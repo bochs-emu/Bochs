@@ -239,7 +239,7 @@ enum SVM_intercept_codes {
 #define SVM_GUEST_LAST_EXCEPTION_FROM_MSR       (0x688)
 #define SVM_GUEST_LAST_EXCEPTION_TO_MSR         (0x690)
 
-typedef struct bx_SVM_HOST_STATE
+struct SVM_HOST_STATE
 {
   bx_segment_reg_t sregs[4];
 
@@ -256,10 +256,9 @@ typedef struct bx_SVM_HOST_STATE
   Bit64u rax;
 
   BxPackedRegister pat_msr;
+};
 
-} SVM_HOST_STATE;
-
-typedef struct bx_SVM_GUEST_STATE
+struct SVM_GUEST_STATE
 {
   bx_segment_reg_t sregs[4];
 
@@ -282,10 +281,9 @@ typedef struct bx_SVM_GUEST_STATE
   unsigned cpl;
 
   bool inhibit_interrupts;
+};
 
-} SVM_GUEST_STATE;
-
-typedef struct bx_SVM_CONTROLS
+struct SVM_CONTROLS
 {
   Bit16u cr_rd_ctrl;
   Bit16u cr_wr_ctrl;
@@ -314,26 +312,32 @@ typedef struct bx_SVM_CONTROLS
 
   Bit16u pause_filter_count;
 //Bit16u pause_filter_threshold;
-
-} SVM_CONTROLS;
+};
 
 #if defined(NEED_CPU_REG_SHORTCUTS)
 
-#define SVM_V_TPR          (BX_CPU_THIS_PTR vmcb.ctrls.v_tpr)
-#define SVM_V_INTR_PRIO    (BX_CPU_THIS_PTR vmcb.ctrls.v_intr_prio)
-#define SVM_V_IGNORE_TPR   (BX_CPU_THIS_PTR vmcb.ctrls.v_ignore_tpr)
-#define SVM_V_INTR_MASKING (BX_CPU_THIS_PTR vmcb.ctrls.v_intr_masking)
-#define SVM_V_INTR_VECTOR  (BX_CPU_THIS_PTR vmcb.ctrls.v_intr_vector)
+#define SVM_V_TPR          (BX_CPU_THIS_PTR vmcb->ctrls.v_tpr)
+#define SVM_V_INTR_PRIO    (BX_CPU_THIS_PTR vmcb->ctrls.v_intr_prio)
+#define SVM_V_IGNORE_TPR   (BX_CPU_THIS_PTR vmcb->ctrls.v_ignore_tpr)
+#define SVM_V_INTR_MASKING (BX_CPU_THIS_PTR vmcb->ctrls.v_intr_masking)
+#define SVM_V_INTR_VECTOR  (BX_CPU_THIS_PTR vmcb->ctrls.v_intr_vector)
 
-#define SVM_HOST_IF (BX_CPU_THIS_PTR vmcb.host_state.eflags & EFlagsIFMask)
+#define SVM_HOST_IF (BX_CPU_THIS_PTR vmcb->host_state.eflags & EFlagsIFMask)
 
 #endif
 
-typedef struct bx_VMCB_CACHE
+// VM_CR_MSR 0xc0010114
+#define BX_VM_CR_MSR_DPD_MASK           (1<<0)
+#define BX_VM_CR_MSR_INIT_REDIRECT_MASK (1<<1)
+#define BX_VM_CR_MSR_DIS_A20M_MASK      (1<<2)
+#define BX_VM_CR_MSR_LOCK_MASK          (1<<3)
+#define BX_VM_CR_MSR_SVMDIS_MASK        (1<<4)
+
+struct VMCB_CACHE
 {
   SVM_HOST_STATE host_state;
   SVM_CONTROLS ctrls;
-} VMCB_CACHE;
+};
 
 // ========================
 //  SVM intercept controls
@@ -386,27 +390,28 @@ enum {
   SVM_INTERCEPT1_MWAIT = 43,
   SVM_INTERCEPT1_MWAIT_ARMED = 44,
   SVM_INTERCEPT1_XSETBV = 45,
+  SVM_INTERCEPT1_RDPRU = 46,
 };
 
 #define SVM_INTERCEPT(intercept_bitnum) \
-  (BX_CPU_THIS_PTR vmcb.ctrls.intercept_vector[intercept_bitnum / 32] & (1 << (intercept_bitnum & 31)))
+  (BX_CPU_THIS_PTR vmcb->ctrls.intercept_vector[intercept_bitnum / 32] & (1 << (intercept_bitnum & 31)))
 
 #define SVM_EXCEPTION_INTERCEPTED(vector) \
-  (BX_CPU_THIS_PTR vmcb.ctrls.exceptions_intercept & (1<<(vector)))
+  (BX_CPU_THIS_PTR vmcb->ctrls.exceptions_intercept & (1<<(vector)))
 
 #define SVM_CR_READ_INTERCEPTED(reg_num) \
-  (BX_CPU_THIS_PTR vmcb.ctrls.cr_rd_ctrl & (1<<(reg_num)))
+  (BX_CPU_THIS_PTR vmcb->ctrls.cr_rd_ctrl & (1<<(reg_num)))
 
 #define SVM_CR_WRITE_INTERCEPTED(reg_num) \
-  (BX_CPU_THIS_PTR vmcb.ctrls.cr_wr_ctrl & (1<<(reg_num)))
+  (BX_CPU_THIS_PTR vmcb->ctrls.cr_wr_ctrl & (1<<(reg_num)))
 
 #define SVM_DR_READ_INTERCEPTED(reg_num) \
-  (BX_CPU_THIS_PTR vmcb.ctrls.dr_rd_ctrl & (1<<(reg_num)))
+  (BX_CPU_THIS_PTR vmcb->ctrls.dr_rd_ctrl & (1<<(reg_num)))
 
 #define SVM_DR_WRITE_INTERCEPTED(reg_num) \
-  (BX_CPU_THIS_PTR vmcb.ctrls.dr_wr_ctrl & (1<<(reg_num)))
+  (BX_CPU_THIS_PTR vmcb->ctrls.dr_wr_ctrl & (1<<(reg_num)))
 
-#define SVM_NESTED_PAGING_ENABLED (BX_CPU_THIS_PTR vmcb.ctrls.nested_paging)
+#define SVM_NESTED_PAGING_ENABLED (BX_CPU_THIS_PTR vmcb->ctrls.nested_paging)
 
 #endif // BX_SUPPORT_SVM
 

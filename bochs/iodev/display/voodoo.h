@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2021  The Bochs Project
+//  Copyright (C) 2012-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -69,13 +69,14 @@ public:
   virtual void update(void);
   virtual bool update_timing(void) {return 0;}
   virtual Bit32u get_retrace(bool hv) {return 0;}
+  virtual Bit32u get_vtotal_usec(void) {return 0;}
 
   virtual void output_enable(bool enabled) {}
   virtual void update_screen_start(void) {}
 
   virtual void reg_write(Bit32u reg, Bit32u value);
   virtual void blt_reg_write(Bit8u reg, Bit32u value) {}
-  virtual void mem_write_linear(Bit32u offset, Bit32u value, unsigned len) {}
+  virtual void mem_write_linear(Bit32u offset, Bit64u value, unsigned len) {}
   virtual void draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info) {}
   virtual void set_tile_updated(unsigned xti, unsigned yti, bool flag) {}
 
@@ -100,6 +101,7 @@ public:
 
   virtual bool update_timing(void);
   virtual Bit32u get_retrace(bool hv);
+  virtual Bit32u get_vtotal_usec(void);
 
   virtual void output_enable(bool enabled);
   virtual void update_screen_start(void);
@@ -128,7 +130,7 @@ public:
 
   virtual void reg_write(Bit32u reg, Bit32u value);
   virtual void blt_reg_write(Bit8u reg, Bit32u value);
-  virtual void mem_write_linear(Bit32u offset, Bit32u value, unsigned len);
+  virtual void mem_write_linear(Bit32u offset, Bit64u value, unsigned len);
   virtual void draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info);
   virtual void set_tile_updated(unsigned xti, unsigned yti, bool flag);
 

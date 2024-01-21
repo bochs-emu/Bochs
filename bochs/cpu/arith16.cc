@@ -458,7 +458,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EwM(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
   Bit32u op1_16 = read_RMW_virtual_word(i->seg(), eaddr);
-  op1_16 = 0 - (Bit32s)(Bit16s)(op1_16);
+  op1_16 = -op1_16;
   write_RMW_linear_word(op1_16);
 
   SET_FLAGS_OSZAPC_SUB_16(0, 0 - op1_16, op1_16);
@@ -469,7 +469,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EwM(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EwR(bxInstruction_c *i)
 {
   Bit32u op1_16 = BX_READ_16BIT_REG(i->dst());
-  op1_16 = 0 - (Bit32s)(Bit16s)(op1_16);
+  op1_16 = -op1_16;
   BX_WRITE_16BIT_REG(i->dst(), op1_16);
 
   SET_FLAGS_OSZAPC_SUB_16(0, 0 - op1_16, op1_16);

@@ -1173,10 +1173,9 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
         break;
 #endif
     }
-  } else
-
+  }
   // Operational Registers
-  if ((offset >= OPS_REGS_OFFSET) && (offset < (OPS_REGS_OFFSET + 0x40))) {
+  else if ((offset >= OPS_REGS_OFFSET) && (offset < (OPS_REGS_OFFSET + 0x40))) {
     switch (offset - OPS_REGS_OFFSET) {
       case 0x00: // Command
 #if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
@@ -1274,11 +1273,10 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
               | (BX_XHCI_THIS hub.op_regs.HcConfig.MaxSlotsEn    <<  0);
         break;
     }
-  } else
-
+  }
   // Register Port Sets
-  if ((offset >= PORT_SET_OFFSET) && (offset < (PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16)))) {
-    unsigned port = (((offset - PORT_SET_OFFSET) >> 4) & 0x3F); // calculate port number
+  else if ((offset >= XHCI_PORT_SET_OFFSET) && (offset < (XHCI_PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16)))) {
+    unsigned port = (((offset - XHCI_PORT_SET_OFFSET) >> 4) & 0x3F); // calculate port number
     if (BX_XHCI_THIS hub.usb_port[port].portsc.pp) {
       // the speed field is only valid for USB3 before a port reset.  If a reset has not
       //  taken place after the port is powered, the USB2 ports don't show a valid speed field.
@@ -1344,11 +1342,13 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
 #endif
           break;
       }
-    } else val = 0;
-  } else
-
+    }
+    else {
+      val = 0;
+    }
+  }
   // Extended Capabilities
-  if ((offset >= EXT_CAPS_OFFSET) && (offset < (EXT_CAPS_OFFSET + EXT_CAPS_SIZE))) {
+  else if ((offset >= EXT_CAPS_OFFSET) && (offset < (EXT_CAPS_OFFSET + EXT_CAPS_SIZE))) {
     unsigned caps_offset = (offset - EXT_CAPS_OFFSET);
     switch (len) {
       case 1:
@@ -1370,10 +1370,9 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
                (BX_XHCI_THIS hub.extended_caps[caps_offset + 3] << 24));
         break;
     }
-  } else
-
+  }
   // Host Controller Runtime Registers
-  if ((offset >= RUNTIME_OFFSET) && (offset < (RUNTIME_OFFSET + 32 + (INTERRUPTERS * 32)))) {
+  else if ((offset >= RUNTIME_OFFSET) && (offset < (RUNTIME_OFFSET + 32 + (INTERRUPTERS * 32)))) {
     if (offset == RUNTIME_OFFSET) {
       val =   (BX_XHCI_THIS hub.runtime_regs.mfindex.RsvdP << 14)
             | (BX_XHCI_THIS hub.runtime_regs.mfindex.index <<  0);
@@ -1436,10 +1435,9 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
           break;
       }
     }
-  } else
-
+  }
   // Doorbell Registers (return zero when read)
-  if ((offset >= DOORBELL_OFFSET) && (offset < (DOORBELL_OFFSET + 4 + (INTERRUPTERS * 4)))) {
+  else if ((offset >= DOORBELL_OFFSET) && (offset < (DOORBELL_OFFSET + 4 + (INTERRUPTERS * 4)))) {
     val = 0;
   } else {
 #if BX_PHY_ADDRESS_LONG
@@ -1459,11 +1457,14 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
       val &= 0xFFFF;
       *((Bit16u *) data) = (Bit16u) val;
       break;
-    case 8:
-      *((Bit32u *) ((Bit8u *) data + 4)) = val_hi;
     case 4:
-      *((Bit32u *) data) = val;
+      *((Bit32u *) data) = (Bit32u) val;
       break;
+    case 8:
+      *((Bit64u *) data) = GET64_FROM_HI32_LO32(val_hi, val);
+      break;
+    default:
+     BX_ERROR(("bx_usb_ehci_c::read_handler unsupported length %d", len));
   }
 
   // don't populate the log file if reading from interrupter's IMAN and only INT_ENABLE is set.
@@ -1484,7 +1485,7 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
 bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   Bit32u value = *((Bit32u *) data);
-  Bit32u value_hi = *((Bit32u *) ((Bit8u *) data + 4));
+  Bit32u value_hi = *((Bit32u *) ((Bit8u *) data + 4));     // Q: should value and value_hi to be swapped on BIG_ENDIAN platform ?
   const Bit32u offset = (Bit32u) (addr - BX_XHCI_THIS pci_bar[0].addr);
   Bit32u temp;
   int i;
@@ -1501,11 +1502,11 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
   }
 
 #if BX_PHY_ADDRESS_LONG
-    BX_DEBUG(("register write to  offset 0x%04X:  0x%08X%08X (len=%d)", offset, value_hi, value, len));
+  BX_DEBUG(("register write to  offset 0x%04X:  0x%08X%08X (len=%d)", offset, value_hi, value, len));
 #else
-    BX_DEBUG(("register write to  offset 0x%04X:  0x%08X (len=%d)", offset, value, len));
-    if (len > 4)
-      BX_DEBUG(("Ben: In 32-bit mode, len > 4! (len=%d)", len));
+  BX_DEBUG(("register write to  offset 0x%04X:  0x%08X (len=%d)", offset, value, len));
+  if (len > 4)
+    BX_DEBUG(("Ben: In 32-bit mode, len > 4! (len=%d)", len));
 #endif
 
   // Even though the controller allows reads other than 32-bits & on odd boundaries,
@@ -1526,10 +1527,9 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
         BX_ERROR(("Write to Read Only Host Capability Register (0x%08X)", offset));
         break;
     }
-  } else
-
+  }
   // Operational Registers
-  if ((offset >= OPS_REGS_OFFSET) && (offset < (OPS_REGS_OFFSET + 0x40))) {
+  else if ((offset >= OPS_REGS_OFFSET) && (offset < (OPS_REGS_OFFSET + 0x40))) {
     switch (offset - OPS_REGS_OFFSET) {
       case 0x00: // Command
         temp = BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1;
@@ -1747,11 +1747,10 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
         BX_XHCI_THIS hub.op_regs.HcConfig.MaxSlotsEn = (value & 0xFF);
         break;
     }
-  } else
-
+  }
   // Register Port Sets
-  if ((offset >= PORT_SET_OFFSET) && (offset < (PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16)))) {
-    unsigned port = (((offset - PORT_SET_OFFSET) >> 4) & 0x3F); // calculate port number
+  else if ((offset >= XHCI_PORT_SET_OFFSET) && (offset < (XHCI_PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16)))) {
+    unsigned port = (((offset - XHCI_PORT_SET_OFFSET) >> 4) & 0x3F); // calculate port number
     switch (offset & 0x0000000F) {
       case 0x00:
         if (value & (1<<9)) {  // port power
@@ -1875,10 +1874,9 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
 #endif
         break;
     }
-  } else
-
+  }
   // Extended Capabilities
-  if ((offset >= EXT_CAPS_OFFSET) && (offset < (EXT_CAPS_OFFSET + EXT_CAPS_SIZE))) {
+  else if ((offset >= EXT_CAPS_OFFSET) && (offset < (EXT_CAPS_OFFSET + EXT_CAPS_SIZE))) {
     unsigned caps_offset = (offset - EXT_CAPS_OFFSET);
     Bit64u qword = (((Bit64u) value_hi << 32) | value);
     while (len) {
@@ -1895,10 +1893,9 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
       caps_offset++;
       qword >>= 8;
     }
-  } else
-
+  }
   // Host Controller Runtime Registers
-  if ((offset >= RUNTIME_OFFSET) && (offset < (RUNTIME_OFFSET + 32 + (INTERRUPTERS * 32)))) {
+  else if ((offset >= RUNTIME_OFFSET) && (offset < (RUNTIME_OFFSET + 32 + (INTERRUPTERS * 32)))) {
     if (offset == RUNTIME_OFFSET) {
       BX_ERROR(("Write to MFINDEX register"));
     } else if (offset < (RUNTIME_OFFSET + 32)) {
@@ -1981,10 +1978,9 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
           break;
       }
     }
-  } else
-
+  }
   // Doorbell Registers
-  if ((offset >= DOORBELL_OFFSET) && (offset < (DOORBELL_OFFSET + 4 + (INTERRUPTERS * 4)))) {
+  else if ((offset >= DOORBELL_OFFSET) && (offset < (DOORBELL_OFFSET + 4 + (INTERRUPTERS * 4)))) {
     if (value & (0xFF << 8))
       BX_ERROR(("RsvdZ field of Doorbell written as non zero."));
     unsigned doorbell = ((offset - DOORBELL_OFFSET) >> 2);
@@ -2053,8 +2049,9 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
 #endif
       }
     }
-  } else
+  } else {
     BX_ERROR(("register write to unknown offset 0x%08X:  0x%08X%08X (len=%d)", offset, (Bit32u) value_hi, (Bit32u) value, len));
+  }
 
   return 1;
 }

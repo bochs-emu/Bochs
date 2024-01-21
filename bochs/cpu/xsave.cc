@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2019 Stanislav Shwartsman
+//   Copyright (c) 2008-2024 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -26,6 +26,10 @@
 #include "cpu.h"
 #include "msr.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
 
 #include "decoder/ia_opcodes.h"
 
@@ -1043,6 +1047,87 @@ bool BX_CPU_C::xsave_uintr_state_xinuse(void)
 }
 #endif
 
+#if BX_SUPPORT_AMX
+
+#include "avx/amx.h"
+
+// TILECFG state management //
+void BX_CPU_C::xsave_tilecfg_state(bxInstruction_c *i, bx_address offset)
+{
+  BxPackedAvxRegister tilecfg;
+  tilecfg.clear();
+
+  if (BX_CPU_THIS_PTR amx->tiles_configured()) {
+    tilecfg.vmmubyte(0) = BX_CPU_THIS_PTR amx->palette_id;
+    tilecfg.vmmubyte(1) = BX_CPU_THIS_PTR amx->start_row;
+
+    for (unsigned n=0; n < 8; n++) {
+      tilecfg.vmm16u(8+n)    = BX_CPU_THIS_PTR amx->tilecfg[n].rows;
+      tilecfg.vmmubyte(48+n) = BX_CPU_THIS_PTR amx->tilecfg[n].bytes_per_row;
+    }
+  }
+
+  write_virtual_zmmword(i->seg(), offset, &tilecfg);
+}
+
+void BX_CPU_C::xrstor_tilecfg_state(bxInstruction_c *i, bx_address offset)
+{
+  BxPackedAvxRegister tilecfg;
+  read_virtual_zmmword(i->seg(), offset, &tilecfg);
+
+  if (!configure_tiles(i, tilecfg))
+    BX_CPU_THIS_PTR amx->clear();
+}
+
+void BX_CPU_C::xrstor_init_tilecfg_state(void)
+{
+  BX_CPU_THIS_PTR amx->clear();
+}
+
+bool BX_CPU_C::xsave_tilecfg_state_xinuse(void)
+{
+  return BX_CPU_THIS_PTR amx->tiles_configured();
+}
+
+// TILEDATA state management //
+void BX_CPU_C::xsave_tiledata_state(bxInstruction_c *i, bx_address offset)
+{
+  bx_address asize_mask = i->asize_mask();
+
+  for (unsigned tile=0; tile < BX_TILE_REGISTERS; tile++) {
+    for (unsigned row=0; row < BX_TILE_REGISTERS; row++) {
+      write_virtual_zmmword(i->seg(), (offset+(tile*BX_TILE_MAX_ROWS+row)*64) & asize_mask, &(BX_CPU_THIS_PTR amx->tile[tile].row[row]));
+    }
+  }
+}
+
+void BX_CPU_C::xrstor_tiledata_state(bxInstruction_c *i, bx_address offset)
+{
+  bx_address asize_mask = i->asize_mask();
+
+  for (unsigned tile=0; tile < BX_TILE_REGISTERS; tile++) {
+    for (unsigned row=0; row < BX_TILE_REGISTERS; row++) {
+      read_virtual_zmmword(i->seg(), (offset+(tile*BX_TILE_MAX_ROWS+row)*64) & asize_mask, &(BX_CPU_THIS_PTR amx->tile[tile].row[row]));
+    }
+    BX_CPU_THIS_PTR amx->set_tile_used(tile);
+  }
+}
+
+void BX_CPU_C::xrstor_init_tiledata_state(void)
+{
+  for (unsigned tile=0; tile < BX_TILE_REGISTERS; tile++) {
+    BX_CPU_THIS_PTR amx->tile[tile].clear();
+    BX_CPU_THIS_PTR amx->clear_tile_used(tile);
+  }
+}
+
+bool BX_CPU_C::xsave_tiledata_state_xinuse(void)
+{
+  return (BX_CPU_THIS_PTR amx->tile_use_tracker == 0);  // all tiles are zero
+}
+
+#endif
+
 Bit32u BX_CPU_C::get_xinuse_vector(Bit32u requested_feature_bitmap)
 {
   Bit32u xinuse = 0;
@@ -1161,6 +1246,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
     Bit32u avx512_state_mask = (BX_XCR0_FPU_MASK | BX_XCR0_SSE_MASK | BX_XCR0_YMM_MASK | BX_XCR0_OPMASK_MASK | BX_XCR0_ZMM_HI256_MASK | BX_XCR0_HI_ZMM_MASK);
     if ((EAX & avx512_state_mask) != avx512_state_mask) {
       BX_ERROR(("XSETBV: Illegal attempt to enable AVX-512 state"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+  }
+#endif
+
+#if BX_SUPPORT_AMX
+  if (EAX & BX_XCR0_XTILE_BITS_MASK) {
+    if ((EAX & BX_XCR0_XTILE_BITS_MASK) != BX_XCR0_XTILE_BITS_MASK) {
+      BX_ERROR(("XSETBV: Illegal attempt to enable AMX state"));
       exception(BX_GP_EXCEPTION, 0);
     }
   }

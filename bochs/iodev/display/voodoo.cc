@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2021  The Bochs Project
+//  Copyright (C) 2012-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -186,7 +186,7 @@ BX_THREAD_FUNC(fifo_thread, indata)
     if (bx_wait_sem(&fifo_wakeup),1) {
       if (!voodoo_keep_alive) break;
       BX_LOCK(fifo_mutex);
-      while (1) {
+      while (voodoo_keep_alive) {
         if (!fifo_empty(&v->fbi.fifo)) {
           fifo = &v->fbi.fifo;
         } else if (!fifo_empty(&v->pci.fifo)) {
@@ -257,8 +257,10 @@ bx_voodoo_base_c::~bx_voodoo_base_c()
 {
   if (voodoo_keep_alive) {
     voodoo_keep_alive = 0;
+    v->vtimer_running = 0;
     bx_set_sem(&fifo_wakeup);
     bx_set_sem(&fifo_not_full);
+    bx_set_sem(&vertical_sem);
     BX_THREAD_JOIN(fifo_thread_var);
     BX_FINI_MUTEX(fifo_mutex);
     BX_FINI_MUTEX(render_mutex);
@@ -267,7 +269,6 @@ bx_voodoo_base_c::~bx_voodoo_base_c()
     }
     bx_destroy_sem(&fifo_wakeup);
     bx_destroy_sem(&fifo_not_full);
-    bx_set_sem(&vertical_sem);
     bx_destroy_sem(&vertical_sem);
   }
   if (s.vga_tile_updated != NULL) {
@@ -319,8 +320,8 @@ void bx_voodoo_base_c::init(void)
   voodoo_init(s.model);
   if (s.model >= VOODOO_BANSHEE) {
     banshee_bitblt_init();
-    s.max_xres = 1600;
-    s.max_yres = 1280;
+    s.max_xres = 1920;
+    s.max_yres = 1440;
   } else {
     s.max_xres = 800;
     s.max_yres = 680;
@@ -584,11 +585,15 @@ void bx_voodoo_base_c::update(void)
     BX_LOCK(fifo_mutex);
     if (s.model >= VOODOO_BANSHEE) {
       start = v->fbi.rgboffs[0];
+      pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
+      if (v->banshee.overlay_tiled) {
+        pitch *= 128;
+      }
     } else {
       start = v->fbi.rgboffs[v->fbi.frontbuf];
+      pitch = v->fbi.rowpixels * 2;
     }
     BX_UNLOCK(fifo_mutex);
-    pitch = v->fbi.rowpixels * 2;
   }
   iWidth = s.vdraw.width;
   iHeight = s.vdraw.height;
@@ -639,7 +644,11 @@ void bx_voodoo_base_c::update(void)
             for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED(xti, yti)) {
                 if (v->banshee.half_mode) {
-                  vid_ptr = disp_ptr + ((yc >> 1) * pitch + xc);
+                  if (v->banshee.double_width) {
+                    vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc >> 1));
+                  } else {
+                    vid_ptr = disp_ptr + ((yc >> 1) * pitch + xc);
+                  }
                 } else {
                   vid_ptr = disp_ptr + (yc * pitch + xc);
                 }
@@ -648,7 +657,10 @@ void bx_voodoo_base_c::update(void)
                   vid_ptr2  = vid_ptr;
                   tile_ptr2 = tile_ptr;
                   for (c=0; c<w; c++) {
-                    colour = v->fbi.clut[*(vid_ptr2++)];
+                    colour = v->fbi.clut[*(vid_ptr2)];
+                    if (!v->banshee.double_width || (c & 1)) {
+                      vid_ptr2++;
+                    }
                     colour = MAKE_COLOUR(
                       colour & 0xff0000, 24, info.red_shift, info.red_mask,
                       colour & 0x00ff00, 16, info.green_shift, info.green_mask,
@@ -682,7 +694,11 @@ void bx_voodoo_base_c::update(void)
             for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED(xti, yti)) {
                 if (v->banshee.half_mode) {
-                  vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc << 1));
+                  if (v->banshee.double_width) {
+                    vid_ptr = disp_ptr + ((yc >> 1) * pitch + xc);
+                  } else {
+                    vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc << 1));
+                  }
                 } else {
                   vid_ptr = disp_ptr + (yc * pitch + (xc << 1));
                 }
@@ -691,8 +707,11 @@ void bx_voodoo_base_c::update(void)
                   vid_ptr2  = vid_ptr;
                   tile_ptr2 = tile_ptr;
                   for (c=0; c<w; c++) {
-                    index = *(vid_ptr2++);
-                    index |= *(vid_ptr2++) << 8;
+                    index = *(vid_ptr2);
+                    index |= *(vid_ptr2 + 1) << 8;
+                    if (!v->banshee.double_width || (c & 1)) {
+                      vid_ptr2 += 2;
+                    }
                     colour = MAKE_COLOUR(
                       v->fbi.pen[index] & 0x0000ff, 8, info.blue_shift, info.blue_mask,
                       v->fbi.pen[index] & 0x00ff00, 16, info.green_shift, info.green_mask,
@@ -726,7 +745,11 @@ void bx_voodoo_base_c::update(void)
             for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED(xti, yti)) {
                 if (v->banshee.half_mode) {
-                  vid_ptr = disp_ptr + ((yc >> 1) * pitch + 3*xc);
+                  if (v->banshee.double_width) {
+                    vid_ptr = disp_ptr + ((yc >> 1) * pitch + 3 * (xc >> 1));
+                  } else {
+                    vid_ptr = disp_ptr + ((yc >> 1) * pitch + 3 * xc);
+                  }
                 } else {
                   vid_ptr = disp_ptr + (yc * pitch + 3*xc);
                 }
@@ -735,9 +758,12 @@ void bx_voodoo_base_c::update(void)
                   vid_ptr2  = vid_ptr;
                   tile_ptr2 = tile_ptr;
                   for (c=0; c<w; c++) {
-                    blue = *(vid_ptr2++);
-                    green = *(vid_ptr2++);
-                    red = *(vid_ptr2++);
+                    blue = *(vid_ptr2);
+                    green = *(vid_ptr2 + 1);
+                    red = *(vid_ptr2 + 2);
+                    if (!v->banshee.double_width || (c & 1)) {
+                      vid_ptr2 += 3;
+                    }
                     colour = MAKE_COLOUR(
                       red, 8, info.red_shift, info.red_mask,
                       green, 8, info.green_shift, info.green_mask,
@@ -771,7 +797,11 @@ void bx_voodoo_base_c::update(void)
             for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED(xti, yti)) {
                 if (v->banshee.half_mode) {
-                  vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc << 2));
+                  if (v->banshee.double_width) {
+                    vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc << 1));
+                  } else {
+                    vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc << 2));
+                  }
                 } else {
                   vid_ptr = disp_ptr + (yc * pitch + (xc << 2));
                 }
@@ -780,10 +810,12 @@ void bx_voodoo_base_c::update(void)
                   vid_ptr2  = vid_ptr;
                   tile_ptr2 = tile_ptr;
                   for (c=0; c<w; c++) {
-                    blue = *(vid_ptr2++);
-                    green = *(vid_ptr2++);
-                    red = *(vid_ptr2++);
-                    vid_ptr2++;
+                    blue = *(vid_ptr2);
+                    green = *(vid_ptr2 + 1);
+                    red = *(vid_ptr2 + 2);
+                    if (!v->banshee.double_width || (c & 1)) {
+                      vid_ptr2 += 4;
+                    }
                     colour = MAKE_COLOUR(
                       red, 8, info.red_shift, info.red_mask,
                       green, 8, info.green_shift, info.green_mask,
@@ -855,9 +887,11 @@ void bx_voodoo_base_c::vertical_timer(void)
   if (v->fbi.video_changed || v->fbi.clut_dirty) {
     // TODO: use tile-based update mechanism
     redraw_area(0, 0, s.vdraw.width, s.vdraw.height);
+    BX_LOCK(fifo_mutex);
     if (v->fbi.clut_dirty) {
       update_pens();
     }
+    BX_UNLOCK(fifo_mutex);
     v->fbi.video_changed = 0;
     s.vdraw.gui_update_pending = 1;
   }
@@ -899,6 +933,7 @@ void bx_voodoo_1_2_c::init_model(void)
   s.vdraw.output_on = 0;
   s.vdraw.override_on = 0;
   s.vdraw.screen_update_pending = 0;
+  s.vdraw.vsync_usec = 0; // prevents crash in get_retrace
 }
 
 void bx_voodoo_1_2_c::reset(unsigned type)
@@ -1070,7 +1105,8 @@ bool bx_voodoo_1_2_c::update_timing(void)
   BX_INFO(("Voodoo output %dx%d@%uHz", v->fbi.width, v->fbi.height, (unsigned)v->vertfreq));
   v->fbi.swaps_pending = 0;
   v->vtimer_running = 1;
-  bx_virt_timer.activate_timer(s.vertical_timer_id, (Bit32u)s.vdraw.vtotal_usec, 1);
+  if (v->vidclk != 0.0)
+    bx_virt_timer.activate_timer(s.vertical_timer_id, (Bit32u)s.vdraw.vtotal_usec, 1);
   return 1;
 }
 
@@ -1090,6 +1126,11 @@ Bit32u bx_voodoo_1_2_c::get_retrace(bool hv)
     }
     return value;
   }
+}
+
+Bit32u bx_voodoo_1_2_c::get_vtotal_usec(void)
+{
+  return s.vdraw.vtotal_usec;
 }
 
 void bx_voodoo_1_2_c::output_enable(bool enabled)

@@ -24,6 +24,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "cpuid.h"
 #include "msr.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
@@ -131,6 +132,8 @@ static const char *VMX_vmexit_reason_name[] =
   /* 75 */  "Notify Window",
   /* 76 */  "SEAMCALL",
   /* 77 */  "TDCALL",
+  /* 78 */  "RDMSRLIST",
+  /* 79 */  "WRMSRLIST",
 };
 
 #include "decoder/ia_opcodes.h"
@@ -434,17 +437,17 @@ bool BX_CPU_C::is_eptptr_valid(Bit64u eptptr)
   //       0 = Uncacheable (UC)
   //       6 = Write-back (WB)
   Bit32u memtype = eptptr & 7;
-  if (memtype != BX_MEMTYPE_UC && memtype != BX_MEMTYPE_WB) return 0;
+  if (memtype != BX_MEMTYPE_UC && memtype != BX_MEMTYPE_WB) return false;
 
   // [5:3] This value is 1 less than the EPT page-walk length
   Bit32u walk_length = (eptptr >> 3) & 7;
-  if (walk_length != 3) return 0;
+  if (walk_length != 3) return false;
 
   // [6]   EPT A/D Enable
   if (! BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_ACCESS_DIRTY)) {
     if (eptptr & 0x40) {
       BX_ERROR(("is_eptptr_valid: EPTPTR A/D enabled when not supported by CPU"));
-      return 0;
+      return false;
     }
   }
 
@@ -452,18 +455,18 @@ bool BX_CPU_C::is_eptptr_valid(Bit64u eptptr)
   if (eptptr & 0x80) {
     if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
       BX_ERROR(("is_eptptr_valid: EPTPTR CET supervisor shadow stack control bit enabled when not supported by CPU"));
-      return 0;
+      return false;
     }
   }
 
 #define BX_EPTPTR_RESERVED_BITS 0xf00 /* bits 11:8 are reserved */
   if (eptptr & BX_EPTPTR_RESERVED_BITS) {
     BX_ERROR(("is_eptptr_valid: EPTPTR reserved bits set"));
-    return 0;
+    return false;
   }
 
-  if (! IsValidPhyAddr(eptptr)) return 0;
-  return 1;
+  if (! IsValidPhyAddr(eptptr)) return false;
+  return true;
 }
 #endif
 
@@ -529,7 +532,9 @@ BX_CPP_INLINE static Bit32u vmx_unpack_ar_field(Bit32u ar_field, VMCS_Access_Rig
 // VMenter
 ////////////////////////////////////////////////////////////
 
-extern struct BxExceptionInfo exceptions_info[];
+extern int get_exception_class(unsigned vector);
+extern int get_exception_type(unsigned vector);
+extern bool exception_push_error(unsigned vector);
 
 #define VMENTRY_INJECTING_EVENT(vmentry_interr_info) (vmentry_interr_info & 0x80000000)
 
@@ -789,6 +794,10 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: unrestricted guest without EPT"));
       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
     }
+    if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_MBE_CTRL) {
+      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: MBE is enabled without EPT"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
   }
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_VPID_ENABLE) {
@@ -854,13 +863,6 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
     }
   }
 
-  if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_MBE_CTRL) {
-    if ((vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_EPT_ENABLE) == 0) {
-       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: MBE is enabled without EPT"));
-       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-    }
-  }
-
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_XSAVES_XRSTORS)
     vm->xss_exiting_bitmap = VMread64(VMCS_64BIT_CONTROL_XSS_EXITING_BITMAP);
   else
@@ -874,6 +876,11 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
       BX_ERROR(("VMFAIL: VMCS EXEC CTRL: TSC multiplier should be non zero"));
       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
     }
+  }
+
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_IA32_SPEC_CTRL) {
+    vm->ia32_spec_ctrl_shadow = VMread64(VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_SHADOW);
+    vm->ia32_spec_ctrl_mask   = VMread64(VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_MASK);
   }
 
   //
@@ -991,11 +998,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 
      unsigned push_error_reference = false;
      if (event_type == BX_HARDWARE_EXCEPTION && vector < BX_CPU_HANDLED_EXCEPTIONS)
-        push_error_reference = exceptions_info[vector].push_error;
-
-     if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
-        if (vector == BX_CP_EXCEPTION) push_error_reference = false;
-     }
+        push_error_reference = exception_push_error(vector);
 
      if (vm->vmentry_interr_info & 0x7ffff000) {
         BX_ERROR(("VMFAIL: VMENTRY broken interruption info field"));
@@ -1057,7 +1060,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 #if BX_SUPPORT_VMX >= 2
      if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_UNRESTRICTED_GUEST) {
        unsigned protected_mode_guest = (Bit32u) VMread_natural(VMCS_GUEST_CR0) & BX_CR0_PE_MASK;
-       if (! protected_mode_guest) push_error_reference = 0;
+       if (! protected_mode_guest) push_error_reference = false;
      }
 #endif
 
@@ -1065,7 +1068,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
        // CET added new #CP exception with error code but legacy software assumed that this vector have no error code.
        // Therefore CET enabled processors do not check the error code anymore and able to deliver a hardware
        // exception with or without an error code, regardless of vector as indicated in VMX_MSR_VMX_BASIC[56]
-       if (push_error != push_error_reference) {
+       if (bool(push_error) != push_error_reference) {
          BX_ERROR(("VMFAIL: VMENTRY injected event vector %d broken error code", vector));
          return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
        }
@@ -1331,20 +1334,20 @@ BX_CPP_INLINE bool IsLimitAccessRightsConsistent(Bit32u limit, Bit32u ar)
   bool g = (ar >> 15) & 1;
 
   // access rights reserved bits set
-  if (ar & 0xfffe0f00) return 0;
+  if (ar & 0xfffe0f00) return false;
 
   if (g) {
     // if any of the bits in limit[11:00] are '0 <=> G must be '0
     if ((limit & 0xfff) != 0xfff)
-       return 0;
+       return false;
   }
   else {
     // if any of the bits in limit[31:20] are '1 <=> G must be '1
     if ((limit & 0xfff00000) != 0)
-       return 0;
+       return false;
   }
 
-  return 1;
+  return true;
 }
 
 Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
@@ -2292,7 +2295,7 @@ void BX_CPU_C::VMenterInjectEvents(void)
   if (type == BX_HARDWARE_EXCEPTION) {
     // record exception the same way as BX_CPU_C::exception does
     BX_ASSERT(vector < BX_CPU_HANDLED_EXCEPTIONS);
-    BX_CPU_THIS_PTR last_exception_type = exceptions_info[vector].exception_type;
+    BX_CPU_THIS_PTR last_exception_type = get_exception_type(vector);
   }
 
   vm->idt_vector_info = vm->vmentry_interr_info & ~0x80000000;
@@ -2331,11 +2334,9 @@ Bit32u BX_CPU_C::LoadMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
     }
 #endif
 
-    if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
-      if (is_x2apic_msr_range(index)) {
-        BX_ERROR(("VMX LoadMSRs %d: unable to restore X2APIC range MSR %x", msr, index));
-        return msr;
-      }
+    if (is_x2apic_msr_range(index)) {
+      BX_ERROR(("VMX LoadMSRs %d: unable to restore X2APIC range MSR %x", msr, index));
+      return msr;
     }
 
     if (! wrmsr(index, msr_hi)) {
@@ -2360,11 +2361,9 @@ Bit32u BX_CPU_C::StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
 
     Bit32u index = GET32L(msr_lo);
 
-    if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
-      if (is_x2apic_msr_range(index)) {
-        BX_ERROR(("VMX StoreMSRs %d: unable to save X2APIC range MSR %x", msr, index));
-        return msr;
-      }
+    if (is_x2apic_msr_range(index)) {
+      BX_ERROR(("VMX StoreMSRs %d: unable to save X2APIC range MSR %x", msr, index));
+      return msr;
     }
 
     if (! rdmsr(index, &msr_hi)) {
@@ -2384,7 +2383,48 @@ Bit32u BX_CPU_C::StoreMSRs(Bit32u msr_cnt, bx_phy_address pAddr)
 // VMexit
 ////////////////////////////////////////////////////////////
 
-void BX_CPU_C::VMexitSaveGuestState(Bit32u reason)
+Bit32u BX_CPU_C::VMexitReadEFLAGS(Bit32u reason, Bit32u vector)
+{
+  Bit32u eflags = read_eflags();
+
+  // Determine EFLAGS.RF value
+  switch(reason) {
+    // If the VM exit is caused directly by an event that would normally be delivered through the IDT, the value
+    // saved is that which would appear in the saved RFLAGS image
+    case VMX_VMEXIT_EXCEPTION_NMI:
+      if (get_exception_class(vector) == BX_EXCEPTION_CLASS_FAULT)
+        if (vector != BX_DB_EXCEPTION)
+          eflags |= EFlagsRFMask;
+      break;
+
+    // For APIC-access VM exits and for VM exits caused by:
+    //   - EPT violations
+    //   - EPT misconfigurations
+    //   - page-modification log-full events or
+    //   - SPP-related events
+    // the value saved depends on whether the VM exit occurred during delivery of an event through the IDT
+    case VMX_VMEXIT_APIC_ACCESS:
+    case VMX_VMEXIT_EPT_VIOLATION:
+    case VMX_VMEXIT_EPT_MISCONFIGURATION:
+    case VMX_VMEXIT_PML_LOGFULL:
+    case VMX_VMEXIT_SPP:
+      // * If the VM exit stored 1 for bit 31 for IDT-vectoring information field (because the VM exit did occur
+      //   during delivery of an event through the IDT), the value saved is the value that would have appeared in
+      //   the saved RFLAGS image had the event been delivered through the IDT.
+      // * If the VM exit stored 0 for bit 31 for IDT-vectoring information field (because the VM exit did not occur
+      //   during delivery of an event through the IDT), the value saved is 1.
+      if (! BX_CPU_THIS_PTR in_event)
+        eflags |= EFlagsRFMask;
+      break;
+
+    default:
+      break;
+  }
+
+  return eflags;
+}
+
+void BX_CPU_C::VMexitSaveGuestState(Bit32u reason, Bit32u vector)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   int n;
@@ -2409,7 +2449,7 @@ void BX_CPU_C::VMexitSaveGuestState(Bit32u reason)
 
   VMwrite_natural(VMCS_GUEST_RIP, RIP);
   VMwrite_natural(VMCS_GUEST_RSP, RSP);
-  VMwrite_natural(VMCS_GUEST_RFLAGS, read_eflags());
+  VMwrite_natural(VMCS_GUEST_RFLAGS, VMexitReadEFLAGS(reason, vector));
 
 #if BX_SUPPORT_CET
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
@@ -2488,6 +2528,9 @@ void BX_CPU_C::VMexitSaveGuestState(Bit32u reason)
     VMwrite64(VMCS_64BIT_GUEST_IA32_EFER, BX_CPU_THIS_PTR efer.get32());
 #endif
 #endif
+
+  if (vm->vmexec_ctrls3 & VMX_VM_EXEC_CTRL3_VIRTUALIZE_IA32_SPEC_CTRL)
+    VMwrite64(VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_SHADOW, vm->ia32_spec_ctrl_shadow);
 
   // The pending debug exceptions field is saved as *clear* for all VM exits except the following:
   //   - VMexit caused by an INIT signal, a machine-check exception, or a SMI
@@ -2807,6 +2850,17 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
   else
     BX_DEBUG(("VMEXIT reason = %d (%s) qualification=0x" FMT_LL "x", reason, VMX_vmexit_reason_name[reason], qualification));
 
+  Bit32u vector = 0;
+  if (reason == VMX_VMEXIT_EXCEPTION_NMI) {
+    vector = VMread32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO);
+    vector &= 0xFF;
+  }
+
+  if (TERTIARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST)) {
+    VMwrite64(VMCS_64BIT_MSR_DATA, ((reason == VMX_VMEXIT_WRMSRLIST) && VMEXIT(VMX_VM_EXEC_CTRL1_MSR_BITMAPS)) ? vm->msr_data : 0);
+    vm->msr_data = 0;
+  }
+
   if (reason != VMX_VMEXIT_EXCEPTION_NMI && reason != VMX_VMEXIT_EXTERNAL_INTERRUPT) {
     VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO, 0);
   }
@@ -2841,7 +2895,7 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
     // clear VMENTRY interruption info field
     VMwrite32(VMCS_32BIT_CONTROL_VMENTRY_INTERRUPTION_INFO, vm->vmentry_interr_info & ~0x80000000);
 
-    VMexitSaveGuestState(reason);
+    VMexitSaveGuestState(reason, vector);
 
     Bit32u msr = StoreMSRs(vm->vmexit_msr_store_cnt, vm->vmexit_msr_store_addr);
     if (msr) {
@@ -2882,6 +2936,9 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
   //
 
   mask_event(BX_EVENT_INIT); // INIT is disabled in VMX root mode
+  if (reason == VMX_VMEXIT_EXCEPTION_NMI && vector == 2) {
+    if (vector == 2) mask_event(BX_EVENT_NMI);
+  }
 
   BX_CPU_THIS_PTR EXT = 0;
   BX_CPU_THIS_PTR last_exception_type = 0;
@@ -4066,6 +4123,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, io_bitmap_addr1, BX_CPU_THIS_PTR vmcs.io_bitmap_addr[0]);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, io_bitmap_addr2, BX_CPU_THIS_PTR vmcs.io_bitmap_addr[1]);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, msr_bitmap_addr, BX_CPU_THIS_PTR vmcs.msr_bitmap_addr);
+  BXRS_HEX_PARAM_FIELD(vmexec_ctrls, msr_data, BX_CPU_THIS_PTR vmcs.msr_data);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_cr0_mask, BX_CPU_THIS_PTR vmcs.vm_cr0_mask);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_cr0_read_shadow, BX_CPU_THIS_PTR vmcs.vm_cr0_read_shadow);
   BXRS_HEX_PARAM_FIELD(vmexec_ctrls, vm_cr4_mask, BX_CPU_THIS_PTR vmcs.vm_cr4_mask);

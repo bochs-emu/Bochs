@@ -313,7 +313,7 @@ Bit32u bx_keyb_c::read(Bit32u address, unsigned io_len)
 
       DEV_pic_lower_irq(12);
       activate_timer();
-      BX_DEBUG(("[mouse] read from 0x%02x returns 0x%02x", address, val));
+      BX_DEBUG(("[mouse] read from 0x%04x returns 0x%02x", (Bit16u)address, val));
       return val;
     } else if (BX_KEY_THIS s.kbd_controller.outb) { /* kbd byte available */
       val = BX_KEY_THIS s.kbd_controller.kbd_output_buffer;
@@ -333,13 +333,13 @@ Bit32u bx_keyb_c::read(Bit32u address, unsigned io_len)
           // move Q elements towards head of queue by one
           BX_KEY_THIS s.controller_Q[i] = BX_KEY_THIS s.controller_Q[i+1];
         }
-        BX_DEBUG(("s.controller_Qsize: %02X",BX_KEY_THIS s.controller_Qsize));
+        BX_DEBUG(("s.controller_Qsize: %u",BX_KEY_THIS s.controller_Qsize));
         BX_KEY_THIS s.controller_Qsize--;
       }
 
       DEV_pic_lower_irq(1);
       activate_timer();
-      BX_DEBUG(("READ(%02x) = %02x", (unsigned) address, (unsigned) val));
+      BX_DEBUG(("READ(0x%04x) = %02x", (Bit16u)address, val));
       return val;
     } else {
       BX_DEBUG(("num_elements = %d", BX_KEY_THIS s.kbd_internal_buffer.num_elements));
@@ -359,8 +359,7 @@ Bit32u bx_keyb_c::read(Bit32u address, unsigned io_len)
     return val;
   }
 
-  BX_PANIC(("unknown address in io read to keyboard port %x",
-      (unsigned) address));
+  BX_PANIC(("unknown address in io read to keyboard port 0x%x", address));
   return 0; /* keep compiler happy */
 }
 
@@ -382,7 +381,7 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
   Bit8u   command_byte;
   static int kbd_initialized=0;
 
-  BX_DEBUG(("keyboard: 8-bit write to %04x = %02x", (unsigned)address, (unsigned)value));
+  BX_DEBUG(("keyboard: 8-bit write to 0x%04x = 0x%02x", (Bit16u)address, (Bit8u)value));
 
   switch (address) {
     case 0x60: // input buffer
@@ -413,8 +412,7 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
             else if (BX_KEY_THIS s.kbd_controller.allow_irq1  && BX_KEY_THIS s.kbd_controller.outb)
               BX_KEY_THIS s.kbd_controller.irq1_requested = 1;
 
-            BX_DEBUG((" allow_irq12 set to %u",
-              (unsigned) BX_KEY_THIS s.kbd_controller.allow_irq12));
+            BX_DEBUG((" allow_irq12 set to %u", (unsigned) BX_KEY_THIS s.kbd_controller.allow_irq12));
             if (!scan_convert)
               BX_INFO(("keyboard: scan convert turned off"));
 
@@ -423,10 +421,10 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
             }
             break;
           case 0xcb: // write keyboard controller mode
-            BX_DEBUG(("write keyboard controller mode with value %02xh", (unsigned) value));
+            BX_DEBUG(("write keyboard controller mode with value 0x%02x", (Bit8u) value));
             break;
           case 0xd1: // write output port
-            BX_DEBUG(("write output port with value %02xh", (unsigned) value));
+            BX_DEBUG(("write output port with value 0x%02x", (Bit8u)value));
             BX_DEBUG(("write output port : %sable A20",(value & 0x02)?"en":"dis"));
             BX_SET_ENABLE_A20((value & 0x02) != 0);
             if (!(value & 0x01)) {
@@ -453,7 +451,7 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
           default:
             BX_PANIC(("=== unsupported write to port 60h(lastcomm=%02x): %02x",
-              (unsigned) BX_KEY_THIS s.kbd_controller.last_comm, (unsigned) value));
+              (unsigned) BX_KEY_THIS s.kbd_controller.last_comm, (Bit8u) value));
           }
       } else {
         // data byte written last to 0x60
@@ -621,7 +619,7 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xc1: // Continuous Input Port Poll, Low
         case 0xc2: // Continuous Input Port Poll, High
         case 0xe0: // Read Test Inputs
-          BX_PANIC(("io write 0x64: command = %02xh", (unsigned) value));
+          BX_PANIC(("io write 0x64: command = 0x%02x", (Bit8u) value));
           break;
 
         case 0xfe: // System (cpu?) Reset, transition to real mode
@@ -632,12 +630,11 @@ void bx_keyb_c::write(Bit32u address, Bit32u value, unsigned io_len)
         default:
           if (value==0xff || (value>=0xf0 && value<=0xfd)) {
             /* useless pulse output bit commands ??? */
-            BX_DEBUG(("io write to port 64h, useless command %02x",
-                (unsigned) value));
+            BX_DEBUG(("io write to port 64h, useless command 0x%02x", (Bit8u) value));
             return;
           }
           BX_ERROR(("unsupported io write to keyboard port %x, value = %x",
-            (unsigned) address, (unsigned) value));
+            address, value));
           break;
       }
       break;
@@ -732,7 +729,7 @@ void bx_keyb_c::set_aux_clock_enable(Bit8u value)
 {
   bool prev_aux_clock_enabled;
 
-  BX_DEBUG(("set_aux_clock_enable(%u)", (unsigned) value));
+  BX_DEBUG(("set_aux_clock_enable(%u)", value));
   if (value==0) {
     BX_KEY_THIS s.kbd_controller.aux_clock_enabled = 0;
   } else {
@@ -747,7 +744,7 @@ void bx_keyb_c::set_aux_clock_enable(Bit8u value)
 Bit8u bx_keyb_c::get_kbd_enable(void)
 {
   BX_DEBUG(("get_kbd_enable(): getting kbd_clock_enabled of: %02x",
-      (unsigned) BX_KEY_THIS s.kbd_controller.kbd_clock_enabled));
+      BX_KEY_THIS s.kbd_controller.kbd_clock_enabled));
 
   return(BX_KEY_THIS s.kbd_controller.kbd_clock_enabled);
 }
@@ -756,7 +753,7 @@ void bx_keyb_c::controller_enQ(Bit8u data, unsigned source)
 {
   // source is 0 for keyboard, 1 for mouse
 
-  BX_DEBUG(("controller_enQ(%02x) source=%02x", (unsigned) data,source));
+  BX_DEBUG(("controller_enQ(%02x) source=%02x", (unsigned) data, source));
 
   // see if we need to Q this byte from the controller
   // remember this includes mouse bytes.
@@ -792,12 +789,6 @@ void bx_keyb_c::kbd_enQ_imm(Bit8u val)
     BX_PANIC(("internal keyboard buffer full (imm)"));
     return;
   }
-
-  /* enqueue scancode in multibyte internal keyboard buffer */
-/*
-  int tail = (BX_KEY_THIS s.kbd_internal_buffer.head + BX_KEY_THIS s.kbd_internal_buffer.num_elements) %
-    BX_KBD_ELEMENTS;
-*/
   BX_KEY_THIS s.kbd_controller.kbd_output_buffer = val;
   BX_KEY_THIS s.kbd_controller.outb = 1;
 
@@ -809,17 +800,15 @@ void bx_keyb_c::kbd_enQ(Bit8u scancode)
 {
   int tail;
 
-  BX_DEBUG(("kbd_enQ(0x%02x)", (unsigned) scancode));
+  BX_DEBUG(("kbd_enQ(0x%02x)", scancode));
 
   if (BX_KEY_THIS s.kbd_internal_buffer.num_elements >= BX_KBD_ELEMENTS) {
-    BX_INFO(("internal keyboard buffer full, ignoring scancode.(%02x)",
-      (unsigned) scancode));
+    BX_INFO(("internal keyboard buffer full, ignoring scancode 0x%02x", scancode));
     return;
   }
 
   /* enqueue scancode in multibyte internal keyboard buffer */
-  BX_DEBUG(("kbd_enQ: putting scancode 0x%02x in internal buffer",
-      (unsigned) scancode));
+  BX_DEBUG(("kbd_enQ: putting scancode 0x%02x in internal buffer", scancode));
   tail = (BX_KEY_THIS s.kbd_internal_buffer.head + BX_KEY_THIS s.kbd_internal_buffer.num_elements) %
    BX_KBD_ELEMENTS;
   BX_KEY_THIS s.kbd_internal_buffer.buffer[tail] = scancode;
@@ -853,11 +842,11 @@ void bx_keyb_c::mouse_enQ(Bit8u mouse_data)
 {
   int tail;
 
-  BX_DEBUG(("mouse_enQ(%02x)", (unsigned) mouse_data));
+  BX_DEBUG(("mouse_enQ(0x%02x)", mouse_data));
 
   if (BX_KEY_THIS s.mouse_internal_buffer.num_elements >= BX_MOUSE_BUFF_SIZE) {
-    BX_ERROR(("[mouse] internal mouse buffer full, ignoring mouse data.(%02x)",
-      (unsigned) mouse_data));
+    BX_ERROR(("[mouse] internal mouse buffer full, ignoring mouse data.(0x%02x)",
+      mouse_data));
     return;
   }
 
@@ -934,7 +923,7 @@ void bx_keyb_c::kbd_ctrl_to_kbd(Bit8u value)
 
   switch (value) {
     case 0x00: // ??? ignore and let OS timeout with no response
-      kbd_enQ(0xFA); // send ACK %%%
+      kbd_enQ(0xFA); // send ACK
       break;
 
     case 0x05: // ???
@@ -945,7 +934,7 @@ void bx_keyb_c::kbd_ctrl_to_kbd(Bit8u value)
 
     case 0xed: // LED Write
       BX_KEY_THIS s.kbd_internal_buffer.expecting_led_write = 1;
-      kbd_enQ_imm(0xFA); // send ACK %%%
+      kbd_enQ_imm(0xFA); // send ACK
       break;
 
     case 0xee: // echo
@@ -1039,17 +1028,15 @@ void bx_keyb_c::timer_handler(void *this_ptr)
 
   retval=class_ptr->periodic(1);
 
-  if(retval&0x01)
+  if (retval & 0x01)
     DEV_pic_raise_irq(1);
-  if(retval&0x02)
+  if (retval & 0x02)
     DEV_pic_raise_irq(12);
 }
 
 unsigned bx_keyb_c::periodic(Bit32u usec_delta)
 {
   Bit8u  retval;
-
-  UNUSED(usec_delta);
 
   retval = (Bit8u)BX_KEY_THIS s.kbd_controller.irq1_requested |
            (BX_KEY_THIS s.kbd_controller.irq12_requested << 1);

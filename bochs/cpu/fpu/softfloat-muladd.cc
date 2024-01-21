@@ -57,9 +57,6 @@ these four paragraphs for those parts of this code that are retained.
 | Takes three single-precision floating-point values `a', `b' and `c', one of
 | which is a NaN, and returns the appropriate NaN result.  If any of  `a',
 | `b' or `c' is a signaling NaN, the invalid exception is raised.
-| The input infzero indicates whether a*b was 0*inf or inf*0 (in which case
-| obviously c is a NaN, and whether to propagate c or some other NaN is
-| implementation defined).
 *----------------------------------------------------------------------------*/
 
 static float32 propagateFloat32MulAddNaN(float32 a, float32 b, float32 c, float_status_t &status)
@@ -91,9 +88,6 @@ static float32 propagateFloat32MulAddNaN(float32 a, float32 b, float32 c, float_
 | Takes three double-precision floating-point values `a', `b' and `c', one of
 | which is a NaN, and returns the appropriate NaN result.  If any of  `a',
 | `b' or `c' is a signaling NaN, the invalid exception is raised.
-| The input infzero indicates whether a*b was 0*inf or inf*0 (in which case
-| obviously c is a NaN, and whether to propagate c or some other NaN is
-| implementation defined).
 *----------------------------------------------------------------------------*/
 
 static float64 propagateFloat64MulAddNaN(float64 a, float64 b, float64 c, float_status_t &status)

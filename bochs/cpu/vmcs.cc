@@ -24,6 +24,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "cpuid.h"
 
 #define LOG_THIS BX_CPU(0)->
 
@@ -397,11 +398,21 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_CONTROL_TERTIARY_VMEXEC_CONTROLS_HI:
       return BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl3_supported_bits;
 
+    case VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_MASK:
+    case VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_MASK_HI:
+    case VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_SHADOW:
+    case VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_SHADOW_HI:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_SPEC_CTRL_VIRTUALIZATION);
+
     /* VMCS 64-bit read only data fields */
     /* binary 0010_01xx_xxxx_xxx0 */
     case VMCS_64BIT_GUEST_PHYSICAL_ADDR:
     case VMCS_64BIT_GUEST_PHYSICAL_ADDR_HI:
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT);
+
+    case VMCS_64BIT_MSR_DATA:
+    case VMCS_64BIT_MSR_DATA_HI:
+      return is_cpu_extension_supported(BX_ISA_MSRLIST);
 #endif
 
     /* VMCS 64-bit guest state fields */
@@ -573,7 +584,7 @@ void BX_CPU_C::init_ept_vpid_capabilities(void)
   // [17] - EPT 1G pages support
   // [20] - INVEPT instruction supported
   // [21] - EPT A/D bits supported
-  // [22] - advanced VM-exit information for EPT violations (not implemented yet)
+  // [22] - advanced VM-exit information for EPT violations (tied to MBE support)
   // [23] - Enable Shadow Stack control bit is supported in EPTP (CET)
   // [25] - INVEPT single-context invalidation supported
   // [26] - INVEPT all-context invalidation supported
@@ -589,6 +600,8 @@ void BX_CPU_C::init_ept_vpid_capabilities(void)
       cap->vmx_ept_vpid_cap_supported_bits |= (1 << 17);
     if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_ACCESS_DIRTY))
       cap->vmx_ept_vpid_cap_supported_bits |= (1 << 21);
+    if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_MBE_CONTROL))
+      cap->vmx_ept_vpid_cap_supported_bits |= (1 << 22);
     if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET))
       cap->vmx_ept_vpid_cap_supported_bits |= (1 << 23);
   }
@@ -848,15 +861,24 @@ void BX_CPU_C::init_tertiary_proc_based_vmexec_ctrls(void)
 
   // tertiary proc based vm exec controls
   // -----------------------------------------------------------
-  //   [00] LOADIWKEY exiting (KeyLoker)
+  //   [00] LOADIWKEY exiting (KeyLocker)
   //   [01] Enable HLAT
   //   [02] EPT Paging Write control
   //   [03] Guest Paging verification
   //   [04] IPI Virtualization
   //    ...
+  //   [06] Enable MSRLIST instructions
   //   [07] Virtualize IA32_SPEC_CTRL
+  //    ...
 
   cap->vmx_vmexec_ctrl3_supported_bits = 0;
+
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MSRLIST)) {
+    cap->vmx_vmexec_ctrl3_supported_bits |= VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST;
+  }
+  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_SPEC_CTRL_VIRTUALIZATION)) {
+    cap->vmx_vmexec_ctrl3_supported_bits |= VMX_VM_EXEC_CTRL3_VIRTUALIZE_IA32_SPEC_CTRL;
+  }
 }
 
 void BX_CPU_C::init_vmexit_ctrls(void)

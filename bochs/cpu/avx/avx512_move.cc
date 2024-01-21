@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013-2018 Stanislav Shwartsman
+//   Copyright (c) 2013-2023 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -297,7 +297,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSD_MASK_VsdWsdM(bxInstruction_c *i)
     }
   }
 
-  BX_WRITE_XMM_REGZ(i->dst(), op, i->getVL());
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
   BX_NEXT_INSTR(i);
 }
 
@@ -320,7 +320,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVSS_MASK_VssWssM(bxInstruction_c *i)
     }
   }
 
-  BX_WRITE_XMM_REGZ(i->dst(), op, i->getVL());
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
   BX_NEXT_INSTR(i);
 }
 

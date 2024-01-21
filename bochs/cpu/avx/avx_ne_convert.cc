@@ -29,8 +29,8 @@
 #if BX_SUPPORT_AVX
 
 // FP32: s|eeeeeeee|mmmmmmmmmmmmmmmmmmmmmmm
-// BF16: s|eeeeeeee|mmmmmmmm
-//  F16: s|eeeee|mmmmmmmmmmm
+// BF16: s|eeeeeeee|mmmmmmm
+//  F16: s|eeeee|mmmmmmmmmm
 
 float_status_t prepare_ne_softfloat_status_helper()
 {
@@ -42,12 +42,13 @@ float_status_t prepare_ne_softfloat_status_helper()
   status.float_suppress_exception = float_all_exceptions_mask;
   status.float_nan_handling_mode = float_first_operand_nan;
   status.flush_underflow_to_zero = true;
-  status.denormals_are_zeros = true;
+  // input denormals not converted to zero and handled normally
+  status.denormals_are_zeros = false;
 
   return status;
 }
 
-static float32 convert_ne_fp16_to_fp32(float16 op)
+float32 convert_ne_fp16_to_fp32(float16 op)
 {
   static float_status_t status = prepare_ne_softfloat_status_helper();
   return float16_to_float32(op, status);

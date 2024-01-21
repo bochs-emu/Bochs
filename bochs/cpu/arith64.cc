@@ -492,7 +492,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EqM(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
 
   Bit64u op1_64 = read_RMW_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
-  op1_64 = - (Bit64s)(op1_64);
+  op1_64 = -op1_64;
   write_RMW_linear_qword(op1_64);
 
   SET_FLAGS_OSZAPC_SUB_64(0, -op1_64, op1_64);
@@ -503,7 +503,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EqM(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EqR(bxInstruction_c *i)
 {
   Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
-  op1_64 = - (Bit64s)(op1_64);
+  op1_64 = -op1_64;
   BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
   SET_FLAGS_OSZAPC_SUB_64(0, -op1_64, op1_64);

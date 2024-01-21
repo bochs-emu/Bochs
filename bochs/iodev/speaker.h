@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003       David N. Welton <davidw@dedasys.com>.
-//  Copyright (C) 2003-2021  The Bochs Project
+//  Copyright (C) 2003-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -28,6 +28,10 @@
 
 #ifndef BX_PC_SPEAKER_H
 #define BX_PC_SPEAKER_H
+
+#if BX_SUPPORT_SOUNDLOW
+#define DSP_EVENT_BUFSIZE 4800
+#endif
 
 class bx_soundlow_waveout_c;
 
@@ -69,7 +73,7 @@ private:
   Bit64u dsp_start_usec;
   Bit64u dsp_cb_usec;
   Bit32u dsp_count;
-  Bit64u dsp_event_buffer[500];
+  Bit64u *dsp_event_buffer;
 #endif
 #endif
 };

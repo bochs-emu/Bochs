@@ -1,10 +1,16 @@
 Bochs VGABios
 -------------
 
-The goal of this project is to have a LGPL'd Video Bios in Bochs and qemu.
+The goal of this project is to have a LGPL'd Video Bios in Bochs and QEMU.
 This VGA Bios is very specific to the emulated VGA card.
 It is NOT meant to drive a physical vga card.
 
+
+Bochs VBE extension
+---------------------
+
+The Bochs VBE extension and it's Bochs device backend has been written by
+Jeroen Janssen (japj). It implements support for VBE version 2.0.
 
 Cirrus SVGA extension
 ---------------------
@@ -29,9 +35,9 @@ To compile the VGA Bios you will need the following packages:
 - dev86 (bcc, as86)
 
 Untar the archive, and type 'make'. You should get this set of binary files:
-"VGABIOS-lgpl-latest.bin", "VGABIOS-lgpl-latest.debug.bin",
-"VGABIOS-lgpl-latest.cirrus.bin", "VGABIOS-lgpl-latest.cirrus.debug.bin" and
-"VGABIOS-lgpl-latest.banshee.bin".
+"VGABIOS-lgpl-latest.bin", "VGABIOS-lgpl-latest-debug.bin",
+"VGABIOS-lgpl-latest-cirrus.bin", "VGABIOS-lgpl-latest-cirrus-debug.bin" and
+"VGABIOS-lgpl-latest-banshee.bin".
 Alternatively, you can use one of the precompiled binary files present in
 the archive.
 
@@ -100,6 +106,18 @@ For any information on Qemu, visit the website http://wiki.qemu.org/
 
 History
 -------
+vgabios-0.8c : Jan 07 2024
+  - Volker
+    - added VBE set palette data support to protected mode interface
+    - some more VBE code rewritten in assembler
+
+vgabios-0.8b : Dec 28 2023
+  - Volker
+    - added VBE get/set palette data support for Banshee and Cirrus versions
+    - fixed order of colors in VBE function get/set palette data
+    - VESA BIOS function 0x4f00 now stores strings in OemData (for VBE 2.0)
+    - some VBE functions rewritten in assembler including bugfixes
+
 vgabios-0.8a : Jun 03 2021
   - Volker
     - added initial version of the VGABIOS for Voodoo Banshee PCI
@@ -109,6 +127,7 @@ vgabios-0.8a : Jun 03 2021
     - fixed text output in VGA graphics modes (using INT 0x43 vector as expected)
     - fixed general 'scroll down' bug in graphics modes
     - some functions rewritten in assembler and some other code optimizations
+
 vgabios-0.7b : Jan 03 2020
   - Volker
     - added VESA BIOS function 0x4f09 (set/get palette data) to the Bochs VBE

@@ -286,6 +286,15 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
     BX_CPU_THIS_PTR debug_trap = 0;
   }
 
+  // interruption info:
+  // -----------------
+  // [7 : 0] vector
+  // [10: 8] interruption type
+  // [11:11] error code delivered
+  // [12:12] NMI unblocking due to IRET
+  // [30:13] reserved
+  // [31:31] valid
+
   Bit32u interruption_info = vector | (type << 8);
   if (errcode_valid)
     interruption_info |= (1 << 11); // error code delivered
@@ -327,36 +336,40 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  bool vmexit = false;
-  if (! VMEXIT(VMX_VM_EXEC_CTRL1_MSR_BITMAPS)) vmexit = true;
-  else {
-    VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+  bool readmsr = (op == VMX_VMEXIT_RDMSR || op == VMX_VMEXIT_RDMSRLIST);
 
-    if (msr >= BX_VMX_HI_MSR_START) {
-       if (msr > BX_VMX_HI_MSR_END) vmexit = true;
-       else {
-         // check MSR-HI bitmaps
-         bx_phy_address pAddr = vm->msr_bitmap_addr + ((msr - BX_VMX_HI_MSR_START) >> 3) + 1024 + ((op == VMX_VMEXIT_RDMSR) ? 0 : 2048);
-         Bit8u field = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_MSR_BITMAP_ACCESS);
-         if (field & (1 << (msr & 7)))
-            vmexit = true;
-       }
-    }
+  if (! VMEXIT(VMX_VM_EXEC_CTRL1_MSR_BITMAPS)) {
+    BX_DEBUG(("VMEXIT: %sMSR 0x%08x", (readmsr) ? "RD" : "WR", msr));
+    VMexit(op, 0);
+  }
+
+  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+
+  bool vmexit = false;
+  if (msr >= BX_VMX_HI_MSR_START) {
+    if (msr > BX_VMX_HI_MSR_END) vmexit = true;
     else {
-       if (msr > BX_VMX_LO_MSR_END) vmexit = true;
-       else {
-         // check MSR-LO bitmaps
-         bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + ((op == VMX_VMEXIT_RDMSR) ? 0 : 2048);
-         Bit8u field = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_MSR_BITMAP_ACCESS);
-         if (field & (1 << (msr & 7)))
-            vmexit = true;
-       }
+      // check MSR-HI bitmaps
+      bx_phy_address pAddr = vm->msr_bitmap_addr + ((msr - BX_VMX_HI_MSR_START) >> 3) + 1024 + (readmsr ? 0 : 2048);
+      Bit8u field = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_MSR_BITMAP_ACCESS);
+      if (field & (1 << (msr & 7)))
+        vmexit = true;
+    }
+  }
+  else {
+    if (msr > BX_VMX_LO_MSR_END) vmexit = true;
+    else {
+      // check MSR-LO bitmaps
+      bx_phy_address pAddr = vm->msr_bitmap_addr + (msr >> 3) + (readmsr ? 0 : 2048);
+      Bit8u field = read_physical_byte(pAddr, MEMTYPE(resolve_memtype(pAddr)), BX_MSR_BITMAP_ACCESS);
+      if (field & (1 << (msr & 7)))
+        vmexit = true;
     }
   }
 
   if (vmexit) {
-     BX_DEBUG(("VMEXIT: %sMSR 0x%08x", (op == VMX_VMEXIT_RDMSR) ? "RD" : "WR", msr));
-     VMexit(op, 0);
+     BX_DEBUG(("VMEXIT: %sMSR 0x%08x", (readmsr) ? "RD" : "WR", msr));
+     VMexit(op, (op >= VMX_VMEXIT_RDMSRLIST) ? msr : 0);
   }
 }
 
@@ -509,9 +522,9 @@ bool BX_CPU_C::VMexit_CLTS(void)
   }
 
   if ((vm->vm_cr0_mask & 0x8) != 0 && (vm->vm_cr0_read_shadow & 0x8) == 0)
-    return 1; /* do not clear CR0.TS */
+    return true; /* do not clear CR0.TS */
   else
-    return 0;
+    return false;
 }
 
 Bit32u BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_LMSW(bxInstruction_c *i, Bit32u msw)
@@ -770,7 +783,7 @@ void BX_CPU_C::vmx_page_modification_logging(Bit64u guest_paddr, unsigned dirty_
 
   if (dirty_update) {
     Bit64u pAddr = vm->pml_address + 8 * vm->pml_index;
-    write_physical_qword(pAddr, guest_paddr, MEMTYPE(resolve_memtype(pAddr)), BX_VMX_PML_WRITE);
+    write_physical_qword(pAddr, LPFOf(guest_paddr), MEMTYPE(resolve_memtype(pAddr)), BX_VMX_PML_WRITE);
     vm->pml_index--;
   }
 }

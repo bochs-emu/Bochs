@@ -153,7 +153,7 @@ struct bx_cr4_t {
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
 };
 
-const Bit32u BX_CR4_FLUSH_TLB_MASK = (BX_CR4_PSE_MASK | BX_CR4_PAE_MASK | BX_CR4_PGE_MASK | BX_CR4_PCIDE_MASK | BX_CR4_SMEP_MASK | BX_CR4_SMAP_MASK | BX_CR4_PKE_MASK | BX_CR4_CET_MASK | BX_CR4_PKS_MASK | BX_CR4_LASS_MASK);
+const Bit32u BX_CR4_FLUSH_TLB_MASK = (BX_CR4_PSE_MASK | BX_CR4_PAE_MASK | BX_CR4_PGE_MASK | BX_CR4_LA57_MASK | BX_CR4_PCIDE_MASK | BX_CR4_SMEP_MASK | BX_CR4_SMAP_MASK | BX_CR4_PKE_MASK | BX_CR4_CET_MASK | BX_CR4_PKS_MASK | BX_CR4_LASS_MASK);
 
 #endif  // #if BX_CPU_LEVEL >= 5
 
@@ -248,23 +248,34 @@ struct bx_efer_t {
 
 #if BX_CPU_LEVEL >= 6
 
+const unsigned XSAVE_HEADER_LEN             = 64;
 const unsigned XSAVE_FPU_STATE_LEN          = 160;
 const unsigned XSAVE_SSE_STATE_LEN          = 256;
 const unsigned XSAVE_YMM_STATE_LEN          = 256;
 const unsigned XSAVE_OPMASK_STATE_LEN       = 64;
 const unsigned XSAVE_ZMM_HI256_STATE_LEN    = 512;
 const unsigned XSAVE_HI_ZMM_STATE_LEN       = 1024;
-const unsigned XSAVE_PKRU_STATE_LEN         = 64;
+const unsigned XSAVE_PT_STATE_LEN           = 128;
+const unsigned XSAVE_PKRU_STATE_LEN         = 8;
+const unsigned XSAVE_PASID_STATE_LEN        = 8;
 const unsigned XSAVE_CET_U_STATE_LEN        = 16;
 const unsigned XSAVE_CET_S_STATE_LEN        = 24;
+const unsigned XSAVE_HDC_STATE_LEN          = 8;
 const unsigned XSAVE_UINTR_STATE_LEN        = 48;
+const unsigned XSAVE_LBR_STATE_LEN          = 808;
+const unsigned XSAVE_HWP_STATE_LEN          = 8;
+const unsigned XSAVE_XTILECFG_STATE_LEN     = 64;
+const unsigned XSAVE_XTILEDATA_STATE_LEN    = 8192;
 
+const unsigned XSAVE_FPU_STATE_OFFSET       = 0;
 const unsigned XSAVE_SSE_STATE_OFFSET       = 160;
 const unsigned XSAVE_YMM_STATE_OFFSET       = 576;
 const unsigned XSAVE_OPMASK_STATE_OFFSET    = 1088;
 const unsigned XSAVE_ZMM_HI256_STATE_OFFSET = 1152;
 const unsigned XSAVE_HI_ZMM_STATE_OFFSET    = 1664;
 const unsigned XSAVE_PKRU_STATE_OFFSET      = 2688;
+const unsigned XSAVE_XTILECFG_STATE_OFFSET  = 2752;
+const unsigned XSAVE_XTILEDATA_STATE_OFFSET = 2816;
 
 struct xcr0_t {
   Bit32u  val32; // 32bit value of register
@@ -287,9 +298,9 @@ struct xcr0_t {
     BX_XCR0_UINTR_BIT = 14,
     BX_XCR0_LBR_BIT = 15,    // not implemented yet
     BX_XCR0_HWP_BIT = 16,    // not implemented yet
-    BX_XCR0_XTILECFG_BIT = 17,      // not implemnted yet
-    BX_XCR0_XTILEDATA_BIT = 18,     // not implemnted yet
-    BX_XCR0_LAST
+    BX_XCR0_XTILECFG_BIT = 17,
+    BX_XCR0_XTILEDATA_BIT = 18,
+    BX_XCR0_LAST // make sure it is < 32
   };
 
 #define BX_XCR0_FPU_MASK       (1 << xcr0_t::BX_XCR0_FPU_BIT)
@@ -311,6 +322,8 @@ struct xcr0_t {
 #define BX_XCR0_HWP_MASK       (1 << xcr0_t::BX_XCR0_HWP_BIT)
 #define BX_XCR0_XTILECFG_MASK  (1 << xcr0_t::BX_XCR0_XTILECFG_BIT)
 #define BX_XCR0_XTILEDATA_MASK (1 << xcr0_t::BX_XCR0_XTILEDATA_BIT)
+
+#define BX_XCR0_XTILE_BITS_MASK (BX_XCR0_XTILECFG_MASK | BX_XCR0_XTILEDATA_MASK)
 
   IMPLEMENT_CRREG_ACCESSORS(FPU, BX_XCR0_FPU_BIT);
   IMPLEMENT_CRREG_ACCESSORS(SSE, BX_XCR0_SSE_BIT);
@@ -389,7 +402,7 @@ typedef struct msr {
      switch(type) {
 #if BX_SUPPORT_X86_64
        case BX_LIN_ADDRESS_MSR:
-         if (! IsCanonical(new_val)) return 0;
+         if (! IsCanonical48(new_val)) return 0;
          break;
 #endif
        case BX_PHY_ADDRESS_MSR:

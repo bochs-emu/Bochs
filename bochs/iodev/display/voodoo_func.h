@@ -1311,7 +1311,7 @@ void recompute_video_memory(voodoo_state *v)
   }
 
   /* reset the FIFO */
-  fifo_reset(&v->fbi.fifo);
+  //fifo_reset(&v->fbi.fifo);
   if (fifo_empty_locked(&v->pci.fifo)) v->pci.op_pending = 0;
 
   /* reset our front/back buffers if they are out of range */
@@ -2106,8 +2106,10 @@ void register_w(Bit32u offset, Bit32u data, bool log)
           int index = data >> 24;
           if (index <= 32)
           {
+            BX_LOCK(fifo_mutex);
             v->fbi.clut[index] = data;
             v->fbi.clut_dirty = 1;
+            BX_UNLOCK(fifo_mutex);
           }
         }
         else

@@ -326,11 +326,11 @@ bool BX_CPU_C::dbg_set_sreg(unsigned sreg_no, bx_segment_reg_t *sreg)
       handleAlignmentCheck(/* CPL change */);
 #endif
       invalidate_prefetch_q();
-      return 1;
+      return true;
     }
   }
 
-  return 0;
+  return false;
 }
 
 void BX_CPU_C::dbg_get_tr(bx_dbg_sreg_t *sreg)
