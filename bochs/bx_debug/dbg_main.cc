@@ -210,6 +210,14 @@ bool bx_dbg_info_find_device(const char *devname, debug_info_t **found_debug_inf
   return 0;
 }
 
+void switch_dbg_cpu(unsigned cpu)
+{
+  char cpu_param_name[10];
+  sprintf(cpu_param_name, "cpu%d", (int)cpu);
+  dbg_cpu_list = (bx_list_c*) SIM->get_param(cpu_param_name, SIM->get_bochs_root());
+  dbg_cpu = cpu;
+}
+
 int bx_dbg_main(void)
 {
   setbuf(stdout, NULL);
@@ -2967,10 +2975,7 @@ void bx_dbg_set_symbol_command(const char *symbol, bx_address val)
       dbg_printf("invalid cpu id number %d\n", val);
       return;
     }
-    char cpu_param_name[10];
-    sprintf(cpu_param_name, "cpu%d", (int)val);
-    dbg_cpu_list = (bx_list_c*) SIM->get_param(cpu_param_name, SIM->get_bochs_root());
-    dbg_cpu = val;
+    switch_dbg_cpu(val);
     return;
   }
   else if (!strcmp(symbol, "synchronous_dma")) {
