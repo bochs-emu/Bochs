@@ -364,7 +364,7 @@ int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, FILETIME *
       }
     } else {
       // Opening image must fail if lock file exists.
-      BX_ERROR(("image locked: '%s'", pathname));
+      BX_PANIC(("image locked: '%s'", pathname));
       return -1;
     }
   }
