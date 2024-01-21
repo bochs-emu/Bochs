@@ -2292,7 +2292,7 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
     for (unsigned j=0; j<ilen; j++) {
       dbg_printf("%02x", (unsigned) bx_disasm_ibuf[j]);
     }
-    dbg_printf("\n");
+    dbg_printf("%s\n", (BX_CPU(which_cpu)->stop_reason == STOP_CPU_HALTED) ? " (halted)" : "");
   }
 }
 
