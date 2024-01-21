@@ -545,7 +545,10 @@ enum {
   BX_LEVEL_PTE = 0
 };
 
-static const char *bx_paging_level[5] = { "PTE", "PDE", "PDPE", "PML4", "PML5" }; // keep it 4 letters
+static const char *bx_paging_level[5] = { " PTE", " PDE", " PDPE", " PML4", " PML5" }; // keep it 5 letters
+#if BX_SUPPORT_SVM
+static const char *bx_nested_paging_level[5] = { "NPTE", "NPDE", "NPDPE", "NPML4", "NPML5" }; // keep it 5 letters
+#endif
 
 // combined_access legend:
 // -----------------------
@@ -2181,9 +2184,9 @@ bool BX_CPU_C::spp_walk(bx_phy_address guest_paddr, bx_address guest_laddr, BxMe
 
 #if BX_DEBUGGER
 
-void dbg_print_paging_pte(int level, Bit64u entry)
+void dbg_print_paging_pte(int level, Bit64u entry, bool nested_walk)
 {
-  dbg_printf("%4s: 0x%08x%08x", bx_paging_level[level], GET32H(entry), GET32L(entry));
+  dbg_printf("%5s: 0x%08x%08x", nested_walk ? bx_nested_paging_level[level] : bx_paging_level[level], GET32H(entry), GET32L(entry));
 
   if (entry & BX_CONST64(0x8000000000000000))
     dbg_printf(" XD");
@@ -2305,34 +2308,43 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
   bx_phy_address paddress;
   bx_address offset_mask = 0xfff;
 
-#if BX_SUPPORT_X86_64
-  if (! long_mode()) laddr &= 0xffffffff;
-#endif
-
   if (! BX_CPU_THIS_PTR cr0.get_PG()) {
     paddress = (bx_phy_address) laddr;
   }
   else {
     bx_phy_address pt_address = BX_CPU_THIS_PTR cr3 & BX_CR3_PAGING_MASK;
+    bx_cr4_t the_cr4 = BX_CPU_THIS_PTR cr4;
+    bool in_long_mode = long_mode();
 #if BX_SUPPORT_SVM
     if (nested_walk) {
       pt_address = LPFOf(BX_CPU_THIS_PTR vmcb->ctrls.ncr3);
+      the_cr4 = BX_CPU_THIS_PTR vmcb->host_state.cr4;
+      in_long_mode = BX_CPU_THIS_PTR vmcb->host_state.efer.get_LMA();
     }
 #endif
 
 #if BX_CPU_LEVEL >= 6
-    if (BX_CPU_THIS_PTR cr4.get_PAE()) {
+    if (the_cr4.get_PAE()) {
       int level = BX_LEVEL_PDE;
-      if (! long_mode()) {
+      if (! in_long_mode) {
+        laddr &= 0xffffffff;
         offset_mask = 0x3fffffff;
-        pt_address = BX_CPU_THIS_PTR PDPTR_CACHE.entry[(laddr >> 30) & 3];
-        if (! (pt_address & 0x1))
-           goto page_fault;
-        pt_address &= BX_CONST64(0x000ffffffffff000);
+#if BX_SUPPORT_SVM
+        if (BX_CPU_THIS_PTR in_svm_guest && SVM_NESTED_PAGING_ENABLED) {
+          level = BX_LEVEL_PDPTE;
+        }
+        else
+#endif
+        {
+          pt_address = BX_CPU_THIS_PTR PDPTR_CACHE.entry[(laddr >> 30) & 3];
+          if (! (pt_address & 0x1))
+             goto page_fault;
+          pt_address &= BX_CONST64(0x000ffffffffff000);
+        }
       }
 #if BX_SUPPORT_X86_64
       else {
-        level = BX_CPU_THIS_PTR cr4.get_LA57() ? BX_LEVEL_PML5 : BX_LEVEL_PML4;
+        level = the_cr4.get_LA57() ? BX_LEVEL_PML5 : BX_LEVEL_PML4;
         offset_mask = ((BX_CONST64(1) << BX_CPU_THIS_PTR linaddr_width) - 1);
       }
 #endif
@@ -2358,7 +2370,7 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
         BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pt_address, 8, &pte);
 #if BX_DEBUGGER
         if (verbose)
-          dbg_print_paging_pte(level, pte);
+          dbg_print_paging_pte(level, pte, nested_walk);
 #endif
         if(!(pte & 1))
           goto page_fault;
@@ -2381,6 +2393,7 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
     else   // not PAE
 #endif
     {
+      laddr &= 0xffffffff;
       offset_mask = 0xfff;
       for (int level = BX_LEVEL_PDE; level >= 0; --level) {
         Bit32u pte;
@@ -2402,13 +2415,13 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
         BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pt_address, 4, &pte);
 #if BX_DEBUGGER
         if (verbose)
-          dbg_print_paging_pte(level, pte);
+          dbg_print_paging_pte(level, pte, nested_walk);
 #endif
         if (!(pte & 1))
           goto page_fault;
         pt_address = pte & 0xfffff000;
 #if BX_CPU_LEVEL >= 6
-        if (level == BX_LEVEL_PDE && (pte & 0x80) != 0 && BX_CPU_THIS_PTR cr4.get_PSE()) {
+        if (level == BX_LEVEL_PDE && (pte & 0x80) != 0 && the_cr4.get_PSE()) {
           offset_mask = 0x3fffff;
           pt_address = pte & 0xffc00000;
 #if BX_PHY_ADDRESS_WIDTH > 32
