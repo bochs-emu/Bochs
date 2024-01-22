@@ -99,6 +99,8 @@ EVEX_FMA_SCALAR_DOUBLE(VFNMSUBSD_MASK_VpdHsdWsdR, float64_fnmsub)
 // AVX-512 FP16 FMA Instructions //
 ///////////////////////////////////
 
+#include "fpu/softfloat16.h"
+
 #define EVEX_FMA_SCALAR_HALF_PRECISION(HANDLER, func)                         \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)         \
   {                                                                           \

@@ -84,6 +84,8 @@ AVX2_FMA_SCALAR_DOUBLE(VFNMSUBSD_VpdHsdWsdR, float64_fnmsub)
 
 #if BX_SUPPORT_EVEX
 
+#include "fpu/softfloat16.h"
+
 #define AVX2_FMA_SCALAR_HALF_PRECISION(HANDLER, func)                         \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)         \
   {                                                                           \

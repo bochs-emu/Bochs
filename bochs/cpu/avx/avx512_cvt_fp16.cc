@@ -31,6 +31,7 @@
 extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
 
 #include "simd_int.h"
+#include "fpu/softfloat16.h"
 
 // scalar
 
