@@ -1654,9 +1654,6 @@ unsigned evex_displ8_compression(const bxInstruction_c *i, unsigned ia_opcode, u
        return (8 * len);
 
   case BX_VMM_QUARTER_VECTOR:
-#if BX_SUPPORT_EVEX
-    BX_ASSERT(! i->getEvexb());
-#endif
     return (4 * len);
 
   case BX_VMM_EIGHTH_VECTOR:
@@ -2021,7 +2018,7 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
 
   //    7 6 5 4 3 2 1 0
   //    ---------------
-  // P0 R X B R'0 0 m m
+  // P0 R X B R'0 m m m
   // P1 w v v v v 1 p p
   // P2 z L'L b V'a a a
 
@@ -2038,11 +2035,11 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   // EVEX.LL   - vector length control
 
   // check for reserved EVEX bits
-  if ((evex & 0x0c) != 0 || (evex & 0x400) == 0)
+  if ((evex & 0x08) != 0 || (evex & 0x400) == 0)
     return(ia_opcode);
 
-  unsigned evex_opcext = evex & 0x3;
-  if (evex_opcext == 0)
+  unsigned evex_opcext = evex & 0x7;
+  if (evex_opcext == 0 || evex_opcext == 4)
     return(ia_opcode);
 
   sse_prefix = (evex >> 8) & 0x3;
@@ -2103,7 +2100,7 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
 
   ia_opcode = findOpcode(BxOpcodeTableEVEX[opcode_byte], decmask);
 
-  bool has_immediate = (opcode_byte >= 0x70 && opcode_byte <= 0x73) || (opcode_byte >= 0xC2 && opcode_byte <= 0xC6) || (opcode_byte >= 0x200);
+  bool has_immediate = (opcode_byte >= 0x70 && opcode_byte <= 0x73) || (opcode_byte >= 0xC2 && opcode_byte <= 0xC6) || (opcode_byte >= 0x200 && opcode_byte < 0x300);
   if (has_immediate) {
     if (remain != 0) {
       i->modRMForm.Ib[0] = *iptr;

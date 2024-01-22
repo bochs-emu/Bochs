@@ -1792,6 +1792,11 @@ static const Bit64u BxOpcodeGroup_EVEX_0F3A73[] = {
   last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1, BX_IA_V512_VPSHRDQ_VdqHdqWdqIb_Kmask)
 };
 
+static const Bit64u BxOpcodeGroup_EVEX_0F3AC2[] = {
+  form_opcode(ATTR_VEX_W0 | ATTR_SSE_NO_PREFIX, BX_IA_V512_VCMPPH_KGdHphWphIb),
+  last_opcode(ATTR_VEX_W0 | ATTR_SSE_PREFIX_F3, BX_IA_V512_VCMPSH_KGbHshWshIb)
+};
+
 static const Bit64u BxOpcodeGroup_EVEX_0F3ACE[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1, BX_IA_V512_VGF2P8AFFINEQB_VdqHdqWdqIb_Kmask) };
 static const Bit64u BxOpcodeGroup_EVEX_0F3ACF[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1, BX_IA_V512_VGF2P8AFFINEINVQB_VdqHdqWdqIb_Kmask) };
 
@@ -1832,6 +1837,7 @@ static const Bit64u BxOpcodeGroup_EVEX_MAP5_2D[] = {
 };
 
 static const Bit64u BxOpcodeGroup_EVEX_MAP5_2E[] = { last_opcode(ATTR_VEX_W0 | ATTR_MASK_K0 | ATTR_SSE_NO_PREFIX, BX_IA_V512_VUCOMISH_VshWsh) };
+static const Bit64u BxOpcodeGroup_EVEX_MAP5_2F[] = { last_opcode(ATTR_VEX_W0 | ATTR_MASK_K0 | ATTR_SSE_NO_PREFIX, BX_IA_V512_VCOMISH_VshWsh) };
 
 static const Bit64u BxOpcodeGroup_EVEX_MAP5_51[] = {
   form_opcode(ATTR_VEX_W0 | ATTR_MASK_K0 | ATTR_SSE_NO_PREFIX, BX_IA_V512_VSQRTPH_VphWph),
@@ -2851,7 +2857,7 @@ static const Bit64u *BxOpcodeTableEVEX[256*6] = {
   /* BF */ ( BxOpcodeGroup_ERR ),
   /* C0 */ ( BxOpcodeGroup_ERR ),
   /* C1 */ ( BxOpcodeGroup_ERR ),
-  /* C2 */ ( BxOpcodeGroup_ERR ),
+  /* C2 */ ( BxOpcodeGroup_EVEX_0F3AC2 ),
   /* C3 */ ( BxOpcodeGroup_ERR ),
   /* C4 */ ( BxOpcodeGroup_ERR ),
   /* C5 */ ( BxOpcodeGroup_ERR ),
@@ -3220,7 +3226,7 @@ static const Bit64u *BxOpcodeTableEVEX[256*6] = {
   /* 2C */ ( BxOpcodeGroup_EVEX_MAP5_2C ),
   /* 2D */ ( BxOpcodeGroup_EVEX_MAP5_2D ),
   /* 2E */ ( BxOpcodeGroup_EVEX_MAP5_2E ),
-  /* 2F */ ( BxOpcodeGroup_ERR ),
+  /* 2F */ ( BxOpcodeGroup_EVEX_MAP5_2F ),
   /* 30 */ ( BxOpcodeGroup_ERR ),
   /* 31 */ ( BxOpcodeGroup_ERR ),
   /* 32 */ ( BxOpcodeGroup_ERR ),
