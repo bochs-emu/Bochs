@@ -1625,10 +1625,18 @@ unsigned evex_displ8_compression(const bxInstruction_c *i, unsigned ia_opcode, u
   case BX_VMM_FULL_VECTOR:
 #if BX_SUPPORT_EVEX
     if (i->getEvexb()) // broadcast
-       return (4 << vex_w);
+      return (4 << vex_w);
     else
 #endif
-       return (16 * len);
+      return (16 * len);
+
+  case BX_VMM_FULL_VECTOR_W:
+#if BX_SUPPORT_EVEX
+    if (i->getEvexb()) // broadcast
+      return 2;
+    else
+#endif
+      return (16 * len);
 
   case BX_VMM_SCALAR_BYTE:
     return 1;
@@ -1648,13 +1656,29 @@ unsigned evex_displ8_compression(const bxInstruction_c *i, unsigned ia_opcode, u
   case BX_VMM_HALF_VECTOR:
 #if BX_SUPPORT_EVEX
     if (i->getEvexb()) // broadcast
-       return (4 << vex_w);
+      return (4 << vex_w);
     else
 #endif
-       return (8 * len);
+      return (8 * len);
+
+  case BX_VMM_HALF_VECTOR_W:
+#if BX_SUPPORT_EVEX
+    if (i->getEvexb()) // broadcast
+      return 2;
+    else
+#endif
+      return (8 * len);
 
   case BX_VMM_QUARTER_VECTOR:
     return (4 * len);
+
+  case BX_VMM_QUARTER_VECTOR_W:
+#if BX_SUPPORT_EVEX
+    if (i->getEvexb()) // broadcast
+      return 2;
+    else
+#endif
+      return (4 * len);
 
   case BX_VMM_EIGHTH_VECTOR:
 #if BX_SUPPORT_EVEX
