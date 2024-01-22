@@ -702,7 +702,7 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case io_vidProcCfg:
       v->banshee.io[reg] = value;
-      if ((v->banshee.io[reg] ^ old) & 0x3c00)
+      if ((v->banshee.io[reg] ^ old) & 0x3d80)
         v->fbi.clut_dirty = 1;
       if ((v->banshee.io[reg] & 0x01) && ((old & 0x01) == 0x00)) {
         if (theVoodooVga != NULL) {
@@ -742,7 +742,7 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_ERROR(("vidProcCfg: chromaKey mode not supported yet"));
       }
       if ((v->banshee.io[reg] >> 16) & 3) {
-        BX_ERROR(("vidProcCfg: overlay filter mode not supported yet"));
+        BX_ERROR(("vidProcCfg: overlay filter mode %d not supported yet", (v->banshee.io[reg] >> 16) & 3));
       }
       v->banshee.desktop_tiled = ((v->banshee.io[reg] >> 24) & 1);
       v->banshee.overlay_tiled = ((v->banshee.io[reg] >> 25) & 1);
