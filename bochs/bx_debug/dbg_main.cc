@@ -46,7 +46,7 @@ extern "C" {
 // default CPU in the debugger.  For commands like "dump_cpu" it will
 // use the default instead of always dumping all cpus.
 unsigned dbg_cpu = 0;
-static bx_list_c **dbg_cpu_list = 0;
+static bx_list_c **dbg_cpu_list = NULL;
 
 extern const char* cpu_mode_string(unsigned cpu_mode);
 extern void bx_sr_after_restore_state(void);
@@ -785,8 +785,8 @@ void bx_dbg_exit(int code)
 
   for (int cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
     if (BX_CPU(cpu)) BX_CPU(cpu)->atexit();
-    delete dbg_cpu_list[cpu];
   }
+
   delete [] dbg_cpu_list;
   dbg_cpu_list = NULL;
 
