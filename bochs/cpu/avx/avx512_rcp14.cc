@@ -8301,9 +8301,9 @@ float16 approximate_rcp14(float16 op, const float_status_t &status)
 
   // Compute the single precision 23-bit mantissa from the 10-bit half
   // precision mantissa by shifting it left.
-  fraction = (fraction << 13);
+  Bit32u fraction32 = (fraction << 13);
 
-  fraction = rcp14_table_lookup(fraction, FLOAT16_EXP_BIAS, &exp) >> 4;
+  fraction32 = rcp14_table_lookup(fraction32, FLOAT16_EXP_BIAS, &exp);
 
   if (exp >= 0x1F) {
     /* overflow - the result is signed infinity */
@@ -8315,11 +8315,13 @@ float16 approximate_rcp14(float16 op, const float_status_t &status)
     if (get_flush_underflow_to_zero(status))
       return packFloat16(sign, 0, 0);
 
-    fraction >>= (1 - exp); // make denormal result, note that -1 <= exp <= 0 so no rounding needed
+    fraction32 >>= (1 - exp); // make denormal result, note that -1 <= exp <= 0 so no rounding needed
     exp = 0;
   }
 
-  return packFloat16(sign, exp, fraction);
+  fraction32 = (fraction32 >> 6) | ((fraction32 & 0x3f) != 0);
+
+  return packFloat16(sign, exp, fraction32);
 }
 
 // approximate 14-bit reciprocal of scalar single precision FP

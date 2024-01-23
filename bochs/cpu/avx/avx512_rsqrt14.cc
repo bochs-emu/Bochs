@@ -8292,7 +8292,9 @@ float16 approximate_rsqrt14(float16 op, bool daz)
   else
     exp++;
 
-  return packFloat16(0, exp, fraction >> 4);
+  fraction = (fraction >> 6) | ((fraction & 0x3f) != 0);
+
+  return packFloat16(0, exp, fraction);
 }
 
 // approximate 14-bit sqrt reciprocal of scalar single precision FP
