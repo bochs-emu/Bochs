@@ -54,37 +54,6 @@ these four paragraphs for those parts of this code that are retained.
 #include "softfloat-specialize.h"
 
 /*----------------------------------------------------------------------------
-| Takes three half-precision floating-point values `a', `b' and `c', one of
-| which is a NaN, and returns the appropriate NaN result.  If any of  `a',
-| `b' or `c' is a signaling NaN, the invalid exception is raised.
-*----------------------------------------------------------------------------*/
-
-static float16 propagateFloat16MulAddNaN(float16 a, float16 b, float16 c, float_status_t &status)
-{
-    int aIsNaN = float16_is_nan(a);
-    int bIsNaN = float16_is_nan(b);
-
-    int aIsSignalingNaN = float16_is_signaling_nan(a);
-    int bIsSignalingNaN = float16_is_signaling_nan(b);
-    int cIsSignalingNaN = float16_is_signaling_nan(c);
-
-    a |= 0x200;
-    b |= 0x200;
-    c |= 0x200;
-
-    if (aIsSignalingNaN | bIsSignalingNaN | cIsSignalingNaN)
-        float_raise(status, float_flag_invalid);
-
-    //  operate according to float_first_operand_nan mode
-    if (aIsSignalingNaN | aIsNaN) {
-        return a;
-    }
-    else {
-        return (bIsSignalingNaN | bIsNaN) ? b : c;
-    }
-}
-
-/*----------------------------------------------------------------------------
 | Takes three single-precision floating-point values `a', `b' and `c', one of
 | which is a NaN, and returns the appropriate NaN result.  If any of  `a',
 | `b' or `c' is a signaling NaN, the invalid exception is raised.
