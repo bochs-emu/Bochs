@@ -166,6 +166,7 @@ command:
     | stepN_command
     | step_over_command
     | set_command
+    | cpu_command
     | breakpoint_command
     | info_command
     | regs_command
@@ -552,6 +553,13 @@ step_over_command:
         free($1);
       }
     ;
+
+cpu_command:
+      BX_TOKEN_CPU BX_TOKEN_NUMERIC '\n'
+      {
+        bx_dbg_set_symbol_command("$cpu", $2);
+        free($1);
+      }
 
 set_command:
       BX_TOKEN_SET BX_TOKEN_DISASM BX_TOKEN_TOGGLE_ON_OFF '\n'
@@ -1342,11 +1350,11 @@ help_command:
        {
          dbg_printf("set <regname> = <expr> - set register value to expression\n");
          dbg_printf("set eflags = <expr> - set eflags value to expression, not all flags can be modified\n");
-         dbg_printf("set $cpu = <N> - move debugger control to cpu <N> in SMP simulation\n");
-         dbg_printf("set $auto_disassemble = 1 - cause debugger to disassemble current instruction\n");
+         dbg_printf("set $cpu = <N> or just cpu <N> - move debugger control to cpu <N> in SMP simulation\n");
+         dbg_printf("set $auto_disassemble = 1 -> cause debugger to disassemble current instruction\n");
          dbg_printf("       every time execution stops\n");
-         dbg_printf("set u|disasm|disassemble on  - same as 'set $auto_disassemble = 1'\n");
-         dbg_printf("set u|disasm|disassemble off - same as 'set $auto_disassemble = 0'\n");
+         dbg_printf("set u|disasm on  - same as 'set $auto_disassemble = 1'\n");
+         dbg_printf("set u|disasm off - same as 'set $auto_disassemble = 0'\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_PAGE '\n'

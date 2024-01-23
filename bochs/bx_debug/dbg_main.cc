@@ -212,6 +212,7 @@ bool bx_dbg_info_find_device(const char *devname, debug_info_t **found_debug_inf
 
 void switch_dbg_cpu(unsigned cpu)
 {
+  dbg_printf("Switching to CPU%d\n", cpu);
   dbg_cpu = cpu;
 }
 
