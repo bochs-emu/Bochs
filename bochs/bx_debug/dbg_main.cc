@@ -46,7 +46,7 @@ extern "C" {
 // default CPU in the debugger.  For commands like "dump_cpu" it will
 // use the default instead of always dumping all cpus.
 unsigned dbg_cpu = 0;
-bx_list_c *dbg_cpu_list = 0;
+static bx_list_c **dbg_cpu_list = 0;
 
 extern const char* cpu_mode_string(unsigned cpu_mode);
 extern void bx_sr_after_restore_state(void);
@@ -89,8 +89,8 @@ typedef struct {
   unsigned lineno;
 } bx_infile_stack_entry_t;
 
-bx_infile_stack_entry_t bx_infile_stack[BX_INFILE_DEPTH];
-int                     bx_infile_stack_index = 0;
+static bx_infile_stack_entry_t bx_infile_stack[BX_INFILE_DEPTH];
+static int                     bx_infile_stack_index = 0;
 
 static int  bx_nest_infile(char *path);
 
@@ -212,9 +212,6 @@ bool bx_dbg_info_find_device(const char *devname, debug_info_t **found_debug_inf
 
 void switch_dbg_cpu(unsigned cpu)
 {
-  char cpu_param_name[10];
-  sprintf(cpu_param_name, "cpu%d", (int)cpu);
-  dbg_cpu_list = (bx_list_c*) SIM->get_param(cpu_param_name, SIM->get_bochs_root());
   dbg_cpu = cpu;
 }
 
@@ -238,7 +235,6 @@ int bx_dbg_main(void)
   bx_debugger.default_unit_size      = 'w';
   bx_debugger.default_addr = 0;
 
-  dbg_cpu_list = (bx_list_c*) SIM->get_param("cpu0", SIM->get_bochs_root());
   const char *debugger_log_filename = SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr();
 
   // Open debugger log file if needed
@@ -289,6 +285,15 @@ int bx_dbg_main(void)
     if (BX_CPU(i)->get_cpu_mode() == BX_MODE_LONG_64)
       BX_CPU(i)->guard_found.code_32_64 |= 0x2;
   }
+
+  dbg_cpu_list = new bx_list_c *[BX_SMP_PROCESSORS];
+  for (int cpu=0; cpu<BX_SMP_PROCESSORS; cpu++) {
+    char cpu_param_name[10];
+    sprintf(cpu_param_name, "cpu%d", (int)cpu);
+    dbg_cpu_list[cpu] = (bx_list_c*) SIM->get_param(cpu_param_name, SIM->get_bochs_root());
+  }
+
+  switch_dbg_cpu(0);
 
   // finally, call the usual function to print the disassembly
   dbg_printf("Next at t=" FMT_LL "d\n", bx_pc_system.time_ticks());
@@ -773,11 +778,20 @@ void bx_dbg_exit(int code)
   if (bx_dbg_exit_called) return;
   bx_dbg_exit_called = 1;
   BX_DEBUG(("dbg: before exit"));
+
+  if(debugger_log != NULL)
+    fclose(debugger_log);
+  debugger_log = NULL;
+
   for (int cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
     if (BX_CPU(cpu)) BX_CPU(cpu)->atexit();
+    delete dbg_cpu_list[cpu];
   }
+  delete [] dbg_cpu_list;
+  dbg_cpu_list = NULL;
 
   bx_atexit();
+
   BX_EXIT(code);
 }
 
@@ -785,10 +799,10 @@ void bx_dbg_exit(int code)
 // functions for browsing of cpu state
 //
 
-void bx_dbg_print_mxcsr_state(void)
+void bx_dbg_print_mxcsr_state(unsigned cpu)
 {
 #if BX_CPU_LEVEL >= 6
-  Bit32u mxcsr = SIM->get_param_num("SSE.mxcsr", dbg_cpu_list)->get();
+  Bit32u mxcsr = SIM->get_param_num("SSE.mxcsr", dbg_cpu_list[cpu])->get();
 
   static const char* round_control[] = {
     "Nearest", "Down", "Up", "Chop"
@@ -814,19 +828,24 @@ void bx_dbg_print_mxcsr_state(void)
 #endif
 }
 
-void bx_dbg_print_sse_state(void)
+void bx_dbg_print_mxcsr_state(void)
+{
+  bx_dbg_print_mxcsr_state(dbg_cpu);
+}
+
+void bx_dbg_print_sse_state(unsigned cpu)
 {
 #if BX_CPU_LEVEL >= 6
-  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_SSE)) {
-    bx_dbg_print_mxcsr_state();
+  if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_SSE)) {
+    bx_dbg_print_mxcsr_state(cpu);
 
     char param_name[20];
     unsigned registers = BX_SUPPORT_X86_64 ? 16 : 8; // don't want to print XMM16..31 in EVEX mode
     for(unsigned i=0;i<registers;i++) {
       sprintf(param_name, "SSE.xmm%02d_1", i);
-      Bit64u hi = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+      Bit64u hi = SIM->get_param_num(param_name, dbg_cpu_list[cpu])->get64();
       sprintf(param_name, "SSE.xmm%02d_0", i);
-      Bit64u lo = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+      Bit64u lo = SIM->get_param_num(param_name, dbg_cpu_list[cpu])->get64();
       dbg_printf("XMM[%02u]: %08x_%08x_%08x_%08x\n", i,
          GET32H(hi), GET32L(hi), GET32H(lo), GET32L(lo));
     }
@@ -838,17 +857,22 @@ void bx_dbg_print_sse_state(void)
   }
 }
 
-void bx_dbg_print_avx_state(unsigned vlen)
+void bx_dbg_print_sse_state(void)
+{
+  bx_dbg_print_sse_state(dbg_cpu);
+}
+
+void bx_dbg_print_avx_state(unsigned cpu, unsigned vlen)
 {
 #if BX_SUPPORT_AVX
   char param_name[20];
 
-  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_AVX)) {
+  if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_AVX)) {
     bx_dbg_print_mxcsr_state();
 
     unsigned num_regs = 16;
 #if BX_SUPPORT_EVEX
-    if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_AVX512))
+    if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_AVX512))
       num_regs = BX_XMM_REGISTERS;
     else
       vlen = BX_VL256;
@@ -858,9 +882,9 @@ void bx_dbg_print_avx_state(unsigned vlen)
       dbg_printf("VMM[%02u]: ", i);
       for (int j=vlen-1;j >= 0; j--) {
         sprintf(param_name, "SSE.xmm%02u_%d", i, j*2+1);
-        Bit64u hi = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+        Bit64u hi = SIM->get_param_num(param_name, dbg_cpu_list[cpu])->get64();
         sprintf(param_name, "SSE.xmm%02u_%d", i, j*2);
-        Bit64u lo = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+        Bit64u lo = SIM->get_param_num(param_name, dbg_cpu_list[cpu])->get64();
         dbg_printf("%08x_%08x_%08x_%08x", GET32H(hi), GET32L(hi), GET32H(lo), GET32L(lo));
         if (j!=0) dbg_printf("_");
       }
@@ -874,29 +898,34 @@ void bx_dbg_print_avx_state(unsigned vlen)
   }
 
 #if BX_SUPPORT_EVEX
-  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_AVX512)) {
+  if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_AVX512)) {
     for(unsigned i=0;i<8;i++) {
       sprintf(param_name, "OPMASK.k%u", i);
-      Bit64u opmask = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+      Bit64u opmask = SIM->get_param_num(param_name, dbg_cpu_list[cpu])->get64();
       dbg_printf("K%d: %08x_%08x\n", i, GET32H(opmask), GET32L(opmask));
     }
   }
 #endif
 }
 
-void bx_dbg_print_amx_state(void)
+void bx_dbg_print_avx_state(unsigned vlen)
+{
+  bx_dbg_print_avx_state(dbg_cpu, vlen);
+}
+
+void bx_dbg_print_amx_state(unsigned cpu)
 {
 #if BX_SUPPORT_AMX
-  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_AMX)) {
+  if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_AMX)) {
     char param_name[20];
-    unsigned palette_id = SIM->get_param_num("AMX.palette", dbg_cpu_list)->get();
-    unsigned start_row = SIM->get_param_num("AMX.start_row", dbg_cpu_list)->get();
+    unsigned palette_id = SIM->get_param_num("AMX.palette", dbg_cpu_list[cpu])->get();
+    unsigned start_row = SIM->get_param_num("AMX.start_row", dbg_cpu_list[cpu])->get();
     dbg_printf("TILECFG palette=%d, start_row=%d\n", palette_id, start_row);
     for(unsigned i=0;i<8;i++) {
       sprintf(param_name, "AMX.tile%d_rows", i);
-      unsigned rows = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+      unsigned rows = SIM->get_param_num(param_name, dbg_cpu_list[cpu])->get64();
       sprintf(param_name, "AMX.tile%d_colsb", i);
-      unsigned cols = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+      unsigned cols = SIM->get_param_num(param_name, dbg_cpu_list[cpu])->get64();
       dbg_printf("TILECFG[%d]: %2d x %2d\n", i, rows, cols);
     }
     dbg_printf("use \"tile <tile_number>\" command to print tile content\n");
@@ -908,24 +937,29 @@ void bx_dbg_print_amx_state(void)
   }
 }
 
-void bx_dbg_print_amx_tile_command(int tile)
+void bx_dbg_print_amx_state(void)
+{
+  bx_dbg_print_amx_state(dbg_cpu);
+}
+
+void bx_dbg_print_amx_tile_command(unsigned cpu, int tile)
 {
 #if BX_SUPPORT_AMX
-  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_AMX)) {
+  if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_AMX)) {
     if (tile < 8) {
       char param_name[30];
       sprintf(param_name, "AMX.tile%d_rows", tile);
-      unsigned rows = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+      unsigned rows = SIM->get_param_num(param_name, dbg_cpu_list[cpu])->get64();
       sprintf(param_name, "AMX.tile%d_colsb", tile);
-      unsigned cols = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+      unsigned cols = SIM->get_param_num(param_name, dbg_cpu_list[cpu])->get64();
       dbg_printf("TILE[%d]: %2d x %2d\n", tile, rows, cols);
       for (int row=0;row<16;row++) {
         dbg_printf("row[%02d]: ", row);
         for (int j=BX_VL512-1;j >= 0; j--) {
           sprintf(param_name, "AMX.tile%d_row%d_%d", tile, row, j*2+1);
-          Bit64u hi = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+          Bit64u hi = SIM->get_param_num(param_name, dbg_cpu_list[cpu])->get64();
           sprintf(param_name, "AMX.tile%d_row%d_%d", tile, row, j*2);
-          Bit64u lo = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+          Bit64u lo = SIM->get_param_num(param_name, dbg_cpu_list[cpu])->get64();
           dbg_printf("%08x_%08x_%08x_%08x", GET32H(hi), GET32L(hi), GET32H(lo), GET32L(lo));
           if (j!=0) dbg_printf("_");
         }
@@ -943,14 +977,19 @@ void bx_dbg_print_amx_tile_command(int tile)
   }
 }
 
-void bx_dbg_print_mmx_state(void)
+void bx_dbg_print_amx_tile_command(int tile)
+{
+  bx_dbg_print_amx_tile_command(dbg_cpu, tile);
+}
+
+void bx_dbg_print_mmx_state(unsigned cpu)
 {
 #if BX_CPU_LEVEL >= 5
-  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_MMX)) {
+  if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_MMX)) {
     char param_name[20];
     for(unsigned i=0;i<8;i++) {
       sprintf(param_name, "FPU.st%d.fraction", i);
-      Bit64u mmreg = SIM->get_param_num(param_name, dbg_cpu_list)->get64();
+      Bit64u mmreg = SIM->get_param_num(param_name, dbg_cpu_list[cpu])->get64();
       dbg_printf("MM[%d]: %08x_%08x\n", i, GET32H(mmreg), GET32L(mmreg));
     }
   }
@@ -961,7 +1000,12 @@ void bx_dbg_print_mmx_state(void)
   }
 }
 
-void bx_dbg_print_fpu_state(void)
+void bx_dbg_print_mmx_state(void)
+{
+  bx_dbg_print_mmx_state(dbg_cpu);
+}
+
+void bx_dbg_print_fpu_state(unsigned cpu)
 {
 #if BX_SUPPORT_FPU
   BX_CPU(dbg_cpu)->print_state_FPU();
@@ -970,36 +1014,46 @@ void bx_dbg_print_fpu_state(void)
 #endif
 }
 
-void bx_dbg_info_flags(void)
+void bx_dbg_print_fpu_state(void)
 {
-  dbg_printf("%s %s %s %s %s %s %s IOPL=%1u %s %s %s %s %s %s %s %s %s\n",
-    BX_CPU(dbg_cpu)->get_ID() ? "ID" : "id",
-    BX_CPU(dbg_cpu)->get_VIP() ? "VIP" : "vip",
-    BX_CPU(dbg_cpu)->get_VIF() ? "VIF" : "vif",
-    BX_CPU(dbg_cpu)->get_AC() ? "AC" : "ac",
-    BX_CPU(dbg_cpu)->get_VM() ? "VM" : "vm",
-    BX_CPU(dbg_cpu)->get_RF() ? "RF" : "rf",
-    BX_CPU(dbg_cpu)->get_NT() ? "NT" : "nt",
-    BX_CPU(dbg_cpu)->get_IOPL(),
-    BX_CPU(dbg_cpu)->get_OF() ? "OF" : "of",
-    BX_CPU(dbg_cpu)->get_DF() ? "DF" : "df",
-    BX_CPU(dbg_cpu)->get_IF() ? "IF" : "if",
-    BX_CPU(dbg_cpu)->get_TF() ? "TF" : "tf",
-    BX_CPU(dbg_cpu)->get_SF() ? "SF" : "sf",
-    BX_CPU(dbg_cpu)->get_ZF() ? "ZF" : "zf",
-    BX_CPU(dbg_cpu)->get_AF() ? "AF" : "af",
-    BX_CPU(dbg_cpu)->get_PF() ? "PF" : "pf",
-    BX_CPU(dbg_cpu)->get_CF() ? "CF" : "cf");
+  bx_dbg_print_fpu_state(dbg_cpu);
 }
 
-void bx_dbg_info_debug_regs_command(void)
+void bx_dbg_info_flags(unsigned cpu)
 {
-  bx_address dr0 = SIM->get_param_num("DR0", dbg_cpu_list)->get64();
-  bx_address dr1 = SIM->get_param_num("DR1", dbg_cpu_list)->get64();
-  bx_address dr2 = SIM->get_param_num("DR2", dbg_cpu_list)->get64();
-  bx_address dr3 = SIM->get_param_num("DR3", dbg_cpu_list)->get64();
-  Bit32u dr6 = SIM->get_param_num("DR6", dbg_cpu_list)->get();
-  Bit32u dr7 = SIM->get_param_num("DR7", dbg_cpu_list)->get();
+  dbg_printf("%s %s %s %s %s %s %s IOPL=%1u %s %s %s %s %s %s %s %s %s\n",
+    BX_CPU(cpu)->get_ID() ? "ID" : "id",
+    BX_CPU(cpu)->get_VIP() ? "VIP" : "vip",
+    BX_CPU(cpu)->get_VIF() ? "VIF" : "vif",
+    BX_CPU(cpu)->get_AC() ? "AC" : "ac",
+    BX_CPU(cpu)->get_VM() ? "VM" : "vm",
+    BX_CPU(cpu)->get_RF() ? "RF" : "rf",
+    BX_CPU(cpu)->get_NT() ? "NT" : "nt",
+    BX_CPU(cpu)->get_IOPL(),
+    BX_CPU(cpu)->get_OF() ? "OF" : "of",
+    BX_CPU(cpu)->get_DF() ? "DF" : "df",
+    BX_CPU(cpu)->get_IF() ? "IF" : "if",
+    BX_CPU(cpu)->get_TF() ? "TF" : "tf",
+    BX_CPU(cpu)->get_SF() ? "SF" : "sf",
+    BX_CPU(cpu)->get_ZF() ? "ZF" : "zf",
+    BX_CPU(cpu)->get_AF() ? "AF" : "af",
+    BX_CPU(cpu)->get_PF() ? "PF" : "pf",
+    BX_CPU(cpu)->get_CF() ? "CF" : "cf");
+}
+
+void bx_dbg_info_flags()
+{
+  bx_dbg_info_flags(dbg_cpu);
+}
+
+void bx_dbg_info_debug_regs_command(unsigned cpu)
+{
+  bx_address dr0 = SIM->get_param_num("DR0", dbg_cpu_list[cpu])->get64();
+  bx_address dr1 = SIM->get_param_num("DR1", dbg_cpu_list[cpu])->get64();
+  bx_address dr2 = SIM->get_param_num("DR2", dbg_cpu_list[cpu])->get64();
+  bx_address dr3 = SIM->get_param_num("DR3", dbg_cpu_list[cpu])->get64();
+  Bit32u dr6 = SIM->get_param_num("DR6", dbg_cpu_list[cpu])->get();
+  Bit32u dr7 = SIM->get_param_num("DR7", dbg_cpu_list[cpu])->get();
 
   dbg_printf("DR0=0x" FMT_ADDRX "\n", dr0);
   dbg_printf("DR1=0x" FMT_ADDRX "\n", dr1);
@@ -1036,11 +1090,16 @@ void bx_dbg_info_debug_regs_command(void)
       (dr7 & (1<<0)) ? "L0" : "l0");
 }
 
-void bx_dbg_info_control_regs_command(void)
+void bx_dbg_info_debug_regs_command(void)
 {
-  Bit32u cr0 = SIM->get_param_num("CR0", dbg_cpu_list)->get();
-  bx_address cr2 = (bx_address) SIM->get_param_num("CR2", dbg_cpu_list)->get64();
-  bx_phy_address cr3 = (bx_phy_address) SIM->get_param_num("CR3", dbg_cpu_list)->get64();
+  bx_dbg_info_debug_regs_command(dbg_cpu);
+}
+
+void bx_dbg_info_control_regs_command(unsigned cpu)
+{
+  Bit32u cr0 = SIM->get_param_num("CR0", dbg_cpu_list[cpu])->get();
+  bx_address cr2 = (bx_address) SIM->get_param_num("CR2", dbg_cpu_list[cpu])->get64();
+  bx_phy_address cr3 = (bx_phy_address) SIM->get_param_num("CR3", dbg_cpu_list[cpu])->get64();
   dbg_printf("CR0=0x%08x: %s %s %s %s %s %s %s %s %s %s %s\n", cr0,
     (cr0 & (1<<31)) ? "PG" : "pg",
     (cr0 & (1<<30)) ? "CD" : "cd",
@@ -1058,7 +1117,7 @@ void bx_dbg_info_control_regs_command(void)
   dbg_printf("    PCD=page-level cache disable=%d\n", (cr3>>4) & 1);
   dbg_printf("    PWT=page-level write-through=%d\n", (cr3>>3) & 1);
 #if BX_CPU_LEVEL >= 5
-  Bit32u cr4 = SIM->get_param_num("CR4", dbg_cpu_list)->get();
+  Bit32u cr4 = SIM->get_param_num("CR4", dbg_cpu_list[cpu])->get();
   dbg_printf("CR4=0x%08x: %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n", cr4,
     (cr4 & (1<<27)) ? "LASS" : "lass",
     (cr4 & (1<<25)) ? "UINTR" : "uintr",
@@ -1087,11 +1146,11 @@ void bx_dbg_info_control_regs_command(void)
     (cr4 & (1<<1))  ? "PVI" : "pvi",
     (cr4 & (1<<0))  ? "VME" : "vme");
 #if BX_SUPPORT_X86_64
-  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_LONG_MODE)) {
-    dbg_printf("CR8: 0x%x\n", BX_CPU(dbg_cpu)->get_cr8());
+  if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_LONG_MODE)) {
+    dbg_printf("CR8: 0x%x\n", BX_CPU(cpu)->get_cr8());
   }
 #endif
-  Bit32u efer = SIM->get_param_num("MSR.EFER", dbg_cpu_list)->get();
+  Bit32u efer = SIM->get_param_num("MSR.EFER", dbg_cpu_list[cpu])->get();
   dbg_printf("EFER=0x%08x: %s %s %s %s %s\n", efer,
     (efer & (1<<14)) ? "FFXSR" : "ffxsr",
     (efer & (1<<11)) ? "NXE" : "nxe",
@@ -1100,8 +1159,8 @@ void bx_dbg_info_control_regs_command(void)
     (efer & (1<<0))  ? "SCE" : "sce");
 #endif
 #if BX_CPU_LEVEL >= 6
-  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_XSAVE)) {
-    Bit32u xcr0 = SIM->get_param_num("XCR0", dbg_cpu_list)->get();
+  if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_XSAVE)) {
+    Bit32u xcr0 = SIM->get_param_num("XCR0", dbg_cpu_list[cpu])->get();
     dbg_printf("XCR0=0x%08x: %s %s %s %s %s %s %s %s %s %s %s %s\n", xcr0,
       (xcr0 & (1<<14)) ? "UINTR" : "uintr",
       (xcr0 & (1<<12)) ? "CET_S" : "cet_s",
@@ -1119,7 +1178,12 @@ void bx_dbg_info_control_regs_command(void)
 #endif
 }
 
-void bx_dbg_info_segment_regs_command(void)
+void bx_dbg_info_control_regs_command()
+{
+  bx_dbg_info_control_regs_command(dbg_cpu);
+}
+
+void bx_dbg_info_segment_regs_command(unsigned cpu)
 {
   static const char *segname[] = { "es", "cs", "ss", "ds", "fs", "gs" };
 
@@ -1127,7 +1191,7 @@ void bx_dbg_info_segment_regs_command(void)
   bx_dbg_global_sreg_t global_sreg;
 
   for(int s=0;s<6;s++) {
-    BX_CPU(dbg_cpu)->dbg_get_sreg(&sreg, s);
+    BX_CPU(cpu)->dbg_get_sreg(&sreg, s);
     dbg_printf("%s:0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n", segname[s],
        (unsigned) sreg.sel, (unsigned) sreg.des_h,
        (unsigned) sreg.des_l, (unsigned) sreg.valid);
@@ -1137,130 +1201,140 @@ void bx_dbg_info_segment_regs_command(void)
     }
   }
 
-  BX_CPU(dbg_cpu)->dbg_get_ldtr(&sreg);
+  BX_CPU(cpu)->dbg_get_ldtr(&sreg);
   dbg_printf("ldtr:0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
       (unsigned) sreg.sel, (unsigned) sreg.des_h,
       (unsigned) sreg.des_l, (unsigned) sreg.valid);
 
-  BX_CPU(dbg_cpu)->dbg_get_tr(&sreg);
+  BX_CPU(cpu)->dbg_get_tr(&sreg);
   dbg_printf("tr:0x%04x, dh=0x%08x, dl=0x%08x, valid=%u\n",
       (unsigned) sreg.sel, (unsigned) sreg.des_h,
       (unsigned) sreg.des_l, (unsigned) sreg.valid);
 
-  BX_CPU(dbg_cpu)->dbg_get_gdtr(&global_sreg);
+  BX_CPU(cpu)->dbg_get_gdtr(&global_sreg);
   dbg_printf("gdtr:base=0x" FMT_ADDRX ", limit=0x%x\n",
       global_sreg.base, (unsigned) global_sreg.limit);
 
-  BX_CPU(dbg_cpu)->dbg_get_idtr(&global_sreg);
+  BX_CPU(cpu)->dbg_get_idtr(&global_sreg);
   dbg_printf("idtr:base=0x" FMT_ADDRX ", limit=0x%x\n",
       global_sreg.base, (unsigned) global_sreg.limit);
 }
 
-void bx_dbg_info_registers_command(int which_regs_mask)
+void bx_dbg_info_segment_regs_command(void)
+{
+  bx_dbg_info_segment_regs_command(dbg_cpu);
+}
+
+void bx_dbg_info_registers_command(unsigned cpu, int which_regs_mask)
 {
   bx_address reg;
 
   if (which_regs_mask & BX_INFO_GENERAL_PURPOSE_REGS) {
 #if BX_SUPPORT_SMP
-    dbg_printf("CPU%d:\n", BX_CPU(dbg_cpu)->bx_cpuid);
+    dbg_printf("CPU%d:\n", BX_CPU(cpu)->bx_cpuid);
 #endif
 #if BX_SUPPORT_X86_64 == 0
-    reg = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EAX);
+    reg = BX_CPU(cpu)->get_reg32(BX_32BIT_REG_EAX);
     dbg_printf("eax: 0x%08x %d\n", (unsigned) reg, (int) reg);
-    reg = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EBX);
+    reg = BX_CPU(cpu)->get_reg32(BX_32BIT_REG_EBX);
     dbg_printf("ebx: 0x%08x %d\n", (unsigned) reg, (int) reg);
-    reg = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_ECX);
+    reg = BX_CPU(cpu)->get_reg32(BX_32BIT_REG_ECX);
     dbg_printf("ecx: 0x%08x %d\n", (unsigned) reg, (int) reg);
-    reg = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EDX);
+    reg = BX_CPU(cpu)->get_reg32(BX_32BIT_REG_EDX);
     dbg_printf("edx: 0x%08x %d\n", (unsigned) reg, (int) reg);
-    reg = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_ESP);
+    reg = BX_CPU(cpu)->get_reg32(BX_32BIT_REG_ESP);
     dbg_printf("esp: 0x%08x %d\n", (unsigned) reg, (int) reg);
-    reg = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EBP);
+    reg = BX_CPU(cpu)->get_reg32(BX_32BIT_REG_EBP);
     dbg_printf("ebp: 0x%08x %d\n", (unsigned) reg, (int) reg);
-    reg = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_ESI);
+    reg = BX_CPU(cpu)->get_reg32(BX_32BIT_REG_ESI);
     dbg_printf("esi: 0x%08x %d\n", (unsigned) reg, (int) reg);
-    reg = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EDI);
+    reg = BX_CPU(cpu)->get_reg32(BX_32BIT_REG_EDI);
     dbg_printf("edi: 0x%08x %d\n", (unsigned) reg, (int) reg);
     reg = bx_dbg_get_eip();
     dbg_printf("eip: 0x%08x\n", (unsigned) reg);
 #else
-    reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RAX);
+    reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_RAX);
     dbg_printf("rax: %08x_%08x\n", GET32H(reg), GET32L(reg));
-    reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RBX);
+    reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_RBX);
     dbg_printf("rbx: %08x_%08x\n", GET32H(reg), GET32L(reg));
-    reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RCX);
+    reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_RCX);
     dbg_printf("rcx: %08x_%08x\n", GET32H(reg), GET32L(reg));
-    reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RDX);
+    reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_RDX);
     dbg_printf("rdx: %08x_%08x\n", GET32H(reg), GET32L(reg));
-    reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RSP);
+    reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_RSP);
     dbg_printf("rsp: %08x_%08x\n", GET32H(reg), GET32L(reg));
-    reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RBP);
+    reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_RBP);
     dbg_printf("rbp: %08x_%08x\n", GET32H(reg), GET32L(reg));
-    reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RSI);
+    reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_RSI);
     dbg_printf("rsi: %08x_%08x\n", GET32H(reg), GET32L(reg));
-    reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RDI);
+    reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_RDI);
     dbg_printf("rdi: %08x_%08x\n", GET32H(reg), GET32L(reg));
-    reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_R8);
+    reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_R8);
     dbg_printf("r8 : %08x_%08x\n", GET32H(reg), GET32L(reg));
-    reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_R9);
+    reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_R9);
     dbg_printf("r9 : %08x_%08x\n", GET32H(reg), GET32L(reg));
-    reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_R10);
+    reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_R10);
     dbg_printf("r10: %08x_%08x\n", GET32H(reg), GET32L(reg));
-    reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_R11);
+    reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_R11);
     dbg_printf("r11: %08x_%08x\n", GET32H(reg), GET32L(reg));
-    reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_R12);
+    reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_R12);
     dbg_printf("r12: %08x_%08x\n", GET32H(reg), GET32L(reg));
-    reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_R13);
+    reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_R13);
     dbg_printf("r13: %08x_%08x\n", GET32H(reg), GET32L(reg));
-    reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_R14);
+    reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_R14);
     dbg_printf("r14: %08x_%08x\n", GET32H(reg), GET32L(reg));
-    reg = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_R15);
+    reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_R15);
     dbg_printf("r15: %08x_%08x\n", GET32H(reg), GET32L(reg));
     reg = bx_dbg_get_rip();
     dbg_printf("rip: %08x_%08x\n", GET32H(reg), GET32L(reg));
 #if BX_SUPPORT_CET
-    if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_CET)) {
-      reg = BX_CPU(dbg_cpu)->get_ssp();
+    if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_CET)) {
+      reg = BX_CPU(cpu)->get_ssp();
       dbg_printf("ssp: %08x_%08x\n", GET32H(reg), GET32L(reg));
     }
 #endif
 #endif
-    reg = BX_CPU(dbg_cpu)->read_eflags();
-    dbg_printf("eflags 0x%08x: ", (unsigned) reg);
-    bx_dbg_info_flags();
+    reg = BX_CPU(cpu)->read_eflags();
+    dbg_printf("eflags: 0x%08x: ", (unsigned) reg);
+    bx_dbg_info_flags(cpu);
   }
 
   if (which_regs_mask & BX_INFO_FPU_REGS) {
-    bx_dbg_print_fpu_state();
+    bx_dbg_print_fpu_state(cpu);
   }
 
   if (which_regs_mask & BX_INFO_MMX_REGS) {
-    bx_dbg_print_mmx_state();
+    bx_dbg_print_mmx_state(cpu);
   }
 
 #if BX_SUPPORT_EVEX
   if (which_regs_mask & BX_INFO_ZMM_REGS) {
-    bx_dbg_print_avx_state(BX_VL512);
+    bx_dbg_print_avx_state(cpu, BX_VL512);
   }
   else
 #endif
   {
 #if BX_SUPPORT_AVX
     if (which_regs_mask & BX_INFO_YMM_REGS) {
-      bx_dbg_print_avx_state(BX_VL256);
+      bx_dbg_print_avx_state(cpu, BX_VL256);
     }
     else
 #endif
     {
       if (which_regs_mask & BX_INFO_SSE_REGS) {
-        bx_dbg_print_sse_state();
+        bx_dbg_print_sse_state(cpu);
       }
     }
   }
 
   if (which_regs_mask & BX_INFO_AMX_REGS) {
-    bx_dbg_print_amx_state();
+    bx_dbg_print_amx_state(cpu);
   }
+}
+
+void bx_dbg_info_registers_command(int which_regs_mask)
+{
+  bx_dbg_info_registers_command(dbg_cpu, which_regs_mask);
 }
 
 //
@@ -1476,16 +1550,18 @@ next_page:
 // return eip at ebp + 4
 void bx_dbg_where_command()
 {
-  if (!BX_CPU(dbg_cpu)->protected_mode()) {
+  BX_CPU_C *cpu = BX_CPU(dbg_cpu);
+
+  if (!cpu->protected_mode()) {
     dbg_printf("'where' only supported in protected mode\n");
     return;
   }
-  if (BX_CPU(dbg_cpu)->get_segment_base(BX_SEG_REG_SS) != 0) {
+  if (cpu->get_segment_base(BX_SEG_REG_SS) != 0) {
     dbg_printf("non-zero stack base\n");
     return;
   }
-  Bit32u bp = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EBP);
-  bx_address ip = BX_CPU(dbg_cpu)->get_instruction_pointer();
+  Bit32u bp = cpu->get_reg32(BX_32BIT_REG_EBP);
+  bx_address ip = cpu->get_instruction_pointer();
   dbg_printf("(%d) 0x%08x\n", dbg_cpu, ip);
   for (int i = 1; i < 50; i++) {
     // Up
@@ -1493,9 +1569,9 @@ void bx_dbg_where_command()
     Bit8u buf[4];
 
     // bp = [bp];
-    bool paddr_valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(bp, &paddr);
+    bool paddr_valid = cpu->dbg_xlate_linear2phy(bp, &paddr);
     if (paddr_valid) {
-      if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), paddr, 4, buf)) {
+      if (BX_MEM(0)->dbg_fetch_mem(cpu, paddr, 4, buf)) {
         bp = conv_4xBit8u_to_Bit32u(buf);
       } else {
         dbg_printf("(%d) Physical memory read error (BP)\n", i);
@@ -1507,9 +1583,9 @@ void bx_dbg_where_command()
     }
 
     // ip = [bp + 4];
-    paddr_valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(bp + 4, &paddr);
+    paddr_valid = cpu->dbg_xlate_linear2phy(bp + 4, &paddr);
     if (paddr_valid) {
-      if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), paddr, 4, buf)) {
+      if (BX_MEM(0)->dbg_fetch_mem(cpu, paddr, 4, buf)) {
         ip = conv_4xBit8u_to_Bit32u(buf);
       } else {
         dbg_printf("(%d) Physical memory read error (IP)\n", i);
@@ -1573,13 +1649,15 @@ void bx_dbg_xlate_address(bx_lin_address laddr)
 
 void bx_dbg_tlb_lookup(bx_lin_address laddr)
 {
+  BX_CPU_C *cpu = BX_CPU(dbg_cpu);
+
   char cpu_param_name[16];
 
-  Bit32u index = BX_CPU(dbg_cpu)->ITLB.get_index_of(laddr);
+  Bit32u index = cpu->ITLB.get_index_of(laddr);
   sprintf(cpu_param_name, "ITLB.entry%d", index);
   bx_dbg_show_param_command(cpu_param_name, 0);
 
-  index = BX_CPU(dbg_cpu)->DTLB.get_index_of(laddr);
+  index = cpu->DTLB.get_index_of(laddr);
   sprintf(cpu_param_name, "DTLB.entry%d", index);
   bx_dbg_show_param_command(cpu_param_name, 0);
 }
@@ -1696,7 +1774,7 @@ void bx_dbg_show_param_command(const char *param, bool xml)
     print_tree(node, 0, xml);
   }
   else {
-    node = SIM->get_param(param, dbg_cpu_list);
+    node = SIM->get_param(param, dbg_cpu_list[dbg_cpu]);
     if (node)
       print_tree(node, 0, xml);
     else
@@ -1710,47 +1788,46 @@ void bx_dbg_show_symbolic(void)
   static unsigned last_cpu_mode = 0;
   static bx_address last_cr3 = 0;
 
+  BX_CPU_C *cpu = BX_CPU(dbg_cpu);
+
   /* modes & address spaces */
   if (dbg_show_mask & BX_DBG_SHOW_MODE) {
-    if(BX_CPU(dbg_cpu)->get_cpu_mode() != last_cpu_mode) {
+    if(cpu->get_cpu_mode() != last_cpu_mode) {
       dbg_printf (FMT_TICK ": switched from '%s' to '%s'\n",
         bx_pc_system.time_ticks(),
         cpu_mode_string(last_cpu_mode),
-        cpu_mode_string(BX_CPU(dbg_cpu)->get_cpu_mode()));
+        cpu_mode_string(cpu->get_cpu_mode()));
     }
 
-    if(last_cr3 != BX_CPU(dbg_cpu)->cr3)
+    if(last_cr3 != cpu->cr3)
       dbg_printf(FMT_TICK ": address space switched. CR3: 0x" FMT_PHY_ADDRX "\n",
-        bx_pc_system.time_ticks(), BX_CPU(dbg_cpu)->cr3);
+        bx_pc_system.time_ticks(), cpu->cr3);
   }
 
   /* interrupts */
   if (dbg_show_mask & BX_DBG_SHOW_SOFTINT) {
-    if(BX_CPU(dbg_cpu)->show_flag & Flag_softint) {
+    if(cpu->show_flag & Flag_softint) {
       dbg_printf(FMT_TICK ": softint ", bx_pc_system.time_ticks());
-      dbg_print_guard_found(BX_CPU(dbg_cpu)->get_cpu_mode(),
-        BX_CPU(dbg_cpu)->guard_found.cs, BX_CPU(dbg_cpu)->guard_found.eip,
-        BX_CPU(dbg_cpu)->guard_found.laddr);
+      dbg_print_guard_found(cpu->get_cpu_mode(),
+        cpu->guard_found.cs, cpu->guard_found.eip, cpu->guard_found.laddr);
       dbg_printf("\n");
     }
   }
 
   if (dbg_show_mask & BX_DBG_SHOW_EXTINT) {
-    if((BX_CPU(dbg_cpu)->show_flag & Flag_intsig) && !(BX_CPU(dbg_cpu)->show_flag & Flag_softint)) {
+    if((cpu->show_flag & Flag_intsig) && !(cpu->show_flag & Flag_softint)) {
       dbg_printf(FMT_TICK ": exception (not softint) ", bx_pc_system.time_ticks());
-      dbg_print_guard_found(BX_CPU(dbg_cpu)->get_cpu_mode(),
-        BX_CPU(dbg_cpu)->guard_found.cs, BX_CPU(dbg_cpu)->guard_found.eip,
-        BX_CPU(dbg_cpu)->guard_found.laddr);
+      dbg_print_guard_found(cpu->get_cpu_mode(),
+        cpu->guard_found.cs, cpu->guard_found.eip, cpu->guard_found.laddr);
       dbg_printf("\n");
     }
   }
 
   if (dbg_show_mask & BX_DBG_SHOW_IRET) {
-    if(BX_CPU(dbg_cpu)->show_flag & Flag_iret) {
+    if(cpu->show_flag & Flag_iret) {
       dbg_printf(FMT_TICK ": iret ", bx_pc_system.time_ticks());
-      dbg_print_guard_found(BX_CPU(dbg_cpu)->get_cpu_mode(),
-        BX_CPU(dbg_cpu)->guard_found.cs, BX_CPU(dbg_cpu)->guard_found.eip,
-        BX_CPU(dbg_cpu)->guard_found.laddr);
+      dbg_print_guard_found(cpu->get_cpu_mode(),
+        cpu->guard_found.cs, cpu->guard_found.eip, cpu->guard_found.laddr);
       dbg_printf("\n");
     }
   }
@@ -1758,27 +1835,26 @@ void bx_dbg_show_symbolic(void)
   /* calls */
   if (dbg_show_mask & BX_DBG_SHOW_CALLRET)
   {
-    if(BX_CPU(dbg_cpu)->show_flag & Flag_call) {
+    if(cpu->show_flag & Flag_call) {
       bx_phy_address phy = 0;
-      bool valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(BX_CPU(dbg_cpu)->guard_found.laddr, &phy);
+      bool valid = cpu->dbg_xlate_linear2phy(cpu->guard_found.laddr, &phy);
       dbg_printf(FMT_TICK ": call ", bx_pc_system.time_ticks());
-      dbg_print_guard_found(BX_CPU(dbg_cpu)->get_cpu_mode(),
-        BX_CPU(dbg_cpu)->guard_found.cs, BX_CPU(dbg_cpu)->guard_found.eip,
-        BX_CPU(dbg_cpu)->guard_found.laddr);
+      dbg_print_guard_found(cpu->get_cpu_mode(),
+        cpu->guard_found.cs, cpu->guard_found.eip, cpu->guard_found.laddr);
       if (!valid) dbg_printf(" phys not valid");
       else {
         dbg_printf(" (phy: 0x" FMT_PHY_ADDRX ") %s", phy,
-          bx_dbg_symbolic_address(BX_CPU(dbg_cpu)->cr3 >> 12,
-              BX_CPU(dbg_cpu)->guard_found.eip,
-              BX_CPU(dbg_cpu)->guard_found.laddr - BX_CPU(dbg_cpu)->guard_found.eip));
+          bx_dbg_symbolic_address(cpu->cr3 >> 12,
+              cpu->guard_found.eip,
+              cpu->guard_found.laddr - cpu->guard_found.eip));
       }
       dbg_printf("\n");
     }
   }
 
-  last_cr3 = BX_CPU(dbg_cpu)->cr3;
-  last_cpu_mode = BX_CPU(dbg_cpu)->get_cpu_mode();
-  BX_CPU(dbg_cpu)->show_flag = 0;
+  last_cr3 = cpu->cr3;
+  last_cpu_mode = cpu->get_cpu_mode();
+  cpu->show_flag = 0;
 }
 
 bx_address bx_dbg_deref(bx_address addr, unsigned deep, unsigned* error_deep, bx_address* last_data_found)
@@ -1810,12 +1886,10 @@ bx_address bx_dbg_deref(bx_address addr, unsigned deep, unsigned* error_deep, bx
   else
 #endif
   {
-    if (BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+    if (BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b)
       len = 4;
-    }
-    else {
+    else
       len = 2;
-    }
   }
 
   Bit8u buf[8];
@@ -1860,24 +1934,26 @@ void bx_dbg_print_stack_command(unsigned nwords)
   bx_address linear_sp;
   unsigned len;
 
+  BX_CPU_C *cpu = BX_CPU(dbg_cpu);
+
 #if BX_SUPPORT_X86_64
-  if (BX_CPU(dbg_cpu)->get_cpu_mode() == BX_MODE_LONG_64) {
-    linear_sp = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RSP);
+  if (cpu->get_cpu_mode() == BX_MODE_LONG_64) {
+    linear_sp = cpu->get_reg64(BX_64BIT_REG_RSP);
     len = 8;
   }
   else
 #endif
   {
-    if (BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-      linear_sp = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_ESP);
+    if (cpu->sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+      linear_sp = cpu->get_reg32(BX_32BIT_REG_ESP);
       len = 4;
     }
     else {
-      linear_sp = BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_SP);
+      linear_sp = cpu->get_reg16(BX_16BIT_REG_SP);
       len = 2;
     }
 
-    linear_sp = BX_CPU(dbg_cpu)->get_laddr(BX_SEG_REG_SS, linear_sp);
+    linear_sp = cpu->get_laddr(BX_SEG_REG_SS, linear_sp);
   }
 
   Bit8u buf[8];
@@ -1925,11 +2001,13 @@ void bx_dbg_bt_command(unsigned dist)
   bx_address linear_sp;
   unsigned len;
 
+  BX_CPU_C *cpu = BX_CPU(dbg_cpu);
+
 #if BX_SUPPORT_X86_64
-  if (BX_CPU(dbg_cpu)->get_cpu_mode() == BX_MODE_LONG_64) {
-    linear_bp = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RBP);
-    linear_sp = BX_CPU(dbg_cpu)->get_reg64(BX_64BIT_REG_RSP);
-    bx_address rip = BX_CPU(dbg_cpu)->get_instruction_pointer();
+  if (cpu->get_cpu_mode() == BX_MODE_LONG_64) {
+    linear_bp = cpu->get_reg64(BX_64BIT_REG_RBP);
+    linear_sp = cpu->get_reg64(BX_64BIT_REG_RSP);
+    bx_address rip = cpu->get_instruction_pointer();
     const char *Sym=bx_dbg_disasm_symbolic_address(rip, 0);
     dbg_printf("%012" FMT_64 "x -> %012" FMT_64 "x (%s)\n",
       (Bit64u)linear_sp, (Bit64u)rip, Sym);
@@ -1937,18 +2015,18 @@ void bx_dbg_bt_command(unsigned dist)
   } else
 #endif
   {
-    if (BX_CPU(dbg_cpu)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
-      linear_bp = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_EBP);
-      linear_sp = BX_CPU(dbg_cpu)->get_reg32(BX_32BIT_REG_ESP);
-      bx_address eip = BX_CPU(dbg_cpu)->get_instruction_pointer();
+    if (cpu->sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
+      linear_bp = cpu->get_reg32(BX_32BIT_REG_EBP);
+      linear_sp = cpu->get_reg32(BX_32BIT_REG_ESP);
+      bx_address eip = cpu->get_instruction_pointer();
       const char *Sym=bx_dbg_disasm_symbolic_address(eip, 0);
       dbg_printf("%08x -> %08x (%s)\n",
         (Bit32u)linear_sp, (Bit32u)eip, Sym);
       len = 4;
     } else {
-      linear_bp = BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_BP);
-      linear_sp = BX_CPU(dbg_cpu)->get_reg16(BX_16BIT_REG_BP);
-      bx_address ip = BX_CPU(dbg_cpu)->get_instruction_pointer();
+      linear_bp = cpu->get_reg16(BX_16BIT_REG_BP);
+      linear_sp = cpu->get_reg16(BX_16BIT_REG_BP);
+      bx_address ip = cpu->get_instruction_pointer();
       const char *Sym=bx_dbg_disasm_symbolic_address(ip, 0);
       dbg_printf("%04x -> %04x (%s)\n",
         (Bit16u)linear_sp, (Bit16u)ip, Sym);
@@ -1962,7 +2040,7 @@ void bx_dbg_bt_command(unsigned dist)
 
   for (unsigned i = 0; i < dist; ++i) {
     // Read return address right above frame pointer
-    addr = BX_CPU(dbg_cpu)->get_laddr(BX_SEG_REG_SS, linear_bp);
+    addr = cpu->get_laddr(BX_SEG_REG_SS, linear_bp);
     if (!bx_dbg_read_linear(dbg_cpu, addr + len, len, buf))
       break;
 #if BX_SUPPORT_X86_64
@@ -2016,9 +2094,11 @@ void bx_dbg_print_watchpoints(void)
   Bit8u buf[2];
   unsigned i;
 
+  BX_CPU_C *cpu = BX_CPU(dbg_cpu);
+
   // print watch point info
   for (i = 0; i < num_read_watchpoints; i++) {
-    if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), read_watchpoint[i].addr, 2, buf))
+    if (BX_MEM(0)->dbg_fetch_mem(cpu, read_watchpoint[i].addr, 2, buf))
       dbg_printf("rd 0x" FMT_PHY_ADDRX " len=%d\t\t(%04x)\n",
           read_watchpoint[i].addr, read_watchpoint[i].len, (int)buf[0] | ((int)buf[1] << 8));
     else
@@ -2026,7 +2106,7 @@ void bx_dbg_print_watchpoints(void)
           read_watchpoint[i].addr, read_watchpoint[i].len);
   }
   for (i = 0; i < num_write_watchpoints; i++) {
-    if (BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), write_watchpoint[i].addr, 2, buf))
+    if (BX_MEM(0)->dbg_fetch_mem(cpu, write_watchpoint[i].addr, 2, buf))
       dbg_printf("wr 0x" FMT_PHY_ADDRX " len=%d\t\t(%04x)\n",
           write_watchpoint[i].addr, write_watchpoint[i].len, (int)buf[0] | ((int)buf[1] << 8));
     else
@@ -2375,7 +2455,7 @@ void bx_dbg_print_guard_results(void)
       i = BX_CPU(cpu)->guard_found.iaddr_index;
       dbg_printf("(%u) Breakpoint %u, in ", cpu,
             bx_guard.iaddr.vir[i].bpoint_id);
-      dbg_print_guard_found(BX_CPU(dbg_cpu)->get_cpu_mode(),
+      dbg_print_guard_found(BX_CPU(cpu)->get_cpu_mode(),
             BX_CPU(cpu)->guard_found.cs, BX_CPU(cpu)->guard_found.eip,
             BX_CPU(cpu)->guard_found.laddr);
       dbg_printf("\n");
@@ -3384,14 +3464,14 @@ void bx_dbg_info_lgdt_command(unsigned from, unsigned to, bool gdt)
   Bit32u limit = 0;
 
   if (gdt) {
-      bx_dbg_global_sreg_t gdtr;
-      BX_CPU(dbg_cpu)->dbg_get_gdtr(&gdtr);
-      base = gdtr.base;
-      limit = gdtr.limit;
+    bx_dbg_global_sreg_t gdtr;
+    BX_CPU(dbg_cpu)->dbg_get_gdtr(&gdtr);
+    base = gdtr.base;
+    limit = gdtr.limit;
   }
   else { // LDT
-      base = SIM->get_param_num("LDTR.base", dbg_cpu_list)->get64();
-      limit = SIM->get_param_num("LDTR.limit_scaled", dbg_cpu_list)->get();
+    base = SIM->get_param_num("LDTR.base", dbg_cpu_list[dbg_cpu])->get64();
+    limit = SIM->get_param_num("LDTR.limit_scaled", dbg_cpu_list[dbg_cpu])->get();
   }
 
   if (to == (unsigned) EMPTY_ARG) {
@@ -3817,12 +3897,14 @@ void bx_dbg_dump_table(void)
   bx_address lpf_mask = 0;
   bool valid;
 
-  if (! BX_CPU(dbg_cpu)->cr0.get_PG()) {
+  BX_CPU_C *cpu = BX_CPU(dbg_cpu);
+
+  if (! cpu->cr0.get_PG()) {
     dbg_printf("paging off\n");
     return;
   }
 
-  dbg_printf("cr3: 0x" FMT_PHY_ADDRX "\n", (bx_phy_address)BX_CPU(dbg_cpu)->cr3);
+  dbg_printf("cr3: 0x" FMT_PHY_ADDRX "\n", (bx_phy_address)cpu->cr3);
 
   lin = 0;
   phy = 0;
@@ -3830,7 +3912,7 @@ void bx_dbg_dump_table(void)
   start_lin = 1;
   start_phy = 2;
   while(1) {
-    valid = BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(lin, &phy, &lpf_mask);
+    valid = cpu->dbg_xlate_linear2phy(lin, &phy, &lpf_mask);
     if(valid) {
       if((lin - start_lin) != (phy - start_phy)) {
         if(start_lin != 1)
@@ -3848,7 +3930,7 @@ void bx_dbg_dump_table(void)
     }
 
     lin += lpf_mask;
-    if (!BX_CPU(dbg_cpu)->long64_mode() && lin >= BX_CONST64(0xfffff000)) break;
+    if (!cpu->long64_mode() && lin >= BX_CONST64(0xfffff000)) break;
     if (lin >= BX_CONST64(0x00007ffffffff000)) {
       if (lin < BX_CONST64(0xfffff00000000000))
         lin = BX_CONST64(0xfffff00000000000) - 1;
