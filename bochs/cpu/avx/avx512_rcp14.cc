@@ -8301,7 +8301,7 @@ float16 approximate_rcp14(float16 op, const float_status_t &status)
 
   // Compute the single precision 23-bit mantissa from the 10-bit half
   // precision mantissa by shifting it left.
-  Bit32u fraction32 = (fraction << 13);
+  Bit32u fraction32 = Bit32u(fraction) << 13;
 
   fraction32 = rcp14_table_lookup(fraction32, FLOAT16_EXP_BIAS, &exp);
 
