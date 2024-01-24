@@ -1004,9 +1004,12 @@ void bx_voodoo_1_2_c::after_restore_state(void)
 bool bx_voodoo_1_2_c::mem_read_handler(bx_phy_address addr, unsigned len,
                                        void *data, void *param)
 {
-  Bit32u *data_ptr = (Bit32u*)data;
+  Bit32u val = voodoo_r((addr>>2) & 0x3FFFFF);
+  if (len == 4)
+    *(Bit32u*)data = val;
+  else if (len == 1)
+    *(Bit8u*)data = val >> ((addr & 3) * 8);
 
-  *data_ptr = voodoo_r((addr>>2) & 0x3FFFFF);
   return 1;
 }
 
