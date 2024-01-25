@@ -1024,7 +1024,7 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
 void bx_banshee_c::mem_write_linear(Bit32u offset, Bit64u value, unsigned len)
 {
   Bit8u value8;
-  Bit32u start = v->banshee.io[io_vidDesktopStartAddr];
+  Bit32u start = v->banshee.io[io_vidDesktopStartAddr] & v->fbi.mask;
   Bit32u pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
   unsigned i, w, x, y;
 
@@ -1047,6 +1047,13 @@ void bx_banshee_c::mem_write_linear(Bit32u offset, Bit64u value, unsigned len)
     x = (offset % pitch) / (v->banshee.disp_bpp >> 3);
     y = offset / pitch;
     w = len / (v->banshee.disp_bpp >> 3);
+    if (v->banshee.half_mode) {
+      y <<= 1;
+    }
+    if (v->banshee.double_width) {
+      x <<= 1;
+      w <<= 1;
+    }
     if (w == 0) w = 1;
     theVoodooVga->redraw_area(x, y, w, 1);
   }
