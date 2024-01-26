@@ -1009,6 +1009,8 @@ bool bx_voodoo_1_2_c::mem_read_handler(bx_phy_address addr, unsigned len,
     *(Bit32u*)data = val;
   else if (len == 1)
     *(Bit8u*)data = val >> ((addr & 3) * 8);
+  else
+    BX_ERROR(("Voodoo mem_read_handler: unknown len=%d", len));
 
   return 1;
 }
