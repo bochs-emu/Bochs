@@ -501,6 +501,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFCMULCSH_MASK_VshHphWshR(bxInstruction_c 
 
   BxPackedXmmRegister *op1 = &BX_READ_XMM_REG(i->src1()), *op2 = &BX_READ_XMM_REG(i->src2()), dst = BX_READ_XMM_REG(i->src1());
 
+  dst.xmm32u(0) = BX_READ_XMM_REG_LO_DWORD(i->dst());
+
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
   status.float_exception_masks = float_all_exceptions_mask;
@@ -571,6 +573,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFCMADDCSH_MASK_VshHphWshR(bxInstruction_c
   }
 
   BxPackedXmmRegister *op1 = &BX_READ_XMM_REG(i->src1()), *op2 = &BX_READ_XMM_REG(i->src2()), dst = BX_READ_XMM_REG(i->src1());
+
+  dst.xmm32u(0) = BX_READ_XMM_REG_LO_DWORD(i->dst());
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
