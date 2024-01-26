@@ -602,12 +602,12 @@ BX_CPP_INLINE void xmm_fmaddsubps_mask(BxPackedXmmRegister *op1, const BxPackedX
 {
   for (unsigned n=0; n < 4; n+=2, mask >>= 2) {
     if (mask & 0x1)
-      op1->xmm32u(n) = float32_muladd(op1->xmm32u(0), op2->xmm32u(0), op3->xmm32u(0), float_muladd_negate_c, status);
+      op1->xmm32u(n) = float32_muladd(op1->xmm32u(n), op2->xmm32u(n), op3->xmm32u(n), float_muladd_negate_c, status);
     else
       op1->xmm32u(n) = 0;
 
     if (mask & 0x2)
-      op1->xmm32u(n+1) = float32_muladd(op1->xmm32u(0), op2->xmm32u(0), op3->xmm32u(0), 0, status);
+      op1->xmm32u(n+1) = float32_muladd(op1->xmm32u(n+1), op2->xmm32u(n+1), op3->xmm32u(n+1), 0, status);
     else
       op1->xmm32u(n+1) = 0;
   }
@@ -635,8 +635,8 @@ BX_CPP_INLINE void xmm_fmaddsubpd_mask(BxPackedXmmRegister *op1, const BxPackedX
 BX_CPP_INLINE void xmm_fmaddsubph(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, const BxPackedXmmRegister *op3, float_status_t &status)
 {
   for (unsigned n=0;n<8;n+=2) {
-    op1->xmm16u(n)   = float16_muladd(op1->xmm16u(n), op2->xmm16u(n), op3->xmm16u(n), float_muladd_negate_c, status);
-    op1->xmm16u(n+1) = float16_muladd(op1->xmm16u(n), op2->xmm16u(n), op3->xmm16u(n), 0, status);
+    op1->xmm16u(n)   = float16_muladd(op1->xmm16u(n),   op2->xmm16u(n),   op3->xmm16u(n),   float_muladd_negate_c, status);
+    op1->xmm16u(n+1) = float16_muladd(op1->xmm16u(n+1), op2->xmm16u(n+1), op3->xmm16u(n+1), 0, status);
   }
 }
 
@@ -649,7 +649,7 @@ BX_CPP_INLINE void xmm_fmaddsubph_mask(BxPackedXmmRegister *op1, const BxPackedX
       op1->xmm16u(n) = 0;
 
     if (mask & 0x2)
-      op1->xmm16u(n+1) = float16_muladd(op1->xmm16u(n), op2->xmm16u(n), op3->xmm16u(n), 0, status);
+      op1->xmm16u(n+1) = float16_muladd(op1->xmm16u(n+1), op2->xmm16u(n+1), op3->xmm16u(n+1), 0, status);
     else
       op1->xmm16u(n+1) = 0;
   }
@@ -667,12 +667,12 @@ BX_CPP_INLINE void xmm_fmsubaddps_mask(BxPackedXmmRegister *op1, const BxPackedX
 {
   for (unsigned n=0; n < 4; n+=2, mask >>= 2) {
     if (mask & 0x1)
-      op1->xmm32u(n) = float32_muladd(op1->xmm32u(0), op2->xmm32u(0), op3->xmm32u(0), 0, status);
+      op1->xmm32u(n) = float32_muladd(op1->xmm32u(n), op2->xmm32u(n), op3->xmm32u(n), 0, status);
     else
       op1->xmm32u(n) = 0;
 
     if (mask & 0x2)
-      op1->xmm32u(n+1) = float32_muladd(op1->xmm32u(0), op2->xmm32u(0), op3->xmm32u(0), float_muladd_negate_c, status);
+      op1->xmm32u(n+1) = float32_muladd(op1->xmm32u(n+1), op2->xmm32u(n+1), op3->xmm32u(n+1), float_muladd_negate_c, status);
     else
       op1->xmm32u(n+1) = 0;
   }
@@ -700,8 +700,8 @@ BX_CPP_INLINE void xmm_fmsubaddpd_mask(BxPackedXmmRegister *op1, const BxPackedX
 BX_CPP_INLINE void xmm_fmsubaddph(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, const BxPackedXmmRegister *op3, float_status_t &status)
 {
   for (unsigned n=0;n<8;n+=2) {
-    op1->xmm16u(n)   = float16_muladd(op1->xmm16u(n), op2->xmm16u(n), op3->xmm16u(n), 0, status);
-    op1->xmm16u(n+1) = float16_muladd(op1->xmm16u(n), op2->xmm16u(n), op3->xmm16u(n), float_muladd_negate_c, status);
+    op1->xmm16u(n)   = float16_muladd(op1->xmm16u(n),   op2->xmm16u(n),   op3->xmm16u(n),   0, status);
+    op1->xmm16u(n+1) = float16_muladd(op1->xmm16u(n+1), op2->xmm16u(n+1), op3->xmm16u(n+1), float_muladd_negate_c, status);
   }
 }
 
@@ -714,7 +714,7 @@ BX_CPP_INLINE void xmm_fmsubaddph_mask(BxPackedXmmRegister *op1, const BxPackedX
       op1->xmm16u(n) = 0;
 
     if (mask & 0x2)
-      op1->xmm16u(n+1) = float16_muladd(op1->xmm16u(n), op2->xmm16u(n), op3->xmm16u(n), float_muladd_negate_c, status);
+      op1->xmm16u(n+1) = float16_muladd(op1->xmm16u(n+1), op2->xmm16u(n+1), op3->xmm16u(n+1), float_muladd_negate_c, status);
     else
       op1->xmm16u(n+1) = 0;
   }
