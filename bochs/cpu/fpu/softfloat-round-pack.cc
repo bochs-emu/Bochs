@@ -281,11 +281,13 @@ float16 roundAndPackFloat16(int zSign, Bit16s zExp, Bit16u zSig, float_status_t 
             }
         }
     }
+
     if (roundBits) float_raise(status, float_flag_inexact);
-    Bit16u zSigRound = ((zSig + roundIncrement) & ~roundMask) >> 4;
-    zSigRound &= ~(((roundBits ^ 0x10) == 0) & roundNearestEven);
-    if (zSigRound == 0) zExp = 0;
-    return packFloat16(zSign, zExp, zSigRound);
+    zSig = (zSig + roundIncrement)>>4;
+    zSig &= ~(Bit16u) ((!(roundBits ^ 8)) & roundNearestEven);
+    if (! zSig) zExp = 0;
+
+    return packFloat16(zSign, zExp, zSig);
 }
 
 #endif
