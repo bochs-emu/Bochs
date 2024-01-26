@@ -182,7 +182,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFPCLASSPH_MASK_KGdWphIbR(bxInstruction_c 
 
   for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
     if (opmask & mask) {
-      if (float16_fpclass(op.vmm32u(n), selector, daz)) result |= mask;
+      if (float16_fpclass(op.vmm16u(n), selector, daz)) result |= mask;
     }
   }
 
