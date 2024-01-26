@@ -259,7 +259,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_3OP_DOUBLE(bxInstru
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
   BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
   BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
-  unsigned mask = BX_READ_16BIT_OPMASK(i->opmask());
+  unsigned mask = BX_READ_8BIT_OPMASK(i->opmask());
   unsigned len = i->getVL();
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
