@@ -143,7 +143,7 @@ void BX_CPU_C::handleInterruptMaskChange(void)
   // EFLAGS.IF was cleared, some events like INTR would be masked
 
 #if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest && PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_EXTERNAL_INTERRUPT_VMEXIT)) {
+  if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.pin_vmexec_ctrls.EXTERNAL_INTERRUPT_VMEXIT()) {
     // if 'External-interrupt exiting' control is set, the value of EFLAGS.IF
     // doesn't affect interrupt blocking
     mask_event(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING | BX_EVENT_PENDING_VMX_VIRTUAL_INTR);

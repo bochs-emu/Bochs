@@ -530,10 +530,10 @@ bool BX_CPU_C::VMX_Posted_Interrupt_Processing(Bit8u vector)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  if (PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_PROCESS_POSTED_INTERRUPTS))
-    return false;
-
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+
+  if (! vm->pin_vmexec_ctrls.PROCESS_POSTED_INTERRUPTS())
+    return false;
 
   if (vector != vm->posted_intr_notification_vector)
     return false;

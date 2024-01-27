@@ -729,22 +729,18 @@ struct VMX_PLE {
 
 #endif
 
+#include "vmx_ctrls.h"
+
 typedef struct bx_VMCS
 {
   //
   // VM-Execution Control Fields
   //
 
-#define VMX_PIN_BASED_VMEXEC_CTRL_EXTERNAL_INTERRUPT_VMEXIT   (1 << 0)
-#define VMX_PIN_BASED_VMEXEC_CTRL_NMI_EXITING                 (1 << 3)
-#define VMX_PIN_BASED_VMEXEC_CTRL_VIRTUAL_NMI                 (1 << 5) /* Virtual NMI */
-#define VMX_PIN_BASED_VMEXEC_CTRL_VMX_PREEMPTION_TIMER_VMEXIT (1 << 6) /* VMX preemption timer */
-#define VMX_PIN_BASED_VMEXEC_CTRL_PROCESS_POSTED_INTERRUPTS   (1 << 7) /* Posted Interrupts */
-
 #define VMX_PIN_BASED_VMEXEC_CTRL_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_pin_vmexec_ctrl_supported_bits)
 
-   Bit32u pin_vmexec_ctrls;
+   VmxPinBasedVmexecControls pin_vmexec_ctrls;
 
 #define VMX_VM_EXEC_CTRL1_INTERRUPT_WINDOW_VMEXIT   (1 << 2)
 #define VMX_VM_EXEC_CTRL1_TSC_OFFSET                (1 << 3)
@@ -895,36 +891,15 @@ typedef struct bx_VMCS
    // VM-Exit Control Fields
    //
 
-#define VMX_VMEXIT_CTRL1_SAVE_DBG_CTRLS             (1 <<  2) /* legacy must be '1 */
-#define VMX_VMEXIT_CTRL1_HOST_ADDR_SPACE_SIZE       (1 <<  9)
-#define VMX_VMEXIT_CTRL1_LOAD_PERF_GLOBAL_CTRL_MSR  (1 << 12) /* Perf Global Control */
-#define VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT             (1 << 15)
-#define VMX_VMEXIT_CTRL1_STORE_PAT_MSR              (1 << 18) /* PAT */
-#define VMX_VMEXIT_CTRL1_LOAD_PAT_MSR               (1 << 19) /* PAT */
-#define VMX_VMEXIT_CTRL1_STORE_EFER_MSR             (1 << 20) /* EFER */
-#define VMX_VMEXIT_CTRL1_LOAD_EFER_MSR              (1 << 21) /* EFER */
-#define VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER (1 << 22) /* VMX preemption timer */
-#define VMX_VMEXIT_CTRL1_CLEAR_BNDCFGS              (1 << 23) /* MPX (not implemented) */
-#define VMX_VMEXIT_CTRL1_SUPPRESS_HOST_VMX_TRACE    (1 << 24) /* Processor Trace (not implemented) */
-#define VMX_VMEXIT_CTRL1_CLEAR_IA32_RTIT_CTRL       (1 << 25) /* Clear IA32_RTIT_CTRL MSR on vmexit (not implemented) */
-#define VMX_VMEXIT_CTRL1_CLEAR_IA32_LBR_CTRL        (1 << 26) /* Clear IA32_LBR_CTRL MSR on vmexit (not implemented) */
-#define VMX_VMEXIT_CTRL1_CLEAR_UINV                 (1 << 27) /* UINTR */
-#define VMX_VMEXIT_CTRL1_LOAD_HOST_CET_STATE        (1 << 28) /* CET */
-#define VMX_VMEXIT_CTRL1_LOAD_HOST_PKRS             (1 << 29) /* Supervisor-Mode Protection Keys */
-#define VMX_VMEXIT_CTRL1_SAVE_PERF_GLOBAL_CTRL      (1 << 30) /* Save IA32_PERF_GLOBAL_CTRL on vmexit (not implemented) */
-#define VMX_VMEXIT_CTRL1_ACTIVATE_SECONDARY_CTRLS   (1 << 31)
-
 #define VMX_VMEXIT_CTRL1_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_vmexit_ctrl1_supported_bits)
 
-   Bit32u vmexit_ctrls1;
-
-#define VMX_VMEXIT_CTRL2_SHADOW_STACK_BUSY_CTRL     (1 <<  2) /* Shadow stack prematurely busy */
+   BxVmexit1Controls vmexit_ctrls1;
 
 #define VMX_VMEXIT_CTRL2_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_vmexit_ctrl2_supported_bits)
 
-   Bit64u vmexit_ctrls2;
+   BxVmexit2Controls vmexit_ctrls2;
 
    Bit32u vmexit_msr_store_cnt;
    bx_phy_address vmexit_msr_store_addr;
@@ -935,25 +910,10 @@ typedef struct bx_VMCS
    // VM-Entry Control Fields
    //
 
-#define VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS                    (1 <<  2) /* legacy must be '1 */
-#define VMX_VMENTRY_CTRL1_X86_64_GUEST                      (1 <<  9)
-#define VMX_VMENTRY_CTRL1_SMM_ENTER                         (1 << 10)
-#define VMX_VMENTRY_CTRL1_DEACTIVATE_DUAL_MONITOR_TREATMENT (1 << 11)
-#define VMX_VMENTRY_CTRL1_LOAD_PERF_GLOBAL_CTRL_MSR         (1 << 13) /* Perf Global Ctrl */
-#define VMX_VMENTRY_CTRL1_LOAD_PAT_MSR                      (1 << 14) /* PAT */
-#define VMX_VMENTRY_CTRL1_LOAD_EFER_MSR                     (1 << 15) /* EFER */
-#define VMX_VMENTRY_CTRL1_LOAD_BNDCFGS                      (1 << 16) /* MPX (not implemented) */
-#define VMX_VMENTRY_CTRL1_SUPPRESS_VMX_PACKETS              (1 << 17) /* Processor Trace (not implemented) */
-#define VMX_VMENTRY_CTRL1_LOAD_GUEST_RTIT_CTRL              (1 << 18) // not implemented
-#define VMX_VMENTRY_CTRL1_LOAD_UINV                         (1 << 19) /* UINTR */
-#define VMX_VMENTRY_CTRL1_LOAD_GUEST_CET_STATE              (1 << 20) /* CET */
-#define VMX_VMENTRY_CTRL1_LOAD_GUEST_LBR_CTRL               (1 << 21) // not implemented
-#define VMX_VMENTRY_CTRL1_LOAD_GUEST_PKRS                   (1 << 22) /* Supervisor-Mode Protection Keys */
-
 #define VMX_VMENTRY_CTRL1_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_vmentry_ctrl_supported_bits)
 
-   Bit32u vmentry_ctrls;
+   VmxVmentryControls vmentry_ctrls;
 
    Bit32u vmentry_msr_load_cnt;
    bx_phy_address vmentry_msr_load_addr;
@@ -990,8 +950,6 @@ typedef struct bx_VMCS
    VMCS_HOST_STATE host_state;
 
 } VMCS_CACHE;
-
-#define PIN_VMEXIT(ctrl) (BX_CPU_THIS_PTR vmcs.pin_vmexec_ctrls & (ctrl))
 
 #define PRIMARY_VMEXEC_CONTROL(ctrl)   (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1 & (ctrl))
 #define SECONDARY_VMEXEC_CONTROL(ctrl) (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2 & (ctrl))

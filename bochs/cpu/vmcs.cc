@@ -30,6 +30,8 @@
 
 #if BX_SUPPORT_VMX
 
+#include "vmx_ctrls.h"
+
 const Bit32u VMCS_REVISION_ID_FIELD_ADDR  = 0x0000;
 const Bit32u VMCS_VMX_ABORT_FIELD_ADDR    = 0x0004;
 const Bit32u VMCS_LAUNCH_STATE_FIELD_ADDR = 0x0008;

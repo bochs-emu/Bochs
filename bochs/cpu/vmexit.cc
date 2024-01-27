@@ -195,10 +195,10 @@ void BX_CPU_C::VMexit_ExtInterrupt(void)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  if (PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_EXTERNAL_INTERRUPT_VMEXIT)) {
-    VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
-    if (! (vm->vmexit_ctrls1 & VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT)) {
+  if (vm->pin_vmexec_ctrls.EXTERNAL_INTERRUPT_VMEXIT()) {
+    if (! vm->vmexit_ctrls1.INTA_ON_VMEXIT()) {
        // interrupt wasn't acknowledged and still pending, interruption info is invalid
        VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO, 0);
        VMexit(VMX_VMEXIT_EXTERNAL_INTERRUPT, 0);
@@ -217,12 +217,12 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
   switch(type) {
     case BX_EXTERNAL_INTERRUPT:
       reason = VMX_VMEXIT_EXTERNAL_INTERRUPT;
-      if (PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_EXTERNAL_INTERRUPT_VMEXIT))
+      if (vm->pin_vmexec_ctrls.EXTERNAL_INTERRUPT_VMEXIT())
          vmexit = true;
       break;
 
     case BX_NMI:
-      if (PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_NMI_EXITING))
+      if (vm->pin_vmexec_ctrls.NMI_EXITING())
          vmexit = true;
       break;
 
@@ -783,7 +783,7 @@ void BX_CPU_C::vmx_page_modification_logging(Bit64u guest_laddr, Bit64u guest_pa
     if (BX_CPU_THIS_PTR nmi_unblocking_iret)
       vmexit_qualification |= (1 << 12);
 
-    if (vm->vmexit_ctrls2 & VMX_VMEXIT_CTRL2_SHADOW_STACK_BUSY_CTRL) {
+    if (vm->vmexit_ctrls2.SHADOW_STACK_PREMATURELY_BUSY_CTRL()) {
       VMwrite_natural(VMCS_GUEST_LINEAR_ADDR, guest_laddr);
     }
     VMexit(VMX_VMEXIT_PML_LOGFULL, vmexit_qualification);
