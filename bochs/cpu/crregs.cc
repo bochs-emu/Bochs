@@ -1023,7 +1023,7 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR0(bx_address cr0_val)
       BX_ERROR(("check_CR0(0x%08x): attempt to clear CR0.NE in vmx mode !", temp_cr0.get32()));
       return false;
     }
-    if (!BX_CPU_THIS_PTR in_vmx_guest && !SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_UNRESTRICTED_GUEST)) {
+    if (!BX_CPU_THIS_PTR in_vmx_guest && !BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.UNRESTRICTED_GUEST()) {
       if (!temp_cr0.get_PE() || !temp_cr0.get_PG()) {
         BX_ERROR(("check_CR0(0x%08x): attempt to clear CR0.PE/CR0.PG in vmx mode !", temp_cr0.get32()));
         return false;
@@ -1513,7 +1513,7 @@ void BX_CPU_C::WriteCR8(bxInstruction_c *i, bx_address val)
 #endif
 
 #if BX_SUPPORT_VMX && BX_SUPPORT_X86_64
-  if (BX_CPU_THIS_PTR in_vmx_guest && VMEXIT(VMX_VM_EXEC_CTRL1_TPR_SHADOW)) {
+  if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.TPR_SHADOW()) {
     VMX_Write_Virtual_APIC(BX_LAPIC_TPR, tpr);
     VMX_TPR_Virtualization();
     return;
@@ -1547,7 +1547,7 @@ Bit32u BX_CPU_C::ReadCR8(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR in_vmx_guest)
     VMexit_CR8_Read(i);
 
-  if (BX_CPU_THIS_PTR in_vmx_guest && VMEXIT(VMX_VM_EXEC_CTRL1_TPR_SHADOW)) {
+  if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.TPR_SHADOW()) {
      Bit32u tpr = (VMX_Read_Virtual_APIC(BX_LAPIC_TPR) >> 4) & 0xf;
      return tpr;
   }

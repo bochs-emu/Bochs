@@ -299,7 +299,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_DESCRIPTOR_TABLE_VMEXIT))
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.DESCRIPTOR_TABLE_VMEXIT())
       VMexit_Instruction(i, VMX_VMEXIT_LDTR_TR_ACCESS, BX_READ);
 #endif
 
@@ -343,7 +343,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STR_Ew(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_DESCRIPTOR_TABLE_VMEXIT))
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.DESCRIPTOR_TABLE_VMEXIT())
       VMexit_Instruction(i, VMX_VMEXIT_LDTR_TR_ACCESS, BX_READ);
 #endif
 
@@ -394,7 +394,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_DESCRIPTOR_TABLE_VMEXIT))
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.DESCRIPTOR_TABLE_VMEXIT())
       VMexit_Instruction(i, VMX_VMEXIT_LDTR_TR_ACCESS, BX_WRITE);
 #endif
 
@@ -497,7 +497,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_DESCRIPTOR_TABLE_VMEXIT))
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.DESCRIPTOR_TABLE_VMEXIT())
       VMexit_Instruction(i, VMX_VMEXIT_LDTR_TR_ACCESS, BX_WRITE);
 #endif
 
@@ -773,7 +773,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT_Ms(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_DESCRIPTOR_TABLE_VMEXIT))
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.DESCRIPTOR_TABLE_VMEXIT())
       VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS, BX_READ);
 #endif
 
@@ -807,7 +807,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT_Ms(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_DESCRIPTOR_TABLE_VMEXIT))
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.DESCRIPTOR_TABLE_VMEXIT())
       VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS, BX_READ);
 #endif
 
@@ -840,7 +840,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT_Ms(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_DESCRIPTOR_TABLE_VMEXIT))
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.DESCRIPTOR_TABLE_VMEXIT())
       VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS, BX_WRITE);
 #endif
 
@@ -875,7 +875,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT_Ms(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_DESCRIPTOR_TABLE_VMEXIT))
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.DESCRIPTOR_TABLE_VMEXIT())
       VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS, BX_WRITE);
 #endif
 
@@ -911,7 +911,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SGDT64_Ms(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_DESCRIPTOR_TABLE_VMEXIT))
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.DESCRIPTOR_TABLE_VMEXIT())
       VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS, BX_READ);
 #endif
 
@@ -943,7 +943,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SIDT64_Ms(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_DESCRIPTOR_TABLE_VMEXIT))
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.DESCRIPTOR_TABLE_VMEXIT())
       VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS, BX_READ);
 #endif
 
@@ -975,7 +975,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LGDT64_Ms(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_DESCRIPTOR_TABLE_VMEXIT))
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.DESCRIPTOR_TABLE_VMEXIT()) 
       VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS, BX_WRITE);
 #endif
 
@@ -1011,7 +1011,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LIDT64_Ms(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_DESCRIPTOR_TABLE_VMEXIT))
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.DESCRIPTOR_TABLE_VMEXIT())
       VMexit_Instruction(i, VMX_VMEXIT_GDTR_IDTR_ACCESS, BX_WRITE);
 #endif
 

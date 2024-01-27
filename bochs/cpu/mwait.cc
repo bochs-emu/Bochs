@@ -85,7 +85,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (VMEXIT(VMX_VM_EXEC_CTRL1_MONITOR_VMEXIT)) {
+      if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.MONITOR_VMEXIT()) {
         VMexit(VMX_VMEXIT_MONITOR, 0);
       }
     }
@@ -142,7 +142,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (VMEXIT(VMX_VM_EXEC_CTRL1_MWAIT_VMEXIT)) {
+      if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.MWAIT_VMEXIT()) {
         VMexit(VMX_VMEXIT_MWAIT, BX_CPU_THIS_PTR monitor.armed_by_monitor());
       }
     }
@@ -211,7 +211,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
     // When "interrupt window exiting" VMX control is set MWAIT instruction
     // won't cause the processor to enter sleep state with EFLAGS.IF = 0
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (VMEXIT(VMX_VM_EXEC_CTRL1_INTERRUPT_WINDOW_VMEXIT) && ! BX_CPU_THIS_PTR get_IF()) {
+      if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.INTERRUPT_WINDOW_VMEXIT() && ! BX_CPU_THIS_PTR get_IF()) {
         BX_NEXT_TRACE(i);
       }
     }
@@ -239,7 +239,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMONITOR_Eq(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_UMWAIT_TPAUSE_VMEXIT)) {
+    if (! BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.UMWAIT_TPAUSE_VMEXIT()) {
       BX_DEBUG(("%s: instruction is not enabled in VMX guest", i->getIaOpcodeNameShort()));
       exception(BX_UD_EXCEPTION, 0);
     }
@@ -282,7 +282,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_UMWAIT_TPAUSE_VMEXIT)) {
+    if (! BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.UMWAIT_TPAUSE_VMEXIT()) {
       BX_DEBUG(("%s: instruction is not enabled in VMX guest", i->getIaOpcodeNameShort()));
       exception(BX_UD_EXCEPTION, 0);
     }
@@ -295,7 +295,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest && VMEXIT(VMX_VM_EXEC_CTRL1_RDTSC_VMEXIT)) {
+  if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.RDTSC_VMEXIT()) {
     VMexit((i->getIaOpcode() == BX_IA_TPAUSE_Ed) ? VMX_VMEXIT_TPAUSE : VMX_VMEXIT_UMWAIT, 0);
   }
 #endif

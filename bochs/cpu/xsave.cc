@@ -145,12 +145,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_XSAVES_XRSTORS)) {
+      VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+
+      if (! vm->vmexec_ctrls2.XSAVES_XRSTORS()) {
         BX_ERROR(("%s in VMX guest: not allowed to use instruction !", i->getIaOpcodeNameShort()));
         exception(BX_UD_EXCEPTION, 0);
       }
 
-      VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
       Bit64u requested_features = GET64_FROM_HI32_LO32(EDX, EAX);
       if (requested_features & BX_CPU_THIS_PTR msr.ia32_xss & vm->xss_exiting_bitmap)
         VMexit_Instruction(i, VMX_VMEXIT_XSAVES);
@@ -248,12 +249,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_XSAVES_XRSTORS)) {
+      VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+
+      if (! vm->vmexec_ctrls2.XSAVES_XRSTORS()) {
         BX_ERROR(("%s in VMX guest: not allowed to use instruction !", i->getIaOpcodeNameShort()));
         exception(BX_UD_EXCEPTION, 0);
       }
 
-      VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
       Bit64u requested_features = GET64_FROM_HI32_LO32(EDX, EAX);
       if (requested_features & BX_CPU_THIS_PTR msr.ia32_xss & vm->xss_exiting_bitmap)
         VMexit_Instruction(i, VMX_VMEXIT_XRSTORS);
