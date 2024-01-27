@@ -343,7 +343,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       //    [1] - Enable STIBP: Single Thread Indirect Branch Predictors
       //    [2] - Enable SSCB: Speculative Store Bypass Disable
       // [63:3] - reserved
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX >= 2
       if (BX_CPU_THIS_PTR in_vmx_guest && vm->vmexec_ctrls3.VIRTUALIZE_IA32_SPEC_CTRL())
         val64 = vm->ia32_spec_ctrl_shadow;
       else
@@ -1087,7 +1087,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR IA32_SPEC_CTRL: not enabled in the cpu model"));
         return handle_unknown_wrmsr(index, val_64);
       }
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX >= 2
       if (BX_CPU_THIS_PTR in_vmx_guest && vm->vmexec_ctrls3.VIRTUALIZE_IA32_SPEC_CTRL())
         val_64 = (BX_CPU_THIS_PTR msr.ia32_spec_ctrl & vm->ia32_spec_ctrl_mask) | (val_64 & ~vm->ia32_spec_ctrl_mask);
 #endif
