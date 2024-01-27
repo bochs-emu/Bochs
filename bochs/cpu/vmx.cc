@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2023 Stanislav Shwartsman
+//   Copyright (c) 2009-2024 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -736,7 +736,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
         BX_ERROR(("VMFAIL: VMCS EXEC CTRL: posted interrupts must be enabled together with virtual interrupt delivery"));
         return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
       }
-      if (! (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT)) {
+      if (! (vm->vmexit_ctrls1 & VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT)) {
         BX_ERROR(("VMFAIL: VMCS EXEC CTRL: posted interrupts must be enabled together 'ack interrupt on exit'"));
         return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
       }
@@ -887,7 +887,11 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   // Load VM-exit control fields to VMCS Cache
   //
 
-  vm->vmexit_ctrls = VMread32(VMCS_32BIT_CONTROL_VMEXIT_CONTROLS);
+  vm->vmexit_ctrls1 = VMread32(VMCS_32BIT_CONTROL_VMEXIT_CONTROLS);
+  if (vm->vmexit_ctrls1 & VMX_VMEXIT_CTRL1_ACTIVATE_SECONDARY_CTRLS)
+    vm->vmexit_ctrls2 = VMread64(VMCS_64BIT_CONTROL_SECONDARY_VMEXIT_CONTROLS);
+  else
+    vm->vmexit_ctrls2 = 0;
   vm->vmexit_msr_store_cnt = VMread32(VMCS_32BIT_CONTROL_VMEXIT_MSR_STORE_COUNT);
   vm->vmexit_msr_load_cnt = VMread32(VMCS_32BIT_CONTROL_VMEXIT_MSR_LOAD_COUNT);
 
@@ -895,17 +899,22 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   // Check VM-exit control fields
   //
 
-  if (~vm->vmexit_ctrls & VMX_CHECKS_USE_MSR_VMX_VMEXIT_CTRLS_LO) {
+  if (~vm->vmexit_ctrls1 & VMX_CHECKS_USE_MSR_VMX_VMEXIT_CTRLS_LO) {
     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmexit controls allowed 0-settings"));
     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
-  if (vm->vmexit_ctrls & ~VMX_CHECKS_USE_MSR_VMX_VMEXIT_CTRLS_HI) {
-    BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmexit controls allowed 1-settings [0x%08x]", vm->vmexit_ctrls & ~VMX_CHECKS_USE_MSR_VMX_VMEXIT_CTRLS_HI));
+  if (vm->vmexit_ctrls1 & ~VMX_CHECKS_USE_MSR_VMX_VMEXIT_CTRLS_HI) {
+    BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmexit controls allowed 1-settings [0x%08x]", vm->vmexit_ctrls1 & ~VMX_CHECKS_USE_MSR_VMX_VMEXIT_CTRLS_HI));
     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
 
+  if (vm->vmexit_ctrls2 & ~VMX_VMEXIT_CTRL2_SUPPORTED_BITS) {
+     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmexit secondary controls allowed 1-settings"));
+     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+  }
+
 #if BX_SUPPORT_VMX >= 2
-  if ((~vm->pin_vmexec_ctrls & VMX_PIN_BASED_VMEXEC_CTRL_VMX_PREEMPTION_TIMER_VMEXIT) && (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER)) {
+  if ((~vm->pin_vmexec_ctrls & VMX_PIN_BASED_VMEXEC_CTRL_VMX_PREEMPTION_TIMER_VMEXIT) && (vm->vmexit_ctrls1 & VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER)) {
     BX_ERROR(("VMFAIL: save_VMX_preemption_timer VMEXIT control is set but VMX_preemption_timer VMEXEC control is clear"));
     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
@@ -935,6 +944,13 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
     Bit64u last_byte = (Bit64u) vm->vmexit_msr_load_addr + (vm->vmexit_msr_load_cnt * 16) - 1;
     if (! IsValidPhyAddr(last_byte)) {
       BX_ERROR(("VMFAIL: VMCS VMEXIT CTRL: msr load addr too high"));
+      return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+    }
+  }
+
+  if (PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_PROCESS_POSTED_INTERRUPTS)) {
+    if (! (vm->vmexit_ctrls1 & VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT)) {
+      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: posted interrupts must be enabled together 'ack interrupt on exit'"));
       return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
     }
   }
@@ -1095,7 +1111,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
   // VM Host State Checks Related to Address-Space Size
   //
 
-  Bit32u vmexit_ctrls = vm->vmexit_ctrls;
+  Bit32u vmexit_ctrls = vm->vmexit_ctrls1;
   if (vmexit_ctrls & VMX_VMEXIT_CTRL1_HOST_ADDR_SPACE_SIZE) {
      x86_64_host = true;
   }
@@ -2444,7 +2460,7 @@ void BX_CPU_C::VMexitSaveGuestState(Bit32u reason, Bit32u vector)
   }
 #endif
 
-  if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_SAVE_DBG_CTRLS)
+  if (vm->vmexit_ctrls1 & VMX_VMEXIT_CTRL1_SAVE_DBG_CTRLS)
      VMwrite_natural(VMCS_GUEST_DR7, BX_CPU_THIS_PTR dr7.get32());
 
   VMwrite_natural(VMCS_GUEST_RIP, RIP);
@@ -2521,10 +2537,10 @@ void BX_CPU_C::VMexitSaveGuestState(Bit32u reason, Bit32u vector)
   VMwrite32(VMCS_32BIT_GUEST_IA32_SYSENTER_CS_MSR, BX_CPU_THIS_PTR msr.sysenter_cs_msr);
 
 #if BX_SUPPORT_VMX >= 2
-  if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_PAT_MSR)
+  if (vm->vmexit_ctrls1 & VMX_VMEXIT_CTRL1_STORE_PAT_MSR)
     VMwrite64(VMCS_64BIT_GUEST_IA32_PAT, BX_CPU_THIS_PTR msr.pat.u64);
 #if BX_SUPPORT_X86_64
-  if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_EFER_MSR)
+  if (vm->vmexit_ctrls1 & VMX_VMEXIT_CTRL1_STORE_EFER_MSR)
     VMwrite64(VMCS_64BIT_GUEST_IA32_EFER, BX_CPU_THIS_PTR efer.get32());
 #endif
 #endif
@@ -2606,7 +2622,7 @@ void BX_CPU_C::VMexitSaveGuestState(Bit32u reason, Bit32u vector)
   BX_CPU_THIS_PTR lapic->deactivate_vmx_preemption_timer();
   clear_event(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED);
   // Store back to VMCS
-  if (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER)
+  if (vm->vmexit_ctrls1 & VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER)
     VMwrite32(VMCS_32BIT_GUEST_PREEMPTION_TIMER_VALUE, BX_CPU_THIS_PTR lapic->read_vmx_preemption_timer());
 
   if (vm->vmexec_ctrls2 & VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY) {
@@ -2626,7 +2642,7 @@ void BX_CPU_C::VMexitLoadHostState(void)
   BX_CPU_THIS_PTR tsc_offset = 0;
 
 #if BX_SUPPORT_X86_64
-  Bit32u vmexit_ctrls = BX_CPU_THIS_PTR vmcs.vmexit_ctrls;
+  Bit32u vmexit_ctrls = BX_CPU_THIS_PTR vmcs.vmexit_ctrls1;
   if (vmexit_ctrls & VMX_VMEXIT_CTRL1_HOST_ADDR_SPACE_SIZE) {
      BX_DEBUG(("VMEXIT to x86-64 host"));
      x86_64_host = true;
@@ -2836,6 +2852,20 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
   //
   // STEP 0: Update VMEXIT reason
   //
+
+  // Extra vmexit reason bits:
+  //    [25] Shadow stack prematurely busy
+  //    [26] VMM bus lock detection (not implemented yet)
+  //    [27] Enclave mode (not supported)
+  //    [28] Pending MTF vmexit (only set by SMM VMEXIT which not implemented)
+  //    [29] VmExit from VMX root operation (hannpen only in SMM VMEXIT which not implemented) 
+#if BX_SUPPORT_CET
+  if (vm->vmexit_ctrls2 & VMX_VMEXIT_CTRL2_SHADOW_STACK_BUSY_CTRL) {
+    if (vm->shadow_stack_prematurely_busy)
+      reason |= (1<<25);
+  }
+  vm->shadow_stack_prematurely_busy = false;
+#endif
 
   VMwrite32(VMCS_32BIT_VMEXIT_REASON, reason);
   VMwrite_natural(VMCS_VMEXIT_QUALIFICATION, qualification);
@@ -4184,7 +4214,8 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
 
   bx_list_c *vmexit_ctrls = new bx_list_c(vmcache, "VMEXIT_CTRLS");
 
-  BXRS_HEX_PARAM_FIELD(vmexit_ctrls, vmexit_ctrls, BX_CPU_THIS_PTR vmcs.vmexit_ctrls);
+  BXRS_HEX_PARAM_FIELD(vmexit_ctrls, vmexit_ctrls, BX_CPU_THIS_PTR vmcs.vmexit_ctrls1);
+  BXRS_HEX_PARAM_FIELD(vmexit_ctrls, vmexit_ctrls2, BX_CPU_THIS_PTR vmcs.vmexit_ctrls2);
   BXRS_DEC_PARAM_FIELD(vmexit_ctrls, vmexit_msr_store_cnt, BX_CPU_THIS_PTR vmcs.vmexit_msr_store_cnt);
   BXRS_HEX_PARAM_FIELD(vmexit_ctrls, vmexit_msr_store_addr, BX_CPU_THIS_PTR vmcs.vmexit_msr_store_addr);
   BXRS_DEC_PARAM_FIELD(vmexit_ctrls, vmexit_msr_load_cnt, BX_CPU_THIS_PTR vmcs.vmexit_msr_load_cnt);

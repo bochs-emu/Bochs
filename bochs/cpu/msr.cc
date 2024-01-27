@@ -387,6 +387,12 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_VMX_VMEXIT_CTRLS:
       val64 = VMX_MSR_VMX_VMEXIT_CTRLS;
       break;
+    case BX_MSR_VMX_VMEXIT_CTRLS2:
+      if (BX_CPU_THIS_PTR vmx_cap.vmx_vmexit_ctrl2_supported_bits) {
+        val64 = VMX_MSR_VMX_VMEXIT_CTRLS2;
+        break;
+      }
+      return false;
     case BX_MSR_VMX_VMENTRY_CTRLS:
       val64 = VMX_MSR_VMX_VMENTRY_CTRLS;
       break;
@@ -1144,6 +1150,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_VMX_PROCBASED_CTRLS2:
     case BX_MSR_VMX_PROCBASED_CTRLS3:
     case BX_MSR_VMX_VMEXIT_CTRLS:
+    case BX_MSR_VMX_VMEXIT_CTRLS2:
     case BX_MSR_VMX_VMENTRY_CTRLS:
     case BX_MSR_VMX_MISC:
     case BX_MSR_VMX_CR0_FIXED0:

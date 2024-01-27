@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2023 Stanislav Shwartsman
+//   Copyright (c) 2009-2024 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -198,7 +198,7 @@ void BX_CPU_C::VMexit_ExtInterrupt(void)
   if (PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_EXTERNAL_INTERRUPT_VMEXIT)) {
     VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
-    if (! (vm->vmexit_ctrls & VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT)) {
+    if (! (vm->vmexit_ctrls1 & VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT)) {
        // interrupt wasn't acknowledged and still pending, interruption info is invalid
        VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO, 0);
        VMexit(VMX_VMEXIT_EXTERNAL_INTERRUPT, 0);
@@ -738,10 +738,15 @@ void BX_CPU_C::Virtualization_Exception(Bit64u qualification, Bit64u guest_physi
   //  - CR0.PE is set
   //  - the logical processor is not in the process of delivering an event through the IDT
   //  - the 32 bits at offset 4 in the virtualization-exception information area are all 0
+  //  - the EPT violation cause a shadow stack to become prematurely busy
 
   if (! BX_CPU_THIS_PTR cr0.get_PE() || BX_CPU_THIS_PTR in_event) return;
 
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+
+#if BX_SUPPORT_CET
+  if (vm->shadow_stack_prematurely_busy) return;
+#endif
 
   BxMemtype ve_info_memtype = BX_MEMTYPE_INVALID;
 #if BX_SUPPORT_MEMTYPE
@@ -769,7 +774,7 @@ void BX_CPU_C::Virtualization_Exception(Bit64u qualification, Bit64u guest_physi
   exception(BX_VE_EXCEPTION, 0);
 }
 
-void BX_CPU_C::vmx_page_modification_logging(Bit64u guest_paddr, unsigned dirty_update)
+void BX_CPU_C::vmx_page_modification_logging(Bit64u guest_laddr, Bit64u guest_paddr, unsigned dirty_update)
 {
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
@@ -778,6 +783,9 @@ void BX_CPU_C::vmx_page_modification_logging(Bit64u guest_paddr, unsigned dirty_
     if (BX_CPU_THIS_PTR nmi_unblocking_iret)
       vmexit_qualification |= (1 << 12);
 
+    if (vm->vmexit_ctrls2 & VMX_VMEXIT_CTRL2_SHADOW_STACK_BUSY_CTRL) {
+      VMwrite_natural(VMCS_GUEST_LINEAR_ADDR, guest_laddr);
+    }
     VMexit(VMX_VMEXIT_PML_LOGFULL, vmexit_qualification);
   }
 

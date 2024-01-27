@@ -89,6 +89,15 @@ void BX_CPU_C::cpu_loop(void)
   BX_CPU_THIS_PTR prev_rip = RIP; // commit new EIP
   BX_CPU_THIS_PTR speculative_rsp = false;
 
+#if BX_SUPPORT_CET && BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+    if (vm->shadow_stack_prematurely_busy)
+      BX_PANIC(("Shadow stack prematurely busy is left set !"));
+    vm->shadow_stack_prematurely_busy = false; // for safety
+  }
+#endif
+
   while (1) {
 
     // check on events which occurred for previous instructions (traps)

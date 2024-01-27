@@ -921,8 +921,16 @@ void BX_CPU_C::update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry
   }
 
   // Update A/D bits if needed
-  if (!(entry[leaf] & 0x20) || (write && !(entry[leaf] & 0x40))) {
-    entry[leaf] |= (0x20 | (write<<6)); // Update A and possibly D bits
+  // Specifically, a processor that supports CET will never set the dirty flag in a paging-structure entry in which the R/W flag is clear
+  bool set_dirty = write && !(entry[leaf] & 0x40);
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
+    if (set_dirty && !(entry[leaf] & 0x02)) {
+      BX_PANIC(("PAE: asked to set dirty on paging leaf entry with R/W bit clear"));
+    }
+  }
+  if (!(entry[leaf] & 0x20) || set_dirty) {
+    entry[leaf] |= 0x20; // Update A and possibly D bits
+    if (set_dirty) entry[leaf] |= 0x40;
     write_physical_qword(entry_addr[leaf], entry[leaf], entry_memtype[leaf], AccessReason(BX_PTE_ACCESS + leaf)); // should be done with locked RMW
   }
 }
@@ -1227,8 +1235,16 @@ void BX_CPU_C::update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, Bx
   }
 
   // Update A/D bits if needed
-  if (!(entry[leaf] & 0x20) || (write && !(entry[leaf] & 0x40))) {
-    entry[leaf] |= (0x20 | (write<<6)); // Update A and possibly D bits
+  // Specifically, a processor that supports CET will never set the dirty flag in a paging-structure entry in which the R/W flag is clear
+  bool set_dirty = write && !(entry[leaf] & 0x40);
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
+    if (set_dirty && !(entry[leaf] & 0x02)) {
+      BX_PANIC(("Legacy Paging: asked to set dirty on paging leaf entry with R/W bit clear"));
+    }
+  }
+  if (!(entry[leaf] & 0x20) || set_dirty) {
+    entry[leaf] |= 0x20; // Update A and possibly D bits
+    if (set_dirty) entry[leaf] |= 0x40;
     write_physical_dword(entry_addr[leaf], entry[leaf], entry_memtype[leaf], AccessReason(BX_PTE_ACCESS + leaf)); // should be done with locked RMW
   }
 }
@@ -2089,7 +2105,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
     // write access and Dirty-bit is not set in the leaf entry
     unsigned dirty_update = (rw & 1) && !(entry[leaf] & 0x200);
     if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_PML_ENABLE))
-      vmx_page_modification_logging(guest_paddr, dirty_update);
+      vmx_page_modification_logging(guest_laddr, guest_paddr, dirty_update);
 
     update_ept_access_dirty(entry_addr, entry, MEMTYPE(eptptr_memtype), leaf, rw & 1);
   }

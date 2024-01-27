@@ -4944,6 +4944,7 @@ public: // for now...
   BX_SMF void init_secondary_proc_based_vmexec_ctrls(void);
   BX_SMF void init_tertiary_proc_based_vmexec_ctrls(void);
   BX_SMF void init_vmexit_ctrls(void);
+  BX_SMF void init_secondary_vmexit_ctrls(void);
   BX_SMF void init_vmentry_ctrls(void);
   BX_SMF void init_VMCS(void);
   BX_SMF bool vmcs_field_supported(Bit32u encoding);
@@ -4974,7 +4975,7 @@ public: // for now...
   BX_SMF void VMX_Self_IPI_Virtualization(Bit8u vector);
   BX_SMF void VMX_Evaluate_Pending_Virtual_Interrupts(void);
   BX_SMF void VMX_Deliver_Virtual_Interrupt(void);
-  BX_SMF void vmx_page_modification_logging(Bit64u guest_addr, unsigned dirty_update);
+  BX_SMF void vmx_page_modification_logging(Bit64u guest_laddr, Bit64u guest_paddr, unsigned dirty_update);
 #endif
 #if BX_SUPPORT_VMX >= 2
   BX_SMF Bit16u VMread16_Shadow(unsigned encoding) BX_CPP_AttrRegparmN(1);

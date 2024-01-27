@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2023 Stanislav Shwartsman
+//   Copyright (c) 2009-2024 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -708,7 +708,8 @@ typedef struct bx_VMX_Cap
   Bit32u vmx_proc_vmexec_ctrl_supported_bits;
   Bit32u vmx_vmexec_ctrl2_supported_bits;
   Bit64u vmx_vmexec_ctrl3_supported_bits;
-  Bit32u vmx_vmexit_ctrl_supported_bits;
+  Bit32u vmx_vmexit_ctrl1_supported_bits;
+  Bit32u vmx_vmexit_ctrl2_supported_bits;
   Bit32u vmx_vmentry_ctrl_supported_bits;
 #if BX_SUPPORT_VMX >= 2
   Bit64u vmx_ept_vpid_cap_supported_bits;
@@ -886,6 +887,10 @@ typedef struct bx_VMCS
    Bit64u xss_exiting_bitmap;
 #endif
 
+#if BX_SUPPORT_CET
+   bool shadow_stack_prematurely_busy;
+#endif
+
    //
    // VM-Exit Control Fields
    //
@@ -907,11 +912,19 @@ typedef struct bx_VMCS
 #define VMX_VMEXIT_CTRL1_LOAD_HOST_CET_STATE        (1 << 28) /* CET */
 #define VMX_VMEXIT_CTRL1_LOAD_HOST_PKRS             (1 << 29) /* Supervisor-Mode Protection Keys */
 #define VMX_VMEXIT_CTRL1_SAVE_PERF_GLOBAL_CTRL      (1 << 30) /* Save IA32_PERF_GLOBAL_CTRL on vmexit (not implemented) */
+#define VMX_VMEXIT_CTRL1_ACTIVATE_SECONDARY_CTRLS   (1 << 31)
 
 #define VMX_VMEXIT_CTRL1_SUPPORTED_BITS \
-    (BX_CPU_THIS_PTR vmx_cap.vmx_vmexit_ctrl_supported_bits)
+    (BX_CPU_THIS_PTR vmx_cap.vmx_vmexit_ctrl1_supported_bits)
 
-   Bit32u vmexit_ctrls;
+   Bit32u vmexit_ctrls1;
+
+#define VMX_VMEXIT_CTRL2_SHADOW_STACK_BUSY_CTRL     (1 <<  2) /* Shadow stack prematurely busy */
+
+#define VMX_VMEXIT_CTRL2_SUPPORTED_BITS \
+    (BX_CPU_THIS_PTR vmx_cap.vmx_vmexit_ctrl2_supported_bits)
+
+   Bit64u vmexit_ctrls2;
 
    Bit32u vmexit_msr_store_cnt;
    bx_phy_address vmexit_msr_store_addr;
@@ -1264,6 +1277,13 @@ const Bit32u VMX_MSR_VMX_PROCBASED_CTRLS2_LO = 0x00000000;
 
 // Allowed 1-settings
 #define VMX_MSR_VMX_PROCBASED_CTRLS3 (VMX_VM_EXEC_CTRL3_SUPPORTED_BITS)
+
+
+// IA32_VMX_EXIT_CTLS2 MSR (0x493)
+// ---------------------
+
+// Allowed 1-settings
+#define VMX_MSR_VMX_VMEXIT_CTRLS2 (VMX_VMEXIT_CTRL2_SUPPORTED_BITS)
 
 
 #if BX_SUPPORT_VMX >= 2

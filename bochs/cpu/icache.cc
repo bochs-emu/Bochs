@@ -181,8 +181,6 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
     }
   }
 
-//BX_INFO(("commit trace %08x len=%d mask %08x", (Bit32u) entry->pAddr, entry->tlen, pageWriteStampTable.getFineGranularityMapping(entry->pAddr)));
-
   entry->traceMask |= traceMask;
 
   pageWriteStampTable.markICacheMask(pAddr, entry->traceMask);
