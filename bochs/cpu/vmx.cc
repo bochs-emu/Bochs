@@ -878,12 +878,6 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
   //
 
   vm->vmexit_ctrls1 = VMread32(VMCS_32BIT_CONTROL_VMEXIT_CONTROLS);
-  if (vm->vmexit_ctrls1.ACTIVATE_SECONDARY_CTRLS())
-    vm->vmexit_ctrls2 = VMread64(VMCS_64BIT_CONTROL_SECONDARY_VMEXIT_CONTROLS);
-  else
-    vm->vmexit_ctrls2 = 0;
-  vm->vmexit_msr_store_cnt = VMread32(VMCS_32BIT_CONTROL_VMEXIT_MSR_STORE_COUNT);
-  vm->vmexit_msr_load_cnt = VMread32(VMCS_32BIT_CONTROL_VMEXIT_MSR_LOAD_COUNT);
 
   //
   // Check VM-exit control fields
@@ -897,6 +891,14 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
     BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmexit controls allowed 1-settings"));
     return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
   }
+
+  if (vm->vmexit_ctrls1.ACTIVATE_SECONDARY_CTRLS())
+    vm->vmexit_ctrls2 = VMread64(VMCS_64BIT_CONTROL_SECONDARY_VMEXIT_CONTROLS);
+  else
+    vm->vmexit_ctrls2 = 0;
+
+  vm->vmexit_msr_store_cnt = VMread32(VMCS_32BIT_CONTROL_VMEXIT_MSR_STORE_COUNT);
+  vm->vmexit_msr_load_cnt = VMread32(VMCS_32BIT_CONTROL_VMEXIT_MSR_LOAD_COUNT);
 
   if (vm->vmexit_ctrls2.get() & ~VMX_VMEXIT_CTRL2_SUPPORTED_BITS) {
      BX_ERROR(("VMFAIL: VMCS EXEC CTRL: VMX vmexit secondary controls allowed 1-settings"));
