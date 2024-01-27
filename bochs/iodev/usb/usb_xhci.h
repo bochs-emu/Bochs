@@ -628,7 +628,7 @@ private:
   static void remove_device(Bit8u port);
   static bool set_connect_status(Bit8u port, bool connected);
 
-  static int  broadcast_speed(int slot);
+  static int  broadcast_speed(SLOT_CONTEXT& slot_context);
   static int  broadcast_packet(USBPacket *p, int port);
   static Bit8u get_psceg(int port);
   static void xhci_timer_handler(void *);
@@ -658,7 +658,7 @@ private:
   static int  validate_slot_context(const struct SLOT_CONTEXT *slot_context, int trb_command, int slot);
   static int  validate_ep_context(const struct EP_CONTEXT *ep_context, int trb_command, Bit32u a_flags, int port_num, int ep_num);
   static int  create_unique_address(int slot);
-  static int  send_set_address(int addr, int port_num, int slot);
+  static int  send_set_address(int addr, int port_num, SLOT_CONTEXT& slot_context);
 
   static void dump_xhci_core(unsigned int slots, unsigned int eps);
 
