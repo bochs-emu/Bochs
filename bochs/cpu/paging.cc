@@ -2069,7 +2069,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
         vmexit_qualification |= (1<<7);
         if (! is_page_walk) {
           vmexit_qualification |= (1<<8);
-          if (vm->vmexec_ctrls2.MBE_CTRL()) {
+          if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_MBE_CONTROL)) {
             // support of MBE control implies support of advanced VM-exit information for EPT violations
             if (user_page)
               vmexit_qualification |= (1<<9);
