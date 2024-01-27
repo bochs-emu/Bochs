@@ -1007,6 +1007,8 @@ bool bx_voodoo_1_2_c::mem_read_handler(bx_phy_address addr, unsigned len,
   Bit32u val = voodoo_r((addr>>2) & 0x3FFFFF);
   if (len == 4)
     *(Bit32u*)data = val;
+  else if ((len == 2) && ((addr & 3) != 3))
+    *(Bit16u*)data = val >> ((addr & 3) * 8);
   else if (len == 1)
     *(Bit8u*)data = val >> ((addr & 3) * 8);
   else
@@ -1018,18 +1020,53 @@ bool bx_voodoo_1_2_c::mem_read_handler(bx_phy_address addr, unsigned len,
 bool bx_voodoo_1_2_c::mem_write_handler(bx_phy_address addr, unsigned len,
                                         void *data, void *param)
 {
-  Bit32u val = *(Bit32u*)data;
-
-  if (len == 4) {
-    voodoo_w((addr>>2) & 0x3FFFFF, val, 0xffffffff);
-  } else if (len == 2) {
-    if (addr & 3) {
-      voodoo_w((addr>>2) & 0x3FFFFF, val<<16, 0xffff0000);
-    } else {
-      voodoo_w((addr>>2) & 0x3FFFFF, val, 0x0000ffff);
-    }
+  bx_voodoo_1_2_c *class_ptr = (bx_voodoo_1_2_c*)param;
+  if (len == 16) {
+    Bit64u *data64 = (Bit64u*)data;
+#ifdef BX_LITTLE_ENDIAN
+    class_ptr->mem_write(addr, 8, &data64[0]);
+    class_ptr->mem_write(addr + 8, 8, &data64[1]);
+#else
+    class_ptr->mem_write(addr, 8, &data64[1]);
+    class_ptr->mem_write(addr + 8, 8, &data64[0]);
+#endif
+  } else {
+    class_ptr->mem_write(addr, len, data);
   }
   return 1;
+}
+
+void bx_voodoo_1_2_c::mem_write(bx_phy_address addr, unsigned len, void *data)
+{
+  Bit64u value = 0;
+
+#ifdef BX_LITTLE_ENDIAN
+  Bit8u *data_ptr = (Bit8u *) data;
+#else // BX_BIG_ENDIAN
+  Bit8u *data_ptr = (Bit8u *) data + (len - 1);
+#endif
+  for (unsigned i = 0; i < len; i++) {
+    value |= ((Bit64u)*data_ptr << (i * 8));
+#ifdef BX_LITTLE_ENDIAN
+    data_ptr++;
+#else // BX_BIG_ENDIAN
+    data_ptr--;
+#endif
+  }
+  if (len == 8) {
+    voodoo_w((addr >> 2) & 0x3FFFFF, (Bit32u)value, 0xffffffff);
+    voodoo_w(((addr >> 2) + 1) & 0x3FFFFF, (Bit32u)(value >> 32), 0xffffffff);
+  } else if (len == 4) {
+    voodoo_w((addr >> 2) & 0x3FFFFF, (Bit32u)value, 0xffffffff);
+  } else if (len == 2) {
+    if (addr & 3) {
+      voodoo_w((addr >> 2) & 0x3FFFFF, Bit32u(value << 16), 0xffff0000);
+    } else {
+      voodoo_w((addr >> 2) & 0x3FFFFF, (Bit32u)value, 0x0000ffff);
+    }
+  } else {
+    BX_ERROR(("Voodoo mem_write(): unknown len=%d", len));
+  }
 }
 
 void bx_voodoo_1_2_c::mode_change_timer_handler(void *this_ptr)

@@ -112,6 +112,8 @@ private:
   static bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   static bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 
+  void mem_write(bx_phy_address addr, unsigned len, void *data);
+
   static void mode_change_timer_handler(void *);
   void mode_change_timer(void);
 };
