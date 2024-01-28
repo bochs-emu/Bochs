@@ -276,6 +276,8 @@ void BX_CPU_C::init_SMRAM(void)
   smram_map[SMRAM_FIELD_CR3] = SMRAM_TRANSLATE(0x7f50);
   smram_map[SMRAM_FIELD_CR4_HI32] = SMRAM_TRANSLATE(0x7f4c);    // always zero
   smram_map[SMRAM_FIELD_CR4] = SMRAM_TRANSLATE(0x7f48);
+  smram_map[SMRAM_FIELD_SSP_HI32] = SMRAM_TRANSLATE(0x7f44);
+  smram_map[SMRAM_FIELD_SSP] = SMRAM_TRANSLATE(0x7f40);
   smram_map[SMRAM_FIELD_EFER_HI32] = SMRAM_TRANSLATE(0x7ed4);   // always zero
   smram_map[SMRAM_FIELD_EFER] = SMRAM_TRANSLATE(0x7ed0);
   smram_map[SMRAM_FIELD_IO_INSTRUCTION_RESTART] = SMRAM_TRANSLATE(0x7ec8);
@@ -425,6 +427,11 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
   SMRAM_FIELD(saved_state, SMRAM_FIELD_EIP) = EIP;
   SMRAM_FIELD(saved_state, SMRAM_FIELD_EFLAGS) = read_eflags();
 
+#if BX_SUPPORT_CET
+  SMRAM_FIELD(saved_state, SMRAM_FIELD_SSP_HI32) = GET32H(SSP);
+  SMRAM_FIELD(saved_state, SMRAM_FIELD_SSP) = GET32L(SSP);
+#endif
+
   // --- Debug and Control Registers --- //
   SMRAM_FIELD(saved_state, SMRAM_FIELD_DR6) = BX_CPU_THIS_PTR dr6.get32();
   SMRAM_FIELD(saved_state, SMRAM_FIELD_DR7) = BX_CPU_THIS_PTR dr7.get32();
@@ -492,6 +499,9 @@ bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
   }
 
   smm_state.rip = SMRAM_FIELD64(saved_state, SMRAM_FIELD_RIP_HI32, SMRAM_FIELD_EIP);
+#if BX_SUPPORT_CET
+  smm_state.ssp = SMRAM_FIELD64(saved_state, SMRAM_FIELD_SSP_HI32, SMRAM_FIELD_SSP);
+#endif
 
   smm_state.dr6 = SMRAM_FIELD(saved_state, SMRAM_FIELD_DR6);
   smm_state.dr7 = SMRAM_FIELD(saved_state, SMRAM_FIELD_DR7);
@@ -757,6 +767,9 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
 #endif
 
   RIP = BX_CPU_THIS_PTR prev_rip = smm_state->rip;
+#if BX_SUPPORT_CET
+  SSP = smm_state->ssp;
+#endif
 
   BX_CPU_THIS_PTR dr6.val32 = smm_state->dr6;
   BX_CPU_THIS_PTR dr7.val32 = smm_state->dr7;

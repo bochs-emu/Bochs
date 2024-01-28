@@ -966,7 +966,8 @@ void BX_CPU_C::xrstor_init_cet_s_state(void)
 bool BX_CPU_C::xsave_cet_s_state_xinuse(void)
 {
   for (unsigned n=0;n<3;n++)
-    return BX_CPU_THIS_PTR msr.ia32_pl_ssp[n] != 0;
+    if (BX_CPU_THIS_PTR msr.ia32_pl_ssp[n])
+        return true;
 
   return false;
 }
