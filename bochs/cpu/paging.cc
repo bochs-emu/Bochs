@@ -1356,7 +1356,7 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.EPT_ENABLE()) {
       paddress = translate_guest_physical(paddress, laddr, true /* laddr_valid */, false /* page walk */,
-            IS_USER_PAGE(combined_access) != 0, IS_WRITEABLE_PAGE(combined_access) != 0, IS_NX_PAGE(combined_access), rw, (isShadowStack & !user), &spp_page);
+            IS_USER_PAGE(combined_access) != 0, IS_WRITEABLE_PAGE(combined_access) != 0, IS_NX_PAGE(combined_access), rw, (isShadowStack && !user), &spp_page);
     }
   }
 #endif
