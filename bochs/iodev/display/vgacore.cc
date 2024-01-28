@@ -2276,6 +2276,8 @@ void bx_vgacore_c::redraw_area(unsigned x0, unsigned y0, unsigned width, unsigne
     // graphics mode
     xmax = BX_VGA_THIS s.last_xres;
     ymax = BX_VGA_THIS s.last_yres;
+    if ((xmax == 0) || (ymax == 0))
+      return;
     xt0 = x0 / X_TILESIZE;
     yt0 = y0 / Y_TILESIZE;
     if (x0 < xmax) {
