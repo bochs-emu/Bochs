@@ -725,24 +725,43 @@ void bx_usb_xhci_c::reset_port(int p)
   BX_XHCI_THIS hub.usb_port[p].psceg = 0;
 }
 
+// reset_type = HOT_RESET = bit 4 was used to reset the port
+// reset_type = WARM_RESET = bit 31 was used to reset the port
+//  (a WARM_RESET can only be done from a USB3 port)
 void bx_usb_xhci_c::reset_port_usb3(int port, int reset_type)
 {
   BX_INFO(("Reset port #%d, type=%d", port + 1, reset_type));
   BX_XHCI_THIS hub.usb_port[port].portsc.pr = 0;
   BX_XHCI_THIS hub.usb_port[port].has_been_reset = 1;
   if (BX_XHCI_THIS hub.usb_port[port].portsc.ccs) {
-    BX_XHCI_THIS hub.usb_port[port].portsc.prc = 1;
     BX_XHCI_THIS hub.usb_port[port].portsc.pls = PLS_U0;
     BX_XHCI_THIS hub.usb_port[port].portsc.ped = 1;
     if (BX_XHCI_THIS hub.usb_port[port].device != NULL) {
       BX_XHCI_THIS hub.usb_port[port].device->usb_send_msg(USB_MSG_RESET);
-      if (BX_XHCI_THIS hub.usb_port[port].is_usb3 && (reset_type == WARM_RESET))
-        BX_XHCI_THIS hub.usb_port[port].portsc.wrc = 1;
     }
   } else {
     BX_XHCI_THIS hub.usb_port[port].portsc.pls = PLS_RXDETECT;
     BX_XHCI_THIS hub.usb_port[port].portsc.ped = 0;
     BX_XHCI_THIS hub.usb_port[port].portsc.speed = 0;
+  }
+
+  // The following tests were done on real hardware (NEC/Renesas):
+  // USB2 (always is HOT_RESET)
+  //   bit 21 = 1 if CCS = 1, bit 19 always 0
+  //   bit 21 = 0 if CCS = 0, bit 19 always 0
+  // USB3 (if HOT_RESET) (same as USB2 port)
+  //   bit 21 = 1 if CCS = 1, bit 19 always 0
+  //   bit 21 = 0 if CCS = 0, bit 19 always 0
+  // USB3 (if WARM_RESET)
+  //   bit 21 = 1 if CCS = 1, bit 19 always 1
+  //   bit 21 = 1 if CCS = 0, bit 19 always 1
+  if (reset_type == HOT_RESET) {
+    BX_XHCI_THIS hub.usb_port[port].portsc.prc = 
+      BX_XHCI_THIS hub.usb_port[port].portsc.ccs;
+    BX_XHCI_THIS hub.usb_port[port].portsc.wrc = 0;
+  } else {
+    BX_XHCI_THIS hub.usb_port[port].portsc.prc = 1;
+    BX_XHCI_THIS hub.usb_port[port].portsc.wrc = 1;
   }
 }
 
