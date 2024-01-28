@@ -2019,11 +2019,10 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
 #if BX_SUPPORT_CET
     if (BX_VMX_EPT_SUPERVISOR_SHADOW_STACK_CTRL_ENABLED && supervisor_shadow_stack) {
       // The EPT.R bit is set in all EPT paging-structure entry controlling the translation
-      // The EPT.W bit is set in all EPT paging-structure entry controlling the translation except the leaf entry (allowed for shadow stack write access)
+      // The EPT.W bit is set in all EPT paging-structure entry controlling the translation ignoring the leaf entry (allowed for shadow stack write access)
       // The SSS bit (bit 60) is 1 in the EPT paging-structure entry maps the page
       bool supervisor_shadow_stack_page = ((combined_access & BX_EPT_ENTRY_READ_WRITE) == BX_EPT_ENTRY_READ_WRITE) &&
                                              ((entry[leaf] & BX_EPT_READ) != 0) &&
-                                             (((entry[leaf] & BX_EPT_WRITE) == 0) || !(access_mask & BX_EPT_WRITE)) &&
                                              ((entry[leaf] & BX_SUPERVISOR_SHADOW_STACK_PAGE) != 0);
       if (!supervisor_shadow_stack_page) {
         BX_ERROR(("VMEXIT: supervisor shadow stack access to non supervisor shadow stack page"));
