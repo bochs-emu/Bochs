@@ -1065,11 +1065,7 @@ void bx_voodoo_1_2_c::mem_write(bx_phy_address addr, unsigned len, void *data)
       voodoo_w((addr >> 2) & 0x3FFFFF, (Bit32u)value, 0x0000ffff);
     }
   } else if (len == 1) {
-    Bit32u value2 = voodoo_r((addr >> 2) & 0x3FFFFF);
-    Bit32u mask = (Bit32u)0xff << (8 * (addr & 3));
-    value2 &= ~mask;
-    value2 |= ((Bit32u)value << (8 * (addr & 3)));
-    voodoo_w((addr >> 2) & 0x3FFFFF, value2, 0xffffffff);
+    voodoo_w((addr >> 2) & 0x3FFFFF, (Bit32u)(value << (8 * (addr & 3))), 0xffffffff);
   } else {
     BX_ERROR(("Voodoo mem_write(): unknown len=%d", len));
   }
