@@ -175,6 +175,7 @@ static const Bit64u BxOpcodeTable0F38DB[] = { last_opcode(ATTR_SSE_PREFIX_66, BX
 static const Bit64u BxOpcodeTable0F38DC[] = {
 #if BX_SUPPORT_KEYLOCKER
   form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_MOD_MEM, BX_IA_AESENC128KL_VdqMdq),
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_MODC0,   BX_IA_LOADIWKEY_VdqWdq),
 #endif
   last_opcode(ATTR_SSE_PREFIX_66, BX_IA_AESENC_VdqWdq)
 };
@@ -182,7 +183,6 @@ static const Bit64u BxOpcodeTable0F38DC[] = {
 static const Bit64u BxOpcodeTable0F38DD[] = { 
 #if BX_SUPPORT_KEYLOCKER
   form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_MOD_MEM, BX_IA_AESDEC128KL_VdqMdq),
-  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_MODC0,   BX_IA_LOADIWKEY_VdqWdq),
 #endif
   last_opcode(ATTR_SSE_PREFIX_66, BX_IA_AESENCLAST_VdqWdq)
 };

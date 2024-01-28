@@ -140,9 +140,6 @@ x86_feature(BX_ISA_RDPID, "rdpid")                                      /* RDPID
 x86_feature(BX_ISA_TCE, "tce")                                          /* Translation Cache Extensions (TCE) support (AMD) */
 x86_feature(BX_ISA_CLZERO, "clzero")                                    /* CLZERO instruction support (AMD) */
 x86_feature(BX_ISA_SCA_MITIGATIONS, "sca_mitigations")                  /* Report SCA Mitigations in CPUID */
-#if BX_SUPPORT_KEYLOCKER
-x86_feature(BX_ISA_KEYLOCKER, "keylocker")                              /* KeyLocker support */
-#endif
 x86_feature(BX_ISA_CET, "cet")                                          /* Control Flow Enforcement */
 x86_feature(BX_ISA_WRMSRNS, "wrmsrns")                                  /* Non-Serializing version of WRMSR */
 x86_feature(BX_ISA_CMPCCXADD, "cmpccxadd")                              /* CMPccXADD instructions */
@@ -153,3 +150,4 @@ x86_feature(BX_ISA_UINTR, "uintr")                                      /* User 
 x86_feature(BX_ISA_MOVDIRI, "movdiri")                                  /* MOVDIRI instruction support */
 x86_feature(BX_ISA_MOVDIR64B, "movdir64b")                              /* MOVDIR64B instruction support */
 x86_feature(BX_ISA_MSRLIST, "msrlist")                                  /* RDMSRLIST/WRMSRLIST instructions support */
+x86_feature(BX_ISA_KEYLOCKER, "keylocker")                              /* KeyLocker support */
