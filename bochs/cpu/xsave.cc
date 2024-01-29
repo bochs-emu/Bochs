@@ -623,12 +623,12 @@ void BX_CPU_C::xsave_sse_state(bxInstruction_c *i, bx_address offset)
 {
   bx_address asize_mask = i->asize_mask();
 
+  // save XMM8-XMM15 only in 64-bit mode
+  unsigned num_regs = long64_mode() ? 16 : 8;
+
   /* store XMM register file */
-  for(unsigned index=0; index < 16; index++) {
-    // save XMM8-XMM15 only in 64-bit mode
-    if (index < 8 || long64_mode()) {
-      write_virtual_xmmword(i->seg(), (offset + index*16) & asize_mask, &BX_READ_XMM_REG(index));
-    }
+  for(unsigned index=0; index < num_regs; index++) {
+    write_virtual_xmmword(i->seg(), (offset + index*16) & asize_mask, &BX_READ_XMM_REG(index));
   }
 }
 
@@ -636,32 +636,34 @@ void BX_CPU_C::xrstor_sse_state(bxInstruction_c *i, bx_address offset)
 {
   bx_address asize_mask = i->asize_mask();
 
+  // restore XMM8-XMM15 only in 64-bit mode
+  unsigned num_regs = long64_mode() ? 16 : 8;
+
   // load SSE state from XSAVE area
-  for(unsigned index=0; index < 16; index++) {
-    // restore XMM8-XMM15 only in 64-bit mode
-    if (index < 8 || long64_mode()) {
-      read_virtual_xmmword(i->seg(), (offset+index*16) & asize_mask, &BX_READ_XMM_REG(index));
-    }
+  for(unsigned index=0; index < num_regs; index++) {
+    read_virtual_xmmword(i->seg(), (offset+index*16) & asize_mask, &BX_READ_XMM_REG(index));
   }
 }
 
 void BX_CPU_C::xrstor_init_sse_state(void)
 {
+  // set XMM8-XMM15 only in 64-bit mode
+  unsigned num_regs = long64_mode() ? 16 : 8;
+
   // initialize SSE with reset values
-  for(unsigned index=0; index < 16; index++) {
-    // set XMM8-XMM15 only in 64-bit mode
-    if (index < 8 || long64_mode()) BX_CLEAR_XMM_REG(index);
+  for(unsigned index=0; index < num_regs; index++) {
+    BX_CLEAR_XMM_REG(index);
   }
 }
 
 bool BX_CPU_C::xsave_sse_state_xinuse(void)
 {
-  for(unsigned index=0; index < 16; index++) {
-    // set XMM8-XMM15 only in 64-bit mode
-    if (index < 8 || long64_mode()) {
-      const BxPackedXmmRegister *reg = &BX_XMM_REG(index);
-      if (! is_clear(reg)) return true;
-    }
+  // set XMM8-XMM15 only in 64-bit mode
+  unsigned num_regs = long64_mode() ? 16 : 8;
+
+  for(unsigned index=0; index < num_regs; index++) {
+    const BxPackedXmmRegister *reg = &BX_XMM_REG(index);
+    if (! is_clear(reg)) return true;
   }
 
   return false;
@@ -675,12 +677,12 @@ void BX_CPU_C::xsave_ymm_state(bxInstruction_c *i, bx_address offset)
 {
   bx_address asize_mask = i->asize_mask();
 
+  // save YMM8-YMM15 only in 64-bit mode
+  unsigned num_regs = long64_mode() ? 16 : 8;
+
   /* store AVX state */
-  for(unsigned index=0; index < 16; index++) {
-    // save YMM8-YMM15 only in 64-bit mode
-    if (index < 8 || long64_mode()) {
-      write_virtual_xmmword(i->seg(), (offset + index*16) & asize_mask, &BX_READ_AVX_REG_LANE(index, 1));
-    }
+  for(unsigned index=0; index < num_regs; index++) {
+    write_virtual_xmmword(i->seg(), (offset + index*16) & asize_mask, &BX_READ_AVX_REG_LANE(index, 1));
   }
 }
 
@@ -688,32 +690,34 @@ void BX_CPU_C::xrstor_ymm_state(bxInstruction_c *i, bx_address offset)
 {
   bx_address asize_mask = i->asize_mask();
 
+  // restore YMM8-YMM15 only in 64-bit mode
+  unsigned num_regs = long64_mode() ? 16 : 8;
+
   // load AVX state from XSAVE area
-  for(unsigned index=0; index < 16; index++) {
-    // restore YMM8-YMM15 only in 64-bit mode
-    if (index < 8 || long64_mode()) {
-      read_virtual_xmmword(i->seg(), (offset + index*16) & asize_mask, &BX_READ_AVX_REG_LANE(index, 1));
-    }
+  for(unsigned index=0; index < num_regs; index++) {
+    read_virtual_xmmword(i->seg(), (offset + index*16) & asize_mask, &BX_READ_AVX_REG_LANE(index, 1));
   }
 }
 
 void BX_CPU_C::xrstor_init_ymm_state(void)
 {
+  // set YMM8-YMM15 only in 64-bit mode
+  unsigned num_regs = long64_mode() ? 16 : 8;
+
   // initialize upper part of AVX registers with reset values
-  for(unsigned index=0; index < 16; index++) {
-    // set YMM8-YMM15 only in 64-bit mode
-    if (index < 8 || long64_mode()) BX_CLEAR_AVX_HIGH128(index);
+  for(unsigned index=0; index < num_regs; index++) {
+    BX_CLEAR_AVX_HIGH128(index);
   }
 }
 
 bool BX_CPU_C::xsave_ymm_state_xinuse(void)
 {
-  for(unsigned index=0; index < 16; index++) {
-    // set YMM8-YMM15 only in 64-bit mode
-    if (index < 8 || long64_mode()) {
-      const BxPackedXmmRegister *reg = &BX_READ_AVX_REG_LANE(index, 1);
-      if (! is_clear(reg)) return true;
-    }
+  // set YMM8-YMM15 only in 64-bit mode
+  unsigned num_regs = long64_mode() ? 16 : 8;
+
+  for(unsigned index=0; index < num_regs; index++) {
+    const BxPackedXmmRegister *reg = &BX_READ_AVX_REG_LANE(index, 1);
+    if (! is_clear(reg)) return true;
   }
 
   return false;
