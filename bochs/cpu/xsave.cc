@@ -189,14 +189,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
   Bit64u xstate_bv = requested_feature_bitmap & xinuse;
   Bit64u xcomp_bv = requested_feature_bitmap | XSAVEC_COMPACTION_ENABLED;
 
-  if ((requested_feature_bitmap & BX_XCR0_FPU_MASK) != 0)
+  if ((xstate_bv & BX_XCR0_FPU_MASK) != 0)
   {
-    if (xinuse & BX_XCR0_FPU_MASK) {
-      xsave_x87_state(i, eaddr);
-    }
+    xsave_x87_state(i, eaddr);
   }
 
-  if ((requested_feature_bitmap & BX_XCR0_SSE_MASK) != 0)
+  if ((xstate_bv & BX_XCR0_SSE_MASK) != 0)
   {
     // write cannot cause any boundary cross because XSAVE image is 64-byte aligned
     write_virtual_dword(i->seg(), eaddr + 24, BX_MXCSR_REGISTER);
@@ -341,19 +339,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   }
 
   Bit32u requested_feature_bitmap = xcr0 & EAX;
+  Bit64u format = xcomp_bv & ~XSAVEC_COMPACTION_ENABLED;
+  Bit32u restore_mask = xstate_bv & format;
 
   /////////////////////////////////////////////////////////////////////////////
   if ((requested_feature_bitmap & BX_XCR0_FPU_MASK) != 0)
   {
-    if (xstate_bv & BX_XCR0_FPU_MASK)
+    if (restore_mask & BX_XCR0_FPU_MASK)
       xrstor_x87_state(i, eaddr);
     else
       xrstor_init_x87_state();
   }
 
   /////////////////////////////////////////////////////////////////////////////
-  if ((requested_feature_bitmap & BX_XCR0_SSE_MASK) != 0 ||
-     ((requested_feature_bitmap & BX_XCR0_YMM_MASK) != 0 && ! compaction))
+  if ((requested_feature_bitmap & restore_mask & BX_XCR0_SSE_MASK) != 0 ||
+     ((requested_feature_bitmap & restore_mask & BX_XCR0_YMM_MASK) != 0 && ! compaction))
   {
     // read cannot cause any boundary cross because XSAVE image is 64-byte aligned
     Bit32u new_mxcsr = read_virtual_dword(i->seg(), eaddr + 24);
@@ -365,7 +365,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   /////////////////////////////////////////////////////////////////////////////
   if ((requested_feature_bitmap & BX_XCR0_SSE_MASK) != 0)
   {
-    if (xstate_bv & BX_XCR0_SSE_MASK)
+    if (restore_mask & BX_XCR0_SSE_MASK)
       xrstor_sse_state(i, eaddr+XSAVE_SSE_STATE_OFFSET);
     else
       xrstor_init_sse_state();
@@ -386,7 +386,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
           continue;
         }
 
-        if (xstate_bv & feature_mask) {
+        if (restore_mask & feature_mask) {
           BX_ASSERT(xsave_restore[feature].xrstor_method);
           CALL_XSAVE_FN(xsave_restore[feature].xrstor_method)(i, eaddr+offset);
         }
@@ -395,7 +395,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
           CALL_XSAVE_FN(xsave_restore[feature].xrstor_init_method)();
         }
 
-        offset += xsave_restore[feature].len;
+        if (format & feature_mask)
+          offset += xsave_restore[feature].len;
       }
     }
   }

@@ -5,7 +5,7 @@ We welcome every new contributor !
 
 Brief summary :
   - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, x87, AVX-VNNI, AVX-512, CET)
-  - Critical CPU emulation bugfixes for SHA and GFNI instructions, ADOX instruction (prevented boot of Win10)
+    - Critical CPU emulation bugfixes for SHA and GFNI instructions, ADOX and XRSTOR/XRSTORS instructions (prevented boot of Win10)
   ! SVM: Implemented SVM VM_CR_MSR and INIT redirect (required for booting SMP with SVM)
   ! Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
   ! Implemented VMX 'Shadow Stack Prematurely Busy' control
@@ -39,7 +39,7 @@ Detailed change log :
 
 - CPU/CPUDB
   - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, x87, AVX-VNNI, AVX-512, CET)
-  - Critical CPU emulation bugfixes for SHA and GFNI instructions, ADOX instruction (prevented boot of Win10)
+    - Critical CPU emulation bugfixes for SHA and GFNI instructions, ADOX and XRSTOR/XRSTORS instructions (prevented boot of Win10)
   - SVM: Implemented SVM VM_CR_MSR and INIT redirect (required for booting SMP with SVM)
   - Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
   - Implemented advanced VM-exit information for EPT violations (tied to MBE Control)
