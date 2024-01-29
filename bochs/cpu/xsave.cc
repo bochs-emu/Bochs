@@ -339,7 +339,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   }
 
   Bit32u requested_feature_bitmap = xcr0 & EAX;
-  Bit64u format = xcomp_bv & ~XSAVEC_COMPACTION_ENABLED;
+  Bit64u format = (compaction) ? (xcomp_bv & ~XSAVEC_COMPACTION_ENABLED) : (~XSAVEC_COMPACTION_ENABLED);
   Bit32u restore_mask = xstate_bv & format;
 
   /////////////////////////////////////////////////////////////////////////////
