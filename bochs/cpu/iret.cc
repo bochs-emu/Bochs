@@ -439,7 +439,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
       bx_address prev_SSP = SSP;
       SSP = shadow_stack_restore(raw_cs_selector, cs_descriptor, new_rip);
       if (SSP != prev_SSP) {
-        shadow_stack_atomic_clear_busy(SSP, CPL);
+        shadow_stack_atomic_clear_busy(prev_SSP, CPL);
       }
     }
 #endif
