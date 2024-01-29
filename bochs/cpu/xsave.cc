@@ -194,17 +194,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
     xsave_x87_state(i, eaddr);
   }
 
-  if ((xstate_bv & BX_XCR0_SSE_MASK) != 0)
+  if ((xstate_bv & (BX_XCR0_SSE_MASK|BX_XCR0_YMM_MASK)) != 0)
   {
     // write cannot cause any boundary cross because XSAVE image is 64-byte aligned
     write_virtual_dword(i->seg(), eaddr + 24, BX_MXCSR_REGISTER);
     write_virtual_dword(i->seg(), eaddr + 28, MXCSR_MASK);
   }
 
-  Bit32u offset = XSAVE_SSE_STATE_OFFSET;
+  if ((xstate_bv & BX_XCR0_SSE_MASK) != 0)
+  {
+    xsave_sse_state(i, eaddr);
+  }
+
+  Bit32u offset = XSAVE_YMM_STATE_OFFSET;
 
   /////////////////////////////////////////////////////////////////////////////
-  for (unsigned feature = xcr0_t::BX_XCR0_SSE_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
+  for (unsigned feature = xcr0_t::BX_XCR0_YMM_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
   {
     Bit32u feature_mask = (1 << feature);
 
