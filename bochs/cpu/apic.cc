@@ -288,15 +288,16 @@ void bx_local_apic_c::enable_xapic_extensions(void)
 
 void bx_local_apic_c::set_base(bx_phy_address newbase)
 {
-#if BX_CPU_LEVEL >= 6
-  if (mode == BX_APIC_X2APIC_MODE)
-    ldr = ((apic_id & 0xfffffff0) << 16) | (1 << (apic_id & 0xf));
-#endif
   mode = (newbase >> 10) & 3;
   newbase &= ~((bx_phy_address) 0xfff);
   base_addr = newbase;
   BX_INFO(("allocate APIC id=%d (MMIO %s) to 0x" FMT_PHY_ADDRX,
     apic_id, (mode == BX_APIC_XAPIC_MODE) ? "enabled" : "disabled", newbase));
+
+#if BX_CPU_LEVEL >= 6
+  if (mode == BX_APIC_X2APIC_MODE)
+    ldr = ((apic_id & 0xfffffff0) << 16) | (1 << (apic_id & 0xf));
+#endif
 
   if (mode == BX_APIC_GLOBALLY_DISABLED) {
     // if local apic becomes globally disabled reset some fields back to defaults
