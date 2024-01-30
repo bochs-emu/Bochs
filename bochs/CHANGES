@@ -117,7 +117,7 @@ Detailed change log :
     - BLT System-to-screen Dword Pointer (GR2F[6:5]) implemented
     - Fixed redraw values for backward BitBlt
     - Fixed bitblt issues caused by unhandled address wrap and unaligned drawing region
-    - Double scan support for color depth > 8 implemented
+    - Double scan support for color depth > 8 implemented (double width if necessary)
 
   - Voodoo
     - Expand maximum resolution for Banshee and Voodoo 3 from 1600x1280 to 1920x1440
