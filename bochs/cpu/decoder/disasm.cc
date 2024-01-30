@@ -30,7 +30,7 @@
 #include "decoder.h"
 #include "fetchdecode.h"
 
-#if BX_DEBUGGER
+#if BX_DEBUGGER && !defined(BX_STANDALONE_DECODER)
 #include "../../bx_debug/debug.h"
 #define SYMBOLIC_JUMP(fmt)  fmt " %s"
 #define GET_SYMBOL(addr) bx_dbg_disasm_symbolic_address((addr), 0)
@@ -545,7 +545,7 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
       Bit32u imm32 = i->Id();
       Bit16u cs_selector = i->Iw2();
       disbufptr = dis_sprintf(disbufptr, "0x%04x:%08x", cs_selector, imm32);
-#if BX_DEBUGGER
+#if BX_DEBUGGER && !defined(BX_STANDALONE_DECODER)
       bx_address laddr = bx_dbg_get_laddr(cs_selector, imm32);
       // get the symbol
       const char *ptStrSymbol = bx_dbg_disasm_symbolic_address(laddr, 0);
@@ -557,7 +557,7 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
       Bit16u imm16 = i->Iw();
       Bit16u cs_selector = i->Iw2();
       disbufptr = dis_sprintf(disbufptr, "0x%04x:%04x", cs_selector, imm16);
-#if BX_DEBUGGER
+#if BX_DEBUGGER && !defined(BX_STANDALONE_DECODER)
       bx_address laddr = bx_dbg_get_laddr(cs_selector, imm16);
       // get the symbol
       const char *ptStrSymbol = bx_dbg_disasm_symbolic_address(laddr, 0);

@@ -24,6 +24,10 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAHF(bxInstruction_c *i)
 {
   set_SF((AH & 0x80) >> 7);

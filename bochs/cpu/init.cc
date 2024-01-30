@@ -37,6 +37,10 @@
 #include "avx/amx.h"
 #endif
 
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
+
 #include <stdlib.h>
 
 BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
@@ -139,6 +143,13 @@ void BX_CPU_C::initialize(void)
   amx = NULL;
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AMX)) {
     amx = new AMX;
+  }
+#endif
+
+#if BX_SUPPORT_SVM
+  vmcb = NULL;
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM)) {
+    vmcb = new VMCB_CACHE;
   }
 #endif
 
@@ -449,6 +460,13 @@ void BX_CPU_C::register_state(void)
   }
 #endif
 
+#if BX_SUPPORT_SVM
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM)) {
+    BXRS_HEX_PARAM_FIELD(MSR, svm_hsave_pa, msr.svm_hsave_pa);
+    BXRS_HEX_PARAM_FIELD(MSR, svm_vm_cr, msr.svm_vm_cr);
+  }
+#endif
+
 #if BX_CONFIGURE_MSRS
   bx_list_c *MSRS = new bx_list_c(cpu, "USER_MSR");
   for(n=0; n < BX_MSR_MAX_INDEX; n++) {
@@ -745,6 +763,10 @@ BX_CPU_C::~BX_CPU_C()
   delete amx;
 #endif
 
+#if BX_SUPPORT_SVM
+  delete vmcb;
+#endif
+
 #if InstrumentCPU
   delete stats;
 #endif
@@ -951,6 +973,11 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_CPU_THIS_PTR msr.ia32_umwait_ctrl = 0;
+#endif
+
+#if BX_SUPPORT_SVM
+  BX_CPU_THIS_PTR msr.svm_hsave_pa = 0;
+  BX_CPU_THIS_PTR msr.svm_vm_cr = 0;     // enable SVME if was disabled, clear LOCK bit
 #endif
 
 #if BX_SUPPORT_CET

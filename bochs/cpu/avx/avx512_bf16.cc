@@ -86,7 +86,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VDPBF16PS_MASK_VpsHdqWdqR(bxInstruction_c 
   unsigned len = i->getVL();
   Bit32u mask = (i->opmask() != 0) ? BX_READ_16BIT_OPMASK(i->opmask()) : 0xffff;
 
-  static float_status_t status = prepare_ne_softfloat_status_helper();
+  // "round to nearest even" rounding mode is used when doing each accumulation of the FMA.
+  // output denormals are always flushed to zero and input denormals are always treated as zero.
+  float_status_t status = prepare_ne_softfloat_status_helper();
+  status.denormals_are_zeros = true;
 
   for (unsigned n=0, tmp_mask = mask; n < DWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1) {

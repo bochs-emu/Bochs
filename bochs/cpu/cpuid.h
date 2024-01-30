@@ -191,6 +191,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_VMX_TSC_SCALING                      (1 << 24)   /* TSC Scaling */
 #define BX_VMX_SW_INTERRUPT_INJECTION_ILEN_0    (1 << 25)   /* Allow software interrupt injection with instruction length 0 */
 #define BX_VMX_MBE_CONTROL                      (1 << 26)   /* Mode-Based Execution Control (XU/XS) */
+#define BX_VMX_SPEC_CTRL_VIRTUALIZATION         (1 << 27)   /* Virtualize MSR IA32_SPEC_CTRL */
 
 // CPUID defines - features CPUID[0x00000001].EDX
 // ----------------------------

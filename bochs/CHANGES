@@ -4,14 +4,19 @@ The Bochs source tree is transitioning from SVN to GIT hosted on github (https:/
 We welcome every new contributor !
 
 Brief summary :
-  - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, AVX-512, CET, SHA, GFNI fixes)
+  - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, x87, AVX-VNNI, AVX-512, CET)
+    - Critical CPU emulation bugfixes for SHA and GFNI instructions, ADOX and XRSTOR/XRSTORS instructions (prevented boot of Win10)
+  ! SVM: Implemented SVM VM_CR_MSR and INIT redirect (required for booting SMP with SVM)
   ! Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
+  ! Implemented VMX 'Shadow Stack Prematurely Busy' control
+  ! Implemented MSR IA32_SPEC_CTRL Virtualization VMX extension
   ! Implemented Posted-Interrupt Processing VMX extension emulation
   ! Implemented Linear Address Separation (LASS) extension
   ! Implemented 57-bit Linear Address and 5-Level Paging support
   ! Implemented User-Level Interrupt (UINTR) extension
+  ! Implemented Intel AMX extensions (AMX, AMX_INT8, AMX_BF16, AMX_FP16, AMX_COMPLEX)
   ! Implemented Intel instruction sets:
-    - MOVDIRI/MOVDIR64B, AMX, AVX512 BF16, AVX IFMA52, AVX-VNNI/VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
+    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
   ! CPUID: Added Xeon Sapphire Rapids CPU definition
   - Improved 64-bit guest support in Bochs internal debugger, added new internal debugger commands
   - Bochs debugger enhanced with new commands (setpmem, loadmem, deref, ...)
@@ -24,8 +29,8 @@ Brief summary :
   - Disk images: Allows large VHD image files
   - Fixed and enhanced the Floppy Disk emulation, VGA emulation fixes
   - Expand maximum resolution for Banshee and Voodoo 3 from 1600x1280 to 1920x1440
-  - Documentation updates and fixes
   - LGPL'd VGABIOS updated to version 0.8c (several VBE fixes / additions)
+  - Documentation updates and fixes
 
 Detailed change log :
 
@@ -33,17 +38,22 @@ Detailed change log :
   - Improved parsing bochsrc options passed on the command line.
 
 - CPU/CPUDB
-  - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, AVX-512, CET)
-  - Critical CPU emulation bugfixes for SHA and GFNI instructions
+  - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, x87, AVX-VNNI, AVX-512, CET)
+    - Critical CPU emulation bugfixes for SHA and GFNI instructions, ADOX and XRSTOR/XRSTORS instructions (prevented boot of Win10)
+  - SVM: Implemented SVM VM_CR_MSR and INIT redirect (required for booting SMP with SVM)
   - Implemented VMX MBE (Mode Based Execution Control) emulation required for Windows 11 guest
+  - Implemented advanced VM-exit information for EPT violations (tied to MBE Control)
+  - Implemented VMX 'Shadow Stack Prematurely Busy' control
+  - Implemented MSR IA32_SPEC_CTRL Virtualization VMX extension
   - Implemented Posted-Interrupt Processing VMX extension emulation
   - Implemented Linear Address Separation (LASS) extension
   - Implemented 57-bit Linear Address and 5-Level Paging support
   - Implemented User-Level Interrupt (UINTR) extension
+  - Implemented Intel AMX extensions (AMX, AMX_INT8, AMX_BF16, AMX_FP16, AMX_COMPLEX)
   - Implemented Intel instruction sets:
-    - MOVDIRI/MOVDIR64B, AMX, AVX512 BF16, AVX IFMA52, AVX-VNNI/VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
+    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
   - CPUID: Added Xeon Sapphire Rapids CPU definition
-    - Features PKS, WAITPKG, UINTR, AVX-VNNI, AVX512_BF16, MOVDIRI/MOVDIR64, LA57, SERIALIZE and more
+    - Features AMX/AMX_INT8/AMX_BF16, PKS, WAITPKG, UINTR, AVX-VNNI, AVX512_BF16, MOVDIRI/MOVDIR64, LA57, SERIALIZE and more
       Not yet supported but will be added in future: AVX512_FP16, VMX Extensions (HLAT, IPI Virtualization)
 
 - Bochs Debugger and Instrumentation
@@ -62,6 +72,11 @@ Detailed change log :
 - Config interface
   - Show message box while saving and restoring Bochs state
 
+- GUI and display libraries
+  - SDL / SDL2: change fullscreen toggle to key combination ALT+ENTER.
+  - SDL2: Save / restore window position when using fullscreen toggle
+  - win32: cancel topmost window mode after leaving fullscreen mode
+
 - Memory
   - Fixed memory handling in volatile BIOS write support
   - Added 'flash_data' parameter for loading/saving the config space of the
@@ -71,6 +86,10 @@ Detailed change log :
   - Timers
     - Fixed APIC MWAIT timer activation
     - APIC: Removed timer handles from save/restore list
+
+  - PIT
+    - PIT82C54: According to documentation (8254.pdf), mode 6 is the same as mode 2 and mode 7 is the same as mode 3.
+                Writes with mode 6 and 7 were not supported.
 
   - CMOS
     - Fixed and improved RTC handling in CMOS and BIOS (based on SF patch by Michele Giacomone).
@@ -85,13 +104,30 @@ Detailed change log :
     - Fixes for non-chain4 256-color VGA mode called modeX (address wrap, horizonal scrolling)
     - VGA text mode: implemented secondary charmap support
     - mem_write(): in text mode don't mark graphics tiles for update
+    - Increase maximum VGA update frequency to 75 and set default to 10
+    - VGA update frequency value 0 enables support for using frame rate of emulated gfx device
+    - Fixes for emulated CGA mode
+    - Implemented more accurate vertical timing by using one timer with two alternating
+      periods. Set display start address from CRTC at vertical retrace end and after second
+      period the display start time for retrace and blanking detection
+
+  - SVGA Cirrus:
+    - PCI MMIO space is not disabled if the Cirrus card is in VGA mode
+    - Fixed color expand bitblt with dword granularity enabled
+    - BLT System-to-screen Dword Pointer (GR2F[6:5]) implemented
+    - Fixed redraw values for backward BitBlt
+    - Fixed bitblt issues caused by unhandled address wrap and unaligned drawing region
+    - Double scan support for color depth > 8 implemented
 
   - Voodoo
     - Expand maximum resolution for Banshee and Voodoo 3 from 1600x1280 to 1920x1440
-    - Fix memory corruption when reading Voodoo ROM
     - Fixed backward screen-to-screen copy operation for > 8 bpp modes
     - Fixed Voodoo device compilation for big endian architectures
     - Fixed randomly missing color palette updates
+    - Fixed Banshee read from ROM and mem_write() for any size and endianness
+    - Fixed Banshee bitblt redraw in 3D mode and pitch used in this mode
+    - Banshee: Implement 8 and 16 byte writes to CMDFIFO
+    - Double the screen width in 'half mode' if height > width
 
   - CD-ROM:
     - Fix to enable TEAC CD-ROM driver to work
@@ -106,28 +142,27 @@ Detailed change log :
 
   - Floppy drive
     - Allows a choice of multiple FDC Controllers to emulate.
-       Using a compile time #define, you can choose a specified Controller type/manufacture to emulate.
+      Using a compile time #define, you can choose a specified Controller type/manufacture to emulate.
     - Added most all FDC supported commands.
-       Use the 'FDC_TYPE_BOCHS' type to support all commands.
-       Other types will only support their respected supported commands.
-       Commands of note: 'format & write', 'read track', 'part id', and corrected the 'version' command.
-       Did not add the 'Write Deleted Data' command, since there is no way to mark the emulated image
-        file as a deleted sector. The 'Read Deleted Data' command ignores the SK bit.
+      Use the 'FDC_TYPE_BOCHS' type to support all commands.
+      Other types will only support their respected supported commands.
+      Commands of note: 'format & write', 'read track', 'part id', and corrected the 'version' command.
+      Did not add the 'Write Deleted Data' command, since there is no way to mark the emulated image
+      file as a deleted sector. The 'Read Deleted Data' command ignores the SK bit.
     - Fixed and enhanced the Format command and function.
     - Fixed the Multi-track and EOT function.
-       A read/write/verify must stop at the end of a track (multi-track aware).
-    - fixed the cmos floppy type setting (config.cc::get_floppy_devtype_from_type())
-    - IGNORE_DEBUG_03F6: set this define so that the log file is not flooded with
-        reads/writes to this register by the harddrive code.
-    - changed a lot of hardcoded values to '#define's, especially with the switch/case blocks.
-    - the new command/result max size is now a #define (MAX_PHASE_SIZE)
-    - the SCANEQ/SCANLOWEQ/SCANHIGHEQ commands are untested. I don't have a 'real hardware' controller that
-       supports these commands. Even though the controller is a 82078, which specifies that it should
-       support these commands, it returns 'command unsupported'. If I find another controller type, I will
-       try that one. It would surprise me if any of them actually support this rarely used command.
-    - this new code fixes an error where Win98 and older Windows versions would set the high order 
-       drive select bit in error. This would specify drive 2 for drive 0, and drive 3 for drive 1.
-    - replaced the broken 82078 datasheet URL with one from the QEMU wiki. It should be static now.
+      A read/write/verify must stop at the end of a track (multi-track aware).
+    - Fixed the cmos floppy type setting (config.cc::get_floppy_devtype_from_type())
+    - IGNORE_DEBUG_03F6: set this define so that the log file is not flooded with reads/writes
+      to this register by the harddrive code.
+    - The new command/result max size is now a #define (MAX_PHASE_SIZE)
+    - The SCANEQ/SCANLOWEQ/SCANHIGHEQ commands are untested. I don't have a 'real hardware' controller that
+      supports these commands. Even though the controller is a 82078, which specifies that it should
+      support these commands, it returns 'command unsupported'. If I find another controller type, I will
+      try that one. It would surprise me if any of them actually support this rarely used command.
+    - This new code fixes an error where Win98 and older Windows versions would set the high order 
+      drive select bit in error. This would specify drive 2 for drive 0, and drive 3 for drive 1.
+    - Replaced the broken 82078 datasheet URL with one from the QEMU wiki. It should be static now.
 
   - USB
     - Added the ability to change interfaces (ex: BBB to UASP).
@@ -181,13 +216,14 @@ Detailed change log :
 
   - HPET
     - Bugfixes in HPET emulation
+    - Fixed hang after HPET reset in legacy mode
 
   - SB16
     - Set default value for SB16 dmatimer to 1000000 and updated docs
     - Align SB16 DMA buffer size to 4 to avoid crash in 16-bit stereo mode
     - Added 16-bit write support for even i/o addresses
 
-   - Keyboard/Mouse
+  - Keyboard/Mouse
     - Reduce default keyboard serial delay to 150 to avoid timeouts
 
 -BIOS / VGABIOS
@@ -235,6 +271,9 @@ Detailed change log :
 
 - CPU/CPUDB
   - Bugfixes for CPU emulation correctness (CPUID/VMX/SVM fixes to support Windows Hyper-V as guest in Bochs)
+  - TSC: Implemented TSC_ADJUST MSR and enabled in all relevant CPU models
+  - Protection Keys: Implemented Supervisor-Mode Protection Keys (PKS)
+  - AVX-VNNI: Implemented AVX encoded VNNI instructions
   ! CPUID: Added TigerLake CPU definition (features CET and CLWB support)
 
 - Memory
@@ -2579,10 +2618,8 @@ Detailed change log :
 
 - CPU
   - fixes for booting OS/2 by Dmitri Froloff
-    - fixed v8086 priveleged instruction processing bug (was also reported
-      by LightCone Aug 7 2003)
-    - exception process bug (was reported by Diego Henriquez Sat Nov 15
-      01:16:51 CET 2003)
+    - fixed v8086 priveleged instruction processing bug (was also reported by LightCone Aug 7 2003)
+    - exception process bug (was reported by Diego Henriquez Nov 15 2003)
     - segment validation with IRET instruction
     - CS segment not present exception processing with IRET
   - several fixes by Kevin Lawton

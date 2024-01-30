@@ -63,6 +63,7 @@
 typedef struct {
   Bit16u htotal;
   Bit16u vtotal;
+  Bit16u vbstart;
   Bit16u vrstart;
 } bx_crtc_params_t;
 
@@ -73,6 +74,7 @@ public:
                            unsigned width, unsigned height) {}
   virtual void refresh_display(void *this_ptr, bool redraw) {}
   virtual void update(void) {}
+  virtual Bit32u get_vtotal_usec(void) {return 0;}
 };
 #endif
 
@@ -103,8 +105,12 @@ public:
   virtual bool   init_vga_extension(void) {return 0;}
   virtual void   get_crtc_params(bx_crtc_params_t *crtcp, Bit32u *vclock);
 
+  virtual bool   get_update_mode(void) {return update_mode_vsync;}
   virtual void   set_update_timer(Bit32u usec);
+  virtual void   start_vertical_timer(void);
   static void    vga_timer_handler(void *);
+  static void    vertical_timer_handler(void *);
+  virtual void   vertical_timer(void);
   static Bit64s  vga_param_handler(bx_param_c *param, bool set, Bit64s val);
 
 protected:
@@ -143,9 +149,10 @@ protected:
     } misc_output;
 
     struct {
-      Bit8u   address;
-      Bit8u   reg[0x19];
-      bool write_protect;
+      Bit8u  address;
+      Bit8u  reg[0x19];
+      bool   write_protect;
+      Bit16u start_addr;
     } CRTC;
 
     struct {
@@ -267,11 +274,17 @@ protected:
 #endif
   } s;  // state information
 
-  int timer_id;
+  // vga update timer stuff
+  int update_timer_id;
   Bit32u vga_update_interval;
   bool update_realtime;
+  bool update_mode_vsync;
+  // vertical timer stuff
+  int vga_vtimer_id;
   bool vsync_realtime;
-  bool vsync_update_mode;
+  Bit8u vtimer_toggle;
+  Bit32u vtimer_interval[2];
+  // vga config
   bx_param_enum_c *vga_ext;
   bool pci_enabled;
 };

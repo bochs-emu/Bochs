@@ -1728,8 +1728,10 @@ struct _banshee_info
   Bit8u  crtc[0x27]; /* VGA CRTC registers */
   Bit8u  disp_bpp;
   bool half_mode;
+  bool double_width;
   bool dac_8bit;
   bool desktop_tiled;
+  bool overlay_tiled;
   struct {
     bool enabled;
     bool mode;

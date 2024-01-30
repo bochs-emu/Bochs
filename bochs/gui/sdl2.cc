@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2014-2023  The Bochs Project
+//  Copyright (C) 2014-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -90,6 +90,7 @@ SDL_DisplayMode sdl_maxres;
 bool sdl_init_done;
 bool sdl_fullscreen_toggle;
 bool sdl_grab = 0;
+int saved_x = 0, saved_y = 0;
 unsigned res_x, res_y;
 unsigned half_res_x, half_res_y;
 int headerbar_height;
@@ -327,6 +328,7 @@ static Bit32u sdl_sym_to_bx_key(SDL_Keycode sym)
 void switch_to_windowed(void)
 {
   SDL_SetWindowFullscreen(window, 0);
+  SDL_SetWindowPosition(window, saved_x, saved_y);
   SDL_SetWindowSize(window, res_x, res_y + headerbar_height + statusbar_height);
   sdl_screen = SDL_GetWindowSurface(window);
   sdl_fullscreen = NULL;
@@ -342,6 +344,7 @@ void switch_to_fullscreen(void)
   if (!sdl_grab) {
     bx_gui->toggle_mouse_enable();
   }
+  SDL_GetWindowPosition(window, &saved_x, &saved_y);
   SDL_SetWindowSize(window, res_x, res_y);
   SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
   sdl_fullscreen = SDL_GetWindowSurface(window);
@@ -834,7 +837,8 @@ void bx_sdl2_gui_c::handle_events(void)
         }
 
         // Window/Fullscreen toggle-check
-        if (sdl_event.key.keysym.sym == SDLK_SCROLLLOCK) {
+        if ((sdl_event.key.keysym.sym == SDLK_RETURN) &&
+            (bx_gui->get_modifier_keys() == BX_MOD_KEY_ALT)) {
           sdl_fullscreen_toggle = !sdl_fullscreen_toggle;
           if (sdl_fullscreen_toggle == 0) {
             switch_to_windowed();
@@ -917,6 +921,9 @@ void bx_sdl2_gui_c::handle_events(void)
         break;
 
       case SDL_QUIT:
+#ifndef WIN32
+        SIM->set_notify_callback(old_callback, old_callback_arg);
+#endif
         BX_FATAL(("User requested shutdown."));
         break;
     }

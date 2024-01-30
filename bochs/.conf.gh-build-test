@@ -75,6 +75,7 @@ case $which_config in
       --enable-avx \
       --enable-cet \
       --enable-evex \
+      --enable-amx \
       --enable-uintr \
       --enable-perfmon \
       --enable-memtype \

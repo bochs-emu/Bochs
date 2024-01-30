@@ -308,12 +308,6 @@ enum AccessReason {
   BX_SMRAM_ACCESS
 };
 
-struct BxExceptionInfo {
-  unsigned exception_type;
-  unsigned exception_class;
-  bool push_error;
-};
-
 enum BX_Exception {
   BX_DE_EXCEPTION =  0, // Divide Error (fault)
   BX_DB_EXCEPTION =  1, // Debug (fault/trap)
@@ -333,7 +327,8 @@ enum BX_Exception {
   BX_MC_EXCEPTION = 18,
   BX_XM_EXCEPTION = 19,
   BX_VE_EXCEPTION = 20,
-  BX_CP_EXCEPTION = 21  // Control Protection (fault)
+  BX_CP_EXCEPTION = 21, // Control Protection (fault)
+  BX_SX_EXCEPTION = 30  // SVM Security Exception (fault)
 };
 
 enum CP_Exception_Error_Code {
@@ -345,6 +340,12 @@ enum CP_Exception_Error_Code {
 };
 
 const unsigned BX_CPU_HANDLED_EXCEPTIONS = 32;
+
+enum ExceptionClass {
+  BX_EXCEPTION_CLASS_TRAP = 0,
+  BX_EXCEPTION_CLASS_FAULT = 1,
+  BX_EXCEPTION_CLASS_ABORT = 2
+};
 
 enum BxCpuMode {
   BX_MODE_IA32_REAL = 0,        // CR0.PE=0                |
@@ -656,6 +657,7 @@ typedef struct
 #endif
 
 #if BX_SUPPORT_SVM
+  Bit32u svm_vm_cr;
   Bit64u svm_hsave_pa;
 #endif
 
@@ -798,7 +800,9 @@ typedef void (*xmm_pfp_3op_mask)(BxPackedXmmRegister *opdst, const BxPackedXmmRe
 #endif
 
 #if BX_SUPPORT_SVM
-#include "svm.h"
+struct SVM_HOST_STATE;
+struct SVM_CONTROLS;
+struct VMCB_CACHE;
 #endif
 
 enum monitor_armed_by {
@@ -1086,7 +1090,7 @@ public: // for now...
 #if BX_SUPPORT_MEMTYPE
   BxMemtype vmcb_memtype;
 #endif
-  VMCB_CACHE vmcb;
+  VMCB_CACHE *vmcb;
 
 // make SVM integration easier
 #define SVM_GIF (BX_CPU_THIS_PTR svm_gif)
@@ -3609,6 +3613,9 @@ public: // for now...
   BX_SMF void TDPBUSD_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TDPBUUD_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TDPBF16PS_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TDPFP16PS_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TCMMRLFP16PS_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TCMMIMFP16PS_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TILEZERO_Tnnn(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TILERELEASE(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #endif
@@ -4146,9 +4153,9 @@ public: // for now...
   BX_SMF unsigned   dbg_query_pending(void);
 #endif
 #if BX_DEBUGGER || BX_GDBSTUB
-  BX_SMF bool  dbg_instruction_epilog(void);
+  BX_SMF bool dbg_instruction_epilog(void);
 #endif
-  BX_SMF bool  dbg_xlate_linear2phy(bx_address linear, bx_phy_address *phy, bx_address *lpf_mask = 0, bool verbose = 0, bool nested_walk = 0);
+  BX_SMF bool dbg_xlate_linear2phy(bx_address linear, bx_phy_address *phy, bx_address *lpf_mask = 0, bool verbose = 0, bool nested_walk = 0);
 #if BX_SUPPORT_VMX >= 2
   BX_SMF bool dbg_translate_guest_physical_ept(bx_phy_address guest_paddr, bx_phy_address *phy, bool verbose = 0);
 #endif
@@ -4192,6 +4199,7 @@ public: // for now...
 
 #if BX_SUPPORT_X86_64
   BX_SMF BX_CPP_INLINE bool IsCanonical(bx_address addr) { return IsCanonicalToWidth(addr, BX_CPU_THIS_PTR linaddr_width); }
+  BX_SMF bool IsCanonicalAccess(bx_address addr, bool user) BX_CPP_AttrRegparmN(2);
 #endif
 
   BX_SMF bool write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len, bool align = false) BX_CPP_AttrRegparmN(4);
@@ -4403,17 +4411,22 @@ public: // for now...
   BX_SMF bx_phy_address translate_linear(bx_TLB_entry *entry, bx_address laddr, unsigned user, unsigned rw);
   BX_SMF bx_phy_address translate_linear_legacy(bx_address laddr, Bit32u &lpf_mask, unsigned user, unsigned rw);
   BX_SMF void update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, BxMemtype *entry_memtype, unsigned leaf, unsigned write);
+  BX_SMF Bit32u check_leaf_entry_faults(bx_address laddr, Bit64u leaf_entry, Bit32u combined_access, unsigned user, unsigned rw, bool nx_page = false);
 #if BX_CPU_LEVEL >= 6
   BX_SMF bx_phy_address translate_linear_load_PDPTR(bx_address laddr, unsigned user, unsigned rw);
   BX_SMF bx_phy_address translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask, unsigned user, unsigned rw);
-  BX_SMF int check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsigned rw, bool *nx_fault);
+  BX_SMF int check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsigned rw, bool *nx_page);
   BX_SMF void update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry, BxMemtype *entry_memtype, unsigned max_level, unsigned leaf, unsigned write);
 #endif
 #if BX_SUPPORT_X86_64
   BX_SMF bx_phy_address translate_linear_long_mode(bx_address laddr, Bit32u &lpf_mask, Bit32u &pkey, unsigned user, unsigned rw);
+#if BX_SUPPORT_PKEYS
+  BX_SMF Bit32u handle_pkeys(bx_address laddr, Bit64u entry, unsigned user, unsigned rw);
+#endif
 #endif
 #if BX_SUPPORT_VMX >= 2
-  BX_SMF bx_phy_address translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bool guest_laddr_valid, bool is_page_walk, unsigned user_page, unsigned rw, bool supervisor_shadow_stack = false, bool *spp_walk = NULL);
+  BX_SMF bx_phy_address translate_guest_physical(bx_phy_address guest_paddr, bx_address guest_laddr, bool guest_laddr_valid, bool is_page_walk, 
+        bool user_page, bool writeable_page, bool nx_page, unsigned rw, bool supervisor_shadow_stack = false, bool *spp_walk = NULL);
   BX_SMF void update_ept_access_dirty(bx_phy_address *entry_addr, Bit64u *entry, BxMemtype eptptr_memtype, unsigned leaf, unsigned write);
   BX_SMF bool is_eptptr_valid(Bit64u eptptr);
   BX_SMF bool spp_walk(bx_phy_address guest_paddr, bx_address guest_laddr, BxMemtype memtype);
@@ -4445,6 +4458,8 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF void long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16u error_code);
 #endif
+  BX_SMF bool exception_push_error(unsigned vector);
+  BX_SMF int  get_exception_type(unsigned vector);
   BX_SMF void exception(unsigned vector, Bit16u error_code)
                   BX_CPP_AttrNoReturn();
   BX_SMF void init_SMRAM(void);
@@ -4928,9 +4943,10 @@ public: // for now...
   BX_SMF Bit32u VMenterLoadCheckGuestState(Bit64u *qualification);
   BX_SMF void VMenterInjectEvents(void);
   BX_SMF void VMexit(Bit32u reason, Bit64u qualification);
-  BX_SMF void VMexitSaveGuestState(Bit32u reason);
+  BX_SMF void VMexitSaveGuestState(Bit32u reason, Bit32u vector);
   BX_SMF void VMexitSaveGuestMSRs(void);
   BX_SMF void VMexitLoadHostState(void);
+  BX_SMF Bit32u VMexitReadEFLAGS(Bit32u reason, Bit32u vector);
   BX_SMF void set_VMCSPTR(Bit64u vmxptr);
   BX_SMF void init_vmx_capabilities(void);
 #if BX_SUPPORT_VMX >= 2
@@ -4942,6 +4958,7 @@ public: // for now...
   BX_SMF void init_secondary_proc_based_vmexec_ctrls(void);
   BX_SMF void init_tertiary_proc_based_vmexec_ctrls(void);
   BX_SMF void init_vmexit_ctrls(void);
+  BX_SMF void init_secondary_vmexit_ctrls(void);
   BX_SMF void init_vmentry_ctrls(void);
   BX_SMF void init_VMCS(void);
   BX_SMF bool vmcs_field_supported(Bit32u encoding);
@@ -4972,7 +4989,7 @@ public: // for now...
   BX_SMF void VMX_Self_IPI_Virtualization(Bit8u vector);
   BX_SMF void VMX_Evaluate_Pending_Virtual_Interrupts(void);
   BX_SMF void VMX_Deliver_Virtual_Interrupt(void);
-  BX_SMF void vmx_page_modification_logging(Bit64u guest_addr, unsigned dirty_update);
+  BX_SMF void vmx_page_modification_logging(Bit64u guest_laddr, Bit64u guest_paddr, unsigned dirty_update);
 #endif
 #if BX_SUPPORT_VMX >= 2
   BX_SMF Bit16u VMread16_Shadow(unsigned encoding) BX_CPP_AttrRegparmN(1);
@@ -5035,7 +5052,8 @@ public: // for now...
   BX_SMF void SvmInterceptMSR(unsigned op, Bit32u msr);
   BX_SMF void SvmInterceptTaskSwitch(Bit16u tss_selector, unsigned source, bool push_error, Bit32u error_code);
   BX_SMF void SvmInterceptPAUSE(void);
-  BX_SMF void VirtualInterruptAcknowledge(void);
+  BX_SMF void SvmVirtualInterruptAcknowledge(void);
+  BX_SMF void Svm_Update_VM_CR_MSR(Bit64u val);
   BX_SMF void register_svm_state(bx_param_c *parent);
 #endif
 

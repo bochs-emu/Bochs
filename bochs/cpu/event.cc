@@ -29,6 +29,10 @@
 #include "apic.h"
 #endif
 
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
+
 #include "iodev/iodev.h"
 
 bool BX_CPU_C::handleWaitForEvent(void)
@@ -178,7 +182,7 @@ void BX_CPU_C::HandleExtInterrupt(void)
 }
 
 #if BX_SUPPORT_SVM
-void BX_CPU_C::VirtualInterruptAcknowledge(void)
+void BX_CPU_C::SvmVirtualInterruptAcknowledge(void)
 {
   Bit8u vector = SVM_V_INTR_VECTOR;
 
@@ -258,12 +262,17 @@ bool BX_CPU_C::handleAsyncEvent(void)
   }
 
   if (is_unmasked_event_pending(BX_EVENT_INIT) && SVM_GIF) {
-    clear_event(BX_EVENT_INIT);
 #if BX_SUPPORT_SVM
     if (BX_CPU_THIS_PTR in_svm_guest) {
-      if (SVM_INTERCEPT(SVM_INTERCEPT0_INIT)) Svm_Vmexit(SVM_VMEXIT_INIT);
+      if (SVM_INTERCEPT(SVM_INTERCEPT0_INIT)) Svm_Vmexit(SVM_VMEXIT_INIT); // INIT is still pending
+    }
+    if (BX_CPU_THIS_PTR msr.svm_vm_cr & BX_VM_CR_MSR_INIT_REDIRECT_MASK) {
+      clear_event(BX_EVENT_INIT);     // INIT is no longer pending
+      BX_INFO(("SVM INIT Redirect to #SX"));
+      exception(BX_SX_EXCEPTION, 1);  // The only error code is 1, and indicates redirection of INIT
     }
 #endif
+    clear_event(BX_EVENT_INIT);
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest) {
       VMexit(VMX_VMEXIT_INIT, 0);
@@ -345,11 +354,11 @@ bool BX_CPU_C::handleAsyncEvent(void)
     }
 #endif
     clear_event(BX_EVENT_NMI);
-    mask_event(BX_EVENT_NMI);
     BX_CPU_THIS_PTR EXT = 1; /* external event */
 #if BX_SUPPORT_VMX
     VMexit_Event(BX_NMI, 2, 0, 0);
 #endif
+    mask_event(BX_EVENT_NMI);
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, 2, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
     interrupt(2, BX_NMI, 0, 0);
   }
@@ -373,8 +382,7 @@ bool BX_CPU_C::handleAsyncEvent(void)
 #if BX_SUPPORT_SVM
   else if (is_unmasked_event_pending(BX_EVENT_SVM_VIRQ_PENDING))
   {
-    // virtual interrupt acknowledge
-    VirtualInterruptAcknowledge();
+    SvmVirtualInterruptAcknowledge();
   }
 #endif
   else if (BX_HRQ && BX_DBG_ASYNC_DMA) {

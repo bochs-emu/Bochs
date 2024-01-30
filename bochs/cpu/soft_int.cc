@@ -25,6 +25,10 @@
 #include "cpuid.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
 {
   Bit16s op1_16 = BX_READ_16BIT_REG(i->dst());

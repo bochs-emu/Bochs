@@ -725,24 +725,43 @@ void bx_usb_xhci_c::reset_port(int p)
   BX_XHCI_THIS hub.usb_port[p].psceg = 0;
 }
 
+// reset_type = HOT_RESET = bit 4 was used to reset the port
+// reset_type = WARM_RESET = bit 31 was used to reset the port
+//  (a WARM_RESET can only be done from a USB3 port)
 void bx_usb_xhci_c::reset_port_usb3(int port, int reset_type)
 {
   BX_INFO(("Reset port #%d, type=%d", port + 1, reset_type));
   BX_XHCI_THIS hub.usb_port[port].portsc.pr = 0;
   BX_XHCI_THIS hub.usb_port[port].has_been_reset = 1;
   if (BX_XHCI_THIS hub.usb_port[port].portsc.ccs) {
-    BX_XHCI_THIS hub.usb_port[port].portsc.prc = 1;
     BX_XHCI_THIS hub.usb_port[port].portsc.pls = PLS_U0;
     BX_XHCI_THIS hub.usb_port[port].portsc.ped = 1;
     if (BX_XHCI_THIS hub.usb_port[port].device != NULL) {
       BX_XHCI_THIS hub.usb_port[port].device->usb_send_msg(USB_MSG_RESET);
-      if (BX_XHCI_THIS hub.usb_port[port].is_usb3 && (reset_type == WARM_RESET))
-        BX_XHCI_THIS hub.usb_port[port].portsc.wrc = 1;
     }
   } else {
     BX_XHCI_THIS hub.usb_port[port].portsc.pls = PLS_RXDETECT;
     BX_XHCI_THIS hub.usb_port[port].portsc.ped = 0;
     BX_XHCI_THIS hub.usb_port[port].portsc.speed = 0;
+  }
+
+  // The following tests were done on real hardware (NEC/Renesas):
+  // USB2 (always is HOT_RESET)
+  //   bit 21 = 1 if CCS = 1, bit 19 always 0
+  //   bit 21 = 0 if CCS = 0, bit 19 always 0
+  // USB3 (if HOT_RESET) (same as USB2 port)
+  //   bit 21 = 1 if CCS = 1, bit 19 always 0
+  //   bit 21 = 0 if CCS = 0, bit 19 always 0
+  // USB3 (if WARM_RESET)
+  //   bit 21 = 1 if CCS = 1, bit 19 always 1
+  //   bit 21 = 1 if CCS = 0, bit 19 always 1
+  if (reset_type == HOT_RESET) {
+    BX_XHCI_THIS hub.usb_port[port].portsc.prc = 
+      BX_XHCI_THIS hub.usb_port[port].portsc.ccs;
+    BX_XHCI_THIS hub.usb_port[port].portsc.wrc = 0;
+  } else {
+    BX_XHCI_THIS hub.usb_port[port].portsc.prc = 1;
+    BX_XHCI_THIS hub.usb_port[port].portsc.wrc = 1;
   }
 }
 
@@ -2362,7 +2381,7 @@ Bit64u bx_usb_xhci_c::process_transfer_ring(int slot, int ep, Bit64u ring_addr, 
           p->packet.pid = cur_direction;
           p->packet.devaddr = BX_XHCI_THIS hub.slots[slot].slot_context.device_address;
           p->packet.devep = (ep >> 1);
-          p->packet.speed = broadcast_speed(slot);
+          p->packet.speed = broadcast_speed(BX_XHCI_THIS hub.slots[slot].slot_context);
 #if HANDLE_TOGGLE_CONTROL
           p->packet.toggle = -1; // the xHCI handles the data toggle bit for USB2 devices
 #endif
@@ -2624,7 +2643,7 @@ void bx_usb_xhci_c::process_command_ring(void)
                 if (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state <= SLOT_STATE_DEFAULT) {
                   int port_num = slot_context.rh_port_num - 1;  // slot:port_num is 1 based
                   new_addr = create_unique_address(slot);
-                  if (send_set_address(new_addr, port_num, slot) == 0) {
+                  if (send_set_address(new_addr, port_num, slot_context) == 0) {
                     slot_context.slot_state = SLOT_STATE_ADDRESSED;
                     slot_context.device_address = new_addr;
                     ep_context.ep_state = EP_STATE_RUNNING;
@@ -3469,7 +3488,7 @@ int bx_usb_xhci_c::create_unique_address(int slot)
   return (slot + 1);  // Windows may need the first one to be 2 (though it shouldn't know the difference for xHCI)
 }
 
-int bx_usb_xhci_c::send_set_address(int addr, int port_num, int slot)
+int bx_usb_xhci_c::send_set_address(int addr, int port_num, SLOT_CONTEXT& slot_context)
 {
   static Bit8u setup_address[8] = { 0, 0x05, 0, 0, 0, 0, 0, 0 };
 
@@ -3479,7 +3498,7 @@ int bx_usb_xhci_c::send_set_address(int addr, int port_num, int slot)
   USBPacket packet;
   packet.pid = USB_TOKEN_SETUP;
   packet.devep = 0;
-  packet.speed = broadcast_speed(slot);
+  packet.speed = broadcast_speed(slot_context);
 #if HANDLE_TOGGLE_CONTROL
   packet.toggle = -1; // the xHCI handles the data toggle bit for USB2 devices
 #endif
@@ -3497,11 +3516,11 @@ int bx_usb_xhci_c::send_set_address(int addr, int port_num, int slot)
   return ret;
 }
 
-int bx_usb_xhci_c::broadcast_speed(int slot)
+int bx_usb_xhci_c::broadcast_speed(SLOT_CONTEXT& slot_context)
 {
   int ret = -1;
   
-  switch (BX_XHCI_THIS hub.slots[slot].slot_context.speed) {
+  switch (slot_context.speed) {
     case 1:
       ret = USB_SPEED_FULL;
       break;
@@ -3516,7 +3535,7 @@ int bx_usb_xhci_c::broadcast_speed(int slot)
       ret = USB_SPEED_SUPER;
       break;
     default:
-      BX_ERROR(("Invalid speed (%d) specified in Speed field of the Slot Context.", BX_XHCI_THIS hub.slots[slot].slot_context.speed));
+      BX_ERROR(("Invalid speed (%d) specified in Speed field of the Slot Context.", slot_context.speed));
   }
   
   return ret;

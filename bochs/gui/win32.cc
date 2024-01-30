@@ -595,7 +595,7 @@ void terminateEmul(int reason)
 
   switch (reason) {
     case EXIT_GUI_SHUTDOWN:
-      BX_FATAL(("Window closed, exiting!"));
+      BX_INFO(("Window closed, exiting!"));
       break;
     case EXIT_GMH_FAILURE:
       BX_FATAL(("GetModuleHandle failure!"));
@@ -825,6 +825,8 @@ void set_fullscreen_mode(BOOL enable)
     if (saveParent) {
       BX_DEBUG(("Restoring parent window"));
       SetParent(stInfo.mainWnd, saveParent);
+      SetWindowPos(stInfo.mainWnd, HWND_NOTOPMOST,
+        0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
       saveParent = NULL;
     }
     // put back the title bar, border, etc...

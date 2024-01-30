@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2023 Stanislav Shwartsman
+//   Copyright (c) 2009-2024 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -708,7 +708,8 @@ typedef struct bx_VMX_Cap
   Bit32u vmx_proc_vmexec_ctrl_supported_bits;
   Bit32u vmx_vmexec_ctrl2_supported_bits;
   Bit64u vmx_vmexec_ctrl3_supported_bits;
-  Bit32u vmx_vmexit_ctrl_supported_bits;
+  Bit32u vmx_vmexit_ctrl1_supported_bits;
+  Bit32u vmx_vmexit_ctrl2_supported_bits;
   Bit32u vmx_vmentry_ctrl_supported_bits;
 #if BX_SUPPORT_VMX >= 2
   Bit64u vmx_ept_vpid_cap_supported_bits;
@@ -728,97 +729,33 @@ struct VMX_PLE {
 
 #endif
 
+#include "vmx_ctrls.h"
+
 typedef struct bx_VMCS
 {
   //
   // VM-Execution Control Fields
   //
 
-#define VMX_PIN_BASED_VMEXEC_CTRL_EXTERNAL_INTERRUPT_VMEXIT   (1 << 0)
-#define VMX_PIN_BASED_VMEXEC_CTRL_NMI_EXITING                 (1 << 3)
-#define VMX_PIN_BASED_VMEXEC_CTRL_VIRTUAL_NMI                 (1 << 5) /* Virtual NMI */
-#define VMX_PIN_BASED_VMEXEC_CTRL_VMX_PREEMPTION_TIMER_VMEXIT (1 << 6) /* VMX preemption timer */
-#define VMX_PIN_BASED_VMEXEC_CTRL_PROCESS_POSTED_INTERRUPTS   (1 << 7) /* Posted Interrupts */
-
 #define VMX_PIN_BASED_VMEXEC_CTRL_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_pin_vmexec_ctrl_supported_bits)
 
-   Bit32u pin_vmexec_ctrls;
-
-#define VMX_VM_EXEC_CTRL1_INTERRUPT_WINDOW_VMEXIT   (1 << 2)
-#define VMX_VM_EXEC_CTRL1_TSC_OFFSET                (1 << 3)
-#define VMX_VM_EXEC_CTRL1_HLT_VMEXIT                (1 << 7)
-#define VMX_VM_EXEC_CTRL1_INVLPG_VMEXIT             (1 << 9)
-#define VMX_VM_EXEC_CTRL1_MWAIT_VMEXIT              (1 << 10)
-#define VMX_VM_EXEC_CTRL1_RDPMC_VMEXIT              (1 << 11)
-#define VMX_VM_EXEC_CTRL1_RDTSC_VMEXIT              (1 << 12)
-#define VMX_VM_EXEC_CTRL1_CR3_WRITE_VMEXIT          (1 << 15) /* legacy must be '1 */
-#define VMX_VM_EXEC_CTRL1_CR3_READ_VMEXIT           (1 << 16) /* legacy must be '1 */
-#define VMX_VM_EXEC_CTRL1_TERTIARY_CONTROLS         (1 << 17)
-#define VMX_VM_EXEC_CTRL1_CR8_WRITE_VMEXIT          (1 << 19) /* TPR shadow */
-#define VMX_VM_EXEC_CTRL1_CR8_READ_VMEXIT           (1 << 20) /* TPR shadow */
-#define VMX_VM_EXEC_CTRL1_TPR_SHADOW                (1 << 21) /* TPR shadow */
-#define VMX_VM_EXEC_CTRL1_NMI_WINDOW_EXITING        (1 << 22) /* Virtual NMI */
-#define VMX_VM_EXEC_CTRL1_DRx_ACCESS_VMEXIT         (1 << 23)
-#define VMX_VM_EXEC_CTRL1_IO_VMEXIT                 (1 << 24)
-#define VMX_VM_EXEC_CTRL1_IO_BITMAPS                (1 << 25)
-#define VMX_VM_EXEC_CTRL1_MONITOR_TRAP_FLAG         (1 << 27) /* Monitor Trap Flag */
-#define VMX_VM_EXEC_CTRL1_MSR_BITMAPS               (1 << 28)
-#define VMX_VM_EXEC_CTRL1_MONITOR_VMEXIT            (1 << 29)
-#define VMX_VM_EXEC_CTRL1_PAUSE_VMEXIT              (1 << 30)
-#define VMX_VM_EXEC_CTRL1_SECONDARY_CONTROLS        (1 << 31)
+   VmxPinBasedVmexecControls pin_vmexec_ctrls;
 
 #define VMX_VM_EXEC_CTRL1_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_proc_vmexec_ctrl_supported_bits)
 
-   Bit32u vmexec_ctrls1;
-
-#define VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_ACCESSES  (1 <<  0) /* APIC virtualization */
-#define VMX_VM_EXEC_CTRL2_EPT_ENABLE                (1 <<  1) /* EPT */
-#define VMX_VM_EXEC_CTRL2_DESCRIPTOR_TABLE_VMEXIT   (1 <<  2) /* Descriptor Table VMEXIT */
-#define VMX_VM_EXEC_CTRL2_RDTSCP                    (1 <<  3)
-#define VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE    (1 <<  4) /* Virtualize X2APIC */
-#define VMX_VM_EXEC_CTRL2_VPID_ENABLE               (1 <<  5) /* VPID */
-#define VMX_VM_EXEC_CTRL2_WBINVD_VMEXIT             (1 <<  6) /* WBINVD VMEXIT */
-#define VMX_VM_EXEC_CTRL2_UNRESTRICTED_GUEST        (1 <<  7) /* Unrestricted Guest */
-#define VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS (1 <<  8)
-#define VMX_VM_EXEC_CTRL2_VIRTUAL_INT_DELIVERY      (1 <<  9)
-#define VMX_VM_EXEC_CTRL2_PAUSE_LOOP_VMEXIT         (1 << 10) /* PAUSE loop exiting */
-#define VMX_VM_EXEC_CTRL2_RDRAND_VMEXIT             (1 << 11)
-#define VMX_VM_EXEC_CTRL2_INVPCID                   (1 << 12)
-#define VMX_VM_EXEC_CTRL2_VMFUNC_ENABLE             (1 << 13) /* VM Functions */
-#define VMX_VM_EXEC_CTRL2_VMCS_SHADOWING            (1 << 14) /* VMCS Shadowing */
-#define VMX_VM_EXEC_CTRL2_SGX_ENCLS_VMEXIT          (1 << 15) /* ENCLS/SGX (not implemented) */
-#define VMX_VM_EXEC_CTRL2_RDSEED_VMEXIT             (1 << 16)
-#define VMX_VM_EXEC_CTRL2_PML_ENABLE                (1 << 17) /* Page Modification Logging */
-#define VMX_VM_EXEC_CTRL2_EPT_VIOLATION_EXCEPTION   (1 << 18) /* #VE Exception */
-#define VMX_VM_EXEC_CTRL2_SUPPRESS_GUEST_VMX_TRACE  (1 << 19) /* Processor Trace (not implemented) */
-#define VMX_VM_EXEC_CTRL2_XSAVES_XRSTORS            (1 << 20) /* XSAVES */
-#define VMX_VM_EXEC_CTRL2_MBE_CTRL                  (1 << 22) /* Mode Based Execution Control */
-#define VMX_VM_EXEC_CTRL2_SUBPAGE_WR_PROTECT_CTRL   (1 << 23) /* Sub-Page Write Protection Control */
-#define VMX_VM_EXEC_CTRL2_PROCESSOR_TRACE_USE_GPA   (1 << 24) /* Processor Trace (not implemented) */
-#define VMX_VM_EXEC_CTRL2_TSC_SCALING               (1 << 25) /* TSC Scaling */
-#define VMX_VM_EXEC_CTRL2_UMWAIT_TPAUSE_VMEXIT      (1 << 26) /* WAITPKG */
-#define VMX_VM_EXEC_CTRL2_PCONFIG_ENABLE            (1 << 27) // not implemented yet
-#define VMX_VM_EXEC_CTRL2_SGX_ENCLV_VMEXIT          (1 << 28) /* ENCLV/SGX (not implemented) */
+   VmxVmexec1Controls vmexec_ctrls1;
 
 #define VMX_VM_EXEC_CTRL2_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl2_supported_bits)
 
-   Bit32u vmexec_ctrls2;
-
-#define VMX_VM_EXEC_CTRL3_LOADIWKEY_VMEXIT          (1 <<  0) /* KeyLocker (not implemented) */
-#define VMX_VM_EXEC_CTRL3_HLAT_ENABLE               (1 <<  1) /* HLAT (not implemented) */
-#define VMX_VM_EXEC_CTRL3_EPT_PAGING_WRITE          (1 <<  2) /* HLAT (not implemented) */
-#define VMX_VM_EXEC_CTRL3_GUEST_PAGING_VERIFICATION (1 <<  3) /* HLAT (not implemented) */
-#define VMX_VM_EXEC_CTRL3_IPI_VIRTUALIZATION        (1 <<  4) /* IPI virtualization (not implemented) */
-#define VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST            (1 <<  6) /* MSRLIST */
-#define VMX_VM_EXEC_CTRL3_VIRTUALIZE_IA32_SPEC_CTRL (1 <<  7)
+   VmxVmexec2Controls vmexec_ctrls2;
 
 #define VMX_VM_EXEC_CTRL3_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl3_supported_bits)
 
-   Bit64u vmexec_ctrls3;
+   VmxVmexec3Controls vmexec_ctrls3;
 
    Bit64u vmcs_linkptr;
 
@@ -830,6 +767,9 @@ typedef struct bx_VMCS
    Bit64u io_bitmap_addr[2];
    bx_phy_address msr_bitmap_addr;
    Bit64u msr_data;
+
+   Bit64u ia32_spec_ctrl_shadow;
+   Bit64u ia32_spec_ctrl_mask;
 
    bx_address vm_cr0_mask;
    bx_address vm_cr0_read_shadow;
@@ -883,32 +823,23 @@ typedef struct bx_VMCS
    Bit64u xss_exiting_bitmap;
 #endif
 
+#if BX_SUPPORT_CET
+   bool shadow_stack_prematurely_busy;
+#endif
+
    //
    // VM-Exit Control Fields
    //
 
-#define VMX_VMEXIT_CTRL1_SAVE_DBG_CTRLS             (1 <<  2) /* legacy must be '1 */
-#define VMX_VMEXIT_CTRL1_HOST_ADDR_SPACE_SIZE       (1 <<  9)
-#define VMX_VMEXIT_CTRL1_LOAD_PERF_GLOBAL_CTRL_MSR  (1 << 12) /* Perf Global Control */
-#define VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT             (1 << 15)
-#define VMX_VMEXIT_CTRL1_STORE_PAT_MSR              (1 << 18) /* PAT */
-#define VMX_VMEXIT_CTRL1_LOAD_PAT_MSR               (1 << 19) /* PAT */
-#define VMX_VMEXIT_CTRL1_STORE_EFER_MSR             (1 << 20) /* EFER */
-#define VMX_VMEXIT_CTRL1_LOAD_EFER_MSR              (1 << 21) /* EFER */
-#define VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER (1 << 22) /* VMX preemption timer */
-#define VMX_VMEXIT_CTRL1_CLEAR_BNDCFGS              (1 << 23) /* MPX (not implemented) */
-#define VMX_VMEXIT_CTRL1_SUPPRESS_HOST_VMX_TRACE    (1 << 24) /* Processor Trace (not implemented) */
-#define VMX_VMEXIT_CTRL1_CLEAR_IA32_RTIT_CTRL       (1 << 25) /* Clear IA32_RTIT_CTRL MSR on vmexit (not implemented) */
-#define VMX_VMEXIT_CTRL1_CLEAR_IA32_LBR_CTRL        (1 << 26) /* Clear IA32_LBR_CTRL MSR on vmexit (not implemented) */
-#define VMX_VMEXIT_CTRL1_CLEAR_UINV                 (1 << 27) /* UINTR */
-#define VMX_VMEXIT_CTRL1_LOAD_HOST_CET_STATE        (1 << 28) /* CET */
-#define VMX_VMEXIT_CTRL1_LOAD_HOST_PKRS             (1 << 29) /* Supervisor-Mode Protection Keys */
-#define VMX_VMEXIT_CTRL1_SAVE_PERF_GLOBAL_CTRL      (1 << 30) /* Save IA32_PERF_GLOBAL_CTRL on vmexit (not implemented) */
-
 #define VMX_VMEXIT_CTRL1_SUPPORTED_BITS \
-    (BX_CPU_THIS_PTR vmx_cap.vmx_vmexit_ctrl_supported_bits)
+    (BX_CPU_THIS_PTR vmx_cap.vmx_vmexit_ctrl1_supported_bits)
 
-   Bit32u vmexit_ctrls;
+   BxVmexit1Controls vmexit_ctrls1;
+
+#define VMX_VMEXIT_CTRL2_SUPPORTED_BITS \
+    (BX_CPU_THIS_PTR vmx_cap.vmx_vmexit_ctrl2_supported_bits)
+
+   BxVmexit2Controls vmexit_ctrls2;
 
    Bit32u vmexit_msr_store_cnt;
    bx_phy_address vmexit_msr_store_addr;
@@ -919,25 +850,10 @@ typedef struct bx_VMCS
    // VM-Entry Control Fields
    //
 
-#define VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS                    (1 <<  2) /* legacy must be '1 */
-#define VMX_VMENTRY_CTRL1_X86_64_GUEST                      (1 <<  9)
-#define VMX_VMENTRY_CTRL1_SMM_ENTER                         (1 << 10)
-#define VMX_VMENTRY_CTRL1_DEACTIVATE_DUAL_MONITOR_TREATMENT (1 << 11)
-#define VMX_VMENTRY_CTRL1_LOAD_PERF_GLOBAL_CTRL_MSR         (1 << 13) /* Perf Global Ctrl */
-#define VMX_VMENTRY_CTRL1_LOAD_PAT_MSR                      (1 << 14) /* PAT */
-#define VMX_VMENTRY_CTRL1_LOAD_EFER_MSR                     (1 << 15) /* EFER */
-#define VMX_VMENTRY_CTRL1_LOAD_BNDCFGS                      (1 << 16) /* MPX (not implemented) */
-#define VMX_VMENTRY_CTRL1_SUPPRESS_VMX_PACKETS              (1 << 17) /* Processor Trace (not implemented) */
-#define VMX_VMENTRY_CTRL1_LOAD_GUEST_RTIT_CTRL              (1 << 18) // not implemented
-#define VMX_VMENTRY_CTRL1_LOAD_UINV                         (1 << 19) /* UINTR */
-#define VMX_VMENTRY_CTRL1_LOAD_GUEST_CET_STATE              (1 << 20) /* CET */
-#define VMX_VMENTRY_CTRL1_LOAD_GUEST_LBR_CTRL               (1 << 21) // not implemented
-#define VMX_VMENTRY_CTRL1_LOAD_GUEST_PKRS                   (1 << 22) /* Supervisor-Mode Protection Keys */
-
 #define VMX_VMENTRY_CTRL1_SUPPORTED_BITS \
     (BX_CPU_THIS_PTR vmx_cap.vmx_vmentry_ctrl_supported_bits)
 
-   Bit32u vmentry_ctrls;
+   VmxVmentryControls vmentry_ctrls;
 
    Bit32u vmentry_msr_load_cnt;
    bx_phy_address vmentry_msr_load_addr;
@@ -974,14 +890,6 @@ typedef struct bx_VMCS
    VMCS_HOST_STATE host_state;
 
 } VMCS_CACHE;
-
-#define PIN_VMEXIT(ctrl) (BX_CPU_THIS_PTR vmcs.pin_vmexec_ctrls & (ctrl))
-
-#define PRIMARY_VMEXEC_CONTROL(ctrl)   (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1 & (ctrl))
-#define SECONDARY_VMEXEC_CONTROL(ctrl) (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2 & (ctrl))
-#define TERTIARY_VMEXEC_CONTROL(ctrl)  (BX_CPU_THIS_PTR vmcs.vmexec_ctrls3 & (ctrl))
-
-#define VMEXIT(ctrl) PRIMARY_VMEXEC_CONTROL(ctrl)
 
 const Bit32u BX_VMX_INTERRUPTS_BLOCKED_BY_STI      = (1 << 0);
 const Bit32u BX_VMX_INTERRUPTS_BLOCKED_BY_MOV_SS   = (1 << 1);
@@ -1261,6 +1169,13 @@ const Bit32u VMX_MSR_VMX_PROCBASED_CTRLS2_LO = 0x00000000;
 
 // Allowed 1-settings
 #define VMX_MSR_VMX_PROCBASED_CTRLS3 (VMX_VM_EXEC_CTRL3_SUPPORTED_BITS)
+
+
+// IA32_VMX_EXIT_CTLS2 MSR (0x493)
+// ---------------------
+
+// Allowed 1-settings
+#define VMX_MSR_VMX_VMEXIT_CTRLS2 (VMX_VMEXIT_CTRL2_SUPPORTED_BITS)
 
 
 #if BX_SUPPORT_VMX >= 2
