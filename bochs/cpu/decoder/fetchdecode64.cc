@@ -1348,8 +1348,9 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
     return(ia_opcode);
 
   unsigned evex_opcext = evex & 0x7;
-  if (evex_opcext == 0 || evex_opcext == 4)
+  if (evex_opcext == 0 || evex_opcext == 4 || evex_opcext == 7)
     return(ia_opcode);
+  if (evex_opcext >= 4) evex_opcext--; // skipped map4 in the table
 
   rex_r = ((evex >> 4) & 0x8) ^ 0x8;
   rex_r |= (evex & 0x10) ^ 0x10;
