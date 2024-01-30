@@ -1865,14 +1865,14 @@ enum {
 
 /* EPT access mask */
 enum {
-  BX_EPT_ENTRY_NOT_PRESENT        = 0x00,
-  BX_EPT_ENTRY_READ_ONLY          = 0x01,
-  BX_EPT_ENTRY_WRITE_ONLY         = 0x02,
-  BX_EPT_ENTRY_READ_WRITE         = 0x03,
-  BX_EPT_ENTRY_EXECUTE_ONLY       = 0x04,
-  BX_EPT_ENTRY_READ_EXECUTE       = 0x05,
-  BX_EPT_ENTRY_WRITE_EXECUTE      = 0x06,
-  BX_EPT_ENTRY_READ_WRITE_EXECUTE = 0x07
+  BX_EPT_ENTRY_NOT_PRESENT        = 0,
+  BX_EPT_ENTRY_READ_ONLY          = BX_EPT_READ,
+  BX_EPT_ENTRY_WRITE_ONLY         = BX_EPT_WRITE,                   // illegal
+  BX_EPT_ENTRY_READ_WRITE         = BX_EPT_READ | BX_EPT_WRITE,
+  BX_EPT_ENTRY_EXECUTE_ONLY       = BX_EPT_EXECUTE,
+  BX_EPT_ENTRY_READ_EXECUTE       = BX_EPT_EXECUTE | BX_EPT_READ,
+  BX_EPT_ENTRY_WRITE_EXECUTE      = BX_EPT_EXECUTE | BX_EPT_WRITE,  // illegal
+  BX_EPT_ENTRY_READ_WRITE_EXECUTE = BX_EPT_EXECUTE | BX_EPT_READ | BX_EPT_WRITE
 };
 
 #define BX_VMX_EPT_ACCESS_DIRTY_ENABLED                 (BX_CPU_THIS_PTR vmcs.eptptr & 0x40)
@@ -1902,6 +1902,12 @@ const Bit64u BX_SUB_PAGE_PROTECTED               = (BX_CONST64(1) << 61);
 const Bit64u BX_SUPERVISOR_SHADOW_STACK_PAGE     = (BX_CONST64(1) << 60);
 const Bit64u BX_PAGING_WRITE_ACCESS              = (BX_CONST64(1) << 58);
 const Bit64u BX_VERIFY_GUEST_PAGING              = (BX_CONST64(1) << 57);
+
+BX_CPP_INLINE bool ept_suppress_ept_violation_exception_bit(Bit64u leaf_entry) { return leaf_entry & BX_SUPPRESS_EPT_VIOLATION_EXCEPTION; }
+BX_CPP_INLINE bool ept_spp_bit(Bit64u leaf_entry) { return leaf_entry & BX_SUB_PAGE_PROTECTED; }
+BX_CPP_INLINE bool ept_supervisor_shadow_stack_page_bit(Bit64u leaf_entry) { return leaf_entry & BX_SUPERVISOR_SHADOW_STACK_PAGE; }
+BX_CPP_INLINE bool ept_paging_write_access_bit(Bit64u leaf_entry) { return leaf_entry & BX_PAGING_WRITE_ACCESS; }
+BX_CPP_INLINE bool ept_verify_guest_paging_bit(Bit64u leaf_entry) { return leaf_entry & BX_VERIFY_GUEST_PAGING; }
 
 #define PAGING_EPT_RESERVED_BITS (BX_PAGING_PHY_ADDRESS_RESERVED_BITS)
 
@@ -2023,7 +2029,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
       // The SSS bit (bit 60) is 1 in the EPT paging-structure entry maps the page
       bool supervisor_shadow_stack_page = ((combined_access & BX_EPT_ENTRY_READ_WRITE) == BX_EPT_ENTRY_READ_WRITE) &&
                                              ((entry[leaf] & BX_EPT_READ) != 0) &&
-                                             ((entry[leaf] & BX_SUPERVISOR_SHADOW_STACK_PAGE) != 0);
+                                              ept_supervisor_shadow_stack_page_bit(entry[leaf]);
       if (!supervisor_shadow_stack_page) {
         BX_ERROR(("VMEXIT: supervisor shadow stack access to non supervisor shadow stack page"));
         vmexit_reason = VMX_VMEXIT_EPT_VIOLATION;
@@ -2035,7 +2041,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
       combined_access &= entry[leaf];
       if ((access_mask & combined_access) != access_mask) {
         vmexit_reason = VMX_VMEXIT_EPT_VIOLATION;
-        if (vm->vmexec_ctrls2.SUBPAGE_WR_PROTECT_CTRL() && (entry[leaf] & BX_SUB_PAGE_PROTECTED) != 0 && leaf == BX_LEVEL_PTE) {
+        if (vm->vmexec_ctrls2.SUBPAGE_WR_PROTECT_CTRL() && ept_spp_bit(entry[leaf]) && leaf == BX_LEVEL_PTE) {
           // if cumulative read-access bit is 0, the write access is not eligible for SPP
           if ((access_mask & BX_EPT_WRITE) != 0 && (combined_access & BX_EPT_ENTRY_READ_WRITE) == BX_EPT_ENTRY_READ_ONLY && guest_laddr_valid && ! is_page_walk) {
             if (spp_walk(guest_paddr, guest_laddr, BX_MEMTYPE_WB)) { // memory type indicated in IA32_VMX_BASIC MSR
@@ -2085,11 +2091,11 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
       if (rw & 4) // shadow stack access
         vmexit_qualification |= (1 << 13);
 
-      if (BX_VMX_EPT_SUPERVISOR_SHADOW_STACK_CTRL_ENABLED && (entry[leaf] & BX_SUPERVISOR_SHADOW_STACK_PAGE) != 0)
+      if (BX_VMX_EPT_SUPERVISOR_SHADOW_STACK_CTRL_ENABLED && ept_supervisor_shadow_stack_page_bit(entry[leaf]))
         vmexit_qualification |= (1 << 14);
 #endif
       if (vm->vmexec_ctrls2.EPT_VIOLATION_EXCEPTION()) {
-        if ((entry[leaf] & BX_SUPPRESS_EPT_VIOLATION_EXCEPTION) == 0)
+        if (!ept_suppress_ept_violation_exception_bit(entry[leaf]))
           Virtualization_Exception(vmexit_qualification, guest_paddr, guest_laddr);
       }
     }
