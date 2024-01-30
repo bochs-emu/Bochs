@@ -211,6 +211,7 @@ int ask_int(const char *prompt, int min, int max, int the_default, int *out)
   while (1) {
     printf("%s", prompt);
     printf("[%d] ", the_default);
+    fflush(stdout);
     if (!fgets(buffer, sizeof(buffer), stdin))
       return -1;
     clean = clean_string(buffer);
@@ -240,6 +241,7 @@ int ask_menu(const char *prompt, int n_choices, const char *choice[], int the_de
   while(1) {
     printf("%s", prompt);
     printf("[%s] ", choice[the_default]);
+    fflush(stdout);
     if (!fgets(buffer, sizeof(buffer), stdin))
       return -1;
     clean = clean_string(buffer);
@@ -261,6 +263,7 @@ int ask_menu(const char *prompt, int n_choices, const char *choice[], int the_de
       printf("%s", choice[i]);
     }
     printf("\n");
+    fflush(stdout);
   }
 }
 
@@ -272,6 +275,7 @@ int ask_yn(const char *prompt, int the_default, int *out)
   while (1) {
     printf("%s", prompt);
     printf("[%s] ", the_default?"yes":"no");
+    fflush(stdout);
     if (!fgets(buffer, sizeof(buffer), stdin))
       return -1;
     clean = clean_string(buffer);
@@ -294,6 +298,7 @@ int ask_string(const char *prompt, char *the_default, char *out)
   char *clean;
   printf("%s", prompt);
   printf("[%s] ", the_default);
+  fflush(stdout);
   if (!fgets(buffer, sizeof(buffer), stdin))
     return -1;
   clean = clean_string(buffer);
