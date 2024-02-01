@@ -280,11 +280,20 @@ enum AccessReason {
   BX_PDPTR1_ACCESS,
   BX_PDPTR2_ACCESS,
   BX_PDPTR3_ACCESS,
+  BX_NESTED_PDPTR0_ACCESS,
+  BX_NESTED_PDPTR1_ACCESS,
+  BX_NESTED_PDPTR2_ACCESS,
+  BX_NESTED_PDPTR3_ACCESS,
   BX_PTE_ACCESS,
   BX_PDE_ACCESS,
   BX_PDTE_ACCESS,
   BX_PML4E_ACCESS,
   BX_PML5E_ACCESS,
+  BX_NESTED_PTE_ACCESS,
+  BX_NESTED_PDE_ACCESS,
+  BX_NESTED_PDTE_ACCESS,
+  BX_NESTED_PML4E_ACCESS,
+  BX_NESTED_PML5E_ACCESS,
   BX_EPT_PTE_ACCESS,
   BX_EPT_PDE_ACCESS,
   BX_EPT_PDTE_ACCESS,
@@ -4405,7 +4414,7 @@ public: // for now...
 #if BX_CPU_LEVEL >= 6
   BX_SMF bx_phy_address translate_linear_load_PDPTR(bx_address laddr, unsigned user, unsigned rw);
   BX_SMF bx_phy_address translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask, unsigned user, unsigned rw);
-  BX_SMF int check_entry_PAE(const char *s, Bit64u entry, Bit64u reserved, unsigned rw, bool *nx_page);
+  BX_SMF int check_entry_PAE(const char *s, int leaf, Bit64u entry, Bit64u reserved, unsigned rw, bool *nx_page);
   BX_SMF void update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry, BxMemtype *entry_memtype, unsigned max_level, unsigned leaf, unsigned write);
 #endif
 #if BX_SUPPORT_X86_64
