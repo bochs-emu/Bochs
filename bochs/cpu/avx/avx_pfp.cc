@@ -29,6 +29,7 @@
 #if BX_SUPPORT_AVX
 
 extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
+extern void mxcsr_to_softfloat_status_word_imm_override(float_status_t &status, Bit8u immb);
 
 extern float32 approximate_rsqrt(float32 op);
 extern float32 approximate_rcp(float32 op);
@@ -395,14 +396,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDPS_VpsWpsIbR(bxInstruction_c *i)
   unsigned len = i->getVL();
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  Bit8u control = i->Ib();
-
-  // override MXCSR rounding mode with control coming from imm8
-  if ((control & 0x4) == 0)
-    status.float_rounding_mode = control & 0x3;
-  // ignore precision exception result
-  if (control & 0x8)
-    status.float_suppress_exception |= float_flag_inexact;
+  mxcsr_to_softfloat_status_word_imm_override(status, i->Ib());
 
   for(unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
     op.ymm32u(n) = float32_round_to_int(op.ymm32u(n), status);
@@ -422,14 +416,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDPD_VpdWpdIbR(bxInstruction_c *i)
   unsigned len = i->getVL();
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  Bit8u control = i->Ib();
-
-  // override MXCSR rounding mode with control coming from imm8
-  if ((control & 0x4) == 0)
-    status.float_rounding_mode = control & 0x3;
-  // ignore precision exception result
-  if (control & 0x8)
-    status.float_suppress_exception |= float_flag_inexact;
+  mxcsr_to_softfloat_status_word_imm_override(status, i->Ib());
 
   for(unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
     op.ymm64u(n) = float64_round_to_int(op.ymm64u(n), status);
@@ -449,14 +436,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDSS_VssHpsWssIbR(bxInstruction_c *i)
   float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  Bit8u control = i->Ib();
-
-  // override MXCSR rounding mode with control coming from imm8
-  if ((control & 0x4) == 0)
-    status.float_rounding_mode = control & 0x3;
-  // ignore precision exception result
-  if (control & 0x8)
-    status.float_suppress_exception |= float_flag_inexact;
+  mxcsr_to_softfloat_status_word_imm_override(status, i->Ib());
 
   op1.xmm32u(0) = float32_round_to_int(op2, status);
 
@@ -474,14 +454,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDSD_VsdHpdWsdIbR(bxInstruction_c *i)
   float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  Bit8u control = i->Ib();
-
-  // override MXCSR rounding mode with control coming from imm8
-  if ((control & 0x4) == 0)
-    status.float_rounding_mode = control & 0x3;
-  // ignore precision exception result
-  if (control & 0x8)
-    status.float_suppress_exception |= float_flag_inexact;
+  mxcsr_to_softfloat_status_word_imm_override(status, i->Ib());
 
   op1.xmm64u(0) = float64_round_to_int(op2, status);
 
