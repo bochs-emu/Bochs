@@ -667,7 +667,7 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
 {
 #if BX_SUPPORT_PCI
   if (BX_CIRRUS_THIS pci_enabled) {
-    unsigned xti, yti;
+    unsigned x, y;
 
     if ((addr >= BX_CIRRUS_THIS pci_bar[0].addr) &&
         (addr < (BX_CIRRUS_THIS pci_bar[0].addr + CIRRUS_PNPMEM_SIZE))) {
@@ -710,15 +710,15 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
         }
       }
       BX_CIRRUS_THIS svga_needs_update_tile = 1;
-      xti = ((offset % BX_CIRRUS_THIS svga_pitch) / (BX_CIRRUS_THIS svga_bpp / 8)) / X_TILESIZE;
-      yti = (offset / BX_CIRRUS_THIS svga_pitch) / Y_TILESIZE;
+      x = (offset % BX_CIRRUS_THIS svga_pitch) / (BX_CIRRUS_THIS svga_bpp / 8);
+      y = offset / BX_CIRRUS_THIS svga_pitch;
       if (BX_CIRRUS_THIS s.y_doublescan) {
-        yti <<= 1;
+        y <<= 1;
       }
       if (BX_CIRRUS_THIS svga_double_width) {
-        xti <<= 1;
+        x <<= 1;
       }
-      SET_TILE_UPDATED(BX_CIRRUS_THIS, xti, yti, 1);
+      SET_TILE_UPDATED(BX_CIRRUS_THIS, x / X_TILESIZE, y / Y_TILESIZE, 1);
       return;
     } else if ((addr >= BX_CIRRUS_THIS pci_bar[1].addr) &&
                (addr < (BX_CIRRUS_THIS pci_bar[1].addr + CIRRUS_PNPMMIO_SIZE))) {
@@ -743,7 +743,7 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
   if (addr >= 0xA0000 && addr <= 0xAFFFF) {
     Bit32u bank, offset;
     Bit8u mode;
-    unsigned xti, yti;
+    unsigned x, y;
 
     // cpu-to-video BLT
     if (BX_CIRRUS_THIS bitblt.memsrc_needed > 0) {
@@ -776,15 +776,15 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
         }
       }
       BX_CIRRUS_THIS svga_needs_update_tile = 1;
-      xti = ((offset % BX_CIRRUS_THIS svga_pitch) / (BX_CIRRUS_THIS svga_bpp / 8)) / X_TILESIZE;
-      yti = (offset / BX_CIRRUS_THIS svga_pitch) / Y_TILESIZE;
+      x = (offset % BX_CIRRUS_THIS svga_pitch) / (BX_CIRRUS_THIS svga_bpp / 8);
+      y = offset / BX_CIRRUS_THIS svga_pitch;
       if (BX_CIRRUS_THIS s.y_doublescan) {
-        yti <<= 1;
+        y <<= 1;
       }
       if (BX_CIRRUS_THIS svga_double_width) {
-        xti <<= 1;
+        x <<= 1;
       }
-      SET_TILE_UPDATED(BX_CIRRUS_THIS, xti, yti, 1);
+      SET_TILE_UPDATED(BX_CIRRUS_THIS, x / X_TILESIZE, y / Y_TILESIZE, 1);
     }
   } else if (addr >= 0xB8000 && addr < 0xB8100) {
     // memory-mapped I/O.
