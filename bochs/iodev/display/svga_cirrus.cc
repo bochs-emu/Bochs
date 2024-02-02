@@ -743,6 +743,7 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
   if (addr >= 0xA0000 && addr <= 0xAFFFF) {
     Bit32u bank, offset;
     Bit8u mode;
+    unsigned xti, yti;
 
     // cpu-to-video BLT
     if (BX_CIRRUS_THIS bitblt.memsrc_needed > 0) {
@@ -775,8 +776,15 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
         }
       }
       BX_CIRRUS_THIS svga_needs_update_tile = 1;
-      SET_TILE_UPDATED(BX_CIRRUS_THIS, ((offset % BX_CIRRUS_THIS svga_pitch) / (BX_CIRRUS_THIS svga_bpp / 8)) / X_TILESIZE,
-                       (offset / BX_CIRRUS_THIS svga_pitch) / Y_TILESIZE, 1);
+      xti = ((offset % BX_CIRRUS_THIS svga_pitch) / (BX_CIRRUS_THIS svga_bpp / 8)) / X_TILESIZE;
+      yti = (offset / BX_CIRRUS_THIS svga_pitch) / Y_TILESIZE;
+      if (BX_CIRRUS_THIS s.y_doublescan) {
+        yti <<= 1;
+      }
+      if (BX_CIRRUS_THIS svga_double_width) {
+        xti <<= 1;
+      }
+      SET_TILE_UPDATED(BX_CIRRUS_THIS, xti, yti, 1);
     }
   } else if (addr >= 0xB8000 && addr < 0xB8100) {
     // memory-mapped I/O.
