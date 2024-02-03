@@ -578,9 +578,14 @@ void bx_vga_c::update(void)
       unsigned r, c, x, y;
       unsigned xc, yc, xti, yti;
       Bit8u *plane[4];
-      Bit16u row_addr;
+      Bit32u row_addr;
 
-      BX_VGA_THIS determine_screen_dimensions(&iHeight, &iWidth);
+      if (BX_VGA_THIS vbe.yres < 1024) {
+        BX_VGA_THIS determine_screen_dimensions(&iHeight, &iWidth);
+      } else {
+        iWidth = BX_VGA_THIS vbe.xres;
+        iHeight = BX_VGA_THIS vbe.yres;
+      }
       if ((iWidth != BX_VGA_THIS s.last_xres) || (iHeight != BX_VGA_THIS s.last_yres) ||
            (BX_VGA_THIS s.last_bpp > 8)) {
         bx_gui->dimension_update(iWidth, iHeight);
