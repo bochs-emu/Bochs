@@ -945,6 +945,7 @@ void bx_svga_cirrus_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x03c6: /* Hidden DAC */
       if (BX_CIRRUS_THIS is_unlocked()) {
         if (BX_CIRRUS_THIS hidden_dac.lockindex == 4) {
+          BX_DEBUG(("hidden_dac: write 0x%02x", (unsigned)value));
           BX_CIRRUS_THIS hidden_dac.data = value;
         }
         BX_CIRRUS_THIS hidden_dac.lockindex = 0;
@@ -1003,6 +1004,9 @@ void bx_svga_cirrus_c::svga_modeupdate(void)
     iHeight <<= 1; // interlaced mode
   }
   iWidth = (BX_CIRRUS_THIS crtc.reg[0x01] + 1) * 8;
+  if ((BX_CIRRUS_THIS hidden_dac.data & 0xcf) == 0x4a) {
+    iWidth <<= 1;
+  }
   iBpp = 8;
   iDispBpp = 4;
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x1) == CIRRUS_SR7_BPP_SVGA) {
@@ -1013,8 +1017,13 @@ void bx_svga_cirrus_c::svga_modeupdate(void)
       break;
     case CIRRUS_SR7_BPP_16_DOUBLEVCLK:
     case CIRRUS_SR7_BPP_16:
-      iBpp = 16;
-      iDispBpp = (BX_CIRRUS_THIS hidden_dac.data & 0x1) ? 16 : 15;
+      if ((BX_CIRRUS_THIS hidden_dac.data & 0xcf) == 0x4a) {
+        iBpp = 8;
+        iDispBpp = 8;
+      } else {
+        iBpp = 16;
+        iDispBpp = (BX_CIRRUS_THIS hidden_dac.data & 0x1) ? 16 : 15;
+      }
       break;
     case CIRRUS_SR7_BPP_24:
       iBpp = 24;
