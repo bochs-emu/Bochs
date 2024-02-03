@@ -125,7 +125,7 @@ protected:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len, bool no_log);
 
-  Bit8u get_vga_pixel(Bit16u x, Bit16u y, Bit16u raddr, Bit16u lc, bool bs, Bit8u **plane);
+  Bit8u get_vga_pixel(Bit16u x, Bit16u y, Bit32u raddr, Bit16u lc, bool bs, Bit8u **plane);
   virtual void update(void);
   void determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth);
   void calculate_retrace_timing(void);

@@ -1216,9 +1216,10 @@ void bx_vgacore_c::set_override(bool enabled, void *dev)
   }
 }
 
-Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit16u raddr, Bit16u lc, bool bs, Bit8u **plane)
+Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit32u raddr, Bit16u lc, bool bs, Bit8u **plane)
 {
   Bit8u attribute, bit_no, palette_reg_val, DAC_regno;
+  Bit32u plane_mask = ((Bit32u)1 << BX_VGA_THIS s.plane_shift) - 1;
   Bit32u byte_offset;
 
   if (BX_VGA_THIS s.x_dotclockdiv2) x >>= 1;
@@ -1226,7 +1227,7 @@ Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit16u raddr, Bit16u lc, b
     x += BX_VGA_THIS s.attribute_ctrl.horiz_pel_panning;
   }
   bit_no = 7 - (x % 8);
-  byte_offset = raddr + (x / 8);
+  byte_offset = (raddr + (x / 8)) & plane_mask;
   attribute =
     (((plane[0][byte_offset] >> bit_no) & 0x01) << 0) |
     (((plane[1][byte_offset] >> bit_no) & 0x01) << 1) |
@@ -1348,7 +1349,8 @@ void bx_vgacore_c::update(void)
     switch (BX_VGA_THIS s.graphics_ctrl.shift_reg) {
       case 0: // interleaved shift
         Bit8u attribute, palette_reg_val, DAC_regno;
-        Bit16u line_compare, row_addr;
+        Bit16u line_compare;
+        Bit32u row_addr;
         Bit8u *plane[4];
 
         plane[0] = &BX_VGA_THIS s.memory[0 << BX_VGA_THIS s.plane_shift];
