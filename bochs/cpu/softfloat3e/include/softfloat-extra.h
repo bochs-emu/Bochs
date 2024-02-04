@@ -56,6 +56,13 @@ BX_CPP_INLINE uint16_t f16_fraction(float16_t a)
     return fracF16UI(a);
 }
 
+BX_CPP_INLINE float16_t f16_denormal_to_zero(float16_t a)
+{
+    if (! expF16UI(a) && fracF16UI(a))
+        return a & 0x8000;
+    return a;
+}
+
 // ======= float32 ======= //
 
 BX_CPP_INLINE bool f32_sign(float32_t a)
@@ -73,6 +80,13 @@ BX_CPP_INLINE uint32_t f32_fraction(float32_t a)
     return fracF32UI(a);
 }
 
+BX_CPP_INLINE float32_t f32_denormal_to_zero(float32_t a)
+{
+    if (! expF32UI(a) && fracF32UI(a))
+        return a & 0x80000000;
+    return a;
+}
+
 // ======= float64 ======= //
 
 BX_CPP_INLINE bool f64_sign(float64_t a)
@@ -88,6 +102,13 @@ BX_CPP_INLINE int16_t f64_exp(float64_t a)
 BX_CPP_INLINE uint64_t f64_fraction(float64_t a)
 {
     return fracF64UI(a);
+}
+
+BX_CPP_INLINE float64_t f64_denormal_to_zero(float64_t a)
+{
+    if (! expF64UI(a) && fracF64UI(a))
+        return a & ((uint64_t)(1) << 63);
+    return a;
 }
 
 // ======= floatx80 ======= //

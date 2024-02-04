@@ -1,11 +1,10 @@
-
 /*============================================================================
 
 This C source file is part of the SoftFloat IEEE Floating-Point Arithmetic
 Package, Release 3e, by John R. Hauser.
 
-Copyright 2011, 2012, 2013, 2014 The Regents of the University of California.
-All rights reserved.
+Copyright 2011, 2012, 2013, 2014, 2015, 2016 The Regents of the University of
+California.  All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -34,24 +33,38 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 =============================================================================*/
 
+#include <stdbool.h>
 #include <stdint.h>
 #include "platform.h"
-#include "specialize.h"
+#include "internals.h"
 #include "softfloat.h"
 
 /*----------------------------------------------------------------------------
-| Assuming the unsigned integer formed from concatenating `uiA64' and `uiA0'
-| has the bit pattern of an 80-bit extended floating-point NaN, converts
-| this NaN to the common NaN form, and stores the resulting common NaN at the
-| location pointed to by `zPtr'.  If the NaN is a signaling NaN, the invalid
-| exception is raised.
+| Compare between two single precision floating point numbers and return the
+| smaller of them.
 *----------------------------------------------------------------------------*/
-void softfloat_extF80UIToCommonNaN(uint16_t uiA64, uint64_t uiA0, struct commonNaN *zPtr, struct softfloat_status_t *status)
+
+float32_t f32_min(float32_t a, float32_t b, softfloat_status_t *status)
 {
-    if (softfloat_isSigNaNExtF80UI(uiA64, uiA0)) {
-        softfloat_raiseFlags(status, softfloat_flag_invalid);
-    }
-    zPtr->sign = uiA64>>15;
-    zPtr->v64  = uiA0<<1;
-    zPtr->v0   = 0;
+  if (softfloat_denormalsAreZeros(status)) {
+    a = f32_denormal_to_zero(a);
+    b = f32_denormal_to_zero(b);
+  }
+
+  return (f32_compare(a, b, status) == softfloat_relation_less) ? a : b;
+}
+
+/*----------------------------------------------------------------------------
+| Compare between two single precision floating point numbers and return the
+| larger of them.
+*----------------------------------------------------------------------------*/
+
+float32_t f32_max(float32_t a, float32_t b, softfloat_status_t *status)
+{
+  if (softfloat_denormalsAreZeros(status)) {
+    a = f32_denormal_to_zero(a);
+    b = f32_denormal_to_zero(b);
+  }
+
+  return (f32_compare(a, b, status) == softfloat_relation_greater) ? a : b;
 }

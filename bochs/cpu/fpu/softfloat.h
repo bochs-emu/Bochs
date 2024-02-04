@@ -222,15 +222,22 @@ BX_CPP_INLINE int get_flush_underflow_to_zero(const float_status_t &status)
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE integer-to-floating-point conversion routines.
 *----------------------------------------------------------------------------*/
+float16 int32_to_float16(Bit32s, float_status_t &status);
 float32 int32_to_float32(Bit32s, float_status_t &status);
 float64 int32_to_float64(Bit32s);
+float16 int64_to_float16(Bit64s, float_status_t &status);
 float32 int64_to_float32(Bit64s, float_status_t &status);
 float64 int64_to_float64(Bit64s, float_status_t &status);
 
+float16 uint32_to_float16(Bit32u, float_status_t &status);
 float32 uint32_to_float32(Bit32u, float_status_t &status);
 float64 uint32_to_float64(Bit32u);
+float16 uint64_to_float16(Bit64u, float_status_t &status);
 float32 uint64_to_float32(Bit64u, float_status_t &status);
 float64 uint64_to_float64(Bit64u, float_status_t &status);
+
+float16 int16_to_float16(Bit16s, float_status_t &status);
+float16 uint16_to_float16(Bit16u, float_status_t &status);
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE single-precision conversion routines.
@@ -256,7 +263,6 @@ float32 float32_mul(float32, float32, float_status_t &status);
 float32 float32_div(float32, float32, float_status_t &status);
 float32 float32_sqrt(float32, float_status_t &status);
 float32 float32_frc(float32, float_status_t &status);
-float32 float32_muladd(float32, float32, float32, int flags, float_status_t &status);
 float32 float32_scalef(float32, float32, float_status_t &status);
 int float32_compare(float32, float32, int quiet, float_status_t &status);
 
@@ -311,7 +317,6 @@ float64 float64_mul(float64, float64, float_status_t &status);
 float64 float64_div(float64, float64, float_status_t &status);
 float64 float64_sqrt(float64, float_status_t &status);
 float64 float64_frc(float64, float_status_t &status);
-float64 float64_muladd(float64, float64, float64, int flags, float_status_t &status);
 float64 float64_scalef(float64, float64, float_status_t &status);
 int float64_compare(float64, float64, int quiet, float_status_t &status);
 
@@ -343,8 +348,59 @@ float64 float64_getexp(float64 a, float_status_t &status);
 float64 float64_getmant(float64 a, float_status_t &status, int sign_ctrl, int interv);
 
 #ifdef FLOAT16
+/*----------------------------------------------------------------------------
+| Software IEC/IEEE half-precision conversion routines.
+*----------------------------------------------------------------------------*/
+Bit16s float16_to_int16(float16, float_status_t &status);
+Bit16s float16_to_int16_round_to_zero(float16, float_status_t &status);
+Bit32s float16_to_int32(float16, float_status_t &status);
+Bit32s float16_to_int32_round_to_zero(float16, float_status_t &status);
+Bit64s float16_to_int64(float16, float_status_t &status);
+Bit64s float16_to_int64_round_to_zero(float16, float_status_t &status);
+Bit16u float16_to_uint16(float16, float_status_t &status);
+Bit16u float16_to_uint16_round_to_zero(float16, float_status_t &status);
+Bit32u float16_to_uint32(float16, float_status_t &status);
+Bit32u float16_to_uint32_round_to_zero(float16, float_status_t &status);
+Bit64u float16_to_uint64(float16, float_status_t &status);
+Bit64u float16_to_uint64_round_to_zero(float16, float_status_t &status);
 float32 float16_to_float32(float16, float_status_t &status);
+float64 float16_to_float64(float16, float_status_t &status);
 float16 float32_to_float16(float32, float_status_t &status);
+float16 float64_to_float16(float64, float_status_t &status);
+
+/*----------------------------------------------------------------------------
+| Software IEC/IEEE half-precision operations.
+*----------------------------------------------------------------------------*/
+float16 float16_round_to_int(float16, float_status_t &status);
+float16 float16_round_to_int(float16, Bit8u scale, float_status_t &status);
+float16 float16_add(float16, float16, float_status_t &status);
+float16 float16_sub(float16, float16, float_status_t &status);
+float16 float16_mul(float16, float16, float_status_t &status);
+float16 float16_div(float16, float16, float_status_t &status);
+float16 float16_sqrt(float16, float_status_t &status);
+float16 float16_scalef(float16, float16, float_status_t &status);
+int float16_compare(float16, float16, int quiet, float_status_t &status);
+
+BX_CPP_INLINE float16 float16_round_to_int(float16 a, float_status_t &status)
+{
+  return float16_round_to_int(a, 0, status);
+}
+
+BX_CPP_INLINE int float16_compare(float16 a, float16 b, float_status_t &status)
+{
+  return float16_compare(a, b, 0, status);
+}
+
+BX_CPP_INLINE int float16_compare_quiet(float16 a, float16 b, float_status_t &status)
+{
+  return float16_compare(a, b, 1, status);
+}
+
+float16 float16_min(float16 a, float16 b, float_status_t &status);
+float16 float16_max(float16 a, float16 b, float_status_t &status);
+
+float16 float16_getexp(float16 a, float_status_t &status);
+float16 float16_getmant(float16 a, float_status_t &status, int sign_ctrl, int interv);
 
 float_class_t float16_class(float16);
 int float16_is_signaling_nan(float16);

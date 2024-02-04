@@ -260,8 +260,8 @@ const float64 float64_positive_half = BX_CONST64(0x3fe0000000000000);
 float32 float32_fixupimm(float32 dst, float32 op1, Bit32u op2, unsigned imm8, float_status_t &status)
 {
   float32 tmp_op1 = op1;
-  if (get_denormals_are_zeros(status))
-    tmp_op1 = float32_denormal_to_zero(op1);
+  if (softfloat_denormalsAreZeros(&status))
+    tmp_op1 = f32_denormal_to_zero(op1);
 
   softfloat_class_t op1_class = f32_class(tmp_op1);
   int sign = f32_sign(tmp_op1);
@@ -355,8 +355,8 @@ float32 float32_fixupimm(float32 dst, float32 op1, Bit32u op2, unsigned imm8, fl
 float64 float64_fixupimm(float64 dst, float64 op1, Bit32u op2, unsigned imm8, float_status_t &status)
 {
   float64 tmp_op1 = op1;
-  if (get_denormals_are_zeros(status))
-    tmp_op1 = float64_denormal_to_zero(op1);
+  if (softfloat_denormalsAreZeros(&status))
+    tmp_op1 = f64_denormal_to_zero(op1);
 
   softfloat_class_t op1_class = f64_class(tmp_op1);
   int sign = f64_sign(tmp_op1);
@@ -595,7 +595,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMPD_MASK_VpdHpdWpdIbR(bxInstructio
 
 // fpclass
 
-static int fpclass(softfloat_class_t op_class, int sign, int selector)
+int fpclass(softfloat_class_t op_class, int sign, int selector)
 {
   return ((op_class == softfloat_QNaN) && (selector & 0x01) != 0) || // QNaN
          ((op_class == softfloat_zero) && ! sign && (selector & 0x02) != 0) || // positive zero
@@ -610,7 +610,7 @@ static int fpclass(softfloat_class_t op_class, int sign, int selector)
 static BX_CPP_INLINE int f32_fpclass(float32 op, int selector, int daz)
 {
   if (daz)
-    op = float32_denormal_to_zero(op);
+    op = f32_denormal_to_zero(op);
 
   return fpclass(f32_class(op), f32_sign(op), selector);
 }
@@ -618,7 +618,7 @@ static BX_CPP_INLINE int f32_fpclass(float32 op, int selector, int daz)
 static BX_CPP_INLINE int f64_fpclass(float64 op, int selector, int daz)
 {
   if (daz)
-    op = float64_denormal_to_zero(op);
+    op = f64_denormal_to_zero(op);
 
   return fpclass(f64_class(op), f64_sign(op), selector);
 }
@@ -694,7 +694,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETEXPSS_VssHpsWssR(bxInstruction_c *i)
   float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
-  op1.xmm32u(0) = float32_getexp(op2, status);
+  op1.xmm32u(0) = f32_getExp(op2, &status);
   check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
@@ -710,7 +710,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETEXPSS_MASK_VssHpsWssR(bxInstruction_c 
 
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
-    op1.xmm32u(0) = float32_getexp(op2, status);
+    op1.xmm32u(0) = f32_getExp(op2, &status);
     check_exceptionsSSE(get_exception_flags(status));
   }
   else {
@@ -731,7 +731,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETEXPSD_VsdHpdWsdR(bxInstruction_c *i)
   float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
-  op1.xmm64u(0) = float64_getexp(op2, status);
+  op1.xmm64u(0) = f64_getExp(op2, &status);
   check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
@@ -747,7 +747,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETEXPSD_MASK_VsdHpdWsdR(bxInstruction_c 
 
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
-    op1.xmm64u(0) = float64_getexp(op2, status);
+    op1.xmm64u(0) = f64_getExp(op2, &status);
     check_exceptionsSSE(get_exception_flags(status));
   }
   else {
@@ -1172,7 +1172,7 @@ static BX_CPP_INLINE float32 float32_reduce(float32 a, Bit8u scale, float_status
     return 0;
 
   float32 tmp = float32_round_to_int(a, scale, status);
-  return float32_sub(a, tmp, status);
+  return f32_sub(a, tmp, &status);
 }
 
 static BX_CPP_INLINE float64 float64_reduce(float64 a, Bit8u scale, float_status_t &status)
@@ -1181,7 +1181,7 @@ static BX_CPP_INLINE float64 float64_reduce(float64 a, Bit8u scale, float_status
     return 0;
 
   float64 tmp = float64_round_to_int(a, scale, status);
-  return float64_sub(a, tmp, status);
+  return f64_sub(a, tmp, &status);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VREDUCEPS_MASK_VpsWpsIbR(bxInstruction_c *i)

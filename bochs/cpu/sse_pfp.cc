@@ -928,7 +928,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTSS_VssWssR(bxInstruction_c *i)
     float32 op1 = BX_READ_XMM_REG_LO_DWORD(i->dst()), op2 = BX_READ_XMM_REG_LO_DWORD(i->src()); \
                                                                                                 \
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                              \
-    op1 = (func)(op1, op2, status);                                                             \
+    op1 = (func)(op1, op2, &status);                                                            \
     check_exceptionsSSE(get_exception_flags(status));                                           \
     BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);                                                   \
     BX_NEXT_INSTR(i);                                                                           \
@@ -945,12 +945,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTSS_VssWssR(bxInstruction_c *i)
 
 #endif
 
-SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(ADDSS_VssWssR, float32_add);
-SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(SUBSS_VssWssR, float32_sub);
-SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(MULSS_VssWssR, float32_mul);
-SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(DIVSS_VssWssR, float32_div);
-SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(MINSS_VssWssR, float32_min);
-SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(MAXSS_VssWssR, float32_max);
+SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(ADDSS_VssWssR, f32_add);
+SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(SUBSS_VssWssR, f32_sub);
+SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(MULSS_VssWssR, f32_mul);
+SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(DIVSS_VssWssR, f32_div);
+SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(MINSS_VssWssR, f32_min);
+SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(MAXSS_VssWssR, f32_max);
 
 #if BX_CPU_LEVEL >= 6
 
@@ -961,7 +961,7 @@ SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(MAXSS_VssWssR, float32_max);
     float64 op1 = BX_READ_XMM_REG_LO_QWORD(i->dst()), op2 = BX_READ_XMM_REG_LO_QWORD(i->src()); \
                                                                                                 \
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                              \
-    op1 = (func)(op1, op2, status);                                                             \
+    op1 = (func)(op1, op2, &status);                                                            \
     check_exceptionsSSE(get_exception_flags(status));                                           \
     BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);                                                   \
     BX_NEXT_INSTR(i);                                                                           \
@@ -978,12 +978,12 @@ SSE_SCALAR_SINGLE_FP_CPU_LEVEL6(MAXSS_VssWssR, float32_max);
 
 #endif
 
-SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(ADDSD_VsdWsdR, float64_add);
-SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(SUBSD_VsdWsdR, float64_sub);
-SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(MULSD_VsdWsdR, float64_mul);
-SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(DIVSD_VsdWsdR, float64_div);
-SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(MINSD_VsdWsdR, float64_min);
-SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(MAXSD_VsdWsdR, float64_max);
+SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(ADDSD_VsdWsdR, f64_add);
+SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(SUBSD_VsdWsdR, f64_sub);
+SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(MULSD_VsdWsdR, f64_mul);
+SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(DIVSD_VsdWsdR, f64_div);
+SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(MINSD_VsdWsdR, f64_min);
+SSE_SCALAR_DOUBLE_FP_CPU_LEVEL6(MAXSD_VsdWsdR, f64_max);
 
 /*
  * Opcode: 0F C2

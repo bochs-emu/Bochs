@@ -130,6 +130,44 @@ float64_compare_method avx_compare64[32] = {
   f64_true_signalling
 };
 
+#if BX_SUPPORT_EVEX
+/* Comparison predicate for VCMPSH/VCMPPH instructions */
+float16_compare_method avx_compare16[32] = {
+  f16_eq_ordered_quiet,
+  f16_lt_ordered_signalling,
+  f16_le_ordered_signalling,
+  f16_unordered_quiet,
+  f16_neq_unordered_quiet,
+  f16_nlt_unordered_signalling,
+  f16_nle_unordered_signalling,
+  f16_ordered_quiet,
+  f16_eq_unordered_quiet,
+  f16_nge_unordered_signalling,
+  f16_ngt_unordered_signalling,
+  f16_false_quiet,
+  f16_neq_ordered_quiet,
+  f16_ge_ordered_signalling,
+  f16_gt_ordered_signalling,
+  f16_true_quiet,
+  f16_eq_ordered_signalling,
+  f16_lt_ordered_quiet,
+  f16_le_ordered_quiet,
+  f16_unordered_signalling,
+  f16_neq_unordered_signalling,
+  f16_nlt_unordered_quiet,
+  f16_nle_unordered_quiet,
+  f16_ordered_signalling,
+  f16_eq_unordered_signalling,
+  f16_nge_unordered_quiet,
+  f16_ngt_unordered_quiet,
+  f16_false_signalling,
+  f16_neq_ordered_signalling,
+  f16_ge_ordered_quiet,
+  f16_gt_ordered_quiet,
+  f16_true_signalling
+};
+#endif
+
 /* Opcode: VEX.NDS.F3.0F 51 (VEX.W ignore, VEX.L ignore) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSS_VssHpsWssR(bxInstruction_c *i)
 {

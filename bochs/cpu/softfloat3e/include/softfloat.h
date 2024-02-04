@@ -33,7 +33,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 =============================================================================*/
 
-
 /*============================================================================
 | Note:  If SoftFloat is made available as a general library for programs to
 | use, it is strongly recommended that a platform-specific version of this
@@ -54,8 +53,8 @@ struct softfloat_status_t
     int softfloat_exceptionFlags;
     int softfloat_exceptionMasks;
 
-    uint8_t softfloat_denormals_are_zeros;
-    uint8_t softfloat_flush_underflow_to_zero;
+    bool softfloat_denormals_are_zeros;
+    bool softfloat_flush_underflow_to_zero;
 
     /*----------------------------------------------------------------------------
     | Rounding precision for 80-bit extended double-precision floating-point.
@@ -145,36 +144,49 @@ enum {
 /*----------------------------------------------------------------------------
 | Routine to raise any or all of the software floating-point exception flags.
 *----------------------------------------------------------------------------*/
-void softfloat_raiseFlags(struct softfloat_status_t *, int);
+BX_CPP_INLINE void softfloat_raiseFlags(struct softfloat_status_t *status, int flags) {
+    status->softfloat_exceptionFlags |= flags;
+}
 
 /*----------------------------------------------------------------------------
 | Check if exception is masked.
 *----------------------------------------------------------------------------*/
-int softfloat_isMaskedException(struct softfloat_status_t *, int flags);
+BX_CPP_INLINE int softfloat_isMaskedException(struct softfloat_status_t *status, int flags) {
+    return status->softfloat_exceptionMasks & flags;
+}
 
 /*----------------------------------------------------------------------------
 | Obtain current rounding mode.
 *----------------------------------------------------------------------------*/
-uint8_t softfloat_getRoundingMode(struct softfloat_status_t *);
+BX_CPP_INLINE uint8_t softfloat_getRoundingMode(struct softfloat_status_t *status) {
+    return status->softfloat_roundingMode;
+}
 
 /*----------------------------------------------------------------------------
 | Read denormals-are-zeroes flag.
 *----------------------------------------------------------------------------*/
-uint8_t softfloat_denormalsAreZeros(struct softfloat_status_t *status);
+BX_CPP_INLINE bool softfloat_denormalsAreZeros(struct softfloat_status_t *status) {
+    return status->softfloat_denormals_are_zeros;
+}
 
 /*----------------------------------------------------------------------------
 | Read flush-underflow-to-zero flag.
 *----------------------------------------------------------------------------*/
-uint8_t softfloat_flushUnderflowToZero(struct softfloat_status_t *status);
+BX_CPP_INLINE bool softfloat_flushUnderflowToZero(struct softfloat_status_t *status) {
+    return status->softfloat_flush_underflow_to_zero;
+}
 
 /*----------------------------------------------------------------------------
 | Obtain current rounding precision for F80.
 *----------------------------------------------------------------------------*/
-uint8_t softfloat_extF80_roundingPrecision(struct softfloat_status_t *);
+BX_CPP_INLINE uint8_t softfloat_extF80_roundingPrecision(struct softfloat_status_t *status) {
+    return status->extF80_roundingPrecision;
+}
 
 /*----------------------------------------------------------------------------
 | Integer-to-floating-point conversion routines.
 *----------------------------------------------------------------------------*/
+float16_t ui16_to_f16(uint16_t, struct softfloat_status_t *);
 float16_t ui32_to_f16(uint32_t, struct softfloat_status_t *);
 float32_t ui32_to_f32(uint32_t, struct softfloat_status_t *);
 float64_t ui32_to_f64(uint32_t);
@@ -185,6 +197,7 @@ float32_t ui64_to_f32(uint64_t, struct softfloat_status_t *);
 float64_t ui64_to_f64(uint64_t, struct softfloat_status_t *);
 extFloat80_t ui64_to_extF80(uint64_t);
 float128_t ui64_to_f128(uint64_t);
+float16_t i16_to_f16(int16_t, struct softfloat_status_t *);
 float16_t i32_to_f16(int32_t, struct softfloat_status_t *);
 float32_t i32_to_f32(int32_t, struct softfloat_status_t *);
 float64_t i32_to_f64(int32_t);
@@ -195,6 +208,14 @@ float32_t i64_to_f32(int64_t, struct softfloat_status_t *);
 float64_t i64_to_f64(int64_t, struct softfloat_status_t *);
 extFloat80_t i64_to_extF80(int64_t);
 float128_t i64_to_f128(int64_t);
+
+BX_CPP_INLINE float16_t i16_to_f16(int16_t a, struct softfloat_status_t *status) {
+  return i32_to_f16((int32_t)(a), status);
+}
+
+BX_CPP_INLINE float16_t ui16_to_f16(uint16_t a, struct softfloat_status_t *status) {
+  return ui32_to_f16((uint32_t)(a), status);
+}
 
 /*----------------------------------------------------------------------------
 | 16-bit (half-precision) floating-point operations.
@@ -210,22 +231,26 @@ int64_t f16_to_i64_r_minMag(float16_t, bool, struct softfloat_status_t *);
 float32_t f16_to_f32(float16_t, struct softfloat_status_t *);
 float64_t f16_to_f64(float16_t, struct softfloat_status_t *);
 extFloat80_t f16_to_extF80(float16_t, struct softfloat_status_t *);
-float128_t f16_to_f128(float16_t, struct softfloat_status_t *);
 float16_t f16_roundToInt(float16_t, uint8_t, uint8_t, bool, struct softfloat_status_t *);
 float16_t f16_add(float16_t, float16_t, struct softfloat_status_t *);
 float16_t f16_sub(float16_t, float16_t, struct softfloat_status_t *);
 float16_t f16_mul(float16_t, float16_t, struct softfloat_status_t *);
 float16_t f16_mulAdd(float16_t, float16_t, float16_t, uint8_t op, struct softfloat_status_t *);
 float16_t f16_div(float16_t, float16_t, struct softfloat_status_t *);
-float16_t f16_rem(float16_t, float16_t, struct softfloat_status_t *);
+float16_t f16_min(float16_t, float16_t, struct softfloat_status_t *);
+float16_t f16_max(float16_t, float16_t, struct softfloat_status_t *);
+float16_t f16_getExp(float16_t, struct softfloat_status_t *);
 int f16_compare(float16_t, float16_t, bool, struct softfloat_status_t *);
 float16_t f16_sqrt(float16_t, struct softfloat_status_t *);
 softfloat_class_t f16_class(float16_t);
+
 bool f16_isSignalingNaN(float16_t);
 bool f16_isNaN(float16_t);
-bool f16_sign(float16_t a);
-int8_t f16_exp(float16_t a);
-uint16_t f16_fraction(float16_t a);
+
+bool f16_sign(float16_t);
+int8_t f16_exp(float16_t);
+uint16_t f16_fraction(float16_t);
+float16_t f16_denormal_to_zero(float16_t);
 
 BX_CPP_INLINE int f16_compare(float16_t a, float16_t b, softfloat_status_t *status) {
   return f16_compare(a, b, 0, status);
@@ -304,15 +329,20 @@ float32_t f32_sub(float32_t, float32_t, struct softfloat_status_t *);
 float32_t f32_mul(float32_t, float32_t, struct softfloat_status_t *);
 float32_t f32_mulAdd(float32_t, float32_t, float32_t, uint8_t op, struct softfloat_status_t *);
 float32_t f32_div(float32_t, float32_t, struct softfloat_status_t *);
-float32_t f32_rem(float32_t, float32_t, struct softfloat_status_t *);
+float32_t f32_min(float32_t, float32_t, struct softfloat_status_t *);
+float32_t f32_max(float32_t, float32_t, struct softfloat_status_t *);
+float32_t f32_getExp(float32_t, struct softfloat_status_t *);
 int f32_compare(float32_t, float32_t, bool, struct softfloat_status_t *);
 float32_t f32_sqrt(float32_t, struct softfloat_status_t *);
 softfloat_class_t f32_class(float32_t);
+
 bool f32_isSignalingNaN(float32_t);
 bool f32_isNaN(float32_t);
-bool f32_sign(float32_t a);
-int16_t f32_exp(float32_t a);
-uint32_t f32_fraction(float32_t a);
+
+bool f32_sign(float32_t);
+int16_t f32_exp(float32_t);
+uint32_t f32_fraction(float32_t);
+float32_t f32_denormal_to_zero(float32_t);
 
 BX_CPP_INLINE int f32_compare(float32_t a, float32_t b, softfloat_status_t *status) {
   return f32_compare(a, b, 0, status);
@@ -391,15 +421,20 @@ float64_t f64_sub(float64_t, float64_t, struct softfloat_status_t *);
 float64_t f64_mul(float64_t, float64_t, struct softfloat_status_t *);
 float64_t f64_mulAdd(float64_t, float64_t, float64_t, uint8_t op, struct softfloat_status_t *);
 float64_t f64_div(float64_t, float64_t, struct softfloat_status_t *);
-float64_t f64_rem(float64_t, float64_t, struct softfloat_status_t *);
+float64_t f64_min(float64_t, float64_t, struct softfloat_status_t *);
+float64_t f64_max(float64_t, float64_t, struct softfloat_status_t *);
+float64_t f64_getExp(float64_t, struct softfloat_status_t *);
 int f64_compare(float64_t, float64_t, bool, struct softfloat_status_t *);
 float64_t f64_sqrt(float64_t, struct softfloat_status_t *);
 softfloat_class_t f64_class(float64_t);
+
 bool f64_isSignalingNaN(float64_t);
 bool f64_isNaN(float64_t);
-bool f64_sign(float64_t a);
-int16_t f64_exp(float64_t a);
-uint64_t f64_fraction(float64_t a);
+
+bool f64_sign(float64_t);
+int16_t f64_exp(float64_t);
+uint64_t f64_fraction(float64_t);
+float64_t f64_denormal_to_zero(float64_t);
 
 BX_CPP_INLINE int f64_compare(float64_t a, float64_t b, softfloat_status_t *status) {
   return f64_compare(a, b, 0, status);
@@ -493,7 +528,6 @@ uint32_t f128_to_ui32_r_minMag(float128_t, bool, struct softfloat_status_t *);
 uint64_t f128_to_ui64_r_minMag(float128_t, bool, struct softfloat_status_t *);
 int32_t f128_to_i32_r_minMag(float128_t, bool, struct softfloat_status_t *);
 int64_t f128_to_i64_r_minMag(float128_t, bool, struct softfloat_status_t *);
-float16_t f128_to_f16(float128_t, struct softfloat_status_t *);
 float32_t f128_to_f32(float128_t, struct softfloat_status_t *);
 float64_t f128_to_f64(float128_t, struct softfloat_status_t *);
 extFloat80_t f128_to_extF80(float128_t, struct softfloat_status_t *);
@@ -503,7 +537,6 @@ float128_t f128_sub(float128_t, float128_t, struct softfloat_status_t *);
 float128_t f128_mul(float128_t, float128_t, struct softfloat_status_t *);
 float128_t f128_mulAdd(float128_t, float128_t, float128_t, uint8_t op, struct softfloat_status_t *);
 float128_t f128_div(float128_t, float128_t, struct softfloat_status_t *);
-float128_t f128_rem(float128_t, float128_t, struct softfloat_status_t *);
 float128_t f128_sqrt(float128_t, struct softfloat_status_t *);
 bool f128_isSignalingNaN(float128_t);
 bool f128_isNaN(float128_t);

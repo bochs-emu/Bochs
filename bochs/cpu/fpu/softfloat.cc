@@ -1825,7 +1825,7 @@ float64 float64_frc(float64 a, float_status_t &status)
             if (! float_exception_masked(status, float_flag_underflow))
                 float_raise(status, float_flag_underflow);
 
-            if(get_flush_underflow_to_zero(status)) {
+            if (get_flush_underflow_to_zero(status)) {
                 float_raise(status, float_flag_underflow | float_flag_inexact);
                 return packFloat64(aSign, 0, 0);
             }

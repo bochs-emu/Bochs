@@ -3,7 +3,7 @@
 This C source file is part of the SoftFloat IEEE Floating-Point Arithmetic
 Package, Release 3e, by John R. Hauser.
 
-Copyright 2011, 2012, 2013, 2014, 2015 The Regents of the University of
+Copyright 2011, 2012, 2013, 2014, 2015, 2016 The Regents of the University of
 California.  All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -37,49 +37,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include "platform.h"
 #include "internals.h"
-#include "specialize.h"
 #include "softfloat.h"
 
-float16_t f128_to_f16(float128_t a, struct softfloat_status_t *status)
-{
-    union ui128_f128 uA;
-    uint64_t uiA64, uiA0;
-    bool sign;
-    int32_t exp;
-    uint64_t frac64;
-    struct commonNaN commonNaN;
-    uint16_t uiZ, frac16;
+/*----------------------------------------------------------------------------
+| Compare between two half precision floating point numbers and return the
+| smaller of them.
+*----------------------------------------------------------------------------*/
 
-    /*------------------------------------------------------------------------
-    *------------------------------------------------------------------------*/
-    uA.f = a;
-    uiA64 = uA.ui.v64;
-    uiA0  = uA.ui.v0;
-    sign  = signF128UI64(uiA64);
-    exp   = expF128UI64(uiA64);
-    frac64 = fracF128UI64(uiA64) | (uiA0 != 0);
-    /*------------------------------------------------------------------------
-    *------------------------------------------------------------------------*/
-    if (exp == 0x7FFF) {
-        if (frac64) {
-            softfloat_f128UIToCommonNaN(uiA64, uiA0, &commonNaN, status);
-            uiZ = softfloat_commonNaNToF16UI(&commonNaN);
-        } else {
-            uiZ = packToF16UI(sign, 0x1F, 0);
-        }
-        return uiZ;
-    }
-    /*------------------------------------------------------------------------
-    *------------------------------------------------------------------------*/
-    frac16 = softfloat_shortShiftRightJam64(frac64, 34);
-    if (! (exp | frac16)) {
-        return packToF16UI(sign, 0, 0);
-    }
-    /*------------------------------------------------------------------------
-    *------------------------------------------------------------------------*/
-    exp -= 0x3FF1;
-    if (sizeof (int16_t) < sizeof (int32_t)) {
-        if (exp < -0x40) exp = -0x40;
-    }
-    return softfloat_roundPackToF16(sign, exp, frac16 | 0x4000, status);
+float16_t f16_min(float16_t a, float16_t b, softfloat_status_t *status)
+{
+  if (softfloat_denormalsAreZeros(status)) {
+    a = f16_denormal_to_zero(a);
+    b = f16_denormal_to_zero(b);
+  }
+
+  return (f16_compare(a, b, status) == softfloat_relation_less) ? a : b;
+}
+
+/*----------------------------------------------------------------------------
+| Compare between two half precision floating point numbers and return the
+| larger of them.
+*----------------------------------------------------------------------------*/
+
+float16_t f16_max(float16_t a, float16_t b, softfloat_status_t *status)
+{
+  if (softfloat_denormalsAreZeros(status)) {
+    a = f16_denormal_to_zero(a);
+    b = f16_denormal_to_zero(b);
+  }
+
+  return (f16_compare(a, b, status) == softfloat_relation_greater) ? a : b;
 }

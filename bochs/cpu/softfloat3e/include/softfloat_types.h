@@ -65,7 +65,7 @@ typedef struct f64_t {
   operator uint64_t() const { return v; }
 } float64_t;
 
-typedef struct {
+typedef struct f128_t {
   uint64_t v[2];
 } float128_t;
 

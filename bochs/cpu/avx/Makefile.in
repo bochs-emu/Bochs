@@ -54,9 +54,11 @@ AVX_OBJS = \
 	avx512_broadcast.o \
 	avx512_move.o \
 	avx512_pfp.o \
+	avx512_pfp16.o \
 	avx512_rcp14.o \
 	avx512_rsqrt14.o \
 	avx512_cvt.o \
+	avx512_cvt16.o \
 	avx512_fma.o \
 	avx512_mask8.o \
 	avx512_mask16.o \
@@ -160,6 +162,14 @@ avx512_cvt.o: avx512_cvt.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h
  ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h ../crregs.h \
  ../descriptor.h ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h \
  ../xmm.h ../vmx.h ../stack.h ../access.h ../simd_int.h
+avx512_cvt16.o: avx512_cvt16.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
+ ../../logio.h ../../misc/bswap.h ../cpu.h ../../bx_debug/debug.h \
+ ../../config.h ../../osdep.h ../../cpu/decoder/decoder.h \
+ ../../cpu/decoder/features.h ../decoder/decoder.h \
+ ../../instrument/stubs/instrument.h ../i387.h ../fpu/softfloat.h \
+ ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h ../crregs.h \
+ ../descriptor.h ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h \
+ ../xmm.h ../vmx.h ../stack.h ../access.h ../simd_int.h
 avx512_fma.o: avx512_fma.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../logio.h ../../misc/bswap.h ../cpu.h ../../bx_debug/debug.h \
  ../../config.h ../../osdep.h ../../cpu/decoder/decoder.h \
@@ -217,6 +227,16 @@ avx512_move.o: avx512_move.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep
  ../descriptor.h ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h \
  ../xmm.h ../vmx.h ../stack.h ../access.h ../simd_int.h
 avx512_pfp.o: avx512_pfp.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
+ ../../logio.h ../../misc/bswap.h ../cpu.h ../../bx_debug/debug.h \
+ ../../config.h ../../osdep.h ../../cpu/decoder/decoder.h \
+ ../../cpu/decoder/features.h ../decoder/decoder.h \
+ ../../instrument/stubs/instrument.h ../i387.h ../fpu/softfloat.h \
+ ../fpu/tag_w.h ../fpu/status_w.h ../fpu/control_w.h ../crregs.h \
+ ../descriptor.h ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h \
+ ../xmm.h ../vmx.h ../stack.h ../access.h  \
+ ../fpu/softfloat.h ../simd_int.h ../simd_pfp.h \
+ ../fpu/softfloat-specialize.h
+avx512_pfp16.o: avx512_pfp16.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../logio.h ../../misc/bswap.h ../cpu.h ../../bx_debug/debug.h \
  ../../config.h ../../osdep.h ../../cpu/decoder/decoder.h \
  ../../cpu/decoder/features.h ../decoder/decoder.h \

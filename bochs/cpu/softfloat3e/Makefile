@@ -1,4 +1,3 @@
-
 #=============================================================================
 #
 # This Makefile is part of the SoftFloat IEEE Floating-Point Arithmetic
@@ -86,20 +85,14 @@ OBJS_PRIMITIVES = \
   s_approxRecipSqrt32_1$(OBJ) \
 
 OBJS_SPECIALIZE = \
-  softfloat_state$(OBJ) \
-  s_f16UIToCommonNaN$(OBJ) \
   s_commonNaNToF16UI$(OBJ) \
   s_propagateNaNF16UI$(OBJ) \
-  s_f32UIToCommonNaN$(OBJ) \
   s_commonNaNToF32UI$(OBJ) \
   s_propagateNaNF32UI$(OBJ) \
-  s_f64UIToCommonNaN$(OBJ) \
   s_commonNaNToF64UI$(OBJ) \
   s_propagateNaNF64UI$(OBJ) \
-  s_extF80UIToCommonNaN$(OBJ) \
   s_commonNaNToExtF80UI$(OBJ) \
   s_propagateNaNExtF80UI$(OBJ) \
-  s_f128UIToCommonNaN$(OBJ) \
   s_commonNaNToF128UI$(OBJ) \
   s_propagateNaNF128UI$(OBJ) \
 
@@ -170,10 +163,11 @@ OBJS_OTHERS = \
   f16_to_f32$(OBJ) \
   f16_to_f64$(OBJ) \
   f16_to_extF80$(OBJ) \
-  f16_to_f128$(OBJ) \
+  f16_getExp$(OBJ) \
   f16_roundToInt$(OBJ) \
   f16_class$(OBJ) \
   f16_compare$(OBJ) \
+  f16_minmax$(OBJ) \
   f16_add$(OBJ) \
   f16_sub$(OBJ) \
   f16_mul$(OBJ) \
@@ -192,9 +186,11 @@ OBJS_OTHERS = \
   f32_to_f64$(OBJ) \
   f32_to_extF80$(OBJ) \
   f32_to_f128$(OBJ) \
+  f32_getExp$(OBJ) \
   f32_roundToInt$(OBJ) \
   f32_class$(OBJ) \
   f32_compare$(OBJ) \
+  f32_minmax$(OBJ) \
   f32_add$(OBJ) \
   f32_sub$(OBJ) \
   f32_mul$(OBJ) \
@@ -213,9 +209,11 @@ OBJS_OTHERS = \
   f64_to_f32$(OBJ) \
   f64_to_extF80$(OBJ) \
   f64_to_f128$(OBJ) \
+  f64_getExp$(OBJ) \
   f64_roundToInt$(OBJ) \
   f64_class$(OBJ) \
   f64_compare$(OBJ) \
+  f64_minmax$(OBJ) \
   f64_add$(OBJ) \
   f64_sub$(OBJ) \
   f64_mul$(OBJ) \
@@ -249,7 +247,6 @@ OBJS_OTHERS = \
   f128_to_ui64_r_minMag$(OBJ) \
   f128_to_i32_r_minMag$(OBJ) \
   f128_to_i64_r_minMag$(OBJ) \
-  f128_to_f16$(OBJ) \
   f128_to_f32$(OBJ) \
   f128_to_extF80$(OBJ) \
   f128_to_f64$(OBJ) \

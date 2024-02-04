@@ -52,3 +52,20 @@ struct uint128 softfloat_commonNaNToExtF80UI(const struct commonNaN *aPtr)
     uiZ.v0 = UINT64_C(0xC000000000000000) | aPtr->v64>>1;
     return uiZ;
 }
+
+/*----------------------------------------------------------------------------
+| Assuming the unsigned integer formed from concatenating `uiA64' and `uiA0'
+| has the bit pattern of an 80-bit extended floating-point NaN, converts
+| this NaN to the common NaN form, and stores the resulting common NaN at the
+| location pointed to by `zPtr'.  If the NaN is a signaling NaN, the invalid
+| exception is raised.
+*----------------------------------------------------------------------------*/
+void softfloat_extF80UIToCommonNaN(uint16_t uiA64, uint64_t uiA0, struct commonNaN *zPtr, struct softfloat_status_t *status)
+{
+    if (softfloat_isSigNaNExtF80UI(uiA64, uiA0)) {
+        softfloat_raiseFlags(status, softfloat_flag_invalid);
+    }
+    zPtr->sign = uiA64>>15;
+    zPtr->v64  = uiA0<<1;
+    zPtr->v0   = 0;
+}

@@ -57,6 +57,27 @@ typedef struct {
 #ifdef FLOAT16
 
 /*----------------------------------------------------------------------------
+| Takes half-precision floating-point NaN `a' and returns the appropriate
+| NaN result.  If `a' is a signaling NaN, the invalid exception is raised.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE float16 propagateFloat16NaN(float16 a, float_status_t &status)
+{
+    if (float16_is_signaling_nan(a))
+        float_raise(status, float_flag_invalid);
+
+    return a | 0x200;
+}
+
+/*----------------------------------------------------------------------------
+| Commonly used half-precision floating point constants
+*----------------------------------------------------------------------------*/
+const float16 float16_negative_inf  = 0xfc00;
+const float16 float16_positive_inf  = 0x7c00;
+const float16 float16_negative_zero = 0x8000;
+const float16 float16_positive_zero = 0x0000;
+
+/*----------------------------------------------------------------------------
 | The pattern for a default generated half-precision NaN.
 *----------------------------------------------------------------------------*/
 const float16 float16_default_nan = 0xFE00;
@@ -64,6 +85,8 @@ const float16 float16_default_nan = 0xFE00;
 #define float16_fraction extractFloat16Frac
 #define float16_exp extractFloat16Exp
 #define float16_sign extractFloat16Sign
+
+#define FLOAT16_EXP_BIAS 0xF
 
 /*----------------------------------------------------------------------------
 | Returns the fraction bits of the half-precision floating-point value `a'.

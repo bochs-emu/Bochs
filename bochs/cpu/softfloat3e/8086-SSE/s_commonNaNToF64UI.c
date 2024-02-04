@@ -46,3 +46,19 @@ uint64_t softfloat_commonNaNToF64UI(const struct commonNaN *aPtr)
 {
     return (uint64_t) aPtr->sign<<63 | UINT64_C(0x7FF8000000000000) | aPtr->v64>>12;
 }
+
+/*----------------------------------------------------------------------------
+| Assuming `uiA' has the bit pattern of a 64-bit floating-point NaN, converts
+| this NaN to the common NaN form, and stores the resulting common NaN at the
+| location pointed to by `zPtr'.  If the NaN is a signaling NaN, the invalid
+| exception is raised.
+*----------------------------------------------------------------------------*/
+void softfloat_f64UIToCommonNaN(uint64_t uiA, struct commonNaN *zPtr, struct softfloat_status_t *status)
+{
+    if (softfloat_isSigNaNF64UI(uiA)) {
+        softfloat_raiseFlags(status, softfloat_flag_invalid);
+    }
+    zPtr->sign = uiA>>63;
+    zPtr->v64  = uiA<<12;
+    zPtr->v0   = 0;
+}

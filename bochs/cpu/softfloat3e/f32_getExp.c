@@ -3,8 +3,8 @@
 This C source file is part of the SoftFloat IEEE Floating-Point Arithmetic
 Package, Release 3e, by John R. Hauser.
 
-Copyright 2011, 2012, 2013, 2014 The Regents of the University of California.
-All rights reserved.
+Copyright 2011, 2012, 2013, 2014, 2015, 2016 The Regents of the University of
+California.  All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -33,43 +33,42 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 =============================================================================*/
 
+#include <stdbool.h>
+#include <stdint.h>
 #include "platform.h"
+#include "internals.h"
+#include "specialize.h"
 #include "softfloat.h"
 
-#include "../fpu/softfloat.h"
-
 /*----------------------------------------------------------------------------
-| Raises the exceptions specified by `flags'.  Floating-point traps can be
-| defined here if desired.  It is currently not possible for such a trap
-| to substitute a result value.  If traps are not implemented, this routine
-| should be simply `softfloat_exceptionFlags |= flags;'.
+| Extracts the exponent portion of single-precision floating-point value 'a',
+| and returns the result as a single-precision floating-point value
+| representing unbiased integer exponent. The operation is performed according
+| to the IEC/IEEE Standard for Binary Floating-Point Arithmetic.
 *----------------------------------------------------------------------------*/
-void softfloat_raiseFlags(struct softfloat_status_t *status, int flags)
-{
-    status->softfloat_exceptionFlags |= flags;
-}
 
-int softfloat_isMaskedException(struct softfloat_status_t *status, int flags)
+float32_t f32_getExp(float32_t a, softfloat_status_t *status)
 {
-    return status->softfloat_exceptionMasks & flags;
-}
+    int16_t expA;
+    uint32_t sigA;
+    struct exp16_sig32 normExpSig;
 
-uint8_t softfloat_getRoundingMode(struct softfloat_status_t *status)
-{
-    return status->softfloat_roundingMode;
-}
+    expA  = expF32UI(a);
+    sigA  = fracF32UI(a);
 
-uint8_t softfloat_extF80_roundingPrecision(struct softfloat_status_t *status)
-{
-    return status->extF80_roundingPrecision;
-}
+    if (expA == 0xFF) {
+        if (sigA) return softfloat_propagateNaNF32UI(a, 0, status);
+        return packToF32UI(0, 0xFF, 0);
+    }
 
-uint8_t softfloat_denormalsAreZeros(struct softfloat_status_t *status)
-{
-    return status->softfloat_denormals_are_zeros;
-}
+    if (! expA) {
+        if (! sigA || softfloat_denormalsAreZeros(status))
+            return packToF32UI(1, 0xFF, 0);
 
-uint8_t softfloat_flushUnderflowToZero(struct softfloat_status_t *status)
-{
-    return status->softfloat_flush_underflow_to_zero;
+        softfloat_raiseFlags(status, softfloat_flag_denormal);
+        normExpSig = softfloat_normSubnormalF32Sig(sigA);
+        expA = normExpSig.exp;
+    }
+
+    return i32_to_f32((int32_t)(expA) - 0x7F, status);
 }

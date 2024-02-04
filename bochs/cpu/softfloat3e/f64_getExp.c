@@ -1,11 +1,10 @@
-
 /*============================================================================
 
 This C source file is part of the SoftFloat IEEE Floating-Point Arithmetic
 Package, Release 3e, by John R. Hauser.
 
-Copyright 2011, 2012, 2013, 2014 The Regents of the University of California.
-All rights reserved.
+Copyright 2011, 2012, 2013, 2014, 2015, 2016 The Regents of the University of
+California.  All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -34,29 +33,42 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 =============================================================================*/
 
+#include <stdbool.h>
 #include <stdint.h>
 #include "platform.h"
-#include "primitives.h"
+#include "internals.h"
 #include "specialize.h"
 #include "softfloat.h"
 
 /*----------------------------------------------------------------------------
-| Assuming the unsigned integer formed from concatenating `uiA64' and `uiA0'
-| has the bit pattern of a 128-bit floating-point NaN, converts this NaN to
-| the common NaN form, and stores the resulting common NaN at the location
-| pointed to by `zPtr'.  If the NaN is a signaling NaN, the invalid exception
-| is raised.
+| Extracts the exponent portion of double-precision floating-point value 'a',
+| and returns the result as a double-precision floating-point value
+| representing unbiased integer exponent. The operation is performed according
+| to the IEC/IEEE Standard for Binary Floating-Point Arithmetic.
 *----------------------------------------------------------------------------*/
-void
- softfloat_f128UIToCommonNaN(uint64_t uiA64, uint64_t uiA0, struct commonNaN *zPtr, struct softfloat_status_t *status)
-{
-    struct uint128 NaNSig;
 
-    if (softfloat_isSigNaNF128UI(uiA64, uiA0)) {
-        softfloat_raiseFlags(status, softfloat_flag_invalid);
+float64_t f64_getExp(float64_t a, softfloat_status_t *status)
+{
+    int16_t expA;
+    uint64_t sigA;
+    struct exp16_sig64 normExpSig;
+
+    expA  = expF64UI(a);
+    sigA  = fracF64UI(a);
+
+    if (expA == 0x7FF) {
+        if (sigA) return softfloat_propagateNaNF64UI(a, 0, status);
+        return packToF64UI(0, 0x7FF, 0);
     }
-    NaNSig = softfloat_shortShiftLeft128(uiA64, uiA0, 16);
-    zPtr->sign = uiA64>>63;
-    zPtr->v64  = NaNSig.v64;
-    zPtr->v0   = NaNSig.v0;
+
+    if (! expA) {
+        if (! sigA || softfloat_denormalsAreZeros(status))
+            return packToF64UI(1, 0x7FF, 0);
+
+        softfloat_raiseFlags(status, softfloat_flag_denormal);
+        normExpSig = softfloat_normSubnormalF64Sig(sigA);
+        expA = normExpSig.exp;
+    }
+
+    return i32_to_f64((int32_t)(expA) - 0x3FF);
 }

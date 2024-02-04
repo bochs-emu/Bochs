@@ -350,7 +350,7 @@ cpu/fpu/libfpu.a::
 	$(MAKE) $(MDEFINES) libfpu.a
 	@CD_UP_TWO@
 
-cpu/softftloat3e/libsoftftloat.a::
+cpu/softfloat3e/libsoftfloat.a::
 	cd cpu/softfloat3e @COMMAND_SEPARATOR@
 	$(MAKE) $(MDEFINES) libsoftfloat.a
 	@CD_UP_TWO@

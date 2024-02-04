@@ -1,11 +1,10 @@
-
 /*============================================================================
 
 This C source file is part of the SoftFloat IEEE Floating-Point Arithmetic
 Package, Release 3e, by John R. Hauser.
 
-Copyright 2011, 2012, 2013, 2014 The Regents of the University of California.
-All rights reserved.
+Copyright 2011, 2012, 2013, 2014, 2015, 2016 The Regents of the University of
+California.  All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -34,23 +33,42 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 =============================================================================*/
 
+#include <stdbool.h>
 #include <stdint.h>
 #include "platform.h"
+#include "internals.h"
 #include "specialize.h"
 #include "softfloat.h"
 
 /*----------------------------------------------------------------------------
-| Assuming `uiA' has the bit pattern of a 32-bit floating-point NaN, converts
-| this NaN to the common NaN form, and stores the resulting common NaN at the
-| location pointed to by `zPtr'.  If the NaN is a signaling NaN, the invalid
-| exception is raised.
+| Extracts the exponent portion of half-precision floating-point value 'a',
+| and returns the result as a half-precision floating-point value
+| representing unbiased integer exponent. The operation is performed according
+| to the IEC/IEEE Standard for Binary Floating-Point Arithmetic.
 *----------------------------------------------------------------------------*/
-void softfloat_f32UIToCommonNaN(uint32_t uiA, struct commonNaN *zPtr, struct softfloat_status_t *status)
+
+float16_t f16_getExp(float16_t a, softfloat_status_t *status)
 {
-    if (softfloat_isSigNaNF32UI(uiA)) {
-        softfloat_raiseFlags(status, softfloat_flag_invalid);
+    int8_t expA;
+    uint16_t sigA;
+    struct exp8_sig16 normExpSig;
+
+    expA  = expF16UI(a);
+    sigA  = fracF16UI(a);
+
+    if (expA == 0x1F) {
+        if (sigA) return softfloat_propagateNaNF16UI(a, 0, status);
+        return packToF32UI(0, 0x1F, 0);
     }
-    zPtr->sign = uiA>>31;
-    zPtr->v64  = (uint64_t) uiA<<41;
-    zPtr->v0   = 0;
+
+    if (! expA) {
+        if (! sigA || softfloat_denormalsAreZeros(status))
+            return packToF32UI(1, 0x1F, 0);
+
+        softfloat_raiseFlags(status, softfloat_flag_denormal);
+        normExpSig = softfloat_normSubnormalF16Sig(sigA);
+        expA = normExpSig.exp;
+    }
+
+    return i32_to_f16((int32_t)(expA) - 0xF, status);
 }

@@ -123,6 +123,7 @@ sapphire_rapids_t::sapphire_rapids_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_AVX512_BITALG);
   enable_cpu_extension(BX_ISA_AVX512_VPOPCNTDQ);
   enable_cpu_extension(BX_ISA_AVX512_BF16);
+  enable_cpu_extension(BX_ISA_AVX512_FP16);
 #endif
 #if BX_SUPPORT_AMX
   enable_cpu_extension(BX_ISA_AMX);

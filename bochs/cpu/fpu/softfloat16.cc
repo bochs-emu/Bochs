@@ -46,51 +46,96 @@ these four paragraphs for those parts of this code that are retained.
 
 float_class_t float16_class(float16 a)
 {
-   Bit16s aExp = extractFloat16Exp(a);
-   Bit16u aSig = extractFloat16Frac(a);
-   int  aSign = extractFloat16Sign(a);
+    Bit16s aExp = extractFloat16Exp(a);
+    Bit16u aSig = extractFloat16Frac(a);
+    int  aSign = extractFloat16Sign(a);
 
-   if(aExp == 0x1F) {
-       if (aSig == 0)
-           return (aSign) ? float_negative_inf : float_positive_inf;
+    if(aExp == 0x1F) {
+        if (aSig == 0)
+            return (aSign) ? float_negative_inf : float_positive_inf;
 
-       return (aSig & 0x200) ? float_QNaN : float_SNaN;
-   }
+        return (aSig & 0x200) ? float_QNaN : float_SNaN;
+    }
 
-   if(aExp == 0) {
-       if (aSig == 0) return float_zero;
-       return float_denormal;
-   }
+    if(aExp == 0) {
+        if (aSig == 0) return float_zero;
+        return float_denormal;
+    }
 
-   return float_normalized;
+    return float_normalized;
 }
 
 /*----------------------------------------------------------------------------
-| Returns the result of converting the half-precision floating-point value
-| `a' to the single-precision floating-point format.  The conversion is
-| performed according to the IEC/IEEE Standard for Binary Floating-Point
-| Arithmetic.
+| Compare  between  two  half  precision  floating  point  numbers. Returns
+| 'float_relation_equal'  if the operands are equal, 'float_relation_less' if
+| the    value    'a'   is   less   than   the   corresponding   value   `b',
+| 'float_relation_greater' if the value 'a' is greater than the corresponding
+| value `b', or 'float_relation_unordered' otherwise.
 *----------------------------------------------------------------------------*/
 
-float32 float16_to_float32(float16 a, float_status_t &status)
+int float16_compare(float16 a, float16 b, int quiet, float_status_t &status)
 {
-    Bit16u aSig = extractFloat16Frac(a);
-    Bit16s aExp = extractFloat16Exp(a);
-    int aSign = extractFloat16Sign(a);
-
-    if (aExp == 0x1F) {
-        if (aSig) return commonNaNToFloat32(float16ToCommonNaN(a, status));
-        return packFloat32(aSign, 0xFF, 0);
+    if (get_denormals_are_zeros(status)) {
+        a = float16_denormal_to_zero(a);
+        b = float16_denormal_to_zero(b);
     }
-    if (aExp == 0) {
-        // ignore denormals_are_zeros flag
-        if (aSig == 0) return packFloat32(aSign, 0, 0);
+
+    float_class_t aClass = float16_class(a);
+    float_class_t bClass = float16_class(b);
+
+    if (aClass == float_SNaN || bClass == float_SNaN) {
+        float_raise(status, float_flag_invalid);
+        return float_relation_unordered;
+    }
+
+    if (aClass == float_QNaN || bClass == float_QNaN) {
+        if (! quiet) float_raise(status, float_flag_invalid);
+        return float_relation_unordered;
+    }
+
+    if (aClass == float_denormal || bClass == float_denormal) {
         float_raise(status, float_flag_denormal);
-        normalizeFloat16Subnormal(aSig, &aExp, &aSig);
-        --aExp;
     }
 
-    return packFloat32(aSign, aExp + 0x70, ((Bit32u) aSig)<<13);
+    if ((a == b) || ((Bit16u) ((a | b)<<1) == 0)) return float_relation_equal;
+
+    int aSign = extractFloat16Sign(a);
+    int bSign = extractFloat16Sign(b);
+    if (aSign != bSign)
+        return (aSign) ? float_relation_less : float_relation_greater;
+
+    if (aSign ^ (a < b)) return float_relation_less;
+    return float_relation_greater;
+}
+
+/*----------------------------------------------------------------------------
+| Compare between two half precision floating point numbers and return the
+| smaller of them.
+*----------------------------------------------------------------------------*/
+
+float16 float16_min(float16 a, float16 b, float_status_t &status)
+{
+    if (get_denormals_are_zeros(status)) {
+        a = float16_denormal_to_zero(a);
+        b = float16_denormal_to_zero(b);
+    }
+
+    return (float16_compare(a, b, status) == float_relation_less) ? a : b;
+}
+
+/*----------------------------------------------------------------------------
+| Compare between two half precision floating point numbers and return the
+| larger of them.
+*----------------------------------------------------------------------------*/
+
+float16 float16_max(float16 a, float16 b, float_status_t &status)
+{
+    if (get_denormals_are_zeros(status)) {
+        a = float16_denormal_to_zero(a);
+        b = float16_denormal_to_zero(b);
+    }
+
+    return (float16_compare(a, b, status) == float_relation_greater) ? a : b;
 }
 
 /*----------------------------------------------------------------------------
@@ -124,6 +169,86 @@ float16 float32_to_float16(float32 a, float_status_t &status)
     }
 
     return roundAndPackFloat16(aSign, aExp, zSig, status);
+}
+
+/*----------------------------------------------------------------------------
+| Rounds the half-precision floating-point value `a' to an integer,
+| and returns the result as a half-precision floating-point value. The
+| operation is performed according to the IEC/IEEE Standard for Binary
+| Floating-Point Arithmetic.
+*----------------------------------------------------------------------------*/
+
+float16 float16_round_to_int(float16 a, Bit8u scale, float_status_t &status)
+{
+    int aSign;
+    Bit16u lastBitMask, roundBitsMask;
+    Bit16u z;
+    Bit16s aExp = extractFloat16Exp(a);
+    scale &= 0xf;
+
+    if ((aExp == 0x1F) && extractFloat16Frac(a)) {
+        return propagateFloat16NaN(a, status);
+    }
+
+    aExp += scale; // scale the exponent
+
+    if (0x19 <= aExp) {
+        return a;
+    }
+
+    if (get_denormals_are_zeros(status)) {
+        a = float32_denormal_to_zero(a);
+    }
+
+    if (aExp <= 0xE) {
+        if ((Bit16u) (a<<1) == 0) return a;
+        float_raise(status, float_flag_inexact);
+        aSign = extractFloat16Sign(a);
+        switch(get_float_rounding_mode(status)) {
+        case float_round_nearest_even:
+            if ((aExp == 0xE) && extractFloat16Frac(a)) {
+                return packFloat16(aSign, 0xF - scale, 0);
+            }
+            break;
+        case float_round_down:
+            return aSign ? packFloat16(aSign, 0xF - scale, 0) : float16_positive_zero;
+        case float_round_up:
+            /* -0.0/1.0f */
+            return aSign ? float16_negative_zero : packFloat32(0, 0xF - scale, 0);
+        }
+        return packFloat16(aSign, 0, 0);
+    }
+    lastBitMask = 1;
+    lastBitMask <<= 0x19 - aExp;
+    roundBitsMask = lastBitMask - 1;
+    z = a;
+    switch(get_float_rounding_mode(status)) {
+    case float_round_nearest_even:
+        z += lastBitMask>>1;
+        if ((z & roundBitsMask) == 0) {
+            z &= ~lastBitMask;
+        }
+        break;
+    case float_round_to_zero:
+        break;
+    case float_round_up:
+        if (!extractFloat16Sign(z)) {
+            z += roundBitsMask;
+        }
+        break;
+    case float_round_down:
+        if (extractFloat16Sign(z)) {
+            z += roundBitsMask;
+        }
+        break;
+    default:
+        break;
+    }
+    z &= ~roundBitsMask;
+    if (z != a) {
+        float_raise(status, float_flag_inexact);
+    }
+    return z;
 }
 
 #endif

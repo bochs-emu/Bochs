@@ -3,7 +3,7 @@
 This C source file is part of the SoftFloat IEEE Floating-Point Arithmetic
 Package, Release 3e, by John R. Hauser.
 
-Copyright 2011, 2012, 2013, 2014, 2015 The Regents of the University of
+Copyright 2011, 2012, 2013, 2014, 2015, 2016 The Regents of the University of
 California.  All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -37,54 +37,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include "platform.h"
 #include "internals.h"
-#include "specialize.h"
 #include "softfloat.h"
 
-float128_t f16_to_f128(float16_t a, struct softfloat_status_t *status)
-{
-    bool sign;
-    int8_t exp;
-    uint16_t frac;
-    struct commonNaN commonNaN;
-    struct uint128 uiZ;
-    struct exp8_sig16 normExpSig;
-    union ui128_f128 uZ;
+/*----------------------------------------------------------------------------
+| Compare between two double precision floating point numbers and return the
+| smaller of them.
+*----------------------------------------------------------------------------*/
 
-    /*------------------------------------------------------------------------
-    *------------------------------------------------------------------------*/
-    sign = signF16UI(a);
-    exp  = expF16UI(a);
-    frac = fracF16UI(a);
-    /*------------------------------------------------------------------------
-    *------------------------------------------------------------------------*/
-    if (exp == 0x1F) {
-        if (frac) {
-            softfloat_f16UIToCommonNaN(a, &commonNaN, status);
-            uiZ = softfloat_commonNaNToF128UI(&commonNaN);
-        } else {
-            uiZ.v64 = packToF128UI64(sign, 0x7FFF, 0);
-            uiZ.v0  = 0;
-        }
-        goto uiZ;
-    }
-    /*------------------------------------------------------------------------
-    *------------------------------------------------------------------------*/
-    if (! exp) {
-        if (! frac) {
-            uiZ.v64 = packToF128UI64(sign, 0, 0);
-            uiZ.v0  = 0;
-            goto uiZ;
-        }
-        softfloat_raiseFlags(status, softfloat_flag_denormal);
-        normExpSig = softfloat_normSubnormalF16Sig(frac);
-        exp = normExpSig.exp - 1;
-        frac = normExpSig.sig;
-    }
-    /*------------------------------------------------------------------------
-    *------------------------------------------------------------------------*/
-    uiZ.v64 = packToF128UI64(sign, exp + 0x3FF0, (uint64_t) frac<<38);
-    uiZ.v0  = 0;
- uiZ:
-    uZ.ui = uiZ;
-    return uZ.f;
+float64_t f64_min(float64_t a, float64_t b, softfloat_status_t *status)
+{
+  if (softfloat_denormalsAreZeros(status)) {
+    a = f64_denormal_to_zero(a);
+    b = f64_denormal_to_zero(b);
+  }
+
+  return (f64_compare(a, b, status) == softfloat_relation_less) ? a : b;
+}
+
+/*----------------------------------------------------------------------------
+| Compare between two double precision floating point numbers and return the
+| larger of them.
+*----------------------------------------------------------------------------*/
+
+float64_t f64_max(float64_t a, float64_t b, softfloat_status_t *status)
+{
+  if (softfloat_denormalsAreZeros(status)) {
+    a = f64_denormal_to_zero(a);
+    b = f64_denormal_to_zero(b);
+  }
+
+  return (f64_compare(a, b, status) == softfloat_relation_greater) ? a : b;
 }
