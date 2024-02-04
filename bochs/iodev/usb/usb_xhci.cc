@@ -3404,9 +3404,18 @@ int bx_usb_xhci_c::validate_ep_context(const struct EP_CONTEXT *ep_context, int 
         
         // 6) all other fields are within the valid range of values.
         
-        // The Max Burst Size, and EP State values shall be cleared to 0.
-        if ((ep_context->max_burst_size != 0) || (ep_context->ep_state != 0))
+        // The Max Burst Size value shall be cleared to 0.
+        if (ep_context->max_burst_size != 0)
           ret = PARAMETER_ERROR;
+        
+        // xHCI version 1.0, section 4.6.5, pg 92, second primary dot item states: EP State value should be cleared to '0'
+        // xHCI version 1.1, section 4.6.5, pg 111, second to last 'Note' states it should be in the 
+        //   Stopped or Running State, either of these states not being equal to zero.
+#if ((VERSION_MAJOR < 1) || ((VERSION_MAJOR == 1) && (VERSION_MINOR < 1)))
+        // if version is <= 1.0, the EP State value shall be cleared to 0.
+        if (ep_context->ep_state != 0)
+          ret = PARAMETER_ERROR;
+#endif
       }
       break;
 
