@@ -1133,7 +1133,7 @@ AC_ARG_ENABLE(fpu,
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_FPU, 1)
-    FPU_VAR='$(FPU_LIB)'
+    FPU_VAR='$(FPU_LIB) $(SOFTFLOAT_LIB)'
    elif test "$enableval" = no; then
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_FPU, 0)
@@ -1147,7 +1147,7 @@ AC_ARG_ENABLE(fpu,
   [
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_FPU, 1)
-    FPU_VAR='$(FPU_LIB)'
+    FPU_VAR='$(FPU_LIB) $(SOFTFLOAT_LIB)'
     ]
   )
 AC_SUBST(FPU_VAR)

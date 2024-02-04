@@ -292,8 +292,8 @@ static Bit16u rcp_table[2048] = {
 // approximate reciprocal of scalar single precision FP
 float32 approximate_rcp(float32 op)
 {
-  float_class_t op_class = float32_class(op);
-  int sign = float32_sign(op);
+  softfloat_class_t op_class = f32_class(op);
+  bool sign = f32_sign(op);
 
   switch(op_class) {
     case float_zero:
@@ -312,8 +312,8 @@ float32 approximate_rcp(float32 op)
       break;
   }
 
-  Bit32u fraction = float32_fraction(op);
-  Bit16s exp = float32_exp(op);
+  Bit32u fraction = f32_fraction(op);
+  Bit16s exp = f32_exp(op);
 
   /*
    * Calculate (1/1.yyyyyyyyyyy1), the result is always rounded to the
@@ -638,8 +638,8 @@ static const Bit16u rsqrt_table1[1024] = {
 // approximate reciprocal sqrt of scalar single precision FP
 float32 approximate_rsqrt(float32 op)
 {
-  float_class_t op_class = float32_class(op);
-  int sign = float32_sign(op);
+  softfloat_class_t op_class = f32_class(op);
+  bool sign = f32_sign(op);
 
   switch(op_class) {
     case float_zero:
@@ -663,8 +663,8 @@ float32 approximate_rsqrt(float32 op)
   if (sign == 1)
     return float32_default_nan;
 
-  Bit32u fraction = float32_fraction(op);
-  Bit16s exp = float32_exp(op);
+  Bit32u fraction = f32_fraction(op);
+  Bit16s exp = f32_exp(op);
 
   /*
    * Calculate (1/1.yyyyyyyyyy1), the result is always rounded to the

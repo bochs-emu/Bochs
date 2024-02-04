@@ -45,7 +45,7 @@ extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
                                                                               \
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);            \
     softfloat_status_word_rc_override(status, i);                             \
-    op1 = (func)(op1, op2, op3, status);                                      \
+    op1 = (func)(op1, op2, op3, &status);                                     \
     check_exceptionsSSE(get_exception_flags(status));                         \
                                                                               \
     BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);                                 \
@@ -54,10 +54,10 @@ extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
     BX_NEXT_INSTR(i);                                                         \
   }
 
-AVX2_FMA_SCALAR_SINGLE(VFMADDSS_VpsHssWssR, float32_fmadd)
-AVX2_FMA_SCALAR_SINGLE(VFMSUBSS_VpsHssWssR, float32_fmsub)
-AVX2_FMA_SCALAR_SINGLE(VFNMADDSS_VpsHssWssR, float32_fnmadd)
-AVX2_FMA_SCALAR_SINGLE(VFNMSUBSS_VpsHssWssR, float32_fnmsub)
+AVX2_FMA_SCALAR_SINGLE(VFMADDSS_VpsHssWssR, f32_fmadd)
+AVX2_FMA_SCALAR_SINGLE(VFMSUBSS_VpsHssWssR, f32_fmsub)
+AVX2_FMA_SCALAR_SINGLE(VFNMADDSS_VpsHssWssR, f32_fnmadd)
+AVX2_FMA_SCALAR_SINGLE(VFNMSUBSS_VpsHssWssR, f32_fnmsub)
 
 #define AVX2_FMA_SCALAR_DOUBLE(HANDLER, func)                                 \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)         \
@@ -68,7 +68,7 @@ AVX2_FMA_SCALAR_SINGLE(VFNMSUBSS_VpsHssWssR, float32_fnmsub)
                                                                               \
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);            \
     softfloat_status_word_rc_override(status, i);                             \
-    op1 = (func)(op1, op2, op3, status);                                      \
+    op1 = (func)(op1, op2, op3, &status);                                     \
     check_exceptionsSSE(get_exception_flags(status));                         \
                                                                               \
     BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);                                 \
@@ -77,10 +77,10 @@ AVX2_FMA_SCALAR_SINGLE(VFNMSUBSS_VpsHssWssR, float32_fnmsub)
     BX_NEXT_INSTR(i);                                                         \
   }
 
-AVX2_FMA_SCALAR_DOUBLE(VFMADDSD_VpdHsdWsdR, float64_fmadd)
-AVX2_FMA_SCALAR_DOUBLE(VFMSUBSD_VpdHsdWsdR, float64_fmsub)
-AVX2_FMA_SCALAR_DOUBLE(VFNMADDSD_VpdHsdWsdR, float64_fnmadd)
-AVX2_FMA_SCALAR_DOUBLE(VFNMSUBSD_VpdHsdWsdR, float64_fnmsub)
+AVX2_FMA_SCALAR_DOUBLE(VFMADDSD_VpdHsdWsdR, f64_fmadd)
+AVX2_FMA_SCALAR_DOUBLE(VFMSUBSD_VpdHsdWsdR, f64_fmsub)
+AVX2_FMA_SCALAR_DOUBLE(VFNMADDSD_VpdHsdWsdR, f64_fnmadd)
+AVX2_FMA_SCALAR_DOUBLE(VFNMSUBSD_VpdHsdWsdR, f64_fnmsub)
 
 //////////////////////////////////
 // FMA4 (AMD) specific handlers //
@@ -96,7 +96,7 @@ AVX2_FMA_SCALAR_DOUBLE(VFNMSUBSD_VpdHsdWsdR, float64_fnmsub)
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);            \
                                                                               \
     BxPackedXmmRegister dest;                                                 \
-    dest.xmm64u(0) = (func)(op1, op2, op3, status);                           \
+    dest.xmm64u(0) = (func)(op1, op2, op3, &status);                          \
     dest.xmm64u(1) = 0;                                                       \
                                                                               \
     check_exceptionsSSE(get_exception_flags(status));                         \
@@ -106,11 +106,11 @@ AVX2_FMA_SCALAR_DOUBLE(VFNMSUBSD_VpdHsdWsdR, float64_fnmsub)
     BX_NEXT_INSTR(i);                                                         \
   }
 
-FMA4_SINGLE_SCALAR(VFMADDSS_VssHssWssVIbR, float32_fmadd)
-FMA4_SINGLE_SCALAR(VFMSUBSS_VssHssWssVIbR, float32_fmsub)
+FMA4_SINGLE_SCALAR(VFMADDSS_VssHssWssVIbR, f32_fmadd)
+FMA4_SINGLE_SCALAR(VFMSUBSS_VssHssWssVIbR, f32_fmsub)
 
-FMA4_SINGLE_SCALAR(VFNMADDSS_VssHssWssVIbR, float32_fnmadd)
-FMA4_SINGLE_SCALAR(VFNMSUBSS_VssHssWssVIbR, float32_fnmsub)
+FMA4_SINGLE_SCALAR(VFNMADDSS_VssHssWssVIbR, f32_fnmadd)
+FMA4_SINGLE_SCALAR(VFNMSUBSS_VssHssWssVIbR, f32_fnmsub)
 
 #define FMA4_DOUBLE_SCALAR(HANDLER, func)                                     \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)         \
@@ -122,7 +122,7 @@ FMA4_SINGLE_SCALAR(VFNMSUBSS_VssHssWssVIbR, float32_fnmsub)
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);            \
                                                                               \
     BxPackedXmmRegister dest;                                                 \
-    dest.xmm64u(0) = (func)(op1, op2, op3, status);                           \
+    dest.xmm64u(0) = (func)(op1, op2, op3, &status);                          \
     dest.xmm64u(1) = 0;                                                       \
                                                                               \
     check_exceptionsSSE(get_exception_flags(status));                         \
@@ -132,10 +132,10 @@ FMA4_SINGLE_SCALAR(VFNMSUBSS_VssHssWssVIbR, float32_fnmsub)
     BX_NEXT_INSTR(i);                                                         \
   }
 
-FMA4_DOUBLE_SCALAR(VFMADDSD_VsdHsdWsdVIbR, float64_fmadd)
-FMA4_DOUBLE_SCALAR(VFMSUBSD_VsdHsdWsdVIbR, float64_fmsub)
+FMA4_DOUBLE_SCALAR(VFMADDSD_VsdHsdWsdVIbR, f64_fmadd)
+FMA4_DOUBLE_SCALAR(VFMSUBSD_VsdHsdWsdVIbR, f64_fmsub)
 
-FMA4_DOUBLE_SCALAR(VFNMADDSD_VsdHsdWsdVIbR, float64_fnmadd)
-FMA4_DOUBLE_SCALAR(VFNMSUBSD_VsdHsdWsdVIbR, float64_fnmsub)
+FMA4_DOUBLE_SCALAR(VFNMADDSD_VsdHsdWsdVIbR, f64_fnmadd)
+FMA4_DOUBLE_SCALAR(VFNMSUBSD_VsdHsdWsdVIbR, f64_fnmsub)
 
 #endif

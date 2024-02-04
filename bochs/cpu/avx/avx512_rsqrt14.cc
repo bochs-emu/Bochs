@@ -8241,27 +8241,27 @@ static const Bit16u rsqrt14_table1[32768] = {
 // approximate 14-bit sqrt reciprocal of scalar single precision FP
 float32 approximate_rsqrt14(float32 op, bool daz)
 {
-  float_class_t op_class = float32_class(op);
+  softfloat_class_t op_class = f32_class(op);
 
-  int sign = float32_sign(op);
-  Bit32u fraction = float32_fraction(op);
-  Bit16s exp = float32_exp(op);
+  int sign = f32_sign(op);
+  Bit32u fraction = f32_fraction(op);
+  Bit16s exp = f32_exp(op);
 
   switch(op_class) {
-    case float_zero:
+    case softfloat_zero:
       return packFloat32(sign, 0xFF, 0);
 
-    case float_positive_inf:
+    case softfloat_positive_inf:
       return 0;
 
-    case float_negative_inf:
+    case softfloat_negative_inf:
       return float32_default_nan;
 
-    case float_SNaN:
-    case float_QNaN:
+    case softfloat_SNaN:
+    case softfloat_QNaN:
       return convert_to_QNaN(op);
 
-    case float_denormal:
+    case softfloat_denormal:
       if (daz) return packFloat32(sign, 0xFF, 0);
 
       normalizeFloat32Subnormal(fraction, &exp, &fraction);
@@ -8269,7 +8269,7 @@ float32 approximate_rsqrt14(float32 op, bool daz)
       fraction &= 0x7fffff;
       // fall through
 
-    case float_normalized:
+    case softfloat_normalized:
       break;
   };
 
@@ -8298,27 +8298,27 @@ float32 approximate_rsqrt14(float32 op, bool daz)
 // approximate 14-bit sqrt reciprocal of scalar double precision FP
 float64 approximate_rsqrt14(float64 op, bool daz)
 {
-  float_class_t op_class = float64_class(op);
+  softfloat_class_t op_class = f64_class(op);
 
-  int sign = float64_sign(op);
-  Bit64u fraction = float64_fraction(op);
-  Bit16s exp = float64_exp(op);
+  int sign = f64_sign(op);
+  Bit64u fraction = f64_fraction(op);
+  Bit16s exp = f64_exp(op);
 
   switch(op_class) {
-    case float_zero:
+    case softfloat_zero:
       return packFloat64(sign, 0x7FF, 0);
 
-    case float_positive_inf:
+    case softfloat_positive_inf:
       return 0;
 
-    case float_negative_inf:
+    case softfloat_negative_inf:
       return float64_default_nan;
 
-    case float_SNaN:
-    case float_QNaN:
+    case softfloat_SNaN:
+    case softfloat_QNaN:
       return convert_to_QNaN(op);
 
-    case float_denormal:
+    case softfloat_denormal:
       if (daz) return packFloat64(sign, 0x7FF, 0);
 
       normalizeFloat64Subnormal(fraction, &exp, &fraction);
@@ -8326,7 +8326,7 @@ float64 approximate_rsqrt14(float64 op, bool daz)
       fraction &= BX_CONST64(0xfffffffffffff);
       // fall through
 
-    case float_normalized:
+    case softfloat_normalized:
       break;
   };
 

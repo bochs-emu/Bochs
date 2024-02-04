@@ -108,21 +108,12 @@ enum {
     float_relation_unordered =  2
 };
 
-/*----------------------------------------------------------------------------
-| Options to indicate which negations to perform in float*_muladd()
-| Using these differs from negating an input or output before calling
-| the muladd function in that this means that a NaN doesn't have its
-| sign bit inverted before it is propagated.
-*----------------------------------------------------------------------------*/
-enum {
-    float_muladd_negate_c       = 1,
-    float_muladd_negate_product = 2,
-    float_muladd_negate_result  = float_muladd_negate_c | float_muladd_negate_product
-};
+#include "../softfloat3e/include/softfloat.h"
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point status structure.
 *----------------------------------------------------------------------------*/
+#if 0
 struct float_status_t
 {
 #ifdef FLOATX80
@@ -136,6 +127,7 @@ struct float_status_t
     int flush_underflow_to_zero;    /* flag register */
     int denormals_are_zeros;        /* flag register */
 };
+#endif
 
 /*----------------------------------------------------------------------------
 | Routine to raise any or all of the software IEC/IEEE floating-point
@@ -273,26 +265,6 @@ BX_CPP_INLINE float32 float32_round_to_int(float32 a, float_status_t &status)
   return float32_round_to_int(a, 0, status);
 }
 
-BX_CPP_INLINE float32 float32_fmadd(float32 a, float32 b, float32 c, float_status_t &status)
-{
-  return float32_muladd(a, b, c, 0, status);
-}
-
-BX_CPP_INLINE float32 float32_fmsub(float32 a, float32 b, float32 c, float_status_t &status)
-{
-  return float32_muladd(a, b, c, float_muladd_negate_c, status);
-}
-
-BX_CPP_INLINE float32 float32_fnmadd(float32 a, float32 b, float32 c, float_status_t &status)
-{
-  return float32_muladd(a, b, c, float_muladd_negate_product, status);
-}
-
-BX_CPP_INLINE float32 float32_fnmsub(float32 a, float32 b, float32 c, float_status_t &status)
-{
-  return float32_muladd(a, b, c, float_muladd_negate_result, status);
-}
-
 BX_CPP_INLINE int float32_compare(float32 a, float32 b, float_status_t &status)
 {
   return float32_compare(a, b, 0, status);
@@ -346,26 +318,6 @@ int float64_compare(float64, float64, int quiet, float_status_t &status);
 BX_CPP_INLINE float64 float64_round_to_int(float64 a, float_status_t &status)
 {
   return float64_round_to_int(a, 0, status);
-}
-
-BX_CPP_INLINE float64 float64_fmadd(float64 a, float64 b, float64 c, float_status_t &status)
-{
-  return float64_muladd(a, b, c, 0, status);
-}
-
-BX_CPP_INLINE float64 float64_fmsub(float64 a, float64 b, float64 c, float_status_t &status)
-{
-  return float64_muladd(a, b, c, float_muladd_negate_c, status);
-}
-
-BX_CPP_INLINE float64 float64_fnmadd(float64 a, float64 b, float64 c, float_status_t &status)
-{
-  return float64_muladd(a, b, c, float_muladd_negate_product, status);
-}
-
-BX_CPP_INLINE float64 float64_fnmsub(float64 a, float64 b, float64 c, float_status_t &status)
-{
-  return float64_muladd(a, b, c, float_muladd_negate_result, status);
 }
 
 BX_CPP_INLINE int float64_compare(float64 a, float64 b, float_status_t &status)

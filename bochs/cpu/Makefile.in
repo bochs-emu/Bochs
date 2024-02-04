@@ -689,7 +689,7 @@ sse_pfp.o: sse_pfp.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../instrument/stubs/instrument.h i387.h fpu/softfloat.h fpu/tag_w.h \
  fpu/status_w.h fpu/control_w.h crregs.h descriptor.h decoder/instr.h \
  lazy_flags.h tlb.h icache.h xmm.h vmx.h stack.h access.h \
- fpu/softfloat-compare.h fpu/softfloat.h simd_pfp.h simd_int.h
+ fpu/softfloat.h simd_pfp.h simd_int.h
 sse_rcp.o: sse_rcp.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h decoder/decoder.h \

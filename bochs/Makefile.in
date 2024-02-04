@@ -153,6 +153,7 @@ EXTERN_ENVIRONMENT_OBJS = \
 DEBUGGER_LIB   = bx_debug/libdebug.a
 INSTRUMENT_LIB = @INSTRUMENT_DIR@/libinstrument.a
 FPU_LIB        = cpu/fpu/libfpu.a
+SOFTFLOAT_LIB  = cpu/softfloat3e/libsoftfloat.a
 AVX_LIB        = cpu/avx/libavx.a
 READLINE_LIB   = @READLINE_LIB@
 EXTRA_LINK_OPTS = @EXTRA_LINK_OPTS@
@@ -347,6 +348,11 @@ cpu/cpudb/libcpudb.a::
 cpu/fpu/libfpu.a::
 	cd cpu/fpu @COMMAND_SEPARATOR@
 	$(MAKE) $(MDEFINES) libfpu.a
+	@CD_UP_TWO@
+
+cpu/softftloat3e/libsoftftloat.a::
+	cd cpu/softfloat3e @COMMAND_SEPARATOR@
+	$(MAKE) $(MDEFINES) libsoftfloat.a
 	@CD_UP_TWO@
 
 memory/libmemory.a::
@@ -585,6 +591,9 @@ all-clean: clean @CLEAN_DOCBOOK_VAR@ @CLEAN_PCIDEV_VAR@
 	cd cpu/fpu @COMMAND_SEPARATOR@
 	$(MAKE) clean
 	@CD_UP_TWO@
+	cd cpu/softfloat3e @COMMAND_SEPARATOR@
+	$(MAKE) dist-clean
+	@CD_UP_TWO@
 	cd memory @COMMAND_SEPARATOR@
 	$(MAKE) clean
 	@CD_UP_ONE@
@@ -633,6 +642,9 @@ dist-clean: local-dist-clean
 	$(MAKE) dist-clean
 	@CD_UP_TWO@
 	cd cpu/fpu @COMMAND_SEPARATOR@
+	$(MAKE) dist-clean
+	@CD_UP_TWO@
+	cd cpu/softfloat3e @COMMAND_SEPARATOR@
 	$(MAKE) dist-clean
 	@CD_UP_TWO@
 	cd memory @COMMAND_SEPARATOR@

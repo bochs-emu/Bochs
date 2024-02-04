@@ -31,7 +31,7 @@
 extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
 extern void mxcsr_to_softfloat_status_word_imm_override(float_status_t &status, Bit8u immb);
 
-#include "fpu/softfloat-compare.h"
+#include "softfloat3e/include/softfloat-compare.h"
 #include "simd_int.h"
 #include "simd_pfp.h"
 
@@ -108,7 +108,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSS_MASK_VssHpsWssR(bxInstruction_c *i
 
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
-    op1.xmm32u(0) = float32_sqrt(op2, status);
+    op1.xmm32u(0) = f32_sqrt(op2, &status);
     check_exceptionsSSE(get_exception_flags(status));
   }
   else {
@@ -131,7 +131,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSD_MASK_VsdHpdWsdR(bxInstruction_c *i
 
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
-    op1.xmm64u(0) = float64_sqrt(op2, status);
+    op1.xmm64u(0) = f64_sqrt(op2, &status);
     check_exceptionsSSE(get_exception_flags(status));
   }
   else {
@@ -164,7 +164,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPS_MASK_KGwHpsWpsIbR(bxInstruction_c *
 
   for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
     if (opmask & mask) {
-      if (avx_compare32[ib](op1.vmm32u(n), op2.vmm32u(n), status)) result |= mask;
+      if (avx_compare32[ib](op1.vmm32u(n), op2.vmm32u(n), &status)) result |= mask;
     }
   }
 
@@ -188,7 +188,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPD_MASK_KGbHpdWpdIbR(bxInstruction_c *
 
   for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
     if (opmask & mask) {
-      if (avx_compare64[ib](op1.vmm64u(n), op2.vmm64u(n), status)) result |= mask;
+      if (avx_compare64[ib](op1.vmm64u(n), op2.vmm64u(n), &status)) result |= mask;
     }
   }
 
@@ -208,7 +208,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSD_MASK_KGbHsdWsdIbR(bxInstruction_c *
 
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
-    if (avx_compare64[i->Ib() & 0x1F](op1, op2, status)) result = 1;
+    if (avx_compare64[i->Ib() & 0x1F](op1, op2, &status)) result = 1;
     check_exceptionsSSE(get_exception_flags(status));
   }
 
@@ -226,7 +226,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSS_MASK_KGbHssWssIbR(bxInstruction_c *
 
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
-    if (avx_compare32[i->Ib() & 0x1F](op1, op2, status)) result = 1;
+    if (avx_compare32[i->Ib() & 0x1F](op1, op2, &status)) result = 1;
     check_exceptionsSSE(get_exception_flags(status));
   }
 
@@ -263,39 +263,39 @@ float32 float32_fixupimm(float32 dst, float32 op1, Bit32u op2, unsigned imm8, fl
   if (get_denormals_are_zeros(status))
     tmp_op1 = float32_denormal_to_zero(op1);
 
-  float_class_t op1_class = float32_class(tmp_op1);
-  int sign = float32_sign(tmp_op1);
+  softfloat_class_t op1_class = f32_class(tmp_op1);
+  int sign = f32_sign(tmp_op1);
   unsigned token = 0, ie_fault_mask = 0, divz_fault_mask = 0;
 
   switch(op1_class)
   {
-    case float_zero:
+    case softfloat_zero:
       token = BX_FIXUPIMM_ZERO_VALUE_TOKEN;
       divz_fault_mask = 0x01;
         ie_fault_mask = 0x02;
       break;
 
-    case float_negative_inf:
+    case softfloat_negative_inf:
       token = BX_FIXUPIMM_NEG_INF_TOKEN;
       ie_fault_mask = 0x20;
       break;
 
-    case float_positive_inf:
+    case softfloat_positive_inf:
       token = BX_FIXUPIMM_POS_INF_TOKEN;
       ie_fault_mask = 0x80;
       break;
 
-    case float_SNaN:
+    case softfloat_SNaN:
       token = BX_FIXUPIMM_SNAN_TOKEN;
       ie_fault_mask = 0x10;
       break;
 
-    case float_QNaN:
+    case softfloat_QNaN:
       token = BX_FIXUPIMM_QNAN_TOKEN;
       break;
 
-    case float_denormal:
-    case float_normalized:
+    case softfloat_denormal:
+    case softfloat_normalized:
       if (tmp_op1 == float32_positive_one) {
         token = BX_FIXUPIMM_POS_ONE_VALUE_TOKEN;
         divz_fault_mask = 0x04;
@@ -358,39 +358,39 @@ float64 float64_fixupimm(float64 dst, float64 op1, Bit32u op2, unsigned imm8, fl
   if (get_denormals_are_zeros(status))
     tmp_op1 = float64_denormal_to_zero(op1);
 
-  float_class_t op1_class = float64_class(tmp_op1);
-  int sign = float64_sign(tmp_op1);
+  softfloat_class_t op1_class = f64_class(tmp_op1);
+  int sign = f64_sign(tmp_op1);
   unsigned token = 0, ie_fault_mask = 0, divz_fault_mask = 0;
 
   switch(op1_class)
   {
-    case float_zero:
+    case softfloat_zero:
       token = BX_FIXUPIMM_ZERO_VALUE_TOKEN;
       divz_fault_mask = 0x01;
         ie_fault_mask = 0x02;
       break;
 
-    case float_negative_inf:
+    case softfloat_negative_inf:
       token = BX_FIXUPIMM_NEG_INF_TOKEN;
       ie_fault_mask = 0x20;
       break;
 
-    case float_positive_inf:
+    case softfloat_positive_inf:
       token = BX_FIXUPIMM_POS_INF_TOKEN;
       ie_fault_mask = 0x80;
       break;
 
-    case float_SNaN:
+    case softfloat_SNaN:
       token = BX_FIXUPIMM_SNAN_TOKEN;
       ie_fault_mask = 0x10;
       break;
 
-    case float_QNaN:
+    case softfloat_QNaN:
       token = BX_FIXUPIMM_QNAN_TOKEN;
       break;
 
-    case float_denormal:
-    case float_normalized:
+    case softfloat_denormal:
+    case softfloat_normalized:
       if (tmp_op1 == float64_positive_one) {
         token = BX_FIXUPIMM_POS_ONE_VALUE_TOKEN;
         divz_fault_mask = 0x04;
@@ -595,32 +595,32 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMPD_MASK_VpdHpdWpdIbR(bxInstructio
 
 // fpclass
 
-static int fpclass(float_class_t op_class, int sign, int selector)
+static int fpclass(softfloat_class_t op_class, int sign, int selector)
 {
-  return ((op_class == float_QNaN) && (selector & 0x01) != 0) || // QNaN
-         ((op_class == float_zero) && ! sign && (selector & 0x02) != 0) || // positive zero
-         ((op_class == float_zero) && sign && (selector & 0x04) != 0) || // negative zero
-         ((op_class == float_positive_inf) && (selector & 0x08) != 0) || // positive inf
-         ((op_class == float_negative_inf) && (selector & 0x10) != 0) || // negative inf
-         ((op_class == float_denormal) && (selector & 0x20) != 0) || // negative inf
-         ((op_class == float_denormal || op_class == float_normalized) && sign && (selector & 0x40) != 0) || // negative finite
-         ((op_class == float_SNaN) && (selector & 0x80) != 0); // SNaN
+  return ((op_class == softfloat_QNaN) && (selector & 0x01) != 0) || // QNaN
+         ((op_class == softfloat_zero) && ! sign && (selector & 0x02) != 0) || // positive zero
+         ((op_class == softfloat_zero) && sign && (selector & 0x04) != 0) || // negative zero
+         ((op_class == softfloat_positive_inf) && (selector & 0x08) != 0) || // positive inf
+         ((op_class == softfloat_negative_inf) && (selector & 0x10) != 0) || // negative inf
+         ((op_class == softfloat_denormal) && (selector & 0x20) != 0) || // negative inf
+         ((op_class == softfloat_denormal || op_class == softfloat_normalized) && sign && (selector & 0x40) != 0) || // negative finite
+         ((op_class == softfloat_SNaN) && (selector & 0x80) != 0); // SNaN
 }
 
-static BX_CPP_INLINE int float32_fpclass(float32 op, int selector, int daz)
+static BX_CPP_INLINE int f32_fpclass(float32 op, int selector, int daz)
 {
   if (daz)
     op = float32_denormal_to_zero(op);
 
-  return fpclass(float32_class(op), float32_sign(op), selector);
+  return fpclass(f32_class(op), f32_sign(op), selector);
 }
 
-static BX_CPP_INLINE int float64_fpclass(float64 op, int selector, int daz)
+static BX_CPP_INLINE int f64_fpclass(float64 op, int selector, int daz)
 {
   if (daz)
     op = float64_denormal_to_zero(op);
 
-  return fpclass(float64_class(op), float64_sign(op), selector);
+  return fpclass(f64_class(op), f64_sign(op), selector);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFPCLASSPS_MASK_KGwWpsIbR(bxInstruction_c *i)
@@ -634,7 +634,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFPCLASSPS_MASK_KGwWpsIbR(bxInstruction_c 
 
   for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
     if (opmask & mask) {
-      if (float32_fpclass(op.vmm32u(n), selector, daz)) result |= mask;
+      if (f32_fpclass(op.vmm32u(n), selector, daz)) result |= mask;
     }
   }
 
@@ -653,7 +653,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFPCLASSPD_MASK_KGbWpdIbR(bxInstruction_c 
 
   for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
     if (opmask & mask) {
-      if (float64_fpclass(op.vmm64u(n), selector, daz)) result |= mask;
+      if (f64_fpclass(op.vmm64u(n), selector, daz)) result |= mask;
     }
   }
 
@@ -664,7 +664,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFPCLASSPD_MASK_KGbWpdIbR(bxInstruction_c 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFPCLASSSS_MASK_KGbWssIbR(bxInstruction_c *i)
 {
   if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
-    BX_WRITE_OPMASK(i->dst(), float32_fpclass(BX_READ_XMM_REG_LO_DWORD(i->src()), i->Ib(), MXCSR.get_DAZ()));
+    BX_WRITE_OPMASK(i->dst(), f32_fpclass(BX_READ_XMM_REG_LO_DWORD(i->src()), i->Ib(), MXCSR.get_DAZ()));
   }
   else {
     BX_WRITE_OPMASK(i->dst(), 0);
@@ -676,7 +676,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFPCLASSSS_MASK_KGbWssIbR(bxInstruction_c 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFPCLASSSD_MASK_KGbWsdIbR(bxInstruction_c *i)
 {
   if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
-    BX_WRITE_OPMASK(i->dst(), float64_fpclass(BX_READ_XMM_REG_LO_QWORD(i->src()), i->Ib(), MXCSR.get_DAZ()));
+    BX_WRITE_OPMASK(i->dst(), f64_fpclass(BX_READ_XMM_REG_LO_QWORD(i->src()), i->Ib(), MXCSR.get_DAZ()));
   }
   else {
     BX_WRITE_OPMASK(i->dst(), 0);
@@ -1010,7 +1010,7 @@ static BX_CPP_INLINE float32 float32_range(float32 a, float32 b, int opselect, i
 {
   float32 minmax = float32_minmax(a, b, opselect & 0x1, (opselect >> 1) & 0x1, status);
 
-  if (! float32_is_signaling_nan(a) && ! float32_is_signaling_nan(b)) {
+  if (! f32_isSignalingNaN(a) && ! f32_isSignalingNaN(b)) {
     if (sign_ctrl == 0) {
       minmax = (minmax & ~0x80000000) | (a & 0x80000000); // keep sign of a
     }
@@ -1030,7 +1030,7 @@ static BX_CPP_INLINE float64 float64_range(float64 a, float64 b, int opselect, i
 {
   float64 minmax = float64_minmax(a, b, opselect & 0x1, (opselect >> 1) & 0x1, status);
 
-  if (! float64_is_signaling_nan(a) && ! float64_is_signaling_nan(b)) {
+  if (! f64_isSignalingNaN(a) && ! f64_isSignalingNaN(b)) {
     if (sign_ctrl == 0) {
       minmax = (minmax & ~BX_CONST64(0x8000000000000000)) | (a & BX_CONST64(0x8000000000000000)); // keep sign of a
     }

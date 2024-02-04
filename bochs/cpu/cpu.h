@@ -789,7 +789,7 @@ typedef struct {
 
 #include "xmm.h"
 
-struct float_status_t;
+struct softfloat_status_t;
 
 typedef void (*simd_xmm_shift)(BxPackedXmmRegister *opdst, Bit64u shift_64);
 

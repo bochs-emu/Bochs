@@ -34,7 +34,7 @@ extern void mxcsr_to_softfloat_status_word_imm_override(float_status_t &status, 
 extern float32 approximate_rsqrt(float32 op);
 extern float32 approximate_rcp(float32 op);
 
-#include "fpu/softfloat-compare.h"
+#include "softfloat3e/include/softfloat-compare.h"
 #include "simd_pfp.h"
 #include "simd_int.h"
 
@@ -60,74 +60,74 @@ void BX_CPU_C::print_state_AVX(void)
 
 /* Comparison predicate for VCMPSS/VCMPPS instructions */
 float32_compare_method avx_compare32[32] = {
-  float32_eq_ordered_quiet,
-  float32_lt_ordered_signalling,
-  float32_le_ordered_signalling,
-  float32_unordered_quiet,
-  float32_neq_unordered_quiet,
-  float32_nlt_unordered_signalling,
-  float32_nle_unordered_signalling,
-  float32_ordered_quiet,
-  float32_eq_unordered_quiet,
-  float32_nge_unordered_signalling,
-  float32_ngt_unordered_signalling,
-  float32_false_quiet,
-  float32_neq_ordered_quiet,
-  float32_ge_ordered_signalling,
-  float32_gt_ordered_signalling,
-  float32_true_quiet,
-  float32_eq_ordered_signalling,
-  float32_lt_ordered_quiet,
-  float32_le_ordered_quiet,
-  float32_unordered_signalling,
-  float32_neq_unordered_signalling,
-  float32_nlt_unordered_quiet,
-  float32_nle_unordered_quiet,
-  float32_ordered_signalling,
-  float32_eq_unordered_signalling,
-  float32_nge_unordered_quiet,
-  float32_ngt_unordered_quiet,
-  float32_false_signalling,
-  float32_neq_ordered_signalling,
-  float32_ge_ordered_quiet,
-  float32_gt_ordered_quiet,
-  float32_true_signalling
+  f32_eq_ordered_quiet,
+  f32_lt_ordered_signalling,
+  f32_le_ordered_signalling,
+  f32_unordered_quiet,
+  f32_neq_unordered_quiet,
+  f32_nlt_unordered_signalling,
+  f32_nle_unordered_signalling,
+  f32_ordered_quiet,
+  f32_eq_unordered_quiet,
+  f32_nge_unordered_signalling,
+  f32_ngt_unordered_signalling,
+  f32_false_quiet,
+  f32_neq_ordered_quiet,
+  f32_ge_ordered_signalling,
+  f32_gt_ordered_signalling,
+  f32_true_quiet,
+  f32_eq_ordered_signalling,
+  f32_lt_ordered_quiet,
+  f32_le_ordered_quiet,
+  f32_unordered_signalling,
+  f32_neq_unordered_signalling,
+  f32_nlt_unordered_quiet,
+  f32_nle_unordered_quiet,
+  f32_ordered_signalling,
+  f32_eq_unordered_signalling,
+  f32_nge_unordered_quiet,
+  f32_ngt_unordered_quiet,
+  f32_false_signalling,
+  f32_neq_ordered_signalling,
+  f32_ge_ordered_quiet,
+  f32_gt_ordered_quiet,
+  f32_true_signalling
 };
 
 /* Comparison predicate for VCMPSD/VCMPPD instructions */
 float64_compare_method avx_compare64[32] = {
-  float64_eq_ordered_quiet,
-  float64_lt_ordered_signalling,
-  float64_le_ordered_signalling,
-  float64_unordered_quiet,
-  float64_neq_unordered_quiet,
-  float64_nlt_unordered_signalling,
-  float64_nle_unordered_signalling,
-  float64_ordered_quiet,
-  float64_eq_unordered_quiet,
-  float64_nge_unordered_signalling,
-  float64_ngt_unordered_signalling,
-  float64_false_quiet,
-  float64_neq_ordered_quiet,
-  float64_ge_ordered_signalling,
-  float64_gt_ordered_signalling,
-  float64_true_quiet,
-  float64_eq_ordered_signalling,
-  float64_lt_ordered_quiet,
-  float64_le_ordered_quiet,
-  float64_unordered_signalling,
-  float64_neq_unordered_signalling,
-  float64_nlt_unordered_quiet,
-  float64_nle_unordered_quiet,
-  float64_ordered_signalling,
-  float64_eq_unordered_signalling,
-  float64_nge_unordered_quiet,
-  float64_ngt_unordered_quiet,
-  float64_false_signalling,
-  float64_neq_ordered_signalling,
-  float64_ge_ordered_quiet,
-  float64_gt_ordered_quiet,
-  float64_true_signalling
+  f64_eq_ordered_quiet,
+  f64_lt_ordered_signalling,
+  f64_le_ordered_signalling,
+  f64_unordered_quiet,
+  f64_neq_unordered_quiet,
+  f64_nlt_unordered_signalling,
+  f64_nle_unordered_signalling,
+  f64_ordered_quiet,
+  f64_eq_unordered_quiet,
+  f64_nge_unordered_signalling,
+  f64_ngt_unordered_signalling,
+  f64_false_quiet,
+  f64_neq_ordered_quiet,
+  f64_ge_ordered_signalling,
+  f64_gt_ordered_signalling,
+  f64_true_quiet,
+  f64_eq_ordered_signalling,
+  f64_lt_ordered_quiet,
+  f64_le_ordered_quiet,
+  f64_unordered_signalling,
+  f64_neq_unordered_signalling,
+  f64_nlt_unordered_quiet,
+  f64_nle_unordered_quiet,
+  f64_ordered_signalling,
+  f64_eq_unordered_signalling,
+  f64_nge_unordered_quiet,
+  f64_ngt_unordered_quiet,
+  f64_false_signalling,
+  f64_neq_ordered_signalling,
+  f64_ge_ordered_quiet,
+  f64_gt_ordered_quiet,
+  f64_true_signalling
 };
 
 /* Opcode: VEX.NDS.F3.0F 51 (VEX.W ignore, VEX.L ignore) */
@@ -138,7 +138,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSS_VssHpsWssR(bxInstruction_c *i)
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
-  op1.xmm32u(0) = float32_sqrt(op2, status);
+  op1.xmm32u(0) = f32_sqrt(op2, &status);
   check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
@@ -153,7 +153,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSD_VsdHpdWsdR(bxInstruction_c *i)
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
-  op1.xmm64u(0) = float64_sqrt(op2, status);
+  op1.xmm64u(0) = f64_sqrt(op2, &status);
   check_exceptionsSSE(get_exception_flags(status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
@@ -276,7 +276,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPS_VpsHpsWpsIbR(bxInstruction_c *i)
   int ib = i->Ib() & 0x1F;
 
   for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
-    op1.ymm32u(n) = avx_compare32[ib](op1.ymm32u(n), op2.ymm32u(n), status) ? 0xFFFFFFFF : 0;
+    op1.ymm32u(n) = avx_compare32[ib](op1.ymm32u(n), op2.ymm32u(n), &status) ? 0xFFFFFFFF : 0;
   }
 
   check_exceptionsSSE(get_exception_flags(status));
@@ -295,7 +295,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPD_VpdHpdWpdIbR(bxInstruction_c *i)
   int ib = i->Ib() & 0x1F;
 
   for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
-    op1.ymm64u(n) = avx_compare64[ib](op1.ymm64u(n), op2.ymm64u(n), status) ?
+    op1.ymm64u(n) = avx_compare64[ib](op1.ymm64u(n), op2.ymm64u(n), &status) ?
        BX_CONST64(0xFFFFFFFFFFFFFFFF) : 0;
   }
 
@@ -314,7 +314,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSD_VsdHpdWsdIbR(bxInstruction_c *i)
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   int ib = i->Ib() & 0x1F;
 
-  if(avx_compare64[ib](op1.xmm64u(0), op2, status)) {
+  if(avx_compare64[ib](op1.xmm64u(0), op2, &status)) {
     op1.xmm64u(0) = BX_CONST64(0xFFFFFFFFFFFFFFFF);
   } else {
     op1.xmm64u(0) = 0;
@@ -335,7 +335,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSS_VssHpsWssIbR(bxInstruction_c *i)
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   int ib = i->Ib() & 0x1F;
 
-  if(avx_compare32[ib](op1.xmm32u(0), op2, status)) {
+  if(avx_compare32[ib](op1.xmm32u(0), op2, &status)) {
     op1.xmm32u(0) = 0xFFFFFFFF;
   } else {
     op1.xmm32u(0) = 0;
@@ -399,7 +399,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDPS_VpsWpsIbR(bxInstruction_c *i)
   mxcsr_to_softfloat_status_word_imm_override(status, i->Ib());
 
   for(unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
-    op.ymm32u(n) = float32_round_to_int(op.ymm32u(n), status);
+    op.ymm32u(n) = f32_roundToInt(op.ymm32u(n), &status);
   }
 
   check_exceptionsSSE(get_exception_flags(status));
@@ -419,7 +419,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDPD_VpdWpdIbR(bxInstruction_c *i)
   mxcsr_to_softfloat_status_word_imm_override(status, i->Ib());
 
   for(unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
-    op.ymm64u(n) = float64_round_to_int(op.ymm64u(n), status);
+    op.ymm64u(n) = f64_roundToInt(op.ymm64u(n), &status);
   }
 
   check_exceptionsSSE(get_exception_flags(status));
@@ -438,7 +438,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDSS_VssHpsWssIbR(bxInstruction_c *i)
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   mxcsr_to_softfloat_status_word_imm_override(status, i->Ib());
 
-  op1.xmm32u(0) = float32_round_to_int(op2, status);
+  op1.xmm32u(0) = f32_roundToInt(op2, &status);
 
   check_exceptionsSSE(get_exception_flags(status));
 
@@ -456,7 +456,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDSD_VsdHpdWsdIbR(bxInstruction_c *i)
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   mxcsr_to_softfloat_status_word_imm_override(status, i->Ib());
 
-  op1.xmm64u(0) = float64_round_to_int(op2, status);
+  op1.xmm64u(0) = f64_roundToInt(op2, &status);
 
   check_exceptionsSSE(get_exception_flags(status));
 

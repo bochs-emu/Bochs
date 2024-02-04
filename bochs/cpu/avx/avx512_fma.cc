@@ -30,6 +30,7 @@
 
 extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
 
+#include "softfloat3e/include/softfloat.h"
 #include "simd_int.h"
 #include "simd_pfp.h"
 
@@ -47,7 +48,7 @@ extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
                                                                               \
       float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);          \
       softfloat_status_word_rc_override(status, i);                           \
-      op1 = (func)(op1, op2, op3, status);                                    \
+      op1 = (func)(op1, op2, op3, &status);                                   \
       check_exceptionsSSE(get_exception_flags(status));                       \
                                                                               \
       BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);                               \
@@ -61,10 +62,10 @@ extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
     BX_NEXT_INSTR(i);                                                         \
   }
 
-EVEX_FMA_SCALAR_SINGLE(VFMADDSS_MASK_VpsHssWssR, float32_fmadd)
-EVEX_FMA_SCALAR_SINGLE(VFMSUBSS_MASK_VpsHssWssR, float32_fmsub)
-EVEX_FMA_SCALAR_SINGLE(VFNMADDSS_MASK_VpsHssWssR, float32_fnmadd)
-EVEX_FMA_SCALAR_SINGLE(VFNMSUBSS_MASK_VpsHssWssR, float32_fnmsub)
+EVEX_FMA_SCALAR_SINGLE(VFMADDSS_MASK_VpsHssWssR, f32_fmadd)
+EVEX_FMA_SCALAR_SINGLE(VFMSUBSS_MASK_VpsHssWssR, f32_fmsub)
+EVEX_FMA_SCALAR_SINGLE(VFNMADDSS_MASK_VpsHssWssR, f32_fnmadd)
+EVEX_FMA_SCALAR_SINGLE(VFNMSUBSS_MASK_VpsHssWssR, f32_fnmsub)
 
 #define EVEX_FMA_SCALAR_DOUBLE(HANDLER, func)                                 \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)         \
@@ -76,7 +77,7 @@ EVEX_FMA_SCALAR_SINGLE(VFNMSUBSS_MASK_VpsHssWssR, float32_fnmsub)
                                                                               \
       float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);          \
       softfloat_status_word_rc_override(status, i);                           \
-      op1 = (func)(op1, op2, op3, status);                                    \
+      op1 = (func)(op1, op2, op3, &status);                                   \
       check_exceptionsSSE(get_exception_flags(status));                       \
                                                                               \
       BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);                               \
@@ -90,9 +91,9 @@ EVEX_FMA_SCALAR_SINGLE(VFNMSUBSS_MASK_VpsHssWssR, float32_fnmsub)
     BX_NEXT_INSTR(i);                                                         \
   }
 
-EVEX_FMA_SCALAR_DOUBLE(VFMADDSD_MASK_VpdHsdWsdR, float64_fmadd)
-EVEX_FMA_SCALAR_DOUBLE(VFMSUBSD_MASK_VpdHsdWsdR, float64_fmsub)
-EVEX_FMA_SCALAR_DOUBLE(VFNMADDSD_MASK_VpdHsdWsdR, float64_fnmadd)
-EVEX_FMA_SCALAR_DOUBLE(VFNMSUBSD_MASK_VpdHsdWsdR, float64_fnmsub)
+EVEX_FMA_SCALAR_DOUBLE(VFMADDSD_MASK_VpdHsdWsdR, f64_fmadd)
+EVEX_FMA_SCALAR_DOUBLE(VFMSUBSD_MASK_VpdHsdWsdR, f64_fmsub)
+EVEX_FMA_SCALAR_DOUBLE(VFNMADDSD_MASK_VpdHsdWsdR, f64_fnmadd)
+EVEX_FMA_SCALAR_DOUBLE(VFNMSUBSD_MASK_VpdHsdWsdR, f64_fnmsub)
 
 #endif
