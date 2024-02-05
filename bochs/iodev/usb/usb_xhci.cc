@@ -2406,6 +2406,7 @@ Bit64u bx_usb_xhci_c::process_transfer_ring(int slot, int ep, Bit64u ring_addr, 
               } else {
                 ret = BX_XHCI_THIS broadcast_packet(&p->packet, port_num - 1);
                 len = transfer_length;
+                BX_XHCI_THIS hub.slots[slot].ep_context[ep].edtla += len;
                 BX_DEBUG(("OUT: Transferred %d bytes (ret = %d)", len, ret));
               }
               break;
