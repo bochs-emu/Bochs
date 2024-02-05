@@ -2286,6 +2286,8 @@ void bx_dbg_stepN_command(int cpu, Bit32u count)
     return;
   }
 
+  if (cpu == -1 && BX_SMP_PROCESSORS == 1) cpu = 0;
+
   if (count == 0) {
     dbg_printf("Error: stepN: count=0\n");
     return;
