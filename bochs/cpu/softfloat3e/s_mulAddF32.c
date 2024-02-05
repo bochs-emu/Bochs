@@ -71,10 +71,19 @@ float32_t softfloat_mulAddF32(uint32_t uiA, uint32_t uiB, uint32_t uiC, uint8_t 
     signB = signF32UI(uiB);
     expB  = expF32UI(uiB);
     sigB  = fracF32UI(uiB);
-    signC = signF32UI(uiC) ^ (op == softfloat_mulAdd_subC);
+    signC = signF32UI(uiC) ^ ((op & softfloat_mulAdd_subC) != 0);
     expC  = expF32UI(uiC);
     sigC  = fracF32UI(uiC);
-    signProd = signA ^ signB ^ (op == softfloat_mulAdd_subProd);
+    signProd = signA ^ signB ^ ((op & softfloat_mulAdd_subProd) != 0);
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    bool aisNaN = (expA == 0xFF) && sigA;
+    bool bisNaN = (expB == 0xFF) && sigB;
+    bool cisNaN = (expC == 0xFF) && sigC;
+    if (aisNaN | bisNaN | cisNaN) {
+        uiZ = (aisNaN | bisNaN) ? softfloat_propagateNaNF32UI(uiA, uiB, status) : 0;
+        return softfloat_propagateNaNF32UI(uiZ, uiC, status);
+    }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if (softfloat_denormalsAreZeros(status)) {
@@ -85,24 +94,18 @@ float32_t softfloat_mulAddF32(uint32_t uiA, uint32_t uiB, uint32_t uiC, uint8_t 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if (expA == 0xFF) {
-        if (sigA || ((expB == 0xFF) && sigB)) goto propagateNaN_ABC;
         magBits = expB | sigB;
         goto infProdArg;
     }
     if (expB == 0xFF) {
-        if (sigB) goto propagateNaN_ABC;
         magBits = expA | sigA;
         goto infProdArg;
     }
     if (expC == 0xFF) {
-        if (sigC) {
-            uiZ = 0;
-            goto propagateNaN_ZC;
-        }
         if ((sigA && !expA) || (sigB && !expB)) {
             softfloat_raiseFlags(status, softfloat_flag_denormal);
         }
-        return uiC;
+        return packToF32UI(signC, 0xFF, 0);
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -194,29 +197,23 @@ float32_t softfloat_mulAddF32(uint32_t uiA, uint32_t uiB, uint32_t uiC, uint8_t 
     return softfloat_roundPackToF32(signZ, expZ, sigZ, status);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
- propagateNaN_ABC:
-    uiZ = softfloat_propagateNaNF32UI(uiA, uiB, status);
-    goto propagateNaN_ZC;
-    /*------------------------------------------------------------------------
-    *------------------------------------------------------------------------*/
  infProdArg:
     if (magBits) {
         uiZ = packToF32UI(signProd, 0xFF, 0);
-        if (sigC && expC == 0xFF) goto propagateNaN_ZC;
-        if ((sigA && !expA) || (sigB && !expB) || (sigC && !expC))
-            softfloat_raiseFlags(status, softfloat_flag_denormal);
-        if (expC != 0xFF) return uiZ;
-        if (signProd == signC) return uiZ;
+        if (signProd == signC || expC != 0xFF) {
+            if ((sigA && !expA) || (sigB && !expB) || (sigC && !expC))
+                softfloat_raiseFlags(status, softfloat_flag_denormal);
+            return uiZ;
+        }
     }
     softfloat_raiseFlags(status, softfloat_flag_invalid);
     uiZ = defaultNaNF32UI;
- propagateNaN_ZC:
     return softfloat_propagateNaNF32UI(uiZ, uiC, status);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  zeroProd:
     uiZ = packToF32UI(signC, expC, sigC);
-    if (expC && !sigC) {
+    if (!expC && sigC) {
         /* Exact zero plus a denormal */
         softfloat_raiseFlags(status, softfloat_flag_denormal);
         if (softfloat_flushUnderflowToZero(status)) {

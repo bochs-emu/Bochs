@@ -85,11 +85,11 @@ float128_t
     expB  = expF128UI64(uiB64);
     sigB.v64 = fracF128UI64(uiB64);
     sigB.v0  = uiB0;
-    signC = signF128UI64(uiC64) ^ (op == softfloat_mulAdd_subC);
+    signC = signF128UI64(uiC64) ^ ((op &= softfloat_mulAdd_subC) != 0);
     expC  = expF128UI64(uiC64);
     sigC.v64 = fracF128UI64(uiC64);
     sigC.v0  = uiC0;
-    signZ = signA ^ signB ^ (op == softfloat_mulAdd_subProd);
+    signZ = signA ^ signB ^ ((op &= softfloat_mulAdd_subProd) != 0);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if (expA == 0x7FFF) {
@@ -306,11 +306,11 @@ float128_t
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  infProdArg:
+    if ((sigC.v64 | sigC.v0) && expC == 0x7FFF) goto propagateNaN_ZC;
     if (magBits) {
         uiZ.v64 = packToF128UI64(signZ, 0x7FFF, 0);
         uiZ.v0 = 0;
         if (expC != 0x7FFF) goto uiZ;
-        if (sigC.v64 | sigC.v0) goto propagateNaN_ZC;
         if (signZ == signC) goto uiZ;
     }
     softfloat_raiseFlags(status, softfloat_flag_invalid);

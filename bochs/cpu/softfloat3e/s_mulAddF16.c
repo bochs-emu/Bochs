@@ -62,7 +62,6 @@ float16_t softfloat_mulAddF16(uint16_t uiA, uint16_t uiB, uint16_t uiC, uint8_t 
     int8_t expDiff;
     uint32_t sig32Z, sig32C;
     int8_t shiftDist;
-
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     signA = signF16UI(uiA);
@@ -71,10 +70,19 @@ float16_t softfloat_mulAddF16(uint16_t uiA, uint16_t uiB, uint16_t uiC, uint8_t 
     signB = signF16UI(uiB);
     expB  = expF16UI(uiB);
     sigB  = fracF16UI(uiB);
-    signC = signF16UI(uiC) ^ (op == softfloat_mulAdd_subC);
+    signC = signF16UI(uiC) ^ ((op & softfloat_mulAdd_subC) != 0);
     expC  = expF16UI(uiC);
     sigC  = fracF16UI(uiC);
-    signProd = signA ^ signB ^ (op == softfloat_mulAdd_subProd);
+    signProd = signA ^ signB ^ ((op & softfloat_mulAdd_subProd) != 0);
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    bool aisNaN = (expA == 0x1F) && sigA;
+    bool bisNaN = (expB == 0x1F) && sigB;
+    bool cisNaN = (expC == 0x1F) && sigC;
+    if (aisNaN | bisNaN | cisNaN) {
+        uiZ = (aisNaN | bisNaN) ? softfloat_propagateNaNF16UI(uiA, uiB, status) : 0;
+        return softfloat_propagateNaNF16UI(uiZ, uiC, status);
+    }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if (softfloat_denormalsAreZeros(status)) {
@@ -85,22 +93,18 @@ float16_t softfloat_mulAddF16(uint16_t uiA, uint16_t uiB, uint16_t uiC, uint8_t 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if (expA == 0x1F) {
-        if (sigA || ((expB == 0x1F) && sigB)) goto propagateNaN_ABC;
         magBits = expB | sigB;
         goto infProdArg;
     }
     if (expB == 0x1F) {
-        if (sigB) goto propagateNaN_ABC;
         magBits = expA | sigA;
         goto infProdArg;
     }
     if (expC == 0x1F) {
-        if (sigC) {
-            uiZ = 0;
-            goto propagateNaN_ZC;
+        if ((sigA && !expA) || (sigB && !expB)) {
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
         }
-        uiZ = uiC;
-        return uiZ;
+        return packToF16UI(signC, 0x1F, 0);
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -192,29 +196,23 @@ float16_t softfloat_mulAddF16(uint16_t uiA, uint16_t uiB, uint16_t uiC, uint8_t 
     return softfloat_roundPackToF16(signZ, expZ, sigZ, status);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
- propagateNaN_ABC:
-    uiZ = softfloat_propagateNaNF16UI(uiA, uiB, status);
-    goto propagateNaN_ZC;
-    /*------------------------------------------------------------------------
-    *------------------------------------------------------------------------*/
  infProdArg:
     if (magBits) {
         uiZ = packToF16UI(signProd, 0x1F, 0);
-        if (sigC && expC == 0x1F) goto propagateNaN_ZC;
-        if ((sigA && !expA) || (sigB && !expB) || (sigC && !expC))
-            softfloat_raiseFlags(status, softfloat_flag_denormal);
-        if (expC != 0x1F) return uiZ;
-        if (signProd == signC) return uiZ;
+        if (signProd == signC || expC != 0x1F) {
+            if ((sigA && !expA) || (sigB && !expB) || (sigC && !expC))
+                softfloat_raiseFlags(status, softfloat_flag_denormal);
+            return uiZ;
+        }
     }
     softfloat_raiseFlags(status, softfloat_flag_invalid);
     uiZ = defaultNaNF16UI;
- propagateNaN_ZC:
     return softfloat_propagateNaNF16UI(uiZ, uiC, status);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  zeroProd:
     uiZ = packToF16UI(signC, expC, sigC);
-    if (expC && !sigC) {
+    if (!expC && sigC) {
         /* Exact zero plus a denormal */
         softfloat_raiseFlags(status, softfloat_flag_denormal);
         if (softfloat_flushUnderflowToZero(status)) {
