@@ -3004,7 +3004,7 @@ void bx_usb_xhci_c::init_event_ring(unsigned interrupter)
     BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[0].size;
   
   // check that the guest uses correct segment sizes
-  for (int i=0; i<(1<<MAX_SEG_TBL_SZ_EXP); i++) {
+  for (int i=0; i<BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstsz.erstabsize; i++) {
     if ((BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size < 16) ||
         (BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size > 4096)) {
       BX_ERROR(("Event Ring Segment %d has a size of %d which is invalid.", i, 
