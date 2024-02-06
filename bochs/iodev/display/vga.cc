@@ -701,7 +701,7 @@ void bx_vga_c::mem_write(bx_phy_address addr, Bit8u value)
     vbe_mem_write(addr, value);
     return;
   } else if ((BX_VGA_THIS vbe.base_address != 0) && (addr >= BX_VGA_THIS vbe.base_address)) {
-    // Workaround for the retore function of the GRUB bootloader
+    // Workaround for the restore function of the GRUB bootloader
     Bit32u offset = addr & (BX_VGA_THIS s.memsize - 1);
     if (BX_VGA_THIS s.sequencer.chain_four && (offset < 0x8000)) {
       BX_VGA_THIS s.memory[(offset >> 2) + ((offset % 4) << 16)] = value;
