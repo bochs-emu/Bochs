@@ -73,10 +73,12 @@ float64_t
                 sig = softfloat_shiftRightJam64(sig, -exp);
                 exp = 0;
                 roundBits = sig & 0x3FF;
-                if (roundBits) softfloat_raiseFlags(status, softfloat_flag_underflow);
-                if (softfloat_flushUnderflowToZero(status)) {
-                    softfloat_raiseFlags(status, softfloat_flag_underflow | softfloat_flag_inexact);
-                    return packToF64UI(sign, 0, 0);
+                if (isTiny) {
+                    if (softfloat_flushUnderflowToZero(status)) {
+                        softfloat_raiseFlags(status, softfloat_flag_underflow | softfloat_flag_inexact);
+                        return packToF64UI(sign, 0, 0);
+                    }
+                    if (roundBits) softfloat_raiseFlags(status, softfloat_flag_underflow);
                 }
             }
         } else if ((0x7FD < exp) || (UINT64_C(0x8000000000000000) <= sig + roundIncrement)) {

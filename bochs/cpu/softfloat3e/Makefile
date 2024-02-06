@@ -191,6 +191,7 @@ OBJS_OTHERS = \
   f32_class$(OBJ) \
   f32_compare$(OBJ) \
   f32_minmax$(OBJ) \
+  f32_scalef$(OBJ) \
   f32_add$(OBJ) \
   f32_sub$(OBJ) \
   f32_mul$(OBJ) \
@@ -214,6 +215,7 @@ OBJS_OTHERS = \
   f64_class$(OBJ) \
   f64_compare$(OBJ) \
   f64_minmax$(OBJ) \
+  f64_scalef$(OBJ) \
   f64_add$(OBJ) \
   f64_sub$(OBJ) \
   f64_mul$(OBJ) \

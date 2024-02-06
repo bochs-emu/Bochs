@@ -331,6 +331,7 @@ float32_t f32_mulAdd(float32_t, float32_t, float32_t, uint8_t op, struct softflo
 float32_t f32_div(float32_t, float32_t, struct softfloat_status_t *);
 float32_t f32_min(float32_t, float32_t, struct softfloat_status_t *);
 float32_t f32_max(float32_t, float32_t, struct softfloat_status_t *);
+float32_t f32_scalef(float32_t, float32_t, struct softfloat_status_t *);
 float32_t f32_getExp(float32_t, struct softfloat_status_t *);
 int f32_compare(float32_t, float32_t, bool, struct softfloat_status_t *);
 float32_t f32_sqrt(float32_t, struct softfloat_status_t *);
@@ -423,6 +424,7 @@ float64_t f64_mulAdd(float64_t, float64_t, float64_t, uint8_t op, struct softflo
 float64_t f64_div(float64_t, float64_t, struct softfloat_status_t *);
 float64_t f64_min(float64_t, float64_t, struct softfloat_status_t *);
 float64_t f64_max(float64_t, float64_t, struct softfloat_status_t *);
+float64_t f64_scalef(float64_t, float64_t, struct softfloat_status_t *);
 float64_t f64_getExp(float64_t, struct softfloat_status_t *);
 int f64_compare(float64_t, float64_t, bool, struct softfloat_status_t *);
 float64_t f64_sqrt(float64_t, struct softfloat_status_t *);

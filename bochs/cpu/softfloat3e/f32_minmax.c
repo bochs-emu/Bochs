@@ -44,7 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 | smaller of them.
 *----------------------------------------------------------------------------*/
 
-float32_t f32_min(float32_t a, float32_t b, softfloat_status_t *status)
+float32_t f32_min(float32_t a, float32_t b, struct softfloat_status_t *status)
 {
   if (softfloat_denormalsAreZeros(status)) {
     a = f32_denormal_to_zero(a);
@@ -59,7 +59,7 @@ float32_t f32_min(float32_t a, float32_t b, softfloat_status_t *status)
 | larger of them.
 *----------------------------------------------------------------------------*/
 
-float32_t f32_max(float32_t a, float32_t b, softfloat_status_t *status)
+float32_t f32_max(float32_t a, float32_t b, struct softfloat_status_t *status)
 {
   if (softfloat_denormalsAreZeros(status)) {
     a = f32_denormal_to_zero(a);

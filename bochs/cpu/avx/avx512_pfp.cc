@@ -45,7 +45,7 @@ extern void mxcsr_to_softfloat_status_word_imm_override(float_status_t &status, 
                                                                                             \
       float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                        \
       softfloat_status_word_rc_override(status, i);                                         \
-      op1.xmm32u(0) = (func)(op1.xmm32u(0), op2, status);                                   \
+      op1.xmm32u(0) = (func)(op1.xmm32u(0), op2, &status);                                  \
       check_exceptionsSSE(get_exception_flags(status));                                     \
     }                                                                                       \
     else {                                                                                  \
@@ -59,13 +59,13 @@ extern void mxcsr_to_softfloat_status_word_imm_override(float_status_t &status, 
     BX_NEXT_INSTR(i);                                                                       \
   }
 
-EVEX_OP_SCALAR_SINGLE(VADDSS_MASK_VssHpsWssR, float32_add)
-EVEX_OP_SCALAR_SINGLE(VSUBSS_MASK_VssHpsWssR, float32_sub)
-EVEX_OP_SCALAR_SINGLE(VMULSS_MASK_VssHpsWssR, float32_mul)
-EVEX_OP_SCALAR_SINGLE(VDIVSS_MASK_VssHpsWssR, float32_div)
-EVEX_OP_SCALAR_SINGLE(VMINSS_MASK_VssHpsWssR, float32_min)
-EVEX_OP_SCALAR_SINGLE(VMAXSS_MASK_VssHpsWssR, float32_max)
-EVEX_OP_SCALAR_SINGLE(VSCALEFSS_MASK_VssHpsWssR, float32_scalef)
+EVEX_OP_SCALAR_SINGLE(VADDSS_MASK_VssHpsWssR, f32_add)
+EVEX_OP_SCALAR_SINGLE(VSUBSS_MASK_VssHpsWssR, f32_sub)
+EVEX_OP_SCALAR_SINGLE(VMULSS_MASK_VssHpsWssR, f32_mul)
+EVEX_OP_SCALAR_SINGLE(VDIVSS_MASK_VssHpsWssR, f32_div)
+EVEX_OP_SCALAR_SINGLE(VMINSS_MASK_VssHpsWssR, f32_min)
+EVEX_OP_SCALAR_SINGLE(VMAXSS_MASK_VssHpsWssR, f32_max)
+EVEX_OP_SCALAR_SINGLE(VSCALEFSS_MASK_VssHpsWssR, f32_scalef)
 
 #define EVEX_OP_SCALAR_DOUBLE(HANDLER, func)                                                \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
@@ -77,7 +77,7 @@ EVEX_OP_SCALAR_SINGLE(VSCALEFSS_MASK_VssHpsWssR, float32_scalef)
                                                                                             \
       float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                        \
       softfloat_status_word_rc_override(status, i);                                         \
-      op1.xmm64u(0) = (func)(op1.xmm64u(0), op2, status);                                   \
+      op1.xmm64u(0) = (func)(op1.xmm64u(0), op2, &status);                                  \
       check_exceptionsSSE(get_exception_flags(status));                                     \
     }                                                                                       \
     else {                                                                                  \
@@ -91,13 +91,13 @@ EVEX_OP_SCALAR_SINGLE(VSCALEFSS_MASK_VssHpsWssR, float32_scalef)
     BX_NEXT_INSTR(i);                                                                       \
   }
 
-EVEX_OP_SCALAR_DOUBLE(VADDSD_MASK_VsdHpdWsdR, float64_add)
-EVEX_OP_SCALAR_DOUBLE(VSUBSD_MASK_VsdHpdWsdR, float64_sub)
-EVEX_OP_SCALAR_DOUBLE(VMULSD_MASK_VsdHpdWsdR, float64_mul)
-EVEX_OP_SCALAR_DOUBLE(VDIVSD_MASK_VsdHpdWsdR, float64_div)
-EVEX_OP_SCALAR_DOUBLE(VMINSD_MASK_VsdHpdWsdR, float64_min)
-EVEX_OP_SCALAR_DOUBLE(VMAXSD_MASK_VsdHpdWsdR, float64_max)
-EVEX_OP_SCALAR_DOUBLE(VSCALEFSD_MASK_VsdHpdWsdR, float64_scalef)
+EVEX_OP_SCALAR_DOUBLE(VADDSD_MASK_VsdHpdWsdR, f64_add)
+EVEX_OP_SCALAR_DOUBLE(VSUBSD_MASK_VsdHpdWsdR, f64_sub)
+EVEX_OP_SCALAR_DOUBLE(VMULSD_MASK_VsdHpdWsdR, f64_mul)
+EVEX_OP_SCALAR_DOUBLE(VDIVSD_MASK_VsdHpdWsdR, f64_div)
+EVEX_OP_SCALAR_DOUBLE(VMINSD_MASK_VsdHpdWsdR, f64_min)
+EVEX_OP_SCALAR_DOUBLE(VMAXSD_MASK_VsdHpdWsdR, f64_max)
+EVEX_OP_SCALAR_DOUBLE(VSCALEFSD_MASK_VsdHpdWsdR, f64_scalef)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSS_MASK_VssHpsWssR(bxInstruction_c *i)
 {

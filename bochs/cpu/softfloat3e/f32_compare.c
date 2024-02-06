@@ -47,7 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 | value `b', or 'float_relation_unordered' otherwise.
 *----------------------------------------------------------------------------*/
 
-int f32_compare(float32_t a, float32_t b, bool quiet, softfloat_status_t *status)
+int f32_compare(float32_t a, float32_t b, bool quiet, struct softfloat_status_t *status)
 {
     softfloat_class_t aClass;
     softfloat_class_t bClass;

@@ -47,7 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 | to the IEC/IEEE Standard for Binary Floating-Point Arithmetic.
 *----------------------------------------------------------------------------*/
 
-float16_t f16_getExp(float16_t a, softfloat_status_t *status)
+float16_t f16_getExp(float16_t a, struct softfloat_status_t *status)
 {
     int8_t expA;
     uint16_t sigA;

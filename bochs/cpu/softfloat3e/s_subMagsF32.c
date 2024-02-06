@@ -145,8 +145,7 @@ float32_t softfloat_subMagsF32(uint32_t uiA, uint32_t uiB, struct softfloat_stat
             sigY = sigB + (expB ? 0x40000000 : sigB);
         }
         return
-            softfloat_normRoundPackToF32(
-                signZ, expZ, sigX - softfloat_shiftRightJam32(sigY, expDiff), status);
+            softfloat_normRoundPackToF32(signZ, expZ, sigX - softfloat_shiftRightJam32(sigY, expDiff), status);
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
