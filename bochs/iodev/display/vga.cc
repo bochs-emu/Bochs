@@ -201,6 +201,7 @@ void bx_vga_c::register_state(void)
     new bx_shadow_num_c(vbe, "virtual_yres", &BX_VGA_THIS vbe.virtual_yres);
     new bx_shadow_num_c(vbe, "virtual_start", &BX_VGA_THIS vbe.virtual_start);
     new bx_shadow_num_c(vbe, "bpp_multiplier", &BX_VGA_THIS vbe.bpp_multiplier);
+    new bx_shadow_num_c(vbe, "saved_line_offset", &BX_VGA_THIS vbe.saved_line_offset);
     BXRS_PARAM_BOOL(vbe, get_capabilities, BX_VGA_THIS vbe.get_capabilities);
     BXRS_PARAM_BOOL(vbe, dac_8bit, BX_VGA_THIS vbe.dac_8bit);
     BXRS_PARAM_BOOL(vbe, ddc_enabled, BX_VGA_THIS vbe.ddc_enabled);
@@ -1083,6 +1084,8 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           {
             unsigned depth=0;
 
+            BX_VGA_THIS vbe.saved_line_offset = BX_VGA_THIS s.line_offset;
+
             // setup virtual resolution to be the same as current reso
             BX_VGA_THIS vbe.virtual_yres=BX_VGA_THIS vbe.yres;
             BX_VGA_THIS vbe.virtual_xres=BX_VGA_THIS vbe.xres;
@@ -1148,6 +1151,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
             }
           } else if (((value & VBE_DISPI_ENABLED) == 0) && BX_VGA_THIS vbe.enabled) {
             BX_INFO(("VBE disabling"));
+            BX_VGA_THIS s.line_offset = BX_VGA_THIS vbe.saved_line_offset;
             BX_VGA_THIS s.plane_shift = 16;
             BX_VGA_THIS s.ext_offset = 0;
           }
