@@ -69,14 +69,14 @@ int f64_compare(float64_t a, float64_t b, bool quiet, softfloat_status_t *status
 
     if (aClass == softfloat_denormal) {
         if (softfloat_denormalsAreZeros(status))
-            a = a & 0x8000;
+            a = a & UINT64_C(0x8000000000000000);
         else
             softfloat_raiseFlags(status, softfloat_flag_denormal);
     }
 
     if (bClass == softfloat_denormal) {
         if (softfloat_denormalsAreZeros(status))
-            b = b & 0x8000;
+            b = b & UINT64_C(0x8000000000000000);
         else
             softfloat_raiseFlags(status, softfloat_flag_denormal);
     }
