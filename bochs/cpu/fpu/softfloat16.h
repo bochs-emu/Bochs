@@ -35,61 +35,7 @@ these four paragraphs for those parts of this code that are retained.
 #ifndef _SOFTFLOAT_F16_HELPERS_H_
 #define _SOFTFLOAT_F16_HELPERS_H_
 
-#include "softfloat-specialize.h"
-
 extern float32 convert_ne_fp16_to_fp32(float16 op);
-
-BX_CPP_INLINE float16 int16_to_float16(Bit16s val_16, float_status_t &status)
-{
-  return i32_to_f16((Bit32s)val_16, &status);
-}
-
-BX_CPP_INLINE float16 uint16_to_float16(Bit16u val_16, float_status_t &status)
-{
-  return ui32_to_f16((Bit32u)val_16, &status);
-}
-
-BX_CPP_INLINE Bit16s float16_to_int16(float16 a, float_status_t &status)
-{
-  Bit32s val_32 = f16_to_i32(a, &status);
-  Bit16s val_16 = (Bit16s) val_32;
-  if ((Bit32s)(val_16) != val_32) {
-    status.float_exception_flags = float_flag_invalid; // throw away other flags
-    return int16_indefinite;
-  }
-  return val_16;
-}
-
-BX_CPP_INLINE Bit16s float16_to_int16_round_to_zero(float16 a, float_status_t &status)
-{
-  Bit32s val_32 = f16_to_i32_round_to_zero(a, &status);
-  Bit16s val_16 = (Bit16s) val_32;
-  if ((Bit32s)(val_16) != val_32) {
-    status.float_exception_flags = float_flag_invalid; // throw away other flags
-    return int16_indefinite;
-  }
-  return val_16;
-}
-
-BX_CPP_INLINE Bit16u float16_to_uint16(float16 a, float_status_t &status)
-{
-  Bit32u val_32 = f16_to_ui32(a, &status);
-  if (val_32 > 0xffff) {
-    status.float_exception_flags = float_flag_invalid; // throw away other flags
-    return uint16_indefinite;
-  }
-  return (Bit16u)val_32;
-}
-
-BX_CPP_INLINE Bit16u float16_to_uint16_round_to_zero(float16 a, float_status_t &status)
-{
-  Bit32u val_32 = f16_to_ui32_round_to_zero(a, &status);
-  if (val_32 > 0xffff) {
-    status.float_exception_flags = float_flag_invalid; // throw away other flags
-    return uint16_indefinite;
-  }
-  return (Bit16u)val_32;
-}
 
 BX_CPP_INLINE float16 f16_scalef(float16 a, float16 b, float_status_t *status)
 {

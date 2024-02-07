@@ -473,7 +473,7 @@ AVX512_CVT32_TO_16_MASK(VCVTUDQ2PH_MASK_VphWdqR, ui32_to_f16)
     softfloat_status_word_rc_override(status, i);                                           \
                                                                                             \
     for (unsigned n=0; n < WORD_ELEMENTS(len); n++) {                                       \
-      op.vmm16u(n) = (func)(op.vmm16u(n), status);                                          \
+      op.vmm16u(n) = (func)(op.vmm16u(n), &status);                                         \
     }                                                                                       \
                                                                                             \
     check_exceptionsSSE(get_exception_flags(status));                                       \
@@ -481,12 +481,12 @@ AVX512_CVT32_TO_16_MASK(VCVTUDQ2PH_MASK_VphWdqR, ui32_to_f16)
     BX_NEXT_INSTR(i);                                                                       \
   }
 
-AVX512_CVT16_TO_16(VCVTPH2UW_VdqWphR, float16_to_uint16)
-AVX512_CVT16_TO_16(VCVTPH2W_VdqWphR, float16_to_int16)
-AVX512_CVT16_TO_16(VCVTTPH2UW_VdqWphR, float16_to_uint16_round_to_zero)
-AVX512_CVT16_TO_16(VCVTTPH2W_VdqWphR, float16_to_int16_round_to_zero)
-AVX512_CVT16_TO_16(VCVTUW2PH_VphWdqR, uint16_to_float16)
-AVX512_CVT16_TO_16(VCVTW2PH_VphWdqR, int16_to_float16)
+AVX512_CVT16_TO_16(VCVTPH2UW_VdqWphR, f16_to_ui16)
+AVX512_CVT16_TO_16(VCVTPH2W_VdqWphR, f16_to_i16)
+AVX512_CVT16_TO_16(VCVTTPH2UW_VdqWphR, f16_to_ui16_round_to_zero)
+AVX512_CVT16_TO_16(VCVTTPH2W_VdqWphR, f16_to_i16_round_to_zero)
+AVX512_CVT16_TO_16(VCVTUW2PH_VphWdqR, ui16_to_f16)
+AVX512_CVT16_TO_16(VCVTW2PH_VphWdqR, i16_to_f16)
 
 #define AVX512_CVT16_TO_16_MASK(HANDLER, func)                                              \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
@@ -500,7 +500,7 @@ AVX512_CVT16_TO_16(VCVTW2PH_VphWdqR, int16_to_float16)
                                                                                             \
     for (unsigned n=0, mask = 0x1; n < WORD_ELEMENTS(len); n++, mask <<= 1) {               \
       if (opmask & mask)                                                                    \
-        op.vmm16u(n) = (func)(op.vmm16u(n), status);                                        \
+        op.vmm16u(n) = (func)(op.vmm16u(n), &status);                                       \
       else                                                                                  \
         op.vmm16u(n) = 0;                                                                   \
     }                                                                                       \
@@ -519,12 +519,12 @@ AVX512_CVT16_TO_16(VCVTW2PH_VphWdqR, int16_to_float16)
     BX_NEXT_INSTR(i);                                                                       \
   }
 
-AVX512_CVT16_TO_16_MASK(VCVTPH2UW_MASK_VdqWphR, float16_to_uint16)
-AVX512_CVT16_TO_16_MASK(VCVTPH2W_MASK_VdqWphR, float16_to_int16)
-AVX512_CVT16_TO_16_MASK(VCVTTPH2UW_MASK_VdqWphR, float16_to_uint16_round_to_zero)
-AVX512_CVT16_TO_16_MASK(VCVTTPH2W_MASK_VdqWphR, float16_to_int16_round_to_zero)
-AVX512_CVT16_TO_16_MASK(VCVTUW2PH_MASK_VphWdqR, uint16_to_float16)
-AVX512_CVT16_TO_16_MASK(VCVTW2PH_MASK_VphWdqR, int16_to_float16)
+AVX512_CVT16_TO_16_MASK(VCVTPH2UW_MASK_VdqWphR, f16_to_ui16)
+AVX512_CVT16_TO_16_MASK(VCVTPH2W_MASK_VdqWphR, f16_to_i16)
+AVX512_CVT16_TO_16_MASK(VCVTTPH2UW_MASK_VdqWphR, f16_to_ui16_round_to_zero)
+AVX512_CVT16_TO_16_MASK(VCVTTPH2W_MASK_VdqWphR, f16_to_i16_round_to_zero)
+AVX512_CVT16_TO_16_MASK(VCVTUW2PH_MASK_VphWdqR, ui16_to_f16)
+AVX512_CVT16_TO_16_MASK(VCVTW2PH_MASK_VphWdqR, i16_to_f16)
 
 #define AVX512_CVT16_TO_32(HANDLER, func)                                                   \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \

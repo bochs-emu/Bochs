@@ -268,11 +268,33 @@ BX_CPP_INLINE float16_t f16_roundToInt(float16_t a, struct softfloat_status_t *s
     return f16_roundToInt(a, 0, softfloat_getRoundingMode(status), true, status);
 }
 
+BX_CPP_INLINE int16_t f16_to_i16(float16_t a, softfloat_status_t *status)
+{
+    int32_t val_32 = f16_to_i32(a, softfloat_getRoundingMode(status), false, status);
+    int16_t val_16 = (int16_t) val_32;
+    if ((int32_t)(val_16) != val_32) {
+        softfloat_raiseFlags(status, softfloat_flag_invalid);
+        return (int16_t) 0x8000;
+    }
+    return val_16;
+}
+
 BX_CPP_INLINE int32_t f16_to_i32(float16_t a, struct softfloat_status_t *status) {
     return f16_to_i32(a, softfloat_getRoundingMode(status), true, status);
 }
 BX_CPP_INLINE int64_t f16_to_i64(float16_t a, struct softfloat_status_t *status) {
     return f16_to_i64(a, softfloat_getRoundingMode(status), true, status);
+}
+
+BX_CPP_INLINE int16_t f16_to_i16_round_to_zero(float16_t a, softfloat_status_t *status)
+{
+    int32_t val_32 = f16_to_i32_r_minMag(a, false, status);
+    int16_t val_16 = (int16_t) val_32;
+    if ((int32_t)(val_16) != val_32) {
+        softfloat_raiseFlags(status, softfloat_flag_invalid);
+        return (int16_t) 0x8000;
+    }
+      return val_16;
 }
 
 BX_CPP_INLINE int32_t f16_to_i32_round_to_zero(float16_t a, struct softfloat_status_t *status) {
@@ -282,11 +304,31 @@ BX_CPP_INLINE int64_t f16_to_i64_round_to_zero(float16_t a, struct softfloat_sta
     return f16_to_i64_r_minMag(a, true, status);
 }
 
+BX_CPP_INLINE uint16_t f16_to_ui16(float16_t a, softfloat_status_t *status)
+{
+    uint32_t val_32 = f16_to_ui32(a, softfloat_getRoundingMode(status), false, status);
+    if (val_32 > 0xFFFF) {
+        softfloat_raiseFlags(status, softfloat_flag_invalid);
+        return 0xFFFF;
+    }
+    return (uint16_t) val_32;
+}
+
 BX_CPP_INLINE uint32_t f16_to_ui32(float16_t a, struct softfloat_status_t *status) {
     return f16_to_ui32(a, softfloat_getRoundingMode(status), true, status);
 }
 BX_CPP_INLINE uint64_t f16_to_ui64(float16_t a, struct softfloat_status_t *status) {
     return f16_to_ui64(a, softfloat_getRoundingMode(status), true, status);
+}
+
+BX_CPP_INLINE uint16_t f16_to_ui16_round_to_zero(float16_t a, softfloat_status_t *status)
+{
+    uint32_t val_32 = f16_to_ui32_r_minMag(a, false, status);
+    if (val_32 > 0xFFFF) {
+        softfloat_raiseFlags(status, softfloat_flag_invalid);
+        return 0xFFFF;
+    }
+    return (uint16_t) val_32;
 }
 
 BX_CPP_INLINE uint32_t f16_to_ui32_round_to_zero(float16_t a, struct softfloat_status_t *status) {
