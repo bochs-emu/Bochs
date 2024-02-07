@@ -44,20 +44,20 @@ extern void mxcsr_to_softfloat_status_word_imm_override(float_status_t &status, 
     float16 op2 = BX_READ_XMM_REG_LO_WORD(i->src2());                                       \
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                          \
     softfloat_status_word_rc_override(status, i);                                           \
-    op1.xmm16u(0) = (func)(op1.xmm16u(0), op2, status);                                     \
+    op1.xmm16u(0) = (func)(op1.xmm16u(0), op2, &status);                                    \
     check_exceptionsSSE(get_exception_flags(status));                                       \
                                                                                             \
     BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);                                             \
     BX_NEXT_INSTR(i);                                                                       \
   }
 
-EVEX_OP_SCALAR_HALF(VADDSH_VshHphWshR, float16_add)
-EVEX_OP_SCALAR_HALF(VSUBSH_VshHphWshR, float16_sub)
-EVEX_OP_SCALAR_HALF(VMULSH_VshHphWshR, float16_mul)
-EVEX_OP_SCALAR_HALF(VDIVSH_VshHphWshR, float16_div)
-EVEX_OP_SCALAR_HALF(VMINSH_VshHphWshR, float16_min)
-EVEX_OP_SCALAR_HALF(VMAXSH_VshHphWshR, float16_max)
-EVEX_OP_SCALAR_HALF(VSCALEFSH_VshHphWshR, float16_scalef)
+EVEX_OP_SCALAR_HALF(VADDSH_VshHphWshR, f16_add)
+EVEX_OP_SCALAR_HALF(VSUBSH_VshHphWshR, f16_sub)
+EVEX_OP_SCALAR_HALF(VMULSH_VshHphWshR, f16_mul)
+EVEX_OP_SCALAR_HALF(VDIVSH_VshHphWshR, f16_div)
+EVEX_OP_SCALAR_HALF(VMINSH_VshHphWshR, f16_min)
+EVEX_OP_SCALAR_HALF(VMAXSH_VshHphWshR, f16_max)
+EVEX_OP_SCALAR_HALF(VSCALEFSH_VshHphWshR, f16_scalef)
 
 #define EVEX_OP_SCALAR_HALF_MASK(HANDLER, func)                                             \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
@@ -68,7 +68,7 @@ EVEX_OP_SCALAR_HALF(VSCALEFSH_VshHphWshR, float16_scalef)
       float16 op2 = BX_READ_XMM_REG_LO_WORD(i->src2());                                     \
       float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                        \
       softfloat_status_word_rc_override(status, i);                                         \
-      op1.xmm16u(0) = (func)(op1.xmm16u(0), op2, status);                                   \
+      op1.xmm16u(0) = (func)(op1.xmm16u(0), op2, &status);                                  \
       check_exceptionsSSE(get_exception_flags(status));                                     \
     }                                                                                       \
     else {                                                                                  \
@@ -82,13 +82,13 @@ EVEX_OP_SCALAR_HALF(VSCALEFSH_VshHphWshR, float16_scalef)
     BX_NEXT_INSTR(i);                                                                       \
   }
 
-EVEX_OP_SCALAR_HALF_MASK(VADDSH_MASK_VshHphWshR, float16_add)
-EVEX_OP_SCALAR_HALF_MASK(VSUBSH_MASK_VshHphWshR, float16_sub)
-EVEX_OP_SCALAR_HALF_MASK(VMULSH_MASK_VshHphWshR, float16_mul)
-EVEX_OP_SCALAR_HALF_MASK(VDIVSH_MASK_VshHphWshR, float16_div)
-EVEX_OP_SCALAR_HALF_MASK(VMINSH_MASK_VshHphWshR, float16_min)
-EVEX_OP_SCALAR_HALF_MASK(VMAXSH_MASK_VshHphWshR, float16_max)
-EVEX_OP_SCALAR_HALF_MASK(VSCALEFSH_MASK_VshHphWshR, float16_scalef)
+EVEX_OP_SCALAR_HALF_MASK(VADDSH_MASK_VshHphWshR, f16_add)
+EVEX_OP_SCALAR_HALF_MASK(VSUBSH_MASK_VshHphWshR, f16_sub)
+EVEX_OP_SCALAR_HALF_MASK(VMULSH_MASK_VshHphWshR, f16_mul)
+EVEX_OP_SCALAR_HALF_MASK(VDIVSH_MASK_VshHphWshR, f16_div)
+EVEX_OP_SCALAR_HALF_MASK(VMINSH_MASK_VshHphWshR, f16_min)
+EVEX_OP_SCALAR_HALF_MASK(VMAXSH_MASK_VshHphWshR, f16_max)
+EVEX_OP_SCALAR_HALF_MASK(VSCALEFSH_MASK_VshHphWshR, f16_scalef)
 
 extern float16_compare_method avx_compare16[32];
 
@@ -289,7 +289,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTSH_MASK_VshHphWshIbR(bxInstruction
 
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
-    op1.xmm16u(0) = float16_getmant(op2, status, sign_ctrl, interv);
+    op1.xmm16u(0) = f16_getMant(op2, &status, sign_ctrl, interv);
     check_exceptionsSSE(get_exception_flags(status));
   }
   else {
@@ -317,7 +317,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTPH_MASK_VphWphIbR(bxInstruction_c 
 
   for (unsigned n=0, mask = 0x1; n < WORD_ELEMENTS(len); n++, mask <<= 1) {
     if (opmask & mask)
-      op.vmm16u(n) = float16_getmant(op.vmm16u(n), status, sign_ctrl, interv);
+      op.vmm16u(n) = f16_getMant(op.vmm16u(n), &status, sign_ctrl, interv);
     else
       op.vmm16u(n) = 0;
   }

@@ -775,7 +775,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTSS_MASK_VssHpsWssIbR(bxInstruction
 
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
-    op1.xmm32u(0) = float32_getmant(op2, status, sign_ctrl, interv);
+    op1.xmm32u(0) = f32_getMant(op2, &status, sign_ctrl, interv);
     check_exceptionsSSE(get_exception_flags(status));
   }
   else {
@@ -801,7 +801,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTSD_MASK_VsdHpdWsdIbR(bxInstruction
 
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
-    op1.xmm64u(0) = float64_getmant(op2, status, sign_ctrl, interv);
+    op1.xmm64u(0) = f64_getMant(op2, &status, sign_ctrl, interv);
     check_exceptionsSSE(get_exception_flags(status));
   }
   else {
@@ -829,7 +829,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTPS_MASK_VpsWpsIbR(bxInstruction_c 
 
   for (unsigned n=0, mask = 0x1; n < DWORD_ELEMENTS(len); n++, mask <<= 1) {
     if (opmask & mask)
-      op.vmm32u(n) = float32_getmant(op.vmm32u(n), status, sign_ctrl, interv);
+      op.vmm32u(n) = f32_getMant(op.vmm32u(n), &status, sign_ctrl, interv);
     else
       op.vmm32u(n) = 0;
   }
@@ -862,7 +862,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTPD_MASK_VpdWpdIbR(bxInstruction_c 
 
   for (unsigned n=0, mask = 0x1; n < QWORD_ELEMENTS(len); n++, mask <<= 1) {
     if (opmask & mask)
-      op.vmm64u(n) = float64_getmant(op.vmm64u(n), status, sign_ctrl, interv);
+      op.vmm64u(n) = f64_getMant(op.vmm64u(n), &status, sign_ctrl, interv);
     else
       op.vmm64u(n) = 0;
   }

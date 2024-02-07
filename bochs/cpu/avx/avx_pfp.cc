@@ -259,7 +259,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCPSS_VssHpsWssR(bxInstruction_c *i)
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                          \
     softfloat_status_word_rc_override(status, i);                                           \
                                                                                             \
-    op1.xmm32u(0) = (func)(op1.xmm32u(0), op2, status);                                     \
+    op1.xmm32u(0) = (func)(op1.xmm32u(0), op2, &status);                                    \
                                                                                             \
     check_exceptionsSSE(get_exception_flags(status));                                       \
     BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);                                             \
@@ -267,14 +267,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCPSS_VssHpsWssR(bxInstruction_c *i)
     BX_NEXT_INSTR(i);                                                                       \
   }
 
-AVX_SCALAR_SINGLE_FP(VADDSS_VssHpsWssR, float32_add);
-AVX_SCALAR_SINGLE_FP(VSUBSS_VssHpsWssR, float32_sub);
-AVX_SCALAR_SINGLE_FP(VMULSS_VssHpsWssR, float32_mul);
-AVX_SCALAR_SINGLE_FP(VDIVSS_VssHpsWssR, float32_div);
-AVX_SCALAR_SINGLE_FP(VMINSS_VssHpsWssR, float32_min);
-AVX_SCALAR_SINGLE_FP(VMAXSS_VssHpsWssR, float32_max);
+AVX_SCALAR_SINGLE_FP(VADDSS_VssHpsWssR, f32_add);
+AVX_SCALAR_SINGLE_FP(VSUBSS_VssHpsWssR, f32_sub);
+AVX_SCALAR_SINGLE_FP(VMULSS_VssHpsWssR, f32_mul);
+AVX_SCALAR_SINGLE_FP(VDIVSS_VssHpsWssR, f32_div);
+AVX_SCALAR_SINGLE_FP(VMINSS_VssHpsWssR, f32_min);
+AVX_SCALAR_SINGLE_FP(VMAXSS_VssHpsWssR, f32_max);
 #if BX_SUPPORT_EVEX
-AVX_SCALAR_SINGLE_FP(VSCALEFSS_VssHpsWssR, float32_scalef);
+AVX_SCALAR_SINGLE_FP(VSCALEFSS_VssHpsWssR, f32_scalef);
 #endif
 
 #define AVX_SCALAR_DOUBLE_FP(HANDLER, func)                                                 \
@@ -286,7 +286,7 @@ AVX_SCALAR_SINGLE_FP(VSCALEFSS_VssHpsWssR, float32_scalef);
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                          \
     softfloat_status_word_rc_override(status, i);                                           \
                                                                                             \
-    op1.xmm64u(0) = (func)(op1.xmm64u(0), op2, status);                                     \
+    op1.xmm64u(0) = (func)(op1.xmm64u(0), op2, &status);                                    \
                                                                                             \
     check_exceptionsSSE(get_exception_flags(status));                                       \
     BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);                                             \
@@ -294,14 +294,14 @@ AVX_SCALAR_SINGLE_FP(VSCALEFSS_VssHpsWssR, float32_scalef);
     BX_NEXT_INSTR(i);                                                                       \
   }
 
-AVX_SCALAR_DOUBLE_FP(VADDSD_VsdHpdWsdR, float64_add);
-AVX_SCALAR_DOUBLE_FP(VSUBSD_VsdHpdWsdR, float64_sub);
-AVX_SCALAR_DOUBLE_FP(VMULSD_VsdHpdWsdR, float64_mul);
-AVX_SCALAR_DOUBLE_FP(VDIVSD_VsdHpdWsdR, float64_div);
-AVX_SCALAR_DOUBLE_FP(VMINSD_VsdHpdWsdR, float64_min);
-AVX_SCALAR_DOUBLE_FP(VMAXSD_VsdHpdWsdR, float64_max);
+AVX_SCALAR_DOUBLE_FP(VADDSD_VsdHpdWsdR, f64_add);
+AVX_SCALAR_DOUBLE_FP(VSUBSD_VsdHpdWsdR, f64_sub);
+AVX_SCALAR_DOUBLE_FP(VMULSD_VsdHpdWsdR, f64_mul);
+AVX_SCALAR_DOUBLE_FP(VDIVSD_VsdHpdWsdR, f64_div);
+AVX_SCALAR_DOUBLE_FP(VMINSD_VsdHpdWsdR, f64_min);
+AVX_SCALAR_DOUBLE_FP(VMAXSD_VsdHpdWsdR, f64_max);
 #if BX_SUPPORT_EVEX
-AVX_SCALAR_DOUBLE_FP(VSCALEFSD_VsdHpdWsdR, float64_scalef);
+AVX_SCALAR_DOUBLE_FP(VSCALEFSD_VsdHpdWsdR, f64_scalef);
 #endif
 
 /* Opcode: VEX.NDS.0F C2 (VEX.W ignore) */

@@ -91,34 +91,9 @@ BX_CPP_INLINE Bit16u float16_to_uint16_round_to_zero(float16 a, float_status_t &
   return (Bit16u)val_32;
 }
 
-BX_CPP_INLINE float16 float16_add(float16 a, float16 b, float_status_t &status)
+BX_CPP_INLINE float16 f16_scalef(float16 a, float16 b, float_status_t *status)
 {
-  return float32_to_float16(float32_add(convert_ne_fp16_to_fp32(a), convert_ne_fp16_to_fp32(b), status), status);
-}
-
-BX_CPP_INLINE float16 float16_sub(float16 a, float16 b, float_status_t &status)
-{
-  return float32_to_float16(float32_sub(convert_ne_fp16_to_fp32(a), convert_ne_fp16_to_fp32(b), status), status);
-}
-
-BX_CPP_INLINE float16 float16_mul(float16 a, float16 b, float_status_t &status)
-{
-  return float32_to_float16(float32_mul(convert_ne_fp16_to_fp32(a), convert_ne_fp16_to_fp32(b), status), status);
-}
-
-BX_CPP_INLINE float16 float16_div(float16 a, float16 b, float_status_t &status)
-{
-  return float32_to_float16(float32_div(convert_ne_fp16_to_fp32(a), convert_ne_fp16_to_fp32(b), status), status);
-}
-
-BX_CPP_INLINE float16 float16_scalef(float16 a, float16 b, float_status_t &status)
-{
-  return float32_to_float16(float32_scalef(convert_ne_fp16_to_fp32(a), convert_ne_fp16_to_fp32(b), status), status);
-}
-
-BX_CPP_INLINE float16 float16_getmant(float16 a, float_status_t &status, int sign_ctrl, int interv)
-{
-  return float32_to_float16(float32_getmant(convert_ne_fp16_to_fp32(a), status, sign_ctrl, interv), status);
+  return f32_to_f16(f32_scalef(convert_ne_fp16_to_fp32(a), convert_ne_fp16_to_fp32(b), status), status);
 }
 
 #endif

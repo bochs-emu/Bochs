@@ -164,6 +164,7 @@ OBJS_OTHERS = \
   f16_to_f64$(OBJ) \
   f16_to_extF80$(OBJ) \
   f16_getExp$(OBJ) \
+  f16_getMant$(OBJ) \
   f16_roundToInt$(OBJ) \
   f16_class$(OBJ) \
   f16_compare$(OBJ) \
@@ -187,6 +188,7 @@ OBJS_OTHERS = \
   f32_to_extF80$(OBJ) \
   f32_to_f128$(OBJ) \
   f32_getExp$(OBJ) \
+  f32_getMant$(OBJ) \
   f32_roundToInt$(OBJ) \
   f32_class$(OBJ) \
   f32_compare$(OBJ) \
@@ -211,6 +213,7 @@ OBJS_OTHERS = \
   f64_to_extF80$(OBJ) \
   f64_to_f128$(OBJ) \
   f64_getExp$(OBJ) \
+  f64_getMant$(OBJ) \
   f64_roundToInt$(OBJ) \
   f64_class$(OBJ) \
   f64_compare$(OBJ) \
