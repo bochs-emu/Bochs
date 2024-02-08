@@ -130,6 +130,7 @@ protected:
   void determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth);
   void calculate_retrace_timing(void);
   bool skip_update(void);
+  void update_charmap(void);
 
   struct {
     struct {
@@ -227,7 +228,7 @@ protected:
     } sequencer;
 
     bool  vga_enabled;
-    bool  vga_mem_updated;
+    Bit8u  vga_mem_updated;
     Bit16u line_offset;
     Bit16u line_compare;
     Bit16u vertical_display_end;

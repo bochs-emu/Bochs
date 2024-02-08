@@ -662,10 +662,10 @@ Bit8u bx_vga_c::mem_read(bx_phy_address addr)
   if ((BX_VGA_THIS vbe.enabled) && (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4)) {
     return vbe_mem_read(addr);
   } else if ((BX_VGA_THIS vbe.base_address != 0) && (addr >= BX_VGA_THIS vbe.base_address)) {
-    // Workaround for the save function of the GRUB bootloader
+    // The save function of the GRUB bootloader needs this
     Bit32u offset = addr & (BX_VGA_THIS s.memsize - 1);
-    if (BX_VGA_THIS s.sequencer.chain_four && (offset < 0x8000)) {
-      return BX_VGA_THIS s.memory[(offset >> 2) + ((offset % 4) << 16)];
+    if (BX_VGA_THIS s.sequencer.chain_four && (offset < 0x40000)) {
+      return bx_vgacore_c::mem_read(offset);
     } else {
       return 0xff;
     }
@@ -701,15 +701,10 @@ void bx_vga_c::mem_write(bx_phy_address addr, Bit8u value)
     vbe_mem_write(addr, value);
     return;
   } else if ((BX_VGA_THIS vbe.base_address != 0) && (addr >= BX_VGA_THIS vbe.base_address)) {
-    // Workaround for the restore function of the GRUB bootloader
+    // The restore function of the GRUB bootloader needs this
     Bit32u offset = addr & (BX_VGA_THIS s.memsize - 1);
-    if (BX_VGA_THIS s.sequencer.chain_four && (offset < 0x8000)) {
-      BX_VGA_THIS s.memory[(offset >> 2) + ((offset % 4) << 16)] = value;
-      if (offset == 0) {
-        BX_VGA_THIS s.vga_mem_updated = 1;
-        bx_gui->set_text_charmap(0, &BX_VGA_THIS s.memory[0x20000 + BX_VGA_THIS s.charmap_address1]);
-        bx_gui->set_text_charmap(1, &BX_VGA_THIS s.memory[0x20000 + BX_VGA_THIS s.charmap_address2]);
-      }
+    if (BX_VGA_THIS s.sequencer.chain_four && (offset < 0x40000)) {
+      bx_vgacore_c::mem_write(offset, value);
     }
     return;
   }
