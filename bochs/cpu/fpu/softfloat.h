@@ -289,7 +289,6 @@ int float32_is_denormal(float32);
 float32 float32_min(float32 a, float32 b, float_status_t &status);
 float32 float32_max(float32 a, float32 b, float_status_t &status);
 
-float32 float32_minmax(float32 a, float32 b, int is_max, int is_abs, float_status_t &status);
 float32 float32_getexp(float32 a, float_status_t &status);
 float32 float32_getmant(float32 a, float_status_t &status, int sign_ctrl, int interv);
 
@@ -343,7 +342,6 @@ int float64_is_denormal(float64);
 float64 float64_min(float64 a, float64 b, float_status_t &status);
 float64 float64_max(float64 a, float64 b, float_status_t &status);
 
-float64 float64_minmax(float64 a, float64 b, int is_max, int is_abs, float_status_t &status);
 float64 float64_getexp(float64 a, float_status_t &status);
 float64 float64_getmant(float64 a, float_status_t &status, int sign_ctrl, int interv);
 

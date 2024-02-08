@@ -84,7 +84,7 @@ float64_t f64_scalef(float64_t a, float64_t b, struct softfloat_status_t *status
     *------------------------------------------------------------------------*/
     if (expA == 0x7FF) {
         if (sigA) {
-            int aIsSignalingNaN = (sigA & BX_CONST64(0x0008000000000000)) == 0;
+            int aIsSignalingNaN = (sigA & UINT64_C(0x0008000000000000)) == 0;
             if (aIsSignalingNaN || expB != 0x7FF || sigB)
                 return softfloat_propagateNaNF64UI(a, b, status);
 
@@ -131,7 +131,7 @@ float64_t f64_scalef(float64_t a, float64_t b, struct softfloat_status_t *status
         scale = -signB;
     }
     else {
-        sigB |= BX_CONST64(0x0010000000000000);
+        sigB |= UINT64_C(0x0010000000000000);
         shiftCount = 0x433 - expB;
         uint64_t prev_sigB = sigB;
         sigB >>= shiftCount;
@@ -146,7 +146,7 @@ float64_t f64_scalef(float64_t a, float64_t b, struct softfloat_status_t *status
     }
 
     if (expA != 0) {
-        sigA |= BX_CONST64(0x0010000000000000);
+        sigA |= UINT64_C(0x0010000000000000);
     } else {
         expA++;
     }

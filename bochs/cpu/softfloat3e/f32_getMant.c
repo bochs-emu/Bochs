@@ -60,7 +60,7 @@ float32_t f32_getMant(float32_t a, softfloat_status_t *status, int sign_ctrl, in
     sigA  = fracF32UI(a);
 
     if (expA == 0xFF) {
-        if (sigA) softfloat_propagateNaNF32UI(a, 0, status);
+        if (sigA) return softfloat_propagateNaNF32UI(a, 0, status);
         if (signA) {
             if (sign_ctrl & 0x2) {
                 softfloat_raiseFlags(status, softfloat_flag_invalid);
@@ -70,7 +70,7 @@ float32_t f32_getMant(float32_t a, softfloat_status_t *status, int sign_ctrl, in
         return packToF32UI(~sign_ctrl & signA, 0x7F, 0);
     }
 
-    if (! expA == 0 && (! sigA || softfloat_denormalsAreZeros(status))) {
+    if (! expA && (! sigA || softfloat_denormalsAreZeros(status))) {
         return packToF32UI(~sign_ctrl & signA, 0x7F, 0);
     }
 
@@ -86,6 +86,7 @@ float32_t f32_getMant(float32_t a, softfloat_status_t *status, int sign_ctrl, in
         normExpSig = softfloat_normSubnormalF32Sig(sigA);
         expA = normExpSig.exp;
         sigA = normExpSig.sig;
+        sigA &= 0x7FFFFF;
     }
 
     switch(interv) {

@@ -1335,66 +1335,6 @@ float32 float32_max(float32 a, float32 b, float_status_t &status)
 }
 
 /*----------------------------------------------------------------------------
-| Compare between two  single precision  floating point numbers and  return the
-| smaller/larger of them. The operation  is performed according to the IEC/IEEE
-| Standard for Binary Floating-Point Arithmetic.
-*----------------------------------------------------------------------------*/
-
-float32 float32_minmax(float32 a, float32 b, int is_max, int is_abs, float_status_t &status)
-{
-    if (get_denormals_are_zeros(status)) {
-        a = float32_denormal_to_zero(a);
-        b = float32_denormal_to_zero(b);
-    }
-
-    if (float32_is_nan(a) || float32_is_nan(b)) {
-        if (float32_is_signaling_nan(a)) {
-            return propagateFloat32NaN(a, status);
-        }
-        if (float32_is_signaling_nan(b) ) {
-            return propagateFloat32NaN(b, status);
-        }
-        if (! float32_is_nan(b)) {
-            if (float32_is_denormal(b))
-                float_raise(status, float_flag_denormal);
-            return b;
-        }
-        if (! float32_is_nan(a)) {
-            if (float32_is_denormal(a))
-                float_raise(status, float_flag_denormal);
-            return a;
-        }
-        return propagateFloat32NaN(a, b, status);
-    }
-
-    float32 tmp_a = a, tmp_b = b;
-    if (is_abs) {
-        tmp_a &= ~0x80000000; // clear the sign bit
-        tmp_b &= ~0x80000000;
-    }
-
-    int aSign = extractFloat32Sign(tmp_a);
-    int bSign = extractFloat32Sign(tmp_b);
-
-    if (float32_is_denormal(a) || float32_is_denormal(b))
-        float_raise(status, float_flag_denormal);
-
-    if (aSign != bSign) {
-        if (! is_max) {
-            return aSign ? a : b;
-        } else {
-            return aSign ? b : a;
-        }
-    } else {
-        if (! is_max) {
-            return (aSign ^ (tmp_a < tmp_b)) ? a : b;
-        } else {
-            return (aSign ^ (tmp_a < tmp_b)) ? b : a;
-        }
-    }
-}
-
-/*----------------------------------------------------------------------------
 | Returns the result of converting the double-precision floating-point value
 | `a' to the 32-bit two's complement integer format.  The conversion is
 | performed according to the IEC/IEEE Standard for Binary Floating-Point
@@ -2561,66 +2501,6 @@ float64 float64_max(float64 a, float64 b, float_status_t &status)
   }
 
   return (float64_compare(a, b, status) == float_relation_greater) ? a : b;
-}
-
-/*----------------------------------------------------------------------------
-| Compare between two  double precision  floating point numbers and  return the
-| smaller/larger of them. The operation  is performed according to the IEC/IEEE
-| Standard for Binary Floating-Point Arithmetic.
-*----------------------------------------------------------------------------*/
-
-float64 float64_minmax(float64 a, float64 b, int is_max, int is_abs, float_status_t &status)
-{
-    if (get_denormals_are_zeros(status)) {
-        a = float64_denormal_to_zero(a);
-        b = float64_denormal_to_zero(b);
-    }
-
-    if (float64_is_nan(a) || float64_is_nan(b)) {
-        if (float64_is_signaling_nan(a)) {
-            return propagateFloat64NaN(a, status);
-        }
-        if (float64_is_signaling_nan(b)) {
-            return propagateFloat64NaN(b, status);
-        }
-        if (! float64_is_nan(b)) {
-            if (float64_is_denormal(b))
-                float_raise(status, float_flag_denormal);
-            return b;
-        }
-        if (! float64_is_nan(a)) {
-            if (float64_is_denormal(a))
-                float_raise(status, float_flag_denormal);
-            return a;
-        }
-        return propagateFloat64NaN(a, b, status);
-    }
-
-    float64 tmp_a = a, tmp_b = b;
-    if (is_abs) {
-        tmp_a &= ~BX_CONST64(0x8000000000000000); // clear the sign bit
-        tmp_b &= ~BX_CONST64(0x8000000000000000);
-    }
-
-    int aSign = extractFloat64Sign(tmp_a);
-    int bSign = extractFloat64Sign(tmp_b);
-
-    if (float64_is_denormal(a) || float64_is_denormal(b))
-        float_raise(status, float_flag_denormal);
-
-    if (aSign != bSign) {
-        if (! is_max) {
-            return aSign ? a : b;
-        } else {
-            return aSign ? b : a;
-        }
-    } else {
-        if (! is_max) {
-            return (aSign ^ (tmp_a < tmp_b)) ? a : b;
-        } else {
-            return (aSign ^ (tmp_a < tmp_b)) ? b : a;
-        }
-    }
 }
 
 #ifdef FLOATX80

@@ -1006,46 +1006,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALESD_MASK_VsdHpdWsdIbR(bxInstructio
 
 // range
 
-static BX_CPP_INLINE float32 float32_range(float32 a, float32 b, int opselect, int sign_ctrl, float_status_t &status)
-{
-  float32 minmax = float32_minmax(a, b, opselect & 0x1, (opselect >> 1) & 0x1, status);
-
-  if (! f32_isSignalingNaN(a) && ! f32_isSignalingNaN(b)) {
-    if (sign_ctrl == 0) {
-      minmax = (minmax & ~0x80000000) | (a & 0x80000000); // keep sign of a
-    }
-    else if (sign_ctrl == 2) {
-      minmax &= ~0x80000000; // zero out sign it
-    }
-    else if (sign_ctrl == 3) {
-      minmax |=  0x80000000; // set the sign it
-    }
-    // else preserve the sign of compare result
-  }
-
-  return minmax;
-}
-
-static BX_CPP_INLINE float64 float64_range(float64 a, float64 b, int opselect, int sign_ctrl, float_status_t &status)
-{
-  float64 minmax = float64_minmax(a, b, opselect & 0x1, (opselect >> 1) & 0x1, status);
-
-  if (! f64_isSignalingNaN(a) && ! f64_isSignalingNaN(b)) {
-    if (sign_ctrl == 0) {
-      minmax = (minmax & ~BX_CONST64(0x8000000000000000)) | (a & BX_CONST64(0x8000000000000000)); // keep sign of a
-    }
-    else if (sign_ctrl == 2) {
-      minmax &= ~BX_CONST64(0x8000000000000000); // zero out sign it
-    }
-    else if (sign_ctrl == 3) {
-      minmax |=  BX_CONST64(0x8000000000000000); // set the sign it
-    }
-    // else preserve the sign of compare result
-  }
-
-  return minmax;
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRANGEPS_MASK_VpsHpsWpsIbR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
@@ -1055,12 +1015,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRANGEPS_MASK_VpsHpsWpsIbR(bxInstruction_c
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
 
+  bool is_max = i->Ib() & 0x1;
+  bool is_abs = (i->Ib() & 0x2) != 0;
   int sign_ctrl = (i->Ib() >> 2) & 0x3;
-  int opselect = i->Ib() & 0x3;
 
   for (unsigned n=0, mask = 0x1; n < DWORD_ELEMENTS(len); n++, mask <<= 1) {
     if (opmask & mask)
-      op1.vmm32u(n) = float32_range(op1.vmm32u(n), op2.vmm32u(n), opselect, sign_ctrl, status);
+      op1.vmm32u(n) = f32_range(op1.vmm32u(n), op2.vmm32u(n), is_max, is_abs, sign_ctrl, &status);
     else
       op1.vmm32u(n) = 0;
   }
@@ -1088,12 +1049,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRANGEPD_MASK_VpdHpdWpdIbR(bxInstruction_c
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
 
+  bool is_max = i->Ib() & 0x1;
+  bool is_abs = (i->Ib() & 0x2) != 0;
   int sign_ctrl = (i->Ib() >> 2) & 0x3;
-  int opselect = i->Ib() & 0x3;
 
   for (unsigned n=0, mask = 0x1; n < QWORD_ELEMENTS(len); n++, mask <<= 1) {
     if (opmask & mask)
-      op1.vmm64u(n) = float64_range(op1.vmm64u(n), op2.vmm64u(n), opselect, sign_ctrl, status);
+      op1.vmm64u(n) = f64_range(op1.vmm64u(n), op2.vmm64u(n), is_max, is_abs, sign_ctrl, &status);
     else
       op1.vmm64u(n) = 0;
   }
@@ -1119,12 +1081,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRANGESS_MASK_VssHpsWssIbR(bxInstruction_c
   if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
     float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
 
+    bool is_max = i->Ib() & 0x1;
+    bool is_abs = (i->Ib() & 0x2) != 0;
     int sign_ctrl = (i->Ib() >> 2) & 0x3;
-    int opselect = i->Ib() & 0x3;
 
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
-    op1.xmm32u(0) = float32_range(op1.xmm32u(0), op2, opselect, sign_ctrl, status);
+    op1.xmm32u(0) = f32_range(op1.xmm32u(0), op2, is_max, is_abs, sign_ctrl, &status);
     check_exceptionsSSE(get_exception_flags(status));
   }
   else {
@@ -1145,12 +1108,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRANGESD_MASK_VsdHpdWsdIbR(bxInstruction_c
   if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
     float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
 
+    bool is_max = i->Ib() & 0x1;
+    bool is_abs = (i->Ib() & 0x2) != 0;
     int sign_ctrl = (i->Ib() >> 2) & 0x3;
-    int opselect = i->Ib() & 0x3;
 
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
-    op1.xmm64u(0) = float64_range(op1.xmm64u(0), op2, opselect, sign_ctrl, status);
+    op1.xmm64u(0) = f64_range(op1.xmm64u(0), op2, is_max, is_abs, sign_ctrl, &status);
     check_exceptionsSSE(get_exception_flags(status));
   }
   else {

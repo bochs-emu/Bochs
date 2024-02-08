@@ -53,7 +53,7 @@ softfloat_class_t f64_class(float64_t a)
         if (sigA == 0)
             return (signA) ? softfloat_negative_inf : softfloat_positive_inf;
 
-        return (sigA & BX_CONST64(0x0008000000000000)) ? softfloat_QNaN : softfloat_SNaN;
+        return (sigA & UINT64_C(0x0008000000000000)) ? softfloat_QNaN : softfloat_SNaN;
     }
 
     if (expA == 0) {

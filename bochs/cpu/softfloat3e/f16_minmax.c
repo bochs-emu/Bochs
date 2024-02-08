@@ -46,12 +46,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 float16_t f16_min(float16_t a, float16_t b, struct softfloat_status_t *status)
 {
-  if (softfloat_denormalsAreZeros(status)) {
-    a = f16_denormal_to_zero(a);
-    b = f16_denormal_to_zero(b);
-  }
+    if (softfloat_denormalsAreZeros(status)) {
+        a = f16_denormal_to_zero(a);
+        b = f16_denormal_to_zero(b);
+    }
 
-  return (f16_compare(a, b, status) == softfloat_relation_less) ? a : b;
+    return (f16_compare(a, b, status) == softfloat_relation_less) ? a : b;
 }
 
 /*----------------------------------------------------------------------------
@@ -61,10 +61,10 @@ float16_t f16_min(float16_t a, float16_t b, struct softfloat_status_t *status)
 
 float16_t f16_max(float16_t a, float16_t b, struct softfloat_status_t *status)
 {
-  if (softfloat_denormalsAreZeros(status)) {
-    a = f16_denormal_to_zero(a);
-    b = f16_denormal_to_zero(b);
-  }
+    if (softfloat_denormalsAreZeros(status)) {
+        a = f16_denormal_to_zero(a);
+        b = f16_denormal_to_zero(b);
+    }
 
-  return (f16_compare(a, b, status) == softfloat_relation_greater) ? a : b;
+    return (f16_compare(a, b, status) == softfloat_relation_greater) ? a : b;
 }
