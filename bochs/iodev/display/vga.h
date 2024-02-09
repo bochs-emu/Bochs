@@ -162,7 +162,7 @@ private:
     Bit16u  virtual_yres;
     Bit32u  virtual_start;   /**< For dealing with bpp>8, this is where the virtual screen starts. */
     Bit8u   bpp_multiplier;  /**< We have to save this b/c sometimes we need to recalculate stuff with it. */
-    Bit16u  saved_line_offset;
+    Bit16u  line_offset;
     bool    get_capabilities;
     bool    dac_8bit;
     bool    ddc_enabled;

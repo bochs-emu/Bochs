@@ -1208,7 +1208,7 @@ void bx_svga_cirrus_c::update(void)
   }
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
     if (BX_CIRRUS_THIS svga_needs_update_mode) {
-      BX_CIRRUS_THIS s.vga_mem_updated = 1;
+      BX_CIRRUS_THIS s.vga_mem_updated = 0x0f;
       BX_CIRRUS_THIS svga_needs_update_mode = 0;
     }
     BX_CIRRUS_THIS bx_vgacore_c::update();

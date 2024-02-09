@@ -201,7 +201,7 @@ void bx_vga_c::register_state(void)
     new bx_shadow_num_c(vbe, "virtual_yres", &BX_VGA_THIS vbe.virtual_yres);
     new bx_shadow_num_c(vbe, "virtual_start", &BX_VGA_THIS vbe.virtual_start);
     new bx_shadow_num_c(vbe, "bpp_multiplier", &BX_VGA_THIS vbe.bpp_multiplier);
-    new bx_shadow_num_c(vbe, "saved_line_offset", &BX_VGA_THIS vbe.saved_line_offset);
+    new bx_shadow_num_c(vbe, "line_offset", &BX_VGA_THIS vbe.line_offset);
     BXRS_PARAM_BOOL(vbe, get_capabilities, BX_VGA_THIS vbe.get_capabilities);
     BXRS_PARAM_BOOL(vbe, dac_8bit, BX_VGA_THIS vbe.dac_8bit);
     BXRS_PARAM_BOOL(vbe, ddc_enabled, BX_VGA_THIS vbe.ddc_enabled);
@@ -328,7 +328,7 @@ void bx_vga_c::update(void)
 
       iWidth = BX_VGA_THIS vbe.xres;
       iHeight = BX_VGA_THIS vbe.yres;
-      pitch = BX_VGA_THIS s.line_offset;
+      pitch = BX_VGA_THIS vbe.line_offset;
       Bit8u *disp_ptr = &BX_VGA_THIS s.memory[BX_VGA_THIS vbe.virtual_start];
 
       if (bx_gui->graphics_tile_info_common(&info)) {
@@ -606,7 +606,7 @@ void bx_vga_c::update(void)
             for (r=0; r<Y_TILESIZE; r++) {
               y = yc + r;
               if (BX_VGA_THIS s.y_doublescan) y >>= 1;
-              row_addr = BX_VGA_THIS vbe.virtual_start + (y * BX_VGA_THIS s.line_offset);
+              row_addr = BX_VGA_THIS vbe.virtual_start + (y * BX_VGA_THIS vbe.line_offset);
               for (c=0; c<X_TILESIZE; c++) {
                 x = xc + c;
                 BX_VGA_THIS s.tile[r*X_TILESIZE + c] =
@@ -1079,8 +1079,6 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           {
             unsigned depth=0;
 
-            BX_VGA_THIS vbe.saved_line_offset = BX_VGA_THIS s.line_offset;
-
             // setup virtual resolution to be the same as current reso
             BX_VGA_THIS vbe.virtual_yres=BX_VGA_THIS vbe.yres;
             BX_VGA_THIS vbe.virtual_xres=BX_VGA_THIS vbe.xres;
@@ -1095,41 +1093,41 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
               // Default pixel sizes
               case VBE_DISPI_BPP_8:
                 BX_VGA_THIS vbe.bpp_multiplier = 1;
-                BX_VGA_THIS s.line_offset = BX_VGA_THIS vbe.virtual_xres;
+                BX_VGA_THIS vbe.line_offset = BX_VGA_THIS vbe.virtual_xres;
                 depth=8;
                 break;
 
               case VBE_DISPI_BPP_4:
                 BX_VGA_THIS vbe.bpp_multiplier = 1;
-                BX_VGA_THIS s.line_offset = (BX_VGA_THIS vbe.virtual_xres >> 3);
+                BX_VGA_THIS vbe.line_offset = (BX_VGA_THIS vbe.virtual_xres >> 3);
                 depth=4;
                 break;
 
               case VBE_DISPI_BPP_15:
                 BX_VGA_THIS vbe.bpp_multiplier = 2;
-                BX_VGA_THIS s.line_offset = BX_VGA_THIS vbe.virtual_xres * 2;
+                BX_VGA_THIS vbe.line_offset = BX_VGA_THIS vbe.virtual_xres * 2;
                 depth=15;
                 break;
 
               case VBE_DISPI_BPP_16:
                 BX_VGA_THIS vbe.bpp_multiplier = 2;
-                BX_VGA_THIS s.line_offset = BX_VGA_THIS vbe.virtual_xres * 2;
+                BX_VGA_THIS vbe.line_offset = BX_VGA_THIS vbe.virtual_xres * 2;
                 depth=16;
                 break;
 
               case VBE_DISPI_BPP_24:
                 BX_VGA_THIS vbe.bpp_multiplier = 3;
-                BX_VGA_THIS s.line_offset = BX_VGA_THIS vbe.virtual_xres * 3;
+                BX_VGA_THIS vbe.line_offset = BX_VGA_THIS vbe.virtual_xres * 3;
                 depth=24;
                 break;
 
               case VBE_DISPI_BPP_32:
                 BX_VGA_THIS vbe.bpp_multiplier = 4;
-                BX_VGA_THIS s.line_offset = BX_VGA_THIS vbe.virtual_xres << 2;
+                BX_VGA_THIS vbe.line_offset = BX_VGA_THIS vbe.virtual_xres << 2;
                 depth=32;
                 break;
             }
-            BX_VGA_THIS vbe.visible_screen_size = BX_VGA_THIS s.line_offset * BX_VGA_THIS vbe.yres;
+            BX_VGA_THIS vbe.visible_screen_size = BX_VGA_THIS vbe.line_offset * BX_VGA_THIS vbe.yres;
 
             BX_INFO(("VBE enabling x %d, y %d, bpp %d, %u bytes visible", BX_VGA_THIS vbe.xres, BX_VGA_THIS vbe.yres, BX_VGA_THIS vbe.bpp, BX_VGA_THIS vbe.visible_screen_size));
 
@@ -1146,7 +1144,6 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
             }
           } else if (((value & VBE_DISPI_ENABLED) == 0) && BX_VGA_THIS vbe.enabled) {
             BX_INFO(("VBE disabling"));
-            BX_VGA_THIS s.line_offset = BX_VGA_THIS vbe.saved_line_offset;
             BX_VGA_THIS s.plane_shift = 16;
             BX_VGA_THIS s.ext_offset = 0;
           }
@@ -1203,7 +1200,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           BX_DEBUG(("VBE offset x %d", value));
           BX_VGA_THIS vbe.offset_x=(Bit16u)value;
 
-          BX_VGA_THIS vbe.virtual_start = BX_VGA_THIS vbe.offset_y * BX_VGA_THIS s.line_offset;
+          BX_VGA_THIS vbe.virtual_start = BX_VGA_THIS vbe.offset_y * BX_VGA_THIS vbe.line_offset;
           if (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4) {
             BX_VGA_THIS vbe.virtual_start += (BX_VGA_THIS vbe.offset_x * BX_VGA_THIS vbe.bpp_multiplier);
           } else {
@@ -1216,7 +1213,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
         {
           BX_DEBUG(("VBE offset y %d", value));
 
-          Bit32u new_screen_start = value * BX_VGA_THIS s.line_offset;
+          Bit32u new_screen_start = value * BX_VGA_THIS vbe.line_offset;
           if (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4) {
             if ((new_screen_start + BX_VGA_THIS vbe.visible_screen_size) > VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES)
             {
@@ -1282,11 +1279,11 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           BX_VGA_THIS vbe.virtual_xres=new_width;
           BX_VGA_THIS vbe.virtual_yres=new_height;
           if (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4) {
-            BX_VGA_THIS s.line_offset = BX_VGA_THIS vbe.virtual_xres * BX_VGA_THIS vbe.bpp_multiplier;
+            BX_VGA_THIS vbe.line_offset = BX_VGA_THIS vbe.virtual_xres * BX_VGA_THIS vbe.bpp_multiplier;
           } else {
-            BX_VGA_THIS s.line_offset = BX_VGA_THIS vbe.virtual_xres >> 3;
+            BX_VGA_THIS vbe.line_offset = BX_VGA_THIS vbe.virtual_xres >> 3;
           }
-          BX_VGA_THIS vbe.visible_screen_size = BX_VGA_THIS s.line_offset * BX_VGA_THIS vbe.yres;
+          BX_VGA_THIS vbe.visible_screen_size = BX_VGA_THIS vbe.line_offset * BX_VGA_THIS vbe.yres;
 
         } break;
         case VBE_DISPI_INDEX_VIRT_HEIGHT:

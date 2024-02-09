@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -911,13 +911,6 @@ void bx_gui_c::set_text_charmap(Bit8u map, Bit8u *fbuffer)
 {
   memcpy(& BX_GUI_THIS vga_charmap[map], fbuffer, 0x2000);
   for (unsigned i=0; i<256; i++) BX_GUI_THIS char_changed[map][i] = 1;
-  BX_GUI_THIS charmap_updated = 1;
-}
-
-void bx_gui_c::set_text_charbyte(Bit8u map, Bit16u address, Bit8u data)
-{
-  BX_GUI_THIS vga_charmap[map][address] = data;
-  BX_GUI_THIS char_changed[map][address >> 5] = 1;
   BX_GUI_THIS charmap_updated = 1;
 }
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -172,7 +172,6 @@ public:
   // GUI code calls them
   static void key_event(Bit32u key);
   static void set_text_charmap(Bit8u map, Bit8u *fbuffer);
-  static void set_text_charbyte(Bit8u map, Bit16u address, Bit8u data);
   static Bit8u get_mouse_headerbar_id();
 
   void init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
