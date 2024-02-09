@@ -91,8 +91,6 @@ float32_t f32_range(float32_t a, float32_t b, bool is_max, bool is_abs, int sign
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-void dbg_printf(const char *fmt, ...);
-//dbg_printf("a=%08x b=%08x is_abs=%d is_max=%d\n", a,b,is_abs,is_max);
     if (bIsNaN) {
         z = a;
     }
@@ -112,13 +110,10 @@ void dbg_printf(const char *fmt, ...);
             tmp_b = tmp_b & ~0x80000000;
             signA = 0;
         }
-//dbg_printf("tmp_a=%08x tmpb=%08x is_abs=%d is_max=%d\n", tmp_a,tmp_b,is_abs,is_max);
         if (! is_max) {
             z = (signA ^ (tmp_a < tmp_b)) ? a : b;
-//dbg_printf("z1=%08x\n", z);
         } else {
             z = (signA ^ (tmp_a < tmp_b)) ? b : a;
-//dbg_printf("z2=%08x\n", z);
         }
     }
 

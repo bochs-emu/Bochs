@@ -57,19 +57,6 @@ typedef struct {
 #ifdef FLOAT16
 
 /*----------------------------------------------------------------------------
-| Takes half-precision floating-point NaN `a' and returns the appropriate
-| NaN result.  If `a' is a signaling NaN, the invalid exception is raised.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE float16 propagateFloat16NaN(float16 a, float_status_t &status)
-{
-    if (float16_is_signaling_nan(a))
-        float_raise(status, float_flag_invalid);
-
-    return a | 0x200;
-}
-
-/*----------------------------------------------------------------------------
 | Commonly used half-precision floating point constants
 *----------------------------------------------------------------------------*/
 const float16 float16_negative_inf  = 0xfc00;
@@ -195,6 +182,19 @@ BX_CPP_INLINE commonNaNT float16ToCommonNaN(float16 a, float_status_t &status)
 BX_CPP_INLINE float16 commonNaNToFloat16(commonNaNT a)
 {
     return (((Bit16u) a.sign)<<15) | 0x7E00 | (Bit16u)(a.hi>>54);
+}
+
+/*----------------------------------------------------------------------------
+| Takes half-precision floating-point NaN `a' and returns the appropriate
+| NaN result.  If `a' is a signaling NaN, the invalid exception is raised.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE float16 propagateFloat16NaN(float16 a, float_status_t &status)
+{
+    if (float16_is_signaling_nan(a))
+        float_raise(status, float_flag_invalid);
+
+    return a | 0x200;
 }
 
 #endif

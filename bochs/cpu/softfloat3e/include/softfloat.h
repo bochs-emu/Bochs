@@ -566,6 +566,8 @@ extFloat80_t extF80_mul(extFloat80_t, extFloat80_t, struct softfloat_status_t *)
 extFloat80_t extF80_div(extFloat80_t, extFloat80_t, struct softfloat_status_t *);
 extFloat80_t extF80_rem(extFloat80_t, extFloat80_t, struct softfloat_status_t *);
 extFloat80_t extF80_sqrt(extFloat80_t, struct softfloat_status_t *);
+softfloat_class_t extF80_class(extFloat80_t);
+
 bool extF80_isSignalingNaN(extFloat80_t);
 bool extF80_isNaN(extFloat80_t);
 

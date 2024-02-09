@@ -38,6 +38,15 @@ these four paragraphs for those parts of this code that are retained.
 #include "softfloat.h"
 
 /*----------------------------------------------------------------------------
+| Normalizes the subnormal half-precision floating-point value represented
+| by the denormalized significand `aSig'.  The normalized exponent and
+| significand are stored at the locations pointed to by `zExpPtr' and
+| `zSigPtr', respectively.
+*----------------------------------------------------------------------------*/
+
+void normalizeFloat16Subnormal(Bit16u aSig, Bit16s *zExpPtr, Bit16u *zSigPtr);
+
+/*----------------------------------------------------------------------------
 | Takes a 64-bit fixed-point value `absZ' with binary point between bits 6
 | and 7, and returns the properly rounded 32-bit integer corresponding to the
 | input.  If `zSign' is 1, the input is negated before being converted to an
@@ -62,55 +71,6 @@ Bit32s roundAndPackInt32(int zSign, Bit64u absZ, float_status_t &status);
 *----------------------------------------------------------------------------*/
 
 Bit64s roundAndPackInt64(int zSign, Bit64u absZ0, Bit64u absZ1, float_status_t &status);
-
-/*----------------------------------------------------------------------------
-| Takes the 128-bit fixed-point value formed by concatenating `absZ0' and
-| `absZ1', with binary point between bits 63 and 64 (between the input words),
-| and returns the properly rounded 64-bit unsigned integer corresponding to the
-| input.  Ordinarily, the fixed-point input is simply rounded to an integer,
-| with the inexact exception raised if the input cannot be represented exactly
-| as an integer. However, if the fixed-point input is too large, the invalid
-| exception is raised and the largest unsigned integer is returned.
-*----------------------------------------------------------------------------*/
-
-Bit64u roundAndPackUint64(int zSign, Bit64u absZ0, Bit64u absZ1, float_status_t &status);
-
-#ifdef FLOAT16
-
-/*----------------------------------------------------------------------------
-| Normalizes the subnormal half-precision floating-point value represented
-| by the denormalized significand `aSig'.  The normalized exponent and
-| significand are stored at the locations pointed to by `zExpPtr' and
-| `zSigPtr', respectively.
-*----------------------------------------------------------------------------*/
-
-void normalizeFloat16Subnormal(Bit16u aSig, Bit16s *zExpPtr, Bit16u *zSigPtr);
-
-/*----------------------------------------------------------------------------
-| Takes an abstract floating-point value having sign `zSign', exponent `zExp',
-| and significand `zSig', and returns the proper half-precision floating-
-| point value corresponding to the abstract input.  Ordinarily, the abstract
-| value is simply rounded and packed into the half-precision format, with
-| the inexact exception raised if the abstract input cannot be represented
-| exactly.  However, if the abstract value is too large, the overflow and
-| inexact exceptions are raised and an infinity or maximal finite value is
-| returned.  If the abstract value is too small, the input value is rounded to
-| a subnormal number, and the underflow and inexact exceptions are raised if
-| the abstract input cannot be represented exactly as a subnormal single-
-| precision floating-point number.
-|     The input significand `zSig' has its binary point between bits 14
-| and 13, which is 4 bits to the left of the usual location.  This shifted
-| significand must be normalized or smaller.  If `zSig' is not normalized,
-| `zExp' must be 0; in that case, the result returned is a subnormal number,
-| and it must not require rounding.  In the usual case that `zSig' is
-| normalized, `zExp' must be 1 less than the ``true'' floating-point exponent.
-| The handling of underflow and overflow follows the IEC/IEEE Standard for
-| Binary Floating-Point Arithmetic.
-*----------------------------------------------------------------------------*/
-
-float16 roundAndPackFloat16(int zSign, Bit16s zExp, Bit16u zSig, float_status_t &status);
-
-#endif
 
 /*----------------------------------------------------------------------------
 | Normalizes the subnormal single-precision floating-point value represented

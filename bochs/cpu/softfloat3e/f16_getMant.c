@@ -86,6 +86,7 @@ float16_t f16_getMant(float16_t a, softfloat_status_t *status, int sign_ctrl, in
         normExpSig = softfloat_normSubnormalF16Sig(sigA);
         expA = normExpSig.exp;
         sigA = normExpSig.sig;
+        sigA &= 0x3ff;
     }
 
     switch(interv) {

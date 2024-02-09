@@ -86,6 +86,7 @@ float64_t f64_getMant(float64_t a, softfloat_status_t *status, int sign_ctrl, in
         normExpSig = softfloat_normSubnormalF64Sig(sigA);
         expA = normExpSig.exp;
         sigA = normExpSig.sig;
+        sigA &= UINT64_C(0xFFFFFFFFFFFFF);
     }
 
     switch(interv) {

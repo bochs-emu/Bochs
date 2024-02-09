@@ -55,6 +55,20 @@ these four paragraphs for those parts of this code that are retained.
 #include "softfloat-specialize.h"
 
 /*----------------------------------------------------------------------------
+| Normalizes the subnormal half-precision floating-point value represented
+| by the denormalized significand `aSig'.  The normalized exponent and
+| significand are stored at the locations pointed to by `zExpPtr' and
+| `zSigPtr', respectively.
+*----------------------------------------------------------------------------*/
+
+void normalizeFloat16Subnormal(Bit16u aSig, Bit16s *zExpPtr, Bit16u *zSigPtr)
+{
+    int shiftCount = countLeadingZeros16(aSig) - 5;
+    *zSigPtr = aSig<<shiftCount;
+    *zExpPtr = 1 - shiftCount;
+}
+
+/*----------------------------------------------------------------------------
 | Takes a 64-bit fixed-point value `absZ' with binary point between bits 6
 | and 7, and returns the properly rounded 32-bit integer corresponding to the
 | input.  If `zSign' is 1, the input is negated before being converted to an
@@ -147,150 +161,6 @@ Bit64s roundAndPackInt64(int zSign, Bit64u absZ0, Bit64u absZ1, float_status_t &
     }
     return z;
 }
-
-/*----------------------------------------------------------------------------
-| Takes the 128-bit fixed-point value formed by concatenating `absZ0' and
-| `absZ1', with binary point between bits 63 and 64 (between the input words),
-| and returns the properly rounded 64-bit unsigned integer corresponding to the
-| input.  Ordinarily, the fixed-point input is simply rounded to an integer,
-| with the inexact exception raised if the input cannot be represented exactly
-| as an integer. However, if the fixed-point input is too large, the invalid
-| exception is raised and the largest unsigned integer is returned.
-*----------------------------------------------------------------------------*/
-
-Bit64u roundAndPackUint64(int zSign, Bit64u absZ0, Bit64u absZ1, float_status_t &status)
-{
-    int roundingMode = get_float_rounding_mode(status);
-    int roundNearestEven = (roundingMode == float_round_nearest_even);
-    int increment = ((Bit64s) absZ1 < 0);
-    if (!roundNearestEven) {
-        if (roundingMode == float_round_to_zero) {
-            increment = 0;
-        } else if (absZ1) {
-            if (zSign) {
-                increment = (roundingMode == float_round_down) && absZ1;
-            } else {
-                increment = (roundingMode == float_round_up) && absZ1;
-            }
-        }
-    }
-    if (increment) {
-        ++absZ0;
-        if (absZ0 == 0) {
-            float_raise(status, float_flag_invalid);
-            return uint64_indefinite;
-        }
-        absZ0 &= ~(((Bit64u) (absZ1<<1) == 0) & roundNearestEven);
-    }
-
-    if (zSign && absZ0) {
-        float_raise(status, float_flag_invalid);
-        return uint64_indefinite;
-    }
-
-    if (absZ1) {
-        float_raise(status, float_flag_inexact);
-    }
-    return absZ0;
-}
-
-#ifdef FLOAT16
-
-/*----------------------------------------------------------------------------
-| Normalizes the subnormal half-precision floating-point value represented
-| by the denormalized significand `aSig'.  The normalized exponent and
-| significand are stored at the locations pointed to by `zExpPtr' and
-| `zSigPtr', respectively.
-*----------------------------------------------------------------------------*/
-
-void normalizeFloat16Subnormal(Bit16u aSig, Bit16s *zExpPtr, Bit16u *zSigPtr)
-{
-    int shiftCount = countLeadingZeros16(aSig) - 5;
-    *zSigPtr = aSig<<shiftCount;
-    *zExpPtr = 1 - shiftCount;
-}
-
-/*----------------------------------------------------------------------------
-| Takes an abstract floating-point value having sign `zSign', exponent `zExp',
-| and significand `zSig', and returns the proper half-precision floating-
-| point value corresponding to the abstract input.  Ordinarily, the abstract
-| value is simply rounded and packed into the half-precision format, with
-| the inexact exception raised if the abstract input cannot be represented
-| exactly.  However, if the abstract value is too large, the overflow and
-| inexact exceptions are raised and an infinity or maximal finite value is
-| returned.  If the abstract value is too small, the input value is rounded to
-| a subnormal number, and the underflow and inexact exceptions are raised if
-| the abstract input cannot be represented exactly as a subnormal single-
-| precision floating-point number.
-|     The input significand `zSig' has its binary point between bits 14
-| and 13, which is 4 bits to the left of the usual location.  This shifted
-| significand must be normalized or smaller.  If `zSig' is not normalized,
-| `zExp' must be 0; in that case, the result returned is a subnormal number,
-| and it must not require rounding.  In the usual case that `zSig' is
-| normalized, `zExp' must be 1 less than the ``true'' floating-point exponent.
-| The handling of underflow and overflow follows the IEC/IEEE Standard for
-| Binary Floating-Point Arithmetic.
-*----------------------------------------------------------------------------*/
-
-float16 roundAndPackFloat16(int zSign, Bit16s zExp, Bit16u zSig, float_status_t &status)
-{
-    Bit16s roundIncrement, roundBits, roundMask;
-
-    int roundingMode = get_float_rounding_mode(status);
-    int roundNearestEven = (roundingMode == float_round_nearest_even);
-    roundIncrement = 8;
-    roundMask = 0xF;
-
-    if (! roundNearestEven) {
-        if (roundingMode == float_round_to_zero) roundIncrement = 0;
-        else {
-            roundIncrement = roundMask;
-            if (zSign) {
-                if (roundingMode == float_round_up) roundIncrement = 0;
-            }
-            else {
-                if (roundingMode == float_round_down) roundIncrement = 0;
-            }
-        }
-    }
-    roundBits = zSig & roundMask;
-    if (0x1D <= (Bit16u) zExp) {
-        if ((0x1D < zExp)
-             || ((zExp == 0x1D) && ((Bit16s) (zSig + roundIncrement) < 0)))
-        {
-            float_raise(status, float_flag_overflow);
-            if (roundBits || float_exception_masked(status, float_flag_overflow)) {
-                float_raise(status, float_flag_inexact);
-            }
-            return packFloat16(zSign, 0x1F, 0) - (roundIncrement == 0);
-        }
-        if (zExp < 0) {
-            int isTiny = (zExp < -1) || (zSig + roundIncrement < 0x8000);
-            zSig = shift16RightJamming(zSig, -zExp);
-            zExp = 0;
-            roundBits = zSig & roundMask;
-            if (isTiny) {
-                if(get_flush_underflow_to_zero(status)) {
-                    float_raise(status, float_flag_underflow | float_flag_inexact);
-                    return packFloat16(zSign, 0, 0);
-                }
-                // signal the #P according to roundBits calculated AFTER denormalization
-                if (roundBits || !float_exception_masked(status, float_flag_underflow)) {
-                    float_raise(status, float_flag_underflow);
-                }
-            }
-        }
-    }
-
-    if (roundBits) float_raise(status, float_flag_inexact);
-    zSig = (zSig + roundIncrement)>>4;
-    zSig &= ~(Bit16u) ((!(roundBits ^ 8)) & roundNearestEven);
-    if (! zSig) zExp = 0;
-
-    return packFloat16(zSign, zExp, zSig);
-}
-
-#endif
 
 /*----------------------------------------------------------------------------
 | Normalizes the subnormal single-precision floating-point value represented
