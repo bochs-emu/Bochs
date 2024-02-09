@@ -1620,6 +1620,7 @@ struct _fbi_state
   Bit32u        yorigin;        /* Y origin subtract value */
   Bit32u        lfb_base;       /* base of LFB in memory */
   Bit8u         lfb_stride;     /* stride of LFB accesses in bits */
+  Bit16u        clip_mask;      /* non-reserved bits in clipLeftRight register */
 
   Bit32u        width;          /* width of current frame buffer */
   Bit32u        height;         /* height of current frame buffer */

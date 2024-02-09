@@ -108,7 +108,7 @@ void raster_function(int tmus, void *destbase, Bit32s y, const poly_extent *exte
 	/* determine the screen Y */
 	scry = y;
 	if (FBZMODE_Y_ORIGIN(fbzmode))
-		scry = (v->fbi.yorigin - y) & 0x3ff;
+		scry = (v->fbi.yorigin - y) & v->fbi.clip_mask;
 
 	/* compute dithering */
 	COMPUTE_DITHER_POINTERS(fbzmode, y);
@@ -118,20 +118,20 @@ void raster_function(int tmus, void *destbase, Bit32s y, const poly_extent *exte
 		Bit32s tempclip;
 
 		/* Y clipping buys us the whole scanline */
-		if (scry < (Bit32s) ((v->reg[clipLowYHighY].u >> 16) & 0x3ff)
-				|| scry >= (Bit32s) (v->reg[clipLowYHighY].u & 0x3ff)) {
+		if (scry < (Bit32s) ((v->reg[clipLowYHighY].u >> 16) & v->fbi.clip_mask)
+				|| scry >= (Bit32s) (v->reg[clipLowYHighY].u & v->fbi.clip_mask)) {
 			stats->pixels_in += stopx - startx;
 			stats->clip_fail += stopx - startx;
 			return;
 		}
 
 		/* X clipping */
-		tempclip = (v->reg[clipLeftRight].u >> 16) & 0x3ff;
+		tempclip = (v->reg[clipLeftRight].u >> 16) & v->fbi.clip_mask;
 		if (startx < tempclip) {
 			stats->pixels_in += tempclip - startx;
 			startx = tempclip;
 		}
-		tempclip = v->reg[clipLeftRight].u & 0x3ff;
+		tempclip = v->reg[clipLeftRight].u & v->fbi.clip_mask;
 		if (stopx >= tempclip) {
 			stats->pixels_in += stopx - tempclip;
 			stopx = tempclip - 1;
@@ -927,7 +927,7 @@ static void raster_fastfill(void *destbase, Bit32s y, const poly_extent *extent,
   /* determine the screen Y */
   scry = y;
   if (FBZMODE_Y_ORIGIN(v->reg[fbzMode].u))
-    scry = (v->fbi.yorigin - y) & 0x3ff;
+    scry = (v->fbi.yorigin - y) & v->fbi.clip_mask;
 
   /* fill this RGB row */
   if (FBZMODE_RGB_BUFFER_MASK(v->reg[fbzMode].u))
@@ -1027,10 +1027,10 @@ Bit32u poly_render_triangle_custom(void *dest, const rectangle *cliprect, int st
 
 Bit32s fastfill(voodoo_state *v)
 {
-  int sx = (v->reg[clipLeftRight].u >> 16) & 0x3ff;
-  int ex = (v->reg[clipLeftRight].u >> 0) & 0x3ff;
-  int sy = (v->reg[clipLowYHighY].u >> 16) & 0x3ff;
-  int ey = (v->reg[clipLowYHighY].u >> 0) & 0x3ff;
+  int sx = (v->reg[clipLeftRight].u >> 16) & v->fbi.clip_mask;
+  int ex = (v->reg[clipLeftRight].u >> 0) & v->fbi.clip_mask;
+  int sy = (v->reg[clipLowYHighY].u >> 16) & v->fbi.clip_mask;
+  int ey = (v->reg[clipLowYHighY].u >> 0) & v->fbi.clip_mask;
   poly_extent extents[64];
   Bit16u dithermatrix[16];
   Bit16u *drawbuf = NULL;
@@ -2711,7 +2711,7 @@ Bit32u lfb_w(Bit32u offset, Bit32u data, Bit32u mem_mask)
     /* determine the screen Y */
     scry = y;
     if (LFBMODE_Y_ORIGIN(v->reg[lfbMode].u))
-      scry = (v->fbi.yorigin - y) & 0x3ff;
+      scry = (v->fbi.yorigin - y) & v->fbi.clip_mask;
 
     /* advance pointers to the proper row */
     bufoffs = scry * v->fbi.rowpixels + x;
@@ -2765,7 +2765,7 @@ Bit32u lfb_w(Bit32u offset, Bit32u data, Bit32u mem_mask)
     /* determine the screen Y */
     scry = y;
     if (FBZMODE_Y_ORIGIN(v->reg[fbzMode].u))
-      scry = (v->fbi.yorigin - y) & 0x3ff;
+      scry = (v->fbi.yorigin - y) & v->fbi.clip_mask;
 
     /* advance pointers to the proper row */
     dest += scry * v->fbi.rowpixels;
@@ -2789,10 +2789,10 @@ Bit32u lfb_w(Bit32u offset, Bit32u data, Bit32u mem_mask)
         /* apply clipping */
         if (FBZMODE_ENABLE_CLIPPING(v->reg[fbzMode].u))
         {
-          if (x < (int)((v->reg[clipLeftRight].u >> 16) & 0x3ff) ||
-            x >= (int)(v->reg[clipLeftRight].u & 0x3ff) ||
-            scry < (int)((v->reg[clipLowYHighY].u >> 16) & 0x3ff) ||
-            scry >= (int)(v->reg[clipLowYHighY].u & 0x3ff))
+          if (x < (int)((v->reg[clipLeftRight].u >> 16) & v->fbi.clip_mask) ||
+            x >= (int)(v->reg[clipLeftRight].u & v->fbi.clip_mask) ||
+            scry < (int)((v->reg[clipLowYHighY].u >> 16) & v->fbi.clip_mask) ||
+            scry >= (int)(v->reg[clipLowYHighY].u & v->fbi.clip_mask))
           {
             stats->pixels_in++;
             stats->clip_fail++;
@@ -3731,7 +3731,7 @@ Bit32u lfb_r(Bit32u offset)
   /* determine the screen Y */
   scry = y;
   if (LFBMODE_Y_ORIGIN(v->reg[lfbMode].u))
-    scry = (v->fbi.yorigin - y) & 0x3ff;
+    scry = (v->fbi.yorigin - y) & v->fbi.clip_mask;
 
   /* advance pointers to the proper row */
   bufoffs = scry * v->fbi.rowpixels + x;
@@ -4028,6 +4028,7 @@ void voodoo_init(Bit8u _type)
   v->fbi.height = 480;
   v->fbi.rowpixels = v->fbi.width;
   v->fbi.fogdelta_mask = (v->type < VOODOO_2) ? 0xff : 0xfc;
+  v->fbi.clip_mask = (v->type <= VOODOO_2) ? 0x3ff : 0xfff;
 
   /* build shared TMU tables */
   init_tmu_shared(&v->tmushare);

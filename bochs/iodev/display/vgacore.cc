@@ -2273,7 +2273,7 @@ void bx_vgacore_c::redraw_area(unsigned x0, unsigned y0, unsigned width, unsigne
 {
   unsigned xti, yti, xt0, xt1, yt0, yt1, xmax, ymax;
 
-  BX_VGA_THIS s.vga_mem_updated |= 1;
+  BX_VGA_THIS s.vga_mem_updated |= 0x07;
 
   if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
     // graphics mode
