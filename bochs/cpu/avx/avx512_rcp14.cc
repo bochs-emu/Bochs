@@ -8322,7 +8322,7 @@ float16 approximate_rcp14(float16 op, const float_status_t &status)
   // round to nearest even
   Bit16u roundBits = fraction32 & 0x3F;
   fraction32 = (fraction32 + 0x20)>>6;
-  fraction32 &= ~(Bit16u) (! (roundBits ^ 0x20) & 0x1);
+  fraction32 &= ~(Bit16u) (!(roundBits ^ 0x20));
   if (! fraction32) exp = 0;
 
   return packFloat16(sign, exp, fraction32);
