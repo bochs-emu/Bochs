@@ -8246,6 +8246,7 @@ float16 approximate_rsqrt14(float16 op, bool daz)
   int sign = f16_sign(op);
   Bit16u fraction = f16_fraction(op);
   Bit16s exp = f16_exp(op);
+  struct exp8_sig16 normExpSig;
 
   switch(op_class) {
     case float_zero:
@@ -8264,7 +8265,9 @@ float16 approximate_rsqrt14(float16 op, bool daz)
     case float_denormal:
       if (daz) return packFloat16(sign, 0x1F, 0);
 
-      normalizeFloat16Subnormal(fraction, &exp, &fraction);
+      normExpSig = softfloat_normSubnormalF16Sig(fraction);
+      exp = normExpSig.exp;
+      fraction = normExpSig.sig;
 
       fraction &= 0x3ff;
       // fall through
@@ -8309,6 +8312,7 @@ float32 approximate_rsqrt14(float32 op, bool daz)
   int sign = f32_sign(op);
   Bit32u fraction = f32_fraction(op);
   Bit16s exp = f32_exp(op);
+  struct exp16_sig32 normExpSig;
 
   switch(op_class) {
     case softfloat_zero:
@@ -8327,7 +8331,9 @@ float32 approximate_rsqrt14(float32 op, bool daz)
     case softfloat_denormal:
       if (daz) return packFloat32(sign, 0xFF, 0);
 
-      normalizeFloat32Subnormal(fraction, &exp, &fraction);
+      normExpSig = softfloat_normSubnormalF32Sig(fraction);
+      exp = normExpSig.exp;
+      fraction = normExpSig.sig;
 
       fraction &= 0x7fffff;
       // fall through
@@ -8366,6 +8372,7 @@ float64 approximate_rsqrt14(float64 op, bool daz)
   int sign = f64_sign(op);
   Bit64u fraction = f64_fraction(op);
   Bit16s exp = f64_exp(op);
+  struct exp16_sig64 normExpSig;
 
   switch(op_class) {
     case softfloat_zero:
@@ -8384,7 +8391,9 @@ float64 approximate_rsqrt14(float64 op, bool daz)
     case softfloat_denormal:
       if (daz) return packFloat64(sign, 0x7FF, 0);
 
-      normalizeFloat64Subnormal(fraction, &exp, &fraction);
+      normExpSig = softfloat_normSubnormalF64Sig(fraction);
+      exp = normExpSig.exp;
+      fraction = normExpSig.sig;
 
       fraction &= BX_CONST64(0xfffffffffffff);
       // fall through
