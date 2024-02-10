@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdint.h>
 
-#include "platform.h"
+#include "config.h"
 
 /*----------------------------------------------------------------------------
 | Types used to pass 16-bit, 32-bit, 64-bit, and 128-bit floating-point
@@ -77,7 +77,7 @@ typedef struct f128_t {
 | named 'signif'.
 *----------------------------------------------------------------------------*/
 
-#ifdef LITTLEENDIAN
+#ifdef BX_LITTLE_ENDIAN
 struct extFloat80M {
   uint64_t signif;
   uint16_t signExp;

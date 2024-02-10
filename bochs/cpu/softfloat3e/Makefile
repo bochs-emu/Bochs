@@ -273,7 +273,7 @@ OBJS_OTHERS = \
 OBJS_ALL = $(OBJS_PRIMITIVES) $(OBJS_SPECIALIZE) $(OBJS_OTHERS)
 
 $(OBJS_ALL): \
-  include/platform.h $(SOURCE_DIR)/include/primitiveTypes.h \
+  $(SOURCE_DIR)/include/primitiveTypes.h \
   $(SOURCE_DIR)/include/primitives.h
 $(OBJS_SPECIALIZE) $(OBJS_OTHERS): \
   $(SOURCE_DIR)/include/softfloat_types.h $(SOURCE_DIR)/include/internals.h \

@@ -36,7 +36,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef softfloat_extra_h
 #define softfloat_extra_h 1
 
-#include "platform.h"
 #include "internals.h"
 
 // ======= float16 ======= //

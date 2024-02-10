@@ -35,7 +35,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "platform.h"
 #include "internals.h"
 #include "specialize.h"
 #include "softfloat.h"
@@ -47,8 +46,7 @@ int64_t
      uint64_t sigExtra,
      uint8_t roundingMode,
      bool exact,
-     struct softfloat_status_t *status
-)
+     struct softfloat_status_t *status)
 {
     union { uint64_t ui; int64_t i; } uZ;
     int64_t z;

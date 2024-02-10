@@ -1,4 +1,3 @@
-
 /*============================================================================
 
 This C source file is part of the SoftFloat IEEE Floating-Point Arithmetic
@@ -35,7 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 =============================================================================*/
 
 #include <stdint.h>
-#include "platform.h"
 #include "primitiveTypes.h"
 
 #ifndef softfloat_shiftRightJam64Extra

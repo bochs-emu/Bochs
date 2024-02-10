@@ -36,7 +36,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "platform.h"
 #include "internals.h"
 
 float128_t softfloat_normRoundPackToF128(bool sign, int32_t exp, uint64_t sig64, uint64_t sig0, struct softfloat_status_t *status)

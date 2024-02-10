@@ -69,7 +69,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *----------------------------------------------------------------------------*/
 struct commonNaN {
     bool sign;
-#ifdef LITTLEENDIAN
+#ifdef BX_LITTLE_ENDIAN
     uint64_t v0, v64;
 #else
     uint64_t v64, v0;
@@ -275,7 +275,5 @@ struct uint128
      uint64_t uiB0,
      struct softfloat_status_t *status
 );
-
-#include "platform.h"
 
 #endif

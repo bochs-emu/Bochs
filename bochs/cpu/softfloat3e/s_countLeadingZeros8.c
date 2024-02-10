@@ -34,7 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 =============================================================================*/
 
 #include <stdint.h>
-#include "platform.h"
 #include "primitives.h"
 
 const uint_least8_t softfloat_countLeadingZeros8[256] = {

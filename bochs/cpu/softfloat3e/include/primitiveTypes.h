@@ -1,4 +1,3 @@
-
 /*============================================================================
 
 This C header file is part of the SoftFloat IEEE Floating-Point Arithmetic
@@ -39,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdint.h>
 
-#ifdef LITTLEENDIAN
+#ifdef BX_LITTLE_ENDIAN
 struct uint128 { uint64_t v0, v64; };
 struct uint64_extra { uint64_t extra, v; };
 struct uint128_extra { uint64_t extra; struct uint128 v; };
@@ -53,7 +52,7 @@ struct uint128_extra { struct uint128 v; uint64_t extra; };
 | These macros are used to isolate the differences in word order between big-
 | endian and little-endian platforms.
 *----------------------------------------------------------------------------*/
-#ifdef LITTLEENDIAN
+#ifdef BX_LITTLE_ENDIAN
 #define wordIncr 1
 #define indexWord(total, n) (n)
 #define indexWordHi(total) ((total) - 1)
