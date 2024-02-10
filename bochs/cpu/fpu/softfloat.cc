@@ -1913,7 +1913,7 @@ float64 float64_getmant(float64 a, float_status_t &status, int sign_ctrl, int in
     if (aExp == 0) {
         float_raise(status, float_flag_denormal);
         normalizeFloat64Subnormal(aSig, &aExp, &aSig);
-        aSig &= BX_CONST64(0xFFFFFFFFFFFFFFFF);
+        aSig &= BX_CONST64(0xFFFFFFFFFFFFF);
     }
 
     switch(interv) {
