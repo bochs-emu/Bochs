@@ -39,6 +39,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdint.h>
 
+#include "platform.h"
+
 /*----------------------------------------------------------------------------
 | Types used to pass 16-bit, 32-bit, 64-bit, and 128-bit floating-point
 | arguments and results to/from functions.  These types must be exactly
@@ -74,10 +76,21 @@ typedef struct f128_t {
 | structure must contain a 16-bit field named 'signExp' and a 64-bit field
 | named 'signif'.
 *----------------------------------------------------------------------------*/
+
 #ifdef LITTLEENDIAN
-struct extFloat80M { uint64_t signif; uint16_t signExp; };
+struct extFloat80M {
+  uint64_t signif;
+  uint16_t signExp;
+
+  extFloat80M(): signif(0), signExp(0) {}
+};
 #else
-struct extFloat80M { uint16_t signExp; uint64_t signif; };
+struct extFloat80M {
+  uint16_t signExp;
+  uint64_t signif;
+
+  extFloat80M(): signExp(0), signif(0) {}
+};
 #endif
 
 /*----------------------------------------------------------------------------
