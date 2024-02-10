@@ -542,11 +542,13 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
         (addr < (BX_CIRRUS_THIS pci_bar[0].addr + CIRRUS_PNPMEM_SIZE))) {
       Bit8u *ptr;
 
+      Bit32u offset = addr & BX_CIRRUS_THIS memsize_mask;
       if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
-        return 0xff;
+        if (offset >= 0x100000) {
+          return 0xff;
+        }
       }
 
-      Bit32u offset = addr & BX_CIRRUS_THIS memsize_mask;
       if ((offset >= (BX_CIRRUS_THIS s.memsize - 256)) &&
           ((BX_CIRRUS_THIS sequencer.reg[0x17] & 0x44) == 0x44)) {
         return svga_mmio_blt_read(offset & 0xff);
@@ -672,11 +674,13 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
     if ((addr >= BX_CIRRUS_THIS pci_bar[0].addr) &&
         (addr < (BX_CIRRUS_THIS pci_bar[0].addr + CIRRUS_PNPMEM_SIZE))) {
 
+      Bit32u offset = addr & BX_CIRRUS_THIS memsize_mask;
       if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
-        return;
+        if (offset >= 0x100000) {
+          return;
+        }
       }
 
-      Bit32u offset = addr & BX_CIRRUS_THIS memsize_mask;
       if ((offset >= (BX_CIRRUS_THIS s.memsize - 256)) &&
           ((BX_CIRRUS_THIS sequencer.reg[0x17] & 0x44) == 0x44)) {
         svga_mmio_blt_write(addr & 0xff, value);
