@@ -566,7 +566,16 @@ extFloat80_t extF80_mul(extFloat80_t, extFloat80_t, struct softfloat_status_t *)
 extFloat80_t extF80_div(extFloat80_t, extFloat80_t, struct softfloat_status_t *);
 extFloat80_t extF80_rem(extFloat80_t, extFloat80_t, struct softfloat_status_t *);
 extFloat80_t extF80_sqrt(extFloat80_t, struct softfloat_status_t *);
+int extF80_compare(extFloat80_t, extFloat80_t, int, softfloat_status_t *);
 softfloat_class_t extF80_class(extFloat80_t);
+
+BX_CPP_INLINE int extF80_compare(extFloat80_t a, extFloat80_t b, softfloat_status_t *status) {
+  return extF80_compare(a, b, 0, status);
+}
+
+BX_CPP_INLINE int extF80_compare_quiet(extFloat80_t a, extFloat80_t b, softfloat_status_t *status) {
+  return extF80_compare(a, b, 1, status);
+}
 
 bool extF80_isSignalingNaN(extFloat80_t);
 bool extF80_isNaN(extFloat80_t);

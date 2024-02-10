@@ -3,7 +3,7 @@
 This C source file is part of the SoftFloat IEEE Floating-Point Arithmetic
 Package, Release 3e, by John R. Hauser.
 
-Copyright 2011, 2012, 2013, 2014, 2017 The Regents of the University of
+Copyright 2011, 2012, 2013, 2014, 2015, 2016 The Regents of the University of
 California.  All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -37,85 +37,97 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include "platform.h"
 #include "internals.h"
-#include "specialize.h"
 #include "softfloat.h"
 
-float64_t f64_roundToInt(float64_t a, uint8_t scale, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
+/*----------------------------------------------------------------------------
+| Compare  between  two extended precision  floating  point  numbers. Returns
+| 'float_relation_equal'  if the operands are equal, 'float_relation_less' if
+| the    value    'a'   is   less   than   the   corresponding   value   `b',
+| 'float_relation_greater' if the value 'a' is greater than the corresponding
+| value `b', or 'float_relation_unordered' otherwise.
+*----------------------------------------------------------------------------*/
+
+int extF80_compare(extFloat80_t a, extFloat80_t b, int quiet, softfloat_status_t *status)
 {
-    int16_t exp;
-    int64_t frac;
-    bool sign;
-    uint64_t uiZ, lastBitMask, roundBitsMask;
+    uint16_t uiA64;
+    uint64_t uiA0;
+    bool signA;
+    int32_t expA;
+    uint64_t sigA;
+
+    uint16_t uiB64;
+    uint64_t uiB0;
+    bool signB;
+    int32_t expB;
+    uint64_t sigB;
+
+    struct exp32_sig64 normExpSig;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    scale &= 0xF;
+    softfloat_class_t aClass = extF80_class(a);
+    softfloat_class_t bClass = extF80_class(b);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    exp = expF64UI(a);
-    frac = fracF64UI(a);
-    sign = signF64UI(a);
-    /*------------------------------------------------------------------------
-    *------------------------------------------------------------------------*/
-    if (0x433 <= (exp + scale)) {
-        if ((exp == 0x7FF) && frac) {
-            return softfloat_propagateNaNF64UI(a, 0, status);
-        }
-        return a;
+    if (aClass == softfloat_SNaN || bClass == softfloat_SNaN)
+    {
+        /* unsupported reported as SNaN */
+        softfloat_raiseFlags(status, softfloat_flag_invalid);
+        return softfloat_relation_unordered;
+    }
+
+    if (aClass == softfloat_QNaN || bClass == softfloat_QNaN) {
+        if (! quiet) softfloat_raiseFlags(status, softfloat_flag_invalid);
+        return softfloat_relation_unordered;
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (softfloat_denormalsAreZeros(status)) {
-        if (!exp) {
-            frac = 0;
-            a = packToF64UI(sign, 0, 0);
-        }
+    if (aClass == softfloat_denormal || bClass == softfloat_denormal) {
+        softfloat_raiseFlags(status, softfloat_flag_denormal);
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if ((exp + scale) <= 0x3FE) {
-        if (!(exp | frac)) return a;
-        if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
-        uiZ = packToF64UI(sign, 0, 0);
-        switch (roundingMode) {
-         case softfloat_round_near_even:
-            if (!frac) break;
-         case softfloat_round_near_maxMag:
-            if ((exp + scale) == 0x3FE) uiZ |= packToF64UI(0, 0x3FF - scale, 0);
-            break;
-         case softfloat_round_min:
-            if (uiZ) uiZ = packToF64UI(1, 0x3FF - scale, 0);
-            break;
-         case softfloat_round_max:
-            if (!uiZ) uiZ = packToF64UI(0, 0x3FF - scale, 0);
-            break;
-#ifdef SOFTFLOAT_ROUND_ODD
-         case softfloat_round_odd:
-            uiZ |= packToF64UI(0, 0x3FF - scale, 0);
-            break;
-#endif
-        }
-        return uiZ;
+    uiA64 = a.signExp;
+    uiA0  = a.signif;
+    signA = signExtF80UI64(uiA64);
+    expA  = expExtF80UI64(uiA64);
+    sigA  = uiA0;
+
+    uiB64 = b.signExp;
+    uiB0  = b.signif;
+    signB = signExtF80UI64(uiB64);
+    expB  = expExtF80UI64(uiB64);
+    sigB  = uiB0;
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    if (aClass == softfloat_zero) {
+        if (bClass == softfloat_zero) return softfloat_relation_equal;
+        return signB ? softfloat_relation_greater : softfloat_relation_less;
+    }
+
+    if (bClass == softfloat_zero || signA != signB) {
+        return signA ? softfloat_relation_less : softfloat_relation_greater;
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    uiZ = a;
-    lastBitMask = (uint64_t) 1<<(0x433 - exp - scale);
-    roundBitsMask = lastBitMask - 1;
-    if (roundingMode == softfloat_round_near_maxMag) {
-        uiZ += lastBitMask>>1;
-    } else if (roundingMode == softfloat_round_near_even) {
-        uiZ += lastBitMask>>1;
-        if (!(uiZ & roundBitsMask)) uiZ &= ~lastBitMask;
-    } else if (roundingMode == (signF64UI(uiZ) ? softfloat_round_min : softfloat_round_max)) {
-        uiZ += roundBitsMask;
+    if (aClass == softfloat_denormal) {
+        normExpSig = softfloat_normSubnormalExtF80Sig(sigA);
+        expA += normExpSig.exp;
+        sigA = normExpSig.sig;
     }
-    uiZ &= ~roundBitsMask;
-    if (uiZ != a) {
-#ifdef SOFTFLOAT_ROUND_ODD
-        if (roundingMode == softfloat_round_odd) uiZ |= lastBitMask;
-#endif
-        if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
+    if (bClass == softfloat_denormal) {
+        normExpSig = softfloat_normSubnormalExtF80Sig(sigB);
+        expB += normExpSig.exp;
+        sigB = normExpSig.sig;
     }
-    return uiZ;
+
+    if (expA == expB && sigA == sigB)
+        return softfloat_relation_equal;
+
+    int less_than =
+        signA ? ((expB < expA) || ((expB == expA) && (sigB < sigA)))
+              : ((expA < expB) || ((expA == expB) && (sigA < sigB)));
+
+    if (less_than) return softfloat_relation_less;
+    return softfloat_relation_greater;
 }

@@ -49,12 +49,15 @@ float32_t f32_roundToInt(float32_t a, uint8_t scale, uint8_t roundingMode, bool 
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
+    scale &= 0xF;
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
     exp = expF32UI(a);
     frac = fracF32UI(a);
     sign = signF32UI(a);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (0x96 <= exp) {
+    if (0x96 <= (exp + scale)) {
         if ((exp == 0xFF) && frac) {
             return softfloat_propagateNaNF32UI(a, 0, status);
         }
@@ -70,7 +73,7 @@ float32_t f32_roundToInt(float32_t a, uint8_t scale, uint8_t roundingMode, bool 
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (exp <= 0x7E) {
+    if ((exp + scale) <= 0x7E) {
         if (!(exp | frac)) return a;
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
         uiZ = packToF32UI(sign, 0, 0);
@@ -78,17 +81,17 @@ float32_t f32_roundToInt(float32_t a, uint8_t scale, uint8_t roundingMode, bool 
          case softfloat_round_near_even:
             if (!frac) break;
          case softfloat_round_near_maxMag:
-            if (exp == 0x7E) uiZ |= packToF32UI(0, 0x7F, 0);
+            if ((exp + scale) == 0x7E) uiZ |= packToF32UI(0, 0x7F - scale, 0);
             break;
          case softfloat_round_min:
-            if (uiZ) uiZ = packToF32UI(1, 0x7F, 0);
+            if (uiZ) uiZ = packToF32UI(1, 0x7F - scale, 0);
             break;
          case softfloat_round_max:
-            if (!uiZ) uiZ = packToF32UI(0, 0x7F, 0);
+            if (!uiZ) uiZ = packToF32UI(0, 0x7F - scale, 0);
             break;
 #ifdef SOFTFLOAT_ROUND_ODD
          case softfloat_round_odd:
-            uiZ |= packToF32UI(0, 0x7F, 0);
+            uiZ |= packToF32UI(0, 0x7F - scale, 0);
             break;
 #endif
         }
@@ -97,7 +100,7 @@ float32_t f32_roundToInt(float32_t a, uint8_t scale, uint8_t roundingMode, bool 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     uiZ = a;
-    lastBitMask = (uint32_t) 1<<(0x96 - exp);
+    lastBitMask = (uint32_t) 1<<(0x96 - exp - scale);
     roundBitsMask = lastBitMask - 1;
     if (roundingMode == softfloat_round_near_maxMag) {
         uiZ += lastBitMask>>1;

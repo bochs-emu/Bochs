@@ -139,26 +139,6 @@ BX_CPP_INLINE int float16_is_signaling_nan(float16 a)
 }
 
 /*----------------------------------------------------------------------------
-| Returns 1 if the half-precision floating-point value `a' is denormal;
-| otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int float16_is_denormal(float16 a)
-{
-   return (extractFloat16Exp(a) == 0) && (extractFloat16Frac(a) != 0);
-}
-
-/*----------------------------------------------------------------------------
-| Convert float16 denormals to zero.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE float16 float16_denormal_to_zero(float16 a)
-{
-  if (float16_is_denormal(a)) a &= 0x8000;
-  return a;
-}
-
-/*----------------------------------------------------------------------------
 | Returns the result of converting the half-precision floating-point NaN
 | `a' to the canonical NaN format. If `a' is a signaling NaN, the invalid
 | exception is raised.
@@ -283,26 +263,6 @@ BX_CPP_INLINE int float32_is_nan(float32 a)
 BX_CPP_INLINE int float32_is_signaling_nan(float32 a)
 {
     return (((a>>22) & 0x1FF) == 0x1FE) && (a & 0x003FFFFF);
-}
-
-/*----------------------------------------------------------------------------
-| Returns 1 if the single-precision floating-point value `a' is denormal;
-| otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int float32_is_denormal(float32 a)
-{
-   return (extractFloat32Exp(a) == 0) && (extractFloat32Frac(a) != 0);
-}
-
-/*----------------------------------------------------------------------------
-| Convert float32 denormals to zero.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE float32 float32_denormal_to_zero(float32 a)
-{
-  if (float32_is_denormal(a)) a &= 0x80000000;
-  return a;
 }
 
 /*----------------------------------------------------------------------------
@@ -436,26 +396,6 @@ BX_CPP_INLINE int float64_is_nan(float64 a)
 BX_CPP_INLINE int float64_is_signaling_nan(float64 a)
 {
     return (((a>>51) & 0xFFF) == 0xFFE) && (a & BX_CONST64(0x0007FFFFFFFFFFFF));
-}
-
-/*----------------------------------------------------------------------------
-| Returns 1 if the double-precision floating-point value `a' is denormal;
-| otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int float64_is_denormal(float64 a)
-{
-   return (extractFloat64Exp(a) == 0) && (extractFloat64Frac(a) != 0);
-}
-
-/*----------------------------------------------------------------------------
-| Convert float64 denormals to zero.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE float64 float64_denormal_to_zero(float64 a)
-{
-  if (float64_is_denormal(a)) a &= ((Bit64u)(1) << 63);
-  return a;
 }
 
 /*----------------------------------------------------------------------------

@@ -896,7 +896,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALEPS_MASK_VpsWpsIbR(bxInstruction_c
 
   for (unsigned n=0, mask = 0x1; n < DWORD_ELEMENTS(len); n++, mask <<= 1) {
     if (opmask & mask)
-      op.vmm32u(n) = float32_round_to_int(op.vmm32u(n), scale, status);
+      op.vmm32u(n) = f32_roundToInt(op.vmm32u(n), scale, &status);
     else
       op.vmm32u(n) = 0;
   }
@@ -928,7 +928,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALESS_MASK_VssHpsWssIbR(bxInstructio
     softfloat_status_word_rc_override(status, i);
     mxcsr_to_softfloat_status_word_imm_override(status, control);
 
-    op1.xmm32u(0) = float32_round_to_int(op2, scale, status);
+    op1.xmm32u(0) = f32_roundToInt(op2, scale, &status);
 
     check_exceptionsSSE(get_exception_flags(status));
   }
@@ -957,7 +957,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALEPD_MASK_VpdWpdIbR(bxInstruction_c
 
   for (unsigned n=0, mask = 0x1; n < QWORD_ELEMENTS(len); n++, mask <<= 1) {
     if (opmask & mask)
-      op.vmm64u(n) = float64_round_to_int(op.vmm64u(n), scale, status);
+      op.vmm64u(n) = f64_roundToInt(op.vmm64u(n), scale, &status);
     else
       op.vmm64u(n) = 0;
   }
@@ -989,7 +989,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALESD_MASK_VsdHpdWsdIbR(bxInstructio
     softfloat_status_word_rc_override(status, i);
     mxcsr_to_softfloat_status_word_imm_override(status, control);
 
-    op1.xmm64u(0) = float64_round_to_int(op2, scale, status);
+    op1.xmm64u(0) = f64_roundToInt(op2, scale, &status);
 
     check_exceptionsSSE(get_exception_flags(status));
   }
@@ -1135,7 +1135,7 @@ static BX_CPP_INLINE float32 float32_reduce(float32 a, Bit8u scale, float_status
   if (a == float32_negative_inf || a == float32_positive_inf)
     return 0;
 
-  float32 tmp = float32_round_to_int(a, scale, status);
+  float32 tmp = f32_roundToInt(a, scale, &status);
   return f32_sub(a, tmp, &status);
 }
 
@@ -1144,7 +1144,7 @@ static BX_CPP_INLINE float64 float64_reduce(float64 a, Bit8u scale, float_status
   if (a == float64_negative_inf || a == float64_positive_inf)
     return 0;
 
-  float64 tmp = float64_round_to_int(a, scale, status);
+  float64 tmp = f64_roundToInt(a, scale, &status);
   return f64_sub(a, tmp, &status);
 }
 

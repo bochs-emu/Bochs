@@ -244,6 +244,7 @@ OBJS_OTHERS = \
   extF80_to_f128$(OBJ) \
   extF80_roundToInt$(OBJ) \
   extF80_class$(OBJ) \
+  extF80_compare$(OBJ) \
   extF80_add$(OBJ) \
   extF80_sub$(OBJ) \
   extF80_mul$(OBJ) \

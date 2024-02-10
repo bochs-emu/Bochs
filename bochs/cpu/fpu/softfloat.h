@@ -220,47 +220,18 @@ BX_CPP_INLINE int get_flush_underflow_to_zero(const float_status_t &status)
 }
 
 /*----------------------------------------------------------------------------
-| Software IEC/IEEE half-precision operations.
-*----------------------------------------------------------------------------*/
-
-float16 float16_round_to_int(float16, float_status_t &status);
-float16 float16_round_to_int(float16, Bit8u scale, float_status_t &status);
-
-BX_CPP_INLINE float16 float16_round_to_int(float16 a, float_status_t &status)
-{
-  return float16_round_to_int(a, 0, status);
-}
-
-/*----------------------------------------------------------------------------
 | Software IEC/IEEE single-precision operations.
 *----------------------------------------------------------------------------*/
-float32 float32_round_to_int(float32, float_status_t &status);
-float32 float32_round_to_int(float32, Bit8u scale, float_status_t &status);
-float32 float32_frc(float32, float_status_t &status);
-
-BX_CPP_INLINE float32 float32_round_to_int(float32 a, float_status_t &status)
-{
-  return float32_round_to_int(a, 0, status);
-}
 
 int float32_is_signaling_nan(float32);
 int float32_is_nan(float32);
-int float32_is_denormal(float32);
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE double-precision operations.
 *----------------------------------------------------------------------------*/
-float64 float64_round_to_int(float64, float_status_t &status);
-float64 float64_round_to_int(float64, Bit8u scale, float_status_t &status);
-
-BX_CPP_INLINE float64 float64_round_to_int(float64 a, float_status_t &status)
-{
-  return float64_round_to_int(a, 0, status);
-}
 
 int float64_is_signaling_nan(float64);
 int float64_is_nan(float64);
-int float64_is_denormal(float64);
 
 #ifdef FLOATX80
 

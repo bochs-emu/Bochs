@@ -341,7 +341,7 @@ static BX_CPP_INLINE float16 float16_reduce(float16 a, Bit8u scale, float_status
   if (a == float16_negative_inf || a == float16_positive_inf)
     return 0;
 
-  float16 tmp = float16_round_to_int(a, scale, status);
+  float16 tmp = f16_roundToInt(a, scale, &status);
   return f16_sub(a, tmp, &status);
 }
 
@@ -419,7 +419,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALEPH_MASK_VphWphIbR(bxInstruction_c
 
   for (unsigned n=0, mask = 0x1; n < WORD_ELEMENTS(len); n++, mask <<= 1) {
     if (opmask & mask)
-      op.vmm16u(n) = float16_round_to_int(op.vmm16u(n), scale, status);
+      op.vmm16u(n) = f16_roundToInt(op.vmm16u(n), scale, &status);
     else
       op.vmm16u(n) = 0;
   }
@@ -451,7 +451,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALESH_MASK_VshHphWshIbR(bxInstructio
     softfloat_status_word_rc_override(status, i);
     mxcsr_to_softfloat_status_word_imm_override(status, control);
 
-    op1.xmm16u(0) = float16_round_to_int(op2, scale, status);
+    op1.xmm16u(0) = f16_roundToInt(op2, scale, &status);
 
     check_exceptionsSSE(get_exception_flags(status));
   }

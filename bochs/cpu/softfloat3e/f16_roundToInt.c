@@ -49,12 +49,15 @@ float16_t f16_roundToInt(float16_t a, uint8_t scale, uint8_t roundingMode, bool 
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
+    scale &= 0xF;
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
     exp = expF16UI(a);
     frac = fracF16UI(a);
     sign = signF16UI(a);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (0x19 <= exp) {
+    if (0x19 <= (exp + scale)) {
         if ((exp == 0x1F) && frac) {
             return softfloat_propagateNaNF16UI(a, 0, status);
         }
@@ -70,7 +73,7 @@ float16_t f16_roundToInt(float16_t a, uint8_t scale, uint8_t roundingMode, bool 
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (exp <= 0xE) {
+    if ((exp + scale) <= 0xE) {
         if (!(exp | frac)) return a;
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
         uiZ = packToF16UI(sign, 0, 0);
@@ -78,17 +81,17 @@ float16_t f16_roundToInt(float16_t a, uint8_t scale, uint8_t roundingMode, bool 
          case softfloat_round_near_even:
             if (!frac) break;
          case softfloat_round_near_maxMag:
-            if (exp == 0xE) uiZ |= packToF16UI(0, 0xF, 0);
+            if ((exp + scale) == 0xE) uiZ |= packToF16UI(0, 0xF - scale, 0);
             break;
          case softfloat_round_min:
-            if (uiZ) uiZ = packToF16UI(1, 0xF, 0);
+            if (uiZ) uiZ = packToF16UI(1, 0xF - scale, 0);
             break;
          case softfloat_round_max:
-            if (!uiZ) uiZ = packToF16UI(0, 0xF, 0);
+            if (!uiZ) uiZ = packToF16UI(0, 0xF - scale, 0);
             break;
 #ifdef SOFTFLOAT_ROUND_ODD
          case softfloat_round_odd:
-            uiZ |= packToF16UI(0, 0xF, 0);
+            uiZ |= packToF16UI(0, 0xF - scale, 0);
             break;
 #endif
         }
@@ -97,7 +100,7 @@ float16_t f16_roundToInt(float16_t a, uint8_t scale, uint8_t roundingMode, bool 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     uiZ = a;
-    lastBitMask = (uint16_t) 1<<(0x19 - exp);
+    lastBitMask = (uint16_t) 1<<(0x19 - exp - scale);
     roundBitsMask = lastBitMask - 1;
     if (roundingMode == softfloat_round_near_maxMag) {
         uiZ += lastBitMask>>1;
