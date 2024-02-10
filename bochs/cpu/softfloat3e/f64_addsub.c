@@ -38,6 +38,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "internals.h"
 #include "softfloat.h"
 
+float64_t f64_add(float64_t a, float64_t b, struct softfloat_status_t *status)
+{
+    bool signA;
+    bool signB;
+
+    signA = signF64UI(a);
+    signB = signF64UI(b);
+    if (signA == signB) {
+        return softfloat_addMagsF64(a, b, signA, status);
+    } else {
+        return softfloat_subMagsF64(a, b, signA, status);
+    }
+}
+
 float64_t f64_sub(float64_t a, float64_t b, struct softfloat_status_t *status)
 {
     bool signA;

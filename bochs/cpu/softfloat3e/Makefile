@@ -170,8 +170,7 @@ OBJS_OTHERS = \
   f16_compare$(OBJ) \
   f16_minmax$(OBJ) \
   f16_range$(OBJ) \
-  f16_add$(OBJ) \
-  f16_sub$(OBJ) \
+  f16_addsub$(OBJ) \
   f16_mul$(OBJ) \
   f16_mulAdd$(OBJ) \
   f16_div$(OBJ) \
@@ -197,8 +196,7 @@ OBJS_OTHERS = \
   f32_range$(OBJ) \
   f32_scalef$(OBJ) \
   f32_frc$(OBJ) \
-  f32_add$(OBJ) \
-  f32_sub$(OBJ) \
+  f32_addsub$(OBJ) \
   f32_mul$(OBJ) \
   f32_mulAdd$(OBJ) \
   f32_div$(OBJ) \
@@ -224,8 +222,7 @@ OBJS_OTHERS = \
   f64_range$(OBJ) \
   f64_scalef$(OBJ) \
   f64_frc$(OBJ) \
-  f64_add$(OBJ) \
-  f64_sub$(OBJ) \
+  f64_addsub$(OBJ) \
   f64_mul$(OBJ) \
   f64_mulAdd$(OBJ) \
   f64_div$(OBJ) \
@@ -245,8 +242,7 @@ OBJS_OTHERS = \
   extF80_roundToInt$(OBJ) \
   extF80_class$(OBJ) \
   extF80_compare$(OBJ) \
-  extF80_add$(OBJ) \
-  extF80_sub$(OBJ) \
+  extF80_addsub$(OBJ) \
   extF80_mul$(OBJ) \
   extF80_div$(OBJ) \
   extF80_rem$(OBJ) \
@@ -263,8 +259,7 @@ OBJS_OTHERS = \
   f128_to_extF80$(OBJ) \
   f128_to_f64$(OBJ) \
   f128_roundToInt$(OBJ) \
-  f128_add$(OBJ) \
-  f128_sub$(OBJ) \
+  f128_addsub$(OBJ) \
   f128_mul$(OBJ) \
   f128_mulAdd$(OBJ) \
   f128_div$(OBJ) \

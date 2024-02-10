@@ -36,28 +36,69 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include "internals.h"
+#include "specialize.h"
 #include "softfloat.h"
 
-float128_t f128_sub(float128_t a, float128_t b, struct softfloat_status_t *status)
+extFloat80_t extF80_add(extFloat80_t a, extFloat80_t b, struct softfloat_status_t *status)
 {
-    union ui128_f128 uA;
-    uint64_t uiA64, uiA0;
+    uint16_t uiA64;
+    uint64_t uiA0;
     bool signA;
-    union ui128_f128 uB;
-    uint64_t uiB64, uiB0;
+    uint16_t uiB64;
+    uint64_t uiB0;
     bool signB;
 
-    uA.f = a;
-    uiA64 = uA.ui.v64;
-    uiA0  = uA.ui.v0;
-    signA = signF128UI64(uiA64);
-    uB.f = b;
-    uiB64 = uB.ui.v64;
-    uiB0  = uB.ui.v0;
-    signB = signF128UI64(uiB64);
+    // handle unsupported extended double-precision floating encodings
+    if (extF80_isUnsupported(a) || extF80_isUnsupported(b)) {
+        softfloat_raiseFlags(status, softfloat_flag_invalid);
+        a.signExp = defaultNaNExtF80UI64;
+        a.signif = defaultNaNExtF80UI0;
+        return a;
+    }
+
+    uiA64 = a.signExp;
+    uiA0  = a.signif;
+    signA = signExtF80UI64(uiA64);
+
+    uiB64 = b.signExp;
+    uiB0  = b.signif;
+    signB = signExtF80UI64(uiB64);
+
     if (signA == signB) {
-        return softfloat_subMagsF128(uiA64, uiA0, uiB64, uiB0, signA, status);
+        return softfloat_addMagsExtF80(uiA64, uiA0, uiB64, uiB0, signA, status);
     } else {
-        return softfloat_addMagsF128(uiA64, uiA0, uiB64, uiB0, signA, status);
+        return softfloat_subMagsExtF80(uiA64, uiA0, uiB64, uiB0, signA, status);
+    }
+}
+
+extFloat80_t extF80_sub(extFloat80_t a, extFloat80_t b, struct softfloat_status_t *status)
+{
+    uint16_t uiA64;
+    uint64_t uiA0;
+    bool signA;
+    uint16_t uiB64;
+    uint64_t uiB0;
+    bool signB;
+
+    // handle unsupported extended double-precision floating encodings
+    if (extF80_isUnsupported(a) || extF80_isUnsupported(b)) {
+        softfloat_raiseFlags(status, softfloat_flag_invalid);
+        a.signExp = defaultNaNExtF80UI64;
+        a.signif = defaultNaNExtF80UI0;
+        return a;
+    }
+
+    uiA64 = a.signExp;
+    uiA0  = a.signif;
+    signA = signExtF80UI64(uiA64);
+
+    uiB64 = b.signExp;
+    uiB0  = b.signif;
+    signB = signExtF80UI64(uiB64);
+
+    if (signA == signB) {
+        return softfloat_subMagsExtF80(uiA64, uiA0, uiB64, uiB0, signA, status);
+    } else {
+        return softfloat_addMagsExtF80(uiA64, uiA0, uiB64, uiB0, signA, status);
     }
 }
