@@ -236,7 +236,7 @@ protected:
     bool  *vga_tile_updated;
     Bit8u *memory;
     Bit32u memsize;
-    Bit8u text_snapshot[128 * 1024]; // current text snapshot
+    Bit8u *text_snapshot; // current text snapshot
     Bit8u tile[X_TILESIZE * Y_TILESIZE * 4]; /**< Currently allocates the tile as large as needed. */
     Bit16u charmap_address1;
     Bit16u charmap_address2;

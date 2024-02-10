@@ -40,6 +40,10 @@ static const Bit16u charmap_offset[8] = {
   0x2000, 0x6000, 0xa000, 0xe000
 };
 
+static const Bit32u text_snap_size[4] = {
+  0x20000, 0x10000, 0x8000, 0x8000
+};
+
 static const Bit8u ccdat[16][4] = {
   { 0x00, 0x00, 0x00, 0x00 },
   { 0xff, 0x00, 0x00, 0x00 },
@@ -72,6 +76,10 @@ bx_vgacore_c::~bx_vgacore_c()
   if (s.memory != NULL) {
     delete [] s.memory;
     s.memory = NULL;
+  }
+  if (s.text_snapshot != NULL) {
+    delete [] s.text_snapshot;
+    s.text_snapshot = NULL;
   }
   if (s.vga_tile_updated != NULL) {
     delete [] s.vga_tile_updated;
@@ -149,6 +157,9 @@ void bx_vgacore_c::init_standard_vga(void)
   BX_VGA_THIS s.max_yres = 600;
 
   BX_VGA_THIS s.vga_override = 0;
+
+  if (BX_VGA_THIS s.text_snapshot == NULL)
+    BX_VGA_THIS s.text_snapshot = new Bit8u[0x20000];
 
   // initialize memory handlers, timer and CMOS
   DEV_register_memory_handlers(BX_VGA_THIS_PTR, mem_read_handler, mem_write_handler,
@@ -352,7 +363,6 @@ void bx_vgacore_c::after_restore_state(void)
                                   BX_VGA_THIS s.pel.data[i].green << BX_VGA_THIS s.dac_shift,
                                   BX_VGA_THIS s.pel.data[i].blue  << BX_VGA_THIS s.dac_shift);
   }
-  BX_VGA_THIS update_charmap();
   BX_VGA_THIS calculate_retrace_timing();
   if (!BX_VGA_THIS s.vga_override) {
     BX_VGA_THIS s.last_xres = BX_VGA_THIS s.max_xres;
@@ -2302,7 +2312,7 @@ void bx_vgacore_c::redraw_area(unsigned x0, unsigned y0, unsigned width, unsigne
   } else {
     // text mode
     memset(BX_VGA_THIS s.text_snapshot, 0,
-           sizeof(BX_VGA_THIS s.text_snapshot));
+           text_snap_size[BX_VGA_THIS s.graphics_ctrl.memory_mapping]);
   }
 }
 
