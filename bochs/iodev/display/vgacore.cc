@@ -1731,7 +1731,7 @@ void bx_vgacore_c::update(void)
                      BX_VGA_THIS s.CRTC.reg[0x0f]);
     if ((cursor_address < tm_info.start_address) ||
         (cursor_address > (tm_info.start_address + tm_info.line_offset * rows))) {
-      cursor_address = 0xffff;
+      cursor_address = 0x7fff;
     }
 #ifdef VGA_MEM_FIX
     int size = text_snap_size[BX_VGA_THIS s.graphics_ctrl.memory_mapping];
