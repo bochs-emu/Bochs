@@ -142,7 +142,7 @@ void bx_vgacore_c::init_standard_vga(void)
   BX_VGA_THIS s.sequencer.reset1 = 1;
   BX_VGA_THIS s.sequencer.reset2 = 1;
   BX_VGA_THIS s.sequencer.extended_mem = 1; // display mem greater than 64K
-  BX_VGA_THIS s.sequencer.odd_even = 1; // use sequential addressing mode
+  BX_VGA_THIS s.sequencer.odd_even_dis = 1; // use sequential addressing mode
 
 #ifndef VGA_MEM_FIX
   BX_VGA_THIS s.plane_shift = 16;
@@ -330,7 +330,7 @@ void bx_vgacore_c::vgacore_register_state(bx_list_c *parent)
   new bx_shadow_num_c(sequ, "reg1", &BX_VGA_THIS s.sequencer.reg1, BASE_HEX);
   new bx_shadow_num_c(sequ, "char_map_select", &BX_VGA_THIS s.sequencer.char_map_select);
   BXRS_PARAM_BOOL(sequ, extended_mem, BX_VGA_THIS s.sequencer.extended_mem);
-  BXRS_PARAM_BOOL(sequ, odd_even, BX_VGA_THIS s.sequencer.odd_even);
+  BXRS_PARAM_BOOL(sequ, odd_even_dis, BX_VGA_THIS s.sequencer.odd_even_dis);
   BXRS_PARAM_BOOL(sequ, chain_four, BX_VGA_THIS s.sequencer.chain_four);
   BXRS_PARAM_BOOL(list, enabled, BX_VGA_THIS s.vga_enabled);
   new bx_shadow_num_c(list, "line_offset", &BX_VGA_THIS s.line_offset);
@@ -599,7 +599,7 @@ Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
         case 4: /* sequencer: memory mode register */
           retval =
             (BX_VGA_THIS s.sequencer.extended_mem   << 1) |
-            (BX_VGA_THIS s.sequencer.odd_even       << 2) |
+            (BX_VGA_THIS s.sequencer.odd_even_dis   << 2) |
             (BX_VGA_THIS s.sequencer.chain_four     << 3);
           RETURN(retval);
           break;
@@ -946,7 +946,7 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_
           break;
         case 4: /* sequencer: memory mode register */
           BX_VGA_THIS s.sequencer.extended_mem   = (value >> 1) & 0x01;
-          BX_VGA_THIS s.sequencer.odd_even       = (value >> 2) & 0x01;
+          BX_VGA_THIS s.sequencer.odd_even_dis   = (value >> 2) & 0x01;
           BX_VGA_THIS s.sequencer.chain_four     = (value >> 3) & 0x01;
 
           break;
@@ -2443,8 +2443,8 @@ void bx_vgacore_c::debug_dump(int argc, char **argv)
 
   dbg_printf("s.sequencer.extended_mem = %u\n",
             (unsigned) BX_VGA_THIS s.sequencer.extended_mem);
-  dbg_printf("s.sequencer.odd_even = %u (inverted)\n",
-            (unsigned) BX_VGA_THIS s.sequencer.odd_even);
+  dbg_printf("s.sequencer.odd_even_dis = %u (inverted)\n",
+            (unsigned) BX_VGA_THIS s.sequencer.odd_even_dis);
   dbg_printf("s.sequencer.chain_four = %u\n",
             (unsigned) BX_VGA_THIS s.sequencer.chain_four);
 

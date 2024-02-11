@@ -228,7 +228,7 @@ protected:
       Bit8u reg1;
       Bit8u char_map_select;
       bool  extended_mem;
-      bool  odd_even;
+      bool  odd_even_dis;
       bool  chain_four;
       bool  clear_screen;
     } sequencer;
