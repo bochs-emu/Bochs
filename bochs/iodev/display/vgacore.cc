@@ -1821,14 +1821,9 @@ Bit8u bx_vgacore_c::mem_read(bx_phy_address addr)
     return BX_VGA_THIS s.memory[(offset >> 2) + ((offset % 4) << 16)];
 #endif
 #ifdef VGA_MEM_FIX
-  } else if (BX_VGA_THIS s.graphics_ctrl.odd_even) {
-    if (BX_VGA_THIS s.graphics_ctrl.chain_odd_even) {
-      Bit8u plane = (read_map_select & 2) | (offset & 1);
-      return BX_VGA_THIS s.memory[((offset & ~1) << 1) | plane];
-    } else {
-      // FIXME: Fall back to planar mode for now
-      BX_DEBUG(("mem_read(): odd/even mode with chain_odd_even = 0"));
-    }
+  } else if (!BX_VGA_THIS s.sequencer.odd_even_dis) {
+    Bit8u plane = (read_map_select & 2) | (offset & 1);
+    return BX_VGA_THIS s.memory[((offset & ~1) << 1) | plane];
 #endif
   }
 
@@ -1987,46 +1982,41 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
     }
     return;
 #ifdef VGA_MEM_FIX
-  } else if (BX_VGA_THIS s.graphics_ctrl.odd_even) {
-    if (BX_VGA_THIS s.graphics_ctrl.chain_odd_even) {
-      Bit8u plane = (BX_VGA_THIS s.graphics_ctrl.read_map_select & 2) | (offset & 1);
-      if (sequ_map_mask & (1 << plane)) {
-        BX_VGA_THIS s.memory[((offset & ~1) << 1) | plane] = value;
-        BX_VGA_THIS s.vga_mem_updated |= (1 << plane);
-        if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
-          unsigned x_tileno, y_tileno;
-          if ((BX_VGA_THIS s.CRTC.reg[0x17] & 1) == 0) { // MAP13 (CGA 320x200x4
-            unsigned xc, yc;
+  } else if (!BX_VGA_THIS s.sequencer.odd_even_dis) {
+    Bit8u plane = offset & 1;
+    if (sequ_map_mask & (1 << plane)) {
+      BX_VGA_THIS s.memory[((offset & ~1) << 1) | plane] = value;
+      BX_VGA_THIS s.vga_mem_updated |= (1 << plane);
+      if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
+        unsigned x_tileno, y_tileno;
+        if ((BX_VGA_THIS s.CRTC.reg[0x17] & 1) == 0) { // MAP13 (CGA 320x200x4
+          unsigned xc, yc;
 
-            if ((BX_VGA_THIS s.CRTC.reg[0x17] & 0x40) == 0) {
-              start_addr <<= 1;
-            }
-            offset -= start_addr;
-            if (offset >= 0x2000) {
-              yc = (((offset - 0x2000) / (320 / 4)) << 1) + 1;
-              xc = ((offset - 0x2000) % (320 / 4)) << 2;
-            } else {
-              yc = (offset / (320 / 4)) << 1;
-              xc = (offset % (320 / 4)) << 2;
-            }
-            if ((BX_VGA_THIS s.graphics_ctrl.shift_reg == 0) || BX_VGA_THIS s.x_dotclockdiv2) {
-              xc <<= 1;
-            }
-            x_tileno = xc / X_TILESIZE;
-            if (BX_VGA_THIS s.y_doublescan) {
-              y_tileno = yc / (Y_TILESIZE / 2);
-            } else {
-              y_tileno = yc / Y_TILESIZE;
-            }
-            SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
+          if ((BX_VGA_THIS s.CRTC.reg[0x17] & 0x40) == 0) {
+            start_addr <<= 1;
           }
+          offset -= start_addr;
+          if (offset >= 0x2000) {
+            yc = (((offset - 0x2000) / (320 / 4)) << 1) + 1;
+            xc = ((offset - 0x2000) % (320 / 4)) << 2;
+          } else {
+            yc = (offset / (320 / 4)) << 1;
+            xc = (offset % (320 / 4)) << 2;
+          }
+          if ((BX_VGA_THIS s.graphics_ctrl.shift_reg == 0) || BX_VGA_THIS s.x_dotclockdiv2) {
+            xc <<= 1;
+          }
+          x_tileno = xc / X_TILESIZE;
+          if (BX_VGA_THIS s.y_doublescan) {
+            y_tileno = yc / (Y_TILESIZE / 2);
+          } else {
+            y_tileno = yc / Y_TILESIZE;
+          }
+          SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
         }
       }
-      return;
-    } else {
-      // FIXME: Fall back to planar mode for now
-      BX_DEBUG(("mem_write(): odd/even mode with chain_odd_even = 0"));
     }
+    return;
 #endif
   }
 
