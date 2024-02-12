@@ -1497,7 +1497,7 @@ void bx_vgacore_c::update(void)
 
                   attribute = 6 - 2 * (x % 4);
 #ifdef VGA_MEM_FIX
-                  byte_offset = ((byte_offset & ~1) << 1) | (byte_offset & 1);
+                  byte_offset = ((byte_offset & ~1) << 2) | (byte_offset & 1);
 #endif
                   palette_reg_val = (BX_VGA_THIS s.memory[byte_offset]) >> attribute;
                   palette_reg_val &= 3;
@@ -1737,8 +1737,8 @@ void bx_vgacore_c::update(void)
     int size = text_snap_size[BX_VGA_THIS s.graphics_ctrl.memory_mapping];
     Bit8u *textmode_buffer = new Bit8u[size];
     for (int i = 0; i < size; i += 2) {
-      textmode_buffer[i] = BX_VGA_THIS s.memory[i * 2];
-      textmode_buffer[i + 1] = BX_VGA_THIS s.memory[i * 2 + 1];
+      textmode_buffer[i] = BX_VGA_THIS s.memory[i * 4];
+      textmode_buffer[i + 1] = BX_VGA_THIS s.memory[i * 4 + 1];
     }
     bx_gui->text_update_common(BX_VGA_THIS s.text_snapshot, textmode_buffer,
                                cursor_address, &tm_info);
@@ -1823,7 +1823,7 @@ Bit8u bx_vgacore_c::mem_read(bx_phy_address addr)
 #ifdef VGA_MEM_FIX
   } else if (!BX_VGA_THIS s.sequencer.odd_even_dis) {
     Bit8u plane = (read_map_select & 2) | (offset & 1);
-    return BX_VGA_THIS s.memory[((offset & ~1) << 1) | plane];
+    return BX_VGA_THIS s.memory[((offset & ~1) << 2) | plane];
 #endif
   }
 
@@ -1984,9 +1984,16 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
 #ifdef VGA_MEM_FIX
   } else if (!BX_VGA_THIS s.sequencer.odd_even_dis) {
     Bit8u plane = offset & 1;
-    if (sequ_map_mask & (1 << plane)) {
-      BX_VGA_THIS s.memory[((offset & ~1) << 1) | plane] = value;
-      BX_VGA_THIS s.vga_mem_updated |= (1 << plane);
+    Bit8u mask = sequ_map_mask & (0x05 << plane);
+    if (mask > 0) {
+      if (mask & 0x03) {
+        BX_VGA_THIS s.memory[((offset & ~1) << 2) | plane] = value;
+        BX_VGA_THIS s.vga_mem_updated |= (1 << plane);
+      }
+      if (mask & 0x0c) {
+        BX_VGA_THIS s.memory[((offset & ~1) << 2) | (plane + 2)] = value;
+        BX_VGA_THIS s.vga_mem_updated |= (4 << plane);
+      }
       if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
         unsigned x_tileno, y_tileno;
         if ((BX_VGA_THIS s.CRTC.reg[0x17] & 1) == 0) { // MAP13 (CGA 320x200x4
