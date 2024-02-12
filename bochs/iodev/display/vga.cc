@@ -1151,12 +1151,14 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 #endif
               BX_VGA_THIS s.ext_offset = (BX_VGA_THIS vbe.bank[0] << 16);
             }
+            BX_VGA_THIS s.memsize_mask = BX_VGA_THIS s.memsize - 1;
           } else if (((value & VBE_DISPI_ENABLED) == 0) && BX_VGA_THIS vbe.enabled) {
             BX_INFO(("VBE disabling"));
 #ifndef VGA_MEM_FIX
             BX_VGA_THIS s.plane_shift = 16;
 #endif
             BX_VGA_THIS s.ext_offset = 0;
+            BX_VGA_THIS s.memsize_mask = 0x3ffff;
           }
           BX_VGA_THIS vbe.enabled = ((value & VBE_DISPI_ENABLED) != 0);
           BX_VGA_THIS vbe.get_capabilities = ((value & VBE_DISPI_GETCAPS) != 0);

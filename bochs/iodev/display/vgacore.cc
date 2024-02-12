@@ -103,6 +103,7 @@ void bx_vgacore_c::init(void)
       BX_VGA_THIS s.memory = new Bit8u[BX_VGA_THIS s.memsize];
     memset(BX_VGA_THIS s.memory, 0, BX_VGA_THIS s.memsize);
   }
+  BX_VGA_THIS s.memsize_mask = 0x3ffff;
   BX_VGA_THIS init_gui();
 
   BX_VGA_THIS s.num_x_tiles = BX_VGA_THIS s.max_xres / X_TILESIZE +
@@ -356,6 +357,7 @@ void bx_vgacore_c::vgacore_register_state(bx_list_c *parent)
   new bx_shadow_num_c(list, "last_bpp", &BX_VGA_THIS s.last_bpp);
   new bx_shadow_num_c(list, "last_fw", &BX_VGA_THIS s.last_fw);
   new bx_shadow_num_c(list, "last_fh", &BX_VGA_THIS s.last_fh);
+  new bx_shadow_num_c(list, "memsize_mask", &BX_VGA_THIS s.memsize_mask);
   BXRS_PARAM_BOOL(list, vga_override, BX_VGA_THIS s.vga_override);
   new bx_shadow_data_c(list, "memory", BX_VGA_THIS s.memory, BX_VGA_THIS s.memsize);
 }
@@ -1229,9 +1231,7 @@ Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit32u raddr, Bit16u lc, b
 #endif
 {
   Bit8u attribute, bit_no, palette_reg_val, DAC_regno;
-#ifdef VGA_MEM_FIX
-  Bit32u vgamem_mask = BX_VGA_THIS s.memsize - 1;
-#else
+#ifndef VGA_MEM_FIX
   Bit32u plane_mask = ((Bit32u)1 << BX_VGA_THIS s.plane_shift) - 1;
 #endif
   Bit32u byte_offset;
@@ -1242,7 +1242,7 @@ Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit32u raddr, Bit16u lc, b
   }
   bit_no = 7 - (x % 8);
 #ifdef VGA_MEM_FIX
-  byte_offset = ((raddr + (x / 8)) << 2) & vgamem_mask;
+  byte_offset = ((raddr + (x / 8)) << 2) & BX_VGA_THIS s.memsize_mask;
   attribute =
     (((vgamem_ptr[byte_offset] >> bit_no) & 0x01) << 0) |
     (((vgamem_ptr[byte_offset + 1] >> bit_no) & 0x01) << 1) |
