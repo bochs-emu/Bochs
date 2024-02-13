@@ -1195,6 +1195,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VREDUCEPS_MASK_VpsWpsIbR(bxInstruction_c *
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
   mxcsr_to_softfloat_status_word_imm_override(status, control);
+  status.float_suppress_exception |= float_flag_denormal | float_flag_underflow | float_flag_overflow;
 
   for (unsigned n=0, mask = 0x1; n < DWORD_ELEMENTS(len); n++, mask <<= 1) {
     if (opmask & mask)
@@ -1229,6 +1230,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VREDUCESS_MASK_VssHpsWssIbR(bxInstruction_
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
     mxcsr_to_softfloat_status_word_imm_override(status, control);
+    status.float_suppress_exception |= float_flag_denormal | float_flag_underflow | float_flag_overflow;
 
     op1.xmm32u(0) = float32_reduce(op2, scale, status);
 
@@ -1256,6 +1258,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VREDUCEPD_MASK_VpdWpdIbR(bxInstruction_c *
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
   mxcsr_to_softfloat_status_word_imm_override(status, control);
+  status.float_suppress_exception |= float_flag_denormal | float_flag_underflow | float_flag_overflow;
 
   for (unsigned n=0, mask = 0x1; n < QWORD_ELEMENTS(len); n++, mask <<= 1) {
     if (opmask & mask)
@@ -1290,6 +1293,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VREDUCESD_MASK_VsdHpdWsdIbR(bxInstruction_
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
     mxcsr_to_softfloat_status_word_imm_override(status, control);
+    status.float_suppress_exception |= float_flag_denormal | float_flag_underflow | float_flag_overflow;
 
     op1.xmm64u(0) = float64_reduce(op2, scale, status);
 
