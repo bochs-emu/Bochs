@@ -1,4 +1,3 @@
-
 /*============================================================================
 
 This C header file is part of the SoftFloat IEEE Floating-Point Arithmetic
@@ -38,7 +37,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define softfloat_types_h 1
 
 #include <stdint.h>
-
 #include "config.h"
 
 /*----------------------------------------------------------------------------

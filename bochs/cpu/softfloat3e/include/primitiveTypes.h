@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define primitiveTypes_h 1
 
 #include <stdint.h>
+#include "config.h"
 
 #ifdef BX_LITTLE_ENDIAN
 struct uint128 { uint64_t v0, v64; };
