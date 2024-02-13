@@ -84,11 +84,11 @@ float128_t
     expB  = expF128UI64(uiB64);
     sigB.v64 = fracF128UI64(uiB64);
     sigB.v0  = uiB0;
-    signC = signF128UI64(uiC64) ^ ((op &= softfloat_mulAdd_subC) != 0);
+    signC = signF128UI64(uiC64) ^ ((op & softfloat_mulAdd_subC) != 0);
     expC  = expF128UI64(uiC64);
     sigC.v64 = fracF128UI64(uiC64);
     sigC.v0  = uiC0;
-    signZ = signA ^ signB ^ ((op &= softfloat_mulAdd_subProd) != 0);
+    signZ = signA ^ signB ^ ((op & softfloat_mulAdd_subProd) != 0);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if (expA == 0x7FFF) {

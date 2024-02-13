@@ -53,6 +53,7 @@ struct softfloat_status_t
     uint8_t softfloat_roundingMode;
     int softfloat_exceptionFlags;
     int softfloat_exceptionMasks;
+    int softfloat_suppressException;
 
     bool softfloat_denormals_are_zeros;
     bool softfloat_flush_underflow_to_zero;
@@ -69,9 +70,9 @@ struct softfloat_status_t
 #define denormals_are_zeros softfloat_denormals_are_zeros
 #define float_rounding_precision extF80_roundingPrecision
 #define float_exception_masks softfloat_exceptionMasks
+#define float_suppress_exception softfloat_suppressException
 
-    int float_suppress_exception;
-    int float_nan_handling_mode;    /* flag register */     // might be redundant
+    int float_nan_handling_mode;    /* flag register */     // redundant
 };
 
 typedef struct softfloat_status_t float_status_t;
@@ -154,6 +155,13 @@ BX_CPP_INLINE void softfloat_raiseFlags(struct softfloat_status_t *status, int f
 *----------------------------------------------------------------------------*/
 BX_CPP_INLINE int softfloat_isMaskedException(struct softfloat_status_t *status, int flags) {
     return status->softfloat_exceptionMasks & flags;
+}
+
+/*----------------------------------------------------------------------------
+| Suppress generation of these exceptions.
+*----------------------------------------------------------------------------*/
+BX_CPP_INLINE void softfloat_suppressException(struct softfloat_status_t *status, int flags) {
+    status->softfloat_suppressException |= flags;
 }
 
 /*----------------------------------------------------------------------------
