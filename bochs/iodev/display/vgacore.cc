@@ -77,6 +77,12 @@ bx_vgacore_c::~bx_vgacore_c()
     delete [] s.memory;
     s.memory = NULL;
   }
+#ifdef VGA_MEM_FIX
+  if (s.text_buffer != NULL) {
+    delete [] s.text_buffer;
+    s.text_buffer = NULL;
+  }
+#endif
   if (s.text_snapshot != NULL) {
     delete [] s.text_snapshot;
     s.text_snapshot = NULL;
@@ -161,6 +167,10 @@ void bx_vgacore_c::init_standard_vga(void)
 
   BX_VGA_THIS s.vga_override = 0;
 
+#ifdef VGA_MEM_FIX
+  if (BX_VGA_THIS s.text_buffer == NULL)
+    BX_VGA_THIS s.text_buffer = new Bit8u[0x20000];
+#endif
   if (BX_VGA_THIS s.text_snapshot == NULL)
     BX_VGA_THIS s.text_snapshot = new Bit8u[0x20000];
 
@@ -1053,7 +1063,6 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_
           break;
         case 6: /* Miscellaneous */
           prev_graphics_alpha = BX_VGA_THIS s.graphics_ctrl.graphics_alpha;
-//        prev_chain_odd_even = BX_VGA_THIS s.graphics_ctrl.chain_odd_even;
           prev_memory_mapping = BX_VGA_THIS s.graphics_ctrl.memory_mapping;
 
           BX_VGA_THIS s.graphics_ctrl.graphics_alpha = value & 0x01;
@@ -1734,13 +1743,7 @@ void bx_vgacore_c::update(void)
       cursor_address = 0x7fff;
     }
 #ifdef VGA_MEM_FIX
-    int size = text_snap_size[BX_VGA_THIS s.graphics_ctrl.memory_mapping];
-    Bit8u *textmode_buffer = new Bit8u[size];
-    for (int i = 0; i < size; i += 2) {
-      textmode_buffer[i] = BX_VGA_THIS s.memory[i * 4];
-      textmode_buffer[i + 1] = BX_VGA_THIS s.memory[i * 4 + 1];
-    }
-    bx_gui->text_update_common(BX_VGA_THIS s.text_snapshot, textmode_buffer,
+    bx_gui->text_update_common(BX_VGA_THIS s.text_snapshot, BX_VGA_THIS s.text_buffer,
                                cursor_address, &tm_info);
 #else
     bx_gui->text_update_common(BX_VGA_THIS s.text_snapshot, BX_VGA_THIS s.memory,
@@ -1749,7 +1752,7 @@ void bx_vgacore_c::update(void)
     if (BX_VGA_THIS s.vga_mem_updated > 0) {
       // screen updated, copy new VGA memory contents into text snapshot
 #ifdef VGA_MEM_FIX
-      memcpy(BX_VGA_THIS s.text_snapshot, textmode_buffer,
+      memcpy(BX_VGA_THIS s.text_snapshot, BX_VGA_THIS s.text_buffer,
              tm_info.line_offset * rows + tm_info.start_address);
 #else
       memcpy(BX_VGA_THIS s.text_snapshot, BX_VGA_THIS s.memory,
@@ -1757,9 +1760,6 @@ void bx_vgacore_c::update(void)
 #endif
       BX_VGA_THIS s.vga_mem_updated = 0;
     }
-#ifdef VGA_MEM_FIX
-    delete [] textmode_buffer;
-#endif
   }
 }
 
@@ -2021,6 +2021,10 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
           }
           SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
         }
+      } else {
+        // Write to text buffer in legacy format (simplifies text update)
+        Bit32u mem_mask = text_snap_size[BX_VGA_THIS s.graphics_ctrl.memory_mapping] - 1;
+        BX_VGA_THIS s.text_buffer[offset & mem_mask] = value;
       }
     }
     return;

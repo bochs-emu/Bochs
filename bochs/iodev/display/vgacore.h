@@ -243,6 +243,9 @@ protected:
     Bit8u *memory;
     Bit32u memsize;
     Bit32u memsize_mask;
+#ifdef VGA_MEM_FIX
+    Bit8u *text_buffer; // active text memory in legacy format
+#endif
     Bit8u *text_snapshot; // current text snapshot
     Bit8u tile[X_TILESIZE * Y_TILESIZE * 4]; /**< Currently allocates the tile as large as needed. */
     Bit16u charmap_address1;
