@@ -8299,7 +8299,6 @@ float16 approximate_rsqrt14(float16 op, bool daz)
   Bit16u roundBits = fraction & 0x3F;
   fraction = (fraction + 0x20)>>6;
   fraction &= ~(Bit16u) (!(roundBits ^ 0x20));
-  if (! fraction) exp = 0;
 
   return packFloat16(0, exp, fraction);
 }

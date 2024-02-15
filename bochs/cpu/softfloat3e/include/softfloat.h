@@ -193,6 +193,13 @@ BX_CPP_INLINE uint8_t softfloat_extF80_roundingPrecision(struct softfloat_status
 }
 
 /*----------------------------------------------------------------------------
+| Returns raised IEC/IEEE floating-point exception flags.
+*----------------------------------------------------------------------------*/
+BX_CPP_INLINE int softfloat_getExceptionFlags(struct softfloat_status_t *status) {
+    return status->softfloat_exceptionFlags & ~status->softfloat_suppressException;
+}
+
+/*----------------------------------------------------------------------------
 | Integer-to-floating-point conversion routines.
 *----------------------------------------------------------------------------*/
 float16_t ui16_to_f16(uint16_t, struct softfloat_status_t *);
