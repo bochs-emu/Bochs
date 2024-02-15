@@ -179,7 +179,7 @@ int bx_soundlow_waveout_win_c::set_pcm_params(bx_pcm_param_t *param)
 
 int bx_soundlow_waveout_win_c::get_packetsize()
 {
-  return (real_pcm_param.samplerate * 4 / SOUNDWIN_PACKETS_PER_SEC);
+  return (real_pcm_param.samplerate / SOUNDWIN_PACKETS_PER_SEC * 4);
 }
 
 int bx_soundlow_waveout_win_c::output(int length, Bit8u data[])

@@ -24,6 +24,10 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
+
 // Notes:
 // ======
 

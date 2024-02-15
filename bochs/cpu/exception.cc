@@ -25,6 +25,10 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
+
 #include "param_names.h"
 #include "iodev/iodev.h"
 
@@ -831,10 +835,10 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
   BX_CPU_THIS_PTR EXT = 0;
 }
 
-/* Exception classes.  These are used as indexes into the 'is_exception_OK'
+/* Exception types.  These are used as indexes into the 'is_exception_OK'
  * array below, and are stored in the 'exception' array also
  */
-enum {
+enum ExceptionType {
   BX_ET_BENIGN = 0,
   BX_ET_CONTRIBUTORY = 1,
   BX_ET_PAGE_FAULT = 2,
@@ -847,13 +851,13 @@ static const bool is_exception_OK[3][3] = {
     { 1, 0, 0 }  /* 1st exception is PAGE_FAULT */
 };
 
-enum {
-  BX_EXCEPTION_CLASS_TRAP = 0,
-  BX_EXCEPTION_CLASS_FAULT = 1,
-  BX_EXCEPTION_CLASS_ABORT = 2
+struct BxExceptionInfo {
+  unsigned exception_type;
+  unsigned exception_class;
+  bool push_error;
 };
 
-struct BxExceptionInfo exceptions_info[BX_CPU_HANDLED_EXCEPTIONS] = {
+static const struct BxExceptionInfo exceptions_info[BX_CPU_HANDLED_EXCEPTIONS] = {
   /* DE */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 0 },
   /* DB */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
   /* 02 */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 }, // NMI
@@ -885,22 +889,58 @@ struct BxExceptionInfo exceptions_info[BX_CPU_HANDLED_EXCEPTIONS] = {
   /* 27 */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
   /* 28 */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
   /* 29 */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 },
-  /* 30 */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 }, // FIXME: SVM #SF
+  /* SX */ { BX_ET_CONTRIBUTORY, BX_EXCEPTION_CLASS_FAULT, 1 }, // SVM #SX is here and pushes error code
   /* 31 */ { BX_ET_BENIGN,       BX_EXCEPTION_CLASS_FAULT, 0 }
 };
+
+int get_exception_class(unsigned vector)
+{
+  if (vector < BX_CPU_HANDLED_EXCEPTIONS)
+    return exceptions_info[vector].exception_class;
+  else
+    return BX_EXCEPTION_CLASS_FAULT;
+}
+
+int BX_CPU_C::get_exception_type(unsigned vector)
+{
+  if (vector < BX_CPU_HANDLED_EXCEPTIONS) {
+    if (vector == BX_CP_EXCEPTION)
+      if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET))
+        return BX_ET_BENIGN;
+    if (vector == BX_SX_EXCEPTION)
+      if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM))
+        return BX_ET_BENIGN;
+    return exceptions_info[vector].exception_type;
+  }
+  else
+    return BX_ET_BENIGN;
+}
+
+bool BX_CPU_C::exception_push_error(unsigned vector)
+{
+  if (vector < BX_CPU_HANDLED_EXCEPTIONS) {
+    if (vector == BX_CP_EXCEPTION)
+      if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) return false;
+    if (vector == BX_SX_EXCEPTION)
+      if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM)) return false;
+    return exceptions_info[vector].push_error;
+  }
+  else
+    return false;
+}
 
 // vector:     0..255: vector in IDT
 // error_code: if exception generates and error, push this error code
 void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 {
-  unsigned exception_type = 0;
+  unsigned exception_type = BX_ET_BENIGN;
   unsigned exception_class = BX_EXCEPTION_CLASS_FAULT;
   bool push_error = false;
 
   if (vector < BX_CPU_HANDLED_EXCEPTIONS) {
-     push_error = exceptions_info[vector].push_error;
-     exception_class = exceptions_info[vector].exception_class;
-     exception_type = exceptions_info[vector].exception_type;
+     push_error = exception_push_error(vector);
+     exception_class = get_exception_class(vector);
+     exception_type = get_exception_type(vector);
   }
   else {
      BX_PANIC(("exception(%u): bad vector", vector));
@@ -910,9 +950,17 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
    * least significant bit set correctly. This correction is applied first
    * to make the change transparent to any instrumentation.
    */
-  if (vector != BX_PF_EXCEPTION && vector != BX_DF_EXCEPTION && vector != BX_CP_EXCEPTION) {
-    // Page faults have different format
-    error_code = (error_code & 0xfffe) | (Bit16u)(BX_CPU_THIS_PTR EXT);
+  if (push_error) {
+    if (vector != BX_PF_EXCEPTION && vector != BX_DF_EXCEPTION && vector != BX_CP_EXCEPTION && vector != BX_SX_EXCEPTION) {
+      error_code = (error_code & 0xfffe) | (Bit16u)(BX_CPU_THIS_PTR EXT);
+    }
+  }
+
+  BX_DEBUG(("exception(0x%02x): error_code=%04x", vector, error_code));
+
+  if (real_mode()) {
+    push_error = false; // not INT, no error code pushed
+    error_code = 0;
   }
 
   BX_INSTR_EXCEPTION(BX_CPU_ID, vector, error_code);
@@ -920,8 +968,6 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 #if BX_DEBUGGER
   bx_dbg_exception(BX_CPU_ID, vector, error_code);
 #endif
-
-  BX_DEBUG(("exception(0x%02x): error_code=%04x", vector, error_code));
 
 #if BX_SUPPORT_VMX
   VMexit_Event(BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
@@ -942,6 +988,8 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 #endif
     }
     BX_CPU_THIS_PTR speculative_rsp = false;
+
+    if (vector != BX_DB_EXCEPTION) BX_CPU_THIS_PTR assert_RF();
 
     if (BX_CPU_THIS_PTR last_exception_type == BX_ET_DOUBLE_FAULT)
     {
@@ -969,8 +1017,6 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
       }
       longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
     }
-
-    if (vector != BX_DB_EXCEPTION) BX_CPU_THIS_PTR assert_RF();
   }
 
   if (vector == BX_DB_EXCEPTION) {
@@ -995,11 +1041,6 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
   }
 
   BX_CPU_THIS_PTR last_exception_type = exception_type;
-
-  if (real_mode()) {
-    push_error = false; // not INT, no error code pushed
-    error_code = 0;
-  }
 
   interrupt(vector, BX_HARDWARE_EXCEPTION, push_error, error_code);
 

@@ -5,7 +5,7 @@
 //  Copyright (c) 2004 Makoto Suzuki (suzu)
 //                     Volker Ruppert (vruppert)
 //                     Robin Kay (komadori)
-//  Copyright (C) 2004-2021  The Bochs Project
+//  Copyright (C) 2004-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -194,6 +194,7 @@ private:
   bool svga_needs_update_tile;
   bool svga_needs_update_dispentire;
   bool svga_needs_update_mode;
+  bool svga_double_width;
 
   unsigned svga_xres;
   unsigned svga_yres;

@@ -98,20 +98,20 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float32 b32, int bIsNaN, float_s
     }
 }
 
-int FPU_handle_NaN(floatx80 a, float32 b, floatx80 &r, float_status_t &status)
+bool FPU_handle_NaN(floatx80 a, float32 b, floatx80 &r, float_status_t &status)
 {
   if (floatx80_is_unsupported(a)) {
      float_raise(status, float_flag_invalid);
      r = floatx80_default_nan;
-     return 1;
+     return true;
   }
 
   int aIsNaN = floatx80_is_nan(a), bIsNaN = float32_is_nan(b);
   if (aIsNaN | bIsNaN) {
      r = FPU_handle_NaN(a, aIsNaN, b, bIsNaN, status);
-     return 1;
+     return true;
   }
-  return 0;
+  return false;
 }
 
 floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float64 b64, int bIsNaN, float_status_t &status)
@@ -147,20 +147,20 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float64 b64, int bIsNaN, float_s
     }
 }
 
-int FPU_handle_NaN(floatx80 a, float64 b, floatx80 &r, float_status_t &status)
+bool FPU_handle_NaN(floatx80 a, float64 b, floatx80 &r, float_status_t &status)
 {
   if (floatx80_is_unsupported(a)) {
      float_raise(status, float_flag_invalid);
      r = floatx80_default_nan;
-     return 1;
+     return true;
   }
 
   int aIsNaN = floatx80_is_nan(a), bIsNaN = float64_is_nan(b);
   if (aIsNaN | bIsNaN) {
      r = FPU_handle_NaN(a, aIsNaN, b, bIsNaN, status);
-     return 1;
+     return true;
   }
-  return 0;
+  return false;
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_ST0_STj(bxInstruction_c *i)

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -104,8 +104,8 @@ void sb16_init_options(void)
     "dmatimer",
     "DMA timer",
     "Microseconds per second for a DMA cycle.",
-    0, BX_MAX_BIT32U,
-    0);
+    100000, BX_MAX_BIT32U,
+    1000000);
 
   bx_list_c *deplist = new bx_list_c(NULL);
   deplist->add(midimode);
@@ -386,7 +386,7 @@ void bx_sb16_c::init(void)
   // Allocate the IO addresses, 2x0..2xf, 3x0..3x4 and 388..38b
   for (addr=BX_SB16_IO; addr<BX_SB16_IO+BX_SB16_IOLEN; addr++) {
     DEV_register_ioread_handler(this, &read_handler, addr, "SB16", 1);
-    DEV_register_iowrite_handler(this, &write_handler, addr, "SB16", 1);
+    DEV_register_iowrite_handler(this, &write_handler, addr, "SB16", (addr & 1) ? 1 : 3);
   }
   for (addr=BX_SB16_IOMPU; addr<BX_SB16_IOMPU+BX_SB16_IOMPULEN; addr++) {
     DEV_register_ioread_handler(this, &read_handler, addr, "SB16", 1);
@@ -1336,7 +1336,7 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
         }
       }
     }
-    DSP.dma.chunkcount = sampledatarate / 10; // 0.1 sec
+    DSP.dma.chunkcount = (sampledatarate / 10 + 4) & ~3; // 0.1 sec + alignment to 4 (for 16-bit stereo)
     if (DSP.dma.chunkcount > BX_SOUNDLOW_WAVEPACKETSIZE) {
       DSP.dma.chunkcount = BX_SOUNDLOW_WAVEPACKETSIZE;
     }
@@ -2750,8 +2750,16 @@ void bx_sb16_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, unsi
 
 void bx_sb16_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
+
+  if (io_len == 2) {
+    write(address, (Bit8u)value, 1);
+    write(address + 1, (value >> 8), 1);
+  }
 #else
-  UNUSED(this_ptr);
+  if (io_len == 2) {
+    write_handler(this_ptr, address, (Bit8u)value, 1);
+    write_handler(this_ptr, address + 1, (value >> 8), 1);
+  }
 #endif  // !BX_USE_SB16_SMF
 
   bx_pc_system.isa_bus_delay();

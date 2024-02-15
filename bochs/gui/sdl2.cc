@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2014-2023  The Bochs Project
+//  Copyright (C) 2014-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -50,7 +50,7 @@ public:
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
   virtual void draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                          Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                         bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs);
+                         bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs, bool font2);
   virtual void set_display_mode(disp_mode_t newmode);
   virtual void statusbar_setitem_specific(int element, bool active, bool w);
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
@@ -90,6 +90,7 @@ SDL_DisplayMode sdl_maxres;
 bool sdl_init_done;
 bool sdl_fullscreen_toggle;
 bool sdl_grab = 0;
+int saved_x = 0, saved_y = 0;
 unsigned res_x, res_y;
 unsigned half_res_x, half_res_y;
 int headerbar_height;
@@ -327,6 +328,7 @@ static Bit32u sdl_sym_to_bx_key(SDL_Keycode sym)
 void switch_to_windowed(void)
 {
   SDL_SetWindowFullscreen(window, 0);
+  SDL_SetWindowPosition(window, saved_x, saved_y);
   SDL_SetWindowSize(window, res_x, res_y + headerbar_height + statusbar_height);
   sdl_screen = SDL_GetWindowSurface(window);
   sdl_fullscreen = NULL;
@@ -342,6 +344,7 @@ void switch_to_fullscreen(void)
   if (!sdl_grab) {
     bx_gui->toggle_mouse_enable();
   }
+  SDL_GetWindowPosition(window, &saved_x, &saved_y);
   SDL_SetWindowSize(window, res_x, res_y);
   SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
   sdl_fullscreen = SDL_GetWindowSurface(window);
@@ -422,10 +425,12 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   headerbar_height = headerbar_y;
 
-  for(i=0;i<256;i++)
-    for(j=0;j<16;j++)
-      vga_charmap[i*32+j] = sdl_font8x16[i][j];
-
+  for(i=0;i<256;i++) {
+    for(j=0;j<16;j++) {
+      vga_charmap[0][i*32+j] = sdl_font8x16[i][j];
+      vga_charmap[1][i*32+j] = sdl_font8x16[i][j];
+    }
+  }
   for(i=0;i<256;i++)
     for(j=0;j<8;j++)
       menufont[i][j] = sdl_font8x8[i][j];
@@ -522,7 +527,7 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
 void bx_sdl2_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                               Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                              bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs)
+                              bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs, bool font2)
 {
   Uint32 *buf, pitch, fgcolor, bgcolor;
   Bit16u font_row, mask;
@@ -539,7 +544,11 @@ void bx_sdl2_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc
   fgcolor = sdl_palette[fc];
   bgcolor = sdl_palette[bc];
   dwidth = (guest_fwidth > 9);
-  font_ptr = &vga_charmap[(ch << 5) + fy];
+  if (font2) {
+    font_ptr = &vga_charmap[1][(ch << 5) + fy];
+  } else {
+    font_ptr = &vga_charmap[0][(ch << 5) + fy];
+  }
   do {
     font_row = *font_ptr++;
     if (gfxcharw9) {
@@ -828,7 +837,8 @@ void bx_sdl2_gui_c::handle_events(void)
         }
 
         // Window/Fullscreen toggle-check
-        if (sdl_event.key.keysym.sym == SDLK_SCROLLLOCK) {
+        if ((sdl_event.key.keysym.sym == SDLK_RETURN) &&
+            (bx_gui->get_modifier_keys() == BX_MOD_KEY_ALT)) {
           sdl_fullscreen_toggle = !sdl_fullscreen_toggle;
           if (sdl_fullscreen_toggle == 0) {
             switch_to_windowed();
@@ -911,6 +921,9 @@ void bx_sdl2_gui_c::handle_events(void)
         break;
 
       case SDL_QUIT:
+#ifndef WIN32
+        SIM->set_notify_callback(old_callback, old_callback_arg);
+#endif
         BX_FATAL(("User requested shutdown."));
         break;
     }

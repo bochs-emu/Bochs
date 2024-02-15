@@ -257,8 +257,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADOX_GdEdR(bxInstruction_c *i)
 
   BX_WRITE_32BIT_REGZ(i->dst(), sum_32);
 
-  Bit32u overflow = GET_ADD_OVERFLOW(op1_32, op2_32, sum_32, 0x80000000);
-  set_OF(!!overflow);
+  Bit32u carry_out = ADD_COUT_VEC(op1_32, op2_32, sum_32);
+  set_OF(carry_out >> 31);
 
   BX_NEXT_INSTR(i);
 }

@@ -266,8 +266,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADOX_GqEqR(bxInstruction_c *i)
 
   BX_WRITE_64BIT_REG(i->dst(), sum_64);
 
-  Bit64u overflow = GET_ADD_OVERFLOW(op1_64, op2_64, sum_64, BX_CONST64(0x8000000000000000));
-  set_OF(!!overflow);
+  Bit64u carry_out = ADD_COUT_VEC(op1_64, op2_64, sum_64);
+  set_OF(carry_out >> 63);
 
   BX_NEXT_INSTR(i);
 }

@@ -22,7 +22,12 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "cpuid.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
 {

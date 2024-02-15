@@ -75,19 +75,18 @@ memory.o: memory.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../cpu/fpu/softfloat.h ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h \
  ../cpu/fpu/control_w.h ../cpu/crregs.h ../cpu/descriptor.h \
  ../cpu/decoder/instr.h ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/icache.h \
- ../cpu/xmm.h ../cpu/vmx.h ../cpu/svm.h ../cpu/cpuid.h \
- ../cpu/access.h ../iodev/iodev.h ../plugin.h ../extplugin.h \
- ../param_names.h ../pc_system.h ../memory/memory-bochs.h \
+ ../cpu/xmm.h ../cpu/vmx.h ../cpu/access.h ../iodev/iodev.h ../plugin.h \
+ ../extplugin.h ../param_names.h ../pc_system.h ../memory/memory-bochs.h \
  ../gui/siminterface.h ../gui/paramtree.h ../gui/gui.h
 memory_stub.o: memory_stub.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../pc_system.h ../param_names.h ../cpu/cpu.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../cpu/decoder/decoder.h \
- ../cpu/decoder/features.h ../instrument/stubs/instrument.h ../cpu/i387.h \
- ../cpu/fpu/softfloat.h ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h \
- ../cpu/fpu/control_w.h ../cpu/crregs.h ../cpu/descriptor.h \
- ../cpu/decoder/instr.h ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/icache.h \
- ../cpu/xmm.h ../cpu/vmx.h ../cpu/svm.h ../cpu/cpuid.h \
- ../cpu/access.h ../memory/memory-bochs.h
+ ../cpu/decoder/features.h ../cpu/decoder/decoder.h \
+ ../instrument/stubs/instrument.h ../cpu/i387.h ../cpu/fpu/softfloat.h \
+ ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
+ ../cpu/crregs.h ../cpu/descriptor.h ../cpu/decoder/instr.h \
+ ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/icache.h ../cpu/xmm.h \
+ ../cpu/vmx.h ../cpu/access.h ../memory/memory-bochs.h
 misc_mem.o: misc_mem.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../param_names.h ../cpu/cpu.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../cpu/decoder/decoder.h \
@@ -95,8 +94,7 @@ misc_mem.o: misc_mem.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../instrument/stubs/instrument.h ../cpu/i387.h ../cpu/fpu/softfloat.h \
  ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
  ../cpu/crregs.h ../cpu/descriptor.h ../cpu/decoder/instr.h \
- ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/icache.h \
- ../cpu/xmm.h ../cpu/vmx.h ../cpu/svm.h ../cpu/cpuid.h ../cpu/access.h \
- ../iodev/iodev.h ../plugin.h ../extplugin.h ../pc_system.h \
- ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
- ../gui/gui.h
+ ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/icache.h ../cpu/xmm.h \
+ ../cpu/vmx.h ../cpu/access.h ../iodev/iodev.h ../plugin.h ../extplugin.h \
+ ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
+ ../gui/paramtree.h ../gui/gui.h

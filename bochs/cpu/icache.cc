@@ -181,8 +181,6 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
     }
   }
 
-//BX_INFO(("commit trace %08x len=%d mask %08x", (Bit32u) entry->pAddr, entry->tlen, pageWriteStampTable.getFineGranularityMapping(entry->pAddr)));
-
   entry->traceMask |= traceMask;
 
   pageWriteStampTable.markICacheMask(pAddr, entry->traceMask);
@@ -208,11 +206,11 @@ bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_ad
 
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
     if (max_length + entry->tlen > BX_MAX_TRACE_LENGTH)
-        return 0;
+        return false;
 #else
     if (max_length + entry->tlen > BX_MAX_TRACE_LENGTH)
         max_length = BX_MAX_TRACE_LENGTH - entry->tlen;
-    if(max_length == 0) return 0;
+    if(max_length == 0) return false;
 #endif
 
     memcpy(i, e->i, sizeof(bxInstruction_c)*max_length);
@@ -221,10 +219,10 @@ bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_ad
 
     entry->traceMask |= e->traceMask;
 
-    return 1;
+    return true;
   }
 
-  return 0;
+  return false;
 }
 
 void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *i)

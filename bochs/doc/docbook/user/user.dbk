@@ -3894,7 +3894,10 @@ as VGA BIOS) and 'voodoo' for Voodoo Graphics support (needs
 </para>
 <para>
 The VGA update frequency specifies the number of display updates per second.
-This parameter can be changed at runtime. The default value is 5.
+The VGA update timer by default uses the realtime engine with a value of 10
+(valid: 1 to 75). This parameter can be changed at runtime.
+The special value 0 enables support for using the frame rate of the emulated
+graphics device.
 </para>
 <para>
 The 'realtime' option specifies the operation mode of the VGA update timer.
@@ -3934,7 +3937,7 @@ update timing for all models is controlled by the related
 <para>
 Examples:
 <screen>
-  keyboard: type=mf, serial_delay=200, paste_delay=100000
+  keyboard: type=mf, serial_delay=150, paste_delay=100000
   keyboard: keymap=gui/keymaps/x11-pc-de.map
   keyboard: user_shortcut=ctrl-alt-del
 </screen>
@@ -4653,7 +4656,7 @@ GUI methods (currently only used by the Carbon GUI).
 Example:
 <screen>
   sb16: midimode=2, midifile=output.mid, wavemode=3, wavefile=output.wav
-        loglevel=2, log=sb16.log, dmatimer=600000
+        loglevel=2, log=sb16.log, dmatimer=900000
 </screen>
 <note><para>
 The example is wrapped onto several lines for formatting reasons, but it
@@ -4723,10 +4726,10 @@ are in the usual "property=value" format.
    <listitem><para>
    <option>dmatimer</option>:
    Microseconds per second for a DMA cycle. Make it smaller to fix
-   non-continuous sound. 750000 is usually a good value. This needs a reasonably
+   non-continuous sound. 1000000 is usually a good value. This needs a reasonably
    correct setting for the <command>ips</command> parameter of the
-   <link linkend="bochsopt-cpu-ips">cpu option</link>. It is possible to adjust the
-   dmatimer value at runtime.
+   <link linkend="bochsopt-cpu-ips">cpu option</link> und also denpends on the
+   clock sync setting. It is possible to adjust the dmatimer value at runtime.
    </para></listitem>
  </itemizedlist>
 </para>
@@ -4810,7 +4813,8 @@ to slirp, but with only a few settings.
 
 BOOTROM: The bootrom value is optional, and is the name of the ROM image
 to load. Note that this feature is only implemented for the PCI version of
-the NE2000.
+the NE2000. For the ISA version using one of the optromimage options
+(see <xref linkend="bochsopt-optrom">) must be used instead of this one.
 </screen>
 </para>
 
@@ -7221,6 +7225,7 @@ From here, you may use the following commands:
   mmx                          List of all MMX registers and their contents
   sse|xmm                      List of all SSE registers and their contents
   ymm|zmm                      List of all AVX registers and their contents
+  amx|tile n                   Show AMX state and TILE register contents
   sreg                         Show segment registers and their contents
   dreg                         Show debug registers and their contents
   creg                         Show control registers and their contents

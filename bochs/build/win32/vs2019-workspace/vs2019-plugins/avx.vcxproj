@@ -215,6 +215,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\cpu\avx\amx.cc" />
     <ClCompile Include="..\cpu\avx\avx.cc" />
     <ClCompile Include="..\cpu\avx\avx2.cc" />
     <ClCompile Include="..\cpu\avx\avx512.cc" />

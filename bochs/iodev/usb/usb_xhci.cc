@@ -725,24 +725,43 @@ void bx_usb_xhci_c::reset_port(int p)
   BX_XHCI_THIS hub.usb_port[p].psceg = 0;
 }
 
+// reset_type = HOT_RESET = bit 4 was used to reset the port
+// reset_type = WARM_RESET = bit 31 was used to reset the port
+//  (a WARM_RESET can only be done from a USB3 port)
 void bx_usb_xhci_c::reset_port_usb3(int port, int reset_type)
 {
   BX_INFO(("Reset port #%d, type=%d", port + 1, reset_type));
   BX_XHCI_THIS hub.usb_port[port].portsc.pr = 0;
   BX_XHCI_THIS hub.usb_port[port].has_been_reset = 1;
   if (BX_XHCI_THIS hub.usb_port[port].portsc.ccs) {
-    BX_XHCI_THIS hub.usb_port[port].portsc.prc = 1;
     BX_XHCI_THIS hub.usb_port[port].portsc.pls = PLS_U0;
     BX_XHCI_THIS hub.usb_port[port].portsc.ped = 1;
     if (BX_XHCI_THIS hub.usb_port[port].device != NULL) {
       BX_XHCI_THIS hub.usb_port[port].device->usb_send_msg(USB_MSG_RESET);
-      if (BX_XHCI_THIS hub.usb_port[port].is_usb3 && (reset_type == WARM_RESET))
-        BX_XHCI_THIS hub.usb_port[port].portsc.wrc = 1;
     }
   } else {
     BX_XHCI_THIS hub.usb_port[port].portsc.pls = PLS_RXDETECT;
     BX_XHCI_THIS hub.usb_port[port].portsc.ped = 0;
     BX_XHCI_THIS hub.usb_port[port].portsc.speed = 0;
+  }
+
+  // The following tests were done on real hardware (NEC/Renesas):
+  // USB2 (always is HOT_RESET)
+  //   bit 21 = 1 if CCS = 1, bit 19 always 0
+  //   bit 21 = 0 if CCS = 0, bit 19 always 0
+  // USB3 (if HOT_RESET) (same as USB2 port)
+  //   bit 21 = 1 if CCS = 1, bit 19 always 0
+  //   bit 21 = 0 if CCS = 0, bit 19 always 0
+  // USB3 (if WARM_RESET)
+  //   bit 21 = 1 if CCS = 1, bit 19 always 1
+  //   bit 21 = 1 if CCS = 0, bit 19 always 1
+  if (reset_type == HOT_RESET) {
+    BX_XHCI_THIS hub.usb_port[port].portsc.prc = 
+      BX_XHCI_THIS hub.usb_port[port].portsc.ccs;
+    BX_XHCI_THIS hub.usb_port[port].portsc.wrc = 0;
+  } else {
+    BX_XHCI_THIS hub.usb_port[port].portsc.prc = 1;
+    BX_XHCI_THIS hub.usb_port[port].portsc.wrc = 1;
   }
 }
 
@@ -1173,10 +1192,9 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
         break;
 #endif
     }
-  } else
-
+  }
   // Operational Registers
-  if ((offset >= OPS_REGS_OFFSET) && (offset < (OPS_REGS_OFFSET + 0x40))) {
+  else if ((offset >= OPS_REGS_OFFSET) && (offset < (OPS_REGS_OFFSET + 0x40))) {
     switch (offset - OPS_REGS_OFFSET) {
       case 0x00: // Command
 #if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))
@@ -1274,11 +1292,10 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
               | (BX_XHCI_THIS hub.op_regs.HcConfig.MaxSlotsEn    <<  0);
         break;
     }
-  } else
-
+  }
   // Register Port Sets
-  if ((offset >= PORT_SET_OFFSET) && (offset < (PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16)))) {
-    unsigned port = (((offset - PORT_SET_OFFSET) >> 4) & 0x3F); // calculate port number
+  else if ((offset >= XHCI_PORT_SET_OFFSET) && (offset < (XHCI_PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16)))) {
+    unsigned port = (((offset - XHCI_PORT_SET_OFFSET) >> 4) & 0x3F); // calculate port number
     if (BX_XHCI_THIS hub.usb_port[port].portsc.pp) {
       // the speed field is only valid for USB3 before a port reset.  If a reset has not
       //  taken place after the port is powered, the USB2 ports don't show a valid speed field.
@@ -1344,11 +1361,13 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
 #endif
           break;
       }
-    } else val = 0;
-  } else
-
+    }
+    else {
+      val = 0;
+    }
+  }
   // Extended Capabilities
-  if ((offset >= EXT_CAPS_OFFSET) && (offset < (EXT_CAPS_OFFSET + EXT_CAPS_SIZE))) {
+  else if ((offset >= EXT_CAPS_OFFSET) && (offset < (EXT_CAPS_OFFSET + EXT_CAPS_SIZE))) {
     unsigned caps_offset = (offset - EXT_CAPS_OFFSET);
     switch (len) {
       case 1:
@@ -1370,10 +1389,9 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
                (BX_XHCI_THIS hub.extended_caps[caps_offset + 3] << 24));
         break;
     }
-  } else
-
+  }
   // Host Controller Runtime Registers
-  if ((offset >= RUNTIME_OFFSET) && (offset < (RUNTIME_OFFSET + 32 + (INTERRUPTERS * 32)))) {
+  else if ((offset >= RUNTIME_OFFSET) && (offset < (RUNTIME_OFFSET + 32 + (INTERRUPTERS * 32)))) {
     if (offset == RUNTIME_OFFSET) {
       val =   (BX_XHCI_THIS hub.runtime_regs.mfindex.RsvdP << 14)
             | (BX_XHCI_THIS hub.runtime_regs.mfindex.index <<  0);
@@ -1436,10 +1454,9 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
           break;
       }
     }
-  } else
-
+  }
   // Doorbell Registers (return zero when read)
-  if ((offset >= DOORBELL_OFFSET) && (offset < (DOORBELL_OFFSET + 4 + (INTERRUPTERS * 4)))) {
+  else if ((offset >= DOORBELL_OFFSET) && (offset < (DOORBELL_OFFSET + 4 + (INTERRUPTERS * 4)))) {
     val = 0;
   } else {
 #if BX_PHY_ADDRESS_LONG
@@ -1459,11 +1476,14 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
       val &= 0xFFFF;
       *((Bit16u *) data) = (Bit16u) val;
       break;
-    case 8:
-      *((Bit32u *) ((Bit8u *) data + 4)) = val_hi;
     case 4:
-      *((Bit32u *) data) = val;
+      *((Bit32u *) data) = (Bit32u) val;
       break;
+    case 8:
+      *((Bit64u *) data) = GET64_FROM_HI32_LO32(val_hi, val);
+      break;
+    default:
+     BX_ERROR(("bx_usb_ehci_c::read_handler unsupported length %d", len));
   }
 
   // don't populate the log file if reading from interrupter's IMAN and only INT_ENABLE is set.
@@ -1484,7 +1504,7 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
 bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   Bit32u value = *((Bit32u *) data);
-  Bit32u value_hi = *((Bit32u *) ((Bit8u *) data + 4));
+  Bit32u value_hi = *((Bit32u *) ((Bit8u *) data + 4));     // Q: should value and value_hi to be swapped on BIG_ENDIAN platform ?
   const Bit32u offset = (Bit32u) (addr - BX_XHCI_THIS pci_bar[0].addr);
   Bit32u temp;
   int i;
@@ -1501,11 +1521,11 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
   }
 
 #if BX_PHY_ADDRESS_LONG
-    BX_DEBUG(("register write to  offset 0x%04X:  0x%08X%08X (len=%d)", offset, value_hi, value, len));
+  BX_DEBUG(("register write to  offset 0x%04X:  0x%08X%08X (len=%d)", offset, value_hi, value, len));
 #else
-    BX_DEBUG(("register write to  offset 0x%04X:  0x%08X (len=%d)", offset, value, len));
-    if (len > 4)
-      BX_DEBUG(("Ben: In 32-bit mode, len > 4! (len=%d)", len));
+  BX_DEBUG(("register write to  offset 0x%04X:  0x%08X (len=%d)", offset, value, len));
+  if (len > 4)
+    BX_DEBUG(("Ben: In 32-bit mode, len > 4! (len=%d)", len));
 #endif
 
   // Even though the controller allows reads other than 32-bits & on odd boundaries,
@@ -1526,10 +1546,9 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
         BX_ERROR(("Write to Read Only Host Capability Register (0x%08X)", offset));
         break;
     }
-  } else
-
+  }
   // Operational Registers
-  if ((offset >= OPS_REGS_OFFSET) && (offset < (OPS_REGS_OFFSET + 0x40))) {
+  else if ((offset >= OPS_REGS_OFFSET) && (offset < (OPS_REGS_OFFSET + 0x40))) {
     switch (offset - OPS_REGS_OFFSET) {
       case 0x00: // Command
         temp = BX_XHCI_THIS hub.op_regs.HcCommand.RsvdP1;
@@ -1747,11 +1766,10 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
         BX_XHCI_THIS hub.op_regs.HcConfig.MaxSlotsEn = (value & 0xFF);
         break;
     }
-  } else
-
+  }
   // Register Port Sets
-  if ((offset >= PORT_SET_OFFSET) && (offset < (PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16)))) {
-    unsigned port = (((offset - PORT_SET_OFFSET) >> 4) & 0x3F); // calculate port number
+  else if ((offset >= XHCI_PORT_SET_OFFSET) && (offset < (XHCI_PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16)))) {
+    unsigned port = (((offset - XHCI_PORT_SET_OFFSET) >> 4) & 0x3F); // calculate port number
     switch (offset & 0x0000000F) {
       case 0x00:
         if (value & (1<<9)) {  // port power
@@ -1875,10 +1893,9 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
 #endif
         break;
     }
-  } else
-
+  }
   // Extended Capabilities
-  if ((offset >= EXT_CAPS_OFFSET) && (offset < (EXT_CAPS_OFFSET + EXT_CAPS_SIZE))) {
+  else if ((offset >= EXT_CAPS_OFFSET) && (offset < (EXT_CAPS_OFFSET + EXT_CAPS_SIZE))) {
     unsigned caps_offset = (offset - EXT_CAPS_OFFSET);
     Bit64u qword = (((Bit64u) value_hi << 32) | value);
     while (len) {
@@ -1895,10 +1912,9 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
       caps_offset++;
       qword >>= 8;
     }
-  } else
-
+  }
   // Host Controller Runtime Registers
-  if ((offset >= RUNTIME_OFFSET) && (offset < (RUNTIME_OFFSET + 32 + (INTERRUPTERS * 32)))) {
+  else if ((offset >= RUNTIME_OFFSET) && (offset < (RUNTIME_OFFSET + 32 + (INTERRUPTERS * 32)))) {
     if (offset == RUNTIME_OFFSET) {
       BX_ERROR(("Write to MFINDEX register"));
     } else if (offset < (RUNTIME_OFFSET + 32)) {
@@ -1981,10 +1997,9 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
           break;
       }
     }
-  } else
-
+  }
   // Doorbell Registers
-  if ((offset >= DOORBELL_OFFSET) && (offset < (DOORBELL_OFFSET + 4 + (INTERRUPTERS * 4)))) {
+  else if ((offset >= DOORBELL_OFFSET) && (offset < (DOORBELL_OFFSET + 4 + (INTERRUPTERS * 4)))) {
     if (value & (0xFF << 8))
       BX_ERROR(("RsvdZ field of Doorbell written as non zero."));
     unsigned doorbell = ((offset - DOORBELL_OFFSET) >> 2);
@@ -2053,8 +2068,9 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
 #endif
       }
     }
-  } else
+  } else {
     BX_ERROR(("register write to unknown offset 0x%08X:  0x%08X%08X (len=%d)", offset, (Bit32u) value_hi, (Bit32u) value, len));
+  }
 
   return 1;
 }
@@ -2365,7 +2381,7 @@ Bit64u bx_usb_xhci_c::process_transfer_ring(int slot, int ep, Bit64u ring_addr, 
           p->packet.pid = cur_direction;
           p->packet.devaddr = BX_XHCI_THIS hub.slots[slot].slot_context.device_address;
           p->packet.devep = (ep >> 1);
-          p->packet.speed = broadcast_speed(slot);
+          p->packet.speed = broadcast_speed(BX_XHCI_THIS hub.slots[slot].slot_context);
 #if HANDLE_TOGGLE_CONTROL
           p->packet.toggle = -1; // the xHCI handles the data toggle bit for USB2 devices
 #endif
@@ -2390,6 +2406,7 @@ Bit64u bx_usb_xhci_c::process_transfer_ring(int slot, int ep, Bit64u ring_addr, 
               } else {
                 ret = BX_XHCI_THIS broadcast_packet(&p->packet, port_num - 1);
                 len = transfer_length;
+                BX_XHCI_THIS hub.slots[slot].ep_context[ep].edtla += len;
                 BX_DEBUG(("OUT: Transferred %d bytes (ret = %d)", len, ret));
               }
               break;
@@ -2627,7 +2644,7 @@ void bx_usb_xhci_c::process_command_ring(void)
                 if (BX_XHCI_THIS hub.slots[slot].slot_context.slot_state <= SLOT_STATE_DEFAULT) {
                   int port_num = slot_context.rh_port_num - 1;  // slot:port_num is 1 based
                   new_addr = create_unique_address(slot);
-                  if (send_set_address(new_addr, port_num, slot) == 0) {
+                  if (send_set_address(new_addr, port_num, slot_context) == 0) {
                     slot_context.slot_state = SLOT_STATE_ADDRESSED;
                     slot_context.device_address = new_addr;
                     ep_context.ep_state = EP_STATE_RUNNING;
@@ -2988,7 +3005,7 @@ void bx_usb_xhci_c::init_event_ring(unsigned interrupter)
     BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[0].size;
   
   // check that the guest uses correct segment sizes
-  for (int i=0; i<(1<<MAX_SEG_TBL_SZ_EXP); i++) {
+  for (int i=0; i<BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstsz.erstabsize; i++) {
     if ((BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size < 16) ||
         (BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size > 4096)) {
       BX_ERROR(("Event Ring Segment %d has a size of %d which is invalid.", i, 
@@ -3404,9 +3421,18 @@ int bx_usb_xhci_c::validate_ep_context(const struct EP_CONTEXT *ep_context, int 
         
         // 6) all other fields are within the valid range of values.
         
-        // The Max Burst Size, and EP State values shall be cleared to 0.
-        if ((ep_context->max_burst_size != 0) || (ep_context->ep_state != 0))
+        // The Max Burst Size value shall be cleared to 0.
+        if (ep_context->max_burst_size != 0)
           ret = PARAMETER_ERROR;
+        
+        // xHCI version 1.0, section 4.6.5, pg 92, second primary dot item states: EP State value should be cleared to '0'
+        // xHCI version 1.1, section 4.6.5, pg 111, second to last 'Note' states it should be in the 
+        //   Stopped or Running State, either of these states not being equal to zero.
+#if ((VERSION_MAJOR < 1) || ((VERSION_MAJOR == 1) && (VERSION_MINOR < 1)))
+        // if version is <= 1.0, the EP State value shall be cleared to 0.
+        if (ep_context->ep_state != 0)
+          ret = PARAMETER_ERROR;
+#endif
       }
       break;
 
@@ -3472,7 +3498,7 @@ int bx_usb_xhci_c::create_unique_address(int slot)
   return (slot + 1);  // Windows may need the first one to be 2 (though it shouldn't know the difference for xHCI)
 }
 
-int bx_usb_xhci_c::send_set_address(int addr, int port_num, int slot)
+int bx_usb_xhci_c::send_set_address(int addr, int port_num, SLOT_CONTEXT& slot_context)
 {
   static Bit8u setup_address[8] = { 0, 0x05, 0, 0, 0, 0, 0, 0 };
 
@@ -3482,7 +3508,7 @@ int bx_usb_xhci_c::send_set_address(int addr, int port_num, int slot)
   USBPacket packet;
   packet.pid = USB_TOKEN_SETUP;
   packet.devep = 0;
-  packet.speed = broadcast_speed(slot);
+  packet.speed = broadcast_speed(slot_context);
 #if HANDLE_TOGGLE_CONTROL
   packet.toggle = -1; // the xHCI handles the data toggle bit for USB2 devices
 #endif
@@ -3500,11 +3526,11 @@ int bx_usb_xhci_c::send_set_address(int addr, int port_num, int slot)
   return ret;
 }
 
-int bx_usb_xhci_c::broadcast_speed(int slot)
+int bx_usb_xhci_c::broadcast_speed(SLOT_CONTEXT& slot_context)
 {
   int ret = -1;
   
-  switch (BX_XHCI_THIS hub.slots[slot].slot_context.speed) {
+  switch (slot_context.speed) {
     case 1:
       ret = USB_SPEED_FULL;
       break;
@@ -3519,7 +3545,7 @@ int bx_usb_xhci_c::broadcast_speed(int slot)
       ret = USB_SPEED_SUPER;
       break;
     default:
-      BX_ERROR(("Invalid speed (%d) specified in Speed field of the Slot Context.", BX_XHCI_THIS hub.slots[slot].slot_context.speed));
+      BX_ERROR(("Invalid speed (%d) specified in Speed field of the Slot Context.", slot_context.speed));
   }
   
   return ret;

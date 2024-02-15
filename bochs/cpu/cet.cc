@@ -275,7 +275,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRSSD(bxInstruction_c *i)
   }
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  bx_address laddr = agen_read_aligned(i->seg(), eaddr, 4);
+  bx_address laddr = agen_write_aligned(i->seg(), eaddr, 4);
   if (laddr & 0x3) {
     BX_ERROR(("%s: must be 4 bytes aligned", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -293,7 +293,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRSSQ(bxInstruction_c *i)
   }
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  bx_address laddr = agen_read_aligned(i->seg(), eaddr, 8);
+  bx_address laddr = agen_write_aligned(i->seg(), eaddr, 8);
   if (laddr & 0x7) {
     BX_ERROR(("%s: must be 8 bytes aligned", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -316,7 +316,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRUSSD(bxInstruction_c *i)
   }
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  bx_address laddr = agen_read_aligned(i->seg(), eaddr, 4);
+  bx_address laddr = agen_write_aligned(i->seg(), eaddr, 4);
   if (laddr & 0x3) {
     BX_ERROR(("%s: must be 4 bytes aligned", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -339,7 +339,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRUSSQ(bxInstruction_c *i)
   }
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  bx_address laddr = agen_read_aligned(i->seg(), eaddr, 8);
+  bx_address laddr = agen_write_aligned(i->seg(), eaddr, 8);
   if (laddr & 0x7) {
     BX_ERROR(("%s: must be 8 bytes aligned", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);

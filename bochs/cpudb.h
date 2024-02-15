@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2021 Stanislav Shwartsman
+//   Copyright (c) 2011-2023 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -53,6 +53,7 @@ bx_define_cpudb(corei7_skylake_x)
 bx_define_cpudb(corei3_cnl)
 bx_define_cpudb(corei7_icelake_u)
 bx_define_cpudb(tigerlake)
+bx_define_cpudb(sapphire_rapids)
 #endif
 #endif
 #endif

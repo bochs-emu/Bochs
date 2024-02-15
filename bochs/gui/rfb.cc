@@ -7,7 +7,7 @@
 //    Donald Becker
 //    http://www.psyon.org
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2023  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -56,7 +56,7 @@ public:
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
   virtual void draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                          Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                         bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs);
+                         bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs, bool font2);
   virtual void set_display_mode(disp_mode_t newmode);
   void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
   void statusbar_setitem_specific(int element, bool active, bool w);
@@ -228,7 +228,8 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   for (i = 0; i < 256; i++) {
     for (int j = 0; j < 16; j++) {
-      vga_charmap[i * 32 + j] = reverse_bitorder(bx_vgafont[i].data[j]);
+      vga_charmap[0][i * 32 + j] = reverse_bitorder(bx_vgafont[i].data[j]);
+      vga_charmap[1][i * 32 + j] = reverse_bitorder(bx_vgafont[i].data[j]);
     }
   }
 
@@ -356,14 +357,19 @@ void bx_rfb_gui_c::clear_screen(void)
 
 void bx_rfb_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                              Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                             bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs)
+                             bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs, bool font2)
 {
   Bit8u fgcol = rfbPalette[fc];
   Bit8u bgcol = rfbPalette[bc];
+  char *font_ptr;
 
   yc += rfbHeaderbarY;
-  DrawChar(xc, yc, fw, fh, fx, fy, (char *)&vga_charmap[ch << 5], fgcol, bgcol,
-           gfxcharw9);
+  if (font2) {
+    font_ptr = (char *)&vga_charmap[1][ch << 5];
+  } else {
+    font_ptr = (char *)&vga_charmap[0][ch << 5];
+  }
+  DrawChar(xc, yc, fw, fh, fx, fy, font_ptr, fgcol, bgcol, gfxcharw9);
   rfbAddUpdateRegion(xc, yc, fw, fh);
   if (curs && (ce >= fy) && (cs < (fh + fy))) {
     if (cs > fy) {
@@ -373,8 +379,7 @@ void bx_rfb_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
     if ((ce - cs + 1) < fh) {
       fh = ce - cs + 1;
     }
-    DrawChar(xc, yc, fw, fh, fx, cs, (char *)&vga_charmap[ch << 5], bgcol,
-             fgcol, gfxcharw9);
+    DrawChar(xc, yc, fw, fh, fx, cs, font_ptr, bgcol, fgcol, gfxcharw9);
   }
 }
 

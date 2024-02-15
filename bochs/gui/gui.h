@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -137,7 +137,7 @@ public:
   virtual void set_font(bool lg) {}
   virtual void draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                          Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                         bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs) {}
+                         bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs, bool font2) {}
   // optional gui methods (stubs or default code in gui.cc)
   virtual void statusbar_setitem_specific(int element, bool active, bool w) {}
   virtual void set_tooltip(unsigned hbar_id, const char *tip) {}
@@ -171,8 +171,7 @@ public:
   // The following function(s) are defined already, and your
   // GUI code calls them
   static void key_event(Bit32u key);
-  static void set_text_charmap(Bit8u *fbuffer);
-  static void set_text_charbyte(Bit16u address, Bit8u data);
+  static void set_text_charmap(Bit8u map, Bit8u *fbuffer);
   static Bit8u get_mouse_headerbar_id();
 
   void init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
@@ -180,7 +179,7 @@ public:
   void cleanup(void);
   void draw_char_common(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                         Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                        bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs);
+                        bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs, bool font2);
   void text_update_common(Bit8u *old_text, Bit8u *new_text,
                           Bit16u cursor_address, bx_vga_tminfo_t *tm_info);
   void graphics_tile_update_common(Bit8u *tile, unsigned x, unsigned y);
@@ -280,9 +279,9 @@ protected:
     void (*f)(void);
   } bx_headerbar_entry[BX_MAX_HEADERBAR_ENTRIES];
   // text charmap
-  Bit8u vga_charmap[0x2000];
+  Bit8u vga_charmap[2][0x2000];
   bool charmap_updated;
-  bool char_changed[256];
+  bool char_changed[2][256];
   // status bar items
   unsigned statusitem_count;
   int led_timer_index;

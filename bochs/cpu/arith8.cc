@@ -420,7 +420,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EbM(bxInstruction_c *i)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
 
   Bit32u op1_8 = read_RMW_virtual_byte(i->seg(), eaddr);
-  op1_8 = - (Bit8s)(op1_8);
+  op1_8 = -op1_8;
   write_RMW_linear_byte(op1_8);
 
   SET_FLAGS_OSZAPC_SUB_8(0, 0 - op1_8, op1_8);
@@ -431,7 +431,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EbM(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EbR(bxInstruction_c *i)
 {
   Bit32u op1_8 = BX_READ_8BIT_REGx(i->dst(), i->extend8bitL());
-  op1_8 = - (Bit8s)(op1_8);
+  op1_8 = -op1_8;
   BX_WRITE_8BIT_REGx(i->dst(), i->extend8bitL(), op1_8);
 
   SET_FLAGS_OSZAPC_SUB_8(0, 0 - op1_8, op1_8);

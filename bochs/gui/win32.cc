@@ -51,7 +51,7 @@ public:
   virtual void set_font(bool lg);
   virtual void draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                          Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                         bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs);
+                         bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs, bool font2);
   virtual void statusbar_setitem_specific(int element, bool active, bool w);
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
   virtual void set_tooltip(unsigned hbar_id, const char *tip);
@@ -131,7 +131,7 @@ static BOOL toolbarVisible, statusVisible;
 static BOOL fullscreenMode, inFullscreenToggle;
 
 // Text mode screen stuff
-static HBITMAP vgafont[256];
+static HBITMAP vgafont[2][256];
 static int xChar = 8, yChar = 16;
 
 // Headerbar stuff
@@ -588,12 +588,14 @@ void terminateEmul(int reason)
 
   for (unsigned b=0; b<bx_bitmap_entries; b++)
     if (bx_bitmaps[b].bmap) DeleteObject(bx_bitmaps[b].bmap);
-  for (unsigned c=0; c<256; c++)
-    if (vgafont[c]) DeleteObject(vgafont[c]);
+  for (unsigned c=0; c<256; c++) {
+    if (vgafont[0][c]) DeleteObject(vgafont[0][c]);
+    if (vgafont[1][c]) DeleteObject(vgafont[1][c]);
+  }
 
   switch (reason) {
     case EXIT_GUI_SHUTDOWN:
-      BX_FATAL(("Window closed, exiting!"));
+      BX_INFO(("Window closed, exiting!"));
       break;
     case EXIT_GMH_FAILURE:
       BX_FATAL(("GetModuleHandle failure!"));
@@ -714,7 +716,10 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   stretched_y = dimension_y;
   stretch_factor = 1;
 
-  for(unsigned c=0; c<256; c++) vgafont[c] = NULL;
+  for (unsigned c = 0; c < 256; c++) {
+    vgafont[0][c] = NULL;
+    vgafont[1][c] = NULL;
+  }
   create_vga_font();
 
   bitmap_info=(BITMAPINFO*)new char[sizeof(BITMAPINFOHEADER)+259*sizeof(RGBQUAD)]; // 256 + 3 entries for 16 bpp mode
@@ -820,6 +825,8 @@ void set_fullscreen_mode(BOOL enable)
     if (saveParent) {
       BX_DEBUG(("Restoring parent window"));
       SetParent(stInfo.mainWnd, saveParent);
+      SetWindowPos(stInfo.mainWnd, HWND_NOTOPMOST,
+        0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
       saveParent = NULL;
     }
     // put back the title bar, border, etc...
@@ -1727,25 +1734,27 @@ void bx_win32_gui_c::set_font(bool lg)
 {
   Bit8u data[64], i;
 
-  for (unsigned c = 0; c<256; c++) {
-    if (char_changed[c]) {
-      memset(data, 0, sizeof(data));
-      BOOL gfxchar = lg && ((c & 0xE0) == 0xC0);
-      for (i=0; i<(unsigned)yChar; i++) {
-        data[i*2] = vga_charmap[c*32+i];
-        if (gfxchar) {
-          data[i*2+1] = (data[i*2] << 7);
+  for (unsigned m = 0; m < 2; m++) {
+    for (unsigned c = 0; c < 256; c++) {
+      if (char_changed[m][c]) {
+        memset(data, 0, sizeof(data));
+        BOOL gfxchar = lg && ((c & 0xE0) == 0xC0);
+        for (i=0; i<(unsigned)yChar; i++) {
+          data[i*2] = vga_charmap[m][c*32+i];
+          if (gfxchar) {
+            data[i*2+1] = (data[i*2] << 7);
+          }
         }
+        SetBitmapBits(vgafont[m][c], 64, data);
+        char_changed[m][c] = 0;
       }
-      SetBitmapBits(vgafont[c], 64, data);
-      char_changed[c] = 0;
     }
   }
 }
 
 void bx_win32_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                                Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                               bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs)
+                               bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs, bool font2)
 {
   HDC hdc;
 
@@ -1753,7 +1762,8 @@ void bx_win32_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u y
 
   EnterCriticalSection(&stInfo.drawCS);
   hdc = GetDC(stInfo.simWnd);
-  DrawBitmap(hdc, vgafont[ch], xc, yc, fw, fh, fx, fy, fc, bc);
+  Bit8u map = (font2) ? 1 : 0;
+  DrawBitmap(hdc, vgafont[map][ch], xc, yc, fw, fh, fx, fy, fc, bc);
   if (curs && (ce >= fy) && (cs < (fh + fy))) {
     if (cs > fy) {
       yc += (cs - fy);
@@ -1762,7 +1772,7 @@ void bx_win32_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u y
     if ((ce - cs + 1) < fh) {
       fh = ce - cs + 1;
     }
-    DrawBitmap(hdc, vgafont[ch], xc, yc, fw, fh, fx, fy, bc, fc);
+    DrawBitmap(hdc, vgafont[map][ch], xc, yc, fw, fh, fx, fy, bc, fc);
   }
   ReleaseDC(stInfo.simWnd, hdc);
   LeaveCriticalSection(&stInfo.drawCS);
@@ -2039,15 +2049,16 @@ void create_vga_font(void)
   unsigned char data[64];
 
   // VGA font is 8 or 9 wide and up to 32 high
-  for (unsigned c = 0; c<256; c++) {
-    vgafont[c] = CreateBitmap(9,32,1,1,NULL);
-    if (!vgafont[c]) terminateEmul(EXIT_FONT_BITMAP_ERROR);
-    memset(data, 0, sizeof(data));
-    for (unsigned i=0; i<16; i++)
-      data[i*2] = reverse_bitorder(bx_vgafont[c].data[i]);
-    SetBitmapBits(vgafont[c], 64, data);
-  }
-}
+  for (unsigned m = 0; m < 2; m++) {
+    for (unsigned c = 0; c<256; c++) {
+      vgafont[m][c] = CreateBitmap(9,32,1,1,NULL);
+      if (!vgafont[m][c]) terminateEmul(EXIT_FONT_BITMAP_ERROR);
+      memset(data, 0, sizeof(data));
+      for (unsigned i=0; i<16; i++)
+        data[i*2] = reverse_bitorder(bx_vgafont[c].data[i]);
+      SetBitmapBits(vgafont[m][c], 64, data);
+    }
+  }}
 
 
 COLORREF GetColorRef(Bit8u pal_idx)

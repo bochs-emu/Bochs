@@ -688,7 +688,6 @@ float32 float32_getmant(float32 a, float_status_t &status, int sign_ctrl, int in
     if (aExp == 0) {
         float_raise(status, float_flag_denormal);
         normalizeFloat32Subnormal(aSig, &aExp, &aSig);
-//      aExp += 0x7E;
         aSig &= 0x7FFFFF;
     }
 
@@ -1914,8 +1913,7 @@ float64 float64_getmant(float64 a, float_status_t &status, int sign_ctrl, int in
     if (aExp == 0) {
         float_raise(status, float_flag_denormal);
         normalizeFloat64Subnormal(aSig, &aExp, &aSig);
-//      aExp += 0x3FE;
-        aSig &= BX_CONST64(0xFFFFFFFFFFFFFFFF);
+        aSig &= BX_CONST64(0xFFFFFFFFFFFFF);
     }
 
     switch(interv) {

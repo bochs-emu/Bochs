@@ -80,7 +80,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDRAND_Ew(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_RDRAND_VMEXIT)) {
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.RDRAND_VMEXIT()) {
       VMexit_Instruction(i, VMX_VMEXIT_RDRAND, BX_READ);
     }
   }
@@ -104,7 +104,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDRAND_Ed(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_RDRAND_VMEXIT)) {
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.RDRAND_VMEXIT()) {
       VMexit_Instruction(i, VMX_VMEXIT_RDRAND, BX_READ);
     }
   }
@@ -129,7 +129,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDRAND_Eq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_RDRAND_VMEXIT)) {
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.RDRAND_VMEXIT()) {
       VMexit_Instruction(i, VMX_VMEXIT_RDRAND, BX_READ);
     }
   }
@@ -154,7 +154,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDSEED_Ew(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_RDSEED_VMEXIT)) {
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.RDSEED_VMEXIT()) {
       VMexit_Instruction(i, VMX_VMEXIT_RDSEED, BX_READ);
     }
   }
@@ -178,7 +178,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDSEED_Ed(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_RDSEED_VMEXIT)) {
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.RDSEED_VMEXIT()) {
       VMexit_Instruction(i, VMX_VMEXIT_RDSEED, BX_READ);
     }
   }
@@ -203,7 +203,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDSEED_Eq(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_RDSEED_VMEXIT)) {
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.RDSEED_VMEXIT()) {
       VMexit_Instruction(i, VMX_VMEXIT_RDSEED, BX_READ);
     }
   }

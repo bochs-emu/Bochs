@@ -24,15 +24,18 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "cpuid.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMFUNC(bxInstruction_c *i)
 {
-#if BX_SUPPORT_VMX >= 2
-  if (! BX_CPU_THIS_PTR in_vmx_guest || ! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VMFUNC_ENABLE))
+#if BX_SUPPORT_VMX
+  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+
+  if (!BX_CPU_THIS_PTR in_vmx_guest || !vm->vmexec_ctrls2.VMFUNC_ENABLE())
     exception(BX_UD_EXCEPTION, 0);
 
-  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+#if BX_SUPPORT_VMX >= 2
   Bit32u function = EAX;
 
   if (function >= 64) {
@@ -55,6 +58,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMFUNC(bxInstruction_c *i)
   }
 #endif
 
+#endif
   BX_NEXT_TRACE(i);
 }
 
