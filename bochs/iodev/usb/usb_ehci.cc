@@ -2223,9 +2223,12 @@ void bx_usb_ehci_c::advance_async_state(void)
 
       /* make sure guest has acknowledged the doorbell interrupt */
       /* TO-DO: is this really needed? */
+      /* I believe this is not needed, especially if interrupts
+       *  are not used. There is no reason to stop the Async list
+       *  simply because the driver hasn't cleared this bit. (Ben) */
       if (BX_EHCI_THIS hub.op_regs.UsbSts.inti & USBSTS_IAA) {
         BX_DEBUG(("IAA status bit still set."));
-        break;
+        //break;
       }
 
       /* check that address register has been set */
