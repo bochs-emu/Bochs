@@ -361,6 +361,7 @@ void bx_vgacore_c::vgacore_register_state(bx_list_c *parent)
 #endif
   new bx_shadow_num_c(list, "dac_shift", &BX_VGA_THIS s.dac_shift);
   new bx_shadow_num_c(list, "ext_offset", &BX_VGA_THIS s.ext_offset);
+  new bx_shadow_num_c(list, "ext_start_addr", &BX_VGA_THIS s.ext_start_addr);
   BXRS_PARAM_BOOL(list, ext_y_dblsize, BX_VGA_THIS s.ext_y_dblsize);
   new bx_shadow_num_c(list, "last_xres", &BX_VGA_THIS s.last_xres);
   new bx_shadow_num_c(list, "last_yres", &BX_VGA_THIS s.last_yres);
@@ -1391,7 +1392,7 @@ void bx_vgacore_c::update(void)
     unsigned long byte_offset;
     unsigned xc, yc, xti, yti;
 
-    start_addr = BX_VGA_THIS s.CRTC.start_addr;
+    start_addr = BX_VGA_THIS s.CRTC.start_addr + BX_VGA_THIS s.ext_start_addr;
 
     determine_screen_dimensions(&iHeight, &iWidth);
     if((iWidth != BX_VGA_THIS s.last_xres) || (iHeight != BX_VGA_THIS s.last_yres) ||

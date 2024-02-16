@@ -268,6 +268,7 @@ protected:
 #endif
     Bit8u  dac_shift;
     Bit32u ext_offset;
+    Bit32u ext_start_addr;
     bool   ext_y_dblsize;
     // last active resolution and bpp
     Bit16u last_xres;
