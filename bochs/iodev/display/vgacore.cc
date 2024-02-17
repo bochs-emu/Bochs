@@ -381,6 +381,7 @@ void bx_vgacore_c::after_restore_state(void)
                                   BX_VGA_THIS s.pel.data[i].blue  << BX_VGA_THIS s.dac_shift);
   }
   BX_VGA_THIS calculate_retrace_timing();
+  BX_VGA_THIS s.text_buffer_update = true;
   if (!BX_VGA_THIS s.vga_override) {
     BX_VGA_THIS s.last_xres = BX_VGA_THIS s.max_xres;
     BX_VGA_THIS s.last_yres = BX_VGA_THIS s.max_yres;
@@ -1073,6 +1074,7 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_
             needs_update = 1;
           if (prev_graphics_alpha != BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
             needs_update = 1;
+            BX_VGA_THIS s.text_buffer_update = true;
             BX_VGA_THIS s.last_yres = 0;
           }
           break;
@@ -1744,6 +1746,14 @@ void bx_vgacore_c::update(void)
       cursor_address = 0x7fff;
     }
 #ifdef VGA_MEM_FIX
+    if (BX_VGA_THIS s.text_buffer_update) {
+      int size = text_snap_size[BX_VGA_THIS s.graphics_ctrl.memory_mapping];
+      for (int i = 0; i < size; i += 2) {
+        BX_VGA_THIS s.text_buffer[i] = BX_VGA_THIS s.memory[i * 4];
+        BX_VGA_THIS s.text_buffer[i + 1] = BX_VGA_THIS s.memory[i * 4 + 1];
+      }
+      BX_VGA_THIS s.text_buffer_update = false;
+    }
     bx_gui->text_update_common(BX_VGA_THIS s.text_snapshot, BX_VGA_THIS s.text_buffer,
                                cursor_address, &tm_info);
 #else

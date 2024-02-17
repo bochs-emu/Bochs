@@ -1154,7 +1154,9 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
             BX_VGA_THIS s.memsize_mask = BX_VGA_THIS s.memsize - 1;
           } else if (((value & VBE_DISPI_ENABLED) == 0) && BX_VGA_THIS vbe.enabled) {
             BX_INFO(("VBE disabling"));
-#ifndef VGA_MEM_FIX
+#ifdef VGA_MEM_FIX
+            BX_VGA_THIS s.text_buffer_update = true;
+#else
             BX_VGA_THIS s.plane_shift = 16;
 #endif
             BX_VGA_THIS s.ext_offset = 0;

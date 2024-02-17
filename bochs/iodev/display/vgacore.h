@@ -244,6 +244,7 @@ protected:
     Bit32u memsize;
     Bit32u memsize_mask;
 #ifdef VGA_MEM_FIX
+    bool  text_buffer_update;
     Bit8u *text_buffer; // active text memory in legacy format
 #endif
     Bit8u *text_snapshot; // current text snapshot
