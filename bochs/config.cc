@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -3686,7 +3686,7 @@ int bx_write_configuration(const char *rc, int overwrite)
   bx_write_debugger_options(fp);
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_PORT_E9_HACK_ROOT), NULL, 0);
 #if BX_SUPPORT_IODEBUG
-  fprintf(fp, "iodebug_all_rings: enabled=%d\n", SIM->get_param_bool(BXPN_IODEBUG_ALL_RINGS)->get());
+  fprintf(fp, "iodebug: all_rings=%d\n", SIM->get_param_bool(BXPN_IODEBUG_ALL_RINGS)->get());
 #endif
   fprintf(fp, "private_colormap: enabled=%d\n", SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get());
 #if BX_WITH_AMIGAOS
