@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1891,26 +1891,28 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
   }
 
   bitmap_info->bmiHeader.biBitCount = bpp;
-  if (bpp == 16) {
-    bitmap_info->bmiHeader.biCompression = BI_BITFIELDS;
-    static RGBQUAD red_mask   = {0x00, 0xF8, 0x00, 0x00};
-    static RGBQUAD green_mask = {0xE0, 0x07, 0x00, 0x00};
-    static RGBQUAD blue_mask  = {0x1F, 0x00, 0x00, 0x00};
-    bitmap_info->bmiColors[256] = bitmap_info->bmiColors[0];
-    bitmap_info->bmiColors[257] = bitmap_info->bmiColors[1];
-    bitmap_info->bmiColors[258] = bitmap_info->bmiColors[2];
-    bitmap_info->bmiColors[0] = red_mask;
-    bitmap_info->bmiColors[1] = green_mask;
-    bitmap_info->bmiColors[2] = blue_mask;
-  } else {
-    if (current_bpp == 16) {
-      bitmap_info->bmiColors[0] = bitmap_info->bmiColors[256];
-      bitmap_info->bmiColors[1] = bitmap_info->bmiColors[257];
-      bitmap_info->bmiColors[2] = bitmap_info->bmiColors[258];
-    }
-    bitmap_info->bmiHeader.biCompression = BI_RGB;
-    if (bpp == 15) {
-      bitmap_info->bmiHeader.biBitCount = 16;
+  if (bpp != current_bpp) {
+    if (bpp == 16) {
+      bitmap_info->bmiHeader.biCompression = BI_BITFIELDS;
+      static RGBQUAD red_mask   = {0x00, 0xF8, 0x00, 0x00};
+      static RGBQUAD green_mask = {0xE0, 0x07, 0x00, 0x00};
+      static RGBQUAD blue_mask  = {0x1F, 0x00, 0x00, 0x00};
+      bitmap_info->bmiColors[256] = bitmap_info->bmiColors[0];
+      bitmap_info->bmiColors[257] = bitmap_info->bmiColors[1];
+      bitmap_info->bmiColors[258] = bitmap_info->bmiColors[2];
+      bitmap_info->bmiColors[0] = red_mask;
+      bitmap_info->bmiColors[1] = green_mask;
+      bitmap_info->bmiColors[2] = blue_mask;
+    } else {
+      if (current_bpp == 16) {
+        bitmap_info->bmiColors[0] = bitmap_info->bmiColors[256];
+        bitmap_info->bmiColors[1] = bitmap_info->bmiColors[257];
+        bitmap_info->bmiColors[2] = bitmap_info->bmiColors[258];
+      }
+      bitmap_info->bmiHeader.biCompression = BI_RGB;
+      if (bpp == 15) {
+        bitmap_info->bmiHeader.biBitCount = 16;
+      }
     }
   }
   current_bpp = guest_bpp = bpp;
