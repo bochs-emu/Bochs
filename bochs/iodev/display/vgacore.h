@@ -23,7 +23,7 @@
 #ifndef BX_IODEV_VGACORE_H
 #define BX_IODEV_VGACORE_H
 
-//#define VGA_MEM_FIX
+#define VGA_MEM_FIX
 
 // Make colour
 #define MAKE_COLOUR(red, red_shiftfrom, red_shiftto, red_mask, \
