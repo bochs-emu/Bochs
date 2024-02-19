@@ -957,13 +957,13 @@ void BX_MEM_C::flash_write(Bit32u addr, Bit8u data)
           BX_MEM_THIS flash_status &= ~0xc0;
           BX_MEM_THIS flash_wsm_state = FLASH_ERASE;
           if ((BX_MEM_THIS flash_type == 1) &&
-              ((flash_addr = 0x1c000) || (flash_addr = 0x1d000))) {
+              ((flash_addr == 0x1c000) || (flash_addr == 0x1d000))) {
             for (i = 0; i < 0x1000; i++) {
               BX_MEM_THIS rom[addr + i] = 0xff;
             }
             BX_MEM_THIS flash_modified = true;
           } else if ((BX_MEM_THIS flash_type == 2) &&
-                     ((flash_addr = 0x38000) || (flash_addr = 0x3a000))) {
+                     ((flash_addr == 0x38000) || (flash_addr == 0x3a000))) {
             for (i = 0; i < 0x2000; i++) {
               BX_MEM_THIS rom[addr + i] = 0xff;
             }
