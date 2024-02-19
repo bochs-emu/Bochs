@@ -75,6 +75,7 @@ Detailed change log :
 - GUI and display libraries
   - SDL / SDL2: change fullscreen toggle to key combination ALT+ENTER.
   - SDL2: Save / restore window position when using fullscreen toggle
+  - win32: fixed internal palette handling when switching from/to 16 bpp modes
   - win32: cancel topmost window mode after leaving fullscreen mode
 
 - Memory
@@ -99,6 +100,7 @@ Detailed change log :
     - Fixed and improved PCI slot config error handling
 
   - VGA
+    - Implemented accurate memory handling for all access modes (chain4, odd/even, planar)
     - Fixes in MAP13 disabled mode (VGA mode 6): half dot clock, color support
     - Fixes for the VGA mode 0x13 (Added split screen support)
     - Fixes for non-chain4 256-color VGA mode called modeX (address wrap, horizonal scrolling)
