@@ -398,7 +398,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_DWORD_INTEGER(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-/* DE D9 */
+/* DE D9 - FCOMPP  */
+/* DA E9 - FUCOMPP */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMPP(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
@@ -419,43 +420,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMPP(bxInstruction_c *i)
       BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
-      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
-
-  int rc = floatx80_compare(BX_READ_FPU_REG(0), BX_READ_FPU_REG(1), status);
-  setcc(status_word_flags_fpu_compare(rc));
-
-  if (! FPU_exception(i, status.float_exception_flags)) {
-     BX_CPU_THIS_PTR the_i387.FPU_pop();
-     BX_CPU_THIS_PTR the_i387.FPU_pop();
-  }
-
-  BX_NEXT_INSTR(i);
-}
-
-/* DA E9 */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMPP(bxInstruction_c *i)
-{
-  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
-  BX_CPU_THIS_PTR FPU_update_last_instruction(i);
-
-  if (IS_TAG_EMPTY(0) || IS_TAG_EMPTY(1))
-  {
-      FPU_exception(i, FPU_EX_Stack_Underflow);
-      setcc(FPU_SW_C0|FPU_SW_C2|FPU_SW_C3);
-
-      if(BX_CPU_THIS_PTR the_i387.is_IA_masked())
-      {
-          BX_CPU_THIS_PTR the_i387.FPU_pop();
-          BX_CPU_THIS_PTR the_i387.FPU_pop();
-      }
-      BX_NEXT_INSTR(i);
-  }
+  bool quiet = (i->getIaOpcode() == BX_IA_FUCOMPP);
 
   float_status_t status =
       i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  int rc = floatx80_compare_quiet(BX_READ_FPU_REG(0), BX_READ_FPU_REG(1), status);
+  int rc = floatx80_compare(BX_READ_FPU_REG(0), BX_READ_FPU_REG(1), quiet, status);
   setcc(status_word_flags_fpu_compare(rc));
 
   if (! FPU_exception(i, status.float_exception_flags)) {

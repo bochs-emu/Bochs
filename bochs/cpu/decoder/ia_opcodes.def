@@ -835,7 +835,7 @@ bx_define_opcode(BX_IA_FCMOVNE_ST0_STj, "fcmovne", "fcmovne", NULL, &BX_CPU_C::F
 bx_define_opcode(BX_IA_FCMOVNBE_ST0_STj, "fcmovnbe", "fcmovnbe", NULL, &BX_CPU_C::FCMOVNBE_ST0_STj, BX_ISA_P6, OP_ST0, OP_STi, OP_NONE, OP_NONE, BX_PREPARE_FPU)
 bx_define_opcode(BX_IA_FCMOVNU_ST0_STj, "fcmovnu", "fcmovnu", NULL, &BX_CPU_C::FCMOVNU_ST0_STj, BX_ISA_P6, OP_ST0, OP_STi, OP_NONE, OP_NONE, BX_PREPARE_FPU)
 bx_define_opcode(BX_IA_FCOMPP, "fcompp", "fcompp", NULL, &BX_CPU_C::FCOMPP, BX_ISA_X87, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_FPU)
-bx_define_opcode(BX_IA_FUCOMPP, "fucompp", "fucompp", NULL, &BX_CPU_C::FUCOMPP, BX_ISA_X87, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_FPU)
+bx_define_opcode(BX_IA_FUCOMPP, "fucompp", "fucompp", NULL, &BX_CPU_C::FCOMPP, BX_ISA_X87, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_FPU)
 bx_define_opcode(BX_IA_FXCH_STi, "fxch", "fxch", NULL, &BX_CPU_C::FXCH_STi, BX_ISA_X87, OP_NONE, OP_STi, OP_NONE, OP_NONE, BX_PREPARE_FPU)
 bx_define_opcode(BX_IA_FNOP, "fnop", "fnop", NULL, &BX_CPU_C::FNOP, BX_ISA_X87, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_FPU)
 bx_define_opcode(BX_IA_FPLEGACY, "fplegacy", "fplegacy", NULL, &BX_CPU_C::FPLEGACY, BX_ISA_X87, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_FPU)

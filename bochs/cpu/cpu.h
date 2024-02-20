@@ -2180,9 +2180,7 @@ public: // for now...
   BX_SMF void FCOM_DOUBLE_REAL(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void FICOM_WORD_INTEGER(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void FICOM_DWORD_INTEGER(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
   BX_SMF void FCOMPP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void FUCOMPP(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void FCMOVB_ST0_STj(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void FCMOVE_ST0_STj(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
