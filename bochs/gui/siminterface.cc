@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -72,6 +72,7 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   rt_conf_entry_t *rt_conf_entries;
   addon_option_t *addon_options;
   bool init_done;
+  bool ci_started;
   bool enabled;
   // save context to jump to if we must quit unexpectedly
   jmp_buf *quit_context;
@@ -86,6 +87,7 @@ public:
   virtual void set_quit_context(jmp_buf *context) { quit_context = context; }
   virtual bool get_init_done() { return init_done; }
   virtual int set_init_done(bool n);
+  virtual bool get_ci_started() { return ci_started; }
   virtual void reset_all_param();
   // new param methods
   virtual bx_param_c *get_param(const char *pname, bx_param_c *base=NULL);
@@ -387,6 +389,7 @@ bx_real_sim_c::bx_real_sim_c()
 
   enabled = 1;
   init_done = 0;
+  ci_started = 0;
   quit_context = NULL;
   exit_code = 0;
   param_id = BXP_NEW_PARAM_ID;
@@ -917,6 +920,11 @@ int bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t comm
   else
     wxsel = 0;
   bx_debug_gui = wxsel;
+  if (command == CI_START) {
+    ci_started = 1;
+  } else if (command == CI_SHUTDOWN) {
+    ci_started = 0;
+  }
   // enter configuration mode, just while running the configuration interface
   set_display_mode(DISP_MODE_CONFIG);
   int retval = (*ci_callback)(ci_callback_data, command);
