@@ -35,7 +35,8 @@ Brief summary :
 Detailed change log :
 
 - General
-  - Improved parsing bochsrc options passed on the command line.
+  - Improved parsing bochsrc options passed on the command line
+  - Allow setting disabled parameters makes parsing options less strict
 
 - CPU/CPUDB
   - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, x87, AVX-VNNI, AVX-512, CET)
