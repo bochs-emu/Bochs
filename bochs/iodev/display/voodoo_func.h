@@ -1130,8 +1130,11 @@ void swap_buffers(voodoo_state *v)
       }
     }
   }
-  else
+  else {
+    BX_LOCK(render_mutex);
     v->fbi.rgboffs[0] = v->reg[leftOverlayBuf].u & v->fbi.mask & ~0x0f;
+    BX_UNLOCK(render_mutex);
+  }
 
   /* decrement the pending count and reset our state */
   if (v->fbi.swaps_pending)
