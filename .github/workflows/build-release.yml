@@ -18,13 +18,13 @@ jobs:
       run: cd bochs && ./build/redhat/make-rpm | tee ../build.log
 
     - name: Upload release sources tarball
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: bochs sources tarball
+        name: bochs.tar.gz
         path: bochs.tar.gz
 
     - name: Upload release linux RPM package
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: bochs linux RPM
         path: bochs.*.rpm
