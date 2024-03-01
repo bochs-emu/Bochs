@@ -28,11 +28,11 @@ SPECS=${RPMSRCPATH}/SPECS
 RPMSPEC="build/redhat/bochs.rpmspec.template"
 TMPDIR=/tmp
 
-echo Reading version from configure.in script.
+echo Reading version from configure.ac script.
 VERSION='unknown'
-eval `${GREP} '^VERSION="' configure.in`
+eval `${GREP} '^VERSION="' configure.ac`
 if test $? != 0 -o "$VERSION" = unknown; then
-  echo Could not get version number from configure.in script.
+  echo Could not get version number from configure.ac script.
   echo Exiting.
   exit 1
 fi
