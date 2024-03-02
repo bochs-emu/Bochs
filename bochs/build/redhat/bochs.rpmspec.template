@@ -30,7 +30,7 @@ including Linux, DOS, Windows 9X/NT/2000/XP or Windows 7.
 	cd $RPM_BUILD_DIR/bochs-@SEDVERSION@
 	CONFIGURE_ARGS="--prefix=/usr --mandir=$RPM_BUILD_ROOT/%{_mandir}"
 	export CONFIGURE_ARGS
-	sh .conf.linux normal
+	sh .conf.linux
 	make
 	make unpack_dlx   # must use prefix=/usr since this step sets up
                           # the paths in dlx bochsrc file.
