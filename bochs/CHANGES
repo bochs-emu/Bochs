@@ -29,7 +29,7 @@ Brief summary :
   - Disk images: Allows large VHD image files
   - Fixed and enhanced the Floppy Disk emulation, VGA emulation fixes
   - Expand maximum resolution for Banshee and Voodoo 3 from 1600x1280 to 1920x1440
-  - LGPL'd VGABIOS updated to version 0.8c (several VBE fixes / additions)
+  - LGPL'd VGABIOS updated to version 0.9a (several VBE fixes / additions)
   - Documentation updates and fixes
 
 Detailed change log :
@@ -231,11 +231,18 @@ Detailed change log :
 
 -BIOS / VGABIOS
   - Added capability to enter keycode with ALT + numeric keypad
-  - LGPL'd VGABIOS updated to version 0.8b (from https://github.com/bochs-emu/VGABIOS)
+
+  - LGPL'd VGABIOS updated to version 0.9a (from https://github.com/bochs-emu/VGABIOS)
     - Added VBE get/set palette data support for Banshee and Cirrus versions
     - Fixed order of colors in VBE function get/set palette data
     - Added VBE set palette data support to protected mode interface
     - VESA BIOS function 0x4f00 now stores strings in OemData (for VBE 2.0)
+    - Implemented AH=12h / BL=36h (video refresh control)
+    - Banshee: Added support for VBE function get/set palette format
+    - Fixed video mode detection for TTY functions
+    - Fixed Cirrus vertical timing parameters for 800x600 modes
+    - Added protected mode interface for the Banshee and Cirrus version
+    - Cirrus: Added support for 1152x864x8 video mode
 
 -------------------------------------------------------------------------
 Changes in 2.7 (August 1, 2021):
