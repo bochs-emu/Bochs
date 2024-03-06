@@ -139,9 +139,10 @@ Detailed change log :
     - Bug fix which now closes the cdrom image file when using win32 configuration
 
   - Hard drive / HD image
-    - Allows large VHD image files.
+    - Allow large VHD image files.
       The size in question doesn't necessarily mean the size of the VHD file on disk. The size is the total
       size of the image emulated. The total size increased from roughly 32gig to a limit of 2TB.
+    - VVFAT: Fixed short name generation in case base name length is > 8
 
   - Floppy drive
     - Allows a choice of multiple FDC Controllers to emulate.

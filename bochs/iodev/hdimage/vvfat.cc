@@ -6,7 +6,7 @@
 // ported from QEMU block driver with some additions (see below)
 //
 // Copyright (c) 2004,2005  Johannes E. Schindelin
-// Copyright (C) 2010-2023  The Bochs Project
+// Copyright (C) 2010-2024  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -559,6 +559,7 @@ direntry_t* vvfat_image_t::create_short_and_long_name(
   direntry_t* entry = NULL;
   direntry_t* entry_long = NULL;
   char tempfn[BX_PATHNAME_LEN];
+  bool shorten = false;
 
   if (is_dot) {
     entry = (direntry_t*)array_get_next(&directory);
@@ -579,10 +580,17 @@ direntry_t* vvfat_image_t::create_short_and_long_name(
 
   i = strlen(tempfn);
   for (j = i - 1; j > 0  && tempfn[j] != '.'; j--);
-  if (j > 0)
-    i = (j > 8 ? 8 : j);
-  else if (i > 8)
+  if (j > 0) {
+    if (j > 8) {
+      i = 8;
+      shorten = true;
+    } else {
+      i = j;
+    }
+  } else if (i > 8) {
     i = 8;
+    shorten = true;
+  }
 
   entry = (direntry_t*)array_get_next(&directory);
   memset(entry->name, 0x20, 11);
@@ -602,6 +610,10 @@ direntry_t* vvfat_image_t::create_short_and_long_name(
       entry->name[i]+='A'-'a';
   }
   if (entry->name[0] == 0xe5) entry->name[0] = 0x05;
+  if (shorten) {
+    entry->name[6] = '~';
+    entry->name[7] = '0';
+  }
 
   // mangle duplicates
   while (1) {
