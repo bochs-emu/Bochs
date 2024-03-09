@@ -11,6 +11,9 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
+    - name: Install packages
+      run: sudo apt install libsdl2-dev libasound-dev libvncserver-dev openjade docbook docbook-dsssl
+
     - name: create sources tarball
       run: tar czvf bochs.tar.gz --exclude=.git bochs
 
