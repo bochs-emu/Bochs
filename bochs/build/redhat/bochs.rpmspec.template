@@ -28,7 +28,7 @@ including Linux, DOS, Windows 9X/NT/2000/XP or Windows 7.
 	fi
 %build
 	cd $RPM_BUILD_DIR/bochs-@SEDVERSION@
-	CONFIGURE_ARGS="--prefix=/usr --mandir=$RPM_BUILD_ROOT/%{_mandir}"
+	CONFIGURE_ARGS="--prefix=/usr --mandir=%{_mandir}  --libdir=%{_libdir}"
 	export CONFIGURE_ARGS
 	sh .conf.linux
 	make
@@ -40,7 +40,8 @@ including Linux, DOS, Windows 9X/NT/2000/XP or Windows 7.
 	for i in "" usr usr/bin usr/lib usr/share usr/share/doc %{_mandir}; do 
 	  if ! test -d $RPM_BUILD_ROOT/$i; then mkdir $RPM_BUILD_ROOT/$i; fi
 	done
-	make install install_dlx prefix=$RPM_BUILD_ROOT/usr
+	make install DESTDIR=$RPM_BUILD_ROOT
+	make install_dlx prefix=$RPM_BUILD_ROOT/usr
 	# Build list of plugins on the fly (if any).  This allows the
 	# spec file to support RPM building with or without plugins.
 	cd $RPM_BUILD_ROOT
