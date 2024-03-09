@@ -9,14 +9,14 @@ AC_CONFIG_HEADERS([ltdlconf.h])
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
-VERSION="2.7.svn"
+VERSION="2.7.devel"
 VER_MAJOR=2
 VER_MINOR=7
 dnl // this should be > 90 for pre-release of next version otherwise revision level
 VER_REVISION=0
-dnl // this should be 0 for release and 1 for svn version
-VER_SVN=1
-REL_STRING="Built from SVN snapshot after release 2.7"
+dnl // this should be 0 for release and 1 for development version
+VER_DEV=1
+REL_STRING="Built from GitHub snapshot after release 2.7"
 REL_TIMESTAMP=`grep "Updated:" $srcdir/README | sed 's/Updated: //'`
 
 changequote(<<, >>)
@@ -3319,7 +3319,7 @@ AC_SUBST(VERSION)
 AC_SUBST(VER_MAJOR)
 AC_SUBST(VER_MINOR)
 AC_SUBST(VER_REVISION)
-AC_SUBST(VER_SVN)
+AC_SUBST(VER_DEV)
 AC_SUBST(REL_STRING)
 AC_SUBST(REL_TIMESTAMP)
 AC_SUBST(EXTRA_LINK_OPTS)

@@ -825,7 +825,7 @@ GUI_NON_PLUGIN_OBJS
 EXTRA_LINK_OPTS
 REL_TIMESTAMP
 REL_STRING
-VER_SVN
+VER_DEV
 VER_REVISION
 VER_MINOR
 VER_MAJOR
@@ -3802,12 +3802,12 @@ ac_config_headers="$ac_config_headers config.h"
 ac_config_headers="$ac_config_headers ltdlconf.h"
 
 
-VERSION="2.7.svn"
+VERSION="2.7.devel"
 VER_MAJOR=2
 VER_MINOR=7
 VER_REVISION=0
-VER_SVN=1
-REL_STRING="Built from SVN snapshot after release 2.7"
+VER_DEV=1
+REL_STRING="Built from GitHub snapshot after release 2.7"
 REL_TIMESTAMP=`grep "Updated:" $srcdir/README | sed 's/Updated: //'`
 
 
