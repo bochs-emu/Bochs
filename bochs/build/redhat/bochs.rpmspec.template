@@ -45,6 +45,8 @@ including Linux, DOS, Windows 9X/NT/2000/XP or Windows 7.
 	# Build list of plugins on the fly (if any).  This allows the
 	# spec file to support RPM building with or without plugins.
 	cd $RPM_BUILD_ROOT
+	# Remove the unwanted *.la files before building the list
+	find -name "*.la" -delete
 	find .%{_libdir} -type d | sed '1,2d;s,^\.,\%attr(-\,root\,root) \%dir ,' > \
 	  $RPM_BUILD_DIR/file.list.%{pkg_name}
 	find .%{_libdir} -type f | sed -e 's,^\.,\%attr(-\,root\,root) ,' \
