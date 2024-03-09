@@ -27,4 +27,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: bochs linux RPM
-        path: bochs.*.rpm
+        path: bochs/bochs.*.rpm
