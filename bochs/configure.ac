@@ -9,14 +9,14 @@ AC_CONFIG_HEADERS([ltdlconf.h])
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
-VERSION="2.8"
+VERSION="2.8.devel"
 VER_MAJOR=2
 VER_MINOR=8
 dnl // this should be > 90 for pre-release of next version otherwise revision level
 VER_REVISION=0
 dnl // this should be 0 for release and 1 for development version
-VER_DEV=0
-REL_STRING="Built from GitHub snapshot on March 10, 2024"
+VER_DEV=1
+REL_STRING="Built from GitHub snapshot after release 2.8"
 REL_TIMESTAMP=`grep "Updated:" $srcdir/README | sed 's/Updated: //'`
 
 changequote(<<, >>)

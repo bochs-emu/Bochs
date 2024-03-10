@@ -3802,12 +3802,12 @@ ac_config_headers="$ac_config_headers config.h"
 ac_config_headers="$ac_config_headers ltdlconf.h"
 
 
-VERSION="2.8"
+VERSION="2.8.devel"
 VER_MAJOR=2
 VER_MINOR=8
 VER_REVISION=0
-VER_DEV=0
-REL_STRING="Built from GitHub snapshot on March 10, 2024"
+VER_DEV=1
+REL_STRING="Built from GitHub snapshot after release 2.8"
 REL_TIMESTAMP=`grep "Updated:" $srcdir/README | sed 's/Updated: //'`
 
 
