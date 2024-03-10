@@ -31,6 +31,10 @@
 #include "win32res.h"
 #include "win32paramdlg.h"
 #include "plugin.h"
+#if BX_USE_WIN32USBDEBUG
+  #include "win32usb.h"
+  static int win32_usbi_callback(int type, int wParam, int lParam);
+#endif
 
 #if BX_USE_WIN32CONFIG
 
@@ -41,6 +45,9 @@ PLUGIN_ENTRY_FOR_MODULE(win32config)
 {
   if (mode == PLUGIN_INIT) {
     SIM->register_configuration_interface("win32config", win32_ci_callback, NULL);
+#if BX_USE_WIN32USBDEBUG
+    SIM->register_usb_interface(win32_usbi_callback, NULL);
+#endif
     SIM->set_notify_callback(win32_notify_callback, NULL);
   } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_CI;
@@ -797,5 +804,35 @@ static int win32_ci_callback(void *userdata, ci_command_t command)
   }
   return 0;
 }
+
+#if BX_USE_WIN32USBDEBUG
+static int win32_usbi_callback(int type, int wParam, int lParam) {
+  if (!bx_gui->has_gui_console()) {
+    if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() > 0) {
+      // if "start_frame" is 0, do the debug_window
+      // if "start_frame" is 1, wait for the trigger from the HC
+      //  (set the value to 2, then return, allowing the trigger to envoke it)
+      // if "start_frame" is 2, the HC triggered the debug
+      if (SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->get() == BX_USB_DEBUG_SOF_SET) {
+        SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->set(BX_USB_DEBUG_SOF_TRIGGER);
+        bx_gui->replace_bitmap(bx_gui->usb_hbar_id, bx_gui->usb_trigger_bmap_id);
+      } else {
+        bx_gui->replace_bitmap(bx_gui->usb_hbar_id, bx_gui->usb_bmap_id);
+        if (win32_usb_start(GetBochsWindow(), type, wParam, lParam) < 0) {
+          bx_user_quit = 1;
+  #if !BX_DEBUGGER
+          bx_atexit();
+          SIM->quit_sim(1);
+  #else
+          bx_dbg_exit(1);
+  #endif
+          return -1;
+        }
+      }
+    }
+  }
+  return 0;
+}
+#endif
 
 #endif // BX_USE_WIN32CONFIG

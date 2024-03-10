@@ -159,7 +159,7 @@ static BOOL  hideIPS = FALSE;
 static char ipsText[20];
 #endif
 #define BX_SB_MAX_TEXT_ELEMENTS    2
-#define SIZE_OF_SB_ELEMENT        50
+#define SIZE_OF_SB_ELEMENT        60
 #define SIZE_OF_SB_MOUSE_MESSAGE 170
 #define SIZE_OF_SB_IPS_MESSAGE    90
 Bit32u SB_Led_Colors[3] = {0x0000FF00, 0x000040FF, 0x0000FFFF};
@@ -1217,6 +1217,13 @@ void SetMouseCapture()
   }
   SetMouseToggleInfo();
 }
+
+#if BX_USE_WIN32USBDEBUG
+BOOL GetMouseCaptureMode()
+{
+  return mouseCaptureMode;
+}
+#endif
 
 LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {

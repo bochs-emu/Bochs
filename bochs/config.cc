@@ -31,6 +31,9 @@
 #if BX_SUPPORT_PCIUSB
 #include "iodev/usb/usb_common.h"
 #endif
+#if BX_USE_WIN32USBDEBUG
+#include "gui/win32usb.h"
+#endif
 #include "param_names.h"
 #include <assert.h>
 
@@ -1664,6 +1667,47 @@ void bx_init_options()
 #endif
   // parallel / serial / USB options initialized in the device plugin code
 
+  // usb debugging
+#if BX_USE_WIN32USBDEBUG
+  static const char *usb_debug_type[] = { "none", "uhci", "ohci", "ehci", "xhci", NULL };
+  bx_list_c *usb_debug = new bx_list_c(root_param, "usb_debug", "USB Debug Options");
+  new bx_param_enum_c(usb_debug,
+      "type", "HC type",
+      "Select Host Controller type",
+      usb_debug_type, 0, 0);
+  new bx_param_bool_c(usb_debug,
+      "reset", "trigger on reset",
+      "Trigger on Reset",
+      0
+  );
+  new bx_param_bool_c(usb_debug,
+      "enable", "trigger on enable",
+      "Trigger on Enable",
+      0
+  );
+  new bx_param_num_c(usb_debug,
+      "start_frame", "trigger on start of frame",
+      "Trigger on start of frame",
+      BX_USB_DEBUG_SOF_NONE, BX_USB_DEBUG_SOF_TRIGGER, 
+      BX_USB_DEBUG_SOF_NONE
+  );
+  new bx_param_bool_c(usb_debug,
+      "doorbell", "trigger on doorbell",
+      "Trigger on Doorbell",
+      0
+  );
+  new bx_param_bool_c(usb_debug,
+      "event", "trigger on event",
+      "Trigger on Event",
+      0
+  );
+  new bx_param_bool_c(usb_debug,
+      "non_exist", "trigger on non exist",
+      "Trigger on write to non-existant port",
+      0
+  );
+#endif
+  
 #if BX_NETWORKING
   // network subtree
   bx_list_c *network = new bx_list_c(root_param, "network", "Network Configuration");
@@ -2229,6 +2273,34 @@ int get_floppy_type_from_image(const char *filename)
     }
   }
 }
+
+#if BX_USE_WIN32USBDEBUG
+static Bit32s parse_usb_debug_options(const char *context, int num_params, char *params[])
+{
+  for (int i=1; i<num_params; i++) {
+    if (!strncmp(params[i], "type=", 5)) {
+      SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->set_by_name(&params[i][5]);
+    } else if (!strcmp(params[i], "reset")) {
+      SIM->get_param_bool(BXPN_USB_DEBUG_RESET)->set(1);
+    } else if (!strcmp(params[i], "enable")) {
+      SIM->get_param_bool(BXPN_USB_DEBUG_ENABLE)->set(1);
+    } else if (!strcmp(params[i], "start_frame")) {
+      SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->set(BX_USB_DEBUG_SOF_SET);
+    } else if (!strcmp(params[i], "doorbell")) {
+      SIM->get_param_bool(BXPN_USB_DEBUG_DOORBELL)->set(1);
+    } else if (!strcmp(params[i], "event")) {
+      SIM->get_param_bool(BXPN_USB_DEBUG_EVENT)->set(1);
+    } else if (!strcmp(params[i], "non_exist")) {
+      SIM->get_param_bool(BXPN_USB_DEBUG_NON_EXIST)->set(1);
+    } else {
+      PARSE_ERR(("%s: %s directive malformed.", context, params[i]));
+      return -1;
+    }
+  }
+
+  return 0;
+}
+#endif
 
 static Bit32s parse_log_options(const char *context, int num_params, char *params[])
 {
@@ -3321,6 +3393,29 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
 #else
     PARSE_WARN(("%s: Bochs is not compiled with iodebug support", context));
+#endif
+#if BX_USE_WIN32USBDEBUG
+  } else if (!strcmp(params[0], "usb_debug")) {
+    if (num_params < 2) {
+      PARSE_ERR(("%s: usb_debug directive malformed.", context));
+    }
+    // check that we haven't already defined the type
+    // we can only debug one controller at a time
+    Bit32s type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get();
+    if (type > 0) {
+      PARSE_ERR(("%s: usb_debug: type='%s' previously defined.", context, 
+        SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get_choice(type)));
+    }
+    if (parse_usb_debug_options(context, num_params, params) < 0) {
+      return -1;
+    }
+    // we currently only support the xHCI controller type, so give
+    //  an error if it is something else.
+    type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get();
+    if ((type == USB_DEBUG_OHCI) || (type == USB_DEBUG_EHCI)) {
+      PARSE_ERR(("%s: usb_debug: type='%s' not supported yet.", context, 
+        SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get_choice(type)));
+    }
 #endif
   } else if (!strcmp(params[0], "load32bitOSImage")) {
     PARSE_ERR(("%s: load32bitOSImage: This legacy feature is no longer supported.", context));

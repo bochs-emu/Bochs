@@ -48,6 +48,9 @@
 #include "ohci_core.h"
 #include "qemu-queue.h"
 #include "usb_ehci.h"
+#if BX_USE_WIN32USBDEBUG
+  #include "gui/win32usb.h"
+#endif
 
 #define LOG_THIS theUSB_EHCI->
 
@@ -1024,14 +1027,25 @@ bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
                 BX_EHCI_THIS hub.usb_port[port].device->usb_send_msg(USB_MSG_RESET);
                 BX_EHCI_THIS hub.usb_port[port].portsc.csc = 0;
                 if (BX_EHCI_THIS hub.usb_port[port].device->get_speed() == USB_SPEED_HIGH) {
+#if BX_USE_WIN32USBDEBUG
+                  win32_usb_trigger(USB_DEBUG_EHCI, USB_DEBUG_ENABLE, 0, 0);
+#endif
                   BX_EHCI_THIS hub.usb_port[port].portsc.ped = 1;
                 }
               }
             }
+#if BX_USE_WIN32USBDEBUG
+            if (!oldpr && BX_EHCI_THIS hub.usb_port[port].portsc.pr) {
+              win32_usb_trigger(USB_DEBUG_EHCI, USB_DEBUG_RESET, 0, 0);
+            }
+#endif
             if (oldfpr && !BX_EHCI_THIS hub.usb_port[port].portsc.fpr) {
               BX_EHCI_THIS hub.usb_port[port].portsc.sus = 0;
             }
+#if BX_USE_WIN32USBDEBUG
           } else if (port == USB_EHCI_PORTS) {
+            win32_usb_trigger(USB_DEBUG_EHCI, USB_DEBUG_NONEXIST, 0, 0);
+#endif
           }
       }
     } else {
@@ -1895,6 +1909,10 @@ int bx_usb_ehci_c::state_fetchqtd(EHCIQueue *q)
   EHCIqtd qtd;
   int again = 0;
 
+#if BX_USE_WIN32USBDEBUG
+  win32_usb_trigger(USB_DEBUG_EHCI, USB_DEBUG_COMMAND, 0, 0);
+#endif
+
   get_dwords(NLPTR_GET(q->qtdaddr), (Bit32u*) &qtd, sizeof(EHCIqtd) >> 2);
 
   EHCIPacket *p = QTAILQ_FIRST(&q->packets);
@@ -2350,6 +2368,10 @@ void bx_usb_ehci_c::ehci_frame_timer(void)
   usec_elapsed = t_now - BX_EHCI_THIS hub.last_run_usec;
   frames = (int)(usec_elapsed / FRAME_TIMER_USEC);
   
+#if BX_USE_WIN32USBDEBUG
+  win32_usb_trigger(USB_DEBUG_EHCI, USB_DEBUG_FRAME, 0, 0);
+#endif
+
   if (BX_EHCI_THIS periodic_enabled() || (BX_EHCI_THIS hub.pstate != EST_INACTIVE)) {
     need_timer++;
     BX_EHCI_THIS hub.async_stepdown = 0;

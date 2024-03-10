@@ -36,6 +36,9 @@
 #include "pci.h"
 #include "usb_common.h"
 #include "ohci_core.h"
+#if BX_USE_WIN32USBDEBUG
+  #include "gui/win32usb.h"
+#endif
 
 #define LOG_THIS 
 
@@ -796,14 +799,23 @@ bool bx_ohci_core_c::mem_write(bx_phy_address addr, unsigned len, void *data)
 
     case 0x60: // HcRhPortStatus[3]
 #if (USB_OHCI_PORTS < 4)
+  #if BX_USE_WIN32USBDEBUG
+      win32_usb_trigger(USB_DEBUG_OHCI, USB_DEBUG_NONEXIST, 0, 0);
+  #endif
       break;
 #endif
     case 0x5C: // HcRhPortStatus[2]
 #if (USB_OHCI_PORTS < 3)
+  #if BX_USE_WIN32USBDEBUG
+      win32_usb_trigger(USB_DEBUG_OHCI, USB_DEBUG_NONEXIST, 0, 0);
+  #endif
       break;
 #endif
     case 0x58: // HcRhPortStatus[1]
 #if (USB_OHCI_PORTS < 2)
+  #if BX_USE_WIN32USBDEBUG
+      win32_usb_trigger(USB_DEBUG_OHCI, USB_DEBUG_NONEXIST, 0, 0);
+  #endif
       break;
 #endif
     case 0x54: { // HcRhPortStatus[0]
@@ -816,6 +828,9 @@ bool bx_ohci_core_c::mem_write(bx_phy_address addr, unsigned len, void *data)
         if (hub.usb_port[p].HcRhPortStatus.ccs == 0)
           hub.usb_port[p].HcRhPortStatus.csc = 1;
         else {
+#if BX_USE_WIN32USBDEBUG
+          win32_usb_trigger(USB_DEBUG_OHCI, USB_DEBUG_ENABLE, 0, 0);
+#endif
           hub.usb_port[p].HcRhPortStatus.pes = 1;
         }
       }
@@ -832,6 +847,9 @@ bool bx_ohci_core_c::mem_write(bx_phy_address addr, unsigned len, void *data)
         if (hub.usb_port[p].HcRhPortStatus.ccs == 0)
           hub.usb_port[p].HcRhPortStatus.csc = 1;
         else {
+#if BX_USE_WIN32USBDEBUG
+          win32_usb_trigger(USB_DEBUG_OHCI, USB_DEBUG_RESET, 0, 0);
+#endif
           reset_port(p);
           hub.usb_port[p].HcRhPortStatus.pps = 1;
           hub.usb_port[p].HcRhPortStatus.pes = 1;
@@ -899,6 +917,9 @@ void bx_ohci_core_c::ohci_timer(void)
   Bit16u zero = 0;
 
   if (hub.op_regs.HcControl.hcfs == OHCI_USB_OPERATIONAL) {
+#if BX_USE_WIN32USBDEBUG
+    win32_usb_trigger(USB_DEBUG_OHCI, USB_DEBUG_FRAME, 0, 0);
+#endif
     // set remaining to the interval amount.
     hub.op_regs.HcFmRemainingToggle = hub.op_regs.HcFmInterval.fit;
     hub.sof_time = bx_pc_system.time_usec();
@@ -1137,6 +1158,10 @@ int bx_ohci_core_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed, int toggl
   if (completion && !p->done) {
     return 0;
   }
+
+#if BX_USE_WIN32USBDEBUG
+  win32_usb_trigger(USB_DEBUG_OHCI, USB_DEBUG_COMMAND, 0, 0);
+#endif
 
   // The td->cc field should be 111x if it hasn't been processed yet.
   if (TD_GET_CC(td) < NotAccessed) {
