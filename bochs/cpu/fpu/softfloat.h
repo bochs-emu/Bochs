@@ -210,16 +210,6 @@ BX_CPP_INLINE int get_denormals_are_zeros(const float_status_t &status)
 }
 
 /*----------------------------------------------------------------------------
-| Returns 1 if the <flush-underflow-to-zero> feature is supported;
-| otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int get_flush_underflow_to_zero(const float_status_t &status)
-{
-    return status.flush_underflow_to_zero;
-}
-
-/*----------------------------------------------------------------------------
 | Software IEC/IEEE single-precision operations.
 *----------------------------------------------------------------------------*/
 
@@ -239,17 +229,17 @@ int float64_is_nan(float64);
 | Software IEC/IEEE floating-point types.
 *----------------------------------------------------------------------------*/
 
-#ifdef BX_BIG_ENDIAN
-struct floatx80 {	// leave alignment to compiler
-    Bit16u exp;
-    Bit64u fraction;
-};
-#else
-struct floatx80 {
-    Bit64u fraction;
-    Bit16u exp;
-};
-#endif
+//#ifdef BX_BIG_ENDIAN
+//struct floatx80 {	// leave alignment to compiler
+//    Bit16u exp;
+//    Bit64u fraction;
+//};
+//#else
+//struct floatx80 {
+//    Bit64u fraction;
+//    Bit16u exp;
+//};
+//#endif
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE integer-to-floating-point conversion routines.
@@ -260,16 +250,10 @@ floatx80 int64_to_floatx80(Bit64s);
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE extended double-precision conversion routines.
 *----------------------------------------------------------------------------*/
-floatx80 float32_to_floatx80(float32, float_status_t &status);
-floatx80 float64_to_floatx80(float64, float_status_t &status);
-
 Bit32s floatx80_to_int32(floatx80, float_status_t &status);
 Bit32s floatx80_to_int32_round_to_zero(floatx80, float_status_t &status);
 Bit64s floatx80_to_int64(floatx80, float_status_t &status);
 Bit64s floatx80_to_int64_round_to_zero(floatx80, float_status_t &status);
-
-float32 floatx80_to_float32(floatx80, float_status_t &status);
-float64 floatx80_to_float64(floatx80, float_status_t &status);
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE extended double-precision operations.

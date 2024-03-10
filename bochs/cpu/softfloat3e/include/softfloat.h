@@ -48,6 +48,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "softfloat_types.h"
 
+#define FLOATX80
+
 struct softfloat_status_t
 {
     uint8_t softfloat_roundingMode;
@@ -104,6 +106,10 @@ enum softfloat_exception_flag_t {
     softfloat_flag_inexact   = 0x20
 };
 
+#ifdef FLOATX80
+#define RAISE_SW_C1 0x0200
+#endif
+
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point ordering relations
 *----------------------------------------------------------------------------*/
@@ -151,7 +157,7 @@ BX_CPP_INLINE void softfloat_raiseFlags(struct softfloat_status_t *status, int f
 /*----------------------------------------------------------------------------
 | Check if exception is masked.
 *----------------------------------------------------------------------------*/
-BX_CPP_INLINE int softfloat_isMaskedException(struct softfloat_status_t *status, int flags) {
+BX_CPP_INLINE int softfloat_isMaskedException(const struct softfloat_status_t *status, int flags) {
     return status->softfloat_exceptionMasks & flags;
 }
 
@@ -165,37 +171,47 @@ BX_CPP_INLINE void softfloat_suppressException(struct softfloat_status_t *status
 /*----------------------------------------------------------------------------
 | Obtain current rounding mode.
 *----------------------------------------------------------------------------*/
-BX_CPP_INLINE uint8_t softfloat_getRoundingMode(struct softfloat_status_t *status) {
+BX_CPP_INLINE uint8_t softfloat_getRoundingMode(const struct softfloat_status_t *status) {
     return status->softfloat_roundingMode;
 }
 
 /*----------------------------------------------------------------------------
 | Read denormals-are-zeroes flag.
 *----------------------------------------------------------------------------*/
-BX_CPP_INLINE bool softfloat_denormalsAreZeros(struct softfloat_status_t *status) {
+BX_CPP_INLINE bool softfloat_denormalsAreZeros(const struct softfloat_status_t *status) {
     return status->softfloat_denormals_are_zeros;
 }
 
 /*----------------------------------------------------------------------------
 | Read flush-underflow-to-zero flag.
 *----------------------------------------------------------------------------*/
-BX_CPP_INLINE bool softfloat_flushUnderflowToZero(struct softfloat_status_t *status) {
+BX_CPP_INLINE bool softfloat_flushUnderflowToZero(const struct softfloat_status_t *status) {
     return status->softfloat_flush_underflow_to_zero;
 }
 
 /*----------------------------------------------------------------------------
 | Obtain current rounding precision for F80.
 *----------------------------------------------------------------------------*/
-BX_CPP_INLINE uint8_t softfloat_extF80_roundingPrecision(struct softfloat_status_t *status) {
+BX_CPP_INLINE uint8_t softfloat_extF80_roundingPrecision(const struct softfloat_status_t *status) {
     return status->extF80_roundingPrecision;
 }
 
 /*----------------------------------------------------------------------------
 | Returns raised IEC/IEEE floating-point exception flags.
 *----------------------------------------------------------------------------*/
-BX_CPP_INLINE int softfloat_getExceptionFlags(struct softfloat_status_t *status) {
+BX_CPP_INLINE int softfloat_getExceptionFlags(const struct softfloat_status_t *status) {
     return status->softfloat_exceptionFlags & ~status->softfloat_suppressException;
 }
+
+/*----------------------------------------------------------------------------
+| Raise floating point precision lost up flag (floatx80 only).
+*----------------------------------------------------------------------------*/
+#ifdef FLOATX80
+BX_CPP_INLINE void softfloat_setRoundingUp(struct softfloat_status_t *status)
+{
+    status->softfloat_exceptionFlags |= RAISE_SW_C1;
+}
+#endif
 
 /*----------------------------------------------------------------------------
 | Integer-to-floating-point conversion routines.

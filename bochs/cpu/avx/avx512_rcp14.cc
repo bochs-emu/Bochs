@@ -8288,7 +8288,7 @@ float16 approximate_rcp14(float16 op, const float_status_t &status)
 
     // the rcp14 handle denormals properly
     case float_denormal:
-      if (get_denormals_are_zeros(status))
+      if (softfloat_denormalsAreZeros(&status))
         return packFloat16(sign, 0x1F, 0);
 
       normExpSig = softfloat_normSubnormalF16Sig(fraction);
@@ -8315,7 +8315,7 @@ float16 approximate_rcp14(float16 op, const float_status_t &status)
 
   if (exp <= 0) {
     /* underflow */
-    if (get_flush_underflow_to_zero(status))
+    if (softfloat_flushUnderflowToZero(&status))
       return packFloat16(sign, 0, 0);
 
     fraction32 >>= (1 - exp); // make denormal result, note that -1 <= exp <= 0 so no rounding needed
@@ -8355,7 +8355,7 @@ float32 approximate_rcp14(float32 op, const float_status_t &status)
 
     // the rcp14 handle denormals properly
     case softfloat_denormal:
-      if (get_denormals_are_zeros(status))
+      if (softfloat_denormalsAreZeros(&status))
         return packFloat32(sign, 0xFF, 0);
 
       normExpSig = softfloat_normSubnormalF32Sig(fraction);
@@ -8378,7 +8378,7 @@ float32 approximate_rcp14(float32 op, const float_status_t &status)
 
   if (exp <= 0) {
     /* underflow */
-    if (get_flush_underflow_to_zero(status))
+    if (softfloat_flushUnderflowToZero(&status))
       return packFloat32(sign, 0, 0);
 
     fraction >>= (1 - exp); // make denormal result, note that -1 <= exp <= 0 so no rounding needed
@@ -8412,7 +8412,7 @@ float64 approximate_rcp14(float64 op, const float_status_t &status)
 
     // the rcp14 handle denormals properly
     case softfloat_denormal:
-      if (get_denormals_are_zeros(status))
+      if (softfloat_denormalsAreZeros(&status))
         return packFloat64(sign, 0x7FF, 0);
 
       normExpSig = softfloat_normSubnormalF64Sig(fraction);
@@ -8441,7 +8441,7 @@ float64 approximate_rcp14(float64 op, const float_status_t &status)
 
   if (exp <= 0) {
     /* underflow */
-    if (get_flush_underflow_to_zero(status))
+    if (softfloat_flushUnderflowToZero(&status))
       return packFloat64(sign, 0, 0);
 
     fraction >>= (1 - exp); // make denormal result, note that -1 <= exp <= 0 so no rounding needed

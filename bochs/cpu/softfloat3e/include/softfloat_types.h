@@ -75,14 +75,26 @@ typedef struct f128_t {
 | named 'signif'.
 *----------------------------------------------------------------------------*/
 
+#ifdef BX_BIG_ENDIAN
+struct floatx80 {  // leave alignment to compiler
+    Bit16u exp;
+    Bit64u fraction;
+};
+#else
+struct floatx80 {
+    Bit64u fraction;
+    Bit16u exp;
+};
+#endif
+
 #ifdef BX_LITTLE_ENDIAN
 struct extFloat80M {
   uint64_t signif;
   uint16_t signExp;
 
   extFloat80M(): signif(0), signExp(0) {}
-//extFloat80M(struct floatx80 a): signif(a.fraction), signExp(a.exp) {}
-//operator floatx80() const { floatx80 x; x.fraction = signif; x.exp = signExp; return x; }
+  extFloat80M(struct floatx80 a): signif(a.fraction), signExp(a.exp) {}
+  operator floatx80() const { floatx80 x; x.fraction = signif; x.exp = signExp; return x; }
 };
 #else
 struct extFloat80M {
@@ -90,8 +102,8 @@ struct extFloat80M {
   uint64_t signif;
 
   extFloat80M(): signExp(0), signif(0) {}
-//extFloat80M(struct floatx80 a): signExp(a.exp), signif(a.fraction) {}
-//operator floatx80() const { floatx80 x; x.fraction = signif; x.exp = signExp; return x; }
+  extFloat80M(struct floatx80 a): signExp(a.exp), signif(a.fraction) {}
+  operator floatx80() const { floatx80 x; x.fraction = signif; x.exp = signExp; return x; }
 };
 #endif
 

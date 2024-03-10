@@ -40,7 +40,6 @@ Bit16s floatx80_to_int16_round_to_zero(floatx80, float_status_t &status);
 | Software IEC/IEEE extended double-precision operations.
 *----------------------------------------------------------------------------*/
 
-float_class_t floatx80_class(floatx80);
 floatx80 floatx80_extract(floatx80 &a, float_status_t &status);
 floatx80 floatx80_scale(floatx80 a, floatx80 b, float_status_t &status);
 int floatx80_remainder(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, float_status_t &status);
@@ -58,22 +57,6 @@ int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, float_status_t &status
 int fsin(floatx80 &a, float_status_t &status);
 int fcos(floatx80 &a, float_status_t &status);
 int ftan(floatx80 &a, float_status_t &status);
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE extended double-precision compare.
-*----------------------------------------------------------------------------*/
-
-int floatx80_compare(floatx80, floatx80, int quiet, float_status_t &status);
-
-BX_CPP_INLINE int floatx80_compare(floatx80 a, floatx80 b, float_status_t &status)
-{
-    return floatx80_compare(a, b, 0, status);
-}
-
-BX_CPP_INLINE int floatx80_compare_quiet(floatx80 a, floatx80 b, float_status_t &status)
-{
-    return floatx80_compare(a, b, 1, status);
-}
 
 /*-----------------------------------------------------------------------------
 | Calculates the absolute value of the extended double-precision floating-point
