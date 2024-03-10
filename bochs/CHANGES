@@ -1,7 +1,7 @@
-Changes after 2.7:
+Changes in 2.8 (March 10, 2024):
 
-The Bochs source tree is transitioning from SVN to GIT hosted on github (https://github.com/bochs-emu/Bochs)
-We welcome every new contributor !
+The Bochs source tree has been transitioned from SVN to GIT hosted on GitHub
+(https://github.com/bochs-emu/Bochs). We welcome every new contributor !
 
 Brief summary :
   - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, x87, AVX-VNNI, AVX-512, CET)
@@ -230,9 +230,8 @@ Detailed change log :
   - Keyboard/Mouse
     - Reduce default keyboard serial delay to 150 to avoid timeouts
 
--BIOS / VGABIOS
+- BIOS / VGABIOS
   - Added capability to enter keycode with ALT + numeric keypad
-
   - LGPL'd VGABIOS updated to version 0.9a (from https://github.com/bochs-emu/VGABIOS)
     - Added VBE get/set palette data support for Banshee and Cirrus versions
     - Fixed order of colors in VBE function get/set palette data
