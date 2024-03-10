@@ -111,12 +111,6 @@ float128_t
     *------------------------------------------------------------------------*/
     if (sigExtra) {
         softfloat_raiseFlags(status, softfloat_flag_inexact);
-#ifdef SOFTFLOAT_ROUND_ODD
-        if (roundingMode == softfloat_round_odd) {
-            sig0 |= 1;
-            goto packReturn;
-        }
-#endif
     }
     if (doIncrement) {
         sig128 = softfloat_add128(sig64, sig0, 0, 1);

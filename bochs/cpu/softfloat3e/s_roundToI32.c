@@ -51,12 +51,7 @@ int32_t softfloat_roundToI32(bool sign, uint64_t sig, uint8_t roundingMode, bool
     roundIncrement = 0x800;
     if ((roundingMode != softfloat_round_near_maxMag) && (roundingMode != softfloat_round_near_even)) {
         roundIncrement = 0;
-        if (sign ? (roundingMode == softfloat_round_min)
-#ifdef SOFTFLOAT_ROUND_ODD
-                      || (roundingMode == softfloat_round_odd)
-#endif
-                : (roundingMode == softfloat_round_max)
-       ) {
+        if (sign ? (roundingMode == softfloat_round_min) : (roundingMode == softfloat_round_max)) {
             roundIncrement = 0xFFF;
         }
     }
@@ -71,9 +66,6 @@ int32_t softfloat_roundToI32(bool sign, uint64_t sig, uint8_t roundingMode, bool
     z = uZ.i;
     if (z && ((z < 0) ^ sign)) goto invalid;
     if (roundBits) {
-#ifdef SOFTFLOAT_ROUND_ODD
-        if (roundingMode == softfloat_round_odd) z |= 1;
-#endif
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
     }
     return z;

@@ -56,9 +56,6 @@ uint64_t
         if (sign) {
             if (!(sig | sigExtra)) return 0;
             if (roundingMode == softfloat_round_min) goto invalid;
-#ifdef SOFTFLOAT_ROUND_ODD
-            if (roundingMode == softfloat_round_odd) goto invalid;
-#endif
         } else {
             if ((roundingMode == softfloat_round_max) && sigExtra) {
  increment:
@@ -72,9 +69,6 @@ uint64_t
     }
     if (sign && sig) goto invalid;
     if (sigExtra) {
-#ifdef SOFTFLOAT_ROUND_ODD
-        if (roundingMode == softfloat_round_odd) sig |= 1;
-#endif
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
     }
     return sig;

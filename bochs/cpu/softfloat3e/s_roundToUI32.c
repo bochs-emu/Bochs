@@ -53,9 +53,6 @@ uint32_t
         if (sign) {
             if (!sig) return 0;
             if (roundingMode == softfloat_round_min) goto invalid;
-#ifdef SOFTFLOAT_ROUND_ODD
-            if (roundingMode == softfloat_round_odd) goto invalid;
-#endif
         } else {
             if (roundingMode == softfloat_round_max) roundIncrement = 0xFFF;
         }
@@ -69,9 +66,6 @@ uint32_t
     }
     if (sign && z) goto invalid;
     if (roundBits) {
-#ifdef SOFTFLOAT_ROUND_ODD
-        if (roundingMode == softfloat_round_odd) z |= 1;
-#endif
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
     }
     return z;

@@ -88,11 +88,6 @@ float64_t f64_roundToInt(float64_t a, uint8_t scale, uint8_t roundingMode, bool 
          case softfloat_round_max:
             if (!uiZ) uiZ = packToF64UI(0, 0x3FF - scale, 0);
             break;
-#ifdef SOFTFLOAT_ROUND_ODD
-         case softfloat_round_odd:
-            uiZ |= packToF64UI(0, 0x3FF - scale, 0);
-            break;
-#endif
         }
         return uiZ;
     }
@@ -111,9 +106,6 @@ float64_t f64_roundToInt(float64_t a, uint8_t scale, uint8_t roundingMode, bool 
     }
     uiZ &= ~roundBitsMask;
     if (uiZ != a) {
-#ifdef SOFTFLOAT_ROUND_ODD
-        if (roundingMode == softfloat_round_odd) uiZ |= lastBitMask;
-#endif
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
     }
     return uiZ;

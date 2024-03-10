@@ -182,11 +182,6 @@ float16_t softfloat_addMagsF16(uint16_t uiA, uint16_t uiB, struct softfloat_stat
                 softfloat_raiseFlags(status, softfloat_flag_overflow | softfloat_flag_inexact);
             }
         }
-#ifdef SOFTFLOAT_ROUND_ODD
-        else if (roundingMode == softfloat_round_odd) {
-            uiZ |= 1;
-        }
-#endif
     }
     softfloat_raiseFlags(status, softfloat_flag_inexact);
     return uiZ;

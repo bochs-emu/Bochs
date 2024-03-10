@@ -110,10 +110,6 @@ extFloat80_t
          case softfloat_round_max:
             if (!signUI64) goto mag1;
             break;
-#ifdef SOFTFLOAT_ROUND_ODD
-         case softfloat_round_odd:
-            goto mag1;
-#endif
         }
         uiZ64 = signUI64;
         sigZ  = 0;
@@ -143,9 +139,6 @@ extFloat80_t
         sigZ = UINT64_C(0x8000000000000000);
     }
     if (sigZ != sigA) {
-#ifdef SOFTFLOAT_ROUND_ODD
-        if (roundingMode == softfloat_round_odd) sigZ |= lastBitMask;
-#endif
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
     }
  uiZ:

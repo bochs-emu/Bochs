@@ -57,12 +57,7 @@ int64_t
         if (UINT64_C(0x8000000000000000) <= sigExtra) goto increment;
     } else {
         if (sigExtra
-                && (sign ? (roundingMode == softfloat_round_min)
-#ifdef SOFTFLOAT_ROUND_ODD
-                              || (roundingMode == softfloat_round_odd)
-#endif
-                        : (roundingMode == softfloat_round_max))
-       ) {
+                && (sign ? (roundingMode == softfloat_round_min) : (roundingMode == softfloat_round_max))) {
  increment:
             ++sig;
             if (!sig) goto invalid;
@@ -75,9 +70,6 @@ int64_t
     z = uZ.i;
     if (z && ((z < 0) ^ sign)) goto invalid;
     if (sigExtra) {
-#ifdef SOFTFLOAT_ROUND_ODD
-        if (roundingMode == softfloat_round_odd) z |= 1;
-#endif
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
     }
     return z;

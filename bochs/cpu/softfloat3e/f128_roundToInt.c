@@ -115,11 +115,6 @@ float128_t
              case softfloat_round_max:
                 if (!uiZ.v64) uiZ.v64 = packToF128UI64(0, 0x3FFF, 0);
                 break;
-#ifdef SOFTFLOAT_ROUND_ODD
-             case softfloat_round_odd:
-                uiZ.v64 |= packToF128UI64(0, 0x3FFF, 0);
-                break;
-#endif
             }
             goto uiZ;
         }
@@ -143,12 +138,6 @@ float128_t
         lastBitMask0 = 0;
     }
     if ((uiZ.v64 != uiA64) || (uiZ.v0 != uiA0)) {
-#ifdef SOFTFLOAT_ROUND_ODD
-        if (roundingMode == softfloat_round_odd) {
-            uiZ.v64 |= lastBitMask64;
-            uiZ.v0  |= lastBitMask0;
-        }
-#endif
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
     }
  uiZ:

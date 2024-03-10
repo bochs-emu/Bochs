@@ -180,11 +180,6 @@ float16_t softfloat_subMagsF16(uint16_t uiA, uint16_t uiB, struct softfloat_stat
                 || (roundingMode == (signF16UI(uiZ) ? softfloat_round_max : softfloat_round_min))) {
             --uiZ;
         }
-#ifdef SOFTFLOAT_ROUND_ODD
-        else if (roundingMode == softfloat_round_odd) {
-            uiZ = (uiZ - 1) | 1;
-        }
-#endif
     }
     softfloat_raiseFlags(status, softfloat_flag_inexact);
     return uiZ;

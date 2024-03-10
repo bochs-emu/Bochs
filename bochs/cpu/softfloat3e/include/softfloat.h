@@ -78,8 +78,7 @@ struct softfloat_status_t
 typedef struct softfloat_status_t float_status_t;
 
 /*----------------------------------------------------------------------------
-| Software floating-point rounding mode.  (Mode "odd" is supported only if
-| SoftFloat is compiled with macro 'SOFTFLOAT_ROUND_ODD' defined.)
+| Software floating-point rounding mode.
 *----------------------------------------------------------------------------*/
 enum {
     softfloat_round_near_even   = 0,
@@ -89,8 +88,7 @@ enum {
     softfloat_round_up          = softfloat_round_max,
     softfloat_round_minMag      = 3,
     softfloat_round_to_zero     = softfloat_round_minMag,
-    softfloat_round_near_maxMag = 4,
-    softfloat_round_odd         = 6
+    softfloat_round_near_maxMag = 4
 };
 
 /*----------------------------------------------------------------------------
