@@ -789,7 +789,7 @@ typedef struct {
 
 #include "xmm.h"
 
-struct float_status_t;
+struct softfloat_status_t;
 
 typedef void (*simd_xmm_shift)(BxPackedXmmRegister *opdst, Bit64u shift_64);
 
@@ -797,12 +797,12 @@ typedef void (*simd_xmm_1op)(BxPackedXmmRegister *opdst);
 typedef void (*simd_xmm_2op)(BxPackedXmmRegister *opdst, const BxPackedXmmRegister *op2);
 typedef void (*simd_xmm_3op)(BxPackedXmmRegister *opdst, const BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2);
 
-typedef void (*xmm_pfp_1op)     (BxPackedXmmRegister *opdst, float_status_t &status);
-typedef void (*xmm_pfp_1op_mask)(BxPackedXmmRegister *opdst, float_status_t &status, Bit32u mask);
-typedef void (*xmm_pfp_2op)     (BxPackedXmmRegister *opdst, const BxPackedXmmRegister *op1, float_status_t &status);
-typedef void (*xmm_pfp_2op_mask)(BxPackedXmmRegister *opdst, const BxPackedXmmRegister *op1, float_status_t &status, Bit32u mask);
-typedef void (*xmm_pfp_3op)     (BxPackedXmmRegister *opdst, const BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, float_status_t &status);
-typedef void (*xmm_pfp_3op_mask)(BxPackedXmmRegister *opdst, const BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, float_status_t &status, Bit32u mask);
+typedef void (*xmm_pfp_1op)     (BxPackedXmmRegister *opdst, softfloat_status_t &status);
+typedef void (*xmm_pfp_1op_mask)(BxPackedXmmRegister *opdst, softfloat_status_t &status, Bit32u mask);
+typedef void (*xmm_pfp_2op)     (BxPackedXmmRegister *opdst, const BxPackedXmmRegister *op1, softfloat_status_t &status);
+typedef void (*xmm_pfp_2op_mask)(BxPackedXmmRegister *opdst, const BxPackedXmmRegister *op1, softfloat_status_t &status, Bit32u mask);
+typedef void (*xmm_pfp_3op)     (BxPackedXmmRegister *opdst, const BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, softfloat_status_t &status);
+typedef void (*xmm_pfp_3op_mask)(BxPackedXmmRegister *opdst, const BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, softfloat_status_t &status, Bit32u mask);
 
 #if BX_SUPPORT_VMX
 #include "vmx.h"
@@ -2058,18 +2058,25 @@ public: // for now...
   BX_SMF void LOAD_MASK_Eighth_VectorB(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 #if BX_SUPPORT_EVEX
+  BX_SMF void LOAD_MASK_Ww(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_MASK_Wss(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_MASK_Wsd(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_MASK_VectorB(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_MASK_VectorW(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_MASK_VectorD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_MASK_VectorQ(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_BROADCAST_VectorW(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_BROADCAST_MASK_VectorW(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_BROADCAST_VectorD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_BROADCAST_MASK_VectorD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_BROADCAST_VectorQ(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_BROADCAST_MASK_VectorQ(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_BROADCAST_Half_VectorW(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_BROADCAST_MASK_Half_VectorW(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_BROADCAST_Half_VectorD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LOAD_BROADCAST_MASK_Half_VectorD(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_BROADCAST_Quarter_VectorW(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOAD_BROADCAST_MASK_Quarter_VectorW(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
 #if BX_SUPPORT_FPU == 0	// if FPU is disabled
@@ -3119,15 +3126,21 @@ public: // for now...
   BX_SMF void HANDLE_AVX512_SHIFT_IMM_WORD_EL_MASK(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 
   template <xmm_pfp_1op_mask func>
+  BX_SMF void HANDLE_AVX512_MASK_PFP_1OP_HALF(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  template <xmm_pfp_1op_mask func>
   BX_SMF void HANDLE_AVX512_MASK_PFP_1OP_SINGLE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   template <xmm_pfp_1op_mask func>
   BX_SMF void HANDLE_AVX512_MASK_PFP_1OP_DOUBLE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   template <xmm_pfp_2op_mask func>
+  BX_SMF void HANDLE_AVX512_MASK_PFP_2OP_HALF(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  template <xmm_pfp_2op_mask func>
   BX_SMF void HANDLE_AVX512_MASK_PFP_2OP_SINGLE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   template <xmm_pfp_2op_mask func>
   BX_SMF void HANDLE_AVX512_MASK_PFP_2OP_DOUBLE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  template <xmm_pfp_3op_mask func>
+  BX_SMF void HANDLE_AVX512_MASK_PFP_3OP_HALF(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   template <xmm_pfp_3op_mask func>
   BX_SMF void HANDLE_AVX512_MASK_PFP_3OP_SINGLE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   template <xmm_pfp_3op_mask func>
@@ -3301,10 +3314,19 @@ public: // for now...
 
   BX_SMF void VMOVSD_MASK_VsdWsdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMOVSS_MASK_VssWssM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVSH_MASK_VshWshM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVSH_VshWshM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMOVSD_MASK_WsdVsdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMOVSS_MASK_WssVssM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVSH_MASK_WshVshM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVSH_WshVshM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMOVSD_MASK_VsdHpdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMOVSS_MASK_VssHpsWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVSH_MASK_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVSH_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VMOVW_VshEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVW_EdVshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void VMOVSHDUP_MASK_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMOVSLDUP_MASK_VpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3598,6 +3620,136 @@ public: // for now...
   BX_SMF void VPSHRDVD_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPSHRDQ_MASK_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPSHRDVQ_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VFPCLASSPH_MASK_KGdWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VFPCLASSSH_MASK_KGbWshIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void COMISH_VshWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void UCOMISH_VshWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VCMPPH_MASK_KGdHphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCMPSH_MASK_KGbHshWshIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VSQRTSH_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSQRTSH_MASK_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VGETEXPSH_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VGETEXPSH_MASK_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VGETMANTPH_MASK_VphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VGETMANTSH_MASK_VshHphWshIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VREDUCEPH_MASK_VphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VREDUCESH_MASK_VshHphWshIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VRNDSCALEPH_MASK_VphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VRNDSCALESH_MASK_VshHphWshIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VRCPPH_MASK_VphWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VRCPSH_MASK_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VRSQRTPH_MASK_VphWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VRSQRTSH_MASK_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VADDSH_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VADDSH_MASK_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSUBSH_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSUBSH_MASK_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VDIVSH_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VDIVSH_MASK_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMULSH_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMULSH_MASK_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMINSH_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMINSH_MASK_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMAXSH_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMAXSH_MASK_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSCALEFSH_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VSCALEFSH_MASK_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VFMADDSH_VphHshWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VFMADDSH_MASK_VphHshWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VFMSUBSH_VphHshWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VFMSUBSH_MASK_VphHshWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VFNMADDSH_VphHshWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VFNMADDSH_MASK_VphHshWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VFNMSUBSH_VphHshWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VFNMSUBSH_MASK_VphHshWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VCVTPH2UW_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPH2W_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPH2UW_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPH2W_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTUW2PH_VphWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTW2PH_VphWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VCVTPH2UW_MASK_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPH2W_MASK_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPH2UW_MASK_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPH2W_MASK_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTUW2PH_MASK_VphWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTW2PH_MASK_VphWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VCVTPH2PSX_VpsWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPH2DQ_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPH2UDQ_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPH2QQ_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPH2UQQ_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPH2DQ_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPH2UDQ_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPH2QQ_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPH2UQQ_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPH2PD_VpdWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VCVTPH2PSX_MASK_VpsWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPH2DQ_MASK_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPH2UDQ_MASK_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPH2QQ_MASK_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPH2UQQ_MASK_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPH2DQ_MASK_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPH2UDQ_MASK_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPH2QQ_MASK_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPH2UQQ_MASK_VdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPH2PD_MASK_VpdWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VCVTPS2PHX_VphWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPS2PHX_MASK_VphWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTDQ2PH_VphWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTUDQ2PH_VphWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTDQ2PH_MASK_VphWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTUDQ2PH_MASK_VphWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VCVTPD2PH_VphWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPD2PH_MASK_VphWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTQQ2PH_VphWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTUQQ2PH_VphWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTQQ2PH_MASK_VphWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTUQQ2PH_MASK_VphWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VCVTSD2SH_VshWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTSD2SH_MASK_VshWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTSS2SH_VshWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTSS2SH_MASK_VshWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTSH2SD_VsdWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTSH2SD_MASK_VsdWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTSH2SS_VssWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTSH2SS_MASK_VssWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VCVTSH2SI_GdWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTSH2SI_GqWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTSH2USI_GdWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTSH2USI_GqWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTSH2SI_GdWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTSH2SI_GqWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTSH2USI_GdWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTSH2USI_GqWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VCVTSI2SH_VshEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTSI2SH_VshEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTUSI2SH_VshEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTUSI2SH_VshEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VFCMULCSH_MASK_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VFCMULCPH_MASK_VphHphWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VFCMADDCSH_MASK_VshHphWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VFCMADDCPH_MASK_VphHphWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
 #if BX_SUPPORT_AMX

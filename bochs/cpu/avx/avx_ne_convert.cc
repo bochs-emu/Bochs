@@ -51,7 +51,7 @@ float_status_t prepare_ne_softfloat_status_helper()
 float32 convert_ne_fp16_to_fp32(float16 op)
 {
   static float_status_t status = prepare_ne_softfloat_status_helper();
-  return float16_to_float32(op, status);
+  return f16_to_f32(op, &status);
 }
 
 #include "bf16.h"

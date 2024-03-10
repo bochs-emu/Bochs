@@ -108,21 +108,12 @@ enum {
     float_relation_unordered =  2
 };
 
-/*----------------------------------------------------------------------------
-| Options to indicate which negations to perform in float*_muladd()
-| Using these differs from negating an input or output before calling
-| the muladd function in that this means that a NaN doesn't have its
-| sign bit inverted before it is propagated.
-*----------------------------------------------------------------------------*/
-enum {
-    float_muladd_negate_c       = 1,
-    float_muladd_negate_product = 2,
-    float_muladd_negate_result  = float_muladd_negate_c | float_muladd_negate_product
-};
+#include "../softfloat3e/include/softfloat.h"
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point status structure.
 *----------------------------------------------------------------------------*/
+#if 0
 struct float_status_t
 {
 #ifdef FLOATX80
@@ -136,6 +127,7 @@ struct float_status_t
     int flush_underflow_to_zero;    /* flag register */
     int denormals_are_zeros;        /* flag register */
 };
+#endif
 
 /*----------------------------------------------------------------------------
 | Routine to raise any or all of the software IEC/IEEE floating-point
@@ -228,177 +220,18 @@ BX_CPP_INLINE int get_flush_underflow_to_zero(const float_status_t &status)
 }
 
 /*----------------------------------------------------------------------------
-| Software IEC/IEEE integer-to-floating-point conversion routines.
-*----------------------------------------------------------------------------*/
-float32 int32_to_float32(Bit32s, float_status_t &status);
-float64 int32_to_float64(Bit32s);
-float32 int64_to_float32(Bit64s, float_status_t &status);
-float64 int64_to_float64(Bit64s, float_status_t &status);
-
-float32 uint32_to_float32(Bit32u, float_status_t &status);
-float64 uint32_to_float64(Bit32u);
-float32 uint64_to_float32(Bit64u, float_status_t &status);
-float64 uint64_to_float64(Bit64u, float_status_t &status);
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE single-precision conversion routines.
-*----------------------------------------------------------------------------*/
-Bit32s float32_to_int32(float32, float_status_t &status);
-Bit32s float32_to_int32_round_to_zero(float32, float_status_t &status);
-Bit64s float32_to_int64(float32, float_status_t &status);
-Bit64s float32_to_int64_round_to_zero(float32, float_status_t &status);
-Bit32u float32_to_uint32(float32, float_status_t &status);
-Bit32u float32_to_uint32_round_to_zero(float32, float_status_t &status);
-Bit64u float32_to_uint64(float32, float_status_t &status);
-Bit64u float32_to_uint64_round_to_zero(float32, float_status_t &status);
-float64 float32_to_float64(float32, float_status_t &status);
-
-/*----------------------------------------------------------------------------
 | Software IEC/IEEE single-precision operations.
 *----------------------------------------------------------------------------*/
-float32 float32_round_to_int(float32, float_status_t &status);
-float32 float32_round_to_int(float32, Bit8u scale, float_status_t &status);
-float32 float32_add(float32, float32, float_status_t &status);
-float32 float32_sub(float32, float32, float_status_t &status);
-float32 float32_mul(float32, float32, float_status_t &status);
-float32 float32_div(float32, float32, float_status_t &status);
-float32 float32_sqrt(float32, float_status_t &status);
-float32 float32_frc(float32, float_status_t &status);
-float32 float32_muladd(float32, float32, float32, int flags, float_status_t &status);
-float32 float32_scalef(float32, float32, float_status_t &status);
-int float32_compare(float32, float32, int quiet, float_status_t &status);
 
-BX_CPP_INLINE float32 float32_round_to_int(float32 a, float_status_t &status)
-{
-  return float32_round_to_int(a, 0, status);
-}
-
-BX_CPP_INLINE float32 float32_fmadd(float32 a, float32 b, float32 c, float_status_t &status)
-{
-  return float32_muladd(a, b, c, 0, status);
-}
-
-BX_CPP_INLINE float32 float32_fmsub(float32 a, float32 b, float32 c, float_status_t &status)
-{
-  return float32_muladd(a, b, c, float_muladd_negate_c, status);
-}
-
-BX_CPP_INLINE float32 float32_fnmadd(float32 a, float32 b, float32 c, float_status_t &status)
-{
-  return float32_muladd(a, b, c, float_muladd_negate_product, status);
-}
-
-BX_CPP_INLINE float32 float32_fnmsub(float32 a, float32 b, float32 c, float_status_t &status)
-{
-  return float32_muladd(a, b, c, float_muladd_negate_result, status);
-}
-
-BX_CPP_INLINE int float32_compare(float32 a, float32 b, float_status_t &status)
-{
-  return float32_compare(a, b, 0, status);
-}
-
-BX_CPP_INLINE int float32_compare_quiet(float32 a, float32 b, float_status_t &status)
-{
-  return float32_compare(a, b, 1, status);
-}
-
-float_class_t float32_class(float32);
 int float32_is_signaling_nan(float32);
 int float32_is_nan(float32);
-int float32_is_denormal(float32);
-
-float32 float32_min(float32 a, float32 b, float_status_t &status);
-float32 float32_max(float32 a, float32 b, float_status_t &status);
-
-float32 float32_minmax(float32 a, float32 b, int is_max, int is_abs, float_status_t &status);
-float32 float32_getexp(float32 a, float_status_t &status);
-float32 float32_getmant(float32 a, float_status_t &status, int sign_ctrl, int interv);
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE double-precision conversion routines.
-*----------------------------------------------------------------------------*/
-Bit32s float64_to_int32(float64, float_status_t &status);
-Bit32s float64_to_int32_round_to_zero(float64, float_status_t &status);
-Bit64s float64_to_int64(float64, float_status_t &status);
-Bit64s float64_to_int64_round_to_zero(float64, float_status_t &status);
-Bit32u float64_to_uint32(float64, float_status_t &status);
-Bit32u float64_to_uint32_round_to_zero(float64, float_status_t &status);
-Bit64u float64_to_uint64(float64, float_status_t &status);
-Bit64u float64_to_uint64_round_to_zero(float64, float_status_t &status);
-float32 float64_to_float32(float64, float_status_t &status);
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE double-precision operations.
 *----------------------------------------------------------------------------*/
-float64 float64_round_to_int(float64, float_status_t &status);
-float64 float64_round_to_int(float64, Bit8u scale, float_status_t &status);
-float64 float64_add(float64, float64, float_status_t &status);
-float64 float64_sub(float64, float64, float_status_t &status);
-float64 float64_mul(float64, float64, float_status_t &status);
-float64 float64_div(float64, float64, float_status_t &status);
-float64 float64_sqrt(float64, float_status_t &status);
-float64 float64_frc(float64, float_status_t &status);
-float64 float64_muladd(float64, float64, float64, int flags, float_status_t &status);
-float64 float64_scalef(float64, float64, float_status_t &status);
-int float64_compare(float64, float64, int quiet, float_status_t &status);
 
-BX_CPP_INLINE float64 float64_round_to_int(float64 a, float_status_t &status)
-{
-  return float64_round_to_int(a, 0, status);
-}
-
-BX_CPP_INLINE float64 float64_fmadd(float64 a, float64 b, float64 c, float_status_t &status)
-{
-  return float64_muladd(a, b, c, 0, status);
-}
-
-BX_CPP_INLINE float64 float64_fmsub(float64 a, float64 b, float64 c, float_status_t &status)
-{
-  return float64_muladd(a, b, c, float_muladd_negate_c, status);
-}
-
-BX_CPP_INLINE float64 float64_fnmadd(float64 a, float64 b, float64 c, float_status_t &status)
-{
-  return float64_muladd(a, b, c, float_muladd_negate_product, status);
-}
-
-BX_CPP_INLINE float64 float64_fnmsub(float64 a, float64 b, float64 c, float_status_t &status)
-{
-  return float64_muladd(a, b, c, float_muladd_negate_result, status);
-}
-
-BX_CPP_INLINE int float64_compare(float64 a, float64 b, float_status_t &status)
-{
-  return float64_compare(a, b, 0, status);
-}
-
-BX_CPP_INLINE int float64_compare_quiet(float64 a, float64 b, float_status_t &status)
-{
-  return float64_compare(a, b, 1, status);
-}
-
-float_class_t float64_class(float64);
 int float64_is_signaling_nan(float64);
 int float64_is_nan(float64);
-int float64_is_denormal(float64);
-
-float64 float64_min(float64 a, float64 b, float_status_t &status);
-float64 float64_max(float64 a, float64 b, float_status_t &status);
-
-float64 float64_minmax(float64 a, float64 b, int is_max, int is_abs, float_status_t &status);
-float64 float64_getexp(float64 a, float_status_t &status);
-float64 float64_getmant(float64 a, float_status_t &status, int sign_ctrl, int interv);
-
-#ifdef FLOAT16
-float32 float16_to_float32(float16, float_status_t &status);
-float16 float32_to_float16(float32, float_status_t &status);
-
-float_class_t float16_class(float16);
-int float16_is_signaling_nan(float16);
-int float16_is_nan(float16);
-int float16_is_denormal(float16);
-#endif
 
 #ifdef FLOATX80
 

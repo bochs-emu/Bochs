@@ -105,6 +105,7 @@ x86_feature(BX_ISA_AVX512_VNNI, "avx512vnni")                           /* AVX-5
 x86_feature(BX_ISA_AVX512_BITALG, "avx512bitalg")                       /* AVX-512 BITALG Instructions */
 x86_feature(BX_ISA_AVX512_VP2INTERSECT, "avx512vp2intersect")           /* AVX-512 VP2INTERSECT Instructions */
 x86_feature(BX_ISA_AVX512_BF16, "avx512bf16")                           /* AVX-512 BF16 Instructions */
+x86_feature(BX_ISA_AVX512_FP16, "avx512fp16")                           /* AVX-512 FP16 Instructions */
 x86_feature(BX_ISA_AVX_IFMA, "avx_ifma")                                /* AVX encoded IFMA Instructions */
 x86_feature(BX_ISA_AVX_VNNI, "avx_vnni")                                /* AVX encoded VNNI Instructions */
 x86_feature(BX_ISA_AVX_VNNI_INT8, "avx_vnni_int8")                      /* AVX encoded VNNI-INT8 Instructions */

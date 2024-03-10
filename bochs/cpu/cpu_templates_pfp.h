@@ -22,7 +22,7 @@
 #ifndef BX_CPU_PFP_TEMPLATES_H
 #define BX_CPU_PFP_TEMPLATES_H
 
-extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
+extern softfloat_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
 
 template <xmm_pfp_1op func>
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_SSE_PFP_1OP(bxInstruction_c *i)
@@ -112,6 +112,33 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX_PFP_3OP(bxInstruction_c *i)
 #if BX_SUPPORT_EVEX
 
 #include "simd_int.h"
+
+template <xmm_pfp_1op_mask func>
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_1OP_HALF(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  unsigned mask = BX_READ_32BIT_OPMASK(i->opmask());
+  unsigned len = i->getVL();
+
+  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+  softfloat_status_word_rc_override(status, i);
+
+  for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 8)
+    (func)(&op.vmm128(n), status, tmp_mask);
+
+  check_exceptionsSSE(get_exception_flags(status));
+
+  if (! i->isZeroMasking()) {
+    for (unsigned n=0; n < len; n++, mask >>= 8)
+      xmm_pblendw(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), mask);
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
 
 template <xmm_pfp_1op_mask func>
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_1OP_SINGLE(bxInstruction_c *i)
@@ -223,6 +250,34 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_2OP_DOUBLE(bxInstru
   BX_NEXT_INSTR(i);
 }
 
+template <xmm_pfp_2op_mask func>
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_2OP_HALF(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
+  unsigned mask = BX_READ_32BIT_OPMASK(i->opmask());
+  unsigned len = i->getVL();
+
+  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+  softfloat_status_word_rc_override(status, i);
+
+  for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 8)
+    (func)(&op1.vmm128(n), &op2.vmm128(n), status, tmp_mask);
+
+  check_exceptionsSSE(get_exception_flags(status));
+
+  if (! i->isZeroMasking()) {
+    for (unsigned n=0; n < len; n++, mask >>= 8)
+      xmm_pblendw(&BX_READ_AVX_REG_LANE(i->dst(), n), &op1.vmm128(n), mask);
+
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), op1, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 template <xmm_pfp_3op_mask func>
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_3OP_SINGLE(bxInstruction_c *i)
 {
@@ -273,6 +328,36 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_3OP_DOUBLE(bxInstru
   if (! i->isZeroMasking()) {
     for (unsigned n=0; n < len; n++, mask >>= 2)
       xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op1.vmm128(n), mask);
+
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), op1, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+template <xmm_pfp_3op_mask func>
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_3OP_HALF(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2());
+  BxPackedAvxRegister op3 = BX_READ_AVX_REG(i->src3());
+  unsigned mask = BX_READ_32BIT_OPMASK(i->opmask());
+  unsigned len = i->getVL();
+
+  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+  softfloat_status_word_rc_override(status, i);
+
+  for (unsigned n=0, tmp_mask = mask; n < len; n++, tmp_mask >>= 8)
+    (func)(&op1.vmm128(n), &op2.vmm128(n), &op3.vmm128(n), status, tmp_mask);
+
+  check_exceptionsSSE(get_exception_flags(status));
+
+  if (! i->isZeroMasking()) {
+    for (unsigned n=0; n < len; n++, mask >>= 8)
+      xmm_pblendw(&BX_READ_AVX_REG_LANE(i->dst(), n), &op1.vmm128(n), mask);
 
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }

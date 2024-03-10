@@ -57,6 +57,14 @@ typedef struct {
 #ifdef FLOAT16
 
 /*----------------------------------------------------------------------------
+| Commonly used half-precision floating point constants
+*----------------------------------------------------------------------------*/
+const float16 float16_negative_inf  = 0xfc00;
+const float16 float16_positive_inf  = 0x7c00;
+const float16 float16_negative_zero = 0x8000;
+const float16 float16_positive_zero = 0x0000;
+
+/*----------------------------------------------------------------------------
 | The pattern for a default generated half-precision NaN.
 *----------------------------------------------------------------------------*/
 const float16 float16_default_nan = 0xFE00;
@@ -64,6 +72,8 @@ const float16 float16_default_nan = 0xFE00;
 #define float16_fraction extractFloat16Frac
 #define float16_exp extractFloat16Exp
 #define float16_sign extractFloat16Sign
+
+#define FLOAT16_EXP_BIAS 0xF
 
 /*----------------------------------------------------------------------------
 | Returns the fraction bits of the half-precision floating-point value `a'.
@@ -129,26 +139,6 @@ BX_CPP_INLINE int float16_is_signaling_nan(float16 a)
 }
 
 /*----------------------------------------------------------------------------
-| Returns 1 if the half-precision floating-point value `a' is denormal;
-| otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int float16_is_denormal(float16 a)
-{
-   return (extractFloat16Exp(a) == 0) && (extractFloat16Frac(a) != 0);
-}
-
-/*----------------------------------------------------------------------------
-| Convert float16 denormals to zero.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE float16 float16_denormal_to_zero(float16 a)
-{
-  if (float16_is_denormal(a)) a &= 0x8000;
-  return a;
-}
-
-/*----------------------------------------------------------------------------
 | Returns the result of converting the half-precision floating-point NaN
 | `a' to the canonical NaN format. If `a' is a signaling NaN, the invalid
 | exception is raised.
@@ -172,6 +162,19 @@ BX_CPP_INLINE commonNaNT float16ToCommonNaN(float16 a, float_status_t &status)
 BX_CPP_INLINE float16 commonNaNToFloat16(commonNaNT a)
 {
     return (((Bit16u) a.sign)<<15) | 0x7E00 | (Bit16u)(a.hi>>54);
+}
+
+/*----------------------------------------------------------------------------
+| Takes half-precision floating-point NaN `a' and returns the appropriate
+| NaN result.  If `a' is a signaling NaN, the invalid exception is raised.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE float16 propagateFloat16NaN(float16 a, float_status_t &status)
+{
+    if (float16_is_signaling_nan(a))
+        float_raise(status, float_flag_invalid);
+
+    return a | 0x200;
 }
 
 #endif
@@ -260,26 +263,6 @@ BX_CPP_INLINE int float32_is_nan(float32 a)
 BX_CPP_INLINE int float32_is_signaling_nan(float32 a)
 {
     return (((a>>22) & 0x1FF) == 0x1FE) && (a & 0x003FFFFF);
-}
-
-/*----------------------------------------------------------------------------
-| Returns 1 if the single-precision floating-point value `a' is denormal;
-| otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int float32_is_denormal(float32 a)
-{
-   return (extractFloat32Exp(a) == 0) && (extractFloat32Frac(a) != 0);
-}
-
-/*----------------------------------------------------------------------------
-| Convert float32 denormals to zero.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE float32 float32_denormal_to_zero(float32 a)
-{
-  if (float32_is_denormal(a)) a &= 0x80000000;
-  return a;
 }
 
 /*----------------------------------------------------------------------------
@@ -413,26 +396,6 @@ BX_CPP_INLINE int float64_is_nan(float64 a)
 BX_CPP_INLINE int float64_is_signaling_nan(float64 a)
 {
     return (((a>>51) & 0xFFF) == 0xFFE) && (a & BX_CONST64(0x0007FFFFFFFFFFFF));
-}
-
-/*----------------------------------------------------------------------------
-| Returns 1 if the double-precision floating-point value `a' is denormal;
-| otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int float64_is_denormal(float64 a)
-{
-   return (extractFloat64Exp(a) == 0) && (extractFloat64Frac(a) != 0);
-}
-
-/*----------------------------------------------------------------------------
-| Convert float64 denormals to zero.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE float64 float64_denormal_to_zero(float64 a)
-{
-  if (float64_is_denormal(a)) a &= ((Bit64u)(1) << 63);
-  return a;
 }
 
 /*----------------------------------------------------------------------------
