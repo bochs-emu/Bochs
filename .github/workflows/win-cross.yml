@@ -29,13 +29,13 @@ jobs:
       run: echo "SHORT_GITHUB_SHA=$(git rev-parse --short ${{ github.sha }})" >> $GITHUB_ENV
 
     - name: Upload main binary artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: bochs-${{ env.SHORT_GITHUB_SHA }}.exe
         path: bochs/bochs.exe
 
     - name: Upload tools artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: tools-${{ env.SHORT_GITHUB_SHA }}
         path: |
