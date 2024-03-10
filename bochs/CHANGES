@@ -1,3 +1,15 @@
+Changes after 2.8:
+
+Brief summary :
+ - USB: Added the USB Debugger support for xHCI and UHCI
+
+Detailed change log :
+
+- I/O Devices
+  - USB
+    - Now includes the USB Debugger support for the xHCI and UHCI controllers
+
+-------------------------------------------------------------------------
 Changes in 2.8 (March 10, 2024):
 
 The Bochs source tree has been transitioned from SVN to GIT hosted on GitHub
@@ -26,7 +38,6 @@ Brief summary :
   - USB: xHCI: added the ability to have more than one model of xHCI hardware. Currently there are two.
   - USB: Added experimental MSD UASP emulation
   - USB: Added OHCI as an EHCI Companion option. Now allows UHCI or OHCI specified as a configuration parameter.
-  - USB: Added the USB Debugger support for xHCI and UHCI
   - Disk images: Allows large VHD image files
   - Fixed and enhanced the Floppy Disk emulation, VGA emulation fixes
   - Expand maximum resolution for Banshee and Voodoo 3 from 1600x1280 to 1920x1440
@@ -214,7 +225,6 @@ Detailed change log :
     - xHCI: added checks to the Evaluate Context and Address Device commands.
     - xHCI: fixed/updated the Port Status Change Event emulation.
     - xHCI: fixed/updated the port bandwidth emulation.
-    - Now includes the USB Debugger support for the xHCI and UHCI controllers.
     - Many documentation additions.
 
   - Networking
