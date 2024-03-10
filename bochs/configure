@@ -23955,7 +23955,7 @@ then :
 printf "%s\n" "yes" >&6; }
     printf "%s\n" "#define BX_SUPPORT_FPU 1" >>confdefs.h
 
-    FPU_VAR='$(FPU_LIB)'
+    FPU_VAR='$(FPU_LIB) $(SOFTFLOAT_LIB)'
    elif test "$enableval" = no; then
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
@@ -23974,7 +23974,7 @@ else $as_nop
 printf "%s\n" "yes" >&6; }
     printf "%s\n" "#define BX_SUPPORT_FPU 1" >>confdefs.h
 
-    FPU_VAR='$(FPU_LIB)'
+    FPU_VAR='$(FPU_LIB) $(SOFTFLOAT_LIB)'
 
 
 fi
