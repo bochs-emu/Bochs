@@ -26506,10 +26506,16 @@ case "$target" in
     ;;
   *-mingw32* | *-msys)
     BXIMAGE_LINK_OPTS="-luser32"
+    if test "$enable_static_link" = yes; then
+      BXIMAGE_LINK_OPTS="${BXIMAGE_LINK_OPTS} -static"
+    fi
     if test "$networking" = yes; then
       OPTIONAL_TARGET="$OPTIONAL_TARGET bxhub niclist"
       BXHUB_FLAG="-DBXHUB"
       BXHUB_LINK_OPTS="-lws2_32"
+      if test "$enable_static_link" = yes; then
+        BXHUB_LINK_OPTS="${BXHUB_LINK_OPTS} -static"
+      fi
     fi
     printf "%s\n" "#define BX_HAVE_SELECT 1" >>confdefs.h
 
