@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "14 Dec 2023" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "20 Jan 2024" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -493,7 +493,9 @@ update_freq:
 
 This parameter specifies the number of display updates per second.
 The VGA update timer by default uses the realtime engine with a value
-of 5. This parameter can be changed at runtime.
+of 10 (valid: 1 to 75). This parameter can be changed at runtime.
+The special value 0 enables support for using the frame rate of the 
+emulated graphics device.
 
 realtime:
 
@@ -576,7 +578,7 @@ Valid key names:
 and "win".
 
 Examples:
-  keyboard: type=mf, serial_delay=200, paste_delay=100000
+  keyboard: type=mf, serial_delay=150, paste_delay=100000
   keyboard: keymap=gui/keymaps/x11-pc-de.map
   keyboard: user_shortcut=ctrl-alt-del
 
@@ -1121,10 +1123,11 @@ loglevel:
 dmatimer:
 
 Microseconds per second for a DMA cycle.  Make it smaller
-to fix non-continuous sound.  750000 is  usually  a  good
+to fix non-continuous sound. 1000000 is  usually  a  good
 value.  This  needs  a reasonably  correct   setting  for
-the  IPS  parameter of the CPU option.  It is possible to
-adjust the dmatimer at runtime.
+the  IPS  parameter of the CPU option and also depends on
+the clock sync setting.  It  is  possible  to  adjust the
+dmatimer value at runtime.
 
 Examples for output modes:
   sb16: midimode=2, midifile="output.mid", wavemode=1 # MIDI to file

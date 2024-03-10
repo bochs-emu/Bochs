@@ -234,15 +234,13 @@
     <ClCompile Include="..\cpu\cpudb\intel\p4_willamette.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\pentium.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\pentium_mmx.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\sapphire_rapids.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\tigerlake.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\bochs.h" />
     <ClInclude Include="..\config.h" />
     <ClInclude Include="..\cpu\cpu.h" />
-    <ClInclude Include="..\cpu\cpudb\intel\corei3_cnl.h" />
-    <ClInclude Include="..\cpu\cpudb\intel\corei7_icelake-u.h" />
-    <ClInclude Include="..\cpu\cpudb\intel\tigerlake.h" />
     <ClInclude Include="..\cpu\cpuid.h" />
     <ClInclude Include="..\cpu\cpudb\amd\amd_k6_2_chomper.h" />
     <ClInclude Include="..\cpu\cpudb\amd\athlon64_clawhammer.h" />
@@ -256,6 +254,8 @@
     <ClInclude Include="..\cpu\cpudb\intel\broadwell_ult.h" />
     <ClInclude Include="..\cpu\cpudb\intel\core2_penryn_t9600.h" />
     <ClInclude Include="..\cpu\cpudb\intel\core_duo_t2400_yonah.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\corei3_cnl.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\corei7_icelake-u.h" />
     <ClInclude Include="..\cpu\cpudb\intel\corei5_arrandale_m520.h" />
     <ClInclude Include="..\cpu\cpudb\intel\corei5_lynnfield_750.h" />
     <ClInclude Include="..\cpu\cpudb\intel\corei7_haswell_4770.h" />
@@ -268,6 +268,8 @@
     <ClInclude Include="..\cpu\cpudb\intel\p4_willamette.h" />
     <ClInclude Include="..\cpu\cpudb\intel\pentium.h" />
     <ClInclude Include="..\cpu\cpudb\intel\pentium_mmx.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\sapphire_rapids.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\tigerlake.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

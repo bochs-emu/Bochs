@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1142,12 +1142,13 @@ void bx_init_options()
       "If enabled, the VGA timer is based on realtime",
       1);
 
+  // The value 0 enables support for using vertical frequency
   bx_param_num_c *vga_update_freq = new bx_param_num_c(display,
       "vga_update_frequency",
       "VGA Update Frequency",
       "Number of VGA updates per emulated second",
-      1, 60,
-      5);
+      0, 75,
+      10);
   vga_update_freq->set_ask_format ("Type a new value for VGA update frequency: [%d] ");
 
   bx_init_vgaext_list();
@@ -1203,7 +1204,7 @@ void bx_init_options()
       "serial_delay", "Keyboard serial delay",
       "Approximate time in microseconds that it takes one character to be transferred from the keyboard to controller over the serial path.",
       5, BX_MAX_BIT32U,
-      250);
+      150);
   new bx_param_num_c(keyboard,
       "paste_delay", "Keyboard paste delay",
       "Approximate time in microseconds between attempts to paste characters to the keyboard controller.",
@@ -3685,7 +3686,7 @@ int bx_write_configuration(const char *rc, int overwrite)
   bx_write_debugger_options(fp);
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_PORT_E9_HACK_ROOT), NULL, 0);
 #if BX_SUPPORT_IODEBUG
-  fprintf(fp, "iodebug_all_rings: enabled=%d\n", SIM->get_param_bool(BXPN_IODEBUG_ALL_RINGS)->get());
+  fprintf(fp, "iodebug: all_rings=%d\n", SIM->get_param_bool(BXPN_IODEBUG_ALL_RINGS)->get());
 #endif
   fprintf(fp, "private_colormap: enabled=%d\n", SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get());
 #if BX_WITH_AMIGAOS

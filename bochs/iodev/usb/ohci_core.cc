@@ -1027,7 +1027,7 @@ bool bx_ohci_core_c::process_ed(struct OHCI_ED *ed, const Bit32u ed_address)
     } else {
       BX_DEBUG(("Found a valid ED that points to an control/bulk/int TD"));
       ret = 1;
-      while (ED_GET_HEADP(ed) != ED_GET_TAILP(ed)) {
+      while (!ED_GET_H(ed) && (ED_GET_HEADP(ed) != ED_GET_TAILP(ed))) {
         toggle = ED_GET_C(ed);
         DEV_MEM_READ_PHYSICAL(ED_GET_HEADP(ed),      4, (Bit8u*) &cur_td.dword0);
         DEV_MEM_READ_PHYSICAL(ED_GET_HEADP(ed) +  4, 4, (Bit8u*) &cur_td.dword1);
@@ -1257,9 +1257,17 @@ int bx_ohci_core_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed, int toggl
       TD_SET_EC(td, 0);
     }
   } else {
-    if (ret >= 0)
+    if (ret >= 0) {
       TD_SET_CC(td, DataUnderrun);
-    else {
+      if (((TD_GET_CBP(td) & 0xfff) + ret) >= 0x1000) {
+        TD_SET_CBP(td, (TD_GET_CBP(td) + ret) & 0x0FFF);
+        TD_SET_CBP(td, TD_GET_CBP(td) | (TD_GET_BE(td) & ~0x0FFF));
+      } else {
+        TD_SET_CBP(td, TD_GET_CBP(td) + ret);
+      }
+      if (!TD_GET_R(td))
+        ED_SET_H(ed, 1);
+    } else {
       switch (ret) {
         case USB_RET_NODEV:  // (-1)
           TD_SET_CC(td, DeviceNotResponding);

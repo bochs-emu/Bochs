@@ -24,8 +24,13 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "cpuid.h"
 #include "msr.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
 
 #if BX_SUPPORT_APIC
 #include "apic.h"
@@ -41,10 +46,11 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
   Bit64u val64 = 0;
 
 #if BX_SUPPORT_VMX >= 2
+  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE)) {
+    if (vm->vmexec_ctrls2.VIRTUALIZE_X2APIC_MODE()) {
       if (index >= 0x800 && index <= 0x8FF) {
-        if (index == 0x808 || SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_REGISTERS)) {
+        if (index == 0x808 || vm->vmexec_ctrls2.VIRTUALIZE_APIC_REGISTERS()) {
           unsigned vapic_offset = (index & 0xff) << 4;
           Bit32u msr_lo = VMX_Read_Virtual_APIC(vapic_offset);
           Bit32u msr_hi = VMX_Read_Virtual_APIC(vapic_offset + 4);
@@ -330,19 +336,24 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
     case BX_MSR_IA32_SPEC_CTRL:
       if (! is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS)) {
-        BX_ERROR(("WRMSR IA32_SPEC_CTRL: not enabled in the cpu model"));
+        BX_ERROR(("RDMSR IA32_SPEC_CTRL: not enabled in the cpu model"));
         return handle_unknown_rdmsr(index, msr);
       }
       //    [0] - Enable IBRS: Indirect Branch Restricted Speculation
       //    [1] - Enable STIBP: Single Thread Indirect Branch Predictors
       //    [2] - Enable SSCB: Speculative Store Bypass Disable
       // [63:3] - reserved
-      val64 = BX_CPU_THIS_PTR msr.ia32_spec_ctrl;
+#if BX_SUPPORT_VMX >= 2
+      if (BX_CPU_THIS_PTR in_vmx_guest && vm->vmexec_ctrls3.VIRTUALIZE_IA32_SPEC_CTRL())
+        val64 = vm->ia32_spec_ctrl_shadow;
+      else
+#endif
+        val64 = BX_CPU_THIS_PTR msr.ia32_spec_ctrl;
       break;
 
     case BX_MSR_IA32_PRED_CMD:
       if (! is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS)) {
-        BX_ERROR(("WRMSR IA32_PRED_CMD: not enabled in the cpu model"));
+        BX_ERROR(("RDMSR IA32_PRED_CMD: not enabled in the cpu model"));
         return handle_unknown_rdmsr(index, msr);
       }
       // write only MSR, no need to remember written value
@@ -350,7 +361,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
     case BX_MSR_IA32_FLUSH_CMD:
       if (! is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS)) {
-        BX_ERROR(("WRMSR IA32_FLUSH_CMD: not enabled in the cpu model"));
+        BX_ERROR(("RDMSR IA32_FLUSH_CMD: not enabled in the cpu model"));
         return handle_unknown_rdmsr(index, msr);
       }
       // write only MSR, no need to remember written value
@@ -377,6 +388,12 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_VMX_VMEXIT_CTRLS:
       val64 = VMX_MSR_VMX_VMEXIT_CTRLS;
       break;
+    case BX_MSR_VMX_VMEXIT_CTRLS2:
+      if (BX_CPU_THIS_PTR vmx_cap.vmx_vmexit_ctrl2_supported_bits) {
+        val64 = VMX_MSR_VMX_VMEXIT_CTRLS2;
+        break;
+      }
+      return false;
     case BX_MSR_VMX_VMENTRY_CTRLS:
       val64 = VMX_MSR_VMX_VMENTRY_CTRLS;
       break;
@@ -447,6 +464,14 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
 #if BX_SUPPORT_SVM
+    case BX_SVM_VM_CR_MSR:
+      if (! is_cpu_extension_supported(BX_ISA_SVM)) {
+        BX_ERROR(("RDMSR SVM_VM_CR_MSR: SVM support not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
+      val64 = BX_CPU_THIS_PTR msr.svm_vm_cr;
+      break;
+
     case BX_SVM_HSAVE_PA_MSR:
       if (! is_cpu_extension_supported(BX_ISA_SVM)) {
         BX_ERROR(("RDMSR SVM_HSAVE_PA_MSR: SVM support not enabled in the cpu model"));
@@ -649,8 +674,9 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
   BX_DEBUG(("WRMSR: write %08x:%08x to MSR %x", val32_hi, val32_lo, index));
 
 #if BX_SUPPORT_VMX >= 2
+  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_VIRTUALIZE_X2APIC_MODE)) {
+    if (vm->vmexec_ctrls2.VIRTUALIZE_X2APIC_MODE()) {
       if (Virtualize_X2APIC_Write(index, val_64))
         return true;
     }
@@ -996,7 +1022,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         return false;
       }
       if (val_64 & 0x3f) { // bits [5:0] are reserved and MBZ
-        BX_ERROR(("WRMSR: attempt to write to reserved bits of BX_MSR_IA32_UINTR_MISC !"));
+        BX_ERROR(("WRMSR: attempt to write to reserved bits of BX_MSR_IA32_UINTR_PD !"));
         return false;
       }
       BX_CPU_THIS_PTR uintr.upid_addr = val_64;
@@ -1061,6 +1087,10 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR IA32_SPEC_CTRL: not enabled in the cpu model"));
         return handle_unknown_wrmsr(index, val_64);
       }
+#if BX_SUPPORT_VMX >= 2
+      if (BX_CPU_THIS_PTR in_vmx_guest && vm->vmexec_ctrls3.VIRTUALIZE_IA32_SPEC_CTRL())
+        val_64 = (BX_CPU_THIS_PTR msr.ia32_spec_ctrl & vm->ia32_spec_ctrl_mask) | (val_64 & ~vm->ia32_spec_ctrl_mask);
+#endif
       //    [0] - Enable IBRS: Indirect Branch Restricted Speculation
       //    [1] - Enable STIBP: Single Thread Indirect Branch Predictors
       //    [2] - Enable SSCB: Speculative Store Bypass Disable
@@ -1069,7 +1099,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR: attempt to set reserved bits of IA32_SPEC_CTRL !"));
         return false;
       }
-      BX_CPU_THIS_PTR msr.ia32_spec_ctrl = val32_lo;
+      BX_CPU_THIS_PTR msr.ia32_spec_ctrl = GET32L(val_64);
       break;
 
     case BX_MSR_IA32_PRED_CMD:
@@ -1122,6 +1152,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_VMX_PROCBASED_CTRLS2:
     case BX_MSR_VMX_PROCBASED_CTRLS3:
     case BX_MSR_VMX_VMEXIT_CTRLS:
+    case BX_MSR_VMX_VMEXIT_CTRLS2:
     case BX_MSR_VMX_VMENTRY_CTRLS:
     case BX_MSR_VMX_MISC:
     case BX_MSR_VMX_CR0_FIXED0:
@@ -1140,6 +1171,14 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #endif
 
 #if BX_SUPPORT_SVM
+    case BX_SVM_VM_CR_MSR:
+      if (! is_cpu_extension_supported(BX_ISA_SVM)) {
+        BX_ERROR(("WRMSR SVM_VM_CR_MSR: SVM support not enabled in the cpu model"));
+        return handle_unknown_wrmsr(index, val_64);
+      }
+      Svm_Update_VM_CR_MSR(val_64);
+      break;
+
     case BX_SVM_HSAVE_PA_MSR:
       if (! is_cpu_extension_supported(BX_ISA_SVM)) {
         BX_ERROR(("WRMSR SVM_HSAVE_PA_MSR: SVM support not enabled in the cpu model"));
@@ -1386,7 +1425,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSRLIST(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (! TERTIARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST))
+    if (! BX_CPU_THIS_PTR vmcs.vmexec_ctrls3.ENABLE_MSRLIST())
       exception(BX_UD_EXCEPTION, 0);
   }
 #endif
@@ -1437,8 +1476,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSRLIST(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSRLIST(bxInstruction_c *i)
 {
 #if BX_SUPPORT_VMX
+  VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (! TERTIARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST))
+    if (! vm->vmexec_ctrls3.ENABLE_MSRLIST())
       exception(BX_UD_EXCEPTION, 0);
   }
 #endif
@@ -1459,15 +1499,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSRLIST(bxInstruction_c *i)
     unsigned MSR_index = tzcntq(RCX);   // position of least significant bit set in RCX
     Bit64u MSR_mask = (BX_CONST64(1) << MSR_index);
     Bit64u MSR_address = read_linear_qword(BX_SEG_REG_DS, RSI + MSR_index*8);
-    Bit64u MSR_data    = read_linear_qword(BX_SEG_REG_DS, RDI + MSR_index*8);
     if (GET32H(MSR_address)) {
       BX_ERROR(("WRMSRLIST index=%d #GP(0): reserved bits are set in MSR address table entry", MSR_index));
       exception(BX_GP_EXCEPTION, 0);
     }
 
+    Bit64u MSR_data = read_linear_qword(BX_SEG_REG_DS, RDI + MSR_index*8);
+
 #if BX_SUPPORT_VMX >= 2
     if (BX_CPU_THIS_PTR in_vmx_guest) {
-      VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
       vm->msr_data = MSR_data;
       VMexit_MSR(VMX_VMEXIT_WRMSRLIST, (Bit32u) MSR_address);
     }

@@ -9,14 +9,14 @@ AC_CONFIG_HEADERS([ltdlconf.h])
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
-VERSION="2.7.svn"
+VERSION="2.8.devel"
 VER_MAJOR=2
-VER_MINOR=7
+VER_MINOR=8
 dnl // this should be > 90 for pre-release of next version otherwise revision level
 VER_REVISION=0
-dnl // this should be 0 for release and 1 for svn version
-VER_SVN=1
-REL_STRING="Built from SVN snapshot after release 2.7"
+dnl // this should be 0 for release and 1 for development version
+VER_DEV=1
+REL_STRING="Built from GitHub snapshot after release 2.8"
 REL_TIMESTAMP=`grep "Updated:" $srcdir/README | sed 's/Updated: //'`
 
 changequote(<<, >>)
@@ -1430,6 +1430,29 @@ AC_ARG_ENABLE(evex,
 
 if test "$support_evex" -gt 0 -a "$support_avx" = 0; then
   AC_MSG_ERROR([for EVEX and AVX-512 support AVX emulation must be compiled in!])
+fi
+
+support_amx=0
+AC_MSG_CHECKING(for AMX extensions support)
+AC_ARG_ENABLE(amx,
+  AS_HELP_STRING([--enable-amx], [support for AMX extensions (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_AMX, 1)
+    support_amx=1
+   elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_AMX, 0)
+   fi
+   ],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_AMX, 0)
+  ]
+  )
+
+if test "$support_amx" -gt 0 -a "$support_evex" = 0; then
+  AC_MSG_ERROR([for AMX support AVX and EVEX emulation must be compiled in!])
 fi
 
 AC_MSG_CHECKING(for x86 debugger support)
@@ -3296,7 +3319,7 @@ AC_SUBST(VERSION)
 AC_SUBST(VER_MAJOR)
 AC_SUBST(VER_MINOR)
 AC_SUBST(VER_REVISION)
-AC_SUBST(VER_SVN)
+AC_SUBST(VER_DEV)
 AC_SUBST(REL_STRING)
 AC_SUBST(REL_TIMESTAMP)
 AC_SUBST(EXTRA_LINK_OPTS)

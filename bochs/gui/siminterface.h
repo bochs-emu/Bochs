@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -592,6 +592,7 @@ public:
   virtual void set_quit_context(jmp_buf *context) {}
   virtual bool get_init_done() { return 0; }
   virtual int set_init_done(bool n) {return 0;}
+  virtual bool get_ci_started() { return 0; }
   virtual void reset_all_param() {}
   // new param methods
   virtual bx_param_c *get_param(const char *pname, bx_param_c *base=NULL) {return NULL;}
@@ -690,9 +691,9 @@ public:
   // as a toolbar click will be processed.
   virtual void handle_events() {}
   // return first hard disk in ATA interface
-  virtual bx_param_c *get_first_cdrom() {return NULL;}
-  // return first cdrom in ATA interface
   virtual bx_param_c *get_first_hd() {return NULL;}
+  // return first cdrom in ATA interface
+  virtual bx_param_c *get_first_cdrom() {return NULL;}
   // return 1 if device is connected to a PCI slot
   virtual bool is_pci_device(const char *name) {return 0;}
   // return 1 if device is connected to the AGP slot

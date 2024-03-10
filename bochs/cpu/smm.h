@@ -76,6 +76,9 @@ struct BX_SMM_State
   bx_address gen_reg[BX_GENERAL_REGISTERS];
 
   bx_address rip;
+#if BX_SUPPORT_CET
+  bx_address ssp;
+#endif
   Bit32u eflags;
   Bit32u dr6;
   Bit32u dr7;
@@ -157,6 +160,8 @@ enum SMMRAM_Fields {
   SMRAM_FIELD_IO_INSTRUCTION_RESTART,
   SMRAM_FIELD_AUTOHALT_RESTART,
   SMRAM_FIELD_NMI_MASK,
+  SMRAM_FIELD_SSP_HI32,
+  SMRAM_FIELD_SSP,
   SMRAM_FIELD_TR_BASE_HI32,
   SMRAM_FIELD_TR_BASE,
   SMRAM_FIELD_TR_LIMIT,

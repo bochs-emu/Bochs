@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010-2021  The Bochs Project
+//  Copyright (C) 2010-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -259,7 +259,7 @@ Bit64s bx_param_num_c::get64()
 
 void bx_param_num_c::set(Bit64s newval)
 {
-  if (!enabled) return;
+  if (!enabled && SIM->get_ci_started()) return;
 
   if (handler) {
     // the handler can override the new value and/or perform some side effect

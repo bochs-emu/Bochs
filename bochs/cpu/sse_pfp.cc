@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2018 Stanislav Shwartsman
+//   Copyright (c) 2003-2023 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -65,6 +65,16 @@ float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr)
   status.denormals_are_zeros = mxcsr.get_DAZ();
 
   return status;
+}
+
+void mxcsr_to_softfloat_status_word_imm_override(float_status_t &status, Bit8u control)
+{
+  // override MXCSR rounding mode with control coming from imm8
+  if ((control & 0x4) == 0)
+    status.float_rounding_mode = control & 0x3;
+  // ignore precision exception result
+  if (control & 0x8)
+    status.float_suppress_exception |= float_flag_inexact;
 }
 
 /* Comparison predicate for CMPSS/CMPPS instructions */
@@ -233,9 +243,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEdR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CVTSI2SS_VssEqR(bxInstruction_c *i)
 {
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-
   float32 result = int64_to_float32(BX_READ_64BIT_REG(i->src()), status);
-
   check_exceptionsSSE(get_exception_flags(status));
   BX_WRITE_XMM_REG_LO_DWORD(i->dst(), result);
 
@@ -874,42 +882,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::COMISD_VsdWsdR(bxInstruction_c *i)
 }
 
 /*
- * Opcode: 0F 51
- * Square Root packed single precision.
- * Possible floating point exceptions: #I, #D, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTPS_VpsWpsR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_sqrtps(&op, status);
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG(i->dst(), op);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
- * Opcode: 66 0F 51
- * Square Root packed double precision.
- * Possible floating point exceptions: #I, #D, #P
- */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTPD_VpdWpdR(bxInstruction_c *i)
-{
-#if BX_CPU_LEVEL >= 6
-  BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  xmm_sqrtpd(&op, status);
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_XMM_REG(i->dst(), op);
-#endif
-
-  BX_NEXT_INSTR(i);
-}
-
-/*
  * Opcode: F2 0F 51
  * Square Root scalar double precision.
  * Possible floating point exceptions: #I, #D, #P
@@ -946,54 +918,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SQRTSS_VssWssR(bxInstruction_c *i)
 
   BX_NEXT_INSTR(i);
 }
-
-#if BX_CPU_LEVEL >= 6
-
-#define SSE_SIMD_PFP_CPU_LEVEL6(HANDLER, func)                                             \
-  /* SSE packed shift instruction */                                                       \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                      \
-  {                                                                                        \
-    BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());  \
-                                                                                           \
-    float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                         \
-    (func)(&op1, &op2, status);                                                            \
-    check_exceptionsSSE(get_exception_flags(status));                                      \
-                                                                                           \
-    BX_WRITE_XMM_REG(i->dst(), op1);                                                       \
-    BX_NEXT_INSTR(i);                                                                      \
-  }
-
-#else
-
-#define SSE_SIMD_PFP_CPU_LEVEL6(HANDLER, func)                                             \
-  /* SSE instruction with two src operands */                                              \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C :: HANDLER (bxInstruction_c *i)                     \
-  {                                                                                        \
-    BX_NEXT_INSTR(i);                                                                      \
-  }
-
-#endif
-
-SSE_SIMD_PFP_CPU_LEVEL6(ADDPS_VpsWpsR, xmm_addps);
-SSE_SIMD_PFP_CPU_LEVEL6(SUBPS_VpsWpsR, xmm_subps);
-SSE_SIMD_PFP_CPU_LEVEL6(MULPS_VpsWpsR, xmm_mulps);
-SSE_SIMD_PFP_CPU_LEVEL6(DIVPS_VpsWpsR, xmm_divps);
-SSE_SIMD_PFP_CPU_LEVEL6(MINPS_VpsWpsR, xmm_minps);
-SSE_SIMD_PFP_CPU_LEVEL6(MAXPS_VpsWpsR, xmm_maxps);
-SSE_SIMD_PFP_CPU_LEVEL6(HADDPS_VpsWpsR, xmm_haddps);
-SSE_SIMD_PFP_CPU_LEVEL6(HSUBPS_VpsWpsR, xmm_hsubps);
-
-SSE_SIMD_PFP_CPU_LEVEL6(ADDPD_VpdWpdR, xmm_addpd);
-SSE_SIMD_PFP_CPU_LEVEL6(SUBPD_VpdWpdR, xmm_subpd);
-SSE_SIMD_PFP_CPU_LEVEL6(MULPD_VpdWpdR, xmm_mulpd);
-SSE_SIMD_PFP_CPU_LEVEL6(DIVPD_VpdWpdR, xmm_divpd);
-SSE_SIMD_PFP_CPU_LEVEL6(MINPD_VpdWpdR, xmm_minpd);
-SSE_SIMD_PFP_CPU_LEVEL6(MAXPD_VpdWpdR, xmm_maxpd);
-SSE_SIMD_PFP_CPU_LEVEL6(HADDPD_VpdWpdR, xmm_haddpd);
-SSE_SIMD_PFP_CPU_LEVEL6(HSUBPD_VpdWpdR, xmm_hsubpd);
-
-SSE_SIMD_PFP_CPU_LEVEL6(ADDSUBPS_VpsWpsR, xmm_addsubps);
-SSE_SIMD_PFP_CPU_LEVEL6(ADDSUBPD_VpdWpdR, xmm_addsubpd);
 
 #if BX_CPU_LEVEL >= 6
 
@@ -1167,14 +1091,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPS_VpsWpsIbR(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  Bit8u control = i->Ib();
-
-  // override MXCSR rounding mode with control coming from imm8
-  if ((control & 0x4) == 0)
-    status.float_rounding_mode = control & 0x3;
-  // ignore precision exception result
-  if (control & 0x8)
-    status.float_suppress_exception |= float_flag_inexact;
+  mxcsr_to_softfloat_status_word_imm_override(status, i->Ib());
 
   op.xmm32u(0) = float32_round_to_int(op.xmm32u(0), status);
   op.xmm32u(1) = float32_round_to_int(op.xmm32u(1), status);
@@ -1193,14 +1110,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDPD_VpdWpdIbR(bxInstruction_c *i)
   BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  Bit8u control = i->Ib();
-
-  // override MXCSR rounding mode with control coming from imm8
-  if ((control & 0x4) == 0)
-    status.float_rounding_mode = control & 0x3;
-  // ignore precision exception result
-  if (control & 0x8)
-    status.float_suppress_exception |= float_flag_inexact;
+  mxcsr_to_softfloat_status_word_imm_override(status, i->Ib());
 
   op.xmm64u(0) = float64_round_to_int(op.xmm64u(0), status);
   op.xmm64u(1) = float64_round_to_int(op.xmm64u(1), status);
@@ -1217,14 +1127,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSS_VssWssIbR(bxInstruction_c *i)
   float32 op = BX_READ_XMM_REG_LO_DWORD(i->src());
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  Bit8u control = i->Ib();
-
-  // override MXCSR rounding mode with control coming from imm8
-  if ((control & 0x4) == 0)
-    status.float_rounding_mode = control & 0x3;
-  // ignore precision exception result
-  if (control & 0x8)
-    status.float_suppress_exception |= float_flag_inexact;
+  mxcsr_to_softfloat_status_word_imm_override(status, i->Ib());
 
   op = float32_round_to_int(op, status);
 
@@ -1240,14 +1143,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROUNDSD_VsdWsdIbR(bxInstruction_c *i)
   float64 op = BX_READ_XMM_REG_LO_QWORD(i->src());
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  Bit8u control = i->Ib();
-
-  // override MXCSR rounding mode with control coming from imm8
-  if ((control & 0x4) == 0)
-    status.float_rounding_mode = control & 0x3;
-  // ignore precision exception result
-  if (control & 0x8)
-    status.float_suppress_exception |= float_flag_inexact;
+  mxcsr_to_softfloat_status_word_imm_override(status, i->Ib());
 
   op = float64_round_to_int(op, status);
 

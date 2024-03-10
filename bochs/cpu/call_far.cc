@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2019 Stanislav Shwartsman
+//   Copyright (c) 2005-2024 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -649,6 +649,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::shadow_stack_switch(bx_address new_SSP)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_far_shadow_stack_push(Bit16u cs, bx_address lip, bx_address old_ssp)
 {
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    BX_CPU_THIS_PTR vmcs.shadow_stack_prematurely_busy = true;
+#endif
+
   if (SSP & 0x7) {
     shadow_stack_write_dword(SSP-4, CPL, 0);
     SSP &= ~BX_CONST64(0x7);
@@ -657,7 +662,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_far_shadow_stack_push(Bit16u cs, bx_a
   shadow_stack_push_64(cs);
   shadow_stack_push_64(lip);
   shadow_stack_push_64(old_ssp);
-}
-#endif
 
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    BX_CPU_THIS_PTR vmcs.shadow_stack_prematurely_busy = false;
 #endif
+}
+#endif // BX_SUPPORT_CET
+
+#endif // BX_SUPPORT_X86_64

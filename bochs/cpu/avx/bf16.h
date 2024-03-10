@@ -25,8 +25,8 @@
 #define BX_BF16_HELPER
 
 // FP32: s|eeeeeeee|mmmmmmmmmmmmmmmmmmmmmmm
-// BF16: s|eeeeeeee|mmmmmmmm
-//  F16: s|eeeee|mmmmmmmmmmm
+// BF16: s|eeeeeeee|mmmmmmm
+//  F16: s|eeeee|mmmmmmmmmm
 
 BX_CPP_INLINE float32 convert_bfloat16_to_fp32(bfloat16 op)
 {

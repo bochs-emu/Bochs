@@ -23,7 +23,12 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "cpuid.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
 
 #include "pc_system.h"
 #include "gui/gui.h"
@@ -200,7 +205,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (VMEXIT(VMX_VM_EXEC_CTRL1_HLT_VMEXIT)) {
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.HLT_VMEXIT()) {
       VMexit(VMX_VMEXIT_HLT, 0);
     }
   }
@@ -264,9 +269,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WBINVD(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_WBINVD_VMEXIT)) {
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.WBINVD_VMEXIT())
       VMexit(VMX_VMEXIT_WBINVD, 0);
-    }
   }
 #endif
 
@@ -326,17 +330,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVDIR64B(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
 
-#if BX_SUPPORT_X86_64
-  bx_address src_eaddr = BX_READ_64BIT_REG(i->dst()) & i->asize_mask();
-#else
-  bx_address src_eaddr = BX_READ_32BIT_REG(i->dst()) & i->asize_mask();
-#endif
-
   BxPackedZmmRegister zmm; // zmm is always made available even if EVEX is not compiled in
-  read_virtual_zmmword(BX_SEG_REG_ES, src_eaddr, &zmm);
+  bx_address src_eaddr = BX_CPU_RESOLVE_ADDR(i);
+  read_virtual_zmmword(i->seg(), src_eaddr, &zmm);
 
-  bx_address dst_eaddr = BX_CPU_RESOLVE_ADDR(i);
-  write_virtual_zmmword_aligned(i->seg(), dst_eaddr, &zmm);
+#if BX_SUPPORT_X86_64
+  bx_address dst_eaddr = BX_READ_64BIT_REG(i->dst());
+#else
+  bx_address dst_eaddr = BX_READ_32BIT_REG(i->dst());
+#endif
+  write_virtual_zmmword_aligned(BX_SEG_REG_ES, dst_eaddr & i->asize_mask(), &zmm);
+
 #endif
 
   BX_NEXT_INSTR(i);
@@ -523,6 +527,14 @@ void BX_CPU_C::handleAvxModeChange(void)
     }
   }
 
+#if BX_SUPPORT_AMX
+  if (! long64_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE() ||
+      (~BX_CPU_THIS_PTR xcr0.val32 & (BX_XCR0_XTILECFG_MASK | BX_XCR0_XTILEDATA_MASK)) != 0)
+    clear_amx_ok();
+  else
+    set_amx_ok();
+#endif
+
   updateFetchModeMask(); /* AVX_OK changed */
 }
 
@@ -577,6 +589,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoEVEX(bxInstruction_c *i)
 }
 #endif
 
+#if BX_SUPPORT_AMX
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoAMX(bxInstruction_c *i)
+{
+  if (! long64_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE())
+    exception(BX_UD_EXCEPTION, 0);
+
+  if (~BX_CPU_THIS_PTR xcr0.val32 & (BX_XCR0_XTILECFG_MASK | BX_XCR0_XTILEDATA_MASK))
+    exception(BX_UD_EXCEPTION, 0);
+
+  BX_ASSERT(0);
+
+  BX_NEXT_TRACE(i); // keep compiler happy
+}
+#endif
+
 #endif
 
 void BX_CPU_C::handleCpuContextChange(void)
@@ -614,7 +641,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)  {
-    if (VMEXIT(VMX_VM_EXEC_CTRL1_RDPMC_VMEXIT)) {
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.RDPMC_VMEXIT()) {
       VMexit(VMX_VMEXIT_RDPMC, 0);
     }
   }
@@ -670,7 +697,7 @@ Bit64u BX_CPU_C::get_Virtual_TSC()
   Bit64u tsc = BX_CPU_THIS_PTR get_TSC();
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (VMEXIT(VMX_VM_EXEC_CTRL1_TSC_OFFSET) && SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_TSC_SCALING)) {
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.TSC_OFFSET() && BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.TSC_SCALING()) {
       // RDTSC first computes the product of the value of the IA32_TIME_STAMP_COUNTER MSR and
       // the value of the TSC multiplier. It then shifts the value of the product right 48 bits and loads 
       // EAX:EDX with <the sum of that shifted value and the value of the TSC offset>.
@@ -690,7 +717,7 @@ Bit64u BX_CPU_C::get_Virtual_TSC()
 Bit64u BX_CPU_C::compute_physical_TSC_delay(Bit64u tsc_delay)
 {
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (VMEXIT(VMX_VM_EXEC_CTRL1_TSC_OFFSET) && SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_TSC_SCALING)) {
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.TSC_OFFSET() && BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.TSC_SCALING()) {
       // The virtual delay is multiplied by 2^48 (using a shift) to produce a 128-bit 
       // integer. That product is then divided by the TSC multiplier to produce a 64-bit integer.
       // The physical delay is that quotient.
@@ -728,7 +755,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSC(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (VMEXIT(VMX_VM_EXEC_CTRL1_RDTSC_VMEXIT)) {
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.RDTSC_VMEXIT()) {
       VMexit(VMX_VMEXIT_RDTSC, 0);
     }
   }
@@ -757,7 +784,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   // RDTSCP will always #UD in legacy VMX mode, the #UD takes priority over any other exception the instruction may incur.
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_RDTSCP)) {
+    if (! BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.RDTSCP()) {
        BX_ERROR(("%s in VMX guest: not allowed to use instruction !", i->getIaOpcodeNameShort()));
        exception(BX_UD_EXCEPTION, 0);
     }
@@ -771,7 +798,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDTSCP(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (VMEXIT(VMX_VM_EXEC_CTRL1_RDTSC_VMEXIT)) {
+    if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.RDTSC_VMEXIT()) {
       VMexit(VMX_VMEXIT_RDTSCP, 0);
     }
   }
@@ -800,7 +827,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPID_Ed(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   // RDTSCP will always #UD in legacy VMX mode
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    if (! SECONDARY_VMEXEC_CONTROL(VMX_VM_EXEC_CTRL2_RDTSCP)) {
+    if (! BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.RDTSCP()) {
        BX_ERROR(("%s in VMX guest: not allowed to use instruction !", i->getIaOpcodeNameShort()));
        exception(BX_UD_EXCEPTION, 0);
     }

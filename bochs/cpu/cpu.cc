@@ -89,6 +89,15 @@ void BX_CPU_C::cpu_loop(void)
   BX_CPU_THIS_PTR prev_rip = RIP; // commit new EIP
   BX_CPU_THIS_PTR speculative_rsp = false;
 
+#if BX_SUPPORT_CET && BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest) {
+    VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
+    if (vm->shadow_stack_prematurely_busy)
+      BX_PANIC(("Shadow stack prematurely busy is left set !"));
+    vm->shadow_stack_prematurely_busy = false; // for safety
+  }
+#endif
+
   while (1) {
 
     // check on events which occurred for previous instructions (traps)
@@ -562,17 +571,9 @@ void BX_CPU_C::prefetch(void)
 
 #if BX_SUPPORT_X86_64
   if (long64_mode()) {
-    if (! IsCanonical(RIP)) {
+    if (! IsCanonicalAccess(RIP, USER_PL)) {
       BX_ERROR(("prefetch: #GP(0): RIP crossed canonical boundary"));
       exception(BX_GP_EXCEPTION, 0);
-    }
-
-    if (BX_CPU_THIS_PTR cr4.get_LASS()) {
-      // RIP[63] == 0 user, RIP[63] == 1 supervisor
-      if ((RIP >> 63) == USER_PL) {
-        BX_ERROR(("prefetch: #GP(0): LASS violation during fetch CPL=%d RIP=0x" FMT_PHY_ADDRX, CPL, RIP));
-        exception(BX_GP_EXCEPTION, 0);
-      }
     }
 
     // linear address is equal to RIP in 64-bit long mode

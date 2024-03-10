@@ -288,15 +288,16 @@ void bx_local_apic_c::enable_xapic_extensions(void)
 
 void bx_local_apic_c::set_base(bx_phy_address newbase)
 {
-#if BX_CPU_LEVEL >= 6
-  if (mode == BX_APIC_X2APIC_MODE)
-    ldr = ((apic_id & 0xfffffff0) << 16) | (1 << (apic_id & 0xf));
-#endif
   mode = (newbase >> 10) & 3;
   newbase &= ~((bx_phy_address) 0xfff);
   base_addr = newbase;
   BX_INFO(("allocate APIC id=%d (MMIO %s) to 0x" FMT_PHY_ADDRX,
     apic_id, (mode == BX_APIC_XAPIC_MODE) ? "enabled" : "disabled", newbase));
+
+#if BX_CPU_LEVEL >= 6
+  if (mode == BX_APIC_X2APIC_MODE)
+    ldr = ((apic_id & 0xfffffff0) << 16) | (1 << (apic_id & 0xf));
+#endif
 
   if (mode == BX_APIC_GLOBALLY_DISABLED) {
     // if local apic becomes globally disabled reset some fields back to defaults
@@ -311,9 +312,9 @@ bool bx_local_apic_c::is_selected(bx_phy_address addr)
   if((addr & ~0xfff) == base_addr) {
     if((addr & 0xf) != 0)
       BX_INFO(("warning: misaligned APIC access. addr=0x" FMT_PHY_ADDRX, addr));
-    return 1;
+    return true;
   }
-  return 0;
+  return false;
 }
 
 void bx_local_apic_c::read(bx_phy_address addr, void *data, unsigned len)
@@ -836,11 +837,11 @@ bool bx_local_apic_c::deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode
   case APIC_DM_SMI:
     BX_INFO(("Deliver SMI"));
     cpu->deliver_SMI();
-    return 1;
+    break;
   case APIC_DM_NMI:
     BX_INFO(("Deliver NMI"));
     cpu->deliver_NMI();
-    return 1;
+    break;
   case APIC_DM_INIT:
     BX_INFO(("Deliver INIT IPI"));
     cpu->deliver_INIT();
@@ -854,10 +855,10 @@ bool bx_local_apic_c::deliver(Bit8u vector, Bit8u delivery_mode, Bit8u trig_mode
     trigger_irq(vector, trig_mode, 1);
     break;
   default:
-    return 0;
+    return false;
   }
 
-  return 1;
+  return true;
 }
 
 void bx_local_apic_c::trigger_irq(Bit8u vector, unsigned trigger_mode, bool bypass_irr_isr)
@@ -1252,7 +1253,7 @@ bool bx_local_apic_c::read_x2apic(unsigned index, Bit64u *val_64)
   case BX_LAPIC_ICR_HI:
   case BX_LAPIC_EOI: // write only
   case BX_LAPIC_SELF_IPI: // write only
-    return 0;
+    return false;
   // compatible to legacy lapic mode
   case BX_LAPIC_VERSION:
   case BX_LAPIC_TPR:
@@ -1297,10 +1298,10 @@ bool bx_local_apic_c::read_x2apic(unsigned index, Bit64u *val_64)
     break;
   default:
     BX_ERROR(("read_x2apic: not supported apic register 0x%08x", index));
-    return 0;
+    return false;
   }
 
-  return 1;
+  return true;
 }
 
 // return false when x2apic is not supported/not writeable
@@ -1311,7 +1312,7 @@ bool bx_local_apic_c::write_x2apic(unsigned index, Bit32u val32_hi, Bit32u val32
   if (index != BX_LAPIC_ICR_LO) {
     // upper 32-bit are reserved for all x2apic MSRs except for the ICR
     if (val32_hi != 0)
-      return 0;
+      return false;
   }
 
   switch(index) {
@@ -1348,29 +1349,29 @@ bool bx_local_apic_c::write_x2apic(unsigned index, Bit32u val32_hi, Bit32u val32
   case BX_LAPIC_IRR8:
   case BX_LAPIC_ICR_HI:
   case BX_LAPIC_TIMER_CURRENT_COUNT:
-    return 0;
+    return false;
   // send self ipi
   case BX_LAPIC_SELF_IPI:
     trigger_irq(val32_lo & 0xff, APIC_EDGE_TRIGGERED);
-    return 1;
+    return true;
   case BX_LAPIC_ICR_LO:
     // handle full 64-bit write
     send_ipi(val32_hi, val32_lo);
-    return 1;
+    return true;
   case BX_LAPIC_TPR:
     // handle reserved bits, only bits 0-7 are writeable
     if ((val32_lo & 0xffffff00) != 0)
-      return 0;
+      return false;
     break; // use legacy write
   case BX_LAPIC_SPURIOUS_VECTOR:
     // handle reserved bits, only bits 0-8, 12 are writeable
     // we do not support directed EOI capability, so reserve bit 12 as well
     if ((val32_lo & 0xfffffe00) != 0)
-      return 0;
+      return false;
     break; // use legacy write
   case BX_LAPIC_EOI:
   case BX_LAPIC_ESR:
-    if (val32_lo != 0) return 0;
+    if (val32_lo != 0) return false;
     break; // use legacy write
   case BX_LAPIC_LVT_TIMER:
   case BX_LAPIC_LVT_THERMAL:
@@ -1384,11 +1385,11 @@ bool bx_local_apic_c::write_x2apic(unsigned index, Bit32u val32_hi, Bit32u val32
     break; // use legacy write
   default:
     BX_ERROR(("write_x2apic: not supported apic register 0x%08x", index));
-    return 0;
+    return false;
   }
 
   write_aligned(index, val32_lo);
-  return 1;
+  return true;
 }
 #endif
 

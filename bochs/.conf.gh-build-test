@@ -33,6 +33,7 @@ case $which_config in
       --enable-svm \
       --enable-avx \
       --enable-evex \
+      --enable-amx \
       --enable-cet \
       --enable-pci \
       --enable-clgd54xx \
@@ -74,6 +75,7 @@ case $which_config in
       --enable-avx \
       --enable-cet \
       --enable-evex \
+      --enable-amx \
       --enable-uintr \
       --enable-perfmon \
       --enable-memtype \

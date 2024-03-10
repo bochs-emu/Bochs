@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2023 Stanislav Shwartsman
+//   Copyright (c) 2009-2024 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -24,10 +24,13 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "cpuid.h"
 
 #define LOG_THIS BX_CPU(0)->
 
 #if BX_SUPPORT_VMX
+
+#include "vmx_ctrls.h"
 
 const Bit32u VMCS_REVISION_ID_FIELD_ADDR  = 0x0000;
 const Bit32u VMCS_VMX_ABORT_FIELD_ADDR    = 0x0004;
@@ -397,6 +400,16 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_CONTROL_TERTIARY_VMEXEC_CONTROLS_HI:
       return BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl3_supported_bits;
 
+    case VMCS_64BIT_CONTROL_SECONDARY_VMEXIT_CONTROLS:
+    case VMCS_64BIT_CONTROL_SECONDARY_VMEXIT_CONTROLS_HI:
+      return BX_CPU_THIS_PTR vmx_cap.vmx_vmexit_ctrl2_supported_bits;
+
+    case VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_MASK:
+    case VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_MASK_HI:
+    case VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_SHADOW:
+    case VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_SHADOW_HI:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_SPEC_CTRL_VIRTUALIZATION);
+
     /* VMCS 64-bit read only data fields */
     /* binary 0010_01xx_xxxx_xxx0 */
     case VMCS_64BIT_GUEST_PHYSICAL_ADDR:
@@ -558,6 +571,7 @@ void BX_CPU_C::init_vmx_capabilities(void)
   init_tertiary_proc_based_vmexec_ctrls(); // must initialize in reverse order
   init_secondary_proc_based_vmexec_ctrls();
   init_primary_proc_based_vmexec_ctrls();
+  init_secondary_vmexit_ctrls(); // must initialize in reverse order
   init_vmexit_ctrls();
   init_vmentry_ctrls();
 }
@@ -577,7 +591,7 @@ void BX_CPU_C::init_ept_vpid_capabilities(void)
   // [17] - EPT 1G pages support
   // [20] - INVEPT instruction supported
   // [21] - EPT A/D bits supported
-  // [22] - advanced VM-exit information for EPT violations (not implemented yet)
+  // [22] - advanced VM-exit information for EPT violations (tied to MBE support)
   // [23] - Enable Shadow Stack control bit is supported in EPTP (CET)
   // [25] - INVEPT single-context invalidation supported
   // [26] - INVEPT all-context invalidation supported
@@ -593,6 +607,8 @@ void BX_CPU_C::init_ept_vpid_capabilities(void)
       cap->vmx_ept_vpid_cap_supported_bits |= (1 << 17);
     if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_ACCESS_DIRTY))
       cap->vmx_ept_vpid_cap_supported_bits |= (1 << 21);
+    if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_MBE_CONTROL))
+      cap->vmx_ept_vpid_cap_supported_bits |= (1 << 22);
     if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET))
       cap->vmx_ept_vpid_cap_supported_bits |= (1 << 23);
   }
@@ -852,7 +868,7 @@ void BX_CPU_C::init_tertiary_proc_based_vmexec_ctrls(void)
 
   // tertiary proc based vm exec controls
   // -----------------------------------------------------------
-  //   [00] LOADIWKEY exiting (KeyLoker)
+  //   [00] LOADIWKEY exiting (KeyLocker)
   //   [01] Enable HLAT
   //   [02] EPT Paging Write control
   //   [03] Guest Paging verification
@@ -867,6 +883,23 @@ void BX_CPU_C::init_tertiary_proc_based_vmexec_ctrls(void)
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MSRLIST)) {
     cap->vmx_vmexec_ctrl3_supported_bits |= VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST;
   }
+  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_SPEC_CTRL_VIRTUALIZATION)) {
+    cap->vmx_vmexec_ctrl3_supported_bits |= VMX_VM_EXEC_CTRL3_VIRTUALIZE_IA32_SPEC_CTRL;
+  }
+}
+
+void BX_CPU_C::init_secondary_vmexit_ctrls(void)
+{
+  struct bx_VMX_Cap *cap = &BX_CPU_THIS_PTR vmx_cap;
+
+  // secondary vmexit controls
+  // -----------------------------------------------------------
+  //    [02] Prematurely busy shadow stack control
+
+#if BX_SUPPORT_CET
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET))
+    cap->vmx_vmexit_ctrl2_supported_bits |= VMX_VMEXIT_CTRL2_SHADOW_STACK_BUSY_CTRL;
+#endif
 }
 
 void BX_CPU_C::init_vmexit_ctrls(void)
@@ -893,42 +926,46 @@ void BX_CPU_C::init_vmexit_ctrls(void)
   //      [28] Save host CET state on VMEXIT
   //      [29] Save host MSR_IA32_PKRS on VMEXIT
   //      [30] Save guest MSR_PERF_GLOBAL_CTRL on VMEXIT
+  //      [31] Activate secondary VMEXIT controls
 
-  cap->vmx_vmexit_ctrl_supported_bits =
+  cap->vmx_vmexit_ctrl1_supported_bits =
       VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT | VMX_VMEXIT_CTRL1_SAVE_DBG_CTRLS;
 
 #if BX_SUPPORT_X86_64
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE))
-    cap->vmx_vmexit_ctrl_supported_bits |= VMX_VMEXIT_CTRL1_HOST_ADDR_SPACE_SIZE;
+    cap->vmx_vmexit_ctrl1_supported_bits |= VMX_VMEXIT_CTRL1_HOST_ADDR_SPACE_SIZE;
 #endif
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_PERF_GLOBAL_CTRL))
-    cap->vmx_vmexit_ctrl_supported_bits |= VMX_VMEXIT_CTRL1_LOAD_PERF_GLOBAL_CTRL_MSR;
+    cap->vmx_vmexit_ctrl1_supported_bits |= VMX_VMEXIT_CTRL1_LOAD_PERF_GLOBAL_CTRL_MSR;
 #if BX_SUPPORT_VMX >= 2
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_PAT)) {
-    cap->vmx_vmexit_ctrl_supported_bits |=
+    cap->vmx_vmexit_ctrl1_supported_bits |=
       VMX_VMEXIT_CTRL1_STORE_PAT_MSR | VMX_VMEXIT_CTRL1_LOAD_PAT_MSR;
   }
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EFER)) {
-    cap->vmx_vmexit_ctrl_supported_bits |=
+    cap->vmx_vmexit_ctrl1_supported_bits |=
       VMX_VMEXIT_CTRL1_STORE_EFER_MSR | VMX_VMEXIT_CTRL1_LOAD_EFER_MSR;
   }
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_PREEMPTION_TIMER))
-    cap->vmx_vmexit_ctrl_supported_bits |= VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER;
+    cap->vmx_vmexit_ctrl1_supported_bits |= VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER;
 #endif
 #if BX_SUPPORT_UINTR
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UINTR))
-    cap->vmx_vmexit_ctrl_supported_bits |= VMX_VMEXIT_CTRL1_CLEAR_UINV;
+    cap->vmx_vmexit_ctrl1_supported_bits |= VMX_VMEXIT_CTRL1_CLEAR_UINV;
 #endif
 #if BX_SUPPORT_CET
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET))
-    cap->vmx_vmexit_ctrl_supported_bits |= VMX_VMEXIT_CTRL1_LOAD_HOST_CET_STATE;
+    cap->vmx_vmexit_ctrl1_supported_bits |= VMX_VMEXIT_CTRL1_LOAD_HOST_CET_STATE;
 #endif
 #if BX_SUPPORT_PKEYS
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PKS))
-    cap->vmx_vmexit_ctrl_supported_bits |= VMX_VMEXIT_CTRL1_LOAD_HOST_PKRS;
+    cap->vmx_vmexit_ctrl1_supported_bits |= VMX_VMEXIT_CTRL1_LOAD_HOST_PKRS;
 #endif
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_PERF_GLOBAL_CTRL))
-    cap->vmx_vmexit_ctrl_supported_bits |= VMX_VMEXIT_CTRL1_SAVE_PERF_GLOBAL_CTRL;
+    cap->vmx_vmexit_ctrl1_supported_bits |= VMX_VMEXIT_CTRL1_SAVE_PERF_GLOBAL_CTRL;
+
+  if (cap->vmx_vmexit_ctrl2_supported_bits)
+    cap->vmx_vmexit_ctrl1_supported_bits |= VMX_VMEXIT_CTRL1_ACTIVATE_SECONDARY_CTRLS;
 }
 
 void BX_CPU_C::init_vmentry_ctrls(void)

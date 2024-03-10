@@ -29,6 +29,7 @@
 #if BX_SUPPORT_AVX
 
 extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
+extern void mxcsr_to_softfloat_status_word_imm_override(float_status_t &status, Bit8u immb);
 
 extern float32 approximate_rsqrt(float32 op);
 extern float32 approximate_rcp(float32 op);
@@ -129,42 +130,6 @@ float64_compare_method avx_compare64[32] = {
   float64_true_signalling
 };
 
-/* Opcode: VEX.0F 51 (VEX.W ignore, VEX.VVV #UD) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTPS_VpsWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_sqrtps(&op.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_AVX_REGZ(i->dst(), op, len);
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.66.0F 51 (VEX.W ignore, VEX.VVV #UD) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTPD_VpdWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
-  unsigned len = i->getVL();
-
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < len; n++) {
-    xmm_sqrtpd(&op.vmm128(n), status);
-  }
-
-  check_exceptionsSSE(get_exception_flags(status));
-  BX_WRITE_AVX_REGZ(i->dst(), op, len);
-  BX_NEXT_INSTR(i);
-}
-
 /* Opcode: VEX.NDS.F3.0F 51 (VEX.W ignore, VEX.L ignore) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSS_VssHpsWssR(bxInstruction_c *i)
 {
@@ -247,51 +212,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCPSS_VssHpsWssR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-#define AVX_PACKED_PFP(HANDLER, func)                                                       \
-  /* AVX packed shift with imm8 instruction */                                              \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
-  {                                                                                         \
-    BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()); \
-    unsigned len = i->getVL();                                                              \
-                                                                                            \
-    float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                          \
-    softfloat_status_word_rc_override(status, i);                                           \
-                                                                                            \
-    for (unsigned n=0; n < len; n++) {                                                      \
-      (func)(&op1.vmm128(n), &op2.vmm128(n), status);                                       \
-    }                                                                                       \
-                                                                                            \
-    check_exceptionsSSE(get_exception_flags(status));                                       \
-                                                                                            \
-    BX_WRITE_AVX_REGZ(i->dst(), op1, len);                                                  \
-    BX_NEXT_INSTR(i);                                                                       \
-  }
-
-AVX_PACKED_PFP(VADDPS_VpsHpsWpsR, xmm_addps);
-AVX_PACKED_PFP(VADDPD_VpdHpdWpdR, xmm_addpd);
-AVX_PACKED_PFP(VSUBPS_VpsHpsWpsR, xmm_subps);
-AVX_PACKED_PFP(VSUBPD_VpdHpdWpdR, xmm_subpd);
-AVX_PACKED_PFP(VMULPS_VpsHpsWpsR, xmm_mulps);
-AVX_PACKED_PFP(VMULPD_VpdHpdWpdR, xmm_mulpd);
-AVX_PACKED_PFP(VDIVPS_VpsHpsWpsR, xmm_divps);
-AVX_PACKED_PFP(VDIVPD_VpdHpdWpdR, xmm_divpd);
-AVX_PACKED_PFP(VMINPS_VpsHpsWpsR, xmm_minps);
-AVX_PACKED_PFP(VMINPD_VpdHpdWpdR, xmm_minpd);
-AVX_PACKED_PFP(VMAXPS_VpsHpsWpsR, xmm_maxps);
-AVX_PACKED_PFP(VMAXPD_VpdHpdWpdR, xmm_maxpd);
-AVX_PACKED_PFP(VHADDPS_VpsHpsWpsR, xmm_haddps);
-AVX_PACKED_PFP(VHADDPD_VpdHpdWpdR, xmm_haddpd);
-AVX_PACKED_PFP(VHSUBPS_VpsHpsWpsR, xmm_hsubps);
-AVX_PACKED_PFP(VHSUBPD_VpdHpdWpdR, xmm_hsubpd);
-AVX_PACKED_PFP(VADDSUBPS_VpsHpsWpsR, xmm_addsubps);
-AVX_PACKED_PFP(VADDSUBPD_VpdHpdWpdR, xmm_addsubpd);
-#if BX_SUPPORT_EVEX
-AVX_PACKED_PFP(VSCALEFPS_VpsHpsWpsR, xmm_scalefps);
-AVX_PACKED_PFP(VSCALEFPD_VpdHpdWpdR, xmm_scalefpd);
-#endif
-
 #define AVX_SCALAR_SINGLE_FP(HANDLER, func)                                                 \
-  /* AVX packed shift with imm8 instruction */                                              \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
   {                                                                                         \
     BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());                                   \
@@ -319,7 +240,6 @@ AVX_SCALAR_SINGLE_FP(VSCALEFSS_VssHpsWssR, float32_scalef);
 #endif
 
 #define AVX_SCALAR_DOUBLE_FP(HANDLER, func)                                                 \
-  /* AVX packed shift with imm8 instruction */                                              \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
   {                                                                                         \
     BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());                                   \
@@ -476,14 +396,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDPS_VpsWpsIbR(bxInstruction_c *i)
   unsigned len = i->getVL();
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  Bit8u control = i->Ib();
-
-  // override MXCSR rounding mode with control coming from imm8
-  if ((control & 0x4) == 0)
-    status.float_rounding_mode = control & 0x3;
-  // ignore precision exception result
-  if (control & 0x8)
-    status.float_suppress_exception |= float_flag_inexact;
+  mxcsr_to_softfloat_status_word_imm_override(status, i->Ib());
 
   for(unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
     op.ymm32u(n) = float32_round_to_int(op.ymm32u(n), status);
@@ -503,14 +416,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDPD_VpdWpdIbR(bxInstruction_c *i)
   unsigned len = i->getVL();
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  Bit8u control = i->Ib();
-
-  // override MXCSR rounding mode with control coming from imm8
-  if ((control & 0x4) == 0)
-    status.float_rounding_mode = control & 0x3;
-  // ignore precision exception result
-  if (control & 0x8)
-    status.float_suppress_exception |= float_flag_inexact;
+  mxcsr_to_softfloat_status_word_imm_override(status, i->Ib());
 
   for(unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
     op.ymm64u(n) = float64_round_to_int(op.ymm64u(n), status);
@@ -530,14 +436,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDSS_VssHpsWssIbR(bxInstruction_c *i)
   float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  Bit8u control = i->Ib();
-
-  // override MXCSR rounding mode with control coming from imm8
-  if ((control & 0x4) == 0)
-    status.float_rounding_mode = control & 0x3;
-  // ignore precision exception result
-  if (control & 0x8)
-    status.float_suppress_exception |= float_flag_inexact;
+  mxcsr_to_softfloat_status_word_imm_override(status, i->Ib());
 
   op1.xmm32u(0) = float32_round_to_int(op2, status);
 
@@ -555,14 +454,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VROUNDSD_VsdHpdWsdIbR(bxInstruction_c *i)
   float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  Bit8u control = i->Ib();
-
-  // override MXCSR rounding mode with control coming from imm8
-  if ((control & 0x4) == 0)
-    status.float_rounding_mode = control & 0x3;
-  // ignore precision exception result
-  if (control & 0x8)
-    status.float_suppress_exception |= float_flag_inexact;
+  mxcsr_to_softfloat_status_word_imm_override(status, i->Ib());
 
   op1.xmm64u(0) = float64_round_to_int(op2, status);
 

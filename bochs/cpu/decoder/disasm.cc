@@ -30,7 +30,7 @@
 #include "decoder.h"
 #include "fetchdecode.h"
 
-#if BX_DEBUGGER
+#if BX_DEBUGGER && !defined(BX_STANDALONE_DECODER)
 #include "../../bx_debug/debug.h"
 #define SYMBOLIC_JUMP(fmt)  fmt " %s"
 #define GET_SYMBOL(addr) bx_dbg_disasm_symbolic_address((addr), 0)
@@ -293,12 +293,10 @@ char *resolve_memsize(char *disbufptr, const bxInstruction_c *i, unsigned src_in
   else if (src_index == BX_SRC_RM) {
     switch(src_type) {
     case BX_GPR8:
-    case BX_GPR32_MEM8:      // 8-bit  memory ref but 32-bit GPR
       disbufptr = dis_sprintf(disbufptr, "byte ptr ");
       break;
 
     case BX_GPR16:
-    case BX_GPR32_MEM16:     // 16-bit memory ref but 32-bit GPR
     case BX_SEGREG:
       disbufptr = dis_sprintf(disbufptr, "word ptr ");
       break;
@@ -327,6 +325,9 @@ char *resolve_memsize(char *disbufptr, const bxInstruction_c *i, unsigned src_in
       else
 #endif
         disbufptr = dis_sprintf(disbufptr, "xmmword ptr ");
+      break;
+
+    case BX_TMM_REG:
       break;
 
     default:
@@ -401,8 +402,6 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
     break;
 
   case BX_GPR32:
-  case BX_GPR32_MEM8:      // 8-bit  memory ref but 32-bit GPR
-  case BX_GPR32_MEM16:     // 16-bit memory ref but 32-bit GPR
     disbufptr = dis_sprintf(disbufptr, "%s", general_32bit_regname[srcreg]);
     break;
 
@@ -459,6 +458,10 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
     assert(srcreg < 8);
     break;
 #endif
+
+  case BX_TMM_REG:
+    disbufptr = dis_sprintf(disbufptr, "tmm%d", srcreg);
+    break;
 
   case BX_SEGREG:
     disbufptr = dis_sprintf(disbufptr, "%s", segment_name[srcreg]);
@@ -542,7 +545,7 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
       Bit32u imm32 = i->Id();
       Bit16u cs_selector = i->Iw2();
       disbufptr = dis_sprintf(disbufptr, "0x%04x:%08x", cs_selector, imm32);
-#if BX_DEBUGGER
+#if BX_DEBUGGER && !defined(BX_STANDALONE_DECODER)
       bx_address laddr = bx_dbg_get_laddr(cs_selector, imm32);
       // get the symbol
       const char *ptStrSymbol = bx_dbg_disasm_symbolic_address(laddr, 0);
@@ -554,7 +557,7 @@ char *disasm_immediate(char *disbufptr, const bxInstruction_c *i, unsigned src_t
       Bit16u imm16 = i->Iw();
       Bit16u cs_selector = i->Iw2();
       disbufptr = dis_sprintf(disbufptr, "0x%04x:%04x", cs_selector, imm16);
-#if BX_DEBUGGER
+#if BX_DEBUGGER && !defined(BX_STANDALONE_DECODER)
       bx_address laddr = bx_dbg_get_laddr(cs_selector, imm16);
       // get the symbol
       const char *ptStrSymbol = bx_dbg_disasm_symbolic_address(laddr, 0);

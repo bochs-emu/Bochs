@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -45,10 +45,11 @@
 
 bx_ne2k_main_c *NE2kDevMain = NULL;
 
+#define BX_NE2K_TYPE_AUTO 0
 #define BX_NE2K_TYPE_ISA  1
 #define BX_NE2K_TYPE_PCI  2
 
-const char *ne2k_types_list[] = {"isa", "pci", NULL};
+const char *ne2k_types_list[] = {"auto", "isa", "pci", NULL};
 
 const Bit8u ne2k_iomask[32] = {3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
                                7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
@@ -76,8 +77,8 @@ void ne2k_init_options(void)
       "Type of NE2K NIC emulation",
       "Type of the NE2K NIC emulation",
       ne2k_types_list,
-      BX_NE2K_TYPE_ISA,
-      BX_NE2K_TYPE_ISA);
+      (card==0) ? BX_NE2K_TYPE_AUTO:BX_NE2K_TYPE_ISA,
+      (card==0) ? BX_NE2K_TYPE_AUTO:BX_NE2K_TYPE_ISA);
     bx_param_num_c *ioaddr = new bx_param_num_c(menu,
       "ioaddr",
       "NE2K I/O Address",
@@ -130,13 +131,6 @@ Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])
       // MAC address is already initialized
       valid |= 0x04;
     }
-    if (card == 0) {
-      if (SIM->is_pci_device("ne2k")) {
-        SIM->get_param_enum("type", base)->set(BX_NE2K_TYPE_PCI);
-      } else {
-        SIM->get_param_enum("type", base)->set(BX_NE2K_TYPE_ISA);
-      }
-    }
     for (int i = first; i < num_params; i++) {
       if (!strncmp(params[i], "type=", 5)) {
         SIM->get_param_enum("type", base)->set_by_name(&params[i][5]);
@@ -154,7 +148,7 @@ Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])
         }
       }
     }
-    if (SIM->get_param_enum("type", base)->get() == BX_NE2K_TYPE_PCI) {
+    if (SIM->get_param_enum("type", base)->get() != BX_NE2K_TYPE_ISA) {
       valid |= 0x10;
     }
     if ((valid & 0xc0) == 0) {
@@ -327,7 +321,11 @@ void bx_ne2k_c::init_card(Bit8u card)
   sprintf(s.devname, "ne2k%d", card);
   put(s.devname);
   sprintf(s.ldevname, "NE2000 NIC #%d", card);
-  BX_NE2K_THIS s.pci_enabled = (SIM->get_param_enum("type", base)->get() == BX_NE2K_TYPE_PCI);
+  bx_param_enum_c *type = SIM->get_param_enum("type", base);
+  if ((card == 0) && (type->get() == BX_NE2K_TYPE_AUTO)) {
+    type->set(SIM->is_pci_device("ne2k") ? BX_NE2K_TYPE_PCI:BX_NE2K_TYPE_ISA);
+  }
+  BX_NE2K_THIS s.pci_enabled = (type->get() == BX_NE2K_TYPE_PCI);
 
 #if BX_SUPPORT_PCI
   if (BX_NE2K_THIS s.pci_enabled) {

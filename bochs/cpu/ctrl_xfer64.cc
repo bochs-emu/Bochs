@@ -449,6 +449,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
   BX_NEXT_TRACE(i);
 }
 
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET64(bxInstruction_c *i)
 {
   invalidate_prefetch_q();
@@ -463,11 +467,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET64(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
-    if (is_masked_event(PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_VIRTUAL_NMI) ? BX_EVENT_VMX_VIRTUAL_NMI : BX_EVENT_NMI))
+    if (is_masked_event(BX_CPU_THIS_PTR vmcs.pin_vmexec_ctrls.VIRTUAL_NMI() ? BX_EVENT_VMX_VIRTUAL_NMI : BX_EVENT_NMI))
       BX_CPU_THIS_PTR nmi_unblocking_iret = true;
 
-  if (BX_CPU_THIS_PTR in_vmx_guest && PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_NMI_EXITING)) {
-    if (PIN_VMEXIT(VMX_PIN_BASED_VMEXEC_CTRL_VIRTUAL_NMI)) unmask_event(BX_EVENT_VMX_VIRTUAL_NMI);
+  if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.pin_vmexec_ctrls.NMI_EXITING()) {
+    if (BX_CPU_THIS_PTR vmcs.pin_vmexec_ctrls.VIRTUAL_NMI()) unmask_event(BX_EVENT_VMX_VIRTUAL_NMI);
   }
   else
 #endif

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2014-2023 Stanislav Shwartsman
+//   Copyright (c) 2014-2024 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -87,8 +87,8 @@ BX_CPP_INLINE static Bit32u ilog2(Bit32u x)
 void bx_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   // CPUID function 0x0000000B - Extended Topology Leaf
-  leaf->eax = 0;
-  leaf->ebx = 0;
+  leaf->eax = (subfunction == 0);
+  leaf->ebx = (subfunction == 0);   // number of logical CPUs at this level
   leaf->ecx = subfunction;
   leaf->edx = cpu->get_apic_id();
 
@@ -231,13 +231,70 @@ void bx_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *
   }
 
   if (subfunction < xcr0_t::BX_XCR0_LAST) {
-    if (cpu->xcr0_suppmask & (1 << subfunction)) {
+    Bit32u support_mask = cpu->xcr0_suppmask | cpu->ia32_xss_suppmask;
+    if (support_mask & (1 << subfunction)) {
       leaf->eax = xsave_restore[subfunction].len;
       leaf->ebx = xsave_restore[subfunction].offset;
-      leaf->ecx = (cpu->ia32_xss_suppmask & subfunction) != 0; // managed through IA32_XSS register
+      // ECX[0] - set if this component managed through IA32_XSS register
+      // ECX[1] - set to indicate this component must be aligned to 64-byte
+      // ECX[2] - XFD support for this component
+      leaf->ecx = (cpu->ia32_xss_suppmask & (1 << subfunction)) != 0;
       leaf->edx = 0;
     }
   }
+}
+#endif
+
+#if BX_SUPPORT_AMX
+void bx_cpuid_t::get_std_cpuid_amx_palette_info_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
+{
+  leaf->eax = 0;
+  leaf->ebx = 0;
+  leaf->ecx = 0;
+  leaf->edx = 0;
+
+  if (!is_cpu_extension_supported(BX_ISA_AMX))
+    return;
+
+  if (subfunction == 0) {
+    leaf->eax = 1; // max palette_id
+    leaf->ebx = 0;
+    leaf->ecx = 0;
+    leaf->edx = 0;
+    return;
+  }
+
+  // information about palette #1
+  if (subfunction == 1) {
+    // EAX[15:00] : Palette #1 total tile bytes = 8192
+    // EAX[31:16] : Palette #1 bytes per tile = 1024
+    leaf->eax = 8192 | (1024<<16);
+    // EBX[15:00] : Palette #1 bytes_per_row = 64
+    // EBX[31:16] : Palette #1 number of tiles = 8
+    leaf->ebx = 64 | (8<<16);
+    // ECX[15:00] : Palette #1 max_rows = 16
+    // ECX[31:16] : Reserved
+    leaf->ecx = 16;
+    // EdX[31:00] : Reserved
+    leaf->edx = 0;
+    return;
+  }
+}
+
+void bx_cpuid_t::get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
+{
+  leaf->eax = 0;
+  leaf->ebx = 0;
+  leaf->ecx = 0;
+  leaf->edx = 0;
+
+  if (!is_cpu_extension_supported(BX_ISA_AMX))
+    return;
+
+  // EBX[07:00] = 16 TMUL_MAX_K (rows or columns)
+  // EBX[23:08] = 64 TMUL_MAX_N (column bytes)
+  // EBX[31:24] reserved
+  leaf->ebx = 16 | (64<<8);
 }
 #endif
 
@@ -926,7 +983,13 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ecx(Bit32u extra) const
 #endif
 
   // [15:15] reserved
-  // [16:16] LA57: LA57 and 5-level paging - not supported
+
+  // [16:16] LA57: LA57 and 5-level paging
+#if BX_SUPPORT_X86_64
+  if (is_cpu_extension_supported(BX_ISA_LA57))
+    ecx |= BX_CPUID_STD7_SUBLEAF0_ECX_LA57;
+#endif
+
   // [17:17] reserved
   // [18:18] reserved
   // [19:19] reserved
@@ -1016,10 +1079,28 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_edx(Bit32u extra) const
 #endif
 
   //   [21:21]  reserved
+
   //   [22:22]  AMX BF16 support
+#if BX_SUPPORT_AMX
+  if (is_cpu_extension_supported(BX_ISA_AMX)) {
+    if (is_cpu_extension_supported(BX_ISA_AMX_BF16))
+      edx |= BX_CPUID_STD7_SUBLEAF0_EDX_AMX_BF16;
+  }
+#endif
+
   //   [23:23]  AVX512_FP16 instructions support
+
+#if BX_SUPPORT_AMX
   //   [24:24]  AMX TILE architecture support
-  //   [25:25]  AMX INT8 support
+  if (is_cpu_extension_supported(BX_ISA_AMX)) {
+    edx |= BX_CPUID_STD7_SUBLEAF0_EDX_AMX_TILE;
+
+    //   [25:25]  AMX INT8 support
+    if (is_cpu_extension_supported(BX_ISA_AMX_INT8))
+      edx |= BX_CPUID_STD7_SUBLEAF0_EDX_AMX_INT8;
+  }
+#endif
+
   // * [26:26]  IBRS and IBPB: Indirect branch restricted speculation (SCA)
   // * [27:27]  STIBP: Single Thread Indirect Branch Predictors supported (SCA)
   // * [28:28]  L1D_FLUSH supported (SCA)
@@ -1085,7 +1166,15 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra) const
     eax |= BX_CPUID_STD7_SUBLEAF1_EAX_WRMSRNS;
 
   //   [20:20]  reserved
-  //   [21:21]  AMX-FB16 support
+
+  //   [21:21]  AMX-FP16 support
+#if BX_SUPPORT_AMX
+  if (is_cpu_extension_supported(BX_ISA_AMX)) {
+    if (is_cpu_extension_supported(BX_ISA_AMX_FP16))
+      eax |= BX_CPUID_STD7_SUBLEAF1_EAX_AMX_FP16;
+  }
+#endif
+
   //   [22:22]  HRESET and CPUID leaf 0x20 support
 
   //   [23:23]  AVX IFMA support
@@ -1126,7 +1215,15 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
 #endif
 
   //   [7:6]    reserved
+
   //   [8:8]    AMX-COMPLEX instructions
+#if BX_SUPPORT_AMX
+  if (is_cpu_extension_supported(BX_ISA_AMX)) {
+    if (is_cpu_extension_supported(BX_ISA_AMX_COMPLEX))
+      edx |= BX_CPUID_STD7_SUBLEAF1_EDX_AMX_COMPLEX;
+  }
+#endif
+
   //   [9:9]    reserved
 
   //   [10:10]  AVX-VNNI-INT16 instructions
@@ -1151,7 +1248,8 @@ void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
   // virtual & phys address size in low 2 bytes of EAX.
   // TODO: physical address width should be 32-bit when no PSE-36 is supported
   Bit32u phy_addr_width = BX_PHY_ADDRESS_WIDTH;
-  Bit32u lin_addr_width = is_cpu_extension_supported(BX_ISA_LONG_MODE) ? BX_LIN_ADDRESS_WIDTH : 32;
+  Bit32u lin_addr_width = is_cpu_extension_supported(BX_ISA_LONG_MODE) ? 
+                                (is_cpu_extension_supported(BX_ISA_LA57) ? 57 : 48) : 32;
 
   leaf->eax = phy_addr_width | (lin_addr_width << 8);
 
@@ -1164,7 +1262,7 @@ void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
   // [6:6] Memory Bandwidth Enforcement (MBE) support
   // [8:7] reserved
   // [9:9] WBNOINVD support - when not supported fall back to legacy WBINVD
-  leaf->ebx = 0;
+  leaf->ebx = (1<<9);
   if (is_cpu_extension_supported(BX_ISA_CLZERO))
     leaf->ebx |= 0x1;
 

@@ -216,8 +216,8 @@ void tigerlake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_func
     get_std_cpuid_xsave_leaf(subfunction, leaf);
     return;
   case 0x0000000E:
-  case 0x0000000F: // CPUID leaf 0x0000000F - Intel Resource Director Technonology
-  case 0x00000010: // CPUID leaf 0x00000010 - Intel Resource Director Technonology
+  case 0x0000000F: // CPUID leaf 0x0000000F - Intel Resource Director Technology
+  case 0x00000010: // CPUID leaf 0x00000010 - Intel Resource Director Technology
   case 0x00000011:
   case 0x00000012: // SGX Capability
   case 0x00000013:

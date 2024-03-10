@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2005-2019  The Bochs Project
+//  Copyright (C) 2005-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -61,12 +61,12 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
 
   if (seg->cache.valid==0) {
     BX_DEBUG(("write_virtual_checks(): segment descriptor not valid"));
-    return 0;
+    return false;
   }
 
   if (seg->cache.p == 0) { /* not present */
     BX_ERROR(("write_virtual_checks(): segment not present"));
-    return 0;
+    return false;
   }
 
   switch (seg->cache.type) {
@@ -77,7 +77,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
     case 12: case 13: // execute only, conforming
     case 14: case 15: // execute/read-only, conforming
       BX_ERROR(("write_virtual_checks(): no write access to seg"));
-      return 0;
+      return false;
 
     case 2: case 3: /* read/write */
       if (seg->cache.u.segment.limit_scaled == 0xffffffff && seg->cache.u.segment.base == 0) {
@@ -89,7 +89,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
           || length > seg->cache.u.segment.limit_scaled)
       {
         BX_ERROR(("write_virtual_checks(): write beyond limit, r/w"));
-        return 0;
+        return false;
       }
       if (seg->cache.u.segment.limit_scaled >= (BX_MAX_MEM_ACCESS_LENGTH-1)) {
         // Mark cache as being OK type for succeeding read/writes. The limit
@@ -112,7 +112,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
            offset > upper_limit || (upper_limit - offset) < length)
       {
         BX_ERROR(("write_virtual_checks(): write beyond limit, r/w expand down"));
-        return 0;
+        return false;
       }
       break;
 
@@ -120,7 +120,7 @@ BX_CPU_C::write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned le
       BX_PANIC(("write_virtual_checks(): unknown descriptor type=%d", seg->cache.type));
   }
 
-  return 1;
+  return true;
 }
 
   bool BX_CPP_AttrRegparmN(4)
@@ -140,12 +140,12 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
 
   if (seg->cache.valid==0) {
     BX_DEBUG(("read_virtual_checks(): segment descriptor not valid"));
-    return 0;
+    return false;
   }
 
   if (seg->cache.p == 0) { /* not present */
     BX_ERROR(("read_virtual_checks(): segment not present"));
-    return 0;
+    return false;
   }
 
   switch (seg->cache.type) {
@@ -162,7 +162,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
           || length > seg->cache.u.segment.limit_scaled)
       {
         BX_ERROR(("read_virtual_checks(): read beyond limit"));
-        return 0;
+        return false;
       }
       if (seg->cache.u.segment.limit_scaled >= (BX_MAX_MEM_ACCESS_LENGTH-1)) {
         // Mark cache as being OK type for succeeding reads. See notes for
@@ -181,7 +181,7 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
            offset > upper_limit || (upper_limit - offset) < length)
       {
         BX_ERROR(("read_virtual_checks(): read beyond limit expand down"));
-        return 0;
+        return false;
       }
       break;
 
@@ -189,13 +189,13 @@ BX_CPU_C::read_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len
     case 12: case 13: /* execute only, conforming */
       /* can't read or write an execute-only segment */
       BX_ERROR(("read_virtual_checks(): execute only"));
-      return 0;
+      return false;
 
     default:
       BX_PANIC(("read_virtual_checks(): unknown descriptor type=%d", seg->cache.type));
   }
 
-  return 1;
+  return true;
 }
 
   bool BX_CPP_AttrRegparmN(3)
@@ -205,12 +205,12 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
 
   if (seg->cache.valid==0) {
     BX_DEBUG(("execute_virtual_checks(): segment descriptor not valid"));
-    return 0;
+    return false;
   }
 
   if (seg->cache.p == 0) { /* not present */
     BX_ERROR(("execute_virtual_checks(): segment not present"));
-    return 0;
+    return false;
   }
 
   length--;
@@ -229,7 +229,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
           || length > seg->cache.u.segment.limit_scaled)
       {
         BX_ERROR(("execute_virtual_checks(): read beyond limit"));
-        return 0;
+        return false;
       }
       if (seg->cache.u.segment.limit_scaled >= (BX_MAX_MEM_ACCESS_LENGTH-1)) {
         // Mark cache as being OK type for succeeding reads. See notes for
@@ -244,7 +244,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
           || length > seg->cache.u.segment.limit_scaled)
       {
         BX_ERROR(("execute_virtual_checks(): read beyond limit execute only"));
-        return 0;
+        return false;
       }
       break;
 
@@ -258,7 +258,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
           offset > upper_limit || (upper_limit - offset) < length)
       {
         BX_ERROR(("execute_virtual_checks(): read beyond limit expand down"));
-        return 0;
+        return false;
       }
       break;
 
@@ -266,7 +266,7 @@ BX_CPU_C::execute_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned 
       BX_PANIC(("execute_virtual_checks(): unknown descriptor type=%d", seg->cache.type));
   }
 
-  return 1;
+  return true;
 }
 
 const char *BX_CPU_C::strseg(bx_segment_reg_t *seg)
@@ -289,6 +289,239 @@ int BX_CPU_C::int_number(unsigned s)
     return BX_SS_EXCEPTION;
   else
     return BX_GP_EXCEPTION;
+}
+
+#if BX_SUPPORT_X86_64
+bool BX_CPP_AttrRegparmN(2) BX_CPU_C::IsCanonicalAccess(bx_address laddr, bool user)
+{
+  if (! IsCanonical(laddr)) {
+    return false;
+  }
+
+  if (long64_mode()) {
+    if (BX_CPU_THIS_PTR cr4.get_LASS()) {
+      // laddr[63] == 0 user, laddr[63] == 1 supervisor
+      if ((laddr >> 63) == user) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+#endif
+
+int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned xlate_rw, Bit32u ac_mask, void *data)
+{
+#if BX_SUPPORT_CET
+  BX_ASSERT(xlate_rw == BX_READ || xlate_rw == BX_RW || xlate_rw == BX_SHADOW_STACK_READ || xlate_rw == BX_SHADOW_STACK_RW);
+#else
+  BX_ASSERT(xlate_rw == BX_READ || xlate_rw == BX_RW);
+#endif
+
+  bool user = (curr_pl == 3);
+
+#if BX_SUPPORT_X86_64
+  if (! IsCanonicalAccess(laddr, user)) {
+    BX_ERROR(("access_read_linear(): canonical failure"));
+    return -1;
+  }
+#endif
+
+  Bit32u pageOffset = PAGE_OFFSET(laddr);
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  if (BX_CPU_THIS_PTR alignment_check() && user) {
+    if (pageOffset & ac_mask) {
+      BX_ERROR(("access_read_linear(): #AC misaligned access"));
+      exception(BX_AC_EXCEPTION, 0);
+    }
+  }
+#endif
+
+  bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);
+
+  /* check for reference across multiple pages */
+  if ((pageOffset + len) <= 4096) {
+    // Access within single page.
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.pages     = 1;
+#if BX_SUPPORT_MEMTYPE
+    BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
+#endif
+    access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress1, len, data);
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1, len, tlbEntry->get_memtype(), xlate_rw, (Bit8u*) data);
+
+#if BX_X86_DEBUGGER
+    hwbreakpoint_match(laddr, len, xlate_rw);
+#endif
+  }
+  else {
+    // access across 2 pages
+    BX_CPU_THIS_PTR address_xlation.len1 = 4096 - pageOffset;
+    BX_CPU_THIS_PTR address_xlation.len2 = len - BX_CPU_THIS_PTR address_xlation.len1;
+    BX_CPU_THIS_PTR address_xlation.pages = 2;
+    bx_address laddr2 = laddr + BX_CPU_THIS_PTR address_xlation.len1;
+#if BX_SUPPORT_X86_64
+    if (! long64_mode()) laddr2 &= 0xffffffff; /* handle linear address wrap in legacy mode */
+    else {
+      if (! IsCanonicalAccess(laddr2, user)) {
+        BX_ERROR(("access_read_linear(): canonical failure for second half of page split access"));
+        return -1;
+      }
+    }
+#endif
+
+    bx_TLB_entry *tlbEntry2 = BX_DTLB_ENTRY_OF(laddr2, 0);
+
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, user, xlate_rw);
+#if BX_SUPPORT_MEMTYPE
+    BX_CPU_THIS_PTR address_xlation.memtype1 = tlbEntry->get_memtype();
+    BX_CPU_THIS_PTR address_xlation.memtype2 = tlbEntry2->get_memtype();
+#endif
+
+#ifdef BX_LITTLE_ENDIAN
+    access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1, data);
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1, tlbEntry->get_memtype(),
+        xlate_rw, (Bit8u*) data);
+    access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2,
+        ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr2, BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2, tlbEntry2->get_memtype(),
+        xlate_rw, ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
+#else // BX_BIG_ENDIAN
+    access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1,
+        ((Bit8u*)data) + (len - BX_CPU_THIS_PTR address_xlation.len1));
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1, tlbEntry->get_memtype(),
+        xlate_rw, ((Bit8u*)data) + (len - BX_CPU_THIS_PTR address_xlation.len1));
+    access_read_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2, data);
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr2, BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2, tlbEntry2->get_memtype(),
+        xlate_rw, (Bit8u*) data);
+#endif
+
+#if BX_X86_DEBUGGER
+    hwbreakpoint_match(laddr,  BX_CPU_THIS_PTR address_xlation.len1, xlate_rw);
+    hwbreakpoint_match(laddr2, BX_CPU_THIS_PTR address_xlation.len2, xlate_rw);
+#endif
+  }
+
+  return 0;
+}
+
+int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned xlate_rw, Bit32u ac_mask, void *data)
+{
+#if BX_SUPPORT_CET
+  BX_ASSERT(xlate_rw == BX_WRITE || xlate_rw == BX_SHADOW_STACK_WRITE);
+#else
+  BX_ASSERT(xlate_rw == BX_WRITE);
+#endif
+
+  bool user = (curr_pl == 3);
+
+#if BX_SUPPORT_X86_64
+  if (! IsCanonicalAccess(laddr, user)) {
+    BX_ERROR(("access_write_linear(): canonical failure"));
+    return -1;
+  }
+#endif
+
+  Bit32u pageOffset = PAGE_OFFSET(laddr);
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  if (BX_CPU_THIS_PTR alignment_check() && user) {
+    if (pageOffset & ac_mask) {
+      BX_ERROR(("access_write_linear(): #AC misaligned access"));
+      exception(BX_AC_EXCEPTION, 0);
+    }
+  }
+#endif
+
+  bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, 0);
+
+  /* check for reference across multiple pages */
+  if ((pageOffset + len) <= 4096) {
+    // Access within single page.
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.pages     = 1;
+#if BX_SUPPORT_MEMTYPE
+    BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
+#endif
+
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
+                          len, tlbEntry->get_memtype(), xlate_rw, (Bit8u*) data);
+
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1, len, data);
+
+#if BX_X86_DEBUGGER
+    hwbreakpoint_match(laddr, len, xlate_rw);
+#endif
+  }
+  else {
+    // access across 2 pages
+    BX_CPU_THIS_PTR address_xlation.len1 = 4096 - pageOffset;
+    BX_CPU_THIS_PTR address_xlation.len2 = len - BX_CPU_THIS_PTR address_xlation.len1;
+    BX_CPU_THIS_PTR address_xlation.pages = 2;
+    bx_address laddr2 = laddr + BX_CPU_THIS_PTR address_xlation.len1;
+#if BX_SUPPORT_X86_64
+    if (! long64_mode()) laddr2 &= 0xffffffff; /* handle linear address wrap in legacy mode */
+    else {
+      if (! IsCanonicalAccess(laddr2, user)) {
+        BX_ERROR(("access_write_linear(): canonical failure for second half of page split access"));
+        return -1;
+      }
+    }
+#endif
+
+    bx_TLB_entry *tlbEntry2 = BX_DTLB_ENTRY_OF(laddr2, 0);
+
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, user, xlate_rw);
+#if BX_SUPPORT_MEMTYPE
+    BX_CPU_THIS_PTR address_xlation.memtype1 = tlbEntry->get_memtype();
+    BX_CPU_THIS_PTR address_xlation.memtype2 = tlbEntry2->get_memtype();
+#endif
+
+#ifdef BX_LITTLE_ENDIAN
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1, tlbEntry->get_memtype(),
+        xlate_rw, (Bit8u*) data);
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1, data);
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr2, BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2, tlbEntry2->get_memtype(),
+        xlate_rw, ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2,
+        ((Bit8u*)data) + BX_CPU_THIS_PTR address_xlation.len1);
+#else // BX_BIG_ENDIAN
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr, BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1, tlbEntry->get_memtype(),
+        xlate_rw, ((Bit8u*)data) + (len - BX_CPU_THIS_PTR address_xlation.len1));
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress1,
+        BX_CPU_THIS_PTR address_xlation.len1,
+        ((Bit8u*)data) + (len - BX_CPU_THIS_PTR address_xlation.len1));
+    BX_NOTIFY_LIN_MEMORY_ACCESS(laddr2, BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2, tlbEntry2->get_memtype(),
+        xlate_rw, (Bit8u*) data);
+    access_write_physical(BX_CPU_THIS_PTR address_xlation.paddress2,
+        BX_CPU_THIS_PTR address_xlation.len2, data);
+#endif
+
+#if BX_X86_DEBUGGER
+    hwbreakpoint_match(laddr,  BX_CPU_THIS_PTR address_xlation.len1, xlate_rw);
+    hwbreakpoint_match(laddr2, BX_CPU_THIS_PTR address_xlation.len2, xlate_rw);
+#endif
+  }
+
+  return 0;
 }
 
   Bit8u BX_CPP_AttrRegparmN(1)
@@ -499,7 +732,7 @@ BX_CPU_C::v2h_read_byte(bx_address laddr, bool user)
     }
   }
 
-  return 0;
+  return NULL;
 }
 
   Bit8u* BX_CPP_AttrRegparmN(2)
@@ -520,5 +753,5 @@ BX_CPU_C::v2h_write_byte(bx_address laddr, bool user)
     }
   }
 
-  return 0;
+  return NULL;
 }

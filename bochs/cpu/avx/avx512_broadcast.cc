@@ -48,7 +48,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTB_MASK_VdqWbM(bxInstruction_c *
   BxPackedAvxRegister op;
   unsigned len = i->getVL();
 
-  Bit64u opmask = BX_READ_OPMASK(i->opmask()) & CUT_OPMASK_TO(BYTE_ELEMENTS(len));
+  Bit64u opmask = BX_READ_OPMASK(i->opmask());
+  if (len != BX_VL512) // avoid accidential zero of the mask, due to Bit64u computation overflow (1 << 64) == 1
+    opmask &= CUT_OPMASK_TO(BYTE_ELEMENTS(len));
+
   Bit8u val_8 = 0;
 
   if (opmask) {

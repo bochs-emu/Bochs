@@ -91,7 +91,7 @@ public:
   DECLARE_GUI_NEW_VIRTUAL_METHODS()
   virtual void draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                          Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                         bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs);
+                         bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs, bool font2);
   virtual void statusbar_setitem_specific(int element, bool active, bool w);
   virtual void get_capabilities(Bit16u *xres, Bit16u *yres, Bit16u *bpp);
   virtual void set_mouse_mode_absxy(bool mode);
@@ -998,7 +998,8 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   for(i = 0; i < 256; i++) {
     for(j = 0; j < 16; j++) {
-      vga_charmap[i * 32 + j] = reverse_bitorder(bx_vgafont[i].data[j]);
+      vga_charmap[0][i * 32 + j] = reverse_bitorder(bx_vgafont[i].data[j]);
+      vga_charmap[1][i * 32 + j] = reverse_bitorder(bx_vgafont[i].data[j]);
     }
   }
 
@@ -1286,10 +1287,16 @@ static void DrawBochsBitmap(int x, int y, int width, int height, char *bmap, cha
 
 void bx_wx_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
                             Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
-                            bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs)
+                            bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs, bool font2)
 {
-  DrawBochsBitmap(xc, yc, fw, fh, (char *)&vga_charmap[ch << 5],
-                  fc, bc, fx, fy, gfxcharw9);
+  char *font_ptr;
+
+  if (font2) {
+    font_ptr = (char *)&vga_charmap[1][ch << 5];
+  } else {
+    font_ptr = (char *)&vga_charmap[0][ch << 5];
+  }
+  DrawBochsBitmap(xc, yc, fw, fh, font_ptr, fc, bc, fx, fy, gfxcharw9);
   if (curs && (ce >= fy) && (cs < (fh + fy))) {
     if (cs > fy) {
       yc += (cs - fy);
@@ -1298,8 +1305,7 @@ void bx_wx_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
     if ((ce - cs + 1) < fh) {
       fh = ce - cs + 1;
     }
-    DrawBochsBitmap(xc, yc, fw, fh, (char *)&vga_charmap[ch << 5],
-                    bc, fc, fx, cs, gfxcharw9);
+    DrawBochsBitmap(xc, yc, fw, fh, font_ptr, bc, fc, fx, cs, gfxcharw9);
   }
 }
 

@@ -61,6 +61,8 @@ Bit64u eval_value;
 %token <sval> BX_TOKEN_YMM
 %token <sval> BX_TOKEN_ZMM
 %token <sval> BX_TOKEN_AVX
+%token <sval> BX_TOKEN_AMX
+%token <sval> BX_TOKEN_TILE
 %token <sval> BX_TOKEN_IDT
 %token <sval> BX_TOKEN_IVT
 %token <sval> BX_TOKEN_GDT
@@ -164,6 +166,7 @@ command:
     | stepN_command
     | step_over_command
     | set_command
+    | cpu_command
     | breakpoint_command
     | info_command
     | regs_command
@@ -172,6 +175,8 @@ command:
     | xmm_regs_command
     | ymm_regs_command
     | zmm_regs_command
+    | amx_regs_command
+    | print_tile_command
     | segment_regs_command
     | debug_regs_command
     | control_regs_command
@@ -549,6 +554,13 @@ step_over_command:
       }
     ;
 
+cpu_command:
+      BX_TOKEN_CPU BX_TOKEN_NUMERIC '\n'
+      {
+        bx_dbg_set_symbol_command("$cpu", $2);
+        free($1);
+      }
+
 set_command:
       BX_TOKEN_SET BX_TOKEN_DISASM BX_TOKEN_TOGGLE_ON_OFF '\n'
       {
@@ -819,6 +831,22 @@ zmm_regs_command:
       BX_TOKEN_ZMM '\n'
       {
         bx_dbg_info_registers_command(BX_INFO_ZMM_REGS);
+        free($1);
+      }
+    ;
+
+amx_regs_command:
+      BX_TOKEN_AMX '\n'
+      {
+        bx_dbg_info_registers_command(BX_INFO_AMX_REGS);
+        free($1);
+      }
+    ;
+
+print_tile_command:
+      BX_TOKEN_TILE BX_TOKEN_NUMERIC '\n'
+      {
+        bx_dbg_print_amx_tile_command($2);
         free($1);
       }
     ;
@@ -1233,6 +1261,11 @@ help_command:
          dbg_printf("zmm - print AVX-512 state\n");
          free($1);free($2);
        }
+     | BX_TOKEN_HELP BX_TOKEN_AMX '\n'
+       {
+         dbg_printf("amx - print AMX state\n");
+         free($1);free($2);
+       }
      | BX_TOKEN_HELP BX_TOKEN_SEGMENT_REGS '\n'
        {
          dbg_printf("sreg - show segment registers\n");
@@ -1317,11 +1350,11 @@ help_command:
        {
          dbg_printf("set <regname> = <expr> - set register value to expression\n");
          dbg_printf("set eflags = <expr> - set eflags value to expression, not all flags can be modified\n");
-         dbg_printf("set $cpu = <N> - move debugger control to cpu <N> in SMP simulation\n");
-         dbg_printf("set $auto_disassemble = 1 - cause debugger to disassemble current instruction\n");
+         dbg_printf("set $cpu = <N> or just cpu <N> - move debugger control to cpu <N> in SMP simulation\n");
+         dbg_printf("set $auto_disassemble = 1 -> cause debugger to disassemble current instruction\n");
          dbg_printf("       every time execution stops\n");
-         dbg_printf("set u|disasm|disassemble on  - same as 'set $auto_disassemble = 1'\n");
-         dbg_printf("set u|disasm|disassemble off - same as 'set $auto_disassemble = 0'\n");
+         dbg_printf("set u|disasm on  - same as 'set $auto_disassemble = 1'\n");
+         dbg_printf("set u|disasm off - same as 'set $auto_disassemble = 0'\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_PAGE '\n'
