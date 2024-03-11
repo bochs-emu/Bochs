@@ -352,7 +352,7 @@ cpu/fpu/libfpu.a::
 
 cpu/softfloat3e/libsoftfloat.a::
 	cd cpu/softfloat3e @COMMAND_SEPARATOR@
-	$(MAKE) $(MDEFINES) libsoftfloat.a
+	$(MAKE) $(MDEFINES) CXX=$(CXX) libsoftfloat.a
 	@CD_UP_TWO@
 
 memory/libmemory.a::
