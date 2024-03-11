@@ -592,7 +592,7 @@ all-clean: clean @CLEAN_DOCBOOK_VAR@ @CLEAN_PCIDEV_VAR@
 	$(MAKE) clean
 	@CD_UP_TWO@
 	cd cpu/softfloat3e @COMMAND_SEPARATOR@
-	$(MAKE) dist-clean
+	$(MAKE) clean
 	@CD_UP_TWO@
 	cd memory @COMMAND_SEPARATOR@
 	$(MAKE) clean

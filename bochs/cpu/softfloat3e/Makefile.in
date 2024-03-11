@@ -33,13 +33,13 @@
 #
 #=============================================================================
 
-SOURCE_DIR ?= .
-SPECIALIZE_TYPE ?= 8086-SSE
+SOURCE_DIR = @srcdir@
+SPECIALIZE_TYPE = 8086-SSE
 
-SOFTFLOAT_OPTS ?= \
+SOFTFLOAT_OPTS = \
   -DINLINE_LEVEL=5 -DSOFTFLOAT_FAST_DIV32TO16 -DSOFTFLOAT_FAST_DIV64TO32
 
-DELETE = rm -f
+DELETE = @RMCOMMAND@
 C_INCLUDES = -I. -I../.. -I$(SOURCE_DIR)/$(SPECIALIZE_TYPE) -I$(SOURCE_DIR)/include
 COMPILE_C = \
   $(CXX) -c  \
@@ -287,6 +287,8 @@ libsoftfloat$(LIB): $(OBJS_ALL)
 
 .PHONY: clean
 clean:
-dist-clean:
 	$(DELETE) $(OBJS_ALL) libsoftfloat$(LIB)
+
+dist-clean: clean
+	$(DELETE) Makefile
 

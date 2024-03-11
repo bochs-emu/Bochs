@@ -3389,8 +3389,8 @@ AC_PATH_PROG(IASL, iasl, not_found)
 AC_CONFIG_FILES([Makefile iodev/Makefile iodev/display/Makefile iodev/hdimage/Makefile \
 	 iodev/usb/Makefile iodev/network/Makefile iodev/sound/Makefile \
 	 bx_debug/Makefile bios/Makefile cpu/Makefile cpu/avx/Makefile \
-	 cpu/cpudb/Makefile cpu/fpu/Makefile memory/Makefile gui/Makefile \
-	 ${INSTRUMENT_DIR}/Makefile misc/Makefile \
+	 cpu/cpudb/Makefile cpu/fpu/Makefile cpu/softfloat3e/Makefile memory/Makefile \
+	 gui/Makefile ${INSTRUMENT_DIR}/Makefile misc/Makefile \
 	 doc/docbook/Makefile build/linux/bochs-dlx bxversion.h bxversion.rc \
 	 build/macosx/Info.plist build/win32/nsis/Makefile \
 	 build/win32/nsis/bochs.nsi host/linux/pcidev/Makefile ${USER_PLUGINS_MAKEFILE}])

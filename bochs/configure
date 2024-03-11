@@ -27667,7 +27667,7 @@ fi
 
 
 
-ac_config_files="$ac_config_files Makefile iodev/Makefile iodev/display/Makefile iodev/hdimage/Makefile iodev/usb/Makefile iodev/network/Makefile iodev/sound/Makefile bx_debug/Makefile bios/Makefile cpu/Makefile cpu/avx/Makefile cpu/cpudb/Makefile cpu/fpu/Makefile memory/Makefile gui/Makefile ${INSTRUMENT_DIR}/Makefile misc/Makefile doc/docbook/Makefile build/linux/bochs-dlx bxversion.h bxversion.rc build/macosx/Info.plist build/win32/nsis/Makefile build/win32/nsis/bochs.nsi host/linux/pcidev/Makefile ${USER_PLUGINS_MAKEFILE}"
+ac_config_files="$ac_config_files Makefile iodev/Makefile iodev/display/Makefile iodev/hdimage/Makefile iodev/usb/Makefile iodev/network/Makefile iodev/sound/Makefile bx_debug/Makefile bios/Makefile cpu/Makefile cpu/avx/Makefile cpu/cpudb/Makefile cpu/fpu/Makefile cpu/softfloat3e/Makefile memory/Makefile gui/Makefile ${INSTRUMENT_DIR}/Makefile misc/Makefile doc/docbook/Makefile build/linux/bochs-dlx bxversion.h bxversion.rc build/macosx/Info.plist build/win32/nsis/Makefile build/win32/nsis/bochs.nsi host/linux/pcidev/Makefile ${USER_PLUGINS_MAKEFILE}"
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
@@ -28369,6 +28369,7 @@ do
     "cpu/avx/Makefile") CONFIG_FILES="$CONFIG_FILES cpu/avx/Makefile" ;;
     "cpu/cpudb/Makefile") CONFIG_FILES="$CONFIG_FILES cpu/cpudb/Makefile" ;;
     "cpu/fpu/Makefile") CONFIG_FILES="$CONFIG_FILES cpu/fpu/Makefile" ;;
+    "cpu/softfloat3e/Makefile") CONFIG_FILES="$CONFIG_FILES cpu/softfloat3e/Makefile" ;;
     "memory/Makefile") CONFIG_FILES="$CONFIG_FILES memory/Makefile" ;;
     "gui/Makefile") CONFIG_FILES="$CONFIG_FILES gui/Makefile" ;;
     "${INSTRUMENT_DIR}/Makefile") CONFIG_FILES="$CONFIG_FILES ${INSTRUMENT_DIR}/Makefile" ;;
