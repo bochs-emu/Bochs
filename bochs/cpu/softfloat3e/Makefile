@@ -42,7 +42,7 @@ SOFTFLOAT_OPTS ?= \
 DELETE = rm -f
 C_INCLUDES = -I. -I../.. -I$(SOURCE_DIR)/$(SPECIALIZE_TYPE) -I$(SOURCE_DIR)/include
 COMPILE_C = \
-  g++ -c  \
+  $(CXX) -c  \
     -DSOFTFLOAT_FAST_INT64 $(SOFTFLOAT_OPTS) $(C_INCLUDES) -O2 -o $@
 MAKELIB = ar crs $@
 
