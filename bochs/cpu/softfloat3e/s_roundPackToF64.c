@@ -87,6 +87,7 @@ float64_t
             softfloat_raiseFlags(status, softfloat_flag_overflow);
             if (roundBits || softfloat_isMaskedException(status, softfloat_flag_overflow)) {
                 softfloat_raiseFlags(status, softfloat_flag_inexact);
+                if (roundIncrement != 0) softfloat_setRoundingUp(status);
             }
             uiZ = packToF64UI(sign, 0x7FF, 0) - ! roundIncrement;
             return uiZ;
