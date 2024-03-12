@@ -76,7 +76,7 @@ extFloat80_t
         }
         softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalExtF80Sig(sigA);
-        exp += normExpSig.exp;
+        exp += normExpSig.exp + 1;
         sigA = normExpSig.sig;
     }
     /*------------------------------------------------------------------------
