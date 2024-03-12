@@ -3488,7 +3488,6 @@ with non-interesting ones.</para></listitem>
 <section id="svn-release"><title>Building a Bochs release</title>
 <section><title>Preparing source files and SVN</title>
 <para>
-&FIXME; This section needs updates because of the transition to GitHub
 Update version number and strings in configure.in.
 <screen>
 VERSION="2.8"
@@ -3510,6 +3509,11 @@ number for the Windows build.
 <screen>
   version="2.8.0.0"
 </screen>
+</para>
+<para>
+&FIXME; This section needs an update because of the transition to GitHub
+</para>
+<para>
 Check date, update/sumup info in CHANGES. Run autoconf to regenerate configure and check them in.
 Create an SVN tag that contains all files of the revision that was used in the release.
 For prereleases I create a normal SVN tag like this:
@@ -3695,31 +3699,34 @@ The online documentation, disk images and screenshots must be uploaded manually.
 <section id="update-website"><title>Updating the Bochs website content</title>
 <para>
 The main HTML content of the Bochs website (except online documentation) is stored
-in the <filename>sfsite</filename> directory of the Bochs SVN repository. Unlike
+in the <filename>Bochs-sfsite</filename> GIT repository on SourceForge. Unlike
 other SF projects you don't need to upload these files to the Bochs project webspace.
-Running a simple SVN update on the SF shell is enough after the files have been
-updated in the repository. Please see <link linkend="svn-write-access-setup">Setting
-up SVN write access</link> for general instructions. The only difference is the
-directory name <filename>sfsite</filename> instead of <filename>bochs</filename>.
-The example below shows how to start the SF shell with SSH and to update the
-HTML files.
+Running a simple 'git pull' on the SF shell is enough after new the files have been
+pushed to the repository. The example below shows how to start the SF shell with SSH
+and to update the HTML files.
 <screen>
 ssh -t vruppert,bochs@shell.sourceforge.net create
-vruppert,bochs@shell.sourceforge.net's password:
 
 Requesting a new shell for "vruppert" and waiting for it to start.
-queued... starting...
+queued... creating... starting...
 
 This is an interactive shell created for user vruppert,bochs.
 Use the "timeleft" command to see how much time remains before shutdown.
 Use the "shutdown" command to destroy the shell before the time limit.
 For path information and login help, type "sf-help".
 
-[vruppert@shell-24002 ~]$ svnserve -d -r /home/svn/p/bochs/code
 [vruppert@shell-24002 ~]$ cd /home/project-web/bochs/htdocs/
-[vruppert@shell-24002 htdocs]$ svn update
-U    index.html
-Updated to revision 10752
+[vruppert@shell-24002 htdocs]$ git pull /home/git/p/bochs/Bochs-sfsite.git/
+remote: Counting objects: 5, done.
+remote: Compressing objects: 100% (3/3), done.
+remote: Total 3 (delta 2), reused 0 (delta 0)
+Unpacking objects: 100% (3/3), done.
+From /home/git/p/bochs/Bochs-sfsite
+ * branch            HEAD       -> FETCH_HEAD
+Updating 2d6d56b..7fca1d7
+Fast-forward
+ index.html | 1 +
+ 1 file changed, 1 insertion(+)
 [vruppert@shell-24002 htdocs]$ shutdown
 Requesting that your shell be shut down.
 This request will be processed soon.
@@ -3730,24 +3737,6 @@ The system is going down for system halt NOW!
 Connection to shell-24002 closed by remote host.
 Connection to shell-24002 closed.
 Connection to shell.sourceforge.net closed.
-</screen>
-</para>
-</section>
-
-<section id="update-svn-snapshot"><title>Updating the SVN snapshot</title>
-<para>
-The SVN snapshot
-<footnote>
-<para>The SVN snapshot link can be found on the bottom of the page
-<filename>getcurrent.html</filename>.</para>
-</footnote>
-can be updated with SF shell access using SSH. There is a script
-called <command>update-svn-snapshot.sh</command> that can do all the required steps
-(checking out SVN, packing the source tree into one archive, updating the website
-link). See previous section how to create a shell.
-<screen>
-cd /home/project-web/bochs/sitebin/
-./update-svn-snapshot.sh
 </screen>
 </para>
 </section>
