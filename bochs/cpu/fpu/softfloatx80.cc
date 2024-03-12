@@ -54,32 +54,6 @@ Bit16s floatx80_to_int16(floatx80 a, float_status_t &status)
 }
 
 /*----------------------------------------------------------------------------
-| Returns the result of converting the extended double-precision floating-
-| point value `a' to the 16-bit two's complement integer format.  The
-| conversion is performed according to the IEC/IEEE Standard for Binary
-| Floating-Point Arithmetic, except that the conversion is always rounded
-| toward zero.  If `a' is a NaN or the conversion overflows, the integer
-| indefinite value is returned.
-*----------------------------------------------------------------------------*/
-
-Bit16s floatx80_to_int16_round_to_zero(floatx80 a, float_status_t &status)
-{
-   if (floatx80_is_unsupported(a)) {
-        float_raise(status, float_flag_invalid);
-        return int16_indefinite;
-   }
-
-   Bit32s v32 = floatx80_to_int32_round_to_zero(a, status);
-
-   if ((v32 > 32767) || (v32 < -32768)) {
-        status.float_exception_flags = float_flag_invalid; // throw away other flags
-        return int16_indefinite;
-   }
-
-   return (Bit16s) v32;
-}
-
-/*----------------------------------------------------------------------------
 | Separate the source extended double-precision floating point value `a'
 | into its exponent and significand, store the significant back to the
 | 'a' and return the exponent. The operation performed is a superset of

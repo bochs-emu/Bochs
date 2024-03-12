@@ -117,6 +117,7 @@ extFloat80_t
      mag1:
         uiZ64 = signUI64 | 0x3FFF;
         sigZ  = UINT64_C(0x8000000000000000);
+        softfloat_setRoundingUp(status);
         goto uiZ;
     }
     /*------------------------------------------------------------------------
@@ -137,9 +138,12 @@ extFloat80_t
     if (!sigZ) {
         ++uiZ64;
         sigZ = UINT64_C(0x8000000000000000);
+        softfloat_setRoundingUp(status);
     }
     if (sigZ != sigA) {
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
+        if (sigZ > sigA)
+            softfloat_setRoundingUp(status);
     }
  uiZ:
     z.signExp = uiZ64;

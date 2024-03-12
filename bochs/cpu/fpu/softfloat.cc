@@ -106,57 +106,6 @@ Bit32s floatx80_to_int32(floatx80 a, float_status_t &status)
 
 /*----------------------------------------------------------------------------
 | Returns the result of converting the extended double-precision floating-
-| point value `a' to the 32-bit two's complement integer format.  The
-| conversion is performed according to the IEC/IEEE Standard for Binary
-| Floating-Point Arithmetic, except that the conversion is always rounded
-| toward zero.  If `a' is a NaN or the conversion overflows, the integer
-| indefinite value is returned.
-*----------------------------------------------------------------------------*/
-
-Bit32s floatx80_to_int32_round_to_zero(floatx80 a, float_status_t &status)
-{
-    Bit32s aExp;
-    Bit64u aSig, savedASig;
-    Bit32s z;
-    int shiftCount;
-
-    // handle unsupported extended double-precision floating encodings
-    if (floatx80_is_unsupported(a))
-    {
-        float_raise(status, float_flag_invalid);
-        return int32_indefinite;
-    }
-
-    aSig = extractFloatx80Frac(a);
-    aExp = extractFloatx80Exp(a);
-    int aSign = extractFloatx80Sign(a);
-
-    if (aExp > 0x401E) {
-        float_raise(status, float_flag_invalid);
-        return (Bit32s)(int32_indefinite);
-    }
-    if (aExp < 0x3FFF) {
-        if (aExp || aSig) float_raise(status, float_flag_inexact);
-        return 0;
-    }
-    shiftCount = 0x403E - aExp;
-    savedASig = aSig;
-    aSig >>= shiftCount;
-    z = (Bit32s) aSig;
-    if (aSign) z = -z;
-    if ((z < 0) ^ aSign) {
-        float_raise(status, float_flag_invalid);
-        return (Bit32s)(int32_indefinite);
-    }
-    if ((aSig<<shiftCount) != savedASig)
-    {
-        float_raise(status, float_flag_inexact);
-    }
-    return z;
-}
-
-/*----------------------------------------------------------------------------
-| Returns the result of converting the extended double-precision floating-
 | point value `a' to the 64-bit two's complement integer format.  The
 | conversion is performed according to the IEC/IEEE Standard for Binary
 | Floating-Point Arithmetic - which means in particular that the conversion
@@ -195,52 +144,6 @@ Bit64s floatx80_to_int64(floatx80 a, float_status_t &status)
     }
 
     return roundAndPackInt64(aSign, aSig, aSigExtra, status);
-}
-
-/*----------------------------------------------------------------------------
-| Returns the result of converting the extended double-precision floating-
-| point value `a' to the 64-bit two's complement integer format.  The
-| conversion is performed according to the IEC/IEEE Standard for Binary
-| Floating-Point Arithmetic, except that the conversion is always rounded
-| toward zero.  If `a' is a NaN or the conversion overflows, the integer
-| indefinite value is returned.
-*----------------------------------------------------------------------------*/
-
-Bit64s floatx80_to_int64_round_to_zero(floatx80 a, float_status_t &status)
-{
-    int aSign;
-    Bit32s aExp;
-    Bit64u aSig;
-    Bit64s z;
-
-    // handle unsupported extended double-precision floating encodings
-    if (floatx80_is_unsupported(a))
-    {
-        float_raise(status, float_flag_invalid);
-        return int64_indefinite;
-    }
-
-    aSig = extractFloatx80Frac(a);
-    aExp = extractFloatx80Exp(a);
-    aSign = extractFloatx80Sign(a);
-    int shiftCount = aExp - 0x403E;
-    if (0 <= shiftCount) {
-        aSig &= BX_CONST64(0x7FFFFFFFFFFFFFFF);
-        if ((a.exp != 0xC03E) || aSig) {
-            float_raise(status, float_flag_invalid);
-        }
-        return (Bit64s)(int64_indefinite);
-    }
-    else if (aExp < 0x3FFF) {
-        if (aExp | aSig) float_raise(status, float_flag_inexact);
-        return 0;
-    }
-    z = aSig>>(-shiftCount);
-    if ((Bit64u) (aSig<<(shiftCount & 63))) {
-        float_raise(status, float_flag_inexact);
-    }
-    if (aSign) z = -z;
-    return z;
 }
 
 /*----------------------------------------------------------------------------

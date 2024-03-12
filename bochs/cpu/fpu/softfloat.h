@@ -200,16 +200,6 @@ BX_CPP_INLINE void set_float_rounding_up(float_status_t &status)
 #endif
 
 /*----------------------------------------------------------------------------
-| Returns 1 if the <denormals-are-zeros> feature is supported;
-| otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int get_denormals_are_zeros(const float_status_t &status)
-{
-    return status.denormals_are_zeros;
-}
-
-/*----------------------------------------------------------------------------
 | Software IEC/IEEE single-precision operations.
 *----------------------------------------------------------------------------*/
 
@@ -250,10 +240,11 @@ floatx80 int64_to_floatx80(Bit64s);
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE extended double-precision conversion routines.
 *----------------------------------------------------------------------------*/
+floatx80 float32_to_floatx80(float32, float_status_t &status);
+floatx80 float64_to_floatx80(float64, float_status_t &status);
+
 Bit32s floatx80_to_int32(floatx80, float_status_t &status);
-Bit32s floatx80_to_int32_round_to_zero(floatx80, float_status_t &status);
 Bit64s floatx80_to_int64(floatx80, float_status_t &status);
-Bit64s floatx80_to_int64_round_to_zero(floatx80, float_status_t &status);
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE extended double-precision operations.
