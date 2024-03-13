@@ -1218,13 +1218,6 @@ void SetMouseCapture()
   SetMouseToggleInfo();
 }
 
-#if BX_USE_WIN32USBDEBUG
-BOOL GetMouseCaptureMode()
-{
-  return mouseCaptureMode;
-}
-#endif
-
 LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 {
   HDC hdc, hdcMem;

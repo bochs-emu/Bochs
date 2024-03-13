@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C)      2023  Benjamin David Lunt
-//  Copyright (C) 2003-2023  The Bochs Project
+//  Copyright (C) 2003-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -73,8 +73,6 @@ HFONT hTreeViewFont;
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //  Common to all HC types
 //
-void SetMouseCapture();
-BOOL GetMouseCaptureMode();
 
 // return 0 to continue with emulation
 // return -1 to quit emulation
@@ -119,11 +117,9 @@ int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam)
   }
   
   // if the mouse is currently being captured, we need to pause capture mode
-  // (This is Win32 specific, though we are already Win32 specific, so it shouldn't matter)
-  BOOL capture = GetMouseCaptureMode();
+  BOOL capture = SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get();
   if (capture) {
-    bx_gui->mouse_enabled_changed_specific(0);
-    SetMouseCapture();
+    SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(0);
   }
 
   // create the dialog and wait for it to return
@@ -138,8 +134,7 @@ int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam)
 
   // re-capture the mouse?
   if (capture) {
-    bx_gui->mouse_enabled_changed_specific(1);
-    SetMouseCapture();
+    SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(1);
   }
   
   return ret;
