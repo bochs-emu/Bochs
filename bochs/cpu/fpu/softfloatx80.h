@@ -30,12 +30,6 @@ these four paragraphs for those parts of this code that are retained.
 #include "softfloat-specialize.h"
 
 /*----------------------------------------------------------------------------
-| Software IEC/IEEE integer-to-floating-point conversion routines.
-*----------------------------------------------------------------------------*/
-
-Bit16s floatx80_to_int16(floatx80, float_status_t &status);
-
-/*----------------------------------------------------------------------------
 | Software IEC/IEEE extended double-precision operations.
 *----------------------------------------------------------------------------*/
 

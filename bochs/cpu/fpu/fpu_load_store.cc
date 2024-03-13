@@ -451,7 +451,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_WORD_INTEGER(bxInstruction_c *i)
      float_status_t status =
          i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-     save_reg = floatx80_to_int16(BX_READ_FPU_REG(0), status);
+     save_reg = extF80_to_i16(BX_READ_FPU_REG(0), &status);
 
      if (FPU_exception(i, status.float_exception_flags, 1))
         BX_NEXT_INSTR(i);
@@ -497,7 +497,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIST_DWORD_INTEGER(bxInstruction_c *i)
      float_status_t status =
          i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-     save_reg = floatx80_to_int32(BX_READ_FPU_REG(0), status);
+     save_reg = extF80_to_i32(BX_READ_FPU_REG(0), &status);
 
      if (FPU_exception(i, status.float_exception_flags, 1))
          BX_NEXT_INSTR(i);
@@ -541,7 +541,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISTP_QWORD_INTEGER(bxInstruction_c *i)
      float_status_t status =
          i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-     save_reg = floatx80_to_int64(BX_READ_FPU_REG(0), status);
+     save_reg = extF80_to_i64(BX_READ_FPU_REG(0), &status);
 
      if (FPU_exception(i, status.float_exception_flags, 1))
          BX_NEXT_INSTR(i);
@@ -592,8 +592,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
         i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
      floatx80 reg = BX_READ_FPU_REG(0);
-
-     Bit64s save_val = floatx80_to_int64(reg, status);
+     Bit64s save_val = extF80_to_i64(reg, &status);
 
      int sign = (reg.exp & 0x8000) != 0;
      if (sign)
