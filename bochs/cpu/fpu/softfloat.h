@@ -235,7 +235,7 @@ int floatx80_is_nan(floatx80);
 #endif  /* FLOATX80 */
 
 #ifdef FLOAT128
-
+/*
 #ifdef BX_BIG_ENDIAN
 struct float128 {
     Bit64u hi, lo;
@@ -245,7 +245,7 @@ struct float128 {
     Bit64u lo, hi;
 };
 #endif
-
+*/
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE quadruple-precision conversion routines.
 *----------------------------------------------------------------------------*/

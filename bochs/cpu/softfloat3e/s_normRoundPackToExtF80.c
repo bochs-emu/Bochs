@@ -63,6 +63,5 @@ extFloat80_t
         sigExtra = sig128.v0;
     }
     return
-        softfloat_roundPackToExtF80(
-            sign, exp, sig, sigExtra, roundingPrecision, status);
+        softfloat_roundPackToExtF80(sign, exp, sig, sigExtra, roundingPrecision, status);
 }

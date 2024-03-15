@@ -82,9 +82,7 @@ float128_t f128_mul(float128_t a, float128_t b, struct softfloat_status_t *statu
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if (expA == 0x7FFF) {
-        if (
-            (sigA.v64 | sigA.v0) || ((expB == 0x7FFF) && (sigB.v64 | sigB.v0))
-       ) {
+        if ((sigA.v64 | sigA.v0) || ((expB == 0x7FFF) && (sigB.v64 | sigB.v0))) {
             goto propagateNaN;
         }
         magBits = expB | sigB.v64 | sigB.v0;

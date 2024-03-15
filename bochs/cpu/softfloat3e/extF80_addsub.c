@@ -39,6 +39,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
+extern extFloat80_t softfloat_addMagsExtF80(uint16_t, uint64_t, uint16_t, uint64_t, bool, struct softfloat_status_t *);
+extern extFloat80_t softfloat_subMagsExtF80(uint16_t, uint64_t, uint16_t, uint64_t, bool, struct softfloat_status_t *);
+
 extFloat80_t extF80_add(extFloat80_t a, extFloat80_t b, struct softfloat_status_t *status)
 {
     uint16_t uiA64;

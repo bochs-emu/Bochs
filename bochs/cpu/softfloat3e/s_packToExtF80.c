@@ -3,7 +3,7 @@
 This C source file is part of the SoftFloat IEEE Floating-Point Arithmetic
 Package, Release 3e, by John R. Hauser.
 
-Copyright 2011, 2012, 2013, 2014, 2015, 2016 The Regents of the University of
+Copyright 2011, 2012, 2013, 2014, 2015, 2017 The Regents of the University of
 California.  All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -33,25 +33,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 =============================================================================*/
 
+#include <stdbool.h>
 #include <stdint.h>
 #include "internals.h"
+#include "softfloat.h"
 
-int softfloat_normSubnormalF128SigM(uint32_t *sigPtr)
+extFloat80_t packToExtF80(uint16_t signExp, uint64_t sig)
 {
-    const uint32_t *ptr;
-    int16_t shiftDist;
-    uint32_t wordSig;
+    extFloat80_t z;
+    z.signExp = signExp;
+    z.signif  = sig;
+    return z;
+}
 
-    ptr = sigPtr + indexWordHi(4);
-    shiftDist = 0;
-    for (;;) {
-        wordSig = *ptr;
-        if (wordSig) break;
-        shiftDist += 32;
-        if (128 <= shiftDist) return 1;
-        ptr -= wordIncr;
-    }
-    shiftDist += softfloat_countLeadingZeros32(wordSig) - 15;
-    if (shiftDist) softfloat_shiftLeft128M(sigPtr, shiftDist, sigPtr);
-    return 1 - shiftDist;
+extFloat80_t packToExtF80(bool sign, uint16_t exp, uint64_t sig)
+{
+    extFloat80_t z;
+    z.signExp = packToExtF80UI64(sign, exp);
+    z.signif = sig;
+    return z;
 }

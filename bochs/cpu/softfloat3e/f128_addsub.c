@@ -38,6 +38,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "internals.h"
 #include "softfloat.h"
 
+extern float128_t
+ softfloat_addMagsF128(uint64_t, uint64_t, uint64_t, uint64_t, bool, struct softfloat_status_t *);
+extern float128_t
+ softfloat_subMagsF128(uint64_t, uint64_t, uint64_t, uint64_t, bool, struct softfloat_status_t *);
+
 float128_t f128_add(float128_t a, float128_t b, struct softfloat_status_t *status)
 {
     union ui128_f128 uA;

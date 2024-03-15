@@ -46,13 +46,11 @@ extFloat80_t softfloat_addMagsExtF80(uint16_t uiA64, uint64_t uiA0, uint16_t uiB
     int32_t expB;
     uint64_t sigB;
     int32_t expDiff;
-    uint16_t uiZ64;
-    uint64_t uiZ0, sigZ, sigZExtra;
+    uint64_t sigZ, sigZExtra;
     struct exp32_sig64 normExpSig;
     int32_t expZ;
     struct uint64_extra sig64Extra;
     struct uint128 uiZ;
-    extFloat80_t z;
     bool overflow;
 
     /*------------------------------------------------------------------------
@@ -68,17 +66,13 @@ extFloat80_t softfloat_addMagsExtF80(uint16_t uiA64, uint64_t uiA0, uint16_t uiB
             goto propagateNaN;
         if (sigB && ! expB)
             softfloat_raiseFlags(status, softfloat_flag_denormal);
-        uiZ64 = uiA64;
-        uiZ0  = uiA0;
-        goto uiZ;
+        return packToExtF80(uiA64, uiA0);
     }
     if (expB == 0x7FFF) {
         if (sigB << 1) goto propagateNaN;
         if (sigA && ! expA)
             softfloat_raiseFlags(status, softfloat_flag_denormal);
-        uiZ64 = packToExtF80UI64(signZ, 0x7FFF);
-        uiZ0  = UINT64_C(0x8000000000000000);
-        goto uiZ;
+        return packToExtF80(signZ, 0x7FFF, UINT64_C(0x8000000000000000));
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -151,10 +145,5 @@ extFloat80_t softfloat_addMagsExtF80(uint16_t uiA64, uint64_t uiA0, uint16_t uiB
     *------------------------------------------------------------------------*/
  propagateNaN:
     uiZ = softfloat_propagateNaNExtF80UI(uiA64, uiA0, uiB64, uiB0, status);
-    uiZ64 = uiZ.v64;
-    uiZ0  = uiZ.v0;
- uiZ:
-    z.signExp = uiZ64;
-    z.signif  = uiZ0;
-    return z;
+    return packToExtF80(uiZ.v64, uiZ.v0);
 }

@@ -94,7 +94,7 @@ extFloat80_t
                 softfloat_raiseFlags(status, softfloat_flag_inexact);
                 if (sig > sigExact) softfloat_setRoundingUp(status);
             }
-            goto packReturn;
+            return packToExtF80(sign, exp, sig);
         }
         if ((0x7FFE < exp) || ((exp == 0x7FFE) && ((uint64_t) (sig + roundIncrement) < sig))) {
             goto overflow;
@@ -118,7 +118,7 @@ extFloat80_t
     }
     sig &= ~roundMask;
     if (sig > sigExact) softfloat_setRoundingUp(status);
-    goto packReturn;
+    return packToExtF80(sign, exp, sig);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  precision80:
@@ -157,7 +157,7 @@ extFloat80_t
                 if (sig > sigExact)
                     softfloat_setRoundingUp(status);
             }
-            goto packReturn;
+            return packToExtF80(sign, exp, sig);
         }
         if ((0x7FFE < exp) || ((exp == 0x7FFE) && (sig == UINT64_C(0xFFFFFFFFFFFFFFFF)) && doIncrement)) {
             /*----------------------------------------------------------------
@@ -176,7 +176,7 @@ extFloat80_t
                 exp = 0x7FFE;
                 sig = ~roundMask;
             }
-            goto packReturn;
+            return packToExtF80(sign, exp, sig);
         }
     }
     /*------------------------------------------------------------------------
@@ -197,12 +197,7 @@ extFloat80_t
         if (sig > sigExact)
             softfloat_setRoundingUp(status);
     }
-    /*------------------------------------------------------------------------
-    *------------------------------------------------------------------------*/
- packReturn:
-    z.signExp = packToExtF80UI64(sign, exp);
-    z.signif = sig;
-    return z;
+    return packToExtF80(sign, exp, sig);
 }
 
 extFloat80_t

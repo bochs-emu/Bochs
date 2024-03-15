@@ -47,12 +47,9 @@ extFloat80_t
     int32_t expB;
     uint64_t sigB;
     int32_t expDiff;
-    uint16_t uiZ64;
-    uint64_t uiZ0;
     int32_t expZ;
     uint64_t sigExtra;
     struct uint128 sig128, uiZ;
-    extFloat80_t z;
     struct exp32_sig64 normExpSig;
 
     /*------------------------------------------------------------------------
@@ -68,23 +65,17 @@ extFloat80_t
         if (expB == 0x7FFF) {
             if ((sigB<<1)) goto propagateNaN;
             softfloat_raiseFlags(status, softfloat_flag_invalid);
-            uiZ64 = defaultNaNExtF80UI64;
-            uiZ0  = defaultNaNExtF80UI0;
-            goto uiZ;
+            return packToExtF80(defaultNaNExtF80UI64, defaultNaNExtF80UI0);
         }
         if (sigB && ! expB)
             softfloat_raiseFlags(status, softfloat_flag_denormal);
-        uiZ64 = uiA64;
-        uiZ0  = uiA0;
-        goto uiZ;
+        return packToExtF80(uiA64, uiA0);
     }
     if (expB == 0x7FFF) {
         if ((sigB<<1)) goto propagateNaN;
         if (sigA && ! expA)
             softfloat_raiseFlags(status, softfloat_flag_denormal);
-        uiZ64 = packToExtF80UI64(signZ ^ 1, 0x7FFF);
-        uiZ0  = UINT64_C(0x8000000000000000);
-        goto uiZ;
+        return packToExtF80(signZ ^ 1, 0x7FFF, UINT64_C(0x8000000000000000));
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -98,9 +89,7 @@ extFloat80_t
                     sigB = normExpSig.sig;
                     return softfloat_roundPackToExtF80(signZ ^ 1, expB, sigB, 0, softfloat_extF80_roundingPrecision(status), status);
                 }
-                uiZ64 = packToExtF80UI64((softfloat_getRoundingMode(status) == softfloat_round_min), 0);
-                uiZ0 = 0;
-                goto uiZ;
+                return packToExtF80((softfloat_getRoundingMode(status) == softfloat_round_min), 0, 0);
             }
             return softfloat_roundPackToExtF80(signZ ^ 1, expB, sigB, 0, softfloat_extF80_roundingPrecision(status), status);
         }
@@ -131,9 +120,7 @@ extFloat80_t
     sigExtra = 0;
     if (sigB < sigA) goto aBigger;
     if (sigA < sigB) goto bBigger;
-    uiZ64 = packToExtF80UI64((softfloat_getRoundingMode(status) == softfloat_round_min), 0);
-    uiZ0 = 0;
-    goto uiZ;
+    return packToExtF80((softfloat_getRoundingMode(status) == softfloat_round_min), 0, 0);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  expBBigger:
@@ -164,10 +151,5 @@ extFloat80_t
     *------------------------------------------------------------------------*/
  propagateNaN:
     uiZ = softfloat_propagateNaNExtF80UI(uiA64, uiA0, uiB64, uiB0, status);
-    uiZ64 = uiZ.v64;
-    uiZ0  = uiZ.v0;
- uiZ:
-    z.signExp = uiZ64;
-    z.signif  = uiZ0;
-    return z;
+    return packToExtF80(uiZ.v64, uiZ.v0);
 }

@@ -58,9 +58,6 @@ extFloat80_t extF80_rem(extFloat80_t a, extFloat80_t b, struct softfloat_status_
     struct uint128 term, altRem, meanRem;
     bool signRem;
     struct uint128 uiZ;
-    uint16_t uiZ64;
-    uint64_t uiZ0;
-    extFloat80_t z;
 
     // handle unsupported extended double-precision floating encodings
     if (extF80_isUnsupported(a) || extF80_isUnsupported(b))
@@ -181,16 +178,12 @@ extFloat80_t extF80_rem(extFloat80_t a, extFloat80_t b, struct softfloat_status_
     *------------------------------------------------------------------------*/
  propagateNaN:
     uiZ = softfloat_propagateNaNExtF80UI(uiA64, uiA0, uiB64, uiB0, status);
-    uiZ64 = uiZ.v64;
-    uiZ0  = uiZ.v0;
-    goto uiZ;
+    return packToExtF80(uiZ.v64, uiZ.v0);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  invalid:
     softfloat_raiseFlags(status, softfloat_flag_invalid);
-    uiZ64 = defaultNaNExtF80UI64;
-    uiZ0  = defaultNaNExtF80UI0;
-    goto uiZ;
+    return packToExtF80(defaultNaNExtF80UI64, defaultNaNExtF80UI0);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  copyA:
@@ -198,11 +191,5 @@ extFloat80_t extF80_rem(extFloat80_t a, extFloat80_t b, struct softfloat_status_
         sigA >>= 1 - expA;
         expA = 0;
     }
-    uiZ64 = packToExtF80UI64(signA, expA);
-    uiZ0  = sigA;
- uiZ:
-    z.signExp = uiZ64;
-    z.signif  = uiZ0;
-    return z;
+    return packToExtF80(signA, expA, sigA);
 }
-
