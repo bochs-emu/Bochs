@@ -45,21 +45,17 @@ extern float128_t
 
 float128_t f128_add(float128_t a, float128_t b, struct softfloat_status_t *status)
 {
-    union ui128_f128 uA;
     uint64_t uiA64, uiA0;
     bool signA;
-    union ui128_f128 uB;
     uint64_t uiB64, uiB0;
     bool signB;
 
-    uA.f = a;
-    uiA64 = uA.ui.v64;
-    uiA0  = uA.ui.v0;
+    uiA64 = a.v64;
+    uiA0  = a.v0;
     signA = signF128UI64(uiA64);
 
-    uB.f = b;
-    uiB64 = uB.ui.v64;
-    uiB0  = uB.ui.v0;
+    uiB64 = b.v64;
+    uiB0  = b.v0;
     signB = signF128UI64(uiB64);
 
     if (signA == signB) {
@@ -71,21 +67,17 @@ float128_t f128_add(float128_t a, float128_t b, struct softfloat_status_t *statu
 
 float128_t f128_sub(float128_t a, float128_t b, struct softfloat_status_t *status)
 {
-    union ui128_f128 uA;
     uint64_t uiA64, uiA0;
     bool signA;
-    union ui128_f128 uB;
     uint64_t uiB64, uiB0;
     bool signB;
 
-    uA.f = a;
-    uiA64 = uA.ui.v64;
-    uiA0  = uA.ui.v0;
+    uiA64 = a.v64;
+    uiA0  = a.v0;
     signA = signF128UI64(uiA64);
 
-    uB.f = b;
-    uiB64 = uB.ui.v64;
-    uiB0  = uB.ui.v0;
+    uiB64 = b.v64;
+    uiB0  = b.v0;
     signB = signF128UI64(uiB64);
 
     if (signA == signB) {

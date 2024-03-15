@@ -60,8 +60,5 @@ bool extF80_isNaN(extFloat80_t a)
 
 bool f128_isNaN(float128_t a)
 {
-    union ui128_f128 uA;
-
-    uA.f = a;
-    return isNaNF128UI(uA.ui.v64, uA.ui.v0);
+    return isNaNF128UI(a.v64, a.v0);
 }

@@ -41,7 +41,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 int64_t f128_to_i64_r_minMag(float128_t a, bool exact, struct softfloat_status_t *status)
 {
-    union ui128_f128 uA;
     uint64_t uiA64, uiA0;
     bool sign;
     int32_t exp;
@@ -52,9 +51,8 @@ int64_t f128_to_i64_r_minMag(float128_t a, bool exact, struct softfloat_status_t
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    uA.f = a;
-    uiA64 = uA.ui.v64;
-    uiA0  = uA.ui.v0;
+    uiA64 = a.v64;
+    uiA0  = a.v0;
     sign  = signF128UI64(uiA64);
     exp   = expF128UI64(uiA64);
     sig64 = fracF128UI64(uiA64);

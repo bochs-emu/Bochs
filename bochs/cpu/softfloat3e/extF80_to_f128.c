@@ -49,14 +49,13 @@ float128_t extF80_to_f128(extFloat80_t a, struct softfloat_status_t *status)
     struct uint128 uiZ;
     bool sign;
     struct uint128 frac128;
-    union ui128_f128 uZ;
 
     // handle unsupported extended double-precision floating encodings
     if (extF80_isUnsupported(a)) {
         softfloat_raiseFlags(status, softfloat_flag_invalid);
         uiZ.v64 = defaultNaNF128UI64;
         uiZ.v0  = defaultNaNF128UI0;
-        goto uiZ;
+        return uiZ;
     }
 
     uiA64 = a.signExp;
@@ -72,7 +71,5 @@ float128_t extF80_to_f128(extFloat80_t a, struct softfloat_status_t *status)
         uiZ.v64 = packToF128UI64(sign, exp, frac128.v64);
         uiZ.v0  = frac128.v0;
     }
-uiZ:
-    uZ.ui = uiZ;
-    return uZ.f;
+    return uiZ;
 }

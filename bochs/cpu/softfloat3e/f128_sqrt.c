@@ -41,7 +41,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 float128_t f128_sqrt(float128_t a, struct softfloat_status_t *status)
 {
-    union ui128_f128 uA;
     uint64_t uiA64, uiA0;
     bool signA;
     int32_t expA;
@@ -56,13 +55,11 @@ float128_t f128_sqrt(float128_t a, struct softfloat_status_t *status)
     struct uint128 y, term;
     uint64_t sigZExtra;
     struct uint128 sigZ;
-    union ui128_f128 uZ;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    uA.f = a;
-    uiA64 = uA.ui.v64;
-    uiA0  = uA.ui.v0;
+    uiA64 = a.v64;
+    uiA0  = a.v0;
     signA = signF128UI64(uiA64);
     expA  = expF128UI64(uiA64);
     sigA.v64 = fracF128UI64(uiA64);
@@ -72,7 +69,7 @@ float128_t f128_sqrt(float128_t a, struct softfloat_status_t *status)
     if (expA == 0x7FFF) {
         if (sigA.v64 | sigA.v0) {
             uiZ = softfloat_propagateNaNF128UI(uiA64, uiA0, 0, 0, status);
-            goto uiZ;
+            return uiZ;
         }
         if (! signA) return a;
         goto invalid;
@@ -192,7 +189,5 @@ float128_t f128_sqrt(float128_t a, struct softfloat_status_t *status)
     softfloat_raiseFlags(status, softfloat_flag_invalid);
     uiZ.v64 = defaultNaNF128UI64;
     uiZ.v0  = defaultNaNF128UI0;
- uiZ:
-    uZ.ui = uiZ;
-    return uZ.f;
+    return uiZ;
 }

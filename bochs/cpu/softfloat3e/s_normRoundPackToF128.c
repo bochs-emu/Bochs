@@ -42,9 +42,9 @@ float128_t softfloat_normRoundPackToF128(bool sign, int32_t exp, uint64_t sig64,
 {
     int8_t shiftDist;
     struct uint128 sig128;
-    union ui128_f128 uZ;
     uint64_t sigExtra;
     struct uint128_extra sig128Extra;
+    float128_t z;
 
     if (! sig64) {
         exp -= 64;
@@ -60,9 +60,9 @@ float128_t softfloat_normRoundPackToF128(bool sign, int32_t exp, uint64_t sig64,
             sig0  = sig128.v0;
         }
         if ((uint32_t) exp < 0x7FFD) {
-            uZ.ui.v64 = packToF128UI64(sign, sig64 | sig0 ? exp : 0, sig64);
-            uZ.ui.v0  = sig0;
-            return uZ.f;
+            z.v64 = packToF128UI64(sign, sig64 | sig0 ? exp : 0, sig64);
+            z.v0  = sig0;
+            return z;
         }
         sigExtra = 0;
     } else {

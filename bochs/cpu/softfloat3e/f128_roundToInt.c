@@ -42,20 +42,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 float128_t
  f128_roundToInt(float128_t a, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
 {
-    union ui128_f128 uA;
     uint64_t uiA64, uiA0;
     int32_t exp;
     struct uint128 uiZ;
     uint64_t lastBitMask0, roundBitsMask;
     bool roundNearEven;
     uint64_t lastBitMask64;
-    union ui128_f128 uZ;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    uA.f = a;
-    uiA64 = uA.ui.v64;
-    uiA0  = uA.ui.v0;
+    uiA64 = a.v64;
+    uiA0  = a.v0;
     exp = expF128UI64(uiA64);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -65,7 +62,7 @@ float128_t
         if (0x406F <= exp) {
             if ((exp == 0x7FFF) && (fracF128UI64(uiA64) | uiA0)) {
                 uiZ = softfloat_propagateNaNF128UI(uiA64, uiA0, 0, 0, status);
-                goto uiZ;
+                return uiZ;
             }
             return a;
         }
@@ -116,7 +113,7 @@ float128_t
                 if (!uiZ.v64) uiZ.v64 = packToF128UI64(0, 0x3FFF, 0);
                 break;
             }
-            goto uiZ;
+            return uiZ;
         }
         /*--------------------------------------------------------------------
         *--------------------------------------------------------------------*/
@@ -140,7 +137,5 @@ float128_t
     if ((uiZ.v64 != uiA64) || (uiZ.v0 != uiA0)) {
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
     }
- uiZ:
-    uZ.ui = uiZ;
-    return uZ.f;
+    return uiZ;
 }

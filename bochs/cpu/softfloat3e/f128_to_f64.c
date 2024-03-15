@@ -41,7 +41,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 float64_t f128_to_f64(float128_t a, struct softfloat_status_t *status)
 {
-    union ui128_f128 uA;
     uint64_t uiA64, uiA0;
     bool sign;
     int32_t exp;
@@ -52,9 +51,8 @@ float64_t f128_to_f64(float128_t a, struct softfloat_status_t *status)
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    uA.f = a;
-    uiA64 = uA.ui.v64;
-    uiA0  = uA.ui.v0;
+    uiA64 = a.v64;
+    uiA0  = a.v0;
     sign  = signF128UI64(uiA64);
     exp   = expF128UI64(uiA64);
     frac64 = fracF128UI64(uiA64);

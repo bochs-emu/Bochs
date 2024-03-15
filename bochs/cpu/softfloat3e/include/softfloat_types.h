@@ -56,7 +56,7 @@ typedef struct f16_t {
 typedef struct f32_t {
     uint32_t v;
     f32_t(uint64_t v32): v(v32) {}
-      operator uint32_t() const { return v; }
+    operator uint32_t() const { return v; }
 } float32_t;
 
 typedef struct f64_t {
@@ -75,9 +75,9 @@ struct float128 {
 };
 #endif
 
-typedef struct f128_t {
-    uint64_t v[2];
-} float128_t;
+#include "primitiveTypes.h"
+
+typedef uint128 f128_t, float128_t;
 
 /*----------------------------------------------------------------------------
 | The format of an 80-bit extended floating-point number in memory.  This

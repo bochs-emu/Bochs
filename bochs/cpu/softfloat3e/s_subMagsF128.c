@@ -55,7 +55,6 @@ float128_t
     struct uint128 sigB, sigZ;
     int32_t expDiff, expZ;
     struct uint128 uiZ;
-    union ui128_f128 uZ;
 
     expA = expF128UI64(uiA64);
     sigA.v64 = fracF128UI64(uiA64);
@@ -73,7 +72,7 @@ float128_t
         softfloat_raiseFlags(status, softfloat_flag_invalid);
         uiZ.v64 = defaultNaNF128UI64;
         uiZ.v0  = defaultNaNF128UI0;
-        goto uiZ;
+        return uiZ;
     }
     expZ = expA;
     if (! expZ) expZ = 1;
@@ -83,13 +82,13 @@ float128_t
     if (sigA.v0 < sigB.v0) goto bBigger;
     uiZ.v64 = packToF128UI64((softfloat_getRoundingMode(status) == softfloat_round_min), 0, 0);
     uiZ.v0 = 0;
-    goto uiZ;
+    return uiZ;
  expBBigger:
     if (expB == 0x7FFF) {
         if (sigB.v64 | sigB.v0) goto propagateNaN;
         uiZ.v64 = packToF128UI64(signZ ^ 1, 0x7FFF, 0);
         uiZ.v0  = 0;
-        goto uiZ;
+        return uiZ;
     }
     if (expA) {
         sigA.v64 |= UINT64_C(0x0010000000000000);
@@ -110,7 +109,7 @@ float128_t
         if (sigA.v64 | sigA.v0) goto propagateNaN;
         uiZ.v64 = uiA64;
         uiZ.v0  = uiA0;
-        goto uiZ;
+        return uiZ;
     }
     if (expB) {
         sigB.v64 |= UINT64_C(0x0010000000000000);
@@ -128,7 +127,5 @@ float128_t
     return softfloat_normRoundPackToF128(signZ, expZ - 5, sigZ.v64, sigZ.v0, status);
  propagateNaN:
     uiZ = softfloat_propagateNaNF128UI(uiA64, uiA0, uiB64, uiB0, status);
- uiZ:
-    uZ.ui = uiZ;
-    return uZ.f;
+    return uiZ;
 }

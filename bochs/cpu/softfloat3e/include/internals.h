@@ -41,8 +41,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "primitives.h"
 #include "softfloat_types.h"
 
-union ui128_f128 { struct uint128 ui; float128_t f; };
-
 struct softfloat_status_t;
 
 /*----------------------------------------------------------------------------

@@ -60,8 +60,5 @@ bool extF80_isSignalingNaN(extFloat80_t a)
 
 bool f128_isSignalingNaN(float128_t a)
 {
-    union ui128_f128 uA;
-
-    uA.f = a;
-    return softfloat_isSigNaNF128UI(uA.ui.v64, uA.ui.v0);
+    return softfloat_isSigNaNF128UI(a.v64, a.v0);
 }
