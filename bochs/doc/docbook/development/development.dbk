@@ -33,129 +33,12 @@ including compile instructions, bochsrc options, how to find the mailing
 lists, etc.
 </para>
 
-<section id="svn-write-access-setup"><title>Setting up SVN write access</title>
-<para>
-If you are an official SourceForge developer, then you can use SVN with write
-access.  The SVN contains the most recent copy of the source code, and with
-write access you can upload any changes you make to the SVN server for others
-to use. The SVN checkout command is identical to the one for normal users, but
-you might want to get the whole tree to work with branches and tags.
-</para>
-
-<screen>
-  <command>svn co https://svn.code.sf.net/p/bochs/code bochs-svn</command>
-</screen>
-
-<para>
-Depending on your network connection this may take a long time, since it downloads all
-files from all branches and tags that exist in the repository at the current revision.
-</para>
-
-</section> <!-- end setting up svn write access -->
-
-<section id="using-svn-write-access"><title>Using SVN write access</title>
-
-<section><title>Checking in files</title>
-<para>
-Once you have a Bochs directory, you can compile the files, edit them, test them, etc.
-See the documentation section, <ulink url="../user/get-src-svn.html">Tracking the source code with SVN</ulink>
-for more info on SVN, in the User Manual. But what's new and different is that
-you can now do SVN commits. When a file is all fixed and ready to share with the rest of
-the world, you run a commit command to upload your version to the server.
-First, it's good to do a SVN update to make sure nobody else has changed it
-since you downloaded it last. At the first commit you'll always have to specify your
-SF username and type your password.
-</para>
-
-<screen>
-  $ svn update file.cc
-  $ svn commit --username <replaceable>sfusername</replaceable> file.cc
-  [editor opens. type log message, save, and exit.]
-  Login area: &lt;https://svn.code.sf.net:443&gt; SourceForge Subversion area
-  Username: <replaceable>sfusername</replaceable>
-  Password for '<replaceable>sfusername</replaceable>': <replaceable><--type your password</replaceable>
-  Sending        file.cc
-  Transmitting file data .
-  Committed revision 10.
-</screen>
-
-<para>
-When SVN starts an editor, The default is usually vi. If you want a different
-editor, set the EDITOR environment variable to the name of your preferred
-editor.  When you're done, just save the file and quit the editor.  Unless
-there's some problem, you will see a message that says what the new SVN revision
-number is, and then "done".  If while you're editing the log message, you decide
-that you don't want to commit after all, don't save the file. Quit the editor,
-and when it asks where the log message went, tell it to abort.
-</para>
-
-<para>
-Here is an example of a successful checkin:
-
-<screen>
-  $ svn commit misc.txt
-  [edit log msg]
-  Sending        misc.txt
-  Transmitting file data .
-  Committed revision 6.
-</screen>
-
-And here is an aborted one:
-
-<screen>
-  $ svn commit misc.txt
-  [quit editor without saving]
-  Log message unchanged or not specified
-  a)bort, c)ontinue, e)dit:
-  a
-</screen>
-
-</para>
-</section> <!--end of "Checking in Files" -->
-
-<section><title>Creating a backup of the SVN repository</title>
-<para>
-Backups of the SVN repository can be made with the <command>rsync</command> utility.
-In case of data corruption or other problems on the server, the repository with all
-revisions, branches and tags can be restored easily. It is recommended to update this
-backup frequently. The following example creates a folder called
-<filename>bochs-svn-rsync</filename> that contains the repository.
-<screen>
-  rsync -av svn.code.sf.net::p/bochs/code bochs-svn-rsync
-</screen>
-</para>
-</section>
-
-<section><title>Setting SVN commit notifications</title>
-<para>
-The Bochs SVN repository is set up to send a notification email to the "bochs-cvs"
-mailing list after each successful commit. This email contains the log message, a list
-of the modified files and a diff against the previous revision. The diff of large
-commits will be truncated at 96 kByte.
-</para>
-<para>
-After each commit the SVN server runs the script <command>post-commit</command> located
-in the <filename>hooks</filename> folder. On SourceForge, this script forces a refresh
-of the Allura code browser and it can call a script <command>post-commit-user</command>
-for addition operations if it exists. For Bochs we have set up this script and call
-<command>svnnotify</command> from it to create the notification email.
-<screen>
-#!/bin/sh
-
-svnnotify --repos-path $1 --revision $2 -O -C -d -e 98304 -t bochs-cvs@lists.sourceforge.net
-</screen>
-</para>
-</section>
-
-</section> <!--end of "Using SVN write access" -->
-
-<section id="other"><title>Ideas for other sections</title>
+<section id="other"><title>Ideas for new sections about GIT / GitHub</title>
 <para>
 <screen>
 Ideas:
-- how to browse code with the Allura code browser
-- how to find an identifier, variable, or specific text in the code
-- how to make patches with SVN
+- how to push modified files to the remote repository
+- how to create a pull request
 </screen>
 </para>
 </section>
@@ -3485,8 +3368,8 @@ with non-interesting ones.</para></listitem>
 </itemizedlist>
 </para>
 </section>
-<section id="svn-release"><title>Building a Bochs release</title>
-<section><title>Preparing source files and SVN</title>
+<section id="github-release"><title>Building a Bochs release</title>
+<section><title>Preparing source files and GIT / GitHub</title>
 <para>
 Update version number and strings in configure.in.
 <screen>
@@ -3511,50 +3394,28 @@ number for the Windows build.
 </screen>
 </para>
 <para>
-&FIXME; This section needs an update because of the transition to GitHub
+Check date, update/sumup info in CHANGES. Run autoconf to regenerate configure and check them in.
+Create an GIT tag that contains all files of the revision that was used in the release.
 </para>
 <para>
-Check date, update/sumup info in CHANGES. Run autoconf to regenerate configure and check them in.
-Create an SVN tag that contains all files of the revision that was used in the release.
-For prereleases I create a normal SVN tag like this:
-<screen>
-  svn mkdir tags/REL_2_5_pre1_FINAL
-  svn copy trunk/bochs tags/REL_2_5_pre1_FINAL/bochs
-  svn commit
-</screen>
-But for a real release, I make an SVN branch tag AND a normal tag.
-<screen>
-  svn mkdir tags/REL_2_5_FINAL
-  svn copy trunk/bochs tags/REL_2_5_FINAL/bochs
-  svn mkdir branches/REL_2_5
-  svn copy trunk/bochs branches/REL_2_5/bochs
-  svn commit
-</screen>
-The tag marks where the branch split off of the main trunk.
-This is very useful in maintaining the branch since you can do diffs
-against it.
-<screen>
-   svn diff tags/REL_2_5_FINAL/bochs trunk/bochs
-   svn diff tags/REL_2_5_FINAL/bochs branches/REL_2_5
-   etc.
-</screen>
-All bugfix-only releases after the final release should be created from the REL_2_5 branch.
-Now you can start building packages with the sources from the created release tag.
+&FIXME; This section needs an update because of the transition to GitHub
 </para>
 </section>
 
-<section><title>Anonymous SVN checkout and platform-independent sources</title>
+<section><title>Platform-independent source files from GitHub release</title>
 <para>
-An anonymous SVN checkout from the release tag is the base for all official
-release packages. Do this checkout from the release tag and specify a not yet
-existing directory name with the version number as the destination. Then create
-the source package from this new directory. These steps can be done both on
-Linux and Windows (Cygwin).
+After creating the GitHub release it automatically provides source files in
+<filename>ZIP</filename> and <filename>TAR.GZ</filename> format. These files are
+the base for all official release packages. For release version 2.8 the file name
+is <filename>Bochs-REL_2_8_FINAL.tar.gz</filename>. Unpack this file as shown in
+the example and pack it the file name format we usually use.
+These steps can be done both on Linux and Windows (Cygwin).
 <screen>
-  svn co http://svn.code.sf.net/p/bochs/code/tags/REL_2_5_FINAL/bochs bochs-2.5
-  tar czvf bochs-2.5.tar.gz --exclude=.svn bochs-2.5
+  tar --strip-components=1 -xvzf Bochs-REL_2_8_FINAL.tar.gz Bochs-REL_2_8_FINAL/bochs
+  mv bochs bochs-2.8
+  tar czvf bochs-2.8.tar.gz bochs-2.8
 </screen>
-The source TAR file bochs-2.5.tar.gz is ready for upload.
+The source TAR file bochs-2.8.tar.gz is ready for upload.
 </para>
 </section>
 
@@ -3575,8 +3436,8 @@ This produces two rpm files in the current directory. Test and upload.
 <section><title>Building the release on win32</title>
 <para>
 These instructions require cygwin or mingw32/mingw64 to prepare the sources and
-MSVC++ to build the binaries. Use the Bochs sources from the SVN checkout or
-unpack the TAR file.
+MSVC++ to build the binaries. Use the Bochs sources from a GIT clone or
+unpack the release TAR file from above.
 </para>
 <para>
 In Cygwin or mingw32/mingw64:
@@ -3591,7 +3452,7 @@ if necessary.
 <para>
 Open up Visual C++ and load the workspace file Bochs.sln.  Check
 the Build:Set Active Project Configuration is set the way you want it.
-For releases I use "Win32 Release".
+For releases I use "Win64 Release".
 </para>
 <para>
 To create "bochsdbg.exe" with Bochs debugger support, manually change these
@@ -3620,10 +3481,10 @@ version is being built.  Then rename the debugger version to bochsdbg.exe.
 Do make <emphasis>install_win32</emphasis> into the NSIS folder in the Bochs
 source tree:
 <screen>
-  make install_win32 INSTDIR=./build/win32/nsis/bochs-2.5
+  make install_win32 INSTDIR=./build/win32/nsis/bochs-2.8
 </screen>
 This downloads and unpacks both the DLX Linux demo and the HTML docs from the
-Bochs website, copies all the files into <emphasis>./build/win32/nsis/bochs-2.5</emphasis>
+Bochs website, copies all the files into <emphasis>./build/win32/nsis/bochs-2.8</emphasis>
 and then creates a binary ZIP file in the NSIS folder.
 </para>
 <para>
@@ -3632,7 +3493,7 @@ Now make the NSIS installer package (the current script is known to work with NS
   cd build/win32/nsis
   make
 </screen>
-That gives an installer called <filename>Bochs-2.5.exe</filename>. Test and upload it.
+That gives an installer called <filename>Bochs-2.8.exe</filename>. Test and upload it.
 </para>
 </section>
 
@@ -3723,19 +3584,15 @@ remote: Total 3 (delta 2), reused 0 (delta 0)
 Unpacking objects: 100% (3/3), done.
 From /home/git/p/bochs/Bochs-sfsite
  * branch            HEAD       -> FETCH_HEAD
-Updating 2d6d56b..7fca1d7
+Updating 7fca1d7..b1aca46
 Fast-forward
- index.html | 1 +
- 1 file changed, 1 insertion(+)
+ index.html | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 [vruppert@shell-24002 htdocs]$ shutdown
 Requesting that your shell be shut down.
 This request will be processed soon.
-[vruppert@shell-24002 htdocs]$
-Broadcast message from root (Mon Oct 31 09:45:04 2011):
-
-The system is going down for system halt NOW!
-Connection to shell-24002 closed by remote host.
-Connection to shell-24002 closed.
+[vruppert@shell-21003 htdocs]$ Connection to 10.60.21.43 closed by remote host.
+Connection to 10.60.21.43 closed.
 Connection to shell.sourceforge.net closed.
 </screen>
 </para>
