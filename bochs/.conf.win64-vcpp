@@ -32,8 +32,10 @@ unset echo
 
 # Fix up all makefiles so that nmake can handle them.
 for i in `find . -name Makefile`; do
-  echo Removing curly brackets in $i for NMAKE.
-  mv $i $i.tmp
-  sed -e 's/{/(/g' -e 's/}/)/g' < $i.tmp > $i
-  rm -f $i.tmp
+  if test "$i" != "./cpu/softfloat3e/Makefile"; then
+    echo Removing curly brackets in $i for NMAKE.
+    mv $i $i.tmp
+    sed -e 's/{/(/g' -e 's/}/)/g' < $i.tmp > $i
+    rm -f $i.tmp
+  fi
 done

@@ -1152,6 +1152,16 @@ AC_ARG_ENABLE(fpu,
   )
 AC_SUBST(FPU_VAR)
 
+if test "$MSVC_TARGET" = 0; then
+  GNU_MAKE_ONLY=""
+  NMAKE_ONLY="# "
+else
+  GNU_MAKE_ONLY="# "
+  NMAKE_ONLY=""
+fi
+AC_SUBST(GNU_MAKE_ONLY)
+AC_SUBST(NMAKE_ONLY)
+
 support_vmx=0
 AC_MSG_CHECKING(for VMX support)
 AC_ARG_ENABLE(vmx,
