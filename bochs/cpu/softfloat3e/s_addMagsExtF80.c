@@ -53,6 +53,7 @@ extFloat80_t softfloat_addMagsExtF80(uint16_t uiA64, uint64_t uiA0, uint16_t uiB
     struct uint64_extra sig64Extra;
     struct uint128 uiZ;
     extFloat80_t z;
+    bool overflow;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -62,66 +63,79 @@ extFloat80_t softfloat_addMagsExtF80(uint16_t uiA64, uint64_t uiA0, uint16_t uiB
     sigB = uiB0;
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    expDiff = expA - expB;
-    if (! expDiff) {
-        if (expA == 0x7FFF) {
-            if ((sigA | sigB) & UINT64_C(0x7FFFFFFFFFFFFFFF)) {
-                goto propagateNaN;
+    if (expA == 0x7FFF) {
+        if ((sigA << 1) || ((expB == 0x7FFF) && (sigB << 1)))
+            goto propagateNaN;
+        if (sigB && ! expB)
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
+        uiZ64 = uiA64;
+        uiZ0  = uiA0;
+        goto uiZ;
+    }
+    if (expB == 0x7FFF) {
+        if (sigB << 1) goto propagateNaN;
+        if (sigA && ! expA)
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
+        uiZ64 = packToExtF80UI64(signZ, 0x7FFF);
+        uiZ0  = UINT64_C(0x8000000000000000);
+        goto uiZ;
+    }
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    if (! expA) {
+        if (! sigA) {
+            if (! expB && sigB) {
+                softfloat_raiseFlags(status, softfloat_flag_denormal);
+                normExpSig = softfloat_normSubnormalExtF80Sig(sigB);
+                expB = normExpSig.exp + 1;
+                sigB = normExpSig.sig;
             }
-            uiZ64 = uiA64;
-            uiZ0  = uiA0;
-            goto uiZ;
-        }
-        sigZ = sigA + sigB;
-        sigZExtra = 0;
-        if (! expA) {
-            if (sigA | sigB) softfloat_raiseFlags(status, softfloat_flag_denormal);
-            normExpSig = softfloat_normSubnormalExtF80Sig(sigZ);
-            expZ = normExpSig.exp + 1;
-            sigZ = normExpSig.sig;
+            expZ = expB;
+            sigZ = sigB;
+            sigZExtra = 0;
             goto roundAndPack;
         }
+        softfloat_raiseFlags(status, softfloat_flag_denormal);
+        normExpSig = softfloat_normSubnormalExtF80Sig(sigA);
+        expA = normExpSig.exp + 1;
+        sigA = normExpSig.sig;
+    }
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    if (expB == 0) {
+        if (sigB == 0) {
+            expZ = expA;
+            sigZ = sigA;
+            sigZExtra = 0;
+            goto roundAndPack;
+        }
+        softfloat_raiseFlags(status, softfloat_flag_denormal);
+        normExpSig = softfloat_normSubnormalExtF80Sig(sigB);
+        expB = normExpSig.exp + 1;
+        sigB = normExpSig.sig;
+    }
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    expDiff = expA - expB;
+    if (! expDiff) {
+        sigZ = sigA + sigB;
+        sigZExtra = 0;
         expZ = expA;
         goto shiftRight1;
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if (expDiff < 0) {
-        if (expB == 0x7FFF) {
-            if (sigB & UINT64_C(0x7FFFFFFFFFFFFFFF)) goto propagateNaN;
-            uiZ64 = packToExtF80UI64(signZ, 0x7FFF);
-            uiZ0  = uiB0;
-            goto uiZ;
-        }
         expZ = expB;
-        if (! expA) {
-            if (sigA) softfloat_raiseFlags(status, softfloat_flag_denormal);
-            ++expDiff;
-            sigZExtra = 0;
-            if (! expDiff) goto newlyAligned;
-        }
         sig64Extra = softfloat_shiftRightJam64Extra(sigA, 0, -expDiff);
         sigA = sig64Extra.v;
         sigZExtra = sig64Extra.extra;
     } else {
-        if (expA == 0x7FFF) {
-            if (sigA & UINT64_C(0x7FFFFFFFFFFFFFFF)) goto propagateNaN;
-            uiZ64 = uiA64;
-            uiZ0  = uiA0;
-            goto uiZ;
-        }
         expZ = expA;
-        if (! expB) {
-            if (sigB) softfloat_raiseFlags(status, softfloat_flag_denormal);
-            --expDiff;
-            sigZExtra = 0;
-            if (! expDiff) goto newlyAligned;
-        }
         sig64Extra = softfloat_shiftRightJam64Extra(sigB, 0, expDiff);
         sigB = sig64Extra.v;
         sigZExtra = sig64Extra.extra;
     }
- newlyAligned:
     sigZ = sigA + sigB;
     if (sigZ & UINT64_C(0x8000000000000000)) goto roundAndPack;
     /*------------------------------------------------------------------------

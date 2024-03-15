@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "softfloat.h"
 
 extFloat80_t
- softfloat_roundPackToExtF80(bool sign, int32_t exp, uint64_t sig, uint64_t sigExtra, uint8_t roundingPrecision, struct softfloat_status_t *status)
+ SoftFloat_roundPackToExtF80(bool sign, int32_t exp, uint64_t sig, uint64_t sigExtra, uint8_t roundingPrecision, struct softfloat_status_t *status)
 {
     uint8_t roundingMode;
     bool roundNearEven;
@@ -47,6 +47,7 @@ extFloat80_t
     bool isTiny, doIncrement;
     struct uint64_extra sig64Extra;
     extFloat80_t z;
+    uint64_t sigExact;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -76,11 +77,8 @@ extFloat80_t
             *----------------------------------------------------------------*/
             isTiny = (exp < 0) || (sig <= (uint64_t) (sig + roundIncrement));
             sig = softfloat_shiftRightJam64(sig, 1 - exp);
+            sigExact = sig;
             roundBits = sig & roundMask;
-            if (roundBits) {
-                if (isTiny) softfloat_raiseFlags(status, softfloat_flag_underflow);
-                softfloat_raiseFlags(status, softfloat_flag_inexact);
-            }
             sig += roundIncrement;
             exp = ((sig & UINT64_C(0x8000000000000000)) != 0);
             roundIncrement = roundMask + 1;
@@ -88,6 +86,14 @@ extFloat80_t
                 roundMask |= roundIncrement;
             }
             sig &= ~roundMask;
+            if (isTiny) {
+                if (roundBits || (sig && ! softfloat_isMaskedException(status, softfloat_flag_underflow)))
+                    softfloat_raiseFlags(status, softfloat_flag_underflow);
+            }
+            if (roundBits) {
+                softfloat_raiseFlags(status, softfloat_flag_inexact);
+                if (sig > sigExact) softfloat_setRoundingUp(status);
+            }
             goto packReturn;
         }
         if ((0x7FFE < exp) || ((exp == 0x7FFE) && ((uint64_t) (sig + roundIncrement) < sig))) {
@@ -99,16 +105,19 @@ extFloat80_t
     if (roundBits) {
         softfloat_raiseFlags(status, softfloat_flag_inexact);
     }
+    sigExact = sig;
     sig = (uint64_t) (sig + roundIncrement);
     if (sig < roundIncrement) {
         ++exp;
         sig = UINT64_C(0x8000000000000000);
+        sigExact >>= 1; // must scale also, or else later tests will fail
     }
     roundIncrement = roundMask + 1;
     if (roundNearEven && (roundBits<<1 == roundIncrement)) {
         roundMask |= roundIncrement;
     }
     sig &= ~roundMask;
+    if (sig > sigExact) softfloat_setRoundingUp(status);
     goto packReturn;
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -129,19 +138,24 @@ extFloat80_t
             exp = 0;
             sig = sig64Extra.v;
             sigExtra = sig64Extra.extra;
-            if (sigExtra) {
-                if (isTiny) softfloat_raiseFlags(status, softfloat_flag_underflow);
-                softfloat_raiseFlags(status, softfloat_flag_inexact);
+            if (isTiny) {
+                if (sigExtra || (sig && ! softfloat_isMaskedException(status, softfloat_flag_underflow)))
+                    softfloat_raiseFlags(status, softfloat_flag_underflow);
             }
+            if (sigExtra)
+                softfloat_raiseFlags(status, softfloat_flag_inexact);
             doIncrement = (UINT64_C(0x8000000000000000) <= sigExtra);
             if (! roundNearEven && (roundingMode != softfloat_round_near_maxMag)) {
                 doIncrement =
                     (roundingMode == (sign ? softfloat_round_min : softfloat_round_max)) && sigExtra;
             }
             if (doIncrement) {
+                sigExact = sig;
                 ++sig;
                 sig &= ~(uint64_t) (! (sigExtra & UINT64_C(0x7FFFFFFFFFFFFFFF)) & roundNearEven);
                 exp = ((sig & UINT64_C(0x8000000000000000)) != 0);
+                if (sig > sigExact)
+                    softfloat_setRoundingUp(status);
             }
             goto packReturn;
         }
@@ -154,9 +168,10 @@ extFloat80_t
             if (roundNearEven
                 || (roundingMode == softfloat_round_near_maxMag)
                 || (roundingMode == (sign ? softfloat_round_min : softfloat_round_max))
-           ) {
+            ) {
                 exp = 0x7FFF;
                 sig = UINT64_C(0x8000000000000000);
+                softfloat_setRoundingUp(status);
             } else {
                 exp = 0x7FFE;
                 sig = ~roundMask;
@@ -170,13 +185,17 @@ extFloat80_t
         softfloat_raiseFlags(status, softfloat_flag_inexact);
     }
     if (doIncrement) {
+        sigExact = sig;
         ++sig;
         if (! sig) {
             ++exp;
             sig = UINT64_C(0x8000000000000000);
+            sigExact >>= 1;  // must scale also, or else later tests will fail
         } else {
             sig &= ~(uint64_t) (! (sigExtra & UINT64_C(0x7FFFFFFFFFFFFFFF)) & roundNearEven);
         }
+        if (sig > sigExact)
+            softfloat_setRoundingUp(status);
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -184,4 +203,27 @@ extFloat80_t
     z.signExp = packToExtF80UI64(sign, exp);
     z.signif = sig;
     return z;
+}
+
+extFloat80_t
+ softfloat_roundPackToExtF80(bool sign, int32_t exp, uint64_t sig, uint64_t sigExtra, uint8_t roundingPrecision, struct softfloat_status_t *status)
+{
+    softfloat_status_t round_status = *status;
+    extFloat80_t result = SoftFloat_roundPackToExtF80(sign, exp, sig, sigExtra, roundingPrecision, status);
+
+    // bias unmasked underflow
+    if (status->softfloat_exceptionFlags & ~status->softfloat_exceptionMasks & softfloat_flag_underflow) {
+        softfloat_raiseFlags(&round_status, softfloat_flag_underflow);
+        result = SoftFloat_roundPackToExtF80(sign, exp + 0x6000, sig, sigExtra, roundingPrecision, &round_status);
+        *status = round_status;
+    }
+
+    // bias unmasked overflow
+    if (status->softfloat_exceptionFlags & ~status->softfloat_exceptionMasks & softfloat_flag_overflow) {
+        softfloat_raiseFlags(&round_status, softfloat_flag_overflow);
+        result = SoftFloat_roundPackToExtF80(sign, exp - 0x6000, sig, sigExtra, roundingPrecision, &round_status);
+        *status = round_status;
+    }
+
+    return result;
 }

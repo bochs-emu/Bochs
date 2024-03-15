@@ -92,15 +92,23 @@ extFloat80_t extF80_div(extFloat80_t a, extFloat80_t b, struct softfloat_status_
             if (sigB & UINT64_C(0x7FFFFFFFFFFFFFFF)) goto propagateNaN;
             goto invalid;
         }
+        if (! expB && sigB)
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
         goto infinity;
     }
     if (expB == 0x7FFF) {
         if (sigB & UINT64_C(0x7FFFFFFFFFFFFFFF)) goto propagateNaN;
+        if (! expA && sigA)
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
         goto zero;
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (! expB) expB = 1;
+    if (! expB) {
+        expB = 1;
+        if (sigB)
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
+    }
     if (! (sigB & UINT64_C(0x8000000000000000))) {
         if (! sigB) {
             if (! sigA) goto invalid;
@@ -112,7 +120,11 @@ extFloat80_t extF80_div(extFloat80_t a, extFloat80_t b, struct softfloat_status_
         expB += normExpSig.exp;
         sigB = normExpSig.sig;
     }
-    if (! expA) expA = 1;
+    if (! expA) {
+        expA = 1;
+        if (sigA)
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
+    }
     if (! (sigA & UINT64_C(0x8000000000000000))) {
         if (! sigA) goto zero;
         softfloat_raiseFlags(status, softfloat_flag_denormal);

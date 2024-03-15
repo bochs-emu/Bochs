@@ -97,15 +97,27 @@ extFloat80_t extF80_mul(extFloat80_t a, extFloat80_t b, struct softfloat_status_
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (! expA) expA = 1;
+    if (! expA) {
+        expA = 1;
+        if (sigA)
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
+    }
     if (! (sigA & UINT64_C(0x8000000000000000))) {
-        if (! sigA) goto zero;
+        if (! sigA) {
+            if (! expB && sigB)
+                softfloat_raiseFlags(status, softfloat_flag_denormal);
+            goto zero;
+        }
         softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalExtF80Sig(sigA);
         expA += normExpSig.exp;
         sigA = normExpSig.sig;
     }
-    if (! expB) expB = 1;
+    if (! expB) {
+        expB = 1;
+        if (sigB)
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
+    }
     if (! (sigB & UINT64_C(0x8000000000000000))) {
         if (! sigB) goto zero;
         softfloat_raiseFlags(status, softfloat_flag_denormal);
@@ -138,6 +150,8 @@ extFloat80_t extF80_mul(extFloat80_t a, extFloat80_t b, struct softfloat_status_
         uiZ64 = defaultNaNExtF80UI64;
         uiZ0  = defaultNaNExtF80UI0;
     } else {
+        if ((! expA && sigA) || (! expB && sigB))
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
         uiZ64 = packToExtF80UI64(signZ, 0x7FFF);
         uiZ0  = UINT64_C(0x8000000000000000);
     }

@@ -84,15 +84,18 @@ extFloat80_t extF80_sqrt(extFloat80_t a, struct softfloat_status_t *status)
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if (signA) {
-        if (! sigA) goto zero;
+        if ((expA | sigA) == 0) goto zero;
         goto invalid;
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (! expA) expA = 1;
+    if (! expA) {
+        expA = 1;
+        if (sigA)
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
+    }
     if (! (sigA & UINT64_C(0x8000000000000000))) {
         if (! sigA) goto zero;
-        softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalExtF80Sig(sigA);
         expA += normExpSig.exp;
         sigA = normExpSig.sig;
