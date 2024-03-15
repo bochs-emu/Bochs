@@ -36,7 +36,7 @@
 
 class BX_CPU_C;
                                        // 512K BIOS ROM @0xfff80000
-const Bit32u BIOSROMSZ = (1 << 21);    //   2M BIOS ROM @0xffe00000, must be a power of 2
+const Bit32u BIOSROMSZ = (1 << 22);    //   4M BIOS ROM @0xffc00000, must be a power of 2
 const Bit32u EXROMSIZE = (0x20000);    // ROMs 0xc0000-0xdffff (area 0xe0000-0xfffff=bios mapped)
 
 const Bit32u BIOS_MASK  = BIOSROMSZ-1;
