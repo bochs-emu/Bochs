@@ -120,8 +120,7 @@ floatx80 f2xm1(floatx80 a, float_status_t &status)
     Bit64u zSig0, zSig1, zSig2;
 
     // handle unsupported extended double-precision floating encodings
-    if (floatx80_is_unsupported(a))
-    {
+    if (extF80_isUnsupported(a)) {
         float_raise(status, float_flag_invalid);
         return floatx80_default_nan;
     }

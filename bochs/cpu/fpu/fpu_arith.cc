@@ -67,7 +67,7 @@ float_status_t i387cw_to_softfloat_status_word(Bit16u control_word)
 
 floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float32 b32, int bIsNaN, float_status_t &status)
 {
-    int aIsSignalingNaN = floatx80_is_signaling_nan(a);
+    int aIsSignalingNaN = extF80_isSignalingNaN(a);
     int bIsSignalingNaN = float32_is_signaling_nan(b32);
 
     if (aIsSignalingNaN | bIsSignalingNaN)
@@ -100,13 +100,13 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float32 b32, int bIsNaN, float_s
 
 bool FPU_handle_NaN(floatx80 a, float32 b, floatx80 &r, float_status_t &status)
 {
-  if (floatx80_is_unsupported(a)) {
+  if (extF80_isUnsupported(a)) {
      float_raise(status, float_flag_invalid);
      r = floatx80_default_nan;
      return true;
   }
 
-  int aIsNaN = floatx80_is_nan(a), bIsNaN = float32_is_nan(b);
+  int aIsNaN = extF80_isNaN(a), bIsNaN = f32_isNaN(b);
   if (aIsNaN | bIsNaN) {
      r = FPU_handle_NaN(a, aIsNaN, b, bIsNaN, status);
      return true;
@@ -116,7 +116,7 @@ bool FPU_handle_NaN(floatx80 a, float32 b, floatx80 &r, float_status_t &status)
 
 floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float64 b64, int bIsNaN, float_status_t &status)
 {
-    int aIsSignalingNaN = floatx80_is_signaling_nan(a);
+    int aIsSignalingNaN = extF80_isSignalingNaN(a);
     int bIsSignalingNaN = float64_is_signaling_nan(b64);
 
     if (aIsSignalingNaN | bIsSignalingNaN)
@@ -149,13 +149,13 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float64 b64, int bIsNaN, float_s
 
 bool FPU_handle_NaN(floatx80 a, float64 b, floatx80 &r, float_status_t &status)
 {
-  if (floatx80_is_unsupported(a)) {
+  if (extF80_isUnsupported(a)) {
      float_raise(status, float_flag_invalid);
      r = floatx80_default_nan;
      return true;
   }
 
-  int aIsNaN = floatx80_is_nan(a), bIsNaN = float64_is_nan(b);
+  int aIsNaN = extF80_isNaN(a), bIsNaN = f64_isNaN(b);
   if (aIsNaN | bIsNaN) {
      r = FPU_handle_NaN(a, aIsNaN, b, bIsNaN, status);
      return true;

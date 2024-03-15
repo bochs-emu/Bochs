@@ -228,7 +228,7 @@ int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, float_status_t &status
     int q = 0;
 
     // handle unsupported extended double-precision floating encodings
-    if (floatx80_is_unsupported(a)) {
+    if (extF80_isUnsupported(a)) {
         goto invalid;
     }
 
@@ -351,7 +351,7 @@ int ftan(floatx80 &a, float_status_t &status)
     int q = 0;
 
     // handle unsupported extended double-precision floating encodings
-    if (floatx80_is_unsupported(a)) {
+    if (extF80_isUnsupported(a)) {
         goto invalid;
     }
 
