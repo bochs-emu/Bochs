@@ -49,7 +49,6 @@ float128_t softfloat_addMagsF128(uint64_t uiA64, uint64_t uiA0, uint64_t uiB64, 
     int32_t expZ;
     uint64_t sigZExtra;
     struct uint128_extra sig128Extra;
-    union ui128_f128 uZ;
 
     expA = expF128UI64(uiA64);
     sigA.v64 = fracF128UI64(uiA64);
@@ -63,13 +62,13 @@ float128_t softfloat_addMagsF128(uint64_t uiA64, uint64_t uiA0, uint64_t uiB64, 
             if (sigA.v64 | sigA.v0 | sigB.v64 | sigB.v0) goto propagateNaN;
             uiZ.v64 = uiA64;
             uiZ.v0  = uiA0;
-            goto uiZ;
+            return uiZ;
         }
         sigZ = softfloat_add128(sigA.v64, sigA.v0, sigB.v64, sigB.v0);
         if (! expA) {
             uiZ.v64 = packToF128UI64(signZ, 0, sigZ.v64);
             uiZ.v0  = sigZ.v0;
-            goto uiZ;
+            return uiZ;
         }
         expZ = expA;
         sigZ.v64 |= UINT64_C(0x0002000000000000);
@@ -81,7 +80,7 @@ float128_t softfloat_addMagsF128(uint64_t uiA64, uint64_t uiA0, uint64_t uiB64, 
             if (sigB.v64 | sigB.v0) goto propagateNaN;
             uiZ.v64 = packToF128UI64(signZ, 0x7FFF, 0);
             uiZ.v0  = 0;
-            goto uiZ;
+            return uiZ;
         }
         expZ = expB;
         if (expA) {
@@ -100,7 +99,7 @@ float128_t softfloat_addMagsF128(uint64_t uiA64, uint64_t uiA0, uint64_t uiB64, 
             if (sigA.v64 | sigA.v0) goto propagateNaN;
             uiZ.v64 = uiA64;
             uiZ.v0  = uiA0;
-            goto uiZ;
+            return uiZ;
         }
         expZ = expA;
         if (expB) {
@@ -134,7 +133,5 @@ float128_t softfloat_addMagsF128(uint64_t uiA64, uint64_t uiA0, uint64_t uiB64, 
         softfloat_roundPackToF128(signZ, expZ, sigZ.v64, sigZ.v0, sigZExtra, status);
  propagateNaN:
     uiZ = softfloat_propagateNaNF128UI(uiA64, uiA0, uiB64, uiB0, status);
- uiZ:
-    uZ.ui = uiZ;
-    return uZ.f;
+    return uiZ;
 }

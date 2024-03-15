@@ -50,14 +50,11 @@ extFloat80_t
     struct exp32_sig64 normExpSig;
     struct uint128 uiZ;
     uint64_t lastBitMask, roundBitsMask;
-    extFloat80_t z;
 
     // handle unsupported extended double-precision floating encodings
     if (extF80_isUnsupported(a)) {
         softfloat_raiseFlags(status, softfloat_flag_invalid);
-        uiZ64 = defaultNaNExtF80UI64;
-        sigZ = defaultNaNExtF80UI0;
-        goto uiZ;
+        return packToExtF80(defaultNaNExtF80UI64, defaultNaNExtF80UI0);
     }
 
     /*------------------------------------------------------------------------
@@ -70,9 +67,7 @@ extFloat80_t
     *------------------------------------------------------------------------*/
     if (!(sigA & UINT64_C(0x8000000000000000)) && (exp != 0x7FFF)) {
         if (!sigA) {
-            uiZ64 = signUI64;
-            sigZ = 0;
-            goto uiZ;
+            return packToExtF80(signUI64, 0, 0);
         }
         softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalExtF80Sig(sigA);
@@ -85,16 +80,13 @@ extFloat80_t
         if (exp == 0x7FFF) {
             if (sigA & UINT64_C(0x7FFFFFFFFFFFFFFF)) {
                 uiZ = softfloat_propagateNaNExtF80UI(uiA64, sigA, 0, 0, status);
-                uiZ64 = uiZ.v64;
-                sigZ  = uiZ.v0;
-                goto uiZ;
+                return packToExtF80(uiZ.v64, uiZ.v0);
             }
             sigZ = UINT64_C(0x8000000000000000);
         } else {
             sigZ = sigA;
         }
-        uiZ64 = signUI64 | exp;
-        goto uiZ;
+        return packToExtF80(signUI64, exp, sigZ);
     }
     if (exp <= 0x3FFE) {
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
@@ -111,13 +103,10 @@ extFloat80_t
             if (!signUI64) goto mag1;
             break;
         }
-        uiZ64 = signUI64;
-        sigZ  = 0;
-        goto uiZ;
+        return packToExtF80(signUI64, 0, 0);
      mag1:
-        uiZ64 = signUI64 | 0x3FFF;
-        sigZ  = UINT64_C(0x8000000000000000);
-        goto uiZ;
+        softfloat_setRoundingUp(status);
+        return packToExtF80(signUI64, 0x3FFF, UINT64_C(0x8000000000000000));
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -137,12 +126,12 @@ extFloat80_t
     if (!sigZ) {
         ++uiZ64;
         sigZ = UINT64_C(0x8000000000000000);
+        softfloat_setRoundingUp(status);
     }
     if (sigZ != sigA) {
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
+        if (sigZ > sigA)
+            softfloat_setRoundingUp(status);
     }
- uiZ:
-    z.signExp = uiZ64;
-    z.signif = sigZ;
-    return z;
+    return packToExtF80(uiZ64, sigZ);
 }

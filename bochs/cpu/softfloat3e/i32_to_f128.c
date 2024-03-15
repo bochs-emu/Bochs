@@ -43,7 +43,7 @@ float128_t i32_to_f128(int32_t a)
     bool sign;
     uint32_t absA;
     int8_t shiftDist;
-    union ui128_f128 uZ;
+    float128_t z;
 
     uiZ64 = 0;
     if (a) {
@@ -52,7 +52,7 @@ float128_t i32_to_f128(int32_t a)
         shiftDist = softfloat_countLeadingZeros32(absA) + 17;
         uiZ64 = packToF128UI64(sign, 0x402E - shiftDist, (uint64_t) absA<<shiftDist);
     }
-    uZ.ui.v64 = uiZ64;
-    uZ.ui.v0  = 0;
-    return uZ.f;
+    z.v64 = uiZ64;
+    z.v0  = 0;
+    return z;
 }

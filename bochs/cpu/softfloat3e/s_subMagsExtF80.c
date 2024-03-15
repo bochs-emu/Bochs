@@ -40,21 +40,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "softfloat.h"
 
 extFloat80_t
- softfloat_subMagsExtF80(uint16_t uiA64, uint64_t uiA0,
-     uint16_t uiB64, uint64_t uiB0,
-     bool signZ, struct softfloat_status_t *status)
+ softfloat_subMagsExtF80(uint16_t uiA64, uint64_t uiA0, uint16_t uiB64, uint64_t uiB0, bool signZ, struct softfloat_status_t *status)
 {
     int32_t expA;
     uint64_t sigA;
     int32_t expB;
     uint64_t sigB;
     int32_t expDiff;
-    uint16_t uiZ64;
-    uint64_t uiZ0;
     int32_t expZ;
     uint64_t sigExtra;
     struct uint128 sig128, uiZ;
-    extFloat80_t z;
+    struct exp32_sig64 normExpSig;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -64,46 +60,73 @@ extFloat80_t
     sigB = uiB0;
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
+    if (expA == 0x7FFF) {
+        if ((sigA<<1)) goto propagateNaN;
+        if (expB == 0x7FFF) {
+            if ((sigB<<1)) goto propagateNaN;
+            softfloat_raiseFlags(status, softfloat_flag_invalid);
+            return packToExtF80(defaultNaNExtF80UI64, defaultNaNExtF80UI0);
+        }
+        if (sigB && ! expB)
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
+        return packToExtF80(uiA64, uiA0);
+    }
+    if (expB == 0x7FFF) {
+        if ((sigB<<1)) goto propagateNaN;
+        if (sigA && ! expA)
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
+        return packToExtF80(signZ ^ 1, 0x7FFF, UINT64_C(0x8000000000000000));
+    }
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    if (! expA) {
+        if (! sigA) {
+            if (! expB) {
+                if (sigB) {
+                    softfloat_raiseFlags(status, softfloat_flag_denormal);
+                    normExpSig = softfloat_normSubnormalExtF80Sig(sigB);
+                    expB = normExpSig.exp + 1;
+                    sigB = normExpSig.sig;
+                    return softfloat_roundPackToExtF80(signZ ^ 1, expB, sigB, 0, softfloat_extF80_roundingPrecision(status), status);
+                }
+                return packToExtF80((softfloat_getRoundingMode(status) == softfloat_round_min), 0, 0);
+            }
+            return softfloat_roundPackToExtF80(signZ ^ 1, expB, sigB, 0, softfloat_extF80_roundingPrecision(status), status);
+        }
+        softfloat_raiseFlags(status, softfloat_flag_denormal);
+        normExpSig = softfloat_normSubnormalExtF80Sig(sigA);
+        expA = normExpSig.exp + 1;
+        sigA = normExpSig.sig;
+    }
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    if (! expB) {
+        if (! sigB)
+            return softfloat_roundPackToExtF80(signZ, expA, sigA, 0, softfloat_extF80_roundingPrecision(status), status);
+
+        softfloat_raiseFlags(status, softfloat_flag_denormal);
+        normExpSig = softfloat_normSubnormalExtF80Sig(sigB);
+        expB = normExpSig.exp + 1;
+        sigB = normExpSig.sig;
+    }
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
     expDiff = expA - expB;
     if (0 < expDiff) goto expABigger;
     if (expDiff < 0) goto expBBigger;
-    if (expA == 0x7FFF) {
-        if ((sigA | sigB) & UINT64_C(0x7FFFFFFFFFFFFFFF)) {
-            goto propagateNaN;
-        }
-        softfloat_raiseFlags(status, softfloat_flag_invalid);
-        uiZ64 = defaultNaNExtF80UI64;
-        uiZ0  = defaultNaNExtF80UI0;
-        goto uiZ;
-    }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     expZ = expA;
-    if (! expZ) expZ = 1;
     sigExtra = 0;
     if (sigB < sigA) goto aBigger;
     if (sigA < sigB) goto bBigger;
-    uiZ64 = packToExtF80UI64((softfloat_getRoundingMode(status) == softfloat_round_min), 0);
-    uiZ0 = 0;
-    goto uiZ;
+    return packToExtF80((softfloat_getRoundingMode(status) == softfloat_round_min), 0, 0);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  expBBigger:
-    if (expB == 0x7FFF) {
-        if (sigB & UINT64_C(0x7FFFFFFFFFFFFFFF)) goto propagateNaN;
-        uiZ64 = packToExtF80UI64(signZ ^ 1, 0x7FFF);
-        uiZ0  = UINT64_C(0x8000000000000000);
-        goto uiZ;
-    }
-    if (! expA) {
-        ++expDiff;
-        sigExtra = 0;
-        if (! expDiff) goto newlyAlignedBBigger;
-    }
     sig128 = softfloat_shiftRightJam128(sigA, 0, -expDiff);
     sigA = sig128.v64;
     sigExtra = sig128.v0;
- newlyAlignedBBigger:
     expZ = expB;
  bBigger:
     signZ = ! signZ;
@@ -112,21 +135,9 @@ extFloat80_t
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  expABigger:
-    if (expA == 0x7FFF) {
-        if (sigA & UINT64_C(0x7FFFFFFFFFFFFFFF)) goto propagateNaN;
-        uiZ64 = uiA64;
-        uiZ0  = uiA0;
-        goto uiZ;
-    }
-    if (! expB) {
-        --expDiff;
-        sigExtra = 0;
-        if (! expDiff) goto newlyAlignedABigger;
-    }
     sig128 = softfloat_shiftRightJam128(sigB, 0, expDiff);
     sigB = sig128.v64;
     sigExtra = sig128.v0;
- newlyAlignedABigger:
     expZ = expA;
  aBigger:
     sig128 = softfloat_sub128(sigA, 0, sigB, sigExtra);
@@ -140,10 +151,5 @@ extFloat80_t
     *------------------------------------------------------------------------*/
  propagateNaN:
     uiZ = softfloat_propagateNaNExtF80UI(uiA64, uiA0, uiB64, uiB0, status);
-    uiZ64 = uiZ.v64;
-    uiZ0  = uiZ.v0;
- uiZ:
-    z.signExp = uiZ64;
-    z.signif  = uiZ0;
-    return z;
+    return packToExtF80(uiZ.v64, uiZ.v0);
 }

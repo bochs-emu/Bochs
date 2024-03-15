@@ -44,7 +44,7 @@ float128_t i64_to_f128(int64_t a)
     uint64_t absA;
     int8_t shiftDist;
     struct uint128 zSig;
-    union ui128_f128 uZ;
+    float128_t z;
 
     if (! a) {
         uiZ64 = 0;
@@ -62,7 +62,7 @@ float128_t i64_to_f128(int64_t a)
         uiZ64 = packToF128UI64(sign, 0x406E - shiftDist, zSig.v64);
         uiZ0  = zSig.v0;
     }
-    uZ.ui.v64 = uiZ64;
-    uZ.ui.v0  = uiZ0;
-    return uZ.f;
+    z.v64 = uiZ64;
+    z.v0  = uiZ0;
+    return z;
 }

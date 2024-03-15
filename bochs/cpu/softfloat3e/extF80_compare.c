@@ -111,12 +111,12 @@ int extF80_compare(extFloat80_t a, extFloat80_t b, int quiet, softfloat_status_t
     *------------------------------------------------------------------------*/
     if (aClass == softfloat_denormal) {
         normExpSig = softfloat_normSubnormalExtF80Sig(sigA);
-        expA += normExpSig.exp;
+        expA += normExpSig.exp + 1;
         sigA = normExpSig.sig;
     }
     if (bClass == softfloat_denormal) {
         normExpSig = softfloat_normSubnormalExtF80Sig(sigB);
-        expB += normExpSig.exp;
+        expB += normExpSig.exp + 1;
         sigB = normExpSig.sig;
     }
 

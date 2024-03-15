@@ -52,8 +52,8 @@ softfloat_class_t extF80_class(extFloat80_t a)
     expA  = expExtF80UI64(uiA64);
     sigA  = uiA0;
 
-    if(expA == 0) {
-        if (sigA == 0) return softfloat_zero;
+    if (! expA) {
+        if (! sigA) return softfloat_zero;
         return softfloat_denormal; /* denormal or pseudo-denormal */
     }
 
@@ -62,7 +62,7 @@ softfloat_class_t extF80_class(extFloat80_t a)
         return softfloat_SNaN; /* report unsupported as SNaNs */
 
     if (expA == 0x7FFF) {
-        if (((uint64_t) (sigA<<1)) == 0)
+        if ((sigA<<1) == 0)
             return (signA) ? softfloat_negative_inf : softfloat_positive_inf;
 
         return (sigA & UINT64_C(0x4000000000000000)) ? softfloat_QNaN : softfloat_SNaN;

@@ -200,26 +200,6 @@ BX_CPP_INLINE void set_float_rounding_up(float_status_t &status)
 #endif
 
 /*----------------------------------------------------------------------------
-| Returns 1 if the <denormals-are-zeros> feature is supported;
-| otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int get_denormals_are_zeros(const float_status_t &status)
-{
-    return status.denormals_are_zeros;
-}
-
-/*----------------------------------------------------------------------------
-| Returns 1 if the <flush-underflow-to-zero> feature is supported;
-| otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int get_flush_underflow_to_zero(const float_status_t &status)
-{
-    return status.flush_underflow_to_zero;
-}
-
-/*----------------------------------------------------------------------------
 | Software IEC/IEEE single-precision operations.
 *----------------------------------------------------------------------------*/
 
@@ -236,40 +216,9 @@ int float64_is_nan(float64);
 #ifdef FLOATX80
 
 /*----------------------------------------------------------------------------
-| Software IEC/IEEE floating-point types.
-*----------------------------------------------------------------------------*/
-
-#ifdef BX_BIG_ENDIAN
-struct floatx80 {	// leave alignment to compiler
-    Bit16u exp;
-    Bit64u fraction;
-};
-#else
-struct floatx80 {
-    Bit64u fraction;
-    Bit16u exp;
-};
-#endif
-
-/*----------------------------------------------------------------------------
 | Software IEC/IEEE integer-to-floating-point conversion routines.
 *----------------------------------------------------------------------------*/
 floatx80 int32_to_floatx80(Bit32s);
-floatx80 int64_to_floatx80(Bit64s);
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE extended double-precision conversion routines.
-*----------------------------------------------------------------------------*/
-floatx80 float32_to_floatx80(float32, float_status_t &status);
-floatx80 float64_to_floatx80(float64, float_status_t &status);
-
-Bit32s floatx80_to_int32(floatx80, float_status_t &status);
-Bit32s floatx80_to_int32_round_to_zero(floatx80, float_status_t &status);
-Bit64s floatx80_to_int64(floatx80, float_status_t &status);
-Bit64s floatx80_to_int64_round_to_zero(floatx80, float_status_t &status);
-
-float32 floatx80_to_float32(floatx80, float_status_t &status);
-float64 floatx80_to_float64(floatx80, float_status_t &status);
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE extended double-precision operations.
@@ -278,8 +227,6 @@ floatx80 floatx80_round_to_int(floatx80, float_status_t &status);
 floatx80 floatx80_add(floatx80, floatx80, float_status_t &status);
 floatx80 floatx80_sub(floatx80, floatx80, float_status_t &status);
 floatx80 floatx80_mul(floatx80, floatx80, float_status_t &status);
-floatx80 floatx80_div(floatx80, floatx80, float_status_t &status);
-floatx80 floatx80_sqrt(floatx80, float_status_t &status);
 
 float_class_t floatx80_class(floatx80);
 int floatx80_is_signaling_nan(floatx80);
@@ -288,7 +235,7 @@ int floatx80_is_nan(floatx80);
 #endif  /* FLOATX80 */
 
 #ifdef FLOAT128
-
+/*
 #ifdef BX_BIG_ENDIAN
 struct float128 {
     Bit64u hi, lo;
@@ -298,7 +245,7 @@ struct float128 {
     Bit64u lo, hi;
 };
 #endif
-
+*/
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE quadruple-precision conversion routines.
 *----------------------------------------------------------------------------*/

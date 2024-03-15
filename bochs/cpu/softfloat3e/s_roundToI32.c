@@ -45,6 +45,7 @@ int32_t softfloat_roundToI32(bool sign, uint64_t sig, uint8_t roundingMode, bool
     uint32_t sig32;
     union { uint32_t ui; int32_t i; } uZ;
     int32_t z;
+    uint64_t absSigExact = sig;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -67,6 +68,8 @@ int32_t softfloat_roundToI32(bool sign, uint64_t sig, uint8_t roundingMode, bool
     if (z && ((z < 0) ^ sign)) goto invalid;
     if (roundBits) {
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
+        if (((uint64_t)sig32 << 12) > absSigExact)
+            softfloat_setRoundingUp(status);
     }
     return z;
     /*------------------------------------------------------------------------

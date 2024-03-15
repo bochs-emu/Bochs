@@ -49,7 +49,6 @@ extFloat80_t f64_to_extF80(float64_t a, struct softfloat_status_t *status)
     uint16_t uiZ64;
     uint64_t uiZ0;
     struct exp16_sig64 normExpSig;
-    extFloat80_t z;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -68,15 +67,13 @@ extFloat80_t f64_to_extF80(float64_t a, struct softfloat_status_t *status)
             uiZ64 = packToExtF80UI64(sign, 0x7FFF);
             uiZ0  = UINT64_C(0x8000000000000000);
         }
-        goto uiZ;
+        return packToExtF80(uiZ64, uiZ0);
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if (! exp) {
         if (! frac) {
-            uiZ64 = packToExtF80UI64(sign, 0);
-            uiZ0  = 0;
-            goto uiZ;
+            return packToExtF80(sign, 0, 0);
         }
         softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalF64Sig(frac);
@@ -87,8 +84,5 @@ extFloat80_t f64_to_extF80(float64_t a, struct softfloat_status_t *status)
     *------------------------------------------------------------------------*/
     uiZ64 = packToExtF80UI64(sign, exp + 0x3C00);
     uiZ0  = (frac | UINT64_C(0x0010000000000000))<<11;
- uiZ:
-    z.signExp = uiZ64;
-    z.signif  = uiZ0;
-    return z;
+    return packToExtF80(uiZ64, uiZ0);
 }

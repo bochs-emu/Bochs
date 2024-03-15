@@ -48,26 +48,36 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 | (typically 'float' and 'double', and possibly 'long double').
 *----------------------------------------------------------------------------*/
 typedef struct f16_t {
-  uint16_t v;
-  f16_t(uint64_t v16): v(v16) {}
-  operator uint16_t() const { return v; }
+    uint16_t v;
+    f16_t(uint64_t v16): v(v16) {}
+    operator uint16_t() const { return v; }
 } float16_t;
 
 typedef struct f32_t {
-  uint32_t v;
-  f32_t(uint64_t v32): v(v32) {}
-  operator uint32_t() const { return v; }
+    uint32_t v;
+    f32_t(uint64_t v32): v(v32) {}
+    operator uint32_t() const { return v; }
 } float32_t;
 
 typedef struct f64_t {
-  uint64_t v;
-  f64_t(uint64_t v64): v(v64) {}
-  operator uint64_t() const { return v; }
+    uint64_t v;
+    f64_t(uint64_t v64): v(v64) {}
+    operator uint64_t() const { return v; }
 } float64_t;
 
-typedef struct f128_t {
-  uint64_t v[2];
-} float128_t;
+#ifdef BX_BIG_ENDIAN
+struct float128 {
+    Bit64u hi, lo;
+};
+#else
+struct float128 {
+    Bit64u lo, hi;
+};
+#endif
+
+#include "primitiveTypes.h"
+
+typedef uint128 f128_t, float128_t;
 
 /*----------------------------------------------------------------------------
 | The format of an 80-bit extended floating-point number in memory.  This
@@ -75,14 +85,26 @@ typedef struct f128_t {
 | named 'signif'.
 *----------------------------------------------------------------------------*/
 
+#ifdef BX_BIG_ENDIAN
+struct floatx80 {  // leave alignment to compiler
+    Bit16u exp;
+    Bit64u fraction;
+};
+#else
+struct floatx80 {
+    Bit64u fraction;
+    Bit16u exp;
+};
+#endif
+
 #ifdef BX_LITTLE_ENDIAN
 struct extFloat80M {
   uint64_t signif;
   uint16_t signExp;
 
   extFloat80M(): signif(0), signExp(0) {}
-//extFloat80M(struct floatx80 a): signif(a.fraction), signExp(a.exp) {}
-//operator floatx80() const { floatx80 x; x.fraction = signif; x.exp = signExp; return x; }
+  extFloat80M(struct floatx80 a): signif(a.fraction), signExp(a.exp) {}
+  operator floatx80() const { floatx80 x; x.fraction = signif; x.exp = signExp; return x; }
 };
 #else
 struct extFloat80M {
@@ -90,8 +112,8 @@ struct extFloat80M {
   uint64_t signif;
 
   extFloat80M(): signExp(0), signif(0) {}
-//extFloat80M(struct floatx80 a): signExp(a.exp), signif(a.fraction) {}
-//operator floatx80() const { floatx80 x; x.fraction = signif; x.exp = signExp; return x; }
+  extFloat80M(struct floatx80 a): signExp(a.exp), signif(a.fraction) {}
+  operator floatx80() const { floatx80 x; x.fraction = signif; x.exp = signExp; return x; }
 };
 #endif
 

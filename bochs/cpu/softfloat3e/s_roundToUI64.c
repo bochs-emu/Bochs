@@ -40,14 +40,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "softfloat.h"
 
 uint64_t
- softfloat_roundToUI64(
-     bool sign,
-     uint64_t sig,
-     uint64_t sigExtra,
-     uint8_t roundingMode,
-     bool exact,
-     struct softfloat_status_t *status)
+ softfloat_roundToUI64(bool sign, uint64_t sig, uint64_t sigExtra, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
 {
+    uint64_t absSigExact = sig;
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if ((roundingMode == softfloat_round_near_maxMag) || (roundingMode == softfloat_round_near_even)) {
@@ -70,6 +65,8 @@ uint64_t
     if (sign && sig) goto invalid;
     if (sigExtra) {
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
+        if (sig > absSigExact)
+            softfloat_setRoundingUp(status);
     }
     return sig;
     /*------------------------------------------------------------------------

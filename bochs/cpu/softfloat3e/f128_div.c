@@ -41,12 +41,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 float128_t f128_div(float128_t a, float128_t b, struct softfloat_status_t *status)
 {
-    union ui128_f128 uA;
     uint64_t uiA64, uiA0;
     bool signA;
     int32_t expA;
     struct uint128 sigA;
-    union ui128_f128 uB;
     uint64_t uiB64, uiB0;
     bool signB;
     int32_t expB;
@@ -63,20 +61,17 @@ float128_t f128_div(float128_t a, float128_t b, struct softfloat_status_t *statu
     uint32_t qs[3];
     uint64_t sigZExtra;
     struct uint128 sigZ, uiZ;
-    union ui128_f128 uZ;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    uA.f = a;
-    uiA64 = uA.ui.v64;
-    uiA0  = uA.ui.v0;
+    uiA64 = a.v64;
+    uiA0  = a.v0;
     signA = signF128UI64(uiA64);
     expA  = expF128UI64(uiA64);
     sigA.v64 = fracF128UI64(uiA64);
     sigA.v0  = uiA0;
-    uB.f = b;
-    uiB64 = uB.ui.v64;
-    uiB0  = uB.ui.v0;
+    uiB64 = b.v64;
+    uiB0  = b.v0;
     signB = signF128UI64(uiB64);
     expB  = expF128UI64(uiB64);
     sigB.v64 = fracF128UI64(uiB64);
@@ -168,26 +163,24 @@ float128_t f128_div(float128_t a, float128_t b, struct softfloat_status_t *statu
     *------------------------------------------------------------------------*/
  propagateNaN:
     uiZ = softfloat_propagateNaNF128UI(uiA64, uiA0, uiB64, uiB0, status);
-    goto uiZ;
+    return uiZ;
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  invalid:
     softfloat_raiseFlags(status, softfloat_flag_invalid);
     uiZ.v64 = defaultNaNF128UI64;
     uiZ.v0  = defaultNaNF128UI0;
-    goto uiZ;
+    return uiZ;
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  infinity:
     uiZ.v64 = packToF128UI64(signZ, 0x7FFF, 0);
-    goto uiZ0;
+    uiZ.v0 = 0;
+    return uiZ;
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  zero:
     uiZ.v64 = packToF128UI64(signZ, 0, 0);
- uiZ0:
     uiZ.v0 = 0;
- uiZ:
-    uZ.ui = uiZ;
-    return uZ.f;
+    return uiZ;
 }

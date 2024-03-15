@@ -164,19 +164,6 @@ BX_CPP_INLINE float16 commonNaNToFloat16(commonNaNT a)
     return (((Bit16u) a.sign)<<15) | 0x7E00 | (Bit16u)(a.hi>>54);
 }
 
-/*----------------------------------------------------------------------------
-| Takes half-precision floating-point NaN `a' and returns the appropriate
-| NaN result.  If `a' is a signaling NaN, the invalid exception is raised.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE float16 propagateFloat16NaN(float16 a, float_status_t &status)
-{
-    if (float16_is_signaling_nan(a))
-        float_raise(status, float_flag_invalid);
-
-    return a | 0x200;
-}
-
 #endif
 
 /*----------------------------------------------------------------------------
@@ -292,27 +279,6 @@ BX_CPP_INLINE float32 commonNaNToFloat32(commonNaNT a)
 }
 
 /*----------------------------------------------------------------------------
-| Takes two single-precision floating-point values `a' and `b', one of which
-| is a NaN, and returns the appropriate NaN result.  If either `a' or `b' is a
-| signaling NaN, the invalid exception is raised.
-*----------------------------------------------------------------------------*/
-
-float32 propagateFloat32NaN(float32 a, float32 b, float_status_t &status);
-
-/*----------------------------------------------------------------------------
-| Takes single-precision floating-point NaN `a' and returns the appropriate
-| NaN result.  If `a' is a signaling NaN, the invalid exception is raised.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE float32 propagateFloat32NaN(float32 a, float_status_t &status)
-{
-    if (float32_is_signaling_nan(a))
-        float_raise(status, float_flag_invalid);
-
-    return a | 0x00400000;
-}
-
-/*----------------------------------------------------------------------------
 | Commonly used single-precision floating point constants
 *----------------------------------------------------------------------------*/
 const float64 float64_negative_inf  = BX_CONST64(0xfff0000000000000);
@@ -422,27 +388,6 @@ BX_CPP_INLINE commonNaNT float64ToCommonNaN(float64 a, float_status_t &status)
 BX_CPP_INLINE float64 commonNaNToFloat64(commonNaNT a)
 {
     return (((Bit64u) a.sign)<<63) | BX_CONST64(0x7FF8000000000000) | (a.hi>>12);
-}
-
-/*----------------------------------------------------------------------------
-| Takes two double-precision floating-point values `a' and `b', one of which
-| is a NaN, and returns the appropriate NaN result.  If either `a' or `b' is a
-| signaling NaN, the invalid exception is raised.
-*----------------------------------------------------------------------------*/
-
-float64 propagateFloat64NaN(float64 a, float64 b, float_status_t &status);
-
-/*----------------------------------------------------------------------------
-| Takes double-precision floating-point NaN `a' and returns the appropriate
-| NaN result.  If `a' is a signaling NaN, the invalid exception is raised.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE float64 propagateFloat64NaN(float64 a, float_status_t &status)
-{
-    if (float64_is_signaling_nan(a))
-        float_raise(status, float_flag_invalid);
-
-    return a | BX_CONST64(0x0008000000000000);
 }
 
 #ifdef FLOATX80

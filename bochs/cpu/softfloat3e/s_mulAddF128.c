@@ -72,7 +72,6 @@ float128_t
     uint64_t sig256C[4];
     static uint64_t zero256[4] = INIT_UINTM4(0, 0, 0, 0);
     uint64_t sigZExtra, sig256Z0;
-    union ui128_f128 uZ;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -111,7 +110,7 @@ float128_t
         }
         uiZ.v64 = uiC64;
         uiZ.v0  = uiC0;
-        goto uiZ;
+        return uiZ;
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -309,15 +308,15 @@ float128_t
     if (magBits) {
         uiZ.v64 = packToF128UI64(signZ, 0x7FFF, 0);
         uiZ.v0 = 0;
-        if (expC != 0x7FFF) goto uiZ;
-        if (signZ == signC) goto uiZ;
+        if (expC != 0x7FFF) return uiZ;
+        if (signZ == signC) return uiZ;
     }
     softfloat_raiseFlags(status, softfloat_flag_invalid);
     uiZ.v64 = defaultNaNF128UI64;
     uiZ.v0  = defaultNaNF128UI0;
  propagateNaN_ZC:
     uiZ = softfloat_propagateNaNF128UI(uiZ.v64, uiZ.v0, uiC64, uiC0, status);
-    goto uiZ;
+    return uiZ;
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  zeroProd:
@@ -328,7 +327,5 @@ float128_t
         uiZ.v64 = packToF128UI64((softfloat_getRoundingMode(status) == softfloat_round_min), 0, 0);
         uiZ.v0 = 0;
     }
- uiZ:
-    uZ.ui = uiZ;
-    return uZ.f;
+    return uiZ;
 }

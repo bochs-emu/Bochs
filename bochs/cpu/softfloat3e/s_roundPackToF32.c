@@ -46,6 +46,7 @@ float32_t
     uint8_t roundIncrement, roundBits;
     bool isTiny;
     uint32_t uiZ;
+    uint32_t sigRef;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -86,6 +87,7 @@ float32_t
             softfloat_raiseFlags(status, softfloat_flag_overflow);
             if (roundBits || softfloat_isMaskedException(status, softfloat_flag_overflow)) {
                 softfloat_raiseFlags(status, softfloat_flag_inexact);
+                if (roundIncrement != 0) softfloat_setRoundingUp(status);
             }
             uiZ = packToF32UI(sign, 0xFF, 0) - ! roundIncrement;
             return uiZ;
@@ -93,12 +95,14 @@ float32_t
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
+    sigRef = sig;
     sig = (sig + roundIncrement)>>7;
-    if (roundBits) {
-        softfloat_raiseFlags(status, softfloat_flag_inexact);
-    }
     sig &= ~(uint32_t) (! (roundBits ^ 0x40) & roundNearEven);
     if (! sig) exp = 0;
+    if (roundBits) {
+        softfloat_raiseFlags(status, softfloat_flag_inexact);
+        if ((sig << 7) > sigRef) softfloat_setRoundingUp(status);
+    }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  packReturn:

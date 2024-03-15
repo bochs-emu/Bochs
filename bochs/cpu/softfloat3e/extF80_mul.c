@@ -58,14 +58,11 @@ extFloat80_t extF80_mul(extFloat80_t a, extFloat80_t b, struct softfloat_status_
     struct uint128 sig128Z, uiZ;
     uint16_t uiZ64;
     uint64_t uiZ0;
-    extFloat80_t z;
 
     // handle unsupported extended double-precision floating encodings
     if (extF80_isUnsupported(a) || extF80_isUnsupported(b)) {
         softfloat_raiseFlags(status, softfloat_flag_invalid);
-        uiZ64 = defaultNaNExtF80UI64;
-        uiZ0  = defaultNaNExtF80UI0;
-        goto uiZ;
+        return packToExtF80(defaultNaNExtF80UI64, defaultNaNExtF80UI0);
     }
 
     /*------------------------------------------------------------------------
@@ -97,17 +94,29 @@ extFloat80_t extF80_mul(extFloat80_t a, extFloat80_t b, struct softfloat_status_
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (! expA) expA = 1;
+    if (! expA) {
+        expA = 1;
+        if (sigA)
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
+    }
     if (! (sigA & UINT64_C(0x8000000000000000))) {
-        if (! sigA) goto zero;
+        if (! sigA) {
+            if (! expB && sigB)
+                softfloat_raiseFlags(status, softfloat_flag_denormal);
+            return packToExtF80(signZ, 0, 0);
+        }
         softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalExtF80Sig(sigA);
         expA += normExpSig.exp;
         sigA = normExpSig.sig;
     }
-    if (! expB) expB = 1;
+    if (! expB) {
+        expB = 1;
+        if (sigB)
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
+    }
     if (! (sigB & UINT64_C(0x8000000000000000))) {
-        if (! sigB) goto zero;
+        if (! sigB) return packToExtF80(signZ, 0, 0);
         softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalExtF80Sig(sigB);
         expB += normExpSig.exp;
@@ -127,9 +136,7 @@ extFloat80_t extF80_mul(extFloat80_t a, extFloat80_t b, struct softfloat_status_
     *------------------------------------------------------------------------*/
  propagateNaN:
     uiZ = softfloat_propagateNaNExtF80UI(uiA64, uiA0, uiB64, uiB0, status);
-    uiZ64 = uiZ.v64;
-    uiZ0  = uiZ.v0;
-    goto uiZ;
+    return packToExtF80(uiZ.v64, uiZ.v0);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  infArg:
@@ -138,17 +145,10 @@ extFloat80_t extF80_mul(extFloat80_t a, extFloat80_t b, struct softfloat_status_
         uiZ64 = defaultNaNExtF80UI64;
         uiZ0  = defaultNaNExtF80UI0;
     } else {
+        if ((! expA && sigA) || (! expB && sigB))
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
         uiZ64 = packToExtF80UI64(signZ, 0x7FFF);
         uiZ0  = UINT64_C(0x8000000000000000);
     }
-    goto uiZ;
-    /*------------------------------------------------------------------------
-    *------------------------------------------------------------------------*/
- zero:
-    uiZ64 = packToExtF80UI64(signZ, 0);
-    uiZ0  = 0;
- uiZ:
-    z.signExp = uiZ64;
-    z.signif  = uiZ0;
-    return z;
+    return packToExtF80(uiZ64, uiZ0);
 }

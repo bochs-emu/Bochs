@@ -48,7 +48,6 @@ float128_t f64_to_f128(float64_t a, struct softfloat_status_t *status)
     struct uint128 uiZ;
     struct exp16_sig64 normExpSig;
     struct uint128 frac128;
-    union ui128_f128 uZ;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -65,7 +64,7 @@ float128_t f64_to_f128(float64_t a, struct softfloat_status_t *status)
             uiZ.v64 = packToF128UI64(sign, 0x7FFF, 0);
             uiZ.v0  = 0;
         }
-        goto uiZ;
+        return uiZ;
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -73,7 +72,7 @@ float128_t f64_to_f128(float64_t a, struct softfloat_status_t *status)
         if (! frac) {
             uiZ.v64 = packToF128UI64(sign, 0, 0);
             uiZ.v0  = 0;
-            goto uiZ;
+            return uiZ;
         }
         softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalF64Sig(frac);
@@ -85,7 +84,5 @@ float128_t f64_to_f128(float64_t a, struct softfloat_status_t *status)
     frac128 = softfloat_shortShiftLeft128(0, frac, 60);
     uiZ.v64 = packToF128UI64(sign, exp + 0x3C00, frac128.v64);
     uiZ.v0  = frac128.v0;
- uiZ:
-    uZ.ui = uiZ;
-    return uZ.f;
+    return uiZ;
 }
