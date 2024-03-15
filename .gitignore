@@ -107,6 +107,9 @@ bochs-msvc-src.zip
 # /bochs/cpu/fpu/
 /bochs/cpu/fpu/Makefile
 
+# /bochs/cpu/softfloat3e/
+/bochs/cpu/softfloat3e/Makefile
+
 # /bochs/iodev/display/
 /bochs/iodev/display/Makefile
 /bochs/iodev/display/.libs/
