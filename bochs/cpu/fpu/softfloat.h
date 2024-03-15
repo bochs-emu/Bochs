@@ -216,35 +216,9 @@ int float64_is_nan(float64);
 #ifdef FLOATX80
 
 /*----------------------------------------------------------------------------
-| Software IEC/IEEE floating-point types.
-*----------------------------------------------------------------------------*/
-
-//#ifdef BX_BIG_ENDIAN
-//struct floatx80 {	// leave alignment to compiler
-//    Bit16u exp;
-//    Bit64u fraction;
-//};
-//#else
-//struct floatx80 {
-//    Bit64u fraction;
-//    Bit16u exp;
-//};
-//#endif
-
-/*----------------------------------------------------------------------------
 | Software IEC/IEEE integer-to-floating-point conversion routines.
 *----------------------------------------------------------------------------*/
 floatx80 int32_to_floatx80(Bit32s);
-floatx80 int64_to_floatx80(Bit64s);
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE extended double-precision conversion routines.
-*----------------------------------------------------------------------------*/
-floatx80 float32_to_floatx80(float32, float_status_t &status);
-floatx80 float64_to_floatx80(float64, float_status_t &status);
-
-Bit32s floatx80_to_int32(floatx80, float_status_t &status);
-Bit64s floatx80_to_int64(floatx80, float_status_t &status);
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE extended double-precision operations.
@@ -253,8 +227,6 @@ floatx80 floatx80_round_to_int(floatx80, float_status_t &status);
 floatx80 floatx80_add(floatx80, floatx80, float_status_t &status);
 floatx80 floatx80_sub(floatx80, floatx80, float_status_t &status);
 floatx80 floatx80_mul(floatx80, floatx80, float_status_t &status);
-floatx80 floatx80_div(floatx80, floatx80, float_status_t &status);
-floatx80 floatx80_sqrt(floatx80, float_status_t &status);
 
 float_class_t floatx80_class(floatx80);
 int floatx80_is_signaling_nan(floatx80);
