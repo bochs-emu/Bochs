@@ -46,7 +46,7 @@ int64_t f64_to_i64_r_minMag(float64_t a, bool exact, struct softfloat_status_t *
     int16_t exp;
     uint64_t sig;
     int16_t shiftDist;
-    int64_t absZ;
+    uint64_t absZ;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/

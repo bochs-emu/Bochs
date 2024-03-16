@@ -223,7 +223,6 @@ floatx80 int32_to_floatx80(Bit32s);
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE extended double-precision operations.
 *----------------------------------------------------------------------------*/
-floatx80 floatx80_round_to_int(floatx80, float_status_t &status);
 floatx80 floatx80_add(floatx80, floatx80, float_status_t &status);
 floatx80 floatx80_sub(floatx80, floatx80, float_status_t &status);
 floatx80 floatx80_mul(floatx80, floatx80, float_status_t &status);
