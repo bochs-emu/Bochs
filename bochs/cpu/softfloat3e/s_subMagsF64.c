@@ -46,7 +46,6 @@ float64_t softfloat_subMagsF64(uint64_t uiA, uint64_t uiB, bool signZ, struct so
     int16_t expB;
     uint64_t sigB;
     int16_t expDiff;
-    uint64_t uiZ;
     int64_t sigDiff;
     int8_t shiftDist;
     int16_t expZ;

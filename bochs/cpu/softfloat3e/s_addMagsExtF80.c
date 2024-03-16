@@ -51,7 +51,6 @@ extFloat80_t softfloat_addMagsExtF80(uint16_t uiA64, uint64_t uiA0, uint16_t uiB
     int32_t expZ;
     struct uint64_extra sig64Extra;
     struct uint128 uiZ;
-    bool overflow;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/

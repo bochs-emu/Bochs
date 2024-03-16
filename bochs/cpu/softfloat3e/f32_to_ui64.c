@@ -42,7 +42,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 uint64_t f32_to_ui64(float32_t a, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
 {
-    uint32_t uiA;
     bool sign;
     int16_t exp;
     uint32_t sig;
