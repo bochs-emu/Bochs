@@ -33,26 +33,26 @@ BX_CPP_INLINE float32 convert_bfloat16_to_fp32(bfloat16 op)
   return Bit32u(op) << 16;
 }
 
-#include "fpu/softfloat-specialize.h"
+#include "softfloat3e/include/softfloat.h"
 
 BX_CPP_INLINE bfloat16 convert_ne_fp32_to_bfloat16(float32 op)
 {
-  float_class_t op_class = float32_class(op);
+  softfloat_class_t op_class = f32_class(op);
 
   switch(op_class) {
-    case float_zero:
-    case float_denormal:
+    case softfloat_zero:
+    case softfloat_denormal:
       return (op >> 16) & 0x8000; // sign preserving zero (denormal go to zero)
 
-    case float_negative_inf:
-    case float_positive_inf:
+    case softfloat_negative_inf:
+    case softfloat_positive_inf:
       return op >> 16;
 
-    case float_SNaN:
-    case float_QNaN:
+    case softfloat_SNaN:
+    case softfloat_QNaN:
       return (op >> 16) | 0x40;  // truncate and set msb of the mantisa, force qnan
 
-    case float_normalized:
+    case softfloat_normalized:
       break;
   }
 

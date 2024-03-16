@@ -50,15 +50,15 @@ all: $(SECTION_HTML)
 
 user/index.html: $(srcdir)/user/user.dbk
 	-mkdir -p user
-	cd user; $(DOCBOOK2HTML) user.dbk
+	cd user; $(DOCBOOK2HTML) $(abs_srcdir)/user/user.dbk
 
 documentation/index.html: $(srcdir)/documentation/documentation.dbk
 	-mkdir -p documentation
-	cd documentation; $(DOCBOOK2HTML) documentation.dbk
+	cd documentation; $(DOCBOOK2HTML) $(abs_srcdir)/documentation/documentation.dbk
 
 development/index.html: $(srcdir)/development/development.dbk
 	-mkdir -p development
-	cd development; $(DOCBOOK2HTML) development.dbk
+	cd development; $(DOCBOOK2HTML) $(abs_srcdir)/development/development.dbk
 
 fixperm::
 	# fix permissions locally so that tar will install things right

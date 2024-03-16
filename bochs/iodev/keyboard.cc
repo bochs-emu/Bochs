@@ -1434,8 +1434,10 @@ void bx_keyb_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned but
   if ((delta_y < -1) || (delta_y > 1))
     delta_y /= 2;
 
-  if (!BX_KEY_THIS s.mouse.im_mode)
+  if (!BX_KEY_THIS s.mouse.im_mode) {
     delta_z = 0;
+    button_state &= ~0x04;
+  }
 
   if ((delta_x==0) && (delta_y==0) && (delta_z==0) && (BX_KEY_THIS s.mouse.button_status == (button_state & 0x7))) {
     BX_DEBUG(("Ignoring useless mouse_motion call:"));

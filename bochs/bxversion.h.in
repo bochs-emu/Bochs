@@ -4,6 +4,6 @@
 /////////////////////////////////////////////////////////////////////////
 
 #define VERSION       "@VERSION@"
-#define VER_SVNFLAG   @VER_SVN@
+#define VER_DEVFLAG   @VER_DEV@
 #define REL_STRING    "@REL_STRING@"
 #define REL_TIMESTAMP "@REL_TIMESTAMP@"

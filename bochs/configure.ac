@@ -9,14 +9,14 @@ AC_CONFIG_HEADERS([ltdlconf.h])
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
-VERSION="2.7.svn"
+VERSION="2.8.devel"
 VER_MAJOR=2
-VER_MINOR=7
+VER_MINOR=8
 dnl // this should be > 90 for pre-release of next version otherwise revision level
 VER_REVISION=0
-dnl // this should be 0 for release and 1 for svn version
-VER_SVN=1
-REL_STRING="Built from SVN snapshot after release 2.7"
+dnl // this should be 0 for release and 1 for development version
+VER_DEV=1
+REL_STRING="Built from GitHub snapshot after release 2.8"
 REL_TIMESTAMP=`grep "Updated:" $srcdir/README | sed 's/Updated: //'`
 
 changequote(<<, >>)
@@ -830,6 +830,7 @@ AC_ARG_ENABLE(debugger,
   )
 AC_SUBST(DEBUGGER_VAR)
 
+gui_debugger=0
 AC_MSG_CHECKING(enable Bochs internal debugger GUI)
 AC_ARG_ENABLE(debugger-gui,
   AS_HELP_STRING([--enable-debugger-gui], [compile in support for Bochs internal debugger GUI (yes, if debugger is on)]),
@@ -1132,7 +1133,7 @@ AC_ARG_ENABLE(fpu,
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_FPU, 1)
-    FPU_VAR='$(FPU_LIB)'
+    FPU_VAR='$(FPU_LIB) $(SOFTFLOAT_LIB)'
    elif test "$enableval" = no; then
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_FPU, 0)
@@ -1146,10 +1147,20 @@ AC_ARG_ENABLE(fpu,
   [
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_FPU, 1)
-    FPU_VAR='$(FPU_LIB)'
+    FPU_VAR='$(FPU_LIB) $(SOFTFLOAT_LIB)'
     ]
   )
 AC_SUBST(FPU_VAR)
+
+if test "$MSVC_TARGET" = 0; then
+  GNU_MAKE_ONLY=""
+  NMAKE_ONLY="# "
+else
+  GNU_MAKE_ONLY="# "
+  NMAKE_ONLY=""
+fi
+AC_SUBST(GNU_MAKE_ONLY)
+AC_SUBST(NMAKE_ONLY)
 
 support_vmx=0
 AC_MSG_CHECKING(for VMX support)
@@ -1666,6 +1677,29 @@ fi
 AC_SUBST(USBHC_OBJS)
 AC_SUBST(USBHC_DLL_TARGETS)
 
+usb_debugger=0
+AC_MSG_CHECKING(enable Bochs Win32 USB debugger)
+AC_ARG_ENABLE(win32usbdbg,
+  AS_HELP_STRING([--enable-win32usbdbg], [compile in support for Bochs Win32 USB debugger (yes, if debugger is on and USB is on)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    usb_debugger=1
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_USE_WIN32USBDEBUG, 0)
+    usb_debugger=0
+   fi],
+  [
+    if test "$bx_debugger" = 1 -a "$use_usb" = 1; then
+      AC_MSG_RESULT(yes)
+      usb_debugger=1
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_USE_WIN32USBDEBUG, 0)
+      usb_debugger=0
+    fi
+    ]
+  )
 
 networking=no
 NETDEV_OBJS=''
@@ -2873,10 +2907,16 @@ case "$target" in
     ;;
   *-mingw32* | *-msys)
     BXIMAGE_LINK_OPTS="-luser32"
+    if test "$enable_static_link" = yes; then
+      BXIMAGE_LINK_OPTS="${BXIMAGE_LINK_OPTS} -static"
+    fi
     if test "$networking" = yes; then
       OPTIONAL_TARGET="$OPTIONAL_TARGET bxhub niclist"
       BXHUB_FLAG="-DBXHUB"
       BXHUB_LINK_OPTS="-lws2_32"
+      if test "$enable_static_link" = yes; then
+        BXHUB_LINK_OPTS="${BXHUB_LINK_OPTS} -static"
+      fi
     fi
     AC_DEFINE(BX_HAVE_SELECT, 1)
     ;;
@@ -2919,6 +2959,18 @@ if test "$gui_debugger" = 1; then
   fi
 fi
 AC_SUBST(ENH_DBG_OBJS)
+
+USB_DBG_OBJS=""
+if test "$usb_debugger" = 1; then
+  if test "$DEFAULT_GUI" = win32 -o "$with_win32" = yes; then
+    USB_DBG_OBJS="win32usb.o"
+    AC_DEFINE(BX_USE_WIN32USBDEBUG, 1)
+  else
+    AC_MSG_WARN([The USB debugger supported only for Win32 cannot be compiled here, disabling it])
+    AC_DEFINE(BX_USE_WIN32USBDEBUG, 0)
+  fi
+fi
+AC_SUBST(USB_DBG_OBJS)
 
 CI_PLUGIN_OBJS="textconfig.o"
 EXPORT_DYNAMIC="-export-dynamic"
@@ -3336,7 +3388,7 @@ AC_SUBST(VERSION)
 AC_SUBST(VER_MAJOR)
 AC_SUBST(VER_MINOR)
 AC_SUBST(VER_REVISION)
-AC_SUBST(VER_SVN)
+AC_SUBST(VER_DEV)
 AC_SUBST(REL_STRING)
 AC_SUBST(REL_TIMESTAMP)
 AC_SUBST(EXTRA_LINK_OPTS)
@@ -3364,8 +3416,8 @@ AC_PATH_PROG(IASL, iasl, not_found)
 AC_CONFIG_FILES([Makefile iodev/Makefile iodev/display/Makefile iodev/hdimage/Makefile \
 	 iodev/usb/Makefile iodev/network/Makefile iodev/sound/Makefile \
 	 bx_debug/Makefile bios/Makefile cpu/Makefile cpu/avx/Makefile \
-	 cpu/cpudb/Makefile cpu/fpu/Makefile memory/Makefile gui/Makefile \
-	 ${INSTRUMENT_DIR}/Makefile misc/Makefile \
+	 cpu/cpudb/Makefile cpu/fpu/Makefile cpu/softfloat3e/Makefile memory/Makefile \
+	 gui/Makefile ${INSTRUMENT_DIR}/Makefile misc/Makefile \
 	 doc/docbook/Makefile build/linux/bochs-dlx bxversion.h bxversion.rc \
 	 build/macosx/Info.plist build/win32/nsis/Makefile \
 	 build/win32/nsis/bochs.nsi host/linux/pcidev/Makefile ${USER_PLUGINS_MAKEFILE}])

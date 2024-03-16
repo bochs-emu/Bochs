@@ -730,11 +730,20 @@ void bx_dbg_phy_memory_access(unsigned cpu, bx_phy_address phy, unsigned len, un
     "PDPTR1",
     "PDPTR2",
     "PDPTR3",
+    "NESTED PDPTR0",
+    "NESTED PDPTR1",
+    "NESTED PDPTR2",
+    "NESTED PDPTR3",
     "PTE",
     "PDE",
     "PDPTE",
     "PML4E",
     "PML5E",
+    "NESTED PTE",
+    "NESTED PDE",
+    "NESTED PDPTE",
+    "NESTED PML4E",
+    "NESTED PML5E",
     "EPT PTE",
     "EPT PDE",
     "EPT PDPTE",
@@ -2276,6 +2285,8 @@ void bx_dbg_stepN_command(int cpu, Bit32u count)
     dbg_printf("Error: stepN: unknown cpu=%d\n", cpu);
     return;
   }
+
+  if (cpu == -1 && BX_SMP_PROCESSORS == 1) cpu = 0;
 
   if (count == 0) {
     dbg_printf("Error: stepN: count=0\n");

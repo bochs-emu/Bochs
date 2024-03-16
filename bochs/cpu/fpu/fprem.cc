@@ -53,8 +53,7 @@ static int do_fprem(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, int rounding
     q = 0;
 
     // handle unsupported extended double-precision floating encodings
-    if (floatx80_is_unsupported(a) || floatx80_is_unsupported(b))
-    {
+    if (extF80_isUnsupported(a) || extF80_isUnsupported(b)) {
         float_raise(status, float_flag_invalid);
         r = floatx80_default_nan;
         return -1;
@@ -83,8 +82,7 @@ static int do_fprem(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, int rounding
         if (aExp == 0 && aSig0) {
             float_raise(status, float_flag_denormal);
             normalizeFloatx80Subnormal(aSig0, &aExp, &aSig0);
-            r = (a.fraction & BX_CONST64(0x8000000000000000)) ?
-                    packFloatx80(aSign, aExp, aSig0) : a;
+            r = (a.fraction & BX_CONST64(0x8000000000000000)) ? packFloatx80(aSign, aExp, aSig0) : a;
             return 0;
         }
         r = a;

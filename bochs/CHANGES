@@ -1,7 +1,24 @@
-Changes after 2.7:
+Changes after 2.8:
 
-The Bochs source tree is transitioning from SVN to GIT hosted on github (https://github.com/bochs-emu/Bochs)
-We welcome every new contributor !
+Brief summary :
+ - Integrated softfloat3e library replacing older softfloat2a fpu-emulation code
+ - USB: Added the USB Debugger support for xHCI and UHCI
+
+Detailed change log :
+
+- CPU
+  - Integrated softfloat3e library replacing older softfloat2a fpu-emulation code
+  - Implemented AVX512_FP16 Intel instruction set based on softfloat3e library (enabled in Xeon Sapphire Rapids CPU definition)
+
+- I/O Devices
+  - USB
+    - Now includes the USB Debugger support for the xHCI and UHCI controllers
+
+-------------------------------------------------------------------------
+Changes in 2.8 (March 10, 2024):
+
+The Bochs source tree has been transitioned from SVN to GIT hosted on GitHub
+(https://github.com/bochs-emu/Bochs). We welcome every new contributor !
 
 Brief summary :
   - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, x87, AVX-VNNI, AVX-512, CET)
@@ -16,7 +33,7 @@ Brief summary :
   ! Implemented User-Level Interrupt (UINTR) extension
   ! Implemented Intel AMX extensions (AMX, AMX_INT8, AMX_BF16, AMX_FP16, AMX_COMPLEX)
   ! Implemented Intel instruction sets:
-    - MOVDIRI/MOVDIR64B, AVX512 BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
+    - MOVDIRI/MOVDIR64B, AVX512_BF16, AVX IFMA52, VNNI-INT8/VNNI-INT16, AVX-NE-CONVERT, CMPCCXADD, SM3/SM4, SHA512, WRMSRNS, MSRLIST, WAITPKG, SERIALIZE
   ! CPUID: Added Xeon Sapphire Rapids CPU definition
   - Improved 64-bit guest support in Bochs internal debugger, added new internal debugger commands
   - Bochs debugger enhanced with new commands (setpmem, loadmem, deref, ...)
@@ -29,13 +46,14 @@ Brief summary :
   - Disk images: Allows large VHD image files
   - Fixed and enhanced the Floppy Disk emulation, VGA emulation fixes
   - Expand maximum resolution for Banshee and Voodoo 3 from 1600x1280 to 1920x1440
-  - LGPL'd VGABIOS updated to version 0.8c (several VBE fixes / additions)
+  - LGPL'd VGABIOS updated to version 0.9a (several VBE fixes / additions)
   - Documentation updates and fixes
 
 Detailed change log :
 
 - General
-  - Improved parsing bochsrc options passed on the command line.
+  - Improved parsing bochsrc options passed on the command line
+  - Allow setting disabled parameters makes parsing options less strict
 
 - CPU/CPUDB
   - Bugfixes for CPU emulation correctness (MONITOR/MWAIT, VMX/SVM, x87, AVX-VNNI, AVX-512, CET)
@@ -75,6 +93,7 @@ Detailed change log :
 - GUI and display libraries
   - SDL / SDL2: change fullscreen toggle to key combination ALT+ENTER.
   - SDL2: Save / restore window position when using fullscreen toggle
+  - win32: fixed internal palette handling when switching from/to 16 bpp modes
   - win32: cancel topmost window mode after leaving fullscreen mode
 
 - Memory
@@ -99,6 +118,7 @@ Detailed change log :
     - Fixed and improved PCI slot config error handling
 
   - VGA
+    - Implemented accurate memory handling for all access modes (chain4, odd/even, planar)
     - Fixes in MAP13 disabled mode (VGA mode 6): half dot clock, color support
     - Fixes for the VGA mode 0x13 (Added split screen support)
     - Fixes for non-chain4 256-color VGA mode called modeX (address wrap, horizonal scrolling)
@@ -117,7 +137,7 @@ Detailed change log :
     - BLT System-to-screen Dword Pointer (GR2F[6:5]) implemented
     - Fixed redraw values for backward BitBlt
     - Fixed bitblt issues caused by unhandled address wrap and unaligned drawing region
-    - Double scan support for color depth > 8 implemented
+    - Double scan support for color depth > 8 implemented (double width if necessary)
 
   - Voodoo
     - Expand maximum resolution for Banshee and Voodoo 3 from 1600x1280 to 1920x1440
@@ -136,9 +156,10 @@ Detailed change log :
     - Bug fix which now closes the cdrom image file when using win32 configuration
 
   - Hard drive / HD image
-    - Allows large VHD image files.
+    - Allow large VHD image files.
       The size in question doesn't necessarily mean the size of the VHD file on disk. The size is the total
       size of the image emulated. The total size increased from roughly 32gig to a limit of 2TB.
+    - VVFAT: Fixed short name generation in case base name length is > 8
 
   - Floppy drive
     - Allows a choice of multiple FDC Controllers to emulate.
@@ -226,13 +247,19 @@ Detailed change log :
   - Keyboard/Mouse
     - Reduce default keyboard serial delay to 150 to avoid timeouts
 
--BIOS / VGABIOS
+- BIOS / VGABIOS
   - Added capability to enter keycode with ALT + numeric keypad
-  - LGPL'd VGABIOS updated to version 0.8b (from https://github.com/bochs-emu/VGABIOS)
+  - LGPL'd VGABIOS updated to version 0.9a (from https://github.com/bochs-emu/VGABIOS)
     - Added VBE get/set palette data support for Banshee and Cirrus versions
     - Fixed order of colors in VBE function get/set palette data
     - Added VBE set palette data support to protected mode interface
     - VESA BIOS function 0x4f00 now stores strings in OemData (for VBE 2.0)
+    - Implemented AH=12h / BL=36h (video refresh control)
+    - Banshee: Added support for VBE function get/set palette format
+    - Fixed video mode detection for TTY functions
+    - Fixed Cirrus vertical timing parameters for 800x600 modes
+    - Added protected mode interface for the Banshee and Cirrus version
+    - Cirrus: Added support for 1152x864x8 video mode
 
 -------------------------------------------------------------------------
 Changes in 2.7 (August 1, 2021):

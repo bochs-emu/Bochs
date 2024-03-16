@@ -173,6 +173,9 @@ public:
 
   void set_name(const char *name) {pci_name = name;}
   const char* get_name(void) {return pci_name;}
+#if BX_USE_WIN32USBDEBUG
+  Bit32u get_bar_addr(int indx) const { return pci_bar[indx].addr; }
+#endif
 
 protected:
   const char *pci_name;

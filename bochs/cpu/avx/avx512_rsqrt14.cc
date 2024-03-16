@@ -8239,37 +8239,105 @@ static const Bit16u rsqrt14_table1[32768] = {
 #include "simd_int.h"
 
 // approximate 14-bit sqrt reciprocal of scalar single precision FP
-float32 approximate_rsqrt14(float32 op, bool daz)
+float16 approximate_rsqrt14(float16 op, bool daz)
 {
-  float_class_t op_class = float32_class(op);
+  softfloat_class_t op_class = f16_class(op);
 
-  int sign = float32_sign(op);
-  Bit32u fraction = float32_fraction(op);
-  Bit16s exp = float32_exp(op);
+  int sign = f16_sign(op);
+  Bit16u fraction = f16_fraction(op);
+  Bit16s exp = f16_exp(op);
+  struct exp8_sig16 normExpSig;
 
   switch(op_class) {
     case float_zero:
-      return packFloat32(sign, 0xFF, 0);
+      return packFloat16(sign, 0x1F, 0);
 
     case float_positive_inf:
       return 0;
 
     case float_negative_inf:
-      return float32_default_nan;
+      return float16_default_nan;
 
     case float_SNaN:
     case float_QNaN:
       return convert_to_QNaN(op);
 
     case float_denormal:
+      if (daz) return packFloat16(sign, 0x1F, 0);
+
+      normExpSig = softfloat_normSubnormalF16Sig(fraction);
+      exp = normExpSig.exp;
+      fraction = normExpSig.sig;
+
+      fraction &= 0x3ff;
+      // fall through
+
+    case float_normalized:
+      break;
+  };
+
+  if (sign == 1)
+    return float16_default_nan;
+
+  /*
+   * Calculate (1/1.yyyyyyyyyyyyy1), the result is always rounded to the
+   * 14th bit after the decimal point by round-to-nearest, regardless
+   * of the current rounding mode.
+   *
+   * Using two precalculated 32K-entry tables.
+   */
+
+  const Bit16u *rsqrt_table = (exp & 1) ? rsqrt14_table1 : rsqrt14_table0;
+
+  exp = 0xE - ((exp - 0xF) >> 1);
+  if (fraction)
+    fraction = rsqrt_table[fraction << 5];
+  else
+    exp++;
+
+  // round to nearest even
+  Bit16u roundBits = fraction & 0x3F;
+  fraction = (fraction + 0x20)>>6;
+  fraction &= ~(Bit16u) (!(roundBits ^ 0x20));
+
+  return packFloat16(0, exp, fraction);
+}
+
+// approximate 14-bit sqrt reciprocal of scalar single precision FP
+float32 approximate_rsqrt14(float32 op, bool daz)
+{
+  softfloat_class_t op_class = f32_class(op);
+
+  int sign = f32_sign(op);
+  Bit32u fraction = f32_fraction(op);
+  Bit16s exp = f32_exp(op);
+  struct exp16_sig32 normExpSig;
+
+  switch(op_class) {
+    case softfloat_zero:
+      return packFloat32(sign, 0xFF, 0);
+
+    case softfloat_positive_inf:
+      return 0;
+
+    case softfloat_negative_inf:
+      return float32_default_nan;
+
+    case softfloat_SNaN:
+    case softfloat_QNaN:
+      return convert_to_QNaN(op);
+
+    case softfloat_denormal:
       if (daz) return packFloat32(sign, 0xFF, 0);
 
-      normalizeFloat32Subnormal(fraction, &exp, &fraction);
+      normExpSig = softfloat_normSubnormalF32Sig(fraction);
+      exp = normExpSig.exp;
+      fraction = normExpSig.sig;
 
       fraction &= 0x7fffff;
       // fall through
 
-    case float_normalized:
+    case softfloat_normalized:
       break;
   };
 
@@ -8298,35 +8366,38 @@ float32 approximate_rsqrt14(float32 op, bool daz)
 // approximate 14-bit sqrt reciprocal of scalar double precision FP
 float64 approximate_rsqrt14(float64 op, bool daz)
 {
-  float_class_t op_class = float64_class(op);
+  softfloat_class_t op_class = f64_class(op);
 
-  int sign = float64_sign(op);
-  Bit64u fraction = float64_fraction(op);
-  Bit16s exp = float64_exp(op);
+  int sign = f64_sign(op);
+  Bit64u fraction = f64_fraction(op);
+  Bit16s exp = f64_exp(op);
+  struct exp16_sig64 normExpSig;
 
   switch(op_class) {
-    case float_zero:
+    case softfloat_zero:
       return packFloat64(sign, 0x7FF, 0);
 
-    case float_positive_inf:
+    case softfloat_positive_inf:
       return 0;
 
-    case float_negative_inf:
+    case softfloat_negative_inf:
       return float64_default_nan;
 
-    case float_SNaN:
-    case float_QNaN:
+    case softfloat_SNaN:
+    case softfloat_QNaN:
       return convert_to_QNaN(op);
 
-    case float_denormal:
+    case softfloat_denormal:
       if (daz) return packFloat64(sign, 0x7FF, 0);
 
-      normalizeFloat64Subnormal(fraction, &exp, &fraction);
+      normExpSig = softfloat_normSubnormalF64Sig(fraction);
+      exp = normExpSig.exp;
+      fraction = normExpSig.sig;
 
       fraction &= BX_CONST64(0xfffffffffffff);
       // fall through
 
-    case float_normalized:
+    case softfloat_normalized:
       break;
   };
 
@@ -8434,6 +8505,51 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRT14SD_MASK_VsdHpdWsdR(bxInstruction_c
   }
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRTSH_MASK_VshHphWshR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->src1());
+
+  if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
+    float16 op2 = BX_READ_XMM_REG_LO_WORD(i->src2());
+
+    op1.xmm16u(0) = approximate_rsqrt14(op2, MXCSR.get_DAZ());
+  }
+  else {
+    if (i->isZeroMasking())
+      op1.xmm16u(0) = 0;
+    else
+      op1.xmm16u(0) = BX_READ_XMM_REG_LO_WORD(i->dst());
+  }
+
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRTPH_MASK_VphWphR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  Bit32u mask = i->opmask() ? BX_READ_32BIT_OPMASK(i->opmask()) : (Bit32u) -1;
+  unsigned len = i->getVL();
+
+  for (unsigned n=0, tmp_mask = mask; n < WORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
+    if (tmp_mask & 0x1)
+      op.vmm16u(n) = approximate_rsqrt14(op.vmm16u(n), MXCSR.get_DAZ());
+    else
+      op.vmm16u(n) = 0;
+  }
+
+  if (! i->isZeroMasking()) {
+    for (unsigned n=0; n < len; n++, mask >>= 8)
+      xmm_pblendw(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), mask);
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  }
+
   BX_NEXT_INSTR(i);
 }
 

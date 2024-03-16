@@ -206,6 +206,7 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_16BIT_CONTROL_VPID                            0x00000000 /* VPID */
 #define VMCS_16BIT_CONTROL_POSTED_INTERRUPT_VECTOR         0x00000002 /* Posted Interrupts */
 #define VMCS_16BIT_CONTROL_EPTP_INDEX                      0x00000004 /* #VE Exception */
+#define VMCS_16BIT_CONTROL_HLAT_PREFIX                     0x00000006 /* HLAT */
 #define VMCS_16BIT_CONTROL_LAST_PID_POINTER_INDEX          0x00000008 /* IPI Virtualization */
 
 /* VMCS 16-bit guest-state fields */
