@@ -216,7 +216,7 @@
     <ClCompile Include="..\cpu\avx\avx512_bf16.cc" />
     <ClCompile Include="..\cpu\avx\avx512_broadcast.cc" />
     <ClCompile Include="..\cpu\avx\avx512_cvt.cc" />
-    <ClCompile Include="..\cpu\avx\avx512_cvt_fp16.cc" />
+    <ClCompile Include="..\cpu\avx\avx512_cvt16.cc" />
     <ClCompile Include="..\cpu\avx\avx512_fma.cc" />
     <ClCompile Include="..\cpu\avx\avx512_mask16.cc" />
     <ClCompile Include="..\cpu\avx\avx512_mask32.cc" />
