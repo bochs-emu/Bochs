@@ -23,8 +23,6 @@
 #ifndef BX_IODEV_VGACORE_H
 #define BX_IODEV_VGACORE_H
 
-#define VGA_MEM_FIX
-
 // Make colour
 #define MAKE_COLOUR(red, red_shiftfrom, red_shiftto, red_mask, \
                     green, green_shiftfrom, green_shiftto, green_mask, \
@@ -127,11 +125,7 @@ protected:
   Bit32u read(Bit32u address, unsigned io_len);
   void   write(Bit32u address, Bit32u value, unsigned io_len, bool no_log);
 
-#ifdef VGA_MEM_FIX
   Bit8u get_vga_pixel(Bit16u x, Bit16u y, Bit32u raddr, Bit16u lc, bool bs, Bit8u *vgamem_ptr);
-#else
-  Bit8u get_vga_pixel(Bit16u x, Bit16u y, Bit32u raddr, Bit16u lc, bool bs, Bit8u **plane);
-#endif
   virtual void update(void);
   void determine_screen_dimensions(unsigned *piHeight, unsigned *piWidth);
   void calculate_retrace_timing(void);
@@ -243,10 +237,8 @@ protected:
     Bit8u *memory;
     Bit32u memsize;
     Bit32u memsize_mask;
-#ifdef VGA_MEM_FIX
     bool  text_buffer_update;
     Bit8u *text_buffer; // active text memory in legacy format
-#endif
     Bit8u *text_snapshot; // current text snapshot
     Bit8u tile[X_TILESIZE * Y_TILESIZE * 4]; /**< Currently allocates the tile as large as needed. */
     Bit16u charmap_address1;
@@ -264,9 +256,6 @@ protected:
     Bit32u vrend_usec;
     Bit64u display_start_usec;
     // shift values for extensions
-#ifndef VGA_MEM_FIX
-    Bit8u  plane_shift;
-#endif
     Bit8u  dac_shift;
     Bit32u ext_offset;
     Bit32u ext_start_addr;

@@ -1735,19 +1735,11 @@ void bx_svga_cirrus_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u val
 
   if (update_pitch) {
     if ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x02) != 0) {
-#ifndef VGA_MEM_FIX
-      if (!BX_CIRRUS_THIS s.sequencer.chain_four) {
-        BX_CIRRUS_THIS s.plane_shift = 19;
-      }
-#endif
       BX_CIRRUS_THIS s.memsize_mask = 0xfffff;
       BX_CIRRUS_THIS s.ext_start_addr = ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x01) << 16) |
                                         ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x04) << 15);
       BX_CIRRUS_THIS s.ext_offset = BX_CIRRUS_THIS bank_base[0];
     } else {
-#ifndef VGA_MEM_FIX
-      BX_CIRRUS_THIS s.plane_shift = 16;
-#endif
       BX_CIRRUS_THIS s.memsize_mask = 0x3ffff;
       BX_CIRRUS_THIS s.ext_start_addr = 0;
       BX_CIRRUS_THIS s.ext_offset = 0;

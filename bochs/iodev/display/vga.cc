@@ -578,9 +578,6 @@ void bx_vga_c::update(void)
     } else {
       unsigned r, c, x, y;
       unsigned xc, yc, xti, yti;
-#ifndef VGA_MEM_FIX
-      Bit8u *plane[4];
-#endif
       Bit32u row_addr;
 
       if (BX_VGA_THIS vbe.yres < 1024) {
@@ -597,12 +594,6 @@ void bx_vga_c::update(void)
         BX_VGA_THIS s.last_bpp = 8;
       }
 
-#ifndef VGA_MEM_FIX
-      plane[0] = &BX_VGA_THIS s.memory[0<<VBE_DISPI_4BPP_PLANE_SHIFT];
-      plane[1] = &BX_VGA_THIS s.memory[1<<VBE_DISPI_4BPP_PLANE_SHIFT];
-      plane[2] = &BX_VGA_THIS s.memory[2<<VBE_DISPI_4BPP_PLANE_SHIFT];
-      plane[3] = &BX_VGA_THIS s.memory[3<<VBE_DISPI_4BPP_PLANE_SHIFT];
-#endif
       for (yc=0, yti=0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
         for (xc=0, xti=0; xc<iWidth; xc+=X_TILESIZE, xti++) {
           if (GET_TILE_UPDATED (xti, yti)) {
@@ -613,11 +604,7 @@ void bx_vga_c::update(void)
               for (c=0; c<X_TILESIZE; c++) {
                 x = xc + c;
                 BX_VGA_THIS s.tile[r*X_TILESIZE + c] =
-#ifdef VGA_MEM_FIX
                   BX_VGA_THIS get_vga_pixel(x, y, row_addr, 0xffff, 0, BX_VGA_THIS s.memory);
-#else
-                  BX_VGA_THIS get_vga_pixel(x, y, row_addr, 0xffff, 0, plane);
-#endif
               }
             }
             SET_TILE_UPDATED(BX_VGA_THIS, xti, yti, 0);
@@ -1146,19 +1133,12 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
               BX_VGA_THIS s.last_bpp = depth;
               BX_VGA_THIS s.last_fh = 0;
             } else {
-#ifndef VGA_MEM_FIX
-              BX_VGA_THIS s.plane_shift = VBE_DISPI_4BPP_PLANE_SHIFT;
-#endif
               BX_VGA_THIS s.ext_offset = (BX_VGA_THIS vbe.bank[0] << 16);
             }
             BX_VGA_THIS s.memsize_mask = BX_VGA_THIS s.memsize - 1;
           } else if (((value & VBE_DISPI_ENABLED) == 0) && BX_VGA_THIS vbe.enabled) {
             BX_INFO(("VBE disabling"));
-#ifdef VGA_MEM_FIX
             BX_VGA_THIS s.text_buffer_update = true;
-#else
-            BX_VGA_THIS s.plane_shift = 16;
-#endif
             BX_VGA_THIS s.ext_offset = 0;
             BX_VGA_THIS s.memsize_mask = 0x3ffff;
           }

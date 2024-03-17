@@ -27,9 +27,6 @@
 // Bochs VBE definitions
 
 #define VBE_DISPI_TOTAL_VIDEO_MEMORY_MB  16
-#ifndef VGA_MEM_FIX
-#define VBE_DISPI_4BPP_PLANE_SHIFT       22
-#endif
 
 #define VBE_DISPI_BANK_ADDRESS           0xA0000
 
