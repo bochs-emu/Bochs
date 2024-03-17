@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -33,6 +33,9 @@
 #include "gui/bitmaps/paste.h"
 #include "gui/bitmaps/configbutton.h"
 #include "gui/bitmaps/cdromd.h"
+#if BX_USE_WIN32USBDEBUG
+  #include "gui/bitmaps/usb.h"
+#endif
 #include "gui/bitmaps/userbutton.h"
 #include "gui/bitmaps/saverestore.h"
 
@@ -232,6 +235,15 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
   BX_GUI_THIS save_restore_bmap_id = create_bitmap(bx_save_restore_bmap,
                           BX_SAVE_RESTORE_BMAP_X, BX_SAVE_RESTORE_BMAP_Y);
 
+#if BX_USE_WIN32USBDEBUG
+  BX_GUI_THIS usb_bmap_id = create_bitmap(bx_usb_bmap,
+                          BX_USB_BMAP_X, BX_USB_BMAP_Y);
+  BX_GUI_THIS usb_eject_bmap_id = create_bitmap(bx_usb_eject_bmap,
+                          BX_USB_BMAP_X, BX_USB_BMAP_Y);
+  BX_GUI_THIS usb_trigger_bmap_id = create_bitmap(bx_usb_trigger_bmap,
+                          BX_USB_BMAP_X, BX_USB_BMAP_Y);
+#endif
+
   // Add the initial bitmaps to the headerbar, and enable callback routine, for use
   // when that bitmap is clicked on. The floppy and cdrom devices are not
   // initialized yet. so we just set the bitmaps to ejected for now.
@@ -259,6 +271,25 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
     BX_GUI_THIS mouse_hbar_id = headerbar_bitmap(BX_GUI_THIS nomouse_bmap_id,
                           BX_GRAVITY_LEFT, toggle_mouse_enable);
   BX_GUI_THIS set_tooltip(BX_GUI_THIS mouse_hbar_id, "Enable mouse capture");
+
+#if BX_USE_WIN32USBDEBUG
+  // USB button
+  if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_USB) {
+    if ((SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() > 0) && (
+        SIM->get_param_bool(BXPN_UHCI_ENABLED)->get() ||
+        SIM->get_param_bool(BXPN_OHCI_ENABLED)->get() ||
+        SIM->get_param_bool(BXPN_EHCI_ENABLED)->get() ||
+        SIM->get_param_bool(BXPN_XHCI_ENABLED)->get())) {
+      BX_GUI_THIS usb_hbar_id = headerbar_bitmap(BX_GUI_THIS usb_bmap_id,
+                            BX_GRAVITY_LEFT, usb_handler);
+      BX_GUI_THIS set_tooltip(BX_GUI_THIS usb_hbar_id, "Trigger the USB Debugger");
+    } else {
+      BX_GUI_THIS usb_hbar_id = headerbar_bitmap(BX_GUI_THIS usb_eject_bmap_id,
+                            BX_GRAVITY_LEFT, usb_handler);
+      BX_GUI_THIS set_tooltip(BX_GUI_THIS usb_hbar_id, "USB support not enabled");
+    }
+  }
+#endif
 
   // These are the buttons on the right side.  They are created in order
   // of right to left.
@@ -682,6 +713,18 @@ void bx_gui_c::config_handler(void)
   }
 }
 
+#if BX_USE_WIN32USBDEBUG
+#include "win32usb.h"
+void bx_gui_c::usb_handler(void)
+{
+  if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_USB) {
+    // Once we set the trigger, don't allow the user to press the button again
+    if (SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->get() < BX_USB_DEBUG_SOF_TRIGGER)
+      SIM->usb_config_interface(USB_DEBUG_FRAME, 0, 0);
+  }
+}
+#endif
+
 void bx_gui_c::toggle_mouse_enable(void)
 {
   int old = SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get();
@@ -911,13 +954,6 @@ void bx_gui_c::set_text_charmap(Bit8u map, Bit8u *fbuffer)
 {
   memcpy(& BX_GUI_THIS vga_charmap[map], fbuffer, 0x2000);
   for (unsigned i=0; i<256; i++) BX_GUI_THIS char_changed[map][i] = 1;
-  BX_GUI_THIS charmap_updated = 1;
-}
-
-void bx_gui_c::set_text_charbyte(Bit8u map, Bit16u address, Bit8u data)
-{
-  BX_GUI_THIS vga_charmap[map][address] = data;
-  BX_GUI_THIS char_changed[map][address >> 5] = 1;
   BX_GUI_THIS charmap_updated = 1;
 }
 
@@ -1244,7 +1280,7 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
         old_text[BX_GUI_THIS cursor_address] = ~new_text[BX_GUI_THIS cursor_address];
         BX_GUI_THIS cursor_address = cursor_address;
       }
-      if (cursor_address < 0xffff) {
+      if (cursor_address < 0x7fff) {
         old_text[cursor_address] = ~new_text[cursor_address];
       }
     }

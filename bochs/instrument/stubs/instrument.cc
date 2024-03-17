@@ -24,6 +24,8 @@
 
 #if BX_INSTRUMENTATION
 
+class bxInstruction_c;
+
 void bx_instr_init_env(void) {}
 void bx_instr_exit_env(void) {}
 

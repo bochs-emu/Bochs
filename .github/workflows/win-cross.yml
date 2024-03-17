@@ -1,0 +1,44 @@
+name: Build Windows binary
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install packages
+      run: |
+        sudo apt update
+        sudo apt install gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64
+
+    - name: Configure
+      run: cd bochs && ./.conf.win64-cross-mingw32
+
+    - name: Make
+      run: make -C bochs -j 3
+
+    - name: Get short git commit SHA
+      run: echo "SHORT_GITHUB_SHA=$(git rev-parse --short ${{ github.sha }})" >> $GITHUB_ENV
+
+    - name: Upload main binary artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: bochs-${{ env.SHORT_GITHUB_SHA }}.exe
+        path: bochs/bochs.exe
+
+    - name: Upload tools artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: tools-${{ env.SHORT_GITHUB_SHA }}
+        path: |
+          bochs/bxhub.exe
+          bochs/bximage.exe
+          bochs/niclist.exe

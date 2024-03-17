@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2024  The Bochs Project
 //
 //  I/O memory handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -443,10 +443,25 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
                         (unsigned) romaddress,
                         (unsigned) stat_buf.st_size,
                          path));
-  if (BX_MEM_THIS flash_type > 0) {
+  if ((type == 0) && !is_bochs_bios && (BX_MEM_THIS flash_type > 0)) {
     bx_param_string_c *flash_data = SIM->get_param_string(BXPN_ROM_FLASH_DATA);
     if (!flash_data->isempty()) {
-      BX_MEM_THIS load_flash_data(flash_data->getptr());
+      if (!BX_MEM_THIS load_flash_data(flash_data->getptr())) {
+        Bit32u foffset = 0, fsize = 0;
+        if (BX_MEM_THIS flash_type == 2) {
+          foffset = 0x8000; // 28F002BC-T
+          fsize = 0x4000;
+        } else if (BX_MEM_THIS flash_type == 1) {
+          foffset = 0x4000; // 28F001BX-T
+          fsize = 0x2000;
+        }
+        if (fsize > 0) {
+          for (i = 0; i < (int)fsize; i++) {
+            BX_MEM_THIS rom[BIOSROMSZ - foffset + i] = 0xff;
+          }
+          BX_MEM_THIS flash_modified = true;
+        }
+      }
     }
   }
 }
@@ -957,13 +972,13 @@ void BX_MEM_C::flash_write(Bit32u addr, Bit8u data)
           BX_MEM_THIS flash_status &= ~0xc0;
           BX_MEM_THIS flash_wsm_state = FLASH_ERASE;
           if ((BX_MEM_THIS flash_type == 1) &&
-              ((flash_addr = 0x1c000) || (flash_addr = 0x1d000))) {
+              ((flash_addr == 0x1c000) || (flash_addr == 0x1d000))) {
             for (i = 0; i < 0x1000; i++) {
               BX_MEM_THIS rom[addr + i] = 0xff;
             }
             BX_MEM_THIS flash_modified = true;
           } else if ((BX_MEM_THIS flash_type == 2) &&
-                     ((flash_addr = 0x38000) || (flash_addr = 0x3a000))) {
+                     ((flash_addr == 0x38000) || (flash_addr == 0x3a000))) {
             for (i = 0; i < 0x2000; i++) {
               BX_MEM_THIS rom[addr + i] = 0xff;
             }

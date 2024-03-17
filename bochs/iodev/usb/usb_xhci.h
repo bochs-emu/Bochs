@@ -609,7 +609,9 @@ public:
   int event_handler(int event, void *ptr, int port);
 
   bx_usb_xhci_t hub;
+#if !BX_USE_WIN32USBDEBUG
 private:
+#endif
   Bit8u         devfunc;
   Bit8u         device_change;
   int           rt_conf_id;

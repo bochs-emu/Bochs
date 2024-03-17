@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //  PCI VGA dummy adapter Copyright (C) 2002,2003  Mike Nordell
 //
 //  This library is free software; you can redistribute it and/or
@@ -27,7 +27,6 @@
 // Bochs VBE definitions
 
 #define VBE_DISPI_TOTAL_VIDEO_MEMORY_MB  16
-#define VBE_DISPI_4BPP_PLANE_SHIFT       22
 
 #define VBE_DISPI_BANK_ADDRESS           0xA0000
 
@@ -162,6 +161,7 @@ private:
     Bit16u  virtual_yres;
     Bit32u  virtual_start;   /**< For dealing with bpp>8, this is where the virtual screen starts. */
     Bit8u   bpp_multiplier;  /**< We have to save this b/c sometimes we need to recalculate stuff with it. */
+    Bit16u  line_offset;
     bool    get_capabilities;
     bool    dac_8bit;
     bool    ddc_enabled;

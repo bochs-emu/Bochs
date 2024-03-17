@@ -55,6 +55,9 @@
 #include "pci.h"
 #include "usb_common.h"
 #include "uhci_core.h"
+#if BX_USE_WIN32USBDEBUG
+  #include "gui/win32usb.h"
+#endif
 
 #define LOG_THIS
 
@@ -515,6 +518,10 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case 0x14: // port #3 non existent, but linux systems check it to see if there are more than 2
       BX_ERROR(("write to non existent offset 0x14 (port #3)"));
+#if BX_USE_WIN32USBDEBUG
+      // Non existant Register Port (the next one after the last)
+      win32_usb_trigger(USB_DEBUG_UHCI, USB_DEBUG_NONEXIST, 0, 0);
+#endif
       break;
 
     case 0x10: // port #1
@@ -524,6 +531,10 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
         // If the ports reset bit is set, don't allow any writes unless the new write will clear the reset bit
         if (hub.usb_port[port].reset && ((value & (1 << 9)) != 0))
           break;
+#if BX_USE_WIN32USBDEBUG
+        if ((value & (1 << 9)) && !hub.usb_port[port].reset)
+          win32_usb_trigger(USB_DEBUG_UHCI, USB_DEBUG_RESET, port, 0);
+#endif
         if (value & ((1<<5) | (1<<4) | (1<<0)))
           BX_DEBUG(("write to one or more read-only bits in port #%d register: 0x%04x", port+1, value));
         if (!(value & (1<<7)))
@@ -549,6 +560,9 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
         hub.usb_port[port].reset = (value & (1<<9)) ? 1 : 0;
         hub.usb_port[port].resume = (value & (1<<6)) ? 1 : 0;
         if (!hub.usb_port[port].enabled && (value & (1<<2))) {
+#if BX_USE_WIN32USBDEBUG
+          win32_usb_trigger(USB_DEBUG_UHCI, USB_DEBUG_ENABLE, port, 0);
+#endif
           hub.usb_port[port].enable_changed = 0;
         } else
           if (value & (1<<3)) hub.usb_port[port].enable_changed = 0;
@@ -630,6 +644,10 @@ bool bx_uhci_core_c::uhci_add_queue(struct USB_UHCI_QUEUE_STACK *stack, const Bi
 // Called once every 1ms
 void bx_uhci_core_c::uhci_timer(void)
 {
+#if BX_USE_WIN32USBDEBUG
+  win32_usb_trigger(USB_DEBUG_UHCI, USB_DEBUG_FRAME, 0, 0);
+#endif
+
   // If the "global reset" bit was set by software
   if (global_reset) {
     for (int i=0; i<USB_UHCI_PORTS; i++) {
@@ -752,7 +770,10 @@ void bx_uhci_core_c::uhci_timer(void)
           
           // write back the status to the TD
           DEV_MEM_WRITE_PHYSICAL(address + sizeof(Bit32u), sizeof(Bit32u), (Bit8u *) &td.dword1);
-          
+#if BX_USE_WIN32USBDEBUG
+          // trigger again so that the user can see the processed packet
+          win32_usb_trigger(USB_DEBUG_UHCI, USB_DEBUG_COMMAND, address, USB_LPARAM_FLAG_AFTER);
+#endif
           // we processed another td within this queue line
           td_count++;
           bytes_processed += r_actlen;
@@ -902,10 +923,14 @@ bool bx_uhci_core_c::DoTransfer(Bit32u address, struct TD *td)
 
   BX_DEBUG(("TD found at address 0x%08X:  0x%08X  0x%08X  0x%08X  0x%08X", address, td->dword0, td->dword1, td->dword2, td->dword3));
   
+#if BX_USE_WIN32USBDEBUG
+  win32_usb_trigger(USB_DEBUG_UHCI, USB_DEBUG_COMMAND, address, USB_LPARAM_FLAG_BEFORE);
+#endif
+
   // check TD to make sure it is valid
   // A max length 0x500 to 0x77E is illegal
   if ((maxlen >= 0x500) && (maxlen != 0x7FF)) {
-    BX_ERROR(("invalid max. length value 0x%04x", maxlen ));
+    BX_ERROR(("invalid max. length value 0x%04x", maxlen));
     return 0;  // error = consistency check failure
   }
 

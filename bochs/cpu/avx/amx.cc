@@ -518,17 +518,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TDPBF16PS_TnnnTrmTreg(bxInstruction_c *i)
 
     for (unsigned k=0; k < max_k; k++) {
       for (unsigned n=0; n < max_n; n++) {
-        tmp[2*n]   = float32_fmadd(convert_bfloat16_to_fp32(tsrc1->row[m].vmm16u(2*k)),
-                                   convert_bfloat16_to_fp32(tsrc2->row[k].vmm16u(2*n)),   tmp[2*n],   status);
+        tmp[2*n]   = f32_mulAdd(convert_bfloat16_to_fp32(tsrc1->row[m].vmm16u(2*k)),
+                                convert_bfloat16_to_fp32(tsrc2->row[k].vmm16u(2*n)),   tmp[2*n],   0, &status);
 
-        tmp[2*n+1] = float32_fmadd(convert_bfloat16_to_fp32(tsrc1->row[m].vmm16u(2*k+1)),
-                                   convert_bfloat16_to_fp32(tsrc2->row[k].vmm16u(2*n+1)), tmp[2*n+1], status);
+        tmp[2*n+1] = f32_mulAdd(convert_bfloat16_to_fp32(tsrc1->row[m].vmm16u(2*k+1)),
+                                convert_bfloat16_to_fp32(tsrc2->row[k].vmm16u(2*n+1)), tmp[2*n+1], 0, &status);
       }
     }
 
     for (unsigned n=0; n < max_n; n++) {
-      float32 tmpf32 = float32_add(tmp[2*n], tmp[2*n+1], status);
-      tdst->row[m].vmm32u(n) = float32_add(tdst->row[m].vmm32u(n), tmpf32, status);
+      float32 tmpf32 = f32_add(tmp[2*n], tmp[2*n+1], &status);
+      tdst->row[m].vmm32u(n) = f32_add(tdst->row[m].vmm32u(n), tmpf32, &status);
     }
 
     tdst->zero_upper_row_data32(m, max_n);
@@ -573,17 +573,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TDPFP16PS_TnnnTrmTreg(bxInstruction_c *i)
 
     for (unsigned k=0; k < max_k; k++) {
       for (unsigned n=0; n < max_n; n++) {
-        tmp[2*n]   = float32_fmadd(convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k)),
-                                   convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n)),   tmp[2*n],   status);
+        tmp[2*n]   = f32_mulAdd(convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k)),
+                                convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n)),   tmp[2*n],   0, &status);
 
-        tmp[2*n+1] = float32_fmadd(convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k+1)),
-                                   convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n+1)), tmp[2*n+1], status);
+        tmp[2*n+1] = f32_mulAdd(convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k+1)),
+                                convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n+1)), tmp[2*n+1], 0, &status);
       }
     }
 
     for (unsigned n=0; n < max_n; n++) {
-      float32 tmpf32 = float32_add(tmp[2*n], tmp[2*n+1], status);
-      tdst->row[m].vmm32u(n) = float32_add(tdst->row[m].vmm32u(n), tmpf32, status);
+      float32 tmpf32 = f32_add(tmp[2*n], tmp[2*n+1], &status);
+      tdst->row[m].vmm32u(n) = f32_add(tdst->row[m].vmm32u(n), tmpf32, &status);
     }
 
     tdst->zero_upper_row_data32(m, max_n);
@@ -626,19 +626,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCMMRLFP16PS_TnnnTrmTreg(bxInstruction_c *
 
     for (unsigned k=0; k < max_k; k++) {
       for (unsigned n=0; n < max_n; n++) {
-        float32 s1r = convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k));                           // real
-        float32 s2r = convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n));                           // real
-        float32 s1i = convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k+1));                         // imaginary
-        float32 s2i = convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n+1));                         // imaginary
+        float32 s1r = convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k));                        // real
+        float32 s2r = convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n));                        // real
+        float32 s1i = convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k+1));                      // imaginary
+        float32 s2i = convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n+1));                      // imaginary
 
-        tmp[2*n]   = float32_muladd(s1r, s2r, tmp[2*n],   0, status);                               // real
-        tmp[2*n+1] = float32_muladd(s1i, s2i, tmp[2*n+1], float_muladd_negate_product, status);     // imaginary, negate for i^2 = -1
+        tmp[2*n]   = f32_mulAdd(s1r, s2r, tmp[2*n],   0, &status);                               // real
+        tmp[2*n+1] = f32_mulAdd(s1i, s2i, tmp[2*n+1], softfloat_muladd_negate_product, &status);     // imaginary, negate for i^2 = -1
       }
     }
 
     for (unsigned n=0; n < max_n; n++) {
-      float32 tmpf32 = float32_add(tmp[2*n], tmp[2*n+1], status);
-      tdst->row[m].vmm32u(n) = float32_add(tdst->row[m].vmm32u(n), tmpf32, status);
+      float32 tmpf32 = f32_add(tmp[2*n], tmp[2*n+1], &status);
+      tdst->row[m].vmm32u(n) = f32_add(tdst->row[m].vmm32u(n), tmpf32, &status);
     }
 
     tdst->zero_upper_row_data32(m, max_n);
@@ -684,14 +684,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCMMIMFP16PS_TnnnTrmTreg(bxInstruction_c *
         float32 s1i = convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k+1));     // imaginary
         float32 s2i = convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n+1));     // imaginary
 
-        tmp[2*n]   = float32_muladd(s1i, s2r, tmp[2*n],   0, status);
-        tmp[2*n+1] = float32_muladd(s1r, s2i, tmp[2*n+1], 0, status);
+        tmp[2*n]   = f32_mulAdd(s1i, s2r, tmp[2*n],   0, &status);
+        tmp[2*n+1] = f32_mulAdd(s1r, s2i, tmp[2*n+1], 0, &status);
       }
     }
 
     for (unsigned n=0; n < max_n; n++) {
-      float32 tmpf32 = float32_add(tmp[2*n], tmp[2*n+1], status);
-      tdst->row[m].vmm32u(n) = float32_add(tdst->row[m].vmm32u(n), tmpf32, status);
+      float32 tmpf32 = f32_add(tmp[2*n], tmp[2*n+1], &status);
+      tdst->row[m].vmm32u(n) = f32_add(tdst->row[m].vmm32u(n), tmpf32, &status);
     }
 
     tdst->zero_upper_row_data32(m, max_n);

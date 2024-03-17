@@ -1,6 +1,6 @@
 Bochs - The cross platform IA-32 (x86) emulator
-Updated: Sun Aug  1 10:07:00 CEST 2021
-Version: 2.7
+Updated: Sun Mar 10 08:00:00 CET 2024
+Version: 2.8
 
 WHAT IS BOCHS?
 
@@ -28,10 +28,9 @@ GETTING CURRENT SOURCE CODE
 
 Source code for Bochs is available from the Bochs home page at
 https://bochs.sourceforge.io.  You can download the most recent
-release, use SVN to get the latest sources, or grab a SVN
-snapshot which is updated frequently. The releases contain the most
-stable code, but if you want the very newest features try the
-SVN version instead.
+release, use GIT on GitHub to get the latest sources, or grab a snapshot
+from there. The releases contain the most stable code, but if you want
+the very newest features try the GitHub sources instead.
 
 WHERE ARE THE DOCS?
 
@@ -64,11 +63,11 @@ of recent messages to see what's going on.
 If you are a technical person (can follow hardware specs, can write
 C/C++) take a look at the list of open bug reports and feature
 requests to see if you are interested in working on any of the
-problems that are mentioned in them.  If you check out the SVN
+problems that are mentioned in them.  If you check out the GitHub
 sources, make some changes, and create a patch, one of the
 developers will be very happy to apply it for you.  Developers who
 frequently submit patches, or who embark on major changes in the
-source can get write access to SVN.  Be sure to communicate with the
+source can get write access to GitHub. Be sure to communicate with the
 bochs-developers list to avoid several people working on the same
 thing without realizing it.
 

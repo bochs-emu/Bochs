@@ -87,8 +87,8 @@ BX_CPP_INLINE static Bit32u ilog2(Bit32u x)
 void bx_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   // CPUID function 0x0000000B - Extended Topology Leaf
-  leaf->eax = (subfunction == 0);
-  leaf->ebx = (subfunction == 0);   // number of logical CPUs at this level
+  leaf->eax = 0;
+  leaf->ebx = 0;
   leaf->ecx = subfunction;
   leaf->edx = cpu->get_apic_id();
 
@@ -1089,6 +1089,12 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_edx(Bit32u extra) const
 #endif
 
   //   [23:23]  AVX512_FP16 instructions support
+#if BX_SUPPORT_EVEX
+  if (is_cpu_extension_supported(BX_ISA_AVX512)) {
+    if (is_cpu_extension_supported(BX_ISA_AVX512_FP16))
+      edx |= BX_CPUID_STD7_SUBLEAF0_EDX_AVX512_FP16;
+  }
+#endif
 
 #if BX_SUPPORT_AMX
   //   [24:24]  AMX TILE architecture support

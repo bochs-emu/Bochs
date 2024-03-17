@@ -70,6 +70,9 @@
 #include "pci.h"
 #include "usb_common.h"
 #include "usb_xhci.h"
+#if BX_USE_WIN32USBDEBUG
+  #include "gui/win32usb.h"
+#endif
 
 #define LOG_THIS theUSB_XHCI->
 
@@ -850,7 +853,7 @@ bool bx_usb_xhci_c::restore_hc_state(void)
 
   // get MAX_SCRATCH_PADS worth of pointers
   for (i=0; i<MAX_SCRATCH_PADS; i++) {
-    DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) (addr + i * 8), 8, (Bit8u*)&temp[i]);
+    DEV_MEM_READ_PHYSICAL((bx_phy_address) (addr + i * 8), 8, (Bit8u*)&temp[i]);
   }
 
   // we read it in to a temp buffer just to check the crc.
@@ -1833,6 +1836,9 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
           if (((value & (1 << 31)) && BX_XHCI_THIS hub.usb_port[port].is_usb3) ||
                (value & (1 << 4))) {
             reset_port_usb3(port, (value & (1 << 4)) ? HOT_RESET : WARM_RESET);
+#if BX_USE_WIN32USBDEBUG
+            win32_usb_trigger(USB_DEBUG_XHCI, USB_DEBUG_RESET, 0, 0);
+#endif
           }
         } else
           BX_XHCI_THIS hub.usb_port[port].portsc.pp = 0;
@@ -1894,6 +1900,12 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
         break;
     }
   }
+#if BX_USE_WIN32USBDEBUG
+  // Non existant Register Port (the next one after the last)
+  else if (offset == (XHCI_PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16))) {
+    win32_usb_trigger(USB_DEBUG_XHCI, USB_DEBUG_NONEXIST, 0, 0);
+  } 
+#endif
   // Extended Capabilities
   else if ((offset >= EXT_CAPS_OFFSET) && (offset < (EXT_CAPS_OFFSET + EXT_CAPS_SIZE))) {
     unsigned caps_offset = (offset - EXT_CAPS_OFFSET);
@@ -2270,7 +2282,7 @@ Bit64u bx_usb_xhci_c::process_transfer_ring(int slot, int ep, Bit64u ring_addr, 
       // is the data in trb.parameter? (Immediate data?)
       is_immed_data = TRB_IS_IMMED_DATA(trb.command);
       if (is_immed_data)
-        DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) org_addr, 8, immed_data); // No byte-swapping here
+        DEV_MEM_READ_PHYSICAL((bx_phy_address) org_addr, 8, immed_data); // No byte-swapping here
       else
         address = trb.parameter;
 
@@ -2406,6 +2418,7 @@ Bit64u bx_usb_xhci_c::process_transfer_ring(int slot, int ep, Bit64u ring_addr, 
               } else {
                 ret = BX_XHCI_THIS broadcast_packet(&p->packet, port_num - 1);
                 len = transfer_length;
+                BX_XHCI_THIS hub.slots[slot].ep_context[ep].edtla += len;
                 BX_DEBUG(("OUT: Transferred %d bytes (ret = %d)", len, ret));
               }
               break;
@@ -2514,6 +2527,10 @@ void bx_usb_xhci_c::process_command_ring(void)
   Bit8u buffer[CONTEXT_SIZE + (32 * CONTEXT_SIZE)];
   struct SLOT_CONTEXT slot_context;
   struct EP_CONTEXT   ep_context;
+  
+#if BX_USE_WIN32USBDEBUG
+  win32_usb_trigger(USB_DEBUG_XHCI, USB_DEBUG_COMMAND, 0, 0);
+#endif
 
   if (!BX_XHCI_THIS hub.op_regs.HcCrcr.crr)
     return;
@@ -2921,7 +2938,7 @@ void bx_usb_xhci_c::process_command_ring(void)
           unsigned offset = band_speed * (((1 + BX_XHCI_THIS hub.n_ports) + 7) & ~7);
           if (hub_id == 0) { // root hub
             if (band_speed < 4) {
-              DEV_MEM_WRITE_PHYSICAL_DMA((bx_phy_address) trb.parameter, 1 + BX_XHCI_THIS hub.n_ports, &BX_XHCI_THIS hub.port_band_width[offset]);
+              DEV_MEM_WRITE_PHYSICAL((bx_phy_address) trb.parameter, 1 + BX_XHCI_THIS hub.n_ports, &BX_XHCI_THIS hub.port_band_width[offset]);
               comp_code = TRB_SUCCESS;
             } else {
               comp_code = TRB_ERROR;
@@ -3004,7 +3021,7 @@ void bx_usb_xhci_c::init_event_ring(unsigned interrupter)
     BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[0].size;
   
   // check that the guest uses correct segment sizes
-  for (int i=0; i<(1<<MAX_SEG_TBL_SZ_EXP); i++) {
+  for (int i=0; i<BX_XHCI_THIS hub.runtime_regs.interrupter[interrupter].erstsz.erstabsize; i++) {
     if ((BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size < 16) ||
         (BX_XHCI_THIS hub.ring_members.event_rings[interrupter].entrys[i].size > 4096)) {
       BX_ERROR(("Event Ring Segment %d has a size of %d which is invalid.", i, 
@@ -3027,6 +3044,10 @@ void bx_usb_xhci_c::write_event_TRB(unsigned interrupter, Bit64u parameter, Bit3
   // write the TRB
   write_TRB((bx_phy_address) BX_XHCI_THIS hub.ring_members.event_rings[interrupter].cur_trb, parameter, status,
     command | (Bit32u) BX_XHCI_THIS hub.ring_members.event_rings[interrupter].rcs); // set the cycle bit
+
+#if BX_USE_WIN32USBDEBUG
+  win32_usb_trigger(USB_DEBUG_XHCI, USB_DEBUG_EVENT, interrupter, 0);
+#endif
   
   BX_DEBUG(("Write Event TRB: table index: %d, trb index: %d",
     BX_XHCI_THIS hub.ring_members.event_rings[interrupter].count,
@@ -3188,8 +3209,8 @@ void bx_usb_xhci_c::dump_stream_context(const Bit32u *context)
 {
   BX_INFO((" -=-=-=-=-=-=-=- Stream Context -=-=-=-=-=-=-"));
   BX_INFO(("  TR Dequeue Ptr: " FMT_ADDRX64 "", (* (Bit64u *) &context[0] & (Bit64u) ~0x0F)));
-  BX_INFO(("    Content Type: %01x",    (context[0] & (0x07  << 1)) >>  1));
-  BX_INFO(("             DCS: %d", (context[0] & (1     << 0)) >>  0));
+  BX_INFO(("    Content Type: %01x", (context[0] & (0x07  << 1)) >>  1));
+  BX_INFO(("             DCS: %d", (context[0] & (1 << 0)) >> 0));
 }
 
 void bx_usb_xhci_c::copy_slot_from_buffer(struct SLOT_CONTEXT *slot_context, const Bit8u *buffer)
@@ -3420,9 +3441,18 @@ int bx_usb_xhci_c::validate_ep_context(const struct EP_CONTEXT *ep_context, int 
         
         // 6) all other fields are within the valid range of values.
         
-        // The Max Burst Size, and EP State values shall be cleared to 0.
-        if ((ep_context->max_burst_size != 0) || (ep_context->ep_state != 0))
+        // The Max Burst Size value shall be cleared to 0.
+        if (ep_context->max_burst_size != 0)
           ret = PARAMETER_ERROR;
+        
+        // xHCI version 1.0, section 4.6.5, pg 92, second primary dot item states: EP State value should be cleared to '0'
+        // xHCI version 1.1, section 4.6.5, pg 111, second to last 'Note' states it should be in the 
+        //   Stopped or Running State, either of these states not being equal to zero.
+#if ((VERSION_MAJOR < 1) || ((VERSION_MAJOR == 1) && (VERSION_MINOR < 1)))
+        // if version is <= 1.0, the EP State value shall be cleared to 0.
+        if (ep_context->ep_state != 0)
+          ret = PARAMETER_ERROR;
+#endif
       }
       break;
 
@@ -3578,13 +3608,16 @@ void bx_usb_xhci_c::xhci_timer(void)
   if (BX_XHCI_THIS hub.op_regs.HcStatus.hch)
     return;
 
+#if BX_USE_WIN32USBDEBUG
+  win32_usb_trigger(USB_DEBUG_XHCI, USB_DEBUG_FRAME, 0, 0);
+#endif
+
   /* Per section 4.19.3 of the xHCI 1.0 specs, we need to present
     *  a "Port Status Change Event".  
     * Also, we should only present this event once if any other bits 
     *  change, only presenting it again when all change bits are written 
     *  back to zero, and a change bit goes from 0 to 1.
     */
-
   for (unsigned port=0; port<BX_XHCI_THIS hub.n_ports; port++) {
     Bit8u new_psceg = get_psceg(port);
     // if any bit has transitioned from 0 to 1 (in any port),
@@ -3759,6 +3792,9 @@ bool bx_usb_xhci_c::set_connect_status(Bit8u port, bool connected)
       BX_XHCI_THIS hub.usb_port[port].portsc.csc = 1;
     if (ped_org != BX_XHCI_THIS hub.usb_port[port].portsc.ped) {
       BX_XHCI_THIS hub.usb_port[port].portsc.pec = 1;
+#if BX_USE_WIN32USBDEBUG
+      win32_usb_trigger(USB_DEBUG_XHCI, USB_DEBUG_ENABLE, 0, 0);
+#endif
     }
   }
   return connected;
@@ -3876,7 +3912,7 @@ void bx_usb_xhci_c::dump_xhci_core(unsigned int slots, unsigned int eps)
   for (i=1; i<slots+1; i++) {
     slot_addr = (BX_XHCI_THIS hub.op_regs.HcDCBAAP.dcbaap + (i * sizeof(Bit64u)));
     DEV_MEM_READ_PHYSICAL((bx_phy_address) slot_addr, sizeof(Bit64u), (Bit8u *) &slot_addr);
-    DEV_MEM_READ_PHYSICAL_DMA((bx_phy_address) slot_addr, 2048, buffer);
+    DEV_MEM_READ_PHYSICAL((bx_phy_address) slot_addr, 2048, buffer);
     dump_slot_context((Bit32u *) &buffer[0], i);
     for (p=1; p<eps+1; p++)
       dump_ep_context((Bit32u *) &buffer[p * CONTEXT_SIZE], i, p);

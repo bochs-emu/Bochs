@@ -93,8 +93,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VDPBF16PS_MASK_VpsHdqWdqR(bxInstruction_c 
 
   for (unsigned n=0, tmp_mask = mask; n < DWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1) {
-      dst.vmm32u(n) = float32_fmadd(convert_bfloat16_to_fp32(op1.vmm32u(n) >> 16), convert_bfloat16_to_fp32(op2.vmm32u(n) >> 16), dst.vmm32u(n), status);
-      dst.vmm32u(n) = float32_fmadd(convert_bfloat16_to_fp32(op1.vmm32u(n)),       convert_bfloat16_to_fp32(op2.vmm32u(n)),       dst.vmm32u(n), status);
+      dst.vmm32u(n) = f32_mulAdd(convert_bfloat16_to_fp32(op1.vmm32u(n) >> 16), convert_bfloat16_to_fp32(op2.vmm32u(n) >> 16), dst.vmm32u(n), 0, &status);
+      dst.vmm32u(n) = f32_mulAdd(convert_bfloat16_to_fp32(op1.vmm32u(n)),       convert_bfloat16_to_fp32(op2.vmm32u(n)),       dst.vmm32u(n), 0, &status);
     }
     else if (i->isZeroMasking()) {
       dst.vmm32u(n) = 0;
