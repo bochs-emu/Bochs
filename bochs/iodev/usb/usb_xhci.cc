@@ -1196,6 +1196,7 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
 #endif
     }
   }
+  
   // Operational Registers
   else if ((offset >= OPS_REGS_OFFSET) && (offset < (OPS_REGS_OFFSET + 0x40))) {
     switch (offset - OPS_REGS_OFFSET) {
@@ -1296,6 +1297,7 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
         break;
     }
   }
+  
   // Register Port Sets
   else if ((offset >= XHCI_PORT_SET_OFFSET) && (offset < (XHCI_PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16)))) {
     unsigned port = (((offset - XHCI_PORT_SET_OFFSET) >> 4) & 0x3F); // calculate port number
@@ -1369,6 +1371,7 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
       val = 0;
     }
   }
+  
   // Extended Capabilities
   else if ((offset >= EXT_CAPS_OFFSET) && (offset < (EXT_CAPS_OFFSET + EXT_CAPS_SIZE))) {
     unsigned caps_offset = (offset - EXT_CAPS_OFFSET);
@@ -1393,6 +1396,7 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
         break;
     }
   }
+  
   // Host Controller Runtime Registers
   else if ((offset >= RUNTIME_OFFSET) && (offset < (RUNTIME_OFFSET + 32 + (INTERRUPTERS * 32)))) {
     if (offset == RUNTIME_OFFSET) {
@@ -1486,7 +1490,7 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
       *((Bit64u *) data) = GET64_FROM_HI32_LO32(val_hi, val);
       break;
     default:
-     BX_ERROR(("bx_usb_ehci_c::read_handler unsupported length %d", len));
+      BX_ERROR(("bx_usb_ehci_c::read_handler unsupported length %d", len));
   }
 
   // don't populate the log file if reading from interrupter's IMAN and only INT_ENABLE is set.
@@ -1550,6 +1554,7 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
         break;
     }
   }
+  
   // Operational Registers
   else if ((offset >= OPS_REGS_OFFSET) && (offset < (OPS_REGS_OFFSET + 0x40))) {
     switch (offset - OPS_REGS_OFFSET) {
@@ -1770,6 +1775,7 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
         break;
     }
   }
+  
   // Register Port Sets
   else if ((offset >= XHCI_PORT_SET_OFFSET) && (offset < (XHCI_PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16)))) {
     unsigned port = (((offset - XHCI_PORT_SET_OFFSET) >> 4) & 0x3F); // calculate port number
@@ -1900,12 +1906,14 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
         break;
     }
   }
+  
 #if BX_USE_WIN32USBDEBUG
   // Non existant Register Port (the next one after the last)
   else if (offset == (XHCI_PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16))) {
     win32_usb_trigger(USB_DEBUG_XHCI, USB_DEBUG_NONEXIST, 0, 0);
-  } 
+  }
 #endif
+  
   // Extended Capabilities
   else if ((offset >= EXT_CAPS_OFFSET) && (offset < (EXT_CAPS_OFFSET + EXT_CAPS_SIZE))) {
     unsigned caps_offset = (offset - EXT_CAPS_OFFSET);
@@ -1925,6 +1933,7 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
       qword >>= 8;
     }
   }
+  
   // Host Controller Runtime Registers
   else if ((offset >= RUNTIME_OFFSET) && (offset < (RUNTIME_OFFSET + 32 + (INTERRUPTERS * 32)))) {
     if (offset == RUNTIME_OFFSET) {
@@ -2010,6 +2019,7 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
       }
     }
   }
+  
   // Doorbell Registers
   else if ((offset >= DOORBELL_OFFSET) && (offset < (DOORBELL_OFFSET + 4 + (INTERRUPTERS * 4)))) {
     if (value & (0xFF << 8))
@@ -3441,7 +3451,7 @@ int bx_usb_xhci_c::validate_ep_context(const struct EP_CONTEXT *ep_context, int 
         
         // 6) all other fields are within the valid range of values.
         
-        // The Max Burst Size value shall be cleared to 0.
+        // The Max Burst Size should be cleared to zero
         if (ep_context->max_burst_size != 0)
           ret = PARAMETER_ERROR;
         
