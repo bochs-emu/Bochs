@@ -73,8 +73,15 @@
     <OutDir>.\..\obj-debug\</OutDir>
     <IntDir>.\..\obj-debug\fpu\</IntDir>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>.\..\obj-release\</OutDir>
+    <IntDir>.\..\obj-release\fpu\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>.\..\obj-debug\</OutDir>
+    <IntDir>.\..\obj-debug\fpu\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>.\..\obj-release\</OutDir>
     <IntDir>.\..\obj-release\fpu\</IntDir>
   </PropertyGroup>

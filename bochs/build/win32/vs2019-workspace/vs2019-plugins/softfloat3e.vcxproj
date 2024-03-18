@@ -91,7 +91,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..;..\cpu\softfloat3e\include;..\cpu\softfloat3e\8086-SSE</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;INLINE_LEVEL=5;SOFTFLOAT_FAST_DIV32TO16;SOFTFLOAT_FAST_DIV64TO32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\..\obj-debug\softfloat3e\softfloat3e.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\..\obj-debug\softfloat3e\</AssemblerListingLocation>
       <ObjectFileName>.\..\obj-debug\softfloat3e\</ObjectFileName>
@@ -125,7 +125,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;INLINE_LEVEL=5;SOFTFLOAT_FAST_DIV32TO16;SOFTFLOAT_FAST_DIV64TO32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling />
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>.\..\obj-release\softfloat3e\softfloat3e.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\..\obj-release\softfloat3e\</AssemblerListingLocation>
@@ -157,7 +157,7 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..;..\cpu\softfloat3e\include;..\cpu\softfloat3e\8086-SSE</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;INLINE_LEVEL=5;SOFTFLOAT_FAST_DIV32TO16;SOFTFLOAT_FAST_DIV64TO32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\..\obj-debug\softfloat3e\softfloat3e.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\..\obj-debug\softfloat3e\</AssemblerListingLocation>
       <ObjectFileName>.\..\obj-debug\softfloat3e\</ObjectFileName>
@@ -192,7 +192,7 @@
       <StringPooling>true</StringPooling>
       <ExceptionHandling>
       </ExceptionHandling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeaderOutputFile>.\..\obj-release\softfloat3e\softfloat3e.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\..\obj-release\softfloat3e\</AssemblerListingLocation>
