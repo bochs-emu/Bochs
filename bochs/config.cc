@@ -2097,7 +2097,7 @@ const char *get_builtin_variable(const char *varname)
       if (code == ERROR_SUCCESS) {
         data[0] = 0;
         size = MAX_PATH;
-        if (RegQueryValueEx(hkey, "", NULL, (LPDWORD)&type, (LPBYTE)data,
+        if (RegQueryValueEx(hkey, "BX_SHARE_PATH", NULL, (LPDWORD)&type, (LPBYTE)data,
                             (LPDWORD)&size) == ERROR_SUCCESS) {
           RegCloseKey(hkey);
           return data;
