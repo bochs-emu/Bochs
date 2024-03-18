@@ -903,7 +903,7 @@ bool bx_usb_ehci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
       *((Bit64u *) data) = GET64_FROM_HI32_LO32(val_hi, val);
       break;
     default:
-     BX_ERROR(("bx_usb_ehci_c::read_handler unsupported length %d", len));
+      BX_ERROR(("bx_usb_ehci_c::read_handler unsupported length %d", len));
   }
 
 #if BX_PHY_ADDRESS_LONG
