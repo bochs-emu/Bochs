@@ -24586,6 +24586,7 @@ fi
 
 
 use_usb=0
+use_usb_uhci=0
 USBHC_OBJS=''
 UHCICORE_OBJ=''
 USBHC_DLL_TARGETS=''
@@ -24603,6 +24604,7 @@ printf "%s\n" "yes" >&6; }
     UHCICORE_OBJ="uhci_core.o"
     USBHC_DLL_TARGETS="bx_usb_uhci.dll"
     use_usb=1
+    use_usb_uhci=1
    else
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
@@ -24620,6 +24622,7 @@ printf "%s\n" "no" >&6; }
 fi
 
 
+use_usb_ohci=0
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for USB OHCI support" >&5
 printf %s "checking for USB OHCI support... " >&6; }
 # Check whether --enable-usb-ohci was given.
@@ -24633,6 +24636,7 @@ printf "%s\n" "yes" >&6; }
     USBHC_OBJS="$USBHC_OBJS usb_ohci.o"
     USBHC_DLL_TARGETS="$USBHC_DLL_TARGETS bx_usb_ohci.dll"
     use_usb=1
+    use_usb_ohci=1
    else
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
@@ -24650,6 +24654,7 @@ printf "%s\n" "no" >&6; }
 fi
 
 
+use_usb_ehci=0
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for USB EHCI support" >&5
 printf %s "checking for USB EHCI support... " >&6; }
 # Check whether --enable-usb-ehci was given.
@@ -24663,6 +24668,7 @@ printf "%s\n" "yes" >&6; }
     USBHC_OBJS="$USBHC_OBJS usb_ehci.o"
     USBHC_DLL_TARGETS="$USBHC_DLL_TARGETS bx_usb_ehci.dll"
     use_usb=1
+    use_usb_ehci=1
    else
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
@@ -24680,6 +24686,7 @@ printf "%s\n" "no" >&6; }
 fi
 
 
+use_usb_xhci=0
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for USB xHCI support" >&5
 printf %s "checking for USB xHCI support... " >&6; }
 # Check whether --enable-usb-xhci was given.
@@ -24693,6 +24700,7 @@ printf "%s\n" "yes" >&6; }
     USBHC_OBJS="$USBHC_OBJS usb_xhci.o"
     USBHC_DLL_TARGETS="$USBHC_DLL_TARGETS bx_usb_xhci.dll"
     use_usb=1
+    use_usb_xhci=1
    else
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
@@ -24711,6 +24719,11 @@ fi
 
 
 if test "$use_usb" = 1; then
+  if test "$use_usb_ehci" = 1; then
+    if test "$use_usb_uhci" = 0 -a "$use_usb_ohci" = 0; then
+      as_fn_error $? "To configure USB EHCI, you must also enable UHCI or OHCI" "$LINENO" 5
+    fi
+  fi
   if test "$pci" != "1"; then
     as_fn_error $? "USB requires PCI support" "$LINENO" 5
   fi

@@ -808,8 +808,8 @@ typedef Bit32u bx_phy_address;
   #error To enable USB, you must also enable PCI
 #endif
 
-#if (BX_SUPPORT_USB_EHCI && !BX_SUPPORT_USB_UHCI)
-  #error To enable EHCI, you must also enable UHCI
+#if (BX_SUPPORT_USB_EHCI && !BX_SUPPORT_USB_UHCI && !BX_SUPPORT_USB_OHCI)
+  #error To enable EHCI, you must also enable UHCI or OHCI
 #endif
 
 #ifdef WIN32
