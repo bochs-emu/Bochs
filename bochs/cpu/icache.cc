@@ -60,6 +60,21 @@ void handleSMC(bx_phy_address pAddr, Bit32u mask)
   }
 }
 
+void flushSMC(bxICacheEntry_c *e)
+{
+  if (e->pAddr != BX_ICACHE_INVALID_PHY_ADDRESS) {
+    e->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
+    if (! bx_dbg.debugger_active) {
+      extern void genDummyICacheEntry(bxInstruction_c *i);
+//    for (unsigned instr=0;instr < e->tlen; instr++)
+//      genDummyICacheEntry(e->i + instr);
+      genDummyICacheEntry(e->i);
+    }
+#endif
+  }
+}
+
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
 
 void BX_CPU_C::BxEndTrace(bxInstruction_c *i)
@@ -107,6 +122,8 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
     (BX_SMP_PROCESSORS > 1) ? SIM->get_param_num(BXPN_SMP_QUANTUM)->get() :
 #endif
     BX_MAX_TRACE_LENGTH;
+  if (bx_dbg.debugger_active)
+    quantum = 1;
 
   for (unsigned n=0;n < quantum;n++)
   {
@@ -137,10 +154,12 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
       pageWriteStampTable.markICacheMask(entry->pAddr, entry->traceMask);
       pageWriteStampTable.markICacheMask(BX_CPU_THIS_PTR pAddrFetchPage, 0x1);
 
+      if (! bx_dbg.debugger_active) {
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
-      entry->tlen++; /* Add the inserted end of trace opcode */
-      genDummyICacheEntry(++i);
+        entry->tlen++; /* Add the inserted end of trace opcode */
+        genDummyICacheEntry(++i);
 #endif
+      }
 
       BX_CPU_THIS_PTR iCache.commit_page_split_trace(BX_CPU_THIS_PTR pAddrFetchPage, entry);
       return entry;
@@ -171,12 +190,14 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
     fetchPtr += iLen;
 
     // try to find a trace starting from current pAddr and merge
-    if (remainingInPage >= 15) { // avoid merging with page split trace
-      if (mergeTraces(entry, i, pAddr)) {
+    if (!bx_dbg.debugger_active) {
+      if (remainingInPage >= 15) { // avoid merging with page split trace
+        if (mergeTraces(entry, i, pAddr)) {
           entry->traceMask |= traceMask;
           pageWriteStampTable.markICacheMask(pAddr, entry->traceMask);
           BX_CPU_THIS_PTR iCache.commit_trace(entry->tlen);
           return entry;
+        }
       }
     }
   }
@@ -185,10 +206,12 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
 
   pageWriteStampTable.markICacheMask(pAddr, entry->traceMask);
 
+  if (! bx_dbg.debugger_active) {
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
-  entry->tlen++; /* Add the inserted end of trace opcode */
-  genDummyICacheEntry(i);
+    entry->tlen++; /* Add the inserted end of trace opcode */
+    genDummyICacheEntry(i);
 #endif
+  }
 
   BX_CPU_THIS_PTR iCache.commit_trace(entry->tlen);
 
@@ -197,6 +220,8 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
 
 bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr)
 {
+  BX_ASSERT(!bx_dbg.debugger_active);
+
   bxICacheEntry_c *e = BX_CPU_THIS_PTR iCache.find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
   if (e != NULL)

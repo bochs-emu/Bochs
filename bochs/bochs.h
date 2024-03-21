@@ -229,10 +229,6 @@ void print_statistics_tree(bx_param_c *node, int level = 0);
         if (bx_guard.report.a20) bx_dbg_a20_report(val)
 #  define BX_DBG_IO_REPORT(port, size, op, val) \
         if (bx_guard.report.io) bx_dbg_io_report(port, size, op, val)
-#  define BX_DBG_LIN_MEMORY_ACCESS(cpu, lin, phy, len, memtype, rw, data) \
-        bx_dbg_lin_memory_access(cpu, lin, phy, len, memtype, rw, data)
-#  define BX_DBG_PHY_MEMORY_ACCESS(cpu, phy, len, memtype, rw, why, data) \
-        bx_dbg_phy_memory_access(cpu, phy, len, memtype, rw, why, data)
 #else  // #if BX_DEBUGGER
 // debugger not compiled in, use empty stubs
 #  define BX_DBG_ASYNC_INTR 1
@@ -241,9 +237,17 @@ void print_statistics_tree(bx_param_c *node, int level = 0);
 #  define BX_DBG_IAC_REPORT(vector, irq)                                        /* empty */
 #  define BX_DBG_A20_REPORT(val)                                                /* empty */
 #  define BX_DBG_IO_REPORT(port, size, op, val)                                 /* empty */
+#endif  // #if BX_DEBUGGER
+
+#if BX_DEBUGGER && defined(BX_DEBUGGER_MEMACCESS)
+#  define BX_DBG_LIN_MEMORY_ACCESS(cpu, lin, phy, len, memtype, rw, data) \
+        bx_dbg_lin_memory_access(cpu, lin, phy, len, memtype, rw, data)
+#  define BX_DBG_PHY_MEMORY_ACCESS(cpu, phy, len, memtype, rw, why, data) \
+        bx_dbg_phy_memory_access(cpu, phy, len, memtype, rw, why, data)
+#else
 #  define BX_DBG_LIN_MEMORY_ACCESS(cpu, lin, phy, len, memtype, rw, data)       /* empty */
 #  define BX_DBG_PHY_MEMORY_ACCESS(cpu,      phy, len, memtype, rw, attr, data) /* empty */
-#endif  // #if BX_DEBUGGER
+#endif
 
 #include "logio.h"
 
@@ -288,6 +292,7 @@ typedef struct {
   bool interrupts;
   bool exceptions;
   bool print_timestamps;
+  bool debugger_active;
 #if BX_DEBUGGER
   Bit8u magic_break;
 #endif
