@@ -188,7 +188,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>..;..\cpu\softfloat3e\include;..\cpu\softfloat3e\8086-SSE</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;PARANOID;DEBUGGING;NO_ASSEMBLER;USE_WITH_CPU_SIM;_CRT_SECURE_NO_WARNINGS;INLINE_LEVEL=5;SOFTFLOAT_FAST_DIV32TO16;SOFTFLOAT_FAST_DIV64TO32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;INLINE_LEVEL=5;SOFTFLOAT_FAST_DIV32TO16;SOFTFLOAT_FAST_DIV64TO32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>
       </ExceptionHandling>
