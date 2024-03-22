@@ -228,6 +228,7 @@
     <ClCompile Include="..\gui\win32_enh_dbg_osdep.cc" />
     <ClCompile Include="..\gui\win32config.cc" />
     <ClCompile Include="..\gui\win32paramdlg.cc" />
+    <ClCompile Include="..\gui\win32usb.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\gui\enh_dbg.h" />
@@ -243,6 +244,8 @@
     <ClInclude Include="..\gui\win32dialog.h" />
     <ClInclude Include="..\gui\win32paramdlg.h" />
     <ClInclude Include="..\gui\win32res.h" />
+    <ClInclude Include="..\gui\win32usb.h" />
+    <ClInclude Include="..\gui\win32usbres.h" />
     <ClInclude Include="..\iodev\iodev.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

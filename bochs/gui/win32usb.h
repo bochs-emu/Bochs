@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C)      2023  Benjamin David Lunt
-//  Copyright (C) 2003-2021  The Bochs Project
+//  Copyright (C) 2003-2024 The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -32,7 +32,7 @@
 #define USB_DEBUG_EHCI   3
 #define USB_DEBUG_XHCI   4
 
-int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam);
+BOCHSAPI_MSVCONLY int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam);
 
 // USB debug break_type
 #define USB_DEBUG_FRAME    1
@@ -42,7 +42,7 @@ int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam);
 #define USB_DEBUG_RESET    5
 #define USB_DEBUG_ENABLE   6
 
-void win32_usb_trigger(int type, int trigger, int wParam, int lParam);
+BOCHSAPI_MSVCONLY void win32_usb_trigger(int type, int trigger, int wParam, int lParam);
 
 // lParam flags
 #define USB_LPARAM_FLAG_BEFORE  0x00000001

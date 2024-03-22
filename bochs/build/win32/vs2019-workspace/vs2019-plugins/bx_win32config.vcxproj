@@ -215,6 +215,7 @@
     <ClInclude Include="..\gui\win32dialog.h" />
     <ClInclude Include="..\gui\win32paramdlg.h" />
     <ClInclude Include="..\gui\win32res.h" />
+    <ClInclude Include="..\gui\win32usb.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="bochs.vcxproj">
