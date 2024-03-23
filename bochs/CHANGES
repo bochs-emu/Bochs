@@ -10,6 +10,10 @@ Detailed change log :
   - Integrated softfloat3e library replacing older softfloat2a fpu-emulation code
   - Implemented AVX512_FP16 Intel instruction set based on softfloat3e library (enabled in Xeon Sapphire Rapids CPU definition)
 
+- Configure and compile
+  - Fixed compilation of debugger with plugins enabled on Windows
+  - Removed legacy libltdl code and force using library installed on host system
+
 - I/O Devices
   - USB
     - Now includes the USB Debugger support for the xHCI and UHCI controllers
