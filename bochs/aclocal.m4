@@ -24,9 +24,9 @@ define(WX_SYS_LARGEFILE_MACRO_VALUE,
 [
     AC_CACHE_CHECK([for $1 value needed for large files], [$3],
         [
-          AC_TRY_COMPILE([#define $1 $2
-                          #include <sys/types.h>],
-                         WX_SYS_LARGEFILE_TEST,
+          AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#define $1 $2
+                          #include <sys/types.h>]],
+                         [WX_SYS_LARGEFILE_TEST])],
                          [$3=$2],
                          [$3=no])
         ]
@@ -305,12 +305,12 @@ AC_PROVIDE_IFELSE([AC_LIBTOOL_WIN32_DLL],
 enable_win32_dll=yes, enable_win32_dll=no)
 
 AC_ARG_ENABLE([libtool-lock],
-    [AC_HELP_STRING([--disable-libtool-lock],
+    [AS_HELP_STRING([--disable-libtool-lock],
 	[avoid locking (might break parallel builds)])])
 test "x$enable_libtool_lock" != xno && enable_libtool_lock=yes
 
 AC_ARG_WITH([pic],
-    [AC_HELP_STRING([--with-pic],
+    [AS_HELP_STRING([--with-pic],
 	[try to use only PIC/non-PIC objects @<:@default=use both@:>@])],
     [pic_mode="$withval"],
     [pic_mode=default])
@@ -526,7 +526,7 @@ AC_SUBST(ECHO)
 # -----------
 AC_DEFUN([_LT_AC_LOCK],
 [AC_ARG_ENABLE([libtool-lock],
-    [AC_HELP_STRING([--disable-libtool-lock],
+    [AS_HELP_STRING([--disable-libtool-lock],
 	[avoid locking (might break parallel builds)])])
 test "x$enable_libtool_lock" != xno && enable_libtool_lock=yes
 
@@ -629,7 +629,7 @@ x86_64-*linux*|ppc*-*linux*|powerpc*-*linux*|s390*-*linux*|sparc*-*linux*)
   CFLAGS="$CFLAGS -belf"
   AC_CACHE_CHECK([whether the C compiler needs -belf], lt_cv_cc_needs_belf,
     [AC_LANG_PUSH(C)
-     AC_TRY_LINK([],[],[lt_cv_cc_needs_belf=yes],[lt_cv_cc_needs_belf=no])
+     AC_LINK_IFELSE([],[],[lt_cv_cc_needs_belf=yes],[lt_cv_cc_needs_belf=no])
      AC_LANG_POP])
   if test x"$lt_cv_cc_needs_belf" != x"yes"; then
     # this is probably gcc 2.8.0, egcs 1.0 or newer; no need for -belf
@@ -1705,7 +1705,7 @@ test "$dynamic_linker" = no && can_build_shared=no
 # ----------------
 AC_DEFUN([_LT_AC_TAGCONFIG],
 [AC_ARG_WITH([tags],
-    [AC_HELP_STRING([--with-tags@<:@=TAGS@:>@],
+    [AS_HELP_STRING([--with-tags@<:@=TAGS@:>@],
         [include additional configurations @<:@automatic@:>@])],
     [tagnames="$withval"])
 
@@ -1739,7 +1739,7 @@ if test -f "$ltmain" && test -n "$tagnames"; then
 
     if grep "^# ### BEGIN LIBTOOL TAG CONFIG: $tagname$" < "${ofile}" > /dev/null
     then
-      AC_MSG_ERROR([tag name \"$tagname\" already exists])
+      AC_MSG_ERROR([tag name "$tagname" already exists])
     fi
 
     # Update the list of available tags.
@@ -1823,7 +1823,7 @@ AC_DEFUN([AC_LIBTOOL_WIN32_DLL],
 AC_DEFUN([AC_ENABLE_SHARED],
 [define([AC_ENABLE_SHARED_DEFAULT], ifelse($1, no, no, yes))dnl
 AC_ARG_ENABLE([shared],
-    [AC_HELP_STRING([--enable-shared@<:@=PKGS@:>@],
+    [AS_HELP_STRING([--enable-shared@<:@=PKGS@:>@],
 	[build shared libraries @<:@default=]AC_ENABLE_SHARED_DEFAULT[@:>@])],
     [p=${PACKAGE-default}
     case $enableval in
@@ -1862,7 +1862,7 @@ AC_ENABLE_SHARED(no)
 AC_DEFUN([AC_ENABLE_STATIC],
 [define([AC_ENABLE_STATIC_DEFAULT], ifelse($1, no, no, yes))dnl
 AC_ARG_ENABLE([static],
-    [AC_HELP_STRING([--enable-static@<:@=PKGS@:>@],
+    [AS_HELP_STRING([--enable-static@<:@=PKGS@:>@],
 	[build static libraries @<:@default=]AC_ENABLE_STATIC_DEFAULT[@:>@])],
     [p=${PACKAGE-default}
     case $enableval in
@@ -1901,7 +1901,7 @@ AC_ENABLE_STATIC(no)
 AC_DEFUN([AC_ENABLE_FAST_INSTALL],
 [define([AC_ENABLE_FAST_INSTALL_DEFAULT], ifelse($1, no, no, yes))dnl
 AC_ARG_ENABLE([fast-install],
-    [AC_HELP_STRING([--enable-fast-install@<:@=PKGS@:>@],
+    [AS_HELP_STRING([--enable-fast-install@<:@=PKGS@:>@],
     [optimize for fast installation @<:@default=]AC_ENABLE_FAST_INSTALL_DEFAULT[@:>@])],
     [p=${PACKAGE-default}
     case $enableval in
@@ -2041,7 +2041,7 @@ fi
 # find the pathname to the GNU or non-GNU linker
 AC_DEFUN([AC_PROG_LD],
 [AC_ARG_WITH([gnu-ld],
-    [AC_HELP_STRING([--with-gnu-ld],
+    [AS_HELP_STRING([--with-gnu-ld],
 	[assume the C compiler uses GNU ld @<:@default=no@:>@])],
     [test "$withval" = no || with_gnu_ld=yes],
     [with_gnu_ld=no])
@@ -6112,7 +6112,6 @@ AC_DEFUN([AC_LIB_LTDL],
 [AC_PREREQ(2.50)
 AC_REQUIRE([AC_PROG_CC])
 AC_REQUIRE([AC_C_CONST])
-AC_REQUIRE([AC_HEADER_STDC])
 AC_REQUIRE([AC_HEADER_DIRENT])
 AC_REQUIRE([_LT_AC_CHECK_DLFCN])
 AC_REQUIRE([AC_LTDL_ENABLE_INSTALL])
@@ -6144,7 +6143,7 @@ AC_CHECK_FUNCS([closedir opendir readdir])
 # ----------------------
 AC_DEFUN([AC_LTDL_ENABLE_INSTALL],
 [AC_ARG_ENABLE([ltdl-install],
-    [AC_HELP_STRING([--enable-ltdl-install], [install libltdl])])
+    [AS_HELP_STRING([--enable-ltdl-install], [install libltdl])])
 
 if test x"${enable_ltdl_install-no}" != xno; then
   AC_DEFINE(INSTALL_LTDL)
@@ -6356,11 +6355,11 @@ AC_CHECK_FUNC([shl_load],
 	  [AC_DEFINE([HAVE_LIBDL], [1],
 		     [Define if you have the libdl library or equivalent.])
 	        LIBADD_DL="-ldl" libltdl_cv_lib_dl_dlopen="yes"],
-      [AC_TRY_LINK([#if HAVE_DLFCN_H
+      [AC_LINK_IFELSE([AC_LANG_PROGRAM([[#if HAVE_DLFCN_H
 #  include <dlfcn.h>
 #endif
-      ],
-	[dlopen(0, 0);],
+      ]],
+	[[dlopen(0, 0);]])],
 	    [AC_DEFINE([HAVE_LIBDL], [1],
 		             [Define if you have the libdl library or equivalent.]) libltdl_cv_func_dlopen="yes"],
 	[AC_CHECK_LIB([svld], [dlopen],
@@ -6415,15 +6414,15 @@ EOF
         if grep '^. nm_test_func ' "$ac_nlist" >/dev/null; then
 	  :
         else
-	  echo "configure: cannot find nm_test_func in $ac_nlist" >&AC_FD_CC
+	  echo "configure: cannot find nm_test_func in $ac_nlist" >&AS_MESSAGE_LOG_FD
         fi
       fi
     else
-      echo "configure: cannot run $lt_cv_sys_global_symbol_pipe" >&AC_FD_CC
+      echo "configure: cannot run $lt_cv_sys_global_symbol_pipe" >&AS_MESSAGE_LOG_FD
     fi
   else
-    echo "configure: failed program was:" >&AC_FD_CC
-    cat conftest.c >&AC_FD_CC
+    echo "configure: failed program was:" >&AS_MESSAGE_LOG_FD
+    cat conftest.c >&AS_MESSAGE_LOG_FD
   fi
   rm -rf conftest*
   ])
