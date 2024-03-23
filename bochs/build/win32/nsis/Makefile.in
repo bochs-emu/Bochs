@@ -11,8 +11,10 @@
 MAKENSIS='/c/Program Files (x86)/NSIS/makensis'
 
 VERSION=@VERSION@
-TARGET=Bochs-${VERSION}.exe
-DLXDIR=bochs-${VERSION}/dlxlinux
+BITS=@BOCHS_BITS@
+SOURCE=bochs-${VERSION}
+TARGET=Bochs-win$(BITS)-${VERSION}.exe
+DLXDIR=${SOURCE}/dlxlinux
 
 all: ${TARGET}
 
@@ -27,4 +29,6 @@ ${TARGET}: fixups bochs.nsi
 	ls -l ${TARGET}
 
 clean::
+	rm -rf ${SOURCE}
+	rm -f ${SOURCE}.zip
 	rm -rf ${TARGET}
