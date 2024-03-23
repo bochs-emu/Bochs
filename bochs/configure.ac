@@ -5,7 +5,6 @@ AC_INIT
 AC_CONFIG_SRCDIR([bochs.h])
 AC_REVISION([[$Id$]])
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_HEADERS([ltdlconf.h])
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
@@ -466,8 +465,7 @@ if test "$bx_plugins" = 1; then
       PLUGIN_LIB="-lltdl"
       AC_DEFINE(BX_HAVE_LTDL,1)
     else
-      PLUGIN_VAR="ltdl.o"
-      PLUGIN_LIB="ltdl.o"
+      AC_MSG_ERROR([Plugin support requires libltdl installed on your system])
     fi
   fi
   PLUGIN_TARGET=bochs_plugins
@@ -2974,7 +2972,6 @@ case $target in
   *-pc-windows* | *-pc-winnt*)
     if test "$bx_plugins" = 1; then
       # set variables for building DLL plugins
-      PLUGIN_VAR=""
       PLUGIN_LIBNAME_TRANSFORMATION='%.o=bx_%.dll'
       GUI_PLUGIN_NAME_TRANSFORMATION='%.o=bx_%_gui.dll'
       IMG_PLUGIN_NAME_TRANSFORMATION='%.o=bx_%_img.dll'
@@ -3394,7 +3391,6 @@ AC_SUBST(IODEV_NON_PLUGIN_OBJS)
 AC_SUBST(IODEV_PLUGIN_OBJS)
 AC_SUBST(IODEV_EXT_NON_PLUGIN_OBJS)
 AC_SUBST(IODEV_EXT_PLUGIN_OBJS)
-AC_SUBST(PLUGIN_VAR)
 AC_SUBST(PLUGIN_LIB)
 AC_SUBST(PLUGIN_TARGET)
 AC_SUBST(PLUGIN_TARGET_2)
