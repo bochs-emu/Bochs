@@ -550,7 +550,6 @@ local-dist-clean: clean
 	@RMCOMMAND@ build/win32/nsis/Makefile build/win32/nsis/bochs.nsi
 	@RMCOMMAND@ build/macosx/Info.plist build/macosx/script_compiled.rsrc
 	@RMCOMMAND@ libtool
-	@RMCOMMAND@ ltdlconf.h
 
 clean_pcidev::
 	cd host/linux/pcidev @COMMAND_SEPARATOR@

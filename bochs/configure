@@ -951,7 +951,7 @@ X_PRE_LIBS
 X_CFLAGS
 CPP
 XMKMF
-PKGCONFIG
+PKG_CONFIG
 LIBADD_DL
 LIBTOOL
 ac_ct_F77
@@ -1129,6 +1129,7 @@ CCC
 CXXCPP
 F77
 FFLAGS
+PKG_CONFIG
 XMKMF
 CPP'
 
@@ -1882,6 +1883,7 @@ Some influential environment variables:
   CXXCPP      C++ preprocessor
   F77         Fortran 77 compiler command
   FFLAGS      Fortran 77 compiler flags
+  PKG_CONFIG  path to pkg-config utility
   XMKMF       Path to xmkmf, Makefile generator for X Window System
   CPP         C preprocessor
 
@@ -6167,7 +6169,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 6170 "configure"' > conftest.$ac_ext
+  echo '#line 6172 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7653,11 +7655,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7656: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7658: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7660: \$? = $ac_status" >&5
+   echo "$as_me:7662: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -7887,11 +7889,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7890: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7892: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7894: \$? = $ac_status" >&5
+   echo "$as_me:7896: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -7955,11 +7957,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7958: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7960: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7962: \$? = $ac_status" >&5
+   echo "$as_me:7964: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9750,7 +9752,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9753 "configure"
+#line 9755 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9845,7 +9847,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9848 "configure"
+#line 9850 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11963,11 +11965,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11966: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11968: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:11970: \$? = $ac_status" >&5
+   echo "$as_me:11972: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -12031,11 +12033,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12034: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12036: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12038: \$? = $ac_status" >&5
+   echo "$as_me:12040: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13054,7 +13056,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13057 "configure"
+#line 13059 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13149,7 +13151,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13152 "configure"
+#line 13154 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13969,11 +13971,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13972: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13974: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13976: \$? = $ac_status" >&5
+   echo "$as_me:13978: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -14037,11 +14039,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14040: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14042: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14044: \$? = $ac_status" >&5
+   echo "$as_me:14046: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16005,11 +16007,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16008: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16010: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16012: \$? = $ac_status" >&5
+   echo "$as_me:16014: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16239,11 +16241,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16242: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16244: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16246: \$? = $ac_status" >&5
+   echo "$as_me:16248: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16307,11 +16309,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16310: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16312: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16314: \$? = $ac_status" >&5
+   echo "$as_me:16316: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -18102,7 +18104,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18105 "configure"
+#line 18107 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -18197,7 +18199,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18200 "configure"
+#line 18202 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -19890,7 +19892,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 19893 "configure"
+#line 19895 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -20311,17 +20313,21 @@ else
   RANLIB="echo"
 fi
 
-# Extract the first word of "pkg-config", so it can be a program name with args.
-set dummy pkg-config; ac_word=$2
+
+
+if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
+	if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
+set dummy ${ac_tool_prefix}pkg-config; ac_word=$2
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_path_PKGCONFIG+y}
+if test ${ac_cv_path_PKG_CONFIG+y}
 then :
   printf %s "(cached) " >&6
 else $as_nop
-  case $PKGCONFIG in
+  case $PKG_CONFIG in
   [\\/]* | ?:[\\/]*)
-  ac_cv_path_PKGCONFIG="$PKGCONFIG" # Let the user override the test with a path.
+  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
@@ -20335,7 +20341,7 @@ do
   esac
     for ac_exec_ext in '' $ac_executable_extensions; do
   if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_path_PKGCONFIG="$as_dir$ac_word$ac_exec_ext"
+    ac_cv_path_PKG_CONFIG="$as_dir$ac_word$ac_exec_ext"
     printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
     break 2
   fi
@@ -20343,21 +20349,97 @@ done
   done
 IFS=$as_save_IFS
 
-  test -z "$ac_cv_path_PKGCONFIG" && ac_cv_path_PKGCONFIG="not_found"
   ;;
 esac
 fi
-PKGCONFIG=$ac_cv_path_PKGCONFIG
-if test -n "$PKGCONFIG"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PKGCONFIG" >&5
-printf "%s\n" "$PKGCONFIG" >&6; }
+PKG_CONFIG=$ac_cv_path_PKG_CONFIG
+if test -n "$PKG_CONFIG"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PKG_CONFIG" >&5
+printf "%s\n" "$PKG_CONFIG" >&6; }
 else
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
 fi
 
 
-if test "$PKGCONFIG" = not_found; then
+fi
+if test -z "$ac_cv_path_PKG_CONFIG"; then
+  ac_pt_PKG_CONFIG=$PKG_CONFIG
+  # Extract the first word of "pkg-config", so it can be a program name with args.
+set dummy pkg-config; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_path_ac_pt_PKG_CONFIG+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  case $ac_pt_PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_ac_pt_PKG_CONFIG="$ac_pt_PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_path_ac_pt_PKG_CONFIG="$as_dir$ac_word$ac_exec_ext"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+ac_pt_PKG_CONFIG=$ac_cv_path_ac_pt_PKG_CONFIG
+if test -n "$ac_pt_PKG_CONFIG"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_pt_PKG_CONFIG" >&5
+printf "%s\n" "$ac_pt_PKG_CONFIG" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+  if test "x$ac_pt_PKG_CONFIG" = x; then
+    PKG_CONFIG=""
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+printf "%s\n" "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+ac_tool_warned=yes ;;
+esac
+    PKG_CONFIG=$ac_pt_PKG_CONFIG
+  fi
+else
+  PKG_CONFIG="$ac_cv_path_PKG_CONFIG"
+fi
+
+fi
+if test -n "$PKG_CONFIG"; then
+	_pkg_min_version=0.9.0
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking pkg-config is at least version $_pkg_min_version" >&5
+printf %s "checking pkg-config is at least version $_pkg_min_version... " >&6; }
+	if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
+		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+	else
+		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+		PKG_CONFIG=""
+	fi
+
+fi
+if test "x$PKG_CONFIG" = x; then
   ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -25872,9 +25954,9 @@ then :
 fi
 
 
-  if test "$PKGCONFIG" != not_found; then
-    X_CFLAGS="`pkg-config --cflags x11`"
-    X_LIBS="`pkg-config --libs x11` $XPM_LIB $XRANDR_LIB"
+  if test "x$PKG_CONFIG" != x; then
+    X_CFLAGS="`$PKG_CONFIG --cflags x11`"
+    X_LIBS="`$PKG_CONFIG --libs x11` $XPM_LIB $XRANDR_LIB"
   else
     X_LIBS="$X_LIBS -lX11 $XPM_LIB $XRANDR_LIB"
   fi
@@ -25977,11 +26059,11 @@ if test "$with_rfb" = yes; then
 fi
 
 if test "$with_vncsrv" = yes; then
-  if test "$PKGCONFIG" != not_found; then
-    pkg-config --exists libvncserver
+  if test "$PKG_CONFIG" != not_found; then
+    $PKG_CONFIG --exists libvncserver
     if test x$? = x0; then
-      VNCSRV_CXXFLAGS="`pkg-config --cflags libvncserver`"
-      GUI_LINK_OPTS_VNCSRV="`pkg-config --libs libvncserver`"
+      VNCSRV_CXXFLAGS="`$PKG_CONFIG --cflags libvncserver`"
+      GUI_LINK_OPTS_VNCSRV="`$PKG_CONFIG --libs libvncserver`"
     fi
   else
     # Extract the first word of " libvncserver-config --version ", so it can be a program name with args.
@@ -26142,14 +26224,14 @@ if test "$with_wx" = yes; then
   WX_CFLAGS="`$WX_CONFIG --cflags`"
   WX_CXXFLAGS="`$WX_CONFIG --cxxflags`"
   if test "$wx_needs_gdk_version" = 2; then
-    GDK_CFLAGS="`pkg-config --cflags gdk-2.0`"
+    GDK_CFLAGS="`$PKG_CONFIG --cflags gdk-2.0`"
     WX_CFLAGS="$WX_CFLAGS $GDK_CFLAGS"
     WX_CXXFLAGS="$WX_CXXFLAGS $GDK_CFLAGS"
     printf "%s\n" "#define WX_GDK_VERSION 2" >>confdefs.h
 
   fi
   if test "$wx_needs_gdk_version" = 3; then
-    GDK_CFLAGS="`pkg-config --cflags gdk-3.0`"
+    GDK_CFLAGS="`$PKG_CONFIG --cflags gdk-3.0`"
     WX_CFLAGS="$WX_CFLAGS $GDK_CFLAGS"
     WX_CXXFLAGS="$WX_CXXFLAGS $GDK_CFLAGS"
     printf "%s\n" "#define WX_GDK_VERSION 3" >>confdefs.h
@@ -26210,26 +26292,26 @@ fi
 bx_have_gtk_version=0
 if test "$needs_gtk2" = 1; then
   # pkg-config is required to set TOOLKIT_CXXFLAGS and LIBS
-  if test "$PKGCONFIG" != not_found; then
+  if test "x$PKG_CONFIG" != x; then
     # if wxGTK is based on GTK 3.0, use it for gui debugger to avoid conflicts
     if test "$with_wx" = yes -a "$wx_needs_gdk_version" = 3; then
-      pkg-config --exists gtk+-3.0
+      $PKG_CONFIG --exists gtk+-3.0
       if test x$? = x0; then
-        TOOLKIT_CXXFLAGS="`pkg-config --cflags gtk+-3.0`"
-        LIBS="$LIBS `pkg-config --libs gtk+-3.0`"
+        TOOLKIT_CXXFLAGS="`$PKG_CONFIG --cflags gtk+-3.0`"
+        LIBS="$LIBS `$PKG_CONFIG --libs gtk+-3.0`"
         bx_have_gtk_version=3
       fi
     else
-      pkg-config --exists gtk+-2.0
+      $PKG_CONFIG --exists gtk+-2.0
       if test x$? = x0; then
-        TOOLKIT_CXXFLAGS="`pkg-config --cflags gtk+-2.0`"
-        LIBS="$LIBS `pkg-config --libs gtk+-2.0`"
+        TOOLKIT_CXXFLAGS="`$PKG_CONFIG --cflags gtk+-2.0`"
+        LIBS="$LIBS `$PKG_CONFIG --libs gtk+-2.0`"
         bx_have_gtk_version=2
       else
-        pkg-config --exists gtk+-3.0
+        $PKG_CONFIG --exists gtk+-3.0
         if test x$? = x0; then
-          TOOLKIT_CXXFLAGS="`pkg-config --cflags gtk+-3.0`"
-          LIBS="$LIBS `pkg-config --libs gtk+-3.0`"
+          TOOLKIT_CXXFLAGS="`$PKG_CONFIG --cflags gtk+-3.0`"
+          LIBS="$LIBS `$PKG_CONFIG --libs gtk+-3.0`"
           bx_have_gtk_version=3
         fi
       fi
@@ -26592,7 +26674,7 @@ esac
 
 
 if test "$use_curses" = yes; then
-  if test "$PKGCONFIG" != not_found; then
+  if test "x$PKG_CONFIG" != x; then
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for mvaddch in -lcurses" >&5
 printf %s "checking for mvaddch in -lcurses... " >&6; }
 if test ${ac_cv_lib_curses_mvaddch+y}
@@ -26630,7 +26712,7 @@ fi
 printf "%s\n" "$ac_cv_lib_curses_mvaddch" >&6; }
 if test "x$ac_cv_lib_curses_mvaddch" = xyes
 then :
-  GUI_LINK_OPTS_TERM="`pkg-config --libs curses`"
+  GUI_LINK_OPTS_TERM="`$PKG_CONFIG --libs curses`"
 fi
 
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for mvaddch in -lncurses" >&5
@@ -26670,7 +26752,7 @@ fi
 printf "%s\n" "$ac_cv_lib_ncurses_mvaddch" >&6; }
 if test "x$ac_cv_lib_ncurses_mvaddch" = xyes
 then :
-  GUI_LINK_OPTS_TERM="`pkg-config --libs ncurses`"
+  GUI_LINK_OPTS_TERM="`$PKG_CONFIG --libs ncurses`"
 fi
 
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for mvaddch in -ltermlib" >&5
@@ -26710,7 +26792,7 @@ fi
 printf "%s\n" "$ac_cv_lib_termlib_mvaddch" >&6; }
 if test "x$ac_cv_lib_termlib_mvaddch" = xyes
 then :
-  GUI_LINK_OPTS_TERM="`pkg-config --libs termlib`"
+  GUI_LINK_OPTS_TERM="`$PKG_CONFIG --libs termlib`"
 fi
 
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for mvaddch in -lpdcurses" >&5
@@ -26750,7 +26832,7 @@ fi
 printf "%s\n" "$ac_cv_lib_pdcurses_mvaddch" >&6; }
 if test "x$ac_cv_lib_pdcurses_mvaddch" = xyes
 then :
-  GUI_LINK_OPTS_TERM="`pkg-config --libs pdcurses`"
+  GUI_LINK_OPTS_TERM="`$PKG_CONFIG --libs pdcurses`"
 fi
 
   else

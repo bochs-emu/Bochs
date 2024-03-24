@@ -156,8 +156,8 @@ else
   RANLIB="echo"
 fi
 
-AC_PATH_PROG(PKGCONFIG, pkg-config, not_found)
-if test "$PKGCONFIG" = not_found; then
+PKG_PROG_PKG_CONFIG
+if test "x$PKG_CONFIG" = x; then
   AC_PATH_XTRA
 fi
 
@@ -2470,9 +2470,9 @@ if test "$with_x11" = yes; then
     XRANDR_LIB='-lXrandr'
     ])
 
-  if test "$PKGCONFIG" != not_found; then
-    X_CFLAGS="`pkg-config --cflags x11`"
-    X_LIBS="`pkg-config --libs x11` $XPM_LIB $XRANDR_LIB"
+  if test "x$PKG_CONFIG" != x; then
+    X_CFLAGS="`$PKG_CONFIG --cflags x11`"
+    X_LIBS="`$PKG_CONFIG --libs x11` $XPM_LIB $XRANDR_LIB"
   else
     X_LIBS="$X_LIBS -lX11 $XPM_LIB $XRANDR_LIB"
   fi
@@ -2571,11 +2571,11 @@ if test "$with_rfb" = yes; then
 fi
 
 if test "$with_vncsrv" = yes; then
-  if test "$PKGCONFIG" != not_found; then
-    pkg-config --exists libvncserver
+  if test "$PKG_CONFIG" != not_found; then
+    $PKG_CONFIG --exists libvncserver
     if test x$? = x0; then
-      VNCSRV_CXXFLAGS="`pkg-config --cflags libvncserver`"
-      GUI_LINK_OPTS_VNCSRV="`pkg-config --libs libvncserver`"
+      VNCSRV_CXXFLAGS="`$PKG_CONFIG --cflags libvncserver`"
+      GUI_LINK_OPTS_VNCSRV="`$PKG_CONFIG --libs libvncserver`"
     fi
   else
     AC_CHECK_PROG(LIBVNCSERVER_CONFIG, [ libvncserver-config --version ], libvncserver-config, not_found)
@@ -2682,13 +2682,13 @@ if test "$with_wx" = yes; then
   WX_CFLAGS="`$WX_CONFIG --cflags`"
   WX_CXXFLAGS="`$WX_CONFIG --cxxflags`"
   if test "$wx_needs_gdk_version" = 2; then
-    GDK_CFLAGS="`pkg-config --cflags gdk-2.0`"
+    GDK_CFLAGS="`$PKG_CONFIG --cflags gdk-2.0`"
     WX_CFLAGS="$WX_CFLAGS $GDK_CFLAGS"
     WX_CXXFLAGS="$WX_CXXFLAGS $GDK_CFLAGS"
     AC_DEFINE(WX_GDK_VERSION, 2)
   fi
   if test "$wx_needs_gdk_version" = 3; then
-    GDK_CFLAGS="`pkg-config --cflags gdk-3.0`"
+    GDK_CFLAGS="`$PKG_CONFIG --cflags gdk-3.0`"
     WX_CFLAGS="$WX_CFLAGS $GDK_CFLAGS"
     WX_CXXFLAGS="$WX_CXXFLAGS $GDK_CFLAGS"
     AC_DEFINE(WX_GDK_VERSION, 3)
@@ -2745,26 +2745,26 @@ fi
 bx_have_gtk_version=0
 if test "$needs_gtk2" = 1; then
   # pkg-config is required to set TOOLKIT_CXXFLAGS and LIBS
-  if test "$PKGCONFIG" != not_found; then
+  if test "x$PKG_CONFIG" != x; then
     # if wxGTK is based on GTK 3.0, use it for gui debugger to avoid conflicts
     if test "$with_wx" = yes -a "$wx_needs_gdk_version" = 3; then
-      pkg-config --exists gtk+-3.0
+      $PKG_CONFIG --exists gtk+-3.0
       if test x$? = x0; then
-        TOOLKIT_CXXFLAGS="`pkg-config --cflags gtk+-3.0`"
-        LIBS="$LIBS `pkg-config --libs gtk+-3.0`"
+        TOOLKIT_CXXFLAGS="`$PKG_CONFIG --cflags gtk+-3.0`"
+        LIBS="$LIBS `$PKG_CONFIG --libs gtk+-3.0`"
         bx_have_gtk_version=3
       fi
     else
-      pkg-config --exists gtk+-2.0
+      $PKG_CONFIG --exists gtk+-2.0
       if test x$? = x0; then
-        TOOLKIT_CXXFLAGS="`pkg-config --cflags gtk+-2.0`"
-        LIBS="$LIBS `pkg-config --libs gtk+-2.0`"
+        TOOLKIT_CXXFLAGS="`$PKG_CONFIG --cflags gtk+-2.0`"
+        LIBS="$LIBS `$PKG_CONFIG --libs gtk+-2.0`"
         bx_have_gtk_version=2
       else
-        pkg-config --exists gtk+-3.0
+        $PKG_CONFIG --exists gtk+-3.0
         if test x$? = x0; then
-          TOOLKIT_CXXFLAGS="`pkg-config --cflags gtk+-3.0`"
-          LIBS="$LIBS `pkg-config --libs gtk+-3.0`"
+          TOOLKIT_CXXFLAGS="`$PKG_CONFIG --cflags gtk+-3.0`"
+          LIBS="$LIBS `$PKG_CONFIG --libs gtk+-3.0`"
           bx_have_gtk_version=3
         fi
       fi
@@ -3047,11 +3047,11 @@ AC_SUBST(EXPORT_DYNAMIC)
 AC_SUBST(DLLTOOL)
 
 if test "$use_curses" = yes; then
-  if test "$PKGCONFIG" != not_found; then
-    AC_CHECK_LIB(curses, mvaddch, GUI_LINK_OPTS_TERM="`pkg-config --libs curses`")
-    AC_CHECK_LIB(ncurses, mvaddch, GUI_LINK_OPTS_TERM="`pkg-config --libs ncurses`")
-    AC_CHECK_LIB(termlib, mvaddch, GUI_LINK_OPTS_TERM="`pkg-config --libs termlib`")
-    AC_CHECK_LIB(pdcurses, mvaddch, GUI_LINK_OPTS_TERM="`pkg-config --libs pdcurses`")
+  if test "x$PKG_CONFIG" != x; then
+    AC_CHECK_LIB(curses, mvaddch, GUI_LINK_OPTS_TERM="`$PKG_CONFIG --libs curses`")
+    AC_CHECK_LIB(ncurses, mvaddch, GUI_LINK_OPTS_TERM="`$PKG_CONFIG --libs ncurses`")
+    AC_CHECK_LIB(termlib, mvaddch, GUI_LINK_OPTS_TERM="`$PKG_CONFIG --libs termlib`")
+    AC_CHECK_LIB(pdcurses, mvaddch, GUI_LINK_OPTS_TERM="`$PKG_CONFIG --libs pdcurses`")
   else
     AC_CHECK_LIB(curses, mvaddch, GUI_LINK_OPTS_TERM='-lcurses')
     AC_CHECK_LIB(ncurses, mvaddch, GUI_LINK_OPTS_TERM='-lncurses')
