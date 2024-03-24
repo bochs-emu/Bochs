@@ -1,0 +1,443 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{bda1eb83-d53e-41a7-825f-0efdc3d643e3}</ProjectGuid>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v142</PlatformToolset>
+    <UseOfMfc>false</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>12.0.21005.1</_ProjectFileVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>.\..\obj-debug\</OutDir>
+    <IntDir>.\..\obj-debug\softfloat3e\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>.\..\obj-release\</OutDir>
+    <IntDir>.\..\obj-release\softfloat3e\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>.\..\obj-debug\</OutDir>
+    <IntDir>.\..\obj-debug\softfloat3e\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>.\..\obj-release\</OutDir>
+    <IntDir>.\..\obj-release\softfloat3e\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <BuildLog>
+      <Path>$(IntDir)BuildLog-$(TargetName).log</Path>
+    </BuildLog>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..;..\cpu\softfloat3e\include;..\cpu\softfloat3e\8086-SSE</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;INLINE_LEVEL=5;SOFTFLOAT_FAST_DIV32TO16;SOFTFLOAT_FAST_DIV64TO32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeaderOutputFile>.\..\obj-debug\softfloat3e\softfloat3e.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\obj-debug\softfloat3e\</AssemblerListingLocation>
+      <ObjectFileName>.\..\obj-debug\softfloat3e\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\obj-debug\softfloat3e\</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>.\..\obj-debug\softfloat3e.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\obj-debug\softfloat3e\softfloat3e.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <BuildLog>
+      <Path>$(IntDir)BuildLog-$(TargetName).log</Path>
+    </BuildLog>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>..;..\cpu\softfloat3e\include;..\cpu\softfloat3e\8086-SSE</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;INLINE_LEVEL=5;SOFTFLOAT_FAST_DIV32TO16;SOFTFLOAT_FAST_DIV64TO32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <ExceptionHandling />
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeaderOutputFile>.\..\obj-release\softfloat3e\softfloat3e.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\obj-release\softfloat3e\</AssemblerListingLocation>
+      <ObjectFileName>.\..\obj-release\softfloat3e\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\obj-release\softfloat3e\</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <CallingConvention>FastCall</CallingConvention>
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>.\..\obj-release\softfloat3e.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\obj-release\softfloat3e\softfloat3e.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <BuildLog>
+      <Path>$(IntDir)BuildLog-$(TargetName).log</Path>
+    </BuildLog>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..;..\cpu\softfloat3e\include;..\cpu\softfloat3e\8086-SSE</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;INLINE_LEVEL=5;SOFTFLOAT_FAST_DIV32TO16;SOFTFLOAT_FAST_DIV64TO32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeaderOutputFile>.\..\obj-debug\softfloat3e\softfloat3e.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\obj-debug\softfloat3e\</AssemblerListingLocation>
+      <ObjectFileName>.\..\obj-debug\softfloat3e\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\obj-debug\softfloat3e\</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>.\..\obj-debug\softfloat3e.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\obj-debug\softfloat3e\softfloat3e.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <BuildLog>
+      <Path>$(IntDir)BuildLog-$(TargetName).log</Path>
+    </BuildLog>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <AdditionalIncludeDirectories>..;..\cpu\softfloat3e\include;..\cpu\softfloat3e\8086-SSE</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;INLINE_LEVEL=5;SOFTFLOAT_FAST_DIV32TO16;SOFTFLOAT_FAST_DIV64TO32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <ExceptionHandling>
+      </ExceptionHandling>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeaderOutputFile>.\..\obj-release\softfloat3e\softfloat3e.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\..\obj-release\softfloat3e\</AssemblerListingLocation>
+      <ObjectFileName>.\..\obj-release\softfloat3e\</ObjectFileName>
+      <ProgramDataBaseFileName>.\..\obj-release\softfloat3e\</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <CallingConvention>FastCall</CallingConvention>
+      <CompileAs>CompileAsCpp</CompileAs>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0409</Culture>
+    </ResourceCompile>
+    <Lib>
+      <OutputFile>.\..\obj-release\softfloat3e.lib</OutputFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+    </Lib>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>.\..\obj-release\softfloat3e\softfloat3e.bsc</OutputFile>
+    </Bscmake>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\cpu\softfloat3e\8086-SSE\specialize.h" />
+    <ClInclude Include="..\cpu\softfloat3e\include\internals.h" />
+    <ClInclude Include="..\cpu\softfloat3e\include\opts-GCC.h" />
+    <ClInclude Include="..\cpu\softfloat3e\include\primitives.h" />
+    <ClInclude Include="..\cpu\softfloat3e\include\primitiveTypes.h" />
+    <ClInclude Include="..\cpu\softfloat3e\include\softfloat-compare.h" />
+    <ClInclude Include="..\cpu\softfloat3e\include\softfloat-extra.h" />
+    <ClInclude Include="..\cpu\softfloat3e\include\softfloat.h" />
+    <ClInclude Include="..\cpu\softfloat3e\include\softfloat_types.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\cpu\softfloat3e\8086-SSE\s_commonNaNToExtF80UI.c" />
+    <ClCompile Include="..\cpu\softfloat3e\8086-SSE\s_commonNaNToF128UI.c" />
+    <ClCompile Include="..\cpu\softfloat3e\8086-SSE\s_commonNaNToF16UI.c" />
+    <ClCompile Include="..\cpu\softfloat3e\8086-SSE\s_commonNaNToF32UI.c" />
+    <ClCompile Include="..\cpu\softfloat3e\8086-SSE\s_commonNaNToF64UI.c" />
+    <ClCompile Include="..\cpu\softfloat3e\8086-SSE\s_propagateNaNExtF80UI.c" />
+    <ClCompile Include="..\cpu\softfloat3e\8086-SSE\s_propagateNaNF128UI.c" />
+    <ClCompile Include="..\cpu\softfloat3e\8086-SSE\s_propagateNaNF16UI.c" />
+    <ClCompile Include="..\cpu\softfloat3e\8086-SSE\s_propagateNaNF32UI.c" />
+    <ClCompile Include="..\cpu\softfloat3e\8086-SSE\s_propagateNaNF64UI.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_addsub.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_class.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_compare.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_div.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_mul.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_rem.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_roundToInt.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_sqrt.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_to_f128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_to_f16.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_to_f32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_to_f64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_to_i32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_to_i32_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_to_i64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_to_i64_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_to_ui32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_to_ui32_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_to_ui64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_to_ui64_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f128_addsub.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f128_div.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f128_mul.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f128_mulAdd.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f128_roundToInt.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f128_sqrt.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f128_to_extF80.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f128_to_f32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f128_to_f64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f128_to_i32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f128_to_i32_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f128_to_i64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f128_to_i64_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f128_to_ui32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f128_to_ui32_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f128_to_ui64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f128_to_ui64_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_addsub.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_class.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_compare.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_div.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_getExp.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_getMant.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_minmax.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_mul.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_mulAdd.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_range.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_roundToInt.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_sqrt.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_to_extF80.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_to_f32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_to_f64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_to_i32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_to_i32_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_to_i64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_to_i64_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_to_ui32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_to_ui32_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_to_ui64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_to_ui64_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_addsub.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_class.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_compare.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_div.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_frc.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_getExp.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_getMant.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_minmax.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_mul.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_mulAdd.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_range.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_roundToInt.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_scalef.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_sqrt.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_to_extF80.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_to_f128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_to_f16.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_to_f64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_to_i32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_to_i32_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_to_i64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_to_i64_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_to_ui32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_to_ui32_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_to_ui64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f32_to_ui64_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_addsub.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_class.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_compare.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_div.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_frc.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_getExp.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_getMant.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_minmax.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_mul.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_mulAdd.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_range.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_roundToInt.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_scalef.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_sqrt.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_to_extF80.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_to_f128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_to_f16.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_to_f32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_to_i32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_to_i32_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_to_i64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_to_i64_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_to_ui32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_to_ui32_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_to_ui64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\f64_to_ui64_r_minMag.c" />
+    <ClCompile Include="..\cpu\softfloat3e\i32_to_extF80.c" />
+    <ClCompile Include="..\cpu\softfloat3e\i32_to_f128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\i32_to_f16.c" />
+    <ClCompile Include="..\cpu\softfloat3e\i32_to_f32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\i32_to_f64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\i64_to_extF80.c" />
+    <ClCompile Include="..\cpu\softfloat3e\i64_to_f128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\i64_to_f16.c" />
+    <ClCompile Include="..\cpu\softfloat3e\i64_to_f32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\i64_to_f64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\isNaN.c" />
+    <ClCompile Include="..\cpu\softfloat3e\isSignalingNaN.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_add128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_add256M.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_addMagsExtF80.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_addMagsF128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_addMagsF16.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_addMagsF32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_addMagsF64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_approxRecipSqrt32_1.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_approxRecipSqrt_1Ks.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_approxRecip_1Ks.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_countLeadingZeros16.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_countLeadingZeros32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_countLeadingZeros64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_countLeadingZeros8.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_eq128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_le128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_lt128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_mul128By32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_mul128To256M.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_mul64ByShifted32To128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_mul64To128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_mulAddF128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_mulAddF16.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_mulAddF32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_mulAddF64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_normRoundPackToExtF80.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_normRoundPackToF128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_normRoundPackToF16.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_normRoundPackToF32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_normRoundPackToF64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_normSubnormalExtF80Sig.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_normSubnormalF128Sig.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_normSubnormalF16Sig.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_normSubnormalF32Sig.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_normSubnormalF64Sig.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_packToExtF80.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_roundPackToExtF80.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_roundPackToF128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_roundPackToF16.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_roundPackToF32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_roundPackToF64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_roundToI32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_roundToI64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_roundToUI32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_roundToUI64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_shiftRightJam128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_shiftRightJam128Extra.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_shiftRightJam256M.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_shiftRightJam32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_shiftRightJam64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_shiftRightJam64Extra.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_shortShiftLeft128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_shortShiftRight128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_shortShiftRightJam128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_shortShiftRightJam128Extra.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_shortShiftRightJam64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_shortShiftRightJam64Extra.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_sub128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_sub256M.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_subMagsExtF80.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_subMagsF128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_subMagsF16.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_subMagsF32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\s_subMagsF64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\ui32_to_extF80.c" />
+    <ClCompile Include="..\cpu\softfloat3e\ui32_to_f128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\ui32_to_f16.c" />
+    <ClCompile Include="..\cpu\softfloat3e\ui32_to_f32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\ui32_to_f64.c" />
+    <ClCompile Include="..\cpu\softfloat3e\ui64_to_extF80.c" />
+    <ClCompile Include="..\cpu\softfloat3e\ui64_to_f128.c" />
+    <ClCompile Include="..\cpu\softfloat3e\ui64_to_f16.c" />
+    <ClCompile Include="..\cpu\softfloat3e\ui64_to_f32.c" />
+    <ClCompile Include="..\cpu\softfloat3e\ui64_to_f64.c" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

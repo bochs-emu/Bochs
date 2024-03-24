@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-// Copyright (C) 2002-2021  The Bochs Project
+// Copyright (C) 2002-2024  The Bochs Project
 //
 // extplugin.h
 //
@@ -23,7 +23,7 @@
 #if BX_HAVE_LTDL
 #include <ltdl.h>
 #else
-#include "ltdl-bochs.h"
+#error Plugin support requires libltdl installed on your system
 #endif
 #endif
 

@@ -2,8 +2,8 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2023  The Bochs Project
+//  Copyright (C) 2009-2024  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//                2009-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -743,19 +743,21 @@ bool bx_ohci_core_c::mem_write(bx_phy_address addr, unsigned len, void *data)
       hub.op_regs.HcRhDescriptorA.ocpm     = (value & (1<<11)) ? 1 : 0;
       hub.op_regs.HcRhDescriptorA.nps      = (value & (1<< 9)) ? 1 : 0;
       hub.op_regs.HcRhDescriptorA.psm      = (value & (1<< 8)) ? 1 : 0;
-      if (hub.op_regs.HcRhDescriptorA.psm == 0) {
-
-        BX_INFO(("Ben: hub.op_regs.HcRhDescriptorA.psm == 0"));
-        // all ports have power, etc.
-        // hub.usb_port[p].HcRhPortStatus.pps = 1
-        //  Call a routine to set each ports dword (LS, Connected, etc.)
-
-      } else {
-
-        BX_INFO(("Ben: hub.op_regs.HcRhDescriptorA.psm == 1"));
-        // only ports with bit set in rhstatus have power, etc.
-        //  Call a routine to set each ports dword (LS, Connected, etc.)
-
+      if (hub.op_regs.HcRhDescriptorA.nps == 0) {  // psm is only valid if nps == 0
+        if (hub.op_regs.HcRhDescriptorA.psm == 0) {
+          
+          BX_INFO(("Ben: hub.op_regs.HcRhDescriptorA.psm == 0"));
+          // all ports have power, etc.
+          // hub.usb_port[p].HcRhPortStatus.pps = 1
+          //  Call a routine to set each ports dword (LS, Connected, etc.)
+          
+        } else {
+          
+          BX_INFO(("Ben: hub.op_regs.HcRhDescriptorA.psm == 1"));
+          // only ports with bit set in rhstatus have power, etc.
+          //  Call a routine to set each ports dword (LS, Connected, etc.)
+          
+        }
       }
       break;
 
@@ -774,24 +776,26 @@ bool bx_ohci_core_c::mem_write(bx_phy_address addr, unsigned len, void *data)
       if (value & (1<<15)) hub.op_regs.HcRhStatus.drwe = 1;
 
       if (value & (1<<17)) hub.op_regs.HcRhStatus.ocic = 1;
-      if (value & (1<<16)) {
-        if (hub.op_regs.HcRhDescriptorA.psm == 0) {
-          for (p=0; p<USB_OHCI_PORTS; p++)
-            hub.usb_port[p].HcRhPortStatus.pps = 1;
-        } else {
-          for (p=0; p<USB_OHCI_PORTS; p++)
-            if ((hub.op_regs.HcRhDescriptorB.ppcm & (1<<p)) == 0)
+      if (hub.op_regs.HcRhDescriptorA.nps == 0) {  // psm is only valid if nps == 0
+        if (value & (1<<16)) {
+          if (hub.op_regs.HcRhDescriptorA.psm == 0) {
+            for (p=0; p<USB_OHCI_PORTS; p++)
               hub.usb_port[p].HcRhPortStatus.pps = 1;
+          } else {
+            for (p=0; p<USB_OHCI_PORTS; p++)
+              if ((hub.op_regs.HcRhDescriptorB.ppcm & (1<<p)) == 0)
+                hub.usb_port[p].HcRhPortStatus.pps = 1;
+          }
         }
-      }
-      if (value & (1<<0)) {
-        if (hub.op_regs.HcRhDescriptorA.psm == 0) {
-          for (p=0; p<USB_OHCI_PORTS; p++)
-            hub.usb_port[p].HcRhPortStatus.pps = 0;
-        } else {
-          for (p=0; p<USB_OHCI_PORTS; p++)
-            if (!(hub.op_regs.HcRhDescriptorB.ppcm & (1<<p)))
+        if (value & (1<<0)) {
+          if (hub.op_regs.HcRhDescriptorA.psm == 0) {
+            for (p=0; p<USB_OHCI_PORTS; p++)
               hub.usb_port[p].HcRhPortStatus.pps = 0;
+          } else {
+            for (p=0; p<USB_OHCI_PORTS; p++)
+              if (!(hub.op_regs.HcRhDescriptorB.ppcm & (1<<p)))
+                hub.usb_port[p].HcRhPortStatus.pps = 0;
+          }
         }
       }
       break;

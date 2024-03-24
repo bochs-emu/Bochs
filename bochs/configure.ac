@@ -5,7 +5,6 @@ AC_INIT
 AC_CONFIG_SRCDIR([bochs.h])
 AC_REVISION([[$Id$]])
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_HEADERS([ltdlconf.h])
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
@@ -466,8 +465,7 @@ if test "$bx_plugins" = 1; then
       PLUGIN_LIB="-lltdl"
       AC_DEFINE(BX_HAVE_LTDL,1)
     else
-      PLUGIN_VAR="ltdl.o"
-      PLUGIN_LIB="ltdl.o"
+      AC_MSG_ERROR([Plugin support requires libltdl installed on your system])
     fi
   fi
   PLUGIN_TARGET=bochs_plugins
@@ -1587,6 +1585,7 @@ AC_ARG_ENABLE(pcidev,
 )
 
 use_usb=0
+use_usb_uhci=0
 USBHC_OBJS=''
 UHCICORE_OBJ=''
 USBHC_DLL_TARGETS=''
@@ -1600,6 +1599,7 @@ AC_ARG_ENABLE(usb,
     UHCICORE_OBJ="uhci_core.o"
     USBHC_DLL_TARGETS="bx_usb_uhci.dll"
     use_usb=1
+    use_usb_uhci=1
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_USB_UHCI, 0)
@@ -1610,6 +1610,7 @@ AC_ARG_ENABLE(usb,
     ]
   )
 
+use_usb_ohci=0
 AC_MSG_CHECKING(for USB OHCI support)
 AC_ARG_ENABLE(usb-ohci,
   AS_HELP_STRING([--enable-usb-ohci], [enable USB OHCI support (no)]),
@@ -1619,6 +1620,7 @@ AC_ARG_ENABLE(usb-ohci,
     USBHC_OBJS="$USBHC_OBJS usb_ohci.o"
     USBHC_DLL_TARGETS="$USBHC_DLL_TARGETS bx_usb_ohci.dll"
     use_usb=1
+    use_usb_ohci=1
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_USB_OHCI, 0)
@@ -1629,6 +1631,7 @@ AC_ARG_ENABLE(usb-ohci,
     ]
   )
 
+use_usb_ehci=0
 AC_MSG_CHECKING(for USB EHCI support)
 AC_ARG_ENABLE(usb-ehci,
   AS_HELP_STRING([--enable-usb-ehci], [enable USB EHCI support (no)]),
@@ -1638,6 +1641,7 @@ AC_ARG_ENABLE(usb-ehci,
     USBHC_OBJS="$USBHC_OBJS usb_ehci.o"
     USBHC_DLL_TARGETS="$USBHC_DLL_TARGETS bx_usb_ehci.dll"
     use_usb=1
+    use_usb_ehci=1
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_USB_EHCI, 0)
@@ -1648,6 +1652,7 @@ AC_ARG_ENABLE(usb-ehci,
     ]
   )
 
+use_usb_xhci=0
 AC_MSG_CHECKING(for USB xHCI support)
 AC_ARG_ENABLE(usb-xhci,
   AS_HELP_STRING([--enable-usb-xhci], [enable USB xHCI support (no)]),
@@ -1657,6 +1662,7 @@ AC_ARG_ENABLE(usb-xhci,
     USBHC_OBJS="$USBHC_OBJS usb_xhci.o"
     USBHC_DLL_TARGETS="$USBHC_DLL_TARGETS bx_usb_xhci.dll"
     use_usb=1
+    use_usb_xhci=1
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_USB_XHCI, 0)
@@ -1668,6 +1674,11 @@ AC_ARG_ENABLE(usb-xhci,
   )
 
 if test "$use_usb" = 1; then
+  if test "$use_usb_ehci" = 1; then
+    if test "$use_usb_uhci" = 0 -a "$use_usb_ohci" = 0; then
+      AC_MSG_ERROR([To configure USB EHCI, you must also enable UHCI or OHCI])
+    fi
+  fi
   if test "$pci" != "1"; then
     AC_MSG_ERROR([USB requires PCI support])
   fi
@@ -1690,7 +1701,7 @@ AC_ARG_ENABLE(win32usbdbg,
     usb_debugger=0
    fi],
   [
-    if test "$bx_debugger" = 1 -a "$use_usb" = 1; then
+    if test "$bx_debugger" = 1 -a "$use_usb" = 1 -a "$bx_plugins" = 0; then
       AC_MSG_RESULT(yes)
       usb_debugger=1
     else
@@ -2978,7 +2989,6 @@ case $target in
   *-pc-windows* | *-pc-winnt*)
     if test "$bx_plugins" = 1; then
       # set variables for building DLL plugins
-      PLUGIN_VAR=""
       PLUGIN_LIBNAME_TRANSFORMATION='%.o=bx_%.dll'
       GUI_PLUGIN_NAME_TRANSFORMATION='%.o=bx_%_gui.dll'
       IMG_PLUGIN_NAME_TRANSFORMATION='%.o=bx_%_img.dll'
@@ -3398,7 +3408,6 @@ AC_SUBST(IODEV_NON_PLUGIN_OBJS)
 AC_SUBST(IODEV_PLUGIN_OBJS)
 AC_SUBST(IODEV_EXT_NON_PLUGIN_OBJS)
 AC_SUBST(IODEV_EXT_PLUGIN_OBJS)
-AC_SUBST(PLUGIN_VAR)
 AC_SUBST(PLUGIN_LIB)
 AC_SUBST(PLUGIN_TARGET)
 AC_SUBST(PLUGIN_TARGET_2)

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2016  The Bochs Project
+//  Copyright (C) 2001-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -38,7 +38,7 @@ Bit32u crc32(const Bit8u *buf, int len);
 
 extern Bit32u dbg_cpu;
 
-void dbg_printf(const char *fmt, ...);
+BOCHSAPI_MSVCONLY void dbg_printf(const char *fmt, ...);
 
 typedef enum
 {
@@ -69,7 +69,7 @@ extern "C" {
 };
 
 // register function for 'info device' command
-bool bx_dbg_register_debug_info(const char *devname, void *dev);
+BOCHSAPI_MSVCONLY bool bx_dbg_register_debug_info(const char *devname, void *dev);
 
 #define EMPTY_ARG (-1)
 
@@ -228,9 +228,9 @@ typedef enum {
 #define BX_DBG_PENDING_DMA 1
 #define BX_DBG_PENDING_IRQ 2
 
-void bx_debug_break(void);
+BOCHSAPI_MSVCONLY void bx_debug_break(void);
 
-void bx_dbg_exit(int code);
+BOCHSAPI_MSVCONLY void bx_dbg_exit(int code);
 #if BX_DBG_EXTENSIONS
     int bx_dbg_extensions(char *command);
 #else
@@ -344,7 +344,7 @@ extern unsigned num_write_watchpoints;
 extern unsigned num_read_watchpoints;
 extern bx_watchpoint write_watchpoint[BX_DBG_MAX_WATCHPONTS];
 extern bx_watchpoint read_watchpoint[BX_DBG_MAX_WATCHPONTS];
-extern bx_guard_t bx_guard;
+BOCHSAPI_MSVCONLY extern bx_guard_t bx_guard;
 
 #define IS_CODE_32(code_32_64) ((code_32_64 & 1) != 0)
 #define IS_CODE_64(code_32_64) ((code_32_64 & 2) != 0)
@@ -368,8 +368,8 @@ typedef struct {
   Bit16u limit;
 } bx_dbg_global_sreg_t;
 
-void bx_dbg_dma_report(bx_phy_address addr, unsigned len, unsigned what, Bit32u val);
-void bx_dbg_iac_report(unsigned vector, unsigned irq);
+BOCHSAPI_MSVCONLY void bx_dbg_dma_report(bx_phy_address addr, unsigned len, unsigned what, Bit32u val);
+BOCHSAPI_MSVCONLY void bx_dbg_iac_report(unsigned vector, unsigned irq);
 void bx_dbg_a20_report(unsigned val);
 void bx_dbg_io_report(Bit32u port, unsigned size, unsigned op, Bit32u val);
 void bx_dbg_disassemble_current(int which_cpu, int print_time);

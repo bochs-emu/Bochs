@@ -69,14 +69,21 @@
   <PropertyGroup>
     <_ProjectFileVersion>12.0.21005.1</_ProjectFileVersion>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>.\..\obj-debug\gui\</OutDir>
+    <IntDir>.\..\obj-debug\gui\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>.\..\obj-debug\gui\</OutDir>
+    <IntDir>.\..\obj-debug\gui\</IntDir>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\..\obj-release\</OutDir>
+    <OutDir>.\..\obj-release\gui\</OutDir>
     <IntDir>.\..\obj-release\gui\</IntDir>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\..\obj-debug\</OutDir>
-    <IntDir>.\..\obj-debug\gui\</IntDir>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>.\..\obj-release\gui\</OutDir>
+    <IntDir>.\..\obj-release\gui\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <BuildLog>
@@ -221,6 +228,7 @@
     <ClCompile Include="..\gui\win32_enh_dbg_osdep.cc" />
     <ClCompile Include="..\gui\win32config.cc" />
     <ClCompile Include="..\gui\win32paramdlg.cc" />
+    <ClCompile Include="..\gui\win32usb.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\gui\enh_dbg.h" />
@@ -236,6 +244,8 @@
     <ClInclude Include="..\gui\win32dialog.h" />
     <ClInclude Include="..\gui\win32paramdlg.h" />
     <ClInclude Include="..\gui\win32res.h" />
+    <ClInclude Include="..\gui\win32usb.h" />
+    <ClInclude Include="..\gui\win32usbres.h" />
     <ClInclude Include="..\iodev\iodev.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

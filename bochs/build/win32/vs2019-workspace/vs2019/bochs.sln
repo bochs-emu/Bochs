@@ -6,6 +6,7 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bochs", "bochs.vcxproj", "{A09427D6-1B00-4416-9B29-20E659ED2606}"
 	ProjectSection(ProjectDependencies) = postProject
 		{57A4215B-7E87-447A-A0F4-5BBC0866A3D8} = {57A4215B-7E87-447A-A0F4-5BBC0866A3D8}
+		{BDA1EB83-D53E-41A7-825F-0EFDC3D643E3} = {BDA1EB83-D53E-41A7-825F-0EFDC3D643E3}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bx_debug", "bx_debug.vcxproj", "{88F11CBB-D14A-4981-A91A-BFE987C756E8}"
@@ -44,6 +45,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "avx", "avx.vcxproj", "{57A4215B-7E87-447A-A0F4-5BBC0866A3D8}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bxhub", "bxhub.vcxproj", "{AD9F8A93-9C9B-4A46-8A13-9113D72FD24A}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "softfloat3e", "softfloat3e.vcxproj", "{BDA1EB83-D53E-41A7-825F-0EFDC3D643E3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -197,6 +200,14 @@ Global
 		{AD9F8A93-9C9B-4A46-8A13-9113D72FD24A}.Release|Win32.Build.0 = Release|Win32
 		{AD9F8A93-9C9B-4A46-8A13-9113D72FD24A}.Release|x64.ActiveCfg = Release|x64
 		{AD9F8A93-9C9B-4A46-8A13-9113D72FD24A}.Release|x64.Build.0 = Release|x64
+		{BDA1EB83-D53E-41A7-825F-0EFDC3D643E3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BDA1EB83-D53E-41A7-825F-0EFDC3D643E3}.Debug|Win32.Build.0 = Debug|Win32
+		{BDA1EB83-D53E-41A7-825F-0EFDC3D643E3}.Debug|x64.ActiveCfg = Debug|x64
+		{BDA1EB83-D53E-41A7-825F-0EFDC3D643E3}.Debug|x64.Build.0 = Debug|x64
+		{BDA1EB83-D53E-41A7-825F-0EFDC3D643E3}.Release|Win32.ActiveCfg = Release|Win32
+		{BDA1EB83-D53E-41A7-825F-0EFDC3D643E3}.Release|Win32.Build.0 = Release|Win32
+		{BDA1EB83-D53E-41A7-825F-0EFDC3D643E3}.Release|x64.ActiveCfg = Release|x64
+		{BDA1EB83-D53E-41A7-825F-0EFDC3D643E3}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

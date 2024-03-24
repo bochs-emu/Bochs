@@ -69,14 +69,21 @@
   <PropertyGroup>
     <_ProjectFileVersion>12.0.21005.1</_ProjectFileVersion>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>.\..\obj-debug\iodev\</OutDir>
+    <IntDir>.\..\obj-debug\iodev\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>.\..\obj-debug\iodev\</OutDir>
+    <IntDir>.\..\obj-debug\iodev\</IntDir>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\..\obj-release\</OutDir>
+    <OutDir>.\..\obj-release\iodev\</OutDir>
     <IntDir>.\..\obj-release\iodev\</IntDir>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\..\obj-debug\</OutDir>
-    <IntDir>.\..\obj-debug\iodev\</IntDir>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>.\..\obj-release\iodev\</OutDir>
+    <IntDir>.\..\obj-release\iodev\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <BuildLog>

@@ -47,7 +47,6 @@ extFloat80_t
     uint64_t sigA;
     uint16_t uiZ64;
     uint64_t sigZ;
-    struct exp32_sig64 normExpSig;
     struct uint128 uiZ;
     uint64_t lastBitMask, roundBitsMask;
 
@@ -65,30 +64,20 @@ extFloat80_t
     sigA = a.signif;
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (!(sigA & UINT64_C(0x8000000000000000)) && (exp != 0x7FFF)) {
-        if (!sigA) {
-            return packToExtF80(signUI64, 0, 0);
+    if (0x403E <= exp) {
+        if ((exp == 0x7FFF) && (uint64_t) (sigA<<1)) {
+            uiZ = softfloat_propagateNaNExtF80UI(uiA64, sigA, 0, 0, status);
+            return packToExtF80(uiZ.v64, uiZ.v0);
         }
-        softfloat_raiseFlags(status, softfloat_flag_denormal);
-        normExpSig = softfloat_normSubnormalExtF80Sig(sigA);
-        exp += normExpSig.exp;
-        sigA = normExpSig.sig;
+        return a;
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (0x403E <= exp) {
-        if (exp == 0x7FFF) {
-            if (sigA & UINT64_C(0x7FFFFFFFFFFFFFFF)) {
-                uiZ = softfloat_propagateNaNExtF80UI(uiA64, sigA, 0, 0, status);
-                return packToExtF80(uiZ.v64, uiZ.v0);
-            }
-            sigZ = UINT64_C(0x8000000000000000);
-        } else {
-            sigZ = sigA;
-        }
-        return packToExtF80(signUI64, exp, sigZ);
-    }
     if (exp <= 0x3FFE) {
+        if (! exp) {
+            if ((sigA<<1) == 0) return a;
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
+        }
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
         switch (roundingMode) {
          case softfloat_round_near_even:
