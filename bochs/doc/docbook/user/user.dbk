@@ -141,7 +141,8 @@ active project of the week at SourceForge.
 regular basis, but a few statistics give an indication.  The &devlist;,
 which is the primary source of news on bugs and releases, has over 400
 subscribers. The latest version has been downloaded over 150,000 times
-from SourceForge, not counting any mirror website or SVN users.
+from SourceForge, not counting any mirror website or
+<ulink url="https://github.com/bochs-emu/Bochs/">GitHub</ulink> users.
 </para>
 
 <para>
@@ -968,6 +969,9 @@ See the <link linkend="get-src-svn">SVN instructions</link> for details.
 </section>  <!-- End of Installation:Downloading Bochs section -->
 
 <section id="get-src-svn"><title>Tracking the source code with SVN</title>
+<para>
+&FIXME; These sections need updates because of the transition to GitHub
+</para>
 <para>
 SVN (Subversion) is a tool used by many software developers to manage changes
 within their source code tree. SVN provides the means to store not only the
