@@ -11,8 +11,9 @@ Detailed change log :
   - Implemented AVX512_FP16 Intel instruction set based on softfloat3e library (enabled in Xeon Sapphire Rapids CPU definition)
 
 - Configure and compile
-  - Fixed compilation of debugger with plugins enabled on Windows
+  - Fixed compilation of plugin version with debugger enabled on Windows
   - Removed legacy libltdl code and force using library installed on host system
+  - GTK-based gui debugger can now use GTK3 if GTK2 is not installed
 
 - I/O Devices
   - USB

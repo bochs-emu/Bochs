@@ -26225,6 +26225,13 @@ if test "$needs_gtk2" = 1; then
         TOOLKIT_CXXFLAGS="`pkg-config --cflags gtk+-2.0`"
         LIBS="$LIBS `pkg-config --libs gtk+-2.0`"
         bx_have_gtk_version=2
+      else
+        pkg-config --exists gtk+-3.0
+        if test x$? = x0; then
+          TOOLKIT_CXXFLAGS="`pkg-config --cflags gtk+-3.0`"
+          LIBS="$LIBS `pkg-config --libs gtk+-3.0`"
+          bx_have_gtk_version=3
+        fi
       fi
     fi
   else
