@@ -1292,6 +1292,23 @@ if test "$support_uintr" -gt 0 -a "$use_x86_64" = 0; then
   AC_MSG_ERROR([User Level Interrupt feature emulation require x86-64 enabled])
 fi
 
+AC_MSG_CHECKING(for KeyLocker support)
+AC_ARG_ENABLE(keylocker,
+  AS_HELP_STRING([--enable-keylocker], [Keylocker support (no - incomplete)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_KEYLOCKER, 1)
+   elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_KEYLOCKER, 0)
+   fi
+   ],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_KEYLOCKER, 0)
+  ]
+  )
+
 AC_MSG_CHECKING(for 3DNow! support)
 AC_ARG_ENABLE(3dnow,
   AS_HELP_STRING([--enable-3dnow], [3DNow! support (no - incomplete)]),
