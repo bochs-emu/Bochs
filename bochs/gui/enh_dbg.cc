@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2021  The Bochs Project
+//  Copyright (C) 2008-2024  The Bochs Project
 
 #include "config.h"
 
@@ -237,6 +237,7 @@ unsigned short RWPSnapCount;
 bx_phy_address WWP_Snapshot[16];
 bx_phy_address RWP_Snapshot[16];
 
+char ini_path[BX_PATHNAME_LEN];
 char *debug_cmd;
 bool debug_cmd_ready;
 bool vgaw_refresh;
@@ -3456,17 +3457,42 @@ static size_t strip_whitespace(char *s)
   return ptr;
 }
 
+static void get_bxshare_path(char *path)
+{
+  const char *varptr = NULL;
+
+#if BX_HAVE_GETENV
+  varptr = getenv("BXSHARE");
+#endif
+  if (varptr != NULL) {
+    sprintf(path, "%s", varptr);
+  } else {
+    varptr = get_builtin_variable("BXSHARE");
+    if (varptr != NULL) {
+      sprintf(path, "%s", varptr);
+    } else {
+      strcpy(path, ".");
+    }
+  }
+}
+
 void ReadSettings()
 {
   FILE *fd = NULL;
-  char line[512];
+  char line[512], path[BX_PATHNAME_LEN];
   char *ret, *param, *val;
   bool format_checked = 0;
   size_t len1 = 0, len2;
   int i;
 
-  fd = fopen("bx_enh_dbg.ini", "r");
-  if (fd == NULL) return;
+  get_bxshare_path(path);
+  sprintf(ini_path, "%s/bx_enh_dbg.ini", path);
+  fd = fopen(ini_path, "r");
+  if (fd == NULL) {
+    strcpy(ini_path, "bx_enh_dbg.ini");
+    fd = fopen(ini_path, "r");
+    if (fd == NULL) return;
+  }
   do {
     ret = fgets(line, sizeof(line)-1, fd);
     line[sizeof(line) - 1] = '\0';
@@ -3551,7 +3577,7 @@ void WriteSettings()
   FILE *fd = NULL;
   int i;
 
-  fd = fopen("bx_enh_dbg.ini", "w");
+  fd = fopen(ini_path, "w");
   if (fd == NULL) return;
   fprintf(fd, "# bx_enh_dbg_ini\n");
   for (i = 0; i < 8; i++) {
