@@ -115,9 +115,9 @@ BOCHSAPI_MSVCONLY Bit8u reverse_bitorder(Bit8u);
 BOCHSAPI extern class bx_gui_c *bx_gui;
 
 #if BX_SUPPORT_X86_64
-  #define BOCHS_WINDOW_NAME "Bochs x86-64 emulator, http://bochs.sourceforge.net/"
+  #define BOCHS_WINDOW_NAME "Bochs x86-64 emulator, https://bochs.sourceforge.io/"
 #else
-  #define BOCHS_WINDOW_NAME "Bochs x86 emulator, http://bochs.sourceforge.net/"
+  #define BOCHS_WINDOW_NAME "Bochs x86 emulator, https://bochs.sourceforge.io/"
 #endif
 
 // The bx_gui_c class provides data and behavior that is common to

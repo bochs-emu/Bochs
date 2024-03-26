@@ -130,9 +130,9 @@ The last version of Bochs that he released was 3/25/2000, three days after the
 Mandrake press release.
 -->
 In March 2001, Kevin helped a few developers to move all Bochs activities from
-bochs.com to a new site at <ulink url="http://bochs.sourceforge.net"></ulink>.  Since then the Bochs project
-has settled into its new home, and around release times has even hit #1 most
-active project of the week at SourceForge.
+bochs.com to a new site at <ulink url="http://bochs.sourceforge.net"></ulink>.
+Since then the Bochs project has settled into its new home, and around release
+times has even hit #1 most active project of the week at SourceForge.
 </para>
 </section><!-- end: What is Bochs? -->
 
@@ -918,7 +918,10 @@ need to choose what version to get: a recent release or a development
 version.  If you trying to get things working for the first time, a release
 version is recommended since it has been tested the most.  The development
 versions may have some newer bug fixes and new features, but have not been
-tested as much as the releases.
+tested as much as the releases. A snapshot of the current state of the source
+tree in ZIP format is available on
+<ulink url="https://github.com/bochs-emu/Bochs/">GitHub</ulink> when you press
+the <command>Code</command> button.
 </para>
 
 <para>
@@ -976,7 +979,7 @@ The Bochs source code and documentation is available using GIT<footnote>
 You can download GIT software and documentation from
 <ulink url="https://git-scm.com/">git-scm.com</ulink>.
 </para>
-</footnote> on <ulink url="https://github.com/bochs-emu/Bochs/">GitHub</ulink>.
+</footnote> hostet on <ulink url="https://github.com/bochs-emu/Bochs/">GitHub</ulink>.
 </para>
 
 <section><title>Checking out Bochs</title>
@@ -1296,9 +1299,10 @@ The <replaceable>tagname</replaceable> tells which release you want, and it can 
 
 </section>
 
-<section><title>More about GIT</title>
+<section><title>More about GIT and GitHub</title>
 <para>
-&FIXME;
+The official GIT documentation can be found at <ulink url="https://git-scm.com/doc"></ulink>
+and the official GitHub docs are located at <ulink url="https://docs.github.com/en"></ulink>.
 </para>
 
 </section>
@@ -1319,8 +1323,9 @@ is different on different platforms.
 The Bochs binaries for Windows are distributed in an EXE installer package.
 The Bochs installer can be started like any other Windows program and it brings
 up the installation wizard. Here you can select the destination folder and the
-installation options. The wizard installs the files and creates the registry
-keys, start menu and desktop links.
+installation options. If an older Bochs version is installed, you'll be asked
+to uninstall it before installing the new version. The wizard installs the files
+and creates the registry keys, start menu and desktop links.
 </para>
 <para>
 Previous releases of Bochs were distributed as ZIP packages, too. These packages
@@ -1387,7 +1392,7 @@ DLX Linux screenshot.
 <row><entry>dlxlinux\testform.txt </entry> <entry> Form for reporting success or failure </entry> </row>
 <row>
   <entry>doc\index.html</entry>
-  <entry>a local copy of all Bochs documentation (<ulink url="http://bochs.sourceforge.net/doc/docbook/index.html">online copy</ulink>)</entry>
+  <entry>a local copy of all Bochs documentation (<ulink url="https://bochs.sourceforge.io/doc/docbook/index.html">online copy</ulink>)</entry>
 </row>
 <row><entry>keymaps\*.map </entry> <entry>keymap tables (on Windows used for the paste feature only) </entry> </row>
 </tbody>
@@ -1448,8 +1453,8 @@ anyway, but if it is missing important pieces, it may not run properly.
 </para>
 
 <para>
-The Bochs RPM installs five new commands and associated manual pages: bochs,
-bochs-dlx and bximage.  First, let's try out the
+The Bochs RPM installs four new commands and associated manual pages: bochs,
+bochs-dlx, bxhub and bximage.  First, let's try out the
 DLX Linux demo by typing <command>bochs-dlx</command>.
 
 <screen>
@@ -1550,7 +1555,7 @@ description of each one.
 <row><entry>/usr/share/doc/bochs/LICENSE</entry> <entry> Bochs license information </entry> </row>
 <row><entry>/usr/share/doc/bochs/README</entry> <entry> the read-me file from the source distribution. </entry> </row>
 <row><entry>/usr/share/doc/bochs/TODO</entry> <entry> the TODO file from the source distribution. </entry> </row>
-<row><entry>/usr/share/doc/bochs/index.html</entry> <entry> a local copy of all Bochs documentation ( <ulink url="http://bochs.sourceforge.net/doc/docbook/index.html">Online copy</ulink> )</entry> </row>
+<row><entry>/usr/share/doc/bochs/index.html</entry> <entry> a local copy of all Bochs documentation ( <ulink url="https://bochs.sourceforge.io/doc/docbook/index.html">Online copy</ulink> )</entry> </row>
 <row><entry>/usr/share/doc/bochs/slirp.conf </entry> <entry> sample config file for the advanced 'slirp' network configuration </entry> </row>
 <row><entry>/usr/share/doc/bochs/vnet.conf </entry> <entry> sample config file for the advanced 'vnet' network configuration </entry> </row>
 <row><entry>/usr/share/bochs/BIOS-bochs-latest </entry> <entry> default ROM BIOS image for Bochs </entry> </row>
@@ -2438,7 +2443,7 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
       features of the debugger.  You only want this option if you are
       developing guest OS code for use in Bochs.  In other words, most people
       don't.  Also, it should only be used with <option>--enable-debugger</option>.
-      See the <ulink url="http://bochs.sourceforge.net/doc/docbook/development/iodebug.html">
+      See the <ulink url="https://bochs.sourceforge.io/doc/docbook/development/iodebug.html">
       developer documentation</ulink> for details.
       </entry>
     </row>
@@ -3083,7 +3088,7 @@ instructions given in <xref linkend="keymap">.
 
 <para>
 A collection of disk images of different operating systems can be found at
-<ulink url="http://bochs.sourceforge.net/diskimages.html"></ulink>. Some disk
+<ulink url="https://bochs.sourceforge.io/diskimages.html"></ulink>. Some disk
 images are the size of a floppy disk (1 meg compressed) and others are gigantic
 (160 meg compressed). If you want to create a disk image yourself, please see
 <xref linkend="diskimagehowto">.
@@ -8557,7 +8562,7 @@ The partition size reported by fdisk is okay, but mformat reports only 504 MB
 <para>
 Mtools is a set of programs that can read, write, and format DOS disk images.
 There are links to the Mtools main page and a Win32 port of Mtools on the
-<ulink url="http://bochs.sourceforge.net/links.html">Bochs Links page</ulink>,
+<ulink url="https://bochs.sourceforge.io/links.html">Bochs Links page</ulink>,
 under Resources.
 </para>
 <para>
@@ -9420,8 +9425,8 @@ Hitting ^C works. Example:
         This section describes what is possible to do with Bochs serial port emulation.
         These examples use dlxlinux disk image
         (downloaded from
-        <ulink url="http://bochs.sourceforge.net/guestos/dlxlinux4.tar.gz">
-        http://bochs.sourceforge.net/guestos/dlxlinux3.tar.gz</ulink>
+        <ulink url="https://bochs.sourceforge.io/guestos/dlxlinux4.tar.gz">
+        https://bochs.sourceforge.io/guestos/dlxlinux4.tar.gz</ulink>
         ) running as guest, on a debian x86 linux 2.4.19 host.
 </para>
 <para>
@@ -9564,7 +9569,7 @@ A bootable CD-ROM has a special layout that is detected by the
 BIOS boot loader code, and executed if it conforms the specifications.
 This layout is called "El Torito Bootable CD-ROM Format Specification"
 and has been published by Phoenix and IBM. A copy of this spec is on
-<ulink url="http://bochs.sourceforge.net/techdata.html">Bochs tech specs page</ulink>.
+<ulink url="https://bochs.sourceforge.io/techdata.html">Bochs tech specs page</ulink>.
         </para>
         <para>
 El Torito specifies 3 ways to have a bootable CD:
