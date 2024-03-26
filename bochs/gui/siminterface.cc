@@ -571,7 +571,7 @@ const char *floppy_devtype_names[] = { "none", "5.25\" 360K", "5.25\" 1.2M", "3.
 const char *floppy_type_names[] = { "none", "1.2M", "1.44M", "2.88M", "720K", "360K", "160K", "180K", "320K", "auto", NULL };
 int floppy_type_n_sectors[] = { -1, 80*2*15, 80*2*18, 80*2*36, 80*2*9, 40*2*9, 40*1*8, 40*1*9, 40*2*8, -1 };
 const char *media_status_names[] = { "ejected", "inserted", NULL };
-const char *bochs_bootdisk_names[] = { "none", "floppy", "disk","cdrom", "network", NULL };
+const char *bochs_bootdisk_names[] = { "none", "floppy", "disk", "cdrom", "usb", "network", NULL };
 
 void bx_real_sim_c::set_notify_callback(bxevent_handler func, void *arg)
 {
