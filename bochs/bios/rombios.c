@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -10752,6 +10752,10 @@ pnpbios_exit:
   pop ebp
   retf
 
+vga_rom_error_msg:
+  .ascii "No VGABIOS ROM at C000:0000h! Legacy BIOS does not support PCI ROM!\n"
+  db 0x00
+
 rom_scan:
   ;; Scan for existence of valid expansion ROMS.
   ;;   Video ROM:   from 0xC0000..0xC7FFF in 2k increments
@@ -11208,6 +11212,19 @@ normal_post:
 #if BX_PCIBIOS
   call pcibios_init_iomem_bases
   call pcibios_init_irqs
+  ;; Hack fix: Legacy BIOS cannot initialize PCI VGA ROM
+  push ds
+  mov  ax, #0xc000
+  mov  ds, ax
+  xor  bx, bx
+  cmp  [bx], #0xaa55
+  je   vga_rom_ok
+  push #vga_rom_error_msg
+  push #BIOS_PRINTF_DEBHALT
+  call _bios_printf
+  add  sp, #4
+vga_rom_ok:
+  pop  ds
 #endif //BX_PCIBIOS
 #endif
 
