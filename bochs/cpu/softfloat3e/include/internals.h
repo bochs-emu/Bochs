@@ -70,9 +70,6 @@ struct exp8_sig16 softfloat_normSubnormalF16Sig(uint16_t);
 float16_t softfloat_roundPackToF16(bool, int16_t, uint16_t, struct softfloat_status_t *);
 float16_t softfloat_normRoundPackToF16(bool, int16_t, uint16_t, struct softfloat_status_t *);
 
-float16_t
- softfloat_mulAddF16(uint16_t, uint16_t, uint16_t, uint8_t, struct softfloat_status_t *);
-
 /*----------------------------------------------------------------------------
 *----------------------------------------------------------------------------*/
 #define signF32UI(a) ((bool) ((uint32_t) (a)>>31))
@@ -88,9 +85,6 @@ struct exp16_sig32 softfloat_normSubnormalF32Sig(uint32_t);
 float32_t softfloat_roundPackToF32(bool, int16_t, uint32_t, struct softfloat_status_t *);
 float32_t softfloat_normRoundPackToF32(bool, int16_t, uint32_t, struct softfloat_status_t *);
 
-float32_t
- softfloat_mulAddF32(uint32_t, uint32_t, uint32_t, uint8_t, struct softfloat_status_t *);
-
 /*----------------------------------------------------------------------------
 *----------------------------------------------------------------------------*/
 #define signF64UI(a) ((bool) ((uint64_t) (a)>>63))
@@ -105,9 +99,6 @@ struct exp16_sig64 softfloat_normSubnormalF64Sig(uint64_t);
 
 float64_t softfloat_roundPackToF64(bool, int16_t, uint64_t, struct softfloat_status_t *);
 float64_t softfloat_normRoundPackToF64(bool, int16_t, uint64_t, struct softfloat_status_t *);
-
-float64_t
- softfloat_mulAddF64(uint64_t, uint64_t, uint64_t, uint8_t, struct softfloat_status_t *);
 
 /*----------------------------------------------------------------------------
 *----------------------------------------------------------------------------*/
@@ -147,16 +138,5 @@ float128_t
  softfloat_roundPackToF128(bool, int32_t, uint64_t, uint64_t, uint64_t, struct softfloat_status_t *);
 float128_t
  softfloat_normRoundPackToF128(bool, int32_t, uint64_t, uint64_t, struct softfloat_status_t *);
-
-float128_t
- softfloat_mulAddF128(
-     uint64_t,
-     uint64_t,
-     uint64_t,
-     uint64_t,
-     uint64_t,
-     uint64_t,
-     uint8_t,
-     struct softfloat_status_t *status);
 
 #endif
