@@ -325,14 +325,14 @@ invalid:
         // first order approximation, return (a*b)/ln(2)
         Bit32s zExp = aExp + FLOAT_LN2INV_EXP - 0x3FFE;
 
-	mul128By64To192(FLOAT_LN2INV_HI, FLOAT_LN2INV_LO, aSig, &zSig0, &zSig1, &zSig2);
+        mul128By64To192(FLOAT_LN2INV_HI, FLOAT_LN2INV_LO, aSig, &zSig0, &zSig1, &zSig2);
         if (0 < (Bit64s) zSig0) {
             shortShift128Left(zSig0, zSig1, 1, &zSig0, &zSig1);
             --zExp;
         }
 
         zExp = zExp + bExp - 0x3FFE;
-	mul128By64To192(zSig0, zSig1, bSig, &zSig0, &zSig1, &zSig2);
+        mul128By64To192(zSig0, zSig1, bSig, &zSig0, &zSig1, &zSig2);
         if (0 < (Bit64s) zSig0) {
             shortShift128Left(zSig0, zSig1, 1, &zSig0, &zSig1);
             --zExp;
