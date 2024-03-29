@@ -1671,10 +1671,12 @@ bool bx_gui_c::parse_common_gui_options(const char *arg, Bit8u flags)
     BX_INFO(("enabled command mode support"));
     command_mode.present = 1;
     return true;
+#if BX_USE_GUI_CONSOLE
   } else if (!strcmp(arg, "no_gui_console") && (flags & BX_GUI_OPT_NO_GUI_CONSOLE)) {
     BX_INFO(("use system console instead of gui console"));
     console.present = 0;
     return true;
+#endif
   }
   return false;
 }
