@@ -176,7 +176,7 @@ static unsigned stretch_factor;
 static BOOL fix_size = FALSE;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
 static BOOL gui_debug = FALSE;
-static BOOL enh_dbg_global_ini = FALSE;
+static BOOL win32_enh_dbg_global_ini = FALSE;
 #endif
 static HWND hotKeyReceiver = NULL;
 static HWND saveParent = NULL;
@@ -659,50 +659,35 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   mouseToggleReq = FALSE;
 
   // parse win32 specific options
+  Bit8u flags = BX_GUI_OPT_NOKEYREPEAT | BX_GUI_OPT_HIDE_IPS  | BX_GUI_OPT_CMDMODE;
   if (argc > 1) {
     for (i = 1; i < argc; i++) {
-      BX_INFO(("option %d: %s", i, argv[i]));
-      if (!strcmp(argv[i], "nokeyrepeat")) {
-        BX_INFO(("disabled host keyboard repeat"));
-        win32_nokeyrepeat = 1;
-      } else if (!strcmp(argv[i], "traphotkeys")) {
-        BX_INFO(("trap system hotkeys for Bochs window"));
-        win32_traphotkeys = 1;
-      } else if (!strncmp(argv[i], "gui_debug", 9)) {
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
-        if (gui_ci) {
-          gui_debug = TRUE;
-          SIM->set_debug_gui(1);
-          if ((strlen(argv[i]) > 9) && (argv[i][9] == ':')) {
-            if (!strcmp(&argv[i][10], "globalini")) {
-              enh_dbg_global_ini = TRUE;
-              BX_INFO(("Debugger gui using global config from BXSHARE path"));
-            } else {
-              BX_ERROR(("Ignoring unknown setting '%s' for gui debugger", &argv[i][10]));
-            }
-          } else if (strlen(argv[i]) > 9) {
-            BX_PANIC(("Unknown win32 option '%s'", argv[i]));
-          }
+      if (!parse_common_gui_options(argv[i], flags)) {
+        if (!strcmp(argv[i], "traphotkeys")) {
+          BX_INFO(("trap system hotkeys for Bochs window"));
+          win32_traphotkeys = 1;
+        } else if (!strcmp(argv[i], "autoscale")) {
+          win32_autoscale = 1;
         } else {
-          BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
+          BX_PANIC(("Unknown win32 option '%s'", argv[i]));
         }
-#else
-        SIM->message_box("ERROR", "Bochs debugger not available - ignoring 'gui_debug' option");
-#endif
-#if BX_SHOW_IPS
-      } else if (!strcmp(argv[i], "hideIPS")) {
-        BX_INFO(("hide IPS display in status bar"));
-        hideIPS = TRUE;
-#endif
-      } else if (!strcmp(argv[i], "cmdmode")) {
-        command_mode.present = 1;
-      } else if (!strcmp(argv[i], "autoscale")) {
-        win32_autoscale = 1;
-      } else {
-        BX_PANIC(("Unknown win32 option '%s'", argv[i]));
       }
     }
   }
+
+  win32_nokeyrepeat = gui_nokeyrepeat;
+  hideIPS = gui_hide_ips;
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+  if (enh_dbg_gui_enabled) {
+    if (gui_ci) {
+      gui_debug = TRUE;
+      SIM->set_debug_gui(1);
+      win32_enh_dbg_global_ini = enh_dbg_global_ini;
+    } else {
+      BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
+    }
+  }
+#endif
 
   mouse_buttons = GetSystemMetrics(SM_CMOUSEBUTTONS);
   BX_INFO(("Number of Mouse Buttons = %d", mouse_buttons));
@@ -1042,7 +1027,7 @@ DWORD WINAPI UIThread(LPVOID)
       ShowWindow(stInfo.mainWnd, SW_SHOW);
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
       if (gui_debug) {
-        bx_gui->init_debug_dialog(enh_dbg_global_ini);
+        bx_gui->init_debug_dialog(win32_enh_dbg_global_ini);
       }
 #endif
 #if BX_SHOW_IPS

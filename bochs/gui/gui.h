@@ -87,6 +87,12 @@
   #define BX_USB_DEBUG_SOF_TRIGGER   2
 #endif
 
+// display library option flags
+#define BX_GUI_OPT_HIDE_IPS       0x01
+#define BX_GUI_OPT_NOKEYREPEAT    0x02
+#define BX_GUI_OPT_CMDMODE        0x04
+#define BX_GUI_OPT_NO_GUI_CONSOLE 0x08
+
 typedef struct {
   Bit16u  start_address;
   Bit8u   cs_start;
@@ -271,6 +277,7 @@ protected:
 #else
   void console_cleanup(void) {}
 #endif
+  bool parse_common_gui_options(const char *arg, Bit8u flags);
 
   // header bar buttons
   bool floppyA_status;
@@ -393,6 +400,15 @@ protected:
   } command_mode;
   bool fullscreen_mode;
   Bit32u marker_count;
+  // display library options
+#if BX_SHOW_IPS
+  bool gui_hide_ips;
+#endif
+  bool gui_nokeyrepeat;
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+  bool enh_dbg_gui_enabled;
+  bool enh_dbg_global_ini;
+#endif
 };
 
 

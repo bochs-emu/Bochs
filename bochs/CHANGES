@@ -15,6 +15,10 @@ Detailed change log :
   - Removed legacy libltdl code and force using library installed on host system
   - GTK-based gui debugger can now use GTK3 if GTK2 is not installed
 
+- GUI and display libraries
+  - Debugger gui can now use ini file from BXSHARE path when using gui option
+    extension "gui_debug:globalini" (sdl, sdl2, win32, x11)
+
 - I/O Devices
   - USB
     - Now includes the USB Debugger support for the xHCI and UHCI controllers

@@ -110,10 +110,12 @@ static unsigned statusitem_pos[12] = {
 };
 static bool statusitem_active[12];
 #if BX_SHOW_IPS
-static bool sdl_hide_ips = 0;
 static bool sdl_ips_update = 0;
 static char sdl_ips_text[20];
 static bool sdl_show_info_msg = 0;
+#endif
+#if defined(WIN32) && BX_DEBUGGER && BX_DEBUGGER_GUI
+bool sdl_enh_dbg_global_ini;
 #endif
 
 
@@ -375,7 +377,7 @@ DWORD WINAPI DebugGuiThread(LPVOID)
 {
   MSG msg;
 
-  bx_gui->init_debug_dialog(0);
+  bx_gui->init_debug_dialog(sdl_enh_dbg_global_ini);
   while (GetMessage(&msg, NULL, 0, 0)) {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
@@ -475,45 +477,42 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   }
 
   // parse sdl specific options
+  Bit8u flags = BX_GUI_OPT_NOKEYREPEAT | BX_GUI_OPT_HIDE_IPS  | BX_GUI_OPT_CMDMODE
+                | BX_GUI_OPT_NO_GUI_CONSOLE;
   if (argc > 1) {
     for (i = 1; i < argc; i++) {
-      if (!strcmp(argv[i], "fullscreen")) {
-        sdl_fullscreen_toggle = 1;
-        switch_to_fullscreen();
-      } else if (!strcmp(argv[i], "nokeyrepeat")) {
-        BX_INFO(("disabled host keyboard repeat"));
-        SDL_EnableKeyRepeat(0, 0);
-      } else if (!strcmp(argv[i], "gui_debug")) {
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
-        SIM->set_debug_gui(1);
-#ifdef WIN32
-        if (gui_ci) {
-          // on Windows the debugger gui must run in a separate thread
-          DWORD threadID;
-          CreateThread(NULL, 0, DebugGuiThread, NULL, 0, &threadID);
+      if (!parse_common_gui_options(argv[i], flags)) {
+        if (!strcmp(argv[i], "fullscreen")) {
+          sdl_fullscreen_toggle = 1;
+          switch_to_fullscreen();
         } else {
-          BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
+          BX_PANIC(("Unknown sdl option '%s'", argv[i]));
         }
-#else
-        init_debug_dialog(0);
-#endif
-#else
-        SIM->message_box("ERROR", "Bochs debugger not available - ignoring 'gui_debug' option");
-#endif
-#if BX_SHOW_IPS
-      } else if (!strcmp(argv[i], "hideIPS")) {
-        BX_INFO(("hide IPS display in status bar"));
-        sdl_hide_ips = 1;
-#endif
-      } else if (!strcmp(argv[i], "cmdmode")) {
-        command_mode.present = 1;
-      } else if (!strcmp(argv[i], "no_gui_console")) {
-        console.present = 0;
-      } else {
-        BX_PANIC(("Unknown sdl option '%s'", argv[i]));
       }
     }
   }
+
+  if (gui_nokeyrepeat) {
+    SDL_EnableKeyRepeat(0, 0);
+  }
+
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+  if (enh_dbg_gui_enabled) {
+    SIM->set_debug_gui(1);
+#ifdef WIN32
+    if (gui_ci) {
+      sdl_enh_dbg_global_ini = enh_dbg_global_ini;
+      // on Windows the debugger gui must run in a separate thread
+      DWORD threadID;
+      CreateThread(NULL, 0, DebugGuiThread, NULL, 0, &threadID);
+    } else {
+      BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
+    }
+#else
+    init_debug_dialog(enh_dbg_global_ini);
+#endif
+  }
+#endif
 
   new_gfx_api = 1;
   new_text_api = 1;
@@ -1432,7 +1431,7 @@ void bx_sdl_gui_c::set_mouse_mode_absxy(bool mode)
 #if BX_SHOW_IPS
 void bx_sdl_gui_c::show_ips(Bit32u ips_count)
 {
-  if (!sdl_hide_ips && !sdl_ips_update) {
+  if (!gui_hide_ips && !sdl_ips_update) {
     ips_count /= 1000;
     sprintf(sdl_ips_text, "IPS: %u.%3.3uM", ips_count / 1000, ips_count % 1000);
     sdl_ips_update = 1;

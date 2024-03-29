@@ -1636,3 +1636,45 @@ void bx_gui_c::set_command_mode(bool active)
     command_mode.active = active;
   }
 }
+
+bool bx_gui_c::parse_common_gui_options(const char *arg, Bit8u flags)
+{
+  if (!strcmp(arg, "nokeyrepeat") && (flags & BX_GUI_OPT_NOKEYREPEAT)) {
+    BX_INFO(("disabled host keyboard repeat"));
+    gui_nokeyrepeat = 1;
+    return true;
+  } else if (!strncmp(arg, "gui_debug", 9)) {
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+    enh_dbg_gui_enabled = 1;
+    enh_dbg_global_ini = 0;
+    if ((strlen(arg) > 9) && (arg[9] == ':')) {
+      if (!strcmp(&arg[10], "globalini")) {
+        enh_dbg_global_ini = 1;
+        BX_INFO(("Debugger gui using global config from BXSHARE path"));
+      } else {
+        BX_ERROR(("Ignoring unknown setting '%s' for gui debugger", &arg[10]));
+      }
+    } else if (strlen(arg) > 9) {
+      return false;
+    }
+    return true;
+#else
+    SIM->message_box("ERROR", "Bochs debugger not available - ignoring 'gui_debug' option");
+#endif
+#if BX_SHOW_IPS
+  } else if (!strcmp(arg, "hideIPS") && (flags & BX_GUI_OPT_HIDE_IPS)) {
+    BX_INFO(("hide IPS display in status bar"));
+    gui_hide_ips = 1;
+    return true;
+#endif
+  } else if (!strcmp(arg, "cmdmode") && (flags & BX_GUI_OPT_CMDMODE)) {
+    BX_INFO(("enabled command mode support"));
+    command_mode.present = 1;
+    return true;
+  } else if (!strcmp(arg, "no_gui_console") && (flags & BX_GUI_OPT_NO_GUI_CONSOLE)) {
+    BX_INFO(("use system console instead of gui console"));
+    console.present = 0;
+    return true;
+  }
+  return false;
+}
