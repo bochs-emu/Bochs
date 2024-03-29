@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -967,7 +967,7 @@ DWORD WINAPI DebugGuiThread(LPVOID)
 {
   MSG msg;
 
-  bx_gui->init_debug_dialog();
+  bx_gui->init_debug_dialog(0);
   while (GetMessage(&msg, NULL, 0, 0)) {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
@@ -1054,7 +1054,7 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   CreateThread(NULL, 0, DebugGuiThread, NULL, 0, &threadID);
 #else
   wxMutexGuiEnter();
-  init_debug_dialog();
+  init_debug_dialog(0);
   wxMutexGuiLeave();
 #endif
 #endif

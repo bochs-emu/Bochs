@@ -1080,10 +1080,10 @@ Bit8u bx_gui_c::get_mouse_headerbar_id()
 }
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
-void bx_gui_c::init_debug_dialog()
+void bx_gui_c::init_debug_dialog(bool global_ini)
 {
-  extern void InitDebugDialog();
-  InitDebugDialog();
+  extern void InitDebugDialog(bool GlobalIni);
+  InitDebugDialog(global_ini);
 }
 
 void bx_gui_c::close_debug_dialog()

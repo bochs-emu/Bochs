@@ -176,6 +176,7 @@ static unsigned stretch_factor;
 static BOOL fix_size = FALSE;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
 static BOOL gui_debug = FALSE;
+static BOOL enh_dbg_global_ini = FALSE;
 #endif
 static HWND hotKeyReceiver = NULL;
 static HWND saveParent = NULL;
@@ -667,11 +668,21 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
       } else if (!strcmp(argv[i], "traphotkeys")) {
         BX_INFO(("trap system hotkeys for Bochs window"));
         win32_traphotkeys = 1;
-      } else if (!strcmp(argv[i], "gui_debug")) {
+      } else if (!strncmp(argv[i], "gui_debug", 9)) {
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
         if (gui_ci) {
           gui_debug = TRUE;
           SIM->set_debug_gui(1);
+          if ((strlen(argv[i]) > 9) && (argv[i][9] == ':')) {
+            if (!strcmp(&argv[i][10], "globalini")) {
+              enh_dbg_global_ini = TRUE;
+              BX_INFO(("Debugger gui using global config from BXSHARE path"));
+            } else {
+              BX_ERROR(("Ignoring unknown setting '%s' for gui debugger", &argv[i][10]));
+            }
+          } else if (strlen(argv[i]) > 9) {
+            BX_PANIC(("Unknown win32 option '%s'", argv[i]));
+          }
         } else {
           BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
         }
@@ -1031,7 +1042,7 @@ DWORD WINAPI UIThread(LPVOID)
       ShowWindow(stInfo.mainWnd, SW_SHOW);
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
       if (gui_debug) {
-        bx_gui->init_debug_dialog();
+        bx_gui->init_debug_dialog(enh_dbg_global_ini);
       }
 #endif
 #if BX_SHOW_IPS

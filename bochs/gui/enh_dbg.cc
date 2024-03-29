@@ -237,6 +237,7 @@ unsigned short RWPSnapCount;
 bx_phy_address WWP_Snapshot[16];
 bx_phy_address RWP_Snapshot[16];
 
+bool global_ini;
 char ini_path[BX_PATHNAME_LEN];
 char *debug_cmd;
 bool debug_cmd_ready;
@@ -3485,12 +3486,13 @@ void ReadSettings()
   size_t len1 = 0, len2;
   int i;
 
-  get_bxshare_path(path);
-  sprintf(ini_path, "%s/bx_enh_dbg.ini", path);
-  fd = fopen(ini_path, "r");
-  if (fd == NULL) {
-    strcpy(ini_path, "bx_enh_dbg.ini");
+  if (global_ini) {
+    get_bxshare_path(path);
+    sprintf(ini_path, "%s/bx_enh_dbg.ini", path);
     fd = fopen(ini_path, "r");
+  }
+  if (fd == NULL) {
+    fd = fopen("bx_enh_dbg.ini", "r");
     if (fd == NULL) return;
   }
   do {
@@ -3577,7 +3579,11 @@ void WriteSettings()
   FILE *fd = NULL;
   int i;
 
-  fd = fopen(ini_path, "w");
+  if (global_ini) {
+    fd = fopen(ini_path, "w");
+  } else {
+    fd = fopen("bx_enh_dbg.ini", "w");
+  }
   if (fd == NULL) return;
   fprintf(fd, "# bx_enh_dbg_ini\n");
   for (i = 0; i < 8; i++) {
@@ -3602,12 +3608,13 @@ void WriteSettings()
   fclose(fd);
 }
 
-void InitDebugDialog()
+void InitDebugDialog(bool GlobalIni)
 {
   // redirect notify callback to the debugger specific code
   SIM->get_notify_callback(&old_callback, &old_callback_arg);
   assert (old_callback != NULL);
   SIM->set_notify_callback(enh_dbg_notify_callback, NULL);
+  global_ini = GlobalIni;
   ReadSettings();
   DoAllInit();    // non-os-specific init stuff
   OSInit();

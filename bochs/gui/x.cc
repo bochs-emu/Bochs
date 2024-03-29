@@ -600,6 +600,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   XColor color;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
   bool x11_with_debug_gui = 0;
+  bool enh_dbg_global_ini = 0;
 #endif
 #if BX_HAVE_XRANDR_H
   int event_base, error_base;
@@ -616,9 +617,19 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
       if (!strcmp(argv[i], "nokeyrepeat")) {
         BX_INFO(("disabled host keyboard repeat"));
         x11_nokeyrepeat = 1;
-      } else if (!strcmp(argv[i], "gui_debug")) {
+      } else if (!strncmp(argv[i], "gui_debug", 9)) {
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
         x11_with_debug_gui = 1;
+        if ((strlen(argv[i]) > 9) && (argv[i][9] == ':')) {
+          if (!strcmp(&argv[i][10], "globalini")) {
+            enh_dbg_global_ini = 1;
+            BX_INFO(("Debugger gui using global config from BXSHARE path"));
+          } else {
+            BX_ERROR(("Ignoring unknown setting '%s' for gui debugger", &argv[i][10]));
+          }
+        } else if (strlen(argv[i]) > 9) {
+          BX_PANIC(("Unknown x11 option '%s'", argv[i]));
+        }
 #else
         SIM->message_box("ERROR", "Bochs debugger not available - ignoring 'gui_debug' option");
 #endif
@@ -914,7 +925,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   // initialize debugger gui
   if (x11_with_debug_gui) {
     SIM->set_debug_gui(1);
-    init_debug_dialog();
+    init_debug_dialog(enh_dbg_global_ini);
   }
 #endif
 

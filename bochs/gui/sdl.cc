@@ -375,7 +375,7 @@ DWORD WINAPI DebugGuiThread(LPVOID)
 {
   MSG msg;
 
-  bx_gui->init_debug_dialog();
+  bx_gui->init_debug_dialog(0);
   while (GetMessage(&msg, NULL, 0, 0)) {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
@@ -495,7 +495,7 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
           BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
         }
 #else
-        init_debug_dialog();
+        init_debug_dialog(0);
 #endif
 #else
         SIM->message_box("ERROR", "Bochs debugger not available - ignoring 'gui_debug' option");

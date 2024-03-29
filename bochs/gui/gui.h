@@ -217,7 +217,7 @@ public:
   Bit8u set_modifier_keys(Bit8u modifier, bool pressed);
   bool parse_user_shortcut(const char *val);
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
-  void init_debug_dialog(void);
+  void init_debug_dialog(bool global_ini);
   void close_debug_dialog(void);
 #endif
 #if BX_USE_GUI_CONSOLE
