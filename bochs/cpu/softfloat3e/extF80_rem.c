@@ -93,21 +93,27 @@ extFloat80_t extF80_rem(extFloat80_t a, extFloat80_t b, struct softfloat_status_
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (! expB) expB = 1;
+    if (! expB) {
+        expB = 1;
+        if (sigB)
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
+    }
     if (! (sigB & UINT64_C(0x8000000000000000))) {
         if (! sigB) goto invalid;
-        softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalExtF80Sig(sigB);
         expB += normExpSig.exp;
         sigB = normExpSig.sig;
     }
-    if (! expA) expA = 1;
+    if (! expA) {
+        expA = 1;
+        if (sigA)
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
+    }
     if (! (sigA & UINT64_C(0x8000000000000000))) {
         if (! sigA) {
             expA = 0;
             goto copyA;
         }
-        softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalExtF80Sig(sigA);
         expA += normExpSig.exp;
         sigA = normExpSig.sig;
