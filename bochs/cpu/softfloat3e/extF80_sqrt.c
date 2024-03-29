@@ -47,8 +47,6 @@ extFloat80_t extF80_sqrt(extFloat80_t a, struct softfloat_status_t *status)
     int32_t expA;
     uint64_t sigA;
     struct uint128 uiZ;
-    uint16_t uiZ64;
-    uint64_t uiZ0;
     struct exp32_sig64 normExpSig;
     int32_t expZ;
     uint32_t sig32A, recipSqrt32, sig32Z;
