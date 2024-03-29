@@ -179,16 +179,6 @@ BX_CPP_INLINE int get_float_rounding_precision(const float_status_t &status)
 #endif
 
 /*----------------------------------------------------------------------------
-| Returns current floating point NaN operands handling mode specified
-| by status word.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int get_float_nan_handling_mode(const float_status_t &status)
-{
-    return status.float_nan_handling_mode;
-}
-
-/*----------------------------------------------------------------------------
 | Raise floating point precision lost up flag (floatx80 only).
 *----------------------------------------------------------------------------*/
 
