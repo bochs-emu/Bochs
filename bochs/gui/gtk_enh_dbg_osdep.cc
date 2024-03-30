@@ -17,10 +17,10 @@
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
 
-#include <gtk/gtkversion.h>
-#if GTK_MAJOR_VERSION == (2)
+#if BX_HAVE_GTK_VERSION == 2
 #define GTK_DISABLE_DEPRECATED
 #endif
+
 #include <gtk/gtk.h>
 #include <glib.h>
 #include <pthread.h>
