@@ -2101,6 +2101,10 @@ const char *get_builtin_variable(const char *varname)
                             (LPDWORD)&size) == ERROR_SUCCESS) {
           RegCloseKey(hkey);
           return data;
+        } else if (RegQueryValueEx(hkey, "", NULL, (LPDWORD)&type, (LPBYTE)data,
+                            (LPDWORD)&size) == ERROR_SUCCESS) {
+          RegCloseKey(hkey);
+          return data;
         } else {
           RegCloseKey(hkey);
           return NULL;
