@@ -232,7 +232,6 @@
     <ClCompile Include="..\cpu\fpu\poly.cc" />
     <ClCompile Include="..\cpu\fpu\softfloat-round-pack.cc" />
     <ClCompile Include="..\cpu\fpu\softfloat-specialize.cc" />
-    <ClCompile Include="..\cpu\fpu\softfloat.cc" />
     <ClCompile Include="..\cpu\fpu\softfloatx80.cc" />
   </ItemGroup>
   <ItemGroup>

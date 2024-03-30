@@ -596,10 +596,10 @@ void BX_CPU_C::print_state_FPU(void)
 
 int FPU_tagof(const floatx80 &reg)
 {
-   Bit32s exp = floatx80_exp(reg);
+   Bit32s exp = extF80_exp(reg);
    if (exp == 0)
    {
-      if (! floatx80_fraction(reg))
+      if (! extF80_fraction(reg))
           return FPU_Tag_Zero;
 
       /* The number is a de-normal or pseudodenormal. */

@@ -152,11 +152,11 @@ floatx80 fpatan(floatx80 a, floatx80 b, float_status_t &status)
 
     if (bExp == 0x7FFF)
     {
-        if ((Bit64u) (bSig<<1))
+        if (bSig<<1)
             return propagateFloatx80NaN(a, b, status);
 
         if (aExp == 0x7FFF) {
-            if ((Bit64u) (aSig<<1))
+            if (aSig<<1)
                 return propagateFloatx80NaN(a, b, status);
 
             if (aSign) {   /* return 3PI/4 */
@@ -169,7 +169,7 @@ floatx80 fpatan(floatx80 a, floatx80 b, float_status_t &status)
             }
         }
 
-        if (aSig && (aExp == 0))
+        if (aSig && ! aExp)
             float_raise(status, float_flag_denormal);
 
         /* return PI/2 */
@@ -177,10 +177,10 @@ floatx80 fpatan(floatx80 a, floatx80 b, float_status_t &status)
     }
     if (aExp == 0x7FFF)
     {
-        if ((Bit64u) (aSig<<1))
+        if (aSig<<1)
             return propagateFloatx80NaN(a, b, status);
 
-        if (bSig && (bExp == 0))
+        if (bSig && ! bExp)
             float_raise(status, float_flag_denormal);
 
 return_PI_or_ZERO:
@@ -191,19 +191,19 @@ return_PI_or_ZERO:
             return packFloatx80(bSign, 0, 0);
         }
     }
-    if (bExp == 0)
+    if (! bExp)
     {
-        if (bSig == 0) {
-             if (aSig && (aExp == 0)) float_raise(status, float_flag_denormal);
+        if (! bSig) {
+             if (aSig && ! aExp) float_raise(status, float_flag_denormal);
              goto return_PI_or_ZERO;
         }
 
         float_raise(status, float_flag_denormal);
         normalizeFloatx80Subnormal(bSig, &bExp, &bSig);
     }
-    if (aExp == 0)
+    if (! aExp)
     {
-        if (aSig == 0)   /* return PI/2 */
+        if (! aSig)   /* return PI/2 */
             return roundAndPackFloatx80(80, bSign, FLOATX80_PI2_EXP, FLOAT_PI_HI, FLOAT_PI_LO, status);
 
         float_raise(status, float_flag_denormal);

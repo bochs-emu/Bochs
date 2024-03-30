@@ -53,7 +53,6 @@ float_status_t i387cw_to_softfloat_status_word(Bit16u control_word)
   }
 
   status.float_exception_flags = 0; // clear exceptions before execution
-  status.float_nan_handling_mode = float_first_operand_nan;
   status.float_rounding_mode = (control_word & FPU_CW_RC) >> 10;
   status.flush_underflow_to_zero = 0;
   status.float_suppress_exception = 0;
@@ -68,7 +67,7 @@ float_status_t i387cw_to_softfloat_status_word(Bit16u control_word)
 floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float32 b32, int bIsNaN, float_status_t &status)
 {
     int aIsSignalingNaN = extF80_isSignalingNaN(a);
-    int bIsSignalingNaN = float32_is_signaling_nan(b32);
+    int bIsSignalingNaN = f32_isSignalingNaN(b32);
 
     if (aIsSignalingNaN | bIsSignalingNaN)
         float_raise(status, float_flag_invalid);
@@ -117,7 +116,7 @@ bool FPU_handle_NaN(floatx80 a, float32 b, floatx80 &r, float_status_t &status)
 floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float64 b64, int bIsNaN, float_status_t &status)
 {
     int aIsSignalingNaN = extF80_isSignalingNaN(a);
-    int bIsSignalingNaN = float64_is_signaling_nan(b64);
+    int bIsSignalingNaN = f64_isSignalingNaN(b64);
 
     if (aIsSignalingNaN | bIsSignalingNaN)
         float_raise(status, float_flag_invalid);

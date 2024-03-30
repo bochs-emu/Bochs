@@ -123,7 +123,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPTAN(bxInstruction_c *i)
      BX_NEXT_INSTR(i);
   }
 
-  if (floatx80_is_nan(y))
+  if (extF80_isNaN(y))
   {
      if (! FPU_exception(i, status.float_exception_flags))
      {
@@ -200,8 +200,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXTRACT(bxInstruction_c *i)
   float_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 a = BX_READ_FPU_REG(0);
-  floatx80 b = floatx80_extract(a, status);
+  extFloat80_t a = BX_READ_FPU_REG(0);
+//floatx80 b = floatx80_extract(a, status);
+  extFloat80_t b = extF80_extract(&a, &status);
 
   if (! FPU_exception(i, status.float_exception_flags)) {
      BX_WRITE_FPU_REG(b, 0);     // exponent

@@ -31,9 +31,10 @@
 BX_CPP_INLINE void prepare_softfloat_status_word(float_status_t &status, int rounding_mode)
 {
   status.float_exception_flags = 0; // clear exceptions before execution
-  status.float_nan_handling_mode = float_first_operand_nan;
   status.float_rounding_mode = rounding_mode;
   status.flush_underflow_to_zero = 0;
+  status.float_suppress_exception = 0;
+  status.denormals_are_zeros = 0;
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFPNACC_PqQq(bxInstruction_c *i)

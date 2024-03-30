@@ -8275,19 +8275,19 @@ float16 approximate_rcp14(float16 op, const float_status_t &status)
   struct exp8_sig16 normExpSig;
 
   switch(op_class) {
-    case float_zero:
+    case softfloat_zero:
       return packFloat16(sign, 0x1F, 0);
 
-    case float_negative_inf:
-    case float_positive_inf:
+    case softfloat_negative_inf:
+    case softfloat_positive_inf:
       return packFloat16(sign, 0, 0);
 
-    case float_SNaN:
-    case float_QNaN:
+    case softfloat_SNaN:
+    case softfloat_QNaN:
       return convert_to_QNaN(op);
 
     // the rcp14 handle denormals properly
-    case float_denormal:
+    case softfloat_denormal:
       if (softfloat_denormalsAreZeros(&status))
         return packFloat16(sign, 0x1F, 0);
 
@@ -8298,7 +8298,7 @@ float16 approximate_rcp14(float16 op, const float_status_t &status)
       fraction &= 0x3ff;
       // fall through
 
-    case float_normalized:
+    case softfloat_normalized:
       break;
   }
 

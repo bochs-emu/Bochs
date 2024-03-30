@@ -37,16 +37,16 @@ extern float_status_t i387cw_to_softfloat_status_word(Bit16u control_word);
 static int status_word_flags_fpu_compare(int float_relation)
 {
   switch(float_relation) {
-     case float_relation_unordered:
+     case softfloat_relation_unordered:
          return (FPU_SW_C0|FPU_SW_C2|FPU_SW_C3);
 
-     case float_relation_greater:
+     case softfloat_relation_greater:
          return (0);
 
-     case float_relation_less:
+     case softfloat_relation_less:
          return (FPU_SW_C0);
 
-     case float_relation_equal:
+     case softfloat_relation_equal:
          return (FPU_SW_C3);
   }
 
@@ -56,20 +56,20 @@ static int status_word_flags_fpu_compare(int float_relation)
 void BX_CPU_C::write_eflags_fpu_compare(int float_relation)
 {
   switch(float_relation) {
-   case float_relation_unordered:
+   case softfloat_relation_unordered:
       setEFlagsOSZAPC(EFlagsZFMask | EFlagsPFMask | EFlagsCFMask);
       break;
 
-   case float_relation_greater:
+   case softfloat_relation_greater:
       clearEFlagsOSZAPC();
       break;
 
-   case float_relation_less:
+   case softfloat_relation_less:
       clearEFlagsOSZAPC();
       assert_CF();
       break;
 
-   case float_relation_equal:
+   case softfloat_relation_equal:
       clearEFlagsOSZAPC();
       assert_ZF();
       break;
@@ -253,7 +253,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
 
   if (extF80_isNaN(a) || extF80_isUnsupported(a) || f32_isNaN(load_reg)) {
-    rc = float_relation_unordered;
+    rc = softfloat_relation_unordered;
     float_raise(status, float_flag_invalid);
   }
   else {
@@ -301,7 +301,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
 
   if (extF80_isNaN(a) || extF80_isUnsupported(a) || f64_isNaN(load_reg)) {
-    rc = float_relation_unordered;
+    rc = softfloat_relation_unordered;
     float_raise(status, float_flag_invalid);
   }
   else {
@@ -469,7 +469,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXAM(bxInstruction_c *i)
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   floatx80 reg = BX_READ_FPU_REG(0);
-  int sign = floatx80_sign(reg);
+  int sign = extF80_sign(reg);
 
   /*
    * Examine the contents of the ST(0) register and sets the condition

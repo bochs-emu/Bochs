@@ -241,6 +241,7 @@
     <ClCompile Include="..\cpu\softfloat3e\extF80_addsub.c" />
     <ClCompile Include="..\cpu\softfloat3e\extF80_class.c" />
     <ClCompile Include="..\cpu\softfloat3e\extF80_compare.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_extract.c" />
     <ClCompile Include="..\cpu\softfloat3e\extF80_div.c" />
     <ClCompile Include="..\cpu\softfloat3e\extF80_mul.c" />
     <ClCompile Include="..\cpu\softfloat3e\extF80_rem.c" />

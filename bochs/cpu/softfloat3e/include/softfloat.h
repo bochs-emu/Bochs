@@ -75,8 +75,6 @@ struct softfloat_status_t
 #define float_rounding_precision extF80_roundingPrecision
 #define float_exception_masks softfloat_exceptionMasks
 #define float_suppress_exception softfloat_suppressException
-
-    int float_nan_handling_mode;    /* flag register */     // redundant
 };
 
 typedef struct softfloat_status_t float_status_t;
@@ -601,6 +599,7 @@ extFloat80_t extF80_mul(extFloat80_t, extFloat80_t, struct softfloat_status_t *)
 extFloat80_t extF80_div(extFloat80_t, extFloat80_t, struct softfloat_status_t *);
 extFloat80_t extF80_rem(extFloat80_t, extFloat80_t, struct softfloat_status_t *);
 extFloat80_t extF80_sqrt(extFloat80_t, struct softfloat_status_t *);
+extFloat80_t extF80_extract(extFloat80_t *, struct softfloat_status_t *);
 int extF80_compare(extFloat80_t, extFloat80_t, int, softfloat_status_t *);
 softfloat_class_t extF80_class(extFloat80_t);
 
@@ -657,6 +656,10 @@ BX_CPP_INLINE int32_t extF80_to_i16_round_to_zero(extFloat80_t a, struct softflo
 bool extF80_isUnsupported(extFloat80_t);
 bool extF80_isSignalingNaN(extFloat80_t);
 bool extF80_isNaN(extFloat80_t);
+
+bool extF80_sign(float64_t);
+int16_t extF80_exp(float64_t);
+uint64_t extF80_fraction(float64_t);
 
 /*----------------------------------------------------------------------------
 | 128-bit (quadruple-precision) floating-point operations.

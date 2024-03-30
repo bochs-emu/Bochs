@@ -296,19 +296,19 @@ float32 approximate_rcp(float32 op)
   bool sign = f32_sign(op);
 
   switch(op_class) {
-    case float_zero:
-    case float_denormal:
+    case softfloat_zero:
+    case softfloat_denormal:
       return packFloat32(sign, 0xFF, 0);
 
-    case float_negative_inf:
-    case float_positive_inf:
+    case softfloat_negative_inf:
+    case softfloat_positive_inf:
       return packFloat32(sign, 0, 0);
 
-    case float_SNaN:
-    case float_QNaN:
+    case softfloat_SNaN:
+    case softfloat_QNaN:
       return convert_to_QNaN(op);
 
-    case float_normalized:
+    case softfloat_normalized:
       break;
   }
 
@@ -642,21 +642,21 @@ float32 approximate_rsqrt(float32 op)
   bool sign = f32_sign(op);
 
   switch(op_class) {
-    case float_zero:
-    case float_denormal:
+    case softfloat_zero:
+    case softfloat_denormal:
       return packFloat32(sign, 0xFF, 0);
 
-    case float_positive_inf:
+    case softfloat_positive_inf:
       return 0;
 
-    case float_negative_inf:
+    case softfloat_negative_inf:
       return float32_default_nan;
 
-    case float_SNaN:
-    case float_QNaN:
+    case softfloat_SNaN:
+    case softfloat_QNaN:
       return convert_to_QNaN(op);
 
-    case float_normalized:
+    case softfloat_normalized:
       break;
   };
 

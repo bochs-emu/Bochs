@@ -160,8 +160,8 @@ invalid:
         }
         if (aSign) goto invalid;
         else {
-            if (bExp == 0) {
-                if (bSig == 0) goto invalid;
+            if (! bExp) {
+                if (! bSig) goto invalid;
                 float_raise(status, float_flag_denormal);
             }
             return packFloatx80(bSign, 0x7FFF, BX_CONST64(0x8000000000000000));
@@ -169,9 +169,9 @@ invalid:
     }
     if (bExp == 0x7FFF)
     {
-        if ((Bit64u) (bSig<<1)) return propagateFloatx80NaN(a, b, status);
+        if (bSig<<1) return propagateFloatx80NaN(a, b, status);
         if (aSign && (Bit64u)(aExp | aSig)) goto invalid;
-        if (aSig && (aExp == 0))
+        if (aSig && ! aExp)
             float_raise(status, float_flag_denormal);
         if (aExp < 0x3FFF) {
             return packFloatx80(zSign, 0x7FFF, BX_CONST64(0x8000000000000000));
@@ -179,8 +179,8 @@ invalid:
         if (aExp == 0x3FFF && ((Bit64u) (aSig<<1) == 0)) goto invalid;
         return packFloatx80(bSign, 0x7FFF, BX_CONST64(0x8000000000000000));
     }
-    if (aExp == 0) {
-        if (aSig == 0) {
+    if (! aExp) {
+        if (! aSig) {
             if ((bExp | bSig) == 0) goto invalid;
             float_raise(status, float_flag_divbyzero);
             return packFloatx80(zSign, 0x7FFF, BX_CONST64(0x8000000000000000));
@@ -190,15 +190,15 @@ invalid:
         normalizeFloatx80Subnormal(aSig, &aExp, &aSig);
     }
     if (aSign) goto invalid;
-    if (bExp == 0) {
-        if (bSig == 0) {
+    if (! bExp) {
+        if (! bSig) {
             if (aExp < 0x3FFF) return packFloatx80(zSign, 0, 0);
             return packFloatx80(bSign, 0, 0);
         }
         float_raise(status, float_flag_denormal);
         normalizeFloatx80Subnormal(bSig, &bExp, &bSig);
     }
-    if (aExp == 0x3FFF && ((Bit64u) (aSig<<1) == 0))
+    if (aExp == 0x3FFF && ((aSig<<1) == 0))
         return packFloatx80(bSign, 0, 0);
 
     float_raise(status, float_flag_inexact);

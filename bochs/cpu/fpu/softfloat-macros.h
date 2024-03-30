@@ -39,56 +39,6 @@ these four paragraphs for those parts of this code that are retained.
 | Shifts `a' right by the number of bits given in `count'.  If any nonzero
 | bits are shifted off, they are ``jammed'' into the least significant bit of
 | the result by setting the least significant bit to 1.  The value of `count'
-| can be arbitrarily large; in particular, if `count' is greater than 16, the
-| result will be either 0 or 1, depending on whether `a' is zero or nonzero.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE Bit16u shift16RightJamming(Bit16u a, int count)
-{
-    Bit16u z;
-
-    if (count == 0) {
-        z = a;
-    }
-    else if (count < 16) {
-        z = (a>>count) | ((a<<((-count) & 15)) != 0);
-    }
-    else {
-        z = (a != 0);
-    }
-
-    return z;
-}
-
-/*----------------------------------------------------------------------------
-| Shifts `a' right by the number of bits given in `count'.  If any nonzero
-| bits are shifted off, they are ``jammed'' into the least significant bit of
-| the result by setting the least significant bit to 1.  The value of `count'
-| can be arbitrarily large; in particular, if `count' is greater than 32, the
-| result will be either 0 or 1, depending on whether `a' is zero or nonzero.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE Bit32u shift32RightJamming(Bit32u a, int count)
-{
-    Bit32u z;
-
-    if (count == 0) {
-        z = a;
-    }
-    else if (count < 32) {
-        z = (a>>count) | ((a<<((-count) & 31)) != 0);
-    }
-    else {
-        z = (a != 0);
-    }
-
-    return z;
-}
-
-/*----------------------------------------------------------------------------
-| Shifts `a' right by the number of bits given in `count'.  If any nonzero
-| bits are shifted off, they are ``jammed'' into the least significant bit of
-| the result by setting the least significant bit to 1.  The value of `count'
 | can be arbitrarily large; in particular, if `count' is greater than 64, the
 | result will be either 0 or 1, depending on whether `a' is zero or nonzero.
 *----------------------------------------------------------------------------*/
@@ -261,26 +211,6 @@ static const int countLeadingZeros8[] = {
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-#ifdef FLOAT16
-
-/*----------------------------------------------------------------------------
-| Returns the number of leading 0 bits before the most-significant 1 bit of
-| `a'.  If `a' is zero, 16 is returned.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int countLeadingZeros16(Bit16u a)
-{
-    int shiftCount = 0;
-    if (a < 0x100) {
-        shiftCount += 8;
-        a <<= 8;
-    }
-    shiftCount += countLeadingZeros8[a>>8];
-    return shiftCount;
-}
-
-#endif
-
 /*----------------------------------------------------------------------------
 | Returns the number of leading 0 bits before the most-significant 1 bit of
 | `a'.  If `a' is zero, 32 is returned.
@@ -344,46 +274,6 @@ BX_CPP_INLINE void shift128Right(Bit64u a0, Bit64u a1, int count, Bit64u *z0Ptr,
     }
     else {
         z1 = (count < 128) ? (a0>>(count & 63)) : 0;
-        z0 = 0;
-    }
-    *z1Ptr = z1;
-    *z0Ptr = z0;
-}
-
-/*----------------------------------------------------------------------------
-| Shifts the 128-bit value formed by concatenating `a0' and `a1' right by the
-| number of bits given in `count'.  If any nonzero bits are shifted off, they
-| are ``jammed'' into the least significant bit of the result by setting the
-| least significant bit to 1.  The value of `count' can be arbitrarily large;
-| in particular, if `count' is greater than 128, the result will be either
-| 0 or 1, depending on whether the concatenation of `a0' and `a1' is zero or
-| nonzero.  The result is broken into two 64-bit pieces which are stored at
-| the locations pointed to by `z0Ptr' and `z1Ptr'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE void shift128RightJamming(Bit64u a0, Bit64u a1, int count, Bit64u *z0Ptr, Bit64u *z1Ptr)
-{
-    Bit64u z0, z1;
-    int negCount = (-count) & 63;
-
-    if (count == 0) {
-        z1 = a1;
-        z0 = a0;
-    }
-    else if (count < 64) {
-        z1 = (a0<<negCount) | (a1>>count) | ((a1<<negCount) != 0);
-        z0 = a0>>count;
-    }
-    else {
-        if (count == 64) {
-            z1 = a0 | (a1 != 0);
-        }
-        else if (count < 128) {
-            z1 = (a0>>(count & 63)) | (((a0<<negCount) | a1) != 0);
-        }
-        else {
-            z1 = ((a0 | a1) != 0);
-        }
         z0 = 0;
     }
     *z1Ptr = z1;

@@ -117,4 +117,19 @@ BX_CPP_INLINE bool extF80_isUnsupported(extFloat80_t a)
     return ((a.signExp & 0x7FFF) && !(a.signif & BX_CONST64(0x8000000000000000)));
 }
 
+BX_CPP_INLINE bool extF80_sign(extFloat80_t a)
+{
+    return signExtF80UI64(a.signExp);
+}
+
+BX_CPP_INLINE int16_t extF80_exp(extFloat80_t a)
+{
+    return expExtF80UI64(a.signExp);
+}
+
+BX_CPP_INLINE uint64_t extF80_fraction(extFloat80_t a)
+{
+    return a.signif;
+}
+
 #endif

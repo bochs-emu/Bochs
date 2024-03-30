@@ -8249,20 +8249,20 @@ float16 approximate_rsqrt14(float16 op, bool daz)
   struct exp8_sig16 normExpSig;
 
   switch(op_class) {
-    case float_zero:
+    case softfloat_zero:
       return packFloat16(sign, 0x1F, 0);
 
-    case float_positive_inf:
+    case softfloat_positive_inf:
       return 0;
 
-    case float_negative_inf:
+    case softfloat_negative_inf:
       return float16_default_nan;
 
-    case float_SNaN:
-    case float_QNaN:
+    case softfloat_SNaN:
+    case softfloat_QNaN:
       return convert_to_QNaN(op);
 
-    case float_denormal:
+    case softfloat_denormal:
       if (daz) return packFloat16(sign, 0x1F, 0);
 
       normExpSig = softfloat_normSubnormalF16Sig(fraction);
@@ -8272,7 +8272,7 @@ float16 approximate_rsqrt14(float16 op, bool daz)
       fraction &= 0x3ff;
       // fall through
 
-    case float_normalized:
+    case softfloat_normalized:
       break;
   };
 

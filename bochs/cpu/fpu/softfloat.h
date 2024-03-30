@@ -37,38 +37,14 @@ these four paragraphs for those parts of this code that are retained.
 #ifndef _SOFTFLOAT_H_
 #define _SOFTFLOAT_H_
 
-#define FLOAT16
 #define FLOATX80
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point types.
 *----------------------------------------------------------------------------*/
-#ifdef FLOAT16
 typedef Bit16u float16, bfloat16;
-#endif
 typedef Bit32u float32;
 typedef Bit64u float64;
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE floating-point class.
-*----------------------------------------------------------------------------*/
-typedef enum {
-    float_zero,
-    float_SNaN,
-    float_QNaN,
-    float_negative_inf,
-    float_positive_inf,
-    float_denormal,
-    float_normalized
-} float_class_t;
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE floating-point NaN operands handling mode.
-*----------------------------------------------------------------------------*/
-enum float_nan_handling_mode_t {
-    float_larger_significand_nan = 0,   // this mode used by x87 FPU
-    float_first_operand_nan = 1	        // this mode used by SSE
-};
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point rounding mode.
@@ -98,36 +74,7 @@ const unsigned float_all_exceptions_mask = 0x3f;
 #define RAISE_SW_C1 0x0200
 #endif
 
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE floating-point ordering relations
-*----------------------------------------------------------------------------*/
-enum {
-    float_relation_less      = -1,
-    float_relation_equal     =  0,
-    float_relation_greater   =  1,
-    float_relation_unordered =  2
-};
-
 #include "../softfloat3e/include/softfloat.h"
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE floating-point status structure.
-*----------------------------------------------------------------------------*/
-#if 0
-struct float_status_t
-{
-#ifdef FLOATX80
-    int float_rounding_precision;	/* floatx80 only */
-#endif
-    int float_rounding_mode;
-    int float_exception_flags;
-    int float_exception_masks;
-    int float_suppress_exception;
-    int float_nan_handling_mode;    /* flag register */
-    int flush_underflow_to_zero;    /* flag register */
-    int denormals_are_zeros;        /* flag register */
-};
-#endif
 
 /*----------------------------------------------------------------------------
 | Routine to raise any or all of the software IEC/IEEE floating-point
@@ -189,50 +136,14 @@ BX_CPP_INLINE void set_float_rounding_up(float_status_t &status)
 }
 #endif
 
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE single-precision operations.
-*----------------------------------------------------------------------------*/
-
-int float32_is_signaling_nan(float32);
-int float32_is_nan(float32);
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE double-precision operations.
-*----------------------------------------------------------------------------*/
-
-int float64_is_signaling_nan(float64);
-int float64_is_nan(float64);
-
 #ifdef FLOATX80
 
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE integer-to-floating-point conversion routines.
-*----------------------------------------------------------------------------*/
-floatx80 int32_to_floatx80(Bit32s);
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE extended double-precision operations.
-*----------------------------------------------------------------------------*/
-floatx80 floatx80_mul(floatx80, floatx80, float_status_t &status);
-
-float_class_t floatx80_class(floatx80);
 int floatx80_is_signaling_nan(floatx80);
 int floatx80_is_nan(floatx80);
 
 #endif  /* FLOATX80 */
 
 #ifdef FLOAT128
-/*
-#ifdef BX_BIG_ENDIAN
-struct float128 {
-    Bit64u hi, lo;
-};
-#else
-struct float128 {
-    Bit64u lo, hi;
-};
-#endif
-*/
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE extended double-precision operations.

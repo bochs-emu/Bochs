@@ -54,8 +54,6 @@ typedef struct {
     Bit64u hi, lo;
 } commonNaNT;
 
-#ifdef FLOAT16
-
 /*----------------------------------------------------------------------------
 | Commonly used half-precision floating point constants
 *----------------------------------------------------------------------------*/
@@ -69,38 +67,7 @@ const float16 float16_positive_zero = 0x0000;
 *----------------------------------------------------------------------------*/
 const float16 float16_default_nan = 0xFE00;
 
-#define float16_fraction extractFloat16Frac
-#define float16_exp extractFloat16Exp
-#define float16_sign extractFloat16Sign
-
 #define FLOAT16_EXP_BIAS 0xF
-
-/*----------------------------------------------------------------------------
-| Returns the fraction bits of the half-precision floating-point value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE Bit16u extractFloat16Frac(float16 a)
-{
-    return a & 0x3FF;
-}
-
-/*----------------------------------------------------------------------------
-| Returns the exponent bits of the half-precision floating-point value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE Bit16s extractFloat16Exp(float16 a)
-{
-    return (a>>10) & 0x1F;
-}
-
-/*----------------------------------------------------------------------------
-| Returns the sign bit of the half-precision floating-point value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int extractFloat16Sign(float16 a)
-{
-    return a>>15;
-}
 
 /*----------------------------------------------------------------------------
 | Packs the sign `zSign', exponent `zExp', and significand `zSig' into a
@@ -119,54 +86,6 @@ BX_CPP_INLINE float16 packFloat16(int zSign, int zExp, Bit16u zSig)
 }
 
 /*----------------------------------------------------------------------------
-| Returns 1 if the half-precision floating-point value `a' is a NaN;
-| otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int float16_is_nan(float16 a)
-{
-    return (0xF800 < (Bit16u) (a<<1));
-}
-
-/*----------------------------------------------------------------------------
-| Returns 1 if the half-precision floating-point value `a' is a signaling
-| NaN; otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int float16_is_signaling_nan(float16 a)
-{
-    return (((a>>9) & 0x3F) == 0x3E) && (a & 0x1FF);
-}
-
-/*----------------------------------------------------------------------------
-| Returns the result of converting the half-precision floating-point NaN
-| `a' to the canonical NaN format. If `a' is a signaling NaN, the invalid
-| exception is raised.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE commonNaNT float16ToCommonNaN(float16 a, float_status_t &status)
-{
-    commonNaNT z;
-    if (float16_is_signaling_nan(a)) float_raise(status, float_flag_invalid);
-    z.sign = a>>15;
-    z.lo = 0;
-    z.hi = ((Bit64u) a)<<54;
-    return z;
-}
-
-/*----------------------------------------------------------------------------
-| Returns the result of converting the canonical NaN `a' to the half-
-| precision floating-point format.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE float16 commonNaNToFloat16(commonNaNT a)
-{
-    return (((Bit16u) a.sign)<<15) | 0x7E00 | (Bit16u)(a.hi>>54);
-}
-
-#endif
-
-/*----------------------------------------------------------------------------
 | Commonly used single-precision floating point constants
 *----------------------------------------------------------------------------*/
 const float32 float32_negative_inf  = 0xff800000;
@@ -183,38 +102,7 @@ const float32 float32_min_float     = 0xff7fffff;
 *----------------------------------------------------------------------------*/
 const float32 float32_default_nan   = 0xffc00000;
 
-#define float32_fraction extractFloat32Frac
-#define float32_exp extractFloat32Exp
-#define float32_sign extractFloat32Sign
-
 #define FLOAT32_EXP_BIAS 0x7F
-
-/*----------------------------------------------------------------------------
-| Returns the fraction bits of the single-precision floating-point value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE Bit32u extractFloat32Frac(float32 a)
-{
-    return a & 0x007FFFFF;
-}
-
-/*----------------------------------------------------------------------------
-| Returns the exponent bits of the single-precision floating-point value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE Bit16s extractFloat32Exp(float32 a)
-{
-    return (a>>23) & 0xFF;
-}
-
-/*----------------------------------------------------------------------------
-| Returns the sign bit of the single-precision floating-point value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int extractFloat32Sign(float32 a)
-{
-    return a>>31;
-}
 
 /*----------------------------------------------------------------------------
 | Packs the sign `zSign', exponent `zExp', and significand `zSig' into a
@@ -230,52 +118,6 @@ BX_CPP_INLINE int extractFloat32Sign(float32 a)
 BX_CPP_INLINE float32 packFloat32(int zSign, Bit16s zExp, Bit32u zSig)
 {
     return (((Bit32u) zSign)<<31) + (((Bit32u) zExp)<<23) + zSig;
-}
-
-/*----------------------------------------------------------------------------
-| Returns 1 if the single-precision floating-point value `a' is a NaN;
-| otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int float32_is_nan(float32 a)
-{
-    return (0xFF000000 < (Bit32u) (a<<1));
-}
-
-/*----------------------------------------------------------------------------
-| Returns 1 if the single-precision floating-point value `a' is a signaling
-| NaN; otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int float32_is_signaling_nan(float32 a)
-{
-    return (((a>>22) & 0x1FF) == 0x1FE) && (a & 0x003FFFFF);
-}
-
-/*----------------------------------------------------------------------------
-| Returns the result of converting the single-precision floating-point NaN
-| `a' to the canonical NaN format.  If `a' is a signaling NaN, the invalid
-| exception is raised.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE commonNaNT float32ToCommonNaN(float32 a, float_status_t &status)
-{
-    commonNaNT z;
-    if (float32_is_signaling_nan(a)) float_raise(status, float_flag_invalid);
-    z.sign = a>>31;
-    z.lo = 0;
-    z.hi = ((Bit64u) a)<<41;
-    return z;
-}
-
-/*----------------------------------------------------------------------------
-| Returns the result of converting the canonical NaN `a' to the single-
-| precision floating-point format.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE float32 commonNaNToFloat32(commonNaNT a)
-{
-    return (((Bit32u) a.sign)<<31) | 0x7FC00000 | (Bit32u)(a.hi>>41);
 }
 
 /*----------------------------------------------------------------------------
@@ -295,38 +137,7 @@ const float64 float64_min_float     = BX_CONST64(0xffefffffffffffff);
 *----------------------------------------------------------------------------*/
 const float64 float64_default_nan = BX_CONST64(0xFFF8000000000000);
 
-#define float64_fraction extractFloat64Frac
-#define float64_exp extractFloat64Exp
-#define float64_sign extractFloat64Sign
-
 #define FLOAT64_EXP_BIAS 0x3FF
-
-/*----------------------------------------------------------------------------
-| Returns the fraction bits of the double-precision floating-point value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE Bit64u extractFloat64Frac(float64 a)
-{
-    return a & BX_CONST64(0x000FFFFFFFFFFFFF);
-}
-
-/*----------------------------------------------------------------------------
-| Returns the exponent bits of the double-precision floating-point value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE Bit16s extractFloat64Exp(float64 a)
-{
-    return (Bit16s)(a>>52) & 0x7FF;
-}
-
-/*----------------------------------------------------------------------------
-| Returns the sign bit of the double-precision floating-point value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int extractFloat64Sign(float64 a)
-{
-    return (int)(a>>63);
-}
 
 /*----------------------------------------------------------------------------
 | Packs the sign `zSign', exponent `zExp', and significand `zSig' into a
@@ -342,52 +153,6 @@ BX_CPP_INLINE int extractFloat64Sign(float64 a)
 BX_CPP_INLINE float64 packFloat64(int zSign, Bit16s zExp, Bit64u zSig)
 {
     return (((Bit64u) zSign)<<63) + (((Bit64u) zExp)<<52) + zSig;
-}
-
-/*----------------------------------------------------------------------------
-| Returns 1 if the double-precision floating-point value `a' is a NaN;
-| otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int float64_is_nan(float64 a)
-{
-    return (BX_CONST64(0xFFE0000000000000) < (Bit64u) (a<<1));
-}
-
-/*----------------------------------------------------------------------------
-| Returns 1 if the double-precision floating-point value `a' is a signaling
-| NaN; otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int float64_is_signaling_nan(float64 a)
-{
-    return (((a>>51) & 0xFFF) == 0xFFE) && (a & BX_CONST64(0x0007FFFFFFFFFFFF));
-}
-
-/*----------------------------------------------------------------------------
-| Returns the result of converting the double-precision floating-point NaN
-| `a' to the canonical NaN format.  If `a' is a signaling NaN, the invalid
-| exception is raised.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE commonNaNT float64ToCommonNaN(float64 a, float_status_t &status)
-{
-    commonNaNT z;
-    if (float64_is_signaling_nan(a)) float_raise(status, float_flag_invalid);
-    z.sign = (int)(a>>63);
-    z.lo = 0;
-    z.hi = a<<12;
-    return z;
-}
-
-/*----------------------------------------------------------------------------
-| Returns the result of converting the canonical NaN `a' to the double-
-| precision floating-point format.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE float64 commonNaNToFloat64(commonNaNT a)
-{
-    return (((Bit64u) a.sign)<<63) | BX_CONST64(0x7FF8000000000000) | (a.hi>>12);
 }
 
 #ifdef FLOATX80
@@ -667,19 +432,6 @@ BX_CPP_INLINE commonNaNT float128ToCommonNaN(float128 a, float_status_t &status)
     if (float128_is_signaling_nan(a)) float_raise(status, float_flag_invalid);
     z.sign = (int)(a.hi>>63);
     shortShift128Left(a.hi, a.lo, 16, &z.hi, &z.lo);
-    return z;
-}
-
-/*----------------------------------------------------------------------------
-| Returns the result of converting the canonical NaN `a' to the quadruple-
-| precision floating-point format.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE float128 commonNaNToFloat128(commonNaNT a)
-{
-    float128 z;
-    shift128Right(a.hi, a.lo, 16, &z.hi, &z.lo);
-    z.hi |= (((Bit64u) a.sign)<<63) | BX_CONST64(0x7FFF800000000000);
     return z;
 }
 

@@ -140,7 +140,7 @@ static int do_fprem(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, int rounding
             }
         }
 
-        if (rounding_mode == float_round_nearest_even)
+        if (rounding_mode == softfloat_round_near_even)
         {
             Bit64u term0, term1;
             shift128Right(bSig, 0, 1, &term0, &term1);
@@ -171,7 +171,7 @@ static int do_fprem(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, int rounding
 
 int floatx80_ieee754_remainder(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, float_status_t &status)
 {
-    return do_fprem(a, b, r, q, float_round_nearest_even, status);
+    return do_fprem(a, b, r, q, softfloat_round_near_even, status);
 }
 
 /*----------------------------------------------------------------------------
@@ -185,5 +185,5 @@ int floatx80_ieee754_remainder(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, f
 
 int floatx80_remainder(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, float_status_t &status)
 {
-    return do_fprem(a, b, r, q, float_round_to_zero, status);
+    return do_fprem(a, b, r, q, softfloat_round_to_zero, status);
 }
