@@ -383,10 +383,6 @@
     <ClCompile Include="..\cpu\softfloat3e\s_mul128To256M.c" />
     <ClCompile Include="..\cpu\softfloat3e\s_mul64ByShifted32To128.c" />
     <ClCompile Include="..\cpu\softfloat3e\s_mul64To128.c" />
-    <ClCompile Include="..\cpu\softfloat3e\s_mulAddF128.c" />
-    <ClCompile Include="..\cpu\softfloat3e\s_mulAddF16.c" />
-    <ClCompile Include="..\cpu\softfloat3e\s_mulAddF32.c" />
-    <ClCompile Include="..\cpu\softfloat3e\s_mulAddF64.c" />
     <ClCompile Include="..\cpu\softfloat3e\s_normRoundPackToExtF80.c" />
     <ClCompile Include="..\cpu\softfloat3e\s_normRoundPackToF128.c" />
     <ClCompile Include="..\cpu\softfloat3e\s_normRoundPackToF16.c" />
