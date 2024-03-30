@@ -1657,10 +1657,10 @@ bool bx_gui_c::parse_common_gui_options(const char *arg, Bit8u flags)
     } else if (strlen(arg) > 9) {
       return false;
     }
-    return true;
 #else
     SIM->message_box("ERROR", "Bochs debugger not available - ignoring 'gui_debug' option");
 #endif
+    return true;
 #if BX_SHOW_IPS
   } else if (!strcmp(arg, "hideIPS") && (flags & BX_GUI_OPT_HIDE_IPS)) {
     BX_INFO(("hide IPS display in status bar"));
