@@ -118,10 +118,10 @@ static float128 cos_arr[COS_ARR_SIZE] =
     PACK_FLOAT_128(0x3fc1e542ba402022, 0x507a9cad2bf8f0bb)  /* 20 */
 };
 
-extern float128 OddPoly (float128 x, float128 *arr, int n, float_status_t &status);
+extern float128_t OddPoly (float128_t x, const float128_t *arr, int n, float_status_t &status);
 
 /* 0 <= x <= pi/4 */
-BX_CPP_INLINE float128 poly_sin(float128 x, float_status_t &status)
+BX_CPP_INLINE float128_t poly_sin(float128_t x, float_status_t &status)
 {
     //                 3     5     7     9     11     13     15
     //                x     x     x     x     x      x      x
@@ -143,13 +143,13 @@ BX_CPP_INLINE float128 poly_sin(float128 x, float_status_t &status)
     //   sin(x) ~ x * [ p(x) + x * q(x) ]
     //
 
-    return OddPoly(x, sin_arr, SIN_ARR_SIZE, status);
+    return OddPoly(x, (const float128_t*) sin_arr, SIN_ARR_SIZE, status);
 }
 
-extern float128 EvenPoly(float128 x, float128 *arr, int n, float_status_t &status);
+extern float128_t EvenPoly(float128_t x, const float128_t *arr, int n, float_status_t &status);
 
 /* 0 <= x <= pi/4 */
-BX_CPP_INLINE float128 poly_cos(float128 x, float_status_t &status)
+BX_CPP_INLINE float128_t poly_cos(float128 x, float_status_t &status)
 {
     //                 2     4     6     8     10     12     14
     //                x     x     x     x     x      x      x
@@ -166,7 +166,7 @@ BX_CPP_INLINE float128 poly_cos(float128 x, float_status_t &status)
     //   cos(x) ~ [ p(x) + x * q(x) ]
     //
 
-    return EvenPoly(x, cos_arr, COS_ARR_SIZE, status);
+    return EvenPoly(x, (const float128_t*) cos_arr, COS_ARR_SIZE, status);
 }
 
 BX_CPP_INLINE void sincos_invalid(floatx80 *sin_a, floatx80 *cos_a, floatx80 a)
@@ -181,7 +181,7 @@ BX_CPP_INLINE void sincos_tiny_argument(floatx80 *sin_a, floatx80 *cos_a, floatx
     if (cos_a) *cos_a = floatx80_one;
 }
 
-static floatx80 sincos_approximation(int neg, float128 r, Bit64u quotient, float_status_t &status)
+static floatx80 sincos_approximation(int neg, float128_t r, Bit64u quotient, float_status_t &status)
 {
     if (quotient & 0x1) {
         r = poly_cos(r, status);
@@ -190,7 +190,7 @@ static floatx80 sincos_approximation(int neg, float128 r, Bit64u quotient, float
         r = poly_sin(r, status);
     }
 
-    floatx80 result = float128_to_floatx80(r, status);
+    floatx80 result = f128_to_extF80(r, &status);
     if (quotient & 0x2)
         neg = ! neg;
 
@@ -413,17 +413,17 @@ int ftan(floatx80 &a, float_status_t &status)
     /* using float128 for approximation */
     float128 r = normalizeRoundAndPackFloat128(0, zExp-0x10, aSig0, aSig1, status);
 
-    float128 sin_r = poly_sin(r, status);
-    float128 cos_r = poly_cos(r, status);
+    float128_t sin_r = poly_sin(r, status);
+    float128_t cos_r = poly_cos(r, status);
 
     if (q & 0x1) {
-        r = float128_div(cos_r, sin_r, status);
+        r = f128_div(cos_r, sin_r, &status);
         zSign = ! zSign;
     } else {
-        r = float128_div(sin_r, cos_r, status);
+        r = f128_div(sin_r, cos_r, &status);
     }
 
-    a = float128_to_floatx80(r, status);
+    a = f128_to_extF80(r, &status);
     if (zSign)
         floatx80_chs(a);
 

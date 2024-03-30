@@ -684,14 +684,6 @@ BX_CPP_INLINE float128 commonNaNToFloat128(commonNaNT a)
 }
 
 /*----------------------------------------------------------------------------
-| Takes two quadruple-precision floating-point values `a' and `b', one of
-| which is a NaN, and returns the appropriate NaN result.  If either `a' or
-| `b' is a signaling NaN, the invalid exception is raised.
-*----------------------------------------------------------------------------*/
-
-float128 propagateFloat128NaN(float128 a, float128 b, float_status_t &status);
-
-/*----------------------------------------------------------------------------
 | The pattern for a default generated quadruple-precision NaN.
 *----------------------------------------------------------------------------*/
 extern const float128 float128_default_nan;

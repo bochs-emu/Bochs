@@ -242,45 +242,6 @@ static Bit64u estimateDiv128To64(Bit64u a0, Bit64u a1, Bit64u b)
 }
 #endif
 
-/*----------------------------------------------------------------------------
-| Returns an approximation to the square root of the 32-bit significand given
-| by `a'.  Considered as an integer, `a' must be at least 2^31.  If bit 0 of
-| `aExp' (the least significant bit) is 1, the integer returned approximates
-| 2^31*sqrt(`a'/2^31), where `a' is considered an integer.  If bit 0 of `aExp'
-| is 0, the integer returned approximates 2^31*sqrt(`a'/2^30).  In either
-| case, the approximation returned lies strictly within +/-2 of the exact
-| value.
-*----------------------------------------------------------------------------*/
-
-#ifdef USE_estimateSqrt32
-static Bit32u estimateSqrt32(Bit16s aExp, Bit32u a)
-{
-    static const Bit16u sqrtOddAdjustments[] = {
-        0x0004, 0x0022, 0x005D, 0x00B1, 0x011D, 0x019F, 0x0236, 0x02E0,
-        0x039C, 0x0468, 0x0545, 0x0631, 0x072B, 0x0832, 0x0946, 0x0A67
-    };
-    static const Bit16u sqrtEvenAdjustments[] = {
-        0x0A2D, 0x08AF, 0x075A, 0x0629, 0x051A, 0x0429, 0x0356, 0x029E,
-        0x0200, 0x0179, 0x0109, 0x00AF, 0x0068, 0x0034, 0x0012, 0x0002
-    };
-    Bit32u z;
-
-    int index = (a>>27) & 15;
-    if (aExp & 1) {
-        z = 0x4000 + (a>>17) - sqrtOddAdjustments[index];
-        z = ((a / z)<<14) + (z<<15);
-        a >>= 1;
-    }
-    else {
-        z = 0x8000 + (a>>17) - sqrtEvenAdjustments[index];
-        z = a / z + z;
-        z = (0x20000 <= z) ? 0xFFFF8000 : (z<<15);
-        if (z <= a) return (Bit32u) (((Bit32s) a)>>1);
-    }
-    return ((Bit32u) ((((Bit64u) a)<<31) / z)) + (z>>1);
-}
-#endif
-
 static const int countLeadingZeros8[] = {
   8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4,
   3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
@@ -479,42 +440,6 @@ BX_CPP_INLINE void add192(
 }
 
 /*----------------------------------------------------------------------------
-| Subtracts the 192-bit value formed by concatenating `b0', `b1', and `b2'
-| from the 192-bit value formed by concatenating `a0', `a1', and `a2'.
-| Subtraction is modulo 2^192, so any borrow out (carry out) is lost.  The
-| result is broken into three 64-bit pieces which are stored at the locations
-| pointed to by `z0Ptr', `z1Ptr', and `z2Ptr'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE void sub192(
-     Bit64u a0,
-     Bit64u a1,
-     Bit64u a2,
-     Bit64u b0,
-     Bit64u b1,
-     Bit64u b2,
-     Bit64u *z0Ptr,
-     Bit64u *z1Ptr,
-     Bit64u *z2Ptr
-)
-{
-    Bit64u z0, z1, z2;
-    unsigned borrow0, borrow1;
-
-    z2 = a2 - b2;
-    borrow1 = (a2 < b2);
-    z1 = a1 - b1;
-    borrow0 = (a1 < b1);
-    z0 = a0 - b0;
-    z0 -= (z1 < borrow1);
-    z1 -= borrow1;
-    z0 -= borrow0;
-    *z2Ptr = z2;
-    *z1Ptr = z1;
-    *z0Ptr = z0;
-}
-
-/*----------------------------------------------------------------------------
 | Returns 1 if the 128-bit value formed by concatenating `a0' and `a1'
 | is equal to the 128-bit value formed by concatenating `b0' and `b1'.
 | Otherwise, returns 0.
@@ -576,42 +501,6 @@ BX_CPP_INLINE void mul128By64To192(
 }
 
 #ifdef FLOAT128
-
-/*----------------------------------------------------------------------------
-| Multiplies the 128-bit value formed by concatenating `a0' and `a1' to the
-| 128-bit value formed by concatenating `b0' and `b1' to obtain a 256-bit
-| product.  The product is broken into four 64-bit pieces which are stored at
-| the locations pointed to by `z0Ptr', `z1Ptr', `z2Ptr', and `z3Ptr'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE void mul128To256(
-     Bit64u a0,
-     Bit64u a1,
-     Bit64u b0,
-     Bit64u b1,
-     Bit64u *z0Ptr,
-     Bit64u *z1Ptr,
-     Bit64u *z2Ptr,
-     Bit64u *z3Ptr
-)
-{
-    Bit64u z0, z1, z2, z3;
-    Bit64u more1, more2;
-
-    mul64To128(a1, b1, &z2, &z3);
-    mul64To128(a1, b0, &z1, &more2);
-    add128(z1, more2, 0, z2, &z1, &z2);
-    mul64To128(a0, b0, &z0, &more1);
-    add128(z0, more1, 0, z1, &z0, &z1);
-    mul64To128(a0, b1, &more1, &more2);
-    add128(more1, more2, 0, z2, &more1, &z2);
-    add128(z0, z1, 0, more1, &z0, &z1);
-    *z3Ptr = z3;
-    *z2Ptr = z2;
-    *z1Ptr = z1;
-    *z0Ptr = z0;
-}
-
 
 /*----------------------------------------------------------------------------
 | Shifts the 192-bit value formed by concatenating `a0', `a1', and `a2' right

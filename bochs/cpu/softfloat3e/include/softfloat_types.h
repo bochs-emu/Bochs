@@ -65,16 +65,6 @@ typedef struct f64_t {
     operator uint64_t() const { return v; }
 } float64_t;
 
-#ifdef BX_BIG_ENDIAN
-struct float128 {
-    Bit64u hi, lo;
-};
-#else
-struct float128 {
-    Bit64u lo, hi;
-};
-#endif
-
 #include "primitiveTypes.h"
 
 typedef uint128 f128_t, float128_t;

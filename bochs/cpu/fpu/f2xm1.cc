@@ -66,10 +66,10 @@ static float128 exp_arr[EXP_ARR_SIZE] =
     PACK_FLOAT_128(0x3fd6ae7f3e733b81, 0xf11d8656b0ee8cb0)  /* 15 */
 };
 
-extern float128 EvalPoly(float128 x, float128 *arr, int n, float_status_t &status);
+extern float128 EvalPoly(float128_t x, const float128_t *arr, int n, float_status_t &status);
 
 /* required -1 < x < 1 */
-static float128 poly_exp(float128 x, float_status_t &status)
+static float128_t poly_exp(float128_t x, float_status_t &status)
 {
 /*
     //               2     3     4     5     6     7     8     9
@@ -92,8 +92,8 @@ static float128 poly_exp(float128 x, float_status_t &status)
     //   e  - 1 ~ x * [ p(x) + x * q(x) ]
     //
 */
-    float128 t = EvalPoly(x, exp_arr, EXP_ARR_SIZE, status);
-    return float128_mul(t, x, status);
+    float128_t t = EvalPoly(x, (const float128_t*) exp_arr, EXP_ARR_SIZE, status);
+    return f128_mul(t, x, &status);
 }
 
 // =================================================
@@ -162,10 +162,10 @@ floatx80 f2xm1(floatx80 a, float_status_t &status)
         /* using float128 for approximation */
         /* ******************************** */
 
-        float128 x = floatx80_to_float128(a, status);
-        x = float128_mul(x, float128_ln2, status);
+        float128_t x = extF80_to_f128(a, &status);
+        x = f128_mul(x, float128_ln2, &status);
         x = poly_exp(x, status);
-        return float128_to_floatx80(x, status);
+        return f128_to_extF80(x, &status);
     }
     else
     {

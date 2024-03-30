@@ -81,38 +81,6 @@ const floatx80 floatx80_default_nan =
 #ifdef FLOAT128
 
 /*----------------------------------------------------------------------------
-| Takes two quadruple-precision floating-point values `a' and `b', one of
-| which is a NaN, and returns the appropriate NaN result.  If either `a' or
-| `b' is a signaling NaN, the invalid exception is raised.
-*----------------------------------------------------------------------------*/
-
-float128 propagateFloat128NaN(float128 a, float128 b, float_status_t &status)
-{
-    int aIsNaN, aIsSignalingNaN, bIsNaN, bIsSignalingNaN;
-    aIsNaN = float128_is_nan(a);
-    aIsSignalingNaN = float128_is_signaling_nan(a);
-    bIsNaN = float128_is_nan(b);
-    bIsSignalingNaN = float128_is_signaling_nan(b);
-    a.hi |= BX_CONST64(0x0000800000000000);
-    b.hi |= BX_CONST64(0x0000800000000000);
-    if (aIsSignalingNaN | bIsSignalingNaN) float_raise(status, float_flag_invalid);
-    if (aIsSignalingNaN) {
-        if (bIsSignalingNaN) goto returnLargerSignificand;
-        return bIsNaN ? b : a;
-    }
-    else if (aIsNaN) {
-        if (bIsSignalingNaN | !bIsNaN) return a;
- returnLargerSignificand:
-        if (lt128(a.hi<<1, a.lo, b.hi<<1, b.lo)) return b;
-        if (lt128(b.hi<<1, b.lo, a.hi<<1, a.lo)) return a;
-        return (a.hi < b.hi) ? a : b;
-    }
-    else {
-        return b;
-    }
-}
-
-/*----------------------------------------------------------------------------
 | The pattern for a default generated quadruple-precision NaN.
 *----------------------------------------------------------------------------*/
 const float128 float128_default_nan =
