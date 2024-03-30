@@ -606,26 +606,13 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   progname = argv[0];
   console.present = 1;
 
-  // parse x11 specific options
-  Bit8u flags = BX_GUI_OPT_NOKEYREPEAT | BX_GUI_OPT_HIDE_IPS  | BX_GUI_OPT_CMDMODE
-                | BX_GUI_OPT_NO_GUI_CONSOLE;
-  if (argc > 1) {
-    for (i = 1; i < argc; i++) {
-      if (!parse_common_gui_options(argv[i], flags)) {
-        BX_PANIC(("Unknown x11 option '%s'", argv[i]));
-      }
-    }
-  }
-
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
-  if (enh_dbg_gui_enabled) {
-    // This is only necessary when GTK+ and Xlib are sharing the same
-    // connection. XInitThreads() must finish before any calls to GTK+
-    // or Xlib are made.
-    if (XInitThreads() == 0) {
-      BX_PANIC(("trying to run Bochs with the GTK+ "
-                "debugger on a non-threading X11."));
-    }
+#if (BX_DEBUGGER && BX_DEBUGGER_GUI) || BX_SUPPORT_SOUNDLOW || BX_SUPPORT_VOODOO
+  // This is only necessary when GTK+ and Xlib are sharing the same
+  // connection. XInitThreads() must finish before any calls to GTK+
+  // or Xlib are made.
+  if (XInitThreads() == 0) {
+    BX_PANIC(("trying to run Bochs with the GTK+ "
+              "debugger on a non-threading X11."));
   }
 #endif
 
@@ -638,6 +625,22 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   /* get screen size from display structure macro */
   bx_x_screen_num = DefaultScreen(bx_x_display);
+
+  // redirect notify callback to X11 specific code
+  SIM->get_notify_callback(&old_callback, &old_callback_arg);
+  assert(old_callback != NULL);
+  SIM->set_notify_callback(x11_notify_callback, NULL);
+
+  // parse x11 specific options
+  Bit8u flags = BX_GUI_OPT_NOKEYREPEAT | BX_GUI_OPT_HIDE_IPS  | BX_GUI_OPT_CMDMODE
+                | BX_GUI_OPT_NO_GUI_CONSOLE;
+  if (argc > 1) {
+    for (i = 1; i < argc; i++) {
+      if (!parse_common_gui_options(argv[i], flags)) {
+        BX_PANIC(("Unknown x11 option '%s'", argv[i]));
+      }
+    }
+  }
 
   /* Note that in a real application, x and y would default to 0
    * but would be settable from the command line or resource database.
@@ -878,11 +881,6 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 //  win, None, CurrentTime);
 
   XFlush(bx_x_display);
-
-  // redirect notify callback to X11 specific code
-  SIM->get_notify_callback(&old_callback, &old_callback_arg);
-  assert(old_callback != NULL);
-  SIM->set_notify_callback(x11_notify_callback, NULL);
 
   // loads keymap for x11
   x11_use_kbd_mapping = SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get();
