@@ -2071,19 +2071,6 @@ if test "$soundcard_present" = 1; then
           DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lasound"
         fi
       fi
-      if test "x$PKG_CONFIG" != x; then
-        $PKG_CONFIG --exists libpulse-simple
-        if test x$? = x0; then
-          SOUNDLOW_OBJS="$SOUNDLOW_OBJS soundpulse.o"
-          soundlow_drivers="$soundlow_drivers pulse"
-          AC_DEFINE(BX_HAVE_SOUND_PULSE, 1)
-          if test "$bx_plugins" = 1; then
-            PULSE_SOUND_LINK_OPTS="$PULSE_SOUND_LINK_OPTS `$PKG_CONFIG --libs libpulse-simple`"
-          else
-            DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS `$PKG_CONFIG --libs libpulse-simple`"
-          fi
-        fi
-      fi
       ;;
     *-pc-windows*)
       SOUNDLOW_OBJS='soundwin.o'
@@ -2143,6 +2130,21 @@ if test "$soundcard_present" = 1; then
     ]
     if test "$sdl2_audio_capture" = 1; then
       AC_DEFINE(BX_HAVE_SDL2_AUDIO_CAPTURE, 1)
+    fi
+  fi
+  if test "$cross_configure" = 0 -a "$DEFAULT_GUI" != win32; then
+    if test "x$PKG_CONFIG" != x; then
+      $PKG_CONFIG --exists libpulse-simple
+      if test x$? = x0; then
+        SOUNDLOW_OBJS="$SOUNDLOW_OBJS soundpulse.o"
+        soundlow_drivers="$soundlow_drivers pulse"
+        AC_DEFINE(BX_HAVE_SOUND_PULSE, 1)
+        if test "$bx_plugins" = 1; then
+          PULSE_SOUND_LINK_OPTS="$PULSE_SOUND_LINK_OPTS `$PKG_CONFIG --libs libpulse-simple`"
+        else
+          DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS `$PKG_CONFIG --libs libpulse-simple`"
+        fi
+      fi
     fi
   fi
   if test "$MSVC_TARGET" = 0; then
