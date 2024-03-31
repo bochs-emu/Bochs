@@ -160,12 +160,10 @@ floatx80 fpatan(floatx80 a, floatx80 b, float_status_t &status)
                 return propagateFloatx80NaN(a, b, status);
 
             if (aSign) {   /* return 3PI/4 */
-                return roundAndPackFloatx80(80, bSign,
-                        FLOATX80_3PI4_EXP, FLOAT_3PI4_HI, FLOAT_3PI4_LO, status);
+                return roundAndPackFloatx80(80, bSign, FLOATX80_3PI4_EXP, FLOAT_3PI4_HI, FLOAT_3PI4_LO, status);
             }
             else {         /* return  PI/4 */
-                return roundAndPackFloatx80(80, bSign,
-                        FLOATX80_PI4_EXP, FLOAT_PI_HI, FLOAT_PI_LO, status);
+                return roundAndPackFloatx80(80, bSign, FLOATX80_PI4_EXP, FLOAT_PI_HI, FLOAT_PI_LO, status);
             }
         }
 

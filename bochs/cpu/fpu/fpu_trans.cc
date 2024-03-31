@@ -390,7 +390,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSCALE(bxInstruction_c *i)
   float_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  floatx80 result = floatx80_scale(BX_READ_FPU_REG(0), BX_READ_FPU_REG(1), status);
+  floatx80 result = extF80_scale(BX_READ_FPU_REG(0), BX_READ_FPU_REG(1), &status);
 
   if (! FPU_exception(i, status.float_exception_flags))
      BX_WRITE_FPU_REG(result, 0);

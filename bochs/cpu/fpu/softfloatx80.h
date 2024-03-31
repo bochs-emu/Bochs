@@ -33,7 +33,6 @@ these four paragraphs for those parts of this code that are retained.
 | Software IEC/IEEE extended double-precision operations.
 *----------------------------------------------------------------------------*/
 
-floatx80 floatx80_scale(floatx80 a, floatx80 b, float_status_t &status);
 int floatx80_remainder(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, float_status_t &status);
 int floatx80_ieee754_remainder(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, float_status_t &status);
 floatx80 f2xm1(floatx80 a, float_status_t &status);

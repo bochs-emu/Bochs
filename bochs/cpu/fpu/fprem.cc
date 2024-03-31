@@ -109,7 +109,7 @@ static int do_fprem(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, int rounding
     expDiff = aExp - bExp;
     aSig1 = 0;
 
-    Bit32u overflow = 0;
+    int overflow = 0;
 
     if (expDiff >= 64) {
         int n = (expDiff & 0x1f) | 0x20;

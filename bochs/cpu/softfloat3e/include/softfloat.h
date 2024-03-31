@@ -598,6 +598,7 @@ extFloat80_t extF80_sub(extFloat80_t, extFloat80_t, struct softfloat_status_t *)
 extFloat80_t extF80_mul(extFloat80_t, extFloat80_t, struct softfloat_status_t *);
 extFloat80_t extF80_div(extFloat80_t, extFloat80_t, struct softfloat_status_t *);
 extFloat80_t extF80_rem(extFloat80_t, extFloat80_t, struct softfloat_status_t *);
+extFloat80_t extF80_scale(extFloat80_t, extFloat80_t, struct softfloat_status_t *);
 extFloat80_t extF80_sqrt(extFloat80_t, struct softfloat_status_t *);
 extFloat80_t extF80_extract(extFloat80_t *, struct softfloat_status_t *);
 int extF80_compare(extFloat80_t, extFloat80_t, int, softfloat_status_t *);

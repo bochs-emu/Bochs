@@ -240,6 +240,7 @@ OBJS_OTHERS = \
   extF80_class$(OBJ) \
   extF80_compare$(OBJ) \
   extF80_extract$(OBJ) \
+  extF80_scale$(OBJ) \
   extF80_addsub$(OBJ) \
   extF80_mul$(OBJ) \
   extF80_div$(OBJ) \
