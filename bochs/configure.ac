@@ -2071,6 +2071,19 @@ if test "$soundcard_present" = 1; then
           DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lasound"
         fi
       fi
+      if test "x$PKG_CONFIG" != x; then
+        $PKG_CONFIG --exists libpulse-simple
+        if test x$? = x0; then
+          SOUNDLOW_OBJS="$SOUNDLOW_OBJS soundpulse.o"
+          soundlow_drivers="$soundlow_drivers pulse"
+          AC_DEFINE(BX_HAVE_SOUND_PULSE, 1)
+          if test "$bx_plugins" = 1; then
+            PULSE_SOUND_LINK_OPTS="$PULSE_SOUND_LINK_OPTS `$PKG_CONFIG --libs libpulse-simple`"
+          else
+            DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS `$PKG_CONFIG --libs libpulse-simple`"
+          fi
+        fi
+      fi
       ;;
     *-pc-windows*)
       SOUNDLOW_OBJS='soundwin.o'
@@ -2158,6 +2171,7 @@ fi
 AC_SUBST(SOUNDHW_OBJS)
 AC_SUBST(SOUNDLOW_OBJS)
 AC_SUBST(ALSA_SOUND_LINK_OPTS)
+AC_SUBST(PULSE_SOUND_LINK_OPTS)
 AC_SUBST(SDL_SOUND_LINK_OPTS)
 AC_SUBST(SOUNDHW_DLL_TARGETS)
 
@@ -3318,6 +3332,7 @@ case "$target" in
       if test "$soundcard_present" = 1; then
         if test "$bx_plugins" = 1; then
           ALSA_SOUND_LINK_OPTS="$ALSA_SOUND_LINK_OPTS $PTHREAD_LIBS"
+          PULSE_SOUND_LINK_OPTS="$PULSE_SOUND_LINK_OPTS $PTHREAD_LIBS"
           SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS $PTHREAD_LIBS"
         else
           DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS $PTHREAD_LIBS"

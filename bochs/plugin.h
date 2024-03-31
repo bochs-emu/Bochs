@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -463,6 +463,7 @@ PLUGIN_ENTRY_FOR_SND_MODULE(dummy);
 PLUGIN_ENTRY_FOR_SND_MODULE(file);
 PLUGIN_ENTRY_FOR_SND_MODULE(oss);
 PLUGIN_ENTRY_FOR_SND_MODULE(osx);
+PLUGIN_ENTRY_FOR_SND_MODULE(pulse);
 PLUGIN_ENTRY_FOR_SND_MODULE(sdl);
 PLUGIN_ENTRY_FOR_SND_MODULE(win);
 // network driver plugins

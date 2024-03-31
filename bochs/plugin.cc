@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1089,6 +1089,9 @@ plugin_t bx_builtin_plugins[] = {
 #endif
 #if BX_HAVE_SOUND_OSX
   BUILTIN_SND_PLUGIN_ENTRY(osx),
+#endif
+#if BX_HAVE_SOUND_PULSE
+  BUILTIN_SND_PLUGIN_ENTRY(pulse),
 #endif
 #if BX_HAVE_SOUND_SDL
   BUILTIN_SND_PLUGIN_ENTRY(sdl),
