@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011-2021  The Bochs Project
+//  Copyright (C) 2011-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -75,6 +75,7 @@ public:
   audio_buffer_t *new_buffer(Bit32u size);
   audio_buffer_t *get_buffer();
   void delete_buffer();
+  void flush();
 private:
   Bit8u format;
   audio_buffer_t *root;

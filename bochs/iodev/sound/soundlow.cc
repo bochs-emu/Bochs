@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011-2021  The Bochs Project
+//  Copyright (C) 2011-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -89,6 +89,13 @@ void bx_audio_buffer_c::delete_buffer()
     }
   }
   delete tmpbuffer;
+}
+
+void bx_audio_buffer_c::flush()
+{
+  while (root != NULL) {
+    BX_MSLEEP(1);
+  }
 }
 
 // convert to float format for resampler
@@ -468,6 +475,7 @@ Bit32u bx_soundlow_waveout_c::resampler_common(audio_buffer_t *inbuffer, float *
 #else
   if (param.samplerate != real_pcm_param.samplerate) {
     real_pcm_param.samplerate = param.samplerate;
+    audio_buffers[1]->flush();
     set_pcm_params(&real_pcm_param);
   }
   *fbuffer = new float[inbuffer->size];
