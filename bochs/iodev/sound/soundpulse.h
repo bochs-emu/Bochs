@@ -16,7 +16,7 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-// Lowlevel sound output support using PulseAudio simple API
+// PCM playback/recording support using PulseAudio simple API
 
 #if BX_HAVE_SOUND_PULSE
 
@@ -31,6 +31,7 @@ public:
   virtual ~bx_sound_pulse_c() {}
 
   virtual bx_soundlow_waveout_c* get_waveout();
+  virtual bx_soundlow_wavein_c* get_wavein();
 } bx_sound_pulse;
 
 // the pulse waveout class
@@ -46,6 +47,25 @@ public:
   virtual int output(int length, Bit8u data[]);
   virtual int closewaveoutput();
 private:
+  pa_simple *s;
+};
+
+// the pulse waveoin class
+
+class bx_soundlow_wavein_pulse_c : public bx_soundlow_wavein_c {
+public:
+  bx_soundlow_wavein_pulse_c();
+  virtual ~bx_soundlow_wavein_pulse_c();
+
+  virtual int openwaveinput(const char *wavedev, sound_record_handler_t rh);
+  virtual int startwaverecord(bx_pcm_param_t *param);
+  virtual int getwavepacket(int length, Bit8u data[]);
+  virtual int stopwaverecord();
+
+  static void record_timer_handler(void *);
+  void record_timer(void);
+private:
+  bx_pcm_param_t wavein_param;
   pa_simple *s;
 };
 

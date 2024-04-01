@@ -965,8 +965,8 @@ parport1: enabled=1, file="parport.out"
 #      the output file for the 'file' driver.
 # waveindrv:
 #      This defines the driver to be used for the wavein feature.
-#      Possible values are 'dummy' (recording silence) and platform-dependent
-#      drivers 'alsa', 'oss', 'sdl' and 'win'.
+#      Possible values are 'dummy' (recording silence), 'pulse', 'sdl' (both
+#      cross-platform) and platform-dependent drivers 'alsa', 'oss' and 'win'.
 # wavein:
 #      This defines the device to be used for wave input (if necessary).
 # midioutdrv:

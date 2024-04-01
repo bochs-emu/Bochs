@@ -23,7 +23,7 @@ Detailed change log :
   - USB
     - Now includes the USB Debugger support for the xHCI and UHCI controllers
   - Sound
-    - Added lowlevel sound output support using PulseAudio simple API
+    - Added PCM playback/recording support using PulseAudio simple API
 
 -------------------------------------------------------------------------
 Changes in 2.8 (March 10, 2024):
