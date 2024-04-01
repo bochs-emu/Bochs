@@ -7436,6 +7436,10 @@ From here, you may use the following commands:
 
   deref addr deep              pointer dereference. For example: get value of [[[rax]]] or ***rax: deref rax 3
 
+  telescope addr               telescope. For example: telescope rax: telescope rax
+
+  telescopeset max_rows max_depth data_depth data_hex. For example: telescopeset 6 5 15 0. Disable telescope: telescopeset 0 0 0 0
+
   crc  addr1  addr2            Show CRC32 for physical memory range addr1..addr2
 
 </screen>

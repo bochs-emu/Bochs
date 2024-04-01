@@ -523,7 +523,7 @@ void UpdateStatus()
 // Note: laddr + len must not cross a 4K boundary -- otherwise, there are no limits
 bool ReadBxLMem(Bit64u laddr, unsigned len, Bit8u *buf)
 {
-    return bx_dbg_read_linear(CurrentCPU, laddr, len, buf);
+    return bx_dbg_read_linear(CurrentCPU, laddr, len, buf, false);
 }
 
 // binary conversion (and validity testing) on hex/decimal char string inputs
