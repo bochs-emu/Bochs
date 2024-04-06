@@ -86,7 +86,7 @@ void convert_float_to_s16le(float *src, unsigned srcsize, Bit8u *dst);
 BOCHSAPI_MSVCONLY Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
 
 extern BX_MUTEX(resampler_mutex);
-#ifndef ANDROID
+#ifndef __ANDROID__
 extern BX_MUTEX(mixer_mutex);
 #endif
 

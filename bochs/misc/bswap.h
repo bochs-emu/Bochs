@@ -71,7 +71,7 @@ BX_CPP_INLINE void WriteHostDWordToLittleEndian(Bit32u *hostPtr, Bit32u nativeVa
 
 BX_CPP_INLINE void WriteHostQWordToLittleEndian(Bit64u *hostPtr, Bit64u nativeVar64)
 {
-#ifdef ANDROID
+#ifdef __ANDROID__
 // Resolve problems with unaligned access
   ((Bit8u *)(hostPtr))[0] = (Bit8u) (nativeVar64);
   ((Bit8u *)(hostPtr))[1] = (Bit8u) ((nativeVar64)>>8);
@@ -98,7 +98,7 @@ BX_CPP_INLINE Bit32u ReadHostDWordFromLittleEndian(Bit32u *hostPtr)
 
 BX_CPP_INLINE Bit64u ReadHostQWordFromLittleEndian(Bit64u *hostPtr)
 {
-#ifdef ANDROID
+#ifdef __ANDROID__
 // Resolve problems with unaligned access
   Bit64u nativeVar64 = ((Bit64u) ((Bit8u *)(hostPtr))[0]) |
                        (((Bit64u) ((Bit8u *)(hostPtr))[1])<<8) |

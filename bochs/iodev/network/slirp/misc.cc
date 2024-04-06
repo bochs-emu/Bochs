@@ -177,7 +177,7 @@ fork_exec(struct socket *so, const char *ex, int do_pty)
 		dup2(s, 0);
 		dup2(s, 1);
 		dup2(s, 2);
-#ifdef ANDROID
+#ifdef __ANDROID__
 		{
 			/* No getdtablesize() on Android, we will use /proc/XXX/fd/ Linux virtual FS instead */
 			char proc_fd_path[256];
