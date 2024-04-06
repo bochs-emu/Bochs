@@ -335,14 +335,14 @@ void switch_to_fullscreen(void)
 {
   SDL_FreeSurface(sdl_screen);
   sdl_screen = NULL;
-#ifdef ANDROID
+#ifdef __ANDROID__
   sdl_fullscreen = SDL_SetVideoMode(res_x,res_y,32, SDL_SWSURFACE|SDL_FULLSCREEN);
 #else
   sdl_fullscreen = SDL_SetVideoMode(res_x,res_y,32, SDL_HWSURFACE|SDL_FULLSCREEN);
 #endif
   DEV_vga_refresh(1);
   SDL_ShowCursor(0);
-#ifndef ANDROID
+#ifndef __ANDROID__
   if (sdl_grab == 0) {
     SDL_WM_GrabInput(SDL_GRAB_ON);
     sdl_grab = 1;
@@ -418,7 +418,7 @@ bx_sdl_gui_c::bx_sdl_gui_c()
   atexit(SDL_Quit);
 #endif
 
-#ifdef ANDROID
+#ifdef __ANDROID__
   modes = SDL_ListModes(NULL, SDL_FULLSCREEN|SDL_SWSURFACE);
 #else
   modes = SDL_ListModes(NULL, SDL_FULLSCREEN|SDL_HWSURFACE);
@@ -1006,7 +1006,7 @@ void bx_sdl_gui_c::dimension_update(unsigned x, unsigned y,
   guest_yres = y;
 
   if ((x == res_x) && (y == res_y)) return;
-#ifndef ANDROID
+#ifndef __ANDROID__
   // This is not needed on Android
   if (((int)x > sdl_maxres.w) || ((int)y > sdl_maxres.h)) {
     BX_PANIC(("dimension_update(): resolution of out of display bounds"));
@@ -1040,7 +1040,7 @@ void bx_sdl_gui_c::dimension_update(unsigned x, unsigned y,
         BX_HEADERBAR_BG_GREEN,
         BX_HEADERBAR_BG_BLUE);
   } else {
-#ifdef ANDROID
+#ifdef __ANDROID__
     sdl_fullscreen = SDL_SetVideoMode(x, y, 32, SDL_SWSURFACE|SDL_FULLSCREEN);
 #else
     sdl_fullscreen = SDL_SetVideoMode(x, y, 32, SDL_HWSURFACE|SDL_FULLSCREEN);
