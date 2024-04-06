@@ -7436,9 +7436,24 @@ From here, you may use the following commands:
 
   deref addr deep              pointer dereference. For example: get value of [[[rax]]] or ***rax: deref rax 3
 
-  telescope addr               telescope. For example: telescope rax: telescope rax
-
-  telescopeset max_rows max_depth data_depth data_hex. For example: telescopeset 6 5 15 0. Disable telescope: telescopeset 0 0 0 0
+  telescope addr               shows how pointers lead to other pointers and finally to data. 
+                               It goes step by step through each pointer, showing you where they all end up. 
+                               To activate this functionality, the telescopeset command must be executed beforehand. 
+                               For example: telescope esp
+                               it presents a sequential view where each row represents the data at the next address 
+                               starting from the original location. This means that the command not only shows the 
+                               chain of pointers and the end data but also arranges the output so that each row 
+                               progresses to the next memory address from the starting point
+        
+  telescopeset max_rows max_depth data_depth data_hex
+                               The number of rows ('max_rows') to display, how deeply to follow pointer dereferencing 
+                               ('max_depth'), the depth of final displayed data ('data_depth'), and the option to 
+                               show the final data in hexadecimal(1)/ascii(0) format flag ('data_hex'). 
+                               This command also activates the telescope feature for viewing registers and the stack. 
+                               For example: telescopeset 6 5 15 0
+                               display up to 6 addresses, dereference pointers 5 levels deep, show 15 units of data in ASCII
+                               (0 means not use hexadecimal)
+                               Disable telescope: telescopeset 0 0 0 0
 
   crc  addr1  addr2            Show CRC32 for physical memory range addr1..addr2
 

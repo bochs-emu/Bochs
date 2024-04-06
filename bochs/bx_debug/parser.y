@@ -1323,12 +1323,12 @@ help_command:
        }
      | BX_TOKEN_HELP BX_TOKEN_TELESCOPE '\n'
        {
-         dbg_printf("telescope <addr> - telescope. For example: telescope rax: telescope rax\n");
+         dbg_printf("telescope <addr> - shows how pointers lead to other pointers and finally to data. It goes step by step through each pointer, showing you where they all end up. To activate this functionality, the telescopeset command must be executed beforehand. For example: telescope esp. it presents a sequential view where each row represents the data at the next address starting from the original location. This means that the command not only shows the chain of pointers and the end data but also arranges the output so that each row progresses to the next memory address from the starting point\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_TELESCOPESET '\n'
        {
-         dbg_printf("telescopeset <max_rows> <max_depth> <data_depth> <data_hex>. For example: telescopeset 6 5 15 0. Disable telescope: telescopeset 0 0 0 0\n");
+         dbg_printf("telescopeset <max_rows> <max_depth> <data_depth> <data_hex> - the number of rows ('max_rows') to display, how deeply to follow pointer dereferencing ('max_depth'), the depth of final displayed data ('data_depth'), and the option to show the final data in hexadecimal(1)/ascii(0) format flag ('data_hex'). This command also activates the telescope feature for viewing registers and the stack. For example: telescopeset 6 5 15 0: display up to 6 addresses, dereference pointers 5 levels deep, show 15 units of data in ASCII (0 means not use hexadecimal). Disable telescope: telescopeset 0 0 0 0\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_DISASM '\n'
