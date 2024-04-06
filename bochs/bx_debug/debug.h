@@ -122,7 +122,7 @@ void bx_dbg_print_stack_command(unsigned nwords);
 void bx_dbg_deref_command(bx_address addr, unsigned deep);
 bx_address bx_dbg_deref(bx_address addr, unsigned deep, unsigned* error_deep, bx_address* last_data_found, bool quiet);
 void bx_dbg_telescope(bx_address addr);
-void bx_dbg_telescope_command(bx_address addr, unsigned nwords);
+void bx_dbg_telescope_command(bx_address addr);
 void bx_dbg_telescopeset_command(unsigned int max_rows, unsigned int max_depth, unsigned int data_depth, bool data_hex);
 void bx_dbg_bt_command(unsigned dist);
 void bx_dbg_print_watchpoints(void);

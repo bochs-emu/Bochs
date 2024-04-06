@@ -2001,11 +2001,9 @@ void bx_dbg_telescope(bx_address addr)
 
   last_valid_addr = addr;
   curr_addr = addr;
-  for (int i = 0; i < telescope_max_depth; i++)
-  {
+  for (int i = 0; i < telescope_max_depth + 1; i++) {
     deref_data = bx_dbg_deref(curr_addr, 1, &deep_sc, NULL, true);
-    if (0 != deep_sc)
-    {
+    if (0 != deep_sc) {
       print_data = true;
       break;
     }
@@ -2015,8 +2013,7 @@ void bx_dbg_telescope(bx_address addr)
 
     last_valid_addr = curr_addr;
 
-    if (deref_data == curr_addr)
-    {
+    if (deref_data == curr_addr) {
       dbg_printf("iloop");
       break;
     }
@@ -2025,20 +2022,16 @@ void bx_dbg_telescope(bx_address addr)
   }
 
   if (print_data && bx_dbg_read_linear(dbg_cpu, last_valid_addr, telescope_data_depth, data, true)) {
-    if (telescope_data_hex)
-    {
+    if (telescope_data_hex) {
       dbg_printf(" h'");
-      for (int i = 0; i < telescope_data_depth; i++)
-      {
+      for (int i = 0; i < telescope_data_depth; i++) {
         dbg_printf("%02x", data[i]);
       }
       dbg_printf("'");
     }
-    else
-    {
+    else {
       dbg_printf(" s'");
-      for (int i = 0; i < telescope_data_depth; i++)
-      {
+      for (int i = 0; i < telescope_data_depth; i++) {
         if (data[i] < 0x20 || data[i] > 0x7E)
           data[i] = '.';
       }
@@ -2060,14 +2053,9 @@ void bx_dbg_telescopeset_command(unsigned int max_rows, unsigned int max_depth, 
   telescope_data_hex = data_hex;
 }
 
-void bx_dbg_telescope_command(bx_address addr, unsigned nrows)
+void bx_dbg_telescope_command(bx_address addr)
 {
   unsigned len;
-
-  if (nrows == 0)
-  {
-    nrows = telescope_max_rows;
-  }
 
   BX_CPU_C *cpu = BX_CPU(dbg_cpu);
 
@@ -2086,12 +2074,12 @@ void bx_dbg_telescope_command(bx_address addr, unsigned nrows)
     }
   }
 
-  for (unsigned i = 0; i < nrows; i++) {
+  for (unsigned i = 0; i < telescope_max_rows; i++) {
 #if BX_SUPPORT_X86_64
     if (len == 8) {
       dbg_printf("0x%08x%08x ", GET32H(addr), GET32L(addr));
-        bx_dbg_telescope(addr);
-        dbg_printf("\n");
+      bx_dbg_telescope(addr);
+      dbg_printf("\n");
     }
     else
 #endif

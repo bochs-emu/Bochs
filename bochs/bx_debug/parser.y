@@ -976,7 +976,7 @@ deref_command:
 telescope_command:
       BX_TOKEN_TELESCOPE expression '\n'
       {
-        bx_dbg_telescope_command($2, 0);
+        bx_dbg_telescope_command($2);
         free($1);
       }
     ;
