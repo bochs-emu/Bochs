@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2021  The Bochs Project
+# Copyright (C) 2012-2024  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -87,8 +87,8 @@ OBJS_THAT_CAN_BE_PLUGINS = \
   $(NETLOW_OBJS)
 
 OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
-  netutil.o \
-  $(SLIRP_OBJS)
+  @SLIRP_OBJS@ \
+  netutil.o
 
 NONPLUGIN_OBJS = @IODEV_EXT_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_EXT_PLUGIN_OBJS@
@@ -120,8 +120,8 @@ libbx_%.la: %.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
 # special link rules for plugins that require more than one object file
-libbx_eth_slirp.la: eth_slirp.lo $(SLIRP_OBJS:.o=.lo)
-	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module eth_slirp.lo $(SLIRP_OBJS:.o=.lo) -o libbx_eth_slirp.la -rpath $(PLUGIN_PATH)
+libbx_eth_slirp.la: eth_slirp.lo @SLIRP_OBJS2@
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module eth_slirp.lo @SLIRP_OBJS2@ -o libbx_eth_slirp.la -rpath $(PLUGIN_PATH) @SLIRP_LINK_OPTS@
 
 libbx_eth_vnet.la: eth_vnet.lo netutil.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module eth_vnet.lo netutil.lo -o libbx_eth_vnet.la -rpath $(PLUGIN_PATH)
@@ -134,8 +134,8 @@ bx_%.dll: %.o
 bx_eth_null.dll: eth_null.o
 	@LINK_DLL@ eth_null.o $(WIN32_DLL_IMPORT_LIBRARY)
 
-bx_eth_slirp.dll: eth_slirp.o $(SLIRP_OBJS)
-	@LINK_DLL@ eth_slirp.o $(SLIRP_OBJS) $(WIN32_DLL_IMPORT_LIBRARY) $(NETMOD_LINK_OPTS@LINK_VAR@)
+bx_eth_slirp.dll: eth_slirp.o @SLIRP_OBJS@
+	@LINK_DLL@ eth_slirp.o @SLIRP_OBJS@ $(WIN32_DLL_IMPORT_LIBRARY) $(NETMOD_LINK_OPTS@LINK_VAR@)
 
 bx_eth_socket.dll: eth_socket.o
 	@LINK_DLL@ eth_socket.o $(WIN32_DLL_IMPORT_LIBRARY) $(NETMOD_LINK_OPTS@LINK_VAR@)

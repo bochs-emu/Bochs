@@ -210,19 +210,14 @@ static void slirp_init_once(void)
     loopback_mask = htonl(IN_CLASSA_NET);
 }
 
-Slirp *slirp_init(int restricted, struct in_addr vnetwork,
-                  struct in_addr vnetmask, struct in_addr vhost,
-                  const char *vhostname, const char *tftp_path,
-                  const char *bootfile, struct in_addr vdhcp_start,
-                  struct in_addr vnameserver, const char **vdnssearch,
-                  void *opaque, void *logfn)
+Slirp *slirp_new(SlirpConfig *cfg, void *opaque, void *logfn)
 {
     Slirp *slirp = (Slirp*)malloc(sizeof(Slirp));
     memset(slirp, 0, sizeof(Slirp));
 
     slirp_init_once();
 
-    slirp->restricted = restricted;
+    slirp->restricted = cfg->restricted;
 
     if_init(slirp);
     ip_init(slirp);
@@ -230,24 +225,24 @@ Slirp *slirp_init(int restricted, struct in_addr vnetwork,
     /* Initialise mbufs *after* setting the MTU */
     m_init(slirp);
 
-    slirp->vnetwork_addr = vnetwork;
-    slirp->vnetwork_mask = vnetmask;
-    slirp->vhost_addr = vhost;
-    if (vhostname) {
+    slirp->vnetwork_addr = cfg->vnetwork;
+    slirp->vnetwork_mask = cfg->vnetmask;
+    slirp->vhost_addr = cfg->vhost;
+    if (cfg->vhostname) {
         pstrcpy(slirp->client_hostname, sizeof(slirp->client_hostname),
-                vhostname);
+                cfg->vhostname);
     }
-    if (tftp_path) {
-        slirp->tftp_prefix = strdup(tftp_path);
+    if (cfg->tftp_path) {
+        slirp->tftp_prefix = strdup(cfg->tftp_path);
     }
-    if (bootfile) {
-        slirp->bootp_filename = strdup(bootfile);
+    if (cfg->bootfile) {
+        slirp->bootp_filename = strdup(cfg->bootfile);
     }
-    slirp->vdhcp_startaddr = vdhcp_start;
-    slirp->vnameserver_addr = vnameserver;
+    slirp->vdhcp_startaddr = cfg->vdhcp_start;
+    slirp->vnameserver_addr = cfg->vnameserver;
 
-    if (vdnssearch) {
-        translate_dnssearch(slirp, vdnssearch);
+    if (cfg->vdnssearch) {
+        translate_dnssearch(slirp, cfg->vdnssearch);
     }
 
     slirp->opaque = opaque;
@@ -256,6 +251,28 @@ Slirp *slirp_init(int restricted, struct in_addr vnetwork,
     QTAILQ_INSERT_TAIL(&slirp_instances, slirp, entry);
 
     return slirp;
+}
+
+Slirp *slirp_init(int restricted, struct in_addr vnetwork,
+                  struct in_addr vnetmask, struct in_addr vhost,
+                  const char *vhostname, const char *tftp_path,
+                  const char *bootfile, struct in_addr vdhcp_start,
+                  struct in_addr vnameserver, const char **vdnssearch,
+                  void *opaque, void *logfn)
+{
+  SlirpConfig cfg;
+  memset(&cfg, 0, sizeof(cfg));
+  cfg.restricted = restricted;
+  cfg.vnetwork = vnetwork;
+  cfg.vnetmask = vnetmask;
+  cfg.vhost = vhost;
+  cfg.vhostname = vhostname;
+  cfg.tftp_path = tftp_path;
+  cfg.bootfile = bootfile;
+  cfg.vdhcp_start = vdhcp_start;
+  cfg.vnameserver = vnameserver;
+  cfg.vdnssearch = vdnssearch;
+  return slirp_new(&cfg, opaque, logfn);
 }
 
 void slirp_cleanup(Slirp *slirp)
@@ -867,7 +884,7 @@ int slirp_add_hostfwd(Slirp *slirp, int is_udp, struct in_addr host_addr,
     return 0;
 }
 
-int slirp_add_exec(Slirp *slirp, int do_pty, const void *args,
+int slirp_add_exec(Slirp *slirp, const void *args,
                    struct in_addr *guest_addr, int guest_port)
 {
     if (!guest_addr->s_addr) {
@@ -880,7 +897,7 @@ int slirp_add_exec(Slirp *slirp, int do_pty, const void *args,
         guest_addr->s_addr == slirp->vnameserver_addr.s_addr) {
         return -1;
     }
-    return add_exec(&slirp->exec_list, do_pty, (char *)args, *guest_addr,
+    return add_exec(&slirp->exec_list, 0, (char *)args, *guest_addr,
                     htons(guest_port));
 }
 

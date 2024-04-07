@@ -1759,23 +1759,56 @@ AC_ARG_ENABLE(e1000,
   )
 
 NETLOW_OBJS=''
+SLIRP_OBJS=''
+SLIRP_OBJS2=''
+SLIRP_LINK_OPTS=''
 if test "$networking" = yes; then
   NETLOW_OBJS='eth_null.o eth_vnet.o'
   ethernet_modules='null vnet'
   can_compile_slirp=0
-  case "$target" in
-    *-cygwin* | *-mingw32* | *-msys)
-      can_compile_slirp=1
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -liphlpapi"
-      ;;
-    *-pc-windows* | *-pc-winnt*)
-      can_compile_slirp=1
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS iphlpapi.lib"
-      ;;
-    *)
-      AC_CHECK_HEADER([netinet/in.h], [ can_compile_slirp=1 ], [])
-      ;;
-  esac
+  AC_MSG_CHECKING(for slirp networking support)
+  AC_ARG_ENABLE(using-libslirp,
+    AS_HELP_STRING([--enable-using-libslirp], [enable using libslirp instead of builtin slirp (no)]),
+    [if test "$enableval" = yes; then
+      if test "x$PKG_CONFIG" != x; then
+        $PKG_CONFIG --exists slirp
+        if test x$? = x0; then
+          can_compile_slirp=1
+          if test "$bx_plugins" = 1; then
+            SLIRP_LINK_OPTS="`$PKG_CONFIG --libs slirp`"
+          else
+            DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS `$PKG_CONFIG --libs slirp`"
+          fi
+          AC_MSG_RESULT(libslirp)
+          AC_DEFINE(BX_HAVE_LIBSLIRP, 1)
+        fi
+      fi
+    fi], [])
+  if test $can_compile_slirp = 0; then
+    AC_MSG_RESULT(builtin)
+    case "$target" in
+      *-cygwin* | *-mingw32* | *-msys)
+        can_compile_slirp=1
+        DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -liphlpapi"
+        SLIRP_OBJS='$(SLIRP_OBJS)'
+        ;;
+      *-pc-windows* | *-pc-winnt*)
+        can_compile_slirp=1
+        DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS iphlpapi.lib"
+        SLIRP_OBJS='$(SLIRP_OBJS)'
+        ;;
+      *)
+        AC_CHECK_HEADER([netinet/in.h],[can_compile_slirp=1])
+        if test $can_compile_slirp = 1; then
+          if test "$bx_plugins" = 1; then
+            SLIRP_OBJS2='$(SLIRP_OBJS:.o=.lo)'
+          else
+            SLIRP_OBJS='$(SLIRP_OBJS)'
+          fi
+        fi
+        ;;
+    esac
+  fi
   if test $can_compile_slirp = 1; then
     NETLOW_OBJS="$NETLOW_OBJS eth_slirp.o"
     ethernet_modules="$ethernet_modules slirp"
@@ -1864,6 +1897,9 @@ fi
 AC_SUBST(NETDEV_OBJS)
 AC_SUBST(NETLOW_OBJS)
 AC_SUBST(NETDEV_DLL_TARGETS)
+AC_SUBST(SLIRP_OBJS)
+AC_SUBST(SLIRP_OBJS2)
+AC_SUBST(SLIRP_LINK_OPTS)
 
 
 dnl // serial mode 'socket' needs ws2_32.dll in non-plugin mode

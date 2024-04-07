@@ -10,6 +10,12 @@
 struct Slirp;
 typedef struct Slirp Slirp;
 
+typedef struct SlirpConfig {
+  int restricted;
+  struct in_addr vnetwork, vnetmask, vhost, vdhcp_start, vnameserver;
+  const char *bootfile, *vhostname, **vdnssearch, *tftp_path;
+} SlirpConfig;
+
 int get_dns_addr(struct in_addr *pdns_addr);
 
 Slirp *slirp_init(int restricted, struct in_addr vnetwork,
@@ -18,6 +24,7 @@ Slirp *slirp_init(int restricted, struct in_addr vnetwork,
                   const char *bootfile, struct in_addr vdhcp_start,
                   struct in_addr vnameserver, const char **vdnssearch,
                   void *opaque, void *logfn);
+Slirp *slirp_new(SlirpConfig *cfg, void *opaque, void *logfn);
 void slirp_cleanup(Slirp *slirp);
 
 void slirp_select_fill(int *pnfds, fd_set *readfds, fd_set *writefds,
@@ -37,7 +44,7 @@ int slirp_add_hostfwd(Slirp *slirp, int is_udp,
                       struct in_addr guest_addr, int guest_port);
 int slirp_remove_hostfwd(Slirp *slirp, int is_udp,
                          struct in_addr host_addr, int host_port);
-int slirp_add_exec(Slirp *slirp, int do_pty, const void *args,
+int slirp_add_exec(Slirp *slirp, const void *args,
                    struct in_addr *guest_addr, int guest_port);
 
 void slirp_socket_recv(Slirp *slirp, struct in_addr guest_addr,
