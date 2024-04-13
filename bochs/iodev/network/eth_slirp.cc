@@ -17,7 +17,8 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 //
 
-// eth_slirp.cc  - Bochs port of Qemu's slirp implementation
+// eth_slirp.cc  - Bochs port of Qemu's slirp implementation (plus libslirp support)
+// Portion of this software comes with the following license: BSD-3-Clause
 
 #define BX_PLUGGABLE
 
@@ -71,7 +72,10 @@ public:
   virtual ~bx_slirp_pktmover_c();
   void sendpkt(void *buf, unsigned io_len);
   void receive(void *pkt, unsigned pkt_len);
-  int can_receive(void);
+  int  can_receive(void);
+#if BX_HAVE_LIBSLIRP
+  void slirp_msg(const char *msg);
+#endif
 private:
   Slirp *slirp;
   unsigned netdev_speed;
@@ -116,12 +120,68 @@ static slirp_ssize_t send_packet(const void *buf, size_t len, void *opaque);
 
 static void guest_error(const char *msg, void *opaque)
 {
-  fprintf(stderr, "guest_error\n");
+  char errmsg[512];
+
+  sprintf(errmsg, "guest error: %s", msg);
+  ((bx_slirp_pktmover_c*)opaque)->slirp_msg(errmsg);
 }
 
 static int64_t clock_get_ns(void *opaque)
 {
   return bx_pc_system.time_usec() * 1000;
+}
+
+struct timer {
+    SlirpTimerId id;
+    void *cb_opaque;
+    int64_t expire;
+    struct timer *next;
+};
+
+static struct timer *timer_queue;
+
+static void *timer_new_opaque(SlirpTimerId id, void *cb_opaque, void *opaque)
+{
+  ((bx_slirp_pktmover_c*)opaque)->slirp_msg("timer_new_opaque()");
+  struct timer *new_timer = new timer;
+  new_timer->id = id;
+  new_timer->cb_opaque = cb_opaque;
+  new_timer->next = NULL;
+  return new_timer;
+}
+
+static void timer_free(void *_timer, void *opaque)
+{
+  ((bx_slirp_pktmover_c*)opaque)->slirp_msg("timer_free()");
+  struct timer *timer1 = (timer*)_timer;
+  struct timer **t;
+
+  for (t = &timer_queue; *t != NULL; *t = (*t)->next) {
+    if (*t == timer1) {
+      /* Not expired yet, drop it */
+      *t = timer1->next;
+      break;
+    }
+  }
+
+  delete [] timer1;
+}
+
+static void timer_mod(void *_timer, int64_t expire_time, void *opaque)
+{
+  ((bx_slirp_pktmover_c*)opaque)->slirp_msg("timer_mod()");
+  struct timer *timer1 = (timer*)_timer;
+  struct timer **t;
+
+  timer1->expire = expire_time * 1000 * 1000;
+
+  for (t = &timer_queue; *t != NULL; *t = (*t)->next) {
+    if (expire_time < (*t)->expire)
+      break;
+  }
+
+  timer1->next = *t;
+  *t = timer1;
 }
 
 static int npoll;
@@ -145,9 +205,12 @@ static struct SlirpCb callbacks = {
     .send_packet = send_packet,
     .guest_error = guest_error,
     .clock_get_ns = clock_get_ns,
+    .timer_free = timer_free,
+    .timer_mod = timer_mod,
     .register_poll_fd = register_poll_fd,
     .unregister_poll_fd = unregister_poll_fd,
     .notify = notify,
+    .timer_new_opaque = timer_new_opaque,
 };
 #endif
 
@@ -217,6 +280,17 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
     if (!parse_slirp_conf(script)) {
       BX_ERROR(("reading slirp config failed"));
     }
+#if BX_HAVE_LIBSLIRP && !defined(_WIN32)
+    if (config.in6_enabled) {
+      BX_INFO(("IPv6 enabled (using default QEMU settings)"));
+      inet_pton(AF_INET6, "fec0::", &config.vprefix_addr6);
+      config.vprefix_len = 64;
+      config.vhost6 = config.vprefix_addr6;
+      config.vhost6.s6_addr[15] |= 2;
+      config.vnameserver6 = config.vprefix_addr6;
+      config.vnameserver6.s6_addr[15] |= 3;
+    }
+#endif
   }
 #if BX_HAVE_LIBSLIRP
   slirp = slirp_new(&config, &callbacks, this);
@@ -428,6 +502,10 @@ bool bx_slirp_pktmover_c::parse_slirp_conf(const char *conf)
           } else {
             BX_ERROR(("slirp: wrong format for 'pktlog'"));
           }
+#if BX_HAVE_LIBSLIRP && !defined(_WIN32)
+        } else if (!stricmp(param, "ipv6_enabled")) {
+          config.in6_enabled = (atoi(val) != 0);
+#endif
         } else {
           BX_ERROR(("slirp: unknown option '%s'", line));
         }
@@ -539,7 +617,12 @@ void bx_slirp_pktmover_c::receive(void *pkt, unsigned pkt_len)
 }
 
 #if BX_HAVE_LIBSLIRP
-static slirp_ssize_t send_packet(const void *buf, size_t len, void *opaque)
+void bx_slirp_pktmover_c::slirp_msg(const char *msg)
+{
+  BX_INFO(("%s", msg));
+}
+
+static ssize_t send_packet(const void *buf, size_t len, void *opaque)
 {
   bx_slirp_pktmover_c *class_ptr = (bx_slirp_pktmover_c *)opaque;
   class_ptr->receive((void*)buf, len);
