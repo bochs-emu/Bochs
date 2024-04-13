@@ -24,6 +24,8 @@ Detailed change log :
     - Now includes the USB Debugger support for the xHCI and UHCI controllers
   - Sound
     - Added PCM playback/recording support using PulseAudio simple API
+  - Networking
+    - Added support for using libslirp library instead of builtin slirp code
 
 -------------------------------------------------------------------------
 Changes in 2.8 (March 10, 2024):

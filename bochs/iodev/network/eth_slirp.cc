@@ -116,7 +116,12 @@ protected:
 
 
 #if BX_HAVE_LIBSLIRP
-static slirp_ssize_t send_packet(const void *buf, size_t len, void *opaque);
+static ssize_t send_packet(const void *buf, size_t len, void *opaque)
+{
+  bx_slirp_pktmover_c *class_ptr = (bx_slirp_pktmover_c *)opaque;
+  class_ptr->receive((void*)buf, len);
+  return len;
+}
 
 static void guest_error(const char *msg, void *opaque)
 {
@@ -280,7 +285,7 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
     if (!parse_slirp_conf(script)) {
       BX_ERROR(("reading slirp config failed"));
     }
-#if BX_HAVE_LIBSLIRP && !defined(_WIN32)
+#if BX_HAVE_LIBSLIRP
     if (config.in6_enabled) {
       BX_INFO(("IPv6 enabled (using default QEMU settings)"));
       inet_pton(AF_INET6, "fec0::", &config.vprefix_addr6);
@@ -371,6 +376,26 @@ bx_slirp_pktmover_c::~bx_slirp_pktmover_c()
     }
   }
 }
+
+#if BX_HAVE_LIBSLIRP && defined(WIN32)
+int inet_aton(const char *cp, struct in_addr *ia)
+{
+  uint32_t addr;
+
+#if defined(_MSC_VER)
+  if (!inet_pton(AF_INET, cp, &addr)) {
+    return 0;
+  }
+#else
+  addr = inet_addr(cp);
+#endif
+  if (addr == 0xffffffff) {
+    return 0;
+  }
+  ia->s_addr = addr;
+  return 1;
+}
+#endif
 
 bool bx_slirp_pktmover_c::parse_slirp_conf(const char *conf)
 {
@@ -502,7 +527,7 @@ bool bx_slirp_pktmover_c::parse_slirp_conf(const char *conf)
           } else {
             BX_ERROR(("slirp: wrong format for 'pktlog'"));
           }
-#if BX_HAVE_LIBSLIRP && !defined(_WIN32)
+#if BX_HAVE_LIBSLIRP
         } else if (!stricmp(param, "ipv6_enabled")) {
           config.in6_enabled = (atoi(val) != 0);
 #endif
@@ -620,13 +645,6 @@ void bx_slirp_pktmover_c::receive(void *pkt, unsigned pkt_len)
 void bx_slirp_pktmover_c::slirp_msg(const char *msg)
 {
   BX_INFO(("%s", msg));
-}
-
-static ssize_t send_packet(const void *buf, size_t len, void *opaque)
-{
-  bx_slirp_pktmover_c *class_ptr = (bx_slirp_pktmover_c *)opaque;
-  class_ptr->receive((void*)buf, len);
-  return len;
 }
 #endif
 
