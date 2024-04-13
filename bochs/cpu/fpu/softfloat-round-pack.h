@@ -104,43 +104,6 @@ floatx80 normalizeRoundAndPackFloatx80(int roundingPrecision,
 void normalizeFloat128Subnormal(
      Bit64u aSig0, Bit64u aSig1, Bit32s *zExpPtr, Bit64u *zSig0Ptr, Bit64u *zSig1Ptr);
 
-/*----------------------------------------------------------------------------
-| Takes an abstract floating-point value having sign `zSign', exponent `zExp',
-| and extended significand formed by the concatenation of `zSig0', `zSig1',
-| and `zSig2', and returns the proper quadruple-precision floating-point value
-| corresponding to the abstract input.  Ordinarily, the abstract value is
-| simply rounded and packed into the quadruple-precision format, with the
-| inexact exception raised if the abstract input cannot be represented
-| exactly.  However, if the abstract value is too large, the overflow and
-| inexact exceptions are raised and an infinity or maximal finite value is
-| returned.  If the abstract value is too small, the input value is rounded to
-| a subnormal number, and the underflow and inexact exceptions are raised if
-| the abstract input cannot be represented exactly as a subnormal quadruple-
-| precision floating-point number.
-|     The input significand must be normalized or smaller.  If the input
-| significand is not normalized, `zExp' must be 0; in that case, the result
-| returned is a subnormal number, and it must not require rounding.  In the
-| usual case that the input significand is normalized, `zExp' must be 1 less
-| than the ``true'' floating-point exponent.  The handling of underflow and
-| overflow follows the IEC/IEEE Standard for Binary Floating-Point Arithmetic.
-*----------------------------------------------------------------------------*/
-
-float128 roundAndPackFloat128(
-     int zSign, Bit32s zExp, Bit64u zSig0, Bit64u zSig1, Bit64u zSig2, float_status_t &status);
-
-/*----------------------------------------------------------------------------
-| Takes an abstract floating-point value having sign `zSign', exponent `zExp',
-| and significand formed by the concatenation of `zSig0' and `zSig1', and
-| returns the proper quadruple-precision floating-point value corresponding
-| to the abstract input.  This routine is just like `roundAndPackFloat128'
-| except that the input significand has fewer bits and does not have to be
-| normalized.  In all cases, `zExp' must be 1 less than the ``true'' floating-
-| point exponent.
-*----------------------------------------------------------------------------*/
-
-float128 normalizeRoundAndPackFloat128(
-     int zSign, Bit32s zExp, Bit64u zSig0, Bit64u zSig1, float_status_t &status);
-
 #endif // FLOAT128
 
 #endif

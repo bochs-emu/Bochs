@@ -27,6 +27,7 @@ these four paragraphs for those parts of this code that are retained.
 #include "softfloat-round-pack.h"
 #define USE_estimateDiv128To64
 #include "softfloat-macros.h"
+#include "softfloat-helpers.h"
 
 /* executes single exponent reduction cycle */
 static Bit64u remainder_kernel(Bit64u aSig0, Bit64u bSig, int expDiff, Bit64u *zSig0, Bit64u *zSig1)
@@ -54,7 +55,7 @@ static int do_fprem(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, int rounding
 
     // handle unsupported extended double-precision floating encodings
     if (extF80_isUnsupported(a) || extF80_isUnsupported(b)) {
-        float_raise(status, float_flag_invalid);
+        softfloat_raiseFlags(&status, softfloat_flag_invalid);
         r = floatx80_default_nan;
         return -1;
     }
@@ -70,7 +71,7 @@ static int do_fprem(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, int rounding
             r = propagateFloatx80NaN(a, b, status);
             return -1;
         }
-        float_raise(status, float_flag_invalid);
+        softfloat_raiseFlags(&status, softfloat_flag_invalid);
         r = floatx80_default_nan;
         return -1;
     }
@@ -80,7 +81,7 @@ static int do_fprem(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, int rounding
             return -1;
         }
         if (aExp == 0 && aSig0) {
-            float_raise(status, float_flag_denormal);
+            softfloat_raiseFlags(&status, softfloat_flag_denormal);
             normalizeFloatx80Subnormal(aSig0, &aExp, &aSig0);
             r = (a.fraction & BX_CONST64(0x8000000000000000)) ? packFloatx80(aSign, aExp, aSig0) : a;
             return 0;
@@ -91,11 +92,11 @@ static int do_fprem(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, int rounding
     }
     if (bExp == 0) {
         if (bSig == 0) {
-            float_raise(status, float_flag_invalid);
+            softfloat_raiseFlags(&status, softfloat_flag_invalid);
             r = floatx80_default_nan;
             return -1;
         }
-        float_raise(status, float_flag_denormal);
+        softfloat_raiseFlags(&status, softfloat_flag_denormal);
         normalizeFloatx80Subnormal(bSig, &bExp, &bSig);
     }
     if (aExp == 0) {
@@ -103,7 +104,7 @@ static int do_fprem(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, int rounding
             r = a;
             return 0;
         }
-        float_raise(status, float_flag_denormal);
+        softfloat_raiseFlags(&status, softfloat_flag_denormal);
         normalizeFloatx80Subnormal(aSig0, &aExp, &aSig0);
     }
     expDiff = aExp - bExp;
@@ -126,7 +127,7 @@ static int do_fprem(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, int rounding
                     packFloatx80(aSign, aExp, aSig0) : a;
                return 0;
             }
-            shift128Right(aSig0, 0, 1, &aSig0, &aSig1);
+            shortShift128Right(aSig0, 0, 1, &aSig0, &aSig1);
             expDiff = 0;
         }
 
@@ -143,7 +144,7 @@ static int do_fprem(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, int rounding
         if (rounding_mode == softfloat_round_near_even)
         {
             Bit64u term0, term1;
-            shift128Right(bSig, 0, 1, &term0, &term1);
+            shortShift128Right(bSig, 0, 1, &term0, &term1);
 
             if (! lt128(aSig0, aSig1, term0, term1))
             {

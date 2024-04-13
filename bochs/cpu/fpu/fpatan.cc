@@ -137,16 +137,16 @@ floatx80 fpatan(floatx80 a, floatx80 b, float_status_t &status)
 {
     // handle unsupported extended double-precision floating encodings
     if (extF80_isUnsupported(a) || extF80_isUnsupported(b)) {
-        float_raise(status, float_flag_invalid);
+        softfloat_raiseFlags(&status, softfloat_flag_invalid);
         return floatx80_default_nan;
     }
 
-    Bit64u aSig = extractFloatx80Frac(a);
-    Bit32s aExp = extractFloatx80Exp(a);
-    int aSign = extractFloatx80Sign(a);
-    Bit64u bSig = extractFloatx80Frac(b);
-    Bit32s bExp = extractFloatx80Exp(b);
-    int bSign = extractFloatx80Sign(b);
+    Bit64u aSig = extF80_fraction(a);
+    Bit32s aExp = extF80_exp(a);
+    int aSign = extF80_sign(a);
+    Bit64u bSig = extF80_fraction(b);
+    Bit32s bExp = extF80_exp(b);
+    int bSign = extF80_sign(b);
 
     int zSign = aSign ^ bSign;
 
@@ -168,7 +168,7 @@ floatx80 fpatan(floatx80 a, floatx80 b, float_status_t &status)
         }
 
         if (aSig && ! aExp)
-            float_raise(status, float_flag_denormal);
+            softfloat_raiseFlags(&status, softfloat_flag_denormal);
 
         /* return PI/2 */
         return roundAndPackFloatx80(80, bSign, FLOATX80_PI2_EXP, FLOAT_PI_HI, FLOAT_PI_LO, status);
@@ -179,7 +179,7 @@ floatx80 fpatan(floatx80 a, floatx80 b, float_status_t &status)
             return propagateFloatx80NaN(a, b, status);
 
         if (bSig && ! bExp)
-            float_raise(status, float_flag_denormal);
+            softfloat_raiseFlags(&status, softfloat_flag_denormal);
 
 return_PI_or_ZERO:
 
@@ -192,11 +192,11 @@ return_PI_or_ZERO:
     if (! bExp)
     {
         if (! bSig) {
-             if (aSig && ! aExp) float_raise(status, float_flag_denormal);
+             if (aSig && ! aExp) softfloat_raiseFlags(&status, softfloat_flag_denormal);
              goto return_PI_or_ZERO;
         }
 
-        float_raise(status, float_flag_denormal);
+        softfloat_raiseFlags(&status, softfloat_flag_denormal);
         normalizeFloatx80Subnormal(bSig, &bExp, &bSig);
     }
     if (! aExp)
@@ -204,11 +204,11 @@ return_PI_or_ZERO:
         if (! aSig)   /* return PI/2 */
             return roundAndPackFloatx80(80, bSign, FLOATX80_PI2_EXP, FLOAT_PI_HI, FLOAT_PI_LO, status);
 
-        float_raise(status, float_flag_denormal);
+        softfloat_raiseFlags(&status, softfloat_flag_denormal);
         normalizeFloatx80Subnormal(aSig, &aExp, &aSig);
     }
 
-    float_raise(status, float_flag_inexact);
+    softfloat_raiseFlags(&status, softfloat_flag_inexact);
 
     /* |a| = |b| ==> return PI/4 */
     if (aSig == bSig && aExp == bExp) {
@@ -222,8 +222,9 @@ return_PI_or_ZERO:
     /* using float128 for approximation */
     /* ******************************** */
 
-    float128 a128 = normalizeRoundAndPackFloat128(0, aExp-0x10, aSig, 0, status);
-    float128 b128 = normalizeRoundAndPackFloat128(0, bExp-0x10, bSig, 0, status);
+
+    float128_t a128 = softfloat_normRoundPackToF128(0, aExp-0x10, aSig, 0, &status);
+    float128_t b128 = softfloat_normRoundPackToF128(0, bExp-0x10, bSig, 0, &status);
     float128_t x;
     int swap = 0, add_pi6 = 0, add_pi4 = 0;
 

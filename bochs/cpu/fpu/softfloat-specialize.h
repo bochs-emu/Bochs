@@ -420,6 +420,8 @@ BX_CPP_INLINE int float128_is_signaling_nan(float128 a)
         && (a.lo || (a.hi & BX_CONST64(0x00007FFFFFFFFFFF)));
 }
 
+#include "softfloat-helpers.h"
+
 /*----------------------------------------------------------------------------
 | Returns the result of converting the quadruple-precision floating-point NaN
 | `a' to the canonical NaN format.  If `a' is a signaling NaN, the invalid

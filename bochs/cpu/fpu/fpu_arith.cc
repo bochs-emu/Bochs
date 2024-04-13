@@ -70,7 +70,7 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float32 b32, int bIsNaN, float_s
     int bIsSignalingNaN = f32_isSignalingNaN(b32);
 
     if (aIsSignalingNaN | bIsSignalingNaN)
-        float_raise(status, float_flag_invalid);
+        softfloat_raiseFlags(&status, softfloat_flag_invalid);
 
     // propagate QNaN to SNaN
     a = propagateFloatx80NaN(a, status);
@@ -100,7 +100,7 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float32 b32, int bIsNaN, float_s
 bool FPU_handle_NaN(floatx80 a, float32 b, floatx80 &r, float_status_t &status)
 {
   if (extF80_isUnsupported(a)) {
-     float_raise(status, float_flag_invalid);
+     softfloat_raiseFlags(&status, softfloat_flag_invalid);
      r = floatx80_default_nan;
      return true;
   }
@@ -119,7 +119,7 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float64 b64, int bIsNaN, float_s
     int bIsSignalingNaN = f64_isSignalingNaN(b64);
 
     if (aIsSignalingNaN | bIsSignalingNaN)
-        float_raise(status, float_flag_invalid);
+        softfloat_raiseFlags(&status, softfloat_flag_invalid);
 
     // propagate QNaN to SNaN
     a = propagateFloatx80NaN(a, status);
@@ -149,7 +149,7 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float64 b64, int bIsNaN, float_s
 bool FPU_handle_NaN(floatx80 a, float64 b, floatx80 &r, float_status_t &status)
 {
   if (extF80_isUnsupported(a)) {
-     float_raise(status, float_flag_invalid);
+     softfloat_raiseFlags(&status, softfloat_flag_invalid);
      r = floatx80_default_nan;
      return true;
   }

@@ -317,10 +317,10 @@ float32 float32_fixupimm(float32 dst, float32 op1, Bit32u op2, unsigned imm8, fl
   }
 
   if (imm8 & ie_fault_mask)
-    float_raise(status, float_flag_invalid);
+    softfloat_raiseFlags(&status, softfloat_flag_invalid);
 
   if (imm8 & divz_fault_mask)
-    float_raise(status, float_flag_divbyzero);
+    softfloat_raiseFlags(&status, softfloat_flag_divbyzero);
 
   // access response table, each response is encoded with 4-bit value in the op2
   unsigned token_response = (op2 >> (token*4)) & 0xf;
@@ -412,10 +412,10 @@ float64 float64_fixupimm(float64 dst, float64 op1, Bit32u op2, unsigned imm8, fl
   }
 
   if (imm8 & ie_fault_mask)
-    float_raise(status, float_flag_invalid);
+    softfloat_raiseFlags(&status, softfloat_flag_invalid);
 
   if (imm8 & divz_fault_mask)
-    float_raise(status, float_flag_divbyzero);
+    softfloat_raiseFlags(&status, softfloat_flag_divbyzero);
 
   // access response table, each response is encoded with 4-bit value in the op2
   unsigned token_response = (op2 >> (token*4)) & 0xf;

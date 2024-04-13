@@ -27,6 +27,7 @@ these four paragraphs for those parts of this code that are retained.
 
 #include "softfloatx80.h"
 #include "softfloat-round-pack.h"
+#include "softfloat-helpers.h"
 
 static const floatx80 floatx80_negone  = packFloatx80(1, 0x3fff, BX_CONST64(0x8000000000000000));
 static const floatx80 floatx80_neghalf = packFloatx80(1, 0x3ffe, BX_CONST64(0x8000000000000000));
@@ -114,20 +115,19 @@ static float128_t poly_exp(float128_t x, float_status_t &status)
 //     e  = 1 + --- + --- + --- + --- + --- + ... + --- + ...
 //               1!    2!    3!    4!    5!          n!
 //
-
 floatx80 f2xm1(floatx80 a, float_status_t &status)
 {
     Bit64u zSig0, zSig1, zSig2;
 
     // handle unsupported extended double-precision floating encodings
     if (extF80_isUnsupported(a)) {
-        float_raise(status, float_flag_invalid);
+        softfloat_raiseFlags(&status, softfloat_flag_invalid);
         return floatx80_default_nan;
     }
 
-    Bit64u aSig = extractFloatx80Frac(a);
-    Bit32s aExp = extractFloatx80Exp(a);
-    int aSign = extractFloatx80Sign(a);
+    Bit64u aSig = extF80_fraction(a);
+    Bit32s aExp = extF80_exp(a);
+    int aSign = extF80_sign(a);
 
     if (aExp == 0x7FFF) {
         if ((Bit64u) (aSig<<1))
@@ -138,7 +138,7 @@ floatx80 f2xm1(floatx80 a, float_status_t &status)
 
     if (aExp == 0) {
         if (aSig == 0) return a;
-        float_raise(status, float_flag_denormal | float_flag_inexact);
+        softfloat_raiseFlags(&status, softfloat_flag_denormal | softfloat_flag_inexact);
         normalizeFloatx80Subnormal(aSig, &aExp, &aSig);
 
     tiny_argument:
@@ -147,11 +147,10 @@ floatx80 f2xm1(floatx80 a, float_status_t &status)
             shortShift128Left(zSig0, zSig1, 1, &zSig0, &zSig1);
             --aExp;
         }
-        return
-            roundAndPackFloatx80(80, aSign, aExp, zSig0, zSig1, status);
+        return roundAndPackFloatx80(80, aSign, aExp, zSig0, zSig1, status);
     }
 
-    float_raise(status, float_flag_inexact);
+    softfloat_raiseFlags(&status, softfloat_flag_inexact);
 
     if (aExp < 0x3FFF)
     {

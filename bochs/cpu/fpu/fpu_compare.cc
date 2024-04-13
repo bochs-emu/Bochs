@@ -254,7 +254,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *i)
 
   if (extF80_isNaN(a) || extF80_isUnsupported(a) || f32_isNaN(load_reg)) {
     rc = softfloat_relation_unordered;
-    float_raise(status, float_flag_invalid);
+    softfloat_raiseFlags(&status, softfloat_flag_invalid);
   }
   else {
     rc = extF80_compare(a, f32_to_extF80(load_reg, &status), &status);
@@ -302,7 +302,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *i)
 
   if (extF80_isNaN(a) || extF80_isUnsupported(a) || f64_isNaN(load_reg)) {
     rc = softfloat_relation_unordered;
-    float_raise(status, float_flag_invalid);
+    softfloat_raiseFlags(&status, softfloat_flag_invalid);
   }
   else {
     rc = extF80_compare(a, f64_to_extF80(load_reg, &status), &status);
