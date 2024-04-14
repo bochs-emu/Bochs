@@ -27,6 +27,9 @@ Detailed change log :
   - Networking
     - Added support for using libslirp library instead of builtin slirp code
 
+- Misc
+  - bximage: added simple partition table viewer to the info function
+
 -------------------------------------------------------------------------
 Changes in 2.8 (March 10, 2024):
 
