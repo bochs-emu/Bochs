@@ -233,11 +233,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPREM1(bxInstruction_c *i)
 
   Bit64u quotient;
 
-  floatx80 a = BX_READ_FPU_REG(0);
-  floatx80 b = BX_READ_FPU_REG(1);
-  floatx80 result;
+  extFloat80_t a = BX_READ_FPU_REG(0);
+  extFloat80_t b = BX_READ_FPU_REG(1);
+  extFloat80_t result;
 
-  int flags = floatx80_ieee754_remainder(a, b, result, quotient, status);
+  int flags = floatx80_ieee754_remainder(a, b, result, quotient, &status);
 
   if (! FPU_exception(i, status.float_exception_flags)) {
      if (flags >= 0) {
@@ -276,11 +276,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPREM(bxInstruction_c *i)
 
   Bit64u quotient;
 
-  floatx80 a = BX_READ_FPU_REG(0);
-  floatx80 b = BX_READ_FPU_REG(1);
-  floatx80 result;
+  extFloat80_t a = BX_READ_FPU_REG(0);
+  extFloat80_t b = BX_READ_FPU_REG(1);
+  extFloat80_t result;
 
-  int flags = floatx80_remainder(a, b, result, quotient, status);
+  int flags = floatx80_remainder(a, b, result, quotient, &status);
 
   if (! FPU_exception(i, status.float_exception_flags)) {
      if (flags >= 0) {

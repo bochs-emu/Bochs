@@ -154,9 +154,7 @@ invalid:
     int zSign = bSign ^ 1;
 
     if (aExp == 0x7FFF) {
-        if ((Bit64u) (aSig<<1)
-             || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1)))
-        {
+        if ((aSig<<1) || ((bExp == 0x7FFF) && (bSig<<1))) {
             return propagateFloatx80NaN(a, b, status);
         }
         if (aSign) goto invalid;
@@ -168,16 +166,15 @@ invalid:
             return packFloatx80(bSign, 0x7FFF, BX_CONST64(0x8000000000000000));
         }
     }
-    if (bExp == 0x7FFF)
-    {
-        if (bSig<<1) return propagateFloatx80NaN(a, b, status);
+    if (bExp == 0x7FFF) {
+        if (bSig << 1) return propagateFloatx80NaN(a, b, status);
         if (aSign && (Bit64u)(aExp | aSig)) goto invalid;
         if (aSig && ! aExp)
             softfloat_raiseFlags(&status, softfloat_flag_denormal);
         if (aExp < 0x3FFF) {
             return packFloatx80(zSign, 0x7FFF, BX_CONST64(0x8000000000000000));
         }
-        if (aExp == 0x3FFF && ((Bit64u) (aSig<<1) == 0)) goto invalid;
+        if (aExp == 0x3FFF && ! (aSig<<1)) goto invalid;
         return packFloatx80(bSign, 0x7FFF, BX_CONST64(0x8000000000000000));
     }
     if (! aExp) {
@@ -199,7 +196,7 @@ invalid:
         softfloat_raiseFlags(&status, softfloat_flag_denormal);
         normalizeFloatx80Subnormal(bSig, &bExp, &bSig);
     }
-    if (aExp == 0x3FFF && ((aSig<<1) == 0))
+    if (aExp == 0x3FFF && ! (aSig<<1))
         return packFloatx80(bSign, 0, 0);
 
     softfloat_raiseFlags(&status, softfloat_flag_inexact);
@@ -339,8 +336,7 @@ invalid:
             --zExp;
         }
 
-        return
-            roundAndPackFloatx80(80, aSign ^ bSign, zExp, zSig0, zSig1, status);
+        return softfloat_roundPackToExtF80(aSign ^ bSign, zExp, zSig0, zSig1, 80, &status);
     }
 
     /* ******************************** */

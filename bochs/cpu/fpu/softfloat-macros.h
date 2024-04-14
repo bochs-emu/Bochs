@@ -104,20 +104,6 @@ BX_CPP_INLINE void shift64ExtraRightJamming(Bit64u a0, Bit64u a1, int count, Bit
 }
 
 /*----------------------------------------------------------------------------
-| Adds the 128-bit value formed by concatenating `a0' and `a1' to the 128-bit
-| value formed by concatenating `b0' and `b1'.  Addition is modulo 2^128, so
-| any carry out is lost.  The result is broken into two 64-bit pieces which
-| are stored at the locations pointed to by `z0Ptr' and `z1Ptr'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE void add128(Bit64u a0, Bit64u a1, Bit64u b0, Bit64u b1, Bit64u *z0Ptr, Bit64u *z1Ptr)
-{
-    Bit64u z1 = a1 + b1;
-    *z1Ptr = z1;
-    *z0Ptr = a0 + b0 + (z1 < a1);
-}
-
-/*----------------------------------------------------------------------------
 | Subtracts the 128-bit value formed by concatenating `b0' and `b1' from the
 | 128-bit value formed by concatenating `a0' and `a1'.  Subtraction is modulo
 | 2^128, so any borrow out (carry out) is lost.  The result is broken into two
@@ -131,66 +117,6 @@ BX_CPP_INLINE void
     *z1Ptr = a1 - b1;
     *z0Ptr = a0 - b0 - (a1 < b1);
 }
-
-/*----------------------------------------------------------------------------
-| Multiplies `a' by `b' to obtain a 128-bit product.  The product is broken
-| into two 64-bit pieces which are stored at the locations pointed to by
-| `z0Ptr' and `z1Ptr'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE void mul64To128(Bit64u a, Bit64u b, Bit64u *z0Ptr, Bit64u *z1Ptr)
-{
-    Bit32u aHigh, aLow, bHigh, bLow;
-    Bit64u z0, zMiddleA, zMiddleB, z1;
-
-    aLow = (Bit32u) a;
-    aHigh = (Bit32u)(a>>32);
-    bLow = (Bit32u) b;
-    bHigh = (Bit32u)(b>>32);
-    z1 = ((Bit64u) aLow) * bLow;
-    zMiddleA = ((Bit64u) aLow) * bHigh;
-    zMiddleB = ((Bit64u) aHigh) * bLow;
-    z0 = ((Bit64u) aHigh) * bHigh;
-    zMiddleA += zMiddleB;
-    z0 += (((Bit64u) (zMiddleA < zMiddleB))<<32) + (zMiddleA>>32);
-    zMiddleA <<= 32;
-    z1 += zMiddleA;
-    z0 += (z1 < zMiddleA);
-    *z1Ptr = z1;
-    *z0Ptr = z0;
-}
-
-/*----------------------------------------------------------------------------
-| Returns an approximation to the 64-bit integer quotient obtained by dividing
-| `b' into the 128-bit value formed by concatenating `a0' and `a1'.  The
-| divisor `b' must be at least 2^63.  If q is the exact quotient truncated
-| toward zero, the approximation returned lies between q and q + 2 inclusive.
-| If the exact quotient q is larger than 64 bits, the maximum positive 64-bit
-| unsigned integer is returned.
-*----------------------------------------------------------------------------*/
-
-#ifdef USE_estimateDiv128To64
-static Bit64u estimateDiv128To64(Bit64u a0, Bit64u a1, Bit64u b)
-{
-    Bit64u b0, b1;
-    Bit64u rem0, rem1, term0, term1;
-    Bit64u z;
-
-    if (b <= a0) return BX_CONST64(0xFFFFFFFFFFFFFFFF);
-    b0 = b>>32;
-    z = (b0<<32 <= a0) ? BX_CONST64(0xFFFFFFFF00000000) : (a0 / b0)<<32;
-    mul64To128(b, z, &term0, &term1);
-    sub128(a0, a1, term0, term1, &rem0, &rem1);
-    while (((Bit64s) rem0) < 0) {
-        z -= BX_CONST64(0x100000000);
-        b1 = b<<32;
-        add128(rem0, rem1, b0, b1, &rem0, &rem1);
-    }
-    rem0 = (rem0<<32) | (rem1>>32);
-    z |= (b0<<32 <= rem0) ? 0xFFFFFFFF : rem0 / b0;
-    return z;
-}
-#endif
 
 static const int countLeadingZeros8[] = {
   8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4,

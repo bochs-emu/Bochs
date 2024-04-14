@@ -130,14 +130,14 @@ floatx80 f2xm1(floatx80 a, float_status_t &status)
     int aSign = extF80_sign(a);
 
     if (aExp == 0x7FFF) {
-        if ((Bit64u) (aSig<<1))
+        if (aSig << 1)
             return propagateFloatx80NaN(a, status);
 
         return (aSign) ? floatx80_negone : a;
     }
 
-    if (aExp == 0) {
-        if (aSig == 0) return a;
+    if (! aExp) {
+        if (! aSig) return a;
         softfloat_raiseFlags(&status, softfloat_flag_denormal | softfloat_flag_inexact);
         normalizeFloatx80Subnormal(aSig, &aExp, &aSig);
 

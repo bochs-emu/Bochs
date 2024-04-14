@@ -159,19 +159,17 @@ floatx80 fpatan(floatx80 a, floatx80 b, float_status_t &status)
             if (aSig<<1)
                 return propagateFloatx80NaN(a, b, status);
 
-            if (aSign) {   /* return 3PI/4 */
-                return roundAndPackFloatx80(80, bSign, FLOATX80_3PI4_EXP, FLOAT_3PI4_HI, FLOAT_3PI4_LO, status);
-            }
-            else {         /* return  PI/4 */
-                return roundAndPackFloatx80(80, bSign, FLOATX80_PI4_EXP, FLOAT_PI_HI, FLOAT_PI_LO, status);
-            }
+            if (aSign)     /* return 3PI/4 */
+                return softfloat_roundPackToExtF80(bSign, FLOATX80_3PI4_EXP, FLOAT_3PI4_HI, FLOAT_3PI4_LO, 80, &status);
+            else           /* return  PI/4 */
+                return softfloat_roundPackToExtF80(bSign, FLOATX80_PI4_EXP, FLOAT_PI_HI, FLOAT_PI_LO, 80, &status);
         }
 
         if (aSig && ! aExp)
             softfloat_raiseFlags(&status, softfloat_flag_denormal);
 
         /* return PI/2 */
-        return roundAndPackFloatx80(80, bSign, FLOATX80_PI2_EXP, FLOAT_PI_HI, FLOAT_PI_LO, status);
+        return softfloat_roundPackToExtF80(bSign, FLOATX80_PI2_EXP, FLOAT_PI_HI, FLOAT_PI_LO, 80, &status);
     }
     if (aExp == 0x7FFF)
     {
@@ -183,11 +181,10 @@ floatx80 fpatan(floatx80 a, floatx80 b, float_status_t &status)
 
 return_PI_or_ZERO:
 
-        if (aSign) {   /* return PI */
-            return roundAndPackFloatx80(80, bSign, FLOATX80_PI_EXP, FLOAT_PI_HI, FLOAT_PI_LO, status);
-        } else {       /* return  0 */
-            return packFloatx80(bSign, 0, 0);
-        }
+        if (aSign)   /* return PI */
+            return softfloat_roundPackToExtF80(bSign, FLOATX80_PI_EXP, FLOAT_PI_HI, FLOAT_PI_LO, 80, &status);
+        else         /* return  0 */
+            return packToExtF80(bSign, 0, 0);
     }
     if (! bExp)
     {
@@ -202,7 +199,7 @@ return_PI_or_ZERO:
     if (! aExp)
     {
         if (! aSig)   /* return PI/2 */
-            return roundAndPackFloatx80(80, bSign, FLOATX80_PI2_EXP, FLOAT_PI_HI, FLOAT_PI_LO, status);
+            return softfloat_roundPackToExtF80(bSign, FLOATX80_PI2_EXP, FLOAT_PI_HI, FLOAT_PI_LO, 80, &status);
 
         softfloat_raiseFlags(&status, softfloat_flag_denormal);
         normalizeFloatx80Subnormal(aSig, &aExp, &aSig);
@@ -213,9 +210,9 @@ return_PI_or_ZERO:
     /* |a| = |b| ==> return PI/4 */
     if (aSig == bSig && aExp == bExp) {
         if (aSign)
-            return roundAndPackFloatx80(80, bSign, FLOATX80_3PI4_EXP, FLOAT_3PI4_HI, FLOAT_3PI4_LO, status);
+            return softfloat_roundPackToExtF80(bSign, FLOATX80_3PI4_EXP, FLOAT_3PI4_HI, FLOAT_3PI4_LO, 80, &status);
         else
-            return roundAndPackFloatx80(80, bSign, FLOATX80_PI4_EXP, FLOAT_PI_HI, FLOAT_PI_LO, status);
+            return softfloat_roundPackToExtF80(bSign, FLOATX80_PI4_EXP, FLOAT_PI_HI, FLOAT_PI_LO, 80, &status);
     }
 
     /* ******************************** */

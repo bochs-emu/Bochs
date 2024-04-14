@@ -75,18 +75,6 @@ void normalizeFloatx80Subnormal(Bit64u aSig, Bit32s *zExpPtr, Bit64u *zSigPtr);
 floatx80 roundAndPackFloatx80(int roundingPrecision,
         int zSign, Bit32s zExp, Bit64u zSig0, Bit64u zSig1, float_status_t &status);
 
-/*----------------------------------------------------------------------------
-| Takes an abstract floating-point value having sign `zSign', exponent
-| `zExp', and significand formed by the concatenation of `zSig0' and `zSig1',
-| and returns the proper extended double-precision floating-point value
-| corresponding to the abstract input.  This routine is just like
-| `roundAndPackFloatx80' except that the input significand does not have to be
-| normalized.
-*----------------------------------------------------------------------------*/
-
-floatx80 normalizeRoundAndPackFloatx80(int roundingPrecision,
-        int zSign, Bit32s zExp, Bit64u zSig0, Bit64u zSig1, float_status_t &status);
-
 #endif // FLOATX80
 
 #ifdef FLOAT128

@@ -197,6 +197,9 @@ extFloat80_t
         if (sig > sigExact)
             softfloat_setRoundingUp(status);
     }
+    else {
+        if (! sig) exp = 0;
+    }
     return packToExtF80(sign, exp, sig);
 }
 

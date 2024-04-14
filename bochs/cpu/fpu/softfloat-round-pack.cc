@@ -270,30 +270,6 @@ floatx80 roundAndPackFloatx80(int roundingPrecision,
     return result;
 }
 
-/*----------------------------------------------------------------------------
-| Takes an abstract floating-point value having sign `zSign', exponent
-| `zExp', and significand formed by the concatenation of `zSig0' and `zSig1',
-| and returns the proper extended double-precision floating-point value
-| corresponding to the abstract input.  This routine is just like
-| `roundAndPackFloatx80' except that the input significand does not have to be
-| normalized.
-*----------------------------------------------------------------------------*/
-
-floatx80 normalizeRoundAndPackFloatx80(int roundingPrecision,
-        int zSign, Bit32s zExp, Bit64u zSig0, Bit64u zSig1, float_status_t &status)
-{
-    if (zSig0 == 0) {
-        zSig0 = zSig1;
-        zSig1 = 0;
-        zExp -= 64;
-    }
-    int shiftCount = countLeadingZeros64(zSig0);
-    shortShift128Left(zSig0, zSig1, shiftCount, &zSig0, &zSig1);
-    zExp -= shiftCount;
-    return
-        roundAndPackFloatx80(roundingPrecision, zSign, zExp, zSig0, zSig1, status);
-}
-
 #endif
 
 #ifdef FLOAT128

@@ -33,8 +33,9 @@ these four paragraphs for those parts of this code that are retained.
 | Software IEC/IEEE extended double-precision operations.
 *----------------------------------------------------------------------------*/
 
-int floatx80_remainder(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, float_status_t &status);
-int floatx80_ieee754_remainder(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, float_status_t &status);
+int floatx80_remainder(extFloat80_t a, extFloat80_t b, extFloat80_t &r, Bit64u &q, struct softfloat_status_t *status);
+int floatx80_ieee754_remainder(extFloat80_t a, extFloat80_t b, extFloat80_t &r, Bit64u &q, struct softfloat_status_t *status);
+
 floatx80 f2xm1(floatx80 a, float_status_t &status);
 floatx80 fyl2x(floatx80 a, floatx80 b, float_status_t &status);
 floatx80 fyl2xp1(floatx80 a, floatx80 b, float_status_t &status);
