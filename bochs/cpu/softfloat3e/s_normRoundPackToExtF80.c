@@ -44,8 +44,7 @@ extFloat80_t
      uint64_t sig,
      uint64_t sigExtra,
      uint8_t roundingPrecision,
-     struct softfloat_status_t *status
-)
+     struct softfloat_status_t *status)
 {
     int8_t shiftDist;
     struct uint128 sig128;

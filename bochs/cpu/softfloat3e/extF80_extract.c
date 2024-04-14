@@ -53,7 +53,6 @@ extFloat80_t extF80_extract(extFloat80_t *a, struct softfloat_status_t *status)
     bool signA;
     int32_t expA;
     uint64_t sigA;
-    struct uint128 uiZ;
     struct exp32_sig64 normExpSig;
 
     /*------------------------------------------------------------------------
@@ -75,8 +74,7 @@ extFloat80_t extF80_extract(extFloat80_t *a, struct softfloat_status_t *status)
     *------------------------------------------------------------------------*/
     if (expA == 0x7FFF) {
         if (sigA<<1) {
-            uiZ = softfloat_propagateNaNExtF80UI(uiA64, uiA0, 0, 0, status);
-            *a = packToExtF80(uiZ.v64, uiZ.v0);
+            *a = softfloat_propagateNaNExtF80UI(uiA64, uiA0, 0, 0, status);
             return *a;
         }
         return packToExtF80(0, 0x7FFF, BX_CONST64(0x8000000000000000));

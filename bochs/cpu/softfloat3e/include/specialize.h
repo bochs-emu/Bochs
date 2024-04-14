@@ -220,14 +220,13 @@ struct uint128 softfloat_commonNaNToExtF80UI(const struct commonNaN *aPtr);
 | result.  If either original floating-point value is a signaling NaN, the
 | invalid exception is raised.
 *----------------------------------------------------------------------------*/
-struct uint128
+extFloat80_t
  softfloat_propagateNaNExtF80UI(
      uint16_t uiA64,
      uint64_t uiA0,
      uint16_t uiB64,
      uint64_t uiB0,
-     struct softfloat_status_t *status
-);
+     struct softfloat_status_t *status);
 
 /*----------------------------------------------------------------------------
 | The bit pattern for a default generated 128-bit floating-point NaN.

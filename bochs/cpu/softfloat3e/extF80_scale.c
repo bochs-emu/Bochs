@@ -59,7 +59,6 @@ extFloat80_t extF80_scale(extFloat80_t a, extFloat80_t b, softfloat_status_t *st
     bool signB;
     int32_t expB;
     uint64_t sigB;
-    struct uint128 uiZ;
     struct exp32_sig64 normExpSig;
 
     // handle unsupported extended double-precision floating encodings
@@ -86,8 +85,7 @@ invalid:
 
     if (expA == 0x7FFF) {
         if ((sigA<<1) || ((expB == 0x7FFF) && (sigB<<1))) {
-            uiZ = softfloat_propagateNaNExtF80UI(uiA64, uiA0, uiB64, uiB0, status);
-            return packToExtF80(uiZ.v64, uiZ.v0);
+            return softfloat_propagateNaNExtF80UI(uiA64, uiA0, uiB64, uiB0, status);
         }
         if ((expB == 0x7FFF) && signB) goto invalid;
         if (sigB && !expB) softfloat_raiseFlags(status, softfloat_flag_denormal);
@@ -95,8 +93,7 @@ invalid:
     }
     if (expB == 0x7FFF) {
         if (sigB<<1) {
-            uiZ = softfloat_propagateNaNExtF80UI(uiA64, uiA0, uiB64, uiB0, status);
-            return packToExtF80(uiZ.v64, uiZ.v0);
+            return softfloat_propagateNaNExtF80UI(uiA64, uiA0, uiB64, uiB0, status);
         }
         if ((expA | sigA) == 0) {
             if (! signB) goto invalid;

@@ -57,7 +57,6 @@ extFloat80_t extF80_rem(extFloat80_t a, extFloat80_t b, struct softfloat_status_
     uint64_t q64;
     struct uint128 term, altRem, meanRem;
     bool signRem;
-    struct uint128 uiZ;
 
     // handle unsupported extended double-precision floating encodings
     if (extF80_isUnsupported(a) || extF80_isUnsupported(b))
@@ -183,8 +182,7 @@ extFloat80_t extF80_rem(extFloat80_t a, extFloat80_t b, struct softfloat_status_
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  propagateNaN:
-    uiZ = softfloat_propagateNaNExtF80UI(uiA64, uiA0, uiB64, uiB0, status);
-    return packToExtF80(uiZ.v64, uiZ.v0);
+    return softfloat_propagateNaNExtF80UI(uiA64, uiA0, uiB64, uiB0, status);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  invalid:

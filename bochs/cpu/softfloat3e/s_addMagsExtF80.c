@@ -50,7 +50,6 @@ extFloat80_t softfloat_addMagsExtF80(uint16_t uiA64, uint64_t uiA0, uint16_t uiB
     struct exp32_sig64 normExpSig;
     int32_t expZ;
     struct uint64_extra sig64Extra;
-    struct uint128 uiZ;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -143,6 +142,5 @@ extFloat80_t softfloat_addMagsExtF80(uint16_t uiA64, uint64_t uiA0, uint16_t uiB
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  propagateNaN:
-    uiZ = softfloat_propagateNaNExtF80UI(uiA64, uiA0, uiB64, uiB0, status);
-    return packToExtF80(uiZ.v64, uiZ.v0);
+    return softfloat_propagateNaNExtF80UI(uiA64, uiA0, uiB64, uiB0, status);
 }
