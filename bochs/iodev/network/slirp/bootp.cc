@@ -406,6 +406,18 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
             }
         }
 
+        if (slirp->tftp_server_name) {
+            spaceleft = sizeof(rbp->bp_vend) - (q - rbp->bp_vend);
+            val = strlen(slirp->tftp_server_name);
+            if (val + 1 > (int)spaceleft) {
+                slirp_warning(slirp, "DHCP packet size exceeded, omitting tftp-server-name option.");
+            } else {
+                *q++ = RFC2132_TFTP_SERVER_NAME;
+                *q++ = val;
+                memcpy(q, slirp->tftp_server_name, val);
+                q += val;
+            }
+        }
         if (slirp->vdnssearch) {
             spaceleft = sizeof(rbp->bp_vend) - (q - rbp->bp_vend);
             val = slirp->vdnssearch_len;

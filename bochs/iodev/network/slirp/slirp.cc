@@ -232,6 +232,9 @@ Slirp *slirp_new(SlirpConfig *cfg, void *opaque, void *logfn)
         pstrcpy(slirp->client_hostname, sizeof(slirp->client_hostname),
                 cfg->vhostname);
     }
+    if (cfg->tftp_server_name) {
+        slirp->tftp_server_name = strdup(cfg->tftp_server_name);
+    }
     if (cfg->tftp_path) {
         slirp->tftp_prefix = strdup(cfg->tftp_path);
     }

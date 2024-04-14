@@ -290,6 +290,7 @@ struct Slirp {
     struct socket *icmp_last_so;
 
     /* tftp states */
+    char *tftp_server_name;
     char *tftp_prefix;
     struct tftp_session tftp_sessions[TFTP_SESSIONS_MAX];
 

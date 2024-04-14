@@ -242,7 +242,7 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
   config.disable_host_loopback = false;
   config.enable_emu = false;
   config.disable_dns = false;
-  config.tftp_server_name = "tftp";
+  config.vdomainname = "local";
 #endif
   config.restricted = false;
   config.vnetwork.s_addr = htonl(0x0a000200);    /* 10.0.2.0 */
@@ -355,6 +355,7 @@ bx_slirp_pktmover_c::~bx_slirp_pktmover_c()
 #endif
     if (config.bootfile != NULL) free((void*)config.bootfile);
     if (config.vhostname != NULL) free((void*)config.vhostname);
+    if (config.tftp_server_name != NULL) free((void*)config.tftp_server_name);
     if (config.vdnssearch != NULL) {
       size_t i = 0;
       while (config.vdnssearch[i] != NULL) {
@@ -531,6 +532,13 @@ bool bx_slirp_pktmover_c::parse_slirp_conf(const char *conf)
         } else if (!stricmp(param, "ipv6_enabled")) {
           config.in6_enabled = (atoi(val) != 0);
 #endif
+        } else if (!stricmp(param, "tftp_srvname")) {
+          if (len2 < 33) {
+            config.tftp_server_name = (char*)malloc(len2+1);
+            strcpy((char*)config.tftp_server_name, val);
+          } else {
+            BX_ERROR(("slirp: wrong format for 'tftp_srvname'"));
+          }
         } else {
           BX_ERROR(("slirp: unknown option '%s'", line));
         }
