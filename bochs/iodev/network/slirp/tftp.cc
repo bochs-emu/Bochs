@@ -202,7 +202,7 @@ static int tftp_send_optack(struct tftp_session *spt,
     daddr.sin_addr = spt->client_ip;
     daddr.sin_port = spt->client_port;
 
-    m->m_len = sizeof(struct tftp_t) - 514 + n -
+    m->m_len = sizeof(struct tftp_t) - TFTP_BUFFER_SIZE - 2 + n -
         sizeof(struct ip) - sizeof(struct udphdr);
     udp_output2(NULL, m, &saddr, &daddr, IPTOS_LOWDELAY);
 
