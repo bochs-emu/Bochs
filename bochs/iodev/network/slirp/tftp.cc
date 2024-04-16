@@ -5,7 +5,8 @@
  * A simple TFTP server (ported from Qemu)
  * Bochs additions: write support, 'blksize' and 'timeout' options
  *
- * Copyright (c) 2004 Magnus Damm <damm@opensource.se>
+ * Copyright (C) 2004  Magnus Damm <damm@opensource.se>
+ * Copyright (C) 2014-2024  The Bochs Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -340,6 +341,16 @@ static void tftp_parse_options(struct tftp_session *spt, struct tftp_t *tp, int 
 {
   const char *key, *value;
 
+  if (k < pktlen) {
+    // parse mode, which has no argument
+    key = &tp->x.tp_buf[k];
+    k += strlen(key) + 1;
+
+    if (strcasecmp(key, "octet") == 0) {
+      spt->options |= TFTP_OPTION_OCTET;
+    }
+  }
+
   while (k < pktlen) {
       key = &tp->x.tp_buf[k];
       k += strlen(key) + 1;
@@ -348,31 +359,25 @@ static void tftp_parse_options(struct tftp_session *spt, struct tftp_t *tp, int 
           value = &tp->x.tp_buf[k];
           k += strlen(value) + 1;
       } else {
-          value = NULL;
+          break;
       }
 
-      if (strcasecmp(key, "octet") == 0) {
-          spt->options |= TFTP_OPTION_OCTET;
-      } else if (strcasecmp(key, "tsize") == 0) {
+      if (strcasecmp(key, "tsize") == 0) {
           spt->options |= TFTP_OPTION_TSIZE;
-          if (spt->write && (value != NULL)) {
+          if (spt->write) {
               spt->tsize_val = atoi(value);
           }
       } else if (strcasecmp(key, "blksize") == 0) {
-          if (value != NULL) {
-              spt->options |= TFTP_OPTION_BLKSIZE;
-              spt->blksize_val = atoi(value);
-              if (spt->blksize_val > TFTP_BUFFER_SIZE) {
-                  spt->blksize_val = TFTP_DEFAULT_BLKSIZE;
-              }
+          spt->options |= TFTP_OPTION_BLKSIZE;
+          spt->blksize_val = atoi(value);
+          if (spt->blksize_val > TFTP_BUFFER_SIZE) {
+              spt->blksize_val = TFTP_DEFAULT_BLKSIZE;
           }
       } else if (strcasecmp(key, "timeout") == 0) {
-          if (value != NULL) {
-              spt->options |= TFTP_OPTION_TIMEOUT;
-              spt->timeout_val = atoi(value);
-              if ((spt->timeout_val < 1) || (spt->timeout_val > 255)) {
-                  spt->timeout_val = TFTP_DEFAULT_TIMEOUT;
-              }
+          spt->options |= TFTP_OPTION_TIMEOUT;
+          spt->timeout_val = atoi(value);
+          if ((spt->timeout_val < 1) || (spt->timeout_val > 255)) {
+              spt->timeout_val = TFTP_DEFAULT_TIMEOUT;
           }
       }
   }
