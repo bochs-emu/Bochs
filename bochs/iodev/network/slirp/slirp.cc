@@ -232,6 +232,9 @@ Slirp *slirp_new(SlirpConfig *cfg, void *opaque, void *logfn)
         pstrcpy(slirp->client_hostname, sizeof(slirp->client_hostname),
                 cfg->vhostname);
     }
+    if (cfg->vdomainname) {
+        slirp->vdomainname = strdup(cfg->vdomainname);
+    }
     if (cfg->tftp_server_name) {
         slirp->tftp_server_name = strdup(cfg->tftp_server_name);
     }
@@ -296,7 +299,9 @@ void slirp_cleanup(Slirp *slirp)
         slirp->exec_list = ex_ptr;
     }
 
+    free(slirp->vdomainname);
     free(slirp->tftp_prefix);
+    free(slirp->tftp_server_name);
     free(slirp->bootp_filename);
     free(slirp);
 }

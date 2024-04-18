@@ -242,7 +242,6 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
   config.disable_host_loopback = false;
   config.enable_emu = false;
   config.disable_dns = false;
-  config.vdomainname = "local";
 #endif
   config.restricted = false;
   config.vnetwork.s_addr = htonl(0x0a000200);    /* 10.0.2.0 */
@@ -251,6 +250,7 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
   config.vdhcp_start.s_addr = htonl(0x0a00020f); /* 10.0.2.15 */
   config.vnameserver.s_addr = htonl(0x0a000203); /* 10.0.2.3 */
   config.tftp_path = netif;
+  config.vdomainname = "local";
 #ifndef WIN32
   smb_export = NULL;
   smb_tmpdir = NULL;

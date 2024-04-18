@@ -251,6 +251,7 @@ struct Slirp {
 
     struct in_addr client_ipaddr;
     char client_hostname[33];
+    char *vdomainname;
 
     int restricted;
     struct ex_list *exec_list;

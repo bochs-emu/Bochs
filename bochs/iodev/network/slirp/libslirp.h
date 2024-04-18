@@ -14,6 +14,7 @@ typedef struct SlirpConfig {
   int restricted;
   struct in_addr vnetwork, vnetmask, vhost, vdhcp_start, vnameserver;
   const char *bootfile, *vhostname, **vdnssearch, *tftp_path, *tftp_server_name;
+  const char *vdomainname;
 } SlirpConfig;
 
 int get_dns_addr(struct in_addr *pdns_addr);
