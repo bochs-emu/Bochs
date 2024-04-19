@@ -11,7 +11,6 @@
 #define BX_PLUGGABLE
 
 #include "slirp.h"
-#include "iodev.h"
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 
@@ -161,7 +160,7 @@ diddit:
  */
 void if_start(Slirp *slirp)
 {
-    uint64_t now = bx_pc_system.time_usec() * 1000ULL;
+    uint64_t now = slirp->cb->clock_get_ns(slirp->opaque);
     bool from_batchq, next_from_batchq;
     struct mbuf *ifm, *ifm_next, *ifqt;
 
@@ -188,11 +187,6 @@ void if_start(Slirp *slirp)
     }
 
     while (ifm_next) {
-        /* check if we can really output */
-        if (!slirp_can_output(slirp->opaque)) {
-            break;
-        }
-
         ifm = ifm_next;
         from_batchq = next_from_batchq;
 

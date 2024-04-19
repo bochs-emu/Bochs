@@ -1,9 +1,6 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
-
-#ifndef __COMMON_H__
-#define __COMMON_H__
+/* SPDX-License-Identifier: BSD-3-Clause */
+#ifndef SLIRP_H
+#define SLIRP_H
 
 #ifdef __CYGWIN__
 #define __USE_W32_SOCKETS
@@ -297,6 +294,7 @@ struct Slirp {
 
     ArpTable arp_table;
 
+    SlirpCb *cb;
     void *opaque;
     void *logfn;
 };
@@ -379,6 +377,9 @@ uint8_t tcp_tos(struct socket *);
 int tcp_emu(struct socket *, struct mbuf *);
 int tcp_ctl(struct socket *);
 struct tcpcb *tcp_drop(struct tcpcb *tp, int err);
+
+/* Send a frame to the virtual Ethernet board, i.e. call the application send_packet callback */
+void slirp_send_packet_all(Slirp *slirp, const void *buf, size_t len);
 
 #ifdef USE_PPP
 #define MIN_MRU MINMRU

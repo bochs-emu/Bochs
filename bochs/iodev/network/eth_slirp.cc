@@ -71,8 +71,7 @@ public:
                       logfunctions *netdev, const char *script);
   virtual ~bx_slirp_pktmover_c();
   void sendpkt(void *buf, unsigned io_len);
-  void receive(void *pkt, unsigned pkt_len);
-  int  can_receive(void);
+  slirp_ssize_t receive(void *pkt, unsigned pkt_len);
 #if BX_HAVE_LIBSLIRP
   void slirp_msg(const char *msg);
 #endif
@@ -115,14 +114,14 @@ protected:
 } bx_slirp_match;
 
 
-#if BX_HAVE_LIBSLIRP
 static ssize_t send_packet(const void *buf, size_t len, void *opaque)
 {
   bx_slirp_pktmover_c *class_ptr = (bx_slirp_pktmover_c *)opaque;
-  class_ptr->receive((void*)buf, len);
-  return len;
+
+  return class_ptr->receive((void*)buf, len);
 }
 
+#if BX_HAVE_LIBSLIRP
 static void guest_error(const char *msg, void *opaque)
 {
   char errmsg[512];
@@ -130,12 +129,14 @@ static void guest_error(const char *msg, void *opaque)
   sprintf(errmsg, "guest error: %s", msg);
   ((bx_slirp_pktmover_c*)opaque)->slirp_msg(errmsg);
 }
+#endif
 
 static int64_t clock_get_ns(void *opaque)
 {
   return bx_pc_system.time_usec() * 1000;
 }
 
+#if BX_HAVE_LIBSLIRP
 struct timer {
     SlirpTimerId id;
     void *cb_opaque;
@@ -205,19 +206,23 @@ static void notify(void *opaque)
 {
   // Nothing here yet
 }
+#endif
 
 static struct SlirpCb callbacks = {
     .send_packet = send_packet,
+#if BX_HAVE_LIBSLIRP
     .guest_error = guest_error,
+#endif
     .clock_get_ns = clock_get_ns,
+#if BX_HAVE_LIBSLIRP
     .timer_free = timer_free,
     .timer_mod = timer_mod,
     .register_poll_fd = register_poll_fd,
     .unregister_poll_fd = unregister_poll_fd,
     .notify = notify,
     .timer_new_opaque = timer_new_opaque,
-};
 #endif
+};
 
 bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
                                          const char *macaddr,
@@ -303,7 +308,7 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
   slirplog = new logfunctions();
   sprintf(prefix, "SLIRP%d", bx_slirp_instances);
   slirplog->put(prefix);
-  slirp = slirp_new(&config, this, slirplog);
+  slirp = slirp_new(&config, &callbacks, this, slirplog);
 #endif
   if (n_hostfwd > 0) {
     for (int i = 0; i < n_hostfwd; i++) {
@@ -619,24 +624,7 @@ void bx_slirp_pktmover_c::rx_timer(void)
 #endif
 }
 
-int slirp_can_output(void *this_ptr)
-{
-  bx_slirp_pktmover_c *class_ptr = (bx_slirp_pktmover_c *)this_ptr;
-  return class_ptr->can_receive();
-}
-
-int bx_slirp_pktmover_c::can_receive()
-{
-  return ((this->rxstat(this->netdev) & BX_NETDEV_RXREADY) != 0);
-}
-
-void slirp_output(void *this_ptr, const Bit8u *pkt, int pkt_len)
-{
-  bx_slirp_pktmover_c *class_ptr = (bx_slirp_pktmover_c *)this_ptr;
-  class_ptr->receive((void*)pkt, pkt_len);
-}
-
-void bx_slirp_pktmover_c::receive(void *pkt, unsigned pkt_len)
+slirp_ssize_t bx_slirp_pktmover_c::receive(void *pkt, unsigned pkt_len)
 {
   if (this->rxstat(this->netdev) & BX_NETDEV_RXREADY) {
     if (pkt_len < MIN_RX_PACKET_LEN) pkt_len = MIN_RX_PACKET_LEN;
@@ -644,8 +632,10 @@ void bx_slirp_pktmover_c::receive(void *pkt, unsigned pkt_len)
       write_pktlog_txt(pktlog_txt, (const Bit8u*)pkt, pkt_len, 1);
     }
     this->rxh(this->netdev, pkt, pkt_len);
+    return pkt_len;
   } else {
     BX_ERROR(("device not ready to receive data"));
+    return -1;
   }
 }
 

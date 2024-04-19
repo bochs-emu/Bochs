@@ -1,6 +1,4 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: MIT */
 /*
  * libslirp glue
  *
@@ -48,7 +46,7 @@ static const uint8_t zero_ethaddr[ETH_ALEN] = { 0, 0, 0, 0, 0, 0 };
 /* XXX: suppress those select globals */
 fd_set *global_readfds, *global_writefds, *global_xfds;
 
-u_int curtime;
+unsigned curtime;
 
 static QTAILQ_HEAD(slirp_instances, Slirp) slirp_instances =
     QTAILQ_HEAD_INITIALIZER(slirp_instances);
@@ -210,7 +208,7 @@ static void slirp_init_once(void)
     loopback_mask = htonl(IN_CLASSA_NET);
 }
 
-Slirp *slirp_new(SlirpConfig *cfg, void *opaque, void *logfn)
+Slirp *slirp_new(SlirpConfig *cfg, SlirpCb *callbacks, void *opaque, void *logfn)
 {
     Slirp *slirp = (Slirp*)malloc(sizeof(Slirp));
     memset(slirp, 0, sizeof(Slirp));
@@ -251,6 +249,7 @@ Slirp *slirp_new(SlirpConfig *cfg, void *opaque, void *logfn)
         translate_dnssearch(slirp, cfg->vdnssearch);
     }
 
+    slirp->cb = callbacks;
     slirp->opaque = opaque;
     slirp->logfn = logfn;
 
@@ -264,7 +263,8 @@ Slirp *slirp_init(int restricted, struct in_addr vnetwork,
                   const char *vhostname, const char *tftp_path,
                   const char *bootfile, struct in_addr vdhcp_start,
                   struct in_addr vnameserver, const char **vdnssearch,
-                  void *opaque, void *logfn)
+                  const char *vdomainname, SlirpCb *callbacks, void *opaque,
+                  void *logfn)
 {
   SlirpConfig cfg;
   memset(&cfg, 0, sizeof(cfg));
@@ -278,7 +278,8 @@ Slirp *slirp_init(int restricted, struct in_addr vnetwork,
   cfg.vdhcp_start = vdhcp_start;
   cfg.vnameserver = vnameserver;
   cfg.vdnssearch = vdnssearch;
-  return slirp_new(&cfg, opaque, logfn);
+  cfg.vdomainname = vdomainname;
+  return slirp_new(&cfg, callbacks, opaque, logfn);
 }
 
 void slirp_cleanup(Slirp *slirp)
@@ -503,9 +504,9 @@ void slirp_select_poll(fd_set *readfds, fd_set *writefds, fd_set *xfds,
     global_writefds = writefds;
     global_xfds = xfds;
 
-    curtime = (u_int)(bx_pc_system.time_usec() / 1000);
 
     QTAILQ_FOREACH(slirp, &slirp_instances, entry) {
+        curtime = slirp->cb->clock_get_ns(slirp->opaque) / 1000000;
         /*
          * See if anything has timed out
          */
@@ -736,7 +737,7 @@ static void arp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
             rah->ar_sip = ah->ar_tip;
             memcpy(rah->ar_tha, ah->ar_sha, ETH_ALEN);
             rah->ar_tip = ah->ar_sip;
-            slirp_output(slirp->opaque, arp_reply, sizeof(arp_reply));
+            slirp_send_packet_all(slirp, arp_reply, sizeof(arp_reply));
         }
         break;
     case ARPOP_REPLY:
@@ -830,11 +831,11 @@ int if_encap(Slirp *slirp, struct mbuf *ifm)
             /* target IP */
             rah->ar_tip = iph->ip_dst.s_addr;
             slirp->client_ipaddr = iph->ip_dst;
-            slirp_output(slirp->opaque, arp_req, sizeof(arp_req));
+            slirp_send_packet_all(slirp, arp_req, sizeof(arp_req));
             ifm->arp_requested = true;
 
             /* Expire request and drop outgoing packet after 1 second */
-            ifm->expiration_date = (bx_pc_system.time_usec() + 1000000ULL) * 1000ULL;
+            ifm->expiration_date = slirp->cb->clock_get_ns(slirp->opaque) + 1000000000ULL;
         }
         return 0;
     } else {
@@ -844,7 +845,7 @@ int if_encap(Slirp *slirp, struct mbuf *ifm)
         memcpy(&eh->h_source[2], &slirp->vhost_addr, 4);
         eh->h_proto = htons(ETH_P_IP);
         memcpy(buf + sizeof(struct ethhdr), ifm->m_data, ifm->m_len);
-        slirp_output(slirp->opaque, buf, ifm->m_len + ETH_HLEN);
+        slirp_send_packet_all(slirp, buf, ifm->m_len + ETH_HLEN);
         return 1;
     }
 }
@@ -971,6 +972,17 @@ void slirp_socket_recv(Slirp *slirp, struct in_addr guest_addr, int guest_port,
 void slirp_warning(Slirp *slirp, const char *msg)
 {
     BX_ERROR(("%s",msg));
+}
+
+void slirp_send_packet_all(Slirp *slirp, const void *buf, size_t len)
+{
+    slirp_ssize_t ret = slirp->cb->send_packet(buf, len, slirp->opaque);
+
+    if (ret < 0) {
+        slirp_warning(slirp, "Failed to send packet");
+    } else if ((size_t)ret < len) {
+        slirp_warning(slirp, "send_packet() didn't send all data");
+    }
 }
 
 #endif
