@@ -217,7 +217,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\cpu\softfloat3e\8086-SSE\specialize.h" />
+    <ClInclude Include="..\cpu\softfloat3e\include\specialize.h" />
     <ClInclude Include="..\cpu\softfloat3e\include\internals.h" />
     <ClInclude Include="..\cpu\softfloat3e\include\opts-GCC.h" />
     <ClInclude Include="..\cpu\softfloat3e\include\primitives.h" />
