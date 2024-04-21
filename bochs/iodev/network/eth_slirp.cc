@@ -368,7 +368,10 @@ bx_slirp_pktmover_c::~bx_slirp_pktmover_c()
   }
 }
 
-#if BX_HAVE_LIBSLIRP && defined(WIN32)
+#if defined(WIN32)
+#if !BX_HAVE_LIBSLIRP
+int inet_aton(const char *cp, struct in_addr *ia);
+#else
 int inet_aton(const char *cp, struct in_addr *ia)
 {
   uint32_t addr;
@@ -386,6 +389,7 @@ int inet_aton(const char *cp, struct in_addr *ia)
   ia->s_addr = addr;
   return 1;
 }
+#endif
 #endif
 
 bool bx_slirp_pktmover_c::parse_slirp_conf(const char *conf)

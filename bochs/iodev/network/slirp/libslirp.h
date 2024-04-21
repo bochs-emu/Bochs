@@ -3,12 +3,12 @@
 #define LIBSLIRP_H
 
 #include <stdint.h>
-#include "compat.h"
 
 #ifdef _WIN32
 #include <winsock2.h>
 #else
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #endif
 typedef ssize_t slirp_ssize_t;
 

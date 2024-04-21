@@ -9,6 +9,7 @@
 
 #include "config.h"
 #include "slirp_config.h"
+#include "compat.h"
 
 #ifdef _WIN32
 
