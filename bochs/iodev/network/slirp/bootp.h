@@ -1,13 +1,14 @@
 /* SPDX-License-Identifier: BSD-3-Clause */
 /* bootp/dhcp defines */
+
 #ifndef SLIRP_BOOTP_H
-#define SLIRP_BOOTP_H 1
+#define SLIRP_BOOTP_H
 
-#define BOOTP_SERVER	67
-#define BOOTP_CLIENT	68
+#define BOOTP_SERVER 67
+#define BOOTP_CLIENT 68
 
-#define BOOTP_REQUEST	1
-#define BOOTP_REPLY	2
+#define BOOTP_REQUEST 1
+#define BOOTP_REPLY   2
 
 #define RFC1533_COOKIE		99, 130, 83, 99
 #define RFC1533_PAD		0
@@ -61,40 +62,41 @@
 #define RFC1533_XFS		48
 #define RFC1533_XDM		49
 
-#define RFC2132_REQ_ADDR	50
+#define RFC2132_REQ_ADDR        50
 #define RFC2132_LEASE_TIME      51
-#define RFC2132_MSG_TYPE	53
-#define RFC2132_SRV_ID		54
-#define RFC2132_PARAM_LIST	55
-#define RFC2132_MESSAGE		56
-#define RFC2132_MAX_SIZE	57
+#define RFC2132_MSG_TYPE        53
+#define RFC2132_SRV_ID          54
+#define RFC2132_PARAM_LIST      55
+#define RFC2132_MESSAGE         56
+#define RFC2132_MAX_SIZE        57
 #define RFC2132_RENEWAL_TIME    58
 #define RFC2132_REBIND_TIME     59
+#define RFC2132_VENDOR_CLASS_ID 60
 #define RFC2132_TFTP_SERVER_NAME 66
 
-#define DHCPDISCOVER		1
-#define DHCPOFFER		2
-#define DHCPREQUEST		3
-#define DHCPACK			5
-#define DHCPNAK			6
+#define DHCPDISCOVER 1
+#define DHCPOFFER    2
+#define DHCPREQUEST  3
+#define DHCPACK      5
+#define DHCPNAK      6
 
-#define RFC1533_VENDOR_MAJOR	0
-#define RFC1533_VENDOR_MINOR	0
+#define RFC1533_VENDOR_MAJOR 0
+#define RFC1533_VENDOR_MINOR 0
 
-#define RFC1533_VENDOR_MAGIC	128
-#define RFC1533_VENDOR_ADDPARM	129
-#define	RFC1533_VENDOR_ETHDEV	130
-#define RFC1533_VENDOR_HOWTO    132
-#define RFC1533_VENDOR_MNUOPTS	160
+#define RFC1533_VENDOR_MAGIC     128
+#define RFC1533_VENDOR_ADDPARM   129
+#define	RFC1533_VENDOR_ETHDEV    130
+#define RFC1533_VENDOR_HOWTO     132
+#define RFC1533_VENDOR_MNUOPTS   160
 #define RFC1533_VENDOR_SELECTION 176
-#define RFC1533_VENDOR_MOTD	184
-#define RFC1533_VENDOR_NUMOFMOTD 8
-#define RFC1533_VENDOR_IMG	192
-#define RFC1533_VENDOR_NUMOFIMG	16
+#define RFC1533_VENDOR_MOTD      184
+#define RFC1533_VENDOR_NUMOFMOTD   8
+#define RFC1533_VENDOR_IMG       192
+#define RFC1533_VENDOR_NUMOFIMG   16
 
-#define RFC1533_END		255
-#define BOOTP_VENDOR_LEN	64
-#define DHCP_OPT_LEN		312
+#define RFC1533_END      255
+#define BOOTP_VENDOR_LEN  64
+#define DHCP_OPT_LEN     312
 
 struct bootp_t {
     struct ip ip;
@@ -112,8 +114,8 @@ struct bootp_t {
     struct in_addr bp_giaddr;
     uint8_t bp_hwaddr[16];
     uint8_t bp_sname[64];
-    uint8_t bp_file[128];
-    uint8_t bp_vend[DHCP_OPT_LEN];
+    char    bp_file[128];
+    uint8_t bp_vend[];
 };
 
 typedef struct {
@@ -123,6 +125,7 @@ typedef struct {
 
 #define NB_BOOTP_CLIENTS 16
 
+/* Process a bootp packet from the guest */
 void bootp_input(struct mbuf *m);
 
 #endif

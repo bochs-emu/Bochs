@@ -240,4 +240,20 @@ dtom(Slirp *slirp, void *dat)
 	return (struct mbuf *)0;
 }
 
+void *mtod_check(struct mbuf *m, size_t len)
+{
+    if (m->m_len >= (int)len) {
+        return m->m_data;
+    }
+
+    DEBUG_ERROR("mtod failed");
+
+    return NULL;
+}
+
+void *m_end(struct mbuf *m)
+{
+    return m->m_data + m->m_len;
+}
+
 #endif

@@ -111,6 +111,13 @@ void m_adj(struct mbuf *, int);
 int m_copy(struct mbuf *, struct mbuf *, int, int);
 struct mbuf * dtom(Slirp *, void *);
 
+/* Check that the mbuf contains at least len bytes, and return the data */
+void *mtod_check(struct mbuf *, size_t len);
+
+/* Return the end of the data of the mbuf */
+void *m_end(struct mbuf *);
+
+/* Initialize the ifs queue of the mbuf */
 static inline void ifs_init(struct mbuf *ifm)
 {
     ifm->ifs_next = ifm->ifs_prev = ifm;
