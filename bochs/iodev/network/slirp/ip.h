@@ -1,6 +1,4 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1982, 1986, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -33,8 +31,8 @@
  * ip.h,v 1.3 1994/08/21 05:27:30 paul Exp
  */
 
-#ifndef _IP_H_
-#define _IP_H_
+#ifndef IP_H
+#define IP_H
 
 #ifndef BX_LITTLE_ENDIAN
 # undef NTOHL

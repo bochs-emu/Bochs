@@ -25,11 +25,8 @@
 #define BX_PLUGGABLE
 
 #include "slirp.h"
-#include "iodev.h"
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
-
-#define LOG_THIS ((logfunctions*)slirp->logfn)->
 
 /* host loopback address */
 struct in_addr loopback_addr;
@@ -208,7 +205,7 @@ static void slirp_init_once(void)
     loopback_mask = htonl(IN_CLASSA_NET);
 }
 
-Slirp *slirp_new(SlirpConfig *cfg, SlirpCb *callbacks, void *opaque, void *logfn)
+Slirp *slirp_new(SlirpConfig *cfg, SlirpCb *callbacks, void *opaque)
 {
     Slirp *slirp = (Slirp*)malloc(sizeof(Slirp));
     memset(slirp, 0, sizeof(Slirp));
@@ -251,7 +248,6 @@ Slirp *slirp_new(SlirpConfig *cfg, SlirpCb *callbacks, void *opaque, void *logfn
 
     slirp->cb = callbacks;
     slirp->opaque = opaque;
-    slirp->logfn = logfn;
 
     QTAILQ_INSERT_TAIL(&slirp_instances, slirp, entry);
 
@@ -263,8 +259,7 @@ Slirp *slirp_init(int restricted, struct in_addr vnetwork,
                   const char *vhostname, const char *tftp_path,
                   const char *bootfile, struct in_addr vdhcp_start,
                   struct in_addr vnameserver, const char **vdnssearch,
-                  const char *vdomainname, SlirpCb *callbacks, void *opaque,
-                  void *logfn)
+                  const char *vdomainname, SlirpCb *callbacks, void *opaque)
 {
   SlirpConfig cfg;
   memset(&cfg, 0, sizeof(cfg));
@@ -279,7 +274,7 @@ Slirp *slirp_init(int restricted, struct in_addr vnetwork,
   cfg.vnameserver = vnameserver;
   cfg.vdnssearch = vdnssearch;
   cfg.vdomainname = vdomainname;
-  return slirp_new(&cfg, callbacks, opaque, logfn);
+  return slirp_new(&cfg, callbacks, opaque);
 }
 
 void slirp_cleanup(Slirp *slirp)
@@ -779,7 +774,7 @@ void slirp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
         if (proto == ETH_P_IP) {
           ip_input(m);
         } else {
-          BX_ERROR(("IPv6 packet not supported yet"));
+          slirp_warning("IPv6 packet not supported yet", slirp->opaque);
         }
         break;
     default:
@@ -914,7 +909,7 @@ ssize_t slirp_send(struct socket *so, const void *buf, size_t len, int flags)
 {
     if (so->s == -1 && so->extra) {
         Slirp *slirp = so->slirp;
-        BX_ERROR(("slirp_send(): so->extra not supported"));
+        slirp_warning("slirp_send(): so->extra not supported", slirp->opaque);
         return len;
     }
 
@@ -969,19 +964,14 @@ void slirp_socket_recv(Slirp *slirp, struct in_addr guest_addr, int guest_port,
         tcp_output(sototcpcb(so));
 }
 
-void slirp_warning(Slirp *slirp, const char *msg)
-{
-    BX_ERROR(("%s",msg));
-}
-
 void slirp_send_packet_all(Slirp *slirp, const void *buf, size_t len)
 {
     slirp_ssize_t ret = slirp->cb->send_packet(buf, len, slirp->opaque);
 
     if (ret < 0) {
-        slirp_warning(slirp, "Failed to send packet");
+        slirp_warning("Failed to send packet", slirp->opaque);
     } else if ((size_t)ret < len) {
-        slirp_warning(slirp, "send_packet() didn't send all data");
+        slirp_warning("send_packet() didn't send all data", slirp->opaque);
     }
 }
 

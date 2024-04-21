@@ -1,8 +1,6 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: MIT */
 /*
- * BOOTP/DHCP server (ported from Qemu)
+ * QEMU BOOTP/DHCP server
  * Bochs additions: parameter list and some other options
  *
  * Copyright (c) 2004 Fabrice Bellard
@@ -177,13 +175,13 @@ static void dhcp_decode(Slirp *slirp, const struct bootp_t *bp, dhcp_options_t *
                     defsize = sizeof(struct bootp_t) - sizeof(struct ip) - sizeof(struct udphdr);
                     if (ntohs(maxsize) < defsize) {
                         sprintf(msg, "DHCP server: RFB2132_MAX_SIZE=%u not supported yet", ntohs(maxsize));
-                        slirp_warning(slirp, msg);
+                        slirp_warning(msg, slirp->opaque);
                     }
                 }
                 break;
               default:
                 sprintf(msg, "DHCP server: option %d not supported yet", tag);
-                slirp_warning(slirp, msg);
+                slirp_warning(msg, slirp->opaque);
                 break;
             }
             p += len;
@@ -383,7 +381,7 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
                       spaceleft = sizeof(rbp->bp_vend) - (q - rbp->bp_vend);
                       val = strlen(slirp->vdomainname);
                       if (val + 1 > (int)spaceleft) {
-                        slirp_warning(slirp, "DHCP packet size exceeded, omitting domain name option.");
+                        slirp_warning("DHCP packet size exceeded, omitting domain name option.", slirp->opaque);
                       } else {
                         *q++ = RFC1533_DOMAINNAME;
                         *q++ = val;
@@ -418,7 +416,7 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
                       spaceleft = sizeof(rbp->bp_vend) - (q - rbp->bp_vend);
                       val = strlen(slirp->tftp_server_name);
                       if (val + 1 > (int)spaceleft) {
-                        slirp_warning(slirp, "DHCP packet size exceeded, omitting tftp-server-name option.");
+                        slirp_warning("DHCP packet size exceeded, omitting tftp-server-name option.", slirp->opaque);
                       } else {
                         *q++ = RFC2132_TFTP_SERVER_NAME;
                         *q++ = val;
@@ -434,7 +432,7 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
                 default:
                     sprintf(msg, "DHCP server: requested parameter %u not supported yet",
                             *(pp-1));
-                    slirp_warning(slirp, msg);
+                    slirp_warning(msg, slirp->opaque);
             }
         }
 
@@ -442,7 +440,7 @@ static void bootp_reply(Slirp *slirp, const struct bootp_t *bp)
             spaceleft = sizeof(rbp->bp_vend) - (q - rbp->bp_vend);
             val = slirp->vdnssearch_len;
             if (val + 1 > (int)spaceleft) {
-                slirp_warning(slirp, "DHCP packet size exceeded, omitting domain-search option.");
+                slirp_warning("DHCP packet size exceeded, omitting domain-search option.", slirp->opaque);
             } else {
                 memcpy(q, slirp->vdnssearch, val);
                 q += val;

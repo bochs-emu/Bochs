@@ -1,6 +1,4 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1982, 1986, 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -33,8 +31,8 @@
  * mbuf.h,v 1.9 1994/11/14 13:54:20 bde Exp
  */
 
-#ifndef _MBUF_H_
-#define _MBUF_H_
+#ifndef MBUF_H
+#define MBUF_H
 
 #define MINCSIZE 4096	/* Amount to increase mbuf if too small */
 

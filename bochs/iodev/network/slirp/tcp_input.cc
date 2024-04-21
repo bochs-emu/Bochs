@@ -1,6 +1,4 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1982, 1986, 1988, 1990, 1993, 1994
  *	The Regents of the University of California.  All rights reserved.
@@ -174,14 +172,14 @@ tcp_reass(struct tcpcb *tp, struct tcpiphdr *ti,
 		}
 		q = tcpiphdr_next(q);
 		m = tcpiphdr_prev(q)->ti_mbuf;
-		remque(tcpiphdr2qlink(tcpiphdr_prev(q)));
+		slirp_remque(tcpiphdr2qlink(tcpiphdr_prev(q)));
 		m_free(m);
 	}
 
 	/*
 	 * Stick new segment in its place.
 	 */
-	insque(tcpiphdr2qlink(ti), tcpiphdr2qlink(tcpiphdr_prev(q)));
+	slirp_insque(tcpiphdr2qlink(ti), tcpiphdr2qlink(tcpiphdr_prev(q)));
 
 present:
 	/*
@@ -198,7 +196,7 @@ present:
 	do {
 		tp->rcv_nxt += ti->ti_len;
 		flags = ti->ti_flags & TH_FIN;
-		remque(tcpiphdr2qlink(ti));
+		slirp_remque(tcpiphdr2qlink(ti));
 		m = ti->ti_mbuf;
 		ti = tcpiphdr_next(ti);
 		if (so->so_state & SS_FCANTSENDMORE)

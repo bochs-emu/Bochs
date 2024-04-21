@@ -1,6 +1,4 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1982, 1986, 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -99,7 +97,7 @@ static int icmp_send(struct socket *so, struct mbuf *m, int hlen)
     addr.sin_family = AF_INET;
     addr.sin_addr = so->so_faddr;
 
-    insque(so, &so->slirp->icmp);
+    slirp_insque(so, &so->slirp->icmp);
 
     if (sendto(so->s, m->m_data + hlen, m->m_len - hlen, 0,
                (struct sockaddr *)&addr, sizeof(addr)) == -1) {

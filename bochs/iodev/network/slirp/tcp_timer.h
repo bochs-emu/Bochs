@@ -1,6 +1,4 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1982, 1986, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -33,8 +31,8 @@
  * tcp_timer.h,v 1.4 1994/08/21 05:27:38 paul Exp
  */
 
-#ifndef _TCP_TIMER_H_
-#define _TCP_TIMER_H_
+#ifndef TCP_TIMER_H
+#define TCP_TIMER_H
 
 /*
  * Definitions of the TCP timers.  These timers are counted

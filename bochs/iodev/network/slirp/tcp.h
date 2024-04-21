@@ -1,6 +1,4 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1982, 1986, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -33,8 +31,8 @@
  * tcp.h,v 1.3 1994/08/21 05:27:34 paul Exp
  */
 
-#ifndef _TCP_H_
-#define _TCP_H_
+#ifndef TCP_H
+#define TCP_H
 
 typedef	uint32_t tcp_seq;
 

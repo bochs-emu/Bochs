@@ -1,6 +1,4 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1982, 1986, 1988, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -262,7 +260,7 @@ ip_reass(Slirp *slirp, struct ip *ip, struct ipq *fp)
 	      goto dropfrag;
 	  }
 	  fp = mtod(t, struct ipq *);
-	  insque(&fp->ip_link, &slirp->ipq.ip_link);
+	  slirp_insque(&fp->ip_link, &slirp->ipq.ip_link);
 	  fp->ipq_ttl = IPFRAGTTL;
 	  fp->ipq_p = ip->ip_p;
 	  fp->ipq_id = ip->ip_id;
@@ -370,7 +368,7 @@ insert:
 	ip->ip_tos &= ~1;
 	ip->ip_src = fp->ipq_src;
 	ip->ip_dst = fp->ipq_dst;
-	remque(&fp->ip_link);
+	slirp_remque(&fp->ip_link);
 	(void) m_free(dtom(slirp, fp));
 	m->m_len += (ip->ip_hl << 2);
 	m->m_data -= (ip->ip_hl << 2);
@@ -396,13 +394,13 @@ ip_freef(Slirp *slirp, struct ipq *fp)
 		ip_deq(q);
 		m_free(dtom(slirp, q));
 	}
-	remque(&fp->ip_link);
+	slirp_remque(&fp->ip_link);
 	(void) m_free(dtom(slirp, fp));
 }
 
 /*
  * Put an ip fragment on a reassembly chain.
- * Like insque, but pointers in middle of structure.
+ * Like slirp_insque, but pointers in middle of structure.
  */
 static void
 ip_enq(struct ipasfrag *p, struct ipasfrag *prev)
@@ -416,7 +414,7 @@ ip_enq(struct ipasfrag *p, struct ipasfrag *prev)
 }
 
 /*
- * To ip_enq as remque is to insque.
+ * To ip_enq as slirp_remque is to slirp_insque.
  */
 static void
 ip_deq(struct ipasfrag *p)

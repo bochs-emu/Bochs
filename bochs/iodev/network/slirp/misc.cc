@@ -1,11 +1,6 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1995 Danny Gasparovski.
- *
- * Please read the file COPYRIGHT for the
- * terms and conditions of the copyright.
  */
 
 #include "slirp.h"
@@ -26,7 +21,7 @@ struct quehead {
 	struct quehead *qh_rlink;
 };
 
-void insque(void *a, void *b)
+void slirp_insque(void *a, void *b)
 {
 	struct quehead *element = (struct quehead *) a;
 	struct quehead *head = (struct quehead *) b;
@@ -37,7 +32,7 @@ void insque(void *a, void *b)
 	= (struct quehead *)element;
 }
 
-void remque(void *a)
+void slirp_remque(void *a)
 {
   struct quehead *element = (struct quehead *) a;
   ((struct quehead *)(element->qh_link))->qh_rlink = element->qh_rlink;
@@ -224,7 +219,7 @@ fork_exec(struct socket *so, const char *ex, int do_pty)
 		exit(1);
 
 	 default:
-		slirp_warning(so->slirp, "qemu_add_child_watch(pid) not implemented");
+                slirp_warning("qemu_add_child_watch(pid) not implemented", so->slirp->opaque);
                 /*
                  * XXX this could block us...
                  * XXX Should set a timer here, and if accept() doesn't

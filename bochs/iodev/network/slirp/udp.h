@@ -1,6 +1,4 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1982, 1986, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -33,8 +31,8 @@
  * udp.h,v 1.3 1994/08/21 05:27:41 paul Exp
  */
 
-#ifndef _UDP_H_
-#define _UDP_H_
+#ifndef UDP_H
+#define UDP_H
 
 #define UDP_TTL 0x60
 #define UDP_UDPDATALEN 16192

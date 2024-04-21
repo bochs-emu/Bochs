@@ -1,11 +1,6 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1995 Danny Gasparovski
- *
- * Please read the file COPYRIGHT for the
- * terms and conditions of the copyright.
  */
 
 /*
@@ -83,11 +78,11 @@ m_get(Slirp *slirp)
 		m->slirp = slirp;
 	} else {
 		m = slirp->m_freelist.m_next;
-		remque(m);
+		slirp_remque(m);
 	}
 
 	/* Insert it in the used list */
-	insque(m,&slirp->m_usedlist);
+	slirp_insque(m,&slirp->m_usedlist);
 	m->m_flags = (flags | M_USEDLIST);
 
 	/* Initialise it */
@@ -113,7 +108,7 @@ m_free(struct mbuf *m)
   if(m) {
 	/* Remove from m_usedlist */
 	if (m->m_flags & M_USEDLIST)
-	   remque(m);
+	   slirp_remque(m);
 
 	/* If it's M_EXT, free() it */
 	if (m->m_flags & M_EXT)
@@ -126,7 +121,7 @@ m_free(struct mbuf *m)
 		m->slirp->mbuf_alloced--;
 		free(m);
 	} else if ((m->m_flags & M_FREELIST) == 0) {
-		insque(m,&m->slirp->m_freelist);
+		slirp_insque(m,&m->slirp->m_freelist);
 		m->m_flags = M_FREELIST; /* Clobber other flags */
 	}
   } /* if(m) */

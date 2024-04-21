@@ -1,15 +1,10 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1995 Danny Gasparovski.
- *
- * Please read the file COPYRIGHT for the
- * terms and conditions of the copyright.
  */
 
-#ifndef _SBUF_H_
-#define _SBUF_H_
+#ifndef SBUF_H
+#define SBUF_H
 
 #define sbflush(sb) sbdrop((sb),(sb)->sb_cc)
 #define sbspace(sb) ((sb)->sb_datalen - (sb)->sb_cc)

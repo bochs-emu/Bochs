@@ -1,12 +1,10 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
-
+/* SPDX-License-Identifier: BSD-3-Clause */
 /* tftp defines */
-#ifndef SLIRP_TFTP_H
-#define SLIRP_TFTP_H 1
 
-#define TFTP_SESSIONS_MAX 3
+#ifndef SLIRP_TFTP_H
+#define SLIRP_TFTP_H
+
+#define TFTP_SESSIONS_MAX 20
 
 #define TFTP_SERVER      69
 

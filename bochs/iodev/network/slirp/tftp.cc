@@ -1,11 +1,9 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: MIT */
 /*
- * A simple TFTP server (ported from Qemu)
+ * tftp.c - a simple, read-only tftp server for qemu
  * Bochs additions: write support, 'blksize' and 'timeout' options
  *
- * Copyright (C) 2004  Magnus Damm <damm@opensource.se>
+ * Copyright (C) 2004       Magnus Damm <damm@opensource.se>
  * Copyright (C) 2014-2024  The Bochs Project
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy

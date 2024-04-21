@@ -1,6 +1,4 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: MIT */
 /*
  * Domain search option for DHCP (RFC 3397)
  *
@@ -159,7 +157,7 @@ static void domain_mklabels(Slirp *s, CompactDomain *cd, const char *input)
 
 fail:
     sprintf(msg, "failed to parse domain name '%s'\n", input);
-    slirp_warning(s, msg);
+    slirp_warning(msg, s->opaque);
     cd->len = 0;
 }
 

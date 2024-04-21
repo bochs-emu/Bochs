@@ -1,6 +1,4 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1995 Danny Gasparovski.
  *
@@ -68,7 +66,7 @@ if_output(struct socket *so, struct mbuf *ifm)
 	 * XXX Shouldn't need this, gotta change dtom() etc.
 	 */
 	if (ifm->m_flags & M_USEDLIST) {
-		remque(ifm);
+		slirp_remque(ifm);
 		ifm->m_flags &= ~M_USEDLIST;
 	}
 
@@ -113,7 +111,7 @@ if_output(struct socket *so, struct mbuf *ifm)
 	/* Create a new doubly linked list for this session */
 	ifm->ifq_so = so;
 	ifs_init(ifm);
-	insque(ifm, ifq);
+	slirp_insque(ifm, ifq);
 
 diddit:
 	if (so) {
@@ -131,10 +129,10 @@ diddit:
 				 (so->so_nqueued - so->so_queued) >= 3)) {
 
 			/* Remove from current queue... */
-			remque(ifm->ifs_next);
+			slirp_remque(ifm->ifs_next);
 
 			/* ...And insert in the new.  That'll teach ya! */
-			insque(ifm->ifs_next, &slirp->if_batchq);
+			slirp_insque(ifm->ifs_next, &slirp->if_batchq);
 		}
 	}
 
@@ -214,13 +212,13 @@ void if_start(Slirp *slirp)
 
         /* Remove it from the queue */
         ifqt = ifm->ifq_prev;
-        remque(ifm);
+        slirp_remque(ifm);
 
         /* If there are more packets for this session, re-queue them */
         if (ifm->ifs_next != ifm) {
             struct mbuf *next = ifm->ifs_next;
 
-            insque(next, ifqt);
+            slirp_insque(next, ifqt);
             ifs_remque(ifm);
 
             if (!from_batchq) {

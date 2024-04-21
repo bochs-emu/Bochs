@@ -1,11 +1,6 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1995 Danny Gasparovski.
- *
- * Please read the file COPYRIGHT for the
- * terms and conditions of the copyright.
  */
 
 #include "slirp.h"
@@ -43,7 +38,7 @@ solookup(struct socket *head, struct in_addr laddr, u_int lport,
 /*
  * Create a new socket, initialise the fields
  * It is the responsibility of the caller to
- * insque() it into the correct linked-list
+ * slirp_insque() it into the correct linked-list
  */
 struct socket *
 socreate(Slirp *slirp)
@@ -61,7 +56,7 @@ socreate(Slirp *slirp)
 }
 
 /*
- * remque and free a socket, clobber cache
+ * slirp_remque and free a socket, clobber cache
  */
 void
 sofree(struct socket *so)
@@ -82,7 +77,7 @@ sofree(struct socket *so)
   m_free(so->so_m);
 
   if(so->so_next && so->so_prev)
-    remque(so);  /* crashes if so is not in a queue */
+    slirp_remque(so);  /* crashes if so is not in a queue */
 
   free(so);
 }
@@ -613,7 +608,7 @@ tcp_listen(Slirp *slirp, uint32_t haddr, u_int hport, uint32_t laddr,
 		free(so);
 		return NULL;
 	}
-	insque(so, &slirp->tcb);
+	slirp_insque(so, &slirp->tcb);
 
 	/*
 	 * SS_FACCEPTONCE sockets must time out.

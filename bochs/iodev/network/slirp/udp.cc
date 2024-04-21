@@ -1,6 +1,4 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1982, 1986, 1988, 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -319,7 +317,7 @@ udp_attach(struct socket *so)
 {
   if((so->s = qemu_socket(AF_INET,SOCK_DGRAM,0)) != -1) {
     so->so_expire = curtime + SO_EXPIRE;
-    insque(so, &so->slirp->udb);
+    slirp_insque(so, &so->slirp->udb);
   }
   return(so->s);
 }
@@ -367,7 +365,7 @@ udp_listen(Slirp *slirp, uint32_t haddr, u_int hport, uint32_t laddr,
 	}
 	so->s = qemu_socket(AF_INET,SOCK_DGRAM,0);
 	so->so_expire = curtime + SO_EXPIRE;
-	insque(so, &slirp->udb);
+	slirp_insque(so, &slirp->udb);
 
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = haddr;

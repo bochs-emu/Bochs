@@ -1,6 +1,4 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1982, 1986, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -33,8 +31,8 @@
  * tcpip.h,v 1.3 1994/08/21 05:27:40 paul Exp
  */
 
-#ifndef _TCPIP_H_
-#define _TCPIP_H_
+#ifndef TCPIP_H
+#define TCPIP_H
 
 /*
  * Tcp+ip header, after ip options removed.

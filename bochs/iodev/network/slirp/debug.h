@@ -1,13 +1,10 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1995 Danny Gasparovski.
- *
- * Please read the file COPYRIGHT for the
- * terms and conditions of the copyright.
  */
 
+#ifndef DEBUG_H_
+#define DEBUG_H_
 //#define DEBUG 1
 
 #ifdef DEBUG
@@ -33,5 +30,7 @@ extern int slirp_debug;
 #define DEBUG_ARGS(x)
 #define DEBUG_MISC(x)
 #define DEBUG_ERROR(x)
+
+#endif
 
 #endif

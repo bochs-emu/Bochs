@@ -148,11 +148,6 @@ void free(void *ptr);
 
 #include <sys/stat.h>
 
-/* Avoid conflicting with the libc insque() and remque(), which
-   have different prototypes. */
-#define insque slirp_insque
-#define remque slirp_remque
-
 #ifdef HAVE_SYS_STROPTS_H
 #include <sys/stropts.h>
 #endif
@@ -296,7 +291,6 @@ struct Slirp {
 
     SlirpCb *cb;
     void *opaque;
-    void *logfn;
 };
 
 extern Slirp *slirp_instance;
@@ -322,8 +316,6 @@ void if_start(struct ttys *);
 #ifndef HAVE_GETHOSTID
  long gethostid(void);
 #endif
-
-void slirp_warning(Slirp *, const char *);
 
 #ifndef _WIN32
 #include <netdb.h>

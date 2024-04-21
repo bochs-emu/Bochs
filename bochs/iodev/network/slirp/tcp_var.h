@@ -1,6 +1,4 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1982, 1986, 1993, 1994
  *	The Regents of the University of California.  All rights reserved.
@@ -33,8 +31,8 @@
  * tcp_var.h,v 1.3 1994/08/21 05:27:39 paul Exp
  */
 
-#ifndef _TCP_VAR_H_
-#define _TCP_VAR_H_
+#ifndef TCP_VAR_H
+#define TCP_VAR_H
 
 #include "tcpip.h"
 #include "tcp_timer.h"

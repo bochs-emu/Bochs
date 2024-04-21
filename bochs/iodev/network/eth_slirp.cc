@@ -36,11 +36,10 @@
 
 #if BX_HAVE_LIBSLIRP
 #include <slirp/libslirp.h>
-#include <signal.h>
 #else
-#include "slirp/slirp.h"
 #include "slirp/libslirp.h"
 #endif
+#include <signal.h>
 
 static unsigned int bx_slirp_instances = 0;
 
@@ -72,9 +71,7 @@ public:
   virtual ~bx_slirp_pktmover_c();
   void sendpkt(void *buf, unsigned io_len);
   slirp_ssize_t receive(void *pkt, unsigned pkt_len);
-#if BX_HAVE_LIBSLIRP
-  void slirp_msg(const char *msg);
-#endif
+  void slirp_msg(bool error, const char *msg);
 private:
   Slirp *slirp;
   unsigned netdev_speed;
@@ -86,9 +83,11 @@ private:
   char *smb_export, *smb_tmpdir;
   struct in_addr smb_srv;
 #endif
+  bool slirp_logging;
   char *pktlog_fn;
   FILE *pktlog_txt;
-  bool slirp_logging;
+
+  logfunctions *slirplog;
 
   bool parse_slirp_conf(const char *conf);
   static void rx_timer_handler(void *);
@@ -121,15 +120,13 @@ static ssize_t send_packet(const void *buf, size_t len, void *opaque)
   return class_ptr->receive((void*)buf, len);
 }
 
-#if BX_HAVE_LIBSLIRP
 static void guest_error(const char *msg, void *opaque)
 {
   char errmsg[512];
 
   sprintf(errmsg, "guest error: %s", msg);
-  ((bx_slirp_pktmover_c*)opaque)->slirp_msg(errmsg);
+  ((bx_slirp_pktmover_c*)opaque)->slirp_msg(true, errmsg);
 }
-#endif
 
 static int64_t clock_get_ns(void *opaque)
 {
@@ -148,7 +145,7 @@ static struct timer *timer_queue;
 
 static void *timer_new_opaque(SlirpTimerId id, void *cb_opaque, void *opaque)
 {
-  ((bx_slirp_pktmover_c*)opaque)->slirp_msg("timer_new_opaque()");
+  ((bx_slirp_pktmover_c*)opaque)->slirp_msg(false, "timer_new_opaque()");
   struct timer *new_timer = new timer;
   new_timer->id = id;
   new_timer->cb_opaque = cb_opaque;
@@ -158,7 +155,7 @@ static void *timer_new_opaque(SlirpTimerId id, void *cb_opaque, void *opaque)
 
 static void timer_free(void *_timer, void *opaque)
 {
-  ((bx_slirp_pktmover_c*)opaque)->slirp_msg("timer_free()");
+  ((bx_slirp_pktmover_c*)opaque)->slirp_msg(false, "timer_free()");
   struct timer *timer1 = (timer*)_timer;
   struct timer **t;
 
@@ -175,7 +172,7 @@ static void timer_free(void *_timer, void *opaque)
 
 static void timer_mod(void *_timer, int64_t expire_time, void *opaque)
 {
-  ((bx_slirp_pktmover_c*)opaque)->slirp_msg("timer_mod()");
+  ((bx_slirp_pktmover_c*)opaque)->slirp_msg(false, "timer_mod()");
   struct timer *timer1 = (timer*)_timer;
   struct timer **t;
 
@@ -210,9 +207,7 @@ static void notify(void *opaque)
 
 static struct SlirpCb callbacks = {
     .send_packet = send_packet,
-#if BX_HAVE_LIBSLIRP
     .guest_error = guest_error,
-#endif
     .clock_get_ns = clock_get_ns,
 #if BX_HAVE_LIBSLIRP
     .timer_free = timer_free,
@@ -231,10 +226,7 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
                                          logfunctions *netdev,
                                          const char *script)
 {
-#if !BX_HAVE_LIBSLIRP
-  logfunctions *slirplog;
   char prefix[10];
-#endif
 
   slirp = NULL;
   pktlog_fn = NULL;
@@ -266,9 +258,6 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
 #if BX_HAVE_LIBSLIRP
   BX_INFO(("slirp network driver (libslirp version %s)", slirp_version_string()));
 #else
-  if (sizeof(struct arphdr) != 28) {
-    BX_FATAL(("system error: invalid ARP header structure size"));
-  }
   BX_INFO(("slirp network driver"));
 #endif
 
@@ -302,14 +291,10 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
     }
 #endif
   }
-#if BX_HAVE_LIBSLIRP
-  slirp = slirp_new(&config, &callbacks, this);
-#else
   slirplog = new logfunctions();
   sprintf(prefix, "SLIRP%d", bx_slirp_instances);
   slirplog->put(prefix);
-  slirp = slirp_new(&config, &callbacks, this, slirplog);
-#endif
+  slirp = slirp_new(&config, &callbacks, this);
   if (n_hostfwd > 0) {
     for (int i = 0; i < n_hostfwd; i++) {
       slirp_hostfwd(slirp, hostfwd[i], 0);
@@ -639,13 +624,6 @@ slirp_ssize_t bx_slirp_pktmover_c::receive(void *pkt, unsigned pkt_len)
   }
 }
 
-#if BX_HAVE_LIBSLIRP
-void bx_slirp_pktmover_c::slirp_msg(const char *msg)
-{
-  BX_INFO(("%s", msg));
-}
-#endif
-
 #if !defined(_WIN32) && !defined(__CYGWIN__)
 
 #define CONFIG_SMBD_COMMAND "/usr/sbin/smbd"
@@ -855,5 +833,23 @@ int bx_slirp_pktmover_c::slirp_hostfwd(Slirp *s, const char *redir_str, int lega
     BX_ERROR(("invalid host forwarding rule '%s'", redir_str));
     return -1;
 }
+
+#undef LOG_THIS
+#define LOG_THIS  slirplog->
+
+void bx_slirp_pktmover_c::slirp_msg(bool error, const char *msg)
+{
+  if (error)
+    BX_ERROR(("%s", msg));
+  else
+    BX_INFO(("%s", msg));
+}
+
+#if !BX_HAVE_LIBSLIRP
+void slirp_warning(const char *msg, void *opaque)
+{
+  ((bx_slirp_pktmover_c*)opaque)->slirp_msg(true, msg);
+}
+#endif
 
 #endif /* if BX_NETWORKING && BX_NETMOD_SLIRP */

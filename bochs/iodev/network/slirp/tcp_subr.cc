@@ -1,6 +1,4 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1982, 1986, 1988, 1990, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -261,7 +259,7 @@ tcp_close(struct tcpcb *tp)
 	while (!tcpfrag_list_end(t, tp)) {
 		t = tcpiphdr_next(t);
 		m = tcpiphdr_prev(t)->ti_mbuf;
-		remque(tcpiphdr2qlink(tcpiphdr_prev(t)));
+		slirp_remque(tcpiphdr2qlink(tcpiphdr_prev(t)));
 		m_free(m);
 	}
 	free(tp);
@@ -478,7 +476,7 @@ tcp_attach(struct socket *so)
 	if ((so->so_tcpcb = tcp_newtcpcb(so)) == NULL)
 	   return -1;
 
-	insque(so, &so->slirp->tcb);
+	slirp_insque(so, &so->slirp->tcb);
 
 	return 0;
 }

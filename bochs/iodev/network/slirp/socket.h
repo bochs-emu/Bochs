@@ -1,15 +1,10 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1995 Danny Gasparovski.
- *
- * Please read the file COPYRIGHT for the
- * terms and conditions of the copyright.
  */
 
-#ifndef _SLIRP_SOCKET_H_
-#define _SLIRP_SOCKET_H_
+#ifndef SLIRP_SOCKET_H
+#define SLIRP_SOCKET_H
 
 #define SO_EXPIRE 240000
 #define SO_EXPIREFAST 10000
@@ -95,4 +90,4 @@ struct iovec; /* For win32 */
 size_t sopreprbuf(struct socket *so, struct iovec *iov, int *np);
 int soreadbuf(struct socket *so, const char *buf, int size);
 
-#endif /* _SOCKET_H_ */
+#endif /* SLIRP_SOCKET_H */
