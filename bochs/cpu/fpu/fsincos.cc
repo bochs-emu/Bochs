@@ -28,7 +28,6 @@ these four paragraphs for those parts of this code that are retained.
 #define USE_estimateDiv128To64
 #include "softfloatx80.h"
 #include "softfloat-helpers.h"
-#include "softfloat-round-pack.h"
 #include "fpu_constant.h"
 
 static const floatx80 floatx80_one = packFloatx80(0, 0x3fff, BX_CONST64(0x8000000000000000));
@@ -71,10 +70,10 @@ static int reduce_trig_arg(int expDiff, int &zSign, Bit64u &aSig0, Bit64u &aSig1
     }
 
     shortShift128Right(FLOAT_PI_HI, FLOAT_PI_LO, 1, &term0, &term1);
-    if (! lt128(aSig0, aSig1, term0, term1))
+    if (! softfloat_lt128(aSig0, aSig1, term0, term1))
     {
-        int lt = lt128(term0, term1, aSig0, aSig1);
-        int eq = eq128(aSig0, aSig1, term0, term1);
+        int lt = softfloat_lt128(term0, term1, aSig0, aSig1);
+        int eq = softfloat_eq128(aSig0, aSig1, term0, term1);
 
         if ((eq && (q & 1)) || lt) {
             zSign = !zSign;

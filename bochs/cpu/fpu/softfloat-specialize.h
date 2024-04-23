@@ -310,53 +310,7 @@ extern const floatx80 floatx80_default_nan;
 
 #include "softfloat-macros.h"
 
-/*----------------------------------------------------------------------------
-| The pattern for a default generated quadruple-precision NaN. The `high' and
-| `low' values hold the most- and least-significant bits, respectively.
-*----------------------------------------------------------------------------*/
-#define float128_default_nan_hi BX_CONST64(0xFFFF800000000000)
-#define float128_default_nan_lo BX_CONST64(0x0000000000000000)
-
 #define float128_exp extractFloat128Exp
-
-/*----------------------------------------------------------------------------
-| Returns the least-significant 64 fraction bits of the quadruple-precision
-| floating-point value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE Bit64u extractFloat128Frac1(float128 a)
-{
-    return a.lo;
-}
-
-/*----------------------------------------------------------------------------
-| Returns the most-significant 48 fraction bits of the quadruple-precision
-| floating-point value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE Bit64u extractFloat128Frac0(float128 a)
-{
-    return a.hi & BX_CONST64(0x0000FFFFFFFFFFFF);
-}
-
-/*----------------------------------------------------------------------------
-| Returns the exponent bits of the quadruple-precision floating-point value
-| `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE Bit32s extractFloat128Exp(float128 a)
-{
-    return ((Bit32s)(a.hi>>48)) & 0x7FFF;
-}
-
-/*----------------------------------------------------------------------------
-| Returns the sign bit of the quadruple-precision floating-point value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int extractFloat128Sign(float128 a)
-{
-    return (int)(a.hi >> 63);
-}
 
 /*----------------------------------------------------------------------------
 | Packs the sign `zSign', the exponent `zExp', and the significand formed
@@ -397,50 +351,6 @@ BX_CPP_INLINE float128 packFloat128(Bit64u zHi, Bit64u zLo)
 #else
 #define PACK_FLOAT_128(hi,lo) packFloat128(BX_CONST64(hi),BX_CONST64(lo))
 #endif
-
-/*----------------------------------------------------------------------------
-| Returns 1 if the quadruple-precision floating-point value `a' is a NaN;
-| otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int float128_is_nan(float128 a)
-{
-    return (BX_CONST64(0xFFFE000000000000) <= (Bit64u) (a.hi<<1))
-        && (a.lo || (a.hi & BX_CONST64(0x0000FFFFFFFFFFFF)));
-}
-
-/*----------------------------------------------------------------------------
-| Returns 1 if the quadruple-precision floating-point value `a' is a
-| signaling NaN; otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int float128_is_signaling_nan(float128 a)
-{
-    return (((a.hi>>47) & 0xFFFF) == 0xFFFE)
-        && (a.lo || (a.hi & BX_CONST64(0x00007FFFFFFFFFFF)));
-}
-
-#include "softfloat-helpers.h"
-
-/*----------------------------------------------------------------------------
-| Returns the result of converting the quadruple-precision floating-point NaN
-| `a' to the canonical NaN format.  If `a' is a signaling NaN, the invalid
-| exception is raised.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE commonNaNT float128ToCommonNaN(float128 a, float_status_t &status)
-{
-    commonNaNT z;
-    if (float128_is_signaling_nan(a)) float_raise(status, float_flag_invalid);
-    z.sign = (int)(a.hi>>63);
-    shortShift128Left(a.hi, a.lo, 16, &z.hi, &z.lo);
-    return z;
-}
-
-/*----------------------------------------------------------------------------
-| The pattern for a default generated quadruple-precision NaN.
-*----------------------------------------------------------------------------*/
-extern const float128 float128_default_nan;
 
 #endif /* FLOAT128 */
 

@@ -46,8 +46,7 @@ BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I$(srcdir)/../.. -I../../@INSTRUMENT_D
 OBJS = ferr.o fpu.o fpu_arith.o fpu_compare.o fpu_const.o fpu_cmov.o \
                fpu_load_store.o fpu_misc.o fpu_trans.o \
                fprem.o fsincos.o f2xm1.o fyl2x.o fpatan.o \
-               softfloatx80.o \
-               softfloat-specialize.o softfloat-round-pack.o poly.o
+               o softfloat-specialize.o poly.o
 
 all: libfpu.a
 
@@ -75,7 +74,7 @@ dist-clean: clean
 #  gcc -MM -I.. -I../.. -I../../instrument/stubs *.cc | sed 's/\.cc/.@CPP_SUFFIX@/g'
 ###########################################
 f2xm1.o: f2xm1.@CPP_SUFFIX@ softfloatx80.h softfloat.h ../../config.h \
- softfloat-specialize.h softfloat-macros.h softfloat-round-pack.h
+ softfloat-specialize.h softfloat-macros.h 
 ferr.o: ferr.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h \
  ../../misc/bswap.h ../../cpu/cpu.h ../../bx_debug/debug.h ../../config.h \
  ../../osdep.h ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
@@ -86,10 +85,10 @@ ferr.o: ferr.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio
  ../../cpu/tlb.h ../../cpu/icache.h ../../cpu/xmm.h ../../cpu/vmx.h \
  ../../cpu/stack.h ../../cpu/access.h softfloat-specialize.h softfloat.h
 fpatan.o: fpatan.@CPP_SUFFIX@ softfloatx80.h softfloat.h ../../config.h \
- softfloat-specialize.h softfloat-macros.h softfloat-round-pack.h \
+ softfloat-specialize.h softfloat-macros.h  \
  fpu_constant.h
 fprem.o: fprem.@CPP_SUFFIX@ softfloatx80.h softfloat.h ../../config.h \
- softfloat-specialize.h softfloat-round-pack.h softfloat-macros.h
+ softfloat-specialize.h  softfloat-macros.h
 fpu.o: fpu.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h \
  ../../misc/bswap.h ../../cpu/cpu.h ../../bx_debug/debug.h ../../config.h \
  ../../osdep.h ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
@@ -178,16 +177,11 @@ fpu_trans.o: fpu_trans.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../cpu/icache.h ../../cpu/xmm.h ../../cpu/vmx.h ../../cpu/stack.h \
  ../../cpu/access.h softfloatx80.h softfloat.h softfloat-specialize.h
 fsincos.o: fsincos.@CPP_SUFFIX@ softfloatx80.h softfloat.h ../../config.h \
- softfloat-specialize.h softfloat-macros.h softfloat-round-pack.h \
+ softfloat-specialize.h softfloat-macros.h  \
  fpu_constant.h
 fyl2x.o: fyl2x.@CPP_SUFFIX@ softfloatx80.h softfloat.h ../../config.h \
- softfloat-specialize.h softfloat-macros.h softfloat-round-pack.h \
+ softfloat-specialize.h softfloat-macros.h  \
  fpu_constant.h
 poly.o: poly.@CPP_SUFFIX@ softfloat.h ../../config.h
-softfloat-round-pack.o: softfloat-round-pack.@CPP_SUFFIX@ softfloat.h \
- ../../config.h softfloat-round-pack.h softfloat-macros.h \
- softfloat-specialize.h
 softfloat-specialize.o: softfloat-specialize.@CPP_SUFFIX@ softfloat.h \
  ../../config.h softfloat-specialize.h softfloat-macros.h
-softfloatx80.o: softfloatx80.@CPP_SUFFIX@ softfloatx80.h softfloat.h ../../config.h \
- softfloat-specialize.h softfloat-round-pack.h softfloat-macros.h

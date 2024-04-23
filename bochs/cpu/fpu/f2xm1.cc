@@ -26,7 +26,6 @@ these four paragraphs for those parts of this code that are retained.
 #define FLOAT128
 
 #include "softfloatx80.h"
-#include "softfloat-round-pack.h"
 #include "softfloat-helpers.h"
 
 static const floatx80 floatx80_negone  = packFloatx80(1, 0x3fff, BX_CONST64(0x8000000000000000));
@@ -147,7 +146,7 @@ floatx80 f2xm1(floatx80 a, float_status_t &status)
             shortShift128Left(zSig0, zSig1, 1, &zSig0, &zSig1);
             --aExp;
         }
-        return roundAndPackFloatx80(80, aSign, aExp, zSig0, zSig1, status);
+        return softfloat_roundPackToExtF80(aSign, aExp, zSig0, zSig1, 80, &status);
     }
 
     softfloat_raiseFlags(&status, softfloat_flag_inexact);

@@ -143,13 +143,4 @@ int floatx80_is_nan(floatx80);
 
 #endif  /* FLOATX80 */
 
-#ifdef FLOAT128
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE extended double-precision operations.
-*----------------------------------------------------------------------------*/
-floatx80 floatx80_mul(floatx80 a, float128 b, float_status_t &status);
-
-#endif  /* FLOAT128 */
-
 #endif

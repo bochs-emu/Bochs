@@ -8235,7 +8235,6 @@ static const Bit16u rsqrt14_table1[32768] = {
 };
 
 #include "fpu/softfloat-specialize.h"
-#include "fpu/softfloat-round-pack.h"
 #include "simd_int.h"
 
 // approximate 14-bit sqrt reciprocal of scalar single precision FP

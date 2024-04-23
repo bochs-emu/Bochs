@@ -8234,7 +8234,6 @@ static const Bit16u rcp14_table[65536] = {
 extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
 
 #include "fpu/softfloat-specialize.h"
-#include "fpu/softfloat-round-pack.h"
 #include "simd_int.h"
 
 static Bit32u rcp14_table_lookup(Bit32u mant, unsigned bias, Bit16s *exp)

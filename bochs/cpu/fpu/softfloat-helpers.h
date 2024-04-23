@@ -112,4 +112,30 @@ static Bit64u estimateDiv128To64(Bit64u a0, Bit64u a1, Bit64u b)
 }
 #endif
 
+/*----------------------------------------------------------------------------
+| Adds the 192-bit value formed by concatenating `a0', `a1', and `a2' to the
+| 192-bit value formed by concatenating `b0', `b1', and `b2'.  Addition is
+| modulo 2^192, so any carry out is lost.  The result is broken into three
+| 64-bit pieces which are stored at the locations pointed to by `z0Ptr',
+| `z1Ptr', and `z2Ptr'.
+*----------------------------------------------------------------------------*/
+
+BX_CPP_INLINE void add192(Bit64u a0, Bit64u a1, Bit64u a2, Bit64u b0, Bit64u b1, Bit64u b2, Bit64u *z0Ptr, Bit64u *z1Ptr, Bit64u *z2Ptr)
+{
+    Bit64u z0, z1, z2;
+    unsigned carry0, carry1;
+
+    z2 = a2 + b2;
+    carry1 = (z2 < a2);
+    z1 = a1 + b1;
+    carry0 = (z1 < a1);
+    z0 = a0 + b0;
+    z1 += carry1;
+    z0 += (z1 < carry1);
+    z0 += carry0;
+    *z2Ptr = z2;
+    *z1Ptr = z1;
+    *z0Ptr = z0;
+}
+
 #endif

@@ -26,7 +26,6 @@ these four paragraphs for those parts of this code that are retained.
 #define FLOAT128
 
 #include "softfloatx80.h"
-#include "softfloat-round-pack.h"
 #include "fpu_constant.h"
 
 #define FPATAN_ARR_SIZE 11

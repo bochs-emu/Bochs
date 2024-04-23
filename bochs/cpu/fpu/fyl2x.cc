@@ -26,7 +26,6 @@ these four paragraphs for those parts of this code that are retained.
 #define FLOAT128
 
 #include "softfloatx80.h"
-#include "softfloat-round-pack.h"
 #include "softfloat-helpers.h"
 #include "fpu_constant.h"
 
@@ -217,7 +216,8 @@ invalid:
     float128_t x = packFloat128(0, aExp+0x3FFF, zSig0, zSig1);
     x = poly_l2(x, status);
     x = f128_add(x, i32_to_f128(ExpDiff), &status);
-    return floatx80_mul(b, x, status);
+    x = f128_mul(extF80_to_f128(b, &status), x, &status);
+    return f128_to_extF80(x, &status);
 }
 
 // =================================================
@@ -346,5 +346,6 @@ invalid:
     shortShift128Right(aSig<<1, 0, 16, &zSig0, &zSig1);
     float128 x = packFloat128(aSign, aExp, zSig0, zSig1);
     x = poly_l2p1(x, status);
-    return floatx80_mul(b, x, status);
+    x = f128_mul(extF80_to_f128(b, &status), x, &status);
+    return f128_to_extF80(x, &status);
 }
