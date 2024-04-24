@@ -47,6 +47,8 @@ float128_t
     struct uint128 sig128;
     float128_t z;
 
+    sigExtra = 0; // artificially reduce precision to match hardware x86 which uses only 67-bit
+
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     doIncrement = (UINT64_C(0x8000000000000000) <= sigExtra);
