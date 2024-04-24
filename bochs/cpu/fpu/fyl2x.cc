@@ -32,12 +32,12 @@ these four paragraphs for those parts of this code that are retained.
 
 static const floatx80 floatx80_one = packFloatx80(0, 0x3fff, BX_CONST64(0x8000000000000000));
 
-static const float128 float128_one =
+static const float128_t float128_one =
     packFloat128(BX_CONST64(0x3fff000000000000), BX_CONST64(0x0000000000000000));
-static const float128 float128_two =
+static const float128_t float128_two =
     packFloat128(BX_CONST64(0x4000000000000000), BX_CONST64(0x0000000000000000));
 
-static const float128 float128_ln2inv2 =
+static const float128_t float128_ln2inv2 =
     packFloat128(BX_CONST64(0x400071547652b82f), BX_CONST64(0xe1777d0ffda0d23a));
 
 #define SQRT2_HALF_SIG 	BX_CONST64(0xb504f333f9de6484)
@@ -46,7 +46,7 @@ extern float128_t OddPoly(float128_t x, const float128_t *arr, int n, float_stat
 
 #define L2_ARR_SIZE 9
 
-static float128 ln_arr[L2_ARR_SIZE] =
+static float128_t ln_arr[L2_ARR_SIZE] =
 {
     PACK_FLOAT_128(0x3fff000000000000, 0x0000000000000000), /*  1 */
     PACK_FLOAT_128(0x3ffd555555555555, 0x5555555555555555), /*  3 */
@@ -154,7 +154,7 @@ invalid:
 
     if (aExp == 0x7FFF) {
         if ((aSig<<1) || ((bExp == 0x7FFF) && (bSig<<1))) {
-            return softfloat_propagateNaNExtF80UI(a.exp, aSig, b.exp, bSig, &status);
+            return softfloat_propagateNaNExtF80UI(a.signExp, aSig, b.signExp, bSig, &status);
         }
         if (aSign) goto invalid;
         else {
@@ -167,7 +167,7 @@ invalid:
     }
     if (bExp == 0x7FFF) {
         if (bSig << 1)
-            return softfloat_propagateNaNExtF80UI(a.exp, aSig, b.exp, bSig, &status);
+            return softfloat_propagateNaNExtF80UI(a.signExp, aSig, b.signExp, bSig, &status);
         if (aSign && (Bit64u)(aExp | aSig)) goto invalid;
         if (aSig && ! aExp)
             softfloat_raiseFlags(&status, softfloat_flag_denormal);
@@ -272,7 +272,7 @@ invalid:
 
     if (aExp == 0x7FFF) {
         if ((aSig<<1) != 0 || ((bExp == 0x7FFF) && (bSig<<1) != 0)) {
-            return softfloat_propagateNaNExtF80UI(a.exp, aSig, b.exp, bSig, &status);
+            return softfloat_propagateNaNExtF80UI(a.signExp, aSig, b.signExp, bSig, &status);
         }
         if (aSign) goto invalid;
         else {
@@ -286,7 +286,7 @@ invalid:
     if (bExp == 0x7FFF)
     {
         if (bSig << 1)
-            return softfloat_propagateNaNExtF80UI(a.exp, aSig, b.exp, bSig, &status);
+            return softfloat_propagateNaNExtF80UI(a.signExp, aSig, b.signExp, bSig, &status);
 
         if (! aExp) {
             if (! aSig) goto invalid;
@@ -348,7 +348,7 @@ invalid:
     float128_t b128 = softfloat_normRoundPackToF128(bSign, bExp-0x10, bSig, 0, &status);
 
     shortShift128Right(aSig<<1, 0, 16, &zSig0, &zSig1);
-    float128 x = packFloat128(aSign, aExp, zSig0, zSig1);
+    float128_t x = packFloat128(aSign, aExp, zSig0, zSig1);
     x = poly_l2p1(x, status);
     x = f128_mul(x, b128, &status);
     return f128_to_extF80(x, &status);

@@ -513,9 +513,9 @@ void BX_CPU_C::xsave_x87_state(bxInstruction_c *i, bx_address offset)
   {
     const floatx80 &fp = BX_READ_FPU_REG(index);
 
-    xmm.xmm64u(0) = fp.fraction;
+    xmm.xmm64u(0) = fp.signif;
     xmm.xmm64u(1) = 0;
-    xmm.xmm16u(4) = fp.exp;
+    xmm.xmm16u(4) = fp.signExp;
 
     write_virtual_xmmword(i->seg(), (offset+index*16+32) & asize_mask, &xmm);
   }
@@ -575,8 +575,8 @@ void BX_CPU_C::xrstor_x87_state(bxInstruction_c *i, bx_address offset)
   for(unsigned index=0; index < 8; index++)
   {
     floatx80 reg;
-    reg.fraction = read_virtual_qword(i->seg(), (offset+index*16+32) & asize_mask);
-    reg.exp      = read_virtual_word (i->seg(), (offset+index*16+40) & asize_mask);
+    reg.signif  = read_virtual_qword(i->seg(), (offset+index*16+32) & asize_mask);
+    reg.signExp = read_virtual_word (i->seg(), (offset+index*16+40) & asize_mask);
 
     // update tag only if it is not empty
     BX_WRITE_FPU_REGISTER_AND_TAG(reg,
@@ -619,7 +619,7 @@ bool BX_CPU_C::xsave_x87_state_xinuse(void)
 
   for (unsigned index=0;index<8;index++) {
     floatx80 reg = BX_FPU_REG(index);
-    if (reg.exp != 0 || reg.fraction != 0) return true;
+    if (reg.signExp != 0 || reg.signif != 0) return true;
   }
 
   return false;

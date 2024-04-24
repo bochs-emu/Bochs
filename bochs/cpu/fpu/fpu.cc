@@ -401,8 +401,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FRSTOR(bxInstruction_c *i)
   /* read all registers in stack order */
   for(int n=0;n<8;n++)
   {
-     tmp.fraction = read_virtual_qword(i->seg(), (offset + n*10)     & i->asize_mask());
-     tmp.exp      = read_virtual_word (i->seg(), (offset + n*10 + 8) & i->asize_mask());
+     tmp.signif  = read_virtual_qword(i->seg(), (offset + n*10)     & i->asize_mask());
+     tmp.signExp = read_virtual_word (i->seg(), (offset + n*10 + 8) & i->asize_mask());
 
      // update tag only if it is not empty
      BX_WRITE_FPU_REGISTER_AND_TAG(tmp,
@@ -421,8 +421,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSAVE(bxInstruction_c *i)
   for(int n=0;n<8;n++)
   {
      floatx80 stn = BX_READ_FPU_REG(n);
-     write_virtual_qword(i->seg(), (offset + n*10)     & i->asize_mask(), stn.fraction);
-     write_virtual_word (i->seg(), (offset + n*10 + 8) & i->asize_mask(), stn.exp);
+     write_virtual_qword(i->seg(), (offset + n*10)     & i->asize_mask(), stn.signif);
+     write_virtual_word (i->seg(), (offset + n*10 + 8) & i->asize_mask(), stn.signExp);
   }
 
   BX_CPU_THIS_PTR the_i387.init();
@@ -568,18 +568,18 @@ void BX_CPU_C::print_state_FPU(void)
     const floatx80 &fp = BX_FPU_REG(i);
     unsigned tag = BX_CPU_THIS_PTR the_i387.FPU_gettagi((i-tos)&7);
     if (tag != FPU_Tag_Empty) tag = FPU_tagof(fp);
-    double f = pow(2.0, ((0x7fff & fp.exp) - 0x3fff));
-    if (fp.exp & 0x8000) f = -f;
+    double f = pow(2.0, ((0x7fff & fp.signExp) - 0x3fff));
+    if (fp.signExp & 0x8000) f = -f;
 #ifdef _MSC_VER
-    f *= (double)(signed __int64)(fp.fraction>>1) * scale_factor * 2;
+    f *= (double)(signed __int64)(fp.signif>>1) * scale_factor * 2;
 #else
-    f *= fp.fraction*scale_factor;
+    f *= fp.signif*scale_factor;
 #endif
     softfloat_class_t f_class = extF80_class(fp);
     fprintf(stderr, "%sFP%d ST%d(%c):        raw 0x%04x:%08x%08x (%.10f) (%s)\n",
           i==tos?"=>":"  ", i, (i-tos)&7,
           "v0se"[tag],
-          fp.exp & 0xffff, GET32H(fp.fraction), GET32L(fp.fraction),
+          fp.signExp & 0xffff, GET32H(fp.signif), GET32L(fp.signif),
           f, fp_class[f_class]);
   }
 }
@@ -609,7 +609,7 @@ int FPU_tagof(const floatx80 &reg)
       return FPU_Tag_Special;
    }
 
-   if (!(reg.fraction & BX_CONST64(0x8000000000000000)))
+   if (!(reg.signif & BX_CONST64(0x8000000000000000)))
    {
       /* Unsupported data type. */
       /* Valid numbers have the ms bit set to 1. */

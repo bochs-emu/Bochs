@@ -46,7 +46,6 @@ extFloat80_t
     uint64_t roundIncrement, roundMask, roundBits;
     bool isTiny, doIncrement;
     struct uint64_extra sig64Extra;
-    extFloat80_t z;
     uint64_t sigExact;
 
     /*------------------------------------------------------------------------

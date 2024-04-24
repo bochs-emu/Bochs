@@ -89,7 +89,7 @@ static int reduce_trig_arg(int expDiff, int &zSign, Bit64u &aSig0, Bit64u &aSig1
 #define SIN_ARR_SIZE 11
 #define COS_ARR_SIZE 11
 
-static float128 sin_arr[SIN_ARR_SIZE] =
+static float128_t sin_arr[SIN_ARR_SIZE] =
 {
     PACK_FLOAT_128(0x3fff000000000000, 0x0000000000000000), /*  1 */
     PACK_FLOAT_128(0xbffc555555555555, 0x5555555555555555), /*  3 */
@@ -104,7 +104,7 @@ static float128 sin_arr[SIN_ARR_SIZE] =
     PACK_FLOAT_128(0x3fbd71b8ef6dcf57, 0x18bef146fcee6e45)  /* 21 */
 };
 
-static float128 cos_arr[COS_ARR_SIZE] =
+static float128_t cos_arr[COS_ARR_SIZE] =
 {
     PACK_FLOAT_128(0x3fff000000000000, 0x0000000000000000), /*  0 */
     PACK_FLOAT_128(0xbffe000000000000, 0x0000000000000000), /*  2 */
@@ -150,7 +150,7 @@ BX_CPP_INLINE float128_t poly_sin(float128_t x, float_status_t &status)
 extern float128_t EvenPoly(float128_t x, const float128_t *arr, int n, float_status_t &status);
 
 /* 0 <= x <= pi/4 */
-BX_CPP_INLINE float128_t poly_cos(float128 x, float_status_t &status)
+BX_CPP_INLINE float128_t poly_cos(float128_t x, float_status_t &status)
 {
     //                 2     4     6     8     10     12     14
     //                x     x     x     x     x      x      x
@@ -240,7 +240,7 @@ int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, float_status_t &status
     /* invalid argument */
     if (aExp == 0x7FFF) {
         if (aSig0 << 1) {
-            sincos_invalid(sin_a, cos_a, softfloat_propagateNaNExtF80UI(a.exp, aSig0, 0, 0, &status));
+            sincos_invalid(sin_a, cos_a, softfloat_propagateNaNExtF80UI(a.signExp, aSig0, 0, 0, &status));
             return 0;
         }
 
@@ -364,7 +364,7 @@ int ftan(floatx80 &a, float_status_t &status)
     if (aExp == 0x7FFF) {
         if (aSig0 << 1)
         {
-            a = softfloat_propagateNaNExtF80UI(a.exp, aSig0, 0, 0, &status);
+            a = softfloat_propagateNaNExtF80UI(a.signExp, aSig0, 0, 0, &status);
             return 0;
         }
 

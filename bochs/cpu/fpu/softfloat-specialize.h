@@ -175,8 +175,8 @@ BX_CPP_INLINE float64 packFloat64(int zSign, Bit16s zExp, Bit64u zSig)
 BX_CPP_INLINE floatx80 packFloatx80(int zSign, Bit32s zExp, Bit64u zSig)
 {
     floatx80 z;
-    z.fraction = zSig;
-    z.exp = (zSign << 15) + zExp;
+    z.signif = zSig;
+    z.signExp = (zSign << 15) + zExp;
     return z;
 }
 
@@ -203,11 +203,11 @@ static const floatx80 floatx80_default_nan =
 | significand.
 *----------------------------------------------------------------------------*/
 
-BX_CPP_INLINE float128 packFloat128(int zSign, Bit32s zExp, Bit64u zSig0, Bit64u zSig1)
+BX_CPP_INLINE float128_t packFloat128(int zSign, Bit32s zExp, Bit64u zSig0, Bit64u zSig1)
 {
-    float128 z;
-    z.lo = zSig1;
-    z.hi = (((Bit64u) zSign)<<63) + (((Bit64u) zExp)<<48) + zSig0;
+    float128_t z;
+    z.v0  = zSig1;
+    z.v64 = (((Bit64u) zSign)<<63) + (((Bit64u) zExp)<<48) + zSig0;
     return z;
 }
 
@@ -216,11 +216,11 @@ BX_CPP_INLINE float128 packFloat128(int zSign, Bit32s zExp, Bit64u zSig0, Bit64u
 | floating-point value, returning the result.
 *----------------------------------------------------------------------------*/
 
-BX_CPP_INLINE float128 packFloat128(Bit64u zHi, Bit64u zLo)
+BX_CPP_INLINE float128_t packFloat128(Bit64u zHi, Bit64u zLo)
 {
-    float128 z;
-    z.lo = zLo;
-    z.hi = zHi;
+    float128_t z;
+    z.v0  = zLo;
+    z.v64 = zHi;
     return z;
 }
 

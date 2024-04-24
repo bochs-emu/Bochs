@@ -508,8 +508,8 @@ void BX_CPU_C::register_state(void)
   for (n=0; n<8; n++) {
     sprintf(name, "st%d", n);
     bx_list_c *STx = new bx_list_c(fpu, name);
-    BXRS_HEX_PARAM_FIELD(STx, exp,      the_i387.st_space[n].exp);
-    BXRS_HEX_PARAM_FIELD(STx, fraction, the_i387.st_space[n].fraction);
+    new bx_shadow_num_c(STx, "exp", &the_i387.st_space[n].signExp, BASE_HEX);
+    new bx_shadow_num_c(STx, "fraction", (Bit64s*) &the_i387.st_space[n].signif, BASE_HEX);
   }
   BXRS_DEC_PARAM_FIELD(fpu, tos, the_i387.tos);
 #endif

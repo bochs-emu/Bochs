@@ -73,7 +73,7 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float32 b32, int bIsNaN, float_s
         softfloat_raiseFlags(&status, softfloat_flag_invalid);
 
     // propagate QNaN to SNaN
-    a = softfloat_propagateNaNExtF80UI(a.exp, a.fraction, 0, 0, &status);
+    a = softfloat_propagateNaNExtF80UI(a.signExp, a.signif, 0, 0, &status);
 
     if (aIsNaN & !bIsNaN) return a;
 
@@ -88,9 +88,9 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float32 b32, int bIsNaN, float_s
     else if (aIsNaN) {
         if (bIsSignalingNaN) return a;
  returnLargerSignificand:
-        if (a.fraction < b.fraction) return b;
-        if (b.fraction < a.fraction) return a;
-        return (a.exp < b.exp) ? a : b;
+        if (a.signif < b.signif) return b;
+        if (b.signif < a.signif) return a;
+        return (a.signExp < b.signExp) ? a : b;
     }
     else {
         return b;
@@ -122,7 +122,7 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float64 b64, int bIsNaN, float_s
         softfloat_raiseFlags(&status, softfloat_flag_invalid);
 
     // propagate QNaN to SNaN
-    a = softfloat_propagateNaNExtF80UI(a.exp, a.fraction, 0, 0, &status);
+    a = softfloat_propagateNaNExtF80UI(a.signExp, a.signif, 0, 0, &status);
 
     if (aIsNaN & !bIsNaN) return a;
 
@@ -137,9 +137,9 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float64 b64, int bIsNaN, float_s
     else if (aIsNaN) {
         if (bIsSignalingNaN) return a;
  returnLargerSignificand:
-        if (a.fraction < b.fraction) return b;
-        if (b.fraction < a.fraction) return a;
-        return (a.exp < b.exp) ? a : b;
+        if (a.signif < b.signif) return b;
+        if (b.signif < a.signif) return a;
+        return (a.signExp < b.signExp) ? a : b;
     }
     else {
         return b;

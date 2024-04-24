@@ -200,9 +200,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXTRACT(bxInstruction_c *i)
   float_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
-  extFloat80_t a = BX_READ_FPU_REG(0);
-//floatx80 b = floatx80_extract(a, status);
-  extFloat80_t b = extF80_extract(&a, &status);
+  floatx80 a = BX_READ_FPU_REG(0);
+  floatx80 b = extF80_extract(&a, &status);
 
   if (! FPU_exception(i, status.softfloat_exceptionFlags)) {
      BX_WRITE_FPU_REG(b, 0);     // exponent
@@ -233,9 +232,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPREM1(bxInstruction_c *i)
 
   Bit64u quotient;
 
-  extFloat80_t a = BX_READ_FPU_REG(0);
-  extFloat80_t b = BX_READ_FPU_REG(1);
-  extFloat80_t result;
+  floatx80 a = BX_READ_FPU_REG(0);
+  floatx80 b = BX_READ_FPU_REG(1);
+  floatx80 result;
 
   int flags = floatx80_ieee754_remainder(a, b, result, quotient, &status);
 
@@ -276,9 +275,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPREM(bxInstruction_c *i)
 
   Bit64u quotient;
 
-  extFloat80_t a = BX_READ_FPU_REG(0);
-  extFloat80_t b = BX_READ_FPU_REG(1);
-  extFloat80_t result;
+  floatx80 a = BX_READ_FPU_REG(0);
+  floatx80 b = BX_READ_FPU_REG(1);
+  floatx80 result;
 
   int flags = floatx80_remainder(a, b, result, quotient, &status);
 

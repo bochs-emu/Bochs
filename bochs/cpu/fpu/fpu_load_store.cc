@@ -138,8 +138,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_EXTENDED_REAL(bxInstruction_c *i)
   floatx80 result;
 
   RMAddr(i) = BX_CPU_RESOLVE_ADDR(i);
-  result.fraction = read_virtual_qword(i->seg(), RMAddr(i));
-  result.exp      = read_virtual_word(i->seg(), (RMAddr(i)+8) & i->asize_mask());
+  result.signif  = read_virtual_qword(i->seg(), RMAddr(i));
+  result.signExp = read_virtual_word(i->seg(), (RMAddr(i)+8) & i->asize_mask());
 
   FPU_update_last_instruction(i);
 
@@ -172,7 +172,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_WORD_INTEGER(bxInstruction_c *i)
     FPU_stack_overflow(i);
   }
   else {
-    extFloat80_t result = i32_to_extF80((Bit32s) load_reg);
+    floatx80 result = i32_to_extF80((Bit32s) load_reg);
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(result, 0);
   }
@@ -196,7 +196,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_DWORD_INTEGER(bxInstruction_c *i)
     FPU_stack_overflow(i);
   }
   else {
-    extFloat80_t result = i32_to_extF80(load_reg);
+    floatx80 result = i32_to_extF80(load_reg);
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(result, 0);
   }
@@ -220,7 +220,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FILD_QWORD_INTEGER(bxInstruction_c *i)
     FPU_stack_overflow(i);
   }
   else {
-    extFloat80_t result = i64_to_extF80(load_reg);
+    floatx80 result = i64_to_extF80(load_reg);
     BX_CPU_THIS_PTR the_i387.FPU_push();
     BX_WRITE_FPU_REG(result, 0);
   }
@@ -416,8 +416,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSTP_EXTENDED_REAL(bxInstruction_c *i)
      save_reg = BX_READ_FPU_REG(0);
   }
 
-  write_virtual_qword(i->seg(), RMAddr(i), save_reg.fraction);
-  write_virtual_word(i->seg(), (RMAddr(i) + 8) & i->asize_mask(), save_reg.exp);
+  write_virtual_qword(i->seg(), RMAddr(i), save_reg.signif);
+  write_virtual_word(i->seg(), (RMAddr(i) + 8) & i->asize_mask(), save_reg.signExp);
 
   BX_CPU_THIS_PTR the_i387.FPU_pop();
 
@@ -595,7 +595,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FBSTP_PACKED_BCD(bxInstruction_c *i)
      floatx80 reg = BX_READ_FPU_REG(0);
      Bit64s save_val = extF80_to_i64(reg, &status);
 
-     int sign = (reg.exp & 0x8000) != 0;
+     int sign = extF80_sign(reg);
      if (sign)
         save_val = -save_val;
 

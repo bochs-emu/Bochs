@@ -238,9 +238,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXSAVE(bxInstruction_c *i)
   {
     const floatx80 &fp = BX_READ_FPU_REG(index);
 
-    xmm.xmm64u(0) = fp.fraction;
+    xmm.xmm64u(0) = fp.signif;
     xmm.xmm64u(1) = 0;
-    xmm.xmm16u(4) = fp.exp;
+    xmm.xmm16u(4) = fp.signExp;
 
     write_virtual_xmmword(i->seg(), (eaddr+index*16+32) & asize_mask, &xmm);
   }
@@ -336,8 +336,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   for(index=0; index < 8; index++)
   {
     floatx80 reg;
-    reg.fraction = read_virtual_qword(i->seg(), (eaddr+index*16+32) & asize_mask);
-    reg.exp      = read_virtual_word (i->seg(), (eaddr+index*16+40) & asize_mask);
+    reg.signif  = read_virtual_qword(i->seg(), (eaddr+index*16+32) & asize_mask);
+    reg.signExp = read_virtual_word (i->seg(), (eaddr+index*16+40) & asize_mask);
 
     // update tag only if it is not empty
     BX_WRITE_FPU_REGISTER_AND_TAG(reg,

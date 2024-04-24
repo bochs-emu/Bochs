@@ -47,7 +47,7 @@ const floatx80 Const_INF  = packFloatx80(0, 0x7fff, BX_CONST64(0x800000000000000
 BX_CPP_INLINE floatx80 FPU_round_const(const floatx80 &a, int adj)
 {
   floatx80 result = a;
-  result.fraction += adj;
+  result.signif += adj;
   return result;
 }
 

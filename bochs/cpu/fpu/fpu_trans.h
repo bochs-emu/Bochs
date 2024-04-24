@@ -27,14 +27,14 @@
 #include "softfloat.h"
 #include "softfloat-specialize.h"
 
-extern extFloat80_t softfloat_propagateNaNExtF80UI(uint16_t uiA64, uint64_t uiA0, uint16_t uiB64, uint64_t uiB0, struct softfloat_status_t *status);
+extern floatx80 softfloat_propagateNaNExtF80UI(uint16_t uiA64, uint64_t uiA0, uint16_t uiB64, uint64_t uiB0, struct softfloat_status_t *status);
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE extended double-precision operations.
 *----------------------------------------------------------------------------*/
 
-int floatx80_remainder(extFloat80_t a, extFloat80_t b, extFloat80_t &r, Bit64u &q, struct softfloat_status_t *status);
-int floatx80_ieee754_remainder(extFloat80_t a, extFloat80_t b, extFloat80_t &r, Bit64u &q, struct softfloat_status_t *status);
+int floatx80_remainder(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, struct softfloat_status_t *status);
+int floatx80_ieee754_remainder(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, struct softfloat_status_t *status);
 
 floatx80 f2xm1(floatx80 a, float_status_t &status);
 floatx80 fyl2x(floatx80 a, floatx80 b, float_status_t &status);
@@ -58,7 +58,7 @@ int ftan(floatx80 &a, float_status_t &status);
 
 BX_CPP_INLINE floatx80& floatx80_abs(floatx80 &reg)
 {
-    reg.exp &= 0x7FFF;
+    reg.signExp &= 0x7FFF;
     return reg;
 }
 
@@ -70,7 +70,7 @@ BX_CPP_INLINE floatx80& floatx80_abs(floatx80 &reg)
 
 BX_CPP_INLINE floatx80& floatx80_chs(floatx80 &reg)
 {
-    reg.exp ^= 0x8000;
+    reg.signExp ^= 0x8000;
     return reg;
 }
 

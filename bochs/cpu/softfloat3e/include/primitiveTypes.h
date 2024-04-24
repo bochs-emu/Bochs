@@ -39,38 +39,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include "config.h"
 
-#ifdef BX_BIG_ENDIAN
-struct float128 {
-    Bit64u hi, lo;
-};
-#else
-struct float128 {
-    Bit64u lo, hi;
-};
-#endif
-
 #ifdef BX_LITTLE_ENDIAN
-struct uint128 { 
-    uint64_t v0, v64;
-    uint128(): v0(0), v64(0) {}
-    uint128(float128 v128): v0(v128.lo), v64(v128.hi) {}
-    operator float128() const { float128 x; x.lo = v0; x.hi = v64; return x; }
-};
-#else
-struct uint128 {
-    uint64_t v64, v0;
-    uint128(): v64(0), v0(0) {}
-    uint128(float128 v128): v64(v128.hi), v0(v128.lo) {}
-    operator float128() const { float128 x; x.lo = v0; x.hi = v64; return x; }
-};
-#endif
-
-#ifdef BX_LITTLE_ENDIAN
-//struct uint128 { uint64_t v0, v64; };
+struct uint128 { uint64_t v0, v64; };
 struct uint64_extra { uint64_t extra, v; };
 struct uint128_extra { uint64_t extra; struct uint128 v; };
 #else
-//struct uint128 { uint64_t v64, v0; };
+struct uint128 { uint64_t v64, v0; };
 struct uint64_extra { uint64_t v, extra; };
 struct uint128_extra { struct uint128 v; uint64_t extra; };
 #endif

@@ -31,21 +31,21 @@ these four paragraphs for those parts of this code that are retained.
 
 #define FPATAN_ARR_SIZE 11
 
-static const float128 float128_one =
+static const float128_t float128_one =
         packFloat128(BX_CONST64(0x3fff000000000000), BX_CONST64(0x0000000000000000));
-static const float128 float128_sqrt3 =
+static const float128_t float128_sqrt3 =
         packFloat128(BX_CONST64(0x3fffbb67ae8584ca), BX_CONST64(0xa73b25742d7078b8));
 static const floatx80 floatx80_pi  =
         packFloatx80(0, 0x4000, BX_CONST64(0xc90fdaa22168c235));
 
-static const float128 float128_pi2 =
+static const float128_t float128_pi2 =
         packFloat128(BX_CONST64(0x3fff921fb54442d1), BX_CONST64(0x8469898CC5170416));
-static const float128 float128_pi4 =
+static const float128_t float128_pi4 =
         packFloat128(BX_CONST64(0x3ffe921fb54442d1), BX_CONST64(0x8469898CC5170416));
-static const float128 float128_pi6 =
+static const float128_t float128_pi6 =
         packFloat128(BX_CONST64(0x3ffe0c152382d736), BX_CONST64(0x58465BB32E0F580F));
 
-static float128 atan_arr[FPATAN_ARR_SIZE] =
+static float128_t atan_arr[FPATAN_ARR_SIZE] =
 {
     PACK_FLOAT_128(0x3fff000000000000, 0x0000000000000000), /*  1 */
     PACK_FLOAT_128(0xbffd555555555555, 0x5555555555555555), /*  3 */
@@ -153,11 +153,11 @@ floatx80 fpatan(floatx80 a, floatx80 b, float_status_t &status)
     if (bExp == 0x7FFF)
     {
         if (bSig<<1)
-            return softfloat_propagateNaNExtF80UI(a.exp, aSig, b.exp, bSig, &status);
+            return softfloat_propagateNaNExtF80UI(a.signExp, aSig, b.signExp, bSig, &status);
 
         if (aExp == 0x7FFF) {
             if (aSig<<1)
-                return softfloat_propagateNaNExtF80UI(a.exp, aSig, b.exp, bSig, &status);
+                return softfloat_propagateNaNExtF80UI(a.signExp, aSig, b.signExp, bSig, &status);
 
             if (aSign)     /* return 3PI/4 */
                 return softfloat_roundPackToExtF80(bSign, FLOATX80_3PI4_EXP, FLOAT_3PI4_HI, FLOAT_3PI4_LO, 80, &status);
@@ -174,7 +174,7 @@ floatx80 fpatan(floatx80 a, floatx80 b, float_status_t &status)
     if (aExp == 0x7FFF)
     {
         if (aSig<<1)
-            return softfloat_propagateNaNExtF80UI(a.exp, aSig, b.exp, bSig, &status);
+            return softfloat_propagateNaNExtF80UI(a.signExp, aSig, b.signExp, bSig, &status);
 
         if (bSig && ! bExp)
             softfloat_raiseFlags(&status, softfloat_flag_denormal);
@@ -219,7 +219,6 @@ return_PI_or_ZERO:
     /* using float128 for approximation */
     /* ******************************** */
 
-
     float128_t a128 = softfloat_normRoundPackToF128(0, aExp-0x10, aSig, 0, &status);
     float128_t b128 = softfloat_normRoundPackToF128(0, bExp-0x10, bSig, 0, &status);
     float128_t x;
@@ -244,8 +243,8 @@ return_PI_or_ZERO:
         /*
         arctan(x) = arctan((x-1)/(x+1)) + pi/4
         */
-        float128 t1 = f128_sub(x, float128_one, &status);
-        float128 t2 = f128_add(x, float128_one, &status);
+        float128_t t1 = f128_sub(x, float128_one, &status);
+        float128_t t2 = f128_add(x, float128_one, &status);
         x = f128_div(t1, t2, &status);
         add_pi4 = 1;
     }

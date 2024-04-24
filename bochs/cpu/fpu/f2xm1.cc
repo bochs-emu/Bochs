@@ -31,7 +31,7 @@ these four paragraphs for those parts of this code that are retained.
 
 static const floatx80 floatx80_negone  = packFloatx80(1, 0x3fff, BX_CONST64(0x8000000000000000));
 static const floatx80 floatx80_neghalf = packFloatx80(1, 0x3ffe, BX_CONST64(0x8000000000000000));
-static const float128 float128_ln2     =
+static const float128_t float128_ln2   =
     packFloat128(BX_CONST64(0x3ffe62e42fefa39e), BX_CONST64(0xf35793c7673007e6));
 
 #ifdef BETTER_THAN_PENTIUM
@@ -48,7 +48,7 @@ static const float128 float128_ln2     =
 
 #define EXP_ARR_SIZE 15
 
-static float128 exp_arr[EXP_ARR_SIZE] =
+static float128_t exp_arr[EXP_ARR_SIZE] =
 {
     PACK_FLOAT_128(0x3fff000000000000, 0x0000000000000000), /*  1 */
     PACK_FLOAT_128(0x3ffe000000000000, 0x0000000000000000), /*  2 */
@@ -131,7 +131,7 @@ floatx80 f2xm1(floatx80 a, float_status_t &status)
 
     if (aExp == 0x7FFF) {
         if (aSig << 1)
-            return softfloat_propagateNaNExtF80UI(a.exp, aSig, 0, 0, &status);
+            return softfloat_propagateNaNExtF80UI(a.signExp, aSig, 0, 0, &status);
 
         return (aSign) ? floatx80_negone : a;
     }
@@ -168,7 +168,7 @@ floatx80 f2xm1(floatx80 a, float_status_t &status)
     }
     else
     {
-        if (a.exp == 0xBFFF && ! (aSig<<1))
+        if (a.signExp == 0xBFFF && ! (aSig<<1))
            return floatx80_neghalf;
 
         return a;

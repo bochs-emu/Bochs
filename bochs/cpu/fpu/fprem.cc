@@ -47,7 +47,7 @@ static Bit64u remainder_kernel(Bit64u aSig0, Bit64u bSig, int expDiff, Bit64u *z
     return q;
 }
 
-static int do_fprem(extFloat80_t a, extFloat80_t b, extFloat80_t &r, Bit64u &q, int rounding_mode, struct softfloat_status_t *status)
+static int do_fprem(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, int rounding_mode, struct softfloat_status_t *status)
 {
     Bit32s aExp, bExp, zExp, expDiff;
     Bit64u aSig0, aSig1 = 0, bSig;
@@ -180,7 +180,7 @@ static int do_fprem(extFloat80_t a, extFloat80_t b, extFloat80_t &r, Bit64u &q, 
 | according to the IEC/IEEE Standard for Binary Floating-Point Arithmetic.
 *----------------------------------------------------------------------------*/
 
-int floatx80_ieee754_remainder(extFloat80_t a, extFloat80_t b, extFloat80_t &r, Bit64u &q, struct softfloat_status_t *status)
+int floatx80_ieee754_remainder(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, struct softfloat_status_t *status)
 {
     return do_fprem(a, b, r, q, softfloat_round_near_even, status);
 }
@@ -194,7 +194,7 @@ int floatx80_ieee754_remainder(extFloat80_t a, extFloat80_t b, extFloat80_t &r, 
 | quotient of 'a' divided by 'b' to an integer.
 *----------------------------------------------------------------------------*/
 
-int floatx80_remainder(extFloat80_t a, extFloat80_t b, extFloat80_t &r, Bit64u &q, struct softfloat_status_t *status)
+int floatx80_remainder(floatx80 a, floatx80 b, floatx80 &r, Bit64u &q, struct softfloat_status_t *status)
 {
     return do_fprem(a, b, r, q, softfloat_round_to_zero, status);
 }

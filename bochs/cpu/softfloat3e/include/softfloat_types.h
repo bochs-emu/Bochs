@@ -67,7 +67,7 @@ typedef struct f64_t {
 
 #include "primitiveTypes.h"
 
-typedef uint128 f128_t, float128_t;
+typedef uint128 float128_t;
 
 /*----------------------------------------------------------------------------
 | The format of an 80-bit extended floating-point number in memory.  This
@@ -75,35 +75,15 @@ typedef uint128 f128_t, float128_t;
 | named 'signif'.
 *----------------------------------------------------------------------------*/
 
-#ifdef BX_BIG_ENDIAN
-struct floatx80 {  // leave alignment to compiler
-    Bit16u exp;
-    Bit64u fraction;
-};
-#else
-struct floatx80 {
-    Bit64u fraction;
-    Bit16u exp;
-};
-#endif
-
 #ifdef BX_LITTLE_ENDIAN
 struct extFloat80M {
   uint64_t signif;
   uint16_t signExp;
-
-  extFloat80M(): signif(0), signExp(0) {}
-  extFloat80M(struct floatx80 a): signif(a.fraction), signExp(a.exp) {}
-  operator floatx80() const { floatx80 x; x.fraction = signif; x.exp = signExp; return x; }
 };
 #else
 struct extFloat80M {
   uint16_t signExp;
   uint64_t signif;
-
-  extFloat80M(): signExp(0), signif(0) {}
-  extFloat80M(struct floatx80 a): signExp(a.exp), signif(a.fraction) {}
-  operator floatx80() const { floatx80 x; x.fraction = signif; x.exp = signExp; return x; }
 };
 #endif
 
@@ -119,6 +99,6 @@ struct extFloat80M {
 | must align exactly with the locations in memory of the sign, exponent, and
 | significand of the native type.
 *----------------------------------------------------------------------------*/
-typedef struct extFloat80M extFloat80_t;
+typedef struct extFloat80M extFloat80_t, floatx80;
 
 #endif
