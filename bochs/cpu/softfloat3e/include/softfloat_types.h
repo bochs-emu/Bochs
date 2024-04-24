@@ -39,13 +39,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include "config.h"
 
+#ifdef BX_LITTLE_ENDIAN
+struct uint128 { uint64_t v0, v64; };
+struct uint64_extra { uint64_t extra, v; };
+struct uint128_extra { uint64_t extra; struct uint128 v; };
+#else
+struct uint128 { uint64_t v64, v0; };
+struct uint64_extra { uint64_t v, extra; };
+struct uint128_extra { struct uint128 v; uint64_t extra; };
+#endif
+
 /*----------------------------------------------------------------------------
 | Types used to pass 16-bit, 32-bit, 64-bit, and 128-bit floating-point
 | arguments and results to/from functions.  These types must be exactly
-| 16 bits, 32 bits, 64 bits, and 128 bits in size, respectively.  Where a
-| platform has "native" support for IEEE-Standard floating-point formats,
-| the types below may, if desired, be defined as aliases for the native types
-| (typically 'float' and 'double', and possibly 'long double').
+| 16 bits, 32 bits, 64 bits, and 128 bits in size, respectively.
 *----------------------------------------------------------------------------*/
 typedef struct f16_t {
     uint16_t v;
@@ -64,8 +71,6 @@ typedef struct f64_t {
     f64_t(uint64_t v64): v(v64) {}
     operator uint64_t() const { return v; }
 } float64_t;
-
-#include "primitiveTypes.h"
 
 typedef uint128 float128_t;
 
