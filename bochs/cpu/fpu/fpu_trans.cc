@@ -28,7 +28,7 @@
 
 #if BX_SUPPORT_FPU
 
-#include "softfloatx80.h"
+#include "fpu_trans.h"
 #include "softfloat-specialize.h"
 
 extern float_status_t i387cw_to_softfloat_status_word(Bit16u control_word);
@@ -111,7 +111,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPTAN(bxInstruction_c *i)
      BX_NEXT_INSTR(i);
   }
 
-  extern const floatx80 Const_1;
+  static const floatx80 Const_1 = packFloatx80(0, 0x3fff, BX_CONST64(0x8000000000000000));
 
   float_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);

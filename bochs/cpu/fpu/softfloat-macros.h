@@ -107,19 +107,4 @@ BX_CPP_INLINE void normalizeFloatx80Subnormal(Bit64u aSig, Bit32s *zExpPtr, Bit6
     *zExpPtr = 1 - shiftCount;
 }
 
-/*----------------------------------------------------------------------------
-| Subtracts the 128-bit value formed by concatenating `b0' and `b1' from the
-| 128-bit value formed by concatenating `a0' and `a1'.  Subtraction is modulo
-| 2^128, so any borrow out (carry out) is lost.  The result is broken into two
-| 64-bit pieces which are stored at the locations pointed to by `z0Ptr' and
-| `z1Ptr'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE void
- sub128(Bit64u a0, Bit64u a1, Bit64u b0, Bit64u b1, Bit64u *z0Ptr, Bit64u *z1Ptr)
-{
-    *z1Ptr = a1 - b1;
-    *z0Ptr = a0 - b0 - (a1 < b1);
-}
-
 #endif

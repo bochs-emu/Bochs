@@ -23,7 +23,7 @@ these four paragraphs for those parts of this code that are retained.
  *            Stanislav Shwartsman [sshwarts at sourceforge net]
  * ==========================================================================*/
 
-#include "softfloatx80.h"
+#include "fpu_trans.h"
 #define USE_estimateDiv128To64
 #include "softfloat-helpers.h"
 

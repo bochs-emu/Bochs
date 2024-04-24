@@ -25,12 +25,11 @@ these four paragraphs for those parts of this code that are retained.
 
 #define FLOAT128
 
-#include "softfloatx80.h"
+#include "fpu_trans.h"
 #include "softfloat-helpers.h"
 #include "fpu_constant.h"
 
-static const floatx80 floatx80_one =
-    packFloatx80(0, 0x3fff, BX_CONST64(0x8000000000000000));
+static const floatx80 floatx80_one = packFloatx80(0, 0x3fff, BX_CONST64(0x8000000000000000));
 
 static const float128 float128_one =
     packFloat128(BX_CONST64(0x3fff000000000000), BX_CONST64(0x0000000000000000));
@@ -154,7 +153,7 @@ invalid:
 
     if (aExp == 0x7FFF) {
         if ((aSig<<1) || ((bExp == 0x7FFF) && (bSig<<1))) {
-            return propagateFloatx80NaN(a, b, status);
+            return softfloat_propagateNaNExtF80UI(a.exp, aSig, b.exp, bSig, &status);
         }
         if (aSign) goto invalid;
         else {
@@ -166,7 +165,8 @@ invalid:
         }
     }
     if (bExp == 0x7FFF) {
-        if (bSig << 1) return propagateFloatx80NaN(a, b, status);
+        if (bSig << 1)
+            return softfloat_propagateNaNExtF80UI(a.exp, aSig, b.exp, bSig, &status);
         if (aSign && (Bit64u)(aExp | aSig)) goto invalid;
         if (aSig && ! aExp)
             softfloat_raiseFlags(&status, softfloat_flag_denormal);
@@ -269,15 +269,13 @@ invalid:
     int zSign = aSign ^ bSign;
 
     if (aExp == 0x7FFF) {
-        if ((Bit64u) (aSig<<1)
-             || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1)))
-        {
-            return propagateFloatx80NaN(a, b, status);
+        if ((aSig<<1) != 0 || ((bExp == 0x7FFF) && (bSig<<1) != 0)) {
+            return softfloat_propagateNaNExtF80UI(a.exp, aSig, b.exp, bSig, &status);
         }
         if (aSign) goto invalid;
         else {
-            if (bExp == 0) {
-                if (bSig == 0) goto invalid;
+            if (! bExp) {
+                if (! bSig) goto invalid;
                 softfloat_raiseFlags(&status, softfloat_flag_denormal);
             }
             return packFloatx80(bSign, 0x7FFF, BX_CONST64(0x8000000000000000));
@@ -285,26 +283,26 @@ invalid:
     }
     if (bExp == 0x7FFF)
     {
-        if ((Bit64u) (bSig<<1))
-            return propagateFloatx80NaN(a, b, status);
+        if (bSig << 1)
+            return softfloat_propagateNaNExtF80UI(a.exp, aSig, b.exp, bSig, &status);
 
-        if (aExp == 0) {
-            if (aSig == 0) goto invalid;
+        if (! aExp) {
+            if (! aSig) goto invalid;
             softfloat_raiseFlags(&status, softfloat_flag_denormal);
         }
 
         return packFloatx80(zSign, 0x7FFF, BX_CONST64(0x8000000000000000));
     }
-    if (aExp == 0) {
-        if (aSig == 0) {
-            if (bSig && (bExp == 0)) softfloat_raiseFlags(&status, softfloat_flag_denormal);
+    if (! aExp) {
+        if (! aSig) {
+            if (bSig && ! bExp) softfloat_raiseFlags(&status, softfloat_flag_denormal);
             return packFloatx80(zSign, 0, 0);
         }
         softfloat_raiseFlags(&status, softfloat_flag_denormal);
         normalizeFloatx80Subnormal(aSig, &aExp, &aSig);
     }
-    if (bExp == 0) {
-        if (bSig == 0) return packFloatx80(zSign, 0, 0);
+    if (! bExp) {
+        if (! bSig) return packFloatx80(zSign, 0, 0);
         softfloat_raiseFlags(&status, softfloat_flag_denormal);
         normalizeFloatx80Subnormal(bSig, &bExp, &bSig);
     }

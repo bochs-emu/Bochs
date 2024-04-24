@@ -40,7 +40,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SS_VssEdR(bxInstruction_c *i)
 
   op1.xmm32u(0) = i32_to_f32(BX_READ_32BIT_REG(i->src2()), &status);
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
   BX_NEXT_INSTR(i);
@@ -56,7 +56,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SS_VssEqR(bxInstruction_c *i)
 
   op1.xmm32u(0) = i64_to_f32(BX_READ_64BIT_REG(i->src2()), &status);
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
   BX_NEXT_INSTR(i);
@@ -82,7 +82,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SD_VsdEqR(bxInstruction_c *i)
 
   op1.xmm64u(0) = i64_to_f64(BX_READ_64BIT_REG(i->src2()), &status);
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
   BX_NEXT_INSTR(i);
@@ -102,7 +102,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PD_VpdWpsR(bxInstruction_c *i)
      result.vmm64u(n) = f32_to_f64(op.ymm32u(n), &status);
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   BX_WRITE_AVX_REGZ(i->dst(), result, len);
   BX_NEXT_INSTR(i);
@@ -121,7 +121,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2PS_VpsWpdR(bxInstruction_c *i)
     result.vmm32u(n) = f64_to_f32(op.vmm64u(n), &status);
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (len == BX_VL128) {
     BX_WRITE_XMM_REG_LO_QWORD_CLEAR_HIGH(i->dst(), result.vmm64u(0));
@@ -142,7 +142,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSS2SD_VsdWssR(bxInstruction_c *i)
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
   op1.xmm64u(0) = f32_to_f64(op2, &status);
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
   BX_NEXT_INSTR(i);
@@ -157,7 +157,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSD2SS_VssWsdR(bxInstruction_c *i)
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
   op1.xmm32u(0) = f64_to_f32(op2, &status);
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
   BX_NEXT_INSTR(i);
@@ -176,7 +176,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTDQ2PS_VpsWdqR(bxInstruction_c *i)
     op.vmm32u(n) = i32_to_f32(op.vmm32s(n), &status);
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op, len);
   BX_NEXT_INSTR(i);
@@ -195,7 +195,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2DQ_VdqWpsR(bxInstruction_c *i)
     op.vmm32s(n) = f32_to_i32(op.vmm32u(n), &status);
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op, len);
   BX_NEXT_INSTR(i);
@@ -214,7 +214,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTPS2DQ_VdqWpsR(bxInstruction_c *i)
     op.vmm32s(n) = f32_to_i32_round_to_zero(op.vmm32u(n), &status);
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op, len);
   BX_NEXT_INSTR(i);
@@ -233,7 +233,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTPD2DQ_VdqWpdR(bxInstruction_c *i)
     result.vmm32s(n) = f64_to_i32_round_to_zero(op.vmm64u(n), &status);
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (len == BX_VL128) {
     BX_WRITE_XMM_REG_LO_QWORD_CLEAR_HIGH(i->dst(), result.vmm64u(0));
@@ -258,7 +258,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2DQ_VdqWpdR(bxInstruction_c *i)
     result.vmm32s(n) = f64_to_i32(op.vmm64u(n), &status);
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (len == BX_VL128) {
     BX_WRITE_XMM_REG_LO_QWORD_CLEAR_HIGH(i->dst(), result.vmm64u(0));
@@ -303,7 +303,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPH2PS_VpsWpsR(bxInstruction_c *i)
      result.vmm32u(n) = f16_to_f32(op.ymm16u(n), &status);
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   BX_WRITE_AVX_REGZ(i->dst(), result, len);
   BX_NEXT_INSTR(i);
@@ -328,7 +328,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PH_WpsVpsIb(bxInstruction_c *i)
     result.vmm16u(n) = f32_to_f16(op.vmm32u(n), &status);
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (i->modC0()) {
     if (len == BX_VL128) {

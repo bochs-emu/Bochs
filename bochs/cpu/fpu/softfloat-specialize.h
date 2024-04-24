@@ -237,72 +237,10 @@ BX_CPP_INLINE int floatx80_is_signaling_nan(floatx80 a)
 }
 
 /*----------------------------------------------------------------------------
-| Returns 1 if the extended double-precision floating-point value `a' is an
-| unsupported; otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int floatx80_is_unsupported(floatx80 a)
-{
-    return ((a.exp & 0x7FFF) && !(a.fraction & BX_CONST64(0x8000000000000000)));
-}
-
-/*----------------------------------------------------------------------------
-| Returns the result of converting the extended double-precision floating-
-| point NaN `a' to the canonical NaN format. If `a' is a signaling NaN, the
-| invalid exception is raised.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE commonNaNT floatx80ToCommonNaN(floatx80 a, float_status_t &status)
-{
-    commonNaNT z;
-    if (floatx80_is_signaling_nan(a)) float_raise(status, float_flag_invalid);
-    z.sign = a.exp >> 15;
-    z.lo = 0;
-    z.hi = a.fraction << 1;
-    return z;
-}
-
-/*----------------------------------------------------------------------------
-| Returns the result of converting the canonical NaN `a' to the extended
-| double-precision floating-point format.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE floatx80 commonNaNToFloatx80(commonNaNT a)
-{
-    floatx80 z;
-    z.fraction = BX_CONST64(0xC000000000000000) | (a.hi>>1);
-    z.exp = (((Bit16u) a.sign)<<15) | 0x7FFF;
-    return z;
-}
-
-/*----------------------------------------------------------------------------
-| Takes two extended double-precision floating-point values `a' and `b', one
-| of which is a NaN, and returns the appropriate NaN result.  If either `a' or
-| `b' is a signaling NaN, the invalid exception is raised.
-*----------------------------------------------------------------------------*/
-
-floatx80 propagateFloatx80NaN(floatx80 a, floatx80 b, float_status_t &status);
-
-/*----------------------------------------------------------------------------
-| Takes extended double-precision floating-point  NaN  `a' and returns the
-| appropriate NaN result. If `a' is a signaling NaN, the invalid exception
-| is raised.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE floatx80 propagateFloatx80NaN(floatx80 a, float_status_t &status)
-{
-    if (floatx80_is_signaling_nan(a))
-        float_raise(status, float_flag_invalid);
-
-    a.fraction |= BX_CONST64(0xC000000000000000);
-
-    return a;
-}
-
-/*----------------------------------------------------------------------------
 | The pattern for a default generated extended double-precision NaN.
 *----------------------------------------------------------------------------*/
-extern const floatx80 floatx80_default_nan;
+static const floatx80 floatx80_default_nan =
+    packFloatx80(0, floatx80_default_nan_exp, floatx80_default_nan_fraction);
 
 #endif /* FLOATX80 */
 

@@ -46,7 +46,7 @@ extern void mxcsr_to_softfloat_status_word_imm_override(float_status_t &status, 
       float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                        \
       softfloat_status_word_rc_override(status, i);                                         \
       op1.xmm32u(0) = (func)(op1.xmm32u(0), op2, &status);                                  \
-      check_exceptionsSSE(get_exception_flags(status));                                     \
+      check_exceptionsSSE(softfloat_getExceptionFlags(&status));                            \
     }                                                                                       \
     else {                                                                                  \
       if (i->isZeroMasking())                                                               \
@@ -78,7 +78,7 @@ EVEX_OP_SCALAR_SINGLE(VSCALEFSS_MASK_VssHpsWssR, f32_scalef)
       float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                        \
       softfloat_status_word_rc_override(status, i);                                         \
       op1.xmm64u(0) = (func)(op1.xmm64u(0), op2, &status);                                  \
-      check_exceptionsSSE(get_exception_flags(status));                                     \
+      check_exceptionsSSE(softfloat_getExceptionFlags(&status));                            \
     }                                                                                       \
     else {                                                                                  \
       if (i->isZeroMasking())                                                               \
@@ -109,7 +109,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSS_MASK_VssHpsWssR(bxInstruction_c *i
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
     op1.xmm32u(0) = f32_sqrt(op2, &status);
-    check_exceptionsSSE(get_exception_flags(status));
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   }
   else {
     if (i->isZeroMasking())
@@ -132,7 +132,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSQRTSD_MASK_VsdHpdWsdR(bxInstruction_c *i
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
     op1.xmm64u(0) = f64_sqrt(op2, &status);
-    check_exceptionsSSE(get_exception_flags(status));
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   }
   else {
     if (i->isZeroMasking())
@@ -168,7 +168,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPS_MASK_KGwHpsWpsIbR(bxInstruction_c *
     }
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   BX_WRITE_OPMASK(i->dst(), result);
 
   BX_NEXT_INSTR(i);
@@ -192,7 +192,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPD_MASK_KGbHpdWpdIbR(bxInstruction_c *
     }
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   BX_WRITE_OPMASK(i->dst(), result);
 
   BX_NEXT_INSTR(i);
@@ -209,7 +209,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSD_MASK_KGbHsdWsdIbR(bxInstruction_c *
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
     if (avx_compare64[i->Ib() & 0x1F](op1, op2, &status)) result = 1;
-    check_exceptionsSSE(get_exception_flags(status));
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   }
 
   BX_WRITE_OPMASK(i->dst(), result);
@@ -227,7 +227,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPSS_MASK_KGbHssWssIbR(bxInstruction_c *
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
     if (avx_compare32[i->Ib() & 0x1F](op1, op2, &status)) result = 1;
-    check_exceptionsSSE(get_exception_flags(status));
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   }
 
   BX_WRITE_OPMASK(i->dst(), result);
@@ -458,7 +458,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMSS_MASK_VssHssWssIbR(bxInstructio
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
     op1.xmm32u(0) = float32_fixupimm(op_dst, op1.xmm32u(0), op2, i->Ib(), status);
-    check_exceptionsSSE(get_exception_flags(status));
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   }
   else {
     if (i->isZeroMasking())
@@ -482,7 +482,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMSD_MASK_VsdHsdWsdIbR(bxInstructio
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
     op1.xmm64u(0) = float64_fixupimm(op_dst, op1.xmm64u(0), op2, i->Ib(), status);
-    check_exceptionsSSE(get_exception_flags(status));
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   }
   else {
     if (i->isZeroMasking())
@@ -507,7 +507,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMPS_VpsHpsWpsIbR(bxInstruction_c *
     op1.vmm32u(n) = float32_fixupimm(dst.vmm32u(n), op1.vmm32u(n), op2.vmm32u(n), i->Ib(), status);
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
   BX_NEXT_INSTR(i);
@@ -529,7 +529,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMPS_MASK_VpsHpsWpsIbR(bxInstructio
       op1.vmm32u(n) = 0;
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
     for (unsigned n=0; n < len; n++, mask >>= 4)
@@ -556,7 +556,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMPD_VpdHpdWpdIbR(bxInstruction_c *
     op1.vmm64u(n) = float64_fixupimm(dst.vmm64u(n), op1.vmm64u(n), (Bit32u) op2.vmm64u(n), i->Ib(), status);
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   BX_WRITE_AVX_REGZ(i->dst(), op1, len);
   BX_NEXT_INSTR(i);
@@ -578,7 +578,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMPD_MASK_VpdHpdWpdIbR(bxInstructio
       op1.vmm64u(n) = 0;
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
     for (unsigned n=0; n < len; n++, mask >>= 2)
@@ -695,7 +695,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETEXPSS_VssHpsWssR(bxInstruction_c *i)
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
   op1.xmm32u(0) = f32_getExp(op2, &status);
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
   BX_NEXT_INSTR(i);
@@ -711,7 +711,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETEXPSS_MASK_VssHpsWssR(bxInstruction_c 
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
     op1.xmm32u(0) = f32_getExp(op2, &status);
-    check_exceptionsSSE(get_exception_flags(status));
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   }
   else {
     if (i->isZeroMasking())
@@ -732,7 +732,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETEXPSD_VsdHpdWsdR(bxInstruction_c *i)
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
   op1.xmm64u(0) = f64_getExp(op2, &status);
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
   BX_NEXT_INSTR(i);
@@ -748,7 +748,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETEXPSD_MASK_VsdHpdWsdR(bxInstruction_c 
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
     op1.xmm64u(0) = f64_getExp(op2, &status);
-    check_exceptionsSSE(get_exception_flags(status));
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   }
   else {
     if (i->isZeroMasking())
@@ -776,7 +776,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTSS_MASK_VssHpsWssIbR(bxInstruction
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
     op1.xmm32u(0) = f32_getMant(op2, &status, sign_ctrl, interv);
-    check_exceptionsSSE(get_exception_flags(status));
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   }
   else {
     if (i->isZeroMasking())
@@ -802,7 +802,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTSD_MASK_VsdHpdWsdIbR(bxInstruction
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
     op1.xmm64u(0) = f64_getMant(op2, &status, sign_ctrl, interv);
-    check_exceptionsSSE(get_exception_flags(status));
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   }
   else {
     if (i->isZeroMasking())
@@ -834,7 +834,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTPS_MASK_VpsWpsIbR(bxInstruction_c 
       op.vmm32u(n) = 0;
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
     for (unsigned n=0; n < len; n++, opmask >>= 4)
@@ -867,7 +867,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTPD_MASK_VpdWpdIbR(bxInstruction_c 
       op.vmm64u(n) = 0;
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
     for (unsigned n=0; n < len; n++, opmask >>= 2)
@@ -901,7 +901,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALEPS_MASK_VpsWpsIbR(bxInstruction_c
       op.vmm32u(n) = 0;
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
     for (unsigned n=0; n < len; n++, opmask >>= 4)
@@ -930,7 +930,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALESS_MASK_VssHpsWssIbR(bxInstructio
 
     op1.xmm32u(0) = f32_roundToInt(op2, scale, &status);
 
-    check_exceptionsSSE(get_exception_flags(status));
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   }
   else {
     if (i->isZeroMasking())
@@ -962,7 +962,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALEPD_MASK_VpdWpdIbR(bxInstruction_c
       op.vmm64u(n) = 0;
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
     for (unsigned n=0; n < len; n++, opmask >>= 2)
@@ -991,7 +991,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALESD_MASK_VsdHpdWsdIbR(bxInstructio
 
     op1.xmm64u(0) = f64_roundToInt(op2, scale, &status);
 
-    check_exceptionsSSE(get_exception_flags(status));
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   }
   else {
     if (i->isZeroMasking())
@@ -1026,7 +1026,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRANGEPS_MASK_VpsHpsWpsIbR(bxInstruction_c
       op1.vmm32u(n) = 0;
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
     for (unsigned n=0; n < len; n++, opmask >>= 4)
@@ -1060,7 +1060,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRANGEPD_MASK_VpdHpdWpdIbR(bxInstruction_c
       op1.vmm64u(n) = 0;
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
     for (unsigned n=0; n < len; n++, opmask >>= 2)
@@ -1088,7 +1088,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRANGESS_MASK_VssHpsWssIbR(bxInstruction_c
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
     op1.xmm32u(0) = f32_range(op1.xmm32u(0), op2, is_max, is_abs, sign_ctrl, &status);
-    check_exceptionsSSE(get_exception_flags(status));
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   }
   else {
     if (i->isZeroMasking())
@@ -1115,7 +1115,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRANGESD_MASK_VsdHpdWsdIbR(bxInstruction_c
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
     op1.xmm64u(0) = f64_range(op1.xmm64u(0), op2, is_max, is_abs, sign_ctrl, &status);
-    check_exceptionsSSE(get_exception_flags(status));
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   }
   else {
     if (i->isZeroMasking())
@@ -1168,7 +1168,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VREDUCEPS_MASK_VpsWpsIbR(bxInstruction_c *
       op.vmm32u(n) = 0;
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
     for (unsigned n=0; n < len; n++, opmask >>= 4)
@@ -1198,7 +1198,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VREDUCESS_MASK_VssHpsWssIbR(bxInstruction_
 
     op1.xmm32u(0) = float32_reduce(op2, scale, status);
 
-    check_exceptionsSSE(get_exception_flags(status));
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   }
   else {
     if (i->isZeroMasking())
@@ -1231,7 +1231,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VREDUCEPD_MASK_VpdWpdIbR(bxInstruction_c *
       op.vmm64u(n) = 0;
   }
 
-  check_exceptionsSSE(get_exception_flags(status));
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
     for (unsigned n=0; n < len; n++, opmask >>= 2)
@@ -1261,7 +1261,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VREDUCESD_MASK_VsdHpdWsdIbR(bxInstruction_
 
     op1.xmm64u(0) = float64_reduce(op2, scale, status);
 
-    check_exceptionsSSE(get_exception_flags(status));
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   }
   else {
     if (i->isZeroMasking())

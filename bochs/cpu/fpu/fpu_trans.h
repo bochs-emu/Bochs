@@ -1,33 +1,33 @@
-/*============================================================================
-This source file is an extension to the SoftFloat IEC/IEEE Floating-point
-Arithmetic Package, Release 2b, written for Bochs (x86 achitecture simulator)
-floating point emulation.
+/////////////////////////////////////////////////////////////////////////
+// $Id$
+/////////////////////////////////////////////////////////////////////////
+//
+//   Copyright (c) 2003-2018 Stanislav Shwartsman
+//          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
+//
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
+//
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+//
+/////////////////////////////////////////////////////////////////////////
 
-THIS SOFTWARE IS DISTRIBUTED AS IS, FOR FREE.  Although reasonable effort has
-been made to avoid it, THIS SOFTWARE MAY CONTAIN FAULTS THAT WILL AT TIMES
-RESULT IN INCORRECT BEHAVIOR.  USE OF THIS SOFTWARE IS RESTRICTED TO PERSONS
-AND ORGANIZATIONS WHO CAN AND WILL TAKE FULL RESPONSIBILITY FOR ALL LOSSES,
-COSTS, OR OTHER PROBLEMS THEY INCUR DUE TO THE SOFTWARE, AND WHO FURTHERMORE
-EFFECTIVELY INDEMNIFY JOHN HAUSER AND THE INTERNATIONAL COMPUTER SCIENCE
-INSTITUTE (possibly via similar legal warning) AGAINST ALL LOSSES, COSTS, OR
-OTHER PROBLEMS INCURRED BY THEIR CUSTOMERS AND CLIENTS DUE TO THE SOFTWARE.
-
-Derivative works are acceptable, even for commercial purposes, so long as
-(1) the source code for the derivative work includes prominent notice that
-the work is derivative, and (2) the source code includes prominent notice with
-these four paragraphs for those parts of this code that are retained.
-=============================================================================*/
-
-/*============================================================================
- * Written for Bochs (x86 achitecture simulator) by
- *            Stanislav Shwartsman [sshwarts at sourceforge net]
- * ==========================================================================*/
-
-#ifndef _SOFTFLOATX80_EXTENSIONS_H_
-#define _SOFTFLOATX80_EXTENSIONS_H_
+#ifndef BX_FPU_TRANSCENDENTAL_H
+#define BX_FPU_TRANSCENDENTAL_H
 
 #include "softfloat.h"
 #include "softfloat-specialize.h"
+
+extern extFloat80_t softfloat_propagateNaNExtF80UI(uint16_t uiA64, uint64_t uiA0, uint16_t uiB64, uint64_t uiB0, struct softfloat_status_t *status);
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE extended double-precision operations.

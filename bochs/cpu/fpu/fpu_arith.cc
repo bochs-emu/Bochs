@@ -62,7 +62,7 @@ float_status_t i387cw_to_softfloat_status_word(Bit16u control_word)
   return status;
 }
 
-#include "softfloatx80.h"
+#include "fpu_trans.h"
 
 floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float32 b32, int bIsNaN, float_status_t &status)
 {
@@ -73,7 +73,7 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float32 b32, int bIsNaN, float_s
         softfloat_raiseFlags(&status, softfloat_flag_invalid);
 
     // propagate QNaN to SNaN
-    a = propagateFloatx80NaN(a, status);
+    a = softfloat_propagateNaNExtF80UI(a.exp, a.fraction, 0, 0, &status);
 
     if (aIsNaN & !bIsNaN) return a;
 
@@ -122,7 +122,7 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float64 b64, int bIsNaN, float_s
         softfloat_raiseFlags(&status, softfloat_flag_invalid);
 
     // propagate QNaN to SNaN
-    a = propagateFloatx80NaN(a, status);
+    a = softfloat_propagateNaNExtF80UI(a.exp, a.fraction, 0, 0, &status);
 
     if (aIsNaN & !bIsNaN) return a;
 

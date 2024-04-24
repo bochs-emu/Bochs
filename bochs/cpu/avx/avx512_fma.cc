@@ -49,7 +49,7 @@ extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
       float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);          \
       softfloat_status_word_rc_override(status, i);                           \
       op1 = (func)(op1, op2, op3, &status);                                   \
-      check_exceptionsSSE(get_exception_flags(status));                       \
+      check_exceptionsSSE(softfloat_getExceptionFlags(&status));              \
                                                                               \
       BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);                               \
     }                                                                         \
@@ -78,7 +78,7 @@ EVEX_FMA_SCALAR_SINGLE(VFNMSUBSS_MASK_VpsHssWssR, f32_fnmsub)
       float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);          \
       softfloat_status_word_rc_override(status, i);                           \
       op1 = (func)(op1, op2, op3, &status);                                   \
-      check_exceptionsSSE(get_exception_flags(status));                       \
+      check_exceptionsSSE(softfloat_getExceptionFlags(&status));              \
                                                                               \
       BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);                               \
     }                                                                         \
@@ -111,7 +111,7 @@ EVEX_FMA_SCALAR_DOUBLE(VFNMSUBSD_MASK_VpdHsdWsdR, f64_fnmsub)
       float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);          \
       softfloat_status_word_rc_override(status, i);                           \
       op1 = (func)(op1, op2, op3, &status);                                   \
-      check_exceptionsSSE(get_exception_flags(status));                       \
+      check_exceptionsSSE(softfloat_getExceptionFlags(&status));              \
                                                                               \
       BX_WRITE_XMM_REG_LO_WORD(i->dst(), op1);                                \
     }                                                                         \

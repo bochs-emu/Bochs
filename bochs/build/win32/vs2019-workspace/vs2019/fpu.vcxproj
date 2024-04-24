@@ -230,7 +230,6 @@
     <ClCompile Include="..\cpu\fpu\fsincos.cc" />
     <ClCompile Include="..\cpu\fpu\fyl2x.cc" />
     <ClCompile Include="..\cpu\fpu\poly.cc" />
-    <ClCompile Include="..\cpu\fpu\softfloat-specialize.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\cpu\fpu\control_w.h" />
@@ -238,7 +237,7 @@
     <ClInclude Include="..\cpu\fpu\softfloat.h" />
     <ClInclude Include="..\cpu\fpu\softfloat-macros.h" />
     <ClInclude Include="..\cpu\fpu\softfloat-specialize.h" />
-    <ClInclude Include="..\cpu\fpu\softfloatx80.h" />
+    <ClInclude Include="..\cpu\fpu\fpu_trans.h" />
     <ClInclude Include="..\cpu\fpu\status_w.h" />
     <ClInclude Include="..\cpu\fpu\tag_w.h" />
   </ItemGroup>

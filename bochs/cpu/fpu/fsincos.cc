@@ -26,7 +26,7 @@ these four paragraphs for those parts of this code that are retained.
 #define FLOAT128
 
 #define USE_estimateDiv128To64
-#include "softfloatx80.h"
+#include "fpu_trans.h"
 #include "softfloat-helpers.h"
 #include "fpu_constant.h"
 
@@ -238,8 +238,8 @@ int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, float_status_t &status
 
     /* invalid argument */
     if (aExp == 0x7FFF) {
-        if ((Bit64u) (aSig0<<1)) {
-            sincos_invalid(sin_a, cos_a, propagateFloatx80NaN(a, status));
+        if (aSig0 << 1) {
+            sincos_invalid(sin_a, cos_a, softfloat_propagateNaNExtF80UI(a.exp, aSig0, 0, 0, &status));
             return 0;
         }
 
@@ -249,8 +249,8 @@ int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, float_status_t &status
         return 0;
     }
 
-    if (aExp == 0) {
-        if (aSig0 == 0) {
+    if (! aExp) {
+        if (! aSig0) {
             sincos_tiny_argument(sin_a, cos_a, a);
             return 0;
         }
@@ -361,9 +361,9 @@ int ftan(floatx80 &a, float_status_t &status)
 
     /* invalid argument */
     if (aExp == 0x7FFF) {
-        if ((Bit64u) (aSig0<<1))
+        if (aSig0 << 1)
         {
-            a = propagateFloatx80NaN(a, status);
+            a = softfloat_propagateNaNExtF80UI(a.exp, aSig0, 0, 0, &status);
             return 0;
         }
 
@@ -373,8 +373,8 @@ int ftan(floatx80 &a, float_status_t &status)
         return 0;
     }
 
-    if (aExp == 0) {
-        if (aSig0 == 0) return 0;
+    if (! aExp) {
+        if (! aSig0) return 0;
         softfloat_raiseFlags(&status, softfloat_flag_denormal);
         /* handle pseudo denormals */
         if (! (aSig0 & BX_CONST64(0x8000000000000000)))

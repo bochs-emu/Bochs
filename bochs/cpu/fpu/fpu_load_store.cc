@@ -34,7 +34,8 @@
 
 extern float_status_t i387cw_to_softfloat_status_word(Bit16u control_word);
 
-#include "softfloatx80.h"
+#include "softfloat-specialize.h"
+#include "fpu_trans.h"
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLD_STi(bxInstruction_c *i)
 {

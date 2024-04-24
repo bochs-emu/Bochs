@@ -25,7 +25,7 @@ these four paragraphs for those parts of this code that are retained.
 
 #define FLOAT128
 
-#include "softfloatx80.h"
+#include "fpu_trans.h"
 #include "fpu_constant.h"
 
 #define FPATAN_ARR_SIZE 11
@@ -152,11 +152,11 @@ floatx80 fpatan(floatx80 a, floatx80 b, float_status_t &status)
     if (bExp == 0x7FFF)
     {
         if (bSig<<1)
-            return propagateFloatx80NaN(a, b, status);
+            return softfloat_propagateNaNExtF80UI(a.exp, aSig, b.exp, bSig, &status);
 
         if (aExp == 0x7FFF) {
             if (aSig<<1)
-                return propagateFloatx80NaN(a, b, status);
+                return softfloat_propagateNaNExtF80UI(a.exp, aSig, b.exp, bSig, &status);
 
             if (aSign)     /* return 3PI/4 */
                 return softfloat_roundPackToExtF80(bSign, FLOATX80_3PI4_EXP, FLOAT_3PI4_HI, FLOAT_3PI4_LO, 80, &status);
@@ -173,7 +173,7 @@ floatx80 fpatan(floatx80 a, floatx80 b, float_status_t &status)
     if (aExp == 0x7FFF)
     {
         if (aSig<<1)
-            return propagateFloatx80NaN(a, b, status);
+            return softfloat_propagateNaNExtF80UI(a.exp, aSig, b.exp, bSig, &status);
 
         if (bSig && ! bExp)
             softfloat_raiseFlags(&status, softfloat_flag_denormal);

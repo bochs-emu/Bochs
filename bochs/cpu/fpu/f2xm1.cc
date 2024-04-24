@@ -25,7 +25,7 @@ these four paragraphs for those parts of this code that are retained.
 
 #define FLOAT128
 
-#include "softfloatx80.h"
+#include "fpu_trans.h"
 #include "softfloat-helpers.h"
 
 static const floatx80 floatx80_negone  = packFloatx80(1, 0x3fff, BX_CONST64(0x8000000000000000));
@@ -130,7 +130,7 @@ floatx80 f2xm1(floatx80 a, float_status_t &status)
 
     if (aExp == 0x7FFF) {
         if (aSig << 1)
-            return propagateFloatx80NaN(a, status);
+            return softfloat_propagateNaNExtF80UI(a.exp, aSig, 0, 0, &status);
 
         return (aSign) ? floatx80_negone : a;
     }

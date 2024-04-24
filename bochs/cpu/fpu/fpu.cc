@@ -503,8 +503,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPLEGACY(bxInstruction_c *i)
 
 #if BX_SUPPORT_FPU
 
-#include "softfloatx80.h"
-
 #include <math.h>
 
 void BX_CPU_C::print_state_FPU(void)
