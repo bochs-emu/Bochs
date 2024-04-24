@@ -255,7 +255,7 @@ avx512_rcp14.o: avx512_rcp14.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../crregs.h ../descriptor.h ../decoder/instr.h ../lazy_flags.h ../tlb.h \
  ../icache.h ../xmm.h ../vmx.h ../stack.h ../access.h \
  ../fpu/softfloat-specialize.h ../fpu/softfloat.h \
- ../fpu/softfloat-round-pack.h ../simd_int.h
+ ../simd_int.h
 avx512_rsqrt14.o: avx512_rsqrt14.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
@@ -265,7 +265,7 @@ avx512_rsqrt14.o: avx512_rsqrt14.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../crregs.h ../descriptor.h ../decoder/instr.h ../lazy_flags.h ../tlb.h \
  ../icache.h ../xmm.h ../vmx.h ../stack.h ../access.h \
  ../fpu/softfloat-specialize.h ../fpu/softfloat.h \
- ../fpu/softfloat-round-pack.h ../simd_int.h
+ ../simd_int.h
 avx_cvt.o: avx_cvt.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../logio.h ../../misc/bswap.h ../cpu.h ../../bx_debug/debug.h \
  ../../config.h ../../osdep.h ../../cpu/decoder/decoder.h \
