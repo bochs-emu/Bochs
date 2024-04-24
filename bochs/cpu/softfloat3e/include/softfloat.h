@@ -47,10 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 
 #include "softfloat_types.h"
-
 #include "softfloat-extra.h"
-
-#define FLOATX80
 
 struct softfloat_status_t
 {
@@ -67,14 +64,6 @@ struct softfloat_status_t
     | Valid values are 32, 64, and 80.
     *----------------------------------------------------------------------------*/
     uint8_t extF80_roundingPrecision;
-
-#define float_rounding_mode softfloat_roundingMode
-#define float_exception_flags softfloat_exceptionFlags
-#define flush_underflow_to_zero softfloat_flush_underflow_to_zero
-#define denormals_are_zeros softfloat_denormals_are_zeros
-#define float_rounding_precision extF80_roundingPrecision
-#define float_exception_masks softfloat_exceptionMasks
-#define float_suppress_exception softfloat_suppressException
 };
 
 typedef struct softfloat_status_t float_status_t;
@@ -105,6 +94,10 @@ enum softfloat_exception_flag_t {
     softfloat_flag_underflow = 0x10,
     softfloat_flag_inexact   = 0x20
 };
+
+static const unsigned softfloat_all_exceptions_mask = 0x3f;
+
+#define FLOATX80
 
 #ifdef FLOATX80
 #define RAISE_SW_C1 0x0200

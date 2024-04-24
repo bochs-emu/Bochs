@@ -295,9 +295,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPH2PS_VpsWpsR(bxInstruction_c *i)
   unsigned len = i->getVL();
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  status.denormals_are_zeros = 0; // ignore MXCSR.DAZ
+  status.softfloat_denormals_are_zeros = 0; // ignore MXCSR.DAZ
   // no denormal exception is reported on MXCSR
-  status.float_suppress_exception = float_flag_denormal;
+  status.softfloat_suppressException = softfloat_flag_denormal;
 
   for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
      result.vmm32u(n) = f16_to_f32(op.ymm16u(n), &status);
@@ -319,10 +319,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PH_WpsVpsIb(bxInstruction_c *i)
 
   Bit8u control = i->Ib();
 
-  status.flush_underflow_to_zero = 0; // ignore MXCSR.FUZ
+  status.softfloat_flush_underflow_to_zero = 0; // ignore MXCSR.FUZ
   // override MXCSR rounding mode with control coming from imm8
   if ((control & 0x4) == 0)
-    status.float_rounding_mode = control & 0x3;
+    status.softfloat_roundingMode = control & 0x3;
 
   for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
     result.vmm16u(n) = f32_to_f16(op.vmm32u(n), &status);

@@ -25,6 +25,7 @@ these four paragraphs for those parts of this code that are retained.
 
 #define FLOAT128
 
+#include "softfloat-macros.h"
 #include "fpu_trans.h"
 #include "softfloat-helpers.h"
 #include "fpu_constant.h"
@@ -260,12 +261,13 @@ invalid:
         return floatx80_default_nan;
     }
 
-    aSig = extractFloatx80Frac(a);
-    aExp = extractFloatx80Exp(a);
-    aSign = extractFloatx80Sign(a);
-    bSig = extractFloatx80Frac(b);
-    bExp = extractFloatx80Exp(b);
-    bSign = extractFloatx80Sign(b);
+
+    aSig = extF80_fraction(a);
+    aExp = extF80_exp(a);
+    aSign = extF80_sign(a);
+    bSig = extF80_fraction(b);
+    bExp = extF80_exp(b);
+    bSign = extF80_sign(b);
     int zSign = aSign ^ bSign;
 
     if (aExp == 0x7FFF) {

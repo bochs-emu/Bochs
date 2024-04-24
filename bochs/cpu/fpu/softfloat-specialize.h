@@ -165,41 +165,7 @@ BX_CPP_INLINE float64 packFloat64(int zSign, Bit16s zExp, Bit64u zSig)
 #define floatx80_default_nan_exp 0xFFFF
 #define floatx80_default_nan_fraction BX_CONST64(0xC000000000000000)
 
-#define floatx80_fraction extractFloatx80Frac
-#define floatx80_exp extractFloatx80Exp
-#define floatx80_sign extractFloatx80Sign
-
 #define FLOATX80_EXP_BIAS 0x3FFF
-
-/*----------------------------------------------------------------------------
-| Returns the fraction bits of the extended double-precision floating-point
-| value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE Bit64u extractFloatx80Frac(floatx80 a)
-{
-    return a.fraction;
-}
-
-/*----------------------------------------------------------------------------
-| Returns the exponent bits of the extended double-precision floating-point
-| value `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE Bit32s extractFloatx80Exp(floatx80 a)
-{
-    return a.exp & 0x7FFF;
-}
-
-/*----------------------------------------------------------------------------
-| Returns the sign bit of the extended double-precision floating-point value
-| `a'.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int extractFloatx80Sign(floatx80 a)
-{
-    return a.exp>>15;
-}
 
 /*----------------------------------------------------------------------------
 | Packs the sign `zSign', exponent `zExp', and significand `zSig' into an
@@ -215,28 +181,6 @@ BX_CPP_INLINE floatx80 packFloatx80(int zSign, Bit32s zExp, Bit64u zSig)
 }
 
 /*----------------------------------------------------------------------------
-| Returns 1 if the extended double-precision floating-point value `a' is a
-| NaN; otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int floatx80_is_nan(floatx80 a)
-{
-    return ((a.exp & 0x7FFF) == 0x7FFF) && (Bit64s) (a.fraction<<1);
-}
-
-/*----------------------------------------------------------------------------
-| Returns 1 if the extended double-precision floating-point value `a' is a
-| signaling NaN; otherwise returns 0.
-*----------------------------------------------------------------------------*/
-
-BX_CPP_INLINE int floatx80_is_signaling_nan(floatx80 a)
-{
-    Bit64u aLow = a.fraction & ~BX_CONST64(0x4000000000000000);
-    return ((a.exp & 0x7FFF) == 0x7FFF) &&
-            ((Bit64u) (aLow<<1)) && (a.fraction == aLow);
-}
-
-/*----------------------------------------------------------------------------
 | The pattern for a default generated extended double-precision NaN.
 *----------------------------------------------------------------------------*/
 static const floatx80 floatx80_default_nan =
@@ -245,10 +189,6 @@ static const floatx80 floatx80_default_nan =
 #endif /* FLOATX80 */
 
 #ifdef FLOAT128
-
-#include "softfloat-macros.h"
-
-#define float128_exp extractFloat128Exp
 
 /*----------------------------------------------------------------------------
 | Packs the sign `zSign', the exponent `zExp', and the significand formed

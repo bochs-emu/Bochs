@@ -560,9 +560,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPH2PS_MASK_VpsWpsR(bxInstruction_c *i)
     result = BX_READ_AVX_REG(i->dst());
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  status.denormals_are_zeros = 0; // ignore MXCSR.DAZ
+  status.softfloat_denormals_are_zeros = 0; // ignore MXCSR.DAZ
   // no denormal exception is reported on MXCSR
-  status.float_suppress_exception = float_flag_denormal;
+  status.softfloat_suppressException = softfloat_flag_denormal;
 
   Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
 
@@ -586,10 +586,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PH_MASK_WpsVpsIbR(bxInstruction_c *
 
   Bit8u control = i->Ib();
 
-  status.flush_underflow_to_zero = 0; // ignore MXCSR.FUZ
+  status.softfloat_flush_underflow_to_zero = 0; // ignore MXCSR.FUZ
   // override MXCSR rounding mode with control coming from imm8
   if ((control & 0x4) == 0)
-    status.float_rounding_mode = control & 0x3;
+    status.softfloat_roundingMode = control & 0x3;
 
   Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
 
@@ -621,10 +621,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PH_MASK_WpsVpsIbM(bxInstruction_c *
 
   Bit8u control = i->Ib();
 
-  status.flush_underflow_to_zero = 0; // ignore MXCSR.FUZ
+  status.softfloat_flush_underflow_to_zero = 0; // ignore MXCSR.FUZ
   // override MXCSR rounding mode with control coming from imm8
   if ((control & 0x4) == 0)
-    status.float_rounding_mode = control & 0x3;
+    status.softfloat_roundingMode = control & 0x3;
 
   Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
   opmask &= CUT_OPMASK_TO(DWORD_ELEMENTS(len));

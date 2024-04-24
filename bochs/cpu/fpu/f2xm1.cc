@@ -25,6 +25,7 @@ these four paragraphs for those parts of this code that are retained.
 
 #define FLOAT128
 
+#include "softfloat-macros.h"
 #include "fpu_trans.h"
 #include "softfloat-helpers.h"
 

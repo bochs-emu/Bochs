@@ -25,6 +25,7 @@ these four paragraphs for those parts of this code that are retained.
 
 #define FLOAT128
 
+#include "softfloat-macros.h"
 #include "fpu_trans.h"
 #include "fpu_constant.h"
 
@@ -272,7 +273,7 @@ approximation_completed:
     if (swap) x = f128_sub(float128_pi2, x, &status);
     floatx80 result = f128_to_extF80(x, &status);
     if (zSign) floatx80_chs(result);
-    int rSign = extractFloatx80Sign(result);
+    int rSign = extF80_sign(result);
     if (!bSign && rSign)
         return extF80_add(result, floatx80_pi, &status);
     if (bSign && !rSign)

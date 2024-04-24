@@ -355,7 +355,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VREDUCEPH_MASK_VphWphIbR(bxInstruction_c *
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
   mxcsr_to_softfloat_status_word_imm_override(status, control);
-  status.float_suppress_exception |= float_flag_denormal | float_flag_underflow | float_flag_overflow;
+  status.softfloat_suppressException |= softfloat_flag_denormal | softfloat_flag_underflow | softfloat_flag_overflow;
 
   for (unsigned n=0, mask = 0x1; n < WORD_ELEMENTS(len); n++, mask <<= 1) {
     if (opmask & mask)
@@ -390,7 +390,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VREDUCESH_MASK_VshHphWshIbR(bxInstruction_
     float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     softfloat_status_word_rc_override(status, i);
     mxcsr_to_softfloat_status_word_imm_override(status, control);
-    status.float_suppress_exception |= float_flag_denormal | float_flag_underflow | float_flag_overflow;
+    status.softfloat_suppressException |= softfloat_flag_denormal | softfloat_flag_underflow | softfloat_flag_overflow;
 
     op1.xmm16u(0) = float16_reduce(op2, scale, status);
 
@@ -483,7 +483,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFCMULCSH_MASK_VshHphWshR(bxInstruction_c 
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
-  status.float_exception_masks = float_all_exceptions_mask;
+  status.softfloat_exceptionMasks = softfloat_all_exceptions_mask;
 
   int fma_control1 = (i->getIaOpcode() == BX_IA_V512_VFMULCSH_VshHphWsh_Kmask) ? softfloat_muladd_negate_product : 0;
   int fma_control2 = (i->getIaOpcode() == BX_IA_V512_VFMULCSH_VshHphWsh_Kmask) ? 0 : softfloat_muladd_negate_product;
@@ -516,7 +516,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFCMULCPH_MASK_VphHphWphR(bxInstruction_c 
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
-  status.float_exception_masks = float_all_exceptions_mask;
+  status.softfloat_exceptionMasks = softfloat_all_exceptions_mask;
 
   for (n=0, tmp_mask = mask; n < DWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1) {
@@ -556,7 +556,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFCMADDCSH_MASK_VshHphWshR(bxInstruction_c
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
-  status.float_exception_masks = float_all_exceptions_mask;
+  status.softfloat_exceptionMasks = softfloat_all_exceptions_mask;
 
   int fma_control1 = (i->getIaOpcode() == BX_IA_V512_VFMADDCSH_VshHphWsh_Kmask) ? softfloat_muladd_negate_product : 0;
   int fma_control2 = (i->getIaOpcode() == BX_IA_V512_VFMADDCSH_VshHphWsh_Kmask) ? 0 : softfloat_muladd_negate_product;
@@ -589,7 +589,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFCMADDCPH_MASK_VphHphWphR(bxInstruction_c
 
   float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
-  status.float_exception_masks = float_all_exceptions_mask;
+  status.softfloat_exceptionMasks = softfloat_all_exceptions_mask;
 
   for (n=0, tmp_mask = mask; n < DWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1) {

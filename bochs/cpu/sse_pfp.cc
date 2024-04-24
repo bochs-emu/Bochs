@@ -54,14 +54,14 @@ float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr)
 {
   float_status_t status;
 
-  status.float_exception_flags = 0; // clear exceptions before execution
-  status.float_rounding_mode = mxcsr.get_rounding_mode();
+  status.softfloat_exceptionFlags = 0; // clear exceptions before execution
+  status.softfloat_roundingMode = mxcsr.get_rounding_mode();
   // if underflow is masked and FUZ is 1, set it to 1, else to 0
-  status.flush_underflow_to_zero =
+  status.softfloat_flush_underflow_to_zero =
        (mxcsr.get_flush_masked_underflow() && mxcsr.get_UM()) ? 1 : 0;
-  status.float_exception_masks = mxcsr.get_exceptions_masks();
-  status.float_suppress_exception = 0;
-  status.denormals_are_zeros = mxcsr.get_DAZ();
+  status.softfloat_exceptionMasks = mxcsr.get_exceptions_masks();
+  status.softfloat_suppressException = 0;
+  status.softfloat_denormals_are_zeros = mxcsr.get_DAZ();
 
   return status;
 }
@@ -70,10 +70,10 @@ void mxcsr_to_softfloat_status_word_imm_override(float_status_t &status, Bit8u c
 {
   // override MXCSR rounding mode with control coming from imm8
   if ((control & 0x4) == 0)
-    status.float_rounding_mode = control & 0x3;
+    status.softfloat_roundingMode = control & 0x3;
   // ignore precision exception result
   if (control & 0x8)
-    status.float_suppress_exception |= float_flag_inexact;
+    status.softfloat_suppressException |= softfloat_flag_inexact;
 }
 
 /* Comparison predicate for CMPSS/CMPPS instructions */

@@ -37,38 +37,12 @@ these four paragraphs for those parts of this code that are retained.
 #ifndef _SOFTFLOAT_H_
 #define _SOFTFLOAT_H_
 
-#define FLOATX80
-
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE floating-point types.
 *----------------------------------------------------------------------------*/
 typedef Bit16u float16, bfloat16;
 typedef Bit32u float32;
 typedef Bit64u float64;
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE floating-point rounding mode.
-*----------------------------------------------------------------------------*/
-enum float_round_t {
-    float_round_nearest_even = 0,
-    float_round_down         = 1,
-    float_round_up           = 2,
-    float_round_to_zero      = 3
-};
-
-/*----------------------------------------------------------------------------
-| Software IEC/IEEE floating-point exception flags.
-*----------------------------------------------------------------------------*/
-enum float_exception_flag_t {
-    float_flag_invalid   = 0x01,
-    float_flag_denormal  = 0x02,
-    float_flag_divbyzero = 0x04,
-    float_flag_overflow  = 0x08,
-    float_flag_underflow = 0x10,
-    float_flag_inexact   = 0x20
-};
-
-const unsigned float_all_exceptions_mask = 0x3f;
 
 #include "../softfloat3e/include/softfloat.h"
 
