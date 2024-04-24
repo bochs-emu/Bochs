@@ -261,8 +261,7 @@ OBJS_OTHERS = \
   f128_addsub$(OBJ) \
   f128_mul$(OBJ) \
   f128_mulAdd$(OBJ) \
-  f128_div$(OBJ) \
-  f128_sqrt$(OBJ)
+  f128_div$(OBJ)
 
 OBJS_ALL = $(OBJS_PRIMITIVES) $(OBJS_SPECIALIZE) $(OBJS_OTHERS)
 
