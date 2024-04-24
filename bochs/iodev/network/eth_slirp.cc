@@ -370,7 +370,8 @@ bx_slirp_pktmover_c::~bx_slirp_pktmover_c()
 
 #if defined(WIN32)
 #if !BX_HAVE_LIBSLIRP
-int inet_aton(const char *cp, struct in_addr *ia);
+#define inet_aton slirp_inet_aton
+int slirp_inet_aton(const char *cp, struct in_addr *ia);
 #else
 int inet_aton(const char *cp, struct in_addr *ia)
 {

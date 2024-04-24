@@ -76,19 +76,8 @@ typedef Bit64s ssize_t;
 # define EWOULDBLOCK  WSAEWOULDBLOCK
 #endif
 
-#ifdef _WIN32
-struct iovec {
-    void *iov_base;
-    size_t iov_len;
-};
-#endif
-
 // missing functions
-void pstrcpy(char *buf, int buf_size, const char *str);
 int qemu_socket(int domain, int type, int protocol);
-#ifndef HAVE_INET_ATON
-int inet_aton(const char *cp, struct in_addr *ia);
-#endif
 #ifdef _WIN32
 #define qemu_setsockopt(sockfd, level, optname, optval, optlen) \
     setsockopt(sockfd, level, optname, (const char *)optval, optlen)

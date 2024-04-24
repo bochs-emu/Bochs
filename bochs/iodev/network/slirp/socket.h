@@ -72,6 +72,60 @@ struct socket {
 #define SS_HOSTFWD		0x1000	/* Socket describes host->guest forwarding */
 #define SS_INCOMING		0x2000	/* Connection was initiated by a host on the internet */
 
+/* Check that two addresses are equal */
+static inline int sockaddr_equal(const struct sockaddr_storage *a,
+                                 const struct sockaddr_storage *b)
+{
+    if (a->ss_family != b->ss_family) {
+        return 0;
+    }
+
+    switch (a->ss_family) {
+    case AF_INET: {
+        const struct sockaddr_in *a4 = (const struct sockaddr_in *)a;
+        const struct sockaddr_in *b4 = (const struct sockaddr_in *)b;
+        return a4->sin_addr.s_addr == b4->sin_addr.s_addr &&
+               a4->sin_port == b4->sin_port;
+    }
+    case AF_INET6: {
+        const struct sockaddr_in6 *a6 = (const struct sockaddr_in6 *)a;
+        const struct sockaddr_in6 *b6 = (const struct sockaddr_in6 *)b;
+        return (in6_equal(&a6->sin6_addr, &b6->sin6_addr) &&
+                a6->sin6_port == b6->sin6_port);
+    }
+#ifndef _WIN32
+    case AF_UNIX: {
+        const struct sockaddr_un *aun = (const struct sockaddr_un *)a;
+        const struct sockaddr_un *bun = (const struct sockaddr_un *)b;
+        return strncmp(aun->sun_path, bun->sun_path, sizeof(aun->sun_path)) == 0;
+    }
+#endif
+    default:
+        fprintf(stderr, "unknown protocol\n");
+    }
+
+    return 0;
+}
+
+/* Get the size of an address */
+static inline socklen_t sockaddr_size(const struct sockaddr_storage *a)
+{
+    switch (a->ss_family) {
+    case AF_INET:
+        return sizeof(struct sockaddr_in);
+    case AF_INET6:
+        return sizeof(struct sockaddr_in6);
+#ifndef _WIN32
+    case AF_UNIX:
+        return sizeof(struct sockaddr_un);
+#endif
+    default:
+        fprintf(stderr, "unknown protocol\n");
+    }
+
+    return 0;
+}
+
 struct socket * solookup(struct socket *, struct in_addr, u_int, struct in_addr, u_int);
 struct socket * socreate(Slirp *);
 void sofree(struct socket *);

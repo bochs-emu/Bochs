@@ -224,8 +224,8 @@ Slirp *slirp_new(SlirpConfig *cfg, SlirpCb *callbacks, void *opaque)
     slirp->vnetwork_mask = cfg->vnetmask;
     slirp->vhost_addr = cfg->vhost;
     if (cfg->vhostname) {
-        pstrcpy(slirp->client_hostname, sizeof(slirp->client_hostname),
-                cfg->vhostname);
+        slirp_pstrcpy(slirp->client_hostname, sizeof(slirp->client_hostname),
+                      cfg->vhostname);
     }
     if (cfg->vdomainname) {
         slirp->vdomainname = strdup(cfg->vdomainname);

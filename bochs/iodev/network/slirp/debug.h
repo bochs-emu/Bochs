@@ -12,6 +12,7 @@
 #define DBG_CALL 0x1
 #define DBG_MISC 0x2
 #define DBG_ERROR 0x4
+#define DBG_TFTP 0x8
 
 #define dfd stderr
 
@@ -22,6 +23,7 @@ extern int slirp_debug;
 #define DEBUG_ARGS(x) if (slirp_debug & DBG_CALL) { fprintf x ; fflush(dfd); }
 #define DEBUG_MISC(x) if (slirp_debug & DBG_MISC) { fprintf x ; fflush(dfd); }
 #define DEBUG_ERROR(x) if (slirp_debug & DBG_ERROR) {fprintf x ; fflush(dfd); }
+#define DEBUG_TFTP(x,y) if (slirp_debug & DBG_TFTP) {fprintf x ; fflush(dfd); }
 
 #else
 
@@ -30,6 +32,7 @@ extern int slirp_debug;
 #define DEBUG_ARGS(x)
 #define DEBUG_MISC(x)
 #define DEBUG_ERROR(x)
+#define DEBUG_TFTP(x,y)
 
 #endif
 

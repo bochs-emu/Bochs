@@ -35,7 +35,6 @@ typedef char *caddr_t;
 #endif
 
 #else
-# define ioctlsocket ioctl
 # define closesocket(s) close(s)
 # if !defined(__HAIKU__) && !defined(__CYGWIN__)
 #  define O_BINARY 0
@@ -154,9 +153,11 @@ void free(void *ptr);
 #endif
 
 #include "debug.h"
+#include "util.h"
 
 #include "libslirp.h"
 #include "ip.h"
+#include "ip6.h"
 #include "tcp.h"
 #include "tcp_timer.h"
 #include "tcp_var.h"
@@ -176,13 +177,6 @@ void free(void *ptr);
 
 #include "bootp.h"
 #include "tftp.h"
-
-#define ETH_ALEN 6
-#define ETH_HLEN 14
-
-#define ETH_P_IP   0x0800      /* Internet Protocol packet  */
-#define ETH_P_ARP  0x0806      /* Address Resolution packet */
-#define ETH_P_IPV6 0x86dd      /* IP version 6 packet       */
 
 #define ARPOP_REQUEST 1         /* ARP request */
 #define ARPOP_REPLY   2         /* ARP reply   */
@@ -239,6 +233,7 @@ struct Slirp {
     struct in_addr vnetwork_addr;
     struct in_addr vnetwork_mask;
     struct in_addr vhost_addr;
+    struct in6_addr vhost_addr6;
     bool disable_dhcp; /* slirp will not reply to any DHCP requests */
     struct in_addr vdhcp_startaddr;
     struct in_addr vnameserver_addr;

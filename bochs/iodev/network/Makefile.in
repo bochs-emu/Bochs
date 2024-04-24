@@ -75,7 +75,8 @@ SLIRP_OBJS = \
 	slirp/tcp_subr.o \
 	slirp/tcp_timer.o \
 	slirp/tftp.o \
-	slirp/udp.o
+	slirp/udp.o \
+	slirp/util.o
 
 BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I$(srcdir)/../.. -I../../@INSTRUMENT_DIR@ -I$(srcdir)/../../@INSTRUMENT_DIR@
 LOCAL_CXXFLAGS = $(MCH_CFLAGS)

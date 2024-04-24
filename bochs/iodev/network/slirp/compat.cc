@@ -37,23 +37,6 @@
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 
-void pstrcpy(char *buf, int buf_size, const char *str)
-{
-    int c;
-    char *q = buf;
-
-    if (buf_size <= 0)
-        return;
-
-    for(;;) {
-        c = *str++;
-        if (c == 0 || q >= buf + buf_size - 1)
-            break;
-        *q++ = c;
-    }
-    *q = '\0';
-}
-
 void qemu_set_nonblock(int fd)
 {
 #ifndef _WIN32
@@ -65,26 +48,6 @@ void qemu_set_nonblock(int fd)
     ioctlsocket(fd, FIONBIO, &opt);
 #endif
 }
-
-#ifndef HAVE_INET_ATON
-int inet_aton(const char *cp, struct in_addr *ia)
-{
-  uint32_t addr;
-
-#if defined(_MSC_VER)
-  if (!inet_pton(AF_INET, cp, &addr)) {
-    return 0;
-  }
-#else
-  addr = inet_addr(cp);
-#endif
-  if (addr == 0xffffffff) {
-    return 0;
-  }
-  ia->s_addr = addr;
-  return 1;
-}
-#endif
 
 int socket_set_fast_reuse(int fd)
 {

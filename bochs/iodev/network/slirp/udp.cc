@@ -67,12 +67,14 @@ void udp_cleanup(Slirp *slirp)
 void
 udp_input(struct mbuf *m, int iphlen)
 {
-	Slirp *slirp = m->slirp;
-	struct ip *ip;
-	struct udphdr *uh;
-	int len;
-	struct ip save_ip;
-	struct socket *so;
+    Slirp *slirp = m->slirp;
+    struct ip *ip;
+    struct udphdr *uh;
+    int len;
+    struct ip save_ip;
+    struct socket *so;
+    struct sockaddr_storage lhost;
+    struct sockaddr_in *lhost4;
 
 	DEBUG_CALL("udp_input");
 	DEBUG_ARG("m = %lx", (long)m);
@@ -128,6 +130,11 @@ udp_input(struct mbuf *m, int iphlen)
 	  }
 	}
 
+        lhost.ss_family = AF_INET;
+        lhost4 = (struct sockaddr_in *)&lhost;
+        lhost4->sin_addr = ip->ip_src;
+        lhost4->sin_port = uh->uh_sport;
+
         /*
          *  handle DHCP/BOOTP
          */
@@ -143,7 +150,11 @@ udp_input(struct mbuf *m, int iphlen)
          */
         if (ntohs(uh->uh_dport) == TFTP_SERVER &&
             ip->ip_dst.s_addr == slirp->vhost_addr.s_addr) {
-            tftp_input(m);
+            m->m_data += iphlen;
+            m->m_len -= iphlen;
+            tftp_input(&lhost, m);
+            m->m_data -= iphlen;
+            m->m_len += iphlen;
             goto bad;
         }
 

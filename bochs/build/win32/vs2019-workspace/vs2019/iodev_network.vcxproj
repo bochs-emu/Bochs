@@ -245,6 +245,7 @@
     <ClCompile Include="..\iodev\network\slirp\tcp_timer.cc" />
     <ClCompile Include="..\iodev\network\slirp\tftp.cc" />
     <ClCompile Include="..\iodev\network\slirp\udp.cc" />
+    <ClCompile Include="..\iodev\network\slirp\util.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\iodev\network\e1000.h" />
@@ -258,6 +259,7 @@
     <ClInclude Include="..\iodev\network\slirp\debug.h" />
     <ClInclude Include="..\iodev\network\slirp\if.h" />
     <ClInclude Include="..\iodev\network\slirp\ip.h" />
+    <ClInclude Include="..\iodev\network\slirp\ip6.h" />
     <ClInclude Include="..\iodev\network\slirp\ip_icmp.h" />
     <ClInclude Include="..\iodev\network\slirp\libslirp.h" />
     <ClInclude Include="..\iodev\network\slirp\main.h" />
@@ -273,6 +275,7 @@
     <ClInclude Include="..\iodev\network\slirp\tcpip.h" />
     <ClInclude Include="..\iodev\network\slirp\tftp.h" />
     <ClInclude Include="..\iodev\network\slirp\udp.h" />
+    <ClInclude Include="..\iodev\network\slirp\util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
