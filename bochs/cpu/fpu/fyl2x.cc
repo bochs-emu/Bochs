@@ -211,12 +211,14 @@ invalid:
     /* using float128 for approximation */
     /* ******************************** */
 
+    float128_t b128 = softfloat_normRoundPackToF128(bSign, bExp-0x10, bSig, 0, &status);
+
     Bit64u zSig0, zSig1;
     shortShift128Right(aSig<<1, 0, 16, &zSig0, &zSig1);
     float128_t x = packFloat128(0, aExp+0x3FFF, zSig0, zSig1);
     x = poly_l2(x, status);
     x = f128_add(x, i32_to_f128(ExpDiff), &status);
-    x = f128_mul(extF80_to_f128(b, &status), x, &status);
+    x = f128_mul(x, b128, &status);
     return f128_to_extF80(x, &status);
 }
 
@@ -343,9 +345,11 @@ invalid:
     /* using float128 for approximation */
     /* ******************************** */
 
+    float128_t b128 = softfloat_normRoundPackToF128(bSign, bExp-0x10, bSig, 0, &status);
+
     shortShift128Right(aSig<<1, 0, 16, &zSig0, &zSig1);
     float128 x = packFloat128(aSign, aExp, zSig0, zSig1);
     x = poly_l2p1(x, status);
-    x = f128_mul(extF80_to_f128(b, &status), x, &status);
+    x = f128_mul(x, b128, &status);
     return f128_to_extF80(x, &status);
 }
