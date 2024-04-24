@@ -40,14 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // trimmed for Bochs to support only 'softfloat_round_nearest_even' rounding mode
 float128_t
- softfloat_roundPackToF128(
-     bool sign,
-     int32_t exp,
-     uint64_t sig64,
-     uint64_t sig0,
-     uint64_t sigExtra,
-     struct softfloat_status_t *status
-)
+ softfloat_roundPackToF128(bool sign, int32_t exp, uint64_t sig64, uint64_t sig0, uint64_t sigExtra, struct softfloat_status_t *status)
 {
     bool doIncrement, isTiny;
     struct uint128_extra sig128Extra;
