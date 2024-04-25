@@ -28,6 +28,8 @@ these four paragraphs for those parts of this code that are retained.
 
 #include <assert.h>
 
+#include "../softfloat3e/include/primitiveTypes.h"
+
 /*----------------------------------------------------------------------------
 | Multiplies the 128-bit value formed by concatenating `a0' and `a1' by
 | `b' to obtain a 192-bit product.  The product is broken into three 64-bit
