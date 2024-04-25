@@ -9,7 +9,6 @@
 
 #include "config.h"
 #include "slirp_config.h"
-#include "compat.h"
 
 #ifdef _WIN32
 
@@ -151,6 +150,8 @@ void free(void *ptr);
 #ifdef HAVE_SYS_STROPTS_H
 #include <sys/stropts.h>
 #endif
+
+#include "compat.h"
 
 #include "debug.h"
 #include "util.h"

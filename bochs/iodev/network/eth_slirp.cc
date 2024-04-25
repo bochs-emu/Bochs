@@ -113,7 +113,7 @@ protected:
 } bx_slirp_match;
 
 
-static ssize_t send_packet(const void *buf, size_t len, void *opaque)
+static slirp_ssize_t send_packet(const void *buf, size_t len, void *opaque)
 {
   bx_slirp_pktmover_c *class_ptr = (bx_slirp_pktmover_c *)opaque;
 

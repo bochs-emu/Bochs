@@ -6,11 +6,12 @@
 
 #ifdef _WIN32
 #include <winsock2.h>
+typedef Bit64s slirp_ssize_t;
 #else
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#endif
 typedef ssize_t slirp_ssize_t;
+#endif
 
 struct Slirp;
 typedef struct Slirp Slirp;

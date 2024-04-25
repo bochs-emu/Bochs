@@ -26,10 +26,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+#ifdef __CYGWIN__
+#define __USE_W32_SOCKETS
+#define _WIN32
+#endif
+
 #include "config.h"
-#include "util.h"
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
+
+#include "util.h"
 
 #include <fcntl.h>
 #include <stdint.h>
@@ -174,7 +180,11 @@ static int socket_error(void)
 int slirp_ioctlsocket_wrap(int fd, int req, void *val)
 {
     int ret;
+#ifdef __CYGWIN__
+    ret = ioctlsocket(fd, req, (__ms_u_long*)val);
+#else
     ret = ioctlsocket(fd, req, (u_long*)val);
+#endif
     if (ret < 0) {
         errno = socket_error();
     }

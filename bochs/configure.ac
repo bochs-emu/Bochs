@@ -2907,6 +2907,7 @@ case "$target" in
     else
       C_OPT="$C_OPT /EHs-c-"
     fi
+    C_OPT="$C_OPT /std:c++20"
     if test "$bx_plugins" = 1; then
       CFLAGS="/nologo /MD /W3 /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS $C_OPT"
     else
