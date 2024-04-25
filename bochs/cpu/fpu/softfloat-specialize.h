@@ -85,6 +85,8 @@ const float32 float32_negative_zero = 0x80000000;
 const float32 float32_positive_zero = 0x00000000;
 const float32 float32_negative_one  = 0xbf800000;
 const float32 float32_positive_one  = 0x3f800000;
+const float32 float32_max_float     = 0x7f7fffff;
+const float32 float32_min_float     = 0xff7fffff;
 
 /*----------------------------------------------------------------------------
 | The pattern for a default generated single-precision NaN.
@@ -118,6 +120,8 @@ const float64 float64_negative_zero = BX_CONST64(0x8000000000000000);
 const float64 float64_positive_zero = BX_CONST64(0x0000000000000000);
 const float64 float64_negative_one  = BX_CONST64(0xbff0000000000000);
 const float64 float64_positive_one  = BX_CONST64(0x3ff0000000000000);
+const float64 float64_max_float     = BX_CONST64(0x7fefffffffffffff);
+const float64 float64_min_float     = BX_CONST64(0xffefffffffffffff);
 
 /*----------------------------------------------------------------------------
 | The pattern for a default generated double-precision NaN.
