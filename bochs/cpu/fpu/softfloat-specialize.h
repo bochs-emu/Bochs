@@ -37,22 +37,13 @@ these four paragraphs for those parts of this code that are retained.
  *            Stanislav Shwartsman [sshwarts at sourceforge net]
  * ==========================================================================*/
 
-#define int16_indefinite ((Bit16s)0x8000)
-#define int32_indefinite ((Bit32s)0x80000000)
-#define int64_indefinite BX_CONST64(0x8000000000000000)
+const Bit16s int16_indefinite = (Bit16s) 0x8000;
+const Bit32s int32_indefinite = (Bit32s) 0x80000000;
+const Bit64s int64_indefinite = (Bit64s) BX_CONST64(0x8000000000000000);
 
-#define uint16_indefinite (0xffff)
-#define uint32_indefinite (0xffffffff)
-#define uint64_indefinite BX_CONST64(0xffffffffffffffff)
-
-/*----------------------------------------------------------------------------
-| Internal canonical NaN format.
-*----------------------------------------------------------------------------*/
-
-typedef struct {
-    int sign;
-    Bit64u hi, lo;
-} commonNaNT;
+const Bit16u uint16_indefinite = 0xffff;
+const Bit32u uint32_indefinite = 0xffffffff;
+const Bit64u uint64_indefinite = BX_CONST64(0xffffffffffffffff);
 
 /*----------------------------------------------------------------------------
 | Commonly used half-precision floating point constants
@@ -94,8 +85,6 @@ const float32 float32_negative_zero = 0x80000000;
 const float32 float32_positive_zero = 0x00000000;
 const float32 float32_negative_one  = 0xbf800000;
 const float32 float32_positive_one  = 0x3f800000;
-const float32 float32_max_float     = 0x7f7fffff;
-const float32 float32_min_float     = 0xff7fffff;
 
 /*----------------------------------------------------------------------------
 | The pattern for a default generated single-precision NaN.
@@ -129,8 +118,6 @@ const float64 float64_negative_zero = BX_CONST64(0x8000000000000000);
 const float64 float64_positive_zero = BX_CONST64(0x0000000000000000);
 const float64 float64_negative_one  = BX_CONST64(0xbff0000000000000);
 const float64 float64_positive_one  = BX_CONST64(0x3ff0000000000000);
-const float64 float64_max_float     = BX_CONST64(0x7fefffffffffffff);
-const float64 float64_min_float     = BX_CONST64(0xffefffffffffffff);
 
 /*----------------------------------------------------------------------------
 | The pattern for a default generated double-precision NaN.
