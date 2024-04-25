@@ -25,7 +25,6 @@ these four paragraphs for those parts of this code that are retained.
 
 #define FLOAT128
 
-#include "softfloat-macros.h"
 #include "fpu_trans.h"
 #include "softfloat-helpers.h"
 
@@ -118,6 +117,7 @@ static float128_t poly_exp(float128_t x, float_status_t &status)
 floatx80 f2xm1(floatx80 a, float_status_t &status)
 {
     Bit64u zSig0, zSig1, zSig2;
+    struct exp32_sig64 normExpSig;
 
     // handle unsupported extended double-precision floating encodings
     if (extF80_isUnsupported(a)) {
@@ -139,7 +139,9 @@ floatx80 f2xm1(floatx80 a, float_status_t &status)
     if (! aExp) {
         if (! aSig) return a;
         softfloat_raiseFlags(&status, softfloat_flag_denormal | softfloat_flag_inexact);
-        normalizeFloatx80Subnormal(aSig, &aExp, &aSig);
+        normExpSig = softfloat_normSubnormalExtF80Sig(aSig);
+        aExp = normExpSig.exp + 1;
+        aSig = normExpSig.sig;
 
     tiny_argument:
         mul128By64To192(LN2_SIG_HI, LN2_SIG_LO, aSig, &zSig0, &zSig1, &zSig2);

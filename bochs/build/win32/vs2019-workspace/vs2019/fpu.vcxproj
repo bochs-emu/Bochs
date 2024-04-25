@@ -235,7 +235,6 @@
     <ClInclude Include="..\cpu\fpu\control_w.h" />
     <ClInclude Include="..\cpu\fpu\fpu_constant.h" />
     <ClInclude Include="..\cpu\fpu\softfloat.h" />
-    <ClInclude Include="..\cpu\fpu\softfloat-macros.h" />
     <ClInclude Include="..\cpu\fpu\softfloat-specialize.h" />
     <ClInclude Include="..\cpu\fpu\fpu_trans.h" />
     <ClInclude Include="..\cpu\fpu\status_w.h" />

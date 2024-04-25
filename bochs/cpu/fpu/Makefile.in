@@ -74,7 +74,7 @@ dist-clean: clean
 #  gcc -MM -I.. -I../.. -I../../instrument/stubs *.cc | sed 's/\.cc/.@CPP_SUFFIX@/g'
 ###########################################
 f2xm1.o: f2xm1.@CPP_SUFFIX@ fpu_trans.h softfloat.h ../../config.h \
- softfloat-specialize.h softfloat-macros.h 
+ softfloat-specialize.h  
 ferr.o: ferr.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h \
  ../../misc/bswap.h ../../cpu/cpu.h ../../bx_debug/debug.h ../../config.h \
  ../../osdep.h ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
@@ -85,10 +85,10 @@ ferr.o: ferr.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio
  ../../cpu/tlb.h ../../cpu/icache.h ../../cpu/xmm.h ../../cpu/vmx.h \
  ../../cpu/stack.h ../../cpu/access.h softfloat-specialize.h softfloat.h
 fpatan.o: fpatan.@CPP_SUFFIX@ fpu_trans.h softfloat.h ../../config.h \
- softfloat-specialize.h softfloat-macros.h  \
+ softfloat-specialize.h   \
  fpu_constant.h
 fprem.o: fprem.@CPP_SUFFIX@ fpu_trans.h softfloat.h ../../config.h \
- softfloat-specialize.h  softfloat-macros.h
+ softfloat-specialize.h  
 fpu.o: fpu.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h \
  ../../misc/bswap.h ../../cpu/cpu.h ../../bx_debug/debug.h ../../config.h \
  ../../osdep.h ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
@@ -177,9 +177,8 @@ fpu_trans.o: fpu_trans.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../cpu/icache.h ../../cpu/xmm.h ../../cpu/vmx.h ../../cpu/stack.h \
  ../../cpu/access.h fpu_trans.h softfloat.h softfloat-specialize.h
 fsincos.o: fsincos.@CPP_SUFFIX@ fpu_trans.h softfloat.h ../../config.h \
- softfloat-specialize.h softfloat-macros.h  \
+ softfloat-specialize.h   \
  fpu_constant.h
 fyl2x.o: fyl2x.@CPP_SUFFIX@ fpu_trans.h softfloat.h ../../config.h \
- softfloat-specialize.h softfloat-macros.h  \
- fpu_constant.h
+ softfloat-specialize.h fpu_constant.h
 poly.o: poly.@CPP_SUFFIX@ softfloat.h ../../config.h

@@ -26,7 +26,6 @@ these four paragraphs for those parts of this code that are retained.
 #define FLOAT128
 
 #define USE_estimateDiv128To64
-#include "softfloat-macros.h"
 #include "fpu_trans.h"
 #include "softfloat-helpers.h"
 #include "fpu_constant.h"
@@ -268,7 +267,9 @@ int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, float_status_t &status
             return 0;
         }
 
-        normalizeFloatx80Subnormal(aSig0, &aExp, &aSig0);
+        struct exp32_sig64 normExpSig = softfloat_normSubnormalExtF80Sig(aSig0);
+        aExp = normExpSig.exp + 1;
+        aSig0 = normExpSig.sig;
     }
 
     zSign = aSign;
@@ -383,7 +384,10 @@ int ftan(floatx80 &a, float_status_t &status)
             softfloat_raiseFlags(&status, softfloat_flag_inexact | softfloat_flag_underflow);
             return 0;
         }
-        normalizeFloatx80Subnormal(aSig0, &aExp, &aSig0);
+
+        struct exp32_sig64 normExpSig = softfloat_normSubnormalExtF80Sig(aSig0);
+        aExp = normExpSig.exp + 1;
+        aSig0 = normExpSig.sig;
     }
 
     zSign = aSign;

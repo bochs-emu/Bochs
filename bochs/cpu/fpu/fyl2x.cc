@@ -25,7 +25,6 @@ these four paragraphs for those parts of this code that are retained.
 
 #define FLOAT128
 
-#include "softfloat-macros.h"
 #include "fpu_trans.h"
 #include "softfloat-helpers.h"
 #include "fpu_constant.h"
@@ -185,7 +184,9 @@ invalid:
         }
         if (aSign) goto invalid;
         softfloat_raiseFlags(&status, softfloat_flag_denormal);
-        normalizeFloatx80Subnormal(aSig, &aExp, &aSig);
+        struct exp32_sig64 normExpSig = softfloat_normSubnormalExtF80Sig(aSig);
+        aExp = normExpSig.exp + 1;
+        aSig = normExpSig.sig;
     }
     if (aSign) goto invalid;
     if (! bExp) {
@@ -194,7 +195,9 @@ invalid:
             return packFloatx80(bSign, 0, 0);
         }
         softfloat_raiseFlags(&status, softfloat_flag_denormal);
-        normalizeFloatx80Subnormal(bSig, &bExp, &bSig);
+        struct exp32_sig64 normExpSig = softfloat_normSubnormalExtF80Sig(bSig);
+        bExp = normExpSig.exp + 1;
+        bSig = normExpSig.sig;
     }
     if (aExp == 0x3FFF && ! (aSig<<1))
         return packFloatx80(bSign, 0, 0);
@@ -301,12 +304,16 @@ invalid:
             return packFloatx80(zSign, 0, 0);
         }
         softfloat_raiseFlags(&status, softfloat_flag_denormal);
-        normalizeFloatx80Subnormal(aSig, &aExp, &aSig);
+        struct exp32_sig64 normExpSig = softfloat_normSubnormalExtF80Sig(aSig);
+        aExp = normExpSig.exp + 1;
+        aSig = normExpSig.sig;
     }
     if (! bExp) {
         if (! bSig) return packFloatx80(zSign, 0, 0);
         softfloat_raiseFlags(&status, softfloat_flag_denormal);
-        normalizeFloatx80Subnormal(bSig, &bExp, &bSig);
+        struct exp32_sig64 normExpSig = softfloat_normSubnormalExtF80Sig(bSig);
+        bExp = normExpSig.exp + 1;
+        bSig = normExpSig.sig;
     }
 
     softfloat_raiseFlags(&status, softfloat_flag_inexact);

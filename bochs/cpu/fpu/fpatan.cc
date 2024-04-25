@@ -25,7 +25,6 @@ these four paragraphs for those parts of this code that are retained.
 
 #define FLOAT128
 
-#include "softfloat-macros.h"
 #include "fpu_trans.h"
 #include "fpu_constant.h"
 
@@ -194,7 +193,9 @@ return_PI_or_ZERO:
         }
 
         softfloat_raiseFlags(&status, softfloat_flag_denormal);
-        normalizeFloatx80Subnormal(bSig, &bExp, &bSig);
+        struct exp32_sig64 normExpSig = softfloat_normSubnormalExtF80Sig(bSig);
+        bExp = normExpSig.exp + 1;
+        bSig = normExpSig.sig;
     }
     if (! aExp)
     {
@@ -202,7 +203,9 @@ return_PI_or_ZERO:
             return softfloat_roundPackToExtF80(bSign, FLOATX80_PI2_EXP, FLOAT_PI_HI, FLOAT_PI_LO, 80, &status);
 
         softfloat_raiseFlags(&status, softfloat_flag_denormal);
-        normalizeFloatx80Subnormal(aSig, &aExp, &aSig);
+        struct exp32_sig64 normExpSig = softfloat_normSubnormalExtF80Sig(aSig);
+        aExp = normExpSig.exp + 1;
+        aSig = normExpSig.sig;
     }
 
     softfloat_raiseFlags(&status, softfloat_flag_inexact);
