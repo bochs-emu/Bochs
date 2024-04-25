@@ -42,8 +42,6 @@
 #include "fpu/status_w.h"
 #include "fpu/control_w.h"
 
-extern int FPU_tagof(const floatx80 &reg);
-
 //
 // Minimal i387 structure
 //
@@ -91,6 +89,9 @@ public:
     unsigned char align2;
     unsigned char align3;
 };
+
+extern int FPU_tagof(const floatx80 &reg);
+extern Bit16u unpack_FPU_TW(const i387_t *i387, Bit16u tag_byte);
 
 #define IS_TAG_EMPTY(i)                                                 \
   ((BX_CPU_THIS_PTR the_i387.FPU_gettagi(i)) == FPU_Tag_Empty)
