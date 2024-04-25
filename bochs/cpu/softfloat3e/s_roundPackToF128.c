@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
 #include "softfloat.h"
 
 // trimmed for Bochs to support only 'softfloat_round_nearest_even' rounding mode

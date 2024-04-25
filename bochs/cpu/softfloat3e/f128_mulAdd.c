@@ -35,6 +35,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
+#include "primitiveTypes.h"
 #include "softfloat.h"
 #include "specialize.h"
 

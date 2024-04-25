@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
 
 extFloat80_t
  softfloat_normRoundPackToExtF80(
