@@ -192,7 +192,7 @@ avx512_cvt16.o: avx512_cvt16.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
- ../softfloat3e/include/internals.h ../simd_int.h ../fpu/softfloat16.h
+ ../softfloat3e/include/internals.h ../simd_int.h 
 avx512_fma.o: avx512_fma.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../logio.h ../../misc/bswap.h ../cpu.h ../../bx_debug/debug.h \
  ../../config.h ../../osdep.h ../../cpu/decoder/decoder.h \
@@ -205,8 +205,7 @@ avx512_fma.o: avx512_fma.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h
  ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
- ../softfloat3e/include/internals.h ../simd_int.h ../simd_pfp.h \
- ../fpu/softfloat16.h
+ ../softfloat3e/include/internals.h ../simd_int.h ../simd_pfp.h
 avx512_helpers.o: avx512_helpers.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
@@ -275,7 +274,7 @@ avx512_pfp.o: avx512_pfp.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
  ../softfloat3e/include/internals.h ../simd_int.h ../simd_pfp.h \
- ../fpu/softfloat16.h ../fpu/softfloat-specialize.h \
+  ../fpu/softfloat-specialize.h \
  ../fpu/../softfloat3e/include/softfloat_types.h
 avx512_pfp16.o: avx512_pfp16.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \
@@ -290,8 +289,8 @@ avx512_pfp16.o: avx512_pfp16.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
- ../softfloat3e/include/internals.h ../fpu/softfloat16.h ../simd_int.h \
- ../simd_pfp.h ../fpu/softfloat16.h ../fpu/softfloat-specialize.h \
+ ../softfloat3e/include/internals.h  ../simd_int.h \
+ ../simd_pfp.h  ../fpu/softfloat-specialize.h \
  ../fpu/../softfloat3e/include/softfloat_types.h \
  ../../cpu/decoder/ia_opcodes.h ../../cpu/decoder/ia_opcodes.def
 avx512_rcp14.o: avx512_rcp14.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
@@ -347,7 +346,7 @@ avx_fma.o: avx_fma.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
- ../softfloat3e/include/internals.h ../simd_pfp.h ../fpu/softfloat16.h
+ ../softfloat3e/include/internals.h ../simd_pfp.h 
 avx_ifma52.o: avx_ifma52.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../logio.h ../../misc/bswap.h ../cpu.h ../../bx_debug/debug.h \
  ../../config.h ../../osdep.h ../../cpu/decoder/decoder.h \
@@ -383,7 +382,7 @@ avx_pfp.o: avx_pfp.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
- ../softfloat3e/include/internals.h ../simd_pfp.h ../fpu/softfloat16.h \
+ ../softfloat3e/include/internals.h ../simd_pfp.h \
  ../simd_int.h
 gather.o: gather.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../logio.h ../../misc/bswap.h ../cpu.h ../../bx_debug/debug.h \

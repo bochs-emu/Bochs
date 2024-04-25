@@ -32,7 +32,6 @@ extern softfloat_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
 extern void mxcsr_to_softfloat_status_word_imm_override(softfloat_status_t &status, Bit8u immb);
 
 #include "softfloat3e/include/softfloat-compare.h"
-#include "fpu/softfloat16.h"
 #include "simd_int.h"
 #include "simd_pfp.h"
 

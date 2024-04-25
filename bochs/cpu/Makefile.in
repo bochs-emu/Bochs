@@ -758,7 +758,7 @@ sse_pfp.o: sse_pfp.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  softfloat3e/include/softfloat-compare.h softfloat3e/include/softfloat.h \
  softfloat3e/include/softfloat_types.h \
  softfloat3e/include/softfloat-extra.h softfloat3e/include/internals.h \
- simd_pfp.h fpu/softfloat16.h simd_int.h
+ simd_pfp.h simd_int.h
 sse_rcp.o: sse_rcp.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h decoder/decoder.h \
@@ -922,8 +922,7 @@ fetchdecode32.o: decoder/fetchdecode32.@CPP_SUFFIX@ ../bochs.h ../config.h \
  decoder/fetchdecode_opmap_0f38.h decoder/fetchdecode_opmap_0f3a.h \
  decoder/fetchdecode_x87.h decoder/fetchdecode_avx.h \
  decoder/fetchdecode_xop.h decoder/fetchdecode_evex.h ../cpu/simd_int.h \
- ../cpu/fpu/softfloat16.h ../cpu/simd_pfp.h \
- ../cpu/simd_compare.h ../cpu/simd_vnni.h
+ ../cpu/simd_pfp.h ../cpu/simd_compare.h ../cpu/simd_vnni.h
 fetchdecode64.o: decoder/fetchdecode64.@CPP_SUFFIX@ ../bochs.h ../config.h \
  ../osdep.h ../logio.h ../misc/bswap.h decoder/instr.h decoder/decoder.h \
  decoder/features.h decoder/fetchdecode.h decoder/ia_opcodes.h \
