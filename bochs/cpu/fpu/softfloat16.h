@@ -37,7 +37,7 @@ these four paragraphs for those parts of this code that are retained.
 
 extern float32 convert_ne_fp16_to_fp32(float16 op);
 
-BX_CPP_INLINE float16 f16_scalef(float16 a, float16 b, float_status_t *status)
+BX_CPP_INLINE float16 f16_scalef(float16 a, float16 b, softfloat_status_t *status)
 {
   return f32_to_f16(f32_scalef(convert_ne_fp16_to_fp32(a), convert_ne_fp16_to_fp32(b), status), status);
 }

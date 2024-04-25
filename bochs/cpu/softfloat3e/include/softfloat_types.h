@@ -39,6 +39,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include "config.h"
 
+/*----------------------------------------------------------------------------
+| Software IEC/IEEE floating-point types.
+*----------------------------------------------------------------------------*/
+typedef uint16_t float16, bfloat16;
+typedef uint32_t float32;
+typedef uint64_t float64;
+
 #ifdef BX_LITTLE_ENDIAN
 struct uint128 { uint64_t v0, v64; };
 struct uint64_extra { uint64_t extra, v; };

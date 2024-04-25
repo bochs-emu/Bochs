@@ -78,7 +78,7 @@ struct BxOpcodeDecodeDescriptor32 {
 
 #ifndef BX_STANDALONE_DECODER
 #include "cpu/simd_int.h"
-#include "cpu/fpu/softfloat.h"
+#include "cpu/softfloat3e/include/softfloat.h"
 #include "cpu/fpu/softfloat16.h"
 #include "cpu/simd_pfp.h"
 #include "cpu/simd_compare.h"

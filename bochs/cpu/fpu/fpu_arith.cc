@@ -28,9 +28,11 @@
 
 #if BX_SUPPORT_FPU
 
-float_status_t i387cw_to_softfloat_status_word(Bit16u control_word)
+#include "softfloat3e/include/softfloat.h"
+
+softfloat_status_t i387cw_to_softfloat_status_word(Bit16u control_word)
 {
-  float_status_t status;
+  softfloat_status_t status;
 
   int precision = control_word & FPU_CW_PC;
 
@@ -64,7 +66,7 @@ float_status_t i387cw_to_softfloat_status_word(Bit16u control_word)
 
 #include "fpu_trans.h"
 
-floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float32 b32, int bIsNaN, float_status_t &status)
+floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float32 b32, int bIsNaN, softfloat_status_t &status)
 {
     int aIsSignalingNaN = extF80_isSignalingNaN(a);
     int bIsSignalingNaN = f32_isSignalingNaN(b32);
@@ -97,7 +99,7 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float32 b32, int bIsNaN, float_s
     }
 }
 
-bool FPU_handle_NaN(floatx80 a, float32 b, floatx80 &r, float_status_t &status)
+bool FPU_handle_NaN(floatx80 a, float32 b, floatx80 &r, softfloat_status_t &status)
 {
   if (extF80_isUnsupported(a)) {
      softfloat_raiseFlags(&status, softfloat_flag_invalid);
@@ -113,7 +115,7 @@ bool FPU_handle_NaN(floatx80 a, float32 b, floatx80 &r, float_status_t &status)
   return false;
 }
 
-floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float64 b64, int bIsNaN, float_status_t &status)
+floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float64 b64, int bIsNaN, softfloat_status_t &status)
 {
     int aIsSignalingNaN = extF80_isSignalingNaN(a);
     int bIsSignalingNaN = f64_isSignalingNaN(b64);
@@ -146,7 +148,7 @@ floatx80 FPU_handle_NaN(floatx80 a, int aIsNaN, float64 b64, int bIsNaN, float_s
     }
 }
 
-bool FPU_handle_NaN(floatx80 a, float64 b, floatx80 &r, float_status_t &status)
+bool FPU_handle_NaN(floatx80 a, float64 b, floatx80 &r, softfloat_status_t &status)
 {
   if (extF80_isUnsupported(a)) {
      softfloat_raiseFlags(&status, softfloat_flag_invalid);
@@ -178,7 +180,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_ST0_STj(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = BX_READ_FPU_REG(i->src());
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_add(a, b, &status);
@@ -207,7 +209,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_STi_ST0(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(i->dst());
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_add(a, b, &status);
@@ -237,7 +239,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_SINGLE_REAL(bxInstruction_c *i)
      BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 a = BX_READ_FPU_REG(0), result;
@@ -266,7 +268,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FADD_DOUBLE_REAL(bxInstruction_c *i)
      BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 a = BX_READ_FPU_REG(0), result;
@@ -298,7 +300,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIADD_WORD_INTEGER(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = i32_to_extF80((Bit32s)(load_reg));
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_add(a, b, &status);
@@ -328,7 +330,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIADD_DWORD_INTEGER(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = i32_to_extF80(load_reg);
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_add(a, b, &status);
@@ -355,7 +357,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FMUL_ST0_STj(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = BX_READ_FPU_REG(i->src());
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_mul(a, b, &status);
@@ -384,7 +386,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FMUL_STi_ST0(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(i->dst());
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_mul(a, b, &status);
@@ -414,7 +416,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FMUL_SINGLE_REAL(bxInstruction_c *i)
      BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 a = BX_READ_FPU_REG(0), result;
@@ -443,7 +445,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FMUL_DOUBLE_REAL(bxInstruction_c *i)
      BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 a = BX_READ_FPU_REG(0), result;
@@ -475,7 +477,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIMUL_WORD_INTEGER(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = i32_to_extF80((Bit32s)(load_reg));
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_mul(a, b, &status);
@@ -505,7 +507,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIMUL_DWORD_INTEGER(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = i32_to_extF80(load_reg);
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_mul(a, b, &status);
@@ -532,7 +534,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUB_ST0_STj(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = BX_READ_FPU_REG(i->src());
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_sub(a, b, &status);
@@ -559,7 +561,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUBR_ST0_STj(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(i->src());
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_sub(a, b, &status);
@@ -588,7 +590,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUB_STi_ST0(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(i->dst());
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_sub(a, b, &status);
@@ -620,7 +622,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUBR_STi_ST0(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = BX_READ_FPU_REG(i->dst());
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_sub(a, b, &status);
@@ -650,7 +652,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUB_SINGLE_REAL(bxInstruction_c *i)
      BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 a = BX_READ_FPU_REG(0), result;
@@ -679,7 +681,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUBR_SINGLE_REAL(bxInstruction_c *i)
      BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 b = BX_READ_FPU_REG(0), result;
@@ -708,7 +710,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUB_DOUBLE_REAL(bxInstruction_c *i)
      BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 a = BX_READ_FPU_REG(0), result;
@@ -737,7 +739,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSUBR_DOUBLE_REAL(bxInstruction_c *i)
      BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
 
@@ -770,7 +772,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISUB_WORD_INTEGER(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = i32_to_extF80((Bit32s)(load_reg));
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_sub(a, b, &status);
@@ -800,7 +802,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISUBR_WORD_INTEGER(bxInstruction_c *i)
   floatx80 a = i32_to_extF80((Bit32s)(load_reg));
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_sub(a, b, &status);
@@ -827,7 +829,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISUB_DWORD_INTEGER(bxInstruction_c *i)
      BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_sub(BX_READ_FPU_REG(0), i32_to_extF80(load_reg), &status);
@@ -857,7 +859,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FISUBR_DWORD_INTEGER(bxInstruction_c *i)
   floatx80 a = i32_to_extF80(load_reg);
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_sub(a, b, &status);
@@ -884,7 +886,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIV_ST0_STj(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = BX_READ_FPU_REG(i->src());
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_div(a, b, &status);
@@ -911,7 +913,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIVR_ST0_STj(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(i->src());
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_div(a, b, &status);
@@ -940,7 +942,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIV_STi_ST0(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(i->dst());
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_div(a, b, &status);
@@ -972,7 +974,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIVR_STi_ST0(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = BX_READ_FPU_REG(i->dst());
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_div(a, b, &status);
@@ -1002,7 +1004,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIV_SINGLE_REAL(bxInstruction_c *i)
      BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 a = BX_READ_FPU_REG(0), result;
@@ -1031,7 +1033,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIVR_SINGLE_REAL(bxInstruction_c *i)
      BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 b = BX_READ_FPU_REG(0), result;
@@ -1060,7 +1062,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIV_DOUBLE_REAL(bxInstruction_c *i)
      BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 a = BX_READ_FPU_REG(0), result;
@@ -1089,7 +1091,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FDIVR_DOUBLE_REAL(bxInstruction_c *i)
      BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 b = BX_READ_FPU_REG(0), result;
@@ -1121,7 +1123,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIDIV_WORD_INTEGER(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = i32_to_extF80((Bit32s)(load_reg));
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_div(a, b, &status);
@@ -1151,7 +1153,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIDIVR_WORD_INTEGER(bxInstruction_c *i)
   floatx80 a = i32_to_extF80((Bit32s)(load_reg));
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_div(a, b, &status);
@@ -1181,7 +1183,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIDIV_DWORD_INTEGER(bxInstruction_c *i)
   floatx80 a = BX_READ_FPU_REG(0);
   floatx80 b = i32_to_extF80(load_reg);
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_div(a, b, &status);
@@ -1211,7 +1213,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FIDIVR_DWORD_INTEGER(bxInstruction_c *i)
   floatx80 a = i32_to_extF80(load_reg);
   floatx80 b = BX_READ_FPU_REG(0);
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_div(a, b, &status);
@@ -1234,7 +1236,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FSQRT(bxInstruction_c *i)
      BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_sqrt(BX_READ_FPU_REG(0), &status);
@@ -1258,7 +1260,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FRNDINT(bxInstruction_c *i)
      BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 result = extF80_roundToInt(BX_READ_FPU_REG(0), &status);

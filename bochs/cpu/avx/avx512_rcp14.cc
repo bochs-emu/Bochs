@@ -8231,7 +8231,9 @@ static const Bit16u rcp14_table[65536] = {
     0x0003, 0x0003, 0x0002, 0x0002, 0x0001, 0x0001, 0x0000, 0x0000, // 65528
 };
 
-extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
+#include "softfloat3e/include/softfloat.h"
+
+extern softfloat_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
 
 #include "fpu/softfloat-specialize.h"
 #include "simd_int.h"
@@ -8264,7 +8266,7 @@ static Bit32u rcp14_table_lookup(Bit32u mant, unsigned bias, Bit16s *exp)
 }
 
 // approximate 14-bit reciprocal of scalar half precision FP
-float16 approximate_rcp14(float16 op, const float_status_t &status)
+float16 approximate_rcp14(float16 op, const softfloat_status_t &status)
 {
   softfloat_class_t op_class = f16_class(op);
 
@@ -8331,7 +8333,7 @@ float16 approximate_rcp14(float16 op, const float_status_t &status)
 }
 
 // approximate 14-bit reciprocal of scalar single precision FP
-float32 approximate_rcp14(float32 op, const float_status_t &status)
+float32 approximate_rcp14(float32 op, const softfloat_status_t &status)
 {
   softfloat_class_t op_class = f32_class(op);
 
@@ -8388,7 +8390,7 @@ float32 approximate_rcp14(float32 op, const float_status_t &status)
 }
 
 // approximate 14-bit reciprocal of scalar double precision FP
-float64 approximate_rcp14(float64 op, const float_status_t &status)
+float64 approximate_rcp14(float64 op, const softfloat_status_t &status)
 {
   softfloat_class_t op_class = f64_class(op);
 
@@ -8456,11 +8458,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCP14PS_MASK_VpsWpsR(bxInstruction_c *i)
   Bit32u mask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   unsigned len = i->getVL();
 
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
 
   for (unsigned n=0, tmp_mask = mask; n < DWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1)
-      op.vmm32u(n) = approximate_rcp14(op.vmm32u(n), status);
+      op.vmm32u(n) = approximate_rcp14((float32) op.vmm32u(n), status);
     else
       op.vmm32u(n) = 0;
   }
@@ -8483,11 +8485,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCP14PD_MASK_VpdWpdR(bxInstruction_c *i)
   Bit32u mask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   unsigned len = i->getVL();
 
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
 
   for (unsigned n=0, tmp_mask = mask; n < QWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1)
-      op.vmm64u(n) = approximate_rcp14(op.vmm64u(n), status);
+      op.vmm64u(n) = approximate_rcp14((float64) op.vmm64u(n), status);
     else
       op.vmm64u(n) = 0;
   }
@@ -8511,7 +8513,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCP14SS_MASK_VssHpsWssR(bxInstruction_c *
   if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
     float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());
 
-    float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+    softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     op1.xmm32u(0) = approximate_rcp14(op2, status);
   }
   else {
@@ -8532,7 +8534,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCP14SD_MASK_VsdHpdWsdR(bxInstruction_c *
   if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
     float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());
 
-    float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+    softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     op1.xmm64u(0) = approximate_rcp14(op2, status);
   }
   else {
@@ -8553,7 +8555,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCPSH_MASK_VshHphWshR(bxInstruction_c *i)
   if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
     float16 op2 = BX_READ_XMM_REG_LO_WORD(i->src2());
 
-    float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+    softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
     op1.xmm16u(0) = approximate_rcp14(op2, status);
   }
   else {
@@ -8573,11 +8575,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCPPH_MASK_VphWphR(bxInstruction_c *i)
   Bit32u mask = i->opmask() ? BX_READ_32BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   unsigned len = i->getVL();
 
-  float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
 
   for (unsigned n=0, tmp_mask = mask; n < WORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1)
-      op.vmm16u(n) = approximate_rcp14(op.vmm16u(n), status);
+      op.vmm16u(n) = approximate_rcp14((float16) op.vmm16u(n), status);
     else
       op.vmm16u(n) = 0;
   }

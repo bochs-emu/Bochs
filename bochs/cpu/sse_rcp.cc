@@ -28,6 +28,7 @@
 
 #if BX_CPU_LEVEL >= 6
 
+#include "softfloat3e/include/softfloat.h"
 #include "fpu/softfloat-specialize.h"
 
 static Bit16u rcp_table[2048] = {

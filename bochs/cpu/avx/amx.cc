@@ -117,7 +117,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILELOADD_TnnnMdq(bxInstruction_c *i)
   }
 
   if (BX_CPU_THIS_PTR amx->start_row >= rows) {
-    BX_ERROR(("%s: invalid (start_row=%d) >= (rows=%d)", i->getIaOpcodeNameShort(), tile, BX_CPU_THIS_PTR amx->start_row, rows));
+    BX_ERROR(("%s: invalid tile %d (start_row=%d) >= (rows=%d)", i->getIaOpcodeNameShort(), tile, BX_CPU_THIS_PTR amx->start_row, rows));
     exception(BX_UD_EXCEPTION, 0);
   }
 
@@ -177,7 +177,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILESTORED_MdqTnnn(bxInstruction_c *i)
   }
 
   if (BX_CPU_THIS_PTR amx->start_row >= rows) {
-    BX_ERROR(("TILESTORED: invalid (start_row=%d) >= (rows=%d)", tile, BX_CPU_THIS_PTR amx->start_row, rows));
+    BX_ERROR(("TILESTORED: invalid tile %d (start_row=%d) >= (rows=%d)", tile, BX_CPU_THIS_PTR amx->start_row, rows));
     exception(BX_UD_EXCEPTION, 0);
   }
 
@@ -488,7 +488,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TDPBUUD_TnnnTrmTreg(bxInstruction_c *i)
 
 #include "bf16.h"
 
-extern float_status_t prepare_ne_softfloat_status_helper();
+extern softfloat_status_t prepare_ne_softfloat_status_helper();
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TDPBF16PS_TnnnTrmTreg(bxInstruction_c *i)
 {
@@ -509,7 +509,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TDPBF16PS_TnnnTrmTreg(bxInstruction_c *i)
 
   // "round to nearest even" rounding mode is used when doing each accumulation of the FMA.
   // output denormals are always flushed to zero and input denormals are always treated as zero.
-  float_status_t status = prepare_ne_softfloat_status_helper();
+  softfloat_status_t status = prepare_ne_softfloat_status_helper();
   status.softfloat_denormals_are_zeros = true;
 
   for (unsigned m=0; m < max_m; m++) {
@@ -564,7 +564,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TDPFP16PS_TnnnTrmTreg(bxInstruction_c *i)
 
   // "round to nearest even" rounding mode is used when doing each accumulation of the FMA.
   // output FP32 denormals are always flushed to zero and input denormals are always treated as zero.
-  float_status_t status = prepare_ne_softfloat_status_helper();
+  softfloat_status_t status = prepare_ne_softfloat_status_helper();
   status.softfloat_denormals_are_zeros = true;
 
   for (unsigned m=0; m < max_m; m++) {
@@ -617,7 +617,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCMMRLFP16PS_TnnnTrmTreg(bxInstruction_c *
 
   // "round to nearest even" rounding mode is used when doing each accumulation of the FMA.
   // output FP32 denormals are always flushed to zero and input denormals are always treated as zero.
-  float_status_t status = prepare_ne_softfloat_status_helper();
+  softfloat_status_t status = prepare_ne_softfloat_status_helper();
   status.softfloat_denormals_are_zeros = true;
 
   for (unsigned m=0; m < max_m; m++) {
@@ -670,7 +670,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCMMIMFP16PS_TnnnTrmTreg(bxInstruction_c *
 
   // "round to nearest even" rounding mode is used when doing each accumulation of the FMA.
   // output FP32 denormals are always flushed to zero and input denormals are always treated as zero.
-  float_status_t status = prepare_ne_softfloat_status_helper();
+  softfloat_status_t status = prepare_ne_softfloat_status_helper();
   status.softfloat_denormals_are_zeros = true;
 
   for (unsigned m=0; m < max_m; m++) {

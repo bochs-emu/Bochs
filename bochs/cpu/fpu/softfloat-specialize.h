@@ -30,7 +30,7 @@ these four paragraphs for those parts of this code that are retained.
 #ifndef _SOFTFLOAT_SPECIALIZE_H_
 #define _SOFTFLOAT_SPECIALIZE_H_
 
-#include "softfloat.h"
+#include "../softfloat3e/include/softfloat_types.h"
 
 /*============================================================================
  * Adapted for Bochs (x86 achitecture simulator) by
@@ -146,8 +146,6 @@ BX_CPP_INLINE float64 packFloat64(int zSign, Bit16s zExp, Bit64u zSig)
     return (((Bit64u) zSign)<<63) + (((Bit64u) zExp)<<52) + zSig;
 }
 
-#ifdef FLOATX80
-
 /*----------------------------------------------------------------------------
 | The pattern for a default generated extended double-precision NaN.  The
 | `high' and `low' values hold the most- and least-significant bits,
@@ -176,8 +174,6 @@ BX_CPP_INLINE floatx80 packFloatx80(int zSign, Bit32s zExp, Bit64u zSig)
 *----------------------------------------------------------------------------*/
 static const floatx80 floatx80_default_nan =
     packFloatx80(0, floatx80_default_nan_exp, floatx80_default_nan_fraction);
-
-#endif /* FLOATX80 */
 
 #ifdef FLOAT128
 

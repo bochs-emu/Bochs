@@ -26,7 +26,6 @@
 
 #if BX_SUPPORT_FPU
 
-#include "fpu/softfloat.h"
 #include "softfloat3e/include/softfloat_types.h"
 
 #define BX_FPU_REG(index) \

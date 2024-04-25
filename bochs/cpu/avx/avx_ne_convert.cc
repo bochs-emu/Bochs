@@ -28,13 +28,15 @@
 
 #if BX_SUPPORT_AVX
 
+#include "softfloat3e/include/softfloat.h"
+
 // FP32: s|eeeeeeee|mmmmmmmmmmmmmmmmmmmmmmm
 // BF16: s|eeeeeeee|mmmmmmm
 //  F16: s|eeeee|mmmmmmmmmm
 
-float_status_t prepare_ne_softfloat_status_helper()
+softfloat_status_t prepare_ne_softfloat_status_helper()
 {
-  float_status_t status;
+  softfloat_status_t status;
 
   status.softfloat_roundingMode = softfloat_round_near_even;
   status.softfloat_exceptionFlags = 0;
@@ -49,7 +51,7 @@ float_status_t prepare_ne_softfloat_status_helper()
 
 float32 convert_ne_fp16_to_fp32(float16 op)
 {
-  static float_status_t status = prepare_ne_softfloat_status_helper();
+  static softfloat_status_t status = prepare_ne_softfloat_status_helper();
   return f16_to_f32(op, &status);
 }
 

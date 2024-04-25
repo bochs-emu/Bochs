@@ -25,6 +25,8 @@ these four paragraphs for those parts of this code that are retained.
 
 #define FLOAT128
 
+#include "softfloat3e/include/softfloat.h"
+
 #include "fpu_trans.h"
 #include "fpu_constant.h"
 
@@ -59,10 +61,10 @@ static float128_t atan_arr[FPATAN_ARR_SIZE] =
     PACK_FLOAT_128(0x3ffa861861861861, 0x8618618618618618)  /* 21 */
 };
 
-extern float128_t OddPoly(float128_t x, const float128_t *arr, int n, float_status_t &status);
+extern float128_t OddPoly(float128_t x, const float128_t *arr, int n, softfloat_status_t &status);
 
 /* |x| < 1/4 */
-static float128_t poly_atan(float128_t x1, float_status_t &status)
+static float128_t poly_atan(float128_t x1, softfloat_status_t &status)
 {
 /*
     //                 3     5     7     9     11     13     15     17
@@ -132,7 +134,7 @@ static float128_t poly_atan(float128_t x1, float_status_t &status)
 //                  3     5     7     9                 2n+1
 //
 
-floatx80 fpatan(floatx80 a, floatx80 b, float_status_t &status)
+floatx80 fpatan(floatx80 a, floatx80 b, softfloat_status_t &status)
 {
     // handle unsupported extended double-precision floating encodings
     if (extF80_isUnsupported(a) || extF80_isUnsupported(b)) {

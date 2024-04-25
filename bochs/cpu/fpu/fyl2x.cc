@@ -41,7 +41,7 @@ static const float128_t float128_ln2inv2 =
 
 #define SQRT2_HALF_SIG 	BX_CONST64(0xb504f333f9de6484)
 
-extern float128_t OddPoly(float128_t x, const float128_t *arr, int n, float_status_t &status);
+extern float128_t OddPoly(float128_t x, const float128_t *arr, int n, softfloat_status_t &status);
 
 #define L2_ARR_SIZE 9
 
@@ -58,7 +58,7 @@ static float128_t ln_arr[L2_ARR_SIZE] =
     PACK_FLOAT_128(0x3ffae1e1e1e1e1e1, 0xe1e1e1e1e1e1e1e2)  /* 17 */
 };
 
-static float128_t poly_ln(float128_t x1, float_status_t &status)
+static float128_t poly_ln(float128_t x1, softfloat_status_t &status)
 {
 /*
     //
@@ -87,7 +87,7 @@ static float128_t poly_ln(float128_t x1, float_status_t &status)
 }
 
 /* required sqrt(2)/2 < x < sqrt(2) */
-static float128_t poly_l2(float128_t x, float_status_t &status)
+static float128_t poly_l2(float128_t x, softfloat_status_t &status)
 {
     /* using float128 for approximation */
     float128_t x_p1 = f128_add(x, float128_one, &status);
@@ -98,7 +98,7 @@ static float128_t poly_l2(float128_t x, float_status_t &status)
     return x;
 }
 
-static float128_t poly_l2p1(float128_t x, float_status_t &status)
+static float128_t poly_l2p1(float128_t x, softfloat_status_t &status)
 {
     /* using float128 for approximation */
     float128_t x_plus2 = f128_add(x, float128_two, &status);
@@ -133,7 +133,7 @@ static float128_t poly_l2p1(float128_t x, float_status_t &status)
 //       1-u             3     5     7           2n+1
 //
 
-floatx80 fyl2x(floatx80 a, floatx80 b, float_status_t &status)
+floatx80 fyl2x(floatx80 a, floatx80 b, softfloat_status_t &status)
 {
     // handle unsupported extended double-precision floating encodings
     if (extF80_isUnsupported(a) || extF80_isUnsupported(b)) {
@@ -251,7 +251,7 @@ invalid:
 //       1-u             3     5     7           2n+1
 //
 
-floatx80 fyl2xp1(floatx80 a, floatx80 b, float_status_t &status)
+floatx80 fyl2xp1(floatx80 a, floatx80 b, softfloat_status_t &status)
 {
     Bit32s aExp, bExp;
     Bit64u aSig, bSig, zSig0, zSig1, zSig2;

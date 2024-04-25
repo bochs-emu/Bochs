@@ -28,6 +28,7 @@ these four paragraphs for those parts of this code that are retained.
 
 #include <assert.h>
 
+#include "../softfloat3e/include/primitives.h"
 #include "../softfloat3e/include/primitiveTypes.h"
 
 /*----------------------------------------------------------------------------

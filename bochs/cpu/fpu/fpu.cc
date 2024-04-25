@@ -28,6 +28,8 @@
 
 #include "iodev/iodev.h"
 
+#include "softfloat3e/include/softfloat.h"
+
 #define CHECK_PENDING_EXCEPTIONS 1
 
 #if BX_SUPPORT_FPU

@@ -118,10 +118,10 @@ static float128_t cos_arr[COS_ARR_SIZE] =
     PACK_FLOAT_128(0x3fc1e542ba402022, 0x507a9cad2bf8f0bb)  /* 20 */
 };
 
-extern float128_t OddPoly (float128_t x, const float128_t *arr, int n, float_status_t &status);
+extern float128_t OddPoly (float128_t x, const float128_t *arr, int n, softfloat_status_t &status);
 
 /* 0 <= x <= pi/4 */
-BX_CPP_INLINE float128_t poly_sin(float128_t x, float_status_t &status)
+BX_CPP_INLINE float128_t poly_sin(float128_t x, softfloat_status_t &status)
 {
     //                 3     5     7     9     11     13     15
     //                x     x     x     x     x      x      x
@@ -146,10 +146,10 @@ BX_CPP_INLINE float128_t poly_sin(float128_t x, float_status_t &status)
     return OddPoly(x, (const float128_t*) sin_arr, SIN_ARR_SIZE, status);
 }
 
-extern float128_t EvenPoly(float128_t x, const float128_t *arr, int n, float_status_t &status);
+extern float128_t EvenPoly(float128_t x, const float128_t *arr, int n, softfloat_status_t &status);
 
 /* 0 <= x <= pi/4 */
-BX_CPP_INLINE float128_t poly_cos(float128_t x, float_status_t &status)
+BX_CPP_INLINE float128_t poly_cos(float128_t x, softfloat_status_t &status)
 {
     //                 2     4     6     8     10     12     14
     //                x     x     x     x     x      x      x
@@ -181,7 +181,7 @@ BX_CPP_INLINE void sincos_tiny_argument(floatx80 *sin_a, floatx80 *cos_a, floatx
     if (cos_a) *cos_a = floatx80_one;
 }
 
-static floatx80 sincos_approximation(int neg, float128_t r, Bit64u quotient, float_status_t &status)
+static floatx80 sincos_approximation(int neg, float128_t r, Bit64u quotient, softfloat_status_t &status)
 {
     if (quotient & 0x1) {
         r = poly_cos(r, status);
@@ -220,7 +220,7 @@ static floatx80 sincos_approximation(int neg, float128_t r, Bit64u quotient, flo
 //  sin(x+2pi)    =  sin(x)
 //
 
-int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, float_status_t &status)
+int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, softfloat_status_t &status)
 {
     Bit64u aSig0, aSig1 = 0;
     Bit32s aExp, zExp, expDiff;
@@ -308,12 +308,12 @@ int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, float_status_t &status
     return 0;
 }
 
-int fsin(floatx80 &a, float_status_t &status)
+int fsin(floatx80 &a, softfloat_status_t &status)
 {
     return fsincos(a, &a, 0, status);
 }
 
-int fcos(floatx80 &a, float_status_t &status)
+int fcos(floatx80 &a, softfloat_status_t &status)
 {
     return fsincos(a, 0, &a, status);
 }
@@ -345,7 +345,7 @@ int fcos(floatx80 &a, float_status_t &status)
 //           cos(x)
 //
 
-int ftan(floatx80 &a, float_status_t &status)
+int ftan(floatx80 &a, softfloat_status_t &status)
 {
     Bit64u aSig0, aSig1 = 0;
     Bit32s aExp, zExp, expDiff;

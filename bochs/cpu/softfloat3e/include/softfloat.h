@@ -66,8 +66,6 @@ struct softfloat_status_t
     uint8_t extF80_roundingPrecision;
 };
 
-typedef struct softfloat_status_t float_status_t;
-
 /*----------------------------------------------------------------------------
 | Software floating-point rounding mode.
 *----------------------------------------------------------------------------*/

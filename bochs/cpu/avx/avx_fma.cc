@@ -28,7 +28,9 @@
 
 #if BX_SUPPORT_AVX
 
-extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
+#include "softfloat3e/include/softfloat.h"
+
+extern softfloat_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
 
 #include "simd_pfp.h"
 
@@ -43,7 +45,7 @@ extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
     float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());                        \
     float32 op3 = BX_READ_XMM_REG_LO_DWORD(i->src3());                        \
                                                                               \
-    float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);            \
+    softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);        \
     softfloat_status_word_rc_override(status, i);                             \
     op1 = (func)(op1, op2, op3, &status);                                     \
     check_exceptionsSSE(softfloat_getExceptionFlags(&status));                \
@@ -66,7 +68,7 @@ AVX2_FMA_SCALAR_SINGLE(VFNMSUBSS_VpsHssWssR, f32_fnmsub)
     float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());                        \
     float64 op3 = BX_READ_XMM_REG_LO_QWORD(i->src3());                        \
                                                                               \
-    float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);            \
+    softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);        \
     softfloat_status_word_rc_override(status, i);                             \
     op1 = (func)(op1, op2, op3, &status);                                     \
     check_exceptionsSSE(softfloat_getExceptionFlags(&status));                \
@@ -91,7 +93,7 @@ AVX2_FMA_SCALAR_DOUBLE(VFNMSUBSD_VpdHsdWsdR, f64_fnmsub)
     float16 op2 = BX_READ_XMM_REG_LO_WORD(i->src2());                         \
     float16 op3 = BX_READ_XMM_REG_LO_WORD(i->src3());                         \
                                                                               \
-    float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);            \
+    softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);        \
     softfloat_status_word_rc_override(status, i);                             \
     op1 = (func)(op1, op2, op3, &status);                                     \
     check_exceptionsSSE(softfloat_getExceptionFlags(&status));                \
@@ -120,7 +122,7 @@ AVX2_FMA_SCALAR_HALF_PRECISION(VFNMSUBSH_VphHshWshR, f16_fnmsub)
     float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());                        \
     float32 op3 = BX_READ_XMM_REG_LO_DWORD(i->src3());                        \
                                                                               \
-    float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);            \
+    softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);        \
                                                                               \
     BxPackedXmmRegister dest;                                                 \
     dest.xmm64u(0) = (func)(op1, op2, op3, &status);                          \
@@ -146,7 +148,7 @@ FMA4_SINGLE_SCALAR(VFNMSUBSS_VssHssWssVIbR, f32_fnmsub)
     float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());                        \
     float64 op3 = BX_READ_XMM_REG_LO_QWORD(i->src3());                        \
                                                                               \
-    float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);            \
+    softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);        \
                                                                               \
     BxPackedXmmRegister dest;                                                 \
     dest.xmm64u(0) = (func)(op1, op2, op3, &status);                          \

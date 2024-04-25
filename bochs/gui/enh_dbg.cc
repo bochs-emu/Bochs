@@ -1232,7 +1232,7 @@ void InitRegObjects()
         while (--i >= 0)
             RegObject[cpu][i] = (bx_param_num_c *) NULL;
 
-        char pname[16];
+        char pname[20];
         sprintf (pname,"bochs.cpu%d", cpu);    // set the "cpu number" for cpu_list
         cpu_list = (bx_list_c *) SIM->get_param(pname, root_param);
 

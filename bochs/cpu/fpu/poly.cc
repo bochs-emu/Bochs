@@ -24,7 +24,8 @@ these four paragraphs for those parts of this code that are retained.
  * ==========================================================================*/
 
 #include <assert.h>
-#include "softfloat.h"
+
+#include "softfloat3e/include/softfloat.h"
 
 //                            2         3         4               n
 // f(x) ~ C + (C * x) + (C * x) + (C * x) + (C * x) + ... + (C * x)
@@ -37,7 +38,7 @@ these four paragraphs for those parts of this code that are retained.
 //   f(x) ~ [ p(x) + x * q(x) ]
 //
 
-float128_t EvalPoly(float128_t x, const float128_t *arr, int n, float_status_t &status)
+float128_t EvalPoly(float128_t x, const float128_t *arr, int n, softfloat_status_t &status)
 {
     float128_t r = arr[--n];
 
@@ -63,7 +64,7 @@ float128_t EvalPoly(float128_t x, const float128_t *arr, int n, float_status_t &
 //   f(x) ~ [ p(x) + x * q(x) ]
 //
 
-float128_t EvenPoly(float128_t x, const float128_t *arr, int n, float_status_t &status)
+float128_t EvenPoly(float128_t x, const float128_t *arr, int n, softfloat_status_t &status)
 {
      return EvalPoly(f128_mul(x, x, &status), arr, n, status);
 }
@@ -83,7 +84,7 @@ float128_t EvenPoly(float128_t x, const float128_t *arr, int n, float_status_t &
 //   f(x) ~ x * [ p(x) + x * q(x) ]
 //
 
-float128_t OddPoly(float128_t x, const float128_t *arr, int n, float_status_t &status)
+float128_t OddPoly(float128_t x, const float128_t *arr, int n, softfloat_status_t &status)
 {
      return f128_mul(x, EvenPoly(x, arr, n, status), &status);
 }
