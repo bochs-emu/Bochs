@@ -35,7 +35,6 @@
 #define UDP_H
 
 #define UDP_TTL 0x60
-#define UDP_UDPDATALEN 16192
 
 /*
  * Udp protocol header.
@@ -52,8 +51,8 @@ struct udphdr {
  * UDP kernel structures and variables.
  */
 struct udpiphdr {
-	        struct  ipovly ui_i;            /* overlaid ip structure */
-	        struct  udphdr ui_u;            /* udp header */
+    struct  ipovly ui_i;            /* overlaid ip structure */
+    struct  udphdr ui_u;            /* udp header */
 };
 #define ui_mbuf         ui_i.ih_mbuf.mptr
 #define ui_x1           ui_i.ih_x1
@@ -74,15 +73,22 @@ struct udpiphdr {
 
 struct mbuf;
 
+/* Called from slirp_init */
 void udp_init(Slirp *);
+/* Called from slirp_cleanup */
 void udp_cleanup(Slirp *);
+/* Process UDP datagram coming from the guest */
 void udp_input(struct mbuf *, int);
+/* Send UDP datagram to the guest */
 int udp_output(struct socket *, struct mbuf *, struct sockaddr_in *);
+/* Create a host UDP socket, bound to this socket */
 int udp_attach(struct socket *);
+/* Destroy socket */
 void udp_detach(struct socket *);
-struct socket * udp_listen(Slirp *, uint32_t, u_int, uint32_t, u_int,
-                           int);
-int udp_output2(struct socket *so, struct mbuf *m,
-                struct sockaddr_in *saddr, struct sockaddr_in *daddr,
-                int iptos);
+
+/* Listen for incoming UDP datagrams on this haddr+hport */
+struct socket *udp_listen(Slirp *, uint32_t haddr, unsigned hport, uint32_t laddr, unsigned lport, int flags);
+/* Send UDP datagram to the guest (DHCP / TFTP) */
+int udp_output2(struct socket *so, struct mbuf *m, struct sockaddr_in *saddr,
+               struct sockaddr_in *daddr, int iptos);
 #endif

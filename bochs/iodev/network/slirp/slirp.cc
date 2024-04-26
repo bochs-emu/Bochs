@@ -205,33 +205,35 @@ static void slirp_init_once(void)
     loopback_mask = htonl(IN_CLASSA_NET);
 }
 
-Slirp *slirp_new(SlirpConfig *cfg, SlirpCb *callbacks, void *opaque)
+Slirp *slirp_new(const SlirpConfig *cfg, const SlirpCb *callbacks, void *opaque)
 {
     Slirp *slirp = (Slirp*)malloc(sizeof(Slirp));
     memset(slirp, 0, sizeof(Slirp));
 
     slirp_init_once();
 
+    slirp->cfg_version = cfg->version;
+    slirp->opaque = opaque;
+    slirp->cb = callbacks;
     slirp->restricted = cfg->restricted;
+
+    slirp->in_enabled = cfg->in_enabled;
+    slirp->in6_enabled = cfg->in6_enabled;
 
     if_init(slirp);
     ip_init(slirp);
 
-    /* Initialise mbufs *after* setting the MTU */
     m_init(slirp);
 
     slirp->vnetwork_addr = cfg->vnetwork;
     slirp->vnetwork_mask = cfg->vnetmask;
     slirp->vhost_addr = cfg->vhost;
+    slirp->vprefix_addr6 = cfg->vprefix_addr6;
+    slirp->vprefix_len = cfg->vprefix_len;
+    slirp->vhost_addr6 = cfg->vhost6;
     if (cfg->vhostname) {
         slirp_pstrcpy(slirp->client_hostname, sizeof(slirp->client_hostname),
                       cfg->vhostname);
-    }
-    if (cfg->vdomainname) {
-        slirp->vdomainname = strdup(cfg->vdomainname);
-    }
-    if (cfg->tftp_server_name) {
-        slirp->tftp_server_name = strdup(cfg->tftp_server_name);
     }
     if (cfg->tftp_path) {
         slirp->tftp_prefix = strdup(cfg->tftp_path);
@@ -239,42 +241,73 @@ Slirp *slirp_new(SlirpConfig *cfg, SlirpCb *callbacks, void *opaque)
     if (cfg->bootfile) {
         slirp->bootp_filename = strdup(cfg->bootfile);
     }
+    if (cfg->vdomainname) {
+        slirp->vdomainname = strdup(cfg->vdomainname);
+    }
     slirp->vdhcp_startaddr = cfg->vdhcp_start;
     slirp->vnameserver_addr = cfg->vnameserver;
+    slirp->vnameserver_addr6 = cfg->vnameserver6;
+    if (cfg->tftp_server_name) {
+        slirp->tftp_server_name = strdup(cfg->tftp_server_name);
+    }
 
     if (cfg->vdnssearch) {
         translate_dnssearch(slirp, cfg->vdnssearch);
     }
 
-    slirp->cb = callbacks;
-    slirp->opaque = opaque;
+    slirp->disable_host_loopback = cfg->disable_host_loopback;
+    slirp->enable_emu = cfg->enable_emu;
+
+    if (cfg->version >= 3) {
+        slirp->disable_dns = cfg->disable_dns;
+    } else {
+        slirp->disable_dns = false;
+    }
+
+    if (cfg->version >= 4) {
+        slirp->disable_dhcp = cfg->disable_dhcp;
+    } else {
+        slirp->disable_dhcp = false;
+    }
 
     QTAILQ_INSERT_TAIL(&slirp_instances, slirp, entry);
 
     return slirp;
 }
 
-Slirp *slirp_init(int restricted, struct in_addr vnetwork,
+Slirp *slirp_init(int restricted, bool in_enabled, struct in_addr vnetwork,
                   struct in_addr vnetmask, struct in_addr vhost,
-                  const char *vhostname, const char *tftp_path,
-                  const char *bootfile, struct in_addr vdhcp_start,
-                  struct in_addr vnameserver, const char **vdnssearch,
-                  const char *vdomainname, SlirpCb *callbacks, void *opaque)
+                  bool in6_enabled, struct in6_addr vprefix_addr6,
+                  uint8_t vprefix_len, struct in6_addr vhost6,
+                  const char *vhostname, const char *tftp_server_name,
+                  const char *tftp_path, const char *bootfile,
+                  struct in_addr vdhcp_start, struct in_addr vnameserver,
+                  struct in6_addr vnameserver6, const char **vdnssearch,
+                  const char *vdomainname, const SlirpCb *callbacks,
+                  void *opaque)
 {
-  SlirpConfig cfg;
-  memset(&cfg, 0, sizeof(cfg));
-  cfg.restricted = restricted;
-  cfg.vnetwork = vnetwork;
-  cfg.vnetmask = vnetmask;
-  cfg.vhost = vhost;
-  cfg.vhostname = vhostname;
-  cfg.tftp_path = tftp_path;
-  cfg.bootfile = bootfile;
-  cfg.vdhcp_start = vdhcp_start;
-  cfg.vnameserver = vnameserver;
-  cfg.vdnssearch = vdnssearch;
-  cfg.vdomainname = vdomainname;
-  return slirp_new(&cfg, callbacks, opaque);
+    SlirpConfig cfg;
+    memset(&cfg, 0, sizeof(cfg));
+    cfg.version = 1;
+    cfg.restricted = restricted;
+    cfg.in_enabled = in_enabled;
+    cfg.vnetwork = vnetwork;
+    cfg.vnetmask = vnetmask;
+    cfg.vhost = vhost;
+    cfg.in6_enabled = in6_enabled;
+    cfg.vprefix_addr6 = vprefix_addr6;
+    cfg.vprefix_len = vprefix_len;
+    cfg.vhost6 = vhost6;
+    cfg.vhostname = vhostname;
+    cfg.tftp_server_name = tftp_server_name;
+    cfg.tftp_path = tftp_path;
+    cfg.bootfile = bootfile;
+    cfg.vdhcp_start = vdhcp_start;
+    cfg.vnameserver = vnameserver;
+    cfg.vnameserver6 = vnameserver6;
+    cfg.vdnssearch = vdnssearch;
+    cfg.vdomainname = vdomainname;
+    return slirp_new(&cfg, callbacks, opaque);
 }
 
 void slirp_cleanup(Slirp *slirp)
@@ -686,10 +719,10 @@ void slirp_select_poll(fd_set *readfds, fd_set *writefds, fd_set *xfds,
 
 static void arp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
 {
-    struct arphdr *ah = (struct arphdr *)(pkt + ETH_HLEN);
-    uint8_t arp_reply[max(ETH_HLEN + sizeof(struct arphdr), 64)];
+    struct slirp_arphdr *ah = (struct slirp_arphdr *)(pkt + ETH_HLEN);
+    uint8_t arp_reply[max(ETH_HLEN + sizeof(struct slirp_arphdr), 64)];
     struct ethhdr *reh = (struct ethhdr *)arp_reply;
-    struct arphdr *rah = (struct arphdr *)(arp_reply + ETH_HLEN);
+    struct slirp_arphdr *rah = (struct slirp_arphdr *)(arp_reply + ETH_HLEN);
     int ar_op;
     struct ex_list *ex_ptr;
 
@@ -797,9 +830,9 @@ int if_encap(Slirp *slirp, struct mbuf *ifm)
     }
 
     if (!arp_table_search(slirp, iph->ip_dst.s_addr, ethaddr)) {
-        uint8_t arp_req[ETH_HLEN + sizeof(struct arphdr)];
+        uint8_t arp_req[ETH_HLEN + sizeof(struct slirp_arphdr)];
         struct ethhdr *reh = (struct ethhdr *)arp_req;
-        struct arphdr *rah = (struct arphdr *)(arp_req + ETH_HLEN);
+        struct slirp_arphdr *rah = (struct slirp_arphdr *)(arp_req + ETH_HLEN);
 
         if (!ifm->arp_requested) {
             /* If the client addr is not known, send an ARP request */

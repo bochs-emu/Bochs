@@ -233,13 +233,11 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
   n_hostfwd = 0;
   /* default settings according to historic slirp */
   memset(&config, 0, sizeof(config));
-#if BX_HAVE_LIBSLIRP
   config.version = 4;
   config.in_enabled = true;
   config.disable_host_loopback = false;
   config.enable_emu = false;
   config.disable_dns = false;
-#endif
   config.restricted = false;
   config.vnetwork.s_addr = htonl(0x0a000200);    /* 10.0.2.0 */
   config.vnetmask.s_addr = htonl(0xffffff00);    /* 255.255.255.0 */

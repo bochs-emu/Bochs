@@ -171,10 +171,6 @@ void free(void *ptr);
 #include "if.h"
 #include "main.h"
 #include "misc.h"
-#ifdef USE_PPP
-#include "ppp/pppd.h"
-#include "ppp/ppp.h"
-#endif
 
 #include "bootp.h"
 #include "tftp.h"
@@ -188,11 +184,8 @@ struct ethhdr {
     unsigned short h_proto;            /* packet type ID field */
 };
 
-#if defined(_MSC_VER)
-#pragma pack(push, 1)
-#endif
-
-struct arphdr {
+SLIRP_PACKED_BEGIN
+struct slirp_arphdr {
     unsigned short ar_hrd;      /* format of hardware address */
     unsigned short ar_pro;      /* format of protocol address */
     unsigned char  ar_hln;      /* length of hardware address */
@@ -202,48 +195,56 @@ struct arphdr {
     /*
      *  Ethernet looks like this : This bit is variable sized however...
      */
-    unsigned char ar_sha[ETH_ALEN]; /* sender hardware address */
-    uint32_t      ar_sip;           /* sender IP address       */
-    unsigned char ar_tha[ETH_ALEN]; /* target hardware address */
-    uint32_t      ar_tip;           /* target IP address       */
-} GCC_ATTRIBUTE((packed));
-
-#if defined(_MSC_VER)
-#pragma pack(pop)
-#endif
+    uint8_t  ar_sha[ETH_ALEN]; /* sender hardware address */
+    uint32_t ar_sip;           /* sender IP address       */
+    uint8_t  ar_tha[ETH_ALEN]; /* target hardware address */
+    uint32_t ar_tip;           /* target IP address       */
+} SLIRP_PACKED_END;
 
 #define ARP_TABLE_SIZE 16
 
 typedef struct ArpTable {
-    struct arphdr table[ARP_TABLE_SIZE];
+    struct slirp_arphdr table[ARP_TABLE_SIZE];
     int next_victim;
 } ArpTable;
 
-void arp_table_add(Slirp *slirp, uint32_t ip_addr, const uint8_t ethaddr[ETH_ALEN]);
+/* Add a new ARP entry for the given addresses */
+void arp_table_add(Slirp *slirp, uint32_t ip_addr, 
+                   const uint8_t ethaddr[ETH_ALEN]);
 
+/* Look for an ARP entry for the given IP address */
 bool arp_table_search(Slirp *slirp, uint32_t ip_addr,
                       uint8_t out_ethaddr[ETH_ALEN]);
 
 struct Slirp {
     QTAILQ_ENTRY(Slirp) entry;
-    u_int time_fasttimo;
-    u_int last_slowtimo;
+    int cfg_version;
+
+    unsigned time_fasttimo;
+    unsigned last_slowtimo;
     bool do_slowtimo;
+
+    bool in_enabled, in6_enabled;
 
     /* virtual network configuration */
     struct in_addr vnetwork_addr;
     struct in_addr vnetwork_mask;
     struct in_addr vhost_addr;
+    struct in6_addr vprefix_addr6;
+    uint8_t vprefix_len;
     struct in6_addr vhost_addr6;
     bool disable_dhcp; /* slirp will not reply to any DHCP requests */
     struct in_addr vdhcp_startaddr;
     struct in_addr vnameserver_addr;
+    struct in6_addr vnameserver_addr6;
 
     struct in_addr client_ipaddr;
     char client_hostname[33];
-    char *vdomainname;
 
     int restricted;
+
+    bool disable_host_loopback;
+
     struct ex_list *exec_list;
 
     /* mbuf states */
@@ -265,6 +266,7 @@ struct Slirp {
     char *bootp_filename;
     size_t vdnssearch_len;
     uint8_t *vdnssearch;
+    char *vdomainname;
 
     /* tcp states */
     struct socket tcb;
@@ -281,14 +283,18 @@ struct Slirp {
     struct socket *icmp_last_so;
 
     /* tftp states */
-    char *tftp_server_name;
     char *tftp_prefix;
     struct tftp_session tftp_sessions[TFTP_SESSIONS_MAX];
+    char *tftp_server_name;
 
     ArpTable arp_table;
 
-    SlirpCb *cb;
+    bool enable_emu;
+
+    const SlirpCb *cb;
     void *opaque;
+
+    bool disable_dns; /* slirp will not redirect/serve any DNS packet */
 };
 
 extern Slirp *slirp_instance;
@@ -302,6 +308,9 @@ void if_start(Slirp *);
 #else
 void if_start(struct ttys *);
 #endif
+
+/* Get the address of the DNS server on the host side */
+int get_dns_addr(struct in_addr *pdns_addr);
 
 #ifndef HAVE_STRERROR
  char *strerror(int error);
