@@ -128,6 +128,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+enum {
+  BX_MWAIT_WAKEUP_ON_EVENT_WHEN_INTERRUPT_DISABLE = 0x1,
+  BX_MWAIT_TIMED_MWAITX = 0x2,
+  BX_MWAIT_MONITORLESS_MWAIT = 0x4
+};
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 {
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -151,19 +157,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
 
   // extension supported:
   //   ECX[0] - interrupt MWAIT even if EFLAGS.IF = 0
-  //   ECX[1] - timed MWAITX
+  //   ECX[1] - timed MWAITX (MWAITX only)
+  //   ECX[2] - monitorless MWAIT
   // all other bits are reserved
-  if (i->getIaOpcode() == BX_IA_MWAITX) {
-    if (RCX & ~(BX_CONST64(3))) {
-      BX_ERROR(("%s: incorrect optional extensions in RCX", i->getIaOpcodeNameShort()));
-      exception(BX_GP_EXCEPTION, 0);
-    }
-  }
-  else {
-    if (RCX & ~(BX_CONST64(1))) {
-      BX_ERROR(("%s: incorrect optional extensions in RCX", i->getIaOpcodeNameShort()));
-      exception(BX_GP_EXCEPTION, 0);
-    }
+  Bit64u supported_bits = BX_MWAIT_WAKEUP_ON_EVENT_WHEN_INTERRUPT_DISABLE;
+  if (i->getIaOpcode() == BX_IA_MWAITX)
+    supported_bits |= BX_MWAIT_TIMED_MWAITX;
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MONITORLESS_MWAIT))
+    supported_bits |= BX_MWAIT_MONITORLESS_MWAIT;
+
+  if (RCX & ~supported_bits) {
+    BX_ERROR(("%s: incorrect optional extensions in RCX", i->getIaOpcodeNameShort()));
+    exception(BX_GP_EXCEPTION, 0);
   }
 
 #if BX_SUPPORT_SVM
@@ -175,22 +180,25 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MWAIT(bxInstruction_c *i)
   }
 #endif
 
-  // If monitor has already triggered, we just return.
-  bool monitor_armed = true;
-  if (i->getIaOpcode() == BX_IA_MWAITX) {
-    if (! BX_CPU_THIS_PTR monitor.armed_by_monitorx()) {
-      monitor_armed = false;
+  if (! (ECX & BX_MWAIT_MONITORLESS_MWAIT)) {
+    // If monitor has already triggered, we just return.
+    bool monitor_armed = true;
+    if (i->getIaOpcode() == BX_IA_MWAITX) {
+      if (! BX_CPU_THIS_PTR monitor.armed_by_monitorx())
+        monitor_armed = false;
+    }
+    else {
+      if (! BX_CPU_THIS_PTR monitor.armed_by_monitor())
+        monitor_armed = false;
+    }
+
+    if (! monitor_armed) {
+      BX_DEBUG(("%s: the MONITOR was not armed or already triggered", i->getIaOpcodeNameShort()));
+      BX_NEXT_TRACE(i);
     }
   }
   else {
-    if (! BX_CPU_THIS_PTR monitor.armed_by_monitor()) {
-      monitor_armed = false;
-    }
-  }
-
-  if (! monitor_armed) {
-    BX_DEBUG(("%s: the MONITOR was not armed or already triggered", i->getIaOpcodeNameShort()));
-    BX_NEXT_TRACE(i);
+    BX_CPU_THIS_PTR monitor.reset_monitor(); // Monitorless MWAIT
   }
 
   static bool mwait_is_nop = SIM->get_param_bool(BXPN_MWAIT_IS_NOP)->get();

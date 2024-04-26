@@ -49,6 +49,7 @@ x86_feature(BX_ISA_SSE4_2, "sse4_2")                                    /* SSE4_
 x86_feature(BX_ISA_POPCNT, "popcnt")                                    /* POPCNT instruction */
 x86_feature(BX_ISA_MONITOR_MWAIT, "mwait")                              /* MONITOR/MWAIT instruction */
 x86_feature(BX_ISA_WAITPKG, "waitpkg")                                  /* TPAUSE/UMONITOR/UMWAIT instructions */
+x86_feature(BX_ISA_MONITORLESS_MWAIT, "monitorless_mwait")              /* MONITOR-less MWAIT extension */
 x86_feature(BX_ISA_MONITORX_MWAITX, "mwaitx")                           /* MONITORX/MWAITX instruction (AMD) */
 x86_feature(BX_ISA_VMX, "vmx")                                          /* VMX instruction */
 x86_feature(BX_ISA_SMX, "smx")                                          /* SMX instruction */

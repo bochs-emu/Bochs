@@ -74,6 +74,40 @@ void bx_cpuid_t::init()
   ia_extensions_bitmask[0] = (1 << BX_ISA_386);
 }
 
+void bx_cpuid_t::get_std_cpuid_monitor_mwait_leaf(cpuid_function_t *leaf, Bit32u edx_power_states) const
+{
+  // CPUID function 0x00000005 - MONITOR/MWAIT Leaf
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  // EAX - Smallest monitor-line size in bytes (cache line size)
+  // EBX - Largest  monitor-line size in bytes (cache line size)
+  // ECX -
+  //   [31:4] - reserved
+  //    [3:3] - Monitorless MWAIT support
+  //    [2:2] - reserved
+  //    [1:1] - exit MWAIT even with EFLAGS.IF = 0
+  //    [0:0] - MONITOR/MWAIT extensions are supported
+  // EDX -
+  //  [03-00] - number of C0 sub C-states supported using MWAIT
+  //  [07-04] - number of C1 sub C-states supported using MWAIT
+  //  [11-08] - number of C2 sub C-states supported using MWAIT
+  //  [15-12] - number of C3 sub C-states supported using MWAIT
+  //  [19-16] - number of C4 sub C-states supported using MWAIT
+  //  [31-20] - reserved
+  leaf->eax = CACHE_LINE_SIZE;
+  leaf->ebx = CACHE_LINE_SIZE;
+  leaf->ecx = 0x3;
+  if (is_cpu_extension_supported(BX_ISA_MONITORLESS_MWAIT))
+    leaf->ecx |= (1<<3);
+  leaf->edx = edx_power_states;
+#else
+  leaf->eax = 0;
+  leaf->ebx = 0;
+  leaf->ecx = 0;
+  leaf->edx = 0;
+#endif
+}
+
 #if BX_SUPPORT_APIC
 
 BX_CPP_INLINE static Bit32u ilog2(Bit32u x)
@@ -1244,6 +1278,16 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
   //   [16:16]  reserved
   //   [17:17]  UIRET sets UIF to the RFLAGS[1] image loaded from the stack
   //   [18:18]  CET_SSS
+  //   [22:19]  reserved
+
+  //   [23:23]  to be used by VMM: MWAIT and CPUID LEAF5 support (introduced with Monitorless MWAIT support)
+#if BX_SUPPORT_MONITOR_MWAIT
+  if (is_cpu_extension_supported(BX_ISA_MONITOR_MWAIT))
+    if (is_cpu_extension_supported(BX_ISA_MONITORLESS_MWAIT))
+      edx |= BX_CPUID_STD7_SUBLEAF1_EDX_MWAIT_AND_LEAF5;
+#endif
+
+  //   [31:24]  reserved
 
   return edx;
 }
