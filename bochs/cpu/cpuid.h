@@ -627,7 +627,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [14:14]  PREFETCHITI: PREFETCHIT0/T1 instruction
 //   [15:15]  USER_MSR: support for URDMSR/UWRMSR instructions
 //   [16:16]  reserved
-//   [17:17]  UIRET sets UIF to the RFLAGS[1] image loaded from the stack
+//   [17:17]  Flexible UIRET: UIRET sets UIF to the RFLAGS[1] image loaded from the stack
 //   [18:18]  CET_SSS
 //   [22:19]  reserved
 //   [23:23]  MWAIT and CPUID LEAF5 support

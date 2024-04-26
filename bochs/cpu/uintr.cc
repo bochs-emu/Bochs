@@ -116,7 +116,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UIRET(bxInstruction_c *i)
   BX_CPU_THIS_PTR monitor.reset_monitor();
 #endif
 
-  BX_CPU_THIS_PTR uintr.UIF = 1;
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FLEXIBLE_UIRET))
+    BX_CPU_THIS_PTR uintr.UIF = (new_eflags & 0x2) != 0;
+  else
+    BX_CPU_THIS_PTR uintr.UIF = 1;
   uintr_control(); // potentially enable user interrupt delivery
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_UIRET,
