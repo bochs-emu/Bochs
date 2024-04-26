@@ -623,7 +623,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [8:8]    AMX-COMPLEX instructions
 //   [9:9]    reserved
 //   [10:10]  AVX-VNNI-INT16 instructions
-//   [13:11]  reserved
+//   [12:11]  reserved
+//   [13:13]  User Timer support
 //   [14:14]  PREFETCHITI: PREFETCHIT0/T1 instruction
 //   [15:15]  USER_MSR: support for URDMSR/UWRMSR instructions
 //   [16:16]  reserved
@@ -646,7 +647,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_STD7_SUBLEAF1_EDX_AVX_VNNI_INT16         (1 << 10)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED11             (1 << 11)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED12             (1 << 12)
-#define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED13             (1 << 13)
+#define BX_CPUID_STD7_SUBLEAF1_EDX_USER_TIMER             (1 << 13)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_PREFETCHI              (1 << 14)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_USER_MSR               (1 << 15)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED16             (1 << 16)

@@ -1272,7 +1272,8 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
     edx |= BX_CPUID_STD7_SUBLEAF1_EDX_AVX_VNNI_INT16;
 #endif
 
-  //   [13:11]  reserved
+  //   [12:11]  reserved
+  //   [13:13]  User Timer support
   //   [14:14]  PREFETCHITI: PREFETCHIT0/T1 instruction
   //   [15:15]  USER_MSR: support for URDMSR/UWRMSR instructions
   //   [16:16]  reserved

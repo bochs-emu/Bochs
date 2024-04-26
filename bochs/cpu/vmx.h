@@ -208,6 +208,7 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_16BIT_CONTROL_EPTP_INDEX                      0x00000004 /* #VE Exception */
 #define VMCS_16BIT_CONTROL_HLAT_PREFIX                     0x00000006 /* HLAT */
 #define VMCS_16BIT_CONTROL_LAST_PID_POINTER_INDEX          0x00000008 /* IPI Virtualization */
+#define VMCS_16BIT_CONTROL_VIRTUAL_TIMER_VECTOR            0x0000000A /* APIC timer virtualization (not implemented) */
 
 /* VMCS 16-bit guest-state fields */
 /* binary 0000_10xx_xxxx_xxx0 */
@@ -309,6 +310,9 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_MASK_HI             0x0000204B
 #define VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_SHADOW              0x0000204C
 #define VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_SHADOW_HI           0x0000204D
+#define VMCS_64BIT_CONTROL_GUEST_DEADLINE_SHADOW              0x0000204E /* APIC timer virtualization (not implemented) */
+#define VMCS_64BIT_CONTROL_GUEST_DEADLINE_SHADOW_HI           0x0000204F
+
 
 /* VMCS 64-bit read only data fields */
 /* binary 0010_01xx_xxxx_xxx0 */
@@ -343,6 +347,10 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_64BIT_GUEST_IA32_RTIT_CTL_HI                  0x00002815
 #define VMCS_64BIT_GUEST_IA32_PKRS                         0x00002818 /* Supervisor-Mode Protection Keys */
 #define VMCS_64BIT_GUEST_IA32_PKRS_HI                      0x00002819
+#define VMCS_64BIT_GUEST_IA32_SPEC_CTRL                    0x0000282E /* MSR_IA32_SPEC_CTRL virtualization (not implemented) */
+#define VMCS_64BIT_GUEST_IA32_SPEC_CTRL_HI                 0x0000282F
+#define VMCS_64BIT_GUEST_DEADLINE                          0x00002830 /* APIC timer virtualization (not implemented) */
+#define VMCS_64BIT_GUEST_DEADLINE_HI                       0x00002831
 
 /* VMCS 64-bit host state fields */
 /* binary 0010_11xx_xxxx_xxx0 */
@@ -354,6 +362,8 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_64BIT_HOST_IA32_PERF_GLOBAL_CTRL_HI           0x00002C05
 #define VMCS_64BIT_HOST_IA32_PKRS                          0x00002C06 /* Supervisor-Mode Protection Keys */
 #define VMCS_64BIT_HOST_IA32_PKRS_HI                       0x00002C07
+#define VMCS_64BIT_HOST_IA32_SPEC_CTRL                     0x00002C1A /* MSR_IA32_SPEC_CTRL virtualization (not implemented) */
+#define VMCS_64BIT_HOST_IA32_SPEC_CTRL_HI                  0x00002C1B
 
 /* VMCS 32_bit control fields */
 /* binary 0100_00xx_xxxx_xxx0 */
