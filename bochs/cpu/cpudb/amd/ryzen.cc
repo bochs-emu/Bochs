@@ -174,7 +174,7 @@ void ryzen_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function
     get_std_cpuid_leaf_1(leaf);
     return;
   case 0x00000005:
-    get_std_cpuid_monitor_mwait_leaf(leaf);
+    get_std_cpuid_monitor_mwait_leaf(leaf, 0);
     return;
   case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
     get_leaf(leaf, 0x00000004, 0x00000000, 0x00000001, 0x00000000);
