@@ -490,11 +490,11 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   }
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
-  if (enh_dbg_gui_enabled) {
+  if (gui_opts.enh_dbg_enabled) {
     SIM->set_debug_gui(1);
 #ifdef WIN32
     if (gui_ci) {
-      sdl2_enh_dbg_global_ini = enh_dbg_global_ini;
+      sdl2_enh_dbg_global_ini = gui_opts.enh_dbg_global_ini;
       // on Windows the debugger gui must run in a separate thread
       DWORD threadID;
       CreateThread(NULL, 0, DebugGuiThread, NULL, 0, &threadID);
@@ -502,7 +502,7 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
       BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
     }
 #else
-    init_debug_dialog(enh_dbg_global_ini);
+    init_debug_dialog(gui_opts.enh_dbg_global_ini);
 #endif
   }
 #endif
@@ -843,7 +843,7 @@ void bx_sdl2_gui_c::handle_events(void)
           break;
         }
 
-        if (gui_nokeyrepeat && sdl_event.key.repeat) {
+        if (gui_opts.nokeyrepeat && sdl_event.key.repeat) {
           break;
         }
         // convert sym->bochs code
@@ -1376,7 +1376,7 @@ void bx_sdl2_gui_c::set_mouse_mode_absxy(bool mode)
 #if BX_SHOW_IPS
 void bx_sdl2_gui_c::show_ips(Bit32u ips_count)
 {
-  if (!gui_hide_ips && !sdl_ips_update) {
+  if (!gui_opts.hide_ips && !sdl_ips_update) {
     ips_count /= 1000;
     sprintf(sdl_ips_text, "IPS: %u.%3.3uM", ips_count / 1000, ips_count % 1000);
     sdl_ips_update = 1;

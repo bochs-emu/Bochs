@@ -401,14 +401,16 @@ protected:
   bool fullscreen_mode;
   Bit32u marker_count;
   // display library options
+  struct {
 #if BX_SHOW_IPS
-  bool gui_hide_ips;
+    bool hide_ips;
 #endif
-  bool gui_nokeyrepeat;
+    bool nokeyrepeat;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
-  bool enh_dbg_gui_enabled;
-  bool enh_dbg_global_ini;
+    bool enh_dbg_enabled;
+    bool enh_dbg_global_ini;
 #endif
+  } gui_opts;
 };
 
 

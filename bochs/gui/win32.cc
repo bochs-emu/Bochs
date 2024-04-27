@@ -675,14 +675,14 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     }
   }
 
-  win32_nokeyrepeat = gui_nokeyrepeat;
-  hideIPS = gui_hide_ips;
+  win32_nokeyrepeat = gui_opts.nokeyrepeat;
+  hideIPS = gui_opts.hide_ips;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
-  if (enh_dbg_gui_enabled) {
+  if (gui_opts.enh_dbg_enabled) {
     if (gui_ci) {
       gui_debug = TRUE;
       SIM->set_debug_gui(1);
-      win32_enh_dbg_global_ini = enh_dbg_global_ini;
+      win32_enh_dbg_global_ini = gui_opts.enh_dbg_global_ini;
     } else {
       BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
     }

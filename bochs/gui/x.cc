@@ -890,9 +890,9 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
   // initialize debugger gui
-  if (enh_dbg_gui_enabled) {
+  if (gui_opts.enh_dbg_enabled) {
     SIM->set_debug_gui(1);
-    init_debug_dialog(enh_dbg_global_ini);
+    init_debug_dialog(gui_opts.enh_dbg_global_ini);
   }
 #endif
 
@@ -953,7 +953,7 @@ void bx_x_gui_c::handle_events(void)
     XNextEvent(bx_x_display, &report);
     current_z = 0;
 
-    if (gui_nokeyrepeat && (report.type == KeyRelease) && X11_KeyRepeat(bx_x_display, &report)) {
+    if (gui_opts.nokeyrepeat && (report.type == KeyRelease) && X11_KeyRepeat(bx_x_display, &report)) {
       return;
     }
 
@@ -1705,7 +1705,7 @@ void bx_x_gui_c::set_mouse_mode_absxy(bool mode)
 void bx_x_gui_c::show_ips(Bit32u ips_count)
 {
   if (x11_info_msg_counter == 0) {
-    if (!x11_ips_update && !gui_hide_ips) {
+    if (!x11_ips_update && !gui_opts.hide_ips) {
       ips_count /= 1000;
       sprintf(x11_ips_text, "IPS: %u.%3.3uM", ips_count / 1000, ips_count % 1000);
       x11_ips_update = 1;
