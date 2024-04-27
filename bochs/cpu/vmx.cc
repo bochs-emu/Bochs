@@ -40,6 +40,7 @@ extern VMCS_Mapping vmcs_map;
 
 #if BX_SUPPORT_VMX >= 2
 extern bool isValidMSR_PAT(Bit64u pat_msr);
+extern bool isValidMSR_IA32_SPEC_CTRL(Bit64u val_64);
 #endif
 
 #if BX_SUPPORT_CET
@@ -1234,6 +1235,14 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
       return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
   }
+
+  if (vm->vmexit_ctrls2.LOAD_HOST_IA32_SPEC_CTRL()) {
+    host_state->ia32_spec_ctrl_msr = VMread64(VMCS_64BIT_HOST_IA32_SPEC_CTRL);
+    if (! isValidMSR_IA32_SPEC_CTRL(host_state->ia32_spec_ctrl_msr)) {
+      BX_ERROR(("VMFAIL: invalid value in host IA32_SPEC_CTRL_MSR"));
+      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
+    }
+  }
 #endif
 
   host_state->rsp = (bx_address) VMread_natural(VMCS_HOST_RSP);
@@ -1843,6 +1852,14 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
   }
+
+  if (vm->vmentry_ctrls.LOAD_GUEST_IA32_SPEC_CTRL()) {
+    guest.ia32_spec_ctrl_msr = VMread64(VMCS_64BIT_GUEST_IA32_SPEC_CTRL);
+    if (! isValidMSR_IA32_SPEC_CTRL(guest.ia32_spec_ctrl_msr)) {
+      BX_ERROR(("VMFAIL: invalid value in guest MSR_IA32_SPEC_CTRL"));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+  }
 #endif
 
   guest.rip = VMread_natural(VMCS_GUEST_RIP);
@@ -2157,6 +2174,10 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 #if BX_SUPPORT_VMX >= 2
   if (vm->vmentry_ctrls.LOAD_PAT_MSR()) {
     BX_CPU_THIS_PTR msr.pat = guest.pat_msr;
+  }
+
+  if (vm->vmentry_ctrls.LOAD_GUEST_IA32_SPEC_CTRL()) {
+    BX_CPU_THIS_PTR msr.ia32_spec_ctrl = guest.ia32_spec_ctrl_msr;
   }
 #endif
 
@@ -2670,6 +2691,9 @@ void BX_CPU_C::VMexitLoadHostState(void)
 #if BX_SUPPORT_VMX >= 2
   if (vm->vmexit_ctrls1.LOAD_PAT_MSR()) {
     BX_CPU_THIS_PTR msr.pat = host_state->pat_msr;
+  }
+  if (vm->vmexit_ctrls2.LOAD_HOST_IA32_SPEC_CTRL()) {
+    BX_CPU_THIS_PTR msr.ia32_spec_ctrl = host_state->ia32_spec_ctrl_msr;
   }
 #endif
 
@@ -4248,6 +4272,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
 #if BX_SUPPORT_X86_64
   BXRS_HEX_PARAM_FIELD(host, efer_msr, vm->host_state.efer_msr);
 #endif
+  BXRS_HEX_PARAM_FIELD(host, ia32_spec_ctrl_msr, vm->host_state.ia32_spec_ctrl_msr);
 #endif
 #if BX_SUPPORT_CET
   BXRS_HEX_PARAM_FIELD(host, ia32_s_cet_msr, vm->host_state.msr_ia32_s_cet);

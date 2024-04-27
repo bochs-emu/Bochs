@@ -347,7 +347,7 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_64BIT_GUEST_IA32_RTIT_CTL_HI                  0x00002815
 #define VMCS_64BIT_GUEST_IA32_PKRS                         0x00002818 /* Supervisor-Mode Protection Keys */
 #define VMCS_64BIT_GUEST_IA32_PKRS_HI                      0x00002819
-#define VMCS_64BIT_GUEST_IA32_SPEC_CTRL                    0x0000282E /* MSR_IA32_SPEC_CTRL virtualization (not implemented) */
+#define VMCS_64BIT_GUEST_IA32_SPEC_CTRL                    0x0000282E /* MSR_IA32_SPEC_CTRL virtualization */
 #define VMCS_64BIT_GUEST_IA32_SPEC_CTRL_HI                 0x0000282F
 #define VMCS_64BIT_GUEST_DEADLINE                          0x00002830 /* APIC timer virtualization (not implemented) */
 #define VMCS_64BIT_GUEST_DEADLINE_HI                       0x00002831
@@ -362,7 +362,7 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_64BIT_HOST_IA32_PERF_GLOBAL_CTRL_HI           0x00002C05
 #define VMCS_64BIT_HOST_IA32_PKRS                          0x00002C06 /* Supervisor-Mode Protection Keys */
 #define VMCS_64BIT_HOST_IA32_PKRS_HI                       0x00002C07
-#define VMCS_64BIT_HOST_IA32_SPEC_CTRL                     0x00002C1A /* MSR_IA32_SPEC_CTRL virtualization (not implemented) */
+#define VMCS_64BIT_HOST_IA32_SPEC_CTRL                     0x00002C1A /* MSR_IA32_SPEC_CTRL virtualization */
 #define VMCS_64BIT_HOST_IA32_SPEC_CTRL_HI                  0x00002C1B
 
 /* VMCS 32_bit control fields */
@@ -652,6 +652,8 @@ typedef struct bx_VMCS_GUEST_STATE
    Bit64u pdptr[4];
 #endif
 
+   Bit64u ia32_spec_ctrl_msr;
+
 #if BX_SUPPORT_CET
    Bit64u msr_ia32_s_cet;
    bx_address ssp;
@@ -696,6 +698,7 @@ typedef struct bx_VMCS_HOST_STATE
    Bit64u efer_msr;
 #endif
    Bit64u pat_msr;
+   Bit64u ia32_spec_ctrl_msr;
 #endif
 
 #if BX_SUPPORT_CET
