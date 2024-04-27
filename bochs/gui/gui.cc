@@ -155,6 +155,10 @@ bx_gui_c::bx_gui_c(void): disp_mode(DISP_MODE_SIM)
   memset(palette, 0, sizeof(palette));
   memset(vga_charmap[0], 0, 0x2000);
   memset(vga_charmap[1], 0, 0x2000);
+#if BX_SHOW_IPS
+  gui_hide_ips = 0;
+#endif
+  gui_nokeyrepeat = 0;
 }
 
 bx_gui_c::~bx_gui_c()
