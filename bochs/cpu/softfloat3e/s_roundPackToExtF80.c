@@ -105,7 +105,7 @@ extFloat80_t
                 softfloat_raiseFlags(status, softfloat_flag_overflow);
                 exp -= 0x6000;
             }
-            else {
+            if ((0x7FFE < exp) || ((exp == 0x7FFE) && ((uint64_t) (sig + roundIncrement) < sig))) {
                 goto overflow;
             }
         }
@@ -179,7 +179,7 @@ extFloat80_t
                 softfloat_raiseFlags(status, softfloat_flag_overflow);
                 exp -= 0x6000;
             }
-            else {
+            if ((0x7FFE < exp) || ((exp == 0x7FFE) && (sig == UINT64_C(0xFFFFFFFFFFFFFFFF)) && doIncrement)) {
                 /*----------------------------------------------------------------
                 *----------------------------------------------------------------*/
                 roundMask = 0;
