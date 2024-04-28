@@ -59,7 +59,6 @@ SLIRP_OBJS = \
 	slirp/arp_table.o \
 	slirp/bootp.o \
 	slirp/cksum.o \
-	slirp/compat.o \
 	slirp/dnssearch.o \
 	slirp/if.o \
 	slirp/ip_icmp.o \

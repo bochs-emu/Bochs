@@ -81,7 +81,7 @@ static int icmp_send(struct socket *so, struct mbuf *m, int hlen)
     struct ip *ip = mtod(m, struct ip *);
     struct sockaddr_in addr;
 
-    so->s = qemu_socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP);
+    so->s = slirp_socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP);
     if (so->s == -1) {
         return -1;
     }
@@ -430,7 +430,7 @@ void icmp_receive(struct socket *so)
     icp = mtod(m, struct icmp *);
 
     id = icp->icmp_id;
-    len = qemu_recv(so->s, icp, m->m_len, 0);
+    len = recv(so->s, icp, m->m_len, 0);
     icp->icmp_id = id;
 
     m->m_data -= hlen;

@@ -335,14 +335,14 @@ int tcp_fconnect(struct socket *so)
   DEBUG_CALL("tcp_fconnect");
   DEBUG_ARG("so = %lx", (long )so);
 
-  if( (ret = so->s = qemu_socket(AF_INET,SOCK_STREAM,0)) >= 0) {
+  if( (ret = so->s = slirp_socket(AF_INET,SOCK_STREAM,0)) >= 0) {
     int opt, s=so->s;
     struct sockaddr_in addr;
 
-    qemu_set_nonblock(s);
-    socket_set_fast_reuse(s);
+    slirp_set_nonblock(s);
+    slirp_socket_set_fast_reuse(s);
     opt = 1;
-    qemu_setsockopt(s, SOL_SOCKET, SO_OOBINLINE, &opt, sizeof(opt));
+    setsockopt(s, SOL_SOCKET, SO_OOBINLINE, &opt, sizeof(opt));
 
     addr.sin_family = AF_INET;
     if ((so->so_faddr.s_addr & slirp->vnetwork_mask.s_addr) ==
@@ -427,11 +427,11 @@ void tcp_connect(struct socket *inso)
         tcp_close(sototcpcb(so)); /* This will sofree() as well */
         return;
     }
-    qemu_set_nonblock(s);
-    socket_set_fast_reuse(s);
+    slirp_set_nonblock(s);
+    slirp_socket_set_fast_reuse(s);
     opt = 1;
-    qemu_setsockopt(s, SOL_SOCKET, SO_OOBINLINE, &opt, sizeof(int));
-    socket_set_nodelay(s);
+    setsockopt(s, SOL_SOCKET, SO_OOBINLINE, &opt, sizeof(int));
+    slirp_socket_set_nodelay(s);
 
     so->so_fport = addr.sin_port;
     so->so_faddr = addr.sin_addr;

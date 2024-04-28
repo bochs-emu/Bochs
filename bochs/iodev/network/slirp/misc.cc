@@ -132,7 +132,7 @@ fork_exec(struct socket *so, const char *ex, int do_pty)
 		addr.sin_port = 0;
 		addr.sin_addr.s_addr = INADDR_ANY;
 
-		if ((s = qemu_socket(AF_INET, SOCK_STREAM, 0)) < 0 ||
+		if ((s = slirp_socket(AF_INET, SOCK_STREAM, 0)) < 0 ||
 		    bind(s, (struct sockaddr *)&addr, addrlen) < 0 ||
 		    listen(s, 1) < 0) {
 #ifdef DEBUG
@@ -163,7 +163,7 @@ fork_exec(struct socket *so, const char *ex, int do_pty)
                  * Connect to the socket
                  * XXX If any of these fail, we're in trouble!
                  */
-                s = qemu_socket(AF_INET, SOCK_STREAM, 0);
+                s = slirp_socket(AF_INET, SOCK_STREAM, 0);
                 addr.sin_addr = loopback_addr;
                 do {
                     ret = connect(s, (struct sockaddr *)&addr, addrlen);
@@ -231,10 +231,10 @@ fork_exec(struct socket *so, const char *ex, int do_pty)
                     so->s = accept(s, (struct sockaddr *)&addr, &addrlen);
                 } while (so->s < 0 && errno == EINTR);
                 closesocket(s);
-                socket_set_fast_reuse(so->s);
+                slirp_socket_set_fast_reuse(so->s);
                 opt = 1;
-                qemu_setsockopt(so->s, SOL_SOCKET, SO_OOBINLINE, &opt, sizeof(int));
-		qemu_set_nonblock(so->s);
+                setsockopt(so->s, SOL_SOCKET, SO_OOBINLINE, &opt, sizeof(int));
+                slirp_set_nonblock(so->s);
 
 		/* Append the telnet options now */
                 if (so->so_m != NULL && do_pty == 1)  {

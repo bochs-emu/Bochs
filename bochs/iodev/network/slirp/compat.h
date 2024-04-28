@@ -76,19 +76,4 @@ typedef Bit64s ssize_t;
 # define EWOULDBLOCK  WSAEWOULDBLOCK
 #endif
 
-// missing functions
-int qemu_socket(int domain, int type, int protocol);
-#ifdef _WIN32
-#define qemu_setsockopt(sockfd, level, optname, optval, optlen) \
-    setsockopt(sockfd, level, optname, (const char *)optval, optlen)
-#define qemu_recv(a,b,c,d) recv(a,(char*)b,c,d)
-#else
-#define qemu_setsockopt(sockfd, level, optname, optval, optlen) \
-    setsockopt(sockfd, level, optname, (const void *)optval, optlen)
-#define qemu_recv(a,b,c,d) recv(a,b,c,d)
-#endif
-int socket_set_fast_reuse(int fd);
-int socket_set_nodelay(int fd);
-void qemu_set_nonblock(int fd);
-
 #endif

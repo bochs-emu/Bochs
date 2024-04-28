@@ -326,7 +326,7 @@ int udp_output(struct socket *so, struct mbuf *m,
 int
 udp_attach(struct socket *so)
 {
-  if((so->s = qemu_socket(AF_INET,SOCK_DGRAM,0)) != -1) {
+  if((so->s = slirp_socket(AF_INET,SOCK_DGRAM,0)) != -1) {
     so->so_expire = curtime + SO_EXPIRE;
     slirp_insque(so, &so->slirp->udb);
   }
@@ -374,7 +374,7 @@ udp_listen(Slirp *slirp, uint32_t haddr, u_int hport, uint32_t laddr,
 	if (!so) {
 	    return NULL;
 	}
-	so->s = qemu_socket(AF_INET,SOCK_DGRAM,0);
+	so->s = slirp_socket(AF_INET,SOCK_DGRAM,0);
 	so->so_expire = curtime + SO_EXPIRE;
 	slirp_insque(so, &slirp->udb);
 
@@ -386,7 +386,7 @@ udp_listen(Slirp *slirp, uint32_t haddr, u_int hport, uint32_t laddr,
 		udp_detach(so);
 		return NULL;
 	}
-	socket_set_fast_reuse(so->s);
+	slirp_socket_set_fast_reuse(so->s);
 
 	getsockname(so->s,(struct sockaddr *)&addr,&addrlen);
 	so->so_fport = addr.sin_port;

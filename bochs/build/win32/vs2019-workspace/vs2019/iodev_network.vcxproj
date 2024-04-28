@@ -106,6 +106,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CallingConvention>FastCall</CallingConvention>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -172,6 +173,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -202,6 +204,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -230,7 +233,6 @@
     <ClCompile Include="..\iodev\network\slirp\arp_table.cc" />
     <ClCompile Include="..\iodev\network\slirp\bootp.cc" />
     <ClCompile Include="..\iodev\network\slirp\cksum.cc" />
-    <ClCompile Include="..\iodev\network\slirp\compat.cc" />
     <ClCompile Include="..\iodev\network\slirp\dnssearch.cc" />
     <ClCompile Include="..\iodev\network\slirp\if.cc" />
     <ClCompile Include="..\iodev\network\slirp\ip_icmp.cc" />

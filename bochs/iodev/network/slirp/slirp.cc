@@ -620,7 +620,7 @@ void slirp_select_poll(Slirp *slirp, fd_set *readfds, fd_set *writefds,
              */
 #ifdef PROBE_CONN
             if (so->so_state & SS_ISFCONNECTING) {
-                    ret = qemu_recv(so->s, &ret, 0, 0);
+                    ret = recv(so->s, &ret, 0, 0);
 
                 if (ret < 0) {
                     /* XXX */
