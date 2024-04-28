@@ -5,14 +5,14 @@
 
 #ifndef DEBUG_H_
 #define DEBUG_H_
-//#define DEBUG 1
 
 #ifdef DEBUG
 
-#define DBG_CALL 0x1
-#define DBG_MISC 0x2
-#define DBG_ERROR 0x4
-#define DBG_TFTP 0x8
+#define DBG_CALL (1 << 0)
+#define DBG_MISC (1 << 1)
+#define DBG_ERROR (1 << 2)
+#define DBG_TFTP (1 << 3)
+#define DBG_VERBOSE_CALL (1 << 4)
 
 #define dfd stderr
 
@@ -27,12 +27,12 @@ extern int slirp_debug;
 
 #else
 
-#define DEBUG_CALL(x)
-#define DEBUG_ARG(x, y)
-#define DEBUG_ARGS(x)
-#define DEBUG_MISC(x)
-#define DEBUG_ERROR(x)
-#define DEBUG_TFTP(x,y)
+#define DEBUG_CALL(...)
+#define DEBUG_ARG(...)
+#define DEBUG_ARGS(...)
+#define DEBUG_MISC(...)
+#define DEBUG_ERROR(...)
+#define DEBUG_TFTP(...)
 
 #endif
 

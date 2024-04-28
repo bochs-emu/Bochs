@@ -12,40 +12,11 @@
 /* Define to 1 if you want KEEPALIVE timers */
 #define DO_KEEPALIVE 0
 
-/* Define to MAX interfaces you expect to use at once */
-/* MAX_INTERFACES determines the max. TOTAL number of interfaces (SLIP and PPP) */
-/* MAX_PPP_INTERFACES determines max. number of PPP interfaces */
-#define MAX_INTERFACES 1
-#define MAX_PPP_INTERFACES 1
-
-/* Define if you want slirp's socket in /tmp */
-/* XXXXXX Do this in ./configure */
-#undef USE_TMPSOCKET
-
-/* Define if you want slirp to use cfsetXspeed() on the terminal */
-#undef DO_CFSETSPEED
-
-/*
- * Define if you want slirp to use less CPU
- * You will notice a small lag in interactive sessions, but it's not that bad
- * Things like Netscape/ftp/etc. are completely unaffected
- * This is mainly for sysadmins who have many slirp users
- */
-#undef USE_LOWCPU
-
-/* Define this if your compiler doesn't like prototypes */
-#ifndef __STDC__
-#define NO_PROTOTYPES
-#endif
-
 /*********************************************************/
 /*
  * Autoconf defined configuration options
  * You shouldn't need to touch any of these
  */
-
-/* Ignore this */
-#undef DUMMY_PPP
 
 /* Define if you have unistd.h */
 #define HAVE_UNISTD_H

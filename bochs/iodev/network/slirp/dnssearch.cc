@@ -219,8 +219,7 @@ static size_t domain_compactify(CompactDomain *domains, size_t n)
         CompactDomain *rd = cd->refdom;
 
         if (rd != NULL) {
-            size_t moff = (rd->labels - start)
-                    + (rd->len - cd->common_octets);
+            size_t moff = (rd->labels - start) + (rd->len - cd->common_octets);
             if (moff < 0x3FFFu) {
                 cd->len -= cd->common_octets - 2;
                 cd->labels[cd->len - 1] = moff & 0xFFu;
@@ -266,20 +265,20 @@ int translate_dnssearch(Slirp *s, const char **names)
     }
 
     /* reserve extra 2 header bytes for each 255 bytes of output */
-    memreq += ((memreq + MAX_OPT_LEN - 1) / MAX_OPT_LEN) * OPT_HEADER_LEN;
+    memreq += DIV_ROUND_UP(memreq, MAX_OPT_LEN) * OPT_HEADER_LEN;
     result = (uint8_t*)malloc(memreq * sizeof(*result));
 
     outptr = result;
     for (i = 0; i < num_domains; i++) {
         domains[i].labels = outptr;
         domain_mklabels(s, domains + i, names[i]);
+        if (domains[i].len == 0) {
+            /* Bogus entry, reject it all */
+            free(domains);
+            free(result);
+            return -1;
+        }
         outptr += domains[i].len;
-    }
-
-    if (outptr == result) {
-        free(domains);
-        free(result);
-        return -1;
     }
 
     qsort(domains, num_domains, sizeof(*domains), domain_suffix_ord);
@@ -293,7 +292,7 @@ int translate_dnssearch(Slirp *s, const char **names)
     domain_mkxrefs(domains, domains + num_domains - 1, 0);
     memreq = domain_compactify(domains, num_domains);
 
-    blocks = (memreq + MAX_OPT_LEN - 1) / MAX_OPT_LEN;
+    blocks = DIV_ROUND_UP(memreq, MAX_OPT_LEN);
     bsrc_end = memreq;
     bsrc_start = (blocks - 1) * MAX_OPT_LEN;
     bdst_start = bsrc_start + blocks * OPT_HEADER_LEN;
