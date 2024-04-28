@@ -1,35 +1,27 @@
 /* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1995 Danny Gasparovski.
- *
- * Please read the file COPYRIGHT for the
- * terms and conditions of the copyright.
  */
-
-#define BX_PLUGGABLE
 
 #include "slirp.h"
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 
-static void
-ifs_insque(struct mbuf *ifm, struct mbuf *ifmhead)
+static void ifs_insque(struct mbuf *ifm, struct mbuf *ifmhead)
 {
-	ifm->ifs_next = ifmhead->ifs_next;
-	ifmhead->ifs_next = ifm;
-	ifm->ifs_prev = ifmhead;
-	ifm->ifs_next->ifs_prev = ifm;
+    ifm->ifs_next = ifmhead->ifs_next;
+    ifmhead->ifs_next = ifm;
+    ifm->ifs_prev = ifmhead;
+    ifm->ifs_next->ifs_prev = ifm;
 }
 
-static void
-ifs_remque(struct mbuf *ifm)
+static void ifs_remque(struct mbuf *ifm)
 {
-	ifm->ifs_prev->ifs_next = ifm->ifs_next;
-	ifm->ifs_next->ifs_prev = ifm->ifs_prev;
+    ifm->ifs_prev->ifs_next = ifm->ifs_next;
+    ifm->ifs_next->ifs_prev = ifm->ifs_prev;
 }
 
-void
-if_init(Slirp *slirp)
+void if_init(Slirp *slirp)
 {
     slirp->if_fastq.ifq_next = slirp->if_fastq.ifq_prev = &slirp->if_fastq;
     slirp->if_batchq.ifq_next = slirp->if_batchq.ifq_prev = &slirp->if_batchq;
@@ -49,16 +41,15 @@ if_init(Slirp *slirp)
  * to the fastq (eg. if the user does an ls -alR in a telnet session,
  * it'll temporarily get downgraded to the batchq)
  */
-void
-if_output(struct socket *so, struct mbuf *ifm)
+void if_output(struct socket *so, struct mbuf *ifm)
 {
-	Slirp *slirp = ifm->slirp;
-	struct mbuf *ifq;
-	int on_fastq = 1;
+    Slirp *slirp = ifm->slirp;
+    struct mbuf *ifq;
+    int on_fastq = 1;
 
-	DEBUG_CALL("if_output");
-	DEBUG_ARG("so = %lx", (long)so);
-	DEBUG_ARG("ifm = %lx", (long)ifm);
+    DEBUG_CALL("if_output");
+    DEBUG_ARG("so = %lx", (long)so);
+    DEBUG_ARG("ifm = %lx", (long)ifm);
 
 	/*
 	 * First remove the mbuf from m_usedlist,
@@ -136,26 +127,12 @@ diddit:
 		}
 	}
 
-#ifndef FULL_BOLT
 	/*
 	 * This prevents us from malloc()ing too many mbufs
 	 */
 	if_start(ifm->slirp);
-#endif
 }
 
-/*
- * Send a packet
- * We choose a packet based on its position in the output queues;
- * If there are packets on the fastq, they are sent FIFO, before
- * everything else.  Otherwise we choose the first packet from the
- * batchq and send it.  the next packet chosen will be from the session
- * after this one, then the session after that one, and so on..  So,
- * for example, if there are 3 ftp session's fighting for bandwidth,
- * one packet will be sent from the first session, then one packet
- * from the second session, then one packet from the third, then back
- * to the first, etc. etc.
- */
 void if_start(Slirp *slirp)
 {
     uint64_t now = slirp->cb->clock_get_ns(slirp->opaque);

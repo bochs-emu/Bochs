@@ -66,13 +66,10 @@ typedef uint32_t n_long;                 /* long as received from the net */
  */
 #define	IPVERSION	4
 
-#if defined(_MSC_VER)
-#pragma pack(push, 1)
-#endif
-
 /*
  * Structure of an internet header, naked of options.
  */
+SLIRP_PACKED_BEGIN
 struct ip {
 #ifndef BX_LITTLE_ENDIAN
 	uint8_t ip_v:4,			/* version */
@@ -92,7 +89,7 @@ struct ip {
 	uint8_t ip_p;			/* protocol */
 	uint16_t	ip_sum;			/* checksum */
 	struct	in_addr ip_src,ip_dst;	/* source and dest address */
-} GCC_ATTRIBUTE((packed));
+} SLIRP_PACKED_END;
 
 #define	IP_MAXPACKET	65535		/* maximum packet size */
 
@@ -136,6 +133,7 @@ struct ip {
 /*
  * Time stamp option structure.
  */
+SLIRP_PACKED_BEGIN
 struct	ip_timestamp {
 	uint8_t	ipt_code;		/* IPOPT_TS */
 	uint8_t	ipt_len;		/* size of structure (variable) */
@@ -154,7 +152,7 @@ struct	ip_timestamp {
 			n_long ipt_time;
 		} ipt_ta[1];
 	} ipt_timestamp;
-} GCC_ATTRIBUTE((packed));
+} SLIRP_PACKED_END;
 
 /* flag bits for ipt_flg */
 #define	IPOPT_TS_TSONLY		0		/* timestamps only */
@@ -181,14 +179,16 @@ struct	ip_timestamp {
 #define	IP_MSS		576		/* default maximum segment size */
 
 #if SIZEOF_CHAR_P == 4
+SLIRP_PACKED_BEGIN
 struct mbuf_ptr {
 	struct mbuf *mptr;
 	uint32_t dummy;
-} GCC_ATTRIBUTE((packed));
+} SLIRP_PACKED_END;
 #else
+SLIRP_PACKED_BEGIN
 struct mbuf_ptr {
 	struct mbuf *mptr;
-} GCC_ATTRIBUTE((packed));
+} SLIRP_PACKED_END;
 #endif
 struct qlink {
 	void *next, *prev;
@@ -197,6 +197,7 @@ struct qlink {
 /*
  * Overlay for ip header used by other protocols (tcp, udp).
  */
+SLIRP_PACKED_BEGIN
 struct ipovly {
 	struct mbuf_ptr ih_mbuf;	/* backpointer to mbuf */
 	uint8_t	ih_x1;			/* (unused) */
@@ -204,7 +205,7 @@ struct ipovly {
 	uint16_t	ih_len;			/* protocol length */
 	struct	in_addr ih_src;		/* source internet address */
 	struct	in_addr ih_dst;		/* destination internet address */
-} GCC_ATTRIBUTE((packed));
+} SLIRP_PACKED_END;
 
 /*
  * Ip reassembly queue structure.  Each fragment
@@ -250,9 +251,5 @@ struct ipoption {
 	struct	in_addr ipopt_dst;	/* first-hop dst if source routed */
 	int8_t	ipopt_list[MAX_IPOPTLEN];	/* options proper */
 } GCC_ATTRIBUTE((packed));
-
-#if defined(_MSC_VER)
-#pragma pack(pop)
-#endif
 
 #endif

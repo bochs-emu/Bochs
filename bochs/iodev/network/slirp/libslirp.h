@@ -201,11 +201,11 @@ Slirp *slirp_init(int restricted, bool in_enabled, struct in_addr vnetwork,
 /* Shut down an instance of a slirp stack */
 void slirp_cleanup(Slirp *slirp);
 
-void slirp_select_fill(int *pnfds, fd_set *readfds, fd_set *writefds,
+void slirp_select_fill(Slirp *slirp, int *pnfds, fd_set *readfds, fd_set *writefds,
                        fd_set *xfds, uint32_t *timeout);
 
-void slirp_select_poll(fd_set *readfds, fd_set *writefds, fd_set *xfds,
-                       int select_error);
+void slirp_select_poll(Slirp *slirp, fd_set *readfds, fd_set *writefds,
+                       fd_set *xfds, int select_error);
 
 void slirp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len);
 

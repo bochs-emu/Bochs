@@ -24,9 +24,6 @@
  */
 
 #include "slirp.h"
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 
@@ -45,15 +42,16 @@ typedef struct compact_domain {
     size_t common_octets;
 } CompactDomain;
 
-static size_t
-domain_suffix_diffoff(const CompactDomain *a, const CompactDomain *b)
+static size_t domain_suffix_diffoff(const CompactDomain *a,
+                                    const CompactDomain *b)
 {
     size_t la = a->len, lb = b->len;
     uint8_t *da = a->labels + la, *db = b->labels + lb;
     size_t i, lm = (la < lb) ? la : lb;
 
     for (i = 0; i < lm; i++) {
-        da--; db--;
+        da--;
+        db--;
         if (*da != *db) {
             break;
         }
@@ -61,7 +59,7 @@ domain_suffix_diffoff(const CompactDomain *a, const CompactDomain *b)
     return i;
 }
 
-static int CDECL domain_suffix_ord(const void *cva, const void *cvb)
+static int domain_suffix_ord(const void *cva, const void *cvb)
 {
     const CompactDomain *a = (const CompactDomain*)cva, *b = (const CompactDomain*)cvb;
     size_t la = a->len, lb = b->len;
@@ -161,8 +159,8 @@ fail:
     cd->len = 0;
 }
 
-static void
-domain_mkxrefs(CompactDomain *doms, CompactDomain *last, size_t depth)
+static void domain_mkxrefs(CompactDomain *doms, CompactDomain *last,
+                           size_t depth)
 {
     CompactDomain *i = doms, *target = doms;
 

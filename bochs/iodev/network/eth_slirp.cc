@@ -600,7 +600,7 @@ void bx_slirp_pktmover_c::rx_timer(void)
 #if BX_HAVE_LIBSLIRP
   slirp_pollfds_fill(slirp, &timeout, add_poll_cb, this);
 #else
-  slirp_select_fill(&nfds, &rfds, &wfds, &xfds, &timeout);
+  slirp_select_fill(slirp, &nfds, &rfds, &wfds, &xfds, &timeout);
 #endif
   tv.tv_sec = 0;
   tv.tv_usec = 0;
@@ -608,7 +608,7 @@ void bx_slirp_pktmover_c::rx_timer(void)
 #if BX_HAVE_LIBSLIRP
   slirp_pollfds_poll(slirp, (ret < 0), get_revents_cb, this);
 #else
-  slirp_select_poll(&rfds, &wfds, &xfds, (ret < 0));
+  slirp_select_poll(slirp, &rfds, &wfds, &xfds, (ret < 0));
 #endif
 }
 

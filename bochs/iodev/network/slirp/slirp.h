@@ -135,10 +135,6 @@ void free(void *ptr);
 # include <sys/filio.h>
 #endif
 
-#ifdef USE_PPP
-#include <ppp/slirppp.h>
-#endif
-
 #ifdef __STDC__
 #include <stdarg.h>
 #else
@@ -217,7 +213,6 @@ bool arp_table_search(Slirp *slirp, uint32_t ip_addr,
                       uint8_t out_ethaddr[ETH_ALEN]);
 
 struct Slirp {
-    QTAILQ_ENTRY(Slirp) entry;
     int cfg_version;
 
     unsigned time_fasttimo;
@@ -303,11 +298,7 @@ extern Slirp *slirp_instance;
 #define NULL (void *)0
 #endif
 
-#ifndef FULL_BOLT
 void if_start(Slirp *);
-#else
-void if_start(struct ttys *);
-#endif
 
 /* Get the address of the DNS server on the host side */
 int get_dns_addr(struct in_addr *pdns_addr);
@@ -379,14 +370,6 @@ struct tcpcb *tcp_drop(struct tcpcb *tp, int err);
 
 /* Send a frame to the virtual Ethernet board, i.e. call the application send_packet callback */
 void slirp_send_packet_all(Slirp *slirp, const void *buf, size_t len);
-
-#ifdef USE_PPP
-#define MIN_MRU MINMRU
-#define MAX_MRU MAXMRU
-#else
-#define MIN_MRU 128
-#define MAX_MRU 16384
-#endif
 
 #ifndef min
 #define min(x,y) ((x) < (y) ? (x) : (y))

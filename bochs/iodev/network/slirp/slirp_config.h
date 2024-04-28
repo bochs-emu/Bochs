@@ -25,13 +25,6 @@
 /* Define if you want slirp to use cfsetXspeed() on the terminal */
 #undef DO_CFSETSPEED
 
-/* Define this if you want slirp to write to the tty as fast as it can */
-/* This should only be set if you are using load-balancing, slirp does a */
-/* pretty good job on single modems already, and seting this will make */
-/* interactive sessions less responsive */
-/* XXXXX Talk about having fast modem as unit 0 */
-#undef FULL_BOLT
-
 /*
  * Define if you want slirp to use less CPU
  * You will notice a small lag in interactive sessions, but it's not that bad
