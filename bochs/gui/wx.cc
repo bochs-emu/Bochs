@@ -140,9 +140,11 @@ wxCriticalSection event_thread_lock;
 BxEvent event_queue[MAX_EVENTS];
 unsigned long num_events;
 static bool mouse_captured = 0;
-static bool wx_hide_ips = 0;
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
 static Bit32u convertStringToGDKKey (const char *string);
+#endif
+#if BX_DEBUGGER && BX_DEBUGGER_GUI && defined(WIN32)
+bool wx_enh_dbg_global_ini = false;
 #endif
 
 
@@ -1026,23 +1028,15 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #endif
 
   // parse x11 specific options
+  Bit8u flags = BX_GUI_OPT_HIDE_IPS;
   if (argc > 1) {
     for (i = 1; i < argc; i++) {
-      if (!strcmp(argv[i], "cmdmode")) {
-        BX_ERROR(("Ignoring option 'cmdmode' - not supported by wxWidgets port"));
-      } else if (!strcmp(argv[i], "gui_debug")) {
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
-        BX_ERROR(("Ignoring option 'gui_debug' - wxWidgets port always uses gui debugger"));
-#else
-        BX_ERROR(("Ignoring option 'gui_debug' - debugger not present"));
-#endif
-#if BX_SHOW_IPS
-      } else if (!strcmp(argv[i], "hideIPS")) {
-        BX_INFO(("hide IPS display in status bar"));
-        wx_hide_ips = 1;
-#endif
-      } else {
-        BX_PANIC(("Unknown wx option '%s'", argv[i]));
+      if (!parse_common_gui_options(argv[i], flags)) {
+        if (!strcmp(argv[i], "cmdmode")) {
+          BX_ERROR(("Ignoring option 'cmdmode' - not supported by wxWidgets port"));
+        } else {
+          BX_PANIC(("Unknown wx option '%s'", argv[i]));
+        }
       }
     }
   }
@@ -1051,10 +1045,11 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #ifdef WIN32
   // on Windows the debugger gui must run in a separate thread
   DWORD threadID;
+  wx_enh_dbg_global_ini = gui_opts.enh_dbg_global_ini;
   CreateThread(NULL, 0, DebugGuiThread, NULL, 0, &threadID);
 #else
   wxMutexGuiEnter();
-  init_debug_dialog(0);
+  init_debug_dialog(gui_opts.enh_dbg_global_ini);
   wxMutexGuiLeave();
 #endif
 #endif
@@ -1532,7 +1527,7 @@ void bx_wx_gui_c::show_ips(Bit32u ips_count)
 {
   char ips_text[40];
 
-  if (!wx_hide_ips) {
+  if (!gui_opts.hide_ips) {
     ips_count /= 1000;
     sprintf(ips_text, "IPS: %u.%3.3uM", ips_count / 1000, ips_count % 1000);
     theFrame->SetStatusText(wxString(ips_text, wxConvUTF8), 0);
