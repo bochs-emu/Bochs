@@ -1471,7 +1471,7 @@ tcp_mss(struct tcpcb *tp, u_int offer)
 	DEBUG_ARG("tp = %lx", (long)tp);
 	DEBUG_ARG("offer = %d", offer);
 
-	mss = min(IF_MTU, IF_MRU) - sizeof(struct tcpiphdr);
+	mss = min(IF_MTU_DEFAULT, IF_MRU_DEFAULT) - sizeof(struct tcpiphdr);
 	if (offer)
 		mss = min(mss, (int)offer);
 	mss = max(mss, 32);

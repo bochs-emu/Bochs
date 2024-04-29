@@ -47,8 +47,17 @@ struct emu_t {
     struct emu_t *next;
 };
 
-void slirp_insque(void *, void *);
-void slirp_remque(void *);
+struct slirp_quehead {
+    struct slirp_quehead *qh_link;
+    struct slirp_quehead *qh_rlink;
+};
+
+/* Insert element a into queue b */
+void slirp_insque(void *a, void *b);
+
+/* Remove element a from its queue */
+void slirp_remque(void *a);
+
 int add_exec(struct ex_list **, int, char *, struct in_addr, int);
 int fork_exec(struct socket *so, const char *ex, int do_pty);
 

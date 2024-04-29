@@ -27,7 +27,9 @@ extern int slirp_debug;
 
 #else
 
-#define DEBUG_CALL(...)
+#define DEBUG_CALL(name)
+#define DEBUG_VERBOSE_CALL(name)
+#define DEBUG_RAW_CALL(...)
 #define DEBUG_ARG(...)
 #define DEBUG_ARGS(...)
 #define DEBUG_MISC(...)

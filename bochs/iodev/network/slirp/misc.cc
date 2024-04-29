@@ -16,28 +16,23 @@
 int slirp_debug = DBG_CALL|DBG_MISC|DBG_ERROR;
 #endif
 
-struct quehead {
-	struct quehead *qh_link;
-	struct quehead *qh_rlink;
-};
-
 void slirp_insque(void *a, void *b)
 {
-	struct quehead *element = (struct quehead *) a;
-	struct quehead *head = (struct quehead *) b;
-	element->qh_link = head->qh_link;
-	head->qh_link = (struct quehead *)element;
-	element->qh_rlink = (struct quehead *)head;
-	((struct quehead *)(element->qh_link))->qh_rlink
-	= (struct quehead *)element;
+    struct slirp_quehead *element = (struct slirp_quehead *) a;
+    struct slirp_quehead *head = (struct slirp_quehead *) b;
+    element->qh_link = head->qh_link;
+    head->qh_link = (struct slirp_quehead *)element;
+    element->qh_rlink = (struct slirp_quehead *)head;
+    ((struct slirp_quehead *)(element->qh_link))->qh_rlink =
+        (struct slirp_quehead *)element;
 }
 
 void slirp_remque(void *a)
 {
-  struct quehead *element = (struct quehead *) a;
-  ((struct quehead *)(element->qh_link))->qh_rlink = element->qh_rlink;
-  ((struct quehead *)(element->qh_rlink))->qh_link = element->qh_link;
-  element->qh_rlink = NULL;
+    struct slirp_quehead *element = (struct slirp_quehead *) a;
+    ((struct slirp_quehead *)(element->qh_link))->qh_rlink = element->qh_rlink;
+    ((struct slirp_quehead *)(element->qh_rlink))->qh_link = element->qh_link;
+    element->qh_rlink = NULL;
 }
 
 int add_exec(struct ex_list **ex_ptr, int do_pty, char *exec,

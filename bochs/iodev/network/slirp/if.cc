@@ -48,89 +48,90 @@ void if_output(struct socket *so, struct mbuf *ifm)
     int on_fastq = 1;
 
     DEBUG_CALL("if_output");
-    DEBUG_ARG("so = %lx", (long)so);
-    DEBUG_ARG("ifm = %lx", (long)ifm);
+    DEBUG_ARG("so = %p", so);
+    DEBUG_ARG("ifm = %p", ifm);
 
-	/*
-	 * First remove the mbuf from m_usedlist,
-	 * since we're gonna use m_next and m_prev ourselves
-	 * XXX Shouldn't need this, gotta change dtom() etc.
-	 */
-	if (ifm->m_flags & M_USEDLIST) {
-		slirp_remque(ifm);
-		ifm->m_flags &= ~M_USEDLIST;
-	}
+    /*
+     * First remove the mbuf from m_usedlist,
+     * since we're gonna use m_next and m_prev ourselves
+     * XXX Shouldn't need this, gotta change dtom() etc.
+     */
+    if (ifm->m_flags & M_USEDLIST) {
+        slirp_remque(ifm);
+        ifm->m_flags &= ~M_USEDLIST;
+    }
 
-	/*
-	 * See if there's already a batchq list for this session.
-	 * This can include an interactive session, which should go on fastq,
-	 * but gets too greedy... hence it'll be downgraded from fastq to batchq.
-	 * We mustn't put this packet back on the fastq (or we'll send it out of order)
-	 * XXX add cache here?
-	 */
-	for (ifq = slirp->if_batchq.ifq_prev; ifq != &slirp->if_batchq;
-	     ifq = ifq->ifq_prev) {
-		if (so == ifq->ifq_so) {
-			/* A match! */
-			ifm->ifq_so = so;
-			ifs_insque(ifm, ifq->ifs_prev);
-			goto diddit;
-		}
-	}
-
-	/* No match, check which queue to put it on */
-	if (so && (so->so_iptos & IPTOS_LOWDELAY)) {
-		ifq = slirp->if_fastq.ifq_prev;
-		on_fastq = 1;
-		/*
-		 * Check if this packet is a part of the last
-		 * packet's session
-		 */
-		if (ifq->ifq_so == so) {
-			ifm->ifq_so = so;
-			ifs_insque(ifm, ifq->ifs_prev);
-			goto diddit;
-		}
-        } else {
-		ifq = slirp->if_batchq.ifq_prev;
-                /* Set next_m if the queue was empty so far */
-                if (slirp->next_m == &slirp->if_batchq) {
-                    slirp->next_m = ifm;
-                }
+    /*
+     * See if there's already a batchq list for this session.
+     * This can include an interactive session, which should go on fastq,
+     * but gets too greedy... hence it'll be downgraded from fastq to batchq.
+     * We mustn't put this packet back on the fastq (or we'll send it out of 
+     * order)
+     * XXX add cache here?
+     */
+    for (ifq = slirp->if_batchq.ifq_prev; ifq != &slirp->if_batchq;
+         ifq = ifq->ifq_prev) {
+        if (so == ifq->ifq_so) {
+            /* A match! */
+            ifm->ifq_so = so;
+            ifs_insque(ifm, ifq->ifs_prev);
+            goto diddit;
         }
+    }
 
-	/* Create a new doubly linked list for this session */
-	ifm->ifq_so = so;
-	ifs_init(ifm);
-	slirp_insque(ifm, ifq);
+    /* No match, check which queue to put it on */
+    if (so && (so->so_iptos & IPTOS_LOWDELAY)) {
+        ifq = slirp->if_fastq.ifq_prev;
+        on_fastq = 1;
+        /*
+         * Check if this packet is a part of the last
+         * packet's session
+         */
+        if (ifq->ifq_so == so) {
+            ifm->ifq_so = so;
+            ifs_insque(ifm, ifq->ifs_prev);
+            goto diddit;
+        }
+    } else {
+        ifq = slirp->if_batchq.ifq_prev;
+        /* Set next_m if the queue was empty so far */
+        if (slirp->next_m == &slirp->if_batchq) {
+            slirp->next_m = ifm;
+        }
+    }
+
+    /* Create a new doubly linked list for this session */
+    ifm->ifq_so = so;
+    ifs_init(ifm);
+    slirp_insque(ifm, ifq);
 
 diddit:
-	if (so) {
-		/* Update *_queued */
-		so->so_queued++;
-		so->so_nqueued++;
-		/*
-		 * Check if the interactive session should be downgraded to
-		 * the batchq.  A session is downgraded if it has queued 6
-		 * packets without pausing, and at least 3 of those packets
-		 * have been sent over the link
-		 * (XXX These are arbitrary numbers, probably not optimal..)
-		 */
-		if (on_fastq && ((so->so_nqueued >= 6) &&
-				 (so->so_nqueued - so->so_queued) >= 3)) {
+    if (so) {
+        /* Update *_queued */
+        so->so_queued++;
+        so->so_nqueued++;
+        /*
+         * Check if the interactive session should be downgraded to
+         * the batchq.  A session is downgraded if it has queued 6
+         * packets without pausing, and at least 3 of those packets
+         * have been sent over the link
+         * (XXX These are arbitrary numbers, probably not optimal..)
+         */
+        if (on_fastq &&
+            ((so->so_nqueued >= 6) && (so->so_nqueued - so->so_queued) >= 3)) {
 
-			/* Remove from current queue... */
-			slirp_remque(ifm->ifs_next);
+            /* Remove from current queue... */
+            slirp_remque(ifm->ifs_next);
 
-			/* ...And insert in the new.  That'll teach ya! */
-			slirp_insque(ifm->ifs_next, &slirp->if_batchq);
-		}
-	}
+            /* ...And insert in the new.  That'll teach ya! */
+            slirp_insque(ifm->ifs_next, &slirp->if_batchq);
+        }
+    }
 
-	/*
-	 * This prevents us from malloc()ing too many mbufs
-	 */
-	if_start(ifm->slirp);
+    /*
+     * This prevents us from malloc()ing too many mbufs
+     */
+    if_start(ifm->slirp);
 }
 
 void if_start(Slirp *slirp)
@@ -139,7 +140,7 @@ void if_start(Slirp *slirp)
     bool from_batchq, next_from_batchq;
     struct mbuf *ifm, *ifm_next, *ifqt;
 
-//    DEBUG_CALL("if_start"); // Disabled to avoid flooding output
+    DEBUG_VERBOSE_CALL("if_start");
 
     if (slirp->if_start_busy) {
         return;
@@ -197,9 +198,7 @@ void if_start(Slirp *slirp)
 
             slirp_insque(next, ifqt);
             ifs_remque(ifm);
-
             if (!from_batchq) {
-                /* Next packet in fastq is from the same session */
                 ifm_next = next;
                 next_from_batchq = false;
             } else if (slirp->next_m == &slirp->if_batchq) {
