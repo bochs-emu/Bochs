@@ -49,6 +49,7 @@ float128_t
     float128_t z;
 
     sigExtra = 0; // artificially reduce precision to match hardware x86 which uses only 67-bit
+    sig0 &= UINT64_C(0xFFFFFFFF00000000); // do 80 bits for now
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
