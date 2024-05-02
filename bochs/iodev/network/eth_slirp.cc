@@ -556,7 +556,6 @@ void bx_slirp_pktmover_c::rx_timer_handler(void *this_ptr)
 }
 
 
-#if BX_HAVE_LIBSLIRP
 static int add_poll_cb(int fd, int events, void *opaque)
 {
     if (events & SLIRP_POLL_IN)
@@ -581,7 +580,6 @@ static int get_revents_cb(int idx, void *opaque)
         event |= SLIRP_POLL_PRI;
     return event;
 }
-#endif
 
 void bx_slirp_pktmover_c::rx_timer(void)
 {
@@ -597,19 +595,11 @@ void bx_slirp_pktmover_c::rx_timer(void)
   FD_ZERO(&rfds);
   FD_ZERO(&wfds);
   FD_ZERO(&xfds);
-#if BX_HAVE_LIBSLIRP
   slirp_pollfds_fill(slirp, &timeout, add_poll_cb, this);
-#else
-  slirp_select_fill(slirp, &nfds, &rfds, &wfds, &xfds, &timeout);
-#endif
   tv.tv_sec = 0;
   tv.tv_usec = 0;
   ret = select(nfds + 1, &rfds, &wfds, &xfds, &tv);
-#if BX_HAVE_LIBSLIRP
   slirp_pollfds_poll(slirp, (ret < 0), get_revents_cb, this);
-#else
-  slirp_select_poll(slirp, &rfds, &wfds, &xfds, (ret < 0));
-#endif
 }
 
 slirp_ssize_t bx_slirp_pktmover_c::receive(void *pkt, unsigned pkt_len)

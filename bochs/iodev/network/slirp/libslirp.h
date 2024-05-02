@@ -201,12 +201,27 @@ Slirp *slirp_init(int restricted, bool in_enabled, struct in_addr vnetwork,
 /* Shut down an instance of a slirp stack */
 void slirp_cleanup(Slirp *slirp);
 
-void slirp_select_fill(Slirp *slirp, int *pnfds, fd_set *readfds, fd_set *writefds,
-                       fd_set *xfds, uint32_t *timeout);
+/* This is called by the application when it is about to sleep through poll().
+ * *timeout is set to the amount of virtual time (in ms) that the application intends to
+ * wait (UINT32_MAX if infinite). slirp_pollfds_fill updates it according to
+ * e.g. TCP timers, so the application knows it should sleep a smaller amount of
+ * time. slirp_pollfds_fill calls add_poll for each file descriptor
+ * that should be monitored along the sleep. The opaque pointer is passed as
+ * such to add_poll, and add_poll returns an index. */
+void slirp_pollfds_fill(Slirp *slirp, uint32_t *timeout,
+                        SlirpAddPollCb add_poll, void *opaque);
 
-void slirp_select_poll(Slirp *slirp, fd_set *readfds, fd_set *writefds,
-                       fd_set *xfds, int select_error);
+/* This is called by the application after sleeping, to report which file
+ * descriptors are available. slirp_pollfds_poll calls get_revents on each file
+ * descriptor, giving it the index that add_poll returned during the
+ * slirp_pollfds_fill call, to know whether the descriptor is available for
+ * read/write/etc. (SLIRP_POLL_*)
+ * select_error should be passed 1 if poll() returned an error. */
+void slirp_pollfds_poll(Slirp *slirp, int select_error,
+                        SlirpGetREventsCb get_revents, void *opaque);
 
+/* This is called by the application when the guest emits a packet on the
+ * guest network, to be interpreted by slirp. */
 void slirp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len);
 
 /* you must provide the following functions: */

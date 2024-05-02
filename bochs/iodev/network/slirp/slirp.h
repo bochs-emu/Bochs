@@ -292,8 +292,6 @@ struct Slirp {
     bool disable_dns; /* slirp will not redirect/serve any DNS packet */
 };
 
-extern Slirp *slirp_instance;
-
 #ifndef NULL
 #define NULL (void *)0
 #endif

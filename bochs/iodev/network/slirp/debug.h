@@ -6,8 +6,6 @@
 #ifndef DEBUG_H_
 #define DEBUG_H_
 
-#ifdef DEBUG
-
 #define DBG_CALL (1 << 0)
 #define DBG_MISC (1 << 1)
 #define DBG_ERROR (1 << 2)
@@ -17,6 +15,8 @@
 #define dfd stderr
 
 extern int slirp_debug;
+
+#ifdef DEBUG
 
 #define DEBUG_CALL(x) if (slirp_debug & DBG_CALL) { fprintf(dfd, "%s...\n", x); fflush(dfd); }
 #define DEBUG_ARG(x, y) if (slirp_debug & DBG_CALL) { fputc(' ', dfd); fprintf(dfd, x, y); fputc('\n', dfd); fflush(dfd); }

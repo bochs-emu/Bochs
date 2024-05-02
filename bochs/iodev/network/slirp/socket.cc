@@ -51,6 +51,7 @@ socreate(Slirp *slirp)
     so->so_state = SS_NOFDREF;
     so->s = -1;
     so->slirp = slirp;
+    so->pollfds_idx = -1;
   }
   return(so);
 }
@@ -256,27 +257,31 @@ err:
  * so when OOB data arrives, we soread() it and everything
  * in the send buffer is sent as urgent data
  */
-void
-sorecvoob(struct socket *so)
+int sorecvoob(struct socket *so)
 {
-	struct tcpcb *tp = sototcpcb(so);
+    struct tcpcb *tp = sototcpcb(so);
+    int ret;
 
-	DEBUG_CALL("sorecvoob");
-	DEBUG_ARG("so = %lx", (long)so);
+    DEBUG_CALL("sorecvoob");
+    DEBUG_ARG("so = %lx", (long)so);
 
-	/*
-	 * We take a guess at how much urgent data has arrived.
-	 * In most situations, when urgent data arrives, the next
-	 * read() should get all the urgent data.  This guess will
-	 * be wrong however if more data arrives just after the
-	 * urgent data, or the read() doesn't return all the
-	 * urgent data.
-	 */
-	soread(so);
-	tp->snd_up = tp->snd_una + so->so_snd.sb_cc;
-	tp->t_force = 1;
-	tcp_output(tp);
-	tp->t_force = 0;
+    /*
+     * We take a guess at how much urgent data has arrived.
+     * In most situations, when urgent data arrives, the next
+     * read() should get all the urgent data.  This guess will
+     * be wrong however if more data arrives just after the
+     * urgent data, or the read() doesn't return all the
+     * urgent data.
+     */
+    ret = soread(so);
+    if (ret) {
+        tp->snd_up = tp->snd_una + so->so_snd.sb_cc;
+        tp->t_force = 1;
+        tcp_output(tp);
+        tp->t_force = 0;
+    }
+
+    return ret;
 }
 
 /*
@@ -675,43 +680,32 @@ soisfconnected(struct socket *so)
 	so->so_state |= SS_ISFCONNECTED; /* Clobber other states */
 }
 
-static void
-sofcantrcvmore(struct socket *so)
+static void sofcantrcvmore(struct socket *so)
 {
-	if ((so->so_state & SS_NOFDREF) == 0) {
-		shutdown(so->s,0);
-		if(global_writefds) {
-		  FD_CLR(so->s,global_writefds);
-		}
-	}
-	so->so_state &= ~(SS_ISFCONNECTING);
-	if (so->so_state & SS_FCANTSENDMORE) {
-	   so->so_state &= SS_PERSISTENT_MASK;
-	   so->so_state |= SS_NOFDREF; /* Don't select it */
-	} else {
-	   so->so_state |= SS_FCANTRCVMORE;
-	}
+    if ((so->so_state & SS_NOFDREF) == 0) {
+        shutdown(so->s,0);
+    }
+    so->so_state &= ~(SS_ISFCONNECTING);
+    if (so->so_state & SS_FCANTSENDMORE) {
+        so->so_state &= SS_PERSISTENT_MASK;
+        so->so_state |= SS_NOFDREF; /* Don't select it */
+    } else {
+        so->so_state |= SS_FCANTRCVMORE;
+    }
 }
 
-static void
-sofcantsendmore(struct socket *so)
+static void sofcantsendmore(struct socket *so)
 {
-	if ((so->so_state & SS_NOFDREF) == 0) {
-            shutdown(so->s,1);           /* send FIN to fhost */
-            if (global_readfds) {
-                FD_CLR(so->s,global_readfds);
-            }
-            if (global_xfds) {
-                FD_CLR(so->s,global_xfds);
-            }
-	}
-	so->so_state &= ~(SS_ISFCONNECTING);
-	if (so->so_state & SS_FCANTRCVMORE) {
-	   so->so_state &= SS_PERSISTENT_MASK;
-	   so->so_state |= SS_NOFDREF; /* as above */
-	} else {
-	   so->so_state |= SS_FCANTSENDMORE;
-	}
+    if ((so->so_state & SS_NOFDREF) == 0) {
+        shutdown(so->s,1);           /* send FIN to fhost */
+    }
+    so->so_state &= ~(SS_ISFCONNECTING);
+    if (so->so_state & SS_FCANTRCVMORE) {
+        so->so_state &= SS_PERSISTENT_MASK;
+        so->so_state |= SS_NOFDREF; /* as above */
+    } else {
+        so->so_state |= SS_FCANTSENDMORE;
+    }
 }
 
 /*

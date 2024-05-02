@@ -28,6 +28,8 @@
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 
+int slirp_debug;
+
 /* host loopback address */
 struct in_addr loopback_addr;
 /* host loopback network mask */
@@ -39,9 +41,6 @@ static const uint8_t special_ethaddr[ETH_ALEN] = {
 };
 
 static const uint8_t zero_ethaddr[ETH_ALEN] = { 0, 0, 0, 0, 0, 0 };
-
-/* XXX: suppress those select globals */
-fd_set *global_readfds, *global_writefds, *global_xfds;
 
 unsigned curtime;
 
@@ -355,18 +354,11 @@ static void slirp_update_timeout(Slirp *slirp, uint32_t *timeout)
     *timeout = t;
 }
 
-void slirp_select_fill(Slirp *slirp, int *pnfds, fd_set *readfds, fd_set *writefds,
-                       fd_set *xfds, uint32_t *timeout)
+void slirp_pollfds_fill(Slirp *slirp, uint32_t *timeout,
+                        SlirpAddPollCb add_poll, void *opaque)
 {
     struct socket *so, *so_next;
-    int nfds;
 
-    /* fail safe */
-    global_readfds = NULL;
-    global_writefds = NULL;
-    global_xfds = NULL;
-
-    nfds = *pnfds;
     /*
      * First, TCP sockets
      */
@@ -376,17 +368,19 @@ void slirp_select_fill(Slirp *slirp, int *pnfds, fd_set *readfds, fd_set *writef
      * in the fragment queue, or there are TCP connections active
      */
     slirp->do_slowtimo = ((slirp->tcb.so_next != &slirp->tcb) ||
-            (&slirp->ipq.ip_link != slirp->ipq.ip_link.next));
+                          (&slirp->ipq.ip_link != slirp->ipq.ip_link.next));
 
-    for (so = slirp->tcb.so_next; so != &slirp->tcb;
-            so = so_next) {
+    for (so = slirp->tcb.so_next; so != &slirp->tcb; so = so_next) {
+        int events = 0;
+
         so_next = so->so_next;
+
+        so->pollfds_idx = -1;
 
         /*
          * See if we need a tcp_fasttimo
          */
-        if (slirp->time_fasttimo == 0 &&
-            so->so_tcpcb->t_flags & TF_DELACK) {
+        if (slirp->time_fasttimo == 0 && so->so_tcpcb->t_flags & TF_DELACK) {
             slirp->time_fasttimo = curtime; /* Flag when want a fasttimo */
         }
 
@@ -402,8 +396,8 @@ void slirp_select_fill(Slirp *slirp, int *pnfds, fd_set *readfds, fd_set *writef
          * Set for reading sockets which are accepting
          */
         if (so->so_state & SS_FACCEPTCONN) {
-            FD_SET(so->s, readfds);
-            UPD_NFDS(so->s);
+            so->pollfds_idx = add_poll(
+                so->s, SLIRP_POLL_IN | SLIRP_POLL_HUP | SLIRP_POLL_ERR, opaque);
             continue;
         }
 
@@ -411,8 +405,8 @@ void slirp_select_fill(Slirp *slirp, int *pnfds, fd_set *readfds, fd_set *writef
          * Set for writing sockets which are connecting
          */
         if (so->so_state & SS_ISFCONNECTING) {
-            FD_SET(so->s, writefds);
-            UPD_NFDS(so->s);
+            so->pollfds_idx =
+                add_poll(so->s, SLIRP_POLL_OUT | SLIRP_POLL_ERR, opaque);
             continue;
         }
 
@@ -421,28 +415,34 @@ void slirp_select_fill(Slirp *slirp, int *pnfds, fd_set *readfds, fd_set *writef
          * we have something to send
          */
         if (CONN_CANFSEND(so) && so->so_rcv.sb_cc) {
-            FD_SET(so->s, writefds);
-            UPD_NFDS(so->s);
+            events |= SLIRP_POLL_OUT | SLIRP_POLL_ERR;
         }
 
         /*
          * Set for reading (and urgent data) if we are connected, can
-         * receive more, and we have room for it XXX /2 ?
+         * receive more, and we have room for it.
+         *
+         * If sb is already half full, we will wait for the guest to consume it,
+         * and notify again in sbdrop() when the sb becomes less than half full.
          */
         if (CONN_CANFRCV(so) &&
-            (so->so_snd.sb_cc < (so->so_snd.sb_datalen/2))) {
-            FD_SET(so->s, readfds);
-            FD_SET(so->s, xfds);
-            UPD_NFDS(so->s);
+            (so->so_snd.sb_cc < (so->so_snd.sb_datalen / 2))) {
+            events |= SLIRP_POLL_IN | SLIRP_POLL_HUP | SLIRP_POLL_ERR |
+                      SLIRP_POLL_PRI;
+        }
+
+        if (events) {
+            so->pollfds_idx = add_poll(so->s, events, opaque);
         }
     }
 
     /*
      * UDP sockets
      */
-    for (so = slirp->udb.so_next; so != &slirp->udb;
-            so = so_next) {
+    for (so = slirp->udb.so_next; so != &slirp->udb; so = so_next) {
         so_next = so->so_next;
+
+        so->pollfds_idx = -1;
 
         /*
          * See if it's timed out
@@ -467,17 +467,18 @@ void slirp_select_fill(Slirp *slirp, int *pnfds, fd_set *readfds, fd_set *writef
          * (XXX <= 4 ?)
          */
         if ((so->so_state & SS_ISFCONNECTED) && so->so_queued <= 4) {
-            FD_SET(so->s, readfds);
-            UPD_NFDS(so->s);
+            so->pollfds_idx = add_poll(
+                so->s, SLIRP_POLL_IN | SLIRP_POLL_HUP | SLIRP_POLL_ERR, opaque);
         }
     }
 
     /*
      * ICMP sockets
      */
-    for (so = slirp->icmp.so_next; so != &slirp->icmp;
-            so = so_next) {
+    for (so = slirp->icmp.so_next; so != &slirp->icmp; so = so_next) {
         so_next = so->so_next;
+
+        so->pollfds_idx = -1;
 
         /*
          * See if it's timed out
@@ -492,27 +493,22 @@ void slirp_select_fill(Slirp *slirp, int *pnfds, fd_set *readfds, fd_set *writef
         }
 
         if (so->so_state & SS_ISFCONNECTED) {
-            FD_SET(so->s, readfds);
-            UPD_NFDS(so->s);
+            so->pollfds_idx = add_poll(
+                so->s, SLIRP_POLL_IN | SLIRP_POLL_HUP | SLIRP_POLL_ERR, opaque);
         }
     }
 
     slirp_update_timeout(slirp, timeout);
-    *pnfds = nfds;
 }
 
-void slirp_select_poll(Slirp *slirp, fd_set *readfds, fd_set *writefds,
-                       fd_set *xfds, int select_error)
+void slirp_pollfds_poll(Slirp *slirp, int select_error,
+                        SlirpGetREventsCb get_revents, void *opaque)
 {
     struct socket *so, *so_next;
     int ret;
 
-    global_readfds = readfds;
-    global_writefds = writefds;
-    global_xfds = xfds;
+    curtime = slirp->cb->clock_get_ns(slirp->opaque) / SCALE_MS;
 
-
-    curtime = slirp->cb->clock_get_ns(slirp->opaque) / 1000000;
     /*
      * See if anything has timed out
      */
@@ -535,29 +531,46 @@ void slirp_select_poll(Slirp *slirp, fd_set *readfds, fd_set *writefds,
         /*
          * Check TCP sockets
          */
-        for (so = slirp->tcb.so_next; so != &slirp->tcb;
-             so = so_next) {
+        for (so = slirp->tcb.so_next; so != &slirp->tcb; so = so_next) {
+            int revents;
+
             so_next = so->so_next;
 
-            /*
-             * FD_ISSET is meaningless on these sockets
-             * (and they can crash the program)
-             */
+            revents = 0;
+            if (so->pollfds_idx != -1) {
+                revents = get_revents(so->pollfds_idx, opaque);
+            }
+
             if (so->so_state & SS_NOFDREF || so->s == -1) {
                 continue;
             }
+
+#ifndef __APPLE__
             /*
              * Check for URG data
              * This will soread as well, so no need to
-             * test for readfds below if this succeeds
+             * test for SLIRP_POLL_IN below if this succeeds.
+             *
+             * This is however disabled on MacOS, which apparently always
+             * reports data as PRI when it is the last data of the
+             * connection. We would then report it out of band, which the guest
+             * would most probably not be ready for.
              */
-            if (FD_ISSET(so->s, xfds)) {
-                sorecvoob(so);
+            if (revents & SLIRP_POLL_PRI) {
+                ret = sorecvoob(so);
+                if (ret < 0) {
+                    /* Socket error might have resulted in the socket being
+                     * removed, do not try to do anything more with it. */
+                    continue;
+                }
             }
             /*
              * Check sockets for reading
              */
-            else if (FD_ISSET(so->s, readfds)) {
+            else
+#endif
+                if (revents &
+                     (SLIRP_POLL_IN | SLIRP_POLL_HUP | SLIRP_POLL_ERR | SLIRP_POLL_PRI)) {
                 /*
                  * Check for incoming connections
                  */
@@ -571,12 +584,18 @@ void slirp_select_poll(Slirp *slirp, fd_set *readfds, fd_set *writefds,
                 if (ret > 0) {
                     tcp_output(sototcpcb(so));
                 }
+                if (ret < 0) {
+                    /* Socket error might have resulted in the socket being
+                     * removed, do not try to do anything more with it. */
+                    continue;
+                }
             }
 
             /*
              * Check sockets for writing
              */
-            if (FD_ISSET(so->s, writefds)) {
+            if (!(so->so_state & SS_NOFDREF) &&
+                (revents & (SLIRP_POLL_OUT | SLIRP_POLL_ERR))) {
                 /*
                  * Check for non-blocking, still-connecting sockets
                  */
@@ -584,7 +603,7 @@ void slirp_select_poll(Slirp *slirp, fd_set *readfds, fd_set *writefds,
                     /* Connected */
                     so->so_state &= ~SS_ISFCONNECTING;
 
-                    ret = send(so->s, (const char*) &ret, 0, 0);
+                    ret = send(so->s, (const void *)&ret, 0, 0);
                     if (ret < 0) {
                         /* XXXXX Must fix, zero bytes is a NOP */
                         if (errno == EAGAIN || errno == EWOULDBLOCK ||
@@ -605,54 +624,14 @@ void slirp_select_poll(Slirp *slirp, fd_set *readfds, fd_set *writefds,
                     /* continue; */
                 } else {
                     ret = sowrite(so);
+                    if (ret > 0) {
+                        /* Call tcp_output in case we need to send a window
+                         * update to the guest, otherwise it will be stuck
+                         * until it sends a window probe. */
+                        tcp_output(sototcpcb(so));
+                    }
                 }
-                /*
-                 * XXXXX If we wrote something (a lot), there
-                 * could be a need for a window update.
-                 * In the worst case, the remote will send
-                 * a window probe to get things going again
-                 */
             }
-
-            /*
-             * Probe a still-connecting, non-blocking socket
-             * to check if it's still alive
-             */
-#ifdef PROBE_CONN
-            if (so->so_state & SS_ISFCONNECTING) {
-                    ret = recv(so->s, &ret, 0, 0);
-
-                if (ret < 0) {
-                    /* XXX */
-                    if (errno == EAGAIN || errno == EWOULDBLOCK ||
-                        errno == EINPROGRESS || errno == ENOTCONN) {
-                        continue; /* Still connecting, continue */
-                    }
-
-                    /* else failed */
-                    so->so_state &= SS_PERSISTENT_MASK;
-                    so->so_state |= SS_NOFDREF;
-
-                    /* tcp_input will take care of it */
-                } else {
-                    ret = send(so->s, (const char*)&ret, 0, 0);
-                    if (ret < 0) {
-                        /* XXX */
-                        if (errno == EAGAIN || errno == EWOULDBLOCK ||
-                            errno == EINPROGRESS || errno == ENOTCONN) {
-                            continue;
-                        }
-                        /* else failed */
-                        so->so_state &= SS_PERSISTENT_MASK;
-                        so->so_state |= SS_NOFDREF;
-                    } else {
-                        so->so_state &= ~SS_ISFCONNECTING;
-                    }
-
-                }
-                tcp_input((struct mbuf *)NULL, sizeof(struct ip), so);
-            } /* SS_ISFCONNECTING */
-#endif
         }
 
         /*
@@ -660,11 +639,18 @@ void slirp_select_poll(Slirp *slirp, fd_set *readfds, fd_set *writefds,
          * Incoming packets are sent straight away, they're not buffered.
          * Incoming UDP data isn't buffered either.
          */
-        for (so = slirp->udb.so_next; so != &slirp->udb;
-             so = so_next) {
+        for (so = slirp->udb.so_next; so != &slirp->udb; so = so_next) {
+            int revents;
+
             so_next = so->so_next;
 
-            if (so->s != -1 && FD_ISSET(so->s, readfds)) {
+            revents = 0;
+            if (so->pollfds_idx != -1) {
+                revents = get_revents(so->pollfds_idx, opaque);
+            }
+
+            if (so->s != -1 &&
+                (revents & (SLIRP_POLL_IN | SLIRP_POLL_HUP | SLIRP_POLL_ERR))) {
                 sorecvfrom(so);
             }
         }
@@ -672,26 +658,24 @@ void slirp_select_poll(Slirp *slirp, fd_set *readfds, fd_set *writefds,
         /*
          * Check incoming ICMP relies.
          */
-        for (so = slirp->icmp.so_next; so != &slirp->icmp;
-             so = so_next) {
+        for (so = slirp->icmp.so_next; so != &slirp->icmp; so = so_next) {
+            int revents;
+
             so_next = so->so_next;
 
-            if (so->s != -1 && FD_ISSET(so->s, readfds)) {
+            revents = 0;
+            if (so->pollfds_idx != -1) {
+                revents = get_revents(so->pollfds_idx, opaque);
+            }
+
+            if (so->s != -1 &&
+                (revents & (SLIRP_POLL_IN | SLIRP_POLL_HUP | SLIRP_POLL_ERR))) {
                 icmp_receive(so);
             }
         }
     }
 
     if_start(slirp);
-
-    /* clear global file descriptor sets.
-     * these reside on the stack in vl.c
-     * so they're unusable if we're not in
-     * slirp_select_fill or slirp_select_poll.
-     */
-     global_readfds = NULL;
-     global_writefds = NULL;
-     global_xfds = NULL;
 }
 
 static void arp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)

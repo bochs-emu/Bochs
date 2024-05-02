@@ -18,8 +18,6 @@ extern struct in_addr loopback_addr;
 /* Always equal to IN_CLASSA_NET, in network order */
 extern unsigned long loopback_mask;
 
-extern fd_set *global_readfds, *global_writefds, *global_xfds;
-
 /* Send a packet to the guest */
 int if_encap(Slirp *slirp, struct mbuf *ifm);
 /* Send a frame to the guest. Flags are passed to the send() call */
