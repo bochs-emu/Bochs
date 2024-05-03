@@ -220,7 +220,7 @@ tcp_input(struct mbuf *m, int iphlen, struct socket *inso)
 {
   	struct ip save_ip, *ip;
 	struct tcpiphdr *ti;
-	caddr_t optp = NULL;
+	char * optp = NULL;
 	int optlen = 0;
 	int len, tlen, off;
         struct tcpcb *tp = NULL;
@@ -230,7 +230,7 @@ tcp_input(struct mbuf *m, int iphlen, struct socket *inso)
 	int iss = 0;
 	u_long tiwin;
 	int ret;
-    struct ex_list *ex_ptr;
+    struct gfwd_list *ex_ptr;
     Slirp *slirp;
 
 	DEBUG_CALL("tcp_input");
@@ -301,7 +301,7 @@ tcp_input(struct mbuf *m, int iphlen, struct socket *inso)
 	ti->ti_len = tlen;
 	if (off > (int)sizeof(struct tcphdr)) {
 	  optlen = off - sizeof (struct tcphdr);
-	  optp = mtod(m, caddr_t) + sizeof (struct tcpiphdr);
+	  optp = mtod(m, char *) + sizeof (struct tcpiphdr);
 	}
 	tiflags = ti->ti_flags;
 
@@ -353,7 +353,7 @@ findso:
              * for non-hostfwd connections. These should be dropped, unless it
              * happens to be a guestfwd.
              */
-            for (ex_ptr = slirp->exec_list; ex_ptr; ex_ptr = ex_ptr->ex_next) {
+            for (ex_ptr = slirp->guestfwd_list; ex_ptr; ex_ptr = ex_ptr->ex_next) {
                 if (ex_ptr->ex_fport == ti->ti_dport &&
                     ti->ti_dst.s_addr == ex_ptr->ex_addr.s_addr) {
                     break;
@@ -567,7 +567,7 @@ findso:
 	    if (so->so_faddr.s_addr != slirp->vhost_addr.s_addr &&
 		so->so_faddr.s_addr != slirp->vnameserver_addr.s_addr) {
 		/* May be an add exec */
-		for (ex_ptr = slirp->exec_list; ex_ptr;
+		for (ex_ptr = slirp->guestfwd_list; ex_ptr;
 		     ex_ptr = ex_ptr->ex_next) {
 		  if(ex_ptr->ex_fport == so->so_fport &&
 		     so->so_faddr.s_addr == ex_ptr->ex_addr.s_addr) {
@@ -1350,7 +1350,7 @@ tcp_pulloutofband(so, ti, m)
 
 	while (cnt >= 0) {
 		if (m->m_len > cnt) {
-			char *cp = mtod(m, caddr_t) + cnt;
+			char *cp = mtod(m, char *) + cnt;
 			struct tcpcb *tp = sototcpcb(so);
 
 			tp->t_iobc = *cp;

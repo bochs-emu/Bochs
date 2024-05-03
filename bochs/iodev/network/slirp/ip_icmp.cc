@@ -397,8 +397,8 @@ icmp_reflect(struct mbuf *m)
      * Strip out original options by copying rest of first
      * mbuf's data back, and adjust the IP length.
      */
-    memmove((caddr_t)(ip + 1), (caddr_t)ip + hlen,
-	    (unsigned )(m->m_len - hlen));
+    memmove((char *)(ip + 1), (char *)ip + hlen,
+            (unsigned )(m->m_len - hlen));
     hlen -= optlen;
     ip->ip_hl = hlen >> 2;
     ip->ip_len -= optlen;

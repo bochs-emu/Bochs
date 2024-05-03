@@ -76,7 +76,7 @@ struct mbuf {
 	int	m_size;			/* Size of data */
 	struct	socket *m_so;
 
-	caddr_t	m_data;			/* Location of data */
+	char	*m_data;		/* Location of data */
 	int	m_len;			/* Amount of data in this mbuf */
 
 	Slirp *slirp;

@@ -6,17 +6,12 @@
 #ifndef MISC_H
 #define MISC_H
 
-struct ex_list {
-	int ex_pty;			/* Do we want a pty? */
-	struct in_addr ex_addr;		/* Server address */
-	int ex_fport;                   /* Port to telnet to */
-	const char *ex_exec;            /* Command line of what to exec */
-	struct ex_list *ex_next;
+struct gfwd_list {
+    struct in_addr ex_addr;		/* Server address */
+    int ex_fport;                   /* Port to telnet to */
+    const char *ex_exec;            /* Command line of what to exec */
+    struct gfwd_list *ex_next;
 };
-
-#ifndef HAVE_STRDUP
-char *strdup(const char *);
-#endif
 
 #define EMU_NONE 0x0
 
@@ -58,7 +53,7 @@ void slirp_insque(void *a, void *b);
 /* Remove element a from its queue */
 void slirp_remque(void *a);
 
-int add_exec(struct ex_list **, int, char *, struct in_addr, int);
+int add_exec(struct gfwd_list **, const char *, struct in_addr, int);
 int fork_exec(struct socket *so, const char *ex, int do_pty);
 
 #endif

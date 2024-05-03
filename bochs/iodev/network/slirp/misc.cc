@@ -35,49 +35,25 @@ void slirp_remque(void *a)
     element->qh_rlink = NULL;
 }
 
-int add_exec(struct ex_list **ex_ptr, int do_pty, char *exec,
-             struct in_addr addr, int port)
+int add_exec(struct gfwd_list **ex_ptr, const char *exec, struct in_addr addr, int port)
 {
-	struct ex_list *tmp_ptr;
+    struct gfwd_list *tmp_ptr;
 
-	/* First, check if the port is "bound" */
-	for (tmp_ptr = *ex_ptr; tmp_ptr; tmp_ptr = tmp_ptr->ex_next) {
-		if (port == tmp_ptr->ex_fport &&
-		    addr.s_addr == tmp_ptr->ex_addr.s_addr)
-			return -1;
-	}
+    /* First, check if the port is "bound" */
+    for (tmp_ptr = *ex_ptr; tmp_ptr; tmp_ptr = tmp_ptr->ex_next) {
+        if (port == tmp_ptr->ex_fport &&
+            addr.s_addr == tmp_ptr->ex_addr.s_addr)
+            return -1;
+    }
 
-	tmp_ptr = *ex_ptr;
-	*ex_ptr = (struct ex_list *)malloc(sizeof(struct ex_list));
-	(*ex_ptr)->ex_fport = port;
-	(*ex_ptr)->ex_addr = addr;
-	(*ex_ptr)->ex_pty = do_pty;
-	(*ex_ptr)->ex_exec = (do_pty == 3) ? exec : strdup(exec);
-	(*ex_ptr)->ex_next = tmp_ptr;
-	return 0;
+    tmp_ptr = *ex_ptr;
+    *ex_ptr = (struct gfwd_list *)malloc(sizeof(struct gfwd_list));
+    (*ex_ptr)->ex_fport = port;
+    (*ex_ptr)->ex_addr = addr;
+    (*ex_ptr)->ex_exec = strdup(exec);
+    (*ex_ptr)->ex_next = tmp_ptr;
+    return 0;
 }
-
-#ifndef HAVE_STRERROR
-
-/*
- * For systems with no strerror
- */
-
-extern int sys_nerr;
-extern char *sys_errlist[];
-
-char *
-strerror(error)
-	int error;
-{
-	if (error < sys_nerr)
-	   return sys_errlist[error];
-	else
-	   return "Unknown error.";
-}
-
-#endif
-
 
 #ifdef _WIN32
 
@@ -239,20 +215,6 @@ fork_exec(struct socket *so, const char *ex, int do_pty)
 
 		return 1;
 	}
-}
-#endif
-
-#ifndef HAVE_STRDUP
-char *
-strdup(str)
-	const char *str;
-{
-	char *bptr;
-
-	bptr = (char *)malloc(strlen(str)+1);
-	strcpy(bptr, str);
-
-	return bptr;
 }
 #endif
 

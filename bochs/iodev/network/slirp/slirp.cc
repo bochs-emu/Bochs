@@ -306,18 +306,16 @@ Slirp *slirp_init(int restricted, bool in_enabled, struct in_addr vnetwork,
 
 void slirp_cleanup(Slirp *slirp)
 {
-    struct ex_list *ex_ptr;
+    struct gfwd_list *ex_ptr;
 
     ip_cleanup(slirp);
     m_cleanup(slirp);
 
-    while (slirp->exec_list != NULL) {
-        ex_ptr = slirp->exec_list->ex_next;
-        if (slirp->exec_list->ex_pty != 3) {
-            free((void*)slirp->exec_list->ex_exec);
-        }
-        free(slirp->exec_list);
-        slirp->exec_list = ex_ptr;
+    while (slirp->guestfwd_list != NULL) {
+        ex_ptr = slirp->guestfwd_list->ex_next;
+        free((void*)slirp->guestfwd_list->ex_exec);
+        free(slirp->guestfwd_list);
+        slirp->guestfwd_list = ex_ptr;
     }
 
     free(slirp->vdomainname);
@@ -685,7 +683,7 @@ static void arp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
     struct ethhdr *reh = (struct ethhdr *)arp_reply;
     struct slirp_arphdr *rah = (struct slirp_arphdr *)(arp_reply + ETH_HLEN);
     int ar_op;
-    struct ex_list *ex_ptr;
+    struct gfwd_list *ex_ptr;
 
     ar_op = ntohs(ah->ar_op);
     switch(ar_op) {
@@ -701,7 +699,7 @@ static void arp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
             if (ah->ar_tip == slirp->vnameserver_addr.s_addr ||
                 ah->ar_tip == slirp->vhost_addr.s_addr)
                 goto arp_ok;
-            for (ex_ptr = slirp->exec_list; ex_ptr; ex_ptr = ex_ptr->ex_next) {
+            for (ex_ptr = slirp->guestfwd_list; ex_ptr; ex_ptr = ex_ptr->ex_next) {
                 if (ex_ptr->ex_addr.s_addr == ah->ar_tip)
                     goto arp_ok;
             }
@@ -882,7 +880,7 @@ int slirp_add_hostfwd(Slirp *slirp, int is_udp, struct in_addr host_addr,
     return 0;
 }
 
-int slirp_add_exec(Slirp *slirp, const void *args,
+int slirp_add_exec(Slirp *slirp, const char *cmdline,
                    struct in_addr *guest_addr, int guest_port)
 {
     if (!guest_addr->s_addr) {
@@ -895,7 +893,7 @@ int slirp_add_exec(Slirp *slirp, const void *args,
         guest_addr->s_addr == slirp->vnameserver_addr.s_addr) {
         return -1;
     }
-    return add_exec(&slirp->exec_list, 0, (char *)args, *guest_addr,
+    return add_exec(&slirp->guestfwd_list, cmdline, *guest_addr,
                     htons(guest_port));
 }
 
@@ -910,8 +908,8 @@ slirp_ssize_t slirp_send(struct socket *so, const void *buf, size_t len, int fla
     return send(so->s, (const char*)buf, len, flags);
 }
 
-static struct socket *
-slirp_find_ctl_socket(Slirp *slirp, struct in_addr guest_addr, int guest_port)
+struct socket *slirp_find_ctl_socket(Slirp *slirp, struct in_addr guest_addr,
+                                            int guest_port)
 {
     struct socket *so;
 
@@ -967,6 +965,11 @@ void slirp_send_packet_all(Slirp *slirp, const void *buf, size_t len)
     } else if ((size_t)ret < len) {
         slirp_warning("send_packet() didn't send all data", slirp->opaque);
     }
+}
+
+const char *slirp_version_string(void)
+{
+    return SLIRP_VERSION_STRING;
 }
 
 #endif

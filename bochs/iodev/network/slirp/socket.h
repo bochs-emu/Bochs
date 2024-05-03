@@ -3,6 +3,10 @@
  * Copyright (c) 1995 Danny Gasparovski.
  */
 
+#ifndef _WIN32
+#include <sys/un.h>
+#endif
+
 #ifndef SLIRP_SOCKET_H
 #define SLIRP_SOCKET_H
 

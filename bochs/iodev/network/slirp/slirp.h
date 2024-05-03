@@ -2,6 +2,8 @@
 #ifndef SLIRP_H
 #define SLIRP_H
 
+#define SLIRP_VERSION_STRING "4.7.0"
+
 #ifdef __CYGWIN__
 #define __USE_W32_SOCKETS
 #define _WIN32
@@ -12,139 +14,35 @@
 
 #ifdef _WIN32
 
-#if !defined(_MSC_VER)
-# include <inttypes.h>
+/* as defined in sdkddkver.h */
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0601 /* Windows 7 */
 #endif
-
-typedef char *caddr_t;
-
+/* reduces the number of implicitly included headers */
 #ifndef WIN32_LEAN_AND_MEAN
-# define WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
 #endif
-# include <winsock2.h>
-# include <ws2tcpip.h>
-# include <sys/timeb.h>
-# include <iphlpapi.h>
 
-#if defined(__CYGWIN__) && defined(_WIN64)
-#undef FIONBIO
-#define FIONBIO 0x8004667e
-#undef FIONREAD
-#define FIONREAD 0x4004667f
-#endif
+#include <winsock2.h>
+#include <windows.h>
+#include <ws2tcpip.h>
+#include <sys/timeb.h>
+#include <iphlpapi.h>
 
 #else
-# define closesocket(s) close(s)
-# if !defined(__HAIKU__) && !defined(__CYGWIN__)
-#  define O_BINARY 0
-# endif
-#endif
-
-#include <sys/types.h>
-#if defined(__OpenBSD__) || defined(__linux__)
-#include <stdint.h>
-#include <sys/wait.h>
-#endif
-#ifdef HAVE_SYS_BITYPES_H
-# include <sys/bitypes.h>
-#endif
-
-#if !defined(_MSC_VER)
-
-#include <sys/time.h>
-
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-
-#endif
-
-#ifdef HAVE_STDLIB_H
-# include <stdlib.h>
-#endif
-
-#include <stdio.h>
-#include <errno.h>
-
-#ifndef HAVE_MEMMOVE
-#define memmove(x, y, z) bcopy(y, x, z)
-#endif
-
-#if TIME_WITH_SYS_TIME
-# include <sys/time.h>
-# include <time.h>
-#else
-# ifdef HAVE_SYS_TIME_H
-#  include <sys/time.h>
-# else
-#  include <time.h>
-# endif
-#endif
-
-#ifdef HAVE_STRING_H
-# include <string.h>
-#else
-# include <strings.h>
+#define O_BINARY 0
 #endif
 
 #ifndef _WIN32
 #include <sys/uio.h>
-#endif
-
-#ifndef _WIN32
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#endif
-
-/* Systems lacking strdup() definition in <string.h>. */
-#if defined(ultrix)
-char *strdup(const char *);
-#endif
-
-/* Systems lacking malloc() definition in <stdlib.h>. */
-#if defined(ultrix) || defined(hcx)
-void *malloc(size_t arg);
-void free(void *ptr);
-#endif
-
-#include <fcntl.h>
-#ifndef NO_UNIX_SOCKETS
-#include <sys/un.h>
-#endif
-#include <signal.h>
-#ifdef HAVE_SYS_SIGNAL_H
-# include <sys/signal.h>
-#endif
-#ifndef _WIN32
 #include <sys/socket.h>
+#include <sys/ioctl.h>
 #endif
 
-#if defined(HAVE_SYS_IOCTL_H)
-# include <sys/ioctl.h>
-#endif
-
-#ifdef HAVE_SYS_SELECT_H
-# include <sys/select.h>
-#endif
-
-#ifdef HAVE_SYS_WAIT_H
-# include <sys/wait.h>
-#endif
-
-#ifdef HAVE_SYS_FILIO_H
-# include <sys/filio.h>
-#endif
-
-#ifdef __STDC__
-#include <stdarg.h>
-#else
-#include <varargs.h>
-#endif
-
-#include <sys/stat.h>
-
-#ifdef HAVE_SYS_STROPTS_H
-#include <sys/stropts.h>
+#ifdef __APPLE__
+#include <sys/filio.h>
 #endif
 
 #include "compat.h"
@@ -237,10 +135,9 @@ struct Slirp {
     char client_hostname[33];
 
     int restricted;
+    struct gfwd_list *guestfwd_list;
 
     bool disable_host_loopback;
-
-    struct ex_list *exec_list;
 
     /* mbuf states */
     struct mbuf m_freelist, m_usedlist;
@@ -292,32 +189,10 @@ struct Slirp {
     bool disable_dns; /* slirp will not redirect/serve any DNS packet */
 };
 
-#ifndef NULL
-#define NULL (void *)0
-#endif
-
 void if_start(Slirp *);
 
 /* Get the address of the DNS server on the host side */
 int get_dns_addr(struct in_addr *pdns_addr);
-
-#ifndef HAVE_STRERROR
- char *strerror(int error);
-#endif
-
-#ifndef HAVE_INDEX
- char *index(const char *, int);
-#endif
-
-#ifndef HAVE_GETHOSTID
- long gethostid(void);
-#endif
-
-#ifndef _WIN32
-#include <netdb.h>
-#endif
-
-#define DEFAULT_BAUD 115200
 
 #define SO_OPTIONS DO_KEEPALIVE
 #define TCP_MAXIDLE (TCPTV_KEEPCNT * TCPTV_KEEPINTVL)

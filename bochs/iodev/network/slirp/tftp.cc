@@ -29,6 +29,10 @@
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
 // Missing defines for open (copied from osdep.h)
 #ifndef S_IRUSR
 #define S_IRUSR 0400

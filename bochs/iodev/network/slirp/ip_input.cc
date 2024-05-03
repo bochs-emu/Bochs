@@ -534,7 +534,7 @@ typedef uint32_t n_time;
 			/*
 			 * locate outgoing interface
 			 */
-			bcopy((caddr_t)(cp + off), (caddr_t)&ipaddr.sin_addr,
+			bcopy((char *)(cp + off), (char *)&ipaddr.sin_addr,
 			    sizeof(ipaddr.sin_addr));
 			if (opt == IPOPT_SSRR) {
 #define	INA	struct in_ifaddr *
@@ -549,8 +549,8 @@ typedef uint32_t n_time;
 				goto bad;
 			}
 			ip->ip_dst = ipaddr.sin_addr;
-			bcopy((caddr_t)&(IA_SIN(ia)->sin_addr),
-			    (caddr_t)(cp + off), sizeof(struct in_addr));
+			bcopy((char *)&(IA_SIN(ia)->sin_addr),
+			    (char *)(cp + off), sizeof(struct in_addr));
 			cp[IPOPT_OFFSET] += sizeof(struct in_addr);
 			/*
 			 * Let ip_intr's mcast routing check handle mcast pkts
@@ -569,7 +569,7 @@ typedef uint32_t n_time;
                         off--; /* 0 origin */
 			if (off > optlen - sizeof(struct in_addr))
 				break;
-			bcopy((caddr_t)(&ip->ip_dst), (caddr_t)&ipaddr.sin_addr,
+			bcopy((char *)(&ip->ip_dst), (char *)&ipaddr.sin_addr,
 			    sizeof(ipaddr.sin_addr));
 			/*
 			 * locate outgoing interface; if we're the destination,
@@ -581,8 +581,8 @@ typedef uint32_t n_time;
 				code = ICMP_UNREACH_HOST;
 				goto bad;
 			}
-			bcopy((caddr_t)&(IA_SIN(ia)->sin_addr),
-			    (caddr_t)(cp + off), sizeof(struct in_addr));
+			bcopy((char *)&(IA_SIN(ia)->sin_addr),
+			    (char *)(cp + off), sizeof(struct in_addr));
 			cp[IPOPT_OFFSET] += sizeof(struct in_addr);
 			break;
 
@@ -611,8 +611,8 @@ typedef uint32_t n_time;
 							    m->m_pkthdr.rcvif);
 				if (ia == 0)
 					continue;
-				bcopy((caddr_t)&IA_SIN(ia)->sin_addr,
-				    (caddr_t)sin, sizeof(struct in_addr));
+				bcopy((char *)&IA_SIN(ia)->sin_addr,
+				    (char *)sin, sizeof(struct in_addr));
 				ipt->ipt_ptr += sizeof(struct in_addr);
 				break;
 
@@ -620,7 +620,7 @@ typedef uint32_t n_time;
 				if (ipt->ipt_ptr + sizeof(n_time) +
 				    sizeof(struct in_addr) > ipt->ipt_len)
 					goto bad;
-				bcopy((caddr_t)sin, (caddr_t)&ipaddr.sin_addr,
+				bcopy((char *)sin, (char *)&ipaddr.sin_addr,
 				    sizeof(struct in_addr));
 				if (ifa_ifwithaddr((SA)&ipaddr) == 0)
 					continue;
@@ -631,7 +631,7 @@ typedef uint32_t n_time;
 				goto bad;
 			}
 			ntime = iptime();
-			bcopy((caddr_t)&ntime, (caddr_t)cp + ipt->ipt_ptr - 1,
+			bcopy((char *)&ntime, (char *)cp + ipt->ipt_ptr - 1,
 			    sizeof(n_time));
 			ipt->ipt_ptr += sizeof(n_time);
 		}
@@ -661,11 +661,11 @@ ip_stripoptions(struct mbuf *m, struct mbuf *mopt)
 {
 	int i;
 	struct ip *ip = mtod(m, struct ip *);
-	caddr_t opts;
+	char * opts;
 	int olen;
 
 	olen = (ip->ip_hl<<2) - sizeof (struct ip);
-	opts = (caddr_t)(ip + 1);
+	opts = (char *)(ip + 1);
 	i = m->m_len - (sizeof (struct ip) + olen);
 	memcpy(opts, opts  + olen, (unsigned)i);
 	m->m_len -= olen;

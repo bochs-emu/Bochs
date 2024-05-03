@@ -95,7 +95,7 @@ udp_input(struct mbuf *m, int iphlen)
 	 * Get IP and UDP header together in first mbuf.
 	 */
 	ip = mtod(m, struct ip *);
-	uh = (struct udphdr *)((caddr_t)ip + iphlen);
+	uh = (struct udphdr *)((char *)ip + iphlen);
 
 	/*
 	 * Make mbuf data length reflect UDP length.
