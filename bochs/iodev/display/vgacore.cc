@@ -1609,9 +1609,9 @@ void bx_vgacore_c::update(void)
       tm_info.blink_flags |= BX_TEXT_BLINK_MODE;
       if (cs_toggle)
         tm_info.blink_flags |= BX_TEXT_BLINK_TOGGLE;
-      if (cs_visible)
-        tm_info.blink_flags |= BX_TEXT_BLINK_STATE;
     }
+    if (cs_visible)
+      tm_info.blink_flags |= BX_TEXT_BLINK_STATE;
     if ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 0) {
       if (tm_info.h_panning >= 8)
         tm_info.h_panning = 0;

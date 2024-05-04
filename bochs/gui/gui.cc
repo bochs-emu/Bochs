@@ -1261,8 +1261,8 @@ void bx_gui_c::text_update_common(Bit8u *old_text, Bit8u *new_text,
       if (blink_mode) {
         if (tm_info->blink_flags & BX_TEXT_BLINK_TOGGLE)
           forceUpdate = 1;
-        if (!blink_state) cursor_visible = 0;
       }
+      if (!blink_state) cursor_visible = 0;
       if (BX_GUI_THIS charmap_updated) {
         BX_GUI_THIS set_font(tm_info->line_graphics);
         BX_GUI_THIS charmap_updated = 0;
