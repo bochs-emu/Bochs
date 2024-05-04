@@ -1768,7 +1768,7 @@ void bx_win32_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u y
     if ((ce - cs + 1) < fh) {
       fh = ce - cs + 1;
     }
-    DrawBitmap(hdc, vgafont[map][ch], xc, yc, fw, fh, fx, fy, bc, fc);
+    DrawBitmap(hdc, vgafont[map][ch], xc, yc, fw, fh, fx, cs, bc, fc);
   }
   ReleaseDC(stInfo.simWnd, hdc);
   LeaveCriticalSection(&stInfo.drawCS);
