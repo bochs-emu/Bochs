@@ -28,6 +28,15 @@
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 
+#ifndef _WIN32
+#include <net/if.h>
+#endif
+
+/* https://gitlab.freedesktop.org/slirp/libslirp/issues/18 */
+#if defined(__NetBSD__) && defined(if_mtu)
+#undef if_mtu
+#endif
+
 int slirp_debug;
 
 /* host loopback address */
@@ -250,7 +259,8 @@ Slirp *slirp_new(const SlirpConfig *cfg, const SlirpCb *callbacks, void *opaque)
     if (cfg->vdnssearch) {
         translate_dnssearch(slirp, cfg->vdnssearch);
     }
-
+    slirp->if_mtu = cfg->if_mtu == 0 ? IF_MTU_DEFAULT : cfg->if_mtu;
+    slirp->if_mru = cfg->if_mru == 0 ? IF_MRU_DEFAULT : cfg->if_mru;
     slirp->disable_host_loopback = cfg->disable_host_loopback;
     slirp->enable_emu = cfg->enable_emu;
 
@@ -679,7 +689,7 @@ void slirp_pollfds_poll(Slirp *slirp, int select_error,
 static void arp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
 {
     struct slirp_arphdr *ah = (struct slirp_arphdr *)(pkt + ETH_HLEN);
-    uint8_t arp_reply[max(ETH_HLEN + sizeof(struct slirp_arphdr), 64)];
+    uint8_t arp_reply[MAX(ETH_HLEN + sizeof(struct slirp_arphdr), 64)];
     struct ethhdr *reh = (struct ethhdr *)arp_reply;
     struct slirp_arphdr *rah = (struct slirp_arphdr *)(arp_reply + ETH_HLEN);
     int ar_op;
@@ -774,26 +784,21 @@ void slirp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
     }
 }
 
-/* Output the IP packet to the ethernet device. Returns 0 if the packet must be
- * re-queued.
+/* Prepare the IPv4 packet to be sent to the ethernet device. Returns 1 if no
+ * packet should be sent, 0 if the packet must be re-queued, 2 if the packet
+ * is ready to go.
  */
-int if_encap(Slirp *slirp, struct mbuf *ifm)
+static int if_encap4(Slirp *slirp, struct mbuf *ifm, struct ethhdr *eh,
+                     uint8_t ethaddr[ETH_ALEN])
 {
-    uint8_t buf[1600];
-    struct ethhdr *eh = (struct ethhdr *)buf;
-    uint8_t ethaddr[ETH_ALEN];
     const struct ip *iph = (const struct ip *)ifm->m_data;
 
-    if (ifm->m_len + ETH_HLEN > (int)sizeof(buf)) {
-        return 1;
-    }
-
     if (!arp_table_search(slirp, iph->ip_dst.s_addr, ethaddr)) {
-        uint8_t arp_req[ETH_HLEN + sizeof(struct slirp_arphdr)];
-        struct ethhdr *reh = (struct ethhdr *)arp_req;
-        struct slirp_arphdr *rah = (struct slirp_arphdr *)(arp_req + ETH_HLEN);
+        uint8_t arp_req[2 + ETH_HLEN + sizeof(struct slirp_arphdr)];
+        struct ethhdr *reh = (struct ethhdr *)(arp_req + 2);
+        struct slirp_arphdr *rah = (struct slirp_arphdr *)(arp_req + 2 + ETH_HLEN);
 
-        if (!ifm->arp_requested) {
+        if (!ifm->resolution_requested) {
             /* If the client addr is not known, send an ARP request */
             memset(reh->h_dest, 0xff, ETH_ALEN);
             memcpy(reh->h_source, special_ethaddr, ETH_ALEN - 4);
@@ -818,23 +823,79 @@ int if_encap(Slirp *slirp, struct mbuf *ifm)
             /* target IP */
             rah->ar_tip = iph->ip_dst.s_addr;
             slirp->client_ipaddr = iph->ip_dst;
-            slirp_send_packet_all(slirp, arp_req, sizeof(arp_req));
-            ifm->arp_requested = true;
+            slirp_send_packet_all(slirp, arp_req + 2, sizeof(arp_req) - 2);
+            ifm->resolution_requested = true;
 
             /* Expire request and drop outgoing packet after 1 second */
-            ifm->expiration_date = slirp->cb->clock_get_ns(slirp->opaque) + 1000000000ULL;
+            ifm->expiration_date =
+                slirp->cb->clock_get_ns(slirp->opaque) + 1000000000ULL;
         }
         return 0;
     } else {
-        memcpy(eh->h_dest, ethaddr, ETH_ALEN);
         memcpy(eh->h_source, special_ethaddr, ETH_ALEN - 4);
         /* XXX: not correct */
         memcpy(&eh->h_source[2], &slirp->vhost_addr, 4);
         eh->h_proto = htons(ETH_P_IP);
-        memcpy(buf + sizeof(struct ethhdr), ifm->m_data, ifm->m_len);
-        slirp_send_packet_all(slirp, buf, ifm->m_len + ETH_HLEN);
+
+        /* Send this */
+        return 2;
+    }
+}
+
+/* Prepare the IPv6 packet to be sent to the ethernet device. Returns 1 if no
+ * packet should be sent, 0 if the packet must be re-queued, 2 if the packet
+ * is ready to go.
+ */
+static int if_encap6(Slirp *slirp, struct mbuf *ifm, struct ethhdr *eh,
+                     uint8_t ethaddr[ETH_ALEN])
+{
+    slirp_warning("IPv6 packet not supported yet", slirp->opaque);
+    return 0;
+}
+
+/* Output the IP packet to the ethernet device. Returns 0 if the packet must be
+ * re-queued.
+ */
+int if_encap(Slirp *slirp, struct mbuf *ifm)
+{
+    uint8_t buf[IF_MTU_MAX + 100];
+    struct ethhdr *eh = (struct ethhdr *)(buf + 2);
+    uint8_t ethaddr[ETH_ALEN];
+    const struct ip *iph = (const struct ip *)ifm->m_data;
+    int ret;
+//  char ethaddr_str[ETH_ADDRSTRLEN];
+
+    if (ifm->m_len + ETH_HLEN > (int)sizeof(buf) - 2) {
         return 1;
     }
+
+    switch (iph->ip_v) {
+    case IPVERSION:
+        ret = if_encap4(slirp, ifm, eh, ethaddr);
+        if (ret < 2) {
+            return ret;
+        }
+        break;
+
+    case IP6VERSION:
+        ret = if_encap6(slirp, ifm, eh, ethaddr);
+        if (ret < 2) {
+            return ret;
+        }
+        break;
+
+    default:
+        slirp_warning("unknown protocol", slirp->opaque);
+    }
+
+    memcpy(eh->h_dest, ethaddr, ETH_ALEN);
+    DEBUG_ARG("src = %s", slirp_ether_ntoa(eh->h_source, ethaddr_str,
+                                           sizeof(ethaddr_str)));
+    DEBUG_ARG("dst = %s", slirp_ether_ntoa(eh->h_dest, ethaddr_str,
+                                           sizeof(ethaddr_str)));
+    memcpy(buf + 2 + sizeof(struct ethhdr), ifm->m_data, ifm->m_len);
+    slirp_send_packet_all(slirp, buf + 2, ifm->m_len + ETH_HLEN);
+    return 1;
 }
 
 /* Drop host forwarding rule, return 0 if found. */
@@ -880,32 +941,99 @@ int slirp_add_hostfwd(Slirp *slirp, int is_udp, struct in_addr host_addr,
     return 0;
 }
 
+/* TODO: IPv6 */
+static bool check_guestfwd(Slirp *slirp, struct in_addr *guest_addr,
+                           int guest_port)
+{
+    struct gfwd_list *tmp_ptr;
+
+    if (!guest_addr->s_addr) {
+        guest_addr->s_addr = slirp->vnetwork_addr.s_addr |
+                             (htonl(0x0204) & ~slirp->vnetwork_mask.s_addr);
+    }
+    if ((guest_addr->s_addr & slirp->vnetwork_mask.s_addr) !=
+            slirp->vnetwork_addr.s_addr ||
+        guest_addr->s_addr == slirp->vhost_addr.s_addr ||
+        guest_addr->s_addr == slirp->vnameserver_addr.s_addr) {
+        return false;
+    }
+
+    /* check if the port is "bound" */
+    for (tmp_ptr = slirp->guestfwd_list; tmp_ptr; tmp_ptr = tmp_ptr->ex_next) {
+        if (guest_port == tmp_ptr->ex_fport &&
+            guest_addr->s_addr == tmp_ptr->ex_addr.s_addr)
+            return false;
+    }
+
+    return true;
+}
+
 int slirp_add_exec(Slirp *slirp, const char *cmdline,
                    struct in_addr *guest_addr, int guest_port)
 {
-    if (!guest_addr->s_addr) {
-        guest_addr->s_addr = slirp->vnetwork_addr.s_addr |
-            (htonl(0x0204) & ~slirp->vnetwork_mask.s_addr);
-    }
-    if ((guest_addr->s_addr & slirp->vnetwork_mask.s_addr) !=
-        slirp->vnetwork_addr.s_addr ||
-        guest_addr->s_addr == slirp->vhost_addr.s_addr ||
-        guest_addr->s_addr == slirp->vnameserver_addr.s_addr) {
+    if (!check_guestfwd(slirp, guest_addr, guest_port)) {
         return -1;
     }
-    return add_exec(&slirp->guestfwd_list, cmdline, *guest_addr,
-                    htons(guest_port));
+
+    add_exec(&slirp->guestfwd_list, cmdline, *guest_addr, htons(guest_port));
+    return 0;
+}
+
+int slirp_add_unix(Slirp *slirp, const char *unixsock,
+                   struct in_addr *guest_addr, int guest_port)
+{
+#ifndef _WIN32
+    if (!check_guestfwd(slirp, guest_addr, guest_port)) {
+        return -1;
+    }
+
+    add_unix(&slirp->guestfwd_list, unixsock, *guest_addr, htons(guest_port));
+    return 0;
+#else
+    return -1;
+#endif
+}
+
+int slirp_add_guestfwd(Slirp *slirp, SlirpWriteCb write_cb, void *opaque,
+                       struct in_addr *guest_addr, int guest_port)
+{
+    if (!check_guestfwd(slirp, guest_addr, guest_port)) {
+        return -1;
+    }
+
+    add_guestfwd(&slirp->guestfwd_list, write_cb, opaque, *guest_addr,
+                 htons(guest_port));
+    return 0;
+}
+
+int slirp_remove_guestfwd(Slirp *slirp, struct in_addr guest_addr,
+                          int guest_port)
+{
+    return remove_guestfwd(&slirp->guestfwd_list, guest_addr,
+                           htons(guest_port));
 }
 
 slirp_ssize_t slirp_send(struct socket *so, const void *buf, size_t len, int flags)
 {
-    if (so->s == -1 && so->extra) {
-        Slirp *slirp = so->slirp;
-        slirp_warning("slirp_send(): so->extra not supported", slirp->opaque);
+    if (so->s == -1 && so->guestfwd) {
+        /* XXX this blocks entire thread. Rewrite to use
+         * qemu_chr_fe_write and background I/O callbacks */
+        so->guestfwd->write_cb(buf, len, so->guestfwd->opaque);
         return len;
     }
 
-    return send(so->s, (const char*)buf, len, flags);
+    if (so->s == -1) {
+        /*
+         * This should in theory not happen but it is hard to be
+         * sure because some code paths will end up with so->s == -1
+         * on a failure but don't dispose of the struct socket.
+         * Check specifically, so we don't pass -1 to send().
+         */
+        errno = EBADF;
+        return -1;
+    }
+
+    return send(so->s, buf, len, flags);
 }
 
 struct socket *slirp_find_ctl_socket(Slirp *slirp, struct in_addr guest_addr,

@@ -224,11 +224,15 @@ void slirp_pollfds_poll(Slirp *slirp, int select_error,
  * guest network, to be interpreted by slirp. */
 void slirp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len);
 
+/* This is called by the application when a timer expires, if it provides
+ * the timer_new_opaque callback.  It is not needed if the application only
+ * uses timer_new. */
+void slirp_handle_timer(Slirp *slirp, SlirpTimerId id, void *cb_opaque);
+
 /* These set up / remove port forwarding between a host port in the real world
  * and the guest network. */
 int slirp_add_hostfwd(Slirp *slirp, int is_udp, struct in_addr host_addr,
                       int host_port, struct in_addr guest_addr, int guest_port);
-
 int slirp_remove_hostfwd(Slirp *slirp, int is_udp, struct in_addr host_addr,
                          int host_port);
 
@@ -236,6 +240,14 @@ int slirp_remove_hostfwd(Slirp *slirp, int is_udp, struct in_addr host_addr,
  * command running on the host */
 int slirp_add_exec(Slirp *slirp, const char *cmdline,
                    struct in_addr *guest_addr, int guest_port);
+
+/* Set up port forwarding between a port in the guest network and a
+ * callback that will receive the data coming from the port */
+int slirp_add_guestfwd(Slirp *slirp, SlirpWriteCb write_cb, void *opaque,
+                       struct in_addr *guest_addr, int guest_port);
+
+/* TODO: rather identify a guestfwd through an opaque pointer instead of through
+ * the guest_addr */
 
 /* This is called by the application for a guestfwd, to determine how much data
  * can be received by the forwarded port through a call to slirp_socket_recv. */
@@ -246,10 +258,14 @@ size_t slirp_socket_can_recv(Slirp *slirp, struct in_addr guest_addr,
 void slirp_socket_recv(Slirp *slirp, struct in_addr guest_addr, int guest_port,
                        const uint8_t *buf, int size);
 
+/* Remove entries added by slirp_add_exec, slirp_add_unix or slirp_add_guestfwd */
+int slirp_remove_guestfwd(Slirp *slirp, struct in_addr guest_addr,
+                          int guest_port);
+
 /* Return the version of the slirp implementation */
 const char *slirp_version_string(void);
 
 /* you must provide the following functions: */
 void slirp_warning(const char *, void *);
 
-#endif
+#endif /* LIBSLIRP_H */

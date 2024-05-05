@@ -526,7 +526,7 @@ findso:
           win = sbspace(&so->so_rcv);
 	  if (win < 0)
 	    win = 0;
-	  tp->rcv_wnd = max(win, (int)(tp->rcv_adv - tp->rcv_nxt));
+	  tp->rcv_wnd = MAX(win, (int)(tp->rcv_adv - tp->rcv_nxt));
 	}
 
 	switch (tp->t_state) {
@@ -952,7 +952,7 @@ trimthenstep6:
 				else if (++tp->t_dupacks == TCPREXMTTHRESH) {
 					tcp_seq onxt = tp->snd_nxt;
 					u_int win =
-					    min(tp->snd_wnd, tp->snd_cwnd) / 2 /
+					    MIN(tp->snd_wnd, tp->snd_cwnd) / 2 /
 						tp->t_maxseg;
 
 					if (win < 2)
@@ -1025,7 +1025,7 @@ trimthenstep6:
 
 		  if (cw > tp->snd_ssthresh)
 		    incr = incr * incr / cw;
-		  tp->snd_cwnd = min((int)(cw + incr), TCP_MAXWIN<<tp->snd_scale);
+		  tp->snd_cwnd = MIN((int)(cw + incr), TCP_MAXWIN<<tp->snd_scale);
 		}
 		if (acked > (int)so->so_snd.sb_cc) {
 			tp->snd_wnd -= so->so_snd.sb_cc;
@@ -1471,10 +1471,11 @@ tcp_mss(struct tcpcb *tp, u_int offer)
 	DEBUG_ARG("tp = %lx", (long)tp);
 	DEBUG_ARG("offer = %d", offer);
 
-	mss = min(IF_MTU_DEFAULT, IF_MRU_DEFAULT) - sizeof(struct tcpiphdr);
+        mss = MIN(so->slirp->if_mtu, so->slirp->if_mru) -
+              sizeof(struct tcphdr) - sizeof(struct ip);
 	if (offer)
-		mss = min(mss, (int)offer);
-	mss = max(mss, 32);
+		mss = MIN(mss, (int)offer);
+	mss = MAX(mss, 32);
 	if (mss < tp->t_maxseg || offer != 0)
 	   tp->t_maxseg = mss;
 

@@ -36,11 +36,12 @@
 
 typedef	uint32_t tcp_seq;
 
-#define      PR_SLOWHZ       2               /* 2 slow timeouts per second (approx) */
-#define      PR_FASTHZ       5               /* 5 fast timeouts per second (not important) */
+#define PR_SLOWHZ 2 /* 2 slow timeouts per second (approx) */
+#define PR_FASTHZ 5 /* 5 fast timeouts per second (not important) */
 
-#define TCP_SNDSPACE 8192
-#define TCP_RCVSPACE 8192
+#define TCP_SNDSPACE 1024 * 128
+#define TCP_RCVSPACE 1024 * 128
+#define TCP_MAXSEG_MAX 32768
 
 /*
  * TCP header.

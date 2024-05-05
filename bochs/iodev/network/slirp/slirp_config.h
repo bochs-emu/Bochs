@@ -29,12 +29,6 @@
 #define HAVE_SYS_SELECT_H
 #endif
 
-/* Define to whatever your compiler thinks inline should be */
-//#define inline inline
-
-/* Define to whatever your compiler thinks const should be */
-//#define const const
-
 /* Define to sizeof(char) */
 #define SIZEOF_CHAR 1
 

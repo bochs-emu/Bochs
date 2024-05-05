@@ -4,16 +4,10 @@
  */
 
 #include "slirp.h"
-#include "libslirp.h"
-
-#ifndef _WIN32
-#include <dirent.h>
-#endif
-
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 
-#ifdef DEBUG
-int slirp_debug = DBG_CALL|DBG_MISC|DBG_ERROR;
+#ifndef _WIN32
+#include <sys/un.h>
 #endif
 
 void slirp_insque(void *a, void *b)
@@ -35,187 +29,66 @@ void slirp_remque(void *a)
     element->qh_rlink = NULL;
 }
 
-int add_exec(struct gfwd_list **ex_ptr, const char *exec, struct in_addr addr, int port)
+/* TODO: IPv6 */
+struct gfwd_list *add_guestfwd(struct gfwd_list **ex_ptr, SlirpWriteCb write_cb,
+                               void *opaque, struct in_addr addr, int port)
 {
-    struct gfwd_list *tmp_ptr;
+    struct gfwd_list *f = (struct gfwd_list *)malloc(sizeof(struct gfwd_list));
 
-    /* First, check if the port is "bound" */
-    for (tmp_ptr = *ex_ptr; tmp_ptr; tmp_ptr = tmp_ptr->ex_next) {
-        if (port == tmp_ptr->ex_fport &&
-            addr.s_addr == tmp_ptr->ex_addr.s_addr)
-            return -1;
-    }
+    f->write_cb = write_cb;
+    f->opaque = opaque;
+    f->ex_fport = port;
+    f->ex_addr = addr;
+    f->ex_next = *ex_ptr;
+    *ex_ptr = f;
 
-    tmp_ptr = *ex_ptr;
-    *ex_ptr = (struct gfwd_list *)malloc(sizeof(struct gfwd_list));
-    (*ex_ptr)->ex_fport = port;
-    (*ex_ptr)->ex_addr = addr;
-    (*ex_ptr)->ex_exec = strdup(exec);
-    (*ex_ptr)->ex_next = tmp_ptr;
-    return 0;
+    return f;
 }
 
-#ifdef _WIN32
+struct gfwd_list *add_exec(struct gfwd_list **ex_ptr, const char *cmdline,
+                           struct in_addr addr, int port)
+{
+    struct gfwd_list *f = add_guestfwd(ex_ptr, NULL, NULL, addr, port);
 
-int
-fork_exec(struct socket *so, const char *ex, int do_pty)
+    f->ex_exec = strdup(cmdline);
+
+    return f;
+}
+
+struct gfwd_list *add_unix(struct gfwd_list **ex_ptr, const char *unixsock,
+                           struct in_addr addr, int port)
+{
+    struct gfwd_list *f = add_guestfwd(ex_ptr, NULL, NULL, addr, port);
+
+    f->ex_unix = strdup(unixsock);
+
+    return f;
+}
+
+int remove_guestfwd(struct gfwd_list **ex_ptr, struct in_addr addr, int port)
+{
+    for (; *ex_ptr != NULL; ex_ptr = &((*ex_ptr)->ex_next)) {
+        struct gfwd_list *f = *ex_ptr;
+        if (f->ex_addr.s_addr == addr.s_addr && f->ex_fport == port) {
+            *ex_ptr = f->ex_next;
+            free(f->ex_exec);
+            free(f);
+            return 0;
+        }
+    }
+    return -1;
+}
+
+int fork_exec(struct socket *so, const char *ex)
 {
     /* not implemented */
     return 0;
 }
 
-#else
-
-/*
- * XXX This is ugly
- * We create and bind a socket, then fork off to another
- * process, which connects to this socket, after which we
- * exec the wanted program.  If something (strange) happens,
- * the accept() call could block us forever.
- *
- * do_pty = 0   Fork/exec inetd style
- * do_pty = 1   Fork/exec using slirp.telnetd
- * do_ptr = 2   Fork/exec using pty
- */
-int
-fork_exec(struct socket *so, const char *ex, int do_pty)
+int open_unix(struct socket *so, const char *unixpath)
 {
-	int s;
-	struct sockaddr_in addr;
-	socklen_t addrlen = sizeof(addr);
-	int opt;
-	const char *argv[256];
-	/* don't want to clobber the original */
-	char *bptr;
-	const char *curarg;
-	int c, i, ret;
-	pid_t pid;
-
-	DEBUG_CALL("fork_exec");
-	DEBUG_ARG("so = %lx", (long)so);
-	DEBUG_ARG("ex = %lx", (long)ex);
-	DEBUG_ARG("do_pty = %lx", (long)do_pty);
-
-	if (do_pty == 2) {
-                return 0;
-	} else {
-		addr.sin_family = AF_INET;
-		addr.sin_port = 0;
-		addr.sin_addr.s_addr = INADDR_ANY;
-
-		if ((s = slirp_socket(AF_INET, SOCK_STREAM, 0)) < 0 ||
-		    bind(s, (struct sockaddr *)&addr, addrlen) < 0 ||
-		    listen(s, 1) < 0) {
-#ifdef DEBUG
-			printf("Error: inet socket: %s\n", strerror(errno));
-#endif
-			closesocket(s);
-
-			return 0;
-		}
-	}
-
-	pid = fork();
-	switch(pid) {
-	 case -1:
-#ifdef DEBUG
-		printf("Error: fork failed: %s\n", strerror(errno));
-#endif
-		close(s);
-		return 0;
-
-	 case 0:
-                setsid();
-
-		/* Set the DISPLAY */
-                getsockname(s, (struct sockaddr *)&addr, &addrlen);
-                close(s);
-                /*
-                 * Connect to the socket
-                 * XXX If any of these fail, we're in trouble!
-                 */
-                s = slirp_socket(AF_INET, SOCK_STREAM, 0);
-                addr.sin_addr = loopback_addr;
-                do {
-                    ret = connect(s, (struct sockaddr *)&addr, addrlen);
-                } while (ret < 0 && errno == EINTR);
-
-		dup2(s, 0);
-		dup2(s, 1);
-		dup2(s, 2);
-#ifdef __ANDROID__
-		{
-			/* No getdtablesize() on Android, we will use /proc/XXX/fd/ Linux virtual FS instead */
-			char proc_fd_path[256];
-			sprintf(proc_fd_path, "/proc/%u/fd", (unsigned)getpid());
-			DIR *proc_dir = opendir(proc_fd_path);
-			if (proc_dir) {
-				for (struct dirent *fd = readdir(proc_dir); fd != NULL; fd = readdir(proc_dir)) {
-					if (atoi(fd->d_name) >= 3 && fd->d_name[0] != '.') /* ".." and "." will return 0 anyway */
-						close(atoi(fd->d_name));
-				}
-				closedir(proc_dir);
-			}
-		}
-#else
-		for (s = getdtablesize() - 1; s >= 3; s--)
-		   close(s);
-#endif
-
-		i = 0;
-		bptr = strdup(ex); /* No need to free() this */
-		if (do_pty == 1) {
-			/* Setup "slirp.telnetd -x" */
-			argv[i++] = "slirp.telnetd";
-			argv[i++] = "-x";
-			argv[i++] = bptr;
-		} else
-		   do {
-			/* Change the string into argv[] */
-			curarg = bptr;
-			while (*bptr != ' ' && *bptr != (char)0)
-			   bptr++;
-			c = *bptr;
-			*bptr++ = (char)0;
-			argv[i++] = strdup(curarg);
-		   } while (c);
-
-                argv[i] = NULL;
-		execvp(argv[0], (char **)argv);
-
-		/* Ooops, failed, let's tell the user why */
-        fprintf(stderr, "Error: execvp of %s failed: %s\n",
-                argv[0], strerror(errno));
-		close(0); close(1); close(2); /* XXX */
-		exit(1);
-
-	 default:
-                slirp_warning("qemu_add_child_watch(pid) not implemented", so->slirp->opaque);
-                /*
-                 * XXX this could block us...
-                 * XXX Should set a timer here, and if accept() doesn't
-                 * return after X seconds, declare it a failure
-                 * The only reason this will block forever is if socket()
-                 * of connect() fail in the child process
-                 */
-                do {
-                    so->s = accept(s, (struct sockaddr *)&addr, &addrlen);
-                } while (so->s < 0 && errno == EINTR);
-                closesocket(s);
-                slirp_socket_set_fast_reuse(so->s);
-                opt = 1;
-                setsockopt(so->s, SOL_SOCKET, SO_OOBINLINE, &opt, sizeof(int));
-                slirp_set_nonblock(so->s);
-
-		/* Append the telnet options now */
-                if (so->so_m != NULL && do_pty == 1)  {
-			sbappend(so, so->so_m);
-                        so->so_m = NULL;
-		}
-
-		return 1;
-	}
+    /* not implemented */
+    return 0;
 }
-#endif
 
 #endif

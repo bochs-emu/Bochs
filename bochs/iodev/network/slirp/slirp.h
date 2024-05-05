@@ -110,6 +110,7 @@ void arp_table_add(Slirp *slirp, uint32_t ip_addr,
 bool arp_table_search(Slirp *slirp, uint32_t ip_addr,
                       uint8_t out_ethaddr[ETH_ALEN]);
 
+/* Slirp configuration, specified by the application */
 struct Slirp {
     int cfg_version;
 
@@ -136,6 +137,9 @@ struct Slirp {
 
     int restricted;
     struct gfwd_list *guestfwd_list;
+
+    int if_mtu;
+    int if_mru;
 
     bool disable_host_loopback;
 
@@ -243,17 +247,5 @@ struct tcpcb *tcp_drop(struct tcpcb *tp, int err);
 
 /* Send a frame to the virtual Ethernet board, i.e. call the application send_packet callback */
 void slirp_send_packet_all(Slirp *slirp, const void *buf, size_t len);
-
-#ifndef min
-#define min(x,y) ((x) < (y) ? (x) : (y))
-#endif
-#ifndef max
-#define max(x,y) ((x) > (y) ? (x) : (y))
-#endif
-
-#ifdef _WIN32
-#undef errno
-#define errno (WSAGetLastError())
-#endif
 
 #endif

@@ -62,12 +62,13 @@ socreate(Slirp *slirp)
 void
 sofree(struct socket *so)
 {
-  Slirp *slirp = so->slirp;
-
-  if (so->so_emu==EMU_RSH && so->extra) {
-	sofree((struct socket*)so->extra);
-	so->extra=NULL;
-  }
+    Slirp *slirp = so->slirp;
+/*
+    if (so->so_emu==EMU_RSH && so->extra) {
+        sofree((struct socket*)so->extra);
+        so->extra=NULL;
+    }
+*/
   if (so == slirp->tcp_last_so) {
       slirp->tcp_last_so = &slirp->tcb;
   } else if (so == slirp->udp_last_so) {
@@ -316,12 +317,12 @@ sosendoob(struct socket *so)
 		 * send it all
 		 */
 		len = (sb->sb_data + sb->sb_datalen) - sb->sb_rptr;
-		if (len > so->so_urgc) len = so->so_urgc;
+		if (len > (int)so->so_urgc) len = so->so_urgc;
 		memcpy(buff, sb->sb_rptr, len);
 		so->so_urgc -= len;
 		if (so->so_urgc) {
 			n = sb->sb_wptr - sb->sb_data;
-			if (n > so->so_urgc) n = so->so_urgc;
+			if (n > (int)so->so_urgc) n = so->so_urgc;
 			memcpy((buff + len), sb->sb_data, n);
 			so->so_urgc -= n;
 			len += n;

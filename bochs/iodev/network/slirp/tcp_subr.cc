@@ -181,21 +181,26 @@ tcp_respond(struct tcpcb *tp, struct tcpiphdr *ti, struct mbuf *m,
  * empty reassembly queue and hooking it to the argument
  * protocol control block.
  */
-struct tcpcb *
-tcp_newtcpcb(struct socket *so)
+struct tcpcb *tcp_newtcpcb(struct socket *so)
 {
-	struct tcpcb *tp;
+    struct tcpcb *tp;
 
-	tp = (struct tcpcb *)malloc(sizeof(*tp));
-	if (tp == NULL)
-		return ((struct tcpcb *)0);
+    tp = (struct tcpcb *)malloc(sizeof(*tp));
+    if (tp == NULL)
+        return ((struct tcpcb *)0);
 
-	memset((char *) tp, 0, sizeof(struct tcpcb));
-	tp->seg_next = tp->seg_prev = (struct tcpiphdr*)tp;
-	tp->t_maxseg = TCP_MSS;
+    memset((char *) tp, 0, sizeof(struct tcpcb));
+    tp->seg_next = tp->seg_prev = (struct tcpiphdr*)tp;
+    /*
+     * 40: length of IPv4 header (20) + TCP header (20)
+     * 60: length of IPv6 header (40) + TCP header (20)
+     */
+    tp->t_maxseg =
+        MIN(so->slirp->if_mtu - 40,
+            TCP_MAXSEG_MAX);
 
-	tp->t_flags = TCP_DO_RFC1323 ? (TF_REQ_SCALE|TF_REQ_TSTMP) : 0;
-	tp->t_socket = so;
+    tp->t_flags = TCP_DO_RFC1323 ? (TF_REQ_SCALE|TF_REQ_TSTMP) : 0;
+    tp->t_socket = so;
 
 	/*
 	 * Init srtt to TCPTV_SRTTBASE (0), so we can tell that we have no
@@ -900,7 +905,6 @@ int tcp_ctl(struct socket *so)
     Slirp *slirp = so->slirp;
     struct sbuf *sb = &so->so_snd;
     struct gfwd_list *ex_ptr;
-    int do_pty;
 
     DEBUG_CALL("tcp_ctl");
     DEBUG_ARG("so = %lx", (long )so);
@@ -910,16 +914,16 @@ int tcp_ctl(struct socket *so)
         for (ex_ptr = slirp->guestfwd_list; ex_ptr; ex_ptr = ex_ptr->ex_next) {
             if (ex_ptr->ex_fport == so->so_fport &&
                 so->so_faddr.s_addr == ex_ptr->ex_addr.s_addr) {
-/*
-                if (ex_ptr->ex_pty == 3) {
+                if (ex_ptr->write_cb) {
                     so->s = -1;
-                    so->extra = (void *)ex_ptr->ex_exec;
+                    so->guestfwd = ex_ptr;
                     return 1;
                 }
-                do_pty = ex_ptr->ex_pty;
-*/
-                DEBUG_MISC((dfd, " executing %s\n", ex_ptr->ex_exec));
-                return fork_exec(so, ex_ptr->ex_exec, do_pty);
+                DEBUG_MISC((dfd, " executing %s", ex_ptr->ex_exec));
+                if (ex_ptr->ex_unix)
+                    return open_unix(so, ex_ptr->ex_unix);
+                else
+                    return fork_exec(so, ex_ptr->ex_exec);
             }
         }
     }

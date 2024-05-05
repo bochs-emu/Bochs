@@ -79,14 +79,14 @@ struct mbuf {
 	char	*m_data;		/* Location of data */
 	int	m_len;			/* Amount of data in this mbuf */
 
-	Slirp *slirp;
-	bool	arp_requested;
-	uint64_t expiration_date;
-	/* start of dynamic buffer area, must be last element */
-	union {
-		char	m_dat[1]; /* ANSI don't like 0 sized arrays */
-		char	*m_ext;
-	};
+    Slirp *slirp;
+    bool resolution_requested;
+    uint64_t expiration_date;
+    /* start of dynamic buffer area, must be last element */
+    union {
+        char	m_dat[1]; /* ANSI don't like 0 sized arrays */
+        char	*m_ext;
+    };
 };
 
 #define ifq_prev m_prev

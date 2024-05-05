@@ -6,10 +6,15 @@
 #ifndef MISC_H
 #define MISC_H
 
+#include "libslirp.h"
+
 struct gfwd_list {
-    struct in_addr ex_addr;		/* Server address */
-    int ex_fport;                   /* Port to telnet to */
-    const char *ex_exec;            /* Command line of what to exec */
+    SlirpWriteCb write_cb;
+    void *opaque;
+    struct in_addr ex_addr; /* Server address */
+    int ex_fport;           /* Port to telnet to */
+    char *ex_exec;          /* Command line of what to exec */
+    char *ex_unix;          /* unix socket */
     struct gfwd_list *ex_next;
 };
 
@@ -53,7 +58,28 @@ void slirp_insque(void *a, void *b);
 /* Remove element a from its queue */
 void slirp_remque(void *a);
 
-int add_exec(struct gfwd_list **, const char *, struct in_addr, int);
-int fork_exec(struct socket *so, const char *ex, int do_pty);
+/* Run the given command in the background, and expose its output as a socket */
+int fork_exec(struct socket *so, const char *ex);
+
+/* Create a Unix socket, and expose it as a socket */
+int open_unix(struct socket *so, const char *unixsock);
+
+/* Add a guest forward on the given address and port, with guest data being
+ * forwarded by calling write_cb */
+struct gfwd_list *add_guestfwd(struct gfwd_list **ex_ptr, SlirpWriteCb write_cb,
+                               void *opaque, struct in_addr addr, int port);
+
+/* Run the given command in the backaground, and send its output to the guest on
+ * the given address and port */
+struct gfwd_list *add_exec(struct gfwd_list **ex_ptr, const char *cmdline,
+                           struct in_addr addr, int port);
+
+/* Create a Unix socket, and expose it to the guest on the given address and
+ * port */
+struct gfwd_list *add_unix(struct gfwd_list **ex_ptr, const char *unixsock,
+                           struct in_addr addr, int port);
+
+/* Remove the guest forward bound to the given address and port */
+int remove_guestfwd(struct gfwd_list **ex_ptr, struct in_addr addr, int port);
 
 #endif
