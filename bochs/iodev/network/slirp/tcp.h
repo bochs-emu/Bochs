@@ -87,7 +87,8 @@ struct tcphdr {
 #define TCPOPT_TIMESTAMP	8
 
 #define TCPOPT_TSTAMP_HDR	\
-    (TCPOPT_NOP<<24|TCPOPT_NOP<<16|TCPOPT_TIMESTAMP<<8|TCPOLEN_TIMESTAMP)
+    (TCPOPT_NOP << 24 | TCPOPT_NOP << 16 | TCPOPT_TIMESTAMP << 8 | \
+    TCPOLEN_TIMESTAMP)
 #endif
 
 #ifndef TCPOLEN_MAXSEG
@@ -97,17 +98,6 @@ struct tcphdr {
 #define    TCPOLEN_TIMESTAMP		10
 #define    TCPOLEN_TSTAMP_APPA		(TCPOLEN_TIMESTAMP+2) /* appendix A */
 #endif
-
-/*
- * Default maximum segment size for TCP.
- * With an IP MSS of 576, this is 536,
- * but 512 is probably more convenient.
- * This should be defined as MIN(512, IP_MSS - sizeof (struct tcpiphdr)).
- *
- * We make this 1460 because we only care about Ethernet in the qemu context.
- */
-#undef TCP_MSS
-#define	TCP_MSS	1460
 
 #undef TCP_MAXWIN
 #define	TCP_MAXWIN	65535	/* largest value for (unscaled) window */
@@ -167,8 +157,7 @@ struct tcphdr {
  * send and receive from initial send and receive
  * sequence numbers.
  */
-#define tcp_rcvseqinit(tp) \
-     (tp)->rcv_adv = (tp)->rcv_nxt = (tp)->irs + 1
+#define tcp_rcvseqinit(tp) (tp)->rcv_adv = (tp)->rcv_nxt = (tp)->irs + 1
 
 #define tcp_sendseqinit(tp) \
     (tp)->snd_una = (tp)->snd_nxt = (tp)->snd_max = (tp)->snd_up = (tp)->iss

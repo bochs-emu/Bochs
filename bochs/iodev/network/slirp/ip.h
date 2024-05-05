@@ -178,7 +178,7 @@ struct	ip_timestamp {
 
 #define	IP_MSS		576		/* default maximum segment size */
 
-#if SIZEOF_CHAR_P == 4
+#if SIZEOF_INT_P == 4
 SLIRP_PACKED_BEGIN
 struct mbuf_ptr {
 	struct mbuf *mptr;
@@ -212,7 +212,6 @@ struct ipovly {
  * being reassembled is attached to one of these structures.
  * They are timed out after ipq_ttl drops to 0, and may also
  * be reclaimed if memory becomes tight.
- * size 28 bytes
  */
 struct ipq {
         struct qlink frag_link;			/* to ip headers of fragments */
@@ -221,7 +220,7 @@ struct ipq {
 	uint8_t	ipq_p;			/* protocol of this fragment */
 	uint16_t	ipq_id;			/* sequence id for reassembly */
 	struct	in_addr ipq_src,ipq_dst;
-} GCC_ATTRIBUTE((packed));
+};
 
 /*
  * Ip header, when holding a fragment.
@@ -231,7 +230,7 @@ struct ipq {
 struct	ipasfrag {
 	struct qlink ipf_link;
 	struct ip ipf_ip;
-} GCC_ATTRIBUTE((packed));
+};
 
 #define ipf_off      ipf_ip.ip_off
 #define ipf_tos      ipf_ip.ip_tos

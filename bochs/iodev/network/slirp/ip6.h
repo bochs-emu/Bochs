@@ -209,4 +209,13 @@ struct ip6_pseudohdr {
     uint8_t ih_nh; /* next header */
 };
 
+/*
+ * We don't want to mark these ip6 structs as packed as they are naturally
+ * correctly aligned; instead assert that there is no stray padding.
+ * If we marked the struct as packed then we would be unable to take
+ * the address of any of the fields in it.
+ */
+BX_STATIC_ASSERT(sizeof(struct ip6) == 40);
+BX_STATIC_ASSERT(sizeof(struct ip6_pseudohdr) == 40);
+
 #endif

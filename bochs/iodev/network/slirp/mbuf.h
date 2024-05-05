@@ -34,8 +34,6 @@
 #ifndef MBUF_H
 #define MBUF_H
 
-#define MINCSIZE 4096	/* Amount to increase mbuf if too small */
-
 /*
  * Macros for type conversion
  * mtod(m,t) -	convert mbuf pointer to data pointer of correct type

@@ -39,4 +39,7 @@
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #endif
 
+#define BX_STATIC_ASSERT(s) \
+    static_assert (s, "Invalid structure size");
+
 #endif

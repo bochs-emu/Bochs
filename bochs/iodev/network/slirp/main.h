@@ -2,12 +2,9 @@
 /*
  * Copyright (c) 1995 Danny Gasparovski.
  */
+
 #ifndef SLIRP_MAIN_H
 #define SLIRP_MAIN_H
-
-#ifdef HAVE_SYS_SELECT_H
-#include <sys/select.h>
-#endif
 
 #include "libslirp.h"
 

@@ -86,8 +86,9 @@
  */
 #define TCPTV_MSL       ( 5*PR_SLOWHZ)          /* max seg lifetime (hah!) */
 
-#define	TCPTV_SRTTBASE	0			/* base roundtrip time;
-						   if 0, no idea yet */
+#define	TCPTV_SRTTBASE \
+    0 /* base roundtrip time; \
+       if 0, no idea yet */
 #define	TCPTV_SRTTDFLT	(  3*PR_SLOWHZ)		/* assumed RTT if no info */
 
 #define	TCPTV_PERSMIN	(  5*PR_SLOWHZ)		/* retransmit persistence */
@@ -109,20 +110,24 @@
 /*
  * Force a time value to be in a certain range.
  */
-#define	TCPT_RANGESET(tv, value, tvmin, tvmax) { \
-	(tv) = (value); \
-	if ((tv) < (tvmin)) \
-		(tv) = (tvmin); \
-	else if ((tv) > (tvmax)) \
-		(tv) = (tvmax); \
-}
+#define	TCPT_RANGESET(tv, value, tvmin, tvmax) \
+    {                                          \
+        (tv) = (value);                        \
+        if ((tv) < (tvmin))                    \
+            (tv) = (tvmin);                    \
+        else if ((tv) > (tvmax))               \
+            (tv) = (tvmax);                    \
+    }
 
 extern const int tcp_backoff[];
 
 struct tcpcb;
 
+/* Process fast time-outs */
 void tcp_fasttimo(Slirp *);
+/* Process slow time-outs */
 void tcp_slowtimo(Slirp *);
+/* Cancel all timers for TCP tp */
 void tcp_canceltimers(struct tcpcb *);
 
 #endif

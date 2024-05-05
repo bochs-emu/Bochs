@@ -10,7 +10,6 @@
 #endif
 
 #include "config.h"
-#include "slirp_config.h"
 
 #ifdef _WIN32
 
@@ -59,6 +58,7 @@
 #include "tcpip.h"
 #include "udp.h"
 #include "ip_icmp.h"
+#include "ip6_icmp.h"
 #include "mbuf.h"
 #include "sbuf.h"
 #include "socket.h"
@@ -198,10 +198,17 @@ void if_start(Slirp *);
 /* Get the address of the DNS server on the host side */
 int get_dns_addr(struct in_addr *pdns_addr);
 
-#define SO_OPTIONS DO_KEEPALIVE
+#ifndef _WIN32
+#include <netdb.h>
+#endif
+
+/* Whether we should send TCP keepalive packets */
+extern bool slirp_do_keepalive;
+
 #define TCP_MAXIDLE (TCPTV_KEEPCNT * TCPTV_KEEPINTVL)
 
 /* dnssearch.c */
+/* Translate from vdnssearch in configuration, into Slirp */
 int translate_dnssearch(Slirp *s, const char ** names);
 
 /* cksum.c */

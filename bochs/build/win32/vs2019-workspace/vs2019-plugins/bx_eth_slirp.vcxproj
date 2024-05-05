@@ -241,6 +241,7 @@
     <ClInclude Include="..\iodev\network\slirp\if.h" />
     <ClInclude Include="..\iodev\network\slirp\ip.h" />
     <ClInclude Include="..\iodev\network\slirp\ip6.h" />
+    <ClInclude Include="..\iodev\network\slirp\ip6_icmp.h" />
     <ClInclude Include="..\iodev\network\slirp\ip_icmp.h" />
     <ClInclude Include="..\iodev\network\slirp\libslirp.h" />
     <ClInclude Include="..\iodev\network\slirp\main.h" />
@@ -248,7 +249,6 @@
     <ClInclude Include="..\iodev\network\slirp\misc.h" />
     <ClInclude Include="..\iodev\network\slirp\sbuf.h" />
     <ClInclude Include="..\iodev\network\slirp\slirp.h" />
-    <ClInclude Include="..\iodev\network\slirp\slirp_config.h" />
     <ClInclude Include="..\iodev\network\slirp\socket.h" />
     <ClInclude Include="..\iodev\network\slirp\tcp.h" />
     <ClInclude Include="..\iodev\network\slirp\tcp_timer.h" />
