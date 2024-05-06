@@ -36,6 +36,9 @@
 
 #if BX_HAVE_LIBSLIRP
 #include <slirp/libslirp.h>
+#ifdef __MINGW32__
+typedef ssize_t slirp_ssize_t;
+#endif
 #else
 #include "slirp/libslirp.h"
 #endif
