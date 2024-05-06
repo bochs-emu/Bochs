@@ -455,12 +455,14 @@ typedef unsigned long  Bit32u;
   ;; cmp function
   lcmpl:
   lcmpul:
+    push ebx
     and eax, #0x0000FFFF
     shl ebx, #16
     or  eax, ebx
     shr ebx, #16
     SEG SS
       cmp eax, dword ptr [di]
+    pop  ebx
     ret
 
   ;; sub function
@@ -519,6 +521,7 @@ typedef unsigned long  Bit32u;
 
   ;; sr function
   lsrul:
+    push ebx
     mov  cx,di
     jcxz lsr_exit
     and  eax, #0x0000FFFF
@@ -530,6 +533,7 @@ typedef unsigned long  Bit32u;
     mov  ebx, eax
     shr  ebx, #16
   lsr_exit:
+    pop  ebx
     ret
 
   ;; sl function
