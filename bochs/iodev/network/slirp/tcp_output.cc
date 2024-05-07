@@ -43,7 +43,7 @@
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 
-static const u_char  tcp_outflags[TCP_NSTATES] = {
+static const uint8_t  tcp_outflags[TCP_NSTATES] = {
 	TH_RST|TH_ACK, 0,      TH_SYN,        TH_SYN|TH_ACK,
 	TH_ACK,        TH_ACK, TH_FIN|TH_ACK, TH_FIN|TH_ACK,
 	TH_FIN|TH_ACK, TH_ACK, TH_ACK,
@@ -64,7 +64,7 @@ tcp_output(struct tcpcb *tp)
 	int off, flags, error;
 	struct mbuf *m;
 	struct tcpiphdr *ti;
-	u_char opt[MAX_TCPOPTLEN];
+	uint8_t opt[MAX_TCPOPTLEN];
 	unsigned optlen, hdrlen;
 	int idle, sendalot;
 

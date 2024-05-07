@@ -565,10 +565,10 @@ int
 tcp_emu(struct socket *so, struct mbuf *m)
 {
 	Slirp *slirp = so->slirp;
-	u_int n1, n2, n3, n4, n5, n6;
+	unsigned n1, n2, n3, n4, n5, n6;
         char buff[257];
 	uint32_t laddr;
-	u_int lport;
+	unsigned lport;
 	char *bptr;
 
 	DEBUG_CALL("tcp_emu");
@@ -856,8 +856,8 @@ tcp_emu(struct socket *so, struct mbuf *m)
 				/* This is the field containing the port
 				 * number that RA-player is listening to.
 				 */
-				lport = (((u_char*)bptr)[0] << 8)
-				+ ((u_char *)bptr)[1];
+				lport = (((uint8_t*)bptr)[0] << 8)
+				+ ((uint8_t *)bptr)[1];
 				if (lport < 6970)
 				   lport += 256;   /* don't know why */
 				if (lport < 6970 || lport > 7170)
@@ -875,8 +875,8 @@ tcp_emu(struct socket *so, struct mbuf *m)
 				}
 				if (p == 7071)
 				   p = 0;
-				*(u_char *)bptr++ = (p >> 8) & 0xff;
-                                *(u_char *)bptr = p & 0xff;
+				*(uint8_t *)bptr++ = (p >> 8) & 0xff;
+                                *(uint8_t *)bptr = p & 0xff;
 				ra = 0;
 				return 1;   /* port redirected, we're done */
 				break;

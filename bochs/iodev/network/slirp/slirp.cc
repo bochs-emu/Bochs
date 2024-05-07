@@ -48,23 +48,22 @@ struct in_addr loopback_addr;
 unsigned long loopback_mask;
 
 /* emulated hosts use the MAC addr 52:55:IP:IP:IP:IP */
-static const uint8_t special_ethaddr[ETH_ALEN] = {
-    0x52, 0x55, 0x00, 0x00, 0x00, 0x00
-};
+static const uint8_t special_ethaddr[ETH_ALEN] = { 0x52, 0x55, 0x00,
+                                                   0x00, 0x00, 0x00 };
 
 static const uint8_t zero_ethaddr[ETH_ALEN] = { 0, 0, 0, 0, 0, 0 };
 
 unsigned curtime;
 
 static struct in_addr dns_addr;
-static u_int dns_addr_time;
+static unsigned dns_addr_time;
 
 #define TIMEOUT_FAST 2  /* milliseconds */
 #define TIMEOUT_SLOW 499  /* milliseconds */
 /* for the aging of certain requests like DNS */
 #define TIMEOUT_DEFAULT 1000  /* milliseconds */
 
-#if defined(_WIN32) || defined(__CYGWIN__)
+#if defined(_WIN32)
 
 #include <iphlpapi.h>
 #include <winerror.h>
@@ -94,7 +93,7 @@ int get_dns_addr(struct in_addr *pdns_addr)
     }
 
     if ((ret = GetNetworkParams(FixedInfo, &BufLen)) != ERROR_SUCCESS) {
-        printf("GetNetworkParams failed. ret = %08x\n", (u_int)ret );
+        printf("GetNetworkParams failed. ret = %08x\n", (unsigned)ret );
         if (FixedInfo) {
             GlobalFree(FixedInfo);
             FixedInfo = NULL;
@@ -338,8 +337,10 @@ void slirp_cleanup(Slirp *slirp)
     free(slirp);
 }
 
-#define CONN_CANFSEND(so) (((so)->so_state & (SS_FCANTSENDMORE|SS_ISFCONNECTED)) == SS_ISFCONNECTED)
-#define CONN_CANFRCV(so) (((so)->so_state & (SS_FCANTRCVMORE|SS_ISFCONNECTED)) == SS_ISFCONNECTED)
+#define CONN_CANFSEND(so) \
+    (((so)->so_state & (SS_FCANTSENDMORE|SS_ISFCONNECTED)) == SS_ISFCONNECTED)
+#define CONN_CANFRCV(so) \
+    (((so)->so_state & (SS_FCANTRCVMORE|SS_ISFCONNECTED)) == SS_ISFCONNECTED)
 #define UPD_NFDS(x) if (nfds < (x)) nfds = (x)
 
 static void slirp_update_timeout(Slirp *slirp, uint32_t *timeout)

@@ -100,7 +100,7 @@
 	} \
 }
 #endif
-static void tcp_dooptions(struct tcpcb *tp, u_char *cp, int cnt,
+static void tcp_dooptions(struct tcpcb *tp, uint8_t *cp, int cnt,
                           struct tcpiphdr *ti);
 static void tcp_xmit_timer(struct tcpcb *tp, int rtt);
 
@@ -215,27 +215,25 @@ present:
  * TCP input routine, follows pages 65-76 of the
  * protocol specification dated September, 1981 very closely.
  */
-void
-tcp_input(struct mbuf *m, int iphlen, struct socket *inso)
+void tcp_input(struct mbuf *m, int iphlen, struct socket *inso)
 {
-  	struct ip save_ip, *ip;
-	struct tcpiphdr *ti;
-	char * optp = NULL;
-	int optlen = 0;
-	int len, tlen, off;
-        struct tcpcb *tp = NULL;
-	int tiflags;
-        struct socket *so = NULL;
-	int todrop, acked, ourfinisacked, needoutput = 0;
-	int iss = 0;
-	u_long tiwin;
-	int ret;
+    struct ip save_ip, *ip;
+    struct tcpiphdr *ti;
+    char * optp = NULL;
+    int optlen = 0;
+    int len, tlen, off;
+    struct tcpcb *tp = NULL;
+    int tiflags;
+    struct socket *so = NULL;
+    int todrop, acked, ourfinisacked, needoutput = 0;
+    int iss = 0;
+    u_long tiwin;
+    int ret;
     struct gfwd_list *ex_ptr;
     Slirp *slirp;
 
-	DEBUG_CALL("tcp_input");
-	DEBUG_ARGS((dfd, " m = %8lx  iphlen = %2d  inso = %lx\n",
-		    (long )m, iphlen, (long )inso ));
+    DEBUG_CALL("tcp_input");
+    DEBUG_ARG("m = %p  iphlen = %2d  inso = %p", m, iphlen, inso);
 
 	/*
 	 * If called with m == 0, then we're continuing the connect
@@ -422,7 +420,7 @@ findso:
 	 * else do it below (after getting remote address).
 	 */
 	if (optp && tp->t_state != TCPS_LISTEN)
-		tcp_dooptions(tp, (u_char *)optp, optlen, ti);
+		tcp_dooptions(tp, (uint8_t *)optp, optlen, ti);
 
 	/*
 	 * Header prediction: check for the two common cases
@@ -588,7 +586,7 @@ findso:
 	  }
 
 	  if((tcp_fconnect(so) == -1) && (errno != EINPROGRESS) && (errno != EWOULDBLOCK)) {
-	    u_char code=ICMP_UNREACH_NET;
+	    uint8_t code=ICMP_UNREACH_NET;
 	    DEBUG_MISC((dfd, " tcp fconnect errno = %d-%s\n",
 			errno,strerror(errno)));
 	    if(errno == ECONNREFUSED) {
@@ -635,7 +633,7 @@ findso:
 	  tcp_template(tp);
 
 	  if (optp)
-	    tcp_dooptions(tp, (u_char *)optp, optlen, ti);
+	    tcp_dooptions(tp, (uint8_t *)optp, optlen, ti);
 
 	  if (iss)
 	    tp->iss = iss;
@@ -951,7 +949,7 @@ trimthenstep6:
 					tp->t_dupacks = 0;
 				else if (++tp->t_dupacks == TCPREXMTTHRESH) {
 					tcp_seq onxt = tp->snd_nxt;
-					u_int win =
+					unsigned win =
 					    MIN(tp->snd_wnd, tp->snd_cwnd) / 2 /
 						tp->t_maxseg;
 
@@ -1020,8 +1018,8 @@ trimthenstep6:
 		 * (maxseg^2 / cwnd per packet).
 		 */
 		{
-		  u_int cw = tp->snd_cwnd;
-		  u_int incr = tp->t_maxseg;
+		  unsigned cw = tp->snd_cwnd;
+		  unsigned incr = tp->t_maxseg;
 
 		  if (cw > tp->snd_ssthresh)
 		    incr = incr * incr / cw;
@@ -1292,14 +1290,14 @@ drop:
 	m_free(m);
 }
 
-static void
-tcp_dooptions(struct tcpcb *tp, u_char *cp, int cnt, struct tcpiphdr *ti)
+static void tcp_dooptions(struct tcpcb *tp, uint8_t *cp, int cnt,
+                          struct tcpiphdr *ti)
 {
-	uint16_t mss;
-	int opt, optlen;
+    uint16_t mss;
+    int opt, optlen;
 
-	DEBUG_CALL("tcp_dooptions");
-	DEBUG_ARGS((dfd, " tp = %lx  cnt=%i\n", (long)tp, cnt));
+    DEBUG_CALL("tcp_dooptions");
+    DEBUG_ARG("tp = %p  cnt=%i", tp, cnt);
 
 	for (; cnt > 0; cnt -= optlen, cp += optlen) {
 		opt = cp[0];
@@ -1461,8 +1459,7 @@ tcp_xmit_timer(struct tcpcb *tp, int rtt)
  * parameters from pre-set or cached values in the routing entry.
  */
 
-int
-tcp_mss(struct tcpcb *tp, u_int offer)
+int tcp_mss(struct tcpcb *tp, unsigned offer)
 {
 	struct socket *so = tp->t_socket;
 	int mss;

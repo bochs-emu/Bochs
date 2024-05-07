@@ -193,6 +193,15 @@ struct Slirp {
     bool disable_dns; /* slirp will not redirect/serve any DNS packet */
 };
 
+/*
+ * Send one packet from each session.
+ * If there are packets on the fastq, they are sent FIFO, before
+ * everything else.  Then we choose the first packet from each
+ * batchq session (socket) and send it.
+ * For example, if there are 3 ftp sessions fighting for bandwidth,
+ * one packet will be sent from the first session, then one packet
+ * from the second session, then one packet from the third.
+ */
 void if_start(Slirp *);
 
 /* Get the address of the DNS server on the host side */
@@ -212,47 +221,124 @@ extern bool slirp_do_keepalive;
 int translate_dnssearch(Slirp *s, const char ** names);
 
 /* cksum.c */
+/* Compute the checksum of the mbuf */
 int cksum(struct mbuf *m, int len);
+/* Compute the checksum of the mbuf which contains an IPv6 packet */
+int ip6_cksum(struct mbuf *m);
 
 /* if.c */
+/* Called from slirp_new */
 void if_init(Slirp *);
+/* Queue packet into an output queue (fast or batch), for sending to the guest */
 void if_output(struct socket *, struct mbuf *);
 
 /* ip_input.c */
+/* Called from slirp_new */
 void ip_init(Slirp *);
+/* Called from slirp_cleanup */
 void ip_cleanup(Slirp *);
+/* Process IPv4 packet coming from the guest */
 void ip_input(struct mbuf *);
+/*
+ * IP timer processing;
+ * if a timer expires on a reassembly
+ * queue, discard it.
+ */
 void ip_slowtimo(Slirp *);
+/*
+ * Strip out IP options, at higher
+ * level protocol in the kernel.
+ * Second argument is buffer to which options
+ * will be moved, and return value is their length.
+ * (XXX) should be deleted; last arg currently ignored.
+ */
 void ip_stripoptions(struct mbuf *, struct mbuf *);
 
 /* ip_output.c */
+/* Send IPv4 packet to the guest */
 int ip_output(struct socket *, struct mbuf *);
 
 /* tcp_input.c */
+/* Process TCP datagram coming from the guest */
 void tcp_input(struct mbuf *, int, struct socket *);
-int tcp_mss(struct tcpcb *, u_int);
+/* Determine a reasonable value for maxseg size */
+int tcp_mss(struct tcpcb *, unsigned offer);
 
 /* tcp_output.c */
+/* Send TCP datagram to the guest */
 int tcp_output(struct tcpcb *);
+/* Start/restart persistence timer */
 void tcp_setpersist(struct tcpcb *);
 
 /* tcp_subr.c */
+/* Called from slirp_new */
 void tcp_init(Slirp *);
+/* Called from slirp_cleanup */
 void tcp_cleanup(Slirp *);
+/*
+ * Create template to be used to send tcp packets on a connection.
+ * Call after host entry created, fills
+ * in a skeletal tcp/ip header, minimizing the amount of work
+ * necessary when the connection is used.
+ */
 void tcp_template(struct tcpcb *);
+/*
+ * Send a single message to the TCP at address specified by
+ * the given TCP/IP header.
+ */
 void tcp_respond(struct tcpcb *, struct tcpiphdr *, struct mbuf *, tcp_seq, tcp_seq, int);
+/*
+ * Create a new TCP control block, making an
+ * empty reassembly queue and hooking it to the argument
+ * protocol control block.
+ */
 struct tcpcb * tcp_newtcpcb(struct socket *);
-struct tcpcb * tcp_close(struct tcpcb *);
+/*
+ * Close a TCP control block:
+ * discard all space held by the tcp
+ * discard internet protocol block
+ * wake up any sleepers
+ */
+struct tcpcb *tcp_close(struct tcpcb *);
+/* The Internet socket got closed, tell the guest */
 void tcp_sockclosed(struct tcpcb *);
+/*
+ * Connect to a host on the Internet
+ * Called by tcp_input
+ */
 int tcp_fconnect(struct socket *);
+/* Accept the connection from the Internet, and connect to the guest */
 void tcp_connect(struct socket *);
+/* Attach a TCPCB to a socket */
 int tcp_attach(struct socket *);
+/* * Return TOS according to the ports */
 uint8_t tcp_tos(struct socket *);
+/*
+ * We received a packet from the guest.
+ *
+ * Emulate programs that try and connect to us
+ * This includes ftp (the data connection is
+ * initiated by the server) and IRC (DCC CHAT and
+ * DCC SEND) for now
+ */
 int tcp_emu(struct socket *, struct mbuf *);
+/* Configure the socket, now that the guest completed accepting the connection */
 int tcp_ctl(struct socket *);
+/*
+ * Drop a TCP connection, reporting
+ * the specified error.  If connection is synchronized,
+ * then send a RST to peer.
+ */
 struct tcpcb *tcp_drop(struct tcpcb *tp, int err);
+
+/* Find the socket for the guest address and port */
+struct socket *slirp_find_ctl_socket(Slirp *slirp, struct in_addr guest_addr,
+                                     int guest_port);
 
 /* Send a frame to the virtual Ethernet board, i.e. call the application send_packet callback */
 void slirp_send_packet_all(Slirp *slirp, const void *buf, size_t len);
+
+/* Create a new timer, i.e. call the application timer_new callback */
+void *slirp_timer_new(Slirp *slirp, SlirpTimerId id, void *cb_opaque);
 
 #endif

@@ -16,8 +16,8 @@ static void sofcantrcvmore(struct socket *so);
 static void sofcantsendmore(struct socket *so);
 
 struct socket *
-solookup(struct socket *head, struct in_addr laddr, u_int lport,
-         struct in_addr faddr, u_int fport)
+solookup(struct socket *head, struct in_addr laddr, unsigned lport,
+         struct in_addr faddr, unsigned fport)
 {
 	struct socket *so;
 
@@ -427,49 +427,50 @@ sowrite(struct socket *so)
 void
 sorecvfrom(struct socket *so)
 {
-	struct sockaddr_in addr;
-	socklen_t addrlen = sizeof(struct sockaddr_in);
+    struct sockaddr_in addr;
+    socklen_t addrlen = sizeof(struct sockaddr_in);
 
-	DEBUG_CALL("sorecvfrom");
-	DEBUG_ARG("so = %lx", (long)so);
+    DEBUG_CALL("sorecvfrom");
+    DEBUG_ARG("so = %lx", (long)so);
 
-	if (so->so_type == IPPROTO_ICMP) {   /* This is a "ping" reply */
-	  char buff[256];
-	  int len;
+    if (so->so_type == IPPROTO_ICMP) {   /* This is a "ping" reply */
+        char buff[256];
+        int len;
 
-	  len = recvfrom(so->s, buff, 256, 0,
-			 (struct sockaddr *)&addr, &addrlen);
-	  /* XXX Check if reply is "correct"? */
+        len = recvfrom(so->s, buff, 256, 0,
+                       (struct sockaddr *)&addr, &addrlen);
+        /* XXX Check if reply is "correct"? */
 
-	  if(len == -1 || len == 0) {
-	    u_char code=ICMP_UNREACH_PORT;
+        if (len == -1 || len == 0) {
+            uint8_t code = ICMP_UNREACH_PORT;
 
-	    if(errno == EHOSTUNREACH) code=ICMP_UNREACH_HOST;
-	    else if(errno == ENETUNREACH) code=ICMP_UNREACH_NET;
+            if (errno == EHOSTUNREACH)
+                code = ICMP_UNREACH_HOST;
+            else if(errno == ENETUNREACH)
+                code = ICMP_UNREACH_NET;
 
-	    DEBUG_MISC((dfd," udp icmp rx errno = %d-%s\n",
-			errno,strerror(errno)));
-	    icmp_error(so->so_m, ICMP_UNREACH,code, 0,strerror(errno));
-	  } else {
-	    icmp_reflect(so->so_m);
+            DEBUG_MISC(" udp icmp rx errno = %d-%s", errno,strerror(errno));
+            icmp_error(so->so_m, ICMP_UNREACH,code, 0,strerror(errno));
+        } else {
+            icmp_reflect(so->so_m);
             so->so_m = NULL; /* Don't m_free() it again! */
-	  }
-	  /* No need for this socket anymore, udp_detach it */
-	  udp_detach(so);
-	} else {                            	/* A "normal" UDP packet */
-	  struct mbuf *m;
-          int len;
+        }
+        /* No need for this socket anymore, udp_detach it */
+        udp_detach(so);
+    } else {                            	/* A "normal" UDP packet */
+        struct mbuf *m;
+        int len;
 #ifdef _WIN32
-          ULONG n;
+        ULONG n;
 #else
-          int n;
+        int n;
 #endif
 
-	  m = m_get(so->slirp);
-	  if (!m) {
-	      return;
-	  }
-	  m->m_data += IF_MAXLINKHDR;
+        m = m_get(so->slirp);
+        if (!m) {
+            return;
+        }
+        m->m_data += IF_MAXLINKHDR;
 
 	  /*
 	   * XXX Shouldn't FIONREAD packets destined for port 53,
@@ -491,7 +492,7 @@ sorecvfrom(struct socket *so)
 	  DEBUG_MISC((dfd, " did recvfrom %d, errno = %d-%s\n",
 		      m->m_len, errno,strerror(errno)));
 	  if(m->m_len<0) {
-	    u_char code=ICMP_UNREACH_PORT;
+	    uint8_t code = ICMP_UNREACH_PORT;
 
 	    if(errno == EHOSTUNREACH) code=ICMP_UNREACH_HOST;
 	    else if(errno == ENETUNREACH) code=ICMP_UNREACH_NET;
@@ -572,9 +573,8 @@ sosendto(struct socket *so, struct mbuf *m)
 /*
  * Listen for incoming TCP connections
  */
-struct socket *
-tcp_listen(Slirp *slirp, uint32_t haddr, u_int hport, uint32_t laddr,
-           u_int lport, int flags)
+struct socket *tcp_listen(Slirp *slirp, uint32_t haddr, unsigned hport,
+                          uint32_t laddr, unsigned lport, int flags)
 {
 	struct sockaddr_in addr;
 	struct socket *so;

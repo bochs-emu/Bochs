@@ -181,7 +181,7 @@ static inline void sockaddr_copy(struct sockaddr *dst, socklen_t dstlen, const s
 }
 
 /* Find the socket corresponding to lhost & fhost, trying last as a guess */
-struct socket *solookup(struct socket *, struct in_addr, u_int, struct in_addr, u_int);
+struct socket *solookup(struct socket *, struct in_addr, unsigned, struct in_addr, unsigned);
 /* Create a new socket */
 struct socket *socreate(Slirp *);
 /* Release a socket */

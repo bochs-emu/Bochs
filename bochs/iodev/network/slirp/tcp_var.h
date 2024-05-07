@@ -48,9 +48,9 @@ struct tcpcb {
 	short	t_rxtshift;		/* log(2) of rexmt exp. backoff */
 	short	t_rxtcur;		/* current retransmit value */
 	short	t_dupacks;		/* consecutive dup acks recd */
-	u_short	t_maxseg;		/* maximum segment size */
-	char	t_force;		/* 1 if forcing out a byte */
-	u_short	t_flags;
+    uint16_t t_maxseg; /* maximum segment size */
+    uint8_t t_force; /* 1 if forcing out a byte */
+    uint16_t t_flags;
 #define	TF_ACKNOW	0x0001		/* ack peer immediately */
 #define	TF_DELACK	0x0002		/* ack, but try to delay it */
 #define	TF_NODELAY	0x0004		/* don't delay packets to coalesce */
@@ -91,7 +91,8 @@ struct tcpcb {
 	tcp_seq	snd_max;		/* highest sequence number sent;
 					 * used to recognize retransmits
 					 */
-/* congestion control (for slow start, source quench, retransmit after loss) */
+    /* congestion control (for slow start, source quench, retransmit after loss)
+    */
 	uint32_t snd_cwnd;		/* congestion-controlled window */
 	uint32_t snd_ssthresh;		/* snd_cwnd size threshold for
 					 * for slow start exponential to
@@ -106,28 +107,27 @@ struct tcpcb {
 	tcp_seq	t_rtseq;		/* sequence number being timed */
 	short	t_srtt;			/* smoothed round-trip time */
 	short	t_rttvar;		/* variance in round-trip time */
-	u_short	t_rttmin;		/* minimum rtt allowed */
+	uint16_t t_rttmin;		/* minimum rtt allowed */
 	uint32_t max_sndwnd;		/* largest window peer has offered */
 
-/* out-of-band data */
-	char	t_oobflags;		/* have some */
-	char	t_iobc;			/* input character */
-#define	TCPOOB_HAVEDATA	0x01
-#define	TCPOOB_HADDATA	0x02
-	short	t_softerror;		/* possible error not yet reported */
+    /* out-of-band data */
+    uint8_t t_oobflags; /* have some */
+    uint8_t t_iobc; /* input character */
+#define	TCPOOB_HAVEDATA 0x01
+#define	TCPOOB_HADDATA 0x02
+    short t_softerror; /* possible error not yet reported */
 
 /* RFC 1323 variables */
-	u_char	snd_scale;		/* window scaling for send window */
-	u_char	rcv_scale;		/* window scaling for recv window */
-	u_char	request_r_scale;	/* pending window scaling */
-	u_char	requested_s_scale;
-	uint32_t	ts_recent;		/* timestamp echo data */
-	uint32_t	ts_recent_age;		/* when last updated */
-	tcp_seq	last_ack_sent;
-
+    uint8_t snd_scale; /* window scaling for send window */
+    uint8_t rcv_scale; /* window scaling for recv window */
+    uint8_t request_r_scale; /* pending window scaling */
+    uint8_t requested_s_scale;
+    uint32_t ts_recent; /* timestamp echo data */
+    uint32_t ts_recent_age; /* when last updated */
+    tcp_seq last_ack_sent;
 };
 
-#define	sototcpcb(so)	((so)->so_tcpcb)
+#define	sototcpcb(so) ((so)->so_tcpcb)
 
 /*
  * The smoothed round-trip time and estimated variance
@@ -138,10 +138,10 @@ struct tcpcb {
  * and thus an "ALPHA" of 0.875.  rttvar has 2 bits to the right of the
  * binary point, and is smoothed with an ALPHA of 0.75.
  */
-#define	TCP_RTT_SCALE		8	/* multiplier for srtt; 3 bits frac. */
-#define	TCP_RTT_SHIFT		3	/* shift for srtt; 3 bits frac. */
-#define	TCP_RTTVAR_SCALE	4	/* multiplier for rttvar; 2 bits */
-#define	TCP_RTTVAR_SHIFT	2	/* multiplier for rttvar; 2 bits */
+#define TCP_RTT_SCALE 8 /* multiplier for srtt; 3 bits frac. */
+#define TCP_RTT_SHIFT 3 /* shift for srtt; 3 bits frac. */
+#define TCP_RTTVAR_SCALE 4 /* multiplier for rttvar; 2 bits */
+#define TCP_RTTVAR_SHIFT 2 /* multiplier for rttvar; 2 bits */
 
 /*
  * The initial retransmission should happen at rtt + 4 * rttvar.
@@ -156,7 +156,6 @@ struct tcpcb {
  * This macro assumes that the value of TCP_RTTVAR_SCALE
  * is the same as the multiplier for rttvar.
  */
-#define	TCP_REXMTVAL(tp) \
-	(((tp)->t_srtt >> TCP_RTT_SHIFT) + (tp)->t_rttvar)
+#define TCP_REXMTVAL(tp) (((tp)->t_srtt >> TCP_RTT_SHIFT) + (tp)->t_rttvar)
 
 #endif

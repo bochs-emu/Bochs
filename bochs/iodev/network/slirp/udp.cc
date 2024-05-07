@@ -362,9 +362,8 @@ udp_tos(struct socket *so)
 	return 0;
 }
 
-struct socket *
-udp_listen(Slirp *slirp, uint32_t haddr, u_int hport, uint32_t laddr,
-           u_int lport, int flags)
+struct socket *udp_listen(Slirp *slirp, uint32_t haddr, unsigned hport,
+                          uint32_t laddr, unsigned lport, int flags)
 {
 	struct sockaddr_in addr;
 	struct socket *so;

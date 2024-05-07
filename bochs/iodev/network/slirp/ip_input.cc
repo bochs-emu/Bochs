@@ -464,7 +464,7 @@ ip_dooptions(m)
 	struct mbuf *m;
 {
 	struct ip *ip = mtod(m, struct ip *);
-	u_char *cp;
+	uint8_t *cp;
 	struct ip_timestamp *ipt;
 	struct in_ifaddr *ia;
 	int opt, optlen, cnt, off, code, type, forward = 0;
@@ -473,7 +473,7 @@ typedef uint32_t n_time;
 	n_time ntime;
 
 	dst = ip->ip_dst;
-	cp = (u_char *)(ip + 1);
+	cp = (uint8_t *)(ip + 1);
 	cnt = (ip->ip_hl << 2) - sizeof (struct ip);
 	for (; cnt > 0; cnt -= optlen, cp += optlen) {
 		opt = cp[IPOPT_OPTVAL];
@@ -484,7 +484,7 @@ typedef uint32_t n_time;
 		else {
 			optlen = cp[IPOPT_OLEN];
 			if (optlen <= 0 || optlen > cnt) {
-				code = &cp[IPOPT_OLEN] - (u_char *)ip;
+				code = &cp[IPOPT_OLEN] - (uint8_t *)ip;
 				goto bad;
 			}
 		}
@@ -505,7 +505,7 @@ typedef uint32_t n_time;
 		case IPOPT_LSRR:
 		case IPOPT_SSRR:
 			if ((off = cp[IPOPT_OFFSET]) < IPOPT_MINOFF) {
-				code = &cp[IPOPT_OFFSET] - (u_char *)ip;
+				code = &cp[IPOPT_OFFSET] - (uint8_t *)ip;
 				goto bad;
 			}
 			ipaddr.sin_addr = ip->ip_dst;
@@ -560,7 +560,7 @@ typedef uint32_t n_time;
 
 		case IPOPT_RR:
 			if ((off = cp[IPOPT_OFFSET]) < IPOPT_MINOFF) {
-				code = &cp[IPOPT_OFFSET] - (u_char *)ip;
+				code = &cp[IPOPT_OFFSET] - (uint8_t *)ip;
 				goto bad;
 			}
 			/*
@@ -587,7 +587,7 @@ typedef uint32_t n_time;
 			break;
 
 		case IPOPT_TS:
-			code = cp - (u_char *)ip;
+			code = cp - (uint8_t *)ip;
 			ipt = (struct ip_timestamp *)cp;
 			if (ipt->ipt_len < 5)
 				goto bad;
