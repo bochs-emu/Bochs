@@ -17,16 +17,16 @@
 
 #if defined(_MSC_VER)
 #include <io.h>
-#ifndef BX_OSDEP_H
 #define strdup     _strdup
 #define open       _open
 #define close      _close
 #define lseek      _lseeki64
 #define read       _read
 #define write      _write
-#endif
 #define strcasecmp _stricmp
 #endif
+
+#define SLIRP_N_ELEMENTS(x) (sizeof(x) / sizeof((x)[0]))
 
 #ifndef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))

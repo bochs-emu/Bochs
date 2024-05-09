@@ -75,27 +75,25 @@
         }              \
     }
 
-#define ZERO_ADDR    \
-    {                \
-        .s6_addr = { \
-            0x00,    \
-            0x00,    \
-            0x00,    \
-            0x00,    \
-            0x00,    \
-            0x00,    \
-            0x00,    \
-            0x00,    \
-            0x00,    \
-            0x00,    \
-            0x00,    \
-            0x00,    \
-            0x00,    \
-            0x00,    \
-            0x00,    \
-            0x00     \
-        }            \
-    }
+const struct in6_addr zero_addr = \
+    {            \
+        0x00,    \
+        0x00,    \
+        0x00,    \
+        0x00,    \
+        0x00,    \
+        0x00,    \
+        0x00,    \
+        0x00,    \
+        0x00,    \
+        0x00,    \
+        0x00,    \
+        0x00,    \
+        0x00,    \
+        0x00,    \
+        0x00,    \
+        0x00     \
+    };
 
 /* Check that two IPv6 addresses are equal */
 static inline bool in6_equal(const struct in6_addr *a, const struct in6_addr *b)
@@ -160,7 +158,7 @@ static inline bool in6_equal_mach(const struct in6_addr *a,
     (in6_equal_net(a, &(struct in6_addr)SOLICITED_NODE_PREFIX, 104))
 
 /* Check that the IPv6 is zero */
-#define in6_zero(a) (in6_equal(a, &(struct in6_addr)ZERO_ADDR))
+#define in6_zero(a) (in6_equal(a, &zero_addr))
 
 /* Compute emulated host MAC address from its ipv6 address */
 static inline void in6_compute_ethaddr(struct in6_addr ip,

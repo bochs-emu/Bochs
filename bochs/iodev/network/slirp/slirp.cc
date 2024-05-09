@@ -37,6 +37,37 @@
 #undef if_mtu
 #endif
 
+#if defined(_WIN32)
+
+#define INITIAL_DNS_ADDR_BUF_SIZE 32 * 1024
+#define REALLOC_RETRIES 5
+
+// Broadcast site local DNS resolvers. We do not use these because they are
+// highly unlikely to be valid.
+// https://www.ietf.org/proceedings/52/I-D/draft-ietf-ipngwg-dns-discovery-03.txt
+static const struct in6_addr SITE_LOCAL_DNS_BROADCAST_ADDRS[] = {
+    {
+        {{
+            0xfe, 0xc0, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
+        }}
+    },
+    {
+        {{
+            0xfe, 0xc0, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02
+        }}
+    },
+    {
+        {{
+            0xfe, 0xc0, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x03,
+        }}
+    },
+};
+
+#endif
+
 int slirp_debug;
 
 /* Define to 1 if you want KEEPALIVE timers */
@@ -51,12 +82,13 @@ unsigned long loopback_mask;
 static const uint8_t special_ethaddr[ETH_ALEN] = { 0x52, 0x55, 0x00,
                                                    0x00, 0x00, 0x00 };
 
-static const uint8_t zero_ethaddr[ETH_ALEN] = { 0, 0, 0, 0, 0, 0 };
-
 unsigned curtime;
 
 static struct in_addr dns_addr;
+static struct in6_addr dns6_addr;
+static uint32_t dns6_scope_id;
 static unsigned dns_addr_time;
+static unsigned dns6_addr_time;
 
 #define TIMEOUT_FAST 2  /* milliseconds */
 #define TIMEOUT_SLOW 499  /* milliseconds */
@@ -65,14 +97,11 @@ static unsigned dns_addr_time;
 
 #if defined(_WIN32)
 
-#include <iphlpapi.h>
-#include <winerror.h>
-
 int get_dns_addr(struct in_addr *pdns_addr)
 {
-    FIXED_INFO *FixedInfo=NULL;
-    ULONG    BufLen;
-    DWORD    ret;
+    FIXED_INFO *FixedInfo = NULL;
+    ULONG BufLen;
+    DWORD ret;
     IP_ADDR_STRING *pIPAddr;
     struct in_addr tmp_addr;
 
@@ -93,7 +122,7 @@ int get_dns_addr(struct in_addr *pdns_addr)
     }
 
     if ((ret = GetNetworkParams(FixedInfo, &BufLen)) != ERROR_SUCCESS) {
-        printf("GetNetworkParams failed. ret = %08x\n", (unsigned)ret );
+        printf("GetNetworkParams failed. ret = %08x\n", (unsigned)ret);
         if (FixedInfo) {
             GlobalFree(FixedInfo);
             FixedInfo = NULL;
@@ -113,82 +142,388 @@ int get_dns_addr(struct in_addr *pdns_addr)
     return 0;
 }
 
-#else
-
-static struct stat dns_addr_stat;
-
-int get_dns_addr(struct in_addr *pdns_addr)
+static int is_site_local_dns_broadcast(struct in6_addr *address)
 {
-    char buff[512];
-    char buff2[257];
-    FILE *f;
-    int found = 0;
-    struct in_addr tmp_addr;
-
-    if (dns_addr.s_addr != 0) {
-        struct stat old_stat;
-        if ((curtime - dns_addr_time) < TIMEOUT_DEFAULT) {
-            *pdns_addr = dns_addr;
-            return 0;
+    int i;
+    for (i = 0; i < (int)SLIRP_N_ELEMENTS(SITE_LOCAL_DNS_BROADCAST_ADDRS); i++) {
+        if (in6_equal(address, &SITE_LOCAL_DNS_BROADCAST_ADDRS[i])) {
+            return 1;
         }
-        old_stat = dns_addr_stat;
-        if (stat("/etc/resolv.conf", &dns_addr_stat) != 0)
-            return -1;
-        if ((dns_addr_stat.st_dev == old_stat.st_dev)
-            && (dns_addr_stat.st_ino == old_stat.st_ino)
-            && (dns_addr_stat.st_size == old_stat.st_size)
-            && (dns_addr_stat.st_mtime == old_stat.st_mtime)) {
-            *pdns_addr = dns_addr;
-            return 0;
+    }
+    return 0;
+}
+
+static void print_dns_v6_address(struct in6_addr address)
+{
+    char address_str[INET6_ADDRSTRLEN] = "";
+    if (inet_ntop(AF_INET6, &address, address_str, INET6_ADDRSTRLEN)
+        == NULL) {
+        DEBUG_ERROR("Failed to stringify IPv6 address for logging.");
+        return;
+    }
+    DEBUG_RAW_CALL("IPv6 DNS server found: %s", address_str);
+}
+
+// Gets the first valid DNS resolver with an IPv6 address.
+// Ignores any site local broadcast DNS servers, as these
+// are on deprecated addresses and not generally expected
+// to work. Further details at:
+// https://www.ietf.org/proceedings/52/I-D/draft-ietf-ipngwg-dns-discovery-03.txt
+static int get_ipv6_dns_server(struct in6_addr *dns_server_address, uint32_t *scope_id)
+{
+    PIP_ADAPTER_ADDRESSES addresses = NULL;
+    PIP_ADAPTER_ADDRESSES address = NULL;
+    IP_ADAPTER_DNS_SERVER_ADDRESS *dns_server = NULL;
+    struct sockaddr_in6 *dns_v6_addr = NULL;
+
+    ULONG buf_size = INITIAL_DNS_ADDR_BUF_SIZE;
+    DWORD res = ERROR_BUFFER_OVERFLOW;
+    int i;
+
+    for (i = 0; i < REALLOC_RETRIES; i++) {
+        // If non null, we hit buffer overflow, free it so we can try again.
+        if (addresses != NULL) {
+            free(addresses);
+        }
+
+        addresses = (PIP_ADAPTER_ADDRESSES)malloc(buf_size);
+        res = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_PREFIX, NULL,
+                                   addresses, &buf_size);
+
+        if (res != ERROR_BUFFER_OVERFLOW) {
+            break;
         }
     }
 
-    f = fopen("/etc/resolv.conf", "r");
-    if (!f)
-        return -1;
+    if (res != NO_ERROR) {
+        DEBUG_ERROR("Failed to get IPv6 DNS addresses due to error %lX", res);
+        goto failure;
+    }
 
-#ifdef DEBUG
-    printf("IP address of your DNS(s): ");
-#endif
-    while (fgets(buff, 512, f) != NULL) {
-        if (sscanf(buff, "nameserver%*[ \t]%256s", buff2) == 1) {
-            if (!inet_aton(buff2, &tmp_addr))
+    address = addresses;
+    for (address = addresses; address != NULL; address = address->Next) {
+        for (dns_server = address->FirstDnsServerAddress;
+             dns_server != NULL;
+             dns_server = dns_server->Next) {
+
+            if (dns_server->Address.lpSockaddr->sa_family != AF_INET6) {
                 continue;
-            /* If it's the first one, set it to dns_addr */
-            if (!found) {
-                *pdns_addr = tmp_addr;
-                dns_addr = tmp_addr;
-                dns_addr_time = curtime;
             }
-#ifdef DEBUG
-            else
-                printf(", ");
-#endif
-            if (++found > 3) {
-#ifdef DEBUG
-                printf("(more)");
-#endif
-                break;
+
+            dns_v6_addr = (struct sockaddr_in6 *)dns_server->Address.lpSockaddr;
+            if (is_site_local_dns_broadcast(&dns_v6_addr->sin6_addr) == 0) {
+                print_dns_v6_address(dns_v6_addr->sin6_addr);
+                *dns_server_address = dns_v6_addr->sin6_addr;
+                *scope_id = dns_v6_addr->sin6_scope_id;
+
+                free(addresses);
+                return 0;
             }
-#ifdef DEBUG
-            else
-                printf("%s", inet_ntoa(tmp_addr));
-#endif
         }
     }
-    fclose(f);
+
+    DEBUG_ERROR("No IPv6 DNS servers found.\n");
+
+failure:
+    free(addresses);
+    return -1;
+}
+
+int get_dns6_addr(struct in6_addr *pdns6_addr, uint32_t *scope_id)
+{
+    if (!in6_zero(&dns6_addr) && (curtime - dns6_addr_time) < TIMEOUT_DEFAULT) {
+        *pdns6_addr = dns6_addr;
+        *scope_id = dns6_scope_id;
+        return 0;
+    }
+
+    if (get_ipv6_dns_server(pdns6_addr, scope_id) == 0) {
+        dns6_addr = *pdns6_addr;
+        dns6_addr_time = curtime;
+        dns6_scope_id = *scope_id;
+        return 0;
+    }
+
+    return -1;
+}
+
+static void winsock_cleanup(void)
+{
+    WSACleanup();
+}
+
+#elif defined(__APPLE__)
+
+#include <resolv.h>
+
+static int get_dns_addr_cached(void *pdns_addr, void *cached_addr,
+                               socklen_t addrlen, unsigned *cached_time)
+{
+    if (curtime - *cached_time < TIMEOUT_DEFAULT) {
+        memcpy(pdns_addr, cached_addr, addrlen);
+        return 0;
+    }
+    return 1;
+}
+
+static int get_dns_addr_libresolv(int af, void *pdns_addr, void *cached_addr,
+                                  socklen_t addrlen,
+                                  uint32_t *scope_id, uint32_t *cached_scope_id,
+                                  unsigned *cached_time)
+{
+    struct __res_state state;
+    union res_sockaddr_union servers[NI_MAXSERV];
+    int count;
+    int found;
+    void *addr;
+
+    // we only support IPv4 and IPv4, we assume it's one or the other
+    assert(af == AF_INET || af == AF_INET6);
+
+    if (res_ninit(&state) != 0) {
+        return -1;
+    }
+
+    count = res_getservers(&state, servers, NI_MAXSERV);
+    found = 0;
+    DEBUG_MISC("IP address of your DNS(s):");
+    for (int i = 0; i < count; i++) {
+        if (af == servers[i].sin.sin_family) {
+            found++;
+        }
+        if (af == AF_INET) {
+            addr = &servers[i].sin.sin_addr;
+        } else { // af == AF_INET6
+            addr = &servers[i].sin6.sin6_addr;
+        }
+
+        // we use the first found entry
+        if (found == 1) {
+            memcpy(pdns_addr, addr, addrlen);
+            memcpy(cached_addr, addr, addrlen);
+            if (scope_id) {
+                *scope_id = 0;
+            }
+            if (cached_scope_id) {
+                *cached_scope_id = 0;
+            }
+            *cached_time = curtime;
+        }
+
+        if (found > 3) {
+            DEBUG_MISC("  (more)");
+            break;
+        } else if (slirp_debug & DBG_MISC) {
+            char s[INET6_ADDRSTRLEN];
+            const char *res = inet_ntop(af, addr, s, sizeof(s));
+            if (!res) {
+                res = "  (string conversion error)";
+            }
+            DEBUG_MISC("  %s", res);
+        }
+    }
+
+    res_ndestroy(&state);
     if (!found)
         return -1;
     return 0;
 }
 
+int get_dns_addr(struct in_addr *pdns_addr)
+{
+    if (dns_addr.s_addr != 0) {
+        int ret;
+        ret = get_dns_addr_cached(pdns_addr, &dns_addr, sizeof(dns_addr),
+                                  &dns_addr_time);
+        if (ret <= 0) {
+            return ret;
+        }
+    }
+    return get_dns_addr_libresolv(AF_INET, pdns_addr, &dns_addr,
+                                  sizeof(dns_addr), NULL, NULL, &dns_addr_time);
+}
+
+int get_dns6_addr(struct in6_addr *pdns6_addr, uint32_t *scope_id)
+{
+    if (!in6_zero(&dns6_addr)) {
+        int ret;
+        ret = get_dns_addr_cached(pdns6_addr, &dns6_addr, sizeof(dns6_addr),
+                                  &dns6_addr_time);
+        if (ret == 0) {
+            *scope_id = dns6_scope_id;
+        }
+        if (ret <= 0) {
+            return ret;
+        }
+    }
+    return get_dns_addr_libresolv(AF_INET6, pdns6_addr, &dns6_addr,
+                                  sizeof(dns6_addr),
+                                  scope_id, &dns6_scope_id, &dns6_addr_time);
+}
+
+#else // !defined(_WIN32) && !defined(__APPLE__)
+
+#if defined(__HAIKU__)
+#define RESOLV_CONF_PATH "/boot/system/settings/network/resolv.conf"
+#else
+#define RESOLV_CONF_PATH "/etc/resolv.conf"
 #endif
 
-#ifdef _WIN32
-static void CDECL winsock_cleanup(void)
+static int get_dns_addr_cached(void *pdns_addr, void *cached_addr,
+                               socklen_t addrlen, struct stat *cached_stat,
+                               unsigned *cached_time)
 {
-    WSACleanup();
+    struct stat old_stat;
+    if (curtime - *cached_time < TIMEOUT_DEFAULT) {
+        memcpy(pdns_addr, cached_addr, addrlen);
+        return 0;
+    }
+    old_stat = *cached_stat;
+    if (stat(RESOLV_CONF_PATH, cached_stat) != 0) {
+        return -1;
+    }
+    if (cached_stat->st_dev == old_stat.st_dev &&
+        cached_stat->st_ino == old_stat.st_ino &&
+        cached_stat->st_size == old_stat.st_size &&
+        cached_stat->st_mtime == old_stat.st_mtime) {
+        memcpy(pdns_addr, cached_addr, addrlen);
+        return 0;
+    }
+    return 1;
 }
+
+static bool try_and_setdns_server(int af, unsigned found, unsigned if_index,
+    const char *buff2, void *pdns_addr, void *cached_addr,
+    socklen_t addrlen, uint32_t *scope_id, uint32_t *cached_scope_id,
+    unsigned *cached_time)
+{
+    union {
+        struct in_addr dns_addr;
+        struct in6_addr dns6_addr;
+    } tmp_addr;
+
+    assert(sizeof(tmp_addr) >= addrlen);
+
+    if (!inet_pton(af, buff2, &tmp_addr))
+    return false;
+
+    /* If it's the first one, set it to dns_addr */
+    if (!found) {
+    memcpy(pdns_addr, &tmp_addr, addrlen);
+    memcpy(cached_addr, &tmp_addr, addrlen);
+    if (scope_id) {
+        *scope_id = if_index;
+    }
+    if (cached_scope_id) {
+        *cached_scope_id = if_index;
+    }
+    *cached_time = curtime;
+    }
+
+    if (found > 2) {
+    DEBUG_MISC("  (more)");
+    } else if (slirp_debug & DBG_MISC) {
+    char s[INET6_ADDRSTRLEN];
+    const char *res = inet_ntop(af, &tmp_addr, s, sizeof(s));
+    if (!res) {
+        res = "  (string conversion error)";
+    }
+    DEBUG_MISC("  %s", res);
+    }
+
+    return true;
+}
+
+static int get_dns_addr_resolv_conf(int af, void *pdns_addr, void *cached_addr,
+                                    socklen_t addrlen,
+                                    uint32_t *scope_id, uint32_t *cached_scope_id,
+                                    unsigned *cached_time)
+{
+    char buff[512];
+    char buff2[257];
+    FILE *f;
+    int found = 0;
+    unsigned if_index;
+    unsigned nameservers = 0;
+
+    f = fopen(RESOLV_CONF_PATH, "r");
+    if (!f)
+        return -1;
+
+    DEBUG_MISC("IP address of your DNS(s):");
+    while (fgets(buff, 512, f) != NULL) {
+        if (sscanf(buff, "nameserver%*[ \t]%256s", buff2) == 1) {
+            char *c = strchr(buff2, '%');
+            if (c) {
+                if_index = if_nametoindex(c + 1);
+                *c = '\0';
+            } else {
+                if_index = 0;
+            }
+
+        nameservers++;
+
+        if (!try_and_setdns_server(af, found, if_index, buff2, pdns_addr,
+		    cached_addr, addrlen, scope_id,
+		    cached_scope_id, cached_time))
+	    continue;
+
+        if (++found > 3)
+	break;
+        }
+    }
+    fclose(f);
+    if (nameservers && !found)
+        return -1;
+    if (!nameservers) {
+    found += try_and_setdns_server(af, found, 0, "127.0.0.1",
+	    pdns_addr, cached_addr, addrlen, scope_id,
+	    cached_scope_id, cached_time);
+    found += try_and_setdns_server(af, found, 0, "::1",
+	    pdns_addr, cached_addr, addrlen, scope_id,
+	    cached_scope_id, cached_time);
+    }
+
+    return found ? 0 : -1;
+}
+
+int get_dns_addr(struct in_addr *pdns_addr)
+{
+    static struct stat dns_addr_stat;
+
+    if (dns_addr.s_addr != 0) {
+        int ret;
+        ret = get_dns_addr_cached(pdns_addr, &dns_addr, sizeof(dns_addr),
+                                  &dns_addr_stat, &dns_addr_time);
+        if (ret <= 0) {
+            return ret;
+        }
+    }
+    return get_dns_addr_resolv_conf(AF_INET, pdns_addr, &dns_addr,
+                                    sizeof(dns_addr),
+                                    NULL, NULL, &dns_addr_time);
+}
+
+int get_dns6_addr(struct in6_addr *pdns6_addr, uint32_t *scope_id)
+{
+    static struct stat dns6_addr_stat;
+
+    if (!in6_zero(&dns6_addr)) {
+        int ret;
+        ret = get_dns_addr_cached(pdns6_addr, &dns6_addr, sizeof(dns6_addr),
+                                  &dns6_addr_stat, &dns6_addr_time);
+        if (ret == 0) {
+            *scope_id = dns6_scope_id;
+        }
+        if (ret <= 0) {
+            return ret;
+        }
+    }
+    return get_dns_addr_resolv_conf(AF_INET6, pdns6_addr, &dns6_addr,
+                                    sizeof(dns6_addr),
+                                    scope_id, &dns6_scope_id, &dns6_addr_time);
+}
+
 #endif
 
 static void slirp_init_once(void)
@@ -318,17 +653,17 @@ Slirp *slirp_init(int restricted, bool in_enabled, struct in_addr vnetwork,
 
 void slirp_cleanup(Slirp *slirp)
 {
-    struct gfwd_list *ex_ptr;
+    struct gfwd_list *e, *next;
+
+    for (e = slirp->guestfwd_list; e; e = next) {
+        next = e->ex_next;
+        free(e->ex_exec);
+        free(e->ex_unix);
+        free(e);
+    }
 
     ip_cleanup(slirp);
     m_cleanup(slirp);
-
-    while (slirp->guestfwd_list != NULL) {
-        ex_ptr = slirp->guestfwd_list->ex_next;
-        free((void*)slirp->guestfwd_list->ex_exec);
-        free(slirp->guestfwd_list);
-        slirp->guestfwd_list = ex_ptr;
-    }
 
     free(slirp->vdomainname);
     free(slirp->tftp_prefix);
@@ -692,12 +1027,21 @@ void slirp_pollfds_poll(Slirp *slirp, int select_error,
 
 static void arp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
 {
-    struct slirp_arphdr *ah = (struct slirp_arphdr *)(pkt + ETH_HLEN);
-    uint8_t arp_reply[MAX(ETH_HLEN + sizeof(struct slirp_arphdr), 64)];
-    struct ethhdr *reh = (struct ethhdr *)arp_reply;
-    struct slirp_arphdr *rah = (struct slirp_arphdr *)(arp_reply + ETH_HLEN);
+    const struct slirp_arphdr *ah =
+        (const struct slirp_arphdr *)(pkt + ETH_HLEN);
+    uint8_t arp_reply[MAX(2 + ETH_HLEN + sizeof(struct slirp_arphdr), 2 + 64)];
+    struct ethhdr *reh = (struct ethhdr *)(arp_reply + 2);
+    struct slirp_arphdr *rah = (struct slirp_arphdr *)(arp_reply + 2 + ETH_HLEN);
     int ar_op;
     struct gfwd_list *ex_ptr;
+
+    if (!slirp->in_enabled) {
+        return;
+    }
+
+    if (pkt_len < (int)(ETH_HLEN + sizeof(struct slirp_arphdr))) {
+        return; /* packet too short */
+    }
 
     ar_op = ntohs(ah->ar_op);
     switch(ar_op) {
@@ -713,7 +1057,9 @@ static void arp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
             if (ah->ar_tip == slirp->vnameserver_addr.s_addr ||
                 ah->ar_tip == slirp->vhost_addr.s_addr)
                 goto arp_ok;
-            for (ex_ptr = slirp->guestfwd_list; ex_ptr; ex_ptr = ex_ptr->ex_next) {
+            /* TODO: IPv6 */
+            for (ex_ptr = slirp->guestfwd_list; ex_ptr;
+                 ex_ptr = ex_ptr->ex_next) {
                 if (ex_ptr->ex_addr.s_addr == ah->ar_tip)
                     goto arp_ok;
             }
@@ -738,7 +1084,7 @@ static void arp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
             rah->ar_sip = ah->ar_tip;
             memcpy(rah->ar_tha, ah->ar_sha, ETH_ALEN);
             rah->ar_tip = ah->ar_sip;
-            slirp_send_packet_all(slirp, arp_reply, sizeof(arp_reply));
+            slirp_send_packet_all(slirp, arp_reply + 2, sizeof(arp_reply) - 2);
         }
         break;
     case ARPOP_REPLY:
@@ -757,7 +1103,7 @@ void slirp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
     if (pkt_len < ETH_HLEN)
         return;
 
-    proto = ntohs(*(uint16_t *)(pkt + 12));
+    proto = (((uint16_t)pkt[12]) << 8) + pkt[13];
     switch(proto) {
     case ETH_P_ARP:
         arp_input(slirp, pkt, pkt_len);
@@ -767,22 +1113,28 @@ void slirp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
         m = m_get(slirp);
         if (!m)
             return;
-        /* Note: we add to align the IP header */
-        if (M_FREEROOM(m) < pkt_len + 2) {
-            m_inc(m, pkt_len + 2);
+        /* Note: we add 2 to align the IP header on 8 bytes despite the ethernet
+         * header, and add the margin for the tcpiphdr overhead  */
+        if (M_FREEROOM(m) < pkt_len + TCPIPHDR_DELTA + 2) {
+            m_inc(m, pkt_len + TCPIPHDR_DELTA + 2);
         }
-        m->m_len = pkt_len + 2;
-        memcpy(m->m_data + 2, pkt, pkt_len);
+        m->m_len = pkt_len + TCPIPHDR_DELTA + 2;
+        memcpy(m->m_data + TCPIPHDR_DELTA + 2, pkt, pkt_len);
 
-        m->m_data += 2 + ETH_HLEN;
-        m->m_len -= 2 + ETH_HLEN;
+        m->m_data += TCPIPHDR_DELTA + 2 + ETH_HLEN;
+        m->m_len -= TCPIPHDR_DELTA + 2 + ETH_HLEN;
 
         if (proto == ETH_P_IP) {
-          ip_input(m);
-        } else {
-          slirp_warning("IPv6 packet not supported yet", slirp->opaque);
+            ip_input(m);
+        } else if (proto == ETH_P_IPV6) {
+            slirp_warning("IPv6 packet not supported yet", slirp->opaque);
         }
         break;
+
+    case ETH_P_NCSI:
+        slirp_warning("NCSI packet not supported yet", slirp->opaque);
+        break;
+
     default:
         break;
     }
@@ -916,9 +1268,11 @@ int slirp_remove_hostfwd(Slirp *slirp, int is_udp, struct in_addr host_addr,
         addr_len = sizeof(addr);
         if ((so->so_state & SS_HOSTFWD) &&
             getsockname(so->s, (struct sockaddr *)&addr, &addr_len) == 0 &&
+            addr.sin_family == AF_INET &&
             addr.sin_addr.s_addr == host_addr.s_addr &&
             addr.sin_port == port) {
-            close(so->s);
+            so->slirp->cb->unregister_poll_fd(so->s, so->slirp->opaque);
+            closesocket(so->s);
             sofree(so);
             return 0;
         }
