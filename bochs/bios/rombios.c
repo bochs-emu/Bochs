@@ -536,17 +536,15 @@ typedef unsigned long  Bit32u;
   ;; sl function
   lsll:
   lslul:
-    mov  cx,di
+    push ecx
+    mov  cx, di
     jcxz lsl_exit
-    and  eax, #0x0000FFFF
-    shl  ebx, #16
-    or   eax, ebx
   lsl_loop:
-    shl  eax, #1
+    shl  ax, #1
+    rcl  bx, #1
     loop lsl_loop
-    mov  ebx, eax
-    shr  ebx, #16
   lsl_exit:
+    pop  ecx
     ret
 
   idiv_:

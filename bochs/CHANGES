@@ -27,6 +27,10 @@ Detailed change log :
   - Networking
     - Added support for using libslirp library instead of builtin slirp code
 
+- BIOS
+    - Added panic in legacy BIOS in case no VGA BIOS ROM is found at C000:0000,
+    - Fixed unwanted side effected caused by some helper functions.
+
 - Misc
   - bximage: added simple partition table viewer to the info function
 
