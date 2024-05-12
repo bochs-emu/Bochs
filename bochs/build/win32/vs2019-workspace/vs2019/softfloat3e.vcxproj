@@ -265,7 +265,6 @@
     <ClCompile Include="..\cpu\softfloat3e\f128_mul.c" />
     <ClCompile Include="..\cpu\softfloat3e\f128_mulAdd.c" />
     <ClCompile Include="..\cpu\softfloat3e\f128_roundToInt.c" />
-    <ClCompile Include="..\cpu\softfloat3e\f128_sqrt.c" />
     <ClCompile Include="..\cpu\softfloat3e\f128_to_extF80.c" />
     <ClCompile Include="..\cpu\softfloat3e\f128_to_f32.c" />
     <ClCompile Include="..\cpu\softfloat3e\f128_to_f64.c" />
