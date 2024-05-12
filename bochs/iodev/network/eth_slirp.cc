@@ -189,6 +189,7 @@ static void timer_mod(void *_timer, int64_t expire_time, void *opaque)
   timer1->next = *t;
   *t = timer1;
 }
+#endif
 
 static int npoll;
 
@@ -206,7 +207,6 @@ static void notify(void *opaque)
 {
   // Nothing here yet
 }
-#endif
 
 static struct SlirpCb callbacks = {
     .send_packet = send_packet,
@@ -215,9 +215,11 @@ static struct SlirpCb callbacks = {
 #if BX_HAVE_LIBSLIRP
     .timer_free = timer_free,
     .timer_mod = timer_mod,
+#endif
     .register_poll_fd = register_poll_fd,
     .unregister_poll_fd = unregister_poll_fd,
     .notify = notify,
+#if BX_HAVE_LIBSLIRP
     .timer_new_opaque = timer_new_opaque,
 #endif
 };
