@@ -34,6 +34,12 @@
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 
+#if defined(_MSC_VER)
+#define CPP_STD _MSVC_LANG
+#else
+#define CPP_STD __cplusplus
+#endif
+
 #if BX_HAVE_LIBSLIRP
 #include <slirp/libslirp.h>
 #ifdef __MINGW32__
@@ -208,6 +214,7 @@ static void notify(void *opaque)
   // Nothing here yet
 }
 
+#if CPP_STD >= 201402
 static struct SlirpCb callbacks = {
     .send_packet = send_packet,
     .guest_error = guest_error,
@@ -223,6 +230,9 @@ static struct SlirpCb callbacks = {
     .timer_new_opaque = timer_new_opaque,
 #endif
 };
+#else
+static struct SlirpCb callbacks;
+#endif
 
 bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
                                          const char *macaddr,
@@ -236,6 +246,21 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
   slirp = NULL;
   pktlog_fn = NULL;
   n_hostfwd = 0;
+#if CPP_STD < 201402
+  callbacks.send_packet = send_packet,
+  callbacks.guest_error = guest_error,
+  callbacks.clock_get_ns = clock_get_ns,
+#if BX_HAVE_LIBSLIRP
+  callbacks.timer_free = timer_free,
+  callbacks.timer_mod = timer_mod,
+#endif
+  callbacks.register_poll_fd = register_poll_fd,
+  callbacks.unregister_poll_fd = unregister_poll_fd,
+  callbacks.notify = notify,
+#if BX_HAVE_LIBSLIRP
+  callbacks.timer_new_opaque = timer_new_opaque,
+#endif
+#endif
   /* default settings according to historic slirp */
   memset(&config, 0, sizeof(config));
   config.version = 4;
