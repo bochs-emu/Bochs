@@ -214,7 +214,7 @@ static void notify(void *opaque)
   // Nothing here yet
 }
 
-#if CPP_STD >= 201402
+#if CPP_STD >= 201703
 static struct SlirpCb callbacks = {
     .send_packet = send_packet,
     .guest_error = guest_error,
@@ -246,7 +246,7 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
   slirp = NULL;
   pktlog_fn = NULL;
   n_hostfwd = 0;
-#if CPP_STD < 201402
+#if CPP_STD < 201703
   callbacks.send_packet = send_packet,
   callbacks.guest_error = guest_error,
   callbacks.clock_get_ns = clock_get_ns,
