@@ -464,12 +464,12 @@ static int get_dns_addr_resolv_conf(int af, void *pdns_addr, void *cached_addr,
         nameservers++;
 
         if (!try_and_setdns_server(af, found, if_index, buff2, pdns_addr,
-		    cached_addr, addrlen, scope_id,
-		    cached_scope_id, cached_time))
-	    continue;
+            cached_addr, addrlen, scope_id,
+            cached_scope_id, cached_time))
+        continue;
 
         if (++found > 3)
-	break;
+    break;
         }
     }
     fclose(f);
@@ -477,11 +477,11 @@ static int get_dns_addr_resolv_conf(int af, void *pdns_addr, void *cached_addr,
         return -1;
     if (!nameservers) {
     found += try_and_setdns_server(af, found, 0, "127.0.0.1",
-	    pdns_addr, cached_addr, addrlen, scope_id,
-	    cached_scope_id, cached_time);
+        pdns_addr, cached_addr, addrlen, scope_id,
+        cached_scope_id, cached_time);
     found += try_and_setdns_server(af, found, 0, "::1",
-	    pdns_addr, cached_addr, addrlen, scope_id,
-	    cached_scope_id, cached_time);
+        pdns_addr, cached_addr, addrlen, scope_id,
+        cached_scope_id, cached_time);
     }
 
     return found ? 0 : -1;

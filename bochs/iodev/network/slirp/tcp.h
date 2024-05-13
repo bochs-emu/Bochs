@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1982, 1986, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,14 +27,14 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)tcp.h	8.1 (Berkeley) 6/10/93
+ *  @(#)tcp.h   8.1 (Berkeley) 6/10/93
  * tcp.h,v 1.3 1994/08/21 05:27:34 paul Exp
  */
 
 #ifndef TCP_H
 #define TCP_H
 
-typedef	uint32_t tcp_seq;
+typedef uint32_t tcp_seq;
 
 #define PR_SLOWHZ 2 /* 2 slow timeouts per second (approx) */
 #define PR_FASTHZ 5 /* 5 fast timeouts per second (not important) */
@@ -49,61 +49,61 @@ typedef	uint32_t tcp_seq;
  */
 #define tcphdr slirp_tcphdr
 struct tcphdr {
-	uint16_t th_sport;              /* source port */
-	uint16_t th_dport;              /* destination port */
-	tcp_seq	th_seq;			/* sequence number */
-	tcp_seq	th_ack;			/* acknowledgement number */
+    uint16_t th_sport;              /* source port */
+    uint16_t th_dport;              /* destination port */
+    tcp_seq th_seq;         /* sequence number */
+    tcp_seq th_ack;         /* acknowledgement number */
 #ifndef BX_LITTLE_ENDIAN
-	uint8_t	th_off:4,		/* data offset */
-		th_x2:4;		/* (unused) */
+    uint8_t th_off:4,       /* data offset */
+        th_x2:4;        /* (unused) */
 #else
-	uint8_t	th_x2:4,		/* (unused) */
-		th_off:4;		/* data offset */
+    uint8_t th_x2:4,        /* (unused) */
+        th_off:4;       /* data offset */
 #endif
-	uint8_t th_flags;
-	uint16_t th_win;                /* window */
-	uint16_t th_sum;                /* checksum */
-	uint16_t th_urp;                /* urgent pointer */
+    uint8_t th_flags;
+    uint16_t th_win;                /* window */
+    uint16_t th_sum;                /* checksum */
+    uint16_t th_urp;                /* urgent pointer */
 };
 
 #include "tcp_var.h"
 
 #ifndef TH_FIN
-#define	TH_FIN	0x01
-#define	TH_SYN	0x02
-#define	TH_RST	0x04
-#define	TH_PUSH	0x08
-#define	TH_ACK	0x10
-#define	TH_URG	0x20
+#define TH_FIN  0x01
+#define TH_SYN  0x02
+#define TH_RST  0x04
+#define TH_PUSH 0x08
+#define TH_ACK  0x10
+#define TH_URG  0x20
 #endif
 
 #ifndef TCPOPT_EOL
-#define	TCPOPT_EOL		0
-#define	TCPOPT_NOP		1
-#define	TCPOPT_MAXSEG		2
-#define TCPOPT_WINDOW		3
-#define TCPOPT_SACK_PERMITTED	4		/* Experimental */
-#define TCPOPT_SACK		5		/* Experimental */
-#define TCPOPT_TIMESTAMP	8
+#define TCPOPT_EOL      0
+#define TCPOPT_NOP      1
+#define TCPOPT_MAXSEG       2
+#define TCPOPT_WINDOW       3
+#define TCPOPT_SACK_PERMITTED   4       /* Experimental */
+#define TCPOPT_SACK     5       /* Experimental */
+#define TCPOPT_TIMESTAMP    8
 
-#define TCPOPT_TSTAMP_HDR	\
+#define TCPOPT_TSTAMP_HDR   \
     (TCPOPT_NOP << 24 | TCPOPT_NOP << 16 | TCPOPT_TIMESTAMP << 8 | \
     TCPOLEN_TIMESTAMP)
 #endif
 
 #ifndef TCPOLEN_MAXSEG
-#define    TCPOLEN_MAXSEG		4
-#define    TCPOLEN_WINDOW		3
-#define    TCPOLEN_SACK_PERMITTED	2
-#define    TCPOLEN_TIMESTAMP		10
-#define    TCPOLEN_TSTAMP_APPA		(TCPOLEN_TIMESTAMP+2) /* appendix A */
+#define    TCPOLEN_MAXSEG       4
+#define    TCPOLEN_WINDOW       3
+#define    TCPOLEN_SACK_PERMITTED   2
+#define    TCPOLEN_TIMESTAMP        10
+#define    TCPOLEN_TSTAMP_APPA      (TCPOLEN_TIMESTAMP+2) /* appendix A */
 #endif
 
 #undef TCP_MAXWIN
-#define	TCP_MAXWIN	65535	/* largest value for (unscaled) window */
+#define TCP_MAXWIN  65535   /* largest value for (unscaled) window */
 
 #undef TCP_MAX_WINSHIFT
-#define TCP_MAX_WINSHIFT	14	/* maximum window shift */
+#define TCP_MAX_WINSHIFT    14  /* maximum window shift */
 
 /*
  * User-settable options (used with setsockopt).
@@ -113,7 +113,7 @@ struct tcphdr {
  * so we undefine them.
  */
 #undef TCP_NODELAY
-#define	TCP_NODELAY	0x01	/* don't delay send to coalesce packets */
+#define TCP_NODELAY 0x01    /* don't delay send to coalesce packets */
 #undef TCP_MAXSEG
 
 /*

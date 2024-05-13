@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1982, 1986, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,7 +27,7 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)ip_icmp.h	8.1 (Berkeley) 6/10/93
+ *  @(#)ip_icmp.h   8.1 (Berkeley) 6/10/93
  * ip_icmp.h,v 1.4 1995/05/30 08:09:43 rgrimes Exp
  */
 
@@ -63,25 +63,25 @@ struct icmp {
             uint16_t ipm_nextmtu;
         } ih_pmtu;
     } icmp_hun;
-#define	icmp_pptr icmp_hun.ih_pptr
-#define	icmp_gwaddr icmp_hun.ih_gwaddr
-#define	icmp_id icmp_hun.ih_idseq.icd_id
-#define	icmp_seq icmp_hun.ih_idseq.icd_seq
-#define	icmp_void icmp_hun.ih_void
-#define	icmp_pmvoid icmp_hun.ih_pmtu.ipm_void
-#define	icmp_nextmtu icmp_hun.ih_pmtu.ipm_nextmtu
+#define icmp_pptr icmp_hun.ih_pptr
+#define icmp_gwaddr icmp_hun.ih_gwaddr
+#define icmp_id icmp_hun.ih_idseq.icd_id
+#define icmp_seq icmp_hun.ih_idseq.icd_seq
+#define icmp_void icmp_hun.ih_void
+#define icmp_pmvoid icmp_hun.ih_pmtu.ipm_void
+#define icmp_nextmtu icmp_hun.ih_pmtu.ipm_nextmtu
     union {
-		struct id_ts {
-			n_time its_otime;
-			n_time its_rtime;
-			n_time its_ttime;
-		} id_ts;
-		struct id_ip  {
-			struct ip idi_ip;
-			/* options and then 64 bits of data */
-		} id_ip;
-		uint32_t	id_mask;
-		char		id_data[1];
+        struct id_ts {
+            n_time its_otime;
+            n_time its_rtime;
+            n_time its_ttime;
+        } id_ts;
+        struct id_ip  {
+            struct ip idi_ip;
+            /* options and then 64 bits of data */
+        } id_ip;
+        uint32_t    id_mask;
+        char        id_data[1];
     } icmp_dun;
 #define icmp_otime icmp_dun.id_ts.its_otime
 #define icmp_rtime icmp_dun.id_ts.its_rtime
@@ -145,9 +145,9 @@ struct icmp {
 #define ICMP_MASKREQ 17 /* address mask request */
 #define ICMP_MASKREPLY 18 /* address mask reply */
 
-#define	ICMP_MAXTYPE 18
+#define ICMP_MAXTYPE 18
 
-#define	ICMP_INFOTYPE(type) \
+#define ICMP_INFOTYPE(type) \
     ((type) == ICMP_ECHOREPLY || (type) == ICMP_ECHO || \
     (type) == ICMP_ROUTERADVERT || (type) == ICMP_ROUTERSOLICIT || \
     (type) == ICMP_TSTAMP || (type) == ICMP_TSTAMPREPLY || \

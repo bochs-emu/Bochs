@@ -84,8 +84,8 @@ struct socket {
                      * Used to determine when to "downgrade" a session
                      * from fastq to batchq */
 
-    struct sbuf so_rcv;		/* Receive buffer */
-    struct sbuf so_snd;		/* Send buffer */
+    struct sbuf so_rcv;     /* Receive buffer */
+    struct sbuf so_snd;     /* Send buffer */
 };
 
 
@@ -105,7 +105,7 @@ struct socket {
 #define SS_FWDRAIN \
     0x040 /* We received a FIN, drain data and set SS_FCANTSENDMORE */
 
-#define SS_CTL			0x080
+#define SS_CTL          0x080
 #define SS_FACCEPTCONN \
     0x100 /* Socket is accepting connections from a host on the internet */
 #define SS_FACCEPTONCE \

@@ -30,7 +30,7 @@ struct gfwd_list {
 #define EMU_IDENT 0x7
 #define EMU_RSH 0x8
 
-#define EMU_NOCONNECT 0x10	/* Don't connect */
+#define EMU_NOCONNECT 0x10  /* Don't connect */
 
 struct tos_t {
     uint16_t lport;
