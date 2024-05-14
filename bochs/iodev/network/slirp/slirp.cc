@@ -601,6 +601,14 @@ Slirp *slirp_new(const SlirpConfig *cfg, const SlirpCb *callbacks, void *opaque)
     slirp->disable_host_loopback = cfg->disable_host_loopback;
     slirp->enable_emu = cfg->enable_emu;
 
+    if (cfg->version >= 2) {
+        slirp->outbound_addr = cfg->outbound_addr;
+        slirp->outbound_addr6 = cfg->outbound_addr6;
+    } else {
+        slirp->outbound_addr = NULL;
+        slirp->outbound_addr6 = NULL;
+    }
+
     if (cfg->version >= 3) {
         slirp->disable_dns = cfg->disable_dns;
     } else {
@@ -676,7 +684,6 @@ void slirp_cleanup(Slirp *slirp)
     (((so)->so_state & (SS_FCANTSENDMORE|SS_ISFCONNECTED)) == SS_ISFCONNECTED)
 #define CONN_CANFRCV(so) \
     (((so)->so_state & (SS_FCANTRCVMORE|SS_ISFCONNECTED)) == SS_ISFCONNECTED)
-#define UPD_NFDS(x) if (nfds < (x)) nfds = (x)
 
 static void slirp_update_timeout(Slirp *slirp, uint32_t *timeout)
 {
@@ -967,7 +974,8 @@ void slirp_pollfds_poll(Slirp *slirp, int select_error,
                     /*
                      * Continue tcp_input
                      */
-                    tcp_input((struct mbuf *)NULL, sizeof(struct ip), so);
+                    tcp_input((struct mbuf *)NULL, sizeof(struct ip), so,
+                              so->so_ffamily);
                     /* continue; */
                 } else {
                     ret = sowrite(so);
@@ -1421,6 +1429,8 @@ size_t slirp_socket_can_recv(Slirp *slirp, struct in_addr guest_addr,
     }
 
     if (!CONN_CANFRCV(so) || so->so_snd.sb_cc >= (so->so_snd.sb_datalen/2)) {
+        /* If the sb is already half full, we will wait for the guest to consume it,
+         * and notify again in sbdrop() when the sb becomes less than half full. */
         return 0;
     }
 

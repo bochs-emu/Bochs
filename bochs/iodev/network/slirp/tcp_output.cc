@@ -34,9 +34,6 @@
 /*
  * Changes and additions relating to SLiRP
  * Copyright (c) 1995 Danny Gasparovski.
- *
- * Please read the file COPYRIGHT for the
- * terms and conditions of the copyright.
  */
 
 #include "slirp.h"
@@ -56,20 +53,21 @@ static const uint8_t  tcp_outflags[TCP_NSTATES] = {
 /*
  * Tcp output routine: figure out what should be sent and send it.
  */
-int
-tcp_output(struct tcpcb *tp)
+int tcp_output(struct tcpcb *tp)
 {
     struct socket *so = tp->t_socket;
     long len, win;
     int off, flags, error;
     struct mbuf *m;
-    struct tcpiphdr *ti;
+    struct tcpiphdr *ti, tcpiph_save;
+    struct ip *ip;
+    struct ip6 *ip6;
     uint8_t opt[MAX_TCPOPTLEN];
     unsigned optlen, hdrlen;
     int idle, sendalot;
 
     DEBUG_CALL("tcp_output");
-    DEBUG_ARG("tp = %lx", (long )tp);
+    DEBUG_ARG("tp = %p", tp);
 
     /*
      * Determine length of data that should be transmitted,
@@ -92,7 +90,7 @@ again:
 
     flags = tcp_outflags[tp->t_state];
 
-    DEBUG_MISC((dfd, " --- tcp_output flags = 0x%x\n",flags));
+    DEBUG_MISC(" --- tcp_output flags = 0x%x",flags);
 
     /*
      * If in persist timeout with window of 0, send 1 byte.
@@ -283,10 +281,10 @@ send:
      * Adjust data length if insertion of options will
      * bump the packet length beyond the t_maxseg length.
      */
-     if (len > (long)(tp->t_maxseg - optlen)) {
+    if (len > (long)(tp->t_maxseg - optlen)) {
         len = tp->t_maxseg - optlen;
         sendalot = 1;
-     }
+    }
 
     /*
      * Grab a header mbuf, attaching a copy of data to
@@ -387,8 +385,7 @@ send:
      * checksum extended header and data.
      */
     if (len + optlen)
-        ti->ti_len = htons((uint16_t)(sizeof (struct tcphdr) +
-            optlen + len));
+        ti->ti_len = htons((uint16_t)(sizeof (struct tcphdr) + optlen + len));
     ti->ti_sum = cksum(m, (int)(hdrlen + len));
 
     /*
@@ -430,17 +427,15 @@ send:
          * Initialize shift counter which is used for backoff
          * of retransmit time.
          */
-        if (tp->t_timer[TCPT_REXMT] == 0 &&
-            tp->snd_nxt != tp->snd_una) {
+        if (tp->t_timer[TCPT_REXMT] == 0 && tp->snd_nxt != tp->snd_una) {
             tp->t_timer[TCPT_REXMT] = tp->t_rxtcur;
             if (tp->t_timer[TCPT_PERSIST]) {
                 tp->t_timer[TCPT_PERSIST] = 0;
                 tp->t_rxtshift = 0;
             }
         }
-    } else
-        if (SEQ_GT(tp->snd_nxt + len, tp->snd_max))
-            tp->snd_max = tp->snd_nxt + len;
+    } else if (SEQ_GT(tp->snd_nxt + len, tp->snd_max))
+        tp->snd_max = tp->snd_nxt + len;
 
     /*
      * Fill in IP length and desired time to live and
@@ -449,16 +444,45 @@ send:
      * the template, but need a way to checksum without them.
      */
     m->m_len = hdrlen + len; /* XXX Needed? m_len should be correct */
+    tcpiph_save = *mtod(m, struct tcpiphdr *);
 
-    {
+    switch (so->so_ffamily) {
+    case AF_INET:
+        m->m_data +=
+            sizeof(struct tcpiphdr) - sizeof(struct tcphdr) - sizeof(struct ip);
+        m->m_len -=
+            sizeof(struct tcpiphdr) - sizeof(struct tcphdr) - sizeof(struct ip);
+        ip = mtod(m, struct ip *);
 
-    ((struct ip *)ti)->ip_len = m->m_len;
+        ip->ip_len = m->m_len;
+        ip->ip_dst = tcpiph_save.ti_dst;
+        ip->ip_src = tcpiph_save.ti_src;
+        ip->ip_p = tcpiph_save.ti_pr;
 
-    ((struct ip *)ti)->ip_ttl = IPDEFTTL;
-    ((struct ip *)ti)->ip_tos = so->so_iptos;
+        ip->ip_ttl = IPDEFTTL;
+        ip->ip_tos = so->so_iptos;
+        error = ip_output(so, m);
+        break;
 
-    error = ip_output(so, m);
+    case AF_INET6:
+        m->m_data += sizeof(struct tcpiphdr) - sizeof(struct tcphdr) -
+                     sizeof(struct ip6);
+        m->m_len -= sizeof(struct tcpiphdr) - sizeof(struct tcphdr) -
+                    sizeof(struct ip6);
+        ip6 = mtod(m, struct ip6 *);
+
+        ip6->ip_pl = tcpiph_save.ti_len;
+        ip6->ip_dst = tcpiph_save.ti_dst6;
+        ip6->ip_src = tcpiph_save.ti_src6;
+        ip6->ip_nh = tcpiph_save.ti_nh6;
+
+//        error = ip6_output(so, m, 0);
+        break;
+
+    default:
+        fprintf(stderr, "Unknown protocol");
     }
+
     if (error) {
 out:
         return (error);
@@ -473,24 +497,19 @@ out:
     if (win > 0 && SEQ_GT(tp->rcv_nxt+win, tp->rcv_adv))
         tp->rcv_adv = tp->rcv_nxt + win;
     tp->last_ack_sent = tp->rcv_nxt;
-    tp->t_flags &= ~(TF_ACKNOW|TF_DELACK);
+    tp->t_flags &= ~(TF_ACKNOW | TF_DELACK);
     if (sendalot)
         goto again;
 
     return (0);
 }
 
-void
-tcp_setpersist(struct tcpcb *tp)
+void tcp_setpersist(struct tcpcb *tp)
 {
     int t = ((tp->t_srtt >> 2) + tp->t_rttvar) >> 1;
 
-    /*
-     * Start/restart persistence timer.
-     */
-    TCPT_RANGESET(tp->t_timer[TCPT_PERSIST],
-        t * tcp_backoff[tp->t_rxtshift],
-        TCPTV_PERSMIN, TCPTV_PERSMAX);
+    TCPT_RANGESET(tp->t_timer[TCPT_PERSIST], t * tcp_backoff[tp->t_rxtshift],
+                  TCPTV_PERSMIN, TCPTV_PERSMAX);
     if (tp->t_rxtshift < TCP_MAXRXTSHIFT)
         tp->t_rxtshift++;
 }

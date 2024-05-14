@@ -490,9 +490,8 @@ static void bootp_reply(Slirp *slirp,
 
     if (dhcp_opts.params != NULL) free(dhcp_opts.params);
 
-    m->m_len = sizeof(struct bootp_t) + (end - rbp->bp_vend) -
-        sizeof(struct ip) - sizeof(struct udphdr);
-    udp_output2(NULL, m, &saddr, &daddr, IPTOS_LOWDELAY);
+    m->m_len = sizeof(struct bootp_t) + (end - rbp->bp_vend) - sizeof(struct ip) - sizeof(struct udphdr);
+    udp_output(NULL, m, &saddr, &daddr, IPTOS_LOWDELAY);
 }
 
 void bootp_input(struct mbuf *m)

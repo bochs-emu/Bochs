@@ -34,6 +34,8 @@
 #ifndef UDP_H
 #define UDP_H
 
+#include "socket.h"
+
 #define UDP_TTL 0x60
 
 /*
@@ -79,16 +81,19 @@ void udp_init(Slirp *);
 void udp_cleanup(Slirp *);
 /* Process UDP datagram coming from the guest */
 void udp_input(struct mbuf *, int);
-/* Send UDP datagram to the guest */
-int udp_output(struct socket *, struct mbuf *, struct sockaddr_in *);
 /* Create a host UDP socket, bound to this socket */
-int udp_attach(struct socket *);
+int udp_attach(struct socket *, unsigned short af);
 /* Destroy socket */
 void udp_detach(struct socket *);
 
 /* Listen for incoming UDP datagrams on this haddr+hport */
 struct socket *udp_listen(Slirp *, uint32_t haddr, unsigned hport, uint32_t laddr, unsigned lport, int flags);
-/* Send UDP datagram to the guest (DHCP / TFTP) */
-int udp_output2(struct socket *so, struct mbuf *m, struct sockaddr_in *saddr,
+/* Listen for incoming UDP datagrams on this haddr */
+struct socket *udpx_listen(Slirp *,
+                           const struct sockaddr *haddr, socklen_t haddrlen,
+                           const struct sockaddr *laddr, socklen_t laddrlen,
+                           int flags);
+/* Send UDP datagram to the guest */
+int udp_output(struct socket *so, struct mbuf *m, struct sockaddr_in *saddr,
                struct sockaddr_in *daddr, int iptos);
 #endif

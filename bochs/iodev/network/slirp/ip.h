@@ -214,7 +214,6 @@ struct ipovly {
  * be reclaimed if memory becomes tight.
  */
 struct ipq {
-        struct qlink frag_link;         /* to ip headers of fragments */
     struct qlink ip_link;               /* to other reass headers */
     uint8_t ipq_ttl;        /* time for reass q to live */
     uint8_t ipq_p;          /* protocol of this fragment */
@@ -222,20 +221,16 @@ struct ipq {
     struct  in_addr ipq_src,ipq_dst;
 };
 
-/*
- * Ip header, when holding a fragment.
- *
- * Note: ipf_link must be at same offset as frag_link above
- */
-struct  ipasfrag {
-    struct qlink ipf_link;
-    struct ip ipf_ip;
+struct  ipas {
+    struct qlink link;
+    union {
+        struct ipq ipq;
+        struct ip ipf_ip;
+    };
 };
 
 #define ipf_off      ipf_ip.ip_off
 #define ipf_tos      ipf_ip.ip_tos
 #define ipf_len      ipf_ip.ip_len
-#define ipf_next     ipf_link.next
-#define ipf_prev     ipf_link.prev
 
 #endif

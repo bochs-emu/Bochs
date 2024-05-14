@@ -163,8 +163,13 @@ void icmp_cleanup(Slirp *slirp);
 /* Process an ICMP packet from the guest */
 void icmp_input(struct mbuf *, int);
 
-void icmp_error(struct mbuf *msrc, uint8_t type, uint8_t code, int minsize,
-                const char *message);
+/* Send an ICMP error related to the given packet, using the given ICMP type and code, appending the given message (if enabled at compilation), and using the given source. If minsize is sent, send only header + 8B of the given packet, otherwise send it all */
+void icmp_forward_error(struct mbuf *msrc, uint8_t type, uint8_t code, int minsize,
+                        const char *message, struct in_addr *src);
+
+/* Similar to icmp_forward_error, but use the virtual host address as source */
+void icmp_send_error(struct mbuf *msrc, uint8_t type, uint8_t code, int minsize,
+                     const char *message);
 
 /* Forward the ICMP packet to the guest (probably a ping reply) */
 void icmp_reflect(struct mbuf *);

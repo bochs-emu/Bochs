@@ -9,27 +9,25 @@
 
 #include <string.h>
 
-#define ALLNODES_MULTICAST \
-    {                      \
-        .s6_addr = {       \
-            0xff,          \
-            0x02,          \
-            0x00,          \
-            0x00,          \
-            0x00,          \
-            0x00,          \
-            0x00,          \
-            0x00,          \
-            0x00,          \
-            0x00,          \
-            0x00,          \
-            0x00,          \
-            0x00,          \
-            0x00,          \
-            0x00,          \
-            0x01           \
-        }                  \
-    }
+const struct in6_addr ALLNODES_MULTICAST = \
+    {           \
+        0xff,   \
+        0x02,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x01    \
+    };
 
 #define SOLICITED_NODE_PREFIX \
     {                         \
@@ -75,24 +73,24 @@
         }              \
     }
 
-const struct in6_addr zero_addr = \
-    {            \
-        0x00,    \
-        0x00,    \
-        0x00,    \
-        0x00,    \
-        0x00,    \
-        0x00,    \
-        0x00,    \
-        0x00,    \
-        0x00,    \
-        0x00,    \
-        0x00,    \
-        0x00,    \
-        0x00,    \
-        0x00,    \
-        0x00,    \
-        0x00     \
+const struct in6_addr ZERO_ADDR = \
+    {           \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00,   \
+        0x00    \
     };
 
 /* Check that two IPv6 addresses are equal */
@@ -158,7 +156,7 @@ static inline bool in6_equal_mach(const struct in6_addr *a,
     (in6_equal_net(a, &(struct in6_addr)SOLICITED_NODE_PREFIX, 104))
 
 /* Check that the IPv6 is zero */
-#define in6_zero(a) (in6_equal(a, &zero_addr))
+#define in6_zero(a) (in6_equal(a, &ZERO_ADDR))
 
 /* Compute emulated host MAC address from its ipv6 address */
 static inline void in6_compute_ethaddr(struct in6_addr ip,

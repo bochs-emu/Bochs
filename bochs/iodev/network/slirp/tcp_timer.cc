@@ -40,8 +40,7 @@ static struct tcpcb *tcp_timers(struct tcpcb *tp, int timer);
 /*
  * Fast timeout routine for processing delayed acks
  */
-void
-tcp_fasttimo(Slirp *slirp)
+void tcp_fasttimo(Slirp *slirp)
 {
     struct socket *so;
     struct tcpcb *tp;
@@ -50,13 +49,13 @@ tcp_fasttimo(Slirp *slirp)
 
     so = slirp->tcb.so_next;
     if (so)
-    for (; so != &slirp->tcb; so = so->so_next)
-        if ((tp = (struct tcpcb *)so->so_tcpcb) &&
-            (tp->t_flags & TF_DELACK)) {
-            tp->t_flags &= ~TF_DELACK;
-            tp->t_flags |= TF_ACKNOW;
-            (void) tcp_output(tp);
-        }
+        for (; so != &slirp->tcb; so = so->so_next)
+            if ((tp = (struct tcpcb *)so->so_tcpcb) &&
+                (tp->t_flags & TF_DELACK)) {
+                tp->t_flags &= ~TF_DELACK;
+                tp->t_flags |= TF_ACKNOW;
+                tcp_output(tp);
+            }
 }
 
 /*
@@ -64,8 +63,7 @@ tcp_fasttimo(Slirp *slirp)
  * Updates the timers in all active tcb's and
  * causes finite state machine actions if timers expire.
  */
-void
-tcp_slowtimo(Slirp *slirp)
+void tcp_slowtimo(Slirp *slirp)
 {
     struct socket *ip, *ipnxt;
     struct tcpcb *tp;
@@ -77,15 +75,15 @@ tcp_slowtimo(Slirp *slirp)
      * Search through tcb's and update active timers.
      */
     ip = slirp->tcb.so_next;
-        if (ip == NULL) {
-            return;
-        }
+    if (ip == NULL) {
+        return;
+    }
     for (; ip != &slirp->tcb; ip = ipnxt) {
         ipnxt = ip->so_next;
         tp = sototcpcb(ip);
-                if (tp == NULL) {
-                        continue;
-                }
+        if (tp == NULL) {
+            continue;
+        }
         for (i = 0; i < TCPT_NTIMERS; i++) {
             if (tp->t_timer[i] && --tp->t_timer[i] == 0) {
                 tcp_timers(tp,i);
@@ -95,19 +93,14 @@ tcp_slowtimo(Slirp *slirp)
         }
         tp->t_idle++;
         if (tp->t_rtt)
-           tp->t_rtt++;
-tpgone:
-        ;
+            tp->t_rtt++;
+tpgone:;
     }
-    slirp->tcp_iss += TCP_ISSINCR/PR_SLOWHZ;    /* increment iss */
-    slirp->tcp_now++;               /* for timestamps */
+    slirp->tcp_iss += TCP_ISSINCR/PR_SLOWHZ; /* increment iss */
+    slirp->tcp_now++; /* for timestamps */
 }
 
-/*
- * Cancel all timers for TCP tp.
- */
-void
-tcp_canceltimers(struct tcpcb *tp)
+void tcp_canceltimers(struct tcpcb *tp)
 {
     int i;
 
@@ -115,21 +108,19 @@ tcp_canceltimers(struct tcpcb *tp)
         tp->t_timer[i] = 0;
 }
 
-const int tcp_backoff[TCP_MAXRXTSHIFT + 1] =
-   { 1, 2, 4, 8, 16, 32, 64, 64, 64, 64, 64, 64, 64 };
+const int tcp_backoff[TCP_MAXRXTSHIFT + 1] = { 1, 2, 4, 8, 16, 32, 64,
+                                              64, 64, 64, 64, 64, 64 };
 
 /*
  * TCP timer processing.
  */
-static struct tcpcb *
-tcp_timers(struct tcpcb *tp, int timer)
+static struct tcpcb *tcp_timers(struct tcpcb *tp, int timer)
 {
     int rexmt;
 
     DEBUG_CALL("tcp_timers");
 
     switch (timer) {
-
     /*
      * 2 MSL timeout in shutdown went off.  If we're closed but
      * still waiting for peer to close and connection has been idle
@@ -137,8 +128,7 @@ tcp_timers(struct tcpcb *tp, int timer)
      * control block.  Otherwise, check again in a bit.
      */
     case TCPT_2MSL:
-        if (tp->t_state != TCPS_TIME_WAIT &&
-            tp->t_idle <= TCP_MAXIDLE)
+        if (tp->t_state != TCPS_TIME_WAIT && tp->t_idle <= TCP_MAXIDLE)
             tp->t_timer[TCPT_2MSL] = TCPTV_KEEPINTVL;
         else
             tp = tcp_close(tp);
@@ -158,16 +148,16 @@ tcp_timers(struct tcpcb *tp, int timer)
 
         if (++tp->t_rxtshift > TCP_MAXRXTSHIFT) {
             /*
-             * This is a hack to suit our terminal server here at the uni of canberra
-             * since they have trouble with zeroes... It usually lets them through
-             * unharmed, but under some conditions, it'll eat the zeros.  If we
-             * keep retransmitting it, it'll keep eating the zeroes, so we keep
-             * retransmitting, and eventually the connection dies...
-             * (this only happens on incoming data)
+             * This is a hack to suit our terminal server here at the uni of
+             * canberra since they have trouble with zeroes... It usually lets
+             * them through unharmed, but under some conditions, it'll eat the
+             * zeros.  If we keep retransmitting it, it'll keep eating the
+             * zeroes, so we keep retransmitting, and eventually the connection
+             * dies... (this only happens on incoming data)
              *
-             * So, if we were gonna drop the connection from too many retransmits,
-             * don't... instead halve the t_maxseg, which might break up the NULLs and
-             * let them through
+             * So, if we were gonna drop the connection from too many
+             * retransmits, don't... instead halve the t_maxseg, which might
+             * break up the NULLs and let them through
              *
              * *sigh*
              */
@@ -190,8 +180,8 @@ tcp_timers(struct tcpcb *tp, int timer)
             tp->t_rxtshift = 6;
         }
         rexmt = TCP_REXMTVAL(tp) * tcp_backoff[tp->t_rxtshift];
-        TCPT_RANGESET(tp->t_rxtcur, rexmt,
-            (short)tp->t_rttmin, TCPTV_REXMTMAX); /* XXX */
+        TCPT_RANGESET(tp->t_rxtcur, rexmt, (short)tp->t_rttmin,
+                      TCPTV_REXMTMAX); /* XXX */
         tp->t_timer[TCPT_REXMT] = tp->t_rxtcur;
         /*
          * If losing, let the lower level know and try for
@@ -242,7 +232,7 @@ tcp_timers(struct tcpcb *tp, int timer)
         tp->snd_ssthresh = win * tp->t_maxseg;
         tp->t_dupacks = 0;
         }
-        (void) tcp_output(tp);
+        tcp_output(tp);
         break;
 
     /*
@@ -252,7 +242,7 @@ tcp_timers(struct tcpcb *tp, int timer)
     case TCPT_PERSIST:
         tcp_setpersist(tp);
         tp->t_force = 1;
-        (void) tcp_output(tp);
+        tcp_output(tp);
         tp->t_force = 0;
         break;
 
@@ -264,7 +254,7 @@ tcp_timers(struct tcpcb *tp, int timer)
         if (tp->t_state < TCPS_ESTABLISHED)
             goto dropit;
 
-        if ((slirp_do_keepalive) && tp->t_state <= TCPS_CLOSE_WAIT) {
+        if (slirp_do_keepalive && tp->t_state <= TCPS_CLOSE_WAIT) {
                 if (tp->t_idle >= TCPTV_KEEP_IDLE + TCP_MAXIDLE)
                 goto dropit;
             /*
@@ -279,8 +269,8 @@ tcp_timers(struct tcpcb *tp, int timer)
              * by the protocol spec, this requires the
              * correspondent TCP to respond.
              */
-            tcp_respond(tp, &tp->t_template, (struct mbuf *)NULL,
-                tp->rcv_nxt, tp->snd_una - 1, 0);
+            tcp_respond(tp, &tp->t_template, (struct mbuf *)NULL, tp->rcv_nxt,
+                        tp->snd_una - 1, 0, tp->t_socket->so_ffamily);
             tp->t_timer[TCPT_KEEP] = TCPTV_KEEPINTVL;
         } else
             tp->t_timer[TCPT_KEEP] = TCPTV_KEEP_IDLE;

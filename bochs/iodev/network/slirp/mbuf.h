@@ -49,42 +49,58 @@
  */
 
 /*
+ * mbufs allow to have a gap between the start of the allocated buffer (m_ext if
+ * M_EXT is set, m_dat otherwise) and the in-use data:
+ *
+ *  |--gapsize----->|---m_len------->
+ *  |----------m_size------------------------------>
+ *                  |----M_ROOM-------------------->
+ *                                   |-M_FREEROOM-->
+ *
+ *  ^               ^                               ^
+ *  m_dat/m_ext     m_data                          end of buffer
+ */
+
+/*
  * How much room is in the mbuf, from m_data to the end of the mbuf
  */
-#define M_ROOM(m) ((m->m_flags & M_EXT)? \
-            (((m)->m_ext + (m)->m_size) - (m)->m_data) \
-           : \
-            (((m)->m_dat + (m)->m_size) - (m)->m_data))
+#define M_ROOM(m)                                                        \
+    ((m->m_flags & M_EXT) ? (((m)->m_ext + (m)->m_size) - (m)->m_data) : \
+                            (((m)->m_dat + (m)->m_size) - (m)->m_data))
 
 /*
  * How much free room there is
  */
 #define M_FREEROOM(m) (M_ROOM(m) - (m)->m_len)
-#define M_TRAILINGSPACE M_FREEROOM
+
+/*
+ * How much free room there is before m_data
+ */
+#define M_ROOMBEFORE(m) \
+    (((m)->m_flags & M_EXT) ? (m)->m_data - (m)->m_ext \
+                            : (m)->m_data - (m)->m_dat)
 
 struct mbuf {
     /* XXX should union some of these! */
     /* header at beginning of each mbuf: */
-    struct  mbuf *m_next;       /* Linked list of mbufs */
-    struct  mbuf *m_prev;
-    struct  mbuf *m_nextpkt;    /* Next packet in queue/record */
-    struct  mbuf *m_prevpkt;    /* Flags aren't used in the output queue */
-    int m_flags;        /* Misc flags */
+    struct mbuf *m_next; /* Linked list of mbufs */
+    struct mbuf *m_prev;
+    struct mbuf *m_nextpkt; /* Next packet in queue/record */
+    struct mbuf *m_prevpkt; /* Flags aren't used in the output queue */
+    int m_flags; /* Misc flags */
 
-    int m_size;         /* Size of data */
-    struct  socket *m_so;
+    int m_size; /* Size of mbuf, from m_dat or m_ext */
+    struct socket *m_so;
 
-    char    *m_data;        /* Location of data */
-    int m_len;          /* Amount of data in this mbuf */
+    char *m_data; /* Current location of data */
+    int m_len; /* Amount of data in this mbuf, from m_data */
 
     Slirp *slirp;
     bool resolution_requested;
     uint64_t expiration_date;
+    char *m_ext;
     /* start of dynamic buffer area, must be last element */
-    union {
-        char    m_dat[1]; /* ANSI don't like 0 sized arrays */
-        char    *m_ext;
-    };
+    char m_dat[];
 };
 
 #define ifq_prev m_prev
@@ -96,17 +112,47 @@ struct mbuf {
 #define M_EXT           0x01    /* m_ext points to more (malloced) data */
 #define M_FREELIST      0x02    /* mbuf is on free list */
 #define M_USEDLIST      0x04    /* XXX mbuf is on used list (for dtom()) */
-#define M_DOFREE        0x08    /* when m_free is called on the mbuf, free()
-                     * it rather than putting it on the free list */
+#define M_DOFREE \
+    0x08 /* when m_free is called on the mbuf, free() \
+          * it rather than putting it on the free list */
 
+/* Called by slirp_new */
 void m_init(Slirp *);
+
+/* Called by slirp_cleanup */
 void m_cleanup(Slirp *slirp);
-struct mbuf * m_get(Slirp *);
+
+/* Allocate an mbuf */
+struct mbuf *m_get(Slirp *);
+
+/* Release an mbuf (put possibly put it in allocation cache */
 void m_free(struct mbuf *);
+
+/* Catenate the second buffer to the end of the first buffer, and release the second */
 void m_cat(struct mbuf *, struct mbuf *);
+
+/* Grow the mbuf to the given size */
 void m_inc(struct mbuf *, int);
-void m_adj(struct mbuf *, int);
-int m_copy(struct mbuf *, struct mbuf *, int, int);
+
+/* If len is positive, trim that amount from the head of the mbuf. If it is negative, trim it from the tail of the mbuf */
+void m_adj(struct mbuf *, int len);
+
+/* Copy len bytes from the first buffer at the given offset, to the end of the second buffer */
+int m_copy(struct mbuf *, struct mbuf *, int off, int len);
+
+/*
+ * Duplicate the mbuf
+ *
+ * copy_header specifies whether the bytes before m_data should also be copied.
+ * header_size specifies how many bytes are to be reserved before m_data.
+ */
+struct mbuf *m_dup(Slirp *slirp, struct mbuf *m, bool copy_header, size_t header_size);
+
+/*
+ * Given a pointer into an mbuf, return the mbuf
+ * XXX This is a kludge, I should eliminate the need for it
+ * Fortunately, it's not used often
+ */
 struct mbuf * dtom(Slirp *, void *);
 
 /* Check that the mbuf contains at least len bytes, and return the data */
@@ -120,5 +166,60 @@ static inline void ifs_init(struct mbuf *ifm)
 {
     ifm->ifs_next = ifm->ifs_prev = ifm;
 }
+
+#ifdef SLIRP_DEBUG
+#  define MBUF_DEBUG 1
+#else
+#  ifdef HAVE_VALGRIND
+#    include <valgrind/valgrind.h>
+#    define MBUF_DEBUG RUNNING_ON_VALGRIND
+#  else
+#    define MBUF_DEBUG 0
+#  endif
+#endif
+
+/*
+ * When a function is given an mbuf as well as the responsibility to free it, we
+ * want valgrind etc. to properly identify the new responsible for the
+ * free. Achieve this by making a new copy. For instance:
+ *
+ * f0(void) {
+ *   struct mbuf *m = m_get(slirp);
+ *   [...]
+ *   switch (something) {
+ *   case 1:
+ *     f1(m);
+ *     break;
+ *   case 2:
+ *     f2(m);
+ *     break;
+ *   [...]
+ *   }
+ * }
+ *
+ * f1(struct mbuf *m) {
+ *   M_DUP_DEBUG(m->slirp, m);
+ *   [...]
+ *   m_free(m); // but author of f1 might be forgetting this
+ * }
+ *
+ * f0 transfers the freeing responsibility to f1, f2, etc.  Without the
+ * M_DUP_DEBUG call in f1, valgrind would tell us that it is f0 where the buffer
+ * was allocated, but it's difficult to know whether a leak is actually in f0,
+ * or in f1, or in f2, etc.  Duplicating the mbuf in M_DUP_DEBUG each time the
+ * responsibility is transferred allows to immediately know where the leak
+ * actually is.
+ */
+#define M_DUP_DEBUG(slirp, m, copy_header, header_size) do { \
+    if (MBUF_DEBUG) { \
+        struct mbuf *__n; \
+        __n = m_dup((slirp), (m), (copy_header), (header_size)); \
+        m_free(m); \
+        (m) = __n; \
+    } else { \
+        (void) (slirp); (void) (copy_header); \
+        assert(M_ROOMBEFORE(m) >= (header_size)); \
+    } \
+} while(0)
 
 #endif

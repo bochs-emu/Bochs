@@ -115,6 +115,24 @@ void arp_table_add(Slirp *slirp, uint32_t ip_addr,
 bool arp_table_search(Slirp *slirp, uint32_t ip_addr,
                       uint8_t out_ethaddr[ETH_ALEN]);
 
+struct ndpentry {
+    uint8_t eth_addr[ETH_ALEN]; /* sender hardware address */
+    struct in6_addr ip_addr; /* sender IP address       */
+};
+
+#define NDP_TABLE_SIZE 16
+
+typedef struct NdpTable {
+    struct ndpentry table[NDP_TABLE_SIZE];
+    /*
+     * The table is a cache with old entries overwritten when the table fills.
+     * Preserve the first entry: it is the guest, which is needed for lazy
+     * hostfwd guest address assignment.
+     */
+    struct in6_addr guest_in6_addr;
+    int next_victim;
+} NdpTable;
+
 /* Slirp configuration, specified by the application */
 struct Slirp {
     int cfg_version;
@@ -148,14 +166,17 @@ struct Slirp {
 
     bool disable_host_loopback;
 
+    uint32_t mfr_id;
+    uint8_t oob_eth_addr[ETH_ALEN];
+
     /* mbuf states */
-    struct mbuf m_freelist, m_usedlist;
+    struct slirp_quehead m_freelist;
+    struct slirp_quehead m_usedlist;
     int mbuf_alloced;
 
     /* if states */
-    struct mbuf if_fastq;   /* fast queue (for interactive data) */
-    struct mbuf if_batchq;  /* queue for non-interactive data */
-    struct mbuf *next_m;    /* pointer to next mbuf to output */
+    struct slirp_quehead if_fastq; /* fast queue (for interactive data) */
+    struct slirp_quehead if_batchq; /* queue for non-interactive data */
     bool if_start_busy;     /* avoid if_start recursion */
 
     /* ip states */
@@ -189,12 +210,15 @@ struct Slirp {
     char *tftp_server_name;
 
     ArpTable arp_table;
+    NdpTable ndp_table;
 
     bool enable_emu;
 
     const SlirpCb *cb;
     void *opaque;
 
+    struct sockaddr_in *outbound_addr;
+    struct sockaddr_in6 *outbound_addr6;
     bool disable_dns; /* slirp will not redirect/serve any DNS packet */
 };
 
@@ -211,6 +235,9 @@ void if_start(Slirp *);
 
 /* Get the address of the DNS server on the host side */
 int get_dns_addr(struct in_addr *pdns_addr);
+
+/* Get the IPv6 address of the DNS server on the host side */
+int get_dns6_addr(struct in6_addr *pdns6_addr, uint32_t *scope_id);
 
 #ifndef _WIN32
 #include <netdb.h>
@@ -265,7 +292,7 @@ int ip_output(struct socket *, struct mbuf *);
 
 /* tcp_input.c */
 /* Process TCP datagram coming from the guest */
-void tcp_input(struct mbuf *, int, struct socket *);
+void tcp_input(struct mbuf *, int, struct socket *, unsigned short af);
 /* Determine a reasonable value for maxseg size */
 int tcp_mss(struct tcpcb *, unsigned offer);
 
@@ -291,7 +318,8 @@ void tcp_template(struct tcpcb *);
  * Send a single message to the TCP at address specified by
  * the given TCP/IP header.
  */
-void tcp_respond(struct tcpcb *, struct tcpiphdr *, struct mbuf *, tcp_seq, tcp_seq, int);
+void tcp_respond(struct tcpcb *, struct tcpiphdr *,
+                 struct mbuf *, tcp_seq, tcp_seq, int, unsigned short);
 /*
  * Create a new TCP control block, making an
  * empty reassembly queue and hooking it to the argument
@@ -311,11 +339,11 @@ void tcp_sockclosed(struct tcpcb *);
  * Connect to a host on the Internet
  * Called by tcp_input
  */
-int tcp_fconnect(struct socket *);
+int tcp_fconnect(struct socket *, unsigned short af);
 /* Accept the connection from the Internet, and connect to the guest */
 void tcp_connect(struct socket *);
 /* Attach a TCPCB to a socket */
-int tcp_attach(struct socket *);
+void tcp_attach(struct socket *);
 /* * Return TOS according to the ports */
 uint8_t tcp_tos(struct socket *);
 /*

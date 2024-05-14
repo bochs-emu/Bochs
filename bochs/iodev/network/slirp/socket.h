@@ -181,9 +181,10 @@ static inline void sockaddr_copy(struct sockaddr *dst, socklen_t dstlen, const s
 }
 
 /* Find the socket corresponding to lhost & fhost, trying last as a guess */
-struct socket *solookup(struct socket *, struct in_addr, unsigned, struct in_addr, unsigned);
+struct socket *solookup(struct socket **last, struct socket *head,
+                        struct sockaddr_storage *lhost, struct sockaddr_storage *fhost);
 /* Create a new socket */
-struct socket *socreate(Slirp *);
+struct socket *socreate(Slirp *, int);
 /* Release a socket */
 void sofree(struct socket *);
 /* Receive the available data from the Internet socket and queue it on the sb */
@@ -222,5 +223,16 @@ struct iovec; /* For win32 */
 size_t sopreprbuf(struct socket *so, struct iovec *iov, int *np);
 /* Get data from the buffer and queue it on the sb */
 int soreadbuf(struct socket *so, const char *buf, int size);
+
+/* Translate addr into host addr when it is a virtual address, before sending to the Internet */
+int sotranslate_out(struct socket *, struct sockaddr_storage *);
+/* Translate addr into virtual address when it is host, before sending to the guest */
+void sotranslate_in(struct socket *, struct sockaddr_storage *);
+/* Translate connections from localhost to the real hostname */
+void sotranslate_accept(struct socket *);
+/* Drop num bytes from the reading end of the socket */
+void sodrop(struct socket *, int num);
+/* Forwarding a connection to the guest, try to find the guest address to use, fill lhost with it */
+int soassign_guest_addr_if_needed(struct socket *so);
 
 #endif /* SLIRP_SOCKET_H */

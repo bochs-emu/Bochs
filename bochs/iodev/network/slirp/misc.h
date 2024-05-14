@@ -28,9 +28,8 @@ struct gfwd_list {
 #define EMU_REALAUDIO 0x5
 #define EMU_RLOGIN 0x6
 #define EMU_IDENT 0x7
-#define EMU_RSH 0x8
 
-#define EMU_NOCONNECT 0x10  /* Don't connect */
+#define EMU_NOCONNECT 0x10 /* Don't connect */
 
 struct tos_t {
     uint16_t lport;
@@ -81,5 +80,8 @@ struct gfwd_list *add_unix(struct gfwd_list **ex_ptr, const char *unixsock,
 
 /* Remove the guest forward bound to the given address and port */
 int remove_guestfwd(struct gfwd_list **ex_ptr, struct in_addr addr, int port);
+
+/* Bind the socket to the outbound address specified in the slirp configuration */
+int slirp_bind_outbound(struct socket *so, unsigned short af);
 
 #endif

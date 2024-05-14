@@ -187,7 +187,7 @@ static void tftp_udp_output(struct tftp_session *spt, struct mbuf *m,
         da4.sin_addr = ((struct sockaddr_in *)&spt->client_addr)->sin_addr;
         da4.sin_port = spt->client_port;
 
-        udp_output2(NULL, m, &sa4, &da4, IPTOS_LOWDELAY);
+        udp_output(NULL, m, &sa4, &da4, IPTOS_LOWDELAY);
     }
 }
 

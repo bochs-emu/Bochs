@@ -34,9 +34,6 @@
 /*
  * Changes and additions relating to SLiRP
  * Copyright (c) 1995 Danny Gasparovski.
- *
- * Please read the file COPYRIGHT for the
- * terms and conditions of the copyright.
  */
 
 #include "slirp.h"
@@ -50,8 +47,7 @@
 /*
  * Tcp initialization
  */
-void
-tcp_init(Slirp *slirp)
+void tcp_init(Slirp *slirp)
 {
     slirp->tcp_iss = 1;     /* wrong */
     slirp->tcb.so_next = slirp->tcb.so_prev = &slirp->tcb;
@@ -65,26 +61,36 @@ void tcp_cleanup(Slirp *slirp)
     }
 }
 
-/*
- * Create template to be used to send tcp packets on a connection.
- * Call after host entry created, fills
- * in a skeletal tcp/ip header, minimizing the amount of work
- * necessary when the connection is used.
- */
-void
-tcp_template(struct tcpcb *tp)
+void tcp_template(struct tcpcb *tp)
 {
     struct socket *so = tp->t_socket;
     struct tcpiphdr *n = &tp->t_template;
 
     n->ti_mbuf = NULL;
-    n->ti_x1 = 0;
-    n->ti_pr = IPPROTO_TCP;
-    n->ti_len = htons(sizeof (struct tcpiphdr) - sizeof (struct ip));
-    n->ti_src = so->so_faddr;
-    n->ti_dst = so->so_laddr;
-    n->ti_sport = so->so_fport;
-    n->ti_dport = so->so_lport;
+    memset(&n->ti, 0, sizeof(n->ti));
+    n->ti_x0 = 0;
+    switch (so->so_ffamily) {
+    case AF_INET:
+        n->ti_pr = IPPROTO_TCP;
+        n->ti_len = htons(sizeof(struct tcphdr));
+        n->ti_src = so->so_faddr;
+        n->ti_dst = so->so_laddr;
+        n->ti_sport = so->so_fport;
+        n->ti_dport = so->so_lport;
+        break;
+
+    case AF_INET6:
+        n->ti_nh6 = IPPROTO_TCP;
+        n->ti_len = htons(sizeof(struct tcphdr));
+        n->ti_src6 = so->so_faddr6;
+        n->ti_dst6 = so->so_laddr6;
+        n->ti_sport = so->so_fport6;
+        n->ti_dport = so->so_lport6;
+        break;
+
+    default:
+        fprintf(stderr, "Unknown protocol\n");
+    }
 
     n->ti_seq = 0;
     n->ti_ack = 0;
@@ -109,9 +115,8 @@ tcp_template(struct tcpcb *tp)
  * In any case the ack and sequence number of the transmitted
  * segment are as specified by the parameters.
  */
-void
-tcp_respond(struct tcpcb *tp, struct tcpiphdr *ti, struct mbuf *m,
-            tcp_seq ack, tcp_seq seq, int flags)
+void tcp_respond(struct tcpcb *tp, struct tcpiphdr *ti, struct mbuf *m,
+                 tcp_seq ack, tcp_seq seq, int flags, unsigned short af)
 {
     int tlen;
     int win = 0;
@@ -126,13 +131,23 @@ tcp_respond(struct tcpcb *tp, struct tcpiphdr *ti, struct mbuf *m,
 
     if (tp)
         win = sbspace(&tp->t_socket->so_rcv);
-        if (m == NULL) {
+    if (m == NULL) {
         if (!tp || (m = m_get(tp->t_socket->slirp)) == NULL)
             return;
         tlen = 0;
         m->m_data += IF_MAXLINKHDR;
         *mtod(m, struct tcpiphdr *) = *ti;
         ti = mtod(m, struct tcpiphdr *);
+        switch (af) {
+        case AF_INET:
+            ti->ti.ti_i4.ih_x1 = 0;
+            break;
+        case AF_INET6:
+            ti->ti.ti_i6.ih_x1 = 0;
+            break;
+        default:
+            fprintf(stderr, "Unknown protocol\n");
+        }
         flags = TH_ACK;
     } else {
         /*
@@ -143,17 +158,33 @@ tcp_respond(struct tcpcb *tp, struct tcpiphdr *ti, struct mbuf *m,
 
         m->m_len = sizeof (struct tcpiphdr);
         tlen = 0;
-#define xchg(a,b,type) { type t; t=a; a=b; b=t; }
-        xchg(ti->ti_dst.s_addr, ti->ti_src.s_addr, uint32_t);
-        xchg(ti->ti_dport, ti->ti_sport, uint16_t);
+#define xchg(a, b, type) \
+    {                    \
+        type t;          \
+        t = a;           \
+        a = b;           \
+        b = t;           \
+    }
+        switch (af) {
+        case AF_INET:
+            xchg(ti->ti_dst.s_addr, ti->ti_src.s_addr, uint32_t);
+            xchg(ti->ti_dport, ti->ti_sport, uint16_t);
+            break;
+        case AF_INET6:
+            xchg(ti->ti_dst6, ti->ti_src6, struct in6_addr);
+            xchg(ti->ti_dport, ti->ti_sport, uint16_t);
+            break;
+        default:
+            fprintf(stderr, "Unknown protocol\n");
+        }
 #undef xchg
     }
-    ti->ti_len = htons((u_short)(sizeof (struct tcphdr) + tlen));
+    ti->ti_len = htons((uint16_t)(sizeof (struct tcphdr) + tlen));
     tlen += sizeof (struct tcpiphdr);
     m->m_len = tlen;
 
         ti->ti_mbuf = NULL;
-    ti->ti_x1 = 0;
+    ti->ti_x0 = 0;
     ti->ti_seq = htonl(seq);
     ti->ti_ack = htonl(ack);
     ti->ti_x2 = 0;
@@ -166,21 +197,51 @@ tcp_respond(struct tcpcb *tp, struct tcpiphdr *ti, struct mbuf *m,
     ti->ti_urp = 0;
     ti->ti_sum = 0;
     ti->ti_sum = cksum(m, tlen);
-    ((struct ip *)ti)->ip_len = tlen;
 
-    if(flags & TH_RST)
-      ((struct ip *)ti)->ip_ttl = MAXTTL;
-    else
-      ((struct ip *)ti)->ip_ttl = IPDEFTTL;
+    struct tcpiphdr tcpiph_save = *(mtod(m, struct tcpiphdr *));
+    struct ip *ip;
+    struct ip6 *ip6;
 
-    (void) ip_output((struct socket *)0, m);
+    switch (af) {
+    case AF_INET:
+        m->m_data +=
+            sizeof(struct tcpiphdr) - sizeof(struct tcphdr) - sizeof(struct ip);
+        m->m_len -=
+            sizeof(struct tcpiphdr) - sizeof(struct tcphdr) - sizeof(struct ip);
+        ip = mtod(m, struct ip *);
+        ip->ip_len = m->m_len;
+        ip->ip_dst = tcpiph_save.ti_dst;
+        ip->ip_src = tcpiph_save.ti_src;
+        ip->ip_p = tcpiph_save.ti_pr;
+
+        if (flags & TH_RST) {
+            ip->ip_ttl = MAXTTL;
+        } else {
+            ip->ip_ttl = IPDEFTTL;
+        }
+
+        ip_output(NULL, m);
+        break;
+
+    case AF_INET6:
+        m->m_data += sizeof(struct tcpiphdr) - sizeof(struct tcphdr) -
+                     sizeof(struct ip6);
+        m->m_len -= sizeof(struct tcpiphdr) - sizeof(struct tcphdr) -
+                    sizeof(struct ip6);
+        ip6 = mtod(m, struct ip6 *);
+        ip6->ip_pl = tcpiph_save.ti_len;
+        ip6->ip_dst = tcpiph_save.ti_dst6;
+        ip6->ip_src = tcpiph_save.ti_src6;
+        ip6->ip_nh = tcpiph_save.ti_nh6;
+
+//      ip6_output(NULL, m, 0);
+        break;
+
+    default:
+        fprintf(stderr, "Unknown protocol\n");
+    }
 }
 
-/*
- * Create a new TCP control block, making an
- * empty reassembly queue and hooking it to the argument
- * protocol control block.
- */
 struct tcpcb *tcp_newtcpcb(struct socket *so)
 {
     struct tcpcb *tp;
@@ -196,7 +257,7 @@ struct tcpcb *tcp_newtcpcb(struct socket *so)
      * 60: length of IPv6 header (40) + TCP header (20)
      */
     tp->t_maxseg =
-        MIN(so->slirp->if_mtu - 40,
+        MIN(so->slirp->if_mtu - ((so->so_ffamily == AF_INET) ? 40 : 60),
             TCP_MAXSEG_MAX);
 
     tp->t_flags = TCP_DO_RFC1323 ? (TF_REQ_SCALE|TF_REQ_TSTMP) : 0;
@@ -224,32 +285,20 @@ struct tcpcb *tcp_newtcpcb(struct socket *so)
     return (tp);
 }
 
-/*
- * Drop a TCP connection, reporting
- * the specified error.  If connection is synchronized,
- * then send a RST to peer.
- */
 struct tcpcb *tcp_drop(struct tcpcb *tp, int err)
 {
     DEBUG_CALL("tcp_drop");
-    DEBUG_ARG("tp = %lx", (long)tp);
+    DEBUG_ARG("tp = %p", tp);
     DEBUG_ARG("errno = %d", errno);
 
     if (TCPS_HAVERCVDSYN(tp->t_state)) {
         tp->t_state = TCPS_CLOSED;
-        (void) tcp_output(tp);
+        tcp_output(tp);
     }
     return (tcp_close(tp));
 }
 
-/*
- * Close a TCP control block:
- *  discard all space held by the tcp
- *  discard internet protocol block
- *  wake up any sleepers
- */
-struct tcpcb *
-tcp_close(struct tcpcb *tp)
+struct tcpcb *tcp_close(struct tcpcb *tp)
 {
     struct tcpiphdr *t;
     struct socket *so = tp->t_socket;
@@ -257,7 +306,7 @@ tcp_close(struct tcpcb *tp)
     struct mbuf *m;
 
     DEBUG_CALL("tcp_close");
-    DEBUG_ARG("tp = %lx", (long )tp);
+    DEBUG_ARG("tp = %p", tp);
 
     /* free the reassembly queue, if any */
     t = tcpfrag_list_first(tp);
@@ -268,10 +317,11 @@ tcp_close(struct tcpcb *tp)
         m_free(m);
     }
     free(tp);
-        so->so_tcpcb = NULL;
-    /* clobber input socket cache if we're closing the cached connection */
+    so->so_tcpcb = NULL;
+/* clobber input socket cache if we're closing the cached connection */
     if (so == slirp->tcp_last_so)
         slirp->tcp_last_so = &slirp->tcb;
+    so->slirp->cb->unregister_poll_fd(so->s, so->slirp->opaque);
     closesocket(so->s);
     sbfree(&so->so_rcv);
     sbfree(&so->so_snd);
@@ -293,21 +343,22 @@ tcp_close(struct tcpcb *tp)
  * for peer to send FIN or not respond to keep-alives, etc.
  * We can let the user exit from the close as soon as the FIN is acked.
  */
-void
-tcp_sockclosed(struct tcpcb *tp)
+void tcp_sockclosed(struct tcpcb *tp)
 {
-
     DEBUG_CALL("tcp_sockclosed");
-    DEBUG_ARG("tp = %lx", (long)tp);
+    DEBUG_ARG("tp = %p", tp);
+
+    if (!tp) {
+        return;
+    }
 
     switch (tp->t_state) {
-
-    case TCPS_CLOSED:
+        case TCPS_CLOSED:
     case TCPS_LISTEN:
     case TCPS_SYN_SENT:
         tp->t_state = TCPS_CLOSED;
-        tp = tcp_close(tp);
-        break;
+        tcp_close(tp);
+        return;
 
     case TCPS_SYN_RECEIVED:
     case TCPS_ESTABLISHED:
@@ -318,13 +369,10 @@ tcp_sockclosed(struct tcpcb *tp)
         tp->t_state = TCPS_LAST_ACK;
         break;
     }
-    if (tp)
-        tcp_output(tp);
+    tcp_output(tp);
 }
 
 /*
- * Connect to a host on the Internet
- * Called by tcp_input
  * Only do a connect, the tcp fields will be set in tcp_input
  * return 0 if there's a result of the connect,
  * else return -1 means we're still connecting
@@ -332,56 +380,56 @@ tcp_sockclosed(struct tcpcb *tp)
  * nonblocking.  Connect returns after the SYN is sent, and does
  * not wait for ACK+SYN.
  */
-int tcp_fconnect(struct socket *so)
+int tcp_fconnect(struct socket *so, unsigned short af)
 {
-  Slirp *slirp = so->slirp;
-  int ret=0;
+    int ret = 0;
 
-  DEBUG_CALL("tcp_fconnect");
-  DEBUG_ARG("so = %lx", (long )so);
+    DEBUG_CALL("tcp_fconnect");
+    DEBUG_ARG("so = %p", so);
 
-  if( (ret = so->s = slirp_socket(AF_INET,SOCK_STREAM,0)) >= 0) {
-    int opt, s=so->s;
-    struct sockaddr_in addr;
+    ret = so->s = slirp_socket(af, SOCK_STREAM, 0);
+    if (ret >= 0) {
+        ret = slirp_bind_outbound(so, af);
+        if (ret < 0) {
+            // bind failed - close socket
+            closesocket(so->s);
+            so->s = -1;
+            return (ret);
+        }
+    }
 
-    slirp_set_nonblock(s);
-    slirp_socket_set_fast_reuse(s);
-    opt = 1;
-    setsockopt(s, SOL_SOCKET, SO_OOBINLINE, &opt, sizeof(opt));
+    if (ret >= 0) {
+        int opt, s = so->s;
+        struct sockaddr_storage addr;
 
-    addr.sin_family = AF_INET;
-    if ((so->so_faddr.s_addr & slirp->vnetwork_mask.s_addr) ==
-        slirp->vnetwork_addr.s_addr) {
-      /* It's an alias */
-      if (so->so_faddr.s_addr == slirp->vnameserver_addr.s_addr) {
-    if (get_dns_addr(&addr.sin_addr) < 0)
-      addr.sin_addr = loopback_addr;
-      } else {
-    addr.sin_addr = loopback_addr;
-      }
-    } else
-      addr.sin_addr = so->so_faddr;
-    addr.sin_port = so->so_fport;
+        slirp_set_nonblock(s);
+        so->slirp->cb->register_poll_fd(s, so->slirp->opaque);
+        slirp_socket_set_fast_reuse(s);
+        opt = 1;
+        setsockopt(s, SOL_SOCKET, SO_OOBINLINE, &opt, sizeof(opt));
+        opt = 1;
+        setsockopt(s, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt));
 
-    DEBUG_MISC((dfd, " connect()ing, addr.sin_port=%d, "
-        "addr.sin_addr.s_addr=%.16s\n",
-        ntohs(addr.sin_port), inet_ntoa(addr.sin_addr)));
-    /* We don't care what port we get */
-    ret = connect(s,(struct sockaddr *)&addr,sizeof (addr));
+        addr = so->fhost.ss;
+        DEBUG_CALL(" connect()ing");
+        if (sotranslate_out(so, &addr) < 0) {
+            return -1;
+        }
 
-    /*
-     * If it's not in progress, it failed, so we just return 0,
-     * without clearing SS_NOFDREF
-     */
-    soisfconnecting(so);
-  }
+        /* We don't care what port we get */
+        ret = connect(s, (struct sockaddr *)&addr, sockaddr_size(&addr));
 
-  return(ret);
+        /*
+         * If it's not in progress, it failed, so we just return 0,
+         * without clearing SS_NOFDREF
+         */
+        soisfconnecting(so);
+    }
+
+    return(ret);
 }
 
 /*
- * Accept the socket and connect to the local-host
- *
  * We have a problem. The correct thing to do would be
  * to first connect to the local-host, and only if the
  * connection is accepted, then do an accept() here.
@@ -395,13 +443,55 @@ void tcp_connect(struct socket *inso)
 {
     Slirp *slirp = inso->slirp;
     struct socket *so;
-    struct sockaddr_in addr;
-    socklen_t addrlen = sizeof(struct sockaddr_in);
+    struct sockaddr_storage addr;
+    socklen_t addrlen;
     struct tcpcb *tp;
-    int s, opt;
+    int s, opt, ret;
+    /* AF_INET6 addresses are bigger than AF_INET, so this is big enough. */
+    char addrstr[INET6_ADDRSTRLEN];
+    char portstr[6];
 
     DEBUG_CALL("tcp_connect");
-    DEBUG_ARG("inso = %lx", (long)inso);
+    DEBUG_ARG("inso = %p", inso);
+    switch (inso->lhost.ss.ss_family) {
+    case AF_INET:
+        addrlen = sizeof(struct sockaddr_in);
+        break;
+    case AF_INET6:
+        addrlen = sizeof(struct sockaddr_in6);
+        break;
+    default:
+        fprintf(stderr, "Unknown protocol\n");
+    }
+    ret = getnameinfo((const struct sockaddr *) &inso->lhost.ss, addrlen, addrstr, sizeof(addrstr), portstr, sizeof(portstr), NI_NUMERICHOST|NI_NUMERICSERV);
+    assert(ret == 0);
+    DEBUG_ARG("ip = [%s]:%s", addrstr, portstr);
+    DEBUG_ARG("so_state = 0x%x", inso->so_state);
+
+    /* Perform lazy guest IP address resolution if needed. */
+    if (inso->so_state & SS_HOSTFWD) {
+        /*
+         * We can only reject the connection request by accepting it and
+         * then immediately closing it. Note that SS_FACCEPTONCE sockets can't
+         * get here.
+         */
+        if (soassign_guest_addr_if_needed(inso) < 0) {
+            /*
+             * Guest address isn't available yet. We could either try to defer
+             * completing this connection request until the guest address is
+             * available, or punt. It's easier to punt. Otherwise we need to
+             * complicate the mechanism by which we're called to defer calling
+             * us again until the guest address is available.
+             */
+            DEBUG_MISC(" guest address not available yet");
+            addrlen = sizeof(addr);
+            s = accept(inso->s, (struct sockaddr *)&addr, &addrlen);
+            if (s >= 0) {
+                close(s);
+            }
+            return;
+        }
+    }
 
     /*
      * If it's an SS_ACCEPTONCE socket, no need to socreate()
@@ -411,45 +501,34 @@ void tcp_connect(struct socket *inso)
         /* FACCEPTONCE already have a tcpcb */
         so = inso;
     } else {
-        so = socreate(slirp);
-        if (so == NULL) {
-            /* If it failed, get rid of the pending connection */
-            closesocket(accept(inso->s, (struct sockaddr *)&addr, &addrlen));
-            return;
-        }
-        if (tcp_attach(so) < 0) {
-            free(so); /* NOT sofree */
-            return;
-        }
-        so->so_laddr = inso->so_laddr;
-        so->so_lport = inso->so_lport;
+        so = socreate(slirp, IPPROTO_TCP);
+        tcp_attach(so);
+        so->lhost = inso->lhost;
+        so->so_ffamily = inso->so_ffamily;
     }
 
     tcp_mss(sototcpcb(so), 0);
 
+    addrlen = sizeof(addr);
     s = accept(inso->s, (struct sockaddr *)&addr, &addrlen);
     if (s < 0) {
         tcp_close(sototcpcb(so)); /* This will sofree() as well */
         return;
     }
     slirp_set_nonblock(s);
+    so->slirp->cb->register_poll_fd(s, so->slirp->opaque);
     slirp_socket_set_fast_reuse(s);
     opt = 1;
     setsockopt(s, SOL_SOCKET, SO_OOBINLINE, &opt, sizeof(int));
     slirp_socket_set_nodelay(s);
 
-    so->so_fport = addr.sin_port;
-    so->so_faddr = addr.sin_addr;
-    /* Translate connections from localhost to the real hostname */
-    if (so->so_faddr.s_addr == 0 ||
-        (so->so_faddr.s_addr & loopback_mask) ==
-        (loopback_addr.s_addr & loopback_mask)) {
-        so->so_faddr = slirp->vhost_addr;
-    }
+    so->fhost.ss = addr;
+    sotranslate_accept(so);
 
     /* Close the accept() socket, set right state */
     if (inso->so_state & SS_FACCEPTONCE) {
         /* If we only accept once, close the accept() socket */
+        so->slirp->cb->unregister_poll_fd(so->s, so->slirp->opaque);
         closesocket(so->s);
 
         /* Don't select it yet, even though we have an FD */
@@ -472,18 +551,10 @@ void tcp_connect(struct socket *inso)
     tcp_output(tp);
 }
 
-/*
- * Attach a TCPCB to a socket.
- */
-int
-tcp_attach(struct socket *so)
+void tcp_attach(struct socket *so)
 {
-    if ((so->so_tcpcb = tcp_newtcpcb(so)) == NULL)
-       return -1;
-
+    so->so_tcpcb = tcp_newtcpcb(so);
     slirp_insque(so, &so->slirp->tcb);
-
-    return 0;
 }
 
 /*
@@ -495,7 +566,6 @@ static const struct tos_t tcptos[] = {
       {0, 23, IPTOS_LOWDELAY, 0},   /* telnet */
       {0, 80, IPTOS_THROUGHPUT, 0}, /* WWW */
       {0, 513, IPTOS_LOWDELAY, EMU_RLOGIN|EMU_NOCONNECT},   /* rlogin */
-      {0, 514, IPTOS_LOWDELAY, EMU_RSH|EMU_NOCONNECT},  /* shell */
       {0, 544, IPTOS_LOWDELAY, EMU_KSH},        /* kshell */
       {0, 543, IPTOS_LOWDELAY, 0},  /* klogin */
       {0, 6667, IPTOS_THROUGHPUT, EMU_IRC}, /* IRC */
@@ -505,49 +575,32 @@ static const struct tos_t tcptos[] = {
       {0, 0, 0, 0}
 };
 
-static struct emu_t *tcpemu = NULL;
-
-/*
- * Return TOS according to the above table
- */
-uint8_t
-tcp_tos(struct socket *so)
+uint8_t tcp_tos(struct socket *so)
 {
     int i = 0;
-    struct emu_t *emup;
 
-    while(tcptos[i].tos) {
+    while (tcptos[i].tos) {
         if ((tcptos[i].fport && (ntohs(so->so_fport) == tcptos[i].fport)) ||
             (tcptos[i].lport && (ntohs(so->so_lport) == tcptos[i].lport))) {
+            if (so->slirp->enable_emu)
             so->so_emu = tcptos[i].emu;
             return tcptos[i].tos;
         }
         i++;
     }
 
-    /* Nope, lets see if there's a user-added one */
-    for (emup = tcpemu; emup; emup = emup->next) {
-        if ((emup->fport && (ntohs(so->so_fport) == emup->fport)) ||
-            (emup->lport && (ntohs(so->so_lport) == emup->lport))) {
-            so->so_emu = emup->emu;
-            return emup->tos;
-        }
-    }
-
     return 0;
 }
 
 /*
- * Emulate programs that try and connect to us
- * This includes ftp (the data connection is
- * initiated by the server) and IRC (DCC CHAT and
- * DCC SEND) for now
- *
  * NOTE: It's possible to crash SLiRP by sending it
  * unstandard strings to emulate... if this is a problem,
  * more checks are needed here
  *
  * XXX Assumes the whole command came in one packet
+ * XXX If there is more than one command in the packet, the others may
+ * be truncated.
+ * XXX If the command is too long, it may be truncated.
  *
  * XXX Some ftp clients will have their TOS set to
  * LOWDELAY and so Nagel will kick in.  Because of this,
@@ -561,8 +614,7 @@ tcp_tos(struct socket *so)
  *
  * NOTE: if you return 0 you MUST m_free() the mbuf!
  */
-int
-tcp_emu(struct socket *so, struct mbuf *m)
+int tcp_emu(struct socket *so, struct mbuf *m)
 {
     Slirp *slirp = so->slirp;
     unsigned n1, n2, n3, n4, n5, n6;
@@ -572,8 +624,8 @@ tcp_emu(struct socket *so, struct mbuf *m)
     char *bptr;
 
     DEBUG_CALL("tcp_emu");
-    DEBUG_ARG("so = %lx", (long)so);
-    DEBUG_ARG("m = %lx", (long)m);
+    DEBUG_ARG("so = %p", so);
+    DEBUG_ARG("m = %p", m);
 
     switch(so->so_emu) {
         int x, i;
@@ -800,7 +852,7 @@ tcp_emu(struct socket *so, struct mbuf *m)
 
         bptr = m->m_data;
         while (bptr < m->m_data + m->m_len) {
-            u_short p;
+            uint16_t p;
             static int ra = 0;
             char ra_tbl[4];
 
@@ -907,8 +959,9 @@ int tcp_ctl(struct socket *so)
     struct gfwd_list *ex_ptr;
 
     DEBUG_CALL("tcp_ctl");
-    DEBUG_ARG("so = %lx", (long )so);
+    DEBUG_ARG("so = %p", so);
 
+    /* TODO: IPv6 */
     if (so->so_faddr.s_addr != slirp->vhost_addr.s_addr) {
         /* Check if it's pty_exec */
         for (ex_ptr = slirp->guestfwd_list; ex_ptr; ex_ptr = ex_ptr->ex_next) {
@@ -919,7 +972,7 @@ int tcp_ctl(struct socket *so)
                     so->guestfwd = ex_ptr;
                     return 1;
                 }
-                DEBUG_MISC((dfd, " executing %s", ex_ptr->ex_exec));
+                DEBUG_MISC(" executing %s", ex_ptr->ex_exec);
                 if (ex_ptr->ex_unix)
                     return open_unix(so, ex_ptr->ex_unix);
                 else
@@ -927,9 +980,8 @@ int tcp_ctl(struct socket *so)
             }
         }
     }
-    sb->sb_cc =
-        snprintf(sb->sb_wptr, sb->sb_datalen - (sb->sb_wptr - sb->sb_data),
-                 "Error: No application configured.\r\n");
+    sb->sb_cc = snprintf(sb->sb_wptr, sb->sb_datalen - (sb->sb_wptr - sb->sb_data),
+                         "Error: No application configured.\r\n");
     sb->sb_wptr += sb->sb_cc;
     return 0;
 }

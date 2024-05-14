@@ -23,9 +23,8 @@ static void ifs_remque(struct mbuf *ifm)
 
 void if_init(Slirp *slirp)
 {
-    slirp->if_fastq.ifq_next = slirp->if_fastq.ifq_prev = &slirp->if_fastq;
-    slirp->if_batchq.ifq_next = slirp->if_batchq.ifq_prev = &slirp->if_batchq;
-    slirp->next_m = &slirp->if_batchq;
+    slirp->if_fastq.qh_link = slirp->if_fastq.qh_rlink = &slirp->if_fastq;
+    slirp->if_batchq.qh_link = slirp->if_batchq.qh_rlink = &slirp->if_batchq;
 }
 
 /*
@@ -44,6 +43,8 @@ void if_init(Slirp *slirp)
 void if_output(struct socket *so, struct mbuf *ifm)
 {
     Slirp *slirp = ifm->slirp;
+    M_DUP_DEBUG(slirp, ifm, 0, 0);
+
     struct mbuf *ifq;
     int on_fastq = 1;
 
@@ -69,19 +70,22 @@ void if_output(struct socket *so, struct mbuf *ifm)
      * order)
      * XXX add cache here?
      */
-    for (ifq = slirp->if_batchq.ifq_prev; ifq != &slirp->if_batchq;
+    if (so) {
+        for (ifq = (struct mbuf *)slirp->if_batchq.qh_rlink;
+             (struct slirp_quehead *)ifq != &slirp->if_batchq;
          ifq = ifq->ifq_prev) {
-        if (so == ifq->ifq_so) {
-            /* A match! */
-            ifm->ifq_so = so;
-            ifs_insque(ifm, ifq->ifs_prev);
-            goto diddit;
+            if (so == ifq->ifq_so) {
+                /* A match! */
+                ifm->ifq_so = so;
+                ifs_insque(ifm, ifq->ifs_prev);
+                goto diddit;
+            }
         }
     }
 
     /* No match, check which queue to put it on */
     if (so && (so->so_iptos & IPTOS_LOWDELAY)) {
-        ifq = slirp->if_fastq.ifq_prev;
+        ifq = (struct mbuf *)slirp->if_fastq.qh_rlink;
         on_fastq = 1;
         /*
          * Check if this packet is a part of the last
@@ -93,11 +97,7 @@ void if_output(struct socket *so, struct mbuf *ifm)
             goto diddit;
         }
     } else {
-        ifq = slirp->if_batchq.ifq_prev;
-        /* Set next_m if the queue was empty so far */
-        if (slirp->next_m == &slirp->if_batchq) {
-            slirp->next_m = ifm;
-        }
+        ifq = (struct mbuf *)slirp->if_batchq.qh_rlink;
     }
 
     /* Create a new doubly linked list for this session */
@@ -119,7 +119,6 @@ diddit:
          */
         if (on_fastq &&
             ((so->so_nqueued >= 6) && (so->so_nqueued - so->so_queued) >= 3)) {
-
             /* Remove from current queue... */
             slirp_remque(ifm->ifs_next);
 
@@ -137,7 +136,7 @@ diddit:
 void if_start(Slirp *slirp)
 {
     uint64_t now = slirp->cb->clock_get_ns(slirp->opaque);
-    bool from_batchq, next_from_batchq;
+    bool from_batchq = false;
     struct mbuf *ifm, *ifm_next, *ifqt;
 
     DEBUG_VERBOSE_CALL("if_start");
@@ -147,45 +146,39 @@ void if_start(Slirp *slirp)
     }
     slirp->if_start_busy = true;
 
-    if (slirp->if_fastq.ifq_next != &slirp->if_fastq) {
-        ifm_next = slirp->if_fastq.ifq_next;
-        next_from_batchq = false;
-    } else if (slirp->next_m != &slirp->if_batchq) {
-        /* Nothing on fastq, pick up from batchq via next_m */
-        ifm_next = slirp->next_m;
-        next_from_batchq = true;
+    struct mbuf *batch_head = NULL;
+    if (slirp->if_batchq.qh_link != &slirp->if_batchq) {
+        batch_head = (struct mbuf *)slirp->if_batchq.qh_link;
+    }
+
+    if (slirp->if_fastq.qh_link != &slirp->if_fastq) {
+        ifm_next = (struct mbuf *)slirp->if_fastq.qh_link;
+    } else if (batch_head) {
+        /* Nothing on fastq, pick up from batchq */
+        ifm_next = batch_head;
+        from_batchq = true;
     } else {
         ifm_next = NULL;
     }
 
-    if (ifm_next) {
-        DEBUG_CALL("if_start"); // Report only if something's to do
-    }
-
     while (ifm_next) {
         ifm = ifm_next;
-        from_batchq = next_from_batchq;
 
         ifm_next = ifm->ifq_next;
-        if (ifm_next == &slirp->if_fastq) {
+        if ((struct slirp_quehead *)ifm_next == &slirp->if_fastq) {
             /* No more packets in fastq, switch to batchq */
-            ifm_next = slirp->next_m;
-            next_from_batchq = true;
+            ifm_next = batch_head;
+            from_batchq = true;
         }
-        if (ifm_next == &slirp->if_batchq) {
+        if ((struct slirp_quehead *)ifm_next == &slirp->if_batchq) {
             /* end of batchq */
             ifm_next = NULL;
         }
 
         /* Try to send packet unless it already expired */
         if (ifm->expiration_date >= now && !if_encap(slirp, ifm)) {
-            /* Packet is delayed due to pending ARP resolution */
+            /* Packet is delayed due to pending ARP or NDP resolution */
             continue;
-        }
-
-        if (ifm == slirp->next_m) {
-            /* Set which packet to send on next iteration */
-            slirp->next_m = ifm->ifq_next;
         }
 
         /* Remove it from the queue */
@@ -200,11 +193,6 @@ void if_start(Slirp *slirp)
             ifs_remque(ifm);
             if (!from_batchq) {
                 ifm_next = next;
-                next_from_batchq = false;
-            } else if (slirp->next_m == &slirp->if_batchq) {
-                /* Set next_m and ifm_next if the session packet is now the
-                 * only one on batchq */
-                slirp->next_m = ifm_next = next;
             }
         }
 
