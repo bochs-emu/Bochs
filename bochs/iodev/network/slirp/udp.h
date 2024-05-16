@@ -96,4 +96,11 @@ struct socket *udpx_listen(Slirp *,
 /* Send UDP datagram to the guest */
 int udp_output(struct socket *so, struct mbuf *m, struct sockaddr_in *saddr,
                struct sockaddr_in *daddr, int iptos);
+
+/* Process UDPv6 datagram coming from the guest */
+void udp6_input(struct mbuf *);
+/* Send UDPv6 datagram to the guest */
+int udp6_output(struct socket *so, struct mbuf *m, struct sockaddr_in6 *saddr,
+                struct sockaddr_in6 *daddr);
+
 #endif

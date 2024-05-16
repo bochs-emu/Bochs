@@ -28,6 +28,8 @@
 
 #define SLIRP_N_ELEMENTS(x) (sizeof(x) / sizeof((x)[0]))
 
+#define slirp_rand_int_range(min, max) ((rand() % (max - min)) + min)
+
 #ifndef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 #endif

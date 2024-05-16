@@ -192,4 +192,14 @@ static inline int slirp_socket_set_fast_reuse(int fd)
 
 void slirp_pstrcpy(char *buf, int buf_size, const char *str);
 
+int slirp_fmt(char *str, size_t size, const char *format, ...);
+int slirp_fmt0(char *str, size_t size, const char *format, ...);
+
+/*
+ * Pretty print a MAC address into out_str.
+ * As a convenience returns out_str.
+ */
+const char *slirp_ether_ntoa(const uint8_t *addr, char *out_str,
+                             size_t out_str_len);
+
 #endif

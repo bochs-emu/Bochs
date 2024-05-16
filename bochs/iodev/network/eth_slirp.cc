@@ -34,6 +34,22 @@
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 
+#ifdef _WIN32
+/* as defined in sdkddkver.h */
+#ifdef _WIN32_WINNT
+#if _WIN32_WINNT < 0x0601
+#undef _WIN32_WINNT
+#endif
+#endif
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0601 /* Windows 7 */
+#endif
+/* reduces the number of implicitly included headers */
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#endif
+
 #if defined(_MSC_VER)
 #define CPP_STD _MSVC_LANG
 #else
@@ -142,7 +158,6 @@ static int64_t clock_get_ns(void *opaque)
   return bx_pc_system.time_usec() * 1000;
 }
 
-#if BX_HAVE_LIBSLIRP
 struct timer {
     SlirpTimerId id;
     void *cb_opaque;
@@ -195,7 +210,6 @@ static void timer_mod(void *_timer, int64_t expire_time, void *opaque)
   timer1->next = *t;
   *t = timer1;
 }
-#endif
 
 static int npoll;
 
@@ -219,16 +233,12 @@ static struct SlirpCb callbacks = {
     .send_packet = send_packet,
     .guest_error = guest_error,
     .clock_get_ns = clock_get_ns,
-#if BX_HAVE_LIBSLIRP
     .timer_free = timer_free,
     .timer_mod = timer_mod,
-#endif
     .register_poll_fd = register_poll_fd,
     .unregister_poll_fd = unregister_poll_fd,
     .notify = notify,
-#if BX_HAVE_LIBSLIRP
     .timer_new_opaque = timer_new_opaque,
-#endif
 };
 #else
 static struct SlirpCb callbacks;
@@ -250,16 +260,12 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
   callbacks.send_packet = send_packet,
   callbacks.guest_error = guest_error,
   callbacks.clock_get_ns = clock_get_ns,
-#if BX_HAVE_LIBSLIRP
   callbacks.timer_free = timer_free,
   callbacks.timer_mod = timer_mod,
-#endif
   callbacks.register_poll_fd = register_poll_fd,
   callbacks.unregister_poll_fd = unregister_poll_fd,
   callbacks.notify = notify,
-#if BX_HAVE_LIBSLIRP
   callbacks.timer_new_opaque = timer_new_opaque,
-#endif
 #endif
   /* default settings according to historic slirp */
   memset(&config, 0, sizeof(config));
@@ -307,7 +313,6 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
     if (!parse_slirp_conf(script)) {
       BX_ERROR(("reading slirp config failed"));
     }
-#if BX_HAVE_LIBSLIRP
     if (config.in6_enabled) {
       BX_INFO(("IPv6 enabled (using default QEMU settings)"));
       inet_pton(AF_INET6, "fec0::", &config.vprefix_addr6);
@@ -317,7 +322,6 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
       config.vnameserver6 = config.vprefix_addr6;
       config.vnameserver6.s6_addr[15] |= 3;
     }
-#endif
   }
   slirplog = new logfunctions();
   sprintf(prefix, "SLIRP%d", bx_slirp_instances);
@@ -551,10 +555,8 @@ bool bx_slirp_pktmover_c::parse_slirp_conf(const char *conf)
           } else {
             BX_ERROR(("slirp: wrong format for 'pktlog'"));
           }
-#if BX_HAVE_LIBSLIRP
         } else if (!stricmp(param, "ipv6_enabled")) {
           config.in6_enabled = (atoi(val) != 0);
-#endif
         } else if (!stricmp(param, "tftp_srvname")) {
           if (len2 < 33) {
             config.tftp_server_name = (char*)malloc(len2+1);

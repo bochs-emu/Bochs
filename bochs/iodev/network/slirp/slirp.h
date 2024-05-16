@@ -133,6 +133,14 @@ typedef struct NdpTable {
     int next_victim;
 } NdpTable;
 
+/* Add a new NDP entry for the given addresses */
+void ndp_table_add(Slirp *slirp, struct in6_addr ip_addr,
+                   uint8_t ethaddr[ETH_ALEN]);
+
+/* Look for an NDP entry for the given IPv6 address */
+bool ndp_table_search(Slirp *slirp, struct in6_addr ip_addr,
+                      uint8_t out_ethaddr[ETH_ALEN]);
+
 /* Slirp configuration, specified by the application */
 struct Slirp {
     int cfg_version;
@@ -212,6 +220,8 @@ struct Slirp {
     ArpTable arp_table;
     NdpTable ndp_table;
 
+    void *ra_timer;
+
     bool enable_emu;
 
     const SlirpCb *cb;
@@ -238,6 +248,11 @@ int get_dns_addr(struct in_addr *pdns_addr);
 
 /* Get the IPv6 address of the DNS server on the host side */
 int get_dns6_addr(struct in6_addr *pdns6_addr, uint32_t *scope_id);
+
+/* ncsi.c */
+
+/* Process NCSI packet coming from the guest */
+void ncsi_input(Slirp *slirp, const uint8_t *pkt, int pkt_len);
 
 #ifndef _WIN32
 #include <netdb.h>
@@ -289,6 +304,18 @@ void ip_stripoptions(struct mbuf *, struct mbuf *);
 /* ip_output.c */
 /* Send IPv4 packet to the guest */
 int ip_output(struct socket *, struct mbuf *);
+
+/* ip6_input.c */
+/* Called from slirp_new, but after other initialization */
+void ip6_post_init(Slirp *);
+/* Called from slirp_cleanup */
+void ip6_cleanup(Slirp *);
+/* Process IPv6 packet coming from the guest */
+void ip6_input(struct mbuf *);
+
+/* ip6_output */
+/* Send IPv6 packet to the guest */
+int ip6_output(struct socket *, struct mbuf *, int fast);
 
 /* tcp_input.c */
 /* Process TCP datagram coming from the guest */

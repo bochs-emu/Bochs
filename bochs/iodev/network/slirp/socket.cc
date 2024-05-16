@@ -555,8 +555,8 @@ void sorecvfrom(struct socket *so)
                     struct sockaddr_in6 *sin6;
 
                     sin6 = (struct sockaddr_in6 *) SO_EE_OFFENDER(ee);
-//                    icmp6_forward_error(so->so_m, ee->ee_type, ee->ee_code,
-//                                        &sin6->sin6_addr);
+                    icmp6_forward_error(so->so_m, ee->ee_type, ee->ee_code,
+                                        &sin6->sin6_addr);
                 }
             }
         }
@@ -671,7 +671,7 @@ void sorecvfrom(struct socket *so)
                     }
 
                     DEBUG_MISC(" rx error, tx icmp6 ICMP_UNREACH:%i", code);
-//                    icmp6_send_error(so->so_m, ICMP6_UNREACH, code);
+                    icmp6_send_error(so->so_m, ICMP6_UNREACH, code);
                     break;
                 default:
                     fprintf(stderr, "Unknown protocol\n");
@@ -710,8 +710,8 @@ void sorecvfrom(struct socket *so)
                                         "guest address not available yet");
                         break;
                     case AF_INET6:
-//                        icmp6_send_error(so->so_m, ICMP6_UNREACH,
-//                                         ICMP6_UNREACH_ADDRESS);
+                        icmp6_send_error(so->so_m, ICMP6_UNREACH,
+                                         ICMP6_UNREACH_ADDRESS);
                         break;
                     default:
                         fprintf(stderr, "Unknown protocol\n");
@@ -728,8 +728,8 @@ void sorecvfrom(struct socket *so)
                            (struct sockaddr_in *)&daddr, so->so_iptos);
                 break;
             case AF_INET6:
-//                udp6_output(so, m, (struct sockaddr_in6 *)&saddr,
-//                            (struct sockaddr_in6 *)&daddr);
+                udp6_output(so, m, (struct sockaddr_in6 *)&saddr,
+                            (struct sockaddr_in6 *)&daddr);
                 break;
             default:
                 fprintf(stderr, "Unknown protocol\n");
@@ -1117,7 +1117,7 @@ void sotranslate_accept(struct socket *so)
 unix2inet_cont:
             if (!so->so_fport) {
                 slirp_warning("Falling back to random port allocation", so->slirp->opaque);
-                so->so_fport = htons((rand() & 0x3fff) + 49152);
+                so->so_fport = htons(slirp_rand_int_range(49152, 65536));
             }
         } else if (so->slirp->in6_enabled) {
             so->so_ffamily = AF_INET6;
@@ -1160,7 +1160,7 @@ unix2inet_cont:
 unix2inet6_cont:
             if (!so->so_fport6) {
                 slirp_warning("Falling back to random port allocation", so->slirp->opaque);
-                so->so_fport6 = htons((rand() & 0x3fff) + 49152);
+                so->so_fport6 = htons(slirp_rand_int_range(49152, 65536));
             }
         } else {
             fprintf(stderr, "Unknown protocol\n");

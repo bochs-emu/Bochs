@@ -36,9 +36,11 @@
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 
 #include "util.h"
+#include "compat.h"
 
 #include <fcntl.h>
 #include <stdint.h>
+#include <stdarg.h>
 
 #if defined(_WIN32)
 int slirp_inet_aton(const char *cp, struct in_addr *ia)
@@ -376,6 +378,67 @@ void slirp_pstrcpy(char *buf, int buf_size, const char *str)
         *q++ = c;
     }
     *q = '\0';
+}
+
+/*
+ * A snprintf()-like function that:
+ * - returns the number of bytes written (excluding optional \0-ending)
+ * - dies on error
+ * - warn on truncation
+ */
+int slirp_fmt(char *str, size_t size, const char *format, ...)
+{
+    va_list args;
+    int rv;
+
+    va_start(args, format);
+    rv = vsnprintf(str, size, format, args);
+    va_end(args);
+
+    if (rv >= (int)size) {
+        fprintf(stderr, "slirp_fmt() truncation\n");
+    }
+
+    return MIN(rv, (int)size);
+}
+
+/*
+ * A snprintf()-like function that:
+ * - always \0-end (unless size == 0)
+ * - returns the number of bytes actually written, including \0 ending
+ * - dies on error
+ * - warn on truncation
+ */
+int slirp_fmt0(char *str, size_t size, const char *format, ...)
+{
+    va_list args;
+    int rv;
+
+    va_start(args, format);
+    rv = vsnprintf(str, size, format, args);
+    va_end(args);
+
+    if (rv >= (int)size) {
+        fprintf(stderr, "slirp_fmt0() truncation\n");
+        if (size > 0)
+            str[size - 1] = '\0';
+        rv = size;
+    } else {
+        rv += 1; /* include \0 */
+    }
+
+    return rv;
+}
+
+const char *slirp_ether_ntoa(const uint8_t *addr, char *out_str,
+                             size_t out_str_size)
+{
+    assert(out_str_size >= ETH_ADDRSTRLEN);
+
+    slirp_fmt0(out_str, out_str_size, "%02x:%02x:%02x:%02x:%02x:%02x",
+               addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
+
+    return out_str;
 }
 
 #endif

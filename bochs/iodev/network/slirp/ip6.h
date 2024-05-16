@@ -29,9 +29,8 @@ const struct in6_addr ALLNODES_MULTICAST = \
         0x01    \
     };
 
-#define SOLICITED_NODE_PREFIX \
+const struct in6_addr SOLICITED_NODE_PREFIX \
     {                         \
-        .s6_addr = {          \
             0xff,             \
             0x02,             \
             0x00,             \
@@ -48,12 +47,10 @@ const struct in6_addr ALLNODES_MULTICAST = \
             0x00,             \
             0x00,             \
             0x00              \
-        }                     \
-    }
+    };
 
-#define LINKLOCAL_ADDR \
+const struct in6_addr LINKLOCAL_ADDR \
     {                  \
-        .s6_addr = {   \
             0xfe,      \
             0x80,      \
             0x00,      \
@@ -70,8 +67,7 @@ const struct in6_addr ALLNODES_MULTICAST = \
             0x00,      \
             0x00,      \
             0x02       \
-        }              \
-    }
+    };
 
 const struct in6_addr ZERO_ADDR = \
     {           \
@@ -138,14 +134,14 @@ static inline bool in6_equal_mach(const struct in6_addr *a,
 #define in6_equal_router(a)                                          \
     ((in6_equal_net(a, &slirp->vprefix_addr6, slirp->vprefix_len) && \
       in6_equal_mach(a, &slirp->vhost_addr6, slirp->vprefix_len)) || \
-     (in6_equal_net(a, &(struct in6_addr)LINKLOCAL_ADDR, 64) &&      \
+     (in6_equal_net(a, &LINKLOCAL_ADDR, 64) &&      \
       in6_equal_mach(a, &slirp->vhost_addr6, 64)))
 
 /* Check that the IPv6 is equal to the virtual DNS server */
 #define in6_equal_dns(a)                                                   \
     ((in6_equal_net(a, &slirp->vprefix_addr6, slirp->vprefix_len) &&       \
       in6_equal_mach(a, &slirp->vnameserver_addr6, slirp->vprefix_len)) || \
-     (in6_equal_net(a, &(struct in6_addr)LINKLOCAL_ADDR, 64) &&            \
+     (in6_equal_net(a, &LINKLOCAL_ADDR, 64) &&            \
       in6_equal_mach(a, &slirp->vnameserver_addr6, 64)))
 
 /* Check that the IPv6 is equal to the host */
@@ -153,7 +149,7 @@ static inline bool in6_equal_mach(const struct in6_addr *a,
 
 /* Check that the IPv6 is within the sollicited node multicast network */
 #define in6_solicitednode_multicast(a) \
-    (in6_equal_net(a, &(struct in6_addr)SOLICITED_NODE_PREFIX, 104))
+    (in6_equal_net(a, &SOLICITED_NODE_PREFIX, 104))
 
 /* Check that the IPv6 is zero */
 #define in6_zero(a) (in6_equal(a, &ZERO_ADDR))

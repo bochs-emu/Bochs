@@ -547,6 +547,44 @@ static void slirp_init_once(void)
     loopback_mask = htonl(IN_CLASSA_NET);
 }
 
+static void ra_timer_handler_cb(void *opaque)
+{
+    Slirp *slirp = (Slirp*)opaque;
+
+    ra_timer_handler(slirp, NULL);
+}
+
+void slirp_handle_timer(Slirp *slirp, SlirpTimerId id, void *cb_opaque)
+{
+//    g_return_if_fail(id >= 0 && id < SLIRP_TIMER_NUM);
+
+    switch (id) {
+    case SLIRP_TIMER_RA:
+        ra_timer_handler(slirp, cb_opaque);
+        return;
+    default:
+        abort();
+    }
+}
+
+void *slirp_timer_new(Slirp *slirp, SlirpTimerId id, void *cb_opaque)
+{
+//    g_return_val_if_fail(id >= 0 && id < SLIRP_TIMER_NUM, NULL);
+
+    if (slirp->cfg_version >= 4 && slirp->cb->timer_new_opaque) {
+        return slirp->cb->timer_new_opaque(id, cb_opaque, slirp->opaque);
+    }
+
+    switch (id) {
+    case SLIRP_TIMER_RA:
+//        g_return_val_if_fail(cb_opaque == NULL, NULL);
+        return slirp->cb->timer_new(ra_timer_handler_cb, slirp, slirp->opaque);
+
+    default:
+    abort();
+    }
+}
+
 Slirp *slirp_new(const SlirpConfig *cfg, const SlirpCb *callbacks, void *opaque)
 {
     Slirp *slirp = (Slirp*)malloc(sizeof(Slirp));
@@ -621,6 +659,19 @@ Slirp *slirp_new(const SlirpConfig *cfg, const SlirpCb *callbacks, void *opaque)
         slirp->disable_dhcp = false;
     }
 
+    if (slirp->cfg_version >= 4 && slirp->cb->init_completed) {
+        slirp->cb->init_completed(slirp, slirp->opaque);
+    }
+
+    if (cfg->version >= 5) {
+        slirp->mfr_id = cfg->mfr_id;
+        memcpy(slirp->oob_eth_addr, cfg->oob_eth_addr, ETH_ALEN);
+    } else {
+        slirp->mfr_id = 0;
+        memset(slirp->oob_eth_addr, 0, ETH_ALEN);
+    }
+
+    ip6_post_init(slirp);
     return slirp;
 }
 
@@ -1135,12 +1186,12 @@ void slirp_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
         if (proto == ETH_P_IP) {
             ip_input(m);
         } else if (proto == ETH_P_IPV6) {
-            slirp_warning("IPv6 packet not supported yet", slirp->opaque);
+            ip6_input(m);
         }
         break;
 
     case ETH_P_NCSI:
-        slirp_warning("NCSI packet not supported yet", slirp->opaque);
+        ncsi_input(slirp, pkt, pkt_len);
         break;
 
     default:
@@ -1213,8 +1264,22 @@ static int if_encap4(Slirp *slirp, struct mbuf *ifm, struct ethhdr *eh,
 static int if_encap6(Slirp *slirp, struct mbuf *ifm, struct ethhdr *eh,
                      uint8_t ethaddr[ETH_ALEN])
 {
-    slirp_warning("IPv6 packet not supported yet", slirp->opaque);
-    return 0;
+    const struct ip6 *ip6h = mtod(ifm, const struct ip6 *);
+    if (!ndp_table_search(slirp, ip6h->ip_dst, ethaddr)) {
+        if (!ifm->resolution_requested) {
+            ndp_send_ns(slirp, ip6h->ip_dst);
+            ifm->resolution_requested = true;
+            ifm->expiration_date =
+                slirp->cb->clock_get_ns(slirp->opaque) + 1000000000ULL;
+        }
+        return 0;
+    } else {
+        eh->h_proto = htons(ETH_P_IPV6);
+        in6_compute_ethaddr(ip6h->ip_src, eh->h_source);
+
+        /* Send this */
+        return 2;
+    }
 }
 
 /* Output the IP packet to the ethernet device. Returns 0 if the packet must be

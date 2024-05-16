@@ -234,7 +234,7 @@ void tcp_respond(struct tcpcb *tp, struct tcpiphdr *ti, struct mbuf *m,
         ip6->ip_src = tcpiph_save.ti_src6;
         ip6->ip_nh = tcpiph_save.ti_nh6;
 
-//      ip6_output(NULL, m, 0);
+        ip6_output(NULL, m, 0);
         break;
 
     default:
@@ -588,7 +588,6 @@ uint8_t tcp_tos(struct socket *so)
         }
         i++;
     }
-
     return 0;
 }
 
@@ -630,7 +629,8 @@ int tcp_emu(struct socket *so, struct mbuf *m)
     switch(so->so_emu) {
         int x, i;
 
-     case EMU_IDENT:
+    /* TODO: IPv6 */
+    case EMU_IDENT:
         /*
          * Identification protocol as per rfc-1413
          */

@@ -693,7 +693,7 @@ findso:
                     m->m_len -= sizeof(struct tcpiphdr) -
                                 (sizeof(struct ip6) + sizeof(struct tcphdr));
                     *ip6 = save_ip6;
-//                    icmp6_send_error(m, ICMP6_UNREACH, code);
+                    icmp6_send_error(m, ICMP6_UNREACH, code);
                     break;
                 default:
                     fprintf(stderr, "Unknown protocol\n");

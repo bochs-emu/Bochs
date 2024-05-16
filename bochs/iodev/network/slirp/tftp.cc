@@ -178,7 +178,7 @@ static void tftp_udp_output(struct tftp_session *spt, struct mbuf *m,
         da6.sin6_addr = ((struct sockaddr_in6 *)&spt->client_addr)->sin6_addr;
         da6.sin6_port = spt->client_port;
 
-//        udp6_output(NULL, m, &sa6, &da6);
+        udp6_output(NULL, m, &sa6, &da6);
     } else {
         struct sockaddr_in sa4, da4;
 

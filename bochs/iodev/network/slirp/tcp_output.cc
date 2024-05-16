@@ -476,7 +476,7 @@ send:
         ip6->ip_src = tcpiph_save.ti_src6;
         ip6->ip_nh = tcpiph_save.ti_nh6;
 
-//        error = ip6_output(so, m, 0);
+        error = ip6_output(so, m, 0);
         break;
 
     default:
