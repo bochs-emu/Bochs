@@ -14,9 +14,22 @@
 
 extern int slirp_debug;
 
+#define DEBUG_CALL(name)                        \
+    do {                                        \
+        if (unlikely(slirp_debug & DBG_CALL)) { \
+            slirplog_debug(name "...");         \
+        }                                       \
+    } while (0)
+
+#define DEBUG_VERBOSE_CALL(name)                        \
+    do {                                                \
+        if (unlikely(slirp_debug & DBG_VERBOSE_CALL)) { \
+            slirplog_debug(name "...");                 \
+        }                                               \
+    } while (0)
+
 #ifdef DEBUG
 
-#define DEBUG_CALL(x) if (slirp_debug & DBG_CALL) { fprintf(dfd, "%s...\n", x); fflush(dfd); }
 #define DEBUG_ARG(x, y) if (slirp_debug & DBG_CALL) { fputc(' ', dfd); fprintf(dfd, x, y); fputc('\n', dfd); fflush(dfd); }
 #define DEBUG_MISC(x) if (slirp_debug & DBG_MISC) { fprintf x ; fflush(dfd); }
 #define DEBUG_ERROR(x) if (slirp_debug & DBG_ERROR) {fprintf x ; fflush(dfd); }
@@ -24,8 +37,6 @@ extern int slirp_debug;
 
 #else
 
-#define DEBUG_CALL(name)
-#define DEBUG_VERBOSE_CALL(name)
 #define DEBUG_RAW_CALL(...)
 #define DEBUG_ARG(...)
 #define DEBUG_MISC(...)

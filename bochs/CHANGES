@@ -26,10 +26,11 @@ Detailed change log :
     - Added PCM playback/recording support using PulseAudio simple API
   - Networking
     - Added support for using libslirp library instead of builtin slirp code
+    - Updated builtin slirp from libslirp (including IPv6 support)
 
 - BIOS
     - Added panic in legacy BIOS in case no VGA BIOS ROM is found at C000:0000,
-    - Fixed unwanted side effected caused by some helper functions.
+    - Fixed unwanted side effects caused by some helper functions.
 
 - Misc
   - bximage: added simple partition table viewer to the info function

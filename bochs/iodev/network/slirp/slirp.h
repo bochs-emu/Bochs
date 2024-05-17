@@ -401,4 +401,8 @@ void slirp_send_packet_all(Slirp *slirp, const void *buf, size_t len);
 /* Create a new timer, i.e. call the application timer_new callback */
 void *slirp_timer_new(Slirp *slirp, SlirpTimerId id, void *cb_opaque);
 
+/* Bochs addition */
+void slirp_warning(const char *msg);
+void slirplog_debug(const char *msg);
+
 #endif

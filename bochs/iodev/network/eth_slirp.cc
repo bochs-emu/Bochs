@@ -109,6 +109,7 @@ private:
   struct in_addr smb_srv;
 #endif
   bool slirp_logging;
+  Bit8u debug_switches;
   char *pktlog_fn;
   FILE *pktlog_txt;
 
@@ -293,6 +294,7 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
   BX_INFO(("slirp network driver (libslirp version %s)", slirp_version_string()));
 #else
   BX_INFO(("slirp network driver"));
+  debug_switches = 0;
 #endif
 
   this->rxh   = rxh;
@@ -323,10 +325,16 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
       config.vnameserver6.s6_addr[15] |= 3;
     }
   }
+  slirp = slirp_new(&config, &callbacks, this);
   slirplog = new logfunctions();
   sprintf(prefix, "SLIRP%d", bx_slirp_instances);
   slirplog->put(prefix);
-  slirp = slirp_new(&config, &callbacks, this);
+#if !BX_HAVE_LIBSLIRP
+  if (debug_switches != 0) {
+    slirplog->setonoff(LOGLEV_DEBUG, ACT_REPORT);
+  }
+  slirp_set_logfn(slirp, slirplog, debug_switches);
+#endif
   if (n_hostfwd > 0) {
     for (int i = 0; i < n_hostfwd; i++) {
       slirp_hostfwd(slirp, hostfwd[i], 0);
@@ -564,6 +572,10 @@ bool bx_slirp_pktmover_c::parse_slirp_conf(const char *conf)
           } else {
             BX_ERROR(("slirp: wrong format for 'tftp_srvname'"));
           }
+#if !BX_HAVE_LIBSLIRP
+        } else if (!stricmp(param, "debug_switches")) {
+          debug_switches = atoi(val);
+#endif
         } else {
           BX_ERROR(("slirp: unknown option '%s'", line));
         }
@@ -869,12 +881,5 @@ void bx_slirp_pktmover_c::slirp_msg(bool error, const char *msg)
   else
     BX_INFO(("%s", msg));
 }
-
-#if !BX_HAVE_LIBSLIRP
-void slirp_warning(const char *msg, void *opaque)
-{
-  ((bx_slirp_pktmover_c*)opaque)->slirp_msg(true, msg);
-}
-#endif
 
 #endif /* if BX_NETWORKING && BX_NETMOD_SLIRP */

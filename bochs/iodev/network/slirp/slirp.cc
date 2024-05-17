@@ -25,8 +25,11 @@
 #define BX_PLUGGABLE
 
 #include "slirp.h"
+#include "bochs.h"
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
+
+static logfunctions *slirplog = NULL;
 
 #ifndef _WIN32
 #include <net/if.h>
@@ -1314,7 +1317,7 @@ int if_encap(Slirp *slirp, struct mbuf *ifm)
         break;
 
     default:
-        slirp_warning("unknown protocol", slirp->opaque);
+        slirp_warning("unknown protocol");
     }
 
     memcpy(eh->h_dest, ethaddr, ETH_ALEN);
@@ -1522,9 +1525,33 @@ void slirp_send_packet_all(Slirp *slirp, const void *buf, size_t len)
     slirp_ssize_t ret = slirp->cb->send_packet(buf, len, slirp->opaque);
 
     if (ret < 0) {
-        slirp_warning("Failed to send packet", slirp->opaque);
+        slirp_warning("Failed to send packet");
     } else if ((size_t)ret < len) {
-        slirp_warning("send_packet() didn't send all data", slirp->opaque);
+        slirp_warning("send_packet() didn't send all data");
+    }
+}
+
+/* Bochs additions */
+
+void slirp_set_logfn(void *slirp, void *logfn, uint8_t debug_switches)
+{
+    if (slirp && logfn) {
+        slirplog = (logfunctions*)logfn;
+        slirp_debug = debug_switches;
+    }
+}
+
+void slirp_warning(const char *msg)
+{
+    if (slirplog) {
+        slirplog->error("%s", msg);
+    }
+}
+
+void slirplog_debug(const char *msg)
+{
+    if (slirplog) {
+        slirplog->ldebug("%s", msg);
     }
 }
 

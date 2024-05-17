@@ -265,7 +265,7 @@ int slirp_remove_guestfwd(Slirp *slirp, struct in_addr guest_addr,
 /* Return the version of the slirp implementation */
 const char *slirp_version_string(void);
 
-/* you must provide the following functions: */
-void slirp_warning(const char *, void *);
+/* Addition for Bochs logging */
+void slirp_set_logfn(void *slirp, void *logfn, uint8_t debug_switches);
 
 #endif /* LIBSLIRP_H */

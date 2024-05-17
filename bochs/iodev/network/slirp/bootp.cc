@@ -180,13 +180,13 @@ static void dhcp_decode(Slirp *slirp, const struct bootp_t *bp,
                     defsize = sizeof(struct bootp_t) + DHCP_OPT_LEN - sizeof(struct ip) - sizeof(struct udphdr);
                     if (ntohs(maxsize) < defsize) {
                         sprintf(msg, "DHCP server: RFB2132_MAX_SIZE=%u not supported yet", ntohs(maxsize));
-                        slirp_warning(msg, slirp->opaque);
+                        slirp_warning(msg);
                     }
                 }
                 break;
               default:
                 sprintf(msg, "DHCP server: option %d not supported yet", tag);
-                slirp_warning(msg, slirp->opaque);
+                slirp_warning(msg);
                 break;
             }
             p += len;
@@ -386,7 +386,7 @@ static void bootp_reply(Slirp *slirp,
                     if (slirp->vdomainname) {
                       val = strlen(slirp->vdomainname);
                       if (q + val + 2 >= end) {
-                        slirp_warning("DHCP packet size exceeded, omitting domain name option.", slirp->opaque);
+                        slirp_warning("DHCP packet size exceeded, omitting domain name option.");
                       } else {
                         *q++ = RFC1533_DOMAINNAME;
                         *q++ = val;
@@ -420,7 +420,7 @@ static void bootp_reply(Slirp *slirp,
                     if (slirp->tftp_server_name) {
                       val = strlen(slirp->tftp_server_name);
                       if (q + val + 2 >= end) {
-                        slirp_warning("DHCP packet size exceeded, omitting tftp-server-name option.", slirp->opaque);
+                        slirp_warning("DHCP packet size exceeded, omitting tftp-server-name option.");
                       } else {
                         *q++ = RFC2132_TFTP_SERVER_NAME;
                         *q++ = val;
@@ -436,14 +436,14 @@ static void bootp_reply(Slirp *slirp,
                 default:
                     sprintf(msg, "DHCP server: requested parameter %u not supported yet",
                             *(pp-1));
-                    slirp_warning(msg, slirp->opaque);
+                    slirp_warning(msg);
             }
         }
 
         if (slirp->vdnssearch) {
             val = slirp->vdnssearch_len;
             if (q + val >= end) {
-                slirp_warning("DHCP packet size exceeded, omitting domain-search option.", slirp->opaque);
+                slirp_warning("DHCP packet size exceeded, omitting domain-search option.");
             } else {
                 memcpy(q, slirp->vdnssearch, val);
                 q += val;
@@ -461,8 +461,7 @@ static void bootp_reply(Slirp *slirp,
         if (slirp->bootp_filename && !strncmp(slirp->bootp_filename, "http://", 7)) {
             val = strlen(UEFI_HTTP_VENDOR_CLASS_ID);
             if (q + val + 2 >= end) {
-                slirp_warning("DHCP packet size exceeded, omitting vendor class id option.",
-                              slirp->opaque);
+                slirp_warning("DHCP packet size exceeded, omitting vendor class id option.");
             } else {
                 *q++ = RFC2132_VENDOR_CLASS_ID;
                 *q++ = val;

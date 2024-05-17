@@ -650,23 +650,21 @@ int tcp_emu(struct socket *so, struct mbuf *m)
                     HTONS(n1);
                     HTONS(n2);
                     /* n2 is the one on our host */
-                    for (tmpso = slirp->tcb.so_next;
-                         tmpso != &slirp->tcb;
+                    for (tmpso = slirp->tcb.so_next; tmpso != &slirp->tcb;
                          tmpso = tmpso->so_next) {
                         if (tmpso->so_laddr.s_addr == so->so_laddr.s_addr &&
                             tmpso->so_lport == n2 &&
                             tmpso->so_faddr.s_addr == so->so_faddr.s_addr &&
                             tmpso->so_fport == n1) {
-                            if (getsockname(tmpso->s,
-                                (struct sockaddr *)&addr, &addrlen) == 0)
-                               n2 = ntohs(addr.sin_port);
+                            if (getsockname(tmpso->s, (struct sockaddr *)&addr,
+                                &addrlen) == 0)
+                                n2 = ntohs(addr.sin_port);
                             break;
                         }
                     }
                 }
-                                so_rcv->sb_cc = snprintf(so_rcv->sb_data,
-                                                         so_rcv->sb_datalen,
-                                                         "%d,%d\r\n", n1, n2);
+                so_rcv->sb_cc = snprintf(so_rcv->sb_data, so_rcv->sb_datalen,
+                                         "%d,%d\r\n", n1, n2);
                 so_rcv->sb_rptr = so_rcv->sb_data;
                 so_rcv->sb_wptr = so_rcv->sb_data + so_rcv->sb_cc;
             }
@@ -675,21 +673,22 @@ int tcp_emu(struct socket *so, struct mbuf *m)
         }
 
         case EMU_FTP: /* ftp */
-                *(m->m_data+m->m_len) = 0; /* NUL terminate for strstr */
+        m_inc(m, m->m_len + 1);
+        *(m->m_data+m->m_len) = 0; /* NUL terminate for strstr */
         if ((bptr = (char *)strstr(m->m_data, "ORT")) != NULL) {
             /*
              * Need to emulate the PORT command
              */
-            x = sscanf(bptr, "ORT %u,%u,%u,%u,%u,%u\r\n%256[^\177]",
-                   &n1, &n2, &n3, &n4, &n5, &n6, buff);
+            x = sscanf(bptr, "ORT %u,%u,%u,%u,%u,%u\r\n%256[^\177]", &n1, &n2,
+                       &n3, &n4, &n5, &n6, buff);
             if (x < 6)
                return 1;
 
             laddr = htonl((n1 << 24) | (n2 << 16) | (n3 << 8) | (n4));
             lport = htons((n5 << 8) | (n6));
 
-            if ((so = tcp_listen(slirp, INADDR_ANY, 0, laddr,
-                                 lport, SS_FACCEPTONCE)) == NULL) {
+            if ((so = tcp_listen(slirp, INADDR_ANY, 0, laddr, lport,
+                                 SS_FACCEPTONCE)) == NULL) {
                return 1;
             }
             n6 = ntohs(so->so_fport);
@@ -705,24 +704,26 @@ int tcp_emu(struct socket *so, struct mbuf *m)
             n4 =  (laddr & 0xff);
 
             m->m_len = bptr - m->m_data; /* Adjust length */
-                        m->m_len += snprintf(bptr, m->m_size - m->m_len,
-                                             "ORT %d,%d,%d,%d,%d,%d\r\n%s",
-                                             n1, n2, n3, n4, n5, n6, x==7?buff:"");
+            m->m_len += slirp_fmt(bptr, M_FREEROOM(m),
+                                  "ORT %d,%d,%d,%d,%d,%d\r\n%s",
+                                  n1, n2, n3, n4, n5, n6, x==7?buff:"");
             return 1;
         } else if ((bptr = (char *)strstr(m->m_data, "27 Entering")) != NULL) {
             /*
              * Need to emulate the PASV response
              */
-            x = sscanf(bptr, "27 Entering Passive Mode (%u,%u,%u,%u,%u,%u)\r\n%256[^\177]",
-                   &n1, &n2, &n3, &n4, &n5, &n6, buff);
+            x = sscanf(
+                       bptr,
+                       "27 Entering Passive Mode (%u,%u,%u,%u,%u,%u)\r\n%256[^\177]",
+                       &n1, &n2, &n3, &n4, &n5, &n6, buff);
             if (x < 6)
                return 1;
 
             laddr = htonl((n1 << 24) | (n2 << 16) | (n3 << 8) | (n4));
             lport = htons((n5 << 8) | (n6));
 
-            if ((so = tcp_listen(slirp, INADDR_ANY, 0, laddr,
-                                 lport, SS_FACCEPTONCE)) == NULL) {
+            if ((so = tcp_listen(slirp, INADDR_ANY, 0, laddr, lport,
+                                 SS_FACCEPTONCE)) == NULL) {
                return 1;
             }
             n6 = ntohs(so->so_fport);
@@ -738,10 +739,9 @@ int tcp_emu(struct socket *so, struct mbuf *m)
             n4 =  (laddr & 0xff);
 
             m->m_len = bptr - m->m_data; /* Adjust length */
-            m->m_len += snprintf(bptr, m->m_size - m->m_len,
-                                             "27 Entering Passive Mode (%d,%d,%d,%d,%d,%d)\r\n%s",
-                                             n1, n2, n3, n4, n5, n6, x==7?buff:"");
-
+            m->m_len += slirp_fmt(bptr, M_FREEROOM(m),
+                                  "27 Entering Passive Mode (%d,%d,%d,%d,%d,%d)\r\n%s",
+                                  n1, n2, n3, n4, n5, n6, x==7?buff:"");
             return 1;
         }
 
@@ -764,52 +764,52 @@ int tcp_emu(struct socket *so, struct mbuf *m)
         if (m->m_data[m->m_len-1] == '\0' && lport != 0 &&
             (so = tcp_listen(slirp, INADDR_ANY, 0, so->so_laddr.s_addr,
                              htons(lport), SS_FACCEPTONCE)) != NULL)
-                    m->m_len = snprintf(m->m_data, m->m_size, "%d",
-                                        ntohs(so->so_fport)) + 1;
+            m->m_len = slirp_fmt0(m->m_data, M_ROOM(m),
+                                  "%d", ntohs(so->so_fport));
         return 1;
 
      case EMU_IRC:
         /*
          * Need to emulate DCC CHAT, DCC SEND and DCC MOVE
          */
+        m_inc(m, m->m_len + 1);
         *(m->m_data+m->m_len) = 0; /* NULL terminate the string for strstr */
         if ((bptr = (char *)strstr(m->m_data, "DCC")) == NULL)
              return 1;
 
         /* The %256s is for the broken mIRC */
         if (sscanf(bptr, "DCC CHAT %256s %u %u", buff, &laddr, &lport) == 3) {
-            if ((so = tcp_listen(slirp, INADDR_ANY, 0,
-                                 htonl(laddr), htons(lport),
-                                 SS_FACCEPTONCE)) == NULL) {
+            if ((so = tcp_listen(slirp, INADDR_ANY, 0, htonl(laddr),
+                                 htons(lport), SS_FACCEPTONCE)) == NULL) {
                 return 1;
             }
             m->m_len = bptr - m->m_data; /* Adjust length */
-                        m->m_len += snprintf(bptr, m->m_size,
-                                             "DCC CHAT chat %lu %u%c\n",
-                                             (unsigned long)ntohl(so->so_faddr.s_addr),
-                                             ntohs(so->so_fport), 1);
-        } else if (sscanf(bptr, "DCC SEND %256s %u %u %u", buff, &laddr, &lport, &n1) == 4) {
-            if ((so = tcp_listen(slirp, INADDR_ANY, 0,
-                                 htonl(laddr), htons(lport),
-                                 SS_FACCEPTONCE)) == NULL) {
+            m->m_len += slirp_fmt(bptr, M_FREEROOM(m),
+                                  "DCC CHAT chat %lu %u%c\n",
+                                  (unsigned long)ntohl(so->so_faddr.s_addr),
+                                  ntohs(so->so_fport), 1);
+        } else if (sscanf(bptr, "DCC SEND %256s %u %u %u", buff, &laddr, &lport,
+                          &n1) == 4) {
+            if ((so = tcp_listen(slirp, INADDR_ANY, 0, htonl(laddr),
+                                 htons(lport), SS_FACCEPTONCE)) == NULL) {
                 return 1;
             }
             m->m_len = bptr - m->m_data; /* Adjust length */
-                        m->m_len += snprintf(bptr, m->m_size,
-                                             "DCC SEND %s %lu %u %u%c\n", buff,
-                                             (unsigned long)ntohl(so->so_faddr.s_addr),
-                                             ntohs(so->so_fport), n1, 1);
-        } else if (sscanf(bptr, "DCC MOVE %256s %u %u %u", buff, &laddr, &lport, &n1) == 4) {
-            if ((so = tcp_listen(slirp, INADDR_ANY, 0,
-                                 htonl(laddr), htons(lport),
-                                 SS_FACCEPTONCE)) == NULL) {
+            m->m_len += slirp_fmt(bptr, M_FREEROOM(m),
+                                 "DCC SEND %s %lu %u %u%c\n", buff,
+                                 (unsigned long)ntohl(so->so_faddr.s_addr),
+                                 ntohs(so->so_fport), n1, 1);
+        } else if (sscanf(bptr, "DCC MOVE %256s %u %u %u", buff, &laddr, &lport,
+                          &n1) == 4) {
+            if ((so = tcp_listen(slirp, INADDR_ANY, 0, htonl(laddr),
+                                 htons(lport), SS_FACCEPTONCE)) == NULL) {
                 return 1;
             }
             m->m_len = bptr - m->m_data; /* Adjust length */
-                        m->m_len += snprintf(bptr, m->m_size,
-                                             "DCC MOVE %s %lu %u %u%c\n", buff,
-                                             (unsigned long)ntohl(so->so_faddr.s_addr),
-                                             ntohs(so->so_fport), n1, 1);
+            m->m_len += slirp_fmt(bptr, M_FREEROOM(m),
+                                 "DCC MOVE %s %lu %u %u%c\n", buff,
+                                 (unsigned long)ntohl(so->so_faddr.s_addr),
+                                 ntohs(so->so_fport), n1, 1);
         }
         return 1;
 
@@ -917,10 +917,8 @@ int tcp_emu(struct socket *so, struct mbuf *m)
 
                 /* try to get udp port between 6970 - 7170 */
                 for (p = 6970; p < 7071; p++) {
-                    if (udp_listen(slirp, INADDR_ANY,
-                               htons(p),
-                               so->so_laddr.s_addr,
-                               htons(lport),
+                    if (udp_listen(slirp, INADDR_ANY, htons(p),
+                               so->so_laddr.s_addr, htons(lport),
                                SS_FACCEPTONCE)) {
                         break;
                     }
@@ -980,8 +978,8 @@ int tcp_ctl(struct socket *so)
             }
         }
     }
-    sb->sb_cc = snprintf(sb->sb_wptr, sb->sb_datalen - (sb->sb_wptr - sb->sb_data),
-                         "Error: No application configured.\r\n");
+    sb->sb_cc = slirp_fmt(sb->sb_wptr, sb->sb_datalen - (sb->sb_wptr - sb->sb_data),
+                          "Error: No application configured.\r\n");
     sb->sb_wptr += sb->sb_cc;
     return 0;
 }
