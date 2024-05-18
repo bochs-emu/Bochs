@@ -296,7 +296,7 @@ err:
 
     sofcantrcvmore(so);
     tcp_sockclosed(sototcpcb(so));
-    fprintf(stderr, "soreadbuf buffer to small");
+    slirplog_error("soreadbuf buffer to small");
     return -1;
 }
 
@@ -616,7 +616,7 @@ void sorecvfrom(struct socket *so)
                 IF_MAXLINKHDR + sizeof(struct ip6) + sizeof(struct udphdr);
             break;
         default:
-            fprintf(stderr, "Unknown protocol\n");
+            slirplog_error("Unknown protocol");
         }
 
         /*
@@ -674,7 +674,7 @@ void sorecvfrom(struct socket *so)
                     icmp6_send_error(so->so_m, ICMP6_UNREACH, code);
                     break;
                 default:
-                    fprintf(stderr, "Unknown protocol\n");
+                    slirplog_error("Unknown protocol");
                 }
                 m_free(m);
             }
@@ -714,7 +714,7 @@ void sorecvfrom(struct socket *so)
                                          ICMP6_UNREACH_ADDRESS);
                         break;
                     default:
-                        fprintf(stderr, "Unknown protocol\n");
+                        slirplog_error("Unknown protocol");
                     }
                     m_free(m);
                     return;
@@ -732,7 +732,7 @@ void sorecvfrom(struct socket *so)
                             (struct sockaddr_in6 *)&daddr);
                 break;
             default:
-                fprintf(stderr, "Unknown protocol\n");
+                slirplog_error("Unknown protocol");
             }
         } /* rx error */
     } /* if ping packet */
@@ -803,7 +803,7 @@ struct socket *tcpx_listen(Slirp *slirp,
         break;
 #endif
     default:
-        fprintf(stderr, "Unknown protocol\n");
+        slirplog_error("Unknown protocol");
     }
     switch (laddr->sa_family) {
     case AF_INET:
@@ -814,7 +814,7 @@ struct socket *tcpx_listen(Slirp *slirp,
         DEBUG_ARG("lport = %s", portstr);
         break;
     default:
-        fprintf(stderr, "Unknown protocol\n");
+        slirplog_error("Unknown protocol");
     }
     DEBUG_ARG("flags = %x", flags);
 
@@ -1089,7 +1089,7 @@ void sotranslate_accept(struct socket *so)
                 s = slirp_socket(PF_INET, SOCK_DGRAM, 0);
                 break;
             default:
-                fprintf(stderr, "Unknown protocol\n");
+                slirplog_error("Unknown protocol");
                 break;
             }
             if (s < 0) {
@@ -1132,7 +1132,7 @@ unix2inet_cont:
                 s = slirp_socket(PF_INET6, SOCK_DGRAM, 0);
                 break;
             default:
-                fprintf(stderr, "Unknown protocol\n");
+                slirplog_error("Unknown protocol");
                 break;
             }
             if (s < 0) {
@@ -1163,7 +1163,7 @@ unix2inet6_cont:
                 so->so_fport6 = htons(slirp_rand_int_range(49152, 65536));
             }
         } else {
-            fprintf(stderr, "Unknown protocol\n");
+            slirplog_error("Unknown protocol");
         }
         break;
     } /* case AF_UNIX */
@@ -1202,7 +1202,7 @@ int soassign_guest_addr_if_needed(struct socket *so)
     switch (so->so_ffamily) {
     case AF_INET:
         if (so->so_laddr.s_addr == INADDR_ANY) {
-            fprintf(stderr, "Unsupported address\n");
+            slirplog_error("Unsupported address");
         }
         break;
 

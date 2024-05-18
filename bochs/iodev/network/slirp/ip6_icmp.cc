@@ -109,7 +109,7 @@ void icmp6_forward_error(struct mbuf *m, uint8_t type, uint8_t code, struct in6_
         /* TODO: Handle this case */
         break;
     default:
-        fprintf(stderr, "Unknown ICMP code\n");
+        slirplog_error("Unknown ICMP code");
     }
     t->m_data += ICMP6_ERROR_MINLEN;
     memcpy(t->m_data, m->m_data, error_data_len);
@@ -419,7 +419,7 @@ void icmp6_input(struct mbuf *m)
             icmp6_send_echoreply(m, slirp, ip, icmp);
         } else {
             /* TODO */
-            fprintf(stderr, "external icmpv6 not supported yet\n");
+            slirplog_error("external icmpv6 not supported yet");
         }
         break;
 

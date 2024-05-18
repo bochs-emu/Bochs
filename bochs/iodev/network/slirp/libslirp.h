@@ -236,11 +236,25 @@ int slirp_add_hostfwd(Slirp *slirp, int is_udp, struct in_addr host_addr,
 int slirp_remove_hostfwd(Slirp *slirp, int is_udp, struct in_addr host_addr,
                          int host_port);
 
+#define SLIRP_HOSTFWD_UDP 1
+#define SLIRP_HOSTFWD_V6ONLY 2
+int slirp_add_hostxfwd(Slirp *slirp,
+                       const struct sockaddr *haddr, socklen_t haddrlen,
+                       const struct sockaddr *gaddr, socklen_t gaddrlen,
+                       int flags);
+int slirp_remove_hostxfwd(Slirp *slirp,
+                          const struct sockaddr *haddr, socklen_t haddrlen,
+                          int flags);
+
 /* Set up port forwarding between a port in the guest network and a
  * command running on the host */
 int slirp_add_exec(Slirp *slirp, const char *cmdline,
                    struct in_addr *guest_addr, int guest_port);
 
+/* Set up port forwarding between a port in the guest network and a
+ * Unix port on the host */
+int slirp_add_unix(Slirp *slirp, const char *unixsock,
+                   struct in_addr *guest_addr, int guest_port);
 /* Set up port forwarding between a port in the guest network and a
  * callback that will receive the data coming from the port */
 int slirp_add_guestfwd(Slirp *slirp, SlirpWriteCb write_cb, void *opaque,
@@ -261,6 +275,12 @@ void slirp_socket_recv(Slirp *slirp, struct in_addr guest_addr, int guest_port,
 /* Remove entries added by slirp_add_exec, slirp_add_unix or slirp_add_guestfwd */
 int slirp_remove_guestfwd(Slirp *slirp, struct in_addr guest_addr,
                           int guest_port);
+
+/* Return a human-readable state of the slirp stack */
+char *slirp_connection_info(Slirp *slirp);
+
+/* Return a human-readable state of the NDP/ARP tables */
+char *slirp_neighbor_info(Slirp *slirp);
 
 /* Return the version of the slirp implementation */
 const char *slirp_version_string(void);

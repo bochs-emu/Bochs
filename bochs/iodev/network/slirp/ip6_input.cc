@@ -39,7 +39,7 @@ void ip6_input(struct mbuf *m)
     DEBUG_ARG("m = %p", m);
     DEBUG_ARG("m_len = %d", m->m_len);
 
-    if (m->m_len < sizeof(struct ip6)) {
+    if (m->m_len < (int)sizeof(struct ip6)) {
         goto bad;
     }
 
@@ -49,7 +49,7 @@ void ip6_input(struct mbuf *m)
         goto bad;
     }
 
-    if (ntohs(ip6->ip_pl) + sizeof(struct ip6) > slirp->if_mtu) {
+    if (ntohs(ip6->ip_pl) + sizeof(struct ip6) > (unsigned)slirp->if_mtu) {
         icmp6_send_error(m, ICMP6_TOOBIG, 0);
         goto bad;
     }
@@ -57,7 +57,7 @@ void ip6_input(struct mbuf *m)
     // Check if the message size is big enough to hold what's
     // set in the payload length header. If not this is an invalid
     // packet
-    if (m->m_len < ntohs(ip6->ip_pl) + sizeof(struct ip6)) {
+    if (m->m_len < (int)(ntohs(ip6->ip_pl) + sizeof(struct ip6))) {
         goto bad;
     }
 

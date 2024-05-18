@@ -146,7 +146,7 @@ static inline int sockaddr_equal(const struct sockaddr_storage *a,
     }
 #endif
     default:
-        fprintf(stderr, "unknown protocol\n");
+        fprintf(stderr, "Unknown protocol\n");
     }
 
     return 0;
@@ -165,7 +165,7 @@ static inline socklen_t sockaddr_size(const struct sockaddr_storage *a)
         return sizeof(struct sockaddr_un);
 #endif
     default:
-        fprintf(stderr, "unknown protocol\n");
+        fprintf(stderr, "Unknown protocol\n");
     }
 
     return 0;

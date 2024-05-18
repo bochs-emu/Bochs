@@ -1343,6 +1343,7 @@ int slirp_remove_hostfwd(Slirp *slirp, int is_udp, struct in_addr host_addr,
         addr_len = sizeof(addr);
         if ((so->so_state & SS_HOSTFWD) &&
             getsockname(so->s, (struct sockaddr *)&addr, &addr_len) == 0 &&
+            addr_len == sizeof(addr) &&
             addr.sin_family == AF_INET &&
             addr.sin_addr.s_addr == host_addr.s_addr &&
             addr.sin_port == port) {
@@ -1369,6 +1370,83 @@ int slirp_add_hostfwd(Slirp *slirp, int is_udp, struct in_addr host_addr,
     } else {
         if (!tcp_listen(slirp, host_addr.s_addr, htons(host_port),
                         guest_addr.s_addr, htons(guest_port), SS_HOSTFWD))
+            return -1;
+    }
+    return 0;
+}
+
+int slirp_remove_hostxfwd(Slirp *slirp,
+                          const struct sockaddr *haddr, socklen_t haddrlen,
+                          int flags)
+{
+    struct socket *so;
+    struct socket *head = (flags & SLIRP_HOSTFWD_UDP ? &slirp->udb : &slirp->tcb);
+    struct sockaddr_storage addr;
+    socklen_t addr_len;
+
+    for (so = head->so_next; so != head; so = so->so_next) {
+        addr_len = sizeof(addr);
+        if ((so->so_state & SS_HOSTFWD) &&
+            getsockname(so->s, (struct sockaddr *)&addr, &addr_len) == 0 &&
+            sockaddr_equal(&addr, (const struct sockaddr_storage *) haddr)) {
+            so->slirp->cb->unregister_poll_fd(so->s, so->slirp->opaque);
+            closesocket(so->s);
+            sofree(so);
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
+int slirp_add_hostxfwd(Slirp *slirp,
+                       const struct sockaddr *haddr, socklen_t haddrlen,
+                       const struct sockaddr *gaddr, socklen_t gaddrlen,
+                       int flags)
+{
+    struct sockaddr_in gdhcp_addr;
+    int fwd_flags = SS_HOSTFWD;
+
+    if (flags & SLIRP_HOSTFWD_V6ONLY)
+        fwd_flags |= SS_HOSTFWD_V6ONLY;
+
+    if (gaddr->sa_family == AF_INET) {
+        const struct sockaddr_in *gaddr_in = (const struct sockaddr_in *) gaddr;
+
+        if (gaddrlen < sizeof(struct sockaddr_in)) {
+            errno = EINVAL;
+            return -1;
+        }
+
+        if (!gaddr_in->sin_addr.s_addr) {
+            gdhcp_addr = *gaddr_in;
+            gdhcp_addr.sin_addr = slirp->vdhcp_startaddr;
+            gaddr = (struct sockaddr *) &gdhcp_addr;
+            gaddrlen = sizeof(gdhcp_addr);
+        }
+    } else {
+        if (gaddrlen < sizeof(struct sockaddr_in6)) {
+            errno = EINVAL;
+            return -1;
+        }
+
+        /*
+         * Libslirp currently only provides a stateless DHCPv6 server, thus
+         * we can't translate "addr-any" to the guest here. Instead, we defer
+         * performing the translation to when it's needed. See
+         * soassign_guest_addr_if_needed().
+         */
+    }
+
+    if (flags & SLIRP_HOSTFWD_UDP) {
+        if (!udpx_listen(slirp, haddr, haddrlen,
+                                gaddr, gaddrlen,
+                                fwd_flags))
+            return -1;
+    } else {
+        if (!tcpx_listen(slirp, haddr, haddrlen,
+                                gaddr, gaddrlen,
+                                fwd_flags))
             return -1;
     }
     return 0;
@@ -1474,6 +1552,7 @@ struct socket *slirp_find_ctl_socket(Slirp *slirp, struct in_addr guest_addr,
 {
     struct socket *so;
 
+    /* TODO: IPv6 */
     for (so = slirp->tcb.so_next; so != &slirp->tcb; so = so->so_next) {
         if (so->so_faddr.s_addr == guest_addr.s_addr &&
             htons(so->so_fport) == guest_port) {
@@ -1540,9 +1619,15 @@ void slirp_set_logfn(void *slirp, void *logfn, uint8_t debug_switches)
     }
 }
 
-void slirplog_error(const char *msg)
+void slirplog_error(const char *fmt, ...)
 {
+    va_list ap;
+    char msg[512];
+
     if (slirplog) {
+        va_start(ap, fmt);
+        vsprintf(msg, fmt, ap);
+        va_end(ap);
         slirplog->error("%s", msg);
     }
 }

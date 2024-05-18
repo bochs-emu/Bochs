@@ -89,7 +89,7 @@ void tcp_template(struct tcpcb *tp)
         break;
 
     default:
-        fprintf(stderr, "Unknown protocol\n");
+        slirplog_error("Unknown protocol");
     }
 
     n->ti_seq = 0;
@@ -146,7 +146,7 @@ void tcp_respond(struct tcpcb *tp, struct tcpiphdr *ti, struct mbuf *m,
             ti->ti.ti_i6.ih_x1 = 0;
             break;
         default:
-            fprintf(stderr, "Unknown protocol\n");
+            slirplog_error("Unknown protocol");
         }
         flags = TH_ACK;
     } else {
@@ -175,7 +175,7 @@ void tcp_respond(struct tcpcb *tp, struct tcpiphdr *ti, struct mbuf *m,
             xchg(ti->ti_dport, ti->ti_sport, uint16_t);
             break;
         default:
-            fprintf(stderr, "Unknown protocol\n");
+            slirplog_error("Unknown protocol");
         }
 #undef xchg
     }
@@ -238,7 +238,7 @@ void tcp_respond(struct tcpcb *tp, struct tcpiphdr *ti, struct mbuf *m,
         break;
 
     default:
-        fprintf(stderr, "Unknown protocol\n");
+        slirplog_error("Unknown protocol");
     }
 }
 
@@ -461,7 +461,7 @@ void tcp_connect(struct socket *inso)
         addrlen = sizeof(struct sockaddr_in6);
         break;
     default:
-        fprintf(stderr, "Unknown protocol\n");
+        slirplog_error("Unknown protocol");
     }
     ret = getnameinfo((const struct sockaddr *) &inso->lhost.ss, addrlen, addrstr, sizeof(addrstr), portstr, sizeof(portstr), NI_NUMERICHOST|NI_NUMERICSERV);
     assert(ret == 0);

@@ -91,6 +91,18 @@ int open_unix(struct socket *so, const char *unixpath)
     return 0;
 }
 
+char *slirp_connection_info(Slirp *slirp)
+{
+    /* not implemented */
+    return NULL;
+}
+
+char *slirp_neighbor_info(Slirp *slirp)
+{
+    /* not implemented */
+    return NULL;
+}
+
 int slirp_bind_outbound(struct socket *so, unsigned short af)
 {
     int ret = 0;

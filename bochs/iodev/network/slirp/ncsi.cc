@@ -145,7 +145,7 @@ static int ncsi_rsp_handler_oem(Slirp *slirp, const struct ncsi_pkt_hdr *nh,
     }
 
     /* Check for manufacturer id and Find the handler */
-    for (i = 0; i < SLIRP_N_ELEMENTS(ncsi_rsp_oem_handlers); i++) {
+    for (i = 0; i < (int)SLIRP_N_ELEMENTS(ncsi_rsp_oem_handlers); i++) {
         if (ncsi_rsp_oem_handlers[i].mfr_id == mfr_id) {
             if (ncsi_rsp_oem_handlers[i].handler)
                 nrh = &ncsi_rsp_oem_handlers[i];
@@ -280,7 +280,7 @@ void ncsi_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
     uint32_t checksum;
     uint32_t *pchecksum;
 
-    if (pkt_len < ETH_HLEN + sizeof(struct ncsi_pkt_hdr)) {
+    if (pkt_len < (int)(ETH_HLEN + sizeof(struct ncsi_pkt_hdr))) {
         return; /* packet too short */
     }
 
@@ -290,7 +290,7 @@ void ncsi_input(Slirp *slirp, const uint8_t *pkt, int pkt_len)
     memset(reh->h_source, 0xff, ETH_ALEN);
     reh->h_proto = htons(ETH_P_NCSI);
 
-    for (i = 0; i < SLIRP_N_ELEMENTS(ncsi_rsp_handlers); i++) {
+    for (i = 0; i < (int)SLIRP_N_ELEMENTS(ncsi_rsp_handlers); i++) {
         if (ncsi_rsp_handlers[i].type == nh->type + 0x80) {
             handler = &ncsi_rsp_handlers[i];
             break;

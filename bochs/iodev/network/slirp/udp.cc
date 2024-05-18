@@ -327,7 +327,7 @@ int udp_attach(struct socket *so, unsigned short af)
                 setsockopt(so->s, IPPROTO_IPV6, IPV6_RECVERR, &opt, sizeof(opt));
                 break;
             default:
-                fprintf(stderr, "Unknown protocol\n");
+                slirplog_error("Unknown protocol");
             }
         }
 #endif

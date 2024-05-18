@@ -325,10 +325,10 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
       config.vnameserver6.s6_addr[15] |= 3;
     }
   }
-  slirp = slirp_new(&config, &callbacks, this);
   slirplog = new logfunctions();
   sprintf(prefix, "SLIRP%d", bx_slirp_instances);
   slirplog->put(prefix);
+  slirp = slirp_new(&config, &callbacks, this);
 #if !BX_HAVE_LIBSLIRP
   if (debug_switches != 0) {
     slirplog->setonoff(LOGLEV_DEBUG, ACT_REPORT);

@@ -320,7 +320,7 @@ void tcp_input(struct mbuf *m, int iphlen, struct socket *inso,
         break;
 
     default:
-        fprintf(stderr, "Unknown protocol\n");
+        slirplog_error("Unknown protocol");
     }
 
     len = ((sizeof(struct tcpiphdr) - sizeof(struct tcphdr)) + tlen);
@@ -382,7 +382,7 @@ findso:
         fhost6->sin6_port = ti->ti_dport;
         break;
     default:
-        fprintf(stderr, "Unknown protocol\n");
+        slirplog_error("Unknown protocol");
     }
 
     so = solookup(&slirp->tcp_last_so, &slirp->tcb, &lhost, &fhost);
@@ -440,7 +440,7 @@ findso:
             case AF_INET6:
                 break;
             default:
-                fprintf(stderr, "Unknown protocol\n");
+                slirplog_error("Unknown protocol");
             }
         }
 
@@ -668,7 +668,7 @@ findso:
                     }
                     break;
                 default:
-                    fprintf(stderr, "Unknown protocol\n");
+                    slirplog_error("Unknown protocol");
                 }
                 HTONL(ti->ti_seq);             /* restore tcp header */
                 HTONL(ti->ti_ack);
@@ -696,7 +696,7 @@ findso:
                     icmp6_send_error(m, ICMP6_UNREACH, code);
                     break;
                 default:
-                    fprintf(stderr, "Unknown protocol\n");
+                    slirplog_error("Unknown protocol");
                 }
             }
             tcp_close(tp);
@@ -1530,7 +1530,7 @@ int tcp_mss(struct tcpcb *tp, unsigned offer)
               sizeof(struct tcphdr) - sizeof(struct ip6);
         break;
     default:
-        fprintf(stderr, "Unknown protocol\n");
+        slirplog_error("Unknown protocol");
     }
     if (offer)
         mss = MIN(mss, (int)offer);

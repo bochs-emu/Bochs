@@ -480,7 +480,7 @@ send:
         break;
 
     default:
-        fprintf(stderr, "Unknown protocol");
+        slirplog_error("Unknown protocol");
     }
 
     if (error) {

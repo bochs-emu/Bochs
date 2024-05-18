@@ -115,14 +115,13 @@ static void domain_fixup_order(CompactDomain *cd, size_t n)
     }
 }
 
-static void domain_mklabels(Slirp *s, CompactDomain *cd, const char *input)
+static void domain_mklabels(CompactDomain *cd, const char *input)
 {
     uint8_t *len_marker = cd->labels;
     uint8_t *output = len_marker; /* pre-incremented */
     const char *in = input;
     char cur_chr;
     size_t len = 0;
-    char msg[80];
 
     if (cd->len == 0) {
         goto fail;
@@ -154,8 +153,7 @@ static void domain_mklabels(Slirp *s, CompactDomain *cd, const char *input)
     return;
 
 fail:
-    sprintf(msg, "failed to parse domain name '%s'\n", input);
-    slirplog_error(msg);
+    slirplog_error("failed to parse domain name '%s'", input);
     cd->len = 0;
 }
 
@@ -271,7 +269,7 @@ int translate_dnssearch(Slirp *s, const char **names)
     outptr = result;
     for (i = 0; i < num_domains; i++) {
         domains[i].labels = outptr;
-        domain_mklabels(s, domains + i, names[i]);
+        domain_mklabels(domains + i, names[i]);
         if (domains[i].len == 0) {
             /* Bogus entry, reject it all */
             free(domains);
