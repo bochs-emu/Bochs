@@ -28,21 +28,39 @@ extern int slirp_debug;
         }                                               \
     } while (0)
 
-#ifdef DEBUG
+#define DEBUG_RAW_CALL(...)                     \
+    do {                                        \
+        if (unlikely(slirp_debug & DBG_CALL)) { \
+            slirplog_debug(__VA_ARGS__);        \
+        }                                       \
+    } while (0)
 
-#define DEBUG_ARG(x, y) if (slirp_debug & DBG_CALL) { fputc(' ', dfd); fprintf(dfd, x, y); fputc('\n', dfd); fflush(dfd); }
-#define DEBUG_MISC(x) if (slirp_debug & DBG_MISC) { fprintf x ; fflush(dfd); }
-#define DEBUG_ERROR(x) if (slirp_debug & DBG_ERROR) {fprintf x ; fflush(dfd); }
-#define DEBUG_TFTP(x,y) if (slirp_debug & DBG_TFTP) {fprintf x ; fflush(dfd); }
+#define DEBUG_ARG(...)                              \
+    do {                                            \
+        if (unlikely(slirp_debug & DBG_CALL)) {     \
+            slirplog_debug(" " __VA_ARGS__);        \
+        }                                           \
+    } while (0)
 
-#else
+#define DEBUG_MISC(...)                         \
+    do {                                        \
+        if (unlikely(slirp_debug & DBG_MISC)) { \
+            slirplog_debug(__VA_ARGS__);        \
+        }                                       \
+    } while (0)
 
-#define DEBUG_RAW_CALL(...)
-#define DEBUG_ARG(...)
-#define DEBUG_MISC(...)
-#define DEBUG_ERROR(...)
-#define DEBUG_TFTP(...)
+#define DEBUG_ERROR(...)                         \
+    do {                                         \
+        if (unlikely(slirp_debug & DBG_ERROR)) { \
+            slirplog_debug(__VA_ARGS__);         \
+        }                                        \
+    } while (0)
 
-#endif
+#define DEBUG_TFTP(...)                         \
+    do {                                        \
+        if (unlikely(slirp_debug & DBG_TFTP)) { \
+            slirplog_debug(__VA_ARGS__);        \
+        }                                       \
+    } while (0)
 
 #endif

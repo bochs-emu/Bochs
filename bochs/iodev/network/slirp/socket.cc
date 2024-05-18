@@ -1093,7 +1093,7 @@ void sotranslate_accept(struct socket *so)
                 break;
             }
             if (s < 0) {
-                slirp_warning("Ephemeral slirp_socket() allocation failed");
+                slirplog_error("Ephemeral slirp_socket() allocation failed");
                 goto unix2inet_cont;
             }
             memset(&in_addr, 0, sizeof(in_addr));
@@ -1101,13 +1101,13 @@ void sotranslate_accept(struct socket *so)
             in_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
             in_addr.sin_port = htons(0);
             if (bind(s, (struct sockaddr *) &in_addr, sizeof(in_addr))) {
-                slirp_warning("Ephemeral bind() failed");
+                slirplog_error("Ephemeral bind() failed");
                 closesocket(s);
                 goto unix2inet_cont;
             }
             in_addr_len = sizeof(in_addr);
             if (getsockname(s, (struct sockaddr *) &in_addr, &in_addr_len)) {
-                slirp_warning("Ephemeral getsockname() failed");
+                slirplog_error("Ephemeral getsockname() failed");
                 closesocket(s);
                 goto unix2inet_cont;
             }
@@ -1116,7 +1116,7 @@ void sotranslate_accept(struct socket *so)
 
 unix2inet_cont:
             if (!so->so_fport) {
-                slirp_warning("Falling back to random port allocation");
+                slirplog_error("Falling back to random port allocation");
                 so->so_fport = htons(slirp_rand_int_range(49152, 65536));
             }
         } else if (so->slirp->in6_enabled) {
@@ -1136,7 +1136,7 @@ unix2inet_cont:
                 break;
             }
             if (s < 0) {
-                slirp_warning("Ephemeral slirp_socket() allocation failed");
+                slirplog_error("Ephemeral slirp_socket() allocation failed");
                 goto unix2inet6_cont;
             }
             memset(&in6_addr, 0, sizeof(in6_addr));
@@ -1144,13 +1144,13 @@ unix2inet_cont:
             in6_addr.sin6_addr = in6addr_loopback;
             in6_addr.sin6_port = htons(0);
             if (bind(s, (struct sockaddr *) &in6_addr, sizeof(in6_addr))) {
-                slirp_warning("Ephemeral bind() failed");
+                slirplog_error("Ephemeral bind() failed");
                 closesocket(s);
                 goto unix2inet6_cont;
             }
             in_addr_len = sizeof(in6_addr);
             if (getsockname(s, (struct sockaddr *) &in6_addr, &in_addr_len)) {
-                slirp_warning("Ephemeral getsockname() failed");
+                slirplog_error("Ephemeral getsockname() failed");
                 closesocket(s);
                 goto unix2inet6_cont;
             }
@@ -1159,7 +1159,7 @@ unix2inet_cont:
 
 unix2inet6_cont:
             if (!so->so_fport6) {
-                slirp_warning("Falling back to random port allocation");
+                slirplog_error("Falling back to random port allocation");
                 so->so_fport6 = htons(slirp_rand_int_range(49152, 65536));
             }
         } else {

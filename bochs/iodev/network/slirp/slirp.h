@@ -9,7 +9,11 @@
 #define _WIN32
 #endif
 
+#ifdef BX_PLUGGABLE
+#include "bochs.h"
+#else
 #include "config.h"
+#endif
 
 #ifdef _WIN32
 
@@ -402,7 +406,7 @@ void slirp_send_packet_all(Slirp *slirp, const void *buf, size_t len);
 void *slirp_timer_new(Slirp *slirp, SlirpTimerId id, void *cb_opaque);
 
 /* Bochs addition */
-void slirp_warning(const char *msg);
-void slirplog_debug(const char *msg);
+void slirplog_error(const char *msg);
+void slirplog_debug(const char *fmt, ...) BX_CPP_AttrPrintf(1, 2);
 
 #endif

@@ -103,7 +103,7 @@ void m_free(struct mbuf *m)
     DEBUG_CALL("m_free");
     DEBUG_ARG("m = %p", m);
 
-    if(m) {
+    if (m) {
         /* Remove from m_usedlist */
         if (m->m_flags & M_USEDLIST)
             slirp_remque(m);

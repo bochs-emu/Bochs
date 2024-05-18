@@ -25,7 +25,6 @@
 #define BX_PLUGGABLE
 
 #include "slirp.h"
-#include "bochs.h"
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 
@@ -1295,7 +1294,7 @@ int if_encap(Slirp *slirp, struct mbuf *ifm)
     uint8_t ethaddr[ETH_ALEN];
     const struct ip *iph = (const struct ip *)ifm->m_data;
     int ret;
-//  char ethaddr_str[ETH_ADDRSTRLEN];
+    char ethaddr_str[ETH_ADDRSTRLEN];
 
     if (ifm->m_len + ETH_HLEN > (int)sizeof(buf) - 2) {
         return 1;
@@ -1317,7 +1316,7 @@ int if_encap(Slirp *slirp, struct mbuf *ifm)
         break;
 
     default:
-        slirp_warning("unknown protocol");
+        slirplog_error("unknown protocol");
     }
 
     memcpy(eh->h_dest, ethaddr, ETH_ALEN);
@@ -1525,9 +1524,9 @@ void slirp_send_packet_all(Slirp *slirp, const void *buf, size_t len)
     slirp_ssize_t ret = slirp->cb->send_packet(buf, len, slirp->opaque);
 
     if (ret < 0) {
-        slirp_warning("Failed to send packet");
+        slirplog_error("Failed to send packet");
     } else if ((size_t)ret < len) {
-        slirp_warning("send_packet() didn't send all data");
+        slirplog_error("send_packet() didn't send all data");
     }
 }
 
@@ -1541,16 +1540,22 @@ void slirp_set_logfn(void *slirp, void *logfn, uint8_t debug_switches)
     }
 }
 
-void slirp_warning(const char *msg)
+void slirplog_error(const char *msg)
 {
     if (slirplog) {
         slirplog->error("%s", msg);
     }
 }
 
-void slirplog_debug(const char *msg)
+void slirplog_debug(const char *fmt, ...)
 {
+    va_list ap;
+    char msg[512];
+
     if (slirplog) {
+        va_start(ap, fmt);
+        vsprintf(msg, fmt, ap);
+        va_end(ap);
         slirplog->ldebug("%s", msg);
     }
 }
