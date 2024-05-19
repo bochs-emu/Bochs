@@ -18,7 +18,7 @@ bool sbdrop(struct sbuf *sb, size_t num)
 {
     int limit = sb->sb_datalen / 2;
 
-//    g_warn_if_fail(num <= sb->sb_cc);
+    slirp_warn_if_fail(num <= sb->sb_cc);
     if (num > sb->sb_cc)
         num = sb->sb_cc;
 

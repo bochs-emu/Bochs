@@ -29,6 +29,9 @@
 #define SLIRP_N_ELEMENTS(x) (sizeof(x) / sizeof((x)[0]))
 
 #define slirp_rand_int_range(min, max) ((rand() % (max - min)) + min)
+#define slirp_warn_if_fail(cond) if (!(cond)) slirplog_error("condition " #cond " failed")
+#define slirp_return_if_fail(cond) if (!(cond)) return
+#define slirp_return_val_if_fail(cond, retval) if (!(cond)) return retval
 
 #ifndef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))

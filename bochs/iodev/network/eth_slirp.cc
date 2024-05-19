@@ -293,7 +293,7 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
 #if BX_HAVE_LIBSLIRP
   BX_INFO(("slirp network driver (libslirp version %s)", slirp_version_string()));
 #else
-  BX_INFO(("slirp network driver"));
+  BX_INFO(("slirp network driver (based on libslirp version %s)", slirp_version_string()));
   debug_switches = 0;
 #endif
 

@@ -114,7 +114,6 @@ static void dhcp_decode(Slirp *slirp, const struct bootp_t *bp,
     const uint8_t *p;
     uint16_t defsize, maxsize;
     int len, tag;
-    char msg[80];
 
     memset(opts, 0, sizeof(dhcp_options_t));
 
@@ -136,7 +135,7 @@ static void dhcp_decode(Slirp *slirp, const struct bootp_t *bp,
             if (p + len > bp_end) {
                 break;
             }
-            DPRINTF("dhcp: tag=%d len=%d\n", tag, len);
+            DPRINTF("dhcp: tag=%d len=%d", tag, len);
 
             switch(tag) {
               case RFC2132_MSG_TYPE:
@@ -179,14 +178,12 @@ static void dhcp_decode(Slirp *slirp, const struct bootp_t *bp,
                     memcpy(&maxsize, p, len);
                     defsize = sizeof(struct bootp_t) + DHCP_OPT_LEN - sizeof(struct ip) - sizeof(struct udphdr);
                     if (ntohs(maxsize) < defsize) {
-                        sprintf(msg, "DHCP server: RFB2132_MAX_SIZE=%u not supported yet", ntohs(maxsize));
-                        slirplog_error(msg);
+                        slirplog_error("DHCP server: RFB2132_MAX_SIZE=%u not supported yet", ntohs(maxsize));
                     }
                 }
                 break;
               default:
-                sprintf(msg, "DHCP server: option %d not supported yet", tag);
-                slirplog_error(msg);
+                slirplog_error("DHCP server: option %d not supported yet", tag);
                 break;
             }
             p += len;
@@ -211,15 +208,13 @@ static void bootp_reply(Slirp *slirp,
     uint8_t *q, *end, *pp, plen;
     uint8_t client_ethaddr[ETH_ALEN];
     dhcp_options_t dhcp_opts;
-    char msg[80];
 
     /* extract exact DHCP msg type */
     dhcp_decode(slirp, bp, bp_end, &dhcp_opts);
     DPRINTF("bootp packet op=%d msgtype=%d", bp->bp_op, dhcp_opts.msg_type);
-    if (dhcp_opts.req_addr.s_addr != htonl(0L))
-        DPRINTF(" req_addr=%08x\n", ntohl(dhcp_opts.req_addr.s_addr));
-    else
-        DPRINTF("\n");
+    if (dhcp_opts.req_addr.s_addr != htonl(0L)) {
+        DPRINTF(" req_addr=%08x", ntohl(dhcp_opts.req_addr.s_addr));
+    }
 
     if (dhcp_opts.msg_type == 0)
         dhcp_opts.msg_type = DHCPREQUEST; /* Force reply for old BOOTP clients */
@@ -252,7 +247,7 @@ static void bootp_reply(Slirp *slirp,
          new_addr:
             bc = get_new_addr(slirp, &daddr.sin_addr, client_ethaddr);
             if (!bc) {
-                DPRINTF("no address left\n");
+                DPRINTF("no address left");
                 return;
             }
         }
@@ -298,7 +293,7 @@ static void bootp_reply(Slirp *slirp,
     q += 4;
 
     if (bc) {
-        DPRINTF("%s addr=%08x\n",
+        DPRINTF("%s addr=%08x",
                 (dhcp_opts.msg_type == DHCPDISCOVER) ? "offered" : "ack'ed",
                 ntohl(daddr.sin_addr.s_addr));
 
@@ -434,9 +429,8 @@ static void bootp_reply(Slirp *slirp,
                    // Already handled on top of reply
                    break;
                 default:
-                    sprintf(msg, "DHCP server: requested parameter %u not supported yet",
-                            *(pp-1));
-                    slirplog_error(msg);
+                    slirplog_error("DHCP server: requested parameter %u not supported yet",
+                                   *(pp-1));
             }
         }
 
@@ -472,7 +466,7 @@ static void bootp_reply(Slirp *slirp,
     } else {
         static const char nak_msg[] = "requested address not available";
 
-        DPRINTF("nak'ed addr=%08x\n", ntohl(dhcp_opts.req_addr.s_addr));
+        DPRINTF("nak'ed addr=%08x", ntohl(dhcp_opts.req_addr.s_addr));
 
         *q++ = RFC2132_MSG_TYPE;
         *q++ = 1;

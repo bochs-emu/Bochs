@@ -658,10 +658,12 @@ int tcp_emu(struct socket *so, struct mbuf *m)
                             tmpso->so_fport == n1) {
                             if (getsockname(tmpso->s, (struct sockaddr *)&addr,
                                 &addrlen) == 0)
-                                n2 = ntohs(addr.sin_port);
+                                n2 = addr.sin_port;
                             break;
                         }
                     }
+                    NTOHS(n1);
+                    NTOHS(n2);
                 }
                 so_rcv->sb_cc = snprintf(so_rcv->sb_data, so_rcv->sb_datalen,
                                          "%d,%d\r\n", n1, n2);
@@ -893,6 +895,9 @@ int tcp_emu(struct socket *so, struct mbuf *m)
                 break;
 
              case 5:
+                if (bptr == m->m_data + m->m_len - 1)
+                        return 1; /* We need two bytes */
+
                 /*
                  * The difference between versions 1.0 and
                  * 2.0 is here. For future versions of
@@ -908,8 +913,11 @@ int tcp_emu(struct socket *so, struct mbuf *m)
                 /* This is the field containing the port
                  * number that RA-player is listening to.
                  */
-                lport = (((uint8_t*)bptr)[0] << 8)
-                + ((uint8_t *)bptr)[1];
+
+                if (bptr == m->m_data + m->m_len - 1)
+                        return 1; /* We need two bytes */
+
+                lport = (((uint8_t*)bptr)[0] << 8) + ((uint8_t *)bptr)[1];
                 if (lport < 6970)
                    lport += 256;   /* don't know why */
                 if (lport < 6970 || lport > 7170)

@@ -1532,6 +1532,7 @@ int tcp_mss(struct tcpcb *tp, unsigned offer)
     default:
         slirplog_error("Unknown protocol");
     }
+
     if (offer)
         mss = MIN(mss, (int)offer);
     mss = MAX(mss, 32);

@@ -547,6 +547,8 @@ static void slirp_init_once(void)
 
     loopback_addr.s_addr = htonl(INADDR_LOOPBACK);
     loopback_mask = htonl(IN_CLASSA_NET);
+
+    slirp_debug = 0;
 }
 
 static void ra_timer_handler_cb(void *opaque)
@@ -558,7 +560,7 @@ static void ra_timer_handler_cb(void *opaque)
 
 void slirp_handle_timer(Slirp *slirp, SlirpTimerId id, void *cb_opaque)
 {
-//    g_return_if_fail(id >= 0 && id < SLIRP_TIMER_NUM);
+    slirp_return_if_fail(id >= 0 && id < SLIRP_TIMER_NUM);
 
     switch (id) {
     case SLIRP_TIMER_RA:
@@ -571,7 +573,7 @@ void slirp_handle_timer(Slirp *slirp, SlirpTimerId id, void *cb_opaque)
 
 void *slirp_timer_new(Slirp *slirp, SlirpTimerId id, void *cb_opaque)
 {
-//    g_return_val_if_fail(id >= 0 && id < SLIRP_TIMER_NUM, NULL);
+    slirp_return_val_if_fail(id >= 0 && id < SLIRP_TIMER_NUM, NULL);
 
     if (slirp->cfg_version >= 4 && slirp->cb->timer_new_opaque) {
         return slirp->cb->timer_new_opaque(id, cb_opaque, slirp->opaque);
@@ -579,7 +581,7 @@ void *slirp_timer_new(Slirp *slirp, SlirpTimerId id, void *cb_opaque)
 
     switch (id) {
     case SLIRP_TIMER_RA:
-//        g_return_val_if_fail(cb_opaque == NULL, NULL);
+        slirp_return_val_if_fail(cb_opaque == NULL, NULL);
         return slirp->cb->timer_new(ra_timer_handler_cb, slirp, slirp->opaque);
 
     default:
@@ -589,7 +591,20 @@ void *slirp_timer_new(Slirp *slirp, SlirpTimerId id, void *cb_opaque)
 
 Slirp *slirp_new(const SlirpConfig *cfg, const SlirpCb *callbacks, void *opaque)
 {
-    Slirp *slirp = (Slirp*)malloc(sizeof(Slirp));
+    Slirp *slirp;
+
+    slirp_return_val_if_fail(cfg != NULL, NULL);
+    slirp_return_val_if_fail(cfg->version >= SLIRP_CONFIG_VERSION_MIN, NULL);
+    slirp_return_val_if_fail(cfg->version <= SLIRP_CONFIG_VERSION_MAX, NULL);
+    slirp_return_val_if_fail(cfg->if_mtu >= IF_MTU_MIN || cfg->if_mtu == 0, NULL);
+    slirp_return_val_if_fail(cfg->if_mtu <= IF_MTU_MAX, NULL);
+    slirp_return_val_if_fail(cfg->if_mru >= IF_MRU_MIN || cfg->if_mru == 0, NULL);
+    slirp_return_val_if_fail(cfg->if_mru <= IF_MRU_MAX, NULL);
+    slirp_return_val_if_fail(!cfg->bootfile ||
+                         (strlen(cfg->bootfile) <
+                          G_SIZEOF_MEMBER(struct bootp_t, bp_file)), NULL);
+
+    slirp = (Slirp*)malloc(sizeof(Slirp));
     memset(slirp, 0, sizeof(Slirp));
 
     slirp_init_once();
@@ -724,6 +739,7 @@ void slirp_cleanup(Slirp *slirp)
     }
 
     ip_cleanup(slirp);
+    ip6_cleanup(slirp);
     m_cleanup(slirp);
 
     free(slirp->vdomainname);
@@ -1605,7 +1621,8 @@ void slirp_send_packet_all(Slirp *slirp, const void *buf, size_t len)
     if (ret < 0) {
         slirplog_error("Failed to send packet");
     } else if ((size_t)ret < len) {
-        slirplog_error("send_packet() didn't send all data");
+        DEBUG_ERROR("send_packet() didn't send all data: %ld < %lu", (long)ret,
+                    (unsigned long)len);
     }
 }
 
