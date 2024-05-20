@@ -58,7 +58,7 @@ void udp_cleanup(Slirp *slirp)
 
     for (so = slirp->udb.so_next; so != &slirp->udb; so = so_next) {
         so_next = so->so_next;
-        udp_detach(slirp->udb.so_next);
+        udp_detach(so);
     }
 }
 
@@ -91,7 +91,7 @@ void udp_input(struct mbuf *m, int iphlen)
      * with options still present.
      */
     if ((size_t)iphlen > sizeof(struct ip)) {
-        ip_stripoptions(m, (struct mbuf *)0);
+        ip_stripoptions(m);
         iphlen = sizeof(struct ip);
     }
 

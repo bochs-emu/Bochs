@@ -741,6 +741,7 @@ void slirp_cleanup(Slirp *slirp)
     ip_cleanup(slirp);
     ip6_cleanup(slirp);
     m_cleanup(slirp);
+    tftp_cleanup(slirp);
 
     free(slirp->vdomainname);
     free(slirp->tftp_prefix);
@@ -1094,7 +1095,10 @@ void slirp_pollfds_poll(Slirp *slirp, int select_error,
 
             if (so->s != -1 &&
                 (revents & (SLIRP_POLL_IN | SLIRP_POLL_HUP | SLIRP_POLL_ERR))) {
-                icmp_receive(so);
+                if (so->so_type == IPPROTO_IPV6 || so->so_type == IPPROTO_ICMPV6)
+                    icmp6_receive(so);
+                else
+                    icmp_receive(so);
             }
         }
     }
@@ -1616,7 +1620,17 @@ void slirp_socket_recv(Slirp *slirp, struct in_addr guest_addr, int guest_port,
 
 void slirp_send_packet_all(Slirp *slirp, const void *buf, size_t len)
 {
-    slirp_ssize_t ret = slirp->cb->send_packet(buf, len, slirp->opaque);
+    slirp_ssize_t ret;
+
+    if (len < ETH_MINLEN) {
+        char tmp[ETH_MINLEN];
+        memcpy(tmp, buf, len);
+        memset(tmp + len, 0, ETH_MINLEN - len);
+
+        ret = slirp->cb->send_packet(tmp, ETH_MINLEN, slirp->opaque);
+    } else {
+        ret = slirp->cb->send_packet(buf, len, slirp->opaque);
+    }
 
     if (ret < 0) {
         slirplog_error("Failed to send packet");

@@ -9,6 +9,8 @@
 
 #include <string.h>
 
+#include "util.h"
+
 const struct in6_addr ALLNODES_MULTICAST = \
     {           \
         0xff,   \

@@ -64,4 +64,7 @@ struct tftp_session {
 /* Process TFTP packet coming from the guest */
 void tftp_input(struct sockaddr_storage *srcsas, struct mbuf *m);
 
+/* Clear remaining sessions */
+void tftp_cleanup(Slirp *slirp);
+
 #endif

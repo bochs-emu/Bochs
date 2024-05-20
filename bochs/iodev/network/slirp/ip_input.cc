@@ -435,7 +435,7 @@ void ip_slowtimo(Slirp *slirp)
     }
 }
 
-void ip_stripoptions(struct mbuf *m, struct mbuf *mopt)
+void ip_stripoptions(struct mbuf *m)
 {
     int i;
     struct ip *ip = mtod(m, struct ip *);

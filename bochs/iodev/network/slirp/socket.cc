@@ -589,7 +589,29 @@ void sorecvfrom(struct socket *so)
         }
         /* No need for this socket anymore, udp_detach it */
         udp_detach(so);
-    } else {                                /* A "normal" UDP packet */
+    } else if (so->so_type == IPPROTO_ICMPV6) { /* This is a "ping" reply */
+        int len;
+
+        len = recvfrom(so->s, buff, 256, 0, (struct sockaddr *)&addr, &addrlen);
+        /* XXX Check if reply is "correct"? */
+
+        if (len == -1 || len == 0) {
+            uint8_t code = ICMP6_UNREACH_PORT;
+
+            if (errno == EHOSTUNREACH)
+                code = ICMP6_UNREACH_ADDRESS;
+            else if (errno == ENETUNREACH)
+                code = ICMP6_UNREACH_NO_ROUTE;
+
+            DEBUG_MISC(" udp icmp6 rx errno = %d-%s", errno, strerror(errno));
+            icmp6_send_error(so->so_m, ICMP_UNREACH, code);
+        } else {
+            icmp6_reflect(so->so_m);
+            so->so_m = NULL; /* Don't m_free() it again! */
+        }
+        /* No need for this socket anymore, udp_detach it */
+        udp_detach(so);
+    } else { /* A "normal" UDP packet */
         struct mbuf *m;
         int len;
 #ifdef _WIN32

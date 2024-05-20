@@ -89,6 +89,7 @@ struct iovec {
 #define ETH_ALEN 6
 #define ETH_ADDRSTRLEN 18 /* "xx:xx:xx:xx:xx:xx", with trailing NUL */
 #define ETH_HLEN 14
+#define ETH_MINLEN 60
 #define ETH_P_IP (0x0800) /* Internet Protocol packet  */
 #define ETH_P_ARP (0x0806) /* Address Resolution packet */
 #define ETH_P_IPV6 (0x86dd)

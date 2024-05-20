@@ -124,6 +124,20 @@ static int tftp_session_find(Slirp *slirp, struct sockaddr_storage *srcsas,
     return -1;
 }
 
+void tftp_cleanup(Slirp *slirp)
+{
+    struct tftp_session *spt;
+    int k;
+
+    for (k = 0; k < TFTP_SESSIONS_MAX; k++) {
+        spt = &slirp->tftp_sessions[k];
+
+        if (tftp_session_in_use(spt)) {
+            tftp_session_terminate(spt);
+        }
+    }
+}
+
 static int tftp_read_data(struct tftp_session *spt, uint32_t block_nr,
                           uint8_t *buf, int len)
 {
@@ -288,11 +302,11 @@ static void tftp_send_next_block(struct tftp_session *spt,
   nobytes = tftp_read_data(spt, spt->block_nr, tp->x.tp_data.tp_buf, spt->blksize_val);
 
   if (nobytes < 0) {
-    m_free(m);
-
     /* send "file not found" error back */
 
     tftp_send_error(spt, 1, "File not found", tp);
+
+    m_free(m);
 
     return;
   }

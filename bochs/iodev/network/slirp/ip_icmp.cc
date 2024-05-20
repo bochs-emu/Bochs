@@ -93,9 +93,7 @@ void icmp_cleanup(Slirp *slirp)
 static int icmp_send(struct socket *so, struct mbuf *m, int hlen)
 {
     Slirp *slirp = m->slirp;
-    M_DUP_DEBUG(slirp, m, 0, 0);
 
-    struct ip *ip = mtod(m, struct ip *);
     struct sockaddr_in addr;
 
     /*
@@ -134,6 +132,9 @@ static int icmp_send(struct socket *so, struct mbuf *m, int hlen)
         so->s = -1;
         return -1;
     }
+
+    M_DUP_DEBUG(slirp, m, 0, 0);
+    struct ip *ip = mtod(m, struct ip *);
 
     so->so_m = m;
     so->so_faddr = ip->ip_dst;

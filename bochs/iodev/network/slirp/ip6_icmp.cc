@@ -12,6 +12,12 @@
 #define NDP_Interval \
     slirp_rand_int_range(NDP_MinRtrAdvInterval, NDP_MaxRtrAdvInterval)
 
+/* The message sent when emulating PING */
+/* Be nice and tell them it's just a pseudo-ping packet */
+static const char icmp6_ping_msg[] =
+    "This is a pseudo-PING packet used by Slirp to emulate ICMPV6 ECHO-REQUEST "
+    "packets.\n";
+
 void icmp6_post_init(Slirp *slirp)
 {
     if (!slirp->in6_enabled) {
@@ -33,6 +39,75 @@ void icmp6_cleanup(Slirp *slirp)
     }
 
     slirp->cb->timer_free(slirp->ra_timer, slirp->opaque);
+}
+
+/* Send ICMP packet to the Internet, and save it to so_m */
+static int icmp6_send(struct socket *so, struct mbuf *m, int hlen)
+{
+    Slirp *slirp = m->slirp;
+
+    struct sockaddr_in6 addr;
+
+    /*
+     * The behavior of reading SOCK_DGRAM+IPPROTO_ICMP sockets is inconsistent
+     * between host OSes.  On Linux, only the ICMP header and payload is
+     * included.  On macOS/Darwin, the socket acts like a raw socket and
+     * includes the IP header as well.  On other BSDs, SOCK_DGRAM+IPPROTO_ICMP
+     * sockets aren't supported at all, so we treat them like raw sockets.  It
+     * isn't possible to detect this difference at runtime, so we must use an
+     * #ifdef to determine if we need to remove the IP header.
+     */
+#if defined(BSD) && !defined(__GNU__)
+    so->so_type = IPPROTO_IPV6;
+#else
+    so->so_type = IPPROTO_ICMPV6;
+#endif
+
+    so->s = slirp_socket(AF_INET6, SOCK_DGRAM, IPPROTO_ICMPV6);
+    if (so->s == -1) {
+        if (errno == EAFNOSUPPORT
+         || errno == EPROTONOSUPPORT
+         || errno == EACCES) {
+            /* Kernel doesn't support or allow ping sockets. */
+            so->so_type = IPPROTO_IPV6;
+            so->s = slirp_socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
+        }
+    }
+    if (so->s == -1) {
+        return -1;
+    }
+    so->slirp->cb->register_poll_fd(so->s, so->slirp->opaque);
+
+    if (slirp_bind_outbound(so, AF_INET6) != 0) {
+        // bind failed - close socket
+        closesocket(so->s);
+        so->s = -1;
+        return -1;
+    }
+
+    M_DUP_DEBUG(slirp, m, 0, 0);
+    struct ip6 *ip = mtod(m, struct ip6 *);
+
+    so->so_m = m;
+    so->so_faddr6 = ip->ip_dst;
+    so->so_laddr6 = ip->ip_src;
+    so->so_state = SS_ISFCONNECTED;
+    so->so_expire = curtime + SO_EXPIRE;
+
+    addr.sin6_family = AF_INET6;
+    addr.sin6_addr = so->so_faddr6;
+
+    slirp_insque(so, &so->slirp->icmp);
+
+    if (sendto(so->s, m->m_data + hlen, m->m_len - hlen, 0,
+               (struct sockaddr *)&addr, sizeof(addr)) == -1) {
+        DEBUG_MISC("icmp6_input icmp sendto tx errno = %d-%s", errno,
+                   strerror(errno));
+        icmp6_send_error(m, ICMP6_UNREACH, ICMP6_UNREACH_NO_ROUTE);
+        icmp_detach(so);
+    }
+
+    return 0;
 }
 
 static void icmp6_send_echoreply(struct mbuf *m, Slirp *slirp, struct ip6 *ip,
@@ -126,6 +201,79 @@ void icmp6_send_error(struct mbuf *m, uint8_t type, uint8_t code)
 {
     struct in6_addr src = LINKLOCAL_ADDR;
     icmp6_forward_error(m, type, code, &src);
+}
+
+/*
+ * Reflect the ip packet back to the source
+ */
+void icmp6_reflect(struct mbuf *m)
+{
+    register struct ip6 *ip = mtod(m, struct ip6 *);
+    int hlen = sizeof(struct ip6);
+    register struct icmp6 *icp;
+
+    /*
+     * Send an icmp packet back to the ip level,
+     * after supplying a checksum.
+     */
+    m->m_data += hlen;
+    m->m_len -= hlen;
+    icp = mtod(m, struct icmp6 *);
+
+    icp->icmp6_type = ICMP6_ECHO_REPLY;
+
+    m->m_data -= hlen;
+    m->m_len += hlen;
+
+    icp->icmp6_cksum = 0;
+    icp->icmp6_cksum = ip6_cksum(m);
+
+    ip->ip_hl = MAXTTL;
+    { /* swap */
+        struct in6_addr icmp_dst;
+        icmp_dst = ip->ip_dst;
+        ip->ip_dst = ip->ip_src;
+        ip->ip_src = icmp_dst;
+    }
+
+    ip6_output((struct socket *)NULL, m, 0);
+}
+
+void icmp6_receive(struct socket *so)
+{
+    struct mbuf *m = so->so_m;
+    int hlen = sizeof(struct ip6);
+    uint8_t error_code;
+    struct icmp6 *icp;
+    int id, seq, len;
+
+    m->m_data += hlen;
+    m->m_len -= hlen;
+    icp = mtod(m, struct icmp6 *);
+
+    id = icp->icmp6_id;
+    seq = icp->icmp6_seq;
+    len = recv(so->s, icp, M_ROOM(m), 0);
+
+    icp->icmp6_id = id;
+    icp->icmp6_seq = seq;
+
+    m->m_data -= hlen;
+    m->m_len += hlen;
+
+    if (len == -1 || len == 0) {
+        if (errno == ENETUNREACH) {
+            error_code = ICMP6_UNREACH_NO_ROUTE;
+        } else {
+            error_code = ICMP6_UNREACH_ADDRESS;
+        }
+        DEBUG_MISC(" udp icmp rx errno = %d-%s", errno, strerror(errno));
+        icmp6_send_error(so->so_m, ICMP_UNREACH, error_code);
+    } else {
+        icmp6_reflect(so->so_m);
+        so->so_m = NULL; /* Don't m_free() it again! */
+    }
+    icmp_detach(so);
 }
 
 /*
@@ -399,11 +547,13 @@ void icmp6_input(struct mbuf *m)
     DEBUG_ARG("m_len = %d", m->m_len);
 
     if (ntohs(ip->ip_pl) < ICMP6_MINLEN) {
-        goto end;
+    freeit:
+        m_free(m);
+        goto end_error;
     }
 
     if (ip6_cksum(m)) {
-        goto end;
+        goto freeit;
     }
 
     m->m_len -= hlen;
@@ -417,10 +567,66 @@ void icmp6_input(struct mbuf *m)
     case ICMP6_ECHO_REQUEST:
         if (in6_equal_host(&ip->ip_dst)) {
             icmp6_send_echoreply(m, slirp, ip, icmp);
+        } else if (slirp->restricted) {
+            goto freeit;
         } else {
-            /* TODO */
-            slirplog_error("external icmpv6 not supported yet");
-        }
+            struct socket *so;
+            struct sockaddr_storage addr;
+            int ttl;
+
+            so = socreate(slirp, IPPROTO_ICMPV6);
+            if (icmp6_send(so, m, hlen) == 0) {
+                /* We could send this as ICMP, good! */
+                return;
+            }
+
+            /* We could not send this as ICMP, try to send it on UDP echo
+             * service (7), wishfully hoping that it is open there. */
+
+            if (udp_attach(so, AF_INET6) == -1) {
+                DEBUG_MISC("icmp6_input udp_attach errno = %d-%s", errno,
+                           strerror(errno));
+                sofree(so);
+                m_free(m);
+                goto end_error;
+            }
+            so->so_m = m;
+            so->so_ffamily = AF_INET6;
+            so->so_faddr6 = ip->ip_dst;
+            so->so_fport = htons(7);
+            so->so_lfamily = AF_INET6;
+            so->so_laddr6 = ip->ip_src;
+            so->so_lport = htons(9);
+            so->so_state = SS_ISFCONNECTED;
+
+            /* Send the packet */
+            addr = so->fhost.ss;
+            if (sotranslate_out(so, &addr) < 0) {
+                icmp6_send_error(m, ICMP6_UNREACH, ICMP6_UNREACH_NO_ROUTE);
+                udp_detach(so);
+                return;
+            }
+
+            /*
+             * Check for TTL
+             */
+            ttl = ip->ip_hl-1;
+            if (ttl <= 0) {
+                DEBUG_MISC("udp ttl exceeded");
+                icmp6_send_error(m, ICMP6_TIMXCEED, ICMP6_TIMXCEED_INTRANS);
+                udp_detach(so);
+                break;
+            }
+            setsockopt(so->s, IPPROTO_IPV6, IPV6_UNICAST_HOPS, &ttl, sizeof(ttl));
+
+            if (sendto(so->s, icmp6_ping_msg, strlen(icmp6_ping_msg), 0,
+                       (struct sockaddr *)&addr, sockaddr_size(&addr)) == -1) {
+                DEBUG_MISC("icmp6_input udp sendto tx errno = %d-%s", errno,
+                           strerror(errno));
+                icmp6_send_error(m, ICMP6_UNREACH, ICMP6_UNREACH_NO_ROUTE);
+                udp_detach(so);
+            }
+        } /* if (in6_equal_host(&ip->ip_dst)) */
         break;
 
     case ICMP6_NDP_RS:
@@ -429,6 +635,7 @@ void icmp6_input(struct mbuf *m)
     case ICMP6_NDP_NA:
     case ICMP6_NDP_REDIRECT:
         ndp_input(m, slirp, ip, icmp);
+        m_free(m);
         break;
 
     case ICMP6_UNREACH:
@@ -437,11 +644,13 @@ void icmp6_input(struct mbuf *m)
     case ICMP6_PARAMPROB:
         /* XXX? report error? close socket? */
     default:
+        m_free(m);
         break;
     }
 
-end:
-    m_free(m);
+end_error:
+    /* m is m_free()'d xor put in a socket xor or given to ip_send */
+    return;
 }
 
 #endif

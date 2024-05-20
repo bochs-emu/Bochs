@@ -255,7 +255,7 @@ void tcp_input(struct mbuf *m, int iphlen, struct socket *inso,
     switch (af) {
     case AF_INET:
         if (iphlen > (int)sizeof(struct ip )) {
-            ip_stripoptions(m, (struct mbuf *)0);
+            ip_stripoptions(m);
             iphlen = sizeof(struct ip );
         }
         /* XXX Check if too short */
