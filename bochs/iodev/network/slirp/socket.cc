@@ -1093,7 +1093,7 @@ void sotranslate_accept(struct socket *so)
          * this source port by binding to port 0 so that the OS allocates a
          * port for us. If this fails, we fall back to choosing a random port
          * with a random number generator. */
-        int s;
+        int s = 0;
         struct sockaddr_in in_addr;
         struct sockaddr_in6 in6_addr;
         socklen_t in_addr_len;

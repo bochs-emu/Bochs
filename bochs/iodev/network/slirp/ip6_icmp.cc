@@ -208,9 +208,9 @@ void icmp6_send_error(struct mbuf *m, uint8_t type, uint8_t code)
  */
 void icmp6_reflect(struct mbuf *m)
 {
-    register struct ip6 *ip = mtod(m, struct ip6 *);
+    struct ip6 *ip = mtod(m, struct ip6 *);
     int hlen = sizeof(struct ip6);
-    register struct icmp6 *icp;
+    struct icmp6 *icp;
 
     /*
      * Send an icmp packet back to the ip level,
