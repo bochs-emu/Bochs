@@ -886,7 +886,7 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
 #endif
       for (unsigned i = 0; i < len; i++) {
         if (pci_conf[0x30] & 0x01) {
-          *data_ptr = pci_rom[(addr & mask) + i];
+          *data_ptr = pci_rom[addr & mask];
         } else {
           *data_ptr = 0xff;
         }
