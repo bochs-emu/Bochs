@@ -103,11 +103,11 @@ struct mbuf {
     char m_dat[];
 };
 
-#define ifq_prev m_prev
-#define ifq_next m_next
-#define ifs_prev m_prevpkt
-#define ifs_next m_nextpkt
-#define ifq_so m_so
+static inline void ifs_remque(struct mbuf *ifm)
+{
+    ifm->m_prevpkt->m_nextpkt = ifm->m_nextpkt;
+    ifm->m_nextpkt->m_prevpkt = ifm->m_prevpkt;
+}
 
 #define M_EXT           0x01    /* m_ext points to more (malloced) data */
 #define M_FREELIST      0x02    /* mbuf is on free list */
@@ -164,7 +164,7 @@ void *m_end(struct mbuf *);
 /* Initialize the ifs queue of the mbuf */
 static inline void ifs_init(struct mbuf *ifm)
 {
-    ifm->ifs_next = ifm->ifs_prev = ifm;
+    ifm->m_nextpkt = ifm->m_prevpkt = ifm;
 }
 
 #ifdef SLIRP_DEBUG

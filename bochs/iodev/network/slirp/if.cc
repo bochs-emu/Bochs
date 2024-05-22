@@ -9,16 +9,10 @@
 
 static void ifs_insque(struct mbuf *ifm, struct mbuf *ifmhead)
 {
-    ifm->ifs_next = ifmhead->ifs_next;
-    ifmhead->ifs_next = ifm;
-    ifm->ifs_prev = ifmhead;
-    ifm->ifs_next->ifs_prev = ifm;
-}
-
-static void ifs_remque(struct mbuf *ifm)
-{
-    ifm->ifs_prev->ifs_next = ifm->ifs_next;
-    ifm->ifs_next->ifs_prev = ifm->ifs_prev;
+    ifm->m_nextpkt = ifmhead->m_nextpkt;
+    ifmhead->m_nextpkt = ifm;
+    ifm->m_prevpkt = ifmhead;
+    ifm->m_nextpkt->m_prevpkt = ifm;
 }
 
 void if_init(Slirp *slirp)
@@ -73,11 +67,11 @@ void if_output(struct socket *so, struct mbuf *ifm)
     if (so) {
         for (ifq = (struct mbuf *)slirp->if_batchq.qh_rlink;
              (struct slirp_quehead *)ifq != &slirp->if_batchq;
-         ifq = ifq->ifq_prev) {
-            if (so == ifq->ifq_so) {
+         ifq = ifq->m_prev) {
+            if (so == ifq->m_so) {
                 /* A match! */
-                ifm->ifq_so = so;
-                ifs_insque(ifm, ifq->ifs_prev);
+                ifm->m_so = so;
+                ifs_insque(ifm, ifq->m_prevpkt);
                 goto diddit;
             }
         }
@@ -91,9 +85,9 @@ void if_output(struct socket *so, struct mbuf *ifm)
          * Check if this packet is a part of the last
          * packet's session
          */
-        if (ifq->ifq_so == so) {
-            ifm->ifq_so = so;
-            ifs_insque(ifm, ifq->ifs_prev);
+        if (ifq->m_so == so) {
+            ifm->m_so = so;
+            ifs_insque(ifm, ifq->m_prevpkt);
             goto diddit;
         }
     } else {
@@ -101,7 +95,7 @@ void if_output(struct socket *so, struct mbuf *ifm)
     }
 
     /* Create a new doubly linked list for this session */
-    ifm->ifq_so = so;
+    ifm->m_so = so;
     ifs_init(ifm);
     slirp_insque(ifm, ifq);
 
@@ -120,10 +114,10 @@ diddit:
         if (on_fastq &&
             ((so->so_nqueued >= 6) && (so->so_nqueued - so->so_queued) >= 3)) {
             /* Remove from current queue... */
-            slirp_remque(ifm->ifs_next);
+            slirp_remque(ifm->m_nextpkt);
 
             /* ...And insert in the new.  That'll teach ya! */
-            slirp_insque(ifm->ifs_next, &slirp->if_batchq);
+            slirp_insque(ifm->m_nextpkt, &slirp->if_batchq);
         }
     }
 
@@ -164,7 +158,7 @@ void if_start(Slirp *slirp)
     while (ifm_next) {
         ifm = ifm_next;
 
-        ifm_next = ifm->ifq_next;
+        ifm_next = ifm->m_next;
         if ((struct slirp_quehead *)ifm_next == &slirp->if_fastq) {
             /* No more packets in fastq, switch to batchq */
             ifm_next = batch_head;
@@ -182,12 +176,12 @@ void if_start(Slirp *slirp)
         }
 
         /* Remove it from the queue */
-        ifqt = ifm->ifq_prev;
+        ifqt = ifm->m_prev;
         slirp_remque(ifm);
 
         /* If there are more packets for this session, re-queue them */
-        if (ifm->ifs_next != ifm) {
-            struct mbuf *next = ifm->ifs_next;
+        if (ifm->m_nextpkt != ifm) {
+            struct mbuf *next = ifm->m_nextpkt;
 
             slirp_insque(next, ifqt);
             ifs_remque(ifm);
@@ -197,9 +191,9 @@ void if_start(Slirp *slirp)
         }
 
         /* Update so_queued */
-        if (ifm->ifq_so && --ifm->ifq_so->so_queued == 0) {
+        if (ifm->m_so && --ifm->m_so->so_queued == 0) {
             /* If there's no more queued, reset nqueued */
-            ifm->ifq_so->so_nqueued = 0;
+            ifm->m_so->so_nqueued = 0;
         }
 
         m_free(ifm);

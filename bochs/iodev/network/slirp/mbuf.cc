@@ -31,17 +31,37 @@ void m_init(Slirp *slirp)
     slirp->m_usedlist.qh_link = slirp->m_usedlist.qh_rlink = &slirp->m_usedlist;
 }
 
-static void m_cleanup_list(struct slirp_quehead *list_head)
+static void m_cleanup_list(struct slirp_quehead *list_head, bool pkts)
 {
-    struct mbuf *m, *next;
+    struct mbuf *m, *next, *next2;
+    bool last;
 
     m = (struct mbuf *)list_head->qh_link;
     while ((struct slirp_quehead *)m != list_head) {
         next = m->m_next;
-        if (m->m_flags & M_EXT) {
-            free(m->m_ext);
-        }
-        free(m);
+
+        last = false;
+        while (1) {
+            next2 = m->m_nextpkt;
+
+            if (pkts) {
+                ifs_remque(m);
+                last = next2 == m;
+            } else {
+                last = true;
+            }
+
+            if (m->m_flags & M_EXT) {
+                free(m->m_ext);
+            }
+
+            free(m);
+
+            if (last)
+                break;
+            m = next2;
+        };
+
         m = next;
     }
     list_head->qh_link = list_head;
@@ -50,10 +70,10 @@ static void m_cleanup_list(struct slirp_quehead *list_head)
 
 void m_cleanup(Slirp *slirp)
 {
-    m_cleanup_list(&slirp->m_usedlist);
-    m_cleanup_list(&slirp->m_freelist);
-    m_cleanup_list(&slirp->if_batchq);
-    m_cleanup_list(&slirp->if_fastq);
+    m_cleanup_list(&slirp->m_usedlist, false);
+    m_cleanup_list(&slirp->m_freelist, false);
+    m_cleanup_list(&slirp->if_batchq, true);
+    m_cleanup_list(&slirp->if_fastq, true);
 }
 
 /*
@@ -152,7 +172,7 @@ void m_inc(struct mbuf *m, int size)
     int gapsize;
 
     /* some compilers throw up on gotos.  This one we can fake. */
-    if (M_ROOM(m) > size) {
+    if (M_ROOM(m) >= size) {
         return;
     }
 
@@ -242,8 +262,9 @@ struct mbuf *m_dup(Slirp *slirp, struct mbuf *m,
     if (copy_header) {
         m->m_len += header_size;
         m->m_data -= header_size;
-        mcopy_result = m_copy(n, m, 0, m->m_len + header_size);
+        mcopy_result = m_copy(n, m, 0, m->m_len);
         n->m_data += header_size;
+        n->m_len -= header_size;
         m->m_len -= header_size;
         m->m_data += header_size;
     } else {

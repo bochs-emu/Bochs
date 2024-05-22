@@ -70,12 +70,12 @@ static void soqfree(struct socket *so, struct slirp_quehead *qh)
     struct mbuf *ifq;
 
     for (ifq = (struct mbuf *)qh->qh_link; (struct slirp_quehead *)ifq != qh;
-         ifq = ifq->ifq_next) {
-        if (ifq->ifq_so == so) {
+         ifq = ifq->m_next) {
+        if (ifq->m_so == so) {
             struct mbuf *ifm;
-            ifq->ifq_so = NULL;
-            for (ifm = ifq->ifs_next; ifm != ifq; ifm = ifm->ifs_next) {
-                ifm->ifq_so = NULL;
+            ifq->m_so = NULL;
+            for (ifm = ifq->m_nextpkt; ifm != ifq; ifm = ifm->m_nextpkt) {
+                ifm->m_so = NULL;
             }
         }
     }
