@@ -17,7 +17,7 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 //
 
-// eth_slirp.cc  - Bochs port of Qemu's slirp implementation (plus libslirp support)
+// eth_slirp.cc  - Bochs port of Qemu's slirp implementation (updated from libslirp 4.8.0)
 // Portion of this software comes with the following license: BSD-3-Clause
 
 #define BX_PLUGGABLE
@@ -283,6 +283,9 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
   config.vnameserver.s_addr = htonl(0x0a000203); /* 10.0.2.3 */
   config.tftp_path = netif;
   config.vdomainname = "local";
+  /* enable IPv6 support by default using QEMU settings */
+  config.in6_enabled = true;
+  inet_pton(AF_INET6, "fec0::", &config.vprefix_addr6);
 #ifndef WIN32
   smb_export = NULL;
   smb_tmpdir = NULL;
@@ -317,7 +320,6 @@ bx_slirp_pktmover_c::bx_slirp_pktmover_c(const char *netif,
     }
     if (config.in6_enabled) {
       BX_INFO(("IPv6 enabled (using default QEMU settings)"));
-      inet_pton(AF_INET6, "fec0::", &config.vprefix_addr6);
       config.vprefix_len = 64;
       config.vhost6 = config.vprefix_addr6;
       config.vhost6.s6_addr[15] |= 2;
@@ -565,6 +567,8 @@ bool bx_slirp_pktmover_c::parse_slirp_conf(const char *conf)
           }
         } else if (!stricmp(param, "ipv6_enabled")) {
           config.in6_enabled = (atoi(val) != 0);
+        } else if (!stricmp(param, "ipv6_prefix")) {
+          inet_pton(AF_INET6, val, &config.vprefix_addr6);
         } else if (!stricmp(param, "tftp_srvname")) {
           if (len2 < 33) {
             config.tftp_server_name = (char*)malloc(len2+1);
