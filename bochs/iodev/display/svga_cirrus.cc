@@ -2122,7 +2122,7 @@ void bx_svga_cirrus_c::svga_write_control(Bit32u address, unsigned index, Bit8u 
           ((value & CIRRUS_BLT_RESET) == 0)) {
         svga_reset_bitblt();
       }
-      else if (((old_value & CIRRUS_BLT_START) == 0) &&
+      if (((old_value & CIRRUS_BLT_START) == 0) &&
           ((value & CIRRUS_BLT_START) != 0)) {
         BX_CIRRUS_THIS control.reg[0x31] |= CIRRUS_BLT_BUSY;
         svga_bitblt();
@@ -2566,8 +2566,13 @@ void bx_svga_cirrus_c::svga_bitblt()
   BX_CIRRUS_THIS bitblt.bltmodeext = BX_CIRRUS_THIS control.reg[0x33];
   BX_CIRRUS_THIS bitblt.bltrop = BX_CIRRUS_THIS control.reg[0x32];
   offset = dstaddr - (Bit32u)(BX_CIRRUS_THIS disp_ptr - BX_CIRRUS_THIS s.memory);
-  BX_CIRRUS_THIS redraw.x = (offset % BX_CIRRUS_THIS bitblt.dstpitch) / (BX_CIRRUS_THIS svga_bpp >> 3);
-  BX_CIRRUS_THIS redraw.y = offset / BX_CIRRUS_THIS bitblt.dstpitch;
+  if (BX_CIRRUS_THIS bitblt.dstpitch > 0) {
+    BX_CIRRUS_THIS redraw.x = (offset % BX_CIRRUS_THIS bitblt.dstpitch) / (BX_CIRRUS_THIS svga_bpp >> 3);
+    BX_CIRRUS_THIS redraw.y = offset / BX_CIRRUS_THIS bitblt.dstpitch;
+  } else {
+    BX_CIRRUS_THIS redraw.x = 0;
+    BX_CIRRUS_THIS redraw.y = 0;
+  }
   BX_CIRRUS_THIS redraw.w = BX_CIRRUS_THIS bitblt.bltwidth / (BX_CIRRUS_THIS svga_bpp >> 3);
   BX_CIRRUS_THIS redraw.h = BX_CIRRUS_THIS bitblt.bltheight;
   if (BX_CIRRUS_THIS s.y_doublescan) {
