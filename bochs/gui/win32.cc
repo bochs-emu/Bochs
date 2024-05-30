@@ -1839,18 +1839,22 @@ void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
   HDC hdc;
   HGDIOBJ oldObj;
+  unsigned yt = y_tilesize;
 
+  if ((y0 + y_tilesize) > dimension_y) {
+	yt = dimension_y - y0;
+  }
   EnterCriticalSection(&stInfo.drawCS);
   hdc = GetDC(stInfo.simWnd);
 
   oldObj = SelectObject(MemoryDC, MemoryBitmap);
 
-  StretchDIBits(MemoryDC, x0, y0, x_tilesize, y_tilesize, 0, 0,
-    x_tilesize, y_tilesize, tile, bitmap_info, DIB_RGB_COLORS, SRCCOPY);
+  StretchDIBits(MemoryDC, x0, y0, x_tilesize, yt, 0, 0,
+    x_tilesize, yt, tile, bitmap_info, DIB_RGB_COLORS, SRCCOPY);
 
   SelectObject(MemoryDC, oldObj);
 
-  updateUpdated(x0, y0, x0 + x_tilesize - 1, y0 + y_tilesize - 1);
+  updateUpdated(x0, y0, x0 + x_tilesize - 1, y0 + yt - 1);
 
   ReleaseDC(stInfo.simWnd, hdc);
   LeaveCriticalSection(&stInfo.drawCS);
@@ -1872,6 +1876,10 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
 
   if ((x == dimension_x) && (y == dimension_y) && (bpp == current_bpp))
     return;
+  if (fullscreenMode) {
+	clear_screen();
+	flush();
+  }
   dimension_x = x;
   dimension_y = y;
 
