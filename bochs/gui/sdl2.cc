@@ -346,7 +346,6 @@ void switch_to_fullscreen(void)
     bx_gui->toggle_mouse_enable();
   }
   SDL_GetWindowPosition(window, &saved_x, &saved_y);
-  SDL_SetWindowSize(window, res_x, res_y);
   SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
   sdl_fullscreen = SDL_GetWindowSurface(window);
   sdl_screen = NULL;
@@ -630,8 +629,7 @@ void bx_sdl2_gui_c::handle_events(void)
       case SDL_WINDOWEVENT:
         if (sdl_event.window.event == SDL_WINDOWEVENT_EXPOSED) {
           SDL_UpdateWindowSurface(window);
-        }
-        if (sdl_event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
+        } else if (sdl_event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
           DEV_kbd_release_keys();
         }
         break;
