@@ -8,11 +8,11 @@ Bochs is a highly portable open source IA-32 (x86) PC emulator
 written in C++, that runs on most popular platforms.  It includes
 emulation of the Intel x86 CPU, common I/O devices, and a custom
 BIOS. Bochs can be compiled to emulate many different x86 CPUs,
-from early 386 to the most recent x86-64 Intel and AMD processors
-which may not have even reached the market yet. Bochs is capable of
-running most Operating Systems inside the emulation, for example DOS,
-Linux or Windows. Bochs was written by Kevin Lawton and is currently
-maintained by the Bochs project at "https://bochs.sourceforge.io".
+from early 386 to the most recent (sometimes even pre-market) x86-64
+Intel and AMD processors.  Bochs is capable of running most Operating
+Systems inside the emulation, for example DOS, Linux or Windows. Bochs
+was written by Kevin Lawton and is currently maintained by the Bochs
+project at "https://bochs.sourceforge.io".
 
 Bochs can be compiled and used in a variety of modes, some which are
 still in development.  The 'typical' use of bochs is to provide

@@ -36,8 +36,8 @@ This is the top level file for the bochs Users Manual.
 Bochs is a program that simulates a complete Intel x86 computer.
 It includes emulation of the Intel x86 CPU, common I/O devices,
 and a custom BIOS. Bochs can be compiled to emulate many different
-x86 CPUs, from early 386 to the most recent x86-64 Intel and AMD
-processors which may not have even reached the market yet.
+x86 CPUs, from early 386 to the most recent (sometimes even pre-market)
+x86-64 Intel and AMD processors.
 
 Bochs interprets every instruction from power-up to reboot, and has
 device models for all of the standard PC peripherals: keyboard, mouse,
