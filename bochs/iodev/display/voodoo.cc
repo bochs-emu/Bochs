@@ -599,8 +599,8 @@ void bx_voodoo_base_c::update(void)
   iHeight = s.vdraw.height;
   start &= v->fbi.mask;
   Bit8u *disp_ptr = &v->fbi.ram[start];
-  if ((start + pitch * iHeight) > v->fbi.mask) {
-    BX_ERROR(("update(): skip address wrap (start = 0x%08x)", start));
+  if ((start + pitch * iHeight) > (v->fbi.mask + 1)) {
+    BX_ERROR(("skip address wrap during update() (start = 0x%08x)", start));
     BX_UNLOCK(render_mutex);
     return;
   }
