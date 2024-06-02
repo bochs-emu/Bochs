@@ -189,7 +189,13 @@ static Bit32u sdl_sym_to_bx_key(SDLKey sym)
     case SDLK_BACKSPACE:            return BX_KEY_BACKSPACE;
     case SDLK_TAB:                  return BX_KEY_TAB;
     case SDLK_RETURN:               return BX_KEY_ENTER;
-    case SDLK_PAUSE:                return BX_KEY_PAUSE;
+    case SDLK_PAUSE:
+      if (bx_gui->get_modifier_keys() & BX_MOD_KEY_CTRL) {
+        return BX_KEY_CTRL_BREAK;
+      } else {
+        return BX_KEY_PAUSE;
+      }
+      break;
     case SDLK_ESCAPE:               return BX_KEY_ESC;
     case SDLK_SPACE:                return BX_KEY_SPACE;
     case SDLK_QUOTE:                return BX_KEY_SINGLE_QUOTE;
@@ -305,7 +311,7 @@ static Bit32u sdl_sym_to_bx_key(SDLKey sym)
 
 /* Miscellaneous function keys */
     case SDLK_PRINT:                return BX_KEY_PRINT;
-    case SDLK_BREAK:                return BX_KEY_PAUSE;
+    case SDLK_BREAK:                return BX_KEY_CTRL_BREAK;
     case SDLK_MENU:                 return BX_KEY_MENU;
 
     default:
@@ -900,10 +906,8 @@ void bx_sdl_gui_c::handle_events(void)
           mouse_toggle_check(BX_MT_KEY_F12, 0);
         }
 
-        // filter out release of Windows/Fullscreen toggle and unsupported keys
-        if ((sdl_event.key.keysym.sym != SDLK_SCROLLOCK)
-           && (sdl_event.key.keysym.sym < SDLK_LAST))
-        {
+        // filter out release of unsupported keys
+        if (sdl_event.key.keysym.sym < SDLK_LAST) {
           // convert sym->bochs code
           if (!SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
             key_event = sdl_sym_to_bx_key(sdl_event.key.keysym.sym);
