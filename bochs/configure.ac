@@ -2794,7 +2794,7 @@ if test "$display_libs" = ""; then
 fi
 
 # some display libraries and the enhanced debugger may depend on the GTK+ software package
-BX_HAVE_GTK_VERSION=0
+bx_have_gtk_version=0
 if test "$needs_gtk2" = 1; then
   # pkg-config is required to set TOOLKIT_CXXFLAGS and LIBS
   if test "x$PKG_CONFIG" != x; then
@@ -2804,20 +2804,20 @@ if test "$needs_gtk2" = 1; then
       if test x$? = x0; then
         TOOLKIT_CXXFLAGS="`$PKG_CONFIG --cflags gtk+-3.0`"
         LIBS="$LIBS `$PKG_CONFIG --libs gtk+-3.0`"
-        AC_DEFINE(BX_HAVE_GTK_VERSION, 3)
+        bx_have_gtk_version=3
       fi
     else
       $PKG_CONFIG --exists gtk+-2.0
       if test x$? = x0; then
         TOOLKIT_CXXFLAGS="`$PKG_CONFIG --cflags gtk+-2.0`"
         LIBS="$LIBS `$PKG_CONFIG --libs gtk+-2.0`"
-        AC_DEFINE(BX_HAVE_GTK_VERSION, 2)
+        bx_have_gtk_version=2
       else
         $PKG_CONFIG --exists gtk+-3.0
         if test x$? = x0; then
           TOOLKIT_CXXFLAGS="`$PKG_CONFIG --cflags gtk+-3.0`"
           LIBS="$LIBS `$PKG_CONFIG --libs gtk+-3.0`"
-          AC_DEFINE(BX_HAVE_GTK_VERSION, 3)
+          bx_have_gtk_version=3
         fi
       fi
     fi
@@ -2826,6 +2826,7 @@ if test "$needs_gtk2" = 1; then
     echo "The gui debugger support is disabled now."
   fi
 fi
+AC_DEFINE_UNQUOTED(BX_HAVE_GTK_VERSION, $bx_have_gtk_version)
 
 dnl To use wxWidgets you must select it as both the configuration interface
 dnl and the display library.  In the simplest case where the user has
@@ -3001,7 +3002,7 @@ AC_SUBST(CXXFLAGS_CONSOLE)
 
 ENH_DBG_OBJS=""
 if test "$gui_debugger" = 1; then
-  if test "$BX_HAVE_GTK_VERSION" -ge 2; then
+  if test "$bx_have_gtk_version" -ge 2; then
     ENH_DBG_OBJS="enh_dbg.o gtk_enh_dbg_osdep.o"
     AC_DEFINE(BX_DEBUGGER_GUI, 1)
   elif test "$DEFAULT_GUI" = win32 -o "$with_win32" = yes; then
