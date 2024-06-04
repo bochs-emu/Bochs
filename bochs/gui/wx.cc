@@ -1042,6 +1042,7 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   }
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
+  SIM->set_debug_gui(1);
 #ifdef WIN32
   // on Windows the debugger gui must run in a separate thread
   DWORD threadID;

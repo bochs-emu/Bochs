@@ -922,11 +922,11 @@ int bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t comm
     BX_PANIC(("no configuration interface was loaded"));
     return -1;
   }
-  if (!strcmp(registered_ci_name, "wx"))
+  if (!strcmp(registered_ci_name, "wx")) {
     wxsel = 1;
-  else
+  } else {
     wxsel = 0;
-  bx_debug_gui = wxsel;
+  }
   if (command == CI_START) {
     ci_started = 1;
   } else if (command == CI_SHUTDOWN) {
