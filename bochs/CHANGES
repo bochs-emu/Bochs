@@ -31,8 +31,9 @@ Detailed change log :
     - Updated builtin slirp based on libslirp 4.8.0 (including IPv6 support)
 
 - BIOS
-    - Added panic in legacy BIOS in case no VGA BIOS ROM is found at C000:0000,
-    - Fixed unwanted side effects caused by some helper functions.
+  - Added panic in legacy BIOS in case no VGA BIOS ROM is found at C000:0000,
+  - Fixed unwanted side effects caused by some helper functions.
+  - LGPL'd VGABIOS updated to version 0.9b (several VBE bugfixes)
 
 - Misc
   - bximage: added simple partition table viewer to the info function

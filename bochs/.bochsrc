@@ -415,8 +415,8 @@ romimage: file=$BXSHARE/BIOS-bochs-latest, options=fastboot
 # you cannot use a PCI enabled VGA ROM BIOS option such as the cirrus
 # option shown below.
 #=======================================================================
-vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
-#vgaromimage: file=bios/VGABIOS-lgpl-latest-cirrus
+vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest.bin
+#vgaromimage: file=bios/VGABIOS-lgpl-latest-cirrus.bin
 #vgaromimage: file=$BXSHARE/vgabios-cirrus.bin-1.13.0 # http://www.seabios.org/SeaVGABIOS
 #vgaromimage: file=bios/VGABIOS-elpin-2.40
 

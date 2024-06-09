@@ -107,6 +107,15 @@ For any information on Qemu, visit the website http://wiki.qemu.org/
 
 History
 -------
+vgabios-0.9b : Jun 09 2024
+  - Volker
+    - Fixed VBE protected mode bank switching (all extensions)
+    - Fixed VBE protected mode page flipping (Bochs VBE / Banshee)
+    - Get rid of the Win2k clear VRAM hack after fixing emulation
+    - Bochs VBE function 07h now also supports wait for VSYNC
+    - Added 'Banshee debug' binary that fits in 32k
+    - Return VBE mode info only if mode is supported by hardware
+
 vgabios-0.9a : Mar 03 2024
   - Volker
     - Implemented AH=12h / BL=36h (video refresh control)
