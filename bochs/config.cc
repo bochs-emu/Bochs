@@ -914,7 +914,7 @@ void bx_init_options()
       "Pathname of VGA ROM image to load",
       "", BX_PATHNAME_LEN);
   path->set_format("Name of VGA BIOS image: %s");
-  sprintf(name, "%s" DIRECTORY_SEPARATOR "VGABIOS-lgpl-latest", get_builtin_variable("BXSHARE"));
+  sprintf(name, "%s" DIRECTORY_SEPARATOR "VGABIOS-lgpl-latest.bin", get_builtin_variable("BXSHARE"));
   path->set_initial_val(name);
   vgarom->set_options(vgarom->SERIES_ASK);
 

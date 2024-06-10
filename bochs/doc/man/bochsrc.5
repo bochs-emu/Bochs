@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "09 Jun 2024" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "10 Jun 2024" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -461,8 +461,8 @@ You also need to load a VGA ROM BIOS into 0xC0000.
 
 Examples:
   vgaromimage: file=bios/VGABIOS-elpin-2.40
-  vgaromimage: file=bios/VGABIOS-lgpl-latest.bin
   vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest.bin
+  vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest-cirrus.bin
 
 .TP
 .I "optromimage1: \fP, \fIoptromimage2: \fP, \fIoptromimage3: \fPor \fIoptromimage4:"
