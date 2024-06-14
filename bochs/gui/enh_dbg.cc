@@ -1996,7 +1996,7 @@ void FillBrkp()
 }
 
 // performs endian byteswapping the hard way, for a Data dump
-void FillDataX(char* t, char C, bool doHex)
+void FillDataX(char* t, unsigned char C, bool doHex)
 {
     char tmpbuf[40];
     char *d = tmpbuf;
@@ -2009,8 +2009,8 @@ void FillDataX(char* t, char C, bool doHex)
 
     if (doHex != FALSE)
     {
-        *d = AsciiHex[2* (unsigned char)C];
-        d[1] = AsciiHex[2* (unsigned char)C + 1];
+        *d = AsciiHex[2*C];
+        d[1] = AsciiHex[2*C + 1];
         d[2] = 0;
         if (isLittleEndian) // little endian => reverse hex digits
         {
