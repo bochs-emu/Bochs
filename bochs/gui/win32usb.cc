@@ -93,24 +93,24 @@ int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam)
   }
 
   // create a font for the TreeView
-  hTreeViewFont = CreateFont(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, 
-    OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
+  hTreeViewFont = CreateFont(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET,
+    OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
     DEFAULT_PITCH | FF_DONTCARE, TEXT("Cascadia"));
   if (hTreeViewFont == NULL) {
-    hTreeViewFont = CreateFont(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, 
-      OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
+    hTreeViewFont = CreateFont(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET,
+      OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
       DEFAULT_PITCH | FF_DONTCARE, TEXT("Consolas"));
   }
   if (hTreeViewFont == NULL) {
-    hTreeViewFont = CreateFont(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, 
-      OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
+    hTreeViewFont = CreateFont(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET,
+      OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
       DEFAULT_PITCH | FF_DONTCARE, TEXT("Courier New"));
   }
   if (hTreeViewFont == NULL) {
     MessageBox(hwnd, "Could not create a font for the Tree View Control", NULL, MB_ICONINFORMATION);
     return 0;
   }
-  
+
   // if the mouse is currently being captured, we need to pause capture mode
   BOOL capture = SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get();
   if (capture) {
@@ -131,7 +131,7 @@ int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam)
   if (capture) {
     SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(1);
   }
-  
+
   return ret;
 }
 
@@ -142,7 +142,7 @@ void win32_usb_trigger(int type, int trigger, int wParam, int lParam) {
   bx_param_enum_c *cntlr_type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
   if ((cntlr_type == NULL) || (cntlr_type->get() != type))
     return;
-  
+
   bx_param_bool_c *bool_trigger;
   bx_param_num_c *num_trigger;
   switch (trigger) {
@@ -153,31 +153,31 @@ void win32_usb_trigger(int type, int trigger, int wParam, int lParam) {
         num_trigger->set(BX_USB_DEBUG_SOF_SET);
       }
       break;
-      
+
     case USB_DEBUG_COMMAND:
       bool_trigger = SIM->get_param_bool(BXPN_USB_DEBUG_DOORBELL);
       if (bool_trigger && bool_trigger->get())
         SIM->usb_config_interface(USB_DEBUG_COMMAND, wParam, lParam);
       break;
-      
+
     case USB_DEBUG_EVENT:
       bool_trigger = SIM->get_param_bool(BXPN_USB_DEBUG_EVENT);
       if (bool_trigger && bool_trigger->get())
         SIM->usb_config_interface(USB_DEBUG_EVENT, wParam, lParam);
       break;
-      
+
     case USB_DEBUG_NONEXIST:
       bool_trigger = SIM->get_param_bool(BXPN_USB_DEBUG_NON_EXIST);
       if (bool_trigger && bool_trigger->get())
         SIM->usb_config_interface(USB_DEBUG_NONEXIST, wParam, lParam);
       break;
-      
+
     case USB_DEBUG_RESET:
       bool_trigger = SIM->get_param_bool(BXPN_USB_DEBUG_RESET);
       if (bool_trigger && bool_trigger->get())
         SIM->usb_config_interface(USB_DEBUG_RESET, wParam, lParam);
       break;
-      
+
     case USB_DEBUG_ENABLE:
       bool_trigger = SIM->get_param_bool(BXPN_USB_DEBUG_ENABLE);
       if (bool_trigger && bool_trigger->get())
@@ -230,17 +230,17 @@ INT_PTR CALLBACK dump_dialog_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM
         else
           sprintf(str, "%s--Address: 0x%08X: size = %i", g_dump_parms.title, (Bit32u) g_dump_parms.address, g_dump_parms.size);
         SetWindowText(hDlg, str);
-        
+
         // we need a fixed width font for the dump
-        HFONT hDumpFont = CreateFont(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET, 
-          OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, 
+        HFONT hDumpFont = CreateFont(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET,
+          OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
           DEFAULT_PITCH | FF_DONTCARE, TEXT("Courier New"));
         SNDMSG(GetDlgItem(hDlg, IDC_DUMP), WM_SETFONT, (WPARAM) hDumpFont, FALSE);
-        
+
         // read in the buffer
         Bit8u *buffer = new Bit8u[g_dump_parms.size];
         DEV_MEM_READ_PHYSICAL(g_dump_parms.address, g_dump_parms.size, buffer);
-        
+
         // dump it
         int j = 0;
         strcpy(str, "");
@@ -288,7 +288,7 @@ INT_PTR CALLBACK dump_dialog_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -362,7 +362,7 @@ INT_PTR CALLBACK hc_uhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
     case WM_INITDIALOG:
       sprintf(str, "Bochs for Windows -- USB Debug: UHCI Host Controller");
       SetWindowText(hDlg, str);
-      
+
       // call the initializer
       TreeView = GetDlgItem(hDlg, IDC_STACK);
       SNDMSG(TreeView, WM_SETFONT, (WPARAM) hTreeViewFont, FALSE);
@@ -370,7 +370,7 @@ INT_PTR CALLBACK hc_uhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
       if (ret < 0) {
         MessageBox(hDlg, "Error initializing dialog", NULL, MB_ICONINFORMATION);
       }
-      
+
       memset(u_changed, 0, sizeof(u_changed));
       EnableWindow(GetDlgItem(hDlg, ID_APPLY), 0);
 
@@ -433,7 +433,7 @@ INT_PTR CALLBACK hc_uhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -448,10 +448,10 @@ int hc_uhci_init(HWND hwnd)
   char str[COMMON_STR_SIZE];
   Bit32u frame_addr, frame_num;
   int ret = IDOK;
-  
+
   if (theUSB_UHCI == NULL)
     return -1;
-  
+
   // set the dialog title to the break type
   switch (g_params.break_type) {
     case USB_DEBUG_FRAME:
@@ -487,7 +487,7 @@ int hc_uhci_init(HWND hwnd)
   pci_bar_address = theUSB_UHCI->get_bar_addr(4);
   sprintf(str, "0x%04X", pci_bar_address);
   SetDlgItemText(hwnd, IDC_PORT_ADDR, str);
-  
+
   sprintf(str, "0x%04X", theUSB_UHCI->read(pci_bar_address + 0, 2));
   SetDlgItemText(hwnd, IDC_U_REG_COMMAND, str);
   sprintf(str, "0x%04X", theUSB_UHCI->read(pci_bar_address + 2, 2));
@@ -500,7 +500,7 @@ int hc_uhci_init(HWND hwnd)
   SetDlgItemText(hwnd, IDC_U_REG_FRAME_ADDRESS, str);
   sprintf(str, "0x%02X", theUSB_UHCI->read(pci_bar_address + 12, 1));
   SetDlgItemText(hwnd, IDC_U_REG_SOF, str);
-  
+
   sprintf(str, "0x%04X", theUSB_UHCI->read(pci_bar_address + 16, 2));
   SetDlgItemText(hwnd, IDC_U_REG_PORT0, str);
   sprintf(str, "0x%04X", theUSB_UHCI->read(pci_bar_address + 18, 2));
@@ -533,11 +533,11 @@ int hc_uhci_init(HWND hwnd)
         valid = 1;
       }
       break;
-      
+
     // an event triggered. We ignore these in the uhci
     //case USB_DEBUG_EVENT:
     //  break;
-      
+
     // first byte (word, dword, qword) of first non-existant port was written to
     case USB_DEBUG_NONEXIST:
     // port reset (non-root reset)
@@ -549,7 +549,7 @@ int hc_uhci_init(HWND hwnd)
       EnableWindow(GetDlgItem(hwnd, IDC_VIEW_TD), FALSE);
       break;
   }
-  
+
   if (!valid) {
     TreeView_SetBkColor(TreeView, COLORREF(0x00A9A9A9));
     SetDlgItemText(hwnd, IDC_TREE_COMMENT, "This trigger does not populate the TreeView");
@@ -587,7 +587,7 @@ int hc_uhci_save(HWND hwnd)
     GetDlgItemText(hwnd, IDC_U_REG_SOF, str, COMMON_STR_SIZE);
     theUSB_UHCI->write(pci_bar_address + 12, strtol(str, NULL, 0), 1);
   }
-  
+
   if (u_changed[IDC_U_REG_PORT0 - IDC_U_EN_START]) {
     GetDlgItemText(hwnd, IDC_U_REG_PORT0, str, COMMON_STR_SIZE);
     theUSB_UHCI->write(pci_bar_address + 16, strtol(str, NULL, 0), 2);
@@ -596,7 +596,7 @@ int hc_uhci_save(HWND hwnd)
     GetDlgItemText(hwnd, IDC_U_REG_PORT1, str, COMMON_STR_SIZE);
     theUSB_UHCI->write(pci_bar_address + 18, strtol(str, NULL, 0), 2);
   }
-  
+
   memset(u_changed, 0, sizeof(u_changed));
   EnableWindow(GetDlgItem(hwnd, ID_APPLY), 0);
 
@@ -618,7 +618,7 @@ static bool uhci_add_queue(struct USB_UHCI_QUEUE_STACK *stack, const Bit32u addr
   // add the queue's address
   stack->queue_stack[stack->queue_cnt] = addr;
   stack->queue_cnt++;
-  
+
   return FALSE;
 }
 
@@ -651,12 +651,12 @@ void hc_uhci_do_item(Bit32u FrameAddr, Bit32u FrameNum)
         // if this queue has been added before, stop.
         break;
       }
-      
+
       // read in the queue
       DEV_MEM_READ_PHYSICAL(item & ~0xF, sizeof(struct QUEUE), (Bit8u *) &queue);
       sprintf(str, "0x%08X: Queue Head: (0x%08X 0x%08X)", item & ~0xF, queue.horz, queue.vert);
       Next = TreeViewInsert(TreeView, Next, TVI_LAST, str, (LPARAM) ((item & ~0xF) | 1), 0);
-      
+
       // if the vert pointer is valid, there are td's in it to process
       //  else only the head pointer may be valid
       if (!USB_UHCI_IS_LINK_VALID(queue.vert)) {
@@ -703,7 +703,7 @@ void uhci_display_td(HWND hwnd) {
   TVITEM tvitem;
   INT_PTR ret = -1;
   Bit32u address = 0;
-  
+
   HTREEITEM item = TreeView_GetSelection(TreeView);
   if (item != NULL) {
     tvitem.mask = TVIF_PARAM | TVIF_HANDLE;
@@ -739,21 +739,21 @@ void uhci_display_td(HWND hwnd) {
 INT_PTR CALLBACK hc_uhci_callback_queue(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "0x%08X", g_queue.horz & ~0xF);
       SetDlgItemText(hDlg, IDC_HORZ_PTR, str);
-      
+
       CheckDlgButton(hDlg, IDC_HORZ_Q, (g_queue.horz & 2) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_HORZ_T, (g_queue.horz & 1) ? BST_CHECKED : BST_UNCHECKED);
-      
+
       sprintf(str, "0x%08X", g_queue.vert & ~0xF);
       SetDlgItemText(hDlg, IDC_VERT_PTR, str);
-      
+
       CheckDlgButton(hDlg, IDC_VERT_Q, (g_queue.vert & 2) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_VERT_T, (g_queue.vert & 1) ? BST_CHECKED : BST_UNCHECKED);
-      
+
       SetFocus(GetDlgItem(hDlg, IDOK));
       return TRUE;
     case WM_COMMAND:
@@ -766,13 +766,13 @@ INT_PTR CALLBACK hc_uhci_callback_queue(HWND hDlg, UINT msg, WPARAM wParam, LPAR
 
               g_queue.horz  |= (IsDlgButtonChecked(hDlg, IDC_HORZ_Q) == BST_CHECKED) ? 2 : 0;
               g_queue.horz  |= (IsDlgButtonChecked(hDlg, IDC_HORZ_T) == BST_CHECKED) ? 1 : 0;
-              
+
               GetDlgItemText(hDlg, IDC_VERT_PTR, str, COMMON_STR_SIZE);
               g_queue.vert = strtol(str, NULL, 0);
 
               g_queue.vert  |= (IsDlgButtonChecked(hDlg, IDC_VERT_Q) == BST_CHECKED) ? 2 : 0;
               g_queue.vert  |= (IsDlgButtonChecked(hDlg, IDC_VERT_T) == BST_CHECKED) ? 1 : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -782,7 +782,7 @@ INT_PTR CALLBACK hc_uhci_callback_queue(HWND hDlg, UINT msg, WPARAM wParam, LPAR
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -803,7 +803,7 @@ INT_PTR CALLBACK hc_uhci_callback_td(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
 
       sprintf(str, "0x%08X", g_td.dword0 & ~0xF);
       SetDlgItemText(hDlg, IDC_LINK_PTR, str);
-      
+
       CheckDlgButton(hDlg, IDC_VERT_VF, (g_td.dword0 & 4) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_VERT_Q, (g_td.dword0 & 2) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_VERT_T, (g_td.dword0 & 1) ? BST_CHECKED : BST_UNCHECKED);
@@ -842,7 +842,7 @@ INT_PTR CALLBACK hc_uhci_callback_td(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
         ComboBox_SetCurSel(GetDlgItem(hDlg, IDC_COMBO_PID), 2);
       else
         ComboBox_SetCurSel(GetDlgItem(hDlg, IDC_COMBO_PID), 3);
-      
+
       sprintf(str, "%i", (g_td.dword2 >> 8) & 0x7F);
       SetDlgItemText(hDlg, IDC_DEVICE_ADDR, str);
       sprintf(str, "%i", (g_td.dword2 >> 15) & 0x0F);
@@ -852,7 +852,7 @@ INT_PTR CALLBACK hc_uhci_callback_td(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
 
       sprintf(str, "0x%08X", g_td.dword3);
       SetDlgItemText(hDlg, IDC_DEVICE_BUFFER, str);
-      
+
       SetFocus(GetDlgItem(hDlg, IDOK));
       return TRUE;
     case WM_COMMAND:
@@ -927,7 +927,7 @@ INT_PTR CALLBACK hc_uhci_callback_td(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
 
               GetDlgItemText(hDlg, IDC_DEVICE_BUFFER, str, COMMON_STR_SIZE);
               g_td.dword3 = strtol(str, NULL, 0);
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -937,7 +937,7 @@ INT_PTR CALLBACK hc_uhci_callback_td(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -1030,7 +1030,7 @@ INT_PTR CALLBACK hc_xhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
     case WM_INITDIALOG:
       sprintf(str, "Bochs for Windows -- USB Debug: xHCI Host Controller");
       SetWindowText(hDlg, str);
-      
+
       // call the initializer
       TreeView = GetDlgItem(hDlg, IDC_STACK);
       SNDMSG(TreeView, WM_SETFONT, (WPARAM) hTreeViewFont, FALSE);
@@ -1038,7 +1038,7 @@ INT_PTR CALLBACK hc_xhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
       if (ret < 0) {
         MessageBox(hDlg, "Error initializing dialog", NULL, MB_ICONINFORMATION);
       }
-      
+
       memset(x_changed, 0, sizeof(x_changed));
       EnableWindow(GetDlgItem(hDlg, ID_APPLY), 0);
 
@@ -1136,7 +1136,7 @@ INT_PTR CALLBACK hc_xhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
       break;
       */
   }
-  
+
   return 0;
 }
 
@@ -1147,7 +1147,7 @@ extern bx_usb_xhci_c *theUSB_XHCI;
 static Bit32u xhci_read_dword(const Bit32u address)
 {
   Bit32u value;
-  
+
   theUSB_XHCI->read_handler(address, 4, &value, NULL);
   return value;
 }
@@ -1177,7 +1177,7 @@ int hc_xhci_init(HWND hwnd)
       SetWindowText(hwnd, "xHCI Debug Dialog: Break Type: Frame");
       break;
   }
-  
+
   CheckDlgButton(hwnd, IDC_DEBUG_RESET,    SIM->get_param_bool(BXPN_USB_DEBUG_RESET)->get() ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_DEBUG_ENABLE,   SIM->get_param_bool(BXPN_USB_DEBUG_ENABLE)->get() ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_DEBUG_DOORBELL, SIM->get_param_bool(BXPN_USB_DEBUG_DOORBELL)->get() ? BST_CHECKED : BST_UNCHECKED);
@@ -1188,7 +1188,7 @@ int hc_xhci_init(HWND hwnd)
   pci_bar_address = theUSB_XHCI->get_bar_addr(0);
   sprintf(str, "0x%08X", pci_bar_address);
   SetDlgItemText(hwnd, IDC_PORT_ADDR, str);
-  
+
   for (i=0; i<8; i++) {
     dword = xhci_read_dword(pci_bar_address + (i * 4));
     sprintf(str, "0x%08X", dword);
@@ -1217,12 +1217,12 @@ int hc_xhci_init(HWND hwnd)
   dword = xhci_read_dword(pci_bar_address + offset + 0x38);
   sprintf(str, "0x%08X", dword);
   SetDlgItemText(hwnd, IDC_X_REG_CONFIGURE, str);
-  
+
   offset = xhci_read_dword(pci_bar_address + 0x18);
   dword = xhci_read_dword(pci_bar_address + offset + 0);
   sprintf(str, "0x%08X", dword);
   SetDlgItemText(hwnd, IDC_X_REG_MFINDEX, str);
-  
+
   // show up to 10 port register sets
   for (i=0; i<theUSB_XHCI->hub.n_ports; i++) {
     dword = xhci_read_dword(pci_bar_address + XHCI_PORT_SET_OFFSET + (i * 16));
@@ -1239,7 +1239,7 @@ int hc_xhci_init(HWND hwnd)
     EnableWindow(GetDlgItem(hwnd, IDC_X_REG_PORT0_ETYPE + i), 0);
     EnableWindow(GetDlgItem(hwnd, IDC_X_REG_PORT0_TYPE + i), 0);
   }
-  
+
   tree_items = 0;
   TreeView_DeleteAllItems(TreeView);
 
@@ -1257,7 +1257,7 @@ int hc_xhci_init(HWND hwnd)
         valid = 1;
       }
       break;
-    
+
     // an event TRB was placed on an event ring
     case USB_DEBUG_EVENT:
       SetDlgItemText(hwnd, IDC_RING_TYPE, "Event Ring:");
@@ -1267,13 +1267,13 @@ int hc_xhci_init(HWND hwnd)
       EnableWindow(GetDlgItem(hwnd, IDC_VIEW_TRB), 1);
       valid = 1;
       break;
-      
+
     case USB_DEBUG_FRAME:
-      
+
       SetDlgItemText(hwnd, IDC_RING_TYPE, "SOF Ring Address:");
 
       break;
-      
+
     // first byte (word, dword, qword) of first non-existant port was written to
     case USB_DEBUG_NONEXIST:
       SetDlgItemText(hwnd, IDC_RING_TYPE, "None");
@@ -1289,7 +1289,7 @@ int hc_xhci_init(HWND hwnd)
       EnableWindow(GetDlgItem(hwnd, IDC_VIEW_TRB), 0);
       valid = 0;
       break;
-      
+
     // enable changed
     case USB_DEBUG_ENABLE:
       SetDlgItemText(hwnd, IDC_RING_TYPE, "None");
@@ -1298,7 +1298,7 @@ int hc_xhci_init(HWND hwnd)
       valid = 0;
       break;
   }
-  
+
   if (!valid) {
     TreeView_SetBkColor(TreeView, COLORREF(0x00A9A9A9));
     SetDlgItemText(hwnd, IDC_TREE_COMMENT, "This trigger does not populate the TreeView");
@@ -1310,9 +1310,9 @@ int hc_xhci_init(HWND hwnd)
 
 int hc_xhci_save(HWND hwnd)
 {
-  
+
   MessageBox(hwnd, "xHCI: Save to controller is not yet implemented!", NULL, MB_ICONINFORMATION);
-  
+
   return 0;
 }
 
@@ -1397,7 +1397,7 @@ void hc_xhci_do_ring(const char *ring_str, Bit64u RingPtr, Bit64u dequeue_ptr)
     type = TRB_GET_TYPE(trb.command);
     if (type <= 47)
       sprintf(str, "0x" FMT_ADDRX64 " %08X 0x%08X (%i) (%s)", trb.parameter, trb.status, trb.command, trb.command & 1, trb_types[type].name);
-    else 
+    else
       sprintf(str, "0x" FMT_ADDRX64 " %08X 0x%08X (%i) (Vendor Specific)", trb.parameter, trb.status, trb.command, trb.command & 1);
     if (address == dequeue_ptr) {
       strcat(str, " <--- dq_pointer");
@@ -1437,7 +1437,7 @@ void hc_xhci_do_event_ring(const char *ring_str, int interrupter)
       type = TRB_GET_TYPE(trb.command);
       if (type <= 47)
         sprintf(str, "0x" FMT_ADDRX64 " %08X 0x%08X (%i) (%s)", trb.parameter, trb.status, trb.command, trb.command & 1, trb_types[type].name);
-      else 
+      else
         sprintf(str, "0x" FMT_ADDRX64 " %08X 0x%08X (%i) (Vendor Specific)", trb.parameter, trb.status, trb.command, trb.command & 1);
       if (address == theUSB_XHCI->hub.ring_members.event_rings[interrupter].cur_trb) {
         strcat(str, " <--- eq_pointer");
@@ -1447,7 +1447,7 @@ void hc_xhci_do_event_ring(const char *ring_str, int interrupter)
 
       if (++trb_count > MAX_TRBS_ALLOWED)  // safety catch
         break;
-      
+
       address += sizeof(struct TRB);
     }
     if (trb_count > MAX_TRBS_ALLOWED)  // safety catch
@@ -1469,7 +1469,7 @@ void xhci_display_trb(HWND hwnd, int type_mask) {
     if (tvitem.lParam > 0) {
       DEV_MEM_READ_PHYSICAL(tvitem.lParam, sizeof(struct TRB), (Bit8u *) &g_trb);
       const Bit8u type = TRB_GET_TYPE(g_trb.command);
-    
+
       // check to see if this type of TRB is allowed in this type of ring
       if ((type > 0) && (type <= 47) && ((trb_types[type].allowed_mask & type_mask) == 0)) {
         sprintf(str, "TRB type %i not allowed in a %s ring!", type, ring_type[type_mask]);
@@ -1603,12 +1603,12 @@ void xhci_display_trb(HWND hwnd, int type_mask) {
 INT_PTR CALLBACK hc_xhci_callback_trb_normal(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter);
       SetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str);
-      
+
       sprintf(str, "%i", TRB_GET_TARGET(g_trb.status));
       SetDlgItemText(hDlg, IDC_TRB_INT_TARGET, str);
       sprintf(str, "%i", TRB_GET_TX_LEN(g_trb.status));
@@ -1618,7 +1618,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_normal(HWND hDlg, UINT msg, WPARAM wParam,
 
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_BEI, TRB_DC(g_trb.command) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_IDT, TRB_IS_IMMED_DATA(g_trb.command) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_IOC, TRB_IOC(g_trb.command) ? BST_CHECKED : BST_UNCHECKED);
@@ -1644,7 +1644,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_normal(HWND hDlg, UINT msg, WPARAM wParam,
               g_trb.status |= TRB_SET_TDSIZE(strtol(str, NULL, 0));
               GetDlgItemText(hDlg, IDC_TRB_TRANS_LEN, str, COMMON_STR_SIZE);
               g_trb.status |= strtol(str, NULL, 0) & 0x1FFFF;
-              
+
               g_trb.command  = (IsDlgButtonChecked(hDlg, IDC_TRB_BEI) == BST_CHECKED) ? (1<<9) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_IDT) == BST_CHECKED) ? (1<<6) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_IOC) == BST_CHECKED) ? (1<<5) : 0;
@@ -1653,7 +1653,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_normal(HWND hDlg, UINT msg, WPARAM wParam,
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_ISP) == BST_CHECKED) ? (1<<2) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_ENT) == BST_CHECKED) ? (1<<1) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -1663,7 +1663,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_normal(HWND hDlg, UINT msg, WPARAM wParam,
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -1671,7 +1671,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_normal(HWND hDlg, UINT msg, WPARAM wParam,
 INT_PTR CALLBACK hc_xhci_callback_trb_setup(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "0x%04X", (Bit16u) ((g_trb.parameter & BX_CONST64(0x00000000000000FF)) >> 0));
@@ -1684,7 +1684,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_setup(HWND hDlg, UINT msg, WPARAM wParam, 
       SetDlgItemText(hDlg, IDC_TRB_WINDEX, str);
       sprintf(str, "0x%04X", (Bit16u) ((g_trb.parameter & BX_CONST64(0xFFFF000000000000)) >> 48));
       SetDlgItemText(hDlg, IDC_TRB_WLENGTH, str);
-      
+
       sprintf(str, "%i", TRB_GET_TARGET(g_trb.status));
       SetDlgItemText(hDlg, IDC_TRB_INT_TARGET, str);
       sprintf(str, "%i", TRB_GET_TX_LEN(g_trb.status));
@@ -1694,7 +1694,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_setup(HWND hDlg, UINT msg, WPARAM wParam, 
       SetDlgItemText(hDlg, IDC_TRB_TRT, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_IDT, TRB_IS_IMMED_DATA(g_trb.command) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_IOC, TRB_IOC(g_trb.command) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_C,   (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
@@ -1721,14 +1721,14 @@ INT_PTR CALLBACK hc_xhci_callback_trb_setup(HWND hDlg, UINT msg, WPARAM wParam, 
               g_trb.status  = (strtol(str, NULL, 0) & 0x3FF) << 22;
               GetDlgItemText(hDlg, IDC_TRB_TRANS_LEN, str, COMMON_STR_SIZE);
               g_trb.status |= strtol(str, NULL, 0) & 0x1FFFF;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_TRT, str, COMMON_STR_SIZE);
               g_trb.command  = (strtol(str, NULL, 0) << 16) & 0x00030000;
 
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_IDT) == BST_CHECKED) ? (1<<6) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_IOC) == BST_CHECKED) ? (1<<5) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -1738,7 +1738,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_setup(HWND hDlg, UINT msg, WPARAM wParam, 
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -1746,12 +1746,12 @@ INT_PTR CALLBACK hc_xhci_callback_trb_setup(HWND hDlg, UINT msg, WPARAM wParam, 
 INT_PTR CALLBACK hc_xhci_callback_trb_data(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter);
       SetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str);
-      
+
       sprintf(str, "%i", TRB_GET_TARGET(g_trb.status));
       SetDlgItemText(hDlg, IDC_TRB_INT_TARGET, str);
       sprintf(str, "%i", TRB_GET_TX_LEN(g_trb.status));
@@ -1761,7 +1761,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_data(HWND hDlg, UINT msg, WPARAM wParam, L
 
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_DIR, (g_trb.command & 0x10000) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_IDT, TRB_IS_IMMED_DATA(g_trb.command) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_IOC, TRB_IOC(g_trb.command) ? BST_CHECKED : BST_UNCHECKED);
@@ -1787,7 +1787,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_data(HWND hDlg, UINT msg, WPARAM wParam, L
               g_trb.status |= TRB_SET_TDSIZE(strtol(str, NULL, 0));
               GetDlgItemText(hDlg, IDC_TRB_TRANS_LEN, str, COMMON_STR_SIZE);
               g_trb.status |= strtol(str, NULL, 0) & 0x1FFFF;
-              
+
               g_trb.command  = (IsDlgButtonChecked(hDlg, IDC_TRB_DIR) == BST_CHECKED) ? (1<<16) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_IDT) == BST_CHECKED) ? (1<<6) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_IOC) == BST_CHECKED) ? (1<<5) : 0;
@@ -1796,7 +1796,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_data(HWND hDlg, UINT msg, WPARAM wParam, L
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_ISP) == BST_CHECKED) ? (1<<2) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_ENT) == BST_CHECKED) ? (1<<1) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -1806,7 +1806,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_data(HWND hDlg, UINT msg, WPARAM wParam, L
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -1814,7 +1814,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_data(HWND hDlg, UINT msg, WPARAM wParam, L
 INT_PTR CALLBACK hc_xhci_callback_trb_status(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "%i", TRB_GET_TARGET(g_trb.status));
@@ -1822,7 +1822,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_status(HWND hDlg, UINT msg, WPARAM wParam,
 
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_DIR, (g_trb.command & 0x10000) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_IOC, TRB_IOC(g_trb.command) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_CH,  TRB_CHAIN(g_trb.command) ? BST_CHECKED : BST_UNCHECKED);
@@ -1840,13 +1840,13 @@ INT_PTR CALLBACK hc_xhci_callback_trb_status(HWND hDlg, UINT msg, WPARAM wParam,
 
               GetDlgItemText(hDlg, IDC_TRB_INT_TARGET, str, COMMON_STR_SIZE);
               g_trb.status = (strtol(str, NULL, 0) & 0x3FF) << 22;
-              
+
               g_trb.command  = (IsDlgButtonChecked(hDlg, IDC_TRB_DIR) == BST_CHECKED) ? (1<<16) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_IOC) == BST_CHECKED) ? (1<<5) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_CH) == BST_CHECKED) ? (1<<4) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_ENT) == BST_CHECKED) ? (1<<1) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -1856,7 +1856,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_status(HWND hDlg, UINT msg, WPARAM wParam,
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -1864,18 +1864,18 @@ INT_PTR CALLBACK hc_xhci_callback_trb_status(HWND hDlg, UINT msg, WPARAM wParam,
 INT_PTR CALLBACK hc_xhci_callback_trb_link(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~BX_CONST64(0x0F));
       SetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str);
-      
+
       sprintf(str, "%i", TRB_GET_TARGET(g_trb.status));
       SetDlgItemText(hDlg, IDC_TRB_INT_TARGET, str);
 
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_IOC, TRB_IOC(g_trb.command) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_CH,  TRB_CHAIN(g_trb.command) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_TC,  TRB_GET_TOGGLE(g_trb.command) ? BST_CHECKED : BST_UNCHECKED);
@@ -1893,12 +1893,12 @@ INT_PTR CALLBACK hc_xhci_callback_trb_link(HWND hDlg, UINT msg, WPARAM wParam, L
 
               GetDlgItemText(hDlg, IDC_TRB_INT_TARGET, str, COMMON_STR_SIZE);
               g_trb.status = (strtol(str, NULL, 0) & 0x3FF) << 22;
-              
+
               g_trb.command  = (IsDlgButtonChecked(hDlg, IDC_TRB_IOC) == BST_CHECKED) ? (1<<5) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_CH) == BST_CHECKED) ? (1<<4) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_TC) == BST_CHECKED) ? (1<<1) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -1908,7 +1908,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_link(HWND hDlg, UINT msg, WPARAM wParam, L
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -1916,18 +1916,18 @@ INT_PTR CALLBACK hc_xhci_callback_trb_link(HWND hDlg, UINT msg, WPARAM wParam, L
 INT_PTR CALLBACK hc_xhci_callback_trb_event(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter);
       SetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str);
-      
+
       sprintf(str, "%i", TRB_GET_TARGET(g_trb.status));
       SetDlgItemText(hDlg, IDC_TRB_INT_TARGET, str);
 
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_BEI, TRB_DC(g_trb.command) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_IOC, TRB_IOC(g_trb.command) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_CH,  TRB_CHAIN(g_trb.command) ? BST_CHECKED : BST_UNCHECKED);
@@ -1946,13 +1946,13 @@ INT_PTR CALLBACK hc_xhci_callback_trb_event(HWND hDlg, UINT msg, WPARAM wParam, 
 
               GetDlgItemText(hDlg, IDC_TRB_INT_TARGET, str, COMMON_STR_SIZE);
               g_trb.status = (strtol(str, NULL, 0) & 0x3FF) << 22;
-              
+
               g_trb.command  = (IsDlgButtonChecked(hDlg, IDC_TRB_BEI) == BST_CHECKED) ? (1<<9) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_IOC) == BST_CHECKED) ? (1<<5) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_CH) == BST_CHECKED) ? (1<<4) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_ENT) == BST_CHECKED) ? (1<<1) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -1962,7 +1962,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_event(HWND hDlg, UINT msg, WPARAM wParam, 
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -1970,7 +1970,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_event(HWND hDlg, UINT msg, WPARAM wParam, 
 INT_PTR CALLBACK hc_xhci_callback_trb_noop(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "%i", TRB_GET_TARGET(g_trb.status));
@@ -1978,7 +1978,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_noop(HWND hDlg, UINT msg, WPARAM wParam, L
 
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_IOC, TRB_IOC(g_trb.command) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_CH,  TRB_CHAIN(g_trb.command) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_ENT, TRB_TOGGLE(g_trb.command) ? BST_CHECKED : BST_UNCHECKED);
@@ -1995,12 +1995,12 @@ INT_PTR CALLBACK hc_xhci_callback_trb_noop(HWND hDlg, UINT msg, WPARAM wParam, L
 
               GetDlgItemText(hDlg, IDC_TRB_INT_TARGET, str, COMMON_STR_SIZE);
               g_trb.status = (strtol(str, NULL, 0) & 0x3FF) << 22;
-              
+
               g_trb.command  = (IsDlgButtonChecked(hDlg, IDC_TRB_IOC) == BST_CHECKED) ? (1<<5) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_CH) == BST_CHECKED) ? (1<<4) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_ENT) == BST_CHECKED) ? (1<<1) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2010,7 +2010,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_noop(HWND hDlg, UINT msg, WPARAM wParam, L
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2018,14 +2018,14 @@ INT_PTR CALLBACK hc_xhci_callback_trb_noop(HWND hDlg, UINT msg, WPARAM wParam, L
 INT_PTR CALLBACK hc_xhci_callback_trb_enslot(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "%i", TRB_GET_STYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_SLOT_TYPE, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_C,   (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       SetFocus(GetDlgItem(hDlg, IDOK));
@@ -2037,11 +2037,11 @@ INT_PTR CALLBACK hc_xhci_callback_trb_enslot(HWND hDlg, UINT msg, WPARAM wParam,
             case IDOK:
               g_trb.parameter = 0;
               g_trb.status = 0;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_SLOT_TYPE, str, COMMON_STR_SIZE);
               g_trb.command = TRB_SET_STYPE(strtol(str, NULL, 0));
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2051,7 +2051,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_enslot(HWND hDlg, UINT msg, WPARAM wParam,
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2059,14 +2059,14 @@ INT_PTR CALLBACK hc_xhci_callback_trb_enslot(HWND hDlg, UINT msg, WPARAM wParam,
 INT_PTR CALLBACK hc_xhci_callback_trb_disslot(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "%i", TRB_GET_SLOT(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_C,   (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       // if this is the Negotiate Bandwidth Command, we need to change the title
@@ -2082,11 +2082,11 @@ INT_PTR CALLBACK hc_xhci_callback_trb_disslot(HWND hDlg, UINT msg, WPARAM wParam
             case IDOK:
               g_trb.parameter = 0;
               g_trb.status = 0;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str, COMMON_STR_SIZE);
               g_trb.command = TRB_SET_SLOT(strtol(str, NULL, 0));
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2096,7 +2096,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_disslot(HWND hDlg, UINT msg, WPARAM wParam
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2115,7 +2115,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_address(HWND hDlg, UINT msg, WPARAM wParam
       SetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_BSR, (g_trb.command & (1<<9)) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_C,   (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
@@ -2135,12 +2135,12 @@ INT_PTR CALLBACK hc_xhci_callback_trb_address(HWND hDlg, UINT msg, WPARAM wParam
               g_trb.parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
 
               g_trb.status = 0;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str, COMMON_STR_SIZE);
               g_trb.command = TRB_SET_SLOT(strtol(str, NULL, 0));
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_BSR) == BST_CHECKED) ? (1<<9) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2150,7 +2150,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_address(HWND hDlg, UINT msg, WPARAM wParam
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2159,7 +2159,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_configep(HWND hDlg, UINT msg, WPARAM wPara
 {
   char str[COMMON_STR_SIZE];
   Bit64u address;
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~BX_CONST64(0x0F));
@@ -2169,7 +2169,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_configep(HWND hDlg, UINT msg, WPARAM wPara
       SetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_DECONFIG, (g_trb.command & (1<<9)) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_C,   (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
@@ -2189,12 +2189,12 @@ INT_PTR CALLBACK hc_xhci_callback_trb_configep(HWND hDlg, UINT msg, WPARAM wPara
               g_trb.parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
 
               g_trb.status = 0;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str, COMMON_STR_SIZE);
               g_trb.command = TRB_SET_SLOT(strtol(str, NULL, 0));
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_DECONFIG) == BST_CHECKED) ? (1<<9) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2204,7 +2204,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_configep(HWND hDlg, UINT msg, WPARAM wPara
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2213,7 +2213,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_evaluate(HWND hDlg, UINT msg, WPARAM wPara
 {
   char str[COMMON_STR_SIZE];
   Bit64u address;
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~BX_CONST64(0x0F));
@@ -2223,7 +2223,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_evaluate(HWND hDlg, UINT msg, WPARAM wPara
       SetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_BSR, (g_trb.command & (1<<9)) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_C,   (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
@@ -2243,12 +2243,12 @@ INT_PTR CALLBACK hc_xhci_callback_trb_evaluate(HWND hDlg, UINT msg, WPARAM wPara
               g_trb.parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
 
               g_trb.status = 0;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str, COMMON_STR_SIZE);
               g_trb.command = TRB_SET_SLOT(strtol(str, NULL, 0));
               //g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_BSR) == BST_CHECKED) ? (1<<9) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2258,7 +2258,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_evaluate(HWND hDlg, UINT msg, WPARAM wPara
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2266,7 +2266,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_evaluate(HWND hDlg, UINT msg, WPARAM wPara
 INT_PTR CALLBACK hc_xhci_callback_trb_resetep(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "%i", TRB_GET_SLOT(g_trb.command));
@@ -2275,7 +2275,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_resetep(HWND hDlg, UINT msg, WPARAM wParam
       SetDlgItemText(hDlg, IDC_TRB_EP_ID, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_TSP, (g_trb.command & (1<<9)) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_C,   (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
@@ -2288,14 +2288,14 @@ INT_PTR CALLBACK hc_xhci_callback_trb_resetep(HWND hDlg, UINT msg, WPARAM wParam
             case IDOK:
               g_trb.parameter = 0;
               g_trb.status = 0;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str, COMMON_STR_SIZE);
               g_trb.command  = TRB_SET_SLOT(strtol(str, NULL, 0));
               GetDlgItemText(hDlg, IDC_TRB_EP_ID, str, COMMON_STR_SIZE);
               g_trb.command |= TRB_SET_EP(strtol(str, NULL, 0));
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_TSP) == BST_CHECKED) ? (1<<9) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2305,7 +2305,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_resetep(HWND hDlg, UINT msg, WPARAM wParam
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2313,7 +2313,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_resetep(HWND hDlg, UINT msg, WPARAM wParam
 INT_PTR CALLBACK hc_xhci_callback_trb_stopep(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "%i", TRB_GET_SLOT(g_trb.command));
@@ -2322,7 +2322,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_stopep(HWND hDlg, UINT msg, WPARAM wParam,
       SetDlgItemText(hDlg, IDC_TRB_EP_ID, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_SP, (g_trb.command & (1<<23)) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_C,  (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
@@ -2335,14 +2335,14 @@ INT_PTR CALLBACK hc_xhci_callback_trb_stopep(HWND hDlg, UINT msg, WPARAM wParam,
             case IDOK:
               g_trb.parameter = 0;
               g_trb.status = 0;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str, COMMON_STR_SIZE);
               g_trb.command  = TRB_SET_SLOT(strtol(str, NULL, 0));
               GetDlgItemText(hDlg, IDC_TRB_EP_ID, str, COMMON_STR_SIZE);
               g_trb.command |= TRB_SET_EP(strtol(str, NULL, 0));
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_SP) == BST_CHECKED) ? (1<<23) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2352,7 +2352,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_stopep(HWND hDlg, UINT msg, WPARAM wParam,
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2360,12 +2360,12 @@ INT_PTR CALLBACK hc_xhci_callback_trb_stopep(HWND hDlg, UINT msg, WPARAM wParam,
 INT_PTR CALLBACK hc_xhci_callback_trb_settrptr(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~BX_CONST64(0x0F));
       SetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str);
-      
+
       sprintf(str, "%i", TRB_GET_STREAM(g_trb.status));
       SetDlgItemText(hDlg, IDC_TRB_STREAMID, str);
 
@@ -2375,7 +2375,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_settrptr(HWND hDlg, UINT msg, WPARAM wPara
       SetDlgItemText(hDlg, IDC_TRB_EP_ID, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_C,  (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       SetFocus(GetDlgItem(hDlg, IDOK));
@@ -2390,13 +2390,13 @@ INT_PTR CALLBACK hc_xhci_callback_trb_settrptr(HWND hDlg, UINT msg, WPARAM wPara
 
               GetDlgItemText(hDlg, IDC_TRB_STREAMID, str, COMMON_STR_SIZE);
               g_trb.status = (strtol(str, NULL, 0) & 0xFFFF) << 16;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str, COMMON_STR_SIZE);
               g_trb.command  = TRB_SET_SLOT(strtol(str, NULL, 0));
               GetDlgItemText(hDlg, IDC_TRB_EP_ID, str, COMMON_STR_SIZE);
               g_trb.command |= TRB_SET_EP(strtol(str, NULL, 0));
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2406,7 +2406,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_settrptr(HWND hDlg, UINT msg, WPARAM wPara
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2414,14 +2414,14 @@ INT_PTR CALLBACK hc_xhci_callback_trb_settrptr(HWND hDlg, UINT msg, WPARAM wPara
 INT_PTR CALLBACK hc_xhci_callback_trb_resetdev(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "%i", TRB_GET_SLOT(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_C,  (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       // if this is the NoOp Command, we need to change the title
@@ -2437,11 +2437,11 @@ INT_PTR CALLBACK hc_xhci_callback_trb_resetdev(HWND hDlg, UINT msg, WPARAM wPara
             case IDOK:
               g_trb.parameter = 0;
               g_trb.status = 0;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str, COMMON_STR_SIZE);
               g_trb.command  = TRB_SET_SLOT(strtol(str, NULL, 0));
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2451,7 +2451,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_resetdev(HWND hDlg, UINT msg, WPARAM wPara
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2459,20 +2459,20 @@ INT_PTR CALLBACK hc_xhci_callback_trb_resetdev(HWND hDlg, UINT msg, WPARAM wPara
 INT_PTR CALLBACK hc_xhci_callback_trb_forceevent(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~BX_CONST64(0x0F));
       SetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str);
-      
+
       sprintf(str, "%i", TRB_GET_TARGET(g_trb.status));
       SetDlgItemText(hDlg, IDC_TRB_INT_TARGET, str);
-      
+
       sprintf(str, "%i", (g_trb.command & (0xFF << 16)) >> 16);
       SetDlgItemText(hDlg, IDC_TRB_VF_ID, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_C,  (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       SetFocus(GetDlgItem(hDlg, IDOK));
@@ -2487,11 +2487,11 @@ INT_PTR CALLBACK hc_xhci_callback_trb_forceevent(HWND hDlg, UINT msg, WPARAM wPa
 
               GetDlgItemText(hDlg, IDC_TRB_INT_TARGET, str, COMMON_STR_SIZE);
               g_trb.status = (strtol(str, NULL, 0) & 0x3FF) << 22;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_VF_ID, str, COMMON_STR_SIZE);
               g_trb.command  = (strtol(str, NULL, 0) & 0xFF) << 16;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2501,7 +2501,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_forceevent(HWND hDlg, UINT msg, WPARAM wPa
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2509,14 +2509,14 @@ INT_PTR CALLBACK hc_xhci_callback_trb_forceevent(HWND hDlg, UINT msg, WPARAM wPa
 INT_PTR CALLBACK hc_xhci_callback_trb_setlat(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "%i", (g_trb.command & (0xFFF << 16)) >> 16);
       SetDlgItemText(hDlg, IDC_TRB_BELT, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_C,  (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       SetFocus(GetDlgItem(hDlg, IDOK));
@@ -2528,11 +2528,11 @@ INT_PTR CALLBACK hc_xhci_callback_trb_setlat(HWND hDlg, UINT msg, WPARAM wParam,
             case IDOK:
               g_trb.parameter = 0;
               g_trb.status = 0;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_BELT, str, COMMON_STR_SIZE);
               g_trb.command  = (strtol(str, NULL, 0) & 0xFFF) << 16;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2542,7 +2542,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_setlat(HWND hDlg, UINT msg, WPARAM wParam,
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2550,7 +2550,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_setlat(HWND hDlg, UINT msg, WPARAM wParam,
 INT_PTR CALLBACK hc_xhci_callback_trb_getband(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~BX_CONST64(0x0F));
@@ -2562,7 +2562,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_getband(HWND hDlg, UINT msg, WPARAM wParam
       SetDlgItemText(hDlg, IDC_TRB_DEV_SPEED, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_C,  (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       SetFocus(GetDlgItem(hDlg, IDOK));
@@ -2574,15 +2574,15 @@ INT_PTR CALLBACK hc_xhci_callback_trb_getband(HWND hDlg, UINT msg, WPARAM wParam
             case IDOK:
               GetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str, COMMON_STR_SIZE);
               g_trb.parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
-              
+
               g_trb.status = 0;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str, COMMON_STR_SIZE);
               g_trb.command  = TRB_SET_SLOT(strtol(str, NULL, 0));
               GetDlgItemText(hDlg, IDC_TRB_DEV_SPEED, str, COMMON_STR_SIZE);
               g_trb.command |= (strtol(str, NULL, 0) & 0x0F) << 16;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2592,7 +2592,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_getband(HWND hDlg, UINT msg, WPARAM wParam
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2600,7 +2600,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_getband(HWND hDlg, UINT msg, WPARAM wParam
 INT_PTR CALLBACK hc_xhci_callback_trb_forcehdr(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~BX_CONST64(0x1F));
@@ -2613,7 +2613,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_forcehdr(HWND hDlg, UINT msg, WPARAM wPara
       SetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_C,  (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       SetFocus(GetDlgItem(hDlg, IDOK));
@@ -2625,14 +2625,14 @@ INT_PTR CALLBACK hc_xhci_callback_trb_forcehdr(HWND hDlg, UINT msg, WPARAM wPara
             case IDOK:
               GetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str, COMMON_STR_SIZE);
               g_trb.parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x1F);
-              
+
               GetDlgItemText(hDlg, IDC_TRB_HDR_HI, str, COMMON_STR_SIZE);
               g_trb.status = strtol(str, NULL, 0);
-              
+
               GetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str, COMMON_STR_SIZE);
               g_trb.command  = TRB_SET_SLOT(strtol(str, NULL, 0));
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2642,7 +2642,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_forcehdr(HWND hDlg, UINT msg, WPARAM wPara
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2650,7 +2650,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_forcehdr(HWND hDlg, UINT msg, WPARAM wPara
 INT_PTR CALLBACK hc_xhci_callback_trb_transevent(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter);
@@ -2665,7 +2665,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_transevent(HWND hDlg, UINT msg, WPARAM wPa
       SetDlgItemText(hDlg, IDC_TRB_EP_ID, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_ED, (g_trb.command & 4) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_TRB_C,  (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
@@ -2678,17 +2678,17 @@ INT_PTR CALLBACK hc_xhci_callback_trb_transevent(HWND hDlg, UINT msg, WPARAM wPa
             case IDOK:
               GetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str, COMMON_STR_SIZE);
               g_trb.parameter = strtol(str, NULL, 0);
-              
+
               GetDlgItemText(hDlg, IDC_TRB_COMP_CODE, str, COMMON_STR_SIZE);
               g_trb.status = TRB_SET_COMP_CODE(strtol(str, NULL, 0));
-              
+
               GetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str, COMMON_STR_SIZE);
               g_trb.command  = TRB_SET_SLOT(strtol(str, NULL, 0));
               GetDlgItemText(hDlg, IDC_TRB_EP_ID, str, COMMON_STR_SIZE);
               g_trb.command |= TRB_SET_EP(strtol(str, NULL, 0));
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_ED) == BST_CHECKED) ? (1<<2) : 0;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2698,7 +2698,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_transevent(HWND hDlg, UINT msg, WPARAM wPa
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2706,7 +2706,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_transevent(HWND hDlg, UINT msg, WPARAM wPa
 INT_PTR CALLBACK hc_xhci_callback_trb_compcompletion(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter);
@@ -2723,7 +2723,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_compcompletion(HWND hDlg, UINT msg, WPARAM
       SetDlgItemText(hDlg, IDC_TRB_VF_ID, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_C,  (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       SetFocus(GetDlgItem(hDlg, IDOK));
@@ -2735,18 +2735,18 @@ INT_PTR CALLBACK hc_xhci_callback_trb_compcompletion(HWND hDlg, UINT msg, WPARAM
             case IDOK:
               GetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str, COMMON_STR_SIZE);
               g_trb.parameter = strtol(str, NULL, 0);
-              
+
               GetDlgItemText(hDlg, IDC_TRB_COMP_CODE, str, COMMON_STR_SIZE);
               g_trb.status  = TRB_SET_COMP_CODE(strtol(str, NULL, 0));
               GetDlgItemText(hDlg, IDC_TRB_COMP_LPARAM, str, COMMON_STR_SIZE);
               g_trb.status |= strtol(str, NULL, 0) & 0x00FFFFFF;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str, COMMON_STR_SIZE);
               g_trb.command  = TRB_SET_SLOT(strtol(str, NULL, 0));
               GetDlgItemText(hDlg, IDC_TRB_VF_ID, str, COMMON_STR_SIZE);
               g_trb.command |= (strtol(str, NULL, 0) & 0xFF) << 16;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2756,7 +2756,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_compcompletion(HWND hDlg, UINT msg, WPARAM
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2764,7 +2764,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_compcompletion(HWND hDlg, UINT msg, WPARAM
 INT_PTR CALLBACK hc_xhci_callback_trb_pschange(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "0x" FMT_ADDRX64, (g_trb.parameter & BX_CONST64(0x00000000FF000000)) >> 24);
@@ -2775,7 +2775,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_pschange(HWND hDlg, UINT msg, WPARAM wPara
 
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_C,  (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       SetFocus(GetDlgItem(hDlg, IDOK));
@@ -2787,12 +2787,12 @@ INT_PTR CALLBACK hc_xhci_callback_trb_pschange(HWND hDlg, UINT msg, WPARAM wPara
             case IDOK:
               GetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str, COMMON_STR_SIZE);
               g_trb.parameter = (Bit64u) (strtol(str, NULL, 0) & 0xFF) << 24;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_COMP_CODE, str, COMMON_STR_SIZE);
               g_trb.status  = TRB_SET_COMP_CODE(strtol(str, NULL, 0));
-              
+
               g_trb.command = (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2802,7 +2802,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_pschange(HWND hDlg, UINT msg, WPARAM wPara
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2810,7 +2810,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_pschange(HWND hDlg, UINT msg, WPARAM wPara
 INT_PTR CALLBACK hc_xhci_callback_trb_bandrequ(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "%i", TRB_GET_COMP_CODE(g_trb.status));
@@ -2820,7 +2820,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_bandrequ(HWND hDlg, UINT msg, WPARAM wPara
       SetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_C,  (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       SetFocus(GetDlgItem(hDlg, IDOK));
@@ -2831,14 +2831,14 @@ INT_PTR CALLBACK hc_xhci_callback_trb_bandrequ(HWND hDlg, UINT msg, WPARAM wPara
           switch (LOWORD(wParam)) {
             case IDOK:
               g_trb.parameter = 0;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_COMP_CODE, str, COMMON_STR_SIZE);
               g_trb.status  = TRB_SET_COMP_CODE(strtol(str, NULL, 0));
-              
+
               GetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str, COMMON_STR_SIZE);
               g_trb.command  = TRB_SET_SLOT(strtol(str, NULL, 0));
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2848,7 +2848,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_bandrequ(HWND hDlg, UINT msg, WPARAM wPara
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2856,12 +2856,12 @@ INT_PTR CALLBACK hc_xhci_callback_trb_bandrequ(HWND hDlg, UINT msg, WPARAM wPara
 INT_PTR CALLBACK hc_xhci_callback_trb_doorbell(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & 0x1F);
       SetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str);
-      
+
       sprintf(str, "%i", TRB_GET_COMP_CODE(g_trb.status));
       SetDlgItemText(hDlg, IDC_TRB_COMP_CODE, str);
 
@@ -2871,7 +2871,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_doorbell(HWND hDlg, UINT msg, WPARAM wPara
       SetDlgItemText(hDlg, IDC_TRB_VF_ID, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_C,  (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       SetFocus(GetDlgItem(hDlg, IDOK));
@@ -2883,16 +2883,16 @@ INT_PTR CALLBACK hc_xhci_callback_trb_doorbell(HWND hDlg, UINT msg, WPARAM wPara
             case IDOK:
               GetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str, COMMON_STR_SIZE);
               g_trb.parameter = strtol(str, NULL, 0) & 0x1F;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_COMP_CODE, str, COMMON_STR_SIZE);
               g_trb.status  = TRB_SET_COMP_CODE(strtol(str, NULL, 0));
-              
+
               GetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str, COMMON_STR_SIZE);
               g_trb.command  = TRB_SET_SLOT(strtol(str, NULL, 0));
               GetDlgItemText(hDlg, IDC_TRB_VF_ID, str, COMMON_STR_SIZE);
               g_trb.command |= (strtol(str, NULL, 0) & 0xFF) << 16;
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2902,7 +2902,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_doorbell(HWND hDlg, UINT msg, WPARAM wPara
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2910,7 +2910,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_doorbell(HWND hDlg, UINT msg, WPARAM wPara
 INT_PTR CALLBACK hc_xhci_callback_trb_hostevent(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "%i", TRB_GET_COMP_CODE(g_trb.status));
@@ -2918,7 +2918,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_hostevent(HWND hDlg, UINT msg, WPARAM wPar
 
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_C,  (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       // if this is the MFINDEX Wrap Event, we need to change the title
@@ -2933,12 +2933,12 @@ INT_PTR CALLBACK hc_xhci_callback_trb_hostevent(HWND hDlg, UINT msg, WPARAM wPar
           switch (LOWORD(wParam)) {
             case IDOK:
               g_trb.parameter = 0;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_COMP_CODE, str, COMMON_STR_SIZE);
               g_trb.status  = TRB_SET_COMP_CODE(strtol(str, NULL, 0));
-              
+
               g_trb.command  = (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -2948,7 +2948,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_hostevent(HWND hDlg, UINT msg, WPARAM wPar
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -2956,14 +2956,14 @@ INT_PTR CALLBACK hc_xhci_callback_trb_hostevent(HWND hDlg, UINT msg, WPARAM wPar
 INT_PTR CALLBACK hc_xhci_callback_trb_devnotevent(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter >> 8);
       SetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str);
       sprintf(str, "%i", (Bit8u) (g_trb.parameter & 0xF0) >> 4);
       SetDlgItemText(hDlg, IDC_TRB_NOT_TYPE, str);
-      
+
       sprintf(str, "%i", TRB_GET_COMP_CODE(g_trb.status));
       SetDlgItemText(hDlg, IDC_TRB_COMP_CODE, str);
 
@@ -2971,7 +2971,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_devnotevent(HWND hDlg, UINT msg, WPARAM wP
       SetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_C,  (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       SetFocus(GetDlgItem(hDlg, IDOK));
@@ -2985,14 +2985,14 @@ INT_PTR CALLBACK hc_xhci_callback_trb_devnotevent(HWND hDlg, UINT msg, WPARAM wP
               g_trb.parameter  = (Bit64u) strtol(str, NULL, 0) << 8;
               GetDlgItemText(hDlg, IDC_TRB_NOT_TYPE, str, COMMON_STR_SIZE);
               g_trb.parameter |= (strtol(str, NULL, 0) & 0xF) << 4;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_COMP_CODE, str, COMMON_STR_SIZE);
               g_trb.status  = TRB_SET_COMP_CODE(strtol(str, NULL, 0));
-              
+
               GetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str, COMMON_STR_SIZE);
               g_trb.command  = TRB_SET_SLOT(strtol(str, NULL, 0));
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -3002,7 +3002,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_devnotevent(HWND hDlg, UINT msg, WPARAM wP
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -3010,12 +3010,12 @@ INT_PTR CALLBACK hc_xhci_callback_trb_devnotevent(HWND hDlg, UINT msg, WPARAM wP
 INT_PTR CALLBACK hc_xhci_callback_trb_necfw(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_C,  (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       SetFocus(GetDlgItem(hDlg, IDOK));
@@ -3028,9 +3028,9 @@ INT_PTR CALLBACK hc_xhci_callback_trb_necfw(HWND hDlg, UINT msg, WPARAM wParam, 
 
               g_trb.parameter = 0;
               g_trb.status = 0;
-              
+
               g_trb.command = (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -3040,7 +3040,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_necfw(HWND hDlg, UINT msg, WPARAM wParam, 
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -3048,15 +3048,15 @@ INT_PTR CALLBACK hc_xhci_callback_trb_necfw(HWND hDlg, UINT msg, WPARAM wParam, 
 INT_PTR CALLBACK hc_xhci_callback_trb_necun(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter);
       SetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str);
-      
+
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_C,  (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       SetFocus(GetDlgItem(hDlg, IDOK));
@@ -3068,11 +3068,11 @@ INT_PTR CALLBACK hc_xhci_callback_trb_necun(HWND hDlg, UINT msg, WPARAM wParam, 
             case IDOK:
               GetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str, COMMON_STR_SIZE);
               g_trb.parameter = strtol(str, NULL, 0);
-              
+
               g_trb.status = 0;
-              
+
               g_trb.command = (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -3082,7 +3082,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_necun(HWND hDlg, UINT msg, WPARAM wParam, 
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -3090,7 +3090,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_necun(HWND hDlg, UINT msg, WPARAM wParam, 
 INT_PTR CALLBACK hc_xhci_callback_trb_necfwevent(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   char str[COMMON_STR_SIZE];
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter);
@@ -3107,7 +3107,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_necfwevent(HWND hDlg, UINT msg, WPARAM wPa
       SetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str);
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
-      
+
       CheckDlgButton(hDlg, IDC_TRB_C,  (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       SetFocus(GetDlgItem(hDlg, IDOK));
@@ -3119,18 +3119,18 @@ INT_PTR CALLBACK hc_xhci_callback_trb_necfwevent(HWND hDlg, UINT msg, WPARAM wPa
             case IDOK:
               GetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str, COMMON_STR_SIZE);
               g_trb.parameter = strtol(str, NULL, 0);
-              
+
               GetDlgItemText(hDlg, IDC_TRB_COMP_CODE, str, COMMON_STR_SIZE);
               g_trb.status  = TRB_SET_COMP_CODE(strtol(str, NULL, 0));
               GetDlgItemText(hDlg, IDC_TRB_COMP_LPARAM, str, COMMON_STR_SIZE);
               g_trb.status |= strtol(str, NULL, 0) & 0x0000FFFF;
-              
+
               GetDlgItemText(hDlg, IDC_TRB_COMP_HPARAM, str, COMMON_STR_SIZE);
               g_trb.command  = (strtol(str, NULL, 0) & 0x0000FFFF) << 16;
               GetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str, COMMON_STR_SIZE);
               g_trb.command |= TRB_SET_SLOT(strtol(str, NULL, 0));
               g_trb.command |= (IsDlgButtonChecked(hDlg, IDC_TRB_C) == BST_CHECKED) ? (1<<0) : 0;
-              
+
               EndDialog(hDlg, 1);
               break;
             case IDCANCEL:
@@ -3140,7 +3140,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_necfwevent(HWND hDlg, UINT msg, WPARAM wPa
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -3225,7 +3225,7 @@ static void hc_xhci_callback_context_ep_get(HWND hDlg)
   char str[COMMON_STR_SIZE];
   Bit32u *p;
   int i;
-  
+
   // display the EP (with Drop and Add bits)
   p = (Bit32u *) &xhci_context[0];
   if (xhci_current_ep_context == 1) {
@@ -3238,7 +3238,7 @@ static void hc_xhci_callback_context_ep_get(HWND hDlg)
   if (p[1] & (1 << xhci_current_ep_context))
     strcat(str, "(A)");
   SetDlgItemText(hDlg, IDC_CONTEXT_OF_STR, str);
-  
+
   // EP Context
   p = (Bit32u *) &xhci_context[CONTEXT_SIZE + (xhci_current_ep_context * CONTEXT_SIZE)];
   sprintf(str, "%i", (p[0] & (0xFF << 24)) >> 24);
@@ -3268,9 +3268,9 @@ static void hc_xhci_callback_context_ep_get(HWND hDlg)
   SetDlgItemText(hDlg, IDC_CONTEXT_MAX_ESIT_LO, str);
   sprintf(str, "%i", (p[4] & (0xFFFF << 0)) >> 0);
   SetDlgItemText(hDlg, IDC_CONTEXT_AVERAGE_LEN, str);
-  
+
   EnableWindow(GetDlgItem(hDlg, IDC_CONTEXT_STREAM_CONTEXT), (((p[0] & (0x1F << 10)) >> 10) > 0));
-  
+
   for (i=0; i<3; i++) {
     sprintf(str, "0x%08X", p[5+i]);
     SetDlgItemText(hDlg, IDC_CONTEXT_RSVDO_EP_0 + i, str);
@@ -3282,7 +3282,7 @@ static void hc_xhci_callback_context_ep_get(HWND hDlg)
     EnableWindow(GetDlgItem(hDlg, IDC_CONTEXT_RSVDO_EP_0 + i), 1);
   }
 #endif
-  
+
   xhci_context_changed = 0;
   EnableWindow(GetDlgItem(hDlg, ID_APPLY), 0);
 }
@@ -3292,7 +3292,7 @@ static void hc_xhci_callback_context_ep_put(HWND hDlg)
   char str[COMMON_STR_SIZE];
   Bit32u *p;
   int i;
-  
+
   // EP Context
   p = (Bit32u *) &xhci_context[CONTEXT_SIZE + (xhci_current_ep_context * CONTEXT_SIZE)];
   GetDlgItemText(hDlg, IDC_CONTEXT_MAX_ESIT_HI, str, COMMON_STR_SIZE);
@@ -3406,7 +3406,7 @@ INT_PTR CALLBACK hc_xhci_callback_context(HWND hDlg, UINT msg, WPARAM wParam, LP
         EnableWindow(GetDlgItem(hDlg, IDC_CONTEXT_RSVDO_SLOT_0 + i), 1);
       }
 #endif
-      
+
       // Endpoint Context
       hc_xhci_callback_context_ep_get(hDlg);
 
@@ -3505,7 +3505,7 @@ INT_PTR CALLBACK hc_xhci_callback_context(HWND hDlg, UINT msg, WPARAM wParam, LP
                 else if (ret == IDCANCEL)
                   break;
               }
-              
+
               // Context structure
               p = (Bit32u *) &xhci_context[0];
               GetDlgItemText(hDlg, IDC_CONTEXT_DROP, str, COMMON_STR_SIZE);
@@ -3559,7 +3559,7 @@ INT_PTR CALLBACK hc_xhci_callback_context(HWND hDlg, UINT msg, WPARAM wParam, LP
               }
 #endif
               DEV_MEM_WRITE_PHYSICAL(xhci_context_address, CONTEXT_SIZE + (32 * CONTEXT_SIZE), xhci_context);
-              
+
               delete [] xhci_context;
               EndDialog(hDlg, 1);
               break;
@@ -3614,7 +3614,7 @@ INT_PTR CALLBACK hc_xhci_callback_context(HWND hDlg, UINT msg, WPARAM wParam, LP
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -3628,7 +3628,7 @@ static void CALLBACK hc_xhci_callback_str_context_get(HWND hDlg)
   if (xhci_str_current_context == 0)
     strcat(str, "(Reserved)");
   SetDlgItemText(hDlg, IDC_CONTEXT_OF_STR, str);
-  
+
   // String Context
   p = (Bit32u *) &xhci_str_context[xhci_str_current_context * 32];
   sprintf(str, "0x" FMT_ADDRX64, ((Bit64u) p[1] << 32) | (p[0] & ~BX_CONST64(0xF)));
@@ -3642,7 +3642,7 @@ static void CALLBACK hc_xhci_callback_str_context_get(HWND hDlg)
   SetDlgItemText(hDlg, IDC_STR_CONTEXT_RSVDO_0, str);
   sprintf(str, "0x%08X", p[3]);
   SetDlgItemText(hDlg, IDC_STR_CONTEXT_RSVDO_1, str);
-  
+
   xhci_str_context_changed = 0;
   EnableWindow(GetDlgItem(hDlg, ID_APPLY), 0);
 }
@@ -3666,7 +3666,7 @@ static void CALLBACK hc_xhci_callback_str_context_put(HWND hDlg)
   p[1] |= (strtol(str, NULL, 0) & 0xFF) << 24;
   GetDlgItemText(hDlg, IDC_STR_CONTEXT_RSVDO_1, str, COMMON_STR_SIZE);
   p[2]  = strtol(str, NULL, 0);
-  
+
   xhci_str_context_changed = 0;
   EnableWindow(GetDlgItem(hDlg, ID_APPLY), 0);
 }
@@ -3676,7 +3676,7 @@ INT_PTR CALLBACK hc_xhci_callback_str_context(HWND hDlg, UINT msg, WPARAM wParam
 {
   char str[COMMON_STR_SIZE];
   int i;
-  
+
   switch (msg) {
     case WM_INITDIALOG:
       xhci_str_current_context = 0;
@@ -3731,9 +3731,9 @@ INT_PTR CALLBACK hc_xhci_callback_str_context(HWND hDlg, UINT msg, WPARAM wParam
                 else if (ret == IDCANCEL)
                   break;
               }
-              
+
               DEV_MEM_WRITE_PHYSICAL(xhci_str_context_address, MAX_PSA_SIZE_NUM * 32, xhci_str_context);
-              
+
               delete [] xhci_str_context;
               EndDialog(hDlg, 1);
               break;
@@ -3759,7 +3759,7 @@ INT_PTR CALLBACK hc_xhci_callback_str_context(HWND hDlg, UINT msg, WPARAM wParam
           break;
       }
   }
-  
+
   return 0;
 }
 
@@ -3802,7 +3802,7 @@ static INT_PTR CALLBACK attribute_callback(HWND hDlg, UINT msg, WPARAM wParam, L
       // no need to show the caption if no 'single-only' entries
       ShowWindow(GetDlgItem(hDlg, IDC_CAPTION), bCaption);
       break;
-      
+
     case WM_COMMAND:
       switch (HIWORD(wParam)) {
         case BN_CLICKED:
@@ -3821,7 +3821,7 @@ static INT_PTR CALLBACK attribute_callback(HWND hDlg, UINT msg, WPARAM wParam, L
               break;
           }
           break;
-          
+
         case LBN_SELCHANGE:
           i = ListBox_GetCaretIndex(ListBox); // index to just clicked item
           if (ListBox_GetSel(ListBox, i)) {
