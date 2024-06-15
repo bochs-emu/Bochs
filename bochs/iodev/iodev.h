@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2024  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -173,9 +173,6 @@ public:
 
   void set_name(const char *name) {pci_name = name;}
   const char* get_name(void) {return pci_name;}
-#if BX_USE_WIN32USBDEBUG
-  Bit32u get_bar_addr(int indx) const { return pci_bar[indx].addr; }
-#endif
 
 protected:
   const char *pci_name;

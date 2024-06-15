@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2023  The Bochs Project
+//                2009-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -200,9 +200,7 @@ public:
 
   int event_handler(int event, void *ptr, int port);
 
-#if !BX_USE_WIN32USBDEBUG
 protected:
-#endif
   bx_uhci_core_t hub;
   Bit8u          global_reset;
 

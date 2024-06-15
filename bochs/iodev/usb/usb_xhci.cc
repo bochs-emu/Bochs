@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2011-2023  The Bochs Project
+//                2011-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -298,7 +298,11 @@ void bx_usb_xhci_c::init(void)
   // if n_ports is not given in the Bochsrc.txt file, the number of ports
   //  is defaulted to the controller type above
   Bit32s n_ports = SIM->get_param_num(BXPN_XHCI_N_PORTS)->get();
-  if (n_ports > -1) BX_XHCI_THIS hub.n_ports = n_ports;
+  if (n_ports > -1) {
+    BX_XHCI_THIS hub.n_ports = n_ports;
+  } else {
+    SIM->get_param_num(BXPN_XHCI_N_PORTS)->set(BX_XHCI_THIS hub.n_ports);
+  }
   if ((BX_XHCI_THIS hub.n_ports < 2) || (BX_XHCI_THIS hub.n_ports > USB_XHCI_PORTS_MAX) || (BX_XHCI_THIS hub.n_ports & 1)) {
     BX_PANIC(("n_ports (%d) must be at least 2, not more than %d, and must be an even number.", BX_XHCI_THIS hub.n_ports, USB_XHCI_PORTS_MAX));
     return;
@@ -935,6 +939,7 @@ void bx_usb_xhci_c::register_state(void)
   BXRS_PARAM_BOOL(reg, ca, BX_XHCI_THIS hub.op_regs.HcCrcr.ca);
   BXRS_PARAM_BOOL(reg, cs, BX_XHCI_THIS hub.op_regs.HcCrcr.cs);
   BXRS_PARAM_BOOL(reg, rcs, BX_XHCI_THIS hub.op_regs.HcCrcr.rcs);
+  BXRS_HEX_PARAM_FIELD(reg, actual, BX_XHCI_THIS hub.op_regs.HcCrcr.actual);
   BXRS_HEX_PARAM_FIELD(reg_grp, HcDCBAAP, BX_XHCI_THIS hub.op_regs.HcDCBAAP.dcbaap);
   BXRS_HEX_PARAM_FIELD(reg_grp, HcConfig_MaxSlotsEn, BX_XHCI_THIS hub.op_regs.HcConfig.MaxSlotsEn);
 #if ((VERSION_MAJOR == 1) && (VERSION_MINOR >= 0x10))

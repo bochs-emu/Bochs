@@ -136,8 +136,8 @@ int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam)
 }
 
 // one of the controllers has triggered a debug item.
-void win32_usb_trigger(int type, int trigger, int wParam, int lParam) {
-
+void win32_usb_trigger(int type, int trigger, int wParam, int lParam)
+{
   // check that we are the correct controller type
   bx_param_enum_c *cntlr_type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
   if ((cntlr_type == NULL) || (cntlr_type->get() != type))
@@ -437,10 +437,35 @@ INT_PTR CALLBACK hc_uhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
   return 0;
 }
 
+Bit32u get_pci_bar_addr(bx_shadow_data_c *pci_conf, Bit8u bar_num)
+{
+  if ((pci_conf != NULL) && (bar_num < 5)) {
+    Bit8u *data = pci_conf->getptr() + 0x10 + (bar_num << 2);
+    Bit32u value = ReadHostDWordFromLittleEndian((Bit32u*)data);
+    if (value & 1) {
+      return (value & 0xfffc);
+    } else {
+      return (value & 0xfffffff0);
+    }
+  } else {
+    return 0;
+  }
+}
+
+Bit32u usb_io_read(Bit16u addr, unsigned io_len)
+{
+  return bx_devices.inp(addr, io_len);
+}
+
+void usb_io_write(Bit16u addr, Bit32u value, unsigned io_len)
+{
+  bx_devices.outp(addr, value, io_len);
+}
+
 #include "iodev/usb/uhci_core.h"
 #include "iodev/usb/usb_uhci.h"
 
-extern bx_usb_uhci_c *theUSB_UHCI;
+bx_list_c *UHCI_state = NULL;
 
 // returns -1 if error, else returns ID to control to set the focus to
 int hc_uhci_init(HWND hwnd)
@@ -449,7 +474,8 @@ int hc_uhci_init(HWND hwnd)
   Bit32u frame_addr, frame_num;
   int ret = IDOK;
 
-  if (theUSB_UHCI == NULL)
+  UHCI_state = (bx_list_c*)SIM->get_param("usb_uhci", SIM->get_bochs_root());
+  if (UHCI_state == NULL)
     return -1;
 
   // set the dialog title to the break type
@@ -484,26 +510,26 @@ int hc_uhci_init(HWND hwnd)
   CheckDlgButton(hwnd, IDC_DEBUG_SOF,     (SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->get() > BX_USB_DEBUG_SOF_NONE) ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_DEBUG_NONEXIST, SIM->get_param_bool(BXPN_USB_DEBUG_NON_EXIST)->get() ? BST_CHECKED : BST_UNCHECKED);
 
-  pci_bar_address = theUSB_UHCI->get_bar_addr(4);
+  pci_bar_address = get_pci_bar_addr((bx_shadow_data_c*)SIM->get_param("hub.pci_conf", UHCI_state), 4);
   sprintf(str, "0x%04X", pci_bar_address);
   SetDlgItemText(hwnd, IDC_PORT_ADDR, str);
 
-  sprintf(str, "0x%04X", theUSB_UHCI->read(pci_bar_address + 0, 2));
+  sprintf(str, "0x%04X", usb_io_read(pci_bar_address + 0, 2));
   SetDlgItemText(hwnd, IDC_U_REG_COMMAND, str);
-  sprintf(str, "0x%04X", theUSB_UHCI->read(pci_bar_address + 2, 2));
+  sprintf(str, "0x%04X", usb_io_read(pci_bar_address + 2, 2));
   SetDlgItemText(hwnd, IDC_U_REG_STATUS, str);
-  sprintf(str, "0x%04X", theUSB_UHCI->read(pci_bar_address + 4, 2));
+  sprintf(str, "0x%04X", usb_io_read(pci_bar_address + 4, 2));
   SetDlgItemText(hwnd, IDC_U_REG_INTERRUPT, str);
-  sprintf(str, "0x%04X", frame_num = theUSB_UHCI->read(pci_bar_address + 6, 2));
+  sprintf(str, "0x%04X", frame_num = usb_io_read(pci_bar_address + 6, 2));
   SetDlgItemText(hwnd, IDC_U_REG_FRAME_NUM, str);
-  sprintf(str, "0x%08X", frame_addr = theUSB_UHCI->read(pci_bar_address + 8, 4));
+  sprintf(str, "0x%08X", frame_addr = usb_io_read(pci_bar_address + 8, 4));
   SetDlgItemText(hwnd, IDC_U_REG_FRAME_ADDRESS, str);
-  sprintf(str, "0x%02X", theUSB_UHCI->read(pci_bar_address + 12, 1));
+  sprintf(str, "0x%02X", usb_io_read(pci_bar_address + 12, 1));
   SetDlgItemText(hwnd, IDC_U_REG_SOF, str);
 
-  sprintf(str, "0x%04X", theUSB_UHCI->read(pci_bar_address + 16, 2));
+  sprintf(str, "0x%04X", usb_io_read(pci_bar_address + 16, 2));
   SetDlgItemText(hwnd, IDC_U_REG_PORT0, str);
-  sprintf(str, "0x%04X", theUSB_UHCI->read(pci_bar_address + 18, 2));
+  sprintf(str, "0x%04X", usb_io_read(pci_bar_address + 18, 2));
   SetDlgItemText(hwnd, IDC_U_REG_PORT1, str);
 
   // display the port types
@@ -565,36 +591,36 @@ int hc_uhci_save(HWND hwnd)
 
   if (u_changed[IDC_U_REG_COMMAND - IDC_U_EN_START]) {
     GetDlgItemText(hwnd, IDC_U_REG_COMMAND, str, COMMON_STR_SIZE);
-    theUSB_UHCI->write(pci_bar_address + 0, strtol(str, NULL, 0), 2);
+    usb_io_write(pci_bar_address + 0, strtol(str, NULL, 0), 2);
   }
   if (u_changed[IDC_U_REG_STATUS - IDC_U_EN_START]) {
     GetDlgItemText(hwnd, IDC_U_REG_STATUS, str, COMMON_STR_SIZE);
-    theUSB_UHCI->write(pci_bar_address + 2, strtol(str, NULL, 0), 2);
+    usb_io_write(pci_bar_address + 2, strtol(str, NULL, 0), 2);
   }
   if (u_changed[IDC_U_REG_INTERRUPT - IDC_U_EN_START]) {
     GetDlgItemText(hwnd, IDC_U_REG_INTERRUPT, str, COMMON_STR_SIZE);
-    theUSB_UHCI->write(pci_bar_address + 4, strtol(str, NULL, 0), 2);
+    usb_io_write(pci_bar_address + 4, strtol(str, NULL, 0), 2);
   }
   if (u_changed[IDC_U_REG_FRAME_NUM - IDC_U_EN_START]) {
     GetDlgItemText(hwnd, IDC_U_REG_FRAME_NUM, str, COMMON_STR_SIZE);
-    theUSB_UHCI->write(pci_bar_address + 6, strtol(str, NULL, 0), 2);
+    usb_io_write(pci_bar_address + 6, strtol(str, NULL, 0), 2);
   }
   if (u_changed[IDC_U_REG_FRAME_ADDRESS - IDC_U_EN_START]) {
     GetDlgItemText(hwnd, IDC_U_REG_FRAME_ADDRESS, str, COMMON_STR_SIZE);
-    theUSB_UHCI->write(pci_bar_address + 8, strtol(str, NULL, 0), 4);
+    usb_io_write(pci_bar_address + 8, strtol(str, NULL, 0), 4);
   }
   if (u_changed[IDC_U_REG_SOF - IDC_U_EN_START]) {
     GetDlgItemText(hwnd, IDC_U_REG_SOF, str, COMMON_STR_SIZE);
-    theUSB_UHCI->write(pci_bar_address + 12, strtol(str, NULL, 0), 1);
+    usb_io_write(pci_bar_address + 12, strtol(str, NULL, 0), 1);
   }
 
   if (u_changed[IDC_U_REG_PORT0 - IDC_U_EN_START]) {
     GetDlgItemText(hwnd, IDC_U_REG_PORT0, str, COMMON_STR_SIZE);
-    theUSB_UHCI->write(pci_bar_address + 16, strtol(str, NULL, 0), 2);
+    usb_io_write(pci_bar_address + 16, strtol(str, NULL, 0), 2);
   }
   if (u_changed[IDC_U_REG_PORT1 - IDC_U_EN_START]) {
     GetDlgItemText(hwnd, IDC_U_REG_PORT1, str, COMMON_STR_SIZE);
-    theUSB_UHCI->write(pci_bar_address + 18, strtol(str, NULL, 0), 2);
+    usb_io_write(pci_bar_address + 18, strtol(str, NULL, 0), 2);
   }
 
   memset(u_changed, 0, sizeof(u_changed));
@@ -1142,13 +1168,15 @@ INT_PTR CALLBACK hc_xhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
 
 #include "iodev/usb/usb_xhci.h"
 
-extern bx_usb_xhci_c *theUSB_XHCI;
+bx_list_c *XHCI_state = NULL;
 
 static Bit32u xhci_read_dword(const Bit32u address)
 {
-  Bit32u value;
+  Bit32u value = 0;
 
-  theUSB_XHCI->read_handler(address, 4, &value, NULL);
+  if (address > 0) {
+    DEV_MEM_READ_PHYSICAL(address, 4, (Bit8u*)&value);
+  }
   return value;
 }
 
@@ -1162,7 +1190,8 @@ int hc_xhci_init(HWND hwnd)
   unsigned i;
   int ret = IDOK;
 
-  if (theUSB_XHCI == NULL)
+  XHCI_state = (bx_list_c*)SIM->get_param("usb_xhci", SIM->get_bochs_root());
+  if (XHCI_state == NULL)
     return -1;
 
   // set the dialog title to the break type
@@ -1185,7 +1214,7 @@ int hc_xhci_init(HWND hwnd)
   CheckDlgButton(hwnd, IDC_DEBUG_SOF,     (SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->get() > BX_USB_DEBUG_SOF_NONE) ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_DEBUG_NONEXIST, SIM->get_param_bool(BXPN_USB_DEBUG_NON_EXIST)->get() ? BST_CHECKED : BST_UNCHECKED);
 
-  pci_bar_address = theUSB_XHCI->get_bar_addr(0);
+  pci_bar_address = get_pci_bar_addr((bx_shadow_data_c*)SIM->get_param("hub.pci_conf", XHCI_state), 0);
   sprintf(str, "0x%08X", pci_bar_address);
   SetDlgItemText(hwnd, IDC_PORT_ADDR, str);
 
@@ -1208,7 +1237,8 @@ int hc_xhci_init(HWND hwnd)
   dword = xhci_read_dword(pci_bar_address + offset + 0x14);
   sprintf(str, "0x%08X", dword);
   SetDlgItemText(hwnd, IDC_X_REG_DEVICE_NOTE, str);
-  sprintf(str, "0x" FMT_ADDRX64, theUSB_XHCI->hub.op_regs.HcCrcr.actual); // we can't read this using read_handler() since the handler will return zero
+  // we can't read this using DEV_MEM_READ_PHYSICAL since the handler will return zero
+  sprintf(str, "0x" FMT_ADDRX64, SIM->get_param_num("hub.op_regs.HcCrcr.actual", XHCI_state)->get());
   SetDlgItemText(hwnd, IDC_X_REG_COMMAND_RING, str);
   qword = xhci_read_dword(pci_bar_address + offset + 0x30) |
    ((Bit64u) xhci_read_dword(pci_bar_address + offset + 0x34) << 32);
@@ -1224,7 +1254,7 @@ int hc_xhci_init(HWND hwnd)
   SetDlgItemText(hwnd, IDC_X_REG_MFINDEX, str);
 
   // show up to 10 port register sets
-  for (i=0; i<theUSB_XHCI->hub.n_ports; i++) {
+  for (i = 0; i < (unsigned)SIM->get_param_num(BXPN_XHCI_N_PORTS)->get(); i++) {
     dword = xhci_read_dword(pci_bar_address + XHCI_PORT_SET_OFFSET + (i * 16));
     sprintf(str, "0x%08X", dword);
     SetDlgItemText(hwnd, IDC_X_REG_PORT0 + i, str);
@@ -1248,11 +1278,11 @@ int hc_xhci_init(HWND hwnd)
     // a command TRB was placed on the command ring
     case USB_DEBUG_COMMAND:
       SetDlgItemText(hwnd, IDC_RING_TYPE, "Command Ring Address:");
-      RingPtr = theUSB_XHCI->hub.op_regs.HcCrcr.crc;
+      RingPtr = SIM->get_param_num("hub.op_regs.HcCrcr.crc", XHCI_state)->get();
       sprintf(str, "0x" FMT_ADDRX64, RingPtr);
       SetDlgItemText(hwnd, IDC_FRAME_ADDRESS, str);
       if (RingPtr != 0) {
-        hc_xhci_do_ring("Command", RingPtr, theUSB_XHCI->hub.ring_members.command_ring.dq_pointer);
+        hc_xhci_do_ring("Command", RingPtr, SIM->get_param_num("hub.ring_members.command_ring.dq_pointer", XHCI_state)->get());
         EnableWindow(GetDlgItem(hwnd, IDC_VIEW_TRB), 1);
         valid = 1;
       }
@@ -1417,8 +1447,10 @@ void hc_xhci_do_ring(const char *ring_str, Bit64u RingPtr, Bit64u dequeue_ptr)
 void hc_xhci_do_event_ring(const char *ring_str, int interrupter)
 {
   char str[COMMON_STR_SIZE];
+  char pname[BX_PATHNAME_LEN];
   int  trb_count = 0; // count of TRB's processed
   Bit64u address;
+  Bit32u size;
   struct TRB trb;
   HTREEITEM Parent, Segment;
   Bit32u state = 0;
@@ -1427,11 +1459,14 @@ void hc_xhci_do_event_ring(const char *ring_str, int interrupter)
   sprintf(str, "%s Ring: Interrupter: %i", ring_str, interrupter);
   Parent = TreeViewInsert(TreeView, TVI_ROOT, TVI_FIRST, str, 0, 0);
 
-  for (unsigned i=0; i<(1<<MAX_SEG_TBL_SZ_EXP); i++) {
-    address = theUSB_XHCI->hub.ring_members.event_rings[interrupter].entrys[i].addr;
-    sprintf(str, "Event Ring Segment %i (0x" FMT_ADDRX64 "), size %i", i, address, theUSB_XHCI->hub.ring_members.event_rings[interrupter].entrys[i].size);
+  for (unsigned i = 0; i < (1 << MAX_SEG_TBL_SZ_EXP); i++) {
+    sprintf(pname, "hub.ring_members.event_rings.ring%d.entries.entry%d.addr", interrupter, i);
+    address = SIM->get_param_num(pname, XHCI_state)->get();
+    sprintf(pname, "hub.ring_members.event_rings.ring%d.entries.entry%d.size", interrupter, i);
+    size = SIM->get_param_num(pname, XHCI_state)->get();
+    sprintf(str, "Event Ring Segment %i (0x" FMT_ADDRX64 "), size %i", i, address, size);
     Segment = TreeViewInsert(TreeView, Parent, TVI_LAST, str, 0, 0);
-    for (unsigned j=0; j<theUSB_XHCI->hub.ring_members.event_rings[interrupter].entrys[i].size; j++) {
+    for (unsigned j = 0; j < size; j++) {
       state = 0; // clear the state
       DEV_MEM_READ_PHYSICAL(address, sizeof(struct TRB), (Bit8u *) &trb);
       type = TRB_GET_TYPE(trb.command);
@@ -1439,7 +1474,8 @@ void hc_xhci_do_event_ring(const char *ring_str, int interrupter)
         sprintf(str, "0x" FMT_ADDRX64 " %08X 0x%08X (%i) (%s)", trb.parameter, trb.status, trb.command, trb.command & 1, trb_types[type].name);
       else
         sprintf(str, "0x" FMT_ADDRX64 " %08X 0x%08X (%i) (Vendor Specific)", trb.parameter, trb.status, trb.command, trb.command & 1);
-      if (address == theUSB_XHCI->hub.ring_members.event_rings[interrupter].cur_trb) {
+      sprintf(pname, "hub.ring_members.event_rings.ring%d.cur_trb", interrupter);
+      if (address == (Bit64u)SIM->get_param_num(pname, XHCI_state)->get()) {
         strcat(str, " <--- eq_pointer");
         state |= TVIS_BOLD;
       }
