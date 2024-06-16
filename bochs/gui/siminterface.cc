@@ -28,6 +28,9 @@
 #include "iodev.h"
 #include "bx_debug/debug.h"
 #include "virt_timer.h"
+#if BX_USE_WIN32USBDEBUG
+#include "gui/win32usb.h"
+#endif
 
 bx_simulator_interface_c *SIM = NULL;
 logfunctions *siminterface_log = NULL;
@@ -70,6 +73,7 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   config_interface_callback_t ci_callback;
   void *ci_callback_data;
 #if BX_USE_WIN32USBDEBUG
+  int usb_debug_type;
   usb_interface_callback_t usbi_callback;
 #endif
   rt_conf_entry_t *rt_conf_entries;
@@ -180,6 +184,8 @@ public:
     void *userdata);
   virtual int configuration_interface(const char* name, ci_command_t command);
 #if BX_USE_WIN32USBDEBUG
+  virtual void register_usb_debug_type(int type);
+  virtual void usb_debug_trigger(int type, int trigger, int wParam, int lParam);
   virtual void register_usb_interface(usb_interface_callback_t callback, void *data);
   virtual int usb_config_interface(int type, int wParam, int lParam);
 #endif
@@ -390,6 +396,7 @@ bx_real_sim_c::bx_real_sim_c()
   ci_callback = NULL;
   ci_callback_data = NULL;
 #if BX_USE_WIN32USBDEBUG
+  usb_debug_type = 0;
   usbi_callback = NULL;
 #endif
   is_sim_thread_func = NULL;
@@ -943,6 +950,28 @@ int bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t comm
 }
 
 #if BX_USE_WIN32USBDEBUG
+void bx_real_sim_c::register_usb_debug_type(int type)
+{
+  if (type != USB_DEBUG_NONE) {
+    if ((type != USB_DEBUG_UHCI) && (type != USB_DEBUG_XHCI)) {
+      BX_PANIC(("USB debugger does not yet support type %d", type));
+    } else {
+      usb_debug_type = type;
+    }
+  }
+}
+
+void bx_real_sim_c::usb_debug_trigger(int type, int trigger, int wParam, int lParam)
+{
+  if (type != USB_DEBUG_NONE) {
+    if (type == usb_debug_type) {
+      win32_usb_trigger(type, trigger, wParam, lParam);
+    } else {
+      BX_PANIC(("USB debugger triggered with wrong type %d", type));
+    }
+  }
+}
+
 void bx_real_sim_c::register_usb_interface(usb_interface_callback_t callback, void *data)
 {
   usbi_callback = callback;

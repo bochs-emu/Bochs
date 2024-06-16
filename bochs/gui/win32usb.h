@@ -44,7 +44,7 @@ BOCHSAPI_MSVCONLY int win32_usb_start(HWND hwnd, int break_type, int wParam, int
 #define USB_DEBUG_RESET    5
 #define USB_DEBUG_ENABLE   6
 
-BOCHSAPI_MSVCONLY void win32_usb_trigger(int type, int trigger, int wParam, int lParam);
+void win32_usb_trigger(int type, int trigger, int wParam, int lParam);
 
 // lParam flags
 #define USB_LPARAM_FLAG_BEFORE  0x00000001

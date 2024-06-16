@@ -392,7 +392,7 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x00: // command register (16-bit) (R/W)
       if (value & 0xFF00)
         BX_DEBUG(("write to command register with bits 15:8 not zero: 0x%04x", value));
-      
+
       hub.usb_command.max_packet_size = (value & 0x80) ? 1: 0;
       hub.usb_command.configured = (value & 0x40) ? 1: 0;
       hub.usb_command.debug = (value & 0x20) ? 1: 0;
@@ -520,7 +520,7 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_ERROR(("write to non existent offset 0x14 (port #3)"));
 #if BX_USE_WIN32USBDEBUG
       // Non existant Register Port (the next one after the last)
-      win32_usb_trigger(USB_DEBUG_UHCI, USB_DEBUG_NONEXIST, 0, 0);
+      SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_NONEXIST, 0, 0);
 #endif
       break;
 
@@ -533,7 +533,7 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 #if BX_USE_WIN32USBDEBUG
         if ((value & (1 << 9)) && !hub.usb_port[port].reset)
-          win32_usb_trigger(USB_DEBUG_UHCI, USB_DEBUG_RESET, port, 0);
+          SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_RESET, port, 0);
 #endif
         if (value & ((1<<5) | (1<<4) | (1<<0)))
           BX_DEBUG(("write to one or more read-only bits in port #%d register: 0x%04x", port+1, value));
@@ -561,7 +561,7 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
         hub.usb_port[port].resume = (value & (1<<6)) ? 1 : 0;
         if (!hub.usb_port[port].enabled && (value & (1<<2))) {
 #if BX_USE_WIN32USBDEBUG
-          win32_usb_trigger(USB_DEBUG_UHCI, USB_DEBUG_ENABLE, port, 0);
+          SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_ENABLE, port, 0);
 #endif
           hub.usb_port[port].enable_changed = 0;
         } else
@@ -611,7 +611,7 @@ void bx_uhci_core_c::uhci_timer_handler(void *this_ptr)
 //  we can loop indefinitely, never ending the 1ms frame.
 // Therefore, we save a list of queue heads we execute, possibly updating to the
 //  next queue head when a loop is found.
-// 
+//
 // Let's try to add this queue's address to our stack of processed queues.
 //  if the queue has already been processed, it will be in this list (return TRUE)
 //  if the queue has not been processed yet, return FALSE
@@ -637,7 +637,7 @@ bool bx_uhci_core_c::uhci_add_queue(struct USB_UHCI_QUEUE_STACK *stack, const Bi
   // add the queue's address
   stack->queue_stack[stack->queue_cnt] = addr;
   stack->queue_cnt++;
-  
+
   return 0;
 }
 
@@ -645,7 +645,7 @@ bool bx_uhci_core_c::uhci_add_queue(struct USB_UHCI_QUEUE_STACK *stack, const Bi
 void bx_uhci_core_c::uhci_timer(void)
 {
 #if BX_USE_WIN32USBDEBUG
-  win32_usb_trigger(USB_DEBUG_UHCI, USB_DEBUG_FRAME, 0, 0);
+  SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_FRAME, 0, 0);
 #endif
 
   // If the "global reset" bit was set by software
@@ -666,7 +666,7 @@ void bx_uhci_core_c::uhci_timer(void)
     }
     return;
   }
-  
+
   // if the run bit is set, let's see if we can process a few TDs
   if (hub.usb_command.schedule) {
     // our stack of queues we have processed
@@ -680,28 +680,28 @@ void bx_uhci_core_c::uhci_timer(void)
     struct TD td;
     Bit32u address = hub.usb_frame_base.frame_base +
                    ((hub.usb_frame_num.frame_num & 0x3FF) * sizeof(Bit32u));
-    
+
     // reset our queue stack to zero
     queue_stack.queue_cnt = 0;
-    
+
     // read in the frame pointer
     DEV_MEM_READ_PHYSICAL(address, sizeof(Bit32u), (Bit8u *) &item);
-    
+
     //BX_DEBUG(("Start of Frame %d", hub.usb_frame_num.frame_num & 0x3FF));
-    
+
     // start the loop. we allow USB_UHCI_LOOP_COUNT queues to be processed
     while (count--) {
       // The UHCI (USB 1.1) only allows so many bytes to be transfered per frame.
-      // Due to control/bulk reclamation, we need to catch this and stop transferring 
+      // Due to control/bulk reclamation, we need to catch this and stop transferring
       //  or this code will just keep processing TDs.
       if (bytes_processed >= hub.max_bandwidth) {
         BX_DEBUG(("Process Bandwidth Limits for this frame (%d with a limit of %d).", bytes_processed, hub.max_bandwidth));
         break;
       }
-      
+
       if (!USB_UHCI_IS_LINK_VALID(item))  // the the T bit is set, we are done
         break;
-      
+
       // is it a queue?
       if (USB_UHCI_IS_LINK_QUEUE(item)) {
         // add it to our current list of queues
@@ -717,13 +717,13 @@ void bx_uhci_core_c::uhci_timer(void)
             uhci_add_queue(&queue_stack, item & ~0xF);
           }
         }
-        
+
         // read in the queue
         DEV_MEM_READ_PHYSICAL(item & ~0xF, sizeof(struct QUEUE), (Bit8u *) &queue);
-        
+
         // this massively populates the log file, so I keep it commented out
         //BX_DEBUG(("Queue at 0x%08X:  horz = 0x%08X, vert = 0x%08X", item & ~0xF, queue.horz, queue.vert));
-        
+
         // if the vert pointer is valid, there are td's in it to process
         //  else only the head pointer may be valid
         if (!USB_UHCI_IS_LINK_VALID(queue.vert)) {
@@ -742,7 +742,7 @@ void bx_uhci_core_c::uhci_timer(void)
         }
         continue;
       }
-      
+
       // else, we found a Transfer Descriptor
       address = item & ~0xF;
       DEV_MEM_READ_PHYSICAL(address, sizeof(struct TD), (Bit8u *) &td);
@@ -767,17 +767,17 @@ void bx_uhci_core_c::uhci_timer(void)
             }
           }
           if (td.dword1 & (1<<22)) stalled = was_stall = 1;
-          
+
           // write back the status to the TD
           DEV_MEM_WRITE_PHYSICAL(address + sizeof(Bit32u), sizeof(Bit32u), (Bit8u *) &td.dword1);
 #if BX_USE_WIN32USBDEBUG
           // trigger again so that the user can see the processed packet
-          win32_usb_trigger(USB_DEBUG_UHCI, USB_DEBUG_COMMAND, address, USB_LPARAM_FLAG_AFTER);
+          SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_COMMAND, address, USB_LPARAM_FLAG_AFTER);
 #endif
           // we processed another td within this queue line
           td_count++;
           bytes_processed += r_actlen;
-          
+
           // move to the next item
           if (!was_stall) {
             item = td.dword0;
@@ -803,11 +803,11 @@ void bx_uhci_core_c::uhci_timer(void)
           }
         }
       }
-      
+
       // move to next item (no queues) or queue head (queues found)
       item = (queue_addr != 0) ? queue.horz : td.dword0;
     } // while loop
-    
+
     // set the status register bit:0 to 1 if SPD is enabled
     // and if interrupts not masked via interrupt register, raise irq interrupt.
     if (shortpacket) hub.usb_status.status2 |= STATUS2_SPD;
@@ -836,7 +836,7 @@ void bx_uhci_core_c::uhci_timer(void)
     if (interrupt || shortpacket) {
       hub.usb_status.interrupt = 1;
     }
-    
+
     // if we needed to fire an interrupt now, lets do it *after* we increment the frame_num register
     update_irq();
   }  // end run schedule
@@ -892,7 +892,7 @@ int bx_uhci_core_c::event_handler(int event, void *ptr, int port)
     case USB_EVENT_DEFAULT_SPEED:
       // return default speed for specified port number
       return USB_SPEED_FULL;
-      
+
     case USB_EVENT_CHECK_SPEED:
       if (ptr != NULL) {
         usb_device_c *usb_device = (usb_device_c *) ptr;
@@ -904,7 +904,7 @@ int bx_uhci_core_c::event_handler(int event, void *ptr, int port)
       BX_ERROR(("unknown/unsupported event (id=%d) on port #%d", event, port+1));
       ret = -1; // unknown event, event not handled
   }
-  
+
   return ret;
 }
 
@@ -922,9 +922,9 @@ bool bx_uhci_core_c::DoTransfer(Bit32u address, struct TD *td)
   }
 
   BX_DEBUG(("TD found at address 0x%08X:  0x%08X  0x%08X  0x%08X  0x%08X", address, td->dword0, td->dword1, td->dword2, td->dword3));
-  
+
 #if BX_USE_WIN32USBDEBUG
-  win32_usb_trigger(USB_DEBUG_UHCI, USB_DEBUG_COMMAND, address, USB_LPARAM_FLAG_BEFORE);
+  SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_COMMAND, address, USB_LPARAM_FLAG_BEFORE);
 #endif
 
   // check TD to make sure it is valid
@@ -945,7 +945,7 @@ bool bx_uhci_core_c::DoTransfer(Bit32u address, struct TD *td)
   if (td->dword1 & (1 << 25)) {
     BX_ERROR(("UHCI Core: ISO bit is set..."));
   }
-  
+
   // the reserved bit in the Link Pointer should be zero
   if (td->dword0 & (1<<3)) {
     BX_INFO(("UHCI Core: Reserved bit in the Link Pointer is not zero."));
