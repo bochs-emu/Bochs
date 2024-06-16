@@ -1064,7 +1064,10 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   new_gfx_api = 1;
   new_text_api = 1;
-  dialog_caps = BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_SAVE_RESTORE | BX_GUI_DLG_USB;
+  dialog_caps = BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_SAVE_RESTORE;
+#if BX_USE_WIN32USBDEBUG
+  dialog_caps |= BX_GUI_DLG_USB;
+#endif
 }
 
 void bx_wx_gui_c::handle_events(void)
@@ -1194,9 +1197,11 @@ void bx_wx_gui_c::handle_events(void)
   } else if (tb_button == 4) {
     // userbutton_handler() also calls a dialog.
     userbutton_handler();
+#if BX_USE_WIN32USBDEBUG
   } else if (tb_button == 5) {
     // usb_handler() also calls a dialog.
     usb_handler();
+#endif
   }
 }
 
