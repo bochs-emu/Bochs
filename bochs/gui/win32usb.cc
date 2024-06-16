@@ -77,17 +77,18 @@ int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam)
   int ret;
 
   // get the (host controller) type we are to debug
-  Bit32s type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get();
+  bx_param_enum_c *debug_type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
+  Bit32s type = debug_type->get();
   if ((type < USB_DEBUG_UHCI) || (type > USB_DEBUG_XHCI)) {
     sprintf(str, "Unknown host controller type given: %d", type);
     MessageBox(hwnd, str, NULL, MB_ICONINFORMATION);
     return 0;
   }
 
-  // check to make sure the specified HC was enabled and in use
+  // check to make sure the specified HC is enabled
   host_param = SIM->get_param(hc_param_str[type]);
-  if ((host_param == NULL) || !host_param->get_enabled()) {
-    sprintf(str, "Parameter not found or enabled: %s", hc_param_str[type]);
+  if ((host_param == NULL) || !SIM->get_param_bool("enabled", host_param)->get()) {
+    sprintf(str, "Selected USB HC not enabled: %s", debug_type->get_choice(type));
     MessageBox(hwnd, str, NULL, MB_ICONINFORMATION);
     return 0;
   }

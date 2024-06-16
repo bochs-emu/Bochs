@@ -26,11 +26,13 @@
 
 #define COMMON_STR_SIZE  128
 
-#define USB_DEBUG_NONE   0
-#define USB_DEBUG_UHCI   1
-#define USB_DEBUG_OHCI   2
-#define USB_DEBUG_EHCI   3
-#define USB_DEBUG_XHCI   4
+enum {
+  USB_DEBUG_NONE,
+  USB_DEBUG_UHCI,
+  USB_DEBUG_OHCI,
+  USB_DEBUG_EHCI,
+  USB_DEBUG_XHCI
+};
 
 BOCHSAPI_MSVCONLY int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam);
 

@@ -234,10 +234,10 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, 
 #if BX_USE_WIN32USBDEBUG
     static const char *usb_debug_type[] = { "none", "uhci", "ohci", "ehci", "xhci", NULL };
     bx_list_c *usb_debug = new bx_list_c(ports, "usb_debug", "USB Debug Options");
-    new bx_param_enum_c(usb_debug,
+    bx_param_enum_c *type = new bx_param_enum_c(usb_debug,
       "type", "HC type",
       "Select Host Controller type",
-      usb_debug_type, 0, 0);
+      usb_debug_type, USB_DEBUG_NONE, USB_DEBUG_NONE);
     new bx_param_bool_c(usb_debug,
       "reset", "Trigger on reset",
       "Trigger on Reset",
@@ -269,6 +269,8 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, 
       "Trigger on write to non-existant port",
       0
     );
+    type->set_dependent_list(usb_debug->clone(), 1);
+    type->set_dependent_bitmap(USB_DEBUG_NONE, 0);
 #endif
     // prepare runtime options
     bx_list_c *rtmenu = (bx_list_c*)SIM->get_param("menu.runtime");
@@ -307,7 +309,7 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, 
       -1, 10,
       -1, 0   // -1 as a default so that we can tell if this parameter was given
   );
-  
+
   deplist = new bx_list_c(NULL);
   for (Bit8u i = 0; i < maxports; i++) {
     sprintf(name, "port%u", i+1);
@@ -3404,20 +3406,19 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
     // check that we haven't already defined the type
     // we can only debug one controller at a time
-    Bit32s type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get();
-    if (type > 0) {
+    bx_param_enum_c *type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
+    if (type->get() != USB_DEBUG_NONE) {
       PARSE_ERR(("%s: usb_debug: type='%s' previously defined.", context, 
-        SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get_choice(type)));
+                 type->get_selected()));
     }
     if (parse_usb_debug_options(context, num_params, params) < 0) {
       return -1;
     }
     // we currently only support the xHCI controller type, so give
     //  an error if it is something else.
-    type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get();
-    if ((type == USB_DEBUG_OHCI) || (type == USB_DEBUG_EHCI)) {
+    if ((type->get() == USB_DEBUG_OHCI) || (type->get() == USB_DEBUG_EHCI)) {
       PARSE_ERR(("%s: usb_debug: type='%s' not supported yet.", context, 
-        SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get_choice(type)));
+                 type->get_selected()));
     }
 #endif
   } else if (!strcmp(params[0], "load32bitOSImage")) {
