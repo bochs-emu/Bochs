@@ -93,6 +93,9 @@
 //#include "bitmaps/configbutton.xpm"
 #include "bitmaps/userbutton.xpm"
 #include "bitmaps/saverestore.xpm"
+#if BX_USE_WIN32USBDEBUG
+#include "bitmaps/usb.xpm"
+#endif
 #ifdef __WXGTK__
 #include "icon_bochs.xpm"
 #endif
@@ -344,6 +347,9 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_TOOL(ID_Toolbar_Snapshot, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Mouse_en, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_User, MyFrame::OnToolbarClick)
+#if BX_USE_WIN32USBDEBUG
+  EVT_TOOL(ID_Toolbar_USB_Debug, MyFrame::OnToolbarClick)
+#endif
 END_EVENT_TABLE()
 
 
@@ -447,6 +453,9 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   BX_ADD_TOOL(ID_Toolbar_Snapshot, snapshot_xpm, wxT("Save screen snapshot"));
   BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_xpm, wxT("Enable mouse capture\nThere is also a shortcut for this: a CTRL key + the middle mouse button."));
   BX_ADD_TOOL(ID_Toolbar_User, userbutton_xpm, wxT("Keyboard shortcut"));
+#if BX_USE_WIN32USBDEBUG
+  BX_ADD_TOOL(ID_Toolbar_USB_Debug, usb_xpm, wxT("USB Debugger"));
+#endif
 
   bxToolBar->Realize();
   UpdateToolBar(false);
@@ -862,6 +871,9 @@ void MyFrame::UpdateToolBar(bool simPresent)
   } else {
     bxToolBar->SetToolShortHelp(ID_Toolbar_SaveRestore, wxT("Restore simulation state"));
   }
+#if BX_USE_WIN32USBDEBUG
+  bxToolBar->EnableTool(ID_Toolbar_USB_Debug, simPresent);
+#endif
 }
 
 void MyFrame::OnStartSim(wxCommandEvent& event)
@@ -1271,6 +1283,7 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
     case ID_Toolbar_Snapshot: which = BX_TOOLBAR_SNAPSHOT; break;
     case ID_Toolbar_Mouse_en: panel->ToggleMouse(true); break;
     case ID_Toolbar_User: which = BX_TOOLBAR_USER; break;
+    case ID_Toolbar_USB_Debug: which = BX_TOOLBAR_USB_DEBUG; break;
     default:
       wxLogError(wxT("unknown toolbar id %d"), id);
   }

@@ -1064,7 +1064,7 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   new_gfx_api = 1;
   new_text_api = 1;
-  dialog_caps = BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_SAVE_RESTORE;
+  dialog_caps = BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_SAVE_RESTORE | BX_GUI_DLG_USB;
 }
 
 void bx_wx_gui_c::handle_events(void)
@@ -1084,6 +1084,7 @@ void bx_wx_gui_c::handle_events(void)
             case BX_TOOLBAR_PASTE: paste_handler(); break;
             case BX_TOOLBAR_SNAPSHOT: tb_button = 3; break;
             case BX_TOOLBAR_USER: tb_button = 4; break;
+            case BX_TOOLBAR_USB_DEBUG: tb_button = 5; break;
             default:
               wxLogDebug (wxT ("unknown toolbar id %d"), event_queue[i].u.toolbar.button);
           }
@@ -1193,6 +1194,9 @@ void bx_wx_gui_c::handle_events(void)
   } else if (tb_button == 4) {
     // userbutton_handler() also calls a dialog.
     userbutton_handler();
+  } else if (tb_button == 5) {
+    // usb_handler() also calls a dialog.
+    usb_handler();
   }
 }
 

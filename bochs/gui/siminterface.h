@@ -119,7 +119,8 @@ typedef enum {
   BX_TOOLBAR_SNAPSHOT,
   BX_TOOLBAR_CONFIG,
   BX_TOOLBAR_MOUSE_EN,
-  BX_TOOLBAR_USER
+  BX_TOOLBAR_USER,
+  BX_TOOLBAR_USB_DEBUG
 } bx_toolbar_buttons;
 
 // normally all action choices are available for all event types. The exclude

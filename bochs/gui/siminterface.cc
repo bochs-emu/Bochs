@@ -389,6 +389,9 @@ bx_real_sim_c::bx_real_sim_c()
   bxevent_callback_data = NULL;
   ci_callback = NULL;
   ci_callback_data = NULL;
+#if BX_USE_WIN32USBDEBUG
+  usbi_callback = NULL;
+#endif
   is_sim_thread_func = NULL;
   bx_debug_gui = 0;
   bx_log_viewer = 0;
