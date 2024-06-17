@@ -74,7 +74,6 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   void *ci_callback_data;
 #if BX_USE_WIN32USBDEBUG
   int usb_debug_type;
-  usb_interface_callback_t usbi_callback;
 #endif
   rt_conf_entry_t *rt_conf_entries;
   addon_option_t *addon_options;
@@ -186,8 +185,7 @@ public:
 #if BX_USE_WIN32USBDEBUG
   virtual void register_usb_debug_type(int type);
   virtual void usb_debug_trigger(int type, int trigger, int wParam, int lParam);
-  virtual void register_usb_interface(usb_interface_callback_t callback, void *data);
-  virtual int usb_config_interface(int type, int wParam, int lParam);
+  virtual int usb_debug_interface(int type, int wParam, int lParam);
 #endif
   virtual int begin_simulation(int argc, char *argv[]);
   virtual int register_runtime_config_handler(void *dev, rt_conf_handler_t handler);
@@ -397,7 +395,6 @@ bx_real_sim_c::bx_real_sim_c()
   ci_callback_data = NULL;
 #if BX_USE_WIN32USBDEBUG
   usb_debug_type = 0;
-  usbi_callback = NULL;
 #endif
   is_sim_thread_func = NULL;
   bx_debug_gui = 0;
@@ -963,7 +960,7 @@ void bx_real_sim_c::register_usb_debug_type(int type)
 
 void bx_real_sim_c::usb_debug_trigger(int type, int trigger, int wParam, int lParam)
 {
-  if (type != USB_DEBUG_NONE) {
+  if (usb_debug_type != USB_DEBUG_NONE) {
     if (type == usb_debug_type) {
       win32_usb_trigger(type, trigger, wParam, lParam);
     } else {
@@ -972,22 +969,15 @@ void bx_real_sim_c::usb_debug_trigger(int type, int trigger, int wParam, int lPa
   }
 }
 
-void bx_real_sim_c::register_usb_interface(usb_interface_callback_t callback, void *data)
+int bx_real_sim_c::usb_debug_interface(int type, int wParam, int lParam)
 {
-  usbi_callback = callback;
-}
+  int retval = -1;
 
-int bx_real_sim_c::usb_config_interface(int type, int wParam, int lParam)
-{
-  if (!usbi_callback) {
-    BX_PANIC(("no usb interface was loaded"));
-    return -1;
+  if (type != USB_DEBUG_NONE) {
+    set_display_mode(DISP_MODE_CONFIG);
+    retval = win32_usb_interface(type, wParam, lParam);
+    set_display_mode(DISP_MODE_SIM);
   }
-  
-  set_display_mode(DISP_MODE_CONFIG);
-  int retval = (*usbi_callback)(type, wParam, lParam);
-  set_display_mode(DISP_MODE_SIM);
-  
   return retval;
 }
 #endif

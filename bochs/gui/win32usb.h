@@ -34,7 +34,9 @@ enum {
   USB_DEBUG_XHCI
 };
 
-BOCHSAPI_MSVCONLY int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam);
+int win32_usb_interface(int type, int wParam, int lParam);
+
+int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam);
 
 // USB debug break_type
 #define USB_DEBUG_FRAME    1

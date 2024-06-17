@@ -721,7 +721,7 @@ void bx_gui_c::usb_handler(void)
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_USB) {
     // Once we set the trigger, don't allow the user to press the button again
     if (SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->get() < BX_USB_DEBUG_SOF_TRIGGER)
-      SIM->usb_config_interface(USB_DEBUG_FRAME, 0, 0);
+      SIM->usb_debug_interface(USB_DEBUG_FRAME, 0, 0);
   }
 }
 #endif
