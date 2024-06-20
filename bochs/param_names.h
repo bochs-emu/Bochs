@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2023  The Bochs Project
+//  Copyright (C) 2009-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -164,6 +164,7 @@
 #define BXPN_XHCI_ENABLED                "ports.usb.xhci.enabled"
 #define BXPN_XHCI_MODEL                  "ports.usb.xhci.model"
 #define BXPN_XHCI_N_PORTS                "ports.usb.xhci.n_ports"
+#define BXPN_USB_DEBUG                   "ports.usb_debug"
 #define BXPN_USB_DEBUG_TYPE              "ports.usb_debug.type"
 #define BXPN_USB_DEBUG_RESET             "ports.usb_debug.reset"
 #define BXPN_USB_DEBUG_ENABLE            "ports.usb_debug.enable"

@@ -2279,34 +2279,6 @@ int get_floppy_type_from_image(const char *filename)
   }
 }
 
-#if BX_USE_WIN32USBDEBUG
-static Bit32s parse_usb_debug_options(const char *context, int num_params, char *params[])
-{
-  for (int i=1; i<num_params; i++) {
-    if (!strncmp(params[i], "type=", 5)) {
-      SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->set_by_name(&params[i][5]);
-    } else if (!strcmp(params[i], "reset")) {
-      SIM->get_param_bool(BXPN_USB_DEBUG_RESET)->set(1);
-    } else if (!strcmp(params[i], "enable")) {
-      SIM->get_param_bool(BXPN_USB_DEBUG_ENABLE)->set(1);
-    } else if (!strcmp(params[i], "start_frame")) {
-      SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->set(BX_USB_DEBUG_SOF_SET);
-    } else if (!strcmp(params[i], "doorbell")) {
-      SIM->get_param_bool(BXPN_USB_DEBUG_DOORBELL)->set(1);
-    } else if (!strcmp(params[i], "event")) {
-      SIM->get_param_bool(BXPN_USB_DEBUG_EVENT)->set(1);
-    } else if (!strcmp(params[i], "non_exist")) {
-      SIM->get_param_bool(BXPN_USB_DEBUG_NON_EXIST)->set(1);
-    } else {
-      PARSE_ERR(("%s: %s directive malformed.", context, params[i]));
-      return -1;
-    }
-  }
-
-  return 0;
-}
-#endif
-
 static Bit32s parse_log_options(const char *context, int num_params, char *params[])
 {
   int level, action, i;
@@ -3411,8 +3383,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: usb_debug: type='%s' previously defined.", context, 
                  type->get_selected()));
     }
-    if (parse_usb_debug_options(context, num_params, params) < 0) {
-      return -1;
+    for (i=1; i<num_params; i++) {
+      if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param(BXPN_USB_DEBUG)) < 0) {
+        PARSE_ERR(("%s: usb_debug directive malformed.", context));
+      }
     }
     // we currently only support the xHCI controller type, so give
     //  an error if it is something else.
@@ -3797,6 +3771,9 @@ int bx_write_configuration(const char *rc, int overwrite)
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_KEYBOARD), NULL, 0);
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_MOUSE), NULL, 0);
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_SOUNDLOW),"sound", 0);
+#if BX_USE_WIN32USBDEBUG
+  bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_USB_DEBUG), "usb_debug", 0);
+#endif
   SIM->save_addon_options(fp);
   fclose(fp);
   return 0;
