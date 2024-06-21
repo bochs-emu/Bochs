@@ -6807,7 +6807,7 @@ The USB emulation has been tested on numerous Guests. You can find these results
 </para>
 <para>
 <screen>
-  usb_debug: type=none|uhci|ohci|ehci|xhci, reset, enable, start_frame, doorbell, event, non_exist
+  usb_debug: type=none|uhci|ohci|ehci|xhci, reset=1, enable=1, start_frame=1, doorbell=1, event=1, non_exist=1
 </screen>
 </para>
 <para>
