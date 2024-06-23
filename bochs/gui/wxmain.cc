@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -441,21 +441,21 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
     bxToolBar->AddTool(id, wxT(""), wxBitmap(xpm_name), tooltip); \
   } while (0)
 
-  BX_ADD_TOOL(ID_Edit_FD_0, floppya_xpm, wxT("Change Floppy A"));
-  BX_ADD_TOOL(ID_Edit_FD_1, floppyb_xpm, wxT("Change Floppy B"));
-  BX_ADD_TOOL(ID_Edit_Cdrom1, cdromd_xpm, wxT("Change CDROM"));
-  BX_ADD_TOOL(ID_Toolbar_Reset, reset_xpm, wxT("Reset the system"));
-  BX_ADD_TOOL(ID_Toolbar_Power, power_xpm, wxT("Turn power on/off"));
-  BX_ADD_TOOL(ID_Toolbar_SaveRestore, saverestore_xpm, wxT(""));
-
-  BX_ADD_TOOL(ID_Toolbar_Copy, copy_xpm, wxT("Copy to clipboard"));
-  BX_ADD_TOOL(ID_Toolbar_Paste, paste_xpm, wxT("Paste from clipboard"));
-  BX_ADD_TOOL(ID_Toolbar_Snapshot, snapshot_xpm, wxT("Save screen snapshot"));
-  BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_xpm, wxT("Enable mouse capture\nThere is also a shortcut for this: a CTRL key + the middle mouse button."));
-  BX_ADD_TOOL(ID_Toolbar_User, userbutton_xpm, wxT("Keyboard shortcut"));
+  BX_ADD_TOOL(ID_Edit_FD_0, floppya_xpm, wxT("Change floppy A: media"));
+  BX_ADD_TOOL(ID_Edit_FD_1, floppyb_xpm, wxT("Change floppy B: media"));
+  BX_ADD_TOOL(ID_Edit_Cdrom1, cdromd_xpm, wxT("Change first CDROM media"));
+  BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_xpm, wxT("Enable mouse capture"));
 #if BX_USE_WIN32USBDEBUG
-  BX_ADD_TOOL(ID_Toolbar_USB_Debug, usb_xpm, wxT("USB Debugger"));
+  BX_ADD_TOOL(ID_Toolbar_USB_Debug, usb_xpm, wxT("Trigger the USB Debugger"));
 #endif
+  bxToolBar->AddSeparator();
+  BX_ADD_TOOL(ID_Toolbar_User, userbutton_xpm, wxT("Send keyboard shortcut"));
+  BX_ADD_TOOL(ID_Toolbar_Copy, copy_xpm, wxT("Copy text mode screen to the clipboard"));
+  BX_ADD_TOOL(ID_Toolbar_Paste, paste_xpm, wxT("Paste clipboard text as emulated keystrokes"));
+  BX_ADD_TOOL(ID_Toolbar_Snapshot, snapshot_xpm, wxT("Save snapshot of the Bochs screen"));
+  BX_ADD_TOOL(ID_Toolbar_Reset, reset_xpm, wxT("Reset the system"));
+  BX_ADD_TOOL(ID_Toolbar_SaveRestore, saverestore_xpm, wxT("Save/restore simulation state"));
+  BX_ADD_TOOL(ID_Toolbar_Power, power_xpm, wxT("Turn power on/off"));
 
   bxToolBar->Realize();
   UpdateToolBar(false);
