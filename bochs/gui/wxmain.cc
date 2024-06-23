@@ -1308,7 +1308,7 @@ void MyFrame::SetToolBarBitmap(int id, bool onoff)
 
   switch (id) {
     case ID_Toolbar_Mouse_en:
-      bitmap = onoff ? mouse_xpm : mouse_dis_xpm;
+      bitmap = wxBitmap(onoff ? mouse_xpm : mouse_dis_xpm);
       break;
     default:
       return;
