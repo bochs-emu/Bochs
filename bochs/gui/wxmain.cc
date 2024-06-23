@@ -90,6 +90,7 @@
 #include "bitmaps/reset.xpm"
 #include "bitmaps/snapshot.xpm"
 #include "bitmaps/mouse.xpm"
+#include "bitmaps/mouse_dis.xpm"
 //#include "bitmaps/configbutton.xpm"
 #include "bitmaps/userbutton.xpm"
 #include "bitmaps/saverestore.xpm"
@@ -444,7 +445,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   BX_ADD_TOOL(ID_Edit_FD_0, floppya_xpm, wxT("Change floppy A: media"));
   BX_ADD_TOOL(ID_Edit_FD_1, floppyb_xpm, wxT("Change floppy B: media"));
   BX_ADD_TOOL(ID_Edit_Cdrom1, cdromd_xpm, wxT("Change first CDROM media"));
-  BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_xpm, wxT("Enable mouse capture"));
+  BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_dis_xpm, wxT("Enable mouse capture"));
 #if BX_USE_WIN32USBDEBUG
   BX_ADD_TOOL(ID_Toolbar_USB_Debug, usb_xpm, wxT("Trigger the USB Debugger"));
 #endif
@@ -454,8 +455,8 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   BX_ADD_TOOL(ID_Toolbar_Paste, paste_xpm, wxT("Paste clipboard text as emulated keystrokes"));
   BX_ADD_TOOL(ID_Toolbar_Snapshot, snapshot_xpm, wxT("Save snapshot of the Bochs screen"));
   BX_ADD_TOOL(ID_Toolbar_Reset, reset_xpm, wxT("Reset the system"));
-  BX_ADD_TOOL(ID_Toolbar_SaveRestore, saverestore_xpm, wxT("Save/restore simulation state"));
-  BX_ADD_TOOL(ID_Toolbar_Power, power_xpm, wxT("Turn power on/off"));
+  BX_ADD_TOOL(ID_Toolbar_SaveRestore, saverestore_xpm, wxT("Restore simulation state"));
+  BX_ADD_TOOL(ID_Toolbar_Power, power_xpm, wxT("Turn power on"));
 
   bxToolBar->Realize();
   UpdateToolBar(false);
@@ -868,8 +869,10 @@ void MyFrame::UpdateToolBar(bool simPresent)
   bxToolBar->EnableTool(ID_Toolbar_User, simPresent);
   if (simPresent) {
     bxToolBar->SetToolShortHelp(ID_Toolbar_SaveRestore, wxT("Save simulation state"));
+    bxToolBar->SetToolShortHelp(ID_Toolbar_Power, wxT("Turn power off"));
   } else {
     bxToolBar->SetToolShortHelp(ID_Toolbar_SaveRestore, wxT("Restore simulation state"));
+    bxToolBar->SetToolShortHelp(ID_Toolbar_Power, wxT("Turn power on"));
   }
 #if BX_USE_WIN32USBDEBUG
   bxToolBar->EnableTool(ID_Toolbar_USB_Debug, simPresent);
@@ -1297,6 +1300,20 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
 void MyFrame::SetToolBarHelp(int id, wxString& text)
 {
   bxToolBar->SetToolShortHelp(id, text);
+}
+
+void MyFrame::SetToolBarBitmap(int id, bool onoff)
+{
+  wxBitmap bitmap;
+
+  switch (id) {
+    case ID_Toolbar_Mouse_en:
+      bitmap = onoff ? mouse_xpm : mouse_dis_xpm;
+      break;
+    default:
+      return;
+  }
+  bxToolBar->SetToolNormalBitmap(id, bitmap);
 }
 
 //////////////////////////////////////////////////////////////////////

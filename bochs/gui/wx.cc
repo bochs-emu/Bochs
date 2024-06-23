@@ -243,6 +243,7 @@ void MyPanel::ToggleMouse(bool fromToolbar)
     wxMessageBox(msg, wxT("Mouse Capture Enabled"), wxOK | wxICON_INFORMATION);
     first_enable = false;
   }
+  theFrame->SetToolBarBitmap(ID_Toolbar_Mouse_en, en);
   enable->set(en);
   IFDBG_MOUSE(wxLogDebug (wxT ("now mouse is %sabled", en ? "en" : "dis")));
   if (en) {
