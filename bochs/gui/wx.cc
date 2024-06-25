@@ -140,6 +140,8 @@ wxCriticalSection event_thread_lock;
 BxEvent event_queue[MAX_EVENTS];
 unsigned long num_events;
 static bool mouse_captured = 0;
+static unsigned wxBitmapEntries = 0;
+static unsigned wxToolbarEntries = 0;
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
 static Bit32u convertStringToGDKKey (const char *string);
 #endif
@@ -223,6 +225,27 @@ void MyPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
   needRefresh = false;
 }
 
+void MyPanel::SetMouseCapture(bool en)
+{
+  theFrame->SetToolBarBitmap(ID_Toolbar_Mouse_en, en);
+  if (en) {
+    mouseSavedX = wxScreenX / 2;
+    mouseSavedY = wxScreenY / 2;
+    WarpPointer(mouseSavedX, mouseSavedY);
+#if defined(__WXMSW__)
+    ShowCursor(0);
+#else
+    SetCursor(wxCURSOR_BLANK);
+#endif
+  } else {
+#if defined(__WXMSW__)
+    ShowCursor(1);
+#else
+    SetCursor(wxNullCursor);
+#endif
+  }
+}
+
 void MyPanel::ToggleMouse(bool fromToolbar)
 {
   static bool first_enable = true;
@@ -243,25 +266,9 @@ void MyPanel::ToggleMouse(bool fromToolbar)
     wxMessageBox(msg, wxT("Mouse Capture Enabled"), wxOK | wxICON_INFORMATION);
     first_enable = false;
   }
-  theFrame->SetToolBarBitmap(ID_Toolbar_Mouse_en, en);
   enable->set(en);
   IFDBG_MOUSE(wxLogDebug (wxT ("now mouse is %sabled", en ? "en" : "dis")));
-  if (en) {
-    mouseSavedX = wxScreenX / 2;
-    mouseSavedY = wxScreenY / 2;
-    WarpPointer(mouseSavedX, mouseSavedY);
-#if defined(__WXMSW__)
-    ShowCursor(0);
-#else
-    SetCursor(wxCURSOR_BLANK);
-#endif
-  } else {
-#if defined(__WXMSW__)
-    ShowCursor(1);
-#else
-    SetCursor(wxNullCursor);
-#endif
-  }
+  SetMouseCapture(en);
   if (needmutex) wxMutexGuiLeave();
 }
 
@@ -1060,6 +1067,10 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   msg.Printf(wxT("Enable mouse capture\nThere is also a shortcut for this: %s."),
              theGui->get_toggle_info());
   theFrame->SetToolBarHelp(ID_Toolbar_Mouse_en, msg);
+  if (SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get()) {
+    thePanel->SetMouseCapture(1);
+    mouse_captured = 1;
+  }
 
   num_events = 0;
 
@@ -1436,7 +1447,9 @@ unsigned bx_wx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, un
   UNUSED(bmap);
   UNUSED(xdim);
   UNUSED(ydim);
-  return(0);
+  // Return pseudo ID for replace_bitmap() feature
+  unsigned bmid = wxBitmapEntries++;
+  return bmid;
 }
 
 
@@ -1445,7 +1458,9 @@ unsigned bx_wx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, voi
   UNUSED(bmap_id);
   UNUSED(alignment);
   UNUSED(f);
-  return(0);
+  // Return pseudo ID for replace_bitmap() feature
+  unsigned hbid = wxToolbarEntries++;
+  return hbid;
 }
 
 void bx_wx_gui_c::show_headerbar(void)
@@ -1454,8 +1469,14 @@ void bx_wx_gui_c::show_headerbar(void)
 
 void bx_wx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
-  UNUSED(hbar_id);
-  UNUSED(bmap_id);
+  // Use pseudo IDs to determine toolbar button to change
+  if (hbar_id == floppyA_hbar_id) {
+    theFrame->SetToolBarBitmap(ID_Edit_FD_0, bmap_id == floppyA_bmap_id);
+  } else if (hbar_id == floppyB_hbar_id) {
+    theFrame->SetToolBarBitmap(ID_Edit_FD_1, bmap_id == floppyB_bmap_id);
+  } else if (hbar_id == cdrom1_hbar_id) {
+    theFrame->SetToolBarBitmap(ID_Edit_Cdrom1, bmap_id == cdrom1_bmap_id);
+  }
 }
 
 
@@ -1471,6 +1492,8 @@ void bx_wx_gui_c::exit(void)
   close_debug_dialog();
   wxMutexGuiLeave();
 #endif
+  wxBitmapEntries = 0;
+  wxToolbarEntries = 0;
 }
 
 void bx_wx_gui_c::mouse_enabled_changed_specific(bool val)

@@ -32,7 +32,7 @@
 #include "gui/bitmaps/copy.h"
 #include "gui/bitmaps/paste.h"
 #include "gui/bitmaps/configbutton.h"
-#include "gui/bitmaps/cdromd.h"
+#include "gui/bitmaps/cdrom1.h"
 #if BX_USE_WIN32USBDEBUG
   #include "gui/bitmaps/usb.h"
 #endif
@@ -217,10 +217,10 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
                           BX_FLOPPYB_BMAP_X, BX_FLOPPYB_BMAP_Y);
   BX_GUI_THIS floppyB_eject_bmap_id = create_bitmap(bx_floppyb_eject_bmap,
                           BX_FLOPPYB_BMAP_X, BX_FLOPPYB_BMAP_Y);
-  BX_GUI_THIS cdrom1_bmap_id = create_bitmap(bx_cdromd_bmap,
-                          BX_CDROMD_BMAP_X, BX_CDROMD_BMAP_Y);
-  BX_GUI_THIS cdrom1_eject_bmap_id = create_bitmap(bx_cdromd_eject_bmap,
-                          BX_CDROMD_BMAP_X, BX_CDROMD_BMAP_Y);
+  BX_GUI_THIS cdrom1_bmap_id = create_bitmap(bx_cdrom1_bmap,
+                          BX_CDROM1_BMAP_X, BX_CDROM1_BMAP_Y);
+  BX_GUI_THIS cdrom1_eject_bmap_id = create_bitmap(bx_cdrom1_eject_bmap,
+                          BX_CDROM1_BMAP_X, BX_CDROM1_BMAP_Y);
   BX_GUI_THIS mouse_bmap_id = create_bitmap(bx_mouse_bmap,
                           BX_MOUSE_BMAP_X, BX_MOUSE_BMAP_Y);
   BX_GUI_THIS nomouse_bmap_id = create_bitmap(bx_nomouse_bmap,

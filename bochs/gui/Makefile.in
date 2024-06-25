@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2023  The Bochs Project
+# Copyright (C) 2001-2024  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -242,7 +242,7 @@ gui.o: gui.@CPP_SUFFIX@ ../iodev/iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/bitmaps/floppyb.h ../gui/bitmaps/mouse.h ../gui/bitmaps/reset.h \
  ../gui/bitmaps/power.h ../gui/bitmaps/snapshot.h ../gui/bitmaps/copy.h \
  ../gui/bitmaps/paste.h ../gui/bitmaps/configbutton.h \
- ../gui/bitmaps/cdromd.h ../gui/bitmaps/userbutton.h \
+ ../gui/bitmaps/cdrom1.h ../gui/bitmaps/userbutton.h \
  ../gui/bitmaps/saverestore.h sdl.h
 keymap.o: keymap.@CPP_SUFFIX@ ../param_names.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
@@ -336,7 +336,7 @@ wxdialog.o: wxdialog.@CPP_SUFFIX@ ../config.h ../param_names.h ../osdep.h \
  ../gui/paramtree.h ../gui/siminterface.h ../logio.h wxdialog.h wxmain.h
 wxmain.o: wxmain.@CPP_SUFFIX@ ../config.h ../param_names.h ../osdep.h \
  ../gui/paramtree.h ../gui/siminterface.h ../bxversion.h wxdialog.h \
- wxmain.h ../extplugin.h bitmaps/cdromd.xpm bitmaps/copy.xpm \
+ wxmain.h ../extplugin.h bitmaps/cdrom1.xpm bitmaps/copy.xpm \
  bitmaps/floppya.xpm bitmaps/floppyb.xpm bitmaps/paste.xpm \
  bitmaps/power.xpm bitmaps/reset.xpm bitmaps/snapshot.xpm \
  bitmaps/mouse.xpm bitmaps/userbutton.xpm bitmaps/saverestore.xpm
@@ -371,7 +371,7 @@ gui.lo: gui.@CPP_SUFFIX@ ../iodev/iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/bitmaps/floppyb.h ../gui/bitmaps/mouse.h ../gui/bitmaps/reset.h \
  ../gui/bitmaps/power.h ../gui/bitmaps/snapshot.h ../gui/bitmaps/copy.h \
  ../gui/bitmaps/paste.h ../gui/bitmaps/configbutton.h \
- ../gui/bitmaps/cdromd.h ../gui/bitmaps/userbutton.h \
+ ../gui/bitmaps/cdrom1.h ../gui/bitmaps/userbutton.h \
  ../gui/bitmaps/saverestore.h sdl.h
 keymap.lo: keymap.@CPP_SUFFIX@ ../param_names.h ../bochs.h ../config.h ../osdep.h \
  ../gui/paramtree.h ../logio.h \
@@ -465,7 +465,7 @@ wxdialog.lo: wxdialog.@CPP_SUFFIX@ ../config.h ../param_names.h ../osdep.h \
  ../gui/paramtree.h ../gui/siminterface.h ../logio.h wxdialog.h wxmain.h
 wxmain.lo: wxmain.@CPP_SUFFIX@ ../config.h ../param_names.h ../osdep.h \
  ../gui/paramtree.h ../gui/siminterface.h ../bxversion.h wxdialog.h \
- wxmain.h ../extplugin.h bitmaps/cdromd.xpm bitmaps/copy.xpm \
+ wxmain.h ../extplugin.h bitmaps/cdrom1.xpm bitmaps/copy.xpm \
  bitmaps/floppya.xpm bitmaps/floppyb.xpm bitmaps/paste.xpm \
  bitmaps/power.xpm bitmaps/reset.xpm bitmaps/snapshot.xpm \
  bitmaps/mouse.xpm bitmaps/userbutton.xpm bitmaps/saverestore.xpm

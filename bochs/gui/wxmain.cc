@@ -81,10 +81,13 @@
 #include "extplugin.h"
 
 // include XPM icons
-#include "bitmaps/cdromd.xpm"
+#include "bitmaps/cdrom1.xpm"
+#include "bitmaps/cdrom1_eject.xpm"
 #include "bitmaps/copy.xpm"
 #include "bitmaps/floppya.xpm"
+#include "bitmaps/floppya_eject.xpm"
 #include "bitmaps/floppyb.xpm"
+#include "bitmaps/floppyb_eject.xpm"
 #include "bitmaps/paste.xpm"
 #include "bitmaps/power.xpm"
 #include "bitmaps/reset.xpm"
@@ -442,9 +445,9 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
     bxToolBar->AddTool(id, wxT(""), wxBitmap(xpm_name), tooltip); \
   } while (0)
 
-  BX_ADD_TOOL(ID_Edit_FD_0, floppya_xpm, wxT("Change floppy A: media"));
-  BX_ADD_TOOL(ID_Edit_FD_1, floppyb_xpm, wxT("Change floppy B: media"));
-  BX_ADD_TOOL(ID_Edit_Cdrom1, cdromd_xpm, wxT("Change first CDROM media"));
+  BX_ADD_TOOL(ID_Edit_FD_0, floppya_eject_xpm, wxT("Change floppy A: media"));
+  BX_ADD_TOOL(ID_Edit_FD_1, floppyb_eject_xpm, wxT("Change floppy B: media"));
+  BX_ADD_TOOL(ID_Edit_Cdrom1, cdrom1_eject_xpm, wxT("Change first CDROM media"));
   BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_dis_xpm, wxT("Enable mouse capture"));
 #if BX_USE_WIN32USBDEBUG
   BX_ADD_TOOL(ID_Toolbar_USB_Debug, usb_xpm, wxT("Trigger the USB Debugger"));
@@ -1307,6 +1310,15 @@ void MyFrame::SetToolBarBitmap(int id, bool onoff)
   wxBitmap bitmap;
 
   switch (id) {
+    case ID_Edit_FD_0:
+      bitmap = wxBitmap(onoff ? floppya_xpm : floppya_eject_xpm);
+      break;
+    case ID_Edit_FD_1:
+      bitmap = wxBitmap(onoff ? floppyb_xpm : floppyb_eject_xpm);
+      break;
+    case ID_Edit_Cdrom1:
+      bitmap = wxBitmap(onoff ? cdrom1_xpm : cdrom1_eject_xpm);
+      break;
     case ID_Toolbar_Mouse_en:
       bitmap = wxBitmap(onoff ? mouse_xpm : mouse_dis_xpm);
       break;

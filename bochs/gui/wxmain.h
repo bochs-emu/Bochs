@@ -156,6 +156,7 @@ public:
   void OnKillFocus(wxFocusEvent& event);
   void MyRefresh();
   static void OnPluginInit();
+  void SetMouseCapture(bool en);
   void ToggleMouse(bool fromToolbar);
 private:
   bool needRefresh;
