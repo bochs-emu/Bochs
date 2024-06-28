@@ -1476,6 +1476,10 @@ void bx_wx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
     theFrame->SetToolBarBitmap(ID_Edit_FD_1, bmap_id == floppyB_bmap_id);
   } else if (hbar_id == cdrom1_hbar_id) {
     theFrame->SetToolBarBitmap(ID_Edit_Cdrom1, bmap_id == cdrom1_bmap_id);
+#if BX_USE_WIN32USBDEBUG
+  } else if (hbar_id == usbdbg_hbar_id) {
+    theFrame->SetToolBarBitmap(ID_Toolbar_USB_Debug, bmap_id == usbdbg_trigger_bmap_id);
+#endif
   }
 }
 

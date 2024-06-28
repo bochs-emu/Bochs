@@ -98,7 +98,8 @@
 #include "bitmaps/userbutton.xpm"
 #include "bitmaps/saverestore.xpm"
 #if BX_USE_WIN32USBDEBUG
-#include "bitmaps/usb.xpm"
+#include "bitmaps/usbdbg.xpm"
+#include "bitmaps/usbdbg_trigger.xpm"
 #endif
 #ifdef __WXGTK__
 #include "icon_bochs.xpm"
@@ -450,7 +451,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   BX_ADD_TOOL(ID_Edit_Cdrom1, cdrom1_eject_xpm, wxT("Change first CDROM media"));
   BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_dis_xpm, wxT("Enable mouse capture"));
 #if BX_USE_WIN32USBDEBUG
-  BX_ADD_TOOL(ID_Toolbar_USB_Debug, usbdbg_xpm, wxT("Trigger the USB Debugger"));
+  BX_ADD_TOOL(ID_Toolbar_USB_Debug, usbdbg_xpm, wxT("USB Debugger support not enabled"));
 #endif
   bxToolBar->AddSeparator();
   BX_ADD_TOOL(ID_Toolbar_User, userbutton_xpm, wxT("Send keyboard shortcut"));
@@ -878,7 +879,7 @@ void MyFrame::UpdateToolBar(bool simPresent)
     bxToolBar->SetToolShortHelp(ID_Toolbar_Power, wxT("Turn power on"));
   }
 #if BX_USE_WIN32USBDEBUG
-  bxToolBar->EnableTool(ID_Toolbar_USB_Debug, simPresent);
+  bxToolBar->EnableTool(ID_Toolbar_USB_Debug, false);
 #endif
 }
 
@@ -1322,6 +1323,15 @@ void MyFrame::SetToolBarBitmap(int id, bool onoff)
     case ID_Toolbar_Mouse_en:
       bitmap = wxBitmap(onoff ? mouse_xpm : mouse_dis_xpm);
       break;
+#if BX_USE_WIN32USBDEBUG
+    case ID_Toolbar_USB_Debug:
+      if (!bxToolBar->GetToolEnabled(ID_Toolbar_USB_Debug)) {
+        bxToolBar->EnableTool(ID_Toolbar_USB_Debug, true);
+        bxToolBar->SetToolShortHelp(ID_Toolbar_USB_Debug, wxT("Trigger the USB debugger"));
+      }
+      bitmap = wxBitmap(onoff ? usbdbg_trigger_xpm : usbdbg_xpm);
+      break;
+#endif
     default:
       return;
   }

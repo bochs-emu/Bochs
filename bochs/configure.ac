@@ -1684,7 +1684,7 @@ AC_ARG_ENABLE(win32usbdbg,
     usb_debugger=0
    fi],
   [
-    if test "$bx_debugger" = 1 -a "$use_usb" = 1 -a "$bx_plugins" = 0; then
+    if test "$bx_debugger" = 1 -a "$use_usb" = 1; then
       AC_MSG_RESULT(yes)
       usb_debugger=1
     else

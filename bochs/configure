@@ -24747,7 +24747,7 @@ printf "%s\n" "no" >&6; }
    fi
 else $as_nop
 
-    if test "$bx_debugger" = 1 -a "$use_usb" = 1 -a "$bx_plugins" = 0; then
+    if test "$bx_debugger" = 1 -a "$use_usb" = 1; then
       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
       usb_debugger=1
