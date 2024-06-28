@@ -245,6 +245,9 @@ public:
   void set_fullscreen_mode(bool active) {fullscreen_mode = active;}
   // marklog handler without button, called in gui command mode
   static void marklog_handler(void);
+#if BX_USE_WIN32USBDEBUG
+  void set_usbdbg_bitmap(bool trigger);
+#endif
 
 protected:
   // And these are defined and used privately in gui.cc
@@ -296,10 +299,7 @@ protected:
   unsigned user_bmap_id, user_hbar_id;
   unsigned save_restore_bmap_id, save_restore_hbar_id;
 #if BX_USE_WIN32USBDEBUG
-  // TODO: this is a lousy hack. we need to keep these protected....
-public:
-  unsigned usb_bmap_id, usb_eject_bmap_id, usb_trigger_bmap_id, usb_hbar_id;
-protected:
+  unsigned usbdbg_bmap_id, usbdbg_dis_bmap_id, usbdbg_trigger_bmap_id, usbdbg_hbar_id;
 #endif
   // the "classic" Bochs headerbar
   unsigned bx_headerbar_entries;

@@ -75,9 +75,9 @@ int win32_usb_interface(int type, int wParam, int lParam)
       // if "start_frame" is 2, the HC triggered the debug
       if (SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->get() == BX_USB_DEBUG_SOF_SET) {
         SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->set(BX_USB_DEBUG_SOF_TRIGGER);
-        bx_gui->replace_bitmap(bx_gui->usb_hbar_id, bx_gui->usb_trigger_bmap_id);
+        bx_gui->set_usbdbg_bitmap(1);
       } else {
-        bx_gui->replace_bitmap(bx_gui->usb_hbar_id, bx_gui->usb_bmap_id);
+        bx_gui->set_usbdbg_bitmap(0);
         if (win32_usb_start(GetForegroundWindow(), type, wParam, lParam) < 0) {
           bx_user_quit = 1;
   #if !BX_DEBUGGER

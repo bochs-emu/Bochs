@@ -954,6 +954,7 @@ void bx_real_sim_c::register_usb_debug_type(int type)
       BX_PANIC(("USB debugger does not yet support type %d", type));
     } else {
       usb_debug_type = type;
+      bx_gui->set_usbdbg_bitmap(0);
     }
   }
 }

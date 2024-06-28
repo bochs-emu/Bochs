@@ -450,7 +450,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   BX_ADD_TOOL(ID_Edit_Cdrom1, cdrom1_eject_xpm, wxT("Change first CDROM media"));
   BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_dis_xpm, wxT("Enable mouse capture"));
 #if BX_USE_WIN32USBDEBUG
-  BX_ADD_TOOL(ID_Toolbar_USB_Debug, usb_xpm, wxT("Trigger the USB Debugger"));
+  BX_ADD_TOOL(ID_Toolbar_USB_Debug, usbdbg_xpm, wxT("Trigger the USB Debugger"));
 #endif
   bxToolBar->AddSeparator();
   BX_ADD_TOOL(ID_Toolbar_User, userbutton_xpm, wxT("Send keyboard shortcut"));

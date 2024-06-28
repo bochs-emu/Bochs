@@ -237,11 +237,11 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
                           BX_SAVE_RESTORE_BMAP_X, BX_SAVE_RESTORE_BMAP_Y);
 
 #if BX_USE_WIN32USBDEBUG
-  BX_GUI_THIS usb_bmap_id = create_bitmap(bx_usb_bmap,
+  BX_GUI_THIS usbdbg_bmap_id = create_bitmap(bx_usbdbg_bmap,
                           BX_USB_BMAP_X, BX_USB_BMAP_Y);
-  BX_GUI_THIS usb_eject_bmap_id = create_bitmap(bx_usb_eject_bmap,
+  BX_GUI_THIS usbdbg_dis_bmap_id = create_bitmap(bx_usbdbg_dis_bmap,
                           BX_USB_BMAP_X, BX_USB_BMAP_Y);
-  BX_GUI_THIS usb_trigger_bmap_id = create_bitmap(bx_usb_trigger_bmap,
+  BX_GUI_THIS usbdbg_trigger_bmap_id = create_bitmap(bx_usbdbg_trigger_bmap,
                           BX_USB_BMAP_X, BX_USB_BMAP_Y);
 #endif
 
@@ -276,19 +276,9 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
 #if BX_USE_WIN32USBDEBUG
   // USB button
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_USB) {
-    if ((SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() > 0) && (
-        SIM->get_param_bool(BXPN_UHCI_ENABLED)->get() ||
-        SIM->get_param_bool(BXPN_OHCI_ENABLED)->get() ||
-        SIM->get_param_bool(BXPN_EHCI_ENABLED)->get() ||
-        SIM->get_param_bool(BXPN_XHCI_ENABLED)->get())) {
-      BX_GUI_THIS usb_hbar_id = headerbar_bitmap(BX_GUI_THIS usb_bmap_id,
-                            BX_GRAVITY_LEFT, usb_handler);
-      BX_GUI_THIS set_tooltip(BX_GUI_THIS usb_hbar_id, "Trigger the USB Debugger");
-    } else {
-      BX_GUI_THIS usb_hbar_id = headerbar_bitmap(BX_GUI_THIS usb_eject_bmap_id,
-                            BX_GRAVITY_LEFT, usb_handler);
-      BX_GUI_THIS set_tooltip(BX_GUI_THIS usb_hbar_id, "USB support not enabled");
-    }
+    BX_GUI_THIS usbdbg_hbar_id = headerbar_bitmap(BX_GUI_THIS usbdbg_dis_bmap_id,
+                          BX_GRAVITY_LEFT, usb_handler);
+    BX_GUI_THIS set_tooltip(BX_GUI_THIS usbdbg_hbar_id, "USB debugger support not enabled");
   }
 #endif
 
@@ -723,6 +713,12 @@ void bx_gui_c::usb_handler(void)
     if (SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->get() < BX_USB_DEBUG_SOF_TRIGGER)
       SIM->usb_debug_interface(USB_DEBUG_FRAME, 0, 0);
   }
+}
+
+void bx_gui_c::set_usbdbg_bitmap(bool trigger)
+{
+  set_tooltip(BX_GUI_THIS usbdbg_hbar_id, "Trigger the USB debugger");
+  replace_bitmap(usbdbg_hbar_id, trigger ? usbdbg_trigger_bmap_id : usbdbg_bmap_id);
 }
 #endif
 
