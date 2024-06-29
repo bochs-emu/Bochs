@@ -71,6 +71,7 @@
 #endif
 #include <wx/image.h>
 #include <wx/clipbrd.h>
+#include <wx/filename.h>
 
 #include "osdep.h"               // workarounds for missing stuff
 #include "gui/paramtree.h"       // config parameter tree
@@ -244,7 +245,7 @@ bool MyApp::OnInit()
   // simulation begins.  This is responsible for displaying any error
   // dialogs during bochsrc and command line processing.
   SIM->set_notify_callback(&MyApp::DefaultCallback, this);
-  MyFrame *frame = new MyFrame(wxT("Bochs x86 Emulator"), wxPoint(50,50), wxSize(450,340), wxMINIMIZE_BOX | wxSYSTEM_MENU | wxCAPTION);
+  MyFrame *frame = new MyFrame(wxT("Bochs x86 Emulator"), wxPoint(50,50), wxSize(640,480), wxMINIMIZE_BOX | wxSYSTEM_MENU | wxCAPTION);
   theFrame = frame;  // hack alert
   frame->Show(TRUE);
   SetTopWindow(frame);
@@ -497,10 +498,14 @@ void MyFrame::OnConfigNew(wxCommandEvent& WXUNUSED(event))
 void MyFrame::OnConfigRead(wxCommandEvent& WXUNUSED(event))
 {
   char bochsrc[512];
+  wxString fullName, workDir;
   long style = wxFD_OPEN;
   wxFileDialog *fdialog = new wxFileDialog(this, wxT("Read configuration"), wxT(""), wxT(""), wxT("*.*"), style);
   if (fdialog->ShowModal() == wxID_OK) {
-    strncpy(bochsrc, fdialog->GetPath().mb_str(wxConvUTF8), sizeof(bochsrc) - 1);
+    fullName = fdialog->GetPath();
+    wxFileName::SplitPath(fullName, &workDir, NULL, NULL);
+    wxSetWorkingDirectory(workDir);
+    strncpy(bochsrc, fullName.mb_str(wxConvUTF8), sizeof(bochsrc) - 1);
     bochsrc[sizeof(bochsrc) - 1] = '\0';
     SIM->reset_all_param();
     SIM->read_rc(bochsrc);

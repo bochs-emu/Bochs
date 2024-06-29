@@ -26405,6 +26405,9 @@ printf "%s\n" "wxWidgets" >&6; }
 
   printf "%s\n" "#define BX_USE_TEXTCONFIG 0" >>confdefs.h
 
+  printf "%s\n" "#define HAVE_LIBREADLINE 0" >>confdefs.h
+
+  READLINE_LIB=""
 else
   if test "$DEFAULT_GUI" = win32; then
     printf "%s\n" "#define BX_DEFAULT_CONFIG_INTERFACE \"win32config\"" >>confdefs.h
