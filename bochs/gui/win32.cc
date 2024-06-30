@@ -963,8 +963,9 @@ DWORD WINAPI UIThread(LPVOID)
     SendMessage(hwndTB, TB_BUTTONSTRUCTSIZE, (WPARAM) sizeof(TBBUTTON), 0);
     SendMessage(hwndTB, TB_SETBITMAPSIZE, 0, (LPARAM)MAKELONG(32, 32));
 
-    hwndSB = CreateStatusWindow(WS_CHILD | WS_VISIBLE, "",
-                                stInfo.mainWnd, 0x7712);
+    hwndSB = CreateWindowEx(0, STATUSCLASSNAME, (PCTSTR)NULL,
+                            WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, stInfo.mainWnd,
+                            (HMENU) 0x7712, stInfo.hInstance, NULL);
     if (hwndSB) {
       unsigned elements;
       SB_Edges[0] = SIZE_OF_SB_MOUSE_MESSAGE + SIZE_OF_SB_ELEMENT;
