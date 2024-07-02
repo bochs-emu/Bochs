@@ -285,30 +285,38 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, 
   sprintf(label, "Enable %s emulation", usb_name);
   sprintf(descr, "Enables the %s emulation", usb_name);
   bx_param_bool_c *enabled = new bx_param_bool_c(menu, "enabled", label, descr, 1);
-  
-  // ehci companion type
-  static const char *ehci_comp_type[] = { "uhci", "ohci", NULL };
-  new bx_param_enum_c(menu,
-      "companion", "Companion Type",
-      "Select Companion type to emulate",
-      ehci_comp_type,
-      0, 0
-  );
-  
-  // xhci host controller type and number of ports
-  static const char *xhci_model_names[] = { "uPD720202", "uPD720201", NULL };
-  new bx_param_enum_c(menu,
-      "model", "HC model",
-      "Select Host Controller to emulate",
-      xhci_model_names,
-      0, 0
-  );
-  new bx_param_num_c(menu,
-      "n_ports", "Number of ports",
-      "Set the number of ports for this controller",
-      -1, 10,
-      -1, 0   // -1 as a default so that we can tell if this parameter was given
-  );
+
+#if BX_SUPPORT_USB_EHCI
+  if (!strcmp(usb_name, "EHCI")) {
+    // ehci companion type
+    static const char *ehci_comp_type[] = { "uhci", "ohci", NULL };
+    new bx_param_enum_c(menu,
+        "companion", "Companion Type",
+        "Select Companion type to emulate",
+        ehci_comp_type,
+        0, 0
+    );
+  }
+#endif
+
+#if BX_SUPPORT_USB_XHCI
+  if (!strcmp(usb_name, "xHCI")) {
+    // xhci host controller type and number of ports
+    static const char *xhci_model_names[] = { "uPD720202", "uPD720201", NULL };
+    new bx_param_enum_c(menu,
+        "model", "HC model",
+        "Select Host Controller to emulate",
+        xhci_model_names,
+        0, 0
+    );
+    new bx_param_num_c(menu,
+        "n_ports", "Number of ports",
+        "Set the number of ports for this controller",
+        -1, 10,
+        -1, 0   // -1 as a default so that we can tell if this parameter was given
+    );
+  }
+#endif
 
   deplist = new bx_list_c(NULL);
   for (Bit8u i = 0; i < maxports; i++) {
