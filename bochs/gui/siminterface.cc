@@ -961,12 +961,8 @@ void bx_real_sim_c::register_usb_debug_type(int type)
 
 void bx_real_sim_c::usb_debug_trigger(int type, int trigger, int wParam, int lParam)
 {
-  if (usb_debug_type != USB_DEBUG_NONE) {
-    if (type == usb_debug_type) {
-      win32_usb_trigger(type, trigger, wParam, lParam);
-    } else {
-      BX_PANIC(("USB debugger triggered with wrong type %d", type));
-    }
+  if ((usb_debug_type != USB_DEBUG_NONE) && (type == usb_debug_type)) {
+    win32_usb_trigger(type, trigger, wParam, lParam);
   }
 }
 
