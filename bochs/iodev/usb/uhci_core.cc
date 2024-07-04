@@ -55,9 +55,6 @@
 #include "pci.h"
 #include "usb_common.h"
 #include "uhci_core.h"
-#if BX_USE_WIN32USBDEBUG
-  #include "gui/win32usb.h"
-#endif
 
 #define LOG_THIS
 

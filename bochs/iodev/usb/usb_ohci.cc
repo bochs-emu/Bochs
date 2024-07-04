@@ -37,9 +37,6 @@
 #include "usb_common.h"
 #include "ohci_core.h"
 #include "usb_ohci.h"
-#if BX_USE_WIN32USBDEBUG
-#include "gui/win32usb.h"
-#endif
 
 #define LOG_THIS theUSB_OHCI->
 

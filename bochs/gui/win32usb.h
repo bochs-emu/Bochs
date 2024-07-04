@@ -26,31 +26,11 @@
 
 #define COMMON_STR_SIZE  128
 
-enum {
-  USB_DEBUG_NONE,
-  USB_DEBUG_UHCI,
-  USB_DEBUG_OHCI,
-  USB_DEBUG_EHCI,
-  USB_DEBUG_XHCI
-};
-
 int win32_usb_interface(int type, int wParam, int lParam);
 
 int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam);
 
-// USB debug break_type
-#define USB_DEBUG_FRAME    1
-#define USB_DEBUG_COMMAND  2
-#define USB_DEBUG_EVENT    3
-#define USB_DEBUG_NONEXIST 4
-#define USB_DEBUG_RESET    5
-#define USB_DEBUG_ENABLE   6
-
 void win32_usb_trigger(int type, int trigger, int wParam, int lParam);
-
-// lParam flags
-#define USB_LPARAM_FLAG_BEFORE  0x00000001
-#define USB_LPARAM_FLAG_AFTER   0x00000002
 
 struct CALLBACK_PARAMS {
   int type;

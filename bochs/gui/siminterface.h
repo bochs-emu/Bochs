@@ -558,6 +558,35 @@ BOCHSAPI extern int floppy_type_n_sectors[];
 BOCHSAPI extern const char *media_status_names[];
 BOCHSAPI extern const char *bochs_bootdisk_names[];
 
+// usb_debug items
+#if BX_USE_WIN32USBDEBUG
+
+enum {
+  USB_DEBUG_NONE,
+  USB_DEBUG_UHCI,
+  USB_DEBUG_OHCI,
+  USB_DEBUG_EHCI,
+  USB_DEBUG_XHCI
+};
+
+// USB debug break_type
+#define USB_DEBUG_FRAME    1
+#define USB_DEBUG_COMMAND  2
+#define USB_DEBUG_EVENT    3
+#define USB_DEBUG_NONEXIST 4
+#define USB_DEBUG_RESET    5
+#define USB_DEBUG_ENABLE   6
+
+#define BX_USB_DEBUG_SOF_NONE      0
+#define BX_USB_DEBUG_SOF_SET       1
+#define BX_USB_DEBUG_SOF_TRIGGER   2
+
+// lParam flags
+#define USB_LPARAM_FLAG_BEFORE  0x00000001
+#define USB_LPARAM_FLAG_AFTER   0x00000002
+
+#endif
+
 ////////////////////////////////////////////////////////////////////
 // base class simulator interface, contains just virtual functions.
 // I'm not longer sure that having a base class is going to be of any

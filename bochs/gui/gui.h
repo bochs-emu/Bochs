@@ -80,13 +80,6 @@
 #define BX_GUI_MT_F12           (BX_MT_KEY_F12)
 #define BX_GUI_MT_CTRL_ALT      (BX_MT_KEY_CTRL | BX_MT_KEY_ALT)
 
-// usb_debug items
-#if BX_USE_WIN32USBDEBUG
-  #define BX_USB_DEBUG_SOF_NONE      0
-  #define BX_USB_DEBUG_SOF_SET       1
-  #define BX_USB_DEBUG_SOF_TRIGGER   2
-#endif
-
 // display library option flags
 #define BX_GUI_OPT_HIDE_IPS       0x01
 #define BX_GUI_OPT_NOKEYREPEAT    0x02
