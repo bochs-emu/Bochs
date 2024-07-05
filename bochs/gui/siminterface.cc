@@ -29,7 +29,7 @@
 #include "bx_debug/debug.h"
 #include "virt_timer.h"
 #if BX_USE_WIN32USBDEBUG
-#include "gui/win32usb.h"
+#include "gui/usb_debug.h"
 #endif
 
 bx_simulator_interface_c *SIM = NULL;
@@ -72,9 +72,6 @@ class bx_real_sim_c : public bx_simulator_interface_c {
   const char *registered_ci_name;
   config_interface_callback_t ci_callback;
   void *ci_callback_data;
-#if BX_USE_WIN32USBDEBUG
-  int usb_debug_type;
-#endif
   rt_conf_entry_t *rt_conf_entries;
   addon_option_t *addon_options;
   bool init_done;
@@ -393,9 +390,6 @@ bx_real_sim_c::bx_real_sim_c()
   bxevent_callback_data = NULL;
   ci_callback = NULL;
   ci_callback_data = NULL;
-#if BX_USE_WIN32USBDEBUG
-  usb_debug_type = 0;
-#endif
   is_sim_thread_func = NULL;
   bx_debug_gui = 0;
   bx_log_viewer = 0;
@@ -949,21 +943,12 @@ int bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t comm
 #if BX_USE_WIN32USBDEBUG
 void bx_real_sim_c::register_usb_debug_type(int type)
 {
-  if (type != USB_DEBUG_NONE) {
-    if ((type != USB_DEBUG_UHCI) && (type != USB_DEBUG_XHCI)) {
-      BX_PANIC(("USB debugger does not yet support type %d", type));
-    } else {
-      usb_debug_type = type;
-      bx_gui->set_usbdbg_bitmap(0);
-    }
-  }
+  usb_dbg_register_type(type);
 }
 
 void bx_real_sim_c::usb_debug_trigger(int type, int trigger, int wParam, int lParam)
 {
-  if ((usb_debug_type != USB_DEBUG_NONE) && (type == usb_debug_type)) {
-    win32_usb_trigger(type, trigger, wParam, lParam);
-  }
+  usb_dbg_trigger(type, trigger, wParam, lParam);
 }
 
 int bx_real_sim_c::usb_debug_interface(int type, int wParam, int lParam)
@@ -972,7 +957,7 @@ int bx_real_sim_c::usb_debug_interface(int type, int wParam, int lParam)
 
   if (type != USB_DEBUG_NONE) {
     set_display_mode(DISP_MODE_CONFIG);
-    retval = win32_usb_interface(type, wParam, lParam);
+    retval = usb_dbg_interface(type, wParam, lParam);
     set_display_mode(DISP_MODE_SIM);
   }
   return retval;

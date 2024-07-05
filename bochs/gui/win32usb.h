@@ -26,12 +26,6 @@
 
 #define COMMON_STR_SIZE  128
 
-int win32_usb_interface(int type, int wParam, int lParam);
-
-int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam);
-
-void win32_usb_trigger(int type, int trigger, int wParam, int lParam);
-
 struct CALLBACK_PARAMS {
   int type;
   int break_type;

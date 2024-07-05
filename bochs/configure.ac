@@ -3020,7 +3020,7 @@ AC_SUBST(ENH_DBG_OBJS)
 USB_DBG_OBJS=""
 if test "$usb_debugger" = 1; then
   if test "$DEFAULT_GUI" = win32 -o "$with_win32" = yes; then
-    USB_DBG_OBJS="win32usb.o"
+    USB_DBG_OBJS="usb_debug.o win32usb.o"
     AC_DEFINE(BX_USE_WIN32USBDEBUG, 1)
   else
     AC_MSG_WARN([The USB debugger supported only for Win32 cannot be compiled here, disabling it])

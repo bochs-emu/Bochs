@@ -224,6 +224,7 @@
     <ClCompile Include="..\gui\scrollwin.cc" />
     <ClCompile Include="..\gui\siminterface.cc" />
     <ClCompile Include="..\gui\textconfig.cc" />
+    <ClCompile Include="..\gui\usb_debug.cc" />
     <ClCompile Include="..\gui\win32.cc" />
     <ClCompile Include="..\gui\win32_enh_dbg_osdep.cc" />
     <ClCompile Include="..\gui\win32config.cc" />
@@ -240,6 +241,7 @@
     <ClInclude Include="..\gui\scrollwin.h" />
     <ClInclude Include="..\gui\sdl.h" />
     <ClInclude Include="..\gui\siminterface.h" />
+    <ClInclude Include="..\gui\usb_debug.h" />
     <ClInclude Include="..\gui\wenhdbg_res.h" />
     <ClInclude Include="..\gui\win32dialog.h" />
     <ClInclude Include="..\gui\win32paramdlg.h" />
