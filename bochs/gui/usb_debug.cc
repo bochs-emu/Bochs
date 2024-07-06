@@ -23,6 +23,7 @@
 
 #if BX_USB_DEBUGGER
 
+#include "bx_debug/debug.h"
 #include "usb_debug.h"
 #include "siminterface.h"
 #include "gui.h"
