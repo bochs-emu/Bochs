@@ -417,7 +417,7 @@ void bx_usb_xhci_c::init(void)
   protocol->start_index = (BX_XHCI_THIS hub.n_ports / 2) + 1; // 1 based starting index
   protocol->count = BX_XHCI_THIS hub.n_ports / 2;
 
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() == USB_DEBUG_XHCI) {
     SIM->register_usb_debug_type(USB_DEBUG_XHCI);
   }
@@ -1850,7 +1850,7 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
           if (((value & (1 << 31)) && BX_XHCI_THIS hub.usb_port[port].is_usb3) ||
                (value & (1 << 4))) {
             reset_port_usb3(port, (value & (1 << 4)) ? HOT_RESET : WARM_RESET);
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
             SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_RESET, 0, 0);
 #endif
           }
@@ -1915,7 +1915,7 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
     }
   }
 
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   // Non existant Register Port (the next one after the last)
   else if (offset == (XHCI_PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16))) {
     SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_NONEXIST, 0, 0);
@@ -2546,7 +2546,7 @@ void bx_usb_xhci_c::process_command_ring(void)
   struct SLOT_CONTEXT slot_context;
   struct EP_CONTEXT   ep_context;
 
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_COMMAND, 0, 0);
 #endif
 
@@ -3063,7 +3063,7 @@ void bx_usb_xhci_c::write_event_TRB(unsigned interrupter, Bit64u parameter, Bit3
   write_TRB((bx_phy_address) BX_XHCI_THIS hub.ring_members.event_rings[interrupter].cur_trb, parameter, status,
     command | (Bit32u) BX_XHCI_THIS hub.ring_members.event_rings[interrupter].rcs); // set the cycle bit
 
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_EVENT, interrupter, 0);
 #endif
 
@@ -3626,7 +3626,7 @@ void bx_usb_xhci_c::xhci_timer(void)
   if (BX_XHCI_THIS hub.op_regs.HcStatus.hch)
     return;
 
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_FRAME, 0, 0);
 #endif
 
@@ -3810,7 +3810,7 @@ bool bx_usb_xhci_c::set_connect_status(Bit8u port, bool connected)
       BX_XHCI_THIS hub.usb_port[port].portsc.csc = 1;
     if (ped_org != BX_XHCI_THIS hub.usb_port[port].portsc.ped) {
       BX_XHCI_THIS hub.usb_port[port].portsc.pec = 1;
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
       SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_ENABLE, 0, 0);
 #endif
     }

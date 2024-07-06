@@ -1091,7 +1091,7 @@ enable_usb
 enable_usb_ohci
 enable_usb_ehci
 enable_usb_xhci
-enable_win32usbdbg
+enable_usb_debugger
 enable_ne2000
 enable_pnic
 enable_e1000
@@ -1835,8 +1835,8 @@ Optional Features:
   --enable-usb-ohci       enable USB OHCI support (no)
   --enable-usb-ehci       enable USB EHCI support (no)
   --enable-usb-xhci       enable USB xHCI support (no)
-  --enable-win32usbdbg    compile in support for Bochs Win32 USB debugger
-                          (yes, if debugger is on and USB is on)
+  --enable-usb-debugger   compile in support for Bochs USB debugger (yes, if
+                          debugger is on and USB is on)
   --enable-ne2000         enable NE2000 support (no)
   --enable-pnic           enable PCI pseudo NIC support (no)
   --enable-e1000          enable Intel(R) Gigabit Ethernet support (no)
@@ -24729,19 +24729,19 @@ fi
 
 
 usb_debugger=0
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking enable Bochs Win32 USB debugger" >&5
-printf %s "checking enable Bochs Win32 USB debugger... " >&6; }
-# Check whether --enable-win32usbdbg was given.
-if test ${enable_win32usbdbg+y}
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking enable Bochs USB debugger" >&5
+printf %s "checking enable Bochs USB debugger... " >&6; }
+# Check whether --enable-usb-debugger was given.
+if test ${enable_usb_debugger+y}
 then :
-  enableval=$enable_win32usbdbg; if test "$enableval" = yes; then
+  enableval=$enable_usb_debugger; if test "$enableval" = yes; then
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
     usb_debugger=1
    else
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-    printf "%s\n" "#define BX_USE_WIN32USBDEBUG 0" >>confdefs.h
+    printf "%s\n" "#define BX_USB_DEBUGGER 0" >>confdefs.h
 
     usb_debugger=0
    fi
@@ -24754,7 +24754,7 @@ printf "%s\n" "yes" >&6; }
     else
       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-      printf "%s\n" "#define BX_USE_WIN32USBDEBUG 0" >>confdefs.h
+      printf "%s\n" "#define BX_USB_DEBUGGER 0" >>confdefs.h
 
       usb_debugger=0
     fi
@@ -26661,12 +26661,12 @@ USB_DBG_OBJS=""
 if test "$usb_debugger" = 1; then
   if test "$DEFAULT_GUI" = win32 -o "$with_win32" = yes; then
     USB_DBG_OBJS="usb_debug.o win32usb.o"
-    printf "%s\n" "#define BX_USE_WIN32USBDEBUG 1" >>confdefs.h
+    printf "%s\n" "#define BX_USB_DEBUGGER 1" >>confdefs.h
 
   else
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: The USB debugger supported only for Win32 cannot be compiled here, disabling it" >&5
 printf "%s\n" "$as_me: WARNING: The USB debugger supported only for Win32 cannot be compiled here, disabling it" >&2;}
-    printf "%s\n" "#define BX_USE_WIN32USBDEBUG 0" >>confdefs.h
+    printf "%s\n" "#define BX_USB_DEBUGGER 0" >>confdefs.h
 
   fi
 fi

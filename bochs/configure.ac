@@ -1672,15 +1672,15 @@ AC_SUBST(USBHC_OBJS)
 AC_SUBST(USBHC_DLL_TARGETS)
 
 usb_debugger=0
-AC_MSG_CHECKING(enable Bochs Win32 USB debugger)
-AC_ARG_ENABLE(win32usbdbg,
-  AS_HELP_STRING([--enable-win32usbdbg], [compile in support for Bochs Win32 USB debugger (yes, if debugger is on and USB is on)]),
+AC_MSG_CHECKING(enable Bochs USB debugger)
+AC_ARG_ENABLE(usb-debugger,
+  AS_HELP_STRING([--enable-usb-debugger], [compile in support for Bochs USB debugger (yes, if debugger is on and USB is on)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     usb_debugger=1
    else
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_USE_WIN32USBDEBUG, 0)
+    AC_DEFINE(BX_USB_DEBUGGER, 0)
     usb_debugger=0
    fi],
   [
@@ -1689,7 +1689,7 @@ AC_ARG_ENABLE(win32usbdbg,
       usb_debugger=1
     else
       AC_MSG_RESULT(no)
-      AC_DEFINE(BX_USE_WIN32USBDEBUG, 0)
+      AC_DEFINE(BX_USB_DEBUGGER, 0)
       usb_debugger=0
     fi
     ]
@@ -3021,10 +3021,10 @@ USB_DBG_OBJS=""
 if test "$usb_debugger" = 1; then
   if test "$DEFAULT_GUI" = win32 -o "$with_win32" = yes; then
     USB_DBG_OBJS="usb_debug.o win32usb.o"
-    AC_DEFINE(BX_USE_WIN32USBDEBUG, 1)
+    AC_DEFINE(BX_USB_DEBUGGER, 1)
   else
     AC_MSG_WARN([The USB debugger supported only for Win32 cannot be compiled here, disabling it])
-    AC_DEFINE(BX_USE_WIN32USBDEBUG, 0)
+    AC_DEFINE(BX_USB_DEBUGGER, 0)
   fi
 fi
 AC_SUBST(USB_DBG_OBJS)

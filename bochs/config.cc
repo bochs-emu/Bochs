@@ -31,9 +31,6 @@
 #if BX_SUPPORT_PCIUSB
 #include "iodev/usb/usb_common.h"
 #endif
-#if BX_USE_WIN32USBDEBUG
-#include "gui/win32usb.h"
-#endif
 #include "param_names.h"
 #include <assert.h>
 
@@ -231,7 +228,7 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, 
     usb = new bx_list_c(ports, "usb", "USB Configuration");
     usb->set_options(usb->USE_TAB_WINDOW | usb->SHOW_PARENT);
     // usb debugging
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
     static const char *usb_debug_type[] = { "none", "uhci", "ohci", "ehci", "xhci", NULL };
     bx_list_c *usb_debug = new bx_list_c(ports, "usb_debug", "USB Debug Options");
     bx_param_enum_c *type = new bx_param_enum_c(usb_debug,
@@ -3379,7 +3376,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 #else
     PARSE_WARN(("%s: Bochs is not compiled with iodebug support", context));
 #endif
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   } else if (!strcmp(params[0], "usb_debug")) {
     if (num_params < 2) {
       PARSE_ERR(("%s: usb_debug directive malformed.", context));
@@ -3779,7 +3776,7 @@ int bx_write_configuration(const char *rc, int overwrite)
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_KEYBOARD), NULL, 0);
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_MOUSE), NULL, 0);
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_SOUNDLOW),"sound", 0);
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_USB_DEBUG), "usb_debug", 0);
 #endif
   SIM->save_addon_options(fp);

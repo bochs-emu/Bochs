@@ -559,7 +559,7 @@ BOCHSAPI extern const char *media_status_names[];
 BOCHSAPI extern const char *bochs_bootdisk_names[];
 
 // usb_debug items
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
 
 enum {
   USB_DEBUG_NONE,
@@ -740,7 +740,7 @@ public:
     config_interface_callback_t callback,
     void *userdata) {}
   virtual int configuration_interface(const char* name, ci_command_t command) {return -1; }
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   virtual void register_usb_debug_type(int type) {}
   virtual void usb_debug_trigger(int type, int trigger, int wParam, int lParam) {}
   virtual int usb_debug_interface(int type, int wParam, int lParam) { return -1; }

@@ -28,7 +28,7 @@
 #include "iodev.h"
 #include "bx_debug/debug.h"
 #include "virt_timer.h"
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
 #include "gui/usb_debug.h"
 #endif
 
@@ -179,7 +179,7 @@ public:
     config_interface_callback_t callback,
     void *userdata);
   virtual int configuration_interface(const char* name, ci_command_t command);
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   virtual void register_usb_debug_type(int type);
   virtual void usb_debug_trigger(int type, int trigger, int wParam, int lParam);
   virtual int usb_debug_interface(int type, int wParam, int lParam);
@@ -940,7 +940,7 @@ int bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t comm
   return retval;
 }
 
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
 void bx_real_sim_c::register_usb_debug_type(int type)
 {
   usb_dbg_register_type(type);

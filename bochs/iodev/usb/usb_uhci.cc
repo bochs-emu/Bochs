@@ -187,7 +187,7 @@ void bx_usb_uhci_c::init(void)
   BX_UHCI_THIS rt_conf_id = SIM->register_runtime_config_handler(BX_UHCI_THIS_PTR, runtime_config_handler);
   BX_UHCI_THIS device_change = 0;
 
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() == USB_DEBUG_UHCI) {
     SIM->register_usb_debug_type(USB_DEBUG_UHCI);
   }

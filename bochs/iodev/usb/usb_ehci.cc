@@ -285,7 +285,7 @@ void bx_usb_ehci_c::init(void)
     BX_EHCI_THIS uhci[0]->init_uhci(devfunc | 0x00, 0x8086, 0x24c2, 0x01, 0x80, BX_PCI_INTA);
     BX_EHCI_THIS uhci[1]->init_uhci(devfunc | 0x01, 0x8086, 0x24c4, 0x01, 0x00, BX_PCI_INTB);
     BX_EHCI_THIS uhci[2]->init_uhci(devfunc | 0x02, 0x8086, 0x24c7, 0x01, 0x00, BX_PCI_INTC);
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
     if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() == USB_DEBUG_UHCI) {
       SIM->register_usb_debug_type(USB_DEBUG_UHCI);
     }
@@ -306,7 +306,7 @@ void bx_usb_ehci_c::init(void)
     BX_EHCI_THIS ohci[0]->init_ohci(devfunc | 0x00, 0x8086, 0x880C, 0x00, 0x80, BX_PCI_INTA);
     BX_EHCI_THIS ohci[1]->init_ohci(devfunc | 0x01, 0x8086, 0x880D, 0x00, 0x00, BX_PCI_INTB);
     BX_EHCI_THIS ohci[2]->init_ohci(devfunc | 0x02, 0x8086, 0x880E, 0x00, 0x00, BX_PCI_INTC);
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
     if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() == USB_DEBUG_OHCI) {
       SIM->register_usb_debug_type(USB_DEBUG_OHCI);
     }
@@ -348,7 +348,7 @@ void bx_usb_ehci_c::init(void)
   QTAILQ_INIT(&BX_EHCI_THIS hub.aqueues);
   QTAILQ_INIT(&BX_EHCI_THIS hub.pqueues);
 
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() == USB_DEBUG_EHCI) {
     SIM->register_usb_debug_type(USB_DEBUG_EHCI);
   }
@@ -1040,14 +1040,14 @@ bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
                 BX_EHCI_THIS hub.usb_port[port].device->usb_send_msg(USB_MSG_RESET);
                 BX_EHCI_THIS hub.usb_port[port].portsc.csc = 0;
                 if (BX_EHCI_THIS hub.usb_port[port].device->get_speed() == USB_SPEED_HIGH) {
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
                   SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_ENABLE, 0, 0);
 #endif
                   BX_EHCI_THIS hub.usb_port[port].portsc.ped = 1;
                 }
               }
             }
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
             if (!oldpr && BX_EHCI_THIS hub.usb_port[port].portsc.pr) {
               SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_RESET, 0, 0);
             }
@@ -1055,7 +1055,7 @@ bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
             if (oldfpr && !BX_EHCI_THIS hub.usb_port[port].portsc.fpr) {
               BX_EHCI_THIS hub.usb_port[port].portsc.sus = 0;
             }
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
           } else if (port == USB_EHCI_PORTS) {
             SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_NONEXIST, 0, 0);
 #endif
@@ -1922,7 +1922,7 @@ int bx_usb_ehci_c::state_fetchqtd(EHCIQueue *q)
   EHCIqtd qtd;
   int again = 0;
 
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_COMMAND, 0, 0);
 #endif
 
@@ -2381,7 +2381,7 @@ void bx_usb_ehci_c::ehci_frame_timer(void)
   usec_elapsed = t_now - BX_EHCI_THIS hub.last_run_usec;
   frames = (int)(usec_elapsed / FRAME_TIMER_USEC);
 
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_FRAME, 0, 0);
 #endif
 

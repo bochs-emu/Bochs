@@ -33,7 +33,7 @@
 #include "gui/bitmaps/paste.h"
 #include "gui/bitmaps/configbutton.h"
 #include "gui/bitmaps/cdrom1.h"
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   #include "gui/bitmaps/usb.h"
 #endif
 #include "gui/bitmaps/userbutton.h"
@@ -236,7 +236,7 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
   BX_GUI_THIS save_restore_bmap_id = create_bitmap(bx_save_restore_bmap,
                           BX_SAVE_RESTORE_BMAP_X, BX_SAVE_RESTORE_BMAP_Y);
 
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   BX_GUI_THIS usbdbg_bmap_id = create_bitmap(bx_usbdbg_bmap,
                           BX_USB_BMAP_X, BX_USB_BMAP_Y);
   BX_GUI_THIS usbdbg_dis_bmap_id = create_bitmap(bx_usbdbg_dis_bmap,
@@ -273,7 +273,7 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
                           BX_GRAVITY_LEFT, toggle_mouse_enable);
   BX_GUI_THIS set_tooltip(BX_GUI_THIS mouse_hbar_id, "Enable mouse capture");
 
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   // USB button
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_USB) {
     BX_GUI_THIS usbdbg_hbar_id = headerbar_bitmap(BX_GUI_THIS usbdbg_dis_bmap_id,
@@ -704,8 +704,7 @@ void bx_gui_c::config_handler(void)
   }
 }
 
-#if BX_USE_WIN32USBDEBUG
-#include "win32usb.h"
+#if BX_USB_DEBUGGER
 void bx_gui_c::usb_handler(void)
 {
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_USB) {

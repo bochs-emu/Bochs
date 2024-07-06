@@ -22,7 +22,7 @@
 #ifndef BX_USB_DEBUG_H
 #define BX_USB_DEBUG_H
 
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
 
 extern int usb_debug_type;
 
@@ -34,5 +34,5 @@ void usb_dbg_trigger(int type, int trigger, int wParam, int lParam);
 
 int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam);
 
-#endif  // BX_USE_WIN32USBDEBUG
+#endif  // BX_USB_DEBUGGER
 #endif  // BX_USB_DEBUG_H

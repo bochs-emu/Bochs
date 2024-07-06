@@ -26,7 +26,7 @@
 // header bar and status bar stuff
 #define BX_HEADER_BAR_Y 32
 
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   #define BX_MAX_PIXMAPS 19
   #define BX_MAX_HEADERBAR_ENTRIES 13
 #else
@@ -47,7 +47,7 @@
 #define BX_GUI_DLG_RUNTIME      0x08
 #define BX_GUI_DLG_USER         0x10
 #define BX_GUI_DLG_SAVE_RESTORE 0x20
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   #define BX_GUI_DLG_USB          0x40
   #define BX_GUI_DLG_ALL          0x7F
 #else
@@ -238,7 +238,7 @@ public:
   void set_fullscreen_mode(bool active) {fullscreen_mode = active;}
   // marklog handler without button, called in gui command mode
   static void marklog_handler(void);
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   void set_usbdbg_bitmap(bool trigger);
 #endif
 
@@ -254,7 +254,7 @@ protected:
   static void paste_handler(void);
   static void snapshot_handler(void);
   static void config_handler(void);
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   static void usb_handler(void);
 #endif
   static void userbutton_handler(void);
@@ -291,7 +291,7 @@ protected:
   unsigned mouse_bmap_id, nomouse_bmap_id, mouse_hbar_id;
   unsigned user_bmap_id, user_hbar_id;
   unsigned save_restore_bmap_id, save_restore_hbar_id;
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   unsigned usbdbg_bmap_id, usbdbg_dis_bmap_id, usbdbg_trigger_bmap_id, usbdbg_hbar_id;
 #endif
   // the "classic" Bochs headerbar

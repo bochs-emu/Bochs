@@ -21,7 +21,7 @@
 
 #include "bochs.h"
 
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
 
 #include "usb_debug.h"
 #include "siminterface.h"

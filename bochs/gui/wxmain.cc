@@ -98,7 +98,7 @@
 //#include "bitmaps/configbutton.xpm"
 #include "bitmaps/userbutton.xpm"
 #include "bitmaps/saverestore.xpm"
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
 #include "bitmaps/usbdbg.xpm"
 #include "bitmaps/usbdbg_trigger.xpm"
 #endif
@@ -353,7 +353,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_TOOL(ID_Toolbar_Snapshot, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Mouse_en, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_User, MyFrame::OnToolbarClick)
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   EVT_TOOL(ID_Toolbar_USB_Debug, MyFrame::OnToolbarClick)
 #endif
 END_EVENT_TABLE()
@@ -451,7 +451,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   BX_ADD_TOOL(ID_Edit_FD_1, floppyb_eject_xpm, wxT("Change floppy B: media"));
   BX_ADD_TOOL(ID_Edit_Cdrom1, cdrom1_eject_xpm, wxT("Change first CDROM media"));
   BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_dis_xpm, wxT("Enable mouse capture"));
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   BX_ADD_TOOL(ID_Toolbar_USB_Debug, usbdbg_xpm, wxT("USB Debugger support not enabled"));
 #endif
   bxToolBar->AddSeparator();
@@ -883,7 +883,7 @@ void MyFrame::UpdateToolBar(bool simPresent)
     bxToolBar->SetToolShortHelp(ID_Toolbar_SaveRestore, wxT("Restore simulation state"));
     bxToolBar->SetToolShortHelp(ID_Toolbar_Power, wxT("Turn power on"));
   }
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   bxToolBar->EnableTool(ID_Toolbar_USB_Debug, false);
 #endif
 }
@@ -1328,7 +1328,7 @@ void MyFrame::SetToolBarBitmap(int id, bool onoff)
     case ID_Toolbar_Mouse_en:
       bitmap = wxBitmap(onoff ? mouse_xpm : mouse_dis_xpm);
       break;
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
     case ID_Toolbar_USB_Debug:
       if (!bxToolBar->GetToolEnabled(ID_Toolbar_USB_Debug)) {
         bxToolBar->EnableTool(ID_Toolbar_USB_Debug, true);

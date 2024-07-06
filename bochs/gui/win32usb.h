@@ -22,7 +22,7 @@
 #ifndef BX_WIN32_USB_H
 #define BX_WIN32_USB_H
 
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
 
 #define COMMON_STR_SIZE  128
 
@@ -135,5 +135,5 @@ struct S_ATTRIBUTES {
 void do_attributes(HWND hwnd, DWORD id, const int size, const char *title, const struct S_ATTRIBUTES *attribs);
 
 
-#endif  // BX_USE_WIN32USBDEBUG
+#endif  // BX_USB_DEBUGGER
 #endif  // BX_WIN32_USB_H

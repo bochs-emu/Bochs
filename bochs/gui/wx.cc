@@ -1077,7 +1077,7 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   new_gfx_api = 1;
   new_text_api = 1;
   dialog_caps = BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_SAVE_RESTORE;
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   dialog_caps |= BX_GUI_DLG_USB;
 #endif
 }
@@ -1209,7 +1209,7 @@ void bx_wx_gui_c::handle_events(void)
   } else if (tb_button == 4) {
     // userbutton_handler() also calls a dialog.
     userbutton_handler();
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   } else if (tb_button == 5) {
     // usb_handler() also calls a dialog.
     usb_handler();
@@ -1476,7 +1476,7 @@ void bx_wx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
     theFrame->SetToolBarBitmap(ID_Edit_FD_1, bmap_id == floppyB_bmap_id);
   } else if (hbar_id == cdrom1_hbar_id) {
     theFrame->SetToolBarBitmap(ID_Edit_Cdrom1, bmap_id == cdrom1_bmap_id);
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   } else if (hbar_id == usbdbg_hbar_id) {
     theFrame->SetToolBarBitmap(ID_Toolbar_USB_Debug, bmap_id == usbdbg_trigger_bmap_id);
 #endif
