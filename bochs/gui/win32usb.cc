@@ -70,9 +70,14 @@ HFONT hTreeViewFont;
 //  Common to all HC types
 //
 
+HWND getBochsWindow()
+{
+  return GetForegroundWindow(); // FIXME
+}
+
 // return 0 to continue with emulation
 // return -1 to quit emulation
-int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam)
+int usb_debug_dialog(int break_type, int param1, int param2)
 {
   char str[COMMON_STR_SIZE];
   int ret;
@@ -84,7 +89,7 @@ int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam)
   host_param = SIM->get_param(hc_param_str[usb_debug_type]);
   if ((host_param == NULL) || !SIM->get_param_bool("enabled", host_param)->get()) {
     sprintf(str, "Selected USB HC not enabled: %s", debug_type->get_choice(usb_debug_type));
-    MessageBox(hwnd, str, NULL, MB_ICONINFORMATION);
+    MessageBox(getBochsWindow(), str, NULL, MB_ICONINFORMATION);
     return 0;
   }
 
@@ -103,7 +108,7 @@ int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam)
       DEFAULT_PITCH | FF_DONTCARE, TEXT("Courier New"));
   }
   if (hTreeViewFont == NULL) {
-    MessageBox(hwnd, "Could not create a font for the Tree View Control", NULL, MB_ICONINFORMATION);
+    MessageBox(getBochsWindow(), "Could not create a font for the Tree View Control", NULL, MB_ICONINFORMATION);
     return 0;
   }
 
@@ -116,9 +121,9 @@ int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam)
   // create the dialog and wait for it to return
   g_params.type = usb_debug_type;
   g_params.break_type = break_type;
-  g_params.wParam = wParam;
-  g_params.lParam = lParam;
-  ret = (int) DialogBoxParam(NULL, MAKEINTRESOURCE(dlg_resource[usb_debug_type]), hwnd,
+  g_params.wParam = param1;
+  g_params.lParam = param2;
+  ret = (int) DialogBoxParam(NULL, MAKEINTRESOURCE(dlg_resource[usb_debug_type]), getBochsWindow(),
                              usb_debug_callbacks[usb_debug_type], (LPARAM) 0);
   // destroy the font
   DeleteObject(hTreeViewFont);

@@ -513,6 +513,10 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #endif
   if (gui_ci) {
     dialog_caps = BX_GUI_DLG_ALL;
+#if BX_USB_DEBUGGER
+  } else {
+    dialog_caps |= BX_GUI_DLG_USB;
+#endif
   }
   sdl_init_done = 1;
 }

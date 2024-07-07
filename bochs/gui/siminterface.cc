@@ -181,8 +181,8 @@ public:
   virtual int configuration_interface(const char* name, ci_command_t command);
 #if BX_USB_DEBUGGER
   virtual void register_usb_debug_type(int type);
-  virtual void usb_debug_trigger(int type, int trigger, int wParam, int lParam);
-  virtual int usb_debug_interface(int type, int wParam, int lParam);
+  virtual void usb_debug_trigger(int type, int trigger, int param1, int param2);
+  virtual int usb_debug_interface(int type, int param1, int param2);
 #endif
   virtual int begin_simulation(int argc, char *argv[]);
   virtual int register_runtime_config_handler(void *dev, rt_conf_handler_t handler);
@@ -946,18 +946,18 @@ void bx_real_sim_c::register_usb_debug_type(int type)
   usb_dbg_register_type(type);
 }
 
-void bx_real_sim_c::usb_debug_trigger(int type, int trigger, int wParam, int lParam)
+void bx_real_sim_c::usb_debug_trigger(int type, int trigger, int param1, int param2)
 {
-  usb_dbg_trigger(type, trigger, wParam, lParam);
+  usb_dbg_trigger(type, trigger, param1, param2);
 }
 
-int bx_real_sim_c::usb_debug_interface(int type, int wParam, int lParam)
+int bx_real_sim_c::usb_debug_interface(int type, int param1, int param2)
 {
   int retval = -1;
 
   if (type != USB_DEBUG_NONE) {
     set_display_mode(DISP_MODE_CONFIG);
-    retval = usb_dbg_interface(type, wParam, lParam);
+    retval = usb_dbg_interface(type, param1, param2);
     set_display_mode(DISP_MODE_SIM);
   }
   return retval;

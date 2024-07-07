@@ -742,8 +742,8 @@ public:
   virtual int configuration_interface(const char* name, ci_command_t command) {return -1; }
 #if BX_USB_DEBUGGER
   virtual void register_usb_debug_type(int type) {}
-  virtual void usb_debug_trigger(int type, int trigger, int wParam, int lParam) {}
-  virtual int usb_debug_interface(int type, int wParam, int lParam) { return -1; }
+  virtual void usb_debug_trigger(int type, int trigger, int param1, int param2) {}
+  virtual int usb_debug_interface(int type, int param1, int param2) { return -1; }
 #endif
   virtual int begin_simulation(int argc, char *argv[]) {return -1;}
   virtual int register_runtime_config_handler(void *dev, rt_conf_handler_t handler) {return 0;}

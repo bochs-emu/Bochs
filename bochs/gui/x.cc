@@ -606,7 +606,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   progname = argv[0];
   console.present = 1;
 
-#if (BX_DEBUGGER && BX_DEBUGGER_GUI) || BX_SUPPORT_SOUNDLOW || BX_SUPPORT_VOODOO
+#if (BX_DEBUGGER && BX_DEBUGGER_GUI) || BX_SUPPORT_SOUNDLOW || BX_SUPPORT_VOODOO || BX_USB_DEBUGGER
   // This is only necessary when GTK+ and Xlib are sharing the same
   // connection. XInitThreads() must finish before any calls to GTK+
   // or Xlib are made.
@@ -927,6 +927,9 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   new_gfx_api = 1;
   new_text_api = 1;
   dialog_caps |= (BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_CDROM);
+#if BX_USB_DEBUGGER
+  dialog_caps |= BX_GUI_DLG_USB;
+#endif
 }
 
 void bx_x_gui_c::handle_events(void)

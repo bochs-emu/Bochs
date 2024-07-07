@@ -2535,7 +2535,7 @@ if test "$with_x11" = yes; then
   GUI_CXXFLAGS="$GUI_CXXFLAGS \$(X_CFLAGS)"
   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_X)"
   # The enhanced X debugger depends on GTK2
-  if test "$gui_debugger" = 1; then
+  if test "$gui_debugger" = 1 -o "$usb_debugger" = 1; then
     needs_gtk2=1
   fi
   use_gui_console=1
@@ -2560,8 +2560,10 @@ if test "$with_sdl" = yes; then
     NONPLUGIN_GUI_LINK_OPTS="`sdl-config --libs`"
   fi
   # The enhanced X debugger depends on GTK2
-  if test "$gui_debugger" = 1 -a "$DEFAULT_GUI" != win32; then
-    needs_gtk2=1
+  if test "$DEFAULT_GUI" != win32; then
+    if test "$gui_debugger" = 1 -o "$usb_debugger" = 1; then
+      needs_gtk2=1
+    fi
   fi
   if test "$with_win32" != yes -a "$with_wx" != yes; then
     case $target in
@@ -2595,8 +2597,10 @@ if test "$with_sdl2" = yes; then
     NONPLUGIN_GUI_LINK_OPTS="`sdl2-config --libs`"
   fi
   # The enhanced X debugger depends on GTK2
-  if test "$gui_debugger" = 1 -a "$DEFAULT_GUI" != win32; then
-    needs_gtk2=1
+  if test "$DEFAULT_GUI" != win32; then
+    if test "$gui_debugger" = 1 -o "$usb_debugger" = 1; then
+      needs_gtk2=1
+    fi
   fi
   if test "$with_win32" != yes -a "$with_wx" != yes; then
     case $target in
@@ -2771,8 +2775,10 @@ if test "$with_wx" = yes; then
       ;;
   esac
   # The enhanced X debugger depends on GTK2
-  if test "$gui_debugger" = 1 -a "$DEFAULT_GUI" != win32; then
-    needs_gtk2=1
+  if test "$DEFAULT_GUI" != win32; then
+    if test "$gui_debugger" = 1 -o "$usb_debugger" = 1; then
+      needs_gtk2=1
+    fi
   fi
 fi
 
@@ -3019,11 +3025,14 @@ AC_SUBST(ENH_DBG_OBJS)
 
 USB_DBG_OBJS=""
 if test "$usb_debugger" = 1; then
-  if test "$DEFAULT_GUI" = win32 -o "$with_win32" = yes; then
+  if test "$bx_have_gtk_version" -ge 2; then
+    USB_DBG_OBJS="usb_debug.o gtk_usb_debug.o"
+    AC_DEFINE(BX_USB_DEBUGGER, 1)
+  elif test "$DEFAULT_GUI" = win32 -o "$with_win32" = yes; then
     USB_DBG_OBJS="usb_debug.o win32usb.o"
     AC_DEFINE(BX_USB_DEBUGGER, 1)
   else
-    AC_MSG_WARN([The USB debugger supported only for Win32 cannot be compiled here, disabling it])
+    AC_MSG_WARN([The USB debugger cannot be compiled here, disabling it])
     AC_DEFINE(BX_USB_DEBUGGER, 0)
   fi
 fi

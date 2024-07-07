@@ -45,29 +45,27 @@ void usb_dbg_register_type(int type)
   }
 }
 
-int usb_dbg_interface(int type, int wParam, int lParam)
+int usb_dbg_interface(int type, int param1, int param2)
 {
-  if (!bx_gui->has_gui_console()) {
-    if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() > 0) {
-      // if "start_frame" is 0, do the debug_window
-      // if "start_frame" is 1, wait for the trigger from the HC
-      //  (set the value to 2, then return, allowing the trigger to envoke it)
-      // if "start_frame" is 2, the HC triggered the debug
-      if (SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->get() == BX_USB_DEBUG_SOF_SET) {
-        SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->set(BX_USB_DEBUG_SOF_TRIGGER);
-        bx_gui->set_usbdbg_bitmap(1);
-      } else {
-        bx_gui->set_usbdbg_bitmap(0);
-        if (win32_usb_start(GetForegroundWindow(), type, wParam, lParam) < 0) {
-          bx_user_quit = 1;
+  if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() > 0) {
+    // if "start_frame" is 0, do the debug_window
+    // if "start_frame" is 1, wait for the trigger from the HC
+    //  (set the value to 2, then return, allowing the trigger to envoke it)
+    // if "start_frame" is 2, the HC triggered the debug
+    if (SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->get() == BX_USB_DEBUG_SOF_SET) {
+      SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->set(BX_USB_DEBUG_SOF_TRIGGER);
+      bx_gui->set_usbdbg_bitmap(1);
+    } else {
+      bx_gui->set_usbdbg_bitmap(0);
+      if (usb_debug_dialog(type, param1, param2) < 0) {
+        bx_user_quit = 1;
 #if !BX_DEBUGGER
-          bx_atexit();
-          SIM->quit_sim(1);
+        bx_atexit();
+        SIM->quit_sim(1);
 #else
-          bx_dbg_exit(1);
+        bx_dbg_exit(1);
 #endif
-          return -1;
-        }
+        return -1;
       }
     }
   }
@@ -75,7 +73,7 @@ int usb_dbg_interface(int type, int wParam, int lParam)
 }
 
 // one of the controllers has triggered a debug item.
-void usb_dbg_trigger(int type, int trigger, int wParam, int lParam)
+void usb_dbg_trigger(int type, int trigger, int param1, int param2)
 {
   if ((usb_debug_type == USB_DEBUG_NONE) || (type != usb_debug_type))
     return;
@@ -86,7 +84,7 @@ void usb_dbg_trigger(int type, int trigger, int wParam, int lParam)
     case USB_DEBUG_FRAME:
       num_trigger = SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME);
       if (num_trigger && (num_trigger->get() == BX_USB_DEBUG_SOF_TRIGGER)) {
-        SIM->usb_debug_interface(USB_DEBUG_FRAME, wParam, lParam);
+        SIM->usb_debug_interface(USB_DEBUG_FRAME, param1, param2);
         num_trigger->set(BX_USB_DEBUG_SOF_SET);
       }
       break;
@@ -94,31 +92,31 @@ void usb_dbg_trigger(int type, int trigger, int wParam, int lParam)
     case USB_DEBUG_COMMAND:
       bool_trigger = SIM->get_param_bool(BXPN_USB_DEBUG_DOORBELL);
       if (bool_trigger && bool_trigger->get())
-        SIM->usb_debug_interface(USB_DEBUG_COMMAND, wParam, lParam);
+        SIM->usb_debug_interface(USB_DEBUG_COMMAND, param1, param2);
       break;
 
     case USB_DEBUG_EVENT:
       bool_trigger = SIM->get_param_bool(BXPN_USB_DEBUG_EVENT);
       if (bool_trigger && bool_trigger->get())
-        SIM->usb_debug_interface(USB_DEBUG_EVENT, wParam, lParam);
+        SIM->usb_debug_interface(USB_DEBUG_EVENT, param1, param2);
       break;
 
     case USB_DEBUG_NONEXIST:
       bool_trigger = SIM->get_param_bool(BXPN_USB_DEBUG_NON_EXIST);
       if (bool_trigger && bool_trigger->get())
-        SIM->usb_debug_interface(USB_DEBUG_NONEXIST, wParam, lParam);
+        SIM->usb_debug_interface(USB_DEBUG_NONEXIST, param1, param2);
       break;
 
     case USB_DEBUG_RESET:
       bool_trigger = SIM->get_param_bool(BXPN_USB_DEBUG_RESET);
       if (bool_trigger && bool_trigger->get())
-        SIM->usb_debug_interface(USB_DEBUG_RESET, wParam, lParam);
+        SIM->usb_debug_interface(USB_DEBUG_RESET, param1, param2);
       break;
 
     case USB_DEBUG_ENABLE:
       bool_trigger = SIM->get_param_bool(BXPN_USB_DEBUG_ENABLE);
       if (bool_trigger && bool_trigger->get())
-        SIM->usb_debug_interface(USB_DEBUG_ENABLE, wParam, lParam);
+        SIM->usb_debug_interface(USB_DEBUG_ENABLE, param1, param2);
       break;
   }
 }

@@ -28,11 +28,11 @@ extern int usb_debug_type;
 
 void usb_dbg_register_type(int type);
 
-int usb_dbg_interface(int type, int wParam, int lParam);
+int usb_dbg_interface(int type, int param1, int param2);
 
-void usb_dbg_trigger(int type, int trigger, int wParam, int lParam);
+void usb_dbg_trigger(int type, int trigger, int param1, int param2);
 
-int win32_usb_start(HWND hwnd, int break_type, int wParam, int lParam);
+int usb_debug_dialog(int break_type, int param1, int param2);
 
 #endif  // BX_USB_DEBUGGER
 #endif  // BX_USB_DEBUG_H
