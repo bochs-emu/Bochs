@@ -1565,3 +1565,5 @@ expression:
 ;
 
 %%
+
+#endif  /* if BX_DEBUGGER */
