@@ -570,6 +570,7 @@ void print_usage(void)
     "  -log filename    specify Bochs log file name\n"
     "  -unlock          unlock Bochs images leftover from previous session\n"
 #if BX_DEBUGGER
+    "  -debugger        start Bochs internal debugger on startup\n"
     "  -rc filename     execute debugger commands stored in file\n"
     "  -dbglog filename specify Bochs internal debugger log file name\n"
 #endif
@@ -713,6 +714,10 @@ int bx_init_main(int argc, char *argv[])
       SIM->get_param_bool(BXPN_UNLOCK_IMAGES)->set(1);
     }
 #if BX_DEBUGGER
+    else if (!strcmp("-debugger", argv[arg]) || !strcmp("-dbg", argv[arg])) {
+      SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
+      bx_dbg.debugger_active = true;
+    }
     else if (!strcmp("-dbglog", argv[arg])) {
       if (++arg >= argc) BX_PANIC(("-dbglog must be followed by a filename"));
       else SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set(argv[arg]);
@@ -1032,73 +1037,78 @@ int bx_begin_simulation(int argc, char *argv[])
   SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get());
 
 #if BX_DEBUGGER
-  // If using the debugger, it will take control and call
-  // bx_init_hardware() and cpu_loop()
-  bx_dbg_main();
-#else
-#if BX_GDBSTUB
-  // If using gdbstub, it will take control and call
-  // bx_init_hardware() and cpu_loop()
-  if (bx_dbg.gdbstub_enabled) bx_gdbstub_init();
+  if (bx_dbg.debugger_active) {
+    // If using the debugger, it will take control and call
+    // bx_init_hardware() and cpu_loop()
+    bx_dbg_main();
+  }
   else
 #endif
   {
-    if (BX_SMP_PROCESSORS == 1) {
-      // only one processor, run as fast as possible by not messing with
-      // quantums and loops.
-      while (1) {
-        BX_CPU(0)->cpu_loop();
-        if (bx_pc_system.kill_bochs_request)
-          break;
+#if BX_GDBSTUB
+    // If using gdbstub, it will take control and call
+    // bx_init_hardware() and cpu_loop()
+    if (bx_dbg.gdbstub_enabled) bx_gdbstub_init();
+    else
+#endif
+    {
+      if (BX_SMP_PROCESSORS == 1) {
+        // only one processor, run as fast as possible by not messing with
+        // quantums and loops.
+        while (1) {
+          BX_CPU(0)->cpu_loop();
+          if (bx_pc_system.kill_bochs_request)
+            break;
+        }
+        // for one processor, the only reason for cpu_loop to return is
+        // that kill_bochs_request was set by the GUI interface.
       }
-      // for one processor, the only reason for cpu_loop to return is
-      // that kill_bochs_request was set by the GUI interface.
-    }
 #if BX_SUPPORT_SMP
-    else {
-      // SMP simulation: do a few instructions on each processor, then switch
-      // to another.  Increasing quantum speeds up overall performance, but
-      // reduces granularity of synchronization between processors.
-      // Current implementation uses dynamic quantum, each processor will
-      // execute exactly one trace then quit the cpu_loop and switch to
-      // the next processor.
+      else {
+        // SMP simulation: do a few instructions on each processor, then switch
+        // to another.  Increasing quantum speeds up overall performance, but
+        // reduces granularity of synchronization between processors.
+        // Current implementation uses dynamic quantum, each processor will
+        // execute exactly one trace then quit the cpu_loop and switch to
+        // the next processor.
 
-      static int quantum = SIM->get_param_num(BXPN_SMP_QUANTUM)->get();
-      Bit32u executed = 0, processor = 0;
-      bool run = true;
+        static int quantum = SIM->get_param_num(BXPN_SMP_QUANTUM)->get();
+        Bit32u executed = 0, processor = 0;
+        bool run = true;
 
-      if (setjmp(BX_CPU_C::jmp_buf_env)) {
-        // can get here only from exception function or VMEXIT
-        BX_CPU(processor)->icount++;
-        run = false;
+        if (setjmp(BX_CPU_C::jmp_buf_env)) {
+          // can get here only from exception function or VMEXIT
+          BX_CPU(processor)->icount++;
+          run = false;
+        }
+        while (1) {
+          // do some instructions in each processor
+          if (run)
+            BX_CPU(processor)->cpu_run_trace();
+          else
+            run = true;
+
+           // see how many instruction it was able to run
+           Bit32u n = (Bit32u)(BX_CPU(processor)->get_icount() - BX_CPU(processor)->icount_last_sync);
+           if (n == 0) n = quantum; // the CPU was halted
+           executed += n;
+
+           if (++processor == BX_SMP_PROCESSORS) {
+             processor = 0;
+             BX_TICKN(executed / BX_SMP_PROCESSORS);
+             executed %= BX_SMP_PROCESSORS;
+           }
+
+           BX_CPU(processor)->icount_last_sync = BX_CPU(processor)->get_icount();
+
+           if (bx_pc_system.kill_bochs_request)
+             break;
+        }
       }
-      while (1) {
-         // do some instructions in each processor
-        if (run)
-          BX_CPU(processor)->cpu_run_trace();
-        else
-          run = true;
-
-         // see how many instruction it was able to run
-         Bit32u n = (Bit32u)(BX_CPU(processor)->get_icount() - BX_CPU(processor)->icount_last_sync);
-         if (n == 0) n = quantum; // the CPU was halted
-         executed += n;
-
-         if (++processor == BX_SMP_PROCESSORS) {
-           processor = 0;
-           BX_TICKN(executed / BX_SMP_PROCESSORS);
-           executed %= BX_SMP_PROCESSORS;
-         }
-
-         BX_CPU(processor)->icount_last_sync = BX_CPU(processor)->get_icount();
-
-         if (bx_pc_system.kill_bochs_request)
-           break;
-      }
-    }
 #endif /* BX_SUPPORT_SMP */
+    }
   }
-#endif /* BX_DEBUGGER == 0 */
+
   BX_INFO(("cpu loop quit, shutting down simulator"));
   bx_atexit();
   return(0);
