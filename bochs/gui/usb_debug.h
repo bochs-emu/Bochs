@@ -24,7 +24,10 @@
 
 #if BX_USB_DEBUGGER
 
+extern const char *hc_param_str[];
+
 extern int usb_debug_type;
+extern bx_param_c *host_param;
 
 void usb_dbg_register_type(int type);
 
@@ -33,6 +36,12 @@ int usb_dbg_interface(int type, int param1, int param2);
 void usb_dbg_trigger(int type, int trigger, int param1, int param2);
 
 int usb_debug_dialog(int break_type, int param1, int param2);
+
+Bit32u get_pci_bar_addr(bx_shadow_data_c *pci_conf, Bit8u bar_num);
+
+Bit32u usb_io_read(Bit16u addr, unsigned io_len);
+
+void usb_io_write(Bit16u addr, Bit32u value, unsigned io_len);
 
 #endif  // BX_USB_DEBUGGER
 #endif  // BX_USB_DEBUG_H

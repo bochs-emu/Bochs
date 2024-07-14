@@ -44,15 +44,6 @@ static const int dlg_resource[5] = {
   USB_DEBUG_XHCI_DLG
 };
 
-bx_param_c *host_param = NULL;
-static const char *hc_param_str[5] = {
-  "",
-  BXPN_USB_UHCI,
-  BXPN_USB_OHCI,
-  BXPN_USB_EHCI,
-  BXPN_USB_XHCI
-};
-
 static const DLGPROC usb_debug_callbacks[5] = {
   NULL,
   hc_uhci_callback,
@@ -385,31 +376,6 @@ INT_PTR CALLBACK hc_uhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
   }
 
   return 0;
-}
-
-Bit32u get_pci_bar_addr(bx_shadow_data_c *pci_conf, Bit8u bar_num)
-{
-  if ((pci_conf != NULL) && (bar_num < 5)) {
-    Bit8u *data = pci_conf->getptr() + 0x10 + (bar_num << 2);
-    Bit32u value = ReadHostDWordFromLittleEndian((Bit32u*)data);
-    if (value & 1) {
-      return (value & 0xfffc);
-    } else {
-      return (value & 0xfffffff0);
-    }
-  } else {
-    return 0;
-  }
-}
-
-Bit32u usb_io_read(Bit16u addr, unsigned io_len)
-{
-  return bx_devices.inp(addr, io_len);
-}
-
-void usb_io_write(Bit16u addr, Bit32u value, unsigned io_len)
-{
-  bx_devices.outp(addr, value, io_len);
 }
 
 #include "iodev/usb/uhci_core.h"

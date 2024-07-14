@@ -19,19 +19,24 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-#include "bochs.h"
+#include "iodev.h"
 
 #if BX_USB_DEBUGGER
 
-#include "bx_debug/debug.h"
 #include "usb_debug.h"
-#include "siminterface.h"
-#include "gui.h"
-#include "param_names.h"
 
 #define LOG_THIS genlog->
 
+const char *hc_param_str[] = {
+  "",
+  BXPN_USB_UHCI,
+  BXPN_USB_OHCI,
+  BXPN_USB_EHCI,
+  BXPN_USB_XHCI
+};
+
 int usb_debug_type = USB_DEBUG_NONE;
+bx_param_c *host_param = NULL;
 
 void usb_dbg_register_type(int type)
 {
@@ -119,6 +124,31 @@ void usb_dbg_trigger(int type, int trigger, int param1, int param2)
         SIM->usb_debug_interface(USB_DEBUG_ENABLE, param1, param2);
       break;
   }
+}
+
+Bit32u get_pci_bar_addr(bx_shadow_data_c *pci_conf, Bit8u bar_num)
+{
+  if ((pci_conf != NULL) && (bar_num < 5)) {
+    Bit8u *data = pci_conf->getptr() + 0x10 + (bar_num << 2);
+    Bit32u value = ReadHostDWordFromLittleEndian((Bit32u*)data);
+    if (value & 1) {
+      return (value & 0xfffc);
+    } else {
+      return (value & 0xfffffff0);
+    }
+  } else {
+    return 0;
+  }
+}
+
+Bit32u usb_io_read(Bit16u addr, unsigned io_len)
+{
+  return bx_devices.inp(addr, io_len);
+}
+
+void usb_io_write(Bit16u addr, Bit32u value, unsigned io_len)
+{
+  bx_devices.outp(addr, value, io_len);
 }
 
 #endif
