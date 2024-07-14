@@ -2805,26 +2805,19 @@ if test "$needs_gtk2" = 1; then
   # pkg-config is required to set TOOLKIT_CXXFLAGS and LIBS
   if test "x$PKG_CONFIG" != x; then
     # if wxGTK is based on GTK 3.0, use it for gui debugger to avoid conflicts
-    if test "$with_wx" = yes -a "$wx_needs_gdk_version" = 3; then
-      $PKG_CONFIG --exists gtk+-3.0
-      if test x$? = x0; then
-        TOOLKIT_CXXFLAGS="`$PKG_CONFIG --cflags gtk+-3.0`"
-        LIBS="$LIBS `$PKG_CONFIG --libs gtk+-3.0`"
-        bx_have_gtk_version=3
-      fi
-    else
+    if test "$with_wx" = yes -a "$wx_needs_gdk_version" = 2; then
       $PKG_CONFIG --exists gtk+-2.0
       if test x$? = x0; then
         TOOLKIT_CXXFLAGS="`$PKG_CONFIG --cflags gtk+-2.0`"
         LIBS="$LIBS `$PKG_CONFIG --libs gtk+-2.0`"
         bx_have_gtk_version=2
-      else
-        $PKG_CONFIG --exists gtk+-3.0
-        if test x$? = x0; then
-          TOOLKIT_CXXFLAGS="`$PKG_CONFIG --cflags gtk+-3.0`"
-          LIBS="$LIBS `$PKG_CONFIG --libs gtk+-3.0`"
-          bx_have_gtk_version=3
-        fi
+      fi
+    else
+      $PKG_CONFIG --exists gtk+-3.0
+      if test x$? = x0; then
+        TOOLKIT_CXXFLAGS="`$PKG_CONFIG --cflags gtk+-3.0`"
+        LIBS="$LIBS `$PKG_CONFIG --libs gtk+-3.0`"
+        bx_have_gtk_version=3
       fi
     fi
   else
@@ -3025,7 +3018,7 @@ AC_SUBST(ENH_DBG_OBJS)
 
 USB_DBG_OBJS=""
 if test "$usb_debugger" = 1; then
-  if test "$bx_have_gtk_version" -ge 2; then
+  if test "$bx_have_gtk_version" -ge 3; then
     USB_DBG_OBJS="usb_debug.o gtk_usb_debug.o"
     AC_DEFINE(BX_USB_DEBUGGER, 1)
   elif test "$DEFAULT_GUI" = win32 -o "$with_win32" = yes; then

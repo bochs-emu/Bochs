@@ -25,10 +25,6 @@
 
 #if BX_USB_DEBUGGER
 
-#if BX_HAVE_GTK_VERSION == 2
-#define GTK_DISABLE_DEPRECATED
-#endif
-
 #include "usb_debug.h"
 
 #include <gtk/gtk.h>
