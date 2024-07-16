@@ -734,7 +734,7 @@ void slirp_cleanup(Slirp *slirp)
     for (e = slirp->guestfwd_list; e; e = next) {
         next = e->ex_next;
         free(e->ex_exec);
-        free(e->ex_unix);
+//      free(e->ex_unix);
         free(e);
     }
 

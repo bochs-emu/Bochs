@@ -231,8 +231,13 @@ bool ShowAskDialog()
     if (dialog == NULL)
     {
         dialog = gtk_dialog_new ();
+#if BX_HAVE_GTK_VERSION == 2
         gtk_dialog_add_button (GTK_DIALOG (dialog), GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL);
         gtk_dialog_add_button (GTK_DIALOG (dialog), GTK_STOCK_OK, GTK_RESPONSE_OK);
+#else
+        gtk_dialog_add_button (GTK_DIALOG (dialog), g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_CANCEL);
+        gtk_dialog_add_button (GTK_DIALOG (dialog), g_dgettext("gtk30", "_OK"), GTK_RESPONSE_OK);
+#endif
         gtk_dialog_set_default_response (GTK_DIALOG (dialog), GTK_RESPONSE_OK);
     }
 // HIHI should the "transient" line be INSIDE the dialog creation "if"? -- when I tried it, it crashed?
@@ -586,7 +591,11 @@ int GetASMTopIdx()
 //    Database = (GtkListStore *) gtk_tree_view_get_model( GTK_TREE_VIEW(LV[ASM_WND]) );
 
     AsmPgSize = 0;
-    va = gtk_tree_view_get_vadjustment ( GTK_TREE_VIEW(LV[ASM_WND]) );
+#if BX_HAVE_GTK_VERSION == 2
+    va = gtk_tree_view_get_vadjustment(GTK_TREE_VIEW(LV[ASM_WND]));
+#else
+    va = gtk_scrollable_get_vadjustment(GTK_SCROLLABLE(LV[ASM_WND]));
+#endif
     // calculate the number of vertical "pixels" in one row (as a fraction of the scroll range)
     if (AsmLineCount == 0)
         return 0;
@@ -601,7 +610,11 @@ int GetASMTopIdx()
 // -- it does not technically have to really be a pixel count
 void ScrollASM(int pixels)
 {
-    GtkAdjustment *va = gtk_tree_view_get_vadjustment ( GTK_TREE_VIEW(LV[ASM_WND]) );
+#if BX_HAVE_GTK_VERSION == 2
+    GtkAdjustment *va = gtk_tree_view_get_vadjustment(GTK_TREE_VIEW(LV[ASM_WND]));
+#else
+    GtkAdjustment *va = gtk_scrollable_get_vadjustment(GTK_SCROLLABLE(LV[ASM_WND]));
+#endif
     gtk_adjustment_set_value(GTK_ADJUSTMENT(va), gtk_adjustment_get_value(va) + pixels);
 }
 
@@ -832,7 +845,11 @@ void StartListUpdate(int listnum)
     static int PrevDV = -1;             // type of previous Dump window that was displayed
     GtkListStore *Database;
     // set the scroll position back to the very top
-    GtkAdjustment *va = gtk_tree_view_get_vadjustment ( GTK_TREE_VIEW(LV[listnum]) );
+#if BX_HAVE_GTK_VERSION == 2
+    GtkAdjustment *va = gtk_tree_view_get_vadjustment(GTK_TREE_VIEW(LV[listnum]));
+#else
+    GtkAdjustment *va = gtk_scrollable_get_vadjustment(GTK_SCROLLABLE(LV[listnum]));
+#endif
     gtk_adjustment_set_value (GTK_ADJUSTMENT(va), 0);
     // then clear the database for the list that is updating
     Database = (GtkListStore *) gtk_tree_view_get_model( GTK_TREE_VIEW(LV[listnum]) );
@@ -2184,7 +2201,11 @@ bool OSInit()
       gtk_window_move(GTK_WINDOW(window), win_x, win_y);
     }
 
+#if BX_HAVE_GTK_VERSION == 2
     MainVbox = gtk_vbox_new(FALSE, 0);      // vbox that contains EVERYTHING
+#else
+    MainVbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+#endif
 
     gtk_container_add(GTK_CONTAINER(window), MainVbox);
 
@@ -2192,7 +2213,11 @@ bool OSInit()
     InitMenus();
 
     // build the StatusBar
+#if BX_HAVE_GTK_VERSION == 2
     StatHbox = gtk_hbox_new(FALSE, 3);
+#else
+    StatHbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 3);
+#endif
     Stat[0] = gtk_label_new("Break");
     gtk_label_set_width_chars (GTK_LABEL(Stat[0]), 7);
     Stat[1] = gtk_label_new("CPU:");
@@ -2200,9 +2225,15 @@ bool OSInit()
     Stat[2] = gtk_label_new("t=0");
     gtk_label_set_width_chars (GTK_LABEL(Stat[2]), 19);
     Stat[3] = gtk_label_new("IOPL");
+#if BX_HAVE_GTK_VERSION == 2
     StatVSep1 = gtk_vseparator_new();
     StatVSep2 = gtk_vseparator_new();
     StatVSep3 = gtk_vseparator_new();
+#else
+    StatVSep1 = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
+    StatVSep2 = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
+    StatVSep3 = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
+#endif
     gtk_box_pack_start(GTK_BOX(StatHbox), Stat[0], FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(StatHbox), StatVSep1, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(StatHbox), Stat[1], FALSE, FALSE, 0);
@@ -2211,25 +2242,45 @@ bool OSInit()
     gtk_box_pack_start(GTK_BOX(StatHbox), StatVSep3, FALSE, FALSE, 0);
     gtk_box_pack_start(GTK_BOX(StatHbox), Stat[3], TRUE, TRUE, 0);
     // set LEFT, instead of the default centered "justification" of status text
+#if BX_HAVE_GTK_VERSION == 2
     gtk_misc_set_alignment(GTK_MISC(Stat[0]), (gfloat) 0., (gfloat) 0.5);
     gtk_misc_set_alignment(GTK_MISC(Stat[1]), (gfloat) 0., (gfloat) 0.5);
     gtk_misc_set_alignment(GTK_MISC(Stat[2]), (gfloat) 0., (gfloat) 0.5);
     gtk_misc_set_alignment(GTK_MISC(Stat[3]), (gfloat) 0., (gfloat) 0.5);
+#else
+    gtk_widget_set_halign(GTK_WIDGET(Stat[0]), GTK_ALIGN_START);
+    gtk_widget_set_valign(GTK_WIDGET(Stat[0]), GTK_ALIGN_CENTER);
+    gtk_widget_set_halign(GTK_WIDGET(Stat[1]), GTK_ALIGN_START);
+    gtk_widget_set_valign(GTK_WIDGET(Stat[1]), GTK_ALIGN_CENTER);
+    gtk_widget_set_halign(GTK_WIDGET(Stat[2]), GTK_ALIGN_START);
+    gtk_widget_set_valign(GTK_WIDGET(Stat[2]), GTK_ALIGN_CENTER);
+    gtk_widget_set_halign(GTK_WIDGET(Stat[3]), GTK_ALIGN_START);
+    gtk_widget_set_valign(GTK_WIDGET(Stat[3]), GTK_ALIGN_CENTER);
+#endif
 
     gtk_box_pack_start(GTK_BOX(MainVbox), menubar, FALSE, FALSE, 0);
     gtk_box_pack_end(GTK_BOX(MainVbox), StatHbox, FALSE, FALSE, 0);
 
     // build the table that holds the TreeView/Input&Output windows
     TreeTbl = gtk_table_new(4, 1, TRUE);    // proportion the remaining space in quarters, vertically
+#if BX_HAVE_GTK_VERSION == 2
     sep8 = gtk_vseparator_new();            // vertical separators between the ListViews
     sep9 = gtk_vseparator_new();
+#else
+    sep8 = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
+    sep9 = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
+#endif
     VSepEvtBox1 = gtk_event_box_new();      // seps need event boxes to catch "Enter" events
     VSepEvtBox2 = gtk_event_box_new();
     gtk_container_add (GTK_CONTAINER(VSepEvtBox1), sep8);
     gtk_container_add (GTK_CONTAINER(VSepEvtBox2), sep9);
     gtk_widget_add_events(VSepEvtBox1, GDK_ENTER_NOTIFY_MASK);      // masks must be set immediately after creation
     gtk_widget_add_events(VSepEvtBox2, GDK_ENTER_NOTIFY_MASK);
+#if BX_HAVE_GTK_VERSION == 2
     IOVbox = gtk_vbox_new(FALSE, 0);        // stack the Input Entry and Output TextView vertically
+#else
+    IOVbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+#endif
 
     // create Input window
     IEntry = gtk_entry_new();
@@ -2252,13 +2303,21 @@ bool OSInit()
 
     gtk_box_pack_start(GTK_BOX(IOVbox), ScrlWinOut, TRUE, TRUE, 0);
     gtk_box_pack_end(GTK_BOX(IOVbox), IEntry, FALSE, FALSE, 0);
+#if BX_HAVE_GTK_VERSION == 2
     LVHbox = gtk_hbox_new(FALSE, 0);        // to hold the ListView windows
+#else
+    LVHbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+#endif
     LVEvtBox = gtk_event_box_new();     // need to catch "leave" and "move" events for ListViews
     gtk_container_add (GTK_CONTAINER(LVEvtBox), LVHbox);
     gtk_widget_add_events(LVEvtBox, GDK_LEAVE_NOTIFY_MASK | GDK_POINTER_MOTION_MASK | GDK_BUTTON_PRESS_MASK);
 
     // make Command and CPU Button rows
+#if BX_HAVE_GTK_VERSION == 2
     CmdBHbox = gtk_hbox_new(TRUE, 0);
+#else
+    CmdBHbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+#endif
 
     for (i=0 ; i < 5 ; i++)
     {
@@ -2274,7 +2333,11 @@ bool OSInit()
     // CPU button row does not exist for only 1 cpu
     if (BX_SMP_PROCESSORS > 1)
     {
+#if BX_HAVE_GTK_VERSION == 2
         CpuBHbox = gtk_hbox_new(TRUE, 0);
+#else
+        CpuBHbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+#endif
         gtk_box_pack_start(GTK_BOX(MainVbox), CpuBHbox, FALSE, FALSE, 0);
         i = 0;
         strcpy (bigbuf, "<b>CPU0</b>");     // Handle CPU0 specially -- it is "selected"

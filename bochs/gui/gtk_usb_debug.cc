@@ -31,13 +31,13 @@
 #include <glib.h>
 
 // multithreading using pure posix threads -- not glib threads
-void * EventLp(void *data)
+static void * EventLp(void *data)
 {
   gtk_main();
   return NULL;
 }
 
-void MakeGTKthreads()
+static void MakeGTKthreads()
 {
   pthread_t hThread;
   pthread_create(&hThread, NULL, EventLp, NULL);
