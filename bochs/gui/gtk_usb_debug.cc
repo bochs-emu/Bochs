@@ -55,7 +55,7 @@ int usb_debug_dialog(int type, int param1, int param2)
 {
   static bool first_call = true;
   int argc = 1, i, ret;
-  Bit32u pci_bar_address;
+  Bit32u pci_bar_address, frame_addr, frame_num;
   char *argv[2], **argvp, buffer[128];
   bx_list_c *UHCI_state = NULL;
   const char *chkTxt[6] = {"Reset", "Enable", "Event", "Doorbell", "Start of Frame", "Non-Exist"};
@@ -90,6 +90,20 @@ int usb_debug_dialog(int type, int param1, int param2)
     switch (type) {
       case USB_DEBUG_FRAME:
         gtk_window_set_title(GTK_WINDOW(dialog), "UHCI Debug Dialog: Break Type: Start of Frame");
+        break;
+      case USB_DEBUG_COMMAND:
+        gtk_window_set_title(GTK_WINDOW(dialog), "UHCI Debug Dialog: Break Type: Doorbell");
+        break;
+      case USB_DEBUG_NONEXIST:
+        gtk_window_set_title(GTK_WINDOW(dialog), "UHCI Debug Dialog: Break Type: Non-Existant Port Write");
+        break;
+      case USB_DEBUG_RESET:
+        sprintf(buffer, "UHCI Debug Dialog: Break Type: Port %d Reset", param1);
+        gtk_window_set_title(GTK_WINDOW(dialog), buffer);
+        break;
+      case USB_DEBUG_ENABLE:
+        sprintf(buffer, "UHCI Debug Dialog: Break Type: Port %d Enable", param1);
+        gtk_window_set_title(GTK_WINDOW(dialog), buffer);
         break;
       default:
         gtk_window_set_title(GTK_WINDOW(dialog), "UHCI Debug Dialog");
@@ -238,9 +252,11 @@ int usb_debug_dialog(int type, int param1, int param2)
     gtk_entry_set_text(GTK_ENTRY(entry[2]), buffer);
     sprintf(buffer, "0x%04X", usb_io_read(pci_bar_address + 4, 2));
     gtk_entry_set_text(GTK_ENTRY(entry[3]), buffer);
-    sprintf(buffer, "0x%04X", usb_io_read(pci_bar_address + 6, 2));
+    frame_num = usb_io_read(pci_bar_address + 6, 2);
+    sprintf(buffer, "0x%04X", frame_num);
     gtk_entry_set_text(GTK_ENTRY(entry[4]), buffer);
-    sprintf(buffer, "0x%08X", usb_io_read(pci_bar_address + 8, 4));
+    frame_addr = usb_io_read(pci_bar_address + 8, 4);
+    sprintf(buffer, "0x%08X", frame_addr);
     gtk_entry_set_text(GTK_ENTRY(entry[5]), buffer);
     sprintf(buffer, "0x%02X", usb_io_read(pci_bar_address + 12, 1));
     gtk_entry_set_text(GTK_ENTRY(entry[6]), buffer);
