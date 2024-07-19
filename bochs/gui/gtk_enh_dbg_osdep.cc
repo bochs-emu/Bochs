@@ -172,7 +172,7 @@ GtkWidget *LV[3];       // Register, ASM, MemDump / ListViews (TreeViews)
 // GTK-specific settings
 gint win_x = -1, win_y = -1, win_w, win_h;
 bool window_init = 0;
-char fontname[80];
+char fontname[81];
 bool font_init = 0;
 
 // HIHI put all these colors in an array, and use #defines for them
@@ -1129,16 +1129,36 @@ bool NewFont()
         return FALSE;
     // need to know the current font, to highlight it
     g_object_get(G_OBJECT(LV_Rend[0]), "font", &ofn, NULL);
+#if BX_HAVE_GTK_VERSION == 2
     GtkWidget *widget = gtk_font_selection_dialog_new("Choose primary font");
     gtk_font_selection_dialog_set_font_name(GTK_FONT_SELECTION_DIALOG(widget), ofn);
-    if (gtk_dialog_run(GTK_DIALOG (widget)) == GTK_RESPONSE_OK) {
+    if (gtk_dialog_run(GTK_DIALOG(widget)) == GTK_RESPONSE_OK) {
         char *nfn = gtk_font_selection_dialog_get_font_name(GTK_FONT_SELECTION_DIALOG(widget));
         strncpy(fontname, nfn, 80);
         g_free(nfn);
         update_font();
     }
+#else
+    GtkWidget *dialog = gtk_dialog_new();
+    gtk_window_set_title(GTK_WINDOW(dialog), "Select Font");
+    gtk_dialog_add_button(GTK_DIALOG(dialog),  g_dgettext("gtk30", "_OK"), GTK_RESPONSE_OK);
+    gtk_dialog_add_button(GTK_DIALOG(dialog),  g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_CANCEL);
+    gtk_dialog_set_default_response(GTK_DIALOG (dialog), GTK_RESPONSE_OK);
+    GtkWidget *widget = gtk_font_chooser_widget_new();
+    gtk_widget_show(widget);
+    gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), widget, TRUE, TRUE, 0);
+    gtk_font_chooser_set_font(GTK_FONT_CHOOSER(widget), ofn);
+    gtk_widget_show(dialog);
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_OK) {
+        char *nfn = gtk_font_chooser_get_font(GTK_FONT_CHOOSER(widget));
+        strncpy(fontname, nfn, 80);
+        g_free(nfn);
+        update_font();
+    }
+#endif
     g_free(ofn);
     gtk_widget_destroy(widget);
+    gtk_widget_destroy(dialog);
 
     return TRUE;
 }
@@ -1394,8 +1414,13 @@ void Close_cb(GtkWidget *widget, gpointer data)
     gtk_widget_destroy(PTree);
     g_object_unref(PTree);
     g_object_unref(LV[2]);
+#if BX_HAVE_GTK_VERSION == 2
     gdk_cursor_unref(SizeCurs);
     gdk_cursor_unref(DockCurs);
+#else
+    g_object_unref(SizeCurs);
+    g_object_unref(DockCurs);
+#endif
 
     if (!SIM->is_wx_selected()) {
       gtk_main_quit();
@@ -1691,7 +1716,14 @@ gboolean LEB_MouseUp(GtkWidget *widget, GdkEventButton *event, gpointer data)
         else    // complete a Docking operation
         {
             // get "local" x mouse coordinate value (main window relative)
+#if BX_HAVE_GTK_VERSION == 2
             gdk_window_get_pointer(gtk_widget_get_window(LVEvtBox), &x, &zip, NULL);
+#else
+            GdkDisplay* display = gdk_display_get_default();
+            GdkSeat* seat = gdk_display_get_default_seat(display);
+            GdkDevice* pointer = gdk_seat_get_pointer(seat);
+            gdk_window_get_device_position(gtk_widget_get_window(LVEvtBox), pointer, &x, &zip, NULL);
+#endif
             // verify that mouseup was within a LV window
             if (x >= 0 && cy >= 0 && x < totwidth && cy < heightLV)
             {
@@ -1839,7 +1871,13 @@ static gboolean VGAWrefreshTick(GtkWidget *widget)
         gint y;     // enter pre-dock mode
         int i, j;
         --SizingDelay;
-        gdk_display_get_pointer (display, NULL, &x, &y, NULL);  // absolute x and y mouse coords
+#if BX_HAVE_GTK_VERSION == 2
+        gdk_display_get_pointer(display, NULL, &x, &y, NULL);  // absolute x and y mouse coords
+#else
+        GdkSeat* seat = gdk_display_get_default_seat(display);
+        GdkDevice* pointer = gdk_seat_get_pointer(seat);
+        gdk_device_get_position(pointer, NULL, &x, &y);
+#endif
         i = x - xClick;
         j = y - yClick;     // calculate the pixel delta from the mousedown event to now
         if (i < 0) i= -i;
@@ -2410,10 +2448,17 @@ bool OSInit()
     gtk_event_box_set_visible_window (GTK_EVENT_BOX(VSepEvtBox2), FALSE);
     gtk_event_box_set_above_child (GTK_EVENT_BOX(VSepEvtBox2), TRUE);
     // build the sizing/docking cursors
-    SizeCurs = gdk_cursor_new (GDK_SB_H_DOUBLE_ARROW);
-    DockCurs = gdk_cursor_new (GDK_CROSSHAIR);
+#if BX_HAVE_GTK_VERSION == 2
+    SizeCurs = gdk_cursor_new(GDK_SB_H_DOUBLE_ARROW);
+    DockCurs = gdk_cursor_new(GDK_CROSSHAIR);
     gdk_cursor_ref(SizeCurs);
     gdk_cursor_ref(DockCurs);
+#else
+    SizeCurs = gdk_cursor_new_for_display(gdk_display_get_default(), GDK_SB_H_DOUBLE_ARROW);
+    DockCurs = gdk_cursor_new_for_display(gdk_display_get_default(), GDK_CROSSHAIR);
+    g_object_ref(SizeCurs);
+    g_object_ref(DockCurs);
+#endif
 
     if (!font_init) {
       char *fn;
