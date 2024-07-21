@@ -704,7 +704,9 @@ void VSizeChange()
     if (ShowIOWindows == FALSE)
     {
         gtk_widget_hide(IOVbox);
+//#if BX_HAVE_GTK_VERSION == 2
         gtk_table_resize(GTK_TABLE(TreeTbl), 3, 1);  // IO windows do not exist, so total table rows = 3
+//#endif
     }
     else
     {
@@ -714,7 +716,9 @@ void VSizeChange()
         gcp = gtk_entry_get_text(GTK_ENTRY(IEntry));
         strcpy (tmpcb, gcp);
         gtk_entry_set_text(GTK_ENTRY(IEntry),"");
+//#if BX_HAVE_GTK_VERSION == 2
         gtk_table_resize(GTK_TABLE(TreeTbl), 4, 1);  // IO windows exist, so total table rows = 4
+//#endif
         gtk_widget_show(IOVbox);
         gtk_widget_grab_focus(IEntry);  // Input window loses focus while it is hidden
         gtk_entry_set_text(GTK_ENTRY(IEntry),tmpcb);
@@ -1138,6 +1142,7 @@ bool NewFont()
         g_free(nfn);
         update_font();
     }
+    gtk_widget_destroy(widget);
 #else
     GtkWidget *dialog = gtk_dialog_new();
     gtk_window_set_title(GTK_WINDOW(dialog), "Select Font");
@@ -1155,10 +1160,10 @@ bool NewFont()
         g_free(nfn);
         update_font();
     }
-#endif
-    g_free(ofn);
     gtk_widget_destroy(widget);
     gtk_widget_destroy(dialog);
+#endif
+    g_free(ofn);
 
     return TRUE;
 }
@@ -2305,6 +2310,7 @@ bool OSInit()
     sep8 = gtk_vseparator_new();            // vertical separators between the ListViews
     sep9 = gtk_vseparator_new();
 #else
+//    TreeTbl = gtk_grid_new();              // TODO
     sep8 = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
     sep9 = gtk_separator_new(GTK_ORIENTATION_VERTICAL);
 #endif
@@ -2394,8 +2400,13 @@ bool OSInit()
 
     gtk_box_pack_end(GTK_BOX(MainVbox), TreeTbl, TRUE, TRUE, 0);
 
+//#if BX_HAVE_GTK_VERSION == 2
     gtk_table_attach_defaults(GTK_TABLE(TreeTbl), LVEvtBox, 0, 1, 0, 3);  // order = LRTB
     gtk_table_attach_defaults(GTK_TABLE(TreeTbl), IOVbox, 0, 1, 3, 4);
+//#else
+//    gtk_grid_attach(GTK_GRID(TreeTbl), LVEvtBox, 0, 0, 3, 3);  // order = LTWH
+//    gtk_grid_attach(GTK_GRID(TreeTbl), IOVbox, 0, 3, 3, 1);
+//#endif
     VSizeChange();
 
     // build the 3 ListView windows
