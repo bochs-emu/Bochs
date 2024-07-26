@@ -1362,14 +1362,24 @@ void InitRegObjects()
 
 void doUpdate()
 {
+    Bit8u tmpbuffer[4096];
+
     void FillStack();
+    void RefreshDataDump(Bit8u *buffer);
+
     if (doSimuInit != FALSE)
         SpecialInit();
     // begin an autoupdate of Register and Asm windows
     LoadRegList();      // build and show ListView
     ParseBkpt();        // get the linear breakpoint list
-    if (DViewMode == VIEW_STACK)    // in stack view mode, keep the stack updated
+    if (DViewMode == VIEW_STACK) {  // in stack view mode, keep the stack updated
         FillStack();
+    } else if ((DViewMode == VIEW_MEMDUMP) && DumpInitted) {
+        RefreshDataDump(tmpbuffer);
+        if (memcmp(DataDump, tmpbuffer, 4096)) {
+            doDumpRefresh = TRUE;
+        }
+    }
     CurrentAsmLA = BX_CPU(CurrentCPU)->get_laddr(BX_SEG_REG_CS, (bx_address) rV[RIP_Rnum]);
     if (CurrentAsmLA < BottomAsmLA || CurrentAsmLA > TopAsmLA)
     {
@@ -2020,7 +2030,7 @@ void FillDataX(char* t, unsigned char C, bool doHex)
     }
 }
 
-void RefreshDataDump()
+void RefreshDataDump(Bit8u *buffer)
 {
     bool retval = TRUE;
 
@@ -2031,12 +2041,12 @@ void RefreshDataDump()
         unsigned len = (int) DumpStart & 0xfff;
         unsigned i = 4096 - len;
         Bit64u h = DumpStart + i;
-        retval = ReadBxLMem(DumpStart, i, (Bit8u *)DataDump);
+        retval = ReadBxLMem(DumpStart, i, buffer);
         if (retval != FALSE && len != 0)
-            retval = ReadBxLMem(h, len, (Bit8u *)DataDump + i);
+            retval = ReadBxLMem(h, len, buffer + i);
     } else {
         retval = bx_mem.dbg_fetch_mem(BX_CPU(CurrentCPU),
-            (bx_phy_address)DumpStart, 4096, (Bit8u *)DataDump);
+            (bx_phy_address)DumpStart, 4096, buffer);
     }
 }
 
@@ -2050,7 +2060,7 @@ void ShowData()
     char tmphex[40];
 
     if (doDumpRefresh) {
-        RefreshDataDump();
+        RefreshDataDump((Bit8u*)DataDump);
     }
     *mdtxt = 0;
     cols[0]= mdtxt + 1;     // the amount of storage needed for each column is complicated
