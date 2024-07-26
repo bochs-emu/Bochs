@@ -2020,6 +2020,26 @@ void FillDataX(char* t, unsigned char C, bool doHex)
     }
 }
 
+void RefreshDataDump()
+{
+    bool retval = TRUE;
+
+    // re-load 4k DataDump array from bochs emulated linear or physical memory
+    if (LinearDump) {
+        // cannot read linear mem across a 4K boundary -- so break the read in two
+        // -- calculate location of 4K boundary (h):
+        unsigned len = (int) DumpStart & 0xfff;
+        unsigned i = 4096 - len;
+        Bit64u h = DumpStart + i;
+        retval = ReadBxLMem(DumpStart, i, (Bit8u *)DataDump);
+        if (retval != FALSE && len != 0)
+            retval = ReadBxLMem(h, len, (Bit8u *)DataDump + i);
+    } else {
+        retval = bx_mem.dbg_fetch_mem(BX_CPU(CurrentCPU),
+            (bx_phy_address)DumpStart, 4096, (Bit8u *)DataDump);
+    }
+}
+
 // do the ShowData display work asynchronously, as a thread
 void ShowData()
 {
@@ -2029,6 +2049,9 @@ void ShowData()
     char mdtxt[200];
     char tmphex[40];
 
+    if (doDumpRefresh) {
+        RefreshDataDump();
+    }
     *mdtxt = 0;
     cols[0]= mdtxt + 1;     // the amount of storage needed for each column is complicated
     cols[1]= mdtxt + 20;
