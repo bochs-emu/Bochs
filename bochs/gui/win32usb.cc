@@ -467,7 +467,7 @@ int hc_uhci_init(HWND hwnd)
     case USB_DEBUG_COMMAND:
     // The start of a frame timer was triggered
     case USB_DEBUG_FRAME:
-      SetDlgItemText(hwnd, IDC_RING_TYPE, "SOF Frame Address:");
+      SetDlgItemText(hwnd, IDC_RING_TYPE, "SOF Frame Address");
       if (frame_addr != 0x00000000) {
         hc_uhci_do_item(frame_addr, frame_num);
         EnableWindow(GetDlgItem(hwnd, IDC_VIEW_TD), TRUE);
