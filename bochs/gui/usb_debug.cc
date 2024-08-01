@@ -151,4 +151,14 @@ void usb_io_write(Bit16u addr, Bit32u value, unsigned io_len)
   bx_devices.outp(addr, value, io_len);
 }
 
+Bit32u xhci_read_dword(const Bit32u address)
+{
+  Bit32u value = 0;
+
+  if (address > 0) {
+    DEV_MEM_READ_PHYSICAL(address, 4, (Bit8u*)&value);
+  }
+  return value;
+}
+
 #endif

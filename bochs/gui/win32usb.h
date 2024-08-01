@@ -24,8 +24,6 @@
 
 #if BX_USB_DEBUGGER
 
-#define COMMON_STR_SIZE  128
-
 struct CALLBACK_PARAMS {
   int type;
   int break_type;

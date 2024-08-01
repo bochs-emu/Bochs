@@ -24,6 +24,8 @@
 
 #if BX_USB_DEBUGGER
 
+#define COMMON_STR_SIZE 128
+
 extern const char *hc_param_str[];
 
 extern int usb_debug_type;
@@ -42,6 +44,8 @@ Bit32u get_pci_bar_addr(bx_shadow_data_c *pci_conf, Bit8u bar_num);
 Bit32u usb_io_read(Bit16u addr, unsigned io_len);
 
 void usb_io_write(Bit16u addr, Bit32u value, unsigned io_len);
+
+Bit32u xhci_read_dword(const Bit32u address);
 
 #endif  // BX_USB_DEBUGGER
 #endif  // BX_USB_DEBUG_H

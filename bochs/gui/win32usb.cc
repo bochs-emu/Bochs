@@ -1086,16 +1086,6 @@ INT_PTR CALLBACK hc_xhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
 
 bx_list_c *XHCI_state = NULL;
 
-static Bit32u xhci_read_dword(const Bit32u address)
-{
-  Bit32u value = 0;
-
-  if (address > 0) {
-    DEV_MEM_READ_PHYSICAL(address, 4, (Bit8u*)&value);
-  }
-  return value;
-}
-
 // returns -1 if error, else returns ID to control to set the focus to
 int hc_xhci_init(HWND hwnd)
 {
@@ -1154,7 +1144,7 @@ int hc_xhci_init(HWND hwnd)
   sprintf(str, "0x%08X", dword);
   SetDlgItemText(hwnd, IDC_X_REG_DEVICE_NOTE, str);
   // we can't read this using DEV_MEM_READ_PHYSICAL since the handler will return zero
-  sprintf(str, "0x" FMT_ADDRX64, SIM->get_param_num("hub.op_regs.HcCrcr.actual", XHCI_state)->get());
+  sprintf(str, "0x" FMT_ADDRX64, SIM->get_param_num("hub.op_regs.HcCrcr.actual", XHCI_state)->get64());
   SetDlgItemText(hwnd, IDC_X_REG_COMMAND_RING, str);
   qword = xhci_read_dword(pci_bar_address + offset + 0x30) |
    ((Bit64u) xhci_read_dword(pci_bar_address + offset + 0x34) << 32);
