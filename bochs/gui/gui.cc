@@ -1573,7 +1573,7 @@ int bx_gui_c::bx_printf(const char *s)
   }
   console.cursor_addr = console.cursor_y * 160 + console.cursor_x * 2;
   console_refresh(0);
-  return strlen(s);
+  return (int)strlen(s);
 }
 
 char* bx_gui_c::bx_gets(char *s, int size)

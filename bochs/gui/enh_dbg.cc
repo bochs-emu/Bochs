@@ -2577,7 +2577,7 @@ void doFind()
 
         // Try ascii for additional matches and selected lines
         Select = TRUE;          // this loop, only add selected lines to the display
-        by = strlen(tmpcb);
+        by = (int)strlen(tmpcb);
         for(i = 0, L = 0; i < 4096; i += 16, L++)
         {
             if (by != 0 && FindHex((unsigned char *)DataDump + i,16,(unsigned char *)tmpcb,by))
@@ -3590,7 +3590,7 @@ void ReadSettings()
           DumpAlign = (1 << DumpWSIndex);
           PrevDAD = 0;
         } else if (!strcmp(param, "DockOrder")) {
-          DockOrder = strtoul(val, NULL, 16);
+          DockOrder = (short)strtoul(val, NULL, 16);
         } else if ((len1 == 15) && !strncmp(param, "ListWidthPix[", 13) && (param[14] == ']')) {
           if ((param[13] < '0') || (param[13] > '2')) {
             fprintf(stderr, "bx_enh_dbg.ini: invalid index for option SeeReg[x]\n");

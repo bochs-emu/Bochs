@@ -2,7 +2,7 @@
 // $Id: utctime.h
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2024  The Bochs Project
 //
 //  Portable gmtime()/timegm() clones by Michele Giacomone
 //
@@ -123,7 +123,7 @@ struct utctm *utctime_ext(const Bit64s *a,struct utctm *trgt)
   tsec/=60;
   bdt.tm_min=tsec%60;                                                   //Set the minutes value
   tsec/=60;
-  bdt.tm_hour=tsec;                                                     //Set the hour value
+  bdt.tm_hour = (Bit16s)tsec;                                                     //Set the hour value
 
   bdt.tm_wday=(etmp-6)%7;
   if(bdt.tm_wday<0) bdt.tm_wday+=7;                                     //Set the day of the week value
@@ -144,13 +144,13 @@ struct utctm *utctime_ext(const Bit64s *a,struct utctm *trgt)
   isleap=(isleap?1:0);                                                  //Find out if the year is leap
 
   eyear-=1900;
-  bdt.tm_year=eyear;                                                    //Set the year value
+  bdt.tm_year = (Bit16s)eyear;                                                    //Set the year value
 
-  bdt.tm_yday=etmp;                                                     //Set the day of the year value
+  bdt.tm_yday = (Bit16s)etmp;                                                     //Set the day of the year value
   bdt.tm_mon=0;
   while(etmp>=monthlydays[isleap][bdt.tm_mon+1]) bdt.tm_mon++;          //Set the month value
   etmp-=monthlydays[isleap][bdt.tm_mon];
-  bdt.tm_mday=etmp+1;                                                   //Set the day of the month value
+  bdt.tm_mday = (Bit16s)(etmp + 1);                                                   //Set the day of the month value
 
   if(eyear != bdt.tm_year) return NULL;                                 //If the calculated year is too high fail
 

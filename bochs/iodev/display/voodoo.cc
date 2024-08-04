@@ -1180,7 +1180,7 @@ Bit32u bx_voodoo_1_2_c::get_retrace(bool hv)
 
 Bit32u bx_voodoo_1_2_c::get_vtotal_usec(void)
 {
-  return s.vdraw.vtotal_usec;
+  return (Bit32u)s.vdraw.vtotal_usec;
 }
 
 void bx_voodoo_1_2_c::output_enable(bool enabled)

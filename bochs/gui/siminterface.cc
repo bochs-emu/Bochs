@@ -1226,7 +1226,7 @@ bool bx_real_sim_c::restore_logopts()
     do {
       ret = fgets(line, sizeof(line)-1, fp);
       line[sizeof(line) - 1] = '\0';
-      int len = strlen(line);
+      int len = (int)strlen(line);
       if ((len>0) && (line[len-1] < ' '))
         line[len-1] = '\0';
       i = 0;
@@ -1277,7 +1277,7 @@ static int bx_restore_getline(FILE *fp, char *line, int maxlen)
 {
   char *ret = fgets(line, maxlen - 1, fp);
   line[maxlen - 1] = '\0';
-  int len = strlen(line);
+  int len = (int)strlen(line);
   if ((len > 0) && (line[len - 1] < ' '))
     line[len - 1] = '\0';
   return (ret != NULL) ? len : 0;

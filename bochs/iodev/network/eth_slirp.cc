@@ -143,7 +143,7 @@ static slirp_ssize_t send_packet(const void *buf, size_t len, void *opaque)
 {
   bx_slirp_pktmover_c *class_ptr = (bx_slirp_pktmover_c *)opaque;
 
-  return class_ptr->receive((void*)buf, len);
+  return class_ptr->receive((void*)buf, (unsigned)len);
 }
 
 static void guest_error(const char *msg, void *opaque)
@@ -798,7 +798,7 @@ static int get_str_sep(char *buf, int buf_size, const char **pp, int sep)
     p1 = strchr(p, sep);
     if (!p1)
         return -1;
-    len = p1 - p;
+    len = (int)(p1 - p);
     p1++;
     if (buf_size > 0) {
         if (len > buf_size - 1)

@@ -1331,7 +1331,7 @@ void bx_init_hardware()
   if (memSize < hostMemSize) hostMemSize = memSize;
 
   bx_param_num_c *bxp_memblock_size = SIM->get_param_num(BXPN_MEM_BLOCK_SIZE);
-  Bit32u memBlockSize = bxp_memblock_size->get64() * 1024;
+  Bit32u memBlockSize = (Bit32u)(bxp_memblock_size->get64() * 1024);
 
   BX_MEM(0)->init_memory(memSize, hostMemSize, memBlockSize);
 

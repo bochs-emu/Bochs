@@ -427,7 +427,7 @@ void bx_vgacore_c::calculate_retrace_timing()
   }
   cwidth = ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 1) ? 8 : 9;
   hfreq = (float)vclock / (crtcp.htotal * cwidth);
-  f_htotal_usec = 1000000.0 / hfreq;
+  f_htotal_usec = 1000000.0f / hfreq;
   BX_VGA_THIS s.htotal_usec = (Bit32u)f_htotal_usec;
   hbstart = BX_VGA_THIS s.CRTC.reg[2];
   BX_VGA_THIS s.hbstart_usec = (Bit32u)((1000000.0 * hbstart * cwidth) / vclock);
@@ -1731,7 +1731,7 @@ Bit8u bx_vgacore_c::mem_read(bx_phy_address addr)
         offset = addr & 0x1FFFF;
     }
   } else {
-    offset = addr;
+    offset = (Bit32u)addr;
   }
 
   if (BX_VGA_THIS s.sequencer.chain_four) {
@@ -1830,7 +1830,7 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
         offset = addr & 0x1FFFF;
     }
   } else {
-    offset = addr;
+    offset = (Bit32u)addr;
   }
 
   start_addr = BX_VGA_THIS s.CRTC.start_addr;
@@ -2279,8 +2279,8 @@ void bx_vgacore_c::debug_dump(int argc, char **argv)
             (unsigned) BX_VGA_THIS s.misc_output.horiz_sync_pol);
   dbg_printf("s.misc_output.vert_sync_pol = %u ",
             (unsigned) BX_VGA_THIS s.misc_output.vert_sync_pol);
-  switch ((BX_VGA_THIS s.misc_output.vert_sync_pol << 1) |
-           BX_VGA_THIS s.misc_output.horiz_sync_pol) {
+  switch (((int)BX_VGA_THIS s.misc_output.vert_sync_pol << 1) |
+           (int)BX_VGA_THIS s.misc_output.horiz_sync_pol) {
     case 1: dbg_printf("(400 lines)\n"); break;
     case 2: dbg_printf("(350 lines)\n"); break;
     case 3: dbg_printf("(480 lines)\n"); break;
