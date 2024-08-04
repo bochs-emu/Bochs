@@ -868,44 +868,6 @@ int hc_ehci_init(HWND hwnd)
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //  XHCI
 //
-
-struct S_ATTRIBUTES attribs_x_ports[] = {
-                                             //          |      31 chars + null          | <- max
-  { (1ULL<<31),              (1ULL<<31),             31, "Warm Port Reset"                , {-1, } },
-  { (1<<30),                 (1<<30),                30, "Device Removable"               , {-1, } },
-  { (1<<29),                 (1<<29),                29, "Reserved (bit 29)"              , {-1, } },
-  { (1<<28),                 (1<<28),                28, "Reserved (bit 28)"              , {-1, } },
-  { (1<<27),                 (1<<27),                27, "Wake on Over-current Enable"    , {-1, } },
-  { (1<<26),                 (1<<26),                26, "Wake on Disconnect Enable"      , {-1, } },
-  { (1<<25),                 (1<<25),                25, "Wake on Connect Enable"         , {-1, } },
-  { (1<<24),                 (1<<24),                24, "Cold Attach Status"             , {-1, } },
-  { (1<<23),                 (1<<23),                23, "Port Config Error Change"       , {-1, } },
-  { (1<<22),                 (1<<22),                22, "Port Link State Change"         , {-1, } },
-  { (1<<21),                 (1<<21),                21, "Port Reset Change"              , {-1, } },
-  { (1<<20),                 (1<<20),                20, "Over-current Change"            , {-1, } },
-  { (1<<19),                 (1<<19),                19, "Warm Port Reset Change"         , {-1, } },
-  { (1<<18),                 (1<<18),                18, "Port Enable/Disable Change"     , {-1, } },
-  { (1<<17),                 (1<<17),                17, "Connect Status Change"          , {-1, } },
-  { (1<<16),                 (1<<16),                16, "Port Link State Write Strobe"   , {-1, } },
-  { (1<<15),                 (1<<15),                15, "Port Indicator (bit 1)"         , {-1, } },
-  { (1<<14),                 (1<<14),                14, "Port Indicator (bit 0)"         , {-1, } },
-  { (1<<13),                 (1<<13),                13, "Port Speed (bit 3)"             , {-1, } },
-  { (1<<12),                 (1<<12),                12, "Port Speed (bit 2)"             , {-1, } },
-  { (1<<11),                 (1<<11),                11, "Port Speed (bit 1)"             , {-1, } },
-  { (1<<10),                 (1<<10),                10, "Port Speed (bit 0)"             , {-1, } },
-  { (1<< 9),                 (1<< 9),                 9, "Port Power"                     , {-1, } },
-  { (1<< 8),                 (1<< 8),                 8, "Port Link State (bit 3)"        , {-1, } },
-  { (1<< 7),                 (1<< 7),                 7, "Port Link State (bit 2)"        , {-1, } },
-  { (1<< 6),                 (1<< 6),                 6, "Port Link State (bit 1)"        , {-1, } },
-  { (1<< 5),                 (1<< 5),                 5, "Port Link State (bit 0)"        , {-1, } },
-  { (1<< 4),                 (1<< 4),                 4, "Port Reset"                     , {-1, } },
-  { (1<< 3),                 (1<< 3),                 3, "Over-current Status"            , {-1, } },
-  { (1<< 2),                 (1<< 2),                 2, "Reserved"                       , {-1, } },
-  { (1<< 1),                 (1<< 1),                 1, "Port Enabled/Disabled"          , {-1, } },
-  { (1<< 0),                 (1<< 0),                 0, "Current Connect Status"         , {-1, } },
-  { 0,                   (DWORD) -1,                 -1, "\0"                             , {-1, } }
-};
-
 static bool x_changed[IDC_X_EN_END - IDC_X_EN_START + 1];
 
 // lParam: type is in low 8 bits, break_type in high 8-bits of low word
