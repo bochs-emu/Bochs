@@ -123,13 +123,6 @@ INT_PTR CALLBACK hc_xhci_callback_str_context(HWND hDlg, UINT msg, WPARAM wParam
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //  Attributes
-struct S_ATTRIBUTES {
-  DWORD64 attrb;
-  DWORD64 mask;
-  int   index;
-  char  str[32];
-  int   groups[10];  // up to 10 items can be grouped.  Increase if we need more.
-};
 void do_attributes(HWND hwnd, DWORD id, const int size, const char *title, const struct S_ATTRIBUTES *attribs);
 
 

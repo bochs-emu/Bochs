@@ -35,6 +35,63 @@ const char *hc_param_str[] = {
   BXPN_USB_XHCI
 };
 
+///////////////////////////////////////////////////////////////////////////////////////////////
+//  UHCI
+//
+struct S_ATTRIBUTES attribs_u_command[] = {
+                                             //          |      31 chars + null          | <- max
+  { (1<<7),                  (1<<7),                  7, "Max Packet"                     , {-1, } },
+  { (1<<6),                  (1<<6),                  6, "Configure Flag"                 , {-1, } },
+  { (1<<5),                  (1<<5),                  5, "Software Debug"                 , {-1, } },
+  { (1<<4),                  (1<<4),                  4, "Force Global Resume"            , {-1, } },
+  { (1<<3),                  (1<<3),                  3, "Enter Global Suspend Mode"      , {-1, } },
+  { (1<<2),                  (1<<2),                  2, "Global Reset"                   , {-1, } },
+  { (1<<1),                  (1<<1),                  1, "Host Controller Reset"          , {-1, } },
+  { (1<<0),                  (1<<0),                  0, "Run/Stop"                       , {-1, } },
+  { 0,                   (Bit32u) -1,                 -1, "\0"                             , {-1, } }
+};
+
+struct S_ATTRIBUTES attribs_u_status[] = {
+                                             //          |      31 chars + null          | <- max
+  { (1<<5),                  (1<<5),                  5, "HCHalted"                       , {-1, } },
+  { (1<<4),                  (1<<4),                  4, "Host Controller Process Error"  , {-1, } },
+  { (1<<3),                  (1<<3),                  3, "Host System Error"              , {-1, } },
+  { (1<<2),                  (1<<2),                  2, "Resume Detect"                  , {-1, } },
+  { (1<<1),                  (1<<1),                  1, "USB Error Interrupt"            , {-1, } },
+  { (1<<0),                  (1<<0),                  0, "USB Interrupt"                  , {-1, } },
+  { 0,                   (Bit32u) -1,                 -1, "\0"                             , {-1, } }
+};
+
+struct S_ATTRIBUTES attribs_u_interrupt[] = {
+                                             //          |      31 chars + null          | <- max
+  { (1<<3),                  (1<<3),                  3, "Short packet Interrupt Enable"  , {-1, } },
+  { (1<<2),                  (1<<2),                  2, "Interrupt On Complete (IOC)"    , {-1, } },
+  { (1<<1),                  (1<<1),                  1, "Resume Interrupt Enable"        , {-1, } },
+  { (1<<0),                  (1<<0),                  0, "Timeout/CRC Interrupt Enable"   , {-1, } },
+  { 0,                   (Bit32u) -1,                 -1, "\0"                             , {-1, } }
+};
+
+struct S_ATTRIBUTES attribs_u_ports[] = {
+                                             //          |      31 chars + null          | <- max
+  { (1<<15),                 (1<<15),                15, "Zero (bit 15)"                  , {-1, } },
+  { (1<<14),                 (1<<14),                14, "Zero (bit 14)"                  , {-1, } },
+  { (1<<13),                 (1<<13),                13, "Zero (bit 13)"                  , {-1, } },
+  { (1<<12),                 (1<<12),                12, "Suspend"                        , {-1, } },
+  { (1<<11),                 (1<<11),                11, "Over-current Changed"           , {-1, } },
+  { (1<<10),                 (1<<10),                10, "Over-current Status"            , {-1, } },
+  { (1<< 9),                 (1<< 9),                 9, "Port Reset"                     , {-1, } },
+  { (1<< 8),                 (1<< 8),                 8, "Low Speed Device Attached"      , {-1, } },
+  { (1<< 7),                 (1<< 7),                 7, "Reserved (must be 1)"           , {-1, } },
+  { (1<< 6),                 (1<< 6),                 6, "Resume Detect"                  , {-1, } },
+  { (1<< 5),                 (1<< 5),                 5, "Line Status: D-"                , {-1, } },
+  { (1<< 4),                 (1<< 4),                 4, "Line Status: D+"                , {-1, } },
+  { (1<< 3),                 (1<< 3),                 3, "Port Enable/Disable Change"     , {-1, } },
+  { (1<< 2),                 (1<< 2),                 2, "Port Enabled/Disabled"          , {-1, } },
+  { (1<< 1),                 (1<< 1),                 1, "Current Status Change"          , {-1, } },
+  { (1<< 0),                 (1<< 0),                 0, "Current Connect Status"         , {-1, } },
+  { 0,                   (Bit32u) -1,                 -1, "\0"                             , {-1, } }
+};
+
 int usb_debug_type = USB_DEBUG_NONE;
 bx_param_c *host_param = NULL;
 

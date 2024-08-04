@@ -26,10 +26,26 @@
 
 #define COMMON_STR_SIZE 128
 
+struct S_ATTRIBUTES {
+  Bit64u attrb;
+  Bit64u mask;
+  int   index;
+  char  str[32];
+  int   groups[10];  // up to 10 items can be grouped.  Increase if we need more.
+};
+
 extern const char *hc_param_str[];
 
 extern int usb_debug_type;
 extern bx_param_c *host_param;
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+//  UHCI
+//
+extern struct S_ATTRIBUTES attribs_u_command[];
+extern struct S_ATTRIBUTES attribs_u_status[];
+extern struct S_ATTRIBUTES attribs_u_interrupt[];
+extern struct S_ATTRIBUTES attribs_u_ports[];
 
 void usb_dbg_register_type(int type);
 
