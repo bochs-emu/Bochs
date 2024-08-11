@@ -34,16 +34,31 @@ struct S_ATTRIBUTES {
   int   groups[10];  // up to 10 items can be grouped.  Increase if we need more.
 };
 
+enum {
+  UHCI_REG_COMMAND,
+  UHCI_REG_STATUS,
+  UHCI_REG_INTERRUPT,
+  UHCI_REG_FRAME_NUM,
+  UHCI_REG_FRAME_ADDR,
+  UHCI_REG_SOF,
+  UHCI_REG_PORT0,
+  UHCI_REG_PORT1,
+  UHCI_REG_COUNT
+};
+
 extern const char *hc_param_str[];
 
 extern int usb_debug_type;
 extern bx_param_c *host_param;
+extern Bit32u pci_bar_address;
 
 // UHCI
 extern struct S_ATTRIBUTES attribs_u_command[];
 extern struct S_ATTRIBUTES attribs_u_status[];
 extern struct S_ATTRIBUTES attribs_u_interrupt[];
 extern struct S_ATTRIBUTES attribs_u_ports[];
+
+extern bool u_changed[UHCI_REG_COUNT];
 
 // xHCI
 extern struct S_ATTRIBUTES attribs_x_ports[];

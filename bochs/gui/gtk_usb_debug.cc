@@ -46,7 +46,9 @@ const char *chkBXPN[6] = {BXPN_USB_DEBUG_RESET, BXPN_USB_DEBUG_ENABLE, BXPN_USB_
                           BXPN_USB_DEBUG_DOORBELL, BXPN_USB_DEBUG_START_FRAME, BXPN_USB_DEBUG_NON_EXIST};
 
 GtkWidget *main_dialog;
+GtkWidget *uhci_entry[UHCI_REG_COUNT];
 GtkWidget *DFframe, *DFvbox, *checkbox[6];
+GtkWidget *apply_button;
 
 // multithreading using pure posix threads -- not glib threads
 static void * EventLp(void *data)
@@ -176,23 +178,71 @@ static void usb_regview_dialog(GtkWidget *widget, gpointer data)
   gtk_widget_destroy(dialog);
 }
 
-// Apply button support
+// Save UHCI state to controller
 
-GtkWidget *apply_button;
+int hc_uhci_save()
+{
+  char buffer[COMMON_STR_SIZE];
+
+  if (u_changed[UHCI_REG_COMMAND]) {
+    strcpy(buffer, gtk_entry_get_text(GTK_ENTRY(uhci_entry[UHCI_REG_COMMAND])));
+    usb_io_write(pci_bar_address + 0, strtol(buffer, NULL, 0), 2);
+  }
+  if (u_changed[UHCI_REG_STATUS]) {
+    strcpy(buffer, gtk_entry_get_text(GTK_ENTRY(uhci_entry[UHCI_REG_STATUS])));
+    usb_io_write(pci_bar_address + 2, strtol(buffer, NULL, 0), 2);
+  }
+  if (u_changed[UHCI_REG_INTERRUPT]) {
+    strcpy(buffer, gtk_entry_get_text(GTK_ENTRY(uhci_entry[UHCI_REG_INTERRUPT])));
+    usb_io_write(pci_bar_address + 4, strtol(buffer, NULL, 0), 2);
+  }
+  if (u_changed[UHCI_REG_FRAME_NUM]) {
+    strcpy(buffer, gtk_entry_get_text(GTK_ENTRY(uhci_entry[UHCI_REG_FRAME_NUM])));
+    usb_io_write(pci_bar_address + 6, strtol(buffer, NULL, 0), 2);
+  }
+  if (u_changed[UHCI_REG_FRAME_ADDR]) {
+    strcpy(buffer, gtk_entry_get_text(GTK_ENTRY(uhci_entry[UHCI_REG_FRAME_ADDR])));
+    usb_io_write(pci_bar_address + 8, strtol(buffer, NULL, 0), 4);
+  }
+  if (u_changed[UHCI_REG_SOF]) {
+    strcpy(buffer, gtk_entry_get_text(GTK_ENTRY(uhci_entry[UHCI_REG_SOF])));
+    usb_io_write(pci_bar_address + 12, strtol(buffer, NULL, 0), 1);
+  }
+  if (u_changed[UHCI_REG_PORT0]) {
+    strcpy(buffer, gtk_entry_get_text(GTK_ENTRY(uhci_entry[UHCI_REG_PORT0])));
+    usb_io_write(pci_bar_address + 16, strtol(buffer, NULL, 0), 2);
+  }
+  if (u_changed[UHCI_REG_PORT1]) {
+    strcpy(buffer, gtk_entry_get_text(GTK_ENTRY(uhci_entry[UHCI_REG_PORT1])));
+    usb_io_write(pci_bar_address + 18, strtol(buffer, NULL, 0), 2);
+  }
+
+  memset(u_changed, 0, sizeof(u_changed));
+  gtk_widget_set_sensitive(apply_button, 0);
+
+  return 0;
+}
+
+// Apply button support
 
 static void on_entry_changed(GtkWidget *widget, gpointer data)
 {
+  *((bool*)data) = 1;
   gtk_widget_set_sensitive(apply_button, 1);
 }
 
 static void apply_changes(GtkWidget *widget, gpointer data)
 {
-  GtkWidget* error = gtk_message_dialog_new(
-    GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
-    "Saving changes to controller not implemented yet");
-  gtk_window_set_title(GTK_WINDOW(error), "WARNING");
-  gtk_dialog_run(GTK_DIALOG(error));
-  gtk_widget_destroy(error);
+  if (usb_debug_type == USB_DEBUG_UHCI) {
+    hc_uhci_save();
+  } else {
+    GtkWidget* error = gtk_message_dialog_new(
+      GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
+      "Saving changes to controller not implemented yet");
+    gtk_window_set_title(GTK_WINDOW(error), "WARNING");
+    gtk_dialog_run(GTK_DIALOG(error));
+    gtk_widget_destroy(error);
+  }
 }
 
 void usbdlg_create_apply_button(GtkWidget *vbox)
@@ -211,9 +261,9 @@ int uhci_debug_dialog(int type, int param1)
 {
   bx_list_c *UHCI_state = NULL;
   int i, ret;
-  Bit32u pci_bar_address, frame_addr, frame_num;
+  Bit32u frame_addr, frame_num;
   char buffer[COMMON_STR_SIZE];
-  GtkWidget *mainVbox, *BAhbox, *hbox[2], *vbox[3], *entry[12];
+  GtkWidget *mainVbox, *BAhbox, *hbox[2], *vbox[3], *ro_entry[4];
   GtkWidget *ORframe, *ORhbox, *ORvbox[3];
   GtkWidget *PRframe, *PRhbox, *PRvbox[3];
   GtkWidget *TVvbox, *FNhbox;
@@ -263,7 +313,7 @@ int uhci_debug_dialog(int type, int param1)
   BAhbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
   gtk_box_pack_start(GTK_BOX(mainVbox), BAhbox, FALSE, FALSE, 2);
   usbdlg_create_label(BAhbox, "UHCI at Base IO address", false);
-  entry[0] = usbdlg_create_ro_entry(BAhbox, false);
+  ro_entry[0] = usbdlg_create_ro_entry(BAhbox, false);
 
   hbox[0] = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
   gtk_box_pack_start(GTK_BOX(mainVbox), hbox[0], TRUE, TRUE, 2);
@@ -282,24 +332,24 @@ int uhci_debug_dialog(int type, int param1)
     ORvbox[i] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_box_pack_start(GTK_BOX(ORhbox), ORvbox[i], FALSE, FALSE, 2);
   }
-  entry[1] = usbdlg_create_entry_with_label(ORvbox, "Command");
+  uhci_entry[UHCI_REG_COMMAND] = usbdlg_create_entry_with_label(ORvbox, "Command");
   button[2] = gtk_button_new_with_label("<>");
-  uhci_reg_def[0].entry = entry[1];
+  uhci_reg_def[0].entry = uhci_entry[UHCI_REG_COMMAND];
   g_signal_connect(button[2], "clicked", G_CALLBACK(usb_regview_dialog), &uhci_reg_def[0]);
   gtk_box_pack_start(GTK_BOX(ORvbox[2]), button[2], FALSE, FALSE, 2);
-  entry[2] = usbdlg_create_entry_with_label(ORvbox, "Status");
+  uhci_entry[UHCI_REG_STATUS] = usbdlg_create_entry_with_label(ORvbox, "Status");
   button[3] = gtk_button_new_with_label("<>");
-  uhci_reg_def[1].entry = entry[2];
+  uhci_reg_def[1].entry = uhci_entry[UHCI_REG_STATUS];
   g_signal_connect(button[3], "clicked", G_CALLBACK(usb_regview_dialog), &uhci_reg_def[1]);
   gtk_box_pack_start(GTK_BOX(ORvbox[2]), button[3], FALSE, FALSE, 2);
-  entry[3] = usbdlg_create_entry_with_label(ORvbox, "Interrupt Enable");
+  uhci_entry[UHCI_REG_INTERRUPT] = usbdlg_create_entry_with_label(ORvbox, "Interrupt Enable");
   button[4] = gtk_button_new_with_label("<>");
-  uhci_reg_def[2].entry = entry[3];
+  uhci_reg_def[2].entry = uhci_entry[UHCI_REG_INTERRUPT];
   g_signal_connect(button[4], "clicked", G_CALLBACK(usb_regview_dialog), &uhci_reg_def[2]);
   gtk_box_pack_start(GTK_BOX(ORvbox[2]), button[4], FALSE, FALSE, 2);
-  entry[4] = usbdlg_create_entry_with_label(ORvbox, "Frame Number");
-  entry[5] = usbdlg_create_entry_with_label(ORvbox, "Frame Address");
-  entry[6] = usbdlg_create_entry_with_label(ORvbox, "Start of Frame");
+  uhci_entry[UHCI_REG_FRAME_NUM] = usbdlg_create_entry_with_label(ORvbox, "Frame Number");
+  uhci_entry[UHCI_REG_FRAME_ADDR] = usbdlg_create_entry_with_label(ORvbox, "Frame Address");
+  uhci_entry[UHCI_REG_SOF] = usbdlg_create_entry_with_label(ORvbox, "Start of Frame");
 
   PRframe = gtk_frame_new("Port Registers");
   gtk_box_pack_start(GTK_BOX(hbox[1]), PRframe, FALSE, FALSE, 2);
@@ -311,10 +361,10 @@ int uhci_debug_dialog(int type, int param1)
   }
   for (i = 0; i < 2; i++) {
     sprintf(buffer, "Port %d", i);
-    entry[i * 2 + 7] = usbdlg_create_entry_with_label(PRvbox, buffer);
-    entry[i * 2 + 8] = usbdlg_create_ro_entry_with_label(PRvbox, "Emulation Type");
+    uhci_entry[UHCI_REG_PORT0 + i] = usbdlg_create_entry_with_label(PRvbox, buffer);
+    ro_entry[i + 1] = usbdlg_create_ro_entry_with_label(PRvbox, "Emulation Type");
     button[i + 5] = gtk_button_new_with_label("<>");
-    uhci_reg_def[i + 3].entry = entry[i * 2 + 7];
+    uhci_reg_def[i + 3].entry = uhci_entry[UHCI_REG_PORT0 + i];
     g_signal_connect(button[i + 5], "clicked", G_CALLBACK(usb_regview_dialog), &uhci_reg_def[i + 3]);
     gtk_box_pack_start(GTK_BOX(PRvbox[2]), button[i + 5], FALSE, FALSE, 2);
     gtk_box_pack_start(GTK_BOX(PRvbox[2]), gtk_label_new(" "), FALSE, FALSE, 8); // spacer
@@ -324,7 +374,7 @@ int uhci_debug_dialog(int type, int param1)
   FNhbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
   gtk_box_pack_start(GTK_BOX(TVvbox), FNhbox, FALSE, FALSE, 2);
   FNlabel = usbdlg_create_label(FNhbox, "Frame at Address", false);
-  entry[11] = usbdlg_create_ro_entry(FNhbox, false);
+  ro_entry[3] = usbdlg_create_ro_entry(FNhbox, false);
   button[7] = gtk_button_new_with_label("View Item");
   gtk_widget_set_sensitive(button[7], 0);
   gtk_box_pack_start(GTK_BOX(FNhbox), button[7], FALSE, FALSE, 2);
@@ -336,41 +386,49 @@ int uhci_debug_dialog(int type, int param1)
   // Set values
   pci_bar_address = get_pci_bar_addr((bx_shadow_data_c*)SIM->get_param("hub.pci_conf", UHCI_state), 4);
   sprintf(buffer, "0x%04X", pci_bar_address);
-  gtk_entry_set_text(GTK_ENTRY(entry[0]), buffer);
+  gtk_entry_set_text(GTK_ENTRY(ro_entry[0]), buffer);
   sprintf(buffer, "0x%04X", usb_io_read(pci_bar_address + 0, 2));
-  gtk_entry_set_text(GTK_ENTRY(entry[1]), buffer);
-  g_signal_connect(GTK_EDITABLE(entry[1]), "changed", G_CALLBACK(on_entry_changed), NULL);
+  gtk_entry_set_text(GTK_ENTRY(uhci_entry[UHCI_REG_COMMAND]), buffer);
+  g_signal_connect(GTK_EDITABLE(uhci_entry[UHCI_REG_COMMAND]), "changed",
+                   G_CALLBACK(on_entry_changed), &u_changed[UHCI_REG_COMMAND]);
   sprintf(buffer, "0x%04X", usb_io_read(pci_bar_address + 2, 2));
-  gtk_entry_set_text(GTK_ENTRY(entry[2]), buffer);
-  g_signal_connect(GTK_EDITABLE(entry[2]), "changed", G_CALLBACK(on_entry_changed), NULL);
+  gtk_entry_set_text(GTK_ENTRY(uhci_entry[UHCI_REG_STATUS]), buffer);
+  g_signal_connect(GTK_EDITABLE(uhci_entry[UHCI_REG_STATUS]), "changed",
+                   G_CALLBACK(on_entry_changed), &u_changed[UHCI_REG_STATUS]);
   sprintf(buffer, "0x%04X", usb_io_read(pci_bar_address + 4, 2));
-  gtk_entry_set_text(GTK_ENTRY(entry[3]), buffer);
-  g_signal_connect(GTK_EDITABLE(entry[3]), "changed", G_CALLBACK(on_entry_changed), NULL);
+  gtk_entry_set_text(GTK_ENTRY(uhci_entry[UHCI_REG_INTERRUPT]), buffer);
+  g_signal_connect(GTK_EDITABLE(uhci_entry[UHCI_REG_INTERRUPT]), "changed",
+                   G_CALLBACK(on_entry_changed), &u_changed[UHCI_REG_INTERRUPT]);
   frame_num = usb_io_read(pci_bar_address + 6, 2);
   sprintf(buffer, "0x%04X", frame_num);
-  gtk_entry_set_text(GTK_ENTRY(entry[4]), buffer);
-  g_signal_connect(GTK_EDITABLE(entry[4]), "changed", G_CALLBACK(on_entry_changed), NULL);
+  gtk_entry_set_text(GTK_ENTRY(uhci_entry[UHCI_REG_FRAME_NUM]), buffer);
+  g_signal_connect(GTK_EDITABLE(uhci_entry[UHCI_REG_FRAME_NUM]), "changed",
+                   G_CALLBACK(on_entry_changed), &u_changed[UHCI_REG_FRAME_NUM]);
   frame_addr = usb_io_read(pci_bar_address + 8, 4);
   sprintf(buffer, "0x%08X", frame_addr);
-  gtk_entry_set_text(GTK_ENTRY(entry[5]), buffer);
-  g_signal_connect(GTK_EDITABLE(entry[5]), "changed", G_CALLBACK(on_entry_changed), NULL);
+  gtk_entry_set_text(GTK_ENTRY(uhci_entry[UHCI_REG_FRAME_ADDR]), buffer);
+  g_signal_connect(GTK_EDITABLE(uhci_entry[UHCI_REG_FRAME_ADDR]), "changed",
+                   G_CALLBACK(on_entry_changed), &u_changed[UHCI_REG_FRAME_ADDR]);
   sprintf(buffer, "0x%02X", usb_io_read(pci_bar_address + 12, 1));
-  gtk_entry_set_text(GTK_ENTRY(entry[6]), buffer);
-  g_signal_connect(GTK_EDITABLE(entry[6]), "changed", G_CALLBACK(on_entry_changed), NULL);
+  gtk_entry_set_text(GTK_ENTRY(uhci_entry[UHCI_REG_SOF]), buffer);
+  g_signal_connect(GTK_EDITABLE(uhci_entry[UHCI_REG_SOF]), "changed",
+                   G_CALLBACK(on_entry_changed), &u_changed[UHCI_REG_SOF]);
   sprintf(buffer, "0x%04X", usb_io_read(pci_bar_address + 16, 2));
-  gtk_entry_set_text(GTK_ENTRY(entry[7]), buffer);
-  g_signal_connect(GTK_EDITABLE(entry[7]), "changed", G_CALLBACK(on_entry_changed), NULL);
+  gtk_entry_set_text(GTK_ENTRY(uhci_entry[UHCI_REG_PORT0]), buffer);
+  g_signal_connect(GTK_EDITABLE(uhci_entry[UHCI_REG_PORT0]), "changed",
+                   G_CALLBACK(on_entry_changed), &u_changed[UHCI_REG_PORT0]);
   SIM->get_param_enum("port1.device", host_param)->dump_param(buffer, COMMON_STR_SIZE, 1);
-  gtk_entry_set_text(GTK_ENTRY(entry[8]), buffer);
+  gtk_entry_set_text(GTK_ENTRY(ro_entry[1]), buffer);
   sprintf(buffer, "0x%04X", usb_io_read(pci_bar_address + 18, 2));
-  gtk_entry_set_text(GTK_ENTRY(entry[9]), buffer);
-  g_signal_connect(GTK_EDITABLE(entry[9]), "changed", G_CALLBACK(on_entry_changed), NULL);
+  gtk_entry_set_text(GTK_ENTRY(uhci_entry[UHCI_REG_PORT1]), buffer);
+  g_signal_connect(GTK_EDITABLE(uhci_entry[UHCI_REG_PORT1]), "changed",
+                   G_CALLBACK(on_entry_changed), &u_changed[UHCI_REG_PORT1]);
   SIM->get_param_enum("port2.device", host_param)->dump_param(buffer, COMMON_STR_SIZE, 1);
-  gtk_entry_set_text(GTK_ENTRY(entry[10]), buffer);
+  gtk_entry_set_text(GTK_ENTRY(ro_entry[2]), buffer);
 
   frame_addr += (frame_num * sizeof(Bit32u));
   sprintf(buffer, "0x%08X", frame_addr);
-  gtk_entry_set_text(GTK_ENTRY(entry[11]), buffer);
+  gtk_entry_set_text(GTK_ENTRY(ro_entry[3]), buffer);
 
   bool valid = 0;
   switch (type) {
@@ -396,7 +454,7 @@ int uhci_debug_dialog(int type, int param1)
     // enable changed
     case USB_DEBUG_ENABLE:
       gtk_label_set_text(GTK_LABEL(FNlabel), "None");
-      gtk_entry_set_text(GTK_ENTRY(entry[10]), "None");
+      gtk_entry_set_text(GTK_ENTRY(ro_entry[3]), "None");
       break;
   }
 
@@ -422,14 +480,16 @@ int xhci_debug_dialog(int type, int param1)
 {
   bx_list_c *xHCI_state = NULL;
   int i, n_ports, ret;
-  Bit32u pci_bar_address, dword, offset;
+  Bit32u dword, offset;
+  Bit64u RingPtr = 0;
   char buffer[COMMON_STR_SIZE], tmpbuf[32];
-  GtkWidget *mainVbox, *BAhbox, *hbox[2], *vbox[4], *entry[28];
+  GtkWidget *mainVbox, *BAhbox, *hbox[2], *vbox[4], *entry[38];
   GtkWidget *CRframe, *CRhbox, *CRvbox[2];
   GtkWidget *ORframe, *ORhbox, *ORvbox[2];
   GtkWidget *RTframe, *RThbox, *RTvbox[2];
   GtkWidget *PRframe, *PRhbox, *PRvbox[3];
-  GtkWidget *button[12];
+  GtkWidget *TVvbox, *FNhbox;
+  GtkWidget *button[13], *FNlabel, *treeview;
   usb_reg_t xhci_reg_def[10] = {
     {"Port 0 Register", NULL, 8, attribs_x_ports},
     {"Port 1 Register", NULL, 8, attribs_x_ports},
@@ -491,14 +551,14 @@ int xhci_debug_dialog(int type, int param1)
   gtk_box_pack_start(GTK_BOX(CRhbox), CRvbox[0], FALSE, FALSE, 2);
   CRvbox[1] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
   gtk_box_pack_start(GTK_BOX(CRhbox), CRvbox[1], FALSE, FALSE, 2);
-  entry[1] = usbdlg_create_ro_entry_with_label(CRvbox, "Cap Length");
-  entry[2] = usbdlg_create_ro_entry_with_label(CRvbox, "HCSParams1");
+  entry[1] = usbdlg_create_entry_with_label(CRvbox, "Cap Length");
+  entry[2] = usbdlg_create_entry_with_label(CRvbox, "HCSParams1");
   entry[3] = usbdlg_create_ro_entry_with_label(CRvbox, "HCSParams2");
-  entry[4] = usbdlg_create_ro_entry_with_label(CRvbox, "HCSParams3");
-  entry[5] = usbdlg_create_ro_entry_with_label(CRvbox, "HCCParams1");
-  entry[6] = usbdlg_create_ro_entry_with_label(CRvbox, "DB Offset");
-  entry[7] = usbdlg_create_ro_entry_with_label(CRvbox, "RTS Offset");
-  entry[8] = usbdlg_create_ro_entry_with_label(CRvbox, "HCCParams2");
+  entry[4] = usbdlg_create_entry_with_label(CRvbox, "HCSParams3");
+  entry[5] = usbdlg_create_entry_with_label(CRvbox, "HCCParams1");
+  entry[6] = usbdlg_create_entry_with_label(CRvbox, "DB Offset");
+  entry[7] = usbdlg_create_entry_with_label(CRvbox, "RTS Offset");
+  entry[8] = usbdlg_create_entry_with_label(CRvbox, "HCCParams2");
 
   ORframe = gtk_frame_new("Operational Registers");
   gtk_box_pack_start(GTK_BOX(vbox[1]), ORframe, FALSE, FALSE, 2);
@@ -509,12 +569,12 @@ int xhci_debug_dialog(int type, int param1)
   ORvbox[1] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
   gtk_box_pack_start(GTK_BOX(ORhbox), ORvbox[1], FALSE, FALSE, 2);
   entry[9] = usbdlg_create_ro_entry_with_label(ORvbox, "Command");
-  entry[10] = usbdlg_create_ro_entry_with_label(ORvbox, "Status");
-  entry[11] = usbdlg_create_ro_entry_with_label(ORvbox, "Page Size");
-  entry[12] = usbdlg_create_ro_entry_with_label(ORvbox, "Device Notification");
-  entry[13] = usbdlg_create_ro_entry_with_label(ORvbox, "Command Ring");
-  entry[14] = usbdlg_create_ro_entry_with_label(ORvbox, "Device Context Base");
-  entry[15] = usbdlg_create_ro_entry_with_label(ORvbox, "Configure");
+  entry[10] = usbdlg_create_entry_with_label(ORvbox, "Status");
+  entry[11] = usbdlg_create_entry_with_label(ORvbox, "Page Size");
+  entry[12] = usbdlg_create_entry_with_label(ORvbox, "Device Notification");
+  entry[13] = usbdlg_create_entry_with_label(ORvbox, "Command Ring");
+  entry[14] = usbdlg_create_entry_with_label(ORvbox, "Device Context Base");
+  entry[15] = usbdlg_create_entry_with_label(ORvbox, "Configure");
 
   RTframe = gtk_frame_new("Runtime Registers");
   gtk_box_pack_start(GTK_BOX(vbox[2]), RTframe, FALSE, FALSE, 2);
@@ -524,7 +584,7 @@ int xhci_debug_dialog(int type, int param1)
   gtk_box_pack_start(GTK_BOX(RThbox), RTvbox[0], FALSE, FALSE, 2);
   RTvbox[1] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
   gtk_box_pack_start(GTK_BOX(RThbox), RTvbox[1], FALSE, FALSE, 2);
-  entry[16] = usbdlg_create_ro_entry_with_label(RTvbox, "Microframe Index");
+  entry[16] = usbdlg_create_entry_with_label(RTvbox, "Microframe Index");
 
   PRframe = gtk_frame_new("Port Registers");
   gtk_box_pack_start(GTK_BOX(hbox[1]), PRframe, FALSE, FALSE, 2);
@@ -545,6 +605,18 @@ int xhci_debug_dialog(int type, int param1)
     gtk_box_pack_start(GTK_BOX(PRvbox[2]), button[i + 2], FALSE, FALSE, 2);
     gtk_box_pack_start(GTK_BOX(PRvbox[2]), gtk_label_new(" "), FALSE, FALSE, 8); // spacer
   }
+  TVvbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+  gtk_box_pack_start(GTK_BOX(hbox[1]), TVvbox, TRUE, TRUE, 2);
+  FNhbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+  gtk_box_pack_start(GTK_BOX(TVvbox), FNhbox, FALSE, FALSE, 2);
+  FNlabel = usbdlg_create_label(FNhbox, "Ring Address", false);
+  entry[n_ports * 2 + 17] = usbdlg_create_ro_entry(FNhbox, false);
+  button[12] = gtk_button_new_with_label("View TRB");
+  gtk_widget_set_sensitive(button[12], 0);
+  gtk_box_pack_start(GTK_BOX(FNhbox), button[12], FALSE, FALSE, 2);
+  treeview = gtk_tree_view_new();
+  gtk_box_pack_start(GTK_BOX(TVvbox), treeview, TRUE, TRUE, 2);
+
   usbdlg_create_apply_button(mainVbox);
   usbdlg_create_debug_flags(vbox[3]);
   // Set values
@@ -555,36 +627,45 @@ int xhci_debug_dialog(int type, int param1)
     dword = xhci_read_dword(pci_bar_address + (i * 4));
     sprintf(buffer, "0x%08X", dword);
     gtk_entry_set_text(GTK_ENTRY(entry[i + 1]), buffer);
+    g_signal_connect(GTK_EDITABLE(entry[i + 1]), "changed", G_CALLBACK(on_entry_changed), NULL);
   }
   offset = xhci_read_dword(pci_bar_address + 0) & 0xFF;
 
   dword = xhci_read_dword(pci_bar_address + offset + 0x00);
   sprintf(buffer, "0x%08X", dword);
   gtk_entry_set_text(GTK_ENTRY(entry[9]), buffer);
+  g_signal_connect(GTK_EDITABLE(entry[9]), "changed", G_CALLBACK(on_entry_changed), NULL);
   dword = xhci_read_dword(pci_bar_address + offset + 0x04);
   sprintf(buffer, "0x%08X", dword);
   gtk_entry_set_text(GTK_ENTRY(entry[10]), buffer);
+  g_signal_connect(GTK_EDITABLE(entry[10]), "changed", G_CALLBACK(on_entry_changed), NULL);
   dword = xhci_read_dword(pci_bar_address + offset + 0x08);
   sprintf(buffer, "0x%08X", dword);
   gtk_entry_set_text(GTK_ENTRY(entry[11]), buffer);
+  g_signal_connect(GTK_EDITABLE(entry[11]), "changed", G_CALLBACK(on_entry_changed), NULL);
   dword = xhci_read_dword(pci_bar_address + offset + 0x14);
   sprintf(buffer, "0x%08X", dword);
   gtk_entry_set_text(GTK_ENTRY(entry[12]), buffer);
+  g_signal_connect(GTK_EDITABLE(entry[12]), "changed", G_CALLBACK(on_entry_changed), NULL);
   // we can't read this using DEV_MEM_READ_PHYSICAL since the handler will return zero
   sprintf(buffer, "0x" FMT_ADDRX64, SIM->get_param_num("hub.op_regs.HcCrcr.actual", xHCI_state)->get64());
   gtk_entry_set_text(GTK_ENTRY(entry[13]), buffer);
+  g_signal_connect(GTK_EDITABLE(entry[13]), "changed", G_CALLBACK(on_entry_changed), NULL);
   Bit64u qword = xhci_read_dword(pci_bar_address + offset + 0x30) |
    ((Bit64u) xhci_read_dword(pci_bar_address + offset + 0x34) << 32);
   sprintf(buffer, "0x" FMT_ADDRX64, qword);
   gtk_entry_set_text(GTK_ENTRY(entry[14]), buffer);
+  g_signal_connect(GTK_EDITABLE(entry[14]), "changed", G_CALLBACK(on_entry_changed), NULL);
   dword = xhci_read_dword(pci_bar_address + offset + 0x38);
   sprintf(buffer, "0x%08X", dword);
   gtk_entry_set_text(GTK_ENTRY(entry[15]), buffer);
+  g_signal_connect(GTK_EDITABLE(entry[15]), "changed", G_CALLBACK(on_entry_changed), NULL);
 
   offset = xhci_read_dword(pci_bar_address + 0x18);
   dword = xhci_read_dword(pci_bar_address + offset + 0);
   sprintf(buffer, "0x%08X", dword);
   gtk_entry_set_text(GTK_ENTRY(entry[16]), buffer);
+  g_signal_connect(GTK_EDITABLE(entry[16]), "changed", G_CALLBACK(on_entry_changed), NULL);
   // show up to 10 port register sets
   for (i = 0; i < n_ports; i++) {
     dword = xhci_read_dword(pci_bar_address + XHCI_PORT_SET_OFFSET + (i * 16));
@@ -594,6 +675,53 @@ int xhci_debug_dialog(int type, int param1)
     sprintf(tmpbuf, "port%d.device", i + 1);
     SIM->get_param_enum(tmpbuf, host_param)->dump_param(buffer, COMMON_STR_SIZE, 1);
     gtk_entry_set_text(GTK_ENTRY(entry[i * 2 + 18]), buffer);
+  }
+
+  bool valid = 0;
+  switch (type) {
+    // a command TRB was placed on the command ring
+    case USB_DEBUG_COMMAND:
+      gtk_label_set_text(GTK_LABEL(FNlabel), "Command Ring Address");
+      RingPtr = SIM->get_param_num("hub.op_regs.HcCrcr.crc", xHCI_state)->get();
+      sprintf(buffer, "0x" FMT_ADDRX64, RingPtr);
+      gtk_entry_set_text(GTK_ENTRY(entry[n_ports * 2 + 17]), buffer);
+      if (RingPtr != 0) {
+        gtk_widget_set_sensitive(button[12], 1);
+        valid = 1;
+      }
+      break;
+
+    // an event TRB was placed on an event ring
+    case USB_DEBUG_EVENT:
+      gtk_label_set_text(GTK_LABEL(FNlabel), "Event Ring");
+      sprintf(buffer, "Interrupter %i", param1);
+      gtk_entry_set_text(GTK_ENTRY(entry[n_ports * 2 + 17]), buffer);
+      gtk_widget_set_sensitive(button[12], 1);
+      valid = 1;
+      break;
+
+    case USB_DEBUG_FRAME:
+
+      gtk_label_set_text(GTK_LABEL(FNlabel), "SOF Frame Address");
+
+      break;
+
+    // first byte (word, dword, qword) of first non-existant port was written to
+    case USB_DEBUG_NONEXIST:
+    // port reset (non-root reset)
+    case USB_DEBUG_RESET:
+    // enable changed
+    case USB_DEBUG_ENABLE:
+      gtk_label_set_text(GTK_LABEL(FNlabel), "None");
+      gtk_entry_set_text(GTK_ENTRY(entry[n_ports * 2 + 17]), "None");
+      break;
+  }
+
+  if (!valid) {
+    gtk_widget_set_sensitive(treeview, 0);
+    usbdlg_create_label(TVvbox, "This trigger does not populate the tree view", false);
+  } else {
+    usbdlg_create_label(TVvbox, "Tree view populated", false);
   }
   // Show dialog
   gtk_widget_show_all(main_dialog);

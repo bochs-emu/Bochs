@@ -52,7 +52,6 @@ static const DLGPROC usb_debug_callbacks[5] = {
   hc_xhci_callback
 };
 
-Bit32u pci_bar_address = 0;
 struct CALLBACK_PARAMS g_params;
 
 HFONT hTreeViewFont;
@@ -237,7 +236,6 @@ INT_PTR CALLBACK dump_dialog_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //  UHCI
 //
-BOOL u_changed[IDC_U_EN_END - IDC_U_EN_START + 1];
 
 // lParam: type is in low 8 bits, break_type in high 8-bits of low word
 INT_PTR CALLBACK hc_uhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -325,7 +323,6 @@ INT_PTR CALLBACK hc_uhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
 }
 
 #include "iodev/usb/uhci_core.h"
-#include "iodev/usb/usb_uhci.h"
 
 bx_list_c *UHCI_state = NULL;
 
@@ -451,36 +448,36 @@ int hc_uhci_save(HWND hwnd)
 {
   char str[COMMON_STR_SIZE];
 
-  if (u_changed[IDC_U_REG_COMMAND - IDC_U_EN_START]) {
+  if (u_changed[UHCI_REG_COMMAND]) {
     GetDlgItemText(hwnd, IDC_U_REG_COMMAND, str, COMMON_STR_SIZE);
     usb_io_write(pci_bar_address + 0, strtol(str, NULL, 0), 2);
   }
-  if (u_changed[IDC_U_REG_STATUS - IDC_U_EN_START]) {
+  if (u_changed[UHCI_REG_STATUS]) {
     GetDlgItemText(hwnd, IDC_U_REG_STATUS, str, COMMON_STR_SIZE);
     usb_io_write(pci_bar_address + 2, strtol(str, NULL, 0), 2);
   }
-  if (u_changed[IDC_U_REG_INTERRUPT - IDC_U_EN_START]) {
+  if (u_changed[UHCI_REG_INTERRUPT]) {
     GetDlgItemText(hwnd, IDC_U_REG_INTERRUPT, str, COMMON_STR_SIZE);
     usb_io_write(pci_bar_address + 4, strtol(str, NULL, 0), 2);
   }
-  if (u_changed[IDC_U_REG_FRAME_NUM - IDC_U_EN_START]) {
+  if (u_changed[UHCI_REG_FRAME_NUM]) {
     GetDlgItemText(hwnd, IDC_U_REG_FRAME_NUM, str, COMMON_STR_SIZE);
     usb_io_write(pci_bar_address + 6, strtol(str, NULL, 0), 2);
   }
-  if (u_changed[IDC_U_REG_FRAME_ADDRESS - IDC_U_EN_START]) {
+  if (u_changed[UHCI_REG_FRAME_ADDR]) {
     GetDlgItemText(hwnd, IDC_U_REG_FRAME_ADDRESS, str, COMMON_STR_SIZE);
     usb_io_write(pci_bar_address + 8, strtol(str, NULL, 0), 4);
   }
-  if (u_changed[IDC_U_REG_SOF - IDC_U_EN_START]) {
+  if (u_changed[UHCI_REG_SOF]) {
     GetDlgItemText(hwnd, IDC_U_REG_SOF, str, COMMON_STR_SIZE);
     usb_io_write(pci_bar_address + 12, strtol(str, NULL, 0), 1);
   }
 
-  if (u_changed[IDC_U_REG_PORT0 - IDC_U_EN_START]) {
+  if (u_changed[UHCI_REG_PORT0]) {
     GetDlgItemText(hwnd, IDC_U_REG_PORT0, str, COMMON_STR_SIZE);
     usb_io_write(pci_bar_address + 16, strtol(str, NULL, 0), 2);
   }
-  if (u_changed[IDC_U_REG_PORT1 - IDC_U_EN_START]) {
+  if (u_changed[UHCI_REG_PORT1]) {
     GetDlgItemText(hwnd, IDC_U_REG_PORT1, str, COMMON_STR_SIZE);
     usb_io_write(pci_bar_address + 18, strtol(str, NULL, 0), 2);
   }

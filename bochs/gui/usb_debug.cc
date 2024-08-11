@@ -134,6 +134,8 @@ struct S_ATTRIBUTES attribs_x_ports[] = {
 
 int usb_debug_type = USB_DEBUG_NONE;
 bx_param_c *host_param = NULL;
+Bit32u pci_bar_address;
+bool u_changed[UHCI_REG_COUNT];
 
 void usb_dbg_register_type(int type)
 {
