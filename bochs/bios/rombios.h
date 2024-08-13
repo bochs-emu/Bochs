@@ -74,6 +74,9 @@
 #define SMB_IO_BASE       0xb100
 #define SMP_MSR_ADDR      0x0510
 
+#define PIIX_GPE0_BLK            0xafe0
+#define PIIX_GPE0_BLK_LEN        4
+
   // Define the application NAME
 #if defined(BX_QEMU)
 #  define BX_APPNAME "QEMU"
