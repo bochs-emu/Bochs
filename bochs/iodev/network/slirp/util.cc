@@ -45,7 +45,15 @@
 #if defined(_WIN32)
 int slirp_inet_aton(const char *cp, struct in_addr *ia)
 {
-    uint32_t addr = inet_addr(cp);
+    uint32_t addr;
+
+#if defined(_MSC_VER)
+    if (!inet_pton(AF_INET, cp, &addr)) {
+        return 0;
+    }
+#else 
+    addr = inet_addr(cp);
+#endif
     if (addr == 0xffffffff) {
         return 0;
     }

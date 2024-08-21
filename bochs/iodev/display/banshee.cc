@@ -954,8 +954,8 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
 
 void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
 {
-  Bit32u offset = (addr & 0x1ffffff);
-  Bit64u value = 0;
+  Bit32u offset = (addr & 0x1ffffff), value;
+  Bit64u value64 = 0;
   Bit32u mask = 0xffffffff;
 
 #ifdef BX_LITTLE_ENDIAN
@@ -964,13 +964,14 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
   Bit8u *data_ptr = (Bit8u *) data + (len - 1);
 #endif
   for (unsigned i = 0; i < len; i++) {
-    value |= ((Bit64u)*data_ptr << (i * 8));
+    value64 |= ((Bit64u)*data_ptr << (i * 8));
 #ifdef BX_LITTLE_ENDIAN
     data_ptr++;
 #else // BX_BIG_ENDIAN
     data_ptr--;
 #endif
   }
+  value = (Bit32u)value64;
   if ((addr & ~0x1ffffff) == pci_bar[0].addr) {
     if (offset < 0x80000) {
       write(offset, value, len);
@@ -1008,10 +1009,10 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
         cmdfifo_w(&v->fbi.cmdfifo[0], offset, value);
       } else if (len == 8) {
         cmdfifo_w(&v->fbi.cmdfifo[0], offset, value);
-        cmdfifo_w(&v->fbi.cmdfifo[0], offset + 4, value >> 32);
+        cmdfifo_w(&v->fbi.cmdfifo[0], offset + 4, value64 >> 32);
       } else {
         BX_ERROR(("CMDFIFO #0 write with len = %d redirected to LFB", len));
-        mem_write_linear(offset, value, len);
+        mem_write_linear(offset, value64, len);
       }
     } else if (v->fbi.cmdfifo[1].enabled && (offset >= v->fbi.cmdfifo[1].base) &&
                (offset < v->fbi.cmdfifo[1].end)) {
@@ -1019,13 +1020,13 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
         cmdfifo_w(&v->fbi.cmdfifo[1], offset, value);
       } else if (len == 8) {
         cmdfifo_w(&v->fbi.cmdfifo[1], offset, value);
-        cmdfifo_w(&v->fbi.cmdfifo[1], offset + 4, value >> 32);
+        cmdfifo_w(&v->fbi.cmdfifo[1], offset + 4, value64 >> 32);
       } else  {
         BX_ERROR(("CMDFIFO #1 write with len = %d redirected to LFB", len));
-        mem_write_linear(offset, value, len);
+        mem_write_linear(offset, value64, len);
       }
     } else {
-      mem_write_linear(offset, value, len);
+      mem_write_linear(offset, value64, len);
     }
   }
 }
