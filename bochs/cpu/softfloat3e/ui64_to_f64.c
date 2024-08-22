@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "primitives.h"
 #include "softfloat.h"
 
-float64_t ui64_to_f64(uint64_t a, struct softfloat_status_t *status)
+float64 ui64_to_f64(uint64_t a, struct softfloat_status_t *status)
 {
     if (! a) {
         return 0;

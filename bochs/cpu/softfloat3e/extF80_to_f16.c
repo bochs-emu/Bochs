@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-float16_t extF80_to_f16(extFloat80_t a, struct softfloat_status_t *status)
+float16 extF80_to_f16(extFloat80_t a, struct softfloat_status_t *status)
 {
     uint16_t uiA64;
     uint64_t uiA0;

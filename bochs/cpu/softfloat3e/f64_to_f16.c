@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-float16_t f64_to_f16(float64_t a, struct softfloat_status_t *status)
+float16 f64_to_f16(float64 a, struct softfloat_status_t *status)
 {
     bool sign;
     int16_t exp;

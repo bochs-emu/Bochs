@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "internals.h"
 #include "softfloat.h"
 
-softfloat_class_t f32_class(float32_t a)
+softfloat_class_t f32_class(float32 a)
 {
     bool signA;
     int16_t expA;

@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-float32_t softfloat_subMagsF32(uint32_t uiA, uint32_t uiB, struct softfloat_status_t *status)
+float32 softfloat_subMagsF32(uint32_t uiA, uint32_t uiB, struct softfloat_status_t *status)
 {
     int16_t expA;
     uint32_t sigA;

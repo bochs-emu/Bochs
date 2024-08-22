@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-float32_t f128_to_f32(float128_t a, struct softfloat_status_t *status)
+float32 f128_to_f32(float128_t a, struct softfloat_status_t *status)
 {
     uint64_t uiA64, uiA0;
     bool sign;

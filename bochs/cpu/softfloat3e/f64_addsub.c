@@ -38,10 +38,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "internals.h"
 #include "softfloat.h"
 
-extern float64_t softfloat_addMagsF64(uint64_t, uint64_t, bool, struct softfloat_status_t *);
-extern float64_t softfloat_subMagsF64(uint64_t, uint64_t, bool, struct softfloat_status_t *);
+extern float64 softfloat_addMagsF64(uint64_t, uint64_t, bool, struct softfloat_status_t *);
+extern float64 softfloat_subMagsF64(uint64_t, uint64_t, bool, struct softfloat_status_t *);
 
-float64_t f64_add(float64_t a, float64_t b, struct softfloat_status_t *status)
+float64 f64_add(float64 a, float64 b, struct softfloat_status_t *status)
 {
     bool signA;
     bool signB;
@@ -55,7 +55,7 @@ float64_t f64_add(float64_t a, float64_t b, struct softfloat_status_t *status)
     }
 }
 
-float64_t f64_sub(float64_t a, float64_t b, struct softfloat_status_t *status)
+float64 f64_sub(float64 a, float64 b, struct softfloat_status_t *status)
 {
     bool signA;
     bool signB;

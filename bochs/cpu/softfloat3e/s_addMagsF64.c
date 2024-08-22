@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "primitives.h"
 #include "specialize.h"
 
-float64_t softfloat_addMagsF64(uint64_t uiA, uint64_t uiB, bool signZ, struct softfloat_status_t *status)
+float64 softfloat_addMagsF64(uint64_t uiA, uint64_t uiB, bool signZ, struct softfloat_status_t *status)
 {
     int16_t expA;
     uint64_t sigA;

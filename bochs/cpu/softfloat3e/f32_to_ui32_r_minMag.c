@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-uint32_t f32_to_ui32_r_minMag(float32_t a, bool exact, struct softfloat_status_t *status)
+uint32_t f32_to_ui32_r_minMag(float32 a, bool exact, struct softfloat_status_t *status)
 {
     int16_t exp;
     uint32_t sig;

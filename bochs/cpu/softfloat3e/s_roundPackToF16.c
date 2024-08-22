@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "primitives.h"
 #include "softfloat.h"
 
-float16_t
+float16
  softfloat_roundPackToF16(bool sign, int16_t exp, uint16_t sig, struct softfloat_status_t *status)
 {
     uint8_t roundingMode;

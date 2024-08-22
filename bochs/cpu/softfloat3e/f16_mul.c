@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-float16_t f16_mul(float16_t a, float16_t b, struct softfloat_status_t *status)
+float16 f16_mul(float16 a, float16 b, struct softfloat_status_t *status)
 {
     bool signA;
     int8_t expA;

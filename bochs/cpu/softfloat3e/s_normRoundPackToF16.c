@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "internals.h"
 #include "primitives.h"
 
-float16_t softfloat_normRoundPackToF16(bool sign, int16_t exp, uint16_t sig, struct softfloat_status_t *status)
+float16 softfloat_normRoundPackToF16(bool sign, int16_t exp, uint16_t sig, struct softfloat_status_t *status)
 {
     int8_t shiftDist = softfloat_countLeadingZeros16(sig) - 1;
     exp -= shiftDist;

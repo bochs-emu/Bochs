@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "primitives.h"
 #include "softfloat.h"
 
-float16_t ui32_to_f16(uint32_t a, struct softfloat_status_t *status)
+float16 ui32_to_f16(uint32_t a, struct softfloat_status_t *status)
 {
     int8_t shiftDist;
     uint16_t sig;

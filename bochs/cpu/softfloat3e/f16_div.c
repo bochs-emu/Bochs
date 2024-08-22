@@ -44,7 +44,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern const uint16_t softfloat_approxRecip_1k0s[];
 extern const uint16_t softfloat_approxRecip_1k1s[];
 
-float16_t f16_div(float16_t a, float16_t b, struct softfloat_status_t *status)
+float16 f16_div(float16 a, float16 b, struct softfloat_status_t *status)
 {
     bool signA;
     int8_t expA;
