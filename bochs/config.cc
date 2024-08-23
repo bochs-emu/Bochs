@@ -227,48 +227,6 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, 
   if (usb == NULL) {
     usb = new bx_list_c(ports, "usb", "USB Configuration");
     usb->set_options(usb->USE_TAB_WINDOW | usb->SHOW_PARENT);
-    // usb debugging
-#if BX_USB_DEBUGGER
-    static const char *usb_debug_type[] = { "none", "uhci", "ohci", "ehci", "xhci", NULL };
-    bx_list_c *usb_debug = new bx_list_c(ports, "usb_debug", "USB Debug Options");
-    bx_param_enum_c *type = new bx_param_enum_c(usb_debug,
-      "type", "HC type",
-      "Select Host Controller type",
-      usb_debug_type, USB_DEBUG_NONE, USB_DEBUG_NONE);
-    new bx_param_bool_c(usb_debug,
-      "reset", "Trigger on reset",
-      "Trigger on Reset",
-      0
-    );
-    new bx_param_bool_c(usb_debug,
-      "enable", "Trigger on enable",
-      "Trigger on Enable",
-      0
-    );
-    new bx_param_num_c(usb_debug,
-      "start_frame", "Trigger on start of frame",
-      "Trigger on start of frame",
-      BX_USB_DEBUG_SOF_NONE, BX_USB_DEBUG_SOF_TRIGGER, 
-      BX_USB_DEBUG_SOF_NONE
-    );
-    new bx_param_bool_c(usb_debug,
-      "doorbell", "Trigger on doorbell",
-      "Trigger on Doorbell",
-      0
-    );
-    new bx_param_bool_c(usb_debug,
-      "event", "Trigger on event",
-      "Trigger on Event",
-      0
-    );
-    new bx_param_bool_c(usb_debug,
-      "non_exist", "Trigger on non exist",
-      "Trigger on write to non-existant port",
-      0
-    );
-    type->set_dependent_list(usb_debug->clone(), 1);
-    type->set_dependent_bitmap(USB_DEBUG_NONE, 0);
-#endif
     // prepare runtime options
     bx_list_c *rtmenu = (bx_list_c*)SIM->get_param("menu.runtime");
     usbrt = new bx_list_c(rtmenu, "usb", "USB options");
@@ -359,6 +317,51 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, 
   }
   enabled->set_dependent_list(deplist);
 }
+
+#if BX_USB_DEBUGGER
+void bx_init_usb_debug_options(bx_list_c *base)
+{
+  static const char *usb_debug_type[] = { "none", "uhci", "ohci", "ehci", "xhci", NULL };
+  bx_list_c *usb_debug = new bx_list_c(base, "usb_debug", "USB Debug Options");
+  bx_param_enum_c *type = new bx_param_enum_c(usb_debug,
+    "type", "HC type",
+    "Select Host Controller type",
+    usb_debug_type, USB_DEBUG_NONE, USB_DEBUG_NONE);
+  new bx_param_bool_c(usb_debug,
+    "reset", "Trigger on reset",
+    "Trigger on Reset",
+    0
+  );
+  new bx_param_bool_c(usb_debug,
+    "enable", "Trigger on enable",
+    "Trigger on Enable",
+    0
+  );
+  new bx_param_num_c(usb_debug,
+      "start_frame", "Trigger on start of frame",
+    "Trigger on start of frame",
+    BX_USB_DEBUG_SOF_NONE, BX_USB_DEBUG_SOF_TRIGGER, 
+    BX_USB_DEBUG_SOF_NONE
+  );
+  new bx_param_bool_c(usb_debug,
+    "doorbell", "Trigger on doorbell",
+    "Trigger on Doorbell",
+    0
+  );
+  new bx_param_bool_c(usb_debug,
+    "event", "Trigger on event",
+    "Trigger on Event",
+    0
+  );
+  new bx_param_bool_c(usb_debug,
+    "non_exist", "Trigger on non exist",
+    "Trigger on write to non-existant port",
+    0
+  );
+  type->set_dependent_list(usb_debug->clone(), 1);
+  type->set_dependent_bitmap(USB_DEBUG_NONE, 0);
+}
+#endif
 #endif
 
 void bx_plugin_ctrl_init()
@@ -1711,9 +1714,12 @@ void bx_init_options()
   ports->set_options(ports->USE_TAB_WINDOW | ports->SHOW_PARENT);
 #if BX_SUPPORT_PCIUSB
   bx_usbdev_ctl.init();
+#if BX_USB_DEBUGGER
+  bx_init_usb_debug_options(ports);
+#endif
 #endif
   // parallel / serial / USB options initialized in the device plugin code
-  
+
 #if BX_NETWORKING
   // network subtree
   bx_list_c *network = new bx_list_c(root_param, "network", "Network Configuration");
