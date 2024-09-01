@@ -325,7 +325,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   Bit32u new_mxcsr = xmm.xmm32u(2);
   if (is_cpu_extension_supported(BX_ISA_SSE)) {
     if (new_mxcsr & ~MXCSR_MASK) {
-       BX_ERROR(("%s: corrupted MXCSR state restored new_mxcsr=0x%08x", new_mxcsr));
+       BX_ERROR(("%s: corrupted MXCSR state restored new_mxcsr=0x%08x", i->getIaOpcodeNameShort(), new_mxcsr));
        exception(BX_GP_EXCEPTION, 0);
     }
   }

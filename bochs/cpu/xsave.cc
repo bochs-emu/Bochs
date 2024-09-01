@@ -365,7 +365,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     // read cannot cause any boundary cross because XSAVE image is 64-byte aligned
     Bit32u new_mxcsr = read_virtual_dword(i->seg(), eaddr + 24);
     if(new_mxcsr & ~MXCSR_MASK) {
-       BX_ERROR(("%s: corrupted MXCSR state restored new_mxcsr=0x%08x", new_mxcsr));
+       BX_ERROR(("%s: corrupted MXCSR state restored new_mxcsr=0x%08x", i->getIaOpcodeNameShort(), new_mxcsr));
        exception(BX_GP_EXCEPTION, 0);
     }
     BX_MXCSR_REGISTER = new_mxcsr;
