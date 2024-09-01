@@ -3,13 +3,13 @@ Changes after 2.8:
 Brief summary :
  - Integrated softfloat3e library replacing older softfloat2a fpu-emulation code
  - Implemented AVX512_FP16 Intel instruction set based on softfloat3e library (enabled in Xeon Sapphire Rapids CPU definition)
- - Bugfixes for CPU emulation correctness (critical bugfixes for CPUID and SHA1 ISA implementation)
+ - Bugfixes for CPU emulation correctness (critical bugfixes for XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
  - USB: Added the USB Debugger support for xHCI and UHCI
 
 Detailed change log :
 
 - CPU
-  - Bugfixes for CPU emulation correctness (critical bugfixes for CPUID and SHA1 ISA implementation)
+  - Bugfixes for CPU emulation correctness (critical bugfixes for XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
   - Integrated softfloat3e library replacing older softfloat2a fpu-emulation code
   - Implemented AVX512_FP16 Intel instruction set based on softfloat3e library (enabled in Xeon Sapphire Rapids CPU definition)
 

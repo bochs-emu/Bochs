@@ -323,9 +323,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   }
 
   Bit32u new_mxcsr = xmm.xmm32u(2);
-  if(is_cpu_extension_supported(BX_ISA_SSE)) {
-    if(new_mxcsr & ~MXCSR_MASK)
+  if (is_cpu_extension_supported(BX_ISA_SSE)) {
+    if (new_mxcsr & ~MXCSR_MASK) {
+       BX_ERROR(("%s: corrupted MXCSR state restored new_mxcsr=0x%08x", new_mxcsr));
        exception(BX_GP_EXCEPTION, 0);
+    }
   }
 
   /* load i387 register file */
@@ -365,7 +367,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
 
     /* If the OSFXSR bit in CR4 is not set, the FXRSTOR instruction does
        not restore the states of the XMM and MXCSR registers. */
-    if(BX_CPU_THIS_PTR cr4.get_OSFXSR()) {
+    if (BX_CPU_THIS_PTR cr4.get_OSFXSR()) {
       /* load XMM register file */
       xrstor_sse_state(i, eaddr+160);
     }

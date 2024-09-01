@@ -203,7 +203,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
 
   if ((xstate_bv & BX_XCR0_SSE_MASK) != 0)
   {
-    xsave_sse_state(i, eaddr);
+    xsave_sse_state(i, eaddr+XSAVE_SSE_STATE_OFFSET);
   }
 
   Bit32u offset = XSAVE_YMM_STATE_OFFSET;
@@ -360,12 +360,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   // Legacy form of XRSTOR loads the MXCSR register from memory whenever the
   // RFBM[1](SSE) or RFBM[2](AVX) is set, regardless of the values of XSTATE_BV[1] and XSTATE_BV[2]
   if (((requested_feature_bitmap & (BX_XCR0_SSE_MASK|BX_XCR0_YMM_MASK)) != 0 && ! compaction) ||
-      ((requested_feature_bitmap & restore_mask & BX_XCR0_SSE_MASK) != 0))
+      ((requested_feature_bitmap & restore_mask & BX_XCR0_SSE_MASK) != 0 && compaction))
   {
     // read cannot cause any boundary cross because XSAVE image is 64-byte aligned
     Bit32u new_mxcsr = read_virtual_dword(i->seg(), eaddr + 24);
-    if(new_mxcsr & ~MXCSR_MASK)
+    if(new_mxcsr & ~MXCSR_MASK) {
+       BX_ERROR(("%s: corrupted MXCSR state restored new_mxcsr=0x%08x", new_mxcsr));
        exception(BX_GP_EXCEPTION, 0);
+    }
     BX_MXCSR_REGISTER = new_mxcsr;
   }
 
