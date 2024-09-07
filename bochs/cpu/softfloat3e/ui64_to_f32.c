@@ -35,9 +35,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
 #include "softfloat.h"
 
-float32_t ui64_to_f32(uint64_t a, struct softfloat_status_t *status)
+float32 ui64_to_f32(uint64_t a, struct softfloat_status_t *status)
 {
     int8_t shiftDist;
     uint32_t sig;

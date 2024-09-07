@@ -28,29 +28,30 @@
 
 #if BX_SUPPORT_AVX
 
+#include "softfloat3e/include/softfloat.h"
+
 // FP32: s|eeeeeeee|mmmmmmmmmmmmmmmmmmmmmmm
 // BF16: s|eeeeeeee|mmmmmmm
 //  F16: s|eeeee|mmmmmmmmmm
 
-float_status_t prepare_ne_softfloat_status_helper()
+softfloat_status_t prepare_ne_softfloat_status_helper()
 {
-  float_status_t status;
+  softfloat_status_t status;
 
-  status.float_rounding_mode = float_round_nearest_even;
-  status.float_exception_flags = 0;
-  status.float_exception_masks = float_all_exceptions_mask;
-  status.float_suppress_exception = float_all_exceptions_mask;
-  status.float_nan_handling_mode = float_first_operand_nan;
-  status.flush_underflow_to_zero = true;
+  status.softfloat_roundingMode = softfloat_round_near_even;
+  status.softfloat_exceptionFlags = 0;
+  status.softfloat_exceptionMasks = softfloat_all_exceptions_mask;
+  status.softfloat_suppressException = softfloat_all_exceptions_mask;
+  status.softfloat_flush_underflow_to_zero = true;
   // input denormals not converted to zero and handled normally
-  status.denormals_are_zeros = false;
+  status.softfloat_denormals_are_zeros = false;
 
   return status;
 }
 
 float32 convert_ne_fp16_to_fp32(float16 op)
 {
-  static float_status_t status = prepare_ne_softfloat_status_helper();
+  static softfloat_status_t status = prepare_ne_softfloat_status_helper();
   return f16_to_f32(op, &status);
 }
 

@@ -47,10 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 
 #include "softfloat_types.h"
-
 #include "softfloat-extra.h"
-
-#define FLOATX80
 
 struct softfloat_status_t
 {
@@ -67,19 +64,7 @@ struct softfloat_status_t
     | Valid values are 32, 64, and 80.
     *----------------------------------------------------------------------------*/
     uint8_t extF80_roundingPrecision;
-
-#define float_rounding_mode softfloat_roundingMode
-#define float_exception_flags softfloat_exceptionFlags
-#define flush_underflow_to_zero softfloat_flush_underflow_to_zero
-#define denormals_are_zeros softfloat_denormals_are_zeros
-#define float_rounding_precision extF80_roundingPrecision
-#define float_exception_masks softfloat_exceptionMasks
-#define float_suppress_exception softfloat_suppressException
-
-    int float_nan_handling_mode;    /* flag register */     // redundant
 };
-
-typedef struct softfloat_status_t float_status_t;
 
 /*----------------------------------------------------------------------------
 | Software floating-point rounding mode.
@@ -107,6 +92,10 @@ enum softfloat_exception_flag_t {
     softfloat_flag_underflow = 0x10,
     softfloat_flag_inexact   = 0x20
 };
+
+static const unsigned softfloat_all_exceptions_mask = 0x3f;
+
+#define FLOATX80
 
 #ifdef FLOATX80
 #define RAISE_SW_C1 0x0200
@@ -221,97 +210,97 @@ BX_CPP_INLINE void softfloat_setRoundingUp(struct softfloat_status_t *status) {
 /*----------------------------------------------------------------------------
 | Integer-to-floating-point conversion routines.
 *----------------------------------------------------------------------------*/
-float16_t ui16_to_f16(uint16_t, struct softfloat_status_t *);
-float16_t ui32_to_f16(uint32_t, struct softfloat_status_t *);
-float32_t ui32_to_f32(uint32_t, struct softfloat_status_t *);
-float64_t ui32_to_f64(uint32_t);
+float16 ui16_to_f16(uint16_t, struct softfloat_status_t *);
+float16 ui32_to_f16(uint32_t, struct softfloat_status_t *);
+float32 ui32_to_f32(uint32_t, struct softfloat_status_t *);
+float64 ui32_to_f64(uint32_t);
 extFloat80_t ui32_to_extF80(uint32_t);
 float128_t ui32_to_f128(uint32_t);
-float16_t ui64_to_f16(uint64_t, struct softfloat_status_t *);
-float32_t ui64_to_f32(uint64_t, struct softfloat_status_t *);
-float64_t ui64_to_f64(uint64_t, struct softfloat_status_t *);
+float16 ui64_to_f16(uint64_t, struct softfloat_status_t *);
+float32 ui64_to_f32(uint64_t, struct softfloat_status_t *);
+float64 ui64_to_f64(uint64_t, struct softfloat_status_t *);
 extFloat80_t ui64_to_extF80(uint64_t);
 float128_t ui64_to_f128(uint64_t);
-float16_t i16_to_f16(int16_t, struct softfloat_status_t *);
-float16_t i32_to_f16(int32_t, struct softfloat_status_t *);
-float32_t i32_to_f32(int32_t, struct softfloat_status_t *);
-float64_t i32_to_f64(int32_t);
+float16 i16_to_f16(int16_t, struct softfloat_status_t *);
+float16 i32_to_f16(int32_t, struct softfloat_status_t *);
+float32 i32_to_f32(int32_t, struct softfloat_status_t *);
+float64 i32_to_f64(int32_t);
 extFloat80_t i32_to_extF80(int32_t);
 float128_t i32_to_f128(int32_t);
-float16_t i64_to_f16(int64_t, struct softfloat_status_t *);
-float32_t i64_to_f32(int64_t, struct softfloat_status_t *);
-float64_t i64_to_f64(int64_t, struct softfloat_status_t *);
+float16 i64_to_f16(int64_t, struct softfloat_status_t *);
+float32 i64_to_f32(int64_t, struct softfloat_status_t *);
+float64 i64_to_f64(int64_t, struct softfloat_status_t *);
 extFloat80_t i64_to_extF80(int64_t);
 float128_t i64_to_f128(int64_t);
 
-BX_CPP_INLINE float16_t i16_to_f16(int16_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE float16 i16_to_f16(int16_t a, struct softfloat_status_t *status) {
   return i32_to_f16((int32_t)(a), status);
 }
 
-BX_CPP_INLINE float16_t ui16_to_f16(uint16_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE float16 ui16_to_f16(uint16_t a, struct softfloat_status_t *status) {
   return ui32_to_f16((uint32_t)(a), status);
 }
 
 /*----------------------------------------------------------------------------
 | 16-bit (half-precision) floating-point operations.
 *----------------------------------------------------------------------------*/
-uint32_t f16_to_ui32(float16_t, uint8_t, bool, struct softfloat_status_t *);
-uint64_t f16_to_ui64(float16_t, uint8_t, bool, struct softfloat_status_t *);
-int32_t f16_to_i32(float16_t, uint8_t, bool, struct softfloat_status_t *);
-int64_t f16_to_i64(float16_t, uint8_t, bool, struct softfloat_status_t *);
-uint32_t f16_to_ui32_r_minMag(float16_t, bool, struct softfloat_status_t *);
-uint64_t f16_to_ui64_r_minMag(float16_t, bool, struct softfloat_status_t *);
-int32_t f16_to_i32_r_minMag(float16_t, bool, struct softfloat_status_t *);
-int64_t f16_to_i64_r_minMag(float16_t, bool, struct softfloat_status_t *);
-float32_t f16_to_f32(float16_t, struct softfloat_status_t *);
-float64_t f16_to_f64(float16_t, struct softfloat_status_t *);
-extFloat80_t f16_to_extF80(float16_t, struct softfloat_status_t *);
-float16_t f16_roundToInt(float16_t, uint8_t, uint8_t, bool, struct softfloat_status_t *);
-float16_t f16_add(float16_t, float16_t, struct softfloat_status_t *);
-float16_t f16_sub(float16_t, float16_t, struct softfloat_status_t *);
-float16_t f16_mul(float16_t, float16_t, struct softfloat_status_t *);
-float16_t f16_mulAdd(float16_t, float16_t, float16_t, uint8_t op, struct softfloat_status_t *);
-float16_t f16_div(float16_t, float16_t, struct softfloat_status_t *);
-float16_t f16_min(float16_t, float16_t, struct softfloat_status_t *);
-float16_t f16_max(float16_t, float16_t, struct softfloat_status_t *);
-float16_t f16_getExp(float16_t, struct softfloat_status_t *);
-float16_t f16_getMant(float16_t, struct softfloat_status_t *, int, int);
-float16_t f16_range(float16_t, float16_t, bool is_max, bool is_abs, int sign_ctrl, softfloat_status_t *);
-int f16_compare(float16_t, float16_t, bool, struct softfloat_status_t *);
-float16_t f16_sqrt(float16_t, struct softfloat_status_t *);
-softfloat_class_t f16_class(float16_t);
+uint32_t f16_to_ui32(float16, uint8_t, bool, struct softfloat_status_t *);
+uint64_t f16_to_ui64(float16, uint8_t, bool, struct softfloat_status_t *);
+int32_t f16_to_i32(float16, uint8_t, bool, struct softfloat_status_t *);
+int64_t f16_to_i64(float16, uint8_t, bool, struct softfloat_status_t *);
+uint32_t f16_to_ui32_r_minMag(float16, bool, struct softfloat_status_t *);
+uint64_t f16_to_ui64_r_minMag(float16, bool, struct softfloat_status_t *);
+int32_t f16_to_i32_r_minMag(float16, bool, struct softfloat_status_t *);
+int64_t f16_to_i64_r_minMag(float16, bool, struct softfloat_status_t *);
+float32 f16_to_f32(float16, struct softfloat_status_t *);
+float64 f16_to_f64(float16, struct softfloat_status_t *);
+extFloat80_t f16_to_extF80(float16, struct softfloat_status_t *);
+float16 f16_roundToInt(float16, uint8_t, uint8_t, bool, struct softfloat_status_t *);
+float16 f16_add(float16, float16, struct softfloat_status_t *);
+float16 f16_sub(float16, float16, struct softfloat_status_t *);
+float16 f16_mul(float16, float16, struct softfloat_status_t *);
+float16 f16_mulAdd(float16, float16, float16, uint8_t op, struct softfloat_status_t *);
+float16 f16_div(float16, float16, struct softfloat_status_t *);
+float16 f16_min(float16, float16, struct softfloat_status_t *);
+float16 f16_max(float16, float16, struct softfloat_status_t *);
+float16 f16_getExp(float16, struct softfloat_status_t *);
+float16 f16_getMant(float16, struct softfloat_status_t *, int, int);
+float16 f16_range(float16, float16, bool is_max, bool is_abs, int sign_ctrl, softfloat_status_t *);
+int f16_compare(float16, float16, bool, struct softfloat_status_t *);
+float16 f16_sqrt(float16, struct softfloat_status_t *);
+softfloat_class_t f16_class(float16);
 
-bool f16_isSignalingNaN(float16_t);
-bool f16_isNaN(float16_t);
+bool f16_isSignalingNaN(float16);
+bool f16_isNaN(float16);
 
-bool f16_sign(float16_t);
-int8_t f16_exp(float16_t);
-uint16_t f16_fraction(float16_t);
-float16_t f16_denormal_to_zero(float16_t);
+bool f16_sign(float16);
+int8_t f16_exp(float16);
+uint16_t f16_fraction(float16);
+float16 f16_denormal_to_zero(float16);
 
-BX_CPP_INLINE int f16_compare(float16_t a, float16_t b, softfloat_status_t *status) {
+BX_CPP_INLINE int f16_compare(float16 a, float16 b, softfloat_status_t *status) {
   return f16_compare(a, b, 0, status);
 }
 
-BX_CPP_INLINE int f16_compare_quiet(float16_t a, float16_t b, softfloat_status_t *status) {
+BX_CPP_INLINE int f16_compare_quiet(float16 a, float16 b, softfloat_status_t *status) {
   return f16_compare(a, b, 1, status);
 }
 
-BX_CPP_INLINE float16_t f16_roundToInt(float16_t a, uint8_t scale, struct softfloat_status_t *status) {
+BX_CPP_INLINE float16 f16_roundToInt(float16 a, uint8_t scale, struct softfloat_status_t *status) {
     return f16_roundToInt(a, scale, softfloat_getRoundingMode(status), true, status);
 }
-BX_CPP_INLINE float16_t f16_roundToInt(float16_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE float16 f16_roundToInt(float16 a, struct softfloat_status_t *status) {
     return f16_roundToInt(a, 0, softfloat_getRoundingMode(status), true, status);
 }
 
-BX_CPP_INLINE int64_t f16_to_i64(float16_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE int64_t f16_to_i64(float16 a, struct softfloat_status_t *status) {
     return f16_to_i64(a, softfloat_getRoundingMode(status), true, status);
 }
-BX_CPP_INLINE int32_t f16_to_i32(float16_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE int32_t f16_to_i32(float16 a, struct softfloat_status_t *status) {
     return f16_to_i32(a, softfloat_getRoundingMode(status), true, status);
 }
 
-BX_CPP_INLINE int16_t f16_to_i16(float16_t a, softfloat_status_t *status)
+BX_CPP_INLINE int16_t f16_to_i16(float16 a, softfloat_status_t *status)
 {
     int32_t val_32 = f16_to_i32(a, status);
     int16_t val_16 = (int16_t) val_32;
@@ -322,14 +311,14 @@ BX_CPP_INLINE int16_t f16_to_i16(float16_t a, softfloat_status_t *status)
     return val_16;
 }
 
-BX_CPP_INLINE int64_t f16_to_i64_round_to_zero(float16_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE int64_t f16_to_i64_round_to_zero(float16 a, struct softfloat_status_t *status) {
     return f16_to_i64_r_minMag(a, true, status);
 }
-BX_CPP_INLINE int32_t f16_to_i32_round_to_zero(float16_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE int32_t f16_to_i32_round_to_zero(float16 a, struct softfloat_status_t *status) {
     return f16_to_i32_r_minMag(a, true, status);
 }
 
-BX_CPP_INLINE int16_t f16_to_i16_round_to_zero(float16_t a, softfloat_status_t *status)
+BX_CPP_INLINE int16_t f16_to_i16_round_to_zero(float16 a, softfloat_status_t *status)
 {
     int32_t val_32 = f16_to_i32_round_to_zero(a, status);
     int16_t val_16 = (int16_t) val_32;
@@ -340,14 +329,14 @@ BX_CPP_INLINE int16_t f16_to_i16_round_to_zero(float16_t a, softfloat_status_t *
     return val_16;
 }
 
-BX_CPP_INLINE uint64_t f16_to_ui64(float16_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE uint64_t f16_to_ui64(float16 a, struct softfloat_status_t *status) {
     return f16_to_ui64(a, softfloat_getRoundingMode(status), true, status);
 }
-BX_CPP_INLINE uint32_t f16_to_ui32(float16_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE uint32_t f16_to_ui32(float16 a, struct softfloat_status_t *status) {
     return f16_to_ui32(a, softfloat_getRoundingMode(status), true, status);
 }
 
-BX_CPP_INLINE uint16_t f16_to_ui16(float16_t a, softfloat_status_t *status)
+BX_CPP_INLINE uint16_t f16_to_ui16(float16 a, softfloat_status_t *status)
 {
     uint32_t val_32 = f16_to_ui32(a, status);
     if (val_32 > 0xFFFF) {
@@ -357,14 +346,14 @@ BX_CPP_INLINE uint16_t f16_to_ui16(float16_t a, softfloat_status_t *status)
     return (uint16_t) val_32;
 }
 
-BX_CPP_INLINE uint64_t f16_to_ui64_round_to_zero(float16_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE uint64_t f16_to_ui64_round_to_zero(float16 a, struct softfloat_status_t *status) {
     return f16_to_ui64_r_minMag(a, true, status);
 }
-BX_CPP_INLINE uint32_t f16_to_ui32_round_to_zero(float16_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE uint32_t f16_to_ui32_round_to_zero(float16 a, struct softfloat_status_t *status) {
     return f16_to_ui32_r_minMag(a, true, status);
 }
 
-BX_CPP_INLINE uint16_t f16_to_ui16_round_to_zero(float16_t a, softfloat_status_t *status)
+BX_CPP_INLINE uint16_t f16_to_ui16_round_to_zero(float16 a, softfloat_status_t *status)
 {
     uint32_t val_32 = f16_to_ui32_round_to_zero(a, status);
     if (val_32 > 0xFFFF) {
@@ -374,208 +363,208 @@ BX_CPP_INLINE uint16_t f16_to_ui16_round_to_zero(float16_t a, softfloat_status_t
     return (uint16_t) val_32;
 }
 
-BX_CPP_INLINE float16_t f16_fmadd(float16_t a, float16_t b, float16_t c, softfloat_status_t *status) {
+BX_CPP_INLINE float16 f16_fmadd(float16 a, float16 b, float16 c, softfloat_status_t *status) {
     return f16_mulAdd(a, b, c, 0, status);
 }
-BX_CPP_INLINE float16_t f16_fmsub(float16_t a, float16_t b, float16_t c, softfloat_status_t *status) {
+BX_CPP_INLINE float16 f16_fmsub(float16 a, float16 b, float16 c, softfloat_status_t *status) {
     return f16_mulAdd(a, b, c, softfloat_muladd_negate_c, status);
 }
-BX_CPP_INLINE float16_t f16_fnmadd(float16_t a, float16_t b, float16_t c, softfloat_status_t *status) {
+BX_CPP_INLINE float16 f16_fnmadd(float16 a, float16 b, float16 c, softfloat_status_t *status) {
     return f16_mulAdd(a, b, c, softfloat_muladd_negate_product, status);
 }
-BX_CPP_INLINE float16_t f16_fnmsub(float16_t a, float16_t b, float16_t c, softfloat_status_t *status) {
+BX_CPP_INLINE float16 f16_fnmsub(float16 a, float16 b, float16 c, softfloat_status_t *status) {
     return f16_mulAdd(a, b, c, softfloat_muladd_negate_result, status);
 }
 
 /*----------------------------------------------------------------------------
 | 32-bit (single-precision) floating-point operations.
 *----------------------------------------------------------------------------*/
-uint32_t f32_to_ui32(float32_t, uint8_t, bool, struct softfloat_status_t *);
-uint64_t f32_to_ui64(float32_t, uint8_t, bool, struct softfloat_status_t *);
-int32_t f32_to_i32(float32_t, uint8_t, bool, struct softfloat_status_t *);
-int64_t f32_to_i64(float32_t, uint8_t, bool, struct softfloat_status_t *);
-uint32_t f32_to_ui32_r_minMag(float32_t, bool, struct softfloat_status_t *);
-uint64_t f32_to_ui64_r_minMag(float32_t, bool, struct softfloat_status_t *);
-int32_t f32_to_i32_r_minMag(float32_t, bool, struct softfloat_status_t *);
-int64_t f32_to_i64_r_minMag(float32_t, bool, struct softfloat_status_t *);
-float16_t f32_to_f16(float32_t, struct softfloat_status_t *);
-float64_t f32_to_f64(float32_t, struct softfloat_status_t *);
-extFloat80_t f32_to_extF80(float32_t, struct softfloat_status_t *);
-float128_t f32_to_f128(float32_t, struct softfloat_status_t *);
-float32_t f32_roundToInt(float32_t, uint8_t, uint8_t, bool, struct softfloat_status_t *);
-float32_t f32_add(float32_t, float32_t, struct softfloat_status_t *);
-float32_t f32_sub(float32_t, float32_t, struct softfloat_status_t *);
-float32_t f32_mul(float32_t, float32_t, struct softfloat_status_t *);
-float32_t f32_mulAdd(float32_t, float32_t, float32_t, uint8_t op, struct softfloat_status_t *);
-float32_t f32_div(float32_t, float32_t, struct softfloat_status_t *);
-float32_t f32_min(float32_t, float32_t, struct softfloat_status_t *);
-float32_t f32_max(float32_t, float32_t, struct softfloat_status_t *);
-float32_t f32_scalef(float32_t, float32_t, struct softfloat_status_t *);
-float32_t f32_getExp(float32_t, struct softfloat_status_t *);
-float32_t f32_getMant(float32_t, struct softfloat_status_t *, int, int);
-float32_t f32_range(float32_t, float32_t, bool is_max, bool is_abs, int sign_ctrl, softfloat_status_t *);
-float32_t f32_frc(float32_t, struct softfloat_status_t *);
-int f32_compare(float32_t, float32_t, bool, struct softfloat_status_t *);
-float32_t f32_sqrt(float32_t, struct softfloat_status_t *);
-softfloat_class_t f32_class(float32_t);
+uint32_t f32_to_ui32(float32, uint8_t, bool, struct softfloat_status_t *);
+uint64_t f32_to_ui64(float32, uint8_t, bool, struct softfloat_status_t *);
+int32_t f32_to_i32(float32, uint8_t, bool, struct softfloat_status_t *);
+int64_t f32_to_i64(float32, uint8_t, bool, struct softfloat_status_t *);
+uint32_t f32_to_ui32_r_minMag(float32, bool, struct softfloat_status_t *);
+uint64_t f32_to_ui64_r_minMag(float32, bool, struct softfloat_status_t *);
+int32_t f32_to_i32_r_minMag(float32, bool, struct softfloat_status_t *);
+int64_t f32_to_i64_r_minMag(float32, bool, struct softfloat_status_t *);
+float16 f32_to_f16(float32, struct softfloat_status_t *);
+float64 f32_to_f64(float32, struct softfloat_status_t *);
+extFloat80_t f32_to_extF80(float32, struct softfloat_status_t *);
+float128_t f32_to_f128(float32, struct softfloat_status_t *);
+float32 f32_roundToInt(float32, uint8_t, uint8_t, bool, struct softfloat_status_t *);
+float32 f32_add(float32, float32, struct softfloat_status_t *);
+float32 f32_sub(float32, float32, struct softfloat_status_t *);
+float32 f32_mul(float32, float32, struct softfloat_status_t *);
+float32 f32_mulAdd(float32, float32, float32, uint8_t op, struct softfloat_status_t *);
+float32 f32_div(float32, float32, struct softfloat_status_t *);
+float32 f32_min(float32, float32, struct softfloat_status_t *);
+float32 f32_max(float32, float32, struct softfloat_status_t *);
+float32 f32_scalef(float32, float32, struct softfloat_status_t *);
+float32 f32_getExp(float32, struct softfloat_status_t *);
+float32 f32_getMant(float32, struct softfloat_status_t *, int, int);
+float32 f32_range(float32, float32, bool is_max, bool is_abs, int sign_ctrl, softfloat_status_t *);
+float32 f32_frc(float32, struct softfloat_status_t *);
+int f32_compare(float32, float32, bool, struct softfloat_status_t *);
+float32 f32_sqrt(float32, struct softfloat_status_t *);
+softfloat_class_t f32_class(float32);
 
-bool f32_isSignalingNaN(float32_t);
-bool f32_isNaN(float32_t);
+bool f32_isSignalingNaN(float32);
+bool f32_isNaN(float32);
 
-bool f32_sign(float32_t);
-int16_t f32_exp(float32_t);
-uint32_t f32_fraction(float32_t);
-float32_t f32_denormal_to_zero(float32_t);
+bool f32_sign(float32);
+int16_t f32_exp(float32);
+uint32_t f32_fraction(float32);
+float32 f32_denormal_to_zero(float32);
 
-BX_CPP_INLINE int f32_compare(float32_t a, float32_t b, softfloat_status_t *status) {
+BX_CPP_INLINE int f32_compare(float32 a, float32 b, softfloat_status_t *status) {
     return f32_compare(a, b, 0, status);
 }
 
-BX_CPP_INLINE int f32_compare_quiet(float32_t a, float32_t b, softfloat_status_t *status) {
+BX_CPP_INLINE int f32_compare_quiet(float32 a, float32 b, softfloat_status_t *status) {
     return f32_compare(a, b, 1, status);
 }
 
-BX_CPP_INLINE float32_t f32_roundToInt(float32_t a, uint8_t scale, struct softfloat_status_t *status) {
+BX_CPP_INLINE float32 f32_roundToInt(float32 a, uint8_t scale, struct softfloat_status_t *status) {
     return f32_roundToInt(a, scale, softfloat_getRoundingMode(status), true, status);
 }
-BX_CPP_INLINE float32_t f32_roundToInt(float32_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE float32 f32_roundToInt(float32 a, struct softfloat_status_t *status) {
     return f32_roundToInt(a, 0, softfloat_getRoundingMode(status), true, status);
 }
 
-BX_CPP_INLINE int32_t f32_to_i32(float32_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE int32_t f32_to_i32(float32 a, struct softfloat_status_t *status) {
     return f32_to_i32(a, softfloat_getRoundingMode(status), true, status);
 }
-BX_CPP_INLINE int64_t f32_to_i64(float32_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE int64_t f32_to_i64(float32 a, struct softfloat_status_t *status) {
     return f32_to_i64(a, softfloat_getRoundingMode(status), true, status);
 }
 
-BX_CPP_INLINE int32_t f32_to_i32_round_to_zero(float32_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE int32_t f32_to_i32_round_to_zero(float32 a, struct softfloat_status_t *status) {
     return f32_to_i32_r_minMag(a, true, status);
 }
-BX_CPP_INLINE int64_t f32_to_i64_round_to_zero(float32_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE int64_t f32_to_i64_round_to_zero(float32 a, struct softfloat_status_t *status) {
     return f32_to_i64_r_minMag(a, true, status);
 }
 
-BX_CPP_INLINE uint32_t f32_to_ui32(float32_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE uint32_t f32_to_ui32(float32 a, struct softfloat_status_t *status) {
     return f32_to_ui32(a, softfloat_getRoundingMode(status), true, status);
 }
-BX_CPP_INLINE uint64_t f32_to_ui64(float32_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE uint64_t f32_to_ui64(float32 a, struct softfloat_status_t *status) {
     return f32_to_ui64(a, softfloat_getRoundingMode(status), true, status);
 }
 
-BX_CPP_INLINE uint32_t f32_to_ui32_round_to_zero(float32_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE uint32_t f32_to_ui32_round_to_zero(float32 a, struct softfloat_status_t *status) {
     return f32_to_ui32_r_minMag(a, true, status);
 }
-BX_CPP_INLINE uint64_t f32_to_ui64_round_to_zero(float32_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE uint64_t f32_to_ui64_round_to_zero(float32 a, struct softfloat_status_t *status) {
     return f32_to_ui64_r_minMag(a, true, status);
 }
 
-BX_CPP_INLINE float32_t f32_fmadd(float32_t a, float32_t b, float32_t c, softfloat_status_t *status) {
+BX_CPP_INLINE float32 f32_fmadd(float32 a, float32 b, float32 c, softfloat_status_t *status) {
     return f32_mulAdd(a, b, c, 0, status);
 }
-BX_CPP_INLINE float32_t f32_fmsub(float32_t a, float32_t b, float32_t c, softfloat_status_t *status) {
+BX_CPP_INLINE float32 f32_fmsub(float32 a, float32 b, float32 c, softfloat_status_t *status) {
     return f32_mulAdd(a, b, c, softfloat_muladd_negate_c, status);
 }
-BX_CPP_INLINE float32_t f32_fnmadd(float32_t a, float32_t b, float32_t c, softfloat_status_t *status) {
+BX_CPP_INLINE float32 f32_fnmadd(float32 a, float32 b, float32 c, softfloat_status_t *status) {
     return f32_mulAdd(a, b, c, softfloat_muladd_negate_product, status);
 }
-BX_CPP_INLINE float32_t f32_fnmsub(float32_t a, float32_t b, float32_t c, softfloat_status_t *status) {
+BX_CPP_INLINE float32 f32_fnmsub(float32 a, float32 b, float32 c, softfloat_status_t *status) {
     return f32_mulAdd(a, b, c, softfloat_muladd_negate_result, status);
 }
 
 /*----------------------------------------------------------------------------
 | 64-bit (double-precision) floating-point operations.
 *----------------------------------------------------------------------------*/
-uint32_t f64_to_ui32(float64_t, uint8_t, bool, struct softfloat_status_t *);
-uint64_t f64_to_ui64(float64_t, uint8_t, bool, struct softfloat_status_t *);
-int32_t f64_to_i32(float64_t, uint8_t, bool, struct softfloat_status_t *);
-int64_t f64_to_i64(float64_t, uint8_t, bool, struct softfloat_status_t *);
-uint32_t f64_to_ui32_r_minMag(float64_t, bool, struct softfloat_status_t *);
-uint64_t f64_to_ui64_r_minMag(float64_t, bool, struct softfloat_status_t *);
-int32_t f64_to_i32_r_minMag(float64_t, bool, struct softfloat_status_t *);
-int64_t f64_to_i64_r_minMag(float64_t, bool, struct softfloat_status_t *);
-float16_t f64_to_f16(float64_t, struct softfloat_status_t *);
-float32_t f64_to_f32(float64_t, struct softfloat_status_t *);
-extFloat80_t f64_to_extF80(float64_t, struct softfloat_status_t *);
-float128_t f64_to_f128(float64_t, struct softfloat_status_t *);
-float64_t f64_roundToInt(float64_t, uint8_t, uint8_t, bool, struct softfloat_status_t *);
-float64_t f64_add(float64_t, float64_t, struct softfloat_status_t *);
-float64_t f64_sub(float64_t, float64_t, struct softfloat_status_t *);
-float64_t f64_mul(float64_t, float64_t, struct softfloat_status_t *);
-float64_t f64_mulAdd(float64_t, float64_t, float64_t, uint8_t op, struct softfloat_status_t *);
-float64_t f64_div(float64_t, float64_t, struct softfloat_status_t *);
-float64_t f64_min(float64_t, float64_t, struct softfloat_status_t *);
-float64_t f64_max(float64_t, float64_t, struct softfloat_status_t *);
-float64_t f64_scalef(float64_t, float64_t, struct softfloat_status_t *);
-float64_t f64_getExp(float64_t, struct softfloat_status_t *);
-float64_t f64_getMant(float64_t, struct softfloat_status_t *, int, int);
-float64_t f64_range(float64_t, float64_t, bool is_max, bool is_abs, int sign_ctrl, softfloat_status_t *);
-float64_t f64_frc(float64_t, struct softfloat_status_t *);
-int f64_compare(float64_t, float64_t, bool, struct softfloat_status_t *);
-float64_t f64_sqrt(float64_t, struct softfloat_status_t *);
-softfloat_class_t f64_class(float64_t);
+uint32_t f64_to_ui32(float64, uint8_t, bool, struct softfloat_status_t *);
+uint64_t f64_to_ui64(float64, uint8_t, bool, struct softfloat_status_t *);
+int32_t f64_to_i32(float64, uint8_t, bool, struct softfloat_status_t *);
+int64_t f64_to_i64(float64, uint8_t, bool, struct softfloat_status_t *);
+uint32_t f64_to_ui32_r_minMag(float64, bool, struct softfloat_status_t *);
+uint64_t f64_to_ui64_r_minMag(float64, bool, struct softfloat_status_t *);
+int32_t f64_to_i32_r_minMag(float64, bool, struct softfloat_status_t *);
+int64_t f64_to_i64_r_minMag(float64, bool, struct softfloat_status_t *);
+float16 f64_to_f16(float64, struct softfloat_status_t *);
+float32 f64_to_f32(float64, struct softfloat_status_t *);
+extFloat80_t f64_to_extF80(float64, struct softfloat_status_t *);
+float128_t f64_to_f128(float64, struct softfloat_status_t *);
+float64 f64_roundToInt(float64, uint8_t, uint8_t, bool, struct softfloat_status_t *);
+float64 f64_add(float64, float64, struct softfloat_status_t *);
+float64 f64_sub(float64, float64, struct softfloat_status_t *);
+float64 f64_mul(float64, float64, struct softfloat_status_t *);
+float64 f64_mulAdd(float64, float64, float64, uint8_t op, struct softfloat_status_t *);
+float64 f64_div(float64, float64, struct softfloat_status_t *);
+float64 f64_min(float64, float64, struct softfloat_status_t *);
+float64 f64_max(float64, float64, struct softfloat_status_t *);
+float64 f64_scalef(float64, float64, struct softfloat_status_t *);
+float64 f64_getExp(float64, struct softfloat_status_t *);
+float64 f64_getMant(float64, struct softfloat_status_t *, int, int);
+float64 f64_range(float64, float64, bool is_max, bool is_abs, int sign_ctrl, softfloat_status_t *);
+float64 f64_frc(float64, struct softfloat_status_t *);
+int f64_compare(float64, float64, bool, struct softfloat_status_t *);
+float64 f64_sqrt(float64, struct softfloat_status_t *);
+softfloat_class_t f64_class(float64);
 
-bool f64_isSignalingNaN(float64_t);
-bool f64_isNaN(float64_t);
+bool f64_isSignalingNaN(float64);
+bool f64_isNaN(float64);
 
-bool f64_sign(float64_t);
-int16_t f64_exp(float64_t);
-uint64_t f64_fraction(float64_t);
-float64_t f64_denormal_to_zero(float64_t);
+bool f64_sign(float64);
+int16_t f64_exp(float64);
+uint64_t f64_fraction(float64);
+float64 f64_denormal_to_zero(float64);
 
-BX_CPP_INLINE int f64_compare(float64_t a, float64_t b, softfloat_status_t *status) {
+BX_CPP_INLINE int f64_compare(float64 a, float64 b, softfloat_status_t *status) {
     return f64_compare(a, b, 0, status);
 }
 
-BX_CPP_INLINE int f64_compare_quiet(float64_t a, float64_t b, softfloat_status_t *status) {
+BX_CPP_INLINE int f64_compare_quiet(float64 a, float64 b, softfloat_status_t *status) {
     return f64_compare(a, b, 1, status);
 }
 
-BX_CPP_INLINE float64_t f64_roundToInt(float64_t a, uint8_t scale, struct softfloat_status_t *status) {
+BX_CPP_INLINE float64 f64_roundToInt(float64 a, uint8_t scale, struct softfloat_status_t *status) {
     return f64_roundToInt(a, scale, softfloat_getRoundingMode(status), true, status);
 }
-BX_CPP_INLINE float64_t f64_roundToInt(float64_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE float64 f64_roundToInt(float64 a, struct softfloat_status_t *status) {
     return f64_roundToInt(a, 0, softfloat_getRoundingMode(status), true, status);
 }
 
-BX_CPP_INLINE int32_t f64_to_i32(float64_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE int32_t f64_to_i32(float64 a, struct softfloat_status_t *status) {
     return f64_to_i32(a, softfloat_getRoundingMode(status), true, status);
 }
-BX_CPP_INLINE int64_t f64_to_i64(float64_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE int64_t f64_to_i64(float64 a, struct softfloat_status_t *status) {
     return f64_to_i64(a, softfloat_getRoundingMode(status), true, status);
 }
 
-BX_CPP_INLINE int32_t f64_to_i32_round_to_zero(float64_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE int32_t f64_to_i32_round_to_zero(float64 a, struct softfloat_status_t *status) {
     return f64_to_i32_r_minMag(a, true, status);
 }
-BX_CPP_INLINE int64_t f64_to_i64_round_to_zero(float64_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE int64_t f64_to_i64_round_to_zero(float64 a, struct softfloat_status_t *status) {
     return f64_to_i64_r_minMag(a, true, status);
 }
 
-BX_CPP_INLINE uint32_t f64_to_ui32(float64_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE uint32_t f64_to_ui32(float64 a, struct softfloat_status_t *status) {
     return f64_to_ui32(a, softfloat_getRoundingMode(status), true, status);
 }
-BX_CPP_INLINE uint64_t f64_to_ui64(float64_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE uint64_t f64_to_ui64(float64 a, struct softfloat_status_t *status) {
     return f64_to_ui64(a, softfloat_getRoundingMode(status), true, status);
 }
 
-BX_CPP_INLINE uint32_t f64_to_ui32_round_to_zero(float64_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE uint32_t f64_to_ui32_round_to_zero(float64 a, struct softfloat_status_t *status) {
     return f64_to_ui32_r_minMag(a, true, status);
 }
-BX_CPP_INLINE uint64_t f64_to_ui64_round_to_zero(float64_t a, struct softfloat_status_t *status) {
+BX_CPP_INLINE uint64_t f64_to_ui64_round_to_zero(float64 a, struct softfloat_status_t *status) {
     return f64_to_ui64_r_minMag(a, true, status);
 }
 
-BX_CPP_INLINE float64_t f64_fmadd(float64_t a, float64_t b, float64_t c, softfloat_status_t *status) {
+BX_CPP_INLINE float64 f64_fmadd(float64 a, float64 b, float64 c, softfloat_status_t *status) {
     return f64_mulAdd(a, b, c, 0, status);
 }
-BX_CPP_INLINE float64_t f64_fmsub(float64_t a, float64_t b, float64_t c, softfloat_status_t *status) {
+BX_CPP_INLINE float64 f64_fmsub(float64 a, float64 b, float64 c, softfloat_status_t *status) {
     return f64_mulAdd(a, b, c, softfloat_muladd_negate_c, status);
 }
-BX_CPP_INLINE float64_t f64_fnmadd(float64_t a, float64_t b, float64_t c, softfloat_status_t *status) {
+BX_CPP_INLINE float64 f64_fnmadd(float64 a, float64 b, float64 c, softfloat_status_t *status) {
     return f64_mulAdd(a, b, c, softfloat_muladd_negate_product, status);
 }
-BX_CPP_INLINE float64_t f64_fnmsub(float64_t a, float64_t b, float64_t c, softfloat_status_t *status) {
+BX_CPP_INLINE float64 f64_fnmsub(float64 a, float64 b, float64 c, softfloat_status_t *status) {
     return f64_mulAdd(a, b, c, softfloat_muladd_negate_result, status);
 }
 
@@ -590,9 +579,9 @@ uint32_t extF80_to_ui32_r_minMag(extFloat80_t, bool, struct softfloat_status_t *
 uint64_t extF80_to_ui64_r_minMag(extFloat80_t, bool, struct softfloat_status_t *);
 int32_t extF80_to_i32_r_minMag(extFloat80_t, bool, struct softfloat_status_t *);
 int64_t extF80_to_i64_r_minMag(extFloat80_t, bool, struct softfloat_status_t *);
-float16_t extF80_to_f16(extFloat80_t, struct softfloat_status_t *);
-float32_t extF80_to_f32(extFloat80_t, struct softfloat_status_t *);
-float64_t extF80_to_f64(extFloat80_t, struct softfloat_status_t *);
+float16 extF80_to_f16(extFloat80_t, struct softfloat_status_t *);
+float32 extF80_to_f32(extFloat80_t, struct softfloat_status_t *);
+float64 extF80_to_f64(extFloat80_t, struct softfloat_status_t *);
 float128_t extF80_to_f128(extFloat80_t, struct softfloat_status_t *);
 extFloat80_t extF80_roundToInt(extFloat80_t, uint8_t, bool, struct softfloat_status_t *);
 extFloat80_t extF80_add(extFloat80_t, extFloat80_t, struct softfloat_status_t *);
@@ -600,7 +589,9 @@ extFloat80_t extF80_sub(extFloat80_t, extFloat80_t, struct softfloat_status_t *)
 extFloat80_t extF80_mul(extFloat80_t, extFloat80_t, struct softfloat_status_t *);
 extFloat80_t extF80_div(extFloat80_t, extFloat80_t, struct softfloat_status_t *);
 extFloat80_t extF80_rem(extFloat80_t, extFloat80_t, struct softfloat_status_t *);
+extFloat80_t extF80_scale(extFloat80_t, extFloat80_t, struct softfloat_status_t *);
 extFloat80_t extF80_sqrt(extFloat80_t, struct softfloat_status_t *);
+extFloat80_t extF80_extract(extFloat80_t *, struct softfloat_status_t *);
 int extF80_compare(extFloat80_t, extFloat80_t, int, softfloat_status_t *);
 softfloat_class_t extF80_class(extFloat80_t);
 
@@ -658,6 +649,10 @@ bool extF80_isUnsupported(extFloat80_t);
 bool extF80_isSignalingNaN(extFloat80_t);
 bool extF80_isNaN(extFloat80_t);
 
+bool extF80_sign(float64);
+int16_t extF80_exp(float64);
+uint64_t extF80_fraction(float64);
+
 /*----------------------------------------------------------------------------
 | 128-bit (quadruple-precision) floating-point operations.
 *----------------------------------------------------------------------------*/
@@ -669,8 +664,8 @@ uint32_t f128_to_ui32_r_minMag(float128_t, bool, struct softfloat_status_t *);
 uint64_t f128_to_ui64_r_minMag(float128_t, bool, struct softfloat_status_t *);
 int32_t f128_to_i32_r_minMag(float128_t, bool, struct softfloat_status_t *);
 int64_t f128_to_i64_r_minMag(float128_t, bool, struct softfloat_status_t *);
-float32_t f128_to_f32(float128_t, struct softfloat_status_t *);
-float64_t f128_to_f64(float128_t, struct softfloat_status_t *);
+float32 f128_to_f32(float128_t, struct softfloat_status_t *);
+float64 f128_to_f64(float128_t, struct softfloat_status_t *);
 extFloat80_t f128_to_extF80(float128_t, struct softfloat_status_t *);
 float128_t f128_roundToInt(float128_t, uint8_t, bool, struct softfloat_status_t *);
 float128_t f128_add(float128_t, float128_t, struct softfloat_status_t *);

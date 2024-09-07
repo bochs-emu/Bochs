@@ -461,6 +461,12 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
       return is_cpu_extension_supported(BX_ISA_PKS);
 #endif
 
+#if BX_SUPPORT_VMX >= 2    
+    case VMCS_64BIT_GUEST_IA32_SPEC_CTRL:
+    case VMCS_64BIT_GUEST_IA32_SPEC_CTRL_HI:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_SPEC_CTRL_VIRTUALIZATION);
+#endif
+
 #if BX_SUPPORT_VMX >= 2
     /* VMCS 64-bit host state fields */
     /* binary 0010_11xx_xxxx_xxx0 */
@@ -481,6 +487,12 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_HOST_IA32_PKRS:
     case VMCS_64BIT_HOST_IA32_PKRS_HI:
       return is_cpu_extension_supported(BX_ISA_PKS);
+#endif
+
+#if BX_SUPPORT_VMX >= 2
+    case VMCS_64BIT_HOST_IA32_SPEC_CTRL:
+    case VMCS_64BIT_HOST_IA32_SPEC_CTRL_HI:
+      return BX_SUPPORT_VMX_EXTENSION(BX_VMX_SPEC_CTRL_VIRTUALIZATION);
 #endif
 
     /* VMCS natural width control fields */
@@ -894,8 +906,11 @@ void BX_CPU_C::init_secondary_vmexit_ctrls(void)
 
   // secondary vmexit controls
   // -----------------------------------------------------------
-  //    [02] Prematurely busy shadow stack control
+  //    [02] load host MSR_IA32_SPEC_CTRL control
+  //    [03] Prematurely busy shadow stack control
 
+  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_SPEC_CTRL_VIRTUALIZATION))
+    cap->vmx_vmexit_ctrl2_supported_bits |= VMX_VMEXIT_CTRL2_LOAD_HOST_IA32_SPEC_CTRL;
 #if BX_SUPPORT_CET
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET))
     cap->vmx_vmexit_ctrl2_supported_bits |= VMX_VMEXIT_CTRL2_SHADOW_STACK_BUSY_CTRL;
@@ -987,6 +1002,7 @@ void BX_CPU_C::init_vmentry_ctrls(void)
   //      [17] Load guest CET state
   //      [19] Load guest UINV state
   //      [22] Load guest MSR_IA32_PKRS value
+  //      [24] Load guest MSR_IA32_SPEC_CTRL value
 
   cap->vmx_vmentry_ctrl_supported_bits = VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS |
                                          VMX_VMENTRY_CTRL1_SMM_ENTER |
@@ -1016,6 +1032,8 @@ void BX_CPU_C::init_vmentry_ctrls(void)
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_PKS))
     cap->vmx_vmentry_ctrl_supported_bits |= VMX_VMENTRY_CTRL1_LOAD_GUEST_PKRS;
 #endif
+  if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_SPEC_CTRL_VIRTUALIZATION))
+    cap->vmx_vmexit_ctrl2_supported_bits |= VMX_VMENTRY_CTRL1_LOAD_GUEST_IA32_SPEC_CTRL;
 }
 
 #endif // BX_SUPPORT_VMX

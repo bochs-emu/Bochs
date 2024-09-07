@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
 #include "specialize.h"
 #include "softfloat.h"
 
@@ -57,7 +58,6 @@ extFloat80_t extF80_rem(extFloat80_t a, extFloat80_t b, struct softfloat_status_
     uint64_t q64;
     struct uint128 term, altRem, meanRem;
     bool signRem;
-    struct uint128 uiZ;
 
     // handle unsupported extended double-precision floating encodings
     if (extF80_isUnsupported(a) || extF80_isUnsupported(b))
@@ -93,21 +93,27 @@ extFloat80_t extF80_rem(extFloat80_t a, extFloat80_t b, struct softfloat_status_
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (! expB) expB = 1;
+    if (! expB) {
+        expB = 1;
+        if (sigB)
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
+    }
     if (! (sigB & UINT64_C(0x8000000000000000))) {
         if (! sigB) goto invalid;
-        softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalExtF80Sig(sigB);
         expB += normExpSig.exp;
         sigB = normExpSig.sig;
     }
-    if (! expA) expA = 1;
+    if (! expA) {
+        expA = 1;
+        if (sigA)
+            softfloat_raiseFlags(status, softfloat_flag_denormal);
+    }
     if (! (sigA & UINT64_C(0x8000000000000000))) {
         if (! sigA) {
             expA = 0;
             goto copyA;
         }
-        softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalExtF80Sig(sigA);
         expA += normExpSig.exp;
         sigA = normExpSig.sig;
@@ -177,8 +183,7 @@ extFloat80_t extF80_rem(extFloat80_t a, extFloat80_t b, struct softfloat_status_
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  propagateNaN:
-    uiZ = softfloat_propagateNaNExtF80UI(uiA64, uiA0, uiB64, uiB0, status);
-    return packToExtF80(uiZ.v64, uiZ.v0);
+    return softfloat_propagateNaNExtF80UI(uiA64, uiA0, uiB64, uiB0, status);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  invalid:

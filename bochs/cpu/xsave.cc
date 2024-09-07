@@ -203,7 +203,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
 
   if ((xstate_bv & BX_XCR0_SSE_MASK) != 0)
   {
-    xsave_sse_state(i, eaddr);
+    xsave_sse_state(i, eaddr+XSAVE_SSE_STATE_OFFSET);
   }
 
   Bit32u offset = XSAVE_YMM_STATE_OFFSET;
@@ -360,12 +360,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   // Legacy form of XRSTOR loads the MXCSR register from memory whenever the
   // RFBM[1](SSE) or RFBM[2](AVX) is set, regardless of the values of XSTATE_BV[1] and XSTATE_BV[2]
   if (((requested_feature_bitmap & (BX_XCR0_SSE_MASK|BX_XCR0_YMM_MASK)) != 0 && ! compaction) ||
-      ((requested_feature_bitmap & restore_mask & BX_XCR0_SSE_MASK) != 0))
+      ((requested_feature_bitmap & restore_mask & BX_XCR0_SSE_MASK) != 0 && compaction))
   {
     // read cannot cause any boundary cross because XSAVE image is 64-byte aligned
     Bit32u new_mxcsr = read_virtual_dword(i->seg(), eaddr + 24);
-    if(new_mxcsr & ~MXCSR_MASK)
+    if(new_mxcsr & ~MXCSR_MASK) {
+       BX_ERROR(("%s: corrupted MXCSR state restored new_mxcsr=0x%08x", i->getIaOpcodeNameShort(), new_mxcsr));
        exception(BX_GP_EXCEPTION, 0);
+    }
     BX_MXCSR_REGISTER = new_mxcsr;
   }
 
@@ -513,9 +515,9 @@ void BX_CPU_C::xsave_x87_state(bxInstruction_c *i, bx_address offset)
   {
     const floatx80 &fp = BX_READ_FPU_REG(index);
 
-    xmm.xmm64u(0) = fp.fraction;
+    xmm.xmm64u(0) = fp.signif;
     xmm.xmm64u(1) = 0;
-    xmm.xmm16u(4) = fp.exp;
+    xmm.xmm16u(4) = fp.signExp;
 
     write_virtual_xmmword(i->seg(), (offset+index*16+32) & asize_mask, &xmm);
   }
@@ -523,35 +525,35 @@ void BX_CPU_C::xsave_x87_state(bxInstruction_c *i, bx_address offset)
 
 void BX_CPU_C::xrstor_x87_state(bxInstruction_c *i, bx_address offset)
 {
+  i387_t restore_i387;
   BxPackedXmmRegister xmm;
   bx_address asize_mask = i->asize_mask();
 
   // load FPU state from XSAVE area
   read_virtual_xmmword(i->seg(), offset, &xmm);
 
-  BX_CPU_THIS_PTR the_i387.cwd =  xmm.xmm16u(0);
-  BX_CPU_THIS_PTR the_i387.swd =  xmm.xmm16u(1);
-  BX_CPU_THIS_PTR the_i387.tos = (xmm.xmm16u(1) >> 11) & 0x07;
+  restore_i387.cwd =  xmm.xmm16u(0);
+  restore_i387.swd =  xmm.xmm16u(1);
+  restore_i387.tos = (xmm.xmm16u(1) >> 11) & 0x07;
 
   /* always set bit 6 as '1 */
-  BX_CPU_THIS_PTR the_i387.cwd =
-    (BX_CPU_THIS_PTR the_i387.cwd & ~FPU_CW_Reserved_Bits) | 0x0040;
+  restore_i387.cwd = (restore_i387.cwd & ~FPU_CW_Reserved_Bits) | 0x0040;
 
   /* Restore x87 FPU Opcode */
   /* The lower 11 bits contain the FPU opcode, upper 5 bits are reserved */
-  BX_CPU_THIS_PTR the_i387.foo = xmm.xmm16u(3) & 0x7FF;
+  restore_i387.foo = xmm.xmm16u(3) & 0x7FF;
 
   /* Restore x87 FPU IP */
 #if BX_SUPPORT_X86_64
   if (i->os64L()) {
-    BX_CPU_THIS_PTR the_i387.fip = xmm.xmm64u(1);
-    BX_CPU_THIS_PTR the_i387.fcs = 0;
+    restore_i387.fip = xmm.xmm64u(1);
+    restore_i387.fcs = 0;
   }
   else
 #endif
   {
-    BX_CPU_THIS_PTR the_i387.fip = xmm.xmm32u(2);
-    BX_CPU_THIS_PTR the_i387.fcs = xmm.xmm16u(6);
+    restore_i387.fip = xmm.xmm32u(2);
+    restore_i387.fcs = xmm.xmm16u(6);
   }
 
   Bit32u tag_byte = xmm.xmmubyte(4);
@@ -561,30 +563,32 @@ void BX_CPU_C::xrstor_x87_state(bxInstruction_c *i, bx_address offset)
 
 #if BX_SUPPORT_X86_64
   if (i->os64L()) {
-    BX_CPU_THIS_PTR the_i387.fdp = xmm.xmm64u(0);
-    BX_CPU_THIS_PTR the_i387.fds = 0;
+    restore_i387.fdp = xmm.xmm64u(0);
+    restore_i387.fds = 0;
   }
   else
 #endif
   {
-    BX_CPU_THIS_PTR the_i387.fdp = xmm.xmm32u(0);
-    BX_CPU_THIS_PTR the_i387.fds = xmm.xmm16u(2);
+    restore_i387.fdp = xmm.xmm32u(0);
+    restore_i387.fds = xmm.xmm16u(2);
   }
 
   /* load i387 register file */
   for(unsigned index=0; index < 8; index++)
   {
     floatx80 reg;
-    reg.fraction = read_virtual_qword(i->seg(), (offset+index*16+32) & asize_mask);
-    reg.exp      = read_virtual_word (i->seg(), (offset+index*16+40) & asize_mask);
+    reg.signif  = read_virtual_qword(i->seg(), (offset+index*16+32) & asize_mask);
+    reg.signExp = read_virtual_word (i->seg(), (offset+index*16+40) & asize_mask);
 
     // update tag only if it is not empty
-    BX_WRITE_FPU_REGISTER_AND_TAG(reg,
+    restore_i387.FPU_save_regi(reg,
               IS_TAG_EMPTY(index) ? FPU_Tag_Empty : FPU_tagof(reg), index);
   }
 
   /* Restore floating point tag word - see desription for FXRSTOR instruction */
-  BX_CPU_THIS_PTR the_i387.twd = unpack_FPU_TW(tag_byte);
+  restore_i387.twd = unpack_FPU_TW(&restore_i387, tag_byte);
+
+  BX_CPU_THIS_PTR the_i387 = restore_i387;
 
   /* check for unmasked exceptions */
   if (FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask) {
@@ -619,7 +623,7 @@ bool BX_CPU_C::xsave_x87_state_xinuse(void)
 
   for (unsigned index=0;index<8;index++) {
     floatx80 reg = BX_FPU_REG(index);
-    if (reg.exp != 0 || reg.fraction != 0) return true;
+    if (reg.signExp != 0 || reg.signif != 0) return true;
   }
 
   return false;

@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2021  The Bochs Project
+//  Copyright (C) 2008-2024  The Bochs Project
 
 #include "config.h"
 
@@ -237,6 +237,8 @@ unsigned short RWPSnapCount;
 bx_phy_address WWP_Snapshot[16];
 bx_phy_address RWP_Snapshot[16];
 
+bool global_ini;
+char ini_path[BX_PATHNAME_LEN];
 char *debug_cmd;
 bool debug_cmd_ready;
 bool vgaw_refresh;
@@ -1230,7 +1232,7 @@ void InitRegObjects()
         while (--i >= 0)
             RegObject[cpu][i] = (bx_param_num_c *) NULL;
 
-        char pname[16];
+        char pname[20];
         sprintf (pname,"bochs.cpu%d", cpu);    // set the "cpu number" for cpu_list
         cpu_list = (bx_list_c *) SIM->get_param(pname, root_param);
 
@@ -1360,14 +1362,24 @@ void InitRegObjects()
 
 void doUpdate()
 {
+    Bit8u tmpbuffer[4096];
+
     void FillStack();
+    void RefreshDataDump(Bit8u *buffer);
+
     if (doSimuInit != FALSE)
         SpecialInit();
     // begin an autoupdate of Register and Asm windows
     LoadRegList();      // build and show ListView
     ParseBkpt();        // get the linear breakpoint list
-    if (DViewMode == VIEW_STACK)    // in stack view mode, keep the stack updated
+    if (DViewMode == VIEW_STACK) {  // in stack view mode, keep the stack updated
         FillStack();
+    } else if ((DViewMode == VIEW_MEMDUMP) && DumpInitted) {
+        RefreshDataDump(tmpbuffer);
+        if (memcmp(DataDump, tmpbuffer, 4096)) {
+            doDumpRefresh = TRUE;
+        }
+    }
     CurrentAsmLA = BX_CPU(CurrentCPU)->get_laddr(BX_SEG_REG_CS, (bx_address) rV[RIP_Rnum]);
     if (CurrentAsmLA < BottomAsmLA || CurrentAsmLA > TopAsmLA)
     {
@@ -1994,7 +2006,7 @@ void FillBrkp()
 }
 
 // performs endian byteswapping the hard way, for a Data dump
-void FillDataX(char* t, char C, bool doHex)
+void FillDataX(char* t, unsigned char C, bool doHex)
 {
     char tmpbuf[40];
     char *d = tmpbuf;
@@ -2007,14 +2019,34 @@ void FillDataX(char* t, char C, bool doHex)
 
     if (doHex != FALSE)
     {
-        *d = AsciiHex[2* (unsigned char)C];
-        d[1] = AsciiHex[2* (unsigned char)C + 1];
+        *d = AsciiHex[2*C];
+        d[1] = AsciiHex[2*C + 1];
         d[2] = 0;
         if (isLittleEndian) // little endian => reverse hex digits
         {
             strcat(d,t);
             strcpy(t,d);    // so append the new bytes to the FRONT of t
         }
+    }
+}
+
+void RefreshDataDump(Bit8u *buffer)
+{
+    bool retval = TRUE;
+
+    // re-load 4k DataDump array from bochs emulated linear or physical memory
+    if (LinearDump) {
+        // cannot read linear mem across a 4K boundary -- so break the read in two
+        // -- calculate location of 4K boundary (h):
+        unsigned len = (int) DumpStart & 0xfff;
+        unsigned i = 4096 - len;
+        Bit64u h = DumpStart + i;
+        retval = ReadBxLMem(DumpStart, i, buffer);
+        if (retval != FALSE && len != 0)
+            retval = ReadBxLMem(h, len, buffer + i);
+    } else {
+        retval = bx_mem.dbg_fetch_mem(BX_CPU(CurrentCPU),
+            (bx_phy_address)DumpStart, 4096, buffer);
     }
 }
 
@@ -2027,6 +2059,9 @@ void ShowData()
     char mdtxt[200];
     char tmphex[40];
 
+    if (doDumpRefresh) {
+        RefreshDataDump((Bit8u*)DataDump);
+    }
     *mdtxt = 0;
     cols[0]= mdtxt + 1;     // the amount of storage needed for each column is complicated
     cols[1]= mdtxt + 20;
@@ -2542,7 +2577,7 @@ void doFind()
 
         // Try ascii for additional matches and selected lines
         Select = TRUE;          // this loop, only add selected lines to the display
-        by = strlen(tmpcb);
+        by = (int)strlen(tmpcb);
         for(i = 0, L = 0; i < 4096; i += 16, L++)
         {
             if (by != 0 && FindHex((unsigned char *)DataDump + i,16,(unsigned char *)tmpcb,by))
@@ -3456,17 +3491,43 @@ static size_t strip_whitespace(char *s)
   return ptr;
 }
 
+static void get_bxshare_path(char *path)
+{
+  const char *varptr = NULL;
+
+#if BX_HAVE_GETENV
+  varptr = getenv("BXSHARE");
+#endif
+  if (varptr != NULL) {
+    sprintf(path, "%s", varptr);
+  } else {
+    varptr = get_builtin_variable("BXSHARE");
+    if (varptr != NULL) {
+      sprintf(path, "%s", varptr);
+    } else {
+      strcpy(path, ".");
+    }
+  }
+}
+
 void ReadSettings()
 {
   FILE *fd = NULL;
-  char line[512];
+  char line[512], path[BX_PATHNAME_LEN];
   char *ret, *param, *val;
   bool format_checked = 0;
   size_t len1 = 0, len2;
   int i;
 
-  fd = fopen("bx_enh_dbg.ini", "r");
-  if (fd == NULL) return;
+  if (global_ini) {
+    get_bxshare_path(path);
+    sprintf(ini_path, "%s/bx_enh_dbg.ini", path);
+    fd = fopen(ini_path, "r");
+  }
+  if (fd == NULL) {
+    fd = fopen("bx_enh_dbg.ini", "r");
+    if (fd == NULL) return;
+  }
   do {
     ret = fgets(line, sizeof(line)-1, fd);
     line[sizeof(line) - 1] = '\0';
@@ -3529,7 +3590,7 @@ void ReadSettings()
           DumpAlign = (1 << DumpWSIndex);
           PrevDAD = 0;
         } else if (!strcmp(param, "DockOrder")) {
-          DockOrder = strtoul(val, NULL, 16);
+          DockOrder = (short)strtoul(val, NULL, 16);
         } else if ((len1 == 15) && !strncmp(param, "ListWidthPix[", 13) && (param[14] == ']')) {
           if ((param[13] < '0') || (param[13] > '2')) {
             fprintf(stderr, "bx_enh_dbg.ini: invalid index for option SeeReg[x]\n");
@@ -3551,7 +3612,11 @@ void WriteSettings()
   FILE *fd = NULL;
   int i;
 
-  fd = fopen("bx_enh_dbg.ini", "w");
+  if (global_ini) {
+    fd = fopen(ini_path, "w");
+  } else {
+    fd = fopen("bx_enh_dbg.ini", "w");
+  }
   if (fd == NULL) return;
   fprintf(fd, "# bx_enh_dbg_ini\n");
   for (i = 0; i < 8; i++) {
@@ -3576,12 +3641,13 @@ void WriteSettings()
   fclose(fd);
 }
 
-void InitDebugDialog()
+void InitDebugDialog(bool GlobalIni)
 {
   // redirect notify callback to the debugger specific code
   SIM->get_notify_callback(&old_callback, &old_callback_arg);
   assert (old_callback != NULL);
   SIM->set_notify_callback(enh_dbg_notify_callback, NULL);
+  global_ini = GlobalIni;
   ReadSettings();
   DoAllInit();    // non-os-specific init stuff
   OSInit();

@@ -389,19 +389,12 @@ BX_CPP_INLINE int is_clear(const BxPackedXmmRegister *r)
   return (r->xmm64u(0) | r->xmm64u(1)) == 0;
 }
 
-#if BX_SUPPORT_EVEX
-// implement SAE and EVEX encoded rounding control
-BX_CPP_INLINE void softfloat_status_word_rc_override(float_status_t &status, bxInstruction_c *i)
-{
-  /* must be VL512 otherwise EVEX.LL encodes vector length */
-  if (i->modC0() && i->getEvexb()) {
-    status.float_rounding_mode = i->getRC();
-    status.float_suppress_exception = float_all_exceptions_mask;
-    status.float_exception_masks = float_all_exceptions_mask;
-  }
-}
+struct softfloat_status_t;
+
+#if BX_SUPPORT_EVEX == 0
+#define softfloat_status_word_rc_override(status, i)
 #else
-  #define softfloat_status_word_rc_override(status, i)
+extern void softfloat_status_word_rc_override(softfloat_status_t &status, bxInstruction_c *i);
 #endif
 
 #if BX_SUPPORT_FPU

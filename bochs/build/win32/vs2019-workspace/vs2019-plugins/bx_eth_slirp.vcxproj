@@ -102,6 +102,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -132,6 +133,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -164,6 +166,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CallingConvention>FastCall</CallingConvention>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -194,6 +197,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <CallingConvention>FastCall</CallingConvention>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -211,14 +215,19 @@
     <ClCompile Include="..\iodev\network\slirp\arp_table.cc" />
     <ClCompile Include="..\iodev\network\slirp\bootp.cc" />
     <ClCompile Include="..\iodev\network\slirp\cksum.cc" />
-    <ClCompile Include="..\iodev\network\slirp\compat.cc" />
+    <ClCompile Include="..\iodev\network\slirp\dhcpv6.cc" />
     <ClCompile Include="..\iodev\network\slirp\dnssearch.cc" />
     <ClCompile Include="..\iodev\network\slirp\if.cc" />
+    <ClCompile Include="..\iodev\network\slirp\ip6_icmp.cc" />
+    <ClCompile Include="..\iodev\network\slirp\ip6_input.cc" />
+    <ClCompile Include="..\iodev\network\slirp\ip6_output.cc" />
     <ClCompile Include="..\iodev\network\slirp\ip_icmp.cc" />
     <ClCompile Include="..\iodev\network\slirp\ip_input.cc" />
     <ClCompile Include="..\iodev\network\slirp\ip_output.cc" />
     <ClCompile Include="..\iodev\network\slirp\mbuf.cc" />
     <ClCompile Include="..\iodev\network\slirp\misc.cc" />
+    <ClCompile Include="..\iodev\network\slirp\ncsi.cc" />
+    <ClCompile Include="..\iodev\network\slirp\ndp_table.cc" />
     <ClCompile Include="..\iodev\network\slirp\sbuf.cc" />
     <ClCompile Include="..\iodev\network\slirp\slirp.cc" />
     <ClCompile Include="..\iodev\network\slirp\socket.cc" />
@@ -228,22 +237,27 @@
     <ClCompile Include="..\iodev\network\slirp\tcp_timer.cc" />
     <ClCompile Include="..\iodev\network\slirp\tftp.cc" />
     <ClCompile Include="..\iodev\network\slirp\udp.cc" />
+    <ClCompile Include="..\iodev\network\slirp\udp6.cc" />
+    <ClCompile Include="..\iodev\network\slirp\util.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\iodev\network\netmod.h" />
     <ClInclude Include="..\iodev\network\slirp\bootp.h" />
     <ClInclude Include="..\iodev\network\slirp\compat.h" />
     <ClInclude Include="..\iodev\network\slirp\debug.h" />
+    <ClInclude Include="..\iodev\network\slirp\dhcpv6.h" />
     <ClInclude Include="..\iodev\network\slirp\if.h" />
     <ClInclude Include="..\iodev\network\slirp\ip.h" />
+    <ClInclude Include="..\iodev\network\slirp\ip6.h" />
+    <ClInclude Include="..\iodev\network\slirp\ip6_icmp.h" />
     <ClInclude Include="..\iodev\network\slirp\ip_icmp.h" />
     <ClInclude Include="..\iodev\network\slirp\libslirp.h" />
     <ClInclude Include="..\iodev\network\slirp\main.h" />
     <ClInclude Include="..\iodev\network\slirp\mbuf.h" />
     <ClInclude Include="..\iodev\network\slirp\misc.h" />
+    <ClInclude Include="..\iodev\network\slirp\ncsi-pkt.h" />
     <ClInclude Include="..\iodev\network\slirp\sbuf.h" />
     <ClInclude Include="..\iodev\network\slirp\slirp.h" />
-    <ClInclude Include="..\iodev\network\slirp\slirp_config.h" />
     <ClInclude Include="..\iodev\network\slirp\socket.h" />
     <ClInclude Include="..\iodev\network\slirp\tcp.h" />
     <ClInclude Include="..\iodev\network\slirp\tcp_timer.h" />
@@ -251,6 +265,7 @@
     <ClInclude Include="..\iodev\network\slirp\tcpip.h" />
     <ClInclude Include="..\iodev\network\slirp\tftp.h" />
     <ClInclude Include="..\iodev\network\slirp\udp.h" />
+    <ClInclude Include="..\iodev\network\slirp\util.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="bochs.vcxproj">

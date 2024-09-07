@@ -40,44 +40,52 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "config.h"
 
 /*----------------------------------------------------------------------------
-| Types used to pass 16-bit, 32-bit, 64-bit, and 128-bit floating-point
-| arguments and results to/from functions.  These types must be exactly
-| 16 bits, 32 bits, 64 bits, and 128 bits in size, respectively.  Where a
-| platform has "native" support for IEEE-Standard floating-point formats,
-| the types below may, if desired, be defined as aliases for the native types
-| (typically 'float' and 'double', and possibly 'long double').
+| Software IEC/IEEE floating-point types.
 *----------------------------------------------------------------------------*/
-typedef struct f16_t {
-    uint16_t v;
-    f16_t(uint64_t v16): v(v16) {}
-    operator uint16_t() const { return v; }
-} float16_t;
+typedef uint16_t float16, bfloat16;
+typedef uint32_t float32;
+typedef uint64_t float64;
 
-typedef struct f32_t {
-    uint32_t v;
-    f32_t(uint64_t v32): v(v32) {}
-    operator uint32_t() const { return v; }
-} float32_t;
-
-typedef struct f64_t {
-    uint64_t v;
-    f64_t(uint64_t v64): v(v64) {}
-    operator uint64_t() const { return v; }
-} float64_t;
-
-#ifdef BX_BIG_ENDIAN
-struct float128 {
-    Bit64u hi, lo;
-};
+#ifdef BX_LITTLE_ENDIAN
+struct uint128 { uint64_t v0, v64; };
+struct uint64_extra { uint64_t extra, v; };
+struct uint128_extra { uint64_t extra; struct uint128 v; };
 #else
-struct float128 {
-    Bit64u lo, hi;
-};
+struct uint128 { uint64_t v64, v0; };
+struct uint64_extra { uint64_t v, extra; };
+struct uint128_extra { struct uint128 v; uint64_t extra; };
 #endif
 
-#include "primitiveTypes.h"
+/*----------------------------------------------------------------------------
+| Types used to pass 16-bit, 32-bit, 64-bit, and 128-bit floating-point
+| arguments and results to/from functions.  These types must be exactly
+| 16 bits, 32 bits, 64 bits, and 128 bits in size, respectively.
+*----------------------------------------------------------------------------*/
+struct f16_t {
+    uint16_t v;
+#ifdef __cplusplus
+    f16_t(uint64_t v16): v(v16) {}
+    operator uint16_t() const { return v; }
+#endif
+};
 
-typedef uint128 f128_t, float128_t;
+struct f32_t {
+    uint32_t v;
+#ifdef __cplusplus
+    f32_t(uint64_t v32): v(v32) {}
+    operator uint32_t() const { return v; }
+#endif
+};
+
+struct f64_t {
+    uint64_t v;
+#ifdef __cplusplus
+    f64_t(uint64_t v64): v(v64) {}
+    operator uint64_t() const { return v; }
+#endif
+};
+
+typedef uint128 float128_t;
 
 /*----------------------------------------------------------------------------
 | The format of an 80-bit extended floating-point number in memory.  This
@@ -85,35 +93,15 @@ typedef uint128 f128_t, float128_t;
 | named 'signif'.
 *----------------------------------------------------------------------------*/
 
-#ifdef BX_BIG_ENDIAN
-struct floatx80 {  // leave alignment to compiler
-    Bit16u exp;
-    Bit64u fraction;
-};
-#else
-struct floatx80 {
-    Bit64u fraction;
-    Bit16u exp;
-};
-#endif
-
 #ifdef BX_LITTLE_ENDIAN
 struct extFloat80M {
   uint64_t signif;
   uint16_t signExp;
-
-  extFloat80M(): signif(0), signExp(0) {}
-  extFloat80M(struct floatx80 a): signif(a.fraction), signExp(a.exp) {}
-  operator floatx80() const { floatx80 x; x.fraction = signif; x.exp = signExp; return x; }
 };
 #else
 struct extFloat80M {
   uint16_t signExp;
   uint64_t signif;
-
-  extFloat80M(): signExp(0), signif(0) {}
-  extFloat80M(struct floatx80 a): signExp(a.exp), signif(a.fraction) {}
-  operator floatx80() const { floatx80 x; x.fraction = signif; x.exp = signExp; return x; }
 };
 #endif
 
@@ -129,6 +117,6 @@ struct extFloat80M {
 | must align exactly with the locations in memory of the sign, exponent, and
 | significand of the native type.
 *----------------------------------------------------------------------------*/
-typedef struct extFloat80M extFloat80_t;
+typedef struct extFloat80M extFloat80_t, floatx80;
 
 #endif

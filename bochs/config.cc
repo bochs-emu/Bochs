@@ -31,9 +31,6 @@
 #if BX_SUPPORT_PCIUSB
 #include "iodev/usb/usb_common.h"
 #endif
-#if BX_USE_WIN32USBDEBUG
-#include "gui/win32usb.h"
-#endif
 #include "param_names.h"
 #include <assert.h>
 
@@ -243,31 +240,39 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, 
   sprintf(label, "Enable %s emulation", usb_name);
   sprintf(descr, "Enables the %s emulation", usb_name);
   bx_param_bool_c *enabled = new bx_param_bool_c(menu, "enabled", label, descr, 1);
-  
-  // ehci companion type
-  static const char *ehci_comp_type[] = { "uhci", "ohci", NULL };
-  new bx_param_enum_c(menu,
-      "companion", "Companion Type",
-      "Select Companion type to emulate",
-      ehci_comp_type,
-      0, 0
-  );
-  
-  // xhci host controller type and number of ports
-  static const char *xhci_model_names[] = { "uPD720202", "uPD720201", NULL };
-  new bx_param_enum_c(menu,
-      "model", "HC model",
-      "Select Host Controller to emulate",
-      xhci_model_names,
-      0, 0
-  );
-  new bx_param_num_c(menu,
-      "n_ports", "Number of ports",
-      "Set the number of ports for this controller",
-      -1, 10,
-      -1, 0   // -1 as a default so that we can tell if this parameter was given
-  );
-  
+
+#if BX_SUPPORT_USB_EHCI
+  if (!strcmp(usb_name, "EHCI")) {
+    // ehci companion type
+    static const char *ehci_comp_type[] = { "uhci", "ohci", NULL };
+    new bx_param_enum_c(menu,
+        "companion", "Companion Type",
+        "Select Companion type to emulate",
+        ehci_comp_type,
+        0, 0
+    );
+  }
+#endif
+
+#if BX_SUPPORT_USB_XHCI
+  if (!strcmp(usb_name, "xHCI")) {
+    // xhci host controller type and number of ports
+    static const char *xhci_model_names[] = { "uPD720202", "uPD720201", NULL };
+    new bx_param_enum_c(menu,
+        "model", "HC model",
+        "Select Host Controller to emulate",
+        xhci_model_names,
+        0, 0
+    );
+    new bx_param_num_c(menu,
+        "n_ports", "Number of ports",
+        "Set the number of ports for this controller",
+        -1, 10,
+        -1, 0   // -1 as a default so that we can tell if this parameter was given
+    );
+  }
+#endif
+
   deplist = new bx_list_c(NULL);
   for (Bit8u i = 0; i < maxports; i++) {
     sprintf(name, "port%u", i+1);
@@ -312,6 +317,51 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, 
   }
   enabled->set_dependent_list(deplist);
 }
+
+#if BX_USB_DEBUGGER
+void bx_init_usb_debug_options(bx_list_c *base)
+{
+  static const char *usb_debug_type[] = { "none", "uhci", "ohci", "ehci", "xhci", NULL };
+  bx_list_c *usb_debug = new bx_list_c(base, "usb_debug", "USB Debug Options");
+  bx_param_enum_c *type = new bx_param_enum_c(usb_debug,
+    "type", "HC type",
+    "Select Host Controller type",
+    usb_debug_type, USB_DEBUG_NONE, USB_DEBUG_NONE);
+  new bx_param_bool_c(usb_debug,
+    "reset", "Trigger on reset",
+    "Trigger on Reset",
+    0
+  );
+  new bx_param_bool_c(usb_debug,
+    "enable", "Trigger on enable",
+    "Trigger on Enable",
+    0
+  );
+  new bx_param_num_c(usb_debug,
+      "start_frame", "Trigger on start of frame",
+    "Trigger on start of frame",
+    BX_USB_DEBUG_SOF_NONE, BX_USB_DEBUG_SOF_TRIGGER, 
+    BX_USB_DEBUG_SOF_NONE
+  );
+  new bx_param_bool_c(usb_debug,
+    "doorbell", "Trigger on doorbell",
+    "Trigger on Doorbell",
+    0
+  );
+  new bx_param_bool_c(usb_debug,
+    "event", "Trigger on event",
+    "Trigger on Event",
+    0
+  );
+  new bx_param_bool_c(usb_debug,
+    "non_exist", "Trigger on non exist",
+    "Trigger on write to non-existant port",
+    0
+  );
+  type->set_dependent_list(usb_debug->clone(), 1);
+  type->set_dependent_bitmap(USB_DEBUG_NONE, 0);
+}
+#endif
 #endif
 
 void bx_plugin_ctrl_init()
@@ -914,7 +964,7 @@ void bx_init_options()
       "Pathname of VGA ROM image to load",
       "", BX_PATHNAME_LEN);
   path->set_format("Name of VGA BIOS image: %s");
-  sprintf(name, "%s" DIRECTORY_SEPARATOR "VGABIOS-lgpl-latest", get_builtin_variable("BXSHARE"));
+  sprintf(name, "%s" DIRECTORY_SEPARATOR "VGABIOS-lgpl-latest.bin", get_builtin_variable("BXSHARE"));
   path->set_initial_val(name);
   vgarom->set_options(vgarom->SERIES_ASK);
 
@@ -1664,50 +1714,12 @@ void bx_init_options()
   ports->set_options(ports->USE_TAB_WINDOW | ports->SHOW_PARENT);
 #if BX_SUPPORT_PCIUSB
   bx_usbdev_ctl.init();
+#if BX_USB_DEBUGGER
+  bx_init_usb_debug_options(ports);
+#endif
 #endif
   // parallel / serial / USB options initialized in the device plugin code
 
-  // usb debugging
-#if BX_USE_WIN32USBDEBUG
-  static const char *usb_debug_type[] = { "none", "uhci", "ohci", "ehci", "xhci", NULL };
-  bx_list_c *usb_debug = new bx_list_c(root_param, "usb_debug", "USB Debug Options");
-  new bx_param_enum_c(usb_debug,
-      "type", "HC type",
-      "Select Host Controller type",
-      usb_debug_type, 0, 0);
-  new bx_param_bool_c(usb_debug,
-      "reset", "trigger on reset",
-      "Trigger on Reset",
-      0
-  );
-  new bx_param_bool_c(usb_debug,
-      "enable", "trigger on enable",
-      "Trigger on Enable",
-      0
-  );
-  new bx_param_num_c(usb_debug,
-      "start_frame", "trigger on start of frame",
-      "Trigger on start of frame",
-      BX_USB_DEBUG_SOF_NONE, BX_USB_DEBUG_SOF_TRIGGER, 
-      BX_USB_DEBUG_SOF_NONE
-  );
-  new bx_param_bool_c(usb_debug,
-      "doorbell", "trigger on doorbell",
-      "Trigger on Doorbell",
-      0
-  );
-  new bx_param_bool_c(usb_debug,
-      "event", "trigger on event",
-      "Trigger on Event",
-      0
-  );
-  new bx_param_bool_c(usb_debug,
-      "non_exist", "trigger on non exist",
-      "Trigger on write to non-existant port",
-      0
-  );
-#endif
-  
 #if BX_NETWORKING
   // network subtree
   bx_list_c *network = new bx_list_c(root_param, "network", "Network Configuration");
@@ -2101,6 +2113,10 @@ const char *get_builtin_variable(const char *varname)
                             (LPDWORD)&size) == ERROR_SUCCESS) {
           RegCloseKey(hkey);
           return data;
+        } else if (RegQueryValueEx(hkey, "", NULL, (LPDWORD)&type, (LPBYTE)data,
+                            (LPDWORD)&size) == ERROR_SUCCESS) {
+          RegCloseKey(hkey);
+          return data;
         } else {
           RegCloseKey(hkey);
           return NULL;
@@ -2273,34 +2289,6 @@ int get_floppy_type_from_image(const char *filename)
     }
   }
 }
-
-#if BX_USE_WIN32USBDEBUG
-static Bit32s parse_usb_debug_options(const char *context, int num_params, char *params[])
-{
-  for (int i=1; i<num_params; i++) {
-    if (!strncmp(params[i], "type=", 5)) {
-      SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->set_by_name(&params[i][5]);
-    } else if (!strcmp(params[i], "reset")) {
-      SIM->get_param_bool(BXPN_USB_DEBUG_RESET)->set(1);
-    } else if (!strcmp(params[i], "enable")) {
-      SIM->get_param_bool(BXPN_USB_DEBUG_ENABLE)->set(1);
-    } else if (!strcmp(params[i], "start_frame")) {
-      SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->set(BX_USB_DEBUG_SOF_SET);
-    } else if (!strcmp(params[i], "doorbell")) {
-      SIM->get_param_bool(BXPN_USB_DEBUG_DOORBELL)->set(1);
-    } else if (!strcmp(params[i], "event")) {
-      SIM->get_param_bool(BXPN_USB_DEBUG_EVENT)->set(1);
-    } else if (!strcmp(params[i], "non_exist")) {
-      SIM->get_param_bool(BXPN_USB_DEBUG_NON_EXIST)->set(1);
-    } else {
-      PARSE_ERR(("%s: %s directive malformed.", context, params[i]));
-      return -1;
-    }
-  }
-
-  return 0;
-}
-#endif
 
 static Bit32s parse_log_options(const char *context, int num_params, char *params[])
 {
@@ -3394,27 +3382,28 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 #else
     PARSE_WARN(("%s: Bochs is not compiled with iodebug support", context));
 #endif
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
   } else if (!strcmp(params[0], "usb_debug")) {
     if (num_params < 2) {
       PARSE_ERR(("%s: usb_debug directive malformed.", context));
     }
     // check that we haven't already defined the type
     // we can only debug one controller at a time
-    Bit32s type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get();
-    if (type > 0) {
+    bx_param_enum_c *type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
+    if (type->get() != USB_DEBUG_NONE) {
       PARSE_ERR(("%s: usb_debug: type='%s' previously defined.", context, 
-        SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get_choice(type)));
+                 type->get_selected()));
     }
-    if (parse_usb_debug_options(context, num_params, params) < 0) {
-      return -1;
+    for (i=1; i<num_params; i++) {
+      if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param(BXPN_USB_DEBUG)) < 0) {
+        PARSE_ERR(("%s: usb_debug directive malformed.", context));
+      }
     }
     // we currently only support the xHCI controller type, so give
     //  an error if it is something else.
-    type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get();
-    if ((type == USB_DEBUG_OHCI) || (type == USB_DEBUG_EHCI)) {
+    if ((type->get() == USB_DEBUG_OHCI) || (type->get() == USB_DEBUG_EHCI)) {
       PARSE_ERR(("%s: usb_debug: type='%s' not supported yet.", context, 
-        SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get_choice(type)));
+                 type->get_selected()));
     }
 #endif
   } else if (!strcmp(params[0], "load32bitOSImage")) {
@@ -3794,6 +3783,9 @@ int bx_write_configuration(const char *rc, int overwrite)
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_MOUSE), NULL, 0);
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_SOUNDLOW),"sound", 0);
   SIM->save_addon_options(fp);
+#if BX_USB_DEBUGGER
+  bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_USB_DEBUG), "usb_debug", 0);
+#endif
   fclose(fp);
   return 0;
 }

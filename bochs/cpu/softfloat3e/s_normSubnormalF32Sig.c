@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
 
 struct exp16_sig32 softfloat_normSubnormalF32Sig(uint32_t sig)
 {
@@ -46,6 +47,5 @@ struct exp16_sig32 softfloat_normSubnormalF32Sig(uint32_t sig)
     z.exp = 1 - shiftDist;
     z.sig = sig<<shiftDist;
     return z;
-
 }
 

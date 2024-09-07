@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -140,9 +140,13 @@ wxCriticalSection event_thread_lock;
 BxEvent event_queue[MAX_EVENTS];
 unsigned long num_events;
 static bool mouse_captured = 0;
-static bool wx_hide_ips = 0;
+static unsigned wxBitmapEntries = 0;
+static unsigned wxToolbarEntries = 0;
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
 static Bit32u convertStringToGDKKey (const char *string);
+#endif
+#if BX_DEBUGGER && BX_DEBUGGER_GUI && defined(WIN32)
+bool wx_enh_dbg_global_ini = false;
 #endif
 
 
@@ -221,6 +225,27 @@ void MyPanel::OnPaint(wxPaintEvent& WXUNUSED(event))
   needRefresh = false;
 }
 
+void MyPanel::SetMouseCapture(bool en)
+{
+  theFrame->SetToolBarBitmap(ID_Toolbar_Mouse_en, en);
+  if (en) {
+    mouseSavedX = wxScreenX / 2;
+    mouseSavedY = wxScreenY / 2;
+    WarpPointer(mouseSavedX, mouseSavedY);
+#if defined(__WXMSW__)
+    ShowCursor(0);
+#else
+    SetCursor(wxCURSOR_BLANK);
+#endif
+  } else {
+#if defined(__WXMSW__)
+    ShowCursor(1);
+#else
+    SetCursor(wxNullCursor);
+#endif
+  }
+}
+
 void MyPanel::ToggleMouse(bool fromToolbar)
 {
   static bool first_enable = true;
@@ -243,22 +268,7 @@ void MyPanel::ToggleMouse(bool fromToolbar)
   }
   enable->set(en);
   IFDBG_MOUSE(wxLogDebug (wxT ("now mouse is %sabled", en ? "en" : "dis")));
-  if (en) {
-    mouseSavedX = wxScreenX / 2;
-    mouseSavedY = wxScreenY / 2;
-    WarpPointer(mouseSavedX, mouseSavedY);
-#if defined(__WXMSW__)
-    ShowCursor(0);
-#else
-    SetCursor(wxCURSOR_BLANK);
-#endif
-  } else {
-#if defined(__WXMSW__)
-    ShowCursor(1);
-#else
-    SetCursor(wxNullCursor);
-#endif
-  }
+  SetMouseCapture(en);
   if (needmutex) wxMutexGuiLeave();
 }
 
@@ -967,7 +977,7 @@ DWORD WINAPI DebugGuiThread(LPVOID)
 {
   MSG msg;
 
-  bx_gui->init_debug_dialog();
+  bx_gui->init_debug_dialog(0);
   while (GetMessage(&msg, NULL, 0, 0)) {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
@@ -1026,35 +1036,29 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #endif
 
   // parse x11 specific options
+  Bit8u flags = BX_GUI_OPT_HIDE_IPS;
   if (argc > 1) {
     for (i = 1; i < argc; i++) {
-      if (!strcmp(argv[i], "cmdmode")) {
-        BX_ERROR(("Ignoring option 'cmdmode' - not supported by wxWidgets port"));
-      } else if (!strcmp(argv[i], "gui_debug")) {
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
-        BX_ERROR(("Ignoring option 'gui_debug' - wxWidgets port always uses gui debugger"));
-#else
-        BX_ERROR(("Ignoring option 'gui_debug' - debugger not present"));
-#endif
-#if BX_SHOW_IPS
-      } else if (!strcmp(argv[i], "hideIPS")) {
-        BX_INFO(("hide IPS display in status bar"));
-        wx_hide_ips = 1;
-#endif
-      } else {
-        BX_PANIC(("Unknown wx option '%s'", argv[i]));
+      if (!parse_common_gui_options(argv[i], flags)) {
+        if (!strcmp(argv[i], "cmdmode")) {
+          BX_ERROR(("Ignoring option 'cmdmode' - not supported by wxWidgets port"));
+        } else {
+          BX_PANIC(("Unknown wx option '%s'", argv[i]));
+        }
       }
     }
   }
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
+  SIM->set_debug_gui(1);
 #ifdef WIN32
   // on Windows the debugger gui must run in a separate thread
   DWORD threadID;
+  wx_enh_dbg_global_ini = gui_opts.enh_dbg_global_ini;
   CreateThread(NULL, 0, DebugGuiThread, NULL, 0, &threadID);
 #else
   wxMutexGuiEnter();
-  init_debug_dialog();
+  init_debug_dialog(gui_opts.enh_dbg_global_ini);
   wxMutexGuiLeave();
 #endif
 #endif
@@ -1063,12 +1067,19 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   msg.Printf(wxT("Enable mouse capture\nThere is also a shortcut for this: %s."),
              theGui->get_toggle_info());
   theFrame->SetToolBarHelp(ID_Toolbar_Mouse_en, msg);
+  if (SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get()) {
+    thePanel->SetMouseCapture(1);
+    mouse_captured = 1;
+  }
 
   num_events = 0;
 
   new_gfx_api = 1;
   new_text_api = 1;
   dialog_caps = BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_SAVE_RESTORE;
+#if BX_USB_DEBUGGER
+  dialog_caps |= BX_GUI_DLG_USB;
+#endif
 }
 
 void bx_wx_gui_c::handle_events(void)
@@ -1088,6 +1099,7 @@ void bx_wx_gui_c::handle_events(void)
             case BX_TOOLBAR_PASTE: paste_handler(); break;
             case BX_TOOLBAR_SNAPSHOT: tb_button = 3; break;
             case BX_TOOLBAR_USER: tb_button = 4; break;
+            case BX_TOOLBAR_USB_DEBUG: tb_button = 5; break;
             default:
               wxLogDebug (wxT ("unknown toolbar id %d"), event_queue[i].u.toolbar.button);
           }
@@ -1197,6 +1209,11 @@ void bx_wx_gui_c::handle_events(void)
   } else if (tb_button == 4) {
     // userbutton_handler() also calls a dialog.
     userbutton_handler();
+#if BX_USB_DEBUGGER
+  } else if (tb_button == 5) {
+    // usb_handler() also calls a dialog.
+    usb_handler();
+#endif
   }
 }
 
@@ -1430,7 +1447,9 @@ unsigned bx_wx_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, un
   UNUSED(bmap);
   UNUSED(xdim);
   UNUSED(ydim);
-  return(0);
+  // Return pseudo ID for replace_bitmap() feature
+  unsigned bmid = wxBitmapEntries++;
+  return bmid;
 }
 
 
@@ -1439,7 +1458,9 @@ unsigned bx_wx_gui_c::headerbar_bitmap(unsigned bmap_id, unsigned alignment, voi
   UNUSED(bmap_id);
   UNUSED(alignment);
   UNUSED(f);
-  return(0);
+  // Return pseudo ID for replace_bitmap() feature
+  unsigned hbid = wxToolbarEntries++;
+  return hbid;
 }
 
 void bx_wx_gui_c::show_headerbar(void)
@@ -1448,8 +1469,18 @@ void bx_wx_gui_c::show_headerbar(void)
 
 void bx_wx_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 {
-  UNUSED(hbar_id);
-  UNUSED(bmap_id);
+  // Use pseudo IDs to determine toolbar button to change
+  if (hbar_id == floppyA_hbar_id) {
+    theFrame->SetToolBarBitmap(ID_Edit_FD_0, bmap_id == floppyA_bmap_id);
+  } else if (hbar_id == floppyB_hbar_id) {
+    theFrame->SetToolBarBitmap(ID_Edit_FD_1, bmap_id == floppyB_bmap_id);
+  } else if (hbar_id == cdrom1_hbar_id) {
+    theFrame->SetToolBarBitmap(ID_Edit_Cdrom1, bmap_id == cdrom1_bmap_id);
+#if BX_USB_DEBUGGER
+  } else if (hbar_id == usbdbg_hbar_id) {
+    theFrame->SetToolBarBitmap(ID_Toolbar_USB_Debug, bmap_id == usbdbg_trigger_bmap_id);
+#endif
+  }
 }
 
 
@@ -1465,6 +1496,8 @@ void bx_wx_gui_c::exit(void)
   close_debug_dialog();
   wxMutexGuiLeave();
 #endif
+  wxBitmapEntries = 0;
+  wxToolbarEntries = 0;
 }
 
 void bx_wx_gui_c::mouse_enabled_changed_specific(bool val)
@@ -1532,7 +1565,7 @@ void bx_wx_gui_c::show_ips(Bit32u ips_count)
 {
   char ips_text[40];
 
-  if (!wx_hide_ips) {
+  if (!gui_opts.hide_ips) {
     ips_count /= 1000;
     sprintf(ips_text, "IPS: %u.%3.3uM", ips_count / 1000, ips_count % 1000);
     theFrame->SetStatusText(wxString(ips_text, wxConvUTF8), 0);

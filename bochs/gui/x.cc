@@ -137,7 +137,6 @@ static void disable_cursor();
 static void enable_cursor();
 
 // keyboard
-static bool x11_nokeyrepeat = 0;
 static bool x11_use_kbd_mapping = 0;
 static Bit32u convertStringToXKeysym(const char *string);
 
@@ -167,7 +166,7 @@ static long bx_status_leds[3];
 static long bx_status_graytext;
 static char bx_status_info_text[34];
 #if BX_SHOW_IPS
-static bool x11_ips_update = 0, x11_hide_ips = 0;
+static bool x11_ips_update = 0;
 static char x11_ips_text[20];
 static Bit8u x11_show_info_msg = 0;
 static Bit8u x11_info_msg_counter = 0;
@@ -598,9 +597,6 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   XSetWindowAttributes win_attr;
   unsigned long plane_masks_return[1];
   XColor color;
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
-  bool x11_with_debug_gui = 0;
-#endif
 #if BX_HAVE_XRANDR_H
   int event_base, error_base;
 #endif
@@ -610,42 +606,13 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   progname = argv[0];
   console.present = 1;
 
-  // parse x11 specific options
-  if (argc > 1) {
-    for (i = 1; i < argc; i++) {
-      if (!strcmp(argv[i], "nokeyrepeat")) {
-        BX_INFO(("disabled host keyboard repeat"));
-        x11_nokeyrepeat = 1;
-      } else if (!strcmp(argv[i], "gui_debug")) {
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
-        x11_with_debug_gui = 1;
-#else
-        SIM->message_box("ERROR", "Bochs debugger not available - ignoring 'gui_debug' option");
-#endif
-#if BX_SHOW_IPS
-      } else if (!strcmp(argv[i], "hideIPS")) {
-        BX_INFO(("hide IPS display in status bar"));
-        x11_hide_ips = 1;
-#endif
-      } else if (!strcmp(argv[i], "cmdmode")) {
-        command_mode.present = 1;
-      } else if (!strcmp(argv[i], "no_gui_console")) {
-        console.present = 0;
-      } else {
-        BX_PANIC(("Unknown x11 option '%s'", argv[i]));
-      }
-    }
-  }
-
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
-  if (x11_with_debug_gui) {
-    // This is only necessary when GTK+ and Xlib are sharing the same
-    // connection. XInitThreads() must finish before any calls to GTK+
-    // or Xlib are made.
-    if (XInitThreads() == 0) {
-      BX_PANIC(("trying to run Bochs with the GTK+ "
-                "debugger on a non-threading X11."));
-    }
+#if (BX_DEBUGGER && BX_DEBUGGER_GUI) || BX_SUPPORT_SOUNDLOW || BX_SUPPORT_VOODOO || BX_USB_DEBUGGER
+  // This is only necessary when GTK+ and Xlib are sharing the same
+  // connection. XInitThreads() must finish before any calls to GTK+
+  // or Xlib are made.
+  if (XInitThreads() == 0) {
+    BX_PANIC(("trying to run Bochs with the GTK+ "
+              "debugger on a non-threading X11."));
   }
 #endif
 
@@ -658,6 +625,22 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   /* get screen size from display structure macro */
   bx_x_screen_num = DefaultScreen(bx_x_display);
+
+  // redirect notify callback to X11 specific code
+  SIM->get_notify_callback(&old_callback, &old_callback_arg);
+  assert(old_callback != NULL);
+  SIM->set_notify_callback(x11_notify_callback, NULL);
+
+  // parse x11 specific options
+  Bit8u flags = BX_GUI_OPT_NOKEYREPEAT | BX_GUI_OPT_HIDE_IPS  | BX_GUI_OPT_CMDMODE
+                | BX_GUI_OPT_NO_GUI_CONSOLE;
+  if (argc > 1) {
+    for (i = 1; i < argc; i++) {
+      if (!parse_common_gui_options(argv[i], flags)) {
+        BX_PANIC(("Unknown x11 option '%s'", argv[i]));
+      }
+    }
+  }
 
   /* Note that in a real application, x and y would default to 0
    * but would be settable from the command line or resource database.
@@ -899,11 +882,6 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   XFlush(bx_x_display);
 
-  // redirect notify callback to X11 specific code
-  SIM->get_notify_callback(&old_callback, &old_callback_arg);
-  assert(old_callback != NULL);
-  SIM->set_notify_callback(x11_notify_callback, NULL);
-
   // loads keymap for x11
   x11_use_kbd_mapping = SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get();
   if (x11_use_kbd_mapping) {
@@ -912,9 +890,9 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
   // initialize debugger gui
-  if (x11_with_debug_gui) {
+  if (gui_opts.enh_dbg_enabled) {
     SIM->set_debug_gui(1);
-    init_debug_dialog();
+    init_debug_dialog(gui_opts.enh_dbg_global_ini);
   }
 #endif
 
@@ -949,6 +927,9 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   new_gfx_api = 1;
   new_text_api = 1;
   dialog_caps |= (BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_CDROM);
+#if BX_USB_DEBUGGER
+  dialog_caps |= BX_GUI_DLG_USB;
+#endif
 }
 
 void bx_x_gui_c::handle_events(void)
@@ -975,7 +956,7 @@ void bx_x_gui_c::handle_events(void)
     XNextEvent(bx_x_display, &report);
     current_z = 0;
 
-    if (x11_nokeyrepeat && (report.type == KeyRelease) && X11_KeyRepeat(bx_x_display, &report)) {
+    if (gui_opts.nokeyrepeat && (report.type == KeyRelease) && X11_KeyRepeat(bx_x_display, &report)) {
       return;
     }
 
@@ -1727,7 +1708,7 @@ void bx_x_gui_c::set_mouse_mode_absxy(bool mode)
 void bx_x_gui_c::show_ips(Bit32u ips_count)
 {
   if (x11_info_msg_counter == 0) {
-    if (!x11_ips_update && !x11_hide_ips) {
+    if (!x11_ips_update && !gui_opts.hide_ips) {
       ips_count /= 1000;
       sprintf(x11_ips_text, "IPS: %u.%3.3uM", ips_count / 1000, ips_count % 1000);
       x11_ips_update = 1;

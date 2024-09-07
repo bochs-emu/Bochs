@@ -36,10 +36,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
 #include "specialize.h"
 #include "softfloat.h"
 
-float64_t extF80_to_f64(extFloat80_t a, struct softfloat_status_t *status)
+float64 extF80_to_f64(extFloat80_t a, struct softfloat_status_t *status)
 {
     uint16_t uiA64;
     uint64_t uiA0;

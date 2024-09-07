@@ -36,9 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
 #include "specialize.h"
 
-float32_t softfloat_addMagsF32(uint32_t uiA, uint32_t uiB, struct softfloat_status_t *status)
+float32 softfloat_addMagsF32(uint32_t uiA, uint32_t uiB, struct softfloat_status_t *status)
 {
     int16_t expA;
     uint32_t sigA;

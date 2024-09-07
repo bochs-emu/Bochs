@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
 #include "specialize.h"
 
 float128_t softfloat_addMagsF128(uint64_t uiA64, uint64_t uiA0, uint64_t uiB64, uint64_t uiB0, bool signZ, struct softfloat_status_t *status)

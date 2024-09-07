@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 =============================================================================*/
 
 #include <stdint.h>
-#include "primitiveTypes.h"
+#include "softfloat_types.h"
 
 #ifndef softfloat_shortShiftRightJam64Extra
 

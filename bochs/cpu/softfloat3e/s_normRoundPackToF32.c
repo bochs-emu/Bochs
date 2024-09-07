@@ -36,8 +36,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
 
-float32_t softfloat_normRoundPackToF32(bool sign, int16_t exp, uint32_t sig, struct softfloat_status_t *status)
+float32 softfloat_normRoundPackToF32(bool sign, int16_t exp, uint32_t sig, struct softfloat_status_t *status)
 {
     int8_t shiftDist = softfloat_countLeadingZeros32(sig) - 1;
     exp -= shiftDist;

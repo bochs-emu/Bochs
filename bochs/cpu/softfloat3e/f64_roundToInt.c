@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-float64_t f64_roundToInt(float64_t a, uint8_t scale, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
+float64 f64_roundToInt(float64 a, uint8_t scale, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
 {
     int16_t exp;
     int64_t frac;

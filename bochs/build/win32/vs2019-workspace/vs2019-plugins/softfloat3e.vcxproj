@@ -217,7 +217,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\cpu\softfloat3e\8086-SSE\specialize.h" />
+    <ClInclude Include="..\cpu\softfloat3e\include\specialize.h" />
     <ClInclude Include="..\cpu\softfloat3e\include\internals.h" />
     <ClInclude Include="..\cpu\softfloat3e\include\opts-GCC.h" />
     <ClInclude Include="..\cpu\softfloat3e\include\primitives.h" />
@@ -241,10 +241,12 @@
     <ClCompile Include="..\cpu\softfloat3e\extF80_addsub.c" />
     <ClCompile Include="..\cpu\softfloat3e\extF80_class.c" />
     <ClCompile Include="..\cpu\softfloat3e\extF80_compare.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_extract.c" />
     <ClCompile Include="..\cpu\softfloat3e\extF80_div.c" />
     <ClCompile Include="..\cpu\softfloat3e\extF80_mul.c" />
     <ClCompile Include="..\cpu\softfloat3e\extF80_rem.c" />
     <ClCompile Include="..\cpu\softfloat3e\extF80_roundToInt.c" />
+    <ClCompile Include="..\cpu\softfloat3e\extF80_scale.c" />
     <ClCompile Include="..\cpu\softfloat3e\extF80_sqrt.c" />
     <ClCompile Include="..\cpu\softfloat3e\extF80_to_f128.c" />
     <ClCompile Include="..\cpu\softfloat3e\extF80_to_f16.c" />
@@ -263,7 +265,6 @@
     <ClCompile Include="..\cpu\softfloat3e\f128_mul.c" />
     <ClCompile Include="..\cpu\softfloat3e\f128_mulAdd.c" />
     <ClCompile Include="..\cpu\softfloat3e\f128_roundToInt.c" />
-    <ClCompile Include="..\cpu\softfloat3e\f128_sqrt.c" />
     <ClCompile Include="..\cpu\softfloat3e\f128_to_extF80.c" />
     <ClCompile Include="..\cpu\softfloat3e\f128_to_f32.c" />
     <ClCompile Include="..\cpu\softfloat3e\f128_to_f64.c" />
@@ -383,10 +384,6 @@
     <ClCompile Include="..\cpu\softfloat3e\s_mul128To256M.c" />
     <ClCompile Include="..\cpu\softfloat3e\s_mul64ByShifted32To128.c" />
     <ClCompile Include="..\cpu\softfloat3e\s_mul64To128.c" />
-    <ClCompile Include="..\cpu\softfloat3e\s_mulAddF128.c" />
-    <ClCompile Include="..\cpu\softfloat3e\s_mulAddF16.c" />
-    <ClCompile Include="..\cpu\softfloat3e\s_mulAddF32.c" />
-    <ClCompile Include="..\cpu\softfloat3e\s_mulAddF64.c" />
     <ClCompile Include="..\cpu\softfloat3e\s_normRoundPackToExtF80.c" />
     <ClCompile Include="..\cpu\softfloat3e\s_normRoundPackToF128.c" />
     <ClCompile Include="..\cpu\softfloat3e\s_normRoundPackToF16.c" />

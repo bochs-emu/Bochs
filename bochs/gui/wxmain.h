@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -85,6 +85,7 @@ enum
   ID_Toolbar_Mouse_en,
   ID_Toolbar_User,
   ID_Toolbar_SaveRestore,
+  ID_Toolbar_USB_Debug,
   // dialog box: LogMsgAskDialog
   ID_Continue,
   ID_Die,
@@ -155,6 +156,7 @@ public:
   void OnKillFocus(wxFocusEvent& event);
   void MyRefresh();
   static void OnPluginInit();
+  void SetMouseCapture(bool en);
   void ToggleMouse(bool fromToolbar);
 private:
   bool needRefresh;
@@ -215,6 +217,7 @@ public:
 
   void UpdateToolBar(bool simPresent);
   void SetToolBarHelp(int id, wxString& text);
+  void SetToolBarBitmap(int id, bool onoff);
 
 private:
   wxCriticalSection sim_thread_lock;

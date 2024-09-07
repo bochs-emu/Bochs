@@ -1,6 +1,4 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: MIT */
 /*
  * Domain search option for DHCP (RFC 3397)
  *
@@ -26,9 +24,6 @@
  */
 
 #include "slirp.h"
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
 
 #if BX_NETWORKING && BX_NETMOD_SLIRP
 
@@ -47,15 +42,16 @@ typedef struct compact_domain {
     size_t common_octets;
 } CompactDomain;
 
-static size_t
-domain_suffix_diffoff(const CompactDomain *a, const CompactDomain *b)
+static size_t domain_suffix_diffoff(const CompactDomain *a,
+                                    const CompactDomain *b)
 {
     size_t la = a->len, lb = b->len;
     uint8_t *da = a->labels + la, *db = b->labels + lb;
     size_t i, lm = (la < lb) ? la : lb;
 
     for (i = 0; i < lm; i++) {
-        da--; db--;
+        da--;
+        db--;
         if (*da != *db) {
             break;
         }
@@ -63,7 +59,7 @@ domain_suffix_diffoff(const CompactDomain *a, const CompactDomain *b)
     return i;
 }
 
-static int CDECL domain_suffix_ord(const void *cva, const void *cvb)
+static int domain_suffix_ord(const void *cva, const void *cvb)
 {
     const CompactDomain *a = (const CompactDomain*)cva, *b = (const CompactDomain*)cvb;
     size_t la = a->len, lb = b->len;
@@ -119,14 +115,13 @@ static void domain_fixup_order(CompactDomain *cd, size_t n)
     }
 }
 
-static void domain_mklabels(Slirp *s, CompactDomain *cd, const char *input)
+static void domain_mklabels(CompactDomain *cd, const char *input)
 {
     uint8_t *len_marker = cd->labels;
     uint8_t *output = len_marker; /* pre-incremented */
     const char *in = input;
     char cur_chr;
     size_t len = 0;
-    char msg[80];
 
     if (cd->len == 0) {
         goto fail;
@@ -158,13 +153,12 @@ static void domain_mklabels(Slirp *s, CompactDomain *cd, const char *input)
     return;
 
 fail:
-    sprintf(msg, "failed to parse domain name '%s'\n", input);
-    slirp_warning(s, msg);
+    slirplog_error("failed to parse domain name '%s'", input);
     cd->len = 0;
 }
 
-static void
-domain_mkxrefs(CompactDomain *doms, CompactDomain *last, size_t depth)
+static void domain_mkxrefs(CompactDomain *doms, CompactDomain *last,
+                           size_t depth)
 {
     CompactDomain *i = doms, *target = doms;
 
@@ -223,8 +217,7 @@ static size_t domain_compactify(CompactDomain *domains, size_t n)
         CompactDomain *rd = cd->refdom;
 
         if (rd != NULL) {
-            size_t moff = (rd->labels - start)
-                    + (rd->len - cd->common_octets);
+            size_t moff = (rd->labels - start) + (rd->len - cd->common_octets);
             if (moff < 0x3FFFu) {
                 cd->len -= cd->common_octets - 2;
                 cd->labels[cd->len - 1] = moff & 0xFFu;
@@ -270,20 +263,20 @@ int translate_dnssearch(Slirp *s, const char **names)
     }
 
     /* reserve extra 2 header bytes for each 255 bytes of output */
-    memreq += ((memreq + MAX_OPT_LEN - 1) / MAX_OPT_LEN) * OPT_HEADER_LEN;
+    memreq += DIV_ROUND_UP(memreq, MAX_OPT_LEN) * OPT_HEADER_LEN;
     result = (uint8_t*)malloc(memreq * sizeof(*result));
 
     outptr = result;
     for (i = 0; i < num_domains; i++) {
         domains[i].labels = outptr;
-        domain_mklabels(s, domains + i, names[i]);
+        domain_mklabels(domains + i, names[i]);
+        if (domains[i].len == 0) {
+            /* Bogus entry, reject it all */
+            free(domains);
+            free(result);
+            return -1;
+        }
         outptr += domains[i].len;
-    }
-
-    if (outptr == result) {
-        free(domains);
-        free(result);
-        return -1;
     }
 
     qsort(domains, num_domains, sizeof(*domains), domain_suffix_ord);
@@ -297,7 +290,7 @@ int translate_dnssearch(Slirp *s, const char **names)
     domain_mkxrefs(domains, domains + num_domains - 1, 0);
     memreq = domain_compactify(domains, num_domains);
 
-    blocks = (memreq + MAX_OPT_LEN - 1) / MAX_OPT_LEN;
+    blocks = DIV_ROUND_UP(memreq, MAX_OPT_LEN);
     bsrc_end = memreq;
     bsrc_start = (blocks - 1) * MAX_OPT_LEN;
     bdst_start = bsrc_start + blocks * OPT_HEADER_LEN;

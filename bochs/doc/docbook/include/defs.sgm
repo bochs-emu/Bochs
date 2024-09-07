@@ -1,7 +1,6 @@
 <!--
 ================================================================
 doc/docbook/include/defs.sgm
-$Id: defs.sgm,v 1.8 2008-02-05 22:33:34 sshwarts Exp $
 
 This file is included by all Bochs docbook files, so that the
 definitions can be used anywhere in the documentation.
@@ -19,8 +18,8 @@ draft mode.
 <!ENTITY FIXME '<inlinegraphic format="PNG" fileref="../images/undercon.png">'>
 <!ENTITY NEEDHELP '<inlinegraphic format="PNG" fileref="../images/undercon.png">'>
 
-<!ENTITY bochswebsite '<ulink url="http://bochs.sourceforge.net">Bochs web site</ulink>'>
-<!ENTITY bochs-sf-net '<ulink url="http://bochs.sourceforge.net">bochs.sourceforge.net</ulink>'>
+<!ENTITY bochswebsite '<ulink url="https://bochs.sourceforge.io">Bochs web site</ulink>'>
+<!ENTITY bochs-sf-net '<ulink url="https://bochs.sourceforge.io">bochs.sourceforge.net</ulink>'>
 <!ENTITY devlist '<link linkend="bochs-developers">bochs-developers mailing list</link>'>
 <!ENTITY bochsdir '<varname>$BOCHS</varname>'>
 <!ENTITY Makefile '<filename>Makefile</filename>'>

@@ -36,18 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef primitiveTypes_h
 #define primitiveTypes_h 1
 
-#include <stdint.h>
 #include "config.h"
-
-#ifdef BX_LITTLE_ENDIAN
-struct uint128 { uint64_t v0, v64; };
-struct uint64_extra { uint64_t extra, v; };
-struct uint128_extra { uint64_t extra; struct uint128 v; };
-#else
-struct uint128 { uint64_t v64, v0; };
-struct uint64_extra { uint64_t v, extra; };
-struct uint128_extra { struct uint128 v; uint64_t extra; };
-#endif
 
 /*----------------------------------------------------------------------------
 | These macros are used to isolate the differences in word order between big-

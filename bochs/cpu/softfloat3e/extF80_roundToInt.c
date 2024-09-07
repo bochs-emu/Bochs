@@ -47,7 +47,6 @@ extFloat80_t
     uint64_t sigA;
     uint16_t uiZ64;
     uint64_t sigZ;
-    struct uint128 uiZ;
     uint64_t lastBitMask, roundBitsMask;
 
     // handle unsupported extended double-precision floating encodings
@@ -66,8 +65,7 @@ extFloat80_t
     *------------------------------------------------------------------------*/
     if (0x403E <= exp) {
         if ((exp == 0x7FFF) && (uint64_t) (sigA<<1)) {
-            uiZ = softfloat_propagateNaNExtF80UI(uiA64, sigA, 0, 0, status);
-            return packToExtF80(uiZ.v64, uiZ.v0);
+            return softfloat_propagateNaNExtF80UI(uiA64, sigA, 0, 0, status);
         }
         return a;
     }

@@ -121,7 +121,7 @@ dbg_main.o: dbg_main.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../param_names.h ../cpu/cpu.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../cpu/decoder/decoder.h \
  ../cpu/decoder/features.h ../cpu/decoder/decoder.h \
- ../instrument/stubs/instrument.h ../cpu/i387.h ../cpu/fpu/softfloat.h \
+ ../instrument/stubs/instrument.h ../cpu/i387.h  \
  ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
  ../cpu/crregs.h ../cpu/descriptor.h ../cpu/decoder/instr.h \
  ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/icache.h ../cpu/xmm.h \
@@ -133,7 +133,7 @@ linux.o: linux.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../cpu/cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h \
  ../cpu/decoder/decoder.h ../instrument/stubs/instrument.h ../cpu/i387.h \
- ../cpu/fpu/softfloat.h ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h \
+ ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h \
  ../cpu/fpu/control_w.h ../cpu/crregs.h ../cpu/descriptor.h \
  ../cpu/decoder/instr.h ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/icache.h \
  ../cpu/xmm.h ../cpu/vmx.h ../cpu/access.h syscalls-linux.h
@@ -142,8 +142,8 @@ parser.o: parser.@CPP_SUFFIX@ debug.h ../config.h ../osdep.h \
 symbols.o: symbols.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../cpu/cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h \
- ../cpu/decoder/decoder.h ../instrument/stubs/instrument.h ../cpu/i387.h \
- ../cpu/fpu/softfloat.h ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h \
+ ../instrument/stubs/instrument.h ../cpu/i387.h \
+ ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h \
  ../cpu/fpu/control_w.h ../cpu/crregs.h ../cpu/descriptor.h \
  ../cpu/decoder/instr.h ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/icache.h \
  ../cpu/xmm.h ../cpu/vmx.h ../cpu/access.h

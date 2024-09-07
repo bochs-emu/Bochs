@@ -28,12 +28,15 @@
 
 #if BX_SUPPORT_3DNOW
 
-BX_CPP_INLINE void prepare_softfloat_status_word(float_status_t &status, int rounding_mode)
+#include "softfloat3e/include/softfloat.h"
+
+BX_CPP_INLINE void prepare_softfloat_status_word(softfloat_status_t &status, int rounding_mode)
 {
-  status.float_exception_flags = 0; // clear exceptions before execution
-  status.float_nan_handling_mode = float_first_operand_nan;
-  status.float_rounding_mode = rounding_mode;
-  status.flush_underflow_to_zero = 0;
+  status.softfloat_exceptionFlags = 0; // clear exceptions before execution
+  status.softfloat_roundingMode = rounding_mode;
+  status.softfloat_flush_underflow_to_zero = 0;
+  status.softfloat_suppressException = 0;
+  status.softfloat_denormals_are_zeros = 0;
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFPNACC_PqQq(bxInstruction_c *i)
@@ -65,8 +68,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FW_PqQq(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
-  float_status_t status;
-  prepare_softfloat_status_word(status, float_round_to_zero);
+  softfloat_status_t status;
+  prepare_softfloat_status_word(status, softfloat_round_to_zero);
 
   MMXUD0(result) = i32_to_f32((Bit32s)(MMXSW0(op)), &status);
   MMXUD1(result) = i32_to_f32((Bit32s)(MMXSW2(op)), &status);
@@ -98,8 +101,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FD_PqQq(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
-  float_status_t status;
-  prepare_softfloat_status_word(status, float_round_to_zero);
+  softfloat_status_t status;
+  prepare_softfloat_status_word(status, softfloat_round_to_zero);
 
   MMXUD0(op) = i32_to_f32(MMXSD0(op), &status);
   MMXUD1(op) = i32_to_f32(MMXSD1(op), &status);
@@ -140,8 +143,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
-  float_status_t status;
-  prepare_softfloat_status_word(status, float_round_to_zero);
+  softfloat_status_t status;
+  prepare_softfloat_status_word(status, softfloat_round_to_zero);
 
   MMXSD0(op) = f32_to_i32_round_to_zero(MMXUD0(op), &status);
   MMXSD1(op) = f32_to_i32_round_to_zero(MMXUD1(op), &status);

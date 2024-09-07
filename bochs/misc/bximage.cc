@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -54,6 +54,8 @@
 #define BXIMAGE_FUNC_IMAGE_INFO      5
 
 #define BX_MAX_CYL_BITS 24 // 8 TB
+
+#define SECTOR_SIZE 512
 
 const int bx_max_hd_megs = (int)(((1 << BX_MAX_CYL_BITS) - 1) * 16.0 * 63.0 / 2048.0);
 
@@ -773,6 +775,60 @@ int get_image_mode_and_hdsize(const char *filename, const char **image_mode)
   return hdsize_megs;
 }
 
+void print_partitiontable(device_image_t *hdimage)
+{
+  size_t ret = 0;
+  unsigned int n = 0;
+  Bit8u data[SECTOR_SIZE];
+
+  ret = hdimage->lseek(0, SEEK_SET);
+  if (ret < 0) {
+    fatal("lseek() to MBR failed");
+  }
+  ret = hdimage->read(data, SECTOR_SIZE);
+  if (ret != SECTOR_SIZE) {
+    fatal("failed to read MBR");
+  }
+
+  // check bootsector ID, not present = no partition table present
+  if ((data[0x1FE] != 0x55) && (data[0x1FE] != 0xAA)) {
+    printf("No partition-table detected.\n\n");
+    return;
+  }
+
+  printf("Partition table\n");
+  printf("  boot\t sector start\tsize\ttype\n");
+  for (n = 0; n < 4; n++) {
+    // calculate position of partition record (n) in table
+    Bit8u *p = &data[0x1BE + (16 * n)];
+    Bit8u bootable = p[0x00];	// 0x80 = bootable, 0x00 = not bootable
+    Bit8u type = p[0x04];
+    Bit32u start = *((Bit32u *)&p[0x08]);
+    Bit32u size  = *((Bit32u *)&p[0x0C]);
+
+    if (type > 0) {
+      // print partition number
+      printf("%d.  ", (n + 1));
+
+      // print '*' if partition is bootable
+      if (bootable) printf("*\t "); else printf("\t ");
+
+      // print start of partition in sectors
+      printf("%12u", start);
+
+      // print size of partition in sectors
+      size = (size >> 1) / 1024;
+      if (size > (4 * 1024))
+        printf("%6uG\t", (size / 1024));
+      else
+        printf("%6uM\t", size);
+
+      printf("%02X\n", type);
+    }
+  }
+  printf("\n");
+}
+
 int CDECL main(int argc, char *argv[])
 {
   char bochsrc_line[1024], prompt[80], tmpfname[528];
@@ -1005,6 +1061,7 @@ int CDECL main(int argc, char *argv[])
             printf("geometry = %d/%d/%d (" FMT_LL "d MB)\n\n", hdimage->cylinders,
                    hdimage->heads, hdimage->spt, hdimage->hd_size >> 20);
           }
+          print_partitiontable(hdimage);
           hdimage->close();
         }
         break;

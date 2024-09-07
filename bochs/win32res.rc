@@ -100,7 +100,7 @@ BEGIN
     PUSHBUTTON      "Cancel", IDCANCEL, 105, 40, 50, 14
 END
 
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
 #include "win32usbres.rc"
 #endif
 #include "bxversion.rc"

@@ -46,7 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 | to the IEC/IEEE Standard for Binary Floating-Point Arithmetic.
 *----------------------------------------------------------------------------*/
 
-float16_t f16_getExp(float16_t a, struct softfloat_status_t *status)
+float16 f16_getExp(float16 a, struct softfloat_status_t *status)
 {
     int8_t expA;
     uint16_t sigA;
@@ -57,12 +57,12 @@ float16_t f16_getExp(float16_t a, struct softfloat_status_t *status)
 
     if (expA == 0x1F) {
         if (sigA) return softfloat_propagateNaNF16UI(a, 0, status);
-        return packToF32UI(0, 0x1F, 0);
+        return packToF16UI(0, 0x1F, 0);
     }
 
     if (! expA) {
         if (! sigA || softfloat_denormalsAreZeros(status))
-            return packToF32UI(1, 0x1F, 0);
+            return packToF16UI(1, 0x1F, 0);
 
         softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalF16Sig(sigA);

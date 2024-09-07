@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-int64_t f16_to_i64_r_minMag(float16_t a, bool exact, struct softfloat_status_t *status)
+int64_t f16_to_i64_r_minMag(float16 a, bool exact, struct softfloat_status_t *status)
 {
     int8_t exp;
     uint16_t frac;

@@ -24,12 +24,11 @@
 #include "config.h"
 
 // Compilation for WIN64 native require minimum 0x0500
-#ifndef _WIN32_IE
-#define _WIN32_IE 0x0500  /* Force a minimum "OS level" for commctrl.h */
-#endif
 #if _WIN32_IE < 0x0500
 #undef _WIN32_IE
-#define _WIN32_IE 0x0500
+#endif
+#ifndef _WIN32_IE
+#define _WIN32_IE 0x0500  /* Force a minimum "OS level" for commctrl.h */
 #endif
 
 extern "C" {

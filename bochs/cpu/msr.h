@@ -149,6 +149,7 @@ enum MSR_Register {
   BX_MSR_IA32_UINTR_MISC = 0x988,
   BX_MSR_IA32_UINTR_PD = 0x989, // interface to UPID_ADDR
   BX_MSR_IA32_UINTR_TT = 0x98A, // interface to UITT_ADDR
+  BX_MSR_IA32_UINTR_TIMER = 0x1B00, // for User Timer feature (not implemented yet)
 #endif
 
   BX_MSR_XSS = 0xDA0,

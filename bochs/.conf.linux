@@ -6,6 +6,11 @@ if test $# = 0; then
   which_config=plugins
 else
   which_config=$1
+  if test $# = 2; then
+    if test $2 = debugger; then
+      CONFIGURE_ARGS=--enable-debugger
+    fi
+  fi
 fi
 
 CC="gcc"

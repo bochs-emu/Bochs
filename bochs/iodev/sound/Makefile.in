@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2021  The Bochs Project
+# Copyright (C) 2012-2024  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -68,6 +68,7 @@ OBJS_THAT_SUPPORT_OTHER_PLUGINS = opl.o
 NONPLUGIN_OBJS = @IODEV_EXT_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_EXT_PLUGIN_OBJS@
 ALSA_SOUND_LINK_OPTS = @ALSA_SOUND_LINK_OPTS@
+PULSE_SOUND_LINK_OPTS = @PULSE_SOUND_LINK_OPTS@
 SDL_SOUND_LINK_OPTS = @SDL_SOUND_LINK_OPTS@
 WIN_SOUND_LINK_OPTS = -lwinmm
 WIN_SOUND_LINK_OPTS_VCPP = winmm.lib
@@ -104,6 +105,9 @@ libbx_sb16.la: sb16.lo opl.lo
 
 libbx_soundalsa.la: soundalsa.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module soundalsa.lo -o libbx_soundalsa.la -rpath $(PLUGIN_PATH) $(ALSA_SOUND_LINK_OPTS)
+
+libbx_soundpulse.la: soundpulse.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module soundpulse.lo -o libbx_soundpulse.la -rpath $(PLUGIN_PATH) $(PULSE_SOUND_LINK_OPTS)
 
 libbx_soundsdl.la: soundsdl.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module soundsdl.lo -o libbx_soundsdl.la -rpath $(PLUGIN_PATH) $(SDL_SOUND_LINK_OPTS)
@@ -168,6 +172,10 @@ soundalsa.o: soundalsa.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
  ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
  soundlow.h ../../bxthread.h soundmod.h soundalsa.h
+soundpulse.o: soundpulse.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ soundlow.h ../../bxthread.h soundmod.h soundpulse.h
 sounddummy.o: sounddummy.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
  ../../misc/bswap.h ../../plugin.h ../../extplugin.h soundlow.h \
@@ -223,6 +231,10 @@ soundalsa.lo: soundalsa.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h 
  ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
  ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
  soundlow.h ../../bxthread.h soundmod.h soundalsa.h
+soundpulse.lo: soundpulse.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
+ ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../pc_system.h \
+ soundlow.h ../../bxthread.h soundmod.h soundpulse.h
 sounddummy.lo: sounddummy.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
  ../../misc/bswap.h ../../plugin.h ../../extplugin.h soundlow.h \

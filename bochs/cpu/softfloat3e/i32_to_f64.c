@@ -36,9 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
 #include "softfloat.h"
 
-float64_t i32_to_f64(int32_t a)
+float64 i32_to_f64(int32_t a)
 {
     bool sign;
     uint32_t absA;

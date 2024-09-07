@@ -36,9 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
 #include "softfloat.h"
 
-float64_t
+float64
  softfloat_roundPackToF64(bool sign, int16_t exp, uint64_t sig, struct softfloat_status_t *status)
 {
     uint8_t roundingMode;

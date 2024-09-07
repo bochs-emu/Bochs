@@ -233,33 +233,39 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA256MSG2_VdqWdqR(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHA1RNDS4_VdqWdqIbR(bxInstruction_c *i)
 {
   // SHA1 Constants dependent on immediate i
-  static const Bit32u sha_Ki[4] = { 0x5A827999, 0x6ED9EBA1, 0X8F1BBCDC, 0xCA62C1D6 };
+  static const Bit32u sha_Ki[4] = { 0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xCA62C1D6 };
 
   BxPackedXmmRegister op1 = BX_READ_XMM_REG(i->dst()), op2 = BX_READ_XMM_REG(i->src());
   unsigned imm = i->Ib() & 0x3;
   Bit32u K = sha_Ki[imm];
 
-  Bit32u W[4] = { op2.xmm32u(3), op2.xmm32u(2), op2.xmm32u(1), op2.xmm32u(0) };
-  Bit32u A[5], B[5], C[5], D[5], E[5];
+  Bit32u A, B, C, D, E, W[4];
 
-  A[0] = op1.xmm32u(3);
-  B[0] = op1.xmm32u(2);
-  C[0] = op1.xmm32u(1);
-  D[0] = op1.xmm32u(0);
-  E[0] = 0;
+  A = op1.xmm32u(3);
+  B = op1.xmm32u(2);
+  C = op1.xmm32u(1);
+  D = op1.xmm32u(0);
+  E = 0;
+
+  W[0] = op2.xmm32u(3);
+  W[1] = op2.xmm32u(2);
+  W[2] = op2.xmm32u(1);
+  W[3] = op2.xmm32u(0);
 
   for (unsigned n=0; n < 4; n++) {
-    A[n+1] = sha_f(B[n], C[n], D[n], imm) + rol32(A[n], 5) + W[n] + E[n] + K;
-    B[n+1] = A[n];
-    C[n+1] = rol32(B[n], 30);
-    D[n+1] = C[n];
-    E[n+1] = D[n];
+    Bit32u A_next = sha_f(B, C, D, imm) + rol32(A, 5) + W[n] + E + K;
+
+    E = D;
+    D = C;
+    C = rol32(B, 30);
+    B = A;
+    A = A_next;
   }
 
-  op1.xmm32u(0) = A[4];
-  op1.xmm32u(1) = B[4];
-  op1.xmm32u(2) = C[4];
-  op1.xmm32u(3) = D[4];
+  op1.xmm32u(3) = A;
+  op1.xmm32u(2) = B;
+  op1.xmm32u(1) = C;
+  op1.xmm32u(0) = D;
 
   BX_WRITE_XMM_REG(i->dst(), op1);
 

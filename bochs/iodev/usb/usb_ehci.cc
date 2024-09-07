@@ -4,7 +4,7 @@
 //
 //  Experimental USB EHCI adapter (partly ported from Qemu)
 //
-//  Copyright (C) 2015-2023  The Bochs Project
+//  Copyright (C) 2015-2024  The Bochs Project
 //
 //  Copyright(c) 2008  Emutex Ltd. (address@hidden)
 //  Copyright(c) 2011-2012 Red Hat, Inc.
@@ -48,9 +48,6 @@
 #include "ohci_core.h"
 #include "qemu-queue.h"
 #include "usb_ehci.h"
-#if BX_USE_WIN32USBDEBUG
-  #include "gui/win32usb.h"
-#endif
 
 #define LOG_THIS theUSB_EHCI->
 
@@ -242,7 +239,7 @@ void bx_usb_ehci_c::init(void)
   bx_param_string_c *options;
   bx_param_bool_c *over_current;
   Bit8u devfunc;
-  
+
   /*  If you wish to set DEBUG=report in the code, instead of
    *  in the configuration, simply uncomment this line.  I use
    *  it when I am working on this emulation.
@@ -288,6 +285,11 @@ void bx_usb_ehci_c::init(void)
     BX_EHCI_THIS uhci[0]->init_uhci(devfunc | 0x00, 0x8086, 0x24c2, 0x01, 0x80, BX_PCI_INTA);
     BX_EHCI_THIS uhci[1]->init_uhci(devfunc | 0x01, 0x8086, 0x24c4, 0x01, 0x00, BX_PCI_INTB);
     BX_EHCI_THIS uhci[2]->init_uhci(devfunc | 0x02, 0x8086, 0x24c7, 0x01, 0x00, BX_PCI_INTC);
+#if BX_USB_DEBUGGER
+    if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() == USB_DEBUG_UHCI) {
+      SIM->register_usb_debug_type(USB_DEBUG_UHCI);
+    }
+#endif
   } else if (companion_type == EHCI_COMPANION_OHCI) {
     // initialize readonly registers
     // 0x8086 = vendor (Intel)
@@ -304,9 +306,14 @@ void bx_usb_ehci_c::init(void)
     BX_EHCI_THIS ohci[0]->init_ohci(devfunc | 0x00, 0x8086, 0x880C, 0x00, 0x80, BX_PCI_INTA);
     BX_EHCI_THIS ohci[1]->init_ohci(devfunc | 0x01, 0x8086, 0x880D, 0x00, 0x00, BX_PCI_INTB);
     BX_EHCI_THIS ohci[2]->init_ohci(devfunc | 0x02, 0x8086, 0x880E, 0x00, 0x00, BX_PCI_INTC);
+#if BX_USB_DEBUGGER
+    if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() == USB_DEBUG_OHCI) {
+      SIM->register_usb_debug_type(USB_DEBUG_OHCI);
+    }
+#endif
   } else
     BX_PANIC(("Unknown EHCI Companion Type found..."));
-  
+
   // initialize capability registers
   BX_EHCI_THIS hub.cap_regs.CapLength = OPS_REGS_OFFSET;
   BX_EHCI_THIS hub.cap_regs.HciVersion = 0x0100;
@@ -340,6 +347,12 @@ void bx_usb_ehci_c::init(void)
   BX_EHCI_THIS maxframes = 128;
   QTAILQ_INIT(&BX_EHCI_THIS hub.aqueues);
   QTAILQ_INIT(&BX_EHCI_THIS hub.pqueues);
+
+#if BX_USB_DEBUGGER
+  if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() == USB_DEBUG_EHCI) {
+    SIM->register_usb_debug_type(USB_DEBUG_EHCI);
+  }
+#endif
 
   BX_INFO(("USB EHCI initialized"));
 }
@@ -703,7 +716,7 @@ void bx_usb_ehci_c::change_port_owner(int port)
     usb_device_c *device = BX_EHCI_THIS hub.usb_port[port].device;
     if (BX_EHCI_THIS hub.usb_port[port].owner_change) {
       BX_DEBUG(("port #%d: owner change to %s", port + 1,
-               BX_EHCI_THIS hub.usb_port[port].portsc.po ? "EHCI" : 
+               BX_EHCI_THIS hub.usb_port[port].portsc.po ? "EHCI" :
              ((BX_EHCI_THIS companion_type == EHCI_COMPANION_UHCI) ? "UHCI" : "OHCI")));
       if (device != NULL) {
         set_connect_status(port, 0);
@@ -728,7 +741,7 @@ void bx_usb_ehci_c::change_port_owner(int port)
 Bit64u bx_usb_ehci_c::create_port_routing(int n_cc, int n_pcc)
 {
   Bit64u ret = 0;
-  
+
 #if EHCI_PORT_ROUTE
   // for simplicity sake, we place them in 'accending' order.
   for (int c = n_cc; c > 0; c--) {
@@ -749,14 +762,14 @@ Bit64u bx_usb_ehci_c::create_port_routing(int n_cc, int n_pcc)
     BX_DEBUG(("%s", str));
   }
 #endif
-  
+
   return ret;
 }
 
 // returns the controller and port number on that controller of the
 //  associated companion controller.
 // returns false if out of range.
-// note: 
+// note:
 //  this code is a little more detailed than needed.
 //  for example. We could actually just do:
 //    *n_cc = (int) (route >> (4 * port)) & 0xF;
@@ -1027,24 +1040,24 @@ bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
                 BX_EHCI_THIS hub.usb_port[port].device->usb_send_msg(USB_MSG_RESET);
                 BX_EHCI_THIS hub.usb_port[port].portsc.csc = 0;
                 if (BX_EHCI_THIS hub.usb_port[port].device->get_speed() == USB_SPEED_HIGH) {
-#if BX_USE_WIN32USBDEBUG
-                  win32_usb_trigger(USB_DEBUG_EHCI, USB_DEBUG_ENABLE, 0, 0);
+#if BX_USB_DEBUGGER
+                  SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_ENABLE, 0, 0);
 #endif
                   BX_EHCI_THIS hub.usb_port[port].portsc.ped = 1;
                 }
               }
             }
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
             if (!oldpr && BX_EHCI_THIS hub.usb_port[port].portsc.pr) {
-              win32_usb_trigger(USB_DEBUG_EHCI, USB_DEBUG_RESET, 0, 0);
+              SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_RESET, 0, 0);
             }
 #endif
             if (oldfpr && !BX_EHCI_THIS hub.usb_port[port].portsc.fpr) {
               BX_EHCI_THIS hub.usb_port[port].portsc.sus = 0;
             }
-#if BX_USE_WIN32USBDEBUG
+#if BX_USB_DEBUGGER
           } else if (port == USB_EHCI_PORTS) {
-            win32_usb_trigger(USB_DEBUG_EHCI, USB_DEBUG_NONEXIST, 0, 0);
+            SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_NONEXIST, 0, 0);
 #endif
           }
       }
@@ -1475,7 +1488,7 @@ int bx_usb_ehci_c::event_handler(int event, void *ptr, int port)
     case USB_EVENT_DEFAULT_SPEED:
       // return default speed for specified port number
       return USB_SPEED_HIGH;
-      
+
     case USB_EVENT_CHECK_SPEED:
       if (ptr != NULL) {
         usb_device_c *usb_device = (usb_device_c *) ptr;
@@ -1554,7 +1567,7 @@ int bx_usb_ehci_c::execute(EHCIPacket *p)
   int ret;
   int endp;
 
-  // if we remove the device, or signal an over-current, there is a possibility 
+  // if we remove the device, or signal an over-current, there is a possibility
   //  that 'dev' is NULL. simply return that we transfered zero bytes.
   // ( we can't return USB_RET_PROCERR, since this code will then reset the HC.
   //  On an over-current, we don't want the HC to reset... )
@@ -1909,8 +1922,8 @@ int bx_usb_ehci_c::state_fetchqtd(EHCIQueue *q)
   EHCIqtd qtd;
   int again = 0;
 
-#if BX_USE_WIN32USBDEBUG
-  win32_usb_trigger(USB_DEBUG_EHCI, USB_DEBUG_COMMAND, 0, 0);
+#if BX_USB_DEBUGGER
+  SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_COMMAND, 0, 0);
 #endif
 
   get_dwords(NLPTR_GET(q->qtdaddr), (Bit32u*) &qtd, sizeof(EHCIqtd) >> 2);
@@ -2272,7 +2285,7 @@ void bx_usb_ehci_c::advance_async_state(void)
     default:
       /* this should only be due to a developer mistake */
       // Ben: I commented this line due to the fact that after a USB_RET_ASYNC return,
-      //  then a usb_packet_complete(p), the event handler is setting the astate to 
+      //  then a usb_packet_complete(p), the event handler is setting the astate to
       //  EST_EXECUTE instead of EST_ACTIVE ???
       //BX_PANIC(("Bad asynchronous state %d. Resetting to active", BX_EHCI_THIS hub.astate));
       BX_EHCI_THIS set_state(async, EST_ACTIVE);
@@ -2367,9 +2380,9 @@ void bx_usb_ehci_c::ehci_frame_timer(void)
   Bit64u t_now = bx_pc_system.time_usec();
   usec_elapsed = t_now - BX_EHCI_THIS hub.last_run_usec;
   frames = (int)(usec_elapsed / FRAME_TIMER_USEC);
-  
-#if BX_USE_WIN32USBDEBUG
-  win32_usb_trigger(USB_DEBUG_EHCI, USB_DEBUG_FRAME, 0, 0);
+
+#if BX_USB_DEBUGGER
+  SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_FRAME, 0, 0);
 #endif
 
   if (BX_EHCI_THIS periodic_enabled() || (BX_EHCI_THIS hub.pstate != EST_INACTIVE)) {

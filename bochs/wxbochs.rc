@@ -4,6 +4,9 @@ icon_bochs ICON build/win32/nsis/bochs.ico
 #if BX_WITH_WIN32
 #include "win32res.rc"
 #else
+#if BX_USB_DEBUGGER
+#include "win32usbres.rc"
+#endif
 #if BX_DEBUGGER_GUI
 #include "win32_enh_dbg.rc"
 #endif

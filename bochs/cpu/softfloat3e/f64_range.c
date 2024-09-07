@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-float64_t f64_range(float64_t a, float64_t b, bool is_max, bool is_abs, int sign_ctrl, softfloat_status_t *status)
+float64 f64_range(float64 a, float64 b, bool is_max, bool is_abs, int sign_ctrl, softfloat_status_t *status)
 {
     bool signA;
     int16_t expA;
@@ -103,7 +103,7 @@ float64_t f64_range(float64_t a, float64_t b, bool is_max, bool is_abs, int sign
             z = signA ? b : a;
         }
     } else {
-        float64_t tmp_a = a, tmp_b = b;
+        float64 tmp_a = a, tmp_b = b;
         if (is_abs) {
             tmp_a = tmp_a & ~UINT64_C(0x8000000000000000); // clear the sign bit
             tmp_b = tmp_b & ~UINT64_C(0x8000000000000000);

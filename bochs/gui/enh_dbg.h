@@ -186,11 +186,7 @@ extern short DockOrder;        // set the default List "docking" (Reg, ASM, Dump
 // END of User Customizable settings
 
 #if !defined(_MSC_VER)
-#if SIZEOF_UNSIGNED_LONG == 8
-#define FMT_LLCAPX  "%016lX"
-#else
-#define FMT_LLCAPX  "%016llX"
-#endif
+#define FMT_LLCAPX  FMT_LL"X"
 #else
 #define FMT_LLCAPX  "%016I64X"
 #endif

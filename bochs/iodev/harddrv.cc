@@ -3373,7 +3373,7 @@ bool bx_hard_drive_c::bmdma_present(void)
 {
   #if BX_SUPPORT_PCI
     if (BX_HD_THIS pci_enabled) {
-      #ifndef ANDROID
+      #ifndef __ANDROID__
       // DMA emulation works very bad under Android
       return DEV_ide_bmdma_present();
       #endif

@@ -38,17 +38,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-bool f16_isSignalingNaN(float16_t a)
+bool f16_isSignalingNaN(float16 a)
 {
     return softfloat_isSigNaNF16UI(a);
 }
 
-bool f32_isSignalingNaN(float32_t a)
+bool f32_isSignalingNaN(float32 a)
 {
     return softfloat_isSigNaNF32UI(a);
 }
 
-bool f64_isSignalingNaN(float64_t a)
+bool f64_isSignalingNaN(float64 a)
 {
     return softfloat_isSigNaNF64UI(a);
 }

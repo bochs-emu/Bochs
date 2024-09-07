@@ -105,7 +105,6 @@ int old_mousex=0, new_mousex=0;
 int old_mousey=0, new_mousey=0;
 bool just_warped = 0;
 bool sdl_mouse_mode_absxy = 0;
-bool sdl_nokeyrepeat = 0;
 bitmaps *sdl_bitmaps[MAX_SDL_BITMAPS];
 int n_sdl_bitmaps = 0;
 int statusbar_height = 18;
@@ -115,7 +114,6 @@ static unsigned statusitem_pos[12] = {
 static bool statusitem_active[12];
 #if BX_SHOW_IPS
 SDL_TimerID timer_id;
-static bool sdl_hide_ips = 0;
 static bool sdl_ips_update = 0;
 static char sdl_ips_text[20];
 static bool sdl_show_info_msg = 0;
@@ -124,6 +122,9 @@ static bool sdl_show_info_msg = 0;
 BxEvent *sdl2_notify_callback(void *unused, BxEvent *event);
 static bxevent_handler old_callback = NULL;
 static void *old_callback_arg = NULL;
+#endif
+#if defined(WIN32) && BX_DEBUGGER && BX_DEBUGGER_GUI
+bool sdl2_enh_dbg_global_ini;
 #endif
 
 
@@ -345,7 +346,6 @@ void switch_to_fullscreen(void)
     bx_gui->toggle_mouse_enable();
   }
   SDL_GetWindowPosition(window, &saved_x, &saved_y);
-  SDL_SetWindowSize(window, res_x, res_y);
   SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
   sdl_fullscreen = SDL_GetWindowSurface(window);
   sdl_screen = NULL;
@@ -379,7 +379,7 @@ DWORD WINAPI DebugGuiThread(LPVOID)
 {
   MSG msg;
 
-  bx_gui->init_debug_dialog();
+  bx_gui->init_debug_dialog(sdl2_enh_dbg_global_ini);
   while (GetMessage(&msg, NULL, 0, 0)) {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
@@ -472,46 +472,39 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     console.present = 1;
   }
 
-  // parse sdl specific options
+  // parse sdl2 specific options
+  Bit8u flags = BX_GUI_OPT_NOKEYREPEAT | BX_GUI_OPT_HIDE_IPS  | BX_GUI_OPT_CMDMODE
+                | BX_GUI_OPT_NO_GUI_CONSOLE;
   if (argc > 1) {
     for (i = 1; i < argc; i++) {
-      if (!strcmp(argv[i], "fullscreen")) {
-        sdl_fullscreen_toggle = 1;
-        switch_to_fullscreen();
-      } else if (!strcmp(argv[i], "nokeyrepeat")) {
-        BX_INFO(("disabled host keyboard repeat"));
-        sdl_nokeyrepeat = 1;
-      } else if (!strcmp(argv[i], "gui_debug")) {
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
-        SIM->set_debug_gui(1);
-#ifdef WIN32
-        if (gui_ci) {
-          // on Windows the debugger gui must run in a separate thread
-          DWORD threadID;
-          CreateThread(NULL, 0, DebugGuiThread, NULL, 0, &threadID);
+      if (!parse_common_gui_options(argv[i], flags)) {
+        if (!strcmp(argv[i], "fullscreen")) {
+          sdl_fullscreen_toggle = 1;
+          switch_to_fullscreen();
         } else {
-          BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
+          BX_PANIC(("Unknown sdl2 option '%s'", argv[i]));
         }
-#else
-        init_debug_dialog();
-#endif
-#else
-        SIM->message_box("ERROR", "Bochs debugger not available - ignoring 'gui_debug' option");
-#endif
-#if BX_SHOW_IPS
-      } else if (!strcmp(argv[i], "hideIPS")) {
-        BX_INFO(("hide IPS display in status bar"));
-        sdl_hide_ips = 1;
-#endif
-      } else if (!strcmp(argv[i], "cmdmode")) {
-        command_mode.present = 1;
-      } else if (!strcmp(argv[i], "no_gui_console")) {
-        console.present = 0;
-      } else {
-        BX_PANIC(("Unknown sdl2 option '%s'", argv[i]));
       }
     }
   }
+
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+  if (gui_opts.enh_dbg_enabled) {
+    SIM->set_debug_gui(1);
+#ifdef WIN32
+    if (gui_ci) {
+      sdl2_enh_dbg_global_ini = gui_opts.enh_dbg_global_ini;
+      // on Windows the debugger gui must run in a separate thread
+      DWORD threadID;
+      CreateThread(NULL, 0, DebugGuiThread, NULL, 0, &threadID);
+    } else {
+      BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
+    }
+#else
+    init_debug_dialog(gui_opts.enh_dbg_global_ini);
+#endif
+  }
+#endif
 
   new_gfx_api = 1;
   new_text_api = 1;
@@ -520,6 +513,10 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #endif
   if (gui_ci) {
     dialog_caps = BX_GUI_DLG_ALL;
+#if BX_USB_DEBUGGER
+  } else {
+    dialog_caps |= BX_GUI_DLG_USB;
+#endif
   }
   sdl_init_done = 1;
 }
@@ -636,8 +633,7 @@ void bx_sdl2_gui_c::handle_events(void)
       case SDL_WINDOWEVENT:
         if (sdl_event.window.event == SDL_WINDOWEVENT_EXPOSED) {
           SDL_UpdateWindowSurface(window);
-        }
-        if (sdl_event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
+        } else if (sdl_event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
           DEV_kbd_release_keys();
         }
         break;
@@ -849,7 +845,7 @@ void bx_sdl2_gui_c::handle_events(void)
           break;
         }
 
-        if (sdl_nokeyrepeat && sdl_event.key.repeat) {
+        if (gui_opts.nokeyrepeat && sdl_event.key.repeat) {
           break;
         }
         // convert sym->bochs code
@@ -993,7 +989,7 @@ void bx_sdl2_gui_c::dimension_update(unsigned x, unsigned y,
 
   if ((x == res_x) && (y == res_y)) return;
 
-#ifndef ANDROID
+#ifndef __ANDROID__
   // This is not needed on Android
   if (((int)x > sdl_maxres.w) || ((int)y > sdl_maxres.h)) {
     BX_PANIC(("dimension_update(): resolution of out of display bounds"));
@@ -1382,7 +1378,7 @@ void bx_sdl2_gui_c::set_mouse_mode_absxy(bool mode)
 #if BX_SHOW_IPS
 void bx_sdl2_gui_c::show_ips(Bit32u ips_count)
 {
-  if (!sdl_hide_ips && !sdl_ips_update) {
+  if (!gui_opts.hide_ips && !sdl_ips_update) {
     ips_count /= 1000;
     sprintf(sdl_ips_text, "IPS: %u.%3.3uM", ips_count / 1000, ips_count % 1000);
     sdl_ips_update = 1;

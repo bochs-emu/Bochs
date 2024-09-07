@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -455,12 +455,15 @@ typedef unsigned long  Bit32u;
   ;; cmp function
   lcmpl:
   lcmpul:
-    and eax, #0x0000FFFF
-    shl ebx, #16
-    or  eax, ebx
-    shr ebx, #16
+    push eax
+    push ebx
+    and  eax, #0x0000FFFF
+    shl  ebx, #16
+    or   eax, ebx
     SEG SS
       cmp eax, dword ptr [di]
+    pop  ebx
+    pop  eax
     ret
 
   ;; sub function
@@ -519,33 +522,29 @@ typedef unsigned long  Bit32u;
 
   ;; sr function
   lsrul:
-    mov  cx,di
+    push ecx
+    mov  cx, di
     jcxz lsr_exit
-    and  eax, #0x0000FFFF
-    shl  ebx, #16
-    or   eax, ebx
   lsr_loop:
-    shr  eax, #1
+    shr  bx, #1
+    rcr  ax, #1
     loop lsr_loop
-    mov  ebx, eax
-    shr  ebx, #16
   lsr_exit:
+    pop  ecx
     ret
 
   ;; sl function
   lsll:
   lslul:
-    mov  cx,di
+    push ecx
+    mov  cx, di
     jcxz lsl_exit
-    and  eax, #0x0000FFFF
-    shl  ebx, #16
-    or   eax, ebx
   lsl_loop:
-    shl  eax, #1
+    shl  ax, #1
+    rcl  bx, #1
     loop lsl_loop
-    mov  ebx, eax
-    shr  ebx, #16
   lsl_exit:
+    pop  ecx
     ret
 
   idiv_:
@@ -10752,6 +10751,10 @@ pnpbios_exit:
   pop ebp
   retf
 
+vga_rom_error_msg:
+  .ascii "No VGABIOS ROM at C000:0000h! Legacy BIOS does not support PCI ROM!\n"
+  db 0x00
+
 rom_scan:
   ;; Scan for existence of valid expansion ROMS.
   ;;   Video ROM:   from 0xC0000..0xC7FFF in 2k increments
@@ -11208,6 +11211,19 @@ normal_post:
 #if BX_PCIBIOS
   call pcibios_init_iomem_bases
   call pcibios_init_irqs
+  ;; Hack fix: Legacy BIOS cannot initialize PCI VGA ROM
+  push ds
+  mov  ax, #0xc000
+  mov  ds, ax
+  xor  bx, bx
+  cmp  [bx], #0xaa55
+  je   vga_rom_ok
+  push #vga_rom_error_msg
+  push #BIOS_PRINTF_DEBHALT
+  call _bios_printf
+  add  sp, #4
+vga_rom_ok:
+  pop  ds
 #endif //BX_PCIBIOS
 #endif
 

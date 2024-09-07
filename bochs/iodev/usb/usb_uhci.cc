@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2023  The Bochs Project
+//                2009-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -111,7 +111,7 @@ bx_usb_uhci_c::~bx_usb_uhci_c()
   char pname[32];
 
   SIM->unregister_runtime_config_handler(rt_conf_id);
-  
+
   for (int i=0; i<USB_UHCI_PORTS; i++) {
     sprintf(pname, "port%d.device", i+1);
     SIM->get_param_enum(pname, SIM->get_param(BXPN_USB_UHCI))->set_handler(NULL);
@@ -121,11 +121,11 @@ bx_usb_uhci_c::~bx_usb_uhci_c()
     SIM->get_param_bool(pname, SIM->get_param(BXPN_USB_UHCI))->set_handler(NULL);
     remove_device(i);
   }
-  
+
   SIM->get_bochs_root()->remove("usb_uhci");
   bx_list_c *usb_rt = (bx_list_c *) SIM->get_param(BXPN_MENU_RUNTIME_USB);
   usb_rt->remove("uhci");
-  
+
   BX_DEBUG(("Exit"));
 }
 
@@ -186,6 +186,12 @@ void bx_usb_uhci_c::init(void)
   // register handler for correct device connect handling after runtime config
   BX_UHCI_THIS rt_conf_id = SIM->register_runtime_config_handler(BX_UHCI_THIS_PTR, runtime_config_handler);
   BX_UHCI_THIS device_change = 0;
+
+#if BX_USB_DEBUGGER
+  if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() == USB_DEBUG_UHCI) {
+    SIM->register_usb_debug_type(USB_DEBUG_UHCI);
+  }
+#endif
 
   BX_INFO(("USB UHCI initialized"));
 }
