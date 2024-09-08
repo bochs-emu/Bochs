@@ -2936,11 +2936,13 @@ Bit32u cmdfifo_r(cmdfifo_info *f)
 
   data = *(Bit32u*)(&v->fbi.ram[f->rdptr & v->fbi.mask]);
   f->rdptr += 4;
-  if (f->rdptr >= f->end) {
-    BX_INFO(("CMDFIFO RdPtr rollover"));
-    f->rdptr = f->base;
+  if (!f->jsr) {
+    if (f->rdptr >= f->end) {
+      BX_INFO(("CMDFIFO RdPtr rollover"));
+      f->rdptr = f->base;
+    }
+    f->depth--;
   }
-  f->depth--;
   return data;
 }
 
@@ -2960,6 +2962,24 @@ void cmdfifo_process(cmdfifo_info *f)
       code = (Bit8u)((command >> 3) & 0x07);
       switch (code) {
         case 0: // NOP
+          break;
+        case 1: // JSR
+          if (f->jsr) {
+            BX_ERROR(("cmdfifo_process(): JSR: already inside of subroutine"));
+          } else {
+            f->jsr = true;
+            f->retAddr = f->rdptr;
+            f->rdptr = (command >> 4) & 0xfffffc;
+          }
+          break;
+        case 2: // RET
+          if (!f->jsr) {
+            BX_ERROR(("cmdfifo_process(): RET: not inside of subroutine"));
+          } else {
+            f->rdptr = f->retAddr;
+            f->retAddr = 0;
+            f->jsr = false;
+          }
           break;
         case 3: // JMP
           f->rdptr = (command >> 4) & 0xfffffc;
@@ -3209,7 +3229,7 @@ void cmdfifo_process(cmdfifo_info *f)
       BX_ERROR(("CMDFIFO: unsupported packet type %d", type));
   }
   f->depth_needed = cmdfifo_calc_depth_needed(f);
-  if (f->depth < f->depth_needed) {
+  if (!f->jsr && f->depth < f->depth_needed) {
     f->cmd_ready = 0;
   }
 }
