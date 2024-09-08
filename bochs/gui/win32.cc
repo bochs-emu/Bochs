@@ -1895,8 +1895,12 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
     }
   }
 
-  bitmap_info->bmiHeader.biBitCount = bpp;
   if (bpp != current_bpp) {
+    if (bpp == 15) {
+      bitmap_info->bmiHeader.biBitCount = 16;
+    } else {
+      bitmap_info->bmiHeader.biBitCount = bpp;
+    }
     if (bpp == 16) {
       bitmap_info->bmiHeader.biCompression = BI_BITFIELDS;
       static RGBQUAD red_mask   = {0x00, 0xF8, 0x00, 0x00};
@@ -1915,9 +1919,6 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
         bitmap_info->bmiColors[2] = bitmap_info->bmiColors[258];
       }
       bitmap_info->bmiHeader.biCompression = BI_RGB;
-      if (bpp == 15) {
-        bitmap_info->bmiHeader.biBitCount = 16;
-      }
     }
   }
   current_bpp = guest_bpp = bpp;
