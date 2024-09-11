@@ -2471,7 +2471,6 @@ Bit32u lfb_w(Bit32u offset, Bit32u data, Bit32u mem_mask)
 {
   Bit16u *dest, *depth;
   Bit32u destmax, depthmax;
-  Bit32u forcefront=0;
 
   int sr[2], sg[2], sb[2], sa[2], sw[2];
   int x, y, scry, mask;
@@ -2679,7 +2678,7 @@ Bit32u lfb_w(Bit32u offset, Bit32u data, Bit32u mem_mask)
     mask &= ~(0xf0 + LFB_DEPTH_PRESENT_MSW);
 
   /* select the target buffer */
-  destbuf = (v->type >= VOODOO_BANSHEE) ? (!forcefront) : LFBMODE_WRITE_BUFFER_SELECT(v->reg[lfbMode].u);
+  destbuf = (v->type >= VOODOO_BANSHEE) ? 1 : LFBMODE_WRITE_BUFFER_SELECT(v->reg[lfbMode].u);
   switch (destbuf)
   {
     case 0:     /* front buffer */
@@ -2691,6 +2690,8 @@ Bit32u lfb_w(Bit32u offset, Bit32u data, Bit32u mem_mask)
     case 1:     /* back buffer */
       dest = (Bit16u *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.backbuf]);
       destmax = (v->fbi.mask + 1 - v->fbi.rgboffs[v->fbi.backbuf]) / 2;
+      if (v->fbi.rgboffs[v->fbi.frontbuf] == v->fbi.rgboffs[v->fbi.backbuf])
+        v->fbi.video_changed = 1;
       break;
 
     default:    /* reserved */
