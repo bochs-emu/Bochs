@@ -206,7 +206,7 @@
 // PCI 0x40-0xff: device dependent fields
 
 // default PnP memory and memory-mapped I/O sizes
-#define CIRRUS_PNPMEM_SIZE          CIRRUS_VIDEO_MEMORY_BYTES
+#define CIRRUS_PNPMEM_SIZE          (16 << 20)
 #define CIRRUS_PNPMMIO_SIZE         0x1000
 
 static bx_svga_cirrus_c *theSvga = NULL;
@@ -647,6 +647,17 @@ bool bx_svga_cirrus_c::cirrus_mem_write_handler(bx_phy_address addr, unsigned le
                                          void *data, void *param)
 {
   Bit8u *data_ptr;
+  if ((addr & ~(CIRRUS_PNPMEM_SIZE - 1)) == BX_CIRRUS_THIS pci_bar[0].addr) {
+    Bit8u swap = (Bit8u)(addr >> 22);
+    if (swap == 1) {
+      Bit32u val32 = bx_bswap16((*(Bit32u*)data) & 0xffff);
+      val32 |= (bx_bswap16((*(Bit32u*)data) >> 16) << 16);
+      *((Bit32u*)data) = val32;
+    } else if (swap == 2) {
+      Bit32u val32 = bx_bswap32(*(Bit32u*)data);
+      *((Bit32u*)data) = val32;
+    }
+  }
 #ifdef BX_LITTLE_ENDIAN
   data_ptr = (Bit8u *) data;
 #else // BX_BIG_ENDIAN
@@ -796,9 +807,8 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
     if ((BX_CIRRUS_THIS sequencer.reg[0x17] & 0x44) == 0x04) {
       svga_mmio_blt_write(offset & 0xff, value);
     }
-  }
-  else {
-    BX_DEBUG(("mem_write 0x%08x, value 0x%02x", (Bit32u)addr, value));
+  } else {
+    BX_DEBUG(("mem_write() to address 0x%08x ignored (value 0x%02x)", (Bit32u)addr, value));
   }
 }
 
