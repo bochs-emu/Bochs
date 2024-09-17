@@ -628,15 +628,13 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
     else {
       return 0xff;
     }
-  }
-  else if (addr >= 0xB8000 && addr <= 0xB8100) {
+  } else if (addr >= 0xB8000 && addr <= 0xB8100) {
     // memory-mapped I/O.
     Bit32u offset = (Bit32u) (addr - 0xb8000);
     if ((BX_CIRRUS_THIS sequencer.reg[0x17] & 0x44) == 0x04)
       return svga_mmio_blt_read(offset);
-  }
-  else {
-    BX_DEBUG(("mem_read 0x%08x", (Bit32u)addr));
+  } else {
+    BX_DEBUG(("mem_read from address 0x%08x ignored", (Bit32u)addr));
   }
 
   return 0xff;
@@ -1225,25 +1223,40 @@ void bx_svga_cirrus_c::update(void)
       BX_CIRRUS_THIS s.vga_mem_updated = 0x0f;
       BX_CIRRUS_THIS svga_needs_update_mode = 0;
     }
-    BX_CIRRUS_THIS bx_vgacore_c::update();
-    return;
+    if ((BX_CIRRUS_THIS s.graphics_ctrl.shift_reg != 0) ||
+        (BX_CIRRUS_THIS hw_cursor.size == 0)) {
+      BX_CIRRUS_THIS bx_vgacore_c::update();
+      return;
+    } else {
+      BX_CIRRUS_THIS svga_dispbpp = 4;
+      BX_CIRRUS_THIS svga_needs_update_tile = 1;
+    }
   } else {
     if (BX_CIRRUS_THIS svga_needs_update_mode) {
       svga_modeupdate();
     }
   }
 
-  width  = BX_CIRRUS_THIS svga_xres;
-  height = BX_CIRRUS_THIS svga_yres;
-  pitch = BX_CIRRUS_THIS svga_pitch;
-
-  if (BX_CIRRUS_THIS svga_needs_update_mode) {
+  if (BX_CIRRUS_THIS svga_dispbpp != 4) {
     width  = BX_CIRRUS_THIS svga_xres;
     height = BX_CIRRUS_THIS svga_yres;
-    bx_gui->dimension_update(width, height, 0, 0, BX_CIRRUS_THIS svga_dispbpp);
-    BX_CIRRUS_THIS s.last_bpp = BX_CIRRUS_THIS svga_dispbpp;
-    BX_CIRRUS_THIS svga_needs_update_mode = 0;
-    BX_CIRRUS_THIS svga_needs_update_dispentire = 1;
+    pitch = BX_CIRRUS_THIS svga_pitch;
+    if (BX_CIRRUS_THIS svga_needs_update_mode) {
+      bx_gui->dimension_update(width, height, 0, 0, BX_CIRRUS_THIS svga_dispbpp);
+      BX_CIRRUS_THIS s.last_bpp = BX_CIRRUS_THIS svga_dispbpp;
+      BX_CIRRUS_THIS svga_needs_update_mode = 0;
+      BX_CIRRUS_THIS svga_needs_update_dispentire = 1;
+    }
+  } else {
+    BX_CIRRUS_THIS determine_screen_dimensions(&height, &width);
+    pitch = BX_CIRRUS_THIS s.line_offset;
+    if ((width != BX_CIRRUS_THIS s.last_xres) || (height != BX_CIRRUS_THIS s.last_yres) ||
+        (BX_CIRRUS_THIS s.last_bpp > 8)) {
+      bx_gui->dimension_update(width, height);
+      BX_CIRRUS_THIS s.last_xres = width;
+      BX_CIRRUS_THIS s.last_yres = height;
+      BX_CIRRUS_THIS s.last_bpp = 8;
+    }
   }
 
   if (BX_CIRRUS_THIS svga_needs_update_dispentire) {
@@ -1257,10 +1270,10 @@ void bx_svga_cirrus_c::update(void)
   BX_CIRRUS_THIS svga_needs_update_tile = 0;
 
   unsigned xc, yc, xti, yti;
-  unsigned r, c, w, h;
+  unsigned r, c, w, h, x, y;
   int i;
   Bit8u red, green, blue;
-  Bit32u colour;
+  Bit32u colour, row_addr;
   Bit8u * vid_ptr, * vid_ptr2;
   Bit8u * tile_ptr, * tile_ptr2;
   bx_svga_tileinfo_t info;
@@ -1271,8 +1284,16 @@ void bx_svga_cirrus_c::update(void)
       tile_ptr = bx_gui->get_snapshot_buffer();
       if (tile_ptr != NULL) {
         for (yc = 0; yc < height; yc++) {
-          memcpy(tile_ptr, vid_ptr, info.pitch);
-          vid_ptr += pitch;
+          if (BX_CIRRUS_THIS svga_dispbpp != 4) {
+            memcpy(tile_ptr, vid_ptr, info.pitch);
+            vid_ptr += pitch;
+          } else {
+            tile_ptr2 = tile_ptr;
+            row_addr = BX_CIRRUS_THIS s.CRTC.start_addr + (yc * pitch);
+            for (xc = 0; xc < width; xc++) {
+              *(tile_ptr2++) = BX_CIRRUS_THIS get_vga_pixel(xc, yc, row_addr, 0xffff, 0, BX_CIRRUS_THIS s.memory);
+            }
+          }
           tile_ptr += info.pitch;
         }
       }
@@ -1326,7 +1347,40 @@ void bx_svga_cirrus_c::update(void)
     else {
       switch (BX_CIRRUS_THIS svga_dispbpp) {
         case 4:
-          BX_ERROR(("cannot draw 4bpp SVGA"));
+          for (yc=0, yti=0; yc<height; yc+=Y_TILESIZE, yti++) {
+            for (xc=0, xti=0; xc<width; xc+=X_TILESIZE, xti++) {
+              if (GET_TILE_UPDATED (xti, yti)) {
+                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+                for (r=0; r<Y_TILESIZE; r++) {
+                  tile_ptr2 = tile_ptr;
+                  y = yc + r;
+                  if (BX_CIRRUS_THIS s.y_doublescan) y >>= 1;
+                  row_addr = BX_CIRRUS_THIS s.CRTC.start_addr + (y * pitch);
+                  for (c=0; c<X_TILESIZE; c++) {
+                    x = xc + c;
+                    colour = BX_CIRRUS_THIS get_vga_pixel(x, y, row_addr, 0xffff, 0, BX_CIRRUS_THIS s.memory);
+                    colour = MAKE_COLOUR(
+                      BX_CIRRUS_THIS s.pel.data[colour].red, 6, info.red_shift, info.red_mask,
+                      BX_CIRRUS_THIS s.pel.data[colour].green, 6, info.green_shift, info.green_mask,
+                      BX_CIRRUS_THIS s.pel.data[colour].blue, 6, info.blue_shift, info.blue_mask);
+                    if (info.is_little_endian) {
+                      for (i=0; i<info.bpp; i+=8) {
+                        *(tile_ptr2++) = colour >> i;
+                      }
+                    } else {
+                      for (i=info.bpp-8; i>-8; i-=8) {
+                        *(tile_ptr2++) = colour >> i;
+                      }
+                    }
+                  }
+                  tile_ptr += info.pitch;
+                }
+                draw_hardware_cursor(xc, yc, &info);
+                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+                SET_TILE_UPDATED(BX_CIRRUS_THIS, xti, yti, 0);
+              }
+            }
+          }
           break;
         case 8:
           for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
