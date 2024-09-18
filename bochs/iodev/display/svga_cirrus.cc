@@ -1300,6 +1300,28 @@ void bx_svga_cirrus_c::update(void)
     } else if (info.is_indexed) {
       switch (BX_CIRRUS_THIS svga_dispbpp) {
         case 4:
+          for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
+            for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
+              if (GET_TILE_UPDATED (xti, yti)) {
+                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+                for (r=0; r<h; r++) {
+                  y = yc + r;
+                  if (BX_CIRRUS_THIS s.y_doublescan) y >>= 1;
+                  row_addr = BX_CIRRUS_THIS s.CRTC.start_addr + (y * pitch);
+                  tile_ptr2 = tile_ptr;
+                  for (c=0; c<w; c++) {
+                    x = xc + c;
+                    *(tile_ptr2++) = BX_CIRRUS_THIS get_vga_pixel(x, y, row_addr, 0xffff, 0, BX_CIRRUS_THIS s.memory);
+                  }
+                  tile_ptr += info.pitch;
+                }
+                draw_hardware_cursor(xc, yc, &info);
+                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+                SET_TILE_UPDATED(BX_CIRRUS_THIS, xti, yti, 0);
+              }
+            }
+          }
+          break;
         case 15:
         case 16:
         case 24:
