@@ -236,7 +236,7 @@ protected:
     bool  *vga_tile_updated;
     Bit8u *memory;
     Bit32u memsize;
-    Bit32u memsize_mask;
+    Bit32u vgamem_mask;
     bool  text_buffer_update;
     Bit8u *text_buffer; // active text memory in legacy format
     Bit8u *text_snapshot; // current text snapshot

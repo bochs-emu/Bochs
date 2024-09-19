@@ -1102,6 +1102,7 @@ void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_ti
     Bit8u * plane0_ptr, *plane0_ptr2;
     Bit8u * plane1_ptr, *plane1_ptr2;
     unsigned long fgcol, bgcol;
+    Bit32u hwc_offset;
     Bit64u plane0, plane1;
 
     cx0 = hwcx > xc ? hwcx : xc;
@@ -1112,7 +1113,12 @@ void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_ti
     if (info->bpp == 15) info->bpp = 16;
     tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h) +
                info->pitch * (cy0 - yc) + (info->bpp / 8) * (cx0 - xc);
-    plane0_ptr = BX_CIRRUS_THIS s.memory + BX_CIRRUS_THIS s.memsize - 16384;
+    if (BX_CIRRUS_THIS svga_dispbpp == 4) {
+      hwc_offset = BX_CIRRUS_THIS s.vgamem_mask - 16383; // VGA
+    } else {
+      hwc_offset = BX_CIRRUS_THIS memsize_mask - 16383; // Cirrus
+    }
+    plane0_ptr = BX_CIRRUS_THIS s.memory + hwc_offset;
 
     switch (size) {
       case 32:
@@ -1145,7 +1151,7 @@ void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_ti
     } else {
       // FIXME: this is a hack that works in Windows guests
       // TODO: compare hidden DAC entries with DAC entries to find nearest match
-      fgcol = 0xff;
+      fgcol = (BX_CIRRUS_THIS svga_dispbpp == 4) ? 0x3f : 0xff;
       bgcol = 0x00;
     }
 
@@ -1821,12 +1827,12 @@ void bx_svga_cirrus_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u val
 
   if (update_pitch) {
     if ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x02) != 0) {
-      BX_CIRRUS_THIS s.memsize_mask = 0xfffff;
+      BX_CIRRUS_THIS s.vgamem_mask = 0xfffff;
       BX_CIRRUS_THIS s.ext_start_addr = ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x01) << 16) |
                                         ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x04) << 15);
       BX_CIRRUS_THIS s.ext_offset = BX_CIRRUS_THIS bank_base[0];
     } else {
-      BX_CIRRUS_THIS s.memsize_mask = 0x3ffff;
+      BX_CIRRUS_THIS s.vgamem_mask = 0x3ffff;
       BX_CIRRUS_THIS s.ext_start_addr = 0;
       BX_CIRRUS_THIS s.ext_offset = 0;
     }
