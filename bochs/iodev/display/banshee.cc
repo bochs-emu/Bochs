@@ -947,7 +947,7 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
       *((Bit8u*)data + 2) = (Bit8u)(value >> 16);
 #else
       for (unsigned i = 0; i < 3; i++) {
-        *((Bit8u*)data + i) = (Bit8u)(value >> ((2 - i) << 8));
+        *((Bit8u*)data + i) = (Bit8u)(value >> ((2 - i) << 3));
       }
 #endif
       break;
