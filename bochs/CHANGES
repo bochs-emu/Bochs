@@ -25,8 +25,10 @@ Detailed change log :
   - added bitmap change support for the wxWidgets toolbar
 
 - I/O Devices
-  - VGA
-    - Cirrus: Fixes to make original VGABIOS work correctly with WinXP
+  - SVGA Cirrus
+    - Added support for graphics controller mode extensions in VGA mode
+    - Added support for hardware cursor in VGA mode
+    - Fixes to make original VGABIOS work correctly with WinXP
   - USB
     - Now includes the USB Debugger support for the xHCI and UHCI controllers
   - Sound
