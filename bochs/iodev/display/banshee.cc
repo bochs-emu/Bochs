@@ -1985,7 +1985,8 @@ void bx_banshee_c::blt_screen_to_screen()
   w = BLT.dst_w;
   h = BLT.dst_h;
   BX_DEBUG(("Screen to screen blt: %d x %d  ROP0 %02X", w, h, BLT.rop[0]));
-  if ((BLT.src_fmt != 0) && (BLT.dst_fmt != BLT.src_fmt)) {
+  if ((BLT.src_fmt != 0) && (BLT.dst_fmt != BLT.src_fmt) &&
+      !(BLT.src_fmt == 3 && BLT.dst_fmt == 5)) {
     BX_ERROR(("Pixel format conversion not supported yet"));
   }
   if (!blt_apply_clipwindow(&sx, &sy, &dx, &dy, &w, &h)) {
@@ -2054,6 +2055,27 @@ void bx_banshee_c::blt_screen_to_screen()
         }
         BLT.rop_fn[rop](dst_ptr1 + bkw_adj, src_ptr1 + bkw_adj, dpitch, spitch, abs(dpxsize), 1);
         src_ptr1 += dpxsize;
+        dst_ptr1 += dpxsize;
+      } while (--ncols);
+      src_ptr += spitch;
+      dst_ptr += dpitch;
+    } while (--nrows);
+  } else if (BLT.src_fmt == 3 && BLT.dst_fmt == 5) {
+    int spxsize = 2;
+    src_ptr += (sy * abs(spitch) + sx * spxsize);
+    nrows = h;
+    do {
+      src_ptr1 = src_ptr;
+      dst_ptr1 = dst_ptr;
+      ncols = w;
+      do {
+#ifdef BX_LITTLE_ENDIAN
+        BLT.rop_fn[0](dst_ptr1, (Bit8u*)&v->fbi.pen[*(Bit16u*)src_ptr1], dpitch, spitch, abs(dpxsize), 1);
+#else
+        Bit32u color32 = bx_bswap32(v->fbi.pen[bx_bswap16(*(Bit16u*)src_ptr1)]);
+        BLT.rop_fn[0](dst_ptr1, (Bit8u*)&color32, dpitch, spitch, abs(dpxsize), 1);
+#endif
+        src_ptr1 += spxsize;
         dst_ptr1 += dpxsize;
       } while (--ncols);
       src_ptr += spitch;
