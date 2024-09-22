@@ -2653,6 +2653,16 @@ public: // for now...
 #endif
   /* CET instructions */
 
+#if BX_SUPPORT_KEYLOCKER
+  BX_SMF void AESENC128KL_VdqMdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AESENC256KL_VdqMdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AESDEC128KL_VdqMdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AESDEC256KL_VdqMdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ENCODEKEY128_GdEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ENCODEKEY256_GdEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LOADIWKEY_VdqWdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+
   BX_SMF void MOVDIR64B(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
 #if BX_SUPPORT_AVX
@@ -4816,6 +4826,10 @@ public: // for now...
   BX_SMF Bit32u  code_breakpoint_match(bx_address laddr);
   BX_SMF void    hwbreakpoint_match(bx_address laddr, unsigned len, unsigned rw);
   BX_SMF Bit32u  hwdebug_compare(bx_address laddr, unsigned len, unsigned opa, unsigned opb);
+#endif
+
+#if BX_SUPPORT_KEYLOCKER
+  BX_SMF bool read_Handle(bxInstruction_c *i, bx_address laddr, BxPackedYmmRegister *handle, unsigned key_type, unsigned badkey);
 #endif
 
   BX_SMF void init_FetchDecodeTables(void);
