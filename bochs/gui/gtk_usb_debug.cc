@@ -26,10 +26,9 @@
 #if BX_USB_DEBUGGER
 
 #include "usb_debug.h"
-// hack for xHCI
+// hacks for iodev / USB internals
 #include "iodev.h"
 #include "iodev/usb/usb_common.h"
-#include "iodev/usb/usb_xhci.h"
 
 #include <gtk/gtk.h>
 #include <glib.h>
@@ -255,6 +254,94 @@ void usbdlg_create_apply_button(GtkWidget *vbox)
   gtk_box_pack_start(GTK_BOX(apply_hbox), apply_button, FALSE, FALSE, 2);
 }
 
+int tree_items = 0;
+
+void hc_uhci_do_item(GtkWidget *treeview, Bit32u FrameAddr, Bit32u FrameNum)
+{
+  struct USB_UHCI_QUEUE_STACK queue_stack;
+  Bit32u item, queue_addr = 0;
+  struct QUEUE queue;
+  struct TD td;
+  char str[COMMON_STR_SIZE];
+  Bit32u state;
+  GtkTreeViewColumn *treecol;
+  GtkCellRenderer *renderer;
+  GtkTreeStore *treestore;
+
+  // get the frame pointer
+  DEV_MEM_READ_PHYSICAL(FrameAddr, sizeof(Bit32u), (Bit8u *) &item);
+  sprintf(str, "Frame Pointer(%i): 0x%08X", FrameNum, item);
+
+  treecol = gtk_tree_view_column_new();
+  gtk_tree_view_column_set_title(treecol, str);
+  gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), treecol);
+  renderer = gtk_cell_renderer_text_new();
+  gtk_tree_view_column_pack_start(treecol, renderer, TRUE);
+  gtk_tree_view_column_add_attribute(treecol, renderer, "text", 0);   // pull display text from treestore col 0
+  gtk_widget_set_can_focus(treeview, FALSE);
+  treestore = gtk_tree_store_new(1, G_TYPE_STRING);
+  gtk_tree_view_set_model(GTK_TREE_VIEW(treeview), GTK_TREE_MODEL(treestore));
+
+  queue_stack.queue_cnt = 0;
+
+  // A catch to make sure we don't do too many
+  while (tree_items < 50) {
+    if (!USB_UHCI_IS_LINK_VALID(item))  // the the T bit is set, we are done
+      break;
+
+    // is it a queue?
+    if (USB_UHCI_IS_LINK_QUEUE(item)) {
+      // add it to our current list of queues
+      if (uhci_add_queue(&queue_stack, item & ~0xF)) {
+        // if this queue has been added before, stop.
+        break;
+      }
+
+      // read in the queue
+      DEV_MEM_READ_PHYSICAL(item & ~0xF, sizeof(struct QUEUE), (Bit8u *) &queue);
+      sprintf(str, "0x%08X: Queue Head: (0x%08X 0x%08X)", item & ~0xF, queue.horz, queue.vert);
+//      Next = TreeViewInsert(TreeView, Next, TVI_LAST, str, (LPARAM) ((item & ~0xF) | 1), 0);
+
+      // if the vert pointer is valid, there are td's in it to process
+      //  else only the head pointer may be valid
+      if (!USB_UHCI_IS_LINK_VALID(queue.vert)) {
+        // no vertical elements to process
+        // (clear queue_addr to indicate we are not processing
+        //  elements of the vertical part of a queue)
+        queue_addr = 0;
+        item = queue.horz;
+      } else {
+        // there are vertical elements to process
+        // (save the address of the horz pointer in queue_addr
+        //  so that we may update the queue's vertical pointer
+        //  member with the successfully processed TD's link pointer)
+        queue_addr = item;
+        item = queue.vert;
+      }
+      continue;
+    }
+
+    // we processed another td within this queue line
+    state = 0; // clear the state
+    DEV_MEM_READ_PHYSICAL(item & ~0xF, sizeof(struct TD), (Bit8u *) &td);
+    const bool depthbreadth = (td.dword0 & 0x0004) ? true : false;     // 1 = depth first, 0 = breadth first
+    sprintf(str, "0x%08X: TD: (0x%08X)", item & ~0xF, td.dword0);
+//    if ((item & ~0xF) == (Bit32u) g_params.wParam)
+//      state |= TVIS_BOLD;
+//    hCur = TreeViewInsert(TreeView, Next, TVI_LAST, str, (LPARAM) ((item & ~0xF) | 0), state);
+//    if ((item & ~0xF) == (Bit32u) g_params.wParam)
+//      TreeView_Select(TreeView, hCur, TVGN_CARET);
+    item = td.dword0;
+    if (queue_addr != 0) {
+      // if breadth first or last in the element list, move on to next queue item
+      if (!depthbreadth || !USB_UHCI_IS_LINK_VALID(item)) {
+        item = queue.horz;
+        queue_addr = 0;
+      }
+    }
+  }
+}
+
 // UHCI main dialog
 
 int uhci_debug_dialog(int type, int param1)
@@ -438,6 +525,7 @@ int uhci_debug_dialog(int type, int param1)
     case USB_DEBUG_FRAME:
       gtk_label_set_text(GTK_LABEL(FNlabel), "SOF Frame Address");
       if (frame_addr != 0x00000000) {
+        hc_uhci_do_item(treeview, frame_addr, frame_num);
         gtk_widget_set_sensitive(button[7], 1);
         valid = 1;
       }

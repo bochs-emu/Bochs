@@ -322,8 +322,6 @@ INT_PTR CALLBACK hc_uhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
   return 0;
 }
 
-#include "iodev/usb/uhci_core.h"
-
 bx_list_c *UHCI_state = NULL;
 
 // returns -1 if error, else returns ID to control to set the focus to
@@ -486,25 +484,6 @@ int hc_uhci_save(HWND hwnd)
   EnableWindow(GetDlgItem(hwnd, ID_APPLY), 0);
 
   return 0;
-}
-
-static bool uhci_add_queue(struct USB_UHCI_QUEUE_STACK *stack, const Bit32u addr)
-{
-  // check to see if this queue has been processed before
-  for (int i=0; i<stack->queue_cnt; i++) {
-    if (stack->queue_stack[i] == addr)
-      return TRUE;
-  }
-
-  // if the stack is full, we return TRUE anyway
-  if (stack->queue_cnt == USB_UHCI_QUEUE_STACK_SIZE)
-    return TRUE;
-
-  // add the queue's address
-  stack->queue_stack[stack->queue_cnt] = addr;
-  stack->queue_cnt++;
-
-  return FALSE;
 }
 
 void hc_uhci_do_item(Bit32u FrameAddr, Bit32u FrameNum)

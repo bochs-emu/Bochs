@@ -137,6 +137,25 @@ bx_param_c *host_param = NULL;
 Bit32u pci_bar_address;
 bool u_changed[UHCI_REG_COUNT];
 
+bool uhci_add_queue(struct USB_UHCI_QUEUE_STACK *stack, const Bit32u addr)
+{
+  // check to see if this queue has been processed before
+  for (int i=0; i<stack->queue_cnt; i++) {
+    if (stack->queue_stack[i] == addr)
+      return true;
+  }
+
+  // if the stack is full, we return TRUE anyway
+  if (stack->queue_cnt == USB_UHCI_QUEUE_STACK_SIZE)
+    return true;
+
+  // add the queue's address
+  stack->queue_stack[stack->queue_cnt] = addr;
+  stack->queue_cnt++;
+
+  return false;
+}
+
 void usb_dbg_register_type(int type)
 {
   if (type != USB_DEBUG_NONE) {
