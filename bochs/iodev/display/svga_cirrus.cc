@@ -735,14 +735,31 @@ bool bx_svga_cirrus_c::cirrus_mem_write_handler(bx_phy_address addr, unsigned le
 #else // BX_BIG_ENDIAN
   data_ptr = (Bit8u *) data + (len - 1);
 #endif
-  for (unsigned i = 0; i < len; i++) {
-    BX_CIRRUS_THIS mem_write(addr, *data_ptr);
-    addr++;
+  if (BX_CIRRUS_THIS bitblt.memsrc_needed > 0) {
+    // cpu-to-video BLT
+    for (unsigned i = 0; i < len; i++) {
+      if (BX_CIRRUS_THIS bitblt.memsrc_needed > 0) {
+        *(BX_CIRRUS_THIS bitblt.memsrc_ptr)++ = *data_ptr;
+        if (BX_CIRRUS_THIS bitblt.memsrc_ptr >= BX_CIRRUS_THIS bitblt.memsrc_endptr) {
+          svga_asyncbitblt_next();
+        }
+      }
 #ifdef BX_LITTLE_ENDIAN
-    data_ptr++;
+      data_ptr++;
 #else // BX_BIG_ENDIAN
-    data_ptr--;
+      data_ptr--;
 #endif
+    }
+  } else {
+    for (unsigned i = 0; i < len; i++) {
+      BX_CIRRUS_THIS mem_write(addr, *data_ptr);
+      addr++;
+#ifdef BX_LITTLE_ENDIAN
+      data_ptr++;
+#else // BX_BIG_ENDIAN
+      data_ptr--;
+#endif
+    }
   }
   return 1;
 }
@@ -767,15 +784,6 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
       if ((offset >= (BX_CIRRUS_THIS s.memsize - 256)) &&
           ((BX_CIRRUS_THIS sequencer.reg[0x17] & 0x44) == 0x44)) {
         svga_mmio_blt_write(addr & 0xff, value);
-        return;
-      }
-
-      // cpu-to-video BLT
-      if (BX_CIRRUS_THIS bitblt.memsrc_needed > 0) {
-        *(BX_CIRRUS_THIS bitblt.memsrc_ptr)++ = (value);
-        if (BX_CIRRUS_THIS bitblt.memsrc_ptr >= BX_CIRRUS_THIS bitblt.memsrc_endptr) {
-          svga_asyncbitblt_next();
-        }
         return;
       }
 
