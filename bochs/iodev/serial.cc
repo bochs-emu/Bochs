@@ -544,8 +544,8 @@ bx_serial_c::init(void)
           if (server) {
             // server mode
             pipe = CreateNamedPipe( dev,
-                PIPE_ACCESS_DUPLEX | FILE_FLAG_FIRST_PIPE_INSTANCE,
-                PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT,
+                PIPE_ACCESS_DUPLEX,
+                PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_NOWAIT,
                 1, 4096, 4096, 0, NULL);
 
             if (pipe == INVALID_HANDLE_VALUE) {
@@ -553,7 +553,8 @@ bx_serial_c::init(void)
               continue;
             }
             BX_INFO(("com%d: waiting for client to connect to %s", i+1, dev));
-            if (!ConnectNamedPipe(pipe, NULL) && GetLastError() != ERROR_PIPE_CONNECTED)
+            if (!ConnectNamedPipe(pipe, NULL) && GetLastError() != ERROR_PIPE_CONNECTED
+                && GetLastError() != ERROR_PIPE_LISTENING)
             {
               CloseHandle(pipe);
               pipe = INVALID_HANDLE_VALUE;
@@ -1538,8 +1539,10 @@ void bx_serial_c::rx_timer(void)
     if (BX_SER_THIS s[port].tty_id >= 0) FD_SET(BX_SER_THIS s[port].tty_id, &fds);
 #endif
   }
+
+  // N.B: Throttle inputs if the OS has not yet responded to us.
   if ((BX_SER_THIS s[port].line_status.rxdata_ready == 0) ||
-      (BX_SER_THIS s[port].fifo_cntl.enable)) {
+      ((BX_SER_THIS s[port].fifo_cntl.enable) && (BX_SER_THIS s[port].rx_fifo_end < 15))) {
     switch (BX_SER_THIS s[port].io_mode) {
       case BX_SER_MODE_SOCKET_CLIENT:
       case BX_SER_MODE_SOCKET_SERVER:
