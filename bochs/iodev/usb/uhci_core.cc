@@ -1009,11 +1009,11 @@ bool bx_uhci_core_c::DoTransfer(Bit32u address, struct TD *td)
     }
   }
   if (ret >= 0) {
-    set_status(td, 0, 0, 0, 0, 0, 0, len-1);
+    set_status(td, 0, 0, 0, 0, 0, 0, 0, len-1);
   } else if (ret == USB_RET_NAK) {
-    set_status(td, 0, 0, 0, 1, 0, 0, len-1); // NAK
+    set_status(td, 1, 0, 0, 0, 1, 0, 0, len-1); // NAK
   } else {
-    set_status(td, 1, 0, 0, 0, 0, 0, 0x007); // stalled
+    set_status(td, 0, 1, 0, 0, 0, 0, 0, 0x007); // stalled
   }
   remove_async_packet(&packets, p);
   return 1;
@@ -1032,13 +1032,14 @@ int bx_uhci_core_c::broadcast_packet(USBPacket *p)
 }
 
 // If the request fails, set the stall bit ????
-void bx_uhci_core_c::set_status(struct TD *td, bool stalled, bool data_buffer_error, bool babble,
+void bx_uhci_core_c::set_status(struct TD *td, bool active, bool stalled, bool data_buffer_error, bool babble,
                              bool nak, bool crc_time_out, bool bitstuff_error, Bit16u act_len)
 {
   // clear out the bits we can modify and/or want zero
   td->dword1 &= 0xDF00F800;
 
   // now set the bits according to the passed param's
+  td->dword1 |= active            ? (1<<23) : 0; // active
   td->dword1 |= stalled           ? (1<<22) : 0; // stalled
   td->dword1 |= data_buffer_error ? (1<<21) : 0; // data buffer error
   td->dword1 |= babble            ? (1<<20) : 0; // babble
@@ -1049,7 +1050,6 @@ void bx_uhci_core_c::set_status(struct TD *td, bool stalled, bool data_buffer_er
   if (stalled || data_buffer_error || babble || crc_time_out || bitstuff_error)
     td->dword1 &= ~((1<<28) | (1<<27));  // clear the c_err field if there was an error
 }
-
 
 // pci configuration space write callback handler
 void bx_uhci_core_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
