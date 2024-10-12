@@ -88,32 +88,33 @@ struct bx_cr0_t {
 
 #if BX_CPU_LEVEL >= 5
 
-#define BX_CR4_VME_MASK        (1 << 0)
-#define BX_CR4_PVI_MASK        (1 << 1)
-#define BX_CR4_TSD_MASK        (1 << 2)
-#define BX_CR4_DE_MASK         (1 << 3)
-#define BX_CR4_PSE_MASK        (1 << 4)
-#define BX_CR4_PAE_MASK        (1 << 5)
-#define BX_CR4_MCE_MASK        (1 << 6)
-#define BX_CR4_PGE_MASK        (1 << 7)
-#define BX_CR4_PCE_MASK        (1 << 8)
-#define BX_CR4_OSFXSR_MASK     (1 << 9)
-#define BX_CR4_OSXMMEXCPT_MASK (1 << 10)
-#define BX_CR4_UMIP_MASK       (1 << 11)
-#define BX_CR4_LA57_MASK       (1 << 12)
-#define BX_CR4_VMXE_MASK       (1 << 13)
-#define BX_CR4_SMXE_MASK       (1 << 14)
-#define BX_CR4_FSGSBASE_MASK   (1 << 16)
-#define BX_CR4_PCIDE_MASK      (1 << 17)
-#define BX_CR4_OSXSAVE_MASK    (1 << 18)
-#define BX_CR4_KEYLOCKER_MASK  (1 << 19)
-#define BX_CR4_SMEP_MASK       (1 << 20)
-#define BX_CR4_SMAP_MASK       (1 << 21)
-#define BX_CR4_PKE_MASK        (1 << 22)
-#define BX_CR4_CET_MASK        (1 << 23)
-#define BX_CR4_PKS_MASK        (1 << 24)
-#define BX_CR4_UINTR_MASK      (1 << 25)
-#define BX_CR4_LASS_MASK       (1 << 27)
+#define BX_CR4_VME_MASK             (1 << 0)
+#define BX_CR4_PVI_MASK             (1 << 1)
+#define BX_CR4_TSD_MASK             (1 << 2)
+#define BX_CR4_DE_MASK              (1 << 3)
+#define BX_CR4_PSE_MASK             (1 << 4)
+#define BX_CR4_PAE_MASK             (1 << 5)
+#define BX_CR4_MCE_MASK             (1 << 6)
+#define BX_CR4_PGE_MASK             (1 << 7)
+#define BX_CR4_PCE_MASK             (1 << 8)
+#define BX_CR4_OSFXSR_MASK          (1 << 9)
+#define BX_CR4_OSXMMEXCPT_MASK      (1 << 10)
+#define BX_CR4_UMIP_MASK            (1 << 11)
+#define BX_CR4_LA57_MASK            (1 << 12)
+#define BX_CR4_VMXE_MASK            (1 << 13)
+#define BX_CR4_SMXE_MASK            (1 << 14)
+#define BX_CR4_FSGSBASE_MASK        (1 << 16)
+#define BX_CR4_PCIDE_MASK           (1 << 17)
+#define BX_CR4_OSXSAVE_MASK         (1 << 18)
+#define BX_CR4_KEYLOCKER_MASK       (1 << 19)
+#define BX_CR4_SMEP_MASK            (1 << 20)
+#define BX_CR4_SMAP_MASK            (1 << 21)
+#define BX_CR4_PKE_MASK             (1 << 22)
+#define BX_CR4_CET_MASK             (1 << 23)
+#define BX_CR4_PKS_MASK             (1 << 24)
+#define BX_CR4_UINTR_MASK           (1 << 25)
+#define BX_CR4_LASS_MASK            (1 << 27)
+#define BX_CR4_LAM_SUPERVISOR_MASK  (1 << 28)
 
 struct bx_cr4_t {
   Bit32u  val32; // 32bit value of register
@@ -148,6 +149,7 @@ struct bx_cr4_t {
   IMPLEMENT_CRREG_ACCESSORS(PKS, 24);
   IMPLEMENT_CRREG_ACCESSORS(UINTR, 25);
   IMPLEMENT_CRREG_ACCESSORS(LASS, 27);
+  IMPLEMENT_CRREG_ACCESSORS(LAM_SUPERVISOR, 28);
 
   BX_CPP_INLINE Bit32u get32() const { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
