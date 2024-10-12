@@ -120,7 +120,6 @@ OBJS = \
 	bit16.o \
 	bit32.o \
 	bmi32.o \
-	cmpccxadd32.o \
 	string.o \
 	faststring.o \
 	paging.o \
@@ -140,6 +139,7 @@ OBJS64 = \
 	bit64.o \
 	stack64.o \
 	bmi64.o \
+	cmpccxadd32.o \
 	cmpccxadd64.o \
 	vapic.o \
 	uintr.o \
