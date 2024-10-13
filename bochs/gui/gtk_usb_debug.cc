@@ -254,7 +254,35 @@ void usbdlg_create_apply_button(GtkWidget *vbox)
   gtk_box_pack_start(GTK_BOX(apply_hbox), apply_button, FALSE, FALSE, 2);
 }
 
-int tree_items = 0;
+#define MAX_TREE_ITEMS 50
+int tree_items;
+GtkTreeStore *treestore = NULL;
+GtkTreeIter titems[MAX_TREE_ITEMS];
+
+GtkTreeIter* treeview_insert(GtkWidget *treeview, GtkTreeIter *parent, char *str)
+{
+  GtkTreeViewColumn *treecol;
+  GtkCellRenderer *renderer;
+
+  if (treestore == NULL) {
+    treecol = gtk_tree_view_column_new();
+    gtk_tree_view_column_set_title(treecol, str);
+    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), treecol);
+    renderer = gtk_cell_renderer_text_new();
+    gtk_tree_view_column_pack_start(treecol, renderer, TRUE);
+    gtk_tree_view_column_add_attribute(treecol, renderer, "text", 0);   // pull display text from treestore col 0
+    gtk_widget_set_can_focus(treeview, FALSE);
+    treestore = gtk_tree_store_new(1, G_TYPE_STRING);
+    gtk_tree_view_set_model(GTK_TREE_VIEW(treeview), GTK_TREE_MODEL(treestore));
+    tree_items = 0;
+    return NULL;
+  } else {
+    gtk_tree_store_append(treestore, &titems[tree_items], parent);
+    gtk_tree_store_set(treestore, &titems[tree_items], 0, str, -1);
+    tree_items++;
+    return &titems[tree_items - 1];
+  }
+}
 
 void hc_uhci_do_item(GtkWidget *treeview, Bit32u FrameAddr, Bit32u FrameNum)
 {
@@ -263,29 +291,17 @@ void hc_uhci_do_item(GtkWidget *treeview, Bit32u FrameAddr, Bit32u FrameNum)
   struct QUEUE queue;
   struct TD td;
   char str[COMMON_STR_SIZE];
-  Bit32u state;
-  GtkTreeViewColumn *treecol;
-  GtkCellRenderer *renderer;
-  GtkTreeStore *treestore;
+  GtkTreeIter *parent = NULL;
 
   // get the frame pointer
   DEV_MEM_READ_PHYSICAL(FrameAddr, sizeof(Bit32u), (Bit8u *) &item);
   sprintf(str, "Frame Pointer(%i): 0x%08X", FrameNum, item);
-
-  treecol = gtk_tree_view_column_new();
-  gtk_tree_view_column_set_title(treecol, str);
-  gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), treecol);
-  renderer = gtk_cell_renderer_text_new();
-  gtk_tree_view_column_pack_start(treecol, renderer, TRUE);
-  gtk_tree_view_column_add_attribute(treecol, renderer, "text", 0);   // pull display text from treestore col 0
-  gtk_widget_set_can_focus(treeview, FALSE);
-  treestore = gtk_tree_store_new(1, G_TYPE_STRING);
-  gtk_tree_view_set_model(GTK_TREE_VIEW(treeview), GTK_TREE_MODEL(treestore));
+  treeview_insert(treeview, NULL, str);
 
   queue_stack.queue_cnt = 0;
 
   // A catch to make sure we don't do too many
-  while (tree_items < 50) {
+  while (tree_items < MAX_TREE_ITEMS) {
     if (!USB_UHCI_IS_LINK_VALID(item))  // the the T bit is set, we are done
       break;
 
@@ -300,7 +316,7 @@ void hc_uhci_do_item(GtkWidget *treeview, Bit32u FrameAddr, Bit32u FrameNum)
       // read in the queue
       DEV_MEM_READ_PHYSICAL(item & ~0xF, sizeof(struct QUEUE), (Bit8u *) &queue);
       sprintf(str, "0x%08X: Queue Head: (0x%08X 0x%08X)", item & ~0xF, queue.horz, queue.vert);
-//      Next = TreeViewInsert(TreeView, Next, TVI_LAST, str, (LPARAM) ((item & ~0xF) | 1), 0);
+      parent = treeview_insert(treeview, parent, str);
 
       // if the vert pointer is valid, there are td's in it to process
       //  else only the head pointer may be valid
@@ -322,15 +338,10 @@ void hc_uhci_do_item(GtkWidget *treeview, Bit32u FrameAddr, Bit32u FrameNum)
     }
 
     // we processed another td within this queue line
-    state = 0; // clear the state
     DEV_MEM_READ_PHYSICAL(item & ~0xF, sizeof(struct TD), (Bit8u *) &td);
     const bool depthbreadth = (td.dword0 & 0x0004) ? true : false;     // 1 = depth first, 0 = breadth first
     sprintf(str, "0x%08X: TD: (0x%08X)", item & ~0xF, td.dword0);
-//    if ((item & ~0xF) == (Bit32u) g_params.wParam)
-//      state |= TVIS_BOLD;
-//    hCur = TreeViewInsert(TreeView, Next, TVI_LAST, str, (LPARAM) ((item & ~0xF) | 0), state);
-//    if ((item & ~0xF) == (Bit32u) g_params.wParam)
-//      TreeView_Select(TreeView, hCur, TVGN_CARET);
+      treeview_insert(treeview, parent, str);
     item = td.dword0;
     if (queue_addr != 0) {
       // if breadth first or last in the element list, move on to next queue item
