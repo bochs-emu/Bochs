@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
 #include "specialize.h"
 #include "softfloat.h"
 
@@ -46,9 +47,6 @@ extFloat80_t extF80_sqrt(extFloat80_t a, struct softfloat_status_t *status)
     bool signA;
     int32_t expA;
     uint64_t sigA;
-    struct uint128 uiZ;
-    uint16_t uiZ64;
-    uint64_t uiZ0;
     struct exp32_sig64 normExpSig;
     int32_t expZ;
     uint32_t sig32A, recipSqrt32, sig32Z;
@@ -72,8 +70,7 @@ extFloat80_t extF80_sqrt(extFloat80_t a, struct softfloat_status_t *status)
     *------------------------------------------------------------------------*/
     if (expA == 0x7FFF) {
         if (sigA & UINT64_C(0x7FFFFFFFFFFFFFFF)) {
-            uiZ = softfloat_propagateNaNExtF80UI(uiA64, uiA0, 0, 0, status);
-            return packToExtF80(uiZ.v64, uiZ.v0);
+            return softfloat_propagateNaNExtF80UI(uiA64, uiA0, 0, 0, status);
         }
         if (! signA) return a;
         goto invalid;

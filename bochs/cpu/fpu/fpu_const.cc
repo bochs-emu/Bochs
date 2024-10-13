@@ -28,9 +28,8 @@
 
 #if BX_SUPPORT_FPU
 
-#include "softfloatx80.h"
+#include "softfloat-specialize.h"
 
-const floatx80 Const_QNaN = packFloatx80(0, floatx80_default_nan_exp, floatx80_default_nan_fraction);
 const floatx80 Const_Z    = packFloatx80(0, 0x0000, 0);
 const floatx80 Const_1    = packFloatx80(0, 0x3fff, BX_CONST64(0x8000000000000000));
 const floatx80 Const_L2T  = packFloatx80(0, 0x4000, BX_CONST64(0xd49a784bcd1b8afe));
@@ -48,7 +47,7 @@ const floatx80 Const_INF  = packFloatx80(0, 0x7fff, BX_CONST64(0x800000000000000
 BX_CPP_INLINE floatx80 FPU_round_const(const floatx80 &a, int adj)
 {
   floatx80 result = a;
-  result.fraction += adj;
+  result.signif += adj;
   return result;
 }
 

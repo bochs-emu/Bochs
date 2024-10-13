@@ -28,7 +28,7 @@
 
 #if BX_SUPPORT_EVEX
 
-extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
+extern softfloat_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
 
 #include "softfloat3e/include/softfloat.h"
 #include "simd_int.h"
@@ -46,10 +46,10 @@ extern float_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
       float32 op2 = BX_READ_XMM_REG_LO_DWORD(i->src2());                      \
       float32 op3 = BX_READ_XMM_REG_LO_DWORD(i->src3());                      \
                                                                               \
-      float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);          \
+      softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);      \
       softfloat_status_word_rc_override(status, i);                           \
       op1 = (func)(op1, op2, op3, &status);                                   \
-      check_exceptionsSSE(get_exception_flags(status));                       \
+      check_exceptionsSSE(softfloat_getExceptionFlags(&status));              \
                                                                               \
       BX_WRITE_XMM_REG_LO_DWORD(i->dst(), op1);                               \
     }                                                                         \
@@ -75,10 +75,10 @@ EVEX_FMA_SCALAR_SINGLE(VFNMSUBSS_MASK_VpsHssWssR, f32_fnmsub)
       float64 op2 = BX_READ_XMM_REG_LO_QWORD(i->src2());                      \
       float64 op3 = BX_READ_XMM_REG_LO_QWORD(i->src3());                      \
                                                                               \
-      float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);          \
+      softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);      \
       softfloat_status_word_rc_override(status, i);                           \
       op1 = (func)(op1, op2, op3, &status);                                   \
-      check_exceptionsSSE(get_exception_flags(status));                       \
+      check_exceptionsSSE(softfloat_getExceptionFlags(&status));              \
                                                                               \
       BX_WRITE_XMM_REG_LO_QWORD(i->dst(), op1);                               \
     }                                                                         \
@@ -108,10 +108,10 @@ EVEX_FMA_SCALAR_DOUBLE(VFNMSUBSD_MASK_VpdHsdWsdR, f64_fnmsub)
       float16 op2 = BX_READ_XMM_REG_LO_WORD(i->src2());                       \
       float16 op3 = BX_READ_XMM_REG_LO_WORD(i->src3());                       \
                                                                               \
-      float_status_t status = mxcsr_to_softfloat_status_word(MXCSR);          \
+      softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);      \
       softfloat_status_word_rc_override(status, i);                           \
       op1 = (func)(op1, op2, op3, &status);                                   \
-      check_exceptionsSSE(get_exception_flags(status));                       \
+      check_exceptionsSSE(softfloat_getExceptionFlags(&status));              \
                                                                               \
       BX_WRITE_XMM_REG_LO_WORD(i->dst(), op1);                                \
     }                                                                         \

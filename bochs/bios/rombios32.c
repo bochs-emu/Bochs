@@ -1742,9 +1742,11 @@ void acpi_bios_init(void)
     fadt->pm1a_evt_blk = cpu_to_le32(pm_io_base);
     fadt->pm1a_cnt_blk = cpu_to_le32(pm_io_base + 0x04);
     fadt->pm_tmr_blk = cpu_to_le32(pm_io_base + 0x08);
+    fadt->gpe0_blk = cpu_to_le32(PIIX_GPE0_BLK);
     fadt->pm1_evt_len = 4;
     fadt->pm1_cnt_len = 2;
     fadt->pm_tmr_len = 4;
+    fadt->gpe0_blk_len = PIIX_GPE0_BLK_LEN;
     fadt->plvl2_lat = cpu_to_le16(0xfff); // C2 state not supported
     fadt->plvl3_lat = cpu_to_le16(0xfff); // C3 state not supported
     /* WBINVD + PROC_C1 + PWR_BUTTON + SLP_BUTTON + FIX_RTC */

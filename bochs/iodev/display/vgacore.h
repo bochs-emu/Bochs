@@ -67,6 +67,8 @@ typedef struct {
   Bit16u vrstart;
 } bx_crtc_params_t;
 
+extern const Bit8u ccdat[16][4];
+
 #if BX_SUPPORT_PCI
 class bx_nonvga_device_c : public bx_pci_device_c {
 public:
@@ -236,7 +238,7 @@ protected:
     bool  *vga_tile_updated;
     Bit8u *memory;
     Bit32u memsize;
-    Bit32u memsize_mask;
+    Bit32u vgamem_mask;
     bool  text_buffer_update;
     Bit8u *text_buffer; // active text memory in legacy format
     Bit8u *text_snapshot; // current text snapshot

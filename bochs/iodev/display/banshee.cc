@@ -886,7 +886,7 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
 #endif
       for (unsigned i = 0; i < len; i++) {
         if (pci_conf[0x30] & 0x01) {
-          *data_ptr = pci_rom[(addr & mask) + i];
+          *data_ptr = pci_rom[addr & mask];
         } else {
           *data_ptr = 0xff;
         }
@@ -941,6 +941,16 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
     case 2:
       *((Bit16u*)data) = (Bit16u)value;
       break;
+    case 3:
+#ifdef BX_LITTLE_ENDIAN
+      *((Bit16u*)data) = (Bit16u)value;
+      *((Bit8u*)data + 2) = (Bit8u)(value >> 16);
+#else
+      for (unsigned i = 0; i < 3; i++) {
+        *((Bit8u*)data + i) = (Bit8u)(value >> ((2 - i) << 3));
+      }
+#endif
+      break;
     case 4:
       *((Bit32u*)data) = (Bit32u)value;
       break;
@@ -954,8 +964,8 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
 
 void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
 {
-  Bit32u offset = (addr & 0x1ffffff);
-  Bit64u value = 0;
+  Bit32u offset = (addr & 0x1ffffff), value;
+  Bit64u value64 = 0;
   Bit32u mask = 0xffffffff;
 
 #ifdef BX_LITTLE_ENDIAN
@@ -964,13 +974,14 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
   Bit8u *data_ptr = (Bit8u *) data + (len - 1);
 #endif
   for (unsigned i = 0; i < len; i++) {
-    value |= ((Bit64u)*data_ptr << (i * 8));
+    value64 |= ((Bit64u)*data_ptr << (i * 8));
 #ifdef BX_LITTLE_ENDIAN
     data_ptr++;
 #else // BX_BIG_ENDIAN
     data_ptr--;
 #endif
   }
+  value = (Bit32u)value64;
   if ((addr & ~0x1ffffff) == pci_bar[0].addr) {
     if (offset < 0x80000) {
       write(offset, value, len);
@@ -1008,10 +1019,10 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
         cmdfifo_w(&v->fbi.cmdfifo[0], offset, value);
       } else if (len == 8) {
         cmdfifo_w(&v->fbi.cmdfifo[0], offset, value);
-        cmdfifo_w(&v->fbi.cmdfifo[0], offset + 4, value >> 32);
+        cmdfifo_w(&v->fbi.cmdfifo[0], offset + 4, value64 >> 32);
       } else {
         BX_ERROR(("CMDFIFO #0 write with len = %d redirected to LFB", len));
-        mem_write_linear(offset, value, len);
+        mem_write_linear(offset, value64, len);
       }
     } else if (v->fbi.cmdfifo[1].enabled && (offset >= v->fbi.cmdfifo[1].base) &&
                (offset < v->fbi.cmdfifo[1].end)) {
@@ -1019,13 +1030,13 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
         cmdfifo_w(&v->fbi.cmdfifo[1], offset, value);
       } else if (len == 8) {
         cmdfifo_w(&v->fbi.cmdfifo[1], offset, value);
-        cmdfifo_w(&v->fbi.cmdfifo[1], offset + 4, value >> 32);
+        cmdfifo_w(&v->fbi.cmdfifo[1], offset + 4, value64 >> 32);
       } else  {
         BX_ERROR(("CMDFIFO #1 write with len = %d redirected to LFB", len));
-        mem_write_linear(offset, value, len);
+        mem_write_linear(offset, value64, len);
       }
     } else {
-      mem_write_linear(offset, value, len);
+      mem_write_linear(offset, value64, len);
     }
   }
 }
@@ -1974,7 +1985,8 @@ void bx_banshee_c::blt_screen_to_screen()
   w = BLT.dst_w;
   h = BLT.dst_h;
   BX_DEBUG(("Screen to screen blt: %d x %d  ROP0 %02X", w, h, BLT.rop[0]));
-  if ((BLT.src_fmt != 0) && (BLT.dst_fmt != BLT.src_fmt)) {
+  if ((BLT.src_fmt != 0) && (BLT.dst_fmt != BLT.src_fmt) &&
+      !(BLT.src_fmt == 3 && BLT.dst_fmt == 5)) {
     BX_ERROR(("Pixel format conversion not supported yet"));
   }
   if (!blt_apply_clipwindow(&sx, &sy, &dx, &dy, &w, &h)) {
@@ -2043,6 +2055,27 @@ void bx_banshee_c::blt_screen_to_screen()
         }
         BLT.rop_fn[rop](dst_ptr1 + bkw_adj, src_ptr1 + bkw_adj, dpitch, spitch, abs(dpxsize), 1);
         src_ptr1 += dpxsize;
+        dst_ptr1 += dpxsize;
+      } while (--ncols);
+      src_ptr += spitch;
+      dst_ptr += dpitch;
+    } while (--nrows);
+  } else if (BLT.src_fmt == 3 && BLT.dst_fmt == 5) {
+    int spxsize = 2;
+    src_ptr += (sy * abs(spitch) + sx * spxsize);
+    nrows = h;
+    do {
+      src_ptr1 = src_ptr;
+      dst_ptr1 = dst_ptr;
+      ncols = w;
+      do {
+#ifdef BX_LITTLE_ENDIAN
+        BLT.rop_fn[0](dst_ptr1, (Bit8u*)&v->fbi.pen[*(Bit16u*)src_ptr1], dpitch, spitch, abs(dpxsize), 1);
+#else
+        Bit32u color32 = bx_bswap32(v->fbi.pen[bx_bswap16(*(Bit16u*)src_ptr1)]);
+        BLT.rop_fn[0](dst_ptr1, (Bit8u*)&color32, dpitch, spitch, abs(dpxsize), 1);
+#endif
+        src_ptr1 += spxsize;
         dst_ptr1 += dpxsize;
       } while (--ncols);
       src_ptr += spitch;

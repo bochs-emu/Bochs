@@ -119,7 +119,8 @@ typedef enum {
   BX_TOOLBAR_SNAPSHOT,
   BX_TOOLBAR_CONFIG,
   BX_TOOLBAR_MOUSE_EN,
-  BX_TOOLBAR_USER
+  BX_TOOLBAR_USER,
+  BX_TOOLBAR_USB_DEBUG
 } bx_toolbar_buttons;
 
 // normally all action choices are available for all event types. The exclude
@@ -559,6 +560,35 @@ BOCHSAPI extern int floppy_type_n_sectors[];
 BOCHSAPI extern const char *media_status_names[];
 BOCHSAPI extern const char *bochs_bootdisk_names[];
 
+// usb_debug items
+#if BX_USB_DEBUGGER
+
+enum {
+  USB_DEBUG_NONE,
+  USB_DEBUG_UHCI,
+  USB_DEBUG_OHCI,
+  USB_DEBUG_EHCI,
+  USB_DEBUG_XHCI
+};
+
+// USB debug break_type
+#define USB_DEBUG_FRAME    1
+#define USB_DEBUG_COMMAND  2
+#define USB_DEBUG_EVENT    3
+#define USB_DEBUG_NONEXIST 4
+#define USB_DEBUG_RESET    5
+#define USB_DEBUG_ENABLE   6
+
+#define BX_USB_DEBUG_SOF_NONE      0
+#define BX_USB_DEBUG_SOF_SET       1
+#define BX_USB_DEBUG_SOF_TRIGGER   2
+
+// lParam flags
+#define USB_LPARAM_FLAG_BEFORE  0x00000001
+#define USB_LPARAM_FLAG_AFTER   0x00000002
+
+#endif
+
 ////////////////////////////////////////////////////////////////////
 // base class simulator interface, contains just virtual functions.
 // I'm not longer sure that having a base class is going to be of any
@@ -572,9 +602,6 @@ enum ci_return_t {
   CI_ERR_NO_TEXT_CONSOLE  // err: can't work because there's no text console
 };
 typedef int (*config_interface_callback_t)(void *userdata, ci_command_t command);
-#if BX_USE_WIN32USBDEBUG
-  typedef int (*usb_interface_callback_t)(int type, int wParam, int lParam);
-#endif
 typedef BxEvent* (*bxevent_handler)(void *theclass, BxEvent *event);
 typedef void (*rt_conf_handler_t)(void *this_ptr);
 typedef Bit32s (*addon_option_parser_t)(const char *context, int num_params, char *params[]);
@@ -715,9 +742,10 @@ public:
     config_interface_callback_t callback,
     void *userdata) {}
   virtual int configuration_interface(const char* name, ci_command_t command) {return -1; }
-#if BX_USE_WIN32USBDEBUG
-  virtual void register_usb_interface(usb_interface_callback_t callback, void *data) {}
-  virtual int usb_config_interface(int type, int wParam, int lParam) { return -1; }
+#if BX_USB_DEBUGGER
+  virtual void register_usb_debug_type(int type) {}
+  virtual void usb_debug_trigger(int type, int trigger, int param1, int param2) {}
+  virtual int usb_debug_interface(int type, int param1, int param2) { return -1; }
 #endif
   virtual int begin_simulation(int argc, char *argv[]) {return -1;}
   virtual int register_runtime_config_handler(void *dev, rt_conf_handler_t handler) {return 0;}

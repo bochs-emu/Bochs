@@ -39,6 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define softfloat_mul128To256M softfloat_mul128To256M
 #include "primitives.h"
+#include "primitiveTypes.h"
 
 void
  softfloat_mul128To256M(uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0, uint64_t *zPtr)

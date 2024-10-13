@@ -47,7 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 | Arithmetic.
 *----------------------------------------------------------------------------*/
 
-float16_t f16_getMant(float16_t a, softfloat_status_t *status, int sign_ctrl, int interv)
+float16 f16_getMant(float16 a, softfloat_status_t *status, int sign_ctrl, int interv)
 {
     bool signA;
     int8_t expA;

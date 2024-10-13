@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-uint64_t f16_to_ui64(float16_t a, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
+uint64_t f16_to_ui64(float16 a, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
 {
     bool sign;
     int8_t exp;

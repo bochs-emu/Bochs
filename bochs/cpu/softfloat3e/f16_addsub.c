@@ -38,10 +38,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "internals.h"
 #include "softfloat.h"
 
-extern float16_t softfloat_addMagsF16(uint16_t, uint16_t, struct softfloat_status_t *);
-extern float16_t softfloat_subMagsF16(uint16_t, uint16_t, struct softfloat_status_t *);
+extern float16 softfloat_addMagsF16(uint16_t, uint16_t, struct softfloat_status_t *);
+extern float16 softfloat_subMagsF16(uint16_t, uint16_t, struct softfloat_status_t *);
 
-float16_t f16_add(float16_t a, float16_t b, struct softfloat_status_t *status)
+float16 f16_add(float16 a, float16 b, struct softfloat_status_t *status)
 {
     if (signF16UI((uint16_t) a ^ (uint16_t) b)) {
         return softfloat_subMagsF16(a, b, status);
@@ -50,7 +50,7 @@ float16_t f16_add(float16_t a, float16_t b, struct softfloat_status_t *status)
     }
 }
 
-float16_t f16_sub(float16_t a, float16_t b, struct softfloat_status_t *status)
+float16 f16_sub(float16 a, float16 b, struct softfloat_status_t *status)
 {
     if (signF16UI((uint16_t) a ^ (uint16_t) b)) {
         return softfloat_addMagsF16(a, b, status);

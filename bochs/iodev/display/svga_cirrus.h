@@ -91,6 +91,8 @@ private:
   Bit32u svga_read(Bit32u address, unsigned io_len);
   void   svga_write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
+  BX_CIRRUS_SMF Bit8u vga_mem_read(bx_phy_address addr);
+  BX_CIRRUS_SMF void vga_mem_write(bx_phy_address addr, Bit8u value);
   BX_CIRRUS_SMF void mem_write_mode4and5_8bpp(Bit8u mode, Bit32u offset, Bit8u value);
   BX_CIRRUS_SMF void mem_write_mode4and5_16bpp(Bit8u mode, Bit32u offset, Bit8u value);
 
@@ -206,6 +208,7 @@ private:
   Bit32u bank_limit[2];
   Bit32u memsize_mask;
   Bit8u *disp_ptr;
+  Bit8u ext_latch[4];
 
   struct {
     bx_bitblt_rop_t rop_handler;

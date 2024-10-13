@@ -206,7 +206,7 @@
 // PCI 0x40-0xff: device dependent fields
 
 // default PnP memory and memory-mapped I/O sizes
-#define CIRRUS_PNPMEM_SIZE          CIRRUS_VIDEO_MEMORY_BYTES
+#define CIRRUS_PNPMEM_SIZE          (16 << 20)
 #define CIRRUS_PNPMMIO_SIZE         0x1000
 
 static bx_svga_cirrus_c *theSvga = NULL;
@@ -393,6 +393,10 @@ void bx_svga_cirrus_c::register_state(void)
   new bx_shadow_num_c(list, "bank_base1", &BX_CIRRUS_THIS bank_base[1], BASE_HEX);
   new bx_shadow_num_c(list, "bank_limit0", &BX_CIRRUS_THIS bank_limit[0], BASE_HEX);
   new bx_shadow_num_c(list, "bank_limit1", &BX_CIRRUS_THIS bank_limit[1], BASE_HEX);
+  new bx_shadow_num_c(list, "ext_latch0", &BX_CIRRUS_THIS ext_latch[0], BASE_HEX);
+  new bx_shadow_num_c(list, "ext_latch1", &BX_CIRRUS_THIS ext_latch[1], BASE_HEX);
+  new bx_shadow_num_c(list, "ext_latch2", &BX_CIRRUS_THIS ext_latch[2], BASE_HEX);
+  new bx_shadow_num_c(list, "ext_latch3", &BX_CIRRUS_THIS ext_latch[3], BASE_HEX);
   bx_list_c *cursor = new bx_list_c(list, "hw_cursor");
   new bx_shadow_num_c(cursor, "x", &BX_CIRRUS_THIS hw_cursor.x, BASE_HEX);
   new bx_shadow_num_c(cursor, "y", &BX_CIRRUS_THIS hw_cursor.y, BASE_HEX);
@@ -453,7 +457,7 @@ void bx_svga_cirrus_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
     yt1 = (BX_CIRRUS_THIS svga_yres - 1) / Y_TILESIZE;
   }
   if ((x0 + width) > svga_xres) {
-    BX_CIRRUS_THIS redraw_area(0, y0 + 1, width, height);
+    BX_CIRRUS_THIS redraw_area(0, y0 + 1, x0 + width - svga_xres, height);
   }
   for (yti=yt0; yti<=yt1; yti++) {
     for (xti=xt0; xti<=xt1; xti++) {
@@ -534,9 +538,7 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
       }
     }
   }
-#endif
 
-#if BX_SUPPORT_PCI
   if (BX_CIRRUS_THIS pci_enabled) {
     if ((addr >= BX_CIRRUS_THIS pci_bar[0].addr) &&
         (addr < (BX_CIRRUS_THIS pci_bar[0].addr + CIRRUS_PNPMEM_SIZE))) {
@@ -589,7 +591,11 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
   }
 #endif // BX_SUPPORT_PCI
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
-    return BX_CIRRUS_THIS bx_vgacore_c::mem_read(addr);
+    if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x1e) != 0) {
+      return BX_CIRRUS_THIS vga_mem_read(addr);
+    } else {
+      return BX_CIRRUS_THIS bx_vgacore_c::mem_read(addr);
+    }
   }
 
   if (addr >= 0xA0000 && addr <= 0xAFFFF)
@@ -628,18 +634,84 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
     else {
       return 0xff;
     }
-  }
-  else if (addr >= 0xB8000 && addr <= 0xB8100) {
+  } else if (addr >= 0xB8000 && addr <= 0xB8100) {
     // memory-mapped I/O.
     Bit32u offset = (Bit32u) (addr - 0xb8000);
     if ((BX_CIRRUS_THIS sequencer.reg[0x17] & 0x44) == 0x04)
       return svga_mmio_blt_read(offset);
-  }
-  else {
-    BX_DEBUG(("mem_read 0x%08x", (Bit32u)addr));
+  } else {
+    BX_DEBUG(("mem_read from address 0x%08x ignored", (Bit32u)addr));
   }
 
   return 0xff;
+}
+
+Bit8u bx_svga_cirrus_c::vga_mem_read(bx_phy_address addr)
+{
+  Bit32u offset;
+  Bit8u read_map_select = BX_CIRRUS_THIS s.graphics_ctrl.read_map_select;
+
+  switch (BX_CIRRUS_THIS s.graphics_ctrl.memory_mapping) {
+    case 1: // 0xA0000 .. 0xAFFFF
+      if ((addr < 0xa0000) || (addr > 0xaffff)) return 0xff;
+      offset = addr & 0xffff;
+      break;
+    case 2: // 0xB0000 .. 0xB7FFF
+      if ((addr < 0xb0000) || (addr > 0xb7fff)) return 0xff;
+      offset = addr & 0x7fff;
+      break;
+    case 3: // 0xB8000 .. 0xBFFFF
+      if (addr < 0xb8000) return 0xff;
+      offset = addr & 0x7fff;
+      break;
+    default: // 0xA0000 .. 0xBFFFF
+      offset = addr & 0x1ffff;
+  }
+
+  offset = (offset & 0x7fff) + BX_CIRRUS_THIS bank_base[(offset >> 15) & 1];
+  if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
+    offset <<= 1;
+  } else if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) == 0x14) {
+    offset <<= 2;
+  }
+  offset &= BX_CIRRUS_THIS s.vgamem_mask;
+
+  /* read mode 0 */
+  BX_CIRRUS_THIS s.graphics_ctrl.latch[0] = BX_CIRRUS_THIS s.memory[offset << 2];
+  BX_CIRRUS_THIS s.graphics_ctrl.latch[1] = BX_CIRRUS_THIS s.memory[(offset << 2) + 1];
+  BX_CIRRUS_THIS s.graphics_ctrl.latch[2] = BX_CIRRUS_THIS s.memory[(offset << 2) + 2];
+  BX_CIRRUS_THIS s.graphics_ctrl.latch[3] = BX_CIRRUS_THIS s.memory[(offset << 2) + 3];
+  if (BX_CIRRUS_THIS control.reg[0x0b] & 0x08) {
+    BX_CIRRUS_THIS ext_latch[0] = BX_CIRRUS_THIS s.memory[(offset << 2) + 4];
+    BX_CIRRUS_THIS ext_latch[1] = BX_CIRRUS_THIS s.memory[(offset << 2) + 5];
+    BX_CIRRUS_THIS ext_latch[2] = BX_CIRRUS_THIS s.memory[(offset << 2) + 6];
+    BX_CIRRUS_THIS ext_latch[3] = BX_CIRRUS_THIS s.memory[(offset << 2) + 7];
+  }
+  if (BX_CIRRUS_THIS s.graphics_ctrl.read_mode == 1) {
+    /* read mode 1 */
+    Bit8u color_compare   = BX_CIRRUS_THIS s.graphics_ctrl.color_compare & 0x0f;
+    Bit8u color_dont_care = BX_CIRRUS_THIS s.graphics_ctrl.color_dont_care & 0x0f;
+    Bit8u latch0, latch1, latch2, latch3;
+
+    latch0 = BX_CIRRUS_THIS s.graphics_ctrl.latch[0];
+    latch1 = BX_CIRRUS_THIS s.graphics_ctrl.latch[1];
+    latch2 = BX_CIRRUS_THIS s.graphics_ctrl.latch[2];
+    latch3 = BX_CIRRUS_THIS s.graphics_ctrl.latch[3];
+
+    latch0 ^= ccdat[color_compare][0];
+    latch1 ^= ccdat[color_compare][1];
+    latch2 ^= ccdat[color_compare][2];
+    latch3 ^= ccdat[color_compare][3];
+
+    latch0 &= ccdat[color_dont_care][0];
+    latch1 &= ccdat[color_dont_care][1];
+    latch2 &= ccdat[color_dont_care][2];
+    latch3 &= ccdat[color_dont_care][3];
+
+    return ~(latch0 | latch1 | latch2 | latch3);
+  } else {
+    return BX_CIRRUS_THIS s.graphics_ctrl.latch[read_map_select];
+  }
 }
 
 #if BX_SUPPORT_PCI
@@ -647,19 +719,47 @@ bool bx_svga_cirrus_c::cirrus_mem_write_handler(bx_phy_address addr, unsigned le
                                          void *data, void *param)
 {
   Bit8u *data_ptr;
+  if ((addr & ~(CIRRUS_PNPMEM_SIZE - 1)) == BX_CIRRUS_THIS pci_bar[0].addr) {
+    Bit8u swap = (Bit8u)(addr >> 22);
+    if (swap == 1) {
+      Bit32u val32 = bx_bswap16((*(Bit32u*)data) & 0xffff);
+      val32 |= (bx_bswap16((*(Bit32u*)data) >> 16) << 16);
+      *((Bit32u*)data) = val32;
+    } else if (swap == 2) {
+      Bit32u val32 = bx_bswap32(*(Bit32u*)data);
+      *((Bit32u*)data) = val32;
+    }
+  }
 #ifdef BX_LITTLE_ENDIAN
   data_ptr = (Bit8u *) data;
 #else // BX_BIG_ENDIAN
   data_ptr = (Bit8u *) data + (len - 1);
 #endif
-  for (unsigned i = 0; i < len; i++) {
-    BX_CIRRUS_THIS mem_write(addr, *data_ptr);
-    addr++;
+  if (BX_CIRRUS_THIS bitblt.memsrc_needed > 0) {
+    // cpu-to-video BLT
+    for (unsigned i = 0; i < len; i++) {
+      if (BX_CIRRUS_THIS bitblt.memsrc_needed > 0) {
+        *(BX_CIRRUS_THIS bitblt.memsrc_ptr)++ = *data_ptr;
+        if (BX_CIRRUS_THIS bitblt.memsrc_ptr >= BX_CIRRUS_THIS bitblt.memsrc_endptr) {
+          svga_asyncbitblt_next();
+        }
+      }
 #ifdef BX_LITTLE_ENDIAN
-    data_ptr++;
+      data_ptr++;
 #else // BX_BIG_ENDIAN
-    data_ptr--;
+      data_ptr--;
 #endif
+    }
+  } else {
+    for (unsigned i = 0; i < len; i++) {
+      BX_CIRRUS_THIS mem_write(addr, *data_ptr);
+      addr++;
+#ifdef BX_LITTLE_ENDIAN
+      data_ptr++;
+#else // BX_BIG_ENDIAN
+      data_ptr--;
+#endif
+    }
   }
   return 1;
 }
@@ -684,15 +784,6 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
       if ((offset >= (BX_CIRRUS_THIS s.memsize - 256)) &&
           ((BX_CIRRUS_THIS sequencer.reg[0x17] & 0x44) == 0x44)) {
         svga_mmio_blt_write(addr & 0xff, value);
-        return;
-      }
-
-      // cpu-to-video BLT
-      if (BX_CIRRUS_THIS bitblt.memsrc_needed > 0) {
-        *(BX_CIRRUS_THIS bitblt.memsrc_ptr)++ = (value);
-        if (BX_CIRRUS_THIS bitblt.memsrc_ptr >= BX_CIRRUS_THIS bitblt.memsrc_endptr) {
-          svga_asyncbitblt_next();
-        }
         return;
       }
 
@@ -740,7 +831,11 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
   }
 #endif // BX_SUPPORT_PCI
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
-    BX_CIRRUS_THIS bx_vgacore_c::mem_write(addr,value);
+    if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x1e) != 0) {
+      BX_CIRRUS_THIS vga_mem_write(addr,value);
+    } else {
+      BX_CIRRUS_THIS bx_vgacore_c::mem_write(addr,value);
+    }
     return;
   }
 
@@ -796,9 +891,365 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
     if ((BX_CIRRUS_THIS sequencer.reg[0x17] & 0x44) == 0x04) {
       svga_mmio_blt_write(offset & 0xff, value);
     }
+  } else {
+    BX_DEBUG(("mem_write() to address 0x%08x ignored (value 0x%02x)", (Bit32u)addr, value));
   }
-  else {
-    BX_DEBUG(("mem_write 0x%08x, value 0x%02x", (Bit32u)addr, value));
+}
+
+void bx_svga_cirrus_c::vga_mem_write(bx_phy_address addr, Bit8u value)
+{
+  Bit32u offset;
+  Bit8u new_val[8] = {0,0,0,0,0,0,0,0};
+  unsigned start_addr;
+  Bit8u write_mode, sequ_map_mask;
+
+  switch (BX_CIRRUS_THIS s.graphics_ctrl.memory_mapping) {
+    case 1: // 0xA0000 .. 0xAFFFF
+      if ((addr < 0xa0000) || (addr > 0xaffff)) return;
+      offset = addr & 0xffff;
+      break;
+    case 2: // 0xB0000 .. 0xB7FFF
+      if ((addr < 0xb0000) || (addr > 0xb7fff)) return;
+      offset = addr & 0x7fff;
+      break;
+    case 3: // 0xB8000 .. 0xBFFFF
+      if (addr < 0xb8000) return;
+      offset = addr & 0x7fff;
+      break;
+    default: // 0xA0000 .. 0xBFFFF
+      offset = addr & 0x1ffff;
+  }
+
+  offset = (offset & 0x7fff) + BX_CIRRUS_THIS bank_base[(offset >> 15) & 1];
+  if (BX_CIRRUS_THIS control.reg[0x0b] & 0x02) {
+    offset <<= 1;
+  } else if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x14) == 0x14) {
+    offset <<= 2;
+  }
+  offset &= BX_CIRRUS_THIS s.vgamem_mask;
+
+  if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x04) == 0x04) {
+    write_mode = BX_CIRRUS_THIS control.reg[0x05] & 0x07;
+    sequ_map_mask = BX_CIRRUS_THIS sequencer.reg[0x02];
+  } else {
+    write_mode = BX_CIRRUS_THIS s.graphics_ctrl.write_mode;
+    sequ_map_mask = BX_CIRRUS_THIS s.sequencer.map_mask & 0x0f;
+  }
+
+  start_addr = BX_CIRRUS_THIS s.CRTC.start_addr;
+
+  switch (write_mode) {
+    unsigned i;
+
+    case 0: /* write mode 0 */
+      {
+        const Bit8u bitmask = BX_CIRRUS_THIS s.graphics_ctrl.bitmask;
+        const Bit8u set_reset = BX_CIRRUS_THIS s.graphics_ctrl.set_reset;
+        const Bit8u enable_set_reset = BX_CIRRUS_THIS s.graphics_ctrl.enable_set_reset;
+        /* perform rotate on CPU data in case its needed */
+        if (BX_CIRRUS_THIS s.graphics_ctrl.data_rotate) {
+          value = (value >> BX_CIRRUS_THIS s.graphics_ctrl.data_rotate) |
+                  (value << (8 - BX_CIRRUS_THIS s.graphics_ctrl.data_rotate));
+        }
+        new_val[0] = BX_CIRRUS_THIS s.graphics_ctrl.latch[0] & ~bitmask;
+        new_val[1] = BX_CIRRUS_THIS s.graphics_ctrl.latch[1] & ~bitmask;
+        new_val[2] = BX_CIRRUS_THIS s.graphics_ctrl.latch[2] & ~bitmask;
+        new_val[3] = BX_CIRRUS_THIS s.graphics_ctrl.latch[3] & ~bitmask;
+        switch (BX_CIRRUS_THIS s.graphics_ctrl.raster_op) {
+          case 0: // replace
+            new_val[0] |= ((enable_set_reset & 1)
+                           ? ((set_reset & 1) ? bitmask : 0)
+                           : (value & bitmask));
+            new_val[1] |= ((enable_set_reset & 2)
+                           ? ((set_reset & 2) ? bitmask : 0)
+                           : (value & bitmask));
+            new_val[2] |= ((enable_set_reset & 4)
+                           ? ((set_reset & 4) ? bitmask : 0)
+                           : (value & bitmask));
+            new_val[3] |= ((enable_set_reset & 8)
+                           ? ((set_reset & 8) ? bitmask : 0)
+                           : (value & bitmask));
+            break;
+          case 1: // AND
+            new_val[0] |= ((enable_set_reset & 1)
+                           ? ((set_reset & 1)
+                              ? (BX_CIRRUS_THIS s.graphics_ctrl.latch[0] & bitmask)
+                              : 0)
+                           : (value & BX_CIRRUS_THIS s.graphics_ctrl.latch[0]) & bitmask);
+            new_val[1] |= ((enable_set_reset & 2)
+                           ? ((set_reset & 2)
+                              ? (BX_CIRRUS_THIS s.graphics_ctrl.latch[1] & bitmask)
+                              : 0)
+                           : (value & BX_CIRRUS_THIS s.graphics_ctrl.latch[1]) & bitmask);
+            new_val[2] |= ((enable_set_reset & 4)
+                           ? ((set_reset & 4)
+                              ? (BX_CIRRUS_THIS s.graphics_ctrl.latch[2] & bitmask)
+                              : 0)
+                           : (value & BX_CIRRUS_THIS s.graphics_ctrl.latch[2]) & bitmask);
+            new_val[3] |= ((enable_set_reset & 8)
+                           ? ((set_reset & 8)
+                              ? (BX_CIRRUS_THIS s.graphics_ctrl.latch[3] & bitmask)
+                              : 0)
+                           : (value & BX_CIRRUS_THIS s.graphics_ctrl.latch[3]) & bitmask);
+            break;
+          case 2: // OR
+            new_val[0]
+              |= ((enable_set_reset & 1)
+                  ? ((set_reset & 1)
+                     ? bitmask
+                     : (BX_CIRRUS_THIS s.graphics_ctrl.latch[0] & bitmask))
+                  : ((value | BX_CIRRUS_THIS s.graphics_ctrl.latch[0]) & bitmask));
+            new_val[1]
+              |= ((enable_set_reset & 2)
+                  ? ((set_reset & 2)
+                     ? bitmask
+                     : (BX_CIRRUS_THIS s.graphics_ctrl.latch[1] & bitmask))
+                  : ((value | BX_CIRRUS_THIS s.graphics_ctrl.latch[1]) & bitmask));
+            new_val[2]
+              |= ((enable_set_reset & 4)
+                  ? ((set_reset & 4)
+                     ? bitmask
+                     : (BX_CIRRUS_THIS s.graphics_ctrl.latch[2] & bitmask))
+                  : ((value | BX_CIRRUS_THIS s.graphics_ctrl.latch[2]) & bitmask));
+            new_val[3]
+              |= ((enable_set_reset & 8)
+                  ? ((set_reset & 8)
+                     ? bitmask
+                     : (BX_CIRRUS_THIS s.graphics_ctrl.latch[3] & bitmask))
+                  : ((value | BX_CIRRUS_THIS s.graphics_ctrl.latch[3]) & bitmask));
+            break;
+          case 3: // XOR
+            new_val[0]
+              |= ((enable_set_reset & 1)
+                 ? ((set_reset & 1)
+                    ? (~BX_CIRRUS_THIS s.graphics_ctrl.latch[0] & bitmask)
+                    : (BX_CIRRUS_THIS s.graphics_ctrl.latch[0] & bitmask))
+                 : (value ^ BX_CIRRUS_THIS s.graphics_ctrl.latch[0]) & bitmask);
+            new_val[1]
+              |= ((enable_set_reset & 2)
+                 ? ((set_reset & 2)
+                    ? (~BX_CIRRUS_THIS s.graphics_ctrl.latch[1] & bitmask)
+                    : (BX_CIRRUS_THIS s.graphics_ctrl.latch[1] & bitmask))
+                 : (value ^ BX_CIRRUS_THIS s.graphics_ctrl.latch[1]) & bitmask);
+            new_val[2]
+              |= ((enable_set_reset & 4)
+                 ? ((set_reset & 4)
+                    ? (~BX_CIRRUS_THIS s.graphics_ctrl.latch[2] & bitmask)
+                    : (BX_CIRRUS_THIS s.graphics_ctrl.latch[2] & bitmask))
+                 : (value ^ BX_CIRRUS_THIS s.graphics_ctrl.latch[2]) & bitmask);
+            new_val[3]
+              |= ((enable_set_reset & 8)
+                 ? ((set_reset & 8)
+                    ? (~BX_CIRRUS_THIS s.graphics_ctrl.latch[3] & bitmask)
+                    : (BX_CIRRUS_THIS s.graphics_ctrl.latch[3] & bitmask))
+                 : (value ^ BX_CIRRUS_THIS s.graphics_ctrl.latch[3]) & bitmask);
+            break;
+          default:
+            BX_PANIC(("vga_mem_write: write mode 0: op = %u",
+                      (unsigned) BX_CIRRUS_THIS s.graphics_ctrl.raster_op));
+        }
+      }
+      break;
+
+    case 1: /* write mode 1 */
+      for (i=0; i<4; i++) {
+        new_val[i] = BX_CIRRUS_THIS s.graphics_ctrl.latch[i];
+      }
+      if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x0c) == 0x0c) {
+        for (i=0; i<4; i++) {
+          new_val[i + 4] = BX_CIRRUS_THIS ext_latch[i];
+        }
+      }
+      break;
+
+    case 2: /* write mode 2 */
+      {
+        const Bit8u bitmask = BX_CIRRUS_THIS s.graphics_ctrl.bitmask;
+
+        new_val[0] = BX_CIRRUS_THIS s.graphics_ctrl.latch[0] & ~bitmask;
+        new_val[1] = BX_CIRRUS_THIS s.graphics_ctrl.latch[1] & ~bitmask;
+        new_val[2] = BX_CIRRUS_THIS s.graphics_ctrl.latch[2] & ~bitmask;
+        new_val[3] = BX_CIRRUS_THIS s.graphics_ctrl.latch[3] & ~bitmask;
+        switch (BX_CIRRUS_THIS s.graphics_ctrl.raster_op) {
+          case 0: // write
+            new_val[0] |= (value & 1) ? bitmask : 0;
+            new_val[1] |= (value & 2) ? bitmask : 0;
+            new_val[2] |= (value & 4) ? bitmask : 0;
+            new_val[3] |= (value & 8) ? bitmask : 0;
+            break;
+          case 1: // AND
+            new_val[0] |= (value & 1)
+              ? (BX_CIRRUS_THIS s.graphics_ctrl.latch[0] & bitmask)
+              : 0;
+            new_val[1] |= (value & 2)
+              ? (BX_CIRRUS_THIS s.graphics_ctrl.latch[1] & bitmask)
+              : 0;
+            new_val[2] |= (value & 4)
+              ? (BX_CIRRUS_THIS s.graphics_ctrl.latch[2] & bitmask)
+              : 0;
+            new_val[3] |= (value & 8)
+              ? (BX_CIRRUS_THIS s.graphics_ctrl.latch[3] & bitmask)
+              : 0;
+            break;
+          case 2: // OR
+            new_val[0] |= (value & 1)
+              ? bitmask
+              : (BX_CIRRUS_THIS s.graphics_ctrl.latch[0] & bitmask);
+            new_val[1] |= (value & 2)
+              ? bitmask
+              : (BX_CIRRUS_THIS s.graphics_ctrl.latch[1] & bitmask);
+            new_val[2] |= (value & 4)
+              ? bitmask
+              : (BX_CIRRUS_THIS s.graphics_ctrl.latch[2] & bitmask);
+            new_val[3] |= (value & 8)
+              ? bitmask
+              : (BX_CIRRUS_THIS s.graphics_ctrl.latch[3] & bitmask);
+            break;
+          case 3: // XOR
+            new_val[0] |= (value & 1)
+              ? (~BX_CIRRUS_THIS s.graphics_ctrl.latch[0] & bitmask)
+              : (BX_CIRRUS_THIS s.graphics_ctrl.latch[0] & bitmask);
+            new_val[1] |= (value & 2)
+              ? (~BX_CIRRUS_THIS s.graphics_ctrl.latch[1] & bitmask)
+              : (BX_CIRRUS_THIS s.graphics_ctrl.latch[1] & bitmask);
+            new_val[2] |= (value & 4)
+              ? (~BX_CIRRUS_THIS s.graphics_ctrl.latch[2] & bitmask)
+              : (BX_CIRRUS_THIS s.graphics_ctrl.latch[2] & bitmask);
+            new_val[3] |= (value & 8)
+              ? (~BX_CIRRUS_THIS s.graphics_ctrl.latch[3] & bitmask)
+              : (BX_CIRRUS_THIS s.graphics_ctrl.latch[3] & bitmask);
+            break;
+        }
+      }
+      break;
+
+    case 3: /* write mode 3 */
+      {
+        const Bit8u bitmask = BX_CIRRUS_THIS s.graphics_ctrl.bitmask & value;
+        const Bit8u set_reset = BX_CIRRUS_THIS s.graphics_ctrl.set_reset;
+
+        /* perform rotate on CPU data */
+        if (BX_CIRRUS_THIS s.graphics_ctrl.data_rotate) {
+          value = (value >> BX_CIRRUS_THIS s.graphics_ctrl.data_rotate) |
+                  (value << (8 - BX_CIRRUS_THIS s.graphics_ctrl.data_rotate));
+        }
+        new_val[0] = BX_CIRRUS_THIS s.graphics_ctrl.latch[0] & ~bitmask;
+        new_val[1] = BX_CIRRUS_THIS s.graphics_ctrl.latch[1] & ~bitmask;
+        new_val[2] = BX_CIRRUS_THIS s.graphics_ctrl.latch[2] & ~bitmask;
+        new_val[3] = BX_CIRRUS_THIS s.graphics_ctrl.latch[3] & ~bitmask;
+
+        value &= bitmask;
+
+        switch (BX_CIRRUS_THIS s.graphics_ctrl.raster_op) {
+          case 0: // write
+            new_val[0] |= (set_reset & 1) ? value : 0;
+            new_val[1] |= (set_reset & 2) ? value : 0;
+            new_val[2] |= (set_reset & 4) ? value : 0;
+            new_val[3] |= (set_reset & 8) ? value : 0;
+            break;
+          case 1: // AND
+            new_val[0] |= ((set_reset & 1) ? value : 0)
+              & BX_CIRRUS_THIS s.graphics_ctrl.latch[0];
+            new_val[1] |= ((set_reset & 2) ? value : 0)
+              & BX_CIRRUS_THIS s.graphics_ctrl.latch[1];
+            new_val[2] |= ((set_reset & 4) ? value : 0)
+              & BX_CIRRUS_THIS s.graphics_ctrl.latch[2];
+            new_val[3] |= ((set_reset & 8) ? value : 0)
+              & BX_CIRRUS_THIS s.graphics_ctrl.latch[3];
+            break;
+          case 2: // OR
+            new_val[0] |= ((set_reset & 1) ? value : 0)
+              | BX_CIRRUS_THIS s.graphics_ctrl.latch[0];
+            new_val[1] |= ((set_reset & 2) ? value : 0)
+              | BX_CIRRUS_THIS s.graphics_ctrl.latch[1];
+            new_val[2] |= ((set_reset & 4) ? value : 0)
+              | BX_CIRRUS_THIS s.graphics_ctrl.latch[2];
+            new_val[3] |= ((set_reset & 8) ? value : 0)
+              | BX_CIRRUS_THIS s.graphics_ctrl.latch[3];
+            break;
+          case 3: // XOR
+            new_val[0] |= ((set_reset & 1) ? value : 0)
+              ^ BX_CIRRUS_THIS s.graphics_ctrl.latch[0];
+            new_val[1] |= ((set_reset & 2) ? value : 0)
+              ^ BX_CIRRUS_THIS s.graphics_ctrl.latch[1];
+            new_val[2] |= ((set_reset & 4) ? value : 0)
+              ^ BX_CIRRUS_THIS s.graphics_ctrl.latch[2];
+            new_val[3] |= ((set_reset & 8) ? value : 0)
+              ^ BX_CIRRUS_THIS s.graphics_ctrl.latch[3];
+            break;
+        }
+      }
+      break;
+
+    default:
+      BX_PANIC(("vga_mem_write: write mode %u ?",
+        (unsigned) BX_CIRRUS_THIS s.graphics_ctrl.write_mode));
+  }
+
+  if (sequ_map_mask & 0x0f) {
+    BX_CIRRUS_THIS s.vga_mem_updated |= (sequ_map_mask & 0x0f);
+    if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x04) == 0x04) {
+      if (sequ_map_mask & 0x80)
+        BX_CIRRUS_THIS s.memory[offset << 2] = new_val[0];
+      if (sequ_map_mask & 0x40)
+        BX_CIRRUS_THIS s.memory[(offset << 2) + 1] = new_val[1];
+      if (sequ_map_mask & 0x20)
+        BX_CIRRUS_THIS s.memory[(offset << 2) + 2] = new_val[2];
+      if (sequ_map_mask & 0x10)
+        BX_CIRRUS_THIS s.memory[(offset << 2) + 3] = new_val[3];
+      if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x08) == 0x08) {
+        if (sequ_map_mask & 0x08)
+          BX_CIRRUS_THIS s.memory[(offset << 2) + 4] = new_val[4];
+        if (sequ_map_mask & 0x04)
+          BX_CIRRUS_THIS s.memory[(offset << 2) + 5] = new_val[5];
+        if (sequ_map_mask & 0x02)
+          BX_CIRRUS_THIS s.memory[(offset << 2) + 6] = new_val[6];
+        if (sequ_map_mask & 0x01)
+          BX_CIRRUS_THIS s.memory[(offset << 2) + 7] = new_val[7];
+      }
+    } else {
+      if (sequ_map_mask & 0x01)
+        BX_CIRRUS_THIS s.memory[offset << 2] = new_val[0];
+      if (sequ_map_mask & 0x02)
+        BX_CIRRUS_THIS s.memory[(offset << 2) + 1] = new_val[1];
+      if (sequ_map_mask & 0x04)
+        BX_CIRRUS_THIS s.memory[(offset << 2) + 2] = new_val[2];
+      if (sequ_map_mask & 0x08)
+        BX_CIRRUS_THIS s.memory[(offset << 2) + 3] = new_val[3];
+    }
+
+    if (BX_CIRRUS_THIS s.graphics_ctrl.graphics_alpha) {
+      unsigned x_tileno, y_tileno;
+      if (BX_CIRRUS_THIS s.line_offset > 0) {
+        if (BX_CIRRUS_THIS s.line_compare < BX_CIRRUS_THIS s.vertical_display_end) {
+          if (BX_CIRRUS_THIS s.x_dotclockdiv2) {
+            x_tileno = (offset % BX_CIRRUS_THIS s.line_offset) / (X_TILESIZE / 16);
+          } else {
+            x_tileno = (offset % BX_CIRRUS_THIS s.line_offset) / (X_TILESIZE / 8);
+          }
+          if (BX_CIRRUS_THIS s.y_doublescan) {
+            y_tileno = ((offset / BX_CIRRUS_THIS s.line_offset) * 2 + BX_CIRRUS_THIS s.line_compare + 1) / Y_TILESIZE;
+          } else {
+            y_tileno = ((offset / BX_CIRRUS_THIS s.line_offset) + BX_CIRRUS_THIS s.line_compare + 1) / Y_TILESIZE;
+          }
+          SET_TILE_UPDATED(BX_CIRRUS_THIS, x_tileno, y_tileno, 1);
+        }
+        if (offset >= start_addr) {
+          offset -= start_addr;
+          if (BX_CIRRUS_THIS s.x_dotclockdiv2) {
+            x_tileno = (offset % BX_CIRRUS_THIS s.line_offset) / (X_TILESIZE / 16);
+          } else {
+            x_tileno = (offset % BX_CIRRUS_THIS s.line_offset) / (X_TILESIZE / 8);
+          }
+          if (BX_CIRRUS_THIS s.y_doublescan) {
+            y_tileno = (offset / BX_CIRRUS_THIS s.line_offset) / (Y_TILESIZE / 2);
+          } else {
+            y_tileno = (offset / BX_CIRRUS_THIS s.line_offset) / Y_TILESIZE;
+          }
+          SET_TILE_UPDATED(BX_CIRRUS_THIS, x_tileno, y_tileno, 1);
+        }
+      }
+    }
   }
 }
 
@@ -1094,6 +1545,7 @@ void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_ti
     Bit8u * plane0_ptr, *plane0_ptr2;
     Bit8u * plane1_ptr, *plane1_ptr2;
     unsigned long fgcol, bgcol;
+    Bit32u hwc_offset;
     Bit64u plane0, plane1;
 
     cx0 = hwcx > xc ? hwcx : xc;
@@ -1104,7 +1556,12 @@ void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_ti
     if (info->bpp == 15) info->bpp = 16;
     tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h) +
                info->pitch * (cy0 - yc) + (info->bpp / 8) * (cx0 - xc);
-    plane0_ptr = BX_CIRRUS_THIS s.memory + BX_CIRRUS_THIS s.memsize - 16384;
+    if (BX_CIRRUS_THIS svga_dispbpp == 4) {
+      hwc_offset = 0x40000 - 16384; // VGA (TODO: check this)
+    } else {
+      hwc_offset = BX_CIRRUS_THIS memsize_mask - 16383; // Cirrus
+    }
+    plane0_ptr = BX_CIRRUS_THIS s.memory + hwc_offset;
 
     switch (size) {
       case 32:
@@ -1137,7 +1594,7 @@ void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_ti
     } else {
       // FIXME: this is a hack that works in Windows guests
       // TODO: compare hidden DAC entries with DAC entries to find nearest match
-      fgcol = 0xff;
+      fgcol = (BX_CIRRUS_THIS svga_dispbpp == 4) ? 0x3f : 0xff;
       bgcol = 0x00;
     }
 
@@ -1215,25 +1672,40 @@ void bx_svga_cirrus_c::update(void)
       BX_CIRRUS_THIS s.vga_mem_updated = 0x0f;
       BX_CIRRUS_THIS svga_needs_update_mode = 0;
     }
-    BX_CIRRUS_THIS bx_vgacore_c::update();
-    return;
+    if ((BX_CIRRUS_THIS s.graphics_ctrl.shift_reg != 0) ||
+        (BX_CIRRUS_THIS hw_cursor.size == 0)) {
+      BX_CIRRUS_THIS bx_vgacore_c::update();
+      return;
+    } else {
+      BX_CIRRUS_THIS svga_dispbpp = 4;
+      BX_CIRRUS_THIS svga_needs_update_tile = 1;
+    }
   } else {
     if (BX_CIRRUS_THIS svga_needs_update_mode) {
       svga_modeupdate();
     }
   }
 
-  width  = BX_CIRRUS_THIS svga_xres;
-  height = BX_CIRRUS_THIS svga_yres;
-  pitch = BX_CIRRUS_THIS svga_pitch;
-
-  if (BX_CIRRUS_THIS svga_needs_update_mode) {
+  if (BX_CIRRUS_THIS svga_dispbpp != 4) {
     width  = BX_CIRRUS_THIS svga_xres;
     height = BX_CIRRUS_THIS svga_yres;
-    bx_gui->dimension_update(width, height, 0, 0, BX_CIRRUS_THIS svga_dispbpp);
-    BX_CIRRUS_THIS s.last_bpp = BX_CIRRUS_THIS svga_dispbpp;
-    BX_CIRRUS_THIS svga_needs_update_mode = 0;
-    BX_CIRRUS_THIS svga_needs_update_dispentire = 1;
+    pitch = BX_CIRRUS_THIS svga_pitch;
+    if (BX_CIRRUS_THIS svga_needs_update_mode) {
+      bx_gui->dimension_update(width, height, 0, 0, BX_CIRRUS_THIS svga_dispbpp);
+      BX_CIRRUS_THIS s.last_bpp = BX_CIRRUS_THIS svga_dispbpp;
+      BX_CIRRUS_THIS svga_needs_update_mode = 0;
+      BX_CIRRUS_THIS svga_needs_update_dispentire = 1;
+    }
+  } else {
+    BX_CIRRUS_THIS determine_screen_dimensions(&height, &width);
+    pitch = BX_CIRRUS_THIS s.line_offset;
+    if ((width != BX_CIRRUS_THIS s.last_xres) || (height != BX_CIRRUS_THIS s.last_yres) ||
+        (BX_CIRRUS_THIS s.last_bpp > 8)) {
+      bx_gui->dimension_update(width, height);
+      BX_CIRRUS_THIS s.last_xres = width;
+      BX_CIRRUS_THIS s.last_yres = height;
+      BX_CIRRUS_THIS s.last_bpp = 8;
+    }
   }
 
   if (BX_CIRRUS_THIS svga_needs_update_dispentire) {
@@ -1247,10 +1719,10 @@ void bx_svga_cirrus_c::update(void)
   BX_CIRRUS_THIS svga_needs_update_tile = 0;
 
   unsigned xc, yc, xti, yti;
-  unsigned r, c, w, h;
+  unsigned r, c, w, h, x, y;
   int i;
   Bit8u red, green, blue;
-  Bit32u colour;
+  Bit32u colour, row_addr;
   Bit8u * vid_ptr, * vid_ptr2;
   Bit8u * tile_ptr, * tile_ptr2;
   bx_svga_tileinfo_t info;
@@ -1261,14 +1733,44 @@ void bx_svga_cirrus_c::update(void)
       tile_ptr = bx_gui->get_snapshot_buffer();
       if (tile_ptr != NULL) {
         for (yc = 0; yc < height; yc++) {
-          memcpy(tile_ptr, vid_ptr, info.pitch);
-          vid_ptr += pitch;
+          if (BX_CIRRUS_THIS svga_dispbpp != 4) {
+            memcpy(tile_ptr, vid_ptr, info.pitch);
+            vid_ptr += pitch;
+          } else {
+            tile_ptr2 = tile_ptr;
+            row_addr = BX_CIRRUS_THIS s.CRTC.start_addr + (yc * pitch);
+            for (xc = 0; xc < width; xc++) {
+              *(tile_ptr2++) = BX_CIRRUS_THIS get_vga_pixel(xc, yc, row_addr, 0xffff, 0, BX_CIRRUS_THIS s.memory);
+            }
+          }
           tile_ptr += info.pitch;
         }
       }
     } else if (info.is_indexed) {
       switch (BX_CIRRUS_THIS svga_dispbpp) {
         case 4:
+          for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
+            for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
+              if (GET_TILE_UPDATED (xti, yti)) {
+                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+                for (r=0; r<h; r++) {
+                  y = yc + r;
+                  if (BX_CIRRUS_THIS s.y_doublescan) y >>= 1;
+                  row_addr = BX_CIRRUS_THIS s.CRTC.start_addr + (y * pitch);
+                  tile_ptr2 = tile_ptr;
+                  for (c=0; c<w; c++) {
+                    x = xc + c;
+                    *(tile_ptr2++) = BX_CIRRUS_THIS get_vga_pixel(x, y, row_addr, 0xffff, 0, BX_CIRRUS_THIS s.memory);
+                  }
+                  tile_ptr += info.pitch;
+                }
+                draw_hardware_cursor(xc, yc, &info);
+                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+                SET_TILE_UPDATED(BX_CIRRUS_THIS, xti, yti, 0);
+              }
+            }
+          }
+          break;
         case 15:
         case 16:
         case 24:
@@ -1316,7 +1818,40 @@ void bx_svga_cirrus_c::update(void)
     else {
       switch (BX_CIRRUS_THIS svga_dispbpp) {
         case 4:
-          BX_ERROR(("cannot draw 4bpp SVGA"));
+          for (yc=0, yti=0; yc<height; yc+=Y_TILESIZE, yti++) {
+            for (xc=0, xti=0; xc<width; xc+=X_TILESIZE, xti++) {
+              if (GET_TILE_UPDATED (xti, yti)) {
+                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+                for (r=0; r<Y_TILESIZE; r++) {
+                  tile_ptr2 = tile_ptr;
+                  y = yc + r;
+                  if (BX_CIRRUS_THIS s.y_doublescan) y >>= 1;
+                  row_addr = BX_CIRRUS_THIS s.CRTC.start_addr + (y * pitch);
+                  for (c=0; c<X_TILESIZE; c++) {
+                    x = xc + c;
+                    colour = BX_CIRRUS_THIS get_vga_pixel(x, y, row_addr, 0xffff, 0, BX_CIRRUS_THIS s.memory);
+                    colour = MAKE_COLOUR(
+                      BX_CIRRUS_THIS s.pel.data[colour].red, 6, info.red_shift, info.red_mask,
+                      BX_CIRRUS_THIS s.pel.data[colour].green, 6, info.green_shift, info.green_mask,
+                      BX_CIRRUS_THIS s.pel.data[colour].blue, 6, info.blue_shift, info.blue_mask);
+                    if (info.is_little_endian) {
+                      for (i=0; i<info.bpp; i+=8) {
+                        *(tile_ptr2++) = colour >> i;
+                      }
+                    } else {
+                      for (i=info.bpp-8; i>-8; i-=8) {
+                        *(tile_ptr2++) = colour >> i;
+                      }
+                    }
+                  }
+                  tile_ptr += info.pitch;
+                }
+                draw_hardware_cursor(xc, yc, &info);
+                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+                SET_TILE_UPDATED(BX_CIRRUS_THIS, xti, yti, 0);
+              }
+            }
+          }
           break;
         case 8:
           for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
@@ -1735,12 +2270,12 @@ void bx_svga_cirrus_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u val
 
   if (update_pitch) {
     if ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x02) != 0) {
-      BX_CIRRUS_THIS s.memsize_mask = 0xfffff;
+      BX_CIRRUS_THIS s.vgamem_mask = 0xfffff;
       BX_CIRRUS_THIS s.ext_start_addr = ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x01) << 16) |
                                         ((BX_CIRRUS_THIS crtc.reg[0x1b] & 0x04) << 15);
       BX_CIRRUS_THIS s.ext_offset = BX_CIRRUS_THIS bank_base[0];
     } else {
-      BX_CIRRUS_THIS s.memsize_mask = 0x3ffff;
+      BX_CIRRUS_THIS s.vgamem_mask = 0x3ffff;
       BX_CIRRUS_THIS s.ext_start_addr = 0;
       BX_CIRRUS_THIS s.ext_offset = 0;
     }
@@ -2122,7 +2657,7 @@ void bx_svga_cirrus_c::svga_write_control(Bit32u address, unsigned index, Bit8u 
           ((value & CIRRUS_BLT_RESET) == 0)) {
         svga_reset_bitblt();
       }
-      else if (((old_value & CIRRUS_BLT_START) == 0) &&
+      if (((old_value & CIRRUS_BLT_START) == 0) &&
           ((value & CIRRUS_BLT_START) != 0)) {
         BX_CIRRUS_THIS control.reg[0x31] |= CIRRUS_BLT_BUSY;
         svga_bitblt();
@@ -2566,8 +3101,13 @@ void bx_svga_cirrus_c::svga_bitblt()
   BX_CIRRUS_THIS bitblt.bltmodeext = BX_CIRRUS_THIS control.reg[0x33];
   BX_CIRRUS_THIS bitblt.bltrop = BX_CIRRUS_THIS control.reg[0x32];
   offset = dstaddr - (Bit32u)(BX_CIRRUS_THIS disp_ptr - BX_CIRRUS_THIS s.memory);
-  BX_CIRRUS_THIS redraw.x = (offset % BX_CIRRUS_THIS bitblt.dstpitch) / (BX_CIRRUS_THIS svga_bpp >> 3);
-  BX_CIRRUS_THIS redraw.y = offset / BX_CIRRUS_THIS bitblt.dstpitch;
+  if (BX_CIRRUS_THIS bitblt.dstpitch > 0) {
+    BX_CIRRUS_THIS redraw.x = (offset % BX_CIRRUS_THIS bitblt.dstpitch) / (BX_CIRRUS_THIS svga_bpp >> 3);
+    BX_CIRRUS_THIS redraw.y = offset / BX_CIRRUS_THIS bitblt.dstpitch;
+  } else {
+    BX_CIRRUS_THIS redraw.x = 0;
+    BX_CIRRUS_THIS redraw.y = 0;
+  }
   BX_CIRRUS_THIS redraw.w = BX_CIRRUS_THIS bitblt.bltwidth / (BX_CIRRUS_THIS svga_bpp >> 3);
   BX_CIRRUS_THIS redraw.h = BX_CIRRUS_THIS bitblt.bltheight;
   if (BX_CIRRUS_THIS s.y_doublescan) {

@@ -25,28 +25,27 @@ these four paragraphs for those parts of this code that are retained.
 
 #define FLOAT128
 
-#include "softfloatx80.h"
-#include "softfloat-round-pack.h"
+#include "fpu_trans.h"
+#include "softfloat-helpers.h"
 #include "fpu_constant.h"
 
-static const floatx80 floatx80_one =
-    packFloatx80(0, 0x3fff, BX_CONST64(0x8000000000000000));
+static const floatx80 floatx80_one = packFloatx80(0, 0x3fff, BX_CONST64(0x8000000000000000));
 
-static const float128 float128_one =
+static const float128_t float128_one =
     packFloat128(BX_CONST64(0x3fff000000000000), BX_CONST64(0x0000000000000000));
-static const float128 float128_two =
+static const float128_t float128_two =
     packFloat128(BX_CONST64(0x4000000000000000), BX_CONST64(0x0000000000000000));
 
-static const float128 float128_ln2inv2 =
+static const float128_t float128_ln2inv2 =
     packFloat128(BX_CONST64(0x400071547652b82f), BX_CONST64(0xe1777d0ffda0d23a));
 
 #define SQRT2_HALF_SIG 	BX_CONST64(0xb504f333f9de6484)
 
-extern float128 OddPoly(float128 x, float128 *arr, int n, float_status_t &status);
+extern float128_t OddPoly(float128_t x, const float128_t *arr, int n, softfloat_status_t &status);
 
 #define L2_ARR_SIZE 9
 
-static float128 ln_arr[L2_ARR_SIZE] =
+static float128_t ln_arr[L2_ARR_SIZE] =
 {
     PACK_FLOAT_128(0x3fff000000000000, 0x0000000000000000), /*  1 */
     PACK_FLOAT_128(0x3ffd555555555555, 0x5555555555555555), /*  3 */
@@ -59,7 +58,7 @@ static float128 ln_arr[L2_ARR_SIZE] =
     PACK_FLOAT_128(0x3ffae1e1e1e1e1e1, 0xe1e1e1e1e1e1e1e2)  /* 17 */
 };
 
-static float128 poly_ln(float128 x1, float_status_t &status)
+static float128_t poly_ln(float128_t x1, softfloat_status_t &status)
 {
 /*
     //
@@ -84,28 +83,28 @@ static float128 poly_ln(float128 x1, float_status_t &status)
     //          1-u
     //
 */
-    return OddPoly(x1, ln_arr, L2_ARR_SIZE, status);
+    return OddPoly(x1, (const float128_t*) ln_arr, L2_ARR_SIZE, status);
 }
 
 /* required sqrt(2)/2 < x < sqrt(2) */
-static float128 poly_l2(float128 x, float_status_t &status)
+static float128_t poly_l2(float128_t x, softfloat_status_t &status)
 {
     /* using float128 for approximation */
-    float128 x_p1 = float128_add(x, float128_one, status);
-    float128 x_m1 = float128_sub(x, float128_one, status);
-    x = float128_div(x_m1, x_p1, status);
+    float128_t x_p1 = f128_add(x, float128_one, &status);
+    float128_t x_m1 = f128_sub(x, float128_one, &status);
+    x = f128_div(x_m1, x_p1, &status);
     x = poly_ln(x, status);
-    x = float128_mul(x, float128_ln2inv2, status);
+    x = f128_mul(x, float128_ln2inv2, &status);
     return x;
 }
 
-static float128 poly_l2p1(float128 x, float_status_t &status)
+static float128_t poly_l2p1(float128_t x, softfloat_status_t &status)
 {
     /* using float128 for approximation */
-    float128 x_p2 = float128_add(x, float128_two, status);
-    x = float128_div(x, x_p2, status);
+    float128_t x_plus2 = f128_add(x, float128_two, &status);
+    x = f128_div(x, x_plus2, &status);
     x = poly_ln(x, status);
-    x = float128_mul(x, float128_ln2inv2, status);
+    x = f128_mul(x, float128_ln2inv2, &status);
     return x;
 }
 
@@ -134,74 +133,76 @@ static float128 poly_l2p1(float128 x, float_status_t &status)
 //       1-u             3     5     7           2n+1
 //
 
-floatx80 fyl2x(floatx80 a, floatx80 b, float_status_t &status)
+floatx80 fyl2x(floatx80 a, floatx80 b, softfloat_status_t &status)
 {
     // handle unsupported extended double-precision floating encodings
     if (extF80_isUnsupported(a) || extF80_isUnsupported(b)) {
 invalid:
-        float_raise(status, float_flag_invalid);
+        softfloat_raiseFlags(&status, softfloat_flag_invalid);
         return floatx80_default_nan;
     }
 
-    Bit64u aSig = extractFloatx80Frac(a);
-    Bit32s aExp = extractFloatx80Exp(a);
-    int aSign = extractFloatx80Sign(a);
-    Bit64u bSig = extractFloatx80Frac(b);
-    Bit32s bExp = extractFloatx80Exp(b);
-    int bSign = extractFloatx80Sign(b);
+    Bit64u aSig = extF80_fraction(a);
+    Bit32s aExp = extF80_exp(a);
+    int aSign = extF80_sign(a);
+    Bit64u bSig = extF80_fraction(b);
+    Bit32s bExp = extF80_exp(b);
+    int bSign = extF80_sign(b);
 
     int zSign = bSign ^ 1;
 
     if (aExp == 0x7FFF) {
-        if ((Bit64u) (aSig<<1)
-             || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1)))
-        {
-            return propagateFloatx80NaN(a, b, status);
+        if ((aSig<<1) || ((bExp == 0x7FFF) && (bSig<<1))) {
+            return softfloat_propagateNaNExtF80UI(a.signExp, aSig, b.signExp, bSig, &status);
         }
         if (aSign) goto invalid;
         else {
-            if (bExp == 0) {
-                if (bSig == 0) goto invalid;
-                float_raise(status, float_flag_denormal);
+            if (! bExp) {
+                if (! bSig) goto invalid;
+                softfloat_raiseFlags(&status, softfloat_flag_denormal);
             }
             return packFloatx80(bSign, 0x7FFF, BX_CONST64(0x8000000000000000));
         }
     }
-    if (bExp == 0x7FFF)
-    {
-        if ((Bit64u) (bSig<<1)) return propagateFloatx80NaN(a, b, status);
+    if (bExp == 0x7FFF) {
+        if (bSig << 1)
+            return softfloat_propagateNaNExtF80UI(a.signExp, aSig, b.signExp, bSig, &status);
         if (aSign && (Bit64u)(aExp | aSig)) goto invalid;
-        if (aSig && (aExp == 0))
-            float_raise(status, float_flag_denormal);
+        if (aSig && ! aExp)
+            softfloat_raiseFlags(&status, softfloat_flag_denormal);
         if (aExp < 0x3FFF) {
             return packFloatx80(zSign, 0x7FFF, BX_CONST64(0x8000000000000000));
         }
-        if (aExp == 0x3FFF && ((Bit64u) (aSig<<1) == 0)) goto invalid;
+        if (aExp == 0x3FFF && ! (aSig<<1)) goto invalid;
         return packFloatx80(bSign, 0x7FFF, BX_CONST64(0x8000000000000000));
     }
-    if (aExp == 0) {
-        if (aSig == 0) {
+    if (! aExp) {
+        if (! aSig) {
             if ((bExp | bSig) == 0) goto invalid;
-            float_raise(status, float_flag_divbyzero);
+            softfloat_raiseFlags(&status, softfloat_flag_divbyzero);
             return packFloatx80(zSign, 0x7FFF, BX_CONST64(0x8000000000000000));
         }
         if (aSign) goto invalid;
-        float_raise(status, float_flag_denormal);
-        normalizeFloatx80Subnormal(aSig, &aExp, &aSig);
+        softfloat_raiseFlags(&status, softfloat_flag_denormal);
+        struct exp32_sig64 normExpSig = softfloat_normSubnormalExtF80Sig(aSig);
+        aExp = normExpSig.exp + 1;
+        aSig = normExpSig.sig;
     }
     if (aSign) goto invalid;
-    if (bExp == 0) {
-        if (bSig == 0) {
+    if (! bExp) {
+        if (! bSig) {
             if (aExp < 0x3FFF) return packFloatx80(zSign, 0, 0);
             return packFloatx80(bSign, 0, 0);
         }
-        float_raise(status, float_flag_denormal);
-        normalizeFloatx80Subnormal(bSig, &bExp, &bSig);
+        softfloat_raiseFlags(&status, softfloat_flag_denormal);
+        struct exp32_sig64 normExpSig = softfloat_normSubnormalExtF80Sig(bSig);
+        bExp = normExpSig.exp + 1;
+        bSig = normExpSig.sig;
     }
-    if (aExp == 0x3FFF && ((Bit64u) (aSig<<1) == 0))
+    if (aExp == 0x3FFF && ! (aSig<<1))
         return packFloatx80(bSign, 0, 0);
 
-    float_raise(status, float_flag_inexact);
+    softfloat_raiseFlags(&status, softfloat_flag_inexact);
 
     int ExpDiff = aExp - 0x3FFF;
     aExp = 0;
@@ -214,12 +215,15 @@ invalid:
     /* using float128 for approximation */
     /* ******************************** */
 
+    float128_t b128 = softfloat_normRoundPackToF128(bSign, bExp-0x10, bSig, 0, &status);
+
     Bit64u zSig0, zSig1;
-    shift128Right(aSig<<1, 0, 16, &zSig0, &zSig1);
-    float128 x = packFloat128(0, aExp+0x3FFF, zSig0, zSig1);
+    shortShift128Right(aSig<<1, 0, 16, &zSig0, &zSig1);
+    float128_t x = packFloat128(0, aExp+0x3FFF, zSig0, zSig1);
     x = poly_l2(x, status);
-    x = float128_add(x, int64_to_float128((Bit64s) ExpDiff), status);
-    return floatx80_mul(b, x, status);
+    x = f128_add(x, i32_to_f128(ExpDiff), &status);
+    x = f128_mul(x, b128, &status);
+    return f128_to_extF80(x, &status);
 }
 
 // =================================================
@@ -247,7 +251,7 @@ invalid:
 //       1-u             3     5     7           2n+1
 //
 
-floatx80 fyl2xp1(floatx80 a, floatx80 b, float_status_t &status)
+floatx80 fyl2xp1(floatx80 a, floatx80 b, softfloat_status_t &status)
 {
     Bit32s aExp, bExp;
     Bit64u aSig, bSig, zSig0, zSig1, zSig2;
@@ -256,67 +260,70 @@ floatx80 fyl2xp1(floatx80 a, floatx80 b, float_status_t &status)
     // handle unsupported extended double-precision floating encodings
     if (extF80_isUnsupported(a) || extF80_isUnsupported(b)) {
 invalid:
-        float_raise(status, float_flag_invalid);
+        softfloat_raiseFlags(&status, softfloat_flag_invalid);
         return floatx80_default_nan;
     }
 
-    aSig = extractFloatx80Frac(a);
-    aExp = extractFloatx80Exp(a);
-    aSign = extractFloatx80Sign(a);
-    bSig = extractFloatx80Frac(b);
-    bExp = extractFloatx80Exp(b);
-    bSign = extractFloatx80Sign(b);
+
+    aSig = extF80_fraction(a);
+    aExp = extF80_exp(a);
+    aSign = extF80_sign(a);
+    bSig = extF80_fraction(b);
+    bExp = extF80_exp(b);
+    bSign = extF80_sign(b);
     int zSign = aSign ^ bSign;
 
     if (aExp == 0x7FFF) {
-        if ((Bit64u) (aSig<<1)
-             || ((bExp == 0x7FFF) && (Bit64u) (bSig<<1)))
-        {
-            return propagateFloatx80NaN(a, b, status);
+        if ((aSig<<1) != 0 || ((bExp == 0x7FFF) && (bSig<<1) != 0)) {
+            return softfloat_propagateNaNExtF80UI(a.signExp, aSig, b.signExp, bSig, &status);
         }
         if (aSign) goto invalid;
         else {
-            if (bExp == 0) {
-                if (bSig == 0) goto invalid;
-                float_raise(status, float_flag_denormal);
+            if (! bExp) {
+                if (! bSig) goto invalid;
+                softfloat_raiseFlags(&status, softfloat_flag_denormal);
             }
             return packFloatx80(bSign, 0x7FFF, BX_CONST64(0x8000000000000000));
         }
     }
     if (bExp == 0x7FFF)
     {
-        if ((Bit64u) (bSig<<1))
-            return propagateFloatx80NaN(a, b, status);
+        if (bSig << 1)
+            return softfloat_propagateNaNExtF80UI(a.signExp, aSig, b.signExp, bSig, &status);
 
-        if (aExp == 0) {
-            if (aSig == 0) goto invalid;
-            float_raise(status, float_flag_denormal);
+        if (! aExp) {
+            if (! aSig) goto invalid;
+            softfloat_raiseFlags(&status, softfloat_flag_denormal);
         }
 
         return packFloatx80(zSign, 0x7FFF, BX_CONST64(0x8000000000000000));
     }
-    if (aExp == 0) {
-        if (aSig == 0) {
-            if (bSig && (bExp == 0)) float_raise(status, float_flag_denormal);
+    if (! aExp) {
+        if (! aSig) {
+            if (bSig && ! bExp) softfloat_raiseFlags(&status, softfloat_flag_denormal);
             return packFloatx80(zSign, 0, 0);
         }
-        float_raise(status, float_flag_denormal);
-        normalizeFloatx80Subnormal(aSig, &aExp, &aSig);
+        softfloat_raiseFlags(&status, softfloat_flag_denormal);
+        struct exp32_sig64 normExpSig = softfloat_normSubnormalExtF80Sig(aSig);
+        aExp = normExpSig.exp + 1;
+        aSig = normExpSig.sig;
     }
-    if (bExp == 0) {
-        if (bSig == 0) return packFloatx80(zSign, 0, 0);
-        float_raise(status, float_flag_denormal);
-        normalizeFloatx80Subnormal(bSig, &bExp, &bSig);
+    if (! bExp) {
+        if (! bSig) return packFloatx80(zSign, 0, 0);
+        softfloat_raiseFlags(&status, softfloat_flag_denormal);
+        struct exp32_sig64 normExpSig = softfloat_normSubnormalExtF80Sig(bSig);
+        bExp = normExpSig.exp + 1;
+        bSig = normExpSig.sig;
     }
 
-    float_raise(status, float_flag_inexact);
+    softfloat_raiseFlags(&status, softfloat_flag_inexact);
 
     if (aSign && aExp >= 0x3FFF)
         return a;
 
     if (aExp >= 0x3FFC) // big argument
     {
-        return fyl2x(floatx80_add(a, floatx80_one, status), b, status);
+        return fyl2x(extF80_add(a, floatx80_one, &status), b, status);
     }
 
     // handle tiny argument
@@ -325,29 +332,31 @@ invalid:
         // first order approximation, return (a*b)/ln(2)
         Bit32s zExp = aExp + FLOAT_LN2INV_EXP - 0x3FFE;
 
-	mul128By64To192(FLOAT_LN2INV_HI, FLOAT_LN2INV_LO, aSig, &zSig0, &zSig1, &zSig2);
+        mul128By64To192(FLOAT_LN2INV_HI, FLOAT_LN2INV_LO, aSig, &zSig0, &zSig1, &zSig2);
         if (0 < (Bit64s) zSig0) {
             shortShift128Left(zSig0, zSig1, 1, &zSig0, &zSig1);
             --zExp;
         }
 
         zExp = zExp + bExp - 0x3FFE;
-	mul128By64To192(zSig0, zSig1, bSig, &zSig0, &zSig1, &zSig2);
+        mul128By64To192(zSig0, zSig1, bSig, &zSig0, &zSig1, &zSig2);
         if (0 < (Bit64s) zSig0) {
             shortShift128Left(zSig0, zSig1, 1, &zSig0, &zSig1);
             --zExp;
         }
 
-        return
-            roundAndPackFloatx80(80, aSign ^ bSign, zExp, zSig0, zSig1, status);
+        return softfloat_roundPackToExtF80(aSign ^ bSign, zExp, zSig0, zSig1, 80, &status);
     }
 
     /* ******************************** */
     /* using float128 for approximation */
     /* ******************************** */
 
-    shift128Right(aSig<<1, 0, 16, &zSig0, &zSig1);
-    float128 x = packFloat128(aSign, aExp, zSig0, zSig1);
+    float128_t b128 = softfloat_normRoundPackToF128(bSign, bExp-0x10, bSig, 0, &status);
+
+    shortShift128Right(aSig<<1, 0, 16, &zSig0, &zSig1);
+    float128_t x = packFloat128(aSign, aExp, zSig0, zSig1);
     x = poly_l2p1(x, status);
-    return floatx80_mul(b, x, status);
+    x = f128_mul(x, b128, &status);
+    return f128_to_extF80(x, &status);
 }

@@ -3394,11 +3394,26 @@ number for the Windows build.
 </screen>
 </para>
 <para>
-Check date, update/sumup info in CHANGES. Run autoconf to regenerate configure and check them in.
-Create an GIT tag that contains all files of the revision that was used in the release.
+Check date, update/sumup info in CHANGES. Run autoconf to regenerate configure and
+check them in. The next step is to create a GIT tag that contains all files of the
+revision that was used in the release. Go to the main page of the Bochs repository
+on <ulink url="https://github.com/bochs-emu/Bochs/">GitHub</ulink>. To the right
+of the list of files, click on the <command>Releases</command> link. These are
+the next steps:
+<itemizedlist>
+<listitem><para>Click on <command>Draft a new release</command></para></listitem>
+<listitem><para>Click on <command>Choose a tag</command> and create a new one called
+<filename>REL_2_8_FINAL</filename></para></listitem>
+<listitem><para>Fill in the release title <filename>Bochs 2.8</filename></para></listitem>
+<listitem><para>Use the top of the CHANGES file (brief summary of changes) as the description
+</para></listitem>
+<listitem><para>Select <command>Set as latest release</command></para></listitem>
+<listitem><para>Finally click on <command>Publish release</command></para></listitem>
+</itemizedlist>
 </para>
 <para>
-&FIXME; This section needs an update because of the transition to GitHub
+Source packages are automatically created (see below). After building the binary packages
+you can edit the release and add them with drag&amp;drop.
 </para>
 </section>
 
@@ -3429,7 +3444,7 @@ root directory if it is not already present there.
 <screen>
   ./build/redhat/make-rpm | tee ../build.txt
 </screen>
-This produces two rpm files in the current directory. Test and upload.
+This produces two rpm files in the current directory. Test and upload (see below).
 </para>
 </section>
 
@@ -3452,7 +3467,7 @@ if necessary.
 <para>
 Open up Visual C++ and load the workspace file Bochs.sln.  Check
 the Build:Set Active Project Configuration is set the way you want it.
-For releases I use "Win64 Release".
+For releases I use "x64 Release".
 </para>
 <para>
 To create "bochsdbg.exe" with Bochs debugger support, manually change these
@@ -3488,12 +3503,12 @@ Bochs website, copies all the files into <emphasis>./build/win32/nsis/bochs-2.8<
 and then creates a binary ZIP file in the NSIS folder.
 </para>
 <para>
-Now make the NSIS installer package (the current script is known to work with NSIS 3.04)
+Now make the NSIS installer package (the current script is known to work with NSIS 3.09)
 <screen>
   cd build/win32/nsis
   make
 </screen>
-That gives an installer called <filename>Bochs-2.8.exe</filename>. Test and upload it.
+That gives an installer called <filename>Bochs-win64-2.8.exe</filename>. Test and upload it.
 </para>
 </section>
 
@@ -3524,9 +3539,8 @@ News" section on SF.
 The Bochs project webspace is stored under the SF directory <filename>/home/project-web/bochs</filename>.
 It can be accessed from the SF shell using SSH or with the commands <command>sftp</command>,
 <command>scp</command> and <command>rsync</command>. Some parts of the directory
-structure must be updated from the local CVS repository, others from Bochs SVN
-(directories <filename>bochs</filename> and <filename>sfsite</filename>).
-The online documentation, disk images and screenshots must be uploaded manually.
+structure must be updated from the local CVS repository, others from <filename>Bochs-sfsite</filename>
+GIT repository. The online documentation, disk images and screenshots must be uploaded manually.
 <table>
 <title>Directory structure</title>
 <tgroup cols="2">
@@ -3539,17 +3553,16 @@ The online documentation, disk images and screenshots must be uploaded manually.
 <tbody>
 <row><entry>cgi-bin</entry><entry>CGI scripts for the website</entry></row>
 <row><entry>htdocs</entry><entry>root directory of the website</entry></row>
+<row><entry>htdocs/awards</entry><entry>TODO</entry></row>
 <row><entry>htdocs/doc/docbook</entry><entry>Bochs online documentation</entry></row>
 <row><entry>htdocs/docs-html</entry><entry>old Bochs documentation</entry></row>
 <row><entry>htdocs/guestos</entry><entry>disk images directly stored on the Bochs website</entry></row>
+<row><entry>htdocs/images</entry><entry>images for Bochs website</entry></row>
+<row><entry>htdocs/includes</entry><entry>include files for Bochs website</entry></row>
 <row><entry>htdocs/screenshot</entry><entry>screenshots of Bochs running several guest operating systems</entry></row>
-<row><entry>htdocs/svn-snapshot</entry><entry>link to current snapshot</entry></row>
 <row><entry>htdocs/techspec</entry><entry>technical specifications of several hardware components</entry></row>
-<row><entry>lxr</entry><entry>Bochs source browser</entry></row>
-<row><entry>sfsite-cvsroot</entry><entry>local CVS repository</entry></row>
 <row><entry>sitebin</entry><entry>shell scripts (e.g. for snapshot generation)</entry></row>
 <row><entry>siteman</entry><entry>website manual pages</entry></row>
-<row><entry>snapshot</entry><entry>SVN snapshot storage area</entry></row>
 <row><entry>tmp</entry><entry>temp directory for shell scripts</entry></row>
 </tbody>
 </tgroup>

@@ -2471,7 +2471,6 @@ Bit32u lfb_w(Bit32u offset, Bit32u data, Bit32u mem_mask)
 {
   Bit16u *dest, *depth;
   Bit32u destmax, depthmax;
-  Bit32u forcefront=0;
 
   int sr[2], sg[2], sb[2], sa[2], sw[2];
   int x, y, scry, mask;
@@ -2679,7 +2678,7 @@ Bit32u lfb_w(Bit32u offset, Bit32u data, Bit32u mem_mask)
     mask &= ~(0xf0 + LFB_DEPTH_PRESENT_MSW);
 
   /* select the target buffer */
-  destbuf = (v->type >= VOODOO_BANSHEE) ? (!forcefront) : LFBMODE_WRITE_BUFFER_SELECT(v->reg[lfbMode].u);
+  destbuf = (v->type >= VOODOO_BANSHEE) ? 1 : LFBMODE_WRITE_BUFFER_SELECT(v->reg[lfbMode].u);
   switch (destbuf)
   {
     case 0:     /* front buffer */
@@ -2691,6 +2690,8 @@ Bit32u lfb_w(Bit32u offset, Bit32u data, Bit32u mem_mask)
     case 1:     /* back buffer */
       dest = (Bit16u *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.backbuf]);
       destmax = (v->fbi.mask + 1 - v->fbi.rgboffs[v->fbi.backbuf]) / 2;
+      if (v->fbi.rgboffs[v->fbi.frontbuf] == v->fbi.rgboffs[v->fbi.backbuf])
+        v->fbi.video_changed = 1;
       break;
 
     default:    /* reserved */
@@ -2936,11 +2937,13 @@ Bit32u cmdfifo_r(cmdfifo_info *f)
 
   data = *(Bit32u*)(&v->fbi.ram[f->rdptr & v->fbi.mask]);
   f->rdptr += 4;
-  if (f->rdptr >= f->end) {
-    BX_INFO(("CMDFIFO RdPtr rollover"));
-    f->rdptr = f->base;
+  if (!f->jsr) {
+    if (f->rdptr >= f->end) {
+      BX_INFO(("CMDFIFO RdPtr rollover"));
+      f->rdptr = f->base;
+    }
+    f->depth--;
   }
-  f->depth--;
   return data;
 }
 
@@ -2960,6 +2963,24 @@ void cmdfifo_process(cmdfifo_info *f)
       code = (Bit8u)((command >> 3) & 0x07);
       switch (code) {
         case 0: // NOP
+          break;
+        case 1: // JSR
+          if (f->jsr) {
+            BX_ERROR(("cmdfifo_process(): JSR: already inside of subroutine"));
+          } else {
+            f->jsr = true;
+            f->retAddr = f->rdptr;
+            f->rdptr = (command >> 4) & 0xfffffc;
+          }
+          break;
+        case 2: // RET
+          if (!f->jsr) {
+            BX_ERROR(("cmdfifo_process(): RET: not inside of subroutine"));
+          } else {
+            f->rdptr = f->retAddr;
+            f->retAddr = 0;
+            f->jsr = false;
+          }
           break;
         case 3: // JMP
           f->rdptr = (command >> 4) & 0xfffffc;
@@ -3209,7 +3230,7 @@ void cmdfifo_process(cmdfifo_info *f)
       BX_ERROR(("CMDFIFO: unsupported packet type %d", type));
   }
   f->depth_needed = cmdfifo_calc_depth_needed(f);
-  if (f->depth < f->depth_needed) {
+  if (!f->jsr && f->depth < f->depth_needed) {
     f->cmd_ready = 0;
   }
 }

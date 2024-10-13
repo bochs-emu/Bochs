@@ -875,7 +875,7 @@ void bx_dbg_print_sse_state(void)
 void bx_dbg_print_avx_state(unsigned cpu, unsigned vlen)
 {
 #if BX_SUPPORT_AVX
-  char param_name[20];
+  char param_name[24];
 
   if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_AVX)) {
     bx_dbg_print_mxcsr_state();

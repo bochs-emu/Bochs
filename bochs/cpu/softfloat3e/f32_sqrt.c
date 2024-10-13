@@ -36,10 +36,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
 #include "specialize.h"
 #include "softfloat.h"
 
-float32_t f32_sqrt(float32_t a, struct softfloat_status_t *status)
+float32 f32_sqrt(float32 a, struct softfloat_status_t *status)
 {
     bool signA;
     int16_t expA;

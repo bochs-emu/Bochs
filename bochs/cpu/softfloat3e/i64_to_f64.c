@@ -36,9 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
 #include "softfloat.h"
 
-float64_t i64_to_f64(int64_t a, struct softfloat_status_t *status)
+float64 i64_to_f64(int64_t a, struct softfloat_status_t *status)
 {
     bool sign;
     uint64_t absA;

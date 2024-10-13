@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-extFloat80_t f64_to_extF80(float64_t a, struct softfloat_status_t *status)
+extFloat80_t f64_to_extF80(float64 a, struct softfloat_status_t *status)
 {
     bool sign;
     int16_t exp;

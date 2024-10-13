@@ -20,6 +20,8 @@ including Linux, DOS, Windows 9X/NT/2000/XP or Windows 7.
 
 %define pkg_name bochs
 
+%define _build_id_links none
+
 %prep
 	rm -rf $RPM_BUILD_DIR/bochs-@SEDVERSION@
 	tar xzvf $RPM_SOURCE_DIR/bochs-@SEDVERSION@.tar.gz

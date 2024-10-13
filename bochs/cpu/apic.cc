@@ -687,7 +687,7 @@ void bx_local_apic_c::send_ipi(apic_dest_t dest, Bit32u lo_cmd)
     accepted = apic_bus_broadcast_interrupt(vector, delivery_mode, trig_mode, get_id());
     break;
   default:
-    BX_PANIC(("Invalid desination shorthand %#x", dest_shorthand));
+    BX_PANIC(("Invalid destination shorthand %#x", dest_shorthand));
   }
 
   if(! accepted) {

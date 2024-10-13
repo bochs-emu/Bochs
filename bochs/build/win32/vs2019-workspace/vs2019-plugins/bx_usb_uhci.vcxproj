@@ -68,24 +68,24 @@
     <_ProjectFileVersion>12.0.21005.1</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\..\obj-debug\usb_uhci\</OutDir>
-    <IntDir>.\..\obj-debug\usb_uhci\</IntDir>
+    <OutDir>.\..\obj-debug\bx_usb_uhci\</OutDir>
+    <IntDir>.\..\obj-debug\bx_usb_uhci\</IntDir>
     <LinkIncremental>true</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>.\..\obj-debug\usb_uhci\</OutDir>
-    <IntDir>.\..\obj-debug\usb_uhci\</IntDir>
+    <OutDir>.\..\obj-debug\bx_usb_uhci\</OutDir>
+    <IntDir>.\..\obj-debug\bx_usb_uhci\</IntDir>
     <LinkIncremental>true</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\..\obj-release\usb_uhci\</OutDir>
-    <IntDir>.\..\obj-release\usb_uhci\</IntDir>
+    <OutDir>.\..\obj-release\bx_usb_uhci\</OutDir>
+    <IntDir>.\..\obj-release\bx_usb_uhci\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>.\..\obj-release\usb_uhci\</OutDir>
-    <IntDir>.\..\obj-release\usb_uhci\</IntDir>
+    <OutDir>.\..\obj-release\bx_usb_uhci\</OutDir>
+    <IntDir>.\..\obj-release\bx_usb_uhci\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <BuildLog>
@@ -170,7 +170,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>..\obj-release\bochs.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
       <OutputFile>.\..\obj-release\$(TargetName)$(TargetExt)</OutputFile>
@@ -200,7 +200,7 @@
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>..\obj-release\bochs.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OutputFile>.\..\obj-release\$(TargetName)$(TargetExt)</OutputFile>
     </Link>

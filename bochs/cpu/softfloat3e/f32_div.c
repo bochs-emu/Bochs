@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-float32_t f32_div(float32_t a, float32_t b, struct softfloat_status_t *status)
+float32 f32_div(float32 a, float32 b, struct softfloat_status_t *status)
 {
     bool signA;
     int16_t expA;

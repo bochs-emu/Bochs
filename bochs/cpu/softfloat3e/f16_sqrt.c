@@ -42,7 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern const uint16_t softfloat_approxRecipSqrt_1k0s[];
 extern const uint16_t softfloat_approxRecipSqrt_1k1s[];
 
-float16_t f16_sqrt(float16_t a, struct softfloat_status_t *status)
+float16 f16_sqrt(float16 a, struct softfloat_status_t *status)
 {
     bool signA;
     int8_t expA;

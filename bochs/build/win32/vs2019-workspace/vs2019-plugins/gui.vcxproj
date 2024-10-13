@@ -221,7 +221,9 @@
     <ClCompile Include="..\gui\paramtree.cc" />
     <ClCompile Include="..\gui\siminterface.cc" />
     <ClCompile Include="..\gui\textconfig.cc" />
+    <ClCompile Include="..\gui\usb_debug.cc" />
     <ClCompile Include="..\gui\win32_enh_dbg_osdep.cc" />
+    <ClCompile Include="..\gui\win32usb.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\gui\enh_dbg.h" />
@@ -229,10 +231,14 @@
     <ClInclude Include="..\gui\keymap.h" />
     <ClInclude Include="..\gui\paramtree.h" />
     <ClInclude Include="..\gui\siminterface.h" />
+    <ClInclude Include="..\gui\usb_debug.h" />
     <ClInclude Include="..\gui\wenhdbg_res.h" />
     <ClInclude Include="..\gui\win32dialog.h" />
     <ClInclude Include="..\gui\win32res.h" />
+    <ClInclude Include="..\gui\win32usb.h" />
+    <ClInclude Include="..\gui\win32usbres.h" />
     <ClInclude Include="..\iodev\iodev.h" />
+    <ClInclude Include="..\config.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

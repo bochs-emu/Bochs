@@ -36,15 +36,15 @@ This is the top level file for the bochs Users Manual.
 Bochs is a program that simulates a complete Intel x86 computer.
 It includes emulation of the Intel x86 CPU, common I/O devices,
 and a custom BIOS. Bochs can be compiled to emulate many different
-x86 CPUs, from early 386 to the most recent x86-64 Intel and AMD
-processors which may even not reached the market yet.
+x86 CPUs, from early 386 to the most recent (sometimes even pre-market)
+x86-64 Intel and AMD processors.
 
 Bochs interprets every instruction from power-up to reboot, and has
 device models for all of the standard PC peripherals: keyboard, mouse,
 VGA card/monitor, disks, timer chips, network card, etc.  Because Bochs
 simulates the whole PC environment, the software running in the simulation
 "believes" it is running on a real machine.  This approach allows Bochs
-to run a wide variety of software with no modification, include most popular
+to run a wide variety of software with no modification, including most popular
 x86 operating systems: Windows 95/98/NT/2000/XP and Vista, all Linux flavors,
 all BSD flavors, and more.
 </para>
@@ -130,9 +130,9 @@ The last version of Bochs that he released was 3/25/2000, three days after the
 Mandrake press release.
 -->
 In March 2001, Kevin helped a few developers to move all Bochs activities from
-bochs.com to a new site at <ulink url="http://bochs.sourceforge.net"></ulink>.  Since then the Bochs project
-has settled into its new home, and around release times has even hit #1 most
-active project of the week at SourceForge.
+bochs.com to a new site at <ulink url="http://bochs.sourceforge.net"></ulink>.
+Since then the Bochs project has settled into its new home, and around release
+times has even hit #1 most active project of the week at SourceForge.
 </para>
 </section><!-- end: What is Bochs? -->
 
@@ -141,7 +141,8 @@ active project of the week at SourceForge.
 regular basis, but a few statistics give an indication.  The &devlist;,
 which is the primary source of news on bugs and releases, has over 400
 subscribers. The latest version has been downloaded over 150,000 times
-from SourceForge, not counting any mirror website or SVN users.
+from SourceForge, not counting any mirror website or
+<ulink url="https://github.com/bochs-emu/Bochs/">GitHub</ulink> users.
 </para>
 
 <para>
@@ -894,13 +895,11 @@ code that displays the Bochs VGA screen and handles keyboard and mouse events.
 
 <para>
 The change log is stored in the Bochs source code in a file called
-CHANGES.  Click <ulink url="http://svn.code.sf.net/p/bochs/code/trunk/bochs/CHANGES">here</ulink>
+CHANGES.  Click <ulink url="https://github.com/bochs-emu/Bochs/blob/master/bochs/CHANGES">here</ulink>
 to see the latest version of the CHANGES file.
 </para>
 <para>
-The link above is provided by Source Forge and might change one day.  If it
-stops working, you can download the current source code with SVN and read
-the CHANGES file there.
+You can also download the current source code from GitHub and read the CHANGES file there.
 </para>
 
 </chapter>
@@ -918,8 +917,11 @@ You can download Bochs from our web site at &bochs-sf-net;.  First, you
 need to choose what version to get: a recent release or a development
 version.  If you trying to get things working for the first time, a release
 version is recommended since it has been tested the most.  The development
-versions (sometimes called SVN snapshots) may have some newer bug fixes and
-new features, but have not been tested as much as the releases.
+versions may have some newer bug fixes and new features, but have not been
+tested as much as the releases. A snapshot of the current state of the source
+tree in ZIP format is available on
+<ulink url="https://github.com/bochs-emu/Bochs/">GitHub</ulink> when you press
+the <command>Code</command> button.
 </para>
 
 <para>
@@ -938,8 +940,8 @@ linkend="install-binary">Installing a Binary</link> for more information.
 If you are going to compile Bochs yourself, you need the gzipped tarball
 containing the source code, called
 <filename>bochs-<replaceable>version</replaceable>.tar.gz</filename>.  For
-Windows and Mac, the prebuilt Makefiles are separate, so also get
-the Makefiles for your platform.  To unpack a compressed TAR file<footnote>
+Windows a ZIP package with sources and prebuilt Makefiles is available.
+To unpack a compressed TAR file<footnote>
 <para>
 A TAR file is a single file that contains many files packed inside.  Bochs
 TAR files are compressed with a program called gzip, and another program
@@ -962,71 +964,60 @@ Bochs are in the section, <link linkend="compiling">Compiling Bochs</link>.
 </para>
 
 <para>
-Alternatively, you can also obtain the sources for any Bochs version using SVN.
-See the <link linkend="get-src-svn">SVN instructions</link> for details.
+Alternatively, you can also obtain the sources for any Bochs version using GIT.
+See the <link linkend="get-src-git">GIT instructions</link> for details.
 </para>
 </section>  <!-- End of Installation:Downloading Bochs section -->
 
-<section id="get-src-svn"><title>Tracking the source code with SVN</title>
+<section id="get-src-git"><title>Tracking the source code with GIT</title>
 <para>
-SVN (Subversion) is a tool used by many software developers to manage changes
-within their source code tree. SVN provides the means to store not only the
-current version of a piece of source code, but a record of all changes (and who
-made those changes) that have occurred to that source code. Use of SVN is
-particularly common on projects with multiple developers, since SVN ensures
-changes made by one developer are not accidentally removed when another
-developer posts their changes to the source tree. The Bochs source code and
-documentation is available using SVN<footnote>
+GIT is a free and open source version control system designed to handle small
+to very large project efficiently. Git is used to tracking changes in the source
+code, enabling multiple developers to work together on non-linear development.
+The Bochs source code and documentation is available using GIT<footnote>
 <para>
-You can download SVN software and documentation from
-<ulink url="http://subversion.apache.org">subversion.apache.org</ulink>.
+You can download GIT software and documentation from
+<ulink url="https://git-scm.com/">git-scm.com</ulink>.
 </para>
-</footnote>.
+</footnote> hostet on <ulink url="https://github.com/bochs-emu/Bochs/">GitHub</ulink>.
 </para>
 
 <section><title>Checking out Bochs</title>
 <para>
-When you have SVN installed, the first step is to do a checkout. The initial
-checkout command is long and ugly, but usually you only have to do it
-once. The example below shows the SVN checkout process of the Bochs trunk in Unix.
-On the Windows platform, you can download a SVN client from
-<ulink url="http://subversion.apache.org/packages.html#windows">subversion.apache.org</ulink>,
-or use SVN within Cygwin<footnote>
+When you have a GIT client installed, the first step is to do a checkout.
+The initial checkout command is long and ugly, but usually you only have to do it
+once. The example below shows the GIT checkout process of the Bochs master branch in Unix.
+On the Windows platform, you can download a GIT client from
+<ulink url="https://git-scm.com/download/win">git-scm.com</ulink>,
+or use GIT within Cygwin<footnote>
 <para>
 Cygwin is an open source Unix-like environment for Windows platforms,
-available at <ulink url="http://www.cygwin.com">www.cygwin.com</ulink>.
+available at <ulink url="https://www.cygwin.com">www.cygwin.com</ulink>.
 </para>
 </footnote>.
 
-<figure><title>Checking out Bochs in SVN</title>
+<figure><title>Checking out Bochs in GIT</title>
 <screen>
-  user$ <command>svn co http://svn.code.sf.net/p/bochs/code/trunk/bochs bochs</command>
-  A    bochs/ltdl.c
-  A    bochs/Makefile.in
-  A    bochs/bochs.h
-  .
-  .   <lineannotation>(This might take a few minutes, depending on your network connection.)</lineannotation>
-  .
-  A    bochs/install.sh
-   U   bochs
-  Checkout, Revision 10754.
-  user$ <command>cd bochs</command>
+  user$ <command>git clone https://github.com/bochs-emu/Bochs.git</command>
+  Cloning into 'Bochs'...
+  remote: Enumerating objects: 107946, done.
+  remote: Counting objects: 100% (2708/2708), done.
+  remote: Compressing objects: 100% (869/869), done.
+  remote: Total 107946 (delta 2095), reused 2118 (delta 1817), pack-reused 105238
+  Receiving objects: 100% (107946/107946), 39.53 MiB | 2.86 MiB/s, done.
+  Resolving deltas: 100% (85554/85554), done.
+  <lineannotation>(This might take a few minutes, depending on your network connection.)</lineannotation>
+  user$ <command>cd Bochs/bochs</command>
   user$ <command>ls</command>
-  aclocal.m4       cpu                 logio.cc        pc_system.cc
-  bios             cpudb.h             ltdl.c          pc_system.h
-  bochs.h          crc.cc              ltdlconf.h.in   plugin.cc
-  build            disasm              ltdl.h          plugin.h
-  bx_debug         doc                 ltmain.sh       README
-  bxversion.h.in   docs-html           main.cc         README-plugins
-  bxversion.rc.in  extplugin.h         Makefile.in     README.rfb
-  CHANGES          fpu                 memory          README-wxWindows
-  config.cc        gdbstub.cc          misc            TESTFORM.txt
-  config.guess     gui                 msrs.def        TODO
-  config.h.in      host                osdep.cc        win32_enh_dbg.rc
-  config.sub       install-sh          osdep.h         win32res.rc
-  configure        instrument          param_names.h   wxbochs.rc
-  configure.in     iodev               PARAM_TREE.txt
-  COPYING          load32bitOShack.cc  patches
+  CHANGES           aclocal.m4      bxversion.rc.in  crc.cc       iodev      osdep.h           win32res.rc
+  COPYING           bios            config.cc        doc          logio.cc   param_names.h     win32usbres.rc
+  LICENSE           bochs.h         config.guess     docs-html    logio.h    patches           wxbochs.rc
+  Makefile.in       build           config.h.in      extplugin.h  ltmain.sh  pc_system.cc
+  PARAM_TREE.txt    bx_debug        config.sub       gdbstub.cc   main.cc    pc_system.h
+  README            bxdisasm.cc     configure        gui          memory     plugin.cc
+  README-wxWidgets  bxthread.cc     configure.ac     host         misc       plugin.h
+  TESTFORM.txt      bxthread.h      cpu              install-sh   msrs.def   qemu-queue.h
+  TODO              bxversion.h.in  cpudb.h          instrument   osdep.cc   win32_enh_dbg.rc
   user$ _
 </screen>
 </figure>
@@ -1040,114 +1031,47 @@ available at <ulink url="http://www.cygwin.com">www.cygwin.com</ulink>.
 
 <tip>
 <para>
-If you have write access to the Bochs SVN tree, see the Developers Guide
-<footnote>
-<para>
-See the <ulink url="../development/resources.html">Developers Guide</ulink>
-and/or look at
-<ulink url="http://sourceforge.net/apps/trac/sourceforge/wiki/Subversion#Access">SourceForge's Subversion documentation</ulink>,
+If you have write access to the Bochs GIT tree, see the
+<ulink url="../development/resources.html">Developers Guide</ulink>
 for instructions.
-</para>
-</footnote> for details.
 </para>
 </tip>
 
 <para>
-The SVN checkout process (above) gives you a directory called <filename>bochs</filename>
+The GIT checkout process (above) gives you a directory called <filename>Bochs</filename>
 that contains the very latest source code.  I will refer to this directory
-as &bochsdir;.  In this directory there's also a subdirectory called ".svn"
-which tells the SVN software where the code was checked out, what version
+as &bochsdir;.  In this directory there's also a subdirectory called ".git"
+which tells the GIT software where the code was checked out, what version
 you have, and where to go for future updates.
 </para>
 </section>
 
 <section><title>Getting the Latest Version</title>
 <para>
-Most developers use SVN to always give them the latest source code.  The minute
+Most developers use GIT to always give them the latest source code.  The minute
 that any developer checks in a change, they are available to everyone else
-through SVN. You just have to type <command>svn update</command> in the
-&bochsdir; directory, and SVN will retrieve any files and directories that have
+through GIT. You just have to type <command>git pull</command> in the
+&bochsdir; directory, and GIT will retrieve any files and directories that have
 been changed since you did a checkout.  If you update regularly, each update
 takes a short time because it downloads only the files that changed.
-See also <link linkend="svn-release-version">Getting a release version</link>.
+See also <link linkend="git-release-version">Getting a release version</link>.
 </para>
+
 
 <para>
-The <command>svn update</command> command tells you if any new files have
+The <command>git pull</command> command tells you if any new files have
 been downloaded from the server, and it also tells you if you have modified any
-of the SVN-controlled files.  As it checks through the source directories, it
-will list files that have changed, with a single letter before the name that
-tells the status of that file.  The most common status letters are listed
-below.
-
-<table frame="all">
-<title>Status letters in a SVN update</title>
-  <tgroup cols="3">
-    <thead>
-      <row>
-        <entry>Letter</entry>
-        <entry>Meaning</entry>
-        <entry>Description</entry>
-      </row>
-    </thead>
-    <tbody>
-      <row>
-        <entry>?</entry>
-        <entry>unknown</entry>
-        <entry>
-        This file is in your Bochs directory, but SVN does not know anything
-        about it.  For example, when you compile Bochs, any files created
-        during the build process appear as ?.
-        </entry>
-      </row>
-      <row>
-        <entry>U</entry>
-        <entry>update</entry>
-        <entry>
-        SVN downloaded a new version of this file because it changed on the
-        server, usually because someone else did a checkin.
-        </entry>
-      </row>
-      <row>
-        <entry>A</entry>
-        <entry>added</entry>
-        <entry>
-        SVN downloaded a newly added file from the server.
-        </entry>
-      </row>
-      <row>
-        <entry>D</entry>
-        <entry>deleted</entry>
-        <entry>
-        This file has been deleted on the server and SVN removed it from your
-        local copy.
-        </entry>
-      </row>
-      <row>
-        <entry>C</entry>
-        <entry>conflict</entry>
-        <entry>
-        You have changed this file on your disk, but this change conflicts with
-        a change that was checked in.  Conflicts occur when two people change
-        the same line of code in different ways.  You need to edit the
-        conflicting file(s) and clean it up by hand.  Or, sometimes it's
-        easiest to discard your own edits and download a fresh copy, by
-        deleting the conflicting file and running svn update again.
-        </entry>
-      </row>
-    </tbody>
-   </tgroup>
-</table>
+of the GIT-controlled files.  As it checks through the source directories, it
+will list files that have changed.
 </para>
-
 </section>
 
-<section id="svn-release-version"><title>Getting a Release Version</title>
+<section id="git-release-version"><title>Getting a Release Version</title>
 <para>
-You can also use the SVN checkout command to get the Bochs source code for
+You can also use the GIT checkout command to get the Bochs source code for
 any release since March 2000.  The command is
 <screen>
-  user$ <command>svn co http://svn.code.sf.net/p/bochs/code/tags/<replaceable>tagname</replaceable>/bochs bochs</command>
+  user$ <command>git clone</command> --branch <replaceable>tagname</replaceable> https://github.com/bochs-emu/Bochs.git
 </screen>
 The <replaceable>tagname</replaceable> tells which release you want, and it can be one of the following:
 
@@ -1157,210 +1081,215 @@ The <replaceable>tagname</replaceable> tells which release you want, and it can 
     <thead>
       <row>
         <entry>Bochs version</entry>
-        <entry>Release tag for SVN</entry>
-        <entry>SVN revision</entry>
+        <entry>Release tag for GIT</entry>
+        <entry>Release date</entry>
       </row>
     </thead>
     <tbody>
       <row>
+        <entry>2.8</entry>
+        <entry>REL_2_8_FINAL</entry>
+        <entry>March 10, 2024</entry>
+      </row>
+      <row>
         <entry>2.7</entry>
         <entry>REL_2_7_FINAL</entry>
-        <entry>14332</entry>
+        <entry>August 1, 2021</entry>
       </row>
       <row>
         <entry>2.6.11 (bugfix)</entry>
         <entry>REL_2_6_11_FINAL</entry>
-        <entry>13774</entry>
+        <entry>January 5, 2020</entry>
       </row>
       <row>
         <entry>2.6.10 (intermediate)</entry>
         <entry>REL_2_6_10_FINAL</entry>
-        <entry>13629</entry>
+        <entry>December 1, 2019</entry>
       </row>
       <row>
         <entry>2.6.9 (intermediate)</entry>
         <entry>REL_2_6_9_FINAL</entry>
-        <entry>13181</entry>
+        <entry>April 9, 2017</entry>
       </row>
       <row>
         <entry>2.6.8 (intermediate)</entry>
         <entry>REL_2_6_8_FINAL</entry>
-        <entry>12740</entry>
+        <entry>May 3, 2015</entry>
       </row>
       <row>
         <entry>2.6.7 (intermediate)</entry>
         <entry>REL_2_6_7_FINAL</entry>
-        <entry>12531</entry>
+        <entry>November 2, 2014</entry>
       </row>
       <row>
         <entry>2.6.6 (bugfix)</entry>
         <entry>REL_2_6_6_FINAL</entry>
-        <entry>12375</entry>
+        <entry>June 15, 2014</entry>
       </row>
       <row>
         <entry>2.6.5 (intermediate)</entry>
         <entry>REL_2_6_5_FINAL</entry>
-        <entry>12349</entry>
+        <entry>June 1, 2014</entry>
       </row>
       <row>
         <entry>2.6.2 (bugfix)</entry>
         <entry>REL_2_6_2_FINAL</entry>
-        <entry>11694</entry>
+        <entry>May 26, 2013</entry>
       </row>
       <row>
         <entry>2.6.1 (intermediate)</entry>
         <entry>REL_2_6_1_FINAL</entry>
-        <entry>11667</entry>
+        <entry>April 7, 2013</entry>
       </row>
       <row>
         <entry>2.6</entry>
         <entry>REL_2_6_FINAL</entry>
-        <entry>11395</entry>
+        <entry>September 2, 2012</entry>
       </row>
       <row>
         <entry>2.5.1 (bugfix)</entry>
         <entry>REL_2_5_1_FINAL</entry>
-        <entry>10946</entry>
+        <entry>January 6, 2012</entry>
       </row>
       <row>
         <entry>2.5</entry>
         <entry>REL_2_5_FINAL</entry>
-        <entry>10801</entry>
+        <entry>November 27, 2011</entry>
       </row>
       <row>
         <entry>2.4.6</entry>
         <entry>REL_2_4_6_FINAL</entry>
-        <entry>10202</entry>
+        <entry>February 22, 2011</entry>
       </row>
       <row>
         <entry>2.4.5</entry>
         <entry>REL_2_4_5_FINAL</entry>
-        <entry>9914</entry>
+        <entry>April 25, 2010</entry>
       </row>
       <row>
         <entry>2.4.2</entry>
         <entry>REL_2_4_2_FINAL</entry>
-        <entry>9568</entry>
+        <entry>November 12, 2009</entry>
       </row>
       <row>
         <entry>2.4.1</entry>
         <entry>REL_2_4_1_FINAL</entry>
-        <entry>9368</entry>
+        <entry>June 7, 2009</entry>
       </row>
       <row>
         <entry>2.4</entry>
         <entry>REL_2_4_FINAL</entry>
-        <entry>9289</entry>
+        <entry>May 3, 2009</entry>
       </row>
       <row>
         <entry>2.3.7</entry>
         <entry>REL_2_3_7_FINAL</entry>
-        <entry>8537</entry>
+        <entry>June 3, 2008</entry>
       </row>
       <row>
         <entry>2.3.6</entry>
         <entry>REL_2_3_6_FINAL</entry>
-        <entry>8111</entry>
+        <entry>December 24, 2007</entry>
       </row>
       <row>
         <entry>2.3.5</entry>
         <entry>REL_2_3_5_FINAL</entry>
-        <entry>7840</entry>
+        <entry>September 16, 2007</entry>
       </row>
       <row>
         <entry>2.3</entry>
         <entry>REL_2_3_FINAL</entry>
-        <entry>7538</entry>
+        <entry>August 27, 2006</entry>
       </row>
       <row>
         <entry>2.2.6 (intermediate2)</entry>
         <entry>REL_2_2_6_FINAL</entry>
-        <entry>7060</entry>
+        <entry>January 29, 2005</entry>
       </row>
       <row>
         <entry>2.2.5 (intermediate1)</entry>
         <entry>REL_2_2_5_FINAL</entry>
-        <entry>6942</entry>
+        <entry>December 30, 2005</entry>
       </row>
       <row>
         <entry>2.2.1 (bugfix1)</entry>
         <entry>REL_2_2_1_FINAL</entry>
-        <entry>6624</entry>
+        <entry>July 8, 2005</entry>
       </row>
       <row>
         <entry>2.2</entry>
         <entry>REL_2_2_FINAL</entry>
-        <entry>6476</entry>
+        <entry>May 28, 2005</entry>
       </row>
       <row>
         <entry>2.1.1 (bugfix1)</entry>
         <entry>REL_2_1_1_FINAL</entry>
-        <entry>5560</entry>
+        <entry>February 8, 2004</entry>
       </row>
       <row>
         <entry>2.1</entry>
         <entry>REL_2_1_FINAL</entry>
-        <entry>5441</entry>
+        <entry>January 9, 2004</entry>
       </row>
       <row>
         <entry>2.0.2 (bugfix2)</entry>
         <entry>REL_2_0_2_FINAL</entry>
-        <entry>4592</entry>
+        <entry>January 21, 2003</entry>
       </row>
       <row>
         <entry>2.0.1 (bugfix1)</entry>
         <entry>REL_2_0_1_FINAL</entry>
-        <entry>4491</entry>
+        <entry>January 4, 2003</entry>
       </row>
       <row>
         <entry>2.0</entry>
         <entry>REL_2_0_FINAL</entry>
-        <entry>4409</entry>
+        <entry>December 21, 2002</entry>
       </row>
       <row>
         <entry>1.4.1 (bugfix1)</entry>
         <entry>REL_1_4_1_FINAL</entry>
-        <entry>2513</entry>
+        <entry>June 22, 2002</entry>
       </row>
       <row>
         <entry>1.4</entry>
         <entry>REL_1_4_FINAL</entry>
-        <entry>2235</entry>
+        <entry>March 27, 2002</entry>
       </row>
       <row>
         <entry>1.3</entry>
         <entry>REL_1_3_FINAL</entry>
-        <entry>1705</entry>
+        <entry>December 10, 2001</entry>
       </row>
       <row>
         <entry>1.2.1 (bugfix1)</entry>
         <entry>REL_1_2_1_FINAL</entry>
-        <entry>912</entry>
+        <entry>June 12, 2001</entry>
       </row>
       <row>
         <entry>1.2</entry>
         <entry>REL_1_2_FINAL</entry>
-        <entry>797</entry>
+        <entry>June 3, 2001</entry>
       </row>
       <row>
         <entry>1.1.2 (bugfix3)</entry>
         <entry>REL_1_1_2_BASE</entry>
-        <entry>510</entry>
+        <entry>May 16, 2001</entry>
       </row>
       <row>
         <entry>1.1.1 (bugfix2)</entry>
         <entry>REL_1_1_1_BASE</entry>
-        <entry>57</entry>
+        <entry>April 9, 2001</entry>
       </row>
       <row>
         <entry>1.1 (bugfix1)</entry>
         <entry>REL_1_1_BASE</entry>
-        <entry>51</entry>
+        <entry>April 6, 2001</entry>
       </row>
       <row>
         <entry>1.0 (bochs-2000_0325a)</entry>
         <entry>REL-bochs-2000-03-25</entry>
-        <entry>7</entry>
+        <entry>March 25, 2000</entry>
       </row>
     </tbody>
    </tgroup>
@@ -1370,25 +1299,16 @@ The <replaceable>tagname</replaceable> tells which release you want, and it can 
 
 </section>
 
-<section><title>More about SVN</title>
+<section><title>More about GIT and GitHub</title>
 <para>
-Entire books have been written on SVN, so there's no sense in duplicating
-it all here in the Bochs documentation.  Some sources of additional
-information is listed below.
+The official GIT documentation can be found at <ulink url="https://git-scm.com/doc"></ulink>
+and the official GitHub docs are located at <ulink url="https://docs.github.com/en"></ulink>.
 </para>
-<itemizedlist>
-<listitem><para>The <ulink url="http://subversion.apache.org">subversion.apache.org
-site</ulink> has tons of SVN FAQs and documentation.</para></listitem>
-<listitem><para>
-A German <ulink url="http://pvs.uni-muenster.de/pvs/lehre/WS06/projekt/svn-faq.html">SVN FAQ</ulink>
-is available at University of Muenster.
-</para></listitem>
-</itemizedlist>
 
 </section>
 
 
-</section> <!-- End of Installation:Getting the source code with SVN -->
+</section> <!-- End of Installation:Getting the source code with GIT -->
 
 
 <section id="install-binary"><title>Installing a Binary</title>
@@ -1403,8 +1323,9 @@ is different on different platforms.
 The Bochs binaries for Windows are distributed in an EXE installer package.
 The Bochs installer can be started like any other Windows program and it brings
 up the installation wizard. Here you can select the destination folder and the
-installation options. The wizard installs the files and creates the registry
-keys, start menu and desktop links.
+installation options. If an older Bochs version is installed, you'll be asked
+to uninstall it before installing the new version. The wizard installs the files
+and creates the registry keys, start menu and desktop links.
 </para>
 <para>
 Previous releases of Bochs were distributed as ZIP packages, too. These packages
@@ -1457,11 +1378,12 @@ DLX Linux screenshot.
 <row><entry>vgabios-cirrus.bin-1.13.0 </entry> <entry> SeaVGABIOS ROM image (for Cirrus adapter)</entry> </row>
 <row><entry>VGABIOS-elpin-2.40 </entry> <entry> VGA BIOS image for Bochs </entry> </row>
 <row><entry>VGABIOS-elpin-LICENSE.txt </entry> <entry> license for VGA BIOS </entry> </row>
-<row><entry>VGABIOS-lgpl-latest </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
-<row><entry>VGABIOS-lgpl-latest-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with debug output to the logfile </entry> </row>
-<row><entry>VGABIOS-lgpl-latest-cirrus </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled </entry> </row>
-<row><entry>VGABIOS-lgpl-latest-cirrus-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled and debug output to the logfile </entry> </row>
-<row><entry>VGABIOS-lgpl-latest-banshee </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Voodoo Banshee extension enabled </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-bin </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-debug.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs with debug output to the logfile </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-cirrus.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-cirrus-debug.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled and debug output to the logfile </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-banshee.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Voodoo Banshee extension enabled </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-banshee-debug.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Voodoo Banshee extension enabled and debug output to the logfile </entry> </row>
 <row><entry>VGABIOS-lgpl-README.txt </entry> <entry> readme for the LGPL'd VGA BIOS </entry> </row>
 <row><entry>dlxlinux\ </entry> <entry> directory containing DLX linux sample disk image and configuration files</entry> </row>
 <row><entry>dlxlinux\bochsrc.bxrc </entry> <entry> Bochs configuration file for DLX</entry> </row>
@@ -1471,7 +1393,7 @@ DLX Linux screenshot.
 <row><entry>dlxlinux\testform.txt </entry> <entry> Form for reporting success or failure </entry> </row>
 <row>
   <entry>doc\index.html</entry>
-  <entry>a local copy of all Bochs documentation (<ulink url="http://bochs.sourceforge.net/doc/docbook/index.html">online copy</ulink>)</entry>
+  <entry>a local copy of all Bochs documentation (<ulink url="https://bochs.sourceforge.io/doc/docbook/index.html">online copy</ulink>)</entry>
 </row>
 <row><entry>keymaps\*.map </entry> <entry>keymap tables (on Windows used for the paste feature only) </entry> </row>
 </tbody>
@@ -1532,8 +1454,8 @@ anyway, but if it is missing important pieces, it may not run properly.
 </para>
 
 <para>
-The Bochs RPM installs five new commands and associated manual pages: bochs,
-bochs-dlx and bximage.  First, let's try out the
+The Bochs RPM installs four new commands and associated manual pages: bochs,
+bochs-dlx, bxhub and bximage.  First, let's try out the
 DLX Linux demo by typing <command>bochs-dlx</command>.
 
 <screen>
@@ -1634,7 +1556,7 @@ description of each one.
 <row><entry>/usr/share/doc/bochs/LICENSE</entry> <entry> Bochs license information </entry> </row>
 <row><entry>/usr/share/doc/bochs/README</entry> <entry> the read-me file from the source distribution. </entry> </row>
 <row><entry>/usr/share/doc/bochs/TODO</entry> <entry> the TODO file from the source distribution. </entry> </row>
-<row><entry>/usr/share/doc/bochs/index.html</entry> <entry> a local copy of all Bochs documentation ( <ulink url="http://bochs.sourceforge.net/doc/docbook/index.html">Online copy</ulink> )</entry> </row>
+<row><entry>/usr/share/doc/bochs/index.html</entry> <entry> a local copy of all Bochs documentation ( <ulink url="https://bochs.sourceforge.io/doc/docbook/index.html">Online copy</ulink> )</entry> </row>
 <row><entry>/usr/share/doc/bochs/slirp.conf </entry> <entry> sample config file for the advanced 'slirp' network configuration </entry> </row>
 <row><entry>/usr/share/doc/bochs/vnet.conf </entry> <entry> sample config file for the advanced 'vnet' network configuration </entry> </row>
 <row><entry>/usr/share/bochs/BIOS-bochs-latest </entry> <entry> default ROM BIOS image for Bochs </entry> </row>
@@ -1643,11 +1565,12 @@ description of each one.
 <row><entry>/usr/share/bochs/SeaVGABIOS-README </entry> <entry> README for SeaVGABIOS ROM image </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-elpin-2.40 </entry> <entry> VGA BIOS image for Bochs </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-elpin-LICENSE </entry> <entry> license for VGA BIOS </entry> </row>
-<row><entry>/usr/share/bochs/VGABIOS-lgpl-latest </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
-<row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with debug output to the logfile </entry> </row>
-<row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-cirrus </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled </entry> </row>
-<row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-cirrus-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled and debug output to the logfile </entry> </row>
-<row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-banshee </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Voodoo Banshee extension enabled </entry> </row>
+<row><entry>/usr/share/bochs/VGABIOS-lgpl-latest.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
+<row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-debug.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs with debug output to the logfile </entry> </row>
+<row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-cirrus.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled </entry> </row>
+<row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-cirrus-debug.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled and debug output to the logfile </entry> </row>
+<row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-banshee.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Voodoo Banshee extension enabled </entry> </row>
+<row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-banshee-debug.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Voodoo Banshee extension enabled and debug output to the logfile </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-README </entry> <entry> readme for the LGPL'd VGA BIOS </entry> </row>
 <row><entry>/usr/share/bochs/bios.bin-1.13.0 </entry> <entry> SeaBIOS ROM image </entry> </row>
 <row><entry>/usr/share/bochs/dlxlinux/ </entry> <entry> directory containing DLX linux sample disk image and configuration files</entry> </row>
@@ -1742,7 +1665,7 @@ descriptions or tool-tips).
 Bochs is written in C++, so you need a C++ compiler on your system.  Most
 platforms have been tested with GNU gcc/g++, but other compilers are known
 to work too.  By now, you should have unpacked your source TAR file or checked
-out Bochs from SVN.  If not, you can return to <link
+out Bochs with GIT from GitHub.  If not, you can return to <link
 linkend="downloading">Downloading Bochs</link> for details.  The top level
 directory of the source code will be referred to as &bochsdir;.  (&bochsdir;
 contains the files <filename>bochs.h</filename> and
@@ -2522,7 +2445,7 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
       features of the debugger.  You only want this option if you are
       developing guest OS code for use in Bochs.  In other words, most people
       don't.  Also, it should only be used with <option>--enable-debugger</option>.
-      See the <ulink url="http://bochs.sourceforge.net/doc/docbook/development/iodebug.html">
+      See the <ulink url="https://bochs.sourceforge.io/doc/docbook/development/iodebug.html">
       developer documentation</ulink> for details.
       </entry>
     </row>
@@ -3066,7 +2989,7 @@ called from <command>make</command> are causing the failure (e.g. compiler / lin
 In some cases it might be useful to rebuild Bochs completely by calling
 <command>make dist-clean</command> and running the <command>configure</command>
 script once again. These steps are recommended if the development sources from
-SVN are used and one of the build system files (e.g. <filename>Makefile</filename>
+GitHub are used and one of the build system files (e.g. <filename>Makefile</filename>
 or <filename>config.h.in</filename>) has been changed.
 </para>
 <para>
@@ -3113,7 +3036,7 @@ the BIOS image (usually called <filename>BIOS-bochs-latest</filename>)
 </listitem>
 <listitem>
 <para>
-the VGA BIOS image (e.g. <filename>VGABIOS-lgpl-latest</filename> or <filename>VGABIOS-elpin-2.40</filename>)
+the VGA BIOS image (e.g. <filename>VGABIOS-lgpl-latest.bin</filename> or <filename>VGABIOS-elpin-2.40</filename>)
 </para>
 </listitem>
 <listitem>
@@ -3167,7 +3090,7 @@ instructions given in <xref linkend="keymap">.
 
 <para>
 A collection of disk images of different operating systems can be found at
-<ulink url="http://bochs.sourceforge.net/diskimages.html"></ulink>. Some disk
+<ulink url="https://bochs.sourceforge.io/diskimages.html"></ulink>. Some disk
 images are the size of a floppy disk (1 meg compressed) and others are gigantic
 (160 meg compressed). If you want to create a disk image yourself, please see
 <xref linkend="diskimagehowto">.
@@ -3191,11 +3114,12 @@ system BIOS and VGA BIOS images.
 <row><entry>BIOS-bochs-legacy </entry> <entry> ROM BIOS image without 32-bit init code (for i386 and ISA graphics card emulation) </entry> </row>
 <row><entry>bios.bin-1.13.0 </entry> <entry> SeaBIOS ROM image </entry> </row>
 <row><entry>VGABIOS-elpin-2.40 </entry> <entry> legacy VGA BIOS image for Bochs </entry> </row>
-<row><entry>VGABIOS-lgpl-latest </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
-<row><entry>VGABIOS-lgpl-latest-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with debug output to the logfile </entry> </row>
-<row><entry>VGABIOS-lgpl-latest-cirrus </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled </entry> </row>
-<row><entry>VGABIOS-lgpl-latest-cirrus-debug </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled and debug output to the logfile </entry> </row>
-<row><entry>VGABIOS-lgpl-latest-banshee </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Voodoo Banshee extension enabled </entry> </row>
+<row><entry>VGABIOS-lgpl-latest.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-debug.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs with debug output to the logfile </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-cirrus.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-cirrus-debug.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Cirrus extension enabled and debug output to the logfile </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-banshee.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Voodoo Banshee extension enabled </entry> </row>
+<row><entry>VGABIOS-lgpl-latest-banshee-debug.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Voodoo Banshee extension enabled and debug output to the logfile </entry> </row>
 <row><entry>vgabios-cirrus.bin-1.13.0 </entry> <entry> SeaVGABIOS ROM image (for Cirrus adapter)</entry> </row>
 </tbody>
 </tgroup>
@@ -3206,7 +3130,7 @@ system BIOS and VGA BIOS images.
 Bochs must be set up to use system and VGA BIOS like this:
 <screen>
   romimage: file=BIOS-bochs-latest, address=0xfffe0000
-  vgaromimage: file=VGABIOS-lgpl-latest
+  vgaromimage: file=VGABIOS-lgpl-latest.bin
 </screen>
 We recommend to use the ROM images distributed with Bochs or one of the latest
 <ulink url="http://www.seabios.org/">SeaBIOS</ulink> images. BIOS images designed
@@ -3832,8 +3756,8 @@ this feature yet.
 Examples:
 <screen>
   vgaromimage: file=bios/VGABIOS-elpin-2.40
-  vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
-  vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest-cirrus
+  vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest.bin
+  vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest-cirrus.bin
 </screen>
 This tells Bochs what VGA ROM BIOS to load (at 0xC0000).
 </para>
@@ -3885,11 +3809,11 @@ This defines parameters related to the VGA display
 <para>
 The 'extension' option can be used to specify the VGA display extension.
 With the value 'none' you can use standard VGA with no extension. Other supported
-values are 'vbe' for Bochs VBE (needs <filename>VGABIOS-lgpl-latest</filename> as
+values are 'vbe' for Bochs VBE (needs <filename>VGABIOS-lgpl-latest.bin</filename> as
 VGA BIOS, see <link linkend="bochsopt-vgaromimage">vgaromimage option</link>),
-'cirrus' for Cirrus SVGA support (needs <filename>VGABIOS-lgpl-latest-cirrus</filename>
+'cirrus' for Cirrus SVGA support (needs <filename>VGABIOS-lgpl-latest-cirrus.bin</filename>
 as VGA BIOS) and 'voodoo' for Voodoo Graphics support (needs
-<filename>VGABIOS-lgpl-latest-banshee</filename> as VGA BIOS / see
+<filename>VGABIOS-lgpl-latest-banshee.bin</filename> as VGA BIOS / see
 <xref linkend="voodoo-notes"> for more information).
 </para>
 <para>
@@ -6883,7 +6807,7 @@ The USB emulation has been tested on numerous Guests. You can find these results
 </para>
 <para>
 <screen>
-  usb_debug: type=none|uhci|ohci|ehci|xhci, reset, enable, start_frame, doorbell, event, non_exist
+  usb_debug: type=none|uhci|ohci|ehci|xhci, reset=1, enable=1, start_frame=1, doorbell=1, event=1, non_exist=1
 </screen>
 </para>
 <para>
@@ -7097,7 +7021,7 @@ bit will be clear, so the next TD will be processed anyway.
     <para>
       If you are using a program written for DOS which seems to use the text-mode but
       doesn't display the text properly, you can try the other VGA BIOS, either
-      <filename>VGABIOS-lgpl-latest</filename> or <filename>VGABIOS-elpin-2.40</filename>,
+      <filename>VGABIOS-lgpl-latest.bin</filename> or <filename>VGABIOS-elpin-2.40</filename>,
       see the <link linkend="bochsopt-vgaromimage">vgaromimage option</link>.
     </para>
 
@@ -7150,7 +7074,7 @@ When reporting errors while building Bochs to the &devlist; or the SF bug
 tracker for the Bochs project, this information is required to fix the issue:
 <itemizedlist>
   <listitem><para>host platorm / build environment</para></listitem>
-  <listitem><para>Bochs release version or SVN revision</para></listitem>
+  <listitem><para>Bochs release version or GIT SHA revision code</para></listitem>
   <listitem><para>configure options used</para></listitem>
   <listitem><para>full error message</para></listitem>
   <listitem><para>config.log output if configure failure</para></listitem>
@@ -7169,7 +7093,7 @@ or submit the patch in SF patch tracker for Bochs.
 If Bochs does not work properly (e.g. panic, segfault, malfunction of emulated device)
 we need some information to find out what's going on:
 <itemizedlist>
-  <listitem><para>Bochs version used (version number if binary release / SVN revision
+  <listitem><para>Bochs version used (version number if binary release / GIT revision
   if self-compiled)</para></listitem>
   <listitem><para>host platorm / build environment (if self-compiled)</para></listitem>
   <listitem><para>bochsrc options used</para></listitem>
@@ -7183,7 +7107,7 @@ we need some information to find out what's going on:
 Patches for Bochs should be provided in the "unified diff" format. In addition
 to the patch file and a detailed description this information is required:
 <itemizedlist>
-  <listitem><para>patch applies to Bochs release version / SVN revision</para></listitem>
+  <listitem><para>patch applies to Bochs release version / GIT revision</para></listitem>
   <listitem><para>test case (if required)</para></listitem>
 </itemizedlist>
 </para>
@@ -7268,8 +7192,9 @@ will get 2 copies of every announcement.
 
 <section id="bochs-cvs"><title>bochs-cvs mailing list</title>
 <para>
-This is the svn commit mailinglist (a unified diff email will be sent
-whenever someone does a checkin in the bochs SVN repository).
+This is the SVN commit mailinglist (an email had been sent whenever someone did
+a checkin in the Bochs SVN repository). After transitioning to GitHub there is
+no activity anymore. The mail archive is still present.
 </para>
 
 <para>
@@ -8640,7 +8565,7 @@ The partition size reported by fdisk is okay, but mformat reports only 504 MB
 <para>
 Mtools is a set of programs that can read, write, and format DOS disk images.
 There are links to the Mtools main page and a Win32 port of Mtools on the
-<ulink url="http://bochs.sourceforge.net/links.html">Bochs Links page</ulink>,
+<ulink url="https://bochs.sourceforge.io/links.html">Bochs Links page</ulink>,
 under Resources.
 </para>
 <para>
@@ -9503,8 +9428,8 @@ Hitting ^C works. Example:
         This section describes what is possible to do with Bochs serial port emulation.
         These examples use dlxlinux disk image
         (downloaded from
-        <ulink url="http://bochs.sourceforge.net/guestos/dlxlinux4.tar.gz">
-        http://bochs.sourceforge.net/guestos/dlxlinux3.tar.gz</ulink>
+        <ulink url="https://bochs.sourceforge.io/guestos/dlxlinux4.tar.gz">
+        https://bochs.sourceforge.io/guestos/dlxlinux4.tar.gz</ulink>
         ) running as guest, on a debian x86 linux 2.4.19 host.
 </para>
 <para>
@@ -9647,7 +9572,7 @@ A bootable CD-ROM has a special layout that is detected by the
 BIOS boot loader code, and executed if it conforms the specifications.
 This layout is called "El Torito Bootable CD-ROM Format Specification"
 and has been published by Phoenix and IBM. A copy of this spec is on
-<ulink url="http://bochs.sourceforge.net/techdata.html">Bochs tech specs page</ulink>.
+<ulink url="https://bochs.sourceforge.io/techdata.html">Bochs tech specs page</ulink>.
         </para>
         <para>
 El Torito specifies 3 ways to have a bootable CD:
@@ -10054,7 +9979,7 @@ Bochs VBE Display Drivers for Windows NT/2000
   <screen>
   # Enable CL-GD5446 PCI
   vga: extension=cirrus
-  vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest-cirrus
+  vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest-cirrus.bin
   pci: enabled=1, chipset=i440fx, slot1=cirrus
   </screen>
 
@@ -10084,7 +10009,7 @@ Bochs VBE Display Drivers for Windows NT/2000
   Banshee compatible device with its VGA interface disabled is not
   implemented yet. For both Banshee and Voodoo3 there is now a specific version
   of the LGPL'd VGABIOS with Voodoo Banshee specific code called
-  <filename>VGABIOS-lgpl-latest-banshee</filename>. The binary file is compiled
+  <filename>VGABIOS-lgpl-latest-banshee.bin</filename>. The binary file is compiled
   for the Banshee PCI model, but Bochs modifies the VGABIOS data after loading
   to support the Voodoo3 and AGP models properly.
   </para>
@@ -10092,7 +10017,7 @@ Bochs VBE Display Drivers for Windows NT/2000
   These bochsrc settings should be used for Voodoo Banshee PCI:
   <screen>
   vga: extension=voodoo
-  vgaromimage: file=VGABIOS-lgpl-latest-banshee
+  vgaromimage: file=VGABIOS-lgpl-latest-banshee.bin
   voodoo: model=banshee
   </screen>
   </para>
@@ -11391,7 +11316,7 @@ cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 cpu: cpuid_limit_winnt=0
 clock: sync=realtime, time0=local
 memory: guest=512, host=512
-vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus.bin
 vga: extension=cirrus, update_freq=5
 pci: enabled=1, chipset=i440fx, slot1=cirrus
 </screen>
@@ -11412,7 +11337,7 @@ cpu: count=1, ips=55000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 cpu: cpuid_limit_winnt=0
 clock: sync=realtime, time0=local
 memory: guest=512, host=512
-vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus.bin
 vga: extension=cirrus, update_freq=5
 pci: enabled=1, chipset=i440fx, slot1=cirrus
 </screen>
@@ -11483,7 +11408,7 @@ cpu: count=1, ips=75000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 cpu: cpuid_limit_winnt=0
 clock: sync=realtime, time0=local
 memory: guest=512, host=512
-vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus.bin
 vga: extension=cirrus, update_freq=5
 pci: enabled=1, chipset=i440fx, slot1=cirrus
 </screen>
@@ -11516,7 +11441,7 @@ cpu: count=1, ips=100000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 cpu: cpuid_limit_winnt=0
 clock: sync=realtime, time0=local
 memory: guest=1024, host=1024
-vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus.bin
 vga: extension=cirrus, update_freq=5
 pci: enabled=1, chipset=i440fx, slot1=cirrus
 </screen>
@@ -11541,7 +11466,7 @@ cpu: count=1, ips=150000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 cpu: cpuid_limit_winnt=0
 clock: sync=realtime, time0=local
 memory: guest=2048, host=2048
-vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus.bin
 vga: extension=cirrus, update_freq=5
 pci: enabled=1, chipset=i440fx, slot1=cirrus
 </screen>
@@ -11571,7 +11496,7 @@ cpu: count=1, ips=325000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 cpu: cpuid_limit_winnt=0
 clock: sync=realtime, time0=local
 memory: guest=2048, host=2048
-vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus.bin
 vga: extension=cirrus, update_freq=5
 pci: enabled=1, chipset=i440fx, slot1=cirrus
 </screen>
@@ -11683,7 +11608,7 @@ ata1: enabled=0
 ata2: enabled=0
 ata3: enabled=0
 romimage: file=bios/BIOS-bochs-latest
-vgaromimage: file=bios/VGABIOS-lgpl-latest
+vgaromimage: file=bios/VGABIOS-lgpl-latest.bin
 megs: 64
 parport1: enabled=1, file="lp.pipe"
 com1: enabled=0

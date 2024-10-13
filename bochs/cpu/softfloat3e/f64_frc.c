@@ -46,7 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 | IEC/IEEE Standard for Binary Floating-Point Arithmetic.
 *----------------------------------------------------------------------------*/
 
-float64_t f64_frc(float64_t a, softfloat_status_t *status)
+float64 f64_frc(float64 a, softfloat_status_t *status)
 {
     int roundingMode = softfloat_getRoundingMode(status);
 

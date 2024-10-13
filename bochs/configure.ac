@@ -5,7 +5,6 @@ AC_INIT
 AC_CONFIG_SRCDIR([bochs.h])
 AC_REVISION([[$Id$]])
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_HEADERS([ltdlconf.h])
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
@@ -157,8 +156,8 @@ else
   RANLIB="echo"
 fi
 
-AC_PATH_PROG(PKGCONFIG, pkg-config, not_found)
-if test "$PKGCONFIG" = not_found; then
+PKG_PROG_PKG_CONFIG
+if test "x$PKG_CONFIG" = x; then
   AC_PATH_XTRA
 fi
 
@@ -466,8 +465,7 @@ if test "$bx_plugins" = 1; then
       PLUGIN_LIB="-lltdl"
       AC_DEFINE(BX_HAVE_LTDL,1)
     else
-      PLUGIN_VAR="ltdl.o"
-      PLUGIN_LIB="ltdl.o"
+      AC_MSG_ERROR([Plugin support requires libltdl installed on your system])
     fi
   fi
   PLUGIN_TARGET=bochs_plugins
@@ -1570,6 +1568,7 @@ AC_ARG_ENABLE(pcidev,
 )
 
 use_usb=0
+use_usb_uhci=0
 USBHC_OBJS=''
 UHCICORE_OBJ=''
 USBHC_DLL_TARGETS=''
@@ -1583,6 +1582,7 @@ AC_ARG_ENABLE(usb,
     UHCICORE_OBJ="uhci_core.o"
     USBHC_DLL_TARGETS="bx_usb_uhci.dll"
     use_usb=1
+    use_usb_uhci=1
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_USB_UHCI, 0)
@@ -1593,6 +1593,7 @@ AC_ARG_ENABLE(usb,
     ]
   )
 
+use_usb_ohci=0
 AC_MSG_CHECKING(for USB OHCI support)
 AC_ARG_ENABLE(usb-ohci,
   AS_HELP_STRING([--enable-usb-ohci], [enable USB OHCI support (no)]),
@@ -1602,6 +1603,7 @@ AC_ARG_ENABLE(usb-ohci,
     USBHC_OBJS="$USBHC_OBJS usb_ohci.o"
     USBHC_DLL_TARGETS="$USBHC_DLL_TARGETS bx_usb_ohci.dll"
     use_usb=1
+    use_usb_ohci=1
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_USB_OHCI, 0)
@@ -1612,6 +1614,7 @@ AC_ARG_ENABLE(usb-ohci,
     ]
   )
 
+use_usb_ehci=0
 AC_MSG_CHECKING(for USB EHCI support)
 AC_ARG_ENABLE(usb-ehci,
   AS_HELP_STRING([--enable-usb-ehci], [enable USB EHCI support (no)]),
@@ -1621,6 +1624,7 @@ AC_ARG_ENABLE(usb-ehci,
     USBHC_OBJS="$USBHC_OBJS usb_ehci.o"
     USBHC_DLL_TARGETS="$USBHC_DLL_TARGETS bx_usb_ehci.dll"
     use_usb=1
+    use_usb_ehci=1
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_USB_EHCI, 0)
@@ -1631,6 +1635,7 @@ AC_ARG_ENABLE(usb-ehci,
     ]
   )
 
+use_usb_xhci=0
 AC_MSG_CHECKING(for USB xHCI support)
 AC_ARG_ENABLE(usb-xhci,
   AS_HELP_STRING([--enable-usb-xhci], [enable USB xHCI support (no)]),
@@ -1640,6 +1645,7 @@ AC_ARG_ENABLE(usb-xhci,
     USBHC_OBJS="$USBHC_OBJS usb_xhci.o"
     USBHC_DLL_TARGETS="$USBHC_DLL_TARGETS bx_usb_xhci.dll"
     use_usb=1
+    use_usb_xhci=1
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_USB_XHCI, 0)
@@ -1651,6 +1657,11 @@ AC_ARG_ENABLE(usb-xhci,
   )
 
 if test "$use_usb" = 1; then
+  if test "$use_usb_ehci" = 1; then
+    if test "$use_usb_uhci" = 0 -a "$use_usb_ohci" = 0; then
+      AC_MSG_ERROR([To configure USB EHCI, you must also enable UHCI or OHCI])
+    fi
+  fi
   if test "$pci" != "1"; then
     AC_MSG_ERROR([USB requires PCI support])
   fi
@@ -1661,15 +1672,15 @@ AC_SUBST(USBHC_OBJS)
 AC_SUBST(USBHC_DLL_TARGETS)
 
 usb_debugger=0
-AC_MSG_CHECKING(enable Bochs Win32 USB debugger)
-AC_ARG_ENABLE(win32usbdbg,
-  AS_HELP_STRING([--enable-win32usbdbg], [compile in support for Bochs Win32 USB debugger (yes, if debugger is on and USB is on)]),
+AC_MSG_CHECKING(enable Bochs USB debugger)
+AC_ARG_ENABLE(usb-debugger,
+  AS_HELP_STRING([--enable-usb-debugger], [compile in support for Bochs USB debugger (yes, if debugger is on and USB is on)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     usb_debugger=1
    else
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_USE_WIN32USBDEBUG, 0)
+    AC_DEFINE(BX_USB_DEBUGGER, 0)
     usb_debugger=0
    fi],
   [
@@ -1678,7 +1689,7 @@ AC_ARG_ENABLE(win32usbdbg,
       usb_debugger=1
     else
       AC_MSG_RESULT(no)
-      AC_DEFINE(BX_USE_WIN32USBDEBUG, 0)
+      AC_DEFINE(BX_USB_DEBUGGER, 0)
       usb_debugger=0
     fi
     ]
@@ -1748,23 +1759,56 @@ AC_ARG_ENABLE(e1000,
   )
 
 NETLOW_OBJS=''
+SLIRP_OBJS=''
+SLIRP_OBJS2=''
+SLIRP_LINK_OPTS=''
 if test "$networking" = yes; then
   NETLOW_OBJS='eth_null.o eth_vnet.o'
   ethernet_modules='null vnet'
   can_compile_slirp=0
-  case "$target" in
-    *-cygwin* | *-mingw32* | *-msys)
-      can_compile_slirp=1
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -liphlpapi"
-      ;;
-    *-pc-windows* | *-pc-winnt*)
-      can_compile_slirp=1
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS iphlpapi.lib"
-      ;;
-    *)
-      AC_CHECK_HEADER([netinet/in.h], [ can_compile_slirp=1 ], [])
-      ;;
-  esac
+  AC_MSG_CHECKING(for slirp networking support)
+  AC_ARG_ENABLE(using-libslirp,
+    AS_HELP_STRING([--enable-using-libslirp], [enable using libslirp instead of builtin slirp (no)]),
+    [if test "$enableval" = yes; then
+      if test "x$PKG_CONFIG" != x; then
+        $PKG_CONFIG --exists slirp
+        if test x$? = x0; then
+          can_compile_slirp=1
+          if test "$bx_plugins" = 1; then
+            SLIRP_LINK_OPTS="`$PKG_CONFIG --libs slirp`"
+          else
+            DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS `$PKG_CONFIG --libs slirp`"
+          fi
+          AC_MSG_RESULT(libslirp)
+          AC_DEFINE(BX_HAVE_LIBSLIRP, 1)
+        fi
+      fi
+    fi], [])
+  if test $can_compile_slirp = 0; then
+    AC_MSG_RESULT(builtin)
+    case "$target" in
+      *-cygwin* | *-mingw32* | *-msys)
+        can_compile_slirp=1
+        DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -liphlpapi"
+        SLIRP_OBJS='$(SLIRP_OBJS)'
+        ;;
+      *-pc-windows* | *-pc-winnt*)
+        can_compile_slirp=1
+        DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS iphlpapi.lib"
+        SLIRP_OBJS='$(SLIRP_OBJS)'
+        ;;
+      *)
+        AC_CHECK_HEADER([netinet/in.h],[can_compile_slirp=1])
+        if test $can_compile_slirp = 1; then
+          if test "$bx_plugins" = 1; then
+            SLIRP_OBJS2='$(SLIRP_OBJS:.o=.lo)'
+          else
+            SLIRP_OBJS='$(SLIRP_OBJS)'
+          fi
+        fi
+        ;;
+    esac
+  fi
   if test $can_compile_slirp = 1; then
     NETLOW_OBJS="$NETLOW_OBJS eth_slirp.o"
     ethernet_modules="$ethernet_modules slirp"
@@ -1853,6 +1897,9 @@ fi
 AC_SUBST(NETDEV_OBJS)
 AC_SUBST(NETLOW_OBJS)
 AC_SUBST(NETDEV_DLL_TARGETS)
+AC_SUBST(SLIRP_OBJS)
+AC_SUBST(SLIRP_OBJS2)
+AC_SUBST(SLIRP_LINK_OPTS)
 
 
 dnl // serial mode 'socket' needs ws2_32.dll in non-plugin mode
@@ -2121,6 +2168,21 @@ if test "$soundcard_present" = 1; then
       AC_DEFINE(BX_HAVE_SDL2_AUDIO_CAPTURE, 1)
     fi
   fi
+  if test "$cross_configure" = 0 -a "$DEFAULT_GUI" != win32; then
+    if test "x$PKG_CONFIG" != x; then
+      $PKG_CONFIG --exists libpulse-simple
+      if test x$? = x0; then
+        SOUNDLOW_OBJS="$SOUNDLOW_OBJS soundpulse.o"
+        soundlow_drivers="$soundlow_drivers pulse"
+        AC_DEFINE(BX_HAVE_SOUND_PULSE, 1)
+        if test "$bx_plugins" = 1; then
+          PULSE_SOUND_LINK_OPTS="$PULSE_SOUND_LINK_OPTS `$PKG_CONFIG --libs libpulse-simple`"
+        else
+          DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS `$PKG_CONFIG --libs libpulse-simple`"
+        fi
+      fi
+    fi
+  fi
   if test "$MSVC_TARGET" = 0; then
     AC_CHECK_HEADER([samplerate.h], [bx_have_libsamplerate=1])
     if test "$bx_have_libsamplerate" = 1; then
@@ -2147,6 +2209,7 @@ fi
 AC_SUBST(SOUNDHW_OBJS)
 AC_SUBST(SOUNDLOW_OBJS)
 AC_SUBST(ALSA_SOUND_LINK_OPTS)
+AC_SUBST(PULSE_SOUND_LINK_OPTS)
 AC_SUBST(SDL_SOUND_LINK_OPTS)
 AC_SUBST(SOUNDHW_DLL_TARGETS)
 
@@ -2459,9 +2522,9 @@ if test "$with_x11" = yes; then
     XRANDR_LIB='-lXrandr'
     ])
 
-  if test "$PKGCONFIG" != not_found; then
-    X_CFLAGS="`pkg-config --cflags x11`"
-    X_LIBS="`pkg-config --libs x11` $XPM_LIB $XRANDR_LIB"
+  if test "x$PKG_CONFIG" != x; then
+    X_CFLAGS="`$PKG_CONFIG --cflags x11`"
+    X_LIBS="`$PKG_CONFIG --libs x11` $XPM_LIB $XRANDR_LIB"
   else
     X_LIBS="$X_LIBS -lX11 $XPM_LIB $XRANDR_LIB"
   fi
@@ -2472,7 +2535,7 @@ if test "$with_x11" = yes; then
   GUI_CXXFLAGS="$GUI_CXXFLAGS \$(X_CFLAGS)"
   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_X)"
   # The enhanced X debugger depends on GTK2
-  if test "$gui_debugger" = 1; then
+  if test "$gui_debugger" = 1 -o "$usb_debugger" = 1; then
     needs_gtk2=1
   fi
   use_gui_console=1
@@ -2497,8 +2560,10 @@ if test "$with_sdl" = yes; then
     NONPLUGIN_GUI_LINK_OPTS="`sdl-config --libs`"
   fi
   # The enhanced X debugger depends on GTK2
-  if test "$gui_debugger" = 1 -a "$DEFAULT_GUI" != win32; then
-    needs_gtk2=1
+  if test "$DEFAULT_GUI" != win32; then
+    if test "$gui_debugger" = 1 -o "$usb_debugger" = 1; then
+      needs_gtk2=1
+    fi
   fi
   if test "$with_win32" != yes -a "$with_wx" != yes; then
     case $target in
@@ -2532,8 +2597,10 @@ if test "$with_sdl2" = yes; then
     NONPLUGIN_GUI_LINK_OPTS="`sdl2-config --libs`"
   fi
   # The enhanced X debugger depends on GTK2
-  if test "$gui_debugger" = 1 -a "$DEFAULT_GUI" != win32; then
-    needs_gtk2=1
+  if test "$DEFAULT_GUI" != win32; then
+    if test "$gui_debugger" = 1 -o "$usb_debugger" = 1; then
+      needs_gtk2=1
+    fi
   fi
   if test "$with_win32" != yes -a "$with_wx" != yes; then
     case $target in
@@ -2560,11 +2627,11 @@ if test "$with_rfb" = yes; then
 fi
 
 if test "$with_vncsrv" = yes; then
-  if test "$PKGCONFIG" != not_found; then
-    pkg-config --exists libvncserver
+  if test "$PKG_CONFIG" != not_found; then
+    $PKG_CONFIG --exists libvncserver
     if test x$? = x0; then
-      VNCSRV_CXXFLAGS="`pkg-config --cflags libvncserver`"
-      GUI_LINK_OPTS_VNCSRV="`pkg-config --libs libvncserver`"
+      VNCSRV_CXXFLAGS="`$PKG_CONFIG --cflags libvncserver`"
+      GUI_LINK_OPTS_VNCSRV="`$PKG_CONFIG --libs libvncserver`"
     fi
   else
     AC_CHECK_PROG(LIBVNCSERVER_CONFIG, [ libvncserver-config --version ], libvncserver-config, not_found)
@@ -2671,13 +2738,13 @@ if test "$with_wx" = yes; then
   WX_CFLAGS="`$WX_CONFIG --cflags`"
   WX_CXXFLAGS="`$WX_CONFIG --cxxflags`"
   if test "$wx_needs_gdk_version" = 2; then
-    GDK_CFLAGS="`pkg-config --cflags gdk-2.0`"
+    GDK_CFLAGS="`$PKG_CONFIG --cflags gdk-2.0`"
     WX_CFLAGS="$WX_CFLAGS $GDK_CFLAGS"
     WX_CXXFLAGS="$WX_CXXFLAGS $GDK_CFLAGS"
     AC_DEFINE(WX_GDK_VERSION, 2)
   fi
   if test "$wx_needs_gdk_version" = 3; then
-    GDK_CFLAGS="`pkg-config --cflags gdk-3.0`"
+    GDK_CFLAGS="`$PKG_CONFIG --cflags gdk-3.0`"
     WX_CFLAGS="$WX_CFLAGS $GDK_CFLAGS"
     WX_CXXFLAGS="$WX_CXXFLAGS $GDK_CFLAGS"
     AC_DEFINE(WX_GDK_VERSION, 3)
@@ -2708,8 +2775,10 @@ if test "$with_wx" = yes; then
       ;;
   esac
   # The enhanced X debugger depends on GTK2
-  if test "$gui_debugger" = 1 -a "$DEFAULT_GUI" != win32; then
-    needs_gtk2=1
+  if test "$DEFAULT_GUI" != win32; then
+    if test "$gui_debugger" = 1 -o "$usb_debugger" = 1; then
+      needs_gtk2=1
+    fi
   fi
 fi
 
@@ -2734,21 +2803,21 @@ fi
 bx_have_gtk_version=0
 if test "$needs_gtk2" = 1; then
   # pkg-config is required to set TOOLKIT_CXXFLAGS and LIBS
-  if test "$PKGCONFIG" != not_found; then
+  if test "x$PKG_CONFIG" != x; then
     # if wxGTK is based on GTK 3.0, use it for gui debugger to avoid conflicts
-    if test "$with_wx" = yes -a "$wx_needs_gdk_version" = 3; then
-      pkg-config --exists gtk+-3.0
+    if test "$with_wx" = yes -a "$wx_needs_gdk_version" = 2; then
+      $PKG_CONFIG --exists gtk+-2.0
       if test x$? = x0; then
-        TOOLKIT_CXXFLAGS="`pkg-config --cflags gtk+-3.0`"
-        LIBS="$LIBS `pkg-config --libs gtk+-3.0`"
-        bx_have_gtk_version=3
+        TOOLKIT_CXXFLAGS="`$PKG_CONFIG --cflags gtk+-2.0`"
+        LIBS="$LIBS `$PKG_CONFIG --libs gtk+-2.0`"
+        bx_have_gtk_version=2
       fi
     else
-      pkg-config --exists gtk+-2.0
+      $PKG_CONFIG --exists gtk+-3.0
       if test x$? = x0; then
-        TOOLKIT_CXXFLAGS="`pkg-config --cflags gtk+-2.0`"
-        LIBS="$LIBS `pkg-config --libs gtk+-2.0`"
-        bx_have_gtk_version=2
+        TOOLKIT_CXXFLAGS="`$PKG_CONFIG --cflags gtk+-3.0`"
+        LIBS="$LIBS `$PKG_CONFIG --libs gtk+-3.0`"
+        bx_have_gtk_version=3
       fi
     fi
   else
@@ -2756,6 +2825,7 @@ if test "$needs_gtk2" = 1; then
     echo "The gui debugger support is disabled now."
   fi
 fi
+AC_DEFINE_UNQUOTED(BX_HAVE_GTK_VERSION, $bx_have_gtk_version)
 
 dnl To use wxWidgets you must select it as both the configuration interface
 dnl and the display library.  In the simplest case where the user has
@@ -2771,6 +2841,8 @@ if test "$display_libs" = " wxWidgets"; then
   AC_DEFINE(BX_DEFAULT_CONFIG_INTERFACE, "wx")
   AC_DEFINE(BX_DEFAULT_DISPLAY_LIBRARY, "wx")
   AC_DEFINE(BX_USE_TEXTCONFIG, 0)
+  AC_DEFINE(HAVE_LIBREADLINE, 0)
+  READLINE_LIB=""
 else
   if test "$DEFAULT_GUI" = win32; then
     AC_DEFINE(BX_DEFAULT_CONFIG_INTERFACE, "win32config")
@@ -2837,6 +2909,7 @@ case "$target" in
     else
       C_OPT="$C_OPT /EHs-c-"
     fi
+    C_OPT="$C_OPT /std:c++20"
     if test "$bx_plugins" = 1; then
       CFLAGS="/nologo /MD /W3 /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS $C_OPT"
     else
@@ -2945,12 +3018,15 @@ AC_SUBST(ENH_DBG_OBJS)
 
 USB_DBG_OBJS=""
 if test "$usb_debugger" = 1; then
-  if test "$DEFAULT_GUI" = win32 -o "$with_win32" = yes; then
-    USB_DBG_OBJS="win32usb.o"
-    AC_DEFINE(BX_USE_WIN32USBDEBUG, 1)
+  if test "$bx_have_gtk_version" -ge 3; then
+    USB_DBG_OBJS="usb_debug.o gtk_usb_debug.o"
+    AC_DEFINE(BX_USB_DEBUGGER, 1)
+  elif test "$DEFAULT_GUI" = win32 -o "$with_win32" = yes; then
+    USB_DBG_OBJS="usb_debug.o win32usb.o"
+    AC_DEFINE(BX_USB_DEBUGGER, 1)
   else
-    AC_MSG_WARN([The USB debugger supported only for Win32 cannot be compiled here, disabling it])
-    AC_DEFINE(BX_USE_WIN32USBDEBUG, 0)
+    AC_MSG_WARN([The USB debugger cannot be compiled here, disabling it])
+    AC_DEFINE(BX_USB_DEBUGGER, 0)
   fi
 fi
 AC_SUBST(USB_DBG_OBJS)
@@ -2961,7 +3037,6 @@ case $target in
   *-pc-windows* | *-pc-winnt*)
     if test "$bx_plugins" = 1; then
       # set variables for building DLL plugins
-      PLUGIN_VAR=""
       PLUGIN_LIBNAME_TRANSFORMATION='%.o=bx_%.dll'
       GUI_PLUGIN_NAME_TRANSFORMATION='%.o=bx_%_gui.dll'
       IMG_PLUGIN_NAME_TRANSFORMATION='%.o=bx_%_img.dll'
@@ -3030,11 +3105,11 @@ AC_SUBST(EXPORT_DYNAMIC)
 AC_SUBST(DLLTOOL)
 
 if test "$use_curses" = yes; then
-  if test "$PKGCONFIG" != not_found; then
-    AC_CHECK_LIB(curses, mvaddch, GUI_LINK_OPTS_TERM="`pkg-config --libs curses`")
-    AC_CHECK_LIB(ncurses, mvaddch, GUI_LINK_OPTS_TERM="`pkg-config --libs ncurses`")
-    AC_CHECK_LIB(termlib, mvaddch, GUI_LINK_OPTS_TERM="`pkg-config --libs termlib`")
-    AC_CHECK_LIB(pdcurses, mvaddch, GUI_LINK_OPTS_TERM="`pkg-config --libs pdcurses`")
+  if test "x$PKG_CONFIG" != x; then
+    AC_CHECK_LIB(curses, mvaddch, GUI_LINK_OPTS_TERM="`$PKG_CONFIG --libs curses`")
+    AC_CHECK_LIB(ncurses, mvaddch, GUI_LINK_OPTS_TERM="`$PKG_CONFIG --libs ncurses`")
+    AC_CHECK_LIB(termlib, mvaddch, GUI_LINK_OPTS_TERM="`$PKG_CONFIG --libs termlib`")
+    AC_CHECK_LIB(pdcurses, mvaddch, GUI_LINK_OPTS_TERM="`$PKG_CONFIG --libs pdcurses`")
   else
     AC_CHECK_LIB(curses, mvaddch, GUI_LINK_OPTS_TERM='-lcurses')
     AC_CHECK_LIB(ncurses, mvaddch, GUI_LINK_OPTS_TERM='-lncurses')
@@ -3301,6 +3376,7 @@ case "$target" in
       if test "$soundcard_present" = 1; then
         if test "$bx_plugins" = 1; then
           ALSA_SOUND_LINK_OPTS="$ALSA_SOUND_LINK_OPTS $PTHREAD_LIBS"
+          PULSE_SOUND_LINK_OPTS="$PULSE_SOUND_LINK_OPTS $PTHREAD_LIBS"
           SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS $PTHREAD_LIBS"
         else
           DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS $PTHREAD_LIBS"
@@ -3381,7 +3457,6 @@ AC_SUBST(IODEV_NON_PLUGIN_OBJS)
 AC_SUBST(IODEV_PLUGIN_OBJS)
 AC_SUBST(IODEV_EXT_NON_PLUGIN_OBJS)
 AC_SUBST(IODEV_EXT_PLUGIN_OBJS)
-AC_SUBST(PLUGIN_VAR)
 AC_SUBST(PLUGIN_LIB)
 AC_SUBST(PLUGIN_TARGET)
 AC_SUBST(PLUGIN_TARGET_2)

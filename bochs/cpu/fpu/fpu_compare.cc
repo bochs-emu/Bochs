@@ -30,23 +30,25 @@
 
 #include "cpu/decoder/ia_opcodes.h"
 
-extern float_status_t i387cw_to_softfloat_status_word(Bit16u control_word);
+#include "softfloat3e/include/softfloat.h"
 
-#include "softfloatx80.h"
+#include "softfloat-specialize.h"
+
+extern softfloat_status_t i387cw_to_softfloat_status_word(Bit16u control_word);
 
 static int status_word_flags_fpu_compare(int float_relation)
 {
   switch(float_relation) {
-     case float_relation_unordered:
+     case softfloat_relation_unordered:
          return (FPU_SW_C0|FPU_SW_C2|FPU_SW_C3);
 
-     case float_relation_greater:
+     case softfloat_relation_greater:
          return (0);
 
-     case float_relation_less:
+     case softfloat_relation_less:
          return (FPU_SW_C0);
 
-     case float_relation_equal:
+     case softfloat_relation_equal:
          return (FPU_SW_C3);
   }
 
@@ -56,20 +58,20 @@ static int status_word_flags_fpu_compare(int float_relation)
 void BX_CPU_C::write_eflags_fpu_compare(int float_relation)
 {
   switch(float_relation) {
-   case float_relation_unordered:
+   case softfloat_relation_unordered:
       setEFlagsOSZAPC(EFlagsZFMask | EFlagsPFMask | EFlagsCFMask);
       break;
 
-   case float_relation_greater:
+   case softfloat_relation_greater:
       clearEFlagsOSZAPC();
       break;
 
-   case float_relation_less:
+   case softfloat_relation_less:
       clearEFlagsOSZAPC();
       assert_CF();
       break;
 
-   case float_relation_equal:
+   case softfloat_relation_equal:
       clearEFlagsOSZAPC();
       assert_ZF();
       break;
@@ -101,13 +103,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_STi(bxInstruction_c *i)
       BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   int rc = extF80_compare(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->src()), &status);
   setcc(status_word_flags_fpu_compare(rc));
 
-  if (! FPU_exception(i, status.float_exception_flags)) {
+  if (! FPU_exception(i, status.softfloat_exceptionFlags)) {
      if (pop_stack)
         BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
@@ -137,13 +139,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMI_ST0_STj(bxInstruction_c *i)
       BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
       i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   int rc = extF80_compare(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->src()), &status);
   BX_CPU_THIS_PTR write_eflags_fpu_compare(rc);
 
-  if (! FPU_exception(i, status.float_exception_flags)) {
+  if (! FPU_exception(i, status.softfloat_exceptionFlags)) {
      if (pop_stack)
          BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
@@ -173,13 +175,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOMI_ST0_STj(bxInstruction_c *i)
       BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
       i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   int rc = extF80_compare_quiet(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->src()), &status);
   BX_CPU_THIS_PTR write_eflags_fpu_compare(rc);
 
-  if (! FPU_exception(i, status.float_exception_flags)) {
+  if (! FPU_exception(i, status.softfloat_exceptionFlags)) {
      if (pop_stack)
          BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
@@ -207,13 +209,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FUCOM_STi(bxInstruction_c *i)
       BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
       i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   int rc = extF80_compare_quiet(BX_READ_FPU_REG(0), BX_READ_FPU_REG(i->src()), &status);
   setcc(status_word_flags_fpu_compare(rc));
 
-  if (! FPU_exception(i, status.float_exception_flags)) {
+  if (! FPU_exception(i, status.softfloat_exceptionFlags)) {
      if (pop_stack)
          BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
@@ -247,21 +249,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_SINGLE_REAL(bxInstruction_c *i)
       BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
       i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 a = BX_READ_FPU_REG(0);
 
   if (extF80_isNaN(a) || extF80_isUnsupported(a) || f32_isNaN(load_reg)) {
-    rc = float_relation_unordered;
-    float_raise(status, float_flag_invalid);
+    rc = softfloat_relation_unordered;
+    softfloat_raiseFlags(&status, softfloat_flag_invalid);
   }
   else {
     rc = extF80_compare(a, f32_to_extF80(load_reg, &status), &status);
   }
   setcc(status_word_flags_fpu_compare(rc));
 
-  if (! FPU_exception(i, status.float_exception_flags)) {
+  if (! FPU_exception(i, status.softfloat_exceptionFlags)) {
      if (pop_stack)
          BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
@@ -295,21 +297,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOM_DOUBLE_REAL(bxInstruction_c *i)
       BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
       i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   floatx80 a = BX_READ_FPU_REG(0);
 
   if (extF80_isNaN(a) || extF80_isUnsupported(a) || f64_isNaN(load_reg)) {
-    rc = float_relation_unordered;
-    float_raise(status, float_flag_invalid);
+    rc = softfloat_relation_unordered;
+    softfloat_raiseFlags(&status, softfloat_flag_invalid);
   }
   else {
     rc = extF80_compare(a, f64_to_extF80(load_reg, &status), &status);
   }
   setcc(status_word_flags_fpu_compare(rc));
 
-  if (! FPU_exception(i, status.float_exception_flags)) {
+  if (! FPU_exception(i, status.softfloat_exceptionFlags)) {
      if (pop_stack)
          BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
@@ -343,14 +345,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_WORD_INTEGER(bxInstruction_c *i)
       BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
       i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   int rc = extF80_compare(BX_READ_FPU_REG(0),
                       i32_to_extF80((Bit32s)(load_reg)), &status);
   setcc(status_word_flags_fpu_compare(rc));
 
-  if (! FPU_exception(i, status.float_exception_flags)) {
+  if (! FPU_exception(i, status.softfloat_exceptionFlags)) {
      if (pop_stack)
          BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
@@ -384,13 +386,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FICOM_DWORD_INTEGER(bxInstruction_c *i)
       BX_NEXT_INSTR(i);
   }
 
-  float_status_t status =
+  softfloat_status_t status =
       i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   int rc = extF80_compare(BX_READ_FPU_REG(0), i32_to_extF80(load_reg), &status);
   setcc(status_word_flags_fpu_compare(rc));
 
-  if (! FPU_exception(i, status.float_exception_flags)) {
+  if (! FPU_exception(i, status.softfloat_exceptionFlags)) {
      if (pop_stack)
          BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
@@ -422,13 +424,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FCOMPP(bxInstruction_c *i)
 
   bool quiet = (i->getIaOpcode() == BX_IA_FUCOMPP);
 
-  float_status_t status =
+  softfloat_status_t status =
       i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
   int rc = extF80_compare(BX_READ_FPU_REG(0), BX_READ_FPU_REG(1), quiet, &status);
   setcc(status_word_flags_fpu_compare(rc));
 
-  if (! FPU_exception(i, status.float_exception_flags)) {
+  if (! FPU_exception(i, status.softfloat_exceptionFlags)) {
      BX_CPU_THIS_PTR the_i387.FPU_pop();
      BX_CPU_THIS_PTR the_i387.FPU_pop();
   }
@@ -449,14 +451,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FTST(bxInstruction_c *i)
      setcc(FPU_SW_C0|FPU_SW_C2|FPU_SW_C3);
   }
   else {
-     extern const floatx80 Const_Z;
+     static floatx80 Const_Z = packFloatx80(0, 0x0000, 0);
 
-     float_status_t status =
+     softfloat_status_t status =
         i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word());
 
      int rc = extF80_compare(BX_READ_FPU_REG(0), Const_Z, &status);
      setcc(status_word_flags_fpu_compare(rc));
-     FPU_exception(i, status.float_exception_flags);
+     FPU_exception(i, status.softfloat_exceptionFlags);
   }
 
   BX_NEXT_INSTR(i);
@@ -469,7 +471,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXAM(bxInstruction_c *i)
   BX_CPU_THIS_PTR FPU_update_last_instruction(i);
 
   floatx80 reg = BX_READ_FPU_REG(0);
-  int sign = floatx80_sign(reg);
+  int sign = extF80_sign(reg);
 
   /*
    * Examine the contents of the ST(0) register and sets the condition

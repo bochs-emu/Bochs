@@ -48,19 +48,18 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 | result.  If either original floating-point value is a signaling NaN, the
 | invalid exception is raised.
 *----------------------------------------------------------------------------*/
-struct uint128
+extFloat80_t
  softfloat_propagateNaNExtF80UI(
      uint16_t uiA64,
      uint64_t uiA0,
      uint16_t uiB64,
      uint64_t uiB0,
-     struct softfloat_status_t *status
-)
+     struct softfloat_status_t *status)
 {
     bool isSigNaNA, isSigNaNB;
     uint64_t uiNonsigA0, uiNonsigB0;
     uint16_t uiMagA64, uiMagB64;
-    struct uint128 uiZ;
+    extFloat80_t z;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -93,11 +92,11 @@ struct uint128
     if (uiB0 < uiA0) goto returnA;
     if (uiA64 < uiB64) goto returnA;
  returnB:
-    uiZ.v64 = uiB64;
-    uiZ.v0  = uiNonsigB0;
-    return uiZ;
+    z.signExp = uiB64;
+    z.signif  = uiNonsigB0;
+    return z;
  returnA:
-    uiZ.v64 = uiA64;
-    uiZ.v0  = uiNonsigA0;
-    return uiZ;
+    z.signExp = uiA64;
+    z.signif  = uiNonsigA0;
+    return z;
 }

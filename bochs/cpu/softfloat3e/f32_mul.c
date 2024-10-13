@@ -36,10 +36,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
 #include "specialize.h"
 #include "softfloat.h"
 
-float32_t f32_mul(float32_t a, float32_t b, struct softfloat_status_t *status)
+float32 f32_mul(float32 a, float32 b, struct softfloat_status_t *status)
 {
     bool signA;
     int16_t expA;

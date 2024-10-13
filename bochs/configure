@@ -815,7 +815,6 @@ EXT_MSVC_DLL_RULES
 PLUGIN_TARGET_2
 PLUGIN_TARGET
 PLUGIN_LIB
-PLUGIN_VAR
 IODEV_EXT_PLUGIN_OBJS
 IODEV_EXT_NON_PLUGIN_OBJS
 IODEV_PLUGIN_OBJS
@@ -903,6 +902,7 @@ BUSM_OBJS
 GAME_OBJS
 SOUNDHW_DLL_TARGETS
 SDL_SOUND_LINK_OPTS
+PULSE_SOUND_LINK_OPTS
 ALSA_SOUND_LINK_OPTS
 SOUNDLOW_OBJS
 SOUNDHW_OBJS
@@ -911,6 +911,9 @@ CDROM_OBJS
 DISPLAY_DLL_TARGETS
 DISPLAY_EXTRA_OBJS
 DISPLAY_OBJS
+SLIRP_LINK_OPTS
+SLIRP_OBJS2
+SLIRP_OBJS
 NETDEV_DLL_TARGETS
 NETLOW_OBJS
 NETDEV_OBJS
@@ -952,7 +955,7 @@ X_PRE_LIBS
 X_CFLAGS
 CPP
 XMKMF
-PKGCONFIG
+PKG_CONFIG
 LIBADD_DL
 LIBTOOL
 ac_ct_F77
@@ -1088,10 +1091,11 @@ enable_usb
 enable_usb_ohci
 enable_usb_ehci
 enable_usb_xhci
-enable_win32usbdbg
+enable_usb_debugger
 enable_ne2000
 enable_pnic
 enable_e1000
+enable_using_libslirp
 enable_raw_serial
 enable_clgd54xx
 enable_voodoo
@@ -1130,6 +1134,7 @@ CCC
 CXXCPP
 F77
 FFLAGS
+PKG_CONFIG
 XMKMF
 CPP'
 
@@ -1830,11 +1835,12 @@ Optional Features:
   --enable-usb-ohci       enable USB OHCI support (no)
   --enable-usb-ehci       enable USB EHCI support (no)
   --enable-usb-xhci       enable USB xHCI support (no)
-  --enable-win32usbdbg    compile in support for Bochs Win32 USB debugger
-                          (yes, if debugger is on and USB is on)
+  --enable-usb-debugger   compile in support for Bochs USB debugger (yes, if
+                          debugger is on and USB is on)
   --enable-ne2000         enable NE2000 support (no)
   --enable-pnic           enable PCI pseudo NIC support (no)
   --enable-e1000          enable Intel(R) Gigabit Ethernet support (no)
+  --enable-using-libslirp enable using libslirp instead of builtin slirp (no)
   --enable-raw-serial     use raw serial port access (no - incomplete)
   --enable-clgd54xx       enable CLGD54XX emulation (no)
   --enable-voodoo         enable 3dfx Voodoo Graphics emulation (no)
@@ -1883,6 +1889,7 @@ Some influential environment variables:
   CXXCPP      C++ preprocessor
   F77         Fortran 77 compiler command
   FFLAGS      Fortran 77 compiler flags
+  PKG_CONFIG  path to pkg-config utility
   XMKMF       Path to xmkmf, Makefile generator for X Window System
   CPP         C preprocessor
 
@@ -3804,8 +3811,6 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 ac_config_headers="$ac_config_headers config.h"
-
-ac_config_headers="$ac_config_headers ltdlconf.h"
 
 
 VERSION="2.8.devel"
@@ -6170,7 +6175,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 6173 "configure"' > conftest.$ac_ext
+  echo '#line 6178 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -6267,25 +6272,14 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-int
-main (void)
-{
-
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_link "$LINENO"
+     if ac_fn_c_try_link "$LINENO"
 then :
-  lt_cv_cc_needs_belf=yes
+
 else $as_nop
-  lt_cv_cc_needs_belf=no
+  lt_cv_cc_needs_belf=yes
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext conftest.$ac_ext
+    conftest$ac_exeext
      ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -7667,11 +7661,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7670: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7664: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7674: \$? = $ac_status" >&5
+   echo "$as_me:7668: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -7901,11 +7895,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7904: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7898: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7908: \$? = $ac_status" >&5
+   echo "$as_me:7902: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -7969,11 +7963,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7972: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7966: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7976: \$? = $ac_status" >&5
+   echo "$as_me:7970: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9764,7 +9758,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9767 "configure"
+#line 9761 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9859,7 +9853,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9862 "configure"
+#line 9856 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -11977,11 +11971,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:11980: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:11974: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:11984: \$? = $ac_status" >&5
+   echo "$as_me:11978: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -12045,11 +12039,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12048: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12042: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12052: \$? = $ac_status" >&5
+   echo "$as_me:12046: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13068,7 +13062,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13071 "configure"
+#line 13065 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13163,7 +13157,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13166 "configure"
+#line 13160 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13983,11 +13977,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:13986: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:13980: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:13990: \$? = $ac_status" >&5
+   echo "$as_me:13984: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -14051,11 +14045,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14054: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14048: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14058: \$? = $ac_status" >&5
+   echo "$as_me:14052: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16019,11 +16013,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16022: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16016: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16026: \$? = $ac_status" >&5
+   echo "$as_me:16020: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16253,11 +16247,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16256: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16250: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16260: \$? = $ac_status" >&5
+   echo "$as_me:16254: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16321,11 +16315,11 @@ else $as_nop
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16324: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16318: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16328: \$? = $ac_status" >&5
+   echo "$as_me:16322: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -18116,7 +18110,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18119 "configure"
+#line 18113 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -18211,7 +18205,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18214 "configure"
+#line 18208 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -19291,83 +19285,6 @@ printf "%s\n" "#define const /**/" >>confdefs.h
 
 fi
 
-# Autoupdate added the next two lines to ensure that your configure
-# script's behavior did not change.  They are probably safe to remove.
-
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for egrep" >&5
-printf %s "checking for egrep... " >&6; }
-if test ${ac_cv_path_EGREP+y}
-then :
-  printf %s "(cached) " >&6
-else $as_nop
-  if echo a | $GREP -E '(a|b)' >/dev/null 2>&1
-   then ac_cv_path_EGREP="$GREP -E"
-   else
-     if test -z "$EGREP"; then
-  ac_path_EGREP_found=false
-  # Loop through the user's path and test for each of PROGNAME-LIST
-  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH$PATH_SEPARATOR/usr/xpg4/bin
-do
-  IFS=$as_save_IFS
-  case $as_dir in #(((
-    '') as_dir=./ ;;
-    */) ;;
-    *) as_dir=$as_dir/ ;;
-  esac
-    for ac_prog in egrep
-   do
-    for ac_exec_ext in '' $ac_executable_extensions; do
-      ac_path_EGREP="$as_dir$ac_prog$ac_exec_ext"
-      as_fn_executable_p "$ac_path_EGREP" || continue
-# Check for GNU ac_path_EGREP and select it if it is found.
-  # Check for GNU $ac_path_EGREP
-case `"$ac_path_EGREP" --version 2>&1` in
-*GNU*)
-  ac_cv_path_EGREP="$ac_path_EGREP" ac_path_EGREP_found=:;;
-*)
-  ac_count=0
-  printf %s 0123456789 >"conftest.in"
-  while :
-  do
-    cat "conftest.in" "conftest.in" >"conftest.tmp"
-    mv "conftest.tmp" "conftest.in"
-    cp "conftest.in" "conftest.nl"
-    printf "%s\n" 'EGREP' >> "conftest.nl"
-    "$ac_path_EGREP" 'EGREP$' < "conftest.nl" >"conftest.out" 2>/dev/null || break
-    diff "conftest.out" "conftest.nl" >/dev/null 2>&1 || break
-    as_fn_arith $ac_count + 1 && ac_count=$as_val
-    if test $ac_count -gt ${ac_path_EGREP_max-0}; then
-      # Best one so far, save it but keep looking for a better one
-      ac_cv_path_EGREP="$ac_path_EGREP"
-      ac_path_EGREP_max=$ac_count
-    fi
-    # 10*(2^10) chars as input seems more than enough
-    test $ac_count -gt 10 && break
-  done
-  rm -f conftest.in conftest.tmp conftest.nl conftest.out;;
-esac
-
-      $ac_path_EGREP_found && break 3
-    done
-  done
-  done
-IFS=$as_save_IFS
-  if test -z "$ac_cv_path_EGREP"; then
-    as_fn_error $? "no acceptable egrep could be found in $PATH$PATH_SEPARATOR/usr/xpg4/bin" "$LINENO" 5
-  fi
-else
-  ac_cv_path_EGREP=$EGREP
-fi
-
-   fi
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_path_EGREP" >&5
-printf "%s\n" "$ac_cv_path_EGREP" >&6; }
- EGREP="$ac_cv_path_EGREP"
-
-
-
 ac_header_dirent=no
 for ac_hdr in dirent.h sys/ndir.h sys/dir.h ndir.h; do
   as_ac_Header=`printf "%s\n" "ac_cv_header_dirent_$ac_hdr" | $as_tr_sh`
@@ -19981,7 +19898,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 19984 "configure"
+#line 19901 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -20235,7 +20152,6 @@ fi
 
 
 
-
 ac_fn_c_check_header_compile "$LINENO" "assert.h" "ac_cv_header_assert_h" "$ac_includes_default"
 if test "x$ac_cv_header_assert_h" = xyes
 then :
@@ -20403,17 +20319,21 @@ else
   RANLIB="echo"
 fi
 
-# Extract the first word of "pkg-config", so it can be a program name with args.
-set dummy pkg-config; ac_word=$2
+
+
+if test "x$ac_cv_env_PKG_CONFIG_set" != "xset"; then
+	if test -n "$ac_tool_prefix"; then
+  # Extract the first word of "${ac_tool_prefix}pkg-config", so it can be a program name with args.
+set dummy ${ac_tool_prefix}pkg-config; ac_word=$2
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 printf %s "checking for $ac_word... " >&6; }
-if test ${ac_cv_path_PKGCONFIG+y}
+if test ${ac_cv_path_PKG_CONFIG+y}
 then :
   printf %s "(cached) " >&6
 else $as_nop
-  case $PKGCONFIG in
+  case $PKG_CONFIG in
   [\\/]* | ?:[\\/]*)
-  ac_cv_path_PKGCONFIG="$PKGCONFIG" # Let the user override the test with a path.
+  ac_cv_path_PKG_CONFIG="$PKG_CONFIG" # Let the user override the test with a path.
   ;;
   *)
   as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
@@ -20427,7 +20347,7 @@ do
   esac
     for ac_exec_ext in '' $ac_executable_extensions; do
   if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
-    ac_cv_path_PKGCONFIG="$as_dir$ac_word$ac_exec_ext"
+    ac_cv_path_PKG_CONFIG="$as_dir$ac_word$ac_exec_ext"
     printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
     break 2
   fi
@@ -20435,21 +20355,97 @@ done
   done
 IFS=$as_save_IFS
 
-  test -z "$ac_cv_path_PKGCONFIG" && ac_cv_path_PKGCONFIG="not_found"
   ;;
 esac
 fi
-PKGCONFIG=$ac_cv_path_PKGCONFIG
-if test -n "$PKGCONFIG"; then
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PKGCONFIG" >&5
-printf "%s\n" "$PKGCONFIG" >&6; }
+PKG_CONFIG=$ac_cv_path_PKG_CONFIG
+if test -n "$PKG_CONFIG"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $PKG_CONFIG" >&5
+printf "%s\n" "$PKG_CONFIG" >&6; }
 else
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
 fi
 
 
-if test "$PKGCONFIG" = not_found; then
+fi
+if test -z "$ac_cv_path_PKG_CONFIG"; then
+  ac_pt_PKG_CONFIG=$PKG_CONFIG
+  # Extract the first word of "pkg-config", so it can be a program name with args.
+set dummy pkg-config; ac_word=$2
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
+printf %s "checking for $ac_word... " >&6; }
+if test ${ac_cv_path_ac_pt_PKG_CONFIG+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  case $ac_pt_PKG_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_ac_pt_PKG_CONFIG="$ac_pt_PKG_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $PATH
+do
+  IFS=$as_save_IFS
+  case $as_dir in #(((
+    '') as_dir=./ ;;
+    */) ;;
+    *) as_dir=$as_dir/ ;;
+  esac
+    for ac_exec_ext in '' $ac_executable_extensions; do
+  if as_fn_executable_p "$as_dir$ac_word$ac_exec_ext"; then
+    ac_cv_path_ac_pt_PKG_CONFIG="$as_dir$ac_word$ac_exec_ext"
+    printf "%s\n" "$as_me:${as_lineno-$LINENO}: found $as_dir$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+  done
+IFS=$as_save_IFS
+
+  ;;
+esac
+fi
+ac_pt_PKG_CONFIG=$ac_cv_path_ac_pt_PKG_CONFIG
+if test -n "$ac_pt_PKG_CONFIG"; then
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_pt_PKG_CONFIG" >&5
+printf "%s\n" "$ac_pt_PKG_CONFIG" >&6; }
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+fi
+
+  if test "x$ac_pt_PKG_CONFIG" = x; then
+    PKG_CONFIG=""
+  else
+    case $cross_compiling:$ac_tool_warned in
+yes:)
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: using cross tools not prefixed with host triplet" >&5
+printf "%s\n" "$as_me: WARNING: using cross tools not prefixed with host triplet" >&2;}
+ac_tool_warned=yes ;;
+esac
+    PKG_CONFIG=$ac_pt_PKG_CONFIG
+  fi
+else
+  PKG_CONFIG="$ac_cv_path_PKG_CONFIG"
+fi
+
+fi
+if test -n "$PKG_CONFIG"; then
+	_pkg_min_version=0.9.0
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking pkg-config is at least version $_pkg_min_version" >&5
+printf %s "checking pkg-config is at least version $_pkg_min_version... " >&6; }
+	if $PKG_CONFIG --atleast-pkgconfig-version $_pkg_min_version; then
+		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+	else
+		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+		PKG_CONFIG=""
+	fi
+
+fi
+if test "x$PKG_CONFIG" = x; then
   ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -22814,8 +22810,7 @@ fi
       printf "%s\n" "#define BX_HAVE_LTDL 1" >>confdefs.h
 
     else
-      PLUGIN_VAR="ltdl.o"
-      PLUGIN_LIB="ltdl.o"
+      as_fn_error $? "Plugin support requires libltdl installed on your system" "$LINENO" 5
     fi
   fi
   PLUGIN_TARGET=bochs_plugins
@@ -24586,6 +24581,7 @@ fi
 
 
 use_usb=0
+use_usb_uhci=0
 USBHC_OBJS=''
 UHCICORE_OBJ=''
 USBHC_DLL_TARGETS=''
@@ -24603,6 +24599,7 @@ printf "%s\n" "yes" >&6; }
     UHCICORE_OBJ="uhci_core.o"
     USBHC_DLL_TARGETS="bx_usb_uhci.dll"
     use_usb=1
+    use_usb_uhci=1
    else
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
@@ -24620,6 +24617,7 @@ printf "%s\n" "no" >&6; }
 fi
 
 
+use_usb_ohci=0
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for USB OHCI support" >&5
 printf %s "checking for USB OHCI support... " >&6; }
 # Check whether --enable-usb-ohci was given.
@@ -24633,6 +24631,7 @@ printf "%s\n" "yes" >&6; }
     USBHC_OBJS="$USBHC_OBJS usb_ohci.o"
     USBHC_DLL_TARGETS="$USBHC_DLL_TARGETS bx_usb_ohci.dll"
     use_usb=1
+    use_usb_ohci=1
    else
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
@@ -24650,6 +24649,7 @@ printf "%s\n" "no" >&6; }
 fi
 
 
+use_usb_ehci=0
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for USB EHCI support" >&5
 printf %s "checking for USB EHCI support... " >&6; }
 # Check whether --enable-usb-ehci was given.
@@ -24663,6 +24663,7 @@ printf "%s\n" "yes" >&6; }
     USBHC_OBJS="$USBHC_OBJS usb_ehci.o"
     USBHC_DLL_TARGETS="$USBHC_DLL_TARGETS bx_usb_ehci.dll"
     use_usb=1
+    use_usb_ehci=1
    else
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
@@ -24680,6 +24681,7 @@ printf "%s\n" "no" >&6; }
 fi
 
 
+use_usb_xhci=0
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for USB xHCI support" >&5
 printf %s "checking for USB xHCI support... " >&6; }
 # Check whether --enable-usb-xhci was given.
@@ -24693,6 +24695,7 @@ printf "%s\n" "yes" >&6; }
     USBHC_OBJS="$USBHC_OBJS usb_xhci.o"
     USBHC_DLL_TARGETS="$USBHC_DLL_TARGETS bx_usb_xhci.dll"
     use_usb=1
+    use_usb_xhci=1
    else
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
@@ -24711,6 +24714,11 @@ fi
 
 
 if test "$use_usb" = 1; then
+  if test "$use_usb_ehci" = 1; then
+    if test "$use_usb_uhci" = 0 -a "$use_usb_ohci" = 0; then
+      as_fn_error $? "To configure USB EHCI, you must also enable UHCI or OHCI" "$LINENO" 5
+    fi
+  fi
   if test "$pci" != "1"; then
     as_fn_error $? "USB requires PCI support" "$LINENO" 5
   fi
@@ -24721,19 +24729,19 @@ fi
 
 
 usb_debugger=0
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking enable Bochs Win32 USB debugger" >&5
-printf %s "checking enable Bochs Win32 USB debugger... " >&6; }
-# Check whether --enable-win32usbdbg was given.
-if test ${enable_win32usbdbg+y}
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking enable Bochs USB debugger" >&5
+printf %s "checking enable Bochs USB debugger... " >&6; }
+# Check whether --enable-usb-debugger was given.
+if test ${enable_usb_debugger+y}
 then :
-  enableval=$enable_win32usbdbg; if test "$enableval" = yes; then
+  enableval=$enable_usb_debugger; if test "$enableval" = yes; then
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
     usb_debugger=1
    else
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-    printf "%s\n" "#define BX_USE_WIN32USBDEBUG 0" >>confdefs.h
+    printf "%s\n" "#define BX_USB_DEBUGGER 0" >>confdefs.h
 
     usb_debugger=0
    fi
@@ -24746,7 +24754,7 @@ printf "%s\n" "yes" >&6; }
     else
       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-      printf "%s\n" "#define BX_USE_WIN32USBDEBUG 0" >>confdefs.h
+      printf "%s\n" "#define BX_USB_DEBUGGER 0" >>confdefs.h
 
       usb_debugger=0
     fi
@@ -24852,28 +24860,68 @@ fi
 
 
 NETLOW_OBJS=''
+SLIRP_OBJS=''
+SLIRP_OBJS2=''
+SLIRP_LINK_OPTS=''
 if test "$networking" = yes; then
   NETLOW_OBJS='eth_null.o eth_vnet.o'
   ethernet_modules='null vnet'
   can_compile_slirp=0
-  case "$target" in
-    *-cygwin* | *-mingw32* | *-msys)
-      can_compile_slirp=1
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -liphlpapi"
-      ;;
-    *-pc-windows* | *-pc-winnt*)
-      can_compile_slirp=1
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS iphlpapi.lib"
-      ;;
-    *)
-      ac_fn_c_check_header_compile "$LINENO" "netinet/in.h" "ac_cv_header_netinet_in_h" "$ac_includes_default"
-if test "x$ac_cv_header_netinet_in_h" = xyes
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for slirp networking support" >&5
+printf %s "checking for slirp networking support... " >&6; }
+  # Check whether --enable-using-libslirp was given.
+if test ${enable_using_libslirp+y}
 then :
-   can_compile_slirp=1
+  enableval=$enable_using_libslirp; if test "$enableval" = yes; then
+      if test "x$PKG_CONFIG" != x; then
+        $PKG_CONFIG --exists slirp
+        if test x$? = x0; then
+          can_compile_slirp=1
+          if test "$bx_plugins" = 1; then
+            SLIRP_LINK_OPTS="`$PKG_CONFIG --libs slirp`"
+          else
+            DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS `$PKG_CONFIG --libs slirp`"
+          fi
+          { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: libslirp" >&5
+printf "%s\n" "libslirp" >&6; }
+          printf "%s\n" "#define BX_HAVE_LIBSLIRP 1" >>confdefs.h
+
+        fi
+      fi
+    fi
 fi
 
-      ;;
-  esac
+  if test $can_compile_slirp = 0; then
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: builtin" >&5
+printf "%s\n" "builtin" >&6; }
+    case "$target" in
+      *-cygwin* | *-mingw32* | *-msys)
+        can_compile_slirp=1
+        DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -liphlpapi"
+        SLIRP_OBJS='$(SLIRP_OBJS)'
+        ;;
+      *-pc-windows* | *-pc-winnt*)
+        can_compile_slirp=1
+        DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS iphlpapi.lib"
+        SLIRP_OBJS='$(SLIRP_OBJS)'
+        ;;
+      *)
+        ac_fn_c_check_header_compile "$LINENO" "netinet/in.h" "ac_cv_header_netinet_in_h" "$ac_includes_default"
+if test "x$ac_cv_header_netinet_in_h" = xyes
+then :
+  can_compile_slirp=1
+fi
+
+        if test $can_compile_slirp = 1; then
+          if test "$bx_plugins" = 1; then
+            SLIRP_OBJS2='$(SLIRP_OBJS:.o=.lo)'
+          else
+            SLIRP_OBJS='$(SLIRP_OBJS)'
+          fi
+        fi
+        ;;
+    esac
+  fi
   if test $can_compile_slirp = 1; then
     NETLOW_OBJS="$NETLOW_OBJS eth_slirp.o"
     ethernet_modules="$ethernet_modules slirp"
@@ -25002,6 +25050,9 @@ else
   printf "%s\n" "#define BX_NETWORKING 0" >>confdefs.h
 
 fi
+
+
+
 
 
 
@@ -25360,6 +25411,22 @@ fi
 
     fi
   fi
+  if test "$cross_configure" = 0 -a "$DEFAULT_GUI" != win32; then
+    if test "x$PKG_CONFIG" != x; then
+      $PKG_CONFIG --exists libpulse-simple
+      if test x$? = x0; then
+        SOUNDLOW_OBJS="$SOUNDLOW_OBJS soundpulse.o"
+        soundlow_drivers="$soundlow_drivers pulse"
+        printf "%s\n" "#define BX_HAVE_SOUND_PULSE 1" >>confdefs.h
+
+        if test "$bx_plugins" = 1; then
+          PULSE_SOUND_LINK_OPTS="$PULSE_SOUND_LINK_OPTS `$PKG_CONFIG --libs libpulse-simple`"
+        else
+          DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS `$PKG_CONFIG --libs libpulse-simple`"
+        fi
+      fi
+    fi
+  fi
   if test "$MSVC_TARGET" = 0; then
     ac_fn_c_check_header_compile "$LINENO" "samplerate.h" "ac_cv_header_samplerate_h" "$ac_includes_default"
 if test "x$ac_cv_header_samplerate_h" = xyes
@@ -25401,6 +25468,7 @@ else
   printf "%s\n" "#define BX_SUPPORT_SOUNDLOW 0" >>confdefs.h
 
 fi
+
 
 
 
@@ -25952,9 +26020,9 @@ then :
 fi
 
 
-  if test "$PKGCONFIG" != not_found; then
-    X_CFLAGS="`pkg-config --cflags x11`"
-    X_LIBS="`pkg-config --libs x11` $XPM_LIB $XRANDR_LIB"
+  if test "x$PKG_CONFIG" != x; then
+    X_CFLAGS="`$PKG_CONFIG --cflags x11`"
+    X_LIBS="`$PKG_CONFIG --libs x11` $XPM_LIB $XRANDR_LIB"
   else
     X_LIBS="$X_LIBS -lX11 $XPM_LIB $XRANDR_LIB"
   fi
@@ -25966,7 +26034,7 @@ fi
   GUI_CXXFLAGS="$GUI_CXXFLAGS \$(X_CFLAGS)"
   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_X)"
   # The enhanced X debugger depends on GTK2
-  if test "$gui_debugger" = 1; then
+  if test "$gui_debugger" = 1 -o "$usb_debugger" = 1; then
     needs_gtk2=1
   fi
   use_gui_console=1
@@ -25992,8 +26060,10 @@ if test "$with_sdl" = yes; then
     NONPLUGIN_GUI_LINK_OPTS="`sdl-config --libs`"
   fi
   # The enhanced X debugger depends on GTK2
-  if test "$gui_debugger" = 1 -a "$DEFAULT_GUI" != win32; then
-    needs_gtk2=1
+  if test "$DEFAULT_GUI" != win32; then
+    if test "$gui_debugger" = 1 -o "$usb_debugger" = 1; then
+      needs_gtk2=1
+    fi
   fi
   if test "$with_win32" != yes -a "$with_wx" != yes; then
     case $target in
@@ -26028,8 +26098,10 @@ if test "$with_sdl2" = yes; then
     NONPLUGIN_GUI_LINK_OPTS="`sdl2-config --libs`"
   fi
   # The enhanced X debugger depends on GTK2
-  if test "$gui_debugger" = 1 -a "$DEFAULT_GUI" != win32; then
-    needs_gtk2=1
+  if test "$DEFAULT_GUI" != win32; then
+    if test "$gui_debugger" = 1 -o "$usb_debugger" = 1; then
+      needs_gtk2=1
+    fi
   fi
   if test "$with_win32" != yes -a "$with_wx" != yes; then
     case $target in
@@ -26057,11 +26129,11 @@ if test "$with_rfb" = yes; then
 fi
 
 if test "$with_vncsrv" = yes; then
-  if test "$PKGCONFIG" != not_found; then
-    pkg-config --exists libvncserver
+  if test "$PKG_CONFIG" != not_found; then
+    $PKG_CONFIG --exists libvncserver
     if test x$? = x0; then
-      VNCSRV_CXXFLAGS="`pkg-config --cflags libvncserver`"
-      GUI_LINK_OPTS_VNCSRV="`pkg-config --libs libvncserver`"
+      VNCSRV_CXXFLAGS="`$PKG_CONFIG --cflags libvncserver`"
+      GUI_LINK_OPTS_VNCSRV="`$PKG_CONFIG --libs libvncserver`"
     fi
   else
     # Extract the first word of " libvncserver-config --version ", so it can be a program name with args.
@@ -26222,14 +26294,14 @@ if test "$with_wx" = yes; then
   WX_CFLAGS="`$WX_CONFIG --cflags`"
   WX_CXXFLAGS="`$WX_CONFIG --cxxflags`"
   if test "$wx_needs_gdk_version" = 2; then
-    GDK_CFLAGS="`pkg-config --cflags gdk-2.0`"
+    GDK_CFLAGS="`$PKG_CONFIG --cflags gdk-2.0`"
     WX_CFLAGS="$WX_CFLAGS $GDK_CFLAGS"
     WX_CXXFLAGS="$WX_CXXFLAGS $GDK_CFLAGS"
     printf "%s\n" "#define WX_GDK_VERSION 2" >>confdefs.h
 
   fi
   if test "$wx_needs_gdk_version" = 3; then
-    GDK_CFLAGS="`pkg-config --cflags gdk-3.0`"
+    GDK_CFLAGS="`$PKG_CONFIG --cflags gdk-3.0`"
     WX_CFLAGS="$WX_CFLAGS $GDK_CFLAGS"
     WX_CXXFLAGS="$WX_CXXFLAGS $GDK_CFLAGS"
     printf "%s\n" "#define WX_GDK_VERSION 3" >>confdefs.h
@@ -26261,8 +26333,10 @@ if test "$with_wx" = yes; then
       ;;
   esac
   # The enhanced X debugger depends on GTK2
-  if test "$gui_debugger" = 1 -a "$DEFAULT_GUI" != win32; then
-    needs_gtk2=1
+  if test "$DEFAULT_GUI" != win32; then
+    if test "$gui_debugger" = 1 -o "$usb_debugger" = 1; then
+      needs_gtk2=1
+    fi
   fi
 fi
 
@@ -26290,21 +26364,21 @@ fi
 bx_have_gtk_version=0
 if test "$needs_gtk2" = 1; then
   # pkg-config is required to set TOOLKIT_CXXFLAGS and LIBS
-  if test "$PKGCONFIG" != not_found; then
+  if test "x$PKG_CONFIG" != x; then
     # if wxGTK is based on GTK 3.0, use it for gui debugger to avoid conflicts
-    if test "$with_wx" = yes -a "$wx_needs_gdk_version" = 3; then
-      pkg-config --exists gtk+-3.0
+    if test "$with_wx" = yes -a "$wx_needs_gdk_version" = 2; then
+      $PKG_CONFIG --exists gtk+-2.0
       if test x$? = x0; then
-        TOOLKIT_CXXFLAGS="`pkg-config --cflags gtk+-3.0`"
-        LIBS="$LIBS `pkg-config --libs gtk+-3.0`"
-        bx_have_gtk_version=3
+        TOOLKIT_CXXFLAGS="`$PKG_CONFIG --cflags gtk+-2.0`"
+        LIBS="$LIBS `$PKG_CONFIG --libs gtk+-2.0`"
+        bx_have_gtk_version=2
       fi
     else
-      pkg-config --exists gtk+-2.0
+      $PKG_CONFIG --exists gtk+-3.0
       if test x$? = x0; then
-        TOOLKIT_CXXFLAGS="`pkg-config --cflags gtk+-2.0`"
-        LIBS="$LIBS `pkg-config --libs gtk+-2.0`"
-        bx_have_gtk_version=2
+        TOOLKIT_CXXFLAGS="`$PKG_CONFIG --cflags gtk+-3.0`"
+        LIBS="$LIBS `$PKG_CONFIG --libs gtk+-3.0`"
+        bx_have_gtk_version=3
       fi
     fi
   else
@@ -26312,6 +26386,8 @@ if test "$needs_gtk2" = 1; then
     echo "The gui debugger support is disabled now."
   fi
 fi
+printf "%s\n" "#define BX_HAVE_GTK_VERSION $bx_have_gtk_version" >>confdefs.h
+
 
 if test "$display_libs" = " wxWidgets"; then
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for default configuration interface" >&5
@@ -26328,6 +26404,9 @@ printf "%s\n" "wxWidgets" >&6; }
 
   printf "%s\n" "#define BX_USE_TEXTCONFIG 0" >>confdefs.h
 
+  printf "%s\n" "#define HAVE_LIBREADLINE 0" >>confdefs.h
+
+  READLINE_LIB=""
 else
   if test "$DEFAULT_GUI" = win32; then
     printf "%s\n" "#define BX_DEFAULT_CONFIG_INTERFACE \"win32config\"" >>confdefs.h
@@ -26458,6 +26537,7 @@ case "$target" in
     else
       C_OPT="$C_OPT /EHs-c-"
     fi
+    C_OPT="$C_OPT /std:c++20"
     if test "$bx_plugins" = 1; then
       CFLAGS="/nologo /MD /W3 /DNDEBUG /DWIN32 /D_WINDOWS /D_CRT_SECURE_NO_WARNINGS $C_OPT"
     else
@@ -26578,14 +26658,18 @@ fi
 
 USB_DBG_OBJS=""
 if test "$usb_debugger" = 1; then
-  if test "$DEFAULT_GUI" = win32 -o "$with_win32" = yes; then
-    USB_DBG_OBJS="win32usb.o"
-    printf "%s\n" "#define BX_USE_WIN32USBDEBUG 1" >>confdefs.h
+  if test "$bx_have_gtk_version" -ge 3; then
+    USB_DBG_OBJS="usb_debug.o gtk_usb_debug.o"
+    printf "%s\n" "#define BX_USB_DEBUGGER 1" >>confdefs.h
+
+  elif test "$DEFAULT_GUI" = win32 -o "$with_win32" = yes; then
+    USB_DBG_OBJS="usb_debug.o win32usb.o"
+    printf "%s\n" "#define BX_USB_DEBUGGER 1" >>confdefs.h
 
   else
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: The USB debugger supported only for Win32 cannot be compiled here, disabling it" >&5
-printf "%s\n" "$as_me: WARNING: The USB debugger supported only for Win32 cannot be compiled here, disabling it" >&2;}
-    printf "%s\n" "#define BX_USE_WIN32USBDEBUG 0" >>confdefs.h
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: The USB debugger cannot be compiled here, disabling it" >&5
+printf "%s\n" "$as_me: WARNING: The USB debugger cannot be compiled here, disabling it" >&2;}
+    printf "%s\n" "#define BX_USB_DEBUGGER 0" >>confdefs.h
 
   fi
 fi
@@ -26597,7 +26681,6 @@ case $target in
   *-pc-windows* | *-pc-winnt*)
     if test "$bx_plugins" = 1; then
       # set variables for building DLL plugins
-      PLUGIN_VAR=""
       PLUGIN_LIBNAME_TRANSFORMATION='%.o=bx_%.dll'
       GUI_PLUGIN_NAME_TRANSFORMATION='%.o=bx_%_gui.dll'
       IMG_PLUGIN_NAME_TRANSFORMATION='%.o=bx_%_img.dll'
@@ -26666,7 +26749,7 @@ esac
 
 
 if test "$use_curses" = yes; then
-  if test "$PKGCONFIG" != not_found; then
+  if test "x$PKG_CONFIG" != x; then
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for mvaddch in -lcurses" >&5
 printf %s "checking for mvaddch in -lcurses... " >&6; }
 if test ${ac_cv_lib_curses_mvaddch+y}
@@ -26704,7 +26787,7 @@ fi
 printf "%s\n" "$ac_cv_lib_curses_mvaddch" >&6; }
 if test "x$ac_cv_lib_curses_mvaddch" = xyes
 then :
-  GUI_LINK_OPTS_TERM="`pkg-config --libs curses`"
+  GUI_LINK_OPTS_TERM="`$PKG_CONFIG --libs curses`"
 fi
 
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for mvaddch in -lncurses" >&5
@@ -26744,7 +26827,7 @@ fi
 printf "%s\n" "$ac_cv_lib_ncurses_mvaddch" >&6; }
 if test "x$ac_cv_lib_ncurses_mvaddch" = xyes
 then :
-  GUI_LINK_OPTS_TERM="`pkg-config --libs ncurses`"
+  GUI_LINK_OPTS_TERM="`$PKG_CONFIG --libs ncurses`"
 fi
 
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for mvaddch in -ltermlib" >&5
@@ -26784,7 +26867,7 @@ fi
 printf "%s\n" "$ac_cv_lib_termlib_mvaddch" >&6; }
 if test "x$ac_cv_lib_termlib_mvaddch" = xyes
 then :
-  GUI_LINK_OPTS_TERM="`pkg-config --libs termlib`"
+  GUI_LINK_OPTS_TERM="`$PKG_CONFIG --libs termlib`"
 fi
 
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for mvaddch in -lpdcurses" >&5
@@ -26824,7 +26907,7 @@ fi
 printf "%s\n" "$ac_cv_lib_pdcurses_mvaddch" >&6; }
 if test "x$ac_cv_lib_pdcurses_mvaddch" = xyes
 then :
-  GUI_LINK_OPTS_TERM="`pkg-config --libs pdcurses`"
+  GUI_LINK_OPTS_TERM="`$PKG_CONFIG --libs pdcurses`"
 fi
 
   else
@@ -27461,6 +27544,7 @@ case "$target" in
       if test "$soundcard_present" = 1; then
         if test "$bx_plugins" = 1; then
           ALSA_SOUND_LINK_OPTS="$ALSA_SOUND_LINK_OPTS $PTHREAD_LIBS"
+          PULSE_SOUND_LINK_OPTS="$PULSE_SOUND_LINK_OPTS $PTHREAD_LIBS"
           SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS $PTHREAD_LIBS"
         else
           DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS $PTHREAD_LIBS"
@@ -27484,7 +27568,6 @@ if test ! -d build; then mkdir build; fi
 if test ! -d build/linux; then mkdir build/linux; fi
 if test ! -d build/win32; then mkdir build/win32; fi
 if test ! -d build/win32/nsis; then mkdir build/win32/nsis; fi
-
 
 
 
@@ -28367,7 +28450,6 @@ for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
     "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
-    "ltdlconf.h") CONFIG_HEADERS="$CONFIG_HEADERS ltdlconf.h" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "iodev/Makefile") CONFIG_FILES="$CONFIG_FILES iodev/Makefile" ;;
     "iodev/display/Makefile") CONFIG_FILES="$CONFIG_FILES iodev/display/Makefile" ;;

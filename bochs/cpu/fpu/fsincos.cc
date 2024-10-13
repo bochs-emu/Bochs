@@ -26,8 +26,8 @@ these four paragraphs for those parts of this code that are retained.
 #define FLOAT128
 
 #define USE_estimateDiv128To64
-#include "softfloatx80.h"
-#include "softfloat-round-pack.h"
+#include "fpu_trans.h"
+#include "softfloat-helpers.h"
 #include "fpu_constant.h"
 
 static const floatx80 floatx80_one = packFloatx80(0, 0x3fff, BX_CONST64(0x8000000000000000));
@@ -56,7 +56,7 @@ static int reduce_trig_arg(int expDiff, int &zSign, Bit64u &aSig0, Bit64u &aSig1
     Bit64u term0, term1, q = 0;
 
     if (expDiff < 0) {
-        shift128Right(aSig0, 0, 1, &aSig0, &aSig1);
+        shortShift128Right(aSig0, 0, 1, &aSig0, &aSig1);
         expDiff = 0;
     }
     if (expDiff > 0) {
@@ -69,11 +69,11 @@ static int reduce_trig_arg(int expDiff, int &zSign, Bit64u &aSig0, Bit64u &aSig1
         }
     }
 
-    shift128Right(FLOAT_PI_HI, FLOAT_PI_LO, 1, &term0, &term1);
-    if (! lt128(aSig0, aSig1, term0, term1))
+    shortShift128Right(FLOAT_PI_HI, FLOAT_PI_LO, 1, &term0, &term1);
+    if (! softfloat_lt128(aSig0, aSig1, term0, term1))
     {
-        int lt = lt128(term0, term1, aSig0, aSig1);
-        int eq = eq128(aSig0, aSig1, term0, term1);
+        int lt = softfloat_lt128(term0, term1, aSig0, aSig1);
+        int eq = softfloat_eq128(aSig0, aSig1, term0, term1);
 
         if ((eq && (q & 1)) || lt) {
             zSign = !zSign;
@@ -88,7 +88,7 @@ static int reduce_trig_arg(int expDiff, int &zSign, Bit64u &aSig0, Bit64u &aSig1
 #define SIN_ARR_SIZE 11
 #define COS_ARR_SIZE 11
 
-static float128 sin_arr[SIN_ARR_SIZE] =
+static float128_t sin_arr[SIN_ARR_SIZE] =
 {
     PACK_FLOAT_128(0x3fff000000000000, 0x0000000000000000), /*  1 */
     PACK_FLOAT_128(0xbffc555555555555, 0x5555555555555555), /*  3 */
@@ -103,7 +103,7 @@ static float128 sin_arr[SIN_ARR_SIZE] =
     PACK_FLOAT_128(0x3fbd71b8ef6dcf57, 0x18bef146fcee6e45)  /* 21 */
 };
 
-static float128 cos_arr[COS_ARR_SIZE] =
+static float128_t cos_arr[COS_ARR_SIZE] =
 {
     PACK_FLOAT_128(0x3fff000000000000, 0x0000000000000000), /*  0 */
     PACK_FLOAT_128(0xbffe000000000000, 0x0000000000000000), /*  2 */
@@ -118,10 +118,10 @@ static float128 cos_arr[COS_ARR_SIZE] =
     PACK_FLOAT_128(0x3fc1e542ba402022, 0x507a9cad2bf8f0bb)  /* 20 */
 };
 
-extern float128 OddPoly (float128 x, float128 *arr, int n, float_status_t &status);
+extern float128_t OddPoly (float128_t x, const float128_t *arr, int n, softfloat_status_t &status);
 
 /* 0 <= x <= pi/4 */
-BX_CPP_INLINE float128 poly_sin(float128 x, float_status_t &status)
+BX_CPP_INLINE float128_t poly_sin(float128_t x, softfloat_status_t &status)
 {
     //                 3     5     7     9     11     13     15
     //                x     x     x     x     x      x      x
@@ -143,13 +143,13 @@ BX_CPP_INLINE float128 poly_sin(float128 x, float_status_t &status)
     //   sin(x) ~ x * [ p(x) + x * q(x) ]
     //
 
-    return OddPoly(x, sin_arr, SIN_ARR_SIZE, status);
+    return OddPoly(x, (const float128_t*) sin_arr, SIN_ARR_SIZE, status);
 }
 
-extern float128 EvenPoly(float128 x, float128 *arr, int n, float_status_t &status);
+extern float128_t EvenPoly(float128_t x, const float128_t *arr, int n, softfloat_status_t &status);
 
 /* 0 <= x <= pi/4 */
-BX_CPP_INLINE float128 poly_cos(float128 x, float_status_t &status)
+BX_CPP_INLINE float128_t poly_cos(float128_t x, softfloat_status_t &status)
 {
     //                 2     4     6     8     10     12     14
     //                x     x     x     x     x      x      x
@@ -166,7 +166,7 @@ BX_CPP_INLINE float128 poly_cos(float128 x, float_status_t &status)
     //   cos(x) ~ [ p(x) + x * q(x) ]
     //
 
-    return EvenPoly(x, cos_arr, COS_ARR_SIZE, status);
+    return EvenPoly(x, (const float128_t*) cos_arr, COS_ARR_SIZE, status);
 }
 
 BX_CPP_INLINE void sincos_invalid(floatx80 *sin_a, floatx80 *cos_a, floatx80 a)
@@ -181,7 +181,7 @@ BX_CPP_INLINE void sincos_tiny_argument(floatx80 *sin_a, floatx80 *cos_a, floatx
     if (cos_a) *cos_a = floatx80_one;
 }
 
-static floatx80 sincos_approximation(int neg, float128 r, Bit64u quotient, float_status_t &status)
+static floatx80 sincos_approximation(int neg, float128_t r, Bit64u quotient, softfloat_status_t &status)
 {
     if (quotient & 0x1) {
         r = poly_cos(r, status);
@@ -190,7 +190,7 @@ static floatx80 sincos_approximation(int neg, float128 r, Bit64u quotient, float
         r = poly_sin(r, status);
     }
 
-    floatx80 result = float128_to_floatx80(r, status);
+    floatx80 result = f128_to_extF80(r, &status);
     if (quotient & 0x2)
         neg = ! neg;
 
@@ -220,7 +220,7 @@ static floatx80 sincos_approximation(int neg, float128 r, Bit64u quotient, float
 //  sin(x+2pi)    =  sin(x)
 //
 
-int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, float_status_t &status)
+int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, softfloat_status_t &status)
 {
     Bit64u aSig0, aSig1 = 0;
     Bit32s aExp, zExp, expDiff;
@@ -232,42 +232,44 @@ int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, float_status_t &status
         goto invalid;
     }
 
-    aSig0 = extractFloatx80Frac(a);
-    aExp = extractFloatx80Exp(a);
-    aSign = extractFloatx80Sign(a);
+    aSig0 = extF80_fraction(a);
+    aExp = extF80_exp(a);
+    aSign = extF80_sign(a);
 
     /* invalid argument */
     if (aExp == 0x7FFF) {
-        if ((Bit64u) (aSig0<<1)) {
-            sincos_invalid(sin_a, cos_a, propagateFloatx80NaN(a, status));
+        if (aSig0 << 1) {
+            sincos_invalid(sin_a, cos_a, softfloat_propagateNaNExtF80UI(a.signExp, aSig0, 0, 0, &status));
             return 0;
         }
 
     invalid:
-        float_raise(status, float_flag_invalid);
+        softfloat_raiseFlags(&status, softfloat_flag_invalid);
         sincos_invalid(sin_a, cos_a, floatx80_default_nan);
         return 0;
     }
 
-    if (aExp == 0) {
-        if (aSig0 == 0) {
+    if (! aExp) {
+        if (! aSig0) {
             sincos_tiny_argument(sin_a, cos_a, a);
             return 0;
         }
 
-        float_raise(status, float_flag_denormal);
+        softfloat_raiseFlags(&status, softfloat_flag_denormal);
 
         /* handle pseudo denormals */
         if (! (aSig0 & BX_CONST64(0x8000000000000000)))
         {
-            float_raise(status, float_flag_inexact);
+            softfloat_raiseFlags(&status, softfloat_flag_inexact);
             if (sin_a)
-                float_raise(status, float_flag_underflow);
+                softfloat_raiseFlags(&status, softfloat_flag_underflow);
             sincos_tiny_argument(sin_a, cos_a, a);
             return 0;
         }
 
-        normalizeFloatx80Subnormal(aSig0, &aExp, &aSig0);
+        struct exp32_sig64 normExpSig = softfloat_normSubnormalExtF80Sig(aSig0);
+        aExp = normExpSig.exp + 1;
+        aSig0 = normExpSig.sig;
     }
 
     zSign = aSign;
@@ -278,7 +280,7 @@ int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, float_status_t &status
     if (expDiff >= 63)
         return -1;
 
-    float_raise(status, float_flag_inexact);
+    softfloat_raiseFlags(&status, softfloat_flag_inexact);
 
     if (expDiff < -1) {    // doesn't require reduction
         if (expDiff <= -68) {
@@ -297,7 +299,7 @@ int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, float_status_t &status
     /* **************************** */
 
     /* using float128 for approximation */
-    float128 r = normalizeRoundAndPackFloat128(0, zExp-0x10, aSig0, aSig1, status);
+    float128_t r = softfloat_normRoundPackToF128(0, zExp-0x10, aSig0, aSig1, &status);
 
     if (aSign) q = -q;
     if (sin_a) *sin_a = sincos_approximation(zSign, r,   q, status);
@@ -306,12 +308,12 @@ int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, float_status_t &status
     return 0;
 }
 
-int fsin(floatx80 &a, float_status_t &status)
+int fsin(floatx80 &a, softfloat_status_t &status)
 {
     return fsincos(a, &a, 0, status);
 }
 
-int fcos(floatx80 &a, float_status_t &status)
+int fcos(floatx80 &a, softfloat_status_t &status)
 {
     return fsincos(a, 0, &a, status);
 }
@@ -343,7 +345,7 @@ int fcos(floatx80 &a, float_status_t &status)
 //           cos(x)
 //
 
-int ftan(floatx80 &a, float_status_t &status)
+int ftan(floatx80 &a, softfloat_status_t &status)
 {
     Bit64u aSig0, aSig1 = 0;
     Bit32s aExp, zExp, expDiff;
@@ -355,34 +357,37 @@ int ftan(floatx80 &a, float_status_t &status)
         goto invalid;
     }
 
-    aSig0 = extractFloatx80Frac(a);
-    aExp = extractFloatx80Exp(a);
-    aSign = extractFloatx80Sign(a);
+    aSig0 = extF80_fraction(a);
+    aExp = extF80_exp(a);
+    aSign = extF80_sign(a);
 
     /* invalid argument */
     if (aExp == 0x7FFF) {
-        if ((Bit64u) (aSig0<<1))
+        if (aSig0 << 1)
         {
-            a = propagateFloatx80NaN(a, status);
+            a = softfloat_propagateNaNExtF80UI(a.signExp, aSig0, 0, 0, &status);
             return 0;
         }
 
     invalid:
-        float_raise(status, float_flag_invalid);
+        softfloat_raiseFlags(&status, softfloat_flag_invalid);
         a = floatx80_default_nan;
         return 0;
     }
 
-    if (aExp == 0) {
-        if (aSig0 == 0) return 0;
-        float_raise(status, float_flag_denormal);
+    if (! aExp) {
+        if (! aSig0) return 0;
+        softfloat_raiseFlags(&status, softfloat_flag_denormal);
         /* handle pseudo denormals */
         if (! (aSig0 & BX_CONST64(0x8000000000000000)))
         {
-            float_raise(status, float_flag_inexact | float_flag_underflow);
+            softfloat_raiseFlags(&status, softfloat_flag_inexact | softfloat_flag_underflow);
             return 0;
         }
-        normalizeFloatx80Subnormal(aSig0, &aExp, &aSig0);
+
+        struct exp32_sig64 normExpSig = softfloat_normSubnormalExtF80Sig(aSig0);
+        aExp = normExpSig.exp + 1;
+        aSig0 = normExpSig.sig;
     }
 
     zSign = aSign;
@@ -393,7 +398,7 @@ int ftan(floatx80 &a, float_status_t &status)
     if (expDiff >= 63)
         return -1;
 
-    float_raise(status, float_flag_inexact);
+    softfloat_raiseFlags(&status, softfloat_flag_inexact);
 
     if (expDiff < -1) {    // doesn't require reduction
         if (expDiff <= -68) {
@@ -411,19 +416,19 @@ int ftan(floatx80 &a, float_status_t &status)
     /* **************************** */
 
     /* using float128 for approximation */
-    float128 r = normalizeRoundAndPackFloat128(0, zExp-0x10, aSig0, aSig1, status);
+    float128_t r = softfloat_normRoundPackToF128(0, zExp-0x10, aSig0, aSig1, &status);
 
-    float128 sin_r = poly_sin(r, status);
-    float128 cos_r = poly_cos(r, status);
+    float128_t sin_r = poly_sin(r, status);
+    float128_t cos_r = poly_cos(r, status);
 
     if (q & 0x1) {
-        r = float128_div(cos_r, sin_r, status);
+        r = f128_div(cos_r, sin_r, &status);
         zSign = ! zSign;
     } else {
-        r = float128_div(sin_r, cos_r, status);
+        r = f128_div(sin_r, cos_r, &status);
     }
 
-    a = float128_to_floatx80(r, status);
+    a = f128_to_extF80(r, &status);
     if (zSign)
         floatx80_chs(a);
 

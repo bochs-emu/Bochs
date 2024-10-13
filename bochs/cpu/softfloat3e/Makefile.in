@@ -40,7 +40,7 @@ SOFTFLOAT_OPTS = \
   -DINLINE_LEVEL=5 -DSOFTFLOAT_FAST_DIV32TO16 -DSOFTFLOAT_FAST_DIV64TO32
 
 DELETE = @RMCOMMAND@
-C_INCLUDES = -I. -I../.. -I$(SOURCE_DIR)/$(SPECIALIZE_TYPE) -I$(SOURCE_DIR)/include
+C_INCLUDES = -I. -I../.. -I$(SOURCE_DIR)/include
 COMPILE_C = \
   $(CXX) @DASH@c @CFLAGS@ \
     -DSOFTFLOAT_FAST_INT64 $(SOFTFLOAT_OPTS) $(C_INCLUDES) @OFP@$@
@@ -106,19 +106,16 @@ OBJS_OTHERS = \
   s_normRoundPackToF16$(OBJ) \
   s_addMagsF16$(OBJ) \
   s_subMagsF16$(OBJ) \
-  s_mulAddF16$(OBJ) \
   s_normSubnormalF32Sig$(OBJ) \
   s_roundPackToF32$(OBJ) \
   s_normRoundPackToF32$(OBJ) \
   s_addMagsF32$(OBJ) \
   s_subMagsF32$(OBJ) \
-  s_mulAddF32$(OBJ) \
   s_normSubnormalF64Sig$(OBJ) \
   s_roundPackToF64$(OBJ) \
   s_normRoundPackToF64$(OBJ) \
   s_addMagsF64$(OBJ) \
   s_subMagsF64$(OBJ) \
-  s_mulAddF64$(OBJ) \
   s_packToExtF80$(OBJ) \
   s_normSubnormalExtF80Sig$(OBJ) \
   s_roundPackToExtF80$(OBJ) \
@@ -130,7 +127,6 @@ OBJS_OTHERS = \
   s_normRoundPackToF128$(OBJ) \
   s_addMagsF128$(OBJ) \
   s_subMagsF128$(OBJ) \
-  s_mulAddF128$(OBJ) \
   isNaN$(OBJ) \
   isSignalingNaN$(OBJ) \
   ui32_to_f16$(OBJ) \
@@ -243,6 +239,8 @@ OBJS_OTHERS = \
   extF80_roundToInt$(OBJ) \
   extF80_class$(OBJ) \
   extF80_compare$(OBJ) \
+  extF80_extract$(OBJ) \
+  extF80_scale$(OBJ) \
   extF80_addsub$(OBJ) \
   extF80_mul$(OBJ) \
   extF80_div$(OBJ) \
@@ -263,8 +261,7 @@ OBJS_OTHERS = \
   f128_addsub$(OBJ) \
   f128_mul$(OBJ) \
   f128_mulAdd$(OBJ) \
-  f128_div$(OBJ) \
-  f128_sqrt$(OBJ)
+  f128_div$(OBJ)
 
 OBJS_ALL = $(OBJS_PRIMITIVES) $(OBJS_SPECIALIZE) $(OBJS_OTHERS)
 
@@ -273,7 +270,7 @@ $(OBJS_ALL): \
   $(SOURCE_DIR)/include/primitives.h
 $(OBJS_SPECIALIZE) $(OBJS_OTHERS): \
   $(SOURCE_DIR)/include/softfloat_types.h $(SOURCE_DIR)/include/internals.h \
-  $(SOURCE_DIR)/$(SPECIALIZE_TYPE)/specialize.h \
+  $(SOURCE_DIR)/include/specialize.h \
   $(SOURCE_DIR)/include/softfloat.h
 
 @GNU_MAKE_ONLY@$(OBJS_PRIMITIVES) $(OBJS_OTHERS): %$(OBJ): $(SOURCE_DIR)/%.c

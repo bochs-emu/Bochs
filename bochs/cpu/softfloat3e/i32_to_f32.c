@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "internals.h"
 #include "softfloat.h"
 
-float32_t i32_to_f32(int32_t a, struct softfloat_status_t *status)
+float32 i32_to_f32(int32_t a, struct softfloat_status_t *status)
 {
     bool sign;
     uint32_t absA;

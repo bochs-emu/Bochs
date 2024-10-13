@@ -2,7 +2,7 @@
 // $Id: utctime.h
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2024  The Bochs Project
 //
 //  Portable gmtime()/timegm() clones by Michele Giacomone
 //
@@ -107,7 +107,11 @@ char *ascutc(struct utctm *src)
 
 struct utctm *utctime_ext(const Bit64s *a,struct utctm *trgt)
 {
-  static const Bit32s monthlydays[2][13]={{0,31,59,90,120,151,181,212,243,273,304,334,365},{0,31,60,91,121,152,182,213,244,274,305,335,366}}; //Days elapsed between the start of the selected month and the start of the year
+  //Days elapsed between the start of the selected month and the start of the year
+  static const Bit32s monthlydays[2][13]={
+     {0,31,59,90,120,151,181,212,243,273,304,334,365},
+     {0,31,60,91,121,152,182,213,244,274,305,335,366}
+  };
   Bit8u isleap=0;                                                       //Leap year flag
   struct utctm bdt;                                                     //Structure to temporary store the output
   Bit64s etmp=*a;                                                       //Temporary variable, epoch since 1970
@@ -123,7 +127,7 @@ struct utctm *utctime_ext(const Bit64s *a,struct utctm *trgt)
   tsec/=60;
   bdt.tm_min=tsec%60;                                                   //Set the minutes value
   tsec/=60;
-  bdt.tm_hour=tsec;                                                     //Set the hour value
+  bdt.tm_hour = (Bit16s)tsec;                                           //Set the hour value
 
   bdt.tm_wday=(etmp-6)%7;
   if(bdt.tm_wday<0) bdt.tm_wday+=7;                                     //Set the day of the week value
@@ -144,13 +148,13 @@ struct utctm *utctime_ext(const Bit64s *a,struct utctm *trgt)
   isleap=(isleap?1:0);                                                  //Find out if the year is leap
 
   eyear-=1900;
-  bdt.tm_year=eyear;                                                    //Set the year value
+  bdt.tm_year = (Bit16s)eyear;                                          //Set the year value
 
-  bdt.tm_yday=etmp;                                                     //Set the day of the year value
+  bdt.tm_yday = (Bit16s)etmp;                                           //Set the day of the year value
   bdt.tm_mon=0;
   while(etmp>=monthlydays[isleap][bdt.tm_mon+1]) bdt.tm_mon++;          //Set the month value
   etmp-=monthlydays[isleap][bdt.tm_mon];
-  bdt.tm_mday=etmp+1;                                                   //Set the day of the month value
+  bdt.tm_mday = (Bit16s)(etmp + 1);                                     //Set the day of the month value
 
   if(eyear != bdt.tm_year) return NULL;                                 //If the calculated year is too high fail
 
@@ -167,7 +171,11 @@ struct utctm *utctime_ext(const Bit64s *a,struct utctm *trgt)
 
 Bit64s timeutc(struct utctm *bdt)
 {
-  static const Bit32s monthlydays[2][13]={{0,31,59,90,120,151,181,212,243,273,304,334,365},{0,31,60,91,121,152,182,213,244,274,305,335,366}}; //Days elapsed between the start of the selected month and the start of the year
+  //Days elapsed between the start of the selected month and the start of the year
+  static const Bit32s monthlydays[2][13]={
+     {0,31,59,90,120,151,181,212,243,273,304,334,365},
+     {0,31,60,91,121,152,182,213,244,274,305,335,366}
+  };
   Bit8u   isleap=3;                                                     //Leap year flag
   Bit32s  tmon;                                                         //Temporary month value
   Bit64s  epoch=0;                                                      //Value to return

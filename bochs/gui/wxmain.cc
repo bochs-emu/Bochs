@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -71,6 +71,7 @@
 #endif
 #include <wx/image.h>
 #include <wx/clipbrd.h>
+#include <wx/filename.h>
 
 #include "osdep.h"               // workarounds for missing stuff
 #include "gui/paramtree.h"       // config parameter tree
@@ -81,18 +82,26 @@
 #include "extplugin.h"
 
 // include XPM icons
-#include "bitmaps/cdromd.xpm"
+#include "bitmaps/cdrom1.xpm"
+#include "bitmaps/cdrom1_eject.xpm"
 #include "bitmaps/copy.xpm"
 #include "bitmaps/floppya.xpm"
+#include "bitmaps/floppya_eject.xpm"
 #include "bitmaps/floppyb.xpm"
+#include "bitmaps/floppyb_eject.xpm"
 #include "bitmaps/paste.xpm"
 #include "bitmaps/power.xpm"
 #include "bitmaps/reset.xpm"
 #include "bitmaps/snapshot.xpm"
 #include "bitmaps/mouse.xpm"
+#include "bitmaps/mouse_dis.xpm"
 //#include "bitmaps/configbutton.xpm"
 #include "bitmaps/userbutton.xpm"
 #include "bitmaps/saverestore.xpm"
+#if BX_USB_DEBUGGER
+#include "bitmaps/usbdbg.xpm"
+#include "bitmaps/usbdbg_trigger.xpm"
+#endif
 #ifdef __WXGTK__
 #include "icon_bochs.xpm"
 #endif
@@ -236,7 +245,7 @@ bool MyApp::OnInit()
   // simulation begins.  This is responsible for displaying any error
   // dialogs during bochsrc and command line processing.
   SIM->set_notify_callback(&MyApp::DefaultCallback, this);
-  MyFrame *frame = new MyFrame(wxT("Bochs x86 Emulator"), wxPoint(50,50), wxSize(450,340), wxMINIMIZE_BOX | wxSYSTEM_MENU | wxCAPTION);
+  MyFrame *frame = new MyFrame(wxT("Bochs x86 Emulator"), wxPoint(50,50), wxSize(640,480), wxMINIMIZE_BOX | wxSYSTEM_MENU | wxCAPTION);
   theFrame = frame;  // hack alert
   frame->Show(TRUE);
   SetTopWindow(frame);
@@ -344,6 +353,9 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_TOOL(ID_Toolbar_Snapshot, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_Mouse_en, MyFrame::OnToolbarClick)
   EVT_TOOL(ID_Toolbar_User, MyFrame::OnToolbarClick)
+#if BX_USB_DEBUGGER
+  EVT_TOOL(ID_Toolbar_USB_Debug, MyFrame::OnToolbarClick)
+#endif
 END_EVENT_TABLE()
 
 
@@ -435,18 +447,21 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
     bxToolBar->AddTool(id, wxT(""), wxBitmap(xpm_name), tooltip); \
   } while (0)
 
-  BX_ADD_TOOL(ID_Edit_FD_0, floppya_xpm, wxT("Change Floppy A"));
-  BX_ADD_TOOL(ID_Edit_FD_1, floppyb_xpm, wxT("Change Floppy B"));
-  BX_ADD_TOOL(ID_Edit_Cdrom1, cdromd_xpm, wxT("Change CDROM"));
+  BX_ADD_TOOL(ID_Edit_FD_0, floppya_eject_xpm, wxT("Change floppy A: media"));
+  BX_ADD_TOOL(ID_Edit_FD_1, floppyb_eject_xpm, wxT("Change floppy B: media"));
+  BX_ADD_TOOL(ID_Edit_Cdrom1, cdrom1_eject_xpm, wxT("Change first CDROM media"));
+  BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_dis_xpm, wxT("Enable mouse capture"));
+#if BX_USB_DEBUGGER
+  BX_ADD_TOOL(ID_Toolbar_USB_Debug, usbdbg_xpm, wxT("USB Debugger support not enabled"));
+#endif
+  bxToolBar->AddSeparator();
+  BX_ADD_TOOL(ID_Toolbar_User, userbutton_xpm, wxT("Send keyboard shortcut"));
+  BX_ADD_TOOL(ID_Toolbar_Copy, copy_xpm, wxT("Copy text mode screen to the clipboard"));
+  BX_ADD_TOOL(ID_Toolbar_Paste, paste_xpm, wxT("Paste clipboard text as emulated keystrokes"));
+  BX_ADD_TOOL(ID_Toolbar_Snapshot, snapshot_xpm, wxT("Save snapshot of the Bochs screen"));
   BX_ADD_TOOL(ID_Toolbar_Reset, reset_xpm, wxT("Reset the system"));
-  BX_ADD_TOOL(ID_Toolbar_Power, power_xpm, wxT("Turn power on/off"));
-  BX_ADD_TOOL(ID_Toolbar_SaveRestore, saverestore_xpm, wxT(""));
-
-  BX_ADD_TOOL(ID_Toolbar_Copy, copy_xpm, wxT("Copy to clipboard"));
-  BX_ADD_TOOL(ID_Toolbar_Paste, paste_xpm, wxT("Paste from clipboard"));
-  BX_ADD_TOOL(ID_Toolbar_Snapshot, snapshot_xpm, wxT("Save screen snapshot"));
-  BX_ADD_TOOL(ID_Toolbar_Mouse_en, mouse_xpm, wxT("Enable mouse capture\nThere is also a shortcut for this: a CTRL key + the middle mouse button."));
-  BX_ADD_TOOL(ID_Toolbar_User, userbutton_xpm, wxT("Keyboard shortcut"));
+  BX_ADD_TOOL(ID_Toolbar_SaveRestore, saverestore_xpm, wxT("Restore simulation state"));
+  BX_ADD_TOOL(ID_Toolbar_Power, power_xpm, wxT("Turn power on"));
 
   bxToolBar->Realize();
   UpdateToolBar(false);
@@ -483,10 +498,14 @@ void MyFrame::OnConfigNew(wxCommandEvent& WXUNUSED(event))
 void MyFrame::OnConfigRead(wxCommandEvent& WXUNUSED(event))
 {
   char bochsrc[512];
+  wxString fullName, workDir;
   long style = wxFD_OPEN;
   wxFileDialog *fdialog = new wxFileDialog(this, wxT("Read configuration"), wxT(""), wxT(""), wxT("*.*"), style);
   if (fdialog->ShowModal() == wxID_OK) {
-    strncpy(bochsrc, fdialog->GetPath().mb_str(wxConvUTF8), sizeof(bochsrc) - 1);
+    fullName = fdialog->GetPath();
+    wxFileName::SplitPath(fullName, &workDir, NULL, NULL);
+    wxSetWorkingDirectory(workDir);
+    strncpy(bochsrc, fullName.mb_str(wxConvUTF8), sizeof(bochsrc) - 1);
     bochsrc[sizeof(bochsrc) - 1] = '\0';
     SIM->reset_all_param();
     SIM->read_rc(bochsrc);
@@ -859,9 +878,14 @@ void MyFrame::UpdateToolBar(bool simPresent)
   bxToolBar->EnableTool(ID_Toolbar_User, simPresent);
   if (simPresent) {
     bxToolBar->SetToolShortHelp(ID_Toolbar_SaveRestore, wxT("Save simulation state"));
+    bxToolBar->SetToolShortHelp(ID_Toolbar_Power, wxT("Turn power off"));
   } else {
     bxToolBar->SetToolShortHelp(ID_Toolbar_SaveRestore, wxT("Restore simulation state"));
+    bxToolBar->SetToolShortHelp(ID_Toolbar_Power, wxT("Turn power on"));
   }
+#if BX_USB_DEBUGGER
+  bxToolBar->EnableTool(ID_Toolbar_USB_Debug, false);
+#endif
 }
 
 void MyFrame::OnStartSim(wxCommandEvent& event)
@@ -1271,6 +1295,7 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
     case ID_Toolbar_Snapshot: which = BX_TOOLBAR_SNAPSHOT; break;
     case ID_Toolbar_Mouse_en: panel->ToggleMouse(true); break;
     case ID_Toolbar_User: which = BX_TOOLBAR_USER; break;
+    case ID_Toolbar_USB_Debug: which = BX_TOOLBAR_USB_DEBUG; break;
     default:
       wxLogError(wxT("unknown toolbar id %d"), id);
   }
@@ -1284,6 +1309,38 @@ void MyFrame::OnToolbarClick(wxCommandEvent& event)
 void MyFrame::SetToolBarHelp(int id, wxString& text)
 {
   bxToolBar->SetToolShortHelp(id, text);
+}
+
+void MyFrame::SetToolBarBitmap(int id, bool onoff)
+{
+  wxBitmap bitmap;
+
+  switch (id) {
+    case ID_Edit_FD_0:
+      bitmap = wxBitmap(onoff ? floppya_xpm : floppya_eject_xpm);
+      break;
+    case ID_Edit_FD_1:
+      bitmap = wxBitmap(onoff ? floppyb_xpm : floppyb_eject_xpm);
+      break;
+    case ID_Edit_Cdrom1:
+      bitmap = wxBitmap(onoff ? cdrom1_xpm : cdrom1_eject_xpm);
+      break;
+    case ID_Toolbar_Mouse_en:
+      bitmap = wxBitmap(onoff ? mouse_xpm : mouse_dis_xpm);
+      break;
+#if BX_USB_DEBUGGER
+    case ID_Toolbar_USB_Debug:
+      if (!bxToolBar->GetToolEnabled(ID_Toolbar_USB_Debug)) {
+        bxToolBar->EnableTool(ID_Toolbar_USB_Debug, true);
+        bxToolBar->SetToolShortHelp(ID_Toolbar_USB_Debug, wxT("Trigger the USB debugger"));
+      }
+      bitmap = wxBitmap(onoff ? usbdbg_trigger_xpm : usbdbg_xpm);
+      break;
+#endif
+    default:
+      return;
+  }
+  bxToolBar->SetToolNormalBitmap(id, bitmap);
 }
 
 //////////////////////////////////////////////////////////////////////

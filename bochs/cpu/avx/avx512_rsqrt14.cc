@@ -8234,8 +8234,8 @@ static const Bit16u rsqrt14_table1[32768] = {
     0x6a0e, 0x6a0d, 0x6a0c, 0x6a0c, 0x6a0b, 0x6a0a, 0x6a09, 0x6a09  // 32760
 };
 
+#include "softfloat3e/include/softfloat.h"
 #include "fpu/softfloat-specialize.h"
-#include "fpu/softfloat-round-pack.h"
 #include "simd_int.h"
 
 // approximate 14-bit sqrt reciprocal of scalar single precision FP
@@ -8249,20 +8249,20 @@ float16 approximate_rsqrt14(float16 op, bool daz)
   struct exp8_sig16 normExpSig;
 
   switch(op_class) {
-    case float_zero:
+    case softfloat_zero:
       return packFloat16(sign, 0x1F, 0);
 
-    case float_positive_inf:
+    case softfloat_positive_inf:
       return 0;
 
-    case float_negative_inf:
+    case softfloat_negative_inf:
       return float16_default_nan;
 
-    case float_SNaN:
-    case float_QNaN:
+    case softfloat_SNaN:
+    case softfloat_QNaN:
       return convert_to_QNaN(op);
 
-    case float_denormal:
+    case softfloat_denormal:
       if (daz) return packFloat16(sign, 0x1F, 0);
 
       normExpSig = softfloat_normSubnormalF16Sig(fraction);
@@ -8272,7 +8272,7 @@ float16 approximate_rsqrt14(float16 op, bool daz)
       fraction &= 0x3ff;
       // fall through
 
-    case float_normalized:
+    case softfloat_normalized:
       break;
   };
 
@@ -8428,7 +8428,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRT14PS_MASK_VpsWpsR(bxInstruction_c *i
 
   for (unsigned n=0, tmp_mask = mask; n < DWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1)
-      op.vmm32u(n) = approximate_rsqrt14(op.vmm32u(n), MXCSR.get_DAZ());
+      op.vmm32u(n) = approximate_rsqrt14((float32) op.vmm32u(n), MXCSR.get_DAZ());
     else
       op.vmm32u(n) = 0;
   }
@@ -8453,7 +8453,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRT14PD_MASK_VpdWpdR(bxInstruction_c *i
 
   for (unsigned n=0, tmp_mask = mask; n < QWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1)
-      op.vmm64u(n) = approximate_rsqrt14(op.vmm64u(n), MXCSR.get_DAZ());
+      op.vmm64u(n) = approximate_rsqrt14((float64) op.vmm64u(n), MXCSR.get_DAZ());
     else
       op.vmm64u(n) = 0;
   }
@@ -8514,7 +8514,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRTSH_MASK_VshHphWshR(bxInstruction_c *
 
   if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
     float16 op2 = BX_READ_XMM_REG_LO_WORD(i->src2());
-
     op1.xmm16u(0) = approximate_rsqrt14(op2, MXCSR.get_DAZ());
   }
   else {
@@ -8536,7 +8535,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRTPH_MASK_VphWphR(bxInstruction_c *i)
 
   for (unsigned n=0, tmp_mask = mask; n < WORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1)
-      op.vmm16u(n) = approximate_rsqrt14(op.vmm16u(n), MXCSR.get_DAZ());
+      op.vmm16u(n) = approximate_rsqrt14((float16) op.vmm16u(n), MXCSR.get_DAZ());
     else
       op.vmm16u(n) = 0;
   }

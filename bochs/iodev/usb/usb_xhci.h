@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2011-2023  The Bochs Project
+//                2011-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -609,9 +609,7 @@ public:
   int event_handler(int event, void *ptr, int port);
 
   bx_usb_xhci_t hub;
-#if !BX_USE_WIN32USBDEBUG
 private:
-#endif
   Bit8u         devfunc;
   Bit8u         device_change;
   int           rt_conf_id;

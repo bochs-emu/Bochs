@@ -118,6 +118,8 @@ protected:
   void get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 #endif
 
+  void get_std_cpuid_monitor_mwait_leaf(cpuid_function_t *leaf, Bit32u edx_power_states) const;
+
   Bit32u get_std_cpuid_leaf_1_ecx(Bit32u extra = 0) const;
   Bit32u get_std_cpuid_leaf_1_edx_common(Bit32u extra = 0) const;
   Bit32u get_std_cpuid_leaf_1_edx(Bit32u extra = 0) const;
@@ -552,7 +554,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [18:18]  LKGS instruction support
 //   [19:19]  WRMSRNS instruction
 //   [20:20]  NMI source reporting
-//   [21:21]  AMX-FB16 support
+//   [21:21]  AMX-FP16 support
 //   [22:22]  HRESET and CPUID leaf 0x20 support
 //   [23:23]  AVX IFMA support
 //   [25:24]  reserved
@@ -599,11 +601,15 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 // -----------------------------
 //   [0:0]    IA32_PPIN and IA32_PPIN_CTL MSRs
 //   [1:1]    TSE: PBNDKB instruction and existence of the IA32_TSE_CAPABILITY MSR
+//   [2:2]    reserved
+//   [3:3]    CPUIDMAXVAL_LIM_RMV: IA32_MISC_ENABLE[22] cannot be set to 1 to limit the value returned by CPUID.00H:EAX[7:0]
 //   [31:1]   reserved
 
 // ...
 #define BX_CPUID_STD7_SUBLEAF1_EBX_PPIN                   (1 <<  0)
 #define BX_CPUID_STD7_SUBLEAF1_EBX_TSE                    (1 <<  1)
+#define BX_CPUID_STD7_SUBLEAF1_EBX_RESERVED2              (1 <<  2)
+#define BX_CPUID_STD7_SUBLEAF1_EBX_CPUIDMAXVAL_LIM_RMV    (1 <<  3)
 // ...
 
 // CPUID defines - features CPUID[0x00000007].ECX  [subleaf 1]
@@ -621,12 +627,17 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [8:8]    AMX-COMPLEX instructions
 //   [9:9]    reserved
 //   [10:10]  AVX-VNNI-INT16 instructions
-//   [13:11]  reserved
+//   [12:11]  reserved
+//   [13:13]  User Timer support
 //   [14:14]  PREFETCHITI: PREFETCHIT0/T1 instruction
 //   [15:15]  USER_MSR: support for URDMSR/UWRMSR instructions
 //   [16:16]  reserved
-//   [17:17]  UIRET sets UIF to the RFLAGS[1] image loaded from the stack
+//   [17:17]  Flexible UIRET: UIRET sets UIF to the RFLAGS[1] image loaded from the stack
 //   [18:18]  CET_SSS
+//   [19:19]  AVX10 support and CPUID leaf 0x24
+//   [22:20]  reserved
+//   [23:23]  MWAIT and CPUID LEAF5 support
+//   [31:24]  reserved
 
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED0              (1 <<  0)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED1              (1 <<  1)
@@ -641,12 +652,17 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_STD7_SUBLEAF1_EDX_AVX_VNNI_INT16         (1 << 10)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED11             (1 << 11)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED12             (1 << 12)
-#define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED13             (1 << 13)
+#define BX_CPUID_STD7_SUBLEAF1_EDX_USER_TIMER             (1 << 13)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_PREFETCHI              (1 << 14)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_USER_MSR               (1 << 15)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED16             (1 << 16)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_UIRET_UIF              (1 << 17)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_CET_SSS                (1 << 18)
+#define BX_CPUID_STD7_SUBLEAF1_EDX_AVX10                  (1 << 19)
+#define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED20             (1 << 20)
+#define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED21             (1 << 21)
+#define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED22             (1 << 22)
+#define BX_CPUID_STD7_SUBLEAF1_EDX_MWAIT_AND_LEAF5        (1 << 23)
 // ...
 
 // CPUID defines - STD2 features CPUID[0x80000001].EDX

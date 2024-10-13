@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
 #include "specialize.h"
 #include "softfloat.h"
 
@@ -62,7 +63,6 @@ extFloat80_t extF80_div(extFloat80_t a, extFloat80_t b, struct softfloat_status_
     uint32_t q;
     struct uint128 term;
     uint64_t sigZExtra;
-    struct uint128 uiZ;
 
     // handle unsupported extended double-precision floating encodings
     if (extF80_isUnsupported(a) || extF80_isUnsupported(b))
@@ -180,8 +180,7 @@ extFloat80_t extF80_div(extFloat80_t a, extFloat80_t b, struct softfloat_status_
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  propagateNaN:
-    uiZ = softfloat_propagateNaNExtF80UI(uiA64, uiA0, uiB64, uiB0, status);
-    return packToExtF80(uiZ.v64, uiZ.v0);
+    return softfloat_propagateNaNExtF80UI(uiA64, uiA0, uiB64, uiB0, status);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  invalid:

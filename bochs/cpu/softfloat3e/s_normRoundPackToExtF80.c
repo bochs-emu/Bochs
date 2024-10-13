@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
 
 extFloat80_t
  softfloat_normRoundPackToExtF80(
@@ -44,8 +45,7 @@ extFloat80_t
      uint64_t sig,
      uint64_t sigExtra,
      uint8_t roundingPrecision,
-     struct softfloat_status_t *status
-)
+     struct softfloat_status_t *status)
 {
     int8_t shiftDist;
     struct uint128 sig128;

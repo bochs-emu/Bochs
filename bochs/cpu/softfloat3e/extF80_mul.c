@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdbool.h>
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
 #include "specialize.h"
 #include "softfloat.h"
 
@@ -55,7 +56,7 @@ extFloat80_t extF80_mul(extFloat80_t a, extFloat80_t b, struct softfloat_status_
     uint64_t magBits;
     struct exp32_sig64 normExpSig;
     int32_t expZ;
-    struct uint128 sig128Z, uiZ;
+    struct uint128 sig128Z;
     uint16_t uiZ64;
     uint64_t uiZ0;
 
@@ -135,8 +136,7 @@ extFloat80_t extF80_mul(extFloat80_t a, extFloat80_t b, struct softfloat_status_
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  propagateNaN:
-    uiZ = softfloat_propagateNaNExtF80UI(uiA64, uiA0, uiB64, uiB0, status);
-    return packToExtF80(uiZ.v64, uiZ.v0);
+    return softfloat_propagateNaNExtF80UI(uiA64, uiA0, uiB64, uiB0, status);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  infArg:

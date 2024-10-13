@@ -35,9 +35,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdint.h>
 #include "internals.h"
+#include "primitives.h"
 #include "softfloat.h"
 
-float64_t ui32_to_f64(uint32_t a)
+float64 ui32_to_f64(uint32_t a)
 {
     if (! a) {
         return 0;

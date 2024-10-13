@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -114,9 +114,7 @@ int bx_soundlow_waveout_win_c::set_pcm_params(bx_pcm_param_t *param)
   BX_DEBUG(("set_pcm_params(): %u, %u, %u, %02x", param->samplerate, param->bits,
             param->channels, param->format));
   if (WaveOutOpen != 0) {
-    ret = waveOutReset(hWaveOut);
-    ret = waveOutClose(hWaveOut);
-    WaveOutOpen = 0;
+    closewaveoutput();
   }
 
   // try three times to find a suitable format
@@ -216,7 +214,7 @@ int bx_soundlow_waveout_win_c::closewaveoutput()
   if (WaveOutOpen == 1) {
     waveOutReset(hWaveOut);
     waveOutClose(hWaveOut);
-    WaveOutOpen = 1;
+    WaveOutOpen = 0;
   }
   return BX_SOUNDLOW_OK;
 }

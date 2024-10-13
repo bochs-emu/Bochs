@@ -26,7 +26,6 @@
 
 #if BX_SUPPORT_FPU
 
-#include "fpu/softfloat.h"
 #include "softfloat3e/include/softfloat_types.h"
 
 #define BX_FPU_REG(index) \
@@ -42,8 +41,6 @@
 #include "fpu/tag_w.h"
 #include "fpu/status_w.h"
 #include "fpu/control_w.h"
-
-extern int FPU_tagof(const floatx80 &reg);
 
 //
 // Minimal i387 structure
@@ -92,6 +89,9 @@ public:
     unsigned char align2;
     unsigned char align3;
 };
+
+extern int FPU_tagof(const floatx80 &reg);
+extern Bit16u unpack_FPU_TW(const i387_t *i387, Bit16u tag_byte);
 
 #define IS_TAG_EMPTY(i)                                                 \
   ((BX_CPU_THIS_PTR the_i387.FPU_gettagi(i)) == FPU_Tag_Empty)
@@ -254,15 +254,15 @@ typedef BxPackedRegister BxPackedMmxRegister;
 #define MMXUB6(reg) (reg.ubyte(6))
 #define MMXUB7(reg) (reg.ubyte(7))
 
-#define BX_MMX_REG(index) (BX_FPU_REG(index).fraction)
+#define BX_MMX_REG(index) (BX_FPU_REG(index).signif)
 
 #define BX_READ_MMX_REG(index)                         \
     (*((const BxPackedMmxRegister*)(&(BX_MMX_REG(index)))))
 
 #define BX_WRITE_MMX_REG(index, value)                 \
 {                                                      \
-   (BX_FPU_REG(index)).fraction = MMXUQ(value);        \
-   (BX_FPU_REG(index)).exp = 0xffff;                   \
+   (BX_FPU_REG(index)).signif = MMXUQ(value);          \
+   (BX_FPU_REG(index)).signExp = 0xffff;               \
 }
 
 #endif        /* BX_SUPPORT_FPU */

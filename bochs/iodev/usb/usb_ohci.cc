@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2023  The Bochs Project
+//                2009-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -141,7 +141,7 @@ void bx_usb_ohci_c::init(void)
    *  it when I am working on this emulation.
    */
   //LOG_THIS setonoff(LOGLEV_DEBUG, ACT_REPORT);
-  
+
   // Read in values from config interface
   ohci = (bx_list_c*) SIM->get_param(BXPN_USB_OHCI);
   // Check if the device is disabled or not configured
@@ -174,6 +174,12 @@ void bx_usb_ohci_c::init(void)
   // register handler for correct device connect handling after runtime config
   BX_OHCI_THIS rt_conf_id = SIM->register_runtime_config_handler(BX_OHCI_THIS_PTR, runtime_config_handler);
   BX_OHCI_THIS device_change = 0;
+
+#if BX_USB_DEBUGGER
+  if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() == USB_DEBUG_OHCI) {
+    SIM->register_usb_debug_type(USB_DEBUG_OHCI);
+  }
+#endif
 
   BX_INFO(("USB OHCI initialized"));
 }

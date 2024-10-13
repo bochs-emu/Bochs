@@ -176,6 +176,7 @@ static unsigned stretch_factor;
 static BOOL fix_size = FALSE;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
 static BOOL gui_debug = FALSE;
+static BOOL win32_enh_dbg_global_ini = FALSE;
 #endif
 static HWND hotKeyReceiver = NULL;
 static HWND saveParent = NULL;
@@ -658,40 +659,35 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   mouseToggleReq = FALSE;
 
   // parse win32 specific options
+  Bit8u flags = BX_GUI_OPT_NOKEYREPEAT | BX_GUI_OPT_HIDE_IPS  | BX_GUI_OPT_CMDMODE;
   if (argc > 1) {
     for (i = 1; i < argc; i++) {
-      BX_INFO(("option %d: %s", i, argv[i]));
-      if (!strcmp(argv[i], "nokeyrepeat")) {
-        BX_INFO(("disabled host keyboard repeat"));
-        win32_nokeyrepeat = 1;
-      } else if (!strcmp(argv[i], "traphotkeys")) {
-        BX_INFO(("trap system hotkeys for Bochs window"));
-        win32_traphotkeys = 1;
-      } else if (!strcmp(argv[i], "gui_debug")) {
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
-        if (gui_ci) {
-          gui_debug = TRUE;
-          SIM->set_debug_gui(1);
+      if (!parse_common_gui_options(argv[i], flags)) {
+        if (!strcmp(argv[i], "traphotkeys")) {
+          BX_INFO(("trap system hotkeys for Bochs window"));
+          win32_traphotkeys = 1;
+        } else if (!strcmp(argv[i], "autoscale")) {
+          win32_autoscale = 1;
         } else {
-          BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
+          BX_PANIC(("Unknown win32 option '%s'", argv[i]));
         }
-#else
-        SIM->message_box("ERROR", "Bochs debugger not available - ignoring 'gui_debug' option");
-#endif
-#if BX_SHOW_IPS
-      } else if (!strcmp(argv[i], "hideIPS")) {
-        BX_INFO(("hide IPS display in status bar"));
-        hideIPS = TRUE;
-#endif
-      } else if (!strcmp(argv[i], "cmdmode")) {
-        command_mode.present = 1;
-      } else if (!strcmp(argv[i], "autoscale")) {
-        win32_autoscale = 1;
-      } else {
-        BX_PANIC(("Unknown win32 option '%s'", argv[i]));
       }
     }
   }
+
+  win32_nokeyrepeat = gui_opts.nokeyrepeat;
+  hideIPS = gui_opts.hide_ips;
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+  if (gui_opts.enh_dbg_enabled) {
+    if (gui_ci) {
+      gui_debug = TRUE;
+      SIM->set_debug_gui(1);
+      win32_enh_dbg_global_ini = gui_opts.enh_dbg_global_ini;
+    } else {
+      BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
+    }
+  }
+#endif
 
   mouse_buttons = GetSystemMetrics(SM_CMOUSEBUTTONS);
   BX_INFO(("Number of Mouse Buttons = %d", mouse_buttons));
@@ -967,8 +963,9 @@ DWORD WINAPI UIThread(LPVOID)
     SendMessage(hwndTB, TB_BUTTONSTRUCTSIZE, (WPARAM) sizeof(TBBUTTON), 0);
     SendMessage(hwndTB, TB_SETBITMAPSIZE, 0, (LPARAM)MAKELONG(32, 32));
 
-    hwndSB = CreateStatusWindow(WS_CHILD | WS_VISIBLE, "",
-                                stInfo.mainWnd, 0x7712);
+    hwndSB = CreateWindowEx(0, STATUSCLASSNAME, (PCTSTR)NULL,
+                            WS_CHILD | WS_VISIBLE, 0, 0, 0, 0, stInfo.mainWnd,
+                            (HMENU) 0x7712, stInfo.hInstance, NULL);
     if (hwndSB) {
       unsigned elements;
       SB_Edges[0] = SIZE_OF_SB_MOUSE_MESSAGE + SIZE_OF_SB_ELEMENT;
@@ -1031,7 +1028,7 @@ DWORD WINAPI UIThread(LPVOID)
       ShowWindow(stInfo.mainWnd, SW_SHOW);
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
       if (gui_debug) {
-        bx_gui->init_debug_dialog();
+        bx_gui->init_debug_dialog(win32_enh_dbg_global_ini);
       }
 #endif
 #if BX_SHOW_IPS
@@ -1772,7 +1769,7 @@ void bx_win32_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u y
     if ((ce - cs + 1) < fh) {
       fh = ce - cs + 1;
     }
-    DrawBitmap(hdc, vgafont[map][ch], xc, yc, fw, fh, fx, fy, bc, fc);
+    DrawBitmap(hdc, vgafont[map][ch], xc, yc, fw, fh, fx, cs, bc, fc);
   }
   ReleaseDC(stInfo.simWnd, hdc);
   LeaveCriticalSection(&stInfo.drawCS);
@@ -1843,18 +1840,22 @@ void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
   HDC hdc;
   HGDIOBJ oldObj;
+  unsigned yt = y_tilesize;
 
+  if ((y0 + y_tilesize) > dimension_y) {
+	yt = dimension_y - y0;
+  }
   EnterCriticalSection(&stInfo.drawCS);
   hdc = GetDC(stInfo.simWnd);
 
   oldObj = SelectObject(MemoryDC, MemoryBitmap);
 
-  StretchDIBits(MemoryDC, x0, y0, x_tilesize, y_tilesize, 0, 0,
-    x_tilesize, y_tilesize, tile, bitmap_info, DIB_RGB_COLORS, SRCCOPY);
+  StretchDIBits(MemoryDC, x0, y0, x_tilesize, yt, 0, 0,
+    x_tilesize, yt, tile, bitmap_info, DIB_RGB_COLORS, SRCCOPY);
 
   SelectObject(MemoryDC, oldObj);
 
-  updateUpdated(x0, y0, x0 + x_tilesize - 1, y0 + y_tilesize - 1);
+  updateUpdated(x0, y0, x0 + x_tilesize - 1, y0 + yt - 1);
 
   ReleaseDC(stInfo.simWnd, hdc);
   LeaveCriticalSection(&stInfo.drawCS);
@@ -1876,6 +1877,10 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
 
   if ((x == dimension_x) && (y == dimension_y) && (bpp == current_bpp))
     return;
+  if (fullscreenMode) {
+	clear_screen();
+	flush();
+  }
   dimension_x = x;
   dimension_y = y;
 
@@ -1890,8 +1895,12 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
     }
   }
 
-  bitmap_info->bmiHeader.biBitCount = bpp;
   if (bpp != current_bpp) {
+    if (bpp == 15) {
+      bitmap_info->bmiHeader.biBitCount = 16;
+    } else {
+      bitmap_info->bmiHeader.biBitCount = bpp;
+    }
     if (bpp == 16) {
       bitmap_info->bmiHeader.biCompression = BI_BITFIELDS;
       static RGBQUAD red_mask   = {0x00, 0xF8, 0x00, 0x00};
@@ -1910,9 +1919,6 @@ void bx_win32_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, 
         bitmap_info->bmiColors[2] = bitmap_info->bmiColors[258];
       }
       bitmap_info->bmiHeader.biCompression = BI_RGB;
-      if (bpp == 15) {
-        bitmap_info->bmiHeader.biBitCount = 16;
-      }
     }
   }
   current_bpp = guest_bpp = bpp;

@@ -2,17 +2,48 @@ Changes after 2.8:
 
 Brief summary :
  - Integrated softfloat3e library replacing older softfloat2a fpu-emulation code
+ - Implemented AVX512_FP16 Intel instruction set based on softfloat3e library (enabled in Xeon Sapphire Rapids CPU definition)
+ - Bugfixes for CPU emulation correctness (critical bugfixes for XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
  - USB: Added the USB Debugger support for xHCI and UHCI
 
 Detailed change log :
 
 - CPU
+  - Bugfixes for CPU emulation correctness (critical bugfixes for XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
   - Integrated softfloat3e library replacing older softfloat2a fpu-emulation code
   - Implemented AVX512_FP16 Intel instruction set based on softfloat3e library (enabled in Xeon Sapphire Rapids CPU definition)
 
+- Configure and compile
+  - Fixed compilation of plugin version with debugger enabled on Windows
+  - Removed legacy libltdl code and force using library installed on host system
+  - GTK-based gui debugger can now use GTK3 if GTK2 is not installed
+
+- GUI and display libraries
+  - Debugger gui can now use ini file from BXSHARE path when using gui option
+    extension "gui_debug:globalini" (sdl, sdl2, win32, x11)
+  - Debugger gui now updates the memory dump window if necessary
+  - added bitmap change support for the wxWidgets toolbar
+
 - I/O Devices
+  - SVGA Cirrus
+    - Added support for graphics controller mode extensions in VGA mode
+    - Added support for hardware cursor in VGA mode
+    - Fixes to make original VGABIOS work correctly with WinXP
   - USB
     - Now includes the USB Debugger support for the xHCI and UHCI controllers
+  - Sound
+    - Added PCM playback/recording support using PulseAudio simple API
+  - Networking
+    - Added support for using libslirp library instead of builtin slirp code
+    - Updated builtin slirp based on libslirp 4.8.0 (including IPv6 support)
+
+- BIOS
+  - Added panic in legacy BIOS in case no VGA BIOS ROM is found at C000:0000,
+  - Fixed unwanted side effects caused by some helper functions.
+  - LGPL'd VGABIOS updated to version 0.9b (several VBE bugfixes)
+
+- Misc
+  - bximage: added simple partition table viewer to the info function
 
 -------------------------------------------------------------------------
 Changes in 2.8 (March 10, 2024):

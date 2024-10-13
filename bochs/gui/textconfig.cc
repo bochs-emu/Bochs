@@ -205,7 +205,7 @@ int ask_int(const char *prompt, const char *help, Bit64s min, Bit64s max, Bit64s
       bx_printf("Your choice must be an integer between " FMT_LL "d and " FMT_LL "d.\n\n", min, max);
       continue;
     }
-    illegal = (1 != sscanf(buffer, "%ld", &n));
+    illegal = (1 != sscanf(buffer, FMT_LL "d", &n));
     if (illegal || n<min || n>max) {
       bx_printf("Your choice (%s) was not an integer between " FMT_LL "d and " FMT_LL "d.\n\n",
              clean, min, max);
@@ -623,10 +623,10 @@ void bx_log_options(int individual)
       if (ask_int(log_options_prompt1, "", -1, maxid-1, -1, &id) < 0)
         return;
       if (id < 0) return;
-      bx_printf("Editing log options for the device %s\n", SIM->get_prefix(id));
+      bx_printf("Editing log options for the device %s\n", SIM->get_prefix((int)id));
       for (level=0; level<SIM->get_max_log_level(); level++) {
         char prompt[1024];
-        int default_action = SIM->get_log_action(id, level);
+        int default_action = SIM->get_log_action((int)id, level);
         sprintf(prompt, "Enter action for %s event: [%s] ", SIM->get_log_level_name(level), SIM->get_action_name(default_action));
         // don't show the no change choice (choices=3)
         if (ask_menu(prompt, "", log_level_n_choices_normal, log_level_choices, default_action, &action)<0)
@@ -634,7 +634,7 @@ void bx_log_options(int individual)
         // the exclude expression allows some choices not being available if they
         // don't make any sense.  For example, it would be stupid to ignore a panic.
         if (!BX_LOG_OPTS_EXCLUDE(level, action)) {
-          SIM->set_log_action(id, level, action);
+          SIM->set_log_action((int)id, level, action);
         } else {
           bx_printf("Event type '%s' does not support log action '%s'.\n",
                   SIM->get_log_level_name(level), log_level_choices[action]);
@@ -1068,7 +1068,7 @@ int text_ask(bx_param_c *param)
         bx_list_c *list = (bx_list_c*)param;
         bx_param_c *child;
         const char *my_title = list->get_title();
-        int i, imax = strlen(my_title);
+        int i, imax = (int)strlen(my_title);
         for (i=0; i<imax; i++) bx_printf("-");
         bx_printf("\n%s\n", my_title);
         for (i=0; i<imax; i++) bx_printf("-");

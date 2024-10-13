@@ -70,12 +70,19 @@
     <_ProjectFileVersion>12.0.21005.1</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\..\obj-debug\</OutDir>
+    <OutDir>.\..\obj-debug\fpu\</OutDir>
     <IntDir>.\..\obj-debug\fpu\</IntDir>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\..\obj-release\</OutDir>
+    <OutDir>.\..\obj-release\fpu\</OutDir>
+    <IntDir>.\..\obj-release\fpu\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>.\..\obj-debug\fpu\</OutDir>
+    <IntDir>.\..\obj-debug\fpu\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>.\..\obj-release\fpu\</OutDir>
     <IntDir>.\..\obj-release\fpu\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -84,8 +91,8 @@
     </BuildLog>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..;..\instrument\stubs;.\stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_WINDOWS;PARANOID;DEBUGGING;NO_ASSEMBLER;USE_WITH_CPU_SIM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..;..\cpu\..\instrument\stubs;.\stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\..\obj-debug\fpu\fpu.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\..\obj-debug\fpu\</AssemblerListingLocation>
@@ -115,8 +122,8 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..;..\instrument\stubs;stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;PARANOID;DEBUGGING;NO_ASSEMBLER;USE_WITH_CPU_SIM;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..;..\cpu;..\instrument\stubs;stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling />
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -148,8 +155,8 @@
     </BuildLog>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..;..\instrument\stubs;.\stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_WINDOWS;PARANOID;DEBUGGING;NO_ASSEMBLER;USE_WITH_CPU_SIM;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..;..\cpu;..\instrument\stubs;.\stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\..\obj-debug\fpu\fpu.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\..\obj-debug\fpu\</AssemblerListingLocation>
@@ -179,8 +186,8 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..;..\instrument\stubs;stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;PARANOID;DEBUGGING;NO_ASSEMBLER;USE_WITH_CPU_SIM;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..;..\cpu;..\instrument\stubs;stubs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>
       </ExceptionHandling>
@@ -223,20 +230,12 @@
     <ClCompile Include="..\cpu\fpu\fsincos.cc" />
     <ClCompile Include="..\cpu\fpu\fyl2x.cc" />
     <ClCompile Include="..\cpu\fpu\poly.cc" />
-    <ClCompile Include="..\cpu\fpu\softfloat-round-pack.cc" />
-    <ClCompile Include="..\cpu\fpu\softfloat-specialize.cc" />
-    <ClCompile Include="..\cpu\fpu\softfloat.cc" />
-    <ClCompile Include="..\cpu\fpu\softfloatx80.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\cpu\fpu\control_w.h" />
     <ClInclude Include="..\cpu\fpu\fpu_constant.h" />
-    <ClInclude Include="..\cpu\fpu\softfloat.h" />
-    <ClInclude Include="..\cpu\fpu\softfloat-compare.h" />
-    <ClInclude Include="..\cpu\fpu\softfloat-macros.h" />
-    <ClInclude Include="..\cpu\fpu\softfloat-round-pack.h" />
     <ClInclude Include="..\cpu\fpu\softfloat-specialize.h" />
-    <ClInclude Include="..\cpu\fpu\softfloatx80.h" />
+    <ClInclude Include="..\cpu\fpu\fpu_trans.h" />
     <ClInclude Include="..\cpu\fpu\status_w.h" />
     <ClInclude Include="..\cpu\fpu\tag_w.h" />
   </ItemGroup>

@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2021  The Bochs Project
+# Copyright (C) 2001-2024  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -178,7 +178,7 @@ all: @PRIMARY_TARGET@ @PLUGIN_TARGET@ bximage@EXE@ @OPTIONAL_TARGET@ @BUILD_DOCB
 bochs@EXE@: @IODEV_LIB_VAR@ @DISPLAY_LIB_VAR@ @HDIMAGE_LIB_VAR@ @USB_LIB_VAR@ @NETWORK_LIB_VAR@ @SOUND_LIB_VAR@ \
 		@DEBUGGER_VAR@ cpu/libcpu.a @AVX_LIB_VAR@ cpu/cpudb/libcpudb.a memory/libmemory.a \
 		gui/libgui.a @INSTRUMENT_VAR@ $(BX_OBJS) \
-		$(SIMX86_OBJS) @FPU_VAR@ @GDBSTUB_VAR@ @PLUGIN_VAR@
+		$(SIMX86_OBJS) @FPU_VAR@ @GDBSTUB_VAR@
 	@LINK@ @EXPORT_DYNAMIC@ $(BX_OBJS) $(SIMX86_OBJS) \
 		@IODEV_LIB_VAR@ @DISPLAY_LIB_VAR@ @HDIMAGE_LIB_VAR@ @USB_LIB_VAR@ @NETWORK_LIB_VAR@ @SOUND_LIB_VAR@ \
 		@DEBUGGER_VAR@ cpu/libcpu.a @AVX_LIB_VAR@ cpu/cpudb/libcpudb.a \
@@ -199,12 +199,12 @@ bochs@EXE@: @IODEV_LIB_VAR@ @DISPLAY_LIB_VAR@ @HDIMAGE_LIB_VAR@ @USB_LIB_VAR@ @N
 .win32_dll_plugin_target: @IODEV_LIB_VAR@ @DISPLAY_LIB_VAR@ @HDIMAGE_LIB_VAR@ @USB_LIB_VAR@ @NETWORK_LIB_VAR@ \
 		@SOUND_LIB_VAR@ @DEBUGGER_VAR@ cpu/libcpu.a @AVX_LIB_VAR@ cpu/cpudb/libcpudb.a \
 		memory/libmemory.a gui/libgui.a @INSTRUMENT_VAR@ \
-		$(BX_OBJS) $(SIMX86_OBJS) @FPU_VAR@ @GDBSTUB_VAR@ @PLUGIN_VAR@
+		$(BX_OBJS) $(SIMX86_OBJS) @FPU_VAR@ @GDBSTUB_VAR@
 	$(DLLTOOL) --export-all-symbols --output-def bochs.def \
 		$(BX_OBJS) $(SIMX86_OBJS) \
 		@IODEV_LIB_VAR@ @DISPLAY_LIB_VAR@ @HDIMAGE_LIB_VAR@ @USB_LIB_VAR@ @NETWORK_LIB_VAR@ @SOUND_LIB_VAR@ \
 		cpu/libcpu.a @AVX_LIB_VAR@ cpu/cpudb/libcpudb.a memory/libmemory.a gui/libgui.a \
-		@DEBUGGER_VAR@ @INSTRUMENT_VAR@ @PLUGIN_VAR@ \
+		@DEBUGGER_VAR@ @INSTRUMENT_VAR@ \
 		@GDBSTUB_VAR@ @FPU_VAR@
 	$(DLLTOOL) --dllname bochs.exe --def bochs.def --output-lib dllexports.a
 	$(DLLTOOL) --dllname bochs.exe --output-exp bochs.exp --def bochs.def
@@ -550,7 +550,6 @@ local-dist-clean: clean
 	@RMCOMMAND@ build/win32/nsis/Makefile build/win32/nsis/bochs.nsi
 	@RMCOMMAND@ build/macosx/Info.plist build/macosx/script_compiled.rsrc
 	@RMCOMMAND@ libtool
-	@RMCOMMAND@ ltdlconf.h
 
 clean_pcidev::
 	cd host/linux/pcidev @COMMAND_SEPARATOR@
@@ -794,21 +793,21 @@ crc.o: crc.@CPP_SUFFIX@ config.h
 gdbstub.o: gdbstub.@CPP_SUFFIX@ bochs.h config.h osdep.h gui/paramtree.h logio.h \
  instrument/stubs/instrument.h misc/bswap.h param_names.h \
  cpu/cpu.h bx_debug/debug.h config.h osdep.h cpu/decoder/decoder.h \
- cpu/i387.h cpu/fpu/softfloat.h cpu/fpu/tag_w.h cpu/fpu/status_w.h \
+ cpu/i387.h cpu/fpu/tag_w.h cpu/fpu/status_w.h \
  cpu/fpu/control_w.h cpu/crregs.h cpu/descriptor.h cpu/decoder/instr.h \
  cpu/lazy_flags.h cpu/tlb.h cpu/icache.h cpu/apic.h cpu/xmm.h cpu/vmx.h \
  cpu/cpuid.h cpu/stack.h cpu/access.h
 logio.o: logio.@CPP_SUFFIX@ bochs.h config.h osdep.h gui/paramtree.h logio.h \
  instrument/stubs/instrument.h misc/bswap.h gui/siminterface.h \
  gui/paramtree.h pc_system.h bxthread.h cpu/cpu.h bx_debug/debug.h \
- config.h osdep.h cpu/decoder/decoder.h cpu/i387.h cpu/fpu/softfloat.h \
+ config.h osdep.h cpu/decoder/decoder.h cpu/i387.h \
  cpu/fpu/tag_w.h cpu/fpu/status_w.h cpu/fpu/control_w.h cpu/crregs.h \
  cpu/descriptor.h cpu/decoder/instr.h cpu/lazy_flags.h cpu/tlb.h \
  cpu/icache.h cpu/apic.h cpu/xmm.h cpu/vmx.h cpu/cpuid.h cpu/access.h
 main.o: main.@CPP_SUFFIX@ bochs.h config.h osdep.h gui/paramtree.h logio.h \
  instrument/stubs/instrument.h misc/bswap.h bxversion.h param_names.h \
  config.h cpu/cpu.h bx_debug/debug.h osdep.h \
- cpu/decoder/decoder.h cpu/i387.h cpu/fpu/softfloat.h cpu/fpu/tag_w.h \
+ cpu/decoder/decoder.h cpu/i387.h cpu/fpu/tag_w.h \
  cpu/fpu/status_w.h cpu/fpu/control_w.h cpu/crregs.h cpu/descriptor.h \
  cpu/decoder/instr.h cpu/lazy_flags.h cpu/tlb.h cpu/icache.h cpu/apic.h \
  cpu/xmm.h cpu/vmx.h cpu/cpuid.h cpu/access.h iodev/iodev.h bochs.h \
@@ -820,7 +819,7 @@ osdep.o: osdep.@CPP_SUFFIX@ bochs.h config.h osdep.h gui/paramtree.h logio.h \
 pc_system.o: pc_system.@CPP_SUFFIX@ bochs.h config.h osdep.h gui/paramtree.h \
  logio.h instrument/stubs/instrument.h misc/bswap.h cpu/cpu.h \
  bx_debug/debug.h config.h osdep.h cpu/decoder/decoder.h cpu/i387.h \
- cpu/fpu/softfloat.h cpu/fpu/tag_w.h cpu/fpu/status_w.h \
+ cpu/fpu/tag_w.h cpu/fpu/status_w.h \
  cpu/fpu/control_w.h cpu/crregs.h cpu/descriptor.h cpu/decoder/instr.h \
  cpu/lazy_flags.h cpu/tlb.h cpu/icache.h cpu/apic.h cpu/xmm.h cpu/vmx.h \
  cpu/cpuid.h cpu/access.h iodev/iodev.h bochs.h plugin.h extplugin.h \

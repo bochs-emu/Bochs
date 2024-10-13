@@ -76,6 +76,8 @@
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>.\..\obj-debug\</OutDir>
+    <IntDir>.\..\obj-debug\</IntDir>
     <LinkIncremental>true</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
@@ -85,6 +87,8 @@
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>.\..\obj-release\</OutDir>
+    <IntDir>.\..\obj-release\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -251,7 +255,7 @@
       <AdditionalDependencies>winmm.lib;comctl32.lib;ws2_32.lib;iphlpapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\..\obj-release\bochs.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
       <ProgramDatabaseFile>.\..\obj-release\bochs.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -339,6 +343,9 @@
     <ProjectReference Include="memory.vcxproj">
       <Project>{bbff892d-2f57-4561-b2d0-ed4c3a9b7051}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="softfloat3e.vcxproj">
+      <Project>{bda1eb83-d53e-41a7-825f-0efdc3d643e3}</Project>
     </ProjectReference>
     <ProjectReference Include="stubs.vcxproj">
       <Project>{b107c955-4324-4990-bb79-6cbc91c6d12a}</Project>

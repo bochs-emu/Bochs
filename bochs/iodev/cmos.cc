@@ -794,21 +794,21 @@ void bx_cmos_c::update_clock()
   time_calendar = utctime(& BX_CMOS_THIS s.timeval);
 
   // update seconds
-  BX_CMOS_THIS s.reg[REG_SEC] = bin_to_bcd(time_calendar->tm_sec, BX_CMOS_THIS s.rtc_mode_binary);
+  BX_CMOS_THIS s.reg[REG_SEC] = bin_to_bcd((Bit8u)time_calendar->tm_sec, BX_CMOS_THIS s.rtc_mode_binary);
 
   // update minutes
-  BX_CMOS_THIS s.reg[REG_MIN] = bin_to_bcd(time_calendar->tm_min, BX_CMOS_THIS s.rtc_mode_binary);
+  BX_CMOS_THIS s.reg[REG_MIN] = bin_to_bcd((Bit8u)time_calendar->tm_min, BX_CMOS_THIS s.rtc_mode_binary);
 
   // update hours
   if (BX_CMOS_THIS s.rtc_mode_12hour) {
-    hour = time_calendar->tm_hour;
+    hour = (Bit8u)time_calendar->tm_hour;
     val_bcd = (hour > 11) ? 0x80 : 0x00;
     if (hour > 11) hour -= 12;
     if (hour == 0) hour = 12;
     val_bcd |= bin_to_bcd(hour, BX_CMOS_THIS s.rtc_mode_binary);
     BX_CMOS_THIS s.reg[REG_HOUR] = val_bcd;
   } else {
-    BX_CMOS_THIS s.reg[REG_HOUR] = bin_to_bcd(time_calendar->tm_hour, BX_CMOS_THIS s.rtc_mode_binary);
+    BX_CMOS_THIS s.reg[REG_HOUR] = bin_to_bcd((Bit8u)time_calendar->tm_hour, BX_CMOS_THIS s.rtc_mode_binary);
   }
 
   // update day of the week

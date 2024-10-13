@@ -28,7 +28,7 @@
 
 #if BX_SUPPORT_FPU
 
-#include "softfloatx80.h"
+#include "fpu_trans.h"
 
 /* D9 C8 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXCH_STi(bxInstruction_c *i)

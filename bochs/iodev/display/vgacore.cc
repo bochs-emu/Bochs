@@ -44,7 +44,7 @@ static const Bit32u text_snap_size[4] = {
   0x20000, 0x10000, 0x8000, 0x8000
 };
 
-static const Bit8u ccdat[16][4] = {
+const Bit8u ccdat[16][4] = {
   { 0x00, 0x00, 0x00, 0x00 },
   { 0xff, 0x00, 0x00, 0x00 },
   { 0x00, 0xff, 0x00, 0x00 },
@@ -107,7 +107,7 @@ void bx_vgacore_c::init(void)
       BX_VGA_THIS s.memory = new Bit8u[BX_VGA_THIS s.memsize];
     memset(BX_VGA_THIS s.memory, 0, BX_VGA_THIS s.memsize);
   }
-  BX_VGA_THIS s.memsize_mask = 0x3ffff;
+  BX_VGA_THIS s.vgamem_mask = 0x3ffff;
   BX_VGA_THIS init_gui();
 
   BX_VGA_THIS s.num_x_tiles = BX_VGA_THIS s.max_xres / X_TILESIZE +
@@ -358,7 +358,7 @@ void bx_vgacore_c::vgacore_register_state(bx_list_c *parent)
   new bx_shadow_num_c(list, "last_bpp", &BX_VGA_THIS s.last_bpp);
   new bx_shadow_num_c(list, "last_fw", &BX_VGA_THIS s.last_fw);
   new bx_shadow_num_c(list, "last_fh", &BX_VGA_THIS s.last_fh);
-  new bx_shadow_num_c(list, "memsize_mask", &BX_VGA_THIS s.memsize_mask);
+  new bx_shadow_num_c(list, "vgamem_mask", &BX_VGA_THIS s.vgamem_mask);
   BXRS_PARAM_BOOL(list, vga_override, BX_VGA_THIS s.vga_override);
   new bx_shadow_data_c(list, "memory", BX_VGA_THIS s.memory, BX_VGA_THIS s.memsize);
 }
@@ -427,7 +427,7 @@ void bx_vgacore_c::calculate_retrace_timing()
   }
   cwidth = ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 1) ? 8 : 9;
   hfreq = (float)vclock / (crtcp.htotal * cwidth);
-  f_htotal_usec = 1000000.0 / hfreq;
+  f_htotal_usec = 1000000.0f / hfreq;
   BX_VGA_THIS s.htotal_usec = (Bit32u)f_htotal_usec;
   hbstart = BX_VGA_THIS s.CRTC.reg[2];
   BX_VGA_THIS s.hbstart_usec = (Bit32u)((1000000.0 * hbstart * cwidth) / vclock);
@@ -1236,7 +1236,7 @@ Bit8u bx_vgacore_c::get_vga_pixel(Bit16u x, Bit16u y, Bit32u raddr, Bit16u lc, b
     x += BX_VGA_THIS s.attribute_ctrl.horiz_pel_panning;
   }
   bit_no = 7 - (x % 8);
-  byte_offset = ((raddr + (x / 8)) << 2) & BX_VGA_THIS s.memsize_mask;
+  byte_offset = ((raddr + (x / 8)) << 2) & BX_VGA_THIS s.vgamem_mask;
   attribute =
     (((vgamem_ptr[byte_offset] >> bit_no) & 0x01) << 0) |
     (((vgamem_ptr[byte_offset + 1] >> bit_no) & 0x01) << 1) |
@@ -1609,9 +1609,9 @@ void bx_vgacore_c::update(void)
       tm_info.blink_flags |= BX_TEXT_BLINK_MODE;
       if (cs_toggle)
         tm_info.blink_flags |= BX_TEXT_BLINK_TOGGLE;
-      if (cs_visible)
-        tm_info.blink_flags |= BX_TEXT_BLINK_STATE;
     }
+    if (cs_visible)
+      tm_info.blink_flags |= BX_TEXT_BLINK_STATE;
     if ((BX_VGA_THIS s.sequencer.reg1 & 0x01) == 0) {
       if (tm_info.h_panning >= 8)
         tm_info.h_panning = 0;
@@ -1731,7 +1731,7 @@ Bit8u bx_vgacore_c::mem_read(bx_phy_address addr)
         offset = addr & 0x1FFFF;
     }
   } else {
-    offset = addr;
+    offset = (Bit32u)addr;
   }
 
   if (BX_VGA_THIS s.sequencer.chain_four) {
@@ -1830,7 +1830,7 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
         offset = addr & 0x1FFFF;
     }
   } else {
-    offset = addr;
+    offset = (Bit32u)addr;
   }
 
   start_addr = BX_VGA_THIS s.CRTC.start_addr;
@@ -2279,8 +2279,8 @@ void bx_vgacore_c::debug_dump(int argc, char **argv)
             (unsigned) BX_VGA_THIS s.misc_output.horiz_sync_pol);
   dbg_printf("s.misc_output.vert_sync_pol = %u ",
             (unsigned) BX_VGA_THIS s.misc_output.vert_sync_pol);
-  switch ((BX_VGA_THIS s.misc_output.vert_sync_pol << 1) |
-           BX_VGA_THIS s.misc_output.horiz_sync_pol) {
+  switch (((int)BX_VGA_THIS s.misc_output.vert_sync_pol << 1) |
+           (int)BX_VGA_THIS s.misc_output.horiz_sync_pol) {
     case 1: dbg_printf("(400 lines)\n"); break;
     case 2: dbg_printf("(350 lines)\n"); break;
     case 3: dbg_printf("(480 lines)\n"); break;

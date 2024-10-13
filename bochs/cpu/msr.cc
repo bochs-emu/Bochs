@@ -663,6 +663,18 @@ bool isValidMSR_FixedMTRR(Bit64u fixed_mtrr_val)
 }
 #endif
 
+bool isValidMSR_IA32_SPEC_CTRL(Bit64u val_64)
+{
+  //    [0] - Enable IBRS: Indirect Branch Restricted Speculation
+  //    [1] - Enable STIBP: Single Thread Indirect Branch Predictors
+  //    [2] - Enable SSCB: Speculative Store Bypass Disable
+  // [63:3] - reserved
+  if (val_64 & ~(BX_CONST64(0x7)))
+    return false;
+
+  return true;
+}
+
 #if BX_CPU_LEVEL >= 5
 bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 {
@@ -1091,11 +1103,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       if (BX_CPU_THIS_PTR in_vmx_guest && vm->vmexec_ctrls3.VIRTUALIZE_IA32_SPEC_CTRL())
         val_64 = (BX_CPU_THIS_PTR msr.ia32_spec_ctrl & vm->ia32_spec_ctrl_mask) | (val_64 & ~vm->ia32_spec_ctrl_mask);
 #endif
-      //    [0] - Enable IBRS: Indirect Branch Restricted Speculation
-      //    [1] - Enable STIBP: Single Thread Indirect Branch Predictors
-      //    [2] - Enable SSCB: Speculative Store Bypass Disable
-      // [63:3] - reserved
-      if (val_64 & ~(BX_CONST64(0x7))) {
+      if (! isValidMSR_IA32_SPEC_CTRL(val_64)) {
         BX_ERROR(("WRMSR: attempt to set reserved bits of IA32_SPEC_CTRL !"));
         return false;
       }

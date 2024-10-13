@@ -45,7 +45,7 @@
 
 bx_es1370_c* theES1370Device = NULL;
 
-const Bit8u es1370_iomask[64] = {7, 1, 3, 1, 4, 0, 0, 0, 7, 1, 1, 0, 7, 0, 0, 0,
+const Bit8u es1370_iomask[64] = {7, 1, 3, 1, 4, 1, 0, 0, 7, 1, 1, 0, 7, 0, 0, 0,
                                  6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0,
                                  7, 1, 3, 1, 6, 0, 2, 0, 6, 0, 2, 0, 6, 0, 2, 0,
                                  4, 0, 0, 0, 6, 0, 2, 0, 4, 0, 0, 0, 6, 0, 2, 0};
@@ -379,7 +379,7 @@ void bx_es1370_c::reset(unsigned type)
     BX_ES1370_THIS s.chan[i].leftover = 0;
   }
 
-  #ifndef ANDROID
+  #ifndef __ANDROID__
   // Gameport is unsupported on Android
   DEV_gameport_set_enabled(0);
   #endif
@@ -615,7 +615,7 @@ void bx_es1370_c::write(Bit32u address, Bit32u value, unsigned io_len)
       mask = (0xffffffff >> ((4 - io_len) << 3)) << shift;
       value = (BX_ES1370_THIS s.ctl & ~mask) | ((value << shift) & mask);
       if ((value ^ BX_ES1370_THIS s.ctl) & 0x04) {
-        #ifndef ANDROID
+        #ifndef __ANDROID__
         // Gameport is unsupported on Android
         DEV_gameport_set_enabled((value & 0x04) != 0);
         #endif

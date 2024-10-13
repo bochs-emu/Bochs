@@ -43,7 +43,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 | smaller of them.
 *----------------------------------------------------------------------------*/
 
-float64_t f64_min(float64_t a, float64_t b, struct softfloat_status_t *status)
+float64 f64_min(float64 a, float64 b, struct softfloat_status_t *status)
 {
     if (softfloat_denormalsAreZeros(status)) {
         a = f64_denormal_to_zero(a);
@@ -58,7 +58,7 @@ float64_t f64_min(float64_t a, float64_t b, struct softfloat_status_t *status)
 | larger of them.
 *----------------------------------------------------------------------------*/
 
-float64_t f64_max(float64_t a, float64_t b, struct softfloat_status_t *status)
+float64 f64_max(float64 a, float64 b, struct softfloat_status_t *status)
 {
     if (softfloat_denormalsAreZeros(status)) {
         a = f64_denormal_to_zero(a);

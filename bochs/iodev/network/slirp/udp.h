@@ -1,9 +1,7 @@
-/////////////////////////////////////////////////////////////////////////
-// $Id$
-/////////////////////////////////////////////////////////////////////////
+/* SPDX-License-Identifier: BSD-3-Clause */
 /*
  * Copyright (c) 1982, 1986, 1993
- *	The Regents of the University of California.  All rights reserved.
+ *  The Regents of the University of California.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,15 +27,16 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- *	@(#)udp.h	8.1 (Berkeley) 6/10/93
+ *  @(#)udp.h   8.1 (Berkeley) 6/10/93
  * udp.h,v 1.3 1994/08/21 05:27:41 paul Exp
  */
 
-#ifndef _UDP_H_
-#define _UDP_H_
+#ifndef UDP_H
+#define UDP_H
+
+#include "socket.h"
 
 #define UDP_TTL 0x60
-#define UDP_UDPDATALEN 16192
 
 /*
  * Udp protocol header.
@@ -54,8 +53,8 @@ struct udphdr {
  * UDP kernel structures and variables.
  */
 struct udpiphdr {
-	        struct  ipovly ui_i;            /* overlaid ip structure */
-	        struct  udphdr ui_u;            /* udp header */
+    struct  ipovly ui_i;            /* overlaid ip structure */
+    struct  udphdr ui_u;            /* udp header */
 };
 #define ui_mbuf         ui_i.ih_mbuf.mptr
 #define ui_x1           ui_i.ih_x1
@@ -76,15 +75,32 @@ struct udpiphdr {
 
 struct mbuf;
 
+/* Called from slirp_init */
 void udp_init(Slirp *);
+/* Called from slirp_cleanup */
 void udp_cleanup(Slirp *);
+/* Process UDP datagram coming from the guest */
 void udp_input(struct mbuf *, int);
-int udp_output(struct socket *, struct mbuf *, struct sockaddr_in *);
-int udp_attach(struct socket *);
+/* Create a host UDP socket, bound to this socket */
+int udp_attach(struct socket *, unsigned short af);
+/* Destroy socket */
 void udp_detach(struct socket *);
-struct socket * udp_listen(Slirp *, uint32_t, u_int, uint32_t, u_int,
-                           int);
-int udp_output2(struct socket *so, struct mbuf *m,
-                struct sockaddr_in *saddr, struct sockaddr_in *daddr,
-                int iptos);
+
+/* Listen for incoming UDP datagrams on this haddr+hport */
+struct socket *udp_listen(Slirp *, uint32_t haddr, unsigned hport, uint32_t laddr, unsigned lport, int flags);
+/* Listen for incoming UDP datagrams on this haddr */
+struct socket *udpx_listen(Slirp *,
+                           const struct sockaddr *haddr, socklen_t haddrlen,
+                           const struct sockaddr *laddr, socklen_t laddrlen,
+                           int flags);
+/* Send UDP datagram to the guest */
+int udp_output(struct socket *so, struct mbuf *m, struct sockaddr_in *saddr,
+               struct sockaddr_in *daddr, int iptos);
+
+/* Process UDPv6 datagram coming from the guest */
+void udp6_input(struct mbuf *);
+/* Send UDPv6 datagram to the guest */
+int udp6_output(struct socket *so, struct mbuf *m, struct sockaddr_in6 *saddr,
+                struct sockaddr_in6 *daddr);
+
 #endif
