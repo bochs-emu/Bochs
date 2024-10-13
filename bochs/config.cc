@@ -1339,7 +1339,7 @@ void bx_init_options()
   for (i=0; i<3; i++) {
     sprintf(name, "boot_drive%d", i+1);
     sprintf(label, "Boot drive #%d", i+1);
-    sprintf(descr, "Name of drive #%d in boot sequence (A, C or CD)", i+1);
+    sprintf(descr, "Name of drive #%d in boot sequence (A, C, CD, or USB)", i+1);
     bx_param_enum_c *bootdrive = new bx_param_enum_c(boot_params,
         name,
         label,
@@ -1347,7 +1347,7 @@ void bx_init_options()
         &bochs_bootdisk_names[(i==0)?BX_BOOT_FLOPPYA:BX_BOOT_NONE],
         (i==0)?BX_BOOT_FLOPPYA:BX_BOOT_NONE,
         (i==0)?BX_BOOT_FLOPPYA:BX_BOOT_NONE);
-    bootdrive->set_ask_format("Boot from floppy drive, hard drive or cdrom ? [%s] ");
+    bootdrive->set_ask_format("Boot from floppy drive, hard drive, cdrom, or usb ? [%s] ");
   }
 
   new bx_param_bool_c(boot_params,
@@ -2894,10 +2894,12 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_enum(tmppath)->set(BX_BOOT_DISKC);
       } else if (!strcmp(params[i], "cdrom")) {
         SIM->get_param_enum(tmppath)->set(BX_BOOT_CDROM);
+      } else if (!strcmp(params[i], "usb")) {
+        SIM->get_param_enum(tmppath)->set(BX_BOOT_USB);
       } else if (!strcmp(params[i], "network")) {
         SIM->get_param_enum(tmppath)->set(BX_BOOT_NETWORK);
       } else {
-        PARSE_ERR(("%s: boot directive with unknown boot drive '%s'.  use 'floppy', 'disk', 'cdrom' or 'network'.", context, params[i]));
+        PARSE_ERR(("%s: boot directive with unknown boot drive '%s'.  use 'floppy', 'disk', 'cdrom', 'usb', or 'network'.", context, params[i]));
       }
     }
     if (SIM->get_param_enum(BXPN_BOOTDRIVE1)->get() == BX_BOOT_NONE) {
