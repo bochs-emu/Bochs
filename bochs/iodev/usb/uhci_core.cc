@@ -1012,6 +1012,8 @@ bool bx_uhci_core_c::DoTransfer(Bit32u address, struct TD *td)
     set_status(td, 0, 0, 0, 0, 0, 0, len-1);
   } else if (ret == USB_RET_NAK) {
     set_status(td, 0, 0, 0, 1, 0, 0, len-1); // NAK
+    // NAKs do not deactivate TDs.
+    td->dword2 |= (1 << 23);
   } else {
     set_status(td, 1, 0, 0, 0, 0, 0, 0x007); // stalled
   }
