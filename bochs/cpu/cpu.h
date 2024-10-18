@@ -4318,6 +4318,9 @@ public: // for now...
 
   // now for some ancillary functions...
   BX_SMF void cpu_loop(void);
+#if BX_DEBUGGER
+  BX_SMF void cpu_loop_debugger(void);
+#endif
 #if BX_SUPPORT_SMP
   BX_SMF void cpu_run_trace(void);
 #endif
@@ -5736,7 +5739,7 @@ class bxInstruction_c;
 
 #define BX_NEXT_INSTR(i) {                             \
   BX_COMMIT_INSTRUCTION(i);                            \
-  if (BX_CPU_THIS_PTR async_event) return;             \
+  if (BX_CPU_THIS_PTR async_event || bx_dbg.debugger_active) return;             \
   ++i;                                                 \
   BX_EXECUTE_INSTRUCTION(i);                           \
 }
