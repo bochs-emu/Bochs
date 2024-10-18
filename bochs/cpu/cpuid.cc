@@ -325,10 +325,42 @@ void bx_cpuid_t::get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_
   if (!is_cpu_extension_supported(BX_ISA_AMX))
     return;
 
-  // EBX[07:00] = 16 TMUL_MAX_K (rows or columns)
-  // EBX[23:08] = 64 TMUL_MAX_N (column bytes)
-  // EBX[31:24] reserved
-  leaf->ebx = 16 | (64<<8);
+  switch(subfunction) {
+  case 0:
+    // EBX[07:00] = 16 TMUL_MAX_K (rows or columns)
+    // EBX[23:08] = 64 TMUL_MAX_N (column bytes)
+    // EBX[31:24] reserved
+    leaf->ebx = 16 | (64<<8);
+    break;
+
+  case 1:
+    // EAX:
+    // ---
+    //    [0] AMX-INT8
+    //    [1] AMX-BF16
+    //    [2] AMX-COMPLEX
+    //    [3] AMX-FP16
+    //    [4] AMX-FP8
+    //    [5] AMX-TRANSPOSE
+    //    [6] AMX-TF32 (FP19)
+    //    [7] AMX-AVX512
+    //    [8] AMX-MOVRS
+    // [31:9] reserved
+    if (is_cpu_extension_supported(BX_ISA_AMX_INT8))
+      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_INT8;
+    if (is_cpu_extension_supported(BX_ISA_AMX_BF16))
+      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_BF16;
+    if (is_cpu_extension_supported(BX_ISA_AMX_COMPLEX))
+      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_COMPLEX;
+    if (is_cpu_extension_supported(BX_ISA_AMX_FP16))
+      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP16;
+
+    // EBX/ECX/EDX = 0 (reserved)
+    break;
+
+  default:
+    break;
+  }
 }
 #endif
 

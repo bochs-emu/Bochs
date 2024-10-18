@@ -562,7 +562,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [27:27]  MSRLIST: RDMSRLIST/WRMSRLIST instructions and the IA32_BARRIER MSR
 //   [29:28]  reserved
 //   [30:30]  Prevent INVD execution after BIOS is done
-//   [31:28]  reserved
+//   [31:31]  MOVRS instructions
 
 #define BX_CPUID_STD7_SUBLEAF1_EAX_SHA512                 (1 <<  0)
 #define BX_CPUID_STD7_SUBLEAF1_EAX_SM3                    (1 <<  1)
@@ -595,7 +595,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_STD7_SUBLEAF1_EAX_RESERVED28             (1 << 28)
 #define BX_CPUID_STD7_SUBLEAF1_EAX_RESERVED29             (1 << 29)
 #define BX_CPUID_STD7_SUBLEAF1_EAX_INVD_DISABLE           (1 << 30)
-#define BX_CPUID_STD7_SUBLEAF1_EAX_RESERVED31             (1 << 31)
+#define BX_CPUID_STD7_SUBLEAF1_EAX_MOVRS                  (1 << 31)
 
 // CPUID defines - features CPUID[0x00000007].EBX  [subleaf 1]
 // -----------------------------
@@ -614,8 +614,11 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 
 // CPUID defines - features CPUID[0x00000007].ECX  [subleaf 1]
 // -----------------------------
-//   [31:0]  reserved
+//   [0:4]    IA32_PPIN and IA32_PPIN_CTL MSRs
+//   [5:5]    Support immediate forms of RDMSR and WRMSRNS instructions
+//   [31:5]   reserved
 
+#define BX_CPUID_STD7_SUBLEAF1_ECX_MSR_IMM                (1 <<  5)
 // ...
 
 // CPUID defines - features CPUID[0x00000007].EDX  [subleaf 1]
@@ -664,6 +667,29 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED22             (1 << 22)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_MWAIT_AND_LEAF5        (1 << 23)
 // ...
+
+// CPUID defines - AMX extensions CPUID[0x0000001E].EAX
+// ------------------------------
+//   [0:0] AMX-INT8
+//   [1:1] AMX-BF16
+//   [2:2] AMX-COMPLEX
+//   [3:3] AMX-FP16
+//   [4:4] AMX-FP8
+//   [5:5] AMX-TRANSPOSE
+//   [6:6] AMX-TF32 (FP19)
+//   [7:7] AMX-AVX512
+//   [8:8] AMX-MOVRS
+//  [31:9] reserved
+
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_INT8              (1 <<  0)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_BF16              (1 <<  1)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_COMPLEX           (1 <<  2)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP16              (1 <<  3)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP8               (1 <<  4)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_TRANSPOSE         (1 <<  5)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_TF32              (1 <<  6)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_AVX512            (1 <<  7)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_MOVRS             (1 <<  8)
 
 // CPUID defines - STD2 features CPUID[0x80000001].EDX
 // -----------------------------
