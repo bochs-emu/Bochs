@@ -24,6 +24,7 @@
 #ifndef BX_BF16_HELPER
 #define BX_BF16_HELPER
 
+// TF32: s|eeeeeeee|mmmmmmmmmm-------------
 // FP32: s|eeeeeeee|mmmmmmmmmmmmmmmmmmmmmmm
 // BF16: s|eeeeeeee|mmmmmmm
 //  F16: s|eeeee|mmmmmmmmmm
@@ -58,6 +59,12 @@ BX_CPP_INLINE bfloat16 convert_ne_fp32_to_bfloat16(float32 op)
 
   Bit32u rounding_bias = 0x7FFF + ((op >> 16) & 0x1);
   return (op + rounding_bias) >> 16;
+}
+
+// convert fp32 to tf32 by zeroing out lower mantissa bits [12:0]
+BX_CPP_INLINE float32 fp32_convert_to_tf32(float32 a)
+{
+  return a & 0xffffe000;
 }
 
 #endif

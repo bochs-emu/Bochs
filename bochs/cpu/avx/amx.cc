@@ -704,4 +704,59 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCMMIMFP16PS_TnnnTrmTreg(bxInstruction_c *
   BX_NEXT_INSTR(i);
 }
 
+BX_CPP_INLINE float32 f32_silence_snan(float32 a)
+{
+  if (f32_isNaN(a))
+    a = convert_to_QNaN(a);
+  return a;
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::TMMULTF32PS_TnnnTrmTreg(bxInstruction_c *i)
+{
+  unsigned tile_dst = i->dst(), tile_src1 = i->src1(), tile_src2 = i->src2();
+  check_tiles(i, tile_dst, tile_src1, tile_src2);
+
+  //     R   C
+  // A = m x k (tsrc1)
+  // B = k x n (tsrc2)
+  // C = m x n (tsrcdest)
+  unsigned max_n = BX_CPU_THIS_PTR amx->tile_bytes_per_row(tile_dst) / 4;
+  unsigned max_m = BX_CPU_THIS_PTR amx->tile_num_rows(tile_dst);
+  unsigned max_k = BX_CPU_THIS_PTR amx->tile_num_rows(tile_src2);
+
+  AMX::TILE *tdst  = &(BX_CPU_THIS_PTR amx->tile[tile_dst]);
+  AMX::TILE *tsrc1 = &(BX_CPU_THIS_PTR amx->tile[tile_src1]);
+  AMX::TILE *tsrc2 = &(BX_CPU_THIS_PTR amx->tile[tile_src2]);
+
+  // "round to nearest even" rounding mode is used when doing each accumulation of the FMA.
+  // output denormals are always flushed to zero and input denormals are always treated as zero.
+  softfloat_status_t status = prepare_ne_softfloat_status_helper();
+  status.softfloat_denormals_are_zeros = true;
+
+  for (unsigned m=0; m < max_m; m++) {
+    float32 tmp[16]; // new empty array
+    for (unsigned n=0; n < 16; n++) tmp[n] = 0;
+
+    for (unsigned k=0; k < max_k; k++) {
+      for (unsigned n=0; n < max_n; n++) {
+        float32 a = fp32_convert_to_tf32(f32_silence_snan(tsrc1->row[m].vmm32u(k)));
+        float32 b = fp32_convert_to_tf32(f32_silence_snan(tsrc2->row[k].vmm32u(n)));
+        tmp[n] = f32_mulAdd(a, b, tmp[n], 0, &status);
+      }
+    }
+
+    for (unsigned n=0; n < max_n; n++) {
+      tdst->row[m].vmm32u(n) = f32_add(tdst->row[m].vmm32u(n), tmp[n], &status);
+    }
+
+    tdst->zero_upper_row_data32(m, max_n);
+  }
+
+  BX_CPU_THIS_PTR amx->set_tile_used(tile_dst);
+  BX_CPU_THIS_PTR amx->tile[tile_dst].clear_upper_rows(max_m);
+  BX_CPU_THIS_PTR amx->restart();
+
+  BX_NEXT_INSTR(i);
+}
+
 #endif // BX_SUPPORT_AMX
