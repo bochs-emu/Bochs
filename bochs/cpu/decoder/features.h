@@ -116,6 +116,7 @@ x86_feature(BX_ISA_AMX, "amx")                                          /* AMX I
 x86_feature(BX_ISA_AMX_INT8, "amx_int8")                                /* AMX-INT8 Instructions */
 x86_feature(BX_ISA_AMX_BF16, "amx_bf16")                                /* AMX-BF16 Instructions */
 x86_feature(BX_ISA_AMX_FP16, "amx_fp16")                                /* AMX-FP16 Instructions */
+x86_feature(BX_ISA_AMX_TF32, "amx_tf32")                                /* AMX-TF32 Instructions */
 x86_feature(BX_ISA_AMX_COMPLEX, "amx_complex")                          /* AMX-COMPLEX Instructions */
 x86_feature(BX_ISA_XAPIC, "xapic")                                      /* XAPIC support */
 x86_feature(BX_ISA_X2APIC, "x2apic")                                    /* X2APIC support */

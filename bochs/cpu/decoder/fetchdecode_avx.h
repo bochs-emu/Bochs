@@ -995,6 +995,10 @@ static const Bit64u BxOpcodeGroup_VEX_0F3847[] = {
 };
 
 #if BX_SUPPORT_AMX
+static const Bit64u BxOpcodeGroup_VEX_0F3848[] = {
+  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_VL128 | ATTR_MODC0 | ATTR_IS64, BX_IA_TMMULTF32PS_TnnnTrmTreg)
+};
+
 static const Bit64u BxOpcodeGroup_VEX_0F3849[] = {
   form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0 | ATTR_VL128 | ATTR_NNN0 | ATTR_RRR0 | ATTR_MODC0 | ATTR_IS64, BX_IA_TILERELEASE),
   form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0 | ATTR_VL128 | ATTR_MOD_MEM | ATTR_IS64, BX_IA_LDTILECFG),
@@ -1924,10 +1928,11 @@ static const Bit64u *BxOpcodeTableVEX[256*3] = {
   /* 45  */ ( BxOpcodeGroup_VEX_0F3845 ),
   /* 46  */ ( BxOpcodeGroup_VEX_0F3846 ),
   /* 47  */ ( BxOpcodeGroup_VEX_0F3847 ),
-  /* 48  */ ( BxOpcodeGroup_ERR ),
 #if BX_SUPPORT_AMX
+  /* 48  */ ( BxOpcodeGroup_VEX_0F3848 ),
   /* 49  */ ( BxOpcodeGroup_VEX_0F3849 ),
 #else
+  /* 48  */ ( BxOpcodeGroup_ERR ),
   /* 49  */ ( BxOpcodeGroup_ERR ),
 #endif
   /* 4A  */ ( BxOpcodeGroup_ERR ),
