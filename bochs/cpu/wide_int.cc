@@ -23,43 +23,21 @@
 
 #include "wide_int.h"
 
-static unsigned partial_add(Bit32u *sum, Bit32u b)
-{
-  Bit32u t = *sum;
-  *sum += b;
-  return (*sum < t);
-}
-
 void long_mul(Bit128u *product, Bit64u op1, Bit64u op2)
 {
-  Bit32u op_1[2],op_2[2];
-  Bit32u result[5];
-  Bit64u nn;
-  unsigned c;
+  Bit32u a32 = op1>>32;
+  Bit32u a0 = op1;
+  Bit32u b32 = op2>>32;
+  Bit32u b0 = op2;
 
-  int i,j,k;
-
-  op_1[0] = (Bit32u)(op1 & 0xffffffff);
-  op_1[1] = (Bit32u)(op1 >> 32);
-  op_2[0] = (Bit32u)(op2 & 0xffffffff);
-  op_2[1] = (Bit32u)(op2 >> 32);
-
-  for (i = 0; i < 4; i++) result[i] = 0;
-
-  for (i = 0; i < 2; i++) {
-    for (j = 0; j < 2; j++) {
-      nn = (Bit64u) op_1[i] * (Bit64u) op_2[j];
-      k = i + j;
-      c = partial_add(&result[k++], (Bit32u)(nn & 0xffffffff));
-      c = partial_add(&result[k++], (Bit32u)(nn >> 32) + c);
-      while (k < 4 && c != 0) {
-        c = partial_add(&result[k++], c);
-      }
-    }
-  }
-
-  product->lo = result[0] + ((Bit64u) result[1] << 32);
-  product->hi = result[2] + ((Bit64u) result[3] << 32);
+  product->lo = (Bit64u) a0 * b0;
+  Bit64u mid1 = (Bit64u) a32 * b0;
+  Bit64u mid = mid1 + (Bit64u) a0 * b32;
+  product->hi = (Bit64u) a32 * b32;
+  product->hi += (Bit64u) (mid < mid1)<<32 | mid>>32;
+  mid <<= 32;
+  product->lo += mid;
+  product->hi += (product->lo < mid);
 }
 
 void long_neg(Bit128s *n)
