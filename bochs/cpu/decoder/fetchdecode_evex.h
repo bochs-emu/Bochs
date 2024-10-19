@@ -1813,17 +1813,17 @@ static const Bit64u BxOpcodeGroup_EVEX_0F3ACE[] = { last_opcode(ATTR_SSE_PREFIX_
 static const Bit64u BxOpcodeGroup_EVEX_0F3ACF[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1, BX_IA_V512_VGF2P8AFFINEINVQB_VdqHdqWdqIb_Kmask) };
 
 static const Bit64u BxOpcodeGroup_EVEX_MAP5_10[] = {
-  form_opcode(ATTR_VEX_W0 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_SSE_PREFIX_F3, BX_IA_V512_VMOVSH_VshHphWsh),
-  form_opcode(ATTR_VEX_W0 | ATTR_MASK_K0 | ATTR_MOD_MEM | ATTR_SSE_PREFIX_F3, BX_IA_V512_VMOVSH_VshWsh),
-  form_opcode(ATTR_VEX_W0 | ATTR_MODC0 | ATTR_SSE_PREFIX_F3, BX_IA_V512_VMOVSH_VshHphWsh_Kmask),
-  last_opcode(ATTR_VEX_W0 | ATTR_MOD_MEM | ATTR_SSE_PREFIX_F3, BX_IA_V512_VMOVSH_VshWsh_Kmask),
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_MASK_K0 | ATTR_MODC0, BX_IA_V512_VMOVSH_VshHphWsh),
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_MASK_K0 | ATTR_MOD_MEM, BX_IA_V512_VMOVSH_VshWsh),
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 |                ATTR_MODC0, BX_IA_V512_VMOVSH_VshHphWsh_Kmask),
+  last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 |                ATTR_MOD_MEM, BX_IA_V512_VMOVSH_VshWsh_Kmask),
 };
 
 static const Bit64u BxOpcodeGroup_EVEX_MAP5_11[] = {
-  form_opcode(ATTR_VEX_W0 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_SSE_PREFIX_F3, BX_IA_V512_VMOVSH_WshHphVsh),
-  form_opcode(ATTR_VEX_W0 | ATTR_MASK_K0 | ATTR_MOD_MEM | ATTR_SSE_PREFIX_F3, BX_IA_V512_VMOVSH_WshVsh),
-  form_opcode(ATTR_VEX_W0 | ATTR_MODC0 | ATTR_SSE_PREFIX_F3, BX_IA_V512_VMOVSH_WshHphVsh_Kmask),
-  last_opcode(ATTR_VEX_W0 | ATTR_MOD_MEM | ATTR_SSE_PREFIX_F3, BX_IA_V512_VMOVSH_WshVsh_Kmask)
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_MASK_K0 | ATTR_MODC0, BX_IA_V512_VMOVSH_WshHphVsh),
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_MASK_K0 | ATTR_MOD_MEM, BX_IA_V512_VMOVSH_WshVsh),
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 |                ATTR_MODC0, BX_IA_V512_VMOVSH_WshHphVsh_Kmask),
+  last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 |                ATTR_MOD_MEM, BX_IA_V512_VMOVSH_WshVsh_Kmask)
 };
 
 static const Bit64u BxOpcodeGroup_EVEX_MAP5_1D[] = {
