@@ -1006,6 +1006,8 @@ void FillAsm(Bit64u LAddr, int MaxLines)
         }
         if (AsmLineCount >= MaxLines)       // disassembled enough lines?
             Go = FALSE;
+        if (In64Mode == FALSE && ReadAddr > 0xffffffff)
+            break;
     }
     if (ResizeColmns != FALSE)
         RedrawColumns(ASM_WND);

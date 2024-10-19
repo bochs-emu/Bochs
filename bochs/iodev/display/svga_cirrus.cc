@@ -1718,7 +1718,7 @@ void bx_svga_cirrus_c::update(void)
   }
   BX_CIRRUS_THIS svga_needs_update_tile = 0;
 
-  unsigned xc, yc, xti, yti;
+  unsigned xc, yc, xti, yti, hp;
   unsigned r, c, w, h, x, y;
   int i;
   Bit8u red, green, blue;
@@ -1779,10 +1779,11 @@ void bx_svga_cirrus_c::update(void)
             BX_CIRRUS_THIS svga_dispbpp));
           break;
         case 8:
+          hp = BX_CIRRUS_THIS s.attribute_ctrl.horiz_pel_panning & 0x07;
           for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
-                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + xc);
+                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + xc + hp);
                 tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
                 for (r=0; r<h; r++) {
                   vid_ptr2  = vid_ptr;
@@ -1854,16 +1855,17 @@ void bx_svga_cirrus_c::update(void)
           }
           break;
         case 8:
+          hp = BX_CIRRUS_THIS s.attribute_ctrl.horiz_pel_panning & 0x07;
           for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
                 if (!BX_CIRRUS_THIS s.y_doublescan) {
-                  vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + xc);
+                  vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + xc + hp);
                 } else {
                   if (!BX_CIRRUS_THIS svga_double_width) {
-                    vid_ptr = BX_CIRRUS_THIS disp_ptr + ((yc >> 1) * pitch + xc);
+                    vid_ptr = BX_CIRRUS_THIS disp_ptr + ((yc >> 1) * pitch + xc + hp);
                   } else {
-                    vid_ptr = BX_CIRRUS_THIS disp_ptr + ((yc >> 1) * pitch + (xc >> 1));
+                    vid_ptr = BX_CIRRUS_THIS disp_ptr + ((yc >> 1) * pitch + ((xc + hp) >> 1));
                   }
                 }
                 tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
@@ -1902,16 +1904,17 @@ void bx_svga_cirrus_c::update(void)
           }
           break;
         case 15:
+          hp = BX_CIRRUS_THIS s.attribute_ctrl.horiz_pel_panning & 0x01;
           for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
                 if (!BX_CIRRUS_THIS s.y_doublescan) {
-                  vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + (xc << 1));
+                  vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + ((xc + hp) << 1));
                 } else {
                   if (!BX_CIRRUS_THIS svga_double_width) {
-                    vid_ptr = BX_CIRRUS_THIS disp_ptr + ((yc >> 1) * pitch + (xc << 1));
+                    vid_ptr = BX_CIRRUS_THIS disp_ptr + ((yc >> 1) * pitch + ((xc + hp) << 1));
                   } else {
-                    vid_ptr = BX_CIRRUS_THIS disp_ptr + ((yc >> 1) * pitch + xc);
+                    vid_ptr = BX_CIRRUS_THIS disp_ptr + ((yc >> 1) * pitch + xc + (hp << 1));
                   }
                 }
                 tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
@@ -1951,16 +1954,17 @@ void bx_svga_cirrus_c::update(void)
           }
           break;
         case 16:
+          hp = BX_CIRRUS_THIS s.attribute_ctrl.horiz_pel_panning & 0x01;
           for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
                 if (!BX_CIRRUS_THIS s.y_doublescan) {
-                  vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + (xc << 1));
+                  vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + ((xc + hp) << 1));
                 } else {
                   if (!BX_CIRRUS_THIS svga_double_width) {
-                    vid_ptr = BX_CIRRUS_THIS disp_ptr + ((yc >> 1) * pitch + (xc << 1));
+                    vid_ptr = BX_CIRRUS_THIS disp_ptr + ((yc >> 1) * pitch + ((xc + hp) << 1));
                   } else {
-                    vid_ptr = BX_CIRRUS_THIS disp_ptr + ((yc >> 1) * pitch + xc);
+                    vid_ptr = BX_CIRRUS_THIS disp_ptr + ((yc >> 1) * pitch + xc + (hp << 1));
                   }
                 }
                 tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
