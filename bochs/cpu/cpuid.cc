@@ -354,8 +354,13 @@ void bx_cpuid_t::get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_
       leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_COMPLEX;
     if (is_cpu_extension_supported(BX_ISA_AMX_FP16))
       leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP16;
+    // AMX_FP8
+    // AMX_TRANSPOSE
     if (is_cpu_extension_supported(BX_ISA_AMX_TF32))
       leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_TF32;
+    // AMX_AVX512
+    if (is_cpu_extension_supported(BX_ISA_AMX_MOVRS))
+      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_MOVRS;
     // EBX/ECX/EDX = 0 (reserved)
     break;
 

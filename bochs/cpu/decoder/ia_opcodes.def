@@ -2765,6 +2765,8 @@ bx_define_opcode(BX_IA_LDTILECFG, "ldtilecfg", "ldtilecfg", &BX_CPU_C::LDTILECFG
 bx_define_opcode(BX_IA_STTILECFG, "sttilecfg", "sttilecfg", &BX_CPU_C::STTILECFG, NULL, BX_ISA_AMX, OP_M, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_AMX)
 bx_define_opcode(BX_IA_TILELOADD_TnnnMdq, "tileloadd", "tileloadd", &BX_CPU_C::TILELOADD_TnnnMdq, NULL, BX_ISA_AMX, OP_Tnnn, OP_M, OP_NONE, OP_NONE, BX_PREPARE_AMX)
 bx_define_opcode(BX_IA_TILELOADDT1_TnnnMdq, "tileloaddt1", "tileloaddt1", &BX_CPU_C::TILELOADD_TnnnMdq, NULL, BX_ISA_AMX, OP_Tnnn, OP_M, OP_NONE, OP_NONE, BX_PREPARE_AMX)
+bx_define_opcode(BX_IA_TILELOADDRS_TnnnMdq, "tileloaddrs", "tileloaddrs", &BX_CPU_C::TILELOADD_TnnnMdq, NULL, BX_ISA_AMX_MOVRS, OP_Tnnn, OP_M, OP_NONE, OP_NONE, BX_PREPARE_AMX)
+bx_define_opcode(BX_IA_TILELOADDRST1_TnnnMdq, "tileloaddrst1", "tileloaddrst1", &BX_CPU_C::TILELOADD_TnnnMdq, NULL, BX_ISA_AMX_MOVRS, OP_Tnnn, OP_M, OP_NONE, OP_NONE, BX_PREPARE_AMX)
 bx_define_opcode(BX_IA_TILESTORED_MdqTnnn, "tilestored", "tilestored", &BX_CPU_C::TILESTORED_MdqTnnn, NULL, BX_ISA_AMX, OP_M, OP_Tnnn, OP_NONE, OP_NONE, BX_PREPARE_AMX)
 bx_define_opcode(BX_IA_TILERELEASE, "tilerelease", "tilerelease", NULL, &BX_CPU_C::TILERELEASE, BX_ISA_AMX, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_AMX)
 bx_define_opcode(BX_IA_TILEZERO_Tnnn, "tilezero", "tilezero", NULL, &BX_CPU_C::TILEZERO_Tnnn, BX_ISA_AMX, OP_Tnnn, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_AMX)

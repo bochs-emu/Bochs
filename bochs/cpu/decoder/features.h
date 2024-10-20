@@ -118,6 +118,7 @@ x86_feature(BX_ISA_AMX_BF16, "amx_bf16")                                /* AMX-B
 x86_feature(BX_ISA_AMX_FP16, "amx_fp16")                                /* AMX-FP16 Instructions */
 x86_feature(BX_ISA_AMX_TF32, "amx_tf32")                                /* AMX-TF32 Instructions */
 x86_feature(BX_ISA_AMX_COMPLEX, "amx_complex")                          /* AMX-COMPLEX Instructions */
+x86_feature(BX_ISA_AMX_MOVRS, "amx_movrs")                              /* AMX-MOVRS Instructions */
 x86_feature(BX_ISA_XAPIC, "xapic")                                      /* XAPIC support */
 x86_feature(BX_ISA_X2APIC, "x2apic")                                    /* X2APIC support */
 x86_feature(BX_ISA_XAPIC_EXT, "xapicext")                               /* XAPIC Extensions support (AMD) */
