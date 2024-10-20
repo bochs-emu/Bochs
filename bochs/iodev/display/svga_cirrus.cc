@@ -288,6 +288,7 @@ void bx_svga_cirrus_c::svga_init_members()
   BX_CIRRUS_THIS svga_needs_update_tile = 1;
   BX_CIRRUS_THIS svga_needs_update_dispentire = 1;
   BX_CIRRUS_THIS svga_needs_update_mode = 0;
+  BX_CIRRUS_THIS svga_double_width = 0;
 
   BX_CIRRUS_THIS svga_xres = 640;
   BX_CIRRUS_THIS svga_yres = 480;
