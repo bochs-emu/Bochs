@@ -288,6 +288,7 @@ void bx_svga_cirrus_c::svga_init_members()
   BX_CIRRUS_THIS svga_needs_update_tile = 1;
   BX_CIRRUS_THIS svga_needs_update_dispentire = 1;
   BX_CIRRUS_THIS svga_needs_update_mode = 0;
+  BX_CIRRUS_THIS svga_double_width = 0;
 
   BX_CIRRUS_THIS svga_xres = 640;
   BX_CIRRUS_THIS svga_yres = 480;
@@ -591,7 +592,7 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
   }
 #endif // BX_SUPPORT_PCI
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
-    if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x1e) != 0) {
+    if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x1f) != 0) {
       return BX_CIRRUS_THIS vga_mem_read(addr);
     } else {
       return BX_CIRRUS_THIS bx_vgacore_c::mem_read(addr);
@@ -831,7 +832,7 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
   }
 #endif // BX_SUPPORT_PCI
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
-    if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x1e) != 0) {
+    if ((BX_CIRRUS_THIS control.reg[0x0b] & 0x1f) != 0) {
       BX_CIRRUS_THIS vga_mem_write(addr,value);
     } else {
       BX_CIRRUS_THIS bx_vgacore_c::mem_write(addr,value);
@@ -1557,7 +1558,7 @@ void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_ti
     tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h) +
                info->pitch * (cy0 - yc) + (info->bpp / 8) * (cx0 - xc);
     if (BX_CIRRUS_THIS svga_dispbpp == 4) {
-      hwc_offset = 0x40000 - 16384; // VGA (TODO: check this)
+      hwc_offset = 0x200000 - 16384; // VGA
     } else {
       hwc_offset = BX_CIRRUS_THIS memsize_mask - 16383; // Cirrus
     }
