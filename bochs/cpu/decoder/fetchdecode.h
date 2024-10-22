@@ -79,7 +79,8 @@ BX_CPP_INLINE Bit64u FetchQWORD(const Bit8u *iptr)
 }
 #endif
 
-#define BX_PREPARE_AMX               (0x400)
+#define BX_PREPARE_AMX               (0x800)
+#define BX_EVEX_VL_IGNORE            (0x400 | BX_PREPARE_EVEX)
 #define BX_PREPARE_EVEX_NO_BROADCAST (0x200 | BX_PREPARE_EVEX)
 #define BX_PREPARE_EVEX_NO_SAE       (0x100 | BX_PREPARE_EVEX)
 #define BX_PREPARE_EVEX              (0x80)
