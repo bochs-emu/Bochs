@@ -256,6 +256,8 @@ void sapphire_rapids_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpui
   case 0x0000001A: // CPUID leaf 0x0000001A - native Model ID Enumeration leaf (for Hybrid)
   case 0x0000001B: // PCONFIG Information
   case 0x0000001C: // CPUID leaf 0x0000001C - Last Branch Record (Architectural LBR) leaf
+    get_reserved_leaf(leaf);
+    return;
 #if BX_SUPPORT_AMX
   case 0x0000001D: // AMX
     get_std_cpuid_amx_palette_info_leaf(subfunction, leaf);
