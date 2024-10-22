@@ -4820,6 +4820,7 @@ public: // for now...
 #endif
 
   BX_SMF void init_FetchDecodeTables(void);
+  BX_SMF int  assignHandler(bxInstruction_c *i, Bit32u fetchModeMask);
 
 #if BX_SUPPORT_APIC
   BX_SMF BX_CPP_INLINE Bit8u get_apic_id(void) { return BX_CPU_THIS_PTR bx_cpuid; }

@@ -25,6 +25,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #define NEED_CPU_NEED_TEMPLATE_METHODS 1
 #include "../cpu.h"
+#include "../cpuid.h"
 #endif
 
 #include "decoder.h"
@@ -2558,11 +2559,7 @@ fetch_b1:
 
 #ifndef BX_STANDALONE_DECODER
 
-#if BX_SUPPORT_EVEX
-int assignHandler(bxInstruction_c *i, Bit32u fetchModeMask, bool allow_VL512)
-#else
-int assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
-#endif
+int BX_CPU_C::assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
 {
   unsigned ia_opcode = i->getIaOpcode();
 
@@ -2590,21 +2587,22 @@ int assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
 
 #if BX_SUPPORT_EVEX
   if ((op_flags & BX_PREPARE_EVEX) != 0) {
-    if (! allow_VL512 && i->getVL() == BX_VL512) {
-//    BX_DEBUG(("%s: VL512 not supported not supported at this processor", i->getIaOpcodeNameShort()));
+    bool allow512 = BX_CPU_THIS_PTR cpuid->support_avx10_512();
+    if (! allow512 && i->getVL() == BX_VL512) {
+      BX_DEBUG(("%s: VL512 is not supported for this processor", i->getIaOpcodeNameShort()));
       i->execute1 = &BX_CPU_C::BxError;
     }
 
     if (i->getEvexb()) {
       if (! i->modC0()) {
         if ((op_flags & BX_PREPARE_EVEX_NO_BROADCAST) == BX_PREPARE_EVEX_NO_BROADCAST) {
-//        BX_DEBUG(("%s: broadcast is not supported for this instruction", i->getIaOpcodeNameShort()));
+          BX_DEBUG(("%s: broadcast is not supported for this instruction", i->getIaOpcodeNameShort()));
           i->execute1 = &BX_CPU_C::BxError;
         }
       }
       else {
         if ((op_flags & BX_PREPARE_EVEX_NO_SAE) == BX_PREPARE_EVEX_NO_SAE) {
-//        BX_DEBUG(("%s: EVEX.b in reg form is not allowed for instructions which cannot cause floating point exception", i->getIaOpcodeNameShort()));
+          BX_DEBUG(("%s: EVEX.b in reg form is not allowed for instructions which cannot cause floating point exception", i->getIaOpcodeNameShort()));
           i->execute1 = &BX_CPU_C::BxError;
         }
       }

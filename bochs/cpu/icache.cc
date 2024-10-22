@@ -24,7 +24,6 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
-#include "cpuid.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #include "gui/siminterface.h"
@@ -38,11 +37,6 @@ bxPageWriteStampTable pageWriteStampTable;
 extern int fetchDecode32(const Bit8u *fetchPtr, bool is_32, bxInstruction_c *i, unsigned remainingInPage);
 #if BX_SUPPORT_X86_64
 extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
-#endif
-#if BX_SUPPORT_EVEX
-extern int assignHandler(bxInstruction_c *i, Bit32u fetchModeMask, bool allow_VL512);
-#else
-extern int assignHandler(bxInstruction_c *i, Bit32u fetchModeMask);
 #endif
 
 void flushICaches(void)
@@ -151,11 +145,7 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
       return entry;
     }
 
-    ret = assignHandler(i, BX_CPU_THIS_PTR fetchModeMask
-#if BX_SUPPORT_EVEX
-        , BX_CPU_THIS_PTR cpuid->support_avx10_512()
-#endif
-    );
+    ret = assignHandler(i, BX_CPU_THIS_PTR fetchModeMask);
 
     // add instruction to the trace
     unsigned iLen = i->ilen();
@@ -283,11 +273,7 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  ret = assignHandler(i, BX_CPU_THIS_PTR fetchModeMask
-#if BX_SUPPORT_EVEX
-        , BX_CPU_THIS_PTR cpuid->support_avx10_512()
-#endif
-  );
+  ret = assignHandler(i, BX_CPU_THIS_PTR fetchModeMask);
 
   // Restore EIP since we fudged it to start at the 2nd page boundary.
   RIP = BX_CPU_THIS_PTR prev_rip;
