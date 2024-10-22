@@ -403,7 +403,7 @@ SSSS SSoo SEVO EEEA R
  1 1 EE        LL 0 S
  6 6 FF        50   T
      II        1/
-	 XX        21
+     XX        21
 */
 
 const unsigned OS64_OFFSET = 23;

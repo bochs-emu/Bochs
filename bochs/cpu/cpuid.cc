@@ -370,6 +370,44 @@ void bx_cpuid_t::get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_
 }
 #endif
 
+void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
+{
+  leaf->eax = 0;
+  leaf->ebx = 0;
+  leaf->ecx = 0;
+  leaf->edx = 0;
+
+#if BX_SUPPORT_EVEX
+  if (!is_cpu_extension_supported(BX_ISA_AVX10_1))
+    return;
+
+  if (subfunction == 0) {
+    // EAX:
+    //   [31:00]: maximum supported subleaf
+    // EBX:
+    //   [07:00]: AVX10 version
+    //   [16:08]: reserved
+    //   [17:17]: VL256 supported
+    //   [18:18]: VL512 supported
+    //   [31:19]: reserved
+    // ECX:
+    //   [31:00]: reserved
+    // EDX:
+    //   [31:00]: reserved
+    leaf->eax = 0;
+    leaf->ebx = 0x1 | (1<<17);
+    if (is_cpu_extension_supported(BX_ISA_AVX10_VL512))
+      leaf->ebx |= (1<<18);
+    leaf->ecx = 0;
+    leaf->edx = 0;
+  }
+#endif
+}
+
+bool bx_cpuid_t::support_avx10_512() const {
+  return is_cpu_extension_supported(BX_ISA_AVX512) || is_cpu_extension_supported(BX_ISA_AVX10_VL512);
+}
+
 void bx_cpuid_t::get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_function_t *leaf, unsigned limited_max_leaf) const
 {
   // EAX: highest function understood by CPUID
@@ -1321,7 +1359,12 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
     edx |= BX_CPUID_STD7_SUBLEAF1_EDX_UIRET_UIF;
 
   //   [18:18]  CET_SSS
-  //   [22:19]  reserved
+
+  //   [19:19]  AVX10 support and CPUID leaf 0x24
+  if (is_cpu_extension_supported(BX_ISA_AVX10_1))
+    edx |= BX_CPUID_STD7_SUBLEAF1_EDX_AVX10;
+
+  //   [22:20]  reserved
 
   //   [23:23]  to be used by VMM: MWAIT and CPUID LEAF5 support (introduced with Monitorless MWAIT support)
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -1413,6 +1456,12 @@ void bx_cpuid_t::warning_messages(unsigned extension) const
   default:
     break;
   }
+}
+
+void bx_cpuid_t::sanity_checks() const
+{
+  if (is_cpu_extension_supported(BX_ISA_AVX10_VL512) && !is_cpu_extension_supported(BX_ISA_AVX10_1))
+    BX_FATAL(("PANIC: AVX10_VL512 is enabled when AVX10 is not supported !"));
 }
 
 void bx_cpuid_t::dump_features() const
