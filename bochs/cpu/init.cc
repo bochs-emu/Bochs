@@ -131,9 +131,9 @@ void BX_CPU_C::initialize(void)
 #if BX_SUPPORT_SVM
   BX_CPU_THIS_PTR svm_extensions_bitmask = BX_CPU_THIS_PTR cpuid->get_svm_extensions_bitmask();
 #endif
-#endif
 
   BX_CPU_THIS_PTR cpuid->sanity_checks();
+#endif
 
   init_FetchDecodeTables(); // must be called after init_isa_features_bitmask()
 

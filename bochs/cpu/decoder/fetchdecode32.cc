@@ -2558,7 +2558,11 @@ fetch_b1:
 
 #ifndef BX_STANDALONE_DECODER
 
+#if BX_SUPPORT_EVEX
 int assignHandler(bxInstruction_c *i, Bit32u fetchModeMask, bool allow_VL512)
+#else
+int assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
+#endif
 {
   unsigned ia_opcode = i->getIaOpcode();
 
