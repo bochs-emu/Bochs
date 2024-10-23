@@ -1031,24 +1031,11 @@ void bx_dbg_print_fpu_state(void)
 
 void bx_dbg_info_flags(unsigned cpu)
 {
-  dbg_printf("%s %s %s %s %s %s %s IOPL=%1u %s %s %s %s %s %s %s %s %s\n",
-    BX_CPU(cpu)->get_ID() ? "ID" : "id",
-    BX_CPU(cpu)->get_VIP() ? "VIP" : "vip",
-    BX_CPU(cpu)->get_VIF() ? "VIF" : "vif",
-    BX_CPU(cpu)->get_AC() ? "AC" : "ac",
-    BX_CPU(cpu)->get_VM() ? "VM" : "vm",
-    BX_CPU(cpu)->get_RF() ? "RF" : "rf",
-    BX_CPU(cpu)->get_NT() ? "NT" : "nt",
-    BX_CPU(cpu)->get_IOPL(),
-    BX_CPU(cpu)->get_OF() ? "OF" : "of",
-    BX_CPU(cpu)->get_DF() ? "DF" : "df",
-    BX_CPU(cpu)->get_IF() ? "IF" : "if",
-    BX_CPU(cpu)->get_TF() ? "TF" : "tf",
-    BX_CPU(cpu)->get_SF() ? "SF" : "sf",
-    BX_CPU(cpu)->get_ZF() ? "ZF" : "zf",
-    BX_CPU(cpu)->get_AF() ? "AF" : "af",
-    BX_CPU(cpu)->get_PF() ? "PF" : "pf",
-    BX_CPU(cpu)->get_CF() ? "CF" : "cf");
+  extern const char* stringify_EFLAGS(Bit32u cr0, char *s);
+  char s[256];
+
+  Bit32u eflags = BX_CPU(cpu)->read_eflags();
+  dbg_printf("eflags: 0x%08x: %s", (unsigned) eflags, stringify_EFLAGS(eflags, s));
 }
 
 void bx_dbg_info_flags()

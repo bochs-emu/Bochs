@@ -28,6 +28,38 @@
 #include "memory/memory-bochs.h"
 #include "pc_system.h"
 
+const char *stringify_EFLAGS(Bit32u eflags, char *s)
+{
+  /* 31|30|29|28| 27|26|25|24| 23|22|21|20| 19|18|17|16
+   * ==|==|=====| ==|==|==|==| ==|==|==|==| ==|==|==|==
+   *  0| 0| 0| 0|  0| 0| 0| 0|  0| 0|ID|VP| VF|AC|VM|RF
+   *
+   * 15|14|13|12| 11|10| 9| 8|  7| 6| 5| 4|  3| 2| 1| 0
+   * ==|==|=====| ==|==|==|==| ==|==|==|==| ==|==|==|==
+   *  0|NT| IOPL| OF|DF|IF|TF| SF|ZF| 0|AF|  0|PF| 1|CF
+   */
+
+  sprintf(s, "%s %s %s %s %s %s %s IOPL=%1u %s %s %s %s %s %s %s %s %s",
+    (eflags & (1<<21)) ? "ID" : "id",
+    (eflags & (1<<20)) ? "VIP" : "vip",
+    (eflags & (1<<19)) ? "VIF" : "vif",
+    (eflags & (1<<18)) ? "AC" : "ac",
+    (eflags & (1<<17)) ? "VM" : "vm",
+    (eflags & (1<<16)) ? "RF" : "rf",
+    (eflags & (1<<14)) ? "NT" : "nt",
+    (eflags >> 12) & 0x3,
+    (eflags & (1<<11)) ? "OF" : "of",
+    (eflags & (1<<10)) ? "DF" : "df",
+    (eflags & (1<<9)) ? "IF" : "if",
+    (eflags & (1<<8)) ? "TF" : "tf",
+    (eflags & (1<<7)) ? "SF" : "sf",
+    (eflags & (1<<6)) ? "ZF" : "zf",
+    (eflags & (1<<4)) ? "AF" : "af",
+    (eflags & (1<<2)) ? "PF" : "pf",
+    (eflags & (1<<0)) ? "CF" : "cf");
+  return s;
+}
+
 const char* stringify_CR0(Bit32u cr0, char *s)
 {
   sprintf(s, "%s %s %s %s %s %s %s %s %s %s %s",
@@ -232,24 +264,9 @@ void BX_CPU_C::debug(bx_address offset)
     BX_INFO(("| EAX=%08x  EBX=%08x  ECX=%08x  EDX=%08x", EAX, EBX, ECX, EDX));
     BX_INFO(("| ESP=%08x  EBP=%08x  ESI=%08x  EDI=%08x", ESP, EBP, ESI, EDI));
   }
-  BX_INFO(("| IOPL=%1u %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
-    BX_CPU_THIS_PTR get_IOPL(),
-    BX_CPU_THIS_PTR get_ID() ? "ID" : "id",
-    BX_CPU_THIS_PTR get_VIP() ? "VIP" : "vip",
-    BX_CPU_THIS_PTR get_VIF() ? "VIF" : "vif",
-    BX_CPU_THIS_PTR get_AC() ? "AC" : "ac",
-    BX_CPU_THIS_PTR get_VM() ? "VM" : "vm",
-    BX_CPU_THIS_PTR get_RF() ? "RF" : "rf",
-    BX_CPU_THIS_PTR get_NT() ? "NT" : "nt",
-    BX_CPU_THIS_PTR get_OF() ? "OF" : "of",
-    BX_CPU_THIS_PTR get_DF() ? "DF" : "df",
-    BX_CPU_THIS_PTR get_IF() ? "IF" : "if",
-    BX_CPU_THIS_PTR get_TF() ? "TF" : "tf",
-    BX_CPU_THIS_PTR get_SF() ? "SF" : "sf",
-    BX_CPU_THIS_PTR get_ZF() ? "ZF" : "zf",
-    BX_CPU_THIS_PTR get_AF() ? "AF" : "af",
-    BX_CPU_THIS_PTR get_PF() ? "PF" : "pf",
-    BX_CPU_THIS_PTR get_CF() ? "CF" : "cf"));
+
+  Bit32u eflags = BX_CPU_THIS_PTR read_eflags();
+  BX_INFO(("| EFLAGS=%08x: %s", eflags, stringify_EFLAGS(eflags, s)));
 
   BX_INFO(("| SEG sltr(index|ti|rpl)     base    limit G D"));
   BX_INFO(("|  CS:%04x( %04x| %01u|  %1u) %08x %08x %1u %1u",
@@ -308,7 +325,9 @@ void BX_CPU_C::debug(bx_address offset)
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.d_b));
 
   Bit32u cr0 = BX_CPU_THIS_PTR cr0.get32();
+#if BX_CPU_LEVEL >= 5
   Bit32u cr4 = BX_CPU_THIS_PTR cr4.get32();
+#endif
 
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
