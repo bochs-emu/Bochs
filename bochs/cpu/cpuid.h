@@ -609,7 +609,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [1:1]    TSE: PBNDKB instruction and existence of the IA32_TSE_CAPABILITY MSR
 //   [2:2]    reserved
 //   [3:3]    CPUIDMAXVAL_LIM_RMV: IA32_MISC_ENABLE[22] cannot be set to 1 to limit the value returned by CPUID.00H:EAX[7:0]
-//   [31:1]   reserved
+//   [31:4]   reserved
 
 // ...
 #define BX_CPUID_STD7_SUBLEAF1_EBX_PPIN                   (1 <<  0)
@@ -620,7 +620,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 
 // CPUID defines - features CPUID[0x00000007].ECX  [subleaf 1]
 // -----------------------------
-//   [0:4]    IA32_PPIN and IA32_PPIN_CTL MSRs
+//   [0:4]    reserved
 //   [5:5]    Support immediate forms of RDMSR and WRMSRNS instructions
 //   [31:5]   reserved
 

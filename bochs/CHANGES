@@ -3,6 +3,10 @@ Changes after 2.8:
 Brief summary :
  - Integrated softfloat3e library replacing older softfloat2a fpu-emulation code
  - Implemented AVX512_FP16 Intel instruction set based on softfloat3e library (enabled in Xeon Sapphire Rapids CPU definition)
+ - Implemented MONITORLESS MWAIT instructions support
+ - Implemented AMX-TF32 ISA extension
+ - Added initial support for AVX10_1 ISA extension and AVX10 CPUID leaf 0x24 (to be enabled in Xeon Granite Rapids)
+ - CPUID: Added Arrow Lake CPU definition (features AVX-VNNI, AVX-IFMA, AVX-VNNI-INT8, AVX-VNNI-INT16, AVX_NE_CONVERT, GFNI, VAES/VPCLMULQDQ, SHA512, SM3/SM4, CMPCCXADD, LASS, SERIALIZE, UINTR)
  - Bugfixes for CPU emulation correctness (critical bugfixes for XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
  - USB: Added the USB Debugger support for xHCI and UHCI
 
@@ -12,6 +16,14 @@ Detailed change log :
   - Bugfixes for CPU emulation correctness (critical bugfixes for XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
   - Integrated softfloat3e library replacing older softfloat2a fpu-emulation code
   - Implemented AVX512_FP16 Intel instruction set based on softfloat3e library (enabled in Xeon Sapphire Rapids CPU definition)
+  - Implemented MONITORLESS MWAIT instructions support
+  - Implemented AMX-TF32 ISA extension
+  - VMX: Implemented VMX support for the IA32_SPEC_CTRL MSR
+  - UINTR: Implemented FLEXIBLE UIRET support
+  - Added initial support for AVX10_1 ISA extension and AVX10 CPUID leaf 0x24 (to be enabled in Xeon Granite Rapids)
+
+- CPUID: 
+  - Added Arrow Lake CPU definition (features AVX-VNNI, AVX-IFMA, AVX-VNNI-INT8, AVX-VNNI-INT16, AVX_NE_CONVERT, GFNI, VAES/VPCLMULQDQ, SHA512, SM3/SM4, CMPCCXADD, LASS, SERIALIZE, UINTR)
 
 - Configure and compile
   - Fixed compilation of plugin version with debugger enabled on Windows

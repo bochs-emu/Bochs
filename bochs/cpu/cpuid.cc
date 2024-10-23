@@ -1077,9 +1077,10 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ecx(Bit32u extra) const
     ecx |= BX_CPUID_STD7_SUBLEAF0_ECX_VAES | BX_CPUID_STD7_SUBLEAF0_ECX_VPCLMULQDQ;
 #endif
 
+  // [13:13] TME_EN: indicates support for MSRs: IA32_TME_CAPABILITY, IA32_TME_ACTIVATE, IA32_TME_EXCLUDE_MASK, and IA32_TME_EXCLUDE_BASE
+
   // [11:11] AVX512 VNNI instructions support
   // [12:12] AVX512 BITALG instructions support
-  // [13:13] reserved
   // [14:14] AVX512 VPOPCNTDQ: AVX512 VPOPCNTD/VPOPCNTQ instructions
 #if BX_SUPPORT_EVEX
   if (is_cpu_extension_supported(BX_ISA_AVX512)) {

@@ -56,6 +56,7 @@ CPUDB_OBJS = intel/pentium.o \
              intel/corei7_icelake-u.o \
              intel/tigerlake.o \
              intel/sapphire_rapids.o \
+             intel/arrow_lake.o \
              amd/amd_k6_2_chomper.o  \
              amd/athlon64_clawhammer.o \
              amd/athlon64_venice.o \
@@ -390,3 +391,15 @@ intel/tigerlake.o: intel/tigerlake.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../cpu/xmm.h ../../cpu/vmx.h ../../cpu/vmx_ctrls.h ../../cpu/access.h \
  ../../gui/siminterface.h ../../gui/paramtree.h ../../param_names.h \
  intel/tigerlake.h ../../cpu/cpuid.h
+intel/arrow_lake.o: intel/arrow_lake.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
+ ../../osdep.h ../../logio.h ../../misc/bswap.h ../../cpu/cpu.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
+ ../../cpu/decoder/decoder.h ../../instrument/stubs/instrument.h \
+ ../../cpu/i387.h ../../cpu/softfloat3e/include/softfloat_types.h \
+ ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h \
+ ../../cpu/crregs.h ../../cpu/descriptor.h ../../cpu/decoder/instr.h \
+ ../../cpu/lazy_flags.h ../../cpu/tlb.h ../../cpu/icache.h \
+ ../../cpu/xmm.h ../../cpu/vmx.h ../../cpu/vmx_ctrls.h ../../cpu/access.h \
+ ../../gui/siminterface.h ../../gui/paramtree.h ../../param_names.h \
+ intel/arrow_lake.h ../../cpu/cpuid.h
