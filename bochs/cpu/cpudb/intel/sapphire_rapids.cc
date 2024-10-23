@@ -616,6 +616,16 @@ void sapphire_rapids_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_
     leaf->ebx = 0;
     leaf->ecx = 0;
     leaf->edx = 0;
+    // * [00:00] PSFD: IA32_SPEC_CTRL MSR is supported
+    // * [01:01] IPRED_CTRL: bits 3 (IPRED_DIS_USER) and 4 (IPRED_DIS_SUP) of the IA32_SPEC_CTRL MSR are supported
+    // * [02:02] RRSBA_CTRL: bits 5 (RRSBA_USER) and 6 (RRSBA_SUP) of the IA32_SPEC_CTRL MSR are supported
+    //   [03:03] DDPD_U: bit 8 (Data Dep Prefetcher) of the IA32_SPEC_CTRL MSR are supported
+    // * [04:04] BHI_CTRL: bit 10 (BHI_DIS_S) of the IA32_SPEC_CTRL MSR are supported
+    //   [05:05] MCDT_NO: do not exhibit MXCSR Configuration Dependent Timing (MCDT) behavior and do not need to be 
+    //                    mitigated to avoid data-dep behavior for certain instructions
+    //   [06:06] support for UC-lock disable feature (UC lock causes #AC)
+    //   [07:07] MONITOR_MITG_NO: MONITOR/UMONITOR instructions are not affected by performance or power issues due to 
+    //                            MONITOR/UMONITOR instructions exceeding the capacity of an internal monitor tracking table
     if (is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS))
       leaf->edx = 0x17;
     break;

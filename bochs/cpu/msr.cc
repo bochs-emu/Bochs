@@ -665,11 +665,19 @@ bool isValidMSR_FixedMTRR(Bit64u fixed_mtrr_val)
 
 bool isValidMSR_IA32_SPEC_CTRL(Bit64u val_64)
 {
-  //    [0] - Enable IBRS: Indirect Branch Restricted Speculation
-  //    [1] - Enable STIBP: Single Thread Indirect Branch Predictors
-  //    [2] - Enable SSCB: Speculative Store Bypass Disable
-  // [63:3] - reserved
-  if (val_64 & ~(BX_CONST64(0x7)))
+  //     [0] - Enable IBRS: Indirect Branch Restricted Speculation
+  //     [1] - Enable STIBP: Single Thread Indirect Branch Predictors
+  //     [2] - Enable SSCB: Speculative Store Bypass Disable
+  //     [3] - IPRED_DIS_U: IPRED_DIS control for CPL3
+  //     [4] - IPRED_DIS_S: IPRED_DIS control for CPL0-2
+  //     [5] - RRSBA_DIS_U: RRSBA_DIS control for CPL3
+  //     [6] - RRSBA_DIS_S: RRSBA_DIS control for CPL0-2
+  //     [7] - PSFD: Disable Fast Store Forwarding Predictor
+  //     [8] - DDPD_U: Disable Data Dependent Prefetcher
+  //     [9] - reserved
+  //    [10] - BHI_DIS_S: Enables BHI_DIS_S behavior
+  // [63:11] - reserved
+  if (val_64 & ~(BX_CONST64(0x5FF)))
     return false;
 
   return true;
@@ -1104,7 +1112,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         val_64 = (BX_CPU_THIS_PTR msr.ia32_spec_ctrl & vm->ia32_spec_ctrl_mask) | (val_64 & ~vm->ia32_spec_ctrl_mask);
 #endif
       if (! isValidMSR_IA32_SPEC_CTRL(val_64)) {
-        BX_ERROR(("WRMSR: attempt to set reserved bits of IA32_SPEC_CTRL !"));
+        BX_ERROR(("WRMSR: attempt to set reserved bits of IA32_SPEC_CTRL: 0x" FMT_LL "x", val_64));
         return false;
       }
       BX_CPU_THIS_PTR msr.ia32_spec_ctrl = GET32L(val_64);
