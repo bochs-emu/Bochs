@@ -41,7 +41,7 @@ arrow_lake_t::arrow_lake_t(BX_CPU_C *cpu):
 #endif
 {
   if (BX_SUPPORT_VMX == 1)
-    BX_INFO(("You must compile with --enable-vmx=2 for Intel Core Xeon Sapphire Rapids VMX configuration"));
+    BX_INFO(("You must compile with --enable-vmx=2 for Intel Core Arrow Lake VMX configuration"));
 
   if (! BX_SUPPORT_MONITOR_MWAIT)
     BX_INFO(("WARNING: MONITOR/MWAIT support is not compiled in !"));
