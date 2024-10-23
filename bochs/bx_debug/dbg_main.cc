@@ -1107,83 +1107,39 @@ void bx_dbg_info_debug_regs_command(void)
 
 void bx_dbg_info_control_regs_command(unsigned cpu)
 {
+  extern const char* stringify_CR0(Bit32u cr0, char *s);
+  extern const char* stringify_CR4(Bit32u cr4, char *s);
+  extern const char* stringify_MSR_EFER(Bit32u cr4, char *s);
+  extern const char* stringify_XCR0(Bit32u xcr0, char *s);
+  char s[256];
+
   Bit32u cr0 = SIM->get_param_num("CR0", dbg_cpu_list[cpu])->get();
+  dbg_printf("CR0=0x%08x: %s\n", cr0, stringify_CR0(cr0, s));
+
   bx_address cr2 = (bx_address) SIM->get_param_num("CR2", dbg_cpu_list[cpu])->get64();
-  bx_phy_address cr3 = (bx_phy_address) SIM->get_param_num("CR3", dbg_cpu_list[cpu])->get64();
-  dbg_printf("CR0=0x%08x: %s %s %s %s %s %s %s %s %s %s %s\n", cr0,
-    (cr0 & (1<<31)) ? "PG" : "pg",
-    (cr0 & (1<<30)) ? "CD" : "cd",
-    (cr0 & (1<<29)) ? "NW" : "nw",
-    (cr0 & (1<<18)) ? "AC" : "ac",
-    (cr0 & (1<<16)) ? "WP" : "wp",
-    (cr0 & (1<<5))  ? "NE" : "ne",
-    (cr0 & (1<<4))  ? "ET" : "et",
-    (cr0 & (1<<3))  ? "TS" : "ts",
-    (cr0 & (1<<2))  ? "EM" : "em",
-    (cr0 & (1<<1))  ? "MP" : "mp",
-    (cr0 & (1<<0))  ? "PE" : "pe");
   dbg_printf("CR2=page fault laddr=0x" FMT_ADDRX "\n", cr2);
+
+  bx_phy_address cr3 = (bx_phy_address) SIM->get_param_num("CR3", dbg_cpu_list[cpu])->get64();
   dbg_printf("CR3=0x" FMT_PHY_ADDRX "\n", cr3);
   dbg_printf("    PCD=page-level cache disable=%d\n", (cr3>>4) & 1);
   dbg_printf("    PWT=page-level write-through=%d\n", (cr3>>3) & 1);
+
 #if BX_CPU_LEVEL >= 5
   Bit32u cr4 = SIM->get_param_num("CR4", dbg_cpu_list[cpu])->get();
-  dbg_printf("CR4=0x%08x: %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s\n", cr4,
-    (cr4 & (1<<27)) ? "LASS" : "lass",
-    (cr4 & (1<<25)) ? "UINTR" : "uintr",
-    (cr4 & (1<<24)) ? "PKS" : "pks",
-    (cr4 & (1<<23)) ? "CET" : "cet",
-    (cr4 & (1<<22)) ? "PKE" : "pke",
-    (cr4 & (1<<21)) ? "SMAP" : "smap",
-    (cr4 & (1<<20)) ? "SMEP" : "smep",
-    (cr4 & (1<<19)) ? "KEYLOCK" : "keylock",
-    (cr4 & (1<<18)) ? "OSXSAVE" : "osxsave",
-    (cr4 & (1<<17)) ? "PCID" : "pcid",
-    (cr4 & (1<<16)) ? "FSGSBASE" : "fsgsbase",
-    (cr4 & (1<<14)) ? "SMX" : "smx",
-    (cr4 & (1<<13)) ? "VMX" : "vmx",
-    (cr4 & (1<<12)) ? "LA57" : "la57",
-    (cr4 & (1<<11)) ? "UMIP" : "umip",
-    (cr4 & (1<<10)) ? "OSXMMEXCPT" : "osxmmexcpt",
-    (cr4 & (1<<9))  ? "OSFXSR" : "osfxsr",
-    (cr4 & (1<<8))  ? "PCE" : "pce",
-    (cr4 & (1<<7))  ? "PGE" : "pge",
-    (cr4 & (1<<6))  ? "MCE" : "mce",
-    (cr4 & (1<<5))  ? "PAE" : "pae",
-    (cr4 & (1<<4))  ? "PSE" : "pse",
-    (cr4 & (1<<3))  ? "DE" : "de",
-    (cr4 & (1<<2))  ? "TSD" : "tsd",
-    (cr4 & (1<<1))  ? "PVI" : "pvi",
-    (cr4 & (1<<0))  ? "VME" : "vme");
+  dbg_printf("CR4=0x%08x: %s\n", cr4, stringify_CR4(cr4, s));
 #if BX_SUPPORT_X86_64
   if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_LONG_MODE)) {
     dbg_printf("CR8: 0x%x\n", BX_CPU(cpu)->get_cr8());
   }
 #endif
   Bit32u efer = SIM->get_param_num("MSR.EFER", dbg_cpu_list[cpu])->get();
-  dbg_printf("EFER=0x%08x: %s %s %s %s %s\n", efer,
-    (efer & (1<<14)) ? "FFXSR" : "ffxsr",
-    (efer & (1<<11)) ? "NXE" : "nxe",
-    (efer & (1<<10)) ? "LMA" : "lma",
-    (efer & (1<<8))  ? "LME" : "lme",
-    (efer & (1<<0))  ? "SCE" : "sce");
+  dbg_printf("EFER=0x%08x: %s\n", efer, stringify_MSR_EFER(efer, s));
 #endif
+
 #if BX_CPU_LEVEL >= 6
   if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_XSAVE)) {
     Bit32u xcr0 = SIM->get_param_num("XCR0", dbg_cpu_list[cpu])->get();
-    dbg_printf("XCR0=0x%08x: %s %s %s %s %s %s %s %s %s %s %s %s\n", xcr0,
-      (xcr0 & (1<<14)) ? "UINTR" : "uintr",
-      (xcr0 & (1<<12)) ? "CET_S" : "cet_s",
-      (xcr0 & (1<<11)) ? "CET_U" : "cet_u",
-      (xcr0 & (1<<9))  ? "PKRU" : "pkru",
-      (xcr0 & (1<<7))  ? "HI_ZMM" : "hi_zmm",
-      (xcr0 & (1<<6))  ? "ZMM_HI256" : "zmm_hi256",
-      (xcr0 & (1<<5))  ? "OPMASK" : "opmask",
-      (xcr0 & (1<<4))  ? "BNDCFG" : "bndcfg",
-      (xcr0 & (1<<3))  ? "BNDREGS" : "bndregs",
-      (xcr0 & (1<<2))  ? "YMM" : "ymm",
-      (xcr0 & (1<<1))  ? "SSE" : "sse",
-      (xcr0 & (1<<0))  ? "FPU" : "fpu");
+    dbg_printf("XCR0=0x%08x: %s\n", xcr0, stringify_XCR0(xcr0, s));
   }
 #endif
 }
