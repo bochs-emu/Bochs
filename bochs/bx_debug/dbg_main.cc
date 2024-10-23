@@ -1247,8 +1247,6 @@ void bx_dbg_info_registers_command(unsigned cpu, int which_regs_mask)
     }
 #endif
 #endif
-    reg = BX_CPU(cpu)->read_eflags();
-    dbg_printf("eflags: 0x%08x: ", (unsigned) reg);
     bx_dbg_info_flags(cpu);
   }
 
