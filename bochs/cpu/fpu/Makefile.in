@@ -157,6 +157,7 @@ fpu_compare.o: fpu_compare.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep
  ../../cpu/tlb.h ../../cpu/icache.h ../../cpu/xmm.h ../../cpu/vmx.h \
  ../../cpu/vmx_ctrls.h ../../cpu/stack.h ../../cpu/access.h \
  ../../cpu/decoder/ia_opcodes.h ../../cpu/decoder/ia_opcodes.def \
+ ../../cpu/decoder/ia_opcodes_evex.def \
  ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
@@ -184,7 +185,7 @@ fpu_load_store.o: fpu_load_store.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../cpu/lazy_flags.h ../../cpu/tlb.h ../../cpu/icache.h \
  ../../cpu/xmm.h ../../cpu/vmx.h ../../cpu/vmx_ctrls.h ../../cpu/stack.h \
  ../../cpu/access.h ../../cpu/decoder/ia_opcodes.h \
- ../../cpu/decoder/ia_opcodes.def softfloat-specialize.h \
+ ../../cpu/decoder/ia_opcodes.def ../../cpu/decoder/ia_opcodes_evex.def softfloat-specialize.h \
  ../softfloat3e/include/softfloat_types.h fpu_trans.h \
  ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h \

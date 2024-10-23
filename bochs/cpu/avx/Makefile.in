@@ -292,7 +292,8 @@ avx512_pfp16.o: avx512_pfp16.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../softfloat3e/include/internals.h  ../simd_int.h \
  ../simd_pfp.h  ../fpu/softfloat-specialize.h \
  ../fpu/../softfloat3e/include/softfloat_types.h \
- ../../cpu/decoder/ia_opcodes.h ../../cpu/decoder/ia_opcodes.def
+ ../../cpu/decoder/ia_opcodes.h ../../cpu/decoder/ia_opcodes.def \
+ ../../cpu/decoder/ia_opcodes_evex.def
 avx512_rcp14.o: avx512_rcp14.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
