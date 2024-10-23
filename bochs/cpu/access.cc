@@ -292,16 +292,30 @@ int BX_CPU_C::int_number(unsigned s)
 }
 
 #if BX_SUPPORT_X86_64
-bool BX_CPP_AttrRegparmN(2) BX_CPU_C::IsCanonicalAccess(bx_address laddr, bool user)
+bool BX_CPP_AttrRegparmN(3) BX_CPU_C::IsCanonicalAccess(bx_address laddr, unsigned rw, bool user)
 {
   if (! IsCanonical(laddr)) {
     return false;
   }
 
-  if (long64_mode()) {
-    if (BX_CPU_THIS_PTR cr4.get_LASS()) {
-      // laddr[63] == 0 user, laddr[63] == 1 supervisor
-      if ((laddr >> 63) == user) {
+  if (long64_mode() && BX_CPU_THIS_PTR cr4.get_LASS()) {
+    // laddr[63] == 0 user, laddr[63] == 1 supervisor
+    bool access_user_space = (laddr >> 63) == 0;
+    if (user) {
+      // When LASS is enabled, linear user accesses to supervisor space are blocked
+      if (! access_user_space) {
+        BX_ERROR(("User access LASS canonical violation for address 0x" FMT_LL "x rw=%d", laddr, rw));
+        return false;
+      }
+      return true;
+    }
+
+    // A supervisor-mode instruction fetch causes a LASS violation if it would accesses a linear address[63] == 0
+    // A supervisor-mode data access causes a LASS violation only if supervisor-mode access protection is enabled 
+    // (CR4.SMAP = 1) and RFLAGS.AC = 0 or the access implicitly accesses a system data structure.
+    if (rw == BX_EXECUTE || (BX_CPU_THIS_PTR cr4.get_SMAP() && ! BX_CPU_THIS_PTR get_AC())) {
+      if (access_user_space) {
+        BX_ERROR(("Supervisor access LASS canonical violation for address 0x" FMT_LL "x rw=%d", laddr, rw));
         return false;
       }
     }
@@ -322,7 +336,7 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
   bool user = (curr_pl == 3);
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonicalAccess(laddr, user)) {
+  if (! IsCanonicalAccess(laddr, xlate_rw, user)) {
     BX_ERROR(("access_read_linear(): canonical failure"));
     return -1;
   }
@@ -365,7 +379,7 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
 #if BX_SUPPORT_X86_64
     if (! long64_mode()) laddr2 &= 0xffffffff; /* handle linear address wrap in legacy mode */
     else {
-      if (! IsCanonicalAccess(laddr2, user)) {
+      if (! IsCanonicalAccess(laddr2, xlate_rw, user)) {
         BX_ERROR(("access_read_linear(): canonical failure for second half of page split access"));
         return -1;
       }
@@ -427,7 +441,7 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
   bool user = (curr_pl == 3);
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonicalAccess(laddr, user)) {
+  if (! IsCanonicalAccess(laddr, xlate_rw, user)) {
     BX_ERROR(("access_write_linear(): canonical failure"));
     return -1;
   }
@@ -473,7 +487,7 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
 #if BX_SUPPORT_X86_64
     if (! long64_mode()) laddr2 &= 0xffffffff; /* handle linear address wrap in legacy mode */
     else {
-      if (! IsCanonicalAccess(laddr2, user)) {
+      if (! IsCanonicalAccess(laddr2, xlate_rw, user)) {
         BX_ERROR(("access_write_linear(): canonical failure for second half of page split access"));
         return -1;
       }

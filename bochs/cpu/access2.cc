@@ -315,7 +315,7 @@ BX_CPU_C::tickle_read_linear(unsigned s, bx_address laddr)
   }
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonicalAccess(laddr, USER_PL)) {
+  if (! IsCanonicalAccess(laddr, BX_READ, USER_PL)) {
     BX_ERROR(("tickle_read_linear(): canonical failure"));
     exception(int_number(s), 0);
   }
