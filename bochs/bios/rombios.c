@@ -8386,6 +8386,8 @@ Bit16u seq_nr;
     write_word(IPL_SEG, IPL_SEQUENCE_OFFSET, 0xFFFF);
   } else if (bootdev == 0) BX_PANIC("No bootable device.\n");
 
+  /* Workaround to fix network boot after adding USB boot option in Bochs */
+  if (bootdev == 6) bootdev = 4;
   /* Translate from CMOS runes to an IPL table offset by subtracting 1 */
   bootdev -= 1;
 #else

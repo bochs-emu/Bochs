@@ -51,7 +51,6 @@ Detailed change log :
 
 - I/O Devices
   - Cirrus SVGA
-    - Added support for graphics controller mode extensions in VGA mode
     - Added support for hardware cursor in VGA mode
     - Fixed text mode cursor blinking / text mode cursor rendering issues
     - VGA fixes to make original VGABIOS work correctly with WinXP
