@@ -39,10 +39,10 @@ BX_CPP_INLINE void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near32(Bit32u new_EIP
 
   EIP = new_EIP;
 
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS == 0
-  // assert magic async_event to stop trace execution
-  BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
-#endif
+  if (bx_dbg.debugger_active || BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS == 0) {
+    // assert magic async_event to stop trace execution
+    BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
+  }
 }
 
 void BX_CPU_C::call_far32(bxInstruction_c *i, Bit16u cs_raw, Bit32u disp32)
