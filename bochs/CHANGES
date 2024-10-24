@@ -10,6 +10,7 @@ Brief summary :
  - Bugfixes for CPU emulation correctness (critical bugfixes for WAITPKG, LASS, XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
  - USB: Added the USB Debugger support for xHCI and UHCI
  - Added USB boot option (requires BIOS from https://github.com/fysnet/i440fx)
+ - Documentation updates and fixes after transition to GIT
 
 Detailed change log :
 
@@ -38,30 +39,54 @@ Detailed change log :
   - Debugger gui can now use ini file from BXSHARE path when using gui option
     extension "gui_debug:globalini" (sdl, sdl2, win32, x11)
   - Debugger gui now updates the memory dump window if necessary
-  - added bitmap change support for the wxWidgets toolbar
+  - Added bitmap change support for the wxWidgets toolbar / Improved wxWidgets toolbar functionality
+  - Fullscreen mode fixes for the win32 gui
+  - Fixed SDL2 fullscreen toggle
+  - Fixed two legacy SDL key handling issues
+    - Scroll lock release now works again (Formerly used as fullscreen toggle)
+    - Fix Pause / Ctrl+Break key handling (possibly SDL issue)
 
 - I/O Devices
-  - SVGA Cirrus
+  - Cirrus SVGA
     - Added support for graphics controller mode extensions in VGA mode
     - Added support for hardware cursor in VGA mode
-    - Fixes to make original VGABIOS work correctly with WinXP
-  - Voodoo Banshee
-    - Added support for host-to-screen stretching BitBlt function
+    - Fixed text mode cursor blinking / text mode cursor rendering issues
+    - VGA fixes to make original VGABIOS work correctly with WinXP
+    - Fixed Cirrus PCI issues found with Windows 3.11 driver (missing / unreadable text in 8 bpp and 16 bpp modes)
+    - Added support for graphics controller mode extensions in VGA mode
+      Now the GD5446 PCI driver and the GD5430 ISA driver work correctly
+  - Voodoo / Banshee
+    - Banshee: Fixes for address wrap handling during display update
+      Original Banshee / Voodoo3 VGABIOS reporting wrong number of image pages in
+      VBE mode info of at least mode 640x480x8 (Issue found with vbetest program)
+    - Added JSR and RET functions to CMDFIFO (Voodoo2/Banshee/Voodoo3)
+    - Fixed Voodoo3 issue found with Diablo II game (#349)
+    - Fixed Banshee / Voodoo3 issues with Windows 3.11 driver
+    - Fix big-endian support in Banshee / Voodoo3 mem_read code
+    - Banshee/Voodoo3: Added 16 bpp to 32 bpp pixel format conversion for screen-to-screen bitblt operation
+    - Banshee: added host-to-screen stretching BitBlt support
   - USB
     - Now includes the USB Debugger support for the xHCI and UHCI controllers
   - Sound
     - Added PCM playback/recording support using PulseAudio simple API
+    - ES1370: fixing status register access makes mixer work
   - Networking
     - Added support for using libslirp library instead of builtin slirp code
     - Updated builtin slirp based on libslirp 4.8.0 (including IPv6 support)
+  - Mouse
+    - If not in wheel-mouse mode, don't report the wheel button event
 
 - BIOS
-  - Added panic in legacy BIOS in case no VGA BIOS ROM is found at C000:0000,
-  - Fixed unwanted side effects caused by some helper functions.
+  - Fixed crash of Windows 98 SE setup with BIOS-bochs-latest (Ported some ACPI code from SeaBIOS)
+  - Allow BIOS ROM size up to 4MB to accommodate OVMF
+  - Added panic in legacy BIOS in case no VGA BIOS ROM is found at C000:0000
+  - Bochs BIOS: Fixed unwanted side effects caused by some helper functions
   - LGPL'd VGABIOS updated to version 0.9b (several VBE bugfixes)
+    - Now using ".bin" file extension for all VGABIOS images
 
 - Misc
   - bximage: added simple partition table viewer to the info function
+  - Documentation updates and fixes after transition to GIT
 
 -------------------------------------------------------------------------
 Changes in 2.8 (March 10, 2024):
