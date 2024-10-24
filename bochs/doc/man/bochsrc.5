@@ -136,6 +136,15 @@ supported configurations. When this option is used and the value
 is different from 'bx_generic', the parameters of the CPUID option
 have no effect anymore. See the bochsrc sample for supported values.
 
+exclude_features:
+
+Disable one of more CPU feature from CPU configuration selected by MODEL.
+Could be useful for testing CPU without a specific feature or set of
+features. When experiening issues booting a modern OS it could be useful
+to disable CPU features(s) to see if they responsible for the failures.
+The list of features to exclude supplied through space or comma separated
+string.
+
 count:
 
 Set the number of processors:cores per processor:threads per core when

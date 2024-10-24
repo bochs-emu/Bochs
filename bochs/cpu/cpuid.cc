@@ -28,12 +28,21 @@
 #include "cpuid.h"
 
 static const char *cpu_feature_name[BX_ISA_EXTENSION_LAST] = {
-#define x86_feature(isa, feature_name) #feature_name,
+#define x86_feature(isa, feature_name) feature_name,
 #include "decoder/features.h"
 };
 #undef x86_feature
 
 const char *get_cpu_feature_name(unsigned feature) { return cpu_feature_name[feature]; }
+
+int match_cpu_feature(const char *name)
+{
+  for (int i=0;i < BX_ISA_EXTENSION_LAST; i++)
+    if (!strcmp(name, cpu_feature_name[i]))
+      return i;
+
+  return -1; // match not found
+}
 
 #define LOG_THIS cpu->
 bx_cpuid_t::bx_cpuid_t(BX_CPU_C *_cpu): cpu(_cpu)
@@ -1463,6 +1472,24 @@ void bx_cpuid_t::sanity_checks() const
 {
   if (is_cpu_extension_supported(BX_ISA_AVX10_VL512) && !is_cpu_extension_supported(BX_ISA_AVX10_1))
     BX_FATAL(("PANIC: AVX10_VL512 is enabled when AVX10 is not supported !"));
+
+  if (! is_cpu_extension_supported(BX_ISA_AVX512)) {
+    if (is_cpu_extension_supported(BX_ISA_AVX512_DQ) ||
+        is_cpu_extension_supported(BX_ISA_AVX512_BW) ||
+        is_cpu_extension_supported(BX_ISA_AVX512_CD) ||
+        is_cpu_extension_supported(BX_ISA_AVX512_VBMI) ||
+        is_cpu_extension_supported(BX_ISA_AVX512_VBMI2) ||
+        is_cpu_extension_supported(BX_ISA_AVX512_IFMA52) ||
+        is_cpu_extension_supported(BX_ISA_AVX512_VPOPCNTDQ) ||
+        is_cpu_extension_supported(BX_ISA_AVX512_VNNI) ||
+        is_cpu_extension_supported(BX_ISA_AVX512_BITALG) ||
+        is_cpu_extension_supported(BX_ISA_AVX512_VP2INTERSECT) ||
+        is_cpu_extension_supported(BX_ISA_AVX512_BF16) ||
+        is_cpu_extension_supported(BX_ISA_AVX512_FP16)) 
+    {
+      BX_FATAL(("PANIC: AVX-512 extensions must be disabled if AVX-512 is not supported !"));
+    }
+  }
 }
 
 void bx_cpuid_t::dump_features() const

@@ -113,6 +113,39 @@ static bx_cpuid_t *cpuid_factory(BX_CPU_C *cpu)
 #undef bx_define_cpudb
 }
 
+#include <string>
+
+void BX_CPU_C::exclude_cpuid_features(const char *input)
+{
+  // Use as delimiters: space, tab, newline, and comma
+  static const char *delimiters = " \t\n,";
+
+  int start = 0;
+  int i = 0;
+
+  while (true) {
+    // Check if the current character is a delimiter or end of the string
+    if (strchr(delimiters, input[i]) || !input[i]) {
+      // If there is a word between start and i
+      if (i > start) {
+        std::string feature_name(input + start, input + i);
+        int feature = match_cpu_feature(feature_name.c_str());
+        if (feature >= 0)
+          BX_CPU_THIS_PTR cpuid->disable_cpu_extension(feature);
+        else
+          BX_PANIC(("CPUID: unknown feature name \"%s\" cannot be disabled", feature_name.c_str()));
+      }
+      // Move the start to the next character after the delimiter
+      start = i + 1;
+    }
+
+    // Break out of the loop if end of the string is reached
+    if (! input[i]) break;
+
+    ++i;
+  }
+}
+
 #endif
 
 // BX_CPU_C constructor
@@ -120,8 +153,16 @@ void BX_CPU_C::initialize(void)
 {
 #if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cpuid = cpuid_factory(this);
-  if (! BX_CPU_THIS_PTR cpuid)
+  if (! BX_CPU_THIS_PTR cpuid) {
     BX_PANIC(("Failed to create CPUID module !"));
+  }
+  else {
+    const char *cpu_model_name = cpuid->get_name();
+    BX_INFO(("initialized CPU model %s", cpu_model_name));
+
+    const char* features_to_exclude = SIM->get_param_string(BXPN_CPU_EXCLUDE_FEATURES)->getptr();
+    exclude_cpuid_features(features_to_exclude);
+  }
 
   BX_CPU_THIS_PTR cpuid->get_cpu_extensions(BX_CPU_THIS_PTR ia_extensions_bitmask);
 

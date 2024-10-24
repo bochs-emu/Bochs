@@ -609,6 +609,13 @@ void bx_init_options()
       "Choose pre-defined CPU configuration",
       cpu_names, 0, 0);
 
+  new bx_param_string_c(cpu_param,
+      "exclude_features",
+      "Exclude these features from CPU configuration",
+      "Choose features to exclude from selected CPU configuration",
+      "",
+      BX_PATHNAME_LEN);
+
   // cpu options
   bx_param_num_c *nprocessors = new bx_param_num_c(cpu_param,
       "n_processors", "Number of processors in SMP mode",

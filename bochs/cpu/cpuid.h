@@ -85,15 +85,6 @@ public:
 
   bool support_avx10_512() const;
 
-protected:
-  BX_CPU_C *cpu;
-
-  unsigned nprocessors;
-  unsigned ncores;
-  unsigned nthreads;
-
-  Bit32u ia_extensions_bitmask[BX_ISA_EXTENSIONS_ARRAY_SIZE];
-
   BX_CPP_INLINE void enable_cpu_extension(unsigned extension) {
     assert(extension < BX_ISA_EXTENSION_LAST);
     ia_extensions_bitmask[extension / 32] |=  (1 << (extension % 32));
@@ -104,6 +95,15 @@ protected:
     assert(extension < BX_ISA_EXTENSION_LAST);
     ia_extensions_bitmask[extension / 32] &= ~(1 << (extension % 32));
   }
+
+protected:
+  BX_CPU_C *cpu;
+
+  unsigned nprocessors;
+  unsigned ncores;
+  unsigned nthreads;
+
+  Bit32u ia_extensions_bitmask[BX_ISA_EXTENSIONS_ARRAY_SIZE];
 
   void get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_function_t *leaf, unsigned limited_max_leaf = 0x02) const;
   void get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32u function, cpuid_function_t *leaf) const;
@@ -168,6 +168,7 @@ protected:
 };
 
 extern const char *get_cpu_feature_name(unsigned feature);
+extern int match_cpu_feature(const char *name); // return feature enum or -1 if not found
 
 typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 

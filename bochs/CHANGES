@@ -6,7 +6,8 @@ Brief summary :
  - Implemented MONITORLESS MWAIT instructions support
  - Implemented AMX-TF32 ISA extension
  - Added initial support for AVX10_1 ISA extension and AVX10 CPUID leaf 0x24 (to be enabled in Xeon Granite Rapids)
- - CPUID: Added Arrow Lake CPU definition (features AVX-VNNI, AVX-IFMA, AVX-VNNI-INT8, AVX-VNNI-INT16, AVX_NE_CONVERT, GFNI, VAES/VPCLMULQDQ, SHA512, SM3/SM4, CMPCCXADD, LASS, SERIALIZE, UINTR)
+ - CPUID: Added Arrow Lake CPU definition
+ - CPUID: Support for disabling of one of more CPU feature from CPUID configuration (see "exclude_features" in bochsrc sample and documentation)
  - Bugfixes for CPU emulation correctness (critical bugfixes for WAITPKG, LASS, XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
  - USB: Added the USB Debugger support for xHCI and UHCI
  - Added USB boot option (requires BIOS from https://github.com/fysnet/i440fx)
@@ -25,7 +26,9 @@ Detailed change log :
   - Added initial support for AVX10_1 ISA extension and AVX10 CPUID leaf 0x24 (to be enabled in Xeon Granite Rapids)
 
 - CPUID: 
-  - Added Arrow Lake CPU definition (features AVX-VNNI, AVX-IFMA, AVX-VNNI-INT8, AVX-VNNI-INT16, AVX_NE_CONVERT, GFNI, VAES/VPCLMULQDQ, SHA512, SM3/SM4, CMPCCXADD, LASS, SERIALIZE, UINTR)
+  - Added Arrow Lake CPU definition
+    - Features AVX-VNNI, AVX-IFMA, AVX-VNNI-INT8, AVX-VNNI-INT16, AVX_NE_CONVERT, GFNI, VAES/VPCLMULQDQ, SHA512, SM3/SM4, CMPCCXADD, LASS, SERIALIZE, UINTR
+  - Support for disabling of one of more CPU feature from CPUID configuration (see "exclude_features" in bochsrc sample and documentation)
 
 - Configure and compile
   - Fixed compilation of plugin version with debugger enabled on Windows

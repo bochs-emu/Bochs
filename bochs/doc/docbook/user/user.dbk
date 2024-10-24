@@ -3411,6 +3411,15 @@ supported configurations. When this option is used and the value
 is different from 'bx_generic', the parameters of the <link linkend="bochsopt-cpuid">CPUID</link>
 option have no effect anymore. See the <xref linkend="cpu-models"> for supported values.
 </para>
+<para><command>exclude_features</command></para>
+<para>
+Disable one of more CPU feature from CPU configuration selected by MODEL.
+Could be useful for testing CPU without a specific feature or set of
+features. When experiening issues booting a modern OS it could be useful
+to disable CPU features(s) to see if they responsible for the failures.
+The list of features to exclude supplied through space or comma separated
+string.
+</para>
 <para><command>count</command></para>
 <para>
 Set the number of processors:cores per processor:threads per core when Bochs
@@ -6076,6 +6085,16 @@ features enabled at compile time (3rd column).
   <row>
     <entry>tigerlake</entry>
     <entry>11th Gen Intel(R) Core(TM) i5-1135G7 (TigerLake)</entry>
+    <entry>cpu level 6, x86-64, avx</entry>
+  </row>
+  <row>
+    <entry>sapphire_rapids</entry>
+    <entry>Intel(R) Xeon(R) w9-3475X (Sappire Rapids)</entry>
+    <entry>cpu level 6, x86-64, avx</entry>
+  </row>
+  <row>
+    <entry>arrow_lake</entry>
+    <entry>15th Gen Intel(R) Core(TM) Ultra 5 245K (ArrowLake)</entry>
     <entry>cpu level 6, x86-64, avx</entry>
   </row>
 </tbody>

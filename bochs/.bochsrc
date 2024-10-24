@@ -142,6 +142,16 @@
 #  corei3_cnl                 Intel(R) Core(TM) i3-8121U CPU (Cannonlake)
 #  corei7_icelake_u           QuadCore Intel Core i7-1065G7 (IceLake)
 #  tigerlake                  11th Gen Intel(R) Core(TM) i5-1135G7 (TigerLake)
+#  sapphire_rapids            Intel(R) Xeon(R) w9-3475X (Sappire Rapids)
+#  arrow_lake                 15th Gen Intel(R) Core(TM) Ultra 5 245K (ArrowLake)
+#
+#  EXCLUDE_FEATURES:
+#    Disable one of more CPU feature from CPU configuration selected by MODEL.
+#    Could be useful for testing CPU without a specific feature or set of
+#    features. When experiening issues booting a modern OS it could be useful
+#    to disable CPU features(s) to see if they responsible for the failures.
+#    The list of features to exclude supplied through space or comma separated
+#    string.
 #
 #  COUNT:
 #    Set the number of processors:cores per processor:threads per core when
