@@ -9,6 +9,7 @@ Brief summary :
  - CPUID: Added Arrow Lake CPU definition (features AVX-VNNI, AVX-IFMA, AVX-VNNI-INT8, AVX-VNNI-INT16, AVX_NE_CONVERT, GFNI, VAES/VPCLMULQDQ, SHA512, SM3/SM4, CMPCCXADD, LASS, SERIALIZE, UINTR)
  - Bugfixes for CPU emulation correctness (critical bugfixes for WAITPKG, LASS, XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
  - USB: Added the USB Debugger support for xHCI and UHCI
+ - Added USB boot option (requires BIOS from https://github.com/fysnet/i440fx)
 
 Detailed change log :
 
@@ -30,6 +31,9 @@ Detailed change log :
   - Removed legacy libltdl code and force using library installed on host system
   - GTK-based gui debugger can now use GTK3 if GTK2 is not installed
 
+- Config interface
+  - Added USB boot option (requires BIOS from https://github.com/fysnet/i440fx)
+
 - GUI and display libraries
   - Debugger gui can now use ini file from BXSHARE path when using gui option
     extension "gui_debug:globalini" (sdl, sdl2, win32, x11)
@@ -41,6 +45,8 @@ Detailed change log :
     - Added support for graphics controller mode extensions in VGA mode
     - Added support for hardware cursor in VGA mode
     - Fixes to make original VGABIOS work correctly with WinXP
+  - Voodoo Banshee
+    - Added support for host-to-screen stretching BitBlt function
   - USB
     - Now includes the USB Debugger support for the xHCI and UHCI controllers
   - Sound
