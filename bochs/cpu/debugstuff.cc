@@ -28,6 +28,123 @@
 #include "memory/memory-bochs.h"
 #include "pc_system.h"
 
+const char *stringify_EFLAGS(Bit32u eflags, char *s)
+{
+  /* 31|30|29|28| 27|26|25|24| 23|22|21|20| 19|18|17|16
+   * ==|==|=====| ==|==|==|==| ==|==|==|==| ==|==|==|==
+   *  0| 0| 0| 0|  0| 0| 0| 0|  0| 0|ID|VP| VF|AC|VM|RF
+   *
+   * 15|14|13|12| 11|10| 9| 8|  7| 6| 5| 4|  3| 2| 1| 0
+   * ==|==|=====| ==|==|==|==| ==|==|==|==| ==|==|==|==
+   *  0|NT| IOPL| OF|DF|IF|TF| SF|ZF| 0|AF|  0|PF| 1|CF
+   */
+
+  sprintf(s, "%s %s %s %s %s %s %s IOPL=%1u %s %s %s %s %s %s %s %s %s",
+    (eflags & (1<<21)) ? "ID" : "id",
+    (eflags & (1<<20)) ? "VIP" : "vip",
+    (eflags & (1<<19)) ? "VIF" : "vif",
+    (eflags & (1<<18)) ? "AC" : "ac",
+    (eflags & (1<<17)) ? "VM" : "vm",
+    (eflags & (1<<16)) ? "RF" : "rf",
+    (eflags & (1<<14)) ? "NT" : "nt",
+    (eflags >> 12) & 0x3,
+    (eflags & (1<<11)) ? "OF" : "of",
+    (eflags & (1<<10)) ? "DF" : "df",
+    (eflags & (1<<9)) ? "IF" : "if",
+    (eflags & (1<<8)) ? "TF" : "tf",
+    (eflags & (1<<7)) ? "SF" : "sf",
+    (eflags & (1<<6)) ? "ZF" : "zf",
+    (eflags & (1<<4)) ? "AF" : "af",
+    (eflags & (1<<2)) ? "PF" : "pf",
+    (eflags & (1<<0)) ? "CF" : "cf");
+  return s;
+}
+
+const char* stringify_CR0(Bit32u cr0, char *s)
+{
+  sprintf(s, "%s %s %s %s %s %s %s %s %s %s %s",
+    (cr0 & (1<<31)) ? "PG" : "pg",
+    (cr0 & (1<<30)) ? "CD" : "cd",
+    (cr0 & (1<<29)) ? "NW" : "nw",
+    (cr0 & (1<<18)) ? "AC" : "ac",
+    (cr0 & (1<<16)) ? "WP" : "wp",
+    (cr0 & (1<<5))  ? "NE" : "ne",
+    (cr0 & (1<<4))  ? "ET" : "et",
+    (cr0 & (1<<3))  ? "TS" : "ts",
+    (cr0 & (1<<2))  ? "EM" : "em",
+    (cr0 & (1<<1))  ? "MP" : "mp",
+    (cr0 & (1<<0))  ? "PE" : "pe");
+  return s;
+}
+
+const char* stringify_CR4(Bit32u cr4, char *s)
+{
+  sprintf(s, "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
+    (cr4 & (1<<27)) ? "LASS" : "lass",
+    (cr4 & (1<<25)) ? "UINTR" : "uintr",
+    (cr4 & (1<<24)) ? "PKS" : "pks",
+    (cr4 & (1<<23)) ? "CET" : "cet",
+    (cr4 & (1<<22)) ? "PKE" : "pke",
+    (cr4 & (1<<21)) ? "SMAP" : "smap",
+    (cr4 & (1<<20)) ? "SMEP" : "smep",
+    (cr4 & (1<<19)) ? "KEYLOCK" : "keylock",
+    (cr4 & (1<<18)) ? "OSXSAVE" : "osxsave",
+    (cr4 & (1<<17)) ? "PCID" : "pcid",
+    (cr4 & (1<<16)) ? "FSGSBASE" : "fsgsbase",
+    (cr4 & (1<<14)) ? "SMX" : "smx",
+    (cr4 & (1<<13)) ? "VMX" : "vmx",
+    (cr4 & (1<<12)) ? "LA57" : "la57",
+    (cr4 & (1<<11)) ? "UMIP" : "umip",
+    (cr4 & (1<<10)) ? "OSXMMEXCPT" : "osxmmexcpt",
+    (cr4 & (1<<9))  ? "OSFXSR" : "osfxsr",
+    (cr4 & (1<<8))  ? "PCE" : "pce",
+    (cr4 & (1<<7))  ? "PGE" : "pge",
+    (cr4 & (1<<6))  ? "MCE" : "mce",
+    (cr4 & (1<<5))  ? "PAE" : "pae",
+    (cr4 & (1<<4))  ? "PSE" : "pse",
+    (cr4 & (1<<3))  ? "DE" : "de",
+    (cr4 & (1<<2))  ? "TSD" : "tsd",
+    (cr4 & (1<<1))  ? "PVI" : "pvi",
+    (cr4 & (1<<0))  ? "VME" : "vme");
+  return s;
+};
+
+const char* stringify_MSR_EFER(Bit32u efer, char *s)
+{
+  sprintf(s, "%s %s %s %s %s",
+    (efer & (1<<14)) ? "FFXSR" : "ffxsr",
+    (efer & (1<<11)) ? "NXE" : "nxe",
+    (efer & (1<<10)) ? "LMA" : "lma",
+    (efer & (1<<8))  ? "LME" : "lme",
+    (efer & (1<<0))  ? "SCE" : "sce");
+  return s;
+}
+
+const char* stringify_XCR0(Bit32u xcr0, char *s)
+{
+  sprintf(s, "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
+    (xcr0 & (1<<18)) ? "TILEDATA" : "tiledata",
+    (xcr0 & (1<<17)) ? "TILECFG" : "tilecfg",
+    (xcr0 & (1<<16)) ? "HWP" : "hwp",
+    (xcr0 & (1<<15)) ? "LBR" : "lbr",
+    (xcr0 & (1<<14)) ? "UINTR" : "uintr",
+    (xcr0 & (1<<13)) ? "HDC" : "hdc",
+    (xcr0 & (1<<12)) ? "CET_S" : "cet_s",
+    (xcr0 & (1<<11)) ? "CET_U" : "cet_u",
+    (xcr0 & (1<<10)) ? "PASID" : "pasid",
+    (xcr0 & (1<<9))  ? "PKRU" : "pkru",
+    (xcr0 & (1<<8))  ? "PT" : "pt",
+    (xcr0 & (1<<7))  ? "HI_ZMM" : "hi_zmm",
+    (xcr0 & (1<<6))  ? "ZMM_HI256" : "zmm_hi256",
+    (xcr0 & (1<<5))  ? "OPMASK" : "opmask",
+    (xcr0 & (1<<4))  ? "BNDCFG" : "bndcfg",
+    (xcr0 & (1<<3))  ? "BNDREGS" : "bndregs",
+    (xcr0 & (1<<2))  ? "YMM" : "ymm",
+    (xcr0 & (1<<1))  ? "SSE" : "sse",
+    (xcr0 & (1<<0))  ? "FPU" : "fpu");
+  return s;
+}
+
 void BX_CPU_C::debug_disasm_instruction(bx_address offset)
 {
 #if BX_DEBUGGER
@@ -107,6 +224,8 @@ const char* cpu_state_string(unsigned state)
 
 void BX_CPU_C::debug(bx_address offset)
 {
+  char s[256];
+
 #if BX_SUPPORT_VMX
   BX_INFO(("CPU is in %s (%s%s)", cpu_mode_string(BX_CPU_THIS_PTR get_cpu_mode()),
     cpu_state_string(BX_CPU_THIS_PTR activity_state),
@@ -120,7 +239,13 @@ void BX_CPU_C::debug(bx_address offset)
   BX_INFO(("SS.mode = %u bit",
     long64_mode() ? 64 : (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b ? 32 : 16)));
 #if BX_CPU_LEVEL >= 5
-  BX_INFO(("EFER   = 0x%08x", BX_CPU_THIS_PTR efer.get32()));
+  BX_INFO(("EFER = 0x%08x: %s", BX_CPU_THIS_PTR efer.get32(), stringify_MSR_EFER(BX_CPU_THIS_PTR efer.get32(), s)));
+#endif
+#if BX_CPU_LEVEL >= 6
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVE)) {
+    Bit32u xcr0 = BX_CPU_THIS_PTR xcr0.get32();
+    BX_INFO(("XCR0=0x%08x: %s", xcr0, stringify_XCR0(xcr0, s)));
+  }
 #endif
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
@@ -139,24 +264,9 @@ void BX_CPU_C::debug(bx_address offset)
     BX_INFO(("| EAX=%08x  EBX=%08x  ECX=%08x  EDX=%08x", EAX, EBX, ECX, EDX));
     BX_INFO(("| ESP=%08x  EBP=%08x  ESI=%08x  EDI=%08x", ESP, EBP, ESI, EDI));
   }
-  BX_INFO(("| IOPL=%1u %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
-    BX_CPU_THIS_PTR get_IOPL(),
-    BX_CPU_THIS_PTR get_ID() ? "ID" : "id",
-    BX_CPU_THIS_PTR get_VIP() ? "VIP" : "vip",
-    BX_CPU_THIS_PTR get_VIF() ? "VIF" : "vif",
-    BX_CPU_THIS_PTR get_AC() ? "AC" : "ac",
-    BX_CPU_THIS_PTR get_VM() ? "VM" : "vm",
-    BX_CPU_THIS_PTR get_RF() ? "RF" : "rf",
-    BX_CPU_THIS_PTR get_NT() ? "NT" : "nt",
-    BX_CPU_THIS_PTR get_OF() ? "OF" : "of",
-    BX_CPU_THIS_PTR get_DF() ? "DF" : "df",
-    BX_CPU_THIS_PTR get_IF() ? "IF" : "if",
-    BX_CPU_THIS_PTR get_TF() ? "TF" : "tf",
-    BX_CPU_THIS_PTR get_SF() ? "SF" : "sf",
-    BX_CPU_THIS_PTR get_ZF() ? "ZF" : "zf",
-    BX_CPU_THIS_PTR get_AF() ? "AF" : "af",
-    BX_CPU_THIS_PTR get_PF() ? "PF" : "pf",
-    BX_CPU_THIS_PTR get_CF() ? "CF" : "cf"));
+
+  Bit32u eflags = BX_CPU_THIS_PTR read_eflags();
+  BX_INFO(("| EFLAGS=%08x: %s", eflags, stringify_EFLAGS(eflags, s)));
 
   BX_INFO(("| SEG sltr(index|ti|rpl)     base    limit G D"));
   BX_INFO(("|  CS:%04x( %04x| %01u|  %1u) %08x %08x %1u %1u",
@@ -213,6 +323,12 @@ void BX_CPU_C::debug(bx_address offset)
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.limit_scaled,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.g,
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.d_b));
+
+  Bit32u cr0 = BX_CPU_THIS_PTR cr0.get32();
+#if BX_CPU_LEVEL >= 5
+  Bit32u cr4 = BX_CPU_THIS_PTR cr4.get32();
+#endif
+
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
     BX_INFO(("|  MSR_FS_BASE:" FMT_ADDRX64,
@@ -223,34 +339,26 @@ void BX_CPU_C::debug(bx_address offset)
     BX_INFO(("| RIP=" FMT_ADDRX64 " (" FMT_ADDRX64 ")",
       BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].rrx,
       BX_CPU_THIS_PTR prev_rip));
-    BX_INFO(("| CR0=0x%08x CR2=0x" FMT_ADDRX64,
-      (BX_CPU_THIS_PTR cr0.get32()),
-      (BX_CPU_THIS_PTR cr2)));
-    BX_INFO(("| CR3=0x" FMT_ADDRX64 " CR4=0x%08x",
-      BX_CPU_THIS_PTR cr3, BX_CPU_THIS_PTR cr4.get32()));
+    BX_INFO(("| CR0=0x%08x: %s", cr0, stringify_CR0(cr0, s)));
+    BX_INFO(("| CR2=0x" FMT_ADDRX64, BX_CPU_THIS_PTR cr2));
+    BX_INFO(("| CR3=0x" FMT_ADDRX64, BX_CPU_THIS_PTR cr3));
+    BX_INFO(("| CR4=0x%08x: %s", cr4, stringify_CR4(cr4, s)));
   }
   else
 #endif // BX_SUPPORT_X86_64
   {
     BX_INFO(("| EIP=%08x (%08x)", (unsigned) EIP,
       (unsigned) BX_CPU_THIS_PTR prev_rip));
-
-#if BX_CPU_LEVEL < 5
-    BX_INFO(("| CR0=0x%08x CR2=0x%08x CR3=0x%08x",
-      (unsigned) BX_CPU_THIS_PTR cr0.get32(),
-      (unsigned) BX_CPU_THIS_PTR cr2, (unsigned) BX_CPU_THIS_PTR cr3));
-#else
-    BX_INFO(("| CR0=0x%08x CR2=0x%08x",
-      BX_CPU_THIS_PTR cr0.get32(), (unsigned) BX_CPU_THIS_PTR cr2));
-    BX_INFO(("| CR3=0x%08x CR4=0x%08x",
-      (unsigned) BX_CPU_THIS_PTR cr3,
-      (unsigned) BX_CPU_THIS_PTR cr4.get32()));
+    BX_INFO(("| CR0=0x%08x: %s", cr0, stringify_CR0(cr0, s)));
+    BX_INFO(("| CR2=0x%08x", (unsigned) BX_CPU_THIS_PTR cr2));
+    BX_INFO(("| CR3=0x%08x", (unsigned) BX_CPU_THIS_PTR cr3));
+#if BX_CPU_LEVEL >= 5
+    BX_INFO(("| CR4=0x%08x: %s", cr4, stringify_CR4(cr4, s)));
 #endif
   }
 
   debug_disasm_instruction(offset);
 }
-
 
 #if BX_DEBUGGER
 void BX_CPU_C::dbg_set_eip(bx_address val)

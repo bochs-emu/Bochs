@@ -342,7 +342,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
 
   Bit32u umwait_control_max_delay = (BX_CPU_THIS_PTR msr.ia32_umwait_ctrl & ~0x3);
 //bool using_os_deadline = false; // FIXME
-  if (umwait_control_max_delay < instr_delay) {
+  if (umwait_control_max_delay && umwait_control_max_delay < instr_delay) {
     instr_delay = umwait_control_max_delay;
 //  using_os_deadline = true;
   }
@@ -351,6 +351,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   instr_delay = compute_physical_TSC_delay(instr_delay);
 #endif
+
+  if (instr_delay == 0) {
+    BX_DEBUG(("%s: requested delay is 0", i->getIaOpcodeNameShort()));
+    BX_NEXT_TRACE(i);
+  }
+
+  BX_DEBUG(("%s entering sleep state with delay=" FMT_LL "d", i->getIaOpcodeNameShort(), instr_delay));
 
   BX_CPU_THIS_PTR lapic->set_mwaitx_timer(instr_delay);
 

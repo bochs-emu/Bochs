@@ -38,7 +38,6 @@ extern int fetchDecode32(const Bit8u *fetchPtr, bool is_32, bxInstruction_c *i, 
 #if BX_SUPPORT_X86_64
 extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
 #endif
-extern int assignHandler(bxInstruction_c *i, Bit32u fetchModeMask);
 
 void flushICaches(void)
 {

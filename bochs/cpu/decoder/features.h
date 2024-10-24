@@ -92,6 +92,11 @@ x86_feature(BX_ISA_SHA512, "sha512")                                    /* SHA-5
 x86_feature(BX_ISA_GFNI, "gfni")                                        /* GFNI instruction */
 x86_feature(BX_ISA_SM3, "sm3")                                          /* SM3 instruction */
 x86_feature(BX_ISA_SM4, "sm4")                                          /* SM4 instruction */
+x86_feature(BX_ISA_AVX_IFMA, "avx_ifma")                                /* AVX encoded IFMA Instructions */
+x86_feature(BX_ISA_AVX_VNNI, "avx_vnni")                                /* AVX encoded VNNI Instructions */
+x86_feature(BX_ISA_AVX_VNNI_INT8, "avx_vnni_int8")                      /* AVX encoded VNNI-INT8 Instructions */
+x86_feature(BX_ISA_AVX_VNNI_INT16, "avx_vnni_int16")                    /* AVX encoded VNNI-INT16 Instructions */
+x86_feature(BX_ISA_AVX_NE_CONVERT, "avx_ne_convert")                    /* AVX-NE-CONVERT Instructions */
 x86_feature(BX_ISA_AVX512, "avx512")                                    /* AVX-512 instruction */
 x86_feature(BX_ISA_AVX512_DQ, "avx512dq")                               /* AVX-512DQ instruction */
 x86_feature(BX_ISA_AVX512_BW, "avx512bw")                               /* AVX-512 Byte/Word instruction */
@@ -107,11 +112,6 @@ x86_feature(BX_ISA_AVX512_BITALG, "avx512bitalg")                       /* AVX-5
 x86_feature(BX_ISA_AVX512_VP2INTERSECT, "avx512vp2intersect")           /* AVX-512 VP2INTERSECT Instructions */
 x86_feature(BX_ISA_AVX512_BF16, "avx512bf16")                           /* AVX-512 BF16 Instructions */
 x86_feature(BX_ISA_AVX512_FP16, "avx512fp16")                           /* AVX-512 FP16 Instructions */
-x86_feature(BX_ISA_AVX_IFMA, "avx_ifma")                                /* AVX encoded IFMA Instructions */
-x86_feature(BX_ISA_AVX_VNNI, "avx_vnni")                                /* AVX encoded VNNI Instructions */
-x86_feature(BX_ISA_AVX_VNNI_INT8, "avx_vnni_int8")                      /* AVX encoded VNNI-INT8 Instructions */
-x86_feature(BX_ISA_AVX_VNNI_INT16, "avx_vnni_int16")                    /* AVX encoded VNNI-INT16 Instructions */
-x86_feature(BX_ISA_AVX_NE_CONVERT, "avx_ne_convert")                    /* AVX-NE-CONVERT Instructions */
 x86_feature(BX_ISA_AMX, "amx")                                          /* AMX Instructions */
 x86_feature(BX_ISA_AMX_INT8, "amx_int8")                                /* AMX-INT8 Instructions */
 x86_feature(BX_ISA_AMX_BF16, "amx_bf16")                                /* AMX-BF16 Instructions */
@@ -119,6 +119,8 @@ x86_feature(BX_ISA_AMX_FP16, "amx_fp16")                                /* AMX-F
 x86_feature(BX_ISA_AMX_TF32, "amx_tf32")                                /* AMX-TF32 Instructions */
 x86_feature(BX_ISA_AMX_COMPLEX, "amx_complex")                          /* AMX-COMPLEX Instructions */
 x86_feature(BX_ISA_AMX_MOVRS, "amx_movrs")                              /* AMX-MOVRS Instructions */
+x86_feature(BX_ISA_AVX10_1, "avx10_1")                                  /* AVX10.1 Instructions */
+x86_feature(BX_ISA_AVX10_VL512, "avx10_vl512")                          /* AVX10 VL512 support */
 x86_feature(BX_ISA_XAPIC, "xapic")                                      /* XAPIC support */
 x86_feature(BX_ISA_X2APIC, "x2apic")                                    /* X2APIC support */
 x86_feature(BX_ISA_XAPIC_EXT, "xapicext")                               /* XAPIC Extensions support (AMD) */

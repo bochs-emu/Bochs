@@ -25,6 +25,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #define NEED_CPU_NEED_TEMPLATE_METHODS 1
 #include "../cpu.h"
+#include "../cpuid.h"
 #endif
 
 #include "decoder.h"
@@ -2558,7 +2559,7 @@ fetch_b1:
 
 #ifndef BX_STANDALONE_DECODER
 
-int assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
+int BX_CPU_C::assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
 {
   unsigned ia_opcode = i->getIaOpcode();
 
@@ -2585,21 +2586,33 @@ int assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
   Bit32u op_flags = BxOpcodesTable[ia_opcode].opflags;
 
 #if BX_SUPPORT_EVEX
-  if ((op_flags & BX_PREPARE_EVEX) != 0 && i->getEvexb()) {
-    if (! i->modC0()) {
-      if ((op_flags & BX_PREPARE_EVEX_NO_BROADCAST) == BX_PREPARE_EVEX_NO_BROADCAST) {
-//      BX_DEBUG(("%s: broadcast is not supported for this instruction", i->getIaOpcodeNameShort()));
-        i->execute1 = &BX_CPU_C::BxError;
-      }
+  if ((op_flags & BX_PREPARE_EVEX) != 0) {
+    bool allow512 = BX_CPU_THIS_PTR cpuid->support_avx10_512();
+#if BX_SUPPORT_VMX
+    if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.vmexec_ctrls3.EMULATE_AVX10_VL256()) allow512 = false;
+#endif
+    if (! allow512 && i->getVL() == BX_VL512 && (op_flags & BX_EVEX_VL_IGNORE) == 0) {
+      BX_DEBUG(("%s: VL512 is not supported for this processor", i->getIaOpcodeNameShort()));
+      i->execute1 = &BX_CPU_C::BxError;
     }
-    else {
-      if ((op_flags & BX_PREPARE_EVEX_NO_SAE) == BX_PREPARE_EVEX_NO_SAE) {
-//      BX_DEBUG(("%s: EVEX.b in reg form is not allowed for instructions which cannot cause floating point exception", i->getIaOpcodeNameShort()));
-        i->execute1 = &BX_CPU_C::BxError;
+
+    if (i->getEvexb()) {
+      if (! i->modC0()) {
+        if ((op_flags & BX_PREPARE_EVEX_NO_BROADCAST) == BX_PREPARE_EVEX_NO_BROADCAST) {
+          BX_DEBUG(("%s: broadcast is not supported for this instruction", i->getIaOpcodeNameShort()));
+          i->execute1 = &BX_CPU_C::BxError;
+        }
+      }
+      else {
+        if ((op_flags & BX_PREPARE_EVEX_NO_SAE) == BX_PREPARE_EVEX_NO_SAE) {
+          BX_DEBUG(("%s: EVEX.b in reg form is not allowed for instructions which cannot cause floating point exception", i->getIaOpcodeNameShort()));
+          i->execute1 = &BX_CPU_C::BxError;
+        }
       }
     }
   }
 #endif
+
   if (! (fetchModeMask & BX_FETCH_MODE_FPU_MMX_OK)) {
      if (op_flags & BX_PREPARE_FPU) {
         if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoFPU;
@@ -2673,7 +2686,6 @@ void BX_CPU_C::init_FetchDecodeTables(void)
     BX_PANIC(("init_FetchDecodeTables: too many opcodes defined !"));
 
   for (unsigned n=0; n < BX_IA_LAST; n++) {
-
     switch(n) {
       // special case: these opcodes also supported if 3DNOW! Extensions are supported
       case BX_IA_PSHUFW_PqQqIb:
@@ -2694,6 +2706,25 @@ void BX_CPU_C::init_FetchDecodeTables(void)
 
     unsigned ia_opcode_feature = BxOpcodeFeatures[n];
     if (! BX_CPUID_SUPPORT_ISA_EXTENSION(ia_opcode_feature)) {
+      switch(ia_opcode_feature) {
+        case BX_ISA_AVX512:
+        case BX_ISA_AVX512_DQ:
+        case BX_ISA_AVX512_BW:
+        case BX_ISA_AVX512_CD:
+        case BX_ISA_AVX512_VBMI:
+        case BX_ISA_AVX512_VBMI2:
+        case BX_ISA_AVX512_IFMA52:
+        case BX_ISA_AVX512_VPOPCNTDQ:
+        case BX_ISA_AVX512_VNNI:
+        case BX_ISA_AVX512_BITALG:
+        case BX_ISA_AVX512_BF16:
+        case BX_ISA_AVX512_FP16:
+          // It is possible that AVX512 is not supported on this processor but AVX10 is (for example AVX10_VL256 only)
+          // AVX10_1 includes all above AVX512 extensions
+          if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX10_1)) continue;
+
+        default: break;
+      }
       BxOpcodesTable[n].execute1 = &BX_CPU_C::BxError;
       BxOpcodesTable[n].execute2 = &BX_CPU_C::BxError;
       // won't allow this new #UD opcode to check prepare_SSE and similar

@@ -4349,7 +4349,7 @@ public: // for now...
 
 #if BX_SUPPORT_X86_64
   BX_SMF BX_CPP_INLINE bool IsCanonical(bx_address addr) { return IsCanonicalToWidth(addr, BX_CPU_THIS_PTR linaddr_width); }
-  BX_SMF bool IsCanonicalAccess(bx_address addr, bool user) BX_CPP_AttrRegparmN(2);
+  BX_SMF bool IsCanonicalAccess(bx_address addr, unsigned rw, bool user) BX_CPP_AttrRegparmN(3);
 #endif
 
   BX_SMF bool write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len, bool align = false) BX_CPP_AttrRegparmN(4);
@@ -4820,6 +4820,7 @@ public: // for now...
 #endif
 
   BX_SMF void init_FetchDecodeTables(void);
+  BX_SMF int  assignHandler(bxInstruction_c *i, Bit32u fetchModeMask);
 
 #if BX_SUPPORT_APIC
   BX_SMF BX_CPP_INLINE Bit8u get_apic_id(void) { return BX_CPU_THIS_PTR bx_cpuid; }

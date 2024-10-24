@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2023 Stanislav Shwartsman
+//   Copyright (c) 2024 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -25,7 +25,7 @@
 #include "cpu/cpu.h"
 #include "gui/siminterface.h"
 #include "param_names.h"
-#include "sapphire_rapids.h"
+#include "arrow_lake.h"
 
 #define LOG_THIS cpu->
 
@@ -33,7 +33,7 @@
 
 #define VMCS_REVISION_ID 0x04
 
-sapphire_rapids_t::sapphire_rapids_t(BX_CPU_C *cpu):
+arrow_lake_t::arrow_lake_t(BX_CPU_C *cpu):
 #if BX_SUPPORT_VMX
     bx_cpuid_t(cpu, VMCS_REVISION_ID)
 #else
@@ -41,7 +41,7 @@ sapphire_rapids_t::sapphire_rapids_t(BX_CPU_C *cpu):
 #endif
 {
   if (BX_SUPPORT_VMX == 1)
-    BX_INFO(("You must compile with --enable-vmx=2 for Intel Core Xeon Sapphire Rapids VMX configuration"));
+    BX_INFO(("You must compile with --enable-vmx=2 for Intel Core Arrow Lake VMX configuration"));
 
   if (! BX_SUPPORT_MONITOR_MWAIT)
     BX_INFO(("WARNING: MONITOR/MWAIT support is not compiled in !"));
@@ -96,6 +96,10 @@ sapphire_rapids_t::sapphire_rapids_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_AVX2);
   enable_cpu_extension(BX_ISA_AVX_FMA);
   enable_cpu_extension(BX_ISA_AVX_VNNI);
+  enable_cpu_extension(BX_ISA_AVX_IFMA);
+  enable_cpu_extension(BX_ISA_AVX_VNNI_INT8);
+  enable_cpu_extension(BX_ISA_AVX_VNNI_INT16);
+  enable_cpu_extension(BX_ISA_AVX_NE_CONVERT);
   enable_cpu_extension(BX_ISA_LZCNT);
   enable_cpu_extension(BX_ISA_BMI1);
   enable_cpu_extension(BX_ISA_BMI2);
@@ -109,32 +113,15 @@ sapphire_rapids_t::sapphire_rapids_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_FDP_DEPRECATION);
   enable_cpu_extension(BX_ISA_FCS_FDS_DEPRECATION);
   enable_cpu_extension(BX_ISA_SHA);
-#if BX_SUPPORT_EVEX
-  enable_cpu_extension(BX_ISA_GFNI);
-  enable_cpu_extension(BX_ISA_VAES_VPCLMULQDQ);
-  enable_cpu_extension(BX_ISA_AVX512);
-  enable_cpu_extension(BX_ISA_AVX512_DQ);
-  enable_cpu_extension(BX_ISA_AVX512_CD);
-  enable_cpu_extension(BX_ISA_AVX512_BW);
-  enable_cpu_extension(BX_ISA_AVX512_IFMA52);
-  enable_cpu_extension(BX_ISA_AVX512_VBMI);
-  enable_cpu_extension(BX_ISA_AVX512_VBMI2);
-  enable_cpu_extension(BX_ISA_AVX512_VNNI);
-  enable_cpu_extension(BX_ISA_AVX512_BITALG);
-  enable_cpu_extension(BX_ISA_AVX512_VPOPCNTDQ);
-  enable_cpu_extension(BX_ISA_AVX512_BF16);
-  enable_cpu_extension(BX_ISA_AVX512_FP16);
-#endif
-#if BX_SUPPORT_AMX
-  enable_cpu_extension(BX_ISA_AMX);
-  enable_cpu_extension(BX_ISA_AMX_INT8);
-  enable_cpu_extension(BX_ISA_AMX_BF16);
-#endif
   enable_cpu_extension(BX_ISA_CLFLUSHOPT);
   enable_cpu_extension(BX_ISA_CLWB);
-  enable_cpu_extension(BX_ISA_CLDEMOTE);
   enable_cpu_extension(BX_ISA_XSAVEC);
   enable_cpu_extension(BX_ISA_XSAVES);
+  enable_cpu_extension(BX_ISA_GFNI);
+  enable_cpu_extension(BX_ISA_VAES_VPCLMULQDQ);
+  enable_cpu_extension(BX_ISA_SHA512);
+  enable_cpu_extension(BX_ISA_SM3);
+  enable_cpu_extension(BX_ISA_SM4);
 #if BX_SUPPORT_PKEYS
   enable_cpu_extension(BX_ISA_PKU);
   enable_cpu_extension(BX_ISA_PKS);
@@ -146,11 +133,12 @@ sapphire_rapids_t::sapphire_rapids_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_RDPID);
   enable_cpu_extension(BX_ISA_MOVDIRI);
   enable_cpu_extension(BX_ISA_MOVDIR64B);
-  enable_cpu_extension(BX_ISA_LA57);
 #if BX_SUPPORT_MONITOR_MWAIT
   enable_cpu_extension(BX_ISA_WAITPKG);
 #endif
   enable_cpu_extension(BX_ISA_SERIALIZE);
+  enable_cpu_extension(BX_ISA_CMPCCXADD);
+  enable_cpu_extension(BX_ISA_LASS);
 #if BX_SUPPORT_UINTR
   enable_cpu_extension(BX_ISA_UINTR);
 #endif
@@ -160,9 +148,10 @@ sapphire_rapids_t::sapphire_rapids_t(BX_CPU_C *cpu):
   max_ext_leaf = 0x80000008;
 }
 
-void sapphire_rapids_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void arrow_lake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static const char* brand_string = "Intel(R) Xeon(R) w9-3475X\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+  static const char* brand_string = "Intel(R) Core(TM) Ultra 5 245K\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+
   static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
   if (cpuid_limit_winnt)
     if (function > 2 && function < 0x80000000) function = 2;
@@ -183,7 +172,7 @@ void sapphire_rapids_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpui
     get_reserved_leaf(leaf);
     return;
   case 0x80000006: // CPUID leaf 0x80000006 - L2 Cache and TLB Identifiers
-    get_leaf(leaf, 0x00000000, 0x00000000, 0x08007040, 0x00000000);
+    get_leaf(leaf, 0x00000000, 0x00000000, 0x0c007040, 0x00000000);
     return;
   case 0x80000007: // CPUID leaf 0x80000007 - Advanced Power Management leaf
     get_leaf(leaf, 0x00000000, 0x00000000, 0x00000000, 0x00000100); // EDX[8] - invariant TSC
@@ -207,10 +196,10 @@ void sapphire_rapids_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpui
     get_std_cpuid_leaf_4(subfunction, leaf);
     return;
   case 0x00000005: // CPUID leaf 0x00000005 - MONITOR/MWAIT leaf
-    get_std_cpuid_monitor_mwait_leaf(leaf, 0x00001020);
+    get_std_cpuid_monitor_mwait_leaf(leaf, 0x10102020);
     return;
   case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
-    get_leaf(leaf, 0x0045cef7, 0x00000002, 0x00000009, 0x00000000);
+    get_leaf(leaf, 0x00880075, 0x00000002, 0x00000401, 0x00000003);
     return;
   case 0x00000007:
     get_std_cpuid_leaf_7(subfunction, leaf);
@@ -241,10 +230,10 @@ void sapphire_rapids_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpui
     get_reserved_leaf(leaf);
     return;
   case 0x00000015: // CPUID leaf 0x00000015 - Time Stamp Counter and Core Crystal Clock Information Leaf
-    get_leaf(leaf, 0x00000002, 0x000000b0, 0x017d7840, 0x00000000);
+    get_leaf(leaf, 0x00000002, 0x000000da, 0x0249f000, 0x00000000);
     return;
   case 0x00000016: // CPUID leaf 0x00000016 - Processor Frequency Information Leaf
-    get_leaf(leaf, 0x00000898, 0x000012c0, 0x00000064, 0x00000000);
+    get_leaf(leaf, 0x00001068, 0x00001450, 0x00000064, 0x00000000);
     return;
   case 0x00000017:
     get_reserved_leaf(leaf);
@@ -252,29 +241,21 @@ void sapphire_rapids_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpui
   case 0x00000018: // TLB Descriptors
     get_std_cpuid_leaf_18(subfunction, leaf);
     return;
-  case 0x00000019: // CPUID leaf 0x00000019 - Keylocker Leaf
-  case 0x0000001A: // CPUID leaf 0x0000001A - native Model ID Enumeration leaf (for Hybrid)
+  case 0x00000019: // CPUID leaf 0x00000019 - Keylocker Leaf (not supported)
+  case 0x0000001A: // CPUID leaf 0x0000001A - native Model ID Enumeration leaf (for Hybrid) - HYBRID not supported yet
   case 0x0000001B: // PCONFIG Information
-  case 0x0000001C: // CPUID leaf 0x0000001C - Last Branch Record (Architectural LBR) leaf
+  case 0x0000001C: // CPUID leaf 0x0000001C - Last Branch Record (Architectural LBR) leaf (not supported)
     get_reserved_leaf(leaf);
     return;
-#if BX_SUPPORT_AMX
-  case 0x0000001D: // AMX
-    get_std_cpuid_amx_palette_info_leaf(subfunction, leaf);
-    return;
-  case 0x0000001E: // AMX: TMUL Information Main leaf
-    get_std_cpuid_amx_tmul_leaf(subfunction, leaf);
-    return;
-#else
   case 0x0000001D: // AMX
   case 0x0000001E: // AMX: TMUL Information Main leaf
     get_reserved_leaf(leaf);
     return;
-#endif
   case 0x0000001F: // V2 Extended Topology Enumberation leaf
     get_reserved_leaf(leaf); // until figured it out
     return;
   case 0x00000020: // HRESET Information
+  case 0x00000023: // Arch Perfmon Leaf Information (not supported)
   default:
     get_reserved_leaf(leaf);
     return;
@@ -282,7 +263,7 @@ void sapphire_rapids_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpui
 }
 
 #if BX_SUPPORT_VMX >= 2
-Bit32u sapphire_rapids_t::get_vmx_extensions_bitmask(void) const
+Bit32u arrow_lake_t::get_vmx_extensions_bitmask(void) const
 {
   return BX_VMX_TPR_SHADOW |
          BX_VMX_VIRTUAL_NMI |
@@ -318,7 +299,7 @@ Bit32u sapphire_rapids_t::get_vmx_extensions_bitmask(void) const
 // leaf 0x00000000 //
 
 // leaf 0x00000001 //
-void sapphire_rapids_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
+void arrow_lake_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information
   //   [3:0]   Stepping ID
@@ -327,7 +308,7 @@ void sapphire_rapids_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
   //   [19:16] Extended Model
   //   [27:20] Extended Family
-  leaf->eax = 0x000806f8;
+  leaf->eax = 0x000c0662;
 
   // EBX:
   //   [7:0]   Brand ID
@@ -349,19 +330,19 @@ void sapphire_rapids_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [3:3]   MONITOR/MWAIT support
   // * [4:4]   DS-CPL: CPL qualified debug store
   // * [5:5]   VMX: Virtual Machine Technology
-  // ! [6:6]   SMX: Secure Virtual Machine Technology
+  // * [6:6]   SMX: Secure Virtual Machine Technology
   // * [7:7]   EST: Enhanced Intel SpeedStep Technology
   // * [8:8]   TM2: Thermal Monitor 2
   // * [9:9]   SSSE3: SSSE3 Instructions
   //   [10:10] CNXT-ID: L1 context ID
-  //   [11:11] reserved
+  // * [11:11] reserved
   // * [12:12] FMA Instructions support
   // * [13:13] CMPXCHG16B: CMPXCHG16B instruction support
   // * [14:14] xTPR update control
-  // * [15:15] PDCM - Perfmon and Debug Capability MSR
+  // * [15:15] PDCM - Perfon and Debug Capability MSR
   //   [16:16] reserved
   // * [17:17] PCID: Process Context Identifiers
-  // * [18:18] DCA - Direct Cache Access
+  //   [18:18] DCA - Direct Cache Access
   // * [19:19] SSE4.1 Instructions
   // * [20:20] SSE4.2 Instructions
   // * [21:21] X2APIC
@@ -380,8 +361,7 @@ void sapphire_rapids_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
                                        BX_CPUID_STD1_ECX_EST |
                                        BX_CPUID_STD1_ECX_THERMAL_MONITOR2 |
                                        BX_CPUID_STD1_ECX_xTPR |
-                                       BX_CPUID_STD1_ECX_PDCM |
-                                       BX_CPUID_STD1_ECX_DCA);
+                                       BX_CPUID_STD1_ECX_PDCM);
 
   // EDX: Standard Feature Flags
   // * [0:0]   FPU on chip
@@ -429,7 +409,7 @@ void sapphire_rapids_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x00000003 - Processor Serial Number (not supported) //
 
 // leaf 0x00000004 //
-void sapphire_rapids_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const
+void arrow_lake_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000004 - Deterministic Cache Parameters
   switch(subfunction) {
@@ -441,20 +421,20 @@ void sapphire_rapids_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_
     return;
   case 1:
     leaf->eax = 0xfc004122;
-    leaf->ebx = 0x01c0003f;
+    leaf->ebx = 0x03c0003f;
     leaf->ecx = 0x0000003f;
     leaf->edx = 0x00000000;
     return;
   case 2:
-    leaf->eax = 0xfc004143;
-    leaf->ebx = 0x03c0003f;
-    leaf->ecx = 0x000007ff;
+    leaf->eax = 0xfc01c143;
+    leaf->ebx = 0x02c0003f;
+    leaf->ecx = 0x00000fff;
     leaf->edx = 0x00000000;
     return;
   case 3:
     leaf->eax = 0xfc1fc163;
-    leaf->ebx = 0x0380003f;
-    leaf->ecx = 0x00015fff;
+    leaf->ebx = 0x02c0003f;
+    leaf->ecx = 0x00007fff;
     leaf->edx = 0x00000004;
     return;
   default:
@@ -469,7 +449,7 @@ void sapphire_rapids_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_
 // leaf 0x00000006 Thermal and Power Management Leaf //
 
 // leaf 0x00000007 //
-void sapphire_rapids_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const
+void arrow_lake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   switch(subfunction) {
   case 0:
@@ -479,88 +459,92 @@ void sapphire_rapids_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_
     // * [1:1]   Support for IA32_TSC_ADJUST MSR
     //   [2:2]   SGX: Intel Software Guard Extensions
     // * [3:3]   BMI1: Advanced Bit Manipulation Extensions
-    // ! [4:4]   HLE: Hardware Lock Elision
+    //   [4:4]   HLE: Hardware Lock Elision
     // * [5:5]   AVX2
     // * [6:6]   FDP Deprecation
     // * [7:7]   SMEP: Supervisor Mode Execution Protection
     // * [8:8]   BMI2: Advanced Bit Manipulation Extensions
     // * [9:9]   Support for Enhanced REP MOVSB/STOSB
     // * [10:10] Support for INVPCID instruction
-    // ! [11:11] RTM: Restricted Transactional Memory
-    // ! [12:12] Supports Quality of Service (QoS) capability
+    //   [11:11] RTM: Restricted Transactional Memory
+    //   [12:12] Supports Quality of Service (QoS) capability
     // * [13:13] Deprecates FPU CS and FPU DS values
     //   [14:14] Intel Memory Protection Extensions
-    // * [15:15] Supports Platform Quality of Service Enforcement (PQE) capability
-    // * [16:16] AVX512F instructions support
-    // * [17:17] AVX512DQ instructions support
+    // ! [15:15] Supports Platform Quality of Service Enforcement (PQE) capability
+    //   [16:16] AVX512F instructions support
+    //   [17:17] AVX512DQ instructions support
     // * [18:18] RDSEED instruction support
     // * [19:19] ADCX/ADOX instructions support
     // * [20:20] SMAP: Supervisor Mode Access Prevention
-    // * [21:21] AVX512IFMA52 instructions support
+    //   [21:21] AVX512IFMA52 instructions support
     //   [22:22] reserved
     // * [23:23] CLFLUSHOPT instruction
     // * [24:24] CLWB instruction
     // ! [25:25] Intel Processor Trace
     //   [26:26] AVX512PF instructions support
     //   [27:27] AVX512ER instructions support
-    // * [28:28] AVX512CD instructions support
+    //   [28:28] AVX512CD instructions support
     // * [29:29] SHA instructions support
-    // * [30:30] AVX512BW instructions support
-    // * [31:31] AVX512VL variable vector length support
+    //   [30:30] AVX512BW instructions support
+    //   [31:31] AVX512VL variable vector length support
     leaf->ebx = get_std_cpuid_leaf_7_ebx(BX_CPUID_STD7_SUBLEAF0_EBX_ENCHANCED_REP_STRINGS);
 
     //   [0:0]   PREFETCHW1 instruction
-    // * [1:1]   AVX512 VBMI instructions
+    //   [1:1]   AVX512 VBMI instructions
     // * [2:2]   UMIP: Supports user-mode instruction prevention
     // * [3:3]   PKU: Protection keys for user-mode pages
     //   [4:4]   OSPKE: OS has set CR4.PKE to enable protection keys
     // * [5:5]   WAITPKG (TPAUSE/UMONITOR/UMWAIT) support
-    // * [6:6]   AVX512 VBMI2 instructions support
+    //   [6:6]   AVX512 VBMI2 instructions support
     // * [7:7]   CET_SS: Support CET Shadow Stack
     // * [8:8]   GFNI instructions support
     // * [9:9]   VAES instructions support
     // * [10:10] VPCLMULQDQ instruction support
-    // * [11:11] AVX512 VNNI instructions support
-    // * [12:12] AVX512 BITALG instructions support
+    //   [11:11] AVX512 VNNI instructions support
+    //   [12:12] AVX512 BITALG instructions support
     // ! [13:13] TME_EN: indicates support for MSRs: IA32_TME_CAPABILITY, IA32_TME_ACTIVATE, IA32_TME_EXCLUDE_MASK, and IA32_TME_EXCLUDE_BASE
-    // * [14:14] AVX512 VPOPCNTDQ: AVX512 VPOPCNTD/VPOPCNTQ instructions
+    //   [14:14] AVX512 VPOPCNTDQ: AVX512 VPOPCNTD/VPOPCNTQ instructions
     //   [15:15] reserved
-    // * [16:16] LA57: LA57 and 5-level paging
+    //   [16:16] LA57: LA57 and 5-level paging
     //   [21:17] reserved
     // * [22:22] RDPID: Read Processor ID support
     //   [23:23] Keylocker support
     // ! [24:24] BUS_LOCK_DETECT: Indicates support for bus lock debug exceptions
-    // * [25:25] CLDEMOTE: CLDEMOTE instruction support
+    //   [25:25] CLDEMOTE: CLDEMOTE instruction support
     //   [26:26] reserved
     // * [27:27] MOVDIRI: MOVDIRI instruction support
     // * [28:28] MOVDIR64B: MOVDIR64B instruction support
-    // ! [29:29] ENQCMD: Enqueue Stores support
+    //   [29:29] ENQCMD: Enqueue Stores support
     //   [30:30] SGX_LC: SGX Launch Configuration
     // * [31:31] PKS: Protection keys for supervisor-mode pages
     leaf->ecx = get_std_cpuid_leaf_7_ecx();
 
-    //   [1:0]   reserved
+    //   [0:0]   reserved
+    //   [1:1]   reserved
     //   [2:2]   AVX512_4VNNIW support
     //   [3:3]   AVX512_4FMAPS support
     // * [4:4]   Fast Short REP MOV support
     // * [5:5]   UINTR: User interrupts support
-    //   [7:6]   reserved
+    //   [6:6]   reserved
+    //   [7:7]   reserved
     //   [8:8]   AVX512_VP2INTERSECT support
     //   [9:9]   reserved
     // * [10:10] MD clear support
-    //   [13:11] reserved
+    //   [11:11] reserved
+    //   [12:12] reserved
+    //   [13:13] reserved
     // * [14:14] SERIALIZE instruction support
-    //   [15:15] Hybrid processor
-    // ! [16:16] TSXLDTRK: TSX suspent load tracking support
+    // ! [15:15] Hybrid processor
+    //   [16:16] TSXLDTRK: TSX suspent load tracking support
     //   [17:17] reserved
-    // ! [18:18] PCONFIG support
-    // ! [19:19] Architectural LBRs support
+    //   [18:18] PCONFIG support
+    // * [19:19] Architectural LBRs support
     // * [20:20] CET IBT: Support CET indirect branch tracking
     //   [21:21] reserved
-    // * [22:22] AMX BF16 support
-    // * [23:23] AVX512_FP16 instructions support
-    // * [24:24] AMX TILE architecture support
-    // * [25:25] AMX INT8 support
+    //   [22:22] AMX BF16 support
+    //   [23:23] AVX512_FP16 instructions support
+    //   [24:24] AMX TILE architecture support
+    //   [25:25] AMX INT8 support
     // * [26:26] IBRS: indirect branch restricted speculation
     // * [27:27] STIBP: single thread indirect branch predictors
     // * [28:28] L1D_FLUSH support
@@ -580,34 +564,67 @@ void sapphire_rapids_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_
     break;
 
   case 1:
-    //   [0:0]   SHA-512 instructions support
-    //   [1:1]   SM3 instructions support
-    //   [2:2]   SM4 instructions support
+    // * [0:0]   SHA-512 instructions support
+    // * [1:1]   SM3 instructions support
+    // * [2:2]   SM4 instructions support
     //   [3:3]   RAO-INT
     // * [4:4]   AVX VNNI
-    // * [5:5]   AVX512_BF16 conversion instructions support
-    //   [6:6]   LASS: Linear Address Space Separation support
-    //   [7:7]   CMPCCXADD
-    //   [8:8]   Arch Perfmon
+    //   [5:5]   AVX512_BF16 conversion instructions support
+    // * [6:6]   LASS: Linear Address Space Separation support
+    // * [7:7]   CMPCCXADD
+    // ! [8:8]   Arch Perfmon
     //   [9:9]   Reserved
-    // * [10:10] Fast zero-length REP MOVSB
+    //   [10:10] Fast zero-length REP MOVSB
     // * [11:11] Fast zero-length REP STOSB
-    // * [12:12] Fast zero-length REP CMPSB/SCASB
-    //   [18:13] Reserved
+    //   [12:12] Fast zero-length REP CMPSB/SCASB
+    //   [13:18] Reserved
     //   [19:19] WRMSRNS instruction
     //   [20:20] Reserved
-    //   [21:21] AMX-FP16 support
-    //   [22:22] HRESET and CPUID leaf 0x20 support
-    //   [23:23] AVX IFMA support
-    //   [25:24] Reserved
-    //   [26:26] LAM: Linear Address Masking
+    //   [21:21] AMX-FB16 support
+    // ! [22:22] HRESET and CPUID leaf 0x20 support
+    // * [23:23] AVX IFMA support
+    //   [24:24] Reserved
+    //   [25:25] Reserved
+    // ! [26:26] LAM: Linear Address Masking
     //   [27:27] MSRLIST: RDMSRLIST/WRMSRLIST instructions and the IA32_BARRIER MSR
-    //   [31:28] Reserved
-    leaf->eax = get_std_cpuid_leaf_7_subleaf_1_eax(BX_CPUID_STD7_SUBLEAF1_EAX_FAST_ZEROLEN_REP_MOVSB |
-                                                   BX_CPUID_STD7_SUBLEAF1_EAX_FAST_ZEROLEN_REP_STOSB |
-                                                   BX_CPUID_STD7_SUBLEAF1_EAX_FAST_ZEROLEN_REP_CMPSB);
+    //   [28:28] Reserved
+    //   [29:29] Reserved
+    // ! [30:30] Prevent INVD execution after BIOS is done
+    //   [31:31] Reserved
+    leaf->eax = get_std_cpuid_leaf_7_subleaf_1_eax(BX_CPUID_STD7_SUBLEAF1_EAX_FAST_ZEROLEN_REP_STOSB);
+
+    // ! [00:00] IA32_PPIN and IA32_PPIN_CTL MSRs
+    //   [01:01] TSE: PBNDKB instruction and existence of the IA32_TSE_CAPABILITY MSR
+    //   [02:02] Reserved
+    //   [03:03] CPUIDMAXVAL_LIM_RMV: IA32_MISC_ENABLE[22] cannot be set to 1 to limit the value returned by CPUID.00H:EAX[7:0]
+    //   [31:04] Reserved
     leaf->ebx = 0;
+
+    //   [31:00] Reserved
     leaf->ecx = 0;
+
+    //   [0:3]   Reserved
+    // * [4:4]   AVX-VNNI-INT8: AVX-VNNI-INT8 instructions support
+    // * [5:5]   AVX-NE-CONVERT: AVX-NE-CONVERT instructions support
+    //   [6:6]   Reserved
+    //   [7:7]   Reserved
+    //   [8:8]   AMX-COMPLEX: AMX-COMPLEX instructions support
+    //   [9:9]   Reserved
+    // * [10:10] AVX-VNNI-INT16: AVX-VNNI-INT16 instructions support
+    //   [11:11] Reserved
+    //   [12:12] Reserved
+    //   [13:13] User Timer support
+    //   [14:14] PREFETCHI: PREFETCHIT0/1 instructions support
+    //   [15:15] USER_MSR: Support for the URDMSR and UWRMSR instructions
+    //   [16:16] Reserved
+    //   [17:17] Flexible UIRET: UIRET sets UIF to the RFLAGS[1] image loaded from the stack
+    // * [18:18] CET_SSS: Supervisor Shadow Stacks support indication for OS
+    //   [19:19] AVX10 support and CPUID leaf 0x24
+    //   [20:20] Reserved
+    //   [21:21] Reserved
+    //   [22:22] Reserved
+    //   [23:23] MWAIT and CPUID LEAF5 support (to be used by VMM)
+    //   [31:24] Reserved
     leaf->edx = 0;
     break;
 
@@ -619,15 +636,15 @@ void sapphire_rapids_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_
     // * [00:00] PSFD: IA32_SPEC_CTRL MSR is supported
     // * [01:01] IPRED_CTRL: bits 3 (IPRED_DIS_USER) and 4 (IPRED_DIS_SUP) of the IA32_SPEC_CTRL MSR are supported
     // * [02:02] RRSBA_CTRL: bits 5 (RRSBA_USER) and 6 (RRSBA_SUP) of the IA32_SPEC_CTRL MSR are supported
-    //   [03:03] DDPD_U: bit 8 (Data Dep Prefetcher) of the IA32_SPEC_CTRL MSR are supported
+    // * [03:03] DDPD_U: bit 8 (Data Dep Prefetcher) of the IA32_SPEC_CTRL MSR are supported
     // * [04:04] BHI_CTRL: bit 10 (BHI_DIS_S) of the IA32_SPEC_CTRL MSR are supported
-    //   [05:05] MCDT_NO: do not exhibit MXCSR Configuration Dependent Timing (MCDT) behavior and do not need to be 
+    // * [05:05] MCDT_NO: do not exhibit MXCSR Configuration Dependent Timing (MCDT) behavior and do not need to be 
     //                    mitigated to avoid data-dep behavior for certain instructions
     //   [06:06] support for UC-lock disable feature (UC lock causes #AC)
-    //   [07:07] MONITOR_MITG_NO: MONITOR/UMONITOR instructions are not affected by performance or power issues due to 
+    // * [07:07] MONITOR_MITG_NO: MONITOR/UMONITOR instructions are not affected by performance or power issues due to 
     //                            MONITOR/UMONITOR instructions exceeding the capacity of an internal monitor tracking table
     if (is_cpu_extension_supported(BX_ISA_SCA_MITIGATIONS))
-      leaf->edx = 0x17;
+      leaf->edx = 0xBF;
     break;
 
   default:
@@ -642,13 +659,13 @@ void sapphire_rapids_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_
 // leaf 0x00000009 direct cache access not supported //
 
 // leaf 0x0000000A //
-void sapphire_rapids_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
+void arrow_lake_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 {
   // CPUID function 0x0000000A - Architectural Performance Monitoring Leaf
-  leaf->eax = 0x08300805;
-  leaf->ebx = 0x00000000;
-  leaf->ecx = 0x0000000f;
-  leaf->edx = 0x00008604;
+  leaf->eax = 0x0D300806;
+  leaf->ebx = 0x00000280;
+  leaf->ecx = 0x00000007;
+  leaf->edx = 0x00008603;
 
   BX_INFO(("WARNING: Architectural Performance Monitoring is not implemented"));
 }
@@ -668,7 +685,7 @@ void sapphire_rapids_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 // leaf 0x00000017 - System-On-Chip Vendor Attribute Enumeration //
 
 // leaf 0x00000018
-void sapphire_rapids_t::get_std_cpuid_leaf_18(Bit32u subfunction, cpuid_function_t *leaf) const
+void arrow_lake_t::get_std_cpuid_leaf_18(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000018 - Deterministic Address Translation Parameters
   switch(subfunction) {
@@ -698,7 +715,7 @@ void sapphire_rapids_t::get_std_cpuid_leaf_18(Bit32u subfunction, cpuid_function
     return;
   case 4:
     leaf->eax = 0x00000000;
-    leaf->ebx = 0x00040001;
+    leaf->ebx = 0x00080001;
     leaf->ecx = 0x00000010;
     leaf->edx = 0x00004024;
     return;
@@ -737,7 +754,7 @@ void sapphire_rapids_t::get_std_cpuid_leaf_18(Bit32u subfunction, cpuid_function
 // leaf 0x80000000 //
 
 // leaf 0x80000001 //
-void sapphire_rapids_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
+void arrow_lake_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information (reserved for Intel)
   leaf->eax = 0;
@@ -785,11 +802,11 @@ void sapphire_rapids_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000007 - Advanced Power Management //
 // leaf 0x80000008 //
 
-void sapphire_rapids_t::dump_cpuid(void) const
+void arrow_lake_t::dump_cpuid(void) const
 {
   bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
 }
 
-bx_cpuid_t *create_sapphire_rapids_cpuid(BX_CPU_C *cpu) { return new sapphire_rapids_t(cpu); }
+bx_cpuid_t *create_arrow_lake_cpuid(BX_CPU_C *cpu) { return new arrow_lake_t(cpu); }
 
 #endif

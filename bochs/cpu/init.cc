@@ -123,14 +123,16 @@ void BX_CPU_C::initialize(void)
   if (! BX_CPU_THIS_PTR cpuid)
     BX_PANIC(("Failed to create CPUID module !"));
 
-  cpuid->get_cpu_extensions(BX_CPU_THIS_PTR ia_extensions_bitmask);
+  BX_CPU_THIS_PTR cpuid->get_cpu_extensions(BX_CPU_THIS_PTR ia_extensions_bitmask);
 
 #if BX_SUPPORT_VMX
-  BX_CPU_THIS_PTR vmx_extensions_bitmask = cpuid->get_vmx_extensions_bitmask();
+  BX_CPU_THIS_PTR vmx_extensions_bitmask = BX_CPU_THIS_PTR cpuid->get_vmx_extensions_bitmask();
 #endif
 #if BX_SUPPORT_SVM
-  BX_CPU_THIS_PTR svm_extensions_bitmask = cpuid->get_svm_extensions_bitmask();
+  BX_CPU_THIS_PTR svm_extensions_bitmask = BX_CPU_THIS_PTR cpuid->get_svm_extensions_bitmask();
 #endif
+
+  BX_CPU_THIS_PTR cpuid->sanity_checks();
 #endif
 
   init_FetchDecodeTables(); // must be called after init_isa_features_bitmask()

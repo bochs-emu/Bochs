@@ -72,6 +72,8 @@ public:
 
   void dump_features() const;
 
+  void sanity_checks() const;
+
 #if BX_CPU_LEVEL >= 5
   virtual int rdmsr(Bit32u index, Bit64u *msr) { return -1; }
   virtual int wrmsr(Bit32u index, Bit64u  msr) { return -1; }
@@ -80,6 +82,8 @@ public:
 #if BX_SUPPORT_VMX
   VMCS_Mapping* get_vmcs() { return &vmcs_map; }
 #endif
+
+  bool support_avx10_512() const;
 
 protected:
   BX_CPU_C *cpu;
@@ -117,6 +121,8 @@ protected:
   void get_std_cpuid_amx_palette_info_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
   void get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 #endif
+
+  void get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 
   void get_std_cpuid_monitor_mwait_leaf(cpuid_function_t *leaf, Bit32u edx_power_states) const;
 
@@ -603,7 +609,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [1:1]    TSE: PBNDKB instruction and existence of the IA32_TSE_CAPABILITY MSR
 //   [2:2]    reserved
 //   [3:3]    CPUIDMAXVAL_LIM_RMV: IA32_MISC_ENABLE[22] cannot be set to 1 to limit the value returned by CPUID.00H:EAX[7:0]
-//   [31:1]   reserved
+//   [31:4]   reserved
 
 // ...
 #define BX_CPUID_STD7_SUBLEAF1_EBX_PPIN                   (1 <<  0)
@@ -614,7 +620,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 
 // CPUID defines - features CPUID[0x00000007].ECX  [subleaf 1]
 // -----------------------------
-//   [0:4]    IA32_PPIN and IA32_PPIN_CTL MSRs
+//   [0:4]    reserved
 //   [5:5]    Support immediate forms of RDMSR and WRMSRNS instructions
 //   [31:5]   reserved
 
@@ -639,7 +645,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [18:18]  CET_SSS
 //   [19:19]  AVX10 support and CPUID leaf 0x24
 //   [22:20]  reserved
-//   [23:23]  MWAIT and CPUID LEAF5 support
+//   [23:23]  MWAIT and CPUID LEAF5 support (to be used by VMM)
 //   [31:24]  reserved
 
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED0              (1 <<  0)

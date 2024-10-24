@@ -174,6 +174,7 @@ private:
   void   blt_screen_to_screen_pattern(void);
   void   blt_screen_to_screen_stretch(void);
   void   blt_host_to_screen(void);
+  void   blt_host_to_screen_stretch(void);
   void   blt_host_to_screen_pattern(void);
   void   blt_line(bool pline);
   void   blt_polygon_fill(bool force);

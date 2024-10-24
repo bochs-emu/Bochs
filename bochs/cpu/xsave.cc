@@ -24,6 +24,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "cpuid.h"
 #include "msr.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
@@ -783,6 +784,10 @@ bool BX_CPU_C::xsave_opmask_state_xinuse(void)
 // Outside 64-bit mode, ZMM_Hi256 state is in its initial configuration if each of ZMM0_H-ZMM7_H is 0.
 // An execution of XRSTOR or XRSTORS outside 64-bit mode does not update ZMM8_H-ZMM15_H.
 
+// In processor which support only AVX10.VL256 but not AVX10.VL512 ZMM_Hi256 state always tracked as INIT
+// XRSTOR* ignore the contents of the memory corresponding to ZMM_Hi256 state and the corresponding XSTATE_BV bit. 
+// XSAVE zero the memory corresponding ZMM_Hi256, other XSAVE* instructions incorporate INIT optimization.
+
 void BX_CPU_C::xsave_zmm_hi256_state(bxInstruction_c *i, bx_address offset)
 {
   unsigned num_regs = long64_mode() ? 16 : 8;
@@ -790,14 +795,32 @@ void BX_CPU_C::xsave_zmm_hi256_state(bxInstruction_c *i, bx_address offset)
   bx_address asize_mask = i->asize_mask();
 
   // save upper part of ZMM registers to XSAVE area
-  for(unsigned index=0; index < num_regs; index++) {
-    write_virtual_ymmword(i->seg(), (offset+index*32) & asize_mask, &BX_READ_ZMM_REG_HI(index));
+  if (! BX_CPU_THIS_PTR cpuid->support_avx10_512()) {
+    for(unsigned index=0; index < num_regs; index++) {
+      static BxPackedYmmRegister empty_reg;
+      write_virtual_ymmword(i->seg(), (offset+index*32) & asize_mask, &empty_reg);
+    }
+  }
+  else {
+    for(unsigned index=0; index < num_regs; index++) {
+      write_virtual_ymmword(i->seg(), (offset+index*32) & asize_mask, &BX_READ_ZMM_REG_HI(index));
+    }
   }
 }
 
 void BX_CPU_C::xrstor_zmm_hi256_state(bxInstruction_c *i, bx_address offset)
 {
+  if (! BX_CPU_THIS_PTR cpuid->support_avx10_512()) return;
+
   unsigned num_regs = long64_mode() ? 16 : 8;
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.vmexec_ctrls3.EMULATE_AVX10_VL256()) {
+    for(unsigned index=0; index < num_regs; index++)
+      BX_CLEAR_AVX_HIGH256(index);
+    return;
+  }
+#endif
 
   bx_address asize_mask = i->asize_mask();
 
@@ -819,6 +842,8 @@ void BX_CPU_C::xrstor_init_zmm_hi256_state(void)
 
 bool BX_CPU_C::xsave_zmm_hi256_state_xinuse(void)
 {
+  if (! BX_CPU_THIS_PTR cpuid->support_avx10_512()) return false;
+
   unsigned num_regs = long64_mode() ? 16 : 8;
 
   for(unsigned index=0; index < num_regs; index++) {
@@ -837,15 +862,31 @@ bool BX_CPU_C::xsave_zmm_hi256_state_xinuse(void)
 // Outside 64-bit mode, Hi16_ZMM state is always in its initial configuration.
 // An execution of XRSTOR or XRSTORS outside 64-bit mode does not update ZMM16-ZMM31.
 
+// In processor which support only AVX10.VL256 but not AVX10.VL512:
+// XSAVE* save the lower 256 bits of each ZMM registers in Hi16_ZMM state and zero the memory
+// corresponding to upper 256 bits
+// XRSTOR* restore the lower 256 bit of each ZMM register in Hi16_ZMM state and ignore the contents of
+// the memory corresponding to upper 256 bits.
+
 void BX_CPU_C::xsave_hi_zmm_state(bxInstruction_c *i, bx_address offset)
 {
   if (!long64_mode()) return;
 
   bx_address asize_mask = i->asize_mask();
 
-  // save high ZMM state to XSAVE area
-  for(unsigned index=0; index < 16; index++) {
-    write_virtual_zmmword(i->seg(), (offset+index*64) & asize_mask, &BX_READ_AVX_REG(index+16));
+  if (! BX_CPU_THIS_PTR cpuid->support_avx10_512()) {
+    // save lower 256-bit of high ZMM state to XSAVE area and zero upper 256-bit
+    for(unsigned index=0; index < 16; index++) {
+      BxPackedZmmRegister reg = BX_READ_AVX_REG(index+16);
+      reg.vmm256(1).clear();
+      write_virtual_zmmword(i->seg(), (offset+index*64) & asize_mask, &reg);
+    }
+  }
+  else {
+    // save high ZMM state to XSAVE area
+    for(unsigned index=0; index < 16; index++) {
+      write_virtual_zmmword(i->seg(), (offset+index*64) & asize_mask, &BX_READ_AVX_REG(index+16));
+    }
   }
 }
 
@@ -855,9 +896,26 @@ void BX_CPU_C::xrstor_hi_zmm_state(bxInstruction_c *i, bx_address offset)
 
   bx_address asize_mask = i->asize_mask();
 
-  // load high ZMM state from XSAVE area
-  for(unsigned index=0; index < 16; index++) {
-    read_virtual_zmmword(i->seg(), (offset+index*64) & asize_mask, &BX_READ_AVX_REG(index+16));
+  bool support_avx10_512 = BX_CPU_THIS_PTR cpuid->support_avx10_512();
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.vmexec_ctrls3.EMULATE_AVX10_VL256())
+    support_avx10_512 = false;
+#endif
+
+  if (! support_avx10_512) {
+    // Restore the lower 256-bit of each ZMM register and ignore the contents of upper 256-bit.
+    // Zero the upper 256 bits of each ZMM register in Hi16_ZMM state irrespective of the
+    // corresponding XSTATE_BV value.
+    for(unsigned index=0; index < 16; index++) {
+      read_virtual_ymmword(i->seg(), (offset+index*64) & asize_mask, &BX_READ_YMM_REG(index+16));
+      BX_CLEAR_AVX_HIGH256(index+16);
+    }
+  }
+  else {
+    // load high ZMM state from XSAVE area
+    for(unsigned index=0; index < 16; index++) {
+      read_virtual_zmmword(i->seg(), (offset+index*64) & asize_mask, &BX_READ_AVX_REG(index+16));
+    }
   }
 }
 

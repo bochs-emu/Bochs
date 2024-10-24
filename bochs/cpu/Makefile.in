@@ -328,7 +328,7 @@ cpu.o: cpu.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
  icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h \
  ../memory/memory-bochs.h ../pc_system.h cpustats.h decoder/ia_opcodes.h \
- decoder/ia_opcodes.def
+ decoder/ia_opcodes.def decoder/ia_opcodes_evex.def
 cpuid.o: cpuid.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h decoder/decoder.h \
@@ -487,7 +487,7 @@ icache.o: icache.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
  icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h ../gui/siminterface.h \
  ../gui/paramtree.h ../param_names.h cpustats.h decoder/ia_opcodes.h \
- decoder/ia_opcodes.def
+ decoder/ia_opcodes.def decoder/ia_opcodes_evex.def
 init.o: init.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h decoder/decoder.h \
@@ -607,7 +607,7 @@ mwait.o: mwait.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  softfloat3e/include/softfloat_types.h fpu/tag_w.h fpu/status_w.h \
  fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
  icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h svm.h apic.h \
- ../pc_system.h decoder/ia_opcodes.h decoder/ia_opcodes.def
+ ../pc_system.h decoder/ia_opcodes.h decoder/ia_opcodes.def decoder/ia_opcodes_evex.def
 paging.o: paging.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h decoder/decoder.h \
@@ -624,7 +624,7 @@ proc_ctrl.o: proc_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h
  fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
  icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h cpuid.h svm.h \
  ../pc_system.h ../gui/gui.h ../gui/siminterface.h ../gui/paramtree.h \
- wide_int.h decoder/ia_opcodes.h decoder/ia_opcodes.def
+ wide_int.h decoder/ia_opcodes.h decoder/ia_opcodes.def decoder/ia_opcodes_evex.def
 protect_ctrl.o: protect_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h \
  ../osdep.h ../cpu/decoder/decoder.h ../cpu/decoder/features.h \
@@ -681,7 +681,7 @@ shift16.o: shift16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  softfloat3e/include/softfloat_types.h fpu/tag_w.h fpu/status_w.h \
  fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
  icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h scalar_arith.h \
- decoder/ia_opcodes.h decoder/ia_opcodes.def
+ decoder/ia_opcodes.h decoder/ia_opcodes.def decoder/ia_opcodes_evex.def
 shift32.o: shift32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h decoder/decoder.h \
@@ -689,7 +689,7 @@ shift32.o: shift32.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  softfloat3e/include/softfloat_types.h fpu/tag_w.h fpu/status_w.h \
  fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
  icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h scalar_arith.h \
- decoder/ia_opcodes.h decoder/ia_opcodes.def
+ decoder/ia_opcodes.h decoder/ia_opcodes.def decoder/ia_opcodes_evex.def
 shift64.o: shift64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h decoder/decoder.h \
@@ -697,7 +697,7 @@ shift64.o: shift64.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  softfloat3e/include/softfloat_types.h fpu/tag_w.h fpu/status_w.h \
  fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
  icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h scalar_arith.h \
- decoder/ia_opcodes.h decoder/ia_opcodes.def
+ decoder/ia_opcodes.h decoder/ia_opcodes.def decoder/ia_opcodes_evex.def
 shift8.o: shift8.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h decoder/decoder.h \
@@ -705,7 +705,7 @@ shift8.o: shift8.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  softfloat3e/include/softfloat_types.h fpu/tag_w.h fpu/status_w.h \
  fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
  icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h scalar_arith.h \
- decoder/ia_opcodes.h decoder/ia_opcodes.def
+ decoder/ia_opcodes.h decoder/ia_opcodes.def decoder/ia_opcodes_evex.def
 sm3.o: sm3.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h decoder/decoder.h \
@@ -818,7 +818,8 @@ svm.o: svm.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  softfloat3e/include/softfloat_types.h fpu/tag_w.h fpu/status_w.h \
  fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
  icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h svm.h cpuid.h \
- ../gui/paramtree.h decoder/ia_opcodes.h decoder/ia_opcodes.def
+ ../gui/paramtree.h decoder/ia_opcodes.h decoder/ia_opcodes.def \
+ decoder/ia_opcodes_evex.def
 tasking.o: tasking.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h decoder/decoder.h \
@@ -862,7 +863,7 @@ vmexit.o: vmexit.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  softfloat3e/include/softfloat_types.h fpu/tag_w.h fpu/status_w.h \
  fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
  icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h ../pc_system.h \
- decoder/ia_opcodes.h decoder/ia_opcodes.def
+ decoder/ia_opcodes.h decoder/ia_opcodes.def decoder/ia_opcodes_evex.def
 vmfunc.o: vmfunc.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h decoder/decoder.h \
@@ -880,7 +881,7 @@ vmx.o: vmx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../iodev/iodev.h ../plugin.h ../extplugin.h ../param_names.h \
  ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
  ../gui/paramtree.h ../gui/gui.h decoder/ia_opcodes.h \
- decoder/ia_opcodes.def scalar_arith.h
+ decoder/ia_opcodes.def decoder/ia_opcodes_evex.def scalar_arith.h
 wide_int.o: wide_int.@CPP_SUFFIX@ wide_int.h ../config.h
 xsave.o: xsave.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
@@ -889,7 +890,8 @@ xsave.o: xsave.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  softfloat3e/include/softfloat_types.h fpu/tag_w.h fpu/status_w.h \
  fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
  icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h msr.h svm.h \
- decoder/ia_opcodes.h decoder/ia_opcodes.def avx/amx.h ../cpu/xmm.h
+ decoder/ia_opcodes.h decoder/ia_opcodes.def decoder/ia_opcodes_evex.def \
+ avx/amx.h
 disasm.o: decoder/disasm.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h \
  ../osdep.h ../cpu/decoder/decoder.h ../cpu/decoder/features.h \
@@ -901,7 +903,7 @@ disasm.o: decoder/disasm.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio
  icache.h xmm.h vmx.h \
  vmx_ctrls.h access.h decoder/instr.h \
  decoder/decoder.h decoder/fetchdecode.h decoder/ia_opcodes.h \
- decoder/ia_opcodes.def ../bx_debug/debug.h
+ decoder/ia_opcodes.def decoder/ia_opcodes_evex.def ../bx_debug/debug.h
 fetchdecode32.o: decoder/fetchdecode32.@CPP_SUFFIX@ ../bochs.h ../config.h \
  ../osdep.h ../logio.h ../misc/bswap.h cpu.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../cpu/decoder/decoder.h \
@@ -918,15 +920,15 @@ fetchdecode32.o: decoder/fetchdecode32.@CPP_SUFFIX@ ../bochs.h ../config.h \
  ../cpu/softfloat3e/include/softfloat-extra.h \
  ../cpu/softfloat3e/include/internals.h simd_int.h \
  decoder/decoder.h decoder/instr.h decoder/fetchdecode.h \
- decoder/ia_opcodes.h decoder/ia_opcodes.def decoder/fetchdecode_opmap.h \
- decoder/fetchdecode_opmap_0f38.h decoder/fetchdecode_opmap_0f3a.h \
- decoder/fetchdecode_x87.h decoder/fetchdecode_avx.h \
- decoder/fetchdecode_xop.h decoder/fetchdecode_evex.h ../cpu/simd_int.h \
- ../cpu/simd_pfp.h ../cpu/simd_compare.h ../cpu/simd_vnni.h
+ decoder/ia_opcodes.h decoder/ia_opcodes.def decoder/ia_opcodes_evex.def \
+ decoder/fetchdecode_opmap.h decoder/fetchdecode_opmap_0f38.h \
+ decoder/fetchdecode_opmap_0f3a.h decoder/fetchdecode_x87.h \
+ decoder/fetchdecode_avx.h decoder/fetchdecode_xop.h decoder/fetchdecode_evex.h \
+ ../cpu/simd_int.h ../cpu/simd_pfp.h ../cpu/simd_compare.h ../cpu/simd_vnni.h
 fetchdecode64.o: decoder/fetchdecode64.@CPP_SUFFIX@ ../bochs.h ../config.h \
  ../osdep.h ../logio.h ../misc/bswap.h decoder/instr.h decoder/decoder.h \
  decoder/features.h decoder/fetchdecode.h decoder/ia_opcodes.h \
- decoder/ia_opcodes.def decoder/fetchdecode_opmap.h \
+ decoder/ia_opcodes.def decoder/ia_opcodes_evex.def decoder/fetchdecode_opmap.h \
  decoder/fetchdecode_opmap_0f38.h decoder/fetchdecode_opmap_0f3a.h \
  decoder/fetchdecode_x87.h decoder/fetchdecode_avx.h \
  decoder/fetchdecode_xop.h decoder/fetchdecode_evex.h

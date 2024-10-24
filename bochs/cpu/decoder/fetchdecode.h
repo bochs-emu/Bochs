@@ -79,7 +79,8 @@ BX_CPP_INLINE Bit64u FetchQWORD(const Bit8u *iptr)
 }
 #endif
 
-#define BX_PREPARE_AMX               (0x400)
+#define BX_PREPARE_AMX               (0x800)
+#define BX_EVEX_VL_IGNORE            (0x400 | BX_PREPARE_EVEX)
 #define BX_PREPARE_EVEX_NO_BROADCAST (0x200 | BX_PREPARE_EVEX)
 #define BX_PREPARE_EVEX_NO_SAE       (0x100 | BX_PREPARE_EVEX)
 #define BX_PREPARE_EVEX              (0x80)
@@ -403,7 +404,7 @@ SSSS SSoo SEVO EEEA R
  1 1 EE        LL 0 S
  6 6 FF        50   T
      II        1/
-	 XX        21
+     XX        21
 */
 
 const unsigned OS64_OFFSET = 23;

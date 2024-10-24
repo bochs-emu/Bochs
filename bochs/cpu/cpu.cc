@@ -571,7 +571,7 @@ void BX_CPU_C::prefetch(void)
 
 #if BX_SUPPORT_X86_64
   if (long64_mode()) {
-    if (! IsCanonicalAccess(RIP, USER_PL)) {
+    if (! IsCanonicalAccess(RIP, BX_EXECUTE, USER_PL)) {
       BX_ERROR(("prefetch: #GP(0): RIP crossed canonical boundary"));
       exception(BX_GP_EXCEPTION, 0);
     }
