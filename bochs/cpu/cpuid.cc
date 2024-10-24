@@ -751,26 +751,26 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_edx(Bit32u extra) const
 }
 
 // Most of the bits in ECX are reserved for Intel
-Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_ecx_intel(Bit32u extra) const
+Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_ecx(Bit32u extra) const
 {
   Bit32u ecx = extra;
 
-  // * [0:0]   LAHF/SAHF instructions support in 64-bit mode
+  // i [0:0]   LAHF/SAHF instructions support in 64-bit mode
   //   [1:1]   CMP_Legacy: Core multi-processing legacy mode (AMD)
   //   [2:2]   SVM: Secure Virtual Machine (AMD)
   //   [3:3]   Extended APIC Space
   //   [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
-  // * [5:5]   LZCNT: LZCNT instruction support
+  // i [5:5]   LZCNT: LZCNT instruction support
   //   [6:6]   SSE4A: SSE4A Instructions support
   //   [7:7]   Misaligned SSE support
-  // * [8:8]   PREFETCHW: PREFETCHW instruction support - can be enabled through extra
-  //   [9:9]   OSVW: OS visible workarounds (AMD)
-  //   [10:10] IBS: Instruction based sampling
+  // i [8:8]   PREFETCHW: PREFETCHW instruction support - can be enabled through extra
+  //   [9:9]   OSVW: OS visible workarounds CPUID leaf (AMD)
+  //   [10:10] IBS: Instruction based sampling (not supported in Bochs)
   //   [11:11] XOP: Extended Operations Support and XOP Prefix
-  //   [12:12] SKINIT support
-  //   [13:13] WDT: Watchdog timer support
+  //   [12:12] SKINIT support (not supported in Bochs)
+  //   [13:13] WDT: Watchdog timer support (not supported in Bochs)
   //   [14:14] Reserved
-  //   [15:15] LWP: Light weight profiling
+  //   [15:15] LWP: Light weight profiling (not supported in Bochs)
   //   [16:16] FMA4: Four-operand FMA instructions support
   //   [17:17] Reserved
   //   [18:18] Reserved
@@ -784,15 +784,60 @@ Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_ecx_intel(Bit32u extra) const
   //   [26:26] Data breakpoint extension. Indicates support for MSR 0xC0011027 and MSRs 0xC001101[B:9]
   //   [27:27] Performance time-stamp counter. Indicates support for MSR 0xC0010280
   //   [28:28] PerfCtrExtL2I: L2I performance counter extensions support
-  //   [31:29] Reserved
+  //   [29:29] MONITORX/MWAITX instructions support
+  //   [30:30] AddrMaskExt: address mask extension support for instruction breakpoint
+  //   [31:31] Reserved
 
 #if BX_SUPPORT_X86_64
+  // [0:0]   LAHF/SAHF instructions support in 64-bit mode
   if (is_cpu_extension_supported(BX_ISA_LM_LAHF_SAHF))
     ecx |= BX_CPUID_EXT1_ECX_LAHF_SAHF;
 #endif
 
+  // [5:5]   LZCNT: LZCNT instruction support
   if (is_cpu_extension_supported(BX_ISA_LZCNT))
     ecx |= BX_CPUID_EXT1_ECX_LZCNT;
+
+  // now AMD specific bits
+#if BX_SUPPORT_SVM
+  // [2:2]   SVM: Secure Virtual Machine (AMD)
+  if (is_cpu_extension_supported(BX_ISA_SVM))
+    ecx |= BX_CPUID_EXT1_ECX_SVM;
+#endif
+
+  // [3:3]   Extended APIC Space
+  if (is_cpu_extension_supported(BX_ISA_XAPIC_EXT))
+    ecx |= BX_CPUID_EXT1_ECX_EXT_APIC_SPACE;
+
+  // [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
+  if (is_cpu_extension_supported(BX_ISA_ALT_MOV_CR8))
+    ecx |= BX_CPUID_EXT1_ECX_ALT_MOV_CR8;
+
+  // [6:6]   SSE4A: SSE4A Instructions support
+  if (is_cpu_extension_supported(BX_ISA_SSE4A))
+    ecx |= BX_CPUID_EXT1_ECX_SSE4A;
+
+  // [7:7]   Misaligned SSE support
+  if (is_cpu_extension_supported(BX_ISA_MISALIGNED_SSE))
+    ecx |= BX_CPUID_EXT1_ECX_MISALIGNED_SSE;
+
+  // [11:11] XOP: Extended Operations Support and XOP Prefix
+  if (is_cpu_extension_supported(BX_ISA_XOP))
+    ecx |= BX_CPUID_EXT1_ECX_XOP;
+
+  // [16:16] FMA4: Four-operand FMA instructions support
+  if (is_cpu_extension_supported(BX_ISA_FMA4))
+    ecx |= BX_CPUID_EXT1_ECX_FMA4;
+
+  // [21:21] TBM: trailing bit manipulation instructions support
+  if (is_cpu_extension_supported(BX_ISA_TBM))
+    ecx |= BX_CPUID_EXT1_ECX_TBM;
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  // [29:29] MONITORX/MWAITX instructions support
+  if (is_cpu_extension_supported(BX_ISA_MONITORX_MWAITX))
+    ecx |= BX_CPUID_EXT1_ECX_MONITORX_MWAITX;
+#endif
 
   return ecx;
 }
@@ -1470,6 +1515,18 @@ void bx_cpuid_t::warning_messages(unsigned extension) const
 
 void bx_cpuid_t::sanity_checks() const
 {
+  if (is_cpu_extension_supported(BX_ISA_486) && ! is_cpu_extension_supported(BX_ISA_386))
+    BX_FATAL(("PANIC: 80386 ISA must be enabled for 80486 model !"));
+
+  if (is_cpu_extension_supported(BX_ISA_PENTIUM) && ! is_cpu_extension_supported(BX_ISA_486))
+    BX_FATAL(("PANIC: 80486 ISA must be enabled for Pentium model !"));
+
+  if (is_cpu_extension_supported(BX_ISA_P6) && ! is_cpu_extension_supported(BX_ISA_PENTIUM))
+    BX_FATAL(("PANIC: Pentium ISA must be enabled for P6 model !"));
+
+  if (is_cpu_extension_supported(BX_ISA_3DNOW) && ! is_cpu_extension_supported(BX_ISA_MMX))
+    BX_FATAL(("PANIC: 3dnow! ISA require MMX to be enabled !"));
+
   if (is_cpu_extension_supported(BX_ISA_AVX10_VL512) && !is_cpu_extension_supported(BX_ISA_AVX10_1))
     BX_FATAL(("PANIC: AVX10_VL512 is enabled when AVX10 is not supported !"));
 

@@ -392,7 +392,7 @@ void bx_generic_cpuid_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   leaf->ebx = 0;
 
   // ECX:
-  leaf->ecx = get_ext2_cpuid_features();
+  leaf->ecx = get_ext_cpuid_leaf_1_ecx(BX_CPUID_EXT1_ECX_PREFETCHW);
 
   // EDX:
   // Many of the bits in EDX are the same as FN 0x00000001 [*] for AMD
@@ -1006,66 +1006,6 @@ Bit32u bx_generic_cpuid_t::get_cpu_version_information(void) const
          ((family & 0x0f) << 8) |
          ((model & 0x0f) << 4) | stepping;
 }
-
-#if BX_CPU_LEVEL >= 6
-
-/* Get CPU feature flags. Returned by CPUID function 80000001 in ECX register */
-Bit32u bx_generic_cpuid_t::get_ext2_cpuid_features(void) const
-{
-  // ECX:
-  //   [0:0]   LAHF/SAHF instructions support in 64-bit mode
-  //   [1:1]   CMP_Legacy: Core multi-processing legacy mode (AMD)
-  //   [2:2]   SVM: Secure Virtual Machine (AMD)
-  //   [3:3]   Extended APIC Space
-  //   [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
-  //   [5:5]   LZCNT: LZCNT instruction support
-  //   [6:6]   SSE4A: SSE4A Instructions support (deprecated?)
-  //   [7:7]   Misaligned SSE support
-  //   [8:8]   PREFETCHW: PREFETCHW instruction support
-  //   [9:9]   OSVW: OS visible workarounds (AMD)
-  //   [10:10] IBS: Instruction based sampling
-  //   [11:11] XOP: Extended Operations Support and XOP Prefix
-  //   [12:12] SKINIT support
-  //   [13:13] WDT: Watchdog timer support
-  //   [14:14] reserved
-  //   [15:15] LWP: Light weight profiling
-  //   [16:16] FMA4: Four-operand FMA instructions support
-  //   [18:17] reserved
-  //   [19:19] NodeId: Indicates support for NodeId MSR (0xc001100c)
-  //   [20:20] reserved
-  //   [21:21] TBM: trailing bit manipulation instructions support
-  //   [22:22] Topology extensions support
-  //   [31:23] reserved
-
-  Bit32u features = 0;
-
-#if BX_SUPPORT_X86_64
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE))
-    features |= BX_CPUID_EXT1_ECX_LAHF_SAHF | BX_CPUID_EXT1_ECX_PREFETCHW;
-#endif
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MISALIGNED_SSE))
-    features |= BX_CPUID_EXT1_ECX_MISALIGNED_SSE;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LZCNT))
-    features |= BX_CPUID_EXT1_ECX_LZCNT;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SSE4A))
-    features |= BX_CPUID_EXT1_ECX_SSE4A;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XOP))
-    features |= BX_CPUID_EXT1_ECX_XOP;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FMA4))
-    features |= BX_CPUID_EXT1_ECX_FMA4;
-
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_TBM))
-    features |= BX_CPUID_EXT1_ECX_TBM;
-
-  return features;
-}
-
-#endif
 
 void bx_generic_cpuid_t::dump_cpuid(void) const
 {

@@ -591,7 +591,7 @@ void corei7_skylake_x_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [27:27] Performance time-stamp counter. Indicates support for MSR 0xC0010280
   //   [28:28] PerfCtrExtL2I: L2I performance counter extensions support
   //   [31:29] Reserved
-  leaf->ecx = get_ext_cpuid_leaf_1_ecx_intel(BX_CPUID_EXT1_ECX_PREFETCHW);
+  leaf->ecx = get_ext_cpuid_leaf_1_ecx(BX_CPUID_EXT1_ECX_PREFETCHW);
 
   // EDX:
   //    [10:0] Reserved for Intel

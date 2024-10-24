@@ -409,7 +409,7 @@ void ryzen_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [14:14] Reserved
   //   [15:15] LWP: Light weight profiling
   //   [16:16] FMA4: Four-operand FMA instructions support
-  // * [17:17] Translation Cache Extensions
+  // * [17:17] TCE: Translation Cache Extensions
   //   [18:18] Reserved
   //   [19:19] NodeId: Indicates support for NodeId MSR (0xc001100c)
   //   [20:20] Reserved
@@ -422,32 +422,19 @@ void ryzen_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [27:27] Performance time-stamp counter. Indicates support for MSR 0xC0010280
   // * [28:28] PerfCtrExtL2I: L2I performance counter extensions support
   // * [29:29] MONITORX/MWAITX instructions support
-  //   [30:30] Reserved
+  //   [30:30] AddrMaskExt: address mask extension support for instruction breakpoint
   //   [31:31] Reserved
-  leaf->ecx = BX_CPUID_EXT1_ECX_LAHF_SAHF |
-              BX_CPUID_EXT1_ECX_CMP_LEGACY |
-#if BX_SUPPORT_SVM
-              BX_CPUID_EXT1_ECX_SVM |
-#endif
-              BX_CPUID_EXT1_ECX_EXT_APIC_SPACE |
-              BX_CPUID_EXT1_ECX_ALT_MOV_CR8 |
-              BX_CPUID_EXT1_ECX_LZCNT |
-              BX_CPUID_EXT1_ECX_SSE4A |
-              BX_CPUID_EXT1_ECX_MISALIGNED_SSE |
-              BX_CPUID_EXT1_ECX_PREFETCHW |
-              BX_CPUID_EXT1_ECX_OSVW |
-           /* BX_CPUID_EXT1_ECX_SKINIT | */ // not implemented
-              BX_CPUID_EXT1_ECX_WDT |
-              BX_CPUID_EXT1_ECX_TCE |
-              BX_CPUID_EXT1_ECX_TOPOLOGY_EXTENSIONS |
-              BX_CPUID_EXT1_ECX_PERFCTR_EXT_CORE |
-              BX_CPUID_EXT1_ECX_PERFCTR_EXT_NB |
-              BX_CPUID_EXT1_ECX_DATA_BREAKPOINT_EXT |
-              BX_CPUID_EXT1_ECX_PERFCTR_EXT_L2I |
-#if BX_SUPPORT_MONITOR_MWAIT
-              BX_CPUID_EXT1_ECX_MONITORX_MWAITX |
-#endif
-              0;
+  leaf->ecx = get_ext_cpuid_leaf_1_ecx(BX_CPUID_EXT1_ECX_CMP_LEGACY |
+                                       BX_CPUID_EXT1_ECX_PREFETCHW |
+                                       BX_CPUID_EXT1_ECX_OSVW |
+                                    /* BX_CPUID_EXT1_ECX_SKINIT | */ // not implemented
+                                       BX_CPUID_EXT1_ECX_WDT |
+                                       BX_CPUID_EXT1_ECX_TCE |
+                                       BX_CPUID_EXT1_ECX_TOPOLOGY_EXTENSIONS |
+                                       BX_CPUID_EXT1_ECX_PERFCTR_EXT_CORE |
+                                       BX_CPUID_EXT1_ECX_PERFCTR_EXT_NB |
+                                       BX_CPUID_EXT1_ECX_DATA_BREAKPOINT_EXT |
+                                       BX_CPUID_EXT1_ECX_PERFCTR_EXT_L2I);
 
   // EDX:
   // Many of the bits in EDX are the same as FN 0x00000001 for AMD

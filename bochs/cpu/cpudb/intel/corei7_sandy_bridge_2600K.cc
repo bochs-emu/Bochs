@@ -464,7 +464,7 @@ void corei7_sandy_bridge_2600k_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) c
   //   [12:12] SKINIT support
   //   [13:13] WDT: Watchdog timer support
   //   [31:14] reserved
-  leaf->ecx = get_ext_cpuid_leaf_1_ecx_intel();
+  leaf->ecx = get_ext_cpuid_leaf_1_ecx();
 
   // EDX:
   //    [10:0] Reserved for Intel

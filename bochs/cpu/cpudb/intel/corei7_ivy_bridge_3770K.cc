@@ -517,7 +517,7 @@ void corei7_ivy_bridge_3770k_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) con
   //   [23:23] PerfCtrExtCore: core perf counter extensions support
   //   [24:24] PerfCtrExtNB: NB perf counter extensions support
   //   [31:25] Reserved
-  leaf->ecx = get_ext_cpuid_leaf_1_ecx_intel();
+  leaf->ecx = get_ext_cpuid_leaf_1_ecx();
 
   // EDX:
   //    [10:0] Reserved for Intel
