@@ -71,7 +71,7 @@ AVX_OBJS = \
 	tbm32.o \
 	tbm64.o \
 	xop.o \
-	avx10_2_vcomx.o
+	avx10_2_misc.o
 
 all: libavx.a
 
@@ -425,7 +425,7 @@ xop.o: xop.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
  ../softfloat3e/include/internals.h ../simd_int.h ../simd_compare.h
-avx10_2_vcomx.o: avx10_2_vcomx.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
+avx10_2_misc.o: avx10_2_misc.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
