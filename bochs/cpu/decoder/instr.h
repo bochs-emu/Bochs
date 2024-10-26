@@ -104,7 +104,8 @@ public:
         Bit16u Iw[2];
         // use Ib[3] as EVEX mask register
         // use Ib[2] as AVX attributes
-        //     7..5 (unused)
+        //     7..6 (unused)
+        //     5..5 EVEX.U
         //     4..4 VEX.W
         //     3..3 Broadcast/RC/SAE control (EVEX.b)
         //     2..2 Zeroing/Merging mask (EVEX.z)
@@ -344,6 +345,13 @@ public:
   }
   BX_CPP_INLINE unsigned getEvexb(void) const {
     return modRMForm.Ib[2] & (1 << 3);
+  }
+
+  BX_CPP_INLINE void setEvexU(unsigned bit) {
+    modRMForm.Ib[2] = (modRMForm.Ib[2] & ~(1<<5)) | (bit<<5);
+  }
+  BX_CPP_INLINE unsigned getEvexU(void) const {
+    return modRMForm.Ib[2] & (1 << 5);
   }
 
   BX_CPP_INLINE void setZeroMasking(unsigned bit) {
