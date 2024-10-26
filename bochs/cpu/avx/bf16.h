@@ -91,4 +91,15 @@ extern bfloat16 bf16_mulAdd(bfloat16 a, bfloat16 b, bfloat16 c, uint8_t op);
 
 BX_CPP_INLINE softfloat_class_t bf16_class(float16 a) { return f32_class(convert_bfloat16_to_fp32(a)); }
 
+BX_CPP_INLINE bool bf16_sign(bfloat16 a) { return a & 0x8000; }
+BX_CPP_INLINE int  bf16_exp(bfloat16 a) { return (a >> 7) & 0xFF; }
+BX_CPP_INLINE int  bf16_fraction(bfloat16 a) { return a & 0x7F; }
+
+BX_CPP_INLINE bfloat16 bf16_denormal_to_zero(bfloat16 a)
+{
+    if (! bf16_exp(a) && bf16_fraction(a))
+        return a & 0x8000;
+    return a;
+}
+
 #endif

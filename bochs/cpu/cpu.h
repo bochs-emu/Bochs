@@ -3777,12 +3777,18 @@ public: // for now...
 
 #if BX_SUPPORT_AVX
   // AVX10.2 - VCOMX
-  BX_SMF void VCOMXSS_VssWssR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCOMXSD_VsdWsdR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCOMXSH_VshWshR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCOMXSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCOMXSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCOMXSH_VshWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void VDPPHPS_MASK_VpsHdqWdqR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VMPSADBW_MASK_VdqHdqWdqIbR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VDPPHPS_MASK_VpsHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMPSADBW_MASK_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  // AVX10.2 - BF16
+  BX_SMF void VFPCLASSPBF16_MASK_KGdWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCMPPBF16_MASK_KGdHphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCOMSBF16_VshWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VGETMANTPBF16_MASK_VphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
   BX_SMF void LZCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

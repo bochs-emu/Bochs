@@ -22,6 +22,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "config.h"
+#include "softfloat3e/include/softfloat.h"
 #include "bf16.h"
 
 extern softfloat_status_t prepare_ne_softfloat_status_helper(bool denormals_are_zeros);
