@@ -3781,6 +3781,7 @@ public: // for now...
   BX_SMF void VCOMXSD_VsdWsdR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCOMXSH_VshWshR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 
+  BX_SMF void VDPPHPS_MASK_VpsHdqWdqR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMPSADBW_MASK_VdqHdqWdqIbR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #endif
 

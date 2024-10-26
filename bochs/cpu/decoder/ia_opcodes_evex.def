@@ -1553,4 +1553,6 @@ bx_define_opcode(BX_IA_V512_VPDPWUUDS_VdqHdqWdq_Kmask, "vpdpwuuds", "vpdpwuuds",
 bx_define_opcode(BX_IA_V512_VMPSADBW_VdqHdqWdqIb, "vmpsadbw", "vmpsadbw", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VMPSADBW_VdqHdqWdqIbR, BX_ISA_AVX10_2, OP_Vdq, OP_Hdq, OP_mVdq, OP_Ib, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_V512_VMPSADBW_VdqHdqWdqIb_Kmask, "vmpsadbw", "vmpsadbw", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VMPSADBW_MASK_VdqHdqWdqIbR, BX_ISA_AVX10_2, OP_Vdq, OP_Hdq, OP_mVdq, OP_Ib, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 
+bx_define_opcode(BX_IA_V512_VDPPHPS_VpsHdqWdq_Kmask, "vdpphps", "vdpphps", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VDPPHPS_MASK_VpsHdqWdqR, BX_ISA_AVX10_2, OP_Vps, OP_Hdq, OP_mVdq32, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+
 #endif // BX_SUPPORT_EVEX

@@ -1172,9 +1172,10 @@ static const Bit64u BxOpcodeGroup_EVEX_0F3851[] = {
 };
 
 static const Bit64u BxOpcodeGroup_EVEX_0F3852[] = {
-  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_MASK_K0, BX_IA_EVEX_VPDPWSSD_VdqHdqWdq),
-  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0,                BX_IA_EVEX_VPDPWSSD_VdqHdqWdq_Kmask),
-  last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0, BX_IA_EVEX_VDPBF16PS_VpsHdqWdq_Kmask)
+  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0, BX_IA_V512_VDPPHPS_VpsHdqWdq_Kmask),
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_MASK_K0, BX_IA_V512_VPDPWSSD_VdqHdqWdq),
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0,                BX_IA_V512_VPDPWSSD_VdqHdqWdq_Kmask),
+  last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0, BX_IA_V512_VDPBF16PS_VpsHdqWdq_Kmask)
 };
 
 static const Bit64u BxOpcodeGroup_EVEX_0F3853[] = {
