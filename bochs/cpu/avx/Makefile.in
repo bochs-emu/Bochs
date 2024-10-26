@@ -71,6 +71,7 @@ AVX_OBJS = \
 	tbm32.o \
 	tbm64.o \
 	xop.o \
+        bf16_arith.o \
 	avx10_2_misc.o
 
 all: libavx.a
@@ -425,6 +426,11 @@ xop.o: xop.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
  ../softfloat3e/include/internals.h ../simd_int.h ../simd_compare.h
+bf16_arith.o: bf16_arith.@CPP_SUFFIX@ \
+ ../softfloat3e/include/softfloat-compare.h \
+ ../softfloat3e/include/softfloat.h ../softfloat3e/include/softfloat_types.h \
+ ../softfloat3e/include/softfloat-extra.h \
+ ../softfloat3e/include/internals.h
 avx10_2_misc.o: avx10_2_misc.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
@@ -440,6 +446,5 @@ avx10_2_misc.o: avx10_2_misc.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../softfloat3e/include/softfloat-extra.h \
  ../softfloat3e/include/internals.h  ../simd_int.h \
  ../simd_pfp.h  ../fpu/softfloat-specialize.h \
- ../fpu/../softfloat3e/include/softfloat_types.h \
  ../../cpu/decoder/ia_opcodes.h ../../cpu/decoder/ia_opcodes.def \
  ../../cpu/decoder/ia_opcodes_evex.def

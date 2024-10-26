@@ -124,7 +124,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPSADBW_MASK_VdqHdqWdqIbR(bxInstruction_c
 }
 
 extern float32 convert_ne_fp16_to_fp32(float16 op);
-extern softfloat_status_t prepare_ne_softfloat_status_helper();
+extern softfloat_status_t prepare_ne_softfloat_status_helper(bool denormals_are_zeros);
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VDPPHPS_MASK_VpsHdqWdqR(bxInstruction_c *i)
 {
@@ -134,8 +134,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VDPPHPS_MASK_VpsHdqWdqR(bxInstruction_c *i
 
   // "round to nearest even" rounding mode is used when doing each accumulation of the FMA.
   // output denormals are always flushed to zero and input denormals are always treated as zero.
-  softfloat_status_t status = prepare_ne_softfloat_status_helper();
-  status.softfloat_denormals_are_zeros = true;
+  softfloat_status_t status = prepare_ne_softfloat_status_helper(true);
 
   for (unsigned n=0, tmp_mask = mask; n < DWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1) {

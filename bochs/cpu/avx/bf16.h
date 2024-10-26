@@ -31,6 +31,8 @@
 //  BF8: s|eeeee|mm                          (E5M2)
 //  HF8: s|eeee|mmm                          (E4M3)
 
+#include "softfloat3e/include/softfloat.h"
+
 BX_CPP_INLINE float32 convert_bfloat16_to_fp32(bfloat16 op)
 {
   return Bit32u(op) << 16;
@@ -66,5 +68,29 @@ BX_CPP_INLINE float32 fp32_convert_to_tf32(float32 a)
 {
   return a & 0xffffe000;
 }
+
+// bf16 arithmetics
+// These operations do not consult or update MXCSR
+// Denormal BF16 input operands are treated as zeros (DAZ) and denormal BF16 outputs are flushed to zero (FTZ)
+// Rounding mode is always round-to-nearest-even (RNE)
+
+extern bfloat16 bf16_sqrt(bfloat16 a);
+
+extern bfloat16 bf16_add(bfloat16 a, bfloat16 b);
+extern bfloat16 bf16_sub(bfloat16 a, bfloat16 b);
+extern bfloat16 bf16_mul(bfloat16 a, bfloat16 b);
+extern bfloat16 bf16_div(bfloat16 a, bfloat16 b);
+extern bfloat16 bf16_min(bfloat16 a, bfloat16 b);
+extern bfloat16 bf16_max(bfloat16 a, bfloat16 b);
+extern bfloat16 bf16_scalef(bfloat16 a, bfloat16 b);
+
+extern int bf16_compare(bfloat16 a, bfloat16 b); // always quiet
+
+extern bfloat16 bf16_getExp(bfloat16);
+extern bfloat16 bf16_getMant(bfloat16, int, int);
+
+extern bfloat16 bf16_mulAdd(bfloat16 a, bfloat16 b, bfloat16 c, uint8_t op);
+
+BX_CPP_INLINE softfloat_class_t bf16_class(float16 a) { return f32_class(convert_bfloat16_to_fp32(a)); }
 
 #endif
