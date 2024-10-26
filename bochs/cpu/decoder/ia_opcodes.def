@@ -2481,9 +2481,9 @@ bx_define_opcode(BX_IA_VBCSTNEBF162PS_VpsWw, "vbcstnebf162ps", "vbcstnebf162ps",
 bx_define_opcode(BX_IA_VBCSTNESH2PS_VpsWsh, "vbcstnesh2ps", "vbcstneshps", &BX_CPU_C::VBCSTNESH2PS_VpsWshM, &BX_CPU_C::BxError, BX_ISA_AVX_NE_CONVERT, OP_Vps, OP_Wsh, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_VCVTNEEPH2PS_VpsWph, "vcvtneeph2ps", "vcvtneeph2ps", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VCVTNEEPH2PS_VpsWphR, BX_ISA_AVX_NE_CONVERT, OP_Vps, OP_Wph, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_VCVTNEOPH2PS_VpsWph, "vcvtneoph2ps", "vcvtneoph2ps", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VCVTNEOPH2PS_VpsWphR, BX_ISA_AVX_NE_CONVERT, OP_Vps, OP_Wph, OP_NONE, OP_NONE, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_VCVTNEEBF162PS_VpsWbf16, "vcvtneebf162ps", "vcvtneebf162ps", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VCVTNEEBF162PS_VpsWbf16R, BX_ISA_AVX_NE_CONVERT, OP_Vps, OP_Wbf16, OP_NONE, OP_NONE, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_VCVTNEOBF162PS_VpsWbf16, "vcvtneobf162ps", "vcvtneobf162ps", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VCVTNEOBF162PS_VpsWbf16R, BX_ISA_AVX_NE_CONVERT, OP_Vps, OP_Wbf16, OP_NONE, OP_NONE, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_VCVTNEPS2BF16_Vbf16Wps, "vcvtneps2bf16", "vcvtneps2bf16", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VCVTNEPS2BF16_Vbf16WpsR, BX_ISA_AVX_NE_CONVERT, OP_Vbf16, OP_Wps, OP_NONE, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VCVTNEEBF162PS_VpsWph, "vcvtneebf162ps", "vcvtneebf162ps", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VCVTNEEBF162PS_VpsWphR, BX_ISA_AVX_NE_CONVERT, OP_Vps, OP_Wph, OP_NONE, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VCVTNEOBF162PS_VpsWph, "vcvtneobf162ps", "vcvtneobf162ps", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VCVTNEOBF162PS_VpsWphR, BX_ISA_AVX_NE_CONVERT, OP_Vps, OP_Wph, OP_NONE, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VCVTNEPS2BF16_VphWps, "vcvtneps2bf16", "vcvtneps2bf16", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VCVTNEPS2BF16_VphWpsR, BX_ISA_AVX_NE_CONVERT, OP_Vph, OP_Wps, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 // AVX-NE-CONVERT
 
 // BMI1

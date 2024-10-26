@@ -143,6 +143,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX_PSHIFT(bxInstruction_c *i)
 
 #if BX_SUPPORT_EVEX
 
+template <simd_xmm_1op func>
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_1OP_WORD_EL_MASK(bxInstruction_c *i)
+{
+  /* SSE instruction with one operand and non destructive source */
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  unsigned len = i->getVL();
+
+  for (unsigned n=0; n < len; n++)
+    (func)(&op.vmm128(n));
+
+  avx512_write_regw_masked(i, &op, len, BX_READ_32BIT_OPMASK(i->opmask()));
+  BX_NEXT_INSTR(i);
+}
+
 template <simd_xmm_2op func>
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_2OP_QWORD_EL_MASK(bxInstruction_c *i)
 {
@@ -224,6 +238,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_3OP_DWORD_EL_MASK(bxInstruct
     (func)(&dst.vmm128(n), &BX_READ_AVX_REG_LANE(src1, n), &BX_READ_AVX_REG_LANE(src2, n));
 
   avx512_write_regd_masked(i, &dst, len, BX_READ_16BIT_OPMASK(i->opmask()));
+  BX_NEXT_INSTR(i);
+}
+
+template <simd_xmm_3op func>
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_3OP_WORD_EL_MASK(bxInstruction_c *i)
+{
+  /* AVX-512 instruction with 3 operands working on WORD elements */
+  BxPackedAvxRegister dst = BX_READ_AVX_REG(i->dst());
+  unsigned len = i->getVL(), src1 = i->src1(), src2 = i->src2();
+
+  for (unsigned n=0; n < len; n++)
+    (func)(&dst.vmm128(n), &BX_READ_AVX_REG_LANE(src1, n), &BX_READ_AVX_REG_LANE(src2, n));
+
+  avx512_write_regw_masked(i, &dst, len, BX_READ_32BIT_OPMASK(i->opmask()));
   BX_NEXT_INSTR(i);
 }
 

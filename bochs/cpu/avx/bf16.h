@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2023 Stanislav Shwartsman
+//   Copyright (c) 2024 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -35,8 +35,6 @@ BX_CPP_INLINE float32 convert_bfloat16_to_fp32(bfloat16 op)
 {
   return Bit32u(op) << 16;
 }
-
-#include "softfloat3e/include/softfloat.h"
 
 BX_CPP_INLINE bfloat16 convert_ne_fp32_to_bfloat16(float32 op)
 {

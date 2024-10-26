@@ -28,10 +28,11 @@
 
 #if BX_SUPPORT_EVEX
 
+#include "softfloat3e/include/softfloat.h"
 #include "bf16.h"
 #include "simd_int.h"
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNEPS2BF16_MASK_Vbf16WpsR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNEPS2BF16_MASK_VphWpsR(bxInstruction_c *i)
 {
   BxPackedAvxRegister src = BX_READ_AVX_REG(i->src()), dst;
   unsigned len = i->getVL();
@@ -54,7 +55,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNEPS2BF16_MASK_Vbf16WpsR(bxInstruction
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNE2PS2BF16_MASK_Vbf16HpsWpsR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNE2PS2BF16_MASK_VphHpsWpsR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()), dst;
   unsigned len = i->getVL();

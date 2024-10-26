@@ -486,6 +486,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TDPBUUD_TnnnTrmTreg(bxInstruction_c *i)
 
 // AMX-BF16 //
 
+#include "softfloat3e/include/softfloat.h"
 #include "bf16.h"
 
 extern softfloat_status_t prepare_ne_softfloat_status_helper(bool denormals_are_zeros);

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -3017,11 +3017,11 @@ public: // for now...
   /* AVX-NE-CONVERT instructions */
   BX_SMF void VBCSTNEBF162PS_VpsWwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VBCSTNESH2PS_VpsWshM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCVTNEEBF162PS_VpsWbf16R(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCVTNEOBF162PS_VpsWbf16R(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTNEEBF162PS_VpsWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTNEOBF162PS_VpsWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTNEEPH2PS_VpsWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTNEOPH2PS_VpsWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCVTNEPS2BF16_Vbf16WpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTNEPS2BF16_VphWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   // AVX512 OPMASK instructions (VEX encoded)
   BX_SMF void KADDB_KGbKHbKEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3098,6 +3098,9 @@ public: // for now...
 #endif
 
 #if BX_SUPPORT_EVEX
+  template <simd_xmm_1op func>
+  BX_SMF void HANDLE_AVX512_1OP_WORD_EL_MASK(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   template <simd_xmm_2op func>
   BX_SMF void HANDLE_AVX512_2OP_QWORD_EL_MASK(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   template <simd_xmm_2op func>
@@ -3111,6 +3114,8 @@ public: // for now...
   BX_SMF void HANDLE_AVX512_3OP_QWORD_EL_MASK(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   template <simd_xmm_3op func>
   BX_SMF void HANDLE_AVX512_3OP_DWORD_EL_MASK(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  template <simd_xmm_3op func>
+  BX_SMF void HANDLE_AVX512_3OP_WORD_EL_MASK(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   template <simd_xmm_shift func>
   BX_SMF void HANDLE_AVX512_PSHIFT_QWORD_EL_MASK(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
@@ -3282,8 +3287,8 @@ public: // for now...
   BX_SMF void VCVTPS2PH_MASK_WpsVpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTPS2PH_MASK_WpsVpsIbM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void VCVTNEPS2BF16_MASK_Vbf16WpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCVTNE2PS2BF16_MASK_Vbf16HpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTNEPS2BF16_MASK_VphWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTNE2PS2BF16_MASK_VphHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VDPBF16PS_MASK_VpsHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void VPABSB_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

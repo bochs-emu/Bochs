@@ -90,7 +90,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VBCSTNESH2PS_VpsWshM(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNEEBF162PS_VpsWbf16R(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNEEBF162PS_VpsWphR(bxInstruction_c *i)
 {
   assert(i->src() == BX_VECTOR_TMP_REGISTER);
   BxPackedAvxRegister reg = BX_READ_AVX_REG(i->src());
@@ -103,7 +103,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNEEBF162PS_VpsWbf16R(bxInstruction_c *
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNEOBF162PS_VpsWbf16R(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNEOBF162PS_VpsWphR(bxInstruction_c *i)
 {
   assert(i->src() == BX_VECTOR_TMP_REGISTER);
   BxPackedAvxRegister reg = BX_READ_AVX_REG(i->src());
@@ -142,7 +142,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNEOPH2PS_VpsWphR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNEPS2BF16_Vbf16WpsR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNEPS2BF16_VphWpsR(bxInstruction_c *i)
 {
   BxPackedAvxRegister src = BX_READ_AVX_REG(i->src()), dst;
   unsigned len = i->getVL();
