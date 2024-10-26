@@ -34,7 +34,7 @@
 // BF16: s|eeeeeeee|mmmmmmm
 //  F16: s|eeeee|mmmmmmmmmm
 
-softfloat_status_t prepare_ne_softfloat_status_helper()
+softfloat_status_t prepare_ne_softfloat_status_helper(bool denormals_are_zeros = false)
 {
   softfloat_status_t status;
 
@@ -43,8 +43,8 @@ softfloat_status_t prepare_ne_softfloat_status_helper()
   status.softfloat_exceptionMasks = softfloat_all_exceptions_mask;
   status.softfloat_suppressException = softfloat_all_exceptions_mask;
   status.softfloat_flush_underflow_to_zero = true;
-  // input denormals not converted to zero and handled normally
-  status.softfloat_denormals_are_zeros = false;
+  // by default input denormals not converted to zero and handled normally
+  status.softfloat_denormals_are_zeros = denormals_are_zeros;
 
   return status;
 }
