@@ -3775,6 +3775,13 @@ public: // for now...
   BX_SMF void TILERELEASE(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #endif
 
+#if BX_SUPPORT_AVX
+  // AVX10.2 - VCOMX
+  BX_SMF void VCOMXSS_VssWssR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCOMXSD_VsdWsdR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCOMXSH_VshWshR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+#endif
+
   BX_SMF void LZCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LZCNT_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
@@ -4751,8 +4758,11 @@ public: // for now...
   BX_SMF Bit64u get_RSP_from_TSS(unsigned pl);
 #endif
   BX_SMF void write_flags(Bit16u flags, bool change_IOPL, bool change_IF) BX_CPP_AttrRegparmN(3);
-  BX_SMF void writeEFlags(Bit32u eflags, Bit32u changeMask) BX_CPP_AttrRegparmN(2); // Newer variant.
+  BX_SMF void writeEFlags(Bit32u eflags, Bit32u changeMask) BX_CPP_AttrRegparmN(2); // Newer variant
   BX_SMF void write_eflags_fpu_compare(int float_relation);
+#if BX_SUPPORT_AVX
+  BX_SMF void write_eflags_vcomx(int float_relation);
+#endif
   BX_SMF Bit32u force_flags(void);
   BX_SMF Bit32u read_eflags(void) { return BX_CPU_THIS_PTR force_flags(); }
 

@@ -30,7 +30,7 @@ enum x86_feature_name {
 };
 #undef x86_feature
 
-#define BX_ISA_EXTENSIONS_ARRAY_SIZE (4)
+#define BX_ISA_EXTENSIONS_ARRAY_SIZE (5)
 
 #if (BX_ISA_EXTENSION_LAST) >= (BX_ISA_EXTENSIONS_ARRAY_SIZE*32)
   #error "ISA extensions array limit exceeded!"

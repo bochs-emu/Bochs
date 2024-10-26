@@ -413,12 +413,14 @@ void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *
 #endif
 }
 
+#if BX_SUPPORT_EVEX
 unsigned bx_cpuid_t::avx10_level() const
 {
   if (is_cpu_extension_supported(BX_ISA_AVX10_2)) return 2;
   if (is_cpu_extension_supported(BX_ISA_AVX10_1)) return 1;
   return 0;
 }
+#endif
 
 bool bx_cpuid_t::support_avx10_512() const {
   return is_cpu_extension_supported(BX_ISA_AVX512) || is_cpu_extension_supported(BX_ISA_AVX10_VL512);
@@ -1426,8 +1428,10 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
   //   [18:18]  CET_SSS
 
   //   [19:19]  AVX10 support and CPUID leaf 0x24
+#if BX_SUPPORT_EVEX
   if (is_cpu_extension_supported(BX_ISA_AVX10_1))
     edx |= BX_CPUID_STD7_SUBLEAF1_EDX_AVX10;
+#endif
 
   //   [22:20]  reserved
 
