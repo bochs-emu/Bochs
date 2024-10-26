@@ -85,9 +85,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_MASK_VpsWpsM(bxInstruction_c *i)
     BX_WRITE_AVX_REGZ(i->dst(), reg, len);
   }
   else {
-    for (unsigned n=0; n < len; n++, mask >>= 4)
-      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &reg.vmm128(n), mask);
-
+    simd_blendps(&BX_READ_AVX_REG(i->dst()), &reg, mask, DWORD_ELEMENTS(len));
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
 
@@ -113,9 +111,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_VpdWpdM(bxInstruction_c *i)
     BX_WRITE_AVX_REGZ(i->dst(), reg, len);
   }
   else {
-    for (unsigned n=0; n < len; n++, mask >>= 2)
-      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &reg.vmm128(n), mask);
-
+    simd_blendpd(&BX_READ_AVX_REG(i->dst()), &reg, mask, QWORD_ELEMENTS(len));
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
 
@@ -171,9 +167,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVDQU8_MASK_VdqWdqM(bxInstruction_c *i)
     BX_WRITE_AVX_REGZ(i->dst(), reg, len);
   }
   else {
-    for (unsigned n=0; n < len; n++, mask >>= 16)
-      xmm_pblendb(&BX_READ_AVX_REG_LANE(i->dst(), n), &reg.vmm128(n), mask);
-
+    simd_pblendb(&BX_READ_AVX_REG(i->dst()), &reg, mask, BYTE_ELEMENTS(len));
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
 
@@ -193,9 +187,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVDQU16_MASK_VdqWdqM(bxInstruction_c *i)
     BX_WRITE_AVX_REGZ(i->dst(), reg, len);
   }
   else {
-    for (unsigned n=0; n < len; n++, mask >>= 8)
-      xmm_pblendw(&BX_READ_AVX_REG_LANE(i->dst(), n), &reg.vmm128(n), mask);
-
+    simd_pblendw(&BX_READ_AVX_REG(i->dst()), &reg, mask, WORD_ELEMENTS(len));
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
 
@@ -215,9 +207,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPS_MASK_VpsWpsM(bxInstruction_c *i)
     BX_WRITE_AVX_REGZ(i->dst(), reg, len);
   }
   else {
-    for (unsigned n=0; n < len; n++, mask >>= 4)
-      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &reg.vmm128(n), mask);
-
+    simd_blendps(&BX_READ_AVX_REG(i->dst()), &reg, mask, DWORD_ELEMENTS(len));
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
 
@@ -237,9 +227,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVUPD_MASK_VpdWpdM(bxInstruction_c *i)
     BX_WRITE_AVX_REGZ(i->dst(), reg, len);
   }
   else {
-    for (unsigned n=0; n < len; n++, mask >>= 2)
-      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &reg.vmm128(n), mask);
-
+    simd_blendpd(&BX_READ_AVX_REG(i->dst()), &reg, mask, QWORD_ELEMENTS(len));
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
 

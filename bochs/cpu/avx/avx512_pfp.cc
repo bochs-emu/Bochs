@@ -516,13 +516,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMPS_VpsHpsWpsIbR(bxInstruction_c *
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMPS_MASK_VpsHpsWpsIbR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()), dst = BX_READ_AVX_REG(i->dst());
-  Bit32u mask = BX_READ_16BIT_OPMASK(i->opmask());
+  Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
   unsigned len = i->getVL();
+  unsigned num_elements = DWORD_ELEMENTS(len);
 
   softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
 
-  for (unsigned n=0, tmp_mask = mask; n < DWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
+  for (unsigned n=0, tmp_mask = opmask; n < num_elements; n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1)
       op1.vmm32u(n) = float32_fixupimm(dst.vmm32u(n), op1.vmm32u(n), op2.vmm32u(n), i->Ib(), status);
     else
@@ -532,9 +533,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMPS_MASK_VpsHpsWpsIbR(bxInstructio
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, mask >>= 4)
-      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op1.vmm128(n), mask);
-
+    simd_blendps(&BX_READ_AVX_REG(i->dst()), &op1, opmask, num_elements);
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {
@@ -565,13 +564,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMPD_VpdHpdWpdIbR(bxInstruction_c *
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMPD_MASK_VpdHpdWpdIbR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()), dst = BX_READ_AVX_REG(i->dst());
-  Bit32u mask = BX_READ_8BIT_OPMASK(i->opmask());
+  Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask());
   unsigned len = i->getVL();
+  unsigned num_elements = QWORD_ELEMENTS(len);
 
   softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
 
-  for (unsigned n=0, tmp_mask = mask; n < QWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
+  for (unsigned n=0, tmp_mask = opmask; n < num_elements; n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1)
       op1.vmm64u(n) = float64_fixupimm(dst.vmm64u(n), op1.vmm64u(n), (Bit32u) op2.vmm64u(n), i->Ib(), status);
     else
@@ -581,9 +581,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFIXUPIMMPD_MASK_VpdHpdWpdIbR(bxInstructio
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, mask >>= 2)
-      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op1.vmm128(n), mask);
-
+    simd_blendpd(&BX_READ_AVX_REG(i->dst()), &op1, opmask, num_elements);
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {
@@ -820,6 +818,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTPS_MASK_VpsWpsIbR(bxInstruction_c 
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   unsigned len = i->getVL();
+  unsigned num_elements = DWORD_ELEMENTS(len);
 
   softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
@@ -827,7 +826,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTPS_MASK_VpsWpsIbR(bxInstruction_c 
   int sign_ctrl = (i->Ib() >> 2) & 0x3;
   int interv = i->Ib() & 0x3;
 
-  for (unsigned n=0, mask = 0x1; n < DWORD_ELEMENTS(len); n++, mask <<= 1) {
+  for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
     if (opmask & mask)
       op.vmm32u(n) = f32_getMant(op.vmm32u(n), &status, sign_ctrl, interv);
     else
@@ -837,8 +836,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTPS_MASK_VpsWpsIbR(bxInstruction_c 
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, opmask >>= 4)
-      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), opmask);
+    simd_blendps(&BX_READ_AVX_REG(i->dst()), &op, opmask, num_elements);
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {
@@ -853,6 +851,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTPD_MASK_VpdWpdIbR(bxInstruction_c 
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   unsigned len = i->getVL();
+  unsigned num_elements = QWORD_ELEMENTS(len);
 
   softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
@@ -860,7 +859,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTPD_MASK_VpdWpdIbR(bxInstruction_c 
   int sign_ctrl = (i->Ib() >> 2) & 0x3;
   int interv = i->Ib() & 0x3;
 
-  for (unsigned n=0, mask = 0x1; n < QWORD_ELEMENTS(len); n++, mask <<= 1) {
+  for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
     if (opmask & mask)
       op.vmm64u(n) = f64_getMant(op.vmm64u(n), &status, sign_ctrl, interv);
     else
@@ -870,8 +869,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTPD_MASK_VpdWpdIbR(bxInstruction_c 
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, opmask >>= 2)
-      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), opmask);
+    simd_blendpd(&BX_READ_AVX_REG(i->dst()), &op, opmask, num_elements);
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {
@@ -888,13 +886,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALEPS_MASK_VpsWpsIbR(bxInstruction_c
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   unsigned len = i->getVL();
+  unsigned num_elements = DWORD_ELEMENTS(len);
   Bit8u control = i->Ib(), scale = control >> 4;
 
   softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
   mxcsr_to_softfloat_status_word_imm_override(status, control);
 
-  for (unsigned n=0, mask = 0x1; n < DWORD_ELEMENTS(len); n++, mask <<= 1) {
+  for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
     if (opmask & mask)
       op.vmm32u(n) = f32_roundToInt(op.vmm32u(n), scale, &status);
     else
@@ -904,8 +903,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALEPS_MASK_VpsWpsIbR(bxInstruction_c
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, opmask >>= 4)
-      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), opmask);
+    simd_blendps(&BX_READ_AVX_REG(i->dst()), &op, opmask, num_elements);
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {
@@ -948,14 +946,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALEPD_MASK_VpdWpdIbR(bxInstruction_c
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   unsigned len = i->getVL();
-
+  unsigned num_elements = QWORD_ELEMENTS(len);
   Bit8u control = i->Ib(), scale = control >> 4;
 
   softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
   mxcsr_to_softfloat_status_word_imm_override(status, control);
 
-  for (unsigned n=0, mask = 0x1; n < QWORD_ELEMENTS(len); n++, mask <<= 1) {
+  for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
     if (opmask & mask)
       op.vmm64u(n) = f64_roundToInt(op.vmm64u(n), scale, &status);
     else
@@ -965,8 +963,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALEPD_MASK_VpdWpdIbR(bxInstruction_c
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, opmask >>= 2)
-      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), opmask);
+    simd_blendpd(&BX_READ_AVX_REG(i->dst()), &op, opmask, num_elements);
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {
@@ -1011,6 +1008,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRANGEPS_MASK_VpsHpsWpsIbR(bxInstruction_c
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
   Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   unsigned len = i->getVL();
+  unsigned num_elements = DWORD_ELEMENTS(len);
 
   softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
@@ -1019,7 +1017,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRANGEPS_MASK_VpsHpsWpsIbR(bxInstruction_c
   bool is_abs = (i->Ib() & 0x2) != 0;
   int sign_ctrl = (i->Ib() >> 2) & 0x3;
 
-  for (unsigned n=0, mask = 0x1; n < DWORD_ELEMENTS(len); n++, mask <<= 1) {
+  for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
     if (opmask & mask)
       op1.vmm32u(n) = f32_range(op1.vmm32u(n), op2.vmm32u(n), is_max, is_abs, sign_ctrl, &status);
     else
@@ -1029,8 +1027,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRANGEPS_MASK_VpsHpsWpsIbR(bxInstruction_c
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, opmask >>= 4)
-      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op1.vmm128(n), opmask);
+    simd_blendps(&BX_READ_AVX_REG(i->dst()), &op1, opmask, num_elements);
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {
@@ -1045,6 +1042,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRANGEPD_MASK_VpdHpdWpdIbR(bxInstruction_c
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   unsigned len = i->getVL();
+  unsigned num_elements = QWORD_ELEMENTS(len);
 
   softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
@@ -1053,7 +1051,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRANGEPD_MASK_VpdHpdWpdIbR(bxInstruction_c
   bool is_abs = (i->Ib() & 0x2) != 0;
   int sign_ctrl = (i->Ib() >> 2) & 0x3;
 
-  for (unsigned n=0, mask = 0x1; n < QWORD_ELEMENTS(len); n++, mask <<= 1) {
+  for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
     if (opmask & mask)
       op1.vmm64u(n) = f64_range(op1.vmm64u(n), op2.vmm64u(n), is_max, is_abs, sign_ctrl, &status);
     else
@@ -1063,8 +1061,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRANGEPD_MASK_VpdHpdWpdIbR(bxInstruction_c
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, opmask >>= 2)
-      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op1.vmm128(n), opmask);
+    simd_blendpd(&BX_READ_AVX_REG(i->dst()), &op1, opmask, num_elements);
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {
@@ -1153,7 +1150,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VREDUCEPS_MASK_VpsWpsIbR(bxInstruction_c *
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   unsigned len = i->getVL();
-
+  unsigned num_elements = DWORD_ELEMENTS(len);
   Bit8u control = i->Ib(), scale = control >> 4;
 
   softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
@@ -1161,7 +1158,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VREDUCEPS_MASK_VpsWpsIbR(bxInstruction_c *
   mxcsr_to_softfloat_status_word_imm_override(status, control);
   status.softfloat_suppressException |= softfloat_flag_denormal | softfloat_flag_underflow | softfloat_flag_overflow;
 
-  for (unsigned n=0, mask = 0x1; n < DWORD_ELEMENTS(len); n++, mask <<= 1) {
+  for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
     if (opmask & mask)
       op.vmm32u(n) = float32_reduce(op.vmm32u(n), scale, status);
     else
@@ -1171,8 +1168,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VREDUCEPS_MASK_VpsWpsIbR(bxInstruction_c *
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, opmask >>= 4)
-      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), opmask);
+    simd_blendps(&BX_READ_AVX_REG(i->dst()), &op, opmask, num_elements);
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {
@@ -1216,7 +1212,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VREDUCEPD_MASK_VpdWpdIbR(bxInstruction_c *
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   Bit32u opmask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   unsigned len = i->getVL();
-
+  unsigned num_elements = QWORD_ELEMENTS(len);
   Bit8u control = i->Ib(), scale = control >> 4;
 
   softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
@@ -1224,7 +1220,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VREDUCEPD_MASK_VpdWpdIbR(bxInstruction_c *
   mxcsr_to_softfloat_status_word_imm_override(status, control);
   status.softfloat_suppressException |= softfloat_flag_denormal | softfloat_flag_underflow | softfloat_flag_overflow;
 
-  for (unsigned n=0, mask = 0x1; n < QWORD_ELEMENTS(len); n++, mask <<= 1) {
+  for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
     if (opmask & mask)
       op.vmm64u(n) = float64_reduce(op.vmm64u(n), scale, status);
     else
@@ -1234,8 +1230,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VREDUCEPD_MASK_VpdWpdIbR(bxInstruction_c *
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, opmask >>= 2)
-      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), opmask);
+    simd_blendpd(&BX_READ_AVX_REG(i->dst()), &op, opmask, num_elements);
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {

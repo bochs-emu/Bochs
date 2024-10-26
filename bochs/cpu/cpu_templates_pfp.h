@@ -137,8 +137,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_1OP_HALF(bxInstruct
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, mask >>= 8)
-      xmm_pblendw(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), mask);
+    simd_pblendw(&BX_READ_AVX_REG(i->dst()), &op, mask, WORD_ELEMENTS(len));
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {
@@ -164,8 +163,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_1OP_SINGLE(bxInstru
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, mask >>= 4)
-      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), mask);
+    simd_blendps(&BX_READ_AVX_REG(i->dst()), &op, mask, DWORD_ELEMENTS(len));
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {
@@ -191,8 +189,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_1OP_DOUBLE(bxInstru
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, mask >>= 2)
-      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), mask);
+    simd_blendpd(&BX_READ_AVX_REG(i->dst()), &op, mask, QWORD_ELEMENTS(len));
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {
@@ -218,9 +215,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_2OP_SINGLE(bxInstru
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, mask >>= 4)
-      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op1.vmm128(n), mask);
-
+    simd_blendps(&BX_READ_AVX_REG(i->dst()), &op1, mask, DWORD_ELEMENTS(len));
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {
@@ -246,9 +241,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_2OP_DOUBLE(bxInstru
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, mask >>= 2)
-      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op1.vmm128(n), mask);
-
+    simd_blendpd(&BX_READ_AVX_REG(i->dst()), &op1, mask, QWORD_ELEMENTS(len));
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {
@@ -274,9 +267,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_2OP_HALF(bxInstruct
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, mask >>= 8)
-      xmm_pblendw(&BX_READ_AVX_REG_LANE(i->dst(), n), &op1.vmm128(n), mask);
-
+    simd_pblendw(&BX_READ_AVX_REG(i->dst()), &op1, mask, WORD_ELEMENTS(len));
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {
@@ -304,9 +295,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_3OP_SINGLE(bxInstru
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, mask >>= 4)
-      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op1.vmm128(n), mask);
-
+    simd_blendps(&BX_READ_AVX_REG(i->dst()), &op1, mask, DWORD_ELEMENTS(len));
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {
@@ -334,9 +323,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_3OP_DOUBLE(bxInstru
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, mask >>= 2)
-      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op1.vmm128(n), mask);
-
+    simd_blendpd(&BX_READ_AVX_REG(i->dst()), &op1, mask, QWORD_ELEMENTS(len));
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {
@@ -364,9 +351,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HANDLE_AVX512_MASK_PFP_3OP_HALF(bxInstruct
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, mask >>= 8)
-      xmm_pblendw(&BX_READ_AVX_REG_LANE(i->dst(), n), &op1.vmm128(n), mask);
-
+    simd_pblendw(&BX_READ_AVX_REG(i->dst()), &op1, mask, WORD_ELEMENTS(len));
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {

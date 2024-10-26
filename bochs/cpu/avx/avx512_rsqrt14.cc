@@ -8425,8 +8425,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRT14PS_MASK_VpsWpsR(bxInstruction_c *i
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   Bit32u mask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   unsigned len = i->getVL();
+  unsigned num_elements = DWORD_ELEMENTS(len);
 
-  for (unsigned n=0, tmp_mask = mask; n < DWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
+  for (unsigned n=0, tmp_mask = mask; n < num_elements; n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1)
       op.vmm32u(n) = approximate_rsqrt14((float32) op.vmm32u(n), MXCSR.get_DAZ());
     else
@@ -8434,8 +8435,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRT14PS_MASK_VpsWpsR(bxInstruction_c *i
   }
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, mask >>= 4)
-      xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), mask);
+    simd_blendps(&BX_READ_AVX_REG(i->dst()), &op, mask, num_elements);
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {
@@ -8450,8 +8450,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRT14PD_MASK_VpdWpdR(bxInstruction_c *i
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   Bit32u mask = i->opmask() ? BX_READ_8BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   unsigned len = i->getVL();
+  unsigned num_elements = QWORD_ELEMENTS(len);
 
-  for (unsigned n=0, tmp_mask = mask; n < QWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
+  for (unsigned n=0, tmp_mask = mask; n < num_elements; n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1)
       op.vmm64u(n) = approximate_rsqrt14((float64) op.vmm64u(n), MXCSR.get_DAZ());
     else
@@ -8459,8 +8460,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRT14PD_MASK_VpdWpdR(bxInstruction_c *i
   }
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, mask >>= 2)
-      xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), mask);
+    simd_blendpd(&BX_READ_AVX_REG(i->dst()), &op, mask, num_elements);
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {
@@ -8532,8 +8532,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRTPH_MASK_VphWphR(bxInstruction_c *i)
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   Bit32u mask = i->opmask() ? BX_READ_32BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   unsigned len = i->getVL();
+  unsigned num_elements = WORD_ELEMENTS(len);
 
-  for (unsigned n=0, tmp_mask = mask; n < WORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
+  for (unsigned n=0, tmp_mask = mask; n < num_elements; n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1)
       op.vmm16u(n) = approximate_rsqrt14((float16) op.vmm16u(n), MXCSR.get_DAZ());
     else
@@ -8541,8 +8542,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRTPH_MASK_VphWphR(bxInstruction_c *i)
   }
 
   if (! i->isZeroMasking()) {
-    for (unsigned n=0; n < len; n++, mask >>= 8)
-      xmm_pblendw(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), mask);
+    simd_pblendw(&BX_READ_AVX_REG(i->dst()), &op, mask, num_elements);
     BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
   else {

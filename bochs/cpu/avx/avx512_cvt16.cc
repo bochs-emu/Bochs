@@ -493,12 +493,13 @@ AVX512_CVT16_TO_16(VCVTW2PH_VphWdqR, i16_to_f16)
   {                                                                                         \
     BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());                                     \
     unsigned len = i->getVL();                                                              \
+    unsigned num_elements = WORD_ELEMENTS(len);                                             \
     Bit32u opmask = BX_READ_32BIT_OPMASK(i->opmask());                                      \
                                                                                             \
     softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                      \
     softfloat_status_word_rc_override(status, i);                                           \
                                                                                             \
-    for (unsigned n=0, mask = 0x1; n < WORD_ELEMENTS(len); n++, mask <<= 1) {               \
+    for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {                     \
       if (opmask & mask)                                                                    \
         op.vmm16u(n) = (func)(op.vmm16u(n), &status);                                       \
       else                                                                                  \
@@ -508,8 +509,7 @@ AVX512_CVT16_TO_16(VCVTW2PH_VphWdqR, i16_to_f16)
     check_exceptionsSSE(softfloat_getExceptionFlags(&status));                              \
                                                                                             \
     if (! i->isZeroMasking()) {                                                             \
-      for (unsigned n=0; n < len; n++, opmask >>= 8)                                        \
-        xmm_pblendw(&BX_READ_AVX_REG_LANE(i->dst(), n), &op.vmm128(n), opmask);             \
+      simd_pblendw(&BX_READ_AVX_REG(i->dst()), &op, opmask, num_elements);                  \
       BX_CLEAR_AVX_REGZ(i->dst(), len);                                                     \
     }                                                                                       \
     else {                                                                                  \
@@ -559,11 +559,12 @@ AVX512_CVT16_TO_32(VCVTTPH2UDQ_VdqWphR, f16_to_ui32_round_to_zero)
     BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());                                     \
     unsigned opmask = BX_READ_16BIT_OPMASK(i->opmask());                                    \
     unsigned len = i->getVL();                                                              \
+    unsigned num_elements = DWORD_ELEMENTS(len);                                            \
                                                                                             \
     softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                      \
     softfloat_status_word_rc_override(status, i);                                           \
                                                                                             \
-    for (unsigned n=0, tmp_mask = opmask; n < DWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {   \
+    for (unsigned n=0, tmp_mask = opmask; n < num_elements; n++, tmp_mask >>= 1) {          \
       if (tmp_mask & 0x1)                                                                   \
         result.vmm32u(n) = (func)(op.ymm16u(n), &status);                                   \
       else                                                                                  \
@@ -573,8 +574,7 @@ AVX512_CVT16_TO_32(VCVTTPH2UDQ_VdqWphR, f16_to_ui32_round_to_zero)
     check_exceptionsSSE(softfloat_getExceptionFlags(&status));                              \
                                                                                             \
     if (! i->isZeroMasking()) {                                                             \
-      for (unsigned n=0; n < len; n++, opmask >>= 4)                                        \
-        xmm_blendps(&BX_READ_AVX_REG_LANE(i->dst(), n), &result.vmm128(n), opmask);         \
+      simd_blendps(&BX_READ_AVX_REG(i->dst()), &result, opmask, num_elements);              \
       BX_CLEAR_AVX_REGZ(i->dst(), len);                                                     \
     }                                                                                       \
     else {                                                                                  \
@@ -623,11 +623,12 @@ AVX512_CVT16_TO_64(VCVTTPH2UQQ_VdqWphR, f16_to_ui64_round_to_zero)
     BxPackedXmmRegister op = BX_READ_XMM_REG(i->src());                                     \
     unsigned opmask = BX_READ_8BIT_OPMASK(i->opmask());                                     \
     unsigned len = i->getVL();                                                              \
+    unsigned num_elements = QWORD_ELEMENTS(len);                                            \
                                                                                             \
     softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                      \
     softfloat_status_word_rc_override(status, i);                                           \
                                                                                             \
-    for (unsigned n=0, tmp_mask = opmask; n < QWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {   \
+    for (unsigned n=0, tmp_mask = opmask; n < num_elements; n++, tmp_mask >>= 1) {          \
       if (tmp_mask & 0x1)                                                                   \
         result.vmm64u(n) = (func)(op.xmm16u(n), &status);                                   \
       else                                                                                  \
@@ -637,8 +638,7 @@ AVX512_CVT16_TO_64(VCVTTPH2UQQ_VdqWphR, f16_to_ui64_round_to_zero)
     check_exceptionsSSE(softfloat_getExceptionFlags(&status));                              \
                                                                                             \
     if (! i->isZeroMasking()) {                                                             \
-      for (unsigned n=0; n < len; n++, opmask >>= 2)                                        \
-        xmm_blendpd(&BX_READ_AVX_REG_LANE(i->dst(), n), &result.vmm128(n), opmask);         \
+      simd_blendpd(&BX_READ_AVX_REG(i->dst()), &result, opmask, num_elements);              \
       BX_CLEAR_AVX_REGZ(i->dst(), len);                                                     \
     }                                                                                       \
     else {                                                                                  \
