@@ -83,6 +83,7 @@ struct BxOpcodeDecodeDescriptor32 {
 #include "cpu/simd_pfp.h"
 #include "cpu/simd_compare.h"
 #include "cpu/simd_vnni.h"
+#include "cpu/simd_bf16.h"
 #endif
 
 // table of all Bochs opcodes

@@ -31,8 +31,6 @@
 //  BF8: s|eeeee|mm                          (E5M2)
 //  HF8: s|eeee|mmm                          (E4M3)
 
-#include "softfloat3e/include/softfloat.h"
-
 BX_CPP_INLINE float32 convert_bfloat16_to_fp32(bfloat16 op)
 {
   return Bit32u(op) << 16;

@@ -1555,4 +1555,22 @@ bx_define_opcode(BX_IA_V512_VMPSADBW_VdqHdqWdqIb_Kmask, "vmpsadbw", "vmpsadbw", 
 
 bx_define_opcode(BX_IA_V512_VDPPHPS_VpsHdqWdq_Kmask, "vdpphps", "vdpphps", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VDPPHPS_MASK_VpsHdqWdqR, BX_ISA_AVX10_2, OP_Vps, OP_Hdq, OP_mVdq32, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
 
+bx_define_opcode(BX_IA_V512_VADDNEPBF16_VphHphWph, "vaddnepbf16", "vaddnepbf16", &BX_CPU_C::LOAD_BROADCAST_VectorW, &BX_CPU_C::HANDLE_AVX_2OP<xmm_addbf16>, BX_ISA_AVX10_2, OP_Vph, OP_Hph, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_V512_VADDNEPBF16_VphHphWph_Kmask, "vaddnepbf16", "vaddnepbf16", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::HANDLE_AVX512_2OP_WORD_EL_MASK<xmm_addbf16>, BX_ISA_AVX10_2, OP_Vph, OP_Hph, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_V512_VSUBNEPBF16_VphHphWph, "vsubnepbf16", "vsubnepbf16", &BX_CPU_C::LOAD_BROADCAST_VectorW, &BX_CPU_C::HANDLE_AVX_2OP<xmm_subbf16>, BX_ISA_AVX10_2, OP_Vph, OP_Hph, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_V512_VSUBNEPBF16_VphHphWph_Kmask, "vsubnepbf16", "vsubnepbf16", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::HANDLE_AVX512_2OP_WORD_EL_MASK<xmm_subbf16>, BX_ISA_AVX10_2, OP_Vph, OP_Hph, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_V512_VDIVNEPBF16_VphHphWph, "vdivnepbf16", "vdivnepbf16", &BX_CPU_C::LOAD_BROADCAST_VectorW, &BX_CPU_C::HANDLE_AVX_2OP<xmm_divbf16>, BX_ISA_AVX10_2, OP_Vph, OP_Hph, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_V512_VDIVNEPBF16_VphHphWph_Kmask, "vdivnepbf16", "vdivnepbf16", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::HANDLE_AVX512_2OP_WORD_EL_MASK<xmm_divbf16>, BX_ISA_AVX10_2, OP_Vph, OP_Hph, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_V512_VMULNEPBF16_VphHphWph, "vmulnepbf16", "vmulnepbf16", &BX_CPU_C::LOAD_BROADCAST_VectorW, &BX_CPU_C::HANDLE_AVX_2OP<xmm_mulbf16>, BX_ISA_AVX10_2, OP_Vph, OP_Hph, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_V512_VMULNEPBF16_VphHphWph_Kmask, "vmulnepbf16", "vmulnepbf16", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::HANDLE_AVX512_2OP_WORD_EL_MASK<xmm_mulbf16>, BX_ISA_AVX10_2, OP_Vph, OP_Hph, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_V512_VMINPBF16_VphHphWph, "vminpbf16", "vminpbf16", &BX_CPU_C::LOAD_BROADCAST_VectorW, &BX_CPU_C::HANDLE_AVX_2OP<xmm_minbf16>, BX_ISA_AVX10_2, OP_Vph, OP_Hph, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_V512_VMINPBF16_VphHphWph_Kmask, "vminpbf16", "vminpbf16", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::HANDLE_AVX512_2OP_WORD_EL_MASK<xmm_minbf16>, BX_ISA_AVX10_2, OP_Vph, OP_Hph, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_V512_VMAXPBF16_VphHphWph, "vmaxpbf16", "vmaxpbf16", &BX_CPU_C::LOAD_BROADCAST_VectorW, &BX_CPU_C::HANDLE_AVX_2OP<xmm_maxbf16>, BX_ISA_AVX10_2, OP_Vph, OP_Hph, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_V512_VMAXPBF16_VphHphWph_Kmask, "vmaxpbf16", "vmaxpbf16", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::HANDLE_AVX512_2OP_WORD_EL_MASK<xmm_maxbf16>, BX_ISA_AVX10_2, OP_Vph, OP_Hph, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+
+bx_define_opcode(BX_IA_V512_VSQRTNEPBF16_VphWph, "vsqrtnepbf16", "vsqrtnepbf16", &BX_CPU_C::LOAD_BROADCAST_VectorW, &BX_CPU_C::HANDLE_AVX_1OP<xmm_sqrtbf16>, BX_ISA_AVX10_2, OP_Vph, OP_mVph, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_V512_VSQRTNEPBF16_VphWph_Kmask, "vsqrtnepbf16", "vsqrtnepbf16", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::HANDLE_AVX512_1OP_WORD_EL_MASK<xmm_sqrtbf16>, BX_ISA_AVX10_2, OP_Vph, OP_mVph, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_V512_VGETEXPPBF16_VphWph, "vgetexppbf16", "vgetexppbf16", &BX_CPU_C::LOAD_BROADCAST_VectorW, &BX_CPU_C::HANDLE_AVX_1OP<xmm_getexpbf16>, BX_ISA_AVX10_2, OP_Vph, OP_mVph, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_V512_VGETEXPPBF16_VphWph_Kmask, "vgetexppbf16", "vgetexppbf16", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::HANDLE_AVX512_1OP_WORD_EL_MASK<xmm_getexpbf16>, BX_ISA_AVX10_2, OP_Vph, OP_mVph, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+
 #endif // BX_SUPPORT_EVEX
