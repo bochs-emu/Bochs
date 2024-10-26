@@ -404,13 +404,20 @@ void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *
     // EDX:
     //   [31:00]: reserved
     leaf->eax = 0;
-    leaf->ebx = 0x1 | (1<<17);
+    leaf->ebx = avx10_level() | (1<<17);
     if (is_cpu_extension_supported(BX_ISA_AVX10_VL512))
       leaf->ebx |= (1<<18);
     leaf->ecx = 0;
     leaf->edx = 0;
   }
 #endif
+}
+
+unsigned bx_cpuid_t::avx10_level() const
+{
+  if (is_cpu_extension_supported(BX_ISA_AVX10_2)) return 2;
+  if (is_cpu_extension_supported(BX_ISA_AVX10_1)) return 1;
+  return 0;
 }
 
 bool bx_cpuid_t::support_avx10_512() const {
@@ -1531,6 +1538,8 @@ void bx_cpuid_t::sanity_checks() const
     BX_FATAL(("PANIC: 3dnow! ISA require MMX to be enabled !"));
 
   // AVX10_VL512 or AVX10_2 -> AVX10_1 -> AVX2 -> AVX -> XSAVE -> SSE -> MMX
+  if (is_cpu_extension_supported(BX_ISA_AVX10_2) && !is_cpu_extension_supported(BX_ISA_AVX10_1))
+    BX_FATAL(("PANIC: AVX10_2 is reqired AVX10_1 to be enabled !"));
   if (is_cpu_extension_supported(BX_ISA_AVX10_VL512) && !is_cpu_extension_supported(BX_ISA_AVX10_1))
     BX_FATAL(("PANIC: AVX10_VL512 is enabled when AVX10 is not supported !"));
   if (is_cpu_extension_supported(BX_ISA_AVX10_1) && !is_cpu_extension_supported(BX_ISA_AVX2))

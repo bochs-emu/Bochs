@@ -2758,6 +2758,15 @@ void BX_CPU_C::init_FetchDecodeTables(void)
     BxOpcodesTable[BX_IA_MOV_RqCR0].opflags |= BX_LOCKABLE;
 #endif
   }
+
+  // EVEX extensions for SM4 require AVX10_2
+  if (!BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SM4) || !BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX10_2)) {
+    BxOpcodesTable[BX_IA_V512_VSM4KEY4_VdqHdqWdq].execute1 = &BX_CPU_C::BxError;
+    BxOpcodesTable[BX_IA_V512_VSM4KEY4_VdqHdqWdq].opflags = 0;   // won't allow this new #UD opcode to check prepare_EVEX
+
+    BxOpcodesTable[BX_IA_V512_VSM4RNDS4_VdqHdqWdq].execute1 = &BX_CPU_C::BxError;
+    BxOpcodesTable[BX_IA_V512_VSM4RNDS4_VdqHdqWdq].opflags = 0;  // won't allow this new #UD opcode to check prepare_EVEX
+  }
 }
 
 #endif

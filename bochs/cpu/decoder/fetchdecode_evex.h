@@ -1577,6 +1577,12 @@ static const Bit64u BxOpcodeGroup_EVEX_0F38C4[] = {
 };
 
 static const Bit64u BxOpcodeGroup_EVEX_0F38CF[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0, BX_IA_EVEX_VGF2P8MULB_VdqHdqWdq_Kmask) };
+
+static const Bit64u BxOpcodeGroup_VEX_0F38DA[] = {
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_MASK_K0, BX_IA_EVEX_VSM4KEY4_VdqHdqWdq),
+  last_opcode(ATTR_SSE_PREFIX_F2 | ATTR_VEX_W0 | ATTR_MASK_K0, BX_IA_EVEX_VSM4RNDS4_VdqHdqWdq)
+};
+
 static const Bit64u BxOpcodeGroup_EVEX_0F38DC[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_MASK_K0, BX_IA_EVEX_VAESENC_VdqHdqWdq) };
 static const Bit64u BxOpcodeGroup_EVEX_0F38DD[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_MASK_K0, BX_IA_EVEX_VAESENCLAST_VdqHdqWdq) };
 static const Bit64u BxOpcodeGroup_EVEX_0F38DE[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_MASK_K0, BX_IA_EVEX_VAESDEC_VdqHdqWdq) };

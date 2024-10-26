@@ -1510,4 +1510,8 @@ bx_define_opcode(BX_IA_EVEX_VGF2P8AFFINEQB_VdqHdqWdqIb_Kmask, "vgf2p8affineqb", 
 bx_define_opcode(BX_IA_EVEX_VGF2P8AFFINEINVQB_VdqHdqWdqIb_Kmask, "vgf2p8affineinvqb", "vgf2p8affineinvqb", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VGF2P8AFFINEINVQB_VdqHdqWdqIbR, BX_ISA_GFNI, OP_Vdq, OP_Hdq, OP_mVpd, OP_Ib, BX_PREPARE_EVEX_NO_SAE)
 bx_define_opcode(BX_IA_EVEX_VGF2P8MULB_VdqHdqWdq_Kmask, "vgf2p8mulb", "vgf2p8mulb", &BX_CPU_C::LOAD_MASK_VectorB, &BX_CPU_C::VGF2P8MULB_VdqHdqWdqR, BX_ISA_GFNI, OP_Vdq, OP_Hdq, OP_mVpd, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 
+// EVEX for of SM4 instructions
+bx_define_opcode(BX_IA_V512_VSM4KEY4_VdqHdqWdq, "vsm4key4", "vsm4key4", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VSM4KEY4_VdqHdqWdqR, BX_ISA_SM4, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_V512_VSM4RNDS4_VdqHdqWdq, "vsm4rnds4", "vsm4rnds4", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VSM4RNDS4_VdqHdqWdqR, BX_ISA_SM4, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+
 #endif // BX_SUPPORT_EVEX
