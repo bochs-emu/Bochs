@@ -100,4 +100,27 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCOMXSH_VshWshR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+#include "simd_int.h"
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPSADBW_MASK_VdqHdqWdqIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1());
+  BxPackedAvxRegister op2 = BX_READ_AVX_REG(i->src2()), result;
+  result.clear();
+
+  Bit32u opmask = i->opmask() ? BX_READ_32BIT_OPMASK(i->opmask()) : (Bit32u) -1;
+  unsigned len = i->getVL();
+
+  // For the 512-bit version the control bits for the lower two lanes are replicated to the upper two lanes
+  int control[4] = { i->Ib(), i->Ib() >> 3, i->Ib(), i->Ib() >> 3 };
+
+  for (unsigned n=0; n < len; n++) {
+    xmm_mpsadbw(&result.vmm128(n), &op1.vmm128(n), &op2.vmm128(n), control[n]);
+  }
+
+  avx512_write_regw_masked(i, &result, len, opmask);
+
+  BX_NEXT_INSTR(i);
+}
+
 #endif
