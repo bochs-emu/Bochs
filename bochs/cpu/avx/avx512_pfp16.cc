@@ -133,26 +133,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCMPPH_MASK_KGdHphWphIbR(bxInstruction_c *
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::UCOMISH_VshWshR(bxInstruction_c *i)
+#include "cpu/decoder/ia_opcodes.h"
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCOMISH_VshWshR(bxInstruction_c *i)
 {
   float16 op1 = BX_READ_XMM_REG_LO_WORD(i->dst()), op2 = BX_READ_XMM_REG_LO_WORD(i->src());
 
   softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
-  int rc = f16_compare_quiet(op1, op2, &status);
-  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
-  BX_CPU_THIS_PTR write_eflags_fpu_compare(rc);
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::COMISH_VshWshR(bxInstruction_c *i)
-{
-  float16 op1 = BX_READ_XMM_REG_LO_WORD(i->dst()), op2 = BX_READ_XMM_REG_LO_WORD(i->src());
-
-  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-  int rc = f16_compare(op1, op2, &status);
+  bool quiet = (i->getIaOpcode() == BX_IA_V512_VUCOMISH_VshWsh);
+  int rc = f16_compare(op1, op2, quiet, &status);
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   BX_CPU_THIS_PTR write_eflags_fpu_compare(rc);
 
@@ -466,8 +456,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALESH_MASK_VshHphWshIbR(bxInstructio
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
   BX_NEXT_INSTR(i);
 }
-
-#include "cpu/decoder/ia_opcodes.h"
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFCMULCSH_MASK_VshHphWshR(bxInstruction_c *i)
 {

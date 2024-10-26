@@ -3625,8 +3625,7 @@ public: // for now...
   BX_SMF void VFPCLASSPH_MASK_KGdWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VFPCLASSSH_MASK_KGbWshIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void COMISH_VshWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void UCOMISH_VshWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCOMISH_VshWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void VCMPPH_MASK_KGdHphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCMPSH_MASK_KGbHshWshIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
