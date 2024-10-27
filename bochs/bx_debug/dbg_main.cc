@@ -1035,7 +1035,7 @@ void bx_dbg_info_flags(unsigned cpu)
   char s[256];
 
   Bit32u eflags = BX_CPU(cpu)->read_eflags();
-  dbg_printf("eflags: 0x%08x: %s", (unsigned) eflags, stringify_EFLAGS(eflags, s));
+  dbg_printf("eflags: 0x%08x: %s\n", (unsigned) eflags, stringify_EFLAGS(eflags, s));
 }
 
 void bx_dbg_info_flags()
