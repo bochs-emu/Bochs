@@ -1614,7 +1614,7 @@ unsigned evex_displ8_compression(const bxInstruction_c *i, unsigned ia_opcode, u
 
   // VMOVDDUP special case
 #if BX_SUPPORT_EVEX
-  if ((ia_opcode == BX_IA_V512_VMOVDDUP_VpdWpd || ia_opcode == BX_IA_V512_VMOVDDUP_VpdWpd_Kmask) && (i->getVL() == BX_VL128))
+  if ((ia_opcode == BX_IA_EVEX_VMOVDDUP_VpdWpd || ia_opcode == BX_IA_EVEX_VMOVDDUP_VpdWpd_Kmask) && (i->getVL() == BX_VL128))
     return 8;
 #endif
 

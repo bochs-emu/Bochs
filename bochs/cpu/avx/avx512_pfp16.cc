@@ -141,7 +141,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCOMISH_VshWshR(bxInstruction_c *i)
 
   softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
-  bool quiet = (i->getIaOpcode() == BX_IA_V512_VUCOMISH_VshWsh);
+  bool quiet = (i->getIaOpcode() == BX_IA_EVEX_VUCOMISH_VshWsh);
   int rc = f16_compare(op1, op2, quiet, &status);
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   BX_CPU_THIS_PTR write_eflags_fpu_compare(rc);
@@ -471,8 +471,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFCMULCSH_MASK_VshHphWshR(bxInstruction_c 
   softfloat_status_word_rc_override(status, i);
   status.softfloat_exceptionMasks = softfloat_all_exceptions_mask;
 
-  int fma_control1 = (i->getIaOpcode() == BX_IA_V512_VFMULCSH_VshHphWsh_Kmask) ? softfloat_muladd_negate_product : 0;
-  int fma_control2 = (i->getIaOpcode() == BX_IA_V512_VFMULCSH_VshHphWsh_Kmask) ? 0 : softfloat_muladd_negate_product;
+  int fma_control1 = (i->getIaOpcode() == BX_IA_EVEX_VFMULCSH_VshHphWsh_Kmask) ? softfloat_muladd_negate_product : 0;
+  int fma_control2 = (i->getIaOpcode() == BX_IA_EVEX_VFMULCSH_VshHphWsh_Kmask) ? 0 : softfloat_muladd_negate_product;
 
   if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
     dst.xmm16u(0) = f16_mul(op1->xmm16u(0), op2->xmm16u(0), &status);
@@ -511,8 +511,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFCMULCPH_MASK_VphHphWphR(bxInstruction_c 
     }
   }
 
-  int fma_control1 = (i->getIaOpcode() == BX_IA_V512_VFMULCPH_VphHphWph_Kmask) ? softfloat_muladd_negate_product : 0;
-  int fma_control2 = (i->getIaOpcode() == BX_IA_V512_VFMULCPH_VphHphWph_Kmask) ? 0 : softfloat_muladd_negate_product;
+  int fma_control1 = (i->getIaOpcode() == BX_IA_EVEX_VFMULCPH_VphHphWph_Kmask) ? softfloat_muladd_negate_product : 0;
+  int fma_control2 = (i->getIaOpcode() == BX_IA_EVEX_VFMULCPH_VphHphWph_Kmask) ? 0 : softfloat_muladd_negate_product;
 
   for (n=0, tmp_mask = mask; n < DWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1) {
@@ -544,8 +544,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFCMADDCSH_MASK_VshHphWshR(bxInstruction_c
   softfloat_status_word_rc_override(status, i);
   status.softfloat_exceptionMasks = softfloat_all_exceptions_mask;
 
-  int fma_control1 = (i->getIaOpcode() == BX_IA_V512_VFMADDCSH_VshHphWsh_Kmask) ? softfloat_muladd_negate_product : 0;
-  int fma_control2 = (i->getIaOpcode() == BX_IA_V512_VFMADDCSH_VshHphWsh_Kmask) ? 0 : softfloat_muladd_negate_product;
+  int fma_control1 = (i->getIaOpcode() == BX_IA_EVEX_VFMADDCSH_VshHphWsh_Kmask) ? softfloat_muladd_negate_product : 0;
+  int fma_control2 = (i->getIaOpcode() == BX_IA_EVEX_VFMADDCSH_VshHphWsh_Kmask) ? 0 : softfloat_muladd_negate_product;
 
   if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
     dst.xmm16u(0) = f16_mulAdd(op1->xmm16u(0), op2->xmm16u(0), dst.xmm16u(0), 0, &status);
@@ -584,8 +584,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VFCMADDCPH_MASK_VphHphWphR(bxInstruction_c
     }
   }
 
-  int fma_control1 = (i->getIaOpcode() == BX_IA_V512_VFMADDCPH_VphHphWph_Kmask) ? softfloat_muladd_negate_product : 0;
-  int fma_control2 = (i->getIaOpcode() == BX_IA_V512_VFMADDCPH_VphHphWph_Kmask) ? 0 : softfloat_muladd_negate_product;
+  int fma_control1 = (i->getIaOpcode() == BX_IA_EVEX_VFMADDCPH_VphHphWph_Kmask) ? softfloat_muladd_negate_product : 0;
+  int fma_control2 = (i->getIaOpcode() == BX_IA_EVEX_VFMADDCPH_VphHphWph_Kmask) ? 0 : softfloat_muladd_negate_product;
 
   for (n=0, tmp_mask = mask; n < DWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1) {
