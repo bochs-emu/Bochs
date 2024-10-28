@@ -1703,6 +1703,7 @@ static const Bit64u BxOpcodeTableMultiByteNOP[] = { last_opcode(0, BX_IA_NOP) };
 
 // opcode 0F 20
 static const Bit64u BxOpcodeTable0F20_32[] = {
+  form_opcode_lockable(ATTR_NNN0 | ATTR_LOCK, BX_IA_ALT_MOV_RdCR0),
   form_opcode(ATTR_NNN0, BX_IA_MOV_RdCR0),
   form_opcode(ATTR_NNN2, BX_IA_MOV_RdCR2),
   form_opcode(ATTR_NNN3, BX_IA_MOV_RdCR3),
@@ -1711,6 +1712,7 @@ static const Bit64u BxOpcodeTable0F20_32[] = {
 
 #if BX_SUPPORT_X86_64
 static const Bit64u BxOpcodeTable0F20_64[] = {
+  form_opcode_lockable(ATTR_NNN0 | ATTR_LOCK, BX_IA_ALT_MOV_RqCR0),
   form_opcode(ATTR_NNN0, BX_IA_MOV_RqCR0),
   form_opcode(ATTR_NNN2, BX_IA_MOV_RqCR2),
   form_opcode(ATTR_NNN3, BX_IA_MOV_RqCR3),
@@ -1726,6 +1728,7 @@ static const Bit64u BxOpcodeTable0F21_64[] = { last_opcode(0, BX_IA_MOV_RqDq) };
 
 // opcode 0F 22
 static const Bit64u BxOpcodeTable0F22_32[] = {
+  form_opcode_lockable(ATTR_NNN0 | ATTR_LOCK, BX_IA_ALT_MOV_CR0Rd),
   form_opcode(ATTR_NNN0, BX_IA_MOV_CR0Rd),
   form_opcode(ATTR_NNN2, BX_IA_MOV_CR2Rd),
   form_opcode(ATTR_NNN3, BX_IA_MOV_CR3Rd),
@@ -1734,6 +1737,7 @@ static const Bit64u BxOpcodeTable0F22_32[] = {
 
 #if BX_SUPPORT_X86_64
 static const Bit64u BxOpcodeTable0F22_64[] = {
+  form_opcode_lockable(ATTR_NNN0 | ATTR_LOCK, BX_IA_ALT_MOV_CR0Rq),
   form_opcode(ATTR_NNN0, BX_IA_MOV_CR0Rq),
   form_opcode(ATTR_NNN2, BX_IA_MOV_CR2Rq),
   form_opcode(ATTR_NNN3, BX_IA_MOV_CR3Rq),

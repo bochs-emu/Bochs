@@ -305,8 +305,8 @@ public:
   BX_CPP_INLINE void setLock(void) {
     setLockRepUsed(BX_LOCK_PREFIX_USED);
   }
-  BX_CPP_INLINE bool getLock(void) const {
-    return lockRepUsedValue() == BX_LOCK_PREFIX_USED;
+  BX_CPP_INLINE int getLock(void) const {
+    return (lockRepUsedValue() == BX_LOCK_PREFIX_USED);
   }
 
   BX_CPP_INLINE unsigned getVL(void) const {

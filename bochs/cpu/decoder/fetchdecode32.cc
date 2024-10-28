@@ -1908,6 +1908,9 @@ int decoder_vex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
 #if BX_SUPPORT_AVX
   unsigned rm = 0, mod = 0, nnn = 0;
 
+  if (i->getLock())
+    return(BX_IA_ERROR);
+
   if (sse_prefix)
     return(BX_IA_ERROR);
 
@@ -2023,6 +2026,9 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
 
 #if BX_SUPPORT_EVEX
   bool displ8 = false;
+
+  if (i->getLock())
+    return(BX_IA_ERROR);
 
   if (sse_prefix)
     return(BX_IA_ERROR);
@@ -2165,6 +2171,9 @@ int decoder_xop32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   }
 
 #if BX_SUPPORT_AVX
+  if (i->getLock())
+    return(BX_IA_ERROR);
+
   // 3 byte XOP prefix
   if (sse_prefix)
     return(ia_opcode);
@@ -2237,6 +2246,9 @@ int decoder32_fp_escape(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i,
   if (! iptr)
     return(-1);
 
+  if (i->getLock())
+    return(BX_IA_ERROR);
+
   i->setFoo((modrm.modrm | (b1 << 8)) & 0x7ff); /* for x87 */
 
   const Bit16u *x87_opmap[8] = {
@@ -2275,7 +2287,8 @@ int decoder32_modrm(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, uns
                    (sse_prefix << SSE_PREFIX_OFFSET) |
                    (i->modC0() ? (1 << MODC0_OFFSET) : 0) |
                    (modrm.nnn << NNN_OFFSET) |
-                   (modrm.rm << RRR_OFFSET);
+                   (modrm.rm << RRR_OFFSET) |
+                   (i->getLock() << LOCK_PREFIX_OFFSET);
   if (i->modC0() && modrm.nnn == modrm.rm)
     decmask |= (1 << SRC_EQ_DST_OFFSET);
 
@@ -2298,6 +2311,7 @@ int decoder32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned 
   Bit32u decmask = (i->osize() << OS32_OFFSET) |
                    (i->asize() << AS32_OFFSET) |
                    (sse_prefix << SSE_PREFIX_OFFSET) |
+                   (i->getLock() << LOCK_PREFIX_OFFSET) |
                    (1 << MODC0_OFFSET);
   if (nnn == rm)
     decmask |= (1 << SRC_EQ_DST_OFFSET);
@@ -2332,6 +2346,7 @@ int decoder_creg32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   Bit32u decmask = (i->osize() << OS32_OFFSET) |
                    (i->asize() << AS32_OFFSET) |
                    (sse_prefix << SSE_PREFIX_OFFSET) |
+                   (i->getLock() << LOCK_PREFIX_OFFSET) |
                    (i->modC0() ? (1 << MODC0_OFFSET) : 0) |
                    (nnn << NNN_OFFSET) |
                    (rm << RRR_OFFSET);
@@ -2361,6 +2376,9 @@ int decoder32_3dnow(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, uns
   else {
     return(-1);
   }
+
+  if (i->getLock())
+    return(BX_IA_ERROR);
 
   ia_opcode = Bx3DNowOpcode[i->modRMForm.Ib[0]];
 
@@ -2516,6 +2534,9 @@ fetch_b1:
   i->setCetSegOverride(seg_override_cet);
 #endif
 
+  if (lock)
+    i->setLock();
+
   i->modRMForm.Id = 0;
 
   BxOpcodeDecodeDescriptor32 *decode_descriptor = &decode32_descriptor[b1];
@@ -2530,27 +2551,15 @@ fetch_b1:
   if (! BX_NULL_SEG_REG(seg_override))
     i->setSeg(seg_override);
 
-  Bit32u op_flags = BxOpcodesTable[ia_opcode].opflags;
-
   if (lock) {
-    i->setLock();
-    // lock prefix not allowed or destination operand is not memory
-    if (i->modC0() || !(op_flags & BX_LOCKABLE)) {
-#if BX_CPU_LEVEL >= 6
-      if ((op_flags & BX_LOCKABLE) != 0) {
-        if (ia_opcode == BX_IA_MOV_CR0Rd)
-          i->setSrcReg(0, 8); // extend CR0 -> CR8
-        else if (ia_opcode == BX_IA_MOV_RdCR0)
-          i->setSrcReg(1, 8); // extend CR0 -> CR8
-        else
-          i->setIaOpcode(BX_IA_ERROR); // replace execution function with undefined-opcode
-      }
+    // lock prefix not allowed if destination operand is not memory
+    if (i->modC0()) {
+      if (ia_opcode == BX_IA_ALT_MOV_CR0Rd)
+        i->setSrcReg(0, 8); // extend CR0 -> CR8
+      else if (ia_opcode == BX_IA_ALT_MOV_RdCR0)
+        i->setSrcReg(1, 8); // extend CR0 -> CR8
       else
-#endif
-      {
-        // replace execution function with undefined-opcode
-        i->setIaOpcode(BX_IA_ERROR);
-      }
+        i->setIaOpcode(BX_IA_ERROR); // replace execution function with undefined-opcode
     }
   }
 
@@ -2746,16 +2755,6 @@ void BX_CPU_C::init_FetchDecodeTables(void)
     BxOpcodesTable[BX_IA_TZCNT_GdEd] = BxOpcodesTable[BX_IA_BSF_GdEd];
 #if BX_SUPPORT_X86_64
     BxOpcodesTable[BX_IA_TZCNT_GqEq] = BxOpcodesTable[BX_IA_BSF_GqEq];
-#endif
-  }
-
-  // handle lock MOV CR0 AMD extension
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_ALT_MOV_CR8)) {
-    BxOpcodesTable[BX_IA_MOV_CR0Rd].opflags |= BX_LOCKABLE;
-    BxOpcodesTable[BX_IA_MOV_RdCR0].opflags |= BX_LOCKABLE;
-#if BX_SUPPORT_X86_64
-    BxOpcodesTable[BX_IA_MOV_CR0Rq].opflags |= BX_LOCKABLE;
-    BxOpcodesTable[BX_IA_MOV_RqCR0].opflags |= BX_LOCKABLE;
 #endif
   }
 }
