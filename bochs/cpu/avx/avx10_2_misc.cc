@@ -64,7 +64,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCOMXSS_VssWssR(bxInstruction_c *i)
 
   softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
-  bool quiet  = (i->getIaOpcode() == BX_IA_V512_VUCOMXSS_VssWss);
+  bool quiet  = (i->getIaOpcode() == BX_IA_EVEX_VUCOMXSS_VssWss);
   int rc = f32_compare(op1, op2, quiet, &status);
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   write_eflags_vcomx(rc);
@@ -78,7 +78,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCOMXSD_VsdWsdR(bxInstruction_c *i)
 
   softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
-  bool quiet  = (i->getIaOpcode() == BX_IA_V512_VUCOMXSD_VsdWsd);
+  bool quiet  = (i->getIaOpcode() == BX_IA_EVEX_VUCOMXSD_VsdWsd);
   int rc = f64_compare(op1, op2, quiet, &status);
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   write_eflags_vcomx(rc);
@@ -92,7 +92,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCOMXSH_VshWshR(bxInstruction_c *i)
 
   softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
-  bool quiet  = (i->getIaOpcode() == BX_IA_V512_VUCOMXSH_VshWsh);
+  bool quiet  = (i->getIaOpcode() == BX_IA_EVEX_VUCOMXSH_VshWsh);
   int rc = f16_compare(op1, op2, quiet, &status);
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   write_eflags_vcomx(rc);
