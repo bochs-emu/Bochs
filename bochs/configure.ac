@@ -1476,8 +1476,8 @@ AC_ARG_ENABLE(x86-debugger,
    fi
    ],
   [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_X86_DEBUGGER, 0)
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_X86_DEBUGGER, 1)
     ]
   )
 
