@@ -3182,8 +3182,10 @@ void bx_svga_cirrus_c::svga_bitblt()
         BX_CIRRUS_THIS redraw.x -= BX_CIRRUS_THIS redraw.w;
       }
       if (BX_CIRRUS_THIS redraw.h > BX_CIRRUS_THIS redraw.y) {
-        BX_CIRRUS_THIS redraw.h = BX_CIRRUS_THIS redraw.y;
-        BX_CIRRUS_THIS redraw.y = 0;
+        if (BX_CIRRUS_THIS redraw.y > 0) {
+          BX_CIRRUS_THIS redraw.h = BX_CIRRUS_THIS redraw.y;
+          BX_CIRRUS_THIS redraw.y = 0;
+        }
       } else {
         BX_CIRRUS_THIS redraw.y -= BX_CIRRUS_THIS redraw.h;
       }

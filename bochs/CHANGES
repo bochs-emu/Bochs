@@ -57,6 +57,7 @@ Detailed change log :
     - Fixed Cirrus PCI issues found with Windows 3.11 driver (missing / unreadable text in 8 bpp and 16 bpp modes)
     - Added support for graphics controller mode extensions in VGA mode
       Now the GD5446 PCI driver and the GD5430 ISA driver work correctly
+    - Fixed lags caused by incorrect redraw value for backward BitBlt
   - Voodoo / Banshee
     - Banshee: Fixes for address wrap handling during display update
       Original Banshee / Voodoo3 VGABIOS reporting wrong number of image pages in
