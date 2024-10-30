@@ -1185,9 +1185,6 @@ int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   // VEX
   assert((b1 & ~0x1) == 0xc4);
 
-  if (i->getLock())
-    return(BX_IA_ERROR);
-
   if (sse_prefix | rex_prefix)
     return(BX_IA_ERROR);
 
@@ -1311,9 +1308,6 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
 
   // EVEX prefix 0x62
   assert(b1 == 0x62);
-
-  if (i->getLock())
-    return(BX_IA_ERROR);
 
   if (sse_prefix | rex_prefix)
     return(BX_IA_ERROR);
@@ -1483,9 +1477,6 @@ int decoder_xop64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   unsigned b2 = 0;
   bool vex_w = 0;
 
-  if (i->getLock())
-    return(BX_IA_ERROR);
-
   if (sse_prefix | rex_prefix)
     return(ia_opcode);
 
@@ -1584,9 +1575,6 @@ int decoder64_fp_escape(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i,
   if (! iptr)
     return(-1);
 
-  if (i->getLock())
-    return(BX_IA_ERROR);
-
   i->setFoo((modrm.modrm | (b1 << 8)) & 0x7ff); /* for x87 */
 
   const Bit16u *x87_opmap[8] = {
@@ -1623,7 +1611,6 @@ int decoder64_modrm(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, uns
                    (i->asize() << AS32_OFFSET) |
                    (sse_prefix << SSE_PREFIX_OFFSET) |
                    (i->modC0() ? (1 << MODC0_OFFSET) : 0) |
-                   (i->getLock() << LOCK_PREFIX_OFFSET) |
                    ((modrm.nnn & 0x7) << NNN_OFFSET) |
                    ((modrm.rm  & 0x7) << RRR_OFFSET);
   if (i->modC0() && modrm.nnn == modrm.rm)
@@ -1698,7 +1685,6 @@ int decoder_creg64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
                    (i->osize() << OS32_OFFSET) |
                    (i->asize() << AS32_OFFSET) |
                    (sse_prefix << SSE_PREFIX_OFFSET) |
-                   (i->getLock() << LOCK_PREFIX_OFFSET) |
                    (1 << MODC0_OFFSET) |
                    ((nnn & 0x7) << NNN_OFFSET) |
                    ((rm  & 0x7) << RRR_OFFSET);
@@ -1727,9 +1713,6 @@ int decoder64_3dnow(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, uns
   else {
     return(-1);
   }
-
-  if (i->getLock())
-    return(BX_IA_ERROR);
 
   ia_opcode = Bx3DNowOpcode[i->modRMForm.Ib[0]];
 
@@ -2023,9 +2006,6 @@ fetch_b1:
   i->setCetSegOverride(seg_override_cet);
 #endif
 
-  if (lock)
-    i->setLock();
-
   i->modRMForm.Id = 0;
 
   BxOpcodeDecodeDescriptor64 *decode_descriptor = &decode64_descriptor[b1];
@@ -2040,15 +2020,24 @@ fetch_b1:
   if (seg_override == BX_SEG_REG_FS || seg_override == BX_SEG_REG_GS)
      i->setSeg(seg_override);
 
+  Bit32u op_flags = BxOpcodesTable[ia_opcode].opflags;
+
   if (lock) {
-    // lock prefix not allowed if destination operand is not memory
-    if (i->modC0()) {
-      if (ia_opcode == BX_IA_ALT_MOV_CR0Rq)
-        i->setSrcReg(0, 8); // extend CR0 -> CR8
-      else if (ia_opcode == BX_IA_ALT_MOV_RqCR0)
-        i->setSrcReg(1, 8); // extend CR0 -> CR8
-      else
-        i->setIaOpcode(BX_IA_ERROR); // replace execution function with undefined-opcode
+    i->setLock();
+    // lock prefix not allowed or destination operand is not memory
+    if (i->modC0() || !(op_flags & BX_LOCKABLE)) {
+      if ((op_flags & BX_LOCKABLE) != 0) {
+        if (ia_opcode == BX_IA_MOV_CR0Rq)
+          i->setSrcReg(0, 8); // extend CR0 -> CR8
+        else if (ia_opcode == BX_IA_MOV_RqCR0)
+          i->setSrcReg(1, 8); // extend CR0 -> CR8
+        else
+          i->setIaOpcode(BX_IA_ERROR); // replace execution function with undefined-opcode
+      }
+      else {
+        // replace execution function with undefined-opcode
+        i->setIaOpcode(BX_IA_ERROR);
+      }
     }
   }
 
