@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013-2023 Stanislav Shwartsman
+//   Copyright (c) 2013-2024 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1643,7 +1643,8 @@ static const Bit64u BxOpcodeGroup_EVEX_0F3A05[] = {
 
 static const Bit64u BxOpcodeGroup_EVEX_0F3A08[] = {
   form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0, BX_IA_EVEX_VRNDSCALEPH_VphWphIb_Kmask),
-  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0, BX_IA_EVEX_VRNDSCALEPS_VpsWpsIb_Kmask)
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0, BX_IA_EVEX_VRNDSCALEPS_VpsWpsIb_Kmask),
+  last_opcode(ATTR_SSE_PREFIX_F2 | ATTR_VEX_W0, BX_IA_EVEX_VRNDSCALENEPBF16_VphWphIb_Kmask)
 };
 static const Bit64u BxOpcodeGroup_EVEX_0F3A09[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1, BX_IA_EVEX_VRNDSCALEPD_VpdWpdIb_Kmask) };
 static const Bit64u BxOpcodeGroup_EVEX_0F3A0A[] = {
@@ -1818,7 +1819,8 @@ static const Bit64u BxOpcodeGroup_EVEX_0F3A55[] = {
 static const Bit64u BxOpcodeGroup_EVEX_0F3A56[] = {
   form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0, BX_IA_EVEX_VREDUCEPH_VphWphIb_Kmask),
   form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0, BX_IA_EVEX_VREDUCEPS_VpsWpsIb_Kmask),
-  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1, BX_IA_EVEX_VREDUCEPD_VpdWpdIb_Kmask)
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1, BX_IA_EVEX_VREDUCEPD_VpdWpdIb_Kmask),
+  last_opcode(ATTR_SSE_PREFIX_F2 | ATTR_VEX_W0, BX_IA_EVEX_VREDUCENEPBF16_VphWphIb_Kmask)
 };
 
 static const Bit64u BxOpcodeGroup_EVEX_0F3A57[] = {

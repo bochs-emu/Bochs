@@ -89,6 +89,71 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGETMANTPBF16_MASK_VphWphIbR(bxInstruction
   BX_NEXT_INSTR(i);
 }
 
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRNDSCALENEPBF16_MASK_VphWphIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  Bit32u opmask = i->opmask() ? BX_READ_32BIT_OPMASK(i->opmask()) : (Bit32u) -1;
+  unsigned len = i->getVL();
+  unsigned num_elements = WORD_ELEMENTS(len);
+  Bit8u control = i->Ib(), scale = control >> 4;
+
+  for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
+    if (opmask & mask)
+      op.vmm16u(n) = bf16_roundToInt(op.vmm16u(n), scale);
+    else
+      op.vmm16u(n) = 0;
+  }
+
+  if (! i->isZeroMasking()) {
+    simd_pblendw(&BX_READ_AVX_REG(i->dst()), &op, opmask, num_elements);
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+static BX_CPP_INLINE bfloat16 bfloat16_reduce(bfloat16 a, Bit8u scale)
+{
+  const bfloat16 bfloat16_negative_inf = 0xff80;
+  const bfloat16 bfloat16_positive_inf = 0x7f80;
+
+  if (a == bfloat16_negative_inf || a == bfloat16_positive_inf)
+    return 0;
+
+  bfloat16 tmp = bf16_roundToInt(a, scale);
+  return bf16_sub(a, tmp);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VREDUCENEPBF16_MASK_VphWphIbR(bxInstruction_c *i)
+{
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  Bit32u opmask = i->opmask() ? BX_READ_32BIT_OPMASK(i->opmask()) : (Bit32u) -1;
+  unsigned len = i->getVL();
+  unsigned num_elements = WORD_ELEMENTS(len);
+  Bit8u control = i->Ib(), scale = control >> 4;
+
+  for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {
+    if (opmask & mask)
+      op.vmm16u(n) = bfloat16_reduce(op.vmm16u(n), scale);
+    else
+      op.vmm16u(n) = 0;
+  }
+
+  if (! i->isZeroMasking()) {
+    simd_pblendw(&BX_READ_AVX_REG(i->dst()), &op, opmask, num_elements);
+    BX_CLEAR_AVX_REGZ(i->dst(), len);
+  }
+  else {
+    BX_WRITE_AVX_REGZ(i->dst(), op, len);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+
 #include "bf16-compare.h"
 
 /* Comparison predicate for VCMPPBF16 instruction */

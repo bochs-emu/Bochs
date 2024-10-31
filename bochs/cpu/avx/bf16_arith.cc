@@ -78,3 +78,8 @@ bfloat16 bf16_getExp(bfloat16 a) {
 bfloat16 bf16_getMant(bfloat16 a, int sign_ctrl, int interv) {
   return convert_ne_fp32_to_bfloat16(f32_getMant(convert_bfloat16_to_fp32(a), &tmp_status, sign_ctrl, interv));
 }
+
+bfloat16 bf16_roundToInt(bfloat16 a, uint8_t scale)
+{
+  return convert_ne_fp32_to_bfloat16(f32_roundToInt(convert_bfloat16_to_fp32(a), scale, softfloat_round_near_even, false, &tmp_status));
+}

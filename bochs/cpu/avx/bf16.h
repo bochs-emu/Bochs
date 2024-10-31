@@ -84,6 +84,8 @@ extern bfloat16 bf16_scalef(bfloat16 a, bfloat16 b);
 
 extern int bf16_compare(bfloat16 a, bfloat16 b); // always quiet
 
+extern bfloat16 bf16_roundToInt(bfloat16, uint8_t scale);
+
 extern bfloat16 bf16_getExp(bfloat16);
 extern bfloat16 bf16_getMant(bfloat16, int, int);
 
