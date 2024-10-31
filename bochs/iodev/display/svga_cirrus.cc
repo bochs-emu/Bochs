@@ -1674,6 +1674,7 @@ void bx_svga_cirrus_c::update(void)
       BX_CIRRUS_THIS svga_needs_update_mode = 0;
     }
     if ((BX_CIRRUS_THIS s.graphics_ctrl.shift_reg != 0) ||
+        !BX_CIRRUS_THIS s.graphics_ctrl.graphics_alpha ||
         (BX_CIRRUS_THIS hw_cursor.size == 0)) {
       BX_CIRRUS_THIS bx_vgacore_c::update();
       return;
