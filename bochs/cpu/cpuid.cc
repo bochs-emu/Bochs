@@ -367,7 +367,8 @@ void bx_cpuid_t::get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_
     // AMX_TRANSPOSE
     if (is_cpu_extension_supported(BX_ISA_AMX_TF32))
       leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_TF32;
-    // AMX_AVX512
+    if (is_cpu_extension_supported(BX_ISA_AMX_AVX512))
+      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_AVX512;
     if (is_cpu_extension_supported(BX_ISA_AMX_MOVRS))
       leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_MOVRS;
     // EBX/ECX/EDX = 0 (reserved)
@@ -1628,7 +1629,8 @@ void bx_cpuid_t::sanity_checks() const
         is_cpu_extension_supported(BX_ISA_AMX_FP16) ||
         is_cpu_extension_supported(BX_ISA_AMX_TF32) ||
         is_cpu_extension_supported(BX_ISA_AMX_COMPLEX) ||
-        is_cpu_extension_supported(BX_ISA_AMX_MOVRS))
+        is_cpu_extension_supported(BX_ISA_AMX_MOVRS) ||
+        is_cpu_extension_supported(BX_ISA_AMX_AVX512))
     {
       BX_FATAL(("PANIC: All AMX/TMUL extensions must be disabled if AMX is not supported !"));
     }
@@ -1638,6 +1640,9 @@ void bx_cpuid_t::sanity_checks() const
   if (is_cpu_extension_supported(BX_ISA_AMX)) {
     if (! is_cpu_extension_supported(BX_ISA_AVX512) && ! is_cpu_extension_supported(BX_ISA_AVX10_VL512))
       BX_FATAL(("PANIC: AMX/TMUL must be disabled if both AVX-512 and AVX10.VL512 are not supported !"));
+
+    if (is_cpu_extension_supported(BX_ISA_AMX_AVX512) && !is_cpu_extension_supported(BX_ISA_AVX10_2))
+      BX_FATAL(("PANIC: AMX-AVX512 require AVX10_2 to be enabled !"));
   }
 
   if (is_cpu_extension_supported(BX_ISA_VMX) && is_cpu_extension_supported(BX_ISA_SVM))

@@ -3773,6 +3773,13 @@ public: // for now...
   BX_SMF void TMMULTF32PS_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TILEZERO_Tnnn(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TILERELEASE(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void TILEMOVROW_VdqTrm(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TCVTROWD2PS_VpsTrm(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TCVTROWPS2PHL_VphTrm(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TCVTROWPS2PHH_VphTrm(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TCVTROWPS2PBF16L_VphTrm(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TCVTROWPS2PBF16H_VphTrm(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #endif
 
 #if BX_SUPPORT_AVX
@@ -4711,6 +4718,7 @@ public: // for now...
   BX_SMF void check_tile(bxInstruction_c *i, unsigned tile_num) BX_CPP_AttrRegparmN(2);
   BX_SMF void check_tiles(bxInstruction_c *i, unsigned tile_dst, unsigned tile_src1, unsigned tile_src2);
   BX_SMF bool configure_tiles(bxInstruction_c *i, const BxPackedAvxRegister &tilecfg) BX_CPP_AttrRegparmN(2);
+  BX_SMF void tilemov_row(bxInstruction_c *i, bool immediate_form, BxPackedAvxRegister *dst) BX_CPP_AttrRegparmN(3);
 #endif
 
 #if BX_CPU_LEVEL >= 5
