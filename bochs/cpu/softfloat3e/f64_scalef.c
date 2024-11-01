@@ -125,8 +125,6 @@ float64 f64_scalef(float64 a, float64 b, struct softfloat_status_t *status)
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if (expB < 0x3FF) {
-        if (expB == 0)
-            softfloat_raiseFlags(status, softfloat_flag_denormal);
         scale = -signB;
     }
     else {

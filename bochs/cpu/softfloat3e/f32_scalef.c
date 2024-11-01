@@ -125,8 +125,6 @@ float32 f32_scalef(float32 a, float32 b, struct softfloat_status_t *status)
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if (expB <= 0x7E) {
-        if (! expB)
-            softfloat_raiseFlags(status, softfloat_flag_denormal);
         scale = -signB;
     }
     else {
