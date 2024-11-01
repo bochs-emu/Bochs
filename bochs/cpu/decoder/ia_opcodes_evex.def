@@ -1609,4 +1609,7 @@ bx_define_opcode(BX_IA_EVEX_VGETMANTPBF16_VphWphIb_Kmask, "vgetmantpbf16", "vget
 bx_define_opcode(BX_IA_EVEX_VREDUCENEPBF16_VphWphIb_Kmask, "vreducenepbf16", "vreducenepbf16", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::VREDUCENEPBF16_MASK_VphWphIbR, BX_ISA_AVX10_2, OP_Vph, OP_mVph, OP_Ib, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
 bx_define_opcode(BX_IA_EVEX_VRNDSCALENEPBF16_VphWphIb_Kmask, "vrndscalenepbf16", "vrndscalenepbf16", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::VRNDSCALENEPBF16_MASK_VphWphIbR, BX_ISA_AVX10_2, OP_Vph, OP_mVph, OP_Ib, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
 
+bx_define_opcode(BX_IA_EVEX_VRCPPBF16_VphWph_Kmask, "vrcppbf16", "vrcppbf16", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::VRCPPBF16_MASK_VphWphR, BX_ISA_AVX10_2, OP_Vph, OP_mVph, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_EVEX_VRSQRTPBF16_VphWph_Kmask, "vrsqrtpbf16", "vrsqrtpbf16", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::VRSQRTPBF16_MASK_VphWphR, BX_ISA_AVX10_2, OP_Vph, OP_mVph, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+
 #endif // BX_SUPPORT_EVEX

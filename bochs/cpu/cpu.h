@@ -3791,6 +3791,8 @@ public: // for now...
   BX_SMF void VGETMANTPBF16_MASK_VphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VREDUCENEPBF16_MASK_VphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VRNDSCALENEPBF16_MASK_VphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VRSQRTPBF16_MASK_VphWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VRCPPBF16_MASK_VphWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
   BX_SMF void LZCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

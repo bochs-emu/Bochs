@@ -83,3 +83,17 @@ bfloat16 bf16_roundToInt(bfloat16 a, uint8_t scale)
 {
   return convert_ne_fp32_to_bfloat16(f32_roundToInt(convert_bfloat16_to_fp32(a), scale, softfloat_round_near_even, false, &tmp_status));
 }
+
+extern float32 approximate_rcp14(float32 op, const softfloat_status_t &status);
+
+bfloat16 bfloat16_approximate_rcp14(bfloat16 a) {
+  float32 f32 = approximate_rcp14(convert_bfloat16_to_fp32(a), tmp_status);
+  return convert_ne_fp32_to_bfloat16(f32);
+}
+
+extern float32 approximate_rsqrt14(float32 op, bool daz);
+
+bfloat16 bfloat16_approximate_rsqrt14(bfloat16 a) {
+  float32 f32 = approximate_rsqrt14(convert_bfloat16_to_fp32(a), true);
+  return convert_ne_fp32_to_bfloat16(f32);
+}
