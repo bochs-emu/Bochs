@@ -40,7 +40,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /*----------------------------------------------------------------------------
 | Compare between two single precision floating point numbers and return the
-| smaller of them.
+| smaller of them. If the values being compared are both 0.0s (of either sign),
+| the value in the second operand is returned.
 *----------------------------------------------------------------------------*/
 
 float32 f32_min(float32 a, float32 b, struct softfloat_status_t *status)
@@ -55,7 +56,8 @@ float32 f32_min(float32 a, float32 b, struct softfloat_status_t *status)
 
 /*----------------------------------------------------------------------------
 | Compare between two single precision floating point numbers and return the
-| larger of them.
+| larger of them. If the values being compared are both 0.0s (of either sign),
+| the value in the second operand is returned.
 *----------------------------------------------------------------------------*/
 
 float32 f32_max(float32 a, float32 b, struct softfloat_status_t *status)
