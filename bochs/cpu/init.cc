@@ -115,7 +115,7 @@ static bx_cpuid_t *cpuid_factory(BX_CPU_C *cpu)
 
 #include <string>
 
-void BX_CPU_C::exclude_cpuid_features(const char *input)
+void BX_CPU_C::add_remove_cpuid_features(const char *input, bool add)
 {
   // Use as delimiters: space, tab, newline, and comma
   static const char *delimiters = " \t\n,";
@@ -130,8 +130,12 @@ void BX_CPU_C::exclude_cpuid_features(const char *input)
       if (i > start) {
         std::string feature_name(input + start, input + i);
         int feature = match_cpu_feature(feature_name.c_str());
-        if (feature >= 0)
-          BX_CPU_THIS_PTR cpuid->disable_cpu_extension(feature);
+        if (feature >= 0) {
+          if (add)
+            BX_CPU_THIS_PTR cpuid->enable_cpu_extension(feature);
+          else
+            BX_CPU_THIS_PTR cpuid->disable_cpu_extension(feature);
+        }
         else
           BX_PANIC(("CPUID: unknown feature name \"%s\" cannot be disabled", feature_name.c_str()));
       }
@@ -161,7 +165,10 @@ void BX_CPU_C::initialize(void)
     BX_INFO(("initialized CPU model %s", cpu_model_name));
 
     const char* features_to_exclude = SIM->get_param_string(BXPN_CPU_EXCLUDE_FEATURES)->getptr();
-    exclude_cpuid_features(features_to_exclude);
+    add_remove_cpuid_features(features_to_exclude, false);
+
+    const char* features_to_eadd = SIM->get_param_string(BXPN_CPU_ADD_FEATURES)->getptr();
+    add_remove_cpuid_features(features_to_exclude, true);
   }
 
   BX_CPU_THIS_PTR cpuid->get_cpu_extensions(BX_CPU_THIS_PTR ia_extensions_bitmask);

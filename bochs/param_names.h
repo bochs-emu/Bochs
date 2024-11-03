@@ -39,6 +39,7 @@
 #define BXPN_CPU_NCORES                  "cpu.n_cores"
 #define BXPN_CPU_NTHREADS                "cpu.n_threads"
 #define BXPN_CPU_MODEL                   "cpu.model"
+#define BXPN_CPU_ADD_FEATURES            "cpu.add_features"
 #define BXPN_CPU_EXCLUDE_FEATURES        "cpu.exclude_features"
 #define BXPN_IPS                         "cpu.ips"
 #define BXPN_SMP_QUANTUM                 "cpu.quantum"

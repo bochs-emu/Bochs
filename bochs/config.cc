@@ -614,9 +614,16 @@ void bx_init_options()
       cpu_names, 0, 0);
 
   new bx_param_string_c(cpu_param,
+      "add_features",
+      "Add these features to selected pre-defined CPU configuration",
+      "Choose features to add to selected pre-defined CPU configuration",
+      "",
+      BX_PATHNAME_LEN);
+
+  new bx_param_string_c(cpu_param,
       "exclude_features",
-      "Exclude these features from CPU configuration",
-      "Choose features to exclude from selected CPU configuration",
+      "Exclude these features from selected pre-defined CPU configuration",
+      "Choose features to exclude from selected pre-defined CPU configuration",
       "",
       BX_PATHNAME_LEN);
 

@@ -3411,6 +3411,13 @@ supported configurations. When this option is used and the value
 is different from 'bx_generic', the parameters of the <link linkend="bochsopt-cpuid">CPUID</link>
 option have no effect anymore. See the <xref linkend="cpu-models"> for supported values.
 </para>
+<para><command>add_features</command></para>
+<para>
+Enable one of more CPU feature in the CPU configuration selected by MODEL.
+Could be useful for testing CPU with newer imaginary configurations by
+adding a specific feature or set of features to existing MODEL. The list 
+of features to add supplied through space or comma separated string.
+</para>
 <para><command>exclude_features</command></para>
 <para>
 Disable one of more CPU feature from CPU configuration selected by MODEL.

@@ -136,6 +136,13 @@ supported configurations. When this option is used and the value
 is different from 'bx_generic', the parameters of the CPUID option
 have no effect anymore. See the bochsrc sample for supported values.
 
+add_features:
+
+Enable one of more CPU feature in the CPU configuration selected by MODEL.
+Could be useful for testing CPU with newer imaginary configurations by
+adding a specific feature or set of features to existing MODEL. The list 
+of features to add supplied through space or comma separated string.
+
 exclude_features:
 
 Disable one of more CPU feature from CPU configuration selected by MODEL.
