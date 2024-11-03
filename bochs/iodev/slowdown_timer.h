@@ -35,6 +35,8 @@ private:
     Bit64u Q; // sleep rate in usec
   } s;
 
+  Bit64u get_realtime_usec();
+
 public:
   bx_slowdown_timer_c();
 
