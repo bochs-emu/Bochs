@@ -3846,6 +3846,10 @@ the monitor EDID data. By default, the 'builtin' values for 'Bochs Screen'
 are used. Other choices are 'disabled' (no DDC emulation) and 'file'
 (read monitor EDID from file / path name separated with a colon).
 </para>
+<para>
+With the 'vbe_memsize' parameter the size of the memory for the Bochs VBE
+extension can be defined. Valid values are 4, 8, 16 and 32 MB (default is 16 MB).
+</para>
 </section>
 
 <section>
