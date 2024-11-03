@@ -1612,6 +1612,14 @@ bx_define_opcode(BX_IA_EVEX_VRNDSCALENEPBF16_VphWphIb_Kmask, "vrndscalenepbf16",
 bx_define_opcode(BX_IA_EVEX_VRCPPBF16_VphWph_Kmask, "vrcppbf16", "vrcppbf16", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::VRCPPBF16_MASK_VphWphR, BX_ISA_AVX10_2, OP_Vph, OP_mVph, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
 bx_define_opcode(BX_IA_EVEX_VRSQRTPBF16_VphWph_Kmask, "vrsqrtpbf16", "vrsqrtpbf16", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::VRSQRTPBF16_MASK_VphWphR, BX_ISA_AVX10_2, OP_Vph, OP_mVph, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
 
+bx_define_opcode(BX_IA_EVEX_VMINMAXPS_VpsHpsWpsIb_Kmask, "vminmaxps", "vminmaxps", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VMINMAXPS_MASK_VpsHpsWpsIbR, BX_ISA_AVX10_2, OP_Vps, OP_Hps, OP_mVps, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_EVEX_VMINMAXSS_VssHpsWssIb_Kmask, "vminmaxss", "vminmaxss", &BX_CPU_C::LOAD_MASK_Wss, &BX_CPU_C::VMINMAXSS_MASK_VssHpsWssIbR, BX_ISA_AVX10_2, OP_Vss, OP_Hps, OP_mVss, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST | BX_EVEX_VL_IGNORE)
+bx_define_opcode(BX_IA_EVEX_VMINMAXPD_VpdHpdWpdIb_Kmask, "vminmaxpd", "vminmaxpd", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VMINMAXPD_MASK_VpdHpdWpdIbR, BX_ISA_AVX10_2, OP_Vpd, OP_Hpd, OP_mVpd, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_EVEX_VMINMAXSD_VsdHpdWsdIb_Kmask, "vminmaxsd", "vminmaxsd", &BX_CPU_C::LOAD_MASK_Wsd, &BX_CPU_C::VMINMAXSD_MASK_VsdHpdWsdIbR, BX_ISA_AVX10_2, OP_Vsd, OP_Hpd, OP_mVsd, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST | BX_EVEX_VL_IGNORE)
+bx_define_opcode(BX_IA_EVEX_VMINMAXPH_VphHphWphIb_Kmask, "vminmaxph", "vminmaxph", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::VMINMAXPH_MASK_VphHphWphIbR, BX_ISA_AVX10_2, OP_Vph, OP_Hph, OP_mVph, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_EVEX_VMINMAXSH_VshHphWshIb_Kmask, "vminmaxsh", "vminmaxsh", &BX_CPU_C::LOAD_MASK_Ww, &BX_CPU_C::VMINMAXSH_MASK_VshHphWshIbR, BX_ISA_AVX10_2, OP_Vsh, OP_Hph, OP_mVsh, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST | BX_EVEX_VL_IGNORE)
+bx_define_opcode(BX_IA_EVEX_VMINMAXNEPBF16_VphHphWphIb_Kmask, "vminmaxnepbf16", "vminmaxnepbf16", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::VMINMAXNEPBF16_MASK_VphHphWphIbR, BX_ISA_AVX10_2, OP_Vph, OP_Hph, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+
 #if BX_SUPPORT_AMX
 bx_define_opcode(BX_IA_EVEX_TILEMOVROW_VdqTrmIb, "tilemovrow", "tilemovrow", NULL, &BX_CPU_C::TILEMOVROW_VdqTrm, BX_ISA_AMX_AVX512, OP_Vdq, OP_Trm, OP_Ib, OP_NONE, BX_PREPARE_AMX | BX_PREPARE_EVEX_NO_SAE)
 bx_define_opcode(BX_IA_EVEX_TILEMOVROW_VdqTrmBd, "tilemovrow", "tilemovrow", NULL, &BX_CPU_C::TILEMOVROW_VdqTrm, BX_ISA_AMX_AVX512, OP_Vdq, OP_Trm, OP_Bd, OP_NONE, BX_PREPARE_AMX | BX_PREPARE_EVEX_NO_SAE)

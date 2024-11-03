@@ -278,6 +278,8 @@ int8_t f16_exp(float16);
 uint16_t f16_fraction(float16);
 float16 f16_denormal_to_zero(float16);
 
+float16 f16_minmax(float16 a, float16 b, int op_select, int sign_ctrl, bool propagate_NaNs, struct softfloat_status_t *);
+
 BX_CPP_INLINE int f16_compare(float16 a, float16 b, softfloat_status_t *status) {
   return f16_compare(a, b, 0, status);
 }
@@ -416,6 +418,8 @@ int16_t f32_exp(float32);
 uint32_t f32_fraction(float32);
 float32 f32_denormal_to_zero(float32);
 
+float32 f32_minmax(float32 a, float32 b, int op_select, int sign_ctrl, bool propagate_NaNs, struct softfloat_status_t *);
+
 BX_CPP_INLINE int f32_compare(float32 a, float32 b, softfloat_status_t *status) {
     return f32_compare(a, b, 0, status);
 }
@@ -511,6 +515,8 @@ bool f64_sign(float64);
 int16_t f64_exp(float64);
 uint64_t f64_fraction(float64);
 float64 f64_denormal_to_zero(float64);
+
+float64 f64_minmax(float64 a, float64 b, int op_select, int sign_ctrl, bool propagate_NaNs, struct softfloat_status_t *);
 
 BX_CPP_INLINE int f64_compare(float64 a, float64 b, softfloat_status_t *status) {
     return f64_compare(a, b, 0, status);

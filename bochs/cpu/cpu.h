@@ -3800,6 +3800,14 @@ public: // for now...
   BX_SMF void VRNDSCALENEPBF16_MASK_VphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VRSQRTPBF16_MASK_VphWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VRCPPBF16_MASK_VphWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VMINMAXPD_MASK_VpdHpdWpdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMINMAXSD_MASK_VsdHpdWsdIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMINMAXPS_MASK_VpsHpsWpsIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMINMAXSS_MASK_VssHpsWssIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMINMAXPH_MASK_VphHphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMINMAXSH_MASK_VshHphWshIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMINMAXNEPBF16_MASK_VphHphWphIbR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #endif
 
   BX_SMF void LZCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
