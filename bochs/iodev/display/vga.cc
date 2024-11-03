@@ -91,16 +91,16 @@ bool bx_vga_c::init_vga_extension(void)
       DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
       DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
     }
+    BX_VGA_THIS s.memsize = atoi(SIM->get_param_enum(BXPN_VBE_MEMSIZE)->get_selected()) << 20;
     if (!BX_VGA_THIS pci_enabled) {
       BX_VGA_THIS vbe.base_address = VBE_DISPI_LFB_PHYSICAL_ADDRESS;
       DEV_register_memory_handlers(theVga, mem_read_handler, mem_write_handler,
                                    BX_VGA_THIS vbe.base_address,
-                                   BX_VGA_THIS vbe.base_address + VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES - 1);
+                                   BX_VGA_THIS vbe.base_address + BX_VGA_THIS s.memsize - 1);
     }
     if (BX_VGA_THIS s.memory == NULL)
-      BX_VGA_THIS s.memory = new Bit8u[VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES];
-    memset(BX_VGA_THIS s.memory, 0, VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES);
-    BX_VGA_THIS s.memsize = VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES;
+      BX_VGA_THIS s.memory = new Bit8u[BX_VGA_THIS s.memsize];
+    memset(BX_VGA_THIS s.memory, 0, BX_VGA_THIS s.memsize);
     BX_VGA_THIS vbe.cur_dispi=VBE_DISPI_ID0;
     BX_VGA_THIS vbe.xres=640;
     BX_VGA_THIS vbe.yres=480;
@@ -140,7 +140,7 @@ bool bx_vga_c::init_vga_extension(void)
 
     if (BX_VGA_THIS vbe_present) {
       BX_VGA_THIS pci_conf[0x10] = 0x08;
-      BX_VGA_THIS init_bar_mem(0, VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES,
+      BX_VGA_THIS init_bar_mem(0, BX_VGA_THIS s.memsize,
                                mem_read_handler, mem_write_handler);
     }
     BX_VGA_THIS pci_rom_address = 0;
@@ -762,7 +762,7 @@ bx_vga_c::vbe_mem_read(bx_phy_address addr)
   }
 
   // check for out of memory read
-  if (offset > VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES)
+  if (offset > BX_VGA_THIS s.memsize)
     return 0;
 
   return (BX_VGA_THIS s.memory[offset]);
@@ -787,7 +787,7 @@ bx_vga_c::vbe_mem_write(bx_phy_address addr, Bit8u value)
   }
 
   // check for out of memory write
-  if (offset < VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES) {
+  if (offset < BX_VGA_THIS s.memsize) {
     BX_VGA_THIS s.memory[offset] = value;
   } else {
     // make sure we don't flood the logfile
@@ -894,7 +894,7 @@ Bit32u bx_vga_c::vbe_read(Bit32u address, unsigned io_len)
         return BX_VGA_THIS vbe.virtual_yres;
 
       case VBE_DISPI_INDEX_VIDEO_MEMORY_64K:
-        return (VBE_DISPI_TOTAL_VIDEO_MEMORY_KB >> 6);
+        return (BX_VGA_THIS s.memsize >> 16);
 
       case VBE_DISPI_INDEX_DDC:
         if (BX_VGA_THIS vbe.ddc_enabled) {
@@ -1041,7 +1041,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 
         case VBE_DISPI_INDEX_BANK: // set bank
         {
-          Bit16u num_banks = (Bit16u)(VBE_DISPI_TOTAL_VIDEO_MEMORY_KB / BX_VGA_THIS vbe.bank_granularity_kb);
+          Bit16u num_banks = (Bit16u)((BX_VGA_THIS s.memsize >> 10) / BX_VGA_THIS vbe.bank_granularity_kb);
           Bit16u rw_mode = VBE_DISPI_BANK_RW; // compatibility mode
           if (BX_VGA_THIS vbe.bpp == VBE_DISPI_BPP_4) num_banks >>= 2;
           if ((value & VBE_DISPI_BANK_RW) != 0) {
@@ -1126,7 +1126,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
             BX_INFO(("VBE enabling x %d, y %d, bpp %d, %u bytes visible", BX_VGA_THIS vbe.xres, BX_VGA_THIS vbe.yres, BX_VGA_THIS vbe.bpp, BX_VGA_THIS vbe.visible_screen_size));
 
             if ((value & VBE_DISPI_NOCLEARMEM) == 0) {
-              memset(BX_VGA_THIS s.memory, 0, VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES);
+              memset(BX_VGA_THIS s.memory, 0, BX_VGA_THIS s.memsize);
             }
             if (depth > 4) {
               bx_gui->dimension_update(BX_VGA_THIS vbe.xres, BX_VGA_THIS vbe.yres, 0, 0, depth);
@@ -1210,14 +1210,14 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 
           Bit32u new_screen_start = value * BX_VGA_THIS vbe.line_offset;
           if (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4) {
-            if ((new_screen_start + BX_VGA_THIS vbe.visible_screen_size) > VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES)
+            if ((new_screen_start + BX_VGA_THIS vbe.visible_screen_size) > BX_VGA_THIS s.memsize)
             {
               BX_PANIC(("VBE offset y %d out of bounds", value));
               break;
             }
             new_screen_start += (BX_VGA_THIS vbe.offset_x * BX_VGA_THIS vbe.bpp_multiplier);
           } else {
-            if ((new_screen_start + BX_VGA_THIS vbe.visible_screen_size) > (VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES / 4))
+            if ((new_screen_start + BX_VGA_THIS vbe.visible_screen_size) > (BX_VGA_THIS s.memsize >> 2))
             {
               BX_PANIC(("VBE offset y %d out of bounds", value));
               break;
@@ -1249,9 +1249,9 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           Bit16u new_width=value;
           Bit16u new_height;
           if (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4) {
-            new_height=(VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES / BX_VGA_THIS vbe.bpp_multiplier) / new_width;
+            new_height = (BX_VGA_THIS s.memsize / BX_VGA_THIS vbe.bpp_multiplier) / new_width;
           } else {
-            new_height=(VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES * 2) / new_width;
+            new_height = (BX_VGA_THIS s.memsize << 1) / new_width;
           }
           if (new_height >=BX_VGA_THIS vbe.yres)
           {
@@ -1263,9 +1263,9 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
             // no decent virtual height: adjust width & height
             new_height=BX_VGA_THIS vbe.yres;
             if (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4) {
-              new_width=(VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES / BX_VGA_THIS vbe.bpp_multiplier) / new_height;
+              new_width = (BX_VGA_THIS s.memsize / BX_VGA_THIS vbe.bpp_multiplier) / new_height;
             } else {
-              new_width=(VBE_DISPI_TOTAL_VIDEO_MEMORY_BYTES * 2) / new_height;
+              new_width = (BX_VGA_THIS s.memsize << 1) / new_height;
             }
 
             BX_INFO(("VBE recalc virtual width %d height %d",new_width, new_height));

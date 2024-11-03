@@ -51,6 +51,8 @@ Detailed change log :
     - Fix Pause / Ctrl+Break key handling (possibly SDL issue)
 
 - I/O Devices
+  - VGA / Bochs VBE support
+    - Added VBE memory size option (requires latest VGABIOS)
   - Cirrus SVGA
     - Added support for hardware cursor in VGA mode
     - Fixed text mode cursor blinking / text mode cursor rendering issues

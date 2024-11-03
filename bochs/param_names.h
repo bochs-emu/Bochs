@@ -114,6 +114,7 @@
 #define BXPN_VGA_REALTIME                "display.vga_realtime"
 #define BXPN_DDC_MODE                    "display.ddc_mode"
 #define BXPN_DDC_FILE                    "display.ddc_file"
+#define BXPN_VBE_MEMSIZE                 "display.vbe_memsize"
 #define BXPN_VOODOO                      "display.voodoo"
 #define BXPN_KEYBOARD                    "keyboard_mouse.keyboard"
 #define BXPN_KBD_TYPE                    "keyboard_mouse.keyboard.type"
