@@ -26,8 +26,6 @@ SGML_VALIDATE = nsgmls -s
 DOCBOOK2HTML = $(JADE) $(JADE_ARGS)
 endif
 
-DESTDIR=
-
 # name of the major documentation sections
 SECTIONS=user documentation development
 SECTION_HTML=$(SECTIONS:%=%/index.html)
