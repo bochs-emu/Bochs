@@ -35,8 +35,6 @@ sharedir        = $(datarootdir)/bochs
 top_builddir    = .
 top_srcdir      = $(srcdir)
 
-DESTDIR =
-
 VERSION=@VERSION@
 REL_STRING=@REL_STRING@
 MAN_PAGE_1_LIST=bochs bximage bochs-dlx
@@ -605,6 +603,8 @@ all-clean: clean @CLEAN_DOCBOOK_VAR@ @CLEAN_PCIDEV_VAR@
 	cd misc @COMMAND_SEPARATOR@
 	$(MAKE) clean
 	@CD_UP_ONE@
+
+distclean: dist-clean
 
 dist-clean: local-dist-clean
 	cd iodev @COMMAND_SEPARATOR@
