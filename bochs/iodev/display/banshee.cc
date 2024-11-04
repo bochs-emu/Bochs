@@ -731,6 +731,8 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
         } else if ((v->banshee.io[reg] & 0x180) == 0x100) {
           BX_INFO(("3D overlay mode enabled"));
           v->vtimer_running = 1;
+        } else if ((v->banshee.io[reg] & 0x180) == 0x180) {
+          BX_ERROR(("Desktop / overlay mode not supported yet"));
         }
       }
       v->banshee.hwcursor.enabled = ((v->banshee.io[reg] >> 27) & 1);
@@ -749,6 +751,12 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
       }
       if ((v->banshee.io[reg] >> 5) & 1) {
         BX_ERROR(("vidProcCfg: chromaKey mode not supported yet"));
+      }
+      if ((v->banshee.io[reg] >> 14) & 1) {
+        BX_ERROR(("vidProcCfg: overlay horizontal scaling not supported yet"));
+      }
+      if ((v->banshee.io[reg] >> 15) & 1) {
+        BX_ERROR(("vidProcCfg: overlay vertical scaling not supported yet"));
       }
       if ((v->banshee.io[reg] >> 16) & 3) {
         BX_ERROR(("vidProcCfg: overlay filter mode %d not supported yet", (v->banshee.io[reg] >> 16) & 3));
