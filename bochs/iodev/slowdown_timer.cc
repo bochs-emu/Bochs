@@ -59,6 +59,15 @@ bx_slowdown_timer_c::bx_slowdown_timer_c()
   s.timer_handle=BX_NULL_TIMER_HANDLE;
 }
 
+Bit64u bx_slowdown_timer_c::get_realtime_usec()
+{
+#if BX_HAVE_REALTIME_USEC
+  return bx_get_realtime64_usec();
+#else
+  return sectousec(time(NULL));
+#endif
+}
+
 void bx_slowdown_timer_c::init(void)
 {
   // Return early if slowdown timer not selected
@@ -73,7 +82,7 @@ void bx_slowdown_timer_c::init(void)
   if(s.MAXmultiplier<1)
     s.MAXmultiplier=1;
 
-  s.start_time = sectousec(time(NULL));
+  s.start_time = get_realtime_usec();
   s.start_emulated_time = bx_pc_system.time_usec();
   s.lasttime=0;
   if (s.timer_handle == BX_NULL_TIMER_HANDLE) {
@@ -103,7 +112,7 @@ void bx_slowdown_timer_c::handle_timer()
 {
   Bit64u total_emu_time = (bx_pc_system.time_usec()) - s.start_emulated_time;
   Bit64u wanttime = s.lasttime+s.Q;
-  Bit64u totaltime = sectousec(time(NULL)) - s.start_time;
+  Bit64u totaltime = get_realtime_usec() - s.start_time;
   Bit64u thistime=(wanttime>totaltime)?wanttime:totaltime;
 
 #if BX_SLOWDOWN_PRINTF_FEEDBACK
