@@ -1515,21 +1515,43 @@ void bx_cpuid_t::warning_messages(unsigned extension) const
 
 void bx_cpuid_t::sanity_checks() const
 {
+  // P6 -> PENTIUM -> 486 -> 386
   if (is_cpu_extension_supported(BX_ISA_486) && ! is_cpu_extension_supported(BX_ISA_386))
     BX_FATAL(("PANIC: 80386 ISA must be enabled for 80486 model !"));
-
   if (is_cpu_extension_supported(BX_ISA_PENTIUM) && ! is_cpu_extension_supported(BX_ISA_486))
     BX_FATAL(("PANIC: 80486 ISA must be enabled for Pentium model !"));
-
   if (is_cpu_extension_supported(BX_ISA_P6) && ! is_cpu_extension_supported(BX_ISA_PENTIUM))
     BX_FATAL(("PANIC: Pentium ISA must be enabled for P6 model !"));
 
+  // 3DNow! -> MMX
   if (is_cpu_extension_supported(BX_ISA_3DNOW) && ! is_cpu_extension_supported(BX_ISA_MMX))
     BX_FATAL(("PANIC: 3dnow! ISA require MMX to be enabled !"));
 
+  // AVX10_VL512 or AVX10_2 -> AVX10_1 -> AVX2 -> AVX -> XSAVE -> SSE -> MMX
   if (is_cpu_extension_supported(BX_ISA_AVX10_VL512) && !is_cpu_extension_supported(BX_ISA_AVX10_1))
     BX_FATAL(("PANIC: AVX10_VL512 is enabled when AVX10 is not supported !"));
+  if (is_cpu_extension_supported(BX_ISA_AVX10_1) && !is_cpu_extension_supported(BX_ISA_AVX2))
+    BX_FATAL(("PANIC: AVX10 is enabled when AVX2 is not supported !"));
+  if (is_cpu_extension_supported(BX_ISA_AVX512) && !is_cpu_extension_supported(BX_ISA_AVX2))
+    BX_FATAL(("PANIC: AVX-512 is enabled when AVX2 is not supported !"));
+  if (is_cpu_extension_supported(BX_ISA_AVX2) && !is_cpu_extension_supported(BX_ISA_AVX))
+    BX_FATAL(("PANIC: AVX2 is enabled when AVX is not supported !"));
+  if (is_cpu_extension_supported(BX_ISA_AVX) && !is_cpu_extension_supported(BX_ISA_XSAVE))
+    BX_FATAL(("PANIC: AVX is enabled when XSAVE is not supported !"));
+  if (is_cpu_extension_supported(BX_ISA_XSAVE) && !is_cpu_extension_supported(BX_ISA_SSE))
+    BX_FATAL(("PANIC: XSAVE is enabled when SSE is not supported !"));
+  if (is_cpu_extension_supported(BX_ISA_SSE) && !is_cpu_extension_supported(BX_ISA_MMX))
+    BX_FATAL(("PANIC: SSE is enabled when MMX is not supported !"));
 
+  // XSAVEOPT/XSAVES/XSAVEC -> XSAVE
+  if (is_cpu_extension_supported(BX_ISA_XSAVEOPT) && !is_cpu_extension_supported(BX_ISA_XSAVE))
+    BX_FATAL(("PANIC: XSAVEOPT is enabled when XSAVE is not supported !"));
+  if (is_cpu_extension_supported(BX_ISA_XSAVES) && !is_cpu_extension_supported(BX_ISA_XSAVE))
+    BX_FATAL(("PANIC: XSAVES is enabled when XSAVE is not supported !"));
+  if (is_cpu_extension_supported(BX_ISA_XSAVEC) && !is_cpu_extension_supported(BX_ISA_XSAVE))
+    BX_FATAL(("PANIC: XSAVEC is enabled when XSAVE is not supported !"));
+
+  // AVX-512 extensions -> AVX-512
   if (! is_cpu_extension_supported(BX_ISA_AVX512)) {
     if (is_cpu_extension_supported(BX_ISA_AVX512_DQ) ||
         is_cpu_extension_supported(BX_ISA_AVX512_BW) ||
@@ -1546,6 +1568,60 @@ void bx_cpuid_t::sanity_checks() const
     {
       BX_FATAL(("PANIC: AVX-512 extensions must be disabled if AVX-512 is not supported !"));
     }
+  }
+
+  // TBM -> XOP -> AVX
+  if (is_cpu_extension_supported(BX_ISA_TBM) && !is_cpu_extension_supported(BX_ISA_XOP))
+    BX_FATAL(("PANIC: TBM is enabled when XOP is not supported !"));
+  if (is_cpu_extension_supported(BX_ISA_XOP) && !is_cpu_extension_supported(BX_ISA_AVX))
+    BX_FATAL(("PANIC: XOP is enabled when AVX is not supported !"));
+
+  // SSE2/SSE3/SSSE3/SSE4_1/SSE4_2/SSE4A/MISALIGNED_SSE -> SSE
+  if (! is_cpu_extension_supported(BX_ISA_SSE)) {
+    if (is_cpu_extension_supported(BX_ISA_SSE2) ||
+        is_cpu_extension_supported(BX_ISA_SSE3) ||
+        is_cpu_extension_supported(BX_ISA_SSSE3) ||
+        is_cpu_extension_supported(BX_ISA_SSE4_1) ||
+        is_cpu_extension_supported(BX_ISA_SSE4_2) ||
+        is_cpu_extension_supported(BX_ISA_SSE4A) ||
+        is_cpu_extension_supported(BX_ISA_MISALIGNED_SSE))
+    {
+      BX_FATAL(("PANIC: All SSE extensions must be disabled if SSE is not supported !"));
+    }
+  }
+
+  if (! is_cpu_extension_supported(BX_ISA_AVX)) {
+    if (is_cpu_extension_supported(BX_ISA_AVX_IFMA) ||
+        is_cpu_extension_supported(BX_ISA_AVX_VNNI) ||
+        is_cpu_extension_supported(BX_ISA_AVX_VNNI_INT8) ||
+        is_cpu_extension_supported(BX_ISA_AVX_VNNI_INT16) ||
+        is_cpu_extension_supported(BX_ISA_AVX_NE_CONVERT) ||
+        is_cpu_extension_supported(BX_ISA_AVX_F16C) ||
+        is_cpu_extension_supported(BX_ISA_AVX_FMA))
+    {
+      BX_FATAL(("PANIC: All AVX extensions must be disabled if AVX is not supported !"));
+    }
+
+    if (is_cpu_extension_supported(BX_ISA_FMA4))
+      BX_FATAL(("PANIC: FMA4 extension must be disabled if AVX is not supported !"));
+  }
+
+  if (! is_cpu_extension_supported(BX_ISA_AMX)) {
+    if (is_cpu_extension_supported(BX_ISA_AMX_INT8) ||
+        is_cpu_extension_supported(BX_ISA_AMX_BF16) ||
+        is_cpu_extension_supported(BX_ISA_AMX_FP16) ||
+        is_cpu_extension_supported(BX_ISA_AMX_TF32) ||
+        is_cpu_extension_supported(BX_ISA_AMX_COMPLEX) ||
+        is_cpu_extension_supported(BX_ISA_AMX_MOVRS))
+    {
+      BX_FATAL(("PANIC: All AMX/TMUL extensions must be disabled if AMX is not supported !"));
+    }
+  }
+
+  // AMX -> AVX-512 or AVX10_VL512
+  if (is_cpu_extension_supported(BX_ISA_AMX)) {
+    if (! is_cpu_extension_supported(BX_ISA_AVX512) && ! is_cpu_extension_supported(BX_ISA_AVX10_VL512))
+      BX_FATAL(("PANIC: AMX/TMUL must be disabled if both AVX-512 and AVX10.VL512 are not supported !"));
   }
 }
 
