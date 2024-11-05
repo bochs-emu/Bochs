@@ -113,6 +113,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SD_VsdEqR(bxInstruction_c *i)
   }
 
 AVX_CVT32_TO_64(VCVTPS2PD_VpdWpsR, f32_to_f64)
+#if BX_SUPPORT_EVEX
+AVX_CVT32_TO_64(VCVTPS2QQ_VdqWpsR, f32_to_i64)
+AVX_CVT32_TO_64(VCVTTPS2QQ_VdqWpsR, f32_to_i64_round_to_zero)
+AVX_CVT32_TO_64(VCVTPS2UQQ_VdqWpsR, f32_to_ui64)
+AVX_CVT32_TO_64(VCVTTPS2UQQ_VdqWpsR, f32_to_ui64_round_to_zero)
+#endif
 
 #define AVX_CVT64_TO_32(HANDLER, func)                                                      \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
@@ -141,6 +147,12 @@ AVX_CVT32_TO_64(VCVTPS2PD_VpdWpsR, f32_to_f64)
 AVX_CVT64_TO_32(VCVTPD2PS_VpsWpdR, f64_to_f32)
 AVX_CVT64_TO_32(VCVTPD2DQ_VdqWpdR, f64_to_i32)
 AVX_CVT64_TO_32(VCVTTPD2DQ_VdqWpdR, f64_to_i32_round_to_zero)
+#if BX_SUPPORT_EVEX
+AVX_CVT64_TO_32(VCVTPD2UDQ_VdqWpdR, f64_to_ui32)
+AVX_CVT64_TO_32(VCVTTPD2UDQ_VdqWpdR, f64_to_ui32_round_to_zero)
+AVX_CVT64_TO_32(VCVTQQ2PS_VpsWdqR, i64_to_f32)
+AVX_CVT64_TO_32(VCVTUQQ2PS_VpsWdqR, ui64_to_f32)
+#endif
 
 #define AVX_CVT32_TO_32(HANDLER, func)                                                      \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
@@ -163,6 +175,11 @@ AVX_CVT64_TO_32(VCVTTPD2DQ_VdqWpdR, f64_to_i32_round_to_zero)
 AVX_CVT32_TO_32(VCVTDQ2PS_VpsWdqR, i32_to_f32)
 AVX_CVT32_TO_32(VCVTPS2DQ_VdqWpsR, f32_to_i32)
 AVX_CVT32_TO_32(VCVTTPS2DQ_VdqWpsR, f32_to_i32_round_to_zero)
+#if BX_SUPPORT_EVEX
+AVX_CVT32_TO_32(VCVTPS2UDQ_VdqWpsR, f32_to_ui32)
+AVX_CVT32_TO_32(VCVTTPS2UDQ_VdqWpsR, f32_to_ui32_round_to_zero)
+AVX_CVT32_TO_32(VCVTUDQ2PS_VpsWdqR, ui32_to_f32)
+#endif
 
 /* Opcode: VEX.F3.0F 5A (VEX.W ignore) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSS2SD_VsdWssR(bxInstruction_c *i)

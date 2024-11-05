@@ -234,35 +234,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSS2SD_MASK_VsdWssR(bxInstruction_c *i)
 
 // packed
 
-#define AVX512_CVT64_TO_32(HANDLER, func)                                                   \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
-  {                                                                                         \
-    BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;                             \
-    unsigned len = i->getVL();                                                              \
-                                                                                            \
-    softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                      \
-    softfloat_status_word_rc_override(status, i);                                           \
-                                                                                            \
-    for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {                                      \
-      result.vmm32u(n) = (func)(op.vmm64u(n), &status);                                     \
-    }                                                                                       \
-                                                                                            \
-    check_exceptionsSSE(softfloat_getExceptionFlags(&status));                              \
-                                                                                            \
-    if (len == BX_VL128) {                                                                  \
-      BX_WRITE_XMM_REG_LO_QWORD_CLEAR_HIGH(i->dst(), result.vmm64u(0));                     \
-    } else {                                                                                \
-      BX_WRITE_AVX_REGZ(i->dst(), result, len >> 1); /* write half vector */                \
-    }                                                                                       \
-                                                                                            \
-    BX_NEXT_INSTR(i);                                                                       \
-  }
-
-AVX512_CVT64_TO_32(VCVTPD2UDQ_VdqWpdR, f64_to_ui32)
-AVX512_CVT64_TO_32(VCVTTPD2UDQ_VdqWpdR, f64_to_ui32_round_to_zero)
-AVX512_CVT64_TO_32(VCVTQQ2PS_VpsWdqR, i64_to_f32)
-AVX512_CVT64_TO_32(VCVTUQQ2PS_VpsWdqR, ui64_to_f32)
-
 #define AVX512_CVT64_TO_32_MASK(HANDLER, func)                                              \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
   {                                                                                         \
@@ -298,28 +269,6 @@ AVX512_CVT64_TO_32_MASK(VCVTPD2UDQ_MASK_VdqWpdR, f64_to_ui32)
 AVX512_CVT64_TO_32_MASK(VCVTTPD2UDQ_MASK_VdqWpdR, f64_to_ui32_round_to_zero)
 AVX512_CVT64_TO_32_MASK(VCVTQQ2PS_MASK_VpsWdqR, i64_to_f32)
 AVX512_CVT64_TO_32_MASK(VCVTUQQ2PS_MASK_VpsWdqR, ui64_to_f32)
-
-#define AVX512_CVT32_TO_32(HANDLER, func)                                                   \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
-  {                                                                                         \
-    BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());                                     \
-    unsigned len = i->getVL();                                                              \
-                                                                                            \
-    softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                      \
-    softfloat_status_word_rc_override(status, i);                                           \
-                                                                                            \
-    for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {                                      \
-      op.vmm32u(n) = (func)(op.vmm32u(n), &status);                                         \
-    }                                                                                       \
-                                                                                            \
-    check_exceptionsSSE(softfloat_getExceptionFlags(&status));                              \
-    BX_WRITE_AVX_REGZ(i->dst(), op, len);                                                   \
-    BX_NEXT_INSTR(i);                                                                       \
-  }
-
-AVX512_CVT32_TO_32(VCVTPS2UDQ_VdqWpsR, f32_to_ui32)
-AVX512_CVT32_TO_32(VCVTTPS2UDQ_VdqWpsR, f32_to_ui32_round_to_zero)
-AVX512_CVT32_TO_32(VCVTUDQ2PS_VpsWdqR, ui32_to_f32)
 
 #define AVX512_CVT32_TO_32_MASK(HANDLER, func)                                              \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
@@ -421,31 +370,6 @@ AVX512_CVT64_TO_64_MASK(VCVTPD2UQQ_MASK_VdqWpdR, f64_to_ui64)
 AVX512_CVT64_TO_64_MASK(VCVTTPD2UQQ_MASK_VdqWpdR, f64_to_ui64_round_to_zero)
 AVX512_CVT64_TO_64_MASK(VCVTQQ2PD_MASK_VpdWdqR, i64_to_f64)
 AVX512_CVT64_TO_64_MASK(VCVTUQQ2PD_MASK_VpdWdqR, ui64_to_f64)
-
-#define AVX512_CVT32_TO_64(HANDLER, func)                                                   \
-  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
-  {                                                                                         \
-    BxPackedAvxRegister result;                                                             \
-    BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());                                     \
-    unsigned len = i->getVL();                                                              \
-                                                                                            \
-    softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                      \
-    softfloat_status_word_rc_override(status, i);                                           \
-                                                                                            \
-    for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {                                      \
-      result.vmm64u(n) = (func)(op.ymm32u(n), &status);                                     \
-    }                                                                                       \
-                                                                                            \
-    check_exceptionsSSE(softfloat_getExceptionFlags(&status));                              \
-                                                                                            \
-    BX_WRITE_AVX_REGZ(i->dst(), result, len);                                               \
-    BX_NEXT_INSTR(i);                                                                       \
-  }
-
-AVX512_CVT32_TO_64(VCVTPS2QQ_VdqWpsR, f32_to_i64)
-AVX512_CVT32_TO_64(VCVTTPS2QQ_VdqWpsR, f32_to_i64_round_to_zero)
-AVX512_CVT32_TO_64(VCVTPS2UQQ_VdqWpsR, f32_to_ui64)
-AVX512_CVT32_TO_64(VCVTTPS2UQQ_VdqWpsR, f32_to_ui64_round_to_zero)
 
 #define AVX512_CVT32_TO_64_MASK(HANDLER, func)                                              \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
