@@ -3807,7 +3807,10 @@ public: // for now...
   BX_SMF void VMINMAXSS_MASK_VssHpsWssIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMINMAXPH_MASK_VphHphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMINMAXSH_MASK_VshHphWshIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VMINMAXNEPBF16_MASK_VphHphWphIbR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMINMAXNEPBF16_MASK_VphHphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  // AVX 10.2 - convert instructions
+  BX_SMF void VCVT2PS2PHX_MASK_VphHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
   BX_SMF void LZCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

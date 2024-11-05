@@ -72,6 +72,7 @@ AVX_OBJS = \
 	tbm64.o \
 	xop.o \
 	bf16_arith.o \
+	avx10_2_cvt.o \
 	avx10_2_minmax.o \
 	avx10_2_bf16.o \
 	avx10_2_misc.o
@@ -451,6 +452,23 @@ avx10_2_bf16.o: avx10_2_bf16.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../cpu/decoder/ia_opcodes.h ../../cpu/decoder/ia_opcodes.def \
  ../../cpu/decoder/ia_opcodes_evex.def
 avx10_2_minmax.o: avx10_2_minmax.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
+ ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
+ ../decoder/decoder.h ../../instrument/stubs/instrument.h ../i387.h \
+ ../softfloat3e/include/softfloat_types.h ../fpu/tag_w.h \
+ ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
+ ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../xmm.h \
+ ../vmx.h ../vmx_ctrls.h ../stack.h ../access.h \
+ ../softfloat3e/include/softfloat-compare.h \
+ ../softfloat3e/include/softfloat.h \
+ ../softfloat3e/include/softfloat_types.h \
+ ../softfloat3e/include/softfloat-extra.h \
+ ../softfloat3e/include/internals.h  ../simd_int.h \
+ ../simd_pfp.h  ../fpu/softfloat-specialize.h \
+ ../../cpu/decoder/ia_opcodes.h ../../cpu/decoder/ia_opcodes.def \
+ ../../cpu/decoder/ia_opcodes_evex.def
+avx10_2_cvt.o: avx10_2_cvt.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
