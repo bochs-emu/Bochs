@@ -138,7 +138,7 @@ int vbox_image_t::open(const char* _pathname, int flags)
   // (10gig = 10240 1-meg blocks with each entry using 4 bytes) = 40k
   mtlb = new Bit32s[(unsigned) header.blocks_in_hdd];
   if (mtlb == 0) {
-    BX_PANIC(("unable to allocate %lu bytes for vbox image's map table", header.blocks_in_hdd * sizeof(Bit32u)));
+    BX_PANIC(("unable to allocate %lu bytes for vbox image's map table", (unsigned long) (header.blocks_in_hdd * sizeof(Bit32u))));
   }
 
   // read in the map table

@@ -391,7 +391,7 @@ void bx_hpet_c::hpet_set_timer(HPETTimer *t)
   }
   if (diff < HPET_MIN_ALLOWED_PERIOD) diff = HPET_MIN_ALLOWED_PERIOD;
   if (diff > HPET_MAX_ALLOWED_PERIOD) diff = HPET_MAX_ALLOWED_PERIOD;
-  BX_DEBUG(("Timer %d to fire in 0x%lX ticks", t->tn, diff));
+  BX_DEBUG(("Timer %d to fire in 0x" FMT_LL "X ticks", t->tn, diff));
   bx_pc_system.activate_timer_nsec(t->timer_id, ticks_to_ns(diff), 0);
 }
 
