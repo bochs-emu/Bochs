@@ -90,50 +90,79 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSI2SD_VsdEqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-/* Opcode: VEX.0F 5A (VEX.W ignore, VEX.VVV #UD) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2PD_VpdWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister result;
-  BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());
-  unsigned len = i->getVL();
+// packed
 
-  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
-     result.vmm64u(n) = f32_to_f64(op.ymm32u(n), &status);
+#define AVX_CVT32_TO_64(HANDLER, func)                                                      \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
+  {                                                                                         \
+    BxPackedAvxRegister result;                                                             \
+    BxPackedYmmRegister op = BX_READ_YMM_REG(i->src());                                     \
+    unsigned len = i->getVL();                                                              \
+                                                                                            \
+    softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                      \
+    softfloat_status_word_rc_override(status, i);                                           \
+                                                                                            \
+    for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {                                      \
+      result.vmm64u(n) = (func)(op.ymm32u(n), &status);                                     \
+    }                                                                                       \
+                                                                                            \
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));                              \
+                                                                                            \
+    BX_WRITE_AVX_REGZ(i->dst(), result, len);                                               \
+    BX_NEXT_INSTR(i);                                                                       \
   }
 
-  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
+AVX_CVT32_TO_64(VCVTPS2PD_VpdWpsR, f32_to_f64)
 
-  BX_WRITE_AVX_REGZ(i->dst(), result, len);
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.66.0F 5A (VEX.W ignore, VEX.VVV #UD) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2PS_VpsWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
-  unsigned len = i->getVL();
-
-  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
-    result.vmm32u(n) = f64_to_f32(op.vmm64u(n), &status);
+#define AVX_CVT64_TO_32(HANDLER, func)                                                      \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
+  {                                                                                         \
+    BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;                             \
+    unsigned len = i->getVL();                                                              \
+                                                                                            \
+    softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                      \
+    softfloat_status_word_rc_override(status, i);                                           \
+                                                                                            \
+    for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {                                      \
+      result.vmm32u(n) = (func)(op.vmm64u(n), &status);                                     \
+    }                                                                                       \
+                                                                                            \
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));                              \
+                                                                                            \
+    if (len == BX_VL128) {                                                                  \
+      BX_WRITE_XMM_REG_LO_QWORD_CLEAR_HIGH(i->dst(), result.vmm64u(0));                     \
+    } else {                                                                                \
+      BX_WRITE_AVX_REGZ(i->dst(), result, len >> 1); /* write half vector */                \
+    }                                                                                       \
+                                                                                            \
+    BX_NEXT_INSTR(i);                                                                       \
   }
 
-  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
+AVX_CVT64_TO_32(VCVTPD2PS_VpsWpdR, f64_to_f32)
+AVX_CVT64_TO_32(VCVTPD2DQ_VdqWpdR, f64_to_i32)
+AVX_CVT64_TO_32(VCVTTPD2DQ_VdqWpdR, f64_to_i32_round_to_zero)
 
-  if (len == BX_VL128) {
-    BX_WRITE_XMM_REG_LO_QWORD_CLEAR_HIGH(i->dst(), result.vmm64u(0));
-  }
-  else {
-    BX_WRITE_AVX_REGZ(i->dst(), result, len >> 1); // write half vector
+#define AVX_CVT32_TO_32(HANDLER, func)                                                      \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
+  {                                                                                         \
+    BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());                                     \
+    unsigned len = i->getVL();                                                              \
+                                                                                            \
+    softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);                      \
+    softfloat_status_word_rc_override(status, i);                                           \
+                                                                                            \
+    for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {                                      \
+      op.vmm32u(n) = (func)(op.vmm32u(n), &status);                                         \
+    }                                                                                       \
+                                                                                            \
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));                              \
+    BX_WRITE_AVX_REGZ(i->dst(), op, len);                                                   \
+    BX_NEXT_INSTR(i);                                                                       \
   }
 
-  BX_NEXT_INSTR(i);
-}
+AVX_CVT32_TO_32(VCVTDQ2PS_VpsWdqR, i32_to_f32)
+AVX_CVT32_TO_32(VCVTPS2DQ_VdqWpsR, f32_to_i32)
+AVX_CVT32_TO_32(VCVTTPS2DQ_VdqWpsR, f32_to_i32_round_to_zero)
 
 /* Opcode: VEX.F3.0F 5A (VEX.W ignore) */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSS2SD_VsdWssR(bxInstruction_c *i)
@@ -162,113 +191,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTSD2SS_VssWsdR(bxInstruction_c *i)
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op1);
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.0F 5B (VEX.W ignore, VEX.VVV #UD) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTDQ2PS_VpsWdqR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
-  unsigned len = i->getVL();
-
-  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
-    op.vmm32u(n) = i32_to_f32(op.vmm32s(n), &status);
-  }
-
-  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op, len);
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.66.0F 5B (VEX.W ignore, VEX.VVV #UD) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPS2DQ_VdqWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
-  unsigned len = i->getVL();
-
-  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
-    op.vmm32s(n) = f32_to_i32(op.vmm32u(n), &status);
-  }
-
-  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op, len);
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.NDS.F3.0F 5B (VEX.W ignore, VEX.VVV #UD) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTPS2DQ_VdqWpsR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
-  unsigned len = i->getVL();
-
-  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
-    op.vmm32s(n) = f32_to_i32_round_to_zero(op.vmm32u(n), &status);
-  }
-
-  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
-
-  BX_WRITE_AVX_REGZ(i->dst(), op, len);
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.66.0F.E6 (VEX.W ignore, VEX.VVV #UD) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTPD2DQ_VdqWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
-  unsigned len = i->getVL();
-
-  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
-    result.vmm32s(n) = f64_to_i32_round_to_zero(op.vmm64u(n), &status);
-  }
-
-  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
-
-  if (len == BX_VL128) {
-    BX_WRITE_XMM_REG_LO_QWORD_CLEAR_HIGH(i->dst(), result.vmm64u(0));
-  }
-  else {
-    BX_WRITE_AVX_REGZ(i->dst(), result, len >> 1); // write half vector
-  }
-
-  BX_NEXT_INSTR(i);
-}
-
-/* Opcode: VEX.F2.0F.E6 (VEX.W ignore, VEX.VVV #UD) */
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPD2DQ_VdqWpdR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
-  unsigned len = i->getVL();
-
-  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
-  softfloat_status_word_rc_override(status, i);
-
-  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
-    result.vmm32s(n) = f64_to_i32(op.vmm64u(n), &status);
-  }
-
-  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
-
-  if (len == BX_VL128) {
-    BX_WRITE_XMM_REG_LO_QWORD_CLEAR_HIGH(i->dst(), result.vmm64u(0));
-  }
-  else {
-    BX_WRITE_AVX_REGZ(i->dst(), result, len >> 1); // write half vector
-  }
-
   BX_NEXT_INSTR(i);
 }
 
