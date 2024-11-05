@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "10 Jun 2024" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "03 Nov 2024" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -135,6 +135,13 @@ Selects CPU configuration to emulate from pre-defined list of all
 supported configurations. When this option is used and the value
 is different from 'bx_generic', the parameters of the CPUID option
 have no effect anymore. See the bochsrc sample for supported values.
+
+add_features:
+
+Enable one of more CPU feature in the CPU configuration selected by MODEL.
+Could be useful for testing CPU with newer imaginary configurations by
+adding a specific feature or set of features to existing MODEL. The list 
+of features to add supplied through space or comma separated string.
 
 exclude_features:
 
@@ -520,6 +527,11 @@ This parameter defines the behaviour of the DDC emulation that returns
 the monitor EDID data. By default the 'builtin' values for 'Bochs Screen'
 are used. Other choices are 'disabled' (no DDC emulation) and 'file'
 (read monitor EDID from file / path name separated with a colon).
+
+vbe_memsize:
+
+With this parameter the size of the memory for the Bochs VBE extension
+can be defined. Valid values are 4, 8, 16 and 32 MB (default is 16 MB).
 
 Examples:
   vga: extension=none, update_freq=10, realtime=0, ddc=disabled

@@ -47,9 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *----------------------------------------------------------------------------*/
 uint64_t softfloat_propagateNaNF64UI(uint64_t uiA, uint64_t uiB, struct softfloat_status_t *status)
 {
-    bool isSigNaNA;
-
-    isSigNaNA = softfloat_isSigNaNF64UI(uiA);
+    bool isSigNaNA = softfloat_isSigNaNF64UI(uiA);
     if (isSigNaNA || softfloat_isSigNaNF64UI(uiB)) {
         softfloat_raiseFlags(status, softfloat_flag_invalid);
         if (isSigNaNA) return uiA | UINT64_C(0x0008000000000000);

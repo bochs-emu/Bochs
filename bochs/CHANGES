@@ -7,10 +7,11 @@ Brief summary :
  - Implemented AMX-TF32 ISA extension
  - Added initial support for AVX10_1 ISA extension and AVX10 CPUID leaf 0x24 (to be enabled in Xeon Granite Rapids)
  - CPUID: Added Arrow Lake CPU definition
- - CPUID: Support for disabling of one of more CPU feature from CPUID configuration (see "exclude_features" in bochsrc sample and documentation)
+ - CPUID: Support for enabling/disabling of one of more CPU features from CPUID configuration (see "add_features" and "exclude_features" in bochsrc sample and documentation)
  - Bugfixes for CPU emulation correctness (critical bugfixes for WAITPKG, LASS, XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
  - USB: Added the USB Debugger support for xHCI and UHCI
  - Added USB boot option (requires BIOS from https://github.com/fysnet/i440fx)
+ - LGPL'd VGABIOS updated from GitHub repo (Cirrus / VBE fixes and extensions)
  - Documentation updates and fixes after transition to GIT
 
 Detailed change log :
@@ -28,7 +29,7 @@ Detailed change log :
 - CPUID: 
   - Added Arrow Lake CPU definition
     - Features AVX-VNNI, AVX-IFMA, AVX-VNNI-INT8, AVX-VNNI-INT16, AVX_NE_CONVERT, GFNI, VAES/VPCLMULQDQ, SHA512, SM3/SM4, CMPCCXADD, LASS, SERIALIZE, UINTR
-  - Support for disabling of one of more CPU feature from CPUID configuration (see "exclude_features" in bochsrc sample and documentation)
+  - Support for enabling/disabling of one of more CPU features from CPUID configuration (see "add_features" and "exclude_features" in bochsrc sample and documentation)
 
 - Configure and compile
   - Fixed compilation of plugin version with debugger enabled on Windows
@@ -50,6 +51,8 @@ Detailed change log :
     - Fix Pause / Ctrl+Break key handling (possibly SDL issue)
 
 - I/O Devices
+  - VGA / Bochs VBE support
+    - Added VBE memory size option (requires latest VGABIOS)
   - Cirrus SVGA
     - Added support for hardware cursor in VGA mode
     - Fixed text mode cursor blinking / text mode cursor rendering issues
@@ -84,7 +87,7 @@ Detailed change log :
   - Allow BIOS ROM size up to 4MB to accommodate OVMF
   - Added panic in legacy BIOS in case no VGA BIOS ROM is found at C000:0000
   - Bochs BIOS: Fixed unwanted side effects caused by some helper functions
-  - LGPL'd VGABIOS updated to version 0.9b (several VBE bugfixes)
+  - LGPL'd VGABIOS updated from GitHub repo (Cirrus / VBE fixes and extensions)
     - Now using ".bin" file extension for all VGABIOS images
 
 - Misc

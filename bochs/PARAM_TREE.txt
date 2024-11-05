@@ -33,6 +33,7 @@ cpuid
   level
   family
   model
+  add_features
   exclude_features
   stepping
   vendor_string

@@ -1385,7 +1385,7 @@ public: // for now...
  ~BX_CPU_C();
 
   void initialize(void);
-  void exclude_cpuid_features(const char *feature_list);
+  void add_remove_cpuid_features(const char *feature_list, bool add);
   void init_statistics(void);
   void after_restore_state(void);
   void register_state(void);

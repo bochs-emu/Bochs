@@ -454,7 +454,7 @@ void bx_init_displaylib_list()
 
 void bx_init_vgaext_list()
 {
-  Bit8u i, count = 0;
+  Bit8u i, j, count = 0;
   const char *plugname;
 
   count = PLUG_get_plugins_count(PLUGTYPE_VGA);
@@ -462,15 +462,19 @@ void bx_init_vgaext_list()
   vga_extension_plugins = (const char**) malloc((count + 1) * sizeof(char*));
   vga_extension_names[0] = "none";
   vga_extension_plugins[0] = "vga";
+  vga_extension_names[1] = "vbe";
+  vga_extension_plugins[1] = "vga";
+  j = 2;
   for (i = 0; i < count; i++) {
     plugname = PLUG_get_plugin_name(PLUGTYPE_VGA, i);
-    vga_extension_plugins[i + 1] = plugname;
-    if (!strcmp(plugname, "vga")) {
-      vga_extension_names[i + 1] = "vbe";
-    } else if (!strcmp(plugname, "svga_cirrus")) {
-      vga_extension_names[i + 1] = plugname + 5;
-    } else {
-      vga_extension_names[i + 1] = plugname;
+    if (strcmp(plugname, "vga")) {
+      vga_extension_plugins[j] = plugname;
+      if (!strcmp(plugname, "svga_cirrus")) {
+        vga_extension_names[j] = plugname + 5;
+      } else {
+        vga_extension_names[j] = plugname;
+      }
+      j++;
     }
   }
   vga_extension_names[count + 1] = NULL;
@@ -610,9 +614,16 @@ void bx_init_options()
       cpu_names, 0, 0);
 
   new bx_param_string_c(cpu_param,
+      "add_features",
+      "Add these features to selected pre-defined CPU configuration",
+      "Choose features to add to selected pre-defined CPU configuration",
+      "",
+      BX_PATHNAME_LEN);
+
+  new bx_param_string_c(cpu_param,
       "exclude_features",
-      "Exclude these features from CPU configuration",
-      "Choose features to exclude from selected CPU configuration",
+      "Exclude these features from selected pre-defined CPU configuration",
+      "Choose features to exclude from selected pre-defined CPU configuration",
       "",
       BX_PATHNAME_LEN);
 
@@ -1217,10 +1228,8 @@ void bx_init_options()
       "VGA Extension",
       "Name of the VGA extension",
       vga_extension_names,
-      0, 0);
-  vga_extension->set_by_name("vbe");
+      BX_VGA_EXTENSION_VBE, BX_VGA_EXTENSION_NONE);
   vga_extension->set_handler(bx_param_handler);
-  display->set_options(display->SHOW_PARENT);
 
   static const char *ddc_mode_list[] = {
     "disabled",
@@ -1243,6 +1252,26 @@ void bx_init_options()
   deplist->add(path);
   ddc_mode->set_dependent_list(deplist, 0);
   ddc_mode->set_dependent_bitmap(BX_DDC_MODE_FILE, 1);
+
+  static const char *vbe_memsize_list[] = {
+    "4",
+    "8",
+    "16",
+    "32",
+    NULL
+  };
+  bx_param_enum_c *vbe_memsize = new bx_param_enum_c(display,
+      "vbe_memsize",
+      "VBE memory size (MB)",
+      "Size of VBE memory in MB",
+      vbe_memsize_list,
+      BX_VBE_MEMSIZE_16MB, BX_VBE_MEMSIZE_4MB);
+
+  deplist = new bx_list_c(NULL);
+  deplist->add(vbe_memsize);
+  vga_extension->set_dependent_list(deplist, 0);
+  vga_extension->set_dependent_bitmap(BX_VGA_EXTENSION_VBE, 1);
+  display->set_options(display->SHOW_PARENT);
 
   // keyboard & mouse subtree
   bx_list_c *kbd_mouse = new bx_list_c(root_param, "keyboard_mouse", "Keyboard & Mouse Options");
@@ -3112,6 +3141,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
           SIM->get_param_enum(BXPN_DDC_MODE)->set(BX_DDC_MODE_FILE);
           SIM->get_param_string(BXPN_DDC_FILE)->set(strval+5);
         }
+      } else if (!strncmp(params[i], "vbe_memsize=", 12)) {
+        SIM->get_param_enum(BXPN_VBE_MEMSIZE)->set_by_name(&params[i][12]);
       } else {
         PARSE_ERR(("%s: vga directive malformed.", context));
       }
@@ -3742,7 +3773,7 @@ int bx_write_configuration(const char *rc, int overwrite)
   if (SIM->get_param_enum(BXPN_DDC_MODE)->get() == BX_DDC_MODE_FILE) {
     fprintf(fp, ":%s", SIM->get_param_string(BXPN_DDC_FILE)->getptr());
   }
-  fprintf(fp, "\n");
+  fprintf(fp, ", vbe_memsize=%s\n", SIM->get_param_enum(BXPN_VBE_MEMSIZE)->get_selected());
 #if BX_SUPPORT_SMP
   fprintf(fp, "cpu: count=%u:%u:%u, ips=%u, quantum=%d, ",
     SIM->get_param_num(BXPN_CPU_NPROCESSORS)->get(), SIM->get_param_num(BXPN_CPU_NCORES)->get(),
