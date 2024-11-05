@@ -5756,7 +5756,7 @@ class bxInstruction_c;
 
 #endif
 
-#if defined(NEED_CPU_NEED_TEMPLATE_METHODS)
+#if defined(NEED_CPU_TEMPLATE_METHODS)
 #include "cpu_templates.h"
 #include "cpu_templates_pfp.h"
 #endif

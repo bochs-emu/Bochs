@@ -23,7 +23,7 @@
 #include "bochs.h"
 #ifndef BX_STANDALONE_DECODER
 #define NEED_CPU_REG_SHORTCUTS 1
-#define NEED_CPU_NEED_TEMPLATE_METHODS 1
+#define NEED_CPU_TEMPLATE_METHODS 1
 #include "../cpu.h"
 #include "../cpuid.h"
 #endif
