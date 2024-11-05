@@ -167,8 +167,8 @@ void BX_CPU_C::initialize(void)
     const char* features_to_exclude = SIM->get_param_string(BXPN_CPU_EXCLUDE_FEATURES)->getptr();
     add_remove_cpuid_features(features_to_exclude, false);
 
-    const char* features_to_eadd = SIM->get_param_string(BXPN_CPU_ADD_FEATURES)->getptr();
-    add_remove_cpuid_features(features_to_exclude, true);
+    const char* features_to_add = SIM->get_param_string(BXPN_CPU_ADD_FEATURES)->getptr();
+    add_remove_cpuid_features(features_to_add, true);
   }
 
   BX_CPU_THIS_PTR cpuid->get_cpu_extensions(BX_CPU_THIS_PTR ia_extensions_bitmask);
