@@ -73,4 +73,108 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVT2PS2PHX_MASK_VphHpsWpsR(bxInstruction_
   BX_NEXT_INSTR(i);
 }
 
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTSD2USIS_GdWsdR(bxInstruction_c *i)
+{
+  float64 op = BX_READ_XMM_REG_LO_QWORD(i->src());
+
+  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+  softfloat_status_word_rc_override(status, i);
+  Bit32u result = f64_to_ui32_round_to_zero_saturate(op, &status);
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
+
+  BX_WRITE_32BIT_REGZ(i->dst(), result);
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTSD2USIS_GqWsdR(bxInstruction_c *i)
+{
+  float64 op = BX_READ_XMM_REG_LO_QWORD(i->src());
+
+  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+  softfloat_status_word_rc_override(status, i);
+  Bit64u result = f64_to_ui64_round_to_zero_saturate(op, &status);
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
+
+  BX_WRITE_64BIT_REG(i->dst(), result);
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTSS2USIS_GdWssR(bxInstruction_c *i)
+{
+  float32 op = BX_READ_XMM_REG_LO_DWORD(i->src());
+
+  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+  softfloat_status_word_rc_override(status, i);
+  Bit32u result = f32_to_ui32_round_to_zero_saturate(op, &status);
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
+
+  BX_WRITE_32BIT_REGZ(i->dst(), result);
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTSS2USIS_GqWssR(bxInstruction_c *i)
+{
+  float32 op = BX_READ_XMM_REG_LO_DWORD(i->src());
+
+  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+  softfloat_status_word_rc_override(status, i);
+  Bit64u result = f32_to_ui64_round_to_zero_saturate(op, &status);
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
+
+  BX_WRITE_64BIT_REG(i->dst(), result);
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTSD2SIS_GdWsdR(bxInstruction_c *i)
+{
+  float64 op = BX_READ_XMM_REG_LO_QWORD(i->src());
+
+  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+  softfloat_status_word_rc_override(status, i);
+  Bit32s result = f64_to_i32_round_to_zero_saturate(op, &status);
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
+
+  BX_WRITE_32BIT_REGZ(i->dst(), (Bit32u) result);
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTSD2SIS_GqWsdR(bxInstruction_c *i)
+{
+  float64 op = BX_READ_XMM_REG_LO_QWORD(i->src());
+
+  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+  softfloat_status_word_rc_override(status, i);
+  Bit64s result = f64_to_i64_round_to_zero_saturate(op, &status);
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
+
+  BX_WRITE_64BIT_REG(i->dst(), (Bit64u) result);
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTSS2SIS_GdWssR(bxInstruction_c *i)
+{
+  float32 op = BX_READ_XMM_REG_LO_DWORD(i->src());
+
+  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+  softfloat_status_word_rc_override(status, i);
+  Bit32s result = f32_to_i32_round_to_zero_saturate(op, &status);
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
+
+  BX_WRITE_32BIT_REGZ(i->dst(), (Bit32u) result);
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTTSS2SIS_GqWssR(bxInstruction_c *i)
+{
+  float32 op = BX_READ_XMM_REG_LO_DWORD(i->src());
+
+  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+  softfloat_status_word_rc_override(status, i);
+  Bit64s result = f32_to_i64_round_to_zero_saturate(op, &status);
+  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
+
+  BX_WRITE_64BIT_REG(i->dst(), (Bit64u) result);
+  BX_NEXT_INSTR(i);
+}
+
 #endif

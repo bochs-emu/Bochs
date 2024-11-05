@@ -116,8 +116,10 @@ AVX_CVT32_TO_64(VCVTPS2PD_VpdWpsR, f32_to_f64)
 #if BX_SUPPORT_EVEX
 AVX_CVT32_TO_64(VCVTPS2QQ_VdqWpsR, f32_to_i64)
 AVX_CVT32_TO_64(VCVTTPS2QQ_VdqWpsR, f32_to_i64_round_to_zero)
+AVX_CVT32_TO_64(VCVTTPS2QQS_VdqWpsR, f32_to_i64_round_to_zero_saturate) // AVX 10.2
 AVX_CVT32_TO_64(VCVTPS2UQQ_VdqWpsR, f32_to_ui64)
 AVX_CVT32_TO_64(VCVTTPS2UQQ_VdqWpsR, f32_to_ui64_round_to_zero)
+AVX_CVT32_TO_64(VCVTTPS2UQQS_VdqWpsR, f32_to_ui64_round_to_zero_saturate) // AVX 10.2
 #endif
 
 #define AVX_CVT64_TO_32(HANDLER, func)                                                      \
@@ -148,8 +150,10 @@ AVX_CVT64_TO_32(VCVTPD2PS_VpsWpdR, f64_to_f32)
 AVX_CVT64_TO_32(VCVTPD2DQ_VdqWpdR, f64_to_i32)
 AVX_CVT64_TO_32(VCVTTPD2DQ_VdqWpdR, f64_to_i32_round_to_zero)
 #if BX_SUPPORT_EVEX
+AVX_CVT64_TO_32(VCVTTPD2DQS_VdqWpdR, f64_to_i32_round_to_zero_saturate) // AVX 10.2
 AVX_CVT64_TO_32(VCVTPD2UDQ_VdqWpdR, f64_to_ui32)
 AVX_CVT64_TO_32(VCVTTPD2UDQ_VdqWpdR, f64_to_ui32_round_to_zero)
+AVX_CVT64_TO_32(VCVTTPD2UDQS_VdqWpdR, f64_to_ui32_round_to_zero_saturate) // AVX 10.2
 AVX_CVT64_TO_32(VCVTQQ2PS_VpsWdqR, i64_to_f32)
 AVX_CVT64_TO_32(VCVTUQQ2PS_VpsWdqR, ui64_to_f32)
 #endif
@@ -176,8 +180,10 @@ AVX_CVT32_TO_32(VCVTDQ2PS_VpsWdqR, i32_to_f32)
 AVX_CVT32_TO_32(VCVTPS2DQ_VdqWpsR, f32_to_i32)
 AVX_CVT32_TO_32(VCVTTPS2DQ_VdqWpsR, f32_to_i32_round_to_zero)
 #if BX_SUPPORT_EVEX
+AVX_CVT32_TO_32(VCVTTPS2DQS_VdqWpsR, f32_to_i32_round_to_zero_saturate) // AVX 10.2
 AVX_CVT32_TO_32(VCVTPS2UDQ_VdqWpsR, f32_to_ui32)
 AVX_CVT32_TO_32(VCVTTPS2UDQ_VdqWpsR, f32_to_ui32_round_to_zero)
+AVX_CVT32_TO_32(VCVTTPS2UDQS_VdqWpsR, f32_to_ui32_round_to_zero_saturate) // AVX 10.2
 AVX_CVT32_TO_32(VCVTUDQ2PS_VpsWdqR, ui32_to_f32)
 #endif
 

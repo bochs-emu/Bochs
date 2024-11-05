@@ -3811,6 +3811,33 @@ public: // for now...
 
   // AVX 10.2 - convert instructions
   BX_SMF void VCVT2PS2PHX_MASK_VphHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  // AVX 10.2 - saturating convert to integer with truncation
+  BX_SMF void VCVTTPD2UDQS_VdqWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPD2UDQS_MASK_VdqWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPD2UQQS_VdqWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPD2UQQS_MASK_VdqWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPS2UDQS_VdqWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPS2UDQS_MASK_VdqWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPS2UQQS_VdqWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPS2UQQS_MASK_VdqWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPD2DQS_VdqWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPD2DQS_MASK_VdqWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPD2QQS_VdqWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPD2QQS_MASK_VdqWpdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPS2DQS_VdqWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPS2DQS_MASK_VdqWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPS2QQS_VdqWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPS2QQS_MASK_VdqWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void VCVTTSS2USIS_GdWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTSS2USIS_GqWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTSD2USIS_GdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTSD2USIS_GqWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTSD2SIS_GdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTSD2SIS_GqWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTSS2SIS_GdWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTSS2SIS_GqWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
   BX_SMF void LZCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

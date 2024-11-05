@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-uint32_t f32_to_ui32_r_minMag(float32 a, bool exact, struct softfloat_status_t *status)
+uint32_t f32_to_ui32_r_minMag(float32 a, bool exact, bool saturate, struct softfloat_status_t *status)
 {
     int16_t exp;
     uint32_t sig;
@@ -67,10 +67,14 @@ uint32_t f32_to_ui32_r_minMag(float32 a, bool exact, struct softfloat_status_t *
     *------------------------------------------------------------------------*/
     sign = signF32UI(a);
     if (sign || (shiftDist < 0)) {
+        const uint32_t NaN_response = saturate ? 0 : ui32_fromNaN; 
+        const uint32_t NegOverflowResponse = saturate ? ui32_minValue : ui32_fromNegOverflow;
+        const uint32_t PosOverflowResponse = saturate ? ui32_maxValue : ui32_fromPosOverflow;
+
         softfloat_raiseFlags(status, softfloat_flag_invalid);
         return (exp == 0xFF) && sig 
-                ? ui32_fromNaN
-                : sign ? ui32_fromNegOverflow : ui32_fromPosOverflow;
+                ? NaN_response
+                : sign ? NegOverflowResponse : PosOverflowResponse;
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/

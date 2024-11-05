@@ -39,13 +39,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-uint64_t f64_to_ui64_r_minMag(float64 a, bool exact, struct softfloat_status_t *status)
+uint64_t f64_to_ui64_r_minMag(float64 a, bool exact, bool saturate, struct softfloat_status_t *status)
 {
     int16_t exp;
     uint64_t sig;
     int16_t shiftDist;
     bool sign;
     uint64_t z;
+
+    const uint64_t NaN_response = saturate ? 0 : ui64_fromNaN; 
+    const uint64_t NegOverflowResponse = saturate ? ui64_minValue : ui64_fromNegOverflow;
+    const uint64_t PosOverflowResponse = saturate ? ui64_maxValue : ui64_fromPosOverflow;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -82,6 +86,6 @@ uint64_t f64_to_ui64_r_minMag(float64 a, bool exact, struct softfloat_status_t *
  invalid:
     softfloat_raiseFlags(status, softfloat_flag_invalid);
     return
-        (exp == 0x7FF) && sig ? ui64_fromNaN
-            : sign ? ui64_fromNegOverflow : ui64_fromPosOverflow;
+        (exp == 0x7FF) && sig ? NaN_response
+            : sign ? NegOverflowResponse : PosOverflowResponse;
 }
