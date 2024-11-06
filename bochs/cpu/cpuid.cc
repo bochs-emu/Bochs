@@ -1626,6 +1626,9 @@ void bx_cpuid_t::sanity_checks() const
     if (! is_cpu_extension_supported(BX_ISA_AVX512) && ! is_cpu_extension_supported(BX_ISA_AVX10_VL512))
       BX_FATAL(("PANIC: AMX/TMUL must be disabled if both AVX-512 and AVX10.VL512 are not supported !"));
   }
+
+  if (is_cpu_extension_supported(BX_ISA_VMX) && is_cpu_extension_supported(BX_ISA_SVM))
+    BX_FATAL(("PANIC: VMX and SVM cannot be enabled in same model !"));
 }
 
 void bx_cpuid_t::dump_features() const
