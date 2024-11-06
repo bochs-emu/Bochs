@@ -6,6 +6,7 @@ Brief summary :
  - Implemented MONITORLESS MWAIT instructions support
  - Implemented AMX-TF32 ISA extension
  - Added initial support for AVX10_1 ISA extension and AVX10 CPUID leaf 0x24 (to be enabled in Xeon Granite Rapids)
+ - CPUID: Added i486DX4 CPU definition
  - CPUID: Added Arrow Lake CPU definition
  - CPUID: Support for enabling/disabling of one of more CPU features from CPUID configuration (see "add_features" and "exclude_features" in bochsrc sample and documentation)
  - Bugfixes for CPU emulation correctness (critical bugfixes for WAITPKG, LASS, XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
@@ -27,6 +28,8 @@ Detailed change log :
   - Added initial support for AVX10_1 ISA extension and AVX10 CPUID leaf 0x24 (to be enabled in Xeon Granite Rapids)
 
 - CPUID: 
+  - Added i486DX4 CPU definition
+    - Model=4, supports x87 FPU and VME only
   - Added Arrow Lake CPU definition
     - Features AVX-VNNI, AVX-IFMA, AVX-VNNI-INT8, AVX-VNNI-INT16, AVX_NE_CONVERT, GFNI, VAES/VPCLMULQDQ, SHA512, SM3/SM4, CMPCCXADD, LASS, SERIALIZE, UINTR
   - Support for enabling/disabling of one of more CPU features from CPUID configuration (see "add_features" and "exclude_features" in bochsrc sample and documentation)

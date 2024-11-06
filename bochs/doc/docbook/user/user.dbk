@@ -5962,7 +5962,12 @@ features enabled at compile time (3rd column).
   <row>
     <entry>bx_generic</entry>
     <entry>Default Bochs CPU configured with <link linkend="bochsopt-cpuid">CPUID</link> option</entry>
-    <entry>cpu level 5</entry>
+    <entry>cpu level 4</entry>
+  </row>
+  <row>
+    <entry>i486dx4</entry>
+    <entry>Intel 486DX4</entry>
+    <entry>cpu level 4</entry>
   </row>
   <row>
     <entry>pentium</entry>

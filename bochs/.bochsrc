@@ -115,6 +115,7 @@
 #
 #  CPU configurations that can be selected:
 # -----------------------------------------------------------------
+#  i486dx4                    Intel 486DX4
 #  pentium                    Intel Pentium (P54C)
 #  pentium_mmx                Intel Pentium MMX
 #  amd_k6_2_chomper           AMD-K6(tm) 3D processor (Chomper)
