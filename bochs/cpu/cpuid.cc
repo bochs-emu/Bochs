@@ -451,6 +451,9 @@ void bx_cpuid_t::get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_
 
 void bx_cpuid_t::get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32u function, cpuid_function_t *leaf) const
 {
+  static const char *brand_string_ovr = (const char *)SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
+  if (brand_string_ovr && *brand_string_ovr) brand_string = brand_string_ovr;
+
   switch(function) {
   case 0x80000002:
     memcpy(&(leaf->eax), brand_string     , 4);

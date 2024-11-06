@@ -22,22 +22,22 @@ cpu
   n_cores
   n_threads
   model
+  add_features
+  exclude_features
   ips
   quantum
   reset_on_triple_fault
   msrs
   cpuid_limit_winnt
   mwait_is_nop
+  brand_string
 
 cpuid
   level
   family
   model
-  add_features
-  exclude_features
   stepping
   vendor_string
-  brand_string
   mmx
   sep
   simd

@@ -689,6 +689,13 @@ void bx_init_options()
       "", BX_PATHNAME_LEN);
 #endif
 
+  new bx_param_string_c(cpu_param,
+      "brand_string",
+      "CPUID brand string",
+      "Set the CPUID brand string override (keep empty to use original brand string)",
+      "",
+      BX_CPUID_BRAND_LEN+1);
+
   cpu_param->set_options(menu->SHOW_PARENT);
 
   // cpuid subtree
@@ -729,16 +736,6 @@ void bx_init_options()
       "AuthenticAMD",
 #endif
       BX_CPUID_VENDOR_LEN+1);
-  new bx_param_string_c(cpuid_param,
-      "brand_string",
-      "CPUID brand string",
-      "Set the CPUID brand string",
-#if BX_CPU_VENDOR_INTEL
-      "              Intel(R) Pentium(R) 4 CPU        ",
-#else
-      "AMD Athlon(tm) processor",
-#endif
-      BX_CPUID_BRAND_LEN+1);
 
 #if BX_CPU_LEVEL >= 5
   new bx_param_bool_c(cpuid_param,

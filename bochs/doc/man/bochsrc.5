@@ -182,6 +182,12 @@ mwait_is_nop:
 When this option is enabled MWAIT will not put the CPU into a sleep state.
 This option exists only if Bochs compiled with --enable-monitor-mwait.
 
+brand_string:
+
+Set the CPUID brand string returned by CPUID(0x80000002 .. 0x80000004).
+This should be at most a forty-eight-character ASCII string.
+Keep it empty to use original CPUID brand string.
+
 msrs:
 
 Define path to user CPU Model Specific Registers (MSRs) specification.
@@ -258,11 +264,6 @@ vendor_string:
 
 Set the CPUID vendor string returned by CPUID(0x0).  This should be a
 twelve-character ASCII string.
-
-brand_string:
-
-Set the CPUID vendor string returned by CPUID(0x80000002 .. 0x80000004).
-This should be at most a forty-eight-character ASCII string.
 
 mmx:
 
