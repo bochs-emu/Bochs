@@ -244,12 +244,16 @@ BX_CPP_INLINE float16 ui16_to_f16(uint16_t a, struct softfloat_status_t *status)
 /*----------------------------------------------------------------------------
 | 16-bit (half-precision) floating-point operations.
 *----------------------------------------------------------------------------*/
+uint16_t f16_to_ui16(float16, uint8_t, bool, struct softfloat_status_t *);
 uint32_t f16_to_ui32(float16, uint8_t, bool, struct softfloat_status_t *);
 uint64_t f16_to_ui64(float16, uint8_t, bool, struct softfloat_status_t *);
+int16_t f16_to_i16(float16, uint8_t, bool, struct softfloat_status_t *);
 int32_t f16_to_i32(float16, uint8_t, bool, struct softfloat_status_t *);
 int64_t f16_to_i64(float16, uint8_t, bool, struct softfloat_status_t *);
+uint16_t f16_to_ui16_r_minMag(float16, bool, struct softfloat_status_t *);
 uint32_t f16_to_ui32_r_minMag(float16, bool, struct softfloat_status_t *);
 uint64_t f16_to_ui64_r_minMag(float16, bool, struct softfloat_status_t *);
+int16_t f16_to_i16_r_minMag(float16, bool, struct softfloat_status_t *);
 int32_t f16_to_i32_r_minMag(float16, bool, struct softfloat_status_t *);
 int64_t f16_to_i64_r_minMag(float16, bool, struct softfloat_status_t *);
 float32 f16_to_f32(float16, struct softfloat_status_t *);
@@ -301,16 +305,8 @@ BX_CPP_INLINE int64_t f16_to_i64(float16 a, struct softfloat_status_t *status) {
 BX_CPP_INLINE int32_t f16_to_i32(float16 a, struct softfloat_status_t *status) {
     return f16_to_i32(a, softfloat_getRoundingMode(status), true, status);
 }
-
-BX_CPP_INLINE int16_t f16_to_i16(float16 a, softfloat_status_t *status)
-{
-    int32_t val_32 = f16_to_i32(a, status);
-    int16_t val_16 = (int16_t) val_32;
-    if ((int32_t)(val_16) != val_32) {
-        softfloat_setFlags(status, softfloat_flag_invalid);
-        return (int16_t) 0x8000;
-    }
-    return val_16;
+BX_CPP_INLINE int16_t f16_to_i16(float16 a, struct softfloat_status_t *status) {
+    return f16_to_i16(a, softfloat_getRoundingMode(status), true, status);
 }
 
 BX_CPP_INLINE int64_t f16_to_i64_round_to_zero(float16 a, struct softfloat_status_t *status) {
@@ -319,16 +315,8 @@ BX_CPP_INLINE int64_t f16_to_i64_round_to_zero(float16 a, struct softfloat_statu
 BX_CPP_INLINE int32_t f16_to_i32_round_to_zero(float16 a, struct softfloat_status_t *status) {
     return f16_to_i32_r_minMag(a, true, status);
 }
-
-BX_CPP_INLINE int16_t f16_to_i16_round_to_zero(float16 a, softfloat_status_t *status)
-{
-    int32_t val_32 = f16_to_i32_round_to_zero(a, status);
-    int16_t val_16 = (int16_t) val_32;
-    if ((int32_t)(val_16) != val_32) {
-        softfloat_setFlags(status, softfloat_flag_invalid);
-        return (int16_t) 0x8000;
-    }
-    return val_16;
+BX_CPP_INLINE int16_t f16_to_i16_round_to_zero(float16 a, struct softfloat_status_t *status) {
+    return f16_to_i16_r_minMag(a, true, status);
 }
 
 BX_CPP_INLINE uint64_t f16_to_ui64(float16 a, struct softfloat_status_t *status) {
@@ -337,15 +325,8 @@ BX_CPP_INLINE uint64_t f16_to_ui64(float16 a, struct softfloat_status_t *status)
 BX_CPP_INLINE uint32_t f16_to_ui32(float16 a, struct softfloat_status_t *status) {
     return f16_to_ui32(a, softfloat_getRoundingMode(status), true, status);
 }
-
-BX_CPP_INLINE uint16_t f16_to_ui16(float16 a, softfloat_status_t *status)
-{
-    uint32_t val_32 = f16_to_ui32(a, status);
-    if (val_32 > 0xFFFF) {
-        softfloat_setFlags(status, softfloat_flag_invalid);
-        return 0xFFFF;
-    }
-    return (uint16_t) val_32;
+BX_CPP_INLINE uint16_t f16_to_ui16(float16 a, struct softfloat_status_t *status) {
+    return f16_to_ui16(a, softfloat_getRoundingMode(status), true, status);
 }
 
 BX_CPP_INLINE uint64_t f16_to_ui64_round_to_zero(float16 a, struct softfloat_status_t *status) {
@@ -354,15 +335,8 @@ BX_CPP_INLINE uint64_t f16_to_ui64_round_to_zero(float16 a, struct softfloat_sta
 BX_CPP_INLINE uint32_t f16_to_ui32_round_to_zero(float16 a, struct softfloat_status_t *status) {
     return f16_to_ui32_r_minMag(a, true, status);
 }
-
-BX_CPP_INLINE uint16_t f16_to_ui16_round_to_zero(float16 a, softfloat_status_t *status)
-{
-    uint32_t val_32 = f16_to_ui32_round_to_zero(a, status);
-    if (val_32 > 0xFFFF) {
-        softfloat_setFlags(status, softfloat_flag_invalid);
-        return 0xFFFF;
-    }
-    return (uint16_t) val_32;
+BX_CPP_INLINE uint16_t f16_to_ui16_round_to_zero(float16 a, struct softfloat_status_t *status) {
+    return f16_to_ui16_r_minMag(a, true, status);
 }
 
 BX_CPP_INLINE float16 f16_fmadd(float16 a, float16 b, float16 c, softfloat_status_t *status) {
