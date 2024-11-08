@@ -35,17 +35,48 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "internals.h"
 #include "specialize.h"
 #include "softfloat.h"
 
 uint16_t f16_to_ui16_r_minMag(float16 a, bool exact, struct softfloat_status_t *status)
 {
-    uint32_t sig32 = f16_to_ui32_r_minMag(a, exact, status);
+    bool sign;
+    int8_t exp;
+    uint16_t sig;
+    int shiftDist;
+    uint16_t z;
 
-    if (sig32 > UINT16_MAX) {
-        softfloat_raiseFlags(status, softfloat_flag_invalid);
-        return ui16_fromPosOverflow;
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    sign = signF16UI(a);
+    exp  = expF16UI(a);
+    sig = fracF16UI(a);
+    if (softfloat_denormalsAreZeros(status))
+        if (!exp && sig) sig = 0;
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    shiftDist = 0x1E - exp;
+    if (16 <= shiftDist) {
+        if (exact && (exp | sig)) {
+            softfloat_raiseFlags(status, softfloat_flag_inexact);
+        }
+        return 0;
     }
-
-    return sig32;
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    if (sign || (shiftDist < 0)) {
+        softfloat_raiseFlags(status, softfloat_flag_invalid);
+        return (exp == 0x1F) && sig 
+                ? ui16_fromNaN
+                : sign ? ui16_fromNegOverflow : ui16_fromPosOverflow;
+    }
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    sig = (sig | 0x0400)<<5;
+    z = sig>>shiftDist;
+    if (exact && (z<<shiftDist != sig)) {
+        softfloat_raiseFlags(status, softfloat_flag_inexact);
+    }
+    return z;
 }

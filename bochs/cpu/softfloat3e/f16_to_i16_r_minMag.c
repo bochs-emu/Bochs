@@ -35,21 +35,48 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "internals.h"
 #include "specialize.h"
 #include "softfloat.h"
 
 int16_t f16_to_i16_r_minMag(float16 a, bool exact, struct softfloat_status_t *status)
 {
-    int32_t sig32 = f16_to_i32_r_minMag(a, exact, status);
+    bool sign;
+    int8_t exp;
+    uint16_t sig;
+    int shiftDist;
+    int16_t absZ;
 
-    if (sig32 > INT16_MAX) {
-        softfloat_raiseFlags(status, softfloat_flag_invalid);
-        return i16_fromPosOverflow;
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    sign = signF16UI(a);
+    exp  = expF16UI(a);
+    sig = fracF16UI(a);
+    if (softfloat_denormalsAreZeros(status))
+        if (!exp && sig) sig = 0;
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    shiftDist = 0x1E - exp;
+    if (16 <= shiftDist) {
+        if (exact && (exp | sig)) {
+            softfloat_raiseFlags(status, softfloat_flag_inexact);
+        }
+        return 0;
     }
-    if (sig32 < INT16_MIN) {
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    if (shiftDist <= 0) {
         softfloat_raiseFlags(status, softfloat_flag_invalid);
-        return i16_fromNegOverflow;
+        return (exp == 0x1F) && sig 
+                ? i16_fromNaN
+                : sign ? i16_fromNegOverflow : i16_fromPosOverflow;
     }
-
-    return sig32;
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    sig = (sig | 0x0400)<<5;
+    absZ = sig>>shiftDist;
+    if (exact && ((uint32_t) absZ<<shiftDist != sig)) {
+        softfloat_raiseFlags(status, softfloat_flag_inexact);
+    }
+    return sign ? -absZ : absZ;
 }
