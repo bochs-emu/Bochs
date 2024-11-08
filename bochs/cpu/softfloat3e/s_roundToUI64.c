@@ -39,6 +39,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
+/*----------------------------------------------------------------------------
+| Takes the 128-bit fixed-point value formed by concatenating `sig' and
+| `sigExtra', with binary point between bits 63 and 64 (between the input words),
+| and returns the properly rounded 64-bit unsigned integer corresponding to the
+| input.  Ordinarily, the fixed-point input is simply rounded to an integer,
+| with the inexact exception raised if the input cannot be represented exactly
+| as an integer. However, if the fixed-point input is too large, the invalid
+| exception is raised and the largest unsigned integer is returned.
+*----------------------------------------------------------------------------*/
+
 uint64_t
  softfloat_roundToUI64(bool sign, uint64_t sig, uint64_t sigExtra, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
 {

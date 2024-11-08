@@ -169,6 +169,8 @@ OBJS_OTHERS = \
   f16_roundToInt$(OBJ) \
   f16_class$(OBJ) \
   f16_compare$(OBJ) \
+  f16_max$(OBJ) \
+  f16_min$(OBJ) \
   f16_minmax$(OBJ) \
   f16_range$(OBJ) \
   f16_addsub$(OBJ) \
@@ -193,6 +195,8 @@ OBJS_OTHERS = \
   f32_roundToInt$(OBJ) \
   f32_class$(OBJ) \
   f32_compare$(OBJ) \
+  f32_max$(OBJ) \
+  f32_min$(OBJ) \
   f32_minmax$(OBJ) \
   f32_range$(OBJ) \
   f32_scalef$(OBJ) \
@@ -219,6 +223,8 @@ OBJS_OTHERS = \
   f64_roundToInt$(OBJ) \
   f64_class$(OBJ) \
   f64_compare$(OBJ) \
+  f64_max$(OBJ) \
+  f64_min$(OBJ) \
   f64_minmax$(OBJ) \
   f64_range$(OBJ) \
   f64_scalef$(OBJ) \
