@@ -127,6 +127,7 @@ public:
   virtual void register_state(void);
   virtual void after_restore_state(void);
 
+  virtual void   update(void);
   virtual bool   update_timing(void);
   virtual Bit32u get_retrace(bool hv);
 
@@ -178,6 +179,8 @@ private:
   void   blt_host_to_screen_pattern(void);
   void   blt_line(bool pline);
   void   blt_polygon_fill(bool force);
+
+  Bit16u get_overlay_pixel(unsigned x, unsigned y);
 
   bx_ddc_c ddc;
   bool     is_agp;

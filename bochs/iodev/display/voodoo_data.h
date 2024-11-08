@@ -846,8 +846,8 @@ static const char *const banshee_reg_name[] =
 #define io_vidChromaMax       (0x090/4) /*  */
 #define io_vidCurrentLine     (0x094/4) /*  */
 #define io_vidScreenSize      (0x098/4) /*  */
-#define io_vidOverlayStartCoords (0x09c/4) /*  */
-#define io_vidOverlayEndScreenCoord (0x0a0/4) /*  */
+#define io_vidOverlayStartCoord (0x09c/4) /*  */
+#define io_vidOverlayEndScreen (0x0a0/4) /*  */
 #define io_vidOverlayDudx     (0x0a4/4) /*  */
 #define io_vidOverlayDudxOffsetSrcWidth (0x0a8/4) /*  */
 #define io_vidOverlayDvdy     (0x0ac/4) /*  */
@@ -898,8 +898,8 @@ static const char *const banshee_io_reg_name[] =
 
   /* 0x080 */
   "vidInDecimInitErrs","vidInYDecimDeltas","vidPixelBufThold","vidChromaMin",
-  "vidChromaMax", "vidCurrentLine","vidScreenSize","vidOverlayStartCoords",
-  "vidOverlayEndScreenCoord","vidOverlayDudx","vidOverlayDudxOffsetSrcWidth","vidOverlayDvdy",
+  "vidChromaMax", "vidCurrentLine","vidScreenSize","vidOverlayStartCoord",
+  "vidOverlayEndScreen","vidOverlayDudx","vidOverlayDudxOffsetSrcWidth","vidOverlayDvdy",
   "vga[b0]",    "vga[b4]",    "vga[b8]",    "vga[bc]",
 
   /* 0x0c0 */
@@ -1799,6 +1799,16 @@ struct _banshee_info
     Bit32u laidx;
     Bit8u *lamem;
   } blt;
+  struct {
+    bool   enabled;
+    Bit8u  format;
+    Bit32u start;
+    Bit16u pitch;
+    Bit16u x0;
+    Bit16u y0;
+    Bit16u x1;
+    Bit16u y1;
+  } overlay;
 };
 
 

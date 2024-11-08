@@ -379,7 +379,7 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
   }
   if ((xc <= hwcx) && ((int)(xc + X_TILESIZE) > (hwcx - hwcw)) &&
       (yc <= hwcy) && ((int)(yc + Y_TILESIZE) > (hwcy - 63))) {
-    if ((v->banshee.io[io_vidProcCfg] & 0x181) == 0x81) {
+    if ((v->banshee.io[io_vidProcCfg] & 0x81) == 0x81) {
       start = v->banshee.io[io_vidDesktopStartAddr];
       pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
     } else {
@@ -457,8 +457,17 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
               }
               break;
             case 16:
-              index = *(vid_ptr++);
-              index |= *(vid_ptr++) << 8;
+              if (v->banshee.overlay.enabled &&
+                  (x >= v->banshee.overlay.x0) &&
+                  (x <= v->banshee.overlay.x1) &&
+                  (y >= v->banshee.overlay.y0) &&
+                  (y <= v->banshee.overlay.y1)) {
+                index = get_overlay_pixel(x, y);
+              } else {
+                index = *(vid_ptr);
+                index |= *(vid_ptr + 1) << 8;
+              }
+              vid_ptr += 2;
               colour = v->fbi.pen[index];
               break;
             case 24:
@@ -497,6 +506,348 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
       cpat0 += 16;
       tile_ptr += info->pitch;
     }
+  }
+}
+
+Bit16u bx_banshee_c::get_overlay_pixel(unsigned x, unsigned y)
+{
+  Bit16u index;
+  unsigned ox, oy;
+  Bit8u *vid_ptr, yy;
+
+  ox = x - v->banshee.overlay.x0;
+  oy = y - v->banshee.overlay.y0;
+  vid_ptr = &v->fbi.ram[v->banshee.overlay.start & v->fbi.mask] + (ox << 1)
+            + (oy * v->banshee.overlay.pitch);
+  if (v->banshee.overlay.format == 6) {
+    yy = *(vid_ptr + 1);
+    index = ((yy >> 3) << 11) | ((yy >> 2) << 5) | (yy >> 3);
+  } else {
+    index = *(vid_ptr);
+    index |= *(vid_ptr + 1) << 8;
+  }
+  return index;
+}
+
+void bx_banshee_c::update(void)
+{
+  Bit32u start;
+  unsigned iHeight, iWidth, riHeight, riWidth;
+  unsigned pitch, xc, yc, xti, yti;
+  unsigned r, c, w, h;
+  int i;
+  Bit32u red, green, blue, colour;
+  Bit8u *vid_ptr, *vid_ptr2;
+  Bit8u *tile_ptr, *tile_ptr2;
+  Bit8u bpp;
+  Bit16u index;
+  bx_svga_tileinfo_t info;
+
+  if ((v->banshee.io[io_vidProcCfg] & 0x81) == 0x81) {
+    BX_LOCK(render_mutex);
+    bpp = v->banshee.disp_bpp;
+    start = v->banshee.io[io_vidDesktopStartAddr];
+    pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
+    if (v->banshee.desktop_tiled) {
+      pitch *= 128;
+    }
+    v->banshee.overlay.enabled = ((v->banshee.io[io_vidProcCfg] & 0x100) != 0);
+    if (v->banshee.overlay.enabled) {
+      v->banshee.overlay.start = v->reg[leftOverlayBuf].u;
+      v->banshee.overlay.pitch = (v->banshee.io[io_vidDesktopOverlayStride] >> 16) & 0x7fff;
+      if (v->banshee.overlay_tiled) {
+        v->banshee.overlay.pitch *= 128;
+      }
+      v->banshee.overlay.format = (v->banshee.io[io_vidProcCfg] >> 21) & 0x07;
+      v->banshee.overlay.x0 = v->banshee.io[io_vidOverlayStartCoord] & 0xfff;
+      v->banshee.overlay.y0 = (v->banshee.io[io_vidOverlayStartCoord] >> 12) & 0xfff;
+      v->banshee.overlay.x1 = v->banshee.io[io_vidOverlayEndScreen] & 0xfff;
+      v->banshee.overlay.y1 = (v->banshee.io[io_vidOverlayEndScreen] >> 12) & 0xfff;
+    }
+    iWidth = s.vdraw.width;
+    iHeight = s.vdraw.height;
+    if (v->banshee.half_mode) {
+      riHeight = iHeight / 2;
+      if (v->banshee.double_width) {
+        riWidth = iWidth / 2;
+      } else {
+        riWidth = iWidth;
+      }
+    } else {
+      riHeight = iHeight;
+      riWidth = iWidth;
+    }
+    start &= v->fbi.mask;
+    Bit8u *disp_ptr = &v->fbi.ram[start];
+    if ((start + pitch * (riHeight - 1) + riWidth) > (v->fbi.mask + 1)) {
+      BX_ERROR(("skip address wrap during update() (start = 0x%08x)", start));
+      BX_UNLOCK(render_mutex);
+      return;
+    }
+    if (bx_gui->graphics_tile_info_common(&info)) {
+      if (info.snapshot_mode) {
+        vid_ptr = disp_ptr;
+        tile_ptr = bx_gui->get_snapshot_buffer();
+        if (tile_ptr != NULL) {
+          for (yc = 0; yc < iHeight; yc++) {
+            memcpy(tile_ptr, vid_ptr, info.pitch);
+            vid_ptr += pitch;
+            tile_ptr += info.pitch;
+          }
+        }
+      } else if (info.is_indexed) {
+        if ((bpp == 8) && (info.bpp == 8)) {
+          for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+            for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
+              if (GET_TILE_UPDATED (xti, yti)) {
+                vid_ptr = disp_ptr + (yc * pitch + xc);
+                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+                for (r=0; r<h; r++) {
+                  vid_ptr2  = vid_ptr;
+                  tile_ptr2 = tile_ptr;
+                  for (c=0; c<w; c++) {
+                    *(tile_ptr2++) = *(vid_ptr2++);
+                  }
+                  vid_ptr  += pitch;
+                  tile_ptr += info.pitch;
+                }
+                if (v->banshee.hwcursor.enabled) {
+                  draw_hwcursor(xc, yc, &info);
+                }
+                set_tile_updated(xti, yti, 0);
+                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+              }
+            }
+          }
+        } else {
+          BX_ERROR(("current guest pixel format is unsupported on indexed colour host displays"));
+        }
+      } else {
+        switch (bpp) {
+          case 8:
+            for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+              for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
+                if (GET_TILE_UPDATED(xti, yti)) {
+                  if (v->banshee.half_mode) {
+                    if (v->banshee.double_width) {
+                      vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc >> 1));
+                    } else {
+                      vid_ptr = disp_ptr + ((yc >> 1) * pitch + xc);
+                    }
+                  } else {
+                    vid_ptr = disp_ptr + (yc * pitch + xc);
+                  }
+                  tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+                  for (r=0; r<h; r++) {
+                    vid_ptr2  = vid_ptr;
+                    tile_ptr2 = tile_ptr;
+                    for (c=0; c<w; c++) {
+                      colour = v->fbi.clut[*(vid_ptr2)];
+                      if (!v->banshee.double_width || (c & 1)) {
+                        vid_ptr2++;
+                      }
+                      colour = MAKE_COLOUR(
+                        colour & 0xff0000, 24, info.red_shift, info.red_mask,
+                        colour & 0x00ff00, 16, info.green_shift, info.green_mask,
+                        colour & 0x0000ff, 8, info.blue_shift, info.blue_mask);
+                      if (info.is_little_endian) {
+                        for (i=0; i<info.bpp; i+=8) {
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
+                        }
+                      } else {
+                        for (i=info.bpp-8; i>-8; i-=8) {
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
+                        }
+                      }
+                    }
+                    if (!v->banshee.half_mode || (r & 1)) {
+                      vid_ptr += pitch;
+                    }
+                    tile_ptr += info.pitch;
+                  }
+                  if (v->banshee.hwcursor.enabled) {
+                    draw_hwcursor(xc, yc, &info);
+                  }
+                  set_tile_updated(xti, yti, 0);
+                  bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+                }
+              }
+            }
+            break;
+          case 16:
+            for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+              for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
+                if (GET_TILE_UPDATED(xti, yti)) {
+                  if (v->banshee.half_mode) {
+                    if (v->banshee.double_width) {
+                      vid_ptr = disp_ptr + ((yc >> 1) * pitch + xc);
+                    } else {
+                      vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc << 1));
+                    }
+                  } else {
+                    vid_ptr = disp_ptr + (yc * pitch + (xc << 1));
+                  }
+                  tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+                  for (r=0; r<h; r++) {
+                    vid_ptr2  = vid_ptr;
+                    tile_ptr2 = tile_ptr;
+                    for (c=0; c<w; c++) {
+                      if (v->banshee.overlay.enabled &&
+                          ((xc + c) >= v->banshee.overlay.x0) &&
+                          ((xc + c) <= v->banshee.overlay.x1) &&
+                          ((yc + r) >= v->banshee.overlay.y0) &&
+                          ((yc + r) <= v->banshee.overlay.y1)) {
+                        index = get_overlay_pixel(xc + c, yc + r);
+                      } else {
+                        index = *(vid_ptr2);
+                        index |= *(vid_ptr2 + 1) << 8;
+                      }
+                      if (!v->banshee.double_width || (c & 1)) {
+                        vid_ptr2 += 2;
+                      }
+                      colour = MAKE_COLOUR(
+                        v->fbi.pen[index] & 0x0000ff, 8, info.blue_shift, info.blue_mask,
+                        v->fbi.pen[index] & 0x00ff00, 16, info.green_shift, info.green_mask,
+                        v->fbi.pen[index] & 0xff0000, 24, info.red_shift, info.red_mask);
+                      if (info.is_little_endian) {
+                        for (i=0; i<info.bpp; i+=8) {
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
+                        }
+                      } else {
+                        for (i=info.bpp-8; i>-8; i-=8) {
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
+                        }
+                      }
+                    }
+                    if (!v->banshee.half_mode || (r & 1)) {
+                      vid_ptr += pitch;
+                    }
+                    tile_ptr += info.pitch;
+                  }
+                  if (v->banshee.hwcursor.enabled) {
+                    draw_hwcursor(xc, yc, &info);
+                  }
+                  set_tile_updated(xti, yti, 0);
+                  bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+                }
+              }
+            }
+            break;
+          case 24:
+            for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+              for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
+                if (GET_TILE_UPDATED(xti, yti)) {
+                  if (v->banshee.half_mode) {
+                    if (v->banshee.double_width) {
+                      vid_ptr = disp_ptr + ((yc >> 1) * pitch + 3 * (xc >> 1));
+                    } else {
+                      vid_ptr = disp_ptr + ((yc >> 1) * pitch + 3 * xc);
+                    }
+                  } else {
+                    vid_ptr = disp_ptr + (yc * pitch + 3*xc);
+                  }
+                  tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+                  for (r=0; r<h; r++) {
+                    vid_ptr2  = vid_ptr;
+                    tile_ptr2 = tile_ptr;
+                    for (c=0; c<w; c++) {
+                      blue = *(vid_ptr2);
+                      green = *(vid_ptr2 + 1);
+                      red = *(vid_ptr2 + 2);
+                      if (!v->banshee.double_width || (c & 1)) {
+                        vid_ptr2 += 3;
+                      }
+                      colour = MAKE_COLOUR(
+                        red, 8, info.red_shift, info.red_mask,
+                        green, 8, info.green_shift, info.green_mask,
+                        blue, 8, info.blue_shift, info.blue_mask);
+                      if (info.is_little_endian) {
+                        for (i=0; i<info.bpp; i+=8) {
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
+                        }
+                      } else {
+                        for (i=info.bpp-8; i>-8; i-=8) {
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
+                        }
+                      }
+                    }
+                    if (!v->banshee.half_mode || (r & 1)) {
+                      vid_ptr += pitch;
+                    }
+                    tile_ptr += info.pitch;
+                  }
+                  if (v->banshee.hwcursor.enabled) {
+                    draw_hwcursor(xc, yc, &info);
+                  }
+                  set_tile_updated(xti, yti, 0);
+                  bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+                }
+              }
+            }
+            break;
+          case 32:
+            for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
+              for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
+                if (GET_TILE_UPDATED(xti, yti)) {
+                  if (v->banshee.half_mode) {
+                    if (v->banshee.double_width) {
+                      vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc << 1));
+                    } else {
+                      vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc << 2));
+                    }
+                  } else {
+                    vid_ptr = disp_ptr + (yc * pitch + (xc << 2));
+                  }
+                  tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+                  for (r=0; r<h; r++) {
+                    vid_ptr2  = vid_ptr;
+                    tile_ptr2 = tile_ptr;
+                    for (c=0; c<w; c++) {
+                      blue = *(vid_ptr2);
+                      green = *(vid_ptr2 + 1);
+                      red = *(vid_ptr2 + 2);
+                      if (!v->banshee.double_width || (c & 1)) {
+                        vid_ptr2 += 4;
+                      }
+                      colour = MAKE_COLOUR(
+                        red, 8, info.red_shift, info.red_mask,
+                        green, 8, info.green_shift, info.green_mask,
+                        blue, 8, info.blue_shift, info.blue_mask);
+                      if (info.is_little_endian) {
+                        for (i=0; i<info.bpp; i+=8) {
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
+                        }
+                      } else {
+                        for (i=info.bpp-8; i>-8; i-=8) {
+                          *(tile_ptr2++) = (Bit8u)(colour >> i);
+                        }
+                      }
+                    }
+                    if (!v->banshee.half_mode || (r & 1)) {
+                      vid_ptr += pitch;
+                    }
+                    tile_ptr += info.pitch;
+                  }
+                  if (v->banshee.hwcursor.enabled) {
+                    draw_hwcursor(xc, yc, &info);
+                  }
+                  set_tile_updated(xti, yti, 0);
+                  bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+                }
+              }
+            }
+            break;
+          default:
+            BX_ERROR(("Ignoring reserved pixel format"));
+        }
+      }
+    } else {
+      BX_PANIC(("cannot get svga tile info"));
+    }
+    s.vdraw.gui_update_pending = 0;
+    BX_UNLOCK(render_mutex);
+  } else {
+    bx_voodoo_base_c::update();
   }
 }
 
@@ -732,7 +1083,7 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
           BX_INFO(("3D overlay mode enabled"));
           v->vtimer_running = 1;
         } else if ((v->banshee.io[reg] & 0x180) == 0x180) {
-          BX_ERROR(("Desktop / overlay mode not supported yet"));
+          BX_ERROR(("Desktop / overlay mode not yet complete"));
         }
       }
       v->banshee.hwcursor.enabled = ((v->banshee.io[reg] >> 27) & 1);
@@ -749,16 +1100,16 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if ((v->banshee.io[reg] >> 2) & 1) {
         BX_ERROR(("vidProcCfg: overlay stereo mode not supported yet"));
       }
-      if ((v->banshee.io[reg] >> 5) & 1) {
+      if (((v->banshee.io[reg] >> 5) & 1) && !((old >> 5) & 1)) {
         BX_ERROR(("vidProcCfg: chromaKey mode not supported yet"));
       }
-      if ((v->banshee.io[reg] >> 14) & 1) {
+      if (((v->banshee.io[reg] >> 14) & 1) && !((old >> 14) & 1)) {
         BX_ERROR(("vidProcCfg: overlay horizontal scaling not supported yet"));
       }
-      if ((v->banshee.io[reg] >> 15) & 1) {
+      if (((v->banshee.io[reg] >> 15) & 1) && !((old >> 15) & 1)) {
         BX_ERROR(("vidProcCfg: overlay vertical scaling not supported yet"));
       }
-      if ((v->banshee.io[reg] >> 16) & 3) {
+      if (((v->banshee.io[reg] >> 16) & 3) != ((old >> 16) & 3)) {
         BX_ERROR(("vidProcCfg: overlay filter mode %d not supported yet", (v->banshee.io[reg] >> 16) & 3));
       }
       v->banshee.desktop_tiled = ((v->banshee.io[reg] >> 24) & 1);
