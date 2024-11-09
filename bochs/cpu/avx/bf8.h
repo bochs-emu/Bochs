@@ -43,4 +43,56 @@ BX_CPP_INLINE float16 convert_bf8_to_fp16(float_bf8 op)
   return Bit16u(op) << 8;
 }
 
+// Convert half precision floating point number (fp16) to E5M2 BF8 number
+// The bias paramemter is the bias 8b integer to be added to data before the downconvert
+BX_CPP_INLINE float_bf8 convert_ne_fp16_to_bf8_bias(float16 a, Bit8u bias, bool saturate_overflow, struct softfloat_status_t *status)
+{
+  int signA   = signF16UI(a);
+  Bit8s expA  = expF16UI(a);
+  Bit16u sigA = fracF16UI(a);
+
+  float_bf8 z;
+
+  if (expA == 0x1F) {
+    if (! sigA) {
+      // a is infinity
+      if (saturate_overflow)
+        z = (signA << 7) | 0x7B; // max signif value
+      else
+        z = a >> 8;              // keep infinity
+
+      return z;
+    }
+
+    softfloat_raiseFlags(status, softfloat_flag_invalid);
+    return (a >> 8) | 0x02; // make it QNaN
+  }
+
+  if (! expA && sigA)
+    softfloat_raiseFlags(status, softfloat_flag_denormal);
+
+  // normal, zero or denormal number, convert applying round-to-nearest-even
+  Bit16u rounding_bias = (Bit16u) bias;
+  Bit16u roundA = a + rounding_bias;
+
+  if (((z & 0x7F00) == 0x7C00) && saturate_overflow) {
+    softfloat_raiseFlags(status, softfloat_flag_overflow);
+    z = ((roundA >> 8) & 0x80) | 0x7B;
+  }
+  else {
+    z = roundA >> 8;
+    if (roundA != a)
+      softfloat_raiseFlags(status, softfloat_flag_inexact);
+  }
+
+  return z;
+}
+
+// convert half precision floating point number (fp16) to E5M2 BF8 number
+BX_CPP_INLINE float_bf8 convert_ne_fp16_to_bf8(float16 a, bool saturate_overflow, struct softfloat_status_t *status)
+{
+  // without bias argument rounding bias is 0x7F + bit(a[8])
+  return convert_ne_fp16_to_bf8_bias(a, 0x007F + ((a >> 8) & 0x1), saturate_overflow, status);
+}
+
 #endif

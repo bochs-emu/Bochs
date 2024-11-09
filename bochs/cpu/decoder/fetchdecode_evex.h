@@ -1291,6 +1291,12 @@ static const Bit64u BxOpcodeGroup_EVEX_0F3873[] = {
   last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1, BX_IA_EVEX_VPSHRDVQ_VdqHdqWdq_Kmask)
 };
 
+static const Bit64u BxOpcodeGroup_EVEX_0F3874[] = {
+  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0, BX_IA_EVEX_VCVTBIASPH2BF8_Vf8HdqWph_Kmask),
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0, BX_IA_EVEX_VCVTNEPH2BF8_Vf8HdqWph_Kmask),
+  last_opcode(ATTR_SSE_PREFIX_F2 | ATTR_VEX_W0, BX_IA_EVEX_VCVTNE2PH2BF8_Vf8HdqWph_Kmask)
+};
+
 static const Bit64u BxOpcodeGroup_EVEX_0F3875[] = {
   form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0, BX_IA_EVEX_VPERMI2B_VdqHdqWdq_Kmask),
   last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1, BX_IA_EVEX_VPERMI2W_VdqHdqWdq_Kmask)
@@ -2088,6 +2094,12 @@ static const Bit64u BxOpcodeGroup_EVEX_MAP5_6E[] = {
   last_opcode(ATTR_MASK_K0 | ATTR_SSE_PREFIX_F3 | ATTR_VL128 | ATTR_VEX_W0, BX_IA_EVEX_VMOVW_VshWsh)
 };
 
+static const Bit64u BxOpcodeGroup_EVEX_MAP5_74[] = {
+  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0, BX_IA_EVEX_VCVTBIASPH2BF8S_Vf8HdqWph_Kmask),
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0, BX_IA_EVEX_VCVTNEPH2BF8S_Vf8HdqWph_Kmask),
+  last_opcode(ATTR_SSE_PREFIX_F2 | ATTR_VEX_W0, BX_IA_EVEX_VCVTNE2PH2BF8S_Vf8HdqWph_Kmask)
+};
+
 static const Bit64u BxOpcodeGroup_EVEX_MAP5_78[] = {
   form_opcode(ATTR_VEX_W0 | ATTR_MASK_K0 | ATTR_SSE_NO_PREFIX, BX_IA_EVEX_VCVTTPH2UDQ_VdqWph),
   form_opcode(ATTR_VEX_W0 |                ATTR_SSE_NO_PREFIX, BX_IA_EVEX_VCVTTPH2UDQ_VdqWph_Kmask),
@@ -2742,7 +2754,7 @@ static const Bit64u *BxOpcodeTableEVEX[256*5] = {
   /* 71 */ ( BxOpcodeGroup_EVEX_0F3871 ),
   /* 72 */ ( BxOpcodeGroup_EVEX_0F3872 ),
   /* 73 */ ( BxOpcodeGroup_EVEX_0F3873 ),
-  /* 74 */ ( BxOpcodeGroup_ERR ),
+  /* 74 */ ( BxOpcodeGroup_EVEX_0F3874 ),
   /* 75 */ ( BxOpcodeGroup_EVEX_0F3875 ),
   /* 76 */ ( BxOpcodeGroup_EVEX_0F3876 ),
   /* 77 */ ( BxOpcodeGroup_EVEX_0F3877 ),
@@ -3266,7 +3278,7 @@ static const Bit64u *BxOpcodeTableEVEX[256*5] = {
   /* 71 */ ( BxOpcodeGroup_ERR ),
   /* 72 */ ( BxOpcodeGroup_ERR ),
   /* 73 */ ( BxOpcodeGroup_ERR ),
-  /* 74 */ ( BxOpcodeGroup_ERR ),
+  /* 74 */ ( BxOpcodeGroup_EVEX_MAP5_74 ),
   /* 75 */ ( BxOpcodeGroup_ERR ),
   /* 76 */ ( BxOpcodeGroup_ERR ),
   /* 77 */ ( BxOpcodeGroup_ERR ),

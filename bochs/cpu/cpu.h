@@ -3845,6 +3845,9 @@ public: // for now...
 
   // AVX10.2 fp8 convert instructions
   BX_SMF void VCVTHF82PH_VphWf8R(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTNEPH2BF8_Vf8HdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTNE2PH2BF8_Vf8HdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTBIASPH2BF8_Vf8HdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
   BX_SMF void LZCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
