@@ -84,4 +84,17 @@ BX_CPP_INLINE float16 convert_hf8_to_fp16(float_hf8 a, struct softfloat_status_t
   return z;
 }
 
+// Convert half precision floating point number (fp16) to E4M3 HF8 number
+// The bias parameter is the bias 8b integer to be added to data for rounding
+BX_CPP_INLINE float_hf8 convert_ne_fp16_to_hf8_bias(float16 a, Bit8u bias, bool saturate_overflow, struct softfloat_status_t *status)
+{
+  return 0; // place holder
+}
+
+// Convert half precision floating point number (fp16) to E4M3 HF8 number
+BX_CPP_INLINE float_hf8 convert_ne_fp16_to_hf8(float16 a, bool saturate_overflow, struct softfloat_status_t *status)
+{
+  return 0; // place holder
+}
+
 #endif

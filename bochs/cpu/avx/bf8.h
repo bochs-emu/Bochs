@@ -44,7 +44,7 @@ BX_CPP_INLINE float16 convert_bf8_to_fp16(float_bf8 op)
 }
 
 // Convert half precision floating point number (fp16) to E5M2 BF8 number
-// The bias paramemter is the bias 8b integer to be added to data before the downconvert
+// The bias parameter is the bias 8b integer to be added to data before the downconvert
 BX_CPP_INLINE float_bf8 convert_ne_fp16_to_bf8_bias(float16 a, Bit8u bias, bool saturate_overflow, struct softfloat_status_t *status)
 {
   int signA   = signF16UI(a);

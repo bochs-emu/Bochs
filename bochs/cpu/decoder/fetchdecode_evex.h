@@ -1933,6 +1933,18 @@ static const Bit64u BxOpcodeGroup_EVEX_MAP5_11[] = {
   last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 |                ATTR_MOD_MEM, BX_IA_EVEX_VMOVSH_WshVsh_Kmask)
 };
 
+static const Bit64u BxOpcodeGroup_EVEX_MAP5_18[] = {
+  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0, BX_IA_EVEX_VCVTBIASPH2HF8_Vf8HdqWph_Kmask),
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0, BX_IA_EVEX_VCVTNEPH2HF8_Vf8HdqWph_Kmask),
+  last_opcode(ATTR_SSE_PREFIX_F2 | ATTR_VEX_W0, BX_IA_EVEX_VCVTNE2PH2HF8_Vf8HdqWph_Kmask)
+};
+
+static const Bit64u BxOpcodeGroup_EVEX_MAP5_1B[] = {
+  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0, BX_IA_EVEX_VCVTBIASPH2HF8S_Vf8HdqWph_Kmask),
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0, BX_IA_EVEX_VCVTNEPH2HF8S_Vf8HdqWph_Kmask),
+  last_opcode(ATTR_SSE_PREFIX_F2 | ATTR_VEX_W0, BX_IA_EVEX_VCVTNE2PH2HF8S_Vf8HdqWph_Kmask)
+};
+
 static const Bit64u BxOpcodeGroup_EVEX_MAP5_1D[] = {
   form_opcode(ATTR_VEX_W0 | ATTR_MASK_K0 | ATTR_SSE_NO_PREFIX, BX_IA_EVEX_VCVTSS2SH_VssWsh),
   form_opcode(ATTR_VEX_W0                | ATTR_SSE_NO_PREFIX, BX_IA_EVEX_VCVTSS2SH_VssWsh_Kmask),
@@ -3186,10 +3198,10 @@ static const Bit64u *BxOpcodeTableEVEX[256*5] = {
   /* 15 */ ( BxOpcodeGroup_ERR ),
   /* 16 */ ( BxOpcodeGroup_ERR ),
   /* 17 */ ( BxOpcodeGroup_ERR ),
-  /* 18 */ ( BxOpcodeGroup_ERR ),
+  /* 18 */ ( BxOpcodeGroup_EVEX_MAP5_18 ),
   /* 19 */ ( BxOpcodeGroup_ERR ),
   /* 1A */ ( BxOpcodeGroup_ERR ),
-  /* 1B */ ( BxOpcodeGroup_ERR ),
+  /* 1B */ ( BxOpcodeGroup_EVEX_MAP5_1B ),
   /* 1C */ ( BxOpcodeGroup_ERR ),
   /* 1D */ ( BxOpcodeGroup_EVEX_MAP5_1D ),
   /* 1E */ ( BxOpcodeGroup_EVEX_MAP5_1E ),

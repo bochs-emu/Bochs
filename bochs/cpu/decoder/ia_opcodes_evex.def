@@ -1666,6 +1666,13 @@ bx_define_opcode(BX_IA_EVEX_VCVTNE2PH2BF8S_Vf8HdqWph_Kmask, "vcvtne2ph2bf8", "vc
 bx_define_opcode(BX_IA_EVEX_VCVTBIASPH2BF8_Vf8HdqWph_Kmask, "vcvtbiasph2bf8", "vcvtbiasph2bf8", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::VCVTBIASPH2BF8_Vf8HdqWphR, BX_ISA_AVX10_2, OP_Vdq, OP_Hdq, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
 bx_define_opcode(BX_IA_EVEX_VCVTBIASPH2BF8S_Vf8HdqWph_Kmask, "vcvtbiasph2bf8s", "vcvtbiasph2bf8s", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::VCVTBIASPH2BF8_Vf8HdqWphR, BX_ISA_AVX10_2, OP_Vdq, OP_Hdq, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
 
+bx_define_opcode(BX_IA_EVEX_VCVTNEPH2HF8_Vf8HdqWph_Kmask, "vcvtneph2hf8", "vcvtneph2hf8", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::VCVTNEPH2HF8_Vf8HdqWphR, BX_ISA_AVX10_2, OP_Vdq, OP_mVph, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_EVEX_VCVTNEPH2HF8S_Vf8HdqWph_Kmask, "vcvtneph2hf8", "vcvtneph2hf8", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::VCVTNEPH2HF8_Vf8HdqWphR, BX_ISA_AVX10_2, OP_Vdq, OP_mVph, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_EVEX_VCVTNE2PH2HF8_Vf8HdqWph_Kmask, "vcvtne2ph2hf8", "vcvtne2ph2hf8", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::VCVTNE2PH2HF8_Vf8HdqWphR, BX_ISA_AVX10_2, OP_Vdq, OP_Hdq, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_EVEX_VCVTNE2PH2HF8S_Vf8HdqWph_Kmask, "vcvtne2ph2hf8", "vcvtne2ph2hf8", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::VCVTNE2PH2HF8_Vf8HdqWphR, BX_ISA_AVX10_2, OP_Vdq, OP_Hdq, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_EVEX_VCVTBIASPH2HF8_Vf8HdqWph_Kmask, "vcvtbiasph2hf8", "vcvtbiasph2hf8", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::VCVTBIASPH2HF8_Vf8HdqWphR, BX_ISA_AVX10_2, OP_Vdq, OP_Hdq, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_EVEX_VCVTBIASPH2HF8S_Vf8HdqWph_Kmask, "vcvtbiasph2hf8s", "vcvtbiasph2hf8s", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::VCVTBIASPH2HF8_Vf8HdqWphR, BX_ISA_AVX10_2, OP_Vdq, OP_Hdq, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+
 #if BX_SUPPORT_AMX
 bx_define_opcode(BX_IA_EVEX_TILEMOVROW_VdqTrmIb, "tilemovrow", "tilemovrow", NULL, &BX_CPU_C::TILEMOVROW_VdqTrm, BX_ISA_AMX_AVX512, OP_Vdq, OP_Trm, OP_Ib, OP_NONE, BX_PREPARE_AMX | BX_PREPARE_EVEX_NO_SAE)
 bx_define_opcode(BX_IA_EVEX_TILEMOVROW_VdqTrmBd, "tilemovrow", "tilemovrow", NULL, &BX_CPU_C::TILEMOVROW_VdqTrm, BX_ISA_AMX_AVX512, OP_Vdq, OP_Trm, OP_Bd, OP_NONE, BX_PREPARE_AMX | BX_PREPARE_EVEX_NO_SAE)
