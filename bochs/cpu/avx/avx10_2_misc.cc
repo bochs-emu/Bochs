@@ -28,6 +28,26 @@
 
 #if BX_SUPPORT_AVX
 
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVW_VshWshR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op;
+  op.xmm64u(0) = (Bit64u) BX_READ_XMM_REG_LO_WORD(i->src());
+  op.xmm64u(1) = 0;
+
+  BX_WRITE_XMM_REGZ(i->dst(), op, i->getVL());
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVD_VdWdR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister op;
+  op.xmm64u(0) = (Bit64u) BX_READ_XMM_REG_LO_DWORD(i->src());
+  op.xmm64u(1) = 0;
+
+  BX_WRITE_XMM_REGZ(i->dst(), op, i->getVL());
+  BX_NEXT_INSTR(i);
+}
+
 #include "softfloat3e/include/softfloat.h"
 #include "decoder/ia_opcodes.h"
 

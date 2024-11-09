@@ -3838,6 +3838,10 @@ public: // for now...
   BX_SMF void VCVTTSD2SIS_GqWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTTSS2SIS_GdWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTTSS2SIS_GqWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  // AVX10.2 zero-extending partial vector register copy
+  BX_SMF void VMOVW_VshWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMOVD_VdWdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
   BX_SMF void LZCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
