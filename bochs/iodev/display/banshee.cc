@@ -462,7 +462,7 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
                   (x <= v->banshee.overlay.x1) &&
                   (y >= v->banshee.overlay.y0) &&
                   (y <= v->banshee.overlay.y1)) {
-                index = get_overlay_pixel(x, y);
+                index = (Bit16u)get_overlay_pixel(x, y, 16);
               } else {
                 index = *(vid_ptr);
                 index |= *(vid_ptr + 1) << 8;
@@ -472,9 +472,17 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
               break;
             case 24:
             case 32:
-              colour = *vid_ptr;
-              colour |= (*(vid_ptr + 1)) << 8;
-              colour |= (*(vid_ptr + 2)) << 16;
+              if (v->banshee.overlay.enabled &&
+                  (x >= v->banshee.overlay.x0) &&
+                  (x <= v->banshee.overlay.x1) &&
+                  (y >= v->banshee.overlay.y0) &&
+                  (y <= v->banshee.overlay.y1)) {
+                colour = get_overlay_pixel(x, y, v->banshee.disp_bpp);
+              } else {
+                colour = *vid_ptr;
+                colour |= (*(vid_ptr + 1)) << 8;
+                colour |= (*(vid_ptr + 2)) << 16;
+              }
               break;
           }
           if (ccode == 3) colour ^= 0xffffff;
@@ -509,14 +517,15 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
   }
 }
 
-Bit16u bx_banshee_c::get_overlay_pixel(unsigned x, unsigned y)
+Bit32u bx_banshee_c::get_overlay_pixel(unsigned x, unsigned y, Bit8u bpp)
 {
   Bit16u index;
+  Bit32u value = 0;
   unsigned ox, oy;
   Bit8u *vid_ptr, yy;
 
-  ox = x - v->banshee.overlay.x0;
-  oy = y - v->banshee.overlay.y0;
+  ox = (unsigned)((double)(x - v->banshee.overlay.x0) * v->banshee.overlay.fx);
+  oy = (unsigned)((double)(y - v->banshee.overlay.y0) * v->banshee.overlay.fy);
   vid_ptr = &v->fbi.ram[v->banshee.overlay.start & v->fbi.mask] + (ox << 1)
             + (oy * v->banshee.overlay.pitch);
   if (v->banshee.overlay.format == 6) {
@@ -526,7 +535,12 @@ Bit16u bx_banshee_c::get_overlay_pixel(unsigned x, unsigned y)
     index = *(vid_ptr);
     index |= *(vid_ptr + 1) << 8;
   }
-  return index;
+  if (bpp == 16) {
+    value = index;
+  } else if ((bpp == 24) || (bpp == 32)) {
+    value = ((index & 0xf800) << 8) | ((index & 0x07e0) << 5) | ((index & 0x001f) << 3);
+  }
+  return value;
 }
 
 void bx_banshee_c::update(void)
@@ -691,7 +705,7 @@ void bx_banshee_c::update(void)
                           ((xc + c) <= v->banshee.overlay.x1) &&
                           ((yc + r) >= v->banshee.overlay.y0) &&
                           ((yc + r) <= v->banshee.overlay.y1)) {
-                        index = get_overlay_pixel(xc + c, yc + r);
+                        index = (Bit16u)get_overlay_pixel(xc + c, yc + r, bpp);
                       } else {
                         index = *(vid_ptr2);
                         index |= *(vid_ptr2 + 1) << 8;
@@ -745,9 +759,20 @@ void bx_banshee_c::update(void)
                     vid_ptr2  = vid_ptr;
                     tile_ptr2 = tile_ptr;
                     for (c=0; c<w; c++) {
-                      blue = *(vid_ptr2);
-                      green = *(vid_ptr2 + 1);
-                      red = *(vid_ptr2 + 2);
+                      if (v->banshee.overlay.enabled &&
+                          ((xc + c) >= v->banshee.overlay.x0) &&
+                          ((xc + c) <= v->banshee.overlay.x1) &&
+                          ((yc + r) >= v->banshee.overlay.y0) &&
+                          ((yc + r) <= v->banshee.overlay.y1)) {
+                        colour = get_overlay_pixel(xc + c, yc + r, bpp);
+                        blue = colour & 0xff;
+                        green = (colour >> 8) & 0xff;
+                        red = (colour >> 16) & 0xff;
+                      } else {
+                        blue = *(vid_ptr2);
+                        green = *(vid_ptr2 + 1);
+                        red = *(vid_ptr2 + 2);
+                      }
                       if (!v->banshee.double_width || (c & 1)) {
                         vid_ptr2 += 3;
                       }
@@ -797,9 +822,20 @@ void bx_banshee_c::update(void)
                     vid_ptr2  = vid_ptr;
                     tile_ptr2 = tile_ptr;
                     for (c=0; c<w; c++) {
-                      blue = *(vid_ptr2);
-                      green = *(vid_ptr2 + 1);
-                      red = *(vid_ptr2 + 2);
+                      if (v->banshee.overlay.enabled &&
+                          ((xc + c) >= v->banshee.overlay.x0) &&
+                          ((xc + c) <= v->banshee.overlay.x1) &&
+                          ((yc + r) >= v->banshee.overlay.y0) &&
+                          ((yc + r) <= v->banshee.overlay.y1)) {
+                        colour = get_overlay_pixel(xc + c, yc + r, bpp);
+                        blue = colour & 0xff;
+                        green = (colour >> 8) & 0xff;
+                        red = (colour >> 16) & 0xff;
+                      } else {
+                        blue = *(vid_ptr2);
+                        green = *(vid_ptr2 + 1);
+                        red = *(vid_ptr2 + 2);
+                      }
                       if (!v->banshee.double_width || (c & 1)) {
                         vid_ptr2 += 4;
                       }
@@ -1175,12 +1211,26 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
       v->banshee.io[reg] = value;
       v->banshee.overlay.x0 = value & 0xfff;
       v->banshee.overlay.y0 = (value >> 12) & 0xfff;
+      v->banshee.overlay.redraw = true;
       break;
 
     case io_vidOverlayEndScreen:
       v->banshee.io[reg] = value;
       v->banshee.overlay.x1 = value & 0xfff;
       v->banshee.overlay.y1 = (value >> 12) & 0xfff;
+      v->banshee.overlay.redraw = true;
+      break;
+
+    case io_vidOverlayDudx:
+      v->banshee.io[reg] = value;
+      v->banshee.overlay.fx = (double)(value & 0xfffff) / (double)(1 << 20);
+      v->banshee.overlay.redraw = true;
+      break;
+
+    case io_vidOverlayDvdy:
+      v->banshee.io[reg] = value;
+      v->banshee.overlay.fy = (double)(value & 0xfffff) / (double)(1 << 20);
+      v->banshee.overlay.redraw = true;
       break;
 
     case io_vgab0:  case io_vgab4:  case io_vgab8:  case io_vgabc:

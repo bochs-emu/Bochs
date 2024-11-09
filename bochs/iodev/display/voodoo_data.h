@@ -1801,6 +1801,7 @@ struct _banshee_info
   } blt;
   struct {
     bool   enabled;
+    bool   redraw;
     Bit8u  format;
     Bit32u start;
     Bit16u pitch;
@@ -1808,6 +1809,8 @@ struct _banshee_info
     Bit16u y0;
     Bit16u x1;
     Bit16u y1;
+    double fx;
+    double fy;
   } overlay;
 };
 

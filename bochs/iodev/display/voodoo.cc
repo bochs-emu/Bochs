@@ -690,7 +690,7 @@ void bx_voodoo_base_c::vertical_timer(void)
 
   if (v->fbi.video_changed || v->fbi.clut_dirty) {
     // TODO: use tile-based update mechanism
-    if (v->fbi.clut_dirty || (s.model < VOODOO_BANSHEE)) {
+    if (v->fbi.clut_dirty || (s.model < VOODOO_BANSHEE) || v->banshee.overlay.redraw) {
       redraw_area(0, 0, s.vdraw.width, s.vdraw.height);
     } else {
       redraw_area(v->banshee.overlay.x0, v->banshee.overlay.y0,
@@ -703,6 +703,7 @@ void bx_voodoo_base_c::vertical_timer(void)
     }
     BX_UNLOCK(fifo_mutex);
     v->fbi.video_changed = 0;
+    v->banshee.overlay.redraw = false;
     s.vdraw.gui_update_pending = 1;
   }
 }
