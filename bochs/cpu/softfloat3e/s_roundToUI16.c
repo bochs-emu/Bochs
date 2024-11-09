@@ -39,50 +39,53 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-/*----------------------------------------------------------------------------
-| Takes the 128-bit fixed-point value formed by concatenating `sig' and
-| `sigExtra', with binary point between bits 63 and 64 (between the input words),
-| and returns the properly rounded 64-bit unsigned integer corresponding to the
-| input.  Ordinarily, the fixed-point input is simply rounded to an integer,
-| with the inexact exception raised if the input cannot be represented exactly
-| as an integer. However, if the fixed-point input is too large, the invalid
-| exception is raised and the largest unsigned integer is returned.
-*----------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------------
+| Takes a 32-bit fixed-point value `sig' with binary point between bits 11 and 12
+| and returns the properly rounded  16-bit unsigned  integer corresponding to the
+| input.  If  `sign' is  1, the  input is  negated before  being converted  to an
+| integer. Bit  31 of  `sig' must be zero. Ordinarily,  the fixed-point  input is
+| simply rounded to  an integer, with the  inexact exception raised if  the input
+| cannot be represented exactly as an integer. However, if  the fixed-point input
+| is too large, the invalid exception is raised and the largest  unsigned integer
+| is returned.
+*--------------------------------------------------------------------------------*/
 
-uint64_t
- softfloat_roundToUI64(bool sign, uint64_t sig, uint64_t sigExtra, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
+uint16_t
+ softfloat_roundToUI16(bool sign, uint32_t sig, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
 {
-    uint64_t origSig = sig;
+    uint16_t roundIncrement, roundBits;
+    uint16_t z;
+    uint32_t origSig = sig >> 12;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if ((roundingMode == softfloat_round_near_maxMag) || (roundingMode == softfloat_round_near_even)) {
-        if (UINT64_C(0x8000000000000000) <= sigExtra) goto increment;
-    } else {
+    roundIncrement = 0x800;
+    if ((roundingMode != softfloat_round_near_maxMag) && (roundingMode != softfloat_round_near_even)) {
+        roundIncrement = 0;
         if (sign) {
-            if (!(sig | sigExtra)) return 0;
+            if (!sig) return 0;
             if (roundingMode == softfloat_round_min) goto invalid;
         } else {
-            if ((roundingMode == softfloat_round_max) && sigExtra) {
- increment:
-                ++sig;
-                if (!sig) goto invalid;
-                if ((sigExtra == UINT64_C(0x8000000000000000)) && (roundingMode == softfloat_round_near_even)) {
-                    sig &= ~(uint64_t) 1;
-                }
-            }
+            if (roundingMode == softfloat_round_max) roundIncrement = 0xFFF;
         }
     }
-    if (sign && sig) goto invalid;
-    if (sigExtra) {
+    roundBits = sig & 0xFFF;
+    sig += roundIncrement;
+    if (sig & 0xF0000000) goto invalid;
+    z = sig>>12;
+    if ((roundBits == 0x800) && (roundingMode == softfloat_round_near_even)) {
+        z &= ~0x1;
+    }
+    if (sign && z) goto invalid;
+    if (roundBits) {
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
-        if (sig > origSig)
+        if (z > origSig)
             softfloat_setRoundingUp(status);
     }
-    return sig;
+    return z;
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  invalid:
     softfloat_raiseFlags(status, softfloat_flag_invalid);
-    return sign ? ui64_fromNegOverflow : ui64_fromPosOverflow;
+    return sign ? ui16_fromNegOverflow : ui16_fromPosOverflow;
 }

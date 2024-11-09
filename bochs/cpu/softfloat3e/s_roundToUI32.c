@@ -55,7 +55,7 @@ uint32_t
 {
     uint16_t roundIncrement, roundBits;
     uint32_t z;
-    uint64_t absSigExact = sig;
+    uint64_t origSig = sig >> 12;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -79,7 +79,7 @@ uint32_t
     if (sign && z) goto invalid;
     if (roundBits) {
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
-        if (((uint64_t)z << 12) > absSigExact)
+        if (z > (uint32_t)origSig)
             softfloat_setRoundingUp(status);
     }
     return z;

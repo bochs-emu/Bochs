@@ -55,7 +55,7 @@ int64_t
 {
     union { uint64_t ui; int64_t i; } uZ;
     int64_t z;
-    uint64_t absSigExact = sig;
+    uint64_t origSig = sig;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -77,7 +77,7 @@ int64_t
     if (z && ((z < 0) ^ sign)) goto invalid;
     if (sigExtra) {
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
-        if (sig > absSigExact)
+        if (sig > origSig)
             softfloat_setRoundingUp(status);
     }
     return z;
