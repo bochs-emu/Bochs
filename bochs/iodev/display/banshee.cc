@@ -551,18 +551,12 @@ void bx_banshee_c::update(void)
     if (v->banshee.desktop_tiled) {
       pitch *= 128;
     }
-    v->banshee.overlay.enabled = ((v->banshee.io[io_vidProcCfg] & 0x100) != 0);
     if (v->banshee.overlay.enabled) {
       v->banshee.overlay.start = v->reg[leftOverlayBuf].u;
       v->banshee.overlay.pitch = (v->banshee.io[io_vidDesktopOverlayStride] >> 16) & 0x7fff;
       if (v->banshee.overlay_tiled) {
         v->banshee.overlay.pitch *= 128;
       }
-      v->banshee.overlay.format = (v->banshee.io[io_vidProcCfg] >> 21) & 0x07;
-      v->banshee.overlay.x0 = v->banshee.io[io_vidOverlayStartCoord] & 0xfff;
-      v->banshee.overlay.y0 = (v->banshee.io[io_vidOverlayStartCoord] >> 12) & 0xfff;
-      v->banshee.overlay.x1 = v->banshee.io[io_vidOverlayEndScreen] & 0xfff;
-      v->banshee.overlay.y1 = (v->banshee.io[io_vidOverlayEndScreen] >> 12) & 0xfff;
     }
     iWidth = s.vdraw.width;
     iHeight = s.vdraw.height;
@@ -1077,6 +1071,7 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
         mode_change = true;
       }
       if (mode_change) {
+        v->banshee.overlay.enabled = ((v->banshee.io[reg] & 0x100) != 0);
         if ((v->banshee.io[reg] & 0x180) == 0x080) {
           BX_INFO(("2D desktop mode enabled"));
         } else if ((v->banshee.io[reg] & 0x180) == 0x100) {
@@ -1084,6 +1079,7 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
           v->vtimer_running = 1;
         } else if ((v->banshee.io[reg] & 0x180) == 0x180) {
           BX_ERROR(("Desktop / overlay mode not yet complete"));
+          v->banshee.overlay.format = (v->banshee.io[reg] >> 21) & 0x07;
         }
       }
       v->banshee.hwcursor.enabled = ((v->banshee.io[reg] >> 27) & 1);
@@ -1175,6 +1171,18 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
       v->fbi.height = (value >> 12) & 0xfff;
       break;
 
+    case io_vidOverlayStartCoord:
+      v->banshee.io[reg] = value;
+      v->banshee.overlay.x0 = value & 0xfff;
+      v->banshee.overlay.y0 = (value >> 12) & 0xfff;
+      break;
+
+    case io_vidOverlayEndScreen:
+      v->banshee.io[reg] = value;
+      v->banshee.overlay.x1 = value & 0xfff;
+      v->banshee.overlay.y1 = (value >> 12) & 0xfff;
+      break;
+
     case io_vgab0:  case io_vgab4:  case io_vgab8:  case io_vgabc:
     case io_vgac0:  case io_vgac4:  case io_vgac8:  case io_vgacc:
     case io_vgad0:  case io_vgad4:  case io_vgad8:  case io_vgadc:
@@ -1190,7 +1198,7 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case io_vidDesktopStartAddr:
     case io_vidDesktopOverlayStride:
       if ((v->banshee.io[io_vidProcCfg] & 0x01) && (v->banshee.io[reg] != value)) {
-        v->fbi.video_changed = 1;
+        theVoodooVga->redraw_area(0, 0, s.vdraw.width, s.vdraw.height);
       }
       v->banshee.io[reg] = value;
       break;
@@ -2022,7 +2030,7 @@ void bx_banshee_c::blt_complete()
   bool yinc = (cmd >> 11) & 1;
   int x, y, w, h;
 
-  if ((v->banshee.io[io_vidProcCfg] & 0x101) == 0x101) {
+  if ((v->banshee.io[io_vidProcCfg] & 0x181) == 0x101) {
     if (v->banshee.overlay_tiled) {
       vpitch *= 128;
     }
@@ -2069,7 +2077,7 @@ void bx_banshee_c::blt_complete()
       x <<= 1;
       w <<= 1;
     }
-    if ((v->banshee.io[io_vidProcCfg] & 0x101) == 0x101) {
+    if ((v->banshee.io[io_vidProcCfg] & 0x181) == 0x101) {
       v->fbi.video_changed = 1;
     } else {
       theVoodooVga->redraw_area(x, y, w, h);
