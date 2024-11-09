@@ -821,7 +821,7 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
   bool is_vector = false;
 #endif
 
-  if (! strncmp(opname, "V128_", 5) || ! strncmp(opname, "V256_", 5) || ! strncmp(opname, "V512_", 5)) {
+  if (! strncmp(opname, "V128_", 5) || ! strncmp(opname, "V256_", 5) || ! strncmp(opname, "V512_", 5) || ! strncmp(opname, "EVEX_", 5)) {
     opname += 5;
 #if BX_SUPPORT_EVEX
     is_vector = true;
