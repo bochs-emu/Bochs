@@ -34,7 +34,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVW_VshWshR(bxInstruction_c *i)
   op.xmm64u(0) = (Bit64u) BX_READ_XMM_REG_LO_WORD(i->src());
   op.xmm64u(1) = 0;
 
-  BX_WRITE_XMM_REGZ(i->dst(), op, i->getVL());
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
   BX_NEXT_INSTR(i);
 }
 
@@ -44,7 +44,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVD_VdWdR(bxInstruction_c *i)
   op.xmm64u(0) = (Bit64u) BX_READ_XMM_REG_LO_DWORD(i->src());
   op.xmm64u(1) = 0;
 
-  BX_WRITE_XMM_REGZ(i->dst(), op, i->getVL());
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), op);
   BX_NEXT_INSTR(i);
 }
 
