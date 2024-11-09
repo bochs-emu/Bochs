@@ -103,18 +103,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILELOADD_TnnnMdq(bxInstruction_c *i)
 
   unsigned tile = i->dst();
 
-  if (tile >= BX_TILE_REGISTERS || ! BX_CPU_THIS_PTR amx->tile_valid(tile)) {
-    BX_ERROR(("%s: invalid tile %d", i->getIaOpcodeNameShort(), tile));
-    exception(BX_UD_EXCEPTION, 0);
-  }
+  check_tile(i, tile);
 
   unsigned rows = BX_CPU_THIS_PTR amx->tile_num_rows(tile);
   unsigned bytes_per_row = BX_CPU_THIS_PTR amx->tile_bytes_per_row(tile);
-
-  if ((bytes_per_row & 0x3) != 0) {
-    BX_ERROR(("%s: invalid tile %d bytes_per_row=%d", i->getIaOpcodeNameShort(), tile, bytes_per_row));
-    exception(BX_UD_EXCEPTION, 0);
-  }
 
   if (BX_CPU_THIS_PTR amx->start_row >= rows) {
     BX_ERROR(("%s: invalid tile %d (start_row=%d) >= (rows=%d)", i->getIaOpcodeNameShort(), tile, BX_CPU_THIS_PTR amx->start_row, rows));
@@ -163,18 +155,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILESTORED_MdqTnnn(bxInstruction_c *i)
 
   unsigned tile = i->src();
 
-  if (tile >= BX_TILE_REGISTERS || ! BX_CPU_THIS_PTR amx->tile_valid(tile)) {
-    BX_ERROR(("TILESTORED: invalid tile %d", tile));
-    exception(BX_UD_EXCEPTION, 0);
-  }
+  check_tile(i, tile);
 
   unsigned rows = BX_CPU_THIS_PTR amx->tile_num_rows(tile);
   unsigned bytes_per_row = BX_CPU_THIS_PTR amx->tile_bytes_per_row(tile);
-
-  if ((bytes_per_row & 0x3) != 0) {
-    BX_ERROR(("TILESTORED: invalid tile %d bytes_per_row=%d", tile, bytes_per_row));
-    exception(BX_UD_EXCEPTION, 0);
-  }
 
   if (BX_CPU_THIS_PTR amx->start_row >= rows) {
     BX_ERROR(("TILESTORED: invalid tile %d (start_row=%d) >= (rows=%d)", tile, BX_CPU_THIS_PTR amx->start_row, rows));
@@ -226,6 +210,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILERELEASE(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+void BX_CPP_AttrRegparmN(2) BX_CPU_C::check_tile(bxInstruction_c *i, unsigned tile_num)
+{
+  // #UD if TILES_CONFIGURED == 0
+  // #UD if src are not valid tile
+  // #UD if src is >= palette_table[tilecfg.palette_id].max_names
+  if (tile_num >= BX_TILE_REGISTERS || ! BX_CPU_THIS_PTR amx->tile_valid(tile_num)) {
+    BX_ERROR(("%s: invalid tile %d", i->getIaOpcodeNameShort(), tile_num));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  unsigned bytes_per_row = BX_CPU_THIS_PTR amx->tile_bytes_per_row(tile_num);
+  if ((bytes_per_row & 0x3) != 0) {
+    BX_ERROR(("%s: invalid tile %d bytes_per_row=%d", i->getIaOpcodeNameShort(), tile_num, bytes_per_row));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+}
+
 void BX_CPU_C::check_tiles(bxInstruction_c *i, unsigned tile_dst, unsigned tile_src1, unsigned tile_src2)
 {
   // #UD if srcdest == src1 OR src1 == src2 OR srcdest == src2
@@ -237,20 +238,9 @@ void BX_CPU_C::check_tiles(bxInstruction_c *i, unsigned tile_dst, unsigned tile_
   // #UD if TILES_CONFIGURED == 0
   // #UD if srcdest/src1/src2 are not valid tiles
   // #UD if srcdest/src1/src2 are >= palette_table[tilecfg.palette_id].max_names
-  if (tile_dst >= BX_TILE_REGISTERS || ! BX_CPU_THIS_PTR amx->tile_valid(tile_dst)) {
-    BX_ERROR(("%s: invalid tile %d", i->getIaOpcodeNameShort(), tile_dst));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
-  if (tile_src1 >= BX_TILE_REGISTERS || ! BX_CPU_THIS_PTR amx->tile_valid(tile_src1)) {
-    BX_ERROR(("%s: invalid tile %d", i->getIaOpcodeNameShort(), tile_src1));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
-  if (tile_src2 >= BX_TILE_REGISTERS || ! BX_CPU_THIS_PTR amx->tile_valid(tile_src2)) {
-    BX_ERROR(("%s: invalid tile %d", i->getIaOpcodeNameShort(), tile_src2));
-    exception(BX_UD_EXCEPTION, 0);
-  }
+  check_tile(i, tile_dst);
+  check_tile(i, tile_src1);
+  check_tile(i, tile_src2);
 
   unsigned rows[3];
   unsigned bytes_per_row[3];
@@ -261,16 +251,6 @@ void BX_CPU_C::check_tiles(bxInstruction_c *i, unsigned tile_dst, unsigned tile_
   bytes_per_row[1] = BX_CPU_THIS_PTR amx->tile_bytes_per_row(tile_src1);
   rows[2] = BX_CPU_THIS_PTR amx->tile_num_rows(tile_src2);
   bytes_per_row[2] = BX_CPU_THIS_PTR amx->tile_bytes_per_row(tile_src2);
-
-  // #UD if srcdest.colbytes mod 4 != 0
-  // #UD if src1.colbytes mod 4 != 0
-  // #UD if src2.colbytes mod 4 != 0
-  for (unsigned j=0; j<3; j++) {
-    if ((bytes_per_row[j] & 0x3) != 0) {
-      BX_ERROR(("%s: invalid tile bytes_per_row=%d", i->getIaOpcodeNameShort(), bytes_per_row[j]));
-      exception(BX_UD_EXCEPTION, 0);
-    }
-  }
 
   //     R   C
   // A = m x k (tsrc1)
