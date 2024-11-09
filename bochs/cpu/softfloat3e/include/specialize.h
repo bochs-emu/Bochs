@@ -47,9 +47,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ui8_fromPosOverflow  0xFF
 #define ui8_fromNegOverflow  0xFF
 #define ui8_fromNaN          0xFF
-#define i8_fromPosOverflow   0x7F
-#define i8_fromNegOverflow   (-0x7F - 1)
-#define i8_fromNaN           0x7F
+#define i8_fromPosOverflow  (-0x7F - 1)
+#define i8_fromNegOverflow  (-0x7F - 1)
+#define i8_fromNaN          (-0x7F - 1)
 
 #define ui8_minValue        (0)
 #define ui8_maxValue        (0xFF)
@@ -63,9 +63,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ui16_fromPosOverflow 0xFFFF
 #define ui16_fromNegOverflow 0xFFFF
 #define ui16_fromNaN         0xFFFF
-#define i16_fromPosOverflow  0x7FFF
+#define i16_fromPosOverflow  (-0x7FFF - 1)
 #define i16_fromNegOverflow  (-0x7FFF - 1)
-#define i16_fromNaN          0x7FFF
+#define i16_fromNaN          (-0x7FFF - 1)
 
 #define ui16_minValue        (0)
 #define ui16_maxValue        (0xFFFF)
