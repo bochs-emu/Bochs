@@ -72,8 +72,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSM3MSG1_VdqHdqWdqR(bxInstruction_c *i)
   dst.xmm32u(2) = SM3_P1(tmp[2]);
   dst.xmm32u(3) = SM3_P1(tmp[3]);
 
-  BX_WRITE_XMM_REGZ(i->dst(), dst, i->getVL());
-
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
   BX_NEXT_INSTR(i);
 }
 
@@ -94,8 +93,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSM3MSG2_VdqHdqWdqR(bxInstruction_c *i)
   dst.xmm32u(2) = tmp[2];
   dst.xmm32u(3) = tmp[3];
 
-  BX_WRITE_XMM_REGZ(i->dst(), dst, i->getVL());
-
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
   BX_NEXT_INSTR(i);
 }
 
@@ -146,8 +144,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VSM3RNDS2_VdqHdqWdqIbR(bxInstruction_c *i)
   dst.xmm32u(1) = E[2];
   dst.xmm32u(0) = F[2];
 
-  BX_WRITE_XMM_REGZ(i->dst(), dst, i->getVL());
-
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
   BX_NEXT_INSTR(i);
 }
 
