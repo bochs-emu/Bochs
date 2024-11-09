@@ -40,12 +40,43 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 uint16_t f16_to_ui16(float16 a, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
 {
-    uint32_t sig32 = f16_to_ui32(a, roundingMode, exact, status);
+    bool sign;
+    int8_t exp;
+    uint16_t frac;
+    uint32_t sig32;
+    int8_t shiftDist;
 
-    if (sig32 > UINT16_MAX) {
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    sign = signF16UI(a);
+    exp  = expF16UI(a);
+    frac = fracF16UI(a);
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    if (exp == 0x1F) {
         softfloat_raiseFlags(status, softfloat_flag_invalid);
-        return ui16_fromPosOverflow;
+        return
+            frac ? ui16_fromNaN
+                 : sign ? ui16_fromNegOverflow : ui16_fromPosOverflow;
     }
-
-    return sig32;
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    if (! exp) {
+        if (softfloat_denormalsAreZeros(status)) return 0;
+        if (exact && frac) {
+            softfloat_raiseFlags(status, softfloat_flag_inexact);
+        }
+        return 0;
+    }
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    sig32 = frac | 0x0400;
+    shiftDist = exp - 0x19;
+    if ((0 <= shiftDist) && ! sign) {
+        return sig32<<shiftDist;
+    }
+    shiftDist = exp - 0x0D;
+    if (0 < shiftDist)
+        sig32 <<= shiftDist;
+    return softfloat_roundToUI16(sign, sig32, roundingMode, exact, status);
 }

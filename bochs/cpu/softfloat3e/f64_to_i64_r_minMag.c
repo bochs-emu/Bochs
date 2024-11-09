@@ -53,8 +53,9 @@ int64_t f64_to_i64_r_minMag(float64 a, bool exact, bool saturate, struct softflo
     sign = signF64UI(a);
     exp  = expF64UI(a);
     sig  = fracF64UI(a);
-    if (softfloat_denormalsAreZeros(status))
-        if (!exp && sig) sig = 0;
+    if (softfloat_denormalsAreZeros(status)) {
+        if (!exp && sig) return 0;
+    }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     shiftDist = 0x433 - exp;
@@ -71,7 +72,7 @@ int64_t f64_to_i64_r_minMag(float64 a, bool exact, bool saturate, struct softflo
             const int64_t PosOverflowResponse = saturate ? i64_maxPositiveValue : i64_fromPosOverflow;
 
             softfloat_raiseFlags(status, softfloat_flag_invalid);
-            return (exp == 0x7FF) && sig 
+            return (exp == 0x7FF) && sig
                     ? NaN_response
                     : sign ? NegOverflowResponse : PosOverflowResponse;
         }

@@ -51,8 +51,9 @@ uint64_t f16_to_ui64_r_minMag(float16 a, bool exact, struct softfloat_status_t *
     *------------------------------------------------------------------------*/
     exp  = expF16UI(a);
     frac = fracF16UI(a);
-    if (softfloat_denormalsAreZeros(status))
-        if (!exp && frac) frac = 0;
+    if (softfloat_denormalsAreZeros(status)) {
+        if (!exp && frac) return 0;
+    }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     shiftDist = exp - 0x0F;

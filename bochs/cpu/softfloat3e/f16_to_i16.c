@@ -40,16 +40,50 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 int16_t f16_to_i16(float16 a, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
 {
-    int32_t sig32 = f16_to_i32(a, roundingMode, exact, status);
+    bool sign;
+    int8_t exp;
+    uint16_t frac;
+    int32_t sig32;
+    int8_t shiftDist;
+    int16_t z;
 
-    if (sig32 > INT16_MAX) {
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    sign = signF16UI(a);
+    exp  = expF16UI(a);
+    frac = fracF16UI(a);
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    if (exp == 0x1F) {
         softfloat_raiseFlags(status, softfloat_flag_invalid);
-        return i16_fromPosOverflow;
+        return
+            frac ? i16_fromNaN
+                 : sign ? i16_fromNegOverflow : i16_fromPosOverflow;
     }
-    if (sig32 < INT16_MIN) {
-        softfloat_raiseFlags(status, softfloat_flag_invalid);
-        return i16_fromNegOverflow;
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    if (! exp) {
+        if (softfloat_denormalsAreZeros(status)) return 0;
+        if (exact && frac) {
+            softfloat_raiseFlags(status, softfloat_flag_inexact);
+        }
+        return 0;
     }
-
-    return sig32;
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    sig32 = frac | 0x0400;
+    shiftDist = exp - 0x19;
+    if (0 <= shiftDist) {
+        sig32 <<= shiftDist;
+        if (shiftDist > 4) {
+            softfloat_raiseFlags(status, softfloat_flag_invalid);
+            return sign ? i16_fromNegOverflow : i16_fromPosOverflow;
+        }
+        z = (int16_t) sig32;
+        return sign ? -z : z;
+    }
+    shiftDist = exp - 0x0D;
+    if (0 < shiftDist)
+        sig32 <<= shiftDist;
+    return softfloat_roundToI16(sign, sig32, roundingMode, exact, status);
 }
