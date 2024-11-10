@@ -107,7 +107,27 @@ BX_CPP_INLINE float_bf8 convert_truncate_fp16_to_bf8_bias(float16 a, Bit8u bias,
 // convert half precision floating point number (fp16) to E5M2 BF8 number
 BX_CPP_INLINE float_bf8 convert_ne_fp16_to_bf8(float16 a, bool saturate_overflow, struct softfloat_status_t *status)
 {
-  // without bias argument rounding bias is 0x7F + bit(a[8])
+  // BF8 matching FP16 format but mantissa is 8-bit shorter
+  // so conversion of FP16 to BF8 require to round FP16 mantissa to its bit 8
+  // this function performs according to round-to-nearest-even (RNE) rounding mode
+
+  // RNE rounding:                      1.BBGRXXXXX
+  //                                        ||-----
+  //   Guard bit (LSB of the result)   -----+|  Sticky bit = OR of all remaining bits
+  //   Round bit (First bit removed)   ------+
+  //
+  //   GRS
+  //   ---
+  //   x0x -> no increment
+  //   010 -> no increment
+  //   110 -> increment
+  //   x11 -> increment
+
+  // Rounding-to-nearest-even to bit 8 is equivalent to converting with bias matching increment value
+
+  // Sticky bits: 0x7F
+  // Value of Guard bit: ((a >> 8) & 0x1)          Increment value: 0x7F + bit(a[8])
+
   return convert_truncate_fp16_to_bf8_bias(a, 0x007F + ((a >> 8) & 0x1), saturate_overflow, status);
 }
 
