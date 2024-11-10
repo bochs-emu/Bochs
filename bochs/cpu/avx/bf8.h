@@ -38,14 +38,28 @@ BX_CPP_INLINE int bf8_sign(float_bf8 bf8) { return bf8 >> 7; }
 BX_CPP_INLINE int bf8_exp(float_bf8 bf8) { return (bf8 & 0x7c) >> 2; }
 BX_CPP_INLINE int bf8_signif(float_bf8 bf8) { return bf8 & 0x03; }
 
+BX_CPP_INLINE int bf8_is_denormal(float_bf8 bf8) { return (bf8 & 0x7c) == 0 && (bf8 & 0x03) != 0; }
+
 BX_CPP_INLINE float16 convert_bf8_to_fp16(float_bf8 op)
 {
   return Bit16u(op) << 8;
 }
 
-// Convert half precision floating point number (fp16) to E5M2 BF8 number
-// The bias parameter is the bias 8b integer to be added to data before the downconvert
-BX_CPP_INLINE float_bf8 convert_ne_fp16_to_bf8_bias(float16 a, Bit8u bias, bool saturate_overflow, struct softfloat_status_t *status)
+// Convert half precision floating point number (fp16) to E5M2 BF8 number.
+// Add a 8-bit unsigned BIAS number to the 8 bits below the LSB of the rounded number and
+// then convert the result into a E5M2 FP8 value by normalizing and truncation to align
+// with E4M3 dynamic range. The addition is aligned FP16 LSB.
+// The result is truncated.
+
+// Infinity is preserved for the non-saturated versions. NaN at input is propagated as QNaN.
+// If the result is infinity or too big to be represented, then for the saturated version, E5M2_MAX is returned,
+// for the non-saturated versions, infinity is returned.
+// The UE (underflow) flag is set when the result is both denormal and inexact.
+
+// DAZ is not obeyed and always assumed DAZ==0. FTZ is not obeyed and always assumed FTZ==0.
+// All MXCSR mask bits DM, IM, OM, PM, UM are implicitly set.
+
+BX_CPP_INLINE float_bf8 convert_truncate_fp16_to_bf8_bias(float16 a, Bit8u bias, bool saturate_overflow, struct softfloat_status_t *status)
 {
   int signA   = signF16UI(a);
   Bit8s expA  = expF16UI(a);
@@ -76,13 +90,15 @@ BX_CPP_INLINE float_bf8 convert_ne_fp16_to_bf8_bias(float16 a, Bit8u bias, bool 
   Bit16u roundA = (a + rounding_bias) >> 8;
 
   if (((roundA & 0x7F) == 0x7C) && saturate_overflow) {
-    softfloat_raiseFlags(status, softfloat_flag_overflow);
     z = (roundA & 0x80) | 0x7B;
   }
   else {
     z = roundA;
-    if ((roundA<<8) != a)
+    if ((roundA<<8) != a) {
       softfloat_raiseFlags(status, softfloat_flag_inexact);
+      if (bf8_is_denormal(z))
+        softfloat_raiseFlags(status, softfloat_flag_underflow);
+    }
   }
 
   return z;
@@ -92,7 +108,7 @@ BX_CPP_INLINE float_bf8 convert_ne_fp16_to_bf8_bias(float16 a, Bit8u bias, bool 
 BX_CPP_INLINE float_bf8 convert_ne_fp16_to_bf8(float16 a, bool saturate_overflow, struct softfloat_status_t *status)
 {
   // without bias argument rounding bias is 0x7F + bit(a[8])
-  return convert_ne_fp16_to_bf8_bias(a, 0x007F + ((a >> 8) & 0x1), saturate_overflow, status);
+  return convert_truncate_fp16_to_bf8_bias(a, 0x007F + ((a >> 8) & 0x1), saturate_overflow, status);
 }
 
 #endif

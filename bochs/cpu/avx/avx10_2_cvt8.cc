@@ -145,7 +145,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTBIASPH2BF8_Vf8HdqWphR(bxInstruction_c 
 
   for (unsigned n=0, tmp_mask = opmask; n < num_elements; n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1)
-      res.vmmubyte(n) = convert_ne_fp16_to_bf8_bias(op2.vmm16u(n), op1.vmm16u(n) & 0xFF, saturate, &status);
+      res.vmmubyte(n) = convert_truncate_fp16_to_bf8_bias(op2.vmm16u(n), op1.vmm16u(n) & 0xFF, saturate, &status);
     else if (i->isZeroMasking())
       res.vmmubyte(n) = 0;
   }
@@ -237,7 +237,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTBIASPH2HF8_Vf8HdqWphR(bxInstruction_c 
 
   for (unsigned n=0, tmp_mask = opmask; n < num_elements; n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1)
-      res.vmmubyte(n) = convert_ne_fp16_to_hf8_bias(op2.vmm16u(n), op1.vmm16u(n) & 0xFF, saturate, &status);
+      res.vmmubyte(n) = convert_truncate_fp16_to_hf8_bias(op2.vmm16u(n), op1.vmm16u(n) & 0xFF, saturate, &status);
     else if (i->isZeroMasking())
       res.vmmubyte(n) = 0;
   }
