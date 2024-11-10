@@ -517,28 +517,46 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
   }
 }
 
-Bit32u bx_banshee_c::get_overlay_pixel(unsigned x, unsigned y, Bit8u bpp)
+Bit32u bx_banshee_c::get_overlay_pixel(unsigned xc, unsigned yc, Bit8u bpp)
 {
   Bit16u index;
   Bit32u value = 0;
-  unsigned ox, oy;
-  Bit8u *vid_ptr, yy;
+  unsigned ox, oy, r, g, b;
+  Bit8u *vid_ptr, data[4], px, Y[2];
+  Bit8s U, V;
 
-  ox = (unsigned)((double)(x - v->banshee.overlay.x0) * v->banshee.overlay.fx);
-  oy = (unsigned)((double)(y - v->banshee.overlay.y0) * v->banshee.overlay.fy);
+  ox = (unsigned)((double)(xc - v->banshee.overlay.x0) * v->banshee.overlay.fx);
+  oy = (unsigned)((double)(yc - v->banshee.overlay.y0) * v->banshee.overlay.fy);
+  px = ox & 1;
+  ox &= ~1;
   vid_ptr = &v->fbi.ram[v->banshee.overlay.start & v->fbi.mask] + (ox << 1)
             + (oy * v->banshee.overlay.pitch);
+  for (unsigned i = 0; i < 4; i++) {
+    data[i] = *(vid_ptr + i);
+  }
   if (v->banshee.overlay.format == 6) {
-    yy = *(vid_ptr + 1);
-    index = ((yy >> 3) << 11) | ((yy >> 2) << 5) | (yy >> 3);
+    U = data[0] - 0x80;
+    Y[0] = data[1];
+    V = data[2] - 0x80;
+    Y[1] = data[3];
+    r = (unsigned)(Y[px] + (double)V / 0.877);
+    if (r > 255) r = 255;
+    g = (unsigned)(Y[px] - (double)U * 0.39393 - (double)V * 0.58081);
+    if (g > 255) g = 255;
+    b = (unsigned)(Y[px] + (double)U / 0.493);
+    if (b > 255) b = 255;
+    index = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
   } else {
-    index = *(vid_ptr);
-    index |= *(vid_ptr + 1) << 8;
+    index = data[px << 1];
+    index |= data[(px << 1) + 1] << 8;
+    r = (index & 0xf800) >> 8;
+    g = (index & 0x07e0) >> 3;
+    b = (index & 0x1f) << 3;
   }
   if (bpp == 16) {
     value = index;
   } else if ((bpp == 24) || (bpp == 32)) {
-    value = ((index & 0xf800) << 8) | ((index & 0x07e0) << 5) | ((index & 0x001f) << 3);
+    value = (r << 16) | (g << 8) | b;
   }
   return value;
 }
