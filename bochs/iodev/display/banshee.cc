@@ -519,9 +519,9 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
 
 Bit32u bx_banshee_c::get_overlay_pixel(unsigned xc, unsigned yc, Bit8u bpp)
 {
-  Bit16u index;
+  Bit16u index = 0;
   Bit32u value = 0;
-  unsigned ox, oy, r, g, b;
+  unsigned ox, oy, r = 0, g = 0, b = 0;
   Bit8u *vid_ptr, data[4], px, Y[2];
   Bit8s U, V;
 
@@ -534,11 +534,18 @@ Bit32u bx_banshee_c::get_overlay_pixel(unsigned xc, unsigned yc, Bit8u bpp)
   for (unsigned i = 0; i < 4; i++) {
     data[i] = *(vid_ptr + i);
   }
-  if (v->banshee.overlay.format == 6) {
-    U = data[0] - 0x80;
-    Y[0] = data[1];
-    V = data[2] - 0x80;
-    Y[1] = data[3];
+  if ((v->banshee.overlay.format == 5) || (v->banshee.overlay.format == 6)) {
+    if (v->banshee.overlay.format == 5) {
+      Y[0] = data[0];
+      U = data[1] - 0x80;
+      Y[1] = data[2];
+      V = data[3] - 0x80;
+    } else {
+      U = data[0] - 0x80;
+      Y[0] = data[1];
+      V = data[2] - 0x80;
+      Y[1] = data[3];
+    }
     r = (unsigned)(Y[px] + (double)V / 0.877);
     if (r > 255) r = 255;
     g = (unsigned)(Y[px] - (double)U * 0.39393 - (double)V * 0.58081);
@@ -546,7 +553,8 @@ Bit32u bx_banshee_c::get_overlay_pixel(unsigned xc, unsigned yc, Bit8u bpp)
     b = (unsigned)(Y[px] + (double)U / 0.493);
     if (b > 255) b = 255;
     index = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
-  } else {
+  } else if ((v->banshee.overlay.format == 1) ||
+             (v->banshee.overlay.format == 7)) {
     index = data[px << 1];
     index |= data[(px << 1) + 1] << 8;
     r = (index & 0xf800) >> 8;
@@ -1153,11 +1161,15 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (((v->banshee.io[reg] >> 5) & 1) && !((old >> 5) & 1)) {
         BX_ERROR(("vidProcCfg: chromaKey mode not supported yet"));
       }
-      if (((v->banshee.io[reg] >> 14) & 1) && !((old >> 14) & 1)) {
-        BX_ERROR(("vidProcCfg: overlay horizontal scaling not supported yet"));
+      if ((v->banshee.io[reg] >> 14) & 1) {
+        v->banshee.overlay.fx = (double)(v->banshee.io[io_vidOverlayDudx] & 0xfffff) / (double)(1 << 20);
+      } else {
+        v->banshee.overlay.fx = 1.000;
       }
-      if (((v->banshee.io[reg] >> 15) & 1) && !((old >> 15) & 1)) {
-        BX_ERROR(("vidProcCfg: overlay vertical scaling not supported yet"));
+      if ((v->banshee.io[reg] >> 15) & 1) {
+        v->banshee.overlay.fy = (double)(v->banshee.io[io_vidOverlayDvdy] & 0xfffff) / (double)(1 << 20);
+      } else {
+        v->banshee.overlay.fy = 1.000;
       }
       if (((v->banshee.io[reg] >> 16) & 3) != ((old >> 16) & 3)) {
         BX_ERROR(("vidProcCfg: overlay filter mode %d not supported yet", (v->banshee.io[reg] >> 16) & 3));
@@ -1241,14 +1253,18 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
     case io_vidOverlayDudx:
       v->banshee.io[reg] = value;
-      v->banshee.overlay.fx = (double)(value & 0xfffff) / (double)(1 << 20);
-      v->banshee.overlay.redraw = true;
+      if ((v->banshee.io[io_vidProcCfg] >> 14) & 1) {
+        v->banshee.overlay.fx = (double)(value & 0xfffff) / (double)(1 << 20);
+        v->banshee.overlay.redraw = true;
+      }
       break;
 
     case io_vidOverlayDvdy:
       v->banshee.io[reg] = value;
-      v->banshee.overlay.fy = (double)(value & 0xfffff) / (double)(1 << 20);
-      v->banshee.overlay.redraw = true;
+      if ((v->banshee.io[io_vidProcCfg] >> 15) & 1) {
+        v->banshee.overlay.fy = (double)(value & 0xfffff) / (double)(1 << 20);
+        v->banshee.overlay.redraw = true;
+      }
       break;
 
     case io_vgab0:  case io_vgab4:  case io_vgab8:  case io_vgabc:
