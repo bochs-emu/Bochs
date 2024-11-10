@@ -73,15 +73,15 @@ BX_CPP_INLINE float_bf8 convert_ne_fp16_to_bf8_bias(float16 a, Bit8u bias, bool 
 
   // normal, zero or denormal number, convert applying round-to-nearest-even
   Bit16u rounding_bias = (Bit16u) bias;
-  Bit16u roundA = a + rounding_bias;
+  Bit16u roundA = (a + rounding_bias) >> 8;
 
-  if (((z & 0x7F00) == 0x7C00) && saturate_overflow) {
+  if (((roundA & 0x7F) == 0x7C) && saturate_overflow) {
     softfloat_raiseFlags(status, softfloat_flag_overflow);
-    z = ((roundA >> 8) & 0x80) | 0x7B;
+    z = (roundA & 0x80) | 0x7B;
   }
   else {
-    z = roundA >> 8;
-    if (roundA != a)
+    z = roundA;
+    if ((roundA<<8) != a)
       softfloat_raiseFlags(status, softfloat_flag_inexact);
   }
 
