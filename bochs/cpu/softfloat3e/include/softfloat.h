@@ -244,9 +244,11 @@ BX_CPP_INLINE float16 ui16_to_f16(uint16_t a, struct softfloat_status_t *status)
 /*----------------------------------------------------------------------------
 | 16-bit (half-precision) floating-point operations.
 *----------------------------------------------------------------------------*/
+uint8_t f16_to_ui8(float16, uint8_t, bool, bool, struct softfloat_status_t *);
 uint16_t f16_to_ui16(float16, uint8_t, bool, struct softfloat_status_t *);
 uint32_t f16_to_ui32(float16, uint8_t, bool, struct softfloat_status_t *);
 uint64_t f16_to_ui64(float16, uint8_t, bool, struct softfloat_status_t *);
+int8_t f16_to_i8(float16, uint8_t, bool, bool, struct softfloat_status_t *);
 int16_t f16_to_i16(float16, uint8_t, bool, struct softfloat_status_t *);
 int32_t f16_to_i32(float16, uint8_t, bool, struct softfloat_status_t *);
 int64_t f16_to_i64(float16, uint8_t, bool, struct softfloat_status_t *);
@@ -309,6 +311,13 @@ BX_CPP_INLINE int16_t f16_to_i16(float16 a, struct softfloat_status_t *status) {
     return f16_to_i16(a, softfloat_getRoundingMode(status), true, status);
 }
 
+BX_CPP_INLINE int8_t f16_to_i8(float16 a, struct softfloat_status_t *status) {
+    return f16_to_i8(a, softfloat_getRoundingMode(status), true, false, status);
+}
+BX_CPP_INLINE int8_t f16_to_i8_saturate(float16 a, struct softfloat_status_t *status) {
+    return f16_to_i8(a, softfloat_getRoundingMode(status), true, true, status);
+}
+
 BX_CPP_INLINE int64_t f16_to_i64_round_to_zero(float16 a, struct softfloat_status_t *status) {
     return f16_to_i64_r_minMag(a, true, status);
 }
@@ -327,6 +336,13 @@ BX_CPP_INLINE uint32_t f16_to_ui32(float16 a, struct softfloat_status_t *status)
 }
 BX_CPP_INLINE uint16_t f16_to_ui16(float16 a, struct softfloat_status_t *status) {
     return f16_to_ui16(a, softfloat_getRoundingMode(status), true, status);
+}
+
+BX_CPP_INLINE uint8_t f16_to_ui8(float16 a, struct softfloat_status_t *status) {
+    return f16_to_ui8(a, softfloat_getRoundingMode(status), true, false, status);
+}
+BX_CPP_INLINE uint8_t f16_to_ui8_saturate(float16 a, struct softfloat_status_t *status) {
+    return f16_to_ui8(a, softfloat_getRoundingMode(status), true, true, status);
 }
 
 BX_CPP_INLINE uint64_t f16_to_ui64_round_to_zero(float16 a, struct softfloat_status_t *status) {
@@ -355,8 +371,10 @@ BX_CPP_INLINE float16 f16_fnmsub(float16 a, float16 b, float16 c, softfloat_stat
 /*----------------------------------------------------------------------------
 | 32-bit (single-precision) floating-point operations.
 *----------------------------------------------------------------------------*/
+uint8_t f32_to_ui8(float32, uint8_t, bool, bool, struct softfloat_status_t *);
 uint32_t f32_to_ui32(float32, uint8_t, bool, struct softfloat_status_t *);
 uint64_t f32_to_ui64(float32, uint8_t, bool, struct softfloat_status_t *);
+int8_t f32_to_i8(float32, uint8_t, bool, bool, struct softfloat_status_t *);
 int32_t f32_to_i32(float32, uint8_t, bool, struct softfloat_status_t *);
 int64_t f32_to_i64(float32, uint8_t, bool, struct softfloat_status_t *);
 uint32_t f32_to_ui32_r_minMag(float32, bool, bool, struct softfloat_status_t *);
@@ -409,6 +427,13 @@ BX_CPP_INLINE float32 f32_roundToInt(float32 a, struct softfloat_status_t *statu
     return f32_roundToInt(a, 0, softfloat_getRoundingMode(status), true, status);
 }
 
+BX_CPP_INLINE int8_t f32_to_i8(float32 a, struct softfloat_status_t *status) {
+    return f32_to_i8(a, softfloat_getRoundingMode(status), true, false, status);
+}
+BX_CPP_INLINE int8_t f32_to_i8_saturate(float32 a, struct softfloat_status_t *status) {
+    return f32_to_i8(a, softfloat_getRoundingMode(status), true, true, status);
+}
+
 BX_CPP_INLINE int32_t f32_to_i32(float32 a, struct softfloat_status_t *status) {
     return f32_to_i32(a, softfloat_getRoundingMode(status), true, status);
 }
@@ -427,6 +452,13 @@ BX_CPP_INLINE int64_t f32_to_i64_round_to_zero(float32 a, struct softfloat_statu
 }
 BX_CPP_INLINE int64_t f32_to_i64_round_to_zero_saturate(float32 a, struct softfloat_status_t *status) {
     return f32_to_i64_r_minMag(a, true, true, status);
+}
+
+BX_CPP_INLINE uint8_t f32_to_ui8(float32 a, struct softfloat_status_t *status) {
+    return f32_to_ui8(a, softfloat_getRoundingMode(status), true, false, status);
+}
+BX_CPP_INLINE uint8_t f32_to_ui8_saturate(float32 a, struct softfloat_status_t *status) {
+    return f32_to_ui8(a, softfloat_getRoundingMode(status), true, true, status);
 }
 
 BX_CPP_INLINE uint32_t f32_to_ui32(float32 a, struct softfloat_status_t *status) {

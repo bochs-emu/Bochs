@@ -40,13 +40,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-uint32_t f32_to_ui32(float32 a, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
+uint8_t f32_to_ui8(float32 a, uint8_t roundingMode, bool exact, bool saturate, struct softfloat_status_t *status)
 {
     bool sign;
     int16_t exp;
     uint32_t sig;
-    uint64_t sig64;
-    int16_t shiftDist;
+    int shiftDist;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -63,16 +62,24 @@ uint32_t f32_to_ui32(float32 a, uint8_t roundingMode, bool exact, struct softflo
         sign = 1;
 #else
         softfloat_raiseFlags(status, softfloat_flag_invalid);
-        return ui32_fromNaN;
+        return saturate ? 0 : ui8_fromNaN;
 #endif
     }
 #endif
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
+    shiftDist = 0x86 - exp;
+    if (shiftDist < 0) {
+        const uint8_t NegOverflowResponse = saturate ? ui8_minValue : ui8_fromNegOverflow;
+        const uint8_t PosOverflowResponse = saturate ? ui8_maxValue : ui8_fromPosOverflow;
+
+        softfloat_raiseFlags(status, softfloat_flag_invalid);
+        return sign ? NegOverflowResponse : PosOverflowResponse;
+    }
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
     if (exp) sig |= 0x00800000;
     else if (softfloat_denormalsAreZeros(status)) return 0;
-    sig64 = (uint64_t) sig<<32;
-    shiftDist = 0xAA - exp;
-    if (0 < shiftDist) sig64 = softfloat_shiftRightJam64(sig64, shiftDist);
-    return softfloat_roundToUI32(sign, sig64, roundingMode, exact, status);
+    if (0 < shiftDist) sig = softfloat_shiftRightJam32(sig, shiftDist);
+    return softfloat_roundToUI8(sign, sig, roundingMode, exact, saturate, status);
 }

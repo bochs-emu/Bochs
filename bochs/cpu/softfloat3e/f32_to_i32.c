@@ -46,7 +46,7 @@ int32_t f32_to_i32(float32 a, uint8_t roundingMode, bool exact, struct softfloat
     int16_t exp;
     uint32_t sig;
     uint64_t sig64;
-    int16_t shiftDist;
+    int shiftDist;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/

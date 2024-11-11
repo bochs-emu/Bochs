@@ -40,13 +40,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-uint32_t f32_to_ui32(float32 a, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
+int8_t f32_to_i8(float32 a, uint8_t roundingMode, bool exact, bool saturate, struct softfloat_status_t *status)
 {
     bool sign;
     int16_t exp;
     uint32_t sig;
-    uint64_t sig64;
-    int16_t shiftDist;
+    int shiftDist;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -55,24 +54,32 @@ uint32_t f32_to_ui32(float32 a, uint8_t roundingMode, bool exact, struct softflo
     sig  = fracF32UI(a);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-#if (ui32_fromNaN != ui32_fromPosOverflow) || (ui32_fromNaN != ui32_fromNegOverflow)
+#if (i32_fromNaN != i32_fromPosOverflow) || (i32_fromNaN != i32_fromNegOverflow)
     if ((exp == 0xFF) && sig) {
-#if (ui32_fromNaN == ui32_fromPosOverflow)
+#if (i32_fromNaN == i32_fromPosOverflow)
         sign = 0;
-#elif (ui32_fromNaN == ui32_fromNegOverflow)
+#elif (i32_fromNaN == i32_fromNegOverflow)
         sign = 1;
 #else
         softfloat_raiseFlags(status, softfloat_flag_invalid);
-        return ui32_fromNaN;
+        return saturate ? 0 : i8_fromNaN;
 #endif
     }
 #endif
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
+    shiftDist = 0x86 - exp;
+    if (shiftDist < 0) {
+        const int8_t NegOverflowResponse = saturate ? i8_minNegativeValue : i8_fromNegOverflow;
+        const int8_t PosOverflowResponse = saturate ? i8_maxPositiveValue : i8_fromPosOverflow;
+
+        softfloat_raiseFlags(status, softfloat_flag_invalid);
+        return sign ? NegOverflowResponse : PosOverflowResponse;
+    }
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
     if (exp) sig |= 0x00800000;
     else if (softfloat_denormalsAreZeros(status)) return 0;
-    sig64 = (uint64_t) sig<<32;
-    shiftDist = 0xAA - exp;
-    if (0 < shiftDist) sig64 = softfloat_shiftRightJam64(sig64, shiftDist);
-    return softfloat_roundToUI32(sign, sig64, roundingMode, exact, status);
+    if (0 < shiftDist) sig = softfloat_shiftRightJam32(sig, shiftDist);
+    return softfloat_roundToI8(sign, sig, roundingMode, exact, saturate, status);
 }

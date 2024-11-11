@@ -35,44 +35,42 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "internals.h"
-#include "primitives.h"
 #include "specialize.h"
+#include "primitives.h"
 #include "softfloat.h"
 
-uint32_t f32_to_ui32(float32 a, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
+uint8_t f16_to_ui8(float16 a, uint8_t roundingMode, bool exact, bool saturate, struct softfloat_status_t *status)
 {
     bool sign;
-    int16_t exp;
-    uint32_t sig;
-    uint64_t sig64;
-    int16_t shiftDist;
+    int8_t exp;
+    uint16_t frac;
+    int shiftDist;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    sign = signF32UI(a);
-    exp  = expF32UI(a);
-    sig  = fracF32UI(a);
+    sign = signF16UI(a);
+    exp  = expF16UI(a);
+    frac = fracF16UI(a);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-#if (ui32_fromNaN != ui32_fromPosOverflow) || (ui32_fromNaN != ui32_fromNegOverflow)
-    if ((exp == 0xFF) && sig) {
-#if (ui32_fromNaN == ui32_fromPosOverflow)
-        sign = 0;
-#elif (ui32_fromNaN == ui32_fromNegOverflow)
-        sign = 1;
-#else
+    if ((exp == 0x1F) && frac) {
         softfloat_raiseFlags(status, softfloat_flag_invalid);
-        return ui32_fromNaN;
-#endif
+        return saturate ? 0 : ui8_fromNaN;
     }
-#endif
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (exp) sig |= 0x00800000;
+    shiftDist = 0x16 - exp;
+    if (shiftDist < 0) {
+        const uint8_t NegOverflowResponse = saturate ? ui8_minValue : ui8_fromNegOverflow;
+        const uint8_t PosOverflowResponse = saturate ? ui8_maxValue : ui8_fromPosOverflow;
+
+        softfloat_raiseFlags(status, softfloat_flag_invalid);
+        return sign ? NegOverflowResponse : PosOverflowResponse;
+    }
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    if (exp) frac |= 0x0400;
     else if (softfloat_denormalsAreZeros(status)) return 0;
-    sig64 = (uint64_t) sig<<32;
-    shiftDist = 0xAA - exp;
-    if (0 < shiftDist) sig64 = softfloat_shiftRightJam64(sig64, shiftDist);
-    return softfloat_roundToUI32(sign, sig64, roundingMode, exact, status);
+    if (0 < shiftDist) frac = softfloat_shiftRightJam32(frac, shiftDist);
+    return softfloat_roundToUI8(sign, frac, roundingMode, exact, saturate, status);
 }
