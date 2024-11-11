@@ -41,19 +41,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /*--------------------------------------------------------------------------------
 | Takes a 32-bit fixed-point value `sig' with binary point between bits 11 and 12
-| and returns the properly rounded  16-bit unsigned  integer corresponding to the
-| input.  If  `sign' is  1, the  input is  negated before  being converted  to an
-| integer. Bit  31 of  `sig' must be zero. Ordinarily,  the fixed-point  input is
-| simply rounded to  an integer, with the  inexact exception raised if  the input
-| cannot be represented exactly as an integer. However, if  the fixed-point input
-| is too large, the invalid exception is raised and the largest  unsigned integer
-| is returned.
+| and returns the properly rounded 16-bit unsigned  integer corresponding to the
+| input. Ordinarily, the fixed-point input is simply rounded to an integer, with
+| the inexact exception raised if  the input cannot be represented exactly as an
+| integer. However, if  the fixed-point input is too large, the invalid exception
+| is raised and the largest unsigned integer is returned.
 *--------------------------------------------------------------------------------*/
 
 uint16_t
  softfloat_roundToUI16(bool sign, uint32_t sig, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
 {
-    uint16_t roundIncrement, roundBits;
+    uint32_t roundIncrement, roundBits;
     uint16_t z;
     uint32_t origSig = sig >> 12;
 

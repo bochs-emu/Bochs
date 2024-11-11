@@ -52,7 +52,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 int32_t softfloat_roundToI32(bool sign, uint64_t sig, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
 {
-    uint16_t roundIncrement, roundBits;
+    uint32_t roundIncrement, roundBits;
     uint32_t sig32;
     union { uint32_t ui; int32_t i; } uZ;
     int32_t z;
