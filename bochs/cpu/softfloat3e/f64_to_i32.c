@@ -74,4 +74,3 @@ int32_t f64_to_i32(float64 a, uint8_t roundingMode, bool exact, struct softfloat
     if (0 < shiftDist) sig = softfloat_shiftRightJam64(sig, shiftDist);
     return softfloat_roundToI32(sign, sig, roundingMode, exact, status);
 }
-

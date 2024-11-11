@@ -75,4 +75,3 @@ int64_t f64_to_i64(float64 a, uint8_t roundingMode, bool exact, struct softfloat
             ? i64_fromNaN
             : sign ? i64_fromNegOverflow : i64_fromPosOverflow;
 }
-

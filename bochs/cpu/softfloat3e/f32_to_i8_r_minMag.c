@@ -59,6 +59,8 @@ int8_t f32_to_i8_r_minMag(float32 a, bool exact, bool saturate, struct softfloat
     *------------------------------------------------------------------------*/
     shiftDist = 0x96 - exp;
     if (shiftDist <= 16) {
+        if (a == packToF32UI(1, 0x86, 0)) return -0x7F - 1;
+
         const int8_t NaN_response = saturate ? 0 : i8_fromNaN; 
         const int8_t NegOverflowResponse = saturate ? i8_minNegativeValue : i8_fromNegOverflow;
         const int8_t PosOverflowResponse = saturate ? i8_maxPositiveValue : i8_fromPosOverflow;

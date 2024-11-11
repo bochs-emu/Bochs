@@ -61,6 +61,8 @@ int8_t f16_to_i8(float16 a, uint8_t roundingMode, bool exact, bool saturate, str
     *------------------------------------------------------------------------*/
     shiftDist = 0x16 - exp;
     if (shiftDist < 0) {
+        if (a == packToF16UI(1, 0x16, 0)) return -0x7F - 1;
+
         const int8_t NegOverflowResponse = saturate ? i8_minNegativeValue : i8_fromNegOverflow;
         const int8_t PosOverflowResponse = saturate ? i8_maxPositiveValue : i8_fromPosOverflow;
 

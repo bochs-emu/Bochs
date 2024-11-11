@@ -67,6 +67,8 @@ int16_t f16_to_i16_r_minMag(float16 a, bool exact, struct softfloat_status_t *st
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if (shiftDist <= 0) {
+        if (a == packToF16UI(1, 0x1E, 0)) return -0x7FFF - 1;
+
         softfloat_raiseFlags(status, softfloat_flag_invalid);
         return (exp == 0x1F) && sig 
                 ? i16_fromNaN
