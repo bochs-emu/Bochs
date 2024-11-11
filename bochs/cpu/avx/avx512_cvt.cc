@@ -311,6 +311,8 @@ AVX512_CVT32_TO_32_MASK(VCVTTPS2UDQ_MASK_VdqWpsR, f32_to_ui32_round_to_zero)
 AVX512_CVT32_TO_32_MASK(VCVTTPS2UDQS_MASK_VdqWpsR, f32_to_ui32_round_to_zero_saturate) // AVX 10.2
 AVX512_CVT32_TO_32_MASK(VCVTDQ2PS_MASK_VpsWdqR, i32_to_f32)
 AVX512_CVT32_TO_32_MASK(VCVTUDQ2PS_MASK_VpsWdqR, ui32_to_f32)
+AVX512_CVT32_TO_32_MASK(VCVTPS2IBS_MASK_V8bWpsR, f32_to_i8_saturate) // AVX 10.2
+AVX512_CVT32_TO_32_MASK(VCVTPS2IUBS_MASK_V8bWpsR, f32_to_ui8_saturate) // AVX 10.2
 
 #define AVX512_CVT64_TO_64(HANDLER, func)                                                   \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \

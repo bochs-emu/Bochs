@@ -73,7 +73,7 @@ AVX_OBJS = \
 	xop.o \
 	bf16_arith.o \
 	avx10_2_cvt.o \
-	avx10_2_cvt8.o \
+	avx10_2_cvt_fp8.o \
 	avx10_2_minmax.o \
 	avx10_2_bf16.o \
 	avx10_2_misc.o
@@ -151,7 +151,7 @@ avx10_2_cvt.o: avx10_2_cvt.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
  ../softfloat3e/include/internals.h
-avx10_2_cvt8.o: avx10_2_cvt8.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
+avx10_2_cvt_fp8.o: avx10_2_cvt_fp8.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \

@@ -49,7 +49,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *-------------------------------------------------------------------------------*/
 
 uint8_t
- softfloat_roundToUI16(bool sign, uint32_t sig, uint8_t roundingMode, bool exact, bool saturate, struct softfloat_status_t *status)
+ softfloat_roundToUI8(bool sign, uint32_t sig, uint8_t roundingMode, bool exact, bool saturate, struct softfloat_status_t *status)
 {
     uint32_t roundIncrement, roundBits;
     uint8_t z;

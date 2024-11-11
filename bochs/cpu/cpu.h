@@ -3852,6 +3852,15 @@ public: // for now...
   BX_SMF void VCVTNE2PH2HF8_Vf8HdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTBIASPH2HF8_Vf8HdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
+  // AVX10.2 convert to int8 with saturation
+  BX_SMF void VCVTPH2IBS_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPH2IUBS_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPH2IBS_MASK_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPH2IUBS_MASK_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPS2IBS_V8bWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPS2IUBS_V8bWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPS2IBS_MASK_V8bWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPS2IUBS_MASK_V8bWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
   BX_SMF void LZCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
