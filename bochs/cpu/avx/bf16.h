@@ -93,6 +93,9 @@ extern bfloat16 bf16_mulAdd(bfloat16 a, bfloat16 b, bfloat16 c, uint8_t op);
 
 BX_CPP_INLINE softfloat_class_t bf16_class(bfloat16 a) { return f32_class(convert_bfloat16_to_fp32(a)); }
 
+extern int8_t bf16_to_i8_saturate(bfloat16 a);
+extern uint8_t bf16_to_ui8_saturate(bfloat16 a);
+
 extern bfloat16 bfloat16_approximate_rcp14(bfloat16 a);
 extern bfloat16 bfloat16_approximate_rsqrt14(bfloat16 a);
 

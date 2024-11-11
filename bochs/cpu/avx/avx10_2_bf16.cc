@@ -204,54 +204,54 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCOMSBF16_VshWshR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCPPBF16_MASK_VphWphR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
-  Bit32u mask = i->opmask() ? BX_READ_32BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  unsigned len = i->getVL();
-  unsigned num_elements = WORD_ELEMENTS(len);
-
-  for (unsigned n=0, tmp_mask = mask; n < num_elements; n++, tmp_mask >>= 1) {
-    if (tmp_mask & 0x1)
-      op.vmm16u(n) = bfloat16_approximate_rcp14(op.vmm16u(n));
-    else
-      op.vmm16u(n) = 0;
+#define AVX10_CVT_NE_16_TO_16(HANDLER, func)                                                \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
+  {                                                                                         \
+    BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());                                     \
+    unsigned len = i->getVL();                                                              \
+                                                                                            \
+    for (unsigned n=0; n < WORD_ELEMENTS(len); n++) {                                       \
+      op.vmm16u(n) = (func)(op.vmm16u(n));                                                  \
+    }                                                                                       \
+                                                                                            \
+    BX_WRITE_AVX_REGZ(i->dst(), op, len);                                                   \
+    BX_NEXT_INSTR(i);                                                                       \
   }
 
-  if (! i->isZeroMasking()) {
-    simd_pblendw(&BX_READ_AVX_REG(i->dst()), &op, mask, num_elements);
-    BX_CLEAR_AVX_REGZ(i->dst(), len);
-  }
-  else {
-    BX_WRITE_AVX_REGZ(i->dst(), op, len);
-  }
+AVX10_CVT_NE_16_TO_16(VRCPPBF16_VphWphR, bfloat16_approximate_rcp14) // AVX 10.2
+AVX10_CVT_NE_16_TO_16(VRSQRTPBF16_VphWphR, bfloat16_approximate_rsqrt14) // AVX 10.2
+AVX10_CVT_NE_16_TO_16(VCVTNEBF162IBS_V8bWphR, bf16_to_i8_saturate) // AVX 10.2
+AVX10_CVT_NE_16_TO_16(VCVTNEBF162IUBS_V8bWphR, bf16_to_ui8_saturate) // AVX 10.2
 
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRTPBF16_MASK_VphWphR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
-  Bit32u mask = i->opmask() ? BX_READ_32BIT_OPMASK(i->opmask()) : (Bit32u) -1;
-  unsigned len = i->getVL();
-  unsigned num_elements = WORD_ELEMENTS(len);
-
-  for (unsigned n=0, tmp_mask = mask; n < num_elements; n++, tmp_mask >>= 1) {
-    if (tmp_mask & 0x1)
-      op.vmm16u(n) = bfloat16_approximate_rsqrt14(op.vmm16u(n));
-    else
-      op.vmm16u(n) = 0;
-  }
-
-  if (! i->isZeroMasking()) {
-    simd_pblendw(&BX_READ_AVX_REG(i->dst()), &op, mask, num_elements);
-    BX_CLEAR_AVX_REGZ(i->dst(), len);
-  }
-  else {
-    BX_WRITE_AVX_REGZ(i->dst(), op, len);
+#define AVX10_CVT_NE_16_TO_16_MASK(HANDLER, func)                                           \
+  void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
+  {                                                                                         \
+    BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());                                     \
+    unsigned len = i->getVL();                                                              \
+    unsigned num_elements = WORD_ELEMENTS(len);                                             \
+    Bit32u opmask = BX_READ_32BIT_OPMASK(i->opmask());                                      \
+                                                                                            \
+    for (unsigned n=0, mask = 0x1; n < num_elements; n++, mask <<= 1) {                     \
+      if (opmask & mask)                                                                    \
+        op.vmm16u(n) = (func)(op.vmm16u(n));                                                \
+      else                                                                                  \
+        op.vmm16u(n) = 0;                                                                   \
+    }                                                                                       \
+                                                                                            \
+    if (! i->isZeroMasking()) {                                                             \
+      simd_pblendw(&BX_READ_AVX_REG(i->dst()), &op, opmask, num_elements);                  \
+      BX_CLEAR_AVX_REGZ(i->dst(), len);                                                     \
+    }                                                                                       \
+    else {                                                                                  \
+      BX_WRITE_AVX_REGZ(i->dst(), op, len);                                                 \
+    }                                                                                       \
+                                                                                            \
+    BX_NEXT_INSTR(i);                                                                       \
   }
 
-  BX_NEXT_INSTR(i);
-}
+AVX10_CVT_NE_16_TO_16_MASK(VRCPPBF16_MASK_VphWphR, bfloat16_approximate_rcp14) // AVX 10.2
+AVX10_CVT_NE_16_TO_16_MASK(VRSQRTPBF16_MASK_VphWphR, bfloat16_approximate_rsqrt14) // AVX 10.2
+AVX10_CVT_NE_16_TO_16_MASK(VCVTNEBF162IBS_MASK_V8bWphR, bf16_to_i8_saturate) // AVX 10.2
+AVX10_CVT_NE_16_TO_16_MASK(VCVTNEBF162IUBS_MASK_V8bWphR, bf16_to_ui8_saturate) // AVX 10.2
 
 #endif
