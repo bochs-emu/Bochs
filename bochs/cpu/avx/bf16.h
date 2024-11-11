@@ -95,6 +95,8 @@ BX_CPP_INLINE softfloat_class_t bf16_class(bfloat16 a) { return f32_class(conver
 
 extern int8_t bf16_to_i8_saturate(bfloat16 a);
 extern uint8_t bf16_to_ui8_saturate(bfloat16 a);
+extern int8_t bf16_to_i8_round_to_zero_saturate(bfloat16 a);
+extern uint8_t bf16_to_ui8_round_to_zero_saturate(bfloat16 a);
 
 extern bfloat16 bfloat16_approximate_rcp14(bfloat16 a);
 extern bfloat16 bfloat16_approximate_rsqrt14(bfloat16 a);

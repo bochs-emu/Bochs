@@ -161,9 +161,11 @@ OBJS_OTHERS = \
   f16_to_i16$(OBJ) \
   f16_to_i32$(OBJ) \
   f16_to_i64$(OBJ) \
+  f16_to_ui8_r_minMag$(OBJ) \
   f16_to_ui16_r_minMag$(OBJ) \
   f16_to_ui32_r_minMag$(OBJ) \
   f16_to_ui64_r_minMag$(OBJ) \
+  f16_to_i8_r_minMag$(OBJ) \
   f16_to_i16_r_minMag$(OBJ) \
   f16_to_i32_r_minMag$(OBJ) \
   f16_to_i64_r_minMag$(OBJ) \
@@ -190,8 +192,10 @@ OBJS_OTHERS = \
   f32_to_i8$(OBJ) \
   f32_to_i32$(OBJ) \
   f32_to_i64$(OBJ) \
+  f32_to_ui8_r_minMag$(OBJ) \
   f32_to_ui32_r_minMag$(OBJ) \
   f32_to_ui64_r_minMag$(OBJ) \
+  f32_to_i8_r_minMag$(OBJ) \
   f32_to_i32_r_minMag$(OBJ) \
   f32_to_i64_r_minMag$(OBJ) \
   f32_to_f16$(OBJ) \

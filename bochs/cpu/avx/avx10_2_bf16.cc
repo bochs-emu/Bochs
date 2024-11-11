@@ -222,6 +222,8 @@ AVX10_CVT_NE_16_TO_16(VRCPPBF16_VphWphR, bfloat16_approximate_rcp14) // AVX 10.2
 AVX10_CVT_NE_16_TO_16(VRSQRTPBF16_VphWphR, bfloat16_approximate_rsqrt14) // AVX 10.2
 AVX10_CVT_NE_16_TO_16(VCVTNEBF162IBS_V8bWphR, bf16_to_i8_saturate) // AVX 10.2
 AVX10_CVT_NE_16_TO_16(VCVTNEBF162IUBS_V8bWphR, bf16_to_ui8_saturate) // AVX 10.2
+AVX10_CVT_NE_16_TO_16(VCVTTNEBF162IBS_V8bWphR, bf16_to_i8_round_to_zero_saturate) // AVX 10.2
+AVX10_CVT_NE_16_TO_16(VCVTTNEBF162IUBS_V8bWphR, bf16_to_ui8_round_to_zero_saturate) // AVX 10.2
 
 #define AVX10_CVT_NE_16_TO_16_MASK(HANDLER, func)                                           \
   void BX_CPP_AttrRegparmN(1) BX_CPU_C:: HANDLER (bxInstruction_c *i)                       \
@@ -253,5 +255,7 @@ AVX10_CVT_NE_16_TO_16_MASK(VRCPPBF16_MASK_VphWphR, bfloat16_approximate_rcp14) /
 AVX10_CVT_NE_16_TO_16_MASK(VRSQRTPBF16_MASK_VphWphR, bfloat16_approximate_rsqrt14) // AVX 10.2
 AVX10_CVT_NE_16_TO_16_MASK(VCVTNEBF162IBS_MASK_V8bWphR, bf16_to_i8_saturate) // AVX 10.2
 AVX10_CVT_NE_16_TO_16_MASK(VCVTNEBF162IUBS_MASK_V8bWphR, bf16_to_ui8_saturate) // AVX 10.2
+AVX10_CVT_NE_16_TO_16_MASK(VCVTTNEBF162IBS_MASK_V8bWphR, bf16_to_i8_round_to_zero_saturate) // AVX 10.2
+AVX10_CVT_NE_16_TO_16_MASK(VCVTTNEBF162IUBS_MASK_V8bWphR, bf16_to_ui8_round_to_zero_saturate) // AVX 10.2
 
 #endif

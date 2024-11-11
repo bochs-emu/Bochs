@@ -3859,16 +3859,28 @@ public: // for now...
   BX_SMF void VCVTNEBF162IUBS_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTNEBF162IBS_MASK_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTNEBF162IUBS_MASK_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTNEBF162IBS_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTNEBF162IUBS_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTNEBF162IBS_MASK_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTNEBF162IUBS_MASK_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void VCVTPH2IBS_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTPH2IUBS_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTPH2IBS_MASK_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTPH2IUBS_MASK_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPH2IBS_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPH2IUBS_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPH2IBS_MASK_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPH2IUBS_MASK_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void VCVTPS2IBS_V8bWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTPS2IUBS_V8bWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTPS2IBS_MASK_V8bWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTPS2IUBS_MASK_V8bWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPS2IBS_V8bWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPS2IUBS_V8bWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPS2IBS_MASK_V8bWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTPS2IUBS_MASK_V8bWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
   BX_SMF void LZCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

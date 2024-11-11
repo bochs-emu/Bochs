@@ -187,6 +187,8 @@ AVX_CVT32_TO_32(VCVTTPS2UDQS_VdqWpsR, f32_to_ui32_round_to_zero_saturate) // AVX
 AVX_CVT32_TO_32(VCVTUDQ2PS_VpsWdqR, ui32_to_f32)
 AVX_CVT32_TO_32(VCVTPS2IBS_V8bWpsR, f32_to_i8_saturate) // AVX 10.2
 AVX_CVT32_TO_32(VCVTPS2IUBS_V8bWpsR, f32_to_ui8_saturate) // AVX 10.2
+AVX_CVT32_TO_32(VCVTTPS2IBS_V8bWpsR, f32_to_i8_round_to_zero_saturate) // AVX 10.2
+AVX_CVT32_TO_32(VCVTTPS2IUBS_V8bWpsR, f32_to_ui8_round_to_zero_saturate) // AVX 10.2
 #endif
 
 /* Opcode: VEX.F3.0F 5A (VEX.W ignore) */
