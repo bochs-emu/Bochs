@@ -59,7 +59,7 @@
 // 3dfx Voodoo Banshee / Voodoo3 emulation (partly based on a patch for DOSBox)
 
 // TODO:
-// - 2D host-to-screen stretching support
+// - 2D host-to-screen pattern stretching support
 // - 2D screen-to-screen pattern stretching support
 // - 2D chromaKey support
 // - 2D reversible line drawing
@@ -1449,7 +1449,7 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
     } else if (offset < 0xc00000) {
       BX_DEBUG(("reserved write to offset 0x%08x", offset));
     } else if (offset < 0x1000000) {
-      BX_ERROR(("TODO: YUV planar space write to offset 0x%08x", offset));
+      yuv_planar_write(offset, value);
     } else {
       Bit8u temp = v->fbi.lfb_stride;
       v->fbi.lfb_stride = 11;
@@ -1650,6 +1650,46 @@ void bx_banshee_c::agp_reg_write(Bit8u reg, Bit32u value)
       break;
   }
   v->banshee.agp[reg] = value;
+}
+
+void bx_banshee_c::yuv_planar_write(Bit32u offset, Bit32u value)
+{
+  Bit8u plane = (Bit8u)((offset >> 20) & 3);
+  Bit16u stride = v->banshee.agp[yuvStride] & 0x3fff;
+  Bit16u x = (Bit16u)((offset & 0xfffff) % 1024);
+  Bit16u y = (Bit16u)((offset & 0xfffff) / 1024);
+  Bit32u fbaddr = v->banshee.agp[yuvBaseAddress];
+  int i;
+
+  switch (plane) {
+    case 0:
+      fbaddr +=  (y * stride + (x << 1));
+      v->fbi.ram[fbaddr & v->fbi.mask] = value & 0xff;
+      v->fbi.ram[(fbaddr + 2) & v->fbi.mask] = (value >> 8) & 0xff;
+      v->fbi.ram[(fbaddr + 4) & v->fbi.mask] = (value >> 16) & 0xff;
+      v->fbi.ram[(fbaddr + 6) & v->fbi.mask] = (value >> 24) & 0xff;
+      break;
+    case 1:
+      fbaddr += ((y << 1) * stride + (x << 2));
+      for (i = 0; i < 2; i++) {
+        v->fbi.ram[(fbaddr + 1) & v->fbi.mask] = value & 0xff;
+        v->fbi.ram[(fbaddr + 5) & v->fbi.mask] = (value >> 8) & 0xff;
+        v->fbi.ram[(fbaddr + 9) & v->fbi.mask] = (value >> 16) & 0xff;
+        v->fbi.ram[(fbaddr + 13) & v->fbi.mask] = (value >> 24) & 0xff;
+        fbaddr += stride;
+      }
+      break;
+    case 2:
+      fbaddr += ((y << 1) * stride + (x << 2));
+      for (i = 0; i < 2; i++) {
+        v->fbi.ram[(fbaddr + 3) & v->fbi.mask] = value & 0xff;
+        v->fbi.ram[(fbaddr + 7) & v->fbi.mask] = (value >> 8) & 0xff;
+        v->fbi.ram[(fbaddr + 11) & v->fbi.mask] = (value >> 16) & 0xff;
+        v->fbi.ram[(fbaddr + 15) & v->fbi.mask] = (value >> 24) & 0xff;
+        fbaddr += stride;
+      }
+      break;
+  }
 }
 
 #define BLT v->banshee.blt
@@ -2295,6 +2335,53 @@ Bit8u bx_banshee_c::blt_colorkey_check(Bit8u *ptr, Bit8u pxsize, bool dst)
   return pass;
 }
 
+Bit32u bx_banshee_c::blt_yuv_conversion(Bit8u *ptr, Bit16u xc, Bit16u yc,
+                                        Bit16u pitch, Bit8u fmt, Bit8u pxsize)
+{
+  Bit32u value = 0;
+  unsigned r, g, b;
+  Bit8u *src_ptr, data[4], px, Y[2];
+  Bit8s U, V;
+
+  px = xc & 1;
+  xc &= ~1;
+  src_ptr = ptr + (xc << 1) + (yc * pitch);
+  for (unsigned i = 0; i < 4; i++) {
+    data[i] = *(src_ptr + i);
+  }
+  if (fmt == 8) {
+    Y[0] = data[0];
+    U = data[1] - 0x80;
+    Y[1] = data[2];
+    V = data[3] - 0x80;
+  } else {
+    U = data[0] - 0x80;
+    Y[0] = data[1];
+    V = data[2] - 0x80;
+    Y[1] = data[3];
+  }
+  r = (unsigned)(Y[px] + (double)V / 0.877);
+  if (r > 255) r = 255;
+  g = (unsigned)(Y[px] - (double)U * 0.39393 - (double)V * 0.58081);
+  if (g > 255) g = 255;
+  b = (unsigned)(Y[px] + (double)U / 0.493);
+  if (b > 255) b = 255;
+  if (pxsize == 2) {
+#ifdef BX_LITTLE_ENDIAN
+    value = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
+#else
+    value = ((b >> 3) << 27) | ((g >> 2) << 21) | ((r >> 3) << 16);
+#endif
+  } else if ((pxsize == 3) || (pxsize == 4)) {
+#ifdef BX_LITTLE_ENDIAN
+    value = (r << 16) | (g << 8) | b;
+#else
+    value = (b << 24) | (g << 16) | (r << 8);
+#endif
+  }
+  return value;
+}
+
 void bx_banshee_c::blt_rectangle_fill()
 {
   Bit32u dpitch = BLT.dst_pitch;
@@ -2653,7 +2740,9 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
 void bx_banshee_c::blt_screen_to_screen_stretch()
 {
   Bit8u *dst_ptr, *dst_ptr1, *src_ptr, *src_ptr1;
+  Bit8u spxsize = (BLT.src_fmt > 1) ? (BLT.src_fmt - 1) : 1;
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
+  bool yuv_src = ((BLT.src_fmt & 0x0e) == 8);
   int spitch = BLT.src_pitch;
   int dpitch = BLT.dst_pitch;
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
@@ -2661,6 +2750,7 @@ void bx_banshee_c::blt_screen_to_screen_stretch()
   int nrows, stepy;
   int dx, dy, x2, x3, y2, y3, w0, h0, w1, h1;
   double fx, fy;
+  Bit32u src_val;
 
   w0 = BLT.src_w;
   h0 = BLT.src_h;
@@ -2668,13 +2758,17 @@ void bx_banshee_c::blt_screen_to_screen_stretch()
   h1 = BLT.dst_h;
   BX_DEBUG(("Screen to screen stretch blt: : %d x %d -> %d x %d  ROP0 %02X",
             w0, h0, w1, h1, BLT.rop[0]));
-  if (BLT.dst_fmt != BLT.src_fmt) {
+  if ((BLT.dst_fmt != BLT.src_fmt) && !yuv_src) {
     BX_ERROR(("Pixel format conversion not supported yet"));
   }
   BX_LOCK(render_mutex);
   dy = BLT.dst_y;
+  if (yuv_src) {
+    // YUYV / UYVY
+    spxsize = 2;
+  }
   dst_ptr = &v->fbi.ram[BLT.dst_base + dy * dpitch + BLT.dst_x * dpxsize];
-  src_ptr = &v->fbi.ram[BLT.src_base + BLT.src_y * spitch + BLT.src_x * dpxsize];
+  src_ptr = &v->fbi.ram[BLT.src_base + BLT.src_y * spitch + BLT.src_x * spxsize];
   if (BLT.y_dir) {
     spitch *= -1;
     dpitch *= -1;
@@ -2693,7 +2787,12 @@ void bx_banshee_c::blt_screen_to_screen_stretch()
       if (blt_clip_check(dx, dy)) {
         x3 = (int)((double)x2 / fx + 0.49f);
         y3 = (int)((double)y2 / fy + 0.49f);
-        src_ptr1 = src_ptr + (y3 * spitch + x3 * dpxsize);
+        if (yuv_src) {
+          src_val = blt_yuv_conversion(src_ptr, x3, y3, spitch, BLT.src_fmt, dpxsize);
+          src_ptr1 = (Bit8u*)&src_val;
+        } else {
+          src_ptr1 = src_ptr + (y3 * spitch + x3 * spxsize);
+        }
         if (colorkey_en & 1) {
           rop = blt_colorkey_check(src_ptr1, dpxsize, 0);
         }

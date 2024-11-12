@@ -139,6 +139,7 @@ public:
 
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
+  void yuv_planar_write(Bit32u offset, Bit32u value);
   Bit32u blt_reg_read(Bit8u reg);
 #if BX_DEBUGGER
   virtual void debug_dump(int argc, char **argv);
@@ -167,6 +168,7 @@ private:
   bool   blt_apply_clipwindow(int *x0, int *y0, int *x1, int *y1, int *w, int *h);
   bool   blt_clip_check(int x, int y);
   Bit8u  blt_colorkey_check(Bit8u *ptr, Bit8u pxsize, bool dst);
+  Bit32u blt_yuv_conversion(Bit8u *ptr, Bit16u xc, Bit16u yc, Bit16u pitch, Bit8u fmt, Bit8u pxsize);
 
   void   blt_rectangle_fill(void);
   void   blt_pattern_fill_mono(void);

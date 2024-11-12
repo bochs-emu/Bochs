@@ -76,6 +76,7 @@ Detailed change log :
     - Banshee/Voodoo3: Added 16 bpp to 32 bpp pixel format conversion for screen-to-screen bitblt operation
     - Banshee: added host-to-screen stretching BitBlt support
     - Banshee/Voodoo3: Added support for combined desktop / overlay mode
+    - Banshee/Voodoo3: Added YUV planar space write support
   - USB
     - Now includes the USB Debugger support for the xHCI and UHCI controllers
   - Sound
