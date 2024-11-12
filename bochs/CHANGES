@@ -4,8 +4,8 @@ Brief summary :
  - Integrated softfloat3e library replacing older softfloat2a fpu-emulation code
  - Implemented AVX512_FP16 Intel instruction set based on softfloat3e library (enabled in Xeon Sapphire Rapids CPU definition)
  - Implemented MONITORLESS MWAIT instructions support
- - Implemented AMX-TF32 ISA extension
- - Added initial support for AVX10_1 ISA extension and AVX10 CPUID leaf 0x24 (to be enabled in Xeon Granite Rapids)
+ - Implemented initial support for AVX10_1 + AVX10_2 ISA extensions and AVX10 CPUID leaf 0x24 (AVX10_1 first to be enabled in Xeon Granite Rapids)
+ - Implemented AMX-TF32 and AMX-AVX512 ISA extensions
  - CPUID: Added i486DX4 CPU definition
  - CPUID: Added Arrow Lake CPU definition
  - CPUID: Support for enabling/disabling of one of more CPU features from CPUID configuration (see "add_features" and "exclude_features" in bochsrc sample and documentation)
@@ -23,10 +23,10 @@ Detailed change log :
   - Integrated softfloat3e library replacing older softfloat2a fpu-emulation code
   - Implemented AVX512_FP16 Intel instruction set based on softfloat3e library (enabled in Xeon Sapphire Rapids CPU definition)
   - Implemented MONITORLESS MWAIT instructions support
-  - Implemented AMX-TF32 ISA extension
+  - Implemented initial support for AVX10_1 + AVX10_2 ISA extensions and AVX10 CPUID leaf 0x24 (AVX10_1 first to be enabled in Xeon Granite Rapids)
+  - Implemented AMX-TF32 and AMX-AVX512 ISA extensions
   - VMX: Implemented VMX support for the IA32_SPEC_CTRL MSR
   - UINTR: Implemented FLEXIBLE UIRET support
-  - Added initial support for AVX10_1 ISA extension and AVX10 CPUID leaf 0x24 (to be enabled in Xeon Granite Rapids)
 
 - CPUID: 
   - Added i486DX4 CPU definition
