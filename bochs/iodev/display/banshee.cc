@@ -2519,15 +2519,18 @@ void bx_banshee_c::blt_screen_to_screen()
   Bit8u *src_ptr = &v->fbi.ram[BLT.src_base];
   Bit8u *dst_ptr, *dst_ptr1, *src_ptr1;
   Bit8u pxpack = (BLT.reg[blt_srcFormat] >> 22) & 3;
-  int dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
+  Bit8u spxsize = (BLT.src_fmt > 1) ? (BLT.src_fmt - 1) : 1;
+  Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
+  bool yuv_src = ((BLT.src_fmt & 0x0e) == 8);
   Bit8u *color;
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
   int spitch;
   int dpitch = BLT.dst_pitch;
   int bkw_adj = 0;
-  int ncols, nrows, dx, dy, sx, sy, w, h;
+  int ncols, nrows, dx, dy, sx, sy, w, h, x, y;
   Bit8u smask, rop = 0;
   bool set;
+  Bit32u src_val;
 
   sx = BLT.src_x;
   sy = BLT.src_y;
@@ -2537,7 +2540,7 @@ void bx_banshee_c::blt_screen_to_screen()
   h = BLT.dst_h;
   BX_DEBUG(("Screen to screen blt: %d x %d  ROP0 %02X", w, h, BLT.rop[0]));
   if ((BLT.src_fmt != 0) && (BLT.dst_fmt != BLT.src_fmt) &&
-      !(BLT.src_fmt == 3 && BLT.dst_fmt == 5)) {
+      !(BLT.src_fmt == 3 && BLT.dst_fmt == 5) && !yuv_src) {
     BX_ERROR(("Pixel format conversion not supported yet"));
   }
   if (!blt_apply_clipwindow(&sx, &sy, &dx, &dy, &w, &h)) {
@@ -2549,6 +2552,10 @@ void bx_banshee_c::blt_screen_to_screen()
     spitch = (BLT.dst_w + 7) / 8;
   } else {
     spitch = BLT.src_pitch;
+  }
+  if (yuv_src) {
+    // YUYV / UYVY
+    spxsize = 2;
   }
   dst_ptr = &v->fbi.ram[BLT.dst_base + dy * dpitch + dx * dpxsize];
   if (BLT.x_dir) {
@@ -2591,7 +2598,6 @@ void bx_banshee_c::blt_screen_to_screen()
       dst_ptr += dpitch;
     } while (--nrows);
   } else if (colorkey_en > 0) {
-    src_ptr += (sy * abs(spitch) + sx * abs(dpxsize));
     nrows = h;
     do {
       src_ptr1 = src_ptr;
@@ -2612,7 +2618,6 @@ void bx_banshee_c::blt_screen_to_screen()
       dst_ptr += dpitch;
     } while (--nrows);
   } else if (BLT.src_fmt == 3 && BLT.dst_fmt == 5) {
-    int spxsize = 2;
     src_ptr += (sy * abs(spitch) + sx * spxsize);
     nrows = h;
     do {
@@ -2631,6 +2636,23 @@ void bx_banshee_c::blt_screen_to_screen()
       } while (--ncols);
       src_ptr += spitch;
       dst_ptr += dpitch;
+    } while (--nrows);
+  } else if (yuv_src) {
+    nrows = h;
+    y = sy;
+    do {
+      dst_ptr1 = dst_ptr;
+      ncols = w;
+      x = sx;
+      do {
+        src_val = blt_yuv_conversion(src_ptr, x, y, spitch, BLT.src_fmt, dpxsize);
+        src_ptr1 = (Bit8u*)&src_val;
+        BLT.rop_fn[0](dst_ptr1, src_ptr1, dpitch, spitch, abs(dpxsize), 1);
+        dst_ptr1 += dpxsize;
+        x++;
+      } while (--ncols);
+      dst_ptr += dpitch;
+      y++;
     } while (--nrows);
   } else {
     src_ptr += (sy * abs(spitch) + sx * abs(dpxsize) + bkw_adj);
