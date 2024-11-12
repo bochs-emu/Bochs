@@ -71,7 +71,7 @@ int8_t f16_to_i8(float16 a, uint8_t roundingMode, bool exact, bool saturate, str
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (exp) frac |= 0x0400;
+    if (exp) frac = (frac | 0x0400) << 5;
     else if (softfloat_denormalsAreZeros(status)) return 0;
     if (0 < shiftDist) frac = softfloat_shiftRightJam32(frac, shiftDist);
     return softfloat_roundToI8(sign, frac, roundingMode, exact, saturate, status);

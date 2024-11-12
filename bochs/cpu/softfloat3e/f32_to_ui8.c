@@ -78,7 +78,7 @@ uint8_t f32_to_ui8(float32 a, uint8_t roundingMode, bool exact, bool saturate, s
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (exp) sig |= 0x00800000;
+    if (exp) sig = (sig | 0x00800000)<<8;
     else if (softfloat_denormalsAreZeros(status)) return 0;
     if (0 < shiftDist) sig = softfloat_shiftRightJam32(sig, shiftDist);
     return softfloat_roundToUI8(sign, sig, roundingMode, exact, saturate, status);
