@@ -2520,7 +2520,7 @@ void bx_banshee_c::blt_screen_to_screen()
   Bit8u *dst_ptr, *dst_ptr1, *src_ptr1;
   Bit8u pxpack = (BLT.reg[blt_srcFormat] >> 22) & 3;
   Bit8u spxsize = (BLT.src_fmt > 1) ? (BLT.src_fmt - 1) : 1;
-  Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
+  int dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
   bool yuv_src = ((BLT.src_fmt & 0x0e) == 8);
   Bit8u *color;
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
