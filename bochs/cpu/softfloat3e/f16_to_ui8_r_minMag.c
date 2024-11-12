@@ -52,8 +52,10 @@ uint8_t f16_to_ui8_r_minMag(float16 a, bool exact, bool saturate, struct softflo
     sign = signF16UI(a);
     exp  = expF16UI(a);
     sig = fracF16UI(a);
-    if (softfloat_denormalsAreZeros(status)) {
-        if (!exp && sig) return 0;
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    if (! exp) {
+        if (! sig || (sig && softfloat_denormalsAreZeros(status))) return 0;
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/

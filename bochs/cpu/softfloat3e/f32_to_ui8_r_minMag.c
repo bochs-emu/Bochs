@@ -53,8 +53,10 @@ uint8_t f32_to_ui8_r_minMag(float32 a, bool exact, bool saturate, struct softflo
     exp = expF32UI(a);
     sig = fracF32UI(a);
     sign = signF32UI(a);
-    if (softfloat_denormalsAreZeros(status)) {
-        if (!exp && sig) return 0;
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    if (! exp) {
+        if (! sig || (sig && softfloat_denormalsAreZeros(status))) return 0;
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
