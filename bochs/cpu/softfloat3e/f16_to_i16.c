@@ -76,6 +76,7 @@ int16_t f16_to_i16(float16 a, uint8_t roundingMode, bool exact, struct softfloat
     if (0 <= shiftDist) {
         sig32 <<= shiftDist;
         if (shiftDist > 4) {
+            if (a == packToF16UI(1, 0x1E, 0)) return -0x7FFF - 1;
             softfloat_raiseFlags(status, softfloat_flag_invalid);
             return sign ? i16_fromNegOverflow : i16_fromPosOverflow;
         }
