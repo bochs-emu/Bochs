@@ -575,49 +575,45 @@ bool bx_banshee_c::chromakey_check(Bit32u color, Bit8u bpp)
   Bit8u r, g, b, rmin, rmax, gmin, gmax, bmin, bmax;
 
   if (!((v->banshee.io[io_vidProcCfg] >> 5) & 1))
-    return false;
+    return true;
 
   cmin = v->banshee.io[io_vidChromaMin];
   cmax = v->banshee.io[io_vidChromaMax];
-  if (bpp == 8) {
-    pass = (((Bit8u)color >= (Bit8u)cmin) && ((Bit8u)color <= (Bit8u)cmax));
+  if (bpp == 15) {
+    color &= 0x7fff;
+    r = (color >> 10);
+    g = (color >> 5) & 0x1f;
+    b = color & 0x1f;
+    rmin = (cmin >> 10) & 0x1f;
+    rmax = (cmax >> 10) & 0x1f;
+    gmin = (cmin >> 5) & 0x1f;
+    gmax = (cmax >> 5) & 0x1f;
+    bmin = cmin & 0x1f;
+    bmax = cmax & 0x1f;
+  } else if (bpp == 16) {
+    color &= 0xffff;
+    r = (color >> 11);
+    g = (color >> 5) & 0x3f;
+    b = color & 0x1f;
+    rmin = (cmin >> 11) & 0x1f;
+    rmax = (cmax >> 11) & 0x1f;
+    gmin = (cmin >> 5) & 0x3f;
+    gmax = (cmax >> 5) & 0x3f;
+    bmin = cmin & 0x1f;
+    bmax = cmax & 0x1f;
   } else {
-    if (bpp == 15) {
-      color &= 0x7fff;
-      r = (color >> 10);
-      g = (color >> 5) & 0x1f;
-      b = color & 0x1f;
-      rmin = (cmin >> 10) & 0x1f;
-      rmax = (cmax >> 10) & 0x1f;
-      gmin = (cmin >> 5) & 0x1f;
-      gmax = (cmax >> 5) & 0x1f;
-      bmin = cmin & 0x1f;
-      bmax = cmax & 0x1f;
-    } else if (bpp == 16) {
-      color &= 0xffff;
-      r = (color >> 11);
-      g = (color >> 5) & 0x3f;
-      b = color & 0x1f;
-      rmin = (cmin >> 11) & 0x1f;
-      rmax = (cmax >> 11) & 0x1f;
-      gmin = (cmin >> 5) & 0x3f;
-      gmax = (cmax >> 5) & 0x3f;
-      bmin = cmin & 0x1f;
-      bmax = cmax & 0x1f;
-    } else {
-      r = (color >> 16) & 0xff;
-      g = (color >> 8) & 0xff;
-      b = color & 0xff;
-      rmin = (cmin >> 16) & 0xff;
-      rmax = (cmax >> 16) & 0xff;
-      gmin = (cmin >> 8) & 0xff;
-      gmax = (cmax >> 8) & 0xff;
-      bmin = cmin & 0xff;
-      bmax = cmax & 0xff;
-    }
-    pass = ((r >= rmin) && (r <= rmax) && (g >= gmin) && (g <= gmax) &&
-            (b >= bmin) && (b <= bmax));
+    r = (color >> 16) & 0xff;
+    g = (color >> 8) & 0xff;
+    b = color & 0xff;
+    rmin = (cmin >> 16) & 0xff;
+    rmax = (cmax >> 16) & 0xff;
+    gmin = (cmin >> 8) & 0xff;
+    gmax = (cmax >> 8) & 0xff;
+    bmin = cmin & 0xff;
+    bmax = cmax & 0xff;
   }
+  pass = ((r >= rmin) && (r <= rmax) && (g >= gmin) && (g <= gmax) &&
+          (b >= bmin) && (b <= bmax));
   if ((v->banshee.io[io_vidProcCfg] >> 6) & 1) {
     pass = !pass;
   }
