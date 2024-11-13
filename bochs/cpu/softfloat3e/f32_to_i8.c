@@ -68,8 +68,10 @@ int8_t f32_to_i8(float32 a, uint8_t roundingMode, bool exact, bool saturate, str
 #endif
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    shiftDist = 0x86 - exp;
+    shiftDist = 0x8E - exp;
     if (shiftDist < 0) {
+        if (a == packToF32UI(1, 0x86, 0)) return -0x7F - 1;
+
         const int8_t NegOverflowResponse = saturate ? i8_minNegativeValue : i8_fromNegOverflow;
         const int8_t PosOverflowResponse = saturate ? i8_maxPositiveValue : i8_fromPosOverflow;
 
@@ -78,7 +80,7 @@ int8_t f32_to_i8(float32 a, uint8_t roundingMode, bool exact, bool saturate, str
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (exp) sig = (sig | 0x00800000)<<8;
+    if (exp) sig |= 0x00800000;
     else if (softfloat_denormalsAreZeros(status)) return 0;
     if (0 < shiftDist) sig = softfloat_shiftRightJam32(sig, shiftDist);
     return softfloat_roundToI8(sign, sig, roundingMode, exact, saturate, status);

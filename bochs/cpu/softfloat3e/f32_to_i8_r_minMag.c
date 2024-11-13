@@ -57,9 +57,23 @@ int8_t f32_to_i8_r_minMag(float32 a, bool exact, bool saturate, struct softfloat
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
+    if (exp < 0x7F) {
+        if (exact && (exp | sig)) {
+            softfloat_raiseFlags(status, softfloat_flag_inexact);
+        }
+        return 0;
+    }
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
     shiftDist = 0x96 - exp;
     if (shiftDist <= 16) {
-        if (a == packToF32UI(1, 0x86, 0)) return -0x7F - 1;
+        if (shiftDist == 16) {
+            uint16_t roundMask = a & 0xFFFF;
+            if ((a & ~roundMask) == packToF32UI(1, 0x86, 0)) {
+                if (roundMask) softfloat_raiseFlags(status, softfloat_flag_inexact);
+                return -0x7F - 1;
+            }
+        }
 
         const int8_t NaN_response = saturate ? 0 : i8_fromNaN; 
         const int8_t NegOverflowResponse = saturate ? i8_minNegativeValue : i8_fromNegOverflow;
