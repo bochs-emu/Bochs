@@ -61,7 +61,6 @@
 // TODO:
 // - 2D host-to-screen pattern stretching support
 // - 2D screen-to-screen pattern stretching support
-// - 2D chromaKey support
 // - 2D reversible line drawing
 // - pixel format conversion not supported in all cases
 // - full AGP support
@@ -457,15 +456,15 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
               }
               break;
             case 16:
+              index = *(vid_ptr);
+              index |= *(vid_ptr + 1) << 8;
               if (v->banshee.overlay.enabled &&
                   (x >= v->banshee.overlay.x0) &&
                   (x <= v->banshee.overlay.x1) &&
                   (y >= v->banshee.overlay.y0) &&
-                  (y <= v->banshee.overlay.y1)) {
+                  (y <= v->banshee.overlay.y1) &&
+                  chromakey_check(index, 16)) {
                 index = (Bit16u)get_overlay_pixel(x, y, 16);
-              } else {
-                index = *(vid_ptr);
-                index |= *(vid_ptr + 1) << 8;
               }
               vid_ptr += 2;
               colour = v->fbi.pen[index];
@@ -567,6 +566,62 @@ Bit32u bx_banshee_c::get_overlay_pixel(unsigned xc, unsigned yc, Bit8u bpp)
     value = (r << 16) | (g << 8) | b;
   }
   return value;
+}
+
+bool bx_banshee_c::chromakey_check(Bit32u color, Bit8u bpp)
+{
+  bool pass = false;
+  Bit32u cmin, cmax;
+  Bit8u r, g, b, rmin, rmax, gmin, gmax, bmin, bmax;
+
+  if (!((v->banshee.io[io_vidProcCfg] >> 5) & 1))
+    return false;
+
+  cmin = v->banshee.io[io_vidChromaMin];
+  cmax = v->banshee.io[io_vidChromaMax];
+  if (bpp == 8) {
+    pass = (((Bit8u)color >= (Bit8u)cmin) && ((Bit8u)color <= (Bit8u)cmax));
+  } else {
+    if (bpp == 15) {
+      color &= 0x7fff;
+      r = (color >> 10);
+      g = (color >> 5) & 0x1f;
+      b = color & 0x1f;
+      rmin = (cmin >> 10) & 0x1f;
+      rmax = (cmax >> 10) & 0x1f;
+      gmin = (cmin >> 5) & 0x1f;
+      gmax = (cmax >> 5) & 0x1f;
+      bmin = cmin & 0x1f;
+      bmax = cmax & 0x1f;
+    } else if (bpp == 16) {
+      color &= 0xffff;
+      r = (color >> 11);
+      g = (color >> 5) & 0x3f;
+      b = color & 0x1f;
+      rmin = (cmin >> 11) & 0x1f;
+      rmax = (cmax >> 11) & 0x1f;
+      gmin = (cmin >> 5) & 0x3f;
+      gmax = (cmax >> 5) & 0x3f;
+      bmin = cmin & 0x1f;
+      bmax = cmax & 0x1f;
+    } else {
+      r = (color >> 16) & 0xff;
+      g = (color >> 8) & 0xff;
+      b = color & 0xff;
+      rmin = (cmin >> 16) & 0xff;
+      rmax = (cmax >> 16) & 0xff;
+      gmin = (cmin >> 8) & 0xff;
+      gmax = (cmax >> 8) & 0xff;
+      bmin = cmin & 0xff;
+      bmax = cmax & 0xff;
+    }
+    pass = ((r >= rmin) && (r <= rmax) && (g >= gmin) && (g <= gmax) &&
+            (b >= bmin) && (b <= bmax));
+  }
+  if ((v->banshee.io[io_vidProcCfg] >> 6) & 1) {
+    pass = !pass;
+  }
+  return pass;
 }
 
 void bx_banshee_c::update(void)
@@ -726,15 +781,15 @@ void bx_banshee_c::update(void)
                     vid_ptr2  = vid_ptr;
                     tile_ptr2 = tile_ptr;
                     for (c=0; c<w; c++) {
+                      index = *(vid_ptr2);
+                      index |= *(vid_ptr2 + 1) << 8;
                       if (v->banshee.overlay.enabled &&
                           ((xc + c) >= v->banshee.overlay.x0) &&
                           ((xc + c) <= v->banshee.overlay.x1) &&
                           ((yc + r) >= v->banshee.overlay.y0) &&
-                          ((yc + r) <= v->banshee.overlay.y1)) {
+                          ((yc + r) <= v->banshee.overlay.y1) &&
+                          chromakey_check(index, bpp)) {
                         index = (Bit16u)get_overlay_pixel(xc + c, yc + r, bpp);
-                      } else {
-                        index = *(vid_ptr2);
-                        index |= *(vid_ptr2 + 1) << 8;
                       }
                       if (!v->banshee.double_width || (c & 1)) {
                         vid_ptr2 += 2;
@@ -1157,9 +1212,6 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
       }
       if ((v->banshee.io[reg] >> 2) & 1) {
         BX_ERROR(("vidProcCfg: overlay stereo mode not supported yet"));
-      }
-      if (((v->banshee.io[reg] >> 5) & 1) && !((old >> 5) & 1)) {
-        BX_ERROR(("vidProcCfg: chromaKey mode not supported yet"));
       }
       if ((v->banshee.io[reg] >> 14) & 1) {
         v->banshee.overlay.fx = (double)(v->banshee.io[io_vidOverlayDudx] & 0xfffff) / (double)(1 << 20);

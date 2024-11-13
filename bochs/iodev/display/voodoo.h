@@ -183,6 +183,7 @@ private:
   void   blt_polygon_fill(bool force);
 
   Bit32u get_overlay_pixel(unsigned x, unsigned y, Bit8u bpp);
+  bool   chromakey_check(Bit32u color, Bit8u bpp);
 
   bx_ddc_c ddc;
   bool     is_agp;
