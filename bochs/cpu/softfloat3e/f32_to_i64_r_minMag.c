@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-int64_t f32_to_i64_r_minMag(float32 a, bool exact, struct softfloat_status_t *status)
+int64_t f32_to_i64_r_minMag(float32 a, bool exact, bool saturate, struct softfloat_status_t *status)
 {
     int16_t exp;
     uint32_t sig;
@@ -52,8 +52,9 @@ int64_t f32_to_i64_r_minMag(float32 a, bool exact, struct softfloat_status_t *st
     *------------------------------------------------------------------------*/
     exp = expF32UI(a);
     sig = fracF32UI(a);
-    if (softfloat_denormalsAreZeros(status))
-        if (!exp && sig) sig = 0;
+    if (softfloat_denormalsAreZeros(status)) {
+        if (!exp && sig) return 0;
+    }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     shiftDist = 0xBE - exp;
@@ -70,10 +71,15 @@ int64_t f32_to_i64_r_minMag(float32 a, bool exact, struct softfloat_status_t *st
         if (a == packToF32UI(1, 0xBE, 0)) {
             return -INT64_C(0x7FFFFFFFFFFFFFFF) - 1;
         }
+
+        const int64_t NaN_response = saturate ? 0 : i64_fromNaN; 
+        const int64_t NegOverflowResponse = saturate ? i64_minNegativeValue : i64_fromNegOverflow;
+        const int64_t PosOverflowResponse = saturate ? i64_maxPositiveValue : i64_fromPosOverflow;
+
         softfloat_raiseFlags(status, softfloat_flag_invalid);
         return (exp == 0xFF) && sig 
-                ? i64_fromNaN
-                : sign ? i64_fromNegOverflow : i64_fromPosOverflow;
+                ? NaN_response
+                : sign ? NegOverflowResponse : PosOverflowResponse;
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/

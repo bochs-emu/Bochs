@@ -45,9 +45,13 @@ struct softfloat_status_t;
 
 /*----------------------------------------------------------------------------
 *----------------------------------------------------------------------------*/
+uint8_t  softfloat_roundToUI8(bool, uint32_t, uint8_t, bool, bool, struct softfloat_status_t *);
+uint16_t softfloat_roundToUI16(bool, uint32_t, uint8_t, bool, struct softfloat_status_t *);
 uint32_t softfloat_roundToUI32(bool, uint64_t, uint8_t, bool, struct softfloat_status_t *);
 uint64_t softfloat_roundToUI64(bool, uint64_t, uint64_t, uint8_t, bool, struct softfloat_status_t *);
 
+int8_t  softfloat_roundToI8(bool, uint32_t, uint8_t, bool, bool, struct softfloat_status_t *);
+int16_t softfloat_roundToI16(bool, uint32_t, uint8_t, bool, struct softfloat_status_t *);
 int32_t softfloat_roundToI32(bool, uint64_t, uint8_t, bool, struct softfloat_status_t *);
 int64_t softfloat_roundToI64(bool, uint64_t, uint64_t, uint8_t, bool, struct softfloat_status_t *);
 

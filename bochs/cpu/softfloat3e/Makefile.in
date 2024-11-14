@@ -97,8 +97,12 @@ OBJS_SPECIALIZE = \
   s_propagateNaNF128UI$(OBJ) \
 
 OBJS_OTHERS = \
+  s_roundToUI8$(OBJ) \
+  s_roundToUI16$(OBJ) \
   s_roundToUI32$(OBJ) \
   s_roundToUI64$(OBJ) \
+  s_roundToI8$(OBJ) \
+  s_roundToI16$(OBJ) \
   s_roundToI32$(OBJ) \
   s_roundToI64$(OBJ) \
   s_normSubnormalF16Sig$(OBJ) \
@@ -149,12 +153,20 @@ OBJS_OTHERS = \
   i64_to_f64$(OBJ) \
   i64_to_extF80$(OBJ) \
   i64_to_f128$(OBJ) \
+  f16_to_ui8$(OBJ) \
+  f16_to_ui16$(OBJ) \
   f16_to_ui32$(OBJ) \
   f16_to_ui64$(OBJ) \
+  f16_to_i8$(OBJ) \
+  f16_to_i16$(OBJ) \
   f16_to_i32$(OBJ) \
   f16_to_i64$(OBJ) \
+  f16_to_ui8_r_minMag$(OBJ) \
+  f16_to_ui16_r_minMag$(OBJ) \
   f16_to_ui32_r_minMag$(OBJ) \
   f16_to_ui64_r_minMag$(OBJ) \
+  f16_to_i8_r_minMag$(OBJ) \
+  f16_to_i16_r_minMag$(OBJ) \
   f16_to_i32_r_minMag$(OBJ) \
   f16_to_i64_r_minMag$(OBJ) \
   f16_to_f32$(OBJ) \
@@ -165,6 +177,8 @@ OBJS_OTHERS = \
   f16_roundToInt$(OBJ) \
   f16_class$(OBJ) \
   f16_compare$(OBJ) \
+  f16_max$(OBJ) \
+  f16_min$(OBJ) \
   f16_minmax$(OBJ) \
   f16_range$(OBJ) \
   f16_addsub$(OBJ) \
@@ -172,12 +186,16 @@ OBJS_OTHERS = \
   f16_mulAdd$(OBJ) \
   f16_div$(OBJ) \
   f16_sqrt$(OBJ) \
+  f32_to_ui8$(OBJ) \
   f32_to_ui32$(OBJ) \
   f32_to_ui64$(OBJ) \
+  f32_to_i8$(OBJ) \
   f32_to_i32$(OBJ) \
   f32_to_i64$(OBJ) \
+  f32_to_ui8_r_minMag$(OBJ) \
   f32_to_ui32_r_minMag$(OBJ) \
   f32_to_ui64_r_minMag$(OBJ) \
+  f32_to_i8_r_minMag$(OBJ) \
   f32_to_i32_r_minMag$(OBJ) \
   f32_to_i64_r_minMag$(OBJ) \
   f32_to_f16$(OBJ) \
@@ -189,6 +207,8 @@ OBJS_OTHERS = \
   f32_roundToInt$(OBJ) \
   f32_class$(OBJ) \
   f32_compare$(OBJ) \
+  f32_max$(OBJ) \
+  f32_min$(OBJ) \
   f32_minmax$(OBJ) \
   f32_range$(OBJ) \
   f32_scalef$(OBJ) \
@@ -215,6 +235,8 @@ OBJS_OTHERS = \
   f64_roundToInt$(OBJ) \
   f64_class$(OBJ) \
   f64_compare$(OBJ) \
+  f64_max$(OBJ) \
+  f64_min$(OBJ) \
   f64_minmax$(OBJ) \
   f64_range$(OBJ) \
   f64_scalef$(OBJ) \

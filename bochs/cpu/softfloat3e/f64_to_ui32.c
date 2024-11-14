@@ -70,7 +70,7 @@ uint32_t f64_to_ui32(float64 a, uint8_t roundingMode, bool exact, struct softflo
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if (exp) sig |= UINT64_C(0x0010000000000000);
-    else if (softfloat_denormalsAreZeros(status)) sig = 0;
+    else if (softfloat_denormalsAreZeros(status)) return 0;
     shiftDist = 0x427 - exp;
     if (0 < shiftDist) sig = softfloat_shiftRightJam64(sig, shiftDist);
     return softfloat_roundToUI32(sign, sig, roundingMode, exact, status);

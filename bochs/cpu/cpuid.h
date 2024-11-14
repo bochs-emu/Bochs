@@ -83,6 +83,9 @@ public:
   VMCS_Mapping* get_vmcs() { return &vmcs_map; }
 #endif
 
+#if BX_SUPPORT_EVEX
+  unsigned avx10_level() const;
+#endif
   bool support_avx10_512() const;
 
   BX_CPP_INLINE void enable_cpu_extension(unsigned extension) {

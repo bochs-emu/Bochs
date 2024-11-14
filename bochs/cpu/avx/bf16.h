@@ -67,4 +67,49 @@ BX_CPP_INLINE float32 fp32_convert_to_tf32(float32 a)
   return a & 0xffffe000;
 }
 
+// bf16 arithmetics
+// These operations do not consult or update MXCSR
+// Denormal BF16 input operands are treated as zeros (DAZ) and denormal BF16 outputs are flushed to zero (FTZ)
+// Rounding mode is always round-to-nearest-even (RNE)
+
+extern bfloat16 bf16_sqrt(bfloat16 a);
+
+extern bfloat16 bf16_add(bfloat16 a, bfloat16 b);
+extern bfloat16 bf16_sub(bfloat16 a, bfloat16 b);
+extern bfloat16 bf16_mul(bfloat16 a, bfloat16 b);
+extern bfloat16 bf16_div(bfloat16 a, bfloat16 b);
+extern bfloat16 bf16_min(bfloat16 a, bfloat16 b);
+extern bfloat16 bf16_max(bfloat16 a, bfloat16 b);
+extern bfloat16 bf16_scalef(bfloat16 a, bfloat16 b);
+
+extern int bf16_compare(bfloat16 a, bfloat16 b); // always quiet
+
+extern bfloat16 bf16_roundToInt(bfloat16, uint8_t scale);
+
+extern bfloat16 bf16_getExp(bfloat16);
+extern bfloat16 bf16_getMant(bfloat16, int, int);
+
+extern bfloat16 bf16_mulAdd(bfloat16 a, bfloat16 b, bfloat16 c, uint8_t op);
+
+BX_CPP_INLINE softfloat_class_t bf16_class(bfloat16 a) { return f32_class(convert_bfloat16_to_fp32(a)); }
+
+extern int8_t bf16_to_i8_saturate(bfloat16 a);
+extern uint8_t bf16_to_ui8_saturate(bfloat16 a);
+extern int8_t bf16_to_i8_round_to_zero_saturate(bfloat16 a);
+extern uint8_t bf16_to_ui8_round_to_zero_saturate(bfloat16 a);
+
+extern bfloat16 bfloat16_approximate_rcp14(bfloat16 a);
+extern bfloat16 bfloat16_approximate_rsqrt14(bfloat16 a);
+
+BX_CPP_INLINE bool bf16_sign(bfloat16 a) { return a & 0x8000; }
+BX_CPP_INLINE int  bf16_exp(bfloat16 a) { return (a >> 7) & 0xFF; }
+BX_CPP_INLINE int  bf16_fraction(bfloat16 a) { return a & 0x7F; }
+
+BX_CPP_INLINE bfloat16 bf16_denormal_to_zero(bfloat16 a)
+{
+    if (! bf16_exp(a) && bf16_fraction(a))
+        return a & 0x8000;
+    return a;
+}
+
 #endif

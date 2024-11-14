@@ -67,12 +67,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMPSADBW_VdqHdqWdqIbR(bxInstruction_c *i)
 
   result.clear();
 
-  Bit8u control = i->Ib();
+  // For the 512-bit version the control bits for the lower two lanes are replicated to the upper two lanes
+  int control[4] = { i->Ib(), i->Ib() >> 3, i->Ib(), i->Ib() >> 3 };
   unsigned len = i->getVL();
 
   for (unsigned n=0; n < len; n++) {
-    xmm_mpsadbw(&result.vmm128(n), &op1.vmm128(n), &op2.vmm128(n), control & 0x7);
-    control >>= 3;
+    xmm_mpsadbw(&result.vmm128(n), &op1.vmm128(n), &op2.vmm128(n), control[n]);
   }
 
   BX_WRITE_AVX_REG(i->dst(), result);

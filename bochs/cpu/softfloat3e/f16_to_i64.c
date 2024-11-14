@@ -58,23 +58,28 @@ int64_t f16_to_i64(float16 a, uint8_t roundingMode, bool exact, struct softfloat
         softfloat_raiseFlags(status, softfloat_flag_invalid);
         return
             frac ? i64_fromNaN
-                : sign ? i64_fromNegOverflow : i64_fromPosOverflow;
+                 : sign ? i64_fromNegOverflow : i64_fromPosOverflow;
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    sig32 = frac;
-    if (exp) {
-        sig32 |= 0x0400;
-        shiftDist = exp - 0x19;
-        if (0 <= shiftDist) {
-            sig32 <<= shiftDist;
-            return sign ? -sig32 : sig32;
+    if (! exp) {
+        if (softfloat_denormalsAreZeros(status)) return 0;
+        if (exact && frac) {
+            softfloat_raiseFlags(status, softfloat_flag_inexact);
         }
-        shiftDist = exp - 0x0D;
-        if (0 < shiftDist) sig32 <<= shiftDist;
+        return 0;
     }
-    else {
-        if (softfloat_denormalsAreZeros(status)) sig32 = 0;
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    sig32 = frac | 0x0400;
+    shiftDist = exp - 0x19;
+    if (0 <= shiftDist) {
+        sig32 <<= shiftDist;
+        return sign ? -sig32 : sig32;
     }
+    shiftDist = exp - 0x0D;
+    if (0 < shiftDist)
+        sig32 <<= shiftDist;
+
     return softfloat_roundToI32(sign, (uint32_t) sig32, roundingMode, exact, status);
 }

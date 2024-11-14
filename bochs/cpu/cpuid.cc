@@ -367,7 +367,8 @@ void bx_cpuid_t::get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_
     // AMX_TRANSPOSE
     if (is_cpu_extension_supported(BX_ISA_AMX_TF32))
       leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_TF32;
-    // AMX_AVX512
+    if (is_cpu_extension_supported(BX_ISA_AMX_AVX512))
+      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_AVX512;
     if (is_cpu_extension_supported(BX_ISA_AMX_MOVRS))
       leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_MOVRS;
     // EBX/ECX/EDX = 0 (reserved)
@@ -404,7 +405,7 @@ void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *
     // EDX:
     //   [31:00]: reserved
     leaf->eax = 0;
-    leaf->ebx = 0x1 | (1<<17);
+    leaf->ebx = avx10_level() | (1<<17);
     if (is_cpu_extension_supported(BX_ISA_AVX10_VL512))
       leaf->ebx |= (1<<18);
     leaf->ecx = 0;
@@ -412,6 +413,15 @@ void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *
   }
 #endif
 }
+
+#if BX_SUPPORT_EVEX
+unsigned bx_cpuid_t::avx10_level() const
+{
+  if (is_cpu_extension_supported(BX_ISA_AVX10_2)) return 2;
+  if (is_cpu_extension_supported(BX_ISA_AVX10_1)) return 1;
+  return 0;
+}
+#endif
 
 bool bx_cpuid_t::support_avx10_512() const {
   return is_cpu_extension_supported(BX_ISA_AVX512) || is_cpu_extension_supported(BX_ISA_AVX10_VL512);
@@ -1419,8 +1429,10 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
   //   [18:18]  CET_SSS
 
   //   [19:19]  AVX10 support and CPUID leaf 0x24
+#if BX_SUPPORT_EVEX
   if (is_cpu_extension_supported(BX_ISA_AVX10_1))
     edx |= BX_CPUID_STD7_SUBLEAF1_EDX_AVX10;
+#endif
 
   //   [22:20]  reserved
 
@@ -1531,6 +1543,8 @@ void bx_cpuid_t::sanity_checks() const
     BX_FATAL(("PANIC: 3dnow! ISA require MMX to be enabled !"));
 
   // AVX10_VL512 or AVX10_2 -> AVX10_1 -> AVX2 -> AVX -> XSAVE -> SSE -> MMX
+  if (is_cpu_extension_supported(BX_ISA_AVX10_2) && !is_cpu_extension_supported(BX_ISA_AVX10_1))
+    BX_FATAL(("PANIC: AVX10_2 is reqired AVX10_1 to be enabled !"));
   if (is_cpu_extension_supported(BX_ISA_AVX10_VL512) && !is_cpu_extension_supported(BX_ISA_AVX10_1))
     BX_FATAL(("PANIC: AVX10_VL512 is enabled when AVX10 is not supported !"));
   if (is_cpu_extension_supported(BX_ISA_AVX10_1) && !is_cpu_extension_supported(BX_ISA_AVX2))
@@ -1615,7 +1629,8 @@ void bx_cpuid_t::sanity_checks() const
         is_cpu_extension_supported(BX_ISA_AMX_FP16) ||
         is_cpu_extension_supported(BX_ISA_AMX_TF32) ||
         is_cpu_extension_supported(BX_ISA_AMX_COMPLEX) ||
-        is_cpu_extension_supported(BX_ISA_AMX_MOVRS))
+        is_cpu_extension_supported(BX_ISA_AMX_MOVRS) ||
+        is_cpu_extension_supported(BX_ISA_AMX_AVX512))
     {
       BX_FATAL(("PANIC: All AMX/TMUL extensions must be disabled if AMX is not supported !"));
     }
@@ -1625,6 +1640,9 @@ void bx_cpuid_t::sanity_checks() const
   if (is_cpu_extension_supported(BX_ISA_AMX)) {
     if (! is_cpu_extension_supported(BX_ISA_AVX512) && ! is_cpu_extension_supported(BX_ISA_AVX10_VL512))
       BX_FATAL(("PANIC: AMX/TMUL must be disabled if both AVX-512 and AVX10.VL512 are not supported !"));
+
+    if (is_cpu_extension_supported(BX_ISA_AMX_AVX512) && !is_cpu_extension_supported(BX_ISA_AVX10_2))
+      BX_FATAL(("PANIC: AMX-AVX512 require AVX10_2 to be enabled !"));
   }
 
   if (is_cpu_extension_supported(BX_ISA_VMX) && is_cpu_extension_supported(BX_ISA_SVM))

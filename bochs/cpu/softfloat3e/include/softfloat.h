@@ -244,12 +244,20 @@ BX_CPP_INLINE float16 ui16_to_f16(uint16_t a, struct softfloat_status_t *status)
 /*----------------------------------------------------------------------------
 | 16-bit (half-precision) floating-point operations.
 *----------------------------------------------------------------------------*/
+uint8_t f16_to_ui8(float16, uint8_t, bool, bool, struct softfloat_status_t *);
+uint16_t f16_to_ui16(float16, uint8_t, bool, struct softfloat_status_t *);
 uint32_t f16_to_ui32(float16, uint8_t, bool, struct softfloat_status_t *);
 uint64_t f16_to_ui64(float16, uint8_t, bool, struct softfloat_status_t *);
+int8_t f16_to_i8(float16, uint8_t, bool, bool, struct softfloat_status_t *);
+int16_t f16_to_i16(float16, uint8_t, bool, struct softfloat_status_t *);
 int32_t f16_to_i32(float16, uint8_t, bool, struct softfloat_status_t *);
 int64_t f16_to_i64(float16, uint8_t, bool, struct softfloat_status_t *);
+uint8_t f16_to_ui8_r_minMag(float16, bool, bool, struct softfloat_status_t *);
+uint16_t f16_to_ui16_r_minMag(float16, bool, struct softfloat_status_t *);
 uint32_t f16_to_ui32_r_minMag(float16, bool, struct softfloat_status_t *);
 uint64_t f16_to_ui64_r_minMag(float16, bool, struct softfloat_status_t *);
+int8_t f16_to_i8_r_minMag(float16, bool, bool, struct softfloat_status_t *);
+int16_t f16_to_i16_r_minMag(float16, bool, struct softfloat_status_t *);
 int32_t f16_to_i32_r_minMag(float16, bool, struct softfloat_status_t *);
 int64_t f16_to_i64_r_minMag(float16, bool, struct softfloat_status_t *);
 float32 f16_to_f32(float16, struct softfloat_status_t *);
@@ -278,6 +286,8 @@ int8_t f16_exp(float16);
 uint16_t f16_fraction(float16);
 float16 f16_denormal_to_zero(float16);
 
+float16 f16_minmax(float16 a, float16 b, int op_select, int sign_ctrl, bool propagate_NaNs, struct softfloat_status_t *);
+
 BX_CPP_INLINE int f16_compare(float16 a, float16 b, softfloat_status_t *status) {
   return f16_compare(a, b, 0, status);
 }
@@ -299,16 +309,15 @@ BX_CPP_INLINE int64_t f16_to_i64(float16 a, struct softfloat_status_t *status) {
 BX_CPP_INLINE int32_t f16_to_i32(float16 a, struct softfloat_status_t *status) {
     return f16_to_i32(a, softfloat_getRoundingMode(status), true, status);
 }
+BX_CPP_INLINE int16_t f16_to_i16(float16 a, struct softfloat_status_t *status) {
+    return f16_to_i16(a, softfloat_getRoundingMode(status), true, status);
+}
 
-BX_CPP_INLINE int16_t f16_to_i16(float16 a, softfloat_status_t *status)
-{
-    int32_t val_32 = f16_to_i32(a, status);
-    int16_t val_16 = (int16_t) val_32;
-    if ((int32_t)(val_16) != val_32) {
-        softfloat_setFlags(status, softfloat_flag_invalid);
-        return (int16_t) 0x8000;
-    }
-    return val_16;
+BX_CPP_INLINE int8_t f16_to_i8(float16 a, struct softfloat_status_t *status) {
+    return f16_to_i8(a, softfloat_getRoundingMode(status), true, false, status);
+}
+BX_CPP_INLINE int8_t f16_to_i8_saturate(float16 a, struct softfloat_status_t *status) {
+    return f16_to_i8(a, softfloat_getRoundingMode(status), true, true, status);
 }
 
 BX_CPP_INLINE int64_t f16_to_i64_round_to_zero(float16 a, struct softfloat_status_t *status) {
@@ -317,16 +326,15 @@ BX_CPP_INLINE int64_t f16_to_i64_round_to_zero(float16 a, struct softfloat_statu
 BX_CPP_INLINE int32_t f16_to_i32_round_to_zero(float16 a, struct softfloat_status_t *status) {
     return f16_to_i32_r_minMag(a, true, status);
 }
+BX_CPP_INLINE int16_t f16_to_i16_round_to_zero(float16 a, struct softfloat_status_t *status) {
+    return f16_to_i16_r_minMag(a, true, status);
+}
 
-BX_CPP_INLINE int16_t f16_to_i16_round_to_zero(float16 a, softfloat_status_t *status)
-{
-    int32_t val_32 = f16_to_i32_round_to_zero(a, status);
-    int16_t val_16 = (int16_t) val_32;
-    if ((int32_t)(val_16) != val_32) {
-        softfloat_setFlags(status, softfloat_flag_invalid);
-        return (int16_t) 0x8000;
-    }
-    return val_16;
+BX_CPP_INLINE int8_t f16_to_i8_round_to_zero(float16 a, struct softfloat_status_t *status) {
+    return f16_to_i8_r_minMag(a, true, false, status);
+}
+BX_CPP_INLINE int8_t f16_to_i8_round_to_zero_saturate(float16 a, struct softfloat_status_t *status) {
+    return f16_to_i8_r_minMag(a, true, true, status);
 }
 
 BX_CPP_INLINE uint64_t f16_to_ui64(float16 a, struct softfloat_status_t *status) {
@@ -335,15 +343,15 @@ BX_CPP_INLINE uint64_t f16_to_ui64(float16 a, struct softfloat_status_t *status)
 BX_CPP_INLINE uint32_t f16_to_ui32(float16 a, struct softfloat_status_t *status) {
     return f16_to_ui32(a, softfloat_getRoundingMode(status), true, status);
 }
+BX_CPP_INLINE uint16_t f16_to_ui16(float16 a, struct softfloat_status_t *status) {
+    return f16_to_ui16(a, softfloat_getRoundingMode(status), true, status);
+}
 
-BX_CPP_INLINE uint16_t f16_to_ui16(float16 a, softfloat_status_t *status)
-{
-    uint32_t val_32 = f16_to_ui32(a, status);
-    if (val_32 > 0xFFFF) {
-        softfloat_setFlags(status, softfloat_flag_invalid);
-        return 0xFFFF;
-    }
-    return (uint16_t) val_32;
+BX_CPP_INLINE uint8_t f16_to_ui8(float16 a, struct softfloat_status_t *status) {
+    return f16_to_ui8(a, softfloat_getRoundingMode(status), true, false, status);
+}
+BX_CPP_INLINE uint8_t f16_to_ui8_saturate(float16 a, struct softfloat_status_t *status) {
+    return f16_to_ui8(a, softfloat_getRoundingMode(status), true, true, status);
 }
 
 BX_CPP_INLINE uint64_t f16_to_ui64_round_to_zero(float16 a, struct softfloat_status_t *status) {
@@ -352,15 +360,15 @@ BX_CPP_INLINE uint64_t f16_to_ui64_round_to_zero(float16 a, struct softfloat_sta
 BX_CPP_INLINE uint32_t f16_to_ui32_round_to_zero(float16 a, struct softfloat_status_t *status) {
     return f16_to_ui32_r_minMag(a, true, status);
 }
+BX_CPP_INLINE uint16_t f16_to_ui16_round_to_zero(float16 a, struct softfloat_status_t *status) {
+    return f16_to_ui16_r_minMag(a, true, status);
+}
 
-BX_CPP_INLINE uint16_t f16_to_ui16_round_to_zero(float16 a, softfloat_status_t *status)
-{
-    uint32_t val_32 = f16_to_ui32_round_to_zero(a, status);
-    if (val_32 > 0xFFFF) {
-        softfloat_setFlags(status, softfloat_flag_invalid);
-        return 0xFFFF;
-    }
-    return (uint16_t) val_32;
+BX_CPP_INLINE uint8_t f16_to_ui8_round_to_zero(float16 a, struct softfloat_status_t *status) {
+    return f16_to_ui8_r_minMag(a, true, false, status);
+}
+BX_CPP_INLINE uint8_t f16_to_ui8_round_to_zero_saturate(float16 a, struct softfloat_status_t *status) {
+    return f16_to_ui8_r_minMag(a, true, true, status);
 }
 
 BX_CPP_INLINE float16 f16_fmadd(float16 a, float16 b, float16 c, softfloat_status_t *status) {
@@ -379,14 +387,18 @@ BX_CPP_INLINE float16 f16_fnmsub(float16 a, float16 b, float16 c, softfloat_stat
 /*----------------------------------------------------------------------------
 | 32-bit (single-precision) floating-point operations.
 *----------------------------------------------------------------------------*/
+uint8_t f32_to_ui8(float32, uint8_t, bool, bool, struct softfloat_status_t *);
 uint32_t f32_to_ui32(float32, uint8_t, bool, struct softfloat_status_t *);
 uint64_t f32_to_ui64(float32, uint8_t, bool, struct softfloat_status_t *);
+int8_t f32_to_i8(float32, uint8_t, bool, bool, struct softfloat_status_t *);
 int32_t f32_to_i32(float32, uint8_t, bool, struct softfloat_status_t *);
 int64_t f32_to_i64(float32, uint8_t, bool, struct softfloat_status_t *);
-uint32_t f32_to_ui32_r_minMag(float32, bool, struct softfloat_status_t *);
-uint64_t f32_to_ui64_r_minMag(float32, bool, struct softfloat_status_t *);
-int32_t f32_to_i32_r_minMag(float32, bool, struct softfloat_status_t *);
-int64_t f32_to_i64_r_minMag(float32, bool, struct softfloat_status_t *);
+uint8_t f32_to_ui8_r_minMag(float32, bool, bool, struct softfloat_status_t *);
+uint32_t f32_to_ui32_r_minMag(float32, bool, bool, struct softfloat_status_t *);
+uint64_t f32_to_ui64_r_minMag(float32, bool, bool, struct softfloat_status_t *);
+int8_t f32_to_i8_r_minMag(float32, bool, bool, struct softfloat_status_t *);
+int32_t f32_to_i32_r_minMag(float32, bool, bool, struct softfloat_status_t *);
+int64_t f32_to_i64_r_minMag(float32, bool, bool, struct softfloat_status_t *);
 float16 f32_to_f16(float32, struct softfloat_status_t *);
 float64 f32_to_f64(float32, struct softfloat_status_t *);
 extFloat80_t f32_to_extF80(float32, struct softfloat_status_t *);
@@ -416,6 +428,8 @@ int16_t f32_exp(float32);
 uint32_t f32_fraction(float32);
 float32 f32_denormal_to_zero(float32);
 
+float32 f32_minmax(float32 a, float32 b, int op_select, int sign_ctrl, bool propagate_NaNs, struct softfloat_status_t *);
+
 BX_CPP_INLINE int f32_compare(float32 a, float32 b, softfloat_status_t *status) {
     return f32_compare(a, b, 0, status);
 }
@@ -431,6 +445,13 @@ BX_CPP_INLINE float32 f32_roundToInt(float32 a, struct softfloat_status_t *statu
     return f32_roundToInt(a, 0, softfloat_getRoundingMode(status), true, status);
 }
 
+BX_CPP_INLINE int8_t f32_to_i8(float32 a, struct softfloat_status_t *status) {
+    return f32_to_i8(a, softfloat_getRoundingMode(status), true, false, status);
+}
+BX_CPP_INLINE int8_t f32_to_i8_saturate(float32 a, struct softfloat_status_t *status) {
+    return f32_to_i8(a, softfloat_getRoundingMode(status), true, true, status);
+}
+
 BX_CPP_INLINE int32_t f32_to_i32(float32 a, struct softfloat_status_t *status) {
     return f32_to_i32(a, softfloat_getRoundingMode(status), true, status);
 }
@@ -438,11 +459,30 @@ BX_CPP_INLINE int64_t f32_to_i64(float32 a, struct softfloat_status_t *status) {
     return f32_to_i64(a, softfloat_getRoundingMode(status), true, status);
 }
 
+BX_CPP_INLINE int8_t f32_to_i8_round_to_zero(float32 a, struct softfloat_status_t *status) {
+    return f32_to_i8_r_minMag(a, true, false, status);
+}
+BX_CPP_INLINE int8_t f32_to_i8_round_to_zero_saturate(float32 a, struct softfloat_status_t *status) {
+    return f32_to_i8_r_minMag(a, true, true, status);
+}
 BX_CPP_INLINE int32_t f32_to_i32_round_to_zero(float32 a, struct softfloat_status_t *status) {
-    return f32_to_i32_r_minMag(a, true, status);
+    return f32_to_i32_r_minMag(a, true, false, status);
+}
+BX_CPP_INLINE int32_t f32_to_i32_round_to_zero_saturate(float32 a, struct softfloat_status_t *status) {
+    return f32_to_i32_r_minMag(a, true, true, status);
 }
 BX_CPP_INLINE int64_t f32_to_i64_round_to_zero(float32 a, struct softfloat_status_t *status) {
-    return f32_to_i64_r_minMag(a, true, status);
+    return f32_to_i64_r_minMag(a, true, false, status);
+}
+BX_CPP_INLINE int64_t f32_to_i64_round_to_zero_saturate(float32 a, struct softfloat_status_t *status) {
+    return f32_to_i64_r_minMag(a, true, true, status);
+}
+
+BX_CPP_INLINE uint8_t f32_to_ui8(float32 a, struct softfloat_status_t *status) {
+    return f32_to_ui8(a, softfloat_getRoundingMode(status), true, false, status);
+}
+BX_CPP_INLINE uint8_t f32_to_ui8_saturate(float32 a, struct softfloat_status_t *status) {
+    return f32_to_ui8(a, softfloat_getRoundingMode(status), true, true, status);
 }
 
 BX_CPP_INLINE uint32_t f32_to_ui32(float32 a, struct softfloat_status_t *status) {
@@ -452,11 +492,23 @@ BX_CPP_INLINE uint64_t f32_to_ui64(float32 a, struct softfloat_status_t *status)
     return f32_to_ui64(a, softfloat_getRoundingMode(status), true, status);
 }
 
+BX_CPP_INLINE uint8_t f32_to_ui8_round_to_zero(float32 a, struct softfloat_status_t *status) {
+    return f32_to_ui8_r_minMag(a, true, false, status);
+}
+BX_CPP_INLINE uint8_t f32_to_ui8_round_to_zero_saturate(float32 a, struct softfloat_status_t *status) {
+    return f32_to_ui8_r_minMag(a, true, true, status);
+}
 BX_CPP_INLINE uint32_t f32_to_ui32_round_to_zero(float32 a, struct softfloat_status_t *status) {
-    return f32_to_ui32_r_minMag(a, true, status);
+    return f32_to_ui32_r_minMag(a, true, false, status);
+}
+BX_CPP_INLINE uint32_t f32_to_ui32_round_to_zero_saturate(float32 a, struct softfloat_status_t *status) {
+    return f32_to_ui32_r_minMag(a, true, true, status);
 }
 BX_CPP_INLINE uint64_t f32_to_ui64_round_to_zero(float32 a, struct softfloat_status_t *status) {
-    return f32_to_ui64_r_minMag(a, true, status);
+    return f32_to_ui64_r_minMag(a, true, false, status);
+}
+BX_CPP_INLINE uint64_t f32_to_ui64_round_to_zero_saturate(float32 a, struct softfloat_status_t *status) {
+    return f32_to_ui64_r_minMag(a, true, true, status);
 }
 
 BX_CPP_INLINE float32 f32_fmadd(float32 a, float32 b, float32 c, softfloat_status_t *status) {
@@ -479,10 +531,10 @@ uint32_t f64_to_ui32(float64, uint8_t, bool, struct softfloat_status_t *);
 uint64_t f64_to_ui64(float64, uint8_t, bool, struct softfloat_status_t *);
 int32_t f64_to_i32(float64, uint8_t, bool, struct softfloat_status_t *);
 int64_t f64_to_i64(float64, uint8_t, bool, struct softfloat_status_t *);
-uint32_t f64_to_ui32_r_minMag(float64, bool, struct softfloat_status_t *);
-uint64_t f64_to_ui64_r_minMag(float64, bool, struct softfloat_status_t *);
-int32_t f64_to_i32_r_minMag(float64, bool, struct softfloat_status_t *);
-int64_t f64_to_i64_r_minMag(float64, bool, struct softfloat_status_t *);
+uint32_t f64_to_ui32_r_minMag(float64, bool, bool, struct softfloat_status_t *);
+uint64_t f64_to_ui64_r_minMag(float64, bool, bool, struct softfloat_status_t *);
+int32_t f64_to_i32_r_minMag(float64, bool, bool, struct softfloat_status_t *);
+int64_t f64_to_i64_r_minMag(float64, bool, bool, struct softfloat_status_t *);
 float16 f64_to_f16(float64, struct softfloat_status_t *);
 float32 f64_to_f32(float64, struct softfloat_status_t *);
 extFloat80_t f64_to_extF80(float64, struct softfloat_status_t *);
@@ -512,6 +564,8 @@ int16_t f64_exp(float64);
 uint64_t f64_fraction(float64);
 float64 f64_denormal_to_zero(float64);
 
+float64 f64_minmax(float64 a, float64 b, int op_select, int sign_ctrl, bool propagate_NaNs, struct softfloat_status_t *);
+
 BX_CPP_INLINE int f64_compare(float64 a, float64 b, softfloat_status_t *status) {
     return f64_compare(a, b, 0, status);
 }
@@ -535,10 +589,16 @@ BX_CPP_INLINE int64_t f64_to_i64(float64 a, struct softfloat_status_t *status) {
 }
 
 BX_CPP_INLINE int32_t f64_to_i32_round_to_zero(float64 a, struct softfloat_status_t *status) {
-    return f64_to_i32_r_minMag(a, true, status);
+    return f64_to_i32_r_minMag(a, true, false, status);
+}
+BX_CPP_INLINE int32_t f64_to_i32_round_to_zero_saturate(float64 a, struct softfloat_status_t *status) {
+    return f64_to_i32_r_minMag(a, true, true, status);
 }
 BX_CPP_INLINE int64_t f64_to_i64_round_to_zero(float64 a, struct softfloat_status_t *status) {
-    return f64_to_i64_r_minMag(a, true, status);
+    return f64_to_i64_r_minMag(a, true, false, status);
+}
+BX_CPP_INLINE int64_t f64_to_i64_round_to_zero_saturate(float64 a, struct softfloat_status_t *status) {
+    return f64_to_i64_r_minMag(a, true, true, status);
 }
 
 BX_CPP_INLINE uint32_t f64_to_ui32(float64 a, struct softfloat_status_t *status) {
@@ -549,10 +609,16 @@ BX_CPP_INLINE uint64_t f64_to_ui64(float64 a, struct softfloat_status_t *status)
 }
 
 BX_CPP_INLINE uint32_t f64_to_ui32_round_to_zero(float64 a, struct softfloat_status_t *status) {
-    return f64_to_ui32_r_minMag(a, true, status);
+    return f64_to_ui32_r_minMag(a, true, false, status);
+}
+BX_CPP_INLINE uint32_t f64_to_ui32_round_to_zero_saturate(float64 a, struct softfloat_status_t *status) {
+    return f64_to_ui32_r_minMag(a, true, true, status);
 }
 BX_CPP_INLINE uint64_t f64_to_ui64_round_to_zero(float64 a, struct softfloat_status_t *status) {
-    return f64_to_ui64_r_minMag(a, true, status);
+    return f64_to_ui64_r_minMag(a, true, false, status);
+}
+BX_CPP_INLINE uint64_t f64_to_ui64_round_to_zero_saturate(float64 a, struct softfloat_status_t *status) {
+    return f64_to_ui64_r_minMag(a, true, true, status);
 }
 
 BX_CPP_INLINE float64 f64_fmadd(float64 a, float64 b, float64 c, softfloat_status_t *status) {

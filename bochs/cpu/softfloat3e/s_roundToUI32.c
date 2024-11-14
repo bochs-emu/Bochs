@@ -39,12 +39,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
+/*--------------------------------------------------------------------------------
+| Takes a 64-bit fixed-point value `sig' with binary point between bits 11 and 12
+| and returns the properly rounded  32-bit unsigned  integer corresponding to the
+| input.  Ordinarily, the fixed-point input is simply rounded to an integer, with
+| the inexact exception raised if  the input cannot be represented exactly as an
+| integer. However, if  the fixed-point input is too large, the invalid exception
+| is raised and the largest unsigned integer is returned.
+*--------------------------------------------------------------------------------*/
+
 uint32_t
  softfloat_roundToUI32(bool sign, uint64_t sig, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
 {
-    uint16_t roundIncrement, roundBits;
+    uint32_t roundIncrement, roundBits;
     uint32_t z;
-    uint64_t absSigExact = sig;
+    uint64_t origSig = sig >> 12;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -68,7 +77,7 @@ uint32_t
     if (sign && z) goto invalid;
     if (roundBits) {
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
-        if (((uint64_t)z << 12) > absSigExact)
+        if (z > (uint32_t)origSig)
             softfloat_setRoundingUp(status);
     }
     return z;

@@ -39,13 +39,24 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
+/*----------------------------------------------------------------------------
+| Takes a 64-bit fixed-point value `sig' with binary point between bits 11
+| and 12, and returns the properly rounded 32-bit integer corresponding to the
+| input.  If `sign' is 1, the input is negated before being converted to an
+| integer.  Bit 63 of `sig' must be zero.  Ordinarily, the fixed-point input
+| is simply rounded to an integer, with the inexact exception raised if the
+| input cannot be represented exactly as an integer.  However, if the fixed-
+| point input is too large, the invalid exception is raised and the integer
+| indefinite value is returned.
+*----------------------------------------------------------------------------*/
+
 int32_t softfloat_roundToI32(bool sign, uint64_t sig, uint8_t roundingMode, bool exact, struct softfloat_status_t *status)
 {
-    uint16_t roundIncrement, roundBits;
+    uint32_t roundIncrement, roundBits;
     uint32_t sig32;
     union { uint32_t ui; int32_t i; } uZ;
     int32_t z;
-    uint64_t absSigExact = sig;
+    uint64_t origSig = sig >> 12;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -68,7 +79,7 @@ int32_t softfloat_roundToI32(bool sign, uint64_t sig, uint8_t roundingMode, bool
     if (z && ((z < 0) ^ sign)) goto invalid;
     if (roundBits) {
         if (exact) softfloat_raiseFlags(status, softfloat_flag_inexact);
-        if (((uint64_t)sig32 << 12) > absSigExact)
+        if (sig32 > (uint32_t)origSig)
             softfloat_setRoundingUp(status);
     }
     return z;

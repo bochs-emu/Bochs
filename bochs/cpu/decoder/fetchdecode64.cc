@@ -1328,7 +1328,7 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   //    7 6 5 4 3 2 1 0
   //    ---------------
   // P0 R X B R'0 m m m
-  // P1 w v v v v 1 p p
+  // P1 w v v v v u p p ; evex.u was always '1 before avx10.2
   // P2 z L'L b V'a a a
 
   // EVEX.mmmm - opcode group
@@ -1341,10 +1341,11 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   // EVEX.W    - opsize promotion / opcode extension
   // EVEX.z    - zero masking / merging
   // EVEX.b    - broadcast / round control / SAE
+  // EVEX.u    - round control / SAE for 256-bit (AVX10.2)
   // EVEX.LL   - vector length control
 
   // check for reserved EVEX bits
-  if ((evex & 0x08) != 0 || (evex & 0x400) == 0)
+  if ((evex & 0x08) != 0)
     return(ia_opcode);
 
   unsigned evex_opcext = evex & 0x7;
@@ -1378,6 +1379,9 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   i->setVL(1 << evex_vl_rc);
   i->setVexW(vex_w);
 
+  unsigned evex_u = (evex >> 10) & 0x1;
+  i->setEvexU(evex_u);
+
   unsigned evex_z = (evex >> 23) & 0x1;
   i->setZeroMasking(evex_z);
 
@@ -1410,9 +1414,12 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
     }
   }
 
-  // EVEX.b in reg form implies 512-bit vector length
-  if (i->modC0() && i->getEvexb()) {
-    i->setVL(BX_VL512);
+  if (i->modC0()) {
+    // EVEX.b in reg form implies 512-bit vector length
+    if (i->getEvexb()) i->setVL(BX_VL512);
+
+    // EVEX.u=0 in reg form implies 256-bit vector length
+    if (!i->getEvexU()) i->setVL(BX_VL256);
   }
 
   Bit32u vl = i->getVL()-1; // 0: VL128, 1: VL256, 3: VL512

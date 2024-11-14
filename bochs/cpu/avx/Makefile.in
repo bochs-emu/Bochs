@@ -70,7 +70,13 @@ AVX_OBJS = \
 	gather.o \
 	tbm32.o \
 	tbm64.o \
-	xop.o
+	xop.o \
+	bf16_arith.o \
+	avx10_2_cvt.o \
+	avx10_2_cvt_fp8.o \
+	avx10_2_minmax.o \
+	avx10_2_bf16.o \
+	avx10_2_misc.o
 
 all: libavx.a
 
@@ -105,10 +111,11 @@ amx.o: amx.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../xmm.h \
  ../vmx.h ../vmx_ctrls.h ../stack.h ../access.h amx.h ../../cpu/xmm.h \
- bf16.h ../softfloat3e/include/softfloat.h \
+ ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
- ../softfloat3e/include/internals.h
+ ../softfloat3e/include/internals.h bf16.h ../../cpu/decoder/ia_opcodes.h \
+ ../../cpu/decoder/ia_opcodes.def ../../cpu/decoder/ia_opcodes_evex.def
 avx.o: avx.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h \
  ../../misc/bswap.h ../cpu.h ../../bx_debug/debug.h ../../config.h \
  ../../osdep.h ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
@@ -117,6 +124,75 @@ avx.o: avx.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../xmm.h \
  ../vmx.h ../vmx_ctrls.h ../stack.h ../access.h ../simd_int.h
+avx10_2_bf16.o: avx10_2_bf16.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
+ ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
+ ../decoder/decoder.h ../../instrument/stubs/instrument.h ../i387.h \
+ ../softfloat3e/include/softfloat_types.h ../fpu/tag_w.h \
+ ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
+ ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../xmm.h \
+ ../vmx.h ../vmx_ctrls.h ../stack.h ../access.h \
+ ../softfloat3e/include/softfloat.h \
+ ../softfloat3e/include/softfloat_types.h \
+ ../softfloat3e/include/softfloat-extra.h \
+ ../softfloat3e/include/internals.h bf16.h ../simd_bf16.h ../avx/bf16.h \
+ ../simd_int.h bf16-compare.h
+avx10_2_cvt.o: avx10_2_cvt.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
+ ../../logio.h ../../misc/bswap.h ../cpu.h ../../bx_debug/debug.h \
+ ../../config.h ../../osdep.h ../../cpu/decoder/decoder.h \
+ ../../cpu/decoder/features.h ../decoder/decoder.h \
+ ../../instrument/stubs/instrument.h ../i387.h \
+ ../softfloat3e/include/softfloat_types.h ../fpu/tag_w.h \
+ ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
+ ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../xmm.h \
+ ../vmx.h ../vmx_ctrls.h ../stack.h ../access.h \
+ ../softfloat3e/include/softfloat.h \
+ ../softfloat3e/include/softfloat_types.h \
+ ../softfloat3e/include/softfloat-extra.h \
+ ../softfloat3e/include/internals.h
+avx10_2_cvt_fp8.o: avx10_2_cvt_fp8.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
+ ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
+ ../decoder/decoder.h ../../instrument/stubs/instrument.h ../i387.h \
+ ../softfloat3e/include/softfloat_types.h ../fpu/tag_w.h \
+ ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
+ ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../xmm.h \
+ ../vmx.h ../vmx_ctrls.h ../stack.h ../access.h \
+ ../softfloat3e/include/softfloat.h \
+ ../softfloat3e/include/softfloat_types.h \
+ ../softfloat3e/include/softfloat-extra.h \
+ ../softfloat3e/include/internals.h bf8.h hf8.h ../simd_int.h \
+ ../../cpu/decoder/ia_opcodes.h ../../cpu/decoder/ia_opcodes.def \
+ ../../cpu/decoder/ia_opcodes_evex.def
+avx10_2_minmax.o: avx10_2_minmax.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
+ ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
+ ../decoder/decoder.h ../../instrument/stubs/instrument.h ../i387.h \
+ ../softfloat3e/include/softfloat_types.h ../fpu/tag_w.h \
+ ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
+ ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../xmm.h \
+ ../vmx.h ../vmx_ctrls.h ../stack.h ../access.h \
+ ../softfloat3e/include/softfloat.h \
+ ../softfloat3e/include/softfloat_types.h \
+ ../softfloat3e/include/softfloat-extra.h \
+ ../softfloat3e/include/internals.h ../simd_int.h bf16.h
+avx10_2_misc.o: avx10_2_misc.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
+ ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
+ ../decoder/decoder.h ../../instrument/stubs/instrument.h ../i387.h \
+ ../softfloat3e/include/softfloat_types.h ../fpu/tag_w.h \
+ ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
+ ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../xmm.h \
+ ../vmx.h ../vmx_ctrls.h ../stack.h ../access.h \
+ ../softfloat3e/include/softfloat.h \
+ ../softfloat3e/include/softfloat_types.h \
+ ../softfloat3e/include/softfloat-extra.h \
+ ../softfloat3e/include/internals.h ../decoder/ia_opcodes.h \
+ ../decoder/ia_opcodes.def ../decoder/ia_opcodes_evex.def ../simd_int.h
 avx2.o: avx2.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h \
  ../../misc/bswap.h ../cpu.h ../../bx_debug/debug.h ../../config.h \
  ../../osdep.h ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
@@ -143,11 +219,11 @@ avx512_bf16.o: avx512_bf16.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep
  ../softfloat3e/include/softfloat_types.h ../fpu/tag_w.h \
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../xmm.h \
- ../vmx.h ../vmx_ctrls.h ../stack.h ../access.h bf16.h \
+ ../vmx.h ../vmx_ctrls.h ../stack.h ../access.h \
  ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
- ../softfloat3e/include/internals.h ../simd_int.h
+ ../softfloat3e/include/internals.h bf16.h ../simd_int.h
 avx512_bitalg.o: avx512_bitalg.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
@@ -192,7 +268,7 @@ avx512_cvt16.o: avx512_cvt16.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
- ../softfloat3e/include/internals.h ../simd_int.h 
+ ../softfloat3e/include/internals.h ../simd_int.h
 avx512_fma.o: avx512_fma.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../logio.h ../../misc/bswap.h ../cpu.h ../../bx_debug/debug.h \
  ../../config.h ../../osdep.h ../../cpu/decoder/decoder.h \
@@ -274,7 +350,7 @@ avx512_pfp.o: avx512_pfp.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
  ../softfloat3e/include/internals.h ../simd_int.h ../simd_pfp.h \
-  ../fpu/softfloat-specialize.h \
+ ../fpu/softfloat-specialize.h \
  ../fpu/../softfloat3e/include/softfloat_types.h
 avx512_pfp16.o: avx512_pfp16.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \
@@ -289,11 +365,10 @@ avx512_pfp16.o: avx512_pfp16.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
- ../softfloat3e/include/internals.h  ../simd_int.h \
- ../simd_pfp.h  ../fpu/softfloat-specialize.h \
- ../fpu/../softfloat3e/include/softfloat_types.h \
+ ../softfloat3e/include/internals.h ../simd_int.h ../simd_pfp.h \
  ../../cpu/decoder/ia_opcodes.h ../../cpu/decoder/ia_opcodes.def \
- ../../cpu/decoder/ia_opcodes_evex.def
+ ../../cpu/decoder/ia_opcodes_evex.def ../fpu/softfloat-specialize.h \
+ ../fpu/../softfloat3e/include/softfloat_types.h
 avx512_rcp14.o: avx512_rcp14.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
@@ -347,7 +422,7 @@ avx_fma.o: avx_fma.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
- ../softfloat3e/include/internals.h ../simd_pfp.h 
+ ../softfloat3e/include/internals.h ../simd_pfp.h
 avx_ifma52.o: avx_ifma52.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../logio.h ../../misc/bswap.h ../cpu.h ../../bx_debug/debug.h \
  ../../config.h ../../osdep.h ../../cpu/decoder/decoder.h \
@@ -383,8 +458,12 @@ avx_pfp.o: avx_pfp.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
- ../softfloat3e/include/internals.h ../simd_pfp.h \
- ../simd_int.h
+ ../softfloat3e/include/internals.h ../simd_pfp.h ../simd_int.h
+bf16_arith.o: bf16_arith.@CPP_SUFFIX@ ../../config.h \
+ ../softfloat3e/include/softfloat.h \
+ ../softfloat3e/include/softfloat_types.h \
+ ../softfloat3e/include/softfloat-extra.h \
+ ../softfloat3e/include/internals.h bf16.h
 gather.o: gather.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
  ../../logio.h ../../misc/bswap.h ../cpu.h ../../bx_debug/debug.h \
  ../../config.h ../../osdep.h ../../cpu/decoder/decoder.h \
