@@ -471,16 +471,16 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
               break;
             case 24:
             case 32:
+              colour = *vid_ptr;
+              colour |= (*(vid_ptr + 1)) << 8;
+              colour |= (*(vid_ptr + 2)) << 16;
               if (v->banshee.overlay.enabled &&
                   (x >= v->banshee.overlay.x0) &&
                   (x <= v->banshee.overlay.x1) &&
                   (y >= v->banshee.overlay.y0) &&
-                  (y <= v->banshee.overlay.y1)) {
+                  (y <= v->banshee.overlay.y1) &&
+                  chromakey_check(colour, v->banshee.disp_bpp)) {
                 colour = get_overlay_pixel(x, y, v->banshee.disp_bpp);
-              } else {
-                colour = *vid_ptr;
-                colour |= (*(vid_ptr + 1)) << 8;
-                colour |= (*(vid_ptr + 2)) << 16;
               }
               break;
           }
@@ -520,8 +520,10 @@ Bit32u bx_banshee_c::get_overlay_pixel(unsigned xc, unsigned yc, Bit8u bpp)
 {
   Bit16u index = 0;
   Bit32u value = 0;
-  unsigned ox, oy, r = 0, g = 0, b = 0;
-  Bit8u *vid_ptr, data[4], px, Y[2];
+  unsigned ox, oy;
+  Bit16s r = 0, g = 0, b = 0;
+  Bit8u *vid_ptr, data[4], px;
+  Bit16s Y[2];
   Bit8s U, V;
 
   ox = (unsigned)((double)(xc - v->banshee.overlay.x0) * v->banshee.overlay.fx);
@@ -535,22 +537,22 @@ Bit32u bx_banshee_c::get_overlay_pixel(unsigned xc, unsigned yc, Bit8u bpp)
   }
   if ((v->banshee.overlay.format == 5) || (v->banshee.overlay.format == 6)) {
     if (v->banshee.overlay.format == 5) {
-      Y[0] = data[0];
+      Y[0] = data[0] - 0x10;
       U = data[1] - 0x80;
-      Y[1] = data[2];
+      Y[1] = data[2] - 0x10;
       V = data[3] - 0x80;
     } else {
       U = data[0] - 0x80;
-      Y[0] = data[1];
+      Y[0] = data[1] - 0x10;
       V = data[2] - 0x80;
-      Y[1] = data[3];
+      Y[1] = data[3] - 0x10;
     }
-    r = (unsigned)(Y[px] + (double)V / 0.877);
-    if (r > 255) r = 255;
-    g = (unsigned)(Y[px] - (double)U * 0.39393 - (double)V * 0.58081);
-    if (g > 255) g = 255;
-    b = (unsigned)(Y[px] + (double)U / 0.493);
-    if (b > 255) b = 255;
+    r = Y[px] * 1.164383 + V * 1.596027;
+    g = Y[px] * 1.164383 - U * 0.391762 - V * 0.812968;
+    b = Y[px] * 1.164383 + U * 2.017232;
+    CLAMP(r, 0x00, 0xff);
+    CLAMP(g, 0x00, 0xff);
+    CLAMP(b, 0x00, 0xff);
     index = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
   } else if ((v->banshee.overlay.format == 1) ||
              (v->banshee.overlay.format == 7)) {
@@ -627,7 +629,7 @@ void bx_banshee_c::update(void)
   unsigned pitch, xc, yc, xti, yti;
   unsigned r, c, w, h;
   int i;
-  Bit32u red, green, blue, colour;
+  Bit32u colour;
   Bit8u *vid_ptr, *vid_ptr2;
   Bit8u *tile_ptr, *tile_ptr2;
   Bit8u bpp;
@@ -836,27 +838,24 @@ void bx_banshee_c::update(void)
                     vid_ptr2  = vid_ptr;
                     tile_ptr2 = tile_ptr;
                     for (c=0; c<w; c++) {
+                      colour = *vid_ptr2;
+                      colour |= (*(vid_ptr2 + 1)) << 8;
+                      colour |= (*(vid_ptr2 + 2)) << 16;
                       if (v->banshee.overlay.enabled &&
                           ((xc + c) >= v->banshee.overlay.x0) &&
                           ((xc + c) <= v->banshee.overlay.x1) &&
                           ((yc + r) >= v->banshee.overlay.y0) &&
-                          ((yc + r) <= v->banshee.overlay.y1)) {
+                          ((yc + r) <= v->banshee.overlay.y1) &&
+                          chromakey_check(colour, bpp)) {
                         colour = get_overlay_pixel(xc + c, yc + r, bpp);
-                        blue = colour & 0xff;
-                        green = (colour >> 8) & 0xff;
-                        red = (colour >> 16) & 0xff;
-                      } else {
-                        blue = *(vid_ptr2);
-                        green = *(vid_ptr2 + 1);
-                        red = *(vid_ptr2 + 2);
                       }
                       if (!v->banshee.double_width || (c & 1)) {
                         vid_ptr2 += 3;
                       }
                       colour = MAKE_COLOUR(
-                        red, 8, info.red_shift, info.red_mask,
-                        green, 8, info.green_shift, info.green_mask,
-                        blue, 8, info.blue_shift, info.blue_mask);
+                        colour, 24, info.red_shift, info.red_mask,
+                        colour, 16, info.green_shift, info.green_mask,
+                        colour, 8, info.blue_shift, info.blue_mask);
                       if (info.is_little_endian) {
                         for (i=0; i<info.bpp; i+=8) {
                           *(tile_ptr2++) = (Bit8u)(colour >> i);
@@ -899,27 +898,24 @@ void bx_banshee_c::update(void)
                     vid_ptr2  = vid_ptr;
                     tile_ptr2 = tile_ptr;
                     for (c=0; c<w; c++) {
+                      colour = *vid_ptr2;
+                      colour |= (*(vid_ptr2 + 1)) << 8;
+                      colour |= (*(vid_ptr2 + 2)) << 16;
                       if (v->banshee.overlay.enabled &&
                           ((xc + c) >= v->banshee.overlay.x0) &&
                           ((xc + c) <= v->banshee.overlay.x1) &&
                           ((yc + r) >= v->banshee.overlay.y0) &&
-                          ((yc + r) <= v->banshee.overlay.y1)) {
+                          ((yc + r) <= v->banshee.overlay.y1) &&
+                          chromakey_check(colour, bpp)) {
                         colour = get_overlay_pixel(xc + c, yc + r, bpp);
-                        blue = colour & 0xff;
-                        green = (colour >> 8) & 0xff;
-                        red = (colour >> 16) & 0xff;
-                      } else {
-                        blue = *(vid_ptr2);
-                        green = *(vid_ptr2 + 1);
-                        red = *(vid_ptr2 + 2);
                       }
                       if (!v->banshee.double_width || (c & 1)) {
                         vid_ptr2 += 4;
                       }
                       colour = MAKE_COLOUR(
-                        red, 8, info.red_shift, info.red_mask,
-                        green, 8, info.green_shift, info.green_mask,
-                        blue, 8, info.blue_shift, info.blue_mask);
+                        colour, 24, info.red_shift, info.red_mask,
+                        colour, 16, info.green_shift, info.green_mask,
+                        colour, 8, info.blue_shift, info.blue_mask);
                       if (info.is_little_endian) {
                         for (i=0; i<info.bpp; i+=8) {
                           *(tile_ptr2++) = (Bit8u)(colour >> i);
@@ -1207,7 +1203,7 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
         }
       }
       if ((v->banshee.io[reg] >> 2) & 1) {
-        BX_ERROR(("vidProcCfg: overlay stereo mode not supported yet"));
+        BX_ERROR(("vidProcCfg: overlay stereo mode not supported"));
       }
       if ((v->banshee.io[reg] >> 14) & 1) {
         v->banshee.overlay.fx = (double)(v->banshee.io[io_vidOverlayDudx] & 0xfffff) / (double)(1 << 20);
@@ -2387,8 +2383,9 @@ Bit32u bx_banshee_c::blt_yuv_conversion(Bit8u *ptr, Bit16u xc, Bit16u yc,
                                         Bit16u pitch, Bit8u fmt, Bit8u pxsize)
 {
   Bit32u value = 0;
-  unsigned r, g, b;
-  Bit8u *src_ptr, data[4], px, Y[2];
+  Bit16s r, g, b;
+  Bit8u *src_ptr, data[4], px;
+  Bit16s Y[2];
   Bit8s U, V;
 
   px = xc & 1;
@@ -2398,22 +2395,22 @@ Bit32u bx_banshee_c::blt_yuv_conversion(Bit8u *ptr, Bit16u xc, Bit16u yc,
     data[i] = *(src_ptr + i);
   }
   if (fmt == 8) {
-    Y[0] = data[0];
+    Y[0] = data[0] - 0x10;
     U = data[1] - 0x80;
-    Y[1] = data[2];
+    Y[1] = data[2] - 0x10;
     V = data[3] - 0x80;
   } else {
     U = data[0] - 0x80;
-    Y[0] = data[1];
+    Y[0] = data[1] - 0x10;
     V = data[2] - 0x80;
-    Y[1] = data[3];
+    Y[1] = data[3] - 0x10;
   }
-  r = (unsigned)(Y[px] + (double)V / 0.877);
-  if (r > 255) r = 255;
-  g = (unsigned)(Y[px] - (double)U * 0.39393 - (double)V * 0.58081);
-  if (g > 255) g = 255;
-  b = (unsigned)(Y[px] + (double)U / 0.493);
-  if (b > 255) b = 255;
+  r = Y[px] * 1.164383 + V * 1.596027;
+  g = Y[px] * 1.164383 - U * 0.391762 - V * 0.812968;
+  b = Y[px] * 1.164383 + U * 2.017232;
+  CLAMP(r, 0x00, 0xff);
+  CLAMP(g, 0x00, 0xff);
+  CLAMP(b, 0x00, 0xff);
   if (pxsize == 2) {
 #ifdef BX_LITTLE_ENDIAN
     value = ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3);
