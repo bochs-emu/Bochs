@@ -1856,6 +1856,8 @@ void BX_CPU_C::xsave_xrestor_init(void)
     xsave_restore[xcr0_t::BX_XCR0_XTILEDATA_BIT].xrstor_init_method = &BX_CPU_C::xrstor_init_tiledata_state;
   }
 #endif
+
+  // XCR0[19]: APX state (not implemented)
 }
 
 #if BX_CPU_LEVEL >= 5

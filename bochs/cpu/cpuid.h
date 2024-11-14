@@ -648,7 +648,9 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [17:17]  Flexible UIRET: UIRET sets UIF to the RFLAGS[1] image loaded from the stack
 //   [18:18]  CET_SSS
 //   [19:19]  AVX10 support and CPUID leaf 0x24
-//   [22:20]  reserved
+//   [20:20]  reserved
+//   [21:21]  APX support
+//   [22:22]  reserved
 //   [23:23]  MWAIT and CPUID LEAF5 support (to be used by VMM)
 //   [31:24]  reserved
 
@@ -673,7 +675,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_STD7_SUBLEAF1_EDX_CET_SSS                (1 << 18)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_AVX10                  (1 << 19)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED20             (1 << 20)
-#define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED21             (1 << 21)
+#define BX_CPUID_STD7_SUBLEAF1_EDX_APX                    (1 << 21)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED22             (1 << 22)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_MWAIT_AND_LEAF5        (1 << 23)
 // ...

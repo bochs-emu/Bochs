@@ -268,6 +268,7 @@ const unsigned XSAVE_LBR_STATE_LEN          = 808;
 const unsigned XSAVE_HWP_STATE_LEN          = 8;
 const unsigned XSAVE_XTILECFG_STATE_LEN     = 64;
 const unsigned XSAVE_XTILEDATA_STATE_LEN    = 8192;
+const unsigned XSAVE_APX_STATE_LEN          = 128;
 
 const unsigned XSAVE_FPU_STATE_OFFSET       = 0;
 const unsigned XSAVE_SSE_STATE_OFFSET       = 160;
@@ -278,6 +279,7 @@ const unsigned XSAVE_HI_ZMM_STATE_OFFSET    = 1664;
 const unsigned XSAVE_PKRU_STATE_OFFSET      = 2688;
 const unsigned XSAVE_XTILECFG_STATE_OFFSET  = 2752;
 const unsigned XSAVE_XTILEDATA_STATE_OFFSET = 2816;
+const unsigned XSAVE_APX_STATE_OFFSET       = 960;    // repurpose deprecated BND (MPX) state
 
 struct xcr0_t {
   Bit32u  val32; // 32bit value of register
@@ -302,6 +304,7 @@ struct xcr0_t {
     BX_XCR0_HWP_BIT = 16,    // not implemented yet
     BX_XCR0_XTILECFG_BIT = 17,
     BX_XCR0_XTILEDATA_BIT = 18,
+    BX_XCR0_APX_BIT = 19,
     BX_XCR0_LAST // make sure it is < 32
   };
 
@@ -324,6 +327,7 @@ struct xcr0_t {
 #define BX_XCR0_HWP_MASK       (1 << xcr0_t::BX_XCR0_HWP_BIT)
 #define BX_XCR0_XTILECFG_MASK  (1 << xcr0_t::BX_XCR0_XTILECFG_BIT)
 #define BX_XCR0_XTILEDATA_MASK (1 << xcr0_t::BX_XCR0_XTILEDATA_BIT)
+#define BX_XCR0_APX_MASK       (1 << xcr0_t::BX_XCR0_APX_BIT)
 
 #define BX_XCR0_XTILE_BITS_MASK (BX_XCR0_XTILECFG_MASK | BX_XCR0_XTILEDATA_MASK)
 
@@ -345,6 +349,7 @@ struct xcr0_t {
   IMPLEMENT_CRREG_ACCESSORS(HWP, BX_XCR0_HWP_BIT);
   IMPLEMENT_CRREG_ACCESSORS(XTILECFG, BX_XCR0_XTILECFG_BIT);
   IMPLEMENT_CRREG_ACCESSORS(XTILEDATA, BX_XCR0_XTILEDATA_BIT);
+  IMPLEMENT_CRREG_ACCESSORS(APX, BX_XCR0_APX_BIT);
 
   BX_CPP_INLINE Bit32u get32() const { return val32; }
   BX_CPP_INLINE void set32(Bit32u val) { val32 = val; }
