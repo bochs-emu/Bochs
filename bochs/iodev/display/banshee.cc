@@ -323,6 +323,16 @@ void bx_banshee_c::register_state(void)
   new bx_shadow_num_c(banshee, "blt_clipy1_1", &v->banshee.blt.clipy1[1]);
   new bx_shadow_num_c(banshee, "blt_h2s_pitch", &v->banshee.blt.h2s_pitch);
   new bx_shadow_num_c(banshee, "blt_h2s_pxstart", &v->banshee.blt.h2s_pxstart);
+  BXRS_PARAM_BOOL(banshee, overlay_enabled, v->banshee.overlay.enabled);
+  new bx_shadow_num_c(banshee, "overlay_format", &v->banshee.overlay.format);
+  new bx_shadow_num_c(banshee, "overlay_start", &v->banshee.overlay.start, BASE_HEX);
+  new bx_shadow_num_c(banshee, "overlay_pitch", &v->banshee.overlay.pitch);
+  new bx_shadow_num_c(banshee, "overlay_x0", &v->banshee.overlay.x0);
+  new bx_shadow_num_c(banshee, "overlay_y0", &v->banshee.overlay.y0);
+  new bx_shadow_num_c(banshee, "overlay_x1", &v->banshee.overlay.x1);
+  new bx_shadow_num_c(banshee, "overlay_y1", &v->banshee.overlay.y1);
+  new bx_shadow_num_c(banshee, "overlay_fx", &v->banshee.overlay.fx);
+  new bx_shadow_num_c(banshee, "overlay_fy", &v->banshee.overlay.fy);
 }
 
 void bx_banshee_c::after_restore_state(void)
@@ -371,6 +381,7 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
   Bit16u hwcy = v->banshee.hwcursor.y;
   Bit8u hwcw = 63;
   int i;
+  bool overlay2d = false;
 
   if (v->banshee.double_width) {
     hwcx <<= 1;
@@ -381,6 +392,7 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
     if ((v->banshee.io[io_vidProcCfg] & 0x81) == 0x81) {
       start = v->banshee.io[io_vidDesktopStartAddr];
       pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
+      overlay2d = v->banshee.overlay.enabled;
     } else {
       start = v->fbi.rgboffs[0];
       pitch = (v->banshee.io[io_vidDesktopOverlayStride] >> 16) & 0x7fff;
@@ -458,7 +470,7 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
             case 16:
               index = *(vid_ptr);
               index |= *(vid_ptr + 1) << 8;
-              if (v->banshee.overlay.enabled &&
+              if (overlay2d &&
                   (x >= v->banshee.overlay.x0) &&
                   (x <= v->banshee.overlay.x1) &&
                   (y >= v->banshee.overlay.y0) &&
@@ -474,7 +486,7 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
               colour = *vid_ptr;
               colour |= (*(vid_ptr + 1)) << 8;
               colour |= (*(vid_ptr + 2)) << 16;
-              if (v->banshee.overlay.enabled &&
+              if (overlay2d &&
                   (x >= v->banshee.overlay.x0) &&
                   (x <= v->banshee.overlay.x1) &&
                   (y >= v->banshee.overlay.y0) &&
