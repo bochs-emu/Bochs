@@ -1765,8 +1765,8 @@ struct _banshee_info
     Bit8u  src_fmt;
     Bit16u src_pitch;
     Bit8u  src_swizzle;
-    Bit16u src_x;
-    Bit16u src_y;
+    Bit16s src_x;
+    Bit16s src_y;
     Bit16u src_w;
     Bit16u src_h;
     Bit32u dst_base;

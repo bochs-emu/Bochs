@@ -107,6 +107,12 @@ const Bit8u banshee_iomask[256] = {4,0,0,0,7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1,
 const Bit8u pxconv_table[16] = {0x3a,0x02,0x00,0x38,0x38,0x38,0x00,0x00,
                                 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 
+#define SIGN_EXTEND(type, dst, width, src) \
+do { \
+  struct { type x : width; } s; \
+  dst = s.x = src; \
+} while (0)
+
 #include "voodoo_types.h"
 #include "voodoo_data.h"
 #include "voodoo_main.h"
@@ -1855,8 +1861,8 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
       BLT.src_h = (BLT.reg[reg] >> 16) & 0x1fff;
       break;
     case blt_srcXY:
-      BLT.src_x = BLT.reg[reg] & 0x1fff;
-      BLT.src_y = (BLT.reg[reg] >> 16) & 0x1fff;
+      SIGN_EXTEND(Bit16s, BLT.src_x, 13, BLT.reg[reg]);
+      SIGN_EXTEND(Bit16s, BLT.src_y, 13, BLT.reg[reg] >> 16);
       break;
     case blt_colorBack:
       BLT.bgcolor[0] = BLT.reg[reg] & 0xff;
@@ -1875,16 +1881,8 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
       BLT.dst_h = (BLT.reg[reg] >> 16) & 0x1fff;
       break;
     case blt_dstXY:
-      if ((BLT.reg[reg] >> 15) & 1) {
-        BLT.dst_x = (Bit16s)(BLT.reg[reg] & 0xffff);
-      } else {
-        BLT.dst_x = BLT.reg[reg] & 0x1fff;
-      }
-      if (BLT.reg[reg] >> 31) {
-        BLT.dst_y = (Bit16s)(BLT.reg[reg] >> 16);
-      } else {
-        BLT.dst_y = (BLT.reg[reg] >> 16) & 0x1fff;
-      }
+      SIGN_EXTEND(Bit16s, BLT.dst_x, 13, BLT.reg[reg]);
+      SIGN_EXTEND(Bit16s, BLT.dst_y, 13, BLT.reg[reg] >> 16);
       break;
     case blt_command:
       old_cmd = BLT.cmd;
