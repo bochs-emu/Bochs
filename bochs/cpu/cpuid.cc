@@ -251,6 +251,7 @@ void bx_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *
     // EAX[1] - support for compaction extensions to the XSAVE feature set
     // EAX[2] - support for execution of XGETBV with ECX = 1
     // EAX[3] - support for XSAVES, XRSTORS, and the IA32_XSS MSR
+    // EAX[4] - support for XFD
     leaf->eax = 0;
     if (is_cpu_extension_supported(BX_ISA_XSAVEOPT))
       leaf->eax |= 0x1;
