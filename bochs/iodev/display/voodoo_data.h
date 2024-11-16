@@ -1634,7 +1634,6 @@ struct _fbi_state
   Bit32u        tile_height;    /* height of video tiles */
   Bit32u        x_tiles;        /* number of tiles in the X direction */
 
-  Bit8u         vblank;         /* VBLANK state */
   Bit8u         vblank_count;   /* number of VBLANKs since last swap */
   bool          vblank_swap_pending; /* a swap is pending, waiting for a vblank */
   Bit8u         vblank_swap;    /* swap when we hit this count */

@@ -375,7 +375,6 @@ void bx_voodoo_base_c::voodoo_register_state(bx_list_c *parent)
   new bx_shadow_num_c(fbi, "width", &v->fbi.width);
   new bx_shadow_num_c(fbi, "height", &v->fbi.height);
   new bx_shadow_num_c(fbi, "rowpixels", &v->fbi.rowpixels);
-  new bx_shadow_num_c(fbi, "vblank", &v->fbi.vblank);
   new bx_shadow_num_c(fbi, "vblank_count", &v->fbi.vblank_count);
   BXRS_PARAM_BOOL(fbi, vblank_swap_pending, v->fbi.vblank_swap_pending);
   new bx_shadow_num_c(fbi, "vblank_swap", &v->fbi.vblank_swap);
@@ -426,6 +425,7 @@ void bx_voodoo_base_c::voodoo_register_state(bx_list_c *parent)
     new bx_shadow_num_c(num, "s1", &v->fbi.svert[i].s1);
     new bx_shadow_num_c(num, "t1", &v->fbi.svert[i].t1);
   }
+  BXRS_PARAM_BOOL(fbi, fifo_enabled, v->fbi.fifo.enabled);
   bx_list_c *cmdfifo = new bx_list_c(fbi, "cmdfifo", "");
   for (i = 0; i < 2; i++) {
     sprintf(name, "%d", i);
@@ -808,6 +808,10 @@ void bx_voodoo_1_2_c::after_restore_state(void)
     s.vdraw.frame_start = bx_virt_timer.time_usec(0);
     update_timing();
     DEV_vga_set_override(1, BX_VOODOO_THIS_PTR);
+    if (s.model == VOODOO_1) {
+      recompute_video_memory(v);
+    }
+
   }
   start_fifo_thread();
 }
