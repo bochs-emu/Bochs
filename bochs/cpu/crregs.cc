@@ -1090,16 +1090,21 @@ bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
 
   // handle reserved bits behaviour
 #if BX_CPU_LEVEL == 3
-  val_32 = val_32 | 0x7ffffff0;
+  val_32 = val_32 | 0x7fffffe0; // reserved bits all set to 1 on 386
 #elif BX_CPU_LEVEL == 4
-  val_32 = (val_32 | 0x00000010) & 0xe005003f;
+  val_32 = val_32 & 0xe005003f;
 #elif BX_CPU_LEVEL == 5
-  val_32 = val_32 | 0x00000010;
+  val_32 = val_32;
 #elif BX_CPU_LEVEL == 6
-  val_32 = (val_32 | 0x00000010) & 0xe005003f;
+  val_32 = val_32 & 0xe005003f;
 #else
 #error "SetCR0: implement reserved bits behaviour for this CPU_LEVEL"
 #endif
+
+  // The CR0.ET is set if an 80387 is present in the configuration. If CR0.ET is reset, the
+  // configuration either contains an 80287 or does not contain a coprocessor.
+  if (is_cpu_extension_supported(BX_ISA_X87))
+    val_32 |= BX_CR0_ET_MASK;
 
   Bit32u oldCR0 = BX_CPU_THIS_PTR cr0.get32();
 

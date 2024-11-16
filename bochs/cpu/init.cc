@@ -992,11 +992,18 @@ void BX_CPU_C::reset(unsigned source)
     BX_CPU_THIS_PTR smbase = 0x30000; // do not change SMBASE on INIT
   }
 
-  BX_CPU_THIS_PTR cr0.set32(0x60000010);
+#if BX_SUPPORT_FPU
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_X87))
+    BX_CPU_THIS_PTR cr0.set32(0x60000010);
+  else
+#else
+    BX_CPU_THIS_PTR cr0.set32(0x60000000);
+#endif
+
   // handle reserved bits
 #if BX_CPU_LEVEL == 3
   // reserved bits all set to 1 on 386
-  BX_CPU_THIS_PTR cr0.val32 |= 0x7ffffff0;
+  BX_CPU_THIS_PTR cr0.val32 |= 0x7fffffe0;
 #endif
 
 #if BX_CPU_LEVEL >= 3
