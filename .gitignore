@@ -14,6 +14,8 @@ bochs-msvc-src.zip
 /bochs/Makefile
 /bochs/bochs
 /bochs/bochs.exe
+/bochs/bxdisasm
+/bochs/bxdisasm.exe
 /bochs/bximage
 /bochs/bximage.exe
 /bochs/bxcommit
@@ -32,6 +34,7 @@ bochs-msvc-src.zip
 /bochs/parport.out
 /bochs/ltdlconf.h
 /bochs/libtool
+/bochs/.bochs.log
 /bochs/.bochs.out
 /bochs/vs2019
 
