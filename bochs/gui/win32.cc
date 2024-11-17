@@ -1579,9 +1579,13 @@ void enq_key_event(Bit32u key, Bit32u press_release)
         break;
       case 0x2a:
         shift_pressed_l = FALSE;
+        // after pressing both shift keys there is only one release event
+        if (shift_pressed_r) enq_key_event(0x36, BX_KEY_RELEASED);
         break;
       case 0x36:
         shift_pressed_r = FALSE;
+        // see above
+        if (shift_pressed_l) enq_key_event(0x2a, BX_KEY_RELEASED);
         break;
       case 0x38:
         alt_pressed_l = FALSE;
