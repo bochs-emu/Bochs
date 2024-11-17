@@ -21,7 +21,7 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-bx_define_cpudb(bx_generic)
+bx_define_cpudb(i386)
 #if BX_CPU_LEVEL >= 4
 bx_define_cpudb(i486dx4)
 #if BX_CPU_LEVEL >= 5

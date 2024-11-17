@@ -995,7 +995,7 @@ int bx_begin_simulation(int argc, char *argv[])
                  SIM->get_param_num(BXPN_CPU_NTHREADS)->get();
 
 #if BX_SUPPORT_APIC
-  simulate_xapic = (SIM->get_param_enum(BXPN_CPUID_APIC)->get() >= BX_CPUID_SUPPORT_XAPIC);
+  simulate_xapic = true;
 
   // For P6 and Pentium family processors the local APIC ID feild is 4 bits
   // APIC_MAX_ID indicate broadcast so it can't be used as valid APIC ID
@@ -1194,69 +1194,8 @@ void bx_init_hardware()
   BX_INFO(("  SMP support: no"));
 #endif
 
-  unsigned cpu_model = SIM->get_param_enum(BXPN_CPU_MODEL)->get();
-  if (! cpu_model) {
-#if BX_CPU_LEVEL >= 5
-    unsigned cpu_level = SIM->get_param_num(BXPN_CPUID_LEVEL)->get();
-    BX_INFO(("  level: %d", cpu_level));
-    BX_INFO(("  APIC support: %s", SIM->get_param_enum(BXPN_CPUID_APIC)->get_selected()));
-#else
-    BX_INFO(("  level: %d", BX_CPU_LEVEL));
-    BX_INFO(("  APIC support: no"));
-#endif
-    BX_INFO(("  FPU support: %s", BX_SUPPORT_FPU?"yes":"no"));
-#if BX_CPU_LEVEL >= 5
-    bool mmx_enabled = SIM->get_param_bool(BXPN_CPUID_MMX)->get();
-    BX_INFO(("  MMX support: %s", mmx_enabled?"yes":"no"));
-    BX_INFO(("  3dnow! support: %s", BX_SUPPORT_3DNOW?"yes":"no"));
-#endif
-#if BX_CPU_LEVEL >= 6
-    bool sep_enabled = SIM->get_param_bool(BXPN_CPUID_SEP)->get();
-    BX_INFO(("  SEP support: %s", sep_enabled?"yes":"no"));
-    BX_INFO(("  SIMD support: %s", SIM->get_param_enum(BXPN_CPUID_SIMD)->get_selected()));
-    bool xsave_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVE)->get();
-    bool xsaveopt_enabled = SIM->get_param_bool(BXPN_CPUID_XSAVEOPT)->get();
-    BX_INFO(("  XSAVE support: %s %s",
-      xsave_enabled?"xsave":"no", xsaveopt_enabled?"xsaveopt":""));
-    bool aes_enabled = SIM->get_param_bool(BXPN_CPUID_AES)->get();
-    BX_INFO(("  AES support: %s", aes_enabled?"yes":"no"));
-    bool sha_enabled = SIM->get_param_bool(BXPN_CPUID_SHA)->get();
-    BX_INFO(("  SHA support: %s", sha_enabled?"yes":"no"));
-    bool movbe_enabled = SIM->get_param_bool(BXPN_CPUID_MOVBE)->get();
-    BX_INFO(("  MOVBE support: %s", movbe_enabled?"yes":"no"));
-    bool adx_enabled = SIM->get_param_bool(BXPN_CPUID_ADX)->get();
-    BX_INFO(("  ADX support: %s", adx_enabled?"yes":"no"));
-#if BX_SUPPORT_X86_64
-    bool x86_64_enabled = SIM->get_param_bool(BXPN_CPUID_X86_64)->get();
-    BX_INFO(("  x86-64 support: %s", x86_64_enabled?"yes":"no"));
-    bool xlarge_enabled = SIM->get_param_bool(BXPN_CPUID_1G_PAGES)->get();
-    BX_INFO(("  1G paging support: %s", xlarge_enabled?"yes":"no"));
-#else
-    BX_INFO(("  x86-64 support: no"));
-#endif
-#if BX_SUPPORT_MONITOR_MWAIT
-    bool mwait_enabled = SIM->get_param_bool(BXPN_CPUID_MWAIT)->get();
-    BX_INFO(("  MWAIT support: %s", mwait_enabled?"yes":"no"));
-#endif
-#if BX_SUPPORT_VMX
-    unsigned vmx_enabled = SIM->get_param_num(BXPN_CPUID_VMX)->get();
-    if (vmx_enabled) {
-      BX_INFO(("  VMX support: %d", vmx_enabled));
-    }
-    else {
-      BX_INFO(("  VMX support: no"));
-    }
-#endif
-#if BX_SUPPORT_SVM
-    bool svm_enabled = SIM->get_param_bool(BXPN_CPUID_SVM)->get();
-    BX_INFO(("  SVM support: %s", svm_enabled?"yes":"no"));
-#endif
-#endif // BX_CPU_LEVEL >= 6
-  }
-  else {
-    BX_INFO(("  Using pre-defined CPU configuration: %s",
+  BX_INFO(("  Using pre-defined CPU configuration: %s",
       SIM->get_param_enum(BXPN_CPU_MODEL)->get_selected()));
-  }
 
   BX_INFO(("Optimization configuration"));
   BX_INFO(("  RepeatSpeedups support: %s", BX_SUPPORT_REPEAT_SPEEDUPS?"yes":"no"));

@@ -3407,9 +3407,7 @@ This defines the parameters of the cpu inside Bochs:
 <para><command>model</command></para>
 <para>
 Selects CPU configuration to emulate from pre-defined list of all
-supported configurations. When this option is used and the value
-is different from 'bx_generic', the parameters of the <link linkend="bochsopt-cpuid">CPUID</link>
-option have no effect anymore. See the <xref linkend="cpu-models"> for supported values.
+supported configurations. See the <xref linkend="cpu-models"> for supported values.
 </para>
 <para><command>add_features</command></para>
 <para>
@@ -3512,175 +3510,6 @@ speed.</para></footnote>.
 </tbody>
 </tgroup>
 </table>
-</section>
-
-<section id="bochsopt-cpuid"><title>cpuid</title>
-<para>
-Example:
-<screen>
-  cpuid: level=6, mmx=1, sep=1, sse=sse4_2, apic=xapic, aes=1, movbe=1, xsave=1
-</screen>
-This defines features and functionality supported by Bochs emulated CPU. These settings
-are only valid and configurable if the <link linkend="cpu-models">cpu model</link> is
-set to the default value 'bx_generic'.
-</para>
-<para><command>level</command></para>
-<para>
-Set emulated CPU level information returned by CPUID. Default value is
-determined by configure option <link linkend="configure-enable-cpu-level">--enable-cpu-level</link>.
-Currently supported values are 5 (for Pentium and similar processors) and 6 (for P6 and
-later processors).
-</para>
-<para><command>family</command></para>
-<para>
-Set family information returned by CPUID. Default family value determined
-by configure option <link linkend="configure-enable-cpu-level">--enable-cpu-level</link>.
-</para>
-<para><command>model</command></para>
-<para>
-Set model information returned by CPUID. Default model value is 3.
-</para>
-<para><command>stepping</command></para>
-<para>
-Set stepping information returned by CPUID. Default stepping value is 3.
-</para>
-<para><command>vendor_string</command></para>
-<para>
-Set the CPUID vendor string returned by CPUID(0x0).  This should be a
-twelve-character ASCII string.
-</para>
-<para><command>mmx</command></para>
-<para>
-Select MMX instruction set support.
-This option exists only if Bochs compiled with BX_CPU_LEVEL >= 5.
-</para>
-<para><command>apic</command></para>
-<para>
-Select APIC configuration (LEGACY/XAPIC/XAPIC_EXT/X2APIC).
-This option exists only if Bochs compiled with BX_CPU_LEVEL >= 5.
-</para>
-<para><command>sep</command></para>
-<para>
-Select SYSENTER/SYSEXIT instruction set support.
-This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
-</para>
-<para><command>simd</command></para>
-<para>
-Select SIMD instructions support.
-Any of NONE/SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2/AVX/AVX2/AVX512 could be selected.
-This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
-The AVX choices exists only if Bochs compiled with --enable-avx option.
-</para>
-<para><command>sse4a</command></para>
-<para>
-Select AMD SSE4A instructions support.
-This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
-</para>
-<para><command>misaligned_sse</command></para>
-<para>
-Select AMD Misaligned SSE mode support.
-This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
-</para>
-<para><command>aes</command></para>
-<para>
-Select AES instruction set support.
-This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
-</para>
-<para><command>sha</command></para>
-<para>
-Select SHA instruction set support.
-This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
-</para>
-<para><command>movbe</command></para>
-<para>
-Select MOVBE Intel(R) Atom instruction support.
-This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
-</para>
-<para><command>adx</command></para>
-<para>
-Select ADCX/ADOX instructions support.
-This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
-</para>
-<para><command>xsave</command></para>
-<para>
-Select XSAVE extensions support.
-This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
-</para>
-<para><command>xsaveopt</command></para>
-<para>
-Select XSAVEOPT instruction support.
-This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
-</para>
-<para><command>avx_f16c</command></para>
-<para>
-Select AVX float16 convert instructions support.
-This option exists only if Bochs compiled with <option>--enable-avx</option> option.
-</para>
-<para><command>avx_fma</command></para>
-<para>
-Select AVX fused multiply add (FMA) instructions support.
-This option exists only if Bochs compiled with <option>--enable-avx</option> option.
-</para>
-<para><command>bmi</command></para>
-<para>
-Select BMI1/BMI2 instructions support.
-This option exists only if Bochs compiled with <option>--enable-avx</option> option.
-</para>
-<para><command>fma4</command></para>
-<para>
-Select AMD four operand FMA instructions support.
-This option exists only if Bochs compiled with <option>--enable-avx</option> option.
-</para>
-<para><command>xop</command></para>
-<para>
-Select AMD XOP instructions support.
-This option exists only if Bochs compiled with <option>--enable-avx</option> option.
-</para>
-<para><command>tbm</command></para>
-<para>
-Select AMD TBM instructions support.
-This option exists only if Bochs compiled with <option>--enable-avx</option> option.
-</para>
-<para><command>x86_64</command></para>
-<para>
-Enable x86-64 and long mode support.
-This option exists only if Bochs compiled with x86-64 support.
-</para>
-<para><command>1g_pages</command></para>
-<para>
-Enable 1G page size support in long mode.
-This option exists only if Bochs compiled with x86-64 support.
-</para>
-<para><command>pcid</command></para>
-<para>
-Enable Process-Context Identifiers (PCID) support in long mode.
-This option exists only if Bochs compiled with x86-64 support.
-</para>
-<para><command>smep</command></para>
-<para>
-Enable Supervisor Mode Execution Protection (SMEP) support.
-This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
-</para>
-<para><command>smap</command></para>
-<para>
-Enable Supervisor Mode Access Prevention (SMAP) support.
-This option exists only if Bochs compiled with BX_CPU_LEVEL >= 6.
-</para>
-<para><command>mwait</command></para>
-<para>
-Select MONITOR/MWAIT instructions support.
-This option exists only if Bochs compiled with <option>--enable-monitor-mwait</option>.
-</para>
-<para><command>vmx</command></para>
-<para>
-Select VMX extensions emulation support.
-This option exists only if Bochs compiled with <option>--enable-vmx</option> option.
-</para>
-<para><command>svm</command></para>
-<para>
-Select AMD SVM (Secure Virtual Machine) extensions emulation support.
-This option exists only if Bochs compiled with <option>--enable-svm</option> option.
-</para>
 </section>
 
 <section id="bochsopt-memory"><title>memory</title>
@@ -5960,9 +5789,9 @@ features enabled at compile time (3rd column).
 </thead>
 <tbody>
   <row>
-    <entry>bx_generic</entry>
-    <entry>Default Bochs CPU configured with <link linkend="bochsopt-cpuid">CPUID</link> option</entry>
-    <entry>cpu level 4</entry>
+    <entry>i386</entry>
+    <entry>Intel 386SX</entry>
+    <entry>cpu level 3</entry>
   </row>
   <row>
     <entry>i486dx4</entry>
@@ -11654,7 +11483,7 @@ floppy_bootsig_check: disabled=0
 vga: update_freq=5
 keyboard_serial_delay: 250
 keyboard_paste_delay: 100000
-cpu: ips=3000000
+cpu: model=pentium_mmx, ips=3000000
 clock: sync=realtime, time0=0
 mouse: enabled=0
 private_colormap: enabled=0

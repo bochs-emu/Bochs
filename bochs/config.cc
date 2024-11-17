@@ -67,6 +67,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 static int parse_bochsrc(const char *rcfile);
 static int get_floppy_type_from_image(const char *filename);
 
+extern int bx_default_cpuid_model();
+
 int get_floppy_devtype_from_type(int type)
 {
   switch (type) {
@@ -611,7 +613,7 @@ void bx_init_options()
   new bx_param_enum_c(cpu_param,
       "model", "CPU configuration",
       "Choose pre-defined CPU configuration",
-      cpu_names, 0, 0);
+      cpu_names, bx_default_cpuid_model(), 0);
 
   new bx_param_string_c(cpu_param,
       "add_features",
@@ -697,216 +699,6 @@ void bx_init_options()
       BX_CPUID_BRAND_LEN+1);
 
   cpu_param->set_options(menu->SHOW_PARENT);
-
-  // cpuid subtree
-#if BX_CPU_LEVEL >= 4
-  bx_list_c *cpuid_param = new bx_list_c(root_param, "cpuid", "CPUID Options");
-
-  new bx_param_num_c(cpuid_param,
-      "level", "CPU Level",
-      "CPU level",
-     (BX_CPU_LEVEL < 5) ? BX_CPU_LEVEL : 5, BX_CPU_LEVEL,
-      BX_CPU_LEVEL);
-
-  new bx_param_num_c(cpuid_param,
-      "stepping", "Stepping ID",
-      "Processor 4-bits stepping ID",
-      0, 15,
-      3);
-
-  new bx_param_num_c(cpuid_param,
-      "model", "Model ID",
-      "Processor model ID, extended model ID",
-      0, 255,
-      3);
-
-  new bx_param_num_c(cpuid_param,
-      "family", "Family ID",
-      "Processor family ID, extended family ID",
-      BX_CPU_LEVEL, (BX_CPU_LEVEL >= 6) ? 4095 : BX_CPU_LEVEL,
-      BX_CPU_LEVEL);
-
-  new bx_param_string_c(cpuid_param,
-      "vendor_string",
-      "CPUID vendor string",
-      "Set the CPUID vendor string",
-#if BX_CPU_VENDOR_INTEL
-      "GenuineIntel",
-#else
-      "AuthenticAMD",
-#endif
-      BX_CPUID_VENDOR_LEN+1);
-
-#if BX_CPU_LEVEL >= 5
-  new bx_param_bool_c(cpuid_param,
-      "mmx", "Support for MMX instruction set",
-      "Support for MMX instruction set",
-      1);
-
-  // configure defaults to XAPIC enabled
-  static const char *apic_names[] = {
-    "legacy",
-    "xapic",
-#if BX_CPU_LEVEL >= 6
-    "xapic_ext",
-    "x2apic",
-#endif
-    NULL
-  };
-
-  new bx_param_enum_c(cpuid_param,
-      "apic", "APIC configuration",
-      "Select APIC configuration (Legacy APIC/XAPIC/XAPIC_EXT/X2APIC)",
-      apic_names,
-      BX_CPUID_SUPPORT_XAPIC,
-      BX_CPUID_SUPPORT_LEGACY_APIC);
-#endif
-
-#if BX_CPU_LEVEL >= 6
-  // configure defaults to CPU_LEVEL = 6 with SSE2 enabled
-  static const char *simd_names[] = {
-      "none",
-      "sse",
-      "sse2",
-      "sse3",
-      "ssse3",
-      "sse4_1",
-      "sse4_2",
-#if BX_SUPPORT_AVX
-      "avx",
-      "avx2",
-#if BX_SUPPORT_EVEX
-      "avx512",
-#endif
-#endif
-      NULL };
-
-  new bx_param_enum_c(cpuid_param,
-      "simd", "Support for SIMD instruction set",
-      "Support for SIMD (SSE/SSE2/SSE3/SSSE3/SSE4_1/SSE4_2/AVX/AVX2/AVX512) instruction set",
-      simd_names,
-      BX_CPUID_SUPPORT_SSE2,
-      BX_CPUID_SUPPORT_NOSSE);
-
-  new bx_param_bool_c(cpuid_param,
-      "sse4a", "Support for AMD SSE4A instructions",
-      "Support for AMD SSE4A instructions",
-      0);
-  new bx_param_bool_c(cpuid_param,
-      "misaligned_sse", "Support for AMD Misaligned SSE mode",
-      "Support for AMD Misaligned SSE mode",
-      0);
-
-  new bx_param_bool_c(cpuid_param,
-      "sep", "Support for SYSENTER/SYSEXIT instructions",
-      "Support for SYSENTER/SYSEXIT instructions",
-      1);
-  new bx_param_bool_c(cpuid_param,
-      "movbe", "Support for MOVBE instruction",
-      "Support for MOVBE instruction",
-      0);
-  new bx_param_bool_c(cpuid_param,
-      "adx", "Support for ADX instructions",
-      "Support for ADCX/ADOX instructions",
-      0);
-  new bx_param_bool_c(cpuid_param,
-      "aes", "Support for AES instruction set",
-      "Support for AES instruction set",
-      0);
-  new bx_param_bool_c(cpuid_param,
-      "sha", "Support for SHA instruction set",
-      "Support for SHA instruction set",
-      0);
-  new bx_param_bool_c(cpuid_param,
-      "xsave", "Support for XSAVE extensions",
-      "Support for XSAVE extensions",
-      0);
-  new bx_param_bool_c(cpuid_param,
-      "xsaveopt", "Support for XSAVEOPT instruction",
-      "Support for XSAVEOPT instruction",
-      0);
-#if BX_SUPPORT_AVX
-  new bx_param_bool_c(cpuid_param,
-      "avx_f16c", "Support for AVX F16 convert instructions",
-      "Support for AVX F16 convert instructions",
-      0);
-  new bx_param_bool_c(cpuid_param,
-      "avx_fma", "Support for AVX FMA instructions",
-      "Support for AVX FMA instructions",
-      0);
-  new bx_param_num_c(cpuid_param,
-      "bmi", "Support for BMI instructions",
-      "Support for Bit Manipulation Instructions (BMI)",
-      0, 2,
-      0);
-  new bx_param_bool_c(cpuid_param,
-      "xop", "Support for AMD XOP instructions",
-      "Support for AMD XOP instructions",
-      0);
-  new bx_param_bool_c(cpuid_param,
-      "fma4", "Support for AMD four operand FMA instructions",
-      "Support for AMD FMA4 instructions",
-      0);
-  new bx_param_bool_c(cpuid_param,
-      "tbm", "Support for AMD TBM instructions",
-      "Support for AMD Trailing Bit Manipulation (TBM) instructions",
-      0);
-#endif
-#if BX_SUPPORT_X86_64
-  new bx_param_bool_c(cpuid_param,
-      "x86_64", "x86-64 and long mode",
-      "Support for x86-64 and long mode",
-      1);
-  new bx_param_bool_c(cpuid_param,
-      "1g_pages", "1G pages support in long mode",
-      "Support for 1G pages in long mode",
-      0);
-  new bx_param_bool_c(cpuid_param,
-      "pcid", "PCID support in long mode",
-      "Support for process context ID (PCID) in long mode",
-      0);
-  new bx_param_bool_c(cpuid_param,
-      "fsgsbase", "FS/GS BASE access instructions support",
-      "FS/GS BASE access instructions support in long mode",
-      0);
-#endif
-  new bx_param_bool_c(cpuid_param,
-      "smep", "Supervisor Mode Execution Protection support",
-      "Supervisor Mode Execution Protection support",
-      0);
-  new bx_param_bool_c(cpuid_param,
-      "smap", "Supervisor Mode Access Prevention support",
-      "Supervisor Mode Access Prevention support",
-      0);
-#if BX_SUPPORT_MONITOR_MWAIT
-  new bx_param_bool_c(cpuid_param,
-      "mwait", "MONITOR/MWAIT instructions support",
-      "MONITOR/MWAIT instructions support",
-      BX_SUPPORT_MONITOR_MWAIT);
-#endif
-#if BX_SUPPORT_VMX
-  new bx_param_num_c(cpuid_param,
-      "vmx", "Support for Intel VMX extensions emulation",
-      "Support for Intel VMX extensions emulation",
-      0, BX_SUPPORT_VMX,
-      1);
-#endif
-#if BX_SUPPORT_SVM
-  new bx_param_bool_c(cpuid_param,
-      "svm", "Secure Virtual Machine (SVM) emulation support",
-      "Secure Virtual Machine (SVM) emulation support",
-      0);
-#endif
-#endif // CPU_LEVEL >= 6
-
-  cpuid_param->set_options(menu->SHOW_PARENT | menu->USE_SCROLL_WINDOW);
-
-  // CPUID subtree depends on CPU model
-  SIM->get_param_enum(BXPN_CPU_MODEL)->set_dependent_list(cpuid_param->clone(), 0);
-  // enable CPUID subtree only for CPU model choice #0
-  SIM->get_param_enum(BXPN_CPU_MODEL)->set_dependent_bitmap(0, BX_MAX_BIT64U);
-
-#endif // CPU_LEVEL >= 4
 
   // memory subtree
   bx_list_c *memory = new bx_list_c(root_param, "memory", "Memory Options");
@@ -1935,11 +1727,6 @@ void bx_reset_options()
 
   // cpu
   SIM->get_param("cpu")->reset();
-
-#if BX_CPU_LEVEL >= 4
-  // cpuid
-  SIM->get_param("cpuid")->reset();
-#endif
 
   // memory (ram & rom)
   SIM->get_param("memory")->reset();
@@ -3016,17 +2803,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         PARSE_ERR(("%s: cpu directive malformed.", context));
       }
     }
-#if BX_CPU_LEVEL >= 4
   } else if (!strcmp(params[0], "cpuid")) {
-    if (num_params < 2) {
-      PARSE_ERR(("%s: cpuid directive malformed.", context));
-    }
-    for (i=1; i<num_params; i++) {
-      if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param("cpuid")) < 0) {
-        PARSE_ERR(("%s: cpuid directive malformed.", context));
-      }
-    }
-#endif
+    PARSE_ERR(("%s: cpuid: This legacy option is no longer supported, use pre-defined CPU models", context));
   } else if (!strcmp(params[0], "megs")) {
     if (num_params != 2) {
       PARSE_ERR(("%s: megs directive: wrong # args.", context));
@@ -3795,13 +3573,6 @@ int bx_write_configuration(const char *rc, int overwrite)
     fprintf(fp, ", msrs=\"%s\"", sparam->getptr());
 #endif
   fprintf(fp, "\n");
-
-#if BX_CPU_LEVEL >= 4
-  if (! SIM->get_param_enum(BXPN_CPU_MODEL)->get()) {
-    // dump only when using BX_GENERIC CPUDB profile
-    bx_write_param_list(fp, (bx_list_c*) SIM->get_param("cpuid"), NULL, 1);
-  }
-#endif
 
   fprintf(fp, "print_timestamps: enabled=%d\n", bx_dbg.print_timestamps);
   bx_write_debugger_options(fp);
