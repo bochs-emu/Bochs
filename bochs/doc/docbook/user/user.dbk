@@ -3407,9 +3407,7 @@ This defines the parameters of the cpu inside Bochs:
 <para><command>model</command></para>
 <para>
 Selects CPU configuration to emulate from pre-defined list of all
-supported configurations. When this option is used and the value
-is different from 'bx_generic', the parameters of the <link linkend="bochsopt-cpuid">CPUID</link>
-option have no effect anymore. See the <xref linkend="cpu-models"> for supported values.
+supported configurations. See the <xref linkend="cpu-models"> for supported values.
 </para>
 <para><command>add_features</command></para>
 <para>
@@ -5791,9 +5789,9 @@ features enabled at compile time (3rd column).
 </thead>
 <tbody>
   <row>
-    <entry>bx_generic</entry>
-    <entry>Default Bochs CPU configured with <link linkend="bochsopt-cpuid">CPUID</link> option</entry>
-    <entry>cpu level 4</entry>
+    <entry>i386</entry>
+    <entry>Intel 386SX</entry>
+    <entry>cpu level 3</entry>
   </row>
   <row>
     <entry>i486dx4</entry>
@@ -11485,7 +11483,7 @@ floppy_bootsig_check: disabled=0
 vga: update_freq=5
 keyboard_serial_delay: 250
 keyboard_paste_delay: 100000
-cpu: ips=3000000
+cpu: model=pentium_mmx, ips=3000000
 clock: sync=realtime, time0=0
 mouse: enabled=0
 private_colormap: enabled=0

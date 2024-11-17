@@ -115,6 +115,7 @@
 #
 #  CPU configurations that can be selected:
 # -----------------------------------------------------------------
+#  i386                       Intel 386SX
 #  i486dx4                    Intel 486DX4
 #  pentium                    Intel Pentium (P54C)
 #  pentium_mmx                Intel Pentium MMX
