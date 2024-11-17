@@ -189,7 +189,6 @@ public:
   void OnLogDlg(BxEvent *be);
   void OnEditPluginCtrl(wxCommandEvent& event);
   void OnEditCPU(wxCommandEvent& event);
-  void OnEditCPUID(wxCommandEvent& event);
   void OnEditMemory(wxCommandEvent& event);
   void OnEditClockCmos(wxCommandEvent& event);
   void OnEditPCI(wxCommandEvent& event);
