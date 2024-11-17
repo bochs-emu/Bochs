@@ -47,7 +47,8 @@ Detailed change log :
   - Debugger gui can now use ini file from BXSHARE path when using gui option
     extension "gui_debug:globalini" (sdl, sdl2, win32, x11)
   - Debugger gui now updates the memory dump window if necessary
-  - Added bitmap change support for the wxWidgets toolbar / Improved wxWidgets toolbar functionality
+  - Added bitmap change support for the wxWidgets toolbar / Improved wxWidgets
+    toolbar functionality
   - Fullscreen mode fixes for the win32 gui
   - Fixed SDL2 fullscreen toggle
   - Fixed two legacy SDL key handling issues
@@ -61,7 +62,8 @@ Detailed change log :
     - Added support for hardware cursor in VGA mode
     - Fixed text mode cursor blinking / text mode cursor rendering issues
     - VGA fixes to make original VGABIOS work correctly with WinXP
-    - Fixed Cirrus PCI issues found with Windows 3.11 driver (missing / unreadable text in 8 bpp and 16 bpp modes)
+    - Fixed Cirrus PCI issues found with Windows 3.11 driver (missing /
+      unreadable text in 8 bpp and 16 bpp modes)
     - Added support for graphics controller mode extensions in VGA mode
       Now the GD5446 PCI driver and the GD5430 ISA driver work correctly
     - Fixed lags caused by incorrect redraw value for backward BitBlt
@@ -78,6 +80,7 @@ Detailed change log :
     - Banshee/Voodoo3: Added support for combined desktop / overlay mode with
       chroma key check support
     - Banshee/Voodoo3: Added YUV planar space write support
+    - Fixed deadlock after restore with Voodoo1 active
   - USB
     - Now includes the USB Debugger support for the xHCI and UHCI controllers
   - Sound

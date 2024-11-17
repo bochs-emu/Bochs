@@ -135,6 +135,9 @@ display
   screenmode
   vga_extension
   vga_update_interval
+  ddc_mode
+  ddc_file
+  vbe_memsize
   voodoo
     enabled
     model

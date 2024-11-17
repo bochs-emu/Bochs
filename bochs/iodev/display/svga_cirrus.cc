@@ -25,10 +25,9 @@
 
 // limited PCI/ISA CLGD5446 support for Bochs
 //
-// there are still many unimplemented features:
+// there are still some unimplemented features:
 //
 // - BLT mode extension support is not complete (bit 3..4)
-// - 4bpp modes
 //
 // some codes are copied from vga.cc and modified.
 // some codes are ported from the cirrus emulation in qemu
