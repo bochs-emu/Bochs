@@ -79,11 +79,6 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
   srand(time(NULL)); // initialize random generator for RDRAND/RDSEED
 }
 
-#if BX_CPU_LEVEL >= 4
-
-#include "cpuid.h"
-#include "cpudb/intel/i386.h" // dummy CPUDB module, i387 doesn't support CPUID instruction 
-
 enum {
 #define bx_define_cpudb(model) bx_cpudb_##model,
 #include "cpudb.h"
@@ -118,6 +113,11 @@ int bx_default_cpuid_model()
 #include "cpudb.h"
 
 #undef bx_define_cpudb
+
+#if BX_CPU_LEVEL >= 4
+
+#include "cpuid.h"
+#include "cpudb/intel/i386.h" // dummy CPUDB module, i387 doesn't support CPUID instruction 
 
 static bx_cpuid_t *cpuid_factory(BX_CPU_C *cpu)
 {
