@@ -2411,7 +2411,11 @@ INSTALL_LIST_FOR_PLATFORM=
 # check for existence of and usable version of wxWidgets.  This comes
 # early so that it could affect which one gets chosen.
 if test x$WX_CONFIG = x; then
-  AC_CHECK_PROG(WX_CONFIG, [ wx-config --version ], wx-config, not_found)
+  if test "$enable_static_link" = yes; then
+    AC_CHECK_PROG(WX_CONFIG, [ wx-config-static --version ], wx-config-static, not_found)
+  else
+    AC_CHECK_PROG(WX_CONFIG, [ wx-config --version ], wx-config, not_found)
+  fi
 fi
 AC_MSG_CHECKING(for wxWidgets configuration script)
 AC_MSG_RESULT($WX_CONFIG)

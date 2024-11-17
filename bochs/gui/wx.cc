@@ -38,6 +38,7 @@
 #include "config.h"
 #if WX_MSW_UNICODE
 #define UNICODE
+#define _UNICODE
 #endif
 
 #include "bochs.h"
