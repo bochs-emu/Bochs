@@ -95,7 +95,6 @@ OBJS = \
 	data_xfer32.o \
 	exception.o \
 	cpuid.o \
-	generic_cpuid.o \
 	proc_ctrl.o \
 	mwait.o \
 	crregs.o \
@@ -463,15 +462,6 @@ fpu_emu.o: fpu_emu.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  softfloat3e/include/softfloat_types.h fpu/tag_w.h fpu/status_w.h \
  fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
  icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h
-generic_cpuid.o: generic_cpuid.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
- ../logio.h ../misc/bswap.h ../gui/siminterface.h ../gui/paramtree.h \
- cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
- ../cpu/decoder/decoder.h ../cpu/decoder/features.h decoder/decoder.h \
- ../instrument/stubs/instrument.h i387.h \
- softfloat3e/include/softfloat_types.h fpu/tag_w.h fpu/status_w.h \
- fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
- icache.h xmm.h vmx.h vmx_ctrls.h access.h ../param_names.h \
- generic_cpuid.h cpuid.h svm.h
 gf2.o: gf2.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h decoder/decoder.h \
@@ -496,7 +486,7 @@ init.o: init.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
  icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h ../gui/siminterface.h \
  ../gui/paramtree.h ../param_names.h cpustats.h apic.h avx/amx.h \
- ../cpu/xmm.h svm.h generic_cpuid.h cpuid.h ../cpudb.h
+ ../cpu/xmm.h svm.h cpuid.h ../cpudb.h
 io.o: io.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h ../misc/bswap.h \
  cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h decoder/decoder.h \

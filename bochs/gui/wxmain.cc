@@ -327,7 +327,6 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_ATA2, MyFrame::OnEditATA)
   EVT_MENU(ID_Edit_ATA3, MyFrame::OnEditATA)
   EVT_MENU(ID_Edit_CPU, MyFrame::OnEditCPU)
-  EVT_MENU(ID_Edit_CPUID, MyFrame::OnEditCPUID)
   EVT_MENU(ID_Edit_Memory, MyFrame::OnEditMemory)
   EVT_MENU(ID_Edit_Clock_Cmos, MyFrame::OnEditClockCmos)
   EVT_MENU(ID_Edit_PCI, MyFrame::OnEditPCI)
@@ -387,7 +386,6 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit->Append(ID_Edit_ATA2, wxT("ATA Channel 2..."));
   menuEdit->Append(ID_Edit_ATA3, wxT("ATA Channel 3..."));
   menuEdit->Append(ID_Edit_CPU, wxT("&CPU..."));
-  menuEdit->Append(ID_Edit_CPUID, wxT("CPU&ID..."));
   menuEdit->Append(ID_Edit_Memory, wxT("&Memory..."));
   menuEdit->Append(ID_Edit_Clock_Cmos, wxT("C&lock/Cmos..."));
   menuEdit->Append(ID_Edit_PCI, wxT("&PCI..."));
@@ -561,20 +559,6 @@ void MyFrame::OnEditCPU(wxCommandEvent& WXUNUSED(event))
   dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
   dlg.AddParam(list);
   dlg.ShowModal();
-}
-
-void MyFrame::OnEditCPUID(wxCommandEvent& WXUNUSED(event))
-{
-  bx_list_c *list = (bx_list_c*) SIM->get_param("cpuid");
-  if (list != NULL) {
-    ParamDialog dlg(this, -1);
-    dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
-    dlg.AddParam(list);
-    dlg.ShowModal();
-  } else {
-    wxMessageBox(wxT("Nothing to configure in this section!"),
-                 wxT("Not enabled"), wxOK | wxICON_ERROR, this);
-  }
 }
 
 void MyFrame::OnEditMemory(wxCommandEvent& WXUNUSED(event))
@@ -847,7 +831,6 @@ void MyFrame::simStatusChanged(StatusChange change, bool popupNotify) {
   }
   menuEdit->Enable(ID_Edit_Plugins, canConfigure);
   menuEdit->Enable(ID_Edit_CPU, canConfigure);
-  menuEdit->Enable(ID_Edit_CPUID, canConfigure);
   menuEdit->Enable(ID_Edit_Memory, canConfigure);
   menuEdit->Enable(ID_Edit_Clock_Cmos, canConfigure);
   menuEdit->Enable(ID_Edit_PCI, canConfigure);

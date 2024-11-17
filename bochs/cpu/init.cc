@@ -81,7 +81,8 @@ BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
 
 #if BX_CPU_LEVEL >= 4
 
-#include "generic_cpuid.h"
+#include "cpuid.h"
+#include "cpudb/intel/i386.h" // dummy CPUDB module, i387 doesn't support CPUID instruction 
 
 enum {
 #define bx_define_cpudb(model) bx_cpudb_##model,
