@@ -67,6 +67,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
 static int parse_bochsrc(const char *rcfile);
 static int get_floppy_type_from_image(const char *filename);
 
+extern int bx_default_cpuid_model();
+
 int get_floppy_devtype_from_type(int type)
 {
   switch (type) {
@@ -611,7 +613,7 @@ void bx_init_options()
   new bx_param_enum_c(cpu_param,
       "model", "CPU configuration",
       "Choose pre-defined CPU configuration",
-      cpu_names, 0, 0);
+      cpu_names, bx_default_cpuid_model(), 0);
 
   new bx_param_string_c(cpu_param,
       "add_features",
