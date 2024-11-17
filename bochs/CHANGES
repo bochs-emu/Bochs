@@ -6,9 +6,9 @@ Brief summary :
  - Implemented MONITORLESS MWAIT instructions support
  - Implemented initial support for AVX10_1 + AVX10_2 ISA extensions and AVX10 CPUID leaf 0x24 (AVX10_1 first to be enabled in Xeon Granite Rapids)
  - Implemented AMX-TF32 and AMX-AVX512 ISA extensions
- - CPUID: Added i486DX4 CPU definition
- - CPUID: Added Arrow Lake CPU definition
+ - CPUID: Added new CPU definitions: for i386 CPU, i486DX4 CPU and Intel Core i5 Arrow Lake CPU
  - CPUID: Support for enabling/disabling of one of more CPU features from CPUID configuration (see "add_features" and "exclude_features" in bochsrc sample and documentation)
+ - CPUID: Old bx_generic CPUID model is deprecated with all associated .bochsrc CPUID configuration options, use pre-defined CPU models instead
  - Bugfixes for CPU emulation correctness (critical bugfixes for WAITPKG, LASS, XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
  - Several fixes and improvements for the Cirrus and Voodoo emulation
  - USB: Added the USB Debugger support for xHCI and UHCI
@@ -29,11 +29,14 @@ Detailed change log :
   - UINTR: Implemented FLEXIBLE UIRET support
 
 - CPUID: 
+  - Added i386 CPU definition
+    - Model=3, supports x87 FPU only, the FPU support can be disabled using 'exclude_features' option
   - Added i486DX4 CPU definition
     - Model=4, supports x87 FPU and VME only
   - Added Arrow Lake CPU definition
     - Features AVX-VNNI, AVX-IFMA, AVX-VNNI-INT8, AVX-VNNI-INT16, AVX_NE_CONVERT, GFNI, VAES/VPCLMULQDQ, SHA512, SM3/SM4, CMPCCXADD, LASS, SERIALIZE, UINTR
   - Support for enabling/disabling of one of more CPU features from CPUID configuration (see "add_features" and "exclude_features" in bochsrc sample and documentation)
+  - Old bx_generic CPUID model is deprecated with all associated .bochsrc CPUID configuration options, use pre-defined CPU models instead
 
 - Configure and compile
   - Fixed compilation of plugin version with debugger enabled on Windows
