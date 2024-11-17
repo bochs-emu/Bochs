@@ -159,7 +159,7 @@ void BX_CPU_C::add_remove_cpuid_features(const char *input, bool add)
             BX_CPU_THIS_PTR cpuid->disable_cpu_extension(feature);
         }
         else
-          BX_PANIC(("CPUID: unknown feature name \"%s\" cannot be disabled", feature_name.c_str()));
+          BX_PANIC(("CPUID: unknown feature name \"%s\" cannot be enabled/disabled", feature_name.c_str()));
       }
       // Move the start to the next character after the delimiter
       start = i + 1;
