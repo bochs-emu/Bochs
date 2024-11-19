@@ -123,6 +123,7 @@ OBJS = \
 	faststring.o \
 	paging.o \
 	rdrand.o \
+	rao.o \
 	wide_int.o \
 	decoder/disasm.o
 	
@@ -622,6 +623,13 @@ protect_ctrl.o: protect_ctrl.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  softfloat3e/include/softfloat_types.h fpu/tag_w.h fpu/status_w.h \
  fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
  icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h svm.h
+rao.o: rao.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
+ ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../cpu/decoder/decoder.h ../cpu/decoder/features.h decoder/decoder.h \
+ ../instrument/stubs/instrument.h i387.h \
+ softfloat3e/include/softfloat_types.h fpu/tag_w.h fpu/status_w.h \
+ fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
+ icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h
 rdrand.o: rdrand.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h decoder/decoder.h \

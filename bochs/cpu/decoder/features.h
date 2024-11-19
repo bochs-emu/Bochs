@@ -151,3 +151,4 @@ x86_feature(BX_ISA_FLEXIBLE_UIRET, "flexible_uiret")                    /* Flexi
 x86_feature(BX_ISA_MOVDIRI, "movdiri")                                  /* MOVDIRI instruction support */
 x86_feature(BX_ISA_MOVDIR64B, "movdir64b")                              /* MOVDIR64B instruction support */
 x86_feature(BX_ISA_MSRLIST, "msrlist")                                  /* RDMSRLIST/WRMSRLIST instructions support */
+x86_feature(BX_ISA_RAO_INT, "rao_int")                                  /* RAO-INT instructions support */

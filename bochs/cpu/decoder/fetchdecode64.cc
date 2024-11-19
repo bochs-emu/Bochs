@@ -906,7 +906,7 @@ static BxOpcodeDecodeDescriptor64 decode64_descriptor[] =
    /* 0F 38 F9 */ { &decoder64_modrm, BxOpcodeTable0F38F9 },
    /* 0F 38 FA */ { &decoder_ud64, NULL },
    /* 0F 38 FB */ { &decoder_ud64, NULL },
-   /* 0F 38 FC */ { &decoder_ud64, NULL },
+   /* 0F 38 FC */ { &decoder64_modrm, BxOpcodeTable0F38FC },
    /* 0F 38 FD */ { &decoder_ud64, NULL },
    /* 0F 38 FE */ { &decoder_ud64, NULL },
    /* 0F 38 FF */ { &decoder_ud64, NULL },

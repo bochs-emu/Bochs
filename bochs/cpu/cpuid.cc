@@ -1316,6 +1316,8 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra) const
     eax |= BX_CPUID_STD7_SUBLEAF1_EAX_SM4;
 
   //   [3:3]    RAO-INT
+  if (is_cpu_extension_supported(BX_ISA_RAO_INT))
+    eax |= BX_CPUID_STD7_SUBLEAF1_EAX_RAO_INT;
 
   //   [4:4]    AVX VNNI
 #if BX_SUPPORT_AVX

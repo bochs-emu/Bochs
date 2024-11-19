@@ -231,6 +231,20 @@ static const Bit64u BxOpcodeTable0F38F9[] = {
   last_opcode(            ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX, BX_IA_MOVDIRI_MdGd)
 };
 
+// opcode 0F 38 FC
+static const Bit64u BxOpcodeTable0F38FC[] = {
+#if BX_SUPPORT_X86_64
+  form_opcode(ATTR_OS64 | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX, BX_IA_AADD_EqGq),
+  form_opcode(ATTR_OS64 | ATTR_MOD_MEM | ATTR_SSE_PREFIX_66, BX_IA_AAND_EqGq),
+  form_opcode(ATTR_OS64 | ATTR_MOD_MEM | ATTR_SSE_PREFIX_F2, BX_IA_AOR_EqGq),
+  form_opcode(ATTR_OS64 | ATTR_MOD_MEM | ATTR_SSE_PREFIX_F3, BX_IA_AXOR_EqGq),
+#endif
+  form_opcode(            ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX, BX_IA_AADD_EdGd),
+  form_opcode(            ATTR_MOD_MEM | ATTR_SSE_PREFIX_66, BX_IA_AAND_EdGd),
+  form_opcode(            ATTR_MOD_MEM | ATTR_SSE_PREFIX_F2, BX_IA_AOR_EdGd),
+  last_opcode(            ATTR_MOD_MEM | ATTR_SSE_PREFIX_F3, BX_IA_AXOR_EdGd)
+};
+
 #endif // BX_CPU_LEVEL >= 6
 
 #endif // BX_FETCHDECODE_OPMAP_0F38_H

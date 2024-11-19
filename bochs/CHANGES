@@ -6,6 +6,7 @@ Brief summary :
  - Implemented MONITORLESS MWAIT instructions support
  - Implemented initial support for AVX10_1 + AVX10_2 ISA extensions and AVX10 CPUID leaf 0x24 (AVX10_1 first to be enabled in Xeon Granite Rapids)
  - Implemented AMX-TF32 and AMX-AVX512 ISA extensions
+ - Implemented RAO-INT ISA extension
  - CPUID: Added new CPU definitions: for i386 CPU, i486DX4 CPU and Intel Core i5 Arrow Lake CPU
  - CPUID: Support for enabling/disabling of one of more CPU features from CPUID configuration (see "add_features" and "exclude_features" in bochsrc sample and documentation)
  - CPUID: Old bx_generic CPUID model is deprecated with all associated .bochsrc CPUID configuration options, use pre-defined CPU models instead
@@ -25,6 +26,7 @@ Detailed change log :
   - Implemented MONITORLESS MWAIT instructions support
   - Implemented initial support for AVX10_1 + AVX10_2 ISA extensions and AVX10 CPUID leaf 0x24 (AVX10_1 first to be enabled in Xeon Granite Rapids)
   - Implemented AMX-TF32 and AMX-AVX512 ISA extensions
+  - Implemented RAO-INT ISA extension
   - VMX: Implemented VMX support for the IA32_SPEC_CTRL MSR
   - UINTR: Implemented FLEXIBLE UIRET support
 

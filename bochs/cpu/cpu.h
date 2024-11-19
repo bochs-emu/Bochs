@@ -2983,6 +2983,18 @@ public: // for now...
   /* TBM (AMD) */
 #endif
 
+  // RAO-INT
+  BX_SMF void AADD_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AAND_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AOR_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AXOR_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_X86_64
+  BX_SMF void AADD_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AAND_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AOR_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AXOR_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+
 #if BX_SUPPORT_AVX
   // VAES: VEX extended AES instructions
   BX_SMF void VAESENC_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

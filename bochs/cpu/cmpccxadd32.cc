@@ -32,7 +32,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPBEXADD_EdGdBd(bxInstruction_c *i)
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src1());
   Bit32u op3_32 = BX_READ_32BIT_REG(i->src2());
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr(i->seg(), eaddr);
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr64(i->seg(), eaddr);
   if (laddr & 3) {
     BX_ERROR(("%s: #GP misaligned access", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -53,7 +53,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPBXADD_EdGdBd(bxInstruction_c *i)
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src1());
   Bit32u op3_32 = BX_READ_32BIT_REG(i->src2());
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr(i->seg(), eaddr);
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr64(i->seg(), eaddr);
   if (laddr & 3) {
     BX_ERROR(("%s: #GP misaligned access", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -74,7 +74,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPLEXADD_EdGdBd(bxInstruction_c *i)
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src1());
   Bit32u op3_32 = BX_READ_32BIT_REG(i->src2());
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr(i->seg(), eaddr);
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr64(i->seg(), eaddr);
   if (laddr & 3) {
     BX_ERROR(("%s: #GP misaligned access", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -95,7 +95,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPLXADD_EdGdBd(bxInstruction_c *i)
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src1());
   Bit32u op3_32 = BX_READ_32BIT_REG(i->src2());
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr(i->seg(), eaddr);
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr64(i->seg(), eaddr);
   if (laddr & 3) {
     BX_ERROR(("%s: #GP misaligned access", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -116,7 +116,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNBEXADD_EdGdBd(bxInstruction_c *i)
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src1());
   Bit32u op3_32 = BX_READ_32BIT_REG(i->src2());
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr(i->seg(), eaddr);
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr64(i->seg(), eaddr);
   if (laddr & 3) {
     BX_ERROR(("%s: #GP misaligned access", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -137,7 +137,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNBXADD_EdGdBd(bxInstruction_c *i)
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src1());
   Bit32u op3_32 = BX_READ_32BIT_REG(i->src2());
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr(i->seg(), eaddr);
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr64(i->seg(), eaddr);
   if (laddr & 3) {
     BX_ERROR(("%s: #GP misaligned access", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -158,7 +158,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNLEXADD_EdGdBd(bxInstruction_c *i)
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src1());
   Bit32u op3_32 = BX_READ_32BIT_REG(i->src2());
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr(i->seg(), eaddr);
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr64(i->seg(), eaddr);
   if (laddr & 3) {
     BX_ERROR(("%s: #GP misaligned access", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -179,7 +179,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNLXADD_EdGdBd(bxInstruction_c *i)
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src1());
   Bit32u op3_32 = BX_READ_32BIT_REG(i->src2());
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr(i->seg(), eaddr);
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr64(i->seg(), eaddr);
   if (laddr & 3) {
     BX_ERROR(("%s: #GP misaligned access", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -200,7 +200,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNOXADD_EdGdBd(bxInstruction_c *i)
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src1());
   Bit32u op3_32 = BX_READ_32BIT_REG(i->src2());
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr(i->seg(), eaddr);
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr64(i->seg(), eaddr);
   if (laddr & 3) {
     BX_ERROR(("%s: #GP misaligned access", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -221,7 +221,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNPXADD_EdGdBd(bxInstruction_c *i)
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src1());
   Bit32u op3_32 = BX_READ_32BIT_REG(i->src2());
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr(i->seg(), eaddr);
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr64(i->seg(), eaddr);
   if (laddr & 3) {
     BX_ERROR(("%s: #GP misaligned access", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -242,7 +242,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNSXADD_EdGdBd(bxInstruction_c *i)
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src1());
   Bit32u op3_32 = BX_READ_32BIT_REG(i->src2());
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr(i->seg(), eaddr);
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr64(i->seg(), eaddr);
   if (laddr & 3) {
     BX_ERROR(("%s: #GP misaligned access", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -263,7 +263,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPNZXADD_EdGdBd(bxInstruction_c *i)
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src1());
   Bit32u op3_32 = BX_READ_32BIT_REG(i->src2());
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr(i->seg(), eaddr);
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr64(i->seg(), eaddr);
   if (laddr & 3) {
     BX_ERROR(("%s: #GP misaligned access", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -284,7 +284,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPOXADD_EdGdBd(bxInstruction_c *i)
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src1());
   Bit32u op3_32 = BX_READ_32BIT_REG(i->src2());
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr(i->seg(), eaddr);
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr64(i->seg(), eaddr);
   if (laddr & 3) {
     BX_ERROR(("%s: #GP misaligned access", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -305,7 +305,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPPXADD_EdGdBd(bxInstruction_c *i)
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src1());
   Bit32u op3_32 = BX_READ_32BIT_REG(i->src2());
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr(i->seg(), eaddr);
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr64(i->seg(), eaddr);
   if (laddr & 3) {
     BX_ERROR(("%s: #GP misaligned access", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -326,7 +326,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPSXADD_EdGdBd(bxInstruction_c *i)
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src1());
   Bit32u op3_32 = BX_READ_32BIT_REG(i->src2());
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr(i->seg(), eaddr);
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr64(i->seg(), eaddr);
   if (laddr & 3) {
     BX_ERROR(("%s: #GP misaligned access", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -347,7 +347,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CMPZXADD_EdGdBd(bxInstruction_c *i)
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src1());
   Bit32u op3_32 = BX_READ_32BIT_REG(i->src2());
 
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr(i->seg(), eaddr);
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i), laddr = get_laddr64(i->seg(), eaddr);
   if (laddr & 3) {
     BX_ERROR(("%s: #GP misaligned access", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);

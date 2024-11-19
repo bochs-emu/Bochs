@@ -2760,6 +2760,18 @@ bx_define_opcode(BX_IA_MOVDIR64B_GdMdq, "movdir64b", "movdir64b", &BX_CPU_C::MOV
 bx_define_opcode(BX_IA_MOVDIR64B_GqMdq, "movdir64b", "movdir64b", &BX_CPU_C::MOVDIR64B, NULL, BX_ISA_MOVDIR64B, OP_Gq, OP_M, OP_NONE, OP_NONE, 0)
 #endif
 
+// RAO-INT
+bx_define_opcode(BX_IA_AADD_EdGd, "aadd", "aadd", &BX_CPU_C::AADD_EdGdM, NULL, BX_ISA_RAO_INT, OP_Ed, OP_Gd, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_AAND_EdGd, "aand", "aand", &BX_CPU_C::AAND_EdGdM, NULL, BX_ISA_RAO_INT, OP_Ed, OP_Gd, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_AOR_EdGd, "aor", "aor", &BX_CPU_C::AOR_EdGdM, NULL, BX_ISA_RAO_INT, OP_Ed, OP_Gd, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_AXOR_EdGd, "axor", "axor", &BX_CPU_C::AXOR_EdGdM, NULL, BX_ISA_RAO_INT, OP_Ed, OP_Gd, OP_NONE, OP_NONE, 0)
+#if BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_AADD_EqGq, "aadd", "aaddq", &BX_CPU_C::AADD_EqGqM, NULL, BX_ISA_RAO_INT, OP_Eq, OP_Gq, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_AAND_EqGq, "aand", "aandq", &BX_CPU_C::AAND_EqGqM, NULL, BX_ISA_RAO_INT, OP_Eq, OP_Gq, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_AOR_EqGq, "aor", "aorq", &BX_CPU_C::AOR_EqGqM, NULL, BX_ISA_RAO_INT, OP_Eq, OP_Gq, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_AXOR_EqGq, "axor", "axorq", &BX_CPU_C::AXOR_EqGqM, NULL, BX_ISA_RAO_INT, OP_Eq, OP_Gq, OP_NONE, OP_NONE, 0)
+#endif
+
 #if BX_SUPPORT_AMX
 bx_define_opcode(BX_IA_LDTILECFG, "ldtilecfg", "ldtilecfg", &BX_CPU_C::LDTILECFG, NULL, BX_ISA_AMX, OP_M, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_AMX)
 bx_define_opcode(BX_IA_STTILECFG, "sttilecfg", "sttilecfg", &BX_CPU_C::STTILECFG, NULL, BX_ISA_AMX, OP_M, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_AMX)
