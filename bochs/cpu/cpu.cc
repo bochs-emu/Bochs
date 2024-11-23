@@ -98,7 +98,11 @@ void BX_CPU_C::cpu_loop_debugger(void)
       BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
       RIP += i->ilen();
       BX_CPU_CALL_METHOD(i->execute1, (i)); // might iterate repeat instruction
-
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS == 0
+      BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
+      BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
+      BX_CPU_THIS_PTR icount++;
+#endif
       if (BX_SMP_PROCESSORS == 1) BX_TICK1();
 
       // note instructions generating exceptions never reach this point
