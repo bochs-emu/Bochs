@@ -1647,7 +1647,7 @@ void FillPAGE()
     char pa_lin[50];
     char pa_phy[50];
 
-    while(LineCount < 1024) {
+    while(LineCount < 10000) {
         bool valid = BX_CPU(CurrentCPU)->dbg_xlate_linear2phy(lin, &phy, &lpf_mask);
         if(valid) {
             if((lin - start_lin) != (phy - start_phy)) {
