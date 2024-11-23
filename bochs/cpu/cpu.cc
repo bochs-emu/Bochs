@@ -75,11 +75,15 @@ void BX_CPU_C::cpu_loop_debugger(void)
   BX_CPU_THIS_PTR prev_rip = RIP; // commit new EIP
   BX_CPU_THIS_PTR speculative_rsp = false;
 
+  // stop tracing after every instruction to handle in internal debugger
+  BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
+
   while (1) {
 
     // check on events which occurred for previous instructions (traps)
     // and ones which are asynchronous to the CPU (hardware interrupts)
-    if (BX_CPU_THIS_PTR async_event) {
+    Bit32u handle_event = BX_CPU_THIS_PTR async_event & ~BX_ASYNC_EVENT_STOP_TRACE;
+    if (handle_event) {
       if (handleAsyncEvent()) {
         // If request to return to caller ASAP.
         return;
@@ -116,10 +120,6 @@ void BX_CPU_C::cpu_loop_debugger(void)
         last = i + (entry->tlen);
       }
     }
-
-    // clear stop trace magic indication that probably was set by repeat or branch32/64
-    BX_CPU_THIS_PTR async_event &= ~BX_ASYNC_EVENT_STOP_TRACE;
-
   }  // while (1)
 }
 #endif // BX_DEBUGGER
@@ -413,6 +413,8 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationP
     return;
   }
 
+  BX_ASSERT(! bx_dbg.debugger_active || BX_CPU_THIS_PTR async_event);
+
   BX_CPU_THIS_PTR clear_RF();
 
 #if BX_SUPPORT_X86_64
@@ -425,7 +427,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationP
       }
       if (RCX == 0) return;
 
-      if (BX_CPU_THIS_PTR async_event || bx_dbg.debugger_active)
+      if (BX_CPU_THIS_PTR async_event)
         break; // exit always if debugger enabled
 
       BX_CPU_THIS_PTR icount++;
@@ -444,7 +446,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationP
       }
       if (ECX == 0) return;
 
-      if (BX_CPU_THIS_PTR async_event || bx_dbg.debugger_active)
+      if (BX_CPU_THIS_PTR async_event)
         break; // exit always if debugger enabled
 
       BX_CPU_THIS_PTR icount++;
@@ -462,7 +464,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat(bxInstruction_c *i, BxRepIterationP
       }
       if (CX == 0) return;
 
-      if (BX_CPU_THIS_PTR async_event || bx_dbg.debugger_active)
+      if (BX_CPU_THIS_PTR async_event)
         break; // exit always if debugger enabled
 
       BX_CPU_THIS_PTR icount++;
@@ -502,7 +504,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
         }
         if (! get_ZF() || RCX == 0) return;
 
-        if (BX_CPU_THIS_PTR async_event || bx_dbg.debugger_active)
+        if (BX_CPU_THIS_PTR async_event)
           break; // exit always if debugger enabled
 
         BX_CPU_THIS_PTR icount++;
@@ -521,7 +523,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
         }
         if (! get_ZF() || ECX == 0) return;
 
-        if (BX_CPU_THIS_PTR async_event || bx_dbg.debugger_active)
+        if (BX_CPU_THIS_PTR async_event)
           break; // exit always if debugger enabled
 
         BX_CPU_THIS_PTR icount++;
@@ -539,7 +541,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
         }
         if (! get_ZF() || CX == 0) return;
 
-        if (BX_CPU_THIS_PTR async_event || bx_dbg.debugger_active)
+        if (BX_CPU_THIS_PTR async_event)
           break; // exit always if debugger enabled
 
         BX_CPU_THIS_PTR icount++;
@@ -559,7 +561,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
         }
         if (get_ZF() || RCX == 0) return;
 
-        if (BX_CPU_THIS_PTR async_event || bx_dbg.debugger_active)
+        if (BX_CPU_THIS_PTR async_event)
           break; // exit always if debugger enabled
 
         BX_CPU_THIS_PTR icount++;
@@ -578,7 +580,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
         }
         if (get_ZF() || ECX == 0) return;
 
-        if (BX_CPU_THIS_PTR async_event || bx_dbg.debugger_active)
+        if (BX_CPU_THIS_PTR async_event)
           break; // exit always if debugger enabled
 
         BX_CPU_THIS_PTR icount++;
@@ -596,7 +598,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::repeat_ZF(bxInstruction_c *i, BxRepIterati
         }
         if (get_ZF() || CX == 0) return;
 
-        if (BX_CPU_THIS_PTR async_event || bx_dbg.debugger_active)
+        if (BX_CPU_THIS_PTR async_event)
           break; // exit always if debugger enabled
 
         BX_CPU_THIS_PTR icount++;

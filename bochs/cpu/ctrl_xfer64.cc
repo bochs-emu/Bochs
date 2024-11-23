@@ -37,10 +37,10 @@ BX_CPP_INLINE void BX_CPP_AttrRegparmN(1) BX_CPU_C::branch_near64(bxInstruction_
 
   RIP = new_RIP;
 
-  if (bx_dbg.debugger_active || BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS == 0) {
-    // assert magic async_event to stop trace execution
-    BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
-  }
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS == 0
+  // assert magic async_event to stop trace execution
+  BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
+#endif
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)

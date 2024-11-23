@@ -332,7 +332,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW32_YwDX(bxInstruction_c *i)
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */
-  if (i->repUsedL() && !BX_CPU_THIS_PTR async_event && !bx_dbg.debugger_active)
+  if (i->repUsedL() && !BX_CPU_THIS_PTR async_event)
   {
     Bit32u wordCount = ECX;
     BX_ASSERT(wordCount > 0);
@@ -583,7 +583,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSW32_DXXw(bxInstruction_c *i)
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */
-  if (i->repUsedL() && !BX_CPU_THIS_PTR async_event && !bx_dbg.debugger_active) {
+  if (i->repUsedL() && !BX_CPU_THIS_PTR async_event) {
     Bit32u wordCount = ECX;
     wordCount = FastRepOUTSW(i->seg(), esi, DX, wordCount);
     if (wordCount) {

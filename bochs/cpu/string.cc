@@ -131,7 +131,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB32_YbXb(bxInstruction_c *i)
 #if BX_SUPPORT_REPEAT_SPEEDUPS
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time */
-  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event && !bx_dbg.debugger_active)
+  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event)
   {
     Bit32u byteCount = FastRepMOVSB(i->seg(), ESI, BX_SEG_REG_ES, EDI, ECX, 1);
     if (byteCount) {
@@ -174,7 +174,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB64_YbXb(bxInstruction_c *i)
 #if BX_SUPPORT_REPEAT_SPEEDUPS
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time */
-  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event && !bx_dbg.debugger_active)
+  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event)
   {
     Bit32u byteCount = FastRepMOVSB(get_laddr64(i->seg(), rsi), rdi, ECX, 1);
     if (byteCount) {
@@ -309,7 +309,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD32_YdXd(bxInstruction_c *i)
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */
-  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event && !bx_dbg.debugger_active)
+  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event)
   {
     Bit32u byteCount = FastRepMOVSB(i->seg(), esi, BX_SEG_REG_ES, edi, ECX*4, 4);
     if (byteCount) {
@@ -357,7 +357,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD64_YdXd(bxInstruction_c *i)
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */
-  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event && !bx_dbg.debugger_active)
+  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event)
   {
     Bit32u byteCount = FastRepMOVSB(get_laddr64(i->seg(), rsi), rdi, ECX*4, 4);
     if (byteCount) {
@@ -425,7 +425,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ64_YqXq(bxInstruction_c *i)
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */
-  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event && !bx_dbg.debugger_active)
+  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event)
   {
     Bit32u byteCount = FastRepMOVSB(get_laddr64(i->seg(), rsi), rdi, ECX*8, 8);
     if (byteCount) {
@@ -1308,7 +1308,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSB32_YbAL(bxInstruction_c *i)
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */
-  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event && !bx_dbg.debugger_active)
+  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event)
   {
     Bit32u byteCount = FastRepSTOSB(BX_SEG_REG_ES, edi, AL, ECX);
     if (byteCount) {
@@ -1349,7 +1349,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSB64_YbAL(bxInstruction_c *i)
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */
-  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event && !bx_dbg.debugger_active)
+  if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event)
   {
     Bit32u byteCount = FastRepSTOSB(rdi, AL, ECX);
     if (byteCount) {
