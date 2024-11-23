@@ -51,6 +51,7 @@ struct AMX {
   bool tile_valid(unsigned tile_num) const { return tilecfg[tile_num].rows != 0; }
   unsigned tile_num_rows(unsigned tile_num) const { return tilecfg[tile_num].rows; }
   unsigned tile_bytes_per_row(unsigned tile_num) const { return tilecfg[tile_num].bytes_per_row; }
+  unsigned tile_dword_elements_per_row(unsigned tile_num) const { return tilecfg[tile_num].bytes_per_row / 4; }
 
   bool is_tile_used(unsigned tile_num) const { return tile_use_tracker & (1 << tile_num); }
   void set_tile_used(unsigned tile_num) { tile_use_tracker |= (1 << tile_num); }
