@@ -1631,28 +1631,27 @@ void AddPagingLine(int LC, char *pa_lin, char *pa_phy)
 // lifted from bx_dbg_dump_table in dbg_main of the internal debugger
 void FillPAGE()
 {
-    Bit32u lin, start_lin, curlin; // show only low 32 bit
-    bx_phy_address phy;
-    Bit64u start_phy, phy64;
+    Bit64u lin, start_lin; // show only low 32 bit
+    bx_phy_address phy, start_phy; // start of a valid translation interval
+    bx_address lpf_mask = 0;
     int LineCount = 0;
-    char pa_lin[50];
-    char pa_phy[50];
     doDumpRefresh = FALSE;
 
     StartListUpdate(DUMP_WND);
-    curlin = lin = 0;   // always start at linear address 0
+
+    lin = 0;   // always start at linear address 0
+    phy = 0;
     start_lin = 1;      // force a mismatch on the first line
     start_phy = 2;
-    while (LineCount < 1024 && curlin != 0xfffff000)
-    {
-        // get translation lin -> phys, and verify mapping is legal
-        if (BX_CPU(CurrentCPU)->dbg_xlate_linear2phy(lin, &phy) != FALSE)
-        {
-            phy64 = phy;
-            if ((lin - start_lin) != (phy64 - start_phy))
-            {
-                if (start_lin != 1)
-                {
+
+    char pa_lin[50];
+    char pa_phy[50];
+
+    while(LineCount < 1024) {
+        bool valid = BX_CPU(CurrentCPU)->dbg_xlate_linear2phy(lin, &phy, &lpf_mask);
+        if(valid) {
+            if((lin - start_lin) != (phy - start_phy)) {
+                if(start_lin != 1) {
                     sprintf (pa_lin,"0x%08X - 0x%08X",start_lin, lin - 1);
                     sprintf (pa_phy,"0x" FMT_LLCAPX " - 0x" FMT_LLCAPX,
                         start_phy, start_phy + (lin-1-start_lin));
@@ -1660,13 +1659,10 @@ void FillPAGE()
                     ++LineCount;
                 }
                 start_lin = lin;
-                start_phy = phy64;
+                start_phy = phy;
             }
-        }
-        else
-        {
-            if (start_lin != 1)
-            {
+        } else {
+            if(start_lin != 1) {
                 sprintf (pa_lin,"0x%08X - 0x%08X",start_lin, lin - 1);
                 sprintf (pa_phy,"0x" FMT_LLCAPX " - 0x" FMT_LLCAPX,
                     start_phy, start_phy + (lin-1-start_lin));
@@ -1676,11 +1672,18 @@ void FillPAGE()
             start_lin = 1;
             start_phy = 2;
         }
-        curlin = lin;
-        lin += 0x1000;  // then test the next 4K page in the loop
+
+        lin += lpf_mask;
+        if (!BX_CPU(CurrentCPU)->long64_mode() && lin >= BX_CONST64(0xfffff000)) break;
+        if (lin >= BX_CONST64(0x00007ffffffff000)) {
+            if (lin < BX_CONST64(0xfffff00000000000))
+                lin = BX_CONST64(0xfffff00000000000) - 1;
+            if (lin >= BX_CONST64(0xfffffffffffff000))
+                break;
+        }
+        lin++;
     }
-    if (start_lin != 1)     // need to output one last line?
-    {
+    if(start_lin != 1) {
         sprintf (pa_lin,"0x%08X - 0x%08X", start_lin, -1);
         sprintf (pa_phy,"0x" FMT_LLCAPX " - 0x" FMT_LLCAPX,start_phy, start_phy + (lin-1-start_lin));
         AddPagingLine (LineCount,pa_lin,pa_phy);
