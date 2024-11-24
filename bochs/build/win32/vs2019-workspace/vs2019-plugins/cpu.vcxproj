@@ -257,7 +257,6 @@
     <ClCompile Include="..\cpu\flag_ctrl.cc" />
     <ClCompile Include="..\cpu\flag_ctrl_pro.cc" />
     <ClCompile Include="..\cpu\fpu_emu.cc" />
-    <ClCompile Include="..\cpu\generic_cpuid.cc" />
     <ClCompile Include="..\cpu\gf2.cc" />
     <ClCompile Include="..\cpu\icache.cc" />
     <ClCompile Include="..\cpu\init.cc" />
@@ -279,6 +278,7 @@
     <ClCompile Include="..\cpu\paging.cc" />
     <ClCompile Include="..\cpu\proc_ctrl.cc" />
     <ClCompile Include="..\cpu\protect_ctrl.cc" />
+    <ClCompile Include="..\cpu\rao.cc" />
     <ClCompile Include="..\cpu\rdrand.cc" />
     <ClCompile Include="..\cpu\ret_far.cc" />
     <ClCompile Include="..\cpu\segment_ctrl.cc" />
@@ -334,7 +334,6 @@
     <ClInclude Include="..\cpu\decoder\fetchdecode_opmap_0f3a.h" />
     <ClInclude Include="..\cpu\decoder\fetchdecode_x87.h" />
     <ClInclude Include="..\cpu\decoder\fetchdecode_xop.h" />
-    <ClInclude Include="..\cpu\generic_cpuid.h" />
     <ClInclude Include="..\cpu\i387.h" />
     <ClInclude Include="..\cpu\ia_opcodes.def" />
     <ClInclude Include="..\cpu\icache.h" />

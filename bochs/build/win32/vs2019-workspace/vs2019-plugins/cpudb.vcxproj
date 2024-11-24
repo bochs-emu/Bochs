@@ -223,6 +223,7 @@
     <ClCompile Include="..\cpu\cpudb\amd\trinity_apu.cc" />
     <ClCompile Include="..\cpu\cpudb\amd\turion64_tyler.cc" />
     <ClCompile Include="..\cpu\cpudb\amd\zambezi.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\arrow_lake.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\atom_n270.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\broadwell_ult.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\core2_penryn_t9600.cc" />
@@ -235,6 +236,7 @@
     <ClCompile Include="..\cpu\cpudb\intel\corei7_ivy_bridge_3770K.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\corei7_sandy_bridge_2600K.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\corei7_skylake-x.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\i486dx4.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\p2_klamath.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\p3_katmai.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\p4_prescott_celeron_336.cc" />
@@ -257,6 +259,7 @@
     <ClInclude Include="..\cpu\cpudb\amd\trinity_apu.h" />
     <ClInclude Include="..\cpu\cpudb\amd\turion64_tyler.h" />
     <ClInclude Include="..\cpu\cpudb\amd\zambezi.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\arrow_lake.h" />
     <ClInclude Include="..\cpu\cpudb\intel\atom_n270.h" />
     <ClInclude Include="..\cpu\cpudb\intel\broadwell_ult.h" />
     <ClInclude Include="..\cpu\cpudb\intel\core2_penryn_t9600.h" />
@@ -269,6 +272,8 @@
     <ClInclude Include="..\cpu\cpudb\intel\corei7_ivy_bridge_3770K.h" />
     <ClInclude Include="..\cpu\cpudb\intel\corei7_sandy_bridge_2600K.h" />
     <ClInclude Include="..\cpu\cpudb\intel\corei7_skylake-x.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\i386.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\i486dx4.h" />
     <ClInclude Include="..\cpu\cpudb\intel\p2_klamath.h" />
     <ClInclude Include="..\cpu\cpudb\intel\p3_katmai.h" />
     <ClInclude Include="..\cpu\cpudb\intel\p4_prescott_celeron_336.h" />
