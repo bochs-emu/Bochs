@@ -75,9 +75,6 @@ void BX_CPU_C::cpu_loop_debugger(void)
   BX_CPU_THIS_PTR prev_rip = RIP; // commit new EIP
   BX_CPU_THIS_PTR speculative_rsp = false;
 
-  // stop tracing after every instruction to handle in internal debugger
-  BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
-
   while (1) {
 
     // check on events which occurred for previous instructions (traps)
@@ -89,6 +86,9 @@ void BX_CPU_C::cpu_loop_debugger(void)
         return;
       }
     }
+
+    // stop tracing after every instruction to handle in internal debugger
+    BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
 
     bxICacheEntry_c *entry = getICacheEntry();
     bxInstruction_c *i = entry->i;
@@ -112,7 +112,7 @@ void BX_CPU_C::cpu_loop_debugger(void)
       // note instructions generating exceptions never reach this point
       if (dbg_instruction_epilog()) return;
 
-      if (BX_CPU_THIS_PTR async_event) break;
+      if (BX_CPU_THIS_PTR async_event & ~BX_ASYNC_EVENT_STOP_TRACE) break;
 
       if (++i == last) {
         entry = getICacheEntry();
