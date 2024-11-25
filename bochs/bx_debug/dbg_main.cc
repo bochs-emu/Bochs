@@ -216,12 +216,8 @@ void switch_dbg_cpu(unsigned cpu)
   dbg_cpu = cpu;
 }
 
-int bx_dbg_main(void)
+void bx_dbg_init(void)
 {
-  setbuf(stdout, NULL);
-  setbuf(stderr, NULL);
-
-  bx_dbg_exit_called = 0;
   bx_dbg_batch_dma.this_many = 1;
   bx_dbg_batch_dma.Qsize     = 0;
 
@@ -235,6 +231,14 @@ int bx_dbg_main(void)
   bx_debugger.default_display_format = 'x';
   bx_debugger.default_unit_size      = 'w';
   bx_debugger.default_addr = 0;
+}
+
+int bx_dbg_main(void)
+{
+  setbuf(stdout, NULL);
+  setbuf(stderr, NULL);
+
+  bx_dbg_exit_called = 0;
 
   const char *debugger_log_filename = SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr();
 

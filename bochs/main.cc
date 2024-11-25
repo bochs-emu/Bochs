@@ -1036,7 +1036,10 @@ int bx_begin_simulation(int argc, char *argv[])
   // Not a great solution but it works. BBD
   SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get());
 
+
 #if BX_DEBUGGER
+  bx_dbg_init();
+
   if (bx_dbg.debugger_active) {
     // If using the debugger, it will take control and call
     // bx_init_hardware() and cpu_loop()
@@ -1048,7 +1051,9 @@ int bx_begin_simulation(int argc, char *argv[])
 #if BX_GDBSTUB
     // If using gdbstub, it will take control and call
     // bx_init_hardware() and cpu_loop()
-    if (bx_dbg.gdbstub_enabled) bx_gdbstub_init();
+    if (bx_dbg.gdbstub_enabled) {
+      bx_gdbstub_init();
+    }
     else
 #endif
     {

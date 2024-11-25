@@ -349,6 +349,7 @@ BOCHSAPI_MSVCONLY extern bx_guard_t bx_guard;
 #define IS_CODE_32(code_32_64) ((code_32_64 & 1) != 0)
 #define IS_CODE_64(code_32_64) ((code_32_64 & 2) != 0)
 
+void bx_dbg_init(void);
 void bx_dbg_init_infile(void);
 int  bx_dbg_set_rcfile(const char *rcfile);
 int  bx_dbg_main(void);
