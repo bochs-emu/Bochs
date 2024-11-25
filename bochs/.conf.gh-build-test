@@ -47,6 +47,8 @@ case $which_config in
       --enable-e1000 \
       --enable-plugins \
       --enable-show-ips \
+      --enable-debugger \
+      --enable-debugger-gui \
       --with-all-libs
     ;;
   nothing)
@@ -118,6 +120,8 @@ case $which_config in
       --enable-es1370 \
       --enable-ne2000 \
       --enable-e1000 \
+      --enable-debugger \
+      --enable-debugger-gui \
       --enable-show-ips
     ;;
   x86-64)
@@ -137,6 +141,8 @@ case $which_config in
       --enable-es1370 \
       --enable-ne2000 \
       --enable-e1000 \
+      --enable-debugger \
+      --enable-debugger-gui \
       --enable-show-ips
     ;;
   *) echo "Unknown config \"$1\" selected!" ;;
