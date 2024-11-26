@@ -1361,9 +1361,10 @@ void bx_init_hardware()
 
   BX_DEBUG(("bx_init_hardware is setting signal handlers"));
 // if not using debugger, then we can take control of SIGINT.
-#if !BX_DEBUGGER
-  signal(SIGINT, bx_signal_handler);
+#if BX_DEBUGGER
+  if (! bx_dbg.debugger_active)
 #endif
+    signal(SIGINT, bx_signal_handler);
 
 #if BX_SHOW_IPS
 #if !defined(WIN32)
@@ -1399,10 +1400,13 @@ int bx_atexit(void)
   bx_pc_system.exit();
 
   // restore signal handling to defaults
-#if BX_DEBUGGER == 0
-  BX_INFO(("restoring default signal behavior"));
-  signal(SIGINT, SIG_DFL);
+#if BX_DEBUGGER
+  if (! bx_dbg.debugger_active)
 #endif
+  {
+    BX_INFO(("restoring default signal behavior"));
+    signal(SIGINT, SIG_DFL);
+  }
 
 #if BX_SHOW_IPS
 #if !defined(__MINGW32__) && !defined(_MSC_VER)
