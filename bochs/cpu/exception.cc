@@ -1004,7 +1004,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 #endif
 #if BX_DEBUGGER
       // trap into debugger (the same as when a PANIC occurs)
-      bx_debug_break();
+      if (bx_dbg.debugger_active) bx_debug_break();
 #endif
       if (SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get()) {
         BX_ERROR(("exception(): 3rd (%d) exception with no resolution, shutdown status is %02xh, resetting", vector, DEV_cmos_get_reg(0x0f)));
