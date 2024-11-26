@@ -1174,7 +1174,7 @@ speaker: enabled=1, mode=sound, volume=15
 #   non_exist:   will break and load the debugger on a non-existant port access
 # (experimental and is under development)
 #=======================================================================
-#usb_debug: type=xhci, reset=1, enable=1, start_frame=1, doorbell, event=1, non_exist=1
+#usb_debug: type=xhci, reset=1, enable=1, start_frame=1, doorbell=1, event=1, non_exist=1
 
 #=======================================================================
 # PCIDEV:
