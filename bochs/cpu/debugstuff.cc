@@ -148,8 +148,12 @@ const char* stringify_XCR0(Bit32u xcr0, char *s)
 void BX_CPU_C::debug_disasm_instruction(bx_address offset)
 {
 #if BX_DEBUGGER
-  bx_dbg_disassemble_current(BX_CPU_ID, 1); // only one cpu, print time stamp
-#else
+  if (bx_dbg.debugger_active) {
+    bx_dbg_disassemble_current(BX_CPU_ID, 1); // only one cpu, print time stamp
+    return;
+  }
+#endif
+
   bx_phy_address phy_addr;
   Bit8u  instr_buf[16];
   char   char_buf[512];
@@ -188,7 +192,6 @@ void BX_CPU_C::debug_disasm_instruction(bx_address offset)
   else {
     BX_INFO(("0x" FMT_ADDRX ": (instruction unavailable) page not present", offset));
   }
-#endif  // #if BX_DEBUGGER
 }
 
 const char* cpu_mode_string(unsigned cpu_mode)
