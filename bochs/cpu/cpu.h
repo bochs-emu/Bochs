@@ -4427,8 +4427,11 @@ public: // for now...
   BX_SMF void       dbg_get_idtr(bx_dbg_global_sreg_t *sreg);
   BX_SMF unsigned   dbg_query_pending(void);
 #endif
-#if BX_DEBUGGER || BX_GDBSTUB
+#if BX_DEBUGGER
   BX_SMF bool dbg_instruction_epilog(void);
+#endif
+#if BX_GDBSTUB
+  BX_SMF bool gdbstub_instruction_epilog(void);
 #endif
   BX_SMF bool dbg_xlate_linear2phy(bx_address linear, bx_phy_address *phy, bx_address *lpf_mask = 0, bool verbose = 0, bool nested_walk = 0);
 #if BX_SUPPORT_VMX >= 2

@@ -694,9 +694,11 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
   BX_CPU_THIS_PTR last_exception_type = 0;
 
 #if BX_DEBUGGER
-  if (BX_CPU_THIS_PTR vmexit_break) {
-    BX_CPU_THIS_PTR stop_reason = STOP_VMEXIT_BREAK_POINT;
-    bx_debug_break(); // trap into debugger
+  if (bx_dbg.debugger_active) {
+    if (BX_CPU_THIS_PTR vmexit_break) {
+      BX_CPU_THIS_PTR stop_reason = STOP_VMEXIT_BREAK_POINT;
+      bx_debug_break(); // trap into debugger
+    }
   }
 #endif
 

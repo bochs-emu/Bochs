@@ -180,7 +180,8 @@ void BX_CPU_C::enter_sleep_state(unsigned state)
   BX_INSTR_HLT(BX_CPU_ID);
 
 #if BX_DEBUGGER
-  bx_dbg_halt(BX_CPU_ID);
+  if (bx_dbg.debugger_active)
+    bx_dbg_halt(BX_CPU_ID);
 #endif
 
 #if BX_USE_IDLE_HACK
@@ -406,9 +407,11 @@ void BX_CPU_C::handleCpuModeChange(void)
   if (mode != BX_CPU_THIS_PTR cpu_mode) {
     BX_DEBUG(("%s activated", cpu_mode_string(BX_CPU_THIS_PTR cpu_mode)));
 #if BX_DEBUGGER
-    if (BX_CPU_THIS_PTR mode_break) {
-      BX_CPU_THIS_PTR stop_reason = STOP_MODE_BREAK_POINT;
-      bx_debug_break(); // trap into debugger
+    if (bx_dbg.debugger_active) {
+      if (BX_CPU_THIS_PTR mode_break) {
+        BX_CPU_THIS_PTR stop_reason = STOP_MODE_BREAK_POINT;
+        bx_debug_break(); // trap into debugger
+      }
     }
 #endif
   }

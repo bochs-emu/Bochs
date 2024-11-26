@@ -766,7 +766,8 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
     if (vector == 0x80) bx_dbg_linux_syscall(BX_CPU_ID);
   }
 #endif
-  bx_dbg_interrupt(BX_CPU_ID, vector, error_code);
+  if (bx_dbg.debugger_active)
+    bx_dbg_interrupt(BX_CPU_ID, vector, error_code);
 #endif
 
   BX_INSTR_INTERRUPT(BX_CPU_ID, vector);
@@ -966,7 +967,8 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
   BX_INSTR_EXCEPTION(BX_CPU_ID, vector, error_code);
 
 #if BX_DEBUGGER
-  bx_dbg_exception(BX_CPU_ID, vector, error_code);
+  if (bx_dbg.debugger_active)
+    bx_dbg_exception(BX_CPU_ID, vector, error_code);
 #endif
 
 #if BX_SUPPORT_VMX

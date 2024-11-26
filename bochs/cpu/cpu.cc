@@ -133,29 +133,17 @@ void BX_CPU_C::cpu_loop(void)
 #endif
 
 #if BX_DEBUGGER
-  BX_CPU_THIS_PTR break_point = 0;
-  BX_CPU_THIS_PTR magic_break = 0;
-  BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
+  BX_ASSERT(! bx_dbg.debugger_active);
 #endif
 
   if (setjmp(BX_CPU_THIS_PTR jmp_buf_env)) {
     // can get here only from exception function or VMEXIT
     BX_CPU_THIS_PTR icount++;
     BX_SYNC_TIME_IF_SINGLE_PROCESSOR(0);
-#if BX_DEBUGGER || BX_GDBSTUB
-    if (dbg_instruction_epilog()) return;
-#endif
 #if BX_GDBSTUB
-    if (bx_dbg.gdbstub_enabled) return;
+    if (gdbstub_instruction_epilog() || bx_dbg.gdbstub_enabled) return;
 #endif
   }
-
-  // If the exception() routine has encountered a nasty fault scenario,
-  // the debugger may request that control is returned to it so that
-  // the situation may be examined.
-#if BX_DEBUGGER
-  if (bx_guard.interrupt_requested) return;
-#endif
 
   // We get here either by a normal function call, or by a longjmp
   // back from an exception() call.  In either case, commit the
@@ -207,11 +195,6 @@ void BX_CPU_C::cpu_loop(void)
 
     for(;;) {
 
-#if BX_DEBUGGER
-      if (BX_CPU_THIS_PTR trace)
-        debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
-#endif
-
       // want to allow changing of the instruction inside instrumentation callback
       BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
       RIP += i->ilen();
@@ -223,8 +206,8 @@ void BX_CPU_C::cpu_loop(void)
       BX_SYNC_TIME_IF_SINGLE_PROCESSOR(0);
 
       // note instructions generating exceptions never reach this point
-#if BX_DEBUGGER || BX_GDBSTUB
-      if (dbg_instruction_epilog()) return;
+#if BX_GDBSTUB
+      if (gdbstub_instruction_epilog()) return;
 #endif
 
       if (BX_CPU_THIS_PTR async_event) break;
@@ -737,10 +720,9 @@ void BX_CPU_C::prefetch(void)
   }
 }
 
-#if BX_DEBUGGER || BX_GDBSTUB
+#if BX_DEBUGGER
 bool BX_CPU_C::dbg_instruction_epilog(void)
 {
-#if BX_DEBUGGER
   bx_address debug_eip = RIP;
   Bit16u cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
 
@@ -851,20 +833,25 @@ bool BX_CPU_C::dbg_instruction_epilog(void)
       return(1);
     }
   }
-#endif
-
-#if BX_GDBSTUB
-  if (bx_dbg.gdbstub_enabled) {
-    unsigned reason =
-#if BX_SUPPORT_X86_64 == 0
-        bx_gdbstub_check(EIP);
-#else
-        bx_gdbstub_check(RIP);
-#endif
-    if (reason != GDBSTUB_STOP_NO_REASON) return(1);
-  }
-#endif
 
   return(0);
 }
-#endif // BX_DEBUGGER || BX_GDBSTUB
+#endif
+
+#if BX_GDBSTUB
+bool BX_CPU_C::gdbstub_instruction_epilog(void)
+{
+  if (bx_dbg.gdbstub_enabled) {
+    unsigned reason =
+#if BX_SUPPORT_X86_64 == 0
+      bx_gdbstub_check(EIP);
+#else
+      bx_gdbstub_check(RIP);
+#endif
+    if (reason != GDBSTUB_STOP_NO_REASON) 
+      return(1);
+  }
+
+  return(0);
+}
+#endif
