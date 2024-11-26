@@ -1038,8 +1038,6 @@ int bx_begin_simulation(int argc, char *argv[])
 
 
 #if BX_DEBUGGER
-  bx_dbg_init();
-
   if (bx_dbg.debugger_active) {
     // If using the debugger, it will take control and call
     // bx_init_hardware() and cpu_loop()
@@ -1380,7 +1378,7 @@ void bx_init_hardware()
 void bx_init_bx_dbg(void)
 {
 #if BX_DEBUGGER
-  bx_dbg_init_infile();
+  bx_dbg_init();
 #endif
   memset(&bx_dbg, 0, sizeof(bx_debug_t));
 }

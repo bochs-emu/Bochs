@@ -147,13 +147,6 @@ void dbg_printf(const char *fmt, ...)
   SIM->debug_puts(buf); // send to debugger, which will free buf when done.
 }
 
-void bx_dbg_init_infile(void)
-{
-  bx_infile_stack_index = 0;
-  bx_infile_stack[0].fp = stdin;
-  bx_infile_stack[0].lineno = 0;
-}
-
 int bx_dbg_set_rcfile(const char *rcfile)
 {
   strncpy(bx_infile_stack[0].fname, rcfile, BX_MAX_PATH);
@@ -231,6 +224,10 @@ void bx_dbg_init(void)
   bx_debugger.default_display_format = 'x';
   bx_debugger.default_unit_size      = 'w';
   bx_debugger.default_addr = 0;
+
+  bx_infile_stack_index = 0;
+  bx_infile_stack[0].fp = stdin;
+  bx_infile_stack[0].lineno = 0;
 }
 
 int bx_dbg_main(void)
