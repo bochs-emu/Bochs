@@ -793,10 +793,6 @@ void bx_dbg_exit(int code)
     fclose(debugger_log);
   debugger_log = NULL;
 
-  for (int cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
-    if (BX_CPU(cpu)) BX_CPU(cpu)->atexit();
-  }
-
   delete [] dbg_cpu_list;
   dbg_cpu_list = NULL;
 

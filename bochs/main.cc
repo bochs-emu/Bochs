@@ -1378,15 +1378,8 @@ int bx_atexit(void)
   // so that the user can see any messages left behind on the console.
   SIM->set_display_mode(DISP_MODE_CONFIG);
 
-#if BX_DEBUGGER == 0
-  if (SIM && SIM->get_init_done()) {
-    for (int cpu=0; cpu<BX_SMP_PROCESSORS; cpu++)
-#if BX_SUPPORT_SMP
-      if (BX_CPU(cpu))
-#endif
-        BX_CPU(cpu)->atexit();
-  }
-#endif
+  for (int cpu=0; cpu<BX_SMP_PROCESSORS; cpu++)
+    if (BX_CPU(cpu)) BX_CPU(cpu)->atexit();
 
   BX_MEM(0)->cleanup_memory();
 
