@@ -114,6 +114,7 @@ void bx_log_options(int individual);
 int bx_atexit();
 #if BX_DEBUGGER
 void bx_dbg_exit(int code);
+BOCHSAPI extern bx_debug_t bx_dbg;
 #endif
 int text_ask(bx_param_c *param);
 
