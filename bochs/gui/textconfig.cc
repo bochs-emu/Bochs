@@ -568,12 +568,16 @@ int bx_text_config_interface(int menu)
             case BX_CI_RT_QUIT:
               bx_printf("You chose quit on the configuration interface.\n");
               bx_user_quit = 1;
-#if !BX_DEBUGGER
-              bx_atexit();
-              SIM->quit_sim(1);
-#else
-              bx_dbg_exit(1);
+#if BX_DEBUGGER
+              if (bx_dbg.debugger_active) {
+                bx_dbg_exit(1);
+              }
+              else
 #endif
+              {
+                bx_atexit();
+                SIM->quit_sim(1);
+              }
               return -1;
             default: bx_printf("Menu choice %d not implemented.\n", choice);
           }

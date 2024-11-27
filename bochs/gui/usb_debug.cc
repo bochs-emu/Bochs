@@ -182,12 +182,16 @@ int usb_dbg_interface(int type, int param1, int param2)
       bx_gui->set_usbdbg_bitmap(0);
       if (usb_debug_dialog(type, param1, param2) < 0) {
         bx_user_quit = 1;
-#if !BX_DEBUGGER
-        bx_atexit();
-        SIM->quit_sim(1);
-#else
-        bx_dbg_exit(1);
+#if BX_DEBUGGER
+        if (bx_dbg.debugger_active) {
+          bx_dbg_exit(1);
+        }
+        else
 #endif
+        {
+          bx_atexit();
+          SIM->quit_sim(1);
+        }
         return -1;
       }
     }
