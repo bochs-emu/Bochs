@@ -725,16 +725,7 @@ void bx_real_sim_c::periodic()
   sim_to_ci_event (&tick);
   if (tick.retcode < 0) {
     BX_INFO(("Bochs thread has been asked to quit."));
-#if BX_DEBUGGER
-    if (bx_dbg.debugger_active) {
-      bx_dbg_exit(0);
-    }
-    else
-#endif
-    {
-      bx_atexit();
-      SIM->quit_sim(0);
-    }
+    bx_exit(0);
   }
   static int refresh_counter = 0;
   if (++refresh_counter == 50) {

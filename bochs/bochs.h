@@ -315,6 +315,7 @@ BOCHSAPI_MSVCONLY void bx_show_ips_handler(void);
 void CDECL bx_signal_handler(int signum);
 BOCHSAPI_MSVCONLY int bx_atexit(void);
 BOCHSAPI extern bx_debug_t bx_dbg;
+BOCHSAPI_MSVCONLY void bx_exit(int errcode);
 
 #if BX_SUPPORT_SMP
   #define BX_SMP_PROCESSORS (bx_cpu_count)

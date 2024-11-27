@@ -779,17 +779,7 @@ static int win32_ci_callback(void *userdata, ci_command_t command)
       if (!bx_gui->has_gui_console()) {
         if (MainMenuDialog(GetBochsWindow(), 1) < 0) {
           bx_user_quit = 1;
-#if BX_DEBUGGER
-          if (bx_dbg.debugger_active) {
-            bx_dbg_exit(1);
-          }
-          else
-#endif
-          {
-            bx_atexit();
-            SIM->quit_sim(1);
-          }
-          return -1;
+          bx_exit(1);
         }
       }
       break;

@@ -1384,6 +1384,20 @@ void bx_init_bx_dbg(void)
   memset(&bx_dbg, 0, sizeof(bx_debug_t));
 }
 
+void bx_exit(int errcode)
+{
+#if BX_DEBUGGER
+  if (bx_dbg.debugger_active) {
+    bx_dbg_exit(errcode);
+  }
+  else
+#endif
+  {
+    bx_atexit();
+    SIM->quit_sim(errcode);
+  }
+}
+
 int bx_atexit(void)
 {
   if (!SIM->get_init_done()) return 1; // protect from reentry
