@@ -1051,17 +1051,19 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   }
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
-  SIM->set_debug_gui(1);
+  if (bx_dbg.debugger_active) {
+    SIM->set_debug_gui(1);
 #ifdef WIN32
-  // on Windows the debugger gui must run in a separate thread
-  DWORD threadID;
-  wx_enh_dbg_global_ini = gui_opts.enh_dbg_global_ini;
-  CreateThread(NULL, 0, DebugGuiThread, NULL, 0, &threadID);
+    // on Windows the debugger gui must run in a separate thread
+    DWORD threadID;
+    wx_enh_dbg_global_ini = gui_opts.enh_dbg_global_ini;
+    CreateThread(NULL, 0, DebugGuiThread, NULL, 0, &threadID);
 #else
-  wxMutexGuiEnter();
-  init_debug_dialog(gui_opts.enh_dbg_global_ini);
-  wxMutexGuiLeave();
+    wxMutexGuiEnter();
+    init_debug_dialog(gui_opts.enh_dbg_global_ini);
+    wxMutexGuiLeave();
 #endif
+  }
 #endif
 
   wxString msg;

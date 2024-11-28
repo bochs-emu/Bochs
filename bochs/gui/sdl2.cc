@@ -489,7 +489,7 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   }
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
-  if (gui_opts.enh_dbg_enabled) {
+  if (bx_dbg.debugger_active && gui_opts.enh_dbg_enabled) {
     SIM->set_debug_gui(1);
 #ifdef WIN32
     if (gui_ci) {

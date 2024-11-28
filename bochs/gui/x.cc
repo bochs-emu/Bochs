@@ -890,7 +890,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
   // initialize debugger gui
-  if (gui_opts.enh_dbg_enabled) {
+  if (bx_dbg.debugger_active && gui_opts.enh_dbg_enabled) {
     SIM->set_debug_gui(1);
     init_debug_dialog(gui_opts.enh_dbg_global_ini);
   }
