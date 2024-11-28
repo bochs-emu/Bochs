@@ -328,7 +328,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW32_YwDX(bxInstruction_c *i)
   Bit32u edi = EDI;
   unsigned increment = 2;
 
-#if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
+#if BX_SUPPORT_REPEAT_SPEEDUPS
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */
@@ -579,7 +579,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OUTSW32_DXXw(bxInstruction_c *i)
   Bit32u esi = ESI;
   unsigned increment = 2;
 
-#if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
+#if BX_SUPPORT_REPEAT_SPEEDUPS
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */

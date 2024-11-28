@@ -54,6 +54,8 @@ case $which_config in
                 --enable-es1370 \
                 --enable-e1000 \
                 --enable-show-ips \
+                --enable-debugger \
+                --enable-debugger-gui \
                 ${CONFIGURE_ARGS}
     ;;
 
@@ -84,6 +86,8 @@ case $which_config in
                 --enable-e1000 \
                 --enable-plugins \
                 --enable-show-ips \
+                --enable-debugger \
+                --enable-debugger-gui \
                 --with-all-libs \
                 ${CONFIGURE_ARGS}
     ;;

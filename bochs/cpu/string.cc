@@ -128,7 +128,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB32_YbXb(bxInstruction_c *i)
 {
   Bit32s increment = 0;
 
-#if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
+#if BX_SUPPORT_REPEAT_SPEEDUPS
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time */
   if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event)
@@ -171,7 +171,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSB64_YbXb(bxInstruction_c *i)
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
 
-#if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
+#if BX_SUPPORT_REPEAT_SPEEDUPS
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time */
   if (i->repUsedL() && !BX_CPU_THIS_PTR get_DF() && !BX_CPU_THIS_PTR async_event)
@@ -305,7 +305,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD32_YdXd(bxInstruction_c *i)
   Bit32u esi = ESI;
   Bit32u edi = EDI;
 
-#if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
+#if BX_SUPPORT_REPEAT_SPEEDUPS
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */
@@ -353,7 +353,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSD64_YdXd(bxInstruction_c *i)
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
 
-#if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
+#if BX_SUPPORT_REPEAT_SPEEDUPS
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */
@@ -421,7 +421,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVSQ64_YqXq(bxInstruction_c *i)
   Bit64u rsi = RSI;
   Bit64u rdi = RDI;
 
-#if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
+#if BX_SUPPORT_REPEAT_SPEEDUPS
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */
@@ -1304,7 +1304,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSB32_YbAL(bxInstruction_c *i)
   Bit32s increment = 0;
   Bit32u edi = EDI;
 
-#if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
+#if BX_SUPPORT_REPEAT_SPEEDUPS
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */
@@ -1345,7 +1345,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STOSB64_YbAL(bxInstruction_c *i)
   Bit64u rdi = RDI;
   Bit32s increment = 0;
 
-#if (BX_SUPPORT_REPEAT_SPEEDUPS) && (BX_DEBUGGER == 0)
+#if BX_SUPPORT_REPEAT_SPEEDUPS
   /* If conditions are right, we can transfer IO to physical memory
    * in a batch, rather than one instruction at a time.
    */

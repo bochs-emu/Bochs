@@ -40,6 +40,8 @@ export DLLTOOL
             --enable-es1370 \
             --enable-e1000 \
             --enable-show-ips \
+            --enable-debugger \
+            --enable-debugger-gui \
             --disable-readline \
             --with-win32 --with-rfb --with-nogui \
             ${CONFIGURE_ARGS}

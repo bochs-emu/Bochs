@@ -223,7 +223,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EwGwR(bxInstruction_c *i)
     66:87F6  | xchg si,si  | 1000011111 110 110 -> 6
     66:87FF  | xchg di,di  | 1000011111 111 111 -> 7
   */
-  if (bx_dbg.magic_break && i->src() == i->dst() && (bx_dbg.magic_break & (1 << (i->src())))) {
+  if (bx_dbg.debugger_active && bx_dbg.magic_break && i->src() == i->dst() && (bx_dbg.magic_break & (1 << (i->src())))) {
     BX_CPU_THIS_PTR magic_break = 1;
     BX_NEXT_INSTR(i);
   }

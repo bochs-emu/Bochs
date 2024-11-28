@@ -838,7 +838,6 @@ AC_ARG_ENABLE(debugger-gui,
    else
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_DEBUGGER_GUI, 0)
-    gui_debugger=0
    fi],
   [
     if test "$bx_debugger" = 1; then
@@ -847,7 +846,6 @@ AC_ARG_ENABLE(debugger-gui,
     else
       AC_MSG_RESULT(no)
       AC_DEFINE(BX_DEBUGGER_GUI, 0)
-      gui_debugger=0
     fi
     ]
   )
@@ -946,11 +944,6 @@ if test "$speedup_fastcall" = 1; then
   AC_DEFINE(BX_FAST_FUNC_CALL, 1)
 else
   AC_DEFINE(BX_FAST_FUNC_CALL, 0)
-fi
-
-if test "$bx_debugger" = 1 -a "$speedup_handlers_chaining" = 1; then
-  speedup_handlers_chaining=0
-  echo "ERROR: handlers-chaining speedups are not supported with internal debugger or gdbstub yet"
 fi
 
 if test "$bx_gdb_stub" = 1 -a "$speedup_handlers_chaining" = 1; then

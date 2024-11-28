@@ -43,10 +43,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
   if (ia_opcode == BX_IA_ERROR) {
     BX_DEBUG(("BxError: Encountered an unknown instruction (signalling #UD)"));
 
-#if BX_DEBUGGER == 0 // with debugger it easy to see the #UD
     if (LOG_THIS getonoff(LOGLEV_DEBUG))
       debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
-#endif
   }
   else {
     BX_DEBUG(("%s: instruction not supported - signalling #UD", get_bx_opcode_name(ia_opcode)));
@@ -182,7 +180,8 @@ void BX_CPU_C::enter_sleep_state(unsigned state)
   BX_INSTR_HLT(BX_CPU_ID);
 
 #if BX_DEBUGGER
-  bx_dbg_halt(BX_CPU_ID);
+  if (bx_dbg.debugger_active)
+    bx_dbg_halt(BX_CPU_ID);
 #endif
 
 #if BX_USE_IDLE_HACK
@@ -408,9 +407,11 @@ void BX_CPU_C::handleCpuModeChange(void)
   if (mode != BX_CPU_THIS_PTR cpu_mode) {
     BX_DEBUG(("%s activated", cpu_mode_string(BX_CPU_THIS_PTR cpu_mode)));
 #if BX_DEBUGGER
-    if (BX_CPU_THIS_PTR mode_break) {
-      BX_CPU_THIS_PTR stop_reason = STOP_MODE_BREAK_POINT;
-      bx_debug_break(); // trap into debugger
+    if (bx_dbg.debugger_active) {
+      if (BX_CPU_THIS_PTR mode_break) {
+        BX_CPU_THIS_PTR stop_reason = STOP_MODE_BREAK_POINT;
+        bx_debug_break(); // trap into debugger
+      }
     }
 #endif
   }

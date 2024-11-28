@@ -111,10 +111,7 @@ int bx_read_rc(char *rc);
 int bx_write_rc(char *rc);
 void bx_plugin_ctrl();
 void bx_log_options(int individual);
-int bx_atexit();
-#if BX_DEBUGGER
-void bx_dbg_exit(int code);
-#endif
+void bx_exit(int errcode);
 int text_ask(bx_param_c *param);
 
 /******************************************************************/
@@ -568,12 +565,7 @@ int bx_text_config_interface(int menu)
             case BX_CI_RT_QUIT:
               bx_printf("You chose quit on the configuration interface.\n");
               bx_user_quit = 1;
-#if !BX_DEBUGGER
-              bx_atexit();
-              SIM->quit_sim(1);
-#else
-              bx_dbg_exit(1);
-#endif
+              bx_exit(1);
               return -1;
             default: bx_printf("Menu choice %d not implemented.\n", choice);
           }

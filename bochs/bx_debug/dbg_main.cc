@@ -147,13 +147,6 @@ void dbg_printf(const char *fmt, ...)
   SIM->debug_puts(buf); // send to debugger, which will free buf when done.
 }
 
-void bx_dbg_init_infile(void)
-{
-  bx_infile_stack_index = 0;
-  bx_infile_stack[0].fp = stdin;
-  bx_infile_stack[0].lineno = 0;
-}
-
 int bx_dbg_set_rcfile(const char *rcfile)
 {
   strncpy(bx_infile_stack[0].fname, rcfile, BX_MAX_PATH);
@@ -216,12 +209,8 @@ void switch_dbg_cpu(unsigned cpu)
   dbg_cpu = cpu;
 }
 
-int bx_dbg_main(void)
+void bx_dbg_init(void)
 {
-  setbuf(stdout, NULL);
-  setbuf(stderr, NULL);
-
-  bx_dbg_exit_called = 0;
   bx_dbg_batch_dma.this_many = 1;
   bx_dbg_batch_dma.Qsize     = 0;
 
@@ -235,6 +224,18 @@ int bx_dbg_main(void)
   bx_debugger.default_display_format = 'x';
   bx_debugger.default_unit_size      = 'w';
   bx_debugger.default_addr = 0;
+
+  bx_infile_stack_index = 0;
+  bx_infile_stack[0].fp = stdin;
+  bx_infile_stack[0].lineno = 0;
+}
+
+int bx_dbg_main(void)
+{
+  setbuf(stdout, NULL);
+  setbuf(stderr, NULL);
+
+  bx_dbg_exit_called = 0;
 
   const char *debugger_log_filename = SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr();
 
@@ -2158,7 +2159,7 @@ one_more:
 
     if (BX_SMP_PROCESSORS == 1) {
       bx_dbg_set_icount_guard(0, 0); // run to next breakpoint
-      BX_CPU(0)->cpu_loop();
+      BX_CPU(0)->cpu_loop_debugger();
       // set stop flag if a guard found other than icount or halted
       unsigned found = BX_CPU(0)->guard_found.guard_found;
       stop_reason_t reason = (stop_reason_t) BX_CPU(0)->stop_reason;
@@ -2173,7 +2174,7 @@ one_more:
       for (int cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
         Bit64u cpu_icount = BX_CPU(cpu)->get_icount();
         bx_dbg_set_icount_guard(cpu, BX_DBG_DEFAULT_ICOUNT_QUANTUM);
-        BX_CPU(cpu)->cpu_loop();
+        BX_CPU(cpu)->cpu_loop_debugger();
         Bit32u executed = BX_CPU(cpu)->get_icount() - cpu_icount;
         if (executed > max_executed) max_executed = executed;
         // set stop flag if a guard found other than icount or halted
@@ -2237,7 +2238,7 @@ void bx_dbg_stepN_command(int cpu, Bit32u count)
   if (cpu >= 0 || BX_SMP_PROCESSORS == 1) {
     bx_guard.interrupt_requested = false;
     bx_dbg_set_icount_guard(cpu, count);
-    BX_CPU(cpu)->cpu_loop();
+    BX_CPU(cpu)->cpu_loop_debugger();
   }
 #if BX_SUPPORT_SMP
   else {
@@ -2247,7 +2248,7 @@ void bx_dbg_stepN_command(int cpu, Bit32u count)
       for (unsigned ncpu=0; ncpu < BX_SMP_PROCESSORS; ncpu++) {
         bx_guard.interrupt_requested = false;
         bx_dbg_set_icount_guard(ncpu, 1);
-        BX_CPU(ncpu)->cpu_loop();
+        BX_CPU(ncpu)->cpu_loop_debugger();
         // set stop flag if a guard found other than icount or halted
         unsigned found = BX_CPU(ncpu)->guard_found.guard_found;
         stop_reason_t reason = (stop_reason_t) BX_CPU(ncpu)->stop_reason;

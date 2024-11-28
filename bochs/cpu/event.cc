@@ -98,7 +98,7 @@ bool BX_CPU_C::handleWaitForEvent(void)
 #endif
 
 #if BX_DEBUGGER
-    if (bx_guard.interrupt_requested)
+    if (bx_dbg.debugger_active && bx_guard.interrupt_requested)
       return 1; // Return to caller of cpu_loop.
 #endif
 
