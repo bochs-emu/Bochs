@@ -1536,6 +1536,8 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
       } else {
         BX_ERROR(("CMDFIFO #0 write with len = %d redirected to LFB", len));
         mem_write_linear(offset, value64, len);
+        if (!(offset & 3))
+          v->fbi.cmdfifo[0].depth++;
       }
     } else if (v->fbi.cmdfifo[1].enabled && (offset >= v->fbi.cmdfifo[1].base) &&
                (offset < v->fbi.cmdfifo[1].end)) {
@@ -1671,7 +1673,9 @@ void bx_banshee_c::agp_reg_write(Bit8u reg, Bit32u value)
     case cmdBump0:
     case cmdBump1:
       if (value > 0) {
-        BX_ERROR(("cmdBump%d not implemented (value = 0x%04x)", fifo_idx, (Bit16u)value));
+        BX_LOCK(cmdfifo_mutex);
+        v->fbi.cmdfifo[fifo_idx].amin += value * 4;
+        BX_UNLOCK(cmdfifo_mutex);
       }
       break;
     case cmdRdPtrL0:

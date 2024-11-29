@@ -2919,6 +2919,10 @@ void cmdfifo_w(cmdfifo_info *f, Bit32u fbi_offset, Bit32u data)
       f->amax = fbi_offset;
     }
   }
+  else {
+    f->amax = fbi_offset;
+    f->depth++;
+  }
   if (f->depth_needed == BX_MAX_BIT32U) {
     f->depth_needed = cmdfifo_calc_depth_needed(f);
   }
