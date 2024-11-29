@@ -54,7 +54,6 @@ extern "C" {
 #endif
 
 #include "osdep.h"
-#include "bx_debug/debug.h"
 #include "param_names.h"
 #include "logio.h"
 #include "paramtree.h"
@@ -768,12 +767,12 @@ void bx_plugin_ctrl()
   }
 }
 
-const char *log_action_ask_choices[] = { "cont", "alwayscont", "die", "abort", "debug" };
-int log_action_n_choices = 4 + (BX_DEBUGGER||BX_GDBSTUB?1:0);
-
 BxEvent *
 textconfig_notify_callback(void *unused, BxEvent *event)
 {
+  const char *log_action_ask_choices[] = { "cont", "alwayscont", "die", "abort", "debug" };
+  int log_action_n_choices = 4 + (SIM->debugger_active()||BX_GDBSTUB?1:0);
+
   event->retcode = -1;
   switch (event->type)
   {
@@ -798,7 +797,9 @@ textconfig_notify_callback(void *unused, BxEvent *event)
         fprintf(stderr, "  abort      - dump core %s\n",
                 BX_HAVE_ABORT ? "" : "(Disabled)");
 #if BX_DEBUGGER
-        fprintf(stderr, "  debug      - continue and return to bochs debugger\n");
+        if (SIM->debugger_active()) {
+          fprintf(stderr, "  debug      - continue and return to bochs debugger\n");
+        }
 #endif
 #if BX_GDBSTUB
         fprintf(stderr, "  debug      - hand control to gdb\n");

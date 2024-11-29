@@ -2596,9 +2596,11 @@ int x11_ask_dialog(BxEvent *event)
   }
   if (mode == BX_LOG_DLG_ASK) {
 #if BX_DEBUGGER || BX_GDBSTUB
-    buttons.btn[i].label = "Debugger";
-    buttons.btn[i].code = BX_LOG_ASK_CHOICE_ENTER_DEBUG;
-    i++;
+    if (bx_dbg.debugger_active) {
+      buttons.btn[i].label = "Debugger";
+      buttons.btn[i].code = BX_LOG_ASK_CHOICE_ENTER_DEBUG;
+      i++;
+    }
 #endif
 #if BX_HAVE_ABORT
     buttons.btn[i].label = "Dump Core";

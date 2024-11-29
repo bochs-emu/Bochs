@@ -169,6 +169,7 @@ public:
   virtual bool is_pci_device(const char *name);
   virtual bool is_agp_device(const char *name);
 #if BX_DEBUGGER
+  virtual bool debugger_active() {return bx_dbg.debugger_active;}
   virtual void debug_break();
   virtual void debug_interpret_cmd(char *cmd);
   virtual char *debug_get_next_command();

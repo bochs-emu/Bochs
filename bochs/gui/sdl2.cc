@@ -1457,7 +1457,7 @@ int sdl2_ask_dialog(BxEvent *event)
     i = 2;
   }
 #if BX_DEBUGGER || BX_GDBSTUB
-  if (mode == BX_LOG_DLG_ASK) {
+  if ((mode == BX_LOG_DLG_ASK) && (bx_dbg.debugger_active || BX_GDBSTUB)) {
     buttondata[i].flags = 0;
     buttondata[i].buttonid = BX_LOG_ASK_CHOICE_ENTER_DEBUG;
     buttondata[i].text = "Debugger";

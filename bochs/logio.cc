@@ -682,11 +682,14 @@ void logfunctions::fatal(int level, const char *prefix, const char *fmt, va_list
     fprintf(stderr, "%s", exit_msg);
     fprintf(stderr, "\n%s\n", divider);
   }
-#if !BX_DEBUGGER
-  BX_EXIT(exit_status);
-#else
-  bx_dbg_exit(exit_status);
+#if BX_DEBUGGER
+  if (bx_dbg.debugger_active) {
+    bx_dbg_exit(exit_status);
+  } else
 #endif
+  {
+    BX_EXIT(exit_status);
+  }
   // not safe to use BX_* log functions in here.
   fprintf(stderr, "fatal() should never return, but it just did\n");
 }
