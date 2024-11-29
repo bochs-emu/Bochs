@@ -1170,7 +1170,7 @@ void MyFrame::OnLogDlg(BxEvent *be)
 #if !BX_DEBUGGER && !BX_GDBSTUB
   dlg.EnableButton(dlg.DEBUG, FALSE);
 #else
-  dlg.EnableButton(dlg.DEBUG, mode == BX_LOG_DLG_ASK);
+  dlg.EnableButton(dlg.DEBUG, (mode == BX_LOG_DLG_ASK) && (SIM->debugger_active() || BX_GDBSTUB));
 #endif
   dlg.SetContext(wxString(be->u.logmsg.prefix, wxConvUTF8));
   dlg.SetMessage(wxString(be->u.logmsg.msg, wxConvUTF8));
