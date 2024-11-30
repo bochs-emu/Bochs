@@ -25,7 +25,6 @@
 
 #include "win32dialog.h"
 #include "bochs.h"
-#include "bx_debug/debug.h"
 #include "param_names.h"
 #include "gui.h"
 #include "win32res.h"

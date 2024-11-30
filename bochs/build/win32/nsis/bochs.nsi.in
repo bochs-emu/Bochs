@@ -262,7 +262,7 @@ Section "Register .bxrc Extension" SecExtension
   WriteRegStr HKCR "BochsConfigFile\shell" "" "Edit"
   WriteRegStr HKCR "BochsConfigFile\shell\Edit\command" "" '$WINDIR\NOTEPAD.EXE "%1"'
   WriteRegStr HKCR "BochsConfigFile\shell" "" "Debugger"
-  WriteRegStr HKCR "BochsConfigFile\shell\Debugger\command" "" '"$INSTDIR\Bochsdbg.exe" -f "%1"'
+  WriteRegStr HKCR "BochsConfigFile\shell\Debugger\command" "" '"$INSTDIR\Bochs.exe" -dbg -f "%1"'
   WriteRegStr HKCR "BochsConfigFile\shell" "" "Run"
   WriteRegStr HKCR "BochsConfigFile\shell\Run\command" "" '"$INSTDIR\Bochs.exe" -q -f "%1"'
 SectionEnd

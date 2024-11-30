@@ -1352,7 +1352,6 @@ DLX Linux screenshot.
 <row><entry>bios.bin-1.13.0 </entry> <entry> SeaBIOS ROM image </entry> </row>
 <row><entry>BIOS-bochs-latest </entry> <entry> default ROM BIOS image for Bochs </entry> </row>
 <row><entry>BIOS-bochs-legacy </entry> <entry> ROM BIOS image without 32-bit init code </entry> </row>
-<row><entry>bochsdbg.exe </entry> <entry> the main Bochs executable with debugger enabled </entry> </row>
 <row><entry>bochs.exe </entry> <entry> the main Bochs executable </entry> </row>
 <row><entry>bochs.ico </entry> <entry> the Bochs icon (used for links in start menu and on the desktop) </entry> </row>
 <row><entry>bochsrc-sample.txt </entry> <entry> sample Bochs configuration file </entry> </row>
@@ -5407,6 +5406,10 @@ For other arguments, see section <link linkend="bochsrc">bochsrc</link>.
 <row>
   <entry>-log <replaceable>filename</replaceable></entry>
   <entry>specify Bochs log file</entry>
+</row>
+<row>
+  <entry>-dbg</entry>
+  <entry>start Bochs internal debugger on startup</entry>
 </row>
 <row>
   <entry>-dbglog <replaceable>filename</replaceable></entry>
