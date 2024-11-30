@@ -59,7 +59,7 @@ static size_t domain_suffix_diffoff(const CompactDomain *a,
     return i;
 }
 
-static int domain_suffix_ord(const void *cva, const void *cvb)
+static int CDECL domain_suffix_ord(const void *cva, const void *cvb)
 {
     const CompactDomain *a = (const CompactDomain*)cva, *b = (const CompactDomain*)cvb;
     size_t la = a->len, lb = b->len;

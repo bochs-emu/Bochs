@@ -249,7 +249,7 @@ int get_dns6_addr(struct in6_addr *pdns6_addr, uint32_t *scope_id)
     return -1;
 }
 
-static void winsock_cleanup(void)
+static void CDECL winsock_cleanup(void)
 {
     WSACleanup();
 }
