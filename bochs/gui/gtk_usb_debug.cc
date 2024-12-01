@@ -256,14 +256,15 @@ void usbdlg_create_apply_button(GtkWidget *vbox)
 
 #define MAX_TREE_ITEMS 50
 int tree_items;
-GtkTreeStore *treestore = NULL;
 GtkTreeIter titems[MAX_TREE_ITEMS];
 
 GtkTreeIter* treeview_insert(GtkWidget *treeview, GtkTreeIter *parent, char *str)
 {
+  GtkTreeStore *treestore;
   GtkTreeViewColumn *treecol;
   GtkCellRenderer *renderer;
 
+  treestore = (GtkTreeStore*)gtk_tree_view_get_model(GTK_TREE_VIEW(treeview));
   if (treestore == NULL) {
     treecol = gtk_tree_view_column_new();
     gtk_tree_view_column_set_title(treecol, str);
@@ -274,6 +275,7 @@ GtkTreeIter* treeview_insert(GtkWidget *treeview, GtkTreeIter *parent, char *str
     gtk_widget_set_can_focus(treeview, FALSE);
     treestore = gtk_tree_store_new(1, G_TYPE_STRING);
     gtk_tree_view_set_model(GTK_TREE_VIEW(treeview), GTK_TREE_MODEL(treestore));
+    g_object_unref(treestore);
     tree_items = 0;
     return NULL;
   } else {
@@ -351,6 +353,16 @@ void hc_uhci_do_item(GtkWidget *treeview, Bit32u FrameAddr, Bit32u FrameNum)
       }
     }
   }
+}
+
+static void uhci_display_td(GtkWidget *widget, gpointer data)
+{
+  GtkWidget* error = gtk_message_dialog_new(
+    GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
+  "UHCI display TD not implemented yet");
+  gtk_window_set_title(GTK_WINDOW(error), "WARNING");
+  gtk_dialog_run(GTK_DIALOG(error));
+  gtk_widget_destroy(error);
 }
 
 // UHCI main dialog
@@ -537,6 +549,7 @@ int uhci_debug_dialog(int type, int param1)
       gtk_label_set_text(GTK_LABEL(FNlabel), "SOF Frame Address");
       if (frame_addr != 0x00000000) {
         hc_uhci_do_item(treeview, frame_addr, frame_num);
+        g_signal_connect(button[7], "clicked", G_CALLBACK(uhci_display_td), NULL);
         gtk_widget_set_sensitive(button[7], 1);
         valid = 1;
       }
