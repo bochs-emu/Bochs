@@ -468,36 +468,44 @@ void bx_svga_cirrus_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
 
 void bx_svga_cirrus_c::mem_write_mode4and5_8bpp(Bit8u mode, Bit32u offset, Bit8u value)
 {
+  Bit8u sequ_map_mask = BX_CIRRUS_THIS sequencer.reg[0x02];
   Bit8u val = value;
   Bit8u *dst;
 
   dst = BX_CIRRUS_THIS s.memory + offset;
   for (int x = 0; x < 8; x++) {
-    if (val & 0x80) {
-      *dst = BX_CIRRUS_THIS control.shadow_reg1;
-    } else if (mode == 5) {
-      *dst = BX_CIRRUS_THIS control.shadow_reg0;
+    if (sequ_map_mask & 0x80) {
+      if (val & 0x80) {
+        *dst = BX_CIRRUS_THIS control.shadow_reg1;
+      } else if (mode == 5) {
+        *dst = BX_CIRRUS_THIS control.shadow_reg0;
+      }
     }
     val <<= 1;
+    sequ_map_mask <<= 1;
     dst++;
   }
 }
 
 void bx_svga_cirrus_c::mem_write_mode4and5_16bpp(Bit8u mode, Bit32u offset, Bit8u value)
 {
+  Bit8u sequ_map_mask = BX_CIRRUS_THIS sequencer.reg[0x02];
   Bit8u val = value;
   Bit8u *dst;
 
   dst = BX_CIRRUS_THIS s.memory + offset;
   for (int x = 0; x < 8; x++) {
-    if (val & 0x80) {
-      *dst = BX_CIRRUS_THIS control.shadow_reg1;
-      *(dst + 1) = BX_CIRRUS_THIS control.reg[0x11];
-    } else if (mode == 5) {
-      *dst = BX_CIRRUS_THIS control.shadow_reg0;
-      *(dst + 1) = BX_CIRRUS_THIS control.reg[0x10];
+    if (sequ_map_mask & 0x80) {
+      if (val & 0x80) {
+        *dst = BX_CIRRUS_THIS control.shadow_reg1;
+        *(dst + 1) = BX_CIRRUS_THIS control.reg[0x11];
+      } else if (mode == 5) {
+        *dst = BX_CIRRUS_THIS control.shadow_reg0;
+        *(dst + 1) = BX_CIRRUS_THIS control.reg[0x10];
+      }
     }
     val <<= 1;
+    sequ_map_mask <<= 1;
     dst += 2;
   }
 }
