@@ -2962,6 +2962,7 @@ case "$target" in
     BXIMAGE_LINK_OPTS="-luser32"
     if test "$enable_static_link" = yes; then
       BXIMAGE_LINK_OPTS="${BXIMAGE_LINK_OPTS} -static"
+      NICLIST_LINK_OPTS="-static"
     fi
     if test "$networking" = yes; then
       OPTIONAL_TARGET="$OPTIONAL_TARGET bxhub niclist"
@@ -2996,6 +2997,7 @@ AC_SUBST(BXIMAGE_FLAG)
 AC_SUBST(BXIMAGE_LINK_OPTS)
 AC_SUBST(BXHUB_FLAG)
 AC_SUBST(BXHUB_LINK_OPTS)
+AC_SUBST(NICLIST_LINK_OPTS)
 AC_SUBST(CXXFLAGS_CONSOLE)
 
 ENH_DBG_OBJS=""

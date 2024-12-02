@@ -248,7 +248,7 @@ bximage@EXE@: misc/bximage.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/v
 	@LINK_CONSOLE@ $(BXIMAGE_LINK_OPTS) misc/bximage.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc.o misc/vbox.o
 
 niclist@EXE@: misc/niclist.o
-	@LINK_CONSOLE@ misc/niclist.o
+	@LINK_CONSOLE@ misc/niclist.o @NICLIST_LINK_OPTS@
 
 bxhub@EXE@: misc/bxhub.o misc/netutil.o
 	@LINK_CONSOLE@ misc/bxhub.o misc/netutil.o @BXHUB_LINK_OPTS@
@@ -350,7 +350,7 @@ cpu/fpu/libfpu.a::
 
 cpu/softfloat3e/libsoftfloat.a::
 	cd cpu/softfloat3e @COMMAND_SEPARATOR@
-	$(MAKE) $(MDEFINES) CXX=$(CXX) libsoftfloat.a
+	$(MAKE) $(MDEFINES) CXX="$(CXX)" libsoftfloat.a
 	@CD_UP_TWO@
 
 memory/libmemory.a::
