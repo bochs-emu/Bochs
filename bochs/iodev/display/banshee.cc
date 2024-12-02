@@ -2657,6 +2657,7 @@ void bx_banshee_c::blt_screen_to_screen()
       dst_ptr += dpitch;
     } while (--nrows);
   } else if (colorkey_en > 0) {
+    src_ptr += (sy * abs(spitch) + sx * spxsize);
     nrows = h;
     do {
       src_ptr1 = src_ptr;
