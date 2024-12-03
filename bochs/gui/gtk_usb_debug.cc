@@ -254,6 +254,7 @@ void usbdlg_create_apply_button(GtkWidget *vbox)
   gtk_box_pack_start(GTK_BOX(apply_hbox), apply_button, FALSE, FALSE, 2);
 }
 
+// Tree view support
 #define MAX_TREE_ITEMS 50
 int tree_items;
 GtkTreeIter titems[MAX_TREE_ITEMS];
@@ -355,14 +356,140 @@ void hc_uhci_do_item(GtkWidget *treeview, Bit32u FrameAddr, Bit32u FrameNum)
   }
 }
 
+static void uhci_queue_dialog(Bit32u addr)
+{
+  int ret;
+  struct QUEUE queue;
+  char buffer[COMMON_STR_SIZE];
+  GtkWidget *mainVbox, *label[2], *entry[2], *checkbox[4];
+  GtkWidget *Hframe, *Vframe, *grid[2];
+
+  DEV_MEM_READ_PHYSICAL(addr, sizeof(struct QUEUE), (Bit8u*)&queue);
+  GtkWidget *dialog =
+    gtk_dialog_new_with_buttons("Queue", GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL,
+                                g_dgettext("gtk30", "_OK"), GTK_RESPONSE_OK,
+                                g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_CANCEL,
+                                NULL);
+  gtk_window_set_default_size(GTK_WINDOW(dialog), 200, 250);
+  // TODO: set focus
+  mainVbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+  gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), mainVbox, TRUE, TRUE, 2);
+  Hframe = gtk_frame_new("Horizontal Pointer");
+  gtk_box_pack_start(GTK_BOX(mainVbox), Hframe, FALSE, FALSE, 2);
+  grid[0] = gtk_grid_new();
+  gtk_container_add(GTK_CONTAINER(Hframe), grid[0]);
+  label[0] = gtk_label_new("Pointer");
+  gtk_grid_attach(GTK_GRID(grid[0]), label[0], 0, 0, 1, 1);
+  entry[0] = gtk_entry_new();
+  gtk_grid_attach(GTK_GRID(grid[0]), entry[0], 1, 0, 1, 1);
+  checkbox[0] = gtk_check_button_new_with_label("Queue");
+  gtk_grid_attach(GTK_GRID(grid[0]), checkbox[0], 1, 1, 1, 1);
+  checkbox[1] = gtk_check_button_new_with_label("Terminate");
+  gtk_grid_attach(GTK_GRID(grid[0]), checkbox[1], 1, 2, 1, 1);
+  Vframe = gtk_frame_new("Vertical Pointer");
+  gtk_box_pack_start(GTK_BOX(mainVbox), Vframe, FALSE, FALSE, 2);
+  grid[1] = gtk_grid_new();
+  gtk_container_add(GTK_CONTAINER(Vframe), grid[1]);
+  label[1] = gtk_label_new("Pointer");
+  gtk_grid_attach(GTK_GRID(grid[1]), label[1], 0, 0, 1, 1);
+  entry[1] = gtk_entry_new();
+  gtk_grid_attach(GTK_GRID(grid[1]), entry[1], 1, 0, 1, 1);
+  checkbox[2] = gtk_check_button_new_with_label("Queue");
+  gtk_grid_attach(GTK_GRID(grid[1]), checkbox[2], 1, 1, 1, 1);
+  checkbox[3] = gtk_check_button_new_with_label("Terminate");
+  gtk_grid_attach(GTK_GRID(grid[1]), checkbox[3], 1, 2, 1, 1);
+  // Set values
+  sprintf(buffer, "0x%04X", queue.horz & ~0xF);
+  gtk_entry_set_text(GTK_ENTRY(entry[0]), buffer);
+  if (queue.horz & 2) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[0]), TRUE);
+  }
+  if (queue.horz & 1) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[1]), TRUE);
+  }
+  sprintf(buffer, "0x%04X", queue.vert & ~0xF);
+  gtk_entry_set_text(GTK_ENTRY(entry[1]), buffer);
+  if (queue.vert & 2) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[2]), TRUE);
+  }
+  if (queue.vert & 1) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[3]), TRUE);
+  }
+  // Show dialog
+  gtk_widget_show_all(dialog);
+  ret = gtk_dialog_run(GTK_DIALOG(dialog));
+  if (ret == GTK_RESPONSE_OK) {
+    strcpy(buffer, gtk_entry_get_text(GTK_ENTRY(entry[0])));
+    queue.horz = strtol(buffer, NULL, 0);
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[0]))) {
+      queue.horz |= 2;
+    }
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[1]))) {
+      queue.horz |= 1;
+    }
+    strcpy(buffer, gtk_entry_get_text(GTK_ENTRY(entry[1])));
+    queue.vert = strtol(buffer, NULL, 0);
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[2]))) {
+      queue.vert |= 2;
+    }
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[3]))) {
+      queue.vert |= 1;
+    }
+    DEV_MEM_WRITE_PHYSICAL(addr, sizeof(struct QUEUE), (Bit8u*)&queue);
+  }
+  gtk_widget_destroy(dialog);
+}
+
+static void uhci_td_dialog(Bit32u addr)
+{
+  int ret;
+  GtkWidget *mainVbox, *label;
+
+  GtkWidget *dialog =
+    gtk_dialog_new_with_buttons("Transfer Descriptor", GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL,
+                                g_dgettext("gtk30", "_OK"), GTK_RESPONSE_OK,
+                                g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_CANCEL,
+                                NULL);
+  gtk_window_set_default_size(GTK_WINDOW(dialog), 250, 250);
+  mainVbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+  gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), mainVbox, TRUE, TRUE, 2);
+  label = gtk_label_new("Not implemented yet");
+  gtk_box_pack_start(GTK_BOX(mainVbox), label, TRUE, TRUE, 2);
+  // Show dialog
+  gtk_widget_show_all(dialog);
+  ret = gtk_dialog_run(GTK_DIALOG(dialog));
+  if (ret == GTK_RESPONSE_OK) {
+    // TODO
+  }
+  gtk_widget_destroy(dialog);
+}
+
 static void uhci_display_td(GtkWidget *widget, gpointer data)
 {
-  GtkWidget* error = gtk_message_dialog_new(
-    GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
-  "UHCI display TD not implemented yet");
-  gtk_window_set_title(GTK_WINDOW(error), "WARNING");
-  gtk_dialog_run(GTK_DIALOG(error));
-  gtk_widget_destroy(error);
+  GtkTreeSelection *selection;
+  GtkTreeModel     *model;
+  GtkTreeIter       iter;
+
+  selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(data));
+  if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
+    gchar *name;
+
+    gtk_tree_model_get(model, &iter, 0, &name, -1);
+    Bit32u value = g_ascii_strtoull(name, NULL, 16);
+    if (g_strstr_len(name, 14, "TD") == NULL) {
+      uhci_queue_dialog(value);
+    } else {
+      uhci_td_dialog(value);
+    }
+    g_free(name);
+  } else {
+    GtkWidget* error = gtk_message_dialog_new(
+      GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
+    "No TD selected");
+    gtk_window_set_title(GTK_WINDOW(error), "WARNING");
+    gtk_dialog_run(GTK_DIALOG(error));
+    gtk_widget_destroy(error);
+  }
 }
 
 // UHCI main dialog
@@ -549,7 +676,7 @@ int uhci_debug_dialog(int type, int param1)
       gtk_label_set_text(GTK_LABEL(FNlabel), "SOF Frame Address");
       if (frame_addr != 0x00000000) {
         hc_uhci_do_item(treeview, frame_addr, frame_num);
-        g_signal_connect(button[7], "clicked", G_CALLBACK(uhci_display_td), NULL);
+        g_signal_connect(button[7], "clicked", G_CALLBACK(uhci_display_td), treeview);
         gtk_widget_set_sensitive(button[7], 1);
         valid = 1;
       }
