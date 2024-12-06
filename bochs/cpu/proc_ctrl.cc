@@ -404,6 +404,13 @@ void BX_CPU_C::handleCpuModeChange(void)
   set_PKeys(BX_CPU_THIS_PTR pkru, BX_CPU_THIS_PTR pkrs);
 #endif
 
+#if BX_DEBUGGER
+  if (bx_dbg.debugger_active) {
+    // assert magic async_event to stop trace execution
+    BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
+  }
+#endif
+
   if (mode != BX_CPU_THIS_PTR cpu_mode) {
     BX_DEBUG(("%s activated", cpu_mode_string(BX_CPU_THIS_PTR cpu_mode)));
 #if BX_DEBUGGER
