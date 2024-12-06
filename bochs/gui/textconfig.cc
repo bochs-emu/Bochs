@@ -560,12 +560,11 @@ int bx_text_config_interface(int menu)
             case BX_CI_RT_CONT:
               SIM->update_runtime_options();
               bx_printf("Continuing simulation\n");
-              return 0;
+              return 1;
             case BX_CI_RT_QUIT:
               bx_printf("You chose quit on the configuration interface.\n");
               bx_user_quit = 1;
-              bx_exit(1);
-              return -1;
+              return 0;
             default: bx_printf("Menu choice %d not implemented.\n", choice);
           }
         }

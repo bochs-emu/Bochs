@@ -780,7 +780,8 @@ static int win32_ci_callback(void *userdata, ci_command_t command)
       if (!bx_gui->has_gui_console()) {
         if (MainMenuDialog(GetBochsWindow(), 1) < 0) {
           bx_user_quit = 1;
-          bx_exit(1);
+        } else {
+          return 1;
         }
       }
       break;

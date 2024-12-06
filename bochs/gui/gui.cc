@@ -700,7 +700,9 @@ void bx_gui_c::paste_handler(void)
 void bx_gui_c::config_handler(void)
 {
   if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_RUNTIME) {
-    SIM->configuration_interface(NULL, CI_RUNTIME_CONFIG);
+    if (!SIM->configuration_interface(NULL, CI_RUNTIME_CONFIG)) {
+      bx_exit(1);
+    }
   }
 }
 
