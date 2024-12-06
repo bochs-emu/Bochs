@@ -665,9 +665,12 @@ void logfunctions::fatal(int level, const char *prefix, const char *fmt, va_list
     // store prefix and message in 'exit_msg' before unloading device plugins
     sprintf(exit_msg, "%s %s", prefix, tmpbuf);
   }
-#if !BX_DEBUGGER
-  bx_atexit();
+#if BX_DEBUGGER
+  if (!bx_dbg.debugger_active)
 #endif
+  {
+    bx_atexit();
+  }
 #if BX_WITH_CARBON
   if (!isatty(STDIN_FILENO) && !SIM->get_init_done()) {
     snprintf(exit_msg, sizeof(exit_msg), "Bochs startup error\n%s", tmpbuf);
