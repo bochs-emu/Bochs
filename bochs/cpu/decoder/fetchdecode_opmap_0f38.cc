@@ -21,10 +21,15 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_FETCHDECODE_OPMAP_0F38_H
-#define BX_FETCHDECODE_OPMAP_0F38_H
+#include "config.h"
 
 #if BX_CPU_LEVEL >= 6
+
+#ifndef BX_STANDALONE_DECODER
+#define BX_STANDALONE_DECODER
+#endif
+
+#include "fetchdecode.h"
 
 /* ************************************************************************ */
 /* 3-byte opcode table (Table A-4, 0F 38) */
@@ -247,7 +252,7 @@ static const Bit64u BxOpcodeTable0F38FC[] = {
 
 /* ************************************************************************ */
 
-static const Bit64u *BxOpcodeTable0F38[256] = {
+const Bit64u *BxOpcodeTable0F38[256] = {
   // 3-byte opcode 0x0F 0x38
   /* 0F 38 00 */ { BxOpcodeTable0F3800 },
   /* 0F 38 01 */ { BxOpcodeTable0F3801 },
@@ -512,5 +517,3 @@ static const Bit64u *BxOpcodeTable0F38[256] = {
 };
 
 #endif // BX_CPU_LEVEL >= 6
-
-#endif // BX_FETCHDECODE_OPMAP_0F38_H

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2019 Stanislav Shwartsman
+//   Copyright (c) 2011-2024 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -21,10 +21,15 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_XOP_FETCHDECODE_TABLES_H
-#define BX_XOP_FETCHDECODE_TABLES_H
+#include "config.h"
 
 #if BX_SUPPORT_AVX
+
+#ifndef BX_STANDALONE_DECODER
+#define BX_STANDALONE_DECODER
+#endif
+
+#include "fetchdecode.h"
 
 // 256 entries for XOP-encoded map 0x8 opcodes
 static const Bit64u BxOpcodeGroup_XOP_0x8_01[] = {
@@ -182,7 +187,9 @@ static const Bit64u BxOpcodeGroup_XOP_0xA_10[] = {
   last_opcode(ATTR_VEX_W1 | ATTR_VEX_L0 | ATTR_IS64, BX_IA_BEXTR_GqEqId)
 };
 
-static const Bit64u *BxOpcodeTableXOP[256*3] = {
+/* ************************************************************************ */
+
+const Bit64u *BxOpcodeTableXOP[256*3] = {
   // 256 entries for XOP-encoded map 0x8 opcodes
   /* 00  */ ( BxOpcodeGroup_ERR ),
   /* 01  */ ( BxOpcodeGroup_XOP_0x8_01 ),
@@ -959,5 +966,3 @@ static const Bit64u *BxOpcodeTableXOP[256*3] = {
 };
 
 #endif // BX_SUPPORT_AVX
-
-#endif // BX_XOP_FETCHDECODE_TABLES_H

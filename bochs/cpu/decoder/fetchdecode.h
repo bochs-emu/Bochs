@@ -62,22 +62,9 @@ enum BxDecodeError {
 // according to instruction prefixes)
 //
 
-BX_CPP_INLINE Bit16u FetchWORD(const Bit8u *iptr)
-{
-   return ReadHostWordFromLittleEndian((Bit16u*)iptr);
-}
-
-BX_CPP_INLINE Bit32u FetchDWORD(const Bit8u *iptr)
-{
-   return ReadHostDWordFromLittleEndian((Bit32u*)iptr);
-}
-
-#if BX_SUPPORT_X86_64
-BX_CPP_INLINE Bit64u FetchQWORD(const Bit8u *iptr)
-{
-   return ReadHostQWordFromLittleEndian((Bit64u*)iptr);
-}
-#endif
+#define FetchDWORD(iptr) ReadHostDWordFromLittleEndian((Bit32u*)(iptr))
+#define FetchWORD(iptr) ReadHostWordFromLittleEndian((Bit16u*)(iptr))
+#define FetchQWORD(iptr) ReadHostQWordFromLittleEndian((Bit64u*)(iptr));
 
 #define BX_PREPARE_AMX               (0x800)
 #define BX_EVEX_VL_IGNORE            (0x400 | BX_PREPARE_EVEX)

@@ -21,10 +21,15 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_AVX_FETCHDECODE_TABLES_H
-#define BX_AVX_FETCHDECODE_TABLES_H
+#include "config.h"
 
 #if BX_SUPPORT_AVX
+
+#ifndef BX_STANDALONE_DECODER
+#define BX_STANDALONE_DECODER
+#endif
+
+#include "fetchdecode.h"
 
 // VEX-encoded 0x0F opcodes
 static const Bit64u BxOpcodeGroup_VEX_0F10[] = {
@@ -1601,7 +1606,7 @@ static const Bit64u BxOpcodeGroup_VEX_0F3AF0[] = {
 
 /* ************************************************************************ */
 
-static const Bit64u *BxOpcodeTableVEX[256*3] = {
+const Bit64u *BxOpcodeTableVEX[256*3] = {
   // 256 entries for VEX-encoded 0x0F opcodes
   /* 00  */ ( BxOpcodeGroup_ERR ),
   /* 01  */ ( BxOpcodeGroup_ERR ),
@@ -2397,5 +2402,3 @@ static const Bit64u *BxOpcodeTableVEX[256*3] = {
 };
 
 #endif // BX_SUPPORT_AVX
-
-#endif // BX_AVX_FETCHDECODE_TABLES_H

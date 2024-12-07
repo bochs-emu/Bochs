@@ -21,10 +21,15 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_FETCHDECODE_OPMAP_0F3A_H
-#define BX_FETCHDECODE_OPMAP_0F3A_H
+#include "config.h"
 
 #if BX_CPU_LEVEL >= 6
+
+#ifndef BX_STANDALONE_DECODER
+#define BX_STANDALONE_DECODER
+#endif
+
+#include "fetchdecode.h"
 
 /* ************************************************************************ */
 /* 3-byte opcode table (Table A-5, 0F 3A) */
@@ -88,7 +93,7 @@ static const Bit64u BxOpcodeTable0F3ADF[] = { last_opcode(ATTR_SSE_PREFIX_66, BX
 
 /* ************************************************************************ */
 
-static const Bit64u *BxOpcodeTable0F3A[256] = {
+const Bit64u *BxOpcodeTable0F3A[256] = {
   // 3-byte opcode 0x0F 0x3A
   /* 0F 3A 00 */ { BxOpcodeGroup_ERR },
   /* 0F 3A 01 */ { BxOpcodeGroup_ERR },
@@ -349,5 +354,3 @@ static const Bit64u *BxOpcodeTable0F3A[256] = {
 };
 
 #endif
-
-#endif // BX_FETCHDECODE_OPMAP_0F3A_H

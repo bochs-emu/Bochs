@@ -83,18 +83,19 @@ static unsigned sreg_mod1or2_base32[16] = {
 // common fetchdecode32/64 opcode tables
 #include "fetchdecode.h"
 #include "fetchdecode_opmap.h"
-#include "fetchdecode_opmap_0f38.h"
-#include "fetchdecode_opmap_0f3a.h"
+
+extern const Bit64u *BxOpcodeTable0F38[];
+extern const Bit64u *BxOpcodeTable0F3A[];
 
 #include "fetchdecode_x87.h"
 
 #if BX_SUPPORT_AVX
-#include "fetchdecode_avx.h"
-#include "fetchdecode_xop.h"
+extern const Bit64u *BxOpcodeTableVEX[];
+extern const Bit64u *BxOpcodeTableXOP[];
 #endif
 
 #if BX_SUPPORT_EVEX
-#include "fetchdecode_evex.h"
+extern const Bit64u *BxOpcodeTableEVEX[];
 #endif
 
 // table of all Bochs opcodes

@@ -21,10 +21,15 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_EVEX_FETCHDECODE_TABLES_H
-#define BX_EVEX_FETCHDECODE_TABLES_H
+#include "config.h"
 
 #if BX_SUPPORT_EVEX
+
+#ifndef BX_STANDALONE_DECODER
+#define BX_STANDALONE_DECODER
+#endif
+
+#include "fetchdecode.h"
 
 // EVEX-encoded 0x0F opcodes
 static const Bit64u BxOpcodeGroup_EVEX_0F10[] = {
@@ -2420,7 +2425,9 @@ static const Bit64u BxOpcodeGroup_EVEX_MAP6_D7[] = {
   last_opcode(ATTR_VEX_W0 | ATTR_SSE_PREFIX_F2, BX_IA_EVEX_VFCMULCSH_VshHphWsh_Kmask)
 };
 
-static const Bit64u *BxOpcodeTableEVEX[256*5] = {
+/* ************************************************************************ */
+
+const Bit64u *BxOpcodeTableEVEX[256*5] = {
   // 256 entries for EVEX-encoded 0x0F opcodes
   /* 00 */ ( BxOpcodeGroup_ERR ),
   /* 01 */ ( BxOpcodeGroup_ERR ),
@@ -3729,5 +3736,3 @@ static const Bit64u *BxOpcodeTableEVEX[256*5] = {
 };
 
 #endif // BX_SUPPORT_EVEX
-
-#endif // BX_AVX_FETCHDECODE_TABLES_H

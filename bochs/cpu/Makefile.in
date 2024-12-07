@@ -46,6 +46,11 @@ OBJS = \
 	event.o \
 	icache.o \
 	decoder/fetchdecode32.o \
+	decoder/fetchdecode_opmap_0f38.o \
+	decoder/fetchdecode_opmap_0f3a.o \
+	decoder/fetchdecode_opmap_avx.o \
+	decoder/fetchdecode_opmap_xop.o \
+	decoder/fetchdecode_opmap_evex.o \
 	access.o \
 	access2.o \
 	shift16.o \
@@ -902,31 +907,29 @@ disasm.o: decoder/disasm.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio
  vmx_ctrls.h access.h decoder/instr.h \
  decoder/decoder.h decoder/fetchdecode.h decoder/ia_opcodes.h \
  decoder/ia_opcodes.def decoder/ia_opcodes_evex.def ../bx_debug/debug.h
-fetchdecode32.o: decoder/fetchdecode32.@CPP_SUFFIX@ ../bochs.h ../config.h \
+fetchdecode32.o: decoder/fetchdecode32.cc ../bochs.h ../config.h \
  ../osdep.h ../logio.h ../misc/bswap.h cpu.h \
- ../bx_debug/debug.h ../config.h ../osdep.h ../cpu/decoder/decoder.h \
- ../cpu/decoder/features.h decoder/decoder.h \
- ../instrument/stubs/instrument.h i387.h \
+ ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../cpu/decoder/features.h ../instrument/stubs/instrument.h i387.h \
  softfloat3e/include/softfloat_types.h fpu/tag_w.h \
  fpu/status_w.h fpu/control_w.h crregs.h \
- descriptor.h decoder/instr.h \
- lazy_flags.h tlb.h icache.h \
- xmm.h vmx.h vmx_ctrls.h \
- stack.h access.h cpu_templates.h \
+ descriptor.h lazy_flags.h tlb.h icache.h \
+ xmm.h vmx.h vmx_ctrls.h stack.h access.h cpu_templates.h \
  cpu_templates_pfp.h ../cpu/softfloat3e/include/softfloat.h \
  ../cpu/softfloat3e/include/softfloat_types.h \
  ../cpu/softfloat3e/include/softfloat-extra.h \
  ../cpu/softfloat3e/include/internals.h simd_int.h \
  decoder/decoder.h decoder/instr.h decoder/fetchdecode.h \
  decoder/ia_opcodes.h decoder/ia_opcodes.def decoder/ia_opcodes_evex.def \
- decoder/fetchdecode_opmap.h decoder/fetchdecode_opmap_0f38.h \
- decoder/fetchdecode_opmap_0f3a.h decoder/fetchdecode_x87.h \
- decoder/fetchdecode_avx.h decoder/fetchdecode_xop.h decoder/fetchdecode_evex.h \
+ decoder/fetchdecode_opmap.h decoder/fetchdecode_x87.h \
  ../cpu/simd_int.h ../cpu/simd_pfp.h ../cpu/simd_compare.h ../cpu/simd_vnni.h
-fetchdecode64.o: decoder/fetchdecode64.@CPP_SUFFIX@ ../bochs.h ../config.h \
+fetchdecode64.o: decoder/fetchdecode64.cc ../bochs.h ../config.h \
  ../osdep.h ../logio.h ../misc/bswap.h decoder/instr.h decoder/decoder.h \
  decoder/features.h decoder/fetchdecode.h decoder/ia_opcodes.h \
  decoder/ia_opcodes.def decoder/ia_opcodes_evex.def decoder/fetchdecode_opmap.h \
- decoder/fetchdecode_opmap_0f38.h decoder/fetchdecode_opmap_0f3a.h \
- decoder/fetchdecode_x87.h decoder/fetchdecode_avx.h \
- decoder/fetchdecode_xop.h decoder/fetchdecode_evex.h
+ decoder/fetchdecode_x87.h
+fetchdecode_opmap_0f38.o: decoder/fetchdecode_opmap_0f38.cc ../config.h decoder/fetchdecode.h
+fetchdecode_opmap_0f3a.o: decoder/fetchdecode_opmap_0f38.cc ../config.h decoder/fetchdecode.h
+fetchdecode_opmap_avx.o: decoder/fetchdecode_opmap_avx.cc ../config.h decoder/fetchdecode.h
+fetchdecode_opmap_evex.o: decoder/fetchdecode_opmap_evex.cc ../config.h decoder/fetchdecode.h
+fetchdecode_opmap_xop.o: decoder/fetchdecode_opmap_xop.cc ../config.h decoder/fetchdecode.h
