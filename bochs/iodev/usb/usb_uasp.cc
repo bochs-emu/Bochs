@@ -452,8 +452,9 @@ int usb_msd_device_c::uasp_do_command(USBPacket *p)
       r->len = uasp_do_response(req, r);
       req->status = NULL;
       usb_packet_complete(r);
-    } else
-      UASP_SET_RESPONSE(req->mode);
+    } else {
+      req->mode = UASP_SET_RESPONSE(req->mode);
+    }
     return p->len;
   } else
     BX_ERROR(("uasp: unknown IU_id on command pipe: %d", hdr->id));
