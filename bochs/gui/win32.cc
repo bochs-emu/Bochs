@@ -1246,16 +1246,16 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
     if (stretch_factor == 1) {
       BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top,
-             ps.rcPaint.right - ps.rcPaint.left + 1,
-             ps.rcPaint.bottom - ps.rcPaint.top + 1, hdcMem,
+             ps.rcPaint.right - ps.rcPaint.left,
+             ps.rcPaint.bottom - ps.rcPaint.top, hdcMem,
              ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
     } else {
       StretchBlt(hdc, ps.rcPaint.left, ps.rcPaint.top,
-                 ps.rcPaint.right - ps.rcPaint.left + 1,
-                 ps.rcPaint.bottom - ps.rcPaint.top + 1, hdcMem,
+                 ps.rcPaint.right - ps.rcPaint.left,
+                 ps.rcPaint.bottom - ps.rcPaint.top, hdcMem,
                  ps.rcPaint.left/stretch_factor, ps.rcPaint.top/stretch_factor,
-                 (ps.rcPaint.right - ps.rcPaint.left+1)/stretch_factor,
-                 (ps.rcPaint.bottom - ps.rcPaint.top+1)/stretch_factor, SRCCOPY);
+                 (ps.rcPaint.right - ps.rcPaint.left)/stretch_factor,
+                 (ps.rcPaint.bottom - ps.rcPaint.top)/stretch_factor, SRCCOPY);
     }
     DeleteDC (hdcMem);
     EndPaint (hwnd, &ps);
@@ -1704,9 +1704,6 @@ void bx_win32_gui_c::flush(void)
 {
   EnterCriticalSection(&stInfo.drawCS);
   if (updated_area_valid) {
-    // slight bugfix
-	updated_area.right++;
-	updated_area.bottom++;
 	InvalidateRect(stInfo.simWnd, &updated_area, FALSE);
 	updated_area_valid = FALSE;
   }
@@ -1725,7 +1722,7 @@ void bx_win32_gui_c::clear_screen(void)
   PatBlt(MemoryDC, 0, 0, stretched_x, stretched_y, BLACKNESS);
   SelectObject(MemoryDC, oldObj);
 
-  updateUpdated(0, 0, dimension_x-1, dimension_y-1);
+  updateUpdated(0, 0, dimension_x, dimension_y);
 
   LeaveCriticalSection(&stInfo.drawCS);
 }
@@ -1859,7 +1856,7 @@ void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
   SelectObject(MemoryDC, oldObj);
 
-  updateUpdated(x0, y0, x0 + x_tilesize - 1, y0 + yt - 1);
+  updateUpdated(x0, y0, x0 + x_tilesize, y0 + yt);
 
   ReleaseDC(stInfo.simWnd, hdc);
   LeaveCriticalSection(&stInfo.drawCS);
@@ -2119,7 +2116,7 @@ void DrawBitmap(HDC hdc, HBITMAP hBitmap, int xStart, int yStart, int width,
 
   SelectObject(MemoryDC, oldObj);
 
-  updateUpdated(xStart, yStart, ptSize.x + xStart - 1, ptSize.y + yStart - 1);
+  updateUpdated(xStart, yStart, ptSize.x + xStart, ptSize.y + yStart);
 
   DeleteDC(hdcMem);
 }
