@@ -44,7 +44,9 @@ const char *chkTxt[6] = {"Reset", "Enable", "Event", "Doorbell", "Start of Frame
 const char *chkBXPN[6] = {BXPN_USB_DEBUG_RESET, BXPN_USB_DEBUG_ENABLE, BXPN_USB_DEBUG_EVENT,
                           BXPN_USB_DEBUG_DOORBELL, BXPN_USB_DEBUG_START_FRAME, BXPN_USB_DEBUG_NON_EXIST};
 
-GtkWidget *main_dialog;
+int usbdbg_param2;
+
+GtkWidget *main_dialog, *td_dialog;
 GtkWidget *uhci_entry[UHCI_REG_COUNT];
 GtkWidget *DFframe, *DFvbox, *checkbox[6];
 GtkWidget *apply_button;
@@ -367,7 +369,7 @@ static void uhci_queue_dialog(Bit32u addr)
   DEV_MEM_READ_PHYSICAL(addr, sizeof(struct QUEUE), (Bit8u*)&queue);
   GtkWidget *dialog =
     gtk_dialog_new_with_buttons("Queue", GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL,
-                                g_dgettext("gtk30", "_OK"), GTK_RESPONSE_OK,
+                                g_dgettext("gtk30", "_Save"), GTK_RESPONSE_OK,
                                 g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_CANCEL,
                                 NULL);
   gtk_window_set_default_size(GTK_WINDOW(dialog), 200, 250);
@@ -440,28 +442,237 @@ static void uhci_queue_dialog(Bit32u addr)
   gtk_widget_destroy(dialog);
 }
 
+static void depth_breadth_sel(GtkWidget *widget, gpointer data)
+{
+  if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(widget))) {
+    gtk_button_set_label(GTK_BUTTON(widget), "(Depth first) Vf");
+  } else {
+    gtk_button_set_label(GTK_BUTTON(widget), "(Breadth first) Vf");
+  }
+}
+
+static void dump_buffer(GtkWidget *widget, gpointer data)
+{
+  GtkWidget* error = gtk_message_dialog_new(
+    GTK_WINDOW(td_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
+    "Not implemented yet");
+  gtk_window_set_title(GTK_WINDOW(error), "WARNING");
+  gtk_dialog_run(GTK_DIALOG(error));
+  gtk_widget_destroy(error);
+}
+
 static void uhci_td_dialog(Bit32u addr)
 {
   int ret;
-  GtkWidget *mainVbox, *label;
+  struct TD td;
+  char buffer[COMMON_STR_SIZE];
+  GtkWidget *mainVbox, *entry[7], *checkbox[16], *grid[4], *label[7];
+  GtkWidget *Shbox, *Svbox, *Bhbox, *LPframe, *Sframe[2], *PHframe;
+  GtkWidget *combo, *button;
 
-  GtkWidget *dialog =
+  DEV_MEM_READ_PHYSICAL(addr, sizeof(struct TD), (Bit8u*)&td);
+  td_dialog =
     gtk_dialog_new_with_buttons("Transfer Descriptor", GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL,
-                                g_dgettext("gtk30", "_OK"), GTK_RESPONSE_OK,
+                                g_dgettext("gtk30", "_Save"), GTK_RESPONSE_OK,
                                 g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_CANCEL,
                                 NULL);
-  gtk_window_set_default_size(GTK_WINDOW(dialog), 250, 250);
-  mainVbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-  gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), mainVbox, TRUE, TRUE, 2);
-  label = gtk_label_new("Not implemented yet");
-  gtk_box_pack_start(GTK_BOX(mainVbox), label, TRUE, TRUE, 2);
-  // Show dialog
-  gtk_widget_show_all(dialog);
-  ret = gtk_dialog_run(GTK_DIALOG(dialog));
-  if (ret == GTK_RESPONSE_OK) {
-    // TODO
+  if (usbdbg_param2 & USB_LPARAM_FLAG_BEFORE) {
+    gtk_window_set_title(GTK_WINDOW(td_dialog), "Transfer Descriptor: *Before*");
+  } else if (usbdbg_param2 & USB_LPARAM_FLAG_AFTER) {
+    gtk_window_set_title(GTK_WINDOW(td_dialog), "Transfer Descriptor: *After*");
   }
-  gtk_widget_destroy(dialog);
+  gtk_window_set_default_size(GTK_WINDOW(td_dialog), 250, 300);
+  mainVbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+  gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(td_dialog))), mainVbox, TRUE, TRUE, 2);
+  LPframe = gtk_frame_new("Link Pointer");
+  gtk_box_pack_start(GTK_BOX(mainVbox), LPframe, FALSE, FALSE, 2);
+  grid[0] = gtk_grid_new();
+  gtk_container_add(GTK_CONTAINER(LPframe), grid[0]);
+  label[0] = gtk_label_new("Link Pointer");
+  gtk_grid_attach(GTK_GRID(grid[0]), label[0], 0, 0, 1, 1);
+  entry[0] = gtk_entry_new();
+  gtk_grid_attach(GTK_GRID(grid[0]), entry[0], 1, 0, 1, 1);
+  checkbox[0] = gtk_check_button_new_with_label("(Breadth first) Vf");
+  g_signal_connect(checkbox[0], "clicked", G_CALLBACK(depth_breadth_sel), NULL);
+  gtk_grid_attach(GTK_GRID(grid[0]), checkbox[0], 1, 1, 1, 1);
+  checkbox[1] = gtk_check_button_new_with_label("Queue");
+  gtk_grid_attach(GTK_GRID(grid[0]), checkbox[1], 1, 2, 1, 1);
+  checkbox[2] = gtk_check_button_new_with_label("Terminate");
+  gtk_grid_attach(GTK_GRID(grid[0]), checkbox[2], 1, 3, 1, 1);
+  Sframe[0] = gtk_frame_new("Status");
+  gtk_box_pack_start(GTK_BOX(mainVbox), Sframe[0], FALSE, FALSE, 2);
+  Svbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+  gtk_container_add(GTK_CONTAINER(Sframe[0]), Svbox);
+  Shbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+  gtk_box_pack_start(GTK_BOX(Svbox), Shbox, FALSE, FALSE, 2);
+  label[1] = gtk_label_new("Actual Len");
+  gtk_box_pack_start(GTK_BOX(Shbox), label[1], TRUE, TRUE, 2);
+  entry[1] = gtk_entry_new();
+  gtk_box_pack_start(GTK_BOX(Shbox), entry[1], TRUE, TRUE, 2);
+  Sframe[1] = gtk_frame_new("Status");
+  gtk_box_pack_start(GTK_BOX(Svbox), Sframe[1], FALSE, FALSE, 2);
+  grid[1] = gtk_grid_new();
+  gtk_container_add(GTK_CONTAINER(Sframe[1]), grid[1]);
+  checkbox[3] = gtk_check_button_new_with_label("Active");
+  if ((usbdbg_param2 & USB_LPARAM_FLAG_AFTER) == 0) {
+    gtk_widget_set_sensitive(checkbox[3], 0);
+  }
+  gtk_grid_attach(GTK_GRID(grid[1]), checkbox[3], 0, 0, 1, 1);
+  checkbox[4] = gtk_check_button_new_with_label("Stalled");
+  gtk_grid_attach(GTK_GRID(grid[1]), checkbox[4], 0, 1, 1, 1);
+  checkbox[5] = gtk_check_button_new_with_label("Data Buffer Error");
+  gtk_grid_attach(GTK_GRID(grid[1]), checkbox[5], 0, 2, 1, 1);
+  checkbox[6] = gtk_check_button_new_with_label("Babble Detect");
+  gtk_grid_attach(GTK_GRID(grid[1]), checkbox[6], 0, 3, 1, 1);
+  checkbox[7] = gtk_check_button_new_with_label("NAK Received");
+  gtk_grid_attach(GTK_GRID(grid[1]), checkbox[7], 1, 0, 1, 1);
+  checkbox[8] = gtk_check_button_new_with_label("CRC / Timeout");
+  gtk_grid_attach(GTK_GRID(grid[1]), checkbox[8], 1, 1, 1, 1);
+  checkbox[9] = gtk_check_button_new_with_label("Bitstuff Error");
+  gtk_grid_attach(GTK_GRID(grid[1]), checkbox[9], 1, 2, 1, 1);
+  checkbox[10] = gtk_check_button_new_with_label("Reserved");
+  gtk_grid_attach(GTK_GRID(grid[1]), checkbox[10], 1, 3, 1, 1);
+  grid[2] = gtk_grid_new();
+  gtk_box_pack_start(GTK_BOX(Svbox), grid[2], FALSE, FALSE, 2);
+  checkbox[11] = gtk_check_button_new_with_label("Interrupt on Comp.");
+  gtk_grid_attach(GTK_GRID(grid[2]), checkbox[11], 0, 0, 1, 1);
+  checkbox[12] = gtk_check_button_new_with_label("Isosynchronus");
+  gtk_grid_attach(GTK_GRID(grid[2]), checkbox[12], 0, 1, 1, 1);
+  checkbox[13] = gtk_check_button_new_with_label("Low Speed");
+  gtk_grid_attach(GTK_GRID(grid[2]), checkbox[13], 2, 0, 1, 1);
+  checkbox[14] = gtk_check_button_new_with_label("Short Packet");
+  gtk_grid_attach(GTK_GRID(grid[2]), checkbox[14], 2, 1, 1, 1);
+  label[2] = gtk_label_new("C_ERR");
+  gtk_grid_attach(GTK_GRID(grid[2]), label[2], 1, 2, 1, 1);
+  entry[2] = gtk_entry_new();
+  gtk_grid_attach(GTK_GRID(grid[2]), entry[2], 2, 2, 1, 1);
+  PHframe = gtk_frame_new("Packet Header");
+  gtk_box_pack_start(GTK_BOX(mainVbox), PHframe, FALSE, FALSE, 2);
+  grid[3] = gtk_grid_new();
+  gtk_container_add(GTK_CONTAINER(PHframe), grid[3]);
+  label[3] = gtk_label_new("PID");
+  gtk_grid_attach(GTK_GRID(grid[3]), label[3], 1, 0, 1, 1);
+  combo = gtk_combo_box_text_new();
+  gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(combo), NULL, "IN (0x69)");
+  gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(combo), NULL, "OUT (0xE1)");
+  gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(combo), NULL, "SETUP (0x2D)");
+  gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(combo), NULL, "ERROR");
+  gtk_grid_attach(GTK_GRID(grid[3]), combo, 2, 0, 1, 1);
+  label[4] = gtk_label_new("Device Address");
+  gtk_grid_attach(GTK_GRID(grid[3]), label[4], 1, 1, 1, 1);
+  entry[3] = gtk_entry_new();
+  gtk_grid_attach(GTK_GRID(grid[3]), entry[3], 2, 1, 1, 1);
+  label[5] = gtk_label_new("End Point");
+  gtk_grid_attach(GTK_GRID(grid[3]), label[5], 1, 2, 1, 1);
+  entry[4] = gtk_entry_new();
+  gtk_grid_attach(GTK_GRID(grid[3]), entry[4], 2, 2, 1, 1);
+  label[6] = gtk_label_new("Max Length");
+  gtk_grid_attach(GTK_GRID(grid[3]), label[6], 1, 3, 1, 1);
+  entry[5] = gtk_entry_new();
+  gtk_grid_attach(GTK_GRID(grid[3]), entry[5], 2, 3, 1, 1);
+  checkbox[15] = gtk_check_button_new_with_label("Toggle Bit");
+  gtk_grid_attach(GTK_GRID(grid[3]), checkbox[15], 0, 2, 1, 1);
+  Bhbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+  gtk_box_pack_start(GTK_BOX(mainVbox), Bhbox, FALSE, FALSE, 2);
+  label[7] = gtk_label_new("Buffer");
+  gtk_box_pack_start(GTK_BOX(Bhbox), label[7], FALSE, FALSE, 2);
+  entry[6] = gtk_entry_new();
+  gtk_box_pack_start(GTK_BOX(Bhbox), entry[6], FALSE, FALSE, 2);
+  button = gtk_button_new_with_label(">");
+  g_signal_connect(button, "clicked", G_CALLBACK(dump_buffer), NULL);
+  gtk_box_pack_start(GTK_BOX(Bhbox), button, FALSE, FALSE, 2);
+  // Set values
+  sprintf(buffer, "0x%04X", td.dword0 & ~0xF);
+  gtk_entry_set_text(GTK_ENTRY(entry[0]), buffer);
+  if (td.dword0 & 4) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[0]), TRUE);
+  }
+  if (td.dword0 & 2) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[1]), TRUE);
+  }
+  if (td.dword0 & 1) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[2]), TRUE);
+  }
+  sprintf(buffer, "%i", td.dword1 & 0x3FF);
+  gtk_entry_set_text(GTK_ENTRY(entry[1]), buffer);
+  if (td.dword1 & (1 << 23)) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[3]), TRUE);
+  }
+  if (td.dword1 & (1 << 22)) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[4]), TRUE);
+  }
+  if (td.dword1 & (1 << 21)) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[5]), TRUE);
+  }
+  if (td.dword1 & (1 << 20)) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[6]), TRUE);
+  }
+  if (td.dword1 & (1 << 19)) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[7]), TRUE);
+  }
+  if (td.dword1 & (1 << 18)) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[8]), TRUE);
+  }
+  if (td.dword1 & (1 << 17)) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[9]), TRUE);
+  }
+  if (td.dword1 & (1 << 16)) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[10]), TRUE);
+  }
+  if (td.dword1 & (1 << 24)) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[11]), TRUE);
+  }
+  if (td.dword1 & (1 << 25)) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[12]), TRUE);
+  }
+  if (td.dword1 & (1 << 26)) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[13]), TRUE);
+  }
+  if (td.dword1 & (1 << 29)) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[14]), TRUE);
+  }
+  sprintf(buffer, "%i", (td.dword1 >> 27) & 3);
+  gtk_entry_set_text(GTK_ENTRY(entry[2]), buffer);
+  switch (td.dword2 & 0xff) {
+    case 0x69:
+      gtk_combo_box_set_active(GTK_COMBO_BOX(combo), 0);
+      break;
+    case 0xE1:
+      gtk_combo_box_set_active(GTK_COMBO_BOX(combo), 1);
+      break;
+    case 0x2D:
+      gtk_combo_box_set_active(GTK_COMBO_BOX(combo), 2);
+      break;
+    default:
+      gtk_combo_box_set_active(GTK_COMBO_BOX(combo), 3);
+  }
+  sprintf(buffer, "%i", (td.dword2 >> 8) & 0x7F);
+  gtk_entry_set_text(GTK_ENTRY(entry[3]), buffer);
+  sprintf(buffer, "%i", (td.dword2 >> 15) & 0x0F);
+  gtk_entry_set_text(GTK_ENTRY(entry[4]), buffer);
+  sprintf(buffer, "%i", (td.dword2 >> 21) & 0x7FF);
+  gtk_entry_set_text(GTK_ENTRY(entry[5]), buffer);
+  sprintf(buffer, "0x%08X", td.dword3);
+  gtk_entry_set_text(GTK_ENTRY(entry[6]), buffer);
+  // Show dialog
+  gtk_widget_show_all(td_dialog);
+  ret = gtk_dialog_run(GTK_DIALOG(td_dialog));
+  if (ret == GTK_RESPONSE_OK) {
+    strcpy(buffer, gtk_entry_get_text(GTK_ENTRY(entry[0])));
+    td.dword0 = strtol(buffer, NULL, 0);
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[0]))) {
+      td.dword0 |= 4;
+    }
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[1]))) {
+      td.dword0 |= 2;
+    }
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[2]))) {
+      td.dword0 |= 1;
+    }
+    // TODO
+    DEV_MEM_WRITE_PHYSICAL(addr, sizeof(struct TD), (Bit8u*)&td);
+  }
+  gtk_widget_destroy(td_dialog);
 }
 
 static void uhci_display_td(GtkWidget *widget, gpointer data)
@@ -996,6 +1207,7 @@ int usb_debug_dialog(int type, int param1, int param2)
     first_call = false;
   }
   host_param = SIM->get_param(hc_param_str[usb_debug_type]);
+  usbdbg_param2 = param2;
   if (usb_debug_type == USB_DEBUG_UHCI) {
     ret = uhci_debug_dialog(type, param1);
     return (ret == GTK_RESPONSE_OK) ? 0 : -1;
