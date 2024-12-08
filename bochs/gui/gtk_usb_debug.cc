@@ -455,15 +455,15 @@ static void dump_buffer(GtkWidget *widget, gpointer data)
 {
   GtkWidget* error = gtk_message_dialog_new(
     GTK_WINDOW(td_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
-    "Not implemented yet");
-  gtk_window_set_title(GTK_WINDOW(error), "WARNING");
+    "Buffer dump not implemented yet");
+  gtk_window_set_title(GTK_WINDOW(error), "Dump");
   gtk_dialog_run(GTK_DIALOG(error));
   gtk_widget_destroy(error);
 }
 
 static void uhci_td_dialog(Bit32u addr)
 {
-  int ret;
+  int ret, value;
   struct TD td;
   char buffer[COMMON_STR_SIZE];
   GtkWidget *mainVbox, *entry[7], *checkbox[16], *grid[4], *label[7];
@@ -652,6 +652,9 @@ static void uhci_td_dialog(Bit32u addr)
   gtk_entry_set_text(GTK_ENTRY(entry[4]), buffer);
   sprintf(buffer, "%i", (td.dword2 >> 21) & 0x7FF);
   gtk_entry_set_text(GTK_ENTRY(entry[5]), buffer);
+  if (td.dword2 & (1 << 19)) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[15]), TRUE);
+  }
   sprintf(buffer, "0x%08X", td.dword3);
   gtk_entry_set_text(GTK_ENTRY(entry[6]), buffer);
   // Show dialog
@@ -669,7 +672,68 @@ static void uhci_td_dialog(Bit32u addr)
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[2]))) {
       td.dword0 |= 1;
     }
-    // TODO
+    strcpy(buffer, gtk_entry_get_text(GTK_ENTRY(entry[1])));
+    td.dword1 = strtol(buffer, NULL, 0) & 0x3FF;
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[3]))) {
+      td.dword1 |= (1 << 23);
+    }
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[4]))) {
+      td.dword1 |= (1 << 22);
+    }
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[5]))) {
+      td.dword1 |= (1 << 21);
+    }
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[6]))) {
+      td.dword1 |= (1 << 20);
+    }
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[7]))) {
+      td.dword1 |= (1 << 19);
+    }
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[8]))) {
+      td.dword1 |= (1 << 18);
+    }
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[9]))) {
+      td.dword1 |= (1 << 17);
+    }
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[10]))) {
+      td.dword1 |= (1 << 16);
+    }
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[11]))) {
+      td.dword1 |= (1 << 24);
+    }
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[12]))) {
+      td.dword1 |= (1 << 25);
+    }
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[13]))) {
+      td.dword1 |= (1 << 26);
+    }
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[14]))) {
+      td.dword1 |= (1 << 29);
+    }
+    strcpy(buffer, gtk_entry_get_text(GTK_ENTRY(entry[2])));
+    td.dword1 |= ((strtol(buffer, NULL, 0) & 3) << 27);
+    value = gtk_combo_box_get_active(GTK_COMBO_BOX(combo));
+    switch (value) {
+      case 0:
+        td.dword2 = 0x69;
+        break;
+      case 1:
+        td.dword2 = 0xE1;
+        break;
+      case 2:
+        td.dword2 = 0x2D;
+        break;
+      default:
+        td.dword2 = 0;
+    }
+    strcpy(buffer, gtk_entry_get_text(GTK_ENTRY(entry[3])));
+    td.dword2 |= ((strtol(buffer, NULL, 0) & 0x7F) << 8);
+    strcpy(buffer, gtk_entry_get_text(GTK_ENTRY(entry[4])));
+    td.dword2 |= ((strtol(buffer, NULL, 0) & 0x0F) << 15);
+    strcpy(buffer, gtk_entry_get_text(GTK_ENTRY(entry[5])));
+    td.dword2 |= ((strtol(buffer, NULL, 0) & 0x7FF) << 21);
+    strcpy(buffer, gtk_entry_get_text(GTK_ENTRY(entry[6])));
+    td.dword3 = strtol(buffer, NULL, 0);
     DEV_MEM_WRITE_PHYSICAL(addr, sizeof(struct TD), (Bit8u*)&td);
   }
   gtk_widget_destroy(td_dialog);
