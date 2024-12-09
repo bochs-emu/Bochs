@@ -705,15 +705,28 @@ void bx_banshee_c::update(void)
           for (yc=0, yti = 0; yc<iHeight; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti = 0; xc<iWidth; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
-                vid_ptr = disp_ptr + (yc * pitch + xc);
+                if (v->banshee.half_mode) {
+                  if (v->banshee.double_width) {
+                    vid_ptr = disp_ptr + ((yc >> 1) * pitch + (xc >> 1));
+                  } else {
+                    vid_ptr = disp_ptr + ((yc >> 1) * pitch + xc);
+                  }
+                } else {
+                  vid_ptr = disp_ptr + (yc * pitch + xc);
+                }
                 tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
                 for (r=0; r<h; r++) {
                   vid_ptr2  = vid_ptr;
                   tile_ptr2 = tile_ptr;
                   for (c=0; c<w; c++) {
-                    *(tile_ptr2++) = *(vid_ptr2++);
+                    *(tile_ptr2++) = *(vid_ptr2);
+                    if (!v->banshee.double_width || (c & 1)) {
+                      vid_ptr2++;
+                    }
                   }
-                  vid_ptr  += pitch;
+                  if (!v->banshee.half_mode || (r & 1)) {
+                    vid_ptr += pitch;
+                  }
                   tile_ptr += info.pitch;
                 }
                 if (v->banshee.hwcursor.enabled) {
