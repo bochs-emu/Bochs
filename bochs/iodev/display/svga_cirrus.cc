@@ -1792,28 +1792,29 @@ void bx_svga_cirrus_c::update(void)
           for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
             for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
               if (GET_TILE_UPDATED (xti, yti)) {
-                vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + xc + hp);
+                if (!BX_CIRRUS_THIS s.y_doublescan) {
+                  vid_ptr = BX_CIRRUS_THIS disp_ptr + (yc * pitch + xc + hp);
+                } else {
+                  if (!BX_CIRRUS_THIS svga_double_width) {
+                    vid_ptr = BX_CIRRUS_THIS disp_ptr + ((yc >> 1) * pitch + xc + hp);
+                  } else {
+                    vid_ptr = BX_CIRRUS_THIS disp_ptr + ((yc >> 1) * pitch + ((xc + hp) >> 1));
+                  }
+                }
                 tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
                 for (r=0; r<h; r++) {
                   vid_ptr2  = vid_ptr;
                   tile_ptr2 = tile_ptr;
                   for (c=0; c<w; c++) {
-                    colour = 0;
-                    for (i=0; i<(int)BX_CIRRUS_THIS svga_bpp; i+=8) {
-                      colour |= *(vid_ptr2++) << i;
+                    colour = *(vid_ptr2);
+                    if (!BX_CIRRUS_THIS svga_double_width || (c & 1)) {
+                      vid_ptr2++;
                     }
-                    if (info.is_little_endian) {
-                      for (i=0; i<info.bpp; i+=8) {
-                        *(tile_ptr2++) = colour >> i;
-                      }
-                    }
-                    else {
-                      for (i=info.bpp-8; i>-8; i-=8) {
-                        *(tile_ptr2++) = colour >> i;
-                      }
-                    }
+                    *(tile_ptr2++) = colour;
                   }
-                  vid_ptr  += pitch;
+                  if (!BX_CIRRUS_THIS s.y_doublescan || (r & 1)) {
+                    vid_ptr += pitch;
+                  }
                   tile_ptr += info.pitch;
                 }
                 draw_hardware_cursor(xc, yc, &info);
