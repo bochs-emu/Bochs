@@ -385,7 +385,7 @@ void bx_sb16_c::init(void)
 
   // Allocate the IO addresses, 2x0..2xf, 3x0..3x4 and 388..38b
   for (addr=BX_SB16_IO; addr<BX_SB16_IO+BX_SB16_IOLEN; addr++) {
-    DEV_register_ioread_handler(this, &read_handler, addr, "SB16", 1);
+    DEV_register_ioread_handler(this, &read_handler, addr, "SB16", (addr & 1) ? 1 : 3);
     DEV_register_iowrite_handler(this, &write_handler, addr, "SB16", (addr & 1) ? 1 : 3);
   }
   for (addr=BX_SB16_IOMPU; addr<BX_SB16_IOMPU+BX_SB16_IOMPULEN; addr++) {
