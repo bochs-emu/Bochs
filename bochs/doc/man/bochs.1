@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochs 1 "26 Mar 2024" "bochs @version@" "The Bochs Project"
+.TH bochs 1 "14 Dec 2024" "bochs @version@" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochs \- Portable x86 Emulator.
@@ -62,6 +62,17 @@ Display available features / devices and exit
 .TP
 .BI \-h,\ --help\ cpu
 Display supported CPU models and exit
+.LP
+The following options are available if Bochs is compiled with debugger support.
+.TP
+.BI \-dbg
+Start Bochs internal debugger on startup
+.TP
+.BI \-rc\ filename
+Execute debugger commands stored in file
+.TP
+.BI \-dbglog
+Specify Bochs internal debugger log file name
 .LP
 You can override the settings from the configuration file
 with command line arguments, using the  same  syntax  as the
