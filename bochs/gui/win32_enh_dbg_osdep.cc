@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2021  The Bochs Project
+//  Copyright (C) 2008-2024  The Bochs Project
 
 #include "bochs.h"
 #include "bx_debug/debug.h"
@@ -128,6 +128,7 @@ WNDPROC wListView;  // all the lists use the same Proc
 // window resizing/docking variables
 unsigned CurXSize = 0;      // last known size of main client window
 unsigned CurYSize = 0;
+int      BytesCurSize = -1; // defaults to 125
 HCURSOR hCursResize;
 HCURSOR hCursDock;
 HCURSOR hCursArrow;
@@ -840,10 +841,12 @@ void RedrawColumns(int listnum)
     else if (listnum == ASM_WND)
     {
         // recalculate # of list items per page for all list windows
+        BytesCurSize = (BytesCurSize > 0) ? ListView_GetColumnWidth(hL[ASM_WND], 1) : 125;
         AsmPgSize = CallWindowProc(wListView,hL[ASM_WND],LVM_GETCOUNTPERPAGE,(WPARAM) 0,(LPARAM) 0);
         if (AsmPgSize != 0)
             ListLineRatio = ListVerticalPix / AsmPgSize;
-        CallWindowProc(wListView, hL[ASM_WND], LVM_SETCOLUMNWIDTH, 0, LVSCW_AUTOSIZE);
+        CallWindowProc(wListView, hL[ASM_WND], LVM_SETCOLUMNWIDTH, 0, LVSCW_AUTOSIZE_USEHEADER);
+        ListView_SetColumnWidth(hL[ASM_WND], 1, BytesCurSize);
     }
     else
     {
