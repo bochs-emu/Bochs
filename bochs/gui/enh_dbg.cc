@@ -1411,7 +1411,7 @@ void FillGDT()
     unsigned int k = (GDT_Len + 1) / 8;
     Bit8u gdtbuf[8];
     char *cols[18];
-    char gdttxt[90];
+    char gdttxt[100];
     doDumpRefresh = FALSE;
 
     Bit64u laddr = rV[GDTRnum];
@@ -1420,8 +1420,8 @@ void FillGDT()
     *gdttxt = 0;
     cols[0]= gdttxt + 1;
     cols[1]= gdttxt + 30;
-    cols[2]= gdttxt + 40;
-    cols[3]= gdttxt + 80;
+    cols[2]= gdttxt + 50;
+    cols[3]= gdttxt + 90;
     cols[4]= gdttxt;    // columns #5 to 17 are blank
     cols[5]= gdttxt;
     cols[6]= gdttxt;
