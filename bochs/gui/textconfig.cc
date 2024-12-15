@@ -1127,7 +1127,7 @@ static int text_ci_callback(void *userdata, ci_command_t command)
       }
       break;
     case CI_RUNTIME_CONFIG:
-      bx_text_config_interface(BX_CI_RUNTIME);
+      return bx_text_config_interface(BX_CI_RUNTIME);
       break;
     case CI_SHUTDOWN:
       break;
