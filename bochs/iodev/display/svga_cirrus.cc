@@ -1133,14 +1133,15 @@ void bx_svga_cirrus_c::vga_mem_write(bx_phy_address addr, Bit8u value)
 
     case 3: /* write mode 3 */
       {
-        const Bit8u bitmask = BX_CIRRUS_THIS s.graphics_ctrl.bitmask & value;
-        const Bit8u set_reset = BX_CIRRUS_THIS s.graphics_ctrl.set_reset;
-
         /* perform rotate on CPU data */
         if (BX_CIRRUS_THIS s.graphics_ctrl.data_rotate) {
           value = (value >> BX_CIRRUS_THIS s.graphics_ctrl.data_rotate) |
                   (value << (8 - BX_CIRRUS_THIS s.graphics_ctrl.data_rotate));
         }
+
+        const Bit8u bitmask = BX_CIRRUS_THIS s.graphics_ctrl.bitmask & value;
+        const Bit8u set_reset = BX_CIRRUS_THIS s.graphics_ctrl.set_reset;
+
         new_val[0] = BX_CIRRUS_THIS s.graphics_ctrl.latch[0] & ~bitmask;
         new_val[1] = BX_CIRRUS_THIS s.graphics_ctrl.latch[1] & ~bitmask;
         new_val[2] = BX_CIRRUS_THIS s.graphics_ctrl.latch[2] & ~bitmask;
