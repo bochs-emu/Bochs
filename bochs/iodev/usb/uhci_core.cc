@@ -827,7 +827,7 @@ void bx_uhci_core_c::uhci_timer(void)
 
     // The Frame Number Register is incremented every 1ms
     hub.usb_frame_num.frame_num++;
-    hub.usb_frame_num.frame_num &= (1024-1);
+    hub.usb_frame_num.frame_num &= (2048-1);
 
     // The status.interrupt bit should be set regardless of the enable bits if a IOC or SPD is found
     if (interrupt || shortpacket) {
