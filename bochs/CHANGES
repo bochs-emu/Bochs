@@ -72,6 +72,8 @@ Detailed change log :
 
 - I/O Devices
   - VGA / Bochs VBE support
+    - VGA core: added suppoort for read/write modes in odd/even (text) mode
+    - VGA core: fixed write mode 3 with data rotation
     - Added VBE memory size option (requires latest VGABIOS)
   - Cirrus SVGA
     - Added support for hardware cursor in VGA mode
@@ -81,6 +83,7 @@ Detailed change log :
       unreadable text in 8 bpp and 16 bpp modes)
     - Added support for graphics controller mode extensions in VGA mode
       Now the GD5446 PCI driver and the GD5430 ISA driver work correctly
+    - Fixes for write mode 4 & 5 and PCI reads from MMIO space
     - Fixed lags caused by incorrect redraw value for backward BitBlt
   - Voodoo / Banshee
     - Banshee: Fixes for address wrap handling during display update
