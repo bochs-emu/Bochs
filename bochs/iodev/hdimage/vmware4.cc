@@ -339,16 +339,16 @@ off_t vmware4_image_t::perform_seek()
     //
     off_t eof = ((::lseek(file_descriptor, 0, SEEK_END) + SECTOR_SIZE - 1) / SECTOR_SIZE) * SECTOR_SIZE;
     ::write(file_descriptor, tlb, (unsigned)header.tlb_size_sectors * SECTOR_SIZE);
-    tlb_sector = (Bit32u)eof / SECTOR_SIZE;
+    tlb_sector = (Bit32u)(eof / SECTOR_SIZE);
 
     write_block_index(slb_sector, slb_index, tlb_sector);
     write_block_index(slb_copy_sector, slb_index, tlb_sector);
 
     ::lseek(file_descriptor, eof, SEEK_SET);
   } else {
-    ::lseek(file_descriptor, tlb_sector * SECTOR_SIZE, SEEK_SET);
+    ::lseek(file_descriptor, (off_t)tlb_sector * SECTOR_SIZE, SEEK_SET);
     ::read(file_descriptor, tlb, (unsigned)header.tlb_size_sectors * SECTOR_SIZE);
-    ::lseek(file_descriptor, tlb_sector * SECTOR_SIZE, SEEK_SET);
+    ::lseek(file_descriptor, (off_t)tlb_sector * SECTOR_SIZE, SEEK_SET);
   }
 
   return (header.tlb_size_sectors * SECTOR_SIZE) - (current_offset - tlb_offset);
