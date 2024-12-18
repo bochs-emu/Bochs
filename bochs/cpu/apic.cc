@@ -951,6 +951,11 @@ bool bx_local_apic_c::match_logical_addr(apic_dest_t address)
   }
 #endif
 
+  // In both flat and clustered logical mode, a destination mask of all set bits indicates a broadcast.
+  // See AMD spec. 16.6.1 "Receiving System and IPI Interrupts".
+  if (address == 0xff) // broadcast all
+    return true;
+
   if (dest_format == 0xf) {
     // flat model
     match = ((address & ldr) != 0);
@@ -959,9 +964,6 @@ bool bx_local_apic_c::match_logical_addr(apic_dest_t address)
   }
   else if (dest_format == 0) {
     // cluster model
-    if (address == 0xff) // broadcast all
-      return true;
-
     if ((unsigned)(address & 0xf0) == (unsigned)(ldr & 0xf0))
       match = ((address & ldr & 0x0f) != 0);
   }
