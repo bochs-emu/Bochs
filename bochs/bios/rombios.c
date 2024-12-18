@@ -8905,6 +8905,7 @@ carry_set:
 ;   - make all called C function get the same parameters list
 ;
 int13_relocated:
+  sti                             ;; enable higher priority interrupts
 
 #if BX_ELTORITO_BOOT
   ;; check for an eltorito function
@@ -9049,6 +9050,14 @@ int13_out:
   pop ds
   pop es
   popa
+
+  ;; Note: Some DOS versions expect the int 13h handler to return with interrupts enabled (IF).
+  ;; Because of iret modify IF on stack.
+  push  bp
+  mov   bp, sp
+  or    byte ptr [bp+7], #0x02  ;; set interrupt flag (IF) on stack
+  pop   bp
+
   iret
 
 ;----------
