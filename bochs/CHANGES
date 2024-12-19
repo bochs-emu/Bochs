@@ -74,7 +74,7 @@ Detailed change log :
 
 - I/O Devices
   - VGA / Bochs VBE support
-    - VGA core: added suppoort for read/write modes in odd/even (text) mode
+    - VGA core: added support for read/write modes in odd/even (text) mode
     - VGA core: fixed write mode 3 with data rotation
     - Added VBE memory size option (requires latest VGABIOS)
   - Cirrus SVGA
@@ -111,6 +111,8 @@ Detailed change log :
     - Updated builtin slirp based on libslirp 4.8.0 (including IPv6 support)
   - Mouse
     - If not in wheel-mouse mode, don't report the wheel button event
+  - Hard drive / HD image
+    - Fix corruption of vmdk files > 4 GB in size
 
 - BIOS
   - Fixed crash of Windows 98 SE setup with BIOS-bochs-latest (Ported some ACPI code from SeaBIOS)
