@@ -622,6 +622,36 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+#if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR_EqId(bxInstruction_c *i)
+{
+  if (CPL!=0) {
+    BX_ERROR(("RDMSR_Id: CPL != 0"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  Bit32u index = i->Id();
+  Bit64u val64 = 0;
+
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_MSR)) SvmInterceptMSR(BX_READ, index);
+  }
+#endif
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_MSR(VMX_VMEXIT_RDMSR, index);
+#endif
+
+  if (!rdmsr(index, &val64))
+    exception(BX_GP_EXCEPTION, 0);
+
+  BX_WRITE_64BIT_REG(i->dst(), val64);
+  BX_NEXT_INSTR(i);
+}
+#endif
+
 #if BX_CPU_LEVEL >= 6
 bool isMemTypeValidMTRR(unsigned memtype)
 {
@@ -1432,6 +1462,37 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 
   BX_NEXT_TRACE(i);
 }
+
+#if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSRNS_IdEq(bxInstruction_c *i)
+{
+  if (CPL!=0) {
+    BX_ERROR(("WRMSRNS_Id: CPL != 0"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  invalidate_prefetch_q();
+
+  Bit64u val_64 = BX_READ_64BIT_REG(i->src());
+  Bit32u index = i->Id();
+
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_MSR)) SvmInterceptMSR(BX_WRITE, index);
+  }
+#endif
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR in_vmx_guest)
+    VMexit_MSR(VMX_VMEXIT_WRMSR, index);
+#endif
+
+  if (! wrmsr(index, val_64))
+    exception(BX_GP_EXCEPTION, 0);
+
+  BX_NEXT_TRACE(i);
+}
+#endif
 
 #if BX_SUPPORT_X86_64
 

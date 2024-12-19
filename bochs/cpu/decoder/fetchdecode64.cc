@@ -670,7 +670,7 @@ int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
     return(BX_IA_ERROR);
 
   bool vex_w = 0;
-  unsigned vex_opcext = 1;
+  unsigned vex_opc_map = 1;
   unsigned vex = *iptr++;
   remain--;
 
@@ -680,7 +680,7 @@ int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
     rex_b = ((vex >> 2) & 0x8) ^ 0x8;
 
     // decode 3-byte VEX prefix
-    vex_opcext = vex & 0x1f;
+    vex_opc_map = vex & 0x1f;
     if (remain == 0)
       return(-1);
     remain--;
@@ -703,11 +703,16 @@ int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
     return(-1);
   remain--;
   unsigned opcode_byte = *iptr++; // fetch new b1
-  opcode_byte += 256 * vex_opcext;
-  if (opcode_byte < 256 || opcode_byte >= 1024)
+  // there are instructions only from maps 1,2,3 and 7 for now
+  if (vex_opc_map != 1 && vex_opc_map != 2 && vex_opc_map != 3 && vex_opc_map != 7)
     return(ia_opcode);
+  opcode_byte += 256 * vex_opc_map;
   bool has_modrm = (opcode_byte != 0x177); // if not VZEROUPPER/VZEROALL opcode
   opcode_byte -= 256;
+  if (vex_opc_map > 3) {
+    // tables skip maps 4, 5 and 6
+    opcode_byte -= 768;
+  }
 
   if (has_modrm) {
     // opcode requires modrm byte
@@ -829,10 +834,10 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   if ((evex & 0x08) != 0)
     return(ia_opcode);
 
-  unsigned evex_opcext = evex & 0x7;
-  if (evex_opcext == 0 || evex_opcext == 4 || evex_opcext == 7)
+  unsigned evex_opc_map = evex & 0x7;
+  if (evex_opc_map == 0 || evex_opc_map == 4 || evex_opc_map == 7)
     return(ia_opcode);
-  if (evex_opcext >= 4) evex_opcext--; // skipped map4 in the table
+  if (evex_opc_map >= 4) evex_opc_map--; // skipped map4 in the table
 
   rex_r = ((evex >> 4) & 0x8) ^ 0x8;
   rex_r |= (evex & 0x10) ^ 0x10;
@@ -870,7 +875,7 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
     return(ia_opcode);
 
   unsigned opcode_byte = (evex >> 24);
-  opcode_byte += 256 * (evex_opcext-1);
+  opcode_byte += 256 * (evex_opc_map-1);
 
   // opcode requires modrm byte
   if (remain == 0)

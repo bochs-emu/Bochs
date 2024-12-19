@@ -1393,13 +1393,13 @@ int decoder_vex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
     return(BX_IA_ERROR);
 
   bool vex_w = 0;
-  unsigned vex_opcext = 1;
+  unsigned vex_opc_map = 1;
   unsigned vex = *iptr++;
   remain--;
 
   if (b1 == 0xc4) {
     // decode 3-byte VEX prefix
-    vex_opcext = vex & 0x1f;
+    vex_opc_map = vex & 0x1f;
     if (remain == 0)
       return(-1);
     remain--;
@@ -1418,9 +1418,10 @@ int decoder_vex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   remain--;
 
   unsigned opcode_byte = *iptr++;
-  opcode_byte += 256 * vex_opcext;
-  if (opcode_byte < 256 || opcode_byte >= 1024)
+  // there are instructions only from maps 1,2,3 for now in 32-bit mode
+  if (vex_opc_map < 1 || vex_opc_map >= 4)
     return(ia_opcode);
+  opcode_byte += 256 * vex_opc_map;
   bool has_modrm = (opcode_byte != 0x177); // if not VZEROUPPER/VZEROALL opcode
   opcode_byte -= 256;
 
@@ -1544,10 +1545,10 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   if ((evex & 0x08) != 0)
     return(ia_opcode);
 
-  unsigned evex_opcext = evex & 0x7;
-  if (evex_opcext == 0 || evex_opcext == 4 || evex_opcext == 7)
+  unsigned evex_opc_map = evex & 0x7;
+  if (evex_opc_map == 0 || evex_opc_map == 4 || evex_opc_map == 7)
     return(ia_opcode);
-  if (evex_opcext >= 4) evex_opcext--; // skipped map4 in the table
+  if (evex_opc_map >= 4) evex_opc_map--; // skipped map4 in the table
 
   sse_prefix = (evex >> 8) & 0x3;
   int vvv = 15 - ((evex >> 11) & 0xf);
@@ -1578,7 +1579,7 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
     return(ia_opcode);
 
   unsigned opcode_byte = (evex >> 24);
-  opcode_byte += 256 * (evex_opcext-1);
+  opcode_byte += 256 * (evex_opc_map-1);
 
   struct bx_modrm modrm;
   iptr = parseModrm32(iptr, remain, i, &modrm);

@@ -1377,9 +1377,30 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra) const
   if (is_cpu_extension_supported(BX_ISA_MSRLIST))
     eax |= BX_CPUID_STD7_SUBLEAF1_EAX_MSRLIST;
 
-  //   [31:28]  reserved
+  //   [29:28]  reserved
+  //   [30:30]  Prevent INVD execution after BIOS is done
+  //   [31:31]  MOVRS instructions
 
   return eax;
+}
+
+// leaf 0x00000007, subleaf 1 - ECX
+Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_ecx() const
+{
+  Bit32u ecx = 0;
+
+  // CPUID defines - features CPUID[0x00000007].ECX  [subleaf 1]
+  // -----------------------------
+
+  //   [0:4]    reserved
+
+  //   [5:5]    Support immediate forms of RDMSR and WRMSRNS instructions
+  if (is_cpu_extension_supported(BX_ISA_MSR_IMM))
+    ecx |= BX_CPUID_STD7_SUBLEAF1_ECX_MSR_IMM;
+
+  //   [31:5]   reserved
+
+  return ecx;
 }
 
 // leaf 0x00000007, subleaf 1 - EDX

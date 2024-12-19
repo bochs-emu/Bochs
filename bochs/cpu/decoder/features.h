@@ -142,6 +142,7 @@ x86_feature(BX_ISA_CLZERO, "clzero")                                    /* CLZER
 x86_feature(BX_ISA_SCA_MITIGATIONS, "sca_mitigations")                  /* Report SCA Mitigations in CPUID */
 x86_feature(BX_ISA_CET, "cet")                                          /* Control Flow Enforcement */
 x86_feature(BX_ISA_WRMSRNS, "wrmsrns")                                  /* Non-Serializing version of WRMSR */
+x86_feature(BX_ISA_MSR_IMM, "msr_imm")                                  /* Immediate forms of RDMSR and WRMSRNS */
 x86_feature(BX_ISA_CMPCCXADD, "cmpccxadd")                              /* CMPccXADD instructions */
 x86_feature(BX_ISA_SERIALIZE, "serialize")                              /* SERIALIZE instruction */
 x86_feature(BX_ISA_LASS, "lass")                                        /* Linear Address Space Separation support */
