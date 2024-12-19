@@ -2954,7 +2954,7 @@ Bit32u cmdfifo_r(cmdfifo_info *f)
 void cmdfifo_process(cmdfifo_info *f)
 {
   Bit32u command, data, mask, nwords, regaddr;
-  Bit8u type, code, nvertex, smode, disbytes;
+  Bit8u type, code, nvertex, smode, disbytes, datalen = 0;
   bool inc, pcolor;
   voodoo_reg reg;
   int i, w0, wn;
@@ -3157,14 +3157,20 @@ void cmdfifo_process(cmdfifo_info *f)
           if ((disbytes & 0xf0) > 0) {
             data = cmdfifo_r(f);
             if ((disbytes & 0xf0) == 0x30) {
+              datalen = 2;
               data >>= 16;
             } else if ((disbytes & 0xf0) == 0xc0) {
-              data &= 0xffff;
+              datalen = 2;
+            } else if ((disbytes & 0xf0) == 0xb0) {
+              datalen = 1;
+              data >>= 16;
+            } else if ((disbytes & 0xf0) == 0xe0) {
+              datalen = 1;
             } else {
               BX_ERROR(("CMDFIFO packet type 5: byte disable not complete (dest code = 0)"));
             }
             BX_UNLOCK(cmdfifo_mutex);
-            Banshee_LFB_write(regaddr, data, 2);
+            Banshee_LFB_write(regaddr, data, datalen);
             BX_LOCK(cmdfifo_mutex);
             w0++;
             regaddr += 4;
