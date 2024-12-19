@@ -761,12 +761,23 @@ int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
 
   bool has_immediate = (opcode_byte >= 0x70 && opcode_byte <= 0x73) || (opcode_byte >= 0xC2 && opcode_byte <= 0xC6) || (opcode_byte >= 0x200);
   if (has_immediate) {
-    if (remain != 0) {
-      i->modRMForm.Ib[0] = *iptr;
-      remain--;
+    if (vex_opc_map == 7) {
+      if (remain > 3) {
+        i->modRMForm.Id = FetchDWORD(iptr);
+        remain -= 4;
+      }
+      else {
+        return(-1);
+      }
     }
     else {
-      return(-1);
+      if (remain != 0) {
+        i->modRMForm.Ib[0] = *iptr;
+        remain--;
+      }
+      else {
+        return(-1);
+      }
     }
   }
 
