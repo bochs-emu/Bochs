@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2019 Stanislav Shwartsman
+//   Copyright (c) 2008-2024 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -35,6 +35,8 @@
 #if BX_SUPPORT_APIC
 #include "apic.h"
 #endif
+
+#include "decoder/ia_opcodes.h"
 
 #if BX_SUPPORT_CET
 extern bool is_invalid_cet_control(bx_address val);
@@ -369,7 +371,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
 #if BX_SUPPORT_VMX
 /*
-    case BX_MSR_IA32_SMM_MONITOR_CTL:
+    case BX_MSR_IA32_SMM_MONITOR_CTRL:
       BX_PANIC(("Dual-monitor treatment of SMI and SMM is not implemented"));
       break;
 */
@@ -594,11 +596,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("RDMSR: CPL != 0 not in real mode"));
+    BX_ERROR(("%s: CPL != 0 not in real mode", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit32u index = ECX;
+  Bit32u index = (i->getIaOpcode() == BX_IA_RDMSR_EqId) ? i->Id() : ECX;
   Bit64u val64 = 0;
 
 #if BX_SUPPORT_SVM
@@ -615,42 +617,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
   if (!rdmsr(index, &val64))
     exception(BX_GP_EXCEPTION, 0);
 
-  RAX = GET32L(val64);
-  RDX = GET32H(val64);
+  if (i->getIaOpcode() == BX_IA_RDMSR_EqId) {
+    BX_WRITE_64BIT_REG(i->dst(), val64);
+  }
+  else {
+    RAX = GET32L(val64);
+    RDX = GET32H(val64);
+  }
 #endif
 
   BX_NEXT_INSTR(i);
 }
-
-#if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR_EqId(bxInstruction_c *i)
-{
-  if (CPL!=0) {
-    BX_ERROR(("RDMSR_Id: CPL != 0"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  Bit32u index = i->Id();
-  Bit64u val64 = 0;
-
-#if BX_SUPPORT_SVM
-  if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(SVM_INTERCEPT0_MSR)) SvmInterceptMSR(BX_READ, index);
-  }
-#endif
-
-#if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest)
-    VMexit_MSR(VMX_VMEXIT_RDMSR, index);
-#endif
-
-  if (!rdmsr(index, &val64))
-    exception(BX_GP_EXCEPTION, 0);
-
-  BX_WRITE_64BIT_REG(i->dst(), val64);
-  BX_NEXT_INSTR(i);
-}
-#endif
 
 #if BX_CPU_LEVEL >= 6
 bool isMemTypeValidMTRR(unsigned memtype)
@@ -1436,14 +1413,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 #if BX_CPU_LEVEL >= 5
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
-    BX_ERROR(("WRMSR: CPL != 0 not in real mode"));
+    BX_ERROR(("%s: CPL != 0 not in real mode", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
 
   invalidate_prefetch_q();
 
-  Bit64u val_64 = GET64_FROM_HI32_LO32(EDX, EAX);
-  Bit32u index = ECX;
+  Bit64u val_64;
+  Bit32u index;
+
+  if (i->getIaOpcode() == BX_IA_WRMSRNS_IdEq) {
+    val_64 = BX_READ_64BIT_REG(i->src());
+    index = i->Id();
+  }
+  else {
+    val_64 = GET64_FROM_HI32_LO32(EDX, EAX);
+    index = ECX;
+  }
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {
@@ -1462,37 +1448,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 
   BX_NEXT_TRACE(i);
 }
-
-#if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSRNS_IdEq(bxInstruction_c *i)
-{
-  if (CPL!=0) {
-    BX_ERROR(("WRMSRNS_Id: CPL != 0"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
-  invalidate_prefetch_q();
-
-  Bit64u val_64 = BX_READ_64BIT_REG(i->src());
-  Bit32u index = i->Id();
-
-#if BX_SUPPORT_SVM
-  if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(SVM_INTERCEPT0_MSR)) SvmInterceptMSR(BX_WRITE, index);
-  }
-#endif
-
-#if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest)
-    VMexit_MSR(VMX_VMEXIT_WRMSR, index);
-#endif
-
-  if (! wrmsr(index, val_64))
-    exception(BX_GP_EXCEPTION, 0);
-
-  BX_NEXT_TRACE(i);
-}
-#endif
 
 #if BX_SUPPORT_X86_64
 

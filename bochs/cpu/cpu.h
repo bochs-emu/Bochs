@@ -4366,10 +4366,6 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF void WRMSRLIST(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RDMSRLIST(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-#if BX_SUPPORT_AVX
-  BX_SMF void WRMSRNS_IdEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void RDMSR_EqId(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-#endif
 #endif
 
 #if BX_SUPPORT_PKEYS

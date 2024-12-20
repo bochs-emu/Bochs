@@ -2874,8 +2874,8 @@ bx_define_opcode(BX_IA_KTESTB_KGbKEb, "ktestb", "ktestb", &BX_CPU_C::BxError, &B
 bx_define_opcode(BX_IA_KTESTD_KGdKEd, "ktestd", "ktestd", &BX_CPU_C::BxError, &BX_CPU_C::KTESTD_KGdKEdR, BX_ISA_AVX512_BW, OP_NONE, OP_KGd, OP_KEd, OP_NONE, BX_PREPARE_OPMASK)
 
 // RDMSR/WRMSRNS imm form
-bx_define_opcode(BX_IA_RDMSR_EqId, "rdmsr", "rdmsr", NULL, &BX_CPU_C::RDMSR_EqId, BX_ISA_MSR_IMM, OP_Eq, OP_Id, OP_NONE, OP_NONE, BX_TRACE_END)
-bx_define_opcode(BX_IA_WRMSRNS_IdEq, "wrmsrns", "wrmsrns", NULL, &BX_CPU_C::WRMSRNS_IdEq, BX_ISA_MSR_IMM, OP_Id, OP_Eq, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_RDMSR_EqId, "rdmsr", "rdmsr", NULL, &BX_CPU_C::RDMSR, BX_ISA_MSR_IMM, OP_Eq, OP_Id, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_WRMSRNS_IdEq, "wrmsrns", "wrmsrns", NULL, &BX_CPU_C::WRMSR, BX_ISA_MSR_IMM, OP_Id, OP_Eq, OP_NONE, OP_NONE, BX_TRACE_END)
 #endif
 
 #if BX_SUPPORT_EVEX

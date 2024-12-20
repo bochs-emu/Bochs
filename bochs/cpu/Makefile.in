@@ -560,9 +560,8 @@ mmx.o: mmx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
  icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h
 msr.o: msr.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
- ../misc/bswap.h cpu.h ../bx_debug/debug.h ../config.h ../osdep.h \
- ../cpu/decoder/decoder.h ../cpu/decoder/features.h decoder/decoder.h \
- ../instrument/stubs/instrument.h i387.h \
+ ../misc/bswap.h cpu.h ../bx_debug/debug.h decoder/ia_opcodes.h \
+ decoder/features.h decoder/decoder.h ../instrument/stubs/instrument.h i387.h \
  softfloat3e/include/softfloat_types.h fpu/tag_w.h fpu/status_w.h \
  fpu/control_w.h crregs.h descriptor.h decoder/instr.h lazy_flags.h tlb.h \
  icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h cpuid.h msr.h svm.h \

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2019  The Bochs Project
+//  Copyright (C) 2019-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -129,7 +129,7 @@ enum MSR_Register {
   BX_MSR_VMX_PROCBASED_CTRLS3     = 0x492,
   BX_MSR_VMX_VMEXIT_CTRLS2        = 0x493,
   BX_MSR_IA32_FEATURE_CONTROL     = 0x03A,
-  BX_MSR_IA32_SMM_MONITOR_CTL     = 0x09B,
+  BX_MSR_IA32_SMM_MONITOR_CTRL    = 0x09B,
 #endif
 
   /* Shadow Stack */
@@ -176,4 +176,4 @@ enum MSR_Register {
 
 const unsigned BX_NUM_VARIABLE_RANGE_MTRRS = 8;
 
-#endif  // #ifndef BX_MSR_H
+#endif  // BX_MSR_H
