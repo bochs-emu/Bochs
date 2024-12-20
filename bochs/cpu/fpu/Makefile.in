@@ -81,15 +81,14 @@ f2xm1.o: f2xm1.@CPP_SUFFIX@ fpu_trans.h ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/primitives.h \
  ../softfloat3e/include/primitiveTypes.h
 ferr.o: ferr.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h \
- ../../misc/bswap.h ../../cpu/cpu.h ../../bx_debug/debug.h ../../config.h \
- ../../osdep.h ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
- ../../cpu/decoder/decoder.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../cpu/cpu.h ../../cpu/decoder/decoder.h \
+ ../../cpu/decoder/features.h ../../instrument/stubs/instrument.h \
  ../../cpu/i387.h ../../cpu/softfloat3e/include/softfloat_types.h \
- ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h \
- ../../cpu/crregs.h ../../cpu/descriptor.h ../../cpu/decoder/instr.h \
- ../../cpu/lazy_flags.h ../../cpu/tlb.h ../../cpu/icache.h \
- ../../cpu/xmm.h ../../cpu/vmx.h ../../cpu/vmx_ctrls.h ../../cpu/stack.h \
- ../../cpu/access.h softfloat-specialize.h \
+ ../../config.h ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h \
+ ../../cpu/fpu/control_w.h ../../cpu/crregs.h ../../cpu/descriptor.h \
+ ../../cpu/decoder/instr.h ../../cpu/lazy_flags.h ../../cpu/tlb.h \
+ ../../cpu/icache.h ../../cpu/xmm.h ../../cpu/vmx.h ../../cpu/vmx_ctrls.h \
+ ../../cpu/stack.h ../../cpu/access.h softfloat-specialize.h \
  ../softfloat3e/include/softfloat_types.h
 fpatan.o: fpatan.@CPP_SUFFIX@ ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h ../../config.h \
@@ -105,118 +104,113 @@ fprem.o: fprem.@CPP_SUFFIX@ fpu_trans.h ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/primitiveTypes.h \
  ../softfloat3e/include/specialize.h ../softfloat3e/include/softfloat.h
 fpu.o: fpu.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h \
- ../../misc/bswap.h ../../cpu/cpu.h ../../bx_debug/debug.h ../../config.h \
- ../../osdep.h ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
- ../../cpu/decoder/decoder.h ../../instrument/stubs/instrument.h \
+ ../../misc/bswap.h ../../cpu/cpu.h ../../cpu/decoder/decoder.h \
+ ../../cpu/decoder/features.h ../../instrument/stubs/instrument.h \
  ../../cpu/i387.h ../../cpu/softfloat3e/include/softfloat_types.h \
- ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h \
- ../../cpu/crregs.h ../../cpu/descriptor.h ../../cpu/decoder/instr.h \
- ../../cpu/lazy_flags.h ../../cpu/tlb.h ../../cpu/icache.h \
- ../../cpu/xmm.h ../../cpu/vmx.h ../../cpu/vmx_ctrls.h ../../cpu/stack.h \
- ../../cpu/access.h ../../iodev/iodev.h ../../plugin.h ../../extplugin.h \
- ../../param_names.h ../../pc_system.h ../../memory/memory-bochs.h \
- ../../gui/siminterface.h ../../gui/paramtree.h ../../gui/gui.h \
- ../softfloat3e/include/softfloat.h \
+ ../../config.h ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h \
+ ../../cpu/fpu/control_w.h ../../cpu/crregs.h ../../cpu/descriptor.h \
+ ../../cpu/decoder/instr.h ../../cpu/lazy_flags.h ../../cpu/tlb.h \
+ ../../cpu/icache.h ../../cpu/xmm.h ../../cpu/vmx.h ../../cpu/vmx_ctrls.h \
+ ../../cpu/stack.h ../../cpu/access.h ../../iodev/iodev.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../pc_system.h \
+ ../../bx_debug/debug.h ../../osdep.h ../../cpu/decoder/decoder.h \
+ ../../memory/memory-bochs.h ../../gui/siminterface.h \
+ ../../gui/paramtree.h ../../gui/gui.h ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
  ../softfloat3e/include/internals.h softfloat-specialize.h \
  ../softfloat3e/include/softfloat_types.h
 fpu_arith.o: fpu_arith.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../logio.h ../../misc/bswap.h ../../cpu/cpu.h ../../bx_debug/debug.h \
- ../../config.h ../../osdep.h ../../cpu/decoder/decoder.h \
- ../../cpu/decoder/features.h ../../cpu/decoder/decoder.h \
+ ../../logio.h ../../misc/bswap.h ../../cpu/cpu.h \
+ ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
  ../../instrument/stubs/instrument.h ../../cpu/i387.h \
- ../../cpu/softfloat3e/include/softfloat_types.h ../../cpu/fpu/tag_w.h \
- ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h ../../cpu/crregs.h \
- ../../cpu/descriptor.h ../../cpu/decoder/instr.h ../../cpu/lazy_flags.h \
- ../../cpu/tlb.h ../../cpu/icache.h ../../cpu/xmm.h ../../cpu/vmx.h \
- ../../cpu/vmx_ctrls.h ../../cpu/stack.h ../../cpu/access.h \
- ../softfloat3e/include/softfloat.h \
+ ../../cpu/softfloat3e/include/softfloat_types.h ../../config.h \
+ ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h \
+ ../../cpu/crregs.h ../../cpu/descriptor.h ../../cpu/decoder/instr.h \
+ ../../cpu/lazy_flags.h ../../cpu/tlb.h ../../cpu/icache.h \
+ ../../cpu/xmm.h ../../cpu/vmx.h ../../cpu/vmx_ctrls.h ../../cpu/stack.h \
+ ../../cpu/access.h ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
  ../softfloat3e/include/internals.h fpu_trans.h softfloat-specialize.h \
  ../softfloat3e/include/softfloat_types.h
 fpu_cmov.o: fpu_cmov.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../logio.h ../../misc/bswap.h ../../cpu/cpu.h ../../bx_debug/debug.h \
- ../../config.h ../../osdep.h ../../cpu/decoder/decoder.h \
- ../../cpu/decoder/features.h ../../cpu/decoder/decoder.h \
+ ../../logio.h ../../misc/bswap.h ../../cpu/cpu.h \
+ ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
  ../../instrument/stubs/instrument.h ../../cpu/i387.h \
- ../../cpu/softfloat3e/include/softfloat_types.h ../../cpu/fpu/tag_w.h \
- ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h ../../cpu/crregs.h \
- ../../cpu/descriptor.h ../../cpu/decoder/instr.h ../../cpu/lazy_flags.h \
- ../../cpu/tlb.h ../../cpu/icache.h ../../cpu/xmm.h ../../cpu/vmx.h \
- ../../cpu/vmx_ctrls.h ../../cpu/stack.h ../../cpu/access.h
+ ../../cpu/softfloat3e/include/softfloat_types.h ../../config.h \
+ ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h \
+ ../../cpu/crregs.h ../../cpu/descriptor.h ../../cpu/decoder/instr.h \
+ ../../cpu/lazy_flags.h ../../cpu/tlb.h ../../cpu/icache.h \
+ ../../cpu/xmm.h ../../cpu/vmx.h ../../cpu/vmx_ctrls.h ../../cpu/stack.h \
+ ../../cpu/access.h
 fpu_compare.o: fpu_compare.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../logio.h ../../misc/bswap.h ../../cpu/cpu.h ../../bx_debug/debug.h \
- ../../config.h ../../osdep.h ../../cpu/decoder/decoder.h \
- ../../cpu/decoder/features.h ../../cpu/decoder/decoder.h \
+ ../../logio.h ../../misc/bswap.h ../../cpu/cpu.h \
+ ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
  ../../instrument/stubs/instrument.h ../../cpu/i387.h \
- ../../cpu/softfloat3e/include/softfloat_types.h ../../cpu/fpu/tag_w.h \
- ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h ../../cpu/crregs.h \
- ../../cpu/descriptor.h ../../cpu/decoder/instr.h ../../cpu/lazy_flags.h \
- ../../cpu/tlb.h ../../cpu/icache.h ../../cpu/xmm.h ../../cpu/vmx.h \
- ../../cpu/vmx_ctrls.h ../../cpu/stack.h ../../cpu/access.h \
- ../../cpu/decoder/ia_opcodes.h ../../cpu/decoder/ia_opcodes.def \
- ../../cpu/decoder/ia_opcodes_evex.def \
+ ../../cpu/softfloat3e/include/softfloat_types.h ../../config.h \
+ ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h \
+ ../../cpu/crregs.h ../../cpu/descriptor.h ../../cpu/decoder/instr.h \
+ ../../cpu/lazy_flags.h ../../cpu/tlb.h ../../cpu/icache.h \
+ ../../cpu/xmm.h ../../cpu/vmx.h ../../cpu/vmx_ctrls.h ../../cpu/stack.h \
+ ../../cpu/access.h ../../cpu/decoder/ia_opcodes.h \
+ ../../cpu/decoder/ia_opcodes.def ../../cpu/decoder/ia_opcodes_evex.def \
  ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
  ../softfloat3e/include/internals.h softfloat-specialize.h \
  ../softfloat3e/include/softfloat_types.h
 fpu_const.o: fpu_const.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../logio.h ../../misc/bswap.h ../../cpu/cpu.h ../../bx_debug/debug.h \
- ../../config.h ../../osdep.h ../../cpu/decoder/decoder.h \
- ../../cpu/decoder/features.h ../../cpu/decoder/decoder.h \
+ ../../logio.h ../../misc/bswap.h ../../cpu/cpu.h \
+ ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
  ../../instrument/stubs/instrument.h ../../cpu/i387.h \
- ../../cpu/softfloat3e/include/softfloat_types.h ../../cpu/fpu/tag_w.h \
- ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h ../../cpu/crregs.h \
- ../../cpu/descriptor.h ../../cpu/decoder/instr.h ../../cpu/lazy_flags.h \
- ../../cpu/tlb.h ../../cpu/icache.h ../../cpu/xmm.h ../../cpu/vmx.h \
- ../../cpu/vmx_ctrls.h ../../cpu/stack.h ../../cpu/access.h \
- softfloat-specialize.h ../softfloat3e/include/softfloat_types.h
+ ../../cpu/softfloat3e/include/softfloat_types.h ../../config.h \
+ ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h \
+ ../../cpu/crregs.h ../../cpu/descriptor.h ../../cpu/decoder/instr.h \
+ ../../cpu/lazy_flags.h ../../cpu/tlb.h ../../cpu/icache.h \
+ ../../cpu/xmm.h ../../cpu/vmx.h ../../cpu/vmx_ctrls.h ../../cpu/stack.h \
+ ../../cpu/access.h softfloat-specialize.h \
+ ../softfloat3e/include/softfloat_types.h
 fpu_load_store.o: fpu_load_store.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
  ../../osdep.h ../../logio.h ../../misc/bswap.h ../../cpu/cpu.h \
- ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
- ../../cpu/decoder/decoder.h ../../instrument/stubs/instrument.h \
- ../../cpu/i387.h ../../cpu/softfloat3e/include/softfloat_types.h \
+ ../../instrument/stubs/instrument.h ../../cpu/i387.h \
+ ../../cpu/softfloat3e/include/softfloat_types.h ../../config.h \
  ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h \
  ../../cpu/crregs.h ../../cpu/descriptor.h ../../cpu/decoder/instr.h \
  ../../cpu/lazy_flags.h ../../cpu/tlb.h ../../cpu/icache.h \
  ../../cpu/xmm.h ../../cpu/vmx.h ../../cpu/vmx_ctrls.h ../../cpu/stack.h \
  ../../cpu/access.h ../../cpu/decoder/ia_opcodes.h \
- ../../cpu/decoder/ia_opcodes.def ../../cpu/decoder/ia_opcodes_evex.def softfloat-specialize.h \
- ../softfloat3e/include/softfloat_types.h fpu_trans.h \
- ../softfloat3e/include/softfloat.h \
+ ../../cpu/decoder/ia_opcodes.def ../../cpu/decoder/ia_opcodes_evex.def \
+ softfloat-specialize.h ../softfloat3e/include/softfloat_types.h \
+ fpu_trans.h ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
  ../softfloat3e/include/internals.h
 fpu_misc.o: fpu_misc.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../logio.h ../../misc/bswap.h ../../cpu/cpu.h ../../bx_debug/debug.h \
- ../../config.h ../../osdep.h ../../cpu/decoder/decoder.h \
- ../../cpu/decoder/features.h ../../cpu/decoder/decoder.h \
+ ../../logio.h ../../misc/bswap.h ../../cpu/cpu.h \
+ ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
  ../../instrument/stubs/instrument.h ../../cpu/i387.h \
- ../../cpu/softfloat3e/include/softfloat_types.h ../../cpu/fpu/tag_w.h \
- ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h ../../cpu/crregs.h \
- ../../cpu/descriptor.h ../../cpu/decoder/instr.h ../../cpu/lazy_flags.h \
- ../../cpu/tlb.h ../../cpu/icache.h ../../cpu/xmm.h ../../cpu/vmx.h \
- ../../cpu/vmx_ctrls.h ../../cpu/stack.h ../../cpu/access.h fpu_trans.h \
- ../softfloat3e/include/softfloat.h \
+ ../../cpu/softfloat3e/include/softfloat_types.h ../../config.h \
+ ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h \
+ ../../cpu/crregs.h ../../cpu/descriptor.h ../../cpu/decoder/instr.h \
+ ../../cpu/lazy_flags.h ../../cpu/tlb.h ../../cpu/icache.h \
+ ../../cpu/xmm.h ../../cpu/vmx.h ../../cpu/vmx_ctrls.h ../../cpu/stack.h \
+ ../../cpu/access.h fpu_trans.h ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
  ../softfloat3e/include/internals.h softfloat-specialize.h \
  ../softfloat3e/include/softfloat_types.h
 fpu_trans.o: fpu_trans.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../logio.h ../../misc/bswap.h ../../cpu/cpu.h ../../bx_debug/debug.h \
- ../../config.h ../../osdep.h ../../cpu/decoder/decoder.h \
- ../../cpu/decoder/features.h ../../cpu/decoder/decoder.h \
+ ../../logio.h ../../misc/bswap.h ../../cpu/cpu.h \
+ ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
  ../../instrument/stubs/instrument.h ../../cpu/i387.h \
- ../../cpu/softfloat3e/include/softfloat_types.h ../../cpu/fpu/tag_w.h \
- ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h ../../cpu/crregs.h \
- ../../cpu/descriptor.h ../../cpu/decoder/instr.h ../../cpu/lazy_flags.h \
- ../../cpu/tlb.h ../../cpu/icache.h ../../cpu/xmm.h ../../cpu/vmx.h \
- ../../cpu/vmx_ctrls.h ../../cpu/stack.h ../../cpu/access.h fpu_trans.h \
- ../softfloat3e/include/softfloat.h \
+ ../../cpu/softfloat3e/include/softfloat_types.h ../../config.h \
+ ../../cpu/fpu/tag_w.h ../../cpu/fpu/status_w.h ../../cpu/fpu/control_w.h \
+ ../../cpu/crregs.h ../../cpu/descriptor.h ../../cpu/decoder/instr.h \
+ ../../cpu/lazy_flags.h ../../cpu/tlb.h ../../cpu/icache.h \
+ ../../cpu/xmm.h ../../cpu/vmx.h ../../cpu/vmx_ctrls.h ../../cpu/stack.h \
+ ../../cpu/access.h fpu_trans.h ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h \
  ../softfloat3e/include/softfloat-extra.h \
  ../softfloat3e/include/internals.h softfloat-specialize.h \
