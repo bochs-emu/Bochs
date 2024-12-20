@@ -213,6 +213,10 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_XSS:
+      if (! is_cpu_extension_supported(BX_ISA_XSAVES)) {
+        BX_ERROR(("RDMSR BX_MSR_XSS: XSAVES not enabled in the cpu model"));
+        return handle_unknown_rdmsr(index, msr);
+      }
       val64 = BX_CPU_THIS_PTR msr.ia32_xss;
       break;
 #endif
