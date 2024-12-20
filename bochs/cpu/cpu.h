@@ -5868,8 +5868,7 @@ class bxInstruction_c;
 
 #define BX_LINK_TRACE(i) {                             \
   BX_COMMIT_INSTRUCTION(i);                            \
-  linkTrace(i);                                        \
-  return;                                              \
+  return linkTrace(i);                                 \
 }
 
 #define BX_NEXT_INSTR(i) {                             \
