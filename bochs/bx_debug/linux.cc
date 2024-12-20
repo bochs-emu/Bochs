@@ -5,6 +5,8 @@
 #include <stdio.h>
 
 #include "bochs.h"
+#include "debug.h"
+
 #include "cpu/cpu.h"
 
 #if BX_DEBUGGER

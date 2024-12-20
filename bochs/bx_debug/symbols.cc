@@ -20,7 +20,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
-#include "cpu/cpu.h"
+#include "debug.h"
 
 #if BX_DEBUGGER
 #if !((BX_HAVE_MAP || BX_HAVE_MAP_H) && (BX_HAVE_SET || BX_HAVE_SET_H))
@@ -31,7 +31,7 @@ const char* bx_dbg_symbolic_address(bx_address context, bx_address eip, bx_addre
 {
   static bool first = true;
   if (first) {
-    dbg_printf(BX_HAVE_MAP_ERR);
+    dbg_printf("%s", BX_HAVE_MAP_ERR);
     first = false;
   }
   return "unk. ctxt";
@@ -39,18 +39,18 @@ const char* bx_dbg_symbolic_address(bx_address context, bx_address eip, bx_addre
 
 int bx_dbg_symbol_command(const char* filename, bool global, bx_address offset)
 {
-  dbg_printf(BX_HAVE_MAP_ERR);
+  dbg_printf("%s", BX_HAVE_MAP_ERR);
   return -1;
 }
 
 void bx_dbg_info_symbols_command(const char *symbol)
 {
-  dbg_printf(BX_HAVE_MAP_ERR);
+  dbg_printf("%s", BX_HAVE_MAP_ERR);
 }
 
 int bx_dbg_lbreakpoint_symbol_command(const char *symbol, const char *condition)
 {
-  dbg_printf(BX_HAVE_MAP_ERR);
+  dbg_printf("%s", BX_HAVE_MAP_ERR);
   return -1;
 }
 
@@ -272,6 +272,8 @@ const char* bx_dbg_disasm_symbolic_address(bx_address xip, bx_address base)
   snprintf (buf, 80, "%s+%" FMT_64 "x", entr->name, (base+xip) - entr->start);
   return buf;
 }
+
+#include "cpu/cpu.h"
 
 int bx_dbg_symbol_command(const char* filename, bool global, bx_address offset)
 {

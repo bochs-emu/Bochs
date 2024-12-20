@@ -36,6 +36,8 @@
 
 #include "iodev/iodev.h"
 
+#include "bx_debug/debug.h"
+
 extern VMCS_Mapping vmcs_map;
 
 #if BX_SUPPORT_VMX >= 2

@@ -145,6 +145,8 @@ const char* stringify_XCR0(Bit32u xcr0, char *s)
   return s;
 }
 
+#include "bx_debug/debug.h"
+
 void BX_CPU_C::debug_disasm_instruction(bx_address offset)
 {
 #if BX_DEBUGGER
@@ -466,13 +468,13 @@ void BX_CPU_C::dbg_get_ldtr(bx_dbg_sreg_t *sreg)
 #endif
 }
 
-void BX_CPU_C::dbg_get_gdtr(bx_dbg_global_sreg_t *sreg)
+void BX_CPU_C::dbg_get_gdtr(bx_global_segment_reg_t *sreg)
 {
   sreg->base  = BX_CPU_THIS_PTR gdtr.base;
   sreg->limit = BX_CPU_THIS_PTR gdtr.limit;
 }
 
-void BX_CPU_C::dbg_get_idtr(bx_dbg_global_sreg_t *sreg)
+void BX_CPU_C::dbg_get_idtr(bx_global_segment_reg_t *sreg)
 {
   sreg->base  = BX_CPU_THIS_PTR idtr.base;
   sreg->limit = BX_CPU_THIS_PTR idtr.limit;

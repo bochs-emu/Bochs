@@ -27,6 +27,8 @@
 #include "cpu/cpu.h"
 #include <assert.h>
 
+#include "bx_debug/debug.h"
+
 #if BX_WITH_CARBON
 #include <Carbon/Carbon.h>
 #endif

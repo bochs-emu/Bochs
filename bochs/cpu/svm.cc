@@ -34,6 +34,8 @@
 #include "gui/paramtree.h"
 #include "decoder/ia_opcodes.h"
 
+#include "bx_debug/debug.h"
+
 extern const char *segname[];
 
 void BX_CPU_C::set_VMCBPTR(Bit64u vmcbptr)

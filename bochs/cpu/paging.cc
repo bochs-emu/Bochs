@@ -37,6 +37,8 @@
 #include "memory/memory-bochs.h"
 #include "pc_system.h"
 
+#include "bx_debug/debug.h"
+
 // X86 Registers Which Affect Paging:
 // ==================================
 //

@@ -240,6 +240,12 @@ void print_statistics_tree(bx_param_c *node, int level = 0);
 #endif  // #if BX_DEBUGGER
 
 #if BX_DEBUGGER
+// memory trace callbacks from CPU
+extern void bx_dbg_lin_memory_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsigned len, unsigned memtype, unsigned rw,                Bit8u *data);
+extern void bx_dbg_phy_memory_access(unsigned cpu,                 bx_phy_address phy, unsigned len, unsigned memtype, unsigned rw, unsigned attr, Bit8u *data);
+#endif
+
+#if BX_DEBUGGER
 #  define BX_DBG_LIN_MEMORY_ACCESS(cpu, lin, phy, len, memtype, rw, data) \
    if (bx_dbg.debugger_active) \
        bx_dbg_lin_memory_access(cpu, lin, phy, len, memtype, rw, data);

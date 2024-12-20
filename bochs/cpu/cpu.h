@@ -24,8 +24,6 @@
 
 #include <setjmp.h>
 
-#include "bx_debug/debug.h"
-
 #include "decoder/decoder.h"
 
 #include "instrument.h"
@@ -852,6 +850,31 @@ struct monitor_addr_t {
     BX_CPP_INLINE bool armed_by_monitorx(void) const { return armed_by == BX_MONITOR_ARMED_BY_MONITORX; }
     BX_CPP_INLINE bool armed_by_umonitor(void) const { return armed_by == BX_MONITOR_ARMED_BY_UMONITOR; }
 };
+#endif
+
+#if BX_DEBUGGER
+// working information for simulator to update when a guard is reached (found)
+typedef struct bx_guard_found_t {
+  unsigned guard_found;
+  Bit64u icount_max; // stop after completing this many instructions
+  unsigned iaddr_index;
+  Bit32u cs; // cs:eip and linear addr of instruction at guard point
+  bx_address eip;
+  bx_address laddr;
+  // 00 - 16 bit, 01 - 32 bit, 10 - 64-bit, 11 - illegal
+  unsigned code_32_64; // CS seg size at guard point
+} bx_guard_found_t;
+
+struct bx_dbg_sreg_t;
+
+typedef enum dbg_show_flags_t {
+  Flag_call    = 0x1,
+  Flag_ret     = 0x2,
+  Flag_softint = 0x4,
+  Flag_iret    = 0x8,
+  Flag_intsig  = 0x10,
+  Flag_mode    = 0x20,
+} dbg_show_flags_t;
 #endif
 
 struct BX_SMM_State;
@@ -4416,16 +4439,16 @@ public: // for now...
 // <TAG-CLASS-CPU-END>
 
 #if BX_DEBUGGER
-  BX_SMF void       dbg_take_dma(void);
-  BX_SMF bool       dbg_set_eflags(Bit32u val);
-  BX_SMF void       dbg_set_eip(bx_address val);
-  BX_SMF bool       dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no);
-  BX_SMF bool       dbg_set_sreg(unsigned sreg_no, bx_segment_reg_t *sreg);
-  BX_SMF void       dbg_get_tr(bx_dbg_sreg_t *sreg);
-  BX_SMF void       dbg_get_ldtr(bx_dbg_sreg_t *sreg);
-  BX_SMF void       dbg_get_gdtr(bx_dbg_global_sreg_t *sreg);
-  BX_SMF void       dbg_get_idtr(bx_dbg_global_sreg_t *sreg);
-  BX_SMF unsigned   dbg_query_pending(void);
+  BX_SMF void     dbg_take_dma(void);
+  BX_SMF bool     dbg_set_eflags(Bit32u val);
+  BX_SMF void     dbg_set_eip(bx_address val);
+  BX_SMF bool     dbg_get_sreg(bx_dbg_sreg_t *sreg, unsigned sreg_no);
+  BX_SMF bool     dbg_set_sreg(unsigned sreg_no, bx_segment_reg_t *sreg);
+  BX_SMF void     dbg_get_tr(bx_dbg_sreg_t *sreg);
+  BX_SMF void     dbg_get_ldtr(bx_dbg_sreg_t *sreg);
+  BX_SMF void     dbg_get_gdtr(bx_global_segment_reg_t *sreg);
+  BX_SMF void     dbg_get_idtr(bx_global_segment_reg_t *sreg);
+  BX_SMF unsigned dbg_query_pending(void);
 #endif
 #if BX_DEBUGGER
   BX_SMF bool dbg_instruction_epilog(void);

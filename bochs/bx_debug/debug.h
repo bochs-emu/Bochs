@@ -47,15 +47,6 @@ typedef enum
   bkStepOver
 } BreakpointKind;
 
-typedef enum _show_flags {
-  Flag_call    = 0x1,
-  Flag_ret     = 0x2,
-  Flag_softint = 0x4,
-  Flag_iret    = 0x8,
-  Flag_intsig  = 0x10,
-  Flag_mode    = 0x20,
-} show_flags_t;
-
 extern "C" {
   // Flex defs
   extern int bxlex(void);
@@ -322,19 +313,6 @@ struct bx_guard_t {
   } async_changes_pending;
 };
 
-// working information for each simulator to update when a guard
-// is reached (found)
-typedef struct bx_guard_found_t {
-  unsigned guard_found;
-  Bit64u icount_max; // stop after completing this many instructions
-  unsigned iaddr_index;
-  Bit32u cs; // cs:eip and linear addr of instruction at guard point
-  bx_address eip;
-  bx_address laddr;
-  // 00 - 16 bit, 01 - 32 bit, 10 - 64-bit, 11 - illegal
-  unsigned code_32_64; // CS seg size at guard point
-} bx_guard_found_t;
-
 struct bx_watchpoint {
   bx_phy_address addr;
   Bit32u len;
@@ -355,18 +333,13 @@ int  bx_dbg_main(void);
 void bx_dbg_user_input_loop(void);
 void bx_dbg_interpret_line(char *cmd);
 
-typedef struct {
+typedef struct bx_dbg_sreg_t {
   Bit16u sel;
   Bit32u des_l, des_h, valid;
 #if BX_SUPPORT_X86_64
   Bit32u dword3;
 #endif
 } bx_dbg_sreg_t;
-
-typedef struct {
-  bx_address base;
-  Bit16u limit;
-} bx_dbg_global_sreg_t;
 
 BOCHSAPI_MSVCONLY void bx_dbg_dma_report(bx_phy_address addr, unsigned len, unsigned what, Bit32u val);
 BOCHSAPI_MSVCONLY void bx_dbg_iac_report(unsigned vector, unsigned irq);

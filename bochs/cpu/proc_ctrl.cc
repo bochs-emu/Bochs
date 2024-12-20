@@ -33,7 +33,8 @@
 #include "pc_system.h"
 #include "gui/gui.h"
 
-#include "wide_int.h"
+#include "bx_debug/debug.h"
+
 #include "decoder/ia_opcodes.h"
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxError(bxInstruction_c *i)
@@ -693,6 +694,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDPMC(bxInstruction_c *i)
 }
 
 #if BX_CPU_LEVEL >= 5
+
+#include "wide_int.h"
 
 Bit64u BX_CPU_C::get_TSC(void)
 {

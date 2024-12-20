@@ -28,6 +28,8 @@
 #include "pc_system.h"
 #include "cpustats.h"
 
+#include "bx_debug/debug.h"
+
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
 
 #define BX_SYNC_TIME_IF_SINGLE_PROCESSOR(allowed_delta) {                               \

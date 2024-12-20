@@ -32,6 +32,8 @@
 #include "param_names.h"
 #include "iodev/iodev.h"
 
+#include "bx_debug/debug.h"
+
 #if BX_SUPPORT_X86_64==0
 // Make life easier merging cpu64 & cpu code.
 #define RIP EIP

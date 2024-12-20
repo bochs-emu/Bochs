@@ -1138,7 +1138,7 @@ void bx_dbg_info_segment_regs_command(unsigned cpu)
   static const char *segname[] = { "es", "cs", "ss", "ds", "fs", "gs" };
 
   bx_dbg_sreg_t sreg;
-  bx_dbg_global_sreg_t global_sreg;
+  bx_global_segment_reg_t global_sreg;
 
   for(int s=0;s<6;s++) {
     BX_CPU(cpu)->dbg_get_sreg(&sreg, s);
@@ -3342,7 +3342,7 @@ void bx_dbg_print_descriptor64(Bit32u lo1, Bit32u hi1, Bit32u lo2, Bit32u hi2)
 
 void bx_dbg_info_idt_command(unsigned from, unsigned to)
 {
-  bx_dbg_global_sreg_t idtr;
+  bx_global_segment_reg_t idtr;
   BX_CPU(dbg_cpu)->dbg_get_idtr(&idtr);
   bool all = 0;
 
@@ -3414,7 +3414,7 @@ void bx_dbg_info_lgdt_command(unsigned from, unsigned to, bool gdt)
   Bit32u limit = 0;
 
   if (gdt) {
-    bx_dbg_global_sreg_t gdtr;
+    bx_global_segment_reg_t gdtr;
     BX_CPU(dbg_cpu)->dbg_get_gdtr(&gdtr);
     base = gdtr.base;
     limit = gdtr.limit;
@@ -3555,7 +3555,7 @@ void bx_dbg_info_ivt_command(unsigned from, unsigned to)
   unsigned char buff[4];
   unsigned seg, off;
   bool all = 0;
-  bx_dbg_global_sreg_t idtr;
+  bx_global_segment_reg_t idtr;
 
   BX_CPU(dbg_cpu)->dbg_get_idtr(&idtr);
 
