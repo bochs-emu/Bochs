@@ -211,9 +211,8 @@ apic.o: apic.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  fpu/status_w.h fpu/control_w.h crregs.h descriptor.h decoder/instr.h \
  lazy_flags.h tlb.h icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h \
  apic.h scalar_arith.h ../iodev/iodev.h ../plugin.h ../extplugin.h \
- ../param_names.h ../pc_system.h ../bx_debug/debug.h ../osdep.h \
- ../cpu/decoder/decoder.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h
+ ../param_names.h ../pc_system.h ../memory/memory-bochs.h \
+ ../gui/siminterface.h ../gui/paramtree.h ../gui/gui.h
 arith16.o: arith16.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h decoder/decoder.h decoder/features.h \
  ../instrument/stubs/instrument.h i387.h \
@@ -406,9 +405,9 @@ event.o: event.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  fpu/status_w.h fpu/control_w.h crregs.h descriptor.h decoder/instr.h \
  lazy_flags.h tlb.h icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h \
  apic.h svm.h ../iodev/iodev.h ../plugin.h ../extplugin.h \
- ../param_names.h ../pc_system.h ../bx_debug/debug.h ../osdep.h \
- ../cpu/decoder/decoder.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h
+ ../param_names.h ../pc_system.h ../memory/memory-bochs.h \
+ ../gui/siminterface.h ../gui/paramtree.h ../gui/gui.h \
+ ../bx_debug/debug.h ../osdep.h ../cpu/decoder/decoder.h
 exception.o: exception.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h decoder/decoder.h decoder/features.h \
  ../instrument/stubs/instrument.h i387.h \
@@ -416,9 +415,9 @@ exception.o: exception.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h
  fpu/status_w.h fpu/control_w.h crregs.h descriptor.h decoder/instr.h \
  lazy_flags.h tlb.h icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h \
  svm.h ../param_names.h ../iodev/iodev.h ../plugin.h ../extplugin.h \
- ../pc_system.h ../bx_debug/debug.h ../osdep.h ../cpu/decoder/decoder.h \
- ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
- ../gui/gui.h
+ ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
+ ../gui/paramtree.h ../gui/gui.h ../bx_debug/debug.h ../osdep.h \
+ ../cpu/decoder/decoder.h
 faststring.o: faststring.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h decoder/decoder.h decoder/features.h \
  ../instrument/stubs/instrument.h i387.h \
@@ -477,9 +476,8 @@ io.o: io.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h ../misc/bswap
  fpu/status_w.h fpu/control_w.h crregs.h descriptor.h decoder/instr.h \
  lazy_flags.h tlb.h icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h \
  svm.h ../iodev/iodev.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../bx_debug/debug.h ../osdep.h ../cpu/decoder/decoder.h \
- ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
- ../gui/gui.h
+ ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
+ ../gui/paramtree.h ../gui/gui.h
 iret.o: iret.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h decoder/decoder.h decoder/features.h \
  ../instrument/stubs/instrument.h i387.h \
@@ -836,10 +834,11 @@ vmx.o: vmx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  fpu/status_w.h fpu/control_w.h crregs.h descriptor.h decoder/instr.h \
  lazy_flags.h tlb.h icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h \
  cpuid.h msr.h apic.h ../iodev/iodev.h ../plugin.h ../extplugin.h \
- ../param_names.h ../pc_system.h ../bx_debug/debug.h ../osdep.h \
- ../cpu/decoder/decoder.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h decoder/ia_opcodes.h \
- decoder/ia_opcodes.def decoder/ia_opcodes_evex.def scalar_arith.h
+ ../param_names.h ../pc_system.h ../memory/memory-bochs.h \
+ ../gui/siminterface.h ../gui/paramtree.h ../gui/gui.h \
+ ../bx_debug/debug.h ../osdep.h ../cpu/decoder/decoder.h \
+ decoder/ia_opcodes.h decoder/ia_opcodes.def decoder/ia_opcodes_evex.def \
+ scalar_arith.h
 wide_int.o: wide_int.@CPP_SUFFIX@ wide_int.h ../config.h
 xsave.o: xsave.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h decoder/decoder.h decoder/features.h \

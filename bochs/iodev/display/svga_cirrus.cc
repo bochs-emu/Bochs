@@ -43,6 +43,8 @@
 #include "svga_cirrus.h"
 #include "virt_timer.h"
 
+#include "bx_debug/debug.h"
+
 #if BX_SUPPORT_CLGD54XX
 
 #define LOG_THIS BX_CIRRUS_THIS

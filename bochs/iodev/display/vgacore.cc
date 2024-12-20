@@ -30,6 +30,8 @@
 #include "vgacore.h"
 #include "virt_timer.h"
 
+#include "bx_debug/debug.h"
+
 #define BX_VGA_THIS this->
 #define BX_VGA_THIS_PTR this
 

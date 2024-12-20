@@ -29,6 +29,8 @@
 #include "virt_timer.h"
 #include "utctime.h"
 
+#include "bx_debug/debug.h"
+
 #define LOG_THIS theCmosDevice->
 
 bx_cmos_c *theCmosDevice = NULL;

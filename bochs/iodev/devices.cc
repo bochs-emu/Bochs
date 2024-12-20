@@ -34,6 +34,8 @@
 #include "iodev/usb/usb_common.h"
 #include "iodev/hdimage/hdimage.h"
 
+#include "bx_debug/debug.h"
+
 #define LOG_THIS bx_devices.
 
 /* main memory size (in Kbytes)

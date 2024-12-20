@@ -31,6 +31,8 @@
 #include "cpu/cpu.h"
 #include "iodebug.h"
 
+#include "bx_debug/debug.h"
+
 #define BX_IODEBUG_THIS this->
 
 #define BX_IODEBUG_MAX_AREAS 30

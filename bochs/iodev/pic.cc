@@ -27,6 +27,8 @@
 #include "iodev.h"
 #include "pic.h"
 
+#include "bx_debug/debug.h"
+
 #define LOG_THIS thePic->
 
 bx_pic_c *thePic = NULL;

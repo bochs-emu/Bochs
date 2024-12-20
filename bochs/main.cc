@@ -34,6 +34,8 @@
 #include "iodev/usb/usb_common.h"
 #endif
 
+#include "bx_debug/debug.h"
+
 #ifdef HAVE_LOCALE_H
 #include <locale.h>
 #endif

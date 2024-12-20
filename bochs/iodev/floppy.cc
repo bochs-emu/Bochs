@@ -108,6 +108,8 @@ extern "C" {
 #include "iodev.h"
 #include "hdimage/hdimage.h"
 
+#include "bx_debug/debug.h"
+
 // The controller types supported. Choose one of the seven below.
 #define FDC_TYPE_NONE      (0 << 0) // used to indicate that no (included) controller supports this command
 #define FDC_TYPE_82077AA   (1 << 0) // this is the default type to use

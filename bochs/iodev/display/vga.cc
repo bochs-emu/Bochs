@@ -40,6 +40,8 @@
 #include "vga.h"
 #include "virt_timer.h"
 
+#include "bx_debug/debug.h"
+
 #define LOG_THIS theVga->
 
 bx_vga_c *theVga = NULL;

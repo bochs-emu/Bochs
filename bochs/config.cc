@@ -34,6 +34,8 @@
 #include "param_names.h"
 #include <assert.h>
 
+#include "bx_debug/debug.h"
+
 #ifdef HAVE_LOCALE_H
 #include <locale.h>
 #endif

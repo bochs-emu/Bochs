@@ -35,6 +35,8 @@
 #include "pci.h"
 #include "pci2isa.h"
 
+#include "bx_debug/debug.h"
+
 #define LOG_THIS thePci2IsaBridge->
 
 bx_piix3_c *thePci2IsaBridge = NULL;

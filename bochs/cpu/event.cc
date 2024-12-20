@@ -35,6 +35,8 @@
 
 #include "iodev/iodev.h"
 
+#include "bx_debug/debug.h"
+
 bool BX_CPU_C::handleWaitForEvent(void)
 {
   if (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_WAIT_FOR_SIPI) {

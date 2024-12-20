@@ -23,6 +23,7 @@
 #include "bochs.h"
 #include "cpu/cpu.h"
 #include "iodev/iodev.h"
+#include "bx_debug/debug.h"
 #define LOG_THIS bx_pc_system.
 
 #if defined(PROVIDE_M_IPS)

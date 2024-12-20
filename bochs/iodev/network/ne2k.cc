@@ -37,6 +37,8 @@
 #include "ne2k.h"
 #include "netmod.h"
 
+#include "bx_debug/debug.h"
+
 //Never completely fill the ne2k ring so that we never
 // hit the unclear completely full buffer condition.
 #define BX_NE2K_NEVER_FULL_RING (1)

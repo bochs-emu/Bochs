@@ -88,6 +88,8 @@
 #define BX_USE_TERNARY_ROP
 #include "bitblt.h"
 
+#include "bx_debug/debug.h"
+
 #define LOG_THIS theVoodooDevice->
 
 const Bit8u banshee_iomask[256] = {4,0,0,0,7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1,

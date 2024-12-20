@@ -49,8 +49,10 @@
 
 #include "iodev.h"
 #include "pit82c54.h"
-#define LOG_THIS this->
 
+#include "bx_debug/debug.h"
+
+#define LOG_THIS this->
 
 void pit_82C54::print_counter(counter_type &thisctr)
 {

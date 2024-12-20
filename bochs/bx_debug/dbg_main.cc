@@ -25,10 +25,10 @@ extern "C" {
 
 #include "bochs.h"
 #include "param_names.h"
+#include "debug.h"
 #include "cpu/cpu.h"
 #include "cpu/decoder/ia_opcodes.h"
 #include "iodev/iodev.h"
-
 #if BX_DEBUGGER
 
 #define LOG_THIS genlog->

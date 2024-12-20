@@ -28,6 +28,7 @@
 #include "virt_timer.h"
 #include "speaker.h"
 
+#include "bx_debug/debug.h"
 
 #define LOG_THIS thePit->
 

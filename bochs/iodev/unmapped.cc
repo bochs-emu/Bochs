@@ -27,6 +27,8 @@
 #include "iodev.h"
 #include "unmapped.h"
 
+#include "bx_debug/debug.h"
+
 #define LOG_THIS theUnmappedDevice->
 
 bx_unmapped_c *theUnmappedDevice = NULL;

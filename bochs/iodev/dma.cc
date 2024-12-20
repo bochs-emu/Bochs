@@ -28,6 +28,8 @@
 #include "iodev.h"
 #include "dma.h"
 
+#include "bx_debug/debug.h"
+
 #define LOG_THIS theDmaDevice->
 
 enum {

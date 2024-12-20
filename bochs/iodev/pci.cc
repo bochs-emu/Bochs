@@ -34,6 +34,8 @@
 
 #include "pci.h"
 
+#include "bx_debug/debug.h"
+
 #define LOG_THIS thePciBridge->
 
 const char csname[3][20] = {"i430FX TSC", "i440FX PMC", "i440BX Host bridge"};

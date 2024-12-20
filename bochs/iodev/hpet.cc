@@ -37,6 +37,8 @@
 
 #include "hpet.h"
 
+#include "bx_debug/debug.h"
+
 /* HPET will set up timers to fire after a certain period of time.
  * These values can be used to clamp this period to reasonable/supported values.
  * The values are in ticks.

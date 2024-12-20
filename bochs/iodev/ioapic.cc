@@ -30,6 +30,8 @@
 
 #include "ioapic.h"
 
+#include "bx_debug/debug.h"
+
 #define LOG_THIS theIOAPIC->
 
 bx_ioapic_c *theIOAPIC = NULL;
