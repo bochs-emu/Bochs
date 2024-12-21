@@ -815,9 +815,9 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_
       if (BX_VGA_THIS s.attribute_ctrl.flip_flop == 0) { /* address mode */
         prev_video_enabled = BX_VGA_THIS s.attribute_ctrl.video_enabled;
         BX_VGA_THIS s.attribute_ctrl.video_enabled = (value >> 5) & 0x01;
-        if (BX_VGA_THIS s.attribute_ctrl.video_enabled == 0)
+        if (!BX_VGA_THIS s.attribute_ctrl.video_enabled && prev_video_enabled)
           bx_gui->clear_screen();
-        else if (!prev_video_enabled) {
+        else if (BX_VGA_THIS s.attribute_ctrl.video_enabled && !prev_video_enabled) {
           needs_update = 1;
         }
         value &= 0x1f; /* address = bits 0..4 */
@@ -1159,12 +1159,7 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_
             break;
           case 0x0C:
           case 0x0D:
-            // Start address change
-            if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
-              needs_update = 1;
-            } else {
-              BX_VGA_THIS s.vga_mem_updated |= 1;
-            }
+            // Start address change handled in vertical_timer()
             break;
           case 0x11:
             BX_VGA_THIS s.CRTC.write_protect = ((BX_VGA_THIS s.CRTC.reg[0x11] & 0x80) > 0);
@@ -2432,7 +2427,15 @@ void bx_vgacore_c::vertical_timer(void)
   bx_virt_timer.activate_timer(BX_VGA_THIS vga_vtimer_id,
     BX_VGA_THIS vtimer_interval[BX_VGA_THIS vtimer_toggle], 0);
   if (BX_VGA_THIS vtimer_toggle) {
+    Bit16u prev_start_addr = BX_VGA_THIS s.CRTC.start_addr;
     BX_VGA_THIS s.CRTC.start_addr = (BX_VGA_THIS s.CRTC.reg[0x0c] << 8) | BX_VGA_THIS s.CRTC.reg[0x0d];
+    if (BX_VGA_THIS s.CRTC.start_addr != prev_start_addr) {
+      if (BX_VGA_THIS s.graphics_ctrl.graphics_alpha) {
+        BX_VGA_THIS vga_redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
+      } else {
+        BX_VGA_THIS s.vga_mem_updated |= 1;
+      }
+    }
   } else {
     BX_VGA_THIS s.display_start_usec = bx_virt_timer.time_usec(BX_VGA_THIS vsync_realtime);
   }
