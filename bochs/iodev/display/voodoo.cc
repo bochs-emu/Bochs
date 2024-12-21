@@ -693,9 +693,15 @@ void bx_voodoo_base_c::vertical_timer(void)
     if (v->fbi.clut_dirty || (s.model < VOODOO_BANSHEE) || v->banshee.overlay.redraw) {
       redraw_area(0, 0, s.vdraw.width, s.vdraw.height);
     } else {
-      redraw_area(v->banshee.overlay.x0, v->banshee.overlay.y0,
-                  v->banshee.overlay.x1 - v->banshee.overlay.x0 + 1,
-                  v->banshee.overlay.y1 - v->banshee.overlay.y0 + 1);
+      if (v->banshee.double_width) {
+        redraw_area((v->banshee.overlay.x0 << 1), v->banshee.overlay.y0,
+                    (v->banshee.overlay.x1 - v->banshee.overlay.x0 + 1) << 1,
+                    v->banshee.overlay.y1 - v->banshee.overlay.y0 + 1);
+      } else {
+        redraw_area(v->banshee.overlay.x0, v->banshee.overlay.y0,
+                    v->banshee.overlay.x1 - v->banshee.overlay.x0 + 1,
+                    v->banshee.overlay.y1 - v->banshee.overlay.y0 + 1);
+      }
     }
     BX_LOCK(fifo_mutex);
     if (v->fbi.clut_dirty) {
