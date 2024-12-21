@@ -27,7 +27,6 @@
 #include "param_names.h"
 #include "keymap.h"
 #include "iodev.h"
-#include "enh_dbg.h"
 #if BX_WITH_X11
 
 #define XK_PUBLISHING
