@@ -453,10 +453,20 @@ static void depth_breadth_sel(GtkWidget *widget, gpointer data)
 
 static void dump_buffer(GtkWidget *widget, gpointer data)
 {
-  GtkWidget* error = gtk_message_dialog_new(
-    GTK_WINDOW(td_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
-    "Buffer dump not implemented yet");
-  gtk_window_set_title(GTK_WINDOW(error), "Dump");
+  DUMP_PARAMS *params = (DUMP_PARAMS*)data;
+  const char *msg;
+
+  if (params->size > 512) {
+    params->size = 512;
+  }
+  if (params->size > 0) {
+    msg = "Buffer dump not implemented yet";
+  } else {
+    msg = "Nothing to do...";
+  }
+  GtkWidget* error = gtk_message_dialog_new(GTK_WINDOW(td_dialog),
+    GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK, msg);
+  gtk_window_set_title(GTK_WINDOW(error), params->title);
   gtk_dialog_run(GTK_DIALOG(error));
   gtk_widget_destroy(error);
 }
@@ -469,6 +479,7 @@ static void uhci_td_dialog(Bit32u addr)
   GtkWidget *mainVbox, *entry[7], *checkbox[16], *grid[4], *label[7];
   GtkWidget *Shbox, *Svbox, *Bhbox, *LPframe, *Sframe[2], *PHframe;
   GtkWidget *combo, *button;
+  DUMP_PARAMS dump_params;
 
   DEV_MEM_READ_PHYSICAL(addr, sizeof(struct TD), (Bit8u*)&td);
   td_dialog =
@@ -579,7 +590,6 @@ static void uhci_td_dialog(Bit32u addr)
   entry[6] = gtk_entry_new();
   gtk_box_pack_start(GTK_BOX(Bhbox), entry[6], FALSE, FALSE, 2);
   button = gtk_button_new_with_label(">");
-  g_signal_connect(button, "clicked", G_CALLBACK(dump_buffer), NULL);
   gtk_box_pack_start(GTK_BOX(Bhbox), button, FALSE, FALSE, 2);
   // Set values
   sprintf(buffer, "0x%04X", td.dword0 & ~0xF);
@@ -657,6 +667,15 @@ static void uhci_td_dialog(Bit32u addr)
   }
   sprintf(buffer, "0x%08X", td.dword3);
   gtk_entry_set_text(GTK_ENTRY(entry[6]), buffer);
+  strcpy(dump_params.title, "UHCI: Transfer Descriptor Buffer");
+  dump_params.address = td.dword3;
+  if (usbdbg_param2 & USB_LPARAM_FLAG_AFTER) {
+    dump_params.size = (td.dword1 & 0x3FF) + 1;
+  } else {
+    dump_params.size = ((td.dword2 >> 21) + 1) & 0x7FF;
+  }
+  dump_params.big = 0;
+  g_signal_connect(button, "clicked", G_CALLBACK(dump_buffer), &dump_params);
   // Show dialog
   gtk_widget_show_all(td_dialog);
   ret = gtk_dialog_run(GTK_DIALOG(td_dialog));

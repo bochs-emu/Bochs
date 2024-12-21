@@ -26,6 +26,13 @@
 
 #define COMMON_STR_SIZE 128
 
+struct DUMP_PARAMS {
+  char title[COMMON_STR_SIZE];
+  bx_phy_address address;
+  int size;  // amount to dump (no more than 512)
+  bool big;  // use 64-bit addresses?
+};
+
 struct S_ATTRIBUTES {
   Bit64u attrb;
   Bit64u mask;

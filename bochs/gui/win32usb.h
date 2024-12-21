@@ -31,12 +31,6 @@ struct CALLBACK_PARAMS {
   int lParam;
 };
 
-struct DUMP_PARAMS {
-  char title[COMMON_STR_SIZE];
-  bx_phy_address address;
-  int size;  // amount to dump (no more than 512)
-  bool big;  // use 64-bit addresses?
-};
 INT_PTR CALLBACK dump_dialog_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
