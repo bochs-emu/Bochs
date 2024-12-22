@@ -44,7 +44,7 @@ const char *chkTxt[6] = {"Reset", "Enable", "Event", "Doorbell", "Start of Frame
 const char *chkBXPN[6] = {BXPN_USB_DEBUG_RESET, BXPN_USB_DEBUG_ENABLE, BXPN_USB_DEBUG_EVENT,
                           BXPN_USB_DEBUG_DOORBELL, BXPN_USB_DEBUG_START_FRAME, BXPN_USB_DEBUG_NON_EXIST};
 
-int usbdbg_param2;
+int usbdbg_param1, usbdbg_param2;
 
 GtkWidget *main_dialog, *td_dialog;
 GtkWidget *uhci_entry[UHCI_REG_COUNT];
@@ -261,7 +261,7 @@ void usbdlg_create_apply_button(GtkWidget *vbox)
 int tree_items;
 GtkTreeIter titems[MAX_TREE_ITEMS];
 
-GtkTreeIter* treeview_insert(GtkWidget *treeview, GtkTreeIter *parent, char *str)
+GtkTreeIter* treeview_insert(GtkWidget *treeview, GtkTreeIter *parent, char *str, bool bold)
 {
   GtkTreeStore *treestore;
   GtkTreeViewColumn *treecol;
@@ -296,12 +296,14 @@ void hc_uhci_do_item(GtkWidget *treeview, Bit32u FrameAddr, Bit32u FrameNum)
   struct QUEUE queue;
   struct TD td;
   char str[COMMON_STR_SIZE];
-  GtkTreeIter *parent = NULL;
+  GtkTreeIter *cur, *next;
+  GtkTreeSelection *selection;
+  bool state;
 
   // get the frame pointer
   DEV_MEM_READ_PHYSICAL(FrameAddr, sizeof(Bit32u), (Bit8u *) &item);
   sprintf(str, "Frame Pointer(%i): 0x%08X", FrameNum, item);
-  treeview_insert(treeview, NULL, str);
+  next = treeview_insert(treeview, NULL, str, 0);
 
   queue_stack.queue_cnt = 0;
 
@@ -321,7 +323,7 @@ void hc_uhci_do_item(GtkWidget *treeview, Bit32u FrameAddr, Bit32u FrameNum)
       // read in the queue
       DEV_MEM_READ_PHYSICAL(item & ~0xF, sizeof(struct QUEUE), (Bit8u *) &queue);
       sprintf(str, "0x%08X: Queue Head: (0x%08X 0x%08X)", item & ~0xF, queue.horz, queue.vert);
-      parent = treeview_insert(treeview, parent, str);
+      next = treeview_insert(treeview, next, str, 0);
 
       // if the vert pointer is valid, there are td's in it to process
       //  else only the head pointer may be valid
@@ -343,10 +345,16 @@ void hc_uhci_do_item(GtkWidget *treeview, Bit32u FrameAddr, Bit32u FrameNum)
     }
 
     // we processed another td within this queue line
+    state = false; // clear the state
     DEV_MEM_READ_PHYSICAL(item & ~0xF, sizeof(struct TD), (Bit8u *) &td);
     const bool depthbreadth = (td.dword0 & 0x0004) ? true : false;     // 1 = depth first, 0 = breadth first
     sprintf(str, "0x%08X: TD: (0x%08X)", item & ~0xF, td.dword0);
-      treeview_insert(treeview, parent, str);
+    if ((item & ~0xF) == (Bit32u) usbdbg_param1)
+      state = true;
+    cur = treeview_insert(treeview, next, str, state);
+    selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
+    if ((item & ~0xF) == (Bit32u) usbdbg_param1)
+      gtk_tree_selection_select_iter(selection, cur);
     item = td.dword0;
     if (queue_addr != 0) {
       // if breadth first or last in the element list, move on to next queue item
@@ -970,6 +978,7 @@ int uhci_debug_dialog(int type, int param1)
       gtk_label_set_text(GTK_LABEL(FNlabel), "SOF Frame Address");
       if (frame_addr != 0x00000000) {
         hc_uhci_do_item(treeview, frame_addr, frame_num);
+        gtk_tree_view_expand_all(GTK_TREE_VIEW(treeview));
         g_signal_connect(button[7], "clicked", G_CALLBACK(uhci_display_td), treeview);
         gtk_widget_set_sensitive(button[7], 1);
         valid = 1;
@@ -1290,6 +1299,7 @@ int usb_debug_dialog(int type, int param1, int param2)
     first_call = false;
   }
   host_param = SIM->get_param(hc_param_str[usb_debug_type]);
+  usbdbg_param1 = param1;
   usbdbg_param2 = param2;
   if (usb_debug_type == USB_DEBUG_UHCI) {
     ret = uhci_debug_dialog(type, param1);
