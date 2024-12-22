@@ -126,7 +126,7 @@ bool bx_vga_c::init_vga_extension(void)
     BX_VGA_THIS vbe_present = 1;
     ret = 1;
 
-    BX_INFO(("VBE Bochs Display Extension Enabled"));
+    BX_INFO(("VBE Bochs Display Extension Enabled (%d MB)", BX_VGA_THIS s.memsize >> 20));
   }
 #if BX_SUPPORT_PCI
   Bit8u devfunc = 0x00;

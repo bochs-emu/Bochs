@@ -108,6 +108,7 @@ void bx_vgacore_c::init(void)
     if (BX_VGA_THIS s.memory == NULL)
       BX_VGA_THIS s.memory = new Bit8u[BX_VGA_THIS s.memsize];
     memset(BX_VGA_THIS s.memory, 0, BX_VGA_THIS s.memsize);
+    BX_INFO(("Standard VGA adapter initialized"));
   }
   BX_VGA_THIS s.vgamem_mask = 0x3ffff;
   BX_VGA_THIS init_gui();
