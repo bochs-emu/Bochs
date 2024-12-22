@@ -107,7 +107,7 @@ For any information on Qemu, visit the website http://wiki.qemu.org/
 
 History
 -------
-vgabios-github-current : Nov 02 2024
+vgabios-github-current : Nov 06 2024
   - Volker
     - Added support for Cirrus 4 bpp modes 0x58, 0x5d and 0x6c
     - Added 4 bpp support for Cirrus VBE functions
@@ -115,6 +115,7 @@ vgabios-github-current : Nov 02 2024
     - Disable 16k granularity after clearing Cirrus VRAM
     - VBE: Fixed crash or hang in dispi_set_bank_farcall
     - VBE: Only report modes that fit into the configured VBE memory
+    - VBE: Mode info now generated dynamicly similar to Banshee/Cirrus
 
 vgabios-0.9b : Jun 09 2024
   - Volker
