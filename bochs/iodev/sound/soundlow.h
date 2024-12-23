@@ -114,6 +114,8 @@ public:
   bool resampler_running() {return res_thread_start;}
   bool mixer_running() {return mix_thread_start;}
 
+  bx_audio_buffer_c *get_audio_buffer(int n) {return audio_buffers[n];}
+
 protected:
   void start_resampler_thread(void);
   void start_mixer_thread(void);
@@ -127,6 +129,7 @@ protected:
 #if BX_HAVE_LIBSAMPLERATE || BX_HAVE_SOXR_LSR
   SRC_STATE *src_state;
 #endif
+  bx_audio_buffer_c *audio_buffers[2];
 
   int cb_count;
   struct {

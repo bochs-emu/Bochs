@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -274,13 +274,15 @@ void bx_sb16_c::init(void)
   if (BX_SB16_WAVEOUT1 == NULL) {
     BX_PANIC(("Couldn't initialize waveout driver"));
     BX_SB16_THIS wavemode &= ~1;
-  } else {
+  } else if (BX_SB16_THIS wavemode & 1) {
     BX_SB16_THIS fmopl_callback_id = BX_SB16_WAVEOUT1->register_wave_callback(BX_SB16_THISP, fmopl_callback);
   }
   if (BX_SB16_THIS wavemode & 2) {
     BX_SB16_WAVEOUT2 = DEV_sound_get_waveout(1);
     if (BX_SB16_WAVEOUT2 == NULL) {
       BX_PANIC(("Couldn't initialize wave file driver"));
+    } else if (BX_SB16_THIS wavemode == 2) {
+      BX_SB16_THIS fmopl_callback_id = BX_SB16_WAVEOUT2->register_wave_callback(BX_SB16_THISP, fmopl_callback);
     }
   }
   BX_SB16_WAVEIN = DEV_sound_get_wavein();
