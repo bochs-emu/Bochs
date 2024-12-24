@@ -679,7 +679,7 @@ void bx_sb16_c::dsp_reset(Bit32u value)
       {
          writelog(WAVELOG(4), "DSP reset: DMA aborted");
          DSP.dma.mode = 1;  // no auto init anymore
-         dsp_dmadone();
+         dsp_dmadone(0);
       }
 
       DSP.resetport = 0;
@@ -967,7 +967,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
          DSP_B.datain.get(&value8);
          DSP.dma.timeconstant = value8 <<  8;
          DSP.dma.param.samplerate = (Bit32u) 256000000L / ((Bit32u) 65536L - (Bit32u) DSP.dma.timeconstant);
-           break;
+         break;
 
          // set samplerate for input
        case 0x41:
@@ -1163,7 +1163,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
          if (DSP.dma.mode != 0)
            {
              DSP.dma.mode = 1;  // no auto init anymore
-             dsp_dmadone();
+             dsp_dmadone(1);
            }
          break;
 
@@ -1173,7 +1173,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
          if (DSP.dma.mode != 0)
          {
              DSP.dma.mode = 1;  // no auto init anymore
-             dsp_dmadone();
+             dsp_dmadone(1);
          }
          break;
 
@@ -1526,24 +1526,25 @@ Bit8u bx_sb16_c::dsp_putsamplebyte()
 }
 
 // called when the last byte of a DMA transfer has been received/sent
-void bx_sb16_c::dsp_dmadone()
+void bx_sb16_c::dsp_dmadone(bool irq)
 {
-  writelog(WAVELOG(4), "DMA transfer done, triggering IRQ");
-
   if ((DSP.dma.output == 1) && (DSP.dma.mode != 2)) {
     dsp_sendwavepacket();  // flush the output
   } else if ((DSP.dma.output == 0) && (DSP.dma.mode != 2)) {
     BX_SB16_WAVEIN->stopwaverecord();
   }
 
-  // generate the appropriate IRQ
-  if (DSP.dma.param.bits == 8)
-    MIXER.reg[0x82] |= 1;
-  else
-    MIXER.reg[0x82] |= 2;
+  if (irq) {
+    // generate the appropriate IRQ
+    writelog(WAVELOG(4), "DMA transfer done, triggering IRQ");
+    if (DSP.dma.param.bits == 8)
+      MIXER.reg[0x82] |= 1;
+    else
+      MIXER.reg[0x82] |= 2;
 
-  DEV_pic_raise_irq(BX_SB16_IRQ);
-  DSP.irqpending = 1;
+    DEV_pic_raise_irq(BX_SB16_IRQ);
+    DSP.irqpending = 1;
+  }
 
   // if auto-DMA, reinitialize
   if (DSP.dma.mode == 2)
@@ -1580,7 +1581,7 @@ Bit16u bx_sb16_c::dma_read8(Bit8u *buffer, Bit16u maxlen)
   } while ((len < maxlen) && (DSP.dma.count != 0xffff));
 
   if (DSP.dma.count == 0xffff) // last byte received
-    dsp_dmadone();
+    dsp_dmadone(1);
 
   return len;
 }
@@ -1600,7 +1601,7 @@ Bit16u bx_sb16_c::dma_write8(Bit8u *buffer, Bit16u maxlen)
            buffer[0], DSP.dma.count);
 
   if (DSP.dma.count == 0xffff) // last byte sent
-    dsp_dmadone();
+    dsp_dmadone(1);
 
   return len;
 }
@@ -1624,7 +1625,7 @@ Bit16u bx_sb16_c::dma_read16(Bit16u *buffer, Bit16u maxlen)
   } while ((len < maxlen) && (DSP.dma.count != 0xffff));
 
   if (DSP.dma.count == 0xffff) // last word received
-    dsp_dmadone();
+    dsp_dmadone(1);
 
   return len;
 }
@@ -1648,7 +1649,7 @@ Bit16u bx_sb16_c::dma_write16(Bit16u *buffer, Bit16u maxlen)
            buffer[0], DSP.dma.count);
 
   if (DSP.dma.count == 0xffff) // last word sent
-    dsp_dmadone();
+    dsp_dmadone(1);
 
   return len;
 }

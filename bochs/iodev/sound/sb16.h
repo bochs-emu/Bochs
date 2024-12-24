@@ -274,7 +274,7 @@ private:
   BX_SB16_SMF Bit32u dsp_irq16ack();                 // ack 16 bit IRQ      2xf
   BX_SB16_SMF void   dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp);
 						     // initiate a DMA transfer
-  BX_SB16_SMF void   dsp_dmadone();		     // stop a DMA transfer
+  BX_SB16_SMF void   dsp_dmadone(bool irq);	     // stop a DMA transfer
   BX_SB16_SMF void   dsp_enabledma();		     // enable the transfer
   BX_SB16_SMF void   dsp_disabledma();		     // temporarily disable DMA
   BX_SB16_SMF void   dsp_disable_nondma();	     // disable DSP direct mode
