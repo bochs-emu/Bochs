@@ -247,10 +247,8 @@ BX_THREAD_FUNC(mixer_thread, indata)
 bx_soundlow_waveout_c::bx_soundlow_waveout_c()
 {
   put("waveout", "WAVOUT");
-  if (audio_buffers[0] == NULL) {
-    audio_buffers[0] = new bx_audio_buffer_c(BUFTYPE_FLOAT);
-    audio_buffers[1] = new bx_audio_buffer_c(BUFTYPE_UCHAR);
-  }
+  audio_buffers[0] = new bx_audio_buffer_c(BUFTYPE_FLOAT);
+  audio_buffers[1] = new bx_audio_buffer_c(BUFTYPE_UCHAR);
   real_pcm_param = default_pcm_param;
   cb_count = 0;
   pcm_callback_id = -1;

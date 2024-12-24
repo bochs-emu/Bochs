@@ -81,7 +81,6 @@ private:
   audio_buffer_t *root;
 };
 
-extern bx_audio_buffer_c *audio_buffers[2];
 void convert_float_to_s16le(float *src, unsigned srcsize, Bit8u *dst);
 BOCHSAPI_MSVCONLY Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
 
