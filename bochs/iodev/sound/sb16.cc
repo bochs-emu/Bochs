@@ -1258,7 +1258,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
 // dsp_dma() initiates all kinds of dma transfers
 void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
 {
-  int ret;
+  int ret, size;
   bx_list_c *base;
   bool issigned;
 
@@ -1314,7 +1314,8 @@ void bx_sb16_c::dsp_dma(Bit8u command, Bit8u mode, Bit16u length, Bit8u comp)
   } else {
     DSP.dma.count = ((DSP.dma.blocklength + 1) << 1) - 1;
   }
-  DSP.dma.timer = BX_SB16_THIS dmatimer * BX_DMA_BUFFER_SIZE / sampledatarate;
+  size = (DSP.dma.count < BX_DMA_BUFFER_SIZE) ? DSP.dma.count : BX_DMA_BUFFER_SIZE;
+  DSP.dma.timer = BX_SB16_THIS dmatimer * size / sampledatarate;
 
   writelog(WAVELOG(5), "DMA is %db, %dHz, %s, %s, mode %d, %s, %s, %d bps, %d usec/DMA",
            DSP.dma.param.bits, DSP.dma.param.samplerate,
