@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -158,7 +158,7 @@ private:
   int currentirq;
   int currentdma8;
   int currentdma16;
-  int fmopl_callback_id;
+  int fmopl_callback_id[2];
   int rt_conf_id;
   Bit16u fm_volume;
 

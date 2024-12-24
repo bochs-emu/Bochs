@@ -218,6 +218,8 @@ bx_sb16_c::bx_sb16_c(void)
   opl.timer_handle = BX_NULL_TIMER_HANDLE;
   waveout[0] = NULL;
   waveout[1] = NULL;
+  fmopl_callback_id[0] = -1;
+  fmopl_callback_id[1] = -1;
   wavein = NULL;
   midiout[0] = NULL;
   midiout[1] = NULL;
@@ -234,8 +236,11 @@ bx_sb16_c::~bx_sb16_c(void)
 
   closemidioutput();
 
-  if (BX_SB16_WAVEOUT1 != NULL) {
-    BX_SB16_WAVEOUT1->unregister_wave_callback(fmopl_callback_id);
+  if (fmopl_callback_id[0] >= 0) {
+    BX_SB16_WAVEOUT1->unregister_wave_callback(fmopl_callback_id[0]);
+  }
+  if (fmopl_callback_id[1] >= 0) {
+    BX_SB16_WAVEOUT2->unregister_wave_callback(fmopl_callback_id[1]);
   }
   closewaveoutput();
 
@@ -275,14 +280,14 @@ void bx_sb16_c::init(void)
     BX_PANIC(("Couldn't initialize waveout driver"));
     BX_SB16_THIS wavemode &= ~1;
   } else if (BX_SB16_THIS wavemode & 1) {
-    BX_SB16_THIS fmopl_callback_id = BX_SB16_WAVEOUT1->register_wave_callback(BX_SB16_THISP, fmopl_callback);
+    BX_SB16_THIS fmopl_callback_id[0] = BX_SB16_WAVEOUT1->register_wave_callback(BX_SB16_THISP, fmopl_callback);
   }
   if (BX_SB16_THIS wavemode & 2) {
     BX_SB16_WAVEOUT2 = DEV_sound_get_waveout(1);
     if (BX_SB16_WAVEOUT2 == NULL) {
       BX_PANIC(("Couldn't initialize wave file driver"));
-    } else if (BX_SB16_THIS wavemode == 2) {
-      BX_SB16_THIS fmopl_callback_id = BX_SB16_WAVEOUT2->register_wave_callback(BX_SB16_THISP, fmopl_callback);
+    } else {
+      BX_SB16_THIS fmopl_callback_id[1] = BX_SB16_WAVEOUT2->register_wave_callback(BX_SB16_THISP, fmopl_callback);
     }
   }
   BX_SB16_WAVEIN = DEV_sound_get_wavein();
