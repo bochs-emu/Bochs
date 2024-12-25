@@ -104,6 +104,9 @@ Detailed change log :
   - USB
     - Now includes the USB Debugger support for the xHCI and UHCI controllers
   - Sound
+    - SB16: Don't raise IRQ at DSP reset
+    - SB16: Calculate DSP DMA timer period based on DSP block size
+    - Sound drivers: Moving audio buffer to waveout class fixes wavemode 2 and 3
     - Added PCM playback/recording support using PulseAudio simple API
     - ES1370: fixing status register access makes mixer work
   - Networking
