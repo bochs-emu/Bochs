@@ -751,6 +751,9 @@ void bx_sdl2_gui_c::handle_events(void)
         }
         // handle gui console mode
         if (console_running()) {
+          if (sdl_event.key.keysym.sym == SDLK_KP_ENTER) {
+            sdl_event.key.keysym.sym = SDLK_RETURN;
+          }
           if ((sdl_event.key.keysym.sym & (1 << 30)) == 0) {
             Bit8u ascii = (Bit8u)sdl_event.key.keysym.sym;
             if ((ascii == SDLK_RETURN) || (ascii == SDLK_BACKSPACE)) {
@@ -890,7 +893,8 @@ void bx_sdl2_gui_c::handle_events(void)
         }
 
         // filter out release of Windows/Fullscreen toggle
-        if (sdl_event.key.keysym.sym != SDLK_SCROLLLOCK) {
+        if ((sdl_event.key.keysym.sym != SDLK_RETURN) ||
+            (bx_gui->get_modifier_keys() != BX_MOD_KEY_ALT)) {
           // convert sym->bochs code
           if (!SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
             key_event = sdl_sym_to_bx_key(sdl_event.key.keysym.sym);
