@@ -771,6 +771,11 @@ void bx_sdl_gui_c::handle_events(void)
             if (ascii < 0x80) {
               console_key_enq(ascii);
             }
+#ifdef __ANDROID__
+            if (keysym == SDLK_RETURN) {
+              console_key_enq(13);
+            }
+#endif
           }
           break;
         }
