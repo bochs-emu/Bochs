@@ -2153,7 +2153,8 @@ if test "$soundcard_present" = 1; then
     [
     case x$SDL2_VERSION in
       x2.0.[0-4]) ;;
-      x2.0.[5-9]) sdl2_audio_capture=1 ;;
+      x2.0.[5-22]) sdl2_audio_capture=1 ;;
+      x2.[24-30]*) sdl2_audio_capture=1 ;;
       *) ;;
     esac
     ]
