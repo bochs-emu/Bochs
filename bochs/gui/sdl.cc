@@ -767,12 +767,17 @@ void bx_sdl_gui_c::handle_events(void)
           SDLKey keysym = sdl_event.key.keysym.sym;
           Bit8u ascii = (Bit8u)sdl_event.key.keysym.unicode;
           if (((keysym >= SDLK_SPACE) && (keysym < SDLK_DELETE)) ||
-              (keysym == SDLK_RETURN) || (keysym == SDLK_BACKSPACE)) {
+              (keysym == SDLK_RETURN) || (keysym == SDLK_KP_ENTER) ||
+              (keysym == SDLK_BACKSPACE)) {
             if (ascii < 0x80) {
               console_key_enq(ascii);
             }
 #ifdef __ANDROID__
             if (keysym == SDLK_RETURN) {
+              console_key_enq(13);
+            }
+#else
+            if (keysym == SDLK_KP_ENTER) {
               console_key_enq(13);
             }
 #endif
