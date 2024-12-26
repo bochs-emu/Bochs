@@ -556,7 +556,7 @@ void bx_voodoo_base_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
 void bx_voodoo_base_c::update(void)
 {
   Bit32u start;
-  unsigned iHeight, iWidth;
+  unsigned iHeight, iWidth, riHeight, riWidth;
   unsigned pitch, xc, yc, xti, yti;
   unsigned r, c, w, h;
   int i;
@@ -585,9 +585,24 @@ void bx_voodoo_base_c::update(void)
   BX_UNLOCK(fifo_mutex);
   iWidth = s.vdraw.width;
   iHeight = s.vdraw.height;
+  if (v->banshee.half_mode) {
+    riHeight = iHeight / 2;
+    if (v->banshee.double_width) {
+      riWidth = iWidth / 2;
+    } else {
+      riWidth = iWidth;
+    }
+  } else {
+    riHeight = iHeight;
+    riWidth = iWidth;
+  }
   start &= v->fbi.mask;
   Bit8u *disp_ptr = &v->fbi.ram[start];
-
+  if ((start + pitch * (riHeight - 1) + riWidth) > (v->fbi.mask + 1)) {
+    BX_ERROR(("skip address wrap during update() (start = 0x%08x)", start));
+    BX_UNLOCK(render_mutex);
+    return;
+  }
   if (bx_gui->graphics_tile_info_common(&info)) {
     if (info.snapshot_mode) {
       vid_ptr = disp_ptr;
