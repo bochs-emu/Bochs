@@ -97,7 +97,7 @@ bx_keymap_c::~bx_keymap_c(void)
 }
 
 #ifdef WIN32
-char* basename(const char *path)
+char* basename(char *path)
 {
   char *ptr;
 
@@ -105,7 +105,7 @@ char* basename(const char *path)
   if (ptr == NULL) {
     ptr = strrchr(path, 92);
     if (ptr == NULL) {
-      ptr = (char*)path;
+      ptr = path;
     } else {
       ptr++;
     }
@@ -118,15 +118,21 @@ char* basename(const char *path)
 
 void bx_keymap_c::loadKeymap(const char *prefix, Bit32u stringToSymbol(const char*))
 {
+  char keymap_file[BX_PATHNAME_LEN];
+
   if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
-    const char *keymap_file = SIM->get_param_string(BXPN_KBD_KEYMAP)->getptr();
-    char *prefix2 = new char[strlen(prefix + 2)];
-    sprintf(prefix2, "%s-", prefix);
-    if (strncmp(prefix2, basename(keymap_file), strlen(prefix2))) {
-      BX_PANIC(("Keymap file written for this display library"));
+    strcpy(keymap_file, SIM->get_param_string(BXPN_KBD_KEYMAP)->getptr());
+    if (strlen(keymap_file) == 2) {
+      // TODO: create keymap file name from language identifier
+    } else {
+      char *prefix2 = new char[strlen(prefix + 2)];
+      sprintf(prefix2, "%s-", prefix);
+      if (strncmp(prefix2, basename(keymap_file), strlen(prefix2))) {
+        BX_PANIC(("Keymap file not designed for this display library"));
+      }
+      delete [] prefix2;
     }
     loadKeymap(stringToSymbol, keymap_file);
-    delete [] prefix2;
   }
 }
 
