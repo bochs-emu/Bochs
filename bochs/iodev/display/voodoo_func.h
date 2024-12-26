@@ -713,6 +713,8 @@ Bit32s triangle()
 
     case 1:   /* back buffer */
       drawbuf = (Bit16u *)(v->fbi.ram + v->fbi.rgboffs[v->fbi.backbuf]);
+      if (v->fbi.rgboffs[v->fbi.frontbuf] == v->fbi.rgboffs[v->fbi.backbuf])
+        v->fbi.video_changed = 1;
       break;
 
     default:  /* reserved */
