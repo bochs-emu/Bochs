@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -96,10 +96,37 @@ bx_keymap_c::~bx_keymap_c(void)
     keymapCount = 0;
 }
 
-void bx_keymap_c::loadKeymap(Bit32u stringToSymbol(const char*))
+#ifdef WIN32
+char* basename(const char *path)
+{
+  char *ptr;
+
+  ptr = strrchr(path, '/');
+  if (ptr == NULL) {
+    ptr = strrchr(path, 92);
+    if (ptr == NULL) {
+      ptr = (char*)path;
+    } else {
+      ptr++;
+    }
+  } else {
+    ptr++;
+  }
+  return ptr;
+}
+#endif
+
+void bx_keymap_c::loadKeymap(const char *prefix, Bit32u stringToSymbol(const char*))
 {
   if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
-    loadKeymap(stringToSymbol, SIM->get_param_string(BXPN_KBD_KEYMAP)->getptr());
+    const char *keymap_file = SIM->get_param_string(BXPN_KBD_KEYMAP)->getptr();
+    char *prefix2 = new char[strlen(prefix + 2)];
+    sprintf(prefix2, "%s-", prefix);
+    if (strncmp(prefix2, basename(keymap_file), strlen(prefix2))) {
+      BX_PANIC(("Keymap file written for this display library"));
+    }
+    loadKeymap(stringToSymbol, keymap_file);
+    delete [] prefix2;
   }
 }
 

@@ -282,7 +282,7 @@ void bx_rfb_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   // load keymap for rfb
   if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
-    bx_keymap.loadKeymap(convertStringToRfbKey);
+    bx_keymap.loadKeymap("x11", convertStringToRfbKey);
   }
 
   // the ask menu doesn't work on the client side

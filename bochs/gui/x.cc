@@ -884,7 +884,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   // loads keymap for x11
   x11_use_kbd_mapping = SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get();
   if (x11_use_kbd_mapping) {
-    bx_keymap.loadKeymap(convertStringToXKeysym);
+    bx_keymap.loadKeymap("x11", convertStringToXKeysym);
   }
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI

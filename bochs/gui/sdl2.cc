@@ -465,7 +465,7 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   // load keymap for sdl
   if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
-    bx_keymap.loadKeymap(convertStringToSDLKey);
+    bx_keymap.loadKeymap("sdl2", convertStringToSDLKey);
   }
 
   if (!gui_ci) {

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -24,7 +24,7 @@
 //
 // Methods of bx_keymap_c :
 //
-// - loadKeymap(Bit32u convertStringToSymbol(const char*));
+// - loadKeymap(const char *prefix, Bit32u convertStringToSymbol(const char*));
 //   loads the configuration specified keymap file if keymapping is enabled
 //   using convertStringToSymbol to convert strings to client constants
 //
@@ -61,7 +61,7 @@ public:
   bx_keymap_c(void);
  ~bx_keymap_c(void);
 
-  void   loadKeymap(Bit32u(*)(const char*));
+  void   loadKeymap(const char *prefix, Bit32u(*)(const char*));
   void   loadKeymap(Bit32u(*)(const char*),const char *filename);
   bool   isKeymapLoaded();
 

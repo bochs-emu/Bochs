@@ -1031,9 +1031,9 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   // load keymap tables
   if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get())
 #if defined (wxHAS_RAW_KEY_CODES) && defined(__WXGTK__)
-    bx_keymap.loadKeymap(convertStringToGDKKey);
+    bx_keymap.loadKeymap("x11", convertStringToGDKKey);
 #else
-    bx_keymap.loadKeymap(NULL);
+    bx_keymap.loadKeymap("x11", NULL);
 #endif
 
   // parse x11 specific options
