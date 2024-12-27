@@ -73,6 +73,7 @@ Detailed change log :
     - Scroll lock release now works again (Formerly used as fullscreen toggle)
     - Fix Pause / Ctrl+Break key handling (possibly SDL issue)
     - Fixed enter key in gui console mode on Android
+  - Keymap: Added support for using language specifier instead of file name
 
 - I/O Devices
   - VGA / Bochs VBE support

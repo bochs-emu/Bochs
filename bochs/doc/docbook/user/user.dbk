@@ -3082,7 +3082,7 @@ as <link linkend="bochsopt-boot">boot option</link>.
 <para>
 If your keyboard output inside of Bochs is wrong, you may also need a keymap file
 to remap your keyboard layout to the U.S. layout. A set of keymap files for the
-X window system and SDL (Linux port) is distributed with Bochs. If your
+X window system and SDL/SDL2 (Linux port) is distributed with Bochs. If your
 keyboard layout is not supported yet, you can create your own one by following the
 instructions given in <xref linkend="keymap">.
 </para>
@@ -3712,6 +3712,7 @@ Examples:
 <screen>
   keyboard: type=mf, serial_delay=150, paste_delay=100000
   keyboard: keymap=gui/keymaps/x11-pc-de.map
+  keyboard: keymap=de
   keyboard: user_shortcut=ctrl-alt-del
 </screen>
 This defines parameters related to the emulated keyboard.
@@ -3745,11 +3746,21 @@ delay until it stops losing characters.
 <para>
 This enables a remap of a physical localized keyboard to a
 virtualized us keyboard, as the PC architecture expects.
+Using a language specifier instead of a file name is also supported.
+A keymap is also required by the paste feature to convert ASCII to BX_KEY values.
 </para>
 <para>
-Keyboard mapping is available for the display libraries x, sdl (Linux port) and
-wx (GTK port). For SDL you have to use keymaps designed for SDL, the wxWidgets GUI
+Keyboard mapping is available for the display libraries x, sdl / sdl2 (Linux port)
+and wx (GTK port). For SDL you have to use keymaps designed for SDL, the wxWidgets GUI
 uses the keymaps for X11.
+</para>
+<para>
+When using a 2 character language specifier the keymap path and file name are
+built from the BXSHARE path, the prefix required by the selected display library
+and the language specifier. If the sdl2 gui is selected and the keymap is set to
+"de", the keymap file name is set to <filename>$BXSHARE/keymaps/sdl2-pc-de.map</filename>.
+The BXSHARE variable is read from the system or Bochs binary and the directory
+separator depends on host OS.
 </para>
 <para><command>user_shortcut</command></para>
 <para>

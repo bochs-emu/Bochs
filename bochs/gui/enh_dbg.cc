@@ -3496,25 +3496,6 @@ static size_t strip_whitespace(char *s)
   return ptr;
 }
 
-static void get_bxshare_path(char *path)
-{
-  const char *varptr = NULL;
-
-#if BX_HAVE_GETENV
-  varptr = getenv("BXSHARE");
-#endif
-  if (varptr != NULL) {
-    sprintf(path, "%s", varptr);
-  } else {
-    varptr = get_builtin_variable("BXSHARE");
-    if (varptr != NULL) {
-      sprintf(path, "%s", varptr);
-    } else {
-      strcpy(path, ".");
-    }
-  }
-}
-
 void ReadSettings()
 {
   FILE *fd = NULL;

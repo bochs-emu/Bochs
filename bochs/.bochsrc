@@ -395,6 +395,8 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest.bin
 #   KEYMAP:
 #     This enables a remap of a physical localized keyboard to a
 #     virtualized us keyboard, as the PC architecture expects.
+#     Using a language specifier instead of a file name is also supported.
+#     A keymap is also required by the paste feature.
 #
 #   USER_SHORTCUT:
 #     This defines the keyboard shortcut to be sent when you press the "user"

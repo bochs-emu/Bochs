@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -112,11 +112,18 @@ class bx_list_c;
 #define BX_SHARE_PATH NULL
 #endif
 
+#ifdef WIN32
+#define DIRECTORY_SEPARATOR "\\"
+#else
+#define DIRECTORY_SEPARATOR "/"
+#endif
+
 // prototypes
 int  bx_begin_simulation(int argc, char *argv[]);
 void bx_stop_simulation();
 char *bx_find_bochsrc(void);
 const char *get_builtin_variable(const char *varname);
+void get_bxshare_path(char *path);
 int  bx_parse_cmdline(int arg, int argc, char *argv[]);
 int  bx_read_configuration(const char *rcfile);
 int  bx_write_configuration(const char *rcfile, int overwrite);

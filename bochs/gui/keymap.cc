@@ -118,12 +118,15 @@ char* basename(char *path)
 
 void bx_keymap_c::loadKeymap(const char *prefix, Bit32u stringToSymbol(const char*))
 {
-  char keymap_file[BX_PATHNAME_LEN];
+  char keymap_file[BX_PATHNAME_LEN], bxshare[BX_PATHNAME_LEN], lang[3];
 
   if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
     strcpy(keymap_file, SIM->get_param_string(BXPN_KBD_KEYMAP)->getptr());
     if (strlen(keymap_file) == 2) {
-      // TODO: create keymap file name from language identifier
+      strcpy(lang, keymap_file);
+      get_bxshare_path(bxshare);
+      sprintf(keymap_file, "%s" DIRECTORY_SEPARATOR "keymaps" DIRECTORY_SEPARATOR "%s-pc-%s.map",
+              bxshare, prefix, lang);
     } else {
       char *prefix2 = new char[strlen(prefix + 2)];
       sprintf(prefix2, "%s-", prefix);

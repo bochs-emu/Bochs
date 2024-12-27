@@ -47,12 +47,6 @@
 #undef getenv
 #endif
 
-#ifdef WIN32
-#define DIRECTORY_SEPARATOR "\\"
-#else
-#define DIRECTORY_SEPARATOR "/"
-#endif
-
 const char **config_interface_list;
 const char **display_library_list;
 const char **vga_extension_names;
@@ -306,7 +300,7 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, 
       label,
       descr,
       "", BX_PATHNAME_LEN);
-    bx_param_bool_c *overcurrent = new bx_param_bool_c(port, 
+    bx_param_bool_c *overcurrent = new bx_param_bool_c(port,
       "over_current",
       "signal over-current",
       "signal over-current", 0);
@@ -344,7 +338,7 @@ void bx_init_usb_debug_options(bx_list_c *base)
   new bx_param_num_c(usb_debug,
       "start_frame", "Trigger on start of frame",
     "Trigger on start of frame",
-    BX_USB_DEBUG_SOF_NONE, BX_USB_DEBUG_SOF_TRIGGER, 
+    BX_USB_DEBUG_SOF_NONE, BX_USB_DEBUG_SOF_TRIGGER,
     BX_USB_DEBUG_SOF_NONE
   );
   new bx_param_bool_c(usb_debug,
@@ -1954,6 +1948,25 @@ const char *get_builtin_variable(const char *varname)
   }
 }
 
+void get_bxshare_path(char *path)
+{
+  const char *varptr = NULL;
+
+#if BX_HAVE_GETENV
+  varptr = getenv("BXSHARE");
+#endif
+  if (varptr != NULL) {
+    sprintf(path, "%s", varptr);
+  } else {
+    varptr = get_builtin_variable("BXSHARE");
+    if (varptr != NULL) {
+      sprintf(path, "%s", varptr);
+    } else {
+      strcpy(path, ".");
+    }
+  }
+}
+
 static int parse_line_unformatted(const char *context, char *line)
 {
 #define MAX_PARAMS_LEN 40
@@ -2289,7 +2302,7 @@ int bx_parse_usb_port_params(const char *context, const char *param,
   sprintf(tmpname, "port%d.%s", idx, devopt ? "device" : "options");
   if (devopt) {
     compat_mode = false;
-    
+
     // if we already have found this port's declaration in the bochsrc.txt file, give error
     // for example:
     //   usb_ohci: port1=mouse, options1="speed:low, model:m228"
@@ -3208,7 +3221,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     // we can only debug one controller at a time
     bx_param_enum_c *type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
     if (type->get() != USB_DEBUG_NONE) {
-      PARSE_ERR(("%s: usb_debug: type='%s' previously defined.", context, 
+      PARSE_ERR(("%s: usb_debug: type='%s' previously defined.", context,
                  type->get_selected()));
     }
     for (i=1; i<num_params; i++) {
@@ -3219,7 +3232,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     // we currently only support the xHCI controller type, so give
     //  an error if it is something else.
     if ((type->get() == USB_DEBUG_OHCI) || (type->get() == USB_DEBUG_EHCI)) {
-      PARSE_ERR(("%s: usb_debug: type='%s' not supported yet.", context, 
+      PARSE_ERR(("%s: usb_debug: type='%s' not supported yet.", context,
                  type->get_selected()));
     }
 #endif
