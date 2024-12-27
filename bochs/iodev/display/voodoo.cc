@@ -553,7 +553,7 @@ void bx_voodoo_base_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
   }
 }
 
-void bx_voodoo_base_c::update(void)
+bool bx_voodoo_base_c::update(void)
 {
   Bit32u start;
   unsigned iHeight, iWidth, riHeight, riWidth;
@@ -567,9 +567,11 @@ void bx_voodoo_base_c::update(void)
   bx_svga_tileinfo_t info;
 
   BX_LOCK(render_mutex);
+  bool retval = s.vdraw.vfreq_update;
+  s.vdraw.vfreq_update = false;
   if (!s.vdraw.gui_update_pending) {
     BX_UNLOCK(render_mutex);
-    return;
+    return retval;
   }
   BX_LOCK(fifo_mutex);
   if (s.model >= VOODOO_BANSHEE) {
@@ -601,7 +603,7 @@ void bx_voodoo_base_c::update(void)
   if ((start + pitch * (riHeight - 1) + riWidth) > (v->fbi.mask + 1)) {
     BX_ERROR(("skip address wrap during update() (start = 0x%08x)", start));
     BX_UNLOCK(render_mutex);
-    return;
+    return retval;
   }
   if (bx_gui->graphics_tile_info_common(&info)) {
     if (info.snapshot_mode) {
@@ -672,6 +674,7 @@ void bx_voodoo_base_c::update(void)
   }
   s.vdraw.gui_update_pending = 0;
   BX_UNLOCK(render_mutex);
+  return retval;
 }
 
 void bx_voodoo_base_c::reg_write(Bit32u reg, Bit32u value)
@@ -948,7 +951,7 @@ void bx_voodoo_1_2_c::mode_change_timer()
 bool bx_voodoo_1_2_c::update_timing(void)
 {
   int htotal, vtotal, hsync, vsync;
-  float hfreq;
+  float hfreq, old_vertfreq = v->vertfreq;
 
   if (!s.vdraw.clock_enabled || !s.vdraw.output_on)
     return 0;
@@ -970,6 +973,7 @@ bool bx_voodoo_1_2_c::update_timing(void)
     hfreq /= 2;
   }
   v->vertfreq = hfreq / (float)vtotal;
+  s.vdraw.vfreq_update = (v->vertfreq != old_vertfreq);
   s.vdraw.htotal_usec = (unsigned)(1000000.0 / hfreq);
   s.vdraw.vtotal_usec = (unsigned)(1000000.0 / v->vertfreq);
   s.vdraw.htime_to_pixel = (double)htotal / (1000000.0 / hfreq);
@@ -982,11 +986,12 @@ bool bx_voodoo_1_2_c::update_timing(void)
     bx_gui->dimension_update(v->fbi.width, v->fbi.height, 0, 0, 16);
     vertical_timer_handler(this);
   }
-  BX_INFO(("Voodoo output %dx%d@%uHz", v->fbi.width, v->fbi.height, (unsigned)v->vertfreq));
   v->fbi.swaps_pending = 0;
-  v->vtimer_running = 1;
-  if (v->vidclk != 0.0)
+  if (v->vidclk != 0.0) {
+    BX_INFO(("Voodoo output %dx%d@%uHz", v->fbi.width, v->fbi.height, (unsigned)v->vertfreq));
     bx_virt_timer.activate_timer(s.vertical_timer_id, (Bit32u)s.vdraw.vtotal_usec, 1);
+    v->vtimer_running = 1;
+  }
   return 1;
 }
 

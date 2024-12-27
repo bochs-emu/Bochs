@@ -75,7 +75,7 @@ public:
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height) {}
   virtual void refresh_display(void *this_ptr, bool redraw) {}
-  virtual void update(void) {}
+  virtual bool update(void) {return false;}
   virtual Bit32u get_vtotal_usec(void) {return 0;}
 };
 #endif

@@ -2407,7 +2407,11 @@ void bx_vgacore_c::vga_timer_handler(void *this_ptr)
   bx_vgacore_c *vgadev = (bx_vgacore_c *) this_ptr;
 #if BX_SUPPORT_PCI
   if (vgadev->s.vga_override && (vgadev->s.nvgadev != NULL)) {
-    vgadev->s.nvgadev->update();
+    if (vgadev->s.nvgadev->update()) {
+      if (vgadev->update_mode_vsync) {
+        vgadev->set_update_timer(0);
+      }
+    }
   }
   else
 #endif

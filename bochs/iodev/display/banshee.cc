@@ -642,7 +642,7 @@ bool bx_banshee_c::chromakey_check(Bit32u color, Bit8u bpp)
   return pass;
 }
 
-void bx_banshee_c::update(void)
+bool bx_banshee_c::update(void)
 {
   Bit32u start;
   unsigned iHeight, iWidth, riHeight, riWidth;
@@ -689,7 +689,7 @@ void bx_banshee_c::update(void)
     if ((start + pitch * (riHeight - 1) + riWidth) > (v->fbi.mask + 1)) {
       BX_ERROR(("skip address wrap during update() (start = 0x%08x)", start));
       BX_UNLOCK(render_mutex);
-      return;
+      return false;
     }
     if (bx_gui->graphics_tile_info_common(&info)) {
       if (info.snapshot_mode) {
@@ -985,6 +985,7 @@ void bx_banshee_c::update(void)
   } else {
     bx_voodoo_base_c::update();
   }
+  return false;
 }
 
 Bit32u bx_banshee_c::get_retrace(bool hv)

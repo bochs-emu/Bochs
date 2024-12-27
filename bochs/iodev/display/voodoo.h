@@ -37,6 +37,7 @@ typedef struct {
     Bit64u vsync_usec;
     double htime_to_pixel;
     Bit64u frame_start;
+    bool vfreq_update;
     bool clock_enabled;
     bool output_on;
     bool override_on;
@@ -66,7 +67,7 @@ public:
   virtual void refresh_display(void *this_ptr, bool redraw);
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height);
-  virtual void update(void);
+  virtual bool update(void);
   virtual bool update_timing(void) {return 0;}
   virtual Bit32u get_retrace(bool hv) {return 0;}
   virtual Bit32u get_vtotal_usec(void) {return 0;}
@@ -127,7 +128,7 @@ public:
   virtual void register_state(void);
   virtual void after_restore_state(void);
 
-  virtual void   update(void);
+  virtual bool   update(void);
   virtual bool   update_timing(void);
   virtual Bit32u get_retrace(bool hv);
 
