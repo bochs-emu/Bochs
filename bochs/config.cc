@@ -2814,6 +2814,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_num(BXPN_CPU_NPROCESSORS)->set(processors);
         SIM->get_param_num(BXPN_CPU_NCORES)->set(cores);
         SIM->get_param_num(BXPN_CPU_NTHREADS)->set(threads);
+      } else if (!strcmp(params[i], "model=bx_generic")) {
+        PARSE_ERR(("%s: cpu: This model choice is no longer supported, use pre-defined CPU models", context));
       } else if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param("cpu")) < 0) {
         PARSE_ERR(("%s: cpu directive malformed.", context));
       }
