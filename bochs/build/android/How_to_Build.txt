@@ -1,59 +1,105 @@
-1) At first, for building we need (64bit) linux, because already Android NDK support only x64 architecture. In
-example, I use Ubuntu 16.10, which installed in Virtual Box in Windows 10.
+1) Install 64-bit Linux (on real hardware or inside VM). Apply available updates.
 
-2) Install Android SDK and NDK (I unpacked them into ~/android directory), and downlod required tools.
+Note:
+	At least 8 GB RAM is required for building libSDL by Pelya and Bochs.
+	If you have VBox and Win 10/11, turn off "Hyper-V" and "Windows Hypervisor Platform".
+	Then disable "Memory Integrity" and "Credential Guard" (via DG Readiness Tool) in order to avoid "green turtle".
+	If it's shown - VBox cannot use hypervisor directly and cannot run at full performance.
 
-	https://developer.android.com/ndk/downloads/index.html
-	https://developer.android.com/studio/index.html (you can download GUI Android Studio with SDK (which installs
-from studio) or download command-line tools)
+2) Install OpenJDK
+
+Command:
+	sudo apt-get install openjdk-17-jdk
+	
+3) Install packages, which needs for build:
+
+Commands:
+	sudo apt-get install ant
+	sudo apt-get install make
+	sudo apt-get install g++
+	sudo apt-get install git-core
+	
+4) Install Android SDK and NDK
 
 Download this:
 
-	Android SDK Tools
-	Android SDK Platform-tools
-	Android SDL Build tools
-	Android 6.0 (API 23) or higher
-	SDK Platform (API 23) or higher
+	Android Studio Command-Line Tools:
+	https://developer.android.com/studio#command-tools
+	Extract into "/home/<username>/android/sdk/" directory.
+	
+	Android SDK Command-Line tools:
+	./sdkmanager --sdk_root=/home/<username>/android/sdk "cmdline-tools;3.0"                                                 
+	
+	Android SDK Platform-tools:
+	./sdkmanager --sdk_root=/home/<username>/android/sdk "platform-tools"
+	
+	Android SDK Build tools 34.0.0:
+	./sdkmanager --sdk_root=/home/<username>/android/sdk "build-tools;34.0.0"
+	
+	Android SDK Platform (API 33) or higher
+	./sdkmanager --sdk_root=/home/<username>/android/sdk "platforms;android-33"
+	
+	Android NDK r25c (newer versions don't work yet):
+	https://github.com/android/ndk/wiki/Unsupported-Downloads
+	Extract into "/home/<username>/android/ndk/" directory.
+	Rename "android-ndk-r25c" subdirectory to "25.2.9519653".
 
-3) Install JDK. You can do it from apt-get tool or download from official site (in this case you must set envirnoment 
-value to JDK, see guides "How install JDK and set envirnoment values to JDK).
-
-Command:
-	sudo apt-get install openjdk-8-jdk
-
-4) Set envirnoment values to Android's tools. For set android environment I create and use simple script setenv-android.sh.
-In this sript you must set your paths and tools versions. If script don't work (see results from command "printenv") - set
-this values manually. Warning: values will be setted for one command-line session.
-
-Script:
+5) Create script "setenv-android.sh" at "/home/<username>/android/" directory.
+	
+Contents:
 	#!/bin/sh
 
-	export PATH=~/android/android-ndk-r12b:$PATH
-	export PATH=~/android/android-sdk-linux/tools:$PATH
-	export PATH=~/android/android-sdk-linux/build-tools/24.0.0:$PATH
+	export ANDROID_HOME=/home/<username>/android/sdk
+	export ANDROID_NDK_HOME=/home/<username>/android/ndk/25.2.9519653
+	export PATH=$ANDROID_HOME/platform-tools:$PATH
+	export PATH=$ANDROID_HOME/build-tools/34.0.0:$PATH
 
-5) Install packages, which needs for build:
+Command:
+	source /home/<username>/android/setenv-android.sh
+
+6) Create debug keystore at "/home/<username>/.android/" like this:
+
+Command (example):
+	keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000
+	
+Description:
+    Keystore name: "debug.keystore"
+    Keystore password: "android"
+    Key alias: "androiddebugkey"
+    Key password: "android"
+    CN: "CN=Android Debug,O=Android,C=US"
+
+7) Download required repos from GitHub. Use separate directory like "/home/<username>/kitchen".
 
 Commands:
-	sudo apt-get install ant //If you install manually - set envirnoment value to Ant
-	sudo apt-get install make
-	sudo apt-get install g++
+	git clone -b sdl_android https://github.com/pelya/commandergenius androidsdl
+	git clone https://github.com/lubomyr/bochs
+	cd androidsdl
+	git submodule update --init --recursive project/jni/sdl2
+	git submodule update --init --recursive project/jni/sdl2_image
+	git submodule update --init --recursive project/jni/sdl2_mixer
+	git submodule update --init --recursive project/jni/sdl2_ttf
+	
+Note:
+	SDL (v1.2) and SDL2 configurations share common dependencies (like jpeg, png, etc.),
+	but only sdl2_* folders are defined as git submodules,
+	so you have to download them too (see above) in order
+	to fetch dependencies for corresponding SDL (v1.2) libraries.
 
-6) Create and put keystore (I use debug version) in ~/.android/debug.keystore (only in this folder and with this name). In
-example, I copy debug keystore, which created my Android Studio in Windows 10 (C:\Users\USER_NAME\.android\debug.keystore).
+8) Apply patches for androidsdl (there will be a PR later).
 
-7) Download required repos from GitHub:
-	git clone git://github.com/pelya/commandergenius androidsdl
-	git clone git://github.com/lubomyr/bochs
+Affected files:
+	project/java/MainActivity.java (MANAGE_EXTERNAL_STORAGE request on Android 11+)
+	project/java/DummyService.java (FLAG_MUTABLE for PendingIntent's on Android 12+)
+	project/AndroidManifestTemplate (MANAGE_EXTERNAL_STORAGE permission, etc.)
 
-8) Copy folder ~/bochs/android/bochs into ~/androidsdl/project/jni/application/, change symlink
-~/androidsdl/project/jni/application/bochs/bochs to point to this bochs repository. For change symlink you can use this command:
+9) Collect BIOS binaries, license files, etc. into "/home/<username>/kitchen/bochs/build/android/bochs/AndroidData/" directory.
+Create zip archive there (check it's name inside "/home/<username>/kitchen/bochs/build/android/bochs/AndroidAppSettings.cfg").
 
-ln -sf *bochs folder* *symlink path*
+10) Run ./build-core.sh from "/home/<username>/kitchen/bochs/build/android/". Wait and pray)
+If you see "BUILD SUCCESSFUL" - you'll find apk in the same directory.
 
-9) For build go to androidsdl folder:
-	cd ~/androidsdl
-and build apk:
-	./build.sh bochs
-
-Your apk will be in ~/androidsdk/project/bin/MainActivity-debug.apk
+Guide by:
+https://github.com/lubomyr
+https://github.com/MVoloshin
+https://github.com/pelya
