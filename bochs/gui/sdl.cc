@@ -544,7 +544,7 @@ void bx_sdl_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
     buf = (Uint32 *)sdl_screen->pixels + (headerbar_height + yc) * pitch + xc;
   } else {
     pitch = sdl_fullscreen->pitch/4;
-    buf = (Uint32 *)sdl_fullscreen->pixels + yc * pitch + xc;
+    buf = (Uint32 *)sdl_fullscreen->pixels + yc * pitch + xc + sdl_fullscreen->offset/4;
   }
   fgcolor = sdl_palette[fc];
   bgcolor = sdl_palette[bc];
