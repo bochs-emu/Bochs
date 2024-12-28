@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2017-2021  The Bochs Project
+//  Copyright (C) 2017-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -31,7 +31,7 @@
 #define BX_THREAD_EXIT return 0
 #define BX_THREAD_CREATE(name,arg,var) do { var = CreateThread(NULL, 0, name, arg, 0, NULL); } while (0)
 #define BX_THREAD_KILL(var) TerminateThread(var, 0)
-#define BX_THREAD_JOIN(var)
+#define BX_THREAD_JOIN(var) WaitForSingleObject(var, INFINITE)
 #define BX_LOCK(mutex) EnterCriticalSection(&(mutex))
 #define BX_UNLOCK(mutex) LeaveCriticalSection(&(mutex))
 #define BX_MUTEX(mutex) CRITICAL_SECTION mutex
