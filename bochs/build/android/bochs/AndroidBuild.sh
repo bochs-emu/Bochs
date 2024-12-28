@@ -39,6 +39,9 @@ fi
 if [ -f bin-$1/gui/Makefile ]; then
        sed -i -u 's/-D_FILE_OFFSET_BITS=64//' bin-$1/gui/Makefile
 fi
+if [ -f bin-$1/gui/Makefile ]; then
+       sed -i -u 's/-D_FILE_OFFSET_BITS=64//' bin-$1/memory/Makefile
+fi
 
 # Fix a compilation error
 #mkdir -p bin-$1/iodev/network/slirp
