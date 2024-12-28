@@ -26,7 +26,7 @@ if [ \! -f bin-$1/Makefile ] ; then
 		$ANDROIDSDL/project/jni/application/setEnvironment-$1.sh sh -c "cd bin-$1 && ../bochs/configure \
 		--build=x86_64-unknown-linux-gnu --host=$2 --with-sdl \
 		--enable-cpu-level=6 --enable-smp --enable-3dnow --enable-x86-64 \
-        --enable-vmx=2 --enable-avx --enable-evex \
+		--enable-vmx=2 --enable-avx --enable-evex \
 		--enable-sb16 --enable-es1370 \
 		--enable-ne2000 --enable-pnic --enable-e1000 \
 		--enable-clgd54xx --enable-voodoo \

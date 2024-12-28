@@ -96,7 +96,7 @@ bx_keymap_c::~bx_keymap_c(void)
     keymapCount = 0;
 }
 
-#ifdef WIN32
+#if defined(WIN32) || defined(__ANDROID__)
 char* basename(char *path)
 {
   char *ptr;
