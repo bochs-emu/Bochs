@@ -76,8 +76,8 @@ static bx_thread_sem_t vertical_sem;
 static Bit8u dither4_lookup[256*16*2];
 static Bit8u dither2_lookup[256*16*2];
 
-/* fast reciprocal+log2 lookup */
-Bit32u voodoo_reciplog[(2 << RECIPLOG_LOOKUP_BITS) + 2];
+/* fast log2 lookup */
+Bit8u voodoo_log[1 << LOG_LOOKUP_BITS];
 
 
 void raster_function(int tmus, void *destbase, Bit32s y, const poly_extent *extent, const void *extradata, int threadid) {
@@ -435,9 +435,6 @@ void recompute_texture_params(tmu_state *t)
 
 BX_CPP_INLINE Bit32s prepare_tmu(tmu_state *t)
 {
-  Bit64s texdx, texdy;
-  Bit32s lodbase;
-
   /* if the texture parameters are dirty, update them */
   if (t->regdirty) {
     recompute_texture_params(t);
@@ -452,22 +449,22 @@ BX_CPP_INLINE Bit32s prepare_tmu(tmu_state *t)
     }
   }
 
-  /* compute (ds^2 + dt^2) in both X and Y as 28.36 numbers */
-  texdx = (Bit64s)(t->dsdx >> 14) * (Bit64s)(t->dsdx >> 14) + (Bit64s)(t->dtdx >> 14) * (Bit64s)(t->dtdx >> 14);
-  texdy = (Bit64s)(t->dsdy >> 14) * (Bit64s)(t->dsdy >> 14) + (Bit64s)(t->dtdy >> 14) * (Bit64s)(t->dtdy >> 14);
+  // compute (ds^2 + dt^2) in both X and Y; note that these values are
+  // each .32, so the square is a .64 fixed point value
+  double fdsdx = (double)t->dsdx;
+  double fdsdy = (double)t->dsdy;
+  double fdtdx = (double)t->dtdx;
+  double fdtdy = (double)t->dtdy;
+  double texdx = fdsdx * fdsdx + fdtdx * fdtdx;
+  double texdy = fdsdy * fdsdy + fdtdy * fdtdy;
 
-  /* pick whichever is larger and shift off some high bits -> 28.20 */
-  if (texdx < texdy)
-    texdx = texdy;
-  texdx >>= 16;
+  // pick whichever is larger
+  double maxval = BX_MAX(texdx, texdy);
 
-  /* use our fast reciprocal/log on this value; it expects input as a */
-  /* 16.32 number, and returns the log of the reciprocal, so we have to */
-  /* adjust the result: negative to get the log of the original value */
-  /* plus 12 to account for the extra exponent, and divided by 2 to */
-  /* get the log of the square root of texdx */
-  (void)fast_reciplog(texdx, &lodbase);
-  return (-lodbase + (12 << 8)) / 2;
+  // use our fast reciprocal/log on this value; 64 to indicate how many
+  // bits of fractional resolution in the source, and divide by 2 because
+  // we really want the log of the square root
+  return fast_log2(maxval, 64) / 2;
 }
 
 
@@ -4017,12 +4014,11 @@ void voodoo_init(Bit8u _type)
   v->pci.fifo.size = 64*2;
   v->pci.fifo.in = v->pci.fifo.out = 0;
 
-  /* create a table of precomputed 1/n and log2(n) values */
+  /* create a table of precomputed log2(n) values */
   /* n ranges from 1.0000 to 2.0000 */
-  for (val = 0; val <= (1 << RECIPLOG_LOOKUP_BITS); val++) {
-    Bit32u value = (1 << RECIPLOG_LOOKUP_BITS) + val;
-    voodoo_reciplog[val*2 + 0] = (1 << (RECIPLOG_LOOKUP_PREC + RECIPLOG_LOOKUP_BITS)) / value;
-    voodoo_reciplog[val*2 + 1] = (Bit32u)(LOGB2((double)value / (double)(1 << RECIPLOG_LOOKUP_BITS)) * (double)(1 << RECIPLOG_LOOKUP_PREC));
+  for (val = 0; val < (1 << LOG_LOOKUP_BITS); val++) {
+    Bit32u value = (1 << LOG_LOOKUP_BITS) + val;
+    voodoo_log[val] = (Bit32u)(LOGB2((double)value / (double)(1 << LOG_LOOKUP_BITS)) * (double)(1 << LOG_OUTPUT_PREC));
   }
 
   /* create dithering tables */
