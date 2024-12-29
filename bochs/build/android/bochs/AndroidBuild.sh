@@ -4,7 +4,6 @@ LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && pwd`
 
 export PATH=$LOCAL_PATH/..:$PATH # For our custom sdl-config
-ANDROIDSDL=../../../../androidsdl
 
 if [ \! -f bochs/configure ] ; then
 	sh -c "cd bochs && ./bootstrap.sh"
@@ -15,7 +14,7 @@ mkdir -p bin-$1
 if [ "$1" = armeabi-v7a ] || [ "$1" = x86 ]; then
     export ARCH_CFLAG="-DANDROID_32BIT"
 fi
-if [ "$1" = arm64-v8a ]; then
+if [ "$1" = arm64-v8a ] || [ "$1" = x86_64 ]; then
     export ARCH_CFLAG="-DANDROID_ARM64"
 fi
 
@@ -23,10 +22,10 @@ fi
 if [ \! -f bin-$1/Makefile ] ; then
 	env CFLAGS="-Ofast -Wno-narrowing -DANDROID $ARCH_CFLAG" \
     env CLANG=1 \
-		$ANDROIDSDL/project/jni/application/setEnvironment-$1.sh sh -c "cd bin-$1 && ../bochs/configure \
+		$ANDROID_SDL_HOME/project/jni/application/setEnvironment-$1.sh sh -c "cd bin-$1 && ../bochs/configure \
 		--build=x86_64-unknown-linux-gnu --host=$2 --with-sdl \
 		--enable-cpu-level=6 --enable-smp --enable-3dnow --enable-x86-64 \
-		--enable-vmx=2 --enable-avx --enable-evex \
+        	--enable-vmx=2 --enable-avx --enable-evex \
 		--enable-sb16 --enable-es1370 \
 		--enable-ne2000 --enable-pnic --enable-e1000 \
 		--enable-clgd54xx --enable-voodoo \
@@ -39,6 +38,7 @@ fi
 if [ -f bin-$1/gui/Makefile ]; then
        sed -i -u 's/-D_FILE_OFFSET_BITS=64//' bin-$1/gui/Makefile
 fi
+
 if [ -f bin-$1/gui/Makefile ]; then
        sed -i -u 's/-D_FILE_OFFSET_BITS=64//' bin-$1/memory/Makefile
 fi
