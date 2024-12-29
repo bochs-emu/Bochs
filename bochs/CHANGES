@@ -66,7 +66,7 @@ Detailed change log :
   - Debugger gui now updates the memory dump window if necessary
   - Added bitmap change support for the wxWidgets toolbar / Improved wxWidgets
     toolbar functionality
-  - Fullscreen mode fixes for the win32 gui
+  - Fullscreen mode fixes for the legacy SDL and win32 gui
   - Fixed SDL2 fullscreen toggle
   - SDL/SDL2: Added support for keypad enter key in gui console mode
   - Fixed legacy SDL key handling issues
@@ -74,6 +74,7 @@ Detailed change log :
     - Fix Pause / Ctrl+Break key handling (possibly SDL issue)
     - Fixed enter key in gui console mode on Android
   - Keymap: Added support for using language specifier instead of file name
+  - Added mouse capture toggle choice "ctrl+alt+g" (currently used by Qemu)
 
 - I/O Devices
   - VGA / Bochs VBE support

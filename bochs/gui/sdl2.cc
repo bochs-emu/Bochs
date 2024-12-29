@@ -772,6 +772,8 @@ void bx_sdl2_gui_c::handle_events(void)
             mouse_toggle = mouse_toggle_check(BX_MT_KEY_F10, 1);
           } else if (sdl_event.key.keysym.sym == SDLK_F12) {
             mouse_toggle = mouse_toggle_check(BX_MT_KEY_F12, 1);
+          } else if (sdl_event.key.keysym.sym == SDLK_g) {
+            mouse_toggle = mouse_toggle_check(BX_MT_KEY_G, 1);
           }
           if (mouse_toggle) {
             toggle_mouse_enable();
@@ -890,6 +892,8 @@ void bx_sdl2_gui_c::handle_events(void)
           mouse_toggle_check(BX_MT_KEY_F10, 0);
         } else if (sdl_event.key.keysym.sym == SDLK_F12) {
           mouse_toggle_check(BX_MT_KEY_F12, 0);
+        } else if (sdl_event.key.keysym.sym == SDLK_g) {
+          mouse_toggle_check(BX_MT_KEY_G, 0);
         }
 
         // filter out release of Windows/Fullscreen toggle

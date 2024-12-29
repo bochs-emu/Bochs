@@ -3815,8 +3815,8 @@ and the 'toggle' option below).
 <para>
 The default method to toggle the mouse capture at runtime is to press the
 CTRL key and the middle mouse button ('ctrl+mbutton'). This option allows
-to change the method to 'ctrl+f10' (like DOSBox) or 'ctrl+alt' (like QEMU)
-or 'f12'.
+to change the method to 'ctrl+f10' (like DOSBox), 'ctrl+alt' (legacy QEMU),
+'ctrl+alt+g' (QEMU current) or 'f12'.
 </para>
 </section>
 

@@ -201,6 +201,9 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
     case BX_MOUSE_TOGGLE_CTRL_ALT:
       strcpy(mouse_toggle_text, "CTRL + ALT");
       break;
+    case BX_MOUSE_TOGGLE_CTRL_ALT_G:
+      strcpy(mouse_toggle_text, "CTRL + ALT + G");
+      break;
     case BX_MOUSE_TOGGLE_F12:
       strcpy(mouse_toggle_text, "F12");
       break;
@@ -755,7 +758,10 @@ bool bx_gui_c::mouse_toggle_check(Bit32u key, bool pressed)
         toggle = (newstate & BX_GUI_MT_CTRL_F10) == BX_GUI_MT_CTRL_F10;
         break;
       case BX_MOUSE_TOGGLE_CTRL_ALT:
-        toggle = (newstate & BX_GUI_MT_CTRL_ALT) == BX_GUI_MT_CTRL_ALT;
+        toggle = (newstate & BX_GUI_MT_CTRL_ALT_G) == BX_GUI_MT_CTRL_ALT;
+        break;
+      case BX_MOUSE_TOGGLE_CTRL_ALT_G:
+        toggle = (newstate & BX_GUI_MT_CTRL_ALT_G) == BX_GUI_MT_CTRL_ALT_G;
         break;
       case BX_MOUSE_TOGGLE_F12:
         toggle = (newstate == BX_GUI_MT_F12);

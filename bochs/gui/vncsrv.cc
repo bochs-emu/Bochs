@@ -1220,6 +1220,8 @@ void dokey(rfbBool down, rfbKeySym key, rfbClientPtr cl)
     mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F10, down);
   } else if (key == XK_F12) {
     mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F12, down);
+  } else if (key == XK_g) {
+    mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_G, down);
   }
   if (mouse_toggle) {
     bx_gui->toggle_mouse_enable();

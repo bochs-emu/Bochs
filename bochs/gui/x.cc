@@ -1813,6 +1813,8 @@ void bx_x_gui_c::xkeypress(KeySym keysym, int press_release)
     mouse_toggle = mouse_toggle_check(BX_MT_KEY_F10, !press_release);
   } else if (keysym == XK_F12) {
     mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F12, !press_release);
+  } else if (keysym == XK_g) {
+    mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_G, !press_release);
   }
   if (mouse_toggle) {
     toggle_mouse_enable();

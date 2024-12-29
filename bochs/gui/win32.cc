@@ -1389,6 +1389,8 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F10, 1);
     } else if (wParam == VK_F12) {
       mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F12, 1);
+    } else if (wParam == 'G') {
+      mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_G, 1);
     }
     if (mouse_toggle) {
       mouseCaptureMode = !mouseCaptureMode;
@@ -1488,6 +1490,8 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         bx_gui->mouse_toggle_check(BX_MT_KEY_F10, 0);
       } else if (wParam == VK_F12) {
         bx_gui->mouse_toggle_check(BX_MT_KEY_F12, 0);
+      } else if (wParam == 'G') {
+        bx_gui->mouse_toggle_check(BX_MT_KEY_G, 0);
       }
       EnterCriticalSection(&stInfo.keyCS);
       enq_key_event(HIWORD (lParam) & 0x01FF, BX_KEY_RELEASED);

@@ -1139,12 +1139,13 @@ void bx_init_options()
     "ctrl+mbutton",
     "ctrl+f10",
     "ctrl+alt",
+    "ctrl+alt+g",
     "f12",
     NULL
   };
   toggle = new bx_param_enum_c(mouse,
       "toggle", "Mouse toggle method",
-      "The mouse toggle method can be one of these: 'ctrl+mbutton', 'ctrl+f10', 'ctrl+alt'",
+      "The mouse toggle method can be one of these: 'ctrl+mbutton', 'ctrl+f10', 'ctrl+alt', 'ctrl+alt+g'",
       mouse_toggle_list,
       BX_MOUSE_TOGGLE_CTRL_MB,
       BX_MOUSE_TOGGLE_CTRL_MB);

@@ -7,7 +7,7 @@
 //    Donald Becker
 //    http://www.psyon.org
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1404,6 +1404,8 @@ void HandleRfbClient(SOCKET sClient)
             mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F10, ke.downFlag);
           } else if (ke.key == XK_F12) {
             mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F12, ke.downFlag);
+          } else if (ke.key == XK_g) {
+            mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_G, ke.downFlag);
           }
           if (mouse_toggle) {
             bx_gui->toggle_mouse_enable();
