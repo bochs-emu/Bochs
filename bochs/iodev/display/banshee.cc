@@ -1536,6 +1536,7 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
           mask = 0x0000ffff;
         } else {
           mask = 0xffff0000;
+          value <<= 16;
         }
       }
       lfb_w((offset & v->fbi.mask) >> 2, value, mask);
