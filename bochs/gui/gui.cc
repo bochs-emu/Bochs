@@ -1591,6 +1591,7 @@ char* bx_gui_c::bx_gets(char *s, int size)
   int cs_counter = 1, cs_visible = 0;
 
   set_console_edit_mode(1);
+  console.tminfo.blink_flags |= BX_TEXT_BLINK_MODE;
   keystr[1] = 0;
   do {
     handle_events();
@@ -1622,13 +1623,19 @@ char* bx_gui_c::bx_gets(char *s, int size)
       cs_visible ^= 1;
       if (cs_visible) {
         console.tminfo.cs_start &= ~0x20;
+        console.tminfo.blink_flags |= BX_TEXT_BLINK_STATE;
       } else {
         console.tminfo.cs_start |= 0x20;
+        console.tminfo.blink_flags &= ~BX_TEXT_BLINK_STATE;
       }
+      console.tminfo.blink_flags |= BX_TEXT_BLINK_TOGGLE;
       console_refresh(0);
+    } else {
+      console.tminfo.blink_flags &= ~BX_TEXT_BLINK_TOGGLE;
     }
   } while (!done);
   console.tminfo.cs_start |= 0x20;
+  console.tminfo.blink_flags &= ~BX_TEXT_BLINK_MODE;
   set_console_edit_mode(0);
   return s;
 }
