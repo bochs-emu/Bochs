@@ -984,6 +984,7 @@ bool bx_voodoo_1_2_c::update_timing(void)
     s.vdraw.width = v->fbi.width;
     s.vdraw.height = v->fbi.height;
     bx_gui->dimension_update(v->fbi.width, v->fbi.height, 0, 0, 16);
+    v->fbi.vblank_swap_pending = 0;
     vertical_timer_handler(this);
   }
   v->fbi.swaps_pending = 0;
