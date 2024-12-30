@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2024  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -784,24 +784,23 @@ textconfig_notify_callback(void *unused, BxEvent *event)
     case BX_SYNC_EVT_LOG_DLG:
       if (event->u.logmsg.mode == BX_LOG_DLG_ASK) {
         int level = event->u.logmsg.level;
-        fprintf(stderr, "========================================================================\n");
-        fprintf(stderr, "Event type: %s\n", SIM->get_log_level_name (level));
-        fprintf(stderr, "Device: %s\n", event->u.logmsg.prefix);
-        fprintf(stderr, "Message: %s\n\n", event->u.logmsg.msg);
-        fprintf(stderr, "A %s has occurred.  Do you want to:\n", SIM->get_log_level_name (level));
-        fprintf(stderr, "  cont       - continue execution\n");
-        fprintf(stderr, "  alwayscont - continue execution, and don't ask again.\n");
-        fprintf(stderr, "               This affects only %s events from device %s\n", SIM->get_log_level_name (level), event->u.logmsg.prefix);
-        fprintf(stderr, "  die        - stop execution now\n");
-        fprintf(stderr, "  abort      - dump core %s\n",
-                BX_HAVE_ABORT ? "" : "(Disabled)");
+        bx_printf("========================================================================\n");
+        bx_printf("Event type: %s\n", SIM->get_log_level_name (level));
+        bx_printf("Device: %s\n", event->u.logmsg.prefix);
+        bx_printf("Message: %s\n\n", event->u.logmsg.msg);
+        bx_printf("A %s has occurred.  Do you want to:\n", SIM->get_log_level_name (level));
+        bx_printf("  cont       - continue execution\n");
+        bx_printf("  alwayscont - continue execution, and don't ask again.\n");
+        bx_printf("               This affects only %s events from device %s\n", SIM->get_log_level_name (level), event->u.logmsg.prefix);
+        bx_printf("  die        - stop execution now\n");
+        bx_printf("  abort      - dump core %s\n", BX_HAVE_ABORT ? "" : "(Disabled)");
 #if BX_DEBUGGER
         if (SIM->debugger_active()) {
-          fprintf(stderr, "  debug      - continue and return to bochs debugger\n");
+          bx_printf("  debug      - continue and return to bochs debugger\n");
         }
 #endif
 #if BX_GDBSTUB
-        fprintf(stderr, "  debug      - hand control to gdb\n");
+        bx_printf("  debug      - hand control to gdb\n");
 #endif
 
         int choice;
@@ -820,7 +819,7 @@ ask:
       }
       return event;
     case BX_SYNC_EVT_ML_MSG_BOX:
-      fprintf(stderr, "%s\n%s\n", event->u.logmsg.prefix, event->u.logmsg.msg);
+      bx_printf("%s\n%s\n", event->u.logmsg.prefix, event->u.logmsg.msg);
       return event;
     case BX_SYNC_EVT_ML_MSG_BOX_KILL:
       // Nothing to do
@@ -832,7 +831,7 @@ ask:
       // them.
       return event;
     default:
-      fprintf(stderr, "textconfig: notify callback called with event type %04x\n", event->type);
+      bx_printf("textconfig: notify callback called with event type %04x\n", event->type);
       return event;
   }
   assert(0); // switch statement should return
