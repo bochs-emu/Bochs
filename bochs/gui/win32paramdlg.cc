@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2021  Volker Ruppert
+//  Copyright (C) 2009-2024  Volker Ruppert
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -583,7 +583,7 @@ HWND CreateCombobox(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_par
 {
   HWND Combo;
   RECT r;
-  int code, j;
+  int code, i, j;
   const char *choice;
 
   code = ID_PARAM + cid;
@@ -602,7 +602,10 @@ HWND CreateCombobox(HWND hDlg, UINT cid, UINT xpos, UINT ypos, BOOL hide, bx_par
   while(1) {
     choice = eparam->get_choice(j);
     if (choice == NULL) break;
-    SendMessage(Combo, CB_ADDSTRING, 0, (LPARAM)choice);
+    if (strlen(choice) > 0) {
+      i = SendMessage(Combo, CB_ADDSTRING, 0, (LPARAM)choice);
+      SendMessage(Combo, CB_SETITEMDATA, (WPARAM)i, (LPARAM)j);
+    }
     j++;
   }
   SendMessage(Combo, CB_SETCURSEL, (WPARAM)(eparam->get()-eparam->get_min()), 0);
@@ -807,7 +810,7 @@ SIZE CreateParamList(HWND hDlg, UINT lid, UINT xpos, UINT ypos, BOOL hide, bx_li
 void SetParamList(HWND hDlg, bx_list_c *list)
 {
   bx_param_c *param;
-  Bit64s val;
+  Bit64s val, idx;
   const char *src;
   char buffer[512];
   UINT cid, i, items, lid;
@@ -831,7 +834,8 @@ void SetParamList(HWND hDlg, bx_list_c *list)
         }
       } else if (param->get_type() == BXT_PARAM_ENUM) {
         bx_param_enum_c *eparam = (bx_param_enum_c*)param;
-        val = (LRESULT)(SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_GETCURSEL, 0, 0) + eparam->get_min());
+        idx = (LRESULT)(SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_GETCURSEL, 0, 0));
+        val = (LRESULT)(SendMessage(GetDlgItem(hDlg, ID_PARAM + cid), CB_GETITEMDATA, (WPARAM)idx, 0) + eparam->get_min());
         if (val != eparam->get()) {
           eparam->set(val);
         }
