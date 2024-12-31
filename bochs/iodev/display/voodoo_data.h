@@ -2810,6 +2810,7 @@ while (0)
 #define TEXTURE_PIPELINE(TT, XX, DITHER4, TEXMODE, COTHER, LOOKUP, LODBASE, ITERS, ITERT, ITERW, RESULT) \
 do                                                                               \
 {                                                                                \
+  bool trilinear_reverse;                                                        \
   Bit32s blendr, blendg, blendb, blenda;                                         \
   Bit32s tr, tg, tb, ta;                                                         \
   Bit32s s, t, lod, ilod;                                                        \
@@ -2853,6 +2854,16 @@ do                                                                              
     lod += DITHER4[(XX) & 3] << 4;                                               \
   if (lod < (TT)->lodmin)                                                        \
     lod = (TT)->lodmin;                                                          \
+                                                                                 \
+  if (TEXMODE_TRILINEAR(TEXMODE))                                                \
+  {                                                                              \
+    trilinear_reverse = lod & 0x100;                                             \
+    if (trilinear_reverse != TEXLOD_LOD_ODD((TT)->reg[tLOD].u))                  \
+      lod += 0x100;                                                              \
+  }                                                                              \
+  else                                                                           \
+    trilinear_reverse = false;                                                   \
+                                                                                 \
   if (lod > (TT)->lodmax)                                                        \
     lod = (TT)->lodmax;                                                          \
                                                                                  \
@@ -3094,7 +3105,7 @@ do                                                                              
   }                                                                              \
                                                                                  \
   /* reverse the RGB blend */                                                    \
-  if (!TEXMODE_TC_REVERSE_BLEND(TEXMODE))                                        \
+  if (trilinear_reverse != !TEXMODE_TC_REVERSE_BLEND(TEXMODE))                   \
   {                                                                              \
     blendr ^= 0xff;                                                              \
     blendg ^= 0xff;                                                              \
@@ -3102,7 +3113,7 @@ do                                                                              
   }                                                                              \
                                                                                  \
   /* reverse the alpha blend */                                                  \
-  if (!TEXMODE_TCA_REVERSE_BLEND(TEXMODE))                                       \
+  if (trilinear_reverse != !TEXMODE_TCA_REVERSE_BLEND(TEXMODE))                  \
     blenda ^= 0xff;                                                              \
                                                                                  \
   /* do the blend */                                                             \
