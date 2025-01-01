@@ -1,9 +1,9 @@
 #!/bin/sh
 
 LOCAL_PATH=`dirname $0`
-LOCAL_PATH=`cd $LOCAL_PATH && pwd`
+LOCAL_PATH=`cd $LOCAL_PATH && cd .. && pwd`
 
-export PATH=$LOCAL_PATH/..:$PATH # For our custom sdl-config
+export PATH=$LOCAL_PATH:$PATH # For our custom sdl-config
 
 if [ \! -f bochs/configure ] ; then
 	sh -c "cd bochs && ./bootstrap.sh"
