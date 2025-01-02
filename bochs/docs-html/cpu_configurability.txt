@@ -240,6 +240,8 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Enables MONITOR/MWAIT instructions (will #UD otherwise).
  Enables power management sleep states (can enter to sleep state with MWAIT).
 
+ Dependency: BX_SUPPORT_MONITOR_MWAIT
+
 27. CPU Feature: waitpkg
 
  Enables CPUID[0x00000007].subleaf[0].ECX[5] WAITPKG flag.
@@ -407,6 +409,325 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Dependency: xsave
 
+46. CPU Feature: avx2
+
+ Enables CPUID[0x00000007].subleaf[0].EBX[5] (AVX2) flag.
+ Enables AVX2 instructions (will #UD otherwise).
+
+ Dependency: avx
+
+47. CPU Feature: avx_f16c
+
+ Enables CPUID[0x00000001].ECX[29] flag.
+ Enables VCVTPH2PS/VCVTPS2PH instructions (will #UD otherwise).
+
+ Dependency: avx (VEX encoded)
+
+48. CPU Feature: avx_fma
+
+ Enables CPUID[0x00000001].ECX[12] flag.
+ Enables Intel 3-src FMA instructions (will #UD otherwise).
+
+ Dependency: avx (VEX encoded)
+
+49. CPU Feature: sse4a
+
+ Enables CPUID[0x80000001].ECX[6] to indicate SSE4A support.
+ Enables AMD SSE4A instructions (will #UD otherwise)
+
+50. CPU Feature: misaligned_sse (Misaligned SSE)
+
+ Enables CPUID[0x80000001].ECX[7] flag.
+ Controls setting of MXCSR.MM bit, when set MXCSR.MM enables misaligned SSE memory accesses without #GP fault.
+ Enables #AC exception checking on all SSE instruction that previously required alignment and caused #GP for misaligned access.
+
+ Dependency: sse
+
+51. CPU Feature: altmovcr8
+
+ Enables alternative way to access CR8 register outside of the long mode (for AMD processors).
+
+        'lock mov cr0, r/m' treated as 'mov cr8, r/m'
+        'lock mov r/m, cr0' treated as 'mov r/m, cr8'
+
+ Dependency: longmode, apic
+
+52. CPU Feature: lzcnt
+
+ Enables CPUID[0x80000001].ECX[5] flag.
+ Treats F3 0F BD opcode as LZCNT instruction, on processor that does not support LZCNT the opcode decoded as BSR instruction.
+
+53. CPU Feature: bmi1
+
+ Enables CPUID[0x00000007].subleaf[0].EBX[3] (BMI1) flag.
+ Enables BMI1 instructions (will #UD otherwise).
+ Treats F3 0F BC opcode as TZCNT instruction, on processor that does not support BMI1 the opcode decoded as BSF instruction.
+
+ Dependency: avx (VEX encoded)
+
+54. CPU Feature: bmi2
+
+ Enables CPUID[0x00000007].subleaf[0].EBX[8] (BMI2) flag.
+ Enables BMI1 instructions (will #UD otherwise).
+
+ Dependency: avx (VEX encoded)
+
+55. CPU Feature: fma4
+
+ Enables CPUID[0x80000001].ECX[11] flag
+ Enables AMD 4-src FMA instructions (will #UD otherwise).
+
+ Dependency: avx (VEX encoded)
+
+56. CPU Feature: xop
+
+ Enables CPUID[0x80000001].ECX[11] flag: AMD Extended Operations Support and XOP Prefix.
+ Enables XOP prefix (0x8F) decoding and XOP instructions emulation (will #UD otherwise).
+
+57. CPU Feature: tbm
+
+ Enables CPUID[0x80000001].ECX[21] flag: Trailing Bit Manipulation instructions support.
+ Enables TBM instructions emulation (will #UD otherwise).
+
+ Dependency: xop (XOP encoded)
+
+58. CPU Feature: svm
+
+ Enables SVM (Secure Virtual Machine Extensions) by AMD and associated CPU instructions.
+ Enables CPUID[0x80000001].ECX[2] flag: Secure Virtual Machine
+ Enables CPUID[0x8000000A] leaf to indicate supported SVM features.
+ Enables EFER.SVME bit to control SVM support.
+
+ SVM contains a lot of features and feature set might be different between different CPU models.
+ When enabled alters behavior of many instructions to emulate hardware assisted virtialization capabilities.
+ Refer to AMD manuals for full SVM description.
+
+ Dependency: BX_SUPPORT_SVM
+             cannot be enabled together with 'vmx'
+
+59. CPU Feature: vmx
+
+ Enables VMX (Intel Virtual Machine Extensions) and associated CPU instructions.
+ Enables CPUID[0x00000001].ECX[5] flag: Virtual Machine Extensions
+ Enables VMX MSRs (MSR range 0x480 to 0x493)
+ Enables IA32_FEATURE_CONTROL MSR (0x3A) and IA32_SMM_MONITOR_CTRL MSR (0x9B).
+ Controls ability to set CR4[13] (VMXE) bit.
+
+ VMX contains a lot of features and feature set might be different between different CPU models.
+ When enabled alters behavior of many instructions to emulate hardware assisted virtialization capabilities.
+ Refer to Intel manuals for full VMX description.
+
+ Dependency: BX_SUPPORT_VMX
+             cannot be enabled together with 'svm'
+
+60. CPU Feature: smx
+
+ Enables CPUID[0x00000001].ECX[6] flag.
+ Controls ability to set CR4[14] (SMXE) bit.
+ Enables SMX instruction GETSEC (will #UD otherwise).
+ SMX mode can be enabled only using SMX instruction.
+
+ Dependency: SMX and GETSEC instruction not yet implemented in Bochs
+
+61. CPU Feature: rdrand
+
+ Enables CPUID[0x00000001].ECX[30] flag.
+ Enables RDRAND instruction emulation.
+ Note, RDRAND is emulated using pseudo-random generator and doesn't provide true random values like real hardware.
+
+62. CPU Feature: rdseed
+
+ Enables CPUID[0x00000007].subleaf[0].EBX[18] flag.
+ Enables RDSEED instruction emulation.
+ Note, RDSEED is emulated using pseudo-random generator and doesn't provide true random values like real hardware.
+
+63. CPU Feature: adx
+
+ Enables CPUID[0x00000007].subleaf[0].EBX[19] flag.
+ Enables ADCX/ADOX instructions (will #UD otherwise).
+
+ Dependency: ssse3 (3-byte opcodes)
+
+64. CPU Feature: smap
+
+ Enables CPUID[0x00000007].EBX[20] flag.
+ Controls ability to set CR4[21] (SMAP) bit.
+ Enables Supervisor Mode Access Protection during page walk.
+ Enables CLAC/STAC instructions.
+
+65. CPU Feature: smep
+
+ Enables CPUID[0x00000007].EBX[7] flag.
+ Controls ability to set CR4[20] (SMEP) bit.
+ Enables Supervisor Mode Execution Protection during PAE mode page walk.
+
+ Dependency: pae
+
+66. CPU Feature: sha
+
+ Enables CPUID[0x00000007].subleaf[0].EBX[29] flag.
+ Enables SHA instructions (will #UD otherwise).
+
+ Dependency: sse
+
+67. CPU Feature: sha512
+
+ Enables CPUID[0x00000007].subleaf[1].EAX[0] flag.
+ Enables SHA-512 instructions (will #UD otherwise).
+
+ Dependency: ssse3 (3-byte opcode)
+
+68. CPU Feature: gfni
+
+ Enables CPUID[0x00000007].subleaf[0].ECX[8] flag.
+ Enables GFNI instructions (will #UD otherwise).
+
+ Dependency: sse, avx, avx512 (has opcodes of all forms)
+
+69. CPU Feature: sm3
+
+ Enables CPUID[0x00000007].subleaf[1].EAX[1] flag.
+ Enables SM3 instructions (will #UD otherwise).
+
+ Dependency: avx (VEX encoded)
+
+70. CPU Feature: sm4
+
+ Enables CPUID[0x00000007].subleaf[1].EAX[2] flag.
+ Enables SM4 instructions (will #UD otherwise).
+
+ Dependency: avx (VEX encoded)
+
+71. CPU Feature: avx_ifma
+
+ Enables CPUID[0x00000007].subleaf[1].EAX[23] flag.
+ Enables AVX_IFMA instructions (will #UD otherwise).
+
+ Dependency: avx (VEX encoded)
+
+72. CPU Feature: avx_vnni
+
+ Enables CPUID[0x00000007].subleaf[1].EAX[4] flag.
+ Enables AVX_VNNI instructions (will #UD otherwise).
+
+ Dependency: avx (VEX encoded)
+
+73. CPU Feature: avx_vnni_int8
+
+ Enables CPUID[0x00000007].subleaf[1].EDX[4] flag.
+ Enables AVX_VNNI_INT8 instructions (will #UD otherwise).
+
+ Dependency: avx (VEX encoded)
+
+74. CPU Feature: avx_vnni_int16
+
+ Enables CPUID[0x00000007].subleaf[1].EDX[10] flag.
+ Enables AVX_VNNI_INT16 instructions (will #UD otherwise).
+
+ Dependency: avx (VEX encoded)
+
+75. CPU Feature: avx_ne_convert
+
+ Enables CPUID[0x00000007].subleaf[1].EDX[5] flag.
+ Enables AVX_NE_CONVERT instructions (will #UD otherwise).
+
+ Dependency: avx (VEX encoded)
+
+76. CPU Feature: avx512
+
+ Enables CPUID[0x00000007].subleaf[0].EBX[16]: AVX512F flag.
+ Adds support for 512-bit vector registers, opmask registers and increase amount of vector registers to 32.
+ Enables XCR0[5] (OPMASK) state, XCR0[6] (ZMM_HI256) state, XCR0[7] (HI_ZMM) state.
+ Enables EVEX prefix decoding and AVX512 instructions (will #UD otherwise).
+ Enabled CPUID[0x00000007].subleaf[0].EBX[31] to indicate 512-bit vector length support.
+
+ Dependency: BX_SUPPORT_EVEX
+             avx, xsave
+
+77. CPU Feature: avx512dq
+
+ Enables CPUID[0x00000007].subleaf[0].EBX[17]: AVX512DQ flag.
+ Enables AVX512DQ instructions (will #UD otherwise).
+
+ Dependency: avx512
+
+78. CPU Feature: avx512bw
+
+ Enables CPUID[0x00000007].subleaf[0].EBX[30]: AVX-512 Byte/Word instructions.
+ Enables AVX512BW instructions (will #UD otherwise).
+
+ Dependency: avx512
+
+79. CPU Feature: avx512cd
+
+ Enables CPUID[0x00000007].subleaf[0].EBX[28]: AVX-512 Conflict Detection instructions.
+ Enables AVX512CD instructions (will #UD otherwise).
+
+ Dependency: avx512
+
+80. CPU Feature: avx512vbmi
+
+ Enables CPUID[0x00000007].subleaf[0].ECX[1]: AVX-512 Vector Bit Manipulation instructions.
+ Enables AVX512_VBMI instructions (will #UD otherwise).
+
+ Dependency: avx512
+
+81. CPU Feature: avx512vbmi2
+
+ Enables CPUID[0x00000007].subleaf[0].ECX[6]: AVX-512 VBMI2 instructions.
+ Enables AVX512_VBMI2 instructions (will #UD otherwise).
+
+ Dependency: avx512
+
+82. CPU Feature: avx512ifma52
+
+ Enables CPUID[0x00000007].subleaf[0].EBX[21]: AVX-512 IFMA52 instructions.
+ Enables AVX512_IFMA52 instructions (will #UD otherwise).
+
+ Dependency: avx512
+
+83. CPU Feature: avx512vpopcnt
+
+ Enables CPUID[0x00000007].subleaf[0].ECX[14]: AVX512 VPOPCNTD/VPOPCNTQ instructions.
+ Enables AVX512 VPOPCNTD/VPOPCNTQ instructions (will #UD otherwise).
+
+ Dependency: avx512
+
+84. CPU Feature: avx512vnni
+
+ Enables CPUID[0x00000007].subleaf[0].ECX[11]: AVX512 VNNI instructions.
+ Enables AVX512 VNNI instructions (will #UD otherwise).
+
+ Dependency: avx512
+
+85. CPU Feature: avx512bitalg
+
+ Enables CPUID[0x00000007].subleaf[0].ECX[12]: AVX512 BITLAG instructions.
+ Enables AVX512 BITLAG instructions (will #UD otherwise).
+
+ Dependency: avx512
+
+86. CPU Feature: avx512vp2intersect
+
+ Enables CPUID[0x00000007].subleaf[0].EDX[8]: AVX512 VP2INTERSECT instructions.
+ Enables AVX512 VP2INTERSECT instructions (will #UD otherwise).
+
+ Dependency: avx512
+
+87. CPU Feature: avx512bf16
+
+ Enables CPUID[0x00000007].subleaf[1].EAX[5]: AVX512 BF16 instructions.
+ Enables AVX512 BF16 instructions (will #UD otherwise).
+
+ Dependency: avx512
+
+88. CPU Feature: avx512fp16
+
+ Enables CPUID[0x00000007].subleaf[0].EDX[23]: AVX512 FP16 instructions.
+ Enables AVX512 FP16 instructions (will #UD otherwise).
+
+ Dependency: avx512
+
 ---------------------------------------------------------------------------------------------------
 
 10. CPU Feature: APIC on chip
@@ -424,28 +745,6 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Enables CPUID[0x00000001].EDX[28] flag.
  Enables CPUID[0x00000001].EBX[23:16] (Number of logical processors in one physical processor) reporting.
  Indicates that CPU supports hyper-threading technology (not emulation visible).
-
-34. CPU Feature: VMX
-
- Enables CPUID[0x00000001].ECX[5] flag.
- Controls ability to set CR4[13] (VMXE) bit.
- Enables VMX MSR registers.
- Enables VMX instructions (will #UD otherwise).
- VMX mode can be enabled only using VMX instructions.
-
-35. CPU Feature: SMX
-
- Enables CPUID[0x00000001].ECX[6] flag.
- Controls ability to set CR4[14] (SMXE) bit.
- Enables SMX instruction GETSEC (will #UD otherwise).
- SMX mode can be enabled only using SMX instruction.
-
-30. CPU Feature: FMA
-
- Enables CPUID[0x00000001].ECX[12] flag.
- Enables Intel 3-src FMA instructions (will #UD otherwise).
-
- Dependency: AVX (VEX encoded)
 
 34. CPU Feature: PCID
 
@@ -474,58 +773,9 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Enables CPUID[0x00000001].ECX[24] flag.
  Not implemented in Bochs.
 
-44. CPU Feature: AVX_F16C
-
- Enables CPUID[0x00000001].ECX[29] flag.
- Enables VCVTPH2PS/VCVTPS2PH instructions (will #UD otherwise).
-
- Dependency: AVX (VEX encoded)
-
-45. CPU Feature: RDRAND
-
- Enables CPUID[0x00000001].ECX[30] flag.
- Enables RDRAND instructions (will #UD otherwise).
- Not implemented in Bochs.
-
-47. CPU Feature: SMEP
-
- Enables CPUID[0x00000007].EBX[7] flag.
- Controls ability to set CR4[20] (SMEP) bit.
- Enables Supervisor Mode Execution Protection during PAE mode page walk.
-
- Dependency: PAE
-
-50. CPU Feature: AMD MMX Extensions
-
- ???
- Enables CPUID[0x80000001].EDX[22] flag.
- Not implemented in Bochs.
-
-58. CPU Feature: Misaligned SSE
-
- Enables CPUID[0x80000001].ECX[7] flag.
- Controls setting of MXCSR.MM bit.
- Enables misaligned SSE memory accesses without #GP fault.
- Enables #AC exception checking on all SSE instruction that previously required alignment and caused #GO for misaligned access.
-
- Dependency: SSE
-
 59. CPU Feature: PrefetchW
 
  Enables CPUID[0x80000001].ECX[8] flag.
  Set if PREFETCHW implemented as real HW prefetch.
  Uarch only. Has no effect for Bochs. 
 
-60. CPU Feature: ADX
-
- Enables CPUID[0x00000007].EBX[19] flag.
- Enables ADCX/ADOX instructions (will #UD otherwise).
-
- Dependency: SSSE3 (3-byte opcodes)
-
-61. CPU Feature: SMAP
-
- Enables CPUID[0x00000007].EBX[20] flag.
- Controls ability to set CR4[21] (SMAP) bit.
- Enables Supervisor Mode Access Protection during page walk.
- Enables CLAC/STAC instructions.

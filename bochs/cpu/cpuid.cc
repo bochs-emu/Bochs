@@ -1037,7 +1037,7 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ebx(Bit32u extra) const
   if (is_cpu_extension_supported(BX_ISA_SMAP))
     ebx |= BX_CPUID_STD7_SUBLEAF0_EBX_SMAP;
 
-  // [22:21]  AVX512IFMA52 instructions support
+  // [21:21]  AVX512IFMA52 instructions support
 #if BX_SUPPORT_EVEX
   if (is_cpu_extension_supported(BX_ISA_AVX512)) {
     if (is_cpu_extension_supported(BX_ISA_AVX512_IFMA52))

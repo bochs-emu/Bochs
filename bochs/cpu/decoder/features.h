@@ -68,9 +68,9 @@ x86_feature(BX_ISA_AVX, "avx")                                          /* AVX i
 x86_feature(BX_ISA_AVX2, "avx2")                                        /* AVX2 instruction */
 x86_feature(BX_ISA_AVX_F16C, "avx_f16c")                                /* AVX F16 convert instruction */
 x86_feature(BX_ISA_AVX_FMA, "avx_fma")                                  /* AVX FMA instruction */
-x86_feature(BX_ISA_ALT_MOV_CR8, "altmovcr8")                            /* LOCK CR0 access CR8 (AMD) */
 x86_feature(BX_ISA_SSE4A, "sse4a")                                      /* SSE4A instruction (AMD) */
 x86_feature(BX_ISA_MISALIGNED_SSE, "misaligned_sse")                    /* Misaligned SSE (AMD) */
+x86_feature(BX_ISA_ALT_MOV_CR8, "altmovcr8")                            /* LOCK CR0 access CR8 (AMD) */
 x86_feature(BX_ISA_LZCNT, "lzcnt")                                      /* LZCNT instruction */
 x86_feature(BX_ISA_BMI1, "bmi1")                                        /* BMI1 instruction */
 x86_feature(BX_ISA_BMI2, "bmi2")                                        /* BMI2 instruction */
@@ -84,6 +84,7 @@ x86_feature(BX_ISA_RDRAND, "rdrand")                                    /* RDRAN
 x86_feature(BX_ISA_RDSEED, "rdseed")                                    /* RDSEED instruction */
 x86_feature(BX_ISA_ADX, "adx")                                          /* ADCX/ADOX instruction */
 x86_feature(BX_ISA_SMAP, "smap")                                        /* SMAP support */
+x86_feature(BX_ISA_SMEP, "smep")                                        /* SMEP support */
 x86_feature(BX_ISA_SHA, "sha")                                          /* SHA instruction */
 x86_feature(BX_ISA_SHA512, "sha512")                                    /* SHA-512 instruction */
 x86_feature(BX_ISA_GFNI, "gfni")                                        /* GFNI instruction */
@@ -125,7 +126,6 @@ x86_feature(BX_ISA_X2APIC, "x2apic")                                    /* X2API
 x86_feature(BX_ISA_XAPIC_EXT, "xapicext")                               /* XAPIC Extensions support (AMD) */
 x86_feature(BX_ISA_PCID, "pcid")                                        /* PCID support */
 x86_feature(BX_ISA_INVPCID, "invpcid")                                  /* INVPCID instruction */
-x86_feature(BX_ISA_SMEP, "smep")                                        /* SMEP support */
 x86_feature(BX_ISA_TSC_ADJUST, "tsc_adjust")                            /* TSC-Adjust MSR */
 x86_feature(BX_ISA_TSC_DEADLINE, "tsc_deadline")                        /* TSC-Deadline */
 x86_feature(BX_ISA_FOPCODE_DEPRECATION, "fopcode_deprecation")          /* FOPCODE Deprecation - FOPCODE update on unmasked x87 exception only */
