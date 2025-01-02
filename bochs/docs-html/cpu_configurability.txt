@@ -793,17 +793,69 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Dependency: amx
 
----------------------------------------------------------------------------------------------------
+95. CPU Feature: avx10_1
 
-10. CPU Feature: APIC on chip
+ Enables CPUID[0x00000007].subleaf[1].ECX[19]: AVX10 supported flag.
+ Enables CPUID[0x00000014] AVX10 CPUID leaf.
+ Consolidates avx512, avx512dq, avx512bw, avx512cd, avx512vbmi, avx512vbmi2, avx512ifma52, avx512vpopcnt, avx512vnni, avx512bitalg, avx512bf16, avx512fp16 under same feature.
+ Allows to limit maximum vector length to 256 bit (AVX10.256)
+ XSAVE/XRSTOR support for AVX10.256
 
- Enables MSR_APIC_BASE register.
- Enables CPUID[0x00000001].EDX[9] (Apic on Chip) flag. The CPUID bit is read from MSR_APIC_BASE[11] (Global Enable Bit).
+ Dependency: avx512
+
+96. CPU Feature: avx10_vl512
+
+ Support 512-bit vector length for AVX10.1
+
+ Dependency: avx10_1
+
+97. CPU Feature: avx10_2
+
+ Introduce EVEX.U bit (previously must be '1) to enable embedded rounding for 256-bit reg/reg instructions.
+ Support AVX10.2 instructions (will #UD otherwise).
+
+ Dependency: avx10_1
+
+98. CPU Feature: xapic (APIC on chip)
+
+ Enables MSR_APICBASE register.
+ Enables CPUID[0x00000001].EDX[9] (APIC on Chip) flag. The CPUID bit is read from MSR_APIC_BASE[11] (Global Enable Bit).
  Enables CPUID[0x00000001].EBX[31:24] (Local Apic ID) reporting.
  Enables Local APIC functionality.
  Without Local APIC the system behaves as Local APIC is globally disabled.
 
  Dependency: MSR
+
+99. CPU Feature: x2apic
+
+ Enables CPUID[0x00000001].ECX[21] flag.
+ Enables X2APIC MSR registers.
+ Enables X2APIC mode in the Local APIC through MSR_APICBASE[10].
+
+ Dependency: xapic
+
+100. CPU Feature: xapicext
+
+ Enables CPUID[0x80000001].ECX[3] flag: Extended APIC Space.
+ Adds extended APIC registers space (from 0x400 to 0x4F0): LAPIC_EXT_APIC_FEATURE, LAPIC_EXT_APIC_CONTROL, LAPIC_SPECIFIC_EOI, LAPIC_IERx.
+ Adds extended APIC functionality.
+
+ Dependency: xapic
+
+101. CPU Feature: pcid
+
+ Enables CPUID[0x00000001].ECX[17] flag.
+ Controls ability to set CR4[17] (PCID) bit.
+ PCID functionality is enabled under CR4.PCID set.
+ Selective TLB flush on PCID switch is not implemented in Bochs (always flush whole TLB).
+
+102. CPU Feature: invpcid
+
+ Enables CPUID[0x00000007].subleaf[0].EBX[10] flag and INVPCID instruction (will #UD otherwise).
+
+ Dependency: pcid
+
+---------------------------------------------------------------------------------------------------
 
 26. CPU Feature: Hyper Threading Technology
 
@@ -811,12 +863,6 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Enables CPUID[0x00000001].EBX[23:16] (Number of logical processors in one physical processor) reporting.
  Indicates that CPU supports hyper-threading technology (not emulation visible).
 
-34. CPU Feature: PCID
-
- Enables CPUID[0x00000001].ECX[17] flag.
- Controls ability to set CR4[17] (PCID) bit.
- PCID functionality is enabled under CR4.PCID set.
- Selective TLB flush on PCID switch is not implemented in Bochs (always flush whole TLB).
 
 35. CPU Feature: DCA (Direct Cache Access)
 
@@ -825,12 +871,6 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Enables CPUID[0x00000009] Direct Cache Access Information Leaf.
  Indicates the processor supports the ability to prefetch data from a memory mapped device.
  Not implemented in Bochs.
-
-38. CPU Feature: X2APIC
-
- Enables CPUID[0x00000001].ECX[21] flag.
- Enables X2APIC MSR registers.
- Enables X2APIC mode in the Local APIC.
 
 41. CPU Feature: TSC Deadline
 
@@ -843,3 +883,4 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Enables CPUID[0x80000001].ECX[8] flag.
  Set if PREFETCHW implemented as real HW prefetch.
  Uarch only. Has no effect for Bochs. 
+
