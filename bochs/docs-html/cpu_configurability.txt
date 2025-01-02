@@ -728,6 +728,71 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Dependency: avx512
 
+89. CPU Feature: amx
+
+ Enables CPUID[0x00000007].subleaf[0].EDX[24]: AMX_TILE architecture flag.
+ Enables CPUID[0x0000001D] : AMX leaf
+ Enables CPUID[0x0000001E] : TMUL Information Main leaf
+ Adds TILE registers support.
+ Enables XCR0[17] (TILECFG) state and XCR0[18] (TILEDATA) state.
+ Enables AMX instructions (will #UD otherwise).
+
+ Dependency: BX_SUPPORT_EVEX, BX_SUPPORT_AMX
+             avx512
+
+90. CPU Feature: amx_int8
+
+ Enables CPUID[0x00000007].subleaf[0].EDX[25]: AMX INT8 extensions flag.
+ Enables CPUID[0x0000001E].subleaf[1].EAX[0]: AMX INT8 extensions support.
+ Enables AMX_INT8 instructions (will #UD otherwise).
+
+ Dependency: amx
+
+91. CPU Feature: amx_bf16
+
+ Enables CPUID[0x00000007].subleaf[0].EDX[22]: AMX BF16 extensions flag.
+ Enables CPUID[0x0000001E].subleaf[1].EAX[1]: AMX BF16 extensions support.
+ Enables AMX_BF16 instructions (will #UD otherwise).
+
+ Dependency: amx
+
+92. CPU Feature: amx_fp16
+
+ Enables CPUID[0x00000007].subleaf[1].EAX[21]: AMX FP16 extensions flag.
+ Enables CPUID[0x0000001E].subleaf[1].EAX[3]: AMX FP16 extensions support.
+ Enables AMX_FP16 instructions (will #UD otherwise).
+
+ Dependency: amx
+
+93. CPU Feature: amx_tf32
+
+ Enables CPUID[0x0000001E].subleaf[1].EAX[6]: AMX TF32 extensions support.
+ Enables AMX_TF32 instructions (will #UD otherwise).
+
+ Dependency: amx
+
+94. CPU Feature: amx_complex
+
+ Enables CPUID[0x00000007].subleaf[1].EDX[8]: AMX_COMPLEX extensions flag.
+ Enables CPUID[0x0000001E].subleaf[1].EAX[2]: AMX_COMPLEX extensions support.
+ Enables AMX_COMPLEX instructions (will #UD otherwise).
+
+ Dependency: amx
+
+93. CPU Feature: amx_movrs
+
+ Enables CPUID[0x0000001E].subleaf[1].EAX[8]: AMX_MOVRS extensions support.
+ Enables AMX_MOVRS instructions (will #UD otherwise).
+
+ Dependency: amx
+
+94. CPU Feature: amx_avx512
+
+ Enables CPUID[0x0000001E].subleaf[1].EAX[7]: AMX<->AVX512 data transfer instruction support.
+ Enables AMX_AVX512 instructions (will #UD otherwise).
+
+ Dependency: amx
+
 ---------------------------------------------------------------------------------------------------
 
 10. CPU Feature: APIC on chip
@@ -778,4 +843,3 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Enables CPUID[0x80000001].ECX[8] flag.
  Set if PREFETCHW implemented as real HW prefetch.
  Uarch only. Has no effect for Bochs. 
-
