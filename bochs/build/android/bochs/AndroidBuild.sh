@@ -2,6 +2,7 @@
 
 LOCAL_PATH=`dirname $0`
 LOCAL_PATH=`cd $LOCAL_PATH && cd .. && pwd`
+SDL_LIBDIR=`cd $LOCAL_PATH && cd ../../libs/$1 && pwd`
 
 export PATH=$LOCAL_PATH:$PATH # For our custom sdl-config
 
@@ -23,7 +24,7 @@ if [ \! -f bin-$1/Makefile ] ; then
 	env CFLAGS="-Ofast -Wno-narrowing -DANDROID $ARCH_CFLAG" \
     env CLANG=1 \
 		$ANDROID_SDL_HOME/project/jni/application/setEnvironment-$1.sh sh -c "cd bin-$1 && ../bochs/configure \
-		--build=x86_64-unknown-linux-gnu --host=$2 --with-sdl \
+		--build=x86_64-unknown-linux-gnu --host=$2 --with-sdl --exec-prefix=$SDL_LIBDIR \
 		--enable-cpu-level=6 --enable-smp --enable-3dnow --enable-x86-64 \
         	--enable-vmx=2 --enable-avx --enable-evex \
 		--enable-sb16 --enable-es1370 \
