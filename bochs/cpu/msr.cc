@@ -605,7 +605,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
   }
 
   Bit32u index = ECX;
-#if BX_SUPPORT_X86_64
+#if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
   if (i->getIaOpcode() == BX_IA_RDMSR_EqId) index = i->Id();
 #endif
   Bit64u val64 = 0;
@@ -624,7 +624,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
   if (!rdmsr(index, &val64))
     exception(BX_GP_EXCEPTION, 0);
 
-#if BX_SUPPORT_X86_64
+#if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
   if (i->getIaOpcode() == BX_IA_RDMSR_EqId) {
     BX_WRITE_64BIT_REG(i->dst(), val64);
   }
@@ -1432,7 +1432,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
   Bit64u val_64;
   Bit32u index;
 
-#if BX_SUPPORT_X86_64
+#if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
   if (i->getIaOpcode() == BX_IA_WRMSRNS_IdEq) {
     val_64 = BX_READ_64BIT_REG(i->src());
     index = i->Id();
