@@ -36,9 +36,6 @@ pentium_t::pentium_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_PENTIUM);
   enable_cpu_extension(BX_ISA_DEBUG_EXTENSIONS);
   enable_cpu_extension(BX_ISA_VME);
-#if BX_PHY_ADDRESS_LONG
-  enable_cpu_extension(BX_ISA_PSE36);
-#endif
   enable_cpu_extension(BX_ISA_PSE);
 }
 

@@ -58,9 +58,6 @@ sapphire_rapids_t::sapphire_rapids_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_PSE);
   enable_cpu_extension(BX_ISA_PAE);
   enable_cpu_extension(BX_ISA_PGE);
-#if BX_PHY_ADDRESS_LONG
-  enable_cpu_extension(BX_ISA_PSE36);
-#endif
   enable_cpu_extension(BX_ISA_MTRR);
   enable_cpu_extension(BX_ISA_PAT);
   enable_cpu_extension(BX_ISA_XAPIC);
@@ -132,7 +129,7 @@ sapphire_rapids_t::sapphire_rapids_t(BX_CPU_C *cpu):
 #endif
   enable_cpu_extension(BX_ISA_CLFLUSHOPT);
   enable_cpu_extension(BX_ISA_CLWB);
-  enable_cpu_extension(BX_ISA_CLDEMOTE);
+//enable_cpu_extension(BX_ISA_CLDEMOTE);
   enable_cpu_extension(BX_ISA_XSAVEC);
   enable_cpu_extension(BX_ISA_XSAVES);
 #if BX_SUPPORT_PKEYS

@@ -53,9 +53,6 @@ p4_prescott_celeron_336_t::p4_prescott_celeron_336_t(BX_CPU_C *cpu): bx_cpuid_t(
   enable_cpu_extension(BX_ISA_PSE);
   enable_cpu_extension(BX_ISA_PAE);
   enable_cpu_extension(BX_ISA_PGE);
-#if BX_PHY_ADDRESS_LONG
-  enable_cpu_extension(BX_ISA_PSE36);
-#endif
   enable_cpu_extension(BX_ISA_MTRR);
   enable_cpu_extension(BX_ISA_PAT);
   enable_cpu_extension(BX_ISA_XAPIC);

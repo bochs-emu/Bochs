@@ -690,7 +690,7 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_edx_common(Bit32u extra) const
 
 #if BX_PHY_ADDRESS_LONG
   // [17:17] PSE-36: Physical Address Extensions
-  if (is_cpu_extension_supported(BX_ISA_PSE36))
+  if (is_cpu_extension_supported(BX_ISA_PSE))
     edx |= BX_CPUID_STD1_EDX_PSE36;
 #endif
 
@@ -1611,6 +1611,13 @@ void bx_cpuid_t::sanity_checks() const
     {
       BX_FATAL(("PANIC: AVX-512 extensions must be disabled if AVX-512 is not supported !"));
     }
+  }
+
+  if (! is_cpu_extension_supported(BX_ISA_CLFLUSH)) {
+    if (is_cpu_extension_supported(BX_ISA_CLFLUSHOPT))
+      BX_FATAL(("PANIC: CLFLUSHOPT enabled when CLFLUSH is not supported !"));
+    if (is_cpu_extension_supported(BX_ISA_CLWB))
+      BX_FATAL(("PANIC: CLWB enabled when CLFLUSH is not supported !"));
   }
 
   // TBM -> XOP -> AVX

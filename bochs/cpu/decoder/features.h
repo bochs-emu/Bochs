@@ -31,7 +31,6 @@ x86_feature(BX_ISA_VME, "vme")                                          /* VME s
 x86_feature(BX_ISA_PSE, "pse")                                          /* PSE support */
 x86_feature(BX_ISA_PAE, "pae")                                          /* PAE support */
 x86_feature(BX_ISA_PGE, "pge")                                          /* Global Pages support */
-x86_feature(BX_ISA_PSE36, "pse36")                                      /* PSE-36 support */
 x86_feature(BX_ISA_MTRR, "mtrr")                                        /* MTRR support */
 x86_feature(BX_ISA_PAT, "pat")                                          /* PAT support */
 x86_feature(BX_ISA_SYSCALL_SYSRET_LEGACY, "legacy_syscall_sysret")      /* SYSCALL/SYSRET in legacy mode (AMD) */
@@ -39,7 +38,6 @@ x86_feature(BX_ISA_SYSENTER_SYSEXIT, "sysenter_sysexit")                /* SYSEN
 x86_feature(BX_ISA_CLFLUSH, "clflush")                                  /* CLFLUSH instruction */
 x86_feature(BX_ISA_CLFLUSHOPT, "clflushopt")                            /* CLFLUSHOPT instruction */
 x86_feature(BX_ISA_CLWB, "clwb")                                        /* CLWB instruction */
-x86_feature(BX_ISA_CLDEMOTE, "cldemote")                                /* CLDEMOTE instruction */
 x86_feature(BX_ISA_SSE, "sse")                                          /* SSE  instruction */
 x86_feature(BX_ISA_SSE2, "sse2")                                        /* SSE2 instruction */
 x86_feature(BX_ISA_SSE3, "sse3")                                        /* SSE3 instruction */
@@ -51,8 +49,6 @@ x86_feature(BX_ISA_MONITOR_MWAIT, "mwait")                              /* MONIT
 x86_feature(BX_ISA_WAITPKG, "waitpkg")                                  /* TPAUSE/UMONITOR/UMWAIT instructions */
 x86_feature(BX_ISA_MONITORLESS_MWAIT, "monitorless_mwait")              /* MONITOR-less MWAIT extension */
 x86_feature(BX_ISA_MONITORX_MWAITX, "mwaitx")                           /* MONITORX/MWAITX instruction (AMD) */
-x86_feature(BX_ISA_VMX, "vmx")                                          /* VMX instruction */
-x86_feature(BX_ISA_SMX, "smx")                                          /* SMX instruction */
 x86_feature(BX_ISA_LONG_MODE, "longmode")                               /* Long Mode (x86-64) support */
 x86_feature(BX_ISA_LM_LAHF_SAHF, "lm_lahf_sahf")                        /* Long Mode LAHF/SAHF instruction */
 x86_feature(BX_ISA_NX, "nx")                                            /* No-Execute Pages support */
@@ -68,7 +64,6 @@ x86_feature(BX_ISA_AES_PCLMULQDQ, "aes_pclmulqdq")                      /* AES+P
 x86_feature(BX_ISA_VAES_VPCLMULQDQ, "vaes_vpclmulqdq")                  /* Wide vector versions of AES+PCLMULQDQ instructions */
 x86_feature(BX_ISA_MOVBE, "movbe")                                      /* MOVBE instruction */
 x86_feature(BX_ISA_FSGSBASE, "fsgsbase")                                /* FS/GS BASE access instruction */
-x86_feature(BX_ISA_INVPCID, "invpcid")                                  /* INVPCID instruction */
 x86_feature(BX_ISA_AVX, "avx")                                          /* AVX instruction */
 x86_feature(BX_ISA_AVX2, "avx2")                                        /* AVX2 instruction */
 x86_feature(BX_ISA_AVX_F16C, "avx_f16c")                                /* AVX F16 convert instruction */
@@ -83,6 +78,8 @@ x86_feature(BX_ISA_FMA4, "fma4")                                        /* FMA4 
 x86_feature(BX_ISA_XOP, "xop")                                          /* XOP instruction (AMD) */
 x86_feature(BX_ISA_TBM, "tbm")                                          /* TBM instruction (AMD) */
 x86_feature(BX_ISA_SVM, "svm")                                          /* SVM instruction (AMD) */
+x86_feature(BX_ISA_VMX, "vmx")                                          /* VMX instruction */
+x86_feature(BX_ISA_SMX, "smx")                                          /* SMX instruction */
 x86_feature(BX_ISA_RDRAND, "rdrand")                                    /* RDRAND instruction */
 x86_feature(BX_ISA_RDSEED, "rdseed")                                    /* RDSEED instruction */
 x86_feature(BX_ISA_ADX, "adx")                                          /* ADCX/ADOX instruction */
@@ -127,6 +124,7 @@ x86_feature(BX_ISA_XAPIC, "xapic")                                      /* XAPIC
 x86_feature(BX_ISA_X2APIC, "x2apic")                                    /* X2APIC support */
 x86_feature(BX_ISA_XAPIC_EXT, "xapicext")                               /* XAPIC Extensions support (AMD) */
 x86_feature(BX_ISA_PCID, "pcid")                                        /* PCID support */
+x86_feature(BX_ISA_INVPCID, "invpcid")                                  /* INVPCID instruction */
 x86_feature(BX_ISA_SMEP, "smep")                                        /* SMEP support */
 x86_feature(BX_ISA_TSC_ADJUST, "tsc_adjust")                            /* TSC-Adjust MSR */
 x86_feature(BX_ISA_TSC_DEADLINE, "tsc_deadline")                        /* TSC-Deadline */
