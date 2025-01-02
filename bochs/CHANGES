@@ -56,6 +56,7 @@ Detailed change log :
   - Fixed compilation of plugin version with debugger enabled on Windows
   - Removed legacy libltdl code and force using library installed on host system
   - GTK-based gui debugger can now use GTK3 if GTK2 is not installed
+  - Updated Android build manual, config files and scripts
 
 - Config interface
   - Added USB boot option (requires BIOS from https://github.com/fysnet/i440fx)
@@ -92,6 +93,7 @@ Detailed change log :
     - Fixes for write mode 4 & 5 and PCI reads from MMIO space
     - Fixed lags caused by incorrect redraw value for backward BitBlt
   - Voodoo / Banshee
+    - 3D core: Implemented trilinear filtering and fixed level of detail calculations
     - Banshee: Fixes for address wrap handling during display update
       Original Banshee / Voodoo3 VGABIOS reporting wrong number of image pages in
       VBE mode info of at least mode 640x480x8 (Issue found with vbetest program)
