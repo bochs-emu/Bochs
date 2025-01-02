@@ -403,7 +403,7 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Enables CPUID[0x00000001].ECX[28] flag.
  Enables XCR0[2] (AVX) bit.
- Enables CPUID[0x0000000D][2] subleaf leaf.
+ Enables CPUID[0x0000000D][2] subleaf.
  Enables AVX registers.
  Enables VEX prefix decoding and AVX instructions (will #UD otherwise).
 
@@ -888,15 +888,28 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
 108. CPU Feature: pku (User-Mode Protection Keys)
 
- TBD
+ Controls ability to set CR4[22] (PKE) Protection Keys Enable bit.
+ Enables XCR0[9] (PKRU) bit and correspoding XSAVE/XRSTOR support.
+ Enables CPUID[0x0000000D][9] subleaf.
+ Enables Protection Keys register (PKRU) and Protection Keys checks during page walks.
+ Enables RDPKRU and WRPKRU instructions to manipulate Protection Keys state (will #UD otherwise).
+ Enables CPUID[0x00000007].subleaf[0].ECX[3]: User Mode Protection Keys.
+ Enables CPUID[0x00000007].subleaf[0].ECX[4]: OS has set CR4.PKE to enable protection keys (OSPKE) shadowing CR4.PKE
+
+ Dependency: BX_SUPPORT_PKEYS
+             xsave
 
 109. CPU Feature: pks (Supervisor-Mode Protection Keys)
 
  TBD
 
+ Dependency: pku
+
 110. CPU Feature: umip (User-Mode Instructions Prevention)
 
- TBD
+ Enables CPUID[0x00000007].subleaf[0].ECX[2]: User-Mode Instructions Prevention
+ Controls ability to set CR4[11] (UMIP) bit.
+ Prevents execution of special instructions (SMSW, SLDT, STR, SGDT, SIDT) in CPL>0 mode, generate #GP(0) instead.
 
 111. CPU Feature: rdpid
 
@@ -995,13 +1008,13 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
 ---------------------------------------------------------------------------------------------------
 
-* CPU Feature: Hyper Threading Technology
+* CPUID bit: Hyper Threading Technology
 
  Enables CPUID[0x00000001].EDX[28] flag.
  Enables CPUID[0x00000001].EBX[23:16] (Number of logical processors in one physical processor) reporting.
  Indicates that CPU supports hyper-threading technology (not emulation visible).
 
-* CPU Feature: DCA (Direct Cache Access)
+* CPUID bit: DCA (Direct Cache Access)
 
  Enables CPUID[0x00000001].ECX[18] flag.
  Enables IA32_PLATFORM_DCA_CAP MSR register.
@@ -1009,7 +1022,7 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Indicates the processor supports the ability to prefetch data from a memory mapped device.
  Not implemented in Bochs.
 
-* CPU Feature: PrefetchW
+* CPUID bit: PrefetchW
 
  Enables CPUID[0x80000001].ECX[8] flag.
  Set if PREFETCHW implemented as real HW prefetch.
