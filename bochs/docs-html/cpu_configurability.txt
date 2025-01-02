@@ -855,16 +855,153 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Dependency: pcid
 
+103. CPU Feature: tsc_adjust
+
+ Enables CPUID[0x00000007].subleaf[0].EBX[1]: TSC Adjust flag.
+ Enables IA32_TSC_ADJUST MSR (0x3b). The value of the MSR is added to TSC value to be returned by RDTSC instruction.
+
+ Dependency: msr, tsc
+
+104. CPU Feature: tsc_deadline
+
+ Enables CPUID[0x00000001].ECX[24] flag: TSC Deadline
+ Enabled IA32_TSC_DEADLINE MSR (0x6e0). Enables new TSC-Deadline timer mode for APIC timer.
+
+ Dependency: xapic, msr, tsc
+
+105. CPU Feature: fopcode_deprecation
+
+ Enable x87 FOPCODE state deprecation.
+ On CPU which support FOPCODE deprecation the FOPCODE is updated in case of unmasked x87 exception only.
+
+106. CPU Feature: fcs_fds_deprecation
+
+ Enable x87 FCS/FDS state deprecation.
+ On CPU which support FCS/FDS deprecation the FCS and FDS state is not tracked and always read as zero.
+ Enables CPUID[0x00000007].subleaf[0].EBX[13]: FCS/FDS Deprecation.
+
+107. CPU Feature: fdp_deprecation
+
+ Enable x87 FDP state deprecation.
+ On CPU which support FDP deprecation the FDP is updated in case of unmasked x87 exception only.
+ Enables CPUID[0x00000007].subleaf[0].EBX[6]: FDP Deprecation.
+
+108. CPU Feature: pku (User-Mode Protection Keys)
+
+ TBD
+
+109. CPU Feature: pks (Supervisor-Mode Protection Keys)
+
+ TBD
+
+110. CPU Feature: umip (User-Mode Instructions Prevention)
+
+ TBD
+
+111. CPU Feature: rdpid
+
+ Enables CPUID[0x00000007].subleaf[0].ECX[22] flag.
+ Enables RDPID instruction support (will #UD otherwise).
+
+ Dependency: rdtscp
+
+112. CPU Feature: tce
+
+ TBD
+
+113. CPU Feature: clzero
+
+ TBD
+
+114. CPU Feature: sca_mitigations
+
+ TBD
+
+115. CPU Feature: cet
+
+ TBD
+
+116. CPU Feature: wrmsrns
+
+ Enables WRMSRNS instruction: Non-Serializing version of WRMSR (will #UD otherwise).
+ Enables CPUID[0x00000007].subleaf[1].EAX[19] flag.
+
+ Dependency: msr
+
+117. CPU Feature: msr_imm
+
+ Enables immediate forms of RDMSR and WRMSRNS instructions (will #UD otherwise).
+ Enables CPUID[0x00000007].subleaf[1].ECX[5] flag.
+
+ Dependency: BX_SUPPORT_AVX
+             wrmsrns, avx (VEX encoded opcode)
+
+118. CPU Feature: cmpccxadd
+
+ Enables CMPccXADD instructions in long mode (will #UD otherwise).
+ Enables CPUID[0x00000007].subleaf[1].EAX[7] flag.
+
+119. CPU Feature: serialize
+
+ Enables SERIALIZE instruction (will #UD otherwise).
+ Enables CPUID[0x00000007].subleaf[0].EDX[14] flag.
+
+120. CPU Feature: lass (Linear Address Space Separation)
+
+ TBD
+
+121. CPU Feature: la57
+
+ Enable 57-bit Virtual Address and 5-level paging support in long mode.
+
+ TBD
+
+ Dependency: longmode
+
+122. CPU Feature: uintr (User Level Interrupts)
+
+ TBD
+
+ Dependency: xapic
+
+123. CPU Feature: flexible_uiret
+
+ TBD
+
+ Dependency: uintr
+
+124. CPU Feature: movdiri
+
+ Enables MOVDIRI instruction (will #UD otherwise).
+ Enables CPUID[0x00000007].subleaf[0].EBX[27]: MOVDIRI instruction support.
+
+125. CPU Feature: movdir64b
+
+ Enables MOVDIR64B instruction (will #UD otherwise).
+ Enables CPUID[0x00000007].subleaf[0].EBX[28]: MOVDIR64B instruction support.
+
+126. CPU Feature: msrlist
+
+ Enables RDMSRLIST/WRMSRLIST instructions (will #UD otherwise).
+ Enables IA32_BARRIER MSR.
+ Enables CPUID[0x00000007].subleaf[1].EAX[27] flag.
+
+ Dependency: msr
+
+127. CPU Feature: rao_int
+
+ Enables RAO_INT: Remote Atomics (Integer) instructions (will #UD otherwise).
+ Enables CPUID[0x00000007].subleaf[1].EAX[3] flag.
+
 ---------------------------------------------------------------------------------------------------
 
-26. CPU Feature: Hyper Threading Technology
+* CPU Feature: Hyper Threading Technology
 
  Enables CPUID[0x00000001].EDX[28] flag.
  Enables CPUID[0x00000001].EBX[23:16] (Number of logical processors in one physical processor) reporting.
  Indicates that CPU supports hyper-threading technology (not emulation visible).
 
-
-35. CPU Feature: DCA (Direct Cache Access)
+* CPU Feature: DCA (Direct Cache Access)
 
  Enables CPUID[0x00000001].ECX[18] flag.
  Enables IA32_PLATFORM_DCA_CAP MSR register.
@@ -872,15 +1009,8 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Indicates the processor supports the ability to prefetch data from a memory mapped device.
  Not implemented in Bochs.
 
-41. CPU Feature: TSC Deadline
-
- ???
- Enables CPUID[0x00000001].ECX[24] flag.
- Not implemented in Bochs.
-
-59. CPU Feature: PrefetchW
+* CPU Feature: PrefetchW
 
  Enables CPUID[0x80000001].ECX[8] flag.
  Set if PREFETCHW implemented as real HW prefetch.
  Uarch only. Has no effect for Bochs. 
-
