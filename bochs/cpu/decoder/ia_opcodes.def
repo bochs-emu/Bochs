@@ -320,7 +320,6 @@ bx_define_opcode(BX_IA_HLT, "hlt", "hlt", NULL, &BX_CPU_C::HLT, 0, OP_NONE, OP_N
 bx_define_opcode(BX_IA_CLFLUSH, "clflush", "clflush", &BX_CPU_C::CLFLUSH, &BX_CPU_C::BxError, BX_ISA_CLFLUSH, OP_Mb, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_CLFLUSHOPT, "clflushopt", "clflushopt", &BX_CPU_C::CLFLUSH, &BX_CPU_C::BxError, BX_ISA_CLFLUSHOPT, OP_Mb, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_CLWB, "clwb", "clwb", &BX_CPU_C::CLFLUSH, &BX_CPU_C::BxError, BX_ISA_CLWB, OP_Mb, OP_NONE, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_CLDEMOTE, "cldemote", "cldemote", &BX_CPU_C::CLFLUSH, &BX_CPU_C::BxError, BX_ISA_CLDEMOTE, OP_Mb, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_CLZERO, "clzero", "clzero", &BX_CPU_C::BxError, &BX_CPU_C::CLZERO, BX_ISA_CLZERO, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 
 bx_define_opcode(BX_IA_ENTER_Op16_IwIb, "enter", "enter", NULL, &BX_CPU_C::ENTER16_IwIb, 0, OP_Iw, OP_Ib2, OP_NONE, OP_NONE, 0)
