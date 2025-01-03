@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C)      2023  Benjamin David Lunt
-//  Copyright (C) 2003-2024  The Bochs Project
+//  Copyright (C) 2003-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -29,6 +29,7 @@
 // hacks for iodev / USB internals
 #include "iodev.h"
 #include "iodev/usb/usb_common.h"
+#include "iodev/usb/usb_xhci.h"
 
 #include <gtk/gtk.h>
 #include <glib.h>
@@ -282,9 +283,11 @@ GtkTreeIter* treeview_insert(GtkWidget *treeview, GtkTreeIter *parent, char *str
     tree_items = 0;
     return NULL;
   } else {
-    gtk_tree_store_append(treestore, &titems[tree_items], parent);
-    gtk_tree_store_set(treestore, &titems[tree_items], 0, str, -1);
-    tree_items++;
+    if (tree_items < MAX_TREE_ITEMS) {
+      gtk_tree_store_append(treestore, &titems[tree_items], parent);
+      gtk_tree_store_set(treestore, &titems[tree_items], 0, str, -1);
+      tree_items++;
+    }
     return &titems[tree_items - 1];
   }
 }
@@ -1016,11 +1019,97 @@ int uhci_debug_dialog(int type, int param1)
   return ret;
 }
 
+// xHCI
+
+bx_list_c *xHCI_state = NULL;
+
+void hc_xhci_do_ring(GtkWidget *treeview, const char *ring_str, Bit64u RingPtr, Bit64u dequeue_ptr)
+{
+  char str[COMMON_STR_SIZE];
+  int  trb_count = 0; // count of TRB's processed
+  Bit64u address = RingPtr;
+  struct TRB trb;
+  GtkTreeIter *parent;
+  bool state;
+  Bit8u type;
+
+  sprintf(str, "%s Ring: 0x" FMT_ADDRX64, ring_str, address);
+  parent = treeview_insert(treeview, NULL, str, 0);
+
+  do {
+    state = false; // clear the state
+    DEV_MEM_READ_PHYSICAL(address, sizeof(struct TRB), (Bit8u *) &trb);
+    type = TRB_GET_TYPE(trb.command);
+    if (type <= 47)
+      sprintf(str, "0x" FMT_ADDRX64 " %08X 0x%08X (%i) (%s)", trb.parameter, trb.status, trb.command, trb.command & 1, trb_types[type].name);
+    else
+      sprintf(str, "0x" FMT_ADDRX64 " %08X 0x%08X (%i) (Vendor Specific)", trb.parameter, trb.status, trb.command, trb.command & 1);
+    if (address == dequeue_ptr) {
+      strcat(str, " <--- dq_pointer");
+      state = true;
+    }
+    parent = treeview_insert(treeview, parent, str, state);
+    if (type == LINK) {
+      address = trb.parameter & (Bit64u) ~0xF;
+    } else
+      address += sizeof(struct TRB);
+
+    if (++trb_count > MAX_TRBS_ALLOWED)  // safety catch
+      break;
+  } while (address != RingPtr);
+}
+
+void hc_xhci_do_event_ring(GtkWidget *treeview, const char *ring_str, int interrupter)
+{
+  char str[COMMON_STR_SIZE];
+  char pname[BX_PATHNAME_LEN];
+  int  trb_count = 0; // count of TRB's processed
+  Bit64u address;
+  Bit32u size;
+  struct TRB trb;
+  GtkTreeIter *parent, *segment;
+  bool state = false;
+  Bit8u type;
+
+  sprintf(str, "%s Ring: Interrupter: %i", ring_str, interrupter);
+  parent = treeview_insert(treeview, NULL, str, 0);
+
+  for (unsigned i = 0; i < (1 << MAX_SEG_TBL_SZ_EXP); i++) {
+    sprintf(pname, "hub.ring_members.event_rings.ring%d.entries.entry%d.addr", interrupter, i);
+    address = SIM->get_param_num(pname, xHCI_state)->get();
+    sprintf(pname, "hub.ring_members.event_rings.ring%d.entries.entry%d.size", interrupter, i);
+    size = SIM->get_param_num(pname, xHCI_state)->get();
+    sprintf(str, "Event Ring Segment %i (0x" FMT_ADDRX64 "), size %i", i, address, size);
+    segment = treeview_insert(treeview, parent, str, 0);
+    for (unsigned j = 0; j < size; j++) {
+      state = 0; // clear the state
+      DEV_MEM_READ_PHYSICAL(address, sizeof(struct TRB), (Bit8u *) &trb);
+      type = TRB_GET_TYPE(trb.command);
+      if (type <= 47)
+        sprintf(str, "0x" FMT_ADDRX64 " %08X 0x%08X (%i) (%s)", trb.parameter, trb.status, trb.command, trb.command & 1, trb_types[type].name);
+      else
+        sprintf(str, "0x" FMT_ADDRX64 " %08X 0x%08X (%i) (Vendor Specific)", trb.parameter, trb.status, trb.command, trb.command & 1);
+      sprintf(pname, "hub.ring_members.event_rings.ring%d.cur_trb", interrupter);
+      if (address == (Bit64u)SIM->get_param_num(pname, xHCI_state)->get()) {
+        strcat(str, " <--- eq_pointer");
+        state = true;
+      }
+      treeview_insert(treeview, segment, str, state);
+
+      if (++trb_count > MAX_TRBS_ALLOWED)  // safety catch
+        break;
+
+      address += sizeof(struct TRB);
+    }
+    if (trb_count > MAX_TRBS_ALLOWED)  // safety catch
+      break;
+  }
+}
+
 // xHCI main dialog
 
 int xhci_debug_dialog(int type, int param1)
 {
-  bx_list_c *xHCI_state = NULL;
   int i, n_ports, ret;
   Bit32u dword, offset;
   Bit64u RingPtr = 0;
@@ -1228,6 +1317,9 @@ int xhci_debug_dialog(int type, int param1)
       sprintf(buffer, "0x" FMT_ADDRX64, RingPtr);
       gtk_entry_set_text(GTK_ENTRY(entry[n_ports * 2 + 17]), buffer);
       if (RingPtr != 0) {
+        hc_xhci_do_ring(treeview, "Command", RingPtr, SIM->get_param_num("hub.ring_members.command_ring.dq_pointer", xHCI_state)->get());
+        gtk_tree_view_expand_all(GTK_TREE_VIEW(treeview));
+//        g_signal_connect(button[12], "clicked", G_CALLBACK(xhci...), treeview);
         gtk_widget_set_sensitive(button[12], 1);
         valid = 1;
       }
@@ -1238,6 +1330,9 @@ int xhci_debug_dialog(int type, int param1)
       gtk_label_set_text(GTK_LABEL(FNlabel), "Event Ring");
       sprintf(buffer, "Interrupter %i", param1);
       gtk_entry_set_text(GTK_ENTRY(entry[n_ports * 2 + 17]), buffer);
+      hc_xhci_do_event_ring(treeview, "Event", (int) param1);
+        gtk_tree_view_expand_all(GTK_TREE_VIEW(treeview));
+//        g_signal_connect(button[12], "clicked", G_CALLBACK(xhci...), treeview);
       gtk_widget_set_sensitive(button[12], 1);
       valid = 1;
       break;

@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C)      2023  Benjamin David Lunt
-//  Copyright (C) 2003-2024  The Bochs Project
+//  Copyright (C) 2003-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -130,6 +130,59 @@ struct S_ATTRIBUTES attribs_x_ports[] = {
   { (1<< 1),                 (1<< 1),                 1, "Port Enabled/Disabled"          , {-1, } },
   { (1<< 0),                 (1<< 0),                 0, "Current Connect Status"         , {-1, } },
   { 0,                   (Bit32u) -1,                 -1, "\0"                             , {-1, } }
+};
+
+const struct VIEW_TRB_TYPE trb_types[] = {
+  { VIEW_TRB_TYPE_NONE,      "Reserved"              }, // 0
+  { VIEW_TRB_TYPE_TRANSFER,  "Normal"                }, // 1
+  { VIEW_TRB_TYPE_TRANSFER,  "Setup"                 }, // 2
+  { VIEW_TRB_TYPE_TRANSFER,  "Data"                  }, // 3
+  { VIEW_TRB_TYPE_TRANSFER,  "Status"                }, // 4
+  { VIEW_TRB_TYPE_TRANSFER,  "ISO"                   }, // 5
+  { VIEW_TRB_TYPE_TRANSFER |                            // 6
+     VIEW_TRB_TYPE_COMMAND,  "LINK"                  },
+  { VIEW_TRB_TYPE_TRANSFER,  "Event Data"            }, // 7
+  { VIEW_TRB_TYPE_TRANSFER,  "No-Op Transfer"        }, // 8
+  { VIEW_TRB_TYPE_COMMAND,   "Enable Slot"           }, // 9
+  { VIEW_TRB_TYPE_COMMAND,   "Disable Slot"          }, // 10
+  { VIEW_TRB_TYPE_COMMAND,   "Address Dev"           }, // 11
+  { VIEW_TRB_TYPE_COMMAND,   "Config EP"             }, // 12
+  { VIEW_TRB_TYPE_COMMAND,   "Eval Context"          }, // 13
+  { VIEW_TRB_TYPE_COMMAND,   "Reset EP"              }, // 14
+  { VIEW_TRB_TYPE_COMMAND,   "Stop EP"               }, // 15
+  { VIEW_TRB_TYPE_COMMAND,   "Set TR Deque"          }, // 16
+  { VIEW_TRB_TYPE_COMMAND,   "Reset Device"          }, // 17
+  { VIEW_TRB_TYPE_COMMAND,   "Force Event"           }, // 18
+  { VIEW_TRB_TYPE_COMMAND,   "Negotiate Bandwidth"   }, // 19
+  { VIEW_TRB_TYPE_COMMAND,   "Set Latency Tolerance" }, // 20
+  { VIEW_TRB_TYPE_COMMAND,   "Get Port Bandwidth"    }, // 21
+  { VIEW_TRB_TYPE_COMMAND,   "Force Header"          }, // 22
+  { VIEW_TRB_TYPE_COMMAND,   "No-Op Command"         }, // 23
+  { VIEW_TRB_TYPE_COMMAND,   "Get Extended Property" }, // 24
+  { VIEW_TRB_TYPE_COMMAND,   "Set Extended Property" }, // 25
+  { VIEW_TRB_TYPE_NONE,      "Reserved"              }, // 26
+  { VIEW_TRB_TYPE_NONE,      "Reserved"              }, // 27
+  { VIEW_TRB_TYPE_NONE,      "Reserved"              }, // 28
+  { VIEW_TRB_TYPE_NONE,      "Reserved"              }, // 29
+  { VIEW_TRB_TYPE_NONE,      "Reserved"              }, // 30
+  { VIEW_TRB_TYPE_NONE,      "Reserved"              }, // 31
+  { VIEW_TRB_TYPE_EVENT,     "Transfer Event"        }, // 32
+  { VIEW_TRB_TYPE_EVENT,     "Command Completion"    }, // 33
+  { VIEW_TRB_TYPE_EVENT,     "Port Status Change"    }, // 34
+  { VIEW_TRB_TYPE_EVENT,     "Bandwidth Request"     }, // 35
+  { VIEW_TRB_TYPE_EVENT,     "Doorbell Event"        }, // 36
+  { VIEW_TRB_TYPE_EVENT,     "Host Controller Event" }, // 37
+  { VIEW_TRB_TYPE_EVENT,     "Device Notification"   }, // 38
+  { VIEW_TRB_TYPE_EVENT,     "MFINDEX Wrap Event"    }, // 39
+  { VIEW_TRB_TYPE_NONE,      "Reserved"              }, // 40
+  { VIEW_TRB_TYPE_NONE,      "Reserved"              }, // 41
+  { VIEW_TRB_TYPE_NONE,      "Reserved"              }, // 42
+  { VIEW_TRB_TYPE_NONE,      "Reserved"              }, // 43
+  { VIEW_TRB_TYPE_NONE,      "Reserved"              }, // 44
+  { VIEW_TRB_TYPE_NONE,      "Reserved"              }, // 45
+  { VIEW_TRB_TYPE_NONE,      "Reserved"              }, // 46
+  { VIEW_TRB_TYPE_NONE,      "Reserved"              }, // 47
+  // remaining are vendor defined (allowed in any ring)
 };
 
 int usb_debug_type = USB_DEBUG_NONE;

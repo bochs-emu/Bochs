@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C)      2023  Benjamin David Lunt
-//  Copyright (C) 2003-2024 The Bochs Project
+//  Copyright (C) 2003-2025 The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -101,7 +101,20 @@ extern bool u_changed[UHCI_REG_COUNT];
 bool uhci_add_queue(struct USB_UHCI_QUEUE_STACK *stack, const Bit32u addr);
 
 // xHCI
+#define VIEW_TRB_TYPE_NONE      0
+#define VIEW_TRB_TYPE_COMMAND   1
+#define VIEW_TRB_TYPE_EVENT     2
+#define VIEW_TRB_TYPE_TRANSFER  4
+
+struct VIEW_TRB_TYPE {
+  Bit8u allowed_mask;
+  char  name[22];
+};
+
+#define MAX_TRBS_ALLOWED 4096
+
 extern struct S_ATTRIBUTES attribs_x_ports[];
+extern const struct VIEW_TRB_TYPE trb_types[];
 
 // USB debug API
 void usb_dbg_register_type(int type);

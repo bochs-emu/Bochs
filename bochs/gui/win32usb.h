@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C)      2023  Benjamin David Lunt
-//  Copyright (C) 2003-2024 The Bochs Project
+//  Copyright (C) 2003-2025 The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -61,18 +61,6 @@ int hc_ehci_init(HWND hwnd);
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //  XHCI
 //
-#define VIEW_TRB_TYPE_NONE      0
-#define VIEW_TRB_TYPE_COMMAND   1
-#define VIEW_TRB_TYPE_EVENT     2
-#define VIEW_TRB_TYPE_TRANSFER  4
-
-struct VIEW_TRB_TYPE {
-  Bit8u allowed_mask;
-  char  name[22];
-};
-
-#define MAX_TRBS_ALLOWED 4096
-
 INT_PTR CALLBACK hc_xhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 int hc_xhci_init(HWND hwnd);
 int hc_xhci_save(HWND hwnd);
