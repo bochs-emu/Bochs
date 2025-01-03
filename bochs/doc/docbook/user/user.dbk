@@ -1359,6 +1359,7 @@ DLX Linux screenshot.
 <row><entry>bximage.exe </entry> <entry> tool for manipulating disk images </entry> </row>
 <row><entry>CHANGES.txt </entry> <entry> what has changed between versions </entry> </row>
 <row><entry>COPYING.txt </entry> <entry> copy of the LGPL license </entry> </row>
+<row><entry>cpu_configurability.txt </entry> <entry> documentation for all features supported by Bochs CPU models </entry> </row>
 <row><entry>lgban.ico </entry> <entry> a set of Bochs icons in different sizes </entry> </row>
 <row><entry>LICENSE.txt </entry> <entry> Bochs license information </entry> </row>
 <row><entry>logo.ico </entry> <entry> another set of Bochs icons </entry> </row>
@@ -1552,6 +1553,7 @@ description of each one.
 <row><entry>/usr/share/man/man5/* </entry> <entry> man page for bochsrc </entry> </row>
 <row><entry>/usr/share/doc/bochs/CHANGES</entry> <entry> what has changed between versions </entry> </row>
 <row><entry>/usr/share/doc/bochs/COPYING</entry> <entry> copy of the LGPL license </entry> </row>
+<row><entry>/usr/share/doc/bochs/cpu_configurability.txt </entry> <entry> documentation for all features supported by Bochs CPU models </entry> </row>
 <row><entry>/usr/share/doc/bochs/LICENSE</entry> <entry> Bochs license information </entry> </row>
 <row><entry>/usr/share/doc/bochs/README</entry> <entry> the read-me file from the source distribution. </entry> </row>
 <row><entry>/usr/share/doc/bochs/TODO</entry> <entry> the TODO file from the source distribution. </entry> </row>
