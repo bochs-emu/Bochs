@@ -553,7 +553,7 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Enables CPUID[0x00000007].EBX[20] flag.
  Controls ability to set CR4[21] (SMAP) bit.
  Enables Supervisor Mode Access Protection during page walk.
- Enables CLAC/STAC instructions.
+ Enables CLAC/STAC instructions (will #UD otherwise).
 
 65. CPU Feature: smep
 
@@ -891,7 +891,7 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Controls ability to set CR4[22] (PKE) Protection Keys Enable bit.
  Enables XCR0[9] (PKRU) bit and correspoding XSAVE/XRSTOR support.
  Enables CPUID[0x0000000D][9] subleaf.
- Enables Protection Keys register (PKRU) and Protection Keys checks during page walks.
+ Enables Protection Keys register (PKRU) and Protection Key checks during memory accesses (through TLB and page walks).
  Enables RDPKRU and WRPKRU instructions to manipulate Protection Keys state (will #UD otherwise).
  Enables CPUID[0x00000007].subleaf[0].ECX[3]: User Mode Protection Keys.
  Enables CPUID[0x00000007].subleaf[0].ECX[4]: OS has set CR4.PKE to enable protection keys (OSPKE) shadowing CR4.PKE
@@ -901,9 +901,13 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
 109. CPU Feature: pks (Supervisor-Mode Protection Keys)
 
- TBD
+ Enables CPUID[0x00000007].subleaf[0].ECX[31]: Supervisor-Mode Protection Keys
+ Controls ability to set CR4[24] (PKS) Supervisor Protection Keys Enable bit.
+ Enables IA32_PKRS MSR holding Supervisor Protection Keys state (PKRS).
+ Enables Supervisor Protection Key checks during memory accesses (through TLB and page walks).
 
- Dependency: pku
+ Dependency: BX_SUPPORT_PKEYS
+             pku
 
 110. CPU Feature: umip (User-Mode Instructions Prevention)
 
@@ -920,19 +924,52 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
 112. CPU Feature: tce
 
- TBD
+ Enables CPUID[0x80000001].ECX[17]: Translation Cache Extensions (TCE) flag.
+ Controls ability to set EFER.TCE bit.
+ Setting this bit to 1 changes how the INVLPG, INVLPGB, and INVPCID instructions operate on TLB entries (for AMD processors).
+ This behavior is not relevant to Bochs, in Bochs EFER.TCE doesn't affect TLB invalidation behavior.
 
 113. CPU Feature: clzero
 
- TBD
+ Enables CPUID[0x80000008].EBX[0]: CLZERO support flag.
+ Enables CLZERO instruction (will #UD otherwise).
 
 114. CPU Feature: sca_mitigations
 
- TBD
+ Enables IA32_CORE_CAPABILITIES MSR (0xcf), IA32_ARCH_CAPABILITIES MSR (0x10a), IA32_SPEC_CTRL MSR (0x48), IA32_PRED_CMD MSR (0x48) and IA32_FLUSH_CMD MSR (0x10b).
+ When enabled reports all possible SCA mitigation controls as supported, for example IA32_ARCH_CAPABILITIES reports all bits set:
+        [0]: RDCL_NO: The processor is not susceptible to Rogue Data Cache Load (RDCL)
+        [1]: IBRS_ALL: The processor supports enhanced IBRS
+        [2]: RSBA: The processor supports RSB Alternate
+        [3]: SKIP_L1DFL_VMENTRY: indicates the hypervisor need not flush the L1D on VM entry
+        [4]: SSB_NO: Processor is not susceptible to Speculative Store Bypass
+
+ Also if enabled reports the following SCA features through CPUID[0x00000007].subleaf[0].EDX:
+        [10] MD clear support
+        [26] IBRS: indirect branch restricted speculation
+        [27] STIBP: single thread indirect branch predictors
+        [28] L1D_FLUSH support
+        [29] Support for the IA32_ARCH_CAPABILITIES MSR
+        [30] Support for the IA32_CORE_CAPABILITIES MSR
+        [31] SSBD: Speculative Store Bypass Disable
+
+ Pre-defined CPU models may report only part of the SCA matigation capabilities through CPUID, matching actual CPU architecture.
+
+ Dependency: msr
 
 115. CPU Feature: cet
 
- TBD
+ Enables Control Flow Enforcement Technology (CET) support: shadow stack tracking, idirect branch tracking and shadow stack based ROP protection.
+ Enables CPUID[0x00000007].subleaf[0].ECX[7] CET_SS: Support CET Shadow Stack
+ Enables CPUID[0x00000007].subleaf[0].EDX[20] CET IBT: Support CET indirect branch tracking
+ Controls ability to set CR4[23] (CET) Control Flow Enforcement Technology Enable bit.
+ Enables XCR0[11] (CET_U) and XCR0[12] (CET_S) state control bits and correspoding XSAVE/XRESTOR support.
+ Enables new CET state: SSP register and new MSRs: IA32_INTERRUPT_SSP_TABLE_ADDR, IA32_U_CET, IA32_S_CET, IA32_PLx_SSP.
+ Enables new CET instructions: INCSSP, RDSSP, SAVEPREVSSP, RSTORSSP, WRSSD/WRSSQ, WRUSSD/WRUSSQ, SETSSBSY, CLRSSBSY, ENDBRANCH32/ENDBRANCH64.
+ Introduce new exception vector #CP (fault).
+
+ Dependency: BX_SUPPORT_CET
+             xsave
 
 116. CPU Feature: wrmsrns
 
@@ -961,25 +998,44 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
 120. CPU Feature: lass (Linear Address Space Separation)
 
- TBD
+ Enables CPUID[0x00000007].subleaf[1].EAX[6] LASS: Linear Address Space Separation flag.
+ Controls ability to set CR4[27] (LASS) Linear Address Space Separation Enable bit.
+ Alters CPU canonical violation handling for user and supervisor memory accesses in long mode.
+
+ Dependency: longmode
 
 121. CPU Feature: la57
 
  Enable 57-bit Virtual Address and 5-level paging support in long mode.
-
- TBD
+ Enables CPUID[0x00000007].subleaf[0].ECX[16]: LA57 and 5-level paging.
+ Controls ability to set CR4[12] (LA57) which enables LA57 and 5-level paging.
 
  Dependency: longmode
 
 122. CPU Feature: uintr (User Level Interrupts)
 
- TBD
+ Enables User Mode Interrupt (UINTR) support.
+ Enables CPUID[0x00000007].subleaf[0].EDX[5]: User Mode Interrupt.
+ Controls ability to set CR4[25] (UINTR) User Mode Interrupt Enable bit.
+ Enables XCR0[14] (UINTR) state control and correspoding XSAVE/XRESTOR support.
+ Enables new UINTR state:
+        IA32_UINTR_RR MSR (0x985), IA32_UINTR_HANDLER MSR (0x986), IA32_UINTR_STACKADJUST MSR (0x987),
+        IA32_UINTR_MISC MSR (0x988), IA32_UINTR_PD MSR (0x989), IA32_UINTR_TT MSR (0x98A)
 
- Dependency: xapic
+ Enables new UINTR instructions: CLUI, STUI, TESTUI, UIRET and SENDUIPI.
+ Enables User Mode Interrupt delivery and processing in the CPU.
+
+ Dependency: BX_SUPPORT_UINTR
+             xsave, xapic
 
 123. CPU Feature: flexible_uiret
 
- TBD
+ Enables 'Flexible UIRET' extension to User Mode Interrupt (UINTR) feature.
+ Enables CPUID[0x00000007].subleaf[1].EDX[17]: Flexible UIRET.
+
+ Alters CPU UIRET instruction behavior:
+ If the enhancement is supported, UIRET loads UIF with the value of the bit RFLAGS[1] in the RFLAGS image on the stack.
+ Otherwise if the enhancement is not supported, UIRET ignores that bit in the RFLAGS image and always sets UIF to 1.
 
  Dependency: uintr
 
@@ -1007,6 +1063,8 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Enables CPUID[0x00000007].subleaf[1].EAX[3] flag.
 
 ---------------------------------------------------------------------------------------------------
+
+Description of some CPUID buts not directly controlled by above features:
 
 * CPUID bit: Hyper Threading Technology
 
