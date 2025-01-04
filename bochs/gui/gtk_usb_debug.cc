@@ -258,15 +258,30 @@ void usbdlg_create_apply_button(GtkWidget *vbox)
 }
 
 // Tree view support
-#define MAX_TREE_ITEMS 50
+#define MAX_TREE_ITEMS 260
 int tree_items;
 GtkTreeIter titems[MAX_TREE_ITEMS];
+
+void cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
+                    GtkTreeModel *model, GtkTreeIter *iter, gpointer data)
+{
+  gchar *name;
+
+  gtk_tree_model_get(model, iter, 0, &name, -1);
+  if (name[0] == ' ') {
+    g_object_set(renderer, "weight", PANGO_WEIGHT_BOLD, "weight-set", TRUE, NULL);
+  } else {
+    g_object_set(renderer, "weight", PANGO_WEIGHT_NORMAL, "weight-set", TRUE, NULL);
+  }
+  g_free(name);
+}
 
 GtkTreeIter* treeview_insert(GtkWidget *treeview, GtkTreeIter *parent, char *str, bool bold)
 {
   GtkTreeStore *treestore;
   GtkTreeViewColumn *treecol;
   GtkCellRenderer *renderer;
+  char bstr[COMMON_STR_SIZE];
 
   treestore = (GtkTreeStore*)gtk_tree_view_get_model(GTK_TREE_VIEW(treeview));
   if (treestore == NULL) {
@@ -275,7 +290,8 @@ GtkTreeIter* treeview_insert(GtkWidget *treeview, GtkTreeIter *parent, char *str
     gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), treecol);
     renderer = gtk_cell_renderer_text_new();
     gtk_tree_view_column_pack_start(treecol, renderer, TRUE);
-    gtk_tree_view_column_add_attribute(treecol, renderer, "text", 0);   // pull display text from treestore col 0
+    gtk_tree_view_column_add_attribute(treecol, renderer, "text", 0); // pull display text from treestore col 0
+    gtk_tree_view_column_set_cell_data_func(treecol, renderer, cell_data_func, NULL, NULL);
     gtk_widget_set_can_focus(treeview, FALSE);
     treestore = gtk_tree_store_new(1, G_TYPE_STRING);
     gtk_tree_view_set_model(GTK_TREE_VIEW(treeview), GTK_TREE_MODEL(treestore));
@@ -285,7 +301,12 @@ GtkTreeIter* treeview_insert(GtkWidget *treeview, GtkTreeIter *parent, char *str
   } else {
     if (tree_items < MAX_TREE_ITEMS) {
       gtk_tree_store_append(treestore, &titems[tree_items], parent);
-      gtk_tree_store_set(treestore, &titems[tree_items], 0, str, -1);
+      if (bold) {
+        sprintf(bstr, " %s", str);
+        gtk_tree_store_set(treestore, &titems[tree_items], 0, bstr, -1);
+      } else {
+        gtk_tree_store_set(treestore, &titems[tree_items], 0, str, -1);
+      }
       tree_items++;
     }
     return &titems[tree_items - 1];
@@ -311,7 +332,7 @@ void hc_uhci_do_item(GtkWidget *treeview, Bit32u FrameAddr, Bit32u FrameNum)
   queue_stack.queue_cnt = 0;
 
   // A catch to make sure we don't do too many
-  while (tree_items < MAX_TREE_ITEMS) {
+  while (tree_items < 50) {
     if (!USB_UHCI_IS_LINK_VALID(item))  // the the T bit is set, we are done
       break;
 
@@ -1120,7 +1141,7 @@ int xhci_debug_dialog(int type, int param1)
   GtkWidget *RTframe, *RThbox, *RTvbox[2];
   GtkWidget *PRframe, *PRhbox, *PRvbox[3];
   GtkWidget *TVvbox, *FNhbox;
-  GtkWidget *button[13], *FNlabel, *treeview;
+  GtkWidget *button[13], *FNlabel, *treeview, *scrlwin;
   usb_reg_t xhci_reg_def[10] = {
     {"Port 0 Register", NULL, 8, attribs_x_ports},
     {"Port 1 Register", NULL, 8, attribs_x_ports},
@@ -1245,8 +1266,11 @@ int xhci_debug_dialog(int type, int param1)
   button[12] = gtk_button_new_with_label("View TRB");
   gtk_widget_set_sensitive(button[12], 0);
   gtk_box_pack_start(GTK_BOX(FNhbox), button[12], FALSE, FALSE, 2);
+  scrlwin = gtk_scrolled_window_new(NULL, NULL);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrlwin), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+  gtk_box_pack_start(GTK_BOX(TVvbox), scrlwin, TRUE, TRUE, 2);
   treeview = gtk_tree_view_new();
-  gtk_box_pack_start(GTK_BOX(TVvbox), treeview, TRUE, TRUE, 2);
+  gtk_container_add(GTK_CONTAINER(scrlwin), treeview);
 
   usbdlg_create_apply_button(mainVbox);
   usbdlg_create_debug_flags(vbox[3]);
