@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2017-2024  The Bochs Project
+//  Copyright (C) 2017-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1576,8 +1576,14 @@ void bx_banshee_c::mem_write(bx_phy_address addr, unsigned len, void *data)
 void bx_banshee_c::mem_write_linear(Bit32u offset, Bit64u value, unsigned len)
 {
   Bit8u value8;
-  Bit32u start = v->banshee.io[io_vidDesktopStartAddr] & v->fbi.mask;
-  Bit32u pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
+  Bit32u start, pitch;
+  if ((v->banshee.io[io_vidProcCfg] & 0x181) == 0x101) {
+    start = v->fbi.rgboffs[0];
+    pitch = (v->banshee.io[io_vidDesktopOverlayStride] >> 16) & 0x7fff;
+  } else {
+    start = v->banshee.io[io_vidDesktopStartAddr] & v->fbi.mask;
+    pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
+  }
   unsigned i, w, x, y;
 
   if (offset >= v->fbi.lfb_base) {
@@ -1595,19 +1601,23 @@ void bx_banshee_c::mem_write_linear(Bit32u offset, Bit64u value, unsigned len)
     v->fbi.ram[offset + i] = value8;
   }
   if ((offset >= start) && (pitch > 0)) {
-    offset -= start;
-    x = (offset % pitch) / (v->banshee.disp_bpp >> 3);
-    y = offset / pitch;
-    w = len / (v->banshee.disp_bpp >> 3);
-    if (v->banshee.half_mode) {
-      y <<= 1;
+    if ((v->banshee.io[io_vidProcCfg] & 0x181) == 0x101) {
+      v->fbi.video_changed = 1;
+    } else {
+      offset -= start;
+      x = (offset % pitch) / (v->banshee.disp_bpp >> 3);
+      y = offset / pitch;
+      w = len / (v->banshee.disp_bpp >> 3);
+      if (v->banshee.half_mode) {
+        y <<= 1;
+      }
+      if (v->banshee.double_width) {
+        x <<= 1;
+        w <<= 1;
+      }
+      if (w == 0) w = 1;
+      theVoodooVga->redraw_area(x, y, w, 1);
     }
-    if (v->banshee.double_width) {
-      x <<= 1;
-      w <<= 1;
-    }
-    if (w == 0) w = 1;
-    theVoodooVga->redraw_area(x, y, w, 1);
   }
   BX_UNLOCK(render_mutex);
 }
@@ -2239,46 +2249,46 @@ void bx_banshee_c::blt_complete()
     }
   }
   if ((dstart == vstart) && (dpitch == vpitch) && (dpxsize == vpxsize)) {
-    if (BLT.cmd < 6) {
-      if (BLT.x_dir) {
-        x = BLT.dst_x + 1 - BLT.dst_w;
-      } else {
-        x = BLT.dst_x;
-      }
-      if (BLT.y_dir) {
-        y = BLT.dst_y + 1 - BLT.dst_h;
-      } else {
-        y = BLT.dst_y;
-      }
-      w = BLT.dst_w;
-      h = BLT.dst_h;
-    } else {
-      if (BLT.src_x < BLT.dst_x) {
-        x = BLT.src_x;
-        w = BLT.dst_x - BLT.src_x + 1;
-      } else {
-        x = BLT.dst_x;
-        w = BLT.src_x - BLT.dst_x + 1;
-      }
-      if (BLT.src_y < BLT.dst_y) {
-        y = BLT.src_y;
-        h = BLT.dst_y - BLT.src_y + 1;
-      } else {
-        y = BLT.dst_y;
-        h = BLT.src_y - BLT.dst_y + 1;
-      }
-    }
-    if (v->banshee.half_mode) {
-      y <<= 1;
-      h <<= 1;
-    }
-    if (v->banshee.double_width) {
-      x <<= 1;
-      w <<= 1;
-    }
     if ((v->banshee.io[io_vidProcCfg] & 0x181) == 0x101) {
       v->fbi.video_changed = 1;
     } else {
+      if (BLT.cmd < 6) {
+        if (BLT.x_dir) {
+          x = BLT.dst_x + 1 - BLT.dst_w;
+        } else {
+          x = BLT.dst_x;
+        }
+        if (BLT.y_dir) {
+          y = BLT.dst_y + 1 - BLT.dst_h;
+        } else {
+          y = BLT.dst_y;
+        }
+        w = BLT.dst_w;
+        h = BLT.dst_h;
+      } else {
+        if (BLT.src_x < BLT.dst_x) {
+          x = BLT.src_x;
+          w = BLT.dst_x - BLT.src_x + 1;
+        } else {
+          x = BLT.dst_x;
+          w = BLT.src_x - BLT.dst_x + 1;
+        }
+        if (BLT.src_y < BLT.dst_y) {
+          y = BLT.src_y;
+          h = BLT.dst_y - BLT.src_y + 1;
+        } else {
+          y = BLT.dst_y;
+          h = BLT.src_y - BLT.dst_y + 1;
+        }
+      }
+      if (v->banshee.half_mode) {
+        y <<= 1;
+        h <<= 1;
+      }
+      if (v->banshee.double_width) {
+        x <<= 1;
+        w <<= 1;
+      }
       theVoodooVga->redraw_area(x, y, w, h);
     }
   }
