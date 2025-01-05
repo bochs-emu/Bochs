@@ -3628,7 +3628,7 @@ Bit32u register_r(Bit32u offset)
         result |= 1 << 9;
 
       if (v->type == VOODOO_2) {
-        if (v->fbi.cmdfifo[0].enabled && v->fbi.cmdfifo[0].depth > 0)
+        if (v->fbi.cmdfifo[0].enabled && (v->fbi.cmdfifo[0].depth > 0 || v->fbi.cmdfifo[0].cmd_ready))
           result |= 7 << 7;
       }
       /* Banshee is different starting here */
@@ -3657,11 +3657,11 @@ Bit32u register_r(Bit32u offset)
           result |= 3 << 9;
 
         /* bit 11 is cmd FIFO 0 busy */
-        if (v->fbi.cmdfifo[0].enabled && v->fbi.cmdfifo[0].depth > 0)
+        if (v->fbi.cmdfifo[0].enabled && (v->fbi.cmdfifo[0].depth > 0 || v->fbi.cmdfifo[0].cmd_ready))
           result |= 5 << 9;
 
         /* bit 12 is cmd FIFO 1 busy */
-        if (v->fbi.cmdfifo[1].enabled && v->fbi.cmdfifo[1].depth > 0)
+        if (v->fbi.cmdfifo[1].enabled && (v->fbi.cmdfifo[1].depth > 0 || v->fbi.cmdfifo[1].cmd_ready))
           result |= 9 << 9;
       }
 
