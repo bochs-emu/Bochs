@@ -45,7 +45,7 @@ const char *chkTxt[6] = {"Reset", "Enable", "Event", "Doorbell", "Start of Frame
 const char *chkBXPN[6] = {BXPN_USB_DEBUG_RESET, BXPN_USB_DEBUG_ENABLE, BXPN_USB_DEBUG_EVENT,
                           BXPN_USB_DEBUG_DOORBELL, BXPN_USB_DEBUG_START_FRAME, BXPN_USB_DEBUG_NON_EXIST};
 
-int usbdbg_param1, usbdbg_param2;
+int usbdbg_break_type, usbdbg_param1, usbdbg_param2;
 
 GtkWidget *main_dialog, *td_dialog;
 GtkWidget *uhci_entry[UHCI_REG_COUNT];
@@ -1127,6 +1127,44 @@ void hc_xhci_do_event_ring(GtkWidget *treeview, const char *ring_str, int interr
   }
 }
 
+static void xhci_display_trb(GtkWidget *widget, gpointer data)
+{
+  GtkTreeSelection *selection;
+  GtkTreeModel     *model;
+  GtkTreeIter       iter;
+  GtkWidget        *error;
+//  int type_mask = 0;
+  char str[COMMON_STR_SIZE];
+
+  selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(data));
+  if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
+    switch (usbdbg_break_type) {
+      case USB_DEBUG_COMMAND:
+//        type_mask = VIEW_TRB_TYPE_COMMAND;
+        strcpy(str, "VIEW_TRB_TYPE_COMMAND not implemented yet");
+        break;
+      case USB_DEBUG_EVENT:
+//        type_mask = VIEW_TRB_TYPE_EVENT;
+        strcpy(str, "VIEW_TRB_TYPE_EVENT not implemented yet");
+        break;
+      case USB_DEBUG_FRAME:
+//        type_mask = VIEW_TRB_TYPE_TRANSFER;
+        strcpy(str, "VIEW_TRB_TYPE_TRANSFER not implemented yet");
+        break;
+    }
+    error = gtk_message_dialog_new(
+      GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
+      str);
+  } else {
+    error = gtk_message_dialog_new(
+      GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
+      "No TRB selected");
+  }
+  gtk_window_set_title(GTK_WINDOW(error), "WARNING");
+  gtk_dialog_run(GTK_DIALOG(error));
+  gtk_widget_destroy(error);
+}
+
 // xHCI main dialog
 
 int xhci_debug_dialog(int type, int param1)
@@ -1343,7 +1381,7 @@ int xhci_debug_dialog(int type, int param1)
       if (RingPtr != 0) {
         hc_xhci_do_ring(treeview, "Command", RingPtr, SIM->get_param_num("hub.ring_members.command_ring.dq_pointer", xHCI_state)->get());
         gtk_tree_view_expand_all(GTK_TREE_VIEW(treeview));
-//        g_signal_connect(button[12], "clicked", G_CALLBACK(xhci...), treeview);
+        g_signal_connect(button[12], "clicked", G_CALLBACK(xhci_display_trb), treeview);
         gtk_widget_set_sensitive(button[12], 1);
         valid = 1;
       }
@@ -1355,8 +1393,8 @@ int xhci_debug_dialog(int type, int param1)
       sprintf(buffer, "Interrupter %i", param1);
       gtk_entry_set_text(GTK_ENTRY(entry[n_ports * 2 + 17]), buffer);
       hc_xhci_do_event_ring(treeview, "Event", (int) param1);
-        gtk_tree_view_expand_all(GTK_TREE_VIEW(treeview));
-//        g_signal_connect(button[12], "clicked", G_CALLBACK(xhci...), treeview);
+      gtk_tree_view_expand_all(GTK_TREE_VIEW(treeview));
+      g_signal_connect(button[12], "clicked", G_CALLBACK(xhci_display_trb), treeview);
       gtk_widget_set_sensitive(button[12], 1);
       valid = 1;
       break;
@@ -1418,6 +1456,7 @@ int usb_debug_dialog(int type, int param1, int param2)
     first_call = false;
   }
   host_param = SIM->get_param(hc_param_str[usb_debug_type]);
+  usbdbg_break_type = type;
   usbdbg_param1 = param1;
   usbdbg_param2 = param2;
   if (usb_debug_type == USB_DEBUG_UHCI) {
