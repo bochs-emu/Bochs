@@ -1136,15 +1136,6 @@ int hc_xhci_save(HWND hwnd)
   return 0;
 }
 
-// these match the VIEW_TRB_TYPE_ masks
-static const char *ring_type[] = {
-  "",         // VIEW_TRB_TYPE_NONE
-  "Command",  // VIEW_TRB_TYPE_COMMAND
-  "Event",    // VIEW_TRB_TYPE_EVENT
-  "",         //
-  "Transfer"  // VIEW_TRB_TYPE_TRANSFER
-};
-
 void hc_xhci_do_ring(const char *ring_str, Bit64u RingPtr, Bit64u dequeue_ptr)
 {
   char str[COMMON_STR_SIZE];

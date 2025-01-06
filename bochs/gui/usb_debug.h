@@ -115,6 +115,7 @@ struct VIEW_TRB_TYPE {
 
 extern struct S_ATTRIBUTES attribs_x_ports[];
 extern const struct VIEW_TRB_TYPE trb_types[];
+extern const char *ring_type[];
 
 // USB debug API
 void usb_dbg_register_type(int type);

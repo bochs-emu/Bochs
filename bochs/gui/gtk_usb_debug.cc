@@ -266,9 +266,10 @@ void cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
                     GtkTreeModel *model, GtkTreeIter *iter, gpointer data)
 {
   gchar *name;
+  gboolean bold;
 
-  gtk_tree_model_get(model, iter, 0, &name, -1);
-  if (name[0] == ' ') {
+  gtk_tree_model_get(model, iter, 0, &name, 2, &bold, -1);
+  if (bold) {
     g_object_set(renderer, "weight", PANGO_WEIGHT_BOLD, "weight-set", TRUE, NULL);
   } else {
     g_object_set(renderer, "weight", PANGO_WEIGHT_NORMAL, "weight-set", TRUE, NULL);
@@ -276,12 +277,11 @@ void cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
   g_free(name);
 }
 
-GtkTreeIter* treeview_insert(GtkWidget *treeview, GtkTreeIter *parent, char *str, bool bold)
+GtkTreeIter* treeview_insert(GtkWidget *treeview, GtkTreeIter *parent, char *str, Bit64u param, bool bold)
 {
   GtkTreeStore *treestore;
   GtkTreeViewColumn *treecol;
   GtkCellRenderer *renderer;
-  char bstr[COMMON_STR_SIZE];
 
   treestore = (GtkTreeStore*)gtk_tree_view_get_model(GTK_TREE_VIEW(treeview));
   if (treestore == NULL) {
@@ -293,7 +293,7 @@ GtkTreeIter* treeview_insert(GtkWidget *treeview, GtkTreeIter *parent, char *str
     gtk_tree_view_column_add_attribute(treecol, renderer, "text", 0); // pull display text from treestore col 0
     gtk_tree_view_column_set_cell_data_func(treecol, renderer, cell_data_func, NULL, NULL);
     gtk_widget_set_can_focus(treeview, FALSE);
-    treestore = gtk_tree_store_new(1, G_TYPE_STRING);
+    treestore = gtk_tree_store_new(3, G_TYPE_STRING, G_TYPE_ULONG, G_TYPE_BOOLEAN);
     gtk_tree_view_set_model(GTK_TREE_VIEW(treeview), GTK_TREE_MODEL(treestore));
     g_object_unref(treestore);
     tree_items = 0;
@@ -301,12 +301,8 @@ GtkTreeIter* treeview_insert(GtkWidget *treeview, GtkTreeIter *parent, char *str
   } else {
     if (tree_items < MAX_TREE_ITEMS) {
       gtk_tree_store_append(treestore, &titems[tree_items], parent);
-      if (bold) {
-        sprintf(bstr, " %s", str);
-        gtk_tree_store_set(treestore, &titems[tree_items], 0, bstr, -1);
-      } else {
-        gtk_tree_store_set(treestore, &titems[tree_items], 0, str, -1);
-      }
+      gtk_tree_store_set(treestore, &titems[tree_items], 0, str, 1, param,
+                         2, bold, -1);
       tree_items++;
     }
     return &titems[tree_items - 1];
@@ -327,7 +323,7 @@ void hc_uhci_do_item(GtkWidget *treeview, Bit32u FrameAddr, Bit32u FrameNum)
   // get the frame pointer
   DEV_MEM_READ_PHYSICAL(FrameAddr, sizeof(Bit32u), (Bit8u *) &item);
   sprintf(str, "Frame Pointer(%i): 0x%08X", FrameNum, item);
-  next = treeview_insert(treeview, NULL, str, 0);
+  next = treeview_insert(treeview, NULL, str, 0, 0);
 
   queue_stack.queue_cnt = 0;
 
@@ -347,7 +343,7 @@ void hc_uhci_do_item(GtkWidget *treeview, Bit32u FrameAddr, Bit32u FrameNum)
       // read in the queue
       DEV_MEM_READ_PHYSICAL(item & ~0xF, sizeof(struct QUEUE), (Bit8u *) &queue);
       sprintf(str, "0x%08X: Queue Head: (0x%08X 0x%08X)", item & ~0xF, queue.horz, queue.vert);
-      next = treeview_insert(treeview, next, str, 0);
+      next = treeview_insert(treeview, next, str, (item & ~0xF) | 1, 0);
 
       // if the vert pointer is valid, there are td's in it to process
       //  else only the head pointer may be valid
@@ -375,7 +371,7 @@ void hc_uhci_do_item(GtkWidget *treeview, Bit32u FrameAddr, Bit32u FrameNum)
     sprintf(str, "0x%08X: TD: (0x%08X)", item & ~0xF, td.dword0);
     if ((item & ~0xF) == (Bit32u) usbdbg_param1)
       state = true;
-    cur = treeview_insert(treeview, next, str, state);
+    cur = treeview_insert(treeview, next, str, (item & ~0xF), state);
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
     if ((item & ~0xF) == (Bit32u) usbdbg_param1)
       gtk_tree_selection_select_iter(selection, cur);
@@ -798,16 +794,15 @@ static void uhci_display_td(GtkWidget *widget, gpointer data)
 
   selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(data));
   if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
-    gchar *name;
+    gulong value;
 
-    gtk_tree_model_get(model, &iter, 0, &name, -1);
-    Bit32u value = g_ascii_strtoull(name, NULL, 16);
-    if (g_strstr_len(name, 14, "TD") == NULL) {
-      uhci_queue_dialog(value);
+    gtk_tree_model_get(model, &iter, 1, &value, -1);
+    Bit32u address = (Bit32u)(value & ~0xF);
+    if (value & 1) {
+      uhci_queue_dialog(address);
     } else {
-      uhci_td_dialog(value);
+      uhci_td_dialog(address);
     }
-    g_free(name);
   } else {
     GtkWidget* error = gtk_message_dialog_new(
       GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
@@ -1055,7 +1050,7 @@ void hc_xhci_do_ring(GtkWidget *treeview, const char *ring_str, Bit64u RingPtr, 
   Bit8u type;
 
   sprintf(str, "%s Ring: 0x" FMT_ADDRX64, ring_str, address);
-  parent = treeview_insert(treeview, NULL, str, 0);
+  parent = treeview_insert(treeview, NULL, str, 0, 0);
 
   do {
     state = false; // clear the state
@@ -1069,7 +1064,7 @@ void hc_xhci_do_ring(GtkWidget *treeview, const char *ring_str, Bit64u RingPtr, 
       strcat(str, " <--- dq_pointer");
       state = true;
     }
-    parent = treeview_insert(treeview, parent, str, state);
+    parent = treeview_insert(treeview, parent, str, address, state);
     if (type == LINK) {
       address = trb.parameter & (Bit64u) ~0xF;
     } else
@@ -1093,7 +1088,7 @@ void hc_xhci_do_event_ring(GtkWidget *treeview, const char *ring_str, int interr
   Bit8u type;
 
   sprintf(str, "%s Ring: Interrupter: %i", ring_str, interrupter);
-  parent = treeview_insert(treeview, NULL, str, 0);
+  parent = treeview_insert(treeview, NULL, str, 0, 0);
 
   for (unsigned i = 0; i < (1 << MAX_SEG_TBL_SZ_EXP); i++) {
     sprintf(pname, "hub.ring_members.event_rings.ring%d.entries.entry%d.addr", interrupter, i);
@@ -1101,7 +1096,7 @@ void hc_xhci_do_event_ring(GtkWidget *treeview, const char *ring_str, int interr
     sprintf(pname, "hub.ring_members.event_rings.ring%d.entries.entry%d.size", interrupter, i);
     size = SIM->get_param_num(pname, xHCI_state)->get();
     sprintf(str, "Event Ring Segment %i (0x" FMT_ADDRX64 "), size %i", i, address, size);
-    segment = treeview_insert(treeview, parent, str, 0);
+    segment = treeview_insert(treeview, parent, str, 0, 0);
     for (unsigned j = 0; j < size; j++) {
       state = 0; // clear the state
       DEV_MEM_READ_PHYSICAL(address, sizeof(struct TRB), (Bit8u *) &trb);
@@ -1115,7 +1110,7 @@ void hc_xhci_do_event_ring(GtkWidget *treeview, const char *ring_str, int interr
         strcat(str, " <--- eq_pointer");
         state = true;
       }
-      treeview_insert(treeview, segment, str, state);
+      treeview_insert(treeview, segment, str, address, state);
 
       if (++trb_count > MAX_TRBS_ALLOWED)  // safety catch
         break;
@@ -1133,28 +1128,41 @@ static void xhci_display_trb(GtkWidget *widget, gpointer data)
   GtkTreeModel     *model;
   GtkTreeIter       iter;
   GtkWidget        *error;
-//  int type_mask = 0;
+  int type_mask = 0;
+  gulong value;
+  struct TRB trb;
   char str[COMMON_STR_SIZE];
 
   selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(data));
   if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
     switch (usbdbg_break_type) {
       case USB_DEBUG_COMMAND:
-//        type_mask = VIEW_TRB_TYPE_COMMAND;
+        type_mask = VIEW_TRB_TYPE_COMMAND;
         strcpy(str, "VIEW_TRB_TYPE_COMMAND not implemented yet");
         break;
       case USB_DEBUG_EVENT:
-//        type_mask = VIEW_TRB_TYPE_EVENT;
+        type_mask = VIEW_TRB_TYPE_EVENT;
         strcpy(str, "VIEW_TRB_TYPE_EVENT not implemented yet");
         break;
       case USB_DEBUG_FRAME:
-//        type_mask = VIEW_TRB_TYPE_TRANSFER;
+        type_mask = VIEW_TRB_TYPE_TRANSFER;
         strcpy(str, "VIEW_TRB_TYPE_TRANSFER not implemented yet");
         break;
     }
+    gtk_tree_model_get(model, &iter, 1, &value, -1);
+    if (value > 0) {
+      DEV_MEM_READ_PHYSICAL(value, sizeof(struct TRB), (Bit8u *) &trb);
+      const Bit8u type = TRB_GET_TYPE(trb.command);
+
+      // check to see if this type of TRB is allowed in this type of ring
+      if ((type > 0) && (type <= 47) && ((trb_types[type].allowed_mask & type_mask) == 0)) {
+        sprintf(str, "TRB type %i not allowed in a %s ring!", type, ring_type[type_mask]);
+      }
+      // TODO: using the type of trb, display an associated dialog
+    }
     error = gtk_message_dialog_new(
-      GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
-      str);
+      GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
+      GTK_BUTTONS_OK, str);
   } else {
     error = gtk_message_dialog_new(
       GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,

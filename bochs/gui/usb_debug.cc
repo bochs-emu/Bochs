@@ -185,6 +185,15 @@ const struct VIEW_TRB_TYPE trb_types[] = {
   // remaining are vendor defined (allowed in any ring)
 };
 
+// these match the VIEW_TRB_TYPE_ masks
+const char *ring_type[] = {
+  "",         // VIEW_TRB_TYPE_NONE
+  "Command",  // VIEW_TRB_TYPE_COMMAND
+  "Event",    // VIEW_TRB_TYPE_EVENT
+  "",         //
+  "Transfer"  // VIEW_TRB_TYPE_TRANSFER
+};
+
 int usb_debug_type = USB_DEBUG_NONE;
 bx_param_c *host_param = NULL;
 Bit32u pci_bar_address;
