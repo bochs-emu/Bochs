@@ -132,9 +132,9 @@ void raster_function(int tmus, void *destbase, Bit32s y, const poly_extent *exte
 			startx = tempclip;
 		}
 		tempclip = v->reg[clipLeftRight].u & v->fbi.clip_mask;
-		if (stopx >= tempclip) {
+		if (stopx > tempclip) {
 			stats->pixels_in += stopx - tempclip;
-			stopx = tempclip - 1;
+			stopx = tempclip;
 		}
 	}
 
