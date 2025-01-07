@@ -82,6 +82,8 @@ Bit64u eval_value;
 %token <sval> BX_TOKEN_LOADMEM
 %token <sval> BX_TOKEN_SETPMEM
 %token <sval> BX_TOKEN_DEREF
+%token <sval> BX_TOKEN_TELESCOPE
+%token <sval> BX_TOKEN_TELESCOPESET
 %token <sval> BX_TOKEN_SYMBOLNAME
 %token <sval> BX_TOKEN_QUERY
 %token <sval> BX_TOKEN_PENDING
@@ -192,6 +194,8 @@ command:
     | loadmem_command
     | setpmem_command
     | deref_command
+    | telescope_command
+    | telescopeset_command
     | query_command
     | take_command
     | disassemble_command
@@ -969,6 +973,22 @@ deref_command:
       }
     ;
 
+telescope_command:
+      BX_TOKEN_TELESCOPE expression '\n'
+      {
+        bx_dbg_telescope_command($2);
+        free($1);
+      }
+    ;
+
+telescopeset_command:
+      BX_TOKEN_TELESCOPESET BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'
+      {
+        bx_dbg_telescopeset_command($2, $3, $4, $5);
+        free($1);
+      }
+    ;
+
 query_command:
       BX_TOKEN_QUERY BX_TOKEN_PENDING '\n'
       {
@@ -1301,6 +1321,16 @@ help_command:
          dbg_printf("deref <addr> <deep> - pointer dereference. For example: get value of [[[rax]]] or ***rax: deref rax 3\n");
          free($1);free($2);
        }
+     | BX_TOKEN_HELP BX_TOKEN_TELESCOPE '\n'
+       {
+         dbg_printf("telescope <addr> - shows how pointers lead to other pointers and finally to data. It goes step by step through each pointer, showing you where they all end up. To activate this functionality, the telescopeset command must be executed beforehand. For example: telescope esp. it presents a sequential view where each row represents the data at the next address starting from the original location. This means that the command not only shows the chain of pointers and the end data but also arranges the output so that each row progresses to the next memory address from the starting point\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_TELESCOPESET '\n'
+       {
+         dbg_printf("telescopeset <max_rows> <max_depth> <data_depth> <data_hex> - the number of rows ('max_rows') to display, how deeply to follow pointer dereferencing ('max_depth'), the depth of final displayed data ('data_depth'), and the option to show the final data in hexadecimal(1)/ascii(0) format flag ('data_hex'). This command also activates the telescope feature for viewing registers and the stack. For example: telescopeset 6 5 15 0: display up to 6 addresses, dereference pointers 5 levels deep, show 15 units of data in ASCII (0 means not use hexadecimal). Disable telescope: telescopeset 0 0 0 0\n");
+         free($1);free($2);
+       }
      | BX_TOKEN_HELP BX_TOKEN_DISASM '\n'
        {
          dbg_printf("u|disasm [/count] <start> <end> - disassemble instructions for given linear address\n");
@@ -1513,7 +1543,7 @@ vexpression:
    | vexpression '-' vexpression     { $$ = $1 - $3; }
    | vexpression '*' vexpression     { $$ = $1 * $3; }
    | vexpression '/' vexpression     { $$ = $1 / $3; }
-   | vexpression BX_TOKEN_DEREF_CHR vexpression { $$ = bx_dbg_deref($1, $3, NULL, NULL); }
+   | vexpression BX_TOKEN_DEREF_CHR vexpression { $$ = bx_dbg_deref($1, $3, NULL, NULL, 0); }
    | vexpression BX_TOKEN_RSHIFT vexpression { $$ = $1 >> $3; }
    | vexpression BX_TOKEN_LSHIFT vexpression { $$ = $1 << $3; }
    | vexpression '|' vexpression     { $$ = $1 | $3; }
@@ -1545,7 +1575,7 @@ expression:
    | expression '-' expression       { $$ = $1 - $3; }
    | expression '*' expression       { $$ = $1 * $3; }
    | expression '/' expression       { $$ = ($3 != 0) ? $1 / $3 : 0; }
-   | expression BX_TOKEN_DEREF_CHR expression { $$ = bx_dbg_deref($1, $3, NULL, NULL); }
+   | expression BX_TOKEN_DEREF_CHR expression { $$ = bx_dbg_deref($1, $3, NULL, NULL, 0); }
    | expression BX_TOKEN_RSHIFT expression { $$ = $1 >> $3; }
    | expression BX_TOKEN_LSHIFT expression { $$ = $1 << $3; }
    | expression '|' expression       { $$ = $1 | $3; }
