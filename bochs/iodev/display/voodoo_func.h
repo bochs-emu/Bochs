@@ -755,7 +755,7 @@ static Bit32s setup_and_draw_triangle()
 
     /* if doing strips and ping pong is enabled, apply the ping pong */
     if ((v->reg[sSetupMode].u & 0x90000) == 0x00000)
-      culling_sign ^= (v->fbi.sverts - 3) & 1;
+      culling_sign ^= v->fbi.pingpong;
 
     /* if our sign matches the culling sign, we're done for */
     if (divisor_sign == culling_sign)
@@ -874,6 +874,7 @@ static Bit32s begin_triangle()
   /* spread it across all three verts and reset the count */
   v->fbi.svert[0] = v->fbi.svert[1] = v->fbi.svert[2];
   v->fbi.sverts = 1;
+  v->fbi.pingpong = 0;
 
   return 0;
 }
@@ -885,8 +886,10 @@ static Bit32s draw_triangle()
   int cycles = 0;
 
   /* for strip mode, shuffle vertex 1 down to 0 */
-  if (!(v->reg[sSetupMode].u & (1 << 16)))
+  if (!(v->reg[sSetupMode].u & (1 << 16))) {
+    v->fbi.pingpong ^= 1;
     v->fbi.svert[0] = v->fbi.svert[1];
+  }
 
   /* copy 2 down to 1 regardless */
   v->fbi.svert[1] = v->fbi.svert[2];
@@ -3098,12 +3101,15 @@ void cmdfifo_process(cmdfifo_info *f)
         /* if we're starting a new strip, or if this is the first of a set of verts */
         /* for a series of individual triangles, initialize all the verts */
         if ((code == 1 && i == 0) || (code == 0 && i % 3 == 0)) {
+          v->fbi.pingpong = 0;
           v->fbi.sverts = 1;
           v->fbi.svert[0] = v->fbi.svert[1] = v->fbi.svert[2] = svert;
         } else { /* otherwise, add this to the list */
           /* for strip mode, shuffle vertex 1 down to 0 */
-          if (!(smode & 1))
+          if (!(smode & 1)) {
+            v->fbi.pingpong ^= 1;
             v->fbi.svert[0] = v->fbi.svert[1];
+          }
 
           /* copy 2 down to 1 and add our new one regardless */
           v->fbi.svert[1] = v->fbi.svert[2];

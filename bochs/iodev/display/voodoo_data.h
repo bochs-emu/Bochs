@@ -1650,6 +1650,7 @@ struct _fbi_state
 
   stats_block   lfb_stats;      /* LFB-access statistics */
 
+  Bit8u         pingpong;       /* sign inversion */
   Bit8u         sverts;         /* number of vertices ready */
   setup_vertex  svert[3];       /* 3 setup vertices */
 

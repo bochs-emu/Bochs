@@ -405,6 +405,7 @@ void bx_voodoo_base_c::voodoo_register_state(bx_list_c *parent)
   new bx_shadow_num_c(fbi, "dady", &v->fbi.dady);
   new bx_shadow_num_c(fbi, "dzdy", &v->fbi.dzdy);
   new bx_shadow_num_c(fbi, "dwdy", &v->fbi.dwdy);
+  new bx_shadow_num_c(fbi, "pingpong", &v->fbi.pingpong);
   new bx_shadow_num_c(fbi, "sverts", &v->fbi.sverts);
   bx_list_c *svert = new bx_list_c(fbi, "svert", "");
   for (i = 0; i < 3; i++) {
