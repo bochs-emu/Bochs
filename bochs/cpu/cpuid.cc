@@ -135,55 +135,32 @@ void bx_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_
   leaf->ecx = subfunction;
   leaf->edx = cpu->get_apic_id();
 
+  enum {
+    BX_DOMAIN_TYPE_ID_VALUE_INVALID = 0,
+    BX_DOMAIN_TYPE_ID_VALUE_SMT_THREAD = 1,
+    BX_DOMAIN_TYPE_ID_VALUE_CORE = 2,
+    BX_DOMAIN_TYPE_ID_VALUE_PROCESSOR = 3
+  };
+
 #if BX_SUPPORT_SMP
   switch(subfunction) {
   case 0:
-     if (nthreads > 1) {
-        leaf->eax = ilog2(nthreads-1)+1;
-        leaf->ebx = nthreads;
-        leaf->ecx |= (1<<8);
-     }
-     else if (ncores > 1) {
-        leaf->eax = ilog2(ncores-1)+1;
-        leaf->ebx = ncores;
-        leaf->ecx |= (2<<8);
-     }
-     else if (nprocessors > 1) {
-        leaf->eax = ilog2(nprocessors-1)+1;
-        leaf->ebx = nprocessors;
-     }
-     else {
-        leaf->eax = 1;
-        leaf->ebx = 1; // number of logical CPUs at this level
-     }
+     leaf->eax = ilog2(nthreads-1)+1;
+     leaf->ebx = nthreads;
+     leaf->ecx |= (BX_DOMAIN_TYPE_ID_VALUE_SMT_THREAD<<8);
      break;
 
   case 1:
-     if (nthreads > 1) {
-        if (ncores > 1) {
-           leaf->eax = ilog2(ncores-1)+1;
-           leaf->ebx = ncores;
-           leaf->ecx |= (2<<8);
-        }
-        else if (nprocessors > 1) {
-           leaf->eax = ilog2(nprocessors-1)+1;
-           leaf->ebx = nprocessors;
-        }
-     }
-     else if (ncores > 1) {
-        if (nprocessors > 1) {
-           leaf->eax = ilog2(nprocessors-1)+1;
-           leaf->ebx = nprocessors;
-        }
-     }
+     leaf->eax = ilog2(ncores-1)+1;
+     leaf->ebx = ncores * nthreads;
+     leaf->ecx |= (BX_DOMAIN_TYPE_ID_VALUE_CORE<<8);
      break;
 
   case 2:
-     if (nthreads > 1) {
-        if (nprocessors > 1) {
-           leaf->eax = ilog2(nprocessors-1)+1;
-           leaf->ebx = nprocessors;
-        }
+     if (nprocessors > 1) {
+       leaf->eax = ilog2(nprocessors-1)+1;
+       leaf->ebx = nprocessors * ncores * nthreads;
+       leaf->ecx |= (BX_DOMAIN_TYPE_ID_VALUE_PROCESSOR<<8);
      }
      break;
 
