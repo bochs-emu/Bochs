@@ -482,21 +482,83 @@ static void depth_breadth_sel(GtkWidget *widget, gpointer data)
 static void dump_buffer(GtkWidget *widget, gpointer data)
 {
   DUMP_PARAMS *params = (DUMP_PARAMS*)data;
-  const char *msg;
+  GtkTextBuffer *txtbuf;
+  GtkWidget *text_view, *scrolled_window;
 
   if (params->size > 512) {
     params->size = 512;
   }
+  GtkWidget *dialog =
+    gtk_dialog_new_with_buttons(params->title, GTK_WINDOW(td_dialog), GTK_DIALOG_MODAL,
+                                g_dgettext("gtk30", "_OK"), GTK_RESPONSE_OK,
+                                NULL);
+  gtk_window_set_default_size(GTK_WINDOW(dialog), 420, 400);
+  txtbuf = gtk_text_buffer_new(NULL);
+  text_view = gtk_text_view_new_with_buffer(txtbuf);
+  gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text_view), GTK_WRAP_WORD);
+  gtk_text_view_set_editable(GTK_TEXT_VIEW(text_view), FALSE);
+  gtk_widget_set_can_focus(text_view, FALSE);
+  scrolled_window = gtk_scrolled_window_new(NULL, NULL);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolled_window),
+                                 GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+  gtk_container_add(GTK_CONTAINER(scrolled_window), text_view);
+  gtk_container_set_border_width(GTK_CONTAINER (scrolled_window), 5);
+  gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))),
+                     scrolled_window, TRUE, TRUE, 2);
   if (params->size > 0) {
-    msg = "Buffer dump not implemented yet";
+    // 3 bytes per char printed, ~18 chars at the first of each line, 20 of chars, 2 chars at the end of each line, 2 at last line
+    int str_size = (params->size * 3) + ((18 + 2) * ((params->size + 15) / 16)) + 2;
+    // make sure we are at least COMMON_STR_SIZE so we can use it to set the title
+    if (str_size < COMMON_STR_SIZE)
+      str_size = COMMON_STR_SIZE;
+    char *str = new char[str_size];
+    char temp_str[COMMON_STR_SIZE];
+    if (params->big)
+      sprintf(str, "%s--Address: 0x" FMT_ADDRX64 ": size = %i\n", params->title, params->address, params->size);
+    else
+      sprintf(str, "%s--Address: 0x%08X: size = %i\n", params->title, (Bit32u) params->address, params->size);
+    gtk_window_set_title(GTK_WINDOW(dialog), str);
+
+    // read in the buffer
+    Bit8u *buffer = new Bit8u[params->size];
+    DEV_MEM_READ_PHYSICAL(params->address, params->size, buffer);
+
+    // dump it
+    int j = 0;
+    strcpy(str, "");
+    for (int i = 0; i < params->size; i++) {
+      if (j == 0) {
+        if (params->big)
+          sprintf(temp_str, "0x" FMT_PHY_ADDRX64 ": ", params->address);
+        else
+          sprintf(temp_str, "0x%08X: ", (Bit32u) params->address);
+        strcat(str, temp_str);
+        params->address += 16;
+      }
+      j++;
+      if ((j == 8) && ((i + 1) != params->size)) {
+        sprintf(temp_str, "%02X-", buffer[i]);
+      } else {
+        sprintf(temp_str, "%02X ", buffer[i]);
+      }
+      strcat(str, temp_str);
+      if (j == 16) {
+        strcat(str, "\n");
+        j = 0;
+      }
+    }
+    strcat(str, "\n");
+    gtk_text_buffer_set_text(txtbuf, str, strlen(str));
+
+    delete [] buffer;
+    delete [] str;
   } else {
-    msg = "Nothing to do...";
+    gtk_text_buffer_set_text(txtbuf, "Nothing to do...", 16);
   }
-  GtkWidget* error = gtk_message_dialog_new(GTK_WINDOW(td_dialog),
-    GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK, msg);
-  gtk_window_set_title(GTK_WINDOW(error), params->title);
-  gtk_dialog_run(GTK_DIALOG(error));
-  gtk_widget_destroy(error);
+  // Show dialog
+  gtk_widget_show_all(dialog);
+  gtk_dialog_run(GTK_DIALOG(dialog));
+  gtk_widget_destroy(dialog);
 }
 
 static void uhci_td_dialog(Bit32u addr)
