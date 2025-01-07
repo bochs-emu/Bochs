@@ -3813,8 +3813,8 @@ public: // for now...
   BX_SMF void TCVTROWD2PS_VpsTrm(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TCVTROWPS2PHL_VphTrm(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TCVTROWPS2PHH_VphTrm(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
-  BX_SMF void TCVTROWPS2PBF16L_VphTrm(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
-  BX_SMF void TCVTROWPS2PBF16H_VphTrm(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TCVTROWPS2BF16L_VphTrm(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TCVTROWPS2BF16H_VphTrm(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #endif
 
 #if BX_SUPPORT_AVX

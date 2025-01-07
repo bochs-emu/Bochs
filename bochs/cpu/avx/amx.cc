@@ -117,6 +117,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILELOADD_TnnnMdq(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR amx->set_tile_used(tile);
 
+  BX_CPU_THIS_PTR amx->tile[tile].zero_out_of_range_columns(dword_elements_per_row);
+
   BX_CPU_THIS_PTR amx->tile[tile].clear_upper_rows(BX_CPU_THIS_PTR amx->start_row);
 
   Bit64u start_eaddr = BX_READ_64BIT_REG(i->sibBase()) + (Bit64s) i->displ32s();
@@ -132,9 +134,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILELOADD_TnnnMdq(bxInstruction_c *i)
     }
     else {
       avx_masked_load32(i, eaddr, data, mask);
-
-      for (unsigned n=dword_elements_per_row; n < 16; n++)
-        data->vmm32u(n) = 0;
     }
 
     BX_CPU_THIS_PTR amx->start_row++;
@@ -816,10 +815,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2PHH_VphTrm(bxInstruction_c *i)
   BX_CPU_THIS_PTR amx->restart();
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2PBF16L_VphTrm(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2BF16L_VphTrm(bxInstruction_c *i)
 {
   BxPackedAvxRegister dst;
-  tilemov_row(i, i->getIaOpcode() == BX_IA_EVEX_TCVTROWPS2PBF16L_VphTrmIb, &dst);
+  tilemov_row(i, i->getIaOpcode() == BX_IA_EVEX_TCVTROWPS2BF16L_VphTrmIb, &dst);
 
   // convert the fp32 source elements to bf16 and place them in low 16-bits of each dword
   for (unsigned n=0;n < DWORD_ELEMENTS(BX_VL512); n++)
@@ -829,10 +828,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2PBF16L_VphTrm(bxInstruction_c *i
   BX_CPU_THIS_PTR amx->restart();
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2PBF16H_VphTrm(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2BF16H_VphTrm(bxInstruction_c *i)
 {
   BxPackedAvxRegister dst;
-  tilemov_row(i, i->getIaOpcode() == BX_IA_EVEX_TCVTROWPS2PBF16H_VphTrmIb, &dst);
+  tilemov_row(i, i->getIaOpcode() == BX_IA_EVEX_TCVTROWPS2BF16H_VphTrmIb, &dst);
 
   // convert the fp32 source elements to bf16 and place them in high 16-bits of each dword
   for (unsigned n=0;n < DWORD_ELEMENTS(BX_VL512); n++)

@@ -72,6 +72,12 @@ struct AMX {
         row[nrow].vmm32u(i) = 0;
     }
 
+    void zero_out_of_range_columns(unsigned limit)
+    {
+      for (unsigned i=0; i < BX_TILE_MAX_ROWS; i++)
+        zero_upper_row_data32(i, limit);
+    }
+
     // clear 0..nrows
     void clear_rows(unsigned nrows) {
       for (unsigned i=0; i < nrows; i++)
