@@ -2532,9 +2532,8 @@ do                                                                              
   if (ALPHAMODE_ALPHABLEND(ALPHAMODE))                                           \
   {                                                                              \
     int dpix = dest[XX];                                                         \
-    int dr = (dpix >> 8) & 0xf8;                                                 \
-    int dg = (dpix >> 3) & 0xfc;                                                 \
-    int db = (dpix << 3) & 0xf8;                                                 \
+    int dr, dg, db;                                                              \
+    EXTRACT_565_TO_888(dpix, dr, dg, db);                                        \
     int da = FBZMODE_ENABLE_ALPHA_PLANES(FBZMODE) ? depth[XX] : 0xff;            \
     int sr = (RR);                                                               \
     int sg = (GG);                                                               \
