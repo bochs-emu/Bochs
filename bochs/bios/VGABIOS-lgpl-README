@@ -107,7 +107,7 @@ For any information on Qemu, visit the website http://wiki.qemu.org/
 
 History
 -------
-vgabios-github-current : Nov 06 2024
+vgabios-0.9c : Jan 08 2025
   - Volker
     - Added support for Cirrus 4 bpp modes 0x58, 0x5d and 0x6c
     - Added 4 bpp support for Cirrus VBE functions
