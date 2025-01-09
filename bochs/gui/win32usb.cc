@@ -668,9 +668,9 @@ INT_PTR CALLBACK hc_uhci_callback_td(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
       sprintf(str, "0x%08X", g_td.dword0 & ~0xF);
       SetDlgItemText(hDlg, IDC_LINK_PTR, str);
 
-      CheckDlgButton(hDlg, IDC_VERT_VF, (g_td.dword0 & 4) ? BST_CHECKED : BST_UNCHECKED);
-      CheckDlgButton(hDlg, IDC_VERT_Q, (g_td.dword0 & 2) ? BST_CHECKED : BST_UNCHECKED);
-      CheckDlgButton(hDlg, IDC_VERT_T, (g_td.dword0 & 1) ? BST_CHECKED : BST_UNCHECKED);
+      CheckDlgButton(hDlg, IDC_LINK_VF, (g_td.dword0 & 4) ? BST_CHECKED : BST_UNCHECKED);
+      CheckDlgButton(hDlg, IDC_LINK_Q, (g_td.dword0 & 2) ? BST_CHECKED : BST_UNCHECKED);
+      CheckDlgButton(hDlg, IDC_LINK_T, (g_td.dword0 & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       sprintf(str, "%i", g_td.dword1 & 0x3FF);
       SetDlgItemText(hDlg, IDC_ACTUAL_LEN, str);
@@ -749,7 +749,7 @@ INT_PTR CALLBACK hc_uhci_callback_td(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
               g_td.dword0 |= (IsDlgButtonChecked(hDlg, IDC_LINK_T) == BST_CHECKED) ? 1 : 0;
 
               GetDlgItemText(hDlg, IDC_ACTUAL_LEN, str, COMMON_STR_SIZE);
-              g_td.dword1  = strtol(str, NULL, 0) & 0x3FF;
+              g_td.dword1  = strtol(str, NULL, 0) & 0x7FF;
               g_td.dword1 |= (IsDlgButtonChecked(hDlg, IDC_STATUS_ACTIVE)   == BST_CHECKED) ? (1<<23) : 0;
               g_td.dword1 |= (IsDlgButtonChecked(hDlg, IDC_STATUS_STALLED)  == BST_CHECKED) ? (1<<22) : 0;
               g_td.dword1 |= (IsDlgButtonChecked(hDlg, IDC_STATUS_DATA_BUFF_ERR) == BST_CHECKED) ? (1<<21) : 0;
