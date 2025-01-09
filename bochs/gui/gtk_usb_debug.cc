@@ -1184,6 +1184,33 @@ void hc_xhci_do_event_ring(GtkWidget *treeview, const char *ring_str, int interr
   }
 }
 
+void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
+{
+  GtkWidget *mainVbox;
+  int ret;
+  char buffer[COMMON_STR_SIZE];
+
+  // TODO: using the type of trb, display an associated dialog
+  sprintf(buffer, "%s TRB", trb_types[type].name);
+  GtkWidget *dialog =
+    gtk_dialog_new_with_buttons(buffer, GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL,
+                                g_dgettext("gtk30", "_Save"), GTK_RESPONSE_OK,
+                                g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_CANCEL,
+                                NULL);
+  gtk_window_set_default_size(GTK_WINDOW(dialog), 200, 250);
+  // TODO: set focus
+  mainVbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+  gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), mainVbox, TRUE, TRUE, 2);
+  usbdlg_create_label(mainVbox, "Not implemented yet", true);
+  // Show dialog
+  gtk_widget_show_all(dialog);
+  ret = gtk_dialog_run(GTK_DIALOG(dialog));
+  if (ret == GTK_RESPONSE_OK) {
+    // TODO
+  }
+  gtk_widget_destroy(dialog);
+}
+
 static void xhci_display_trb(GtkWidget *widget, gpointer data)
 {
   GtkTreeSelection *selection;
@@ -1200,15 +1227,12 @@ static void xhci_display_trb(GtkWidget *widget, gpointer data)
     switch (usbdbg_break_type) {
       case USB_DEBUG_COMMAND:
         type_mask = VIEW_TRB_TYPE_COMMAND;
-        strcpy(str, "VIEW_TRB_TYPE_COMMAND not implemented yet");
         break;
       case USB_DEBUG_EVENT:
         type_mask = VIEW_TRB_TYPE_EVENT;
-        strcpy(str, "VIEW_TRB_TYPE_EVENT not implemented yet");
         break;
       case USB_DEBUG_FRAME:
         type_mask = VIEW_TRB_TYPE_TRANSFER;
-        strcpy(str, "VIEW_TRB_TYPE_TRANSFER not implemented yet");
         break;
     }
     gtk_tree_model_get(model, &iter, 1, &value, -1);
@@ -1219,20 +1243,23 @@ static void xhci_display_trb(GtkWidget *widget, gpointer data)
       // check to see if this type of TRB is allowed in this type of ring
       if ((type > 0) && (type <= 47) && ((trb_types[type].allowed_mask & type_mask) == 0)) {
         sprintf(str, "TRB type %i not allowed in a %s ring!", type, ring_type[type_mask]);
+        error = gtk_message_dialog_new(
+          GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
+          GTK_BUTTONS_OK, str);
+        gtk_window_set_title(GTK_WINDOW(error), "WARNING");
+        gtk_dialog_run(GTK_DIALOG(error));
+        gtk_widget_destroy(error);
       }
-      // TODO: using the type of trb, display an associated dialog
+      xhci_view_trb_dialog(type, &trb);
     }
-    error = gtk_message_dialog_new(
-      GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
-      GTK_BUTTONS_OK, str);
   } else {
     error = gtk_message_dialog_new(
       GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
       "No TRB selected");
+    gtk_window_set_title(GTK_WINDOW(error), "WARNING");
+    gtk_dialog_run(GTK_DIALOG(error));
+    gtk_widget_destroy(error);
   }
-  gtk_window_set_title(GTK_WINDOW(error), "WARNING");
-  gtk_dialog_run(GTK_DIALOG(error));
-  gtk_widget_destroy(error);
 }
 
 // xHCI main dialog
