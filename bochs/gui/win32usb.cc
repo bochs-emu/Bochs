@@ -668,9 +668,9 @@ INT_PTR CALLBACK hc_uhci_callback_td(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
       sprintf(str, "0x%08X", g_td.dword0 & ~0xF);
       SetDlgItemText(hDlg, IDC_LINK_PTR, str);
 
-      CheckDlgButton(hDlg, IDC_VERT_VF, (g_td.dword0 & 4) ? BST_CHECKED : BST_UNCHECKED);
-      CheckDlgButton(hDlg, IDC_VERT_Q, (g_td.dword0 & 2) ? BST_CHECKED : BST_UNCHECKED);
-      CheckDlgButton(hDlg, IDC_VERT_T, (g_td.dword0 & 1) ? BST_CHECKED : BST_UNCHECKED);
+      CheckDlgButton(hDlg, IDC_LINK_VF, (g_td.dword0 & 4) ? BST_CHECKED : BST_UNCHECKED);
+      CheckDlgButton(hDlg, IDC_LINK_Q, (g_td.dword0 & 2) ? BST_CHECKED : BST_UNCHECKED);
+      CheckDlgButton(hDlg, IDC_LINK_T, (g_td.dword0 & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       sprintf(str, "%i", g_td.dword1 & 0x3FF);
       SetDlgItemText(hDlg, IDC_ACTUAL_LEN, str);
