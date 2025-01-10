@@ -272,22 +272,6 @@ int bx_dbg_main(void)
 
   dbg_printf("Bochs internal debugger, type 'help' for help or 'c' to continue\n");
 
-  // Print disassembly of the first instruction...  you wouldn't think it
-  // would have to be so hard.  First initialize guard_found, since it is used
-  // in the disassembly code to decide what instruction to print.
-  for (int i=0; i<BX_SMP_PROCESSORS; i++) {
-    BX_CPU(i)->guard_found.cs = BX_CPU(i)->sregs[BX_SEG_REG_CS].selector.value;
-    BX_CPU(i)->guard_found.eip = BX_CPU(i)->get_instruction_pointer();
-    BX_CPU(i)->guard_found.laddr =
-      BX_CPU(i)->get_laddr(BX_SEG_REG_CS, BX_CPU(i)->guard_found.eip);
-    BX_CPU(i)->guard_found.code_32_64 = 0;
-    // 00 - 16 bit, 01 - 32 bit, 10 - 64-bit, 11 - illegal
-    if (BX_CPU(i)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b)
-      BX_CPU(i)->guard_found.code_32_64 |= 0x1;
-    if (BX_CPU(i)->get_cpu_mode() == BX_MODE_LONG_64)
-      BX_CPU(i)->guard_found.code_32_64 |= 0x2;
-  }
-
   dbg_cpu_list = new bx_list_c *[BX_SMP_PROCESSORS];
   for (int cpu=0; cpu<BX_SMP_PROCESSORS; cpu++) {
     char cpu_param_name[10];
@@ -1579,6 +1563,11 @@ static void dbg_print_guard_found(unsigned cpu_mode, Bit32u cs, bx_address eip, 
     dbg_printf("%04x:%04x (0x%08x)", cs, (unsigned) eip, (unsigned) laddr);
 }
 
+static void dbg_print_guard_found(unsigned cpu_mode, const bx_dbg_guard_state_t *guard_state)
+{
+  dbg_print_guard_found(cpu_mode, guard_state->cs, guard_state->eip, guard_state->laddr);
+}
+
 void bx_dbg_xlate_address(bx_lin_address laddr)
 {
   bx_phy_address paddr;
@@ -1756,8 +1745,7 @@ void bx_dbg_show_symbolic(void)
   if (dbg_show_mask & BX_DBG_SHOW_SOFTINT) {
     if(cpu->show_flag & Flag_softint) {
       dbg_printf(FMT_TICK ": softint ", bx_pc_system.time_ticks());
-      dbg_print_guard_found(cpu->get_cpu_mode(),
-        cpu->guard_found.cs, cpu->guard_found.eip, cpu->guard_found.laddr);
+      dbg_print_guard_found(cpu->get_cpu_mode(), &cpu->guard_found.guard_state);
       dbg_printf("\n");
     }
   }
@@ -1765,8 +1753,7 @@ void bx_dbg_show_symbolic(void)
   if (dbg_show_mask & BX_DBG_SHOW_EXTINT) {
     if((cpu->show_flag & Flag_intsig) && !(cpu->show_flag & Flag_softint)) {
       dbg_printf(FMT_TICK ": exception (not softint) ", bx_pc_system.time_ticks());
-      dbg_print_guard_found(cpu->get_cpu_mode(),
-        cpu->guard_found.cs, cpu->guard_found.eip, cpu->guard_found.laddr);
+      dbg_print_guard_found(cpu->get_cpu_mode(), &cpu->guard_found.guard_state);
       dbg_printf("\n");
     }
   }
@@ -1774,8 +1761,7 @@ void bx_dbg_show_symbolic(void)
   if (dbg_show_mask & BX_DBG_SHOW_IRET) {
     if(cpu->show_flag & Flag_iret) {
       dbg_printf(FMT_TICK ": iret ", bx_pc_system.time_ticks());
-      dbg_print_guard_found(cpu->get_cpu_mode(),
-        cpu->guard_found.cs, cpu->guard_found.eip, cpu->guard_found.laddr);
+      dbg_print_guard_found(cpu->get_cpu_mode(), &cpu->guard_found.guard_state);
       dbg_printf("\n");
     }
   }
@@ -1785,16 +1771,15 @@ void bx_dbg_show_symbolic(void)
   {
     if(cpu->show_flag & Flag_call) {
       bx_phy_address phy = 0;
-      bool valid = cpu->dbg_xlate_linear2phy(cpu->guard_found.laddr, &phy);
+      bool valid = cpu->dbg_xlate_linear2phy(cpu->guard_found.guard_state.laddr, &phy);
       dbg_printf(FMT_TICK ": call ", bx_pc_system.time_ticks());
-      dbg_print_guard_found(cpu->get_cpu_mode(),
-        cpu->guard_found.cs, cpu->guard_found.eip, cpu->guard_found.laddr);
+      dbg_print_guard_found(cpu->get_cpu_mode(), &cpu->guard_found.guard_state);
       if (!valid) dbg_printf(" phys not valid");
       else {
         dbg_printf(" (phy: 0x" FMT_PHY_ADDRX ") %s", phy,
           bx_dbg_symbolic_address(cpu->cr3 >> 12,
-              cpu->guard_found.eip,
-              cpu->guard_found.laddr - cpu->guard_found.eip));
+              cpu->guard_found.guard_state.eip,
+              cpu->guard_found.guard_state.laddr - cpu->guard_found.guard_state.eip));
       }
       dbg_printf("\n");
     }
@@ -2277,18 +2262,21 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
     return;
   }
 
-  bool phy_valid = BX_CPU(which_cpu)->dbg_xlate_linear2phy(BX_CPU(which_cpu)->guard_found.laddr, &phy);
+  bx_dbg_guard_state_t guard_state;
+  BX_CPU(which_cpu)->dbg_get_guard_state(&guard_state);
+
+  bool phy_valid = BX_CPU(which_cpu)->dbg_xlate_linear2phy(guard_state.laddr, &phy);
   if (! phy_valid) {
     dbg_printf("(%u).[" FMT_LL "d] ??? (physical address not available)\n", which_cpu, bx_pc_system.time_ticks());
     return;
   }
 
-  if (bx_dbg_read_linear(which_cpu, BX_CPU(which_cpu)->guard_found.laddr, 16, bx_disasm_ibuf))
+  if (bx_dbg_read_linear(which_cpu, guard_state.laddr, 16, bx_disasm_ibuf))
   {
-    unsigned ilen = bx_dbg_disasm_wrapper(IS_CODE_32(BX_CPU(which_cpu)->guard_found.code_32_64),
-      IS_CODE_64(BX_CPU(which_cpu)->guard_found.code_32_64),
+    unsigned ilen = bx_dbg_disasm_wrapper(IS_CODE_32(guard_state.code_32_64),
+      IS_CODE_64(guard_state.code_32_64),
       BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS),
-      BX_CPU(which_cpu)->guard_found.eip, bx_disasm_ibuf, bx_disasm_tbuf);
+      guard_state.eip, bx_disasm_ibuf, bx_disasm_tbuf);
 
     // Note: it would be nice to display only the modified registers here, the easy
     // way out I have thought of would be to keep a prev_eax, prev_ebx, etc copies
@@ -2304,19 +2292,13 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
 
     if (BX_CPU(which_cpu)->protected_mode()) {
       dbg_printf("[0x" FMT_PHY_ADDRX "] %04x:" FMT_ADDRX " (%s): ",
-        phy, BX_CPU(which_cpu)->guard_found.cs,
-        BX_CPU(which_cpu)->guard_found.eip,
-        bx_dbg_symbolic_address(BX_CPU(which_cpu)->cr3 >> 12,
-           BX_CPU(which_cpu)->guard_found.eip,
-           BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS)));
+        phy, guard_state.cs, guard_state.eip,
+        bx_dbg_symbolic_address(BX_CPU(which_cpu)->cr3 >> 12, guard_state.eip, BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS)));
     }
     else { // Real & V86 mode
       dbg_printf("[0x" FMT_PHY_ADDRX "] %04x:%04x (%s): ",
-        phy, BX_CPU(which_cpu)->guard_found.cs,
-        (unsigned) BX_CPU(which_cpu)->guard_found.eip,
-        bx_dbg_symbolic_address(0,
-           BX_CPU(which_cpu)->guard_found.eip & 0xffff,
-           BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS)));
+        phy, guard_state.cs, (Bit32u) guard_state.eip,
+        bx_dbg_symbolic_address(0, guard_state.eip & 0xffff, BX_CPU(which_cpu)->get_segment_base(BX_SEG_REG_CS)));
     }
     dbg_printf("%-25s ; ", bx_disasm_tbuf);
     for (unsigned j=0; j<ilen; j++) {
@@ -2405,9 +2387,7 @@ void bx_dbg_print_guard_results(void)
       i = BX_CPU(cpu)->guard_found.iaddr_index;
       dbg_printf("(%u) Breakpoint %u, in ", cpu,
             bx_guard.iaddr.vir[i].bpoint_id);
-      dbg_print_guard_found(BX_CPU(cpu)->get_cpu_mode(),
-            BX_CPU(cpu)->guard_found.cs, BX_CPU(cpu)->guard_found.eip,
-            BX_CPU(cpu)->guard_found.laddr);
+      dbg_print_guard_found(BX_CPU(cpu)->get_cpu_mode(), &(BX_CPU(cpu)->guard_found.guard_state));
       dbg_printf("\n");
     }
 #endif
@@ -2418,7 +2398,7 @@ void bx_dbg_print_guard_results(void)
         dbg_printf("(%u) Breakpoint %u, 0x" FMT_ADDRX " in ?? ()\n",
             cpu,
             bx_guard.iaddr.lin[i].bpoint_id,
-            BX_CPU(cpu)->guard_found.laddr);
+            BX_CPU(cpu)->guard_found.guard_state.laddr);
     }
 #endif
 #if (BX_DBG_MAX_PHY_BPOINTS > 0)
@@ -2427,7 +2407,7 @@ void bx_dbg_print_guard_results(void)
       dbg_printf("(%u) Breakpoint %u, 0x" FMT_ADDRX " in ?? ()\n",
             cpu,
             bx_guard.iaddr.phy[i].bpoint_id,
-            BX_CPU(cpu)->guard_found.laddr);
+            BX_CPU(cpu)->guard_found.guard_state.laddr);
     }
 #endif
     switch(BX_CPU(cpu)->stop_reason) {
@@ -4228,7 +4208,7 @@ extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned rem
 
 void bx_dbg_step_over_command()
 {
-  bx_address laddr = BX_CPU(dbg_cpu)->guard_found.laddr;
+  bx_address laddr = BX_CPU(dbg_cpu)->guard_found.guard_state.laddr;
   Bit8u opcode_bytes[32];
 
   if (! bx_dbg_read_linear(dbg_cpu, laddr, 16, opcode_bytes))
@@ -4239,11 +4219,11 @@ void bx_dbg_step_over_command()
   bxInstruction_c i;
   int ret = -1;
 #if BX_SUPPORT_X86_64
-  if (IS_CODE_64(BX_CPU(dbg_cpu)->guard_found.code_32_64))
+  if (IS_CODE_64(BX_CPU(dbg_cpu)->guard_found.guard_state.code_32_64))
     ret = fetchDecode64(opcode_bytes, &i, 16);
   else
 #endif
-    ret = fetchDecode32(opcode_bytes, IS_CODE_32(BX_CPU(dbg_cpu)->guard_found.code_32_64), &i, 16);
+    ret = fetchDecode32(opcode_bytes, IS_CODE_32(BX_CPU(dbg_cpu)->guard_found.guard_state.code_32_64), &i, 16);
 
   if (ret < 0) {
     dbg_printf("bx_dbg_step_over_command:: Failed to fetch instructions !\n");

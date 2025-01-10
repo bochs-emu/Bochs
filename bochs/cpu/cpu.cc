@@ -728,10 +728,7 @@ bool BX_CPU_C::dbg_instruction_epilog(void)
   bx_address debug_eip = RIP;
   Bit16u cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
 
-  BX_CPU_THIS_PTR guard_found.cs  = cs;
-  BX_CPU_THIS_PTR guard_found.eip = debug_eip;
-  BX_CPU_THIS_PTR guard_found.laddr = get_laddr(BX_SEG_REG_CS, debug_eip);
-  BX_CPU_THIS_PTR guard_found.code_32_64 = BX_CPU_THIS_PTR fetchModeMask;
+  dbg_get_guard_state(&BX_CPU_THIS_PTR guard_found.guard_state);
 
   //
   // Take care of break point conditions generated during instruction execution
@@ -798,7 +795,7 @@ bool BX_CPU_C::dbg_instruction_epilog(void)
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_LIN) {
       for (unsigned n=0; n<bx_guard.iaddr.num_linear; n++) {
         if (bx_guard.iaddr.lin[n].enabled &&
-           (bx_guard.iaddr.lin[n].addr == BX_CPU_THIS_PTR guard_found.laddr))
+           (bx_guard.iaddr.lin[n].addr == BX_CPU_THIS_PTR guard_found.guard_state.laddr))
         {
           if (! bx_guard.iaddr.lin[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.lin[n].condition)) {
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_LIN;
@@ -812,7 +809,7 @@ bool BX_CPU_C::dbg_instruction_epilog(void)
 #if (BX_DBG_MAX_PHY_BPOINTS > 0)
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_PHY) {
       bx_phy_address phy;
-      bool valid = dbg_xlate_linear2phy(BX_CPU_THIS_PTR guard_found.laddr, &phy);
+      bool valid = dbg_xlate_linear2phy(BX_CPU_THIS_PTR guard_found.guard_state.laddr, &phy);
       if (valid) {
         for (unsigned n=0; n<bx_guard.iaddr.num_physical; n++) {
           if (bx_guard.iaddr.phy[n].enabled && (bx_guard.iaddr.phy[n].addr == phy))

@@ -480,6 +480,17 @@ void BX_CPU_C::dbg_get_idtr(bx_global_segment_reg_t *sreg)
   sreg->limit = BX_CPU_THIS_PTR idtr.limit;
 }
 
+void BX_CPU_C::dbg_get_guard_state(bx_dbg_guard_state_t *guard_state)
+{
+  bx_address debug_eip = RIP;
+  Bit16u cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+
+  guard_state->cs  = cs;
+  guard_state->eip = debug_eip;
+  guard_state->laddr = get_laddr(BX_SEG_REG_CS, debug_eip);
+  guard_state->code_32_64 = BX_CPU_THIS_PTR fetchModeMask;
+}
+
 #endif  // #if BX_DEBUGGER
 
 void BX_CPU_C::atexit(void)

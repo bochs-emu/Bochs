@@ -854,15 +854,19 @@ struct monitor_addr_t {
 
 #if BX_DEBUGGER
 // working information for simulator to update when a guard is reached (found)
-typedef struct bx_guard_found_t {
-  unsigned guard_found;
-  Bit64u icount_max; // stop after completing this many instructions
-  unsigned iaddr_index;
+typedef struct bx_dbg_guard_state_t {
   Bit32u cs; // cs:eip and linear addr of instruction at guard point
   bx_address eip;
   bx_address laddr;
   // 00 - 16 bit, 01 - 32 bit, 10 - 64-bit, 11 - illegal
   unsigned code_32_64; // CS seg size at guard point
+} bx_dbg_guard_state_t;
+
+typedef struct bx_guard_found_t {
+  unsigned guard_found;
+  Bit64u icount_max; // stop after completing this many instructions
+  unsigned iaddr_index;
+  bx_dbg_guard_state_t guard_state;
 } bx_guard_found_t;
 
 struct bx_dbg_sreg_t;
@@ -4448,6 +4452,7 @@ public: // for now...
   BX_SMF void     dbg_get_ldtr(bx_dbg_sreg_t *sreg);
   BX_SMF void     dbg_get_gdtr(bx_global_segment_reg_t *sreg);
   BX_SMF void     dbg_get_idtr(bx_global_segment_reg_t *sreg);
+  BX_SMF void     dbg_get_guard_state(bx_dbg_guard_state_t *guard_state);
   BX_SMF unsigned dbg_query_pending(void);
 #endif
 #if BX_DEBUGGER
