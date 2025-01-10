@@ -1211,12 +1211,21 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
   gtk_widget_destroy(dialog);
 }
 
+void xhci_message_dialog(const char *msg)
+{
+  GtkWidget *error = gtk_message_dialog_new(
+    GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
+    GTK_BUTTONS_OK, msg);
+  gtk_window_set_title(GTK_WINDOW(error), "WARNING");
+  gtk_dialog_run(GTK_DIALOG(error));
+  gtk_widget_destroy(error);
+}
+
 static void xhci_display_trb(GtkWidget *widget, gpointer data)
 {
   GtkTreeSelection *selection;
   GtkTreeModel     *model;
   GtkTreeIter       iter;
-  GtkWidget        *error;
   int type_mask = 0;
   gulong value;
   struct TRB trb;
@@ -1243,22 +1252,19 @@ static void xhci_display_trb(GtkWidget *widget, gpointer data)
       // check to see if this type of TRB is allowed in this type of ring
       if ((type > 0) && (type <= 47) && ((trb_types[type].allowed_mask & type_mask) == 0)) {
         sprintf(str, "TRB type %i not allowed in a %s ring!", type, ring_type[type_mask]);
-        error = gtk_message_dialog_new(
-          GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
-          GTK_BUTTONS_OK, str);
-        gtk_window_set_title(GTK_WINDOW(error), "WARNING");
-        gtk_dialog_run(GTK_DIALOG(error));
-        gtk_widget_destroy(error);
+        xhci_message_dialog((const char*)str);
       }
-      xhci_view_trb_dialog(type, &trb);
+      if ((type > 0) && (type < 40) && (trb_types[type].allowed_mask != VIEW_TRB_TYPE_NONE)) {
+        xhci_view_trb_dialog(type, &trb);
+      } else {
+        sprintf(str, "Unsupported or Reserved TRB type %i found!", type);
+        xhci_message_dialog((const char*)str);
+      }
+    } else {
+      xhci_message_dialog("Item selected has no TRB attached");
     }
   } else {
-    error = gtk_message_dialog_new(
-      GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING, GTK_BUTTONS_OK,
-      "No TRB selected");
-    gtk_window_set_title(GTK_WINDOW(error), "WARNING");
-    gtk_dialog_run(GTK_DIALOG(error));
-    gtk_widget_destroy(error);
+    xhci_message_dialog("No TRB selected");
   }
 }
 
