@@ -2437,7 +2437,7 @@ void bx_dbg_print_guard_results(void)
         dbg_printf("Error: (%u) print_guard_results: guard_found ? (stop reason %u)\n",
           cpu, BX_CPU(cpu)->stop_reason);
     }
-	
+
     if (cpu == 0) {
       bx_dbg_lyt();
     }

@@ -741,15 +741,15 @@ bool BX_CPU_C::dbg_instruction_epilog(void)
     case BREAK_POINT_TIME:
       BX_INFO(("[" FMT_LL "d] Caught time breakpoint", tt));
       BX_CPU_THIS_PTR stop_reason = STOP_TIME_BREAK_POINT;
-      return(1); // on a breakpoint
+      return true; // on a breakpoint
     case BREAK_POINT_READ:
       BX_INFO(("[" FMT_LL "d] Caught read watch point", tt));
       BX_CPU_THIS_PTR stop_reason = STOP_READ_WATCH_POINT;
-      return(1); // on a breakpoint
+      return true; // on a breakpoint
     case BREAK_POINT_WRITE:
       BX_INFO(("[" FMT_LL "d] Caught write watch point", tt));
       BX_CPU_THIS_PTR stop_reason = STOP_WRITE_WATCH_POINT;
-      return(1); // on a breakpoint
+      return true; // on a breakpoint
     default:
       BX_PANIC(("Weird break point condition"));
     }
@@ -758,12 +758,12 @@ bool BX_CPU_C::dbg_instruction_epilog(void)
   if (BX_CPU_THIS_PTR magic_break) {
     BX_INFO(("[" FMT_LL "d] Stopped on MAGIC BREAKPOINT", bx_pc_system.time_ticks()));
     BX_CPU_THIS_PTR stop_reason = STOP_MAGIC_BREAK_POINT;
-    return(1); // on a breakpoint
+    return true; // on a breakpoint
   }
 
   // convenient point to see if user requested debug break or typed Ctrl-C
   if (bx_guard.interrupt_requested) {
-    return(1);
+    return true;
   }
 
   // support for 'show' command in debugger
@@ -774,66 +774,68 @@ bool BX_CPU_C::dbg_instruction_epilog(void)
 
   // Just committed an instruction, before fetching a new one
   // see if debugger is looking for iaddr breakpoint of any type
-  if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_ALL) {
+  if (bx_guard.guard_for) {
+    if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_ALL) {
 #if (BX_DBG_MAX_VIR_BPOINTS > 0)
-    if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_VIR) {
-      for (unsigned n=0; n<bx_guard.iaddr.num_virtual; n++) {
-        if (bx_guard.iaddr.vir[n].enabled &&
-           (bx_guard.iaddr.vir[n].cs  == cs) &&
-           (bx_guard.iaddr.vir[n].eip == debug_eip))
-        {
-          if (! bx_guard.iaddr.vir[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.vir[n].condition)) {
-            BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_VIR;
-            BX_CPU_THIS_PTR guard_found.iaddr_index = n;
-            return(1); // on a breakpoint
-          }
-        }
-      }
-    }
-#endif
-#if (BX_DBG_MAX_LIN_BPOINTS > 0)
-    if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_LIN) {
-      for (unsigned n=0; n<bx_guard.iaddr.num_linear; n++) {
-        if (bx_guard.iaddr.lin[n].enabled &&
-           (bx_guard.iaddr.lin[n].addr == BX_CPU_THIS_PTR guard_found.guard_state.laddr))
-        {
-          if (! bx_guard.iaddr.lin[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.lin[n].condition)) {
-            BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_LIN;
-            BX_CPU_THIS_PTR guard_found.iaddr_index = n;
-            return(1); // on a breakpoint
-          }
-        }
-      }
-    }
-#endif
-#if (BX_DBG_MAX_PHY_BPOINTS > 0)
-    if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_PHY) {
-      bx_phy_address phy;
-      bool valid = dbg_xlate_linear2phy(BX_CPU_THIS_PTR guard_found.guard_state.laddr, &phy);
-      if (valid) {
-        for (unsigned n=0; n<bx_guard.iaddr.num_physical; n++) {
-          if (bx_guard.iaddr.phy[n].enabled && (bx_guard.iaddr.phy[n].addr == phy))
+      if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_VIR) {
+        for (unsigned n=0; n<bx_guard.iaddr.num_virtual; n++) {
+          if (bx_guard.iaddr.vir[n].enabled &&
+             (bx_guard.iaddr.vir[n].cs  == cs) &&
+             (bx_guard.iaddr.vir[n].eip == debug_eip))
           {
-            if (! bx_guard.iaddr.phy[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.phy[n].condition)) {
-              BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
+            if (! bx_guard.iaddr.vir[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.vir[n].condition)) {
+              BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_VIR;
               BX_CPU_THIS_PTR guard_found.iaddr_index = n;
-              return(1); // on a breakpoint
+              return true; // on a breakpoint
             }
           }
         }
       }
-    }
 #endif
-  }
+#if (BX_DBG_MAX_LIN_BPOINTS > 0)
+      if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_LIN) {
+        for (unsigned n=0; n<bx_guard.iaddr.num_linear; n++) {
+          if (bx_guard.iaddr.lin[n].enabled &&
+             (bx_guard.iaddr.lin[n].addr == BX_CPU_THIS_PTR guard_found.guard_state.laddr))
+          {
+            if (! bx_guard.iaddr.lin[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.lin[n].condition)) {
+              BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_LIN;
+              BX_CPU_THIS_PTR guard_found.iaddr_index = n;
+              return true; // on a breakpoint
+            }
+          }
+        }
+      }
+#endif
+#if (BX_DBG_MAX_PHY_BPOINTS > 0)
+      if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_PHY) {
+        bx_phy_address phy;
+        bool valid = dbg_xlate_linear2phy(BX_CPU_THIS_PTR guard_found.guard_state.laddr, &phy);
+        if (valid) {
+          for (unsigned n=0; n<bx_guard.iaddr.num_physical; n++) {
+            if (bx_guard.iaddr.phy[n].enabled && (bx_guard.iaddr.phy[n].addr == phy))
+            {
+              if (! bx_guard.iaddr.phy[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.phy[n].condition)) {
+                BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
+                BX_CPU_THIS_PTR guard_found.iaddr_index = n;
+                return true; // on a breakpoint
+              }
+            }
+          }
+        }
+      }
+#endif
+    }
 
-  // see if debugger requesting icount guard
-  if (bx_guard.guard_for & BX_DBG_GUARD_ICOUNT) {
-    if (get_icount() >= BX_CPU_THIS_PTR guard_found.icount_max) {
-      return(1);
+    // see if debugger requesting icount guard
+    if (bx_guard.guard_for & BX_DBG_GUARD_ICOUNT) {
+      if (get_icount() >= BX_CPU_THIS_PTR guard_found.icount_max) {
+        return true;
+      }
     }
   }
 
-  return(0);
+  return false;
 }
 #endif
 
