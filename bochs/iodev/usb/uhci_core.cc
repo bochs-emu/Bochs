@@ -2,8 +2,8 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2023  The Bochs Project
+//  Copyright (C) 2009-2025  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//                2009-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -122,8 +122,8 @@ void bx_uhci_core_c::reset_uhci(unsigned type)
       { 0x3c, 0x00 },                 // IRQ
       { 0x60, 0x10 },                 // USB revision 1.0
       { 0x6a, 0x01 },                 // USB clock
-      { 0xc1, 0x20 }                  // PIRQ enable
-
+      { 0xc1, 0x20 },                 // PIRQ enable
+      { 0xff, 0x00 }                  // the i440bx uses this register
     };
     for (i = 0; i < sizeof(reset_vals) / sizeof(*reset_vals); ++i) {
         pci_conf[reset_vals[i].addr] = reset_vals[i].val;
@@ -1013,7 +1013,7 @@ bool bx_uhci_core_c::DoTransfer(Bit32u address, struct TD *td)
   } else if (ret == USB_RET_NAK) {
     set_status(td, 1, 0, 0, 0, 1, 0, 0, len-1); // NAK
   } else {
-    set_status(td, 0, 1, 0, 0, 0, 0, 0, 0x007); // stalled
+    set_status(td, 0, 1, 0, 0, 0, 0, 0, 0x7FF); // stalled
   }
   remove_async_packet(&packets, p);
   return 1;
@@ -1073,6 +1073,11 @@ void bx_uhci_core_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_
       case 0x05: // disallowing write to command hi-byte
       case 0x06: // disallowing write to status lo-byte (is that expected?)
         break;
+      case 0xFF:
+        if (SIM->get_param_enum(BXPN_PCI_CHIPSET)->get() == BX_PCI_CHIPSET_I440BX) {
+          BX_ERROR(("TODO: PCI Write to register 0xFF is unimplemented... (0x%02X)", value));
+          break;
+        } // else fall through
       default:
         pci_conf[address+i] = value8;
     }

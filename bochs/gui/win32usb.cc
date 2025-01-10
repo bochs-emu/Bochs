@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C)      2023  Benjamin David Lunt
+//  Copyright (C) 2023-2025  Benjamin David Lunt
 //  Copyright (C) 2003-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
@@ -672,7 +672,7 @@ INT_PTR CALLBACK hc_uhci_callback_td(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
       CheckDlgButton(hDlg, IDC_LINK_Q, (g_td.dword0 & 2) ? BST_CHECKED : BST_UNCHECKED);
       CheckDlgButton(hDlg, IDC_LINK_T, (g_td.dword0 & 1) ? BST_CHECKED : BST_UNCHECKED);
 
-      sprintf(str, "%i", g_td.dword1 & 0x3FF);
+      sprintf(str, "%i", g_td.dword1 & 0x7FF);
       SetDlgItemText(hDlg, IDC_ACTUAL_LEN, str);
 
       CheckDlgButton(hDlg, IDC_STATUS_ACTIVE,   (g_td.dword1 & (1<<23)) ? BST_CHECKED : BST_UNCHECKED);
