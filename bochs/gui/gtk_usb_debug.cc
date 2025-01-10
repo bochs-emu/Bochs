@@ -693,7 +693,7 @@ static void uhci_td_dialog(Bit32u addr)
   if (td.dword0 & 1) {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[2]), TRUE);
   }
-  sprintf(buffer, "%i", td.dword1 & 0x3FF);
+  sprintf(buffer, "%i", td.dword1 & 0x7FF);
   gtk_entry_set_text(GTK_ENTRY(entry[1]), buffer);
   if (td.dword1 & (1 << 23)) {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[3]), TRUE);
@@ -760,7 +760,7 @@ static void uhci_td_dialog(Bit32u addr)
   strcpy(dump_params.title, "UHCI: Transfer Descriptor Buffer");
   dump_params.address = td.dword3;
   if (usbdbg_param2 & USB_LPARAM_FLAG_AFTER) {
-    dump_params.size = (td.dword1 & 0x3FF) + 1;
+    dump_params.size = (td.dword1 & 0x7FF) + 1;
   } else {
     dump_params.size = ((td.dword2 >> 21) + 1) & 0x7FF;
   }
@@ -782,7 +782,7 @@ static void uhci_td_dialog(Bit32u addr)
       td.dword0 |= 1;
     }
     strcpy(buffer, gtk_entry_get_text(GTK_ENTRY(entry[1])));
-    td.dword1 = strtol(buffer, NULL, 0) & 0x3FF;
+    td.dword1 = strtol(buffer, NULL, 0) & 0x7FF;
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[3]))) {
       td.dword1 |= (1 << 23);
     }
