@@ -6,7 +6,7 @@
 // ported from QEMU block driver with some additions (see below)
 //
 // Copyright (c) 2004,2005  Johannes E. Schindelin
-// Copyright (C) 2010-2024  The Bochs Project
+// Copyright (C) 2010-2025  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -691,8 +691,8 @@ int vvfat_image_t::read_directory(int mapping_index)
 
   if (first_cluster != first_cluster_of_root_dir) {
     // create the top entries of a subdirectory
-    direntry = create_short_and_long_name(i, ".", 1);
-    direntry = create_short_and_long_name(i, "..", 1);
+    create_short_and_long_name(i, ".", 1);
+    create_short_and_long_name(i, "..", 1);
   }
 
   // actually read the directory, and allocate the mappings
@@ -704,7 +704,6 @@ int vvfat_image_t::read_directory(int mapping_index)
     }
     unsigned int length = strlen(dirname) + 2 + strlen(entry->d_name);
     char* buffer;
-    direntry_t* direntry;
     struct stat st;
     bool is_dot = !strcmp(entry->d_name, ".");
     bool is_dotdot = !strcmp(entry->d_name, "..");
@@ -738,13 +737,15 @@ int vvfat_image_t::read_directory(int mapping_index)
     }
     direntry->attributes = (S_ISDIR(st.st_mode) ? 0x10 : 0x20);
     direntry->reserved[0] = direntry->reserved[1]=0;
-    direntry->ctime = fat_datetime(st.st_ctime, 1);
-    direntry->cdate = fat_datetime(st.st_ctime, 0);
-    direntry->adate = fat_datetime(st.st_atime, 0);
-    direntry->begin_hi = 0;
-    direntry->mtime = fat_datetime(st.st_mtime, 1);
-    direntry->mdate = fat_datetime(st.st_mtime, 0);
-    if (is_dotdot)
+    if ((fat_type != 32) || (first_cluster_of_parent != 2)) {
+      direntry->ctime = fat_datetime(st.st_ctime, 1);
+      direntry->cdate = fat_datetime(st.st_ctime, 0);
+      direntry->adate = fat_datetime(st.st_atime, 0);
+      direntry->begin_hi = 0;
+      direntry->mtime = fat_datetime(st.st_mtime, 1);
+      direntry->mdate = fat_datetime(st.st_mtime, 0);
+    }
+    if (is_dotdot && ((fat_type != 32) || (first_cluster_of_parent != 2)))
       set_begin_of_direntry(direntry, first_cluster_of_parent);
     else if (is_dot)
       set_begin_of_direntry(direntry, first_cluster);
@@ -804,8 +805,8 @@ int vvfat_image_t::read_directory(int mapping_index)
 
   if (first_cluster != first_cluster_of_root_dir) {
     // create the top entries of a subdirectory
-    direntry = create_short_and_long_name(i, ".", 1);
-    direntry = create_short_and_long_name(i, "..", 1);
+    create_short_and_long_name(i, ".", 1);
+    create_short_and_long_name(i, "..", 1);
   }
 
   // actually read the directory, and allocate the mappings
@@ -817,7 +818,6 @@ int vvfat_image_t::read_directory(int mapping_index)
     }
     unsigned int length = lstrlen(dirname) + 2 + lstrlen(finddata.cFileName);
     char* buffer;
-    direntry_t* direntry;
     bool is_dot = !lstrcmp(finddata.cFileName, ".");
     bool is_dotdot = !lstrcmp(finddata.cFileName, "..");
     if ((first_cluster == first_cluster_of_root_dir) && (is_dotdot || is_dot))
@@ -842,13 +842,15 @@ int vvfat_image_t::read_directory(int mapping_index)
     }
     direntry->attributes = ((finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? 0x10 : 0x20);
     direntry->reserved[0] = direntry->reserved[1]=0;
-    direntry->ctime = fat_datetime(finddata.ftCreationTime, 1);
-    direntry->cdate = fat_datetime(finddata.ftCreationTime, 0);
-    direntry->adate = fat_datetime(finddata.ftLastAccessTime, 0);
-    direntry->begin_hi = 0;
-    direntry->mtime = fat_datetime(finddata.ftLastWriteTime, 1);
-    direntry->mdate = fat_datetime(finddata.ftLastWriteTime, 0);
-    if (is_dotdot)
+    if ((fat_type != 32) || (first_cluster_of_parent != 2)) {
+      direntry->ctime = fat_datetime(finddata.ftCreationTime, 1);
+      direntry->cdate = fat_datetime(finddata.ftCreationTime, 0);
+      direntry->adate = fat_datetime(finddata.ftLastAccessTime, 0);
+      direntry->begin_hi = 0;
+      direntry->mtime = fat_datetime(finddata.ftLastWriteTime, 1);
+      direntry->mdate = fat_datetime(finddata.ftLastWriteTime, 0);
+    }
+    if (is_dotdot && ((fat_type != 32) || (first_cluster_of_parent != 2)))
       set_begin_of_direntry(direntry, first_cluster_of_parent);
     else if (is_dot)
       set_begin_of_direntry(direntry, first_cluster);
@@ -917,7 +919,9 @@ int vvfat_image_t::read_directory(int mapping_index)
   mapping->end = first_cluster;
 
   direntry = (direntry_t*)array_get(&directory, mapping->dir_index);
-  set_begin_of_direntry(direntry, mapping->begin);
+  if ((direntry->attributes & 0x08) == 0) { // not for volume label
+    set_begin_of_direntry(direntry, mapping->begin);
+  }
 
   return 0;
 }
@@ -974,7 +978,11 @@ int vvfat_image_t::init_directories(const char* dirname)
   /* add volume label */
   {
     direntry_t *entry = (direntry_t*)array_get_next(&directory);
-    entry->attributes = 0x28; // archive | volume label
+    if (fat_type != 32) {
+      entry->attributes = 0x28; // archive | volume label
+    } else {
+      entry->attributes = 0x08; // volume label
+    }
     entry->mdate = 0x3d81; // 01.12.2010
     entry->mtime = 0x6000; // 12:00:00
     memcpy(entry->name, "BOCHS VVFAT", 11);
