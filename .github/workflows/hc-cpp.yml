@@ -9,16 +9,10 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v4
-
-    - name: Install packages
-      run: |
-        sudo apt update
-        sudo apt-mark auto libltdl7
-        sudo apt install libltdl7
 
     - name: configure for release
       run: cd bochs && ./.conf.gh-build-test release && make
