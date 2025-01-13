@@ -17,7 +17,8 @@ jobs:
     - name: Install packages
       run: |
         sudo apt update
-        sudo apt install libltdl7 libsdl2-dev
+        sudo apt-mark auto libltdl7
+        sudo apt install libltdl7
 
     - name: configure for release
       run: cd bochs && ./.conf.gh-build-test release && make
