@@ -81,6 +81,15 @@ GtkWidget* usbdlg_create_entry_with_label(GtkWidget **box, const char *text,
   return entry;
 }
 
+GtkWidget* usbdlg_grid_create_entry_with_label(GtkWidget *grid, const char *text,
+                                                  int x, int y)
+{
+  gtk_grid_attach(GTK_GRID(grid), gtk_label_new(text), x, y, 1, 1);
+  GtkWidget *entry = gtk_entry_new();
+  gtk_grid_attach(GTK_GRID(grid), entry, x + 1, y, 1, 1);
+  return entry;
+}
+
 GtkWidget* usbdlg_create_ro_entry(GtkWidget *box, bool expand = true)
 {
   GtkWidget *entry = gtk_entry_new();
@@ -96,6 +105,16 @@ GtkWidget* usbdlg_create_ro_entry_with_label(GtkWidget **box, const char *text,
   GtkWidget *entry = gtk_entry_new();
   gtk_widget_set_sensitive(entry, 0);
   gtk_box_pack_start(GTK_BOX(box[1]), entry, expand, expand, 2);
+  return entry;
+}
+
+GtkWidget* usbdlg_grid_create_ro_entry_with_label(GtkWidget *grid, const char *text,
+                                                  int x, int y)
+{
+  gtk_grid_attach(GTK_GRID(grid), gtk_label_new(text), x, y, 1, 1);
+  GtkWidget *entry = gtk_entry_new();
+  gtk_widget_set_sensitive(entry, 0);
+  gtk_grid_attach(GTK_GRID(grid), entry, x + 1, y, 1, 1);
   return entry;
 }
 
@@ -1186,88 +1205,86 @@ void hc_xhci_do_event_ring(GtkWidget *treeview, const char *ring_str, int interr
 
 void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
 {
-  GtkWidget *mainVbox, *hbox, *vbox[3], *trb_type;
-  GtkWidget *entry[4], *checkbox;
-  int i, ret, e_num = 0;
+  GtkWidget *mainVbox, *trb_type;
+  GtkWidget *grid, *entry[5], *checkbox;
+  int ret, e_num = 0;
   char str[COMMON_STR_SIZE];
 
-  // TODO: using the type of trb, display an associated dialog
+  // Using the type of trb, display an associated dialog
   sprintf(str, "%s TRB", trb_types[type].name);
   GtkWidget *dialog =
     gtk_dialog_new_with_buttons(str, GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL,
                                 g_dgettext("gtk30", "_Save"), GTK_RESPONSE_OK,
                                 g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_CANCEL,
                                 NULL);
-  gtk_window_set_default_size(GTK_WINDOW(dialog), 200, 250);
+  gtk_window_set_default_size(GTK_WINDOW(dialog), 200, 200);
   // TODO: set focus
   mainVbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
   gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), mainVbox, TRUE, TRUE, 2);
-  hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_box_pack_start(GTK_BOX(mainVbox), hbox, TRUE, TRUE, 2);
-  for (i = 0; i < 3; i++) {
-    vbox[i] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_box_pack_start(GTK_BOX(hbox), vbox[i], FALSE, FALSE, 2);
-  }
+  grid = gtk_grid_new();
+  gtk_grid_set_row_spacing(GTK_GRID(grid), 5);
+  gtk_grid_set_column_spacing(GTK_GRID(grid), 5);
+  gtk_box_pack_start(GTK_BOX(mainVbox), grid, TRUE, TRUE, 2);
   switch (type) {
     case NORMAL:
     case DATA_STAGE:
-      entry[e_num] = usbdlg_create_entry_with_label(vbox, "Data Pointer");
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Data Pointer", 0, e_num);
       sprintf(str, "0x" FMT_ADDRX64, trb->parameter);
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case LINK:
-      entry[e_num] = usbdlg_create_entry_with_label(vbox, "Ring Pointer");
-      sprintf(str, "0x" FMT_ADDRX64, trb->parameter & ~BX_CONST64(0x0F));
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Ring Pointer", 0, e_num);
+      sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case ADDRESS_DEVICE:
     case CONFIG_EP:
     case EVALUATE_CONTEXT:
-      entry[e_num] = usbdlg_create_entry_with_label(vbox, "Input Context Pointer");
-      sprintf(str, "0x" FMT_ADDRX64, trb->parameter & ~BX_CONST64(0x0F));
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Input Context Pointer", 0, e_num);
+      sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case SET_TR_DEQUEUE:
-      entry[e_num] = usbdlg_create_entry_with_label(vbox, "New TR Dequeue Pointer");
-      sprintf(str, "0x" FMT_ADDRX64, trb->parameter & ~BX_CONST64(0x0F));
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "New TR Dequeue Pointer", 0, e_num);
+      sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case FORCE_EVENT:
-      entry[e_num] = usbdlg_create_entry_with_label(vbox, "Event TRB Pointer");
-      sprintf(str, "0x" FMT_ADDRX64, trb->parameter & ~BX_CONST64(0x0F));
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Event TRB Pointer", 0, e_num);
+      sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case GET_PORT_BAND:
-      entry[e_num] = usbdlg_create_entry_with_label(vbox, "Port Bandwidth Context Pointer");
-      sprintf(str, "0x" FMT_ADDRX64, trb->parameter & ~BX_CONST64(0x0F));
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Port Bandwidth Context Pointer", 0, e_num);
+      sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case FORCE_HEADER:
-      entry[e_num] = usbdlg_create_entry_with_label(vbox, "Header Lo/Mid");
-      sprintf(str, "0x" FMT_ADDRX64, trb->parameter & ~BX_CONST64(0x1F));
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Header Lo/Mid", 0, e_num);
+      sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x1F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case TRANS_EVENT:
     case COMMAND_COMPLETION:
-      entry[e_num] = usbdlg_create_entry_with_label(vbox, "TRB Pointer");
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "TRB Pointer", 0, e_num);
       sprintf(str, "0x" FMT_ADDRX64, trb->parameter);
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case PORT_STATUS_CHANGE:
-      entry[e_num] = usbdlg_create_entry_with_label(vbox, "Port ID");
-      sprintf(str, "0x" FMT_ADDRX64, (trb->parameter & BX_CONST64(0x00000000FF000000)) >> 24);
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Port ID", 0, e_num);
+      sprintf(str, "0x" FMT_ADDRX64, (Bit64u)((trb->parameter & BX_CONST64(0x00000000FF000000)) >> 24));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case DOORBELL_EVENT:
-      entry[e_num] = usbdlg_create_entry_with_label(vbox, "DB Reason");
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "DB Reason", 0, e_num);
       sprintf(str, "0x" FMT_ADDRX64, trb->parameter & 0x1f);
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case DEVICE_NOTIFICATION:
-      entry[e_num] = usbdlg_create_entry_with_label(vbox, "Dev Notification Data");
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Dev Notification Data", 0, e_num);
       sprintf(str, "0x" FMT_ADDRX64, trb->parameter >> 8);
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
-      entry[e_num] = usbdlg_create_entry_with_label(vbox, "Notification Type");
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Notification Type", 0, e_num);
       sprintf(str, "%i", (Bit8u)(trb->parameter & 0xf0) >> 4);
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
@@ -1280,7 +1297,7 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case DOORBELL_EVENT:
     case HOST_CONTROLLER_EVENT:
     case DEVICE_NOTIFICATION:
-      entry[e_num] = usbdlg_create_entry_with_label(vbox, "Completion Code");
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Completion Code", 0, e_num);
       sprintf(str, "%i", TRB_GET_COMP_CODE(trb->status));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
@@ -1301,23 +1318,32 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case BANDWIDTH_REQUEST:
     case DOORBELL_EVENT:
     case DEVICE_NOTIFICATION:
-      entry[e_num] = usbdlg_create_entry_with_label(vbox, "Slot ID");
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Slot ID", 0, e_num);
       sprintf(str, "%i", TRB_GET_SLOT(trb->command));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
   }
-  trb_type = usbdlg_create_ro_entry_with_label(vbox, "TRB Type");
+  switch (type) {
+    case RESET_EP:
+    case STOP_EP:
+    case SET_TR_DEQUEUE:
+    case TRANS_EVENT:
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Endpoint ID", 0, e_num);
+      sprintf(str, "%i", TRB_GET_EP(trb->command));
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      break;
+  }
+  trb_type = usbdlg_grid_create_ro_entry_with_label(grid, "TRB Type", 0, e_num);
   sprintf(str, "%i", TRB_GET_TYPE(trb->command));
   gtk_entry_set_text(GTK_ENTRY(trb_type), str);
-  if (type != PORT_STATUS_CHANGE) {
-    usbdlg_create_label(mainVbox, "Dialog under construction", true);
-  }
-  gtk_box_pack_start(GTK_BOX(vbox[0]), gtk_label_new(" "), FALSE, FALSE, 8); // spacer
   checkbox = gtk_check_button_new_with_label("Cycle Bit");
   if (trb->command & 1) {
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox), TRUE);
   }
-  gtk_box_pack_start(GTK_BOX(vbox[1]), checkbox, FALSE, FALSE, 2);
+  gtk_grid_attach(GTK_GRID(grid), checkbox, 1, e_num + 1, 1, 1);
+  if (type != PORT_STATUS_CHANGE) {
+    usbdlg_create_label(mainVbox, "Dialog under construction", true);
+  }
   // Show dialog
   gtk_widget_show_all(dialog);
   ret = gtk_dialog_run(GTK_DIALOG(dialog));
