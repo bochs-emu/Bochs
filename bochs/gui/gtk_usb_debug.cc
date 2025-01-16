@@ -1206,7 +1206,7 @@ void hc_xhci_do_event_ring(GtkWidget *treeview, const char *ring_str, int interr
 void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
 {
   GtkWidget *mainVbox, *trb_type;
-  GtkWidget *grid, *entry[5], *checkbox;
+  GtkWidget *grid, *entry[7], *checkbox, *button;
   int ret, e_num = 0;
   char str[COMMON_STR_SIZE];
 
@@ -1241,6 +1241,8 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case CONFIG_EP:
     case EVALUATE_CONTEXT:
       entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Input Context Pointer", 0, e_num);
+      button = gtk_button_new_with_label(">");
+      gtk_grid_attach(GTK_GRID(grid), button, 2, e_num, 1, 1);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
@@ -1311,14 +1313,22 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case STOP_EP:
     case SET_TR_DEQUEUE:
     case RESET_DEVICE:
-    case GET_PORT_BAND:
-    case FORCE_HEADER:
     case TRANS_EVENT:
     case COMMAND_COMPLETION:
     case BANDWIDTH_REQUEST:
     case DOORBELL_EVENT:
     case DEVICE_NOTIFICATION:
       entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Slot ID", 0, e_num);
+      sprintf(str, "%i", TRB_GET_SLOT(trb->command));
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      break;
+    case GET_PORT_BAND:
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Hub Slot ID", 0, e_num);
+      sprintf(str, "%i", TRB_GET_SLOT(trb->command));
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      break;
+    case FORCE_HEADER:
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Root Hub Port Number", 0, e_num);
       sprintf(str, "%i", TRB_GET_SLOT(trb->command));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
@@ -1333,6 +1343,32 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
   }
+  switch (type) {
+    case NORMAL:
+    case SETUP_STAGE:
+    case DATA_STAGE:
+    case STATUS_STAGE:
+    case LINK:
+    case NO_OP:
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Interrupter Target", 0, e_num);
+      sprintf(str, "%i", TRB_GET_TARGET(trb->status));
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      break;
+    case FORCE_EVENT:
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "VF Interrupter Target", 0, e_num);
+      sprintf(str, "%i", TRB_GET_TARGET(trb->status));
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      break;
+  }
+  switch (type) {
+    case FORCE_EVENT:
+    case COMMAND_COMPLETION:
+    case DOORBELL_EVENT:
+      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "VF ID", 0, e_num);
+      sprintf(str, "%i", (trb->command & (0xFF << 16)) >> 16);
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      break;
+  }
   trb_type = usbdlg_grid_create_ro_entry_with_label(grid, "TRB Type", 0, e_num);
   sprintf(str, "%i", TRB_GET_TYPE(trb->command));
   gtk_entry_set_text(GTK_ENTRY(trb_type), str);
@@ -1341,8 +1377,29 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox), TRUE);
   }
   gtk_grid_attach(GTK_GRID(grid), checkbox, 1, e_num + 1, 1, 1);
-  if (type != PORT_STATUS_CHANGE) {
-    usbdlg_create_label(mainVbox, "Dialog under construction", true);
+  // TODO list (missing items before / after TRB type)
+  switch (type) {
+    case NORMAL:              // (2/7)
+    case SETUP_STAGE:         // (7/2)
+    case DATA_STAGE:          // (3/6)
+    case STATUS_STAGE:        // (1/3)
+    case LINK:                // (-/3)
+    case NO_OP:               // (-/3)
+    case ENABLE_SLOT:         // (1/-)
+    case ADDRESS_DEVICE:      // (-/1)
+    case CONFIG_EP:           // (-/1)
+    case EVALUATE_CONTEXT:    // (-/1)
+    case RESET_EP:            // (-/1)
+    case STOP_EP:             // (1/-)
+    case SET_TR_DEQUEUE:      // (3/-)
+    case SET_LAT_TOLERANCE:   // (1/-)
+    case GET_PORT_BAND:       // (1/-)
+    case FORCE_HEADER:        // (2/-)
+    case TRANS_EVENT:         // (-/1)
+    case COMMAND_COMPLETION:  // (1/-)
+    case DEVICE_NOTIFICATION: // (1/-)
+      usbdlg_create_label(mainVbox, "Dialog under construction", true);
+      break;
   }
   // Show dialog
   gtk_widget_show_all(dialog);
