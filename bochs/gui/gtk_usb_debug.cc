@@ -157,6 +157,7 @@ static void usb_regview_dialog(GtkWidget *widget, gpointer data)
                                 g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_CANCEL,
                                 NULL);
   gtk_window_set_default_size(GTK_WINDOW(dialog), 250, 250);
+  gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
   GtkWidget *listbox = gtk_list_box_new();
   gtk_list_box_set_selection_mode(GTK_LIST_BOX(listbox), GTK_SELECTION_MULTIPLE);
   gtk_list_box_set_activate_on_single_click(GTK_LIST_BOX(listbox), 1);
@@ -410,17 +411,19 @@ static void uhci_queue_dialog(Bit32u addr)
   int ret;
   struct QUEUE queue;
   char buffer[COMMON_STR_SIZE];
-  GtkWidget *mainVbox, *label[2], *entry[2], *checkbox[4];
+  GtkWidget *mainVbox, *button[2], *label[2], *entry[2], *checkbox[4];
   GtkWidget *Hframe, *Vframe, *grid[2];
 
   DEV_MEM_READ_PHYSICAL(addr, sizeof(struct QUEUE), (Bit8u*)&queue);
-  GtkWidget *dialog =
-    gtk_dialog_new_with_buttons("Queue", GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL,
-                                g_dgettext("gtk30", "_Save"), GTK_RESPONSE_OK,
-                                g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_CANCEL,
-                                NULL);
+  GtkWidget *dialog = gtk_dialog_new();
+  gtk_window_set_title(GTK_WINDOW(dialog), "Queue");
+  gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(main_dialog));
+  gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
   gtk_window_set_default_size(GTK_WINDOW(dialog), 200, 250);
-  // TODO: set focus
+  button[0] = gtk_dialog_add_button(GTK_DIALOG(dialog), g_dgettext("gtk30", "_Save"), GTK_RESPONSE_OK);
+  button[1] = gtk_dialog_add_button(GTK_DIALOG(dialog), g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_CANCEL);
+  gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+  gtk_window_set_focus(GTK_WINDOW(dialog), button[0]);
   mainVbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
   gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), mainVbox, TRUE, TRUE, 2);
   Hframe = gtk_frame_new("Horizontal Pointer");
@@ -512,6 +515,7 @@ static void dump_buffer(GtkWidget *widget, gpointer data)
                                 g_dgettext("gtk30", "_OK"), GTK_RESPONSE_OK,
                                 NULL);
   gtk_window_set_default_size(GTK_WINDOW(dialog), 420, 400);
+  gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
   txtbuf = gtk_text_buffer_new(NULL);
   text_view = gtk_text_view_new_with_buffer(txtbuf);
   gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(text_view), GTK_WRAP_WORD);
@@ -587,21 +591,25 @@ static void uhci_td_dialog(Bit32u addr)
   char buffer[COMMON_STR_SIZE];
   GtkWidget *mainVbox, *entry[7], *checkbox[16], *grid[4], *label[7];
   GtkWidget *Shbox, *Svbox, *Bhbox, *LPframe, *Sframe[2], *PHframe;
-  GtkWidget *combo, *button;
+  GtkWidget *combo, *button[3];
   DUMP_PARAMS dump_params;
 
   DEV_MEM_READ_PHYSICAL(addr, sizeof(struct TD), (Bit8u*)&td);
-  td_dialog =
-    gtk_dialog_new_with_buttons("Transfer Descriptor", GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL,
-                                g_dgettext("gtk30", "_Save"), GTK_RESPONSE_OK,
-                                g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_CANCEL,
-                                NULL);
+  td_dialog = gtk_dialog_new();
   if (usbdbg_param2 & USB_LPARAM_FLAG_BEFORE) {
     gtk_window_set_title(GTK_WINDOW(td_dialog), "Transfer Descriptor: *Before*");
   } else if (usbdbg_param2 & USB_LPARAM_FLAG_AFTER) {
     gtk_window_set_title(GTK_WINDOW(td_dialog), "Transfer Descriptor: *After*");
+  } else {
+    gtk_window_set_title(GTK_WINDOW(td_dialog), "Transfer Descriptor");
   }
-  gtk_window_set_default_size(GTK_WINDOW(td_dialog), 250, 300);
+  gtk_window_set_transient_for(GTK_WINDOW(td_dialog), GTK_WINDOW(main_dialog));
+  gtk_window_set_modal(GTK_WINDOW(td_dialog), TRUE);
+  gtk_window_set_default_size(GTK_WINDOW(td_dialog), 200, 250);
+  button[0] = gtk_dialog_add_button(GTK_DIALOG(td_dialog), g_dgettext("gtk30", "_Save"), GTK_RESPONSE_OK);
+  button[1] = gtk_dialog_add_button(GTK_DIALOG(td_dialog), g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_CANCEL);
+  gtk_dialog_set_default_response(GTK_DIALOG(td_dialog), GTK_RESPONSE_OK);
+  gtk_window_set_focus(GTK_WINDOW(td_dialog), button[0]);
   mainVbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
   gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(td_dialog))), mainVbox, TRUE, TRUE, 2);
   LPframe = gtk_frame_new("Link Pointer");
@@ -698,8 +706,8 @@ static void uhci_td_dialog(Bit32u addr)
   gtk_box_pack_start(GTK_BOX(Bhbox), label[7], FALSE, FALSE, 2);
   entry[6] = gtk_entry_new();
   gtk_box_pack_start(GTK_BOX(Bhbox), entry[6], FALSE, FALSE, 2);
-  button = gtk_button_new_with_label(">");
-  gtk_box_pack_start(GTK_BOX(Bhbox), button, FALSE, FALSE, 2);
+  button[2] = gtk_button_new_with_label(">");
+  gtk_box_pack_start(GTK_BOX(Bhbox), button[2], FALSE, FALSE, 2);
   // Set values
   sprintf(buffer, "0x%04X", td.dword0 & ~0xF);
   gtk_entry_set_text(GTK_ENTRY(entry[0]), buffer);
@@ -784,7 +792,7 @@ static void uhci_td_dialog(Bit32u addr)
     dump_params.size = ((td.dword2 >> 21) + 1) & 0x7FF;
   }
   dump_params.big = 0;
-  g_signal_connect(button, "clicked", G_CALLBACK(dump_buffer), &dump_params);
+  g_signal_connect(button[2], "clicked", G_CALLBACK(dump_buffer), &dump_params);
   // Show dialog
   gtk_widget_show_all(td_dialog);
   ret = gtk_dialog_run(GTK_DIALOG(td_dialog));
