@@ -72,6 +72,13 @@ GtkWidget* usbdlg_create_label(GtkWidget *box, const char *text, bool expand = t
   return label;
 }
 
+GtkWidget* usbdlg_grid_create_label(GtkWidget *grid, const char *text, int x, int y)
+{
+  GtkWidget *label = gtk_label_new(text);
+  gtk_grid_attach(GTK_GRID(grid), label, x, y, 1, 1);
+  return label;
+}
+
 GtkWidget* usbdlg_create_entry_with_label(GtkWidget **box, const char *text, 
                                           bool expand = true)
 {
@@ -98,6 +105,14 @@ GtkWidget* usbdlg_create_ro_entry(GtkWidget *box, bool expand = true)
   return entry;
 }
 
+GtkWidget* usbdlg_grid_create_ro_entry(GtkWidget *grid, int x, int y)
+{
+  GtkWidget *entry = gtk_entry_new();
+  gtk_widget_set_sensitive(entry, 0);
+  gtk_grid_attach(GTK_GRID(grid), entry, x, y, 1, 1);
+  return entry;
+}
+
 GtkWidget* usbdlg_create_ro_entry_with_label(GtkWidget **box, const char *text,
                                              bool expand = true)
 {
@@ -118,10 +133,14 @@ GtkWidget* usbdlg_grid_create_ro_entry_with_label(GtkWidget *grid, const char *t
   return entry;
 }
 
-void usbdlg_create_debug_flags(GtkWidget *vbox)
+void usbdlg_create_debug_flags(GtkWidget *widget, int x, int y)
 {
   DFframe = gtk_frame_new("Debug Flags");
-  gtk_box_pack_start(GTK_BOX(vbox), DFframe, FALSE, FALSE, 2);
+  if (usb_debug_type == USB_DEBUG_UHCI) {
+    gtk_grid_attach(GTK_GRID(widget), DFframe, x, y, 1, 3);
+  } else {
+    gtk_box_pack_start(GTK_BOX(widget), DFframe, FALSE, FALSE, 2);
+  }
   DFvbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
   gtk_container_add(GTK_CONTAINER(DFframe), DFvbox);
   for (int i = 0; i < 6; i++) {
@@ -267,14 +286,21 @@ static void apply_changes(GtkWidget *widget, gpointer data)
   }
 }
 
-void usbdlg_create_apply_button(GtkWidget *vbox)
+void usbdlg_create_apply_button(GtkWidget *widget, int x, int y)
 {
-  GtkWidget *apply_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_box_pack_start(GTK_BOX(vbox), apply_hbox, FALSE, FALSE, 2);
-  apply_button = gtk_button_new_with_label(g_dgettext("gtk30", "_Apply"));
-  gtk_widget_set_sensitive(apply_button, 0);
-  g_signal_connect(apply_button, "clicked", G_CALLBACK(apply_changes), NULL);
-  gtk_box_pack_start(GTK_BOX(apply_hbox), apply_button, FALSE, FALSE, 2);
+  if (usb_debug_type == USB_DEBUG_UHCI) {
+    apply_button = gtk_button_new_with_label(g_dgettext("gtk30", "_Apply"));
+    gtk_grid_attach(GTK_GRID(widget), apply_button, x, y, 1, 1);
+    gtk_widget_set_sensitive(apply_button, 0);
+    g_signal_connect(apply_button, "clicked", G_CALLBACK(apply_changes), NULL);
+  } else {
+    GtkWidget *apply_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_box_pack_start(GTK_BOX(widget), apply_hbox, FALSE, FALSE, 2);
+    apply_button = gtk_button_new_with_label(g_dgettext("gtk30", "_Apply"));
+    gtk_widget_set_sensitive(apply_button, 0);
+    g_signal_connect(apply_button, "clicked", G_CALLBACK(apply_changes), NULL);
+    gtk_box_pack_start(GTK_BOX(apply_hbox), apply_button, FALSE, FALSE, 2);
+  }
 }
 
 // Tree view support
@@ -910,10 +936,8 @@ int uhci_debug_dialog(int type, int param1)
   int i, ret;
   Bit32u frame_addr, frame_num;
   char buffer[COMMON_STR_SIZE];
-  GtkWidget *mainVbox, *BAhbox, *hbox[2], *vbox[3], *ro_entry[4];
-  GtkWidget *ORframe, *ORhbox, *ORvbox[3];
-  GtkWidget *PRframe, *PRhbox, *PRvbox[3];
-  GtkWidget *TVvbox, *FNhbox;
+  GtkWidget *mainVbox, *mainGrid, *ro_entry[4];
+  GtkWidget *ORframe, *ORgrid, *PRframe, *PRgrid;
   GtkWidget *button[8], *FNlabel, *treeview;
   usb_reg_t uhci_reg_def[5] = {
     {"Command Register", NULL, 4, attribs_u_command},
@@ -955,81 +979,63 @@ int uhci_debug_dialog(int type, int param1)
   gtk_dialog_set_default_response(GTK_DIALOG(main_dialog), GTK_RESPONSE_OK);
   gtk_window_set_focus(GTK_WINDOW(main_dialog), button[0]);
   mainVbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-  gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(main_dialog))), mainVbox, TRUE, TRUE, 2);
+  gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(main_dialog))), mainVbox, TRUE, FALSE, 5);
+  mainGrid = gtk_grid_new();
+  gtk_grid_set_row_spacing(GTK_GRID(mainGrid), 5);
+  gtk_grid_set_column_spacing(GTK_GRID(mainGrid), 5);
+  gtk_container_add(GTK_CONTAINER(mainVbox), mainGrid);
 
-  BAhbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_box_pack_start(GTK_BOX(mainVbox), BAhbox, FALSE, FALSE, 2);
-  usbdlg_create_label(BAhbox, "UHCI at Base IO address", false);
-  ro_entry[0] = usbdlg_create_ro_entry(BAhbox, false);
-
-  hbox[0] = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_box_pack_start(GTK_BOX(mainVbox), hbox[0], TRUE, TRUE, 2);
-  hbox[1] = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_box_pack_start(GTK_BOX(mainVbox), hbox[1], TRUE, TRUE, 2);
-  for (i = 0; i < 3; i++) {
-    vbox[i] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_box_pack_start(GTK_BOX(hbox[0]), vbox[i], TRUE, TRUE, 2);
-  }
-
+  ro_entry[0] = usbdlg_grid_create_ro_entry_with_label(mainGrid, "UHCI at Base IO address", 0, 0);
   ORframe = gtk_frame_new("Operational Registers");
-  gtk_box_pack_start(GTK_BOX(vbox[0]), ORframe, FALSE, FALSE, 2);
-  ORhbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_container_add(GTK_CONTAINER(ORframe), ORhbox);
-  for (i = 0; i < 3; i++) {
-    ORvbox[i] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_box_pack_start(GTK_BOX(ORhbox), ORvbox[i], FALSE, FALSE, 2);
-  }
-  uhci_entry[UHCI_REG_COMMAND] = usbdlg_create_entry_with_label(ORvbox, "Command");
+  gtk_grid_attach(GTK_GRID(mainGrid), ORframe, 0, 1, 3, 7);
+  ORgrid = gtk_grid_new();
+  gtk_grid_set_row_spacing(GTK_GRID(ORgrid), 5);
+  gtk_grid_set_column_spacing(GTK_GRID(ORgrid), 5);
+  gtk_container_add(GTK_CONTAINER(ORframe), ORgrid);
+  gtk_container_set_border_width(GTK_CONTAINER(ORgrid), 5);
+  uhci_entry[UHCI_REG_COMMAND] = usbdlg_grid_create_entry_with_label(ORgrid, "Command", 0, 0);
   button[2] = gtk_button_new_with_label("<>");
   uhci_reg_def[0].entry = uhci_entry[UHCI_REG_COMMAND];
   g_signal_connect(button[2], "clicked", G_CALLBACK(usb_regview_dialog), &uhci_reg_def[0]);
-  gtk_box_pack_start(GTK_BOX(ORvbox[2]), button[2], FALSE, FALSE, 2);
-  uhci_entry[UHCI_REG_STATUS] = usbdlg_create_entry_with_label(ORvbox, "Status");
+  gtk_grid_attach(GTK_GRID(ORgrid), button[2], 2, 0, 1, 1);
+  uhci_entry[UHCI_REG_STATUS] = usbdlg_grid_create_entry_with_label(ORgrid, "Status", 0, 1);
   button[3] = gtk_button_new_with_label("<>");
   uhci_reg_def[1].entry = uhci_entry[UHCI_REG_STATUS];
   g_signal_connect(button[3], "clicked", G_CALLBACK(usb_regview_dialog), &uhci_reg_def[1]);
-  gtk_box_pack_start(GTK_BOX(ORvbox[2]), button[3], FALSE, FALSE, 2);
-  uhci_entry[UHCI_REG_INTERRUPT] = usbdlg_create_entry_with_label(ORvbox, "Interrupt Enable");
+  gtk_grid_attach(GTK_GRID(ORgrid), button[3], 2, 1, 1, 1);
+  uhci_entry[UHCI_REG_INTERRUPT] = usbdlg_grid_create_entry_with_label(ORgrid, "Interrupt Enable", 0, 2);
   button[4] = gtk_button_new_with_label("<>");
   uhci_reg_def[2].entry = uhci_entry[UHCI_REG_INTERRUPT];
   g_signal_connect(button[4], "clicked", G_CALLBACK(usb_regview_dialog), &uhci_reg_def[2]);
-  gtk_box_pack_start(GTK_BOX(ORvbox[2]), button[4], FALSE, FALSE, 2);
-  uhci_entry[UHCI_REG_FRAME_NUM] = usbdlg_create_entry_with_label(ORvbox, "Frame Number");
-  uhci_entry[UHCI_REG_FRAME_ADDR] = usbdlg_create_entry_with_label(ORvbox, "Frame Address");
-  uhci_entry[UHCI_REG_SOF] = usbdlg_create_entry_with_label(ORvbox, "Start of Frame");
-
+  gtk_grid_attach(GTK_GRID(ORgrid), button[4], 2, 2, 1, 1);
+  uhci_entry[UHCI_REG_FRAME_NUM] = usbdlg_grid_create_entry_with_label(ORgrid, "Frame Number", 0, 3);
+  uhci_entry[UHCI_REG_FRAME_ADDR] = usbdlg_grid_create_entry_with_label(ORgrid, "Frame Address", 0, 4);
+  uhci_entry[UHCI_REG_SOF] = usbdlg_grid_create_entry_with_label(ORgrid, "Start of Frame", 0, 5);
   PRframe = gtk_frame_new("Port Registers");
-  gtk_box_pack_start(GTK_BOX(hbox[1]), PRframe, FALSE, FALSE, 2);
-  PRhbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_container_add(GTK_CONTAINER(PRframe), PRhbox);
-  for (i = 0; i < 3; i++) {
-    PRvbox[i] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_box_pack_start(GTK_BOX(PRhbox), PRvbox[i], FALSE, FALSE, 2);
-  }
+  gtk_grid_attach(GTK_GRID(mainGrid), PRframe, 0, 8, 3, 5);
+  PRgrid = gtk_grid_new();
+  gtk_grid_set_row_spacing(GTK_GRID(PRgrid), 5);
+  gtk_grid_set_column_spacing(GTK_GRID(PRgrid), 5);
+  gtk_container_add(GTK_CONTAINER(PRframe), PRgrid);
+  gtk_container_set_border_width(GTK_CONTAINER(PRgrid), 5);
   for (i = 0; i < 2; i++) {
     sprintf(buffer, "Port %d", i);
-    uhci_entry[UHCI_REG_PORT0 + i] = usbdlg_create_entry_with_label(PRvbox, buffer);
-    ro_entry[i + 1] = usbdlg_create_ro_entry_with_label(PRvbox, "Emulation Type");
+    uhci_entry[UHCI_REG_PORT0 + i] = usbdlg_grid_create_entry_with_label(PRgrid, buffer, 0, i * 2);
+    ro_entry[i + 1] = usbdlg_grid_create_ro_entry_with_label(PRgrid, "Emulation Type", 0, i * 2 + 1);
     button[i + 5] = gtk_button_new_with_label("<>");
     uhci_reg_def[i + 3].entry = uhci_entry[UHCI_REG_PORT0 + i];
     g_signal_connect(button[i + 5], "clicked", G_CALLBACK(usb_regview_dialog), &uhci_reg_def[i + 3]);
-    gtk_box_pack_start(GTK_BOX(PRvbox[2]), button[i + 5], FALSE, FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(PRvbox[2]), gtk_label_new(" "), FALSE, FALSE, 8); // spacer
+    gtk_grid_attach(GTK_GRID(PRgrid), button[i + 5], 2, i * 2, 1, 1);
   }
-  TVvbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-  gtk_box_pack_start(GTK_BOX(hbox[1]), TVvbox, TRUE, TRUE, 2);
-  FNhbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_box_pack_start(GTK_BOX(TVvbox), FNhbox, FALSE, FALSE, 2);
-  FNlabel = usbdlg_create_label(FNhbox, "Frame at Address", false);
-  ro_entry[3] = usbdlg_create_ro_entry(FNhbox, false);
+  FNlabel = usbdlg_grid_create_label(mainGrid, "Frame at Address", 4, 4);
+  ro_entry[3] = usbdlg_grid_create_ro_entry(mainGrid, 5, 4);
   button[7] = gtk_button_new_with_label("View Item");
   gtk_widget_set_sensitive(button[7], 0);
-  gtk_box_pack_start(GTK_BOX(FNhbox), button[7], FALSE, FALSE, 2);
+  gtk_grid_attach(GTK_GRID(mainGrid), button[7], 6, 4, 1, 1);
   treeview = gtk_tree_view_new();
-  gtk_box_pack_start(GTK_BOX(TVvbox), treeview, TRUE, TRUE, 2);
-
-  usbdlg_create_apply_button(mainVbox);
-  usbdlg_create_debug_flags(vbox[2]);
+  gtk_grid_attach(GTK_GRID(mainGrid), treeview, 3, 5, 5, 8);
+  usbdlg_create_apply_button(mainGrid, 1, 13);
+  usbdlg_create_debug_flags(mainGrid, 6, 0);
   // Set values
   pci_bar_address = get_pci_bar_addr((bx_shadow_data_c*)SIM->get_param("hub.pci_conf", UHCI_state), 4);
   sprintf(buffer, "0x%04X", pci_bar_address);
@@ -1110,9 +1116,9 @@ int uhci_debug_dialog(int type, int param1)
 
   if (!valid) {
     gtk_widget_set_sensitive(treeview, 0);
-    usbdlg_create_label(TVvbox, "This trigger does not populate the tree view", false);
+    gtk_grid_attach(GTK_GRID(mainGrid), gtk_label_new("This trigger does not populate the tree view"), 4, 13, 1, 1);
   } else {
-    usbdlg_create_label(TVvbox, "Tree view populated", false);
+    gtk_grid_attach(GTK_GRID(mainGrid), gtk_label_new("Tree view populated"), 4, 13, 1, 1);
   }
   // Show dialog
   gtk_widget_show_all(main_dialog);
@@ -1620,8 +1626,8 @@ int xhci_debug_dialog(int type, int param1)
   treeview = gtk_tree_view_new();
   gtk_container_add(GTK_CONTAINER(scrlwin), treeview);
 
-  usbdlg_create_apply_button(mainVbox);
-  usbdlg_create_debug_flags(vbox[3]);
+  usbdlg_create_apply_button(mainVbox, 0, 0);
+  usbdlg_create_debug_flags(vbox[3], 0, 0);
   // Set values
   pci_bar_address = get_pci_bar_addr((bx_shadow_data_c*)SIM->get_param("hub.pci_conf", xHCI_state), 0);
   sprintf(buffer, "0x%08X", pci_bar_address);
