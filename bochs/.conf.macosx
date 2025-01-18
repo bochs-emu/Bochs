@@ -24,6 +24,7 @@ export LDFLAGS
 	    --enable-ne2000 \
 	    --enable-all-optimizations \
             --enable-cpu-level=6 \
+            --enable-3dnow \
             --enable-x86-64 \
             --enable-vmx=2 \
             --enable-svm \

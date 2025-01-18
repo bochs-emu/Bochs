@@ -30,20 +30,127 @@
 
 #include "softfloat3e/include/softfloat.h"
 
-BX_CPP_INLINE void prepare_softfloat_status_word(softfloat_status_t &status, int rounding_mode)
+BX_CPP_INLINE static softfloat_status_t prepare_softfloat_status_word_3dnow(int rounding_mode = softfloat_round_near_even)
 {
+  softfloat_status_t status;
+
   status.softfloat_exceptionFlags = 0; // clear exceptions before execution
   status.softfloat_roundingMode = rounding_mode;
   status.softfloat_flush_underflow_to_zero = 0;
-  status.softfloat_suppressException = 0;
+  status.softfloat_exceptionMasks = softfloat_all_exceptions_mask;
+  status.softfloat_suppressException = softfloat_all_exceptions_mask;
   status.softfloat_denormals_are_zeros = 0;
+
+  return status;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// helper functions
+//////////////////////////////////////////////////////////////////////////////////////////
+
+BX_CPP_INLINE static float32 f32_add_3dnow(float32 a, float32 b)
+{
+  int a_is_zero = (a<<1) == 0;
+  int b_is_zero = (b<<1) == 0;
+
+  if (a_is_zero) {
+    if (b_is_zero) {
+      // result +0/-0 with sign of logical AND of signs of both operands
+      return a & b & 0x80000000;
+    }
+    return b; // otherwise take src2
+  }
+
+  if (b_is_zero) {
+    return a; // take src1
+  }
+
+  static softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_near_even); // Note, actual rounding mode is not specified by 3dNow! manual
+
+  // Note that Inf/NaN handling is not documented in 3Dnow! manuals
+  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
+  return f32_add(a, b, &status);
+}
+
+BX_CPP_INLINE static float32 f32_sub_3dnow(float32 a, float32 b)
+{
+  int a_is_zero = (a<<1) == 0;
+  int b_is_zero = (b<<1) == 0;
+
+  if (a_is_zero) {
+    if (b_is_zero) {
+      // result +0/-0 with sign of logical AND of the sign of src1 and inverse of the sign of src2
+      return a & ~b & 0x80000000;
+    }
+    return b ^ 0x80000000; // otherwise take -src2
+  }
+
+  if (b_is_zero) {
+    return a; // take src1
+  }
+
+  static softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_near_even); // Note, actual rounding mode is not specified by 3dNow! manual
+
+  // Note that Inf/NaN handling is not documented in 3Dnow! manuals
+  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
+  return f32_sub(a, b, &status);
+}
+
+BX_CPP_INLINE static float32 f32_mul_3dnow(float32 a, float32 b)
+{
+  // if either a or b is zero
+  if (((a|b) << 1) == 0) {
+    // result is zero with sign of logical XOR of signs of both operands
+    return (a ^ b) & 0x80000000;
+  }
+
+  static softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_near_even); // Note, actual rounding mode is not specified by 3dNow! manual
+
+  // Note that Inf/NaN handling is not documented in 3Dnow! manuals
+  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
+  return f32_mul(a, b, &status);
+}
+
+BX_CPP_INLINE static float32 f32_min_3dnow(float32 a, float32 b)
+{
+  if (a == 0x80000000) a = 0; // remove sign of zero
+  if (b == 0x80000000) b = 0; // remove sign of zero
+
+  // both arguments zero: return +0
+  // negative value and zero: return +0
+
+  static softfloat_status_t status = prepare_softfloat_status_word_3dnow();
+
+  // Note that Inf/NaN handling is not documented in 3Dnow! manuals
+  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
+  return f32_min(a, b, &status);
+}
+
+BX_CPP_INLINE static float32 f32_max_3dnow(float32 a, float32 b)
+{
+  if (a == 0x80000000) a = 0; // remove sign of zero
+  if (b == 0x80000000) b = 0; // remove sign of zero
+
+  // both arguments zero: return +0
+  // negative value and zero: return +0
+
+  static softfloat_status_t status = prepare_softfloat_status_word_3dnow();
+
+  // Note that Inf/NaN handling is not documented in 3Dnow! manuals
+  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
+  return f32_max(a, b, &status);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFPNACC_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BX_PANIC(("%s: This Enhanced 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
 
   BX_NEXT_INSTR(i);
 }
@@ -68,8 +175,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FW_PqQq(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
-  softfloat_status_t status;
-  prepare_softfloat_status_word(status, softfloat_round_to_zero);
+  softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_to_zero);
 
   MMXUD0(result) = i32_to_f32((Bit32s)(MMXSW0(op)), &status);
   MMXUD1(result) = i32_to_f32((Bit32s)(MMXSW2(op)), &status);
@@ -101,8 +207,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FD_PqQq(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
-  softfloat_status_t status;
-  prepare_softfloat_status_word(status, softfloat_round_to_zero);
+  softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_to_zero);
 
   MMXUD0(op) = i32_to_f32(MMXSD0(op), &status);
   MMXUD1(op) = i32_to_f32(MMXSD1(op), &status);
@@ -118,7 +223,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2IW_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BX_PANIC(("%s: This Enhanced 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
 
   BX_NEXT_INSTR(i);
 }
@@ -143,8 +248,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
-  softfloat_status_t status;
-  prepare_softfloat_status_word(status, softfloat_round_to_zero);
+  softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_to_zero);
 
   MMXSD0(op) = f32_to_i32_round_to_zero(MMXUD0(op), &status);
   MMXSD1(op) = f32_to_i32_round_to_zero(MMXUD1(op), &status);
@@ -160,25 +264,72 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFNACC_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BX_PANIC(("%s: This 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
 
   BX_NEXT_INSTR(i);
 }
 
+/* 0F 0F /r 90 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPGE_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->src());
+  }
+  else {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    /* pointer, segment address pair */
+    op2 = read_virtual_qword(i->seg(), eaddr);
+  }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
+
+  softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_to_zero);
+
+  // Note that Inf/NaN handling is not documented in 3Dnow! manuals
+  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
+
+  int relation0 = f32_compare_quiet(MMXUD0(op1), MMXUD0(op2), &status);
+  int relation1 = f32_compare_quiet(MMXUD1(op1), MMXUD1(op2), &status);
+
+  MMXUD0(op1) = (relation0 == softfloat_relation_greater) || (relation0 == softfloat_relation_equal) ? 0xFFFFFFFF : 0;
+  MMXUD1(op1) = (relation1 == softfloat_relation_greater) || (relation1 == softfloat_relation_equal) ? 0xFFFFFFFF : 0;
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
+/* 0F 0F /r 94 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFMIN_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->src());
+  }
+  else {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    /* pointer, segment address pair */
+    op2 = read_virtual_qword(i->seg(), eaddr);
+  }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
+
+  MMXUD0(op1) = f32_min_3dnow(MMXUD0(op1), MMXUD0(op2));
+  MMXUD1(op1) = f32_min_3dnow(MMXUD1(op1), MMXUD1(op2));
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
@@ -187,7 +338,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRCP_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BX_PANIC(("%s: This 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
 
   BX_NEXT_INSTR(i);
 }
@@ -196,43 +347,125 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRSQRT_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BX_PANIC(("%s: This 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
 
   BX_NEXT_INSTR(i);
 }
 
+/* 0F 0F /r 9A */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFSUB_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->src());
+  }
+  else {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    /* pointer, segment address pair */
+    op2 = read_virtual_qword(i->seg(), eaddr);
+  }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
+
+  MMXUD0(op1) = f32_sub_3dnow(MMXUD0(op1), MMXUD0(op2));
+  MMXUD1(op1) = f32_sub_3dnow(MMXUD1(op1), MMXUD1(op2));
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
+/* 0F 0F /r 9E */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFADD_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->src());
+  }
+  else {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    /* pointer, segment address pair */
+    op2 = read_virtual_qword(i->seg(), eaddr);
+  }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
+
+  MMXUD0(op1) = f32_add_3dnow(MMXUD0(op1), MMXUD0(op2));
+  MMXUD1(op1) = f32_add_3dnow(MMXUD1(op1), MMXUD1(op2));
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
+/* 0F 0F /r A0 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPGT_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->src());
+  }
+  else {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    /* pointer, segment address pair */
+    op2 = read_virtual_qword(i->seg(), eaddr);
+  }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
+
+  // Note that Inf/NaN handling is not documented in 3Dnow! manuals
+  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
+
+  softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_to_zero);
+
+  MMXUD0(op1) = (f32_compare_quiet(MMXUD0(op1), MMXUD0(op2), &status) == softfloat_relation_greater) ? 0xFFFFFFFF : 0;
+  MMXUD1(op1) = (f32_compare_quiet(MMXUD1(op1), MMXUD1(op2), &status) == softfloat_relation_greater) ? 0xFFFFFFFF : 0;
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
+/* 0F 0F /r A4 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFMAX_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->src());
+  }
+  else {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    /* pointer, segment address pair */
+    op2 = read_virtual_qword(i->seg(), eaddr);
+  }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
+
+  MMXUD0(op1) = f32_max_3dnow(MMXUD0(op1), MMXUD0(op2));
+  MMXUD1(op1) = f32_max_3dnow(MMXUD1(op1), MMXUD1(op2));
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
@@ -241,7 +474,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRCPIT1_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BX_PANIC(("%s: This 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
 
   BX_NEXT_INSTR(i);
 }
@@ -250,43 +483,126 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRSQIT1_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BX_PANIC(("%s: This 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
 
   BX_NEXT_INSTR(i);
 }
 
+/* 0F 0F /r AA */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFSUBR_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->src());
+  }
+  else {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    /* pointer, segment address pair */
+    op2 = read_virtual_qword(i->seg(), eaddr);
+  }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
+
+  MMXUD0(op1) = f32_sub_3dnow(MMXUD0(op2), MMXUD0(op1));
+  MMXUD1(op1) = f32_sub_3dnow(MMXUD1(op2), MMXUD1(op1));
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
+/* 0F 0F /r AE */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFACC_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->src());
+  }
+  else {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    /* pointer, segment address pair */
+    op2 = read_virtual_qword(i->seg(), eaddr);
+  }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
+
+  // Horizonal ADD
+  MMXUD0(op1) = f32_add_3dnow(MMXUD0(op1), MMXUD1(op1));
+  MMXUD1(op1) = f32_add_3dnow(MMXUD0(op2), MMXUD1(op2));
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
+/* 0F 0F /r B0 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPEQ_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->src());
+  }
+  else {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    /* pointer, segment address pair */
+    op2 = read_virtual_qword(i->seg(), eaddr);
+  }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
+
+  // Note that Inf/NaN handling is not documented in 3Dnow! manuals
+  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
+
+  softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_to_zero);
+
+  MMXUD0(op1) = (f32_compare_quiet(MMXUD0(op1), MMXUD0(op2), &status) == softfloat_relation_equal) ? 0xFFFFFFFF : 0;
+  MMXUD1(op1) = (f32_compare_quiet(MMXUD1(op1), MMXUD1(op2), &status) == softfloat_relation_equal) ? 0xFFFFFFFF : 0;
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
 
+/* 0F 0F /r B4 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFMUL_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->src());
+  }
+  else {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    /* pointer, segment address pair */
+    op2 = read_virtual_qword(i->seg(), eaddr);
+  }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
+
+  MMXUD0(op1) = f32_mul_3dnow(MMXUD0(op1), MMXUD0(op2));
+  MMXUD1(op1) = f32_mul_3dnow(MMXUD1(op1), MMXUD1(op2));
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->dst(), op1);
 
   BX_NEXT_INSTR(i);
 }
@@ -295,7 +611,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRCPIT2_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BX_PANIC(("%s: This 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
 
   BX_NEXT_INSTR(i);
 }

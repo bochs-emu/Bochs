@@ -23,6 +23,7 @@ export DLLTOOL
             --enable-all-optimizations \
             --enable-static-link \
             --enable-cpu-level=6 \
+            --enable-3dnow \
             --enable-x86-64 \
             --enable-vmx=2 \
             --enable-svm \
