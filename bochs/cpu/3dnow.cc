@@ -28,6 +28,8 @@
 
 #if BX_SUPPORT_3DNOW
 
+#if BX_CPU_LEVEL >= 5
+
 #include "softfloat3e/include/softfloat.h"
 
 BX_CPP_INLINE static softfloat_status_t prepare_softfloat_status_word_3dnow(int rounding_mode = softfloat_round_near_even)
@@ -146,16 +148,40 @@ BX_CPP_INLINE static float32 f32_max_3dnow(float32 a, float32 b)
   return f32_max(a, b, &status);
 }
 
+#endif
+
+/* 0F 0F /r 8E Enhanced 3DNow! */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFPNACC_PqQq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: This Enhanced 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->src());
+  }
+  else {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    /* pointer, segment address pair */
+    op2 = read_virtual_qword(i->seg(), eaddr);
+  }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
+
+  // Mixed Horizonal SUB/ADD
+  MMXUD0(op1) = f32_sub_3dnow(MMXUD0(op1), MMXUD1(op1));
+  MMXUD1(op1) = f32_add_3dnow(MMXUD0(op2), MMXUD1(op2));
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->dst(), op1);
+#endif
 
   BX_NEXT_INSTR(i);
 }
 
-/* 0F 0F /r 0C */
+/* 0F 0F /r 0C Enhanced 3DNow! */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FW_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
@@ -182,9 +208,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FW_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), result);
+#endif
 
   BX_NEXT_INSTR(i);
-#endif
 }
 
 /* 0F 0F /r 0D */
@@ -214,11 +240,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FD_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op);
+#endif
 
   BX_NEXT_INSTR(i);
-#endif
 }
 
+/* 0F 0F /r 1C Enhanced 3DNow! */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2IW_PqQq(bxInstruction_c *i)
 {
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
@@ -255,16 +282,38 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op);
+#endif
 
   BX_NEXT_INSTR(i);
-#endif
 }
 
+/* 0F 0F /r 8A Enhanced 3DNow! */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFNACC_PqQq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: This 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    op2 = BX_READ_MMX_REG(i->src());
+  }
+  else {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    /* pointer, segment address pair */
+    op2 = read_virtual_qword(i->seg(), eaddr);
+  }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
+
+  // Horizonal SUB
+  MMXUD0(op1) = f32_sub_3dnow(MMXUD0(op1), MMXUD1(op1));
+  MMXUD1(op1) = f32_sub_3dnow(MMXUD0(op2), MMXUD1(op2));
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->dst(), op1);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -272,6 +321,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFNACC_PqQq(bxInstruction_c *i)
 /* 0F 0F /r 90 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPGE_PqQq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
@@ -302,6 +352,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPGE_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op1);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -309,6 +360,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPGE_PqQq(bxInstruction_c *i)
 /* 0F 0F /r 94 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFMIN_PqQq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
@@ -330,6 +382,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFMIN_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op1);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -355,6 +408,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRSQRT_PqQq(bxInstruction_c *i)
 /* 0F 0F /r 9A */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFSUB_PqQq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
@@ -376,6 +430,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFSUB_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op1);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -383,6 +438,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFSUB_PqQq(bxInstruction_c *i)
 /* 0F 0F /r 9E */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFADD_PqQq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
@@ -404,6 +460,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFADD_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op1);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -411,6 +468,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFADD_PqQq(bxInstruction_c *i)
 /* 0F 0F /r A0 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPGT_PqQq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
@@ -438,6 +496,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPGT_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op1);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -445,6 +504,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPGT_PqQq(bxInstruction_c *i)
 /* 0F 0F /r A4 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFMAX_PqQq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
@@ -466,6 +526,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFMAX_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op1);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -491,6 +552,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRSQIT1_PqQq(bxInstruction_c *i)
 /* 0F 0F /r AA */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFSUBR_PqQq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
@@ -512,6 +574,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFSUBR_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op1);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -519,6 +582,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFSUBR_PqQq(bxInstruction_c *i)
 /* 0F 0F /r AE */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFACC_PqQq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
@@ -541,6 +605,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFACC_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op1);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -548,6 +613,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFACC_PqQq(bxInstruction_c *i)
 /* 0F 0F /r B0 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPEQ_PqQq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
@@ -575,6 +641,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPEQ_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op1);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -582,6 +649,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPEQ_PqQq(bxInstruction_c *i)
 /* 0F 0F /r B4 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFMUL_PqQq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
@@ -603,6 +671,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFMUL_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op1);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -648,12 +717,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PMULHRW_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op1);
+#endif
 
   BX_NEXT_INSTR(i);
-#endif
 }
 
-/* 0F 0F /r BB */
+/* 0F 0F /r BB Enhanced 3DNow! */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSWAPD_PqQq(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
@@ -678,9 +747,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PSWAPD_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), result);
+#endif
 
   BX_NEXT_INSTR(i);
-#endif
 }
 
 #endif
