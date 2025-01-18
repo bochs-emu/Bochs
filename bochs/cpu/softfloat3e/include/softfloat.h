@@ -680,7 +680,7 @@ BX_CPP_INLINE int32_t extF80_to_i32(extFloat80_t a, struct softfloat_status_t *s
     return extF80_to_i32(a, softfloat_getRoundingMode(status), true, status);
 }
 
-BX_CPP_INLINE int32_t extF80_to_i16(extFloat80_t a, struct softfloat_status_t *status)
+BX_CPP_INLINE int16_t extF80_to_i16(extFloat80_t a, struct softfloat_status_t *status)
 {
     int32_t v32 = extF80_to_i32(a, status);
     int16_t v16 = (int16_t) v32;
@@ -699,7 +699,7 @@ BX_CPP_INLINE int32_t extF80_to_i32_round_to_zero(extFloat80_t a, struct softflo
     return extF80_to_i32_r_minMag(a, true, status);
 }
 
-BX_CPP_INLINE int32_t extF80_to_i16_round_to_zero(extFloat80_t a, struct softfloat_status_t *status)
+BX_CPP_INLINE int16_t extF80_to_i16_round_to_zero(extFloat80_t a, struct softfloat_status_t *status)
 {
     int32_t v32 = extF80_to_i32_round_to_zero(a, status);
     int16_t v16 = (int16_t) v32;
