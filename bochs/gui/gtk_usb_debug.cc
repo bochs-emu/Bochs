@@ -1170,11 +1170,26 @@ void hc_xhci_do_event_ring(GtkWidget *treeview, const char *ring_str, int interr
   }
 }
 
+void xhci_message_dialog(const char *msg)
+{
+  GtkWidget *error = gtk_message_dialog_new(
+    GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
+    GTK_BUTTONS_OK, msg);
+  gtk_window_set_title(GTK_WINDOW(error), "WARNING");
+  gtk_dialog_run(GTK_DIALOG(error));
+  gtk_widget_destroy(error);
+}
+
+static void xhci_context_dialog(GtkWidget *widget, gpointer data)
+{
+  xhci_message_dialog("xHCI context dialog not implemented yet");
+}
+
 void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
 {
   GtkWidget *mainVbox, *trb_type;
-  GtkWidget *grid, *entry[7], *checkbox, *button;
-  int ret, e_num = 0;
+  GtkWidget *grid, *entry[9], *checkbox[8], *button;
+  int ret, c_num = 0, e_num = 0, row = 0;
   char str[COMMON_STR_SIZE];
 
   // Using the type of trb, display an associated dialog
@@ -1195,65 +1210,76 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
   switch (type) {
     case NORMAL:
     case DATA_STAGE:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Data Pointer", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Data Pointer", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, trb->parameter);
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case LINK:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Ring Pointer", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Ring Pointer", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      break;
+    case ENABLE_SLOT:
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Slot Type", 0, row++);
+      sprintf(str, "%i", TRB_GET_STYPE(trb->command));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case ADDRESS_DEVICE:
     case CONFIG_EP:
     case EVALUATE_CONTEXT:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Input Context Pointer", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Input Context Pointer", 0, row++);
       button = gtk_button_new_with_label(">");
+      g_signal_connect(button, "clicked", G_CALLBACK(xhci_context_dialog), NULL);
       gtk_grid_attach(GTK_GRID(grid), button, 2, e_num, 1, 1);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case SET_TR_DEQUEUE:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "New TR Dequeue Pointer", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "New TR Dequeue Pointer", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case FORCE_EVENT:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Event TRB Pointer", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Event TRB Pointer", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
+    case SET_LAT_TOLERANCE:
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Best Effort Value", 0, row++);
+      sprintf(str, "%i", (trb->command & (0xFFF << 16)) >> 16);
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      break;
     case GET_PORT_BAND:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Port Bandwidth Context Pointer", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Port Bandwidth Context Pointer", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case FORCE_HEADER:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Header Lo/Mid", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Header Lo/Mid", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x1F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case TRANS_EVENT:
     case COMMAND_COMPLETION:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "TRB Pointer", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "TRB Pointer", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, trb->parameter);
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case PORT_STATUS_CHANGE:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Port ID", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Port ID", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)((trb->parameter & BX_CONST64(0x00000000FF000000)) >> 24));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case DOORBELL_EVENT:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "DB Reason", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "DB Reason", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, trb->parameter & 0x1f);
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case DEVICE_NOTIFICATION:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Dev Notification Data", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Dev Notification Data", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, trb->parameter >> 8);
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Notification Type", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Notification Type", 0, row++);
       sprintf(str, "%i", (Bit8u)(trb->parameter & 0xf0) >> 4);
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
@@ -1266,9 +1292,14 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case DOORBELL_EVENT:
     case HOST_CONTROLLER_EVENT:
     case DEVICE_NOTIFICATION:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Completion Code", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Completion Code", 0, row++);
       sprintf(str, "%i", TRB_GET_COMP_CODE(trb->status));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      if (type == COMMAND_COMPLETION) {
+        entry[e_num] = usbdlg_create_entry_with_label(grid, "Completion Parameter", 0, row++);
+        sprintf(str, "%i", trb->status & 0x00FFFFFF);
+        gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      }
       break;
   }
   switch (type) {
@@ -1285,27 +1316,37 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case BANDWIDTH_REQUEST:
     case DOORBELL_EVENT:
     case DEVICE_NOTIFICATION:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Slot ID", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Slot ID", 0, row++);
       sprintf(str, "%i", TRB_GET_SLOT(trb->command));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case GET_PORT_BAND:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Hub Slot ID", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Hub Slot ID", 0, row++);
       sprintf(str, "%i", TRB_GET_SLOT(trb->command));
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Device Speed", 0, row++);
+      sprintf(str, "%i", (trb->command & (0x0F << 16)) >> 16);
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case FORCE_HEADER:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Root Hub Port Number", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Root Hub Port Number", 0, row++);
       sprintf(str, "%i", TRB_GET_SLOT(trb->command));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
+  }
+  if (type == STOP_EP) {
+    checkbox[c_num] = gtk_check_button_new_with_label("Suspend");
+    if (trb->command & (1 << 23)) {
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+    }
+    gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
   }
   switch (type) {
     case RESET_EP:
     case STOP_EP:
     case SET_TR_DEQUEUE:
     case TRANS_EVENT:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Endpoint ID", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Endpoint ID", 0, row++);
       sprintf(str, "%i", TRB_GET_EP(trb->command));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
@@ -1317,12 +1358,12 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case STATUS_STAGE:
     case LINK:
     case NO_OP:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Interrupter Target", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Interrupter Target", 0, row++);
       sprintf(str, "%i", TRB_GET_TARGET(trb->status));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case FORCE_EVENT:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "VF Interrupter Target", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "VF Interrupter Target", 0, row++);
       sprintf(str, "%i", TRB_GET_TARGET(trb->status));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
@@ -1331,19 +1372,44 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case FORCE_EVENT:
     case COMMAND_COMPLETION:
     case DOORBELL_EVENT:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "VF ID", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "VF ID", 0, row++);
       sprintf(str, "%i", (trb->command & (0xFF << 16)) >> 16);
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
   }
-  trb_type = usbdlg_create_ro_entry_with_label(grid, "TRB Type", 0, e_num);
+  trb_type = usbdlg_create_ro_entry_with_label(grid, "TRB Type", 0, row++);
   sprintf(str, "%i", TRB_GET_TYPE(trb->command));
   gtk_entry_set_text(GTK_ENTRY(trb_type), str);
-  checkbox = gtk_check_button_new_with_label("Cycle Bit");
-  if (trb->command & 1) {
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox), TRUE);
+  if (type == TRANS_EVENT) {
+    checkbox[c_num] = gtk_check_button_new_with_label("Event Data");
+    if (trb->command & 4) {
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+    }
+    gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+  } else if (type == CONFIG_EP) {
+    checkbox[c_num] = gtk_check_button_new_with_label("Deconfigure");
+    if (trb->command & (1 << 9)) {
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+    }
+    gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+  } else if (type == RESET_EP) {
+    checkbox[c_num] = gtk_check_button_new_with_label("Transfer State Preserve");
+    if (trb->command & (1 << 9)) {
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+    }
+    gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+  } else if ((type == ADDRESS_DEVICE) || (type == EVALUATE_CONTEXT)) {
+    checkbox[c_num] = gtk_check_button_new_with_label("Block Set Address");
+    if (trb->command & (1 << 9)) {
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+    }
+    gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
   }
-  gtk_grid_attach(GTK_GRID(grid), checkbox, 1, e_num + 1, 1, 1);
+  checkbox[c_num] = gtk_check_button_new_with_label("Cycle Bit");
+  if (trb->command & 1) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+  }
+  gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
   // TODO list (missing items before / after TRB type)
   switch (type) {
     case NORMAL:              // (2/7)
@@ -1352,20 +1418,9 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case STATUS_STAGE:        // (1/3)
     case LINK:                // (-/3)
     case NO_OP:               // (-/3)
-    case ENABLE_SLOT:         // (1/-)
-    case ADDRESS_DEVICE:      // (-/1)
-    case CONFIG_EP:           // (-/1)
-    case EVALUATE_CONTEXT:    // (-/1)
-    case RESET_EP:            // (-/1)
-    case STOP_EP:             // (1/-)
     case SET_TR_DEQUEUE:      // (3/-)
-    case SET_LAT_TOLERANCE:   // (1/-)
-    case GET_PORT_BAND:       // (1/-)
     case FORCE_HEADER:        // (2/-)
-    case TRANS_EVENT:         // (-/1)
-    case COMMAND_COMPLETION:  // (1/-)
-    case DEVICE_NOTIFICATION: // (1/-)
-      gtk_grid_attach(GTK_GRID(grid), gtk_label_new("Dialog under construction"), 0, e_num + 2, 2, 1);
+      gtk_grid_attach(GTK_GRID(grid), gtk_label_new("Dialog under construction"), 0, row, 2, 1);
       break;
   }
   // Show dialog
@@ -1375,16 +1430,6 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     // TODO
   }
   gtk_widget_destroy(dialog);
-}
-
-void xhci_message_dialog(const char *msg)
-{
-  GtkWidget *error = gtk_message_dialog_new(
-    GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
-    GTK_BUTTONS_OK, msg);
-  gtk_window_set_title(GTK_WINDOW(error), "WARNING");
-  gtk_dialog_run(GTK_DIALOG(error));
-  gtk_widget_destroy(error);
 }
 
 static void xhci_display_trb(GtkWidget *widget, gpointer data)
