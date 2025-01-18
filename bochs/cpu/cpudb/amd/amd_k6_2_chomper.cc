@@ -36,7 +36,9 @@ amd_k6_2_chomper_t::amd_k6_2_chomper_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_PENTIUM);
   enable_cpu_extension(BX_ISA_MMX);
   enable_cpu_extension(BX_ISA_SYSCALL_SYSRET_LEGACY);
+#if BX_SUPPORT_3DNOW
   enable_cpu_extension(BX_ISA_3DNOW);
+#endif
   enable_cpu_extension(BX_ISA_DEBUG_EXTENSIONS);
   enable_cpu_extension(BX_ISA_VME);
   enable_cpu_extension(BX_ISA_PSE);

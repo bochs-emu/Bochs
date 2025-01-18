@@ -38,7 +38,9 @@ turion64_tyler_t::turion64_tyler_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
   enable_cpu_extension(BX_ISA_MMX);
+#if BX_SUPPORT_3DNOW
   enable_cpu_extension(BX_ISA_3DNOW);
+#endif
   enable_cpu_extension(BX_ISA_SYSCALL_SYSRET_LEGACY);
   enable_cpu_extension(BX_ISA_SYSENTER_SYSEXIT);
   enable_cpu_extension(BX_ISA_P6);

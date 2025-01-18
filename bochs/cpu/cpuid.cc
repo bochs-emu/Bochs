@@ -933,8 +933,10 @@ Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_edx_amd(Bit32u extra) const
 
   // [30:30] AMD 3DNow! Extensions
   // [31:31] AMD 3DNow! Instructions
+#if BX_SUPPORT_3DNOW
   if (is_cpu_extension_supported(BX_ISA_3DNOW))
     edx |= BX_CPUID_EXT1_EDX_3DNOW | BX_CPUID_EXT1_EDX_3DNOW_EXT;
+#endif
   
   return edx;
 }
