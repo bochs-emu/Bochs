@@ -314,8 +314,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
   // Note that Inf/NaN handling is not documented in 3Dnow! manuals
   // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
   // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
-  MMXSD0(op) = f32_to_i32_round_to_zero(MMXUD0(op), &status);
-  MMXSD1(op) = f32_to_i32_round_to_zero(MMXUD1(op), &status);
+  MMXSD0(op) = f32_to_i32_round_to_zero_saturate(MMXUD0(op), &status);
+  MMXSD1(op) = f32_to_i32_round_to_zero_saturate(MMXUD1(op), &status);
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op);
