@@ -33,6 +33,10 @@ Detailed change log :
   - Implemented MSR_IMM ISA extension
   - VMX: Implemented VMX support for the IA32_SPEC_CTRL MSR
   - UINTR: Implemented FLEXIBLE UIRET support
+  - 3DNow: Added missing emulation of AMD 3DNow! instructions
+    These instructions are not implemented yet:
+	PFRCP, PFRCPIT1, PFRCPIT2, PFRSQRT, PFRSQIT1
+    3DNow! support is not compiled in by default yet and require to compile with 'configure --enable-3dnow' to enable.
 
 - CPUID: 
   - Added i386 CPU definition
