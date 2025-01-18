@@ -248,9 +248,43 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PI2FD_PqQq(bxInstruction_c *i)
 /* 0F 0F /r 1C Enhanced 3DNow! */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2IW_PqQq(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
-  BX_PANIC(("%s: This Enhanced 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
+  BxPackedMmxRegister op;
+
+  /* op is a register or memory reference */
+  if (i->modC0()) {
+    op = BX_READ_MMX_REG(i->src());
+  }
+  else {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    /* pointer, segment address pair */
+    op = read_virtual_qword(i->seg(), eaddr);
+  }
+
+  BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
+
+  softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_to_zero);
+
+  // Note that Inf/NaN handling is not documented in 3Dnow! manuals
+  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
+  MMXSD0(op) = f32_to_i32_round_to_zero_saturate(MMXUD0(op), &status);
+  if (MMXSD0(op) < -0x8000)
+    MMXUD0(op) = 0xFFFF8000;
+  else if (MMXSD0(op) > 0x7FFF)
+    MMXSD0(op) = 0x7FFF;
+
+  MMXSD1(op) = f32_to_i32_round_to_zero_saturate(MMXUD1(op), &status);
+  if (MMXSD1(op) < -0x8000)
+    MMXUD1(op) = 0xFFFF8000;
+  else if (MMXSD1(op) > 0x7FFF)
+    MMXSD1(op) = 0x7FFF;
+
+  /* now write result back to destination */
+  BX_WRITE_MMX_REG(i->dst(), op);
+#endif
 
   BX_NEXT_INSTR(i);
 }
@@ -277,6 +311,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
 
   softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_to_zero);
 
+  // Note that Inf/NaN handling is not documented in 3Dnow! manuals
+  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
   MMXSD0(op) = f32_to_i32_round_to_zero(MMXUD0(op), &status);
   MMXSD1(op) = f32_to_i32_round_to_zero(MMXUD1(op), &status);
 
