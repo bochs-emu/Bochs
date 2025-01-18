@@ -49,7 +49,7 @@ int usbdbg_break_type, usbdbg_param1, usbdbg_param2;
 
 GtkWidget *main_dialog, *td_dialog;
 GtkWidget *uhci_entry[UHCI_REG_COUNT];
-GtkWidget *DFframe, *DFvbox, *checkbox[6];
+GtkWidget *DFchkbox[6];
 GtkWidget *apply_button;
 
 // multithreading using pure posix threads -- not glib threads
@@ -65,30 +65,14 @@ static void MakeGTKthreads()
   pthread_create(&hThread, NULL, EventLp, NULL);
 }
 
-GtkWidget* usbdlg_create_label(GtkWidget *box, const char *text, bool expand = true)
-{
-  GtkWidget *label = gtk_label_new(text);
-  gtk_box_pack_start(GTK_BOX(box), label, expand, expand, 2);
-  return label;
-}
-
-GtkWidget* usbdlg_grid_create_label(GtkWidget *grid, const char *text, int x, int y)
+GtkWidget* usbdlg_create_label(GtkWidget *grid, const char *text, int x, int y)
 {
   GtkWidget *label = gtk_label_new(text);
   gtk_grid_attach(GTK_GRID(grid), label, x, y, 1, 1);
   return label;
 }
 
-GtkWidget* usbdlg_create_entry_with_label(GtkWidget **box, const char *text, 
-                                          bool expand = true)
-{
-  gtk_box_pack_start(GTK_BOX(box[0]), gtk_label_new(text), expand, expand, 2);
-  GtkWidget *entry = gtk_entry_new();
-  gtk_box_pack_start(GTK_BOX(box[1]), entry, expand, expand, 2);
-  return entry;
-}
-
-GtkWidget* usbdlg_grid_create_entry_with_label(GtkWidget *grid, const char *text,
+GtkWidget* usbdlg_create_entry_with_label(GtkWidget *grid, const char *text,
                                                   int x, int y)
 {
   gtk_grid_attach(GTK_GRID(grid), gtk_label_new(text), x, y, 1, 1);
@@ -97,15 +81,7 @@ GtkWidget* usbdlg_grid_create_entry_with_label(GtkWidget *grid, const char *text
   return entry;
 }
 
-GtkWidget* usbdlg_create_ro_entry(GtkWidget *box, bool expand = true)
-{
-  GtkWidget *entry = gtk_entry_new();
-  gtk_widget_set_sensitive(entry, 0);
-  gtk_box_pack_start(GTK_BOX(box), entry, expand, expand, 2);
-  return entry;
-}
-
-GtkWidget* usbdlg_grid_create_ro_entry(GtkWidget *grid, int x, int y)
+GtkWidget* usbdlg_create_ro_entry(GtkWidget *grid, int x, int y)
 {
   GtkWidget *entry = gtk_entry_new();
   gtk_widget_set_sensitive(entry, 0);
@@ -113,17 +89,7 @@ GtkWidget* usbdlg_grid_create_ro_entry(GtkWidget *grid, int x, int y)
   return entry;
 }
 
-GtkWidget* usbdlg_create_ro_entry_with_label(GtkWidget **box, const char *text,
-                                             bool expand = true)
-{
-  gtk_box_pack_start(GTK_BOX(box[0]), gtk_label_new(text), expand, expand, 2);
-  GtkWidget *entry = gtk_entry_new();
-  gtk_widget_set_sensitive(entry, 0);
-  gtk_box_pack_start(GTK_BOX(box[1]), entry, expand, expand, 2);
-  return entry;
-}
-
-GtkWidget* usbdlg_grid_create_ro_entry_with_label(GtkWidget *grid, const char *text,
+GtkWidget* usbdlg_create_ro_entry_with_label(GtkWidget *grid, const char *text,
                                                   int x, int y)
 {
   gtk_grid_attach(GTK_GRID(grid), gtk_label_new(text), x, y, 1, 1);
@@ -133,29 +99,25 @@ GtkWidget* usbdlg_grid_create_ro_entry_with_label(GtkWidget *grid, const char *t
   return entry;
 }
 
-void usbdlg_create_debug_flags(GtkWidget *widget, int x, int y)
+void usbdlg_create_debug_flags(GtkWidget *grid, int x, int y)
 {
-  DFframe = gtk_frame_new("Debug Flags");
-  if (usb_debug_type == USB_DEBUG_UHCI) {
-    gtk_grid_attach(GTK_GRID(widget), DFframe, x, y, 1, 3);
-  } else {
-    gtk_box_pack_start(GTK_BOX(widget), DFframe, FALSE, FALSE, 2);
-  }
-  DFvbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+  GtkWidget *DFframe = gtk_frame_new("Debug Flags");
+  gtk_grid_attach(GTK_GRID(grid), DFframe, x, y, 1, 5);
+  GtkWidget *DFvbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
   gtk_container_add(GTK_CONTAINER(DFframe), DFvbox);
   for (int i = 0; i < 6; i++) {
-    checkbox[i] = gtk_check_button_new_with_label(chkTxt[i]);
+    DFchkbox[i] = gtk_check_button_new_with_label(chkTxt[i]);
     if (SIM->get_param_num(chkBXPN[i])->get() > 0) {
-      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[i]), TRUE);
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(DFchkbox[i]), TRUE);
     }
-    gtk_box_pack_start(GTK_BOX(DFvbox), checkbox[i], FALSE, FALSE, 2);
+    gtk_box_pack_start(GTK_BOX(DFvbox), DFchkbox[i], FALSE, FALSE, 2);
   }
 }
 
 void usbdlg_set_debug_flags()
 {
   for (int i = 0; i < 6; i++) {
-    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(checkbox[i]))) {
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(DFchkbox[i]))) {
       SIM->get_param_num(chkBXPN[i])->set(1);
     } else {
       SIM->get_param_num(chkBXPN[i])->set(0);
@@ -286,21 +248,12 @@ static void apply_changes(GtkWidget *widget, gpointer data)
   }
 }
 
-void usbdlg_create_apply_button(GtkWidget *widget, int x, int y)
+void usbdlg_create_apply_button(GtkWidget *grid, int x, int y)
 {
-  if (usb_debug_type == USB_DEBUG_UHCI) {
-    apply_button = gtk_button_new_with_label(g_dgettext("gtk30", "_Apply"));
-    gtk_grid_attach(GTK_GRID(widget), apply_button, x, y, 1, 1);
-    gtk_widget_set_sensitive(apply_button, 0);
-    g_signal_connect(apply_button, "clicked", G_CALLBACK(apply_changes), NULL);
-  } else {
-    GtkWidget *apply_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-    gtk_box_pack_start(GTK_BOX(widget), apply_hbox, FALSE, FALSE, 2);
-    apply_button = gtk_button_new_with_label(g_dgettext("gtk30", "_Apply"));
-    gtk_widget_set_sensitive(apply_button, 0);
-    g_signal_connect(apply_button, "clicked", G_CALLBACK(apply_changes), NULL);
-    gtk_box_pack_start(GTK_BOX(apply_hbox), apply_button, FALSE, FALSE, 2);
-  }
+  apply_button = gtk_button_new_with_label(g_dgettext("gtk30", "_Apply"));
+  gtk_grid_attach(GTK_GRID(grid), apply_button, x, y, 1, 1);
+  gtk_widget_set_sensitive(apply_button, 0);
+  g_signal_connect(apply_button, "clicked", G_CALLBACK(apply_changes), NULL);
 }
 
 // Tree view support
@@ -985,7 +938,7 @@ int uhci_debug_dialog(int type, int param1)
   gtk_grid_set_column_spacing(GTK_GRID(mainGrid), 5);
   gtk_container_add(GTK_CONTAINER(mainVbox), mainGrid);
 
-  ro_entry[0] = usbdlg_grid_create_ro_entry_with_label(mainGrid, "UHCI at Base IO address", 0, 0);
+  ro_entry[0] = usbdlg_create_ro_entry_with_label(mainGrid, "UHCI at Base IO address", 0, 0);
   ORframe = gtk_frame_new("Operational Registers");
   gtk_grid_attach(GTK_GRID(mainGrid), ORframe, 0, 1, 3, 7);
   ORgrid = gtk_grid_new();
@@ -993,24 +946,24 @@ int uhci_debug_dialog(int type, int param1)
   gtk_grid_set_column_spacing(GTK_GRID(ORgrid), 5);
   gtk_container_add(GTK_CONTAINER(ORframe), ORgrid);
   gtk_container_set_border_width(GTK_CONTAINER(ORgrid), 5);
-  uhci_entry[UHCI_REG_COMMAND] = usbdlg_grid_create_entry_with_label(ORgrid, "Command", 0, 0);
+  uhci_entry[UHCI_REG_COMMAND] = usbdlg_create_entry_with_label(ORgrid, "Command", 0, 0);
   button[2] = gtk_button_new_with_label("<>");
   uhci_reg_def[0].entry = uhci_entry[UHCI_REG_COMMAND];
   g_signal_connect(button[2], "clicked", G_CALLBACK(usb_regview_dialog), &uhci_reg_def[0]);
   gtk_grid_attach(GTK_GRID(ORgrid), button[2], 2, 0, 1, 1);
-  uhci_entry[UHCI_REG_STATUS] = usbdlg_grid_create_entry_with_label(ORgrid, "Status", 0, 1);
+  uhci_entry[UHCI_REG_STATUS] = usbdlg_create_entry_with_label(ORgrid, "Status", 0, 1);
   button[3] = gtk_button_new_with_label("<>");
   uhci_reg_def[1].entry = uhci_entry[UHCI_REG_STATUS];
   g_signal_connect(button[3], "clicked", G_CALLBACK(usb_regview_dialog), &uhci_reg_def[1]);
   gtk_grid_attach(GTK_GRID(ORgrid), button[3], 2, 1, 1, 1);
-  uhci_entry[UHCI_REG_INTERRUPT] = usbdlg_grid_create_entry_with_label(ORgrid, "Interrupt Enable", 0, 2);
+  uhci_entry[UHCI_REG_INTERRUPT] = usbdlg_create_entry_with_label(ORgrid, "Interrupt Enable", 0, 2);
   button[4] = gtk_button_new_with_label("<>");
   uhci_reg_def[2].entry = uhci_entry[UHCI_REG_INTERRUPT];
   g_signal_connect(button[4], "clicked", G_CALLBACK(usb_regview_dialog), &uhci_reg_def[2]);
   gtk_grid_attach(GTK_GRID(ORgrid), button[4], 2, 2, 1, 1);
-  uhci_entry[UHCI_REG_FRAME_NUM] = usbdlg_grid_create_entry_with_label(ORgrid, "Frame Number", 0, 3);
-  uhci_entry[UHCI_REG_FRAME_ADDR] = usbdlg_grid_create_entry_with_label(ORgrid, "Frame Address", 0, 4);
-  uhci_entry[UHCI_REG_SOF] = usbdlg_grid_create_entry_with_label(ORgrid, "Start of Frame", 0, 5);
+  uhci_entry[UHCI_REG_FRAME_NUM] = usbdlg_create_entry_with_label(ORgrid, "Frame Number", 0, 3);
+  uhci_entry[UHCI_REG_FRAME_ADDR] = usbdlg_create_entry_with_label(ORgrid, "Frame Address", 0, 4);
+  uhci_entry[UHCI_REG_SOF] = usbdlg_create_entry_with_label(ORgrid, "Start of Frame", 0, 5);
   PRframe = gtk_frame_new("Port Registers");
   gtk_grid_attach(GTK_GRID(mainGrid), PRframe, 0, 8, 3, 5);
   PRgrid = gtk_grid_new();
@@ -1020,22 +973,22 @@ int uhci_debug_dialog(int type, int param1)
   gtk_container_set_border_width(GTK_CONTAINER(PRgrid), 5);
   for (i = 0; i < 2; i++) {
     sprintf(buffer, "Port %d", i);
-    uhci_entry[UHCI_REG_PORT0 + i] = usbdlg_grid_create_entry_with_label(PRgrid, buffer, 0, i * 2);
-    ro_entry[i + 1] = usbdlg_grid_create_ro_entry_with_label(PRgrid, "Emulation Type", 0, i * 2 + 1);
+    uhci_entry[UHCI_REG_PORT0 + i] = usbdlg_create_entry_with_label(PRgrid, buffer, 0, i * 2);
+    ro_entry[i + 1] = usbdlg_create_ro_entry_with_label(PRgrid, "Emulation Type", 0, i * 2 + 1);
     button[i + 5] = gtk_button_new_with_label("<>");
     uhci_reg_def[i + 3].entry = uhci_entry[UHCI_REG_PORT0 + i];
     g_signal_connect(button[i + 5], "clicked", G_CALLBACK(usb_regview_dialog), &uhci_reg_def[i + 3]);
     gtk_grid_attach(GTK_GRID(PRgrid), button[i + 5], 2, i * 2, 1, 1);
   }
-  FNlabel = usbdlg_grid_create_label(mainGrid, "Frame at Address", 4, 4);
-  ro_entry[3] = usbdlg_grid_create_ro_entry(mainGrid, 5, 4);
+  FNlabel = usbdlg_create_label(mainGrid, "Frame at Address", 4, 7);
+  ro_entry[3] = usbdlg_create_ro_entry(mainGrid, 5, 7);
   button[7] = gtk_button_new_with_label("View Item");
   gtk_widget_set_sensitive(button[7], 0);
-  gtk_grid_attach(GTK_GRID(mainGrid), button[7], 6, 4, 1, 1);
+  gtk_grid_attach(GTK_GRID(mainGrid), button[7], 6, 7, 1, 1);
   treeview = gtk_tree_view_new();
-  gtk_grid_attach(GTK_GRID(mainGrid), treeview, 3, 5, 5, 8);
+  gtk_grid_attach(GTK_GRID(mainGrid), treeview, 3, 8, 5, 8);
   usbdlg_create_apply_button(mainGrid, 1, 13);
-  usbdlg_create_debug_flags(mainGrid, 6, 0);
+  usbdlg_create_debug_flags(mainGrid, 6, 1);
   // Set values
   pci_bar_address = get_pci_bar_addr((bx_shadow_data_c*)SIM->get_param("hub.pci_conf", UHCI_state), 4);
   sprintf(buffer, "0x%04X", pci_bar_address);
@@ -1116,9 +1069,9 @@ int uhci_debug_dialog(int type, int param1)
 
   if (!valid) {
     gtk_widget_set_sensitive(treeview, 0);
-    gtk_grid_attach(GTK_GRID(mainGrid), gtk_label_new("This trigger does not populate the tree view"), 4, 13, 1, 1);
+    gtk_grid_attach(GTK_GRID(mainGrid), gtk_label_new("This trigger does not populate the tree view"), 4, 16, 1, 1);
   } else {
-    gtk_grid_attach(GTK_GRID(mainGrid), gtk_label_new("Tree view populated"), 4, 13, 1, 1);
+    gtk_grid_attach(GTK_GRID(mainGrid), gtk_label_new("Tree view populated"), 4, 16, 1, 1);
   }
   // Show dialog
   gtk_widget_show_all(main_dialog);
@@ -1242,65 +1195,65 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
   switch (type) {
     case NORMAL:
     case DATA_STAGE:
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Data Pointer", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Data Pointer", 0, e_num);
       sprintf(str, "0x" FMT_ADDRX64, trb->parameter);
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case LINK:
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Ring Pointer", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Ring Pointer", 0, e_num);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case ADDRESS_DEVICE:
     case CONFIG_EP:
     case EVALUATE_CONTEXT:
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Input Context Pointer", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Input Context Pointer", 0, e_num);
       button = gtk_button_new_with_label(">");
       gtk_grid_attach(GTK_GRID(grid), button, 2, e_num, 1, 1);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case SET_TR_DEQUEUE:
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "New TR Dequeue Pointer", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "New TR Dequeue Pointer", 0, e_num);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case FORCE_EVENT:
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Event TRB Pointer", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Event TRB Pointer", 0, e_num);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case GET_PORT_BAND:
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Port Bandwidth Context Pointer", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Port Bandwidth Context Pointer", 0, e_num);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case FORCE_HEADER:
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Header Lo/Mid", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Header Lo/Mid", 0, e_num);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x1F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case TRANS_EVENT:
     case COMMAND_COMPLETION:
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "TRB Pointer", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "TRB Pointer", 0, e_num);
       sprintf(str, "0x" FMT_ADDRX64, trb->parameter);
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case PORT_STATUS_CHANGE:
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Port ID", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Port ID", 0, e_num);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)((trb->parameter & BX_CONST64(0x00000000FF000000)) >> 24));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case DOORBELL_EVENT:
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "DB Reason", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "DB Reason", 0, e_num);
       sprintf(str, "0x" FMT_ADDRX64, trb->parameter & 0x1f);
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case DEVICE_NOTIFICATION:
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Dev Notification Data", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Dev Notification Data", 0, e_num);
       sprintf(str, "0x" FMT_ADDRX64, trb->parameter >> 8);
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Notification Type", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Notification Type", 0, e_num);
       sprintf(str, "%i", (Bit8u)(trb->parameter & 0xf0) >> 4);
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
@@ -1313,7 +1266,7 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case DOORBELL_EVENT:
     case HOST_CONTROLLER_EVENT:
     case DEVICE_NOTIFICATION:
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Completion Code", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Completion Code", 0, e_num);
       sprintf(str, "%i", TRB_GET_COMP_CODE(trb->status));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
@@ -1332,17 +1285,17 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case BANDWIDTH_REQUEST:
     case DOORBELL_EVENT:
     case DEVICE_NOTIFICATION:
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Slot ID", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Slot ID", 0, e_num);
       sprintf(str, "%i", TRB_GET_SLOT(trb->command));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case GET_PORT_BAND:
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Hub Slot ID", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Hub Slot ID", 0, e_num);
       sprintf(str, "%i", TRB_GET_SLOT(trb->command));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case FORCE_HEADER:
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Root Hub Port Number", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Root Hub Port Number", 0, e_num);
       sprintf(str, "%i", TRB_GET_SLOT(trb->command));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
@@ -1352,7 +1305,7 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case STOP_EP:
     case SET_TR_DEQUEUE:
     case TRANS_EVENT:
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Endpoint ID", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Endpoint ID", 0, e_num);
       sprintf(str, "%i", TRB_GET_EP(trb->command));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
@@ -1364,12 +1317,12 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case STATUS_STAGE:
     case LINK:
     case NO_OP:
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "Interrupter Target", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Interrupter Target", 0, e_num);
       sprintf(str, "%i", TRB_GET_TARGET(trb->status));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case FORCE_EVENT:
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "VF Interrupter Target", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "VF Interrupter Target", 0, e_num);
       sprintf(str, "%i", TRB_GET_TARGET(trb->status));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
@@ -1378,12 +1331,12 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case FORCE_EVENT:
     case COMMAND_COMPLETION:
     case DOORBELL_EVENT:
-      entry[e_num] = usbdlg_grid_create_entry_with_label(grid, "VF ID", 0, e_num);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "VF ID", 0, e_num);
       sprintf(str, "%i", (trb->command & (0xFF << 16)) >> 16);
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
   }
-  trb_type = usbdlg_grid_create_ro_entry_with_label(grid, "TRB Type", 0, e_num);
+  trb_type = usbdlg_create_ro_entry_with_label(grid, "TRB Type", 0, e_num);
   sprintf(str, "%i", TRB_GET_TYPE(trb->command));
   gtk_entry_set_text(GTK_ENTRY(trb_type), str);
   checkbox = gtk_check_button_new_with_label("Cycle Bit");
@@ -1412,7 +1365,7 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case TRANS_EVENT:         // (-/1)
     case COMMAND_COMPLETION:  // (1/-)
     case DEVICE_NOTIFICATION: // (1/-)
-      usbdlg_create_label(mainVbox, "Dialog under construction", true);
+      gtk_grid_attach(GTK_GRID(grid), gtk_label_new("Dialog under construction"), 0, e_num + 2, 2, 1);
       break;
   }
   // Show dialog
@@ -1489,13 +1442,13 @@ int xhci_debug_dialog(int type, int param1)
   Bit32u dword, offset;
   Bit64u RingPtr = 0;
   char buffer[COMMON_STR_SIZE], tmpbuf[32];
-  GtkWidget *mainVbox, *BAhbox, *hbox[2], *vbox[4], *entry[38];
-  GtkWidget *CRframe, *CRhbox, *CRvbox[2];
-  GtkWidget *ORframe, *ORhbox, *ORvbox[2];
-  GtkWidget *RTframe, *RThbox, *RTvbox[2];
-  GtkWidget *PRframe, *PRhbox, *PRvbox[3];
-  GtkWidget *TVvbox, *FNhbox;
-  GtkWidget *button[13], *FNlabel, *treeview, *scrlwin;
+  GtkWidget *mainVbox, *mainGrid;
+  GtkWidget *CRframe, *CRgrid;
+  GtkWidget *ORframe, *ORgrid;
+  GtkWidget *RTframe, *RTgrid;
+  GtkWidget *PRframe, *PRgrid;
+  GtkWidget *entry[38], *button[13], *FNlabel;
+  GtkWidget *treeview, *scrlwin, *FNgrid;
   usb_reg_t xhci_reg_def[10] = {
     {"Port 0 Register", NULL, 8, attribs_x_ports},
     {"Port 1 Register", NULL, 8, attribs_x_ports},
@@ -1534,100 +1487,86 @@ int xhci_debug_dialog(int type, int param1)
   gtk_window_set_focus(GTK_WINDOW(main_dialog), button[0]);
   mainVbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
   gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(main_dialog))), mainVbox, TRUE, TRUE, 2);
+  mainGrid = gtk_grid_new();
+  gtk_grid_set_row_spacing(GTK_GRID(mainGrid), 5);
+  gtk_grid_set_column_spacing(GTK_GRID(mainGrid), 5);
+  gtk_container_add(GTK_CONTAINER(mainVbox), mainGrid);
 
-  BAhbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_box_pack_start(GTK_BOX(mainVbox), BAhbox, FALSE, FALSE, 2);
-  usbdlg_create_label(BAhbox, "xHCI at Base MMIO address", false);
-  entry[0] = usbdlg_create_ro_entry(BAhbox, false);
-
-  hbox[0] = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_box_pack_start(GTK_BOX(mainVbox), hbox[0], TRUE, TRUE, 2);
-  hbox[1] = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_box_pack_start(GTK_BOX(mainVbox), hbox[1], TRUE, TRUE, 2);
-  for (i = 0; i < 4; i++) {
-    vbox[i] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_box_pack_start(GTK_BOX(hbox[0]), vbox[i], TRUE, TRUE, 2);
-  }
-
+  entry[0] = usbdlg_create_ro_entry_with_label(mainGrid, "xHCI at Base MMIO address", 0, 0);
   CRframe = gtk_frame_new("Capability Registers");
-  gtk_box_pack_start(GTK_BOX(vbox[0]), CRframe, FALSE, FALSE, 2);
-  CRhbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_container_add(GTK_CONTAINER(CRframe), CRhbox);
-  CRvbox[0] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-  gtk_box_pack_start(GTK_BOX(CRhbox), CRvbox[0], FALSE, FALSE, 2);
-  CRvbox[1] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-  gtk_box_pack_start(GTK_BOX(CRhbox), CRvbox[1], FALSE, FALSE, 2);
-  entry[1] = usbdlg_create_entry_with_label(CRvbox, "Cap Length");
-  entry[2] = usbdlg_create_entry_with_label(CRvbox, "HCSParams1");
-  entry[3] = usbdlg_create_ro_entry_with_label(CRvbox, "HCSParams2");
-  entry[4] = usbdlg_create_entry_with_label(CRvbox, "HCSParams3");
-  entry[5] = usbdlg_create_entry_with_label(CRvbox, "HCCParams1");
-  entry[6] = usbdlg_create_entry_with_label(CRvbox, "DB Offset");
-  entry[7] = usbdlg_create_entry_with_label(CRvbox, "RTS Offset");
-  entry[8] = usbdlg_create_entry_with_label(CRvbox, "HCCParams2");
+  gtk_grid_attach(GTK_GRID(mainGrid), CRframe, 0, 1, 3, 9);
+  CRgrid = gtk_grid_new();
+  gtk_grid_set_row_spacing(GTK_GRID(CRgrid), 5);
+  gtk_grid_set_column_spacing(GTK_GRID(CRgrid), 5);
+  gtk_container_add(GTK_CONTAINER(CRframe), CRgrid);
+  gtk_container_set_border_width(GTK_CONTAINER(CRgrid), 5);
+  entry[1] = usbdlg_create_entry_with_label(CRgrid, "Cap Length", 0, 0);
+  entry[2] = usbdlg_create_entry_with_label(CRgrid, "HCSParams1", 0, 1);
+  entry[3] = usbdlg_create_ro_entry_with_label(CRgrid, "HCSParams2", 0, 2);
+  entry[4] = usbdlg_create_entry_with_label(CRgrid, "HCSParams3", 0, 3);
+  entry[5] = usbdlg_create_entry_with_label(CRgrid, "HCCParams1", 0, 4);
+  entry[6] = usbdlg_create_entry_with_label(CRgrid, "DB Offset", 0, 5);
+  entry[7] = usbdlg_create_entry_with_label(CRgrid, "RTS Offset", 0, 6);
+  entry[8] = usbdlg_create_entry_with_label(CRgrid, "HCCParams2", 0, 7);
 
   ORframe = gtk_frame_new("Operational Registers");
-  gtk_box_pack_start(GTK_BOX(vbox[1]), ORframe, FALSE, FALSE, 2);
-  ORhbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_container_add(GTK_CONTAINER(ORframe), ORhbox);
-  ORvbox[0] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-  gtk_box_pack_start(GTK_BOX(ORhbox), ORvbox[0], FALSE, FALSE, 2);
-  ORvbox[1] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-  gtk_box_pack_start(GTK_BOX(ORhbox), ORvbox[1], FALSE, FALSE, 2);
-  entry[9] = usbdlg_create_ro_entry_with_label(ORvbox, "Command");
-  entry[10] = usbdlg_create_entry_with_label(ORvbox, "Status");
-  entry[11] = usbdlg_create_entry_with_label(ORvbox, "Page Size");
-  entry[12] = usbdlg_create_entry_with_label(ORvbox, "Device Notification");
-  entry[13] = usbdlg_create_entry_with_label(ORvbox, "Command Ring");
-  entry[14] = usbdlg_create_entry_with_label(ORvbox, "Device Context Base");
-  entry[15] = usbdlg_create_entry_with_label(ORvbox, "Configure");
+  gtk_grid_attach(GTK_GRID(mainGrid), ORframe, 3, 1, 2, 8);
+  ORgrid = gtk_grid_new();
+  gtk_grid_set_row_spacing(GTK_GRID(ORgrid), 5);
+  gtk_grid_set_column_spacing(GTK_GRID(ORgrid), 5);
+  gtk_container_add(GTK_CONTAINER(ORframe), ORgrid);
+  gtk_container_set_border_width(GTK_CONTAINER(ORgrid), 5);
+  entry[9] = usbdlg_create_ro_entry_with_label(ORgrid, "Command", 0, 0);
+  entry[10] = usbdlg_create_entry_with_label(ORgrid, "Status", 0, 1);
+  entry[11] = usbdlg_create_entry_with_label(ORgrid, "Page Size", 0, 2);
+  entry[12] = usbdlg_create_entry_with_label(ORgrid, "Device Notification", 0, 3);
+  entry[13] = usbdlg_create_entry_with_label(ORgrid, "Command Ring", 0, 4);
+  entry[14] = usbdlg_create_entry_with_label(ORgrid, "Device Context Base", 0, 5);
+  entry[15] = usbdlg_create_entry_with_label(ORgrid, "Configure", 0, 6);
 
   RTframe = gtk_frame_new("Runtime Registers");
-  gtk_box_pack_start(GTK_BOX(vbox[2]), RTframe, FALSE, FALSE, 2);
-  RThbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_container_add(GTK_CONTAINER(RTframe), RThbox);
-  RTvbox[0] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-  gtk_box_pack_start(GTK_BOX(RThbox), RTvbox[0], FALSE, FALSE, 2);
-  RTvbox[1] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-  gtk_box_pack_start(GTK_BOX(RThbox), RTvbox[1], FALSE, FALSE, 2);
-  entry[16] = usbdlg_create_entry_with_label(RTvbox, "Microframe Index");
+  gtk_grid_attach(GTK_GRID(mainGrid), RTframe, 3, 9, 2, 1);
+  RTgrid = gtk_grid_new();
+  gtk_grid_set_row_spacing(GTK_GRID(RTgrid), 5);
+  gtk_grid_set_column_spacing(GTK_GRID(RTgrid), 5);
+  gtk_container_add(GTK_CONTAINER(RTframe), RTgrid);
+  gtk_container_set_border_width(GTK_CONTAINER(RTgrid), 5);
+  entry[16] = usbdlg_create_entry_with_label(RTgrid, "Microframe Index", 0, 0);
 
   PRframe = gtk_frame_new("Port Registers");
-  gtk_box_pack_start(GTK_BOX(hbox[1]), PRframe, FALSE, FALSE, 2);
-  PRhbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_container_add(GTK_CONTAINER(PRframe), PRhbox);
-  for (i = 0; i < 3; i++) {
-    PRvbox[i] = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-    gtk_box_pack_start(GTK_BOX(PRhbox), PRvbox[i], FALSE, FALSE, 2);
-  }
   n_ports = SIM->get_param_num(BXPN_XHCI_N_PORTS)->get();
+  gtk_grid_attach(GTK_GRID(mainGrid), PRframe, 0, 10, 3, n_ports * 2);
+  PRgrid = gtk_grid_new();
+  gtk_grid_set_row_spacing(GTK_GRID(PRgrid), 5);
+  gtk_grid_set_column_spacing(GTK_GRID(PRgrid), 5);
+  gtk_container_add(GTK_CONTAINER(PRframe), PRgrid);
+  gtk_container_set_border_width(GTK_CONTAINER(PRgrid), 5);
   for (i = 0; i < n_ports; i++) {
     sprintf(buffer, "Port %d", i);
-    entry[i * 2 + 17] = usbdlg_create_entry_with_label(PRvbox, buffer);
-    entry[i * 2 + 18] = usbdlg_create_ro_entry_with_label(PRvbox, "Emulation Type");
+    entry[i * 2 + 17] = usbdlg_create_entry_with_label(PRgrid, buffer, 0, i * 2);
+    entry[i * 2 + 18] = usbdlg_create_ro_entry_with_label(PRgrid, "Emulation Type", 0, i * 2 + 1);
     button[i + 2] = gtk_button_new_with_label("<>");
     xhci_reg_def[i].entry = entry[i * 2 + 17];
     g_signal_connect(button[i + 2], "clicked", G_CALLBACK(usb_regview_dialog), &xhci_reg_def[i]);
-    gtk_box_pack_start(GTK_BOX(PRvbox[2]), button[i + 2], FALSE, FALSE, 2);
-    gtk_box_pack_start(GTK_BOX(PRvbox[2]), gtk_label_new(" "), FALSE, FALSE, 8); // spacer
+    gtk_grid_attach(GTK_GRID(PRgrid), button[i + 2], 2, i * 2, 1, 1);
   }
-  TVvbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-  gtk_box_pack_start(GTK_BOX(hbox[1]), TVvbox, TRUE, TRUE, 2);
-  FNhbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_box_pack_start(GTK_BOX(TVvbox), FNhbox, FALSE, FALSE, 2);
-  FNlabel = usbdlg_create_label(FNhbox, "Ring Address", false);
-  entry[n_ports * 2 + 17] = usbdlg_create_ro_entry(FNhbox, false);
+  FNgrid = gtk_grid_new();
+  gtk_grid_set_row_spacing(GTK_GRID(FNgrid), 5);
+  gtk_grid_set_column_spacing(GTK_GRID(FNgrid), 5);
+  gtk_container_set_border_width(GTK_CONTAINER(FNgrid), 5);
+  gtk_grid_attach(GTK_GRID(mainGrid), FNgrid, 3, 10, 3, 1);
+  FNlabel = usbdlg_create_label(FNgrid, "Ring Address", 0, 0);
+  entry[n_ports * 2 + 17] = usbdlg_create_ro_entry(FNgrid, 1, 0);
   button[12] = gtk_button_new_with_label("View TRB");
   gtk_widget_set_sensitive(button[12], 0);
-  gtk_box_pack_start(GTK_BOX(FNhbox), button[12], FALSE, FALSE, 2);
+  gtk_grid_attach(GTK_GRID(FNgrid), button[12], 2, 0, 1, 1);
   scrlwin = gtk_scrolled_window_new(NULL, NULL);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrlwin), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-  gtk_box_pack_start(GTK_BOX(TVvbox), scrlwin, TRUE, TRUE, 2);
+  gtk_grid_attach(GTK_GRID(mainGrid), scrlwin, 3, 11, 12, 10);
   treeview = gtk_tree_view_new();
   gtk_container_add(GTK_CONTAINER(scrlwin), treeview);
-
-  usbdlg_create_apply_button(mainVbox, 0, 0);
-  usbdlg_create_debug_flags(vbox[3], 0, 0);
+  usbdlg_create_apply_button(mainGrid, 1, n_ports * 2 + 10);
+  usbdlg_create_debug_flags(mainGrid, 6, 1);
   // Set values
   pci_bar_address = get_pci_bar_addr((bx_shadow_data_c*)SIM->get_param("hub.pci_conf", xHCI_state), 0);
   sprintf(buffer, "0x%08X", pci_bar_address);
@@ -1639,7 +1578,6 @@ int xhci_debug_dialog(int type, int param1)
     g_signal_connect(GTK_EDITABLE(entry[i + 1]), "changed", G_CALLBACK(on_entry_changed), NULL);
   }
   offset = xhci_read_dword(pci_bar_address + 0) & 0xFF;
-
   dword = xhci_read_dword(pci_bar_address + offset + 0x00);
   sprintf(buffer, "0x%08X", dword);
   gtk_entry_set_text(GTK_ENTRY(entry[9]), buffer);
@@ -1734,9 +1672,9 @@ int xhci_debug_dialog(int type, int param1)
 
   if (!valid) {
     gtk_widget_set_sensitive(treeview, 0);
-    usbdlg_create_label(TVvbox, "This trigger does not populate the tree view", false);
+    gtk_grid_attach(GTK_GRID(mainGrid), gtk_label_new("This trigger does not populate the tree view"), 4, 21, 1, 1);
   } else {
-    usbdlg_create_label(TVvbox, "Tree view populated", false);
+    gtk_grid_attach(GTK_GRID(mainGrid), gtk_label_new("Tree view populated"), 4, 21, 1, 1);
   }
   // Show dialog
   gtk_widget_show_all(main_dialog);
