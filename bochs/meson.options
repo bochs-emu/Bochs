@@ -1,0 +1,153 @@
+option('with_x11',    type : 'feature', value : 'auto')
+option('with_sdl1',   type : 'feature', value : 'disabled')
+option('with_sdl2',   type : 'feature', value : 'auto')
+option('with_nogui',  type : 'feature', value : 'disabled')
+option('with_term',   type : 'feature', value : 'auto')
+option('with_rfb',    type : 'feature', value : 'auto')
+option('with_vncsrv', type : 'feature', value : 'auto')
+option('with_wx',     type : 'feature', value : 'auto')
+option('with_carbon', type : 'feature', value : 'auto')
+
+option('debug_linux', type : 'boolean', value : false, description : 'if simulating Linux, this provides a few more debugging options such as tracing all system calls')
+option('support_a20', type : 'boolean', value : false, description : 'Settable A20 line')
+option('dma_floppy_io', type : 'boolean', value : true, description : 'Compile in support for DMA & FLOPPY IO')
+option('support_x86_64', type : 'boolean', value : false, description : 'Emulate x86-64 instruction set?')
+option('phy_address_long', type : 'boolean', value : false, description : 'Emulate long physical address (>32 bit)')
+option('use_idle_hack', type : 'boolean', value : false, description : 'Roland Mainz\'s idle hack')
+option('cpu_level', type : 'integer',  min : 3, value : 3)
+option('cpuid_vendor_len', type : 'integer',  value: 12)
+option('cpuid_brand_len', type : 'integer',  value: 48)
+
+option('support_smp', type : 'boolean', value : false)
+option('bootstrap_processor', type : 'integer',  value: 0)
+option('max_smp_threads_supported', type : 'integer', value: 254)
+
+option('plugins', type : 'boolean', value : false, description : 'Enable plugins')
+option('use_raw_serial', type : 'boolean', value : false, description : 'Use raw serial')
+option('large_ramfile', type : 'boolean', value : false, description : 'This option enables RAM file backing for large guest memory with a smaller amount host memory, without causing a panic when host memory is exhausted.')
+option('dbg_extensions', type : 'boolean', value : false, description : 'Make a call to command line debugger extensions')
+
+option('default_config_interface', type : 'string', value: 'defined_by_configure')
+option('default_display_library', type : 'string', value: 'defined_by_configure')
+
+option('networking', type : 'boolean', value : false)
+
+# optional networking modules
+option('netmod_tap', type : 'boolean', value : false)
+option('netmod_tuntap', type : 'boolean', value : false)
+
+# Soundcard and gameport support
+option('support_sb16', type : 'boolean', value : false)
+option('support_es1370', type : 'boolean', value : false)
+option('support_gameport', type : 'boolean', value : false)
+option('support_soundlow', type : 'boolean', value : false)
+
+# Support x86 hardware debugger registers and facilities.
+# These are the debug facilities offered by the x86 architecture,
+# not the optional built-in debugger.
+option('x86_debugger', type : 'boolean', value : false)
+
+# limited i440FX PCI support
+option('support_pci', type : 'boolean', value : false)
+
+# Experimental host PCI device mapping
+option('support_pcidev', type : 'boolean', value : false)
+
+# CLGD54XX emulation
+option('support_clgd54xx', type : 'boolean', value : false)
+
+# Experimental 3dfx Voodoo (SST-1/2) emulation
+option('support_voodoo', type : 'boolean', value : false)
+
+# USB host controllers
+option('support_usb_uhci', type : 'boolean', value : false)
+option('support_usb_ohci', type : 'boolean', value : false)
+option('support_usb_ehci', type : 'boolean', value : false)
+option('support_usb_xhci', type : 'boolean', value : false)
+
+# MS bus mouse support
+option('support_busmouse', type : 'boolean', value : false)
+
+option('support_cdrom', type : 'boolean', value : false)
+
+
+# NE2K network emulation
+option('support_ne2k', type : 'boolean', value : false)
+
+# Pseudo PCI NIC
+option('support_pcipnic', type : 'boolean', value : false)
+
+
+# Intel(R) Gigabit Ethernet
+option('support_e1000', type : 'boolean', value : false)
+
+option('gdbstub', type : 'boolean', value : false)
+option('debugger', type : 'boolean', value : false)
+option('debugger_gui', type : 'boolean', value : false)
+
+option('instrumentation', type : 'boolean', value : false)
+
+# enable BX_DEBUG/BX_ERROR/BX_INFO messages
+option('no_logging', type : 'boolean', value : false)
+
+# enable BX_ASSERT checks
+option('assert_enable', type : 'boolean', value : false)
+
+# enable statistics collection
+option('enable_statistics', type : 'boolean', value : false)
+
+option('support_iodebug', type : 'boolean', value : false)
+
+option('support_alignment_check', type : 'boolean', value : false)
+option('support_fpu', type : 'boolean', value : false)
+option('support_3dnow', type : 'boolean', value : false)
+option('support_pkeys', type : 'boolean', value : false)
+option('support_cet', type : 'boolean', value : false)
+option('support_monitor_mwait', type : 'boolean', value : false)
+option('support_perfmon', type : 'boolean', value : false)
+option('support_memtype', type : 'boolean', value : false)
+option('support_svm', type : 'boolean', value : false)
+option('support_vmx', type : 'boolean', value : false)
+option('support_avx', type : 'boolean', value : false)
+option('support_evex', type : 'boolean', value : false)
+
+option('support_repeat_speedups', type : 'boolean', value : false)
+option('support_handlers_chaining_speedups', type : 'boolean', value : false)
+option('enable_trace_linking', type : 'boolean', value : false)
+
+option('configure_msrs', type : 'boolean', value : false)
+
+
+
+#SFM stuff
+option('use_cpu_smf', type : 'boolean', value : true, description : 'CPU SMF')
+option('use_mem_smf', type : 'boolean', value : true, description : 'Memory SMF')
+option('use_hd_smf', type : 'boolean', value : true, description : 'Hard drive SMF')
+option('use_bios_smf', type : 'boolean', value : true, description : 'BIOS SMF')
+option('use_cmos_smf', type : 'boolean', value : true, description : 'CMOS SMF')
+option('use_dma_smf', type : 'boolean', value : true, description : 'DMA SMF')
+option('use_fd_smf', type : 'boolean', value : true, description : 'Floppy SMF')
+option('use_key_smf', type : 'boolean', value : true, description : 'Keyboard SMF')
+option('use_par_smf', type : 'boolean', value : true, description : 'Parallel SMF')
+option('use_pic_smf', type : 'boolean', value : true, description : 'PIC SMF')
+option('use_pit_smf', type : 'boolean', value : true, description : 'PIT SMF')
+option('use_ser_smf', type : 'boolean', value : true, description : 'Serial SMF')
+option('use_um_smf', type : 'boolean', value : true, description : 'Unmapped SMF')
+option('use_vga_smf', type : 'boolean', value : true, description : 'VGA SMF')
+option('use_sb16_smf', type : 'boolean', value : true, description : 'SB 16 soundcard SMF')
+option('use_es1370_smf', type : 'boolean', value : true, description : 'ES1370 soundcard SMF')
+option('use_dev_smf', type : 'boolean', value : true, description : 'System Devices (port92) SMF')
+option('use_pci_smf', type : 'boolean', value : true, description : 'PCI SMF')
+option('use_p2i_smf', type : 'boolean', value : true, description : 'PCI-to-ISA bridge SMF')
+option('use_pide_smf', type : 'boolean', value : true, description : 'PCI-IDE SMF')
+option('use_pcidev_smf', type : 'boolean', value : true, description : 'PCI-DEV SMF')
+option('use_usb_uhci_smf', type : 'boolean', value : true, description : 'USB UHCI hub SMF')
+option('use_usb_ohci_smf', type : 'boolean', value : true, description : 'USB OHCI hub SMF')
+option('use_usb_ehci_smf', type : 'boolean', value : true, description : 'USB EHCI hub SMF')
+option('use_usb_xhci_smf', type : 'boolean', value : true, description : 'USB xHCI hub SMF')
+option('use_pcipnic_smf', type : 'boolean', value : true, description : 'PCI pseudo NIC SMF')
+option('use_efi_smf', type : 'boolean', value : true, description : 'External FPU IRQ SMF')
+option('use_gameport_smf', type : 'boolean', value : true, description : 'Gameport SMF')
+option('use_cirrus_smf', type : 'boolean', value : true, description : 'SVGA Cirrus SMF')
+option('use_busm_smf', type : 'boolean', value : true, description : 'Bus Mouse SMF')
+option('use_acpi_smf', type : 'boolean', value : true, description : 'ACPI SMF')
