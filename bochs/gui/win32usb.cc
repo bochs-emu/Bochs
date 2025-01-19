@@ -1375,7 +1375,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_normal(HWND hDlg, UINT msg, WPARAM wParam,
 
       sprintf(str, "%i", TRB_GET_TARGET(g_trb.status));
       SetDlgItemText(hDlg, IDC_TRB_INT_TARGET, str);
-      sprintf(str, "%i", TRB_GET_TX_LEN(g_trb.status));
+      sprintf(str, "%i", TRB_GET_TDSIZE(g_trb.status));
       SetDlgItemText(hDlg, IDC_TRB_TD_SIZE, str);
       sprintf(str, "%i", TRB_GET_TX_LEN(g_trb.status));
       SetDlgItemText(hDlg, IDC_TRB_TRANS_LEN, str);
@@ -1518,7 +1518,7 @@ INT_PTR CALLBACK hc_xhci_callback_trb_data(HWND hDlg, UINT msg, WPARAM wParam, L
 
       sprintf(str, "%i", TRB_GET_TARGET(g_trb.status));
       SetDlgItemText(hDlg, IDC_TRB_INT_TARGET, str);
-      sprintf(str, "%i", TRB_GET_TX_LEN(g_trb.status));
+      sprintf(str, "%i", TRB_GET_TDSIZE(g_trb.status));
       SetDlgItemText(hDlg, IDC_TRB_TD_SIZE, str);
       sprintf(str, "%i", TRB_GET_TX_LEN(g_trb.status));
       SetDlgItemText(hDlg, IDC_TRB_TRANS_LEN, str);

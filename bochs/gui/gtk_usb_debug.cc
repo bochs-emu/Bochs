@@ -1380,6 +1380,20 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
       break;
   }
   switch (type) {
+    case NORMAL:
+    case SETUP_STAGE:
+    case DATA_STAGE:
+      if (type != SETUP_STAGE) {
+        entry[e_num] = usbdlg_create_entry_with_label(grid, "TD Size", 0, row++);
+        sprintf(str, "%i", TRB_GET_TDSIZE(trb->status));
+        gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      }
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "TRB Transfer Length", 0, row++);
+      sprintf(str, "%i", TRB_GET_TX_LEN(trb->status));
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      break;
+  }
+  switch (type) {
     case DATA_STAGE:
     case STATUS_STAGE:
       checkbox[c_num] = gtk_check_button_new_with_label("Direction");
@@ -1399,6 +1413,24 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
   trb_type = usbdlg_create_ro_entry_with_label(grid, "TRB Type", 0, row++);
   sprintf(str, "%i", TRB_GET_TYPE(trb->command));
   gtk_entry_set_text(GTK_ENTRY(trb_type), str);
+  if (type == NORMAL) {
+    checkbox[c_num] = gtk_check_button_new_with_label("Block Event Interrupt");
+    if (TRB_DC(trb->command)) {
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+    }
+    gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+  }
+  switch (type) {
+    case NORMAL:
+    case SETUP_STAGE:
+    case DATA_STAGE:
+      checkbox[c_num] = gtk_check_button_new_with_label("Immediate Data");
+      if (TRB_IS_IMMED_DATA(trb->command)) {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+      }
+      gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+      break;
+  }
   switch (type) {
     case NORMAL:
     case SETUP_STAGE:
@@ -1414,6 +1446,18 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
       if (type != SETUP_STAGE) {
         checkbox[c_num] = gtk_check_button_new_with_label("Chain Bit");
         if (TRB_CHAIN(trb->command)) {
+          gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+        }
+        gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+      }
+      if ((type == NORMAL) || (type == DATA_STAGE)) {
+        checkbox[c_num] = gtk_check_button_new_with_label("No Snoop");
+        if (trb->command & 8) {
+          gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+        }
+        gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+        checkbox[c_num] = gtk_check_button_new_with_label("Interrupt On Short Packet");
+        if (TRB_SPD(trb->command)) {
           gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
         }
         gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
@@ -1463,12 +1507,10 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
   }
   gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
-  // TODO list (missing items before / after TRB type)
+  // TODO list (missing items before TRB type)
   switch (type) {
-    case NORMAL:              // (2/4)
-    case SETUP_STAGE:         // (7/1)
-    case DATA_STAGE:          // (2/3)
-    case SET_TR_DEQUEUE:      // (3/-)
+    case SETUP_STAGE:         // (6)
+    case SET_TR_DEQUEUE:      // (3)
       gtk_grid_attach(GTK_GRID(grid), gtk_label_new("Dialog under construction"), 0, row, 2, 1);
       break;
   }
