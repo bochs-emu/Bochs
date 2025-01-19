@@ -257,9 +257,7 @@ void usbdlg_create_apply_button(GtkWidget *grid, int x, int y)
 }
 
 // Tree view support
-#define MAX_TREE_ITEMS 260
 int tree_items;
-GtkTreeIter titems[MAX_TREE_ITEMS];
 
 void cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
                     GtkTreeModel *model, GtkTreeIter *iter, gpointer data)
@@ -276,35 +274,40 @@ void cell_data_func(GtkTreeViewColumn *col, GtkCellRenderer *renderer,
   g_free(name);
 }
 
-GtkTreeIter* treeview_insert(GtkWidget *treeview, GtkTreeIter *parent, char *str, Bit64u param, bool bold)
+void treeview_init(GtkWidget *treeview, char *str)
 {
   GtkTreeStore *treestore;
   GtkTreeViewColumn *treecol;
   GtkCellRenderer *renderer;
 
+  treecol = gtk_tree_view_column_new();
+  gtk_tree_view_column_set_title(treecol, str);
+  gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), treecol);
+  renderer = gtk_cell_renderer_text_new();
+  gtk_tree_view_column_pack_start(treecol, renderer, TRUE);
+  gtk_tree_view_column_add_attribute(treecol, renderer, "text", 0); // pull display text from treestore col 0
+  gtk_tree_view_column_set_cell_data_func(treecol, renderer, cell_data_func, NULL, NULL);
+  gtk_widget_set_can_focus(treeview, FALSE);
+  treestore = gtk_tree_store_new(3, G_TYPE_STRING, G_TYPE_ULONG, G_TYPE_BOOLEAN);
+  gtk_tree_view_set_model(GTK_TREE_VIEW(treeview), GTK_TREE_MODEL(treestore));
+  g_object_unref(treestore);
+  tree_items = 0;
+}
+
+void treeview_insert(GtkWidget *treeview, GtkTreeIter *parent, GtkTreeIter *child, char *str, Bit64u param, bool bold)
+{
+  GtkTreeStore *treestore;
+  GtkTreeIter item;
+
   treestore = (GtkTreeStore*)gtk_tree_view_get_model(GTK_TREE_VIEW(treeview));
-  if (treestore == NULL) {
-    treecol = gtk_tree_view_column_new();
-    gtk_tree_view_column_set_title(treecol, str);
-    gtk_tree_view_append_column(GTK_TREE_VIEW(treeview), treecol);
-    renderer = gtk_cell_renderer_text_new();
-    gtk_tree_view_column_pack_start(treecol, renderer, TRUE);
-    gtk_tree_view_column_add_attribute(treecol, renderer, "text", 0); // pull display text from treestore col 0
-    gtk_tree_view_column_set_cell_data_func(treecol, renderer, cell_data_func, NULL, NULL);
-    gtk_widget_set_can_focus(treeview, FALSE);
-    treestore = gtk_tree_store_new(3, G_TYPE_STRING, G_TYPE_ULONG, G_TYPE_BOOLEAN);
-    gtk_tree_view_set_model(GTK_TREE_VIEW(treeview), GTK_TREE_MODEL(treestore));
-    g_object_unref(treestore);
-    tree_items = 0;
-    return NULL;
-  } else {
-    if (tree_items < MAX_TREE_ITEMS) {
-      gtk_tree_store_append(treestore, &titems[tree_items], parent);
-      gtk_tree_store_set(treestore, &titems[tree_items], 0, str, 1, param,
-                         2, bold, -1);
-      tree_items++;
-    }
-    return &titems[tree_items - 1];
+  memset(&item, 0, sizeof(GtkTreeIter));
+  if (treestore != NULL) {
+    gtk_tree_store_append(treestore, &item, parent);
+    gtk_tree_store_set(treestore, &item, 0, str, 1, param, 2, bold, -1);
+    tree_items++;
+  }
+  if (child != NULL) {
+    *child = item;
   }
 }
 
@@ -315,14 +318,14 @@ void hc_uhci_do_item(GtkWidget *treeview, Bit32u FrameAddr, Bit32u FrameNum)
   struct QUEUE queue;
   struct TD td;
   char str[COMMON_STR_SIZE];
-  GtkTreeIter *cur, *next;
+  GtkTreeIter cur, next, *nextp = NULL;
   GtkTreeSelection *selection;
   bool state;
 
   // get the frame pointer
   DEV_MEM_READ_PHYSICAL(FrameAddr, sizeof(Bit32u), (Bit8u *) &item);
   sprintf(str, "Frame Pointer(%i): 0x%08X", FrameNum, item);
-  next = treeview_insert(treeview, NULL, str, 0, 0);
+  treeview_init(treeview, str);
 
   queue_stack.queue_cnt = 0;
 
@@ -342,7 +345,8 @@ void hc_uhci_do_item(GtkWidget *treeview, Bit32u FrameAddr, Bit32u FrameNum)
       // read in the queue
       DEV_MEM_READ_PHYSICAL(item & ~0xF, sizeof(struct QUEUE), (Bit8u *) &queue);
       sprintf(str, "0x%08X: Queue Head: (0x%08X 0x%08X)", item & ~0xF, queue.horz, queue.vert);
-      next = treeview_insert(treeview, next, str, (item & ~0xF) | 1, 0);
+      treeview_insert(treeview, nextp, &next, str, (item & ~0xF) | 1, 0);
+      nextp = &next;
 
       // if the vert pointer is valid, there are td's in it to process
       //  else only the head pointer may be valid
@@ -370,10 +374,10 @@ void hc_uhci_do_item(GtkWidget *treeview, Bit32u FrameAddr, Bit32u FrameNum)
     sprintf(str, "0x%08X: TD: (0x%08X)", item & ~0xF, td.dword0);
     if ((item & ~0xF) == (Bit32u) usbdbg_param1)
       state = true;
-    cur = treeview_insert(treeview, next, str, (item & ~0xF), state);
+    treeview_insert(treeview, nextp, &cur, str, (item & ~0xF), state);
     selection = gtk_tree_view_get_selection(GTK_TREE_VIEW(treeview));
     if ((item & ~0xF) == (Bit32u) usbdbg_param1)
-      gtk_tree_selection_select_iter(selection, cur);
+      gtk_tree_selection_select_iter(selection, &cur);
     item = td.dword0;
     if (queue_addr != 0) {
       // if breadth first or last in the element list, move on to next queue item
@@ -1093,12 +1097,12 @@ void hc_xhci_do_ring(GtkWidget *treeview, const char *ring_str, Bit64u RingPtr, 
   int  trb_count = 0; // count of TRB's processed
   Bit64u address = RingPtr;
   struct TRB trb;
-  GtkTreeIter *parent;
+  GtkTreeIter parent, *parentp = NULL;
   bool state;
   Bit8u type;
 
   sprintf(str, "%s Ring: 0x" FMT_ADDRX64, ring_str, address);
-  parent = treeview_insert(treeview, NULL, str, 0, 0);
+  treeview_init(treeview, str);
 
   do {
     state = false; // clear the state
@@ -1112,7 +1116,8 @@ void hc_xhci_do_ring(GtkWidget *treeview, const char *ring_str, Bit64u RingPtr, 
       strcat(str, " <--- dq_pointer");
       state = true;
     }
-    parent = treeview_insert(treeview, parent, str, address, state);
+    treeview_insert(treeview, parentp, &parent, str, address, state);
+    parentp = &parent;
     if (type == LINK) {
       address = trb.parameter & (Bit64u) ~0xF;
     } else
@@ -1131,12 +1136,12 @@ void hc_xhci_do_event_ring(GtkWidget *treeview, const char *ring_str, int interr
   Bit64u address;
   Bit32u size;
   struct TRB trb;
-  GtkTreeIter *parent, *segment;
+  GtkTreeIter segment, *parentp = NULL;
   bool state = false;
   Bit8u type;
 
   sprintf(str, "%s Ring: Interrupter: %i", ring_str, interrupter);
-  parent = treeview_insert(treeview, NULL, str, 0, 0);
+  treeview_init(treeview, str);
 
   for (unsigned i = 0; i < (1 << MAX_SEG_TBL_SZ_EXP); i++) {
     sprintf(pname, "hub.ring_members.event_rings.ring%d.entries.entry%d.addr", interrupter, i);
@@ -1144,7 +1149,7 @@ void hc_xhci_do_event_ring(GtkWidget *treeview, const char *ring_str, int interr
     sprintf(pname, "hub.ring_members.event_rings.ring%d.entries.entry%d.size", interrupter, i);
     size = SIM->get_param_num(pname, xHCI_state)->get();
     sprintf(str, "Event Ring Segment %i (0x" FMT_ADDRX64 "), size %i", i, address, size);
-    segment = treeview_insert(treeview, parent, str, 0, 0);
+    treeview_insert(treeview, parentp, &segment, str, 0, 0);
     for (unsigned j = 0; j < size; j++) {
       state = 0; // clear the state
       DEV_MEM_READ_PHYSICAL(address, sizeof(struct TRB), (Bit8u *) &trb);
@@ -1158,7 +1163,7 @@ void hc_xhci_do_event_ring(GtkWidget *treeview, const char *ring_str, int interr
         strcat(str, " <--- eq_pointer");
         state = true;
       }
-      treeview_insert(treeview, segment, str, address, state);
+      treeview_insert(treeview, &segment, NULL, str, address, state);
 
       if (++trb_count > MAX_TRBS_ALLOWED)  // safety catch
         break;
@@ -1257,6 +1262,12 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case FORCE_HEADER:
       entry[e_num] = usbdlg_create_entry_with_label(grid, "Header Lo/Mid", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x1F)));
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Header Hi", 0, row++);
+      sprintf(str, "0x%08X", trb->status);
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Type", 0, row++);
+      sprintf(str, "%i", (Bit8u)(trb->parameter & 0x1F));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case TRANS_EVENT:
@@ -1369,6 +1380,14 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
       break;
   }
   switch (type) {
+    case DATA_STAGE:
+    case STATUS_STAGE:
+      checkbox[c_num] = gtk_check_button_new_with_label("Direction");
+      if (trb->command & 0x10000) {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+      }
+      gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+      break;
     case FORCE_EVENT:
     case COMMAND_COMPLETION:
     case DOORBELL_EVENT:
@@ -1380,7 +1399,41 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
   trb_type = usbdlg_create_ro_entry_with_label(grid, "TRB Type", 0, row++);
   sprintf(str, "%i", TRB_GET_TYPE(trb->command));
   gtk_entry_set_text(GTK_ENTRY(trb_type), str);
-  if (type == TRANS_EVENT) {
+  switch (type) {
+    case NORMAL:
+    case SETUP_STAGE:
+    case DATA_STAGE:
+    case STATUS_STAGE:
+    case LINK:
+    case NO_OP:
+      checkbox[c_num] = gtk_check_button_new_with_label("Interrupt On Complete");
+      if (TRB_IOC(trb->command)) {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+      }
+      gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+      if (type != SETUP_STAGE) {
+        checkbox[c_num] = gtk_check_button_new_with_label("Chain Bit");
+        if (TRB_CHAIN(trb->command)) {
+          gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+        }
+        gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+      }
+      if ((type != SETUP_STAGE) && (type != LINK)) {
+        checkbox[c_num] = gtk_check_button_new_with_label("Evaluate Next TRB");
+        if (TRB_TOGGLE(trb->command)) {
+          gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+        }
+        gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+      }
+      break;
+  }
+  if (type == LINK) {
+    checkbox[c_num] = gtk_check_button_new_with_label("Toggle Cycle");
+    if (TRB_GET_TOGGLE(trb->command)) {
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+    }
+    gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+  } else if (type == TRANS_EVENT) {
     checkbox[c_num] = gtk_check_button_new_with_label("Event Data");
     if (trb->command & 4) {
       gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
@@ -1412,14 +1465,10 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
   gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
   // TODO list (missing items before / after TRB type)
   switch (type) {
-    case NORMAL:              // (2/7)
-    case SETUP_STAGE:         // (7/2)
-    case DATA_STAGE:          // (3/6)
-    case STATUS_STAGE:        // (1/3)
-    case LINK:                // (-/3)
-    case NO_OP:               // (-/3)
+    case NORMAL:              // (2/4)
+    case SETUP_STAGE:         // (7/1)
+    case DATA_STAGE:          // (2/3)
     case SET_TR_DEQUEUE:      // (3/-)
-    case FORCE_HEADER:        // (2/-)
       gtk_grid_attach(GTK_GRID(grid), gtk_label_new("Dialog under construction"), 0, row, 2, 1);
       break;
   }
