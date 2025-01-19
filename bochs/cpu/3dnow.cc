@@ -41,7 +41,7 @@ BX_CPP_INLINE static softfloat_status_t prepare_softfloat_status_word_3dnow(int 
   status.softfloat_flush_underflow_to_zero = 0;
   status.softfloat_exceptionMasks = softfloat_all_exceptions_mask;
   status.softfloat_suppressException = softfloat_all_exceptions_mask;
-  status.softfloat_denormals_are_zeros = 0;
+  status.softfloat_denormals_are_zeros = true;
 
   return status;
 }
