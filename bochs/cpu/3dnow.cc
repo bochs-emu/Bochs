@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2002-2018 Stanislav Shwartsman
+//   Copyright (c) 2002-2025 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -70,7 +70,7 @@ BX_CPP_INLINE static float32 f32_add_3dnow(float32 a, float32 b)
   static softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_near_even); // Note, actual rounding mode is not specified by 3dNow! manual
 
   // Note that Inf/NaN handling is not documented in 3Dnow! manuals
-  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // The manual doesn't specify what result going to be if one or both arguments are Inf/NaN (undefined behavior)
   // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
   return f32_add(a, b, &status);
 }
@@ -95,7 +95,7 @@ BX_CPP_INLINE static float32 f32_sub_3dnow(float32 a, float32 b)
   static softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_near_even); // Note, actual rounding mode is not specified by 3dNow! manual
 
   // Note that Inf/NaN handling is not documented in 3Dnow! manuals
-  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // The manual doesn't specify what result going to be if one or both arguments are Inf/NaN (undefined behavior)
   // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
   return f32_sub(a, b, &status);
 }
@@ -111,7 +111,7 @@ BX_CPP_INLINE static float32 f32_mul_3dnow(float32 a, float32 b)
   static softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_near_even); // Note, actual rounding mode is not specified by 3dNow! manual
 
   // Note that Inf/NaN handling is not documented in 3Dnow! manuals
-  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // The manual doesn't specify what result going to be if one or both arguments are Inf/NaN (undefined behavior)
   // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
   return f32_mul(a, b, &status);
 }
@@ -127,7 +127,7 @@ BX_CPP_INLINE static float32 f32_min_3dnow(float32 a, float32 b)
   static softfloat_status_t status = prepare_softfloat_status_word_3dnow();
 
   // Note that Inf/NaN handling is not documented in 3Dnow! manuals
-  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // The manual doesn't specify what result going to be if one or both arguments are Inf/NaN (undefined behavior)
   // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
   return f32_min(a, b, &status);
 }
@@ -143,7 +143,7 @@ BX_CPP_INLINE static float32 f32_max_3dnow(float32 a, float32 b)
   static softfloat_status_t status = prepare_softfloat_status_word_3dnow();
 
   // Note that Inf/NaN handling is not documented in 3Dnow! manuals
-  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // The manual doesn't specify what result going to be if one or both arguments are Inf/NaN (undefined behavior)
   // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
   return f32_max(a, b, &status);
 }
@@ -268,7 +268,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2IW_PqQq(bxInstruction_c *i)
   softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_to_zero);
 
   // Note that Inf/NaN handling is not documented in 3Dnow! manuals
-  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // The manual doesn't specify what result going to be if argument is Inf/NaN (undefined behavior)
   // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
   MMXSD0(op) = f32_to_i32_round_to_zero_saturate(MMXUD0(op), &status);
   if (MMXSD0(op) < -0x8000)
@@ -312,7 +312,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PF2ID_PqQq(bxInstruction_c *i)
   softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_to_zero);
 
   // Note that Inf/NaN handling is not documented in 3Dnow! manuals
-  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // The manual doesn't specify what result going to be if argument is Inf/NaN (undefined behavior)
   // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
   MMXSD0(op) = f32_to_i32_round_to_zero_saturate(MMXUD0(op), &status);
   MMXSD1(op) = f32_to_i32_round_to_zero_saturate(MMXUD1(op), &status);
@@ -378,7 +378,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPGE_PqQq(bxInstruction_c *i)
   softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_to_zero);
 
   // Note that Inf/NaN handling is not documented in 3Dnow! manuals
-  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // The manual doesn't specify what result going to be if one or both arguments of the compare are Inf/NaN (undefined behavior)
   // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
 
   int relation0 = f32_compare_quiet(MMXUD0(op1), MMXUD0(op2), &status);
@@ -523,7 +523,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPGT_PqQq(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   // Note that Inf/NaN handling is not documented in 3Dnow! manuals
-  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // The manual doesn't specify what result going to be if one or both arguments of the compare are Inf/NaN (undefined behavior)
   // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
 
   softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_to_zero);
@@ -668,7 +668,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPEQ_PqQq(bxInstruction_c *i)
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
   // Note that Inf/NaN handling is not documented in 3Dnow! manuals
-  // The manual doesn't specify what result going to be if both arguments of the compare are Inf/NaN (undefined behavior)
+  // The manual doesn't specify what result going to be if one or both arguments of the compare are Inf/NaN (undefined behavior)
   // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
 
   softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_to_zero);
