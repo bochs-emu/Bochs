@@ -2372,6 +2372,8 @@ INT_PTR CALLBACK hc_xhci_callback_trb_forcehdr(HWND hDlg, UINT msg, WPARAM wPara
 
       sprintf(str, "0x%08X", g_trb.status);
       SetDlgItemText(hDlg, IDC_TRB_HDR_HI, str);
+      sprintf(str, "%i", (Bit8u)(g_trb.parameter & 0x1F));
+      SetDlgItemText(hDlg, IDC_TRB_FTYPE, str);
 
       sprintf(str, "%i", TRB_GET_SLOT(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str);
@@ -2392,6 +2394,8 @@ INT_PTR CALLBACK hc_xhci_callback_trb_forcehdr(HWND hDlg, UINT msg, WPARAM wPara
 
               GetDlgItemText(hDlg, IDC_TRB_HDR_HI, str, COMMON_STR_SIZE);
               g_trb.status = strtol(str, NULL, 0);
+              GetDlgItemText(hDlg, IDC_TRB_FTYPE, str, COMMON_STR_SIZE);
+              g_trb.parameter |= (strtol(str, NULL, 0) & 0x1F);
 
               GetDlgItemText(hDlg, IDC_TRB_SLOT_ID, str, COMMON_STR_SIZE);
               g_trb.command  = TRB_SET_SLOT(strtol(str, NULL, 0));
