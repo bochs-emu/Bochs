@@ -1243,6 +1243,17 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
       entry[e_num] = usbdlg_create_entry_with_label(grid, "New TR Dequeue Pointer", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Stream Context Type", 0, row++);
+      sprintf(str, "%i", (Bit8u)(trb->parameter >> 1) & 0x07);
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      checkbox[c_num] = gtk_check_button_new_with_label("Dequeue Cycle Bit");
+      if (trb->parameter & 1) {
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+      }
+      gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Stream ID", 0, row++);
+      sprintf(str, "%i", TRB_GET_STREAM(trb->status));
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
     case FORCE_EVENT:
       entry[e_num] = usbdlg_create_entry_with_label(grid, "Event TRB Pointer", 0, row++);
@@ -1510,7 +1521,6 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
   // TODO list (missing items before TRB type)
   switch (type) {
     case SETUP_STAGE:         // (6)
-    case SET_TR_DEQUEUE:      // (3)
       gtk_grid_attach(GTK_GRID(grid), gtk_label_new("Dialog under construction"), 0, row, 2, 1);
       break;
   }

@@ -2130,6 +2130,9 @@ INT_PTR CALLBACK hc_xhci_callback_trb_settrptr(HWND hDlg, UINT msg, WPARAM wPara
       sprintf(str, "0x" FMT_ADDRX64, g_trb.parameter & ~BX_CONST64(0x0F));
       SetDlgItemText(hDlg, IDC_TRB_DATA_PTR, str);
 
+      sprintf(str, "%i", (Bit8u)(g_trb.parameter >> 1) & 0x07);
+      SetDlgItemText(hDlg, IDC_TRB_SCT, str);
+
       sprintf(str, "%i", TRB_GET_STREAM(g_trb.status));
       SetDlgItemText(hDlg, IDC_TRB_STREAMID, str);
 
@@ -2140,7 +2143,8 @@ INT_PTR CALLBACK hc_xhci_callback_trb_settrptr(HWND hDlg, UINT msg, WPARAM wPara
       sprintf(str, "%i", TRB_GET_TYPE(g_trb.command));
       SetDlgItemText(hDlg, IDC_TRB_TYPE, str);
 
-      CheckDlgButton(hDlg, IDC_TRB_C,  (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
+      CheckDlgButton(hDlg, IDC_TRB_DCS, (g_trb.parameter & 1) ? BST_CHECKED : BST_UNCHECKED);
+      CheckDlgButton(hDlg, IDC_TRB_C, (g_trb.command & 1) ? BST_CHECKED : BST_UNCHECKED);
 
       SetFocus(GetDlgItem(hDlg, IDOK));
       return TRUE;
