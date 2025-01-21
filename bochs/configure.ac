@@ -1298,7 +1298,7 @@ AC_ARG_ENABLE(3dnow,
    ],
   [
     AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_3DNOW, 0)
+    AC_DEFINE(BX_SUPPORT_3DNOW, 1)
   ]
   )
 
