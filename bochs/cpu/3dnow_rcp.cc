@@ -68,13 +68,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRCP_PqQq(bxInstruction_c *i)
 
   // for zero argument produce maximum normal value with the sign of source operand
   if ((op << 1) == 0) {
-    MMXUD0(dst) = MMXUD1(dst) = packFloat32(f32_sign(op), 0x7F, 0x7FFFFF);
+    op = packFloat32(f32_sign(op), 0x7F, 0x7FFFFF);
   }
   else {
     // Note that Inf/NaN handling is not documented in 3Dnow! manuals
     // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
-    MMXUD0(dst) = MMXUD1(dst) = approximate_rcp(op);
+    op = approximate_rcp(op);
   }
+
+  MMXUD0(dst) = op;
+  MMXUD1(dst) = op;
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), dst);
@@ -155,13 +158,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRSQRT_PqQq(bxInstruction_c *i)
 
   // for zero argument produce maximum normal value with the sign of source operand
   if (op == 0) {
-    MMXUD0(dst) = MMXUD1(dst) = sign ^ packFloat32(0, 0x7F, 0x7FFFFF);
+    op = sign ^ packFloat32(0, 0x7F, 0x7FFFFF);
   }
   else {
     // Note that Inf/NaN handling is not documented in 3Dnow! manuals
     // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
-    MMXUD0(dst) = MMXUD1(dst) = sign ^ approximate_rsqrt(op);
+    op = sign ^ approximate_rsqrt(op);
   }
+
+  MMXUD0(dst) = op;
+  MMXUD1(dst) = op;
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), dst);
