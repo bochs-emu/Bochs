@@ -59,6 +59,7 @@ OBJS = \
 	ctrl_xfer16.o \
 	mmx.o \
 	3dnow.o \
+	3dnow_rcp.o \
 	fpu_emu.o \
 	sse.o \
 	sse_move.o \
@@ -180,6 +181,12 @@ dist-clean: clean
 #  gcc -MM -I.. -I../instrument/stubs *.cc decoder/*.cc | sed 's/\.cc/.@CPP_SUFFIX@/g'
 ###########################################
 3dnow.o: 3dnow.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
+ ../misc/bswap.h cpu.h decoder/decoder.h decoder/features.h \
+ ../instrument/stubs/instrument.h i387.h \
+ softfloat3e/include/softfloat_types.h ../config.h fpu/tag_w.h \
+ fpu/status_w.h fpu/control_w.h crregs.h descriptor.h decoder/instr.h \
+ lazy_flags.h tlb.h icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h
+3dnow_rcp.o: 3dnow_rcp.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h decoder/decoder.h decoder/features.h \
  ../instrument/stubs/instrument.h i387.h \
  softfloat3e/include/softfloat_types.h ../config.h fpu/tag_w.h \

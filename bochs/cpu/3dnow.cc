@@ -424,24 +424,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFMIN_PqQq(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRCP_PqQq(bxInstruction_c *i)
-{
-  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
-
-  BX_PANIC(("%s: This 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRSQRT_PqQq(bxInstruction_c *i)
-{
-  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
-
-  BX_PANIC(("%s: This 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
-
-  BX_NEXT_INSTR(i);
-}
-
 /* 0F 0F /r 9A */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFSUB_PqQq(bxInstruction_c *i)
 {
@@ -564,24 +546,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFMAX_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op1);
 #endif
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRCPIT1_PqQq(bxInstruction_c *i)
-{
-  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
-
-  BX_PANIC(("%s: This 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRSQIT1_PqQq(bxInstruction_c *i)
-{
-  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
-
-  BX_PANIC(("%s: This 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
 
   BX_NEXT_INSTR(i);
 }
@@ -709,15 +673,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFMUL_PqQq(bxInstruction_c *i)
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op1);
 #endif
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRCPIT2_PqQq(bxInstruction_c *i)
-{
-  BX_CPU_THIS_PTR FPU_check_pending_exceptions();
-
-  BX_PANIC(("%s: This 3DNow! instruction still not implemented", i->getIaOpcodeNameShort()));
 
   BX_NEXT_INSTR(i);
 }
