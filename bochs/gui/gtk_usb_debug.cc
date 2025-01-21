@@ -1219,6 +1219,23 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
       sprintf(str, "0x" FMT_ADDRX64, trb->parameter);
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
+    case SETUP_STAGE:
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "wValue", 0, row++);
+      sprintf(str, "0x%04X", (Bit16u) ((trb->parameter & BX_CONST64(0x00000000000000FF)) >> 0));
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "bRequest", 0, row++);
+      sprintf(str, "0x%04X", (Bit16u) ((trb->parameter & BX_CONST64(0x000000000000FF00)) >> 8));
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "bRequestType", 0, row++);
+      sprintf(str, "0x%04X", (Bit16u) ((trb->parameter & BX_CONST64(0x00000000FFFF0000)) >> 16));
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "wLength", 0, row++);
+      sprintf(str, "0x%04X", (Bit16u) ((trb->parameter & BX_CONST64(0x0000FFFF00000000)) >> 32));
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "wIndex", 0, row++);
+      sprintf(str, "0x%04X", (Bit16u) ((trb->parameter & BX_CONST64(0xFFFF000000000000)) >> 48));
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      break;
     case LINK:
       entry[e_num] = usbdlg_create_entry_with_label(grid, "Ring Pointer", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
@@ -1402,6 +1419,11 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
       entry[e_num] = usbdlg_create_entry_with_label(grid, "TRB Transfer Length", 0, row++);
       sprintf(str, "%i", TRB_GET_TX_LEN(trb->status));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      if (type == SETUP_STAGE) {
+        entry[e_num] = usbdlg_create_entry_with_label(grid, "Transfer Type", 0, row++);
+        sprintf(str, "%i", (trb->command & 0x00030000) >> 16);
+        gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      }
       break;
   }
   switch (type) {
@@ -1518,16 +1540,11 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
   }
   gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
-  // TODO list (missing items before TRB type)
-  switch (type) {
-    case SETUP_STAGE:         // (6)
-      gtk_grid_attach(GTK_GRID(grid), gtk_label_new("Dialog under construction"), 0, row, 2, 1);
-      break;
-  }
   // Show dialog
   gtk_widget_show_all(dialog);
   ret = gtk_dialog_run(GTK_DIALOG(dialog));
   if (ret == GTK_RESPONSE_OK) {
+    xhci_message_dialog("Saving changes to TRB not supported yet");
     // TODO
   }
   gtk_widget_destroy(dialog);
