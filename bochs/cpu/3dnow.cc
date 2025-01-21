@@ -32,7 +32,7 @@
 
 #include "softfloat3e/include/softfloat.h"
 
-BX_CPP_INLINE static softfloat_status_t prepare_softfloat_status_word_3dnow(int rounding_mode = softfloat_round_near_even)
+softfloat_status_t prepare_softfloat_status_word_3dnow(int rounding_mode = softfloat_round_near_even)
 {
   softfloat_status_t status;
 

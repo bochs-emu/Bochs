@@ -2340,7 +2340,6 @@ public: // for now...
   BX_SMF void PFACC_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PFCMPEQ_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PFMUL_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void PFRCPIT2_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PMULHRW_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PSWAPD_PqQq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif

@@ -965,7 +965,7 @@ bx_define_opcode(BX_IA_PFNACC_PqQq, "pfnacc", "pfnacc", &BX_CPU_C::PFNACC_PqQq, 
 bx_define_opcode(BX_IA_PFPNACC_PqQq, "pfpnacc", "pfpnacc", &BX_CPU_C::PFPNACC_PqQq, &BX_CPU_C::PFPNACC_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PFRCP_PqQq, "pfrcp", "pfrcp", &BX_CPU_C::PFRCP_PqQq, &BX_CPU_C::PFRCP_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PFRCPIT1_PqQq, "pfrcpit1", "pfrcpit1", &BX_CPU_C::PFRCPIT1_PqQq, &BX_CPU_C::PFRCPIT1_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
-bx_define_opcode(BX_IA_PFRCPIT2_PqQq, "pfrcpit2", "pfrcpit2", &BX_CPU_C::PFRCPIT2_PqQq, &BX_CPU_C::PFRCPIT2_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
+bx_define_opcode(BX_IA_PFRCPIT2_PqQq, "pfrcpit2", "pfrcpit2", &BX_CPU_C::PFMUL_PqQq, &BX_CPU_C::PFMUL_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)        // aliased to PFMUL
 bx_define_opcode(BX_IA_PFRSQIT1_PqQq, "pfrsqit1", "pfrsqit1", &BX_CPU_C::PFRSQIT1_PqQq, &BX_CPU_C::PFRSQIT1_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PFRSQRT_PqQq, "pfrsqrt", "pfrsqrt", &BX_CPU_C::PFRSQRT_PqQq, &BX_CPU_C::PFRSQRT_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PFSUB_PqQq, "pfsub", "pfsub", &BX_CPU_C::PFSUB_PqQq, &BX_CPU_C::PFSUB_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)

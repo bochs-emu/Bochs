@@ -26,7 +26,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_CPU_LEVEL >= 6
+#if BX_CPU_LEVEL >= 6 || BX_SUPPORT_3DNOW
 
 #include "softfloat3e/include/softfloat.h"
 #include "fpu/softfloat-specialize.h"
@@ -372,7 +372,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RCPSS_VssWssR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-#if BX_CPU_LEVEL >= 6
+#if BX_CPU_LEVEL >= 6 || BX_SUPPORT_3DNOW
 
 static const Bit16u rsqrt_table0[1024] = {
     0x34f8, 0x34e0, 0x34d0, 0x34b8, 0x34a0, 0x3488, 0x3470, 0x3460,
