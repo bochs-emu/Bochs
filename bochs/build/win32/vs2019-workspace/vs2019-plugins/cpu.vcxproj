@@ -216,6 +216,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\cpu\3dnow.cc" />
+    <ClCompile Include="..\cpu\3dnow_rcp.cc" />
     <ClCompile Include="..\cpu\access.cc" />
     <ClCompile Include="..\cpu\access2.cc" />
     <ClCompile Include="..\cpu\aes.cc" />
