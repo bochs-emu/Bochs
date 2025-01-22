@@ -1517,9 +1517,6 @@ void bx_cpuid_t::dump_cpuid(unsigned max_std_leaf, unsigned max_ext_leaf) const
 void bx_cpuid_t::warning_messages(unsigned extension) const
 {
   switch(extension) {
-  case BX_ISA_3DNOW:
-    BX_INFO(("WARNING: 3DNow! is not implemented yet !"));
-    break;
   case BX_ISA_RDRAND:
     BX_INFO(("WARNING: RDRAND would not produce true random numbers !"));
     break;
