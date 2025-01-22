@@ -148,13 +148,21 @@ BX_CPP_INLINE static float32 f32_max_3dnow(float32 a, float32 b)
   return f32_max(a, b, &status);
 }
 
-// 3dnow! handling of PFCMPEQ
-BX_CPP_INLINE static Bit32u f32_cmpeq_3dnow(float32 a, float32 b)
+// 3dnow! handling of PFCMPEQ/PFCMPGT/PFCMPGE
+BX_CPP_INLINE static int f32_compare_3dnow(float32 a, float32 b)
 {
   a = f32_denormal_to_zero(a);
   b = f32_denormal_to_zero(b);
 
-  return ((a == b) || ((Bit32u) ((a | b)<<1) == 0)) ? 0xFFFFFFFF : 0;
+  if ((a == b) || ((uint32_t) ((a | b)<<1) == 0)) return softfloat_relation_equal;
+
+  int signA = f32_sign(a);
+  int signB = f32_sign(b);
+  if (signA != signB)
+      return (signA) ? softfloat_relation_less : softfloat_relation_greater;
+
+  if (signA ^ (a < b)) return softfloat_relation_less;
+  return softfloat_relation_greater;
 }
 
 #endif
@@ -384,14 +392,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPGE_PqQq(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
-  softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_to_zero);
-
-  // Note that Inf/NaN handling is not documented in 3Dnow! manuals
-  // The manual doesn't specify what result going to be if one or both arguments of the compare are Inf/NaN (undefined behavior)
-  // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
-
-  int relation0 = f32_compare_quiet(MMXUD0(op1), MMXUD0(op2), &status);
-  int relation1 = f32_compare_quiet(MMXUD1(op1), MMXUD1(op2), &status);
+  int relation0 = f32_compare_3dnow(MMXUD0(op1), MMXUD0(op2));
+  int relation1 = f32_compare_3dnow(MMXUD1(op1), MMXUD1(op2));
 
   MMXUD0(op1) = (relation0 == softfloat_relation_greater) || (relation0 == softfloat_relation_equal) ? 0xFFFFFFFF : 0;
   MMXUD1(op1) = (relation1 == softfloat_relation_greater) || (relation1 == softfloat_relation_equal) ? 0xFFFFFFFF : 0;
@@ -513,14 +515,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPGT_PqQq(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
-  // Note that Inf/NaN handling is not documented in 3Dnow! manuals
-  // The manual doesn't specify what result going to be if one or both arguments of the compare are Inf/NaN (undefined behavior)
-  // This implementation choose IEEE-754 behavior which might not necessary match actual AMD's hardware
-
-  softfloat_status_t status = prepare_softfloat_status_word_3dnow(softfloat_round_to_zero);
-
-  MMXUD0(op1) = (f32_compare_quiet(MMXUD0(op1), MMXUD0(op2), &status) == softfloat_relation_greater) ? 0xFFFFFFFF : 0;
-  MMXUD1(op1) = (f32_compare_quiet(MMXUD1(op1), MMXUD1(op2), &status) == softfloat_relation_greater) ? 0xFFFFFFFF : 0;
+  MMXUD0(op1) = (f32_compare_3dnow(MMXUD0(op1), MMXUD0(op2)) == softfloat_relation_greater) ? 0xFFFFFFFF : 0;
+  MMXUD1(op1) = (f32_compare_3dnow(MMXUD1(op1), MMXUD1(op2)) == softfloat_relation_greater) ? 0xFFFFFFFF : 0;
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op1);
@@ -640,8 +636,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFCMPEQ_PqQq(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR prepareFPU2MMX(); /* FPU2MMX transition */
 
-  MMXUD0(op1) = f32_cmpeq_3dnow(MMXUD0(op1), MMXUD0(op2));
-  MMXUD1(op1) = f32_cmpeq_3dnow(MMXUD1(op1), MMXUD1(op2));
+  MMXUD0(op1) = (f32_compare_3dnow(MMXUD0(op1), MMXUD0(op2)) == softfloat_relation_equal) ? 0xFFFFFFFF : 0;
+  MMXUD1(op1) = (f32_compare_3dnow(MMXUD1(op1), MMXUD1(op2)) == softfloat_relation_equal) ? 0xFFFFFFFF : 0;
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op1);
