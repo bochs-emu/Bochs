@@ -386,7 +386,7 @@ void bx_virt_timer_c::init(void)
 void bx_virt_timer_c::register_state(void)
 {
   unsigned i;
-  char name[4];
+  char name[12];
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "virt_timer", "Virtual Timer State");
   bx_list_c *vtimers = new bx_list_c(list, "timer");
