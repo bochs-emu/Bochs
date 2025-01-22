@@ -931,6 +931,7 @@ int uhci_debug_dialog(int type, int param1)
       gtk_window_set_title(GTK_WINDOW(main_dialog), "UHCI Debug Dialog");
   }
   gtk_window_set_default_size(GTK_WINDOW(main_dialog), 600, 500);
+  gtk_window_set_keep_above(GTK_WINDOW(main_dialog), TRUE);
   button[0] = gtk_dialog_add_button(GTK_DIALOG(main_dialog), "Continue", GTK_RESPONSE_OK);
   button[1] = gtk_dialog_add_button(GTK_DIALOG(main_dialog), "Quit", GTK_RESPONSE_CANCEL);
   gtk_dialog_set_default_response(GTK_DIALOG(main_dialog), GTK_RESPONSE_OK);
@@ -1193,19 +1194,21 @@ static void xhci_context_dialog(GtkWidget *widget, gpointer data)
 void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
 {
   GtkWidget *mainVbox, *trb_type;
-  GtkWidget *grid, *entry[9], *checkbox[8], *button;
+  GtkWidget *grid, *entry[9], *checkbox[8], *button[3];
   int ret, c_num = 0, e_num = 0, row = 0;
   char str[COMMON_STR_SIZE];
 
   // Using the type of trb, display an associated dialog
   sprintf(str, "%s TRB", trb_types[type].name);
-  GtkWidget *dialog =
-    gtk_dialog_new_with_buttons(str, GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL,
-                                g_dgettext("gtk30", "_Save"), GTK_RESPONSE_OK,
-                                g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_CANCEL,
-                                NULL);
+  GtkWidget *dialog = gtk_dialog_new();
+  gtk_window_set_title(GTK_WINDOW(dialog), str);
+  gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(main_dialog));
+  gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
   gtk_window_set_default_size(GTK_WINDOW(dialog), 200, 200);
-  // TODO: set focus
+  button[0] = gtk_dialog_add_button(GTK_DIALOG(dialog), g_dgettext("gtk30", "_Save"), GTK_RESPONSE_OK);
+  button[1] = gtk_dialog_add_button(GTK_DIALOG(dialog), g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_CANCEL);
+  gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+  gtk_window_set_focus(GTK_WINDOW(dialog), button[0]);
   mainVbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
   gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), mainVbox, TRUE, TRUE, 2);
   grid = gtk_grid_new();
@@ -1250,11 +1253,11 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case CONFIG_EP:
     case EVALUATE_CONTEXT:
       entry[e_num] = usbdlg_create_entry_with_label(grid, "Input Context Pointer", 0, row++);
-      button = gtk_button_new_with_label(">");
-      g_signal_connect(button, "clicked", G_CALLBACK(xhci_context_dialog), NULL);
-      gtk_grid_attach(GTK_GRID(grid), button, 2, e_num, 1, 1);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      button[2] = gtk_button_new_with_label(">");
+      g_signal_connect(button[2], "clicked", G_CALLBACK(xhci_context_dialog), NULL);
+      gtk_grid_attach(GTK_GRID(grid), button[2], 2, e_num, 1, 1);
       break;
     case SET_TR_DEQUEUE:
       entry[e_num] = usbdlg_create_entry_with_label(grid, "New TR Dequeue Pointer", 0, row++);
@@ -1644,6 +1647,7 @@ int xhci_debug_dialog(int type, int param1)
       gtk_window_set_title(GTK_WINDOW(main_dialog), "xHCI Debug Dialog");
   }
   gtk_window_set_default_size(GTK_WINDOW(main_dialog), 600, 500);
+  gtk_window_set_keep_above(GTK_WINDOW(main_dialog), TRUE);
   button[0] = gtk_dialog_add_button(GTK_DIALOG(main_dialog), "Continue", GTK_RESPONSE_OK);
   button[1] = gtk_dialog_add_button(GTK_DIALOG(main_dialog), "Quit", GTK_RESPONSE_CANCEL);
   gtk_dialog_set_default_response(GTK_DIALOG(main_dialog), GTK_RESPONSE_OK);
