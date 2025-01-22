@@ -24704,10 +24704,17 @@ printf "%s\n" "no" >&6; }
 
 else case e in #(
   e)
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-    printf "%s\n" "#define BX_SUPPORT_3DNOW 1" >>confdefs.h
+    if test "$bx_cpu_level" -gt 4; then
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+      printf "%s\n" "#define BX_SUPPORT_3DNOW 1" >>confdefs.h
 
+    else
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+      printf "%s\n" "#define BX_SUPPORT_3DNOW 0" >>confdefs.h
+
+    fi
 
    ;;
 esac

@@ -397,7 +397,7 @@ struct softfloat_status_t;
 extern void softfloat_status_word_rc_override(softfloat_status_t &status, bxInstruction_c *i);
 #endif
 
-#if BX_SUPPORT_FPU
+#if BX_SUPPORT_FPU || BX_SUPPORT_3DNOW
 /* convert float16 NaN number to QNaN */
 BX_CPP_INLINE float16 convert_to_QNaN(float16 op)
 {

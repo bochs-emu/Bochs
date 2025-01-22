@@ -1297,8 +1297,13 @@ AC_ARG_ENABLE(3dnow,
    fi
    ],
   [
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_SUPPORT_3DNOW, 1)
+    if test "$bx_cpu_level" -gt 4; then
+      AC_MSG_RESULT(yes)
+      AC_DEFINE(BX_SUPPORT_3DNOW, 1)
+    else
+      AC_MSG_RESULT(no)
+      AC_DEFINE(BX_SUPPORT_3DNOW, 0)
+    fi
   ]
   )
 

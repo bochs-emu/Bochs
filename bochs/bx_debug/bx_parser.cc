@@ -74,7 +74,7 @@
 #define yychar          bxchar
 
 /* First part of user prologue.  */
-#line 5 "parser.y"
+#line 5 "bx_parser.y"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -390,7 +390,7 @@ extern int bxdebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 14 "parser.y"
+#line 14 "bx_parser.y"
 
   char    *sval;
   Bit64u   uval;
@@ -2462,38 +2462,38 @@ yyreduce:
   switch (yyn)
     {
   case 64: /* command: expression  */
-#line 225 "parser.y"
+#line 225 "bx_parser.y"
                  { eval_value = (yyvsp[0].uval); }
 #line 2468 "y.tab.c"
     break;
 
   case 66: /* command: '\n'  */
-#line 228 "parser.y"
+#line 228 "bx_parser.y"
       {
       }
 #line 2475 "y.tab.c"
     break;
 
   case 68: /* BX_TOKEN_TOGGLE_ON_OFF: BX_TOKEN_OFF  */
-#line 235 "parser.y"
+#line 235 "bx_parser.y"
     { (yyval.bval)=(yyvsp[0].bval); }
 #line 2481 "y.tab.c"
     break;
 
   case 70: /* BX_TOKEN_REGISTERS: BX_TOKEN_REGS  */
-#line 241 "parser.y"
+#line 241 "bx_parser.y"
     { (yyval.sval)=(yyvsp[0].sval); }
 #line 2487 "y.tab.c"
     break;
 
   case 76: /* BX_TOKEN_SEGREG: BX_TOKEN_GS  */
-#line 251 "parser.y"
+#line 251 "bx_parser.y"
     { (yyval.uval)=(yyvsp[0].uval); }
 #line 2493 "y.tab.c"
     break;
 
   case 77: /* timebp_command: BX_TOKEN_TIMEBP expression '\n'  */
-#line 256 "parser.y"
+#line 256 "bx_parser.y"
       {
           bx_dbg_timebp_command(0, (yyvsp[-1].uval));
           free((yyvsp[-2].sval));
@@ -2502,7 +2502,7 @@ yyreduce:
     break;
 
   case 78: /* timebp_command: BX_TOKEN_TIMEBP_ABSOLUTE expression '\n'  */
-#line 261 "parser.y"
+#line 261 "bx_parser.y"
       {
           bx_dbg_timebp_command(1, (yyvsp[-1].uval));
           free((yyvsp[-2].sval));
@@ -2511,7 +2511,7 @@ yyreduce:
     break;
 
   case 79: /* modebp_command: BX_TOKEN_MODEBP '\n'  */
-#line 269 "parser.y"
+#line 269 "bx_parser.y"
       {
           bx_dbg_modebp_command();
           free((yyvsp[-1].sval));
@@ -2520,7 +2520,7 @@ yyreduce:
     break;
 
   case 80: /* vmexitbp_command: BX_TOKEN_VMEXITBP '\n'  */
-#line 277 "parser.y"
+#line 277 "bx_parser.y"
       {
           bx_dbg_vmexitbp_command();
           free((yyvsp[-1].sval));
@@ -2529,7 +2529,7 @@ yyreduce:
     break;
 
   case 81: /* show_command: BX_TOKEN_SHOW BX_TOKEN_GENERIC '\n'  */
-#line 285 "parser.y"
+#line 285 "bx_parser.y"
       {
           bx_dbg_show_command((yyvsp[-1].sval));
           free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -2538,7 +2538,7 @@ yyreduce:
     break;
 
   case 82: /* show_command: BX_TOKEN_SHOW BX_TOKEN_ALL '\n'  */
-#line 290 "parser.y"
+#line 290 "bx_parser.y"
       {
           bx_dbg_show_command("all");
           free((yyvsp[-2].sval));
@@ -2547,7 +2547,7 @@ yyreduce:
     break;
 
   case 83: /* show_command: BX_TOKEN_SHOW BX_TOKEN_OFF '\n'  */
-#line 295 "parser.y"
+#line 295 "bx_parser.y"
       {
           bx_dbg_show_command("off");
           free((yyvsp[-2].sval));
@@ -2556,7 +2556,7 @@ yyreduce:
     break;
 
   case 84: /* show_command: BX_TOKEN_SHOW BX_TOKEN_STRING '\n'  */
-#line 300 "parser.y"
+#line 300 "bx_parser.y"
       {
           bx_dbg_show_param_command((yyvsp[-1].sval), 0);
           free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -2565,7 +2565,7 @@ yyreduce:
     break;
 
   case 85: /* show_command: BX_TOKEN_SHOW BX_TOKEN_STRING BX_TOKEN_XML '\n'  */
-#line 305 "parser.y"
+#line 305 "bx_parser.y"
       {
           bx_dbg_show_param_command((yyvsp[-2].sval), 1);
           free((yyvsp[-3].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -2574,7 +2574,7 @@ yyreduce:
     break;
 
   case 86: /* show_command: BX_TOKEN_SHOW '\n'  */
-#line 310 "parser.y"
+#line 310 "bx_parser.y"
       {
           bx_dbg_show_command(0);
           free((yyvsp[-1].sval));
@@ -2583,7 +2583,7 @@ yyreduce:
     break;
 
   case 87: /* page_command: BX_TOKEN_PAGE expression '\n'  */
-#line 318 "parser.y"
+#line 318 "bx_parser.y"
       {
           bx_dbg_xlate_address((yyvsp[-1].uval));
           free((yyvsp[-2].sval));
@@ -2592,7 +2592,7 @@ yyreduce:
     break;
 
   case 88: /* tlb_command: BX_TOKEN_TLB expression '\n'  */
-#line 326 "parser.y"
+#line 326 "bx_parser.y"
       {
           bx_dbg_tlb_lookup((yyvsp[-1].uval));
           free((yyvsp[-2].sval));
@@ -2601,7 +2601,7 @@ yyreduce:
     break;
 
   case 89: /* ptime_command: BX_TOKEN_PTIME '\n'  */
-#line 334 "parser.y"
+#line 334 "bx_parser.y"
       {
           bx_dbg_ptime_command();
           free((yyvsp[-1].sval));
@@ -2610,7 +2610,7 @@ yyreduce:
     break;
 
   case 90: /* trace_command: BX_TOKEN_TRACE BX_TOKEN_TOGGLE_ON_OFF '\n'  */
-#line 342 "parser.y"
+#line 342 "bx_parser.y"
       {
           bx_dbg_trace_command((yyvsp[-1].bval));
           free((yyvsp[-2].sval));
@@ -2619,7 +2619,7 @@ yyreduce:
     break;
 
   case 91: /* trace_reg_command: BX_TOKEN_TRACEREG BX_TOKEN_TOGGLE_ON_OFF '\n'  */
-#line 350 "parser.y"
+#line 350 "bx_parser.y"
       {
           bx_dbg_trace_reg_command((yyvsp[-1].bval));
           free((yyvsp[-2].sval));
@@ -2628,7 +2628,7 @@ yyreduce:
     break;
 
   case 92: /* trace_mem_command: BX_TOKEN_TRACEMEM BX_TOKEN_TOGGLE_ON_OFF '\n'  */
-#line 358 "parser.y"
+#line 358 "bx_parser.y"
       {
           bx_dbg_trace_mem_command((yyvsp[-1].bval));
           free((yyvsp[-2].sval));
@@ -2637,7 +2637,7 @@ yyreduce:
     break;
 
   case 93: /* print_stack_command: BX_TOKEN_PRINT_STACK '\n'  */
-#line 366 "parser.y"
+#line 366 "bx_parser.y"
       {
           bx_dbg_print_stack_command(16);
           free((yyvsp[-1].sval));
@@ -2646,7 +2646,7 @@ yyreduce:
     break;
 
   case 94: /* print_stack_command: BX_TOKEN_PRINT_STACK BX_TOKEN_NUMERIC '\n'  */
-#line 371 "parser.y"
+#line 371 "bx_parser.y"
       {
           bx_dbg_print_stack_command((yyvsp[-1].uval));
           free((yyvsp[-2].sval));
@@ -2655,7 +2655,7 @@ yyreduce:
     break;
 
   case 95: /* backtrace_command: BX_TOKEN_BT '\n'  */
-#line 379 "parser.y"
+#line 379 "bx_parser.y"
       {
         bx_dbg_bt_command(16);
         free((yyvsp[-1].sval));
@@ -2664,7 +2664,7 @@ yyreduce:
     break;
 
   case 96: /* backtrace_command: BX_TOKEN_BT BX_TOKEN_NUMERIC '\n'  */
-#line 384 "parser.y"
+#line 384 "bx_parser.y"
       {
         bx_dbg_bt_command((yyvsp[-1].uval));
         free((yyvsp[-2].sval));
@@ -2673,7 +2673,7 @@ yyreduce:
     break;
 
   case 97: /* watch_point_command: BX_TOKEN_WATCH BX_TOKEN_STOP '\n'  */
-#line 392 "parser.y"
+#line 392 "bx_parser.y"
       {
           bx_dbg_watchpoint_continue(0);
           free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -2682,7 +2682,7 @@ yyreduce:
     break;
 
   case 98: /* watch_point_command: BX_TOKEN_WATCH BX_TOKEN_CONTINUE '\n'  */
-#line 397 "parser.y"
+#line 397 "bx_parser.y"
       {
           bx_dbg_watchpoint_continue(1);
           free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -2691,7 +2691,7 @@ yyreduce:
     break;
 
   case 99: /* watch_point_command: BX_TOKEN_WATCH '\n'  */
-#line 402 "parser.y"
+#line 402 "bx_parser.y"
       {
           bx_dbg_print_watchpoints();
           free((yyvsp[-1].sval));
@@ -2700,7 +2700,7 @@ yyreduce:
     break;
 
   case 100: /* watch_point_command: BX_TOKEN_WATCH BX_TOKEN_R expression '\n'  */
-#line 407 "parser.y"
+#line 407 "bx_parser.y"
       {
           bx_dbg_watch(0, (yyvsp[-1].uval), 1); /* BX_READ */
           free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
@@ -2709,7 +2709,7 @@ yyreduce:
     break;
 
   case 101: /* watch_point_command: BX_TOKEN_WATCH BX_TOKEN_READ expression '\n'  */
-#line 412 "parser.y"
+#line 412 "bx_parser.y"
       {
           bx_dbg_watch(0, (yyvsp[-1].uval), 1); /* BX_READ */
           free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
@@ -2718,7 +2718,7 @@ yyreduce:
     break;
 
   case 102: /* watch_point_command: BX_TOKEN_WATCH BX_TOKEN_WRITE expression '\n'  */
-#line 417 "parser.y"
+#line 417 "bx_parser.y"
       {
           bx_dbg_watch(1, (yyvsp[-1].uval), 1); /* BX_WRITE */
           free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
@@ -2727,7 +2727,7 @@ yyreduce:
     break;
 
   case 103: /* watch_point_command: BX_TOKEN_WATCH BX_TOKEN_R expression expression '\n'  */
-#line 422 "parser.y"
+#line 422 "bx_parser.y"
       {
           bx_dbg_watch(0, (yyvsp[-2].uval), (yyvsp[-1].uval)); /* BX_READ */
           free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
@@ -2736,7 +2736,7 @@ yyreduce:
     break;
 
   case 104: /* watch_point_command: BX_TOKEN_WATCH BX_TOKEN_READ expression expression '\n'  */
-#line 427 "parser.y"
+#line 427 "bx_parser.y"
       {
           bx_dbg_watch(0, (yyvsp[-2].uval), (yyvsp[-1].uval)); /* BX_READ */
           free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
@@ -2745,7 +2745,7 @@ yyreduce:
     break;
 
   case 105: /* watch_point_command: BX_TOKEN_WATCH BX_TOKEN_WRITE expression expression '\n'  */
-#line 432 "parser.y"
+#line 432 "bx_parser.y"
       {
           bx_dbg_watch(1, (yyvsp[-2].uval), (yyvsp[-1].uval)); /* BX_WRITE */
           free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
@@ -2754,7 +2754,7 @@ yyreduce:
     break;
 
   case 106: /* watch_point_command: BX_TOKEN_UNWATCH '\n'  */
-#line 437 "parser.y"
+#line 437 "bx_parser.y"
       {
           bx_dbg_unwatch_all();
           free((yyvsp[-1].sval));
@@ -2763,7 +2763,7 @@ yyreduce:
     break;
 
   case 107: /* watch_point_command: BX_TOKEN_UNWATCH expression '\n'  */
-#line 442 "parser.y"
+#line 442 "bx_parser.y"
       {
           bx_dbg_unwatch((yyvsp[-1].uval));
           free((yyvsp[-2].sval));
@@ -2772,7 +2772,7 @@ yyreduce:
     break;
 
   case 108: /* symbol_command: BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_STRING '\n'  */
-#line 450 "parser.y"
+#line 450 "bx_parser.y"
       {
         bx_dbg_symbol_command((yyvsp[-1].sval), 0, 0);
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -2781,7 +2781,7 @@ yyreduce:
     break;
 
   case 109: /* symbol_command: BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_STRING expression '\n'  */
-#line 455 "parser.y"
+#line 455 "bx_parser.y"
       {
         bx_dbg_symbol_command((yyvsp[-2].sval), 0, (yyvsp[-1].uval));
         free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
@@ -2790,7 +2790,7 @@ yyreduce:
     break;
 
   case 110: /* symbol_command: BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_GLOBAL BX_TOKEN_STRING '\n'  */
-#line 460 "parser.y"
+#line 460 "bx_parser.y"
       {
         bx_dbg_symbol_command((yyvsp[-1].sval), 1, 0);
         free((yyvsp[-3].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -2799,7 +2799,7 @@ yyreduce:
     break;
 
   case 111: /* symbol_command: BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_GLOBAL BX_TOKEN_STRING expression '\n'  */
-#line 465 "parser.y"
+#line 465 "bx_parser.y"
       {
         bx_dbg_symbol_command((yyvsp[-2].sval), 1, (yyvsp[-1].uval));
         free((yyvsp[-4].sval)); free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
@@ -2808,7 +2808,7 @@ yyreduce:
     break;
 
   case 112: /* set_magic_break_points_command: BX_TOKEN_SET_MAGIC_BREAK_POINTS '\n'  */
-#line 473 "parser.y"
+#line 473 "bx_parser.y"
       {
         bx_dbg_set_magic_bp_mask(0);
         free((yyvsp[-1].sval));
@@ -2817,7 +2817,7 @@ yyreduce:
     break;
 
   case 113: /* set_magic_break_points_command: BX_TOKEN_SET_MAGIC_BREAK_POINTS BX_TOKEN_STRING '\n'  */
-#line 478 "parser.y"
+#line 478 "bx_parser.y"
       {
         bx_dbg_set_magic_bp_mask(bx_dbg_get_magic_bp_mask_from_str((yyvsp[-1].sval)));
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -2826,7 +2826,7 @@ yyreduce:
     break;
 
   case 114: /* clr_magic_break_points_command: BX_TOKEN_CLEAR_MAGIC_BREAK_POINTS '\n'  */
-#line 486 "parser.y"
+#line 486 "bx_parser.y"
       {
         bx_dbg_set_magic_bp_mask(0);
         free((yyvsp[-1].sval));
@@ -2835,7 +2835,7 @@ yyreduce:
     break;
 
   case 115: /* clr_magic_break_points_command: BX_TOKEN_CLEAR_MAGIC_BREAK_POINTS BX_TOKEN_STRING '\n'  */
-#line 491 "parser.y"
+#line 491 "bx_parser.y"
       {
         bx_dbg_clr_magic_bp_mask(bx_dbg_get_magic_bp_mask_from_str((yyvsp[-1].sval)));
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -2844,7 +2844,7 @@ yyreduce:
     break;
 
   case 116: /* where_command: BX_TOKEN_WHERE '\n'  */
-#line 499 "parser.y"
+#line 499 "bx_parser.y"
       {
         bx_dbg_where_command();
         free((yyvsp[-1].sval));
@@ -2853,7 +2853,7 @@ yyreduce:
     break;
 
   case 117: /* print_string_command: BX_TOKEN_PRINT_STRING expression '\n'  */
-#line 507 "parser.y"
+#line 507 "bx_parser.y"
       {
         bx_dbg_print_string_command((yyvsp[-1].uval));
         free((yyvsp[-2].sval));
@@ -2862,7 +2862,7 @@ yyreduce:
     break;
 
   case 118: /* continue_command: BX_TOKEN_CONTINUE '\n'  */
-#line 515 "parser.y"
+#line 515 "bx_parser.y"
       {
         bx_dbg_continue_command(1);
         free((yyvsp[-1].sval));
@@ -2871,7 +2871,7 @@ yyreduce:
     break;
 
   case 119: /* continue_command: BX_TOKEN_CONTINUE BX_TOKEN_IF expression '\n'  */
-#line 520 "parser.y"
+#line 520 "bx_parser.y"
       {
         bx_dbg_continue_command((yyvsp[-1].uval));
         free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
@@ -2880,7 +2880,7 @@ yyreduce:
     break;
 
   case 120: /* stepN_command: BX_TOKEN_STEPN '\n'  */
-#line 528 "parser.y"
+#line 528 "bx_parser.y"
       {
         bx_dbg_stepN_command(dbg_cpu, 1);
         free((yyvsp[-1].sval));
@@ -2889,7 +2889,7 @@ yyreduce:
     break;
 
   case 121: /* stepN_command: BX_TOKEN_STEPN BX_TOKEN_NUMERIC '\n'  */
-#line 533 "parser.y"
+#line 533 "bx_parser.y"
       {
         bx_dbg_stepN_command(dbg_cpu, (yyvsp[-1].uval));
         free((yyvsp[-2].sval));
@@ -2898,7 +2898,7 @@ yyreduce:
     break;
 
   case 122: /* stepN_command: BX_TOKEN_STEPN BX_TOKEN_ALL BX_TOKEN_NUMERIC '\n'  */
-#line 538 "parser.y"
+#line 538 "bx_parser.y"
       {
         bx_dbg_stepN_command(-1, (yyvsp[-1].uval));
         free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
@@ -2907,7 +2907,7 @@ yyreduce:
     break;
 
   case 123: /* stepN_command: BX_TOKEN_STEPN BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'  */
-#line 543 "parser.y"
+#line 543 "bx_parser.y"
       {
         bx_dbg_stepN_command((yyvsp[-2].uval), (yyvsp[-1].uval));
         free((yyvsp[-3].sval));
@@ -2916,7 +2916,7 @@ yyreduce:
     break;
 
   case 124: /* step_over_command: BX_TOKEN_STEP_OVER '\n'  */
-#line 551 "parser.y"
+#line 551 "bx_parser.y"
       {
         bx_dbg_step_over_command();
         free((yyvsp[-1].sval));
@@ -2925,7 +2925,7 @@ yyreduce:
     break;
 
   case 125: /* cpu_command: BX_TOKEN_CPU BX_TOKEN_NUMERIC '\n'  */
-#line 559 "parser.y"
+#line 559 "bx_parser.y"
       {
         bx_dbg_set_symbol_command("$cpu", (yyvsp[-1].uval));
         free((yyvsp[-2].sval));
@@ -2934,7 +2934,7 @@ yyreduce:
     break;
 
   case 126: /* set_command: BX_TOKEN_SET BX_TOKEN_DISASM BX_TOKEN_TOGGLE_ON_OFF '\n'  */
-#line 566 "parser.y"
+#line 566 "bx_parser.y"
       {
         bx_dbg_set_auto_disassemble((yyvsp[-1].bval));
         free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
@@ -2943,7 +2943,7 @@ yyreduce:
     break;
 
   case 127: /* set_command: BX_TOKEN_SET BX_TOKEN_SYMBOLNAME '=' expression '\n'  */
-#line 571 "parser.y"
+#line 571 "bx_parser.y"
       {
         bx_dbg_set_symbol_command((yyvsp[-3].sval), (yyvsp[-1].uval));
         free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
@@ -2952,7 +2952,7 @@ yyreduce:
     break;
 
   case 128: /* set_command: BX_TOKEN_SET BX_TOKEN_8BL_REG '=' expression '\n'  */
-#line 576 "parser.y"
+#line 576 "bx_parser.y"
       {
         bx_dbg_set_reg8l_value((yyvsp[-3].uval), (yyvsp[-1].uval));
       }
@@ -2960,7 +2960,7 @@ yyreduce:
     break;
 
   case 129: /* set_command: BX_TOKEN_SET BX_TOKEN_8BH_REG '=' expression '\n'  */
-#line 580 "parser.y"
+#line 580 "bx_parser.y"
       {
         bx_dbg_set_reg8h_value((yyvsp[-3].uval), (yyvsp[-1].uval));
       }
@@ -2968,7 +2968,7 @@ yyreduce:
     break;
 
   case 130: /* set_command: BX_TOKEN_SET BX_TOKEN_16B_REG '=' expression '\n'  */
-#line 584 "parser.y"
+#line 584 "bx_parser.y"
       {
         bx_dbg_set_reg16_value((yyvsp[-3].uval), (yyvsp[-1].uval));
       }
@@ -2976,7 +2976,7 @@ yyreduce:
     break;
 
   case 131: /* set_command: BX_TOKEN_SET BX_TOKEN_32B_REG '=' expression '\n'  */
-#line 588 "parser.y"
+#line 588 "bx_parser.y"
       {
         bx_dbg_set_reg32_value((yyvsp[-3].uval), (yyvsp[-1].uval));
       }
@@ -2984,7 +2984,7 @@ yyreduce:
     break;
 
   case 132: /* set_command: BX_TOKEN_SET BX_TOKEN_64B_REG '=' expression '\n'  */
-#line 592 "parser.y"
+#line 592 "bx_parser.y"
       {
         bx_dbg_set_reg64_value((yyvsp[-3].uval), (yyvsp[-1].uval));
       }
@@ -2992,7 +2992,7 @@ yyreduce:
     break;
 
   case 133: /* set_command: BX_TOKEN_SET BX_TOKEN_REG_EIP '=' expression '\n'  */
-#line 596 "parser.y"
+#line 596 "bx_parser.y"
       {
         bx_dbg_set_rip_value((yyvsp[-1].uval));
       }
@@ -3000,7 +3000,7 @@ yyreduce:
     break;
 
   case 134: /* set_command: BX_TOKEN_SET BX_TOKEN_REG_RIP '=' expression '\n'  */
-#line 600 "parser.y"
+#line 600 "bx_parser.y"
       {
         bx_dbg_set_rip_value((yyvsp[-1].uval));
       }
@@ -3008,7 +3008,7 @@ yyreduce:
     break;
 
   case 135: /* set_command: BX_TOKEN_SET BX_TOKEN_SEGREG '=' expression '\n'  */
-#line 604 "parser.y"
+#line 604 "bx_parser.y"
       {
         bx_dbg_load_segreg((yyvsp[-3].uval), (yyvsp[-1].uval));
       }
@@ -3016,7 +3016,7 @@ yyreduce:
     break;
 
   case 136: /* breakpoint_command: BX_TOKEN_VBREAKPOINT '\n'  */
-#line 611 "parser.y"
+#line 611 "bx_parser.y"
       {
         bx_dbg_vbreakpoint_command(bkAtIP, 0, 0, NULL);
         free((yyvsp[-1].sval));
@@ -3025,7 +3025,7 @@ yyreduce:
     break;
 
   case 137: /* breakpoint_command: BX_TOKEN_VBREAKPOINT vexpression ':' vexpression '\n'  */
-#line 616 "parser.y"
+#line 616 "bx_parser.y"
       {
         bx_dbg_vbreakpoint_command(bkRegular, (yyvsp[-3].uval), (yyvsp[-1].uval), NULL);
         free((yyvsp[-4].sval));
@@ -3034,7 +3034,7 @@ yyreduce:
     break;
 
   case 138: /* breakpoint_command: BX_TOKEN_VBREAKPOINT vexpression ':' vexpression BX_TOKEN_IF BX_TOKEN_STRING '\n'  */
-#line 621 "parser.y"
+#line 621 "bx_parser.y"
       {
         bx_dbg_vbreakpoint_command(bkRegular, (yyvsp[-5].uval), (yyvsp[-3].uval), (yyvsp[-1].sval));
         free((yyvsp[-6].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3043,7 +3043,7 @@ yyreduce:
     break;
 
   case 139: /* breakpoint_command: BX_TOKEN_LBREAKPOINT '\n'  */
-#line 626 "parser.y"
+#line 626 "bx_parser.y"
       {
         bx_dbg_lbreakpoint_command(bkAtIP, 0, NULL);
         free((yyvsp[-1].sval));
@@ -3052,7 +3052,7 @@ yyreduce:
     break;
 
   case 140: /* breakpoint_command: BX_TOKEN_LBREAKPOINT expression '\n'  */
-#line 631 "parser.y"
+#line 631 "bx_parser.y"
       {
         bx_dbg_lbreakpoint_command(bkRegular, (yyvsp[-1].uval), NULL);
         free((yyvsp[-2].sval));
@@ -3061,7 +3061,7 @@ yyreduce:
     break;
 
   case 141: /* breakpoint_command: BX_TOKEN_LBREAKPOINT expression BX_TOKEN_IF BX_TOKEN_STRING '\n'  */
-#line 636 "parser.y"
+#line 636 "bx_parser.y"
       {
         bx_dbg_lbreakpoint_command(bkRegular, (yyvsp[-3].uval), (yyvsp[-1].sval));
         free((yyvsp[-4].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3070,7 +3070,7 @@ yyreduce:
     break;
 
   case 142: /* breakpoint_command: BX_TOKEN_LBREAKPOINT BX_TOKEN_STRING '\n'  */
-#line 641 "parser.y"
+#line 641 "bx_parser.y"
       {
         bx_dbg_lbreakpoint_symbol_command((yyvsp[-1].sval), NULL);
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3079,7 +3079,7 @@ yyreduce:
     break;
 
   case 143: /* breakpoint_command: BX_TOKEN_LBREAKPOINT BX_TOKEN_STRING BX_TOKEN_IF BX_TOKEN_STRING '\n'  */
-#line 646 "parser.y"
+#line 646 "bx_parser.y"
       {
         bx_dbg_lbreakpoint_symbol_command((yyvsp[-3].sval), (yyvsp[-1].sval));
         free((yyvsp[-4].sval)); free((yyvsp[-3].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3088,7 +3088,7 @@ yyreduce:
     break;
 
   case 144: /* breakpoint_command: BX_TOKEN_PBREAKPOINT '\n'  */
-#line 651 "parser.y"
+#line 651 "bx_parser.y"
       {
         bx_dbg_pbreakpoint_command(bkAtIP, 0, NULL);
         free((yyvsp[-1].sval));
@@ -3097,7 +3097,7 @@ yyreduce:
     break;
 
   case 145: /* breakpoint_command: BX_TOKEN_PBREAKPOINT expression '\n'  */
-#line 656 "parser.y"
+#line 656 "bx_parser.y"
       {
         bx_dbg_pbreakpoint_command(bkRegular, (yyvsp[-1].uval), NULL);
         free((yyvsp[-2].sval));
@@ -3106,7 +3106,7 @@ yyreduce:
     break;
 
   case 146: /* breakpoint_command: BX_TOKEN_PBREAKPOINT expression BX_TOKEN_IF BX_TOKEN_STRING '\n'  */
-#line 661 "parser.y"
+#line 661 "bx_parser.y"
       {
         bx_dbg_pbreakpoint_command(bkRegular, (yyvsp[-3].uval), (yyvsp[-1].sval));
         free((yyvsp[-4].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3115,7 +3115,7 @@ yyreduce:
     break;
 
   case 147: /* breakpoint_command: BX_TOKEN_PBREAKPOINT '*' expression '\n'  */
-#line 666 "parser.y"
+#line 666 "bx_parser.y"
       {
         bx_dbg_pbreakpoint_command(bkRegular, (yyvsp[-1].uval), NULL);
         free((yyvsp[-3].sval));
@@ -3124,7 +3124,7 @@ yyreduce:
     break;
 
   case 148: /* breakpoint_command: BX_TOKEN_PBREAKPOINT '*' expression BX_TOKEN_IF BX_TOKEN_STRING '\n'  */
-#line 671 "parser.y"
+#line 671 "bx_parser.y"
       {
         bx_dbg_pbreakpoint_command(bkRegular, (yyvsp[-3].uval), (yyvsp[-1].sval));
         free((yyvsp[-5].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3133,7 +3133,7 @@ yyreduce:
     break;
 
   case 149: /* blist_command: BX_TOKEN_LIST_BREAK '\n'  */
-#line 679 "parser.y"
+#line 679 "bx_parser.y"
       {
         bx_dbg_info_bpoints_command();
         free((yyvsp[-1].sval));
@@ -3142,7 +3142,7 @@ yyreduce:
     break;
 
   case 150: /* slist_command: BX_TOKEN_LIST_SYMBOLS '\n'  */
-#line 687 "parser.y"
+#line 687 "bx_parser.y"
       {
         bx_dbg_info_symbols_command(0);
         free((yyvsp[-1].sval));
@@ -3151,7 +3151,7 @@ yyreduce:
     break;
 
   case 151: /* slist_command: BX_TOKEN_LIST_SYMBOLS BX_TOKEN_STRING '\n'  */
-#line 692 "parser.y"
+#line 692 "bx_parser.y"
       {
         bx_dbg_info_symbols_command((yyvsp[-1].sval));
         free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3160,7 +3160,7 @@ yyreduce:
     break;
 
   case 152: /* info_command: BX_TOKEN_INFO BX_TOKEN_PBREAKPOINT '\n'  */
-#line 700 "parser.y"
+#line 700 "bx_parser.y"
       {
         bx_dbg_info_bpoints_command();
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3169,7 +3169,7 @@ yyreduce:
     break;
 
   case 153: /* info_command: BX_TOKEN_INFO BX_TOKEN_CPU '\n'  */
-#line 705 "parser.y"
+#line 705 "bx_parser.y"
       {
         bx_dbg_info_registers_command(-1);
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3178,7 +3178,7 @@ yyreduce:
     break;
 
   case 154: /* info_command: BX_TOKEN_INFO BX_TOKEN_IDT optional_numeric optional_numeric '\n'  */
-#line 710 "parser.y"
+#line 710 "bx_parser.y"
       {
         bx_dbg_info_idt_command((yyvsp[-2].uval), (yyvsp[-1].uval));
         free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
@@ -3187,7 +3187,7 @@ yyreduce:
     break;
 
   case 155: /* info_command: BX_TOKEN_INFO BX_TOKEN_IVT optional_numeric optional_numeric '\n'  */
-#line 715 "parser.y"
+#line 715 "bx_parser.y"
       {
         bx_dbg_info_ivt_command((yyvsp[-2].uval), (yyvsp[-1].uval));
         free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
@@ -3196,7 +3196,7 @@ yyreduce:
     break;
 
   case 156: /* info_command: BX_TOKEN_INFO BX_TOKEN_GDT optional_numeric optional_numeric '\n'  */
-#line 720 "parser.y"
+#line 720 "bx_parser.y"
       {
         bx_dbg_info_gdt_command((yyvsp[-2].uval), (yyvsp[-1].uval));
         free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
@@ -3205,7 +3205,7 @@ yyreduce:
     break;
 
   case 157: /* info_command: BX_TOKEN_INFO BX_TOKEN_LDT optional_numeric optional_numeric '\n'  */
-#line 725 "parser.y"
+#line 725 "bx_parser.y"
       {
         bx_dbg_info_ldt_command((yyvsp[-2].uval), (yyvsp[-1].uval));
         free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
@@ -3214,7 +3214,7 @@ yyreduce:
     break;
 
   case 158: /* info_command: BX_TOKEN_INFO BX_TOKEN_TAB '\n'  */
-#line 730 "parser.y"
+#line 730 "bx_parser.y"
       {
         bx_dbg_dump_table();
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3223,7 +3223,7 @@ yyreduce:
     break;
 
   case 159: /* info_command: BX_TOKEN_INFO BX_TOKEN_TSS '\n'  */
-#line 735 "parser.y"
+#line 735 "bx_parser.y"
       {
         bx_dbg_info_tss_command();
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3232,7 +3232,7 @@ yyreduce:
     break;
 
   case 160: /* info_command: BX_TOKEN_INFO BX_TOKEN_FLAGS '\n'  */
-#line 740 "parser.y"
+#line 740 "bx_parser.y"
       {
         bx_dbg_info_flags();
         free((yyvsp[-2].sval));
@@ -3241,7 +3241,7 @@ yyreduce:
     break;
 
   case 161: /* info_command: BX_TOKEN_INFO BX_TOKEN_LINUX '\n'  */
-#line 745 "parser.y"
+#line 745 "bx_parser.y"
       {
         bx_dbg_info_linux_command();
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3250,7 +3250,7 @@ yyreduce:
     break;
 
   case 162: /* info_command: BX_TOKEN_INFO BX_TOKEN_SYMBOLS '\n'  */
-#line 750 "parser.y"
+#line 750 "bx_parser.y"
       {
         bx_dbg_info_symbols_command(0);
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3259,7 +3259,7 @@ yyreduce:
     break;
 
   case 163: /* info_command: BX_TOKEN_INFO BX_TOKEN_SYMBOLS BX_TOKEN_STRING '\n'  */
-#line 755 "parser.y"
+#line 755 "bx_parser.y"
       {
         bx_dbg_info_symbols_command((yyvsp[-1].sval));
         free((yyvsp[-3].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3268,7 +3268,7 @@ yyreduce:
     break;
 
   case 164: /* info_command: BX_TOKEN_INFO BX_TOKEN_DEVICE '\n'  */
-#line 760 "parser.y"
+#line 760 "bx_parser.y"
       {
         bx_dbg_info_device("", "");
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3277,7 +3277,7 @@ yyreduce:
     break;
 
   case 165: /* info_command: BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_GENERIC '\n'  */
-#line 765 "parser.y"
+#line 765 "bx_parser.y"
       {
         bx_dbg_info_device((yyvsp[-1].sval), "");
         free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
@@ -3286,7 +3286,7 @@ yyreduce:
     break;
 
   case 166: /* info_command: BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_GENERIC BX_TOKEN_STRING '\n'  */
-#line 770 "parser.y"
+#line 770 "bx_parser.y"
       {
         bx_dbg_info_device((yyvsp[-2].sval), (yyvsp[-1].sval));
         free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
@@ -3295,7 +3295,7 @@ yyreduce:
     break;
 
   case 167: /* info_command: BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_STRING '\n'  */
-#line 775 "parser.y"
+#line 775 "bx_parser.y"
       {
         bx_dbg_info_device((yyvsp[-1].sval), "");
         free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
@@ -3304,7 +3304,7 @@ yyreduce:
     break;
 
   case 168: /* info_command: BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_STRING BX_TOKEN_STRING '\n'  */
-#line 780 "parser.y"
+#line 780 "bx_parser.y"
       {
         bx_dbg_info_device((yyvsp[-2].sval), (yyvsp[-1].sval));
         free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
@@ -3313,13 +3313,13 @@ yyreduce:
     break;
 
   case 169: /* optional_numeric: %empty  */
-#line 787 "parser.y"
+#line 787 "bx_parser.y"
                { (yyval.uval) = EMPTY_ARG; }
 #line 3319 "y.tab.c"
     break;
 
   case 171: /* regs_command: BX_TOKEN_REGISTERS '\n'  */
-#line 792 "parser.y"
+#line 792 "bx_parser.y"
       {
         bx_dbg_info_registers_command(BX_INFO_GENERAL_PURPOSE_REGS);
         free((yyvsp[-1].sval));
@@ -3328,7 +3328,7 @@ yyreduce:
     break;
 
   case 172: /* fpu_regs_command: BX_TOKEN_FPU '\n'  */
-#line 800 "parser.y"
+#line 800 "bx_parser.y"
       {
         bx_dbg_info_registers_command(BX_INFO_FPU_REGS);
         free((yyvsp[-1].sval));
@@ -3337,7 +3337,7 @@ yyreduce:
     break;
 
   case 173: /* mmx_regs_command: BX_TOKEN_MMX '\n'  */
-#line 808 "parser.y"
+#line 808 "bx_parser.y"
       {
         bx_dbg_info_registers_command(BX_INFO_MMX_REGS);
         free((yyvsp[-1].sval));
@@ -3346,7 +3346,7 @@ yyreduce:
     break;
 
   case 174: /* xmm_regs_command: BX_TOKEN_XMM '\n'  */
-#line 816 "parser.y"
+#line 816 "bx_parser.y"
       {
         bx_dbg_info_registers_command(BX_INFO_SSE_REGS);
         free((yyvsp[-1].sval));
@@ -3355,7 +3355,7 @@ yyreduce:
     break;
 
   case 175: /* ymm_regs_command: BX_TOKEN_YMM '\n'  */
-#line 824 "parser.y"
+#line 824 "bx_parser.y"
       {
         bx_dbg_info_registers_command(BX_INFO_YMM_REGS);
         free((yyvsp[-1].sval));
@@ -3364,7 +3364,7 @@ yyreduce:
     break;
 
   case 176: /* zmm_regs_command: BX_TOKEN_ZMM '\n'  */
-#line 832 "parser.y"
+#line 832 "bx_parser.y"
       {
         bx_dbg_info_registers_command(BX_INFO_ZMM_REGS);
         free((yyvsp[-1].sval));
@@ -3373,7 +3373,7 @@ yyreduce:
     break;
 
   case 177: /* amx_regs_command: BX_TOKEN_AMX '\n'  */
-#line 840 "parser.y"
+#line 840 "bx_parser.y"
       {
         bx_dbg_info_registers_command(BX_INFO_AMX_REGS);
         free((yyvsp[-1].sval));
@@ -3382,7 +3382,7 @@ yyreduce:
     break;
 
   case 178: /* print_tile_command: BX_TOKEN_TILE BX_TOKEN_NUMERIC '\n'  */
-#line 848 "parser.y"
+#line 848 "bx_parser.y"
       {
         bx_dbg_print_amx_tile_command((yyvsp[-1].uval));
         free((yyvsp[-2].sval));
@@ -3391,7 +3391,7 @@ yyreduce:
     break;
 
   case 179: /* segment_regs_command: BX_TOKEN_SEGMENT_REGS '\n'  */
-#line 856 "parser.y"
+#line 856 "bx_parser.y"
       {
         bx_dbg_info_segment_regs_command();
         free((yyvsp[-1].sval));
@@ -3400,7 +3400,7 @@ yyreduce:
     break;
 
   case 180: /* control_regs_command: BX_TOKEN_CONTROL_REGS '\n'  */
-#line 864 "parser.y"
+#line 864 "bx_parser.y"
       {
         bx_dbg_info_control_regs_command();
         free((yyvsp[-1].sval));
@@ -3409,7 +3409,7 @@ yyreduce:
     break;
 
   case 181: /* debug_regs_command: BX_TOKEN_DEBUG_REGS '\n'  */
-#line 872 "parser.y"
+#line 872 "bx_parser.y"
       {
         bx_dbg_info_debug_regs_command();
         free((yyvsp[-1].sval));
@@ -3418,7 +3418,7 @@ yyreduce:
     break;
 
   case 182: /* delete_command: BX_TOKEN_DEL_BREAKPOINT BX_TOKEN_NUMERIC '\n'  */
-#line 880 "parser.y"
+#line 880 "bx_parser.y"
       {
         bx_dbg_del_breakpoint_command((yyvsp[-1].uval));
         free((yyvsp[-2].sval));
@@ -3427,7 +3427,7 @@ yyreduce:
     break;
 
   case 183: /* bpe_command: BX_TOKEN_ENABLE_BREAKPOINT BX_TOKEN_NUMERIC '\n'  */
-#line 888 "parser.y"
+#line 888 "bx_parser.y"
       {
         bx_dbg_en_dis_breakpoint_command((yyvsp[-1].uval), 1);
         free((yyvsp[-2].sval));
@@ -3436,7 +3436,7 @@ yyreduce:
     break;
 
   case 184: /* bpd_command: BX_TOKEN_DISABLE_BREAKPOINT BX_TOKEN_NUMERIC '\n'  */
-#line 895 "parser.y"
+#line 895 "bx_parser.y"
       {
         bx_dbg_en_dis_breakpoint_command((yyvsp[-1].uval), 0);
         free((yyvsp[-2].sval));
@@ -3445,7 +3445,7 @@ yyreduce:
     break;
 
   case 185: /* quit_command: BX_TOKEN_QUIT '\n'  */
-#line 903 "parser.y"
+#line 903 "bx_parser.y"
       {
         bx_dbg_quit_command();
         free((yyvsp[-1].sval));
@@ -3454,7 +3454,7 @@ yyreduce:
     break;
 
   case 186: /* examine_command: BX_TOKEN_EXAMINE BX_TOKEN_XFORMAT expression '\n'  */
-#line 911 "parser.y"
+#line 911 "bx_parser.y"
       {
         bx_dbg_examine_command((yyvsp[-3].sval), (yyvsp[-2].sval),1, (yyvsp[-1].uval), 1);
         free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
@@ -3463,7 +3463,7 @@ yyreduce:
     break;
 
   case 187: /* examine_command: BX_TOKEN_EXAMINE BX_TOKEN_XFORMAT '\n'  */
-#line 916 "parser.y"
+#line 916 "bx_parser.y"
       {
         bx_dbg_examine_command((yyvsp[-2].sval), (yyvsp[-1].sval),1, 0, 0);
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3472,7 +3472,7 @@ yyreduce:
     break;
 
   case 188: /* examine_command: BX_TOKEN_EXAMINE expression '\n'  */
-#line 921 "parser.y"
+#line 921 "bx_parser.y"
       {
         bx_dbg_examine_command((yyvsp[-2].sval), NULL,0, (yyvsp[-1].uval), 1);
         free((yyvsp[-2].sval));
@@ -3481,7 +3481,7 @@ yyreduce:
     break;
 
   case 189: /* examine_command: BX_TOKEN_EXAMINE '\n'  */
-#line 926 "parser.y"
+#line 926 "bx_parser.y"
       {
         bx_dbg_examine_command((yyvsp[-1].sval), NULL,0, 0, 0);
         free((yyvsp[-1].sval));
@@ -3490,7 +3490,7 @@ yyreduce:
     break;
 
   case 190: /* restore_command: BX_TOKEN_RESTORE BX_TOKEN_STRING BX_TOKEN_STRING '\n'  */
-#line 934 "parser.y"
+#line 934 "bx_parser.y"
       {
         bx_dbg_restore_command((yyvsp[-2].sval), (yyvsp[-1].sval));
         free((yyvsp[-3].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3499,7 +3499,7 @@ yyreduce:
     break;
 
   case 191: /* writemem_command: BX_TOKEN_WRITEMEM BX_TOKEN_STRING expression expression '\n'  */
-#line 942 "parser.y"
+#line 942 "bx_parser.y"
       {
         bx_dbg_writemem_command((yyvsp[-3].sval), (yyvsp[-2].uval), (yyvsp[-1].uval));
         free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
@@ -3508,7 +3508,7 @@ yyreduce:
     break;
 
   case 192: /* loadmem_command: BX_TOKEN_LOADMEM BX_TOKEN_STRING expression '\n'  */
-#line 950 "parser.y"
+#line 950 "bx_parser.y"
       {
         bx_dbg_loadmem_command((yyvsp[-2].sval), (yyvsp[-1].uval));
         free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
@@ -3517,7 +3517,7 @@ yyreduce:
     break;
 
   case 193: /* setpmem_command: BX_TOKEN_SETPMEM expression expression expression '\n'  */
-#line 958 "parser.y"
+#line 958 "bx_parser.y"
       {
         bx_dbg_setpmem_command((yyvsp[-3].uval), (yyvsp[-2].uval), (yyvsp[-1].uval));
         free((yyvsp[-4].sval));
@@ -3526,7 +3526,7 @@ yyreduce:
     break;
 
   case 194: /* deref_command: BX_TOKEN_DEREF expression expression '\n'  */
-#line 966 "parser.y"
+#line 966 "bx_parser.y"
       {
         bx_dbg_deref_command((yyvsp[-2].uval), (yyvsp[-1].uval));
         free((yyvsp[-3].sval));
@@ -3535,7 +3535,7 @@ yyreduce:
     break;
 
   case 195: /* query_command: BX_TOKEN_QUERY BX_TOKEN_PENDING '\n'  */
-#line 974 "parser.y"
+#line 974 "bx_parser.y"
       {
         bx_dbg_query_command((yyvsp[-1].sval));
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3544,7 +3544,7 @@ yyreduce:
     break;
 
   case 196: /* take_command: BX_TOKEN_TAKE BX_TOKEN_DMA '\n'  */
-#line 982 "parser.y"
+#line 982 "bx_parser.y"
       {
         bx_dbg_take_command((yyvsp[-1].sval), 1);
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3553,7 +3553,7 @@ yyreduce:
     break;
 
   case 197: /* take_command: BX_TOKEN_TAKE BX_TOKEN_DMA BX_TOKEN_NUMERIC '\n'  */
-#line 987 "parser.y"
+#line 987 "bx_parser.y"
       {
         bx_dbg_take_command((yyvsp[-2].sval), (yyvsp[-1].uval));
         free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
@@ -3562,7 +3562,7 @@ yyreduce:
     break;
 
   case 198: /* take_command: BX_TOKEN_TAKE BX_TOKEN_IRQ '\n'  */
-#line 992 "parser.y"
+#line 992 "bx_parser.y"
       {
         bx_dbg_take_command((yyvsp[-1].sval), 1);
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3571,7 +3571,7 @@ yyreduce:
     break;
 
   case 199: /* take_command: BX_TOKEN_TAKE BX_TOKEN_SMI '\n'  */
-#line 997 "parser.y"
+#line 997 "bx_parser.y"
       {
         bx_dbg_take_command((yyvsp[-1].sval), 1);
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3580,7 +3580,7 @@ yyreduce:
     break;
 
   case 200: /* take_command: BX_TOKEN_TAKE BX_TOKEN_NMI '\n'  */
-#line 1002 "parser.y"
+#line 1002 "bx_parser.y"
       {
         bx_dbg_take_command((yyvsp[-1].sval), 1);
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3589,7 +3589,7 @@ yyreduce:
     break;
 
   case 201: /* disassemble_command: BX_TOKEN_DISASM '\n'  */
-#line 1010 "parser.y"
+#line 1010 "bx_parser.y"
       {
         bx_dbg_disassemble_current(NULL);
         free((yyvsp[-1].sval));
@@ -3598,7 +3598,7 @@ yyreduce:
     break;
 
   case 202: /* disassemble_command: BX_TOKEN_DISASM expression '\n'  */
-#line 1015 "parser.y"
+#line 1015 "bx_parser.y"
       {
         bx_dbg_disassemble_command(NULL, (yyvsp[-1].uval), (yyvsp[-1].uval));
         free((yyvsp[-2].sval));
@@ -3607,7 +3607,7 @@ yyreduce:
     break;
 
   case 203: /* disassemble_command: BX_TOKEN_DISASM expression expression '\n'  */
-#line 1020 "parser.y"
+#line 1020 "bx_parser.y"
       {
         bx_dbg_disassemble_command(NULL, (yyvsp[-2].uval), (yyvsp[-1].uval));
         free((yyvsp[-3].sval));
@@ -3616,7 +3616,7 @@ yyreduce:
     break;
 
   case 204: /* disassemble_command: BX_TOKEN_DISASM BX_TOKEN_DISFORMAT '\n'  */
-#line 1025 "parser.y"
+#line 1025 "bx_parser.y"
       {
         bx_dbg_disassemble_current((yyvsp[-1].sval));
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3625,7 +3625,7 @@ yyreduce:
     break;
 
   case 205: /* disassemble_command: BX_TOKEN_DISASM BX_TOKEN_DISFORMAT expression '\n'  */
-#line 1030 "parser.y"
+#line 1030 "bx_parser.y"
       {
         bx_dbg_disassemble_command((yyvsp[-2].sval), (yyvsp[-1].uval), (yyvsp[-1].uval));
         free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
@@ -3634,7 +3634,7 @@ yyreduce:
     break;
 
   case 206: /* disassemble_command: BX_TOKEN_DISASM BX_TOKEN_DISFORMAT expression expression '\n'  */
-#line 1035 "parser.y"
+#line 1035 "bx_parser.y"
       {
         bx_dbg_disassemble_command((yyvsp[-3].sval), (yyvsp[-2].uval), (yyvsp[-1].uval));
         free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
@@ -3643,7 +3643,7 @@ yyreduce:
     break;
 
   case 207: /* disassemble_command: BX_TOKEN_DISASM BX_TOKEN_SWITCH_MODE '\n'  */
-#line 1040 "parser.y"
+#line 1040 "bx_parser.y"
       {
         bx_dbg_disassemble_switch_mode();
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3652,7 +3652,7 @@ yyreduce:
     break;
 
   case 208: /* disassemble_command: BX_TOKEN_DISASM BX_TOKEN_SIZE '=' BX_TOKEN_NUMERIC '\n'  */
-#line 1045 "parser.y"
+#line 1045 "bx_parser.y"
       {
         bx_dbg_set_disassemble_size((yyvsp[-1].uval));
         free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
@@ -3661,7 +3661,7 @@ yyreduce:
     break;
 
   case 209: /* instrument_command: BX_TOKEN_INSTRUMENT BX_TOKEN_STOP '\n'  */
-#line 1053 "parser.y"
+#line 1053 "bx_parser.y"
       {
         bx_dbg_instrument_command((yyvsp[-1].sval));
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3670,7 +3670,7 @@ yyreduce:
     break;
 
   case 210: /* instrument_command: BX_TOKEN_INSTRUMENT BX_TOKEN_STRING '\n'  */
-#line 1059 "parser.y"
+#line 1059 "bx_parser.y"
       {
         bx_dbg_instrument_command((yyvsp[-1].sval));
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3679,7 +3679,7 @@ yyreduce:
     break;
 
   case 211: /* instrument_command: BX_TOKEN_INSTRUMENT BX_TOKEN_GENERIC '\n'  */
-#line 1064 "parser.y"
+#line 1064 "bx_parser.y"
       {
         bx_dbg_instrument_command((yyvsp[-1].sval));
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
@@ -3688,7 +3688,7 @@ yyreduce:
     break;
 
   case 212: /* doit_command: BX_TOKEN_DOIT expression '\n'  */
-#line 1072 "parser.y"
+#line 1072 "bx_parser.y"
       {
         bx_dbg_doit_command((yyvsp[-1].uval));
         free((yyvsp[-2].sval));
@@ -3697,7 +3697,7 @@ yyreduce:
     break;
 
   case 213: /* crc_command: BX_TOKEN_CRC expression expression '\n'  */
-#line 1080 "parser.y"
+#line 1080 "bx_parser.y"
       {
         bx_dbg_crc_command((yyvsp[-2].uval), (yyvsp[-1].uval));
         free((yyvsp[-3].sval));
@@ -3706,7 +3706,7 @@ yyreduce:
     break;
 
   case 214: /* help_command: BX_TOKEN_HELP BX_TOKEN_QUIT '\n'  */
-#line 1088 "parser.y"
+#line 1088 "bx_parser.y"
        {
          dbg_printf("q|quit|exit - quit debugger and emulator execution\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3715,7 +3715,7 @@ yyreduce:
     break;
 
   case 215: /* help_command: BX_TOKEN_HELP BX_TOKEN_CONTINUE '\n'  */
-#line 1093 "parser.y"
+#line 1093 "bx_parser.y"
        {
          dbg_printf("c|cont|continue - continue executing\n");
          dbg_printf("c|cont|continue if \"expression\" - continue executing only if expression is true\n");
@@ -3725,7 +3725,7 @@ yyreduce:
     break;
 
   case 216: /* help_command: BX_TOKEN_HELP BX_TOKEN_STEPN '\n'  */
-#line 1099 "parser.y"
+#line 1099 "bx_parser.y"
        {
          dbg_printf("s|step [count] - execute #count instructions on current processor (default is one instruction)\n");
          dbg_printf("s|step [cpu] <count> - execute #count instructions on processor #cpu\n");
@@ -3736,7 +3736,7 @@ yyreduce:
     break;
 
   case 217: /* help_command: BX_TOKEN_HELP BX_TOKEN_STEP_OVER '\n'  */
-#line 1106 "parser.y"
+#line 1106 "bx_parser.y"
        {
          dbg_printf("n|next|p - execute instruction stepping over subroutines\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3745,7 +3745,7 @@ yyreduce:
     break;
 
   case 218: /* help_command: BX_TOKEN_HELP BX_TOKEN_VBREAKPOINT '\n'  */
-#line 1111 "parser.y"
+#line 1111 "bx_parser.y"
        {
          dbg_printf("vb|vbreak <seg:offset> - set a virtual address instruction breakpoint\n");
          dbg_printf("vb|vbreak <seg:offset> if \"expression\" - set a conditional virtual address instruction breakpoint\n");
@@ -3755,7 +3755,7 @@ yyreduce:
     break;
 
   case 219: /* help_command: BX_TOKEN_HELP BX_TOKEN_LBREAKPOINT '\n'  */
-#line 1117 "parser.y"
+#line 1117 "bx_parser.y"
        {
          dbg_printf("lb|lbreak <addr> - set a linear address instruction breakpoint\n");
          dbg_printf("lb|lbreak <addr> if \"expression\" - set a conditional linear address instruction breakpoint\n");
@@ -3765,7 +3765,7 @@ yyreduce:
     break;
 
   case 220: /* help_command: BX_TOKEN_HELP BX_TOKEN_PBREAKPOINT '\n'  */
-#line 1123 "parser.y"
+#line 1123 "bx_parser.y"
        {
          dbg_printf("p|pb|break|pbreak <addr> - set a physical address instruction breakpoint\n");
          dbg_printf("p|pb|break|pbreak <addr> if \"expression\" - set a conditional physical address instruction breakpoint\n");
@@ -3775,7 +3775,7 @@ yyreduce:
     break;
 
   case 221: /* help_command: BX_TOKEN_HELP BX_TOKEN_DEL_BREAKPOINT '\n'  */
-#line 1129 "parser.y"
+#line 1129 "bx_parser.y"
        {
          dbg_printf("d|del|delete <n> - delete a breakpoint\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3784,7 +3784,7 @@ yyreduce:
     break;
 
   case 222: /* help_command: BX_TOKEN_HELP BX_TOKEN_ENABLE_BREAKPOINT '\n'  */
-#line 1134 "parser.y"
+#line 1134 "bx_parser.y"
        {
          dbg_printf("bpe <n> - enable a breakpoint\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3793,7 +3793,7 @@ yyreduce:
     break;
 
   case 223: /* help_command: BX_TOKEN_HELP BX_TOKEN_DISABLE_BREAKPOINT '\n'  */
-#line 1139 "parser.y"
+#line 1139 "bx_parser.y"
        {
          dbg_printf("bpd <n> - disable a breakpoint\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3802,7 +3802,7 @@ yyreduce:
     break;
 
   case 224: /* help_command: BX_TOKEN_HELP BX_TOKEN_LIST_BREAK '\n'  */
-#line 1144 "parser.y"
+#line 1144 "bx_parser.y"
        {
          dbg_printf("blist - list all breakpoints (same as 'info break')\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3811,7 +3811,7 @@ yyreduce:
     break;
 
   case 225: /* help_command: BX_TOKEN_HELP BX_TOKEN_MODEBP '\n'  */
-#line 1149 "parser.y"
+#line 1149 "bx_parser.y"
        {
          dbg_printf("modebp - toggles mode switch breakpoint\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3820,7 +3820,7 @@ yyreduce:
     break;
 
   case 226: /* help_command: BX_TOKEN_HELP BX_TOKEN_VMEXITBP '\n'  */
-#line 1154 "parser.y"
+#line 1154 "bx_parser.y"
        {
          dbg_printf("vmexitbp - toggles VMEXIT switch breakpoint\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3829,7 +3829,7 @@ yyreduce:
     break;
 
   case 227: /* help_command: BX_TOKEN_HELP BX_TOKEN_CRC '\n'  */
-#line 1159 "parser.y"
+#line 1159 "bx_parser.y"
        {
          dbg_printf("crc <addr1> <addr2> - show CRC32 for physical memory range addr1..addr2\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3838,7 +3838,7 @@ yyreduce:
     break;
 
   case 228: /* help_command: BX_TOKEN_HELP BX_TOKEN_TRACE '\n'  */
-#line 1164 "parser.y"
+#line 1164 "bx_parser.y"
        {
          dbg_printf("trace on  - print disassembly for every executed instruction\n");
          dbg_printf("trace off - disable instruction tracing\n");
@@ -3848,7 +3848,7 @@ yyreduce:
     break;
 
   case 229: /* help_command: BX_TOKEN_HELP BX_TOKEN_TRACEREG '\n'  */
-#line 1170 "parser.y"
+#line 1170 "bx_parser.y"
        {
          dbg_printf("trace-reg on  - print all registers before every executed instruction\n");
          dbg_printf("trace-reg off - disable registers state tracing\n");
@@ -3858,7 +3858,7 @@ yyreduce:
     break;
 
   case 230: /* help_command: BX_TOKEN_HELP BX_TOKEN_TRACEMEM '\n'  */
-#line 1176 "parser.y"
+#line 1176 "bx_parser.y"
        {
          dbg_printf("trace-mem on  - print all memory accesses occurred during instruction execution\n");
          dbg_printf("trace-mem off - disable memory accesses tracing\n");
@@ -3868,7 +3868,7 @@ yyreduce:
     break;
 
   case 231: /* help_command: BX_TOKEN_HELP BX_TOKEN_RESTORE '\n'  */
-#line 1182 "parser.y"
+#line 1182 "bx_parser.y"
        {
          dbg_printf("restore <param_name> [path] - restore bochs root param from the file\n");
          dbg_printf("for example:\n");
@@ -3880,7 +3880,7 @@ yyreduce:
     break;
 
   case 232: /* help_command: BX_TOKEN_HELP BX_TOKEN_PTIME '\n'  */
-#line 1190 "parser.y"
+#line 1190 "bx_parser.y"
        {
          dbg_printf("ptime - print current time (number of ticks since start of simulation)\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3889,7 +3889,7 @@ yyreduce:
     break;
 
   case 233: /* help_command: BX_TOKEN_HELP BX_TOKEN_TIMEBP '\n'  */
-#line 1195 "parser.y"
+#line 1195 "bx_parser.y"
        {
          dbg_printf("sb <delta> - insert a time breakpoint delta instructions into the future\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3898,7 +3898,7 @@ yyreduce:
     break;
 
   case 234: /* help_command: BX_TOKEN_HELP BX_TOKEN_TIMEBP_ABSOLUTE '\n'  */
-#line 1200 "parser.y"
+#line 1200 "bx_parser.y"
        {
          dbg_printf("sba <time> - insert breakpoint at specific time\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3907,7 +3907,7 @@ yyreduce:
     break;
 
   case 235: /* help_command: BX_TOKEN_HELP BX_TOKEN_PRINT_STACK '\n'  */
-#line 1205 "parser.y"
+#line 1205 "bx_parser.y"
        {
          dbg_printf("print-stack [num_words] - print the num_words top 16 bit words on the stack\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3916,7 +3916,7 @@ yyreduce:
     break;
 
   case 236: /* help_command: BX_TOKEN_HELP BX_TOKEN_BT '\n'  */
-#line 1210 "parser.y"
+#line 1210 "bx_parser.y"
        {
          dbg_printf("bt [num_entries] - prints backtrace\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3925,7 +3925,7 @@ yyreduce:
     break;
 
   case 237: /* help_command: BX_TOKEN_HELP BX_TOKEN_LOAD_SYMBOLS '\n'  */
-#line 1215 "parser.y"
+#line 1215 "bx_parser.y"
        {
          dbg_printf("ldsym [global] <filename> [offset] - load symbols from file\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3934,7 +3934,7 @@ yyreduce:
     break;
 
   case 238: /* help_command: BX_TOKEN_HELP BX_TOKEN_SET_MAGIC_BREAK_POINTS '\n'  */
-#line 1220 "parser.y"
+#line 1220 "bx_parser.y"
        {
          dbg_printf("setmagicbps \"cx dx bx sp bp si di\" - set new magic breakpoints. You can specify multiple at once. Using the setmagicbps command without any arguments will disable all of them\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3943,7 +3943,7 @@ yyreduce:
     break;
 
   case 239: /* help_command: BX_TOKEN_HELP BX_TOKEN_CLEAR_MAGIC_BREAK_POINTS '\n'  */
-#line 1225 "parser.y"
+#line 1225 "bx_parser.y"
        {
          dbg_printf("clrmagicbps \"cx dx bx sp bp si di\" - clear magic breakpoints. You can specify multiple at once. Using the clrmagicbps command without any arguments will disable all of them\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3952,7 +3952,7 @@ yyreduce:
     break;
 
   case 240: /* help_command: BX_TOKEN_HELP BX_TOKEN_LIST_SYMBOLS '\n'  */
-#line 1230 "parser.y"
+#line 1230 "bx_parser.y"
        {
          dbg_printf("slist [string] - list symbols whose preffix is string (same as 'info symbols')\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3961,7 +3961,7 @@ yyreduce:
     break;
 
   case 241: /* help_command: BX_TOKEN_HELP BX_TOKEN_REGISTERS '\n'  */
-#line 1235 "parser.y"
+#line 1235 "bx_parser.y"
        {
          dbg_printf("r|reg|regs|registers - list of CPU registers and their contents (same as 'info registers')\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3970,7 +3970,7 @@ yyreduce:
     break;
 
   case 242: /* help_command: BX_TOKEN_HELP BX_TOKEN_FPU '\n'  */
-#line 1240 "parser.y"
+#line 1240 "bx_parser.y"
        {
          dbg_printf("fp|fpu - print FPU state\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3979,7 +3979,7 @@ yyreduce:
     break;
 
   case 243: /* help_command: BX_TOKEN_HELP BX_TOKEN_MMX '\n'  */
-#line 1245 "parser.y"
+#line 1245 "bx_parser.y"
        {
          dbg_printf("mmx - print MMX state\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3988,7 +3988,7 @@ yyreduce:
     break;
 
   case 244: /* help_command: BX_TOKEN_HELP BX_TOKEN_XMM '\n'  */
-#line 1250 "parser.y"
+#line 1250 "bx_parser.y"
        {
          dbg_printf("xmm|sse - print SSE state\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -3997,7 +3997,7 @@ yyreduce:
     break;
 
   case 245: /* help_command: BX_TOKEN_HELP BX_TOKEN_YMM '\n'  */
-#line 1255 "parser.y"
+#line 1255 "bx_parser.y"
        {
          dbg_printf("ymm - print AVX state\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -4006,7 +4006,7 @@ yyreduce:
     break;
 
   case 246: /* help_command: BX_TOKEN_HELP BX_TOKEN_ZMM '\n'  */
-#line 1260 "parser.y"
+#line 1260 "bx_parser.y"
        {
          dbg_printf("zmm - print AVX-512 state\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -4015,7 +4015,7 @@ yyreduce:
     break;
 
   case 247: /* help_command: BX_TOKEN_HELP BX_TOKEN_AMX '\n'  */
-#line 1265 "parser.y"
+#line 1265 "bx_parser.y"
        {
          dbg_printf("amx - print AMX state\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -4024,7 +4024,7 @@ yyreduce:
     break;
 
   case 248: /* help_command: BX_TOKEN_HELP BX_TOKEN_SEGMENT_REGS '\n'  */
-#line 1270 "parser.y"
+#line 1270 "bx_parser.y"
        {
          dbg_printf("sreg - show segment registers\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -4033,7 +4033,7 @@ yyreduce:
     break;
 
   case 249: /* help_command: BX_TOKEN_HELP BX_TOKEN_CONTROL_REGS '\n'  */
-#line 1275 "parser.y"
+#line 1275 "bx_parser.y"
        {
          dbg_printf("creg - show control registers\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -4042,7 +4042,7 @@ yyreduce:
     break;
 
   case 250: /* help_command: BX_TOKEN_HELP BX_TOKEN_DEBUG_REGS '\n'  */
-#line 1280 "parser.y"
+#line 1280 "bx_parser.y"
        {
          dbg_printf("dreg - show debug registers\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -4051,7 +4051,7 @@ yyreduce:
     break;
 
   case 251: /* help_command: BX_TOKEN_HELP BX_TOKEN_WRITEMEM '\n'  */
-#line 1285 "parser.y"
+#line 1285 "bx_parser.y"
        {
          dbg_printf("writemem <filename> <laddr> <len> - dump 'len' bytes of virtual memory starting from the linear address 'laddr' into the file\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -4060,7 +4060,7 @@ yyreduce:
     break;
 
   case 252: /* help_command: BX_TOKEN_HELP BX_TOKEN_LOADMEM '\n'  */
-#line 1290 "parser.y"
+#line 1290 "bx_parser.y"
        {
          dbg_printf("loadmem <filename> <laddr> - load file bytes to virtual memory starting from the linear address 'laddr'\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -4069,7 +4069,7 @@ yyreduce:
     break;
 
   case 253: /* help_command: BX_TOKEN_HELP BX_TOKEN_SETPMEM '\n'  */
-#line 1295 "parser.y"
+#line 1295 "bx_parser.y"
        {
          dbg_printf("setpmem <addr> <datasize> <val> - set physical memory location of size 'datasize' to value 'val'\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -4078,7 +4078,7 @@ yyreduce:
     break;
 
   case 254: /* help_command: BX_TOKEN_HELP BX_TOKEN_DEREF '\n'  */
-#line 1300 "parser.y"
+#line 1300 "bx_parser.y"
        {
          dbg_printf("deref <addr> <deep> - pointer dereference. For example: get value of [[[rax]]] or ***rax: deref rax 3\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -4087,7 +4087,7 @@ yyreduce:
     break;
 
   case 255: /* help_command: BX_TOKEN_HELP BX_TOKEN_DISASM '\n'  */
-#line 1305 "parser.y"
+#line 1305 "bx_parser.y"
        {
          dbg_printf("u|disasm [/count] <start> <end> - disassemble instructions for given linear address\n");
          dbg_printf("    Optional 'count' is the number of disassembled instructions\n");
@@ -4101,7 +4101,7 @@ yyreduce:
     break;
 
   case 256: /* help_command: BX_TOKEN_HELP BX_TOKEN_WATCH '\n'  */
-#line 1315 "parser.y"
+#line 1315 "bx_parser.y"
        {
          dbg_printf("watch - print current watch point status\n");
          dbg_printf("watch stop - stop simulation when a watchpoint is encountred\n");
@@ -4116,7 +4116,7 @@ yyreduce:
     break;
 
   case 257: /* help_command: BX_TOKEN_HELP BX_TOKEN_UNWATCH '\n'  */
-#line 1326 "parser.y"
+#line 1326 "bx_parser.y"
        {
          dbg_printf("unwatch      - remove all watch points\n");
          dbg_printf("unwatch addr - remove a watch point\n");
@@ -4126,7 +4126,7 @@ yyreduce:
     break;
 
   case 258: /* help_command: BX_TOKEN_HELP BX_TOKEN_EXAMINE '\n'  */
-#line 1332 "parser.y"
+#line 1332 "bx_parser.y"
        {
          dbg_printf("x  /nuf <addr> - examine memory at linear address\n");
          dbg_printf("xp /nuf <addr> - examine memory at physical address\n");
@@ -4143,7 +4143,7 @@ yyreduce:
     break;
 
   case 259: /* help_command: BX_TOKEN_HELP BX_TOKEN_INSTRUMENT '\n'  */
-#line 1345 "parser.y"
+#line 1345 "bx_parser.y"
        {
          dbg_printf("instrument <command|\"string command\"> - calls BX_INSTR_DEBUG_CMD instrumentation callback with <command|\"string command\">\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -4152,7 +4152,7 @@ yyreduce:
     break;
 
   case 260: /* help_command: BX_TOKEN_HELP BX_TOKEN_SET '\n'  */
-#line 1350 "parser.y"
+#line 1350 "bx_parser.y"
        {
          dbg_printf("set <regname> = <expr> - set register value to expression\n");
          dbg_printf("set eflags = <expr> - set eflags value to expression, not all flags can be modified\n");
@@ -4167,7 +4167,7 @@ yyreduce:
     break;
 
   case 261: /* help_command: BX_TOKEN_HELP BX_TOKEN_PAGE '\n'  */
-#line 1361 "parser.y"
+#line 1361 "bx_parser.y"
        {
          dbg_printf("page <laddr> - show linear to physical xlation for linear address laddr\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -4176,7 +4176,7 @@ yyreduce:
     break;
 
   case 262: /* help_command: BX_TOKEN_HELP BX_TOKEN_INFO '\n'  */
-#line 1366 "parser.y"
+#line 1366 "bx_parser.y"
        {
          dbg_printf("info break - show information about current breakpoint status\n");
          dbg_printf("info cpu - show dump of all cpu registers\n");
@@ -4196,7 +4196,7 @@ yyreduce:
     break;
 
   case 263: /* help_command: BX_TOKEN_HELP BX_TOKEN_SHOW '\n'  */
-#line 1382 "parser.y"
+#line 1382 "bx_parser.y"
        {
          dbg_printf("show <command> - toggles show symbolic info (calls to begin with)\n");
          dbg_printf("show - shows current show mode\n");
@@ -4216,7 +4216,7 @@ yyreduce:
     break;
 
   case 264: /* help_command: BX_TOKEN_HELP BX_TOKEN_CALC '\n'  */
-#line 1398 "parser.y"
+#line 1398 "bx_parser.y"
        {
          dbg_printf("calc|? <expr> - calculate a expression and display the result.\n");
          dbg_printf("    'expr' can reference any general-purpose, opmask and segment\n");
@@ -4232,7 +4232,7 @@ yyreduce:
     break;
 
   case 265: /* help_command: BX_TOKEN_HELP BX_TOKEN_ADDLYT '\n'  */
-#line 1410 "parser.y"
+#line 1410 "bx_parser.y"
        {
          dbg_printf("addlyt <file> - cause debugger to execute a script file every time execution stops.\n");
          dbg_printf("    Example of use: 1. Create a script file (script.txt) with the following content:\n");
@@ -4248,7 +4248,7 @@ yyreduce:
     break;
 
   case 266: /* help_command: BX_TOKEN_HELP BX_TOKEN_REMLYT '\n'  */
-#line 1422 "parser.y"
+#line 1422 "bx_parser.y"
        {
          dbg_printf("remlyt - stops debugger to execute the script file added previously with addlyt command.\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -4257,7 +4257,7 @@ yyreduce:
     break;
 
   case 267: /* help_command: BX_TOKEN_HELP BX_TOKEN_LYT '\n'  */
-#line 1427 "parser.y"
+#line 1427 "bx_parser.y"
        {
          dbg_printf("lyt - cause debugger to execute script file added previously with addlyt command.\n");
          dbg_printf("    Use it as a refresh/context.\n");
@@ -4267,7 +4267,7 @@ yyreduce:
     break;
 
   case 268: /* help_command: BX_TOKEN_HELP BX_TOKEN_PRINT_STRING '\n'  */
-#line 1433 "parser.y"
+#line 1433 "bx_parser.y"
        {
          dbg_printf("print-string <addr> - prints a null-ended string from a linear address.\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -4276,7 +4276,7 @@ yyreduce:
     break;
 
   case 269: /* help_command: BX_TOKEN_HELP BX_TOKEN_SOURCE '\n'  */
-#line 1438 "parser.y"
+#line 1438 "bx_parser.y"
        {
          dbg_printf("source <file> - cause debugger to execute a script file.\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -4285,7 +4285,7 @@ yyreduce:
     break;
 
   case 270: /* help_command: BX_TOKEN_HELP BX_TOKEN_HELP '\n'  */
-#line 1443 "parser.y"
+#line 1443 "bx_parser.y"
        {
          bx_dbg_print_help();
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
@@ -4294,7 +4294,7 @@ yyreduce:
     break;
 
   case 271: /* help_command: BX_TOKEN_HELP '\n'  */
-#line 1448 "parser.y"
+#line 1448 "bx_parser.y"
        {
          bx_dbg_print_help();
          free((yyvsp[-1].sval));
@@ -4303,7 +4303,7 @@ yyreduce:
     break;
 
   case 272: /* calc_command: BX_TOKEN_CALC expression '\n'  */
-#line 1456 "parser.y"
+#line 1456 "bx_parser.y"
    {
      eval_value = (yyvsp[-1].uval);
      bx_dbg_calc_command((yyvsp[-1].uval));
@@ -4313,7 +4313,7 @@ yyreduce:
     break;
 
   case 273: /* addlyt_command: BX_TOKEN_ADDLYT BX_TOKEN_STRING '\n'  */
-#line 1465 "parser.y"
+#line 1465 "bx_parser.y"
    {
      bx_dbg_addlyt((yyvsp[-1].sval));
      free((yyvsp[-2].sval));
@@ -4323,7 +4323,7 @@ yyreduce:
     break;
 
   case 274: /* remlyt_command: BX_TOKEN_REMLYT '\n'  */
-#line 1474 "parser.y"
+#line 1474 "bx_parser.y"
    {
      bx_dbg_remlyt();
      free((yyvsp[-1].sval));
@@ -4332,7 +4332,7 @@ yyreduce:
     break;
 
   case 275: /* lyt_command: BX_TOKEN_LYT '\n'  */
-#line 1482 "parser.y"
+#line 1482 "bx_parser.y"
    {
      bx_dbg_lyt();
      free((yyvsp[-1].sval));
@@ -4341,7 +4341,7 @@ yyreduce:
     break;
 
   case 276: /* if_command: BX_TOKEN_IF expression '\n'  */
-#line 1490 "parser.y"
+#line 1490 "bx_parser.y"
    {
      eval_value = (yyvsp[-1].uval) != 0;
      bx_dbg_calc_command((yyvsp[-1].uval));
@@ -4351,367 +4351,367 @@ yyreduce:
     break;
 
   case 277: /* vexpression: BX_TOKEN_NUMERIC  */
-#line 1499 "parser.y"
+#line 1499 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[0].uval); }
 #line 4357 "y.tab.c"
     break;
 
   case 278: /* vexpression: BX_TOKEN_STRING  */
-#line 1500 "parser.y"
+#line 1500 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_symbol_value((yyvsp[0].sval)); free((yyvsp[0].sval));}
 #line 4363 "y.tab.c"
     break;
 
   case 279: /* vexpression: BX_TOKEN_8BL_REG  */
-#line 1501 "parser.y"
+#line 1501 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg8l_value((yyvsp[0].uval)); }
 #line 4369 "y.tab.c"
     break;
 
   case 280: /* vexpression: BX_TOKEN_8BH_REG  */
-#line 1502 "parser.y"
+#line 1502 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg8h_value((yyvsp[0].uval)); }
 #line 4375 "y.tab.c"
     break;
 
   case 281: /* vexpression: BX_TOKEN_16B_REG  */
-#line 1503 "parser.y"
+#line 1503 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg16_value((yyvsp[0].uval)); }
 #line 4381 "y.tab.c"
     break;
 
   case 282: /* vexpression: BX_TOKEN_32B_REG  */
-#line 1504 "parser.y"
+#line 1504 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg32_value((yyvsp[0].uval)); }
 #line 4387 "y.tab.c"
     break;
 
   case 283: /* vexpression: BX_TOKEN_64B_REG  */
-#line 1505 "parser.y"
+#line 1505 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg64_value((yyvsp[0].uval)); }
 #line 4393 "y.tab.c"
     break;
 
   case 284: /* vexpression: BX_TOKEN_OPMASK_REG  */
-#line 1506 "parser.y"
+#line 1506 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_opmask_value((yyvsp[0].uval)); }
 #line 4399 "y.tab.c"
     break;
 
   case 285: /* vexpression: BX_TOKEN_SEGREG  */
-#line 1507 "parser.y"
+#line 1507 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_selector_value((yyvsp[0].uval)); }
 #line 4405 "y.tab.c"
     break;
 
   case 286: /* vexpression: BX_TOKEN_REG_IP  */
-#line 1508 "parser.y"
+#line 1508 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_ip (); }
 #line 4411 "y.tab.c"
     break;
 
   case 287: /* vexpression: BX_TOKEN_REG_EIP  */
-#line 1509 "parser.y"
+#line 1509 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_eip(); }
 #line 4417 "y.tab.c"
     break;
 
   case 288: /* vexpression: BX_TOKEN_REG_RIP  */
-#line 1510 "parser.y"
+#line 1510 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_rip(); }
 #line 4423 "y.tab.c"
     break;
 
   case 289: /* vexpression: BX_TOKEN_REG_SSP  */
-#line 1511 "parser.y"
+#line 1511 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_ssp(); }
 #line 4429 "y.tab.c"
     break;
 
   case 290: /* vexpression: vexpression '+' vexpression  */
-#line 1512 "parser.y"
+#line 1512 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) + (yyvsp[0].uval); }
 #line 4435 "y.tab.c"
     break;
 
   case 291: /* vexpression: vexpression '-' vexpression  */
-#line 1513 "parser.y"
+#line 1513 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) - (yyvsp[0].uval); }
 #line 4441 "y.tab.c"
     break;
 
   case 292: /* vexpression: vexpression '*' vexpression  */
-#line 1514 "parser.y"
+#line 1514 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) * (yyvsp[0].uval); }
 #line 4447 "y.tab.c"
     break;
 
   case 293: /* vexpression: vexpression '/' vexpression  */
-#line 1515 "parser.y"
+#line 1515 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) / (yyvsp[0].uval); }
 #line 4453 "y.tab.c"
     break;
 
   case 294: /* vexpression: vexpression BX_TOKEN_DEREF_CHR vexpression  */
-#line 1516 "parser.y"
+#line 1516 "bx_parser.y"
                                                 { (yyval.uval) = bx_dbg_deref((yyvsp[-2].uval), (yyvsp[0].uval), NULL, NULL); }
 #line 4459 "y.tab.c"
     break;
 
   case 295: /* vexpression: vexpression BX_TOKEN_RSHIFT vexpression  */
-#line 1517 "parser.y"
+#line 1517 "bx_parser.y"
                                              { (yyval.uval) = (yyvsp[-2].uval) >> (yyvsp[0].uval); }
 #line 4465 "y.tab.c"
     break;
 
   case 296: /* vexpression: vexpression BX_TOKEN_LSHIFT vexpression  */
-#line 1518 "parser.y"
+#line 1518 "bx_parser.y"
                                              { (yyval.uval) = (yyvsp[-2].uval) << (yyvsp[0].uval); }
 #line 4471 "y.tab.c"
     break;
 
   case 297: /* vexpression: vexpression '|' vexpression  */
-#line 1519 "parser.y"
+#line 1519 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) | (yyvsp[0].uval); }
 #line 4477 "y.tab.c"
     break;
 
   case 298: /* vexpression: vexpression '^' vexpression  */
-#line 1520 "parser.y"
+#line 1520 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) ^ (yyvsp[0].uval); }
 #line 4483 "y.tab.c"
     break;
 
   case 299: /* vexpression: vexpression '&' vexpression  */
-#line 1521 "parser.y"
+#line 1521 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) & (yyvsp[0].uval); }
 #line 4489 "y.tab.c"
     break;
 
   case 300: /* vexpression: '!' vexpression  */
-#line 1522 "parser.y"
+#line 1522 "bx_parser.y"
                                      { (yyval.uval) = !(yyvsp[0].uval); }
 #line 4495 "y.tab.c"
     break;
 
   case 301: /* vexpression: '-' vexpression  */
-#line 1523 "parser.y"
+#line 1523 "bx_parser.y"
                                      { (yyval.uval) = -(yyvsp[0].uval); }
 #line 4501 "y.tab.c"
     break;
 
   case 302: /* vexpression: '(' vexpression ')'  */
-#line 1524 "parser.y"
+#line 1524 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-1].uval); }
 #line 4507 "y.tab.c"
     break;
 
   case 303: /* expression: BX_TOKEN_NUMERIC  */
-#line 1530 "parser.y"
+#line 1530 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[0].uval); }
 #line 4513 "y.tab.c"
     break;
 
   case 304: /* expression: BX_TOKEN_STRING  */
-#line 1531 "parser.y"
+#line 1531 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_symbol_value((yyvsp[0].sval)); free((yyvsp[0].sval));}
 #line 4519 "y.tab.c"
     break;
 
   case 305: /* expression: BX_TOKEN_8BL_REG  */
-#line 1532 "parser.y"
+#line 1532 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg8l_value((yyvsp[0].uval)); }
 #line 4525 "y.tab.c"
     break;
 
   case 306: /* expression: BX_TOKEN_8BH_REG  */
-#line 1533 "parser.y"
+#line 1533 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg8h_value((yyvsp[0].uval)); }
 #line 4531 "y.tab.c"
     break;
 
   case 307: /* expression: BX_TOKEN_16B_REG  */
-#line 1534 "parser.y"
+#line 1534 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg16_value((yyvsp[0].uval)); }
 #line 4537 "y.tab.c"
     break;
 
   case 308: /* expression: BX_TOKEN_32B_REG  */
-#line 1535 "parser.y"
+#line 1535 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg32_value((yyvsp[0].uval)); }
 #line 4543 "y.tab.c"
     break;
 
   case 309: /* expression: BX_TOKEN_64B_REG  */
-#line 1536 "parser.y"
+#line 1536 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg64_value((yyvsp[0].uval)); }
 #line 4549 "y.tab.c"
     break;
 
   case 310: /* expression: BX_TOKEN_OPMASK_REG  */
-#line 1537 "parser.y"
+#line 1537 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_opmask_value((yyvsp[0].uval)); }
 #line 4555 "y.tab.c"
     break;
 
   case 311: /* expression: BX_TOKEN_SEGREG  */
-#line 1538 "parser.y"
+#line 1538 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_selector_value((yyvsp[0].uval)); }
 #line 4561 "y.tab.c"
     break;
 
   case 312: /* expression: BX_TOKEN_REG_IP  */
-#line 1539 "parser.y"
+#line 1539 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_ip (); }
 #line 4567 "y.tab.c"
     break;
 
   case 313: /* expression: BX_TOKEN_REG_EIP  */
-#line 1540 "parser.y"
+#line 1540 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_eip(); }
 #line 4573 "y.tab.c"
     break;
 
   case 314: /* expression: BX_TOKEN_REG_RIP  */
-#line 1541 "parser.y"
+#line 1541 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_rip(); }
 #line 4579 "y.tab.c"
     break;
 
   case 315: /* expression: BX_TOKEN_REG_SSP  */
-#line 1542 "parser.y"
+#line 1542 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_ssp(); }
 #line 4585 "y.tab.c"
     break;
 
   case 316: /* expression: expression ':' expression  */
-#line 1543 "parser.y"
+#line 1543 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_laddr ((yyvsp[-2].uval), (yyvsp[0].uval)); }
 #line 4591 "y.tab.c"
     break;
 
   case 317: /* expression: expression '+' expression  */
-#line 1544 "parser.y"
+#line 1544 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) + (yyvsp[0].uval); }
 #line 4597 "y.tab.c"
     break;
 
   case 318: /* expression: expression '-' expression  */
-#line 1545 "parser.y"
+#line 1545 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) - (yyvsp[0].uval); }
 #line 4603 "y.tab.c"
     break;
 
   case 319: /* expression: expression '*' expression  */
-#line 1546 "parser.y"
+#line 1546 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) * (yyvsp[0].uval); }
 #line 4609 "y.tab.c"
     break;
 
   case 320: /* expression: expression '/' expression  */
-#line 1547 "parser.y"
+#line 1547 "bx_parser.y"
                                      { (yyval.uval) = ((yyvsp[0].uval) != 0) ? (yyvsp[-2].uval) / (yyvsp[0].uval) : 0; }
 #line 4615 "y.tab.c"
     break;
 
   case 321: /* expression: expression BX_TOKEN_DEREF_CHR expression  */
-#line 1548 "parser.y"
+#line 1548 "bx_parser.y"
                                               { (yyval.uval) = bx_dbg_deref((yyvsp[-2].uval), (yyvsp[0].uval), NULL, NULL); }
 #line 4621 "y.tab.c"
     break;
 
   case 322: /* expression: expression BX_TOKEN_RSHIFT expression  */
-#line 1549 "parser.y"
+#line 1549 "bx_parser.y"
                                            { (yyval.uval) = (yyvsp[-2].uval) >> (yyvsp[0].uval); }
 #line 4627 "y.tab.c"
     break;
 
   case 323: /* expression: expression BX_TOKEN_LSHIFT expression  */
-#line 1550 "parser.y"
+#line 1550 "bx_parser.y"
                                            { (yyval.uval) = (yyvsp[-2].uval) << (yyvsp[0].uval); }
 #line 4633 "y.tab.c"
     break;
 
   case 324: /* expression: expression '|' expression  */
-#line 1551 "parser.y"
+#line 1551 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) | (yyvsp[0].uval); }
 #line 4639 "y.tab.c"
     break;
 
   case 325: /* expression: expression '^' expression  */
-#line 1552 "parser.y"
+#line 1552 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) ^ (yyvsp[0].uval); }
 #line 4645 "y.tab.c"
     break;
 
   case 326: /* expression: expression '&' expression  */
-#line 1553 "parser.y"
+#line 1553 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) & (yyvsp[0].uval); }
 #line 4651 "y.tab.c"
     break;
 
   case 327: /* expression: expression '>' expression  */
-#line 1554 "parser.y"
+#line 1554 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) > (yyvsp[0].uval); }
 #line 4657 "y.tab.c"
     break;
 
   case 328: /* expression: expression '<' expression  */
-#line 1555 "parser.y"
+#line 1555 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) < (yyvsp[0].uval); }
 #line 4663 "y.tab.c"
     break;
 
   case 329: /* expression: expression BX_TOKEN_EQ expression  */
-#line 1556 "parser.y"
+#line 1556 "bx_parser.y"
                                        { (yyval.uval) = (yyvsp[-2].uval) == (yyvsp[0].uval); }
 #line 4669 "y.tab.c"
     break;
 
   case 330: /* expression: expression BX_TOKEN_NE expression  */
-#line 1557 "parser.y"
+#line 1557 "bx_parser.y"
                                        { (yyval.uval) = (yyvsp[-2].uval) != (yyvsp[0].uval); }
 #line 4675 "y.tab.c"
     break;
 
   case 331: /* expression: expression BX_TOKEN_LE expression  */
-#line 1558 "parser.y"
+#line 1558 "bx_parser.y"
                                        { (yyval.uval) = (yyvsp[-2].uval) <= (yyvsp[0].uval); }
 #line 4681 "y.tab.c"
     break;
 
   case 332: /* expression: expression BX_TOKEN_GE expression  */
-#line 1559 "parser.y"
+#line 1559 "bx_parser.y"
                                        { (yyval.uval) = (yyvsp[-2].uval) >= (yyvsp[0].uval); }
 #line 4687 "y.tab.c"
     break;
 
   case 333: /* expression: '!' expression  */
-#line 1560 "parser.y"
+#line 1560 "bx_parser.y"
                                      { (yyval.uval) = !(yyvsp[0].uval); }
 #line 4693 "y.tab.c"
     break;
 
   case 334: /* expression: '-' expression  */
-#line 1561 "parser.y"
+#line 1561 "bx_parser.y"
                                      { (yyval.uval) = -(yyvsp[0].uval); }
 #line 4699 "y.tab.c"
     break;
 
   case 335: /* expression: '*' expression  */
-#line 1562 "parser.y"
+#line 1562 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_lin_indirect((yyvsp[0].uval)); }
 #line 4705 "y.tab.c"
     break;
 
   case 336: /* expression: '@' expression  */
-#line 1563 "parser.y"
+#line 1563 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_phy_indirect((yyvsp[0].uval)); }
 #line 4711 "y.tab.c"
     break;
 
   case 337: /* expression: '(' expression ')'  */
-#line 1564 "parser.y"
+#line 1564 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-1].uval); }
 #line 4717 "y.tab.c"
     break;
@@ -4910,7 +4910,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 1567 "parser.y"
+#line 1567 "bx_parser.y"
 
 #endif  /* if BX_DEBUGGER */
 /* The #endif is appended by the makefile after running yacc. */

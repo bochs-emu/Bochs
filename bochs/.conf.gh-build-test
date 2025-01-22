@@ -55,6 +55,7 @@ case $which_config in
     ./configure \
       --enable-cpu-level=3 \
       --disable-fpu \
+      --disable-3dnow \
       --disable-pci \
       --with-nogui
     ;;

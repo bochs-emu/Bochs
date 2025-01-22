@@ -14,7 +14,7 @@
 #include "debug.h"
 #if BX_DEBUGGER
 
-#include "parser.h"
+#include "bx_parser.h"
 
 int bx_yyinput(char *buf, int max_size);
 #undef YY_INPUT
