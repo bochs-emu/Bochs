@@ -26,7 +26,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_CPU_LEVEL >= 6 || BX_SUPPORT_3DNOW
+#if BX_CPU_LEVEL >= 6
 
 #include "softfloat3e/include/softfloat.h"
 #include "fpu/softfloat-specialize.h"
