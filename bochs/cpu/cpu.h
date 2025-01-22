@@ -3832,10 +3832,10 @@ public: // for now...
   // AVX10.2 - BF16
   BX_SMF void VFPCLASSPBF16_MASK_KGdWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCMPPBF16_MASK_KGdHphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCOMSBF16_VshWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCOMISBF16_VshWshR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VGETMANTPBF16_MASK_VphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VREDUCENEPBF16_MASK_VphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VRNDSCALENEPBF16_MASK_VphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VREDUCEBF16_MASK_VphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VRNDSCALEBF16_MASK_VphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VRSQRTPBF16_VphWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VRCPPBF16_VphWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VRSQRTPBF16_MASK_VphWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3847,7 +3847,7 @@ public: // for now...
   BX_SMF void VMINMAXSS_MASK_VssHpsWssIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMINMAXPH_MASK_VphHphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VMINMAXSH_MASK_VshHphWshIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VMINMAXNEPBF16_MASK_VphHphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VMINMAXBF16_MASK_VphHphWphIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   // AVX 10.2 - convert instructions
   BX_SMF void VCVT2PS2PHX_MASK_VphHpsWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3885,22 +3885,22 @@ public: // for now...
 
   // AVX10.2 fp8 convert instructions
   BX_SMF void VCVTHF82PH_VphWf8R(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCVTNEPH2BF8_Vf8HdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCVTNE2PH2BF8_Vf8HdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPH2BF8_Vf8HdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVT2PH2BF8_Vf8HdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTBIASPH2BF8_Vf8HdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCVTNEPH2HF8_Vf8HdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCVTNE2PH2HF8_Vf8HdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPH2HF8_Vf8HdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVT2PH2HF8_Vf8HdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTBIASPH2HF8_Vf8HdqWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   // AVX10.2 convert to int8 with saturation
-  BX_SMF void VCVTNEBF162IBS_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCVTNEBF162IUBS_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCVTNEBF162IBS_MASK_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCVTNEBF162IUBS_MASK_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCVTTNEBF162IBS_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCVTTNEBF162IUBS_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCVTTNEBF162IBS_MASK_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void VCVTTNEBF162IUBS_MASK_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTBF162IBS_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTBF162IUBS_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTBF162IBS_MASK_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTBF162IUBS_MASK_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTBF162IBS_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTBF162IUBS_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTBF162IBS_MASK_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTTBF162IUBS_MASK_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void VCVTPH2IBS_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTPH2IUBS_V8bWphR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

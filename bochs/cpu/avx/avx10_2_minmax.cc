@@ -226,7 +226,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINMAXSH_MASK_VshHphWshIbR(bxInstruction_
 
 extern softfloat_status_t prepare_ne_softfloat_status_helper(bool denormals_are_zeros);
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINMAXNEPBF16_MASK_VphHphWphIbR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINMAXBF16_MASK_VphHphWphIbR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
   unsigned len = i->getVL();

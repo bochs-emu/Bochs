@@ -71,12 +71,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTHF82PH_VphWf8R(bxInstruction_c *i)
 
 // PH2BF8
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNE2PH2BF8_Vf8HdqWphR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVT2PH2BF8_Vf8HdqWphR(bxInstruction_c *i)
 {
   BxPackedAvxRegister src1 = BX_READ_AVX_REG(i->src1()), src2 = BX_READ_AVX_REG(i->src2()), dst = BX_READ_AVX_REG(i->dst());
   unsigned len = i->getVL();
   unsigned num_elements_from_source = WORD_ELEMENTS(len);
-  bool saturate = (i->getIaOpcode() == BX_IA_EVEX_VCVTNE2PH2BF8_Vf8HdqWph_Kmask);
+  bool saturate = (i->getIaOpcode() == BX_IA_EVEX_VCVT2PH2BF8_Vf8HdqWph_Kmask);
   unsigned n = 0;
 
   softfloat_status_t status = prepare_ne_softfloat_status_helper(false);
@@ -105,13 +105,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNE2PH2BF8_Vf8HdqWphR(bxInstruction_c *
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNEPH2BF8_Vf8HdqWphR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPH2BF8_Vf8HdqWphR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), res = BX_READ_AVX_REG(i->dst());
   unsigned opmask = i->opmask() ? BX_READ_32BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   unsigned len = i->getVL();
   unsigned num_elements = WORD_ELEMENTS(len);
-  bool saturate = (i->getIaOpcode() == BX_IA_EVEX_VCVTNEPH2BF8S_Vf8HdqWph_Kmask);
+  bool saturate = (i->getIaOpcode() == BX_IA_EVEX_VCVTPH2BF8S_Vf8HdqWph_Kmask);
 
   softfloat_status_t status = prepare_ne_softfloat_status_helper(false);
 
@@ -163,12 +163,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTBIASPH2BF8_Vf8HdqWphR(bxInstruction_c 
 
 // PH2HF8
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNE2PH2HF8_Vf8HdqWphR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVT2PH2HF8_Vf8HdqWphR(bxInstruction_c *i)
 {
   BxPackedAvxRegister src1 = BX_READ_AVX_REG(i->src1()), src2 = BX_READ_AVX_REG(i->src2()), dst = BX_READ_AVX_REG(i->dst());
   unsigned len = i->getVL();
   unsigned num_elements_from_source = WORD_ELEMENTS(len);
-  bool saturate = (i->getIaOpcode() == BX_IA_EVEX_VCVTNE2PH2HF8_Vf8HdqWph_Kmask);
+  bool saturate = (i->getIaOpcode() == BX_IA_EVEX_VCVT2PH2HF8_Vf8HdqWph_Kmask);
   unsigned n = 0;
 
   softfloat_status_t status = prepare_ne_softfloat_status_helper(false);
@@ -197,13 +197,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNE2PH2HF8_Vf8HdqWphR(bxInstruction_c *
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNEPH2HF8_Vf8HdqWphR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTPH2HF8_Vf8HdqWphR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), res = BX_READ_AVX_REG(i->dst());
   unsigned opmask = i->opmask() ? BX_READ_32BIT_OPMASK(i->opmask()) : (Bit32u) -1;
   unsigned len = i->getVL();
   unsigned num_elements = WORD_ELEMENTS(len);
-  bool saturate = (i->getIaOpcode() == BX_IA_EVEX_VCVTNEPH2HF8S_Vf8HdqWph_Kmask);
+  bool saturate = (i->getIaOpcode() == BX_IA_EVEX_VCVTPH2HF8S_Vf8HdqWph_Kmask);
 
   softfloat_status_t status = prepare_ne_softfloat_status_helper(false);
 
