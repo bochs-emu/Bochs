@@ -912,8 +912,6 @@ static bx_bool        floppy_drive_recal();
 static bx_bool        floppy_media_known();
 static bx_bool        floppy_media_sense();
 static bx_bool        set_enable_a20();
-static void           debugger_on();
-static void           debugger_off();
 static void           keyboard_init();
 static void           keyboard_panic();
 static void           shutdown_status_panic();
@@ -2355,18 +2353,6 @@ set_enable_a20(val)
     outb(PORT_A20, oldval & 0xfd);
 
   return((oldval & 0x02) != 0);
-}
-
-  void
-debugger_on()
-{
-  outb(0xfedc, 0x01);
-}
-
-  void
-debugger_off()
-{
-  outb(0xfedc, 0x00);
 }
 
 int
