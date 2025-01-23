@@ -219,11 +219,8 @@ float32 approximate_rcp14_3dnow(float32 op)
   return packFloat32(sign, exp, Bit32u(int(rcp_tableH[fraction_b1_b10]) + int(rcp_tableL[(fraction_b1_b5 << 5) | fraction_b11_b15])) << 7);
 }
 
-#endif
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRCP_PqQq(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister dst;
@@ -259,14 +256,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRCP_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), dst);
-#endif
 
   BX_NEXT_INSTR(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRCPIT1_PqQq(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
@@ -300,12 +295,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRCPIT1_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op1);
-#endif
 
   BX_NEXT_INSTR(i);
 }
-
-#if BX_SUPPORT_3DNOW && BX_CPU_LEVEL >= 5
 
 static Bit16u rsqrt_table1H[1024] = {
   0xFFDF, 0xFF9F, 0xFF60, 0xFF20, 0xFEE0, 0xFEA1, 0xFE61, 0xFE22, 0xFDE3, 0xFDA4, 0xFD64, 0xFD26, 0xFCE7, 0xFCA8, 0xFC69, 0xFC2A,
@@ -625,11 +617,8 @@ float32 approximate_rsqrt14_3dnow(float32 op)
   return packFloat32(sign, exp, Bit32u(int(rsqrt_tableH[fraction_b1_b10]) + int(rsqrt_tableL[(fraction_b1_b5 << 5) | fraction_b11_b15])) << 7);
 }
 
-#endif
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRSQRT_PqQq(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister dst;
@@ -671,14 +660,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRSQRT_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), dst);
-#endif
 
   BX_NEXT_INSTR(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRSQIT1_PqQq(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR FPU_check_pending_exceptions();
 
   BxPackedMmxRegister op1 = BX_READ_MMX_REG(i->dst()), op2;
@@ -720,7 +707,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::PFRSQIT1_PqQq(bxInstruction_c *i)
 
   /* now write result back to destination */
   BX_WRITE_MMX_REG(i->dst(), op1);
-#endif
 
   BX_NEXT_INSTR(i);
 }
+
+#endif
