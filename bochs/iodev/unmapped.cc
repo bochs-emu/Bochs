@@ -249,28 +249,22 @@ void bx_unmapped_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_FATAL(("Shutdown port: shutdown requested"));
       }
       break;
-/*
-    case 0xfedc:
-      bx_dbg.io_debugger = (value > 0);
-      BX_DEBUG(("DEBUGGER = %u", (unsigned) bx_dbg.io_debugger));
-      break;
-*/
     default:
       break;
   }
 
   switch (io_len) {
     case 1:
-      BX_DEBUG(("unmapped: 8-bit write to %04x = %02x", address, value));
+      BX_DEBUG(("8-bit write to %04x = %02x", address, value));
       break;
     case 2:
-      BX_DEBUG(("unmapped: 16-bit write to %04x = %04x", address, value));
+      BX_DEBUG(("16-bit write to %04x = %04x", address, value));
       break;
     case 4:
-      BX_DEBUG(("unmapped: 32-bit write to %04x = %08x", address, value));
+      BX_DEBUG(("32-bit write to %04x = %08x", address, value));
       break;
     default:
-      BX_PANIC(("unmapped: %d-bit write to %04x = %x", io_len * 8, address, value));
+      BX_PANIC(("%d-bit write to %04x = %x", io_len * 8, address, value));
       break;
   }
 }
