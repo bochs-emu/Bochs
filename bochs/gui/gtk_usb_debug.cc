@@ -1098,7 +1098,6 @@ void hc_xhci_do_ring(GtkWidget *treeview, const char *ring_str, Bit64u RingPtr, 
   int  trb_count = 0; // count of TRB's processed
   Bit64u address = RingPtr;
   struct TRB trb;
-  GtkTreeIter parent, *parentp = NULL;
   bool state;
   Bit8u type;
 
@@ -1117,8 +1116,7 @@ void hc_xhci_do_ring(GtkWidget *treeview, const char *ring_str, Bit64u RingPtr, 
       strcat(str, " <--- dq_pointer");
       state = true;
     }
-    treeview_insert(treeview, parentp, &parent, str, address, state);
-    parentp = &parent;
+    treeview_insert(treeview, NULL, NULL, str, address, state);
     if (type == LINK) {
       address = trb.parameter & (Bit64u) ~0xF;
     } else
@@ -1259,10 +1257,10 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case EVALUATE_CONTEXT:
       entry[e_num] = usbdlg_create_entry_with_label(grid, "Input Context Pointer", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num]), str);
       button[2] = gtk_button_new_with_label(">");
       g_signal_connect(button[2], "clicked", G_CALLBACK(xhci_context_dialog), NULL);
-      gtk_grid_attach(GTK_GRID(grid), button[2], 2, e_num, 1, 1);
+      gtk_grid_attach(GTK_GRID(grid), button[2], 2, e_num++, 1, 1);
       break;
     case SET_TR_DEQUEUE:
       entry[e_num] = usbdlg_create_entry_with_label(grid, "New TR Dequeue Pointer", 0, row++);
