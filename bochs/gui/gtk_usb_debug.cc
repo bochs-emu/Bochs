@@ -1244,6 +1244,11 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
       gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
       break;
+    case EVENT_DATA:
+      entry[e_num] = usbdlg_create_entry_with_label(grid, "Event Data", 0, row++);
+      sprintf(str, "0x" FMT_ADDRX64, trb->parameter);
+      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      break;
     case ENABLE_SLOT:
       entry[e_num] = usbdlg_create_entry_with_label(grid, "Slot Type", 0, row++);
       sprintf(str, "%i", TRB_GET_STYPE(trb->command));
@@ -1399,6 +1404,7 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case DATA_STAGE:
     case STATUS_STAGE:
     case LINK:
+    case EVENT_DATA:
     case NO_OP:
       entry[e_num] = usbdlg_create_entry_with_label(grid, "Interrupter Target", 0, row++);
       sprintf(str, "%i", TRB_GET_TARGET(trb->status));
@@ -1449,7 +1455,7 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
   trb_type = usbdlg_create_ro_entry_with_label(grid, "TRB Type", 0, row++);
   sprintf(str, "%i", TRB_GET_TYPE(trb->command));
   gtk_entry_set_text(GTK_ENTRY(trb_type), str);
-  if (type == NORMAL) {
+  if ((type == NORMAL) || (type == EVENT_DATA)) {
     checkbox[c_num] = gtk_check_button_new_with_label("Block Event Interrupt");
     if (TRB_DC(trb->command)) {
       gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
@@ -1473,6 +1479,7 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case DATA_STAGE:
     case STATUS_STAGE:
     case LINK:
+    case EVENT_DATA:
     case NO_OP:
       checkbox[c_num] = gtk_check_button_new_with_label("Interrupt On Complete");
       if (TRB_IOC(trb->command)) {
