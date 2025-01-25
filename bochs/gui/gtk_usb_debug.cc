@@ -1091,6 +1091,50 @@ int uhci_debug_dialog(int type, int param1)
 
 // xHCI
 
+enum {
+  ID_TRB_DATA_PTR,
+  ID_TRB_INT_TARGET,
+  ID_TRB_TD_SIZE,
+  ID_TRB_TRANS_LEN,
+  ID_TRB_TYPE,
+  ID_TRB_BEI,
+  ID_TRB_IDT,
+  ID_TRB_IOC,
+  ID_TRB_CH,
+  ID_TRB_NS,
+  ID_TRB_ISP,
+  ID_TRB_ENT,
+  ID_TRB_C,
+  ID_TRB_WVALUE,
+  ID_TRB_BREQUEST,
+  ID_TRB_BREQUESTTYPE,
+  ID_TRB_WLENGTH,
+  ID_TRB_WINDEX,
+  ID_TRB_TRT,
+  ID_TRB_DIR,
+  ID_TRB_TC,
+  ID_TRB_SLOT_TYPE,
+  ID_TRB_SLOT_ID,
+  ID_TRB_BSR,
+  ID_TRB_DECONFIG,
+  ID_TRB_EP_ID,
+  ID_TRB_TSP,
+  ID_TRB_SP,
+  ID_TRB_STREAMID,
+  ID_TRB_VF_ID,
+  ID_TRB_BELT,
+  ID_TRB_DEV_SPEED,
+  ID_TRB_SCT,
+  ID_TRB_DCS,
+  ID_TRB_HDR_HI,
+  ID_TRB_FTYPE,
+  ID_TRB_COMP_CODE,
+  ID_TRB_ED,
+  ID_TRB_COMP_LPARAM,
+  ID_TRB_NOT_TYPE,
+  TRB_N_ITEMS
+};
+
 bx_list_c *xHCI_state = NULL;
 
 void hc_xhci_do_ring(GtkWidget *treeview, const char *ring_str, Bit64u RingPtr, Bit64u dequeue_ptr)
@@ -1192,9 +1236,8 @@ static void xhci_context_dialog(GtkWidget *widget, gpointer data)
 
 void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
 {
-  GtkWidget *mainVbox, *trb_type;
-  GtkWidget *grid, *entry[9], *checkbox[8], *button[3];
-  int ret, c_num = 0, e_num = 0, row = 0;
+  GtkWidget *mainVbox, *grid, *TRBitem[TRB_N_ITEMS], *button[3];
+  int ret, row = 0;
   char str[COMMON_STR_SIZE];
 
   // Using the type of trb, display an associated dialog
@@ -1217,117 +1260,117 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
   switch (type) {
     case NORMAL:
     case DATA_STAGE:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Data Pointer", 0, row++);
+      TRBitem[ID_TRB_DATA_PTR] = usbdlg_create_entry_with_label(grid, "Data Pointer", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, trb->parameter);
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR]), str);
       break;
     case SETUP_STAGE:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "wValue", 0, row++);
+      TRBitem[ID_TRB_WVALUE] = usbdlg_create_entry_with_label(grid, "wValue", 0, row++);
       sprintf(str, "0x%04X", (Bit16u) ((trb->parameter & BX_CONST64(0x00000000000000FF)) >> 0));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "bRequest", 0, row++);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_WVALUE]), str);
+      TRBitem[ID_TRB_BREQUEST] = usbdlg_create_entry_with_label(grid, "bRequest", 0, row++);
       sprintf(str, "0x%04X", (Bit16u) ((trb->parameter & BX_CONST64(0x000000000000FF00)) >> 8));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "bRequestType", 0, row++);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_BREQUEST]), str);
+      TRBitem[ID_TRB_BREQUESTTYPE] = usbdlg_create_entry_with_label(grid, "bRequestType", 0, row++);
       sprintf(str, "0x%04X", (Bit16u) ((trb->parameter & BX_CONST64(0x00000000FFFF0000)) >> 16));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "wLength", 0, row++);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_BREQUESTTYPE]), str);
+      TRBitem[ID_TRB_WLENGTH] = usbdlg_create_entry_with_label(grid, "wLength", 0, row++);
       sprintf(str, "0x%04X", (Bit16u) ((trb->parameter & BX_CONST64(0x0000FFFF00000000)) >> 32));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "wIndex", 0, row++);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_WLENGTH]), str);
+      TRBitem[ID_TRB_WINDEX] = usbdlg_create_entry_with_label(grid, "wIndex", 0, row++);
       sprintf(str, "0x%04X", (Bit16u) ((trb->parameter & BX_CONST64(0xFFFF000000000000)) >> 48));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_WINDEX]), str);
       break;
     case LINK:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Ring Pointer", 0, row++);
+      TRBitem[ID_TRB_DATA_PTR] = usbdlg_create_entry_with_label(grid, "Ring Pointer", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR]), str);
       break;
     case EVENT_DATA:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Event Data", 0, row++);
+      TRBitem[ID_TRB_DATA_PTR] = usbdlg_create_entry_with_label(grid, "Event Data", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, trb->parameter);
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR]), str);
       break;
     case ENABLE_SLOT:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Slot Type", 0, row++);
+      TRBitem[ID_TRB_SLOT_TYPE] = usbdlg_create_entry_with_label(grid, "Slot Type", 0, row++);
       sprintf(str, "%i", TRB_GET_STYPE(trb->command));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_TYPE]), str);
       break;
     case ADDRESS_DEVICE:
     case CONFIG_EP:
     case EVALUATE_CONTEXT:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Input Context Pointer", 0, row++);
+      TRBitem[ID_TRB_DATA_PTR] = usbdlg_create_entry_with_label(grid, "Input Context Pointer", 0, row);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR]), str);
       button[2] = gtk_button_new_with_label(">");
       g_signal_connect(button[2], "clicked", G_CALLBACK(xhci_context_dialog), NULL);
-      gtk_grid_attach(GTK_GRID(grid), button[2], 2, e_num++, 1, 1);
+      gtk_grid_attach(GTK_GRID(grid), button[2], 2, row++, 1, 1);
       break;
     case SET_TR_DEQUEUE:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "New TR Dequeue Pointer", 0, row++);
+      TRBitem[ID_TRB_DATA_PTR] = usbdlg_create_entry_with_label(grid, "New TR Dequeue Pointer", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Stream Context Type", 0, row++);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR]), str);
+      TRBitem[ID_TRB_SCT] = usbdlg_create_entry_with_label(grid, "Stream Context Type", 0, row++);
       sprintf(str, "%i", (Bit8u)(trb->parameter >> 1) & 0x07);
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
-      checkbox[c_num] = gtk_check_button_new_with_label("Dequeue Cycle Bit");
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_SCT]), str);
+      TRBitem[ID_TRB_DCS] = gtk_check_button_new_with_label("Dequeue Cycle Bit");
       if (trb->parameter & 1) {
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_DCS]), TRUE);
       }
-      gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Stream ID", 0, row++);
+      gtk_grid_attach(GTK_GRID(grid), TRBitem[ID_TRB_DCS], 1, row++, 1, 1);
+      TRBitem[ID_TRB_STREAMID] = usbdlg_create_entry_with_label(grid, "Stream ID", 0, row++);
       sprintf(str, "%i", TRB_GET_STREAM(trb->status));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_STREAMID]), str);
       break;
     case FORCE_EVENT:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Event TRB Pointer", 0, row++);
+      TRBitem[ID_TRB_DATA_PTR] = usbdlg_create_entry_with_label(grid, "Event TRB Pointer", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR]), str);
       break;
     case SET_LAT_TOLERANCE:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Best Effort Value", 0, row++);
+      TRBitem[ID_TRB_BELT] = usbdlg_create_entry_with_label(grid, "Best Effort Value", 0, row++);
       sprintf(str, "%i", (trb->command & (0xFFF << 16)) >> 16);
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_BELT]), str);
       break;
     case GET_PORT_BAND:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Port Bandwidth Context Pointer", 0, row++);
+      TRBitem[ID_TRB_DATA_PTR] = usbdlg_create_entry_with_label(grid, "Port Bandwidth Context Pointer", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR]), str);
       break;
     case FORCE_HEADER:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Header Lo/Mid", 0, row++);
+      TRBitem[ID_TRB_DATA_PTR] = usbdlg_create_entry_with_label(grid, "Header Lo/Mid", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x1F)));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Header Hi", 0, row++);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR]), str);
+      TRBitem[ID_TRB_HDR_HI] = usbdlg_create_entry_with_label(grid, "Header Hi", 0, row++);
       sprintf(str, "0x%08X", trb->status);
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Type", 0, row++);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_HDR_HI]), str);
+      TRBitem[ID_TRB_FTYPE] = usbdlg_create_entry_with_label(grid, "Type", 0, row++);
       sprintf(str, "%i", (Bit8u)(trb->parameter & 0x1F));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_FTYPE]), str);
       break;
     case TRANS_EVENT:
     case COMMAND_COMPLETION:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "TRB Pointer", 0, row++);
+      TRBitem[ID_TRB_DATA_PTR] = usbdlg_create_entry_with_label(grid, "TRB Pointer", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, trb->parameter);
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR]), str);
       break;
     case PORT_STATUS_CHANGE:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Port ID", 0, row++);
+      TRBitem[ID_TRB_DATA_PTR] = usbdlg_create_entry_with_label(grid, "Port ID", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)((trb->parameter & BX_CONST64(0x00000000FF000000)) >> 24));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR]), str);
       break;
     case DOORBELL_EVENT:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "DB Reason", 0, row++);
+      TRBitem[ID_TRB_DATA_PTR] = usbdlg_create_entry_with_label(grid, "DB Reason", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, trb->parameter & 0x1f);
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR]), str);
       break;
     case DEVICE_NOTIFICATION:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Dev Notification Data", 0, row++);
+      TRBitem[ID_TRB_DATA_PTR] = usbdlg_create_entry_with_label(grid, "Dev Notification Data", 0, row++);
       sprintf(str, "0x" FMT_ADDRX64, trb->parameter >> 8);
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Notification Type", 0, row++);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR]), str);
+      TRBitem[ID_TRB_NOT_TYPE] = usbdlg_create_entry_with_label(grid, "Notification Type", 0, row++);
       sprintf(str, "%i", (Bit8u)(trb->parameter & 0xf0) >> 4);
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_NOT_TYPE]), str);
       break;
   }
   switch (type) {
@@ -1338,13 +1381,13 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case DOORBELL_EVENT:
     case HOST_CONTROLLER_EVENT:
     case DEVICE_NOTIFICATION:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Completion Code", 0, row++);
+      TRBitem[ID_TRB_COMP_CODE] = usbdlg_create_entry_with_label(grid, "Completion Code", 0, row++);
       sprintf(str, "%i", TRB_GET_COMP_CODE(trb->status));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_COMP_CODE]), str);
       if (type == COMMAND_COMPLETION) {
-        entry[e_num] = usbdlg_create_entry_with_label(grid, "Completion Parameter", 0, row++);
+        TRBitem[ID_TRB_COMP_LPARAM] = usbdlg_create_entry_with_label(grid, "Completion Parameter", 0, row++);
         sprintf(str, "%i", trb->status & 0x00FFFFFF);
-        gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+        gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_COMP_LPARAM]), str);
       }
       break;
   }
@@ -1362,39 +1405,39 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case BANDWIDTH_REQUEST:
     case DOORBELL_EVENT:
     case DEVICE_NOTIFICATION:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Slot ID", 0, row++);
+      TRBitem[ID_TRB_SLOT_ID] = usbdlg_create_entry_with_label(grid, "Slot ID", 0, row++);
       sprintf(str, "%i", TRB_GET_SLOT(trb->command));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_ID]), str);
       break;
     case GET_PORT_BAND:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Hub Slot ID", 0, row++);
+      TRBitem[ID_TRB_SLOT_ID] = usbdlg_create_entry_with_label(grid, "Hub Slot ID", 0, row++);
       sprintf(str, "%i", TRB_GET_SLOT(trb->command));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Device Speed", 0, row++);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_ID]), str);
+      TRBitem[ID_TRB_DEV_SPEED] = usbdlg_create_entry_with_label(grid, "Device Speed", 0, row++);
       sprintf(str, "%i", (trb->command & (0x0F << 16)) >> 16);
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_DEV_SPEED]), str);
       break;
     case FORCE_HEADER:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Root Hub Port Number", 0, row++);
+      TRBitem[ID_TRB_SLOT_ID] = usbdlg_create_entry_with_label(grid, "Root Hub Port Number", 0, row++);
       sprintf(str, "%i", TRB_GET_SLOT(trb->command));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_ID]), str);
       break;
   }
   if (type == STOP_EP) {
-    checkbox[c_num] = gtk_check_button_new_with_label("Suspend");
+    TRBitem[ID_TRB_SP] = gtk_check_button_new_with_label("Suspend");
     if (trb->command & (1 << 23)) {
-      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_SP]), TRUE);
     }
-    gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), TRBitem[ID_TRB_SP], 1, row++, 1, 1);
   }
   switch (type) {
     case RESET_EP:
     case STOP_EP:
     case SET_TR_DEQUEUE:
     case TRANS_EVENT:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Endpoint ID", 0, row++);
+      TRBitem[ID_TRB_EP_ID] = usbdlg_create_entry_with_label(grid, "Endpoint ID", 0, row++);
       sprintf(str, "%i", TRB_GET_EP(trb->command));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_EP_ID]), str);
       break;
   }
   switch (type) {
@@ -1405,14 +1448,14 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case LINK:
     case EVENT_DATA:
     case NO_OP:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "Interrupter Target", 0, row++);
+      TRBitem[ID_TRB_INT_TARGET] = usbdlg_create_entry_with_label(grid, "Interrupter Target", 0, row++);
       sprintf(str, "%i", TRB_GET_TARGET(trb->status));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_INT_TARGET]), str);
       break;
     case FORCE_EVENT:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "VF Interrupter Target", 0, row++);
+      TRBitem[ID_TRB_INT_TARGET] = usbdlg_create_entry_with_label(grid, "VF Interrupter Target", 0, row++);
       sprintf(str, "%i", TRB_GET_TARGET(trb->status));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_INT_TARGET]), str);
       break;
   }
   switch (type) {
@@ -1420,56 +1463,56 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case SETUP_STAGE:
     case DATA_STAGE:
       if (type != SETUP_STAGE) {
-        entry[e_num] = usbdlg_create_entry_with_label(grid, "TD Size", 0, row++);
+        TRBitem[ID_TRB_TD_SIZE] = usbdlg_create_entry_with_label(grid, "TD Size", 0, row++);
         sprintf(str, "%i", TRB_GET_TDSIZE(trb->status));
-        gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+        gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_TD_SIZE]), str);
       }
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "TRB Transfer Length", 0, row++);
+      TRBitem[ID_TRB_TRANS_LEN] = usbdlg_create_entry_with_label(grid, "TRB Transfer Length", 0, row++);
       sprintf(str, "%i", TRB_GET_TX_LEN(trb->status));
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_TRANS_LEN]), str);
       if (type == SETUP_STAGE) {
-        entry[e_num] = usbdlg_create_entry_with_label(grid, "Transfer Type", 0, row++);
+        TRBitem[ID_TRB_TRT] = usbdlg_create_entry_with_label(grid, "Transfer Type", 0, row++);
         sprintf(str, "%i", (trb->command & 0x00030000) >> 16);
-        gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+        gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_TRT]), str);
       }
       break;
   }
   switch (type) {
     case DATA_STAGE:
     case STATUS_STAGE:
-      checkbox[c_num] = gtk_check_button_new_with_label("Direction");
+      TRBitem[ID_TRB_DIR] = gtk_check_button_new_with_label("Direction");
       if (trb->command & 0x10000) {
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_DIR]), TRUE);
       }
-      gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+      gtk_grid_attach(GTK_GRID(grid), TRBitem[ID_TRB_DIR], 1, row++, 1, 1);
       break;
     case FORCE_EVENT:
     case COMMAND_COMPLETION:
     case DOORBELL_EVENT:
-      entry[e_num] = usbdlg_create_entry_with_label(grid, "VF ID", 0, row++);
+      TRBitem[ID_TRB_VF_ID] = usbdlg_create_entry_with_label(grid, "VF ID", 0, row++);
       sprintf(str, "%i", (trb->command & (0xFF << 16)) >> 16);
-      gtk_entry_set_text(GTK_ENTRY(entry[e_num++]), str);
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_VF_ID]), str);
       break;
   }
-  trb_type = usbdlg_create_ro_entry_with_label(grid, "TRB Type", 0, row++);
+  TRBitem[ID_TRB_TYPE] = usbdlg_create_ro_entry_with_label(grid, "TRB Type", 0, row++);
   sprintf(str, "%i", TRB_GET_TYPE(trb->command));
-  gtk_entry_set_text(GTK_ENTRY(trb_type), str);
+  gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_TYPE]), str);
   if ((type == NORMAL) || (type == EVENT_DATA)) {
-    checkbox[c_num] = gtk_check_button_new_with_label("Block Event Interrupt");
+    TRBitem[ID_TRB_BEI] = gtk_check_button_new_with_label("Block Event Interrupt");
     if (TRB_DC(trb->command)) {
-      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_BEI]), TRUE);
     }
-    gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), TRBitem[ID_TRB_BEI], 1, row++, 1, 1);
   }
   switch (type) {
     case NORMAL:
     case SETUP_STAGE:
     case DATA_STAGE:
-      checkbox[c_num] = gtk_check_button_new_with_label("Immediate Data");
+      TRBitem[ID_TRB_IDT] = gtk_check_button_new_with_label("Immediate Data");
       if (TRB_IS_IMMED_DATA(trb->command)) {
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_IDT]), TRUE);
       }
-      gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+      gtk_grid_attach(GTK_GRID(grid), TRBitem[ID_TRB_IDT], 1, row++, 1, 1);
       break;
   }
   switch (type) {
@@ -1480,75 +1523,75 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
     case LINK:
     case EVENT_DATA:
     case NO_OP:
-      checkbox[c_num] = gtk_check_button_new_with_label("Interrupt On Complete");
+      TRBitem[ID_TRB_IOC] = gtk_check_button_new_with_label("Interrupt On Complete");
       if (TRB_IOC(trb->command)) {
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_IOC]), TRUE);
       }
-      gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+      gtk_grid_attach(GTK_GRID(grid), TRBitem[ID_TRB_IOC], 1, row++, 1, 1);
       if (type != SETUP_STAGE) {
-        checkbox[c_num] = gtk_check_button_new_with_label("Chain Bit");
+        TRBitem[ID_TRB_CH] = gtk_check_button_new_with_label("Chain Bit");
         if (TRB_CHAIN(trb->command)) {
-          gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+          gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_CH]), TRUE);
         }
-        gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+        gtk_grid_attach(GTK_GRID(grid), TRBitem[ID_TRB_CH], 1, row++, 1, 1);
       }
       if ((type == NORMAL) || (type == DATA_STAGE)) {
-        checkbox[c_num] = gtk_check_button_new_with_label("No Snoop");
+        TRBitem[ID_TRB_NS] = gtk_check_button_new_with_label("No Snoop");
         if (trb->command & 8) {
-          gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+          gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_NS]), TRUE);
         }
-        gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
-        checkbox[c_num] = gtk_check_button_new_with_label("Interrupt On Short Packet");
+        gtk_grid_attach(GTK_GRID(grid), TRBitem[ID_TRB_NS], 1, row++, 1, 1);
+        TRBitem[ID_TRB_ISP] = gtk_check_button_new_with_label("Interrupt On Short Packet");
         if (TRB_SPD(trb->command)) {
-          gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+          gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_ISP]), TRUE);
         }
-        gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+        gtk_grid_attach(GTK_GRID(grid), TRBitem[ID_TRB_ISP], 1, row++, 1, 1);
       }
       if ((type != SETUP_STAGE) && (type != LINK)) {
-        checkbox[c_num] = gtk_check_button_new_with_label("Evaluate Next TRB");
+        TRBitem[ID_TRB_ENT] = gtk_check_button_new_with_label("Evaluate Next TRB");
         if (TRB_TOGGLE(trb->command)) {
-          gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+          gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_ENT]), TRUE);
         }
-        gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+        gtk_grid_attach(GTK_GRID(grid), TRBitem[ID_TRB_ENT], 1, row++, 1, 1);
       }
       break;
   }
   if (type == LINK) {
-    checkbox[c_num] = gtk_check_button_new_with_label("Toggle Cycle");
+    TRBitem[ID_TRB_TC] = gtk_check_button_new_with_label("Toggle Cycle");
     if (TRB_GET_TOGGLE(trb->command)) {
-      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_TC]), TRUE);
     }
-    gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), TRBitem[ID_TRB_TC], 1, row++, 1, 1);
   } else if (type == TRANS_EVENT) {
-    checkbox[c_num] = gtk_check_button_new_with_label("Event Data");
+    TRBitem[ID_TRB_ED] = gtk_check_button_new_with_label("Event Data");
     if (trb->command & 4) {
-      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_ED]), TRUE);
     }
-    gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), TRBitem[ID_TRB_ED], 1, row++, 1, 1);
   } else if (type == CONFIG_EP) {
-    checkbox[c_num] = gtk_check_button_new_with_label("Deconfigure");
+    TRBitem[ID_TRB_DECONFIG] = gtk_check_button_new_with_label("Deconfigure");
     if (trb->command & (1 << 9)) {
-      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_DECONFIG]), TRUE);
     }
-    gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), TRBitem[ID_TRB_DECONFIG], 1, row++, 1, 1);
   } else if (type == RESET_EP) {
-    checkbox[c_num] = gtk_check_button_new_with_label("Transfer State Preserve");
+    TRBitem[ID_TRB_TSP] = gtk_check_button_new_with_label("Transfer State Preserve");
     if (trb->command & (1 << 9)) {
-      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_TSP]), TRUE);
     }
-    gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), TRBitem[ID_TRB_TSP], 1, row++, 1, 1);
   } else if ((type == ADDRESS_DEVICE) || (type == EVALUATE_CONTEXT)) {
-    checkbox[c_num] = gtk_check_button_new_with_label("Block Set Address");
+    TRBitem[ID_TRB_BSR] = gtk_check_button_new_with_label("Block Set Address");
     if (trb->command & (1 << 9)) {
-      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+      gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_BSR]), TRUE);
     }
-    gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+    gtk_grid_attach(GTK_GRID(grid), TRBitem[ID_TRB_BSR], 1, row++, 1, 1);
   }
-  checkbox[c_num] = gtk_check_button_new_with_label("Cycle Bit");
+  TRBitem[ID_TRB_C] = gtk_check_button_new_with_label("Cycle Bit");
   if (trb->command & 1) {
-    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(checkbox[c_num]), TRUE);
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_C]), TRUE);
   }
-  gtk_grid_attach(GTK_GRID(grid), checkbox[c_num++], 1, row++, 1, 1);
+  gtk_grid_attach(GTK_GRID(grid), TRBitem[ID_TRB_C], 1, row++, 1, 1);
   // Show dialog
   gtk_widget_show_all(dialog);
   ret = gtk_dialog_run(GTK_DIALOG(dialog));
