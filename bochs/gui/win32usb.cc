@@ -67,7 +67,7 @@ HWND getBochsWindow()
 
 // return 0 to continue with emulation
 // return -1 to quit emulation
-int usb_debug_dialog(int break_type, int param1, int param2)
+int usb_debug_dialog(int break_type, Bit64u param0, int param1, int param2)
 {
   char str[COMMON_STR_SIZE];
   int ret;
@@ -111,6 +111,7 @@ int usb_debug_dialog(int break_type, int param1, int param2)
   // create the dialog and wait for it to return
   g_params.type = usb_debug_type;
   g_params.break_type = break_type;
+  g_params.zParam = param0;
   g_params.wParam = param1;
   g_params.lParam = param2;
   ret = (int) DialogBoxParam(NULL, MAKEINTRESOURCE(dlg_resource[usb_debug_type]), getBochsWindow(),
@@ -276,6 +277,7 @@ INT_PTR CALLBACK hc_uhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
               SIM->get_param_bool(BXPN_USB_DEBUG_ENABLE)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_ENABLE) == BST_CHECKED) ? true : false);
               SIM->get_param_bool(BXPN_USB_DEBUG_DOORBELL)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_DOORBELL) == BST_CHECKED) ? true : false);
               SIM->get_param_bool(BXPN_USB_DEBUG_EVENT)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_EVENT) == BST_CHECKED) ? true : false);
+              SIM->get_param_bool(BXPN_USB_DEBUG_DATA)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_DATA) == BST_CHECKED) ? true : false);
               SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_SOF) == BST_CHECKED) ? BX_USB_DEBUG_SOF_SET : BX_USB_DEBUG_SOF_NONE);
               SIM->get_param_bool(BXPN_USB_DEBUG_NON_EXIST)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_NONEXIST) == BST_CHECKED) ? true : false);
               EndDialog(hDlg, 1);
@@ -364,6 +366,7 @@ int hc_uhci_init(HWND hwnd)
   CheckDlgButton(hwnd, IDC_DEBUG_ENABLE,   SIM->get_param_bool(BXPN_USB_DEBUG_ENABLE)->get() ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_DEBUG_DOORBELL, SIM->get_param_bool(BXPN_USB_DEBUG_DOORBELL)->get() ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_DEBUG_EVENT,    SIM->get_param_bool(BXPN_USB_DEBUG_EVENT)->get() ? BST_CHECKED : BST_UNCHECKED);
+  CheckDlgButton(hwnd, IDC_DEBUG_DATA,     SIM->get_param_bool(BXPN_USB_DEBUG_DATA)->get() ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_DEBUG_SOF,     (SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->get() > BX_USB_DEBUG_SOF_NONE) ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_DEBUG_NONEXIST, SIM->get_param_bool(BXPN_USB_DEBUG_NON_EXIST)->get() ? BST_CHECKED : BST_UNCHECKED);
 
@@ -885,6 +888,7 @@ INT_PTR CALLBACK hc_xhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
               SIM->get_param_bool(BXPN_USB_DEBUG_ENABLE)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_ENABLE) == BST_CHECKED) ? true : false);
               SIM->get_param_bool(BXPN_USB_DEBUG_DOORBELL)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_DOORBELL) == BST_CHECKED) ? true : false);
               SIM->get_param_bool(BXPN_USB_DEBUG_EVENT)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_EVENT) == BST_CHECKED) ? true : false);
+              SIM->get_param_bool(BXPN_USB_DEBUG_DATA)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_DATA) == BST_CHECKED) ? true : false);
               SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_SOF) == BST_CHECKED) ? BX_USB_DEBUG_SOF_SET : BX_USB_DEBUG_SOF_NONE);
               SIM->get_param_bool(BXPN_USB_DEBUG_NON_EXIST)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_NONEXIST) == BST_CHECKED) ? true : false);
               EndDialog(hDlg, 1);
@@ -932,6 +936,9 @@ INT_PTR CALLBACK hc_xhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
               switch (g_params.break_type) {
                 case USB_DEBUG_COMMAND:
                   xhci_display_trb(hDlg, VIEW_TRB_TYPE_COMMAND);
+                  break;
+                case USB_DEBUG_DATA:
+                  xhci_display_trb(hDlg, VIEW_TRB_TYPE_TRANSFER);
                   break;
                 case USB_DEBUG_EVENT:
                   xhci_display_trb(hDlg, VIEW_TRB_TYPE_EVENT);
@@ -1001,6 +1008,7 @@ int hc_xhci_init(HWND hwnd)
   CheckDlgButton(hwnd, IDC_DEBUG_ENABLE,   SIM->get_param_bool(BXPN_USB_DEBUG_ENABLE)->get() ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_DEBUG_DOORBELL, SIM->get_param_bool(BXPN_USB_DEBUG_DOORBELL)->get() ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_DEBUG_EVENT,    SIM->get_param_bool(BXPN_USB_DEBUG_EVENT)->get() ? BST_CHECKED : BST_UNCHECKED);
+  CheckDlgButton(hwnd, IDC_DEBUG_DATA,     SIM->get_param_bool(BXPN_USB_DEBUG_DATA)->get() ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_DEBUG_SOF,     (SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->get() > BX_USB_DEBUG_SOF_NONE) ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_DEBUG_NONEXIST, SIM->get_param_bool(BXPN_USB_DEBUG_NON_EXIST)->get() ? BST_CHECKED : BST_UNCHECKED);
 
@@ -1086,6 +1094,19 @@ int hc_xhci_init(HWND hwnd)
       hc_xhci_do_event_ring("Event", (int) g_params.wParam);
       EnableWindow(GetDlgItem(hwnd, IDC_VIEW_TRB), 1);
       valid = 1;
+      break;
+
+    // a TRB was placed on a data ring
+    case USB_DEBUG_DATA:
+      SetDlgItemText(hwnd, IDC_RING_TYPE, "Data Ring Address:");
+      RingPtr = g_params.zParam;
+      sprintf(str, "0x" FMT_ADDRX64, RingPtr);
+      SetDlgItemText(hwnd, IDC_FRAME_ADDRESS, str);
+      if (RingPtr != 0) {
+        hc_xhci_do_ring("Data", RingPtr, RingPtr);
+        EnableWindow(GetDlgItem(hwnd, IDC_VIEW_TRB), 1);
+        valid = 1;
+      }
       break;
 
     case USB_DEBUG_FRAME:

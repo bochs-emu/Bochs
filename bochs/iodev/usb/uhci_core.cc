@@ -517,7 +517,7 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_ERROR(("write to non existent offset 0x14 (port #3)"));
 #if BX_USB_DEBUGGER
       // Non existant Register Port (the next one after the last)
-      SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_NONEXIST, 0, 0);
+      SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_NONEXIST, 0, 0, 0);
 #endif
       break;
 
@@ -530,7 +530,7 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 #if BX_USB_DEBUGGER
         if ((value & (1 << 9)) && !hub.usb_port[port].reset)
-          SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_RESET, port, 0);
+          SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_RESET, 0, port, 0);
 #endif
         if (value & ((1<<5) | (1<<4) | (1<<0)))
           BX_DEBUG(("write to one or more read-only bits in port #%d register: 0x%04x", port+1, value));
@@ -558,7 +558,7 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
         hub.usb_port[port].resume = (value & (1<<6)) ? 1 : 0;
         if (!hub.usb_port[port].enabled && (value & (1<<2))) {
 #if BX_USB_DEBUGGER
-          SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_ENABLE, port, 0);
+          SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_ENABLE, 0, port, 0);
 #endif
           hub.usb_port[port].enable_changed = 0;
         } else
@@ -642,7 +642,7 @@ bool bx_uhci_core_c::uhci_add_queue(struct USB_UHCI_QUEUE_STACK *stack, const Bi
 void bx_uhci_core_c::uhci_timer(void)
 {
 #if BX_USB_DEBUGGER
-  SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_FRAME, 0, 0);
+  SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_FRAME, 0, 0, 0);
 #endif
 
   // If the "global reset" bit was set by software
@@ -769,7 +769,7 @@ void bx_uhci_core_c::uhci_timer(void)
           DEV_MEM_WRITE_PHYSICAL(address + sizeof(Bit32u), sizeof(Bit32u), (Bit8u *) &td.dword1);
 #if BX_USB_DEBUGGER
           // trigger again so that the user can see the processed packet
-          SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_COMMAND, address, USB_LPARAM_FLAG_AFTER);
+          SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_COMMAND, 0, address, USB_LPARAM_FLAG_AFTER);
 #endif
           // we processed another td within this queue line
           td_count++;
@@ -921,7 +921,7 @@ bool bx_uhci_core_c::DoTransfer(Bit32u address, struct TD *td)
   BX_DEBUG(("TD found at address 0x%08X:  0x%08X  0x%08X  0x%08X  0x%08X", address, td->dword0, td->dword1, td->dword2, td->dword3));
 
 #if BX_USB_DEBUGGER
-  SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_COMMAND, address, USB_LPARAM_FLAG_BEFORE);
+  SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_COMMAND, 0, address, USB_LPARAM_FLAG_BEFORE);
 #endif
 
   // check TD to make sure it is valid

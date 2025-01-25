@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C)      2023  Benjamin David Lunt
+//  Copyright (C)      2025  Benjamin David Lunt
 //  Copyright (C) 2003-2025 The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
@@ -120,11 +120,11 @@ extern const char *ring_type[];
 // USB debug API
 void usb_dbg_register_type(int type);
 
-int usb_dbg_interface(int type, int param1, int param2);
+int usb_dbg_interface(int type, Bit64u param0, int param1, int param2);
 
-void usb_dbg_trigger(int type, int trigger, int param1, int param2);
+void usb_dbg_trigger(int type, int trigger, Bit64u param0, int param1, int param2);
 
-int usb_debug_dialog(int break_type, int param1, int param2);
+int usb_debug_dialog(int break_type, Bit64u param0, int param1, int param2);
 
 Bit32u get_pci_bar_addr(bx_shadow_data_c *pci_conf, Bit8u bar_num);
 

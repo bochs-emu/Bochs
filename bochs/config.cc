@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2024  The Bochs Project
+//  Copyright (C) 2002-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -344,6 +344,11 @@ void bx_init_usb_debug_options(bx_list_c *base)
   new bx_param_bool_c(usb_debug,
     "doorbell", "Trigger on doorbell",
     "Trigger on Doorbell",
+    0
+  );
+  new bx_param_bool_c(usb_debug,
+    "data", "Trigger on data TRB",
+    "Trigger on data TRB",
     0
   );
   new bx_param_bool_c(usb_debug,

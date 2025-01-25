@@ -66,10 +66,12 @@ BEGIN
                     BS_LEFTTEXT | BS_RIGHT | WS_TABSTOP,491,63,96,10
     CONTROL         "Event",IDC_DEBUG_EVENT,"Button",BS_AUTOCHECKBOX | 
                     BS_LEFTTEXT | BS_RIGHT | WS_TABSTOP,491,73,96,10
-    CONTROL         "Start of Frame",IDC_DEBUG_SOF,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Data",IDC_DEBUG_DATA,"Button",BS_AUTOCHECKBOX | 
                     BS_LEFTTEXT | BS_RIGHT | WS_TABSTOP,491,83,96,10
-    CONTROL         "Non-exist",IDC_DEBUG_NONEXIST,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Start of Frame",IDC_DEBUG_SOF,"Button",BS_AUTOCHECKBOX | 
                     BS_LEFTTEXT | BS_RIGHT | WS_TABSTOP,491,93,96,10
+    CONTROL         "Non-exist",IDC_DEBUG_NONEXIST,"Button",BS_AUTOCHECKBOX | 
+                    BS_LEFTTEXT | BS_RIGHT | WS_TABSTOP,491,103,96,10
     CONTROL         "Tree1",IDC_STACK,"SysTreeView32",TVS_HASBUTTONS | 
                     TVS_HASLINES | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | 
                     WS_BORDER | WS_TABSTOP,168,180,411,304
@@ -306,10 +308,12 @@ BEGIN
                     BS_LEFTTEXT | BS_RIGHT | WS_TABSTOP,491,63,96,10
     CONTROL         "E&vent",IDC_DEBUG_EVENT,"Button",BS_AUTOCHECKBOX | 
                     BS_LEFTTEXT | BS_RIGHT | WS_TABSTOP,491,73,96,10
-    CONTROL         "&Start of Frame",IDC_DEBUG_SOF,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "D&ata",IDC_DEBUG_DATA,"Button",BS_AUTOCHECKBOX | 
                     BS_LEFTTEXT | BS_RIGHT | WS_TABSTOP,491,83,96,10
-    CONTROL         "&Non-exist",IDC_DEBUG_NONEXIST,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "&Start of Frame",IDC_DEBUG_SOF,"Button",BS_AUTOCHECKBOX | 
                     BS_LEFTTEXT | BS_RIGHT | WS_TABSTOP,491,93,96,10
+    CONTROL         "&Non-exist",IDC_DEBUG_NONEXIST,"Button",BS_AUTOCHECKBOX | 
+                    BS_LEFTTEXT | BS_RIGHT | WS_TABSTOP,491,103,96,10
     CONTROL         "Tree1",IDC_STACK,"SysTreeView32",TVS_HASBUTTONS | 
                     TVS_HASLINES | TVS_DISABLEDRAGDROP | TVS_SHOWSELALWAYS | 
                     WS_BORDER | WS_TABSTOP,168,180,411,304
