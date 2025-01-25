@@ -2,8 +2,8 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2011-2024  The Bochs Project
+//  Copyright (C) 2010-2025  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//                2011-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1851,7 +1851,7 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
                (value & (1 << 4))) {
             reset_port_usb3(port, (value & (1 << 4)) ? HOT_RESET : WARM_RESET);
 #if BX_USB_DEBUGGER
-            SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_RESET, 0, 0);
+            SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_RESET, 0, 0, 0);
 #endif
           }
         } else
@@ -1918,7 +1918,7 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
 #if BX_USB_DEBUGGER
   // Non existant Register Port (the next one after the last)
   else if (offset == (XHCI_PORT_SET_OFFSET + (BX_XHCI_THIS hub.n_ports * 16))) {
-    SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_NONEXIST, 0, 0);
+    SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_NONEXIST, 0, 0, 0);
   }
 #endif
 
@@ -2282,6 +2282,9 @@ Bit64u bx_usb_xhci_c::process_transfer_ring(int slot, int ep, Bit64u ring_addr, 
   // read in the TRB
   read_TRB((bx_phy_address) ring_addr, &trb);
   while ((trb.command & 1) == *rcs) {
+#if BX_USB_DEBUGGER
+    SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_DATA, ring_addr, 0, 0);
+#endif
     org_addr = ring_addr;
     BX_DEBUG(("Found TRB: address = 0x" FORMATADDRESS " 0x" FMT_ADDRX64 " 0x%08X 0x%08X  %d (SPD occurred = %d)",
       (bx_phy_address) org_addr, trb.parameter, trb.status, trb.command, *rcs, spd_occurred));
@@ -2547,7 +2550,7 @@ void bx_usb_xhci_c::process_command_ring(void)
   struct EP_CONTEXT   ep_context;
 
 #if BX_USB_DEBUGGER
-  SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_COMMAND, 0, 0);
+  SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_COMMAND, 0, 0, 0);
 #endif
 
   if (!BX_XHCI_THIS hub.op_regs.HcCrcr.crr)
@@ -3064,7 +3067,7 @@ void bx_usb_xhci_c::write_event_TRB(unsigned interrupter, Bit64u parameter, Bit3
     command | (Bit32u) BX_XHCI_THIS hub.ring_members.event_rings[interrupter].rcs); // set the cycle bit
 
 #if BX_USB_DEBUGGER
-  SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_EVENT, interrupter, 0);
+  SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_EVENT, 0, interrupter, 0);
 #endif
 
   BX_DEBUG(("Write Event TRB: table index: %d, trb index: %d",
@@ -3627,7 +3630,7 @@ void bx_usb_xhci_c::xhci_timer(void)
     return;
 
 #if BX_USB_DEBUGGER
-  SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_FRAME, 0, 0);
+  SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_FRAME, 0, 0, 0);
 #endif
 
   /* Per section 4.19.3 of the xHCI 1.0 specs, we need to present
@@ -3811,7 +3814,7 @@ bool bx_usb_xhci_c::set_connect_status(Bit8u port, bool connected)
     if (ped_org != BX_XHCI_THIS hub.usb_port[port].portsc.ped) {
       BX_XHCI_THIS hub.usb_port[port].portsc.pec = 1;
 #if BX_USB_DEBUGGER
-      SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_ENABLE, 0, 0);
+      SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_ENABLE, 0, 0, 0);
 #endif
     }
   }
