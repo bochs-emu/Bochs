@@ -213,8 +213,9 @@
 #define IDC_DEBUG_ENABLE                8082
 #define IDC_DEBUG_DOORBELL              8083
 #define IDC_DEBUG_EVENT                 8084
-#define IDC_DEBUG_SOF                   8085
-#define IDC_DEBUG_NONEXIST              8086
+#define IDC_DEBUG_DATA                  8085
+#define IDC_DEBUG_SOF                   8086
+#define IDC_DEBUG_NONEXIST              8087
 
 #define IDC_TRB_DATA_PTR                  8100
 #define IDC_TRB_INT_TARGET                8101
