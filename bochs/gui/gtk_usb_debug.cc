@@ -1234,7 +1234,7 @@ static void xhci_context_dialog(GtkWidget *widget, gpointer data)
   xhci_message_dialog("xHCI context dialog not implemented yet");
 }
 
-void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
+bool xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
 {
   GtkWidget *mainVbox, *grid, *TRBitem[TRB_N_ITEMS], *button[3];
   int ret, row = 0;
@@ -1257,6 +1257,7 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
   gtk_grid_set_row_spacing(GTK_GRID(grid), 5);
   gtk_grid_set_column_spacing(GTK_GRID(grid), 5);
   gtk_box_pack_start(GTK_BOX(mainVbox), grid, TRUE, TRUE, 2);
+  memset(TRBitem, 0, sizeof(GtkWidget*) * TRB_N_ITEMS);
   switch (type) {
     case NORMAL:
     case DATA_STAGE:
@@ -1265,21 +1266,21 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
       gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR]), str);
       break;
     case SETUP_STAGE:
-      TRBitem[ID_TRB_WVALUE] = usbdlg_create_entry_with_label(grid, "wValue", 0, row++);
-      sprintf(str, "0x%04X", (Bit16u) ((trb->parameter & BX_CONST64(0x00000000000000FF)) >> 0));
-      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_WVALUE]), str);
-      TRBitem[ID_TRB_BREQUEST] = usbdlg_create_entry_with_label(grid, "bRequest", 0, row++);
-      sprintf(str, "0x%04X", (Bit16u) ((trb->parameter & BX_CONST64(0x000000000000FF00)) >> 8));
-      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_BREQUEST]), str);
       TRBitem[ID_TRB_BREQUESTTYPE] = usbdlg_create_entry_with_label(grid, "bRequestType", 0, row++);
-      sprintf(str, "0x%04X", (Bit16u) ((trb->parameter & BX_CONST64(0x00000000FFFF0000)) >> 16));
+      sprintf(str, "0x%02X", (Bit8u) ((trb->parameter & BX_CONST64(0x00000000000000FF)) >> 0));
       gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_BREQUESTTYPE]), str);
-      TRBitem[ID_TRB_WLENGTH] = usbdlg_create_entry_with_label(grid, "wLength", 0, row++);
-      sprintf(str, "0x%04X", (Bit16u) ((trb->parameter & BX_CONST64(0x0000FFFF00000000)) >> 32));
-      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_WLENGTH]), str);
+      TRBitem[ID_TRB_BREQUEST] = usbdlg_create_entry_with_label(grid, "bRequest", 0, row++);
+      sprintf(str, "0x%02X", (Bit8u) ((trb->parameter & BX_CONST64(0x000000000000FF00)) >> 8));
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_BREQUEST]), str);
+      TRBitem[ID_TRB_WVALUE] = usbdlg_create_entry_with_label(grid, "wValue", 0, row++);
+      sprintf(str, "0x%04X", (Bit16u) ((trb->parameter & BX_CONST64(0x00000000FFFF0000)) >> 16));
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_WVALUE]), str);
       TRBitem[ID_TRB_WINDEX] = usbdlg_create_entry_with_label(grid, "wIndex", 0, row++);
-      sprintf(str, "0x%04X", (Bit16u) ((trb->parameter & BX_CONST64(0xFFFF000000000000)) >> 48));
+      sprintf(str, "0x%04X", (Bit16u) ((trb->parameter & BX_CONST64(0x0000FFFF00000000)) >> 32));
       gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_WINDEX]), str);
+      TRBitem[ID_TRB_WLENGTH] = usbdlg_create_entry_with_label(grid, "wLength", 0, row++);
+      sprintf(str, "0x%04X", (Bit16u) ((trb->parameter & BX_CONST64(0xFFFF000000000000)) >> 48));
+      gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_WLENGTH]), str);
       break;
     case LINK:
       TRBitem[ID_TRB_DATA_PTR] = usbdlg_create_entry_with_label(grid, "Ring Pointer", 0, row++);
@@ -1596,10 +1597,97 @@ void xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
   gtk_widget_show_all(dialog);
   ret = gtk_dialog_run(GTK_DIALOG(dialog));
   if (ret == GTK_RESPONSE_OK) {
-    xhci_message_dialog("Saving changes to TRB not supported yet");
-    // TODO
+    switch (type) {
+      case NORMAL:
+      case DATA_STAGE:
+      case STATUS_STAGE:
+        if (type != STATUS_STAGE) {
+          strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR])));
+          trb->parameter = strtol(str, NULL, 0);
+        } else {
+          trb->parameter = 0;
+        }
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_INT_TARGET])));
+        trb->status = (strtol(str, NULL, 0) & 0x3FF) << 22;
+        if (type != STATUS_STAGE) {
+          strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_TD_SIZE])));
+          trb->status |= TRB_SET_TDSIZE(strtol(str, NULL, 0));
+          strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_TRANS_LEN])));
+          trb->status |= strtol(str, NULL, 0) & 0x1FFFF;
+        }
+
+        if ((type == DATA_STAGE) || (type == STATUS_STAGE)) {
+          if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_DIR]))) {
+            trb->command = (1<<16);
+          }
+        } else {
+          if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_BEI]))) {
+            trb->command = (1<<9);
+          }
+        }
+        if (type != STATUS_STAGE) {
+          if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_IDT]))) {
+            trb->command |= (1<<6);
+          }
+        }
+        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_IOC]))) {
+          trb->command |= (1<<5);
+        }
+        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_CH]))) {
+          trb->command |= (1<<4);
+        }
+        if (type != STATUS_STAGE) {
+          if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_NS]))) {
+            trb->command |= (1<<3);
+          }
+          if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_ISP]))) {
+            trb->command |= (1<<2);
+          }
+        }
+        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_ENT]))) {
+          trb->command |= (1<<1);
+        }
+        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_C]))) {
+          trb->command |= (1<<0);
+        }
+        break;
+    case SETUP_STAGE:
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_BREQUESTTYPE])));
+        trb->parameter  = (((Bit64u) strtol(str, NULL, 0) << 0)  & BX_CONST64(0x00000000000000FF));
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_BREQUEST])));
+        trb->parameter |= (((Bit64u) strtol(str, NULL, 0) << 8)  & BX_CONST64(0x000000000000FF00));
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_WVALUE])));
+        trb->parameter |= (((Bit64u) strtol(str, NULL, 0) << 16) & BX_CONST64(0x00000000FFFF0000));
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_WINDEX])));
+        trb->parameter |= (((Bit64u) strtol(str, NULL, 0) << 32) & BX_CONST64(0x0000FFFF00000000));
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_WLENGTH])));
+        trb->parameter |= (((Bit64u) strtol(str, NULL, 0) << 48) & BX_CONST64(0xFFFF000000000000));
+
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_INT_TARGET])));
+        trb->status = (strtol(str, NULL, 0) & 0x3FF) << 22;
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_TRANS_LEN])));
+        trb->status |= strtol(str, NULL, 0) & 0x1FFFF;
+
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_TRT])));
+        trb->command = (strtol(str, NULL, 0) << 16) & 0x00030000;
+
+        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_IDT]))) {
+          trb->command |= (1<<6);
+        }
+        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_IOC]))) {
+          trb->command |= (1<<5);
+        }
+        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_C]))) {
+          trb->command |= (1<<0);
+        }
+        break;
+      default:
+        // TODO
+        xhci_message_dialog("Saving changes to TRB not supported yet");
+    }
   }
   gtk_widget_destroy(dialog);
+  return (ret == GTK_RESPONSE_OK);
 }
 
 static void xhci_display_trb(GtkWidget *widget, gpointer data)
@@ -1639,7 +1727,13 @@ static void xhci_display_trb(GtkWidget *widget, gpointer data)
         xhci_message_dialog((const char*)str);
       }
       if ((type > 0) && (type < 40) && (trb_types[type].allowed_mask != VIEW_TRB_TYPE_NONE)) {
-        xhci_view_trb_dialog(type, &trb);
+        if (xhci_view_trb_dialog(type, &trb)) {
+          // make sure the type is still correct
+          trb.command &= ~(0x3F << 10);
+          trb.command |= TRB_SET_TYPE(type);
+          // write back the trb
+          DEV_MEM_WRITE_PHYSICAL(value, sizeof(struct TRB), (Bit8u *) &trb);
+        }
       } else {
         sprintf(str, "Unsupported or Reserved TRB type %i found!", type);
         xhci_message_dialog((const char*)str);
