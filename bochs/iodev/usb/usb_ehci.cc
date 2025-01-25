@@ -4,7 +4,7 @@
 //
 //  Experimental USB EHCI adapter (partly ported from Qemu)
 //
-//  Copyright (C) 2015-2024  The Bochs Project
+//  Copyright (C) 2015-2025  The Bochs Project
 //
 //  Copyright(c) 2008  Emutex Ltd. (address@hidden)
 //  Copyright(c) 2011-2012 Red Hat, Inc.
@@ -1041,7 +1041,7 @@ bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
                 BX_EHCI_THIS hub.usb_port[port].portsc.csc = 0;
                 if (BX_EHCI_THIS hub.usb_port[port].device->get_speed() == USB_SPEED_HIGH) {
 #if BX_USB_DEBUGGER
-                  SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_ENABLE, 0, 0);
+                  SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_ENABLE, 0, 0, 0);
 #endif
                   BX_EHCI_THIS hub.usb_port[port].portsc.ped = 1;
                 }
@@ -1049,7 +1049,7 @@ bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
             }
 #if BX_USB_DEBUGGER
             if (!oldpr && BX_EHCI_THIS hub.usb_port[port].portsc.pr) {
-              SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_RESET, 0, 0);
+              SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_RESET, 0, 0, 0);
             }
 #endif
             if (oldfpr && !BX_EHCI_THIS hub.usb_port[port].portsc.fpr) {
@@ -1057,7 +1057,7 @@ bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
             }
 #if BX_USB_DEBUGGER
           } else if (port == USB_EHCI_PORTS) {
-            SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_NONEXIST, 0, 0);
+            SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_NONEXIST, 0, 0, 0);
 #endif
           }
       }
@@ -1923,7 +1923,7 @@ int bx_usb_ehci_c::state_fetchqtd(EHCIQueue *q)
   int again = 0;
 
 #if BX_USB_DEBUGGER
-  SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_COMMAND, 0, 0);
+  SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_COMMAND, 0, 0, 0);
 #endif
 
   get_dwords(NLPTR_GET(q->qtdaddr), (Bit32u*) &qtd, sizeof(EHCIqtd) >> 2);
@@ -2382,7 +2382,7 @@ void bx_usb_ehci_c::ehci_frame_timer(void)
   frames = (int)(usec_elapsed / FRAME_TIMER_USEC);
 
 #if BX_USB_DEBUGGER
-  SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_FRAME, 0, 0);
+  SIM->usb_debug_trigger(USB_DEBUG_EHCI, USB_DEBUG_FRAME, 0, 0, 0);
 #endif
 
   if (BX_EHCI_THIS periodic_enabled() || (BX_EHCI_THIS hub.pstate != EST_INACTIVE)) {

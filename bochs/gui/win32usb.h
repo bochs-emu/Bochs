@@ -27,6 +27,7 @@
 struct CALLBACK_PARAMS {
   int type;
   int break_type;
+  Bit64u zParam;
   int wParam;
   int lParam;
 };

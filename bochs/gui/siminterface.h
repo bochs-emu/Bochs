@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -565,6 +565,7 @@ enum {
 #define USB_DEBUG_NONEXIST 4
 #define USB_DEBUG_RESET    5
 #define USB_DEBUG_ENABLE   6
+#define USB_DEBUG_DATA     7
 
 #define BX_USB_DEBUG_SOF_NONE      0
 #define BX_USB_DEBUG_SOF_SET       1
@@ -732,8 +733,8 @@ public:
   virtual int configuration_interface(const char* name, ci_command_t command) {return -1; }
 #if BX_USB_DEBUGGER
   virtual void register_usb_debug_type(int type) {}
-  virtual void usb_debug_trigger(int type, int trigger, int param1, int param2) {}
-  virtual int usb_debug_interface(int type, int param1, int param2) { return -1; }
+  virtual void usb_debug_trigger(int type, int trigger, Bit64u param0, int param1, int param2) {}
+  virtual int usb_debug_interface(int type, Bit64u param0, int param1, int param2) { return -1; }
 #endif
   virtual int begin_simulation(int argc, char *argv[]) {return -1;}
   virtual int register_runtime_config_handler(void *dev, rt_conf_handler_t handler) {return 0;}
