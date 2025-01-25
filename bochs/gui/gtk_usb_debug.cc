@@ -41,15 +41,16 @@ typedef struct {
   const struct S_ATTRIBUTES *attr;
 } usb_reg_t;
 
-const char *chkTxt[6] = {"Reset", "Enable", "Event", "Doorbell", "Start of Frame", "Non-Exist"};
-const char *chkBXPN[6] = {BXPN_USB_DEBUG_RESET, BXPN_USB_DEBUG_ENABLE, BXPN_USB_DEBUG_EVENT,
-                          BXPN_USB_DEBUG_DOORBELL, BXPN_USB_DEBUG_START_FRAME, BXPN_USB_DEBUG_NON_EXIST};
+const char *chkTxt[7] = {"Reset", "Enable", "Doorbell", "Event", "Data", "Start of Frame", "Non-Exist"};
+const char *chkBXPN[7] = {BXPN_USB_DEBUG_RESET, BXPN_USB_DEBUG_ENABLE, BXPN_USB_DEBUG_DOORBELL,
+                          BXPN_USB_DEBUG_EVENT, BXPN_USB_DEBUG_DATA,
+                          BXPN_USB_DEBUG_START_FRAME, BXPN_USB_DEBUG_NON_EXIST};
 
-int usbdbg_break_type, usbdbg_param1, usbdbg_param2;
+int usbdbg_break_type, usbdbg_param0, usbdbg_param1, usbdbg_param2;
 
 GtkWidget *main_dialog, *td_dialog;
 GtkWidget *uhci_entry[UHCI_REG_COUNT];
-GtkWidget *DFchkbox[6];
+GtkWidget *DFchkbox[7];
 GtkWidget *apply_button;
 
 // multithreading using pure posix threads -- not glib threads
@@ -105,7 +106,7 @@ void usbdlg_create_debug_flags(GtkWidget *grid, int x, int y)
   gtk_grid_attach(GTK_GRID(grid), DFframe, x, y, 1, 5);
   GtkWidget *DFvbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
   gtk_container_add(GTK_CONTAINER(DFframe), DFvbox);
-  for (int i = 0; i < 6; i++) {
+  for (int i = 0; i < 7; i++) {
     DFchkbox[i] = gtk_check_button_new_with_label(chkTxt[i]);
     if (SIM->get_param_num(chkBXPN[i])->get() > 0) {
       gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(DFchkbox[i]), TRUE);
@@ -116,7 +117,7 @@ void usbdlg_create_debug_flags(GtkWidget *grid, int x, int y)
 
 void usbdlg_set_debug_flags()
 {
-  for (int i = 0; i < 6; i++) {
+  for (int i = 0; i < 7; i++) {
     if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(DFchkbox[i]))) {
       SIM->get_param_num(chkBXPN[i])->set(1);
     } else {
@@ -1574,6 +1575,9 @@ static void xhci_display_trb(GtkWidget *widget, gpointer data)
       case USB_DEBUG_COMMAND:
         type_mask = VIEW_TRB_TYPE_COMMAND;
         break;
+      case USB_DEBUG_DATA:
+        type_mask = VIEW_TRB_TYPE_TRANSFER;
+        break;
       case USB_DEBUG_EVENT:
         type_mask = VIEW_TRB_TYPE_EVENT;
         break;
@@ -1825,6 +1829,20 @@ int xhci_debug_dialog(int type, int param1)
       valid = 1;
       break;
 
+    // a TRB was placed on a data ring
+    case USB_DEBUG_DATA:
+      gtk_label_set_text(GTK_LABEL(FNlabel), "Data Ring Address");
+      RingPtr = usbdbg_param0;
+      sprintf(buffer, "0x" FMT_ADDRX64, RingPtr);
+      gtk_entry_set_text(GTK_ENTRY(entry[n_ports * 2 + 17]), buffer);
+      if (RingPtr != 0) {
+        hc_xhci_do_ring(treeview, "Data", RingPtr, RingPtr);
+        g_signal_connect(button[12], "clicked", G_CALLBACK(xhci_display_trb), treeview);
+        gtk_widget_set_sensitive(button[12], 1);
+        valid = 1;
+      }
+      break;
+
     case USB_DEBUG_FRAME:
 
       gtk_label_set_text(GTK_LABEL(FNlabel), "SOF Frame Address");
@@ -1883,6 +1901,7 @@ int usb_debug_dialog(int type, Bit64u param0, int param1, int param2)
   }
   host_param = SIM->get_param(hc_param_str[usb_debug_type]);
   usbdbg_break_type = type;
+  usbdbg_param0 = param0;
   usbdbg_param1 = param1;
   usbdbg_param2 = param2;
   if (usb_debug_type == USB_DEBUG_UHCI) {

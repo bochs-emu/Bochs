@@ -1169,14 +1169,15 @@ speaker: enabled=1, mode=sound, volume=15
 # Triggers:
 #   reset:       will break and load the debugger on a port reset
 #   enable:      will break and load the debugger on a port enable
-#   start_frame: will break and load the debugger on start of frame
-#                  (this is different for each controller type)
 #   doorbell:    will break and load the debugger a xHCI Command Ring addition
 #   event:       will break and load the debugger on a xHCI Event Ring addition
+#   data:        will break and load the debugger on a xHCI Data Ring addition
+#   start_frame: will break and load the debugger on start of frame
+#                  (this is different for each controller type)
 #   non_exist:   will break and load the debugger on a non-existant port access
 # (experimental and is under development)
 #=======================================================================
-#usb_debug: type=xhci, reset=1, enable=1, start_frame=1, doorbell=1, event=1, non_exist=1
+#usb_debug: type=xhci, reset=1, enable=1, start_frame=1, doorbell=1, event=1, data=1, non_exist=1
 
 #=======================================================================
 # PCIDEV:
