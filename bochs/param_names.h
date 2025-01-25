@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2024  The Bochs Project
+//  Copyright (C) 2009-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -141,6 +141,7 @@
 #define BXPN_USB_DEBUG_ENABLE            "ports.usb_debug.enable"
 #define BXPN_USB_DEBUG_START_FRAME       "ports.usb_debug.start_frame"
 #define BXPN_USB_DEBUG_DOORBELL          "ports.usb_debug.doorbell"
+#define BXPN_USB_DEBUG_DATA              "ports.usb_debug.data"
 #define BXPN_USB_DEBUG_EVENT             "ports.usb_debug.event"
 #define BXPN_USB_DEBUG_NON_EXIST         "ports.usb_debug.non_exist"
 #define BXPN_NE2K                        "network.ne2k"
