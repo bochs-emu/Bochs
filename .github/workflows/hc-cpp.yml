@@ -17,7 +17,7 @@ jobs:
     - name: Install packages
       run: |
         sudo apt-get update
-        sudo apt-get install libltdl-dev libx11-dev
+        sudo apt-get install libltdl-dev libx11-dev libgtk-3-dev
 
     - name: configure for release
       run: cd bochs && ./.conf.gh-build-test release && make
