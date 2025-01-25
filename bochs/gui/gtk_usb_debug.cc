@@ -1860,7 +1860,7 @@ int xhci_debug_dialog(int type, int param1)
 
 // USB debug dialog entry point
 
-int usb_debug_dialog(int type, int param1, int param2)
+int usb_debug_dialog(int type, Bit64u param0, int param1, int param2)
 {
   static bool first_call = true;
   int argc = 1, ret;
