@@ -1581,7 +1581,7 @@ bool xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
       gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_TSP]), TRUE);
     }
     gtk_grid_attach(GTK_GRID(grid), TRBitem[ID_TRB_TSP], 1, row++, 1, 1);
-  } else if ((type == ADDRESS_DEVICE) || (type == EVALUATE_CONTEXT)) {
+  } else if (type == ADDRESS_DEVICE) {
     TRBitem[ID_TRB_BSR] = gtk_check_button_new_with_label("Block Set Address");
     if (trb->command & (1 << 9)) {
       gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_BSR]), TRUE);
@@ -1656,9 +1656,6 @@ bool xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
         if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_ENT]))) {
           trb->command |= (1<<1);
         }
-        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_C]))) {
-          trb->command |= (1<<0);
-        }
         break;
     case SETUP_STAGE:
         strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_BREQUESTTYPE])));
@@ -1686,30 +1683,22 @@ bool xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
         if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_IOC]))) {
           trb->command |= (1<<5);
         }
-        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_C]))) {
-          trb->command |= (1<<0);
-        }
         break;
       case ENABLE_SLOT:
         trb->parameter = 0;
         trb->status = 0;
         strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_TYPE])));
         trb->command = TRB_SET_STYPE(strtol(str, NULL, 0));
-        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_C]))) {
-          trb->command |= (1<<0);
-        }
         break;
       case DISABLE_SLOT:
         trb->parameter = 0;
         trb->status = 0;
         strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_ID])));
         trb->command = TRB_SET_SLOT(strtol(str, NULL, 0));
-        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_C]))) {
-          trb->command |= (1<<0);
-        }
         break;
       case ADDRESS_DEVICE:
       case CONFIG_EP:
+      case EVALUATE_CONTEXT:
         strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR])));
         trb->parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
         trb->status = 0;
@@ -1719,18 +1708,98 @@ bool xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
           if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_BSR]))) {
             trb->command |= (1<<9);
           }
-        } else {
+        } else if (type == CONFIG_EP) {
           if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_DECONFIG]))) {
             trb->command |= (1<<9);
           }
         }
-        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_C]))) {
-          trb->command |= (1<<0);
+        break;
+      case RESET_EP:
+      case STOP_EP:
+      case SET_TR_DEQUEUE:
+        if (type == SET_TR_DEQUEUE) {
+          strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR])));
+          trb->parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
+          strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_STREAMID])));
+          trb->status = (strtol(str, NULL, 0) & 0xFFFF) << 16;
+        } else {
+          trb->parameter = 0;
+          trb->status = 0;
+        }
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_ID])));
+        trb->command = TRB_SET_SLOT(strtol(str, NULL, 0));
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_EP_ID])));
+        trb->command |= TRB_SET_EP(strtol(str, NULL, 0));
+        if (type == RESET_EP) {
+          if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_TSP]))) {
+            trb->command |= (1<<9);
+          }
+        } else if (type == STOP_EP) {
+          if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_SP]))) {
+            trb->command |= (1<<23);
+          }
+        }
+        break;
+      case RESET_DEVICE:
+        trb->parameter = 0;
+        trb->status = 0;
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_ID])));
+        trb->command = TRB_SET_SLOT(strtol(str, NULL, 0));
+        break;
+      case FORCE_EVENT:
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR])));
+        trb->parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_INT_TARGET])));
+        trb->status = (strtol(str, NULL, 0) & 0x3FF) << 22;
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_VF_ID])));
+        trb->command = (strtol(str, NULL, 0) & 0xFF) << 16;
+        break;
+      case SET_LAT_TOLERANCE:
+        trb->parameter = 0;
+        trb->status = 0;
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_BELT])));
+        trb->command = (strtol(str, NULL, 0) & 0xFFF) << 16;
+        break;
+      case GET_PORT_BAND:
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR])));
+        trb->parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
+        trb->status = 0;
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_ID])));
+        trb->command  = TRB_SET_SLOT(strtol(str, NULL, 0));
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_DEV_SPEED])));
+        trb->command |= (strtol(str, NULL, 0) & 0x0F) << 16;
+        break;
+      case FORCE_HEADER:
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR])));
+        trb->parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x1F);
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_HDR_HI])));
+        trb->status = strtol(str, NULL, 0);
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_FTYPE])));
+        trb->parameter |= (strtol(str, NULL, 0) & 0x1F);
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_ID])));
+        trb->command  = TRB_SET_SLOT(strtol(str, NULL, 0));
+        break;
+      case TRANS_EVENT:
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR])));
+        trb->parameter = strtol(str, NULL, 0);
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_COMP_CODE])));
+        trb->status = TRB_SET_COMP_CODE(strtol(str, NULL, 0));
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_ID])));
+        trb->command = TRB_SET_SLOT(strtol(str, NULL, 0));
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_EP_ID])));
+        trb->command |= TRB_SET_EP(strtol(str, NULL, 0));
+        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_ED]))) {
+          trb->command |= (1<<2);
         }
         break;
       default:
         // TODO
-        xhci_message_dialog("Saving changes to TRB not supported yet");
+        xhci_message_dialog("Saving changes to TRB type not supported yet");
+    }
+    if (TRBitem[ID_TRB_C] != NULL) {
+      if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_C]))) {
+        trb->command |= (1<<0);
+      }
     }
   }
   gtk_widget_destroy(dialog);
