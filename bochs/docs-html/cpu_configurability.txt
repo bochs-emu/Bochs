@@ -49,6 +49,10 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
         Enables Machine Check MSR registers and ability to trigger machine check exception.
         Note, that Bochs can never trigger the machine check exception.
 
+ Enables CPUID[0x00000001].EDX[24] flag.
+ Controls ability to set CR4[9] (OSFXSR) bit.
+ Enables FXSAVE/FXRSTOR instructions (will #UD otherwise).
+
  Dependency: MSR
 
 5. CPU Feature: mmx
@@ -185,9 +189,7 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Enables MXCSR and SSE registers.
  Enables SSE instructions (will #UD otherwise) and new #XF exception.
 
- Enables CPUID[0x00000001].EDX[24] flag.
- Controls ability to set CR4[9] (OSFXSR) bit.
- Enables FXSAVE/FXRSTOR instructions (will #UD otherwise).
+ Dependency: mmx, p6ni
 
 21. CPU Feature: sse2
 
@@ -316,7 +318,7 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Dependency: pentium (for MSR, TSC)
 
-37. CPU Feature: FFXSR
+37. CPU Feature: ffxsr
 
  Enables CPUID[0x80000001].EDX[25] flag.
  Controls ability to set EFER.FFXSR bit.

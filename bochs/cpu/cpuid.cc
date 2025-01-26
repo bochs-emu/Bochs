@@ -907,7 +907,7 @@ Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_edx_amd(Bit32u extra) const
   // [21:21] Reserved
 
   // [22:22] AMD MMX Extensions <- some Intel's SSE instructions were done in AMD under this name
-  if (is_cpu_extension_supported(BX_ISA_SSE))
+  if (is_cpu_extension_supported(BX_ISA_SSE) || is_cpu_extension_supported(BX_ISA_3DNOW_EXT))
     edx |= BX_CPUID_EXT1_EDX_AMD_MMX_EXT;
   
   // * [23:23] MMX Technology
@@ -1566,6 +1566,9 @@ void bx_cpuid_t::sanity_checks() const
     BX_FATAL(("PANIC: XSAVE is enabled when SSE is not supported !"));
   if (is_cpu_extension_supported(BX_ISA_SSE) && !is_cpu_extension_supported(BX_ISA_MMX))
     BX_FATAL(("PANIC: SSE is enabled when MMX is not supported !"));
+
+  if (is_cpu_extension_supported(BX_ISA_SSE) && !is_cpu_extension_supported(BX_ISA_P6))
+    BX_FATAL(("PANIC: SSE is enabled when P6 FXSAVE/FXRSTOR instructions are not supported !"));
 
   // XSAVEOPT/XSAVES/XSAVEC -> XSAVE
   if (is_cpu_extension_supported(BX_ISA_XSAVEOPT) && !is_cpu_extension_supported(BX_ISA_XSAVE))

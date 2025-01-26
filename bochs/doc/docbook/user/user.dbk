@@ -5830,6 +5830,11 @@ features enabled at compile time (3rd column).
     <entry>cpu level 5</entry>
   </row>
   <row>
+    <entry>athlon</entry>
+    <entry>AMD Athlon(tm) Processor (Pluto)</entry>
+    <entry>cpu level 6</entry>
+  </row>
+  <row>
     <entry>p2_klamath</entry>
     <entry>Intel Pentium II (Klamath)</entry>
     <entry>cpu level 6</entry>

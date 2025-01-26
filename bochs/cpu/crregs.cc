@@ -1233,7 +1233,7 @@ Bit32u BX_CPU_C::get_cr4_allow_mask(void)
   allowMask |= BX_CR4_PCE_MASK;
 
   /* OSFXSR */
-  if (is_cpu_extension_supported(BX_ISA_SSE))
+  if (is_cpu_extension_supported(BX_ISA_P6))
     allowMask |= BX_CR4_OSFXSR_MASK;
 
   /* OSXMMEXCPT */

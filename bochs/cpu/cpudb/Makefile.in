@@ -59,6 +59,7 @@ CPUDB_OBJS = intel/i486dx4.o \
              intel/sapphire_rapids.o \
              intel/arrow_lake.o \
              amd/amd_k6_2_chomper.o  \
+             amd/athlon.o \
              amd/athlon64_clawhammer.o \
              amd/athlon64_venice.o \
              amd/turion64_tyler.o \
@@ -103,6 +104,15 @@ amd/amd_k6_2_chomper.o: amd/amd_k6_2_chomper.@CPP_SUFFIX@ ../../bochs.h ../../co
  ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
  ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../xmm.h \
  ../vmx.h ../vmx_ctrls.h ../access.h amd/amd_k6_2_chomper.h \
+ ../../cpu/cpuid.h
+amd/athlon.o: amd/athlon.@CPP_SUFFIX@ ../../bochs.h ../../config.h \
+ ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \
+ ../decoder/decoder.h ../decoder/features.h \
+ ../../instrument/stubs/instrument.h ../i387.h \
+ ../softfloat3e/include/softfloat_types.h ../../config.h ../fpu/tag_w.h \
+ ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
+ ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../xmm.h \
+ ../vmx.h ../vmx_ctrls.h ../access.h amd/athlon.h \
  ../../cpu/cpuid.h
 amd/athlon64_clawhammer.o: amd/athlon64_clawhammer.@CPP_SUFFIX@ ../../bochs.h \
  ../../config.h ../../osdep.h ../../logio.h ../../misc/bswap.h ../cpu.h \

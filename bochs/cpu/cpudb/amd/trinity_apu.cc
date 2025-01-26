@@ -443,7 +443,6 @@ void trinity_apu_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000005 //
 void trinity_apu_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000005 - L1 Cache and TLB Identifiers
   leaf->eax = 0xFF40FF18;
   leaf->ebx = 0xFF40FF30;
   leaf->ecx = 0x10040140;
@@ -453,7 +452,6 @@ void trinity_apu_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 // leaf 0x80000006 //
 void trinity_apu_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x80000006 - L2 Cache and TLB Identifiers
   leaf->eax = 0x64006400;
   leaf->ebx = 0x64004200;
   leaf->ecx = 0x08008140;

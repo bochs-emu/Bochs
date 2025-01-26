@@ -477,7 +477,6 @@ void ryzen_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000005 - L1 Cache and TLB Identifiers //
 void ryzen_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000005 - L1 Cache and TLB Identifiers
   leaf->eax = 0xff40ff40;
   leaf->ebx = 0xff40ff40;
   leaf->ecx = 0x20080140;
@@ -487,7 +486,6 @@ void ryzen_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 // leaf 0x80000006 - L2 Cache and TLB Identifiers //
 void ryzen_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x80000006 - L2 Cache and TLB Identifiers
   leaf->eax = 0x26006400;
   leaf->ebx = 0x66006400;
   leaf->ecx = 0x02006140;

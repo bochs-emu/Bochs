@@ -356,7 +356,6 @@ void phenom_8650_toliman_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000005 - L1 Cache and TLB Identifiers //
 void phenom_8650_toliman_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x800000005 - L1 Cache and TLB Identifiers
   leaf->eax = 0xFF30FF10;
   leaf->ebx = 0xFF20FF20;
   leaf->ecx = 0x40020140;
@@ -366,7 +365,6 @@ void phenom_8650_toliman_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 // leaf 0x80000006 - L2 Cache and TLB Identifiers //
 void phenom_8650_toliman_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
-  // CPUID function 0x80000006 - L2 Cache and TLB Identifiers
   leaf->eax = 0x20800000;
   leaf->ebx = 0x42004200;
   leaf->ecx = 0x02008140;
