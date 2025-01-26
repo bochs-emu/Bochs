@@ -16,7 +16,7 @@ Brief summary :
  - CPUID: Support for enabling/disabling of one of more CPU features from CPUID configuration (see "add_features" and "exclude_features" in bochsrc sample and documentation)
  ! CPUID: Old bx_generic CPUID model is deprecated with all associated .bochsrc CPUID configuration options, use pre-defined CPU models instead
  - Several fixes and improvements for the Cirrus and Voodoo emulation
- - USB: Added the USB Debugger support for xHCI and UHCI
+ - USB: Added the USB Debugger support for xHCI and UHCI (Windows / GTK3)
  - Added USB boot option (requires BIOS from https://github.com/fysnet/i440fx)
  - LGPL'd VGABIOS updated to version 0.9c (Cirrus / VBE fixes and extensions)
  - Documentation updates and fixes after transition to GIT

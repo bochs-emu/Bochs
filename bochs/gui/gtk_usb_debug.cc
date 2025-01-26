@@ -1765,7 +1765,7 @@ bool xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
         trb->parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
         trb->status = 0;
         strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_ID])));
-        trb->command  = TRB_SET_SLOT(strtol(str, NULL, 0));
+        trb->command = TRB_SET_SLOT(strtol(str, NULL, 0));
         strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_DEV_SPEED])));
         trb->command |= (strtol(str, NULL, 0) & 0x0F) << 16;
         break;
@@ -1777,7 +1777,7 @@ bool xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
         strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_FTYPE])));
         trb->parameter |= (strtol(str, NULL, 0) & 0x1F);
         strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_ID])));
-        trb->command  = TRB_SET_SLOT(strtol(str, NULL, 0));
+        trb->command = TRB_SET_SLOT(strtol(str, NULL, 0));
         break;
       case TRANS_EVENT:
         strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR])));
@@ -1791,6 +1791,58 @@ bool xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
         if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_ED]))) {
           trb->command |= (1<<2);
         }
+        break;
+      case COMMAND_COMPLETION:
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR])));
+        trb->parameter = strtol(str, NULL, 0);
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_COMP_CODE])));
+        trb->status = TRB_SET_COMP_CODE(strtol(str, NULL, 0));
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_COMP_LPARAM])));
+        trb->status |= strtol(str, NULL, 0) & 0x00FFFFFF;
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_ID])));
+        trb->command = TRB_SET_SLOT(strtol(str, NULL, 0));
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_VF_ID])));
+        trb->command |= (strtol(str, NULL, 0) & 0xFF) << 16;
+        break;
+      case PORT_STATUS_CHANGE:
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR])));
+        trb->parameter = (Bit64u) (strtol(str, NULL, 0) & 0xFF) << 24;
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_COMP_CODE])));
+        trb->status = TRB_SET_COMP_CODE(strtol(str, NULL, 0));
+        trb->command = 0;
+        break;
+      case BANDWIDTH_REQUEST:
+        trb->parameter = 0;
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_COMP_CODE])));
+        trb->status = TRB_SET_COMP_CODE(strtol(str, NULL, 0));
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_ID])));
+        trb->command = TRB_SET_SLOT(strtol(str, NULL, 0));
+        break;
+      case DOORBELL_EVENT:
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR])));
+        trb->parameter = strtol(str, NULL, 0) & 0x1F;
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_COMP_CODE])));
+        trb->status = TRB_SET_COMP_CODE(strtol(str, NULL, 0));
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_ID])));
+        trb->command = TRB_SET_SLOT(strtol(str, NULL, 0));
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_VF_ID])));
+        trb->command |= (strtol(str, NULL, 0) & 0xFF) << 16;
+        break;
+      case HOST_CONTROLLER_EVENT:
+        trb->parameter = 0;
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_COMP_CODE])));
+        trb->status = TRB_SET_COMP_CODE(strtol(str, NULL, 0));
+        trb->command = 0;
+        break;
+      case DEVICE_NOTIFICATION:
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR])));
+        trb->parameter = (Bit64u) strtol(str, NULL, 0) << 8;
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_NOT_TYPE])));
+        trb->parameter |= (strtol(str, NULL, 0) & 0xF) << 4;
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_COMP_CODE])));
+        trb->status = TRB_SET_COMP_CODE(strtol(str, NULL, 0));
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_ID])));
+        trb->command = TRB_SET_SLOT(strtol(str, NULL, 0));
         break;
       default:
         // TODO
