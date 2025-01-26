@@ -86,7 +86,7 @@ Var IndependentSectionState
 VIProductVersion ${VER_MAJOR}.${VER_MINOR}.${VER_REVISION}.${VER_DEV}
 VIAddVersionKey "FileVersion" "${VERSION}"
 VIAddVersionKey "FileDescription" "Bochs Setup"
-VIAddVersionKey "LegalCopyright" "Copyright 2001-2019 The Bochs Project"
+VIAddVersionKey "LegalCopyright" "Copyright 2001-2025 The Bochs Project"
 
 ;--------------------------------
 ;Pages
