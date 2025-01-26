@@ -1601,15 +1601,22 @@ bool xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
       case NORMAL:
       case DATA_STAGE:
       case STATUS_STAGE:
-        if (type != STATUS_STAGE) {
-          strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR])));
-          trb->parameter = strtol(str, NULL, 0);
-        } else {
+      case LINK:
+      case EVENT_DATA:
+      case NO_OP:
+        if ((type == STATUS_STAGE) || (type == NO_OP)) {
           trb->parameter = 0;
+        } else {
+          strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR])));
+          if (type == LINK) {
+            trb->parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
+          } else {
+            trb->parameter = strtol(str, NULL, 0);
+          }
         }
         strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_INT_TARGET])));
         trb->status = (strtol(str, NULL, 0) & 0x3FF) << 22;
-        if (type != STATUS_STAGE) {
+        if ((type == NORMAL) || (type == DATA_STAGE)) {
           strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_TD_SIZE])));
           trb->status |= TRB_SET_TDSIZE(strtol(str, NULL, 0));
           strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_TRANS_LEN])));
@@ -1620,12 +1627,14 @@ bool xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
           if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_DIR]))) {
             trb->command = (1<<16);
           }
-        } else {
+        } else if (type != LINK) {
           if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_BEI]))) {
             trb->command = (1<<9);
           }
+        } else {
+            trb->command = 0;
         }
-        if (type != STATUS_STAGE) {
+        if ((type == NORMAL) || (type == DATA_STAGE)) {
           if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_IDT]))) {
             trb->command |= (1<<6);
           }
@@ -1636,7 +1645,7 @@ bool xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
         if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_CH]))) {
           trb->command |= (1<<4);
         }
-        if (type != STATUS_STAGE) {
+        if ((type == NORMAL) || (type == DATA_STAGE)) {
           if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_NS]))) {
             trb->command |= (1<<3);
           }
@@ -1676,6 +1685,44 @@ bool xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
         }
         if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_IOC]))) {
           trb->command |= (1<<5);
+        }
+        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_C]))) {
+          trb->command |= (1<<0);
+        }
+        break;
+      case ENABLE_SLOT:
+        trb->parameter = 0;
+        trb->status = 0;
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_TYPE])));
+        trb->command = TRB_SET_STYPE(strtol(str, NULL, 0));
+        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_C]))) {
+          trb->command |= (1<<0);
+        }
+        break;
+      case DISABLE_SLOT:
+        trb->parameter = 0;
+        trb->status = 0;
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_ID])));
+        trb->command = TRB_SET_SLOT(strtol(str, NULL, 0));
+        if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_C]))) {
+          trb->command |= (1<<0);
+        }
+        break;
+      case ADDRESS_DEVICE:
+      case CONFIG_EP:
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR])));
+        trb->parameter = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
+        trb->status = 0;
+        strcpy(str, gtk_entry_get_text(GTK_ENTRY(TRBitem[ID_TRB_SLOT_ID])));
+        trb->command = TRB_SET_SLOT(strtol(str, NULL, 0));
+        if (type == ADDRESS_DEVICE) {
+          if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_BSR]))) {
+            trb->command |= (1<<9);
+          }
+        } else {
+          if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_DECONFIG]))) {
+            trb->command |= (1<<9);
+          }
         }
         if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_C]))) {
           trb->command |= (1<<0);
@@ -1838,7 +1885,7 @@ int xhci_debug_dialog(int type, int param1)
   entry[15] = usbdlg_create_entry_with_label(ORgrid, "Configure", 0, 6);
 
   RTframe = gtk_frame_new("Runtime Registers");
-  gtk_grid_attach(GTK_GRID(mainGrid), RTframe, 3, 9, 2, 1);
+  gtk_grid_attach(GTK_GRID(mainGrid), RTframe, 5, 1, 2, 1);
   RTgrid = gtk_grid_new();
   gtk_grid_set_row_spacing(GTK_GRID(RTgrid), 5);
   gtk_grid_set_column_spacing(GTK_GRID(RTgrid), 5);
@@ -1867,7 +1914,7 @@ int xhci_debug_dialog(int type, int param1)
   gtk_grid_set_row_spacing(GTK_GRID(FNgrid), 5);
   gtk_grid_set_column_spacing(GTK_GRID(FNgrid), 5);
   gtk_container_set_border_width(GTK_CONTAINER(FNgrid), 5);
-  gtk_grid_attach(GTK_GRID(mainGrid), FNgrid, 3, 10, 3, 1);
+  gtk_grid_attach(GTK_GRID(mainGrid), FNgrid, 3, 9, 3, 1);
   FNlabel = usbdlg_create_label(FNgrid, "Ring Address", 0, 0);
   entry[n_ports * 2 + 17] = usbdlg_create_ro_entry(FNgrid, 1, 0);
   button[12] = gtk_button_new_with_label("View TRB");
@@ -1875,11 +1922,11 @@ int xhci_debug_dialog(int type, int param1)
   gtk_grid_attach(GTK_GRID(FNgrid), button[12], 2, 0, 1, 1);
   scrlwin = gtk_scrolled_window_new(NULL, NULL);
   gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrlwin), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
-  gtk_grid_attach(GTK_GRID(mainGrid), scrlwin, 3, 11, 12, 10);
+  gtk_grid_attach(GTK_GRID(mainGrid), scrlwin, 3, 10, 12, 10);
   treeview = gtk_tree_view_new();
   gtk_container_add(GTK_CONTAINER(scrlwin), treeview);
   usbdlg_create_apply_button(mainGrid, 1, n_ports * 2 + 10);
-  usbdlg_create_debug_flags(mainGrid, 6, 1);
+  usbdlg_create_debug_flags(mainGrid, 7, 1);
   // Set values
   pci_bar_address = get_pci_bar_addr((bx_shadow_data_c*)SIM->get_param("hub.pci_conf", xHCI_state), 0);
   sprintf(buffer, "0x%08X", pci_bar_address);
