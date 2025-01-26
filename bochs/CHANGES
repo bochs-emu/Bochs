@@ -12,7 +12,7 @@ Brief summary :
  - Implemented AMX-TF32 and AMX-AVX512 ISA extensions
  - Implemented RAO-INT ISA extension
  - Implemented MSR_IMM ISA extension
- - CPUID: Added new CPU definitions: for i386 CPU, i486DX4 CPU and Intel Core i5 Arrow Lake CPU
+ - CPUID: Added new CPU definitions: for i386, i486DX4, AMD Athlon and Intel Core i5 Arrow Lake CPUs
  - CPUID: Support for enabling/disabling of one of more CPU features from CPUID configuration (see "add_features" and "exclude_features" in bochsrc sample and documentation)
  ! CPUID: Old bx_generic CPUID model is deprecated with all associated .bochsrc CPUID configuration options, use pre-defined CPU models instead
  - Several fixes and improvements for the Cirrus and Voodoo emulation
@@ -41,6 +41,8 @@ Detailed change log :
     - Model=3, supports x87 FPU only, the FPU support can be disabled using 'exclude_features' option
   - Added i486DX4 CPU definition
     - Model=4, supports x87 FPU and VME only
+  - Added AMD Athlon(tm) CPU definition
+    - Model=6, supports P6 3DNow! and 3DNow! Ext but not SSE
   - Added Arrow Lake CPU definition
     - Features AVX-VNNI, AVX-IFMA, AVX-VNNI-INT8, AVX-VNNI-INT16, AVX_NE_CONVERT, GFNI, VAES/VPCLMULQDQ, SHA512, SM3/SM4, CMPCCXADD, LASS, SERIALIZE, UINTR
   - Support for enabling/disabling of one of more CPU features from CPUID configuration (see "add_features" and "exclude_features" in bochsrc sample and documentation)
