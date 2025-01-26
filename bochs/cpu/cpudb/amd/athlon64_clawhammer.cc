@@ -37,6 +37,7 @@ athlon64_clawhammer_t::athlon64_clawhammer_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_MMX);
 #if BX_SUPPORT_3DNOW
   enable_cpu_extension(BX_ISA_3DNOW);
+  enable_cpu_extension(BX_ISA_3DNOW_EXT);
 #endif
   enable_cpu_extension(BX_ISA_SYSCALL_SYSRET_LEGACY);
   enable_cpu_extension(BX_ISA_SYSENTER_SYSEXIT);

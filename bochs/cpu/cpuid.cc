@@ -931,11 +931,14 @@ Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_edx_amd(Bit32u extra) const
   if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
     edx |= BX_CPUID_EXT1_EDX_LONG_MODE;
 
-  // [30:30] AMD 3DNow! Extensions
+  // [30:30] AMD 3DNow! Extensions (3DNow!+)
   // [31:31] AMD 3DNow! Instructions
 #if BX_SUPPORT_3DNOW
-  if (is_cpu_extension_supported(BX_ISA_3DNOW))
-    edx |= BX_CPUID_EXT1_EDX_3DNOW | BX_CPUID_EXT1_EDX_3DNOW_EXT;
+  if (is_cpu_extension_supported(BX_ISA_3DNOW)) {
+    edx |= BX_CPUID_EXT1_EDX_3DNOW;
+    if (is_cpu_extension_supported(BX_ISA_3DNOW_EXT))
+      edx |= BX_CPUID_EXT1_EDX_3DNOW_EXT;
+  }
 #endif
   
   return edx;
@@ -1543,6 +1546,8 @@ void bx_cpuid_t::sanity_checks() const
   // 3DNow! -> MMX
   if (is_cpu_extension_supported(BX_ISA_3DNOW) && ! is_cpu_extension_supported(BX_ISA_MMX))
     BX_FATAL(("PANIC: 3dnow! ISA require MMX to be enabled !"));
+  if (is_cpu_extension_supported(BX_ISA_3DNOW_EXT) && ! is_cpu_extension_supported(BX_ISA_3DNOW))
+    BX_FATAL(("PANIC: 3dnow! Extensions ISA require 3dnow! to be enabled !"));
 
   // AVX10_VL512 or AVX10_2 -> AVX10_1 -> AVX2 -> AVX -> XSAVE -> SSE -> MMX
   if (is_cpu_extension_supported(BX_ISA_AVX10_2) && !is_cpu_extension_supported(BX_ISA_AVX10_1))

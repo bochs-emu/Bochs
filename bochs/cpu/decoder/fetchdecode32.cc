@@ -2194,18 +2194,22 @@ void BX_CPU_C::init_FetchDecodeTables(void)
   for (unsigned n=0; n < BX_IA_LAST; n++) {
     switch(n) {
       // special case: these opcodes also supported if 3DNOW! Extensions are supported
-      case BX_IA_PSHUFW_PqQqIb:
-      case BX_IA_PINSRW_PqEwIb:
-      case BX_IA_PEXTRW_GdNqIb:
-      case BX_IA_PMOVMSKB_GdNq:
-      case BX_IA_PMINUB_PqQq:
-      case BX_IA_PMAXUB_PqQq:
-      case BX_IA_PMULHUW_PqQq:
-      case BX_IA_MOVNTQ_MqPq:
-      case BX_IA_PMINSW_PqQq:
-      case BX_IA_PSADBW_PqQq:
       case BX_IA_MASKMOVQ_PqNq:
-        if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_3DNOW)) continue;
+      case BX_IA_MOVNTQ_MqPq:
+      case BX_IA_PAVGB_PqQq:
+      case BX_IA_PAVGW_PqQq:
+      case BX_IA_PEXTRW_GdNqIb:
+      case BX_IA_PINSRW_PqEwIb:
+      case BX_IA_PMAXSW_PqQq:
+      case BX_IA_PMAXUB_PqQq:
+      case BX_IA_PMINSW_PqQq:
+      case BX_IA_PMINUB_PqQq:
+      case BX_IA_PMOVMSKB_GdNq:
+      case BX_IA_PMULHUW_PqQq:
+      case BX_IA_PSADBW_PqQq:
+      case BX_IA_PSHUFW_PqQqIb:
+      case BX_IA_SFENCE:
+        if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_3DNOW_EXT)) continue;
 
       default: break;
     }

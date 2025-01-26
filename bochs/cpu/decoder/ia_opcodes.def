@@ -952,7 +952,7 @@ bx_define_opcode(BX_IA_MOVQ_EqPq, "movq", "movq", &BX_CPU_C::MOVQ_QqPqM, &BX_CPU
 bx_define_opcode(BX_IA_FEMMS, "femms", "femms", NULL, &BX_CPU_C::EMMS, BX_ISA_3DNOW, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 #if BX_SUPPORT_3DNOW
 bx_define_opcode(BX_IA_PF2ID_PqQq, "pf2id", "pf2id", &BX_CPU_C::PF2ID_PqQq, &BX_CPU_C::PF2ID_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
-bx_define_opcode(BX_IA_PF2IW_PqQq, "pf2iw", "pf2iw", &BX_CPU_C::PF2IW_PqQq, &BX_CPU_C::PF2IW_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
+bx_define_opcode(BX_IA_PF2IW_PqQq, "pf2iw", "pf2iw", &BX_CPU_C::PF2IW_PqQq, &BX_CPU_C::PF2IW_PqQq, BX_ISA_3DNOW_EXT, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PFACC_PqQq, "pfacc", "pfacc", &BX_CPU_C::PFACC_PqQq, &BX_CPU_C::PFACC_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PFADD_PqQq, "pfadd", "pfadd", &BX_CPU_C::PFADD_PqQq, &BX_CPU_C::PFADD_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PFCMPEQ_PqQq, "pfcmpeq", "pfcmpeq", &BX_CPU_C::PFCMPEQ_PqQq, &BX_CPU_C::PFCMPEQ_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
@@ -961,8 +961,8 @@ bx_define_opcode(BX_IA_PFCMPGT_PqQq, "pfcmpgt", "pfcmpgt", &BX_CPU_C::PFCMPGT_Pq
 bx_define_opcode(BX_IA_PFMAX_PqQq, "pfmax", "pfmax", &BX_CPU_C::PFMAX_PqQq, &BX_CPU_C::PFMAX_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PFMIN_PqQq, "pfmin", "pfmin", &BX_CPU_C::PFMIN_PqQq, &BX_CPU_C::PFMIN_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PFMUL_PqQq, "pfmul", "pfmul", &BX_CPU_C::PFMUL_PqQq, &BX_CPU_C::PFMUL_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
-bx_define_opcode(BX_IA_PFNACC_PqQq, "pfnacc", "pfnacc", &BX_CPU_C::PFNACC_PqQq, &BX_CPU_C::PFNACC_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
-bx_define_opcode(BX_IA_PFPNACC_PqQq, "pfpnacc", "pfpnacc", &BX_CPU_C::PFPNACC_PqQq, &BX_CPU_C::PFPNACC_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
+bx_define_opcode(BX_IA_PFNACC_PqQq, "pfnacc", "pfnacc", &BX_CPU_C::PFNACC_PqQq, &BX_CPU_C::PFNACC_PqQq, BX_ISA_3DNOW_EXT, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
+bx_define_opcode(BX_IA_PFPNACC_PqQq, "pfpnacc", "pfpnacc", &BX_CPU_C::PFPNACC_PqQq, &BX_CPU_C::PFPNACC_PqQq, BX_ISA_3DNOW_EXT, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PFRCP_PqQq, "pfrcp", "pfrcp", &BX_CPU_C::PFRCP_PqQq, &BX_CPU_C::PFRCP_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PFRCPIT1_PqQq, "pfrcpit1", "pfrcpit1", &BX_CPU_C::PFRCPIT1_PqQq, &BX_CPU_C::PFRCPIT1_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PFRCPIT2_PqQq, "pfrcpit2", "pfrcpit2", &BX_CPU_C::PFMUL_PqQq, &BX_CPU_C::PFMUL_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)        // aliased to PFMUL
@@ -971,9 +971,9 @@ bx_define_opcode(BX_IA_PFRSQRT_PqQq, "pfrsqrt", "pfrsqrt", &BX_CPU_C::PFRSQRT_Pq
 bx_define_opcode(BX_IA_PFSUB_PqQq, "pfsub", "pfsub", &BX_CPU_C::PFSUB_PqQq, &BX_CPU_C::PFSUB_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PFSUBR_PqQq, "pfsubr", "pfsubr", &BX_CPU_C::PFSUBR_PqQq, &BX_CPU_C::PFSUBR_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PI2FD_PqQq, "pi2fd", "pi2fd", &BX_CPU_C::PI2FD_PqQq, &BX_CPU_C::PI2FD_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
-bx_define_opcode(BX_IA_PI2FW_PqQq, "pi2fw", "pi2fw", &BX_CPU_C::PI2FW_PqQq, &BX_CPU_C::PI2FW_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
+bx_define_opcode(BX_IA_PI2FW_PqQq, "pi2fw", "pi2fw", &BX_CPU_C::PI2FW_PqQq, &BX_CPU_C::PI2FW_PqQq, BX_ISA_3DNOW_EXT, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PMULHRW_PqQq, "pmulhrw", "pmulhrw", &BX_CPU_C::PMULHRW_PqQq, &BX_CPU_C::PMULHRW_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
-bx_define_opcode(BX_IA_PSWAPD_PqQq, "pswapd", "pswapd", &BX_CPU_C::PSWAPD_PqQq, &BX_CPU_C::PSWAPD_PqQq, BX_ISA_3DNOW, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
+bx_define_opcode(BX_IA_PSWAPD_PqQq, "pswapd", "pswapd", &BX_CPU_C::PSWAPD_PqQq, &BX_CPU_C::PSWAPD_PqQq, BX_ISA_3DNOW_EXT, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 #endif
 bx_define_opcode(BX_IA_PREFETCHW_Mb, "prefetchw", "prefetchw", &BX_CPU_C::NOP, &BX_CPU_C::NOP, 0, OP_Mb, OP_NONE, OP_NONE, OP_NONE, 0) // NOP even when no 3DNow!
 
@@ -1077,12 +1077,12 @@ bx_define_opcode(BX_IA_SHUFPS_VpsWpsIb, "shufps", "shufps", &BX_CPU_C::LOAD_Wdq,
 bx_define_opcode(BX_IA_PMOVMSKB_GdNq, "pmovmskb", "pmovmskb", &BX_CPU_C::BxError, &BX_CPU_C::PMOVMSKB_GdNq, BX_ISA_SSE/* | BX_ISA_3DNOW */, OP_Gd, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PMINUB_PqQq, "pminub", "pminub", &BX_CPU_C::PMINUB_PqQq, &BX_CPU_C::PMINUB_PqQq, BX_ISA_SSE/* | BX_ISA_3DNOW */, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PMAXUB_PqQq, "pmaxub", "pmaxub", &BX_CPU_C::PMAXUB_PqQq, &BX_CPU_C::PMAXUB_PqQq, BX_ISA_SSE/* | BX_ISA_3DNOW */, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
-bx_define_opcode(BX_IA_PAVGB_PqQq, "pavgb", "pavgb", &BX_CPU_C::PAVGB_PqQq, &BX_CPU_C::PAVGB_PqQq, BX_ISA_SSE, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
-bx_define_opcode(BX_IA_PAVGW_PqQq, "pavgw", "pavgw", &BX_CPU_C::PAVGW_PqQq, &BX_CPU_C::PAVGW_PqQq, BX_ISA_SSE, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
+bx_define_opcode(BX_IA_PAVGB_PqQq, "pavgb", "pavgb", &BX_CPU_C::PAVGB_PqQq, &BX_CPU_C::PAVGB_PqQq, BX_ISA_SSE/* | BX_ISA_3DNOW */, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
+bx_define_opcode(BX_IA_PAVGW_PqQq, "pavgw", "pavgw", &BX_CPU_C::PAVGW_PqQq, &BX_CPU_C::PAVGW_PqQq, BX_ISA_SSE/* | BX_ISA_3DNOW */, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PMULHUW_PqQq, "pmulhuw", "pmulhuw", &BX_CPU_C::PMULHUW_PqQq, &BX_CPU_C::PMULHUW_PqQq, BX_ISA_SSE/* | BX_ISA_3DNOW */, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_MOVNTQ_MqPq, "movntq", "movntq", &BX_CPU_C::MOVQ_QqPqM, &BX_CPU_C::BxError, BX_ISA_SSE/* | BX_ISA_3DNOW */, OP_Qq, OP_Pq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PMINSW_PqQq, "pminsw", "pminsw", &BX_CPU_C::PMINSW_PqQq, &BX_CPU_C::PMINSW_PqQq, BX_ISA_SSE/* | BX_ISA_3DNOW */, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
-bx_define_opcode(BX_IA_PMAXSW_PqQq, "pmaxsw", "pmaxsw", &BX_CPU_C::PMAXSW_PqQq, &BX_CPU_C::PMAXSW_PqQq, BX_ISA_SSE, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
+bx_define_opcode(BX_IA_PMAXSW_PqQq, "pmaxsw", "pmaxsw", &BX_CPU_C::PMAXSW_PqQq, &BX_CPU_C::PMAXSW_PqQq, BX_ISA_SSE/* | BX_ISA_3DNOW */, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PSADBW_PqQq, "psadbw", "psadbw", &BX_CPU_C::PSADBW_PqQq, &BX_CPU_C::PSADBW_PqQq, BX_ISA_SSE/* | BX_ISA_3DNOW */, OP_Pq, OP_Qq, OP_NONE, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_MASKMOVQ_PqNq, "maskmovq", "maskmovq", &BX_CPU_C::BxError, &BX_CPU_C::MASKMOVQ_PqNq, BX_ISA_SSE/* | BX_ISA_3DNOW */, OP_NONE, OP_Pq, OP_Qq, OP_sYq, BX_PREPARE_MMX)
 
