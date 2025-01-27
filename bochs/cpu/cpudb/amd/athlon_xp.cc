@@ -23,13 +23,13 @@
 
 #include "bochs.h"
 #include "cpu.h"
-#include "athlon.h"
+#include "athlon_xp.h"
 
 #define LOG_THIS cpu->
 
 #if BX_CPU_LEVEL >= 6
 
-athlon_t::athlon_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
+athlon_xp_t::athlon_xp_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 {
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
@@ -49,11 +49,13 @@ athlon_t::athlon_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_PGE);
   enable_cpu_extension(BX_ISA_MTRR);
   enable_cpu_extension(BX_ISA_PAT);
+  enable_cpu_extension(BX_ISA_SSE);
+  enable_cpu_extension(BX_ISA_XAPIC);
 }
 
-void athlon_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void athlon_xp_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static const char* brand_string = "AMD Athlon(tm) Processor\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+  static const char* brand_string = "AMD Athlon(tm) XP 2200+\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 
   switch(function) {
   case 0x80000000:
@@ -73,6 +75,12 @@ void athlon_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_functio
   case 0x80000006:
     get_ext_cpuid_leaf_6(leaf);
     return;
+  case 0x80000007:
+    get_ext_cpuid_leaf_7(leaf);
+    return;
+  case 0x80000008:
+    get_ext_cpuid_leaf_8(leaf);
+    return;
   case 0x00000000:
     get_std_cpuid_leaf_0(leaf);
     return;
@@ -86,13 +94,13 @@ void athlon_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_functio
 }
 
 // leaf 0x00000000 //
-void athlon_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
+void athlon_xp_t::get_std_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   get_leaf_0(0x1, "AuthenticAMD", leaf);
 }
 
 // leaf 0x00000001 //
-void athlon_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
+void athlon_xp_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information
   //   [3:0]   Stepping ID
@@ -116,7 +124,7 @@ void athlon_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [6:6]   PAE: Physical Address Extensions
   // * [7:7]   MCE: Machine Check Exception
   // * [8:8]   CXS: CMPXCHG8B instruction
-  //   [9:9]   APIC: APIC on Chip
+  // * [9:9]   APIC: APIC on Chip
   //   [10:10] Reserved
   // * [11:11] SYSENTER/SYSEXIT support
   // * [12:12] MTRR: Memory Type Range Reg
@@ -132,7 +140,7 @@ void athlon_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [22:22] ACPI: Thermal Monitor and Software Controlled Clock Facilities
   // * [23:23] MMX Technology
   // * [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
-  //   [25:25] SSE: SSE Extensions
+  // * [25:25] SSE: SSE Extensions
   //   [26:26] SSE2: SSE2 Extensions
   //   [27:27] Self Snoop
   //   [28:28] Hyper Threading Technology
@@ -143,17 +151,17 @@ void athlon_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 }
 
 // leaf 0x80000000 //
-void athlon_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
+void athlon_xp_t::get_ext_cpuid_leaf_0(cpuid_function_t *leaf) const
 {
   // EAX: highest extended function understood by CPUID
   // EBX: reserved
   // EDX: reserved
   // ECX: reserved
-  get_leaf_0(0x80000006, NULL, leaf);
+  get_leaf_0(0x80000008, NULL, leaf);
 }
 
 // leaf 0x80000001 //
-void athlon_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
+void athlon_xp_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information (same as 0x00000001.EAX)
   leaf->eax = 0x00000722;
@@ -172,7 +180,7 @@ void athlon_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   // * [6:6]   PAE: Physical Address Extensions
   // * [7:7]   MCE: Machine Check Exception
   // * [8:8]   CXS: CMPXCHG8B instruction
-  //   [9:9]   APIC: APIC on Chip
+  // * [9:9]   APIC: APIC on Chip
   //   [10:10] Reserved
   // * [11:11] SYSCALL/SYSRET support
   // * [12:12] MTRR: Memory Type Range Reg
@@ -199,28 +207,37 @@ void athlon_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 }
 
 // leaf 0x80000005 - L1 Cache and TLB Identifiers //
-void athlon_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
+void athlon_xp_t::get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const
 {
   leaf->eax = 0x0408ff08;
-  leaf->ebx = 0xff18ff10;
+  leaf->ebx = 0xff20ff10;
   leaf->ecx = 0x40020140;
   leaf->edx = 0x40020140;
 }
 
 // leaf 0x80000006 - L2 Cache and TLB Identifiers //
-void athlon_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
+void athlon_xp_t::get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const
 {
   leaf->eax = 0x00000000;
   leaf->ebx = 0x41004100;
-  leaf->ecx = 0x02002140;
+  leaf->ecx = 0x01008140;
   leaf->edx = 0x00000000;
 }
 
-void athlon_t::dump_cpuid(void) const
+// leaf 0x80000007 - Advanced Power Management //
+void athlon_xp_t::get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const
 {
-  bx_cpuid_t::dump_cpuid(0x1, 0x80000006);
+  leaf->eax = 0;
+  leaf->ebx = 0;
+  leaf->ecx = 0;
+  leaf->edx = 0x00000001;
 }
 
-bx_cpuid_t *create_athlon_cpuid(BX_CPU_C *cpu) { return new athlon_t(cpu); }
+void athlon_xp_t::dump_cpuid(void) const
+{
+  bx_cpuid_t::dump_cpuid(0x1, 0x80000008);
+}
+
+bx_cpuid_t *create_athlon_xp_cpuid(BX_CPU_C *cpu) { return new athlon_xp_t(cpu); }
 
 #endif

@@ -5830,8 +5830,8 @@ features enabled at compile time (3rd column).
     <entry>cpu level 5</entry>
   </row>
   <row>
-    <entry>athlon</entry>
-    <entry>AMD Athlon(tm) Processor (Pluto)</entry>
+    <entry>athlon_xp</entry>
+    <entry>AMD Athlon(tm) XP Processor</entry>
     <entry>cpu level 6</entry>
   </row>
   <row>

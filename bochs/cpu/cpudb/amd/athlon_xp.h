@@ -21,20 +21,20 @@
 //
 /////////////////////////////////////////////////////////////////////////
 
-#ifndef BX_AMD_ATHLON_CPUID_DEFINITIONS_H
-#define BX_AMD_ATHLON_CPUID_DEFINITIONS_H
+#ifndef BX_AMD_ATHLON_XP_CPUID_DEFINITIONS_H
+#define BX_AMD_ATHLON_XP_CPUID_DEFINITIONS_H
 
 #if BX_CPU_LEVEL >= 6
 
 #include "cpu/cpuid.h"
 
-class athlon_t : public bx_cpuid_t {
+class athlon_xp_t : public bx_cpuid_t {
 public:
-  athlon_t(BX_CPU_C *cpu);
-  virtual ~athlon_t() {}
+  athlon_xp_t(BX_CPU_C *cpu);
+  virtual ~athlon_xp_t() {}
 
   // return CPU name
-  virtual const char *get_name(void) const { return "athlon"; }
+  virtual const char *get_name(void) const { return "athlon_xp"; }
 
   virtual void get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const;
 
@@ -48,9 +48,10 @@ private:
   void get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_5(cpuid_function_t *leaf) const;
   void get_ext_cpuid_leaf_6(cpuid_function_t *leaf) const;
+  void get_ext_cpuid_leaf_7(cpuid_function_t *leaf) const;
 };
 
-extern bx_cpuid_t *create_athlon_cpuid(BX_CPU_C *cpu);
+extern bx_cpuid_t *create_athlon_xp_cpuid(BX_CPU_C *cpu);
 
 #endif // BX_CPU_LEVEL >= 6
 

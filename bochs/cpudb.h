@@ -29,7 +29,7 @@ bx_define_cpudb(pentium)
 bx_define_cpudb(pentium_mmx)
 bx_define_cpudb(amd_k6_2_chomper)
 #if BX_CPU_LEVEL >= 6
-bx_define_cpudb(athlon)
+bx_define_cpudb(athlon_xp)
 bx_define_cpudb(p2_klamath)
 bx_define_cpudb(p3_katmai)
 bx_define_cpudb(p4_willamette)

@@ -1022,8 +1022,8 @@ bx_define_opcode(BX_IA_UD2, "ud2", "ud2", &BX_CPU_C::UndefinedOpcode, &BX_CPU_C:
 // P6 new instructions
 
 // FXSAVE
-bx_define_opcode(BX_IA_FXSAVE, "fxsave", "fxsave", &BX_CPU_C::FXSAVE, &BX_CPU_C::BxError, BX_ISA_P6, OP_M, OP_NONE, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_FXRSTOR, "fxrstor", "fxrstor", &BX_CPU_C::FXRSTOR, &BX_CPU_C::BxError, BX_ISA_P6, OP_M, OP_NONE, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_FXSAVE, "fxsave", "fxsave", &BX_CPU_C::FXSAVE, &BX_CPU_C::BxError, BX_ISA_SSE, OP_M, OP_NONE, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_FXRSTOR, "fxrstor", "fxrstor", &BX_CPU_C::FXRSTOR, &BX_CPU_C::BxError, BX_ISA_SSE, OP_M, OP_NONE, OP_NONE, OP_NONE, 0)
 // FXSAVE
 
 // SSE

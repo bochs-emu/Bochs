@@ -1454,7 +1454,7 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
   return edx;
 }
 
-// leaf 0x80000008 - return Intel defaults //
+// leaf 0x80000008 //
 void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
 {
   // virtual & phys address size in low 2 bytes of EAX.
@@ -1474,7 +1474,9 @@ void bx_cpuid_t::get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const
   // [6:6] Memory Bandwidth Enforcement (MBE) support
   // [8:7] reserved
   // [9:9] WBNOINVD support - when not supported fall back to legacy WBINVD
-  leaf->ebx = (1<<9);
+  leaf->ebx = 0;
+  if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
+    leaf->ebx = (1<<9); // I don't add CPUID feature for WBNOINVD but also don't want to report it for really old processors
   if (is_cpu_extension_supported(BX_ISA_CLZERO))
     leaf->ebx |= 0x1;
 
