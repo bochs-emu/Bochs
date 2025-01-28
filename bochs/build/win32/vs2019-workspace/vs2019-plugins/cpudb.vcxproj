@@ -216,6 +216,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\cpu\cpudb\amd\amd_k6_2_chomper.cc" />
+    <ClCompile Include="..\cpu\cpudb\amd\athlon_xp.cc" />
     <ClCompile Include="..\cpu\cpudb\amd\athlon64_clawhammer.cc" />
     <ClCompile Include="..\cpu\cpudb\amd\athlon64_venice.cc" />
     <ClCompile Include="..\cpu\cpudb\amd\phenomx3_8650_toliman.cc" />

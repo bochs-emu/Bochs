@@ -217,16 +217,16 @@
   <ItemGroup>
     <ClCompile Include="..\bx_debug\dbg_breakpoints.cc" />
     <ClCompile Include="..\bx_debug\dbg_main.cc" />
-    <ClCompile Include="..\bx_debug\lexer.c" />
+    <ClCompile Include="..\bx_debug\bx_lexer.c" />
     <ClCompile Include="..\bx_debug\linux.cc" />
-    <ClCompile Include="..\bx_debug\parser.cc" />
+    <ClCompile Include="..\bx_debug\bx_parser.cc" />
     <ClCompile Include="..\bx_debug\symbols.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\bochs.h" />
     <ClInclude Include="..\config.h" />
     <ClInclude Include="..\bx_debug\debug.h" />
-    <ClInclude Include="..\bx_debug\parser.h" />
+    <ClInclude Include="..\bx_debug\bx_parser.h" />
     <ClInclude Include="..\bx_debug\syscalls-linux.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -252,6 +252,11 @@
     <ClCompile Include="..\cpu\decoder\disasm.cc" />
     <ClCompile Include="..\cpu\decoder\fetchdecode32.cc" />
     <ClCompile Include="..\cpu\decoder\fetchdecode64.cc" />
+    <ClCompile Include="..\cpu\decoder\fetchdecode_opmap_0f3a.cc" />
+    <ClCompile Include="..\cpu\decoder\fetchdecode_opmap_0f38.cc" />
+    <ClCompile Include="..\cpu\decoder\fetchdecode_opmap_avx.cc" />
+    <ClCompile Include="..\cpu\decoder\fetchdecode_opmap_evex.cc" />
+    <ClCompile Include="..\cpu\decoder\fetchdecode_opmap_xop.cc" />
     <ClCompile Include="..\cpu\event.cc" />
     <ClCompile Include="..\cpu\exception.cc" />
     <ClCompile Include="..\cpu\faststring.cc" />
