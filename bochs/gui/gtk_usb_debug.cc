@@ -48,7 +48,7 @@ const char *chkBXPN[7] = {BXPN_USB_DEBUG_RESET, BXPN_USB_DEBUG_ENABLE, BXPN_USB_
 
 int usbdbg_break_type, usbdbg_param0, usbdbg_param1, usbdbg_param2;
 
-GtkWidget *main_dialog, *td_dialog;
+GtkWidget *main_dialog, *td_dialog, *trb_dialog;
 GtkWidget *uhci_entry[UHCI_REG_COUNT];
 GtkWidget *DFchkbox[7];
 GtkWidget *apply_button;
@@ -1135,6 +1135,80 @@ enum {
   TRB_N_ITEMS
 };
 
+enum {
+  ID_CONTEXT_NEXT,
+  ID_CONTEXT_PREV,
+  ID_CONTEXT_DROP,
+  ID_CONTEXT_DROP_B,
+  ID_CONTEXT_ADD,
+  ID_CONTEXT_ADD_B,
+  ID_CONTEXT_ALT_SETTING,
+  ID_CONTEXT_INTFACE_NUM,
+  ID_CONTEXT_CONFIG_VALUE,
+  ID_CONTEXT_OF_STR,
+  ID_CONTEXT_STREAM_CONTEXT,
+
+  ID_CONTEXT_ENTRIES,
+  ID_CONTEXT_HUB,
+  ID_CONTEXT_MTT,
+  ID_CONTEXT_SPEED,
+  ID_CONTEXT_ROUTE_STRING,
+  ID_CONTEXT_NUM_PORTS,
+  ID_CONTEXT_RH_PORT_NUM,
+  ID_CONTEXT_MAX_EXIT_LAT,
+  ID_CONTEXT_INT_TARGET,
+  ID_CONTEXT_TTT,
+  ID_CONTEXT_TT_PORT_NUM,
+  ID_CONTEXT_TT_HUB_SLOT_ID,
+  ID_CONTEXT_SLOT_STATE,
+  ID_CONTEXT_DEV_ADDRESS,
+  ID_CONTEXT_RSVDO_SLOT_0,
+  ID_CONTEXT_RSVDO_SLOT_1,
+  ID_CONTEXT_RSVDO_SLOT_2,
+  ID_CONTEXT_RSVDO_SLOT_3,
+  ID_CONTEXT_RSVDO_SLOT_4,
+  ID_CONTEXT_RSVDO_SLOT_5,
+  ID_CONTEXT_RSVDO_SLOT_6,
+  ID_CONTEXT_RSVDO_SLOT_7,
+  ID_CONTEXT_RSVDO_SLOT_8,
+  ID_CONTEXT_RSVDO_SLOT_9,
+  ID_CONTEXT_RSVDO_SLOT_10,
+  ID_CONTEXT_RSVDO_SLOT_11,
+  ID_CONTEXT_SPEED_STR,
+  ID_CONTEXT_SLOT_STATE_STR,
+
+  ID_CONTEXT_MAX_ESIT_HI,
+  ID_CONTEXT_INTERVAL,
+  ID_CONTEXT_LSA,
+  ID_CONTEXT_MAX_PSTREAMS,
+  ID_CONTEXT_MULT,
+  ID_CONTEXT_EP_STATE,
+  ID_CONTEXT_MAX_PACKET_SIZE,
+  ID_CONTEXT_MAX_BURST_SIZE,
+  ID_CONTEXT_HID,
+  ID_CONTEXT_EP_TYPE,
+  ID_CONTEXT_CERR,
+  ID_CONTEXT_TR_DEQUEUE_PTR,
+  ID_CONTEXT_DCS,
+  ID_CONTEXT_MAX_ESIT_LO,
+  ID_CONTEXT_AVERAGE_LEN,
+  ID_CONTEXT_RSVDO_EP_0,
+  ID_CONTEXT_RSVDO_EP_1,
+  ID_CONTEXT_RSVDO_EP_2,
+  ID_CONTEXT_RSVDO_EP_3,
+  ID_CONTEXT_RSVDO_EP_4,
+  ID_CONTEXT_RSVDO_EP_5,
+  ID_CONTEXT_RSVDO_EP_6,
+  ID_CONTEXT_RSVDO_EP_7,
+  ID_CONTEXT_RSVDO_EP_8,
+  ID_CONTEXT_RSVDO_EP_9,
+  ID_CONTEXT_RSVDO_EP_10,
+  ID_CONTEXT_EP_STATE_STR,
+  ID_CONTEXT_EP_TYPE_STR,
+  ID_CONTEXT_MAXPS_STR,
+  CTX_N_ITEMS
+};
+
 bx_list_c *xHCI_state = NULL;
 
 void hc_xhci_do_ring(GtkWidget *treeview, const char *ring_str, Bit64u RingPtr, Bit64u dequeue_ptr)
@@ -1229,9 +1303,106 @@ void xhci_message_dialog(const char *msg)
   gtk_widget_destroy(error);
 }
 
+static Bit64u xhci_context_address = 0;
+static Bit8u  *xhci_context = NULL;
+static int    xhci_current_ep_context = 1;  // 0 through 30 (slot, control_ep, ep1_out, ep1_in, ep2_out, ep2_in, etc)
+static bool   xhci_context_changed = 0;
+
 static void xhci_context_dialog(GtkWidget *widget, gpointer data)
 {
-  xhci_message_dialog("xHCI context dialog not implemented yet");
+  GtkWidget *ICitem = (GtkWidget*)data;
+  GtkWidget *CTXitem[CTX_N_ITEMS], *mainVbox, *grid, *button[7];
+  GtkWidget *SLframe, *EPframe, *SLgrid, *EPgrid;
+  char str[COMMON_STR_SIZE];
+  Bit32u *p;
+  int ret;
+
+  strcpy(str, gtk_entry_get_text(GTK_ENTRY(ICitem)));
+  xhci_context_address  = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
+  xhci_current_ep_context = 1;
+  xhci_context = new Bit8u[CONTEXT_SIZE + (32 * CONTEXT_SIZE)];
+  DEV_MEM_READ_PHYSICAL(xhci_context_address, CONTEXT_SIZE + (32 * CONTEXT_SIZE), xhci_context);
+  p = (Bit32u *) &xhci_context[0];
+
+  GtkWidget *dialog = gtk_dialog_new();
+  gtk_window_set_title(GTK_WINDOW(dialog), "Context");
+  gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(trb_dialog));
+  gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
+  gtk_window_set_default_size(GTK_WINDOW(dialog), 200, 200);
+  button[0] = gtk_dialog_add_button(GTK_DIALOG(dialog), g_dgettext("gtk30", "_OK"), GTK_RESPONSE_OK);
+  button[1] = gtk_dialog_add_button(GTK_DIALOG(dialog), g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_CANCEL);
+  gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
+  gtk_window_set_focus(GTK_WINDOW(dialog), button[0]);
+  mainVbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+  gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), mainVbox, TRUE, TRUE, 2);
+  grid = gtk_grid_new();
+  gtk_grid_set_row_spacing(GTK_GRID(grid), 5);
+  gtk_grid_set_column_spacing(GTK_GRID(grid), 5);
+  gtk_box_pack_start(GTK_BOX(mainVbox), grid, TRUE, TRUE, 2);
+
+  CTXitem[ID_CONTEXT_DROP] = usbdlg_create_entry_with_label(grid, "Drop Context Flags", 0, 0);
+  button[2] = gtk_button_new_with_label("<>");
+  gtk_grid_attach(GTK_GRID(grid), button[2], 2, 0, 1, 1);
+  CTXitem[ID_CONTEXT_ADD] = usbdlg_create_entry_with_label(grid, "Drop Context Flags", 0, 1);
+  button[3] = gtk_button_new_with_label("<>");
+  gtk_grid_attach(GTK_GRID(grid), button[3], 2, 1, 1, 1);
+  CTXitem[ID_CONTEXT_ALT_SETTING] = usbdlg_create_entry_with_label(grid, "Alt Setting", 3, 0);
+  CTXitem[ID_CONTEXT_INTFACE_NUM] = usbdlg_create_entry_with_label(grid, "Interface Num", 3, 1);
+  CTXitem[ID_CONTEXT_CONFIG_VALUE] = usbdlg_create_entry_with_label(grid, "Config Value", 3, 2);
+  button[4] = gtk_button_new_with_label("<<");
+  gtk_grid_attach(GTK_GRID(grid), button[4], 5, 2, 1, 1);
+  CTXitem[ID_CONTEXT_OF_STR] = usbdlg_create_ro_entry(grid, 6, 2);
+  button[5] = gtk_button_new_with_label(">>");
+  gtk_grid_attach(GTK_GRID(grid), button[5], 7, 2, 1, 1);
+
+  SLframe = gtk_frame_new("Slot Context");
+  gtk_grid_attach(GTK_GRID(grid), SLframe, 0, 3, 3, 26);
+  SLgrid = gtk_grid_new();
+  gtk_grid_set_row_spacing(GTK_GRID(SLgrid), 5);
+  gtk_grid_set_column_spacing(GTK_GRID(SLgrid), 5);
+  gtk_container_add(GTK_CONTAINER(SLframe), SLgrid);
+  CTXitem[ID_CONTEXT_ENTRIES] = usbdlg_create_entry_with_label(SLgrid, "Context Entries", 0, 0);
+
+  EPframe = gtk_frame_new("EP Context");
+  gtk_grid_attach(GTK_GRID(grid), EPframe, 3, 3, 3, 26);
+  EPgrid = gtk_grid_new();
+  gtk_grid_set_row_spacing(GTK_GRID(EPgrid), 5);
+  gtk_grid_set_column_spacing(GTK_GRID(EPgrid), 5);
+  gtk_container_add(GTK_CONTAINER(EPframe), EPgrid);
+  // TODO: use usbdlg_create_apply_button()
+  button[6] = gtk_button_new_with_label(g_dgettext("gtk30", "_Apply"));
+  gtk_grid_attach(GTK_GRID(EPgrid), button[6], 2, 0, 1, 1);
+  gtk_widget_set_sensitive(button[6], 0);
+  CTXitem[ID_CONTEXT_MAX_ESIT_HI] = usbdlg_create_entry_with_label(EPgrid, "Max ESIT Payload Hi", 0, 1);
+
+  usbdlg_create_label(grid, "xHCI context dialog under construction", 1, 29);
+
+  // Context structure
+  sprintf(str, "0x%08X", p[0]);
+  gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_DROP]), str);
+  sprintf(str, "0x%08X", p[1]);
+  gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_ADD]), str);
+
+  sprintf(str, "%i", (p[7] & 0x00FF0000) >> 16);
+  gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_ALT_SETTING]), str);
+  sprintf(str, "%i", (p[7] & 0x0000FF00) >> 8);
+  gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_INTFACE_NUM]), str);
+  sprintf(str, "%i", (p[7] & 0x000000FF) >> 0);
+  gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_CONFIG_VALUE]), str);
+
+  // Slot Context
+  p = (Bit32u *) &xhci_context[CONTEXT_SIZE];
+  sprintf(str, "%i", (p[0] & (0x1F << 27)) >> 27);
+  gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_ENTRIES]), str);
+
+  // Show dialog
+  gtk_widget_show_all(dialog);
+  ret = gtk_dialog_run(GTK_DIALOG(dialog));
+  if (ret == GTK_RESPONSE_OK) {
+    // TODO
+  }
+  delete [] xhci_context;
+  gtk_widget_destroy(dialog);
 }
 
 bool xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
@@ -1242,17 +1413,17 @@ bool xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
 
   // Using the type of trb, display an associated dialog
   sprintf(str, "%s TRB", trb_types[type].name);
-  GtkWidget *dialog = gtk_dialog_new();
-  gtk_window_set_title(GTK_WINDOW(dialog), str);
-  gtk_window_set_transient_for(GTK_WINDOW(dialog), GTK_WINDOW(main_dialog));
-  gtk_window_set_modal(GTK_WINDOW(dialog), TRUE);
-  gtk_window_set_default_size(GTK_WINDOW(dialog), 200, 200);
-  button[0] = gtk_dialog_add_button(GTK_DIALOG(dialog), g_dgettext("gtk30", "_Save"), GTK_RESPONSE_OK);
-  button[1] = gtk_dialog_add_button(GTK_DIALOG(dialog), g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_CANCEL);
-  gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
-  gtk_window_set_focus(GTK_WINDOW(dialog), button[0]);
+  trb_dialog = gtk_dialog_new();
+  gtk_window_set_title(GTK_WINDOW(trb_dialog), str);
+  gtk_window_set_transient_for(GTK_WINDOW(trb_dialog), GTK_WINDOW(main_dialog));
+  gtk_window_set_modal(GTK_WINDOW(trb_dialog), TRUE);
+  gtk_window_set_default_size(GTK_WINDOW(trb_dialog), 200, 200);
+  button[0] = gtk_dialog_add_button(GTK_DIALOG(trb_dialog), g_dgettext("gtk30", "_Save"), GTK_RESPONSE_OK);
+  button[1] = gtk_dialog_add_button(GTK_DIALOG(trb_dialog), g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_CANCEL);
+  gtk_dialog_set_default_response(GTK_DIALOG(trb_dialog), GTK_RESPONSE_OK);
+  gtk_window_set_focus(GTK_WINDOW(trb_dialog), button[0]);
   mainVbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-  gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), mainVbox, TRUE, TRUE, 2);
+  gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(trb_dialog))), mainVbox, TRUE, TRUE, 2);
   grid = gtk_grid_new();
   gtk_grid_set_row_spacing(GTK_GRID(grid), 5);
   gtk_grid_set_column_spacing(GTK_GRID(grid), 5);
@@ -1304,7 +1475,7 @@ bool xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
       sprintf(str, "0x" FMT_ADDRX64, (Bit64u)(trb->parameter & ~BX_CONST64(0x0F)));
       gtk_entry_set_text(GTK_ENTRY(TRBitem[ID_TRB_DATA_PTR]), str);
       button[2] = gtk_button_new_with_label(">");
-      g_signal_connect(button[2], "clicked", G_CALLBACK(xhci_context_dialog), NULL);
+      g_signal_connect(button[2], "clicked", G_CALLBACK(xhci_context_dialog), TRBitem[ID_TRB_DATA_PTR]);
       gtk_grid_attach(GTK_GRID(grid), button[2], 2, row++, 1, 1);
       break;
     case SET_TR_DEQUEUE:
@@ -1594,8 +1765,8 @@ bool xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
   }
   gtk_grid_attach(GTK_GRID(grid), TRBitem[ID_TRB_C], 1, row++, 1, 1);
   // Show dialog
-  gtk_widget_show_all(dialog);
-  ret = gtk_dialog_run(GTK_DIALOG(dialog));
+  gtk_widget_show_all(trb_dialog);
+  ret = gtk_dialog_run(GTK_DIALOG(trb_dialog));
   if (ret == GTK_RESPONSE_OK) {
     switch (type) {
       case NORMAL:
@@ -1845,7 +2016,6 @@ bool xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
         trb->command = TRB_SET_SLOT(strtol(str, NULL, 0));
         break;
       default:
-        // TODO
         xhci_message_dialog("Saving changes to TRB type not supported yet");
     }
     if (TRBitem[ID_TRB_C] != NULL) {
@@ -1854,7 +2024,7 @@ bool xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
       }
     }
   }
-  gtk_widget_destroy(dialog);
+  gtk_widget_destroy(trb_dialog);
   return (ret == GTK_RESPONSE_OK);
 }
 
