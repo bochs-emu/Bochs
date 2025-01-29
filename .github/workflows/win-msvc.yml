@@ -1,0 +1,45 @@
+name: Build Windows binary with MSVC
+
+on:
+  push:
+    branches: [ "*" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: UCRT64
+        install: git mingw-w64-ucrt-x86_64-gcc
+
+    - name: Configure
+      shell: msys2 {0}
+      run: cd bochs && ./.conf.win64-vcpp
+
+    - name: Relocate project files
+      shell: msys2 {0}
+      run: cd bochs && mv build/win32/vs2019-workspace/vs2019 vs2019
+
+    - name: Add msbuild to PATH
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Build
+      run: msbuild bochs\vs2019\bochs.sln /t:Build /p:Configuration=Release /p:Platform=x64
+
+    - name: Get short git commit SHA
+      shell: msys2 {0}
+      run: echo "SHORT_GITHUB_SHA=$(git rev-parse --short ${{ github.sha }})" >> $GITHUB_ENV
+
+    - name: Upload main binary artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: bochs-${{ env.SHORT_GITHUB_SHA }}-msvc.exe
+        path: bochs/obj-release/bochs.exe
