@@ -125,7 +125,7 @@ float64 f64_scalef(float64 a, float64 b, struct softfloat_status_t *status)
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if (expB < 0x3FF) {
-        scale = -signB;
+        scale = -int(signB);
     }
     else {
         sigB |= UINT64_C(0x0010000000000000);

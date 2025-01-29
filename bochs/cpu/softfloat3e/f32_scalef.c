@@ -125,7 +125,7 @@ float32 f32_scalef(float32 a, float32 b, struct softfloat_status_t *status)
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if (expB <= 0x7E) {
-        scale = -signB;
+        scale = -int(signB);
     }
     else {
         shiftCount = expB - 0x9E;

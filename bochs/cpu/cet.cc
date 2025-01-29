@@ -212,7 +212,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAVEPREVSSP(bxInstruction_c *i)
 
   // Save Prev SSP from previous_ssp_token to the old shadow stack at next 8 byte aligned address
   Bit64u old_ssp = previous_ssp_token & ~BX_CONST64(0x03);
-  Bit64u tmp = old_ssp | long64_mode();
+  Bit64u tmp = old_ssp | (int) long64_mode();
   shadow_stack_write_dword(old_ssp - 4, CPL, 0);
   old_ssp = old_ssp & ~BX_CONST64(0x07);
   shadow_stack_write_qword(old_ssp - 8, CPL, tmp);
@@ -236,11 +236,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSTORSSP(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  Bit64u previous_ssp_token = SSP | long64_mode() | 0x02;
+  Bit64u previous_ssp_token = SSP | (int) long64_mode() | 0x02;
 
 // should be done atomically using RMW
   Bit64u SSP_tmp = shadow_stack_read_qword(laddr, CPL); // should be LWSI
-  if ((SSP_tmp & 0x03) != long64_mode()) {
+  if ((SSP_tmp & 0x03) != (int) long64_mode()) {
     BX_ERROR(("%s: CS.L of shadow stack token doesn't match or bit1 is not 0", i->getIaOpcodeNameShort()));
     exception(BX_CP_EXCEPTION, BX_CP_RSTORSSP);
   }

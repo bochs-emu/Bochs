@@ -898,7 +898,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
 
   if (BX_CPU_THIS_PTR cr4.get_PGE())
     combined_access |= (entry[leaf] & BX_COMBINED_ACCESS_GLOBAL_PAGE); // G
-  combined_access |= nx_page;
+  combined_access |= (Bit32u) nx_page;
 
 #if BX_SUPPORT_MEMTYPE
   combined_access = combine_memtype(combined_access, memtype_by_pat(calculate_pat((Bit32u) entry[leaf], lpf_mask)));
@@ -1107,7 +1107,7 @@ bx_phy_address BX_CPU_C::translate_linear_PAE(bx_address laddr, Bit32u &lpf_mask
 
   if (BX_CPU_THIS_PTR cr4.get_PGE())
     combined_access |= (entry[leaf] & BX_COMBINED_ACCESS_GLOBAL_PAGE); // G
-  combined_access |= nx_page;
+  combined_access |= (Bit32u) nx_page;
 
 #if BX_SUPPORT_MEMTYPE
   combined_access = combine_memtype(combined_access, memtype_by_pat(calculate_pat((Bit32u) entry[leaf], lpf_mask)));

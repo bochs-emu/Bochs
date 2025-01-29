@@ -2016,7 +2016,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMULTISHIFTQB_MASK_VdqHdqWdqR(bxInstructi
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VP2INTERSECTD_KGqHdqWdqR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  Bit64u mask1 = 0, mask2 = 0;
+  Bit32u mask1 = 0, mask2 = 0;
   unsigned len = i->getVL();
 
   for (unsigned n=0;n < DWORD_ELEMENTS(len); n++) {
@@ -2029,8 +2029,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VP2INTERSECTD_KGqHdqWdqR(bxInstruction_c *
   }
 
   unsigned mask_base = i->dst() & ~1;
-  BX_WRITE_OPMASK(mask_base,   mask1);
-  BX_WRITE_OPMASK(mask_base+1, mask2);
+  BX_WRITE_OPMASK(mask_base,   (Bit64u) mask1);
+  BX_WRITE_OPMASK(mask_base+1, (Bit64u) mask2);
 
   BX_NEXT_INSTR(i);
 }
@@ -2038,7 +2038,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VP2INTERSECTD_KGqHdqWdqR(bxInstruction_c *
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VP2INTERSECTQ_KGqHdqWdqR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
-  Bit64u mask1 = 0, mask2 = 0;
+  Bit32u mask1 = 0, mask2 = 0;
   unsigned len = i->getVL();
 
   for (unsigned n=0;n < QWORD_ELEMENTS(len); n++) {
@@ -2051,8 +2051,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VP2INTERSECTQ_KGqHdqWdqR(bxInstruction_c *
   }
 
   unsigned mask_base = i->dst() & ~1;
-  BX_WRITE_OPMASK(mask_base,   mask1);
-  BX_WRITE_OPMASK(mask_base+1, mask2);
+  BX_WRITE_OPMASK(mask_base,   (Bit64u) mask1);
+  BX_WRITE_OPMASK(mask_base+1, (Bit64u) mask2);
 
   BX_NEXT_INSTR(i);
 }

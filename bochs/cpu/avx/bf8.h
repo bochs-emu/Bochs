@@ -93,7 +93,7 @@ BX_CPP_INLINE float_bf8 convert_truncate_fp16_to_bf8_bias(float16 a, Bit8u bias,
     z = (roundA & 0x80) | 0x7B;
   }
   else {
-    z = roundA;
+    z = (Bit8u) roundA;
     if ((roundA<<8) != a) {
       softfloat_raiseFlags(status, softfloat_flag_inexact);
       if (bf8_is_denormal(z))
