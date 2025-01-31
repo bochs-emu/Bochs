@@ -5366,8 +5366,12 @@ public: // for now...
   BX_SMF void register_svm_state(bx_param_c *parent);
 #endif
 
+#if BX_CPU_LEVEL >= 5
+  void init_MSRs();
+  void destroy_MSRs();
 #if BX_CONFIGURE_MSRS
   int load_MSRs(const char *file);
+#endif
 #endif
 };
 

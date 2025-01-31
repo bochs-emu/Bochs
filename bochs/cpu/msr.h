@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2019-2024  The Bochs Project
+//  Copyright (C) 2019-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,21 @@
 
 #ifndef BX_MSR_H
 #define BX_MSR_H
+
+class MSR_Descriptor {
+private:
+  const char *msrname;
+  unsigned cpu_feature;
+
+public:
+  MSR_Descriptor(const char *name, unsigned feature): msrname(name), cpu_feature(feature) {}
+ ~MSR_Descriptor() {}
+
+  const char* get_name() const { return msrname; }
+  unsigned get_cpu_feature() const { return cpu_feature; }
+};
+
+typedef MSR_Descriptor* MSR_DescriptorPtr;
 
 enum MSR_Register {
   BX_MSR_TSC            = 0x010,
@@ -154,6 +169,7 @@ enum MSR_Register {
   BX_MSR_IA32_UINTR_MISC = 0x988,
   BX_MSR_IA32_UINTR_PD = 0x989, // interface to UPID_ADDR
   BX_MSR_IA32_UINTR_TT = 0x98A, // interface to UITT_ADDR
+
   BX_MSR_IA32_UINTR_TIMER = 0x1B00, // for User Timer feature (not implemented yet)
 #endif
 

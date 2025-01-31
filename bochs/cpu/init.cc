@@ -225,6 +225,9 @@ void BX_CPU_C::initialize(void)
   }
 #endif
 
+#if BX_CPU_LEVEL >= 5
+  init_MSRs();
+
 #if BX_CONFIGURE_MSRS
   for (unsigned n=0; n < BX_MSR_MAX_INDEX; n++) {
     BX_CPU_THIS_PTR msrs[n] = 0;
@@ -234,7 +237,6 @@ void BX_CPU_C::initialize(void)
 #endif
 
   // ignore bad MSRS if user asked for it
-#if BX_CPU_LEVEL >= 5
   BX_CPU_THIS_PTR ignore_bad_msrs = SIM->get_param_bool(BXPN_IGNORE_BAD_MSRS)->get();
 #endif
 
@@ -841,6 +843,10 @@ BX_CPU_C::~BX_CPU_C()
 
 #if InstrumentCPU
   delete stats;
+#endif
+
+#if BX_CPU_LEVEL >= 5
+  destroy_MSRs();
 #endif
 
   BX_INSTR_EXIT(BX_CPU_ID);
