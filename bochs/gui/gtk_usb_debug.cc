@@ -134,7 +134,8 @@ static void usb_regview_dialog(GtkWidget *widget, gpointer data)
 
   usb_reg_t *usb_reg_def = (usb_reg_t*)data;
   GtkWidget *dialog =
-    gtk_dialog_new_with_buttons(usb_reg_def->name, GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL,
+    gtk_dialog_new_with_buttons(usb_reg_def->name, GTK_WINDOW(gtk_widget_get_toplevel(widget)),
+                                GTK_DIALOG_MODAL,
                                 g_dgettext("gtk30", "_OK"), GTK_RESPONSE_OK,
                                 g_dgettext("gtk30", "_Cancel"), GTK_RESPONSE_CANCEL,
                                 NULL);
@@ -1293,11 +1294,10 @@ void hc_xhci_do_event_ring(GtkWidget *treeview, const char *ring_str, int interr
   }
 }
 
-void xhci_message_dialog(const char *msg)
+void xhci_message_dialog(GtkWindow *parent, const char *msg)
 {
-  GtkWidget *error = gtk_message_dialog_new(
-    GTK_WINDOW(main_dialog), GTK_DIALOG_MODAL, GTK_MESSAGE_WARNING,
-    GTK_BUTTONS_OK, msg);
+  GtkWidget *error = gtk_message_dialog_new(parent, GTK_DIALOG_MODAL,
+    GTK_MESSAGE_WARNING, GTK_BUTTONS_OK, "%s", msg);
   gtk_window_set_title(GTK_WINDOW(error), "WARNING");
   gtk_dialog_run(GTK_DIALOG(error));
   gtk_widget_destroy(error);
@@ -1307,6 +1307,13 @@ static Bit64u xhci_context_address = 0;
 static Bit8u  *xhci_context = NULL;
 static int    xhci_current_ep_context = 1;  // 0 through 30 (slot, control_ep, ep1_out, ep1_in, ep2_out, ep2_in, etc)
 static bool   xhci_context_changed = 0;
+
+static void xhci_string_context_dialog(GtkWidget *widget, gpointer data)
+{
+  // TODO
+  xhci_message_dialog(GTK_WINDOW(gtk_widget_get_toplevel(widget)),
+                      "xHCI String Context dialog not implemented yet");
+}
 
 static void xhci_context_flags_dialog(GtkWidget *widget, gpointer data)
 {
@@ -1346,16 +1353,33 @@ static void xhci_context_flags_dialog(GtkWidget *widget, gpointer data)
   usb_regview_dialog(widget, xhci_ctx_flags_def);
 }
 
+GtkWidget *apply_button_2;
+
+static void xhci_context_ep_apply(GtkWidget *widget, gpointer data)
+{
+  GtkWidget **CTXitem = (GtkWidget**)data;
+
+  // TODO
+  xhci_message_dialog(GTK_WINDOW(gtk_widget_get_toplevel(widget)),
+                      "Saving EP context changes not implemented yet");
+
+  xhci_context_changed = 0;
+  gtk_widget_set_sensitive(apply_button_2, 0);
+}
+
 static void xhci_context_ep_select(GtkWidget *widget, gpointer data)
 {
   GtkWidget **CTXitem = (GtkWidget**)data;
   char str[COMMON_STR_SIZE];
   Bit32u *p;
+  int i;
 
   if (widget == CTXitem[ID_CONTEXT_PREV]) {
     if (xhci_current_ep_context > 1) {
       if (xhci_context_changed) {
         // TODO
+        xhci_message_dialog(GTK_WINDOW(gtk_widget_get_toplevel(widget)),
+                            "Saving EP context changes not implemented yet");
       }
       xhci_current_ep_context--;
     } else {
@@ -1365,6 +1389,8 @@ static void xhci_context_ep_select(GtkWidget *widget, gpointer data)
     if (xhci_current_ep_context < 31) {
       if (xhci_context_changed) {
         // TODO
+        xhci_message_dialog(GTK_WINDOW(gtk_widget_get_toplevel(widget)),
+                            "Saving EP context changes not implemented yet");
       }
       xhci_current_ep_context++;
     } else {
@@ -1396,14 +1422,60 @@ static void xhci_context_ep_select(GtkWidget *widget, gpointer data)
   }
   sprintf(str, "%i", (p[0] & (0x1F << 10)) >> 10);
   gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_MAX_PSTREAMS]), str);
-  // TODO
+  sprintf(str, "%i", (p[0] & (0x3 << 8)) >> 8);
+  gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_MULT]), str);
+  sprintf(str, "%i", (p[0] & (0x7 << 0)) >> 0);
+  gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_EP_STATE]), str);
+  sprintf(str, "%i", (p[1] & (0xFFFF << 16)) >> 16);
+  gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_MAX_PACKET_SIZE]), str);
+  sprintf(str, "%i", (p[1] & (0xFF << 8)) >> 8);
+  gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_MAX_BURST_SIZE]), str);
+  if (p[1] & (1<<7)) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(CTXitem[ID_CONTEXT_HID]), TRUE);
+  }
+  sprintf(str, "%i", (p[1] & (0x7 << 3)) >> 3);
+  gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_EP_TYPE]), str);
+  sprintf(str, "%i", (p[1] & (0x3 << 1)) >> 1);
+  gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_CERR]), str);
+  sprintf(str, "0x" FMT_ADDRX64, ((Bit64u) p[3] << 32) | (Bit64u)(p[2] & ~BX_CONST64(0xF)));
+  gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_TR_DEQUEUE_PTR]), str);
+  if (p[2] & (1<<0)) {
+    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(CTXitem[ID_CONTEXT_HID]), TRUE);
+  }
+  sprintf(str, "%i", (p[4] & (0xFFFF << 16)) >> 16);
+  gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_MAX_ESIT_LO]), str);
+  sprintf(str, "%i", (p[4] & (0xFFFF << 0)) >> 0);
+  gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_AVERAGE_LEN]), str);
+
+  gtk_widget_set_sensitive(CTXitem[ID_CONTEXT_STREAM_CONTEXT],
+                           (((p[0] & (0x1F << 10)) >> 10) > 0));
+
+  for (i=0; i<3; i++) {
+    sprintf(str, "0x%08X", p[5+i]);
+    gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_RSVDO_EP_0 + i]), str);
+  }
+#if (CONTEXT_SIZE == 64)
+  for (i=3; i<11; i++) {
+    sprintf(str, "0x%08X", p[5+i]);
+    gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_RSVDO_EP_0 + i]), str);
+    gtk_widget_set_sensitive(CTXitem[ID_CONTEXT_RSVDO_EP_0 + i], 1);
+  }
+#endif
+
   xhci_context_changed = 0;
+  gtk_widget_set_sensitive(apply_button_2, 0);
+}
+
+static void ep_context_entry_changed(GtkWidget *widget, gpointer data)
+{
+  *((bool*)data) = 1;
+  gtk_widget_set_sensitive(apply_button_2, 1);
 }
 
 static void xhci_context_dialog(GtkWidget *widget, gpointer data)
 {
   GtkWidget *ICitem = (GtkWidget*)data;
-  GtkWidget *CTXitem[CTX_N_ITEMS], *mainVbox, *grid, *button[6];
+  GtkWidget *CTXitem[CTX_N_ITEMS], *mainVbox, *grid, *button[2];
   GtkWidget *SLframe, *EPframe, *SLgrid, *EPgrid;
   struct S_ATTRIBUTES *attribs;
   usb_reg_t xhci_ctx_flags_def[2] = {
@@ -1441,15 +1513,15 @@ static void xhci_context_dialog(GtkWidget *widget, gpointer data)
   gtk_box_pack_start(GTK_BOX(mainVbox), grid, TRUE, TRUE, 2);
 
   CTXitem[ID_CONTEXT_DROP] = usbdlg_create_entry_with_label(grid, "Drop Context Flags", 0, 0);
-  button[2] = gtk_button_new_with_label("<>");
+  CTXitem[ID_CONTEXT_DROP_B] = gtk_button_new_with_label("<>");
   xhci_ctx_flags_def[0].entry = CTXitem[ID_CONTEXT_DROP];
-  g_signal_connect(button[2], "clicked", G_CALLBACK(xhci_context_flags_dialog), &xhci_ctx_flags_def[0]);
-  gtk_grid_attach(GTK_GRID(grid), button[2], 2, 0, 1, 1);
+  g_signal_connect(CTXitem[ID_CONTEXT_DROP_B], "clicked", G_CALLBACK(xhci_context_flags_dialog), &xhci_ctx_flags_def[0]);
+  gtk_grid_attach(GTK_GRID(grid), CTXitem[ID_CONTEXT_DROP_B], 2, 0, 1, 1);
   CTXitem[ID_CONTEXT_ADD] = usbdlg_create_entry_with_label(grid, "Add Context Flags", 0, 1);
-  button[3] = gtk_button_new_with_label("<>");
+  CTXitem[ID_CONTEXT_ADD_B] = gtk_button_new_with_label("<>");
   xhci_ctx_flags_def[1].entry = CTXitem[ID_CONTEXT_ADD];
-  g_signal_connect(button[3], "clicked", G_CALLBACK(xhci_context_flags_dialog), &xhci_ctx_flags_def[1]);
-  gtk_grid_attach(GTK_GRID(grid), button[3], 2, 1, 1, 1);
+  g_signal_connect(CTXitem[ID_CONTEXT_ADD_B], "clicked", G_CALLBACK(xhci_context_flags_dialog), &xhci_ctx_flags_def[1]);
+  gtk_grid_attach(GTK_GRID(grid), CTXitem[ID_CONTEXT_ADD_B], 2, 1, 1, 1);
   CTXitem[ID_CONTEXT_ALT_SETTING] = usbdlg_create_entry_with_label(grid, "Alt Setting", 3, 0);
   CTXitem[ID_CONTEXT_INTFACE_NUM] = usbdlg_create_entry_with_label(grid, "Interface Num", 3, 1);
   CTXitem[ID_CONTEXT_CONFIG_VALUE] = usbdlg_create_entry_with_label(grid, "Config Value", 3, 2);
@@ -1499,11 +1571,12 @@ static void xhci_context_dialog(GtkWidget *widget, gpointer data)
   gtk_grid_set_row_spacing(GTK_GRID(EPgrid), 2);
   gtk_grid_set_column_spacing(GTK_GRID(EPgrid), 5);
   gtk_container_add(GTK_CONTAINER(EPframe), EPgrid);
-  // TODO: use usbdlg_create_apply_button()
-  button[4] = gtk_button_new_with_label(g_dgettext("gtk30", "_Apply"));
-  gtk_grid_attach(GTK_GRID(EPgrid), button[4], 2, 0, 1, 1);
-  gtk_widget_set_sensitive(button[4], 0);
+  apply_button_2 = gtk_button_new_with_label(g_dgettext("gtk30", "_Apply"));
+  g_signal_connect(apply_button_2, "clicked", G_CALLBACK(xhci_context_ep_apply), &CTXitem);
+  gtk_grid_attach(GTK_GRID(EPgrid), apply_button_2, 2, 0, 1, 1);
   CTXitem[ID_CONTEXT_MAX_ESIT_HI] = usbdlg_create_entry_with_label(EPgrid, "Max ESIT Payload Hi", 0, 1);
+  g_signal_connect(GTK_EDITABLE(CTXitem[ID_CONTEXT_MAX_ESIT_HI]), "changed",
+                   G_CALLBACK(ep_context_entry_changed), &xhci_context_changed);
   CTXitem[ID_CONTEXT_INTERVAL] = usbdlg_create_entry_with_label(EPgrid, "Interval", 0, 2);
   CTXitem[ID_CONTEXT_LSA] = gtk_check_button_new_with_label("LSA");
   gtk_grid_attach(GTK_GRID(EPgrid), CTXitem[ID_CONTEXT_LSA], 1, 3, 1, 1);
@@ -1520,8 +1593,9 @@ static void xhci_context_dialog(GtkWidget *widget, gpointer data)
   CTXitem[ID_CONTEXT_EP_TYPE_STR] = usbdlg_create_ro_entry(EPgrid, 2, 10);
   CTXitem[ID_CONTEXT_CERR] = usbdlg_create_entry_with_label(EPgrid, "CErr", 0, 11);
   CTXitem[ID_CONTEXT_TR_DEQUEUE_PTR] = usbdlg_create_entry_with_label(EPgrid, "TR Dequeue Pointer", 0, 12);
-  button[5] = gtk_button_new_with_label(">");
-  gtk_grid_attach(GTK_GRID(EPgrid), button[5], 2, 12, 1, 1);
+  CTXitem[ID_CONTEXT_STREAM_CONTEXT] = gtk_button_new_with_label(">");
+  g_signal_connect(CTXitem[ID_CONTEXT_STREAM_CONTEXT], "clicked", G_CALLBACK(xhci_string_context_dialog), NULL);
+  gtk_grid_attach(GTK_GRID(EPgrid), CTXitem[ID_CONTEXT_STREAM_CONTEXT], 2, 12, 1, 1);
   CTXitem[ID_CONTEXT_DCS] = gtk_check_button_new_with_label("DCS");
   gtk_grid_attach(GTK_GRID(EPgrid), CTXitem[ID_CONTEXT_DCS], 1, 13, 1, 1);
   CTXitem[ID_CONTEXT_MAX_ESIT_LO] = usbdlg_create_entry_with_label(EPgrid, "Max ESIT Payload Lo", 0, 14);
@@ -1529,6 +1603,9 @@ static void xhci_context_dialog(GtkWidget *widget, gpointer data)
   for (i = 0; i < 11; i++) {
     sprintf(str, "RsvdO (%02Xh-%02Xh)", 20 + (i << 2) + 3, 20 + (i << 2));
     CTXitem[ID_CONTEXT_RSVDO_EP_0 + i] = usbdlg_create_entry_with_label(EPgrid, str, 0, 16 + i);
+    if (i > 3) {
+      gtk_widget_set_sensitive(CTXitem[ID_CONTEXT_RSVDO_EP_0 + i], 0);
+    }
   }
 
   // Context structure
@@ -2212,7 +2289,8 @@ bool xhci_view_trb_dialog(Bit8u type, struct TRB *trb)
         trb->command = TRB_SET_SLOT(strtol(str, NULL, 0));
         break;
       default:
-        xhci_message_dialog("Saving changes to TRB type not supported yet");
+        xhci_message_dialog(GTK_WINDOW(trb_dialog),
+                            "Saving changes to TRB type not supported yet");
     }
     if (TRBitem[ID_TRB_C] != NULL) {
       if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(TRBitem[ID_TRB_C]))) {
@@ -2258,7 +2336,7 @@ static void xhci_display_trb(GtkWidget *widget, gpointer data)
       // check to see if this type of TRB is allowed in this type of ring
       if ((type > 0) && (type <= 47) && ((trb_types[type].allowed_mask & type_mask) == 0)) {
         sprintf(str, "TRB type %i not allowed in a %s ring!", type, ring_type[type_mask]);
-        xhci_message_dialog((const char*)str);
+        xhci_message_dialog(GTK_WINDOW(gtk_widget_get_toplevel(widget)), (const char*)str);
       }
       if ((type > 0) && (type < 40) && (trb_types[type].allowed_mask != VIEW_TRB_TYPE_NONE)) {
         if (xhci_view_trb_dialog(type, &trb)) {
@@ -2270,13 +2348,13 @@ static void xhci_display_trb(GtkWidget *widget, gpointer data)
         }
       } else {
         sprintf(str, "Unsupported or Reserved TRB type %i found!", type);
-        xhci_message_dialog((const char*)str);
+        xhci_message_dialog(GTK_WINDOW(gtk_widget_get_toplevel(widget)), (const char*)str);
       }
     } else {
-      xhci_message_dialog("Item selected has no TRB attached");
+      xhci_message_dialog(GTK_WINDOW(gtk_widget_get_toplevel(widget)), "Item selected has no TRB attached");
     }
   } else {
-    xhci_message_dialog("No TRB selected");
+    xhci_message_dialog(GTK_WINDOW(gtk_widget_get_toplevel(widget)), "No TRB selected");
   }
 }
 
