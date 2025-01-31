@@ -239,6 +239,19 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     }
 
     switch(index) {
+#if BX_SUPPORT_PERFMON
+    case BX_MSR_PERFEVTSEL0:
+    case BX_MSR_PERFEVTSEL1:
+    case BX_MSR_PERFEVTSEL2:
+    case BX_MSR_PERFEVTSEL3:
+    case BX_MSR_PERFEVTSEL4:
+    case BX_MSR_PERFEVTSEL5:
+    case BX_MSR_PERFEVTSEL6:
+    case BX_MSR_PERFEVTSEL7:
+      BX_INFO(("RDMSR: read of MSR_IA32_PERFEVTSEL%d", index - BX_MSR_PERFEVTSEL0));
+      return handle_unknown_rdmsr(index, msr);
+#endif
+
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:
       val64 = BX_CPU_THIS_PTR msr.sysenter_cs_msr;
