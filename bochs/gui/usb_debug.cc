@@ -194,6 +194,81 @@ const char *ring_type[] = {
   "Transfer"  // VIEW_TRB_TYPE_TRANSFER
 };
 
+Bit64u xhci_context_address = 0;
+Bit8u  *xhci_context = NULL;
+int    xhci_current_ep_context = 1;  // 0 through 30 (slot, control_ep, ep1_out, ep1_in, ep2_out, ep2_in, etc)
+bool   xhci_context_changed = 0;
+
+Bit64u xhci_str_context_address = 0;
+Bit8u *xhci_str_context = NULL;
+int    xhci_str_current_context = 0;
+bool   xhci_str_context_changed = 0;
+int    xhci_max_streams = 0;
+
+const char *slot_speed_str[] = {
+  "Undefined",
+  "Full",
+  "Low",
+  "High",
+  "Super Gen1x1",
+  "Super Gen2x1",
+  "Super Gen1x2",
+  "Super Gen2x2",
+  "Undefined",
+  "Undefined",
+  "Undefined",
+  "Undefined",
+  "Undefined",
+  "Undefined",
+  "Undefined",
+  "Undefined",
+  "Not Valid"
+};
+
+const char *slot_type_str[] = {
+  "Disabled/Enabled",
+  "Default",
+  "Addressed",
+  "Configured",
+  "Reserved"
+};
+
+const char *ep_type_str[] = {
+  "n/a",
+  "ISO Out",
+  "Bulk Out",
+  "Int Out",
+  "Control",
+  "ISO In",
+  "Bulk In",
+  "Int In",
+  "Not Valid"
+};
+
+const char *ep_state_str[] = {
+  "Disabled",
+  "Running",
+  "Halted",
+  "Stopped",
+  "Error",
+  "Reserved",
+  "Reserved",
+  "Reserved",
+  "Not Valid"
+};
+
+const char *string_sct_str[] = {
+  "Secondary / Transfer Ring / N/A",
+  "Primary / Transfer Ring / N/A",
+  "Primary / SSA / 8",
+  "Primary / SSA / 16",
+  "Primary / SSA / 32",
+  "Primary / SSA / 64",
+  "Primary / SSA / 128",
+  "Primary / SSA / 256",
+  "Error"
+};
+
 int usb_debug_type = USB_DEBUG_NONE;
 bx_param_c *host_param = NULL;
 Bit32u pci_bar_address;

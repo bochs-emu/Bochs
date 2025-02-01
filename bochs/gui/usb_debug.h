@@ -117,6 +117,23 @@ extern struct S_ATTRIBUTES attribs_x_ports[];
 extern const struct VIEW_TRB_TYPE trb_types[];
 extern const char *ring_type[];
 
+extern Bit64u xhci_context_address;
+extern Bit8u  *xhci_context;
+extern int    xhci_current_ep_context;
+extern bool   xhci_context_changed;
+
+extern Bit64u xhci_str_context_address;
+extern Bit8u *xhci_str_context;
+extern int    xhci_str_current_context;
+extern bool   xhci_str_context_changed;
+extern int    xhci_max_streams;
+
+extern const char *slot_speed_str[];
+extern const char *slot_type_str[];
+extern const char *ep_type_str[];
+extern const char *ep_state_str[];
+extern const char *string_sct_str[];
+
 // USB debug API
 void usb_dbg_register_type(int type);
 

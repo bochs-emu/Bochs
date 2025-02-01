@@ -1303,11 +1303,6 @@ void xhci_message_dialog(GtkWindow *parent, const char *msg)
   gtk_widget_destroy(error);
 }
 
-static Bit64u xhci_context_address = 0;
-static Bit8u  *xhci_context = NULL;
-static int    xhci_current_ep_context = 1;  // 0 through 30 (slot, control_ep, ep1_out, ep1_in, ep2_out, ep2_in, etc)
-static bool   xhci_context_changed = 0;
-
 static void xhci_string_context_dialog(GtkWidget *widget, gpointer data)
 {
   // TODO
@@ -1355,7 +1350,7 @@ static void xhci_context_flags_dialog(GtkWidget *widget, gpointer data)
 
 GtkWidget *apply_button_2;
 
-static void xhci_context_ep_apply(GtkWidget *widget, gpointer data)
+static void xhci_ep_context_apply(GtkWidget *widget, gpointer data)
 {
   GtkWidget **CTXitem = (GtkWidget**)data;
 
@@ -1367,7 +1362,16 @@ static void xhci_context_ep_apply(GtkWidget *widget, gpointer data)
   gtk_widget_set_sensitive(apply_button_2, 0);
 }
 
-static void xhci_context_ep_select(GtkWidget *widget, gpointer data)
+bool xhci_ep_context_change_dlg(GtkWindow *parent)
+{
+  GtkWidget *ask = gtk_message_dialog_new(parent, GTK_DIALOG_MODAL,
+    GTK_MESSAGE_QUESTION, GTK_BUTTONS_YES_NO, "%s", "Save EP context changes ?");
+  int ret = gtk_dialog_run(GTK_DIALOG(ask));
+  gtk_widget_destroy(ask);
+  return (ret == GTK_RESPONSE_YES);
+}
+
+static void xhci_ep_context_select(GtkWidget *widget, gpointer data)
 {
   GtkWidget **CTXitem = (GtkWidget**)data;
   char str[COMMON_STR_SIZE];
@@ -1377,9 +1381,9 @@ static void xhci_context_ep_select(GtkWidget *widget, gpointer data)
   if (widget == CTXitem[ID_CONTEXT_PREV]) {
     if (xhci_current_ep_context > 1) {
       if (xhci_context_changed) {
-        // TODO
-        xhci_message_dialog(GTK_WINDOW(gtk_widget_get_toplevel(widget)),
-                            "Saving EP context changes not implemented yet");
+        if (xhci_ep_context_change_dlg(GTK_WINDOW(gtk_widget_get_toplevel(widget)))) {
+          xhci_ep_context_apply(widget, data);
+        }
       }
       xhci_current_ep_context--;
     } else {
@@ -1388,9 +1392,9 @@ static void xhci_context_ep_select(GtkWidget *widget, gpointer data)
   } else if (widget == CTXitem[ID_CONTEXT_NEXT]) {
     if (xhci_current_ep_context < 31) {
       if (xhci_context_changed) {
-        // TODO
-        xhci_message_dialog(GTK_WINDOW(gtk_widget_get_toplevel(widget)),
-                            "Saving EP context changes not implemented yet");
+        if (xhci_ep_context_change_dlg(GTK_WINDOW(gtk_widget_get_toplevel(widget)))) {
+          xhci_ep_context_apply(widget, data);
+        }
       }
       xhci_current_ep_context++;
     } else {
@@ -1466,10 +1470,53 @@ static void xhci_context_ep_select(GtkWidget *widget, gpointer data)
   gtk_widget_set_sensitive(apply_button_2, 0);
 }
 
+static void context_string_changed(GtkWidget *widget, gpointer data)
+{
+  GtkWidget **CTXitem = (GtkWidget**)data;
+  char str[COMMON_STR_SIZE];
+  int i;
+
+  strcpy(str, gtk_entry_get_text(GTK_ENTRY(widget)));
+  if (widget == CTXitem[ID_CONTEXT_SPEED]) {
+    i = strtol(str, NULL, 0);
+    if (i > 15) i = 16;
+    gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_SPEED_STR]), slot_speed_str[i]);
+  } else if (widget == CTXitem[ID_CONTEXT_SLOT_STATE]) {
+    i = strtol(str, NULL, 0);
+    if (i > 3) i = 4;
+    gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_SLOT_STATE_STR]), slot_type_str[i]);
+  } else if (widget == CTXitem[ID_CONTEXT_EP_STATE]) {
+    i = strtol(str, NULL, 0);
+    if (i > 7) i = 7;
+    gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_EP_STATE_STR]), ep_state_str[i]);
+  } else if (widget == CTXitem[ID_CONTEXT_EP_TYPE]) {
+    i = strtol(str, NULL, 0);
+    if (i > 7) i = 7;
+    gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_EP_TYPE_STR]), ep_type_str[i]);
+  } else if (widget == CTXitem[ID_CONTEXT_MAX_PSTREAMS]) {
+    i = strtol(str, NULL, 0);
+    if (i == 0)
+      gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_MAXPS_STR]), "None");
+    else if (i <= 15) {
+      sprintf(str, "%i", (1 << (i + 1)));
+      gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_MAXPS_STR]), str);
+    } else
+      gtk_entry_set_text(GTK_ENTRY(CTXitem[ID_CONTEXT_MAXPS_STR]), "Error");
+    gtk_widget_set_sensitive(GTK_WIDGET(CTXitem[ID_CONTEXT_STREAM_CONTEXT]), (i > 0) && (i <=15));
+  }
+}
+
 static void ep_context_entry_changed(GtkWidget *widget, gpointer data)
 {
-  *((bool*)data) = 1;
+  GtkWidget **CTXitem = (GtkWidget**)data;
+
+  xhci_context_changed = 1;
   gtk_widget_set_sensitive(apply_button_2, 1);
+  if ((widget == CTXitem[ID_CONTEXT_MAX_PSTREAMS]) ||
+      (widget == CTXitem[ID_CONTEXT_EP_STATE]) ||
+      (widget == CTXitem[ID_CONTEXT_EP_TYPE])) {
+    context_string_changed(widget, data);
+  }
 }
 
 static void xhci_context_dialog(GtkWidget *widget, gpointer data)
@@ -1526,11 +1573,11 @@ static void xhci_context_dialog(GtkWidget *widget, gpointer data)
   CTXitem[ID_CONTEXT_INTFACE_NUM] = usbdlg_create_entry_with_label(grid, "Interface Num", 3, 1);
   CTXitem[ID_CONTEXT_CONFIG_VALUE] = usbdlg_create_entry_with_label(grid, "Config Value", 3, 2);
   CTXitem[ID_CONTEXT_PREV] = gtk_button_new_with_label("<<");
-  g_signal_connect(CTXitem[ID_CONTEXT_PREV], "clicked", G_CALLBACK(xhci_context_ep_select), &CTXitem);
+  g_signal_connect(CTXitem[ID_CONTEXT_PREV], "clicked", G_CALLBACK(xhci_ep_context_select), &CTXitem);
   gtk_grid_attach(GTK_GRID(grid), CTXitem[ID_CONTEXT_PREV], 5, 2, 1, 1);
   CTXitem[ID_CONTEXT_OF_STR] = usbdlg_create_ro_entry(grid, 6, 2);
   CTXitem[ID_CONTEXT_NEXT] = gtk_button_new_with_label(">>");
-  g_signal_connect(CTXitem[ID_CONTEXT_NEXT], "clicked", G_CALLBACK(xhci_context_ep_select), &CTXitem);
+  g_signal_connect(CTXitem[ID_CONTEXT_NEXT], "clicked", G_CALLBACK(xhci_ep_context_select), &CTXitem);
   gtk_grid_attach(GTK_GRID(grid), CTXitem[ID_CONTEXT_NEXT], 7, 2, 1, 1);
 
   SLframe = gtk_frame_new("Slot Context");
@@ -1545,6 +1592,8 @@ static void xhci_context_dialog(GtkWidget *widget, gpointer data)
   CTXitem[ID_CONTEXT_MTT] = gtk_check_button_new_with_label("MTT");
   gtk_grid_attach(GTK_GRID(SLgrid), CTXitem[ID_CONTEXT_MTT], 1, 2, 1, 1);
   CTXitem[ID_CONTEXT_SPEED] = usbdlg_create_entry_with_label(SLgrid, "Speed", 0, 3);
+  g_signal_connect(GTK_EDITABLE(CTXitem[ID_CONTEXT_SPEED]), "changed",
+                   G_CALLBACK(context_string_changed), &CTXitem);
   CTXitem[ID_CONTEXT_SPEED_STR] = usbdlg_create_ro_entry(SLgrid, 2, 3);
   CTXitem[ID_CONTEXT_ROUTE_STRING] = usbdlg_create_entry_with_label(SLgrid, "Route String", 0, 4);
   CTXitem[ID_CONTEXT_NUM_PORTS] = usbdlg_create_entry_with_label(SLgrid, "Number of Ports", 0, 5);
@@ -1555,6 +1604,8 @@ static void xhci_context_dialog(GtkWidget *widget, gpointer data)
   CTXitem[ID_CONTEXT_TT_PORT_NUM] = usbdlg_create_entry_with_label(SLgrid, "TT Port Number", 0, 10);
   CTXitem[ID_CONTEXT_TT_HUB_SLOT_ID] = usbdlg_create_entry_with_label(SLgrid, "TT Hub Slot ID", 0, 11);
   CTXitem[ID_CONTEXT_SLOT_STATE] = usbdlg_create_entry_with_label(SLgrid, "Slot State", 0, 12);
+  g_signal_connect(GTK_EDITABLE(CTXitem[ID_CONTEXT_SLOT_STATE]), "changed",
+                   G_CALLBACK(context_string_changed), &CTXitem);
   CTXitem[ID_CONTEXT_SLOT_STATE_STR] = usbdlg_create_ro_entry(SLgrid, 2, 12);
   CTXitem[ID_CONTEXT_DEV_ADDRESS] = usbdlg_create_entry_with_label(SLgrid, "USB Device Address", 0, 13);
   for (i = 0; i < 12; i++) {
@@ -1572,37 +1623,67 @@ static void xhci_context_dialog(GtkWidget *widget, gpointer data)
   gtk_grid_set_column_spacing(GTK_GRID(EPgrid), 5);
   gtk_container_add(GTK_CONTAINER(EPframe), EPgrid);
   apply_button_2 = gtk_button_new_with_label(g_dgettext("gtk30", "_Apply"));
-  g_signal_connect(apply_button_2, "clicked", G_CALLBACK(xhci_context_ep_apply), &CTXitem);
+  g_signal_connect(apply_button_2, "clicked", G_CALLBACK(xhci_ep_context_apply), &CTXitem);
   gtk_grid_attach(GTK_GRID(EPgrid), apply_button_2, 2, 0, 1, 1);
   CTXitem[ID_CONTEXT_MAX_ESIT_HI] = usbdlg_create_entry_with_label(EPgrid, "Max ESIT Payload Hi", 0, 1);
   g_signal_connect(GTK_EDITABLE(CTXitem[ID_CONTEXT_MAX_ESIT_HI]), "changed",
-                   G_CALLBACK(ep_context_entry_changed), &xhci_context_changed);
+                   G_CALLBACK(ep_context_entry_changed), &CTXitem);
   CTXitem[ID_CONTEXT_INTERVAL] = usbdlg_create_entry_with_label(EPgrid, "Interval", 0, 2);
+  g_signal_connect(GTK_EDITABLE(CTXitem[ID_CONTEXT_INTERVAL]), "changed",
+                   G_CALLBACK(ep_context_entry_changed), &CTXitem);
   CTXitem[ID_CONTEXT_LSA] = gtk_check_button_new_with_label("LSA");
+  g_signal_connect(GTK_TOGGLE_BUTTON(CTXitem[ID_CONTEXT_LSA]), "toggled",
+                   G_CALLBACK(ep_context_entry_changed), &CTXitem);
   gtk_grid_attach(GTK_GRID(EPgrid), CTXitem[ID_CONTEXT_LSA], 1, 3, 1, 1);
   CTXitem[ID_CONTEXT_MAX_PSTREAMS] = usbdlg_create_entry_with_label(EPgrid, "MaxPStreams", 0, 4);
+  g_signal_connect(GTK_EDITABLE(CTXitem[ID_CONTEXT_MAX_PSTREAMS]), "changed",
+                   G_CALLBACK(ep_context_entry_changed), &CTXitem);
   CTXitem[ID_CONTEXT_MAXPS_STR] = usbdlg_create_ro_entry(EPgrid, 2, 4);
   CTXitem[ID_CONTEXT_MULT] = usbdlg_create_entry_with_label(EPgrid, "Mult", 0, 5);
+  g_signal_connect(GTK_EDITABLE(CTXitem[ID_CONTEXT_MULT]), "changed",
+                   G_CALLBACK(ep_context_entry_changed), &CTXitem);
   CTXitem[ID_CONTEXT_EP_STATE] = usbdlg_create_entry_with_label(EPgrid, "EP State", 0, 6);
+  g_signal_connect(GTK_EDITABLE(CTXitem[ID_CONTEXT_EP_STATE]), "changed",
+                   G_CALLBACK(ep_context_entry_changed), &CTXitem);
   CTXitem[ID_CONTEXT_EP_STATE_STR] = usbdlg_create_ro_entry(EPgrid, 2, 6);
   CTXitem[ID_CONTEXT_MAX_PACKET_SIZE] = usbdlg_create_entry_with_label(EPgrid, "Max Packet Size", 0, 7);
+  g_signal_connect(GTK_EDITABLE(CTXitem[ID_CONTEXT_MAX_PACKET_SIZE]), "changed",
+                   G_CALLBACK(ep_context_entry_changed), &CTXitem);
   CTXitem[ID_CONTEXT_MAX_BURST_SIZE] = usbdlg_create_entry_with_label(EPgrid, "Max Burst Size", 0, 8);
+  g_signal_connect(GTK_EDITABLE(CTXitem[ID_CONTEXT_MAX_BURST_SIZE]), "changed",
+                   G_CALLBACK(ep_context_entry_changed), &CTXitem);
   CTXitem[ID_CONTEXT_HID] = gtk_check_button_new_with_label("HID");
+  g_signal_connect(GTK_TOGGLE_BUTTON(CTXitem[ID_CONTEXT_HID]), "toggled",
+                   G_CALLBACK(ep_context_entry_changed), &CTXitem);
   gtk_grid_attach(GTK_GRID(EPgrid), CTXitem[ID_CONTEXT_HID], 1, 9, 1, 1);
   CTXitem[ID_CONTEXT_EP_TYPE] = usbdlg_create_entry_with_label(EPgrid, "EP Type", 0, 10);
+  g_signal_connect(GTK_EDITABLE(CTXitem[ID_CONTEXT_EP_TYPE]), "changed",
+                   G_CALLBACK(ep_context_entry_changed), &CTXitem);
   CTXitem[ID_CONTEXT_EP_TYPE_STR] = usbdlg_create_ro_entry(EPgrid, 2, 10);
   CTXitem[ID_CONTEXT_CERR] = usbdlg_create_entry_with_label(EPgrid, "CErr", 0, 11);
+  g_signal_connect(GTK_EDITABLE(CTXitem[ID_CONTEXT_CERR]), "changed",
+                   G_CALLBACK(ep_context_entry_changed), &CTXitem);
   CTXitem[ID_CONTEXT_TR_DEQUEUE_PTR] = usbdlg_create_entry_with_label(EPgrid, "TR Dequeue Pointer", 0, 12);
+  g_signal_connect(GTK_EDITABLE(CTXitem[ID_CONTEXT_TR_DEQUEUE_PTR]), "changed",
+                   G_CALLBACK(ep_context_entry_changed), &CTXitem);
   CTXitem[ID_CONTEXT_STREAM_CONTEXT] = gtk_button_new_with_label(">");
   g_signal_connect(CTXitem[ID_CONTEXT_STREAM_CONTEXT], "clicked", G_CALLBACK(xhci_string_context_dialog), NULL);
   gtk_grid_attach(GTK_GRID(EPgrid), CTXitem[ID_CONTEXT_STREAM_CONTEXT], 2, 12, 1, 1);
   CTXitem[ID_CONTEXT_DCS] = gtk_check_button_new_with_label("DCS");
+  g_signal_connect(GTK_TOGGLE_BUTTON(CTXitem[ID_CONTEXT_DCS]), "toggled",
+                   G_CALLBACK(ep_context_entry_changed), &CTXitem);
   gtk_grid_attach(GTK_GRID(EPgrid), CTXitem[ID_CONTEXT_DCS], 1, 13, 1, 1);
   CTXitem[ID_CONTEXT_MAX_ESIT_LO] = usbdlg_create_entry_with_label(EPgrid, "Max ESIT Payload Lo", 0, 14);
+  g_signal_connect(GTK_EDITABLE(CTXitem[ID_CONTEXT_MAX_ESIT_LO]), "changed",
+                   G_CALLBACK(ep_context_entry_changed), &CTXitem);
   CTXitem[ID_CONTEXT_AVERAGE_LEN] = usbdlg_create_entry_with_label(EPgrid, "Average TRB Length", 0, 15);
+  g_signal_connect(GTK_EDITABLE(CTXitem[ID_CONTEXT_AVERAGE_LEN]), "changed",
+                   G_CALLBACK(ep_context_entry_changed), &CTXitem);
   for (i = 0; i < 11; i++) {
     sprintf(str, "RsvdO (%02Xh-%02Xh)", 20 + (i << 2) + 3, 20 + (i << 2));
     CTXitem[ID_CONTEXT_RSVDO_EP_0 + i] = usbdlg_create_entry_with_label(EPgrid, str, 0, 16 + i);
+    g_signal_connect(GTK_EDITABLE(CTXitem[ID_CONTEXT_RSVDO_EP_0 + i]), "changed",
+                     G_CALLBACK(ep_context_entry_changed), &CTXitem);
     if (i > 3) {
       gtk_widget_set_sensitive(CTXitem[ID_CONTEXT_RSVDO_EP_0 + i], 0);
     }
@@ -1665,12 +1746,17 @@ static void xhci_context_dialog(GtkWidget *widget, gpointer data)
 #endif
 
   // Endpoint Context
-  xhci_context_ep_select(NULL, &CTXitem);
+  xhci_ep_context_select(NULL, &CTXitem);
 
   // Show dialog
   gtk_widget_show_all(dialog);
   ret = gtk_dialog_run(GTK_DIALOG(dialog));
   if (ret == GTK_RESPONSE_OK) {
+    if (xhci_context_changed) {
+      if (xhci_ep_context_change_dlg(GTK_WINDOW(dialog))) {
+        xhci_ep_context_apply(apply_button_2, &CTXitem);
+      }
+    }
     // TODO
   }
   delete [] xhci_context;
