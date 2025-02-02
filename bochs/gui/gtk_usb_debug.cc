@@ -1353,10 +1353,57 @@ GtkWidget *apply_button_2;
 static void xhci_ep_context_apply(GtkWidget *widget, gpointer data)
 {
   GtkWidget **CTXitem = (GtkWidget**)data;
+  char str[COMMON_STR_SIZE];
+  Bit32u *p;
+  int i;
 
-  // TODO
-  xhci_message_dialog(GTK_WINDOW(gtk_widget_get_toplevel(widget)),
-                      "Saving EP context changes not implemented yet");
+  // EP Context
+  p = (Bit32u *) &xhci_context[CONTEXT_SIZE + (xhci_current_ep_context * CONTEXT_SIZE)];
+  strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_MAX_ESIT_HI])));
+  p[0]  = (strtol(str, NULL, 0) & 0xFF) << 24;
+  strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_INTERVAL])));
+  p[0] |= (strtol(str, NULL, 0) & 0xFF) << 16;
+  if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(CTXitem[ID_CONTEXT_LSA]))) {
+    p[0] |= (1<<15);
+  }
+  strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_MAX_PSTREAMS])));
+  p[0] |= (strtol(str, NULL, 0) & 0x1F) << 10;
+  strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_MULT])));
+  p[0] |= (strtol(str, NULL, 0) & 0x3) << 8;
+  strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_EP_STATE])));
+  p[0] |= (strtol(str, NULL, 0) & 0x7) << 0;
+  strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_MAX_PACKET_SIZE])));
+  p[1]  = (strtol(str, NULL, 0) & 0xFFFF) << 16;
+  strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_MAX_BURST_SIZE])));
+  p[1] |= (strtol(str, NULL, 0) & 0xFF) << 8;
+  if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(CTXitem[ID_CONTEXT_HID]))) {
+    p[1] |= (1<<7);
+  }
+  strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_EP_TYPE])));
+  p[1] |= (strtol(str, NULL, 0) & 0x7) << 3;
+  strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_CERR])));
+  p[1] |= (strtol(str, NULL, 0) & 0x3) << 1;
+  strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_TR_DEQUEUE_PTR])));
+  p[2]  = strtol(str, NULL, 0) & ~BX_CONST64(0xF);
+  p[3]  = (Bit64u) strtol(str, NULL, 0) >> 32;
+  if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(CTXitem[ID_CONTEXT_DCS]))) {
+    p[2] |= (1<<0);
+  }
+  strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_MAX_ESIT_LO])));
+  p[4]  = (strtol(str, NULL, 0) & 0xFFFF) << 16;
+  strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_AVERAGE_LEN])));
+  p[4] |= (strtol(str, NULL, 0) & 0xFFFF) << 0;
+
+  for (i=0; i<3; i++) {
+    strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_RSVDO_EP_0 + i])));
+    p[5+i] = strtol(str, NULL, 0);
+  }
+#if (CONTEXT_SIZE == 64)
+  for (i=3; i<11; i++) {
+    strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_RSVDO_EP_0 + i])));
+    p[5+i] = strtol(str, NULL, 0);
+  }
+#endif
 
   xhci_context_changed = 0;
   gtk_widget_set_sensitive(apply_button_2, 0);
@@ -1757,7 +1804,63 @@ static void xhci_context_dialog(GtkWidget *widget, gpointer data)
         xhci_ep_context_apply(apply_button_2, &CTXitem);
       }
     }
-    // TODO
+    // Context structure
+    p = (Bit32u *) &xhci_context[0];
+    strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_DROP])));
+    p[0] = strtol(str, NULL, 0) & ~0x3;
+    strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_ADD])));
+    p[1] = strtol(str, NULL, 0);
+
+    strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_ALT_SETTING])));
+    p[7]  = (strtol(str, NULL, 0) & 0xFF) << 16;
+    strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_INTFACE_NUM])));
+    p[7] |= (strtol(str, NULL, 0) & 0xFF) << 8;
+    strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_CONFIG_VALUE])));
+    p[7] |= (strtol(str, NULL, 0) & 0xFF) << 0;
+
+    // Slot Context
+    p = (Bit32u *) &xhci_context[CONTEXT_SIZE];
+    strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_ENTRIES])));
+    p[0]  = (strtol(str, NULL, 0) & 0x1F) << 27;
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(CTXitem[ID_CONTEXT_HUB]))) {
+      p[0] |= (1<<26);
+    }
+    if (gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(CTXitem[ID_CONTEXT_MTT]))) {
+      p[0] |= (1<<25);
+    }
+    strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_SPEED])));
+    p[0] |= (strtol(str, NULL, 0) & 0xF) << 20;
+    strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_ROUTE_STRING])));
+    p[0] |= (strtol(str, NULL, 0) & 0xFFFFF) << 0;
+    strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_NUM_PORTS])));
+    p[1]  = (strtol(str, NULL, 0) & 0xFF) << 24;
+    strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_RH_PORT_NUM])));
+    p[1] |= (strtol(str, NULL, 0) & 0xFF) << 16;
+    strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_MAX_EXIT_LAT])));
+    p[1] |= (strtol(str, NULL, 0) & 0xFFFF) << 0;
+    strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_INT_TARGET])));
+    p[2]  = (strtol(str, NULL, 0) & 0x3FF) << 22;
+    strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_TTT])));
+    p[2] |= (strtol(str, NULL, 0) & 0x3) << 16;
+    strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_TT_PORT_NUM])));
+    p[2] |= (strtol(str, NULL, 0) & 0xFF) << 8;
+    strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_TT_HUB_SLOT_ID])));
+    p[2] |= (strtol(str, NULL, 0) & 0xFF) << 0;
+    strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_SLOT_STATE])));
+    p[3]  = (strtol(str, NULL, 0) & 0x1F) << 27;
+    strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_DEV_ADDRESS])));
+    p[3] |= (strtol(str, NULL, 0) & 0xFF) << 0;
+    for (i=0; i<4; i++) {
+      strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_RSVDO_SLOT_0 + i])));
+      p[4+i] = strtol(str, NULL, 0);
+    }
+#if (CONTEXT_SIZE == 64)
+    for (i=4; i<12; i++) {
+      strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_RSVDO_SLOT_0 + i])));
+      p[4+i] = strtol(str, NULL, 0);
+    }
+#endif
+    DEV_MEM_WRITE_PHYSICAL(xhci_context_address, CONTEXT_SIZE + (32 * CONTEXT_SIZE), xhci_context);
   }
   delete [] xhci_context;
   gtk_widget_destroy(dialog);
