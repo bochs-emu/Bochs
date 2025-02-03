@@ -1483,6 +1483,16 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
     case 4:
       *((Bit32u*)data) = (Bit32u)value;
       break;
+    case 6:
+#ifdef BX_LITTLE_ENDIAN
+      *((Bit32u*)data) = (Bit32u)value;
+      *((Bit16u*)data + 2) = (Bit16u)(value >> 32);
+#else
+      for (unsigned i = 0; i < 6; i++) {
+        *((Bit8u*)data + i) = (Bit8u)(value >> ((5 - i) << 3));
+      }
+#endif
+      break;
     case 8:
       *((Bit64u*)data) = value;
       break;
