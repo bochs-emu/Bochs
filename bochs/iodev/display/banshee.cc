@@ -2481,6 +2481,7 @@ Bit32u bx_banshee_c::blt_yuv_conversion(Bit8u *ptr, Bit16u xc, Bit16u yc,
 void bx_banshee_c::blt_rectangle_fill()
 {
   Bit32u dpitch = BLT.dst_pitch;
+  Bit32u dbase = BLT.dst_base;
   Bit8u dpxsize = (BLT.dst_fmt > 1) ? (BLT.dst_fmt - 1) : 1;
   Bit8u *dst_ptr, *dst_ptr1;
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
@@ -2496,8 +2497,13 @@ void bx_banshee_c::blt_rectangle_fill()
     BLT.busy = 0;
     return;
   }
+  if (dbase + (dy + h - 1) * dpitch + (dx + w - 1) * dpxsize > v->fbi.mask) {
+    BX_ERROR(("skip address wrap during blt_rectangle_fill()"));
+    BLT.busy = 0;
+    return;
+  }
   BX_LOCK(render_mutex);
-  dst_ptr = &v->fbi.ram[BLT.dst_base + dy * dpitch + dx * dpxsize];
+  dst_ptr = &v->fbi.ram[dbase + dy * dpitch + dx * dpxsize];
   for (y = 0; y < h; y++) {
     dst_ptr1 = dst_ptr;
     for (x = 0; x < w; x++) {
