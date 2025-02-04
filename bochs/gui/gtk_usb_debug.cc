@@ -1305,6 +1305,18 @@ void xhci_message_dialog(GtkWindow *parent, const char *msg)
 
 static void xhci_string_context_dialog(GtkWidget *widget, gpointer data)
 {
+  GtkWidget **CTXitem = (GtkWidget**)data;
+  char str[COMMON_STR_SIZE];
+
+  strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_TR_DEQUEUE_PTR])));
+  xhci_str_context_address = strtol(str, NULL, 0) & ~BX_CONST64(0x0F);
+  strcpy(str, gtk_entry_get_text(GTK_ENTRY(CTXitem[ID_CONTEXT_MAX_PSTREAMS])));
+  xhci_max_streams = strtol(str, NULL, 0);
+  if (xhci_max_streams > MAX_PSA_SIZE)
+    xhci_max_streams = MAX_PSA_SIZE;
+  if (xhci_max_streams > 0)
+    xhci_max_streams = (1 << (xhci_max_streams + 1));
+
   // TODO
   xhci_message_dialog(GTK_WINDOW(gtk_widget_get_toplevel(widget)),
                       "xHCI String Context dialog not implemented yet");
@@ -1714,7 +1726,7 @@ static void xhci_context_dialog(GtkWidget *widget, gpointer data)
   g_signal_connect(GTK_EDITABLE(CTXitem[ID_CONTEXT_TR_DEQUEUE_PTR]), "changed",
                    G_CALLBACK(ep_context_entry_changed), &CTXitem);
   CTXitem[ID_CONTEXT_STREAM_CONTEXT] = gtk_button_new_with_label(">");
-  g_signal_connect(CTXitem[ID_CONTEXT_STREAM_CONTEXT], "clicked", G_CALLBACK(xhci_string_context_dialog), NULL);
+  g_signal_connect(CTXitem[ID_CONTEXT_STREAM_CONTEXT], "clicked", G_CALLBACK(xhci_string_context_dialog), &CTXitem);
   gtk_grid_attach(GTK_GRID(EPgrid), CTXitem[ID_CONTEXT_STREAM_CONTEXT], 2, 12, 1, 1);
   CTXitem[ID_CONTEXT_DCS] = gtk_check_button_new_with_label("DCS");
   g_signal_connect(GTK_TOGGLE_BUTTON(CTXitem[ID_CONTEXT_DCS]), "toggled",

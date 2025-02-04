@@ -3215,6 +3215,12 @@ INT_PTR CALLBACK hc_xhci_callback_context(HWND hDlg, UINT msg, WPARAM wParam, LP
                 xhci_max_streams = (1 << (xhci_max_streams + 1));
               DialogBoxParam(NULL, MAKEINTRESOURCE(USB_DEBUG_XHCI_DLG_STR_CONTEXT), hDlg, hc_xhci_callback_str_context, (LPARAM) 0);
               break;
+            case IDC_CONTEXT_LSA:
+            case IDC_CONTEXT_HID:
+            case IDC_CONTEXT_DCS:
+              xhci_context_changed = 1;
+              EnableWindow(GetDlgItem(hDlg, ID_APPLY), 1);
+              break;
             case IDOK:
               if (xhci_context_changed) {
                 int ret = MessageBox(hDlg, "EP has changed. Save?", NULL, MB_ICONQUESTION | MB_YESNOCANCEL);
