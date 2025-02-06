@@ -10,6 +10,7 @@
  * Contact: snrrrub@yahoo.com
  *
  * Copyright (C) 2003 Net Integration Technologies, Inc.
+ * Copyright (C) 2025 The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -34,6 +35,7 @@ class vmware3_image_t : public device_image_t
   public:
       vmware3_image_t() : FL_SHIFT(25), FL_MASK(0xFE000000)
       { };
+      virtual ~vmware3_image_t();
       int open(const char* pathname, int flags);
       void close();
       Bit64s lseek(Bit64s offset, int whence);
@@ -112,6 +114,8 @@ class vmware3_image_t : public device_image_t
           bool synced;
       } * images, * current;
 
+      bool is_open() const;
+
       bool read_header(int fd, COW_Header & header);
       int write_header(int fd, COW_Header & header);
 
@@ -129,6 +133,7 @@ class vmware3_image_t : public device_image_t
       Bit32u   slb_count;
       Bit32u   tlb_size;
 
+      int file_descriptor;
       const char *pathname;
 };
 #endif
