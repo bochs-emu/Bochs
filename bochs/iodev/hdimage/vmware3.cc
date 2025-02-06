@@ -271,6 +271,7 @@ int vmware3_image_t::open(const char* _pathname, int flags)
   }
 
   bx_close_image(file_descriptor, pathname);
+  file_descriptor = -1;
 
   tlb_size  = header.tlb_size_sectors * 512;
   slb_count = (1 << FL_SHIFT) / tlb_size;
