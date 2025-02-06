@@ -266,7 +266,7 @@ int vmware3_image_t::open(const char* _pathname, int flags)
 
   /* Read the header */
   if (!read_header(file_descriptor, header)) {
-    BX_PANIC(("unable to read vmware3 COW Disk header or invalid header from file '%s'", _pathname));
+    BX_PANIC(("unable to read vmware3 COW Disk header or invalid header from file '%s'", pathname));
     return -1;
   }
 
