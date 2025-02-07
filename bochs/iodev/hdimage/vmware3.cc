@@ -256,8 +256,7 @@ int vmware3_image_t::open(const char* _pathname, int flags)
 
   // Set so close doesn't segfault, in case something goes wrong
   current = images = NULL;
-  file_descriptor = -1;
-
+  
   /* Open the virtual disk */
   file_descriptor = hdimage_open_file(pathname, flags, &imgsize, &mtime);
 
