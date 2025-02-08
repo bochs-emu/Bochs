@@ -10,7 +10,7 @@
  * Contact: snrrrub@yahoo.com
  *
  * Copyright (C) 2003       Net Integration Technologies, Inc.
- * Copyright (C) 2003-2021  The Bochs Project
+ * Copyright (C) 2003-2025  The Bochs Project
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -101,6 +101,11 @@ int vmware3_image_t::check_format(int fd, Bit64u imgsize)
     return HDIMAGE_VERSION_ERROR;
   }
   return HDIMAGE_FORMAT_OK;
+}
+
+bool vmware3_image_t::is_open() const
+{
+  return (file_descriptor != -1);
 }
 
 bool vmware3_image_t::read_header(int fd, COW_Header & header)
@@ -231,6 +236,12 @@ char* vmware3_image_t::generate_cow_name(const char * filename, unsigned chain)
   return name;
 }
 
+vmware3_image_t::~vmware3_image_t()
+{
+  close();
+  bx_close_image(file_descriptor, pathname);
+}
+
 /*
  * This function will panic if errors occur when attempting to open an image
  * file. Now if only I could use exceptions to handle the errors in an elegant
@@ -239,26 +250,27 @@ char* vmware3_image_t::generate_cow_name(const char * filename, unsigned chain)
 int vmware3_image_t::open(const char* _pathname, int flags)
 {
   COW_Header header;
-  int file;
   Bit64u imgsize = 0;
 
   pathname = _pathname;
+
   // Set so close doesn't segfault, in case something goes wrong
-  images = NULL;
-
+  current = images = NULL;
+  
   /* Open the virtual disk */
-  file = hdimage_open_file(pathname, flags, &imgsize, &mtime);
+  file_descriptor = hdimage_open_file(pathname, flags, &imgsize, &mtime);
 
-  if (file < 0)
+  if (!is_open())
     return -1;
 
   /* Read the header */
-  if (!read_header(file, header)) {
+  if (!read_header(file_descriptor, header)) {
     BX_PANIC(("unable to read vmware3 COW Disk header or invalid header from file '%s'", pathname));
     return -1;
   }
 
-  bx_close_image(file, pathname);
+  bx_close_image(file_descriptor, pathname);
+  file_descriptor = -1;
 
   tlb_size  = header.tlb_size_sectors * 512;
   slb_count = (1 << FL_SHIFT) / tlb_size;
@@ -533,27 +545,31 @@ Bit64s vmware3_image_t::lseek(Bit64s offset, int whence)
 
 void vmware3_image_t::close()
 {
-    if(current == 0)
-        return;
+  if (file_descriptor == -1)
+    return;
+    
+  if(current == 0)
+    return;
 
-    unsigned count = current->header.number_of_chains;
-    if (count < 1) count = 1;
-    for(unsigned i = 0; i < count; ++i)
+  unsigned count = current->header.number_of_chains;
+  if (count < 1) count = 1;
+  for(unsigned i = 0; i < count; ++i)
+  {
+    if (images != NULL)
     {
-        if (images != NULL)
-        {
-            current = &images[i];
-            for(unsigned j = 0; j < current->header.flb_count; ++j)
-                delete[] current->slb[j];
-            delete[] current->flb;
-            delete[] current->slb;
-            delete[] current->tlb;
-            ::close(current->fd);
-        delete[] images;
-        images = NULL;
-        }
+      current = &images[i];
+      for(unsigned j = 0; j < current->header.flb_count; ++j)
+          delete[] current->slb[j];
+      delete[] current->flb;
+      delete[] current->slb;
+      delete[] current->tlb;
+      ::close(current->fd);
+    delete[] images;
+    images = NULL;
     }
-    current = 0;
+  }
+  current = 0;
+  file_descriptor = -1;
 }
 
 Bit32u vmware3_image_t::get_capabilities(void)
