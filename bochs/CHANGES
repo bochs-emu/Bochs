@@ -4,7 +4,7 @@ Brief summary :
  - Include Bochs debugger support in all release binaries.
    Bochs internal debugger and Bochs GUI debugger are compiled in by default and there are no special Bochs binaries with internal debugger support anymore.
  - Integrated softfloat3e library replacing older softfloat2a fpu-emulation code
- - Bugfixes for CPU emulation correctness (critical bugfixes for WAITPKG, LASS, XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
+ - Bugfixes for CPU emulation correctness (critical bugfixes for VMX, WAITPKG, LASS, XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
  - Added emulation of missing AMD 3DNow! instructions
  - Implemented AVX512_FP16 Intel instruction set based on softfloat3e library (enabled in Xeon Sapphire Rapids CPU definition)
  - Implemented MONITORLESS MWAIT instructions support
@@ -24,7 +24,7 @@ Brief summary :
 Detailed change log :
 
 - CPU
-  - Bugfixes for CPU emulation correctness (critical bugfixes for WAITPKG, LASS, XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
+  - Bugfixes for CPU emulation correctness (critical bugfixes for VMX, WAITPKG, LASS, XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
   - Integrated softfloat3e library replacing older softfloat2a fpu-emulation code
   - Implemented AVX512_FP16 Intel instruction set based on softfloat3e library (enabled in Xeon Sapphire Rapids CPU definition)
   - Implemented MONITORLESS MWAIT instructions support
