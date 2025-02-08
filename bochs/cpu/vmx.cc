@@ -2157,6 +2157,9 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   for(unsigned segreg=0; segreg<6; segreg++)
     BX_CPU_THIS_PTR sregs[segreg] = guest.sregs[segreg];
 
+  // SS.DPL is always loaded from the SS access-rights field. This will be the current privilege level (CPL) after the VM entry completes.
+  CPL = guest.sregs[BX_SEG_REG_SS].cache.dpl;
+
   BX_CPU_THIS_PTR gdtr.base = gdtr_base;
   BX_CPU_THIS_PTR gdtr.limit = gdtr_limit;
   BX_CPU_THIS_PTR idtr.base = idtr_base;
