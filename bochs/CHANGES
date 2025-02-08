@@ -105,6 +105,7 @@ Detailed change log :
     - Fixed Voodoo3 issue found with Diablo II game
     - Fixed Banshee / Voodoo3 issues with Windows 3.11 driver
     - Fix big-endian support in Banshee / Voodoo3 mem_read code
+    - Implement 6 byte reads support for Voodoo 3
     - Banshee/Voodoo3: Added 16 bpp to 32 bpp pixel format conversion for screen-to-screen bitblt operation
     - Banshee: added host-to-screen stretching BitBlt support
     - Banshee/Voodoo3: Added support for combined desktop / overlay mode with
