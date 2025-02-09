@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "29 Dec 2024" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "9 Feb 2025" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -296,6 +296,10 @@ use this feature yet.
 
 .B NOTE:
 If you use the BIOS-bochs-legacy romimage BIOS option, you cannot use a PCI
+enabled VGA ROM BIOS.
+
+.B NOTE:
+If you use a SeaBIOS binary in romimage BIOS option, you must use a PCI
 enabled VGA ROM BIOS.
 
 Examples:

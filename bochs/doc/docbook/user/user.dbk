@@ -3596,6 +3596,10 @@ this feature yet.
   If you use the BIOS-bochs-legacy romimage BIOS option, you cannot use a PCI
   enabled VGA ROM BIOS.
 </para></note>
+<note><para>
+  If you use a SeaBIOS binary in romimage BIOS option, you must use a PCI
+  enabled VGA ROM BIOS.
+</para></note>
 </section>
 
 <section id="bochsopt-vgaromimage"><title>vgaromimage</title>

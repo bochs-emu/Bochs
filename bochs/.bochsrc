@@ -275,6 +275,8 @@ memory: guest=512, host=256, block_size=512
 #
 # Please note that if you use the BIOS-bochs-legacy romimage BIOS option,
 # you cannot use a PCI enabled VGA ROM BIOS.
+# Please note that if you use a SeaBIOS binary in romimage BIOS option,
+# you must use a PCI enabled VGA ROM BIOS.
 #=======================================================================
 romimage: file=$BXSHARE/BIOS-bochs-latest, options=fastboot
 #romimage: file=$BXSHARE/BIOS-bochs-legacy
