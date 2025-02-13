@@ -3560,6 +3560,7 @@ Examples:
 <screen>
   romimage: file=bios/BIOS-bochs-latest, options=fastboot
   romimage: file=$BXSHARE/BIOS-bochs-legacy
+  romimage: file=$BXSHARE/i440fx.bin, flash_data=escd.bin
   romimage: file=asus_p6np5.bin, flash_data=escd.bin
   romimage: file=mybios.bin, address=0xfff80000
 </screen>

@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "9 Feb 2025" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "13 Feb 2025" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -305,6 +305,7 @@ enabled VGA ROM BIOS.
 Examples:
   romimage: file=bios/BIOS-bochs-latest, options=fastboot
   romimage: file=$BXSHARE/BIOS-bochs-legacy
+  romimage: file=$BXSHARE/i440fx.bin, flash_data=escd.bin
   romimage: file=asus_p6np5.bin, flash_data=escd.bin
   romimage: file=mybios.bin, address=0xfff80000
 

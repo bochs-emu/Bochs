@@ -1,34 +1,43 @@
-Changes after 2.8:
+Changes in 3.0 (not yet released):
 
 Brief summary :
  - Include Bochs debugger support in all release binaries.
-   Bochs internal debugger and Bochs GUI debugger are compiled in by default and there are no special Bochs binaries with internal debugger support anymore.
+   Bochs internal debugger and Bochs GUI debugger are compiled in by default and
+   there are no special Bochs binaries with internal debugger support anymore.
  - Integrated softfloat3e library replacing older softfloat2a fpu-emulation code
- - Bugfixes for CPU emulation correctness (critical bugfixes for VMX, WAITPKG, LASS, XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
+ - Bugfixes for CPU emulation correctness (critical bugfixes for VMX, WAITPKG, LASS,
+   XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
  - Added emulation of missing AMD 3DNow! instructions
- - Implemented AVX512_FP16 Intel instruction set based on softfloat3e library (enabled in Xeon Sapphire Rapids CPU definition)
+ - Implemented AVX512_FP16 Intel instruction set based on softfloat3e library
+   (enabled in Xeon Sapphire Rapids CPU definition)
  - Implemented MONITORLESS MWAIT instructions support
- - Implemented initial support for AVX10_1 + AVX10_2 ISA extensions and AVX10 CPUID leaf 0x24 (AVX10_1 first to be enabled in Xeon Granite Rapids)
+ - Implemented initial support for AVX10_1 + AVX10_2 ISA extensions and AVX10
+   CPUID leaf 0x24 (AVX10_1 first to be enabled in Xeon Granite Rapids)
  - Implemented AMX-TF32 and AMX-AVX512 ISA extensions
- - Implemented RAO-INT ISA extension
- - Implemented MSR_IMM ISA extension
+ - Implemented RAO-INT ISA and MSR_IMM ISA extensions
  - CPUID: Added new CPU definitions: for i386, i486DX4, AMD Athlon XP and Intel Core i5 Arrow Lake CPUs
- - CPUID: Support for enabling/disabling of one or more CPU features from CPUID configuration (see "add_features" and "exclude_features" in bochsrc sample and documentation)
- ! CPUID: Old bx_generic CPUID model is deprecated with all associated .bochsrc CPUID configuration options, use pre-defined CPU models instead
+ - CPUID: Support for enabling/disabling of one or more CPU features from CPUID
+   configuration (see "add_features" and "exclude_features" in bochsrc sample and documentation)
+ ! CPUID: Old bx_generic CPUID model is deprecated with all associated .bochsrc
+   CPUID configuration options, use pre-defined CPU models instead
  - Several fixes and improvements for the Cirrus and Voodoo emulation
  - USB: Added the USB Debugger support for xHCI and UHCI (Windows / GTK3)
- - Added USB boot option (requires BIOS from https://github.com/fysnet/i440fx)
+ - Added USB boot option (requires i440fx.bin BIOS)
  - LGPL'd VGABIOS updated to version 0.9c (Cirrus / VBE fixes and extensions)
+ - Added i440fx.bin BIOS written by Ben Lunt (https://github.com/fysnet/i440fx)
  - Documentation updates and fixes after transition to GIT
 
 Detailed change log :
 
 - CPU
-  - Bugfixes for CPU emulation correctness (critical bugfixes for VMX, WAITPKG, LASS, XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
+  - Bugfixes for CPU emulation correctness (critical bugfixes for VMX, WAITPKG,
+    LASS, XSAVEC/XSAVES, CPUID and SHA1 ISA implementation)
   - Integrated softfloat3e library replacing older softfloat2a fpu-emulation code
-  - Implemented AVX512_FP16 Intel instruction set based on softfloat3e library (enabled in Xeon Sapphire Rapids CPU definition)
+  - Implemented AVX512_FP16 Intel instruction set based on softfloat3e library
+    (enabled in Xeon Sapphire Rapids CPU definition)
   - Implemented MONITORLESS MWAIT instructions support
-  - Implemented initial support for AVX10_1 + AVX10_2 ISA extensions and AVX10 CPUID leaf 0x24 (AVX10_1 first to be enabled in Xeon Granite Rapids)
+  - Implemented initial support for AVX10_1 + AVX10_2 ISA extensions and AVX10
+    CPUID leaf 0x24 (AVX10_1 first to be enabled in Xeon Granite Rapids)
   - Implemented AMX-TF32 and AMX-AVX512 ISA extensions
   - Implemented RAO-INT ISA extension
   - Implemented MSR_IMM ISA extension
@@ -44,15 +53,20 @@ Detailed change log :
   - Added AMD Athlon(tm) XP CPU definition
     - Model=6, supports P6 with 3DNow! + 3DNow! Ext and SSE
   - Added Arrow Lake CPU definition
-    - Features AVX-VNNI, AVX-IFMA, AVX-VNNI-INT8, AVX-VNNI-INT16, AVX_NE_CONVERT, GFNI, VAES/VPCLMULQDQ, SHA512, SM3/SM4, CMPCCXADD, LASS, SERIALIZE, UINTR
-  - Support for enabling/disabling of one or more CPU features from CPUID configuration (see "add_features" and "exclude_features" in bochsrc sample and documentation)
-  - Old bx_generic CPUID model is deprecated with all associated .bochsrc CPUID configuration options, use pre-defined CPU models instead
+    - Features AVX-VNNI, AVX-IFMA, AVX-VNNI-INT8, AVX-VNNI-INT16, AVX_NE_CONVERT,
+      GFNI, VAES/VPCLMULQDQ, SHA512, SM3/SM4, CMPCCXADD, LASS, SERIALIZE, UINTR
+  - Support for enabling/disabling of one or more CPU features from CPUID
+    configuration (see "add_features" and "exclude_features" in bochsrc sample and documentation)
+  - Old bx_generic CPUID model is deprecated with all associated .bochsrc CPUID
+    configuration options, use pre-defined CPU models instead
 
 - Bochs Debugger
   - Include Bochs debugger support in all release binaries.
-    Bochs internal debugger and Bochs GUI debugger are compiled in by default and there are no special Bochs binaries with internal debugger support anymore.
+    Bochs internal debugger and Bochs GUI debugger are compiled in by default and
+    there are no special Bochs binaries with internal debugger support anymore.
     The debugger could be enabled if -dbg or -debugger option is included in the Bochs command line.
-    Without these options, normal high performance execution invoked and impact on simulation performance is minimal.
+    Without these options, normal high performance execution invoked and impact
+    on simulation performance is minimal.
     Note that simulation performance in debugger mode is still substantially lower.
   - Implemented 64-bit paging support in GUI debugger page table dump
 
@@ -135,6 +149,7 @@ Detailed change log :
   - Bochs BIOS: Fixed unwanted side effects caused by some helper functions
   - LGPL'd VGABIOS updated to version 0.9c (Cirrus / VBE fixes and extensions)
     - Now using ".bin" file extension for all VGABIOS images
+  - Added i440fx.bin BIOS written by Ben Lunt (https://github.com/fysnet/i440fx)
 
 - Misc
   - bximage: added simple partition table viewer to the info function
