@@ -1362,6 +1362,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
   }
   else if (address == 0x9410)
     value = BX_GEFORCE_THIS time >> 32;
+  else if (address == 0x10020c)
+    value = GEFORCE_VIDEO_MEMORY_BYTES;
   else if (address == 0x101000)
     value = BX_GEFORCE_THIS straps0_primary;
   else if (address >= 0x300000 && address < 0x310000) {
