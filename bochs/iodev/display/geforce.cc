@@ -135,9 +135,9 @@ bool bx_geforce_c::init_vga_extension(void)
   BX_GEFORCE_THIS put("GEFORCE");
   // initialize SVGA stuffs.
   DEV_register_ioread_handler(this, svga_read_handler, 0x03B4, "geforce", 2);
-  DEV_register_ioread_handler(this, svga_read_handler, 0x03D0, "geforce", 2);
+  DEV_register_ioread_handler(this, svga_read_handler, 0x03D0, "geforce", 6);
   DEV_register_ioread_handler(this, svga_read_handler, 0x03D2, "geforce", 2);
-  DEV_register_iowrite_handler(this, svga_write_handler, 0x03D0, "geforce", 2);
+  DEV_register_iowrite_handler(this, svga_write_handler, 0x03D0, "geforce", 6);
   DEV_register_iowrite_handler(this, svga_write_handler, 0x03D2, "geforce", 2);
   BX_GEFORCE_THIS init_iohandlers(svga_read_handler, svga_write_handler);
   BX_GEFORCE_THIS svga_init_members();
@@ -496,15 +496,13 @@ Bit32u bx_geforce_c::svga_read(Bit32u address, unsigned io_len)
 
   if (address == 0x03d0 || address == 0x03d2) // RMA_ACCESS
   {
-      if (io_len != 2)
-        BX_PANIC(("unexpected rma io_len %d", io_len));
-
-      //BX_ERROR(("rma: read len %d", io_len));
-
       int rma_index = BX_GEFORCE_THIS crtc.reg[0x38] >> 1;
       if (rma_index == 1) {
         if (address == 0x03d0) {
-          BX_DEBUG(("rma: read address 0x%08x (lo)", BX_GEFORCE_THIS rma_addr));
+          if (io_len == 2)
+            BX_DEBUG(("rma: read address 0x%08x (lo)", BX_GEFORCE_THIS rma_addr));
+          else
+            BX_DEBUG(("rma: read address 0x%08x", BX_GEFORCE_THIS rma_addr));
           return BX_GEFORCE_THIS rma_addr;
         } else {
           BX_DEBUG(("rma: read address 0x%08x (hi)", BX_GEFORCE_THIS rma_addr));
@@ -514,7 +512,10 @@ Bit32u bx_geforce_c::svga_read(Bit32u address, unsigned io_len)
       else if (rma_index == 2) {
         Bit32u value = register_read32(BX_GEFORCE_THIS rma_addr);
         if (address == 0x03d0) {
-          BX_ERROR(("rma: read from 0x%08x value 0x????%04x", BX_GEFORCE_THIS rma_addr, value & 0xFFFF));
+          if (io_len == 2)
+            BX_ERROR(("rma: read from 0x%08x value 0x????%04x", BX_GEFORCE_THIS rma_addr, value & 0xFFFF));
+          else
+            BX_ERROR(("rma: read from 0x%08x value 0x%08x", BX_GEFORCE_THIS rma_addr, value));
           return value;
         } else {
           BX_ERROR(("rma: read from 0x%08x value 0x%04x????", BX_GEFORCE_THIS rma_addr, value >> 16));
@@ -522,9 +523,9 @@ Bit32u bx_geforce_c::svga_read(Bit32u address, unsigned io_len)
         }
       }
       else if (rma_index == 3)
-        BX_ERROR(("rma: read from 0x%08x partial", BX_GEFORCE_THIS rma_addr));
+        BX_PANIC(("rma: read from 0x%08x partial", BX_GEFORCE_THIS rma_addr));
       else
-        BX_DEBUG(("rma: read unknown index %d", rma_index));
+        BX_PANIC(("rma: read unknown index %d", rma_index));
       return 0;
   }
 
@@ -590,17 +591,17 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
 
   if (address == 0x03d0 || address == 0x03d2) // RMA_ACCESS
   {
-      if (io_len != 2)
-        BX_PANIC(("unexpected rma io_len %d", io_len));
-
-      //BX_ERROR(("rma: write 0x%08x len %d", value, io_len));
-
       int rma_index = BX_GEFORCE_THIS crtc.reg[0x38] >> 1;
       if (rma_index == 1) {
         if (address == 0x03d0) {
-          BX_GEFORCE_THIS rma_addr &= 0xFFFF0000;
-          BX_GEFORCE_THIS rma_addr |= value;
-          BX_DEBUG(("rma: address set to 0x%08x (lo)", BX_GEFORCE_THIS rma_addr));
+          if (io_len == 2) {
+            BX_GEFORCE_THIS rma_addr &= 0xFFFF0000;
+            BX_GEFORCE_THIS rma_addr |= value;
+            BX_DEBUG(("rma: address set to 0x%08x (lo)", BX_GEFORCE_THIS rma_addr));
+          } else {
+            BX_GEFORCE_THIS rma_addr = value;
+            BX_DEBUG(("rma: address set to 0x%08x", BX_GEFORCE_THIS rma_addr));
+          }
         } else {
           BX_GEFORCE_THIS rma_addr &= 0x0000FFFF;
           BX_GEFORCE_THIS rma_addr |= value << 16;
@@ -610,13 +611,19 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
       else if (rma_index == 2)
         BX_PANIC(("rma: write to 0x%08x value 0x%08x", BX_GEFORCE_THIS rma_addr, value));
       else if (rma_index == 3) {
-        Bit32u value32 = register_read32(BX_GEFORCE_THIS rma_addr);
         if (address == 0x03d0) {
-          value32 &= 0xFFFF0000;
-          value32 |= value;
-          register_write32(BX_GEFORCE_THIS rma_addr, value32);
-          BX_ERROR(("rma: write to 0x%08x value 0x????%04x", BX_GEFORCE_THIS rma_addr, value));
+          if (io_len == 2) {
+            Bit32u value32 = register_read32(BX_GEFORCE_THIS rma_addr);
+            value32 &= 0xFFFF0000;
+            value32 |= value;
+            register_write32(BX_GEFORCE_THIS rma_addr, value32);
+            BX_ERROR(("rma: write to 0x%08x value 0x????%04x", BX_GEFORCE_THIS rma_addr, value));
+          } else {
+            register_write32(BX_GEFORCE_THIS rma_addr, value);
+            BX_ERROR(("rma: write to 0x%08x value 0x%08x", BX_GEFORCE_THIS rma_addr, value));
+          }
         } else {
+          Bit32u value32 = register_read32(BX_GEFORCE_THIS rma_addr);
           value32 &= 0x0000FFFF;
           value32 |= value << 16;
           register_write32(BX_GEFORCE_THIS rma_addr, value32);
@@ -624,7 +631,7 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
         }
       }
       else
-        BX_DEBUG(("rma: write unknown index %d", rma_index));
+        BX_PANIC(("rma: write unknown index %d", rma_index));
       return;
   }
 
