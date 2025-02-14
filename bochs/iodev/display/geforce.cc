@@ -527,7 +527,12 @@ Bit32u bx_geforce_c::svga_read(Bit32u address, unsigned io_len)
         }
       }
       else if (rma_index == 3)
-        BX_PANIC(("rma: read from 0x%08x partial", BX_GEFORCE_THIS rma_addr));
+        if (address == 0x03d0 && io_len == 2) {
+          Bit32u value = register_read32(BX_GEFORCE_THIS rma_addr);
+          BX_ERROR(("rma: read from 0x%08x partial value 0x????%04x", BX_GEFORCE_THIS rma_addr, value & 0xFFFF));
+          return value;
+        } else
+          BX_PANIC(("rma: read from 0x%08x partial", BX_GEFORCE_THIS rma_addr));
       else
         BX_PANIC(("rma: read unknown index %d", rma_index));
       return 0;
@@ -1328,8 +1333,15 @@ Bit8u bx_geforce_c::register_read8(Bit32u address)
   Bit8u value = 0xFF;
   if (address >= 0x300000 && address < 0x310000)
     value = BX_GEFORCE_THIS pci_rom[address - 0x300000];
-  else if (address >= 0x601000 && address < 0x602000) {
+  else if (address >= 0xc03c4 && address <= 0xc03c5) {
+    Bit32u offset = address - 0xc0000;
+    value = SVGA_READ(offset, 1);
+  } else if (address == 0x6013c2 || address == 0x6013d4 ||
+             address == 0x6013d5 || address == 0x6013da) {
     Bit32u offset = address - 0x601000;
+    value = SVGA_READ(offset, 1);
+  } else if (address >= 0x6813c6 && address <= 0x6813c9) {
+    Bit32u offset = address - 0x681000;
     value = SVGA_READ(offset, 1);
   } else if (address >= 0x700000 && address < 0x800000) {
     // TODO
@@ -1341,7 +1353,7 @@ Bit8u bx_geforce_c::register_read8(Bit32u address)
 
 Bit32u bx_geforce_c::register_read32(Bit32u address)
 {
-  Bit32u value = 0xFFFFFFFF;
+  Bit32u value = 0;
 
   if (address == 0x0)
     value = 0x02020000; // PMC_ID
@@ -1357,7 +1369,7 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
   else if (address == 0x9210)
     value = BX_GEFORCE_THIS clock_mul;
   else if (address == 0x9400) {
-    BX_GEFORCE_THIS time += 0x1000;
+    BX_GEFORCE_THIS time += 0x10000;
     value = (Bit32u)BX_GEFORCE_THIS time;
   }
   else if (address == 0x9410)
@@ -1390,8 +1402,15 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
 
 void bx_geforce_c::register_write8(Bit32u address, Bit8u value)
 {
-  if (address >= 0x601000 && address < 0x602000) {
+  if (address >= 0xc03c4 && address <= 0xc03c5) {
+    Bit32u offset = address - 0xc0000;
+    SVGA_WRITE(offset, value, 1);
+  } else if (address == 0x6013c2 || address == 0x6013d4 ||
+             address == 0x6013d5 || address == 0x6013da) {
     Bit32u offset = address - 0x601000;
+    SVGA_WRITE(offset, value, 1);
+  } else if (address >= 0x6813c6 && address <= 0x6813c9) {
+    Bit32u offset = address - 0x681000;
     SVGA_WRITE(offset, value, 1);
   } else if (address >= 0x700000 && address < 0x800000) {
     // TODO
