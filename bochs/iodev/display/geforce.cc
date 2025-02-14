@@ -496,7 +496,11 @@ Bit32u bx_geforce_c::svga_read(Bit32u address, unsigned io_len)
 
   if (address == 0x03d0 || address == 0x03d2) // RMA_ACCESS
   {
-      int rma_index = BX_GEFORCE_THIS crtc.reg[0x38] >> 1;
+      Bit8u crtc38 = BX_GEFORCE_THIS crtc.reg[0x38];
+      bool rma_enable = crtc38 & 1;
+      if (!rma_enable)
+          BX_PANIC(("port 0x3d0 access is disabled"));
+      int rma_index = crtc38 >> 1;
       if (rma_index == 1) {
         if (address == 0x03d0) {
           if (io_len == 2)
@@ -591,7 +595,11 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
 
   if (address == 0x03d0 || address == 0x03d2) // RMA_ACCESS
   {
-      int rma_index = BX_GEFORCE_THIS crtc.reg[0x38] >> 1;
+      Bit8u crtc38 = BX_GEFORCE_THIS crtc.reg[0x38];
+      bool rma_enable = crtc38 & 1;
+      if (!rma_enable)
+        BX_PANIC(("port 0x3d0 access is disabled"));
+      int rma_index = crtc38 >> 1;
       if (rma_index == 1) {
         if (address == 0x03d0) {
           if (io_len == 2) {
@@ -607,10 +615,9 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
           BX_GEFORCE_THIS rma_addr |= value << 16;
           BX_DEBUG(("rma: address set to 0x%08x (hi)", BX_GEFORCE_THIS rma_addr));
         }
-      }
-      else if (rma_index == 2)
+      } else if (rma_index == 2) {
         BX_PANIC(("rma: write to 0x%08x value 0x%08x", BX_GEFORCE_THIS rma_addr, value));
-      else if (rma_index == 3) {
+      } else if (rma_index == 3) {
         if (address == 0x03d0) {
           if (io_len == 2) {
             Bit32u value32 = register_read32(BX_GEFORCE_THIS rma_addr);
@@ -629,9 +636,9 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
           register_write32(BX_GEFORCE_THIS rma_addr, value32);
           BX_ERROR(("rma: write to 0x%08x value 0x%04x????", BX_GEFORCE_THIS rma_addr, value));
         }
-      }
-      else
+      } else {
         BX_PANIC(("rma: write unknown index %d", rma_index));
+      }
       return;
   }
 
