@@ -321,6 +321,15 @@ void bx_geforce_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
 bool bx_geforce_c::geforce_mem_read_handler(bx_phy_address addr, unsigned len,
                                         void *data, void *param)
 {
+  if (len == 1 &&
+      addr >= BX_GEFORCE_THIS pci_bar[0].addr &&
+      addr < (BX_GEFORCE_THIS pci_bar[0].addr + GEFORCE_PNPMMIO_SIZE)) {
+    Bit32u offset = addr & (GEFORCE_PNPMMIO_SIZE - 1);
+    *(Bit8u*)data = register_read8(offset);
+    BX_ERROR(("MMIO read from 0x%08x, value 0x%02x", offset, *(Bit8u*)data));
+    return 1;
+  }
+
   Bit8u *data_ptr;
 #ifdef BX_LITTLE_ENDIAN
   data_ptr = (Bit8u *) data;
@@ -355,7 +364,7 @@ Bit8u bx_geforce_c::mem_read(bx_phy_address addr)
   if ((addr >= BX_GEFORCE_THIS pci_bar[0].addr) &&
       (addr < (BX_GEFORCE_THIS pci_bar[0].addr + GEFORCE_PNPMMIO_SIZE))) {
     Bit32u offset = addr & (GEFORCE_PNPMMIO_SIZE - 1);
-    Bit32u value = register_read(offset & ~3);
+    Bit32u value = register_read32(offset & ~3);
     int shift = (offset & 3) * 8;
     if (shift == 0)
       BX_ERROR(("MMIO read from 0x%08x, value 0x%08x", offset, value));
@@ -384,6 +393,15 @@ Bit8u bx_geforce_c::mem_read(bx_phy_address addr)
 bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
                                          void *data, void *param)
 {
+  if (len == 1 &&
+      addr >= BX_GEFORCE_THIS pci_bar[0].addr &&
+      addr < (BX_GEFORCE_THIS pci_bar[0].addr + GEFORCE_PNPMMIO_SIZE)) {
+    Bit32u offset = addr & (GEFORCE_PNPMMIO_SIZE - 1);
+    BX_ERROR(("MMIO write to 0x%08x, value 0x%02x", offset, *(Bit8u*)data));
+    register_write8(offset, *(Bit8u*)data);
+    return 1;
+  }
+
   Bit8u *data_ptr;
 #ifdef BX_LITTLE_ENDIAN
   data_ptr = (Bit8u *) data;
@@ -407,13 +425,13 @@ void bx_geforce_c::mem_write(bx_phy_address addr, Bit8u value)
   if ((addr >= BX_GEFORCE_THIS pci_bar[0].addr) &&
       (addr < (BX_GEFORCE_THIS pci_bar[0].addr + GEFORCE_PNPMMIO_SIZE))) {
     Bit32u offset = addr & (GEFORCE_PNPMMIO_SIZE - 1);
-    Bit32u value32 = register_read(offset & ~3);
+    Bit32u value32 = register_read32(offset & ~3);
     int shift = (offset & 3) * 8;
     Bit32u mask = ~(0xFF << shift);
     value32 = (value32 & mask) | (value << shift);
     if (shift == 24)
       BX_ERROR(("MMIO write to 0x%08x, value 0x%08x", offset & ~3, value32));
-    register_write(offset & ~3, value32);
+    register_write32(offset & ~3, value32);
     return;
   }
 
@@ -494,7 +512,7 @@ Bit32u bx_geforce_c::svga_read(Bit32u address, unsigned io_len)
         }
       }
       else if (rma_index == 2) {
-        Bit32u value = register_read(BX_GEFORCE_THIS rma_addr);
+        Bit32u value = register_read32(BX_GEFORCE_THIS rma_addr);
         if (address == 0x03d0) {
           BX_ERROR(("rma: read from 0x%08x value 0x????%04x", BX_GEFORCE_THIS rma_addr, value & 0xFFFF));
           return value;
@@ -592,16 +610,16 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
       else if (rma_index == 2)
         BX_PANIC(("rma: write to 0x%08x value 0x%08x", BX_GEFORCE_THIS rma_addr, value));
       else if (rma_index == 3) {
-        Bit32u value32 = register_read(BX_GEFORCE_THIS rma_addr);
+        Bit32u value32 = register_read32(BX_GEFORCE_THIS rma_addr);
         if (address == 0x03d0) {
           value32 &= 0xFFFF0000;
           value32 |= value;
-          register_write(BX_GEFORCE_THIS rma_addr, value32);
+          register_write32(BX_GEFORCE_THIS rma_addr, value32);
           BX_ERROR(("rma: write to 0x%08x value 0x????%04x", BX_GEFORCE_THIS rma_addr, value));
         } else {
           value32 &= 0x0000FFFF;
           value32 |= value << 16;
-          register_write(BX_GEFORCE_THIS rma_addr, value32);
+          register_write32(BX_GEFORCE_THIS rma_addr, value32);
           BX_ERROR(("rma: write to 0x%08x value 0x%04x????", BX_GEFORCE_THIS rma_addr, value));
         }
       }
@@ -623,7 +641,7 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
   switch (address) {
     case 0x03b4: /* VGA: CRTC Index Register (monochrome emulation modes) */
     case 0x03d4: /* VGA: CRTC Index Register (color emulation modes) */
-      BX_GEFORCE_THIS crtc.index = value & 0x3f;
+      BX_GEFORCE_THIS crtc.index = value;
       break;
     case 0x03b5: /* VGA: CRTC Registers (monochrome emulation modes) */
     case 0x03d5: /* VGA: CRTC Registers (color emulation modes) */
@@ -1291,7 +1309,23 @@ void bx_geforce_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
     BX_PANIC(("crtc: unknown index 0x%02x write", index));
 }
 
-Bit32u bx_geforce_c::register_read(Bit32u address)
+Bit8u bx_geforce_c::register_read8(Bit32u address)
+{
+  Bit8u value = 0xFF;
+  if (address >= 0x300000 && address < 0x310000)
+    value = BX_GEFORCE_THIS pci_rom[address - 0x300000];
+  else if (address >= 0x601000 && address < 0x602000) {
+    Bit32u offset = address - 0x601000;
+    value = SVGA_READ(offset, 1);
+  } else if (address >= 0x700000 && address < 0x800000) {
+    // TODO
+  }
+  else
+    BX_PANIC(("Unknown 8 bit register 0x%08x read", address));
+  return value;
+}
+
+Bit32u bx_geforce_c::register_read32(Bit32u address)
 {
   Bit32u value = 0xFFFFFFFF;
 
@@ -1338,7 +1372,19 @@ Bit32u bx_geforce_c::register_read(Bit32u address)
   return value;
 }
 
-void bx_geforce_c::register_write(Bit32u address, Bit32u value)
+void bx_geforce_c::register_write8(Bit32u address, Bit8u value)
+{
+  if (address >= 0x601000 && address < 0x602000) {
+    Bit32u offset = address - 0x601000;
+    SVGA_WRITE(offset, value, 1);
+  } else if (address >= 0x700000 && address < 0x800000) {
+    // TODO
+  }
+  else
+    BX_PANIC(("Unknown 8 bit register 0x%08x write", address));
+}
+
+void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
 {
   if (address == 0x200) {
     BX_GEFORCE_THIS pmc_enable = value;

@@ -34,7 +34,7 @@
 
 // 0x3b4,0x3d4
 #define VGA_CRTC_MAX 0x18
-#define GEFORCE_CRTC_MAX 0x3f
+#define GEFORCE_CRTC_MAX 0x52
 // 0x3c4
 #define VGA_SEQENCER_MAX 0x04
 #define CIRRUS_SEQUENCER_MAX 0x1f
@@ -92,8 +92,10 @@ private:
   BX_GEFORCE_SMF Bit8u svga_read_crtc(Bit32u address, unsigned index);
   BX_GEFORCE_SMF void  svga_write_crtc(Bit32u address, unsigned index, Bit8u value);
 
-  BX_GEFORCE_SMF Bit32u register_read(Bit32u address);
-  BX_GEFORCE_SMF void  register_write(Bit32u address, Bit32u value);
+  BX_GEFORCE_SMF Bit8u register_read8(Bit32u address);
+  BX_GEFORCE_SMF void  register_write8(Bit32u address, Bit8u value);
+  BX_GEFORCE_SMF Bit32u register_read32(Bit32u address);
+  BX_GEFORCE_SMF void  register_write32(Bit32u address, Bit32u value);
 
   struct {
     Bit8u index;
