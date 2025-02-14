@@ -815,7 +815,7 @@ static void pci_bios_init_bridges(PCIDevice *d)
         pci_config_writew(d, 0x20, 0xd000);
         pci_config_writew(d, 0x22, 0xd1f0);
         pci_config_writew(d, 0x24, 0xd200);
-        pci_config_writew(d, 0x26, 0xd3f0);
+        pci_config_writew(d, 0x26, 0xdaf0);
         pci_config_writeb(d, 0xee, 0x88);
       }
     }
