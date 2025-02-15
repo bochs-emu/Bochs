@@ -112,26 +112,28 @@ private:
     Bit8u palette[48];
   } hidden_dac; // 0x3c6
 
-  Bit32u pmc_intr_en;
-  Bit32u pmc_enable;
-  Bit32u pbus_debug_1;
-  Bit32u pbus_12xx[0x40];
-  Bit32u fifo[0x800];
+  Bit32u mc_intr;
+  Bit32u mc_intr_en;
+  Bit32u mc_enable;
+  Bit32u bus_debug_1;
+  Bit32u bus_12xx[0x40];
+  Bit32u fifo_intr;
+  Bit32u fifo_intr_en;
   Bit32u rma_addr;
-  Bit32u ptimer_intr;
-  Bit32u ptimer_intr_en;
-  Bit32u ptimer_num;
-  Bit32u ptimer_den;
-  Bit64u ptimer_time;
-  Bit32u ptimer_alarm;
-  Bit32u pfb_debug_0;
-  Bit32u pfb_cfg0;
-  Bit32u pfb_cfg1;
+  Bit32u timer_intr;
+  Bit32u timer_intr_en;
+  Bit32u timer_num;
+  Bit32u timer_den;
+  Bit64u timer_time;
+  Bit32u timer_alarm;
+  Bit32u fb_debug_0;
+  Bit32u fb_cfg0;
+  Bit32u fb_cfg1;
   Bit32u straps0_primary;
-  Bit32u pgraph_intr;
-  Bit32u pgraph_intr_en;
-  Bit32u pgraph_status;
-  Bit32u pgraph_fifo;
+  Bit32u graph_intr;
+  Bit32u graph_intr_en;
+  Bit32u graph_status;
+  Bit32u graph_fifo;
   Bit32u crtc_intr_en;
   Bit32u crtc_config;
   Bit32u crtc_cursor_config;
@@ -150,6 +152,7 @@ private:
   bool svga_needs_update_mode;
   bool svga_double_width;
 
+  Bit8u devfunc;
   unsigned svga_xres;
   unsigned svga_yres;
   unsigned svga_pitch;
@@ -200,6 +203,7 @@ private:
   } redraw;
 
   bx_ddc_c ddc;
+  bx_ddc_c ddc2;
 
   bool is_unlocked() { return svga_unlock_special; }
 
