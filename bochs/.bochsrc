@@ -685,10 +685,11 @@ ata0-master: type=disk, mode=flat, path="30M.sample"
 # This defines the boot sequence. Now you can specify up to 3 boot drives,
 # which can be 'floppy', 'disk', 'cdrom' or 'network' (boot ROM).
 # Legacy 'a' and 'c' are also supported.
+# The new boot choice 'usb' is only supported by the i440fx.bin BIOS.
 # Examples:
 #   boot: floppy
 #   boot: cdrom, disk
-#   boot: network, disk
+#   boot: network, usb, disk
 #   boot: cdrom, floppy, disk
 #=======================================================================
 #boot: floppy

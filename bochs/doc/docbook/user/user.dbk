@@ -4178,12 +4178,13 @@ Examples:
 <screen>
   boot: floppy
   boot: cdrom, disk
-  boot: network, disk
+  boot: network, usb, disk
   boot: cdrom, floppy, disk
 </screen>
 This defines the boot sequence. You can specify up to 3 boot drives,
 which can be 'floppy', 'disk', 'cdrom' or 'network' (boot ROM).
 Legacy 'a' and 'c' are also supported.
+The new boot choice 'usb' is only supported by the i440fx.bin BIOS.
 </para>
 </section>
 
