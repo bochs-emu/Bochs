@@ -92,6 +92,14 @@
 #define GEFORCE_PNPMMIO_SIZE        0x1000000
 #define GEFORCE_BAR2_SIZE           0x80000
 
+#define GEFORCE_VIDEO_MEMORY_MB     64
+
+#define GEFORCE_VIDEO_MEMORY_KB     (GEFORCE_VIDEO_MEMORY_MB * 1024)
+#define GEFORCE_VIDEO_MEMORY_BYTES  (GEFORCE_VIDEO_MEMORY_KB * 1024)
+
+#define RAMIN_OFFSET                (GEFORCE_VIDEO_MEMORY_BYTES - 0x100000)
+
+
 #define STRAPS0_PRIMARY             (0xFFF86C6B | 0x00000180) // disable TV out
 
 static bx_geforce_c *theSvga = NULL;
@@ -170,6 +178,33 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS crtc.reg[i] = 0x00;
   BX_GEFORCE_THIS hidden_dac.lockindex = 0;
   BX_GEFORCE_THIS hidden_dac.data = 0x00;
+
+  BX_GEFORCE_THIS pmc_intr_en = 0x00000000;
+  BX_GEFORCE_THIS pmc_enable = 0x00000000;
+  BX_GEFORCE_THIS pbus_debug_1 = 0x00000000;
+  for (i = 0; i < 0x40; i++)
+    BX_GEFORCE_THIS pbus_12xx[i] = 0x00000000;
+  for (i = 0; i < 0x800; i++)
+    BX_GEFORCE_THIS fifo[i] = 0x00000000;
+  BX_GEFORCE_THIS rma_addr = 0x00000000;
+  BX_GEFORCE_THIS ptimer_intr = 0x00000000;
+  BX_GEFORCE_THIS ptimer_intr_en = 0x00000000;
+  BX_GEFORCE_THIS ptimer_num = 0x00000000;
+  BX_GEFORCE_THIS ptimer_den = 0x00000000;
+  BX_GEFORCE_THIS ptimer_time = 0x0000000000000000;
+  BX_GEFORCE_THIS ptimer_alarm = 0x00000000;
+  BX_GEFORCE_THIS pfb_debug_0 = 0x00000000;
+  BX_GEFORCE_THIS pfb_cfg0 = 0x00000000;
+  BX_GEFORCE_THIS pfb_cfg1 = 0x00000000;
+  BX_GEFORCE_THIS straps0_primary = STRAPS0_PRIMARY;
+  BX_GEFORCE_THIS pgraph_intr = 0x00000000;
+  BX_GEFORCE_THIS pgraph_intr_en = 0x00000000;
+  BX_GEFORCE_THIS pgraph_status = 0x00000000;
+  BX_GEFORCE_THIS pgraph_fifo = 0x00000000;
+  BX_GEFORCE_THIS crtc_intr_en = 0x00000000;
+  BX_GEFORCE_THIS crtc_config = 0x00000000;
+  BX_GEFORCE_THIS crtc_cursor_config = 0x00000000;
+  BX_GEFORCE_THIS crtc_gpio = 0x00000000;
   BX_GEFORCE_THIS nvpll = 0x00000000;
   BX_GEFORCE_THIS mpll = 0x00000000;
   BX_GEFORCE_THIS vpll = 0x00000000;
@@ -177,21 +212,7 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS general_control = 0x00000000;
   BX_GEFORCE_THIS test_control = 0x00000000;
   BX_GEFORCE_THIS fp_control = 0x00000000;
-  BX_GEFORCE_THIS straps0_primary = STRAPS0_PRIMARY;
-  BX_GEFORCE_THIS pmc_enable = 0x00000000;
-  BX_GEFORCE_THIS pbus_debug_1 = 0x00000000;
-  for (i = 0; i < 0x800; i++)
-      BX_GEFORCE_THIS fifo[i] = 0x00000000;
-  BX_GEFORCE_THIS clock_div = 0x00000000;
-  BX_GEFORCE_THIS clock_mul = 0x00000000;
-  BX_GEFORCE_THIS time = 0x0000000000000000;
-  BX_GEFORCE_THIS pfb_debug_0 = 0x00000000;
-  BX_GEFORCE_THIS pfb_cfg0 = 0x00000000;
-  BX_GEFORCE_THIS pfb_cfg1 = 0x00000000;
-
-  BX_GEFORCE_THIS ramin = new Bit8u[1024 * 1024];
-
-  BX_GEFORCE_THIS rma_addr = 0x00000000;
+  
   BX_GEFORCE_THIS svga_unlock_special = 0;
   BX_GEFORCE_THIS svga_needs_update_tile = 1;
   BX_GEFORCE_THIS svga_needs_update_dispentire = 1;
@@ -1349,17 +1370,14 @@ Bit8u bx_geforce_c::register_read8(Bit32u address)
   if (address >= 0x300000 && address < 0x310000)
     value = BX_GEFORCE_THIS pci_rom[address - 0x300000];
   else if (address >= 0xc03c4 && address <= 0xc03c5) {
-    Bit32u offset = address - 0xc0000;
-    value = SVGA_READ(offset, 1);
+    value = SVGA_READ(address - 0xc0000, 1);
   } else if (address == 0x6013c2 || address == 0x6013d4 ||
              address == 0x6013d5 || address == 0x6013da) {
-    Bit32u offset = address - 0x601000;
-    value = SVGA_READ(offset, 1);
+    value = SVGA_READ(address - 0x601000, 1);
   } else if (address >= 0x6813c6 && address <= 0x6813c9) {
-    Bit32u offset = address - 0x681000;
-    value = SVGA_READ(offset, 1);
+    value = SVGA_READ(address - 0x681000, 1);
   } else if (address >= 0x700000 && address < 0x800000) {
-    value = BX_GEFORCE_THIS ramin[address - 0x700000];
+    value = BX_GEFORCE_THIS s.memory[address - 0x700000 + RAMIN_OFFSET];
   }
   else
     BX_PANIC(("Unknown 8 bit register 0x%08x read", address));
@@ -1372,10 +1390,14 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
 
   if (address == 0x0)
     value = 0x020200A5; // PMC_ID
+  else if (address == 0x140)
+    value = BX_GEFORCE_THIS pmc_intr_en;
   else if (address == 0x200)
     value = BX_GEFORCE_THIS pmc_enable;
   else if (address == 0x1084)
     value = BX_GEFORCE_THIS pbus_debug_1;
+  else if (address >= 0x1200 && address < 0x1300)
+    value = BX_GEFORCE_THIS pbus_12xx[(address - 0x1200) / 4];
   else if (address >= 0x1800 && address < 0x1900) {
     Bit32u offset = address - 0x1800;
     value = 
@@ -1386,16 +1408,22 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
   } else if (address >= 0x2000 && address < 0x4000) {
     Bit32u offset = address - 0x2000;
     value = BX_GEFORCE_THIS fifo[offset / 4];
+  } else if (address == 0x9100) {
+    value = BX_GEFORCE_THIS ptimer_intr;
+  } else if (address == 0x9140) {
+    value = BX_GEFORCE_THIS ptimer_intr_en;
   } else if (address == 0x9200)
-    value = BX_GEFORCE_THIS clock_div;
+    value = BX_GEFORCE_THIS ptimer_num;
   else if (address == 0x9210)
-    value = BX_GEFORCE_THIS clock_mul;
+    value = BX_GEFORCE_THIS ptimer_den;
   else if (address == 0x9400) {
-    BX_GEFORCE_THIS time += 0x10000;
-    value = (Bit32u)BX_GEFORCE_THIS time;
+    BX_GEFORCE_THIS ptimer_time += 0x10000;
+    value = (Bit32u)BX_GEFORCE_THIS ptimer_time;
   }
   else if (address == 0x9410)
-    value = BX_GEFORCE_THIS time >> 32;
+    value = BX_GEFORCE_THIS ptimer_time >> 32;
+  else if (address == 0x9420)
+    value = BX_GEFORCE_THIS ptimer_alarm;
   else if (address == 0x100080)
     value = BX_GEFORCE_THIS pfb_debug_0;
   else if (address == 0x100200)
@@ -1413,6 +1441,22 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
       (BX_GEFORCE_THIS pci_rom[offset + 1] << 8) |
       (BX_GEFORCE_THIS pci_rom[offset + 2] << 16) |
       (BX_GEFORCE_THIS pci_rom[offset + 3] << 24);
+  } else if (address == 0x400100) {
+    value = BX_GEFORCE_THIS pgraph_intr;
+  } else if (address == 0x400140) {
+    value = BX_GEFORCE_THIS pgraph_intr_en;
+  } else if (address == 0x400700) {
+    value = BX_GEFORCE_THIS pgraph_status;
+  } else if (address == 0x400720) {
+    value = BX_GEFORCE_THIS pgraph_fifo;
+  } else if (address == 0x600140) {
+    value = BX_GEFORCE_THIS crtc_intr_en;
+  } else if (address == 0x600804) {
+    value = BX_GEFORCE_THIS crtc_config;
+  } else if (address == 0x600810) {
+    value = BX_GEFORCE_THIS crtc_cursor_config;
+  } else if (address == 0x600818) {
+    value = BX_GEFORCE_THIS crtc_gpio;
   } else if (address == 0x680500) {
     value = BX_GEFORCE_THIS nvpll;
   } else if (address == 0x680504) {
@@ -1428,12 +1472,12 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
   } else if (address == 0x680848) {
     value = BX_GEFORCE_THIS fp_control;
   } else if (address >= 0x700000 && address < 0x800000) {
-    Bit32u offset = address - 0x700000;
+    Bit32u offset = address - 0x700000 + RAMIN_OFFSET;
     value = 
-      (BX_GEFORCE_THIS ramin[offset + 0] << 0) |
-      (BX_GEFORCE_THIS ramin[offset + 1] << 8) |
-      (BX_GEFORCE_THIS ramin[offset + 2] << 16) |
-      (BX_GEFORCE_THIS ramin[offset + 3] << 24);
+      (BX_GEFORCE_THIS s.memory[offset + 0] << 0) |
+      (BX_GEFORCE_THIS s.memory[offset + 1] << 8) |
+      (BX_GEFORCE_THIS s.memory[offset + 2] << 16) |
+      (BX_GEFORCE_THIS s.memory[offset + 3] << 24);
   }
   return value;
 }
@@ -1441,17 +1485,14 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
 void bx_geforce_c::register_write8(Bit32u address, Bit8u value)
 {
   if (address >= 0xc03c4 && address <= 0xc03c5) {
-    Bit32u offset = address - 0xc0000;
-    SVGA_WRITE(offset, value, 1);
+    SVGA_WRITE(address - 0xc0000, value, 1);
   } else if (address == 0x6013c2 || address == 0x6013d4 ||
              address == 0x6013d5 || address == 0x6013da) {
-    Bit32u offset = address - 0x601000;
-    SVGA_WRITE(offset, value, 1);
+    SVGA_WRITE(address - 0x601000, value, 1);
   } else if (address >= 0x6813c6 && address <= 0x6813c9) {
-    Bit32u offset = address - 0x681000;
-    SVGA_WRITE(offset, value, 1);
+    SVGA_WRITE(address - 0x681000, value, 1);
   } else if (address >= 0x700000 && address < 0x800000) {
-    BX_GEFORCE_THIS ramin[address - 0x700000] = value;
+    BX_GEFORCE_THIS s.memory[address - 0x700000 + RAMIN_OFFSET] = value;
   }
   else
     BX_PANIC(("Unknown 8 bit register 0x%08x write", address));
@@ -1459,22 +1500,32 @@ void bx_geforce_c::register_write8(Bit32u address, Bit8u value)
 
 void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
 {
-  if (address == 0x200) {
+  if (address == 0x140) {
+    BX_GEFORCE_THIS pmc_intr_en = value;
+  } else if (address == 0x200) {
     BX_GEFORCE_THIS pmc_enable = value;
   } else if (address == 0x1084) {
     BX_GEFORCE_THIS pbus_debug_1 = value;
+  } else if (address >= 0x1200 && address < 0x1300) {
+    BX_GEFORCE_THIS pbus_12xx[(address - 0x1200) / 4] = value;
   } else if (address >= 0x1800 && address < 0x1900) {
     BX_GEFORCE_THIS pci_write_handler(address - 0x1800, value, 4);
   } else if (address >= 0x2000 && address < 0x4000) {
     BX_GEFORCE_THIS fifo[(address - 0x2000) / 4] = value;
+  } else if (address == 0x9100) {
+    BX_GEFORCE_THIS ptimer_intr = value;
+  } else if (address == 0x9140) {
+    BX_GEFORCE_THIS ptimer_intr_en = value;
   } else if (address == 0x9200) {
-    BX_GEFORCE_THIS clock_div = value;
+    BX_GEFORCE_THIS ptimer_num = value;
   } else if (address == 0x9210) {
-    BX_GEFORCE_THIS clock_mul = value;
+    BX_GEFORCE_THIS ptimer_den = value;
   } else if (address == 0x9400) {
-    BX_GEFORCE_THIS time = (BX_GEFORCE_THIS time & 0xFFFFFFFF00000000ULL) | value;
+    BX_GEFORCE_THIS ptimer_time = (BX_GEFORCE_THIS ptimer_time & 0xFFFFFFFF00000000ULL) | value;
   } else if (address == 0x9410) {
-    BX_GEFORCE_THIS time = (BX_GEFORCE_THIS time & 0x00000000FFFFFFFFULL) | ((Bit64u)value << 32);
+    BX_GEFORCE_THIS ptimer_time = (BX_GEFORCE_THIS ptimer_time & 0x00000000FFFFFFFFULL) | ((Bit64u)value << 32);
+  } else if (address == 0x9420) {
+    BX_GEFORCE_THIS ptimer_alarm = value;
   } else if (address == 0x100080) {
     BX_GEFORCE_THIS pfb_debug_0 = value;
   } else if (address == 0x100200) {
@@ -1486,6 +1537,22 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
       BX_GEFORCE_THIS straps0_primary = value;
     else
       BX_GEFORCE_THIS straps0_primary = STRAPS0_PRIMARY;
+  } else if (address == 0x400100) {
+    BX_GEFORCE_THIS pgraph_intr = value;
+  } else if (address == 0x400140) {
+    BX_GEFORCE_THIS pgraph_intr_en = value;
+  } else if (address == 0x400700) {
+    BX_GEFORCE_THIS pgraph_status = value;
+  } else if (address == 0x400720) {
+    BX_GEFORCE_THIS pgraph_fifo = value;
+  } else if (address == 0x600140) {
+    BX_GEFORCE_THIS crtc_intr_en = value;
+  } else if (address == 0x600804) {
+    BX_GEFORCE_THIS crtc_config = value;
+  } else if (address == 0x600810) {
+    BX_GEFORCE_THIS crtc_cursor_config = value;
+  } else if (address == 0x600818) {
+    BX_GEFORCE_THIS crtc_gpio = value;
   } else if (address == 0x680500) {
     BX_GEFORCE_THIS nvpll = value;
   } else if (address == 0x680504) {
@@ -1501,11 +1568,11 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
   } else if (address == 0x680848) {
     BX_GEFORCE_THIS fp_control = value;
   } else if (address >= 0x700000 && address < 0x800000) {
-    Bit32u offset = address - 0x700000;
-    BX_GEFORCE_THIS ramin[offset + 0] = (value >> 0) & 0xFF;
-    BX_GEFORCE_THIS ramin[offset + 1] = (value >> 8) & 0xFF;
-    BX_GEFORCE_THIS ramin[offset + 2] = (value >> 16) & 0xFF;
-    BX_GEFORCE_THIS ramin[offset + 3] = (value >> 24) & 0xFF;
+    Bit32u offset = address - 0x700000 + RAMIN_OFFSET;
+    BX_GEFORCE_THIS s.memory[offset + 0] = (value >> 0) & 0xFF;
+    BX_GEFORCE_THIS s.memory[offset + 1] = (value >> 8) & 0xFF;
+    BX_GEFORCE_THIS s.memory[offset + 2] = (value >> 16) & 0xFF;
+    BX_GEFORCE_THIS s.memory[offset + 3] = (value >> 24) & 0xFF;
   }
 }
 
@@ -1544,10 +1611,6 @@ void bx_geforce_c::svga_init_pcihandlers(void)
     BX_GEFORCE_THIS pci_conf[0x4d] = 0x01;
     BX_GEFORCE_THIS pci_conf[0x4e] = 0x00;
     BX_GEFORCE_THIS pci_conf[0x4f] = 0x1F;
-    BX_GEFORCE_THIS pci_conf[0x50] = 0x01;
-    BX_GEFORCE_THIS pci_conf[0x51] = 0x00;
-    BX_GEFORCE_THIS pci_conf[0x52] = 0x00;
-    BX_GEFORCE_THIS pci_conf[0x53] = 0x00;
 }
 
 void bx_geforce_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)

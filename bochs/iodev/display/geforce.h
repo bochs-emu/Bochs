@@ -45,11 +45,6 @@
 // Size of internal cache memory for bitblt. (must be >= 256 and 4-byte aligned)
 #define CIRRUS_BLT_CACHESIZE (2048 * 4)
 
-#define GEFORCE_VIDEO_MEMORY_MB    64
-
-#define GEFORCE_VIDEO_MEMORY_KB    (GEFORCE_VIDEO_MEMORY_MB * 1024)
-#define GEFORCE_VIDEO_MEMORY_BYTES (GEFORCE_VIDEO_MEMORY_KB * 1024)
-
 class bx_geforce_c : public bx_vgacore_c
 {
 public:
@@ -117,6 +112,30 @@ private:
     Bit8u palette[48];
   } hidden_dac; // 0x3c6
 
+  Bit32u pmc_intr_en;
+  Bit32u pmc_enable;
+  Bit32u pbus_debug_1;
+  Bit32u pbus_12xx[0x40];
+  Bit32u fifo[0x800];
+  Bit32u rma_addr;
+  Bit32u ptimer_intr;
+  Bit32u ptimer_intr_en;
+  Bit32u ptimer_num;
+  Bit32u ptimer_den;
+  Bit64u ptimer_time;
+  Bit32u ptimer_alarm;
+  Bit32u pfb_debug_0;
+  Bit32u pfb_cfg0;
+  Bit32u pfb_cfg1;
+  Bit32u straps0_primary;
+  Bit32u pgraph_intr;
+  Bit32u pgraph_intr_en;
+  Bit32u pgraph_status;
+  Bit32u pgraph_fifo;
+  Bit32u crtc_intr_en;
+  Bit32u crtc_config;
+  Bit32u crtc_cursor_config;
+  Bit32u crtc_gpio;
   Bit32u nvpll;
   Bit32u mpll;
   Bit32u vpll;
@@ -124,20 +143,6 @@ private:
   Bit32u general_control;
   Bit32u test_control;
   Bit32u fp_control;
-  Bit32u straps0_primary;
-  Bit32u pmc_enable;
-  Bit32u pbus_debug_1;
-  Bit32u fifo[0x800];
-  Bit32u clock_div;
-  Bit32u clock_mul;
-  Bit64u time;
-  Bit32u pfb_debug_0;
-  Bit32u pfb_cfg0;
-  Bit32u pfb_cfg1;
-
-  Bit8u* ramin; // temporary
-
-  Bit32u rma_addr;
 
   bool svga_unlock_special;
   bool svga_needs_update_tile;
