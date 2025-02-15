@@ -117,15 +117,25 @@ private:
     Bit8u palette[48];
   } hidden_dac; // 0x3c6
 
-  Bit32u ramdac[4];
+  Bit32u nvpll;
+  Bit32u mpll;
+  Bit32u vpll;
+  Bit32u pll_control;
+  Bit32u general_control;
+  Bit32u test_control;
+  Bit32u fp_control;
   Bit32u straps0_primary;
   Bit32u pmc_enable;
-  Bit32u debug_1;
+  Bit32u pbus_debug_1;
   Bit32u fifo[0x800];
-
   Bit32u clock_div;
   Bit32u clock_mul;
   Bit64u time;
+  Bit32u pfb_debug_0;
+  Bit32u pfb_cfg0;
+  Bit32u pfb_cfg1;
+
+  Bit8u* ramin; // temporary
 
   Bit32u rma_addr;
 
