@@ -41,7 +41,7 @@ For more information, see [the intro section](https://bochs.sourceforge.io/cgi-b
 
 ## Installing
 
-You can download Bochs from the [project page on SourceForge](https://sourceforge.net/projects/bochs/files/bochs/2.7/). See the
+You can download Bochs from the [project page on SourceForge](https://sourceforge.net/projects/bochs/files/bochs/3.0/). See the
 CHANGES file for details on the most recent releases.
 
 ## Usage
