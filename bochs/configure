@@ -3814,12 +3814,12 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 ac_config_headers="$ac_config_headers config.h"
 
 
-VERSION="3.0"
+VERSION="3.0.devel"
 VER_MAJOR=3
 VER_MINOR=0
 VER_REVISION=0
-VER_DEV=0
-REL_STRING="Built from GitHub snapshot on February 16, 2025"
+VER_DEV=1
+REL_STRING="Built from GitHub snapshot after release 3.0"
 REL_TIMESTAMP=`grep "Updated:" $srcdir/README | sed 's/Updated: //'`
 
 
