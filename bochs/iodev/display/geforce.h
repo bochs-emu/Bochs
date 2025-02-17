@@ -134,6 +134,7 @@ private:
   Bit32u graph_intr_en;
   Bit32u graph_status;
   Bit32u graph_fifo;
+  Bit32u graph_channel_ctx_table;
   Bit32u crtc_intr_en;
   Bit32u crtc_config;
   Bit32u crtc_cursor_config;
@@ -144,7 +145,10 @@ private:
   Bit32u pll_control;
   Bit32u general_control;
   Bit32u test_control;
-  Bit32u fp_control;
+  Bit32u ramdac_fp_hcrtc;
+  Bit32u ramdac_fp_tg_control;
+
+  Bit32u unk_regs[4*1024*1024]; // temporary
 
   bool svga_unlock_special;
   bool svga_needs_update_tile;
