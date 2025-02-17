@@ -204,6 +204,7 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS graph_fifo = 0x00000000;
   BX_GEFORCE_THIS graph_channel_ctx_table = 0x00000000;
   BX_GEFORCE_THIS crtc_intr_en = 0x00000000;
+  BX_GEFORCE_THIS crtc_start = 0x00000000;
   BX_GEFORCE_THIS crtc_config = 0x00000000;
   BX_GEFORCE_THIS crtc_cursor_config = 0x00000000;
   BX_GEFORCE_THIS crtc_gpio = 0x00000000;
@@ -476,6 +477,7 @@ void bx_geforce_c::mem_write(bx_phy_address addr, Bit8u value)
     Bit32u offset = addr & BX_GEFORCE_THIS memsize_mask;
     *(BX_GEFORCE_THIS s.memory + offset) = value;
     BX_GEFORCE_THIS svga_needs_update_tile = 1;
+    offset -= BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory;
     x = (offset % BX_GEFORCE_THIS svga_pitch) / (BX_GEFORCE_THIS svga_bpp / 8);
     y = offset / BX_GEFORCE_THIS svga_pitch;
     SET_TILE_UPDATED(BX_GEFORCE_THIS, x / X_TILESIZE, y / Y_TILESIZE, 1);
@@ -707,6 +709,10 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x03d5: /* VGA: CRTC Registers (color emulation modes) */
       if (BX_GEFORCE_THIS crtc.index <= VGA_CRTC_MAX) {
         BX_GEFORCE_THIS crtc.reg[BX_GEFORCE_THIS crtc.index] = value;
+        if (BX_GEFORCE_THIS crtc.index == 0x0c ||
+            BX_GEFORCE_THIS crtc.index == 0x0d) {
+          BX_GEFORCE_THIS svga_needs_update_mode = 1;
+        }
       } else {
         BX_GEFORCE_THIS svga_write_crtc(address, BX_GEFORCE_THIS crtc.index, value);
         return;
@@ -718,7 +724,6 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x03c5: /* VGA: Sequencer Registers */
       if (BX_GEFORCE_THIS sequencer.index > VGA_SEQENCER_MAX)
         BX_PANIC(("sequencer: unknown index 0x%02x write", BX_GEFORCE_THIS sequencer.index));
-      // BX_GEFORCE_THIS svga_write_sequencer(address,BX_GEFORCE_THIS sequencer.index,value);
       break;
     case 0x03c6: /* Hidden DAC */
       break;
@@ -878,6 +883,13 @@ void bx_geforce_c::update(void)
   }
 
   if (BX_GEFORCE_THIS svga_needs_update_mode) {
+    Bit32u iTopOffset = 
+      (BX_GEFORCE_THIS crtc.reg[0x0c] << 8) +
+      BX_GEFORCE_THIS crtc.reg[0x0d] +
+      ((BX_GEFORCE_THIS crtc.reg[0x19] & 0x1F) << 16);
+    iTopOffset <<= 2;
+    iTopOffset += BX_GEFORCE_THIS crtc_start;
+
     Bit8u iBpp;
     if (crtc28 == 0x01)
       iBpp = 8;
@@ -891,12 +903,16 @@ void bx_geforce_c::update(void)
     Bit32u iHeight, iWidth;
     determine_screen_dimensions(&iHeight, &iWidth);
 
-    BX_INFO(("switched to %u x %u x %u", iWidth, iHeight, iBpp));
+    if ((iWidth != BX_GEFORCE_THIS svga_xres) || (iHeight != BX_GEFORCE_THIS svga_yres)
+        || (iBpp != BX_GEFORCE_THIS svga_bpp)) {
+      BX_INFO(("switched to %u x %u x %u", iWidth, iHeight, iBpp));
+    }
 
     BX_GEFORCE_THIS svga_xres = iWidth;
     BX_GEFORCE_THIS svga_yres = iHeight;
     BX_GEFORCE_THIS svga_bpp = iBpp;
     BX_GEFORCE_THIS svga_dispbpp = iBpp;
+    BX_GEFORCE_THIS disp_ptr = BX_GEFORCE_THIS s.memory + iTopOffset;
     BX_GEFORCE_THIS svga_pitch = svga_xres * iBpp / 8;
     // compatibilty settings for VGA core
     BX_GEFORCE_THIS s.last_xres = iWidth;
@@ -1353,23 +1369,16 @@ void bx_geforce_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
 {
   BX_ERROR(("crtc: index 0x%02x write 0x%02x", index, (unsigned)value));
 
-  if (index == 0x19) {
-    Bit32u offset = 
-      (BX_GEFORCE_THIS crtc.reg[0x0c] << 8) +
-      BX_GEFORCE_THIS crtc.reg[0x0d] +
-      ((value & 0x1F) << 16);
-    offset <<= 2;
-    BX_GEFORCE_THIS disp_ptr = BX_GEFORCE_THIS s.memory + offset;
-  }
-  else if (index == 0x1d || index == 0x1e) {
-    BX_GEFORCE_THIS bank_base[index - 0x1d] = value * 0x8000;
-  } else if (index == 0x28 && value != 0x00) {
+  if (index == 0x19)
     BX_GEFORCE_THIS svga_needs_update_mode = 1;
-  } else if (index == 0x37) {
+  else if (index == 0x1d || index == 0x1e)
+    BX_GEFORCE_THIS bank_base[index - 0x1d] = value * 0x8000;
+  else if (index == 0x28 && value != 0x00)
+    BX_GEFORCE_THIS svga_needs_update_mode = 1;
+  else if (index == 0x37)
     BX_GEFORCE_THIS ddc.write((value >> 5) & 1, (value >> 4) & 1);
-  } else if (index == 0x3f) {
+  else if (index == 0x3f)
     value = 0xFF;
-  }
 
   if (index <= GEFORCE_CRTC_MAX) {
     BX_GEFORCE_THIS crtc.reg[index] = value;
@@ -1490,6 +1499,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS graph_channel_ctx_table;
   } else if (address == 0x600140) {
     value = BX_GEFORCE_THIS crtc_intr_en;
+  } else if (address == 0x600800) {
+    value = BX_GEFORCE_THIS crtc_start;
   } else if (address == 0x600804) {
     value = BX_GEFORCE_THIS crtc_config;
   } else if (address == 0x600810) {
@@ -1582,6 +1593,9 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS graph_channel_ctx_table = value;
   } else if (address == 0x600140) {
     BX_GEFORCE_THIS crtc_intr_en = value;
+  } else if (address == 0x600800) {
+    BX_GEFORCE_THIS crtc_start = value;
+    BX_GEFORCE_THIS svga_needs_update_mode = 1;
   } else if (address == 0x600804) {
     BX_GEFORCE_THIS crtc_config = value;
   } else if (address == 0x600810) {

@@ -136,6 +136,7 @@ private:
   Bit32u graph_fifo;
   Bit32u graph_channel_ctx_table;
   Bit32u crtc_intr_en;
+  Bit32u crtc_start;
   Bit32u crtc_config;
   Bit32u crtc_cursor_config;
   Bit32u crtc_gpio;
