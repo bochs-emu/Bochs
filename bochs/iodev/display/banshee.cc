@@ -1375,7 +1375,18 @@ bool bx_banshee_c::mem_read_handler(bx_phy_address addr, unsigned len,
                                     void *data, void *param)
 {
   bx_banshee_c *class_ptr = (bx_banshee_c*)param;
-  class_ptr->mem_read(addr, len, data);
+  if (len > 8) {
+    Bit64u *data64 = (Bit64u*)data;
+#ifdef BX_LITTLE_ENDIAN
+    class_ptr->mem_read(addr, 8, &data64[0]);
+    class_ptr->mem_read(addr + 8, len - 8, &data64[1]);
+#else
+    class_ptr->mem_read(addr, 8, &data64[1]);
+    class_ptr->mem_read(addr + 8, len - 8, &data64[0]);
+#endif
+  } else {
+    class_ptr->mem_read(addr, len, data);
+  }
   return 1;
 }
 
