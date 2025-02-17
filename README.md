@@ -41,8 +41,8 @@ For more information, see [the intro section](https://bochs.sourceforge.io/cgi-b
 
 ## Installing
 
-You can download Bochs from the [project page on SourceForge](https://sourceforge.net/projects/bochs/files/bochs/2.7/). See the
-CHANGES file for details on the most recent releases.
+You can download Bochs from this GitHub page or the [project page on SourceForge](https://sourceforge.net/projects/bochs/files/bochs/3.0/).
+See the CHANGES file for details on the most recent releases.
 
 ## Usage
 See [the documentation](https://bochs.sourceforge.io/cgi-bin/topper.pl?name=New+Bochs+Documentation&url=https://bochs.sourceforge.io/doc/docbook/).

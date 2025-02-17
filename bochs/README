@@ -1,6 +1,6 @@
 Bochs - The cross platform IA-32 (x86) emulator
-Updated: Sun Mar 10 08:00:00 CET 2024
-Version: 2.8
+Updated: Sun Feb 16 10:00:00 CET 2025
+Version: 3.0
 
 WHAT IS BOCHS?
 
@@ -78,17 +78,4 @@ many ways you could help out.  For example:
   - testing out Bochs on every imaginable operating system and
     reporting how it goes.
 
-CHANGES
-
-Brief summary of changes in 2.7:
-  - Bugfixes for CPU emulation correctness (CPUID/VMX/SVM fixes to support
-    Windows Hyper-V as guest in Bochs)
-  - Improvements for the plugin handling to simplify Bochs extensions
-  - Added "multiple NICs" support to the NE2000 and E1000 devices
-  - Added experimental FTP service for networking modules 'vnet' and 'socket'
-  - Fixes and improvements for all supported Voodoo graphics adapters
-  - Added USB keyboard emulation with most of the keys supported
-  - GUI "cmdmode": create a headerbar event with key combo starting with F7
-  - LGPL'd VGABIOS updated to version 0.8a (new VGABIOS for Voodoo Banshee)
-
-See CHANGES file for more information!
+See CHANGES file for information what has changed in this release!

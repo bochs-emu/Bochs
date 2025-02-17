@@ -1360,12 +1360,14 @@ DLX Linux screenshot.
 <row><entry>CHANGES.txt </entry> <entry> what has changed between versions </entry> </row>
 <row><entry>COPYING.txt </entry> <entry> copy of the LGPL license </entry> </row>
 <row><entry>cpu_configurability.txt </entry> <entry> documentation for all features supported by Bochs CPU models </entry> </row>
+<row><entry>i440fx.bin </entry> <entry> i440fx ROM BIOS image </entry> </row>
 <row><entry>lgban.ico </entry> <entry> a set of Bochs icons in different sizes </entry> </row>
 <row><entry>LICENSE.txt </entry> <entry> Bochs license information </entry> </row>
 <row><entry>logo.ico </entry> <entry> another set of Bochs icons </entry> </row>
 <row><entry>niclist.exe </entry> <entry> tool to find out the network interface name </entry> </row>
 <row><entry>penguin.ico </entry> <entry> icons for the DLX Linux link </entry> </row>
 <row><entry>README.txt </entry> <entry> the read-me file from the source distribution. </entry> </row>
+<row><entry>README-i440fx.txt </entry> <entry> README for i440fx ROM image </entry> </row>
 <row><entry>sb16ctrl.exe </entry> <entry> tool to control sb16 in Bochs </entry> </row>
 <row><entry>sb16ctrl.txt </entry> <entry> examples of sb16ctrl commands </entry> </row>
 <row><entry>SeaBIOS-README.txt </entry> <entry> README for SeaBIOS ROM image </entry> </row>
@@ -1574,10 +1576,12 @@ description of each one.
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-banshee-debug.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Voodoo Banshee extension enabled and debug output to the logfile </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-README </entry> <entry> readme for the LGPL'd VGA BIOS </entry> </row>
 <row><entry>/usr/share/bochs/bios.bin-1.13.0 </entry> <entry> SeaBIOS ROM image </entry> </row>
+<row><entry>/usr/share/bochs/vgabios-cirrus.bin-1.13.0 </entry> <entry> SeaVGABIOS ROM image (for Cirrus adapter)</entry> </row>
+<row><entry>/usr/share/bochs/i440fx.bin </entry> <entry> i440fx ROM BIOS image </entry> </row>
+<row><entry>/usr/share/bochs/README-i440fx </entry> <entry> README for i440fx ROM image </entry> </row>
 <row><entry>/usr/share/bochs/dlxlinux/ </entry> <entry> directory containing DLX linux sample disk image and configuration files</entry> </row>
 <row><entry>/usr/share/bochs/dlxlinux/readme.txt</entry> <entry> description of DLX linux</entry> </row>
 <row><entry>/usr/share/bochs/keymaps/*.map </entry> <entry>keymap tables for X11, SDL and SDL2 </entry> </row>
-<row><entry>/usr/share/bochs/vgabios-cirrus.bin-1.13.0 </entry> <entry> SeaVGABIOS ROM image (for Cirrus adapter)</entry> </row>
 </tbody>
 </tgroup>
 </table>
@@ -4174,12 +4178,13 @@ Examples:
 <screen>
   boot: floppy
   boot: cdrom, disk
-  boot: network, disk
+  boot: network, usb, disk
   boot: cdrom, floppy, disk
 </screen>
 This defines the boot sequence. You can specify up to 3 boot drives,
 which can be 'floppy', 'disk', 'cdrom' or 'network' (boot ROM).
 Legacy 'a' and 'c' are also supported.
+The new boot choice 'usb' is only supported by the i440fx.bin BIOS.
 </para>
 </section>
 
