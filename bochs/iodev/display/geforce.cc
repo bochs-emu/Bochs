@@ -594,6 +594,8 @@ Bit32u bx_geforce_c::svga_read(Bit32u address, unsigned io_len)
         return BX_GEFORCE_THIS svga_read_crtc(address,BX_GEFORCE_THIS crtc.index);
       else
         break;
+    case 0x03c2: /* Input Status 0 */
+      return 0x10; // Monitor presence detection (DAC Sensing)
     case 0x03c4: /* VGA: Sequencer Index Register */
       return BX_GEFORCE_THIS sequencer.index;
     case 0x03c5: /* VGA: Sequencer Registers */
@@ -1494,6 +1496,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS crtc_cursor_config;
   } else if (address == 0x600818) {
     value = BX_GEFORCE_THIS crtc_gpio;
+  } else if (address == 0x6013da) {
+    value = register_read8(address);
   } else if (address == 0x680500) {
     value = BX_GEFORCE_THIS nvpll;
   } else if (address == 0x680504) {
