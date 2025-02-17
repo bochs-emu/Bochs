@@ -517,7 +517,7 @@ void bx_geforce_c::get_text_snapshot(Bit8u **text_snapshot,
 
 Bit32u bx_geforce_c::svga_read_handler(void *this_ptr, Bit32u address, unsigned io_len)
 {
-#if !BX_USE_CIRRUS_SMF
+#if !BX_USE_GEFORCE_SMF
   bx_geforce_c *class_ptr = (bx_geforce_c *) this_ptr;
 
   return class_ptr->svga_read(address, io_len);
@@ -527,7 +527,7 @@ Bit32u bx_geforce_c::svga_read(Bit32u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
-#endif // !BX_USE_CIRRUS_SMF
+#endif // !BX_USE_GEFORCE_SMF
 
   if (address == 0x03d0 || address == 0x03d2) // RMA_ACCESS
   {
@@ -624,7 +624,7 @@ Bit32u bx_geforce_c::svga_read(Bit32u address, unsigned io_len)
 
 void bx_geforce_c::svga_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len)
 {
-#if !BX_USE_CIRRUS_SMF
+#if !BX_USE_GEFORCE_SMF
   bx_geforce_c *class_ptr = (bx_geforce_c *) this_ptr;
   class_ptr->svga_write(address, value, io_len);
 }
@@ -633,7 +633,7 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
-#endif // !BX_USE_CIRRUS_SMF
+#endif // !BX_USE_GEFORCE_SMF
 
   if (address == 0x03d0 || address == 0x03d2) // RMA_ACCESS
   {

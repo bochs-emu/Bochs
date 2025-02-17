@@ -1949,6 +1949,24 @@ AC_ARG_ENABLE(clgd54xx,
     ]
   )
 
+AC_MSG_CHECKING(for GeForce emulation)
+AC_ARG_ENABLE(geforce,
+  AS_HELP_STRING([--enable-geforce], [enable GeForce emulation (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_GEFORCE, 1)
+    DISPLAY_OBJS="$DISPLAY_OBJS geforce.o"
+    DISPLAY_DLL_TARGETS="$DISPLAY_DLL_TARGETS bx_geforce.dll"
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_GEFORCE, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_GEFORCE, 0)
+    ]
+  )
+
 AC_MSG_CHECKING(for 3dfx Voodoo Graphics emulation)
 AC_ARG_ENABLE(voodoo,
   AS_HELP_STRING([--enable-voodoo], [enable 3dfx Voodoo Graphics emulation (no)]),
