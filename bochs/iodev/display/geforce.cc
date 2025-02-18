@@ -208,6 +208,7 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS crtc_config = 0x00000000;
   BX_GEFORCE_THIS crtc_cursor_config = 0x00000000;
   BX_GEFORCE_THIS crtc_gpio = 0x00000000;
+  BX_GEFORCE_THIS ramdac_cu_start_pos = 0x00000000;
   BX_GEFORCE_THIS nvpll = 0x00000000;
   BX_GEFORCE_THIS mpll = 0x00000000;
   BX_GEFORCE_THIS vpll = 0x00000000;
@@ -236,6 +237,8 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS hw_cursor.x = 0;
   BX_GEFORCE_THIS hw_cursor.y = 0;
   BX_GEFORCE_THIS hw_cursor.size = 0;
+  BX_GEFORCE_THIS hw_cursor.offset = 0x00000000;
+  BX_GEFORCE_THIS hw_cursor.enabled = false;
 
   // memory allocation.
   if (BX_GEFORCE_THIS s.memory == NULL)
@@ -318,13 +321,12 @@ void bx_geforce_c::after_restore_state(void)
   BX_GEFORCE_THIS bx_vgacore_c::after_restore_state();
 }
 
-void bx_geforce_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
-                                   unsigned height)
+void bx_geforce_c::redraw_area(Bit32s x0, Bit32s y0, Bit32u width, Bit32u height)
 {
   unsigned xti, yti, xt0, xt1, yt0, yt1;
 
   if (!BX_GEFORCE_THIS crtc.reg[0x28]) {
-    BX_GEFORCE_THIS bx_vgacore_c::redraw_area(x0,y0,width,height);
+    BX_GEFORCE_THIS bx_vgacore_c::redraw_area(x0, y0, width, height);
     return;
   }
 
@@ -334,10 +336,10 @@ void bx_geforce_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
 
   BX_GEFORCE_THIS svga_needs_update_tile = 1;
 
-  xt0 = x0 / X_TILESIZE;
-  yt0 = y0 / Y_TILESIZE;
+  xt0 = x0 <= 0 ? 0 : x0 / X_TILESIZE;
+  yt0 = y0 <= 0 ? 0 : y0 / Y_TILESIZE;
   if (x0 < BX_GEFORCE_THIS svga_xres) {
-    xt1 = (x0 + width  - 1) / X_TILESIZE;
+    xt1 = (x0 + width - 1) / X_TILESIZE;
   } else {
     xt1 = (BX_GEFORCE_THIS svga_xres - 1) / X_TILESIZE;
   }
@@ -477,7 +479,7 @@ void bx_geforce_c::mem_write(bx_phy_address addr, Bit8u value)
     Bit32u offset = addr & BX_GEFORCE_THIS memsize_mask;
     *(BX_GEFORCE_THIS s.memory + offset) = value;
     BX_GEFORCE_THIS svga_needs_update_tile = 1;
-    offset -= BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory;
+    offset -= (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
     x = (offset % BX_GEFORCE_THIS svga_pitch) / (BX_GEFORCE_THIS svga_bpp / 8);
     y = offset / BX_GEFORCE_THIS svga_pitch;
     SET_TILE_UPDATED(BX_GEFORCE_THIS, x / X_TILESIZE, y / Y_TILESIZE, 1);
@@ -709,8 +711,13 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x03d5: /* VGA: CRTC Registers (color emulation modes) */
       if (BX_GEFORCE_THIS crtc.index <= VGA_CRTC_MAX) {
         BX_GEFORCE_THIS crtc.reg[BX_GEFORCE_THIS crtc.index] = value;
-        if (BX_GEFORCE_THIS crtc.index == 0x0c ||
-            BX_GEFORCE_THIS crtc.index == 0x0d) {
+        if (BX_GEFORCE_THIS crtc.index == 0x01 ||
+            BX_GEFORCE_THIS crtc.index == 0x07 ||
+            BX_GEFORCE_THIS crtc.index == 0x09 ||
+            BX_GEFORCE_THIS crtc.index == 0x0c ||
+            BX_GEFORCE_THIS crtc.index == 0x0d ||
+            BX_GEFORCE_THIS crtc.index == 0x12 ||
+            BX_GEFORCE_THIS crtc.index == 0x15) {
           BX_GEFORCE_THIS svga_needs_update_mode = 1;
         }
       } else {
@@ -745,129 +752,58 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
 
 void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info)
 {
-  Bit16u hwcx = BX_GEFORCE_THIS hw_cursor.x;
-  Bit16u hwcy = BX_GEFORCE_THIS hw_cursor.y;
-  Bit16u size = BX_GEFORCE_THIS hw_cursor.size;
+  Bit16s hwcx = BX_GEFORCE_THIS hw_cursor.x;
+  Bit16s hwcy = BX_GEFORCE_THIS hw_cursor.y;
+  Bit8u size = BX_GEFORCE_THIS hw_cursor.size;
 
-  if (BX_GEFORCE_THIS svga_double_width) {
-    hwcx <<= 1; // FIXME: untested
-  }
-  if ((size > 0) &&
-      (xc < (unsigned)(hwcx + size)) &&
-      ((xc + X_TILESIZE) > hwcx) &&
-      (yc < (unsigned)(hwcy + size)) &&
-      ((yc + Y_TILESIZE) > hwcy)) {
-    int i;
-    unsigned w, h, pitch, cx, cy, cx0, cy0, cx1, cy1;
+  if (BX_GEFORCE_THIS hw_cursor.enabled &&
+      (int)xc < hwcx + size &&
+      (int)xc + X_TILESIZE > hwcx &&
+      (int)yc < hwcy + size &&
+      (int)yc + Y_TILESIZE > hwcy) {
+    unsigned cx0 = hwcx > (int)xc ? hwcx : xc;
+    unsigned cy0 = hwcy > (int)yc ? hwcy : yc;
+    unsigned cx1 = hwcx + size < (int)xc + X_TILESIZE ? hwcx + size : xc + X_TILESIZE;
+    unsigned cy1 = hwcy + size < (int)yc + Y_TILESIZE ? hwcy + size : yc + Y_TILESIZE;
 
-    Bit8u * tile_ptr, * tile_ptr2;
-    Bit8u * plane0_ptr, *plane0_ptr2;
-    Bit8u * plane1_ptr, *plane1_ptr2;
-    unsigned long fgcol, bgcol;
-    Bit32u hwc_offset;
-    Bit64u plane0, plane1;
-
-    cx0 = hwcx > xc ? hwcx : xc;
-    cy0 = hwcy > yc ? hwcy : yc;
-    cx1 = (unsigned)(hwcx + size) < (xc + X_TILESIZE) ? hwcx + size : xc + X_TILESIZE;
-    cy1 = (unsigned)(hwcy + size) < (yc + Y_TILESIZE) ? hwcy + size : yc + Y_TILESIZE;
-
+    unsigned w, h;
     if (info->bpp == 15) info->bpp = 16;
-    tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h) +
-               info->pitch * (cy0 - yc) + (info->bpp / 8) * (cx0 - xc);
-    if (BX_GEFORCE_THIS svga_dispbpp == 4) {
-      hwc_offset = 0x200000 - 16384; // VGA
-    } else {
-      hwc_offset = BX_GEFORCE_THIS memsize_mask - 16383; // Cirrus
-    }
-    plane0_ptr = BX_GEFORCE_THIS s.memory + hwc_offset;
-
-    switch (size) {
-      case 32:
-        plane0_ptr += (BX_GEFORCE_THIS sequencer.reg[0x13] & 0x3f) * 256;
-        plane1_ptr = plane0_ptr + 128;
-        pitch = 4;
-        break;
-
-      case 64:
-        plane0_ptr += (BX_GEFORCE_THIS sequencer.reg[0x13] & 0x3c) * 256;
-        plane1_ptr = plane0_ptr + 8;
-        pitch = 16;
-        break;
-
-      default:
-        BX_ERROR(("unsupported hardware cursor size"));
-        return;
-        break;
-    }
-
-    if (!info->is_indexed) {
-      fgcol = MAKE_COLOUR(
-        BX_GEFORCE_THIS hidden_dac.palette[45], 6, info->red_shift, info->red_mask,
-        BX_GEFORCE_THIS hidden_dac.palette[46], 6, info->green_shift, info->green_mask,
-        BX_GEFORCE_THIS hidden_dac.palette[47], 6, info->blue_shift, info->blue_mask);
-      bgcol = MAKE_COLOUR(
-        BX_GEFORCE_THIS hidden_dac.palette[0], 6, info->red_shift, info->red_mask,
-        BX_GEFORCE_THIS hidden_dac.palette[1], 6, info->green_shift, info->green_mask,
-        BX_GEFORCE_THIS hidden_dac.palette[2], 6, info->blue_shift, info->blue_mask);
-    } else {
-      // FIXME: this is a hack that works in Windows guests
-      // TODO: compare hidden DAC entries with DAC entries to find nearest match
-      fgcol = (BX_GEFORCE_THIS svga_dispbpp == 4) ? 0x3f : 0xff;
-      bgcol = 0x00;
-    }
-
-    plane0_ptr += pitch * (cy0 - hwcy);
-    plane1_ptr += pitch * (cy0 - hwcy);
-    for (cy=cy0; cy<cy1; cy++) {
-      tile_ptr2 = tile_ptr + (info->bpp/8) * (cx1 - cx0) - 1;
-      plane0_ptr2 = plane0_ptr;
-      plane1_ptr2 = plane1_ptr;
-      plane0 = plane1 = 0;
-      for (i=0; i<size; i+=8) {
-        plane0 = (plane0 << 8) | *(plane0_ptr2++);
-        plane1 = (plane1 << 8) | *(plane1_ptr2++);
-      }
-      plane0 >>= hwcx+size - cx1;
-      plane1 >>= hwcx+size - cx1;
-      for (cx=cx0; cx<cx1; cx++) {
-        if (plane0 & 1) {
-          if (plane1 & 1) {
-            if (info->is_little_endian) {
-              for (i=info->bpp-8; i>-8; i-=8) {
-                *(tile_ptr2--) = (Bit8u)(fgcol >> i);
-              }
-            } else {
-              for (i=0; i<info->bpp; i+=8) {
-                *(tile_ptr2--) = (Bit8u)(fgcol >> i);
-              }
-            }
-          } else {
-            for (i=0; i<info->bpp; i+=8) {
-              *(tile_ptr2--) ^= 0xff;
-            }
+    Bit8u* tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h) +
+               info->pitch * (cy0 - yc) + info->bpp / 8 * (cx0 - xc);
+    unsigned pitch = BX_GEFORCE_THIS hw_cursor.size * 4;
+    Bit8u* cursor_ptr = BX_GEFORCE_THIS s.memory +
+      BX_GEFORCE_THIS hw_cursor.offset + pitch * (cy0 - hwcy);
+    Bit8u* vid_ptr = BX_GEFORCE_THIS disp_ptr + BX_GEFORCE_THIS svga_pitch * cy0;
+    for (unsigned cy = cy0; cy < cy1; cy++) {
+      Bit8u* tile_ptr2 = tile_ptr;
+      Bit8u* cursor_ptr2 = cursor_ptr + 4 * (cx0 - hwcx);
+      Bit8u* vid_ptr2 = vid_ptr + 4 * cx0;
+      for (unsigned cx = cx0; cx < cx1; cx++) {
+        Bit8u alpha = cursor_ptr2[3];
+        Bit32u color;
+        if (alpha) {
+          Bit8u b = (vid_ptr2[0] * (0xFF - alpha) >> 8) + cursor_ptr2[0];
+          Bit8u g = (vid_ptr2[1] * (0xFF - alpha) >> 8) + cursor_ptr2[1];
+          Bit8u r = (vid_ptr2[2] * (0xFF - alpha) >> 8) + cursor_ptr2[2];
+          color = b << 0 | g << 8 | r << 16;
+        } else {
+          color = vid_ptr2[0] << 0 | vid_ptr2[1] << 8 | vid_ptr2[2] << 16;
+        }
+        if (info->is_little_endian) {
+          for (int i = 0; i < info->bpp; i += 8) {
+            *(tile_ptr2++) = (Bit8u)(color >> i);
           }
         } else {
-          if (plane1 & 1) {
-            if (info->is_little_endian) {
-              for (i=info->bpp-8; i>-8; i-=8) {
-                *(tile_ptr2--) = (Bit8u)(bgcol >> i);
-              }
-            } else {
-              for (i=0; i<info->bpp; i+=8) {
-                *(tile_ptr2--) = (Bit8u)(bgcol >> i);
-              }
-            }
-          } else {
-            tile_ptr2 -= (info->bpp/8);
+          for (int i = info->bpp - 8; i > -8; i -= 8) {
+            *(tile_ptr2++) = (Bit8u)(color >> i);
           }
         }
-        plane0 >>= 1;
-        plane1 >>= 1;
+        cursor_ptr2 += 4;
+        vid_ptr2 += 4;
       }
       tile_ptr += info->pitch;
-      plane0_ptr += pitch;
-      plane1_ptr += pitch;
+      cursor_ptr += pitch;
+      vid_ptr += BX_GEFORCE_THIS svga_pitch;
     }
   }
 }
@@ -1369,12 +1305,16 @@ void bx_geforce_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
 {
   BX_ERROR(("crtc: index 0x%02x write 0x%02x", index, (unsigned)value));
 
+  bool update_cursor_addr = false;
+
   if (index == 0x19)
     BX_GEFORCE_THIS svga_needs_update_mode = 1;
   else if (index == 0x1d || index == 0x1e)
     BX_GEFORCE_THIS bank_base[index - 0x1d] = value * 0x8000;
   else if (index == 0x28 && value != 0x00)
     BX_GEFORCE_THIS svga_needs_update_mode = 1;
+  else if (index == 0x2f || index == 0x30 || index == 0x31)
+    update_cursor_addr = true;
   else if (index == 0x37)
     BX_GEFORCE_THIS ddc.write((value >> 5) & 1, (value >> 4) & 1);
   else if (index == 0x3f)
@@ -1385,6 +1325,16 @@ void bx_geforce_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
   }
   else
     BX_PANIC(("crtc: unknown index 0x%02x write", index));
+
+  if (update_cursor_addr) {
+    BX_GEFORCE_THIS hw_cursor.enabled = BX_GEFORCE_THIS crtc.reg[0x31] & 1;
+    BX_GEFORCE_THIS hw_cursor.offset =
+      BX_GEFORCE_THIS crtc.reg[0x31] >> 2 << 11 |
+      (BX_GEFORCE_THIS crtc.reg[0x30] & 0x7F) << 17 |
+      BX_GEFORCE_THIS crtc.reg[0x2f] << 24;
+    BX_GEFORCE_THIS redraw_area(BX_GEFORCE_THIS hw_cursor.x, BX_GEFORCE_THIS hw_cursor.y,
+      BX_GEFORCE_THIS hw_cursor.size, BX_GEFORCE_THIS hw_cursor.size);
+  }
 }
 
 Bit8u bx_geforce_c::register_read8(Bit32u address)
@@ -1509,6 +1459,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS crtc_gpio;
   } else if (address == 0x6013da) {
     value = register_read8(address);
+  } else if (address == 0x680300) {
+    value = BX_GEFORCE_THIS ramdac_cu_start_pos;
   } else if (address == 0x680500) {
     value = BX_GEFORCE_THIS nvpll;
   } else if (address == 0x680504) {
@@ -1600,8 +1552,19 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS crtc_config = value;
   } else if (address == 0x600810) {
     BX_GEFORCE_THIS crtc_cursor_config = value;
+    BX_GEFORCE_THIS hw_cursor.size = value & 0x00010000 ? 64 : 32;
   } else if (address == 0x600818) {
     BX_GEFORCE_THIS crtc_gpio = value;
+  } else if (address == 0x680300) {
+    Bit16s prevx = BX_GEFORCE_THIS hw_cursor.x;
+    Bit16s prevy = BX_GEFORCE_THIS hw_cursor.y;
+    BX_GEFORCE_THIS ramdac_cu_start_pos = value;
+    BX_GEFORCE_THIS hw_cursor.x = BX_GEFORCE_THIS ramdac_cu_start_pos & 0xFFFF;
+    BX_GEFORCE_THIS hw_cursor.y = BX_GEFORCE_THIS ramdac_cu_start_pos >> 16;
+    BX_GEFORCE_THIS redraw_area(prevx, prevy,
+      BX_GEFORCE_THIS hw_cursor.size, BX_GEFORCE_THIS hw_cursor.size);
+    BX_GEFORCE_THIS redraw_area(BX_GEFORCE_THIS hw_cursor.x, BX_GEFORCE_THIS hw_cursor.y,
+      BX_GEFORCE_THIS hw_cursor.size, BX_GEFORCE_THIS hw_cursor.size);
   } else if (address == 0x680500) {
     BX_GEFORCE_THIS nvpll = value;
   } else if (address == 0x680504) {

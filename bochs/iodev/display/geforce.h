@@ -53,8 +53,8 @@ public:
 
   virtual bool init_vga_extension(void);
   virtual void reset(unsigned type);
-  virtual void redraw_area(unsigned x0, unsigned y0,
-                           unsigned width, unsigned height);
+  virtual void redraw_area(Bit32s x0, Bit32s y0,
+                           Bit32u width, Bit32u height);
   virtual Bit8u mem_read(bx_phy_address addr);
   virtual void mem_write(bx_phy_address addr, Bit8u value);
   virtual void get_text_snapshot(Bit8u **text_snapshot,
@@ -140,6 +140,7 @@ private:
   Bit32u crtc_config;
   Bit32u crtc_cursor_config;
   Bit32u crtc_gpio;
+  Bit32u ramdac_cu_start_pos;
   Bit32u nvpll;
   Bit32u mpll;
   Bit32u vpll;
@@ -200,7 +201,10 @@ private:
   } bitblt;
 
   struct {
-    Bit16u x, y, size;
+    Bit32u offset;
+    Bit16s x, y;
+    Bit8u size;
+    bool enabled;
   } hw_cursor;
 
   struct {
