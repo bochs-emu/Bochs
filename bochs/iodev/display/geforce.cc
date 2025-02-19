@@ -400,11 +400,14 @@ bool bx_geforce_c::geforce_mem_read_handler(bx_phy_address addr, unsigned len,
 
 Bit8u bx_geforce_c::mem_read(bx_phy_address addr)
 {
-  if ((BX_GEFORCE_THIS pci_enabled) && (BX_GEFORCE_THIS pci_rom_size > 0)) {
+  if (BX_GEFORCE_THIS pci_rom_size > 0) {
     Bit32u mask = (BX_GEFORCE_THIS pci_rom_size - 1);
     if (((Bit32u)addr & ~mask) == BX_GEFORCE_THIS pci_rom_address) {
       if (BX_GEFORCE_THIS pci_conf[0x30] & 0x01) {
-        return BX_GEFORCE_THIS pci_rom[addr & mask];
+        if (BX_GEFORCE_THIS pci_conf[0x50] == 0x00)
+          return BX_GEFORCE_THIS pci_rom[addr & mask];
+        else
+          return BX_GEFORCE_THIS s.memory[(addr & mask) + RAMIN_OFFSET];
       } else {
         return 0xff;
       }
@@ -414,13 +417,13 @@ Bit8u bx_geforce_c::mem_read(bx_phy_address addr)
   if ((addr >= BX_GEFORCE_THIS pci_bar[1].addr) &&
       (addr < (BX_GEFORCE_THIS pci_bar[1].addr + GEFORCE_VIDEO_MEMORY_BYTES))) {
     Bit32u offset = addr & BX_GEFORCE_THIS memsize_mask;
-    return *(BX_GEFORCE_THIS s.memory + offset);
+    return BX_GEFORCE_THIS s.memory[offset];
   }
 
   if ((addr >= BX_GEFORCE_THIS pci_bar[2].addr) &&
       (addr < (BX_GEFORCE_THIS pci_bar[2].addr + GEFORCE_BAR2_SIZE))) {
     Bit32u offset = addr & (GEFORCE_BAR2_SIZE - 1);
-    BX_ERROR(("BAR2 read from 0x%08x", offset));
+    BX_PANIC(("BAR2 read from 0x%08x", offset));
     return 0xFF;
   }
 
@@ -477,7 +480,7 @@ void bx_geforce_c::mem_write(bx_phy_address addr, Bit8u value)
       (addr < (BX_GEFORCE_THIS pci_bar[1].addr + GEFORCE_VIDEO_MEMORY_BYTES))) {
     unsigned x, y;
     Bit32u offset = addr & BX_GEFORCE_THIS memsize_mask;
-    *(BX_GEFORCE_THIS s.memory + offset) = value;
+    BX_GEFORCE_THIS s.memory[offset] = value;
     BX_GEFORCE_THIS svga_needs_update_tile = 1;
     offset -= (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
     x = (offset % BX_GEFORCE_THIS svga_pitch) / (BX_GEFORCE_THIS svga_bpp / 8);
@@ -489,7 +492,7 @@ void bx_geforce_c::mem_write(bx_phy_address addr, Bit8u value)
   if ((addr >= BX_GEFORCE_THIS pci_bar[2].addr) &&
       (addr < (BX_GEFORCE_THIS pci_bar[2].addr + GEFORCE_BAR2_SIZE))) {
     Bit32u offset = addr & (GEFORCE_BAR2_SIZE - 1);
-    BX_ERROR(("BAR2 write to 0x%08x, value = 0x%02x", offset, value));
+    BX_PANIC(("BAR2 write to 0x%08x, value = 0x%02x", offset, value));
     return;
   }
 
@@ -503,9 +506,13 @@ void bx_geforce_c::mem_write(bx_phy_address addr, Bit8u value)
     unsigned x, y;
 
     offset = addr & 0xffff;
-    offset += bank_base[0];
+    if (BX_GEFORCE_THIS crtc.reg[0x1c] & 0x80) {
+      BX_GEFORCE_THIS s.memory[offset + RAMIN_OFFSET] = value;
+      return;
+    }
+    offset += BX_GEFORCE_THIS bank_base[0];
     offset &= BX_GEFORCE_THIS memsize_mask;
-    *(BX_GEFORCE_THIS s.memory + offset) = value;
+    BX_GEFORCE_THIS s.memory[offset] = value;
     BX_GEFORCE_THIS svga_needs_update_tile = 1;
     x = (offset % BX_GEFORCE_THIS svga_pitch) / (BX_GEFORCE_THIS svga_bpp / 8);
     y = offset / BX_GEFORCE_THIS svga_pitch;
@@ -1350,7 +1357,10 @@ Bit8u bx_geforce_c::register_read8(Bit32u address)
 {
   Bit8u value = 0xFF;
   if (address >= 0x300000 && address < 0x310000) {
-    value = BX_GEFORCE_THIS pci_rom[address - 0x300000];
+    if (BX_GEFORCE_THIS pci_conf[0x50] == 0x00)
+      value = BX_GEFORCE_THIS pci_rom[address - 0x300000];
+    else
+      value = 0x00;
   } else if (address == 0xc03c4 || address == 0xc03c5 ||
              address == 0xc03cc || address == 0xc03cf) {
     value = SVGA_READ(address - 0xc0000, 1);
@@ -1441,11 +1451,15 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS straps0_primary;
   else if (address >= 0x300000 && address < 0x310000) {
     Bit32u offset = address - 0x300000;
-    value = 
-      (BX_GEFORCE_THIS pci_rom[offset + 0] << 0) |
-      (BX_GEFORCE_THIS pci_rom[offset + 1] << 8) |
-      (BX_GEFORCE_THIS pci_rom[offset + 2] << 16) |
-      (BX_GEFORCE_THIS pci_rom[offset + 3] << 24);
+    if (BX_GEFORCE_THIS pci_conf[0x50] == 0x00) {
+      value = 
+        (BX_GEFORCE_THIS pci_rom[offset + 0] << 0) |
+        (BX_GEFORCE_THIS pci_rom[offset + 1] << 8) |
+        (BX_GEFORCE_THIS pci_rom[offset + 2] << 16) |
+        (BX_GEFORCE_THIS pci_rom[offset + 3] << 24);
+    } else {
+      value = 0x00000000;
+    }
   } else if (address == 0x400100) {
     value = BX_GEFORCE_THIS graph_intr;
   } else if (address == 0x400140) {
@@ -1633,10 +1647,26 @@ void bx_geforce_c::svga_init_pcihandlers(void)
     BX_GEFORCE_THIS pci_conf[0x2d] = 0x10;
     BX_GEFORCE_THIS pci_conf[0x2e] = 0x63;
     BX_GEFORCE_THIS pci_conf[0x2f] = 0x28;
-    BX_GEFORCE_THIS pci_conf[0x4c] = 0x04;
-    BX_GEFORCE_THIS pci_conf[0x4d] = 0x01;
-    BX_GEFORCE_THIS pci_conf[0x4e] = 0x00;
-    BX_GEFORCE_THIS pci_conf[0x4f] = 0x1F;
+    BX_GEFORCE_THIS pci_conf[0x40] = BX_GEFORCE_THIS pci_conf[0x2c];
+    BX_GEFORCE_THIS pci_conf[0x41] = BX_GEFORCE_THIS pci_conf[0x2d];
+    BX_GEFORCE_THIS pci_conf[0x42] = BX_GEFORCE_THIS pci_conf[0x2e];
+    BX_GEFORCE_THIS pci_conf[0x43] = BX_GEFORCE_THIS pci_conf[0x2f];
+    BX_GEFORCE_THIS pci_conf[0x44] = 0x02;
+    BX_GEFORCE_THIS pci_conf[0x45] = 0x00;
+    BX_GEFORCE_THIS pci_conf[0x46] = 0x20;
+    BX_GEFORCE_THIS pci_conf[0x47] = 0x00;
+    BX_GEFORCE_THIS pci_conf[0x48] = 0x07;
+    BX_GEFORCE_THIS pci_conf[0x49] = 0x00;
+    BX_GEFORCE_THIS pci_conf[0x4a] = 0x00;
+    BX_GEFORCE_THIS pci_conf[0x4b] = 0x1F;
+    BX_GEFORCE_THIS pci_conf[0x54] = 0x01;
+    BX_GEFORCE_THIS pci_conf[0x55] = 0x00;
+    BX_GEFORCE_THIS pci_conf[0x56] = 0x00;
+    BX_GEFORCE_THIS pci_conf[0x57] = 0x00;
+    BX_GEFORCE_THIS pci_conf[0x60] = 0x01;
+    BX_GEFORCE_THIS pci_conf[0x61] = 0x44;
+    BX_GEFORCE_THIS pci_conf[0x62] = 0x02;
+    BX_GEFORCE_THIS pci_conf[0x63] = 0x00;
 }
 
 void bx_geforce_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
