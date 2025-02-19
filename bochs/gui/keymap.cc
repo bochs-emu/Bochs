@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2024  The Bochs Project
+//  Copyright (C) 2002-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -29,6 +29,10 @@
 #include "bochs.h"
 #include "gui.h"
 #include "keymap.h"
+
+#if defined(__APPLE__)
+#include <libgen.h>
+#endif
 
 // Table of bochs "BX_KEY_*" symbols
 // the table must be in BX_KEY_* order

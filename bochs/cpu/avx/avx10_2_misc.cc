@@ -48,6 +48,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVD_VdWdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+#if BX_SUPPORT_EVEX
+
 #include "softfloat3e/include/softfloat.h"
 #include "decoder/ia_opcodes.h"
 
@@ -169,5 +171,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VDPPHPS_MASK_VpsHdqWdqR(bxInstruction_c *i
   BX_WRITE_AVX_REGZ(i->dst(), dst, len);
   BX_NEXT_INSTR(i);
 }
+
+#endif
 
 #endif

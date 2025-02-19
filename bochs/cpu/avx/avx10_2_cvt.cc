@@ -26,7 +26,7 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#if BX_SUPPORT_AVX
+#if BX_SUPPORT_EVEX
 
 #include "softfloat3e/include/softfloat.h"
 
