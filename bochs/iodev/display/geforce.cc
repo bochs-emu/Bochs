@@ -709,17 +709,21 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
       break;
     case 0x03b5: /* VGA: CRTC Registers (monochrome emulation modes) */
     case 0x03d5: /* VGA: CRTC Registers (color emulation modes) */
+      if (BX_GEFORCE_THIS crtc.index == 0x01 ||
+          BX_GEFORCE_THIS crtc.index == 0x07 ||
+          BX_GEFORCE_THIS crtc.index == 0x09 ||
+          BX_GEFORCE_THIS crtc.index == 0x0c ||
+          BX_GEFORCE_THIS crtc.index == 0x0d ||
+          BX_GEFORCE_THIS crtc.index == 0x12 ||
+          BX_GEFORCE_THIS crtc.index == 0x13 ||
+          BX_GEFORCE_THIS crtc.index == 0x15 ||
+          BX_GEFORCE_THIS crtc.index == 0x19 ||
+          BX_GEFORCE_THIS crtc.index == 0x28 ||
+          BX_GEFORCE_THIS crtc.index == 0x42) {
+        BX_GEFORCE_THIS svga_needs_update_mode = 1;
+      }
       if (BX_GEFORCE_THIS crtc.index <= VGA_CRTC_MAX) {
         BX_GEFORCE_THIS crtc.reg[BX_GEFORCE_THIS crtc.index] = value;
-        if (BX_GEFORCE_THIS crtc.index == 0x01 ||
-            BX_GEFORCE_THIS crtc.index == 0x07 ||
-            BX_GEFORCE_THIS crtc.index == 0x09 ||
-            BX_GEFORCE_THIS crtc.index == 0x0c ||
-            BX_GEFORCE_THIS crtc.index == 0x0d ||
-            BX_GEFORCE_THIS crtc.index == 0x12 ||
-            BX_GEFORCE_THIS crtc.index == 0x15) {
-          BX_GEFORCE_THIS svga_needs_update_mode = 1;
-        }
       } else {
         BX_GEFORCE_THIS svga_write_crtc(address, BX_GEFORCE_THIS crtc.index, value);
         return;
@@ -819,12 +823,18 @@ void bx_geforce_c::update(void)
   }
 
   if (BX_GEFORCE_THIS svga_needs_update_mode) {
-    Bit32u iTopOffset = 
-      (BX_GEFORCE_THIS crtc.reg[0x0c] << 8) +
-      BX_GEFORCE_THIS crtc.reg[0x0d] +
-      ((BX_GEFORCE_THIS crtc.reg[0x19] & 0x1F) << 16);
+    Bit32u iTopOffset =
+      BX_GEFORCE_THIS crtc.reg[0x0d] |
+      BX_GEFORCE_THIS crtc.reg[0x0c] << 8 |
+      (BX_GEFORCE_THIS crtc.reg[0x19] & 0x1F) << 16;
     iTopOffset <<= 2;
     iTopOffset += BX_GEFORCE_THIS crtc_start;
+
+    Bit32u iPitch =
+      BX_GEFORCE_THIS crtc.reg[0x13] |
+      BX_GEFORCE_THIS crtc.reg[0x19] >> 5 << 8 |
+      (BX_GEFORCE_THIS crtc.reg[0x42] >> 6 & 1) << 11;
+    iPitch <<= 3;
 
     Bit8u iBpp;
     if (crtc28 == 0x01)
@@ -849,7 +859,7 @@ void bx_geforce_c::update(void)
     BX_GEFORCE_THIS svga_bpp = iBpp;
     BX_GEFORCE_THIS svga_dispbpp = iBpp;
     BX_GEFORCE_THIS disp_ptr = BX_GEFORCE_THIS s.memory + iTopOffset;
-    BX_GEFORCE_THIS svga_pitch = svga_xres * iBpp / 8;
+    BX_GEFORCE_THIS svga_pitch = iPitch;
     // compatibilty settings for VGA core
     BX_GEFORCE_THIS s.last_xres = iWidth;
     BX_GEFORCE_THIS s.last_yres = iHeight;
@@ -1307,12 +1317,8 @@ void bx_geforce_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
 
   bool update_cursor_addr = false;
 
-  if (index == 0x19)
-    BX_GEFORCE_THIS svga_needs_update_mode = 1;
-  else if (index == 0x1d || index == 0x1e)
+  if (index == 0x1d || index == 0x1e)
     BX_GEFORCE_THIS bank_base[index - 0x1d] = value * 0x8000;
-  else if (index == 0x28 && value != 0x00)
-    BX_GEFORCE_THIS svga_needs_update_mode = 1;
   else if (index == 0x2f || index == 0x30 || index == 0x31)
     update_cursor_addr = true;
   else if (index == 0x37)
@@ -1327,13 +1333,16 @@ void bx_geforce_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
     BX_PANIC(("crtc: unknown index 0x%02x write", index));
 
   if (update_cursor_addr) {
+    bool prev_enabled = BX_GEFORCE_THIS hw_cursor.enabled;
     BX_GEFORCE_THIS hw_cursor.enabled = BX_GEFORCE_THIS crtc.reg[0x31] & 1;
     BX_GEFORCE_THIS hw_cursor.offset =
       BX_GEFORCE_THIS crtc.reg[0x31] >> 2 << 11 |
       (BX_GEFORCE_THIS crtc.reg[0x30] & 0x7F) << 17 |
       BX_GEFORCE_THIS crtc.reg[0x2f] << 24;
-    BX_GEFORCE_THIS redraw_area(BX_GEFORCE_THIS hw_cursor.x, BX_GEFORCE_THIS hw_cursor.y,
-      BX_GEFORCE_THIS hw_cursor.size, BX_GEFORCE_THIS hw_cursor.size);
+    if (prev_enabled != BX_GEFORCE_THIS hw_cursor.enabled) {
+      BX_GEFORCE_THIS redraw_area(BX_GEFORCE_THIS hw_cursor.x, BX_GEFORCE_THIS hw_cursor.y,
+        BX_GEFORCE_THIS hw_cursor.size, BX_GEFORCE_THIS hw_cursor.size);
+    }
   }
 }
 
