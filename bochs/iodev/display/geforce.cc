@@ -100,6 +100,7 @@
 #define RAMIN_OFFSET                (GEFORCE_VIDEO_MEMORY_BYTES - 0x100000)
 
 
+#define PMC_ID_GEFORCE_3_TI_500     0x020200A5
 #define STRAPS0_PRIMARY             (0xFFF86C6B | 0x00000180) // disable TV out
 
 static bx_geforce_c *theSvga = NULL;
@@ -187,6 +188,9 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS bus_12xx[i] = 0x00000000;
   BX_GEFORCE_THIS fifo_intr = 0x00000000;
   BX_GEFORCE_THIS fifo_intr_en = 0x00000000;
+  BX_GEFORCE_THIS fifo_ramht = 0x00000000;
+  BX_GEFORCE_THIS fifo_ramfc = 0x00000000;
+  BX_GEFORCE_THIS fifo_ramro = 0x00000000;
   BX_GEFORCE_THIS rma_addr = 0x00000000;
   BX_GEFORCE_THIS timer_intr = 0x00000000;
   BX_GEFORCE_THIS timer_intr_en = 0x00000000;
@@ -218,7 +222,19 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS ramdac_fp_hcrtc = 0x00000000;
   BX_GEFORCE_THIS ramdac_fp_tg_control = 0x00000000;
 
-  for (i = 0; i < 4*1024*1024; i++)
+  for (i = 0; i < GEFORCE_CHANNEL_COUNT; i++) {
+    BX_GEFORCE_THIS channels[i].initialized = false;
+    BX_GEFORCE_THIS channels[i].dma_put = 0x00000000;
+    BX_GEFORCE_THIS channels[i].dma_get = 0x00000000;
+    BX_GEFORCE_THIS channels[i].ref = 0x00000000;
+    BX_GEFORCE_THIS channels[i].pt = 0x00000000;
+    BX_GEFORCE_THIS channels[i].dma_state.mthd = 0x00000000;
+    BX_GEFORCE_THIS channels[i].dma_state.subc = 0x00000000;
+    BX_GEFORCE_THIS channels[i].dma_state.mcnt = 0x00000000;
+    BX_GEFORCE_THIS channels[i].dma_state.ni = false;
+  }
+
+  for (i = 0; i < 4 * 1024 * 1024; i++)
     BX_GEFORCE_THIS unk_regs[i] = 0x00000000;
 
   BX_GEFORCE_THIS svga_unlock_special = 0;
@@ -338,12 +354,12 @@ void bx_geforce_c::redraw_area(Bit32s x0, Bit32s y0, Bit32u width, Bit32u height
 
   xt0 = x0 <= 0 ? 0 : x0 / X_TILESIZE;
   yt0 = y0 <= 0 ? 0 : y0 / Y_TILESIZE;
-  if (x0 < BX_GEFORCE_THIS svga_xres) {
+  if (x0 < (Bit32s)BX_GEFORCE_THIS svga_xres) {
     xt1 = (x0 + width - 1) / X_TILESIZE;
   } else {
     xt1 = (BX_GEFORCE_THIS svga_xres - 1) / X_TILESIZE;
   }
-  if (y0 < BX_GEFORCE_THIS svga_yres) {
+  if (y0 < (Bit32s)BX_GEFORCE_THIS svga_yres) {
     yt1 = (y0 + height - 1) / Y_TILESIZE;
   } else {
     yt1 = (BX_GEFORCE_THIS svga_yres - 1) / Y_TILESIZE;
@@ -606,6 +622,7 @@ Bit32u bx_geforce_c::svga_read(Bit32u address, unsigned io_len)
       else
         break;
     case 0x03c2: /* Input Status 0 */
+      BX_ERROR(("Input Status 0 read"));
       return 0x10; // Monitor presence detection (DAC Sensing)
     case 0x03c4: /* VGA: Sequencer Index Register */
       return BX_GEFORCE_THIS sequencer.index;
@@ -1356,7 +1373,9 @@ void bx_geforce_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
 Bit8u bx_geforce_c::register_read8(Bit32u address)
 {
   Bit8u value = 0xFF;
-  if (address >= 0x300000 && address < 0x310000) {
+  if (address >= 0x1800 && address < 0x1900) {
+    value = BX_GEFORCE_THIS pci_conf[address - 0x1800];
+  } else if (address >= 0x300000 && address < 0x310000) {
     if (BX_GEFORCE_THIS pci_conf[0x50] == 0x00)
       value = BX_GEFORCE_THIS pci_rom[address - 0x300000];
     else
@@ -1397,12 +1416,38 @@ void bx_geforce_c::register_write8(Bit32u address, Bit8u value)
     BX_PANIC(("Unknown 8 bit register 0x%08x write", address));
 }
 
+Bit32u bx_geforce_c::ramin_read32(Bit32u address)
+{
+  Bit32u offset = address + RAMIN_OFFSET;
+  return
+    BX_GEFORCE_THIS s.memory[offset + 0] << 0 |
+    BX_GEFORCE_THIS s.memory[offset + 1] << 8 |
+    BX_GEFORCE_THIS s.memory[offset + 2] << 16 |
+    BX_GEFORCE_THIS s.memory[offset + 3] << 24;
+}
+
+Bit32u bx_geforce_c::physical_read32(Bit32u address)
+{
+  Bit8u data[4];
+  DEV_MEM_READ_PHYSICAL(address, 4, data);
+  return data[0] << 0 | data[1] << 8 | data[2] << 16 | data[3] << 24;
+}
+
+void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param)
+{
+  BX_ERROR(("execute_command: chid 0x%02x, subc 0x%02x, method 0x%04x, param 0x%08x",
+      chid, subc, method, param));
+  if (method == 0x0014) {
+    BX_GEFORCE_THIS channels[chid].ref = param;
+  }
+}
+
 Bit32u bx_geforce_c::register_read32(Bit32u address)
 {
   Bit32u value = 0;
 
   if (address == 0x0)
-    value = 0x020200A5; // PMC_ID
+    value = PMC_ID_GEFORCE_3_TI_500;
   else if (address == 0x100)
     value = BX_GEFORCE_THIS mc_intr;
   else if (address == 0x140)
@@ -1424,6 +1469,12 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS fifo_intr;
   } else if (address == 0x2140) {
     value = BX_GEFORCE_THIS fifo_intr_en;
+  } else if (address == 0x2210) {
+    value = BX_GEFORCE_THIS fifo_ramht;
+  } else if (address == 0x2214) {
+    value = BX_GEFORCE_THIS fifo_ramfc;
+  } else if (address == 0x2218) {
+    value = BX_GEFORCE_THIS fifo_ramro;
   } else if (address == 0x9100) {
     value = BX_GEFORCE_THIS timer_intr;
   } else if (address == 0x9140) {
@@ -1501,12 +1552,17 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
   } else if (address == 0x680848) {
     value = BX_GEFORCE_THIS ramdac_fp_tg_control;
   } else if (address >= 0x700000 && address < 0x800000) {
-    Bit32u offset = address - 0x700000 + RAMIN_OFFSET;
-    value = 
-      (BX_GEFORCE_THIS s.memory[offset + 0] << 0) |
-      (BX_GEFORCE_THIS s.memory[offset + 1] << 8) |
-      (BX_GEFORCE_THIS s.memory[offset + 2] << 16) |
-      (BX_GEFORCE_THIS s.memory[offset + 3] << 24);
+    value = ramin_read32(address - 0x700000);
+  } else if (address >= 0x800000 && address < 0x900000) {
+    Bit32u chid = address >> 16 & 0x1F;
+    Bit32u subc = address >> 13 & 0x07;
+    Bit32u offset = address & 0x1FFF;
+    if (offset == 0x40)
+      value = BX_GEFORCE_THIS channels[chid].dma_put;
+    else if (offset == 0x44)
+      value = BX_GEFORCE_THIS channels[chid].dma_get;
+    else if (offset == 0x48)
+      value = BX_GEFORCE_THIS channels[chid].ref;
   } else {
     value = BX_GEFORCE_THIS unk_regs[address / 4];
   }
@@ -1531,6 +1587,12 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS fifo_intr &= ~value;
   } else if (address == 0x2140) {
     BX_GEFORCE_THIS fifo_intr_en = value;
+  } else if (address == 0x2210) {
+    BX_GEFORCE_THIS fifo_ramht = value;
+  } else if (address == 0x2214) {
+    BX_GEFORCE_THIS fifo_ramfc = value;
+  } else if (address == 0x2218) {
+    BX_GEFORCE_THIS fifo_ramro = value;
   } else if (address == 0x9100) {
     BX_GEFORCE_THIS timer_intr &= ~value;
   } else if (address == 0x9140) {
@@ -1610,6 +1672,55 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS s.memory[offset + 1] = (value >> 8) & 0xFF;
     BX_GEFORCE_THIS s.memory[offset + 2] = (value >> 16) & 0xFF;
     BX_GEFORCE_THIS s.memory[offset + 3] = (value >> 24) & 0xFF;
+  } else if (address >= 0x800000 && address < 0x900000) {
+    Bit32u chid = address >> 16 & 0x1F;
+    Bit32u subc = address >> 13 & 0x07;
+    Bit32u offset = address & 0x1FFF;
+    if (offset == 0x40) {
+      if (!BX_GEFORCE_THIS channels[chid].initialized) {
+        Bit32u ramfc = (BX_GEFORCE_THIS fifo_ramfc & 0xFFF) << 8;
+        BX_GEFORCE_THIS channels[chid].dma_put = ramin_read32(ramfc + chid * 0x40 + 0x0);
+        BX_GEFORCE_THIS channels[chid].dma_get = ramin_read32(ramfc + chid * 0x40 + 0x4);
+        Bit32u push_obj = ramin_read32(ramfc + chid * 0x40 + 0xC) << 4;
+        if (ramin_read32(push_obj) != 0x2103d)
+          BX_PANIC(("something went wrong"));
+        BX_GEFORCE_THIS channels[chid].pt = push_obj + 0x8;
+        BX_GEFORCE_THIS channels[chid].initialized = true;
+      }
+      BX_GEFORCE_THIS channels[chid].dma_put = value;
+      while (BX_GEFORCE_THIS channels[chid].dma_get != BX_GEFORCE_THIS channels[chid].dma_put) {
+        BX_ERROR(("processing fifo at 0x%08x", BX_GEFORCE_THIS channels[chid].dma_get));
+        Bit32u dma_get_offset = BX_GEFORCE_THIS channels[chid].dma_get & 0xFFF;
+        Bit32u dma_get_page_index = BX_GEFORCE_THIS channels[chid].dma_get >> 12;
+        Bit32u dma_get_page = ramin_read32(
+          BX_GEFORCE_THIS channels[chid].pt + dma_get_page_index * 4) & 0xFFFFF000;
+        Bit32u word = physical_read32(dma_get_page | dma_get_offset);
+        BX_GEFORCE_THIS channels[chid].dma_get += 4;
+
+        if (BX_GEFORCE_THIS channels[chid].dma_state.mcnt) {
+          execute_command(chid,
+            BX_GEFORCE_THIS channels[chid].dma_state.subc,
+            BX_GEFORCE_THIS channels[chid].dma_state.mthd,
+            word);
+          if (!BX_GEFORCE_THIS channels[chid].dma_state.ni)
+            BX_GEFORCE_THIS channels[chid].dma_state.mthd++;
+          BX_GEFORCE_THIS channels[chid].dma_state.mcnt--;
+        } else {
+          if ((word & 0xe0000003) == 0x20000000) {
+            // old jump
+            BX_GEFORCE_THIS channels[chid].dma_get = word & 0x1fffffff;
+          } else if ((word & 0xe0030003) == 0) {
+            // increasing methods
+            BX_GEFORCE_THIS channels[chid].dma_state.mthd = (word >> 2) & 0x7ff;
+            BX_GEFORCE_THIS channels[chid].dma_state.subc = (word >> 13) & 7;
+            BX_GEFORCE_THIS channels[chid].dma_state.mcnt = (word >> 18) & 0x7ff;
+            BX_GEFORCE_THIS channels[chid].dma_state.ni = 0;
+          } else {
+            BX_PANIC(("fifo: unexpected word 0x%08x", word));
+          }
+        }
+      }
+    }
   } else {
     BX_GEFORCE_THIS unk_regs[address / 4] = value;
   }

@@ -45,6 +45,8 @@
 // Size of internal cache memory for bitblt. (must be >= 256 and 4-byte aligned)
 #define CIRRUS_BLT_CACHESIZE (2048 * 4)
 
+#define GEFORCE_CHANNEL_COUNT 32
+
 class bx_geforce_c : public bx_vgacore_c
 {
 public:
@@ -92,6 +94,11 @@ private:
   BX_GEFORCE_SMF Bit32u register_read32(Bit32u address);
   BX_GEFORCE_SMF void  register_write32(Bit32u address, Bit32u value);
 
+  BX_GEFORCE_SMF Bit32u ramin_read32(Bit32u address);
+  BX_GEFORCE_SMF Bit32u physical_read32(Bit32u address);
+
+  BX_GEFORCE_SMF void execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
+
   struct {
     Bit8u index;
     Bit8u reg[GEFORCE_CRTC_MAX+1];
@@ -119,6 +126,9 @@ private:
   Bit32u bus_12xx[0x40];
   Bit32u fifo_intr;
   Bit32u fifo_intr_en;
+  Bit32u fifo_ramht;
+  Bit32u fifo_ramfc;
+  Bit32u fifo_ramro;
   Bit32u rma_addr;
   Bit32u timer_intr;
   Bit32u timer_intr_en;
@@ -150,6 +160,20 @@ private:
   Bit32u ramdac_fp_hcrtc;
   Bit32u ramdac_fp_tg_control;
 
+  struct {
+    bool initialized;
+    Bit32u dma_put;
+    Bit32u dma_get;
+    Bit32u ref;
+    Bit32u pt;
+    struct {
+      Bit32u mthd;
+      Bit32u subc;
+      Bit32u mcnt;
+      bool ni;
+    } dma_state;
+  } channels[GEFORCE_CHANNEL_COUNT];
+
   Bit32u unk_regs[4*1024*1024]; // temporary
 
   bool svga_unlock_special;
@@ -171,36 +195,6 @@ private:
   Bit8u ext_latch[4];
 
   struct {
-    bx_bitblt_rop_t rop_handler;
-    int pixelwidth;
-    int bltwidth;
-    int bltheight;
-    int dstpitch;
-    int srcpitch;
-    Bit8u bltmode;
-    Bit8u bltmodeext;
-    Bit8u bltrop;
-    Bit8u *dst;
-    Bit32u dstaddr;
-    const Bit8u *src;
-    Bit32u srcaddr;
-#if BX_USE_CIRRUS_SMF
-    void (*bitblt_ptr)();
-#else
-    void (*bitblt_ptr)(void *this_ptr);
-#endif
-    Bit8u *memsrc_ptr; // CPU -> video
-    Bit8u *memsrc_endptr;
-    int memsrc_needed;
-    Bit8u *memdst_ptr; // video -> CPU
-    Bit8u *memdst_endptr;
-    int memdst_bytesperline;
-    int memdst_needed;
-    Bit8u memsrc[CIRRUS_BLT_CACHESIZE];
-    Bit8u memdst[CIRRUS_BLT_CACHESIZE];
-  } bitblt;
-
-  struct {
     Bit32u offset;
     Bit16s x, y;
     Bit8u size;
@@ -212,7 +206,6 @@ private:
   } redraw;
 
   bx_ddc_c ddc;
-  bx_ddc_c ddc2;
 
   bool is_unlocked() { return svga_unlock_special; }
 
