@@ -766,7 +766,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, Bit8u cmd_len, i
         
         // if pc == Saved, return error. We don't support saved parameters
         if (pc == PAGE_CONTROL_SAVED) {
-          BX_ERROR(("Mode Sense(%d): Arborting command. PC == Saved, not supported.", (command == 0x1A) ? 6 : 10));
+          BX_ERROR(("Mode Sense(%d): Aborting command. PC == Saved, not supported.", (command == 0x1A) ? 6 : 10));
           _sense = SENSE_ILLEGAL_REQUEST;
           _asc = 0x26; // Parameter Value Invalid
           goto fail;
