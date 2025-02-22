@@ -240,6 +240,17 @@ void bx_geforce_c::svga_init_members()
   }
 
   BX_GEFORCE_THIS notifier = 0x00000000;
+  BX_GEFORCE_THIS image_src = 0x00000000;
+  BX_GEFORCE_THIS image_dst = 0x00000000;
+  BX_GEFORCE_THIS color_fmt = 0x00000000;
+  BX_GEFORCE_THIS pitch = 0x00000000;
+  BX_GEFORCE_THIS offset_src = 0x00000000;
+  BX_GEFORCE_THIS offset_dst = 0x00000000;
+  BX_GEFORCE_THIS blit_surf = 0x00000000;
+  BX_GEFORCE_THIS surface = 0x00000000;
+  BX_GEFORCE_THIS rect_color = 0x00000000;
+  BX_GEFORCE_THIS rect_xy = 0x00000000;
+  BX_GEFORCE_THIS rect_wh = 0x00000000;
 
   for (i = 0; i < 4 * 1024 * 1024; i++)
     BX_GEFORCE_THIS unk_regs[i] = 0x00000000;
@@ -1423,14 +1434,42 @@ void bx_geforce_c::register_write8(Bit32u address, Bit8u value)
     BX_PANIC(("Unknown 8 bit register 0x%08x write", address));
 }
 
+Bit32u bx_geforce_c::vram_read32(Bit32u address)
+{
+  return
+    BX_GEFORCE_THIS s.memory[address + 0] << 0 |
+    BX_GEFORCE_THIS s.memory[address + 1] << 8 |
+    BX_GEFORCE_THIS s.memory[address + 2] << 16 |
+    BX_GEFORCE_THIS s.memory[address + 3] << 24;
+}
+
+void bx_geforce_c::vram_write8(Bit32u address, Bit8u value)
+{
+  BX_GEFORCE_THIS s.memory[address + 0] = value;
+}
+
+void bx_geforce_c::vram_write16(Bit32u address, Bit16u value)
+{
+  BX_GEFORCE_THIS s.memory[address + 0] = value >> 0 & 0xFF;
+  BX_GEFORCE_THIS s.memory[address + 1] = value >> 8 & 0xFF;
+}
+
+void bx_geforce_c::vram_write32(Bit32u address, Bit32u value)
+{
+  BX_GEFORCE_THIS s.memory[address + 0] = value >> 0 & 0xFF;
+  BX_GEFORCE_THIS s.memory[address + 1] = value >> 8 & 0xFF;
+  BX_GEFORCE_THIS s.memory[address + 2] = value >> 16 & 0xFF;
+  BX_GEFORCE_THIS s.memory[address + 3] = value >> 24 & 0xFF;
+}
+
 Bit32u bx_geforce_c::ramin_read32(Bit32u address)
 {
-  Bit32u offset = address + RAMIN_OFFSET;
-  return
-    BX_GEFORCE_THIS s.memory[offset + 0] << 0 |
-    BX_GEFORCE_THIS s.memory[offset + 1] << 8 |
-    BX_GEFORCE_THIS s.memory[offset + 2] << 16 |
-    BX_GEFORCE_THIS s.memory[offset + 3] << 24;
+  return vram_read32(address + RAMIN_OFFSET);
+}
+
+void bx_geforce_c::ramin_write32(Bit32u address, Bit32u value)
+{
+  vram_write32(address + RAMIN_OFFSET, value);
 }
 
 Bit32u bx_geforce_c::physical_read32(Bit32u address)
@@ -1440,19 +1479,65 @@ Bit32u bx_geforce_c::physical_read32(Bit32u address)
   return data[0] << 0 | data[1] << 8 | data[2] << 16 | data[3] << 24;
 }
 
+Bit32u bx_geforce_c::dma_pt_lookup(Bit32u object, Bit32u address)
+{
+  Bit32u page_offset = address & 0xFFF;
+  Bit32u page_index = address >> 12;
+  Bit32u page = ramin_read32(object + 8 + page_index * 4) & 0xFFFFF000;
+  return page | page_offset;
+}
+
+Bit32u bx_geforce_c::dma_vram_lookup(Bit32u object, Bit32u address)
+{
+  Bit32u base = ramin_read32(object + 8) & 0xFFFFFFF0;
+  return base + address;
+}
+
 Bit32u bx_geforce_c::dma_read32(Bit32u object, Bit32u address)
 {
   Bit32u flags = ramin_read32(object);
   Bit32u target = flags >> 12 & 0xFF;
   if (target == 0x21 || target == 0x29) {
-    Bit32u page_offset = address & 0xFFF;
-    Bit32u page_index = address >> 12;
-    Bit32u page = ramin_read32(object + 8 + page_index * 4) & 0xFFFFF000;
-    return physical_read32(page | page_offset);
+    return physical_read32(dma_pt_lookup(object, address));
+  } else if (target == 0x03) {
+    return vram_read32(dma_vram_lookup(object, address));
   } else {
-    BX_PANIC(("unknown DMA target 0x%02x", target));
+    BX_PANIC(("dma_read32: unknown DMA target 0x%02x", target));
   }
   return 0;
+}
+
+void bx_geforce_c::dma_write8(Bit32u object, Bit32u address, Bit8u value)
+{
+  Bit32u flags = ramin_read32(object);
+  Bit32u target = flags >> 12 & 0xFF;
+  if (target == 0x03) {
+    vram_write8(dma_vram_lookup(object, address), value);
+  } else {
+    BX_PANIC(("dma_write8: unknown DMA target 0x%02x", target));
+  }
+}
+
+void bx_geforce_c::dma_write16(Bit32u object, Bit32u address, Bit16u value)
+{
+  Bit32u flags = ramin_read32(object);
+  Bit32u target = flags >> 12 & 0xFF;
+  if (target == 0x03) {
+    vram_write16(dma_vram_lookup(object, address), value);
+  } else {
+    BX_PANIC(("dma_write16: unknown DMA target 0x%02x", target));
+  }
+}
+
+void bx_geforce_c::dma_write32(Bit32u object, Bit32u address, Bit32u value)
+{
+  Bit32u flags = ramin_read32(object);
+  Bit32u target = flags >> 12 & 0xFF;
+  if (target == 0x03) {
+    vram_write32(dma_vram_lookup(object, address), value);
+  } else {
+    BX_PANIC(("dma_write32: unknown DMA target 0x%02x", target));
+  }
 }
 
 Bit32u bx_geforce_c::ramht_lookup(Bit32u handle, Bit32u chid)
@@ -1488,6 +1573,45 @@ Bit32u bx_geforce_c::ramht_lookup(Bit32u handle, Bit32u chid)
   return 0;
 }
 
+void bx_geforce_c::fillrect()
+{
+  Bit16u x = BX_GEFORCE_THIS rect_xy >> 16;
+  Bit16u y = BX_GEFORCE_THIS rect_xy & 0xFFFF;
+  Bit16u width = BX_GEFORCE_THIS rect_wh >> 16;
+  Bit16u height = BX_GEFORCE_THIS rect_wh & 0xFFFF;
+  Bit32u draw_offset = BX_GEFORCE_THIS offset_dst;
+  Bit32u pitch = BX_GEFORCE_THIS pitch & 0xFFFF;
+  Bit32u color = BX_GEFORCE_THIS rect_color;
+  Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
+  Bit32u bytes;
+  if (BX_GEFORCE_THIS color_fmt == 1) // Y8
+    bytes = 1;
+  else if (BX_GEFORCE_THIS color_fmt == 4) // R5G6B5
+    bytes = 2;
+  else if (BX_GEFORCE_THIS color_fmt == 0xA || // A8R8G8B8
+           BX_GEFORCE_THIS color_fmt == 0xB) // Y32
+    bytes = 4;
+  else {
+    BX_ERROR(("fillrect: unknown color format: 0x%02x", BX_GEFORCE_THIS color_fmt));
+    return;
+  }
+  for (Bit16u y = 0; y < height; y++) {
+    for (Bit16u x = 0; x < width; x++) {
+      if (bytes == 1)
+        dma_write8(BX_GEFORCE_THIS image_dst, draw_offset + x, color);
+      else if (bytes == 2)
+        dma_write16(BX_GEFORCE_THIS image_dst, draw_offset + x * 2, color);
+      else if (bytes == 4) {
+        dma_write32(BX_GEFORCE_THIS image_dst, draw_offset + x * 4, color);
+      }
+    }
+    draw_offset += pitch;
+  }
+  Bit32u redraw_x = redraw_offset % pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
+  Bit32u redraw_y = redraw_offset / pitch;
+  BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, width, height);
+}
+
 void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param)
 {
   BX_ERROR(("execute_command: chid 0x%02x, subc 0x%02x, method 0x%03x, param 0x%08x",
@@ -1508,8 +1632,34 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
         Bit8u cls = ramin_read32(BX_GEFORCE_THIS subchannels[subc].object);
         BX_ERROR(("execute_command: obj 0x%08x, class 0x%02x, method 0x%03x, param 0x%08x",
           BX_GEFORCE_THIS subchannels[subc].object, cls, method, param));
-        if (cls == 0x39) { // m2mf
+        if (cls == 0x19) { // clip
+        } else if (cls == 0x39) { // m2mf
+        } else if (cls == 0x44) { // patt
+        } else if (cls == 0x4a) { // gdi
+          if (method == 0x066)
+            BX_GEFORCE_THIS surface = param;
+          else if (method == 0x0ff)
+            BX_GEFORCE_THIS rect_color = param;
+          else if (method == 0x100)
+            BX_GEFORCE_THIS rect_xy = param;
+          else if (method == 0x101) {
+            BX_GEFORCE_THIS rect_wh = param;
+            fillrect();
+          }
         } else if (cls == 0x62) { // surf2d
+          if (method == 0x061)
+            BX_GEFORCE_THIS image_src = param;
+          else if (method == 0x062)
+            BX_GEFORCE_THIS image_dst = param;
+          else if (method == 0x0c0)
+            BX_GEFORCE_THIS color_fmt = param;
+          else if (method == 0x0c1)
+            BX_GEFORCE_THIS pitch = param;
+          else if (method == 0x0c2)
+            BX_GEFORCE_THIS offset_src = param;
+          else if (method == 0x0c3)
+            BX_GEFORCE_THIS offset_dst = param;
+        } else if (cls == 0x9f) { // imageblit
         }
       }
     }
@@ -1741,11 +1891,7 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
   } else if (address == 0x680848) {
     BX_GEFORCE_THIS ramdac_fp_tg_control = value;
   } else if (address >= 0x700000 && address < 0x800000) {
-    Bit32u offset = address - 0x700000 + RAMIN_OFFSET;
-    BX_GEFORCE_THIS s.memory[offset + 0] = (value >> 0) & 0xFF;
-    BX_GEFORCE_THIS s.memory[offset + 1] = (value >> 8) & 0xFF;
-    BX_GEFORCE_THIS s.memory[offset + 2] = (value >> 16) & 0xFF;
-    BX_GEFORCE_THIS s.memory[offset + 3] = (value >> 24) & 0xFF;
+    ramin_write32(address - 0x700000, value);
   } else if (address >= 0x800000 && address < 0x900000) {
     Bit32u chid = address >> 16 & 0x1F;
     Bit32u subc = address >> 13 & 0x07;

@@ -95,12 +95,24 @@ private:
   BX_GEFORCE_SMF Bit32u register_read32(Bit32u address);
   BX_GEFORCE_SMF void  register_write32(Bit32u address, Bit32u value);
 
+  BX_GEFORCE_SMF Bit32u vram_read32(Bit32u address);
+  BX_GEFORCE_SMF void vram_write8(Bit32u address, Bit8u value);
+  BX_GEFORCE_SMF void vram_write16(Bit32u address, Bit16u value);
+  BX_GEFORCE_SMF void vram_write32(Bit32u address, Bit32u value);
   BX_GEFORCE_SMF Bit32u ramin_read32(Bit32u address);
+  BX_GEFORCE_SMF void ramin_write32(Bit32u address, Bit32u value);
   BX_GEFORCE_SMF Bit32u physical_read32(Bit32u address);
   BX_GEFORCE_SMF Bit32u dma_read32(Bit32u object, Bit32u address);
+  BX_GEFORCE_SMF void dma_write8(Bit32u object, Bit32u address, Bit8u value);
+  BX_GEFORCE_SMF void dma_write16(Bit32u object, Bit32u address, Bit16u value);
+  BX_GEFORCE_SMF void dma_write32(Bit32u object, Bit32u address, Bit32u value);
+  BX_GEFORCE_SMF Bit32u dma_pt_lookup(Bit32u object, Bit32u address);
+  BX_GEFORCE_SMF Bit32u dma_vram_lookup(Bit32u object, Bit32u address);
 
   BX_GEFORCE_SMF Bit32u ramht_lookup(Bit32u handle, Bit32u chid);
   BX_GEFORCE_SMF void execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
+
+  BX_GEFORCE_SMF void fillrect();
 
   struct {
     Bit8u index;
@@ -183,6 +195,18 @@ private:
   } subchannels[GEFORCE_SUBCHANNEL_COUNT];
 
   Bit32u notifier;
+
+  Bit32u image_src;
+  Bit32u image_dst;
+  Bit32u color_fmt;
+  Bit32u pitch;
+  Bit32u offset_src;
+  Bit32u offset_dst;
+  Bit32u blit_surf;
+  Bit32u surface;
+  Bit32u rect_color;
+  Bit32u rect_xy;
+  Bit32u rect_wh;
 
   Bit32u unk_regs[4*1024*1024]; // temporary
 
