@@ -227,12 +227,19 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS channels[i].dma_put = 0x00000000;
     BX_GEFORCE_THIS channels[i].dma_get = 0x00000000;
     BX_GEFORCE_THIS channels[i].ref = 0x00000000;
-    BX_GEFORCE_THIS channels[i].pt = 0x00000000;
+    BX_GEFORCE_THIS channels[i].pushbuf = 0x00000000;
     BX_GEFORCE_THIS channels[i].dma_state.mthd = 0x00000000;
     BX_GEFORCE_THIS channels[i].dma_state.subc = 0x00000000;
     BX_GEFORCE_THIS channels[i].dma_state.mcnt = 0x00000000;
     BX_GEFORCE_THIS channels[i].dma_state.ni = false;
   }
+
+  for (i = 0; i < GEFORCE_SUBCHANNEL_COUNT; i++) {
+    BX_GEFORCE_THIS subchannels[i].object = 0x00000000;
+    BX_GEFORCE_THIS subchannels[i].engine = 0x00;
+  }
+
+  BX_GEFORCE_THIS notifier = 0x00000000;
 
   for (i = 0; i < 4 * 1024 * 1024; i++)
     BX_GEFORCE_THIS unk_regs[i] = 0x00000000;
@@ -1433,12 +1440,79 @@ Bit32u bx_geforce_c::physical_read32(Bit32u address)
   return data[0] << 0 | data[1] << 8 | data[2] << 16 | data[3] << 24;
 }
 
+Bit32u bx_geforce_c::dma_read32(Bit32u object, Bit32u address)
+{
+  Bit32u flags = ramin_read32(object);
+  Bit32u target = flags >> 12 & 0xFF;
+  if (target == 0x21 || target == 0x29) {
+    Bit32u page_offset = address & 0xFFF;
+    Bit32u page_index = address >> 12;
+    Bit32u page = ramin_read32(object + 8 + page_index * 4) & 0xFFFFF000;
+    return physical_read32(page | page_offset);
+  } else {
+    BX_PANIC(("unknown DMA target 0x%02x", target));
+  }
+  return 0;
+}
+
+Bit32u bx_geforce_c::ramht_lookup(Bit32u handle, Bit32u chid)
+{
+  Bit32u ramht_addr = (BX_GEFORCE_THIS fifo_ramht & 0xFFF) << 8;
+  Bit32u ramht_bits = (BX_GEFORCE_THIS fifo_ramht >> 16 & 0xFF) + 9;
+  Bit32u ramht_size = 1 << ramht_bits << 3;
+
+  Bit32u hash = 0;
+  Bit32u x = handle;
+  while (x) {
+    hash ^= (x & ((1 << ramht_bits) - 1));
+    x >>= ramht_bits;
+  }
+  hash ^= chid << (ramht_bits - 4);
+  hash = hash << 3;
+
+  Bit32u it = hash;
+  Bit32u steps = 1; // for debugging
+  do {
+    if (ramin_read32(ramht_addr + it) == handle) {
+      Bit32u context = ramin_read32(ramht_addr + it + 4);
+      BX_ERROR(("ramht_lookup: 0x%08x -> 0x%08x, steps: %d", handle, context, steps));
+      return context;
+    }
+    steps++;
+    it += 8;
+    if (it >= ramht_size)
+      it = 0;
+  } while (it != hash);
+
+  BX_PANIC(("ramht_lookup failed for 0x%08x", handle));
+  return 0;
+}
+
 void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param)
 {
-  BX_ERROR(("execute_command: chid 0x%02x, subc 0x%02x, method 0x%04x, param 0x%08x",
+  BX_ERROR(("execute_command: chid 0x%02x, subc 0x%02x, method 0x%03x, param 0x%08x",
       chid, subc, method, param));
-  if (method == 0x0014) {
+  if (method == 0x000) {
+    Bit32u context = ramht_lookup(param, chid);
+    BX_GEFORCE_THIS subchannels[subc].object = (context & 0xFFFF) << 4;
+    BX_GEFORCE_THIS subchannels[subc].engine = context >> 16 & 0xFF;
+  } else if (method == 0x014) {
     BX_GEFORCE_THIS channels[chid].ref = param;
+  } else if (method >= 0x040) {
+    if (method >= 0x060 && method < 0x080)
+      param = (ramht_lookup(param, chid) & 0xFFFF) << 4;
+    if (BX_GEFORCE_THIS subchannels[subc].engine == 0x01) {
+      if (method == 0x060)
+        BX_GEFORCE_THIS notifier = param;
+      else {
+        Bit8u cls = ramin_read32(BX_GEFORCE_THIS subchannels[subc].object);
+        BX_ERROR(("execute_command: obj 0x%08x, class 0x%02x, method 0x%03x, param 0x%08x",
+          BX_GEFORCE_THIS subchannels[subc].object, cls, method, param));
+        if (cls == 0x39) { // m2mf
+        } else if (cls == 0x62) { // surf2d
+        }
+      }
+    }
   }
 }
 
@@ -1681,22 +1755,16 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
         Bit32u ramfc = (BX_GEFORCE_THIS fifo_ramfc & 0xFFF) << 8;
         BX_GEFORCE_THIS channels[chid].dma_put = ramin_read32(ramfc + chid * 0x40 + 0x0);
         BX_GEFORCE_THIS channels[chid].dma_get = ramin_read32(ramfc + chid * 0x40 + 0x4);
-        Bit32u push_obj = ramin_read32(ramfc + chid * 0x40 + 0xC) << 4;
-        if (ramin_read32(push_obj) != 0x2103d)
-          BX_PANIC(("something went wrong"));
-        BX_GEFORCE_THIS channels[chid].pt = push_obj + 0x8;
+        BX_GEFORCE_THIS channels[chid].pushbuf = ramin_read32(ramfc + chid * 0x40 + 0xC) << 4;
         BX_GEFORCE_THIS channels[chid].initialized = true;
       }
       BX_GEFORCE_THIS channels[chid].dma_put = value;
       while (BX_GEFORCE_THIS channels[chid].dma_get != BX_GEFORCE_THIS channels[chid].dma_put) {
-        BX_ERROR(("processing fifo at 0x%08x", BX_GEFORCE_THIS channels[chid].dma_get));
-        Bit32u dma_get_offset = BX_GEFORCE_THIS channels[chid].dma_get & 0xFFF;
-        Bit32u dma_get_page_index = BX_GEFORCE_THIS channels[chid].dma_get >> 12;
-        Bit32u dma_get_page = ramin_read32(
-          BX_GEFORCE_THIS channels[chid].pt + dma_get_page_index * 4) & 0xFFFFF000;
-        Bit32u word = physical_read32(dma_get_page | dma_get_offset);
+        BX_ERROR(("fifo: processing at 0x%08x", BX_GEFORCE_THIS channels[chid].dma_get));
+        Bit32u word = dma_read32(
+            BX_GEFORCE_THIS channels[chid].pushbuf,
+            BX_GEFORCE_THIS channels[chid].dma_get);
         BX_GEFORCE_THIS channels[chid].dma_get += 4;
-
         if (BX_GEFORCE_THIS channels[chid].dma_state.mcnt) {
           execute_command(chid,
             BX_GEFORCE_THIS channels[chid].dma_state.subc,
@@ -1708,6 +1776,7 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
         } else {
           if ((word & 0xe0000003) == 0x20000000) {
             // old jump
+            BX_ERROR(("fifo: jump to 0x%08x", word & 0x1fffffff));
             BX_GEFORCE_THIS channels[chid].dma_get = word & 0x1fffffff;
           } else if ((word & 0xe0030003) == 0) {
             // increasing methods

@@ -46,6 +46,7 @@
 #define CIRRUS_BLT_CACHESIZE (2048 * 4)
 
 #define GEFORCE_CHANNEL_COUNT 32
+#define GEFORCE_SUBCHANNEL_COUNT 8
 
 class bx_geforce_c : public bx_vgacore_c
 {
@@ -96,7 +97,9 @@ private:
 
   BX_GEFORCE_SMF Bit32u ramin_read32(Bit32u address);
   BX_GEFORCE_SMF Bit32u physical_read32(Bit32u address);
+  BX_GEFORCE_SMF Bit32u dma_read32(Bit32u object, Bit32u address);
 
+  BX_GEFORCE_SMF Bit32u ramht_lookup(Bit32u handle, Bit32u chid);
   BX_GEFORCE_SMF void execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
 
   struct {
@@ -165,7 +168,7 @@ private:
     Bit32u dma_put;
     Bit32u dma_get;
     Bit32u ref;
-    Bit32u pt;
+    Bit32u pushbuf;
     struct {
       Bit32u mthd;
       Bit32u subc;
@@ -173,6 +176,13 @@ private:
       bool ni;
     } dma_state;
   } channels[GEFORCE_CHANNEL_COUNT];
+
+  struct {
+    Bit32u object;
+    Bit8u engine;
+  } subchannels[GEFORCE_SUBCHANNEL_COUNT];
+
+  Bit32u notifier;
 
   Bit32u unk_regs[4*1024*1024]; // temporary
 
