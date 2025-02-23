@@ -111,8 +111,9 @@ private:
 
   BX_GEFORCE_SMF Bit32u ramht_lookup(Bit32u handle, Bit32u chid);
   BX_GEFORCE_SMF void execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
-
+  BX_GEFORCE_SMF Bit32u color_565_to_888(Bit16u value);
   BX_GEFORCE_SMF void fillrect();
+  BX_GEFORCE_SMF void imageblit();
 
   struct {
     Bit8u index;
@@ -202,7 +203,15 @@ private:
   Bit32u pitch;
   Bit32u offset_src;
   Bit32u offset_dst;
-  Bit32u blit_surf;
+
+  Bit32u bg_color;
+  Bit32u fg_color;
+  Bit32u image_wh;
+  Bit32u image_xy;
+  Bit32u image_words_ptr;
+  Bit32u image_words_left;
+  Bit32u image_data[1024];
+
   Bit32u surface;
   Bit32u rect_color;
   Bit32u rect_xy;
