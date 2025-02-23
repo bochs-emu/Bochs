@@ -204,7 +204,8 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS timer_intr_en = 0x00000000;
   BX_GEFORCE_THIS timer_num = 0x00000000;
   BX_GEFORCE_THIS timer_den = 0x00000000;
-  BX_GEFORCE_THIS timer_time = 0x0000000000000000;
+  BX_GEFORCE_THIS timer_inittime1 = 0x0000000000000000;
+  BX_GEFORCE_THIS timer_inittime2 = 0x0000000000000000;
   BX_GEFORCE_THIS timer_alarm = 0x00000000;
   BX_GEFORCE_THIS fb_debug_0 = 0x00000000;
   BX_GEFORCE_THIS fb_cfg0 = 0x00000000;
@@ -1788,12 +1789,14 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS timer_num;
   else if (address == 0x9210)
     value = BX_GEFORCE_THIS timer_den;
-  else if (address == 0x9400) {
-    BX_GEFORCE_THIS timer_time += 0x10000;
-    value = (Bit32u)BX_GEFORCE_THIS timer_time;
-  } else if (address == 0x9410)
-    value = BX_GEFORCE_THIS timer_time >> 32;
-  else if (address == 0x9420)
+  else if (address == 0x9400 || address == 0x9410) {
+    Bit64u time2 = bx_pc_system.time_nsec();
+    Bit64u time1 = BX_GEFORCE_THIS timer_inittime1 + time2 - BX_GEFORCE_THIS timer_inittime2;
+    if (address == 0x9400)
+      value = (Bit32u)time1;
+    else
+      value = time1 >> 32;
+  } else if (address == 0x9420)
     value = BX_GEFORCE_THIS timer_alarm;
   else if (address == 0x100080)
     value = BX_GEFORCE_THIS fb_debug_0;
@@ -1906,10 +1909,15 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS timer_num = value;
   } else if (address == 0x9210) {
     BX_GEFORCE_THIS timer_den = value;
-  } else if (address == 0x9400) {
-    BX_GEFORCE_THIS timer_time = (BX_GEFORCE_THIS timer_time & 0xFFFFFFFF00000000ULL) | value;
-  } else if (address == 0x9410) {
-    BX_GEFORCE_THIS timer_time = (BX_GEFORCE_THIS timer_time & 0x00000000FFFFFFFFULL) | ((Bit64u)value << 32);
+  } else if (address == 0x9400 || address == 0x9410) {
+    BX_GEFORCE_THIS timer_inittime2 = bx_pc_system.time_nsec();
+    if (address == 0x9400) {
+      BX_GEFORCE_THIS timer_inittime1 = 
+        (BX_GEFORCE_THIS timer_inittime1 & 0xFFFFFFFF00000000ULL) | value;
+    } else {
+      BX_GEFORCE_THIS timer_inittime1 =
+        (BX_GEFORCE_THIS timer_inittime1 & 0x00000000FFFFFFFFULL) | ((Bit64u)value << 32);
+    }
   } else if (address == 0x9420) {
     BX_GEFORCE_THIS timer_alarm = value;
   } else if (address == 0x100080) {

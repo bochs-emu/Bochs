@@ -150,7 +150,8 @@ private:
   Bit32u timer_intr_en;
   Bit32u timer_num;
   Bit32u timer_den;
-  Bit64u timer_time;
+  Bit64u timer_inittime1;
+  Bit64u timer_inittime2;
   Bit32u timer_alarm;
   Bit32u fb_debug_0;
   Bit32u fb_cfg0;
