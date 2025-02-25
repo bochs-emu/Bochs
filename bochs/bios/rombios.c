@@ -1125,8 +1125,8 @@ static struct {
       { 0x4f00, 0x4f31, 0x7500, 0x0001, 0x20 }, /* 1 End */
       { 0x5000, 0x5032,   none, 0x0002, 0x20 }, /* 2 Down */
       { 0x5100, 0x5133, 0x7600, 0x0003, 0x20 }, /* 3 PgDn */
-      { 0x5200, 0x5230,   none,   none, 0x20 }, /* 0 Ins */
-      { 0x5300, 0x532e,   none,   none, 0x20 }, /* Del */
+      { 0x5200, 0x5230, 0x9200,   none, 0x20 }, /* 0 Ins */
+      { 0x5300, 0x532e, 0x9300,   none, 0x20 }, /* Del */
       {   none,   none,   none,   none, none },
       {   none,   none,   none,   none, none },
       { 0x565c, 0x567c,   none,   none, none }, /* \| */

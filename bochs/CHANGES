@@ -2,7 +2,7 @@ Changes after 3.0:
 
 - fixed compilation with --enable-avx but without --enable-evex
 - Voodoo3: Split mem_read() with len > 8 in two 64-bit reads
-- Bochs BIOS: Fixed not working hotkey alt+backspace
+- Bochs BIOS: Fixed not working hotkeys alt+backspace and control+insert
 - Compilation fix for MacOS in keymap.cc
 - Added Linux manual page for the bxhub utility
 
