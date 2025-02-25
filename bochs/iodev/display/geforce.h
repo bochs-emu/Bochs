@@ -35,12 +35,6 @@
 // 0x3b4,0x3d4
 #define VGA_CRTC_MAX 0x18
 #define GEFORCE_CRTC_MAX 0x52
-// 0x3c4
-#define VGA_SEQENCER_MAX 0x04
-#define CIRRUS_SEQUENCER_MAX 0x1f
-// 0x3ce
-#define VGA_CONTROL_MAX 0x08
-#define CIRRUS_CONTROL_MAX 0x39
 
 // Size of internal cache memory for bitblt. (must be >= 256 and 4-byte aligned)
 #define CIRRUS_BLT_CACHESIZE (2048 * 4)
@@ -112,28 +106,13 @@ private:
   BX_GEFORCE_SMF Bit32u ramht_lookup(Bit32u handle, Bit32u chid);
   BX_GEFORCE_SMF void execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF Bit32u color_565_to_888(Bit16u value);
-  BX_GEFORCE_SMF void fillrect();
-  BX_GEFORCE_SMF void imageblit();
+  BX_GEFORCE_SMF void fillrect(Bit32u chid);
+  BX_GEFORCE_SMF void imageblit(Bit32u chid);
 
   struct {
     Bit8u index;
     Bit8u reg[GEFORCE_CRTC_MAX+1];
   } crtc; // 0x3b4-5/0x3d4-5
-  struct {
-    Bit8u index;
-    Bit8u reg[CIRRUS_SEQUENCER_MAX+1];
-  } sequencer; // 0x3c4-5
-  struct {
-    Bit8u index;
-    Bit8u reg[CIRRUS_CONTROL_MAX+1];
-    Bit8u shadow_reg0;
-    Bit8u shadow_reg1;
-  } control; // 0x3ce-f
-  struct {
-    unsigned lockindex;
-    Bit8u data;
-    Bit8u palette[48];
-  } hidden_dac; // 0x3c6
 
   Bit32u mc_intr;
   Bit32u mc_intr_en;
@@ -189,34 +168,34 @@ private:
       Bit32u mcnt;
       bool ni;
     } dma_state;
-  } channels[GEFORCE_CHANNEL_COUNT];
+    struct {
+        Bit32u object;
+        Bit8u engine;
+    } schs[GEFORCE_SUBCHANNEL_COUNT];
 
-  struct {
-    Bit32u object;
-    Bit8u engine;
-  } subchannels[GEFORCE_SUBCHANNEL_COUNT];
+    Bit32u notifier;
 
-  Bit32u notifier;
+    Bit32u image_src;
+    Bit32u image_dst;
+    Bit32u color_fmt;
+    Bit32u color_bytes;
+    Bit32u pitch;
+    Bit32u offset_src;
+    Bit32u offset_dst;
 
-  Bit32u image_src;
-  Bit32u image_dst;
-  Bit32u color_fmt;
-  Bit32u pitch;
-  Bit32u offset_src;
-  Bit32u offset_dst;
+    Bit32u bg_color;
+    Bit32u fg_color;
+    Bit32u image_wh;
+    Bit32u image_xy;
+    Bit32u image_words_ptr;
+    Bit32u image_words_left;
+    Bit32u image_data[1024];
 
-  Bit32u bg_color;
-  Bit32u fg_color;
-  Bit32u image_wh;
-  Bit32u image_xy;
-  Bit32u image_words_ptr;
-  Bit32u image_words_left;
-  Bit32u image_data[1024];
-
-  Bit32u surface;
-  Bit32u rect_color;
-  Bit32u rect_xy;
-  Bit32u rect_wh;
+    Bit32u surface;
+    Bit32u rect_color;
+    Bit32u rect_xy;
+    Bit32u rect_wh;
+  } chs[GEFORCE_CHANNEL_COUNT];
 
   Bit32u unk_regs[4*1024*1024]; // temporary
 
@@ -252,9 +231,6 @@ private:
   bx_ddc_c ddc;
 
   bool is_unlocked() { return svga_unlock_special; }
-
-  bool banking_granularity_is_16k() { return !!(control.reg[0x0B] & 0x20); }
-  bool banking_is_dual() { return !!(control.reg[0x0B] & 0x01); }
 
 #if BX_SUPPORT_PCI
   BX_GEFORCE_SMF void svga_init_pcihandlers(void);

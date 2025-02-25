@@ -101,7 +101,7 @@
 
 
 #define PMC_ID_GEFORCE_3_TI_500     0x020200A5
-#define STRAPS0_PRIMARY             (0xFFF86C6B | 0x00000180) // disable TV out
+#define STRAPS0_PRIMARY             (0x7FF86C6B | 0x00000180) // disable TV out
 
 
 #define ALIGN(x, a) (((x) + (a) - 1) & ~((a) - 1))
@@ -160,8 +160,8 @@ bool bx_geforce_c::init_vga_extension(void)
   BX_GEFORCE_THIS svga_init_members();
   BX_GEFORCE_THIS svga_init_pcihandlers();
   BX_INFO(("%s initialized", model));
-  BX_GEFORCE_THIS s.max_xres = 1600;
-  BX_GEFORCE_THIS s.max_yres = 1200;
+  BX_GEFORCE_THIS s.max_xres = 2048;
+  BX_GEFORCE_THIS s.max_yres = 1536;
 #if BX_DEBUGGER
   // register device for the 'info device' command (calls debug_dump())
   bx_dbg_register_debug_info("geforce", this);
@@ -171,22 +171,12 @@ bool bx_geforce_c::init_vga_extension(void)
 
 void bx_geforce_c::svga_init_members()
 {
-  unsigned i;
+  unsigned i, j;
 
   // clear all registers.
-  BX_GEFORCE_THIS sequencer.index = CIRRUS_SEQUENCER_MAX + 1;
-  for (i = 0; i <= CIRRUS_SEQUENCER_MAX; i++)
-    BX_GEFORCE_THIS sequencer.reg[i] = 0x00;
-  BX_GEFORCE_THIS control.index = CIRRUS_CONTROL_MAX + 1;
-  for (i = 0; i <= CIRRUS_CONTROL_MAX; i++)
-    BX_GEFORCE_THIS control.reg[i] = 0x00;
-  BX_GEFORCE_THIS control.shadow_reg0 = 0x00;
-  BX_GEFORCE_THIS control.shadow_reg1 = 0x00;
   BX_GEFORCE_THIS crtc.index = GEFORCE_CRTC_MAX + 1;
   for (i = 0; i <= GEFORCE_CRTC_MAX; i++)
     BX_GEFORCE_THIS crtc.reg[i] = 0x00;
-  BX_GEFORCE_THIS hidden_dac.lockindex = 0;
-  BX_GEFORCE_THIS hidden_dac.data = 0x00;
 
   BX_GEFORCE_THIS mc_intr = 0x00000000;
   BX_GEFORCE_THIS mc_intr_en = 0x00000000;
@@ -232,43 +222,43 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS ramdac_fp_tg_control = 0x00000000;
 
   for (i = 0; i < GEFORCE_CHANNEL_COUNT; i++) {
-    BX_GEFORCE_THIS channels[i].initialized = false;
-    BX_GEFORCE_THIS channels[i].dma_put = 0x00000000;
-    BX_GEFORCE_THIS channels[i].dma_get = 0x00000000;
-    BX_GEFORCE_THIS channels[i].ref = 0x00000000;
-    BX_GEFORCE_THIS channels[i].pushbuf = 0x00000000;
-    BX_GEFORCE_THIS channels[i].dma_state.mthd = 0x00000000;
-    BX_GEFORCE_THIS channels[i].dma_state.subc = 0x00000000;
-    BX_GEFORCE_THIS channels[i].dma_state.mcnt = 0x00000000;
-    BX_GEFORCE_THIS channels[i].dma_state.ni = false;
+    BX_GEFORCE_THIS chs[i].initialized = false;
+    BX_GEFORCE_THIS chs[i].dma_put = 0x00000000;
+    BX_GEFORCE_THIS chs[i].dma_get = 0x00000000;
+    BX_GEFORCE_THIS chs[i].ref = 0x00000000;
+    BX_GEFORCE_THIS chs[i].pushbuf = 0x00000000;
+    BX_GEFORCE_THIS chs[i].dma_state.mthd = 0x00000000;
+    BX_GEFORCE_THIS chs[i].dma_state.subc = 0x00000000;
+    BX_GEFORCE_THIS chs[i].dma_state.mcnt = 0x00000000;
+    BX_GEFORCE_THIS chs[i].dma_state.ni = false;
+    for (j = 0; j < GEFORCE_SUBCHANNEL_COUNT; j++) {
+      BX_GEFORCE_THIS chs[i].schs[j].object = 0x00000000;
+      BX_GEFORCE_THIS chs[i].schs[j].engine = 0x00;
+    }
+
+    BX_GEFORCE_THIS chs[i].notifier = 0x00000000;
+    BX_GEFORCE_THIS chs[i].image_src = 0x00000000;
+    BX_GEFORCE_THIS chs[i].image_dst = 0x00000000;
+    BX_GEFORCE_THIS chs[i].color_fmt = 0x00000000;
+    BX_GEFORCE_THIS chs[i].color_bytes = 1;
+    BX_GEFORCE_THIS chs[i].pitch = 0x00000000;
+    BX_GEFORCE_THIS chs[i].offset_src = 0x00000000;
+    BX_GEFORCE_THIS chs[i].offset_dst = 0x00000000;
+
+    BX_GEFORCE_THIS chs[i].bg_color = 0x00000000;
+    BX_GEFORCE_THIS chs[i].fg_color = 0x00000000;
+    BX_GEFORCE_THIS chs[i].image_wh = 0x00000000;
+    BX_GEFORCE_THIS chs[i].image_xy = 0x00000000;
+    BX_GEFORCE_THIS chs[i].image_words_ptr = 0x00000000;
+    BX_GEFORCE_THIS chs[i].image_words_left = 0x00000000;
+    for (i = 0; i < 1024; i++)
+        BX_GEFORCE_THIS chs[i].image_data[i] = 0x00000000;
+
+    BX_GEFORCE_THIS chs[i].surface = 0x00000000;
+    BX_GEFORCE_THIS chs[i].rect_color = 0x00000000;
+    BX_GEFORCE_THIS chs[i].rect_xy = 0x00000000;
+    BX_GEFORCE_THIS chs[i].rect_wh = 0x00000000;
   }
-
-  for (i = 0; i < GEFORCE_SUBCHANNEL_COUNT; i++) {
-    BX_GEFORCE_THIS subchannels[i].object = 0x00000000;
-    BX_GEFORCE_THIS subchannels[i].engine = 0x00;
-  }
-
-  BX_GEFORCE_THIS notifier = 0x00000000;
-  BX_GEFORCE_THIS image_src = 0x00000000;
-  BX_GEFORCE_THIS image_dst = 0x00000000;
-  BX_GEFORCE_THIS color_fmt = 0x00000000;
-  BX_GEFORCE_THIS pitch = 0x00000000;
-  BX_GEFORCE_THIS offset_src = 0x00000000;
-  BX_GEFORCE_THIS offset_dst = 0x00000000;
-
-  BX_GEFORCE_THIS bg_color = 0x00000000;
-  BX_GEFORCE_THIS fg_color = 0x00000000;
-  BX_GEFORCE_THIS image_wh = 0x00000000;
-  BX_GEFORCE_THIS image_xy = 0x00000000;
-  BX_GEFORCE_THIS image_words_ptr = 0x00000000;
-  BX_GEFORCE_THIS image_words_left = 0x00000000;
-  for (i = 0; i < 1024; i++)
-    BX_GEFORCE_THIS image_data[i] = 0x00000000;
-
-  BX_GEFORCE_THIS surface = 0x00000000;
-  BX_GEFORCE_THIS rect_color = 0x00000000;
-  BX_GEFORCE_THIS rect_xy = 0x00000000;
-  BX_GEFORCE_THIS rect_wh = 0x00000000;
 
   for (i = 0; i < 4 * 1024 * 1024; i++)
     BX_GEFORCE_THIS unk_regs[i] = 0x00000000;
@@ -298,22 +288,11 @@ void bx_geforce_c::svga_init_members()
 
   BX_GEFORCE_THIS s.memsize = GEFORCE_VIDEO_MEMORY_BYTES;
 
-  BX_GEFORCE_THIS hidden_dac.lockindex = 5;
-  BX_GEFORCE_THIS hidden_dac.data = 0;
-
   memset(BX_GEFORCE_THIS s.memory, 0x00, GEFORCE_VIDEO_MEMORY_BYTES);
   BX_GEFORCE_THIS disp_ptr = BX_GEFORCE_THIS s.memory;
   BX_GEFORCE_THIS memsize_mask = BX_GEFORCE_THIS s.memsize - 1;
 
   // VCLK defaults after reset
-  BX_GEFORCE_THIS sequencer.reg[0x0b] = 0x66;
-  BX_GEFORCE_THIS sequencer.reg[0x0c] = 0x5b;
-  BX_GEFORCE_THIS sequencer.reg[0x0d] = 0x45;
-  BX_GEFORCE_THIS sequencer.reg[0x0e] = 0x7e;
-  BX_GEFORCE_THIS sequencer.reg[0x1b] = 0x3b;
-  BX_GEFORCE_THIS sequencer.reg[0x1c] = 0x2f;
-  BX_GEFORCE_THIS sequencer.reg[0x1d] = 0x30;
-  BX_GEFORCE_THIS sequencer.reg[0x1e] = 0x33;
   BX_GEFORCE_THIS s.vclk[0] = 25180000;
   BX_GEFORCE_THIS s.vclk[1] = 28325000;
   BX_GEFORCE_THIS s.vclk[2] = 41165000;
@@ -335,18 +314,6 @@ void bx_geforce_c::register_state(void)
   bx_list_c *crtc = new bx_list_c(list, "crtc");
   new bx_shadow_num_c(crtc, "index", &BX_GEFORCE_THIS crtc.index, BASE_HEX);
   new bx_shadow_data_c(crtc, "reg", BX_GEFORCE_THIS crtc.reg, GEFORCE_CRTC_MAX + 1, 1);
-  bx_list_c *sequ = new bx_list_c(list, "sequencer");
-  new bx_shadow_num_c(sequ, "index", &BX_GEFORCE_THIS sequencer.index, BASE_HEX);
-  new bx_shadow_data_c(sequ, "reg", BX_GEFORCE_THIS sequencer.reg, CIRRUS_SEQUENCER_MAX + 1, 1);
-  bx_list_c *ctrl = new bx_list_c(list, "control");
-  new bx_shadow_num_c(ctrl, "index", &BX_GEFORCE_THIS control.index, BASE_HEX);
-  new bx_shadow_data_c(ctrl, "reg", BX_GEFORCE_THIS control.reg, CIRRUS_CONTROL_MAX + 1, 1);
-  new bx_shadow_num_c(ctrl, "shadow_reg0", &BX_GEFORCE_THIS control.shadow_reg0, BASE_HEX);
-  new bx_shadow_num_c(ctrl, "shadow_reg1", &BX_GEFORCE_THIS control.shadow_reg1, BASE_HEX);
-  bx_list_c *hdac = new bx_list_c(list, "hidden_dac");
-  new bx_shadow_num_c(hdac, "lockindex", &BX_GEFORCE_THIS hidden_dac.lockindex, BASE_HEX);
-  new bx_shadow_num_c(hdac, "data", &BX_GEFORCE_THIS hidden_dac.data, BASE_HEX);
-  new bx_shadow_data_c(hdac, "palette", BX_GEFORCE_THIS hidden_dac.palette, 48, 1);
   BXRS_PARAM_BOOL(list, svga_unlock_special, BX_GEFORCE_THIS svga_unlock_special);
   BXRS_PARAM_BOOL(list, svga_double_width, BX_GEFORCE_THIS svga_double_width);
   new bx_shadow_num_c(list, "svga_xres", &BX_GEFORCE_THIS svga_xres);
@@ -660,25 +627,6 @@ Bit32u bx_geforce_c::svga_read(Bit32u address, unsigned io_len)
     case 0x03c2: /* Input Status 0 */
       BX_ERROR(("Input Status 0 read"));
       return 0x10; // Monitor presence detection (DAC Sensing)
-    case 0x03c4: /* VGA: Sequencer Index Register */
-      return BX_GEFORCE_THIS sequencer.index;
-    case 0x03c5: /* VGA: Sequencer Registers */
-      if (BX_GEFORCE_THIS sequencer.index > VGA_SEQENCER_MAX)
-        BX_PANIC(("sequencer: unknown index 0x%02x read", BX_GEFORCE_THIS sequencer.index));
-      break;
-    case 0x03c6: /* Hidden DAC */
-      break;
-    case 0x03c8: /* PEL write address */
-      BX_GEFORCE_THIS hidden_dac.lockindex = 0;
-      break;
-    case 0x03c9: /* PEL Data Register, hiddem pel colors 00..0F */
-      break;
-    case 0x03ce: /* VGA: Graphics Controller Index Register */
-      return BX_GEFORCE_THIS control.index;
-    case 0x03cf: /* VGA: Graphics Controller Registers */
-      if (BX_GEFORCE_THIS control.index > VGA_CONTROL_MAX)
-        BX_PANIC(("control: unknown index 0x%02x read", BX_GEFORCE_THIS control.index));
-      break;
     default:
       break;
   }
@@ -788,24 +736,6 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
         BX_GEFORCE_THIS svga_write_crtc(address, BX_GEFORCE_THIS crtc.index, value);
         return;
       }
-      break;
-    case 0x03c4: /* VGA: Sequencer Index Register */
-      BX_GEFORCE_THIS sequencer.index = value;
-      break;
-    case 0x03c5: /* VGA: Sequencer Registers */
-      if (BX_GEFORCE_THIS sequencer.index > VGA_SEQENCER_MAX)
-        BX_PANIC(("sequencer: unknown index 0x%02x write", BX_GEFORCE_THIS sequencer.index));
-      break;
-    case 0x03c6: /* Hidden DAC */
-      break;
-    case 0x03c9: /* PEL Data Register, hidden pel colors 00..0F */
-      break;
-    case 0x03ce: /* VGA: Graphics Controller Index Register */
-      BX_GEFORCE_THIS control.index = value;
-      break;
-    case 0x03cf: /* VGA: Graphics Controller Registers */
-      if (BX_GEFORCE_THIS control.index > VGA_CONTROL_MAX)
-        BX_PANIC(("control: unknown index 0x%02x write", BX_GEFORCE_THIS control.index));
       break;
     default:
       break;
@@ -1427,8 +1357,9 @@ Bit8u bx_geforce_c::register_read8(Bit32u address)
     value = SVGA_READ(address - 0x681000, 1);
   } else if (address >= 0x700000 && address < 0x800000) {
     value = BX_GEFORCE_THIS s.memory[address - 0x700000 + RAMIN_OFFSET];
-  }
-  else
+  } else if (address == 0x800280) {
+    value = 0x00;
+  } else
     BX_PANIC(("Unknown 8 bit register 0x%08x read", address));
   return value;
 }
@@ -1517,7 +1448,7 @@ Bit32u bx_geforce_c::dma_read32(Bit32u object, Bit32u address)
   Bit32u target = flags >> 12 & 0xFF;
   if (target == 0x21 || target == 0x29) {
     return physical_read32(dma_pt_lookup(object, address));
-  } else if (target == 0x03) {
+  } else if (target == 0x03 || target == 0x0b) {
     return vram_read32(dma_vram_lookup(object, address));
   } else {
     BX_PANIC(("dma_read32: unknown DMA target 0x%02x", target));
@@ -1529,7 +1460,7 @@ void bx_geforce_c::dma_write8(Bit32u object, Bit32u address, Bit8u value)
 {
   Bit32u flags = ramin_read32(object);
   Bit32u target = flags >> 12 & 0xFF;
-  if (target == 0x03) {
+  if (target == 0x03 || target == 0x0b) {
     vram_write8(dma_vram_lookup(object, address), value);
   } else {
     BX_PANIC(("dma_write8: unknown DMA target 0x%02x", target));
@@ -1540,7 +1471,7 @@ void bx_geforce_c::dma_write16(Bit32u object, Bit32u address, Bit16u value)
 {
   Bit32u flags = ramin_read32(object);
   Bit32u target = flags >> 12 & 0xFF;
-  if (target == 0x03) {
+  if (target == 0x03 || target == 0x0b) {
     vram_write16(dma_vram_lookup(object, address), value);
   } else {
     BX_PANIC(("dma_write16: unknown DMA target 0x%02x", target));
@@ -1551,7 +1482,7 @@ void bx_geforce_c::dma_write32(Bit32u object, Bit32u address, Bit32u value)
 {
   Bit32u flags = ramin_read32(object);
   Bit32u target = flags >> 12 & 0xFF;
-  if (target == 0x03) {
+  if (target == 0x03 || target == 0x0b) {
     vram_write32(dma_vram_lookup(object, address), value);
   } else {
     BX_PANIC(("dma_write32: unknown DMA target 0x%02x", target));
@@ -1591,42 +1522,30 @@ Bit32u bx_geforce_c::ramht_lookup(Bit32u handle, Bit32u chid)
   return 0;
 }
 
-void bx_geforce_c::fillrect()
+void bx_geforce_c::fillrect(Bit32u chid)
 {
-  Bit16u dx = BX_GEFORCE_THIS rect_xy >> 16;
-  Bit16u dy = BX_GEFORCE_THIS rect_xy & 0xFFFF;
-  Bit16u width = BX_GEFORCE_THIS rect_wh >> 16;
-  Bit16u height = BX_GEFORCE_THIS rect_wh & 0xFFFF;
-  Bit32u pitch = BX_GEFORCE_THIS pitch & 0xFFFF;
-  Bit32u color = BX_GEFORCE_THIS rect_color;
-  Bit32u bytes;
-  if (BX_GEFORCE_THIS color_fmt == 1) // Y8
-    bytes = 1;
-  else if (BX_GEFORCE_THIS color_fmt == 4) // R5G6B5
-    bytes = 2;
-  else if (BX_GEFORCE_THIS color_fmt == 0xA || // A8R8G8B8
-           BX_GEFORCE_THIS color_fmt == 0xB) // Y32
-    bytes = 4;
-  else {
-    BX_ERROR(("fillrect: unknown color format: 0x%02x", BX_GEFORCE_THIS color_fmt));
-    return;
-  }
-  Bit32u draw_offset = BX_GEFORCE_THIS offset_dst;
-  draw_offset += dy * pitch + dx * bytes;
+  Bit16u dx = BX_GEFORCE_THIS chs[chid].rect_xy >> 16;
+  Bit16u dy = BX_GEFORCE_THIS chs[chid].rect_xy & 0xFFFF;
+  Bit16u width = BX_GEFORCE_THIS chs[chid].rect_wh >> 16;
+  Bit16u height = BX_GEFORCE_THIS chs[chid].rect_wh & 0xFFFF;
+  Bit32u pitch = BX_GEFORCE_THIS chs[chid].pitch >> 16;
+  Bit32u color = BX_GEFORCE_THIS chs[chid].rect_color;
+  Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].offset_dst;
+  draw_offset += dy * pitch + dx * BX_GEFORCE_THIS chs[chid].color_bytes;
   Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   for (Bit16u y = 0; y < height; y++) {
     for (Bit16u x = 0; x < width; x++) {
-      if (bytes == 1)
-        dma_write8(BX_GEFORCE_THIS image_dst, draw_offset + x, color);
-      else if (bytes == 2)
-        dma_write16(BX_GEFORCE_THIS image_dst, draw_offset + x * 2, color);
-      else if (bytes == 4) {
-        dma_write32(BX_GEFORCE_THIS image_dst, draw_offset + x * 4, color);
+      if (BX_GEFORCE_THIS chs[chid].color_bytes == 1)
+        dma_write8(BX_GEFORCE_THIS chs[chid].image_dst, draw_offset + x, color);
+      else if (BX_GEFORCE_THIS chs[chid].color_bytes == 2)
+        dma_write16(BX_GEFORCE_THIS chs[chid].image_dst, draw_offset + x * 2, color);
+      else if (BX_GEFORCE_THIS chs[chid].color_bytes == 4) {
+        dma_write32(BX_GEFORCE_THIS chs[chid].image_dst, draw_offset + x * 4, color);
       }
     }
     draw_offset += pitch;
   }
-  Bit32u redraw_x = redraw_offset % pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
+  Bit32u redraw_x = redraw_offset % pitch / BX_GEFORCE_THIS chs[chid].color_bytes;
   Bit32u redraw_y = redraw_offset / pitch;
   BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, width, height);
 }
@@ -1638,39 +1557,41 @@ Bit32u bx_geforce_c::color_565_to_888(Bit16u value)
   return r << 16 | g << 8 | b;
 }
 
-void bx_geforce_c::imageblit()
+void bx_geforce_c::imageblit(Bit32u chid)
 {
-  Bit16u dx = BX_GEFORCE_THIS image_xy & 0xFFFF;
-  Bit16u dy = BX_GEFORCE_THIS image_xy >> 16;
-  Bit32u width = ALIGN(BX_GEFORCE_THIS image_wh & 0xFFFF, 8);
-  Bit32u height = BX_GEFORCE_THIS image_wh >> 16;
-  Bit32u pitch = BX_GEFORCE_THIS svga_pitch;
-  Bit32u draw_offset = (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
-  Bit32u bytes = BX_GEFORCE_THIS svga_bpp >> 3;
-  Bit32u bg_color = BX_GEFORCE_THIS bg_color;
-  Bit32u fg_color = BX_GEFORCE_THIS fg_color;
-  if (bytes == 4) {
+  Bit16u dx = BX_GEFORCE_THIS chs[chid].image_xy & 0xFFFF;
+  Bit16u dy = BX_GEFORCE_THIS chs[chid].image_xy >> 16;
+  Bit32u width = ALIGN(BX_GEFORCE_THIS chs[chid].image_wh & 0xFFFF, 8);
+  Bit32u height = BX_GEFORCE_THIS chs[chid].image_wh >> 16;
+  Bit32u pitch = BX_GEFORCE_THIS chs[chid].pitch >> 16;
+  Bit32u bg_color = BX_GEFORCE_THIS chs[chid].bg_color;
+  Bit32u fg_color = BX_GEFORCE_THIS chs[chid].fg_color;
+  if (BX_GEFORCE_THIS chs[chid].color_bytes == 4) {
     bg_color = color_565_to_888(bg_color);
     fg_color = color_565_to_888(fg_color);
   }
-  draw_offset += dy * pitch + dx * bytes;
+  Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].offset_dst;
+  draw_offset += dy * pitch + dx * BX_GEFORCE_THIS chs[chid].color_bytes;
+  Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   Bit32u bit_index = 0;
   for (Bit16u y = 0; y < height; y++) {
     for (Bit16u x = 0; x < width; x++) {
       Bit32u word_offset = bit_index / 32;
       Bit32u bit_offset = bit_index % 32;
       bit_offset = bit_offset & 24 | 7 - (bit_offset & 7);
-      bool pixel = BX_GEFORCE_THIS image_data[word_offset] >> bit_offset & 1;
+      bool pixel = BX_GEFORCE_THIS chs[chid].image_data[word_offset] >> bit_offset & 1;
       Bit32u color = pixel ? fg_color : bg_color;
-      if (bytes == 2)
-        dma_write16(BX_GEFORCE_THIS image_dst, draw_offset + x * 2, color);
-      else if (bytes == 4)
-        dma_write32(BX_GEFORCE_THIS image_dst, draw_offset + x * 4, color);
+      if (BX_GEFORCE_THIS chs[chid].color_bytes == 2)
+        dma_write16(BX_GEFORCE_THIS chs[chid].image_dst, draw_offset + x * 2, color);
+      else if (BX_GEFORCE_THIS chs[chid].color_bytes == 4)
+        dma_write32(BX_GEFORCE_THIS chs[chid].image_dst, draw_offset + x * 4, color);
       bit_index++;
     }
     draw_offset += pitch;
   }
-  BX_GEFORCE_THIS redraw_area(dx, dy, width, height);
+  Bit32u redraw_x = redraw_offset % pitch / BX_GEFORCE_THIS chs[chid].color_bytes;
+  Bit32u redraw_y = redraw_offset / pitch;
+  BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, width, height);
 }
 
 void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param)
@@ -1679,72 +1600,83 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
       chid, subc, method, param));
   if (method == 0x000) {
     Bit32u context = ramht_lookup(param, chid);
-    BX_GEFORCE_THIS subchannels[subc].object = (context & 0xFFFF) << 4;
-    BX_GEFORCE_THIS subchannels[subc].engine = context >> 16 & 0xFF;
+    BX_GEFORCE_THIS chs[chid].schs[subc].object = (context & 0xFFFF) << 4;
+    BX_GEFORCE_THIS chs[chid].schs[subc].engine = context >> 16 & 0xFF;
   } else if (method == 0x014) {
-    BX_GEFORCE_THIS channels[chid].ref = param;
+    BX_GEFORCE_THIS chs[chid].ref = param;
   } else if (method >= 0x040) {
     if (method >= 0x060 && method < 0x080)
       param = (ramht_lookup(param, chid) & 0xFFFF) << 4;
-    if (BX_GEFORCE_THIS subchannels[subc].engine == 0x01) {
+    if (BX_GEFORCE_THIS chs[chid].schs[subc].engine == 0x01) {
       if (method == 0x060)
-        BX_GEFORCE_THIS notifier = param;
+        BX_GEFORCE_THIS chs[chid].notifier = param;
       else {
-        Bit8u cls = ramin_read32(BX_GEFORCE_THIS subchannels[subc].object);
+        Bit8u cls = ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object);
         BX_ERROR(("execute_command: obj 0x%08x, class 0x%02x, method 0x%03x, param 0x%08x",
-          BX_GEFORCE_THIS subchannels[subc].object, cls, method, param));
+          BX_GEFORCE_THIS chs[chid].schs[subc].object, cls, method, param));
         if (cls == 0x19) { // clip
         } else if (cls == 0x39) { // m2mf
         } else if (cls == 0x44) { // patt
-          if (method == 0x2fb)
-            BX_GEFORCE_THIS bg_color = param;
-          else if (method == 0x2fc)
-            BX_GEFORCE_THIS fg_color = param;
-          else if (method == 0x2fe) {
-            BX_GEFORCE_THIS image_wh = param;
-            Bit32u width = ALIGN(BX_GEFORCE_THIS image_wh & 0xFFFF, 8);
-            Bit32u dsize = ALIGN(width * (BX_GEFORCE_THIS image_wh >> 16), 32) >> 5;
-            if (dsize > 1024)
-              BX_PANIC(("dsize = %d", dsize));
-            BX_GEFORCE_THIS image_words_ptr = 0;
-            BX_GEFORCE_THIS image_words_left = dsize;
-          }
-          else if (method == 0x2ff)
-            BX_GEFORCE_THIS image_xy = param;
-          else if (method >= 0x300 && method < 0x380) {
-            BX_GEFORCE_THIS image_data[BX_GEFORCE_THIS image_words_ptr++] = param;
-            BX_GEFORCE_THIS image_words_left--;
-            if (!BX_GEFORCE_THIS image_words_left)
-              imageblit();
-          }
         } else if (cls == 0x4a) { // gdi
           if (method == 0x066)
-            BX_GEFORCE_THIS surface = param;
+            BX_GEFORCE_THIS chs[chid].surface = param;
           else if (method == 0x0ff)
-            BX_GEFORCE_THIS rect_color = param;
+            BX_GEFORCE_THIS chs[chid].rect_color = param;
           else if (method == 0x100)
-            BX_GEFORCE_THIS rect_xy = param;
+            BX_GEFORCE_THIS chs[chid].rect_xy = param;
           else if (method == 0x101) {
-            BX_GEFORCE_THIS rect_wh = param;
-            fillrect();
+            BX_GEFORCE_THIS chs[chid].rect_wh = param;
+            fillrect(chid);
+          } else if (method == 0x2fb)
+            BX_GEFORCE_THIS chs[chid].bg_color = param;
+          else if (method == 0x2fc)
+            BX_GEFORCE_THIS chs[chid].fg_color = param;
+          else if (method == 0x2fe) {
+            BX_GEFORCE_THIS chs[chid].image_wh = param;
+            Bit32u width = ALIGN(BX_GEFORCE_THIS chs[chid].image_wh & 0xFFFF, 8);
+            Bit32u dsize = ALIGN(width * (BX_GEFORCE_THIS chs[chid].image_wh >> 16), 32) >> 5;
+            if (dsize > 1024)
+              BX_PANIC(("dsize = %d", dsize));
+            BX_GEFORCE_THIS chs[chid].image_words_ptr = 0;
+            BX_GEFORCE_THIS chs[chid].image_words_left = dsize;
+          }
+          else if (method == 0x2ff)
+            BX_GEFORCE_THIS chs[chid].image_xy = param;
+          else if (method >= 0x300 && method < 0x380) {
+            BX_GEFORCE_THIS chs[chid].image_data[BX_GEFORCE_THIS chs[chid].image_words_ptr++] = param;
+            BX_GEFORCE_THIS chs[chid].image_words_left--;
+            if (!BX_GEFORCE_THIS chs[chid].image_words_left)
+              imageblit(chid);
           }
         } else if (cls == 0x62) { // surf2d
           if (method == 0x061)
-            BX_GEFORCE_THIS image_src = param;
+            BX_GEFORCE_THIS chs[chid].image_src = param;
           else if (method == 0x062)
-            BX_GEFORCE_THIS image_dst = param;
-          else if (method == 0x0c0)
-            BX_GEFORCE_THIS color_fmt = param;
-          else if (method == 0x0c1)
-            BX_GEFORCE_THIS pitch = param;
+            BX_GEFORCE_THIS chs[chid].image_dst = param;
+          else if (method == 0x0c0) {
+            BX_GEFORCE_THIS chs[chid].color_fmt = param;
+            if (BX_GEFORCE_THIS chs[chid].color_fmt == 1) // Y8
+              BX_GEFORCE_THIS chs[chid].color_bytes = 1;
+            else if (BX_GEFORCE_THIS chs[chid].color_fmt == 4) // R5G6B5
+              BX_GEFORCE_THIS chs[chid].color_bytes = 2;
+            else if (BX_GEFORCE_THIS chs[chid].color_fmt == 0xA || // A8R8G8B8
+                     BX_GEFORCE_THIS chs[chid].color_fmt == 0xB) // Y32
+              BX_GEFORCE_THIS chs[chid].color_bytes = 4;
+            else
+              BX_ERROR(("unknown color format: 0x%02x", BX_GEFORCE_THIS chs[chid].color_fmt));
+          } else if (method == 0x0c1)
+            BX_GEFORCE_THIS chs[chid].pitch = param;
           else if (method == 0x0c2)
-            BX_GEFORCE_THIS offset_src = param;
+            BX_GEFORCE_THIS chs[chid].offset_src = param;
           else if (method == 0x0c3)
-            BX_GEFORCE_THIS offset_dst = param;
+            BX_GEFORCE_THIS chs[chid].offset_dst = param;
         } else if (cls == 0x9f) { // imageblit
         }
       }
     }
+  }
+  if (BX_GEFORCE_THIS chs[chid].schs[subc].engine == 0x00) {
+    BX_ERROR(("execute_command: software engine"));
   }
 }
 
@@ -1861,16 +1793,15 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS ramdac_fp_tg_control;
   } else if (address >= 0x700000 && address < 0x800000) {
     value = ramin_read32(address - 0x700000);
-  } else if (address >= 0x800000 && address < 0x900000) {
+  } else if (address >= 0x800000 && address < 0xA00000) {
     Bit32u chid = address >> 16 & 0x1F;
-    Bit32u subc = address >> 13 & 0x07;
     Bit32u offset = address & 0x1FFF;
     if (offset == 0x40)
-      value = BX_GEFORCE_THIS channels[chid].dma_put;
+      value = BX_GEFORCE_THIS chs[chid].dma_put;
     else if (offset == 0x44)
-      value = BX_GEFORCE_THIS channels[chid].dma_get;
+      value = BX_GEFORCE_THIS chs[chid].dma_get;
     else if (offset == 0x48)
-      value = BX_GEFORCE_THIS channels[chid].ref;
+      value = BX_GEFORCE_THIS chs[chid].ref;
   } else {
     value = BX_GEFORCE_THIS unk_regs[address / 4];
   }
@@ -1981,44 +1912,43 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS ramdac_fp_tg_control = value;
   } else if (address >= 0x700000 && address < 0x800000) {
     ramin_write32(address - 0x700000, value);
-  } else if (address >= 0x800000 && address < 0x900000) {
+  } else if (address >= 0x800000 && address < 0xA00000) {
     Bit32u chid = address >> 16 & 0x1F;
-    Bit32u subc = address >> 13 & 0x07;
     Bit32u offset = address & 0x1FFF;
     if (offset == 0x40) {
-      if (!BX_GEFORCE_THIS channels[chid].initialized) {
+      if (!BX_GEFORCE_THIS chs[chid].initialized) {
         Bit32u ramfc = (BX_GEFORCE_THIS fifo_ramfc & 0xFFF) << 8;
-        BX_GEFORCE_THIS channels[chid].dma_put = ramin_read32(ramfc + chid * 0x40 + 0x0);
-        BX_GEFORCE_THIS channels[chid].dma_get = ramin_read32(ramfc + chid * 0x40 + 0x4);
-        BX_GEFORCE_THIS channels[chid].pushbuf = ramin_read32(ramfc + chid * 0x40 + 0xC) << 4;
-        BX_GEFORCE_THIS channels[chid].initialized = true;
+        BX_GEFORCE_THIS chs[chid].dma_put = ramin_read32(ramfc + chid * 0x40 + 0x0);
+        BX_GEFORCE_THIS chs[chid].dma_get = ramin_read32(ramfc + chid * 0x40 + 0x4);
+        BX_GEFORCE_THIS chs[chid].pushbuf = ramin_read32(ramfc + chid * 0x40 + 0xC) << 4;
+        BX_GEFORCE_THIS chs[chid].initialized = true;
       }
-      BX_GEFORCE_THIS channels[chid].dma_put = value;
-      while (BX_GEFORCE_THIS channels[chid].dma_get != BX_GEFORCE_THIS channels[chid].dma_put) {
-        BX_ERROR(("fifo: processing at 0x%08x", BX_GEFORCE_THIS channels[chid].dma_get));
+      BX_GEFORCE_THIS chs[chid].dma_put = value;
+      while (BX_GEFORCE_THIS chs[chid].dma_get != BX_GEFORCE_THIS chs[chid].dma_put) {
+        BX_ERROR(("fifo: processing at 0x%08x", BX_GEFORCE_THIS chs[chid].dma_get));
         Bit32u word = dma_read32(
-            BX_GEFORCE_THIS channels[chid].pushbuf,
-            BX_GEFORCE_THIS channels[chid].dma_get);
-        BX_GEFORCE_THIS channels[chid].dma_get += 4;
-        if (BX_GEFORCE_THIS channels[chid].dma_state.mcnt) {
+            BX_GEFORCE_THIS chs[chid].pushbuf,
+            BX_GEFORCE_THIS chs[chid].dma_get);
+        BX_GEFORCE_THIS chs[chid].dma_get += 4;
+        if (BX_GEFORCE_THIS chs[chid].dma_state.mcnt) {
           execute_command(chid,
-            BX_GEFORCE_THIS channels[chid].dma_state.subc,
-            BX_GEFORCE_THIS channels[chid].dma_state.mthd,
+            BX_GEFORCE_THIS chs[chid].dma_state.subc,
+            BX_GEFORCE_THIS chs[chid].dma_state.mthd,
             word);
-          if (!BX_GEFORCE_THIS channels[chid].dma_state.ni)
-            BX_GEFORCE_THIS channels[chid].dma_state.mthd++;
-          BX_GEFORCE_THIS channels[chid].dma_state.mcnt--;
+          if (!BX_GEFORCE_THIS chs[chid].dma_state.ni)
+            BX_GEFORCE_THIS chs[chid].dma_state.mthd++;
+          BX_GEFORCE_THIS chs[chid].dma_state.mcnt--;
         } else {
           if ((word & 0xe0000003) == 0x20000000) {
             // old jump
             BX_ERROR(("fifo: jump to 0x%08x", word & 0x1fffffff));
-            BX_GEFORCE_THIS channels[chid].dma_get = word & 0x1fffffff;
+            BX_GEFORCE_THIS chs[chid].dma_get = word & 0x1fffffff;
           } else if ((word & 0xe0030003) == 0) {
             // increasing methods
-            BX_GEFORCE_THIS channels[chid].dma_state.mthd = (word >> 2) & 0x7ff;
-            BX_GEFORCE_THIS channels[chid].dma_state.subc = (word >> 13) & 7;
-            BX_GEFORCE_THIS channels[chid].dma_state.mcnt = (word >> 18) & 0x7ff;
-            BX_GEFORCE_THIS channels[chid].dma_state.ni = 0;
+            BX_GEFORCE_THIS chs[chid].dma_state.mthd = (word >> 2) & 0x7ff;
+            BX_GEFORCE_THIS chs[chid].dma_state.subc = (word >> 13) & 7;
+            BX_GEFORCE_THIS chs[chid].dma_state.mcnt = (word >> 18) & 0x7ff;
+            BX_GEFORCE_THIS chs[chid].dma_state.ni = 0;
           } else {
             BX_PANIC(("fifo: unexpected word 0x%08x", word));
           }
