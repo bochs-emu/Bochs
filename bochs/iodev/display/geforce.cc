@@ -247,6 +247,11 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS chs[i].offset_src = 0x00000000;
     BX_GEFORCE_THIS chs[i].offset_dst = 0x00000000;
 
+    BX_GEFORCE_THIS chs[i].blit_operation = 0x00000000;
+    BX_GEFORCE_THIS chs[i].blit_syx = 0x00000000;
+    BX_GEFORCE_THIS chs[i].blit_dyx = 0x00000000;
+    BX_GEFORCE_THIS chs[i].blit_hw = 0x00000000;
+
     BX_GEFORCE_THIS chs[i].bg_color = 0x00000000;
     BX_GEFORCE_THIS chs[i].fg_color = 0x00000000;
     BX_GEFORCE_THIS chs[i].image_wh = 0x00000000;
@@ -1390,6 +1395,18 @@ void bx_geforce_c::register_write8(Bit32u address, Bit8u value)
     BX_PANIC(("Unknown 8 bit register 0x%08x write", address));
 }
 
+Bit8u bx_geforce_c::vram_read8(Bit32u address)
+{
+  return BX_GEFORCE_THIS s.memory[address];
+}
+
+Bit16u bx_geforce_c::vram_read16(Bit32u address)
+{
+  return
+    BX_GEFORCE_THIS s.memory[address + 0] << 0 |
+    BX_GEFORCE_THIS s.memory[address + 1] << 8;
+}
+
 Bit32u bx_geforce_c::vram_read32(Bit32u address)
 {
   return
@@ -1440,6 +1457,20 @@ void bx_geforce_c::ramin_write32(Bit32u address, Bit32u value)
   vram_write32(address + RAMIN_OFFSET, value);
 }
 
+Bit8u bx_geforce_c::physical_read8(Bit32u address)
+{
+  Bit8u data;
+  DEV_MEM_READ_PHYSICAL(address, 1, &data);
+  return data;
+}
+
+Bit16u bx_geforce_c::physical_read16(Bit32u address)
+{
+  Bit8u data[2];
+  DEV_MEM_READ_PHYSICAL(address, 2, data);
+  return data[0] << 0 | data[1] << 8;
+}
+
 Bit32u bx_geforce_c::physical_read32(Bit32u address)
 {
   Bit8u data[4];
@@ -1483,6 +1514,36 @@ Bit32u bx_geforce_c::dma_lin_lookup(Bit32u object, Bit32u address)
 {
   Bit32u base = ramin_read32(object + 8) & 0xFFFFFFF0;
   return base + address;
+}
+
+Bit8u bx_geforce_c::dma_read8(Bit32u object, Bit32u address)
+{
+  Bit32u flags = ramin_read32(object);
+  Bit32u target = flags >> 12 & 0xFF;
+  if (target == 0x21 || target == 0x29)
+    return physical_read8(dma_pt_lookup(object, address));
+  else if (target == 0x23 || target == 0x2b)
+    return physical_read8(dma_lin_lookup(object, address));
+  else if (target == 0x03 || target == 0x0b)
+    return vram_read8(dma_lin_lookup(object, address));
+  else
+    BX_PANIC(("dma_read8: unknown DMA target 0x%02x", target));
+  return 0;
+}
+
+Bit16u bx_geforce_c::dma_read16(Bit32u object, Bit32u address)
+{
+  Bit32u flags = ramin_read32(object);
+  Bit32u target = flags >> 12 & 0xFF;
+  if (target == 0x21 || target == 0x29)
+    return physical_read16(dma_pt_lookup(object, address));
+  else if (target == 0x23 || target == 0x2b)
+    return physical_read16(dma_lin_lookup(object, address));
+  else if (target == 0x03 || target == 0x0b)
+    return vram_read16(dma_lin_lookup(object, address));
+  else
+    BX_PANIC(("dma_read16: unknown DMA target 0x%02x", target));
+  return 0;
 }
 
 Bit32u bx_geforce_c::dma_read32(Bit32u object, Bit32u address)
@@ -1649,6 +1710,42 @@ void bx_geforce_c::imageblit(Bit32u chid)
   BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, width, height);
 }
 
+void bx_geforce_c::copyarea(Bit32u chid)
+{
+  Bit16u sx = BX_GEFORCE_THIS chs[chid].blit_syx & 0xFFFF;
+  Bit16u sy = BX_GEFORCE_THIS chs[chid].blit_syx >> 16;
+  Bit16u dx = BX_GEFORCE_THIS chs[chid].blit_dyx & 0xFFFF;
+  Bit16u dy = BX_GEFORCE_THIS chs[chid].blit_dyx >> 16;
+  Bit16u width = BX_GEFORCE_THIS chs[chid].blit_hw & 0xFFFF;
+  Bit16u height = BX_GEFORCE_THIS chs[chid].blit_hw >> 16;
+  Bit32u spitch = BX_GEFORCE_THIS chs[chid].pitch & 0xFFFF;
+  Bit32u dpitch = BX_GEFORCE_THIS chs[chid].pitch >> 16;
+  Bit32u src_offset = BX_GEFORCE_THIS chs[chid].offset_src;
+  Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].offset_dst;
+  src_offset += sy * spitch + sx * BX_GEFORCE_THIS chs[chid].color_bytes;
+  draw_offset += dy * dpitch + dx * BX_GEFORCE_THIS chs[chid].color_bytes;
+  Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
+  for (Bit16u y = 0; y < height; y++) {
+    for (Bit16u x = 0; x < width; x++) {
+      if (BX_GEFORCE_THIS chs[chid].color_bytes == 1) {
+        Bit8u color = dma_read8(BX_GEFORCE_THIS chs[chid].image_src, src_offset + x);
+        dma_write8(BX_GEFORCE_THIS chs[chid].image_dst, draw_offset + x, color);
+      } else if (BX_GEFORCE_THIS chs[chid].color_bytes == 2) {
+        Bit16u color = dma_read16(BX_GEFORCE_THIS chs[chid].image_src, src_offset + x * 2);
+        dma_write16(BX_GEFORCE_THIS chs[chid].image_dst, draw_offset + x * 2, color);
+      } else if (BX_GEFORCE_THIS chs[chid].color_bytes == 4) {
+        Bit32u color = dma_read32(BX_GEFORCE_THIS chs[chid].image_src, src_offset + x * 4);
+        dma_write32(BX_GEFORCE_THIS chs[chid].image_dst, draw_offset + x * 4, color);
+      }
+    }
+    src_offset += spitch;
+    draw_offset += dpitch;
+  }
+  Bit32u redraw_x = redraw_offset % dpitch / BX_GEFORCE_THIS chs[chid].color_bytes;
+  Bit32u redraw_y = redraw_offset / dpitch;
+  BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, width, height);  
+}
+
 void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param)
 {
   BX_ERROR(("execute_command: chid 0x%02x, subc 0x%02x, method 0x%03x, param 0x%08x",
@@ -1729,6 +1826,16 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
           else if (method == 0x0c3)
             BX_GEFORCE_THIS chs[chid].offset_dst = param;
         } else if (cls == 0x9f) { // imageblit
+          if (method == 0x0bf)
+            BX_GEFORCE_THIS chs[chid].blit_operation = param;
+          else if (method == 0x0c0)
+            BX_GEFORCE_THIS chs[chid].blit_syx = param;
+          else if (method == 0x0c1)
+            BX_GEFORCE_THIS chs[chid].blit_dyx = param;
+          else if (method == 0x0c2) {
+            BX_GEFORCE_THIS chs[chid].blit_hw = param;
+            copyarea(chid);
+          }
         }
         if (BX_GEFORCE_THIS chs[chid].notify_pending) {
           BX_ERROR(("execute_command: DMA notify"));
@@ -1794,12 +1901,11 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS timer_num;
   else if (address == 0x9210)
     value = BX_GEFORCE_THIS timer_den;
-  else if (address == 0x9400 || address == 0x9410) {
-    if (address == 0x9400)
-      value = (Bit32u)get_current_time();
-    else
-      value = get_current_time() >> 32;
-  } else if (address == 0x9420)
+  else if (address == 0x9400)
+    value = (Bit32u)get_current_time();
+  else if (address == 0x9410)
+    value = get_current_time() >> 32;
+  else if (address == 0x9420)
     value = BX_GEFORCE_THIS timer_alarm;
   else if (address == 0x100080)
     value = BX_GEFORCE_THIS fb_debug_0;
