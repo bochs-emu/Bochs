@@ -162,6 +162,7 @@ bool bx_geforce_c::init_vga_extension(void)
   BX_INFO(("%s initialized", model));
   BX_GEFORCE_THIS s.max_xres = 2048;
   BX_GEFORCE_THIS s.max_yres = 1536;
+  BX_GEFORCE_THIS ddc.init();
 #if BX_DEBUGGER
   // register device for the 'info device' command (calls debug_dump())
   bx_dbg_register_debug_info("geforce", this);

@@ -1,0 +1,93 @@
+.\"Document Author:  Volker Ruppert   -   vruppert@users.sourceforge.net"
+.TH bxhub 1 "21 Feb 2025" "bxhub" "The Bochs Project"
+.\"SKIP_SECTION"
+.SH NAME
+bxhub \- Command line utility for the Bochs networking module 'socket'.
+.\"SKIP_SECTION"
+.SH SYNOPSIS
+.B bxhub
+.RI \|[ options \|]
+.\"SKIP_SECTION"
+.SH DESCRIPTION
+.LP
+Bxhub is a utility required for the 'socket' networking module simulating an
+ethernet hub for interconecting Bochs instances. It also simulates a server
+providing the same services as the 'vnet' networking module (DHCP / DNS / FTP /
+TFTP and ICMP-echo). All required parameters must be given in the command line.
+.\".\"DONT_SPLIT"
+.SH OPTIONS
+.LP
+If bxhub is started without command line options, these default values are used:
+
+UDP base port 40000
+.br
+2 client connections
+.br
+Server MAC address b0:c4:20:00:00:0f
+.br
+FTP / TFTP support disabled
+.br
+.TP
+The follow options can be used to change these settings:
+.TP
+.BI \-ports=...
+Number of virtual ethernet ports (2 - 6)
+.TP
+.BI \-base=...
+Base UDP port (bxhub uses 2 ports per Bochs session)
+.TP
+.BI \-mac=...
+Host MAC address (default is b0:c4:20:00:00:0f)
+.TP
+.BI \-tftp=...
+Enable FTP and TFTP support using specified directory as root
+.TP
+.BI \-bootfile=...
+Network bootfile reported by DHCP - located on TFTP server
+.TP
+.BI \-loglev=...
+Set log level (0 - 3, default 1)
+.TP
+.BI \-logfile=...
+Send log output to file
+.TP
+.BI \--help
+Display help message and exit
+.\"SKIP_SECTION"
+.SH LICENSE
+This program  is distributed  under the terms of the  GNU
+Lesser General Public License as published  by  the  Free
+Software  Foundation.  See the LICENSE and COPYING files located
+in /usr/share/doc/bochs/ for details on the license and
+the lack of warranty.
+.\"SKIP_SECTION"
+.SH AVAILABILITY
+The latest version of this program can be found at:
+  https://bochs.sourceforge.io/getcurrent.html
+.\"SKIP_SECTION"
+.SH SEE ALSO
+bochs(1), bximage(1), bochsrc(5), bochs-dlx(1)
+.PP
+.nf
+The Bochs IA-32 Emulator site on the World Wide Web:
+  https://bochs.sourceforge.io
+
+Online Bochs Documentation
+	https://bochs.sourceforge.io/doc/docbook
+.fi
+.\"SKIP_SECTION"
+.SH AUTHORS
+The original version of bxhub was written by Mariusz Matuszek in 2003 as a part
+of the socket networking patch. The builtin server support comes from the 'vnet'
+networking module and it has been adapted and extended by Volker Ruppert.
+.\"SKIP_SECTION"
+.SH BUGS
+Please report all bugs to the bug tracker  on  our  web
+site. Just go to https://bochs.sourceforge.io, and click
+"Bug Reports" on the sidebar under "Feedback."
+.PP
+Provide a detailed description of the bug, the version of
+the program you are running, the operating system you are
+running the program on  and  the  operating   system  you
+are running in the emulator.
+

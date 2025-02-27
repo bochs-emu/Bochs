@@ -2926,6 +2926,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     }
     for (i=1; i<num_params; i++) {
       if (!strncmp(params[i], "extension=", 10)) {
+        SIM->get_param_enum(BXPN_VGA_EXTENSION)->set_by_name(&params[i][10]);
       } else if (!strncmp(params[i], "update_freq=", 12)) {
         SIM->get_param_num(BXPN_VGA_UPDATE_FREQUENCY)->set(atol(&params[i][12]));
       } else if (!strncmp(params[i], "realtime=", 9)) {
@@ -2942,12 +2943,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         SIM->get_param_enum(BXPN_VBE_MEMSIZE)->set_by_name(&params[i][12]);
       } else {
         PARSE_ERR(("%s: vga directive malformed.", context));
-      }
-    }
-    // Plugin should be initialized after DDC parameter is set
-    for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "extension=", 10)) {
-        SIM->get_param_enum(BXPN_VGA_EXTENSION)->set_by_name(&params[i][10]);
       }
     }
   } else if (!strcmp(params[0], "keyboard")) {

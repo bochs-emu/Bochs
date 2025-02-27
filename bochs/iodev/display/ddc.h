@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2018-2021  The Bochs Project
+//  Copyright (C) 2018-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -27,6 +27,7 @@ public:
   bx_ddc_c();
   virtual ~bx_ddc_c();
 
+  void init(void);
   Bit8u read(void);
   void write(bool dck, bool dda);
 
