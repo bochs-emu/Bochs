@@ -5,7 +5,7 @@
 //  Copyright (c) 2004 Makoto Suzuki (suzu)
 //                     Volker Ruppert (vruppert)
 //                     Robin Kay (komadori)
-//  Copyright (C) 2004-2024  The Bochs Project
+//  Copyright (C) 2004-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -259,6 +259,7 @@ bool bx_svga_cirrus_c::init_vga_extension(void)
   }
   BX_CIRRUS_THIS s.max_xres = 1600;
   BX_CIRRUS_THIS s.max_yres = 1200;
+  BX_CIRRUS_THIS ddc.init();
 #if BX_DEBUGGER
   // register device for the 'info device' command (calls debug_dump())
   bx_dbg_register_debug_info("cirrus", this);

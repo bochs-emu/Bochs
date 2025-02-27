@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2024  The Bochs Project
+//  Copyright (C) 2002-2025  The Bochs Project
 //  PCI VGA dummy adapter Copyright (C) 2002,2003  Mike Nordell
 //
 //  This library is free software; you can redistribute it and/or
@@ -124,6 +124,7 @@ bool bx_vga_c::init_vga_extension(void)
     BX_VGA_THIS s.max_xres = BX_VGA_THIS vbe.max_xres;
     BX_VGA_THIS s.max_yres = BX_VGA_THIS vbe.max_yres;
     BX_VGA_THIS vbe_present = 1;
+    BX_VGA_THIS ddc.init();
     ret = 1;
 
     BX_INFO(("VBE Bochs Display Extension Enabled (%d MB)", BX_VGA_THIS s.memsize >> 20));

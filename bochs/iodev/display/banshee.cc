@@ -205,6 +205,7 @@ void bx_banshee_c::init_model(void)
       pci_rom[0x7fff] = -checksum;
     }
   }
+  ddc.init();
 }
 
 void bx_banshee_c::reset(unsigned type)

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2018-2021  The Bochs Project
+//  Copyright (C) 2018-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -154,12 +154,21 @@ const Bit8u vesa_EDID[128] = {
 
 bx_ddc_c::bx_ddc_c(void)
 {
+  put("DDC");
+  memset(&s, 0, sizeof(s));
+}
+
+bx_ddc_c::~bx_ddc_c(void)
+{
+}
+
+void bx_ddc_c::init()
+{
   int fd, ret;
   struct stat stat_buf;
   const char *path;
   Bit8u checksum = 0;
 
-  put("DDC");
   s.DCKhost = 1;
   s.DDAhost = 1;
   s.DDAmon = 1;
@@ -204,10 +213,6 @@ bx_ddc_c::bx_ddc_c(void)
   if (checksum != 0) {
     s.edid_data[127] = (Bit8u)-checksum;
   }
-}
-
-bx_ddc_c::~bx_ddc_c(void)
-{
 }
 
 Bit8u bx_ddc_c::read()
