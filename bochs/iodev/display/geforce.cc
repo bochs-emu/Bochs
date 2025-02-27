@@ -1285,11 +1285,6 @@ void bx_geforce_c::update(void)
 
 Bit8u bx_geforce_c::svga_read_crtc(Bit32u address, unsigned index)
 {
-  if (index == 0x36)
-    BX_GEFORCE_THIS crtc.reg[index] = BX_GEFORCE_THIS ddc.read();
-  else if (index == 0x3e)
-    BX_GEFORCE_THIS crtc.reg[index] = 0xFF;
-
   if (index <= GEFORCE_CRTC_MAX) {
     Bit8u value = BX_GEFORCE_THIS crtc.reg[index];
     BX_ERROR(("crtc: index 0x%02x read 0x%02x", index, value));
@@ -1303,7 +1298,11 @@ Bit8u bx_geforce_c::svga_read_crtc(Bit32u address, unsigned index)
 
 void bx_geforce_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
 {
-  BX_ERROR(("crtc: index 0x%02x write 0x%02x", index, (unsigned)value));
+  if (index == 0x40) {
+    if (BX_GEFORCE_THIS crtc.reg[index] != value)
+      BX_ERROR(("crtc: index 0x%02x write 0x%02x [no duplicates]", index, (unsigned)value));
+  } else
+    BX_ERROR(("crtc: index 0x%02x write 0x%02x", index, (unsigned)value));
 
   bool update_cursor_addr = false;
 
@@ -1311,10 +1310,16 @@ void bx_geforce_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
     BX_GEFORCE_THIS bank_base[index - 0x1d] = value * 0x8000;
   else if (index == 0x2f || index == 0x30 || index == 0x31)
     update_cursor_addr = true;
-  else if (index == 0x37)
-    BX_GEFORCE_THIS ddc.write((value >> 5) & 1, (value >> 4) & 1);
-  else if (index == 0x3f)
-    value = 0xFF;
+  else if (index == 0x37 || index == 0x3f) {
+    bool scl = value & 0x20;
+    bool sda = value & 0x10;
+    if (index == 0x3f) {
+      BX_GEFORCE_THIS ddc.write(scl, sda);
+      BX_GEFORCE_THIS crtc.reg[0x3e] = BX_GEFORCE_THIS ddc.read() & 0x0c;
+    } else {
+      BX_GEFORCE_THIS crtc.reg[0x36] = sda << 3 | scl << 2;
+    }
+  }
 
   if (index <= GEFORCE_CRTC_MAX) {
     BX_GEFORCE_THIS crtc.reg[index] = value;
