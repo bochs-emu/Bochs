@@ -93,15 +93,21 @@ private:
   BX_GEFORCE_SMF void vram_write8(Bit32u address, Bit8u value);
   BX_GEFORCE_SMF void vram_write16(Bit32u address, Bit16u value);
   BX_GEFORCE_SMF void vram_write32(Bit32u address, Bit32u value);
+  BX_GEFORCE_SMF void vram_write64(Bit32u address, Bit64u value);
   BX_GEFORCE_SMF Bit32u ramin_read32(Bit32u address);
   BX_GEFORCE_SMF void ramin_write32(Bit32u address, Bit32u value);
   BX_GEFORCE_SMF Bit32u physical_read32(Bit32u address);
+  BX_GEFORCE_SMF void physical_write32(Bit32u address, Bit32u value);
+  BX_GEFORCE_SMF void physical_write64(Bit32u address, Bit64u value);
   BX_GEFORCE_SMF Bit32u dma_read32(Bit32u object, Bit32u address);
   BX_GEFORCE_SMF void dma_write8(Bit32u object, Bit32u address, Bit8u value);
   BX_GEFORCE_SMF void dma_write16(Bit32u object, Bit32u address, Bit16u value);
   BX_GEFORCE_SMF void dma_write32(Bit32u object, Bit32u address, Bit32u value);
+  BX_GEFORCE_SMF void dma_write64(Bit32u object, Bit32u address, Bit64u value);
   BX_GEFORCE_SMF Bit32u dma_pt_lookup(Bit32u object, Bit32u address);
-  BX_GEFORCE_SMF Bit32u dma_vram_lookup(Bit32u object, Bit32u address);
+  BX_GEFORCE_SMF Bit32u dma_lin_lookup(Bit32u object, Bit32u address);
+
+  BX_GEFORCE_SMF Bit64u get_current_time();
 
   BX_GEFORCE_SMF Bit32u ramht_lookup(Bit32u handle, Bit32u chid);
   BX_GEFORCE_SMF void execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
@@ -174,6 +180,8 @@ private:
     } schs[GEFORCE_SUBCHANNEL_COUNT];
 
     Bit32u notifier;
+    bool notify_pending;
+    Bit32u notify_type;
 
     Bit32u image_src;
     Bit32u image_dst;

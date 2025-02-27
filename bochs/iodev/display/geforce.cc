@@ -237,6 +237,8 @@ void bx_geforce_c::svga_init_members()
     }
 
     BX_GEFORCE_THIS chs[i].notifier = 0x00000000;
+    BX_GEFORCE_THIS chs[i].notify_pending = false;
+    BX_GEFORCE_THIS chs[i].notify_type = 0x00000000;
     BX_GEFORCE_THIS chs[i].image_src = 0x00000000;
     BX_GEFORCE_THIS chs[i].image_dst = 0x00000000;
     BX_GEFORCE_THIS chs[i].color_fmt = 0x00000000;
@@ -1416,6 +1418,18 @@ void bx_geforce_c::vram_write32(Bit32u address, Bit32u value)
   BX_GEFORCE_THIS s.memory[address + 3] = value >> 24 & 0xFF;
 }
 
+void bx_geforce_c::vram_write64(Bit32u address, Bit64u value)
+{
+  BX_GEFORCE_THIS s.memory[address + 0] = value >> 0 & 0xFF;
+  BX_GEFORCE_THIS s.memory[address + 1] = value >> 8 & 0xFF;
+  BX_GEFORCE_THIS s.memory[address + 2] = value >> 16 & 0xFF;
+  BX_GEFORCE_THIS s.memory[address + 3] = value >> 24 & 0xFF;
+  BX_GEFORCE_THIS s.memory[address + 4] = value >> 32 & 0xFF;
+  BX_GEFORCE_THIS s.memory[address + 5] = value >> 40 & 0xFF;
+  BX_GEFORCE_THIS s.memory[address + 6] = value >> 48 & 0xFF;
+  BX_GEFORCE_THIS s.memory[address + 7] = value >> 56 & 0xFF;
+}
+
 Bit32u bx_geforce_c::ramin_read32(Bit32u address)
 {
   return vram_read32(address + RAMIN_OFFSET);
@@ -1433,6 +1447,30 @@ Bit32u bx_geforce_c::physical_read32(Bit32u address)
   return data[0] << 0 | data[1] << 8 | data[2] << 16 | data[3] << 24;
 }
 
+void bx_geforce_c::physical_write32(Bit32u address, Bit32u value)
+{
+  Bit8u data[4];
+  data[0] = value >> 0 & 0xFF;
+  data[1] = value >> 8 & 0xFF;
+  data[2] = value >> 16 & 0xFF;
+  data[3] = value >> 24 & 0xFF;
+  DEV_MEM_WRITE_PHYSICAL(address, 4, data);
+}
+
+void bx_geforce_c::physical_write64(Bit32u address, Bit64u value)
+{
+  Bit8u data[8];
+  data[0] = value >> 0 & 0xFF;
+  data[1] = value >> 8 & 0xFF;
+  data[2] = value >> 16 & 0xFF;
+  data[3] = value >> 24 & 0xFF;
+  data[4] = value >> 32 & 0xFF;
+  data[5] = value >> 40 & 0xFF;
+  data[6] = value >> 48 & 0xFF;
+  data[7] = value >> 56 & 0xFF;
+  DEV_MEM_WRITE_PHYSICAL(address, 8, data);
+}
+
 Bit32u bx_geforce_c::dma_pt_lookup(Bit32u object, Bit32u address)
 {
   Bit32u page_offset = address & 0xFFF;
@@ -1441,7 +1479,7 @@ Bit32u bx_geforce_c::dma_pt_lookup(Bit32u object, Bit32u address)
   return page | page_offset;
 }
 
-Bit32u bx_geforce_c::dma_vram_lookup(Bit32u object, Bit32u address)
+Bit32u bx_geforce_c::dma_lin_lookup(Bit32u object, Bit32u address)
 {
   Bit32u base = ramin_read32(object + 8) & 0xFFFFFFF0;
   return base + address;
@@ -1451,13 +1489,14 @@ Bit32u bx_geforce_c::dma_read32(Bit32u object, Bit32u address)
 {
   Bit32u flags = ramin_read32(object);
   Bit32u target = flags >> 12 & 0xFF;
-  if (target == 0x21 || target == 0x29) {
+  if (target == 0x21 || target == 0x29)
     return physical_read32(dma_pt_lookup(object, address));
-  } else if (target == 0x03 || target == 0x0b) {
-    return vram_read32(dma_vram_lookup(object, address));
-  } else {
+  else if (target == 0x23 || target == 0x2b)
+    return physical_read32(dma_lin_lookup(object, address));
+  else if (target == 0x03 || target == 0x0b)
+    return vram_read32(dma_lin_lookup(object, address));
+  else
     BX_PANIC(("dma_read32: unknown DMA target 0x%02x", target));
-  }
   return 0;
 }
 
@@ -1465,33 +1504,44 @@ void bx_geforce_c::dma_write8(Bit32u object, Bit32u address, Bit8u value)
 {
   Bit32u flags = ramin_read32(object);
   Bit32u target = flags >> 12 & 0xFF;
-  if (target == 0x03 || target == 0x0b) {
-    vram_write8(dma_vram_lookup(object, address), value);
-  } else {
+  if (target == 0x03 || target == 0x0b)
+    vram_write8(dma_lin_lookup(object, address), value);
+  else
     BX_PANIC(("dma_write8: unknown DMA target 0x%02x", target));
-  }
 }
 
 void bx_geforce_c::dma_write16(Bit32u object, Bit32u address, Bit16u value)
 {
   Bit32u flags = ramin_read32(object);
   Bit32u target = flags >> 12 & 0xFF;
-  if (target == 0x03 || target == 0x0b) {
-    vram_write16(dma_vram_lookup(object, address), value);
-  } else {
+  if (target == 0x03 || target == 0x0b)
+    vram_write16(dma_lin_lookup(object, address), value);
+  else
     BX_PANIC(("dma_write16: unknown DMA target 0x%02x", target));
-  }
 }
 
 void bx_geforce_c::dma_write32(Bit32u object, Bit32u address, Bit32u value)
 {
   Bit32u flags = ramin_read32(object);
   Bit32u target = flags >> 12 & 0xFF;
-  if (target == 0x03 || target == 0x0b) {
-    vram_write32(dma_vram_lookup(object, address), value);
-  } else {
+  if (target == 0x03 || target == 0x0b)
+    vram_write32(dma_lin_lookup(object, address), value);
+  else if (target == 0x23 || target == 0x2b)
+    physical_write32(dma_lin_lookup(object, address), value);
+  else
     BX_PANIC(("dma_write32: unknown DMA target 0x%02x", target));
-  }
+}
+
+void bx_geforce_c::dma_write64(Bit32u object, Bit32u address, Bit64u value)
+{
+  Bit32u flags = ramin_read32(object);
+  Bit32u target = flags >> 12 & 0xFF;
+  if (target == 0x03 || target == 0x0b)
+    vram_write64(dma_lin_lookup(object, address), value);
+  else if (target == 0x23 || target == 0x2b)
+    physical_write64(dma_lin_lookup(object, address), value);
+  else
+    BX_PANIC(("dma_write64: unknown DMA target 0x%02x", target));
 }
 
 Bit32u bx_geforce_c::ramht_lookup(Bit32u handle, Bit32u chid)
@@ -1613,9 +1663,12 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
     if (method >= 0x060 && method < 0x080)
       param = (ramht_lookup(param, chid) & 0xFFFF) << 4;
     if (BX_GEFORCE_THIS chs[chid].schs[subc].engine == 0x01) {
-      if (method == 0x060)
+      if (method == 0x041) {
+        BX_GEFORCE_THIS chs[chid].notify_pending = true;
+        BX_GEFORCE_THIS chs[chid].notify_type = param;
+      } else if (method == 0x060) {
         BX_GEFORCE_THIS chs[chid].notifier = param;
-      else {
+      } else {
         Bit8u cls = ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object);
         BX_ERROR(("execute_command: obj 0x%08x, class 0x%02x, method 0x%03x, param 0x%08x",
           BX_GEFORCE_THIS chs[chid].schs[subc].object, cls, method, param));
@@ -1677,12 +1730,27 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
             BX_GEFORCE_THIS chs[chid].offset_dst = param;
         } else if (cls == 0x9f) { // imageblit
         }
+        if (BX_GEFORCE_THIS chs[chid].notify_pending) {
+          BX_ERROR(("execute_command: DMA notify"));
+          dma_write64(BX_GEFORCE_THIS chs[chid].notifier, 0x0, get_current_time());
+          dma_write32(BX_GEFORCE_THIS chs[chid].notifier, 0x8, 0);
+          dma_write32(BX_GEFORCE_THIS chs[chid].notifier, 0xC, 0);
+          BX_GEFORCE_THIS chs[chid].notify_pending = false;
+          if (BX_GEFORCE_THIS chs[chid].notify_type)
+            BX_PANIC(("execute_command: interrupt should be triggered"));
+        }
       }
     }
   }
   if (BX_GEFORCE_THIS chs[chid].schs[subc].engine == 0x00) {
     BX_ERROR(("execute_command: software engine"));
   }
+}
+
+Bit64u bx_geforce_c::get_current_time()
+{
+  return BX_GEFORCE_THIS timer_inittime1 +
+      bx_pc_system.time_nsec() - BX_GEFORCE_THIS timer_inittime2;
 }
 
 Bit32u bx_geforce_c::register_read32(Bit32u address)
@@ -1727,12 +1795,10 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
   else if (address == 0x9210)
     value = BX_GEFORCE_THIS timer_den;
   else if (address == 0x9400 || address == 0x9410) {
-    Bit64u time2 = bx_pc_system.time_nsec();
-    Bit64u time1 = BX_GEFORCE_THIS timer_inittime1 + time2 - BX_GEFORCE_THIS timer_inittime2;
     if (address == 0x9400)
-      value = (Bit32u)time1;
+      value = (Bit32u)get_current_time();
     else
-      value = time1 >> 32;
+      value = get_current_time() >> 32;
   } else if (address == 0x9420)
     value = BX_GEFORCE_THIS timer_alarm;
   else if (address == 0x100080)
@@ -1927,6 +1993,9 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
         BX_GEFORCE_THIS chs[chid].dma_get = ramin_read32(ramfc + chid * 0x40 + 0x4);
         BX_GEFORCE_THIS chs[chid].pushbuf = ramin_read32(ramfc + chid * 0x40 + 0xC) << 4;
         BX_GEFORCE_THIS chs[chid].initialized = true;
+        BX_ERROR(("fifo: chid 0x%02x, dma_put 0x%08x, dma_get 0x%08x, pushbuf 0x%08x",
+            chid, BX_GEFORCE_THIS chs[chid].dma_put, BX_GEFORCE_THIS chs[chid].dma_get,
+            BX_GEFORCE_THIS chs[chid].pushbuf));
       }
       BX_GEFORCE_THIS chs[chid].dma_put = value;
       while (BX_GEFORCE_THIS chs[chid].dma_get != BX_GEFORCE_THIS chs[chid].dma_put) {
