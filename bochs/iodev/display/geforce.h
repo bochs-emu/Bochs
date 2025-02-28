@@ -101,6 +101,7 @@ private:
   BX_GEFORCE_SMF Bit8u physical_read8(Bit32u address);
   BX_GEFORCE_SMF Bit16u physical_read16(Bit32u address);
   BX_GEFORCE_SMF Bit32u physical_read32(Bit32u address);
+  BX_GEFORCE_SMF void physical_write8(Bit32u address, Bit8u value);
   BX_GEFORCE_SMF void physical_write32(Bit32u address, Bit32u value);
   BX_GEFORCE_SMF void physical_write64(Bit32u address, Bit64u value);
   BX_GEFORCE_SMF Bit8u dma_read8(Bit32u object, Bit32u address);
@@ -121,6 +122,7 @@ private:
   BX_GEFORCE_SMF void fillrect(Bit32u chid);
   BX_GEFORCE_SMF void imageblit(Bit32u chid);
   BX_GEFORCE_SMF void copyarea(Bit32u chid);
+  BX_GEFORCE_SMF void move(Bit32u chid);
 
   struct {
     Bit8u index;
@@ -202,6 +204,15 @@ private:
     Bit32u blit_syx;
     Bit32u blit_dyx;
     Bit32u blit_hw;
+
+    Bit32u m2mf_src;
+    Bit32u m2mf_dst;
+    Bit32u m2mf_src_offset;
+    Bit32u m2mf_dst_offset;
+    Bit32u m2mf_src_pitch;
+    Bit32u m2mf_dst_pitch;
+    Bit32u m2mf_line_length;
+    Bit32u m2mf_line_count;
 
     Bit32u bg_color;
     Bit32u fg_color;

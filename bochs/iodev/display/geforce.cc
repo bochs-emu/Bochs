@@ -253,6 +253,15 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS chs[i].blit_dyx = 0x00000000;
     BX_GEFORCE_THIS chs[i].blit_hw = 0x00000000;
 
+    BX_GEFORCE_THIS chs[i].m2mf_src = 0x00000000;
+    BX_GEFORCE_THIS chs[i].m2mf_dst = 0x00000000;
+    BX_GEFORCE_THIS chs[i].m2mf_src_offset = 0x00000000;
+    BX_GEFORCE_THIS chs[i].m2mf_dst_offset = 0x00000000;
+    BX_GEFORCE_THIS chs[i].m2mf_src_pitch = 0x00000000;
+    BX_GEFORCE_THIS chs[i].m2mf_dst_pitch = 0x00000000;
+    BX_GEFORCE_THIS chs[i].m2mf_line_length = 0x00000000;
+    BX_GEFORCE_THIS chs[i].m2mf_line_count = 0x00000000;
+
     BX_GEFORCE_THIS chs[i].bg_color = 0x00000000;
     BX_GEFORCE_THIS chs[i].fg_color = 0x00000000;
     BX_GEFORCE_THIS chs[i].image_wh = 0x00000000;
@@ -1479,6 +1488,11 @@ Bit32u bx_geforce_c::physical_read32(Bit32u address)
   return data[0] << 0 | data[1] << 8 | data[2] << 16 | data[3] << 24;
 }
 
+void bx_geforce_c::physical_write8(Bit32u address, Bit8u value)
+{
+  DEV_MEM_WRITE_PHYSICAL(address, 1, &value);
+}
+
 void bx_geforce_c::physical_write32(Bit32u address, Bit32u value)
 {
   Bit8u data[4];
@@ -1566,7 +1580,11 @@ void bx_geforce_c::dma_write8(Bit32u object, Bit32u address, Bit8u value)
 {
   Bit32u flags = ramin_read32(object);
   Bit32u target = flags >> 12 & 0xFF;
-  if (target == 0x03 || target == 0x0b)
+  if (target == 0x21 || target == 0x29)
+    physical_write8(dma_pt_lookup(object, address), value);
+  else if (target == 0x23 || target == 0x2b)
+    physical_write8(dma_lin_lookup(object, address), value);
+  else if (target == 0x03 || target == 0x0b)
     vram_write8(dma_lin_lookup(object, address), value);
   else
     BX_PANIC(("dma_write8: unknown DMA target 0x%02x", target));
@@ -1586,10 +1604,12 @@ void bx_geforce_c::dma_write32(Bit32u object, Bit32u address, Bit32u value)
 {
   Bit32u flags = ramin_read32(object);
   Bit32u target = flags >> 12 & 0xFF;
-  if (target == 0x03 || target == 0x0b)
-    vram_write32(dma_lin_lookup(object, address), value);
+  if (target == 0x21 || target == 0x29)
+    physical_write32(dma_pt_lookup(object, address), value);
   else if (target == 0x23 || target == 0x2b)
     physical_write32(dma_lin_lookup(object, address), value);
+  else if (target == 0x03 || target == 0x0b)
+    vram_write32(dma_lin_lookup(object, address), value);
   else
     BX_PANIC(("dma_write32: unknown DMA target 0x%02x", target));
 }
@@ -1598,10 +1618,12 @@ void bx_geforce_c::dma_write64(Bit32u object, Bit32u address, Bit64u value)
 {
   Bit32u flags = ramin_read32(object);
   Bit32u target = flags >> 12 & 0xFF;
-  if (target == 0x03 || target == 0x0b)
-    vram_write64(dma_lin_lookup(object, address), value);
+  if (target == 0x21 || target == 0x29)
+    physical_write64(dma_pt_lookup(object, address), value);
   else if (target == 0x23 || target == 0x2b)
     physical_write64(dma_lin_lookup(object, address), value);
+  else if (target == 0x03 || target == 0x0b)
+    vram_write64(dma_lin_lookup(object, address), value);
   else
     BX_PANIC(("dma_write64: unknown DMA target 0x%02x", target));
 }
@@ -1662,7 +1684,7 @@ void bx_geforce_c::fillrect(Bit32u chid)
     }
     draw_offset += pitch;
   }
-  Bit32u redraw_x = redraw_offset % pitch / BX_GEFORCE_THIS chs[chid].color_bytes;
+  Bit32u redraw_x = redraw_offset % pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
   Bit32u redraw_y = redraw_offset / pitch;
   BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, width, height);
 }
@@ -1706,7 +1728,7 @@ void bx_geforce_c::imageblit(Bit32u chid)
     }
     draw_offset += pitch;
   }
-  Bit32u redraw_x = redraw_offset % pitch / BX_GEFORCE_THIS chs[chid].color_bytes;
+  Bit32u redraw_x = redraw_offset % pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
   Bit32u redraw_y = redraw_offset / pitch;
   BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, width, height);
 }
@@ -1742,9 +1764,23 @@ void bx_geforce_c::copyarea(Bit32u chid)
     src_offset += spitch;
     draw_offset += dpitch;
   }
-  Bit32u redraw_x = redraw_offset % dpitch / BX_GEFORCE_THIS chs[chid].color_bytes;
+  Bit32u redraw_x = redraw_offset % dpitch / (BX_GEFORCE_THIS svga_bpp >> 3);
   Bit32u redraw_y = redraw_offset / dpitch;
-  BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, width, height);  
+  BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, width, height);
+}
+
+void bx_geforce_c::move(Bit32u chid)
+{
+  Bit32u src_offset = BX_GEFORCE_THIS chs[chid].m2mf_src_offset;
+  Bit32u dst_offset = BX_GEFORCE_THIS chs[chid].m2mf_dst_offset;
+  for (Bit16u y = 0; y < BX_GEFORCE_THIS chs[chid].m2mf_line_count; y++) {
+    for (Bit16u x = 0; x < BX_GEFORCE_THIS chs[chid].m2mf_line_length; x++) {
+      Bit8u byte = dma_read8(BX_GEFORCE_THIS chs[chid].m2mf_src, src_offset + x);
+      dma_write8(BX_GEFORCE_THIS chs[chid].m2mf_dst, dst_offset + x, byte);
+    }
+    src_offset += BX_GEFORCE_THIS chs[chid].m2mf_src_pitch;
+    dst_offset += BX_GEFORCE_THIS chs[chid].m2mf_dst_pitch;
+  }
 }
 
 void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param)
@@ -1772,6 +1808,24 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
           BX_GEFORCE_THIS chs[chid].schs[subc].object, cls, method, param));
         if (cls == 0x19) { // clip
         } else if (cls == 0x39) { // m2mf
+          if (method == 0x040)
+            move(chid);
+          else if (method == 0x061)
+            BX_GEFORCE_THIS chs[chid].m2mf_src = param;
+          else if (method == 0x062)
+            BX_GEFORCE_THIS chs[chid].m2mf_dst = param;
+          else if (method == 0x0c3)
+            BX_GEFORCE_THIS chs[chid].m2mf_src_offset = param;
+          else if (method == 0x0c4)
+            BX_GEFORCE_THIS chs[chid].m2mf_dst_offset = param;
+          else if (method == 0x0c5)
+            BX_GEFORCE_THIS chs[chid].m2mf_src_pitch = param;
+          else if (method == 0x0c6)
+            BX_GEFORCE_THIS chs[chid].m2mf_dst_pitch = param;
+          else if (method == 0x0c7)
+            BX_GEFORCE_THIS chs[chid].m2mf_line_length = param;
+          else if (method == 0x0c8)
+            BX_GEFORCE_THIS chs[chid].m2mf_line_count = param;
         } else if (cls == 0x44) { // patt
         } else if (cls == 0x4a) { // gdi
           if (method == 0x066)
