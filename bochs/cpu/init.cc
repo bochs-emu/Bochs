@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -571,6 +571,23 @@ void BX_CPU_C::register_state(void)
   }
 #endif
 
+#if BX_SUPPORT_FRED
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FRED)) {
+    bx_list_c *FRED = new bx_list_c(cpu, "FRED");
+    BXRS_HEX_PARAM_FIELD(FRED, ia32_fred_rsp0, msr.ia32_fred_rsp[0]);
+    BXRS_HEX_PARAM_FIELD(FRED, ia32_fred_rsp1, msr.ia32_fred_rsp[1]);
+    BXRS_HEX_PARAM_FIELD(FRED, ia32_fred_rsp2, msr.ia32_fred_rsp[2]);
+    BXRS_HEX_PARAM_FIELD(FRED, ia32_fred_rsp3, msr.ia32_fred_rsp[3]);
+#if BX_SUPPORT_CET
+    BXRS_HEX_PARAM_FIELD(FRED, ia32_fred_ssp1, msr.ia32_fred_ssp[1]);
+    BXRS_HEX_PARAM_FIELD(FRED, ia32_fred_ssp2, msr.ia32_fred_ssp[2]);
+    BXRS_HEX_PARAM_FIELD(FRED, ia32_fred_ssp3, msr.ia32_fred_ssp[3]);
+#endif
+    BXRS_HEX_PARAM_FIELD(FRED, ia32_fred_stack_levels, msr.ia32_fred_stack_levels);
+    BXRS_HEX_PARAM_FIELD(FRED, ia32_fred_cfg, msr.ia32_fred_cfg);
+  }
+#endif
+
 #if BX_SUPPORT_FPU
   bx_list_c *fpu = new bx_list_c(cpu, "FPU");
   BXRS_HEX_PARAM_FIELD(fpu, cwd, the_i387.cwd);
@@ -1045,7 +1062,7 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR cr4.set32(0);
+  BX_CPU_THIS_PTR cr4.set(0);
   BX_CPU_THIS_PTR cr4_suppmask = get_cr4_allow_mask();
 #if BX_SUPPORT_X86_64
   BX_CPU_THIS_PTR linaddr_width = 48;
@@ -1076,6 +1093,19 @@ void BX_CPU_C::reset(unsigned source)
   for (n=0;n<4;n++)
     BX_CPU_THIS_PTR msr.ia32_pl_ssp[n] = 0;
   SSP = 0;
+#endif
+
+#if BX_SUPPORT_FRED
+  if (source == BX_RESET_HARDWARE) {
+    BX_CPU_THIS_PTR msr.ia32_fred_cfg = 0;
+    BX_CPU_THIS_PTR msr.ia32_fred_stack_levels = 0;
+    for (n=0;n<4;n++) {
+#if BX_SUPPORT_CET
+      BX_CPU_THIS_PTR msr.ia32_fred_ssp[n] = 0;
+#endif
+      BX_CPU_THIS_PTR msr.ia32_fred_rsp[n] = 0;
+    }
+  }
 #endif
 #endif // BX_CPU_LEVEL >= 6
 
@@ -1164,6 +1194,10 @@ void BX_CPU_C::reset(unsigned source)
 
   BX_CPU_THIS_PTR EXT = 0;
   BX_CPU_THIS_PTR last_exception_type = 0;
+#if BX_SUPPORT_FRED
+  BX_CPU_THIS_PTR fred_event_info = 0;
+  BX_CPU_THIS_PTR fred_event_data = 0;
+#endif
 
   // invalidate the code prefetch queue
   BX_CPU_THIS_PTR eipPageBias = 0;
@@ -1401,7 +1435,7 @@ void BX_CPU_C::assert_checks(void)
 
 #if BX_CPU_LEVEL >= 5
   // check CR4 consistency
-  if (! check_CR4(BX_CPU_THIS_PTR cr4.get32()))
+  if (! check_CR4(BX_CPU_THIS_PTR cr4.get()))
     BX_PANIC(("assert_checks: CR4 consistency checks failed !"));
 #endif
 

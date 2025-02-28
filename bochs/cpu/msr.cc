@@ -141,6 +141,20 @@ void BX_CPU_C::init_MSRs()
   msr_desc[BX_MSR_IA32_PKRS] = new MSR_Descriptor("MSR_IA32_PKRS", BX_ISA_PKS);
 #endif
 
+#if BX_SUPPORT_FRED
+  msr_desc[BX_MSR_IA32_FRED_RSP0] = new MSR_Descriptor("MSR_IA32_FRED_RSP0", BX_ISA_FRED);
+  msr_desc[BX_MSR_IA32_FRED_RSP1] = new MSR_Descriptor("MSR_IA32_FRED_RSP1", BX_ISA_FRED);
+  msr_desc[BX_MSR_IA32_FRED_RSP2] = new MSR_Descriptor("MSR_IA32_FRED_RSP2", BX_ISA_FRED);
+  msr_desc[BX_MSR_IA32_FRED_RSP3] = new MSR_Descriptor("MSR_IA32_FRED_RSP3", BX_ISA_FRED);
+  msr_desc[BX_MSR_IA32_FRED_STKLVLS] = new MSR_Descriptor("MSR_IA32_FRED_STKLVLS", BX_ISA_FRED);
+#if BX_SUPPORT_CET
+  msr_desc[BX_MSR_IA32_FRED_SSP1] = new MSR_Descriptor("MSR_IA32_FRED_SSP1", BX_ISA_FRED);
+  msr_desc[BX_MSR_IA32_FRED_SSP2] = new MSR_Descriptor("MSR_IA32_FRED_SSP2", BX_ISA_FRED);
+  msr_desc[BX_MSR_IA32_FRED_SSP3] = new MSR_Descriptor("MSR_IA32_FRED_SSP3", BX_ISA_FRED);
+#endif
+  msr_desc[BX_MSR_IA32_FRED_CONFIG] = new MSR_Descriptor("BX_MSR_IA32_FRED_CONFIG", BX_ISA_FRED);
+#endif
+
 #if BX_CPU_LEVEL >= 6
   msr_desc[BX_MSR_TSC_DEADLINE] = new MSR_Descriptor("MSR_TSC_DEADLINE", BX_ISA_TSC_DEADLINE);
 #endif
@@ -368,6 +382,28 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
     case BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR:
       val64 = BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table;
+      break;
+#endif
+
+#if BX_SUPPORT_FRED
+    case BX_MSR_IA32_FRED_RSP0:
+    case BX_MSR_IA32_FRED_RSP1:
+    case BX_MSR_IA32_FRED_RSP2:
+    case BX_MSR_IA32_FRED_RSP3:
+      val64 = BX_CPU_THIS_PTR msr.ia32_fred_rsp[index - BX_MSR_IA32_FRED_RSP0];
+      break;
+#if BX_SUPPORT_CET
+    case BX_MSR_IA32_FRED_SSP1:
+    case BX_MSR_IA32_FRED_SSP2:
+    case BX_MSR_IA32_FRED_SSP3:
+      val64 = BX_CPU_THIS_PTR msr.ia32_fred_ssp[index - BX_MSR_IA32_FRED_SSP1];
+      break;
+#endif
+    case BX_MSR_IA32_FRED_STKLVLS:
+      val64 = BX_CPU_THIS_PTR msr.ia32_fred_stack_levels;
+      break;
+    case BX_MSR_IA32_FRED_CONFIG:
+      val64 = BX_CPU_THIS_PTR msr.ia32_fred_cfg;
       break;
 #endif
 
@@ -1034,6 +1070,48 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         return false;
       }
       BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table = val_64;
+      break;
+#endif
+
+#if BX_SUPPORT_FRED
+    case BX_MSR_IA32_FRED_RSP0:
+    case BX_MSR_IA32_FRED_RSP1:
+    case BX_MSR_IA32_FRED_RSP2:
+    case BX_MSR_IA32_FRED_RSP3:
+      if (! IsCanonical(val_64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_FRED_RSPi !"));
+        return false;
+      }
+      if (val_64 & 0x3f) {
+        BX_ERROR(("WRMSR: attempt to write non 64byte-aligned address to BX_MSR_IA32_FRED_RSPi !"));
+        return false;
+      }
+      BX_CPU_THIS_PTR msr.ia32_fred_rsp[index - BX_MSR_IA32_FRED_RSP0] = val_64;
+      break;
+#if BX_SUPPORT_CET
+    case BX_MSR_IA32_FRED_SSP1:
+    case BX_MSR_IA32_FRED_SSP2:
+    case BX_MSR_IA32_FRED_SSP3:
+      if (! IsCanonical(val_64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_FRED_SSPi !"));
+        return false;
+      }
+      if (val_64 & 0x07) {
+        BX_ERROR(("WRMSR: attempt to write non 8byte-aligned address to BX_MSR_IA32_FRED_SSPi !"));
+        return false;
+      }
+      BX_CPU_THIS_PTR msr.ia32_fred_ssp[index - BX_MSR_IA32_FRED_SSP1] = val_64;
+      break;
+#endif
+    case BX_MSR_IA32_FRED_STKLVLS:
+      BX_CPU_THIS_PTR msr.ia32_fred_stack_levels = val_64;
+      break;
+    case BX_MSR_IA32_FRED_CONFIG:
+      if (val_64 & 0x834) {
+        BX_ERROR(("WRMSR: attempt to set reserved bits of BX_MSR_IA32_FRED_CONFIG !"));
+        return false;
+      }
+      BX_CPU_THIS_PTR msr.ia32_fred_cfg = val_64;
       break;
 #endif
 

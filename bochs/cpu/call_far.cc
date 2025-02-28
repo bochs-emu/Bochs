@@ -171,6 +171,12 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         BX_ERROR(("call_protected: gate type %u unsupported in long mode", (unsigned) gate_descriptor.type));
         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
       }
+#if BX_SUPPORT_FRED
+      if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+        BX_ERROR(("call_protected: call gate not allowed when FRED is enabled"));
+        exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+      }
+#endif
       // gate descriptor must be present else #NP(gate selector)
       if (! IS_PRESENT(gate_descriptor)) {
         BX_ERROR(("call_protected: call gate not present"));

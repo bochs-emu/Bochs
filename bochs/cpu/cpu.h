@@ -196,6 +196,9 @@ const Bit64u BX_PHY_ADDRESS_RESERVED_BITS = (~BX_PHY_ADDRESS_MASK);
 #endif
 
 #define CPL       (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl)
+#if BX_SUPPORT_FRED
+#define CSL       (BX_CPU_THIS_PTR msr.ia32_fred_cfg & 0x3)
+#endif
 
 #define USER_PL   (BX_CPU_THIS_PTR user_pl) /* CPL == 3 */
 
@@ -378,6 +381,18 @@ BX_CPP_INLINE bool IsCanonicalToWidth(bx_address addr, unsigned LIN_ADDRESS_WIDT
 
 BX_CPP_INLINE bool IsCanonical48(bx_address addr) { return IsCanonicalToWidth(addr, 48); }
 BX_CPP_INLINE bool IsCanonical57(bx_address addr) { return IsCanonicalToWidth(addr, 57); }
+
+// sign-extend from the highest implemented address bit up to bit 63
+BX_CPP_INLINE Bit64u CanonicalizeAddress(Bit64u laddr)
+{
+  if (laddr & BX_CONST64(0x0000800000000000)) {
+    return laddr | BX_CONST64(0xffff000000000000);
+  }
+  else {
+    return laddr & BX_CONST64(0x0000ffffffffffff);
+  }
+}
+
 #endif
 
 BX_CPP_INLINE bool IsValidPhyAddr(bx_phy_address addr)
@@ -681,6 +696,16 @@ typedef struct
   Bit64u ia32_cet_control[2]; // indexed by CPL==3
   Bit64u ia32_pl_ssp[4];
   Bit64u ia32_interrupt_ssp_table;
+#endif
+
+ // FRED
+#if BX_SUPPORT_FRED
+  Bit64u ia32_fred_rsp[4];
+#if BX_SUPPORT_CET
+  Bit64u ia32_fred_ssp[4]; // ia32_fred_ssp0 doesn't exists and never should be used
+#endif
+  Bit64u ia32_fred_stack_levels;
+  Bit64u ia32_fred_cfg;
 #endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -992,7 +1017,7 @@ public: // for now...
   bx_address cr3;
 #if BX_CPU_LEVEL >= 5
   bx_cr4_t   cr4;
-  Bit32u cr4_suppmask;
+  bx_address cr4_suppmask;
 #if BX_SUPPORT_X86_64
   unsigned linaddr_width;
 #endif
@@ -1255,6 +1280,10 @@ public: // for now...
   // for exceptions
   static jmp_buf jmp_buf_env;
   unsigned last_exception_type;
+#if BX_SUPPORT_FRED
+  Bit32u fred_event_info;
+  Bit64u fred_event_data;
+#endif
 
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
   const volatile Bit8u *cpuloop_stack_anchor = NULL;
@@ -2683,6 +2712,12 @@ public: // for now...
   BX_SMF void ENDBRANCH64(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
   /* CET instructions */
+
+#if BX_SUPPORT_FRED
+  BX_SMF void ERETS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ERETU(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LKGS_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
 
   BX_SMF void MOVDIR64B(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
@@ -4765,6 +4800,12 @@ public: // for now...
   BX_SMF bool interrupts_inhibited(unsigned mask);
   BX_SMF const char *strseg(bx_segment_reg_t *seg);
   BX_SMF void interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u error_code);
+#if BX_SUPPORT_FRED
+  BX_SMF void FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code);
+  BX_SMF void set_fred_event_info_and_data(Bit8u vector, unsigned type, bool nested_exception, unsigned ilen);
+  BX_SMF Bit64u get_fred_event_data(Bit8u vector, unsigned type) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit32u get_fred_event_info(Bit8u vector, unsigned type, bool nested_exception, unsigned ilen);
+#endif
   BX_SMF void real_mode_int(Bit8u vector, bool push_error, Bit16u error_code);
   BX_SMF void protected_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16u error_code);
 #if BX_SUPPORT_X86_64
@@ -4783,7 +4824,7 @@ public: // for now...
 #if BX_CPU_LEVEL >= 5
   BX_SMF bool SetCR4(bxInstruction_c *i, bx_address val);
   BX_SMF bool check_CR4(bx_address val) BX_CPP_AttrRegparmN(1);
-  BX_SMF Bit32u get_cr4_allow_mask(void);
+  BX_SMF bx_address get_cr4_allow_mask(void);
 #endif
 #if BX_CPU_LEVEL >= 6
   BX_SMF bool CheckPDPTR(bx_phy_address cr3_val) BX_CPP_AttrRegparmN(1);
@@ -4887,10 +4928,12 @@ public: // for now...
   BX_SMF void iret_protected(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
   BX_SMF void long_iret(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void swapgs();
 #endif
 #if BX_SUPPORT_CET
   BX_SMF void shadow_stack_switch(bx_address new_SSP) BX_CPP_AttrRegparmN(1);
   BX_SMF void call_far_shadow_stack_push(Bit16u cs, bx_address lip, bx_address old_ssp) BX_CPP_AttrRegparmN(3);
+  BX_SMF bx_address shadow_stack_restore(Bit16u raw_cs_selector, bx_address return_rip) BX_CPP_AttrRegparmN(2);
   BX_SMF bx_address shadow_stack_restore(Bit16u raw_cs_selector, const bx_descriptor_t &cs_descriptor, bx_address return_rip) BX_CPP_AttrRegparmN(3);
 #endif
   BX_SMF void validate_seg_reg(unsigned seg);
@@ -5043,6 +5086,10 @@ public: // for now...
 
 #if BX_CPU_LEVEL >= 6
   BX_SMF unsigned get_cr8(void);
+#endif
+
+#if BX_SUPPORT_FRED
+  BX_SMF BX_CPP_INLINE void set_CSL(unsigned new_CSL) { BX_CPU_THIS_PTR msr.ia32_fred_cfg = (BX_CPU_THIS_PTR msr.ia32_fred_cfg & ~0x3) | new_CSL; }
 #endif
 
   BX_SMF bx_address get_segment_base(unsigned seg);
@@ -5877,8 +5924,16 @@ enum {
   BX_HARDWARE_EXCEPTION = 3,  // all exceptions except #BP and #OF
   BX_SOFTWARE_INTERRUPT = 4,
   BX_PRIVILEGED_SOFTWARE_INTERRUPT = 5,
-  BX_SOFTWARE_EXCEPTION = 6
+  BX_SOFTWARE_EXCEPTION = 6,
+  BX_EVENT_OTHER = 7          // SYSCALL and SYSENTER with FRED, injected MTF
 };
+
+#if BX_SUPPORT_FRED
+enum {
+  BX_EVENT_SYSCALL = 1,       // used on FRED event with event type BX_EVENT_OTHER
+  BX_EVENT_SYSENTER = 2
+};
+#endif
 
 class bxInstruction_c;
 

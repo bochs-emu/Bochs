@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2024 Stanislav Shwartsman
+//   Copyright (c) 2024-2025 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -244,6 +244,7 @@ public:
 #define VMX_VMENTRY_CTRL1_LOAD_GUEST_CET_STATE              (1 << 20) /* CET */
 #define VMX_VMENTRY_CTRL1_LOAD_GUEST_LBR_CTRL               (1 << 21) // not implemented
 #define VMX_VMENTRY_CTRL1_LOAD_GUEST_PKRS                   (1 << 22) /* Supervisor-Mode Protection Keys */
+#define VMX_VMENTRY_CTRL1_LOAD_GUEST_FRED                   (1 << 23) /* FRED */
 #define VMX_VMENTRY_CTRL1_LOAD_GUEST_IA32_SPEC_CTRL         (1 << 24)
 
    bool LOAD_DBG_CTRLS() const { return vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS; }
@@ -260,6 +261,7 @@ public:
    bool LOAD_GUEST_CET_STATE() const { return vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_GUEST_CET_STATE; }
    bool LOAD_GUEST_LBR() const { return vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_GUEST_LBR_CTRL; }
    bool LOAD_GUEST_PKRS() const { return vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_GUEST_PKRS; }
+   bool LOAD_GUEST_FRED() const { return vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_GUEST_FRED; }
    bool LOAD_GUEST_IA32_SPEC_CTRL() const { return vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_GUEST_IA32_SPEC_CTRL; }
 
    bool query_any(Bit32u mask) const { return (vmentry_ctrls & mask) != 0; }
@@ -333,9 +335,13 @@ private:
 public:
    BxVmexit2Controls(Bit64u ctrls = 0): vmexit2_ctrls(ctrls) {}
 
+#define VMX_VMEXIT_CTRL2_SAVE_GUEST_FRED            (1 <<  0)
+#define VMX_VMEXIT_CTRL2_LOAD_HOST_FRED             (1 <<  1)
 #define VMX_VMEXIT_CTRL2_LOAD_HOST_IA32_SPEC_CTRL   (1 <<  2)
 #define VMX_VMEXIT_CTRL2_SHADOW_STACK_BUSY_CTRL     (1 <<  3) /* Shadow stack prematurely busy */
 
+   bool SAVE_GUEST_FRED() const { return vmexit2_ctrls & VMX_VMEXIT_CTRL2_SAVE_GUEST_FRED; }
+   bool LOAD_HOST_FRED() const { return vmexit2_ctrls & VMX_VMEXIT_CTRL2_LOAD_HOST_FRED; }
    bool LOAD_HOST_IA32_SPEC_CTRL() const { return vmexit2_ctrls & VMX_VMEXIT_CTRL2_LOAD_HOST_IA32_SPEC_CTRL; }
    bool SHADOW_STACK_PREMATURELY_BUSY_CTRL() const { return vmexit2_ctrls & VMX_VMEXIT_CTRL2_SHADOW_STACK_BUSY_CTRL; }
 

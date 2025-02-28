@@ -149,6 +149,7 @@ OBJS64 = \
 	cmpccxadd64.o \
 	vapic.o \
 	uintr.o \
+	fred.o
 
 BX_INCLUDES = ../bochs.h ../config.h
 
@@ -792,6 +793,12 @@ tasking.o: tasking.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  fpu/status_w.h fpu/control_w.h crregs.h descriptor.h decoder/instr.h \
  lazy_flags.h tlb.h icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h \
  svm.h
+fred.o: fred.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
+ ../misc/bswap.h cpu.h decoder/decoder.h decoder/features.h \
+ ../instrument/stubs/instrument.h i387.h \
+ softfloat3e/include/softfloat_types.h ../config.h fpu/tag_w.h \
+ fpu/status_w.h fpu/control_w.h crregs.h descriptor.h decoder/instr.h \
+ lazy_flags.h tlb.h icache.h xmm.h vmx.h vmx_ctrls.h stack.h access.h
 uintr.o: uintr.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h cpu.h decoder/decoder.h decoder/features.h \
  ../instrument/stubs/instrument.h i387.h \

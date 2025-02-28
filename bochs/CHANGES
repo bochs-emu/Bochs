@@ -11,6 +11,7 @@ Detailed change log :
 - CPU emulation and instrumentation
   - CPU: Implemented MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS
   - CPU: implemented IA32_APERF (0xe7) and IA32_MPERF (0xe8) MSRs
+  - CPU: implemented Flexible Return and Delivery (FRED) architecture emulation
   - Added new BX_INSTR_CPUID instrumentation callback, see instrumentation.txt doc for description
   - Bugfixes for CPU emulation correctness
 

@@ -440,6 +440,13 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
 
     BX_DEBUG(("LONG MODE INTERRUPT RETURN TO OUTER PRIVILEGE LEVEL or 64 BIT MODE"));
 
+#if BX_SUPPORT_FRED
+    if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+      BX_ERROR(("iret64: ring transition is not allowed when FRED is enabled"));
+      exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
+    }
+#endif
+
     /* 64bit opsize
      * ============
      * SS     eSP+32

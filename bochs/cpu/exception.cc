@@ -778,7 +778,12 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
 
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
-    long_mode_int(vector, soft_int, push_error, error_code);
+#if BX_SUPPORT_FRED
+    if (BX_CPU_THIS_PTR cr4.get_FRED())
+      FRED_EventDelivery(vector, type, error_code);
+    else
+#endif
+      long_mode_int(vector, soft_int, push_error, error_code);
   }
   else
 #endif
@@ -1013,11 +1018,20 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
     }
   }
 
+#if BX_SUPPORT_FRED
+  set_fred_event_info_and_data(vector, BX_HARDWARE_EXCEPTION, BX_CPU_THIS_PTR last_exception_type != 0, 0);
+#endif
+
   BX_CPU_THIS_PTR last_exception_type = exception_type;
 
   interrupt(vector, BX_HARDWARE_EXCEPTION, push_error, error_code);
 
   BX_CPU_THIS_PTR last_exception_type = 0; // error resolved
+
+#if BX_SUPPORT_FRED
+  BX_CPU_THIS_PTR fred_event_info = 0;
+  BX_CPU_THIS_PTR fred_event_data = 0;
+#endif
 
   longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
 }
