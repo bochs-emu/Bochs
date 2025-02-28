@@ -122,6 +122,7 @@ x86_feature(BX_ISA_AMX_AVX512, "amx_avx512")                            /* AMX-A
 x86_feature(BX_ISA_AVX10_1, "avx10_1")                                  /* AVX10.1 Instructions */
 x86_feature(BX_ISA_AVX10_VL512, "avx10_vl512")                          /* AVX10 VL512 support */
 x86_feature(BX_ISA_AVX10_2, "avx10_2")                                  /* AVX10.2 Instructions */
+x86_feature(BX_ISA_AVX10_2_MOVRS, "avx10_2_movrs")                      /* AVX10.2 MOVRS Instructions */
 x86_feature(BX_ISA_XAPIC, "xapic")                                      /* XAPIC support */
 x86_feature(BX_ISA_X2APIC, "x2apic")                                    /* X2APIC support */
 x86_feature(BX_ISA_XAPIC_EXT, "xapicext")                               /* XAPIC Extensions support (AMD) */
@@ -152,3 +153,4 @@ x86_feature(BX_ISA_MOVDIRI, "movdiri")                                  /* MOVDI
 x86_feature(BX_ISA_MOVDIR64B, "movdir64b")                              /* MOVDIR64B instruction support */
 x86_feature(BX_ISA_MSRLIST, "msrlist")                                  /* RDMSRLIST/WRMSRLIST instructions support */
 x86_feature(BX_ISA_RAO_INT, "rao_int")                                  /* RAO-INT instructions support */
+x86_feature(BX_ISA_MOVRS, "movrs")                                      /* MOVRS instructions support */

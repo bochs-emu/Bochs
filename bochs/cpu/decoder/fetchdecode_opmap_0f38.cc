@@ -159,6 +159,16 @@ static const Bit64u BxOpcodeTable0F3841[] = { last_opcode(ATTR_SSE_PREFIX_66, BX
 static const Bit64u BxOpcodeTable0F3880[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_MOD_MEM, BX_IA_INVEPT) };
 static const Bit64u BxOpcodeTable0F3881[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_MOD_MEM, BX_IA_INVVPID) };
 static const Bit64u BxOpcodeTable0F3882[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_MOD_MEM, BX_IA_INVPCID) };
+
+#if BX_SUPPORT_X86_64
+static const Bit64u BxOpcodeTable0F388A[] = { last_opcode(ATTR_SSE_NO_PREFIX | ATTR_MOD_MEM | ATTR_IS64, BX_IA_MOVRS_GbEb) };
+static const Bit64u BxOpcodeTable0F388B[] = {
+  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_MOD_MEM | ATTR_OS64 | ATTR_IS64, BX_IA_MOVRS_GqEq),
+  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_MOD_MEM | ATTR_OS32 | ATTR_IS64, BX_IA_MOVRS_GdEd),
+  last_opcode(ATTR_SSE_NO_PREFIX | ATTR_MOD_MEM | ATTR_OS16 | ATTR_IS64, BX_IA_MOVRS_GwEw)
+};
+#endif
+
 static const Bit64u BxOpcodeTable0F38C8[] = { last_opcode(ATTR_SSE_NO_PREFIX, BX_IA_SHA1NEXTE_VdqWdq) };
 static const Bit64u BxOpcodeTable0F38C9[] = { last_opcode(ATTR_SSE_NO_PREFIX, BX_IA_SHA1MSG1_VdqWdq) };
 static const Bit64u BxOpcodeTable0F38CA[] = { last_opcode(ATTR_SSE_NO_PREFIX, BX_IA_SHA1MSG2_VdqWdq) };
@@ -392,8 +402,13 @@ const Bit64u *BxOpcodeTable0F38[256] = {
   /* 0F 38 87 */ { BxOpcodeGroup_ERR },
   /* 0F 38 88 */ { BxOpcodeGroup_ERR },
   /* 0F 38 89 */ { BxOpcodeGroup_ERR },
+#if BX_SUPPORT_X86_64
+  /* 0F 38 8A */ { BxOpcodeTable0F388A },
+  /* 0F 38 8B */ { BxOpcodeTable0F388B },
+#else
   /* 0F 38 8A */ { BxOpcodeGroup_ERR },
   /* 0F 38 8B */ { BxOpcodeGroup_ERR },
+#endif
   /* 0F 38 8C */ { BxOpcodeGroup_ERR },
   /* 0F 38 8D */ { BxOpcodeGroup_ERR },
   /* 0F 38 8E */ { BxOpcodeGroup_ERR },

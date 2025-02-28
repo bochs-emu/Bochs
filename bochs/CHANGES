@@ -1,9 +1,10 @@
 Changes after 3.0:
 
-- fixed compilation with --enable-avx but without --enable-evex
+- CPU: Implemented MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS, (AMX TRANSPOSE MOVRS still not implemented)
 - Voodoo3: Split mem_read() with len > 8 in two 64-bit reads
 - VGA / DDC: Fixed using EDID data from specified file
 - Bochs BIOS: Fixed not working hotkeys alt+backspace and control+insert
+- Fixed compilation with --enable-avx but without --enable-evex
 - Compilation fix for MacOS in keymap.cc
 - Added Linux manual page for the bxhub utility
 
