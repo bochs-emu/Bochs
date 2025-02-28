@@ -374,7 +374,8 @@ void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *
     //   [31:00]: maximum supported subleaf
     // EBX:
     //   [07:00]: AVX10 version
-    //   [16:08]: reserved
+    //   [15:08]: reserved
+    //   [16:16]: VL128 supported (always '1)
     //   [17:17]: VL256 supported
     //   [18:18]: VL512 supported
     //   [31:19]: reserved
@@ -383,7 +384,7 @@ void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *
     // EDX:
     //   [31:00]: reserved
     leaf->eax = 0;
-    leaf->ebx = avx10_level() | (1<<17);
+    leaf->ebx = avx10_level() | (1<<16) | (1<<17);
     if (is_cpu_extension_supported(BX_ISA_AVX10_VL512))
       leaf->ebx |= (1<<18);
     leaf->ecx = 0;
