@@ -1363,7 +1363,7 @@ bool BX_CPU_C::SetCR4(bxInstruction_c *i, bx_address val)
 
 #if BX_CPU_LEVEL >= 6
   // Modification of PGE,PAE,PSE,PCIDE,SMEP flushes TLB cache according to docs.
-  if ((val & BX_CR4_FLUSH_TLB_MASK) != (BX_CPU_THIS_PTR cr4.val32 & BX_CR4_FLUSH_TLB_MASK)) {
+  if ((val & BX_CR4_FLUSH_TLB_MASK) != (BX_CPU_THIS_PTR cr4.get32() & BX_CR4_FLUSH_TLB_MASK)) {
     // reload PDPTR if needed
     if (BX_CPU_THIS_PTR cr0.get_PG() && (val & BX_CR4_PAE_MASK) != 0 && !long_mode()) {
       if (! CheckPDPTR(BX_CPU_THIS_PTR cr3)) {
