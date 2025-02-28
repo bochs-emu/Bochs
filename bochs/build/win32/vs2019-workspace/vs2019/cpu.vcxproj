@@ -263,6 +263,7 @@
     <ClCompile Include="..\cpu\flag_ctrl.cc" />
     <ClCompile Include="..\cpu\flag_ctrl_pro.cc" />
     <ClCompile Include="..\cpu\fpu_emu.cc" />
+    <ClCompile Include="..\cpu\fred.cc" />
     <ClCompile Include="..\cpu\gf2.cc" />
     <ClCompile Include="..\cpu\icache.cc" />
     <ClCompile Include="..\cpu\init.cc" />
