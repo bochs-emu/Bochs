@@ -34,13 +34,14 @@
 
 // 0x3b4,0x3d4
 #define VGA_CRTC_MAX 0x18
-#define GEFORCE_CRTC_MAX 0x52
+#define GEFORCE_CRTC_MAX 0x59
 
 // Size of internal cache memory for bitblt. (must be >= 256 and 4-byte aligned)
 #define CIRRUS_BLT_CACHESIZE (2048 * 4)
 
 #define GEFORCE_CHANNEL_COUNT 32
 #define GEFORCE_SUBCHANNEL_COUNT 8
+#define GEFORCE_CACHE1_SIZE 64
 
 class bx_geforce_c : public bx_vgacore_c
 {
@@ -139,6 +140,13 @@ private:
   Bit32u fifo_ramht;
   Bit32u fifo_ramfc;
   Bit32u fifo_ramro;
+  Bit32u fifo_mode;
+  Bit32u fifo_cache1_push1;
+  Bit32u fifo_cache1_put;
+  Bit32u fifo_cache1_pull0;
+  Bit32u fifo_cache1_get;
+  Bit32u fifo_cache1_method[GEFORCE_CACHE1_SIZE];
+  Bit32u fifo_cache1_data[GEFORCE_CACHE1_SIZE];
   Bit32u rma_addr;
   Bit32u timer_intr;
   Bit32u timer_intr_en;
@@ -172,7 +180,6 @@ private:
   Bit32u ramdac_fp_tg_control;
 
   struct {
-    bool initialized;
     Bit32u dma_put;
     Bit32u dma_get;
     Bit32u ref;
