@@ -9,7 +9,7 @@
 //
 //  Authors: Beth Kon <bkon@us.ibm.com>
 //
-//  Copyright (C) 2017-2024  The Bochs Project
+//  Copyright (C) 2017-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -153,7 +153,7 @@ static bool hpet_read(bx_phy_address a20addr, unsigned len, void *data, void *pa
     *((Bit64u *)data) = (value1 | (value2 << 32));
     return true;
   } else {
-    BX_PANIC(("Unsupported HPET read at address 0x" FMT_PHY_ADDRX, a20addr));
+    BX_PANIC(("Unsupported HPET read at address 0x" FMT_PHY_ADDRX " with len = %i", a20addr, len));
   }
   return true;
 }
@@ -176,7 +176,7 @@ static bool hpet_write(bx_phy_address a20addr, unsigned len, void *data, void *p
     theHPET->write_aligned(a20addr, (Bit32u)val64, false);
     theHPET->write_aligned(a20addr + 4, (Bit32u)(val64 >> 32), true);
   } else {
-    BX_PANIC(("Unsupported HPET write at address 0x" FMT_PHY_ADDRX, a20addr));
+    BX_PANIC(("Unsupported HPET write at address 0x" FMT_PHY_ADDRX " with len = %i", a20addr, len));
   }
   return true;
 }
