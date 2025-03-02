@@ -130,7 +130,6 @@ private:
     Bit8u reg[GEFORCE_CRTC_MAX+1];
   } crtc; // 0x3b4-5/0x3d4-5
 
-  Bit32u mc_intr;
   Bit32u mc_intr_en;
   Bit32u mc_enable;
   Bit32u bus_debug_1;
@@ -164,6 +163,7 @@ private:
   Bit32u graph_status;
   Bit32u graph_fifo;
   Bit32u graph_channel_ctx_table;
+  Bit32u crtc_intr;
   Bit32u crtc_intr_en;
   Bit32u crtc_start;
   Bit32u crtc_config;
@@ -179,6 +179,8 @@ private:
   Bit32u ramdac_fp_hcrtc;
   Bit32u ramdac_fp_tg_control;
 
+  bool vblank_prev;
+
   struct {
     Bit32u dma_put;
     Bit32u dma_get;
@@ -191,8 +193,8 @@ private:
       bool ni;
     } dma_state;
     struct {
-        Bit32u object;
-        Bit8u engine;
+      Bit32u object;
+      Bit8u engine;
     } schs[GEFORCE_SUBCHANNEL_COUNT];
 
     Bit32u notifier;
