@@ -97,9 +97,7 @@
 #define GEFORCE_VIDEO_MEMORY_KB     (GEFORCE_VIDEO_MEMORY_MB * 1024)
 #define GEFORCE_VIDEO_MEMORY_BYTES  (GEFORCE_VIDEO_MEMORY_KB * 1024)
 
-#define RAMIN_SIZE                  0xA0000
-#define RAMIN_OFFSET                (GEFORCE_VIDEO_MEMORY_BYTES - RAMIN_SIZE)
-
+#define RAMIN_FLIP                  (GEFORCE_VIDEO_MEMORY_BYTES - 64)
 
 #define PMC_ID_GEFORCE_3_TI_500     0x020200A5
 #define STRAPS0_PRIMARY             (0x7FF86C6B | 0x00000180) // disable TV out
@@ -454,7 +452,7 @@ Bit8u bx_geforce_c::mem_read(bx_phy_address addr)
         if (BX_GEFORCE_THIS pci_conf[0x50] == 0x00)
           return BX_GEFORCE_THIS pci_rom[addr & mask];
         else
-          return BX_GEFORCE_THIS s.memory[(addr & mask) + RAMIN_OFFSET];
+          return BX_GEFORCE_THIS s.memory[addr & mask ^ RAMIN_FLIP];
       } else {
         return 0xff;
       }
@@ -556,7 +554,7 @@ void bx_geforce_c::mem_write(bx_phy_address addr, Bit8u value)
 
     offset = addr & 0xffff;
     if (BX_GEFORCE_THIS crtc.reg[0x1c] & 0x80) {
-      BX_GEFORCE_THIS s.memory[offset + RAMIN_OFFSET] = value;
+      BX_GEFORCE_THIS s.memory[offset ^ RAMIN_FLIP] = value;
       return;
     }
     offset += BX_GEFORCE_THIS bank_base[0];
@@ -1391,8 +1389,8 @@ Bit8u bx_geforce_c::register_read8(Bit32u address)
     value = SVGA_READ(address - 0x601000, 1);
   } else if (address >= 0x6813c6 && address <= 0x6813c9) {
     value = SVGA_READ(address - 0x681000, 1);
-  } else if (address >= 0x700000 && address < 0x700000 + RAMIN_SIZE) {
-    value = BX_GEFORCE_THIS s.memory[address - 0x700000 + RAMIN_OFFSET];
+  } else if (address >= 0x700000 && address < 0x800000) {
+    value = BX_GEFORCE_THIS s.memory[address - 0x700000 ^ RAMIN_FLIP];
   } else if (address == 0x800280) {
     value = 0x00;
     BX_ERROR(("Unknown FIFO offset 0x00000280"));
@@ -1415,8 +1413,8 @@ void bx_geforce_c::register_write8(Bit32u address, Bit8u value)
     SVGA_WRITE(address - 0x601000, value, 1);
   } else if (address >= 0x6813c6 && address <= 0x6813c9) {
     SVGA_WRITE(address - 0x681000, value, 1);
-  } else if (address >= 0x700000 && address < 0x700000 + RAMIN_SIZE) {
-    BX_GEFORCE_THIS s.memory[address - 0x700000 + RAMIN_OFFSET] = value;
+  } else if (address >= 0x700000 && address < 0x800000) {
+    BX_GEFORCE_THIS s.memory[address - 0x700000 ^ RAMIN_FLIP] = value;
   }
   else
     BX_PANIC(("Unknown 8 bit register 0x%08x write", address));
@@ -1476,12 +1474,12 @@ void bx_geforce_c::vram_write64(Bit32u address, Bit64u value)
 
 Bit32u bx_geforce_c::ramin_read32(Bit32u address)
 {
-  return vram_read32(address + RAMIN_OFFSET);
+  return vram_read32(address ^ RAMIN_FLIP);
 }
 
 void bx_geforce_c::ramin_write32(Bit32u address, Bit32u value)
 {
-  vram_write32(address + RAMIN_OFFSET, value);
+  vram_write32(address ^ RAMIN_FLIP, value);
 }
 
 Bit8u bx_geforce_c::physical_read8(Bit32u address)
@@ -2083,7 +2081,7 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = 0x00000000; // ramdac_fp_hcrtc
   } else if (address == 0x680848) {
     value = BX_GEFORCE_THIS ramdac_fp_tg_control;
-  } else if (address >= 0x700000 && address < 0x700000 + RAMIN_SIZE) {
+  } else if (address >= 0x700000 && address < 0x800000) {
     value = ramin_read32(address - 0x700000);
   } else if (address >= 0x800000 && address < 0xA00000) {
     Bit32u chid = address >> 16 & 0x1F;
@@ -2244,7 +2242,7 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS ramdac_fp_hcrtc = value;
   } else if (address == 0x680848) {
     BX_GEFORCE_THIS ramdac_fp_tg_control = value;
-  } else if (address >= 0x700000 && address < 0x700000 + RAMIN_SIZE) {
+  } else if (address >= 0x700000 && address < 0x800000) {
     ramin_write32(address - 0x700000, value);
   } else if (address >= 0x800000 && address < 0xA00000) {
     Bit32u chid = address >> 16 & 0x1F;
