@@ -149,8 +149,6 @@ bool bx_geforce_c::init_vga_extension(void)
   BX_GEFORCE_THIS pci_enabled = true;
 
   BX_GEFORCE_THIS put("GEFORCE");
-  BX_GEFORCE_THIS vertical_timer_id = bx_virt_timer.register_timer(
-      this, vertical_timer_handler, 50000, 1, 1, 0, "vertical_timer");
   // initialize SVGA stuffs.
   DEV_register_ioread_handler(this, svga_read_handler, 0x03B4, "geforce", 2);
   DEV_register_ioread_handler(this, svga_read_handler, 0x03D0, "geforce", 6);
@@ -405,16 +403,12 @@ void bx_geforce_c::redraw_area(Bit32s x0, Bit32s y0, Bit32u width, Bit32u height
   }
 }
 
-void bx_geforce_c::vertical_timer_handler(void* this_ptr)
-{
-  bx_geforce_c* gfdev = (bx_geforce_c*)this_ptr;
-  gfdev->vertical_timer();
-}
-
 void bx_geforce_c::vertical_timer()
 {
-  if (BX_GEFORCE_THIS crtc_intr_en) {
+  bx_vgacore_c::vertical_timer();
+  if (BX_GEFORCE_THIS vtimer_toggle && BX_GEFORCE_THIS crtc_intr_en) {
     BX_GEFORCE_THIS crtc_intr |= 0x00000001;
+    BX_ERROR(("vertical_timer: set_irq_level(1)"));
     set_irq_level(1);
   }
 }
@@ -1906,7 +1900,8 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
               BX_GEFORCE_THIS chs[chid].color_bytes = 1;
             else if (BX_GEFORCE_THIS chs[chid].color_fmt == 4) // R5G6B5
               BX_GEFORCE_THIS chs[chid].color_bytes = 2;
-            else if (BX_GEFORCE_THIS chs[chid].color_fmt == 0xA || // A8R8G8B8
+            else if (BX_GEFORCE_THIS chs[chid].color_fmt == 0x6 || // X8R8G8B8_Z8R8G8B8
+                     BX_GEFORCE_THIS chs[chid].color_fmt == 0xA || // A8R8G8B8
                      BX_GEFORCE_THIS chs[chid].color_fmt == 0xB) // Y32
               BX_GEFORCE_THIS chs[chid].color_bytes = 4;
             else
@@ -1978,6 +1973,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = 0x00000000;
     if (BX_GEFORCE_THIS fifo_intr)
       value |= 0x00000100;
+    if (BX_GEFORCE_THIS graph_intr)
+      value |= 0x00001000;
     if (BX_GEFORCE_THIS crtc_intr)
       value |= 0x01000000;
     set_irq_level(0);

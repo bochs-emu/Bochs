@@ -248,7 +248,6 @@ private:
   bool svga_double_width;
 
   Bit8u devfunc;
-  int vertical_timer_id;
   unsigned svga_xres;
   unsigned svga_yres;
   unsigned svga_pitch;
@@ -277,8 +276,7 @@ private:
 
   BX_GEFORCE_SMF void svga_init_pcihandlers(void);
 
-  static void vertical_timer_handler(void* this_ptr);
-  BX_GEFORCE_SMF void vertical_timer();
+  void vertical_timer();
 
   BX_GEFORCE_SMF bool geforce_mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   BX_GEFORCE_SMF bool geforce_mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
