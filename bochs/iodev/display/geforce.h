@@ -85,6 +85,8 @@ private:
   BX_GEFORCE_SMF Bit8u svga_read_crtc(Bit32u address, unsigned index);
   BX_GEFORCE_SMF void  svga_write_crtc(Bit32u address, unsigned index, Bit8u value);
 
+  BX_GEFORCE_SMF void set_irq_level(bool level);
+
   BX_GEFORCE_SMF Bit8u register_read8(Bit32u address);
   BX_GEFORCE_SMF void  register_write8(Bit32u address, Bit8u value);
   BX_GEFORCE_SMF Bit32u register_read32(Bit32u address);
@@ -179,8 +181,6 @@ private:
   Bit32u ramdac_fp_hcrtc;
   Bit32u ramdac_fp_tg_control;
 
-  bool vblank_prev;
-
   struct {
     Bit32u dma_put;
     Bit32u dma_get;
@@ -222,6 +222,8 @@ private:
     Bit32u m2mf_dst_pitch;
     Bit32u m2mf_line_length;
     Bit32u m2mf_line_count;
+    Bit32u m2mf_format;
+    Bit32u m2mf_buffer_notify;
 
     Bit32u bg_color;
     Bit32u fg_color;
@@ -246,6 +248,7 @@ private:
   bool svga_double_width;
 
   Bit8u devfunc;
+  int vertical_timer_id;
   unsigned svga_xres;
   unsigned svga_yres;
   unsigned svga_pitch;
@@ -272,12 +275,13 @@ private:
 
   bool is_unlocked() { return svga_unlock_special; }
 
-#if BX_SUPPORT_PCI
   BX_GEFORCE_SMF void svga_init_pcihandlers(void);
+
+  static void vertical_timer_handler(void* this_ptr);
+  BX_GEFORCE_SMF void vertical_timer();
 
   BX_GEFORCE_SMF bool geforce_mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   BX_GEFORCE_SMF bool geforce_mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-#endif
 };
 
 #endif // BX_SUPPORT_GEFORCE
