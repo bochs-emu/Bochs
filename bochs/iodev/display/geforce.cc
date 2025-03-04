@@ -242,9 +242,9 @@ void bx_geforce_c::svga_init_members()
     for (j = 0; j < GEFORCE_SUBCHANNEL_COUNT; j++) {
       BX_GEFORCE_THIS chs[i].schs[j].object = 0x00000000;
       BX_GEFORCE_THIS chs[i].schs[j].engine = 0x00;
+      BX_GEFORCE_THIS chs[i].schs[j].notifier = 0x00000000;
     }
 
-    BX_GEFORCE_THIS chs[i].notifier = 0x00000000;
     BX_GEFORCE_THIS chs[i].notify_pending = false;
     BX_GEFORCE_THIS chs[i].notify_type = 0x00000000;
     BX_GEFORCE_THIS chs[i].image_src = 0x00000000;
@@ -1403,7 +1403,7 @@ Bit8u bx_geforce_c::register_read8(Bit32u address)
     value = BX_GEFORCE_THIS s.memory[address - 0x700000 ^ RAMIN_FLIP];
   } else if (address == 0x800280) {
     value = 0x00;
-    BX_ERROR(("Unknown FIFO offset 0x00000280"));
+    BX_ERROR(("Unknown FIFO offset 0x00000280 read"));
   } else {
     value = 0xFF;
     BX_PANIC(("Unknown 8 bit register 0x%08x read", address));
@@ -1425,9 +1425,11 @@ void bx_geforce_c::register_write8(Bit32u address, Bit8u value)
     SVGA_WRITE(address - 0x681000, value, 1);
   } else if (address >= 0x700000 && address < 0x800000) {
     BX_GEFORCE_THIS s.memory[address - 0x700000 ^ RAMIN_FLIP] = value;
-  }
-  else
+  } else if (address == 0x800280) {
+    BX_ERROR(("Unknown FIFO offset 0x00000280 write"));
+  } else {
     BX_PANIC(("Unknown 8 bit register 0x%08x write", address));
+  }
 }
 
 Bit8u bx_geforce_c::vram_read8(Bit32u address)
@@ -1828,7 +1830,7 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
         BX_GEFORCE_THIS chs[chid].notify_pending = true;
         BX_GEFORCE_THIS chs[chid].notify_type = param;
       } else if (method == 0x060) {
-        BX_GEFORCE_THIS chs[chid].notifier = param;
+        BX_GEFORCE_THIS chs[chid].schs[subc].notifier = param;
       } else {
         Bit8u cls = ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object);
         BX_ERROR(("execute_command: obj 0x%08x, class 0x%02x, method 0x%03x, param 0x%08x",
@@ -1856,6 +1858,11 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
           else if (method == 0x0ca) {
             BX_GEFORCE_THIS chs[chid].m2mf_buffer_notify = param;
             move(chid);
+            BX_ERROR(("execute_command: M2MF notify 0x%08x",
+              BX_GEFORCE_THIS chs[chid].schs[subc].notifier));
+            dma_write64(BX_GEFORCE_THIS chs[chid].schs[subc].notifier, 0x10 + 0x0, get_current_time());
+            dma_write32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier, 0x10 + 0x8, 0);
+            dma_write32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier, 0x10 + 0xC, 0);
           }
         } else if (cls == 0x44) { // patt
         } else if (cls == 0x4a) { // gdi
@@ -1927,10 +1934,10 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
         }
         if (BX_GEFORCE_THIS chs[chid].notify_pending) {
           BX_ERROR(("execute_command: DMA notify 0x%08x",
-            BX_GEFORCE_THIS chs[chid].notifier));
-          dma_write64(BX_GEFORCE_THIS chs[chid].notifier, 0x0, get_current_time());
-          dma_write32(BX_GEFORCE_THIS chs[chid].notifier, 0x8, 0);
-          dma_write32(BX_GEFORCE_THIS chs[chid].notifier, 0xC, 0);
+            BX_GEFORCE_THIS chs[chid].schs[subc].notifier));
+          dma_write64(BX_GEFORCE_THIS chs[chid].schs[subc].notifier, 0x0, get_current_time());
+          dma_write32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier, 0x8, 0);
+          dma_write32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier, 0xC, 0);
           BX_GEFORCE_THIS chs[chid].notify_pending = false;
           if (BX_GEFORCE_THIS chs[chid].notify_type)
             BX_PANIC(("execute_command: interrupt should be triggered"));

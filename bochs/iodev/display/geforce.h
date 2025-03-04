@@ -195,9 +195,9 @@ private:
     struct {
       Bit32u object;
       Bit8u engine;
+      Bit32u notifier;
     } schs[GEFORCE_SUBCHANNEL_COUNT];
 
-    Bit32u notifier;
     bool notify_pending;
     Bit32u notify_type;
 
