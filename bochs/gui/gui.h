@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2024  The Bochs Project
+//  Copyright (C) 2002-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -402,7 +402,6 @@ protected:
 #endif
     bool nokeyrepeat;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
-    bool enh_dbg_enabled;
     bool enh_dbg_global_ini;
 #endif
   } gui_opts;

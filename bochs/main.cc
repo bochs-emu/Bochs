@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -573,6 +573,7 @@ void print_usage(void)
     "  -unlock          unlock Bochs images leftover from previous session\n"
 #if BX_DEBUGGER
     "  -debugger        start Bochs internal debugger on startup\n"
+    "  -dbg_gui         start Bochs internal debugger with gui on startup\n"
     "  -rc filename     execute debugger commands stored in file\n"
     "  -dbglog filename specify Bochs internal debugger log file name\n"
 #endif
@@ -720,6 +721,13 @@ int bx_init_main(int argc, char *argv[])
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
       bx_dbg.debugger_active = true;
     }
+#if BX_DEBUGGER_GUI
+    else if (!strcmp("-dbg_gui", argv[arg])) {
+      SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
+      bx_dbg.debugger_active = true;
+      bx_dbg.debugger_gui = true;
+    }
+#endif
     else if (!strcmp("-dbglog", argv[arg])) {
       if (++arg >= argc) BX_PANIC(("-dbglog must be followed by a filename"));
       else SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set(argv[arg]);

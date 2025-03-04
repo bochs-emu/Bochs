@@ -1656,7 +1656,7 @@ bool bx_gui_c::parse_common_gui_options(const char *arg, Bit8u flags)
     return true;
   } else if (!strncmp(arg, "gui_debug", 9)) {
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
-    gui_opts.enh_dbg_enabled = 1;
+    bx_dbg.debugger_gui = 1;
     gui_opts.enh_dbg_global_ini = 0;
     if ((strlen(arg) > 9) && (arg[9] == ':')) {
       if (!strcmp(&arg[10], "globalini")) {

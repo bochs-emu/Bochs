@@ -5435,6 +5435,10 @@ For other arguments, see section <link linkend="bochsrc">bochsrc</link>.
   <entry>start Bochs internal debugger on startup</entry>
 </row>
 <row>
+  <entry>-dbg_gui</entry>
+  <entry>start Bochs internal debugger with gui on startup</entry>
+</row>
+<row>
   <entry>-dbglog <replaceable>filename</replaceable></entry>
   <entry>specify Bochs internal debugger log file</entry>
 </row>
