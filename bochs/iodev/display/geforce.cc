@@ -142,11 +142,9 @@ bool bx_geforce_c::init_vga_extension(void)
 
 void bx_geforce_c::svga_init_members()
 {
-  unsigned i, j;
-
   // clear all registers.
   BX_GEFORCE_THIS crtc.index = GEFORCE_CRTC_MAX + 1;
-  for (i = 0; i <= GEFORCE_CRTC_MAX; i++)
+  for (int i = 0; i <= GEFORCE_CRTC_MAX; i++)
     BX_GEFORCE_THIS crtc.reg[i] = 0x00;
 
   BX_GEFORCE_THIS mc_intr_en = 0;
@@ -161,7 +159,7 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS fifo_cache1_put = 0;
   BX_GEFORCE_THIS fifo_cache1_pull0 = 0;
   BX_GEFORCE_THIS fifo_cache1_get = 0;
-  for (i = 0; i < GEFORCE_CACHE1_SIZE; i++) {
+  for (int i = 0; i < GEFORCE_CACHE1_SIZE; i++) {
     BX_GEFORCE_THIS fifo_cache1_method[i] = 0;
     BX_GEFORCE_THIS fifo_cache1_data[i] = 0;
   }
@@ -191,7 +189,7 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS mpll = 0;
   BX_GEFORCE_THIS vpll = 0;
 
-  for (i = 0; i < GEFORCE_CHANNEL_COUNT; i++) {
+  for (int i = 0; i < GEFORCE_CHANNEL_COUNT; i++) {
     BX_GEFORCE_THIS chs[i].dma_put = 0;
     BX_GEFORCE_THIS chs[i].dma_get = 0;
     BX_GEFORCE_THIS chs[i].ref = 0;
@@ -200,7 +198,7 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS chs[i].dma_state.subc = 0;
     BX_GEFORCE_THIS chs[i].dma_state.mcnt = 0;
     BX_GEFORCE_THIS chs[i].dma_state.ni = false;
-    for (j = 0; j < GEFORCE_SUBCHANNEL_COUNT; j++) {
+    for (int j = 0; j < GEFORCE_SUBCHANNEL_COUNT; j++) {
       BX_GEFORCE_THIS chs[i].schs[j].object = 0;
       BX_GEFORCE_THIS chs[i].schs[j].engine = 0x00;
       BX_GEFORCE_THIS chs[i].schs[j].notifier = 0;
@@ -248,8 +246,8 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS chs[i].image_xy = 0;
     BX_GEFORCE_THIS chs[i].image_words_ptr = 0;
     BX_GEFORCE_THIS chs[i].image_words_left = 0;
-    for (i = 0; i < 1024; i++)
-        BX_GEFORCE_THIS chs[i].image_data[i] = 0;
+    for (int j = 0; j < 1024; j++)
+      BX_GEFORCE_THIS chs[i].image_data[j] = 0;
 
     BX_GEFORCE_THIS chs[i].surface = 0;
     BX_GEFORCE_THIS chs[i].rect_color = 0;
@@ -257,7 +255,7 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS chs[i].rect_wh = 0;
   }
 
-  for (i = 0; i < 4 * 1024 * 1024; i++)
+  for (int i = 0; i < 4 * 1024 * 1024; i++)
     BX_GEFORCE_THIS unk_regs[i] = 0;
 
   BX_GEFORCE_THIS svga_unlock_special = 0;
