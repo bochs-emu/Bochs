@@ -162,6 +162,7 @@ private:
   Bit32u crtc_intr_en;
   Bit32u crtc_start;
   Bit32u crtc_config;
+  Bit32u crtc_cursor_offset;
   Bit32u crtc_cursor_config;
   Bit32u crtc_gpio;
   Bit32u ramdac_cu_start_pos;
@@ -260,6 +261,7 @@ private:
     Bit32u offset;
     Bit16s x, y;
     Bit8u size;
+    bool bpp32;
     bool enabled;
   } hw_cursor;
 

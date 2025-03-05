@@ -70,7 +70,16 @@
 #define EXTRACT_565_TO_888(val, a, b, c)          \
   (a) = (((val) >> 8) & 0xf8) | (((val) >> 13) & 0x07); \
   (b) = (((val) >> 3) & 0xfc) | (((val) >> 9) & 0x03);  \
-  (c) = (((val) << 3) & 0xf8) | (((val) >> 2) & 0x07);  \
+  (c) = (((val) << 3) & 0xf8) | (((val) >> 2) & 0x07);
+
+#define EXTRACT_x555_TO_888(val, a, b, c)         \
+  (a) = (((val) >> 7) & 0xf8) | (((val) >> 12) & 0x07); \
+  (b) = (((val) >> 2) & 0xf8) | (((val) >> 7) & 0x07);  \
+  (c) = (((val) << 3) & 0xf8) | (((val) >> 2) & 0x07);
+
+#define EXTRACT_1555_TO_8888(val, a, b, c, d)       \
+  (a) = ((Bit16s)(val) >> 15) & 0xff;           \
+  EXTRACT_x555_TO_888(val, b, c, d)
 
 static bx_geforce_c *theSvga = NULL;
 
@@ -174,6 +183,7 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS crtc_intr_en = 0;
   BX_GEFORCE_THIS crtc_start = 0;
   BX_GEFORCE_THIS crtc_config = 0;
+  BX_GEFORCE_THIS crtc_cursor_offset = 0;
   BX_GEFORCE_THIS crtc_cursor_config = 0;
   BX_GEFORCE_THIS crtc_gpio = 0;
   BX_GEFORCE_THIS ramdac_cu_start_pos = 0;
@@ -267,6 +277,7 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS hw_cursor.y = 0;
   BX_GEFORCE_THIS hw_cursor.size = 0;
   BX_GEFORCE_THIS hw_cursor.offset = 0;
+  BX_GEFORCE_THIS hw_cursor.bpp32 = false;
   BX_GEFORCE_THIS hw_cursor.enabled = false;
 
   // memory allocation.
@@ -755,27 +766,41 @@ void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tilein
     unsigned cy1 = hwcy + size < (int)yc + Y_TILESIZE ? hwcy + size : yc + Y_TILESIZE;
 
     unsigned w, h;
+    Bit8u color_bytes = BX_GEFORCE_THIS hw_cursor.bpp32 ? 4 : 2;
     if (info->bpp == 15) info->bpp = 16;
     Bit8u* tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h) +
                info->pitch * (cy0 - yc) + info->bpp / 8 * (cx0 - xc);
-    unsigned pitch = BX_GEFORCE_THIS hw_cursor.size * 4;
+    unsigned pitch = BX_GEFORCE_THIS hw_cursor.size * color_bytes;
     Bit8u* cursor_ptr = BX_GEFORCE_THIS s.memory +
       BX_GEFORCE_THIS hw_cursor.offset + pitch * (cy0 - hwcy);
     Bit8u* vid_ptr = BX_GEFORCE_THIS disp_ptr + BX_GEFORCE_THIS svga_pitch * cy0;
     for (unsigned cy = cy0; cy < cy1; cy++) {
       Bit8u* tile_ptr2 = tile_ptr;
-      Bit8u* cursor_ptr2 = cursor_ptr + 4 * (cx0 - hwcx);
+      Bit8u* cursor_ptr2 = cursor_ptr + color_bytes * (cx0 - hwcx);
       Bit8u* vid_ptr2 = vid_ptr + 4 * cx0;
       for (unsigned cx = cx0; cx < cx1; cx++) {
-        Bit8u alpha = cursor_ptr2[3];
         Bit32u color;
-        if (alpha) {
-          Bit8u b = (vid_ptr2[0] * (0xFF - alpha) >> 8) + cursor_ptr2[0];
-          Bit8u g = (vid_ptr2[1] * (0xFF - alpha) >> 8) + cursor_ptr2[1];
-          Bit8u r = (vid_ptr2[2] * (0xFF - alpha) >> 8) + cursor_ptr2[2];
-          color = b << 0 | g << 8 | r << 16;
+        if (BX_GEFORCE_THIS hw_cursor.bpp32) {
+          Bit8u alpha = cursor_ptr2[3];
+          if (alpha) {
+            Bit8u b = (vid_ptr2[0] * (0xFF - alpha) >> 8) + cursor_ptr2[0];
+            Bit8u g = (vid_ptr2[1] * (0xFF - alpha) >> 8) + cursor_ptr2[1];
+            Bit8u r = (vid_ptr2[2] * (0xFF - alpha) >> 8) + cursor_ptr2[2];
+            color = b << 0 | g << 8 | r << 16;
+          } else {
+            color = vid_ptr2[0] << 0 | vid_ptr2[1] << 8 | vid_ptr2[2] << 16;
+          }
         } else {
-          color = vid_ptr2[0] << 0 | vid_ptr2[1] << 8 | vid_ptr2[2] << 16;
+          Bit8u alpha, r1, g1, b1;
+          EXTRACT_1555_TO_8888(cursor_ptr2[0] << 0 | cursor_ptr2[1] << 8, alpha, r1, g1, b1);
+          if (alpha) {
+            color = b1 << 0 | g1 << 8 | r1 << 16;
+          } else {
+            Bit8u b2 = vid_ptr2[0] ^ b1;
+            Bit8u g2 = vid_ptr2[1] ^ g1;
+            Bit8u r2 = vid_ptr2[2] ^ r1;
+            color = b2 << 0 | g2 << 8 | r2 << 16;
+          }
         }
         if (info->is_little_endian) {
           for (int i = 0; i < info->bpp; i += 8) {
@@ -786,7 +811,7 @@ void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tilein
             *(tile_ptr2++) = (Bit8u)(color >> i);
           }
         }
-        cursor_ptr2 += 4;
+        cursor_ptr2 += color_bytes;
         vid_ptr2 += 4;
       }
       tile_ptr += info->pitch;
@@ -1328,6 +1353,7 @@ void bx_geforce_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
       BX_GEFORCE_THIS crtc.reg[0x31] >> 2 << 11 |
       (BX_GEFORCE_THIS crtc.reg[0x30] & 0x7F) << 17 |
       BX_GEFORCE_THIS crtc.reg[0x2f] << 24;
+    BX_GEFORCE_THIS hw_cursor.offset += BX_GEFORCE_THIS crtc_cursor_offset;
     if (prev_enabled != BX_GEFORCE_THIS hw_cursor.enabled) {
       BX_GEFORCE_THIS redraw_area(BX_GEFORCE_THIS hw_cursor.x, BX_GEFORCE_THIS hw_cursor.y,
         BX_GEFORCE_THIS hw_cursor.size, BX_GEFORCE_THIS hw_cursor.size);
@@ -2105,6 +2131,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS crtc_config;
   } else if (address == 0x600808) {
     value = VGA_READ(0x03da, 1) << 13; // hack
+  } else if (address == 0x60080c) {
+    value = BX_GEFORCE_THIS crtc_cursor_offset;
   } else if (address == 0x600810) {
     value = BX_GEFORCE_THIS crtc_cursor_config;
   } else if (address == 0x600818) {
@@ -2241,17 +2269,21 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS svga_needs_update_mode = 1;
   } else if (address == 0x600804) {
     BX_GEFORCE_THIS crtc_config = value;
+  } else if (address == 0x60080c) {
+    BX_GEFORCE_THIS crtc_cursor_offset = value;
+    BX_GEFORCE_THIS hw_cursor.offset = BX_GEFORCE_THIS crtc_cursor_offset;
   } else if (address == 0x600810) {
     BX_GEFORCE_THIS crtc_cursor_config = value;
     BX_GEFORCE_THIS hw_cursor.size = value & 0x00010000 ? 64 : 32;
+    BX_GEFORCE_THIS hw_cursor.bpp32 = value & 0x00001000;
   } else if (address == 0x600818) {
     BX_GEFORCE_THIS crtc_gpio = value;
   } else if (address == 0x680300) {
     Bit16s prevx = BX_GEFORCE_THIS hw_cursor.x;
     Bit16s prevy = BX_GEFORCE_THIS hw_cursor.y;
     BX_GEFORCE_THIS ramdac_cu_start_pos = value;
-    BX_GEFORCE_THIS hw_cursor.x = BX_GEFORCE_THIS ramdac_cu_start_pos & 0xFFFF;
-    BX_GEFORCE_THIS hw_cursor.y = BX_GEFORCE_THIS ramdac_cu_start_pos >> 16;
+    BX_GEFORCE_THIS hw_cursor.x = (Bit32s)BX_GEFORCE_THIS ramdac_cu_start_pos << 20 >> 20;
+    BX_GEFORCE_THIS hw_cursor.y = (Bit32s)BX_GEFORCE_THIS ramdac_cu_start_pos << 4 >> 20;
     if (BX_GEFORCE_THIS hw_cursor.size != 0) {
       BX_GEFORCE_THIS redraw_area(prevx, prevy,
         BX_GEFORCE_THIS hw_cursor.size, BX_GEFORCE_THIS hw_cursor.size);
