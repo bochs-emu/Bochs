@@ -36,9 +36,6 @@
 #define VGA_CRTC_MAX 0x18
 #define GEFORCE_CRTC_MAX 0x59
 
-// Size of internal cache memory for bitblt. (must be >= 256 and 4-byte aligned)
-#define CIRRUS_BLT_CACHESIZE (2048 * 4)
-
 #define GEFORCE_CHANNEL_COUNT 32
 #define GEFORCE_SUBCHANNEL_COUNT 8
 #define GEFORCE_CACHE1_SIZE 64
@@ -134,8 +131,6 @@ private:
 
   Bit32u mc_intr_en;
   Bit32u mc_enable;
-  Bit32u bus_debug_1;
-  Bit32u bus_12xx[0x40];
   Bit32u fifo_intr;
   Bit32u fifo_intr_en;
   Bit32u fifo_ramht;
@@ -156,9 +151,6 @@ private:
   Bit64u timer_inittime1;
   Bit64u timer_inittime2;
   Bit32u timer_alarm;
-  Bit32u fb_debug_0;
-  Bit32u fb_cfg0;
-  Bit32u fb_cfg1;
   Bit32u straps0_primary;
   Bit32u graph_intr;
   Bit32u graph_intr_en;
@@ -175,11 +167,6 @@ private:
   Bit32u nvpll;
   Bit32u mpll;
   Bit32u vpll;
-  Bit32u pll_control;
-  Bit32u general_control;
-  Bit32u test_control;
-  Bit32u ramdac_fp_hcrtc;
-  Bit32u ramdac_fp_tg_control;
 
   struct {
     Bit32u dma_put;
@@ -257,7 +244,6 @@ private:
   Bit32u bank_base[2];
   Bit32u memsize_mask;
   Bit8u *disp_ptr;
-  Bit8u ext_latch[4];
 
   struct {
     Bit32u offset;

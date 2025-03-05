@@ -49,44 +49,6 @@
 #define SVGA_WRITE(addr,val,len) svga_write(addr,val,len)
 #endif // BX_USE_GEFORCE_SMF
 
-// PCI 0x00: vendor, 0x02: device
-#define PCI_VENDOR_NVIDIA             0x10DE
-#define PCI_DEVICE_GEFORCE3TI500      0x0202
-// PCI 0x04: command(word), 0x06(word): status
-#define PCI_COMMAND_IOACCESS                0x0001
-#define PCI_COMMAND_MEMACCESS               0x0002
-#define PCI_COMMAND_BUSMASTER               0x0004
-#define PCI_COMMAND_SPECIALCYCLE            0x0008
-#define PCI_COMMAND_MEMWRITEINVALID         0x0010
-#define PCI_COMMAND_PALETTESNOOPING         0x0020
-#define PCI_COMMAND_PARITYDETECTION         0x0040
-#define PCI_COMMAND_ADDRESSDATASTEPPING     0x0080
-#define PCI_COMMAND_SERR                    0x0100
-#define PCI_COMMAND_BACKTOBACKTRANS         0x0200
-// PCI 0x08, 0xff000000 (0x09-0x0b:class,0x08:rev)
-#define PCI_CLASS_BASE_DISPLAY        0x03
-// PCI 0x08, 0x00ff0000
-#define PCI_CLASS_SUB_VGA             0x00
-// PCI 0x0c, 0x00ff0000 (0x0c:cacheline,0x0d:latency,0x0e:headertype,0x0f:Built-in self test)
-#define PCI_CLASS_HEADERTYPE_00h  0x00
-// 0x10-0x3f (headertype 00h)
-// PCI 0x10,0x14,0x18,0x1c,0x20,0x24: base address mapping registers
-//   0x10: MEMBASE, 0x14: IOBASE(hard-coded in XFree86 3.x)
-#define PCI_MAP_MEM                 0x0
-#define PCI_MAP_IO                  0x1
-#define PCI_MAP_MEM_ADDR_MASK       (~0xf)
-#define PCI_MAP_IO_ADDR_MASK        (~0x3)
-#define PCI_MAP_MEMFLAGS_32BIT      0x0
-#define PCI_MAP_MEMFLAGS_32BIT_1M   0x1
-#define PCI_MAP_MEMFLAGS_64BIT      0x4
-#define PCI_MAP_MEMFLAGS_CACHEABLE  0x8
-// PCI 0x28: cardbus CIS pointer
-// PCI 0x2c: subsystem vendor id, 0x2e: subsystem id
-// PCI 0x30: expansion ROM base address
-// PCI 0x34: 0xffffff00=reserved, 0x000000ff=capabilities pointer
-// PCI 0x38: reserved
-// PCI 0x3c: 0x3c=int-line, 0x3d=int-pin, 0x3e=min-gnt, 0x3f=maax-lat
-// PCI 0x40-0xff: device dependent fields
 
 // default PnP memory and memory-mapped I/O sizes
 #define GEFORCE_PNPMMIO_SIZE        0x1000000
@@ -178,116 +140,105 @@ void bx_geforce_c::svga_init_members()
   for (i = 0; i <= GEFORCE_CRTC_MAX; i++)
     BX_GEFORCE_THIS crtc.reg[i] = 0x00;
 
-  BX_GEFORCE_THIS mc_intr_en = 0x00000000;
-  BX_GEFORCE_THIS mc_enable = 0x00000000;
-  BX_GEFORCE_THIS bus_debug_1 = 0x00000000;
-  for (i = 0; i < 0x40; i++)
-    BX_GEFORCE_THIS bus_12xx[i] = 0x00000000;
-  BX_GEFORCE_THIS fifo_intr = 0x00000000;
-  BX_GEFORCE_THIS fifo_intr_en = 0x00000000;
-  BX_GEFORCE_THIS fifo_ramht = 0x00000000;
-  BX_GEFORCE_THIS fifo_ramfc = 0x00000000;
-  BX_GEFORCE_THIS fifo_ramro = 0x00000000;
-  BX_GEFORCE_THIS fifo_mode = 0x00000000;
-  BX_GEFORCE_THIS fifo_cache1_push1 = 0x00000000;
-  BX_GEFORCE_THIS fifo_cache1_put = 0x00000000;
-  BX_GEFORCE_THIS fifo_cache1_pull0 = 0x00000000;
-  BX_GEFORCE_THIS fifo_cache1_get = 0x00000000;
+  BX_GEFORCE_THIS mc_intr_en = 0;
+  BX_GEFORCE_THIS mc_enable = 0;
+  BX_GEFORCE_THIS fifo_intr = 0;
+  BX_GEFORCE_THIS fifo_intr_en = 0;
+  BX_GEFORCE_THIS fifo_ramht = 0;
+  BX_GEFORCE_THIS fifo_ramfc = 0;
+  BX_GEFORCE_THIS fifo_ramro = 0;
+  BX_GEFORCE_THIS fifo_mode = 0;
+  BX_GEFORCE_THIS fifo_cache1_push1 = 0;
+  BX_GEFORCE_THIS fifo_cache1_put = 0;
+  BX_GEFORCE_THIS fifo_cache1_pull0 = 0;
+  BX_GEFORCE_THIS fifo_cache1_get = 0;
   for (i = 0; i < GEFORCE_CACHE1_SIZE; i++) {
-    BX_GEFORCE_THIS fifo_cache1_method[i] = 0x00000000;
-    BX_GEFORCE_THIS fifo_cache1_data[i] = 0x00000000;
+    BX_GEFORCE_THIS fifo_cache1_method[i] = 0;
+    BX_GEFORCE_THIS fifo_cache1_data[i] = 0;
   }
-  BX_GEFORCE_THIS rma_addr = 0x00000000;
-  BX_GEFORCE_THIS timer_intr = 0x00000000;
-  BX_GEFORCE_THIS timer_intr_en = 0x00000000;
-  BX_GEFORCE_THIS timer_num = 0x00000000;
-  BX_GEFORCE_THIS timer_den = 0x00000000;
-  BX_GEFORCE_THIS timer_inittime1 = 0x0000000000000000;
-  BX_GEFORCE_THIS timer_inittime2 = 0x0000000000000000;
-  BX_GEFORCE_THIS timer_alarm = 0x00000000;
-  BX_GEFORCE_THIS fb_debug_0 = 0x00000000;
-  BX_GEFORCE_THIS fb_cfg0 = 0x00000000;
-  BX_GEFORCE_THIS fb_cfg1 = 0x00000000;
+  BX_GEFORCE_THIS rma_addr = 0;
+  BX_GEFORCE_THIS timer_intr = 0;
+  BX_GEFORCE_THIS timer_intr_en = 0;
+  BX_GEFORCE_THIS timer_num = 0;
+  BX_GEFORCE_THIS timer_den = 0;
+  BX_GEFORCE_THIS timer_inittime1 = 0;
+  BX_GEFORCE_THIS timer_inittime2 = 0;
+  BX_GEFORCE_THIS timer_alarm = 0;
   BX_GEFORCE_THIS straps0_primary = STRAPS0_PRIMARY;
-  BX_GEFORCE_THIS graph_intr = 0x00000000;
-  BX_GEFORCE_THIS graph_intr_en = 0x00000000;
-  BX_GEFORCE_THIS graph_status = 0x00000000;
-  BX_GEFORCE_THIS graph_fifo = 0x00000000;
-  BX_GEFORCE_THIS graph_channel_ctx_table = 0x00000000;
-  BX_GEFORCE_THIS crtc_intr = 0x00000000;
-  BX_GEFORCE_THIS crtc_intr_en = 0x00000000;
-  BX_GEFORCE_THIS crtc_start = 0x00000000;
-  BX_GEFORCE_THIS crtc_config = 0x00000000;
-  BX_GEFORCE_THIS crtc_cursor_config = 0x00000000;
-  BX_GEFORCE_THIS crtc_gpio = 0x00000000;
-  BX_GEFORCE_THIS ramdac_cu_start_pos = 0x00000000;
-  BX_GEFORCE_THIS nvpll = 0x00000000;
-  BX_GEFORCE_THIS mpll = 0x00000000;
-  BX_GEFORCE_THIS vpll = 0x00000000;
-  BX_GEFORCE_THIS pll_control = 0x00000000;
-  BX_GEFORCE_THIS general_control = 0x00000000;
-  BX_GEFORCE_THIS test_control = 0x00000000;
-  BX_GEFORCE_THIS ramdac_fp_hcrtc = 0x00000000;
-  BX_GEFORCE_THIS ramdac_fp_tg_control = 0x00000000;
+  BX_GEFORCE_THIS graph_intr = 0;
+  BX_GEFORCE_THIS graph_intr_en = 0;
+  BX_GEFORCE_THIS graph_status = 0;
+  BX_GEFORCE_THIS graph_fifo = 0;
+  BX_GEFORCE_THIS graph_channel_ctx_table = 0;
+  BX_GEFORCE_THIS crtc_intr = 0;
+  BX_GEFORCE_THIS crtc_intr_en = 0;
+  BX_GEFORCE_THIS crtc_start = 0;
+  BX_GEFORCE_THIS crtc_config = 0;
+  BX_GEFORCE_THIS crtc_cursor_config = 0;
+  BX_GEFORCE_THIS crtc_gpio = 0;
+  BX_GEFORCE_THIS ramdac_cu_start_pos = 0;
+  BX_GEFORCE_THIS nvpll = 0;
+  BX_GEFORCE_THIS mpll = 0;
+  BX_GEFORCE_THIS vpll = 0;
 
   for (i = 0; i < GEFORCE_CHANNEL_COUNT; i++) {
-    BX_GEFORCE_THIS chs[i].dma_put = 0x00000000;
-    BX_GEFORCE_THIS chs[i].dma_get = 0x00000000;
-    BX_GEFORCE_THIS chs[i].ref = 0x00000000;
-    BX_GEFORCE_THIS chs[i].pushbuf = 0x00000000;
-    BX_GEFORCE_THIS chs[i].dma_state.mthd = 0x00000000;
-    BX_GEFORCE_THIS chs[i].dma_state.subc = 0x00000000;
-    BX_GEFORCE_THIS chs[i].dma_state.mcnt = 0x00000000;
+    BX_GEFORCE_THIS chs[i].dma_put = 0;
+    BX_GEFORCE_THIS chs[i].dma_get = 0;
+    BX_GEFORCE_THIS chs[i].ref = 0;
+    BX_GEFORCE_THIS chs[i].pushbuf = 0;
+    BX_GEFORCE_THIS chs[i].dma_state.mthd = 0;
+    BX_GEFORCE_THIS chs[i].dma_state.subc = 0;
+    BX_GEFORCE_THIS chs[i].dma_state.mcnt = 0;
     BX_GEFORCE_THIS chs[i].dma_state.ni = false;
     for (j = 0; j < GEFORCE_SUBCHANNEL_COUNT; j++) {
-      BX_GEFORCE_THIS chs[i].schs[j].object = 0x00000000;
+      BX_GEFORCE_THIS chs[i].schs[j].object = 0;
       BX_GEFORCE_THIS chs[i].schs[j].engine = 0x00;
-      BX_GEFORCE_THIS chs[i].schs[j].notifier = 0x00000000;
+      BX_GEFORCE_THIS chs[i].schs[j].notifier = 0;
     }
 
     BX_GEFORCE_THIS chs[i].notify_pending = false;
-    BX_GEFORCE_THIS chs[i].notify_type = 0x00000000;
-    BX_GEFORCE_THIS chs[i].image_src = 0x00000000;
-    BX_GEFORCE_THIS chs[i].image_dst = 0x00000000;
-    BX_GEFORCE_THIS chs[i].color_fmt = 0x00000000;
+    BX_GEFORCE_THIS chs[i].notify_type = 0;
+    BX_GEFORCE_THIS chs[i].image_src = 0;
+    BX_GEFORCE_THIS chs[i].image_dst = 0;
+    BX_GEFORCE_THIS chs[i].color_fmt = 0;
     BX_GEFORCE_THIS chs[i].color_bytes = 1;
-    BX_GEFORCE_THIS chs[i].pitch = 0x00000000;
-    BX_GEFORCE_THIS chs[i].offset_src = 0x00000000;
-    BX_GEFORCE_THIS chs[i].offset_dst = 0x00000000;
+    BX_GEFORCE_THIS chs[i].pitch = 0;
+    BX_GEFORCE_THIS chs[i].offset_src = 0;
+    BX_GEFORCE_THIS chs[i].offset_dst = 0;
 
-    BX_GEFORCE_THIS chs[i].blit_operation = 0x00000000;
-    BX_GEFORCE_THIS chs[i].blit_syx = 0x00000000;
-    BX_GEFORCE_THIS chs[i].blit_dyx = 0x00000000;
-    BX_GEFORCE_THIS chs[i].blit_hw = 0x00000000;
+    BX_GEFORCE_THIS chs[i].blit_operation = 0;
+    BX_GEFORCE_THIS chs[i].blit_syx = 0;
+    BX_GEFORCE_THIS chs[i].blit_dyx = 0;
+    BX_GEFORCE_THIS chs[i].blit_hw = 0;
 
-    BX_GEFORCE_THIS chs[i].m2mf_src = 0x00000000;
-    BX_GEFORCE_THIS chs[i].m2mf_dst = 0x00000000;
-    BX_GEFORCE_THIS chs[i].m2mf_src_offset = 0x00000000;
-    BX_GEFORCE_THIS chs[i].m2mf_dst_offset = 0x00000000;
-    BX_GEFORCE_THIS chs[i].m2mf_src_pitch = 0x00000000;
-    BX_GEFORCE_THIS chs[i].m2mf_dst_pitch = 0x00000000;
-    BX_GEFORCE_THIS chs[i].m2mf_line_length = 0x00000000;
-    BX_GEFORCE_THIS chs[i].m2mf_line_count = 0x00000000;
-    BX_GEFORCE_THIS chs[i].m2mf_format = 0x00000000;
-    BX_GEFORCE_THIS chs[i].m2mf_buffer_notify = 0x00000000;
+    BX_GEFORCE_THIS chs[i].m2mf_src = 0;
+    BX_GEFORCE_THIS chs[i].m2mf_dst = 0;
+    BX_GEFORCE_THIS chs[i].m2mf_src_offset = 0;
+    BX_GEFORCE_THIS chs[i].m2mf_dst_offset = 0;
+    BX_GEFORCE_THIS chs[i].m2mf_src_pitch = 0;
+    BX_GEFORCE_THIS chs[i].m2mf_dst_pitch = 0;
+    BX_GEFORCE_THIS chs[i].m2mf_line_length = 0;
+    BX_GEFORCE_THIS chs[i].m2mf_line_count = 0;
+    BX_GEFORCE_THIS chs[i].m2mf_format = 0;
+    BX_GEFORCE_THIS chs[i].m2mf_buffer_notify = 0;
 
-    BX_GEFORCE_THIS chs[i].bg_color = 0x00000000;
-    BX_GEFORCE_THIS chs[i].fg_color = 0x00000000;
-    BX_GEFORCE_THIS chs[i].image_wh = 0x00000000;
-    BX_GEFORCE_THIS chs[i].image_xy = 0x00000000;
-    BX_GEFORCE_THIS chs[i].image_words_ptr = 0x00000000;
-    BX_GEFORCE_THIS chs[i].image_words_left = 0x00000000;
+    BX_GEFORCE_THIS chs[i].bg_color = 0;
+    BX_GEFORCE_THIS chs[i].fg_color = 0;
+    BX_GEFORCE_THIS chs[i].image_wh = 0;
+    BX_GEFORCE_THIS chs[i].image_xy = 0;
+    BX_GEFORCE_THIS chs[i].image_words_ptr = 0;
+    BX_GEFORCE_THIS chs[i].image_words_left = 0;
     for (i = 0; i < 1024; i++)
-        BX_GEFORCE_THIS chs[i].image_data[i] = 0x00000000;
+        BX_GEFORCE_THIS chs[i].image_data[i] = 0;
 
-    BX_GEFORCE_THIS chs[i].surface = 0x00000000;
-    BX_GEFORCE_THIS chs[i].rect_color = 0x00000000;
-    BX_GEFORCE_THIS chs[i].rect_xy = 0x00000000;
-    BX_GEFORCE_THIS chs[i].rect_wh = 0x00000000;
+    BX_GEFORCE_THIS chs[i].surface = 0;
+    BX_GEFORCE_THIS chs[i].rect_color = 0;
+    BX_GEFORCE_THIS chs[i].rect_xy = 0;
+    BX_GEFORCE_THIS chs[i].rect_wh = 0;
   }
 
   for (i = 0; i < 4 * 1024 * 1024; i++)
-    BX_GEFORCE_THIS unk_regs[i] = 0x00000000;
+    BX_GEFORCE_THIS unk_regs[i] = 0;
 
   BX_GEFORCE_THIS svga_unlock_special = 0;
   BX_GEFORCE_THIS svga_needs_update_tile = 1;
@@ -305,17 +256,16 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS hw_cursor.x = 0;
   BX_GEFORCE_THIS hw_cursor.y = 0;
   BX_GEFORCE_THIS hw_cursor.size = 0;
-  BX_GEFORCE_THIS hw_cursor.offset = 0x00000000;
+  BX_GEFORCE_THIS hw_cursor.offset = 0;
   BX_GEFORCE_THIS hw_cursor.enabled = false;
 
   // memory allocation.
   if (BX_GEFORCE_THIS s.memory == NULL)
     BX_GEFORCE_THIS s.memory = new Bit8u[GEFORCE_VIDEO_MEMORY_BYTES];
-
-  BX_GEFORCE_THIS s.memsize = GEFORCE_VIDEO_MEMORY_BYTES;
-
   memset(BX_GEFORCE_THIS s.memory, 0x00, GEFORCE_VIDEO_MEMORY_BYTES);
+
   BX_GEFORCE_THIS disp_ptr = BX_GEFORCE_THIS s.memory;
+  BX_GEFORCE_THIS s.memsize = GEFORCE_VIDEO_MEMORY_BYTES;
   BX_GEFORCE_THIS memsize_mask = BX_GEFORCE_THIS s.memsize - 1;
 
   // VCLK defaults after reset
@@ -349,10 +299,6 @@ void bx_geforce_c::register_state(void)
   new bx_shadow_num_c(list, "svga_dispbpp", &BX_GEFORCE_THIS svga_dispbpp);
   new bx_shadow_num_c(list, "bank_base0", &BX_GEFORCE_THIS bank_base[0], BASE_HEX);
   new bx_shadow_num_c(list, "bank_base1", &BX_GEFORCE_THIS bank_base[1], BASE_HEX);
-  new bx_shadow_num_c(list, "ext_latch0", &BX_GEFORCE_THIS ext_latch[0], BASE_HEX);
-  new bx_shadow_num_c(list, "ext_latch1", &BX_GEFORCE_THIS ext_latch[1], BASE_HEX);
-  new bx_shadow_num_c(list, "ext_latch2", &BX_GEFORCE_THIS ext_latch[2], BASE_HEX);
-  new bx_shadow_num_c(list, "ext_latch3", &BX_GEFORCE_THIS ext_latch[3], BASE_HEX);
   bx_list_c *cursor = new bx_list_c(list, "hw_cursor");
   new bx_shadow_num_c(cursor, "x", &BX_GEFORCE_THIS hw_cursor.x, BASE_HEX);
   new bx_shadow_num_c(cursor, "y", &BX_GEFORCE_THIS hw_cursor.y, BASE_HEX);
@@ -1989,10 +1935,6 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS mc_intr_en;
   else if (address == 0x200)
     value = BX_GEFORCE_THIS mc_enable;
-  else if (address == 0x1084)
-    value = BX_GEFORCE_THIS bus_debug_1;
-  else if (address >= 0x1200 && address < 0x1300)
-    value = BX_GEFORCE_THIS bus_12xx[(address - 0x1200) / 4];
   else if (address >= 0x1800 && address < 0x1900) {
     Bit32u offset = address - 0x1800;
     value = 
@@ -2051,12 +1993,6 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = get_current_time() >> 32;
   else if (address == 0x9420)
     value = BX_GEFORCE_THIS timer_alarm;
-  else if (address == 0x100080)
-    value = BX_GEFORCE_THIS fb_debug_0;
-  else if (address == 0x100200)
-    value = BX_GEFORCE_THIS fb_cfg0;
-  else if (address == 0x100204)
-    value = BX_GEFORCE_THIS fb_cfg1;
   else if (address == 0x10020c)
     value = GEFORCE_VIDEO_MEMORY_BYTES;
   else if (address == 0x101000)
@@ -2106,16 +2042,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS mpll;
   } else if (address == 0x680508) {
     value = BX_GEFORCE_THIS vpll;
-  } else if (address == 0x68050C) {
-    value = BX_GEFORCE_THIS pll_control;
-  } else if (address == 0x680600) {
-    value = BX_GEFORCE_THIS general_control;
-  } else if (address == 0x680608) {
-    value = BX_GEFORCE_THIS test_control;
   } else if (address == 0x680828) { // PRAMDAC_FP_HCRTC
-    value = 0x00000000;
-  } else if (address == 0x680848) {
-    value = BX_GEFORCE_THIS ramdac_fp_tg_control;
+    value = 0x00000000; // Second monitor is disconnected
   } else if (address >= 0x700000 && address < 0x800000) {
     value = ramin_read32(address - 0x700000);
   } else if (address >= 0x800000 && address < 0xA00000) {
@@ -2143,10 +2071,6 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS mc_intr_en = value;
   } else if (address == 0x200) {
     BX_GEFORCE_THIS mc_enable = value;
-  } else if (address == 0x1084) {
-    BX_GEFORCE_THIS bus_debug_1 = value;
-  } else if (address >= 0x1200 && address < 0x1300) {
-    BX_GEFORCE_THIS bus_12xx[(address - 0x1200) / 4] = value;
   } else if (address >= 0x1800 && address < 0x1900) {
     BX_GEFORCE_THIS pci_write_handler(address - 0x1800, value, 4);
   } else if (address == 0x2100) {
@@ -2216,12 +2140,6 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     }
   } else if (address == 0x9420) {
     BX_GEFORCE_THIS timer_alarm = value;
-  } else if (address == 0x100080) {
-    BX_GEFORCE_THIS fb_debug_0 = value;
-  } else if (address == 0x100200) {
-    BX_GEFORCE_THIS fb_cfg0 = value;
-  } else if (address == 0x100204) {
-    BX_GEFORCE_THIS fb_cfg1 = value;
   } else if (address == 0x101000) {
     if (value >> 31)
       BX_GEFORCE_THIS straps0_primary = value;
@@ -2269,16 +2187,6 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS mpll = value;
   } else if (address == 0x680508) {
     BX_GEFORCE_THIS vpll = value;
-  } else if (address == 0x68050C) {
-    BX_GEFORCE_THIS pll_control = value;
-  } else if (address == 0x680600) {
-    BX_GEFORCE_THIS general_control = value;
-  } else if (address == 0x680608) {
-    BX_GEFORCE_THIS test_control = value;
-  } else if (address == 0x680828) {
-    BX_GEFORCE_THIS ramdac_fp_hcrtc = value;
-  } else if (address == 0x680848) {
-    BX_GEFORCE_THIS ramdac_fp_tg_control = value;
   } else if (address >= 0x700000 && address < 0x800000) {
     ramin_write32(address - 0x700000, value);
   } else if (address >= 0x800000 && address < 0xA00000) {
@@ -2322,21 +2230,12 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
   }
 }
 
-
-/////////////////////////////////////////////////////////////////////////
-//
-// PCI support
-//
-/////////////////////////////////////////////////////////////////////////
-
 void bx_geforce_c::svga_init_pcihandlers(void)
 {
     BX_GEFORCE_THIS devfunc = 0x00;
     DEV_register_pci_handlers2(BX_GEFORCE_THIS_PTR,
         &BX_GEFORCE_THIS devfunc, BX_PLUGIN_GEFORCE, "GeForce AGP", true);
-    BX_GEFORCE_THIS init_pci_conf(PCI_VENDOR_NVIDIA, PCI_DEVICE_GEFORCE3TI500, 0xA3,
-      (PCI_CLASS_BASE_DISPLAY << 16) | (PCI_CLASS_SUB_VGA << 8),
-      PCI_CLASS_HEADERTYPE_00h, BX_PCI_INTA);
+    BX_GEFORCE_THIS init_pci_conf(0x10DE, 0x0202, 0xA3, 0x030000, 0x00, BX_PCI_INTA);
 
     BX_GEFORCE_THIS pci_conf[0x14] = 0x08;
     BX_GEFORCE_THIS pci_conf[0x18] = 0x08;
