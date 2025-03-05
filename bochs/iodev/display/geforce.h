@@ -121,6 +121,7 @@ private:
   BX_GEFORCE_SMF Bit32u color_565_to_888(Bit16u value);
   BX_GEFORCE_SMF void fillrect(Bit32u chid);
   BX_GEFORCE_SMF void imageblit(Bit32u chid);
+  BX_GEFORCE_SMF void ifc(Bit32u chid);
   BX_GEFORCE_SMF void copyarea(Bit32u chid);
   BX_GEFORCE_SMF void move(Bit32u chid);
 
@@ -188,13 +189,23 @@ private:
     bool notify_pending;
     Bit32u notify_type;
 
-    Bit32u image_src;
-    Bit32u image_dst;
-    Bit32u color_fmt;
-    Bit32u color_bytes;
-    Bit32u pitch;
-    Bit32u offset_src;
-    Bit32u offset_dst;
+    Bit32u s2d_img_src;
+    Bit32u s2d_img_dst;
+    Bit32u s2d_color_fmt;
+    Bit32u s2d_color_bytes;
+    Bit32u s2d_pitch;
+    Bit32u s2d_ofs_src;
+    Bit32u s2d_ofs_dst;
+
+    Bit32u ifc_operation;
+    Bit32u ifc_color_fmt;
+    Bit32u ifc_color_bytes;
+    Bit32u ifc_yx;
+    Bit32u ifc_dhw;
+    Bit32u ifc_shw;
+    Bit32u ifc_words_ptr;
+    Bit32u ifc_words_left;
+    Bit32u* ifc_words;
 
     Bit32u blit_operation;
     Bit32u blit_syx;
