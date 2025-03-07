@@ -574,6 +574,8 @@ void print_usage(void)
 #if BX_DEBUGGER
     "  -debugger        start Bochs internal debugger on startup\n"
     "  -dbg_gui         start Bochs internal debugger with gui on startup\n"
+    "  -dbg_gui:globalini\n"
+    "                   use ini file from BXSHARE path for debugger gui\n"
     "  -rc filename     execute debugger commands stored in file\n"
     "  -dbglog filename specify Bochs internal debugger log file name\n"
 #endif
@@ -722,10 +724,19 @@ int bx_init_main(int argc, char *argv[])
       bx_dbg.debugger_active = true;
     }
 #if BX_DEBUGGER_GUI
-    else if (!strcmp("-dbg_gui", argv[arg])) {
+    else if (!strncmp("-dbg_gui", argv[arg], 8)) {
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
       bx_dbg.debugger_active = true;
       bx_dbg.debugger_gui = true;
+      if ((strlen(argv[arg]) > 9) && (argv[arg][8] == ':')) {
+        if (!strcmp("globalini", &argv[arg][9])) {
+          bx_dbg.dbg_gui_globalini = true;
+        } else {
+          BX_PANIC(("-dbg_gui option malformed"));
+        }
+      } else if (argv[arg][8] != 0) {
+        BX_PANIC(("-dbg_gui option malformed"));
+      }
     }
 #endif
     else if (!strcmp("-dbglog", argv[arg])) {

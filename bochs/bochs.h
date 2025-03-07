@@ -311,6 +311,7 @@ typedef struct {
 #if BX_DEBUGGER
 #if BX_DEBUGGER_GUI
   bool debugger_gui;
+  bool dbg_gui_globalini;
 #endif
   Bit8u magic_break;
 #endif

@@ -401,9 +401,6 @@ protected:
     bool hide_ips;
 #endif
     bool nokeyrepeat;
-#if BX_DEBUGGER && BX_DEBUGGER_GUI
-    bool enh_dbg_global_ini;
-#endif
   } gui_opts;
 };
 

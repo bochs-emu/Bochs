@@ -682,7 +682,7 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     if (gui_ci) {
       gui_debug = TRUE;
       SIM->set_debug_gui(1);
-      win32_enh_dbg_global_ini = gui_opts.enh_dbg_global_ini;
+      win32_enh_dbg_global_ini = bx_dbg.dbg_gui_globalini;
     } else {
       BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
     }
