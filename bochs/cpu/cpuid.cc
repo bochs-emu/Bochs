@@ -374,7 +374,8 @@ void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *
     //   [31:00]: maximum supported subleaf
     // EBX:
     //   [07:00]: AVX10 version
-    //   [16:08]: reserved
+    //   [15:08]: reserved
+    //   [16:16]: VL128 supported (always '1)
     //   [17:17]: VL256 supported
     //   [18:18]: VL512 supported
     //   [31:19]: reserved
@@ -383,7 +384,7 @@ void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *
     // EDX:
     //   [31:00]: reserved
     leaf->eax = 0;
-    leaf->ebx = avx10_level() | (1<<17);
+    leaf->ebx = avx10_level() | (1<<16) | (1<<17);
     if (is_cpu_extension_supported(BX_ISA_AVX10_VL512))
       leaf->ebx |= (1<<18);
     leaf->ecx = 0;
@@ -1361,7 +1362,10 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra) const
 
   //   [29:28]  reserved
   //   [30:30]  Prevent INVD execution after BIOS is done
+
   //   [31:31]  MOVRS instructions
+  if (is_cpu_extension_supported(BX_ISA_MOVRS))
+    eax |= BX_CPUID_STD7_SUBLEAF1_EAX_MOVRS;
 
   return eax;
 }
@@ -1666,6 +1670,15 @@ void bx_cpuid_t::sanity_checks() const
 
   if (is_cpu_extension_supported(BX_ISA_VMX) && is_cpu_extension_supported(BX_ISA_SVM))
     BX_FATAL(("PANIC: VMX and SVM cannot be enabled in same model !"));
+
+  // AVX 10.2 + MOVRS => AVX 10.2 MOVRS
+  if (is_cpu_extension_supported(BX_ISA_AVX10_2) && is_cpu_extension_supported(BX_ISA_MOVRS))
+    if (! is_cpu_extension_supported(BX_ISA_AVX10_2_MOVRS))
+      BX_FATAL(("PANIC: AVX 10.2 MOVRS is expected to be enabled if MOVRS and AVX10.2 are both enabled !"));
+
+  if (is_cpu_extension_supported(BX_ISA_AVX10_2_MOVRS))
+    if (! is_cpu_extension_supported(BX_ISA_AVX10_2) || !is_cpu_extension_supported(BX_ISA_MOVRS))
+      BX_FATAL(("PANIC: AVX 10.2 MOVRS expected to be enabled only if MOVRS and AVX10.2 are both enabled !"));
 }
 
 void bx_cpuid_t::dump_features() const

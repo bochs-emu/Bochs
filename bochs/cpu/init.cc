@@ -1005,11 +1005,11 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR dr6.val32 = 0xFFFF0FF0;
+  BX_CPU_THIS_PTR dr6.set32(0xFFFF0FF0);
 #else
-  BX_CPU_THIS_PTR dr6.val32 = 0xFFFF1FF0;
+  BX_CPU_THIS_PTR dr6.set32(0xFFFF1FF0);
 #endif
-  BX_CPU_THIS_PTR dr7.val32 = 0x00000400;
+  BX_CPU_THIS_PTR dr7.set32(0x00000400);
 
   BX_CPU_THIS_PTR in_smm = false;
 
@@ -1391,12 +1391,12 @@ void BX_CPU_C::assert_checks(void)
   }
 
   // check CR0 consistency
-  if (! check_CR0(BX_CPU_THIS_PTR cr0.val32))
+  if (! check_CR0(BX_CPU_THIS_PTR cr0.get32()))
     BX_PANIC(("assert_checks: CR0 consistency checks failed !"));
 
 #if BX_CPU_LEVEL >= 5
   // check CR4 consistency
-  if (! check_CR4(BX_CPU_THIS_PTR cr4.val32))
+  if (! check_CR4(BX_CPU_THIS_PTR cr4.get32()))
     BX_PANIC(("assert_checks: CR4 consistency checks failed !"));
 #endif
 

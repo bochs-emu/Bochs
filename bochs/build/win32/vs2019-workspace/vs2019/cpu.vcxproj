@@ -311,6 +311,7 @@
     <ClCompile Include="..\cpu\string.cc" />
     <ClCompile Include="..\cpu\svm.cc" />
     <ClCompile Include="..\cpu\tasking.cc" />
+    <ClCompile Include="..\cpu\uintr.cc" />
     <ClCompile Include="..\cpu\vapic.cc" />
     <ClCompile Include="..\cpu\vm8086.cc" />
     <ClCompile Include="..\cpu\vmcs.cc" />

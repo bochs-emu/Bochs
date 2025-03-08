@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2024  The Bochs Project
+//  Copyright (C) 2008-2025  The Bochs Project
 
 #include "config.h"
 
@@ -26,6 +26,8 @@
 extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip);
 
 #include "enh_dbg.h"
+
+#define LOG_THIS genlog->
 
 // Match stuff
 #define MATCH_TRUE 1
@@ -238,7 +240,7 @@ bx_phy_address WWP_Snapshot[16];
 bx_phy_address RWP_Snapshot[16];
 
 bool global_ini;
-char ini_path[BX_PATHNAME_LEN];
+char ini_path[BX_PATHNAME_LEN + 16];
 char *debug_cmd;
 bool debug_cmd_ready;
 bool vgaw_refresh;
@@ -1652,7 +1654,7 @@ void FillPAGE()
         if(valid) {
             if((lin - start_lin) != (phy - start_phy)) {
                 if(start_lin != 1) {
-                    sprintf (pa_lin,"0x%08X - 0x%08X",start_lin, lin - 1);
+                    sprintf (pa_lin,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_lin, lin - 1);
                     sprintf (pa_phy,"0x" FMT_LLCAPX " - 0x" FMT_LLCAPX,
                         start_phy, start_phy + (lin-1-start_lin));
                     AddPagingLine (LineCount,pa_lin,pa_phy);
@@ -1663,7 +1665,7 @@ void FillPAGE()
             }
         } else {
             if(start_lin != 1) {
-                sprintf (pa_lin,"0x%08X - 0x%08X",start_lin, lin - 1);
+                sprintf (pa_lin,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_lin, lin - 1);
                 sprintf (pa_phy,"0x" FMT_LLCAPX " - 0x" FMT_LLCAPX,
                     start_phy, start_phy + (lin-1-start_lin));
                 AddPagingLine (LineCount,pa_lin,pa_phy);
@@ -1684,7 +1686,7 @@ void FillPAGE()
         lin++;
     }
     if(start_lin != 1) {
-        sprintf (pa_lin,"0x%08X - 0x%08X", start_lin, -1);
+        sprintf (pa_lin,"0x" FMT_ADDRX64 " - 0x%08X", start_lin, -1);
         sprintf (pa_phy,"0x" FMT_LLCAPX " - 0x" FMT_LLCAPX,start_phy, start_phy + (lin-1-start_lin));
         AddPagingLine (LineCount,pa_lin,pa_phy);
     }
@@ -3513,6 +3515,9 @@ void ReadSettings()
   if (fd == NULL) {
     fd = fopen("bx_enh_dbg.ini", "r");
     if (fd == NULL) return;
+    BX_INFO(("Reading gui debugger settings from local ini file"));
+  } else {
+    BX_INFO(("Reading gui debugger settings from '%s'", ini_path));
   }
   do {
     ret = fgets(line, sizeof(line)-1, fd);
@@ -3600,10 +3605,14 @@ void WriteSettings()
 
   if (global_ini) {
     fd = fopen(ini_path, "w");
-  } else {
-    fd = fopen("bx_enh_dbg.ini", "w");
   }
-  if (fd == NULL) return;
+  if (fd == NULL) {
+    fd = fopen("bx_enh_dbg.ini", "w");
+    if (fd == NULL) return;
+    BX_INFO(("Saving gui debugger settings to local ini file"));
+  } else {
+    BX_INFO(("Saving gui debugger settings to '%s'", ini_path));
+  }
   fprintf(fd, "# bx_enh_dbg_ini\n");
   for (i = 0; i < 8; i++) {
     fprintf(fd, "SeeReg[%d] = %s\n", i, SeeReg[i] ? "TRUE" : "FALSE");

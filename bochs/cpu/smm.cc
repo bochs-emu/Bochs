@@ -698,7 +698,7 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
     return false;
   }
 
-  BX_CPU_THIS_PTR efer.set32(smm_state->efer.val32);
+  BX_CPU_THIS_PTR efer.set32(smm_state->efer.get32());
 #endif
 
   // check CR0 conditions for entering to shutdown state
@@ -771,8 +771,8 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
   SSP = smm_state->ssp;
 #endif
 
-  BX_CPU_THIS_PTR dr6.val32 = smm_state->dr6;
-  BX_CPU_THIS_PTR dr7.val32 = smm_state->dr7;
+  BX_CPU_THIS_PTR dr6.set32(smm_state->dr6);
+  BX_CPU_THIS_PTR dr7.set32(smm_state->dr7);
 
   BX_CPU_THIS_PTR gdtr = smm_state->gdtr;
   BX_CPU_THIS_PTR idtr = smm_state->idtr;

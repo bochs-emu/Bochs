@@ -3315,11 +3315,12 @@ behaviour. These options are supported by more than one display library:
 <screen>
   "cmdmode"     - call a headerbar button handler after pressing F7 (sdl, sdl2, win32, x)
   "fullscreen"  - startup in fullscreen mode (sdl, sdl2)
-  "gui_debug"   - use GTK debugger GUI (sdl, x) / Win32 debugger GUI (sdl, sdl2, win32)
   "hideIPS"     - disable IPS output in status bar (rfb, sdl, sdl2, term, vncsrv, win32, wx, x)
   "nokeyrepeat" - turn off host keyboard repeat (sdl, sdl2, win32, x)
   "no_gui_console" - use system console instead of builtin GUI console (rfb, sdl, sdl2, vncsrv, x)
   "timeout"     - time (in seconds) to wait for client (rfb, vncsrv)
+  "gui_debug"   - This option is DEPRECATED, use command line option '-dbg_gui'
+                  instead. It also supports the 'globalini' extension
 </screen>
 See the examples below for other currently supported options.
 <screen>
@@ -5433,6 +5434,14 @@ For other arguments, see section <link linkend="bochsrc">bochsrc</link>.
 <row>
   <entry>-dbg</entry>
   <entry>start Bochs internal debugger on startup</entry>
+</row>
+<row>
+  <entry>-dbg_gui</entry>
+  <entry>start Bochs internal debugger with gui on startup</entry>
+</row>
+<row>
+  <entry>-dbg_gui:globalini</entry>
+  <entry>start Bochs internal debugger gui using ini file from BXSHARE path</entry>
 </row>
 <row>
   <entry>-dbglog <replaceable>filename</replaceable></entry>

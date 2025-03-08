@@ -72,15 +72,14 @@
 # "cmdmode"     - call a headerbar button handler after pressing F7 (sdl, sdl2,
 #                 win32, x)
 # "fullscreen"  - startup in fullscreen mode (sdl, sdl2)
-# "gui_debug"   - use GTK debugger gui (sdl, sdl2, x) / Win32 debugger gui (sdl,
-#                 sdl2, win32). When using the "globalini" extension the
-#                 debugger uses ini file from BXSHARE path (see below).
 # "hideIPS"     - disable IPS output in status bar (rfb, sdl, sdl2, term, vncsrv,
 #                 win32, wx, x)
 # "nokeyrepeat" - turn off host keyboard repeat (sdl, sdl2, win32, x)
 # "no_gui_console" - use system console instead of builtin gui console
 #                    (rfb, sdl, sdl2, vncsrv, x)
 # "timeout"     - time (in seconds) to wait for client (rfb, vncsrv)
+# "gui_debug"   - This option is DEPRECATED, use command line option '-dbg_gui'
+#                 instead. It also supports the 'globalini' extension
 #
 # See the examples below for other currently supported options.
 # Setting up options without specifying display library is also supported.
@@ -101,7 +100,7 @@
 #                 on desktop window size
 #display_library: win32, options="traphotkeys, autoscale"
 #display_library: wx
-#display_library: x, options="gui_debug:globalini"
+#display_library: x
 
 #=======================================================================
 # CPU:

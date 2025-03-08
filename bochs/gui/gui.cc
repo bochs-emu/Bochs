@@ -1656,22 +1656,11 @@ bool bx_gui_c::parse_common_gui_options(const char *arg, Bit8u flags)
     return true;
   } else if (!strncmp(arg, "gui_debug", 9)) {
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
-    gui_opts.enh_dbg_enabled = 1;
-    gui_opts.enh_dbg_global_ini = 0;
-    if ((strlen(arg) > 9) && (arg[9] == ':')) {
-      if (!strcmp(&arg[10], "globalini")) {
-        gui_opts.enh_dbg_global_ini = 1;
-        BX_INFO(("Debugger gui using global config from BXSHARE path"));
-      } else {
-        BX_ERROR(("Ignoring unknown setting '%s' for gui debugger", &arg[10]));
-      }
-    } else if (strlen(arg) > 9) {
-      return false;
-    }
+    SIM->message_box("ERROR", "The 'gui_debug' option is deprecated - use command line option '-dbg_gui' instead");
 #else
     SIM->message_box("ERROR", "Bochs debugger not available - ignoring 'gui_debug' option");
 #endif
-    return true;
+    return false;
 #if BX_SHOW_IPS
   } else if (!strcmp(arg, "hideIPS") && (flags & BX_GUI_OPT_HIDE_IPS)) {
     BX_INFO(("hide IPS display in status bar"));

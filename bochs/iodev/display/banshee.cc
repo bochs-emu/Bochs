@@ -3762,19 +3762,24 @@ Bit32u bx_voodoo_vga_c::get_retrace()
 
 void bx_voodoo_vga_c::get_crtc_params(bx_crtc_params_t *crtcp, Bit32u *vclock)
 {
-  *vclock = BX_VVGA_THIS s.vclk[BX_VVGA_THIS s.misc_output.clock_select];
-  crtcp->htotal = BX_VVGA_THIS s.CRTC.reg[0] + ((v->banshee.crtc[0x1a] & 0x01) << 8) + 5;
-  crtcp->vtotal = BX_VVGA_THIS s.CRTC.reg[6] + ((BX_VVGA_THIS s.CRTC.reg[7] & 0x01) << 8) +
-                  ((BX_VVGA_THIS s.CRTC.reg[7] & 0x20) << 4) +
-                  ((v->banshee.crtc[0x1b] & 0x01) << 10) + 2;
-  crtcp->vbstart = BX_VVGA_THIS s.CRTC.reg[21] +
-                   ((BX_VVGA_THIS s.CRTC.reg[7] & 0x08) << 5) +
-                   ((BX_VVGA_THIS s.CRTC.reg[9] & 0x20) << 4) +
-                   ((v->banshee.crtc[0x1b] & 0x10) << 6);
-  crtcp->vrstart = BX_VVGA_THIS s.CRTC.reg[16] +
-                   ((BX_VVGA_THIS s.CRTC.reg[7] & 0x04) << 6) +
-                   ((BX_VVGA_THIS s.CRTC.reg[7] & 0x80) << 2) +
-                   ((v->banshee.crtc[0x1b] & 0x40) << 4);
+  if ((v->banshee.io[io_vgaInit0] & (1 << 6)) != 0) {
+    *vclock = BX_VVGA_THIS s.vclk[BX_VVGA_THIS s.misc_output.clock_select];
+    if (BX_VVGA_THIS s.x_dotclockdiv2) *vclock >>= 1;
+    crtcp->htotal = BX_VVGA_THIS s.CRTC.reg[0] + ((v->banshee.crtc[0x1a] & 0x01) << 8) + 5;
+    crtcp->vtotal = BX_VVGA_THIS s.CRTC.reg[6] + ((BX_VVGA_THIS s.CRTC.reg[7] & 0x01) << 8) +
+                    ((BX_VVGA_THIS s.CRTC.reg[7] & 0x20) << 4) +
+                    ((v->banshee.crtc[0x1b] & 0x01) << 10) + 2;
+    crtcp->vbstart = BX_VVGA_THIS s.CRTC.reg[21] +
+                     ((BX_VVGA_THIS s.CRTC.reg[7] & 0x08) << 5) +
+                     ((BX_VVGA_THIS s.CRTC.reg[9] & 0x20) << 4) +
+                     ((v->banshee.crtc[0x1b] & 0x10) << 6);
+    crtcp->vrstart = BX_VVGA_THIS s.CRTC.reg[16] +
+                     ((BX_VVGA_THIS s.CRTC.reg[7] & 0x04) << 6) +
+                     ((BX_VVGA_THIS s.CRTC.reg[7] & 0x80) << 2) +
+                     ((v->banshee.crtc[0x1b] & 0x40) << 4);
+  } else {
+    bx_vgacore_c::get_crtc_params(crtcp, vclock);
+  }
 }
 
 void bx_voodoo_vga_c::update(void)

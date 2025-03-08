@@ -420,7 +420,6 @@ bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
 bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
 {
   SVM_GUEST_STATE guest;
-  Bit32u tmp;
   unsigned n;
   bool paged_real_mode = false;
 
@@ -429,14 +428,15 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   guest.rsp = vmcb_read64(SVM_GUEST_RSP);
   guest.rax = vmcb_read64(SVM_GUEST_RAX);
 
-  guest.efer.val32 = vmcb_read32(SVM_GUEST_EFER_MSR);
-  tmp = vmcb_read32(SVM_GUEST_EFER_MSR_HI);
-  if (tmp) {
+  Bit32u efer_lo = vmcb_read32(SVM_GUEST_EFER_MSR);
+  Bit32u efer_hi = vmcb_read32(SVM_GUEST_EFER_MSR_HI);
+  if (efer_hi) {
     BX_ERROR(("VMRUN: Guest EFER[63:32] is not zero"));
     return 0;
   }
+  guest.efer.set32(efer_lo);
 
-  if (guest.efer.val32 & ~BX_CPU_THIS_PTR efer_suppmask) {
+  if (guest.efer.get32() & ~BX_CPU_THIS_PTR efer_suppmask) {
     BX_ERROR(("VMRUN: Guest EFER reserved bits set"));
     return 0;
   }
@@ -446,12 +446,13 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
     return 0;
   }
 
-  guest.cr0.val32 = vmcb_read32(SVM_GUEST_CR0);
-  tmp = vmcb_read32(SVM_GUEST_CR0_HI);
-  if (tmp) {
+  Bit32u cr0_lo = vmcb_read32(SVM_GUEST_CR0);
+  Bit32u cr0_hi = vmcb_read32(SVM_GUEST_CR0_HI);
+  if (cr0_hi) {
     BX_ERROR(("VMRUN: Guest CR0[63:32] is not zero"));
     return 0;
   }
+  guest.cr0.set32(cr0_lo);
 
   // always assign EFER.LMA := EFER.LME & CR0.PG
   guest.efer.set_LMA(guest.cr0.get_PG() && guest.efer.get_LME());
@@ -459,31 +460,32 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   guest.cr2 = vmcb_read64(SVM_GUEST_CR2);
   guest.cr3 = vmcb_read64(SVM_GUEST_CR3);
 
-  guest.cr4.val32 = vmcb_read32(SVM_GUEST_CR4);
-  tmp = vmcb_read32(SVM_GUEST_CR4_HI);
-  if (tmp) {
+  Bit32u cr4_lo = vmcb_read32(SVM_GUEST_CR4);
+  Bit32u cr4_hi = vmcb_read32(SVM_GUEST_CR4_HI);
+  if (cr4_hi) {
     BX_ERROR(("VMRUN: Guest CR4[63:32] is not zero"));
     return 0;
   }
+  guest.cr4.set32(cr4_lo);
 
-  if (guest.cr4.val32 & ~BX_CPU_THIS_PTR cr4_suppmask) {
+  if (guest.cr4.get32() & ~BX_CPU_THIS_PTR cr4_suppmask) {
     BX_ERROR(("VMRUN: Guest CR4 reserved bits set"));
     return 0;
   }
 
-  guest.dr6 = vmcb_read32(SVM_GUEST_DR6);
-  tmp = vmcb_read32(SVM_GUEST_DR6_HI);
-  if (tmp) {
+  Bit32u dr6_hi = vmcb_read32(SVM_GUEST_DR6_HI);
+  if (dr6_hi) {
     BX_ERROR(("VMRUN: Guest DR6[63:32] is not zero"));
     return 0;
   }
+  guest.dr6 = vmcb_read32(SVM_GUEST_DR6);
 
-  guest.dr7 = vmcb_read32(SVM_GUEST_DR7);
-  tmp = vmcb_read32(SVM_GUEST_DR7_HI);
-  if (tmp) {
+  Bit32u dr7_hi = vmcb_read32(SVM_GUEST_DR7_HI);
+  if (dr7_hi) {
     BX_ERROR(("VMRUN: Guest DR7[63:32] is not zero"));
     return 0;
   }
+  guest.dr7 = vmcb_read32(SVM_GUEST_DR7);
 
   guest.pat_msr = vmcb_read64(SVM_GUEST_PAT);
 

@@ -1498,7 +1498,7 @@ struct acpi_20_generic_address {
     uint8_t  address_space_id;
     uint8_t  register_bit_width;
     uint8_t  register_bit_offset;
-    uint8_t  reserved;
+    uint8_t  access_size;
     uint64_t address;
 } __attribute__((__packed__));
 
@@ -1808,6 +1808,8 @@ void acpi_bios_init(void)
      */
     hpet->timer_block_id = cpu_to_le32(0x8086a201);
     hpet->addr.address = cpu_to_le32(ACPI_HPET_ADDRESS);
+    hpet->addr.register_bit_width = 32;
+    hpet->addr.access_size = 3;
     acpi_build_table_header((struct  acpi_table_header *)hpet,
                              "HPET", sizeof(*hpet), 1);
 

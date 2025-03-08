@@ -2877,6 +2877,14 @@ bx_define_opcode(BX_IA_RDMSR_EqId, "rdmsr", "rdmsr", NULL, &BX_CPU_C::RDMSR, BX_
 bx_define_opcode(BX_IA_WRMSRNS_IdEq, "wrmsrns", "wrmsrns", NULL, &BX_CPU_C::WRMSR, BX_ISA_MSR_IMM, OP_Id, OP_Eq, OP_NONE, OP_NONE, BX_TRACE_END)
 #endif
 
+// MOVRS only supported in 64-bit mode
+#if BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_MOVRS_GbEb, "movrs", "movrsb", &BX_CPU_C::MOV_GbEbM, NULL, BX_ISA_MOVRS, OP_Gb, OP_Eb, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_MOVRS_GwEw, "movrs", "movrsw", &BX_CPU_C::MOV_GwEwM, NULL, BX_ISA_MOVRS, OP_Gw, OP_Ew, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_MOVRS_GdEd, "movrs", "movrsl", &BX_CPU_C::MOV64_GdEdM, NULL, BX_ISA_MOVRS, OP_Gd, OP_Ed, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_MOVRS_GqEq, "movrs", "movrsq", &BX_CPU_C::MOV_GqEqM, NULL, BX_ISA_MOVRS, OP_Gq, OP_Eq, OP_NONE, OP_NONE, 0)
+#endif
+
 #if BX_SUPPORT_EVEX
 #include "ia_opcodes_evex.def"
 #endif // BX_SUPPORT_EVEX

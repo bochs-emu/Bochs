@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochs 1 "21 Feb 2025" "bochs @version@" "The Bochs Project"
+.TH bochs 1 "07 Mar 2025" "bochs @version@" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochs \- Portable x86 Emulator.
@@ -67,6 +67,12 @@ The following options are available if Bochs is compiled with debugger support.
 .TP
 .BI \-dbg
 Start Bochs internal debugger on startup
+.TP
+.BI \-dbg_gui
+Start Bochs internal debugger with gui on startup
+.TP
+.BI \-dbg_gui:globalini
+Start Bochs internal debugger gui using ini file from BXSHARE path
 .TP
 .BI \-rc\ filename
 Execute debugger commands stored in file

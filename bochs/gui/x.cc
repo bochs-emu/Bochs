@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -889,9 +889,9 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
   // initialize debugger gui
-  if (bx_dbg.debugger_active && gui_opts.enh_dbg_enabled) {
+  if (bx_dbg.debugger_active && bx_dbg.debugger_gui) {
     SIM->set_debug_gui(1);
-    init_debug_dialog(gui_opts.enh_dbg_global_ini);
+    init_debug_dialog(bx_dbg.dbg_gui_globalini);
   }
 #endif
 

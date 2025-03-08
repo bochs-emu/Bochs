@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2024  The Bochs Project
+//  Copyright (C) 2002-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -678,11 +678,11 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   win32_nokeyrepeat = gui_opts.nokeyrepeat;
   hideIPS = gui_opts.hide_ips;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
-  if (bx_dbg.debugger_active && gui_opts.enh_dbg_enabled) {
+  if (bx_dbg.debugger_active && bx_dbg.debugger_gui) {
     if (gui_ci) {
       gui_debug = TRUE;
       SIM->set_debug_gui(1);
-      win32_enh_dbg_global_ini = gui_opts.enh_dbg_global_ini;
+      win32_enh_dbg_global_ini = bx_dbg.dbg_gui_globalini;
     } else {
       BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
     }

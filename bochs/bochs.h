@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -309,6 +309,10 @@ typedef struct {
   bool print_timestamps;
   bool debugger_active;
 #if BX_DEBUGGER
+#if BX_DEBUGGER_GUI
+  bool debugger_gui;
+  bool dbg_gui_globalini;
+#endif
   Bit8u magic_break;
 #endif
 #if BX_GDBSTUB

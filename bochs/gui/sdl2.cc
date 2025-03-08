@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2014-2024  The Bochs Project
+//  Copyright (C) 2014-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -489,11 +489,11 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   }
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
-  if (bx_dbg.debugger_active && gui_opts.enh_dbg_enabled) {
+  if (bx_dbg.debugger_active && bx_dbg.debugger_gui) {
     SIM->set_debug_gui(1);
 #ifdef WIN32
     if (gui_ci) {
-      sdl2_enh_dbg_global_ini = gui_opts.enh_dbg_global_ini;
+      sdl2_enh_dbg_global_ini = bx_dbg.dbg_gui_globalini;
       // on Windows the debugger gui must run in a separate thread
       DWORD threadID;
       CreateThread(NULL, 0, DebugGuiThread, NULL, 0, &threadID);
@@ -501,7 +501,7 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
       BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
     }
 #else
-    init_debug_dialog(gui_opts.enh_dbg_global_ini);
+    init_debug_dialog(bx_dbg.dbg_gui_globalini);
 #endif
   }
 #endif
