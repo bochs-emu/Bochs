@@ -711,49 +711,21 @@ static unsigned sreg_mod1or2_base32[8] = {
   BX_SEG_REG_DS
 };
 
-extern const Bit8u *decodeModrm32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned mod, unsigned nnn, unsigned rm);
-extern const Bit8u *parseModrm32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, struct bx_modrm *modrm);
 extern int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit16u ia_opcode, bool is_64);
 extern Bit16u findOpcode(const Bit64u *opMap, Bit32u opMsk);
 
-const Bit8u *parseModrm32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, struct bx_modrm *modrm)
-{
-  // opcode requires modrm byte
-  if (remain == 0)
-    return NULL;
-  remain--;
-  unsigned b2 = *iptr++;
-
-  // Keep original modrm byte
-  modrm->modrm = b2;
-
-  // Parse mod-nnn-rm and related bytes
-  modrm->mod = b2 & 0xc0; // leave unshifted
-  modrm->nnn = (b2 >> 3) & 0x7;
-  modrm->rm  = b2 & 0x7;
-
-  if (modrm->mod == 0xc0) { // mod == 11b
-    i->assertModC0();
-  }
-  else {
-    iptr = decodeModrm32(iptr, remain, i, modrm->mod, modrm->nnn, modrm->rm);
-  }
-
-  return iptr;
-}
-
-const Bit8u *decodeModrm32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned mod, unsigned nnn, unsigned rm)
+static const Bit8u *decodeModrm32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned mod, unsigned nnn, unsigned rm)
 {
   unsigned seg = BX_SEG_REG_DS;
 
-  i->setSibBase(rm);      // initialize with rm to use BxResolve32Base
-  i->setSibIndex(4);      // no Index encoding by default
   // initialize displ32 with zero to include cases with no diplacement
   i->modRMForm.displ32u = 0;
 
   // note that mod==11b handled outside
 
   if (i->as32L()) {
+    i->setSibBase(rm);
+    i->setSibIndex(4); // no Index encoding by default
     if (rm != 4) { // no s-i-b byte
       if (mod == 0x00) { // mod == 00b
         if (rm == 5) {
@@ -884,6 +856,32 @@ const Bit8u *decodeModrm32(const Bit8u *iptr, unsigned &remain, bxInstruction_c 
 modrm_done:
 
   i->setSeg(seg);
+  return iptr;
+}
+
+static const Bit8u *parseModrm32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, struct bx_modrm *modrm)
+{
+  // opcode requires modrm byte
+  if (remain == 0)
+    return NULL;
+  remain--;
+  unsigned b2 = *iptr++;
+
+  // Keep original modrm byte
+  modrm->modrm = b2;
+
+  // Parse mod-nnn-rm and related bytes
+  modrm->mod = b2 & 0xc0; // leave unshifted
+  modrm->nnn = (b2 >> 3) & 0x7;
+  modrm->rm  = b2 & 0x7;
+
+  if (modrm->mod == 0xc0) { // mod == 11b
+    i->assertModC0();
+  }
+  else {
+    iptr = decodeModrm32(iptr, remain, i, modrm->mod, modrm->nnn, modrm->rm);
+  }
+
   return iptr;
 }
 
@@ -1387,12 +1385,12 @@ int decoder_vex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   }
 
 #if BX_SUPPORT_AVX
-  unsigned rm = 0, mod = 0, nnn = 0;
+  unsigned rm = 0, nnn = 0;
 
   if (sse_prefix)
     return(BX_IA_ERROR);
 
-  bool vex_w = 0;
+  unsigned vex_w = 0;
   unsigned vex_opc_map = 1;
   unsigned vex = *iptr++;
   remain--;
@@ -1427,24 +1425,13 @@ int decoder_vex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
 
   if (has_modrm) {
     // opcode requires modrm byte
-    if (remain == 0)
+    struct bx_modrm modrm;
+    iptr = parseModrm32(iptr, remain, i, &modrm);
+    if (! iptr)
       return(-1);
-    remain--;
-    unsigned b2 = *iptr++;
 
-    // Parse mod-nnn-rm and related bytes
-    mod = b2 & 0xc0; // leave unshifted
-    nnn = (b2 >> 3) & 0x7;
-    rm  = b2 & 0x7;
-
-    if (mod == 0xc0) { // mod == 11b
-      i->assertModC0();
-    }
-    else {
-      iptr = decodeModrm32(iptr, remain, i, mod, nnn, rm);
-      if (! iptr)
-        return(-1);
-    }
+    nnn = modrm.nnn;
+    rm  = modrm.rm;
   }
   else {
     // Opcode does not require a MODRM byte.
@@ -1504,8 +1491,6 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   }
 
 #if BX_SUPPORT_EVEX
-  bool displ8 = false;
-
   if (sse_prefix)
     return(BX_IA_ERROR);
 
@@ -1586,9 +1571,7 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   if (! iptr)
     return(-1);
 
-  if (modrm.mod == 0x40) { // mod==01b
-    displ8 = true;
-  }
+  bool displ8 = (modrm.mod == 0x40); // mod==01b
 
   if (modrm.mod == 0xc0) {
     // EVEX.b in reg form implies 512-bit vector length
@@ -1672,7 +1655,7 @@ int decoder_xop32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
 
   vex = *iptr++; // fetch XOP3
 
-  bool vex_w = (vex >> 7) & 0x1;
+  unsigned vex_w = (vex >> 7) & 0x1;
   int vvv = 15 - ((vex >> 3) & 0xf);
   unsigned vex_l = (vex >> 2) & 0x1;
   i->setVL(BX_VL128 + vex_l);
@@ -1821,7 +1804,7 @@ int decoder_creg32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   Bit32u decmask = (i->osize() << OS32_OFFSET) |
                    (i->asize() << AS32_OFFSET) |
                    (sse_prefix << SSE_PREFIX_OFFSET) |
-                   (i->modC0() ? (1 << MODC0_OFFSET) : 0) |
+                   (1 << MODC0_OFFSET) |
                    (nnn << NNN_OFFSET) |
                    (rm << RRR_OFFSET);
 
