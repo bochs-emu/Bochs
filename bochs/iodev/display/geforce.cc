@@ -240,19 +240,18 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS chs[i].m2mf_format = 0;
     BX_GEFORCE_THIS chs[i].m2mf_buffer_notify = 0;
 
-    BX_GEFORCE_THIS chs[i].bg_color = 0;
-    BX_GEFORCE_THIS chs[i].fg_color = 0;
-    BX_GEFORCE_THIS chs[i].image_wh = 0;
-    BX_GEFORCE_THIS chs[i].image_xy = 0;
-    BX_GEFORCE_THIS chs[i].image_words_ptr = 0;
-    BX_GEFORCE_THIS chs[i].image_words_left = 0;
-    for (int j = 0; j < 1024; j++)
-      BX_GEFORCE_THIS chs[i].image_data[j] = 0;
-
-    BX_GEFORCE_THIS chs[i].surface = 0;
-    BX_GEFORCE_THIS chs[i].rect_color = 0;
-    BX_GEFORCE_THIS chs[i].rect_xy = 0;
-    BX_GEFORCE_THIS chs[i].rect_wh = 0;
+    BX_GEFORCE_THIS chs[i].gdi_surface = 0;
+    BX_GEFORCE_THIS chs[i].gdi_rect_color = 0;
+    BX_GEFORCE_THIS chs[i].gdi_rect_xy = 0;
+    BX_GEFORCE_THIS chs[i].gdi_rect_wh = 0;
+    BX_GEFORCE_THIS chs[i].gdi_bg_color = 0;
+    BX_GEFORCE_THIS chs[i].gdi_fg_color = 0;
+    BX_GEFORCE_THIS chs[i].gdi_image_swh = 0;
+    BX_GEFORCE_THIS chs[i].gdi_image_dwh = 0;
+    BX_GEFORCE_THIS chs[i].gdi_image_xy = 0;
+    BX_GEFORCE_THIS chs[i].gdi_words_ptr = 0;
+    BX_GEFORCE_THIS chs[i].gdi_words_left = 0;
+    BX_GEFORCE_THIS chs[i].gdi_words = nullptr;
   }
 
   for (int i = 0; i < 4 * 1024 * 1024; i++)
@@ -1672,12 +1671,12 @@ Bit32u bx_geforce_c::ramht_lookup(Bit32u handle, Bit32u chid)
 
 void bx_geforce_c::fillrect(Bit32u chid)
 {
-  Bit16u dx = BX_GEFORCE_THIS chs[chid].rect_xy >> 16;
-  Bit16u dy = BX_GEFORCE_THIS chs[chid].rect_xy & 0xFFFF;
-  Bit16u width = BX_GEFORCE_THIS chs[chid].rect_wh >> 16;
-  Bit16u height = BX_GEFORCE_THIS chs[chid].rect_wh & 0xFFFF;
+  Bit16u dx = BX_GEFORCE_THIS chs[chid].gdi_rect_xy >> 16;
+  Bit16u dy = BX_GEFORCE_THIS chs[chid].gdi_rect_xy & 0xFFFF;
+  Bit16u width = BX_GEFORCE_THIS chs[chid].gdi_rect_wh >> 16;
+  Bit16u height = BX_GEFORCE_THIS chs[chid].gdi_rect_wh & 0xFFFF;
   Bit32u pitch = BX_GEFORCE_THIS chs[chid].s2d_pitch >> 16;
-  Bit32u color = BX_GEFORCE_THIS chs[chid].rect_color;
+  Bit32u color = BX_GEFORCE_THIS chs[chid].gdi_rect_color;
   Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].s2d_ofs_dst;
   draw_offset += dy * pitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
   Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
@@ -1707,13 +1706,14 @@ Bit32u bx_geforce_c::color_565_to_888(Bit16u value)
 
 void bx_geforce_c::imageblit(Bit32u chid)
 {
-  Bit16u dx = BX_GEFORCE_THIS chs[chid].image_xy & 0xFFFF;
-  Bit16u dy = BX_GEFORCE_THIS chs[chid].image_xy >> 16;
-  Bit32u width = ALIGN(BX_GEFORCE_THIS chs[chid].image_wh & 0xFFFF, 8);
-  Bit32u height = BX_GEFORCE_THIS chs[chid].image_wh >> 16;
+  Bit16u dx = BX_GEFORCE_THIS chs[chid].gdi_image_xy & 0xFFFF;
+  Bit16u dy = BX_GEFORCE_THIS chs[chid].gdi_image_xy >> 16;
+  Bit32u swidth = BX_GEFORCE_THIS chs[chid].gdi_image_swh & 0xFFFF;
+  Bit32u dwidth = BX_GEFORCE_THIS chs[chid].gdi_image_dwh & 0xFFFF;
+  Bit32u height = BX_GEFORCE_THIS chs[chid].gdi_image_swh >> 16;
   Bit32u pitch = BX_GEFORCE_THIS chs[chid].s2d_pitch >> 16;
-  Bit32u bg_color = BX_GEFORCE_THIS chs[chid].bg_color;
-  Bit32u fg_color = BX_GEFORCE_THIS chs[chid].fg_color;
+  Bit32u bg_color = BX_GEFORCE_THIS chs[chid].gdi_bg_color;
+  Bit32u fg_color = BX_GEFORCE_THIS chs[chid].gdi_fg_color;
   if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4) {
     bg_color = color_565_to_888(bg_color);
     fg_color = color_565_to_888(fg_color);
@@ -1723,11 +1723,11 @@ void bx_geforce_c::imageblit(Bit32u chid)
   Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   Bit32u bit_index = 0;
   for (Bit16u y = 0; y < height; y++) {
-    for (Bit16u x = 0; x < width; x++) {
+    for (Bit16u x = 0; x < dwidth; x++) {
       Bit32u word_offset = bit_index / 32;
       Bit32u bit_offset = bit_index % 32;
       bit_offset = bit_offset & 24 | 7 - (bit_offset & 7);
-      bool pixel = BX_GEFORCE_THIS chs[chid].image_data[word_offset] >> bit_offset & 1;
+      bool pixel = BX_GEFORCE_THIS chs[chid].gdi_words[word_offset] >> bit_offset & 1;
       Bit32u color = pixel ? fg_color : bg_color;
       if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
         dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2, color);
@@ -1735,11 +1735,12 @@ void bx_geforce_c::imageblit(Bit32u chid)
         dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4, color);
       bit_index++;
     }
+    bit_index += swidth - dwidth;
     draw_offset += pitch;
   }
   Bit32u redraw_x = redraw_offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
   Bit32u redraw_y = redraw_offset / BX_GEFORCE_THIS svga_pitch;
-  BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, width, height);
+  BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, dwidth, height);
 }
 
 void bx_geforce_c::ifc(Bit32u chid)
@@ -1873,34 +1874,40 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
         } else if (cls == 0x44) { // patt
         } else if (cls == 0x4a) { // gdi
           if (method == 0x066)
-            BX_GEFORCE_THIS chs[chid].surface = param;
+            BX_GEFORCE_THIS chs[chid].gdi_surface = param;
           else if (method == 0x0ff)
-            BX_GEFORCE_THIS chs[chid].rect_color = param;
+            BX_GEFORCE_THIS chs[chid].gdi_rect_color = param;
           else if (method == 0x100)
-            BX_GEFORCE_THIS chs[chid].rect_xy = param;
+            BX_GEFORCE_THIS chs[chid].gdi_rect_xy = param;
           else if (method == 0x101) {
-            BX_GEFORCE_THIS chs[chid].rect_wh = param;
+            BX_GEFORCE_THIS chs[chid].gdi_rect_wh = param;
             fillrect(chid);
           } else if (method == 0x2fb)
-            BX_GEFORCE_THIS chs[chid].bg_color = param;
+            BX_GEFORCE_THIS chs[chid].gdi_bg_color = param;
           else if (method == 0x2fc)
-            BX_GEFORCE_THIS chs[chid].fg_color = param;
-          else if (method == 0x2fe) {
-            BX_GEFORCE_THIS chs[chid].image_wh = param;
-            Bit32u width = ALIGN(BX_GEFORCE_THIS chs[chid].image_wh & 0xFFFF, 8);
-            Bit32u dsize = ALIGN(width * (BX_GEFORCE_THIS chs[chid].image_wh >> 16), 32) >> 5;
-            if (dsize > 1024)
-              BX_PANIC(("dsize = %d", dsize));
-            BX_GEFORCE_THIS chs[chid].image_words_ptr = 0;
-            BX_GEFORCE_THIS chs[chid].image_words_left = dsize;
-          }
-          else if (method == 0x2ff)
-            BX_GEFORCE_THIS chs[chid].image_xy = param;
-          else if (method >= 0x300 && method < 0x380) {
-            BX_GEFORCE_THIS chs[chid].image_data[BX_GEFORCE_THIS chs[chid].image_words_ptr++] = param;
-            BX_GEFORCE_THIS chs[chid].image_words_left--;
-            if (!BX_GEFORCE_THIS chs[chid].image_words_left)
+            BX_GEFORCE_THIS chs[chid].gdi_fg_color = param;
+          else if (method == 0x2fd)
+            BX_GEFORCE_THIS chs[chid].gdi_image_swh = param;
+          else if (method == 0x2fe)
+            BX_GEFORCE_THIS chs[chid].gdi_image_dwh = param;
+          else if (method == 0x2ff) {
+            BX_GEFORCE_THIS chs[chid].gdi_image_xy = param;
+            Bit32u width = ALIGN(BX_GEFORCE_THIS chs[chid].gdi_image_swh & 0xFFFF, 8);
+            Bit32u wordCount = ALIGN(width * (BX_GEFORCE_THIS chs[chid].gdi_image_swh >> 16), 32) >> 5;
+            if (BX_GEFORCE_THIS chs[chid].gdi_words != nullptr)
+              delete[] BX_GEFORCE_THIS chs[chid].gdi_words;
+            BX_GEFORCE_THIS chs[chid].gdi_words_ptr = 0;
+            BX_GEFORCE_THIS chs[chid].gdi_words_left = wordCount;
+            BX_GEFORCE_THIS chs[chid].gdi_words = new Bit32u[wordCount];
+          } else if (method >= 0x300 && method < 0x380) {
+            BX_GEFORCE_THIS chs[chid].gdi_words[
+              BX_GEFORCE_THIS chs[chid].gdi_words_ptr++] = param;
+            BX_GEFORCE_THIS chs[chid].gdi_words_left--;
+            if (!BX_GEFORCE_THIS chs[chid].gdi_words_left) {
               imageblit(chid);
+              delete[] BX_GEFORCE_THIS chs[chid].gdi_words;
+              BX_GEFORCE_THIS chs[chid].gdi_words = nullptr;
+            }
           }
         } else if (cls == 0x62) { // surf2d
           if (method == 0x061)
@@ -1949,10 +1956,8 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
             Bit32u height = BX_GEFORCE_THIS chs[chid].ifc_shw >> 16;
             Bit32u wordCount = width * height * 
               BX_GEFORCE_THIS chs[chid].ifc_color_bytes / 4;
-            if (BX_GEFORCE_THIS chs[chid].ifc_words != nullptr) {
+            if (BX_GEFORCE_THIS chs[chid].ifc_words != nullptr)
               delete[] BX_GEFORCE_THIS chs[chid].ifc_words;
-              BX_GEFORCE_THIS chs[chid].ifc_words = nullptr;
-            }
             BX_GEFORCE_THIS chs[chid].ifc_words_ptr = 0;
             BX_GEFORCE_THIS chs[chid].ifc_words_left = wordCount;
             BX_GEFORCE_THIS chs[chid].ifc_words = new Bit32u[wordCount];

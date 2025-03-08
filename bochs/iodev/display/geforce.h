@@ -224,18 +224,18 @@ private:
     Bit32u m2mf_format;
     Bit32u m2mf_buffer_notify;
 
-    Bit32u bg_color;
-    Bit32u fg_color;
-    Bit32u image_wh;
-    Bit32u image_xy;
-    Bit32u image_words_ptr;
-    Bit32u image_words_left;
-    Bit32u image_data[1024];
-
-    Bit32u surface;
-    Bit32u rect_color;
-    Bit32u rect_xy;
-    Bit32u rect_wh;
+    Bit32u gdi_surface;
+    Bit32u gdi_rect_color;
+    Bit32u gdi_rect_xy;
+    Bit32u gdi_rect_wh;
+    Bit32u gdi_bg_color;
+    Bit32u gdi_fg_color;
+    Bit32u gdi_image_swh;
+    Bit32u gdi_image_dwh;
+    Bit32u gdi_image_xy;
+    Bit32u gdi_words_ptr;
+    Bit32u gdi_words_left;
+    Bit32u* gdi_words;
   } chs[GEFORCE_CHANNEL_COUNT];
 
   Bit32u unk_regs[4*1024*1024]; // temporary
