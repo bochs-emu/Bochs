@@ -40,6 +40,8 @@
 #define GEFORCE_SUBCHANNEL_COUNT 8
 #define GEFORCE_CACHE1_SIZE 64
 
+#define BX_ROP_PATTERN 0x01
+
 class bx_geforce_c : public bx_vgacore_c
 {
 public:
@@ -75,6 +77,7 @@ private:
   void   svga_write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
   BX_GEFORCE_SMF void   svga_init_members();
+  BX_GEFORCE_SMF void   bitblt_init();
 
   BX_GEFORCE_SMF void draw_hardware_cursor(unsigned, unsigned, bx_svga_tileinfo_t *);
 
@@ -170,6 +173,9 @@ private:
   Bit32u mpll;
   Bit32u vpll;
 
+  bx_bitblt_rop_t rop_handler[0x100];
+  Bit8u  rop_flags[0x100];
+
   struct {
     Bit32u dma_put;
     Bit32u dma_get;
@@ -224,7 +230,13 @@ private:
     Bit32u m2mf_format;
     Bit32u m2mf_buffer_notify;
 
-    Bit32u gdi_surface;
+    Bit8u  rop;
+
+    Bit32u patt_bg_color;
+    Bit32u patt_fg_color;
+
+    Bit32u gdi_operation;
+    Bit32u gdi_color_fmt;
     Bit32u gdi_rect_color;
     Bit32u gdi_rect_xy;
     Bit32u gdi_rect_wh;
