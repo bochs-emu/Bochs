@@ -1845,24 +1845,28 @@ void bx_geforce_c::copyarea(Bit32u chid)
   Bit32u dpitch = BX_GEFORCE_THIS chs[chid].s2d_pitch >> 16;
   Bit32u src_offset = BX_GEFORCE_THIS chs[chid].s2d_ofs_src;
   Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].s2d_ofs_dst;
-  src_offset += sy * spitch + sx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
-  draw_offset += dy * dpitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
-  Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
+  bool xdir = dx > sx;
+  bool ydir = dy > sy;
+  src_offset += (sy + ydir * (height - 1)) * spitch + sx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
+  Bit32u redraw_offset = draw_offset + dy * dpitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes -
+    (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
+  draw_offset += (dy + ydir * (height - 1)) * dpitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
   for (Bit16u y = 0; y < height; y++) {
     for (Bit16u x = 0; x < width; x++) {
+      Bit16u xa = xdir ? width - x - 1 : x;
       if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 1) {
-        Bit8u color = dma_read8(BX_GEFORCE_THIS chs[chid].s2d_img_src, src_offset + x);
-        dma_write8(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x, color);
+        Bit8u color = dma_read8(BX_GEFORCE_THIS chs[chid].s2d_img_src, src_offset + xa);
+        dma_write8(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + xa, color);
       } else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2) {
-        Bit16u color = dma_read16(BX_GEFORCE_THIS chs[chid].s2d_img_src, src_offset + x * 2);
-        dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2, color);
+        Bit16u color = dma_read16(BX_GEFORCE_THIS chs[chid].s2d_img_src, src_offset + xa * 2);
+        dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + xa * 2, color);
       } else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4) {
-        Bit32u color = dma_read32(BX_GEFORCE_THIS chs[chid].s2d_img_src, src_offset + x * 4);
-        dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4, color);
+        Bit32u color = dma_read32(BX_GEFORCE_THIS chs[chid].s2d_img_src, src_offset + xa * 4);
+        dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + xa * 4, color);
       }
     }
-    src_offset += spitch;
-    draw_offset += dpitch;
+    src_offset += spitch * (1 - 2 * ydir);
+    draw_offset += dpitch * (1 - 2 * ydir);
   }
   Bit32u redraw_x = redraw_offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
   Bit32u redraw_y = redraw_offset / BX_GEFORCE_THIS svga_pitch;
@@ -2068,7 +2072,7 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
               BX_GEFORCE_THIS chs[chid].ifc_words = nullptr;
             }
           }
-        } else if (cls == 0x9f) { // imageblit
+        } else if (cls == 0x5f || cls == 0x9f) { // imageblit
           if (method == 0x0bf)
             BX_GEFORCE_THIS chs[chid].blit_operation = param;
           else if (method == 0x0c0)
