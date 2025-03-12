@@ -1499,9 +1499,9 @@ Bit8u bx_geforce_c::register_read8(Bit32u address)
 void bx_geforce_c::register_write8(Bit32u address, Bit8u value)
 {
   if (address >= 0xc0300 && address < 0xc0400) {
-    if (address == 0xc03c2 || address == 0xc03c4 ||
-        address == 0xc03c5 || address == 0xc03ce ||
-        address == 0xc03cf)
+    if (address == 0xc03c2 || address == 0xc03c3 ||
+        address == 0xc03c4 || address == 0xc03c5 ||
+        address == 0xc03ce || address == 0xc03cf)
       SVGA_WRITE(address - 0xc0000, value, 1);
     else
       BX_PANIC(("Unknown register 0x%08x write", address));
@@ -2118,8 +2118,12 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
             BX_GEFORCE_THIS chs[chid].ifc_operation = param;
           else if (method == 0x0c0) {
             BX_GEFORCE_THIS chs[chid].ifc_color_fmt = param;
-            if (BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 4 || // A8R8G8B8
-                BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 5)   // X8R8G8B8
+            if (BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 1 || // R5G6B5
+                BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 2 || // A1R5G5B5
+                BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 3)   // X1R5G5B5
+              BX_GEFORCE_THIS chs[chid].ifc_color_bytes = 2;
+            else if (BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 4 || // A8R8G8B8
+                     BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 5)   // X8R8G8B8
               BX_GEFORCE_THIS chs[chid].ifc_color_bytes = 4;
             else {
               BX_ERROR(("unknown IFC color format: 0x%02x",
