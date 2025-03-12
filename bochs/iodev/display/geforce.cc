@@ -448,20 +448,24 @@ bool bx_geforce_c::geforce_mem_read_handler(bx_phy_address addr, unsigned len,
     return 1;
   }
 
-  if (addr >= BX_GEFORCE_THIS pci_bar[2].addr &&
+  if (BX_GEFORCE_THIS card_type != 0x35 && addr >= BX_GEFORCE_THIS pci_bar[2].addr &&
       addr < (BX_GEFORCE_THIS pci_bar[2].addr + BX_GEFORCE_THIS bar2_size)) {
     Bit32u offset = addr & (BX_GEFORCE_THIS bar2_size - 1);
-    if (len == 4) {
-      Bit32u value = ramin_read32(offset);
-      BX_ERROR(("RAMIN read from 0x%08x, value 0x%08x", offset, value));
-      *((Bit8u*)data + 0) = (value >> 0) & 0xFF;
-      *((Bit8u*)data + 1) = (value >> 8) & 0xFF;
-      *((Bit8u*)data + 2) = (value >> 16) & 0xFF;
-      *((Bit8u*)data + 3) = (value >> 24) & 0xFF;
+    if (BX_GEFORCE_THIS card_type >= 0x40) {
+      if (len == 4) {
+        Bit32u value = ramin_read32(offset);
+        BX_ERROR(("RAMIN read from 0x%08x, value 0x%08x", offset, value));
+        *((Bit8u*)data + 0) = (value >> 0) & 0xFF;
+        *((Bit8u*)data + 1) = (value >> 8) & 0xFF;
+        *((Bit8u*)data + 2) = (value >> 16) & 0xFF;
+        *((Bit8u*)data + 3) = (value >> 24) & 0xFF;
+      } else {
+        BX_PANIC(("RAMIN read len %d", len));
+      }
+      return 1;
     } else {
-      BX_PANIC(("RAMIN read len %d", len));
+      BX_PANIC(("BAR2 read from 0x%08x", offset));
     }
-    return 1;
   }
 
   Bit8u *data_ptr;
@@ -533,21 +537,25 @@ bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
     return 1;
   }
 
-  if (addr >= BX_GEFORCE_THIS pci_bar[2].addr &&
+  if (BX_GEFORCE_THIS card_type != 0x35 && addr >= BX_GEFORCE_THIS pci_bar[2].addr &&
       addr < (BX_GEFORCE_THIS pci_bar[2].addr + BX_GEFORCE_THIS bar2_size)) {
     Bit32u offset = addr & (BX_GEFORCE_THIS bar2_size - 1);
-    if (len == 4) {
-      Bit32u value =
-        (*((Bit8u*)data + 0) << 0) |
-        (*((Bit8u*)data + 1) << 8) |
-        (*((Bit8u*)data + 2) << 16) |
-        (*((Bit8u*)data + 3) << 24);
-      BX_ERROR(("RAMIN write to 0x%08x, value 0x%08x", offset, value));
-      ramin_write32(offset, value);
+    if (BX_GEFORCE_THIS card_type >= 0x40) {
+      if (len == 4) {
+        Bit32u value =
+          (*((Bit8u*)data + 0) << 0) |
+          (*((Bit8u*)data + 1) << 8) |
+          (*((Bit8u*)data + 2) << 16) |
+          (*((Bit8u*)data + 3) << 24);
+        BX_ERROR(("RAMIN write to 0x%08x, value 0x%08x", offset, value));
+        ramin_write32(offset, value);
+      } else {
+        BX_PANIC(("RAMIN write len %d", len));
+      }
+      return 1;
     } else {
-      BX_PANIC(("RAMIN write len %d", len));
+      BX_PANIC(("BAR2 write to 0x%08x", offset));
     }
-    return 1;
   }
 
   Bit8u *data_ptr;
@@ -1420,15 +1428,17 @@ void bx_geforce_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
     BX_GEFORCE_THIS bank_base[index - 0x1d] = value * 0x8000;
   else if (index == 0x2f || index == 0x30 || index == 0x31)
     update_cursor_addr = true;
-  else if (index == 0x37 || index == 0x3f) {
+  else if (index == 0x37 || index == 0x3f || index == 0x51) {
     bool scl = value & 0x20;
     bool sda = value & 0x10;
     if (index == 0x3f) {
       BX_GEFORCE_THIS ddc.write(scl, sda);
       BX_GEFORCE_THIS crtc.reg[0x3e] = BX_GEFORCE_THIS ddc.read() & 0x0c;
     } else {
-      BX_GEFORCE_THIS crtc.reg[0x36] = sda << 3 | scl << 2;
+      BX_GEFORCE_THIS crtc.reg[index - 1] = sda << 3 | scl << 2;
     }
+  } else if (index == 0x58) {
+    return; // Otherwise slaved mode is activated
   }
 
   if (index <= GEFORCE_CRTC_MAX) {
@@ -1481,7 +1491,7 @@ Bit8u bx_geforce_c::register_read8(Bit32u address)
       value = 0xFF;
       BX_PANIC(("Unknown register 0x%08x read", address));
     }
-  } else if (address >= 0x681300 && address <= 0x681400) {
+  } else if (address >= 0x681300 && address < 0x681400) {
     if (address >= 0x6813c6 && address <= 0x6813c9)
       value = SVGA_READ(address - 0x681000, 1);
     else {
@@ -1512,7 +1522,7 @@ void bx_geforce_c::register_write8(Bit32u address, Bit8u value)
       SVGA_WRITE(address - 0x601000, value, 1);
     else
       BX_PANIC(("Unknown register 0x%08x write", address));
-  } else if (address >= 0x681300 && address <= 0x681400) {
+  } else if (address >= 0x681300 && address < 0x681400) {
     if (address >= 0x6813c6 && address <= 0x6813c9)
       SVGA_WRITE(address - 0x681000, value, 1);
     else
@@ -2334,8 +2344,6 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS crtc_cursor_config;
   } else if (address == 0x600818) {
     value = BX_GEFORCE_THIS crtc_gpio;
-  } else if (address == 0x600860) { // PCRTC_ENGINE_CTRL
-    value = 0x00000010;
   } else if (address >= 0x601300 && address < 0x601400) {
     value = register_read8(address);
   } else if (address == 0x680300) {
@@ -2348,7 +2356,7 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS vpll;
   } else if (address == 0x680828) { // PRAMDAC_FP_HCRTC
     value = 0x00000000; // Second monitor is disconnected
-  } else if (address >= 0x681300 && address <= 0x681400) {
+  } else if (address >= 0x681300 && address < 0x681400) {
     value = register_read8(address);
   } else if (address >= 0x700000 && address < 0x800000) {
     value = ramin_read32(address - 0x700000);
@@ -2501,7 +2509,7 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS mpll = value;
   } else if (address == 0x680508) {
     BX_GEFORCE_THIS vpll = value;
-  } else if (address >= 0x681300 && address <= 0x681400) {
+  } else if (address >= 0x681300 && address < 0x681400) {
     register_write8(address, value);
   } else if (address >= 0x700000 && address < 0x800000) {
     ramin_write32(address - 0x700000, value);
@@ -2563,72 +2571,74 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
 
 void bx_geforce_c::svga_init_pcihandlers(void)
 {
-    BX_GEFORCE_THIS devfunc = 0x00;
-    DEV_register_pci_handlers2(BX_GEFORCE_THIS_PTR,
-        &BX_GEFORCE_THIS devfunc, BX_PLUGIN_GEFORCE, "GeForce AGP", true);
-    Bit16u devid;
-    Bit8u revid = 0x00;
-    if (BX_GEFORCE_THIS card_type == 0x20) {
-      devid = 0x0202;
-      revid = 0xA3;
-    } else if (BX_GEFORCE_THIS card_type == 0x35) {
-      devid = 0x0331;
-    } else if (BX_GEFORCE_THIS card_type == 0x40) {
-      devid = 0x0045;
-    } else {
-      devid = 0x0000;
-      BX_PANIC(("Unknown card type"));
-    }
-    BX_GEFORCE_THIS init_pci_conf(0x10DE, devid, revid, 0x030000, 0x00, BX_PCI_INTA);
+  BX_GEFORCE_THIS devfunc = 0x00;
+  DEV_register_pci_handlers2(BX_GEFORCE_THIS_PTR,
+      &BX_GEFORCE_THIS devfunc, BX_PLUGIN_GEFORCE, "GeForce AGP", true);
+  Bit16u devid;
+  Bit8u revid = 0x00;
+  if (BX_GEFORCE_THIS card_type == 0x20) {
+    devid = 0x0202;
+    revid = 0xA3;
+  } else if (BX_GEFORCE_THIS card_type == 0x35) {
+    devid = 0x0331;
+  } else if (BX_GEFORCE_THIS card_type == 0x40) {
+    devid = 0x0045;
+  } else {
+    devid = 0x0000;
+    BX_PANIC(("Unknown card type"));
+  }
+  BX_GEFORCE_THIS init_pci_conf(0x10DE, devid, revid, 0x030000, 0x00, BX_PCI_INTA);
 
-    BX_GEFORCE_THIS pci_conf[0x14] = 0x08;
+  BX_GEFORCE_THIS init_bar_mem(0, GEFORCE_PNPMMIO_SIZE, geforce_mem_read_handler,
+                               geforce_mem_write_handler);
+  BX_GEFORCE_THIS pci_conf[0x14] = 0x08;
+  BX_GEFORCE_THIS init_bar_mem(1, BX_GEFORCE_THIS s.memsize, geforce_mem_read_handler,
+                               geforce_mem_write_handler);
+  if (BX_GEFORCE_THIS card_type != 0x35) {
     BX_GEFORCE_THIS pci_conf[0x18] = 0x08;
-    BX_GEFORCE_THIS init_bar_mem(0, GEFORCE_PNPMMIO_SIZE, geforce_mem_read_handler,
-                                 geforce_mem_write_handler);
-    BX_GEFORCE_THIS init_bar_mem(1, BX_GEFORCE_THIS s.memsize, geforce_mem_read_handler,
-                                geforce_mem_write_handler);
     BX_GEFORCE_THIS init_bar_mem(2, BX_GEFORCE_THIS bar2_size, geforce_mem_read_handler,
-                                geforce_mem_write_handler);
-    BX_GEFORCE_THIS pci_rom_address = 0;
-    BX_GEFORCE_THIS pci_rom_read_handler = geforce_mem_read_handler;
-    BX_GEFORCE_THIS load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr());
+                                 geforce_mem_write_handler);
+  }
+  BX_GEFORCE_THIS pci_rom_address = 0;
+  BX_GEFORCE_THIS pci_rom_read_handler = geforce_mem_read_handler;
+  BX_GEFORCE_THIS load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr());
 
-    BX_GEFORCE_THIS pci_conf[0x2c] = 0x7D;
-    BX_GEFORCE_THIS pci_conf[0x2d] = 0x10;
-    if (BX_GEFORCE_THIS card_type == 0x20) {
-      BX_GEFORCE_THIS pci_conf[0x2e] = 0x63;
-      BX_GEFORCE_THIS pci_conf[0x2f] = 0x28;
-    } else if (BX_GEFORCE_THIS card_type == 0x35) {
-      BX_GEFORCE_THIS pci_conf[0x2e] = 0x7B;
-      BX_GEFORCE_THIS pci_conf[0x2f] = 0x29;
-    } else if (BX_GEFORCE_THIS card_type == 0x40) {
-      BX_GEFORCE_THIS pci_conf[0x2e] = 0x96;
-      BX_GEFORCE_THIS pci_conf[0x2f] = 0x29;
-    } else {
-      BX_PANIC(("Unknown card type"));
-    }
-    BX_GEFORCE_THIS pci_conf[0x40] = BX_GEFORCE_THIS pci_conf[0x2c];
-    BX_GEFORCE_THIS pci_conf[0x41] = BX_GEFORCE_THIS pci_conf[0x2d];
-    BX_GEFORCE_THIS pci_conf[0x42] = BX_GEFORCE_THIS pci_conf[0x2e];
-    BX_GEFORCE_THIS pci_conf[0x43] = BX_GEFORCE_THIS pci_conf[0x2f];
-    if (BX_GEFORCE_THIS card_type == 0x20) {
-      BX_GEFORCE_THIS pci_conf[0x44] = 0x02;
-      BX_GEFORCE_THIS pci_conf[0x45] = 0x00;
-      BX_GEFORCE_THIS pci_conf[0x46] = 0x20;
-      BX_GEFORCE_THIS pci_conf[0x47] = 0x00;
-      BX_GEFORCE_THIS pci_conf[0x48] = 0x07;
-      BX_GEFORCE_THIS pci_conf[0x49] = 0x00;
-      BX_GEFORCE_THIS pci_conf[0x4a] = 0x00;
-      BX_GEFORCE_THIS pci_conf[0x4b] = 0x1F;
-      BX_GEFORCE_THIS pci_conf[0x54] = 0x01;
-      BX_GEFORCE_THIS pci_conf[0x55] = 0x00;
-      BX_GEFORCE_THIS pci_conf[0x56] = 0x00;
-      BX_GEFORCE_THIS pci_conf[0x57] = 0x00;
-      BX_GEFORCE_THIS pci_conf[0x60] = 0x01;
-      BX_GEFORCE_THIS pci_conf[0x61] = 0x44;
-      BX_GEFORCE_THIS pci_conf[0x62] = 0x02;
-      BX_GEFORCE_THIS pci_conf[0x63] = 0x00;
-    }
+  BX_GEFORCE_THIS pci_conf[0x2c] = 0x7D;
+  BX_GEFORCE_THIS pci_conf[0x2d] = 0x10;
+  if (BX_GEFORCE_THIS card_type == 0x20) {
+    BX_GEFORCE_THIS pci_conf[0x2e] = 0x63;
+    BX_GEFORCE_THIS pci_conf[0x2f] = 0x28;
+  } else if (BX_GEFORCE_THIS card_type == 0x35) {
+    BX_GEFORCE_THIS pci_conf[0x2e] = 0x7B;
+    BX_GEFORCE_THIS pci_conf[0x2f] = 0x29;
+  } else if (BX_GEFORCE_THIS card_type == 0x40) {
+    BX_GEFORCE_THIS pci_conf[0x2e] = 0x96;
+    BX_GEFORCE_THIS pci_conf[0x2f] = 0x29;
+  } else {
+    BX_PANIC(("Unknown card type"));
+  }
+  BX_GEFORCE_THIS pci_conf[0x40] = BX_GEFORCE_THIS pci_conf[0x2c];
+  BX_GEFORCE_THIS pci_conf[0x41] = BX_GEFORCE_THIS pci_conf[0x2d];
+  BX_GEFORCE_THIS pci_conf[0x42] = BX_GEFORCE_THIS pci_conf[0x2e];
+  BX_GEFORCE_THIS pci_conf[0x43] = BX_GEFORCE_THIS pci_conf[0x2f];
+  if (BX_GEFORCE_THIS card_type == 0x20) {
+    BX_GEFORCE_THIS pci_conf[0x44] = 0x02;
+    BX_GEFORCE_THIS pci_conf[0x45] = 0x00;
+    BX_GEFORCE_THIS pci_conf[0x46] = 0x20;
+    BX_GEFORCE_THIS pci_conf[0x47] = 0x00;
+    BX_GEFORCE_THIS pci_conf[0x48] = 0x07;
+    BX_GEFORCE_THIS pci_conf[0x49] = 0x00;
+    BX_GEFORCE_THIS pci_conf[0x4a] = 0x00;
+    BX_GEFORCE_THIS pci_conf[0x4b] = 0x1F;
+    BX_GEFORCE_THIS pci_conf[0x54] = 0x01;
+    BX_GEFORCE_THIS pci_conf[0x55] = 0x00;
+    BX_GEFORCE_THIS pci_conf[0x56] = 0x00;
+    BX_GEFORCE_THIS pci_conf[0x57] = 0x00;
+    BX_GEFORCE_THIS pci_conf[0x60] = 0x01;
+    BX_GEFORCE_THIS pci_conf[0x61] = 0x44;
+    BX_GEFORCE_THIS pci_conf[0x62] = 0x02;
+    BX_GEFORCE_THIS pci_conf[0x63] = 0x00;
+  }
 }
 
 void bx_geforce_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
