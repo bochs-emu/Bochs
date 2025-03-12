@@ -34,7 +34,7 @@
 
 // 0x3b4,0x3d4
 #define VGA_CRTC_MAX 0x18
-#define GEFORCE_CRTC_MAX 0x59
+#define GEFORCE_CRTC_MAX 0x86
 
 #define GEFORCE_CHANNEL_COUNT 32
 #define GEFORCE_SUBCHANNEL_COUNT 8
@@ -99,7 +99,9 @@ private:
   BX_GEFORCE_SMF void vram_write16(Bit32u address, Bit16u value);
   BX_GEFORCE_SMF void vram_write32(Bit32u address, Bit32u value);
   BX_GEFORCE_SMF void vram_write64(Bit32u address, Bit64u value);
+  BX_GEFORCE_SMF Bit8u ramin_read8(Bit32u address);
   BX_GEFORCE_SMF Bit32u ramin_read32(Bit32u address);
+  BX_GEFORCE_SMF void ramin_write8(Bit32u address, Bit8u value);
   BX_GEFORCE_SMF void ramin_write32(Bit32u address, Bit32u value);
   BX_GEFORCE_SMF Bit8u physical_read8(Bit32u address);
   BX_GEFORCE_SMF Bit16u physical_read16(Bit32u address);
@@ -156,6 +158,7 @@ private:
   Bit64u timer_inittime2;
   Bit32u timer_alarm;
   Bit32u straps0_primary;
+  Bit32u straps0_primary_original;
   Bit32u graph_intr;
   Bit32u graph_intr_en;
   Bit32u graph_status;
@@ -179,6 +182,8 @@ private:
   struct {
     Bit32u dma_put;
     Bit32u dma_get;
+    Bit32u subr_return;
+    bool subr_active;
     Bit32u ref;
     Bit32u pushbuf;
     struct {
@@ -265,9 +270,13 @@ private:
   unsigned svga_bpp;
   unsigned svga_dispbpp;
 
-  Bit32u bank_base[2];
+  Bit32u card_type;
   Bit32u memsize_mask;
+  Bit32u bar2_size;
+  Bit32u ramin_flip;
+
   Bit8u *disp_ptr;
+  Bit32u bank_base[2];
 
   struct {
     Bit32u offset;

@@ -815,7 +815,7 @@ static void pci_bios_init_bridges(PCIDevice *d)
         pci_config_writew(d, 0x20, 0xd000);
         pci_config_writew(d, 0x22, 0xd1f0);
         pci_config_writew(d, 0x24, 0xd200);
-        pci_config_writew(d, 0x26, 0xdaf0);
+        pci_config_writew(d, 0x26, 0xe0f0);
         pci_config_writeb(d, 0xee, 0x88);
       }
     }
@@ -913,11 +913,11 @@ static void pci_bios_init_pcirom(PCIDevice *d, uint32_t paddr)
                 shift = 0;
             }
             v = pci_config_readb(i440fx, reg);
-            v = (v & (~(0x03 << shift))) | (0x02 << shift);
+            v = (v & (~(0x03 << shift))) | (/*0x02*/0x03 << shift);
             pci_config_writeb(i440fx, reg, v);
             memcpy((void *)tmpaddr, (void *)(paddr + copied), tmpsize);
-            v = (v & (~(0x03 << shift))) | (0x01 << shift);
-            pci_config_writeb(i440fx, reg, v);
+            //v = (v & (~(0x03 << shift))) | (0x01 << shift);
+            //pci_config_writeb(i440fx, reg, v);
             tmpaddr += tmpsize;
             copied += tmpsize;
         } while (copied < size);
