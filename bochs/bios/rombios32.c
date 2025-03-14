@@ -916,7 +916,7 @@ static void pci_bios_init_pcirom(PCIDevice *d, uint32_t paddr)
             v = (v & (~(0x03 << shift))) | (0x02 << shift);
             pci_config_writeb(i440fx, reg, v);
             memcpy((void *)tmpaddr, (void *)(paddr + copied), tmpsize);
-            v = (v & (~(0x03 << shift))) | (0x01 << shift);
+            v |= (0x01 << shift); // set RE bits
             pci_config_writeb(i440fx, reg, v);
             tmpaddr += tmpsize;
             copied += tmpsize;

@@ -10189,6 +10189,22 @@ pci_real_select_reg:
   pop dx
   ret
 
+#if BX_ROMBIOS32
+pci_set_pams_ro:
+  xor  bx, bx
+  mov  di, #0x5a
+pci_set_pams_ro_loop:
+  mov  ax, #0xb108
+  call pcibios_real
+  and  cl, #0xdd ; clear WE bits
+  mov  ax, #0xb10b
+  call pcibios_real
+  inc  di
+  cmp  di, #0x5e
+  jne pci_set_pams_ro_loop
+  ret
+#endif
+
 .align 16
 pci_routing_table_structure:
   db 0x24, 0x50, 0x49, 0x52  ;; "$PIR" signature
@@ -11296,6 +11312,9 @@ vga_init_ok:
   mov  cx, #0xc800  ;; init option roms
   mov  ax, #0xe000
   call rom_scan
+#if BX_ROMBIOS32
+  call pci_set_pams_ro
+#endif
 
 #if BX_ELTORITO_BOOT
   call _interactive_bootkey
