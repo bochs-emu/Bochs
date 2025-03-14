@@ -865,18 +865,19 @@ void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tilein
     unsigned cy1 = hwcy + size < (int)yc + Y_TILESIZE ? hwcy + size : yc + Y_TILESIZE;
 
     unsigned w, h;
-    Bit8u color_bytes = BX_GEFORCE_THIS hw_cursor.bpp32 ? 4 : 2;
+    Bit8u display_color_bytes = BX_GEFORCE_THIS svga_bpp >> 3;
+    Bit8u cursor_color_bytes = BX_GEFORCE_THIS hw_cursor.bpp32 ? 4 : 2;
     if (info->bpp == 15) info->bpp = 16;
     Bit8u* tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h) +
                info->pitch * (cy0 - yc) + info->bpp / 8 * (cx0 - xc);
-    unsigned pitch = BX_GEFORCE_THIS hw_cursor.size * color_bytes;
+    unsigned pitch = BX_GEFORCE_THIS hw_cursor.size * cursor_color_bytes;
     Bit8u* cursor_ptr = BX_GEFORCE_THIS s.memory +
       BX_GEFORCE_THIS hw_cursor.offset + pitch * (cy0 - hwcy);
     Bit8u* vid_ptr = BX_GEFORCE_THIS disp_ptr + BX_GEFORCE_THIS svga_pitch * cy0;
     for (unsigned cy = cy0; cy < cy1; cy++) {
       Bit8u* tile_ptr2 = tile_ptr;
-      Bit8u* cursor_ptr2 = cursor_ptr + color_bytes * (cx0 - hwcx);
-      Bit8u* vid_ptr2 = vid_ptr + 4 * cx0;
+      Bit8u* cursor_ptr2 = cursor_ptr + cursor_color_bytes * (cx0 - hwcx);
+      Bit8u* vid_ptr2 = vid_ptr + display_color_bytes * cx0;
       for (unsigned cx = cx0; cx < cx1; cx++) {
         Bit32u color;
         if (BX_GEFORCE_THIS hw_cursor.bpp32) {
@@ -910,8 +911,8 @@ void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tilein
             *(tile_ptr2++) = (Bit8u)(color >> i);
           }
         }
-        cursor_ptr2 += color_bytes;
-        vid_ptr2 += 4;
+        cursor_ptr2 += cursor_color_bytes;
+        vid_ptr2 += display_color_bytes;
       }
       tile_ptr += info->pitch;
       cursor_ptr += pitch;
@@ -1449,7 +1450,9 @@ void bx_geforce_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
 
   if (update_cursor_addr) {
     bool prev_enabled = BX_GEFORCE_THIS hw_cursor.enabled;
-    BX_GEFORCE_THIS hw_cursor.enabled = BX_GEFORCE_THIS crtc.reg[0x31] & 1;
+    BX_GEFORCE_THIS hw_cursor.enabled =
+      BX_GEFORCE_THIS crtc.reg[0x31] & 0x01 ||
+      BX_GEFORCE_THIS crtc_cursor_config & 0x00000001;
     BX_GEFORCE_THIS hw_cursor.offset =
       BX_GEFORCE_THIS crtc.reg[0x31] >> 2 << 11 |
       (BX_GEFORCE_THIS crtc.reg[0x30] & 0x7F) << 17 |
@@ -2485,6 +2488,8 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS hw_cursor.offset = BX_GEFORCE_THIS crtc_cursor_offset;
   } else if (address == 0x600810) {
     BX_GEFORCE_THIS crtc_cursor_config = value;
+    BX_GEFORCE_THIS hw_cursor.enabled =
+      BX_GEFORCE_THIS crtc.reg[0x31] & 0x01 || value & 0x00000001;
     BX_GEFORCE_THIS hw_cursor.size = value & 0x00010000 ? 64 : 32;
     BX_GEFORCE_THIS hw_cursor.bpp32 = value & 0x00001000;
   } else if (address == 0x600818) {
