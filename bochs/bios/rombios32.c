@@ -913,11 +913,11 @@ static void pci_bios_init_pcirom(PCIDevice *d, uint32_t paddr)
                 shift = 0;
             }
             v = pci_config_readb(i440fx, reg);
-            v = (v & (~(0x03 << shift))) | (/*0x02*/0x03 << shift);
+            v = (v & (~(0x03 << shift))) | (0x02 << shift);
             pci_config_writeb(i440fx, reg, v);
             memcpy((void *)tmpaddr, (void *)(paddr + copied), tmpsize);
-            //v = (v & (~(0x03 << shift))) | (0x01 << shift);
-            //pci_config_writeb(i440fx, reg, v);
+            v |= (0x01 << shift); // set RE bits
+            pci_config_writeb(i440fx, reg, v);
             tmpaddr += tmpsize;
             copied += tmpsize;
         } while (copied < size);
