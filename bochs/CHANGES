@@ -5,7 +5,11 @@ Changes after 3.0:
 - Voodoo3: Split mem_read() with len > 8 in two 64-bit reads
 - Voodoo3: Fixed display timing in VGA mode with half dot clock
 - VGA / DDC: Fixed using EDID data from specified file
-- Bochs BIOS: Fixed not working hotkeys alt+backspace and control+insert
+- VGA core: Added stub for the feature control register
+- Bochs BIOS
+  - Fixed some not working hotkeys
+  - PCI BIOS now sets expansion ROM space to R/W during POST
+  - Fixed HPET entry in ACPI tables
 - Fixed compilation with --enable-avx but without --enable-evex
 - Compilation fix for MacOS in keymap.cc
 - Added Linux manual page for the bxhub utility
