@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -150,6 +150,8 @@ protected:
                                 //   2 = 350 lines
                                 //   3 - 480 lines
     } misc_output;
+
+    Bit8u feature_control;
 
     struct {
       Bit8u  address;

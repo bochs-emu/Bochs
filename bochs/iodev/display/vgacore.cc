@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -135,6 +135,8 @@ void bx_vgacore_c::init_standard_vga(void)
   BX_VGA_THIS s.misc_output.enable_ram  = 1;
   BX_VGA_THIS s.misc_output.horiz_sync_pol   = 1;
   BX_VGA_THIS s.misc_output.vert_sync_pol    = 1;
+
+  BX_VGA_THIS s.feature_control = 0;
 
   BX_VGA_THIS s.attribute_ctrl.mode_ctrl.enable_line_graphics = 1;
   BX_VGA_THIS s.line_offset=80;
@@ -279,6 +281,7 @@ void bx_vgacore_c::vgacore_register_state(bx_list_c *parent)
   BXRS_PARAM_BOOL(misc, select_high_bank, BX_VGA_THIS s.misc_output.select_high_bank);
   BXRS_PARAM_BOOL(misc, horiz_sync_pol, BX_VGA_THIS s.misc_output.horiz_sync_pol);
   BXRS_PARAM_BOOL(misc, vert_sync_pol, BX_VGA_THIS s.misc_output.vert_sync_pol);
+  new bx_shadow_num_c(list, "feature_control", &BX_VGA_THIS s.feature_control, BASE_HEX);
   bx_list_c *crtc = new bx_list_c(list, "CRTC");
   new bx_shadow_num_c(crtc, "address", &BX_VGA_THIS s.CRTC.address, BASE_HEX);
   new bx_shadow_data_c(crtc, "reg", BX_VGA_THIS s.CRTC.reg, 25, 1);
@@ -490,8 +493,11 @@ Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
   }
 
   switch (address) {
+    case 0x03ca: /* Feature Control */
+      RETURN(BX_VGA_THIS s.feature_control);
+      break;
+
     case 0x03ba: /* Input Status 1 (monochrome emulation modes) */
-    case 0x03ca: /* Feature Control ??? */
     case 0x03da: /* Input Status 1 (color emulation modes) */
       // bit3: Vertical Retrace
       //       0 = display is in the display mode
@@ -809,8 +815,6 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_
     return;
 
   switch (address) {
-    case 0x03ba: /* Feature Control (monochrome emulation modes) */
-      break;
 
     case 0x03c0: /* Attribute Controller */
       if (BX_VGA_THIS s.attribute_ctrl.flip_flop == 0) { /* address mode */
@@ -1189,7 +1193,9 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_
       }
       break;
 
+    case 0x03ba: /* Feature Control (monochrome emulation modes) */
     case 0x03da: /* Feature Control (color emulation modes) */
+      BX_VGA_THIS s.feature_control = value & 0x08;
       BX_DEBUG(("io write: 3da: ignoring: feature ctrl & vert sync"));
       break;
 
