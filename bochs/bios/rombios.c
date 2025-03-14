@@ -5151,6 +5151,7 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
 {
   Bit8u scancode, asciicode, shift_flags;
   Bit8u mf2_flags, mf2_state, altkp_val;
+  Bit8u temp;
 
   //
   // DS has been set to 0x40 before call
@@ -5336,7 +5337,13 @@ ASM_END
         }
       } else if (shift_flags & 0x04) { /* CONTROL */
         asciicode = scan_to_scanascii[scancode].control;
-        scancode = scan_to_scanascii[scancode].control >> 8;
+        temp = scan_to_scanascii[scancode].control >> 8;
+        if (((mf2_state & 0x02) > 0) && ((scancode >= 0x47) && (scancode <= 0x53))) {
+          /* extended keys handling */
+          asciicode = 0xe0;
+          temp = scan_to_scanascii[scancode].normal >> 8;
+        }
+        scancode = temp;
       } else if (((mf2_state & 0x02) > 0) && ((scancode >= 0x47) && (scancode <= 0x53))) {
         /* extended keys handling */
         asciicode = 0xe0;

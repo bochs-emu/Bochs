@@ -25,8 +25,6 @@
 #include "config.h"
 #include "osdep.h"
 
-#define BX_DBG_NO_HANDLE 1000
-
 Bit32u crc32(const Bit8u *buf, int len);
 
 #if BX_DEBUGGER
