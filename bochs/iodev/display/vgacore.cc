@@ -136,6 +136,8 @@ void bx_vgacore_c::init_standard_vga(void)
   BX_VGA_THIS s.misc_output.horiz_sync_pol   = 1;
   BX_VGA_THIS s.misc_output.vert_sync_pol    = 1;
 
+  BX_VGA_THIS s.feature_control = 0;
+
   BX_VGA_THIS s.attribute_ctrl.mode_ctrl.enable_line_graphics = 1;
   BX_VGA_THIS s.line_offset=80;
   BX_VGA_THIS s.line_compare=1023;
@@ -490,8 +492,11 @@ Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
   }
 
   switch (address) {
+    case 0x03ca: /* Feature Control */
+      RETURN(BX_VGA_THIS s.feature_control);
+      break;
+
     case 0x03ba: /* Input Status 1 (monochrome emulation modes) */
-    case 0x03ca: /* Feature Control ??? */
     case 0x03da: /* Input Status 1 (color emulation modes) */
       // bit3: Vertical Retrace
       //       0 = display is in the display mode
@@ -1190,6 +1195,7 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_
       break;
 
     case 0x03da: /* Feature Control (color emulation modes) */
+      BX_VGA_THIS s.feature_control = value;
       BX_DEBUG(("io write: 3da: ignoring: feature ctrl & vert sync"));
       break;
 

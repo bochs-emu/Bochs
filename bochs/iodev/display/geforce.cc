@@ -323,7 +323,7 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS s.memsize = 128 * 1024 * 1024;
     BX_GEFORCE_THIS bar2_size = 0x01000000;
     // Guess
-    BX_GEFORCE_THIS straps0_primary_original = (0x7FF86C6B | 0x00000180);
+    BX_GEFORCE_THIS straps0_primary_original = (0x7FF86C4B | 0x00000180);
   }
   BX_GEFORCE_THIS straps0_primary = BX_GEFORCE_THIS straps0_primary_original;
   BX_GEFORCE_THIS ramin_flip = BX_GEFORCE_THIS s.memsize - 64;

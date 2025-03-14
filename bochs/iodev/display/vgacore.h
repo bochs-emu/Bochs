@@ -151,6 +151,8 @@ protected:
                                 //   3 - 480 lines
     } misc_output;
 
+    Bit8u feature_control;
+
     struct {
       Bit8u  address;
       Bit8u  reg[0x19];
