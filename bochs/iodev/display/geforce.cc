@@ -2296,6 +2296,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS fifo_cache1_pull0;
   } else if (address == 0x3270) {
     value = BX_GEFORCE_THIS fifo_cache1_get;
+  } else if (address == 0x3304) {
+    value = 0x00000001;
   } else if (address >= 0x3800 && address < 0x4000 && BX_GEFORCE_THIS card_type < 0x40 ||
              address >= 0x90000 && address < 0x92000 && BX_GEFORCE_THIS card_type >= 0x40) {
     Bit32u offset;
