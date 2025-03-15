@@ -772,7 +772,7 @@ static uint32_t pci_get_agp_memory(PCIDevice *d, uint32_t type)
                 if (saddr == 0xffff) {
                     saddr = (uint16_t)(addr >> 16);
                 }
-                eaddr += (uint16_t)((addr + size - 1) >> 16);
+                eaddr = (uint16_t)((addr + size - 1) >> 16);
             }
             if (size < align) {
                 addr += align;
