@@ -452,7 +452,10 @@ bool bx_geforce_c::geforce_mem_read_handler(bx_phy_address addr, unsigned len,
       addr < (BX_GEFORCE_THIS pci_bar[2].addr + BX_GEFORCE_THIS bar2_size)) {
     Bit32u offset = addr & (BX_GEFORCE_THIS bar2_size - 1);
     if (BX_GEFORCE_THIS card_type >= 0x40) {
-      if (len == 4) {
+      if (len == 1) {
+        *(Bit8u*)data = ramin_read8(offset);
+        BX_ERROR(("RAMIN read from 0x%08x, value 0x%02x", offset, *(Bit8u*)data));
+      } else if (len == 4) {
         Bit32u value = ramin_read32(offset);
         BX_ERROR(("RAMIN read from 0x%08x, value 0x%08x", offset, value));
         *((Bit8u*)data + 0) = (value >> 0) & 0xFF;
@@ -541,7 +544,10 @@ bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
       addr < (BX_GEFORCE_THIS pci_bar[2].addr + BX_GEFORCE_THIS bar2_size)) {
     Bit32u offset = addr & (BX_GEFORCE_THIS bar2_size - 1);
     if (BX_GEFORCE_THIS card_type >= 0x40) {
-      if (len == 4) {
+      if (len == 1) {
+        BX_ERROR(("RAMIN write to 0x%08x, value 0x%02x", offset, *(Bit8u*)data));
+        ramin_write8(offset, *(Bit8u*)data);
+      } else if (len == 4) {
         Bit32u value =
           (*((Bit8u*)data + 0) << 0) |
           (*((Bit8u*)data + 1) << 8) |
@@ -1981,8 +1987,13 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
       chid, subc, method, param));
   if (method == 0x000) {
     Bit32u context = ramht_lookup(param, chid);
-    BX_GEFORCE_THIS chs[chid].schs[subc].object = (context & 0xFFFF) << 4;
-    BX_GEFORCE_THIS chs[chid].schs[subc].engine = context >> 16 & 0xFF;
+    if (BX_GEFORCE_THIS card_type < 0x40) {
+      BX_GEFORCE_THIS chs[chid].schs[subc].object = (context & 0xFFFF) << 4;
+      BX_GEFORCE_THIS chs[chid].schs[subc].engine = context >> 16 & 0xFF;
+    } else {
+      BX_GEFORCE_THIS chs[chid].schs[subc].object = (context & 0xFFFFF) << 4;
+      BX_GEFORCE_THIS chs[chid].schs[subc].engine = context >> 20 & 0x7;
+    }
   } else if (method == 0x014) {
     BX_GEFORCE_THIS chs[chid].ref = param;
   } else if (method >= 0x040) {
@@ -2257,10 +2268,12 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS fifo_intr_en;
   } else if (address == 0x2210) {
     value = BX_GEFORCE_THIS fifo_ramht;
-  } else if (address == 0x2214) {
+  } else if (address == 0x2214 && BX_GEFORCE_THIS card_type < 0x40) {
     value = BX_GEFORCE_THIS fifo_ramfc;
   } else if (address == 0x2218) {
     value = BX_GEFORCE_THIS fifo_ramro;
+  } else if (address == 0x2220 && BX_GEFORCE_THIS card_type >= 0x40) {
+    value = BX_GEFORCE_THIS fifo_ramfc;
   } else if (address == 0x2400) { // PFIFO_RUNOUT_STATUS
     value = 0x00000010;
     if (BX_GEFORCE_THIS fifo_cache1_get != BX_GEFORCE_THIS fifo_cache1_put)
@@ -2283,8 +2296,13 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS fifo_cache1_pull0;
   } else if (address == 0x3270) {
     value = BX_GEFORCE_THIS fifo_cache1_get;
-  } else if (address >= 0x3800 && address < 0x4000) {
-    Bit32u offset = address - 0x3800;
+  } else if (address >= 0x3800 && address < 0x4000 && BX_GEFORCE_THIS card_type < 0x40 ||
+             address >= 0x90000 && address < 0x92000 && BX_GEFORCE_THIS card_type >= 0x40) {
+    Bit32u offset;
+    if (BX_GEFORCE_THIS card_type < 0x40)
+      offset = address - 0x3800;
+    else
+      offset = address - 0x90000;
     Bit32u index = offset / 8;
     if (offset % 8 == 0)
       value = BX_GEFORCE_THIS fifo_cache1_method[index];
@@ -2323,7 +2341,9 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     }
   } else if (address == 0x400100) {
     value = BX_GEFORCE_THIS graph_intr;
-  } else if (address == 0x400140) {
+  } else if (address == 0x40013C && BX_GEFORCE_THIS card_type >= 0x40) {
+    value = BX_GEFORCE_THIS graph_intr_en;
+  } else if (address == 0x400140 && BX_GEFORCE_THIS card_type < 0x40) {
     value = BX_GEFORCE_THIS graph_intr_en;
   } else if (address == 0x400700) {
     value = BX_GEFORCE_THIS graph_status;
@@ -2363,9 +2383,21 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = register_read8(address);
   } else if (address >= 0x700000 && address < 0x800000) {
     value = ramin_read32(address - 0x700000);
-  } else if (address >= 0x800000 && address < 0xA00000) {
-    Bit32u chid = address >> 16 & 0x1F;
-    Bit32u offset = address & 0x1FFF;
+  } else if (address >= 0x800000 && address < 0xA00000 && BX_GEFORCE_THIS card_type < 0x40 ||
+             address >= 0xC00000 && address < 0xE00000 && BX_GEFORCE_THIS card_type >= 0x40) {
+    Bit32u chid;
+    if (BX_GEFORCE_THIS card_type < 0x40)
+      chid = address >> 16 & 0x1F;
+    else {
+      chid = address >> 12 & 0x1FF;
+      if (chid >= GEFORCE_CHANNEL_COUNT)
+        BX_PANIC(("Channel id >= 32"));
+    }
+    Bit32u offset;
+    if (BX_GEFORCE_THIS card_type < 0x40)
+      offset = address & 0x1FFF;
+    else
+      offset = address & 0x1FF;
     if (offset == 0x40)
       value = BX_GEFORCE_THIS chs[chid].dma_put;
     else if (offset == 0x44)
@@ -2396,29 +2428,36 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS fifo_intr_en = value;
   } else if (address == 0x2210) {
     BX_GEFORCE_THIS fifo_ramht = value;
-  } else if (address == 0x2214) {
+  } else if (address == 0x2214 && BX_GEFORCE_THIS card_type < 0x40) {
     BX_GEFORCE_THIS fifo_ramfc = value;
   } else if (address == 0x2218) {
     BX_GEFORCE_THIS fifo_ramro = value;
+  } else if (address == 0x2220 && BX_GEFORCE_THIS card_type >= 0x40) {
+    BX_GEFORCE_THIS fifo_ramfc = value;
   } else if (address == 0x2504) {
+    Bit32u ramfc_ch_size = BX_GEFORCE_THIS card_type < 0x40 ? 0x40 : 0x80;
     for (int chid = 0; chid < GEFORCE_CHANNEL_COUNT; chid++) {
       Bit32u mask = 1 << chid;
       bool preven = BX_GEFORCE_THIS fifo_mode & mask;
       bool newen = value & mask;
       if (preven != newen) {
-        Bit32u ramfc = (BX_GEFORCE_THIS fifo_ramfc & 0xFFF) << 8;
+        Bit32u ramfc;
+        if (BX_GEFORCE_THIS card_type < 0x40)
+          ramfc = (BX_GEFORCE_THIS fifo_ramfc & 0xFFF) << 8;
+        else
+          ramfc = (BX_GEFORCE_THIS fifo_ramfc & 0xFFF) << 16;
         if (newen)
         {
-          BX_GEFORCE_THIS chs[chid].dma_put = ramin_read32(ramfc + chid * 0x40 + 0x0);
-          BX_GEFORCE_THIS chs[chid].dma_get = ramin_read32(ramfc + chid * 0x40 + 0x4);
-          BX_GEFORCE_THIS chs[chid].pushbuf = ramin_read32(ramfc + chid * 0x40 + 0xC) << 4;
+          BX_GEFORCE_THIS chs[chid].dma_put = ramin_read32(ramfc + chid * ramfc_ch_size + 0x0);
+          BX_GEFORCE_THIS chs[chid].dma_get = ramin_read32(ramfc + chid * ramfc_ch_size + 0x4);
+          BX_GEFORCE_THIS chs[chid].pushbuf = ramin_read32(ramfc + chid * ramfc_ch_size + 0xC) << 4;
           BX_ERROR(("fifo: activate chid 0x%02x, dma_put 0x%08x, dma_get 0x%08x, pushbuf 0x%08x",
             chid, BX_GEFORCE_THIS chs[chid].dma_put, BX_GEFORCE_THIS chs[chid].dma_get,
             BX_GEFORCE_THIS chs[chid].pushbuf));
         } else {
-          ramin_write32(ramfc + chid * 0x40 + 0x0, BX_GEFORCE_THIS chs[chid].dma_put);
-          ramin_write32(ramfc + chid * 0x40 + 0x4, BX_GEFORCE_THIS chs[chid].dma_get);
-          ramin_write32(ramfc + chid * 0x40 + 0xC, BX_GEFORCE_THIS chs[chid].pushbuf >> 4);
+          ramin_write32(ramfc + chid * ramfc_ch_size + 0x0, BX_GEFORCE_THIS chs[chid].dma_put);
+          ramin_write32(ramfc + chid * ramfc_ch_size + 0x4, BX_GEFORCE_THIS chs[chid].dma_get);
+          ramin_write32(ramfc + chid * ramfc_ch_size + 0xC, BX_GEFORCE_THIS chs[chid].pushbuf >> 4);
           BX_ERROR(("fifo: deactivate chid 0x%02x", chid));
         }
       }
@@ -2466,7 +2505,9 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
       BX_GEFORCE_THIS straps0_primary = BX_GEFORCE_THIS straps0_primary_original;
   } else if (address == 0x400100) {
     BX_GEFORCE_THIS graph_intr &= ~value;
-  } else if (address == 0x400140) {
+  } else if (address == 0x40013C && BX_GEFORCE_THIS card_type >= 0x40) {
+    BX_GEFORCE_THIS graph_intr_en = value;
+  } else if (address == 0x400140 && BX_GEFORCE_THIS card_type < 0x40) {
     BX_GEFORCE_THIS graph_intr_en = value;
   } else if (address == 0x400700) {
     BX_GEFORCE_THIS graph_status = value;
@@ -2518,9 +2559,21 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     register_write8(address, value);
   } else if (address >= 0x700000 && address < 0x800000) {
     ramin_write32(address - 0x700000, value);
-  } else if (address >= 0x800000 && address < 0xA00000) {
-    Bit32u chid = address >> 16 & 0x1F;
-    Bit32u offset = address & 0x1FFF;
+  } else if (address >= 0x800000 && address < 0xA00000 && BX_GEFORCE_THIS card_type < 0x40 ||
+             address >= 0xC00000 && address < 0xE00000 && BX_GEFORCE_THIS card_type >= 0x40) {
+    Bit32u chid;
+    if (BX_GEFORCE_THIS card_type < 0x40)
+      chid = address >> 16 & 0x1F;
+    else {
+      chid = address >> 12 & 0x1FF;
+      if (chid >= GEFORCE_CHANNEL_COUNT)
+        BX_PANIC(("Channel id >= 32"));
+    }
+    Bit32u offset;
+    if (BX_GEFORCE_THIS card_type < 0x40)
+      offset = address & 0x1FFF;
+    else
+      offset = address & 0x1FF;
     if (offset == 0x40) {
       BX_GEFORCE_THIS chs[chid].dma_put = value;
       while (BX_GEFORCE_THIS chs[chid].dma_get != BX_GEFORCE_THIS chs[chid].dma_put) {
