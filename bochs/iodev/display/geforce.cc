@@ -70,13 +70,70 @@
 
 static bx_geforce_c *theSvga = NULL;
 
+/* enumeration specifying which model of GeForce we are emulating */
+enum
+{
+    GEFORCE_3,
+    GEFORCE_FX_5900,
+    GEFORCE_6800,
+    MAX_GEFORCE_TYPES
+};
+
+
+void geforce_init_options(void)
+{
+  static const char* geforce_model_list[] = {
+    "geforce3",
+    "geforcefx5900",
+    "geforce6800",
+    NULL
+  };
+
+  bx_param_c *display = SIM->get_param("display");
+  bx_list_c *menu = new bx_list_c(display, "geforce", "GeForce");
+  menu->set_options(menu->SHOW_PARENT);
+  new bx_param_enum_c(menu,
+    "model",
+    "GeForce model",
+    "Selects the GeForce model to emulate.",
+    geforce_model_list,
+    GEFORCE_3, GEFORCE_3);
+}
+
+Bit32s geforce_options_parser(const char *context, int num_params, char *params[])
+{
+  if (!strcmp(params[0], "geforce")) {
+    bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_GEFORCE);
+    for (int i = 1; i < num_params; i++) {
+      if (SIM->parse_param_from_list(context, params[i], base) < 0) {
+        BX_ERROR(("%s: unknown parameter for geforce ignored.", context));
+      }
+    }
+  } else {
+    BX_PANIC(("%s: unknown directive '%s'", context, params[0]));
+  }
+  return 0;
+}
+
+Bit32s geforce_options_save(FILE *fp)
+{
+  return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_GEFORCE), NULL, 0);
+}
+
 PLUGIN_ENTRY_FOR_MODULE(geforce)
 {
   if (mode == PLUGIN_INIT) {
     theSvga = new bx_geforce_c();
     bx_devices.pluginVgaDevice = theSvga;
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theSvga, BX_PLUGIN_GEFORCE);
+    // add new configuration parameter for the config interface
+    geforce_init_options();
+    // register add-on option for bochsrc and command line
+    SIM->register_addon_option("geforce", geforce_options_parser, geforce_options_save);
   } else if (mode == PLUGIN_FINI) {
+    SIM->unregister_addon_option("geforce");
+    bx_list_c *menu = (bx_list_c*)SIM->get_param("display");
+    menu->remove("geforce");
     delete theSvga;
   } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_VGA;
@@ -99,9 +156,28 @@ bx_geforce_c::~bx_geforce_c()
 
 bool bx_geforce_c::init_vga_extension(void)
 {
-  const char* model = "GeForce 3 Ti 500";
+  // Read in values from config interface
+  bx_list_c* base = (bx_list_c*)SIM->get_param(BXPN_GEFORCE);
+  Bit32s model_enum = (Bit8u)SIM->get_param_enum("model", base)->get();
+
+  const char* model_string;
+  if (model_enum == GEFORCE_3) {
+    BX_GEFORCE_THIS card_type = 0x20;
+    model_string = "GeForce3 Ti 500";
+  } else if (model_enum == GEFORCE_FX_5900) {
+    BX_GEFORCE_THIS card_type = 0x35;
+    model_string = "GeForce FX 5900";
+  } else if (model_enum == GEFORCE_6800) {
+    BX_GEFORCE_THIS card_type = 0x40;
+    model_string = "GeForce 6800 GT";
+  } else {
+    model_string = nullptr;
+    BX_GEFORCE_THIS card_type = 0x00;
+    BX_PANIC(("Unknown card type"));
+  }
+
   if (!SIM->is_agp_device(BX_PLUGIN_GEFORCE)) {
-    BX_PANIC(("%s should be plugged into AGP slot", model));
+    BX_PANIC(("%s should be plugged into AGP slot", model_string));
   }
 
   BX_GEFORCE_THIS pci_enabled = true;
@@ -121,7 +197,7 @@ bool bx_geforce_c::init_vga_extension(void)
   BX_GEFORCE_THIS s.max_xres = 2048;
   BX_GEFORCE_THIS s.max_yres = 1536;
   BX_GEFORCE_THIS ddc.init();
-  BX_INFO(("%s initialized", model));
+  BX_INFO(("%s initialized", model_string));
 #if BX_DEBUGGER
   // register device for the 'info device' command (calls debug_dump())
   bx_dbg_register_debug_info("geforce", this);
@@ -313,14 +389,16 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS hw_cursor.bpp32 = false;
   BX_GEFORCE_THIS hw_cursor.enabled = false;
 
-  BX_GEFORCE_THIS card_type = 0x20;
   if (BX_GEFORCE_THIS card_type == 0x20) {
     BX_GEFORCE_THIS s.memsize = 64 * 1024 * 1024;
     BX_GEFORCE_THIS bar2_size = 0x00080000;
     // Matches real hardware with exception of disabled TV out
     BX_GEFORCE_THIS straps0_primary_original = (0x7FF86C6B | 0x00000180);
   } else {
-    BX_GEFORCE_THIS s.memsize = 128 * 1024 * 1024;
+    if (BX_GEFORCE_THIS card_type == 0x35)
+      BX_GEFORCE_THIS s.memsize = 128 * 1024 * 1024;
+    else
+      BX_GEFORCE_THIS s.memsize = 256 * 1024 * 1024;
     BX_GEFORCE_THIS bar2_size = 0x01000000;
     // Guess
     BX_GEFORCE_THIS straps0_primary_original = (0x7FF86C4B | 0x00000180);
@@ -2643,9 +2721,6 @@ void bx_geforce_c::svga_init_pcihandlers(void)
     devid = 0x0331;
   } else if (BX_GEFORCE_THIS card_type == 0x40) {
     devid = 0x0045;
-  } else {
-    devid = 0x0000;
-    BX_PANIC(("Unknown card type"));
   }
   BX_GEFORCE_THIS init_pci_conf(0x10DE, devid, revid, 0x030000, 0x00, BX_PCI_INTA);
 
@@ -2674,8 +2749,6 @@ void bx_geforce_c::svga_init_pcihandlers(void)
   } else if (BX_GEFORCE_THIS card_type == 0x40) {
     BX_GEFORCE_THIS pci_conf[0x2e] = 0x96;
     BX_GEFORCE_THIS pci_conf[0x2f] = 0x29;
-  } else {
-    BX_PANIC(("Unknown card type"));
   }
   BX_GEFORCE_THIS pci_conf[0x40] = BX_GEFORCE_THIS pci_conf[0x2c];
   BX_GEFORCE_THIS pci_conf[0x41] = BX_GEFORCE_THIS pci_conf[0x2d];
