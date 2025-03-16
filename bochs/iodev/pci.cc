@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -458,6 +458,8 @@ bool bx_pci_bridge_c::agp_ap_read_handler(bx_phy_address addr, unsigned len,
     case 4:
       *((Bit32u *) data) = value;
       break;
+    default:
+      BX_ERROR(("Unsupported AGP aperture read length %d", len));
   }
   return true;
 }
@@ -469,13 +471,28 @@ Bit32u bx_pci_bridge_c::agp_aperture_read(bx_phy_address addr, unsigned len, boo
     Bit32u gart_index = (Bit32u)(offset >> 12);
     Bit32u page_offset = (Bit32u)(offset & 0xfff);
     Bit32u gart_addr = BX_PCI_THIS gart_base + (gart_index << 2);
-    Bit32u page_addr;
+    Bit32u page_addr, value;
+    Bit16u val16;
+    Bit8u val8;
     DEV_MEM_READ_PHYSICAL(gart_addr, 4, (Bit8u*)&page_addr);
     BX_INFO(("TODO: AGP aperture read: page address = 0x%08x / offset = 0x%04x",
              page_addr, (Bit16u)page_offset));
-    // TODO
+    switch (len) {
+      case 1:
+        DEV_MEM_READ_PHYSICAL(page_addr + page_offset, 1, &val8);
+        value = val8;
+        break;
+      case 2:
+        DEV_MEM_READ_PHYSICAL(page_addr + page_offset, 2, (Bit8u*)&val16);
+        value = val16;
+        break;
+      case 4:
+        DEV_MEM_READ_PHYSICAL(page_addr + page_offset, 4, (Bit8u*)&value);
+        break;
+    }
+    return value;
   }
-  return false;
+  return 0;
 }
 
 bool bx_pci_bridge_c::agp_ap_write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
@@ -494,10 +511,24 @@ void bx_pci_bridge_c::agp_aperture_write(bx_phy_address addr, Bit32u value, unsi
     Bit32u page_offset = (Bit32u)(offset & 0xfff);
     Bit32u gart_addr = BX_PCI_THIS gart_base + (gart_index << 2);
     Bit32u page_addr;
+    Bit16u val16;
+    Bit8u val8;
     DEV_MEM_READ_PHYSICAL(gart_addr, 4, (Bit8u*)&page_addr);
     BX_INFO(("TODO: AGP aperture write: page address = 0x%08x / offset = 0x%04x",
              page_addr, (Bit16u)page_offset));
-    // TODO
+    switch (len) {
+      case 1:
+        val8 = (Bit8u)value;
+        DEV_MEM_WRITE_PHYSICAL(page_addr + page_offset, 1, &val8);
+        break;
+      case 2:
+        val16 = (Bit16u)value;
+        DEV_MEM_WRITE_PHYSICAL(page_addr + page_offset, 2, (Bit8u*)&val16);
+        break;
+      case 4:
+        DEV_MEM_WRITE_PHYSICAL(page_addr + page_offset, 4, (Bit8u*)&value);
+        break;
+    }
   }
 }
 
