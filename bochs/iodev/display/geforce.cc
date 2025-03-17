@@ -457,6 +457,12 @@ void bx_geforce_c::after_restore_state(void)
   BX_GEFORCE_THIS bx_vgacore_c::after_restore_state();
 }
 
+void bx_geforce_c::redraw_area(unsigned x0, unsigned y0,
+                               unsigned width, unsigned height)
+{
+  redraw_area((Bit32s)x0, (Bit32s)y0, width, height);
+}
+
 void bx_geforce_c::redraw_area(Bit32s x0, Bit32s y0, Bit32u width, Bit32u height)
 {
   unsigned xti, yti, xt0, xt1, yt0, yt1;

@@ -50,8 +50,10 @@ public:
 
   virtual bool init_vga_extension(void);
   virtual void reset(unsigned type);
-  virtual void redraw_area(Bit32s x0, Bit32s y0,
-                           Bit32u width, Bit32u height);
+  virtual void redraw_area(unsigned x0, unsigned y0,
+                           unsigned width, unsigned height);
+  void redraw_area(Bit32s x0, Bit32s y0,
+                   Bit32u width, Bit32u height);
   virtual Bit8u mem_read(bx_phy_address addr);
   virtual void mem_write(bx_phy_address addr, Bit8u value);
   virtual void get_text_snapshot(Bit8u **text_snapshot,
