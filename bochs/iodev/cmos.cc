@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -307,7 +307,8 @@ void bx_cmos_c::save_image(void)
   int fd, ret;
 
   // save CMOS to image file if requested.
-  if (SIM->get_param_bool(BXPN_CMOSIMAGE_ENABLED)->get()) {
+  if (SIM->get_param_bool(BXPN_CMOSIMAGE_ENABLED)->get() &&
+      (BX_CMOS_THIS s.max_reg >= 63)) {
     fd = open(SIM->get_param_string(BXPN_CMOSIMAGE_PATH)->getptr(), O_CREAT | O_WRONLY | O_TRUNC
 #ifdef O_BINARY
        | O_BINARY

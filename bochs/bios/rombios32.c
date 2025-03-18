@@ -618,9 +618,7 @@ typedef struct PCIDevice {
 } PCIDevice;
 
 static uint32_t pci_bios_io_addr;
-static uint32_t pci_bios_agp_io_addr;
 static uint32_t pci_bios_mem_addr;
-static uint32_t pci_bios_agp_mem_addr;
 static uint32_t pci_bios_rom_start;
 /* host irqs corresponding to PCI irqs A-D */
 static uint8_t pci_irqs[4] = { 11, 9, 11, 9 };
@@ -748,8 +746,45 @@ static void bios_lock_shadow_ram(void)
     pci_config_writeb(d, 0x59, v);
 }
 
+static uint32_t pci_get_agp_memory(PCIDevice *d, uint32_t type)
+{
+    uint32_t addr, val, size, align;
+    uint16_t cmd, saddr = 0xffff, eaddr = 0;;
+    int i, ofs;
+
+    /* disable i/o and memory access */
+    cmd = pci_config_readw(d, PCI_COMMAND);
+    cmd &= 0xfffc;
+    pci_config_writew(d, PCI_COMMAND, cmd);
+    /* default memory mappings */
+    addr = 0xc0000000;
+    for(i = 0; i < PCI_ROM_SLOT; i++) {
+        ofs = PCI_BASE_ADDRESS_0 + i * 4;
+        pci_config_writel(d, ofs, 0xffffffff);
+        val = pci_config_readl(d, ofs);
+        if ((val != 0) && !(val & PCI_ADDRESS_SPACE_IO)) {
+            size = (~(val & ~0xf)) + 1;
+            align = 0x10000;
+            addr = (addr + size - 1) & ~(size - 1);
+            if ((val & PCI_ADDRESS_SPACE_MEM_PREFETCH) == type) {
+                if (saddr == 0xffff) {
+                    saddr = (uint16_t)(addr >> 16);
+                }
+                eaddr = (uint16_t)((addr + size - 1) >> 16);
+            }
+            if (size < align) {
+                addr += align;
+            } else {
+                addr += size;
+            }
+        }
+    }
+    return (saddr | (eaddr << 16));
+}
+
 static void pci_bios_init_bridges(PCIDevice *d)
 {
+    PCIDevice d1, *agpdev = &d1;
     uint16_t vendor_id, device_id;
     long addr;
     uint8_t *pir;
@@ -805,6 +840,8 @@ static void pci_bios_init_bridges(PCIDevice *d)
         }
       } else if (device_id == PCI_DEVICE_ID_INTEL_82443_1) {
         /* i440BX PCI/AGP bridge */
+        agpdev->bus = 1;
+        agpdev->devfn = 0;
         pci_config_writew(d, 0x04, 0x0107);
         pci_config_writeb(d, 0x0d, 0x40);
         pci_config_writeb(d, 0x19, 0x01);
@@ -812,10 +849,13 @@ static void pci_bios_init_bridges(PCIDevice *d)
         pci_config_writeb(d, 0x1b, 0x40);
         pci_config_writeb(d, 0x1c, 0xe0);
         pci_config_writeb(d, 0x1d, 0xf0);
-        pci_config_writew(d, 0x20, 0xd000);
-        pci_config_writew(d, 0x22, 0xd1f0);
-        pci_config_writew(d, 0x24, 0xd200);
-        pci_config_writew(d, 0x26, 0xf0f0);
+        if (pci_config_readw(agpdev, 0x00) == 0xffff) {
+          pci_config_writel(d, 0x20, 0x0000ffff);
+          pci_config_writel(d, 0x24, 0x0000ffff);
+        } else {
+          pci_config_writel(d, 0x20, pci_get_agp_memory(agpdev, 0));
+          pci_config_writel(d, 0x24, pci_get_agp_memory(agpdev, PCI_ADDRESS_SPACE_MEM_PREFETCH));
+        }
         pci_config_writeb(d, 0xee, 0x88);
       }
     }
@@ -931,7 +971,7 @@ static void pci_bios_init_device(PCIDevice *d)
 {
     PCIDevice d1, *bridge = &d1;
     uint16_t class, cmd;
-    uint32_t *paddr;
+    uint32_t *paddr, mask;
     int headt, i, pin, pic_irq, vendor_id, device_id, is_i440bx = 0;
 
     bridge->bus = 0;
@@ -1005,18 +1045,10 @@ static void pci_bios_init_device(PCIDevice *d)
             if (val != 0) {
                 size = (~(val & ~0xf)) + 1;
                 if (val & PCI_ADDRESS_SPACE_IO) {
-                    if (d->bus == 1) {
-                        paddr = &pci_bios_agp_io_addr;
-                    } else {
-                        paddr = &pci_bios_io_addr;
-                    }
+                    paddr = &pci_bios_io_addr;
                     align = 0x10;
                 } else {
-                    if (d->bus == 1) {
-                        paddr = &pci_bios_agp_mem_addr;
-                    } else {
-                        paddr = &pci_bios_mem_addr;
-                    }
+                    paddr = &pci_bios_mem_addr;
                     align = 0x10000;
                 }
                 *paddr = (*paddr + size - 1) & ~(size - 1);
@@ -1083,11 +1115,12 @@ static void pci_bios_init_optrom(PCIDevice *d)
 void pci_for_each_device(void (*init_func)(PCIDevice *d))
 {
     PCIDevice d1, *d = &d1;
-    int bus, devfn;
+    int bus, devfn, maxdev;
     uint16_t vendor_id, device_id;
 
-    for(bus = 0; bus < 2; bus++) {
-        for(devfn = 0; devfn < 256; devfn++) {
+    for(bus = 1; bus >= 0; bus--) {
+        maxdev = (bus == 1) ? 1 : 256;
+        for(devfn = 0; devfn < maxdev; devfn++) {
             d->bus = bus;
             d->devfn = devfn;
             vendor_id = pci_config_readw(d, PCI_VENDOR_ID);
@@ -1102,9 +1135,7 @@ void pci_for_each_device(void (*init_func)(PCIDevice *d))
 void pci_bios_init(void)
 {
     pci_bios_io_addr = 0xc000;
-    pci_bios_agp_io_addr = 0xe000;
     pci_bios_mem_addr = 0xc0000000;
-    pci_bios_agp_mem_addr = 0xd0000000;
     pci_bios_rom_start = 0xc0000;
 
     pci_for_each_device(pci_bios_init_bridges);

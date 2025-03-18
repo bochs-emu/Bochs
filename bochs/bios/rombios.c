@@ -5151,7 +5151,6 @@ int09_function(DI, SI, BP, SP, BX, DX, CX, AX)
 {
   Bit8u scancode, asciicode, shift_flags;
   Bit8u mf2_flags, mf2_state, altkp_val;
-  Bit8u temp;
 
   //
   // DS has been set to 0x40 before call
@@ -5336,14 +5335,14 @@ ASM_END
           return;
         }
       } else if (shift_flags & 0x04) { /* CONTROL */
-        asciicode = scan_to_scanascii[scancode].control;
-        temp = scan_to_scanascii[scancode].control >> 8;
         if (((mf2_state & 0x02) > 0) && ((scancode >= 0x47) && (scancode <= 0x53))) {
           /* extended keys handling */
           asciicode = 0xe0;
-          temp = scan_to_scanascii[scancode].normal >> 8;
+          scancode = scan_to_scanascii[scancode].normal >> 8;
+        } else {
+          asciicode = scan_to_scanascii[scancode].control;
+          scancode = scan_to_scanascii[scancode].control >> 8;
         }
-        scancode = temp;
       } else if (((mf2_state & 0x02) > 0) && ((scancode >= 0x47) && (scancode <= 0x53))) {
         /* extended keys handling */
         asciicode = 0xe0;
@@ -10190,18 +10189,21 @@ pci_real_select_reg:
   ret
 
 #if BX_ROMBIOS32
-pci_set_pams_ro:
+pci_set_pam_regs_ro:
   xor  bx, bx
   mov  di, #0x5a
-pci_set_pams_ro_loop:
+pci_set_pam_regs_loop:
   mov  ax, #0xb108
   call pcibios_real
+  test cl, #0x22
+  jz   pci_next_pam_reg
   and  cl, #0xdd ; clear WE bits
   mov  ax, #0xb10b
   call pcibios_real
+pci_next_pam_reg:
   inc  di
   cmp  di, #0x5e
-  jne pci_set_pams_ro_loop
+  jne pci_set_pam_regs_loop
   ret
 #endif
 
@@ -11313,7 +11315,7 @@ vga_init_ok:
   mov  ax, #0xe000
   call rom_scan
 #if BX_ROMBIOS32
-  call pci_set_pams_ro
+  call pci_set_pam_regs_ro
 #endif
 
 #if BX_ELTORITO_BOOT
