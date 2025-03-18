@@ -2504,6 +2504,8 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
 {
   if (address == 0x140) {
     BX_GEFORCE_THIS mc_intr_en = value;
+    if (!value)
+      set_irq_level(0);
   } else if (address == 0x200) {
     BX_GEFORCE_THIS mc_enable = value;
   } else if (address >= 0x1800 && address < 0x1900) {
