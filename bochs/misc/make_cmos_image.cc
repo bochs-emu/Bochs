@@ -21,18 +21,12 @@
 // Program which generates sample CMOS image files
 
 extern "C" {
+  #include <assert.h>
   #include <stdio.h>
   #include <stdlib.h>
+  #include <string.h>
   #include <time.h>
 }
-
-// define as 1 to use a 128 byte CMOS (default)
-#define CMOS_EXTENDED  1
-// define this a 1 to store values as BCD, else Binary
-#define USE_BCD        0
-// define this a 1 to use 24 hour mode
-#define USE_24HOUR     1
-
 
 /* Notes:
 * [0]: * Some of the registers are used specifically for Bochs. They are not described anywhere else *
@@ -229,10 +223,13 @@ unsigned char cmos[] = {
   0x21,  // 0x38:  [0  ]    Eltorito Boot Sequence + Boot Signature Check [0x21]
          //                  bits 7:4 - Boot drive #3 (default to hard drive)
          //                    0000b unused
-         //                    0001b floppy
-         //                    0010b hard drive
-         //                    0011b cdrom
-         //                    11xxb other: floppy
+         //                    0001b first floppy
+         //                    0010b first hard drive
+         //                    0011b first cdrom
+         //                    0100b first pcmcia
+         //                    0101b first usb
+         //                    0110b embedded network
+         //                    1xxxb other: try the floppy?
          //                  bits 3:0 floppy boot signature check 
          //                    xxx0b nothing
          //                    0001b do floppy boot sig check
@@ -289,7 +286,6 @@ unsigned char cmos[] = {
          //                  bit    0 - fast boot (skip boot menu delay)
 
   // Most IBM PS/2s now have 128 bytes of CMOS
-#if CMOS_EXTENDED == 1
   0x00,  // 0x40:  [   ]    * unknown * [0x00]
   0x00,  // 0x41:  [   ]    * unknown * [0x00]
   0x00,  // 0x42:  [   ]    * unknown * [0x00]
@@ -354,21 +350,71 @@ unsigned char cmos[] = {
   0x00,  // 0x7D:  [   ]    * unknown * [0x00]
   0x00,  // 0x7E:  [   ]    * unknown * [0x00]
   0x00,  // 0x7F:  [   ]    * unknown * [0x00]
-#endif
 };
 
+// make sure the cmos struct is 128 bytes in length
+static_assert ((sizeof(cmos) == 128), "cmos struct must be 128 bytes in length");
+
+// global members
+char extended = 0;     // 0 = 64-byte cmos (default), 1 = 128-byte cmos
+char use_bcd = 0;      // 0 = use binary (default), 1 = use BCD
+char use_24hour = 0;   // 0 = use 12-hour mode (default), 1 = use 24 hour mode
+char filename[256] = { 0, };
+
 // convert a value to either BCD or binary
-unsigned char get_value(int value) {
-#if (USE_BCD == 1)
-  return (unsigned char) (((value / 10) << 4) | (value % 10));
-#else
-  return (unsigned char) value;
-#endif
+unsigned char create_value(int value) {
+  if (use_bcd)
+    return (unsigned char) (((value / 10) << 4) | (value % 10));
+  else
+    return (unsigned char) value;
+}
+
+void parse_command(int argc, char *argv[]) {
+  int i;
+
+  // did the user supply at least a filename?
+  if (argc < 2) {
+    fprintf(stderr, "usage: %s pathname [/x][/bcd][/24]\n"
+                    "  items in []'s are optional\n"
+                    "  parameters can start with / or -\n"
+                    "   /x   = create 128-byte cmos file, else 64-byte (default)\n"
+                    "   /bcd = use BCD values, else use binary values (default)\n"
+                    "   /24  = use 24-hour mode, else use 12-hour mode (default)\n", argv[0]);
+    exit(1);
+  }
+
+  for (i=1; i<argc; i++) {
+    if ((argv[i][0] == '/') || (argv[i][0] == '-')) {
+      // is it the /x parameter?
+      if (stricmp(&argv[i][1], "x") == 0) {
+        extended = 1;
+      }
+      else if (stricmp(&argv[i][1], "bcd") == 0) {
+        use_bcd = 1;
+      }
+      else if (stricmp(&argv[i][1], "24") == 0) {
+        use_24hour = 1;
+      }
+
+      // else it is something else
+      else {
+        fprintf(stderr, "unknown parameter given: '%s'\n", argv[i]);
+        exit(2);
+      }
+    } else {
+      // else, must be the path/filename
+      strcpy(filename, argv[i]);
+    }
+  }
+
+  if (strlen(filename) == 0) {
+    fprintf(stderr, "must supply a filename...\n");
+    exit(3);
+  }
 }
 
 int main(int argc, char *argv[]) {
   FILE *fp;
-  size_t ret;
   unsigned int crc;
   int i;
   time_t timer;
@@ -378,42 +424,40 @@ int main(int argc, char *argv[]) {
   time(&timer);
   today = localtime(&timer);
 
-  // did the user supply a filename?
-  if (argc != 2) {
-    fprintf(stderr, "usage: %s pathname\n", argv[0]);
-    exit(1);
-  }
+  // parse the command line
+  parse_command(argc, argv);
 
-  // use BCD or Hex
-#if (USE_BCD == 0)
-  cmos[0x0B] |= 0x04;  // binary
-#else
-  cmos[0x0B] &= ~0x04; // BCD
-#endif
+  // get the length of the cmos file to create
+  const size_t len = (extended) ? sizeof(cmos) : 64;
 
-  // use 23-hour mode?
-#if (USE_24HOUR == 1)
-  cmos[0x0B] |= 0x02;
-#else
-  cmos[0x0B] &= ~0x02;
-#endif
+  // use BCD or Binary
+  if (use_bcd)
+    cmos[0x0B] &= ~0x04; // BCD
+  else
+    cmos[0x0B] |= 0x04;  // binary
+  
+  // use 24-hour mode?
+  if (use_24hour)
+    cmos[0x0B] |= 0x02;
+  else
+    cmos[0x0B] &= ~0x02;
 
   // set the date and time registers
-  cmos[0x00] = get_value(today->tm_sec);
-  cmos[0x02] = get_value(today->tm_min);
-#if (USE_24HOUR == 1)
-  cmos[0x04] = get_value(today->tm_hour);
-#else
-  if (get_value(today->tm_hour) < 12) {
-    cmos[0x04] = get_value(today->tm_hour);
+  cmos[0x00] = create_value(today->tm_sec);
+  cmos[0x02] = create_value(today->tm_min);
+  if (use_24hour) {
+    cmos[0x04] = create_value(today->tm_hour);
   } else {
-    cmos[0x04] = get_value(0x80 | (today->tm_hour - 12));
+    if (today->tm_hour < 12) {
+      cmos[0x04] = create_value(today->tm_hour);
+    } else {
+      cmos[0x04] = create_value(0x80 | (today->tm_hour - 12));
+    }
   }
-#endif
-  cmos[0x06] = get_value(today->tm_wday + 1);
-  cmos[0x07] = get_value(today->tm_mday);
-  cmos[0x08] = get_value(today->tm_mon + 1);
-  cmos[0x09] = get_value(today->tm_year - 2000); // assumes we are in the 21st century
+  cmos[0x06] = create_value(today->tm_wday + 1);
+  cmos[0x07] = create_value(today->tm_mday);
+  cmos[0x08] = create_value(today->tm_mon + 1);
+  cmos[0x09] = create_value(today->tm_year - 2000); // assumes we are in the 21st century
   printf("Setting the date and time to: %s", asctime(today));
 
   // calculate the standard checksum (0x2E->0x2F)
@@ -424,29 +468,29 @@ int main(int argc, char *argv[]) {
   cmos[0x2E] = (unsigned char) ((crc >> 8) & 0xFF);
   cmos[0x2F] = (unsigned char) ((crc >> 0) & 0xFF);
    
-#if (CMOS_EXTENDED == 1)
-  // calculate the extended checksum (0x7A->0x7B)
-  // it is calculated as the byte sum of registers 0x40 to 0x79
-  crc = 0;
-  for (i = 0x40; i <= 0x79; i++)
-    crc += cmos[i];
-  cmos[0x7A] = (unsigned char) ((crc >> 8) & 0xFF);
-  cmos[0x7B] = (unsigned char) ((crc >> 0) & 0xFF);
-#endif
+  if (extended) {
+    // calculate the extended checksum (0x7A->0x7B)
+    // it is calculated as the byte sum of registers 0x40 to 0x79
+    crc = 0;
+    for (i = 0x40; i <= 0x79; i++)
+      crc += cmos[i];
+    cmos[0x7A] = (unsigned char) ((crc >> 8) & 0xFF);
+    cmos[0x7B] = (unsigned char) ((crc >> 0) & 0xFF);
+  }
 
-  if ((fp = fopen(argv[1], "wb")) == NULL) {  
-    puts("trying to open cmos image file to write.\n");
+  if ((fp = fopen(filename, "wb")) == NULL) {  
+    puts("trying to open cmos image file for write, failed.\n");
     exit(1);
   }
 
-  ret = fwrite(cmos, 1, sizeof(cmos), fp);
-  if (ret != sizeof(cmos)) {
+  size_t ret = fwrite(cmos, 1, len, fp);
+  if (ret != len) {
     puts("write() did not write all CMOS data.\n");
     fclose(fp);
     exit(1);
   }
 
   fclose(fp);
-  printf("CMOS data successfully written to file '%s'.\n", argv[1]);
+  printf("CMOS data successfully written to file '%s' (%zi bytes).\n", filename, len);
   return 0;
 }
