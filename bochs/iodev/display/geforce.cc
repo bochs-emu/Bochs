@@ -2029,19 +2029,38 @@ void bx_geforce_c::copyarea(Bit32u chid)
   Bit32u redraw_offset = draw_offset + dy * dpitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes -
     (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   draw_offset += (dy + ydir * (height - 1)) * dpitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
+  Bit8u rop = BX_GEFORCE_THIS chs[chid].blit_operation == 3 ? 0xCC : BX_GEFORCE_THIS chs[chid].rop;
+  bx_bitblt_rop_t rop_fn = BX_GEFORCE_THIS rop_handler[rop];
+  bool rop_pattern = BX_GEFORCE_THIS rop_flags[rop];
+  Bit32u patcolor = BX_GEFORCE_THIS chs[chid].patt_fg_color;
   for (Bit16u y = 0; y < height; y++) {
     for (Bit16u x = 0; x < width; x++) {
       Bit16u xa = xdir ? width - x - 1 : x;
-      if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 1) {
-        Bit8u color = dma_read8(BX_GEFORCE_THIS chs[chid].s2d_img_src, src_offset + xa);
-        dma_write8(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + xa, color);
-      } else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2) {
-        Bit16u color = dma_read16(BX_GEFORCE_THIS chs[chid].s2d_img_src, src_offset + xa * 2);
-        dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + xa * 2, color);
-      } else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4) {
-        Bit32u color = dma_read32(BX_GEFORCE_THIS chs[chid].s2d_img_src, src_offset + xa * 4);
-        dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + xa * 4, color);
-      }
+      Bit32u dstcolor;
+      if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 1)
+        dstcolor = dma_read8(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + xa);
+      else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
+        dstcolor = dma_read16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + xa * 2);
+      else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4)
+        dstcolor = dma_read32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + xa * 4);
+      Bit32u srccolor;
+      if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 1)
+        srccolor = dma_read8(BX_GEFORCE_THIS chs[chid].s2d_img_src, src_offset + xa);
+      else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
+        srccolor = dma_read16(BX_GEFORCE_THIS chs[chid].s2d_img_src, src_offset + xa * 2);
+      else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4)
+        srccolor = dma_read32(BX_GEFORCE_THIS chs[chid].s2d_img_src, src_offset + xa * 4);
+      if (rop_pattern)
+        bx_ternary_rop(rop, (Bit8u*)&dstcolor, (Bit8u*)&srccolor,
+          (Bit8u*)&patcolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
+      else
+        rop_fn((Bit8u*)&dstcolor, (Bit8u*)&srccolor, 0, 0, BX_GEFORCE_THIS chs[chid].s2d_color_bytes, 1);
+      if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 1)
+        dma_write8(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + xa, dstcolor);
+      else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
+        dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + xa * 2, dstcolor);
+      else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4)
+        dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + xa * 4, dstcolor);
     }
     src_offset += spitch * (1 - 2 * ydir);
     draw_offset += dpitch * (1 - 2 * ydir);
