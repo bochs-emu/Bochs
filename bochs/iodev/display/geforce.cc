@@ -2757,7 +2757,8 @@ void bx_geforce_c::svga_init_pcihandlers(void)
   BX_GEFORCE_THIS init_bar_mem(1, BX_GEFORCE_THIS s.memsize, geforce_mem_read_handler,
                                geforce_mem_write_handler);
   if (BX_GEFORCE_THIS card_type != 0x35) {
-    BX_GEFORCE_THIS pci_conf[0x18] = 0x08;
+    if (BX_GEFORCE_THIS card_type == 0x20)
+      BX_GEFORCE_THIS pci_conf[0x18] = 0x08;
     BX_GEFORCE_THIS init_bar_mem(2, BX_GEFORCE_THIS bar2_size, geforce_mem_read_handler,
                                  geforce_mem_write_handler);
   }
