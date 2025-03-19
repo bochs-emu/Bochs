@@ -748,9 +748,9 @@ static void bios_lock_shadow_ram(void)
 
 static uint32_t pci_get_agp_memory(PCIDevice *d, uint32_t type)
 {
-    uint32_t addr, val, size, align;
+    uint32_t addr, val, size, align, mask;
     uint16_t cmd, saddr = 0xffff, eaddr = 0;;
-    int i, ofs;
+    int i, j, ofs;
 
     /* disable i/o and memory access */
     cmd = pci_config_readw(d, PCI_COMMAND);
@@ -758,24 +758,28 @@ static uint32_t pci_get_agp_memory(PCIDevice *d, uint32_t type)
     pci_config_writew(d, PCI_COMMAND, cmd);
     /* default memory mappings */
     addr = 0xc0000000;
-    for(i = 0; i < PCI_ROM_SLOT; i++) {
-        ofs = PCI_BASE_ADDRESS_0 + i * 4;
-        pci_config_writel(d, ofs, 0xffffffff);
-        val = pci_config_readl(d, ofs);
-        if ((val != 0) && !(val & PCI_ADDRESS_SPACE_IO)) {
-            size = (~(val & ~0xf)) + 1;
-            align = 0x10000;
-            addr = (addr + size - 1) & ~(size - 1);
-            if ((val & PCI_ADDRESS_SPACE_MEM_PREFETCH) == type) {
-                if (saddr == 0xffff) {
-                    saddr = (uint16_t)(addr >> 16);
+    for(j = 0; j < 2; j++) {
+        mask = (j == 1) ? PCI_ADDRESS_SPACE_MEM_PREFETCH : 0;
+        for(i = 0; i < PCI_ROM_SLOT; i++) {
+            ofs = PCI_BASE_ADDRESS_0 + i * 4;
+            pci_config_writel(d, ofs, 0xffffffff);
+            val = pci_config_readl(d, ofs);
+            if ((val != 0) && !(val & PCI_ADDRESS_SPACE_IO) &&
+                ((val & PCI_ADDRESS_SPACE_MEM_PREFETCH) == mask)) {
+                size = (~(val & ~0xf)) + 1;
+                align = 0x10000;
+                addr = (addr + size - 1) & ~(size - 1);
+                if ((val & PCI_ADDRESS_SPACE_MEM_PREFETCH) == type) {
+                    if (saddr == 0xffff) {
+                        saddr = (uint16_t)(addr >> 16);
+                    }
+                    eaddr = (uint16_t)((addr + size - 1) >> 16);
                 }
-                eaddr = (uint16_t)((addr + size - 1) >> 16);
-            }
-            if (size < align) {
-                addr += align;
-            } else {
-                addr += size;
+                if (size < align) {
+                    addr += align;
+                } else {
+                    addr += size;
+                }
             }
         }
     }
@@ -972,7 +976,8 @@ static void pci_bios_init_device(PCIDevice *d)
     PCIDevice d1, *bridge = &d1;
     uint16_t class, cmd;
     uint32_t *paddr, mask;
-    int headt, i, pin, pic_irq, vendor_id, device_id, is_i440bx = 0;
+    int headt, i, j, pin, pic_irq, vendor_id, device_id, is_i440bx = 0;
+    int init_bar[PCI_NUM_REGIONS];
 
     bridge->bus = 0;
     bridge->devfn = 0;
@@ -1029,40 +1034,52 @@ static void pci_bios_init_device(PCIDevice *d)
         cmd = pci_config_readw(d, PCI_COMMAND);
         cmd &= 0xfffc;
         pci_config_writew(d, PCI_COMMAND, cmd);
-        /* default memory mappings */
         for(i = 0; i < PCI_NUM_REGIONS; i++) {
-            int ofs;
-            uint32_t val, size, align;
-
-            if (i == PCI_ROM_SLOT) {
-                ofs = PCI_ROM_ADDRESS;
-                pci_config_writel(d, ofs, 0xfffffffe);
-            } else {
-                ofs = PCI_BASE_ADDRESS_0 + i * 4;
-                pci_config_writel(d, ofs, 0xffffffff);
-            }
-            val = pci_config_readl(d, ofs);
-            if (val != 0) {
-                size = (~(val & ~0xf)) + 1;
-                if (val & PCI_ADDRESS_SPACE_IO) {
-                    paddr = &pci_bios_io_addr;
-                    align = 0x10;
-                } else {
-                    paddr = &pci_bios_mem_addr;
-                    align = 0x10000;
-                }
-                *paddr = (*paddr + size - 1) & ~(size - 1);
-                pci_set_io_region_addr(d, i, *paddr);
-                if ((i == PCI_ROM_SLOT) && (class == PCI_CLASS_DISPLAY_VGA)) {
-                    pci_bios_init_pcirom(d, *paddr);
-                }
-                if (size < align) {
-                    *paddr += align;
-                } else {
-                    *paddr += size;
-                }
-            }
+            init_bar[i] = 0;
         }
+        /* default memory mappings */
+        j = 0;
+        do {
+            mask = (j == 1) ? PCI_ADDRESS_SPACE_MEM_PREFETCH : 0;
+            for(i = 0; i < PCI_NUM_REGIONS; i++) {
+                int ofs;
+                uint32_t val, size, align;
+
+                if (!init_bar[i]) {
+                    if (i == PCI_ROM_SLOT) {
+                        ofs = PCI_ROM_ADDRESS;
+                        pci_config_writel(d, ofs, 0xfffffffe);
+                    } else {
+                        ofs = PCI_BASE_ADDRESS_0 + i * 4;
+                        pci_config_writel(d, ofs, 0xffffffff);
+                    }
+                    val = pci_config_readl(d, ofs);
+                    if ((val != 0) &&
+                        ((d->bus == 0) || ((val & PCI_ADDRESS_SPACE_MEM_PREFETCH) == mask))) {
+                        size = (~(val & ~0xf)) + 1;
+                        if (val & PCI_ADDRESS_SPACE_IO) {
+                            paddr = &pci_bios_io_addr;
+                            align = 0x10;
+                        } else {
+                            paddr = &pci_bios_mem_addr;
+                            align = 0x10000;
+                        }
+                        *paddr = (*paddr + size - 1) & ~(size - 1);
+                        pci_set_io_region_addr(d, i, *paddr);
+                        if ((i == PCI_ROM_SLOT) && (class == PCI_CLASS_DISPLAY_VGA)) {
+                            pci_bios_init_pcirom(d, *paddr);
+                        }
+                        if (size < align) {
+                            *paddr += align;
+                        } else {
+                            *paddr += size;
+                        }
+                        init_bar[i] = 1;
+                    }
+                }
+            }
+            j++;
+        } while ((j < 2) && (d->bus == 1));
         /* enable i/o and memory access */
         cmd = pci_config_readw(d, PCI_COMMAND);
         cmd |= (PCI_COMMAND_MEMORY | PCI_COMMAND_IO);
