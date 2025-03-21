@@ -287,7 +287,6 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS crtc_config = 0;
   BX_GEFORCE_THIS crtc_cursor_offset = 0;
   BX_GEFORCE_THIS crtc_cursor_config = 0;
-  BX_GEFORCE_THIS crtc_gpio = 0;
   BX_GEFORCE_THIS ramdac_cu_start_pos = 0;
   BX_GEFORCE_THIS nvpll = 0;
   BX_GEFORCE_THIS mpll = 0;
@@ -465,6 +464,9 @@ void bx_geforce_c::redraw_area(unsigned x0, unsigned y0,
 
 void bx_geforce_c::redraw_area(Bit32s x0, Bit32s y0, Bit32u width, Bit32u height)
 {
+  if (x0 + (Bit32s)width <= 0 || y0 + (Bit32s)height <= 0)
+    return;
+
   unsigned xti, yti, xt0, xt1, yt0, yt1;
 
   if (!BX_GEFORCE_THIS crtc.reg[0x28]) {
@@ -490,8 +492,8 @@ void bx_geforce_c::redraw_area(Bit32s x0, Bit32s y0, Bit32u width, Bit32u height
   } else {
     yt1 = (BX_GEFORCE_THIS svga_yres - 1) / Y_TILESIZE;
   }
-  if ((x0 + width) > svga_xres) {
-    BX_GEFORCE_THIS redraw_area(0, y0 + 1, x0 + width - svga_xres, height);
+  if ((x0 + width) > BX_GEFORCE_THIS svga_xres) {
+    BX_GEFORCE_THIS redraw_area(0, y0 + 1, x0 + width - BX_GEFORCE_THIS svga_xres, height);
   }
   for (yti=yt0; yti<=yt1; yti++) {
     for (xti=xt0; xti<=xt1; xti++) {
@@ -503,10 +505,11 @@ void bx_geforce_c::redraw_area(Bit32s x0, Bit32s y0, Bit32u width, Bit32u height
 void bx_geforce_c::vertical_timer()
 {
   bx_vgacore_c::vertical_timer();
-  if (BX_GEFORCE_THIS vtimer_toggle && BX_GEFORCE_THIS crtc_intr_en) {
+  if (BX_GEFORCE_THIS vtimer_toggle) {
     BX_GEFORCE_THIS crtc_intr |= 0x00000001;
-    BX_ERROR(("vertical_timer: set_irq_level(1)"));
-    set_irq_level(1);
+    BX_ERROR(("vertical_timer, crtc_intr_en = %d, mc_intr_en = %d",
+      BX_GEFORCE_THIS crtc_intr_en, BX_GEFORCE_THIS mc_intr_en));
+    update_irq_level();
   }
 }
 
@@ -1515,7 +1518,13 @@ void bx_geforce_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
 
   bool update_cursor_addr = false;
 
-  if (index == 0x1d || index == 0x1e)
+  if (index == 0x1c) {
+    if (!(BX_GEFORCE_THIS crtc.reg[index] & 0x80) && value & 0x80) {
+      // Without clearing this register, Windows 95 hangs after reboot
+      BX_GEFORCE_THIS crtc_intr_en = 0x00000000;
+      update_irq_level();
+    }
+  } else if (index == 0x1d || index == 0x1e)
     BX_GEFORCE_THIS bank_base[index - 0x1d] = value * 0x8000;
   else if (index == 0x2f || index == 0x30 || index == 0x31)
     update_cursor_addr = true;
@@ -2313,7 +2322,7 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
   }
   if (BX_GEFORCE_THIS chs[chid].schs[subc].engine == 0x00) {
     BX_GEFORCE_THIS fifo_intr |= 0x00000001;
-    set_irq_level(1);
+    update_irq_level();
     BX_GEFORCE_THIS fifo_cache1_pull0 |= 0x00000100;
     BX_GEFORCE_THIS fifo_cache1_push1 = BX_GEFORCE_THIS fifo_cache1_push1 & ~0x1F | chid;
     BX_GEFORCE_THIS fifo_cache1_method[BX_GEFORCE_THIS fifo_cache1_put / 4] = method << 2 | subc << 13;
@@ -2336,6 +2345,24 @@ void bx_geforce_c::set_irq_level(bool level)
   DEV_pci_set_irq(BX_GEFORCE_THIS devfunc, BX_GEFORCE_THIS pci_conf[0x3d], level);
 }
 
+Bit32u bx_geforce_c::get_mc_intr()
+{
+  Bit32u value = 0x00000000;
+  if (BX_GEFORCE_THIS fifo_intr & BX_GEFORCE_THIS fifo_intr_en)
+    value |= 0x00000100;
+  if (BX_GEFORCE_THIS graph_intr & BX_GEFORCE_THIS graph_intr_en)
+    value |= 0x00001000;
+  if (BX_GEFORCE_THIS crtc_intr & BX_GEFORCE_THIS crtc_intr_en)
+    value |= 0x01000000;
+  return value;
+}
+
+void bx_geforce_c::update_irq_level()
+{
+  set_irq_level(get_mc_intr() && BX_GEFORCE_THIS mc_intr_en & 1);
+}
+
+
 Bit32u bx_geforce_c::register_read32(Bit32u address)
 {
   Bit32u value;
@@ -2346,14 +2373,7 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     else
       value = BX_GEFORCE_THIS card_type << 20;
   } else if (address == 0x100) {
-    value = 0x00000000;
-    if (BX_GEFORCE_THIS fifo_intr)
-      value |= 0x00000100;
-    if (BX_GEFORCE_THIS graph_intr)
-      value |= 0x00001000;
-    if (BX_GEFORCE_THIS crtc_intr)
-      value |= 0x01000000;
-    set_irq_level(0);
+    value = get_mc_intr();
   } else if (address == 0x140)
     value = BX_GEFORCE_THIS mc_intr_en;
   else if (address == 0x200)
@@ -2446,9 +2466,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     }
   } else if (address == 0x400100) {
     value = BX_GEFORCE_THIS graph_intr;
-  } else if (address == 0x40013C && BX_GEFORCE_THIS card_type >= 0x40) {
-    value = BX_GEFORCE_THIS graph_intr_en;
-  } else if (address == 0x400140 && BX_GEFORCE_THIS card_type < 0x40) {
+  } else if (address == 0x40013C && BX_GEFORCE_THIS card_type >= 0x40 ||
+             address == 0x400140 && BX_GEFORCE_THIS card_type < 0x40) {
     value = BX_GEFORCE_THIS graph_intr_en;
   } else if (address == 0x400700) {
     value = BX_GEFORCE_THIS graph_status;
@@ -2470,8 +2489,6 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS crtc_cursor_offset;
   } else if (address == 0x600810) {
     value = BX_GEFORCE_THIS crtc_cursor_config;
-  } else if (address == 0x600818) {
-    value = BX_GEFORCE_THIS crtc_gpio;
   } else if (address >= 0x601300 && address < 0x601400) {
     value = register_read8(address);
   } else if (address == 0x680300) {
@@ -2495,8 +2512,10 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
       chid = address >> 16 & 0x1F;
     else {
       chid = address >> 12 & 0x1FF;
-      if (chid >= GEFORCE_CHANNEL_COUNT)
+      if (chid >= GEFORCE_CHANNEL_COUNT) {
         BX_PANIC(("Channel id >= 32"));
+        chid = 0;
+      }
     }
     Bit32u offset;
     if (BX_GEFORCE_THIS card_type < 0x40)
@@ -2523,16 +2542,17 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
 {
   if (address == 0x140) {
     BX_GEFORCE_THIS mc_intr_en = value;
-    if (!value)
-      set_irq_level(0);
+    update_irq_level();
   } else if (address == 0x200) {
     BX_GEFORCE_THIS mc_enable = value;
   } else if (address >= 0x1800 && address < 0x1900) {
     BX_GEFORCE_THIS pci_write_handler(address - 0x1800, value, 4);
   } else if (address == 0x2100) {
     BX_GEFORCE_THIS fifo_intr &= ~value;
+    update_irq_level();
   } else if (address == 0x2140) {
     BX_GEFORCE_THIS fifo_intr_en = value;
+    update_irq_level();
   } else if (address == 0x2210) {
     BX_GEFORCE_THIS fifo_ramht = value;
   } else if (address == 0x2214 && BX_GEFORCE_THIS card_type < 0x40) {
@@ -2584,6 +2604,7 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
       BX_GEFORCE_THIS fifo_intr &= ~0x00000001;
       BX_GEFORCE_THIS fifo_cache1_pull0 &= ~0x00000100;
     }
+    update_irq_level();
   } else if (address == 0x9100) {
     BX_GEFORCE_THIS timer_intr &= ~value;
   } else if (address == 0x9140) {
@@ -2612,10 +2633,11 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
       BX_GEFORCE_THIS straps0_primary = BX_GEFORCE_THIS straps0_primary_original;
   } else if (address == 0x400100) {
     BX_GEFORCE_THIS graph_intr &= ~value;
-  } else if (address == 0x40013C && BX_GEFORCE_THIS card_type >= 0x40) {
+    update_irq_level();
+  } else if (address == 0x40013C && BX_GEFORCE_THIS card_type >= 0x40 ||
+             address == 0x400140 && BX_GEFORCE_THIS card_type < 0x40) {
     BX_GEFORCE_THIS graph_intr_en = value;
-  } else if (address == 0x400140 && BX_GEFORCE_THIS card_type < 0x40) {
-    BX_GEFORCE_THIS graph_intr_en = value;
+    update_irq_level();
   } else if (address == 0x400700) {
     BX_GEFORCE_THIS graph_status = value;
   } else if (address == 0x400720) {
@@ -2624,8 +2646,10 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS graph_channel_ctx_table = value;
   } else if (address == 0x600100) {
     BX_GEFORCE_THIS crtc_intr &= ~value;
+    update_irq_level();
   } else if (address == 0x600140) {
     BX_GEFORCE_THIS crtc_intr_en = value;
+    update_irq_level();
   } else if (address == 0x600800) {
     BX_GEFORCE_THIS crtc_start = value;
     BX_GEFORCE_THIS svga_needs_update_mode = 1;
@@ -2640,8 +2664,6 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
       BX_GEFORCE_THIS crtc.reg[0x31] & 0x01 || value & 0x00000001;
     BX_GEFORCE_THIS hw_cursor.size = value & 0x00010000 ? 64 : 32;
     BX_GEFORCE_THIS hw_cursor.bpp32 = value & 0x00001000;
-  } else if (address == 0x600818) {
-    BX_GEFORCE_THIS crtc_gpio = value;
   } else if (address >= 0x601300 && address < 0x601400) {
     register_write8(address, value);
   } else if (address == 0x680300) {
@@ -2739,7 +2761,7 @@ void bx_geforce_c::svga_init_pcihandlers(void)
   BX_GEFORCE_THIS devfunc = 0x00;
   DEV_register_pci_handlers2(BX_GEFORCE_THIS_PTR,
       &BX_GEFORCE_THIS devfunc, BX_PLUGIN_GEFORCE, "GeForce AGP", true);
-  Bit16u devid;
+  Bit16u devid = 0x0000;
   Bit8u revid = 0x00;
   if (BX_GEFORCE_THIS card_type == 0x20) {
     devid = 0x0202;

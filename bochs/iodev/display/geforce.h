@@ -88,6 +88,8 @@ private:
   BX_GEFORCE_SMF void  svga_write_crtc(Bit32u address, unsigned index, Bit8u value);
 
   BX_GEFORCE_SMF void set_irq_level(bool level);
+  BX_GEFORCE_SMF Bit32u get_mc_intr();
+  BX_GEFORCE_SMF void update_irq_level();
 
   BX_GEFORCE_SMF Bit8u register_read8(Bit32u address);
   BX_GEFORCE_SMF void  register_write8(Bit32u address, Bit8u value);
@@ -172,7 +174,6 @@ private:
   Bit32u crtc_config;
   Bit32u crtc_cursor_offset;
   Bit32u crtc_cursor_config;
-  Bit32u crtc_gpio;
   Bit32u ramdac_cu_start_pos;
   Bit32u nvpll;
   Bit32u mpll;
