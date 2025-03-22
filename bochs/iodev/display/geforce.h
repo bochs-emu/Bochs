@@ -126,7 +126,18 @@ private:
   BX_GEFORCE_SMF Bit64u get_current_time();
 
   BX_GEFORCE_SMF Bit32u ramht_lookup(Bit32u handle, Bit32u chid);
+
   BX_GEFORCE_SMF void execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
+
+  BX_GEFORCE_SMF void execute_clip(Bit32u chid, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_m2mf(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_rop(Bit32u chid, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_patt(Bit32u chid, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_gdi(Bit32u chid, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_imageblit(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_ifc(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_surf2d(Bit32u chid, Bit32u method, Bit32u param);
+
   BX_GEFORCE_SMF Bit32u color_565_to_888(Bit16u value);
   BX_GEFORCE_SMF void fillrect(Bit32u chid);
   BX_GEFORCE_SMF void gdi_blit(Bit32u chid, Bit32u type);

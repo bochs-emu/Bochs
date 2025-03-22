@@ -2093,10 +2093,215 @@ void bx_geforce_c::move(Bit32u chid)
   }
 }
 
+void bx_geforce_c::execute_clip(Bit32u chid, Bit32u method, Bit32u param)
+{
+}
+
+void bx_geforce_c::execute_m2mf(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param)
+{
+  if (method == 0x061)
+    BX_GEFORCE_THIS chs[chid].m2mf_src = param;
+  else if (method == 0x062)
+    BX_GEFORCE_THIS chs[chid].m2mf_dst = param;
+  else if (method == 0x0c3)
+    BX_GEFORCE_THIS chs[chid].m2mf_src_offset = param;
+  else if (method == 0x0c4)
+    BX_GEFORCE_THIS chs[chid].m2mf_dst_offset = param;
+  else if (method == 0x0c5)
+    BX_GEFORCE_THIS chs[chid].m2mf_src_pitch = param;
+  else if (method == 0x0c6)
+    BX_GEFORCE_THIS chs[chid].m2mf_dst_pitch = param;
+  else if (method == 0x0c7)
+    BX_GEFORCE_THIS chs[chid].m2mf_line_length = param;
+  else if (method == 0x0c8)
+    BX_GEFORCE_THIS chs[chid].m2mf_line_count = param;
+  else if (method == 0x0c9)
+    BX_GEFORCE_THIS chs[chid].m2mf_format = param;
+  else if (method == 0x0ca) {
+    BX_GEFORCE_THIS chs[chid].m2mf_buffer_notify = param;
+    move(chid);
+    if ((ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier) & 0xFF) == 0x30) {
+      BX_ERROR(("execute_command: M2MF notify skipped"));
+    } else {
+      BX_ERROR(("execute_command: M2MF notify 0x%08x",
+        BX_GEFORCE_THIS chs[chid].schs[subc].notifier));
+      dma_write64(BX_GEFORCE_THIS chs[chid].schs[subc].notifier, 0x10 + 0x0, get_current_time());
+      dma_write32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier, 0x10 + 0x8, 0);
+      dma_write32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier, 0x10 + 0xC, 0);
+    }
+  }
+}
+
+void bx_geforce_c::execute_rop(Bit32u chid, Bit32u method, Bit32u param)
+{
+  if (method == 0x0c0)
+    BX_GEFORCE_THIS chs[chid].rop = param;
+}
+
+void bx_geforce_c::execute_patt(Bit32u chid, Bit32u method, Bit32u param)
+{
+  if (method == 0x0c4)
+    BX_GEFORCE_THIS chs[chid].patt_bg_color = param;
+  else if (method == 0x0c5)
+    BX_GEFORCE_THIS chs[chid].patt_fg_color = param;
+}
+
+void bx_geforce_c::execute_gdi(Bit32u chid, Bit32u method, Bit32u param)
+{
+  if (method == 0x0bf)
+    BX_GEFORCE_THIS chs[chid].gdi_operation = param;
+  else if (method == 0x0c0)
+    BX_GEFORCE_THIS chs[chid].gdi_color_fmt = param;
+  else if (method == 0x0ff)
+    BX_GEFORCE_THIS chs[chid].gdi_rect_color = param;
+  else if (method == 0x100)
+    BX_GEFORCE_THIS chs[chid].gdi_rect_xy = param;
+  else if (method == 0x101) {
+    BX_GEFORCE_THIS chs[chid].gdi_rect_wh = param;
+    fillrect(chid);
+  } else if (method == 0x1fd)
+    BX_GEFORCE_THIS chs[chid].gdi_fg_color = param;
+  else if (method == 0x1fe)
+    BX_GEFORCE_THIS chs[chid].gdi_image_swh = param;
+  else if (method == 0x1ff) {
+    BX_GEFORCE_THIS chs[chid].gdi_image_xy = param;
+    Bit32u width = BX_GEFORCE_THIS chs[chid].gdi_image_swh & 0xFFFF;
+    Bit32u wordCount = ALIGN(width * (BX_GEFORCE_THIS chs[chid].gdi_image_swh >> 16), 32) >> 5;
+    if (BX_GEFORCE_THIS chs[chid].gdi_words != nullptr)
+      delete[] BX_GEFORCE_THIS chs[chid].gdi_words;
+    BX_GEFORCE_THIS chs[chid].gdi_words_ptr = 0;
+    BX_GEFORCE_THIS chs[chid].gdi_words_left = wordCount;
+    BX_GEFORCE_THIS chs[chid].gdi_words = new Bit32u[wordCount];
+  } else if (method >= 0x200 && method < 0x280) {
+    BX_GEFORCE_THIS chs[chid].gdi_words[
+      BX_GEFORCE_THIS chs[chid].gdi_words_ptr++] = param;
+    BX_GEFORCE_THIS chs[chid].gdi_words_left--;
+    if (!BX_GEFORCE_THIS chs[chid].gdi_words_left) {
+      gdi_blit(chid, 0);
+      delete[] BX_GEFORCE_THIS chs[chid].gdi_words;
+      BX_GEFORCE_THIS chs[chid].gdi_words = nullptr;
+    }
+  } else if (method == 0x2fb)
+    BX_GEFORCE_THIS chs[chid].gdi_bg_color = param;
+  else if (method == 0x2fc)
+    BX_GEFORCE_THIS chs[chid].gdi_fg_color = param;
+  else if (method == 0x2fd)
+    BX_GEFORCE_THIS chs[chid].gdi_image_swh = param;
+  else if (method == 0x2fe)
+    BX_GEFORCE_THIS chs[chid].gdi_image_dwh = param;
+  else if (method == 0x2ff) {
+    BX_GEFORCE_THIS chs[chid].gdi_image_xy = param;
+    Bit32u width = BX_GEFORCE_THIS chs[chid].gdi_image_swh & 0xFFFF;
+    Bit32u wordCount = ALIGN(width * (BX_GEFORCE_THIS chs[chid].gdi_image_swh >> 16), 32) >> 5;
+    if (BX_GEFORCE_THIS chs[chid].gdi_words != nullptr)
+      delete[] BX_GEFORCE_THIS chs[chid].gdi_words;
+    BX_GEFORCE_THIS chs[chid].gdi_words_ptr = 0;
+    BX_GEFORCE_THIS chs[chid].gdi_words_left = wordCount;
+    BX_GEFORCE_THIS chs[chid].gdi_words = new Bit32u[wordCount];
+  } else if (method >= 0x300 && method < 0x380) {
+    BX_GEFORCE_THIS chs[chid].gdi_words[
+      BX_GEFORCE_THIS chs[chid].gdi_words_ptr++] = param;
+    BX_GEFORCE_THIS chs[chid].gdi_words_left--;
+    if (!BX_GEFORCE_THIS chs[chid].gdi_words_left) {
+      gdi_blit(chid, 1);
+      delete[] BX_GEFORCE_THIS chs[chid].gdi_words;
+      BX_GEFORCE_THIS chs[chid].gdi_words = nullptr;
+    }
+  } else if (method == 0x3ff)
+    BX_GEFORCE_THIS chs[chid].gdi_fg_color = param;
+}
+
+void bx_geforce_c::execute_imageblit(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param)
+{
+  if (method == 0x0bf)
+    BX_GEFORCE_THIS chs[chid].blit_operation = param;
+  else if (method == 0x0c0)
+    BX_GEFORCE_THIS chs[chid].blit_syx = param;
+  else if (method == 0x0c1)
+    BX_GEFORCE_THIS chs[chid].blit_dyx = param;
+  else if (method == 0x0c2) {
+    BX_GEFORCE_THIS chs[chid].blit_hw = param;
+    copyarea(chid);
+  }
+}
+
+void bx_geforce_c::execute_ifc(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param)
+{
+  if (method == 0x0bf)
+    BX_GEFORCE_THIS chs[chid].ifc_operation = param;
+  else if (method == 0x0c0) {
+    BX_GEFORCE_THIS chs[chid].ifc_color_fmt = param;
+    if (BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 1 || // R5G6B5
+        BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 2 || // A1R5G5B5
+        BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 3)   // X1R5G5B5
+      BX_GEFORCE_THIS chs[chid].ifc_color_bytes = 2;
+    else if (BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 4 || // A8R8G8B8
+     BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 5)   // X8R8G8B8
+      BX_GEFORCE_THIS chs[chid].ifc_color_bytes = 4;
+    else {
+      BX_ERROR(("unknown IFC color format: 0x%02x",
+        BX_GEFORCE_THIS chs[chid].ifc_color_fmt));
+    }
+  } else if (method == 0x0c1)
+    BX_GEFORCE_THIS chs[chid].ifc_yx = param;
+  else if (method == 0x0c2)
+    BX_GEFORCE_THIS chs[chid].ifc_dhw = param;
+  else if (method == 0x0c3) {
+    BX_GEFORCE_THIS chs[chid].ifc_shw = param;
+    Bit32u width = BX_GEFORCE_THIS chs[chid].ifc_shw & 0xFFFF;
+    Bit32u height = BX_GEFORCE_THIS chs[chid].ifc_shw >> 16;
+    Bit32u wordCount = width * height * 
+      BX_GEFORCE_THIS chs[chid].ifc_color_bytes / 4;
+    if (BX_GEFORCE_THIS chs[chid].ifc_words != nullptr)
+      delete[] BX_GEFORCE_THIS chs[chid].ifc_words;
+    BX_GEFORCE_THIS chs[chid].ifc_words_ptr = 0;
+    BX_GEFORCE_THIS chs[chid].ifc_words_left = wordCount;
+    BX_GEFORCE_THIS chs[chid].ifc_words = new Bit32u[wordCount];
+  }
+  else if (method >= 0x100 && method < 0x800) {
+    BX_GEFORCE_THIS chs[chid].ifc_words[
+      BX_GEFORCE_THIS chs[chid].ifc_words_ptr++] = param;
+    BX_GEFORCE_THIS chs[chid].ifc_words_left--;
+    if (!BX_GEFORCE_THIS chs[chid].ifc_words_left) {
+      ifc(chid);
+      delete[] BX_GEFORCE_THIS chs[chid].ifc_words;
+      BX_GEFORCE_THIS chs[chid].ifc_words = nullptr;
+    }
+  }
+}
+
+void bx_geforce_c::execute_surf2d(Bit32u chid, Bit32u method, Bit32u param)
+{
+  if (method == 0x061)
+    BX_GEFORCE_THIS chs[chid].s2d_img_src = param;
+  else if (method == 0x062)
+    BX_GEFORCE_THIS chs[chid].s2d_img_dst = param;
+  else if (method == 0x0c0) {
+    BX_GEFORCE_THIS chs[chid].s2d_color_fmt = param;
+    if (BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 1) // Y8
+      BX_GEFORCE_THIS chs[chid].s2d_color_bytes = 1;
+    else if (BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 4) // R5G6B5
+      BX_GEFORCE_THIS chs[chid].s2d_color_bytes = 2;
+    else if (BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 0x6 || // X8R8G8B8_Z8R8G8B8
+     BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 0xA || // A8R8G8B8
+     BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 0xB)   // Y32
+      BX_GEFORCE_THIS chs[chid].s2d_color_bytes = 4;
+    else {
+      BX_ERROR(("unknown 2d surface color format: 0x%02x",
+        BX_GEFORCE_THIS chs[chid].s2d_color_fmt));
+    }
+  } else if (method == 0x0c1)
+    BX_GEFORCE_THIS chs[chid].s2d_pitch = param;
+  else if (method == 0x0c2)
+    BX_GEFORCE_THIS chs[chid].s2d_ofs_src = param;
+  else if (method == 0x0c3)
+    BX_GEFORCE_THIS chs[chid].s2d_ofs_dst = param;
+}
+
 void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param)
 {
   BX_ERROR(("execute_command: chid 0x%02x, subc 0x%02x, method 0x%03x, param 0x%08x",
-      chid, subc, method, param));
+    chid, subc, method, param));
   if (method == 0x000) {
     Bit32u context = ramht_lookup(param, chid);
     if (BX_GEFORCE_THIS card_type < 0x40) {
@@ -2121,188 +2326,22 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
         Bit8u cls = ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object);
         BX_ERROR(("execute_command: obj 0x%08x, class 0x%02x, method 0x%03x, param 0x%08x",
           BX_GEFORCE_THIS chs[chid].schs[subc].object, cls, method, param));
-        if (cls == 0x19) { // clip
-        } else if (cls == 0x39) { // m2mf
-          if (method == 0x061)
-            BX_GEFORCE_THIS chs[chid].m2mf_src = param;
-          else if (method == 0x062)
-            BX_GEFORCE_THIS chs[chid].m2mf_dst = param;
-          else if (method == 0x0c3)
-            BX_GEFORCE_THIS chs[chid].m2mf_src_offset = param;
-          else if (method == 0x0c4)
-            BX_GEFORCE_THIS chs[chid].m2mf_dst_offset = param;
-          else if (method == 0x0c5)
-            BX_GEFORCE_THIS chs[chid].m2mf_src_pitch = param;
-          else if (method == 0x0c6)
-            BX_GEFORCE_THIS chs[chid].m2mf_dst_pitch = param;
-          else if (method == 0x0c7)
-            BX_GEFORCE_THIS chs[chid].m2mf_line_length = param;
-          else if (method == 0x0c8)
-            BX_GEFORCE_THIS chs[chid].m2mf_line_count = param;
-          else if (method == 0x0c9)
-            BX_GEFORCE_THIS chs[chid].m2mf_format = param;
-          else if (method == 0x0ca) {
-            BX_GEFORCE_THIS chs[chid].m2mf_buffer_notify = param;
-            move(chid);
-            if ((ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier) & 0xFF) == 0x30) {
-              BX_ERROR(("execute_command: M2MF notify skipped"));
-            } else {
-              BX_ERROR(("execute_command: M2MF notify 0x%08x",
-                BX_GEFORCE_THIS chs[chid].schs[subc].notifier));
-              dma_write64(BX_GEFORCE_THIS chs[chid].schs[subc].notifier, 0x10 + 0x0, get_current_time());
-              dma_write32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier, 0x10 + 0x8, 0);
-              dma_write32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier, 0x10 + 0xC, 0);
-            }
-          }
-        } else if (cls == 0x43) { // rop
-          if (method == 0x0c0)
-            BX_GEFORCE_THIS chs[chid].rop = param;
-        } else if (cls == 0x44) { // patt
-          if (method == 0x0c4)
-            BX_GEFORCE_THIS chs[chid].patt_bg_color = param;
-          else if (method == 0x0c5)
-            BX_GEFORCE_THIS chs[chid].patt_fg_color = param;
-        } else if (cls == 0x4a) { // gdi
-          if (method == 0x0bf)
-            BX_GEFORCE_THIS chs[chid].gdi_operation = param;
-          else if (method == 0x0c0)
-            BX_GEFORCE_THIS chs[chid].gdi_color_fmt = param;
-          else if (method == 0x0ff)
-            BX_GEFORCE_THIS chs[chid].gdi_rect_color = param;
-          else if (method == 0x100)
-            BX_GEFORCE_THIS chs[chid].gdi_rect_xy = param;
-          else if (method == 0x101) {
-            BX_GEFORCE_THIS chs[chid].gdi_rect_wh = param;
-            fillrect(chid);
-          } else if (method == 0x1fd)
-            BX_GEFORCE_THIS chs[chid].gdi_fg_color = param;
-          else if (method == 0x1fe)
-            BX_GEFORCE_THIS chs[chid].gdi_image_swh = param;
-          else if (method == 0x1ff) {
-            BX_GEFORCE_THIS chs[chid].gdi_image_xy = param;
-            Bit32u width = BX_GEFORCE_THIS chs[chid].gdi_image_swh & 0xFFFF;
-            Bit32u wordCount = ALIGN(width * (BX_GEFORCE_THIS chs[chid].gdi_image_swh >> 16), 32) >> 5;
-            if (BX_GEFORCE_THIS chs[chid].gdi_words != nullptr)
-              delete[] BX_GEFORCE_THIS chs[chid].gdi_words;
-            BX_GEFORCE_THIS chs[chid].gdi_words_ptr = 0;
-            BX_GEFORCE_THIS chs[chid].gdi_words_left = wordCount;
-            BX_GEFORCE_THIS chs[chid].gdi_words = new Bit32u[wordCount];
-          } else if (method >= 0x200 && method < 0x280) {
-            BX_GEFORCE_THIS chs[chid].gdi_words[
-              BX_GEFORCE_THIS chs[chid].gdi_words_ptr++] = param;
-            BX_GEFORCE_THIS chs[chid].gdi_words_left--;
-            if (!BX_GEFORCE_THIS chs[chid].gdi_words_left) {
-              gdi_blit(chid, 0);
-              delete[] BX_GEFORCE_THIS chs[chid].gdi_words;
-              BX_GEFORCE_THIS chs[chid].gdi_words = nullptr;
-            }
-          } else if (method == 0x2fb)
-            BX_GEFORCE_THIS chs[chid].gdi_bg_color = param;
-          else if (method == 0x2fc)
-            BX_GEFORCE_THIS chs[chid].gdi_fg_color = param;
-          else if (method == 0x2fd)
-            BX_GEFORCE_THIS chs[chid].gdi_image_swh = param;
-          else if (method == 0x2fe)
-            BX_GEFORCE_THIS chs[chid].gdi_image_dwh = param;
-          else if (method == 0x2ff) {
-            BX_GEFORCE_THIS chs[chid].gdi_image_xy = param;
-            Bit32u width = BX_GEFORCE_THIS chs[chid].gdi_image_swh & 0xFFFF;
-            Bit32u wordCount = ALIGN(width * (BX_GEFORCE_THIS chs[chid].gdi_image_swh >> 16), 32) >> 5;
-            if (BX_GEFORCE_THIS chs[chid].gdi_words != nullptr)
-              delete[] BX_GEFORCE_THIS chs[chid].gdi_words;
-            BX_GEFORCE_THIS chs[chid].gdi_words_ptr = 0;
-            BX_GEFORCE_THIS chs[chid].gdi_words_left = wordCount;
-            BX_GEFORCE_THIS chs[chid].gdi_words = new Bit32u[wordCount];
-          } else if (method >= 0x300 && method < 0x380) {
-            BX_GEFORCE_THIS chs[chid].gdi_words[
-              BX_GEFORCE_THIS chs[chid].gdi_words_ptr++] = param;
-            BX_GEFORCE_THIS chs[chid].gdi_words_left--;
-            if (!BX_GEFORCE_THIS chs[chid].gdi_words_left) {
-              gdi_blit(chid, 1);
-              delete[] BX_GEFORCE_THIS chs[chid].gdi_words;
-              BX_GEFORCE_THIS chs[chid].gdi_words = nullptr;
-            }
-          } else if (method == 0x3ff)
-            BX_GEFORCE_THIS chs[chid].gdi_fg_color = param;
-        } else if (cls == 0x62) { // surf2d
-          if (method == 0x061)
-            BX_GEFORCE_THIS chs[chid].s2d_img_src = param;
-          else if (method == 0x062)
-            BX_GEFORCE_THIS chs[chid].s2d_img_dst = param;
-          else if (method == 0x0c0) {
-            BX_GEFORCE_THIS chs[chid].s2d_color_fmt = param;
-            if (BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 1) // Y8
-              BX_GEFORCE_THIS chs[chid].s2d_color_bytes = 1;
-            else if (BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 4) // R5G6B5
-              BX_GEFORCE_THIS chs[chid].s2d_color_bytes = 2;
-            else if (BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 0x6 || // X8R8G8B8_Z8R8G8B8
-                     BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 0xA || // A8R8G8B8
-                     BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 0xB)   // Y32
-              BX_GEFORCE_THIS chs[chid].s2d_color_bytes = 4;
-            else {
-              BX_ERROR(("unknown 2d surface color format: 0x%02x",
-                BX_GEFORCE_THIS chs[chid].s2d_color_fmt));
-            }
-          } else if (method == 0x0c1)
-            BX_GEFORCE_THIS chs[chid].s2d_pitch = param;
-          else if (method == 0x0c2)
-            BX_GEFORCE_THIS chs[chid].s2d_ofs_src = param;
-          else if (method == 0x0c3)
-            BX_GEFORCE_THIS chs[chid].s2d_ofs_dst = param;
-        } else if (cls == 0x61 || cls == 0x8a) { // ifc
-          if (method == 0x0bf)
-            BX_GEFORCE_THIS chs[chid].ifc_operation = param;
-          else if (method == 0x0c0) {
-            BX_GEFORCE_THIS chs[chid].ifc_color_fmt = param;
-            if (BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 1 || // R5G6B5
-                BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 2 || // A1R5G5B5
-                BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 3)   // X1R5G5B5
-              BX_GEFORCE_THIS chs[chid].ifc_color_bytes = 2;
-            else if (BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 4 || // A8R8G8B8
-                     BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 5)   // X8R8G8B8
-              BX_GEFORCE_THIS chs[chid].ifc_color_bytes = 4;
-            else {
-              BX_ERROR(("unknown IFC color format: 0x%02x",
-                BX_GEFORCE_THIS chs[chid].ifc_color_fmt));
-            }
-          } else if (method == 0x0c1)
-            BX_GEFORCE_THIS chs[chid].ifc_yx = param;
-          else if (method == 0x0c2)
-            BX_GEFORCE_THIS chs[chid].ifc_dhw = param;
-          else if (method == 0x0c3) {
-            BX_GEFORCE_THIS chs[chid].ifc_shw = param;
-            Bit32u width = BX_GEFORCE_THIS chs[chid].ifc_shw & 0xFFFF;
-            Bit32u height = BX_GEFORCE_THIS chs[chid].ifc_shw >> 16;
-            Bit32u wordCount = width * height * 
-              BX_GEFORCE_THIS chs[chid].ifc_color_bytes / 4;
-            if (BX_GEFORCE_THIS chs[chid].ifc_words != nullptr)
-              delete[] BX_GEFORCE_THIS chs[chid].ifc_words;
-            BX_GEFORCE_THIS chs[chid].ifc_words_ptr = 0;
-            BX_GEFORCE_THIS chs[chid].ifc_words_left = wordCount;
-            BX_GEFORCE_THIS chs[chid].ifc_words = new Bit32u[wordCount];
-          }
-          else if (method >= 0x100 && method < 0x800) {
-            BX_GEFORCE_THIS chs[chid].ifc_words[
-              BX_GEFORCE_THIS chs[chid].ifc_words_ptr++] = param;
-            BX_GEFORCE_THIS chs[chid].ifc_words_left--;
-            if (!BX_GEFORCE_THIS chs[chid].ifc_words_left) {
-              ifc(chid);
-              delete[] BX_GEFORCE_THIS chs[chid].ifc_words;
-              BX_GEFORCE_THIS chs[chid].ifc_words = nullptr;
-            }
-          }
-        } else if (cls == 0x5f || cls == 0x9f) { // imageblit
-          if (method == 0x0bf)
-            BX_GEFORCE_THIS chs[chid].blit_operation = param;
-          else if (method == 0x0c0)
-            BX_GEFORCE_THIS chs[chid].blit_syx = param;
-          else if (method == 0x0c1)
-            BX_GEFORCE_THIS chs[chid].blit_dyx = param;
-          else if (method == 0x0c2) {
-            BX_GEFORCE_THIS chs[chid].blit_hw = param;
-            copyarea(chid);
-          }
-        }
+        if (cls == 0x19)
+          execute_clip(chid, method, param);
+        else if (cls == 0x39)
+          execute_m2mf(chid, subc, method, param);
+        else if (cls == 0x43)
+          execute_rop(chid, method, param);
+        else if (cls == 0x44)
+          execute_patt(chid, method, param);
+        else if (cls == 0x4a)
+          execute_gdi(chid, method, param);
+        else if (cls == 0x5f || cls == 0x9f)
+          execute_imageblit(chid, cls, method, param);
+        else if (cls == 0x61 || cls == 0x8a)
+          execute_ifc(chid, cls, method, param);
+        else if (cls == 0x62)
+          execute_surf2d(chid, method, param);
         if (BX_GEFORCE_THIS chs[chid].notify_pending) {
           BX_GEFORCE_THIS chs[chid].notify_pending = false;
           if ((ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier) & 0xFF) == 0x30) {
