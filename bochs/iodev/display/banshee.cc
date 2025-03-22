@@ -388,16 +388,23 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
   Bit16u index, pitch;
   Bit16u hwcx = v->banshee.hwcursor.x;
   Bit16u hwcy = v->banshee.hwcursor.y;
-  Bit8u hwcw = 63;
+  Bit8u hwcw = 64;
   int i;
   bool overlay2d = false;
 
-  if (v->banshee.double_width) {
-    hwcx <<= 1;
-    hwcw <<= 1;
+  if (info->snapshot_mode) {
+    tile_ptr = bx_gui->get_snapshot_buffer();
+    w = s.vdraw.width;
+    h = s.vdraw.height;
+  } else {
+    tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+    if (v->banshee.double_width) {
+      hwcx <<= 1;
+      hwcw <<= 1;
+    }
   }
-  if ((xc <= hwcx) && ((int)(xc + X_TILESIZE) > (hwcx - hwcw)) &&
-      (yc <= hwcy) && ((int)(yc + Y_TILESIZE) > (hwcy - 63))) {
+  if ((xc <= hwcx) && ((int)(xc + w) > (hwcx - hwcw + 1)) &&
+      (yc <= hwcy) && ((int)(yc + h) > (hwcy - 63))) {
     if ((v->banshee.io[io_vidProcCfg] & 0x81) == 0x81) {
       start = v->banshee.io[io_vidDesktopStartAddr];
       pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
@@ -410,19 +417,18 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
     if (v->banshee.desktop_tiled) {
       pitch *= 128;
     }
-    tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
 
-    if ((hwcx - hwcw) < (int)xc) {
+    if ((hwcx - hwcw + 1) < (int)xc) {
       cx = xc;
       if ((hwcx - xc + 1) > w) {
         cw = w;
       } else {
         cw = hwcx - xc + 1;
       }
-      px = hwcw - (hwcx - xc);
+      px = hwcw - (hwcx - xc) - 1;
     } else {
-      cx = hwcx - hwcw;
-      cw = w - (hwcx - hwcw - xc);
+      cx = hwcx - hwcw + 1;
+      cw = (hwcx < (xc + w)) ? hwcw : w - (hwcx - hwcw - xc + 1);
       px = 0;
     }
     if ((hwcy - 63) < (int)yc) {
@@ -435,7 +441,7 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
       py = 63 - (hwcy - yc);
     } else {
       cy = hwcy - 63;
-      ch = h - (hwcy - 63 - yc);
+      ch = (hwcy < (yc + h)) ? 64 : h - (hwcy - 63 - yc);
       py = 0;
     }
     tile_ptr += ((cy - yc) * info->pitch);
@@ -701,6 +707,9 @@ bool bx_banshee_c::update(void)
             memcpy(tile_ptr, vid_ptr, info.pitch);
             vid_ptr += pitch;
             tile_ptr += info.pitch;
+          }
+          if (v->banshee.hwcursor.enabled) {
+            draw_hwcursor(0, 0, &info);
           }
         }
       } else if (info.is_indexed) {

@@ -1541,33 +1541,41 @@ void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_ti
   Bit16u hwcx = BX_CIRRUS_THIS hw_cursor.x;
   Bit16u hwcy = BX_CIRRUS_THIS hw_cursor.y;
   Bit16u size = BX_CIRRUS_THIS hw_cursor.size;
+  unsigned w, h;
+  Bit8u * tile_ptr;
 
-  if (BX_CIRRUS_THIS svga_double_width) {
-    hwcx <<= 1; // FIXME: untested
+  if (info->snapshot_mode) {
+    tile_ptr = bx_gui->get_snapshot_buffer();
+    w = BX_CIRRUS_THIS svga_xres;
+    h = BX_CIRRUS_THIS svga_yres;
+  } else {
+    tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+    if (BX_CIRRUS_THIS svga_double_width) {
+      hwcx <<= 1; // FIXME: untested
+    }
   }
   if ((size > 0) &&
       (xc < (unsigned)(hwcx + size)) &&
-      ((xc + X_TILESIZE) > hwcx) &&
+      ((xc + w) > hwcx) &&
       (yc < (unsigned)(hwcy + size)) &&
-      ((yc + Y_TILESIZE) > hwcy)) {
+      ((yc + h) > hwcy)) {
     int i;
-    unsigned w, h, pitch, cx, cy, cx0, cy0, cx1, cy1;
+    unsigned pitch, cx, cy, cx0, cy0, cx1, cy1;
 
-    Bit8u * tile_ptr, * tile_ptr2;
-    Bit8u * plane0_ptr, *plane0_ptr2;
-    Bit8u * plane1_ptr, *plane1_ptr2;
+    Bit8u *tile_ptr2;
+    Bit8u *plane0_ptr, *plane0_ptr2;
+    Bit8u *plane1_ptr, *plane1_ptr2;
     unsigned long fgcol, bgcol;
     Bit32u hwc_offset;
     Bit64u plane0, plane1;
 
     cx0 = hwcx > xc ? hwcx : xc;
     cy0 = hwcy > yc ? hwcy : yc;
-    cx1 = (unsigned)(hwcx + size) < (xc + X_TILESIZE) ? hwcx + size : xc + X_TILESIZE;
-    cy1 = (unsigned)(hwcy + size) < (yc + Y_TILESIZE) ? hwcy + size : yc + Y_TILESIZE;
+    cx1 = (unsigned)(hwcx + size) < (xc + w) ? hwcx + size : xc + w;
+    cy1 = (unsigned)(hwcy + size) < (yc + h) ? hwcy + size : yc + h;
 
     if (info->bpp == 15) info->bpp = 16;
-    tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h) +
-               info->pitch * (cy0 - yc) + (info->bpp / 8) * (cx0 - xc);
+    tile_ptr += info->pitch * (cy0 - yc) + (info->bpp / 8) * (cx0 - xc);
     if (BX_CIRRUS_THIS svga_dispbpp == 4) {
       hwc_offset = 0x200000 - 16384; // VGA
     } else {
@@ -1593,7 +1601,6 @@ void bx_svga_cirrus_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_ti
         return;
         break;
     }
-
     if (!info->is_indexed) {
       fgcol = MAKE_COLOUR(
         BX_CIRRUS_THIS hidden_dac.palette[45], 6, info->red_shift, info->red_mask,
@@ -1758,6 +1765,7 @@ void bx_svga_cirrus_c::update(void)
           }
           tile_ptr += info.pitch;
         }
+        draw_hardware_cursor(0, 0, &info);
       }
     } else if (info.is_indexed) {
       switch (BX_CIRRUS_THIS svga_dispbpp) {

@@ -6,6 +6,7 @@ Changes after 3.0:
 - Voodoo3: Fixed display timing in VGA mode with half dot clock
 - VGA / DDC: Fixed using EDID data from specified file
 - VGA core: Added stub for the feature control register
+- Added hardware cursor support for graphics snapshot (Cirrus/Voodoo)
 - Bochs BIOS
   - Fixed some not working hotkeys
   - PCI BIOS now sets expansion ROM space to R/W during POST
