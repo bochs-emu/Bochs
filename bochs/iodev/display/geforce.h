@@ -139,7 +139,7 @@ private:
   BX_GEFORCE_SMF void execute_surf2d(Bit32u chid, Bit32u method, Bit32u param);
 
   BX_GEFORCE_SMF Bit32u color_565_to_888(Bit16u value);
-  BX_GEFORCE_SMF void fillrect(Bit32u chid);
+  BX_GEFORCE_SMF void gdi_fillrect(Bit32u chid, bool clipped);
   BX_GEFORCE_SMF void gdi_blit(Bit32u chid, Bit32u type);
   BX_GEFORCE_SMF void ifc(Bit32u chid);
   BX_GEFORCE_SMF void copyarea(Bit32u chid);
@@ -257,7 +257,11 @@ private:
     Bit32u gdi_operation;
     Bit32u gdi_color_fmt;
     Bit32u gdi_rect_color;
+    Bit32u gdi_rect_clip_yx0;
+    Bit32u gdi_rect_clip_yx1;
     Bit32u gdi_rect_xy;
+    Bit32u gdi_rect_yx0;
+    Bit32u gdi_rect_yx1;
     Bit32u gdi_rect_wh;
     Bit32u gdi_bg_color;
     Bit32u gdi_fg_color;

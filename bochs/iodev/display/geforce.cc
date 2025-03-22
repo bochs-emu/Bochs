@@ -353,7 +353,11 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS chs[i].gdi_operation = 0;
     BX_GEFORCE_THIS chs[i].gdi_color_fmt = 0;
     BX_GEFORCE_THIS chs[i].gdi_rect_color = 0;
+    BX_GEFORCE_THIS chs[i].gdi_rect_clip_yx0 = 0;
+    BX_GEFORCE_THIS chs[i].gdi_rect_clip_yx1 = 0;
     BX_GEFORCE_THIS chs[i].gdi_rect_xy = 0;
+    BX_GEFORCE_THIS chs[i].gdi_rect_yx0 = 0;
+    BX_GEFORCE_THIS chs[i].gdi_rect_yx1 = 0;
     BX_GEFORCE_THIS chs[i].gdi_rect_wh = 0;
     BX_GEFORCE_THIS chs[i].gdi_bg_color = 0;
     BX_GEFORCE_THIS chs[i].gdi_fg_color = 0;
@@ -1904,12 +1908,40 @@ Bit32u bx_geforce_c::ramht_lookup(Bit32u handle, Bit32u chid)
   return 0;
 }
 
-void bx_geforce_c::fillrect(Bit32u chid)
+void bx_geforce_c::gdi_fillrect(Bit32u chid, bool clipped)
 {
-  Bit16u dx = BX_GEFORCE_THIS chs[chid].gdi_rect_xy >> 16;
-  Bit16u dy = BX_GEFORCE_THIS chs[chid].gdi_rect_xy & 0xFFFF;
-  Bit16u width = BX_GEFORCE_THIS chs[chid].gdi_rect_wh >> 16;
-  Bit16u height = BX_GEFORCE_THIS chs[chid].gdi_rect_wh & 0xFFFF;
+  Bit16s clipx0;
+  Bit16s clipy0;
+  Bit16s clipx1;
+  Bit16s clipy1;
+  if (clipped) {
+    clipx0 = BX_GEFORCE_THIS chs[chid].gdi_rect_clip_yx0 & 0xFFFF;
+    clipy0 = BX_GEFORCE_THIS chs[chid].gdi_rect_clip_yx0 >> 16;
+    clipx1 = BX_GEFORCE_THIS chs[chid].gdi_rect_clip_yx1 & 0xFFFF;
+    clipy1 = BX_GEFORCE_THIS chs[chid].gdi_rect_clip_yx1 >> 16;
+  }
+  Bit16u dx;
+  Bit16u dy;
+  if (clipped) {
+    dx = BX_GEFORCE_THIS chs[chid].gdi_rect_yx0 & 0xFFFF;
+    dy = BX_GEFORCE_THIS chs[chid].gdi_rect_yx0 >> 16;
+    clipx0 -= dx;
+    clipy0 -= dy;
+    clipx1 -= dx;
+    clipy1 -= dy;
+  } else {
+    dx = BX_GEFORCE_THIS chs[chid].gdi_rect_xy >> 16;
+    dy = BX_GEFORCE_THIS chs[chid].gdi_rect_xy & 0xFFFF;
+  }
+  Bit16u width;
+  Bit16u height;
+  if (clipped) {
+    width = (BX_GEFORCE_THIS chs[chid].gdi_rect_yx1 & 0xFFFF) - dx;
+    height = (BX_GEFORCE_THIS chs[chid].gdi_rect_yx1 >> 16) - dy;
+  } else {
+    width = BX_GEFORCE_THIS chs[chid].gdi_rect_wh >> 16;
+    height = BX_GEFORCE_THIS chs[chid].gdi_rect_wh & 0xFFFF;
+  }
   Bit32u pitch = BX_GEFORCE_THIS chs[chid].s2d_pitch >> 16;
   Bit32u color = BX_GEFORCE_THIS chs[chid].gdi_rect_color;
   Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].s2d_ofs_dst;
@@ -1917,12 +1949,13 @@ void bx_geforce_c::fillrect(Bit32u chid)
   Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   for (Bit16u y = 0; y < height; y++) {
     for (Bit16u x = 0; x < width; x++) {
-      if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 1)
-        dma_write8(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x, color);
-      else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
-        dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2, color);
-      else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4) {
-        dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4, color);
+      if (!clipped || x >= clipx0 && x < clipx1 && y >= clipy0 && y < clipy1) {
+        if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 1)
+          dma_write8(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x, color);
+        else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
+          dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2, color);
+        else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4)
+          dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4, color);
       }
     }
     draw_offset += pitch;
@@ -2158,7 +2191,18 @@ void bx_geforce_c::execute_gdi(Bit32u chid, Bit32u method, Bit32u param)
     BX_GEFORCE_THIS chs[chid].gdi_rect_xy = param;
   else if (method == 0x101) {
     BX_GEFORCE_THIS chs[chid].gdi_rect_wh = param;
-    fillrect(chid);
+    gdi_fillrect(chid, false);
+  } else if (method == 0x17d)
+    BX_GEFORCE_THIS chs[chid].gdi_rect_clip_yx0 = param;
+  else if (method == 0x17e)
+    BX_GEFORCE_THIS chs[chid].gdi_rect_clip_yx1 = param;
+  else if (method == 0x17f)
+    BX_GEFORCE_THIS chs[chid].gdi_rect_color = param;
+  else if (method == 0x180)
+    BX_GEFORCE_THIS chs[chid].gdi_rect_yx0 = param;
+  else if (method == 0x181) {
+    BX_GEFORCE_THIS chs[chid].gdi_rect_yx1 = param;
+    gdi_fillrect(chid, true);
   } else if (method == 0x1fd)
     BX_GEFORCE_THIS chs[chid].gdi_fg_color = param;
   else if (method == 0x1fe)
