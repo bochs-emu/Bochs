@@ -153,6 +153,9 @@ extern bxInstrumentation *icpu;
 #define BX_INSTR_INP2(addr, len, val)
 #define BX_INSTR_OUTP(addr, len, val)
 
+/* cpuid callback */
+#define BX_INSTR_CPUID(cpu_id)
+
 /* wrmsr callback */
 #define BX_INSTR_WRMSR(cpu_id, addr, value)
 
@@ -211,6 +214,9 @@ extern bxInstrumentation *icpu;
 #define BX_INSTR_INP(addr, len)
 #define BX_INSTR_INP2(addr, len, val)
 #define BX_INSTR_OUTP(addr, len, val)
+
+/* cpuid callback */
+#define BX_INSTR_CPUID(cpu_id)
 
 /* wrmsr callback */
 #define BX_INSTR_WRMSR(cpu_id, addr, value)

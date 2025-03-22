@@ -114,6 +114,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CPUID(bxInstruction_c *i)
   }
 #endif
 
+#if BX_INSTRUMENTATION
+  BX_INSTR_CPUID(BX_CPU_ID);
+#endif
+
   struct cpuid_function_t leaf;
   BX_CPU_THIS_PTR cpuid->get_cpuid_leaf(EAX, ECX, &leaf);
 

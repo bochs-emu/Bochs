@@ -102,6 +102,9 @@ void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsig
 #define BX_INSTR_INP2(addr, len, val)
 #define BX_INSTR_OUTP(addr, len, val)
 
+/* cpuid callback */
+#define BX_INSTR_CPUID(cpu_id)
+
 /* wrmsr callback */
 #define BX_INSTR_WRMSR(cpu_id, addr, value)
 
@@ -160,6 +163,9 @@ void bx_instr_lin_access(unsigned cpu, bx_address lin, bx_phy_address phy, unsig
 #define BX_INSTR_INP(addr, len)
 #define BX_INSTR_INP2(addr, len, val)
 #define BX_INSTR_OUTP(addr, len, val)
+
+/* cpuid callback */
+#define BX_INSTR_CPUID(cpu_id)
 
 /* wrmsr callback */
 #define BX_INSTR_WRMSR(cpu_id, addr, value)
