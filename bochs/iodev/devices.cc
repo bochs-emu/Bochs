@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2025  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -1687,7 +1687,7 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
         }
       }
     }
-  } else if ((address & 0xfc) == 0x30) {
+  } else if (((address & 0xfc) == 0x30) && (pci_rom_size > 0)) {
     BX_DEBUG_PCI_WRITE(address, value, io_len);
     value &= (0xfffffc01 >> ((address & 0x03) * 8));
     for (unsigned i=0; i<io_len; i++) {

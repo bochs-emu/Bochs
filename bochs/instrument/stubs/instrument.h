@@ -55,6 +55,7 @@ void bx_instr_tlb_cntrl(unsigned cpu, unsigned what, bx_phy_address new_cr3);
 void bx_instr_cache_cntrl(unsigned cpu, unsigned what);
 void bx_instr_prefetch_hint(unsigned cpu, unsigned what, unsigned seg, bx_address offset);
 void bx_instr_clflush(unsigned cpu, bx_address laddr, bx_phy_address paddr);
+void bx_instr_cpuid(unsigned cpu);
 
 void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i);
 void bx_instr_after_execution(unsigned cpu, bxInstruction_c *i);
@@ -129,6 +130,9 @@ void bx_instr_vmexit(unsigned cpu, Bit32u reason, Bit64u qualification);
 #define BX_INSTR_INP2(addr, len, val)         bx_instr_inp2(addr, len, val)
 #define BX_INSTR_OUTP(addr, len, val)         bx_instr_outp(addr, len, val)
 
+/* cpuid callback */
+#define BX_INSTR_CPUID(cpu_id) bx_instr_cpuid(cpu_id)
+
 /* wrmsr callback */
 #define BX_INSTR_WRMSR(cpu_id, addr, value)   bx_instr_wrmsr(cpu_id, addr, value)
 
@@ -187,6 +191,9 @@ void bx_instr_vmexit(unsigned cpu, Bit32u reason, Bit64u qualification);
 #define BX_INSTR_INP(addr, len)
 #define BX_INSTR_INP2(addr, len, val)
 #define BX_INSTR_OUTP(addr, len, val)
+
+/* cpuid callback */
+#define BX_INSTR_CPUID(cpu_id)
 
 /* wrmsr callback */
 #define BX_INSTR_WRMSR(cpu_id, addr, value)

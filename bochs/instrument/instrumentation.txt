@@ -168,6 +168,12 @@ Possible instruction types, passed through bx_instr_cache_cntrl are:
 	#define BX_INSTR_WBINVD       	11
 
 
+    void bx_instr_cpuid(unsigned cpu)
+
+The  callback  is  called  each time, when Bochs simulator executes a CPUID
+instruction.
+
+
 	void bx_instr_prefetch_hint(unsigned cpu, unsigned what, unsigned seg, bx_address offset);
 
 The  callback  is  called  each time, when Bochs simulator executes a PREFETCH

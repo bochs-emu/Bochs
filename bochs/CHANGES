@@ -1,11 +1,13 @@
 Changes after 3.0:
 
 - CPU: Implemented MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS, (AMX TRANSPOSE MOVRS still not implemented)
+- Added new BX_INSTR_CPUID instrumentation callback, see instrumentation.txt doc for description
 - Added new command line option "-dbg_gui" to start Bochs debugger with gui
 - Voodoo3: Split mem_read() with len > 8 in two 64-bit reads
 - Voodoo3: Fixed display timing in VGA mode with half dot clock
 - VGA / DDC: Fixed using EDID data from specified file
 - VGA core: Added stub for the feature control register
+- Added hardware cursor support for graphics snapshot (Cirrus/Voodoo)
 - Bochs BIOS
   - Fixed some not working hotkeys
   - PCI BIOS now sets expansion ROM space to R/W during POST

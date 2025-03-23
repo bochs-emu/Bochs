@@ -1451,11 +1451,40 @@ bx_svga_tileinfo_t * bx_gui_c::graphics_tile_info_common(bx_svga_tileinfo_t *inf
   info->snapshot_mode = BX_GUI_THIS snapshot_mode;
   if (BX_GUI_THIS snapshot_mode) {
     info->pitch = BX_GUI_THIS guest_xres * ((BX_GUI_THIS guest_bpp + 1) >> 3);
+    info->bpp = BX_GUI_THIS guest_bpp;
+    info->is_indexed = (info->bpp == 8);
+    info->is_little_endian = 1;
+    switch (info->bpp) {
+      case 15:
+        info->red_shift = 15;
+        info->green_shift = 10;
+        info->blue_shift = 5;
+        info->red_mask = 0x7c00;
+        info->green_mask = 0x03e0;
+        info->blue_mask = 0x001f;
+        break;
+      case 16:
+        info->red_shift = 16;
+        info->green_shift = 11;
+        info->blue_shift = 5;
+        info->red_mask = 0xf800;
+        info->green_mask = 0x07e0;
+        info->blue_mask = 0x001f;
+        break;
+      case 24:
+      case 32:
+        info->red_shift = 24;
+        info->green_shift = 16;
+        info->blue_shift = 8;
+        info->red_mask = 0xff0000;
+        info->green_mask = 0x00ff00;
+        info->blue_mask = 0x0000ff;
+        break;
+    }
+    return info;
   } else {
     return graphics_tile_info(info);
   }
-
-  return info;
 }
 
 #if BX_USE_GUI_CONSOLE
