@@ -950,23 +950,30 @@ void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tilein
   Bit16s hwcx = BX_GEFORCE_THIS hw_cursor.x;
   Bit16s hwcy = BX_GEFORCE_THIS hw_cursor.y;
   Bit8u size = BX_GEFORCE_THIS hw_cursor.size;
+  unsigned w, h;
+  Bit8u* tile_ptr;
 
+  if (info->snapshot_mode) {
+    tile_ptr = bx_gui->get_snapshot_buffer();
+    w = BX_GEFORCE_THIS svga_xres;
+    h = BX_GEFORCE_THIS svga_yres;
+  } else {
+    tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+  }
   if (BX_GEFORCE_THIS hw_cursor.enabled &&
       (int)xc < hwcx + size &&
-      (int)xc + X_TILESIZE > hwcx &&
+      (int)(xc + w) > hwcx &&
       (int)yc < hwcy + size &&
-      (int)yc + Y_TILESIZE > hwcy) {
+      (int)(yc + h) > hwcy) {
     unsigned cx0 = hwcx > (int)xc ? hwcx : xc;
     unsigned cy0 = hwcy > (int)yc ? hwcy : yc;
-    unsigned cx1 = hwcx + size < (int)xc + X_TILESIZE ? hwcx + size : xc + X_TILESIZE;
-    unsigned cy1 = hwcy + size < (int)yc + Y_TILESIZE ? hwcy + size : yc + Y_TILESIZE;
+    unsigned cx1 = hwcx + size < (int)(xc + w) ? hwcx + size : xc + w;
+    unsigned cy1 = hwcy + size < (int)(yc + h) ? hwcy + size : yc + h;
 
-    unsigned w, h;
     Bit8u display_color_bytes = BX_GEFORCE_THIS svga_bpp >> 3;
     Bit8u cursor_color_bytes = BX_GEFORCE_THIS hw_cursor.bpp32 ? 4 : 2;
     if (info->bpp == 15) info->bpp = 16;
-    Bit8u* tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h) +
-               info->pitch * (cy0 - yc) + info->bpp / 8 * (cx0 - xc);
+    tile_ptr += info->pitch * (cy0 - yc) + info->bpp / 8 * (cx0 - xc);
     unsigned pitch = BX_GEFORCE_THIS hw_cursor.size * cursor_color_bytes;
     Bit8u* cursor_ptr = BX_GEFORCE_THIS s.memory +
       BX_GEFORCE_THIS hw_cursor.offset + pitch * (cy0 - hwcy);
@@ -1132,6 +1139,7 @@ void bx_geforce_c::update(void)
           }
           tile_ptr += info.pitch;
         }
+        draw_hardware_cursor(0, 0, &info);
       }
     } else if (info.is_indexed) {
       switch (BX_GEFORCE_THIS svga_dispbpp) {
