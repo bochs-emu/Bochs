@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -224,7 +224,13 @@ void bx_piix3_c::pci_unregister_irq(unsigned pirq, Bit8u irq)
 
 void bx_piix3_c::pci_set_irq(Bit8u devfunc, unsigned line, bool level)
 {
-  Bit8u pirq = ((devfunc >> 3) + line - BX_P2I_THIS s.map_slot_to_dev) & 0x03;
+  Bit8u pirq;
+
+  if ((devfunc > 0x00) && (devfunc < 0x40)) {
+    pirq = ((devfunc >> 3) + line - BX_P2I_THIS s.map_slot_to_dev) & 0x03;
+  } else {
+    pirq = ((devfunc >> 3) + line - 1 - BX_P2I_THIS s.map_slot_to_dev) & 0x03;
+  }
 #if BX_SUPPORT_APIC
   // forward this function call to the ioapic too
   if (DEV_ioapic_present()) {
@@ -237,7 +243,7 @@ void bx_piix3_c::pci_set_irq(Bit8u devfunc, unsigned line, bool level)
       if (!BX_P2I_THIS s.irq_level[0][irq] && !BX_P2I_THIS s.irq_level[1][irq] &&
           !BX_P2I_THIS s.irq_level[2][irq] && !BX_P2I_THIS s.irq_level[3][irq]) {
         DEV_pic_raise_irq(irq);
-        BX_DEBUG(("PIRQ%c -> IRQ %d = 1", pirq+65, irq));
+        BX_DEBUG(("INT%c -> PIRQ%c -> IRQ %d = 1", line+64, pirq+65, irq));
       }
       BX_P2I_THIS s.irq_level[pirq][irq] |= (1 << (devfunc >> 3));
     } else {
@@ -245,7 +251,7 @@ void bx_piix3_c::pci_set_irq(Bit8u devfunc, unsigned line, bool level)
       if (!BX_P2I_THIS s.irq_level[0][irq] && !BX_P2I_THIS s.irq_level[1][irq] &&
           !BX_P2I_THIS s.irq_level[2][irq] && !BX_P2I_THIS s.irq_level[3][irq]) {
         DEV_pic_lower_irq(irq);
-        BX_DEBUG(("PIRQ%c -> IRQ %d = 0", pirq+65, irq));
+        BX_DEBUG(("INT%c -> PIRQ%c -> IRQ %d = 0", line+64, pirq+65, irq));
       }
     }
   }

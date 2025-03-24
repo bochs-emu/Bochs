@@ -682,7 +682,11 @@ static int pci_slot_get_pirq(PCIDevice *pci_dev, int irq_num, int is_i440bx)
 {
     int slot_addend;
     if (is_i440bx) {
-      slot_addend = (pci_dev->devfn >> 3) - 7;
+      if ((pci_dev->devfn >> 3) == 0x07) {
+        slot_addend = (pci_dev->devfn >> 3) - 7;
+      } else {
+        slot_addend = (pci_dev->devfn >> 3) - 8;
+      }
     } else {
       slot_addend = (pci_dev->devfn >> 3) - 1;
     }
@@ -786,12 +790,14 @@ static uint32_t pci_get_agp_memory(PCIDevice *d, uint32_t type)
     return (saddr | (eaddr << 16));
 }
 
+static int acpi_checksum(const uint8_t *data, int len);
+
 static void pci_bios_init_bridges(PCIDevice *d)
 {
     PCIDevice d1, *agpdev = &d1;
     uint16_t vendor_id, device_id;
     long addr;
-    uint8_t *pir;
+    uint8_t *pir, cksum;
 
     vendor_id = pci_config_readw(d, PCI_VENDOR_ID);
     device_id = pci_config_readw(d, PCI_DEVICE_ID);
@@ -829,12 +835,28 @@ static void pci_bios_init_bridges(PCIDevice *d)
         pir = (uint8_t *)addr;
         BX_INFO("Modify pir_table at: 0x%08lx\n", addr);
         writeb(pir + 0x09, 0x38); // IRQ router DevFunc
-        writeb(pir + 0x1f, 0x07); // Checksum
+        writeb(pir + 0x1f, 0x00); // Checksum set later
         writeb(pir + 0x21, 0x38); // 1st entry: PCI2ISA
         writeb(pir + 0x31, 0x40); // 2nd entry: 1st slot
+        writeb(pir + 0x32, 0x60); // INTA -> PIRQA
+        writeb(pir + 0x35, 0x61); // INTB -> PIRQB
+        writeb(pir + 0x38, 0x62); // INTC -> PIRQC
+        writeb(pir + 0x3b, 0x63); // INTD -> PIRQD
         writeb(pir + 0x41, 0x48); // 3rd entry: 2nd slot
+        writeb(pir + 0x42, 0x61); // INTA -> PIRQB
+        writeb(pir + 0x45, 0x62); // INTB -> PIRQC
+        writeb(pir + 0x48, 0x63); // INTC -> PIRQD
+        writeb(pir + 0x4b, 0x60); // INTD -> PIRQA
         writeb(pir + 0x51, 0x50); // 4th entry: 3rd slot
+        writeb(pir + 0x52, 0x62); // INTA -> PIRQC
+        writeb(pir + 0x55, 0x63); // INTB -> PIRQD
+        writeb(pir + 0x58, 0x60); // INTC -> PIRQA
+        writeb(pir + 0x5b, 0x61); // INTD -> PIRQB
         writeb(pir + 0x61, 0x58); // 5th entry: 4th slot
+        writeb(pir + 0x62, 0x63); // INTA -> PIRQD
+        writeb(pir + 0x65, 0x60); // INTB -> PIRQA
+        writeb(pir + 0x68, 0x61); // INTC -> PIRQB
+        writeb(pir + 0x6b, 0x62); // INTD -> PIRQC
         if (device_id == PCI_DEVICE_ID_INTEL_82443) {
           writeb(pir + 0x70, 0x01); // 6th entry: AGP bus
           writeb(pir + 0x71, 0x00); // 6th entry: AGP slot
@@ -842,6 +864,12 @@ static void pci_bios_init_bridges(PCIDevice *d)
         } else {
           writeb(pir + 0x71, 0x60); // 6th entry: 5th slot
         }
+        writeb(pir + 0x72, 0x60); // INTA -> PIRQA
+        writeb(pir + 0x75, 0x61); // INTB -> PIRQB
+        writeb(pir + 0x78, 0x62); // INTC -> PIRQC
+        writeb(pir + 0x7b, 0x63); // INTD -> PIRQD
+        cksum = acpi_checksum(pir, 0x80);
+        writeb(pir + 0x1f, cksum); // Checksum
       } else if (device_id == PCI_DEVICE_ID_INTEL_82443_1) {
         /* i440BX PCI/AGP bridge */
         agpdev->bus = 1;
