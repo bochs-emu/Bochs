@@ -137,11 +137,13 @@ private:
   BX_GEFORCE_SMF void execute_imageblit(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_ifc(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_surf2d(Bit32u chid, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_iifc(Bit32u chid, Bit32u method, Bit32u param);
 
   BX_GEFORCE_SMF Bit32u color_565_to_888(Bit16u value);
   BX_GEFORCE_SMF void gdi_fillrect(Bit32u chid, bool clipped);
   BX_GEFORCE_SMF void gdi_blit(Bit32u chid, Bit32u type);
   BX_GEFORCE_SMF void ifc(Bit32u chid);
+  BX_GEFORCE_SMF void iifc(Bit32u chid);
   BX_GEFORCE_SMF void copyarea(Bit32u chid);
   BX_GEFORCE_SMF void move(Bit32u chid);
 
@@ -232,6 +234,17 @@ private:
     Bit32u ifc_words_ptr;
     Bit32u ifc_words_left;
     Bit32u* ifc_words;
+
+    Bit32u iifc_palette;
+    Bit32u iifc_color_fmt;
+    Bit32u iifc_color_bytes;
+    Bit32u iifc_bpp4;
+    Bit32u iifc_yx;
+    Bit32u iifc_dhw;
+    Bit32u iifc_shw;
+    Bit32u iifc_words_ptr;
+    Bit32u iifc_words_left;
+    Bit32u* iifc_words;
 
     Bit32u blit_operation;
     Bit32u blit_syx;
