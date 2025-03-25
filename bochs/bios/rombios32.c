@@ -621,7 +621,7 @@ static uint32_t pci_bios_io_addr;
 static uint32_t pci_bios_mem_addr;
 static uint32_t pci_bios_rom_start;
 /* host irqs corresponding to PCI irqs A-D */
-static uint8_t pci_irqs[4] = { 11, 9, 11, 9 };
+static uint8_t pci_irqs[4] = { 11, 9, 5, 3 };
 static PCIDevice i440_pcidev = {-1, -1};
 
 static void pci_config_writel(PCIDevice *d, uint32_t addr, uint32_t val)
@@ -858,8 +858,8 @@ static void pci_bios_init_bridges(PCIDevice *d)
         writeb(pir + 0x68, 0x61); // INTC -> PIRQB
         writeb(pir + 0x6b, 0x62); // INTD -> PIRQC
         if (device_id == PCI_DEVICE_ID_INTEL_82443) {
-          writeb(pir + 0x70, 0x01); // 6th entry: AGP bus
-          writeb(pir + 0x71, 0x00); // 6th entry: AGP slot
+          writeb(pir + 0x71, 0x08); // 6th entry: AGP-to-PCI bridge
+          writeb(pir + 0x7e, 0x00); // embedded
           pci_config_writeb(d, 0xb4, 0x30); /* AGP aperture size 64 MB */
         } else {
           writeb(pir + 0x71, 0x60); // 6th entry: 5th slot
@@ -1127,8 +1127,6 @@ static void pci_bios_init_device(PCIDevice *d)
         /* PIIX4 Power Management device (for ACPI) */
         pm_io_base = PM_IO_BASE;
         smb_io_base = SMB_IO_BASE;
-        // acpi sci is hardwired to 9
-        pci_config_writeb(d, PCI_INTERRUPT_LINE, 9);
         pm_sci_int = pci_config_readb(d, PCI_INTERRUPT_LINE);
         piix4_pm_enable(d);
         acpi_enabled = 1;
