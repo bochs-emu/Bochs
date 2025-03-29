@@ -8,6 +8,7 @@ Changes after 3.0:
 - VGA / DDC: Fixed using EDID data from specified file
 - VGA core: Added stub for the feature control register
 - Added hardware cursor support for graphics snapshot (Cirrus/Voodoo)
+- Rewrite of the IRQ signal handling for PCI / ACPI
 - Bochs BIOS
   - Fixed some not working hotkeys
   - PCI BIOS now sets expansion ROM space to R/W during POST

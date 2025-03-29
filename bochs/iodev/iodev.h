@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -37,6 +37,12 @@
    PIC chips cascaded together.  each has 8 IRQ lines, so there
    should be 16 IRQ's total */
 #define BX_MAX_IRQS 16
+
+/* IRQ types (PCI / ACPI */
+#define BX_IRQ_TYPE_ISA   1
+#define BX_IRQ_TYPE_PIRQ  2
+#define BX_IRQ_TYPE_SCI   4
+#define BX_IRQ_TYPE_SMBUS 8
 
 /* keyboard indicators */
 #define BX_KBD_LED_NUM  0
@@ -266,11 +272,14 @@ public:
 
 class BOCHSAPI bx_pic_stub_c : public bx_devmodel_c {
 public:
-  virtual void raise_irq(unsigned irq_no) {
+  virtual void raise_irq(unsigned irq_no, Bit8u irq_type) {
     STUBFUNC(pic, raise_irq);
   }
-  virtual void lower_irq(unsigned irq_no) {
+  virtual void lower_irq(unsigned irq_no, Bit8u irq_type) {
     STUBFUNC(pic, lower_irq);
+  }
+  virtual void set_irq_level(unsigned irq_no, Bit8u irq_type, bool level) {
+    STUBFUNC(pic, set_irq_level);
   }
   virtual void set_mode(bool ma_sl, Bit8u mode) {
     STUBFUNC(pic, set_mode);

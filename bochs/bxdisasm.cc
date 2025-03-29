@@ -31,6 +31,9 @@
 #include "config.h"
 #include "cpu/decoder/instr.h"
 
+bool is_32 = 1;
+bool is_64 = 0;
+
 unsigned char char2byte(unsigned char input)
 {
   if(input >= '0' && input <= '9')
@@ -55,19 +58,60 @@ void hex2bin(Bit8u* target, const char* src, unsigned len)
   }
 }
 
-int main(int argn, const char **argv)
+unsigned disasm_next_opcode(const Bit8u *iptr, bool is_32, bool is_64)
 {
   char disbuf[256];
-  Bit8u ibuf[16] = {0};
-  bool is_32 = 1, is_64 = 0;
 
-  if (argn < 2)
-  {
-    printf("Usage: bxdisasm [-16|-32|-64] string-of-instruction-bytes\n");
-    exit(1);
+  bxInstruction_c i;
+  disasm(iptr, is_32, is_64, disbuf, &i, 0, 0, BX_DISASM_INTEL);
+  printf("disasm: %s (opcode handler=%s)\n", disbuf, i.getIaOpcodeName());
+
+  disasm(iptr, is_32, is_64, disbuf, &i, 0, 0, BX_DISASM_GAS);
+  printf("disasm: %s (opcode handler=%s)\n", disbuf, i.getIaOpcodeName());
+
+  return i.ilen();
+}
+
+#define MAX_LENGTH_SUPPORTED 0x1000
+
+void disasm_string(const char *s)
+{
+  Bit8u ibuf[MAX_LENGTH_SUPPORTED] = {0};
+
+  int len = strlen(s);
+  if (len > MAX_LENGTH_SUPPORTED)
+    len = MAX_LENGTH_SUPPORTED;
+
+  hex2bin(ibuf, s, len);
+  len /= 2; // length in bytes
+
+  char disbuf[256];
+
+  const Bit8u *iptr = ibuf;
+  while(len > 0) {
+    unsigned bytes = (len > 16) ? 16 : len;
+    printf("instruction bytes:");
+    for (int i=0;i<bytes;i++)
+      printf("%02x", iptr[i]);
+    printf("\n");
+
+    unsigned ilen = disasm_next_opcode(iptr, is_32, is_64);
+    if (ilen == 0) break;
+
+    len -= ilen;
+    iptr += ilen;
   }
+}
 
+int main(int argn, const char **argv)
+{
   for (int i=1;i<argn;i++) {
+    if (i == argn)
+    {
+      printf("Usage: bxdisasm [-16|-32|-64] string-of-instruction-bytes\n");
+      exit(1);
+    }
+
     if (!strcmp(argv[i], "/16")) {
       is_32 = 0;
       is_64 = 0;
@@ -87,21 +131,6 @@ int main(int argn, const char **argv)
       continue;
     }
 
-    const char *p = argv[i];
-    unsigned len = strlen(p);
-    if (len > 32) len = 32;
-    hex2bin(ibuf, p, len);
+    disasm_string(argv[i]);
   }
-
-  printf("instruction bytes:");
-  for (int i=0;i<16;i++)
-    printf("%02x", ibuf[i]);
-  printf("\n");
-
-  bxInstruction_c i;
-  disasm(ibuf, is_32, is_64, disbuf, &i, 0, 0, BX_DISASM_INTEL);
-  printf("disasm: %s (opcode handler=%s)\n", disbuf, i.getIaOpcodeName());
-
-  disasm(ibuf, is_32, is_64, disbuf, &i, 0, 0, BX_DISASM_GAS);
-  printf("disasm: %s (opcode handler=%s)\n", disbuf, i.getIaOpcodeName());
 }
