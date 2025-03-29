@@ -618,6 +618,7 @@ typedef struct PCIDevice {
 } PCIDevice;
 
 static uint32_t pci_bios_io_addr;
+static uint32_t agp_bios_io_addr;
 static uint32_t pci_bios_mem_addr;
 static uint32_t pci_bios_rom_start;
 /* host irqs corresponding to PCI irqs A-D */
@@ -753,7 +754,7 @@ static void bios_lock_shadow_ram(void)
 static uint32_t pci_get_agp_memory(PCIDevice *d, uint32_t type)
 {
     uint32_t addr, val, size, align, mask;
-    uint16_t cmd, saddr = 0xffff, eaddr = 0;;
+    uint16_t cmd, saddr = 0xffff, eaddr = 0;
     int i, j, ofs;
 
     /* disable i/o and memory access */
@@ -764,9 +765,14 @@ static uint32_t pci_get_agp_memory(PCIDevice *d, uint32_t type)
     addr = 0xc0000000;
     for(j = 0; j < 2; j++) {
         mask = (j == 1) ? PCI_ADDRESS_SPACE_MEM_PREFETCH : 0;
-        for(i = 0; i < PCI_ROM_SLOT; i++) {
-            ofs = PCI_BASE_ADDRESS_0 + i * 4;
-            pci_config_writel(d, ofs, 0xffffffff);
+        for(i = 0; i < PCI_NUM_REGIONS; i++) {
+            if (i == PCI_ROM_SLOT) {
+                ofs = PCI_ROM_ADDRESS;
+                pci_config_writel(d, ofs, 0xfffffffe);
+            } else {
+                ofs = PCI_BASE_ADDRESS_0 + i * 4;
+                pci_config_writel(d, ofs, 0xffffffff);
+            }
             val = pci_config_readl(d, ofs);
             if ((val != 0) && !(val & PCI_ADDRESS_SPACE_IO) &&
                 ((val & PCI_ADDRESS_SPACE_MEM_PREFETCH) == mask)) {
@@ -788,6 +794,42 @@ static uint32_t pci_get_agp_memory(PCIDevice *d, uint32_t type)
         }
     }
     return (saddr | (eaddr << 16));
+}
+
+static uint16_t pci_get_agp_iobase(PCIDevice *d)
+{
+    uint32_t val;
+    uint16_t addr, align, cmd, size;
+    uint8_t saddr = 0xf0, eaddr = 0;
+    int i, ofs;
+
+    /* disable i/o and memory access */
+    cmd = pci_config_readw(d, PCI_COMMAND);
+    cmd &= 0xfffc;
+    pci_config_writew(d, PCI_COMMAND, cmd);
+    /* default memory mappings */
+    addr = 0xe000;
+    for(i = 0; i < PCI_ROM_SLOT; i++) {
+        ofs = PCI_BASE_ADDRESS_0 + i * 4;
+        pci_config_writel(d, ofs, 0xffffffff);
+        val = pci_config_readl(d, ofs);
+        if ((val != 0) && (val & PCI_ADDRESS_SPACE_IO)) {
+            val &= 0xffff;
+            size = (~(val & ~0xf)) + 1;
+            align = 0x1000;
+            addr = (addr + size - 1) & ~(size - 1);
+            if (saddr == 0xf0) {
+                saddr = (uint8_t)(addr >> 8);
+            }
+            eaddr = (uint8_t)((addr + size - 1) >> 8);
+            if (size < align) {
+                addr += align;
+            } else {
+                addr += size;
+            }
+        }
+    }
+    return (saddr | (eaddr << 8));
 }
 
 static int acpi_checksum(const uint8_t *data, int len);
@@ -879,12 +921,14 @@ static void pci_bios_init_bridges(PCIDevice *d)
         pci_config_writeb(d, 0x19, 0x01);
         pci_config_writeb(d, 0x1a, 0x01);
         pci_config_writeb(d, 0x1b, 0x40);
-        pci_config_writeb(d, 0x1c, 0xe0);
-        pci_config_writeb(d, 0x1d, 0xf0);
         if (pci_config_readw(agpdev, 0x00) == 0xffff) {
+          pci_config_writeb(d, 0x1c, 0xf0);
+          pci_config_writeb(d, 0x1d, 0x00);
           pci_config_writel(d, 0x20, 0x0000ffff);
           pci_config_writel(d, 0x24, 0x0000ffff);
         } else {
+          pci_config_writeb(d, 0x1c, pci_get_agp_iobase(agpdev));
+          pci_config_writeb(d, 0x1d, pci_get_agp_iobase(agpdev) + 0x10);
           pci_config_writel(d, 0x20, pci_get_agp_memory(agpdev, 0));
           pci_config_writel(d, 0x24, pci_get_agp_memory(agpdev, PCI_ADDRESS_SPACE_MEM_PREFETCH));
         }
@@ -1086,8 +1130,13 @@ static void pci_bios_init_device(PCIDevice *d)
                         ((d->bus == 0) || ((val & PCI_ADDRESS_SPACE_MEM_PREFETCH) == mask))) {
                         size = (~(val & ~0xf)) + 1;
                         if (val & PCI_ADDRESS_SPACE_IO) {
-                            paddr = &pci_bios_io_addr;
-                            align = 0x10;
+                            if (d->bus == 1) {
+                                paddr = &agp_bios_io_addr;
+                                align = 0x1000;
+                            } else {
+                                paddr = &pci_bios_io_addr;
+                                align = 0x10;
+                            }
                         } else {
                             paddr = &pci_bios_mem_addr;
                             align = 0x10000;
@@ -1180,6 +1229,7 @@ void pci_for_each_device(void (*init_func)(PCIDevice *d))
 void pci_bios_init(void)
 {
     pci_bios_io_addr = 0xc000;
+    agp_bios_io_addr = 0xe000;
     pci_bios_mem_addr = 0xc0000000;
     pci_bios_rom_start = 0xc0000;
 
