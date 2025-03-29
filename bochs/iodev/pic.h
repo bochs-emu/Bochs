@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -43,7 +43,7 @@ typedef struct {
   Bit8u irq;               /* current IRQ number */
   Bit8u lowest_priority;   /* current lowest priority irq */
   bool INT;                /* INT request pin of PIC */
-  Bit8u IRQ_in;            /* IRQ pins of PIC */
+  Bit8u IRQ_in[8];         /* IRQ pins of PIC */
   struct {
     bool  in_init;
     bool  requires_4;
@@ -62,8 +62,9 @@ public:
   virtual ~bx_pic_c();
   virtual void init(void);
   virtual void reset(unsigned type);
-  virtual void lower_irq(unsigned irq_no);
-  virtual void raise_irq(unsigned irq_no);
+  virtual void lower_irq(unsigned irq_no, Bit8u irq_type);
+  virtual void raise_irq(unsigned irq_no, Bit8u irq_type);
+  virtual void set_irq_level(unsigned irq_no, Bit8u irq_type, bool level);
   virtual void set_mode(bool ma_sl, Bit8u mode);
   virtual Bit8u IAC(void);
 #if BX_DEBUGGER

@@ -203,8 +203,9 @@ extern "C" {
   (bx_devices.pluginDmaDevice->raise_HLDA())
 
 ///////// PIC macros
-#define DEV_pic_lower_irq(b)  (bx_devices.pluginPicDevice->lower_irq(b))
-#define DEV_pic_raise_irq(b)  (bx_devices.pluginPicDevice->raise_irq(b))
+#define DEV_pic_lower_irq(a)  (bx_devices.pluginPicDevice->lower_irq(a,BX_IRQ_TYPE_ISA))
+#define DEV_pic_raise_irq(a)  (bx_devices.pluginPicDevice->raise_irq(a,BX_IRQ_TYPE_ISA))
+#define DEV_pic_set_irq_level(a,b,c)  (bx_devices.pluginPicDevice->set_irq_level(a,b,c))
 #define DEV_pic_set_mode(a,b) (bx_devices.pluginPicDevice->set_mode(a,b))
 #define DEV_pic_iac()         (bx_devices.pluginPicDevice->IAC())
 

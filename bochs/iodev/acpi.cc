@@ -143,7 +143,7 @@ void bx_acpi_ctrl_c::init(void)
   BX_ACPI_THIS s.sm_base = 0x0;
 
   // initialize readonly registers
-  init_pci_conf(0x8086, 0x7113, 0x03, 0x068000, 0x00, BX_PCI_INTA);
+  init_pci_conf(0x8086, 0x7113, 0x03, 0x068000, 0x00, 0);
 }
 
 void bx_acpi_ctrl_c::reset(unsigned type)
@@ -240,7 +240,8 @@ void bx_acpi_ctrl_c::after_restore_state(void)
 
 void bx_acpi_ctrl_c::set_irq_level(bool level)
 {
-  DEV_pci_set_irq(BX_ACPI_THIS s.devfunc, BX_ACPI_THIS pci_conf[0x3d], level);
+  // ACPI SCI hardwired to 9
+  DEV_pic_set_irq_level(9, BX_IRQ_TYPE_SCI, level);
 }
 
 Bit32u bx_acpi_ctrl_c::get_pmtmr(void)

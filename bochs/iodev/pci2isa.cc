@@ -93,8 +93,6 @@ void bx_piix3_c::init(void)
   DEV_register_ioread_handler(this, read_handler, 0x04D1, "PIIX3 PCI-to-ISA bridge", 1);
   DEV_register_ioread_handler(this, read_handler, 0x0CF9, "PIIX3 PCI-to-ISA bridge", 1);
 
-  for (i=0; i<16; i++)
-    BX_P2I_THIS s.irq_registry[i] = 0x0;
   for (i=0; i<4; i++) {
     for (j=0; j<16; j++) {
       BX_P2I_THIS s.irq_level[i][j] = 0x0;
@@ -151,7 +149,7 @@ void bx_piix3_c::reset(unsigned type)
 
   for (unsigned i = 0; i < 4; i++) {
     pci_set_irq(BX_P2I_THIS s.devfunc, i+1, 0);
-    pci_unregister_irq(i, 0x80);
+    BX_P2I_THIS pci_conf[0x60 + i] = 0x80;
   }
 
   BX_P2I_THIS s.elcr1 = 0x00;
@@ -176,49 +174,12 @@ void bx_piix3_c::register_state(void)
   BXRS_HEX_PARAM_FIELD(list, apms, BX_P2I_THIS s.apms);
   BXRS_HEX_PARAM_FIELD(list, pci_reset, BX_P2I_THIS s.pci_reset);
 
-  new bx_shadow_data_c(list, "irq_registry", BX_P2I_THIS s.irq_registry, 16, 1);
   bx_list_c *irql = new bx_list_c(list, "irq_level");
   for (i=0; i<4; i++) {
     for (j=0; j<16; j++) {
       sprintf(name, "%u_%u", i, j);
       new bx_shadow_num_c(irql, name, &BX_P2I_THIS s.irq_level[i][j]);
     }
-  }
-}
-
-void bx_piix3_c::after_restore_state(void)
-{
-  for (unsigned i=0; i<16; i++) {
-    if (BX_P2I_THIS s.irq_registry[i]) {
-      DEV_register_irq(i, "PIIX3 IRQ routing");
-    }
-  }
-}
-
-void bx_piix3_c::pci_register_irq(unsigned pirq, Bit8u irq)
-{
-  if ((irq < 16) && (((1 << irq) & 0xdef8) > 0)) {
-    if (BX_P2I_THIS pci_conf[0x60 + pirq] < 16) {
-      pci_unregister_irq(pirq, irq);
-    }
-    BX_P2I_THIS pci_conf[0x60 + pirq] = irq;
-    if (!BX_P2I_THIS s.irq_registry[irq]) {
-      DEV_register_irq(irq, "PIIX3 IRQ routing");
-    }
-    BX_P2I_THIS s.irq_registry[irq] |= (1 << pirq);
-  }
-}
-
-void bx_piix3_c::pci_unregister_irq(unsigned pirq, Bit8u irq)
-{
-  Bit8u oldirq =  BX_P2I_THIS pci_conf[0x60 + pirq];
-  if (oldirq < 16) {
-    BX_P2I_THIS s.irq_registry[oldirq] &= ~(1 << pirq);
-    if (!BX_P2I_THIS s.irq_registry[oldirq]) {
-      BX_P2I_THIS pci_set_irq(BX_P2I_THIS s.devfunc, pirq+1, 0);
-      DEV_unregister_irq(oldirq, "PIIX3 IRQ routing");
-    }
-    BX_P2I_THIS pci_conf[0x60 + pirq] = irq;
   }
 }
 
@@ -239,10 +200,10 @@ void bx_piix3_c::pci_set_irq(Bit8u devfunc, unsigned line, bool level)
 #endif
   Bit8u irq = BX_P2I_THIS pci_conf[0x60 + pirq];
   if ((irq < 16) && (((1 << irq) & 0xdef8) > 0)) {
-    if (level == 1) {
+    if (level) {
       if (!BX_P2I_THIS s.irq_level[0][irq] && !BX_P2I_THIS s.irq_level[1][irq] &&
           !BX_P2I_THIS s.irq_level[2][irq] && !BX_P2I_THIS s.irq_level[3][irq]) {
-        DEV_pic_raise_irq(irq);
+        DEV_pic_set_irq_level(irq, BX_IRQ_TYPE_PIRQ, 1);
         BX_DEBUG(("INT%c -> PIRQ%c -> IRQ %d = 1", line+64, pirq+65, irq));
       }
       BX_P2I_THIS s.irq_level[pirq][irq] |= (1 << (devfunc >> 3));
@@ -250,7 +211,7 @@ void bx_piix3_c::pci_set_irq(Bit8u devfunc, unsigned line, bool level)
       BX_P2I_THIS s.irq_level[pirq][irq] &= ~(1 << (devfunc >> 3));
       if (!BX_P2I_THIS s.irq_level[0][irq] && !BX_P2I_THIS s.irq_level[1][irq] &&
           !BX_P2I_THIS s.irq_level[2][irq] && !BX_P2I_THIS s.irq_level[3][irq]) {
-        DEV_pic_lower_irq(irq);
+        DEV_pic_set_irq_level(irq, BX_IRQ_TYPE_PIRQ, 0);
         BX_DEBUG(("INT%c -> PIRQ%c -> IRQ %d = 0", line+64, pirq+65, irq));
       }
     }
@@ -416,11 +377,7 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
       case 0x63:
         value8 &= 0x8f;
         if (value8 != oldval) {
-          if (value8 >= 0x80) {
-            pci_unregister_irq((address+i) & 0x03, value8);
-          } else {
-            pci_register_irq((address+i) & 0x03, value8);
-          }
+          BX_P2I_THIS pci_conf[address+i] = value8;
           BX_INFO(("PCI IRQ routing: PIRQ%c# set to 0x%02x", address+i-31,
                    value8));
         }
