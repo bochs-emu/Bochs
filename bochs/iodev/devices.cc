@@ -44,6 +44,12 @@
  */
 #define BASE_MEMORY_IN_K  640
 
+#if BX_SUPPORT_PCI
+// 0 = PCI-to-ISA bridge
+// 1...5 = physical slots
+const Bit8u slot_to_dev[3][6] = {{1, 2, 3, 4, 5, 6}, {1, 12, 11, 10, 9, 13},
+                                 {7, 8, 9, 10, 11, 12}};
+#endif
 
 bx_devices_c bx_devices;
 
@@ -201,6 +207,12 @@ void bx_devices_c::init(BX_MEM_C *newmem)
         }
       } else if (!strcmp(argv[i], "nohpet")) {
         pci.advopts |= BX_PCI_ADVOPT_NOHPET;
+      } else if (!strcmp(argv[i], "altdevmap")) {
+        if (chipset == BX_PCI_CHIPSET_I440FX) {
+          pci.advopts |= BX_PCI_ADVOPT_ALTDEVMAP;
+        } else {
+          BX_ERROR(("Alternative device map not supported by PCI chipset"));
+        }
       } else if (!strcmp(argv[i], "noagp")) {
         if (chipset == BX_PCI_CHIPSET_I440BX) {
           pci.advopts |= BX_PCI_ADVOPT_NOAGP;
@@ -286,9 +298,11 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     }
 
     if (chipset == BX_PCI_CHIPSET_I440BX) {
-      pci.map_slot_to_dev = 8;
+      pci.map_slot_to_dev = slot_to_dev[2];
+    } else if ((pci.advopts & BX_PCI_ADVOPT_ALTDEVMAP) != 0) {
+      pci.map_slot_to_dev = slot_to_dev[1];
     } else {
-      pci.map_slot_to_dev = 2;
+      pci.map_slot_to_dev = slot_to_dev[0];
     }
 
     // confAddr accepts dword i/o only
@@ -1366,6 +1380,19 @@ void bx_devices_c::mouse_motion(int delta_x, int delta_y, int delta_z, unsigned 
 
 #if BX_SUPPORT_PCI
 // generic PCI support
+int bx_devices_c::pci_get_slot_from_dev(Bit8u device)
+{
+  int slot = -1;
+
+  for (int i = 0; i < 6; i++) {
+    if (device == pci.map_slot_to_dev[i]) {
+      slot = i;
+      break;
+    }
+  }
+  return slot;
+}
+
 bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
                                             Bit8u *devfunc, const char *name,
                                             const char *descr, Bit8u bus)
@@ -1388,7 +1415,7 @@ bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
         device = SIM->get_param_enum(devname)->get_selected();
         if (strcmp(device, "none")) {
           if (!strcmp(name, device) && !pci.slot_used[i]) {
-            *devfunc = ((i + pci.map_slot_to_dev) << 3) | (*devfunc & 0x07);
+            *devfunc = ((pci.map_slot_to_dev[i + 1]) << 3) | (*devfunc & 0x07);
             pci.slot_used[i] = true;
             BX_INFO(("PCI slot #%d used by plugin '%s'", i+1, name));
             break;
@@ -1403,7 +1430,7 @@ bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
           i = (unsigned)first_free_slot;
           sprintf(devname, "pci.slot.%d", i+1);
           SIM->get_param_enum(devname)->set_by_name(name);
-          *devfunc = ((i + pci.map_slot_to_dev) << 3) | (*devfunc & 0x07);
+          *devfunc = ((pci.map_slot_to_dev[i + 1]) << 3) | (*devfunc & 0x07);
           pci.slot_used[i] = true;
           BX_INFO(("PCI slot #%d used by plugin '%s'", i+1, name));
         } else {

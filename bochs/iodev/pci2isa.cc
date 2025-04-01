@@ -77,7 +77,6 @@ void bx_piix3_c::init(void)
   } else {
     BX_P2I_THIS s.devfunc = BX_PCI_DEVICE(1, 0);
   }
-  BX_P2I_THIS s.map_slot_to_dev = DEV_pci_get_slot_mapping();
   DEV_register_pci_handlers(this, &BX_P2I_THIS s.devfunc, BX_PLUGIN_PCI2ISA,
       "PIIX3 PCI-to-ISA bridge");
 
@@ -185,12 +184,23 @@ void bx_piix3_c::register_state(void)
 
 void bx_piix3_c::pci_set_irq(Bit8u devfunc, unsigned line, bool level)
 {
-  Bit8u pirq;
+  Bit8u pirq, device = devfunc >> 3;
 
-  if ((devfunc > 0x00) && (devfunc < 0x40)) {
-    pirq = ((devfunc >> 3) + line - BX_P2I_THIS s.map_slot_to_dev) & 0x03;
+  int slot = DEV_pci_get_slot_from_dev(device);
+  if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I440BX) {
+    if (device == 7) {
+      pirq = line - 1;
+    } else {
+      pirq = (slot + line - 2) & 3;
+    }
   } else {
-    pirq = ((devfunc >> 3) + line - 1 - BX_P2I_THIS s.map_slot_to_dev) & 0x03;
+    if (device == 1) {
+      pirq = line - 1;
+    } else if (device < 7) {
+      pirq = (slot + line - 1) & 3;
+    } else {
+      pirq = (slot + line - 2) & 3;
+    }
   }
 #if BX_SUPPORT_APIC
   // forward this function call to the ioapic too

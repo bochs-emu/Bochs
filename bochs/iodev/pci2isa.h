@@ -49,7 +49,6 @@ private:
   struct {
     unsigned chipset;
     Bit8u devfunc;
-    Bit8u map_slot_to_dev;
     Bit8u elcr1;
     Bit8u elcr2;
     Bit8u apmc;
