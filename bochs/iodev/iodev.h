@@ -131,9 +131,10 @@ enum {
   BX_PCI_BAR_TYPE_IO   = 2
 };
 
-#define BX_PCI_ADVOPT_NOACPI 0x01
-#define BX_PCI_ADVOPT_NOHPET 0x02
-#define BX_PCI_ADVOPT_NOAGP  0x04
+#define BX_PCI_ADVOPT_NOACPI    0x01
+#define BX_PCI_ADVOPT_NOHPET    0x02
+#define BX_PCI_ADVOPT_ALTDEVMAP 0x04
+#define BX_PCI_ADVOPT_NOAGP     0x08
 
 typedef struct {
   Bit8u  type;
@@ -445,7 +446,7 @@ public:
 
 #if BX_SUPPORT_PCI
   Bit32u pci_get_confAddr(void) {return pci.confAddr;}
-  Bit32u pci_get_slot_mapping(void) {return pci.map_slot_to_dev;}
+  int pci_get_slot_from_dev(Bit8u device);
   bool register_pci_handlers(bx_pci_device_c *device, Bit8u *devfunc,
                              const char *name, const char *descr, Bit8u bus = 0);
   bool pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
@@ -606,7 +607,7 @@ private:
     } pci_handler[BX_MAX_PCI_DEVICES];
     unsigned num_pci_handlers;
 
-    Bit8u map_slot_to_dev;
+    const Bit8u *map_slot_to_dev;
     bool slot_used[BX_N_PCI_SLOTS];
 
     Bit32u confAddr;

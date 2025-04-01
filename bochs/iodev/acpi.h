@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2006-2021  The Bochs Project
+//  Copyright (C) 2006-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -58,6 +58,8 @@ private:
   BX_ACPI_SMF Bit16u get_pmsts(void);
   BX_ACPI_SMF void pm_update_sci(void);
   static void timer_handler(void *);
+
+  bool is_realtime;
 
   struct {
     Bit8u devfunc;
