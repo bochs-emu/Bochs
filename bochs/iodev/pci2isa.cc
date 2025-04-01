@@ -188,7 +188,7 @@ void bx_piix3_c::pci_set_irq(Bit8u devfunc, unsigned line, bool level)
 
   int slot = DEV_pci_get_slot_from_dev(device);
   if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I440BX) {
-    if (device == 7) {
+    if ((device == 7) || (device == 0)) {
       pirq = line - 1;
     } else {
       pirq = (slot + line - 2) & 3;
