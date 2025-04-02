@@ -2011,7 +2011,7 @@ void bx_geforce_c::gdi_blit(Bit32u chid, Bit32u type)
   draw_offset += dy * pitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
   Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   Bit32u bit_index = 0;
-  Bit8u rop = BX_GEFORCE_THIS chs[chid].gdi_operation == 3 ? 0xCC : BX_GEFORCE_THIS chs[chid].rop;
+  Bit8u rop = BX_GEFORCE_THIS chs[chid].gdi_operation != 1 ? 0xCC : BX_GEFORCE_THIS chs[chid].rop;
   bx_bitblt_rop_t rop_fn = BX_GEFORCE_THIS rop_handler[rop];
   bool rop_pattern = BX_GEFORCE_THIS rop_flags[rop];
   Bit32u patcolor = BX_GEFORCE_THIS chs[chid].patt_fg_color;
@@ -2052,19 +2052,20 @@ void bx_geforce_c::ifc(Bit32u chid)
 {
   Bit16u dx = BX_GEFORCE_THIS chs[chid].ifc_yx & 0xFFFF;
   Bit16u dy = BX_GEFORCE_THIS chs[chid].ifc_yx >> 16;
-  Bit32u width = BX_GEFORCE_THIS chs[chid].ifc_dhw & 0xFFFF;
+  Bit32u swidth = BX_GEFORCE_THIS chs[chid].ifc_shw & 0xFFFF;
+  Bit32u dwidth = BX_GEFORCE_THIS chs[chid].ifc_dhw & 0xFFFF;
   Bit32u height = BX_GEFORCE_THIS chs[chid].ifc_dhw >> 16;
   Bit32u pitch = BX_GEFORCE_THIS chs[chid].s2d_pitch >> 16;
   Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].s2d_ofs_dst;
   draw_offset += dy * pitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
   Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   Bit32u word_offset = 0;
-  Bit8u rop = BX_GEFORCE_THIS chs[chid].ifc_operation == 3 ? 0xCC : BX_GEFORCE_THIS chs[chid].rop;
+  Bit8u rop = BX_GEFORCE_THIS chs[chid].ifc_operation != 1 ? 0xCC : BX_GEFORCE_THIS chs[chid].rop;
   bx_bitblt_rop_t rop_fn = BX_GEFORCE_THIS rop_handler[rop];
   bool rop_pattern = BX_GEFORCE_THIS rop_flags[rop];
   Bit32u patcolor = BX_GEFORCE_THIS chs[chid].patt_fg_color;
   for (Bit16u y = 0; y < height; y++) {
-    for (Bit16u x = 0; x < width; x++) {
+    for (Bit16u x = 0; x < dwidth; x++) {
       if (BX_GEFORCE_THIS chs[chid].ifc_color_bytes == 4) {
         Bit32u dstcolor = dma_read32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4);
         Bit32u srccolor = BX_GEFORCE_THIS chs[chid].ifc_words[word_offset];
@@ -2077,11 +2078,12 @@ void bx_geforce_c::ifc(Bit32u chid)
       }
       word_offset++;
     }
+    word_offset += swidth - dwidth;
     draw_offset += pitch;
   }
   Bit32u redraw_x = redraw_offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
   Bit32u redraw_y = redraw_offset / BX_GEFORCE_THIS svga_pitch;
-  BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, width, height);
+  BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, dwidth, height);
 }
 
 void bx_geforce_c::iifc(Bit32u chid)
@@ -2140,7 +2142,7 @@ void bx_geforce_c::copyarea(Bit32u chid)
   Bit32u redraw_offset = draw_offset + dy * dpitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes -
     (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   draw_offset += (dy + ydir * (height - 1)) * dpitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
-  Bit8u rop = BX_GEFORCE_THIS chs[chid].blit_operation == 3 ? 0xCC : BX_GEFORCE_THIS chs[chid].rop;
+  Bit8u rop = BX_GEFORCE_THIS chs[chid].blit_operation != 1 ? 0xCC : BX_GEFORCE_THIS chs[chid].rop;
   bx_bitblt_rop_t rop_fn = BX_GEFORCE_THIS rop_handler[rop];
   bool rop_pattern = BX_GEFORCE_THIS rop_flags[rop];
   Bit32u patcolor = BX_GEFORCE_THIS chs[chid].patt_fg_color;
