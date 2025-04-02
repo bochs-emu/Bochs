@@ -2059,11 +2059,21 @@ void bx_geforce_c::ifc(Bit32u chid)
   draw_offset += dy * pitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
   Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   Bit32u word_offset = 0;
+  Bit8u rop = BX_GEFORCE_THIS chs[chid].ifc_operation == 3 ? 0xCC : BX_GEFORCE_THIS chs[chid].rop;
+  bx_bitblt_rop_t rop_fn = BX_GEFORCE_THIS rop_handler[rop];
+  bool rop_pattern = BX_GEFORCE_THIS rop_flags[rop];
+  Bit32u patcolor = BX_GEFORCE_THIS chs[chid].patt_fg_color;
   for (Bit16u y = 0; y < height; y++) {
     for (Bit16u x = 0; x < width; x++) {
       if (BX_GEFORCE_THIS chs[chid].ifc_color_bytes == 4) {
-        Bit32u color = BX_GEFORCE_THIS chs[chid].ifc_words[word_offset];
-        dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4, color);
+        Bit32u dstcolor = dma_read32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4);
+        Bit32u srccolor = BX_GEFORCE_THIS chs[chid].ifc_words[word_offset];
+        if (rop_pattern)
+          bx_ternary_rop(rop, (Bit8u*)&dstcolor, (Bit8u*)&srccolor,
+            (Bit8u*)&patcolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
+        else
+          rop_fn((Bit8u*)&dstcolor, (Bit8u*)&srccolor, 0, 0, BX_GEFORCE_THIS chs[chid].s2d_color_bytes, 1);
+        dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4, dstcolor);
       }
       word_offset++;
     }
