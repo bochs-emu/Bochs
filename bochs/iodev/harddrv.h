@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -23,6 +23,7 @@
 
 #define MAX_MULTIPLE_SECTORS 16
 
+// SPC3r23.pdf, page 41
 typedef enum _sense {
   SENSE_NONE = 0, SENSE_NOT_READY = 2,
   SENSE_ILLEGAL_REQUEST = 5,
@@ -90,6 +91,7 @@ typedef struct {
   struct {
     bool reset;       // 0=normal, 1=reset controller
     bool disable_irq; // 0=allow irq, 1=disable irq
+    bool read_hob;    // 0=read legacy registers, 1=read hob registers
   } control;
   Bit8u    reset_in_progress;
   Bit8u    features;

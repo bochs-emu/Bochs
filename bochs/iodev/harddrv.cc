@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -267,6 +267,7 @@ void bx_hard_drive_c::init(void)
 
       BX_CONTROLLER(channel,device).control.reset       = 0;
       BX_CONTROLLER(channel,device).control.disable_irq = 0;
+      BX_CONTROLLER(channel,device).control.read_hob    = 0;
       BX_CONTROLLER(channel,device).reset_in_progress   = 0;
 
       BX_CONTROLLER(channel,device).multiple_sectors    = 0;
@@ -628,6 +629,7 @@ void bx_hard_drive_c::register_state(void)
         BXRS_PARAM_BOOL(drive, packet_dma, BX_CONTROLLER(i, j).packet_dma);
         BXRS_PARAM_BOOL(drive, control_reset, BX_CONTROLLER(i, j).control.reset);
         BXRS_PARAM_BOOL(drive, control_disable_irq, BX_CONTROLLER(i, j).control.disable_irq);
+        BXRS_PARAM_BOOL(drive, control_read_hob, BX_CONTROLLER(i, j).control.read_hob);
         new bx_shadow_num_c(drive, "reset_in_progress", &BX_CONTROLLER(i, j).reset_in_progress, BASE_HEX);
         new bx_shadow_num_c(drive, "features", &BX_CONTROLLER(i, j).features, BASE_HEX);
         new bx_shadow_num_c(drive, "mdma_mode", &BX_CONTROLLER(i, j).mdma_mode, BASE_HEX);
@@ -1030,19 +1032,49 @@ Bit32u bx_hard_drive_c::read(Bit32u address, unsigned io_len)
       // -- WARNING : On real hardware the controller registers are shared between drives.
       // So we must respond even if the select device is not present. Some OS uses this fact
       // to detect the disks.... minix2 for example
-      value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : controller->error_register;
+      if (BX_ANY_IS_PRESENT(channel)) {
+        if (controller->lba48 && controller->control.read_hob)
+          value8 = controller->hob.feature;
+        else
+          value8 = controller->error_register;
+      } else
+        value8 = 0;
       goto return_value8;
     case 0x02: // hard disk sector count / interrupt reason 0x1f2
-      value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : controller->sector_count;
+      if (BX_ANY_IS_PRESENT(channel)) {
+        if (controller->lba48 && controller->control.read_hob)
+          value8 = controller->hob.nsector;
+        else
+          value8 = controller->sector_count;
+      } else
+        value8 = 0;
       goto return_value8;
     case 0x03: // sector number 0x1f3
-      value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : controller->sector_no;
+      if (BX_ANY_IS_PRESENT(channel)) {
+        if (controller->lba48 && controller->control.read_hob)
+          value8 = controller->hob.sector;
+        else
+          value8 = controller->sector_no;
+      } else
+        value8 = 0;
       goto return_value8;
     case 0x04: // cylinder low 0x1f4
-      value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : (controller->cylinder_no & 0x00ff);
+      if (BX_ANY_IS_PRESENT(channel)) {
+        if (controller->lba48 && controller->control.read_hob)
+          value8 = controller->hob.lcyl;
+        else
+          value8 = controller->cylinder_no & 0x00FF;
+      } else
+        value8 = 0;
       goto return_value8;
     case 0x05: // cylinder high 0x1f5
-      value8 = (!BX_ANY_IS_PRESENT(channel)) ? 0 : controller->cylinder_no >> 8;
+      if (BX_ANY_IS_PRESENT(channel)) {
+        if (controller->lba48 && controller->control.read_hob)
+          value8 = controller->hob.hcyl;
+        else
+          value8 = controller->cylinder_no >> 8;
+      } else
+        value8 = 0;
       goto return_value8;
 
     case 0x06: // hard disk drive and head register 0x1f6
@@ -1136,7 +1168,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 #endif  // !BX_USE_HD_SMF
   Bit64s logical_sector;
   bool prev_control_reset;
-  bool lba48 = 0;
+  bool lba48 = false;
 
   Bit8u  channel = BX_MAX_ATA_CHANNEL;
   Bit32u port = 0xff; // undefined
@@ -1187,6 +1219,10 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
   controller_t *controller = &BX_SELECTED_CONTROLLER(channel);
   unsigned sect_size = BX_SELECTED_DRIVE(channel).sect_size;
 
+  // A write to any Command Block register clears the HOB bit.
+  BX_HD_THIS channels[channel].drives[0].controller.control.read_hob = 
+    BX_HD_THIS channels[channel].drives[1].controller.control.read_hob = 0;
+  
   switch (port) {
     case 0x00: // 0x1f0
       switch (controller->current_command) {
@@ -1287,6 +1323,13 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
             BX_DEBUG_ATAPI(("ata%d-%d: ATAPI command 0x%02x started", channel,
                             BX_SLAVE_SELECTED(channel), atapi_command));
+
+            // clear the sense
+            if (atapi_command != 0x03) {
+              BX_SELECTED_DRIVE(channel).sense.sense_key = SENSE_NONE;
+              BX_SELECTED_DRIVE(channel).sense.asc = 0;
+              BX_SELECTED_DRIVE(channel).sense.ascq = 0;
+            }
 
             switch (atapi_command) {
               case 0x00: // test unit ready
@@ -1882,6 +1925,147 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                 }
                 break;
 
+              case 0x46: // get configuration (mmc4r05a.pdf, page 286) (pages are physical pdf pages, not page numbers listed on specific page)
+                {
+                  Bit8u rt = (controller->buffer[1] & (3<<0));
+                  Bit16u start_feature = read_16bit(controller->buffer + 2);
+                  Bit16u alloc_length = read_16bit(controller->buffer + 7);
+                  Bit8u *feature_ptr = controller->buffer;
+                  bool inserted = BX_SELECTED_DRIVE(channel).cdrom.ready;
+
+                  // The controller buffer is guaranteed to be at least 2048 bytes.
+                  // The largest return for this command is guaranteed to be less than 1024 bytes.
+                  // Therefore, we just build the return as if requested all bytes,
+                  //  then only return up to 'alloc_length' bytes.
+
+                  if (alloc_length >= 8) {
+                    // create a header (page 287)
+                  //controller->buffer[0] = 0;  // length is calculated below
+                  //controller->buffer[1] = 0;
+                  //controller->buffer[2] = 0;
+                  //controller->buffer[3] = 0;
+                    controller->buffer[4] = 0;  // reserved
+                    controller->buffer[5] = 0;  // reserved
+                    controller->buffer[6] = 0;  // we only support profile 8 (cd-rom)
+                    controller->buffer[7] = 8;  //
+                    feature_ptr += 8;
+
+                    // page: 238
+                    // Profile 8 requires feature numbers, 0x0, 0x1, 0x2, 0x3, 0x10, 0x1E, 0x100, 0x105
+
+                    // profile list (feature 0x0000) (mmc4r05a.pdf, page 174)
+                    feature_ptr[0] = 0x00;  // Feature Code 0x000
+                    feature_ptr[1] = 0x00;
+                    feature_ptr[2] = (0 << 6) | (0 << 2) | (1 << 1) | (inserted << 0); // version 1, persistent = 1, current = 1 if inserted
+                    feature_ptr[3] = 4;  // additional length = (1 * 4)
+                      feature_ptr[4] = 0x00;  // profile 0x0008
+                      feature_ptr[5] = 0x08;  // 
+                      feature_ptr[6] = (0 << 1) | (inserted << 0);  // reserved, Current = 1 if inserted
+                      feature_ptr[7] = 0;  // reserved
+                    feature_ptr += 8;
+
+                    // core feature (feature 0x0001) (mmc4r05a.pdf, page 174)
+                    feature_ptr[0] = 0x00;  // Feature Code 0x001
+                    feature_ptr[1] = 0x01;
+                    feature_ptr[2] = (0 << 6) | (1 << 2) | (1 << 1) | (1 << 0); // version 1, persistent = 1, current = 1
+                    feature_ptr[3] = 8;  // additional length = 8
+                    feature_ptr[4] = 0;  // physical interface standard:
+                    feature_ptr[5] = 0;  //   2 = ATAPI
+                    feature_ptr[6] = 0;  //
+                    feature_ptr[7] = 2;  //
+                    feature_ptr[8] = (0 << 1) | (0 << 0); // reserved, DBE = 0
+                    feature_ptr[9] = 0;  //
+                    feature_ptr[10] = 0;  //
+                    feature_ptr[11] = 0;  //
+                    feature_ptr += 12;
+
+                    // morphing feature (feature 0x0002) (mmc4r05a.pdf, page 178)
+                    feature_ptr[0] = 0x00;  // Feature Code 0x002
+                    feature_ptr[1] = 0x02;
+                    feature_ptr[2] = (0 << 6) | (1 << 2) | (1 << 1) | (1 << 0); // version 1, persistent = 1, current = 1
+                    feature_ptr[3] = 4;  // additional length = 4
+                    feature_ptr[4] = (0 << 1) | (0 << 0); // OCEvent = 0 (see page 178), ASYNC = 0 (0 = polling of EVENT STATUS NOTIFICATION)
+                    feature_ptr[5] = 0;  //
+                    feature_ptr[6] = 0;  //
+                    feature_ptr[7] = 0;  //
+                    feature_ptr += 8;
+
+                    // Removable Medium feature (feature 0x0003) (mmc4r05a.pdf, page 179)
+                    feature_ptr[0] = 0x00;  // Feature Code 0x003
+                    feature_ptr[1] = 0x03;
+                    feature_ptr[2] = (0 << 6) | (0 << 2) | (1 << 1) | (1 << 0); // version 0, persistent = 1, current = 1
+                    feature_ptr[3] = 4;  // additional length = 4
+                    feature_ptr[4] = (0 << 5)  // Loading Mech type: 0
+                                   | (0 << 3)  // No Eject Mech
+                                   | (1 << 2)  // No Pvnt Jumper
+                                   | (0 << 0); // Lock = 0 (no locking mechanism)
+                    feature_ptr[5] = 0;  //
+                    feature_ptr[6] = 0;  //
+                    feature_ptr[7] = 0;  //
+                    feature_ptr += 8;
+
+                    // Random Readable feature (feature 0x0010) (mmc4r05a.pdf, page 182)
+                    feature_ptr[0] = 0x00;  // Feature Code 0x010
+                    feature_ptr[1] = 0x10;
+                    feature_ptr[2] = (0 << 6) | (0 << 2) | (1 << 1) | (1 << 0); // version 0, persistent = 1, current = 1
+                    feature_ptr[3] = 8;  // additional length = 8
+                    feature_ptr[4] = 0x00;  // Logical Block Size:
+                    feature_ptr[5] = 0x00;  //   2048 (0x800)
+                    feature_ptr[6] = 0x08;  //
+                    feature_ptr[7] = 0x00;  //
+                    feature_ptr[8] = (MAX_MULTIPLE_SECTORS >> 8);  // blocking
+                    feature_ptr[9] = (MAX_MULTIPLE_SECTORS & 0xFF);
+                    feature_ptr[10] = (0 << 0);  // PP = 0
+                    feature_ptr[11] = 0;
+                    feature_ptr += 12;
+
+                    // CD Read feature (feature 0x001E) (mmc4r05a.pdf, page 185)
+                    feature_ptr[0] = 0x00;  // Feature Code 0x01E
+                    feature_ptr[1] = 0x1E;
+                    feature_ptr[2] = (0 << 6) | (2 << 2) | (1 << 1) | (1 << 0); // version 2, persistent = 1, current = 1
+                    feature_ptr[3] = 4;  // additional length = 4
+                    feature_ptr[4] = (0 << 7) | (0 << 1) | (0 << 0); // DAP = 0, C2 Flags = 0, CD-Text = 0
+                    feature_ptr[5] = 0;
+                    feature_ptr[6] = 0;
+                    feature_ptr[7] = 0;
+                    feature_ptr += 8;
+
+                    // Power Management feature (feature 0x0100) (mmc4r05a.pdf, page 216)
+                    feature_ptr[0] = 0x01;  // Feature Code 0x100
+                    feature_ptr[1] = 0x00;
+                    feature_ptr[2] = (0 << 6) | (0 << 2) | (1 << 1) | (1 << 0); // version 0, persistent = 1, current = 1
+                    feature_ptr[3] = 0;  // additional length = 0
+                    feature_ptr += 4;
+                    
+                    // Timeout feature (feature 0x0105) (mmc4r05a.pdf, page 222)
+                    feature_ptr[0] = 0x01;  // Feature Code 0x105
+                    feature_ptr[1] = 0x05;
+                    feature_ptr[2] = (0 << 6) | (1 << 2) | (1 << 1) | (1 << 0); // version 1, persistent = 1, current = 1
+                    feature_ptr[3] = 4;  // additional length = 4
+                    feature_ptr[4] = (0 << 0); // Group 3 = 0
+                    feature_ptr[5] = 0;
+                    feature_ptr[6] = 0;
+                    feature_ptr[7] = 0;
+                    feature_ptr += 8;
+
+                    // update the return length
+                    Bit16u return_length = (Bit16u) (feature_ptr - controller->buffer);
+                    if (return_length > alloc_length)
+                      return_length = alloc_length;
+                    controller->buffer[0] = 0;
+                    controller->buffer[1] = 0;
+                    controller->buffer[2] = (return_length >> 8);
+                    controller->buffer[3] = (return_length & 0xFF);
+
+                    init_send_atapi_command(channel, atapi_command, return_length, return_length);
+                    ready_to_send_atapi(channel);
+                  } else {
+                    atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 0);
+                    raise_interrupt(channel);
+                  }
+                }
+                break;
+
               case 0x55: // mode select
               case 0xa6: // load/unload cd
               case 0x4b: // pause/resume
@@ -1893,7 +2077,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               case 0xba: // scan
               case 0xbb: // set cd speed
               case 0x4e: // stop play/scan
-              case 0x46: // get configuration
                 BX_DEBUG_ATAPI(("ATAPI command 0x%x not implemented yet", atapi_command));
                 atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_ILLEGAL_OPCODE, 0);
                 raise_interrupt(channel);
@@ -2019,7 +2202,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
         case 0x24: // READ SECTORS EXT
         case 0x29: // READ MULTIPLE EXT
-          lba48 = 1;
+          lba48 = true;
         case 0x20: // READ SECTORS, with retries
         case 0x21: // READ SECTORS, without retries
         case 0xC4: // READ MULTIPLE SECTORS
@@ -2086,7 +2269,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
         case 0x34: // WRITE SECTORS EXT
         case 0x39: // WRITE MULTIPLE EXT
-          lba48 = 1;
+          lba48 = true;
         case 0x30: // WRITE SECTORS, with retries
         case 0xC5: // WRITE MULTIPLE SECTORS
           /* update sector_no, always points to current sector
@@ -2287,7 +2470,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         case 0x42: // READ VERIFY SECTORS EXT
-          lba48 = 1;
+          lba48 = true;
         case 0x40: // READ VERIFY SECTORS
         case 0x41: // READ VERIFY SECTORS NO RETRY
           if (!BX_SELECTED_IS_HD(channel)) {
@@ -2465,7 +2648,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         case 0x25: // READ DMA EXT
-          lba48 = 1;
+          lba48 = true;
         case 0xC8: // READ DMA
           if (BX_SELECTED_IS_HD(channel) && BX_HD_THIS bmdma_present()) {
             lba48_transform(controller, lba48);
@@ -2489,7 +2672,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           break;
 
         case 0x35: // WRITE DMA EXT
-          lba48 = 1;
+          lba48 = true;
         case 0xCA: // WRITE DMA
           if (BX_SELECTED_IS_HD(channel) && BX_HD_THIS bmdma_present()) {
             lba48_transform(controller, lba48);
@@ -2508,13 +2691,14 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           }
           break;
         case 0x27: // READ NATIVE MAX ADDRESS EXT
-          lba48 = 1;
+          lba48 = true;
         case 0xF8: // READ NATIVE MAX ADDRESS
           if (BX_SELECTED_IS_HD(channel)) {
             lba48_transform(controller, lba48);
             Bit64s max_sector = BX_SELECTED_DRIVE(channel).hdimage->hd_size / sect_size - 1;
             if (controller->lba_mode) {
               if (!controller->lba48) {
+                // todo: if (!lba48 && (max_sector > 268435455)) max_sector = 268435455; // but don't change 'max_sector' (use temp)
                 controller->head_no = (Bit8u)((max_sector >> 24) & 0xf);
                 controller->cylinder_no = (Bit16u)((max_sector >> 8) & 0xffff);
                 controller->sector_no = (Bit8u)((max_sector) & 0xff);
@@ -2536,6 +2720,17 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
           }
           break;
 
+        case 0x37: // SET MAX ADDRESS EXT
+          //lba48 = true;
+        case 0xF9: // SET MAX ADDRESS
+          BX_INFO(("write cmd 0x%02X (SET MAX ADDRESS (EXT)) not supported, but returning success", value));
+          // We can create a limit LBA and check each read/write to make sure we don't read/write past that limit
+          // If we exceed this limit, a IDNF error is presented.
+          // If DRDY was set to 1, a successful READ NATIVE MAX ADDRESS command shall immediately precede a SET MAX ADDRESS command
+          // We also need to update the IDENTIFY[61:60] and IDENTIFY[100:103] words to match this value (value + 1).
+          raise_interrupt(channel);
+          break;
+
         // List all the write operations that are defined in the ATA/ATAPI spec
         // that we don't support.  Commands that are listed here will cause a
         // BX_ERROR, which is non-fatal, and the command will be aborted.
@@ -2549,7 +2744,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0x32: BX_ERROR(("write cmd 0x32 (WRITE LONG) not supported")); command_aborted(channel, 0x32); break;
         case 0x33: BX_ERROR(("write cmd 0x33 (WRITE LONG NO RETRY) not supported")); command_aborted(channel, 0x33); break;
         case 0x36: BX_ERROR(("write cmd 0x36 (WRITE DMA QUEUED EXT) not supported"));command_aborted(channel, 0x36); break;
-        case 0x37: BX_ERROR(("write cmd 0x37 (SET MAX ADDRESS EXT) not supported"));command_aborted(channel, 0x37); break;
         case 0x38: BX_ERROR(("write cmd 0x38 (CFA WRITE SECTORS W/OUT ERASE) not supported"));command_aborted(channel, 0x38); break;
         case 0x3A: BX_ERROR(("write cmd 0x3A (WRITE STREAM DMA) not supported"));command_aborted(channel, 0x3A); break;
         case 0x3B: BX_ERROR(("write cmd 0x3B (WRITE STREAM PIO) not supported"));command_aborted(channel, 0x3B); break;
@@ -2587,7 +2781,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
         case 0xF4: BX_ERROR(("write cmd 0xF4 (SECURITY ERASE UNIT) not supported"));command_aborted(channel, 0xF4); break;
         case 0xF5: BX_ERROR(("write cmd 0xF5 (SECURITY FREEZE LOCK) not supported"));command_aborted(channel, 0xF5); break;
         case 0xF6: BX_ERROR(("write cmd 0xF6 (SECURITY DISABLE PASSWORD) not supported"));command_aborted(channel, 0xF6); break;
-        case 0xF9: BX_ERROR(("write cmd 0xF9 (SET MAX ADDRESS) not supported"));command_aborted(channel, 0xF9); break;
 
         default:
           BX_ERROR(("IO write to 0x%04x: unknown command 0x%02x", address, value));
@@ -2604,6 +2797,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
       BX_HD_THIS channels[channel].drives[1].controller.control.reset       = value & 0x04;
       BX_HD_THIS channels[channel].drives[0].controller.control.disable_irq = value & 0x02;
       BX_HD_THIS channels[channel].drives[1].controller.control.disable_irq = value & 0x02;
+      BX_HD_THIS channels[channel].drives[0].controller.control.read_hob = 
+        BX_HD_THIS channels[channel].drives[1].controller.control.read_hob = (value & 0x80) > 0;
 
       BX_DEBUG(("ata%d: adapter control reg: reset controller = %d", channel,
         (unsigned) (controller->control.reset) ? 1 : 0));
@@ -3210,6 +3405,7 @@ void bx_hard_drive_c::init_send_atapi_command(Bit8u channel, Bit8u command, int 
   BX_SELECTED_DRIVE(channel).atapi.total_bytes_remaining = (req_length < alloc_length) ? req_length : alloc_length;
 }
 
+// Sense Key/ASC/ASCQ assignments are in mmc4r05a.pdf, page 575
 void bx_hard_drive_c::atapi_cmd_error(Bit8u channel, sense_t sense_key, asc_t asc, bool show)
 {
   if (show) {
