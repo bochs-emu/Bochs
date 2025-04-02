@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -37,6 +37,12 @@
    PIC chips cascaded together.  each has 8 IRQ lines, so there
    should be 16 IRQ's total */
 #define BX_MAX_IRQS 16
+
+/* IRQ types (PCI / ACPI */
+#define BX_IRQ_TYPE_ISA   1
+#define BX_IRQ_TYPE_PIRQ  2
+#define BX_IRQ_TYPE_SCI   4
+#define BX_IRQ_TYPE_SMBUS 8
 
 /* keyboard indicators */
 #define BX_KBD_LED_NUM  0
@@ -125,9 +131,10 @@ enum {
   BX_PCI_BAR_TYPE_IO   = 2
 };
 
-#define BX_PCI_ADVOPT_NOACPI 0x01
-#define BX_PCI_ADVOPT_NOHPET 0x02
-#define BX_PCI_ADVOPT_NOAGP  0x04
+#define BX_PCI_ADVOPT_NOACPI    0x01
+#define BX_PCI_ADVOPT_NOHPET    0x02
+#define BX_PCI_ADVOPT_ALTDEVMAP 0x04
+#define BX_PCI_ADVOPT_NOAGP     0x08
 
 typedef struct {
   Bit8u  type;
@@ -266,11 +273,14 @@ public:
 
 class BOCHSAPI bx_pic_stub_c : public bx_devmodel_c {
 public:
-  virtual void raise_irq(unsigned irq_no) {
+  virtual void raise_irq(unsigned irq_no, Bit8u irq_type) {
     STUBFUNC(pic, raise_irq);
   }
-  virtual void lower_irq(unsigned irq_no) {
+  virtual void lower_irq(unsigned irq_no, Bit8u irq_type) {
     STUBFUNC(pic, lower_irq);
+  }
+  virtual void set_irq_level(unsigned irq_no, Bit8u irq_type, bool level) {
+    STUBFUNC(pic, set_irq_level);
   }
   virtual void set_mode(bool ma_sl, Bit8u mode) {
     STUBFUNC(pic, set_mode);
@@ -436,7 +446,7 @@ public:
 
 #if BX_SUPPORT_PCI
   Bit32u pci_get_confAddr(void) {return pci.confAddr;}
-  Bit32u pci_get_slot_mapping(void) {return pci.map_slot_to_dev;}
+  int pci_get_slot_from_dev(Bit8u device);
   bool register_pci_handlers(bx_pci_device_c *device, Bit8u *devfunc,
                              const char *name, const char *descr, Bit8u bus = 0);
   bool pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
@@ -597,7 +607,7 @@ private:
     } pci_handler[BX_MAX_PCI_DEVICES];
     unsigned num_pci_handlers;
 
-    Bit8u map_slot_to_dev;
+    const Bit8u *map_slot_to_dev;
     bool slot_used[BX_N_PCI_SLOTS];
 
     Bit32u confAddr;

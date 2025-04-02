@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -38,7 +38,6 @@ public:
   virtual void reset(unsigned type);
   virtual void pci_set_irq(Bit8u devfunc, unsigned line, bool level);
   virtual void register_state(void);
-  virtual void after_restore_state(void);
 
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 #if BX_DEBUGGER
@@ -50,18 +49,13 @@ private:
   struct {
     unsigned chipset;
     Bit8u devfunc;
-    Bit8u map_slot_to_dev;
     Bit8u elcr1;
     Bit8u elcr2;
     Bit8u apmc;
     Bit8u apms;
-    Bit8u irq_registry[16];
     Bit32u irq_level[4][16];
     Bit8u pci_reset;
   } s;
-
-  static void pci_register_irq(unsigned pirq, Bit8u irq);
-  static void pci_unregister_irq(unsigned pirq, Bit8u irq);
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);

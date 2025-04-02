@@ -203,8 +203,9 @@ extern "C" {
   (bx_devices.pluginDmaDevice->raise_HLDA())
 
 ///////// PIC macros
-#define DEV_pic_lower_irq(b)  (bx_devices.pluginPicDevice->lower_irq(b))
-#define DEV_pic_raise_irq(b)  (bx_devices.pluginPicDevice->raise_irq(b))
+#define DEV_pic_lower_irq(a)  (bx_devices.pluginPicDevice->lower_irq(a,BX_IRQ_TYPE_ISA))
+#define DEV_pic_raise_irq(a)  (bx_devices.pluginPicDevice->raise_irq(a,BX_IRQ_TYPE_ISA))
+#define DEV_pic_set_irq_level(a,b,c)  (bx_devices.pluginPicDevice->set_irq_level(a,b,c))
 #define DEV_pic_set_mode(a,b) (bx_devices.pluginPicDevice->set_mode(a,b))
 #define DEV_pic_iac()         (bx_devices.pluginPicDevice->IAC())
 
@@ -222,7 +223,7 @@ extern "C" {
   (bx_devices.register_pci_handlers(a,b,c,d,0))
 #define DEV_register_pci_handlers2(a,b,c,d,e) \
   (bx_devices.register_pci_handlers(a,b,c,d,e))
-#define DEV_pci_get_slot_mapping() bx_devices.pci_get_slot_mapping()
+#define DEV_pci_get_slot_from_dev(a) bx_devices.pci_get_slot_from_dev(a)
 #define DEV_pci_get_confAddr() bx_devices.pci_get_confAddr()
 #define DEV_pci_set_irq(a,b,c) bx_devices.pluginPci2IsaBridge->pci_set_irq(a,b,c)
 #define DEV_pci_set_base_mem(a,b,c,d,e,f) \

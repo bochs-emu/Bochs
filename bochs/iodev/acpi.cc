@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2006-2021  The Bochs Project
+//  Copyright (C) 2006-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -33,6 +33,7 @@
 
 #include "pci.h"
 #include "acpi.h"
+#include "virt_timer.h"
 
 #define LOG_THIS theACPIController->
 
@@ -124,6 +125,10 @@ void bx_acpi_ctrl_c::init(void)
 {
   // called once when bochs initializes
 
+  int clock_mode = SIM->get_param_enum(BXPN_CLOCK_SYNC)->get();
+  BX_ACPI_THIS is_realtime = (clock_mode == BX_CLOCK_SYNC_REALTIME) ||
+      (clock_mode == BX_CLOCK_SYNC_BOTH);
+
   Bit8u chipset = SIM->get_param_enum(BXPN_PCI_CHIPSET)->get();
   if (chipset == BX_PCI_CHIPSET_I440BX) {
     BX_ACPI_THIS s.devfunc = BX_PCI_DEVICE(7, 3);
@@ -135,7 +140,7 @@ void bx_acpi_ctrl_c::init(void)
 
   if (BX_ACPI_THIS s.timer_index == BX_NULL_TIMER_HANDLE) {
     BX_ACPI_THIS s.timer_index =
-      DEV_register_timer(this, timer_handler, 1000, 0, 0, "ACPI");
+      bx_virt_timer.register_timer(this, timer_handler, 1000, 0, 0, BX_ACPI_THIS is_realtime, "ACPI");
   }
   DEV_register_iowrite_handler(this, write_handler, ACPI_DBG_IO_ADDR, "ACPI", 4);
 
@@ -143,7 +148,7 @@ void bx_acpi_ctrl_c::init(void)
   BX_ACPI_THIS s.sm_base = 0x0;
 
   // initialize readonly registers
-  init_pci_conf(0x8086, 0x7113, 0x03, 0x068000, 0x00, BX_PCI_INTA);
+  init_pci_conf(0x8086, 0x7113, 0x03, 0x068000, 0x00, 0);
 }
 
 void bx_acpi_ctrl_c::reset(unsigned type)
@@ -240,19 +245,20 @@ void bx_acpi_ctrl_c::after_restore_state(void)
 
 void bx_acpi_ctrl_c::set_irq_level(bool level)
 {
-  DEV_pci_set_irq(BX_ACPI_THIS s.devfunc, BX_ACPI_THIS pci_conf[0x3d], level);
+  // ACPI SCI hardwired to 9
+  DEV_pic_set_irq_level(9, BX_IRQ_TYPE_SCI, level);
 }
 
 Bit32u bx_acpi_ctrl_c::get_pmtmr(void)
 {
-  Bit64u value = muldiv64(bx_pc_system.time_usec(), PM_FREQ, 1000000);
+  Bit64u value = muldiv64(bx_virt_timer.time_usec(BX_ACPI_THIS is_realtime), PM_FREQ, 1000000);
   return (Bit32u)(value & 0xffffff);
 }
 
 Bit16u bx_acpi_ctrl_c::get_pmsts(void)
 {
   Bit16u pmsts = BX_ACPI_THIS s.pmsts;
-  Bit64u value = muldiv64(bx_pc_system.time_usec(), PM_FREQ, 1000000);
+  Bit64u value = muldiv64(bx_virt_timer.time_usec(BX_ACPI_THIS is_realtime), PM_FREQ, 1000000);
   if (value >= BX_ACPI_THIS s.tmr_overflow_time)
     BX_ACPI_THIS s.pmsts |= TMROF_EN;
   return pmsts;
@@ -266,11 +272,15 @@ void bx_acpi_ctrl_c::pm_update_sci(void)
   BX_ACPI_THIS set_irq_level(sci_level);
   // schedule a timer interruption if needed
   if ((BX_ACPI_THIS s.pmen & TMROF_EN) && !(pmsts & TMROF_EN)) {
-    Bit64u expire_time = muldiv64(BX_ACPI_THIS s.tmr_overflow_time, 1000000, PM_FREQ);
-      bx_pc_system.activate_timer(BX_ACPI_THIS s.timer_index, (Bit32u)expire_time, 0);
-    } else {
-      bx_pc_system.deactivate_timer(BX_ACPI_THIS s.timer_index);
-    }
+    Bit64u current_time = bx_virt_timer.time_usec(BX_ACPI_THIS is_realtime);
+    Bit64u expire_time = muldiv64(BX_ACPI_THIS s.tmr_overflow_time, 1000000, PM_FREQ) + 10;
+    if (expire_time > current_time)
+      bx_virt_timer.activate_timer(BX_ACPI_THIS s.timer_index, (Bit32u)(expire_time - current_time), 0);
+    else
+      pm_update_sci();
+  } else {
+    bx_virt_timer.deactivate_timer(BX_ACPI_THIS s.timer_index);
+  }
 }
 
 void bx_acpi_ctrl_c::generate_smi(Bit8u value)
@@ -401,7 +411,7 @@ void bx_acpi_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
           Bit16u pmsts = BX_ACPI_THIS get_pmsts();
           if (pmsts & value & TMROF_EN) {
             // if TMRSTS is reset, then compute the new overflow time
-            Bit64u d = muldiv64(bx_pc_system.time_usec(), PM_FREQ, 1000000);
+            Bit64u d = muldiv64(bx_virt_timer.time_usec(BX_ACPI_THIS is_realtime), PM_FREQ, 1000000);
             BX_ACPI_THIS s.tmr_overflow_time = (d + BX_CONST64(0x800000)) & ~BX_CONST64(0x7fffff);
           }
           BX_ACPI_THIS s.pmsts &= ~value;

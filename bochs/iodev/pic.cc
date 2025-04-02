@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -60,6 +60,8 @@ bx_pic_c::~bx_pic_c(void)
 
 void bx_pic_c::init(void)
 {
+  int i;
+
   /* 8259 PIC (Programmable Interrupt Controller) */
   DEV_register_ioread_handler(this, read_handler, 0x0020, "8259 PIC", 1);
   DEV_register_ioread_handler(this, read_handler, 0x0021, "8259 PIC", 1);
@@ -92,7 +94,8 @@ void bx_pic_c::init(void)
   BX_PIC_THIS s.master_pic.polled = 0;
   BX_PIC_THIS s.master_pic.rotate_on_autoeoi = 0;
   BX_PIC_THIS s.master_pic.edge_level = 0;
-  BX_PIC_THIS s.master_pic.IRQ_in = 0;
+  for (i = 0; i < 8; i++)
+    BX_PIC_THIS s.master_pic.IRQ_in[i] = 0;
 
   BX_PIC_THIS s.slave_pic.master = 0;
   BX_PIC_THIS s.slave_pic.interrupt_offset = 0x70; /* IRQ8 = INT 0x70 */
@@ -114,7 +117,8 @@ void bx_pic_c::init(void)
   BX_PIC_THIS s.slave_pic.polled = 0;
   BX_PIC_THIS s.slave_pic.rotate_on_autoeoi = 0;
   BX_PIC_THIS s.slave_pic.edge_level = 0;
-  BX_PIC_THIS s.slave_pic.IRQ_in = 0;
+  for (i = 0; i < 8; i++)
+    BX_PIC_THIS s.slave_pic.IRQ_in[i] = 0;
 
 #if BX_DEBUGGER
   // register device for the 'info device' command (calls debug_dump())
@@ -126,7 +130,9 @@ void bx_pic_c::reset(unsigned type) {}
 
 void bx_pic_c::register_state(void)
 {
-  bx_list_c *ctrl;
+  bx_list_c *ctrl, *irq_in;
+  int i;
+  char name[8];
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "pic", "PIC State");
   ctrl = new bx_list_c(list, "master");
@@ -139,7 +145,11 @@ void bx_pic_c::register_state(void)
   new bx_shadow_num_c(ctrl, "irq", &BX_PIC_THIS s.master_pic.irq, BASE_HEX);
   new bx_shadow_num_c(ctrl, "lowest_priority", &BX_PIC_THIS s.master_pic.lowest_priority, BASE_HEX);
   BXRS_PARAM_BOOL(ctrl, INT, BX_PIC_THIS s.master_pic.INT);
-  new bx_shadow_num_c(ctrl, "IRQ_in", &BX_PIC_THIS s.master_pic.IRQ_in, BASE_HEX);
+  irq_in = new bx_list_c(ctrl, "irq_in");
+  for (i = 0; i < 8; i++) {
+    sprintf(name, "%u", i);
+    new bx_shadow_num_c(irq_in, name, &BX_PIC_THIS s.master_pic.IRQ_in[i], BASE_HEX);
+  }
   BXRS_PARAM_BOOL(ctrl, in_init, BX_PIC_THIS s.master_pic.init.in_init);
   BXRS_PARAM_BOOL(ctrl, requires_4, BX_PIC_THIS s.master_pic.init.requires_4);
   new bx_shadow_num_c(ctrl, "byte_expected", &BX_PIC_THIS s.master_pic.init.byte_expected);
@@ -157,7 +167,11 @@ void bx_pic_c::register_state(void)
   new bx_shadow_num_c(ctrl, "irq", &BX_PIC_THIS s.slave_pic.irq, BASE_HEX);
   new bx_shadow_num_c(ctrl, "lowest_priority", &BX_PIC_THIS s.slave_pic.lowest_priority, BASE_HEX);
   BXRS_PARAM_BOOL(ctrl, INT, BX_PIC_THIS s.slave_pic.INT);
-  new bx_shadow_num_c(ctrl, "IRQ_in", &BX_PIC_THIS s.slave_pic.IRQ_in, BASE_HEX);
+  irq_in = new bx_list_c(ctrl, "irq_in");
+  for (i = 0; i < 8; i++) {
+    sprintf(name, "%u", i);
+    new bx_shadow_num_c(irq_in, name, &BX_PIC_THIS s.slave_pic.IRQ_in[i], BASE_HEX);
+  }
   BXRS_PARAM_BOOL(ctrl, in_init, BX_PIC_THIS s.slave_pic.init.in_init);
   BXRS_PARAM_BOOL(ctrl, requires_4, BX_PIC_THIS s.slave_pic.init.requires_4);
   new bx_shadow_num_c(ctrl, "byte_expected", &BX_PIC_THIS s.slave_pic.init.byte_expected);
@@ -287,7 +301,7 @@ void bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (pic->master) {
         BX_CLEAR_INTR();
       } else {
-        BX_PIC_THIS s.master_pic.IRQ_in &= ~(1 << 2);
+        BX_PIC_THIS s.master_pic.IRQ_in[2] &= ~BX_IRQ_TYPE_ISA;
       }
       return;
     }
@@ -446,49 +460,56 @@ void bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
 // new IRQ signal handling routines
 
-void bx_pic_c::lower_irq(unsigned irq_no)
+void bx_pic_c::lower_irq(unsigned irq_no, Bit8u irq_type)
 {
-#if BX_SUPPORT_APIC
-  // forward this function call to the ioapic too
-  if (DEV_ioapic_present() && (irq_no != 2)) {
-    DEV_ioapic_set_irq_level(irq_no, 0);
-  }
-#endif
-
+  bx_pic_t *pic = (irq_no < 8) ? &BX_PIC_THIS s.master_pic : &BX_PIC_THIS s.slave_pic;
   Bit8u mask = (1 << (irq_no & 7));
-  if ((irq_no <= 7) && (BX_PIC_THIS s.master_pic.IRQ_in & mask)) {
-    BX_DEBUG(("IRQ line %d now low", irq_no));
-    BX_PIC_THIS s.master_pic.IRQ_in &= ~(mask);
-    BX_PIC_THIS s.master_pic.irr &= ~(mask);
-  } else if ((irq_no > 7) && (irq_no <= 15) &&
-             (BX_PIC_THIS s.slave_pic.IRQ_in & mask)) {
-    BX_DEBUG(("IRQ line %d now low", irq_no));
-    BX_PIC_THIS s.slave_pic.IRQ_in &= ~(mask);
-    BX_PIC_THIS s.slave_pic.irr &= ~(mask);
+
+  if ((pic->IRQ_in[irq_no & 7] & irq_type) != 0) {
+    pic->IRQ_in[irq_no & 7] &= ~irq_type;
+    if (pic->IRQ_in[irq_no & 7] == 0) {
+      pic->irr &= ~(mask);
+      BX_DEBUG(("IRQ line %d now low", irq_no));
+#if BX_SUPPORT_APIC
+      // forward this function call to the ioapic too
+      if (DEV_ioapic_present() && (irq_no != 2)) {
+        DEV_ioapic_set_irq_level(irq_no, 0);
+      }
+#endif
+    }
   }
 }
 
-void bx_pic_c::raise_irq(unsigned irq_no)
+void bx_pic_c::raise_irq(unsigned irq_no, Bit8u irq_type)
 {
-#if BX_SUPPORT_APIC
-  // forward this function call to the ioapic too
-  if (DEV_ioapic_present() && (irq_no != 2)) {
-    DEV_ioapic_set_irq_level(irq_no, 1);
-  }
-#endif
-
+  bx_pic_t *pic = (irq_no < 8) ? &BX_PIC_THIS s.master_pic : &BX_PIC_THIS s.slave_pic;
   Bit8u mask = (1 << (irq_no & 7));
-  if ((irq_no <= 7) && !(BX_PIC_THIS s.master_pic.IRQ_in & mask)) {
-    BX_DEBUG(("IRQ line %d now high", irq_no));
-    BX_PIC_THIS s.master_pic.IRQ_in |= mask;
-    BX_PIC_THIS s.master_pic.irr |= mask;
-    pic_service(& BX_PIC_THIS s.master_pic);
-  } else if ((irq_no > 7) && (irq_no <= 15) &&
-             !(BX_PIC_THIS s.slave_pic.IRQ_in & mask)) {
-    BX_DEBUG(("IRQ line %d now high", irq_no));
-    BX_PIC_THIS s.slave_pic.IRQ_in |= mask;
-    BX_PIC_THIS s.slave_pic.irr |= mask;
-    pic_service(& BX_PIC_THIS s.slave_pic);
+
+  if ((irq_type == BX_IRQ_TYPE_ISA) && ((pic->IRQ_in[irq_no & 7] & ~irq_type) != 0)) {
+    BX_PANIC(("ISA IRQ %d lost", irq_no));
+  }
+  if ((pic->IRQ_in[irq_no & 7] & ~irq_type) == 0) {
+    pic->IRQ_in[irq_no & 7] |= irq_type;
+    if ((pic->irr & mask) == 0) {
+      pic->irr |= mask;
+      BX_DEBUG(("IRQ line %d now high", irq_no));
+      pic_service(pic);
+#if BX_SUPPORT_APIC
+      // forward this function call to the ioapic too
+      if (DEV_ioapic_present() && (irq_no != 2)) {
+        DEV_ioapic_set_irq_level(irq_no, 1);
+      }
+#endif
+    }
+  }
+}
+
+void bx_pic_c::set_irq_level(unsigned irq_no, Bit8u irq_type, bool level)
+{
+  if (level) {
+    raise_irq(irq_no, irq_type);
+  } else {
+    lower_irq(irq_no, irq_type);
   }
 }
 
@@ -570,7 +591,7 @@ void bx_pic_c::pic_service(bx_pic_t *pic)
           if (pic->master) {
             BX_RAISE_INTR();
           } else {
-            BX_PIC_THIS raise_irq(2); /* request IRQ 2 on master pic */
+            BX_PIC_THIS raise_irq(2, BX_IRQ_TYPE_ISA); /* request IRQ 2 on master pic */
           }
           return;
         } /* if (unmasked_requests & ... */
@@ -584,7 +605,7 @@ void bx_pic_c::pic_service(bx_pic_t *pic)
     if (pic->master) {
       BX_CLEAR_INTR();
     } else {
-      BX_PIC_THIS lower_irq(2);
+      BX_PIC_THIS lower_irq(2, BX_IRQ_TYPE_ISA);
     }
     pic->INT = 0;
   }
@@ -616,7 +637,7 @@ Bit8u bx_pic_c::IAC(void)
     vector = irq + BX_PIC_THIS s.master_pic.interrupt_offset;
   } else { /* IRQ2 = slave pic IRQ8..15 */
     BX_PIC_THIS s.slave_pic.INT = 0;
-    BX_PIC_THIS s.master_pic.IRQ_in &= ~(1 << 2);
+    BX_PIC_THIS s.master_pic.IRQ_in[2] &= ~BX_IRQ_TYPE_ISA;
     // Check for spurious interrupt
     if ((BX_PIC_THIS s.slave_pic.irr & ~BX_PIC_THIS s.slave_pic.imr) == 0) {
       return (BX_PIC_THIS s.slave_pic.interrupt_offset + 7);
