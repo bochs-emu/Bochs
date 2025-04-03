@@ -1927,8 +1927,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
               case 0x46: // get configuration (mmc4r05a.pdf, page 286) (pages are physical pdf pages, not page numbers listed on specific page)
                 {
-                  Bit8u rt = (controller->buffer[1] & (3<<0));
-                  Bit16u start_feature = read_16bit(controller->buffer + 2);
+//                Bit8u rt = (controller->buffer[1] & (3<<0));
+//                Bit16u start_feature = read_16bit(controller->buffer + 2);
                   Bit16u alloc_length = read_16bit(controller->buffer + 7);
                   Bit8u *feature_ptr = controller->buffer;
                   bool inserted = BX_SELECTED_DRIVE(channel).cdrom.ready;
