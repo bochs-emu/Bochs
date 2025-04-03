@@ -5530,9 +5530,9 @@ int13_edd(DS, SI, device)
 
     if (type == ATA_TYPE_ATAPI)
     {
-      npc     = 0xffffffff;
-      nph     = 0xffffffff;
-      npspt   = 0xffffffff;
+      npc     = 0xffff;
+      nph     = 0xffff;
+      npspt   = 0xffff;
       lba_low = 0xffffffff;
       lba_high = 0xffffffff;
 
@@ -5688,7 +5688,7 @@ int13_harddisk(DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
   Bit32u lba_low, lba_high;
   Bit16u cylinder, head, sector;
   Bit16u segment, offset;
-  Bit16u npc, nph, npspt, nlc, nlh, nlspt;
+  Bit16u nph, npspt, nlc, nlh, nlspt;
   Bit16u size, count;
   Bit8u  device, status;
 
