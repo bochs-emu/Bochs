@@ -1928,7 +1928,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               case 0x46: // get configuration (mmc4r05a.pdf, page 286) (pages are physical pdf pages, not page numbers listed on specific page)
                 {
 //                Bit8u rt = (controller->buffer[1] & (3<<0));
-//                Bit16u start_feature = read_16bit(controller->buffer + 2);
+                  Bit16u start_feature = read_16bit(controller->buffer + 2);
                   Bit16u alloc_length = read_16bit(controller->buffer + 7);
                   Bit8u *feature_ptr = controller->buffer;
                   bool inserted = BX_SELECTED_DRIVE(channel).cdrom.ready;
@@ -1954,99 +1954,115 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     // Profile 8 requires feature numbers, 0x0, 0x1, 0x2, 0x3, 0x10, 0x1E, 0x100, 0x105
 
                     // profile list (feature 0x0000) (mmc4r05a.pdf, page 174)
-                    feature_ptr[0] = 0x00;  // Feature Code 0x000
-                    feature_ptr[1] = 0x00;
-                    feature_ptr[2] = (0 << 6) | (0 << 2) | (1 << 1) | (inserted << 0); // version 1, persistent = 1, current = 1 if inserted
-                    feature_ptr[3] = 4;  // additional length = (1 * 4)
-                      feature_ptr[4] = 0x00;  // profile 0x0008
-                      feature_ptr[5] = 0x08;  // 
-                      feature_ptr[6] = (0 << 1) | (inserted << 0);  // reserved, Current = 1 if inserted
-                      feature_ptr[7] = 0;  // reserved
-                    feature_ptr += 8;
+                    if (start_feature == 0x0000) {
+                      feature_ptr[0] = 0x00;  // Feature Code 0x000
+                      feature_ptr[1] = 0x00;
+                      feature_ptr[2] = (0 << 6) | (0 << 2) | (1 << 1) | (inserted << 0); // version 1, persistent = 1, current = 1 if inserted
+                      feature_ptr[3] = 4;  // additional length = (1 * 4)
+                        feature_ptr[4] = 0x00;  // profile 0x0008
+                        feature_ptr[5] = 0x08;  // 
+                        feature_ptr[6] = (0 << 1) | (inserted << 0);  // reserved, Current = 1 if inserted
+                        feature_ptr[7] = 0;  // reserved
+                      feature_ptr += 8;
+                    }
 
                     // core feature (feature 0x0001) (mmc4r05a.pdf, page 174)
-                    feature_ptr[0] = 0x00;  // Feature Code 0x001
-                    feature_ptr[1] = 0x01;
-                    feature_ptr[2] = (0 << 6) | (1 << 2) | (1 << 1) | (1 << 0); // version 1, persistent = 1, current = 1
-                    feature_ptr[3] = 8;  // additional length = 8
-                    feature_ptr[4] = 0;  // physical interface standard:
-                    feature_ptr[5] = 0;  //   2 = ATAPI
-                    feature_ptr[6] = 0;  //
-                    feature_ptr[7] = 2;  //
-                    feature_ptr[8] = (0 << 1) | (0 << 0); // reserved, DBE = 0
-                    feature_ptr[9] = 0;  //
-                    feature_ptr[10] = 0;  //
-                    feature_ptr[11] = 0;  //
-                    feature_ptr += 12;
+                    if (start_feature <= 0x0001) {
+                      feature_ptr[0] = 0x00;  // Feature Code 0x001
+                      feature_ptr[1] = 0x01;
+                      feature_ptr[2] = (0 << 6) | (1 << 2) | (1 << 1) | (1 << 0); // version 1, persistent = 1, current = 1
+                      feature_ptr[3] = 8;  // additional length = 8
+                      feature_ptr[4] = 0;  // physical interface standard:
+                      feature_ptr[5] = 0;  //   2 = ATAPI
+                      feature_ptr[6] = 0;  //
+                      feature_ptr[7] = 2;  //
+                      feature_ptr[8] = (0 << 1) | (0 << 0); // reserved, DBE = 0
+                      feature_ptr[9] = 0;  //
+                      feature_ptr[10] = 0;  //
+                      feature_ptr[11] = 0;  //
+                      feature_ptr += 12;
+                    }
 
                     // morphing feature (feature 0x0002) (mmc4r05a.pdf, page 178)
-                    feature_ptr[0] = 0x00;  // Feature Code 0x002
-                    feature_ptr[1] = 0x02;
-                    feature_ptr[2] = (0 << 6) | (1 << 2) | (1 << 1) | (1 << 0); // version 1, persistent = 1, current = 1
-                    feature_ptr[3] = 4;  // additional length = 4
-                    feature_ptr[4] = (0 << 1) | (0 << 0); // OCEvent = 0 (see page 178), ASYNC = 0 (0 = polling of EVENT STATUS NOTIFICATION)
-                    feature_ptr[5] = 0;  //
-                    feature_ptr[6] = 0;  //
-                    feature_ptr[7] = 0;  //
-                    feature_ptr += 8;
+                    if (start_feature <= 0x0002) {
+                      feature_ptr[0] = 0x00;  // Feature Code 0x002
+                      feature_ptr[1] = 0x02;
+                      feature_ptr[2] = (0 << 6) | (1 << 2) | (1 << 1) | (1 << 0); // version 1, persistent = 1, current = 1
+                      feature_ptr[3] = 4;  // additional length = 4
+                      feature_ptr[4] = (0 << 1) | (0 << 0); // OCEvent = 0 (see page 178), ASYNC = 0 (0 = polling of EVENT STATUS NOTIFICATION)
+                      feature_ptr[5] = 0;  //
+                      feature_ptr[6] = 0;  //
+                      feature_ptr[7] = 0;  //
+                      feature_ptr += 8;
+                    }
 
                     // Removable Medium feature (feature 0x0003) (mmc4r05a.pdf, page 179)
-                    feature_ptr[0] = 0x00;  // Feature Code 0x003
-                    feature_ptr[1] = 0x03;
-                    feature_ptr[2] = (0 << 6) | (0 << 2) | (1 << 1) | (1 << 0); // version 0, persistent = 1, current = 1
-                    feature_ptr[3] = 4;  // additional length = 4
-                    feature_ptr[4] = (0 << 5)  // Loading Mech type: 0
-                                   | (0 << 3)  // No Eject Mech
-                                   | (1 << 2)  // No Pvnt Jumper
-                                   | (0 << 0); // Lock = 0 (no locking mechanism)
-                    feature_ptr[5] = 0;  //
-                    feature_ptr[6] = 0;  //
-                    feature_ptr[7] = 0;  //
-                    feature_ptr += 8;
+                    if (start_feature <= 0x0003) {
+                      feature_ptr[0] = 0x00;  // Feature Code 0x003
+                      feature_ptr[1] = 0x03;
+                      feature_ptr[2] = (0 << 6) | (0 << 2) | (1 << 1) | (1 << 0); // version 0, persistent = 1, current = 1
+                      feature_ptr[3] = 4;  // additional length = 4
+                      feature_ptr[4] = (0 << 5)  // Loading Mech type: 0
+                                     | (0 << 3)  // No Eject Mech
+                                     | (1 << 2)  // No Pvnt Jumper
+                                     | (0 << 0); // Lock = 0 (no locking mechanism)
+                      feature_ptr[5] = 0;  //
+                      feature_ptr[6] = 0;  //
+                      feature_ptr[7] = 0;  //
+                      feature_ptr += 8;
+                    }
 
                     // Random Readable feature (feature 0x0010) (mmc4r05a.pdf, page 182)
-                    feature_ptr[0] = 0x00;  // Feature Code 0x010
-                    feature_ptr[1] = 0x10;
-                    feature_ptr[2] = (0 << 6) | (0 << 2) | (1 << 1) | (1 << 0); // version 0, persistent = 1, current = 1
-                    feature_ptr[3] = 8;  // additional length = 8
-                    feature_ptr[4] = 0x00;  // Logical Block Size:
-                    feature_ptr[5] = 0x00;  //   2048 (0x800)
-                    feature_ptr[6] = 0x08;  //
-                    feature_ptr[7] = 0x00;  //
-                    feature_ptr[8] = (MAX_MULTIPLE_SECTORS >> 8);  // blocking
-                    feature_ptr[9] = (MAX_MULTIPLE_SECTORS & 0xFF);
-                    feature_ptr[10] = (0 << 0);  // PP = 0
-                    feature_ptr[11] = 0;
-                    feature_ptr += 12;
+                    if (start_feature <= 0x0010) {
+                      feature_ptr[0] = 0x00;  // Feature Code 0x010
+                      feature_ptr[1] = 0x10;
+                      feature_ptr[2] = (0 << 6) | (0 << 2) | (1 << 1) | (1 << 0); // version 0, persistent = 1, current = 1
+                      feature_ptr[3] = 8;  // additional length = 8
+                      feature_ptr[4] = 0x00;  // Logical Block Size:
+                      feature_ptr[5] = 0x00;  //   2048 (0x800)
+                      feature_ptr[6] = 0x08;  //
+                      feature_ptr[7] = 0x00;  //
+                      feature_ptr[8] = (MAX_MULTIPLE_SECTORS >> 8);  // blocking
+                      feature_ptr[9] = (MAX_MULTIPLE_SECTORS & 0xFF);
+                      feature_ptr[10] = (0 << 0);  // PP = 0
+                      feature_ptr[11] = 0;
+                      feature_ptr += 12;
+                    }
 
                     // CD Read feature (feature 0x001E) (mmc4r05a.pdf, page 185)
-                    feature_ptr[0] = 0x00;  // Feature Code 0x01E
-                    feature_ptr[1] = 0x1E;
-                    feature_ptr[2] = (0 << 6) | (2 << 2) | (1 << 1) | (1 << 0); // version 2, persistent = 1, current = 1
-                    feature_ptr[3] = 4;  // additional length = 4
-                    feature_ptr[4] = (0 << 7) | (0 << 1) | (0 << 0); // DAP = 0, C2 Flags = 0, CD-Text = 0
-                    feature_ptr[5] = 0;
-                    feature_ptr[6] = 0;
-                    feature_ptr[7] = 0;
-                    feature_ptr += 8;
+                    if (start_feature <= 0x001E) {
+                      feature_ptr[0] = 0x00;  // Feature Code 0x01E
+                      feature_ptr[1] = 0x1E;
+                      feature_ptr[2] = (0 << 6) | (2 << 2) | (1 << 1) | (1 << 0); // version 2, persistent = 1, current = 1
+                      feature_ptr[3] = 4;  // additional length = 4
+                      feature_ptr[4] = (0 << 7) | (0 << 1) | (0 << 0); // DAP = 0, C2 Flags = 0, CD-Text = 0
+                      feature_ptr[5] = 0;
+                      feature_ptr[6] = 0;
+                      feature_ptr[7] = 0;
+                      feature_ptr += 8;
+                    }
 
                     // Power Management feature (feature 0x0100) (mmc4r05a.pdf, page 216)
-                    feature_ptr[0] = 0x01;  // Feature Code 0x100
-                    feature_ptr[1] = 0x00;
-                    feature_ptr[2] = (0 << 6) | (0 << 2) | (1 << 1) | (1 << 0); // version 0, persistent = 1, current = 1
-                    feature_ptr[3] = 0;  // additional length = 0
-                    feature_ptr += 4;
+                    if (start_feature <= 0x0100) {
+                      feature_ptr[0] = 0x01;  // Feature Code 0x100
+                      feature_ptr[1] = 0x00;
+                      feature_ptr[2] = (0 << 6) | (0 << 2) | (1 << 1) | (1 << 0); // version 0, persistent = 1, current = 1
+                      feature_ptr[3] = 0;  // additional length = 0
+                      feature_ptr += 4;
+                    }
                     
                     // Timeout feature (feature 0x0105) (mmc4r05a.pdf, page 222)
-                    feature_ptr[0] = 0x01;  // Feature Code 0x105
-                    feature_ptr[1] = 0x05;
-                    feature_ptr[2] = (0 << 6) | (1 << 2) | (1 << 1) | (1 << 0); // version 1, persistent = 1, current = 1
-                    feature_ptr[3] = 4;  // additional length = 4
-                    feature_ptr[4] = (0 << 0); // Group 3 = 0
-                    feature_ptr[5] = 0;
-                    feature_ptr[6] = 0;
-                    feature_ptr[7] = 0;
-                    feature_ptr += 8;
+                    if (start_feature <= 0x0105) {
+                      feature_ptr[0] = 0x01;  // Feature Code 0x105
+                      feature_ptr[1] = 0x05;
+                      feature_ptr[2] = (0 << 6) | (1 << 2) | (1 << 1) | (1 << 0); // version 1, persistent = 1, current = 1
+                      feature_ptr[3] = 4;  // additional length = 4
+                      feature_ptr[4] = (0 << 0); // Group 3 = 0
+                      feature_ptr[5] = 0;
+                      feature_ptr[6] = 0;
+                      feature_ptr[7] = 0;
+                      feature_ptr += 8;
+                    }
 
                     // update the return length
                     Bit16u return_length = (Bit16u) (feature_ptr - controller->buffer);
