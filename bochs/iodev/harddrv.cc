@@ -2433,7 +2433,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                 switch (type) {
                   case 0x00: // PIO default
                   case 0x01: // PIO mode
-                    BX_INFO(("ata%d-%d: set transfer mode to PIO", channel,
+                    BX_DEBUG(("ata%d-%d: set transfer mode to PIO", channel,
                              BX_SLAVE_SELECTED(channel)));
                     controller->mdma_mode = 0x00;
                     controller->udma_mode = 0x00;
@@ -2442,7 +2442,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     raise_interrupt(channel);
                     break;
                   case 0x04: // MDMA mode
-                    BX_INFO(("ata%d-%d: set transfer mode to MDMA%d", channel,
+                    BX_DEBUG(("ata%d-%d: set transfer mode to MDMA%d", channel,
                              BX_SLAVE_SELECTED(channel), mode));
                     controller->mdma_mode = (1 << mode);
                     controller->udma_mode = 0x00;
