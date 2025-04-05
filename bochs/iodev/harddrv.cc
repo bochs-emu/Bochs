@@ -2065,15 +2065,16 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     }
 
                     // update the return length
-                    Bit16u return_length = (Bit16u) (feature_ptr - controller->buffer);
-                    if (return_length > alloc_length)
-                      return_length = alloc_length;
+                    // The Data Length field indicates the amount of data available given a sufficient allocation length following this field.
+                    // This length shall not be truncated due to an insufficient Allocation Length.
+                    Bit16u return_length = (Bit16u) (feature_ptr - controller->buffer) - 4;
                     controller->buffer[0] = 0;
                     controller->buffer[1] = 0;
                     controller->buffer[2] = (return_length >> 8);
                     controller->buffer[3] = (return_length & 0xFF);
 
-                    init_send_atapi_command(channel, atapi_command, return_length, return_length);
+                    // I think the last parameter needs to be 'alloc_length', but ReactOS won't boot unless it is this:
+                    init_send_atapi_command(channel, atapi_command, return_length + 4, return_length + 4);
                     ready_to_send_atapi(channel);
                   } else {
                     atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 0);
@@ -2432,7 +2433,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                 switch (type) {
                   case 0x00: // PIO default
                   case 0x01: // PIO mode
-                    BX_INFO(("ata%d-%d: set transfer mode to PIO", channel,
+                    BX_DEBUG(("ata%d-%d: set transfer mode to PIO", channel,
                              BX_SLAVE_SELECTED(channel)));
                     controller->mdma_mode = 0x00;
                     controller->udma_mode = 0x00;
@@ -2441,7 +2442,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     raise_interrupt(channel);
                     break;
                   case 0x04: // MDMA mode
-                    BX_INFO(("ata%d-%d: set transfer mode to MDMA%d", channel,
+                    BX_DEBUG(("ata%d-%d: set transfer mode to MDMA%d", channel,
                              BX_SLAVE_SELECTED(channel), mode));
                     controller->mdma_mode = (1 << mode);
                     controller->udma_mode = 0x00;
