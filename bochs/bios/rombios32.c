@@ -405,6 +405,7 @@ uint8_t bios_uuid[16];
 #ifdef BX_USE_EBDA_TABLES
 unsigned long ebda_cur_addr;
 #endif
+int chipset_i440bx;
 int acpi_enabled;
 uint32_t pm_io_base, smb_io_base;
 int pm_sci_int;
@@ -912,6 +913,7 @@ static void pci_bios_init_bridges(PCIDevice *d)
         writeb(pir + 0x7b, 0x63); // INTD -> PIRQD
         cksum = acpi_checksum(pir, 0x80);
         writeb(pir + 0x1f, cksum); // Checksum
+        chipset_i440bx = 1; // Used later for ACPI fixes
       } else if (device_id == PCI_DEVICE_ID_INTEL_82443_1) {
         /* i440BX PCI/AGP bridge */
         agpdev->bus = 1;
@@ -1758,6 +1760,20 @@ int acpi_build_processor_ssdt(uint8_t *ssdt)
     return ssdt_ptr - ssdt;
 }
 
+static uint8_t* find_acpi_pci2isa_entry(const uint8_t *data, int len)
+{
+    int i;
+
+    for (i = 0; i < len; i += 2) {
+        if ((*(uint32_t *)&data[i] == 0x5f415349) &&
+           (*(uint32_t *)(&data[i + 5]) == 0x5244415f)) {
+            return &data[i];
+        }
+    }
+    BX_PANIC("find_acpi_pci2isa_entry: did not find pci2isa entry");
+    return NULL;
+}
+
 /* base_addr must be a multiple of 4KB */
 void acpi_bios_init(void)
 {
@@ -1888,6 +1904,16 @@ void acpi_bios_init(void)
 
     /* DSDT */
     memcpy(dsdt, AmlCode, sizeof(AmlCode));
+    if (chipset_i440bx) {
+        int size = ssdt_addr - dsdt_addr;
+        uint8_t *ptr = find_acpi_pci2isa_entry(dsdt, size);
+        BX_INFO("Modify ACPI PCI-to-ISA entry at: 0x%08lx\n", ptr);
+        writeb(ptr + 0x0C, 0x07); // PCI-to-ISA device number
+        writeb(dsdt + 0x09, 0x00); // Reset checksum
+        uint8_t checksum = acpi_checksum(dsdt, size);
+        BX_INFO("New ACPI DSDT checksum = 0x%02x\n", checksum);
+        writeb(dsdt + 0x09, checksum);
+    }
 
     /* MADT */
     {
