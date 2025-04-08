@@ -680,10 +680,10 @@ static void pci_set_io_region_addr(PCIDevice *d, int region_num, uint32_t addr)
 /* return the global irq number corresponding to a given device irq
    pin. We could also use the bus number to have a more precise
    mapping. */
-static int pci_slot_get_pirq(PCIDevice *pci_dev, int irq_num, int is_i440bx)
+static int pci_slot_get_pirq(PCIDevice *pci_dev, int irq_num)
 {
     int slot_addend;
-    if (is_i440bx) {
+    if (chipset_i440bx) {
       if ((pci_dev->devfn >> 3) == 0x07) {
         slot_addend = (pci_dev->devfn >> 3) - 7;
       } else {
@@ -1047,19 +1047,11 @@ static void pci_bios_init_pcirom(PCIDevice *d, uint32_t paddr)
 
 static void pci_bios_init_device(PCIDevice *d)
 {
-    PCIDevice d1, *bridge = &d1;
     uint16_t class, cmd;
     uint32_t *paddr, mask;
-    int headt, i, j, pin, pic_irq, vendor_id, device_id, is_i440bx = 0;
+    int headt, i, j, pin, pic_irq, vendor_id, device_id;
     int init_bar[PCI_NUM_REGIONS];
 
-    bridge->bus = 0;
-    bridge->devfn = 0;
-    vendor_id = pci_config_readw(bridge, PCI_VENDOR_ID);
-    device_id = pci_config_readw(bridge, PCI_DEVICE_ID);
-    if (vendor_id == PCI_VENDOR_ID_INTEL && device_id == PCI_DEVICE_ID_INTEL_82443) {
-      is_i440bx = 1;
-    }
     class = pci_config_readw(d, PCI_CLASS_DEVICE);
     vendor_id = pci_config_readw(d, PCI_VENDOR_ID);
     device_id = pci_config_readw(d, PCI_DEVICE_ID);
@@ -1169,7 +1161,7 @@ static void pci_bios_init_device(PCIDevice *d)
     /* map the interrupt */
     pin = pci_config_readb(d, PCI_INTERRUPT_PIN);
     if (pin != 0) {
-        pin = pci_slot_get_pirq(d, pin - 1, is_i440bx);
+        pin = pci_slot_get_pirq(d, pin - 1);
         pic_irq = pci_irqs[pin];
         pci_config_writeb(d, PCI_INTERRUPT_LINE, pic_irq);
     }
@@ -1234,6 +1226,7 @@ void pci_bios_init(void)
     agp_bios_io_addr = 0xe000;
     pci_bios_mem_addr = 0xc0000000;
     pci_bios_rom_start = 0xc0000;
+    chipset_i440bx = 0;
 
     pci_for_each_device(pci_bios_init_bridges);
 
