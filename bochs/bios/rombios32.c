@@ -405,6 +405,7 @@ uint8_t bios_uuid[16];
 #ifdef BX_USE_EBDA_TABLES
 unsigned long ebda_cur_addr;
 #endif
+int chipset_i440bx;
 int acpi_enabled;
 uint32_t pm_io_base, smb_io_base;
 int pm_sci_int;
@@ -679,10 +680,10 @@ static void pci_set_io_region_addr(PCIDevice *d, int region_num, uint32_t addr)
 /* return the global irq number corresponding to a given device irq
    pin. We could also use the bus number to have a more precise
    mapping. */
-static int pci_slot_get_pirq(PCIDevice *pci_dev, int irq_num, int is_i440bx)
+static int pci_slot_get_pirq(PCIDevice *pci_dev, int irq_num)
 {
     int slot_addend;
-    if (is_i440bx) {
+    if (chipset_i440bx) {
       if ((pci_dev->devfn >> 3) == 0x07) {
         slot_addend = (pci_dev->devfn >> 3) - 7;
       } else {
@@ -912,6 +913,7 @@ static void pci_bios_init_bridges(PCIDevice *d)
         writeb(pir + 0x7b, 0x63); // INTD -> PIRQD
         cksum = acpi_checksum(pir, 0x80);
         writeb(pir + 0x1f, cksum); // Checksum
+        chipset_i440bx = 1; // Used later for ACPI fixes
       } else if (device_id == PCI_DEVICE_ID_INTEL_82443_1) {
         /* i440BX PCI/AGP bridge */
         agpdev->bus = 1;
@@ -1045,19 +1047,11 @@ static void pci_bios_init_pcirom(PCIDevice *d, uint32_t paddr)
 
 static void pci_bios_init_device(PCIDevice *d)
 {
-    PCIDevice d1, *bridge = &d1;
     uint16_t class, cmd;
     uint32_t *paddr, mask;
-    int headt, i, j, pin, pic_irq, vendor_id, device_id, is_i440bx = 0;
+    int headt, i, j, pin, pic_irq, vendor_id, device_id;
     int init_bar[PCI_NUM_REGIONS];
 
-    bridge->bus = 0;
-    bridge->devfn = 0;
-    vendor_id = pci_config_readw(bridge, PCI_VENDOR_ID);
-    device_id = pci_config_readw(bridge, PCI_DEVICE_ID);
-    if (vendor_id == PCI_VENDOR_ID_INTEL && device_id == PCI_DEVICE_ID_INTEL_82443) {
-      is_i440bx = 1;
-    }
     class = pci_config_readw(d, PCI_CLASS_DEVICE);
     vendor_id = pci_config_readw(d, PCI_VENDOR_ID);
     device_id = pci_config_readw(d, PCI_DEVICE_ID);
@@ -1167,7 +1161,7 @@ static void pci_bios_init_device(PCIDevice *d)
     /* map the interrupt */
     pin = pci_config_readb(d, PCI_INTERRUPT_PIN);
     if (pin != 0) {
-        pin = pci_slot_get_pirq(d, pin - 1, is_i440bx);
+        pin = pci_slot_get_pirq(d, pin - 1);
         pic_irq = pci_irqs[pin];
         pci_config_writeb(d, PCI_INTERRUPT_LINE, pic_irq);
     }
@@ -1232,6 +1226,7 @@ void pci_bios_init(void)
     agp_bios_io_addr = 0xe000;
     pci_bios_mem_addr = 0xc0000000;
     pci_bios_rom_start = 0xc0000;
+    chipset_i440bx = 0;
 
     pci_for_each_device(pci_bios_init_bridges);
 
@@ -1758,6 +1753,20 @@ int acpi_build_processor_ssdt(uint8_t *ssdt)
     return ssdt_ptr - ssdt;
 }
 
+static uint8_t* find_acpi_pci2isa_entry(const uint8_t *data, int len)
+{
+    int i;
+
+    for (i = 0; i < len; i += 2) {
+        if ((*(uint32_t *)&data[i] == 0x5f415349) &&
+           (*(uint32_t *)(&data[i + 5]) == 0x5244415f)) {
+            return &data[i];
+        }
+    }
+    BX_PANIC("find_acpi_pci2isa_entry: did not find pci2isa entry");
+    return NULL;
+}
+
 /* base_addr must be a multiple of 4KB */
 void acpi_bios_init(void)
 {
@@ -1888,6 +1897,16 @@ void acpi_bios_init(void)
 
     /* DSDT */
     memcpy(dsdt, AmlCode, sizeof(AmlCode));
+    if (chipset_i440bx) {
+        int size = ssdt_addr - dsdt_addr;
+        uint8_t *ptr = find_acpi_pci2isa_entry(dsdt, size);
+        BX_INFO("Modify ACPI PCI-to-ISA entry at: 0x%08lx\n", ptr);
+        writeb(ptr + 0x0C, 0x07); // PCI-to-ISA device number
+        writeb(dsdt + 0x09, 0x00); // Reset checksum
+        uint8_t checksum = acpi_checksum(dsdt, size);
+        BX_INFO("New ACPI DSDT checksum = 0x%02x\n", checksum);
+        writeb(dsdt + 0x09, checksum);
+    }
 
     /* MADT */
     {
