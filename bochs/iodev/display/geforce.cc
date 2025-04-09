@@ -1805,7 +1805,7 @@ Bit8u bx_geforce_c::dma_read8(Bit32u object, Bit32u address)
   Bit32u target = flags >> 12 & 0xFF;
   if (target == 0x21 || target == 0x29)
     return physical_read8(dma_pt_lookup(object, address));
-  else if (target == 0x23 || target == 0x2b)
+  else if (target == 0x23 || target == 0x2b || target == 0x33 || target == 0x37)
     return physical_read8(dma_lin_lookup(object, address));
   else if (target == 0x03 || target == 0x0b)
     return vram_read8(dma_lin_lookup(object, address));
@@ -1820,7 +1820,7 @@ Bit16u bx_geforce_c::dma_read16(Bit32u object, Bit32u address)
   Bit32u target = flags >> 12 & 0xFF;
   if (target == 0x21 || target == 0x29)
     return physical_read16(dma_pt_lookup(object, address));
-  else if (target == 0x23 || target == 0x2b)
+  else if (target == 0x23 || target == 0x2b || target == 0x33 || target == 0x37)
     return physical_read16(dma_lin_lookup(object, address));
   else if (target == 0x03 || target == 0x0b)
     return vram_read16(dma_lin_lookup(object, address));
@@ -1835,7 +1835,7 @@ Bit32u bx_geforce_c::dma_read32(Bit32u object, Bit32u address)
   Bit32u target = flags >> 12 & 0xFF;
   if (target == 0x21 || target == 0x29)
     return physical_read32(dma_pt_lookup(object, address));
-  else if (target == 0x23 || target == 0x2b)
+  else if (target == 0x23 || target == 0x2b || target == 0x33 || target == 0x37)
     return physical_read32(dma_lin_lookup(object, address));
   else if (target == 0x03 || target == 0x0b)
     return vram_read32(dma_lin_lookup(object, address));
@@ -1850,7 +1850,7 @@ void bx_geforce_c::dma_write8(Bit32u object, Bit32u address, Bit8u value)
   Bit32u target = flags >> 12 & 0xFF;
   if (target == 0x21 || target == 0x29)
     physical_write8(dma_pt_lookup(object, address), value);
-  else if (target == 0x23 || target == 0x2b)
+  else if (target == 0x23 || target == 0x2b || target == 0x33)
     physical_write8(dma_lin_lookup(object, address), value);
   else if (target == 0x03 || target == 0x0b)
     vram_write8(dma_lin_lookup(object, address), value);
@@ -1874,7 +1874,7 @@ void bx_geforce_c::dma_write32(Bit32u object, Bit32u address, Bit32u value)
   Bit32u target = flags >> 12 & 0xFF;
   if (target == 0x21 || target == 0x29)
     physical_write32(dma_pt_lookup(object, address), value);
-  else if (target == 0x23 || target == 0x2b)
+  else if (target == 0x23 || target == 0x2b || target == 0x33)
     physical_write32(dma_lin_lookup(object, address), value);
   else if (target == 0x03 || target == 0x0b)
     vram_write32(dma_lin_lookup(object, address), value);
@@ -1888,7 +1888,7 @@ void bx_geforce_c::dma_write64(Bit32u object, Bit32u address, Bit64u value)
   Bit32u target = flags >> 12 & 0xFF;
   if (target == 0x21 || target == 0x29)
     physical_write64(dma_pt_lookup(object, address), value);
-  else if (target == 0x23 || target == 0x2b)
+  else if (target == 0x23 || target == 0x2b || target == 0x33)
     physical_write64(dma_lin_lookup(object, address), value);
   else if (target == 0x03 || target == 0x0b)
     vram_write64(dma_lin_lookup(object, address), value);
@@ -3007,24 +3007,26 @@ void bx_geforce_c::svga_init_pcihandlers(void)
   BX_GEFORCE_THIS pci_conf[0x41] = BX_GEFORCE_THIS pci_conf[0x2d];
   BX_GEFORCE_THIS pci_conf[0x42] = BX_GEFORCE_THIS pci_conf[0x2e];
   BX_GEFORCE_THIS pci_conf[0x43] = BX_GEFORCE_THIS pci_conf[0x2f];
-  if (BX_GEFORCE_THIS card_type == 0x20) {
-    BX_GEFORCE_THIS pci_conf[0x44] = 0x02;
-    BX_GEFORCE_THIS pci_conf[0x45] = 0x00;
-    BX_GEFORCE_THIS pci_conf[0x46] = 0x20;
-    BX_GEFORCE_THIS pci_conf[0x47] = 0x00;
-    BX_GEFORCE_THIS pci_conf[0x48] = 0x07;
-    BX_GEFORCE_THIS pci_conf[0x49] = 0x00;
-    BX_GEFORCE_THIS pci_conf[0x4a] = 0x00;
-    BX_GEFORCE_THIS pci_conf[0x4b] = 0x1F;
-    BX_GEFORCE_THIS pci_conf[0x54] = 0x01;
-    BX_GEFORCE_THIS pci_conf[0x55] = 0x00;
-    BX_GEFORCE_THIS pci_conf[0x56] = 0x00;
-    BX_GEFORCE_THIS pci_conf[0x57] = 0x00;
-    BX_GEFORCE_THIS pci_conf[0x60] = 0x01;
-    BX_GEFORCE_THIS pci_conf[0x61] = 0x44;
-    BX_GEFORCE_THIS pci_conf[0x62] = 0x02;
-    BX_GEFORCE_THIS pci_conf[0x63] = 0x00;
-  }
+
+  BX_GEFORCE_THIS pci_conf[0x06] = 0xB0;
+  BX_GEFORCE_THIS pci_conf[0x07] = 0x02;
+  BX_GEFORCE_THIS pci_conf[0x34] = 0x60;
+  BX_GEFORCE_THIS pci_conf[0x44] = 0x02;
+  BX_GEFORCE_THIS pci_conf[0x45] = 0x00;
+  BX_GEFORCE_THIS pci_conf[0x46] = 0x20;
+  BX_GEFORCE_THIS pci_conf[0x47] = 0x00;
+  BX_GEFORCE_THIS pci_conf[0x48] = 0x07;
+  BX_GEFORCE_THIS pci_conf[0x49] = 0x00;
+  BX_GEFORCE_THIS pci_conf[0x4a] = 0x00;
+  BX_GEFORCE_THIS pci_conf[0x4b] = 0x1F;
+  BX_GEFORCE_THIS pci_conf[0x54] = 0x01;
+  BX_GEFORCE_THIS pci_conf[0x55] = 0x00;
+  BX_GEFORCE_THIS pci_conf[0x56] = 0x00;
+  BX_GEFORCE_THIS pci_conf[0x57] = 0x00;
+  BX_GEFORCE_THIS pci_conf[0x60] = 0x01;
+  BX_GEFORCE_THIS pci_conf[0x61] = 0x44;
+  BX_GEFORCE_THIS pci_conf[0x62] = 0x02;
+  BX_GEFORCE_THIS pci_conf[0x63] = 0x00;
 }
 
 void bx_geforce_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
@@ -3038,6 +3040,12 @@ void bx_geforce_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_le
   for (unsigned i=0; i<io_len; i++) {
     value8 = (value >> (i*8)) & 0xFF;
     oldval = pci_conf[address+i];
+    switch (address + i) {
+      case 0x06:
+      case 0x07:
+        value8 = oldval;
+        break;
+    }
     pci_conf[address+i] = value8;
   }
 }
