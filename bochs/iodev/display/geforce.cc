@@ -2023,7 +2023,9 @@ void bx_geforce_c::gdi_blit(Bit32u chid, Bit32u type)
       bool pixel = BX_GEFORCE_THIS chs[chid].gdi_words[word_offset] >> bit_offset & 1;
       if (type || !type && pixel) {
         Bit32u dstcolor;
-        if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
+        if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 1)
+          dstcolor = dma_read16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x);
+        else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
           dstcolor = dma_read16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2);
         else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4)
           dstcolor = dma_read32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4);
@@ -2033,7 +2035,9 @@ void bx_geforce_c::gdi_blit(Bit32u chid, Bit32u type)
             (Bit8u*)&patcolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
         else
           rop_fn((Bit8u*)&dstcolor, (Bit8u*)&srccolor, 0, 0, BX_GEFORCE_THIS chs[chid].s2d_color_bytes, 1);
-        if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
+        if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 1)
+          dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x, dstcolor);
+        else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
           dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2, dstcolor);
         else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4)
           dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4, dstcolor);
@@ -2075,6 +2079,16 @@ void bx_geforce_c::ifc(Bit32u chid)
         else
           rop_fn((Bit8u*)&dstcolor, (Bit8u*)&srccolor, 0, 0, BX_GEFORCE_THIS chs[chid].s2d_color_bytes, 1);
         dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4, dstcolor);
+      } else if (BX_GEFORCE_THIS chs[chid].ifc_color_bytes == 2) {
+        Bit16u dstcolor = dma_read16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2);
+        Bit16u *ifc_words16 = (Bit16u*)BX_GEFORCE_THIS chs[chid].ifc_words;
+        Bit16u srccolor = ifc_words16[word_offset];
+        if (rop_pattern)
+          bx_ternary_rop(rop, (Bit8u*)&dstcolor, (Bit8u*)&srccolor,
+            (Bit8u*)&patcolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
+        else
+          rop_fn((Bit8u*)&dstcolor, (Bit8u*)&srccolor, 0, 0, BX_GEFORCE_THIS chs[chid].s2d_color_bytes, 1);
+        dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2, dstcolor);
       }
       word_offset++;
     }
