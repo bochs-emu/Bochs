@@ -1013,20 +1013,38 @@ void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tilein
           if (alpha) {
             color = b1 << 0 | g1 << 8 | r1 << 16;
           } else {
-            Bit8u b2 = vid_ptr2[0] ^ b1;
-            Bit8u g2 = vid_ptr2[1] ^ g1;
-            Bit8u r2 = vid_ptr2[2] ^ r1;
+            Bit8u r2, g2, b2;
+            if (display_color_bytes == 1) {
+              r2 = g2 = b2 = vid_ptr2[0];
+            } else if (display_color_bytes == 2) {
+              EXTRACT_565_TO_888(vid_ptr2[0] << 0 | vid_ptr2[1] << 8, r2, g2, b2);
+            } else {
+              b2 = vid_ptr2[0];
+              g2 = vid_ptr2[1];
+              r2 = vid_ptr2[2];
+            }
+            b2 ^= b1;
+            g2 ^= g1;
+            r2 ^= r1;
             color = b2 << 0 | g2 << 8 | r2 << 16;
           }
         }
-        if (info->is_little_endian) {
-          for (int i = 0; i < info->bpp; i += 8) {
-            *(tile_ptr2++) = (Bit8u)(color >> i);
+        if (!info->is_indexed) {
+          color = MAKE_COLOUR(
+            color, 24, info->red_shift, info->red_mask,
+            color, 16, info->green_shift, info->green_mask,
+            color, 8, info->blue_shift, info->blue_mask);
+          if (info->is_little_endian) {
+            for (int i = 0; i < info->bpp; i += 8) {
+              *(tile_ptr2++) = (Bit8u)(color >> i);
+            }
+          } else {
+            for (int i = info->bpp - 8; i > -8; i -= 8) {
+              *(tile_ptr2++) = (Bit8u)(color >> i);
+            }
           }
         } else {
-          for (int i = info->bpp - 8; i > -8; i -= 8) {
-            *(tile_ptr2++) = (Bit8u)(color >> i);
-          }
+          *(tile_ptr2++) = (Bit8u)color;
         }
         cursor_ptr2 += cursor_color_bytes;
         vid_ptr2 += display_color_bytes;
