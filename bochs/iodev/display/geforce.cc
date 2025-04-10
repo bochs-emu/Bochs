@@ -996,37 +996,37 @@ void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tilein
       Bit8u* cursor_ptr2 = cursor_ptr + cursor_color_bytes * (cx0 - hwcx);
       Bit8u* vid_ptr2 = vid_ptr + display_color_bytes * cx0;
       for (unsigned cx = cx0; cx < cx1; cx++) {
+        Bit8u dr, dg, db;
+        if (display_color_bytes == 1) {
+          dr = dg = db = vid_ptr2[0];
+        } else if (display_color_bytes == 2) {
+          EXTRACT_565_TO_888(vid_ptr2[0] << 0 | vid_ptr2[1] << 8, dr, dg, db);
+        } else {
+          db = vid_ptr2[0];
+          dg = vid_ptr2[1];
+          dr = vid_ptr2[2];
+        }
         Bit32u color;
         if (BX_GEFORCE_THIS hw_cursor.bpp32) {
           Bit8u alpha = cursor_ptr2[3];
           if (alpha) {
-            Bit8u b = (vid_ptr2[0] * (0xFF - alpha) >> 8) + cursor_ptr2[0];
-            Bit8u g = (vid_ptr2[1] * (0xFF - alpha) >> 8) + cursor_ptr2[1];
-            Bit8u r = (vid_ptr2[2] * (0xFF - alpha) >> 8) + cursor_ptr2[2];
+            Bit8u b = (db * (0xFF - alpha) >> 8) + cursor_ptr2[0];
+            Bit8u g = (dg * (0xFF - alpha) >> 8) + cursor_ptr2[1];
+            Bit8u r = (dr * (0xFF - alpha) >> 8) + cursor_ptr2[2];
             color = b << 0 | g << 8 | r << 16;
           } else {
-            color = vid_ptr2[0] << 0 | vid_ptr2[1] << 8 | vid_ptr2[2] << 16;
+            color = db << 0 | dg << 8 | dr << 16;
           }
         } else {
-          Bit8u alpha, r1, g1, b1;
-          EXTRACT_1555_TO_8888(cursor_ptr2[0] << 0 | cursor_ptr2[1] << 8, alpha, r1, g1, b1);
+          Bit8u alpha, cr, cg, cb;
+          EXTRACT_1555_TO_8888(cursor_ptr2[0] << 0 | cursor_ptr2[1] << 8, alpha, cr, cg, cb);
           if (alpha) {
-            color = b1 << 0 | g1 << 8 | r1 << 16;
+            color = cb << 0 | cg << 8 | cr << 16;
           } else {
-            Bit8u r2, g2, b2;
-            if (display_color_bytes == 1) {
-              r2 = g2 = b2 = vid_ptr2[0];
-            } else if (display_color_bytes == 2) {
-              EXTRACT_565_TO_888(vid_ptr2[0] << 0 | vid_ptr2[1] << 8, r2, g2, b2);
-            } else {
-              b2 = vid_ptr2[0];
-              g2 = vid_ptr2[1];
-              r2 = vid_ptr2[2];
-            }
-            b2 ^= b1;
-            g2 ^= g1;
-            r2 ^= r1;
-            color = b2 << 0 | g2 << 8 | r2 << 16;
+            Bit8u b = db ^ cb;
+            Bit8u g = dg ^ cg;
+            Bit8u r = dr ^ cr;
+            color = b << 0 | g << 8 | r << 16;
           }
         }
         if (!info->is_indexed) {
