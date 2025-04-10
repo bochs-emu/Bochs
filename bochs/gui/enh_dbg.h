@@ -412,9 +412,9 @@ extern Bit32s yClick;          // values are in Listview coordinates
 
 extern const char* DC0txt[2];    // DumpMode definitions in text
 
-extern const char* BTxt[6];
-
-extern int BtnLkup[6];
+#define NBUTTONS 6
+extern const char* BTxt[NBUTTONS];
+extern int BtnLkup[NBUTTONS];
 
 #endif
 

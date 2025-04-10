@@ -39,16 +39,18 @@ extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr
 
 const char* DC0txt[2] = {"P.Address","L.Address"};    // DumpMode definitions in text
 
-const char* BTxt[6] = {
+const char* BTxt[NBUTTONS] = {
   "Continue [c]",
   "Step [s]",
   "Step N [s ###]",
+  "Step Over",
   "Refresh",
   "Break [^C]",
-  "Break All"};
+//"Break All"
+};
 
-int BtnLkup[6] = {
-    CMD_CONT, CMD_STEP1, CMD_STEPN, CMD_RFRSH, CMD_BREAK
+int BtnLkup[NBUTTONS] = {
+    CMD_CONT, CMD_STEP1, CMD_STEPN, CMD_STEPOVER, CMD_RFRSH, CMD_BREAK
 };
 
 #ifdef WIN32
@@ -3161,6 +3163,15 @@ void ActivateMenuItem (int cmd)
 
         case CMD_STEPN: // step N
             doStepN();
+            break;
+
+        case CMD_STEPOVER:
+            if (AtBreak != FALSE && debug_cmd_ready == FALSE)
+            {
+                bx_dbg_step_over_command();
+                StatusChange = TRUE;
+                OnBreak();
+            }
             break;
 
         case CMD_BREAK: // break/stop the sim
