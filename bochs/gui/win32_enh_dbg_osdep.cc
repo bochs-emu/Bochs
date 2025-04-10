@@ -1388,7 +1388,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                 while (--j > 0)
                 {
                     sprintf (bigbuf, "cpu%d",j);        // number all the CPU buttons
-                    hCPUt[j] = CreateWindowEx(0,"sBtn",bigbuf,WStyle,0,0,1,1,hh,(HMENU)(1030+j),GetModuleHandle(0),0);
+                    hCPUt[j] = CreateWindowEx(0,"sBtn",bigbuf,WStyle,0,0,1,1,hh,(HMENU)(MULTICPU_BTN_BASE+j),GetModuleHandle(0),0);
                 }
                 strcpy (bigbuf, "CPU0");        // Handle CPU0 specially -- it is "selected"
                 hCPUt[0] = CreateWindowEx(0,"sBtn",bigbuf,WStyle,0,0,1,1,hh,(HMENU)MULTICPU_BTN_BASE,GetModuleHandle(0),0);
