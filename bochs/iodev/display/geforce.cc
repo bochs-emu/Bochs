@@ -1999,9 +1999,11 @@ void bx_geforce_c::gdi_fillrect(Bit32u chid, bool clipped)
     }
     draw_offset += pitch;
   }
-  Bit32u redraw_x = redraw_offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
-  Bit32u redraw_y = redraw_offset / BX_GEFORCE_THIS svga_pitch;
-  BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, width, height);
+  if (BX_GEFORCE_THIS svga_pitch != 0) {
+    Bit32u redraw_x = redraw_offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
+    Bit32u redraw_y = redraw_offset / BX_GEFORCE_THIS svga_pitch;
+    BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, width, height);
+  }
 }
 
 Bit32u bx_geforce_c::color_565_to_888(Bit16u value)
@@ -2065,9 +2067,11 @@ void bx_geforce_c::gdi_blit(Bit32u chid, Bit32u type)
     bit_index += swidth - dwidth;
     draw_offset += pitch;
   }
-  Bit32u redraw_x = redraw_offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
-  Bit32u redraw_y = redraw_offset / BX_GEFORCE_THIS svga_pitch;
-  BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, dwidth, height);
+  if (BX_GEFORCE_THIS svga_pitch != 0) {
+    Bit32u redraw_x = redraw_offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
+    Bit32u redraw_y = redraw_offset / BX_GEFORCE_THIS svga_pitch;
+    BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, dwidth, height);
+  }
 }
 
 void bx_geforce_c::ifc(Bit32u chid)
@@ -2113,9 +2117,11 @@ void bx_geforce_c::ifc(Bit32u chid)
     word_offset += swidth - dwidth;
     draw_offset += pitch;
   }
-  Bit32u redraw_x = redraw_offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
-  Bit32u redraw_y = redraw_offset / BX_GEFORCE_THIS svga_pitch;
-  BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, dwidth, height);
+  if (BX_GEFORCE_THIS svga_pitch != 0) {
+    Bit32u redraw_x = redraw_offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
+    Bit32u redraw_y = redraw_offset / BX_GEFORCE_THIS svga_pitch;
+    BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, dwidth, height);
+  }
 }
 
 void bx_geforce_c::iifc(Bit32u chid)
@@ -2151,9 +2157,11 @@ void bx_geforce_c::iifc(Bit32u chid)
     symbol_index += swidth - dwidth;
     draw_offset += pitch;
   }
-  Bit32u redraw_x = redraw_offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
-  Bit32u redraw_y = redraw_offset / BX_GEFORCE_THIS svga_pitch;
-  BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, dwidth, height);
+  if (BX_GEFORCE_THIS svga_pitch != 0) {
+    Bit32u redraw_x = redraw_offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
+    Bit32u redraw_y = redraw_offset / BX_GEFORCE_THIS svga_pitch;
+    BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, dwidth, height);
+  }
 }
 
 void bx_geforce_c::copyarea(Bit32u chid)
@@ -2210,9 +2218,11 @@ void bx_geforce_c::copyarea(Bit32u chid)
     src_offset += spitch * (1 - 2 * ydir);
     draw_offset += dpitch * (1 - 2 * ydir);
   }
-  Bit32u redraw_x = redraw_offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
-  Bit32u redraw_y = redraw_offset / BX_GEFORCE_THIS svga_pitch;
-  BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, width, height);
+  if (BX_GEFORCE_THIS svga_pitch != 0) {
+    Bit32u redraw_x = redraw_offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
+    Bit32u redraw_y = redraw_offset / BX_GEFORCE_THIS svga_pitch;
+    BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, width, height);
+  }
 }
 
 void bx_geforce_c::move(Bit32u chid)
