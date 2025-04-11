@@ -11,6 +11,7 @@ Changes after 3.0:
 - Rewrite of the IRQ signal handling for PCI / ACPI
 - Added advanced PCI option "altdevmap" to make real i440FX BIOS work
 - Bochs BIOS
+  - ACPI fixes for the i440BX chipset
   - Fixed some not working hotkeys
   - PCI BIOS now sets expansion ROM space to R/W during POST
   - Fixed HPET entry in ACPI tables

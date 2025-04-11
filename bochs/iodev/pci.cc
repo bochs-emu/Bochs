@@ -316,10 +316,10 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
         }
         break;
       case 0x51:
-        if (BX_PCI_THIS chipset != BX_PCI_CHIPSET_I430FX) {
-          BX_PCI_THIS pci_conf[address+i] = (value8 & 0x80) | 0x01;
-        } else if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
+        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
           BX_PCI_THIS pci_conf[address+i] = (value8 & 0x8f) | 0x20;
+        } else if (BX_PCI_THIS chipset != BX_PCI_CHIPSET_I430FX) {
+          BX_PCI_THIS pci_conf[address+i] = (value8 & 0x80) | 0x01;
         }
         break;
       case 0x59:
@@ -475,7 +475,8 @@ Bit32u bx_pci_bridge_c::agp_aperture_read(bx_phy_address addr, unsigned len, boo
     Bit16u val16;
     Bit8u val8;
     DEV_MEM_READ_PHYSICAL(gart_addr, 4, (Bit8u*)&page_addr);
-    BX_INFO(("TODO: AGP aperture read: page address = 0x%08x / offset = 0x%04x",
+    page_addr &= ~0xfff; // Lower bits seem to contain memory flags
+    BX_INFO(("AGP aperture read: page address = 0x%08x / offset = 0x%04x",
              page_addr, (Bit16u)page_offset));
     switch (len) {
       case 1:
@@ -514,7 +515,8 @@ void bx_pci_bridge_c::agp_aperture_write(bx_phy_address addr, Bit32u value, unsi
     Bit16u val16;
     Bit8u val8;
     DEV_MEM_READ_PHYSICAL(gart_addr, 4, (Bit8u*)&page_addr);
-    BX_INFO(("TODO: AGP aperture write: page address = 0x%08x / offset = 0x%04x",
+    page_addr &= ~0xfff; // Lower bits seem to contain memory flags
+    BX_INFO(("AGP aperture write: page address = 0x%08x / offset = 0x%04x",
              page_addr, (Bit16u)page_offset));
     switch (len) {
       case 1:
