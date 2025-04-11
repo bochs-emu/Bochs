@@ -1,23 +1,59 @@
 Changes after 3.0:
 
-- CPU: Implemented MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS, (AMX TRANSPOSE MOVRS still not implemented)
-- Added new BX_INSTR_CPUID instrumentation callback, see instrumentation.txt doc for description
-- Added new command line option "-dbg_gui" to start Bochs debugger with gui
-- Voodoo3: Split mem_read() with len > 8 in two 64-bit reads
-- Voodoo3: Fixed display timing in VGA mode with half dot clock
-- VGA / DDC: Fixed using EDID data from specified file
-- VGA core: Added stub for the feature control register
-- Added hardware cursor support for graphics snapshot (Cirrus/Voodoo)
-- Rewrite of the IRQ signal handling for PCI / ACPI
-- Added advanced PCI option "altdevmap" to make real i440FX BIOS work
-- Bochs BIOS
+  This CHANGES file updated with commits merged till 4 Mar 2025, please refer to git log for more recent updates
+
+
+Detailed change log :
+
+- CPU emulation and instrumentation
+  - CPU: Implemented MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS, (AMX TRANSPOSE MOVRS still not implemented)
+  - Added new BX_INSTR_CPUID instrumentation callback, see instrumentation.txt doc for description
+
+- Bochs Debugger
+  - Added new command line option "-dbg_gui" to start Bochs debugger with gui.
+    Old "gui_debug" bochsrc option is deprecated and should not used anymore.
+  - Added new 'step over' button in Bochs debugger GUI to execute an instruction stepping over subroutines
+
+- Configure and compile
+  - Fixed compilation with --enable-avx but without --enable-evex
+  - Compilation fix for MacOS in keymap.cc
+  - Updated MSVCPP project files
+
+- I/O Devices
+  - PCI
+    - Rewrite of the IRQ signal handling for PCI / ACPI
+    - Added advanced PCI option "altdevmap" to make real i440FX BIOS work
+    - PCI: Ignore writes to ROM adddress if no ROM present
+  - ACPI
+    - Fixed ACPI timer in normal and realtime mode
+  - HPET
+    - Return 0x00 on reads with a size less than dword and ignore the writes
+  - CMOS
+    - Make sure that a panic before CMOS init doesn't damage the CMOS image
+  - VGA / DDC
+    - VGA / DDC: Fixed using EDID data from specified file
+    - VGA core: Added stub for the feature control register
+  - Voodoo / Banshee
+    - Added hardware cursor support for graphics snapshot (Cirrus/Voodoo)
+    - Voodoo3: Split mem_read() with len > 8 in two 64-bit reads
+    - Voodoo3: Fixed display timing in VGA mode with half dot clock
+ - Hard Drive
+    - Fix the reading of the HOB registers
+    - Add the 0x46 (GET_CONFIG) command. This allows ReactOS 4.15.xxxx to boot in normal mode (LiveCD)
+    - The SENSE was not being cleared between commands. If one command failed, 
+      the next successful command would still show the failed SENSE values.
+
+- BIOS
   - ACPI fixes for the i440BX chipset
   - Fixed some not working hotkeys
   - PCI BIOS now sets expansion ROM space to R/W during POST
   - Fixed HPET entry in ACPI tables
-- Fixed compilation with --enable-avx but without --enable-evex
-- Compilation fix for MacOS in keymap.cc
-- Added Linux manual page for the bxhub utility
+  - Fixes for AGP support
+  - Fixed CHS assignment
+  - Fixed floppy media state for legacy drive types
+
+- Misc
+  - Added Linux manual page for the bxhub utility
 
 -------------------------------------------------------------------------
 Changes in 3.0 (Frebruary 16, 2025):
