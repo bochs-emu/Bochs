@@ -1823,7 +1823,7 @@ Bit8u bx_geforce_c::dma_read8(Bit32u object, Bit32u address)
   Bit32u target = flags >> 12 & 0xFF;
   if (target == 0x21 || target == 0x29)
     return physical_read8(dma_pt_lookup(object, address));
-  else if (target == 0x23 || target == 0x2b || target == 0x33 || target == 0x37)
+  else if (target == 0x23 || target == 0x2b || target == 0x33 || target == 0x3b || target == 0x37)
     return physical_read8(dma_lin_lookup(object, address));
   else if (target == 0x03 || target == 0x0b)
     return vram_read8(dma_lin_lookup(object, address));
@@ -1838,7 +1838,7 @@ Bit16u bx_geforce_c::dma_read16(Bit32u object, Bit32u address)
   Bit32u target = flags >> 12 & 0xFF;
   if (target == 0x21 || target == 0x29)
     return physical_read16(dma_pt_lookup(object, address));
-  else if (target == 0x23 || target == 0x2b || target == 0x33 || target == 0x37)
+  else if (target == 0x23 || target == 0x2b || target == 0x33 || target == 0x3b || target == 0x37)
     return physical_read16(dma_lin_lookup(object, address));
   else if (target == 0x03 || target == 0x0b)
     return vram_read16(dma_lin_lookup(object, address));
@@ -1853,7 +1853,7 @@ Bit32u bx_geforce_c::dma_read32(Bit32u object, Bit32u address)
   Bit32u target = flags >> 12 & 0xFF;
   if (target == 0x21 || target == 0x29)
     return physical_read32(dma_pt_lookup(object, address));
-  else if (target == 0x23 || target == 0x2b || target == 0x33 || target == 0x37)
+  else if (target == 0x23 || target == 0x2b || target == 0x33 || target == 0x3b || target == 0x37)
     return physical_read32(dma_lin_lookup(object, address));
   else if (target == 0x03 || target == 0x0b)
     return vram_read32(dma_lin_lookup(object, address));
@@ -1868,7 +1868,7 @@ void bx_geforce_c::dma_write8(Bit32u object, Bit32u address, Bit8u value)
   Bit32u target = flags >> 12 & 0xFF;
   if (target == 0x21 || target == 0x29)
     physical_write8(dma_pt_lookup(object, address), value);
-  else if (target == 0x23 || target == 0x2b || target == 0x33)
+  else if (target == 0x23 || target == 0x2b || target == 0x33 || target == 0x3b)
     physical_write8(dma_lin_lookup(object, address), value);
   else if (target == 0x03 || target == 0x0b)
     vram_write8(dma_lin_lookup(object, address), value);
@@ -1892,7 +1892,7 @@ void bx_geforce_c::dma_write32(Bit32u object, Bit32u address, Bit32u value)
   Bit32u target = flags >> 12 & 0xFF;
   if (target == 0x21 || target == 0x29)
     physical_write32(dma_pt_lookup(object, address), value);
-  else if (target == 0x23 || target == 0x2b || target == 0x33)
+  else if (target == 0x23 || target == 0x2b || target == 0x33 || target == 0x3b)
     physical_write32(dma_lin_lookup(object, address), value);
   else if (target == 0x03 || target == 0x0b)
     vram_write32(dma_lin_lookup(object, address), value);
@@ -1906,7 +1906,7 @@ void bx_geforce_c::dma_write64(Bit32u object, Bit32u address, Bit64u value)
   Bit32u target = flags >> 12 & 0xFF;
   if (target == 0x21 || target == 0x29)
     physical_write64(dma_pt_lookup(object, address), value);
-  else if (target == 0x23 || target == 0x2b || target == 0x33)
+  else if (target == 0x23 || target == 0x2b || target == 0x33 || target == 0x3b)
     physical_write64(dma_lin_lookup(object, address), value);
   else if (target == 0x03 || target == 0x0b)
     vram_write64(dma_lin_lookup(object, address), value);
