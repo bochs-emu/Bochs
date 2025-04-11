@@ -3767,8 +3767,8 @@ yyreduce:
   case 220: /* help_command: BX_TOKEN_HELP BX_TOKEN_PBREAKPOINT '\n'  */
 #line 1123 "bx_parser.y"
        {
-         dbg_printf("p|pb|break|pbreak <addr> - set a physical address instruction breakpoint\n");
-         dbg_printf("p|pb|break|pbreak <addr> if \"expression\" - set a conditional physical address instruction breakpoint\n");
+         dbg_printf("b|pb|break|pbreak <addr> - set a physical address instruction breakpoint\n");
+         dbg_printf("b|pb|break|pbreak <addr> if \"expression\" - set a conditional physical address instruction breakpoint\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
 #line 3775 "y.tab.c"
