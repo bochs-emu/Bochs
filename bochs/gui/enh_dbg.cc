@@ -2595,11 +2595,27 @@ void doFind()
     }
 }
 
+void doStepOver()
+{
+    // can't run sim until everything is ready
+    if (AtBreak == FALSE || debug_cmd_ready != FALSE)
+        return;
+
+    // The VGAW *MUST* be refreshed periodically -- it's best to use the timer.
+    // Which means that the sim cannot be directly run from this msglp thread.
+    *debug_cmd = 'p';   // send a fake "continue" command to the internal debugger
+    debug_cmd[1] = 0;
+    debug_cmd_ready = TRUE;
+    AtBreak = FALSE;
+    StatusChange = TRUE;
+}
+
 void doStepN()
 {
     // can't run sim until everything is ready
     if (AtBreak == FALSE || debug_cmd_ready != FALSE)
         return;
+
     sprintf (tmpcb,"%d",PrevStepNSize);
     if (AskText("Singlestep N times","Number of steps (use 0x for hex):",tmpcb) == FALSE)
         return;
@@ -3049,15 +3065,7 @@ int HotKey (int ww, int Alt, int Shift, int Control)
             break;
 
         case VK_F8:
-                // can't continue until everything is ready
-            if (AtBreak != FALSE && debug_cmd_ready == FALSE)
-            {
-                *debug_cmd = 'p';   // send a fake "proceed" command to the internal debugger
-                debug_cmd[1] = 0;
-                debug_cmd_ready = TRUE;
-                AtBreak = FALSE;
-                StatusChange = TRUE;
-            }
+            doStepOver();
             break;
 
         case VK_F11:
@@ -3166,16 +3174,7 @@ void ActivateMenuItem (int cmd)
             break;
 
         case CMD_STEPOVER:
-            if (AtBreak != FALSE && debug_cmd_ready == FALSE)
-            {
-                // The VGAW *MUST* be refreshed periodically -- it's best to use the timer.
-                // Which means that the sim cannot be directly run from this msglp thread.
-                *debug_cmd = 'p';   // send a fake "continue" command to the internal debugger
-                debug_cmd[1] = 0;
-                debug_cmd_ready = TRUE;
-                AtBreak = FALSE;
-                StatusChange = TRUE;
-            }
+            doStepOver();
             break;
 
         case CMD_BREAK: // break/stop the sim
