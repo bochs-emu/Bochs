@@ -316,10 +316,10 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
         }
         break;
       case 0x51:
-        if (BX_PCI_THIS chipset != BX_PCI_CHIPSET_I430FX) {
-          BX_PCI_THIS pci_conf[address+i] = (value8 & 0x80) | 0x01;
-        } else if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
+        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
           BX_PCI_THIS pci_conf[address+i] = (value8 & 0x8f) | 0x20;
+        } else if (BX_PCI_THIS chipset != BX_PCI_CHIPSET_I430FX) {
+          BX_PCI_THIS pci_conf[address+i] = (value8 & 0x80) | 0x01;
         }
         break;
       case 0x59:
