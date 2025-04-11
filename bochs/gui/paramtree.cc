@@ -1060,6 +1060,17 @@ int bx_param_bytestring_c::dump_param(char *buf, int len, bool dquotes)
   return strlen(buf);
 }
 
+#ifdef WIN32
+void replace_slash_for_win32(char *str)
+{
+    while (*str) {
+        if (*str == '/')
+            *str = '\\';
+        str++;
+    }
+}
+#endif
+
 bx_param_filename_c::bx_param_filename_c(bx_param_c *parent,
     const char *name,
     const char *label,
@@ -1075,6 +1086,25 @@ bx_param_filename_c::bx_param_filename_c(bx_param_c *parent,
   } else {
     ext = NULL;
   }
+#ifdef WIN32
+  replace_slash_for_win32(val);
+#endif
+}
+
+void bx_param_filename_c::set(const char *buf)
+{
+  bx_param_string_c::set(buf);
+#ifdef WIN32
+  replace_slash_for_win32(val);
+#endif
+}
+
+void bx_param_filename_c::set_initial_val(const char *buf)
+{
+  bx_param_string_c::set_initial_val(buf);
+#ifdef WIN32
+  replace_slash_for_win32(initial_val);
+#endif
 }
 
 bx_shadow_data_c::bx_shadow_data_c(bx_param_c *parent,
