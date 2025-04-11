@@ -3168,9 +3168,13 @@ void ActivateMenuItem (int cmd)
         case CMD_STEPOVER:
             if (AtBreak != FALSE && debug_cmd_ready == FALSE)
             {
-                bx_dbg_step_over_command();
+                // The VGAW *MUST* be refreshed periodically -- it's best to use the timer.
+                // Which means that the sim cannot be directly run from this msglp thread.
+                *debug_cmd = 'p';   // send a fake "continue" command to the internal debugger
+                debug_cmd[1] = 0;
+                debug_cmd_ready = TRUE;
+                AtBreak = FALSE;
                 StatusChange = TRUE;
-                OnBreak();
             }
             break;
 

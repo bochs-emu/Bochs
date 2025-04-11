@@ -308,7 +308,7 @@ void InitMenus()
     ContMI = gtk_menu_item_new_with_label("Continue [c]\t\t\t\t\tF5");
     StepMI = gtk_menu_item_new_with_label("Step [s]\t\t\t\t\t\tF11");
     StepNMI = gtk_menu_item_new_with_label("Step #...\t\t\t\t\t\tF9");
-    StepOverMI = gtk_menu_item_new_with_label("Step Over\t\t\t\t\t\tShift+F9");
+    StepOverMI = gtk_menu_item_new_with_label("Step Over\t\t\t\t\t\tF8");
     BreakMI = gtk_menu_item_new_with_label("Break\t\t\t\t\t\tCtrl+C");
     SetBrkMI = gtk_menu_item_new_with_label("Breakpoint (ASM selected)\t\tF6");
     WatchWrMI = gtk_menu_item_new_with_label("Watch Write (PhysDump selected)\tShift+F6");

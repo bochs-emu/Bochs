@@ -1121,8 +1121,8 @@ help_command:
        }
      | BX_TOKEN_HELP BX_TOKEN_PBREAKPOINT '\n'
        {
-         dbg_printf("p|pb|break|pbreak <addr> - set a physical address instruction breakpoint\n");
-         dbg_printf("p|pb|break|pbreak <addr> if \"expression\" - set a conditional physical address instruction breakpoint\n");
+         dbg_printf("b|pb|break|pbreak <addr> - set a physical address instruction breakpoint\n");
+         dbg_printf("b|pb|break|pbreak <addr> if \"expression\" - set a conditional physical address instruction breakpoint\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_DEL_BREAKPOINT '\n'
