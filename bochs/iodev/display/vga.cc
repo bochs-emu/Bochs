@@ -78,7 +78,7 @@ bool bx_vga_c::init_vga_extension(void)
   unsigned addr;
   bool ret = 0;
 
-  BX_VGA_THIS init_iohandlers(read_handler, write_handler);
+  BX_VGA_THIS init_iohandlers(read_handler, write_handler, "vga_video");
   BX_VGA_THIS pci_enabled = SIM->is_pci_device("pcivga");
 
   // The following is for the VBE display extension

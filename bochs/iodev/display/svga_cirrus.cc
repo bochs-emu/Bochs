@@ -243,7 +243,7 @@ bool bx_svga_cirrus_c::init_vga_extension(void)
 {
   BX_CIRRUS_THIS put("CIRRUS");
   // initialize SVGA stuffs.
-  BX_CIRRUS_THIS bx_vgacore_c::init_iohandlers(svga_read_handler, svga_write_handler);
+  BX_CIRRUS_THIS bx_vgacore_c::init_iohandlers(svga_read_handler, svga_write_handler, "cirrus");
   BX_CIRRUS_THIS pci_enabled = SIM->is_pci_device("cirrus");
   BX_CIRRUS_THIS svga_init_members();
 #if BX_SUPPORT_PCI

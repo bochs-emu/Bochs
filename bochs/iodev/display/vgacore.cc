@@ -204,34 +204,34 @@ void bx_vgacore_c::init_gui(void)
   }
 }
 
-void bx_vgacore_c::init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t f_write)
+void bx_vgacore_c::init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t f_write, const char *name)
 {
   unsigned addr, i;
   Bit8u io_mask[16] = {3, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1};
   for (addr=0x03B4; addr<=0x03B5; addr++) {
-    DEV_register_ioread_handler(this, f_read, addr, "vga video", 1);
-    DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
+    DEV_register_ioread_handler(this, f_read, addr, name, 1);
+    DEV_register_iowrite_handler(this, f_write, addr, name, 3);
   }
 
   for (addr=0x03BA; addr<=0x03BA; addr++) {
-    DEV_register_ioread_handler(this, f_read, addr, "vga video", 1);
-    DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
+    DEV_register_ioread_handler(this, f_read, addr, name, 1);
+    DEV_register_iowrite_handler(this, f_write, addr, name, 3);
   }
 
   i = 0;
   for (addr=0x03C0; addr<=0x03CF; addr++) {
-    DEV_register_ioread_handler(this, f_read, addr, "vga video", io_mask[i++]);
-    DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
+    DEV_register_ioread_handler(this, f_read, addr, name, io_mask[i++]);
+    DEV_register_iowrite_handler(this, f_write, addr, name, 3);
   }
 
   for (addr=0x03D4; addr<=0x03D5; addr++) {
-    DEV_register_ioread_handler(this, f_read, addr, "vga video", 3);
-    DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
+    DEV_register_ioread_handler(this, f_read, addr, name, 3);
+    DEV_register_iowrite_handler(this, f_write, addr, name, 3);
   }
 
   for (addr=0x03DA; addr<=0x03DA; addr++) {
-    DEV_register_ioread_handler(this, f_read, addr, "vga video", 3);
-    DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
+    DEV_register_ioread_handler(this, f_read, addr, name, 3);
+    DEV_register_iowrite_handler(this, f_write, addr, name, 3);
   }
 }
 
