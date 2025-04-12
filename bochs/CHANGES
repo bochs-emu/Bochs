@@ -2,7 +2,6 @@ Changes after 3.0:
 
   This CHANGES file updated with commits merged till 4 Mar 2025, please refer to git log for more recent updates
 
-
 Detailed change log :
 
 - CPU emulation and instrumentation
@@ -23,7 +22,8 @@ Detailed change log :
   - PCI
     - Rewrite of the IRQ signal handling for PCI / ACPI
     - Added advanced PCI option "altdevmap" to make real i440FX BIOS work
-    - PCI: Ignore writes to ROM adddress if no ROM present
+    - Ignore writes to ROM adddress if no ROM present
+    - AGP aperture access now correctly implemented
   - ACPI
     - Fixed ACPI timer in normal and realtime mode
   - HPET
@@ -39,7 +39,7 @@ Detailed change log :
     - Voodoo3: Fixed display timing in VGA mode with half dot clock
  - Hard Drive
     - Fix the reading of the HOB registers
-    - Add the 0x46 (GET_CONFIG) command. This allows ReactOS 4.15.xxxx to boot in normal mode (LiveCD)
+    - Add the 0x46 (GET_CONFIG) command. This allows ReactOS 0.4.15 to boot in normal mode (LiveCD)
     - The SENSE was not being cleared between commands. If one command failed, 
       the next successful command would still show the failed SENSE values.
 
@@ -48,8 +48,8 @@ Detailed change log :
   - Fixed some not working hotkeys
   - PCI BIOS now sets expansion ROM space to R/W during POST
   - Fixed HPET entry in ACPI tables
-  - Fixes for AGP support
-  - Fixed CHS assignment
+  - Fixes in AGP i/o and memory regions init
+  - Fixed CHS assignment in int13_edd function
   - Fixed floppy media state for legacy drive types
 
 - Misc
