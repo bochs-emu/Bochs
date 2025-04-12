@@ -760,7 +760,7 @@ void bx_serial_c::raise_interrupt(Bit8u port, int type)
   }
 }
 
-char *bx_serial_c::ser_get_name(Bit32u address, Bit8u port, bool read) {
+const char *bx_serial_c::ser_get_name(Bit32u address, Bit8u port, bool read) {
   switch (address & 0x7) {
     case 0:
       if (BX_SER_THIS s[port].line_cntl.dlab)
