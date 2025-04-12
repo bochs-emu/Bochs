@@ -526,8 +526,9 @@ Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
 
       /* reading this port resets the flip-flop to address mode */
       BX_VGA_THIS s.attribute_ctrl.flip_flop = 0;
-      RETURN(retval);
-      break;
+      /* enabling this can flood the log file */
+//      BX_DEBUG(("read from 0x%04x = 0x%02x", address, ret));
+      return retval;
 
     case 0x03c0: /* */
       if (BX_VGA_THIS s.attribute_ctrl.flip_flop == 0) {
