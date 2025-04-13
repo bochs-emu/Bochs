@@ -702,6 +702,7 @@ void bx_serial_c::lower_interrupt(Bit8u port)
       (BX_SER_THIS s[port].ls_interrupt == false) &&
       (BX_SER_THIS s[port].ms_interrupt == false) &&
       (BX_SER_THIS s[port].fifo_interrupt == false)) {
+    BX_DEBUG(("Lower Interrupt"));
     DEV_pic_lower_irq(BX_SER_THIS s[port].IRQ);
   }
 }
@@ -754,8 +755,38 @@ void bx_serial_c::raise_interrupt(Bit8u port, int type)
       break;
   }
   if (gen_int && BX_SER_THIS s[port].modem_cntl.out2) {
+    BX_DEBUG(("Raise Interrupt"));
     DEV_pic_raise_irq(BX_SER_THIS s[port].IRQ);
   }
+}
+
+const char *bx_serial_c::ser_get_name(Bit32u address, Bit8u port, bool read) {
+  switch (address & 0x7) {
+    case 0:
+      if (BX_SER_THIS s[port].line_cntl.dlab)
+        return "LSB divisor";
+      else
+        return (read) ? "Receive Buffer" : "Transmit Buffer";
+    case 1:
+      if (BX_SER_THIS s[port].line_cntl.dlab)
+        return "MSB divisor";
+      else
+        return "Interrupt Enable";
+    case 2:
+      return (read) ? "Interrupt Identification" : "FIFO Control";
+    case 3:
+      return "Line Control";
+    case 4:
+      return "Modem Control";
+    case 5:
+      return (read) ? "Line Status" : "READ ONLY!";
+    case 6:
+      return (read) ? "Modem Status" : "READ ONLY!";
+    case 7:
+      return "Scratch";
+  }
+  // we shouldn't get here
+  return "Unknown";
 }
 
 // static IO port read callback handler
@@ -951,7 +982,7 @@ Bit32u bx_serial_c::read(Bit32u address, unsigned io_len)
       break;
   }
 
-  BX_DEBUG(("com%d register read from address: 0x%04x = 0x%02x", port+1, address, val));
+  BX_DEBUG(("com%d register read from address: 0x%04x (%s) = 0x%02x", port+1, address, ser_get_name(address, port, true), val));
 
   return(val);
 }
@@ -996,7 +1027,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x02e8: port = 3; break;
   }
 
-  BX_DEBUG(("com%d register write to  address: 0x%04x = 0x%02x", port+1, address, value));
+  BX_DEBUG(("com%d register write to  address: 0x%04x (%s) = 0x%02x", port+1, address, ser_get_name(address, port, false), value));
 
   bool new_b0 = value & 0x01;
   bool new_b1 = (value & 0x02) >> 1;
