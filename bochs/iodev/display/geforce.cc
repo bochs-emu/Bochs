@@ -524,7 +524,7 @@ void bx_geforce_c::vertical_timer()
   bx_vgacore_c::vertical_timer();
   if (BX_GEFORCE_THIS vtimer_toggle) {
     BX_GEFORCE_THIS crtc_intr |= 0x00000001;
-    BX_ERROR(("vertical_timer, crtc_intr_en = %d, mc_intr_en = %d",
+    BX_DEBUG(("vertical_timer, crtc_intr_en = %d, mc_intr_en = %d",
       BX_GEFORCE_THIS crtc_intr_en, BX_GEFORCE_THIS mc_intr_en));
     update_irq_level();
   }
@@ -538,10 +538,10 @@ bool bx_geforce_c::geforce_mem_read_handler(bx_phy_address addr, unsigned len,
     Bit32u offset = addr & (GEFORCE_PNPMMIO_SIZE - 1);
     if (len == 1) {
       *(Bit8u*)data = register_read8(offset);
-      BX_ERROR(("MMIO read from 0x%08x, value 0x%02x", offset, *(Bit8u*)data));
+      BX_DEBUG(("MMIO read from 0x%08x, value 0x%02x", offset, *(Bit8u*)data));
     } else if (len == 4) {
       Bit32u value = register_read32(offset);
-      BX_ERROR(("MMIO read from 0x%08x, value 0x%08x", offset, value));
+      BX_DEBUG(("MMIO read from 0x%08x, value 0x%08x", offset, value));
       *((Bit8u*)data + 0) = (value >> 0) & 0xFF;
       *((Bit8u*)data + 1) = (value >> 8) & 0xFF;
       *((Bit8u*)data + 2) = (value >> 16) & 0xFF;
@@ -558,10 +558,10 @@ bool bx_geforce_c::geforce_mem_read_handler(bx_phy_address addr, unsigned len,
     if (BX_GEFORCE_THIS card_type >= 0x40) {
       if (len == 1) {
         *(Bit8u*)data = ramin_read8(offset);
-        BX_ERROR(("RAMIN read from 0x%08x, value 0x%02x", offset, *(Bit8u*)data));
+        BX_DEBUG(("RAMIN read from 0x%08x, value 0x%02x", offset, *(Bit8u*)data));
       } else if (len == 4) {
         Bit32u value = ramin_read32(offset);
-        BX_ERROR(("RAMIN read from 0x%08x, value 0x%08x", offset, value));
+        BX_DEBUG(("RAMIN read from 0x%08x, value 0x%08x", offset, value));
         *((Bit8u*)data + 0) = (value >> 0) & 0xFF;
         *((Bit8u*)data + 1) = (value >> 8) & 0xFF;
         *((Bit8u*)data + 2) = (value >> 16) & 0xFF;
@@ -628,7 +628,7 @@ bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
       addr < (BX_GEFORCE_THIS pci_bar[0].addr + GEFORCE_PNPMMIO_SIZE)) {
     Bit32u offset = addr & (GEFORCE_PNPMMIO_SIZE - 1);
     if (len == 1) {
-      BX_ERROR(("MMIO write to 0x%08x, value 0x%02x", offset, *(Bit8u*)data));
+      BX_DEBUG(("MMIO write to 0x%08x, value 0x%02x", offset, *(Bit8u*)data));
       register_write8(offset, *(Bit8u*)data);
     } else if (len == 4) {
       Bit32u value =
@@ -636,7 +636,7 @@ bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
         (*((Bit8u*)data + 1) << 8) |
         (*((Bit8u*)data + 2) << 16) |
         (*((Bit8u*)data + 3) << 24);
-      BX_ERROR(("MMIO write to 0x%08x, value 0x%08x", offset, value));
+      BX_DEBUG(("MMIO write to 0x%08x, value 0x%08x", offset, value));
       register_write32(offset, value);
     } else {
       BX_PANIC(("MMIO write len %d", len));
@@ -649,7 +649,7 @@ bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
     Bit32u offset = addr & (BX_GEFORCE_THIS bar2_size - 1);
     if (BX_GEFORCE_THIS card_type >= 0x40) {
       if (len == 1) {
-        BX_ERROR(("RAMIN write to 0x%08x, value 0x%02x", offset, *(Bit8u*)data));
+        BX_DEBUG(("RAMIN write to 0x%08x, value 0x%02x", offset, *(Bit8u*)data));
         ramin_write8(offset, *(Bit8u*)data);
       } else if (len == 4) {
         Bit32u value =
@@ -657,7 +657,7 @@ bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
           (*((Bit8u*)data + 1) << 8) |
           (*((Bit8u*)data + 2) << 16) |
           (*((Bit8u*)data + 3) << 24);
-        BX_ERROR(("RAMIN write to 0x%08x, value 0x%08x", offset, value));
+        BX_DEBUG(("RAMIN write to 0x%08x, value 0x%08x", offset, value));
         ramin_write32(offset, value);
       } else {
         BX_PANIC(("RAMIN write len %d", len));
@@ -759,13 +759,13 @@ Bit32u bx_geforce_c::svga_read(Bit32u address, unsigned io_len)
       int rma_index = crtc38 >> 1;
       if (rma_index == 1) {
         if (address == 0x03d0) {
-          if (io_len == 2)
-            BX_DEBUG(("rma: read address 0x%08x (lo)", BX_GEFORCE_THIS rma_addr));
-          else
-            BX_DEBUG(("rma: read address 0x%08x", BX_GEFORCE_THIS rma_addr));
+          //if (io_len == 2)
+          //  BX_DEBUG(("rma: read address 0x%08x (lo)", BX_GEFORCE_THIS rma_addr));
+          //else
+          //  BX_DEBUG(("rma: read address 0x%08x", BX_GEFORCE_THIS rma_addr));
           return BX_GEFORCE_THIS rma_addr;
         } else {
-          BX_DEBUG(("rma: read address 0x%08x (hi)", BX_GEFORCE_THIS rma_addr));
+          //BX_DEBUG(("rma: read address 0x%08x (hi)", BX_GEFORCE_THIS rma_addr));
           return BX_GEFORCE_THIS rma_addr >> 16;
         }
       }
@@ -781,12 +781,12 @@ Bit32u bx_geforce_c::svga_read(Bit32u address, unsigned io_len)
           Bit32u value = vram ? vram_read32(offset) : register_read32(offset);
           if (address == 0x03d0) {
             if (io_len == 2)
-              BX_ERROR(("rma: read from 0x%08x value 0x????%04x", BX_GEFORCE_THIS rma_addr, value & 0xFFFF));
+              BX_DEBUG(("rma: read from 0x%08x value 0x????%04x", BX_GEFORCE_THIS rma_addr, value & 0xFFFF));
             else
-              BX_ERROR(("rma: read from 0x%08x value 0x%08x", BX_GEFORCE_THIS rma_addr, value));
+              BX_DEBUG(("rma: read from 0x%08x value 0x%08x", BX_GEFORCE_THIS rma_addr, value));
             return value;
           } else {
-            BX_ERROR(("rma: read from 0x%08x value 0x%04x????", BX_GEFORCE_THIS rma_addr, value >> 16));
+            BX_DEBUG(("rma: read from 0x%08x value 0x%04x????", BX_GEFORCE_THIS rma_addr, value >> 16));
             return value >> 16;
           }
         } else {
@@ -823,7 +823,7 @@ Bit32u bx_geforce_c::svga_read(Bit32u address, unsigned io_len)
       else
         break;
     case 0x03c2: /* Input Status 0 */
-      BX_ERROR(("Input Status 0 read"));
+      BX_DEBUG(("Input Status 0 read"));
       return 0x10; // Monitor presence detection (DAC Sensing)
     default:
       break;
@@ -857,15 +857,15 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
           if (io_len == 2) {
             BX_GEFORCE_THIS rma_addr &= 0xFFFF0000;
             BX_GEFORCE_THIS rma_addr |= value;
-            BX_DEBUG(("rma: address set to 0x%08x (lo)", BX_GEFORCE_THIS rma_addr));
+            //BX_DEBUG(("rma: address set to 0x%08x (lo)", BX_GEFORCE_THIS rma_addr));
           } else {
             BX_GEFORCE_THIS rma_addr = value;
-            BX_DEBUG(("rma: address set to 0x%08x", BX_GEFORCE_THIS rma_addr));
+            //BX_DEBUG(("rma: address set to 0x%08x", BX_GEFORCE_THIS rma_addr));
           }
         } else {
           BX_GEFORCE_THIS rma_addr &= 0x0000FFFF;
           BX_GEFORCE_THIS rma_addr |= value << 16;
-          BX_DEBUG(("rma: address set to 0x%08x (hi)", BX_GEFORCE_THIS rma_addr));
+          //BX_DEBUG(("rma: address set to 0x%08x (hi)", BX_GEFORCE_THIS rma_addr));
         }
       } else if (rma_index == 2) {
         BX_PANIC(("rma: write index 2"));
@@ -887,13 +887,13 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
                 vram_write32(offset, value32);
               else
                 register_write32(offset, value32);
-              BX_ERROR(("rma: write to 0x%08x value 0x????%04x", BX_GEFORCE_THIS rma_addr, value));
+              BX_DEBUG(("rma: write to 0x%08x value 0x????%04x", BX_GEFORCE_THIS rma_addr, value));
             } else {
               if (vram)
                 vram_write32(offset, value);
               else
                 register_write32(offset, value);
-              BX_ERROR(("rma: write to 0x%08x value 0x%08x", BX_GEFORCE_THIS rma_addr, value));
+              BX_DEBUG(("rma: write to 0x%08x value 0x%08x", BX_GEFORCE_THIS rma_addr, value));
             }
           } else {
             Bit32u value32 = vram ? vram_read32(offset) : register_read32(offset);
@@ -903,7 +903,7 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
               vram_write32(offset, value32);
             else
               register_write32(offset, value32);
-            BX_ERROR(("rma: write to 0x%08x value 0x%04x????", BX_GEFORCE_THIS rma_addr, value));
+            BX_DEBUG(("rma: write to 0x%08x value 0x%04x????", BX_GEFORCE_THIS rma_addr, value));
           }
         } else {
           BX_ERROR(("rma: oob write to 0x%08x ignored", BX_GEFORCE_THIS rma_addr));
@@ -1542,7 +1542,7 @@ Bit8u bx_geforce_c::svga_read_crtc(Bit32u address, unsigned index)
 {
   if (index <= GEFORCE_CRTC_MAX) {
     Bit8u value = BX_GEFORCE_THIS crtc.reg[index];
-    BX_ERROR(("crtc: index 0x%02x read 0x%02x", index, value));
+    BX_DEBUG(("crtc: index 0x%02x read 0x%02x", index, value));
     return value;
   }
   else
@@ -1555,9 +1555,9 @@ void bx_geforce_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
 {
   if (index == 0x40) {
     if (BX_GEFORCE_THIS crtc.reg[index] != value)
-      BX_ERROR(("crtc: index 0x%02x write 0x%02x [no duplicates]", index, (unsigned)value));
+      BX_DEBUG(("crtc: index 0x%02x write 0x%02x [no duplicates]", index, (unsigned)value));
   } else
-    BX_ERROR(("crtc: index 0x%02x write 0x%02x", index, (unsigned)value));
+    BX_DEBUG(("crtc: index 0x%02x write 0x%02x", index, (unsigned)value));
 
   bool update_cursor_addr = false;
 
@@ -1934,7 +1934,7 @@ Bit32u bx_geforce_c::ramht_lookup(Bit32u handle, Bit32u chid)
   do {
     if (ramin_read32(ramht_addr + it) == handle) {
       Bit32u context = ramin_read32(ramht_addr + it + 4);
-      BX_ERROR(("ramht_lookup: 0x%08x -> 0x%08x, steps: %d", handle, context, steps));
+      BX_DEBUG(("ramht_lookup: 0x%08x -> 0x%08x, steps: %d", handle, context, steps));
       return context;
     }
     steps++;
@@ -2267,9 +2267,9 @@ void bx_geforce_c::execute_m2mf(Bit32u chid, Bit32u subc, Bit32u method, Bit32u 
     BX_GEFORCE_THIS chs[chid].m2mf_buffer_notify = param;
     move(chid);
     if ((ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier) & 0xFF) == 0x30) {
-      BX_ERROR(("execute_command: M2MF notify skipped"));
+      BX_DEBUG(("execute_command: M2MF notify skipped"));
     } else {
-      BX_ERROR(("execute_command: M2MF notify 0x%08x",
+      BX_DEBUG(("execute_command: M2MF notify 0x%08x",
         BX_GEFORCE_THIS chs[chid].schs[subc].notifier));
       dma_write64(BX_GEFORCE_THIS chs[chid].schs[subc].notifier, 0x10 + 0x0, get_current_time());
       dma_write32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier, 0x10 + 0x8, 0);
@@ -2504,7 +2504,7 @@ void bx_geforce_c::execute_iifc(Bit32u chid, Bit32u method, Bit32u param)
 
 void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param)
 {
-  BX_ERROR(("execute_command: chid 0x%02x, subc 0x%02x, method 0x%03x, param 0x%08x",
+  BX_DEBUG(("execute_command: chid 0x%02x, subc 0x%02x, method 0x%03x, param 0x%08x",
     chid, subc, method, param));
   if (method == 0x000) {
     Bit32u context = ramht_lookup(param, chid);
@@ -2528,7 +2528,7 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
         BX_GEFORCE_THIS chs[chid].schs[subc].notifier = param;
       } else {
         Bit8u cls = ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object);
-        BX_ERROR(("execute_command: obj 0x%08x, class 0x%02x, method 0x%03x, param 0x%08x",
+        BX_DEBUG(("execute_command: obj 0x%08x, class 0x%02x, method 0x%03x, param 0x%08x",
           BX_GEFORCE_THIS chs[chid].schs[subc].object, cls, method, param));
         if (cls == 0x19)
           execute_clip(chid, method, param);
@@ -2551,9 +2551,9 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
         if (BX_GEFORCE_THIS chs[chid].notify_pending) {
           BX_GEFORCE_THIS chs[chid].notify_pending = false;
           if ((ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier) & 0xFF) == 0x30) {
-            BX_ERROR(("execute_command: DMA notify skipped"));
+            BX_DEBUG(("execute_command: DMA notify skipped"));
           } else {
-            BX_ERROR(("execute_command: DMA notify 0x%08x",
+            BX_DEBUG(("execute_command: DMA notify 0x%08x",
               BX_GEFORCE_THIS chs[chid].schs[subc].notifier));
             dma_write64(BX_GEFORCE_THIS chs[chid].schs[subc].notifier, 0x0, get_current_time());
             dma_write32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier, 0x8, 0);
@@ -2575,7 +2575,7 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
     BX_GEFORCE_THIS fifo_cache1_put += 4;
     if (BX_GEFORCE_THIS fifo_cache1_put == GEFORCE_CACHE1_SIZE * 4)
       BX_GEFORCE_THIS fifo_cache1_put = 0;
-    BX_ERROR(("execute_command: software engine"));
+    BX_DEBUG(("execute_command: software engine"));
   }
 }
 
@@ -2823,14 +2823,14 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
           BX_GEFORCE_THIS chs[chid].dma_put = ramin_read32(ramfc + chid * ramfc_ch_size + 0x0);
           BX_GEFORCE_THIS chs[chid].dma_get = ramin_read32(ramfc + chid * ramfc_ch_size + 0x4);
           BX_GEFORCE_THIS chs[chid].pushbuf = ramin_read32(ramfc + chid * ramfc_ch_size + 0xC) << 4;
-          BX_ERROR(("fifo: activate chid 0x%02x, dma_put 0x%08x, dma_get 0x%08x, pushbuf 0x%08x",
+          BX_DEBUG(("fifo: activate chid 0x%02x, dma_put 0x%08x, dma_get 0x%08x, pushbuf 0x%08x",
             chid, BX_GEFORCE_THIS chs[chid].dma_put, BX_GEFORCE_THIS chs[chid].dma_get,
             BX_GEFORCE_THIS chs[chid].pushbuf));
         } else {
           ramin_write32(ramfc + chid * ramfc_ch_size + 0x0, BX_GEFORCE_THIS chs[chid].dma_put);
           ramin_write32(ramfc + chid * ramfc_ch_size + 0x4, BX_GEFORCE_THIS chs[chid].dma_get);
           ramin_write32(ramfc + chid * ramfc_ch_size + 0xC, BX_GEFORCE_THIS chs[chid].pushbuf >> 4);
-          BX_ERROR(("fifo: deactivate chid 0x%02x", chid));
+          BX_DEBUG(("fifo: deactivate chid 0x%02x", chid));
         }
       }
     }
@@ -2951,7 +2951,7 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     if (offset == 0x40) {
       BX_GEFORCE_THIS chs[chid].dma_put = value;
       while (BX_GEFORCE_THIS chs[chid].dma_get != BX_GEFORCE_THIS chs[chid].dma_put) {
-        BX_ERROR(("fifo: processing at 0x%08x", BX_GEFORCE_THIS chs[chid].dma_get));
+        BX_DEBUG(("fifo: processing at 0x%08x", BX_GEFORCE_THIS chs[chid].dma_get));
         Bit32u word = dma_read32(
             BX_GEFORCE_THIS chs[chid].pushbuf,
             BX_GEFORCE_THIS chs[chid].dma_get);
@@ -2967,13 +2967,13 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
         } else {
           if ((word & 0xe0000003) == 0x20000000) {
             // old jump
-            BX_ERROR(("fifo: jump to 0x%08x", word & 0x1fffffff));
+            BX_DEBUG(("fifo: jump to 0x%08x", word & 0x1fffffff));
             BX_GEFORCE_THIS chs[chid].dma_get = word & 0x1fffffff;
           } else if ((word & 3) == 2) {
             // call
             if (BX_GEFORCE_THIS chs[chid].subr_active)
               BX_PANIC(("fifo: call with subroutine active"));
-            BX_ERROR(("fifo: call 0x%08x", word & 0xfffffffc));
+            BX_DEBUG(("fifo: call 0x%08x", word & 0xfffffffc));
             BX_GEFORCE_THIS chs[chid].subr_return = BX_GEFORCE_THIS chs[chid].dma_get;
             BX_GEFORCE_THIS chs[chid].subr_active = true;
             BX_GEFORCE_THIS chs[chid].dma_get = word & 0xfffffffc;
@@ -2981,7 +2981,7 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
             // return
             if (!BX_GEFORCE_THIS chs[chid].subr_active)
               BX_PANIC(("fifo: return with subroutine inactive"));
-            BX_ERROR(("fifo: return to 0x%08x", BX_GEFORCE_THIS chs[chid].subr_return));
+            BX_DEBUG(("fifo: return to 0x%08x", BX_GEFORCE_THIS chs[chid].subr_return));
             BX_GEFORCE_THIS chs[chid].dma_get = BX_GEFORCE_THIS chs[chid].subr_return;
             BX_GEFORCE_THIS chs[chid].subr_active = false;
           } else if ((word & 0xe0030003) == 0) {
