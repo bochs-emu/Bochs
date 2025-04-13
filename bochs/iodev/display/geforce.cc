@@ -184,13 +184,13 @@ bool bx_geforce_c::init_vga_extension(void)
 
   BX_GEFORCE_THIS put("GEFORCE");
   // initialize SVGA stuffs.
+  BX_GEFORCE_THIS init_iohandlers(svga_read_handler, svga_write_handler, "geforce");
   DEV_register_ioread_handler(this, svga_read_handler, 0x03B4, "geforce", 2);
   DEV_register_ioread_handler(this, svga_read_handler, 0x03D0, "geforce", 6);
   DEV_register_ioread_handler(this, svga_read_handler, 0x03D2, "geforce", 2);
   DEV_register_ioread_handler(this, svga_read_handler, 0x03C3, "geforce", 3);
   DEV_register_iowrite_handler(this, svga_write_handler, 0x03D0, "geforce", 6);
   DEV_register_iowrite_handler(this, svga_write_handler, 0x03D2, "geforce", 2);
-  BX_GEFORCE_THIS init_iohandlers(svga_read_handler, svga_write_handler);
   BX_GEFORCE_THIS svga_init_members();
   BX_GEFORCE_THIS svga_init_pcihandlers();
   BX_GEFORCE_THIS bitblt_init();
