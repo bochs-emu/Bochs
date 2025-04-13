@@ -118,7 +118,7 @@ public:
 protected:
   void init_standard_vga(void);
   void init_gui(void);
-  void init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t f_write);
+  void init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t f_write, const char *name);
   void init_systemtimer();
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);

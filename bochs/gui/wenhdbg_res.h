@@ -15,10 +15,11 @@
 
 // The menuIDs should not have big "gaps" -- so the switch works well.
 // A few small gaps is OK.
-#define CMD_CONT    101
-#define CMD_STEP1   102
-#define CMD_STEPN   103
-#define CMD_BREAK   104
+#define CMD_CONT     101
+#define CMD_STEP1    102
+#define CMD_STEPN    103
+#define CMD_STEPOVER 104
+#define CMD_BREAK    105
 
 #define CMD_BRKPT   107
 #define CMD_WPTWR   108

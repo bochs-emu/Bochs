@@ -694,9 +694,17 @@ bool bx_devices_c::register_io_read_handler(void *this_ptr, bx_read_handler_t f,
   /* first check if the port already has a handlers != the default handler */
   if (read_port_to_handler[addr] &&
       read_port_to_handler[addr] != &io_read_handlers) { // the default
-    BX_ERROR(("IO device address conflict(read) at IO address %Xh", (unsigned) addr));
-    BX_ERROR(("  conflicting devices: %s & %s",
-              read_port_to_handler[addr]->handler_name, name));
+    if (read_port_to_handler[addr]->funct == f &&
+        read_port_to_handler[addr]->this_ptr == this_ptr &&
+        !strcmp(read_port_to_handler[addr]->handler_name, name)) {
+      // special case: replace mask
+      read_port_to_handler[addr]->mask = mask;
+      return true;
+    } else {
+      BX_ERROR(("IO device address conflict(read) at IO address %Xh", (unsigned) addr));
+      BX_ERROR(("  conflicting devices: %s & %s",
+                read_port_to_handler[addr]->handler_name, name));
+    }
     return false;
   }
 
@@ -745,10 +753,18 @@ bool bx_devices_c::register_io_write_handler(void *this_ptr, bx_write_handler_t 
   /* first check if the port already has a handlers != the default handler */
   if (write_port_to_handler[addr] &&
       write_port_to_handler[addr] != &io_write_handlers) { // the default
-    BX_ERROR(("IO device address conflict(write) at IO address %Xh", (unsigned) addr));
-    BX_ERROR(("  conflicting devices: %s & %s",
-              write_port_to_handler[addr]->handler_name, name));
-    return false;
+    if (write_port_to_handler[addr]->funct == f &&
+        write_port_to_handler[addr]->this_ptr == this_ptr &&
+        !strcmp(write_port_to_handler[addr]->handler_name, name)) {
+      // special case: replace mask
+      write_port_to_handler[addr]->mask = mask;
+      return true;
+    } else {
+      BX_ERROR(("IO device address conflict(write) at IO address %Xh", (unsigned) addr));
+      BX_ERROR(("  conflicting devices: %s & %s",
+                write_port_to_handler[addr]->handler_name, name));
+      return false;
+    }
   }
 
   /* first find existing handle for function or create new one */

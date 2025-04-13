@@ -395,10 +395,10 @@ public:
   Bit32s get(char *buf, int len);
   char *getptr() {return val; }
   const char *getptr() const {return val; }
-  void set(const char *buf);
+  virtual void set(const char *buf);
   bool equals(const char *buf) const;
   int get_maxsize() const {return maxsize; }
-  void set_initial_val(const char *buf);
+  virtual void set_initial_val(const char *buf);
   bool isempty() const;
   virtual int parse_param(const char *value);
   virtual void dump_param(FILE *fp);
@@ -445,6 +445,9 @@ public:
       int maxsize=-1);
   const char *get_extension() const {return ext;}
   void set_extension(const char *newext) {ext = newext;}
+
+  virtual void set(const char *buf);
+  virtual void set_initial_val(const char *buf);
 };
 
 class BOCHSAPI bx_shadow_data_c : public bx_param_c {

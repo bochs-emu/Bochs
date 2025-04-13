@@ -476,8 +476,8 @@ Bit32u bx_pci_bridge_c::agp_aperture_read(bx_phy_address addr, unsigned len, boo
     Bit8u val8;
     DEV_MEM_READ_PHYSICAL(gart_addr, 4, (Bit8u*)&page_addr);
     page_addr &= ~0xfff; // Lower bits seem to contain memory flags
-    BX_INFO(("AGP aperture read: page address = 0x%08x / offset = 0x%04x",
-             page_addr, (Bit16u)page_offset));
+    BX_DEBUG(("AGP aperture read: page address = 0x%08x / offset = 0x%04x",
+              page_addr, (Bit16u)page_offset));
     switch (len) {
       case 1:
         DEV_MEM_READ_PHYSICAL(page_addr + page_offset, 1, &val8);
@@ -516,8 +516,8 @@ void bx_pci_bridge_c::agp_aperture_write(bx_phy_address addr, Bit32u value, unsi
     Bit8u val8;
     DEV_MEM_READ_PHYSICAL(gart_addr, 4, (Bit8u*)&page_addr);
     page_addr &= ~0xfff; // Lower bits seem to contain memory flags
-    BX_INFO(("AGP aperture write: page address = 0x%08x / offset = 0x%04x",
-             page_addr, (Bit16u)page_offset));
+    BX_DEBUG(("AGP aperture write: page address = 0x%08x / offset = 0x%04x",
+              page_addr, (Bit16u)page_offset));
     switch (len) {
       case 1:
         val8 = (Bit8u)value;

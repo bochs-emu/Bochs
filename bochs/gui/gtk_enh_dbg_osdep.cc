@@ -112,6 +112,7 @@ GtkWidget *HelpTitle;
 GtkWidget *ContMI;
 GtkWidget *StepMI;
 GtkWidget *StepNMI;
+GtkWidget *StepOverMI;
 GtkWidget *BreakMI;
 GtkWidget *SetBrkMI;
 GtkWidget *WatchWrMI;
@@ -154,7 +155,7 @@ GtkWidget *sep8;        // separators around the ListViews
 GtkWidget *sep9;
 
     // GTK widgets
-GtkWidget *CmdBtn[5];                   // "command" buttonrow
+GtkWidget *CmdBtn[NBUTTONS];                   // "command" buttonrow
 GtkWidget *CpuBtn[BX_MAX_SMP_THREADS_SUPPORTED];        // "CPU" buttonrow
 GtkWidget *CpuB_label[BX_MAX_SMP_THREADS_SUPPORTED];    // "labels" on CPU buttons
 
@@ -307,6 +308,7 @@ void InitMenus()
     ContMI = gtk_menu_item_new_with_label("Continue [c]\t\t\t\t\tF5");
     StepMI = gtk_menu_item_new_with_label("Step [s]\t\t\t\t\t\tF11");
     StepNMI = gtk_menu_item_new_with_label("Step #...\t\t\t\t\t\tF9");
+    StepOverMI = gtk_menu_item_new_with_label("Step Over\t\t\t\t\t\tF8");
     BreakMI = gtk_menu_item_new_with_label("Break\t\t\t\t\t\tCtrl+C");
     SetBrkMI = gtk_menu_item_new_with_label("Breakpoint (ASM selected)\t\tF6");
     WatchWrMI = gtk_menu_item_new_with_label("Watch Write (PhysDump selected)\tShift+F6");
@@ -375,6 +377,7 @@ void InitMenus()
     gtk_menu_shell_append(GTK_MENU_SHELL(CmdMenu), ContMI);
     gtk_menu_shell_append(GTK_MENU_SHELL(CmdMenu), StepMI);
     gtk_menu_shell_append(GTK_MENU_SHELL(CmdMenu), StepNMI);
+    gtk_menu_shell_append(GTK_MENU_SHELL(CmdMenu), StepOverMI);
     gtk_menu_shell_append(GTK_MENU_SHELL(CmdMenu), BreakMI);
     gtk_menu_shell_append(GTK_MENU_SHELL(CmdMenu), sep1);
     gtk_menu_shell_append(GTK_MENU_SHELL(CmdMenu), SetBrkMI);
@@ -1769,8 +1772,9 @@ void AttachSignals()
     g_signal_connect (G_OBJECT(CmdBtn[0]), "clicked", G_CALLBACK(nbCmd_cb), (gpointer) (glong) BtnLkup[0]);
     g_signal_connect (G_OBJECT(CmdBtn[1]), "clicked", G_CALLBACK(nbCmd_cb), (gpointer) (glong) BtnLkup[1]);
     g_signal_connect (G_OBJECT(CmdBtn[2]), "clicked", G_CALLBACK(nbCmd_cb), (gpointer) (glong) BtnLkup[2]);
-    g_signal_connect (G_OBJECT(CmdBtn[3]), "clicked", G_CALLBACK(Cmd_cb), (gpointer) (glong) BtnLkup[3]);
-    g_signal_connect (G_OBJECT(CmdBtn[4]), "clicked", G_CALLBACK(nbCmd_cb), (gpointer) (glong) BtnLkup[4]);
+    g_signal_connect (G_OBJECT(CmdBtn[3]), "clicked", G_CALLBACK(nbCmd_cb), (gpointer) (glong) BtnLkup[3]);
+    g_signal_connect (G_OBJECT(CmdBtn[4]), "clicked", G_CALLBACK(Cmd_cb), (gpointer) (glong) BtnLkup[4]);
+    g_signal_connect (G_OBJECT(CmdBtn[5]), "clicked", G_CALLBACK(nbCmd_cb), (gpointer) (glong) BtnLkup[5]);
 
     i = BX_SMP_PROCESSORS;
     if (i > 1)
@@ -1783,6 +1787,7 @@ void AttachSignals()
     g_signal_connect (G_OBJECT(ContMI), "activate", G_CALLBACK(nbCmd_cb), (gpointer) CMD_CONT);
     g_signal_connect (G_OBJECT(StepMI), "activate", G_CALLBACK(nbCmd_cb), (gpointer) CMD_STEP1);
     g_signal_connect (G_OBJECT(StepNMI), "activate", G_CALLBACK(nbCmd_cb), (gpointer) CMD_STEPN);
+    g_signal_connect (G_OBJECT(StepOverMI), "activate", G_CALLBACK(nbCmd_cb), (gpointer) CMD_STEPOVER);
     g_signal_connect (G_OBJECT(BreakMI), "activate", G_CALLBACK(nbCmd_cb), (gpointer) CMD_BREAK);
     g_signal_connect (G_OBJECT(SetBrkMI), "activate", G_CALLBACK(Cmd_cb), (gpointer) CMD_BRKPT);
     Cmd2MI[CMD_BRKPT - CMD_IDX_LO + 1] = SetBrkMI;
@@ -2363,7 +2368,7 @@ bool OSInit()
     CmdBHbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 #endif
 
-    for (i=0 ; i < 5 ; i++)
+    for (i=0; i < NBUTTONS; i++)
     {
         CmdBtn[i] = gtk_button_new();
         tmpLbl = gtk_label_new ("");

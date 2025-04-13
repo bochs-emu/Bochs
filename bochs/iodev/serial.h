@@ -248,6 +248,7 @@ private:
   void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy);
   void update_mouse_data(void);
 
+  static const char *ser_get_name(Bit32u address, Bit8u port, bool read);
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 #if !BX_USE_SER_SMF

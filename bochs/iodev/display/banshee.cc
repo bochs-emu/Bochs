@@ -3641,13 +3641,13 @@ bool bx_voodoo_vga_c::init_vga_extension(void)
   if (model < VOODOO_BANSHEE) {
     theVoodooDevice = new bx_voodoo_1_2_c();
     theVoodooDevice->init();
-    init_iohandlers(read_handler, write_handler);
+    init_iohandlers(read_handler, write_handler, "vga video");
   } else {
     theVoodooDevice = new bx_banshee_c();
     theVoodooDevice->init();
     BX_VVGA_THIS s.memory = v->fbi.ram;
     BX_VVGA_THIS s.memsize = v->fbi.mask + 1;
-    init_iohandlers(banshee_vga_read_handler, banshee_vga_write_handler);
+    init_iohandlers(banshee_vga_read_handler, banshee_vga_write_handler, "banshee");
     DEV_register_iowrite_handler(this, banshee_vga_write_handler, 0x0102, "banshee", 1);
     DEV_register_iowrite_handler(this, banshee_vga_write_handler, 0x46e8, "banshee", 1);
     BX_VVGA_THIS s.max_xres = 1920;
