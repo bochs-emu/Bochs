@@ -455,6 +455,7 @@ bool bx_pci_bridge_c::agp_ap_read_handler(bx_phy_address addr, unsigned len,
       value &= 0xFFFF;
       *((Bit16u *) data) = (Bit16u) value;
       break;
+    case 3:
     case 4:
       *((Bit32u *) data) = value;
       break;
@@ -471,7 +472,7 @@ Bit32u bx_pci_bridge_c::agp_aperture_read(bx_phy_address addr, unsigned len, boo
     Bit32u gart_index = (Bit32u)(offset >> 12);
     Bit32u page_offset = (Bit32u)(offset & 0xfff);
     Bit32u gart_addr = BX_PCI_THIS gart_base + (gart_index << 2);
-    Bit32u page_addr, value;
+    Bit32u page_addr, value = 0;
     Bit16u val16;
     Bit8u val8;
     DEV_MEM_READ_PHYSICAL(gart_addr, 4, (Bit8u*)&page_addr);
@@ -487,8 +488,9 @@ Bit32u bx_pci_bridge_c::agp_aperture_read(bx_phy_address addr, unsigned len, boo
         DEV_MEM_READ_PHYSICAL(page_addr + page_offset, 2, (Bit8u*)&val16);
         value = val16;
         break;
+      case 3:
       case 4:
-        DEV_MEM_READ_PHYSICAL(page_addr + page_offset, 4, (Bit8u*)&value);
+        DEV_MEM_READ_PHYSICAL(page_addr + page_offset, len, (Bit8u*)&value);
         break;
     }
     return value;
