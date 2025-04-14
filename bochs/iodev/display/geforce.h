@@ -162,6 +162,10 @@ private:
   Bit32u fifo_mode;
   Bit32u fifo_cache1_push1;
   Bit32u fifo_cache1_put;
+  Bit32u fifo_cache1_dma_instance;
+  Bit32u fifo_cache1_dma_put;
+  Bit32u fifo_cache1_dma_get;
+  Bit32u fifo_cache1_ref_cnt;
   Bit32u fifo_cache1_pull0;
   Bit32u fifo_cache1_get;
   Bit32u fifo_cache1_method[GEFORCE_CACHE1_SIZE];
@@ -196,12 +200,8 @@ private:
   Bit8u  rop_flags[0x100];
 
   struct {
-    Bit32u dma_put;
-    Bit32u dma_get;
     Bit32u subr_return;
     bool subr_active;
-    Bit32u ref;
-    Bit32u pushbuf;
     struct {
       Bit32u mthd;
       Bit32u subc;
