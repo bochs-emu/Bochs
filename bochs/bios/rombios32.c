@@ -1780,7 +1780,7 @@ void acpi_bios_init(void)
     uint32_t hpet_addr;
     uint32_t base_addr, rsdt_addr, fadt_addr, addr, facs_addr, dsdt_addr, ssdt_addr;
     uint32_t acpi_tables_size, madt_addr, madt_size;
-    int i;
+    int i, hpet_enabled;
 
     if (ram_size - ACPI_DATA_SIZE < 0x100000) {
         BX_INFO("Not enough memory for ACPI tables\n");
@@ -1797,6 +1797,11 @@ void acpi_bios_init(void)
     rsdp = (void *)(bios_table_cur_addr);
     bios_table_cur_addr += sizeof(*rsdp);
 #endif
+
+    hpet_enabled = ((readl(ACPI_HPET_ADDRESS) >> 16) == 0x8086);
+    if (hpet_enabled) {
+        BX_INFO("HPET present at 0x%08x\n", ACPI_HPET_ADDRESS);
+    }
 
     addr = base_addr = ram_size - ACPI_DATA_SIZE;
     rsdt_addr = addr;
@@ -1829,10 +1834,12 @@ void acpi_bios_init(void)
     madt = (void *)(addr);
     addr += madt_size;
 
-    addr = (addr + 7) & ~7;
-    hpet_addr = addr;
-    hpet = (void *)(addr);
-    addr += sizeof(*hpet);
+    if (hpet_enabled) {
+        addr = (addr + 7) & ~7;
+        hpet_addr = addr;
+        hpet = (void *)(addr);
+        addr += sizeof(*hpet);
+    }
 
     acpi_tables_size = addr - base_addr;
 
@@ -1860,7 +1867,9 @@ void acpi_bios_init(void)
     rsdt->table_offset_entry[0] = cpu_to_le32(fadt_addr);
     rsdt->table_offset_entry[1] = cpu_to_le32(madt_addr);
     rsdt->table_offset_entry[2] = cpu_to_le32(ssdt_addr);
-    rsdt->table_offset_entry[3] = cpu_to_le32(hpet_addr);
+    if (hpet_enabled) {
+        rsdt->table_offset_entry[3] = cpu_to_le32(hpet_addr);
+    }
     acpi_build_table_header((struct acpi_table_header *)rsdt,
                             "RSDT", sizeof(*rsdt), 1);
 
@@ -1947,17 +1956,18 @@ void acpi_bios_init(void)
     }
 
     /* HPET */
-    memset(hpet, 0, sizeof(*hpet));
-    /* Note timer_block_id value must be kept in sync with value advertised by
-     * emulated hpet
-     */
-    hpet->timer_block_id = cpu_to_le32(0x8086a201);
-    hpet->addr.address = cpu_to_le32(ACPI_HPET_ADDRESS);
-    hpet->addr.register_bit_width = 32;
-    hpet->addr.access_size = 3;
-    acpi_build_table_header((struct  acpi_table_header *)hpet,
-                             "HPET", sizeof(*hpet), 1);
-
+    if (hpet_enabled) {
+        memset(hpet, 0, sizeof(*hpet));
+        /* Note timer_block_id value must be kept in sync with value advertised by
+         * emulated hpet
+         */
+        hpet->timer_block_id = cpu_to_le32(0x8086a201);
+        hpet->addr.address = cpu_to_le32(ACPI_HPET_ADDRESS);
+        hpet->addr.register_bit_width = 32;
+        hpet->addr.access_size = 3;
+        acpi_build_table_header((struct  acpi_table_header *)hpet,
+                                "HPET", sizeof(*hpet), 1);
+    }
 }
 
 /* SMBIOS entry point -- must be written to a 16-bit aligned address
