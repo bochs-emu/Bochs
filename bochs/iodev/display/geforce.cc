@@ -2757,23 +2757,21 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = register_read8(address);
   } else if (address >= 0x700000 && address < 0x800000) {
     value = ramin_read32(address - 0x700000);
-  } else if (address >= 0x800000 && address < 0xA00000 && BX_GEFORCE_THIS card_type < 0x40 ||
-             address >= 0xC00000 && address < 0xE00000 && BX_GEFORCE_THIS card_type >= 0x40) {
+  } else if (address >= 0x800000 && address < 0xA00000 ||
+             address >= 0xC00000 && address < 0xE00000) {
     Bit32u chid;
-    if (BX_GEFORCE_THIS card_type < 0x40)
+    Bit32u offset;
+    if (address >= 0x800000 && address < 0xA00000) {
       chid = address >> 16 & 0x1F;
-    else {
+      offset = address & 0x1FFF;
+    } else {
       chid = address >> 12 & 0x1FF;
       if (chid >= GEFORCE_CHANNEL_COUNT) {
         BX_PANIC(("Channel id >= 32"));
         chid = 0;
       }
-    }
-    Bit32u offset;
-    if (BX_GEFORCE_THIS card_type < 0x40)
-      offset = address & 0x1FFF;
-    else
       offset = address & 0x1FF;
+    }
     if (offset == 0x40)
       value = BX_GEFORCE_THIS fifo_cache1_dma_put;
     else if (offset == 0x44)
@@ -2921,21 +2919,21 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     register_write8(address, value);
   } else if (address >= 0x700000 && address < 0x800000) {
     ramin_write32(address - 0x700000, value);
-  } else if (address >= 0x800000 && address < 0xA00000 && BX_GEFORCE_THIS card_type < 0x40 ||
-             address >= 0xC00000 && address < 0xE00000 && BX_GEFORCE_THIS card_type >= 0x40) {
+  } else if (address >= 0x800000 && address < 0xA00000 ||
+             address >= 0xC00000 && address < 0xE00000) {
     Bit32u chid;
-    if (BX_GEFORCE_THIS card_type < 0x40)
-      chid = address >> 16 & 0x1F;
-    else {
-      chid = address >> 12 & 0x1FF;
-      if (chid >= GEFORCE_CHANNEL_COUNT)
-        BX_PANIC(("Channel id >= 32"));
-    }
     Bit32u offset;
-    if (BX_GEFORCE_THIS card_type < 0x40)
+    if (address >= 0x800000 && address < 0xA00000) {
+      chid = address >> 16 & 0x1F;
       offset = address & 0x1FFF;
-    else
+    } else {
+      chid = address >> 12 & 0x1FF;
+      if (chid >= GEFORCE_CHANNEL_COUNT) {
+        BX_PANIC(("Channel id >= 32"));
+        chid = 0;
+      }
       offset = address & 0x1FF;
+    }
     if (offset == 0x40) {
       Bit32u oldchid = BX_GEFORCE_THIS fifo_cache1_push1 & 0x1F;
       if (oldchid != chid) {
