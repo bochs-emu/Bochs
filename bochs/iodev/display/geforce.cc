@@ -2507,6 +2507,21 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
   BX_DEBUG(("execute_command: chid 0x%02x, subc 0x%02x, method 0x%03x, param 0x%08x",
     chid, subc, method, param));
   if (method == 0x000) {
+    if (BX_GEFORCE_THIS chs[chid].schs[subc].engine == 0x01) {
+      Bit8u cls = ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object);
+      if (cls == 0x62) {
+        if (BX_GEFORCE_THIS card_type < 0x40) {
+          ramin_write32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0x8,
+            BX_GEFORCE_THIS chs[chid].s2d_img_src >> 4 |
+            BX_GEFORCE_THIS chs[chid].s2d_img_dst >> 4 << 16);
+        } else {
+          ramin_write32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0x8,
+            BX_GEFORCE_THIS chs[chid].s2d_img_src >> 4);
+          ramin_write32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0xC,
+            BX_GEFORCE_THIS chs[chid].s2d_img_dst >> 4);
+        }
+      }
+    }
     Bit32u context = ramht_lookup(param, chid);
     if (BX_GEFORCE_THIS card_type < 0x40) {
       BX_GEFORCE_THIS chs[chid].schs[subc].object = (context & 0xFFFF) << 4;
@@ -2514,6 +2529,21 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
     } else {
       BX_GEFORCE_THIS chs[chid].schs[subc].object = (context & 0xFFFFF) << 4;
       BX_GEFORCE_THIS chs[chid].schs[subc].engine = context >> 20 & 0x7;
+    }
+    if (BX_GEFORCE_THIS chs[chid].schs[subc].engine == 0x01) {
+      Bit8u cls = ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object);
+      if (cls == 0x62) {
+        if (BX_GEFORCE_THIS card_type < 0x40) {
+          Bit32u srcdst = ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0x8);
+          BX_GEFORCE_THIS chs[chid].s2d_img_src = (srcdst & 0xFFFF) << 4;
+          BX_GEFORCE_THIS chs[chid].s2d_img_dst = srcdst >> 16 << 4;
+        } else {
+          BX_GEFORCE_THIS chs[chid].s2d_img_src =
+            ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0x8) << 4;
+          BX_GEFORCE_THIS chs[chid].s2d_img_dst =
+            ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0xC) << 4;
+        }
+      }
     }
   } else if (method == 0x014) {
     BX_GEFORCE_THIS fifo_cache1_ref_cnt = param;
@@ -2772,14 +2802,18 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
       }
       offset = address & 0x1FF;
     }
-    if (offset == 0x40)
-      value = BX_GEFORCE_THIS fifo_cache1_dma_put;
-    else if (offset == 0x44)
-      value = BX_GEFORCE_THIS fifo_cache1_dma_get;
-    else if (offset == 0x48)
-      value = BX_GEFORCE_THIS fifo_cache1_ref_cnt;
-    else {
-      value = 0x00000000;
+    value = 0x00000000;
+    if (offset >= 0x40 && offset <= 0x48) {
+      Bit32u curchid = BX_GEFORCE_THIS fifo_cache1_push1 & 0x1F;
+      if (curchid != chid)
+        BX_PANIC(("Channel control area read for inactive channel is not implemented"));
+      if (offset == 0x40)
+        value = BX_GEFORCE_THIS fifo_cache1_dma_put;
+      else if (offset == 0x44)
+        value = BX_GEFORCE_THIS fifo_cache1_dma_get;
+      else if (offset == 0x48)
+        value = BX_GEFORCE_THIS fifo_cache1_ref_cnt;
+    } else {
       BX_ERROR(("Unknown FIFO offset 0x%08x", offset));
     }
   } else {
