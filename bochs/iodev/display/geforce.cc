@@ -940,9 +940,17 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
           BX_GEFORCE_THIS crtc.index == 0x13 ||
           BX_GEFORCE_THIS crtc.index == 0x15 ||
           BX_GEFORCE_THIS crtc.index == 0x19 ||
+          BX_GEFORCE_THIS crtc.index == 0x25 ||
           BX_GEFORCE_THIS crtc.index == 0x28 ||
+          BX_GEFORCE_THIS crtc.index == 0x2D ||
+          BX_GEFORCE_THIS crtc.index == 0x41 ||
           BX_GEFORCE_THIS crtc.index == 0x42) {
         BX_GEFORCE_THIS svga_needs_update_mode = 1;
+      }
+      if (BX_GEFORCE_THIS crtc.index == 0x25 ||
+          BX_GEFORCE_THIS crtc.index == 0x2D ||
+          BX_GEFORCE_THIS crtc.index == 0x41) {
+        BX_GEFORCE_THIS calculate_retrace_timing();
       }
       if (BX_GEFORCE_THIS crtc.index <= VGA_CRTC_MAX) {
         BX_GEFORCE_THIS crtc.reg[BX_GEFORCE_THIS crtc.index] = value;
@@ -1056,6 +1064,33 @@ void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tilein
   }
 }
 
+void bx_geforce_c::get_crtc_params(bx_crtc_params_t* crtcp, Bit32u* vclock)
+{
+  if (BX_GEFORCE_THIS crtc.reg[0x28]) {
+    *vclock = BX_GEFORCE_THIS s.vclk[BX_GEFORCE_THIS s.misc_output.clock_select];
+    if (BX_GEFORCE_THIS s.x_dotclockdiv2) *vclock >>= 1;
+    crtcp->htotal = BX_GEFORCE_THIS crtc.reg[0] +
+                    ((BX_GEFORCE_THIS crtc.reg[0x2D] & 1) << 8) + 5;
+    crtcp->vtotal = BX_GEFORCE_THIS crtc.reg[6] +
+                    ((BX_GEFORCE_THIS crtc.reg[7] & 0x01) << 8) +
+                    ((BX_GEFORCE_THIS crtc.reg[7] & 0x20) << 4) +
+                    ((BX_GEFORCE_THIS crtc.reg[0x25] & 1) << 10) +
+                    ((BX_GEFORCE_THIS crtc.reg[0x41] & 1) << 11) + 2;
+    crtcp->vbstart = BX_GEFORCE_THIS crtc.reg[21] +
+                     ((BX_GEFORCE_THIS crtc.reg[7] & 0x08) << 5) +
+                     ((BX_GEFORCE_THIS crtc.reg[9] & 0x20) << 4) +
+                     ((BX_GEFORCE_THIS crtc.reg[0x25] & 0x08) << 7) +
+                     ((BX_GEFORCE_THIS crtc.reg[0x41] & 0x40) << 5);
+    crtcp->vrstart = BX_GEFORCE_THIS crtc.reg[16] +
+                     ((BX_GEFORCE_THIS crtc.reg[7] & 0x04) << 6) +
+                     ((BX_GEFORCE_THIS crtc.reg[7] & 0x80) << 2) +
+                     ((BX_GEFORCE_THIS crtc.reg[0x25] & 0x04) << 8) +
+                     ((BX_GEFORCE_THIS crtc.reg[0x41] & 0x10) << 7);
+  } else {
+    bx_vgacore_c::get_crtc_params(crtcp, vclock);
+  }
+}
+
 void bx_geforce_c::update(void)
 {
   unsigned width, height, pitch;
@@ -1090,8 +1125,15 @@ void bx_geforce_c::update(void)
     else
       BX_PANIC(("unknown bpp"));
 
-    Bit32u iHeight, iWidth;
-    determine_screen_dimensions(&iHeight, &iWidth);
+    Bit32u iWidth =
+      (BX_GEFORCE_THIS crtc.reg[1] +
+      ((BX_GEFORCE_THIS crtc.reg[0x2D] & 0x02) << 7) + 1) * 8;
+    Bit32u iHeight =
+      (BX_GEFORCE_THIS crtc.reg[18] |
+      ((BX_GEFORCE_THIS crtc.reg[7] & 0x02) << 7) |
+      ((BX_GEFORCE_THIS crtc.reg[7] & 0x40) << 3) |
+      ((BX_GEFORCE_THIS crtc.reg[0x25] & 0x02) << 9) |
+      ((BX_GEFORCE_THIS crtc.reg[0x41] & 0x04) << 9)) + 1;
 
     if ((iWidth != BX_GEFORCE_THIS svga_xres) || (iHeight != BX_GEFORCE_THIS svga_yres)
         || (iBpp != BX_GEFORCE_THIS svga_bpp)) {

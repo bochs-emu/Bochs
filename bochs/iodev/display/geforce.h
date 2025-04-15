@@ -49,6 +49,7 @@ public:
   virtual ~bx_geforce_c();
 
   virtual bool init_vga_extension(void);
+  virtual void get_crtc_params(bx_crtc_params_t* crtcp, Bit32u* vclock);
   virtual void reset(unsigned type);
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height);
