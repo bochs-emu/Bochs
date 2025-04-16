@@ -158,6 +158,7 @@ protected:
       Bit8u  reg[0x19];
       bool   write_protect;
       Bit16u start_addr;
+      Bit8u  max_reg; // for logging only (VGA 0x18 / modified by extension)
     } CRTC;
 
     struct {

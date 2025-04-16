@@ -154,6 +154,7 @@ void bx_vgacore_c::init_standard_vga(void)
   BX_VGA_THIS s.sequencer.extended_mem = 1; // display mem greater than 64K
   BX_VGA_THIS s.sequencer.odd_even_dis = 1; // use sequential addressing mode
 
+  BX_VGA_THIS s.CRTC.max_reg = 0x18;
   BX_VGA_THIS s.dac_shift = 2;
   BX_VGA_THIS s.last_bpp = 8;
   BX_VGA_THIS s.vclk[0] = 25175000;
@@ -1092,7 +1093,7 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_
     case 0x03b4: /* CRTC Index Register (monochrome emulation modes) */
     case 0x03d4: /* CRTC Index Register (color emulation modes) */
       BX_VGA_THIS s.CRTC.address = value & 0x3f;
-      if (BX_VGA_THIS s.CRTC.address > 0x18)
+      if (BX_VGA_THIS s.CRTC.address > BX_VGA_THIS s.CRTC.max_reg)
         BX_DEBUG(("write: invalid CRTC register 0x%02x selected",
           (unsigned) BX_VGA_THIS s.CRTC.address));
       break;
