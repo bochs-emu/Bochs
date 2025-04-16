@@ -194,6 +194,7 @@ bool bx_geforce_c::init_vga_extension(void)
   BX_GEFORCE_THIS svga_init_members();
   BX_GEFORCE_THIS svga_init_pcihandlers();
   BX_GEFORCE_THIS bitblt_init();
+  BX_GEFORCE_THIS s.CRTC.max_reg = GEFORCE_CRTC_MAX;
   BX_GEFORCE_THIS s.max_xres = 2048;
   BX_GEFORCE_THIS s.max_yres = 1536;
   BX_GEFORCE_THIS ddc.init();
