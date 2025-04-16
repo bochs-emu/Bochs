@@ -193,9 +193,9 @@ private:
   Bit32u crtc_cursor_offset;
   Bit32u crtc_cursor_config;
   Bit32u ramdac_cu_start_pos;
-  Bit32u nvpll;
-  Bit32u mpll;
-  Bit32u vpll;
+  Bit32u ramdac_vpll;
+  Bit32u ramdac_vpll_b;
+  Bit32u ramdac_pll_select;
 
   bx_bitblt_rop_t rop_handler[0x100];
   Bit8u  rop_flags[0x100];

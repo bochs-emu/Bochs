@@ -292,9 +292,9 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS crtc_cursor_offset = 0;
   BX_GEFORCE_THIS crtc_cursor_config = 0;
   BX_GEFORCE_THIS ramdac_cu_start_pos = 0;
-  BX_GEFORCE_THIS nvpll = 0;
-  BX_GEFORCE_THIS mpll = 0;
-  BX_GEFORCE_THIS vpll = 0;
+  BX_GEFORCE_THIS ramdac_vpll = 0;
+  BX_GEFORCE_THIS ramdac_vpll_b = 0;
+  BX_GEFORCE_THIS ramdac_pll_select = 0;
 
   for (int i = 0; i < GEFORCE_CHANNEL_COUNT; i++) {
     BX_GEFORCE_THIS chs[i].subr_return = 0;
@@ -947,16 +947,16 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
           BX_GEFORCE_THIS crtc.index == 0x42) {
         BX_GEFORCE_THIS svga_needs_update_mode = 1;
       }
-      if (BX_GEFORCE_THIS crtc.index == 0x25 ||
-          BX_GEFORCE_THIS crtc.index == 0x2D ||
-          BX_GEFORCE_THIS crtc.index == 0x41) {
-        BX_GEFORCE_THIS calculate_retrace_timing();
-      }
       if (BX_GEFORCE_THIS crtc.index <= VGA_CRTC_MAX) {
         BX_GEFORCE_THIS crtc.reg[BX_GEFORCE_THIS crtc.index] = value;
       } else {
         BX_GEFORCE_THIS svga_write_crtc(address, BX_GEFORCE_THIS crtc.index, value);
         return;
+      }
+      if (BX_GEFORCE_THIS crtc.index == 0x25 ||
+          BX_GEFORCE_THIS crtc.index == 0x2D ||
+          BX_GEFORCE_THIS crtc.index == 0x41) {
+        BX_GEFORCE_THIS calculate_retrace_timing();
       }
       break;
     default:
@@ -1066,9 +1066,29 @@ void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tilein
 
 void bx_geforce_c::get_crtc_params(bx_crtc_params_t* crtcp, Bit32u* vclock)
 {
-  if (BX_GEFORCE_THIS crtc.reg[0x28]) {
-    *vclock = BX_GEFORCE_THIS s.vclk[BX_GEFORCE_THIS s.misc_output.clock_select];
-    if (BX_GEFORCE_THIS s.x_dotclockdiv2) *vclock >>= 1;
+  Bit32u m = BX_GEFORCE_THIS ramdac_vpll & 0xFF;
+  Bit32u n = BX_GEFORCE_THIS ramdac_vpll >> 8 & 0xFF;
+  Bit32u p = BX_GEFORCE_THIS ramdac_vpll >> 16 & 0x07;
+  Bit32u mb = 1;
+  Bit32u nb = 1;
+  if (BX_GEFORCE_THIS card_type == 0x35) {
+    m &= 0xF;
+    if (BX_GEFORCE_THIS ramdac_vpll & 0x00000080) {
+      mb = BX_GEFORCE_THIS ramdac_vpll >> 4 & 0x7;
+      nb = BX_GEFORCE_THIS ramdac_vpll >> 21 & 0x18 |
+           BX_GEFORCE_THIS ramdac_vpll >> 19 & 0x7;
+    }
+  } else if (BX_GEFORCE_THIS card_type >= 0x40 && BX_GEFORCE_THIS ramdac_vpll_b & 0x80000000) {
+    mb = BX_GEFORCE_THIS ramdac_vpll_b & 0xFF;
+    nb = BX_GEFORCE_THIS ramdac_vpll_b >> 8 & 0xFF;
+  }
+  if (BX_GEFORCE_THIS ramdac_pll_select & 0x200 && m && mb) {
+    Bit32u crystalFreq = 13500000;
+    if (BX_GEFORCE_THIS straps0_primary & 0x00000040)
+      crystalFreq = 14318000;
+    if (BX_GEFORCE_THIS card_type > 0x20 && BX_GEFORCE_THIS straps0_primary & 0x00400000)
+      crystalFreq = 27000000;
+    *vclock = (Bit32u)((Bit64u)crystalFreq * n * nb / m / mb >> p);
     crtcp->htotal = BX_GEFORCE_THIS crtc.reg[0] +
                     ((BX_GEFORCE_THIS crtc.reg[0x2D] & 1) << 8) + 5;
     crtcp->vtotal = BX_GEFORCE_THIS crtc.reg[6] +
@@ -2817,12 +2837,12 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = register_read8(address);
   } else if (address == 0x680300) {
     value = BX_GEFORCE_THIS ramdac_cu_start_pos;
-  } else if (address == 0x680500) {
-    value = BX_GEFORCE_THIS nvpll;
-  } else if (address == 0x680504) {
-    value = BX_GEFORCE_THIS mpll;
   } else if (address == 0x680508) {
-    value = BX_GEFORCE_THIS vpll;
+    value = BX_GEFORCE_THIS ramdac_vpll;
+  } else if (address == 0x68050c) {
+    value = BX_GEFORCE_THIS ramdac_pll_select;
+  } else if (address == 0x680578) {
+    value = BX_GEFORCE_THIS ramdac_vpll_b;
   } else if (address == 0x680828) { // PRAMDAC_FP_HCRTC
     value = 0x00000000; // Second monitor is disconnected
   } else if (address >= 0x681300 && address < 0x681400) {
@@ -2985,12 +3005,15 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
       BX_GEFORCE_THIS redraw_area(BX_GEFORCE_THIS hw_cursor.x, BX_GEFORCE_THIS hw_cursor.y,
         BX_GEFORCE_THIS hw_cursor.size, BX_GEFORCE_THIS hw_cursor.size);
     }
-  } else if (address == 0x680500) {
-    BX_GEFORCE_THIS nvpll = value;
-  } else if (address == 0x680504) {
-    BX_GEFORCE_THIS mpll = value;
   } else if (address == 0x680508) {
-    BX_GEFORCE_THIS vpll = value;
+    BX_GEFORCE_THIS ramdac_vpll = value;
+    BX_GEFORCE_THIS calculate_retrace_timing();
+  } else if (address == 0x68050c) {
+    BX_GEFORCE_THIS ramdac_pll_select = value;
+    BX_GEFORCE_THIS calculate_retrace_timing();
+  } else if (address == 0x680578) {
+    BX_GEFORCE_THIS ramdac_vpll_b = value;
+    BX_GEFORCE_THIS calculate_retrace_timing();
   } else if (address >= 0x681300 && address < 0x681400) {
     register_write8(address, value);
   } else if (address >= 0x700000 && address < 0x800000) {
