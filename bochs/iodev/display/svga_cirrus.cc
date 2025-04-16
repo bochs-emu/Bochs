@@ -283,6 +283,7 @@ void bx_svga_cirrus_c::svga_init_members()
   BX_CIRRUS_THIS crtc.index = CIRRUS_CRTC_MAX + 1;
   for (i = 0; i <= CIRRUS_CRTC_MAX; i++)
     BX_CIRRUS_THIS crtc.reg[i] = 0x00;
+  BX_CIRRUS_THIS s.CRTC.max_reg = CIRRUS_CRTC_MAX;
   BX_CIRRUS_THIS hidden_dac.lockindex = 0;
   BX_CIRRUS_THIS hidden_dac.data = 0x00;
 
