@@ -2868,14 +2868,27 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = 0x00000000;
     if (offset >= 0x40 && offset <= 0x48) {
       Bit32u curchid = BX_GEFORCE_THIS fifo_cache1_push1 & 0x1F;
-      if (curchid != chid)
-        BX_PANIC(("Channel control area read for inactive channel is not implemented"));
-      if (offset == 0x40)
-        value = BX_GEFORCE_THIS fifo_cache1_dma_put;
-      else if (offset == 0x44)
-        value = BX_GEFORCE_THIS fifo_cache1_dma_get;
-      else if (offset == 0x48)
-        value = BX_GEFORCE_THIS fifo_cache1_ref_cnt;
+      if (curchid == chid) {
+        if (offset == 0x40)
+          value = BX_GEFORCE_THIS fifo_cache1_dma_put;
+        else if (offset == 0x44)
+          value = BX_GEFORCE_THIS fifo_cache1_dma_get;
+        else if (offset == 0x48)
+          value = BX_GEFORCE_THIS fifo_cache1_ref_cnt;
+      } else {
+        Bit32u ramfc;
+        if (BX_GEFORCE_THIS card_type < 0x40)
+          ramfc = (BX_GEFORCE_THIS fifo_ramfc & 0xFFF) << 8;
+        else
+          ramfc = (BX_GEFORCE_THIS fifo_ramfc & 0xFFF) << 16;
+        Bit32u ramfc_ch_size = BX_GEFORCE_THIS card_type < 0x40 ? 0x40 : 0x80;
+        if (offset == 0x40)
+          value = ramin_read32(ramfc + chid * ramfc_ch_size + 0x0);
+        else if (offset == 0x44)
+          value = ramin_read32(ramfc + chid * ramfc_ch_size + 0x4);
+        else if (offset == 0x48)
+          value = ramin_read32(ramfc + chid * ramfc_ch_size + 0x8);
+      }
     } else {
       BX_ERROR(("Unknown FIFO offset 0x%08x", offset));
     }
