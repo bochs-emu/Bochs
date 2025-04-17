@@ -2925,7 +2925,7 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
   } else if (address == 0x3250) {
     BX_GEFORCE_THIS fifo_cache1_pull0 = value;
   } else if (address == 0x3270) {
-    BX_GEFORCE_THIS fifo_cache1_get = value;
+    BX_GEFORCE_THIS fifo_cache1_get = value & (GEFORCE_CACHE1_SIZE * 4 - 1);
     if (BX_GEFORCE_THIS fifo_cache1_get != BX_GEFORCE_THIS fifo_cache1_put) {
       BX_GEFORCE_THIS fifo_intr |= 0x00000001;
     } else {
