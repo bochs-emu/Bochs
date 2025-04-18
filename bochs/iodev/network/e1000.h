@@ -12,7 +12,7 @@
 //  Copyright (c) 2007 Dan Aloni
 //  Copyright (c) 2004 Antony T Curtis
 //
-//  Copyright (C) 2011-2023  The Bochs Project
+//  Copyright (C) 2011-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -148,6 +148,7 @@ private:
   Bit32u  txdesc_writeback(bx_phy_address base, struct e1000_tx_desc *dp);
   Bit64u  tx_desc_base(void);
   void    start_xmit(void);
+  void    send_packet(Bit8u *buf, Bit16u size);
 
   static void tx_timer_handler(void *);
   void tx_timer(void);
