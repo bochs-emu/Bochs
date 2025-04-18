@@ -2282,10 +2282,11 @@ int bx_parse_usb_port_params(const char *context, const char *param,
 {
   bool devopt = 0;
   int idx, plen;
-  char tmpname[20], newopts[BX_PATHNAME_LEN];
+  char pname[20], newopts[BX_PATHNAME_LEN];
   char *devstr, *arg, *pEnd;
   const char *opt = NULL, *origopts;
   static bool compat_mode = false;
+  bx_list_c *pbase;
 
   if (!strncmp(param, "port", 4)) {
     devopt = 1;
@@ -2305,7 +2306,8 @@ int bx_parse_usb_port_params(const char *context, const char *param,
     PARSE_ERR(("%s: usb_%s: port number out of range.", context, base->get_name()));
     return -1;
   }
-  sprintf(tmpname, "port%d.%s", idx, devopt ? "device" : "options");
+  sprintf(pname, "port%d", idx);
+  pbase = (bx_list_c*)SIM->get_param(pname, base);
   if (devopt) {
     compat_mode = false;
 
@@ -2314,16 +2316,22 @@ int bx_parse_usb_port_params(const char *context, const char *param,
     //   usb_ohci: port1=mouse, options1="speed:low, model:m228"
     //   usb_ohci: port1=keyboard, options1="speed:low"
     // this catches the second line, giving an error...
-    if (SIM->get_param_enum(tmpname, base)->get() > 0) {
-      BX_PANIC(("%s: Already declared port%d type. Please choose another available port number.", context, idx));
+    // Command line changes are allowed and reset options
+    if (SIM->get_param_enum("device", pbase)->get() > 0) {
+      if (!strcmp(context, "cmdline args")) {
+        BX_ERROR(("%s: Port%d type changed - options will be reset", context, idx));
+        SIM->get_param_string("options", pbase)->set("none");
+      } else {
+        BX_PANIC(("%s: Already declared port%d type. Please choose another available port number.", context, idx));
+      }
     }
 
-    if (!SIM->get_param_enum(tmpname, base)->set_by_name(&param[plen + 2])) {
+    if (!SIM->get_param_enum("device", pbase)->set_by_name(&param[plen + 2])) {
       // backward compatibility code
       devstr = strdup(&param[plen + 2]);
       arg = strtok(devstr, ":");
       arg = strtok(NULL, "\n");
-      SIM->get_param_enum(tmpname, base)->set_by_name(devstr);
+      SIM->get_param_enum("device", pbase)->set_by_name(devstr);
       if (arg != NULL) {
         if (!strcmp(devstr, "disk") || !strcmp(devstr, "cdrom") ||
             !strcmp(devstr, "floppy")) {
@@ -2334,14 +2342,13 @@ int bx_parse_usb_port_params(const char *context, const char *param,
           opt = "file";
         }
         if (opt != NULL) {
-          sprintf(tmpname, "port%d.options", idx);
-          origopts = SIM->get_param_string(tmpname, base)->getptr();
+          origopts = SIM->get_param_string("options", pbase)->getptr();
           if (strlen(origopts) > 0) {
             sprintf(newopts, "%s:%s, %s", opt, arg, origopts);
           } else {
             sprintf(newopts, "%s:%s", opt, arg);
           }
-          SIM->get_param_string(tmpname, base)->set(newopts);
+          SIM->get_param_string("options", pbase)->set(newopts);
           compat_mode = true;
         }
       }
@@ -2357,18 +2364,18 @@ int bx_parse_usb_port_params(const char *context, const char *param,
     //    usb_ohci: port1=tablet, options1="speed:low"
     //    usb_ohci: port2=disk, options1="speed:full, path:hdd.img"
     //  where the user copy/pasted something and forgot to adjust the options# in the second line)
-    if (!SIM->get_param_string(tmpname, base)->isempty()) {
+    if (!SIM->get_param_string("options", pbase)->isempty()) {
       BX_INFO(("%s: Already declared options%d parameter. Was this intended?", context, idx));
     }
 
     if (compat_mode) {
-      origopts = SIM->get_param_string(tmpname, base)->getptr();
+      origopts = SIM->get_param_string("options", pbase)->getptr();
       sprintf(newopts, "%s, %s", origopts, &param[plen + 2]);
       compat_mode = false;
     } else {
       strcpy(newopts, &param[plen + 2]);
     }
-    SIM->get_param_string(tmpname, base)->set(newopts);
+    SIM->get_param_string("options", pbase)->set(newopts);
   }
   return 0;
 }
