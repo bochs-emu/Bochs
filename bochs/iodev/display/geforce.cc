@@ -1644,7 +1644,11 @@ void bx_geforce_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
       BX_GEFORCE_THIS crtc.reg[index - 1] = sda << 3 | scl << 2;
     }
   } else if (index == 0x58) {
-    return; // Otherwise slaved mode is activated
+    // Combined with 0x57, this register makes pair which allows
+    //   to access 16 bytes of head-specific variables.
+    // Until visible side effects appear, however, it is better to
+    //   just disable writes to it which makes reads to return zeroes.
+    return;
   }
 
   if (index <= GEFORCE_CRTC_MAX) {
@@ -1680,29 +1684,48 @@ Bit8u bx_geforce_c::register_read8(Bit32u address)
       value = BX_GEFORCE_THIS pci_rom[address - 0x300000];
     else
       value = 0x00;
-  } else if (address >= 0xc0300 && address < 0xc0400) {
-    if (address == 0xc03c3 ||
-        address == 0xc03c4 || address == 0xc03c5 ||
-        address == 0xc03cc || address == 0xc03cf)
-      value = SVGA_READ(address - 0xc0000, 1);
-    else {
+  } else if (address >= 0xc0300 && address < 0xc0400 ||
+             address >= 0xc2300 && address < 0xc2400) {
+    Bit32u head = address >> 13 & 1;
+    Bit32u offset = address & 0x00000fff;
+    if (offset == 0x3c3 ||
+        offset == 0x3c4 || offset == 0x3c5 ||
+        offset == 0x3cc || offset == 0x3cf) {
+      if (!head)
+        value = SVGA_READ(offset, 1);
+      else
+        value = 0x00;
+    } else {
       value = 0xFF;
       BX_PANIC(("Unknown register 0x%08x read", address));
     }
-  } else if (address >= 0x601300 && address < 0x601400) {
-    if (address == 0x6013c0 || address == 0x6013c1 ||
-        address == 0x6013c2 || address == 0x6013d4 ||
-        address == 0x6013d5 || address == 0x6013d8 || 
-        address == 0x6013da)
-      value = SVGA_READ(address - 0x601000, 1);
-    else {
+  } else if (address >= 0x601300 && address < 0x601400 ||
+             address >= 0x603300 && address < 0x603400) {
+    Bit32u head = address >> 13 & 1;
+    Bit32u offset = address & 0x00000fff;
+    if (offset == 0x3b4 || offset == 0x3b5 ||
+        offset == 0x3c0 || offset == 0x3c1 ||
+        offset == 0x3c2 || offset == 0x3d4 ||
+        offset == 0x3d5 || offset == 0x3d8 ||
+        offset == 0x3da) {
+      if (!head)
+        value = SVGA_READ(offset, 1);
+      else
+        value = 0x00;
+    } else {
       value = 0xFF;
       BX_PANIC(("Unknown register 0x%08x read", address));
     }
-  } else if (address >= 0x681300 && address < 0x681400) {
-    if (address >= 0x6813c6 && address <= 0x6813c9)
-      value = SVGA_READ(address - 0x681000, 1);
-    else {
+  } else if (address >= 0x681300 && address < 0x681400 ||
+             address >= 0x683300 && address < 0x683400) {
+    Bit32u head = address >> 13 & 1;
+    Bit32u offset = address & 0x00000fff;
+    if (offset >= 0x3c6 && offset <= 0x3c9) {
+      if (!head)
+        value = SVGA_READ(offset, 1);
+      else
+        value = 0x00;
+    } else {
       value = 0xFF;
       BX_PANIC(("Unknown register 0x%08x read", address));
     }
@@ -1716,25 +1739,41 @@ Bit8u bx_geforce_c::register_read8(Bit32u address)
 
 void bx_geforce_c::register_write8(Bit32u address, Bit8u value)
 {
-  if (address >= 0xc0300 && address < 0xc0400) {
-    if (address == 0xc03c2 || address == 0xc03c3 ||
-        address == 0xc03c4 || address == 0xc03c5 ||
-        address == 0xc03ce || address == 0xc03cf)
-      SVGA_WRITE(address - 0xc0000, value, 1);
-    else
+  if (address >= 0xc0300 && address < 0xc0400 ||
+      address >= 0xc2300 && address < 0xc2400) {
+    Bit32u head = address >> 13 & 1;
+    Bit32u offset = address & 0x00000fff;
+    if (offset == 0x3c2 || offset == 0x3c3 ||
+        offset == 0x3c4 || offset == 0x3c5 ||
+        offset == 0x3ce || offset == 0x3cf) {
+      if (!head)
+        SVGA_WRITE(offset, value, 1);
+    } else {
       BX_PANIC(("Unknown register 0x%08x write", address));
-  } else if (address >= 0x601300 && address < 0x601400) {
-    if (address == 0x6013c0 || address == 0x6013c1 ||
-        address == 0x6013c2 || address == 0x6013d4 ||
-        address == 0x6013d5 || address == 0x6013da)
-      SVGA_WRITE(address - 0x601000, value, 1);
-    else
+    }
+  } else if (address >= 0x601300 && address < 0x601400 ||
+             address >= 0x603300 && address < 0x603400) {
+    Bit32u head = address >> 13 & 1;
+    Bit32u offset = address & 0x00000fff;
+    if (offset == 0x3b4 || offset == 0x3b5 ||
+        offset == 0x3c0 || offset == 0x3c1 ||
+        offset == 0x3c2 || offset == 0x3d4 ||
+        offset == 0x3d5 || offset == 0x3da) {
+      if (!head)
+        SVGA_WRITE(offset, value, 1);
+    } else {
       BX_PANIC(("Unknown register 0x%08x write", address));
-  } else if (address >= 0x681300 && address < 0x681400) {
-    if (address >= 0x6813c6 && address <= 0x6813c9)
-      SVGA_WRITE(address - 0x681000, value, 1);
-    else
+    }
+  } else if (address >= 0x681300 && address < 0x681400 ||
+             address >= 0x683300 && address < 0x683400) {
+    Bit32u head = address >> 13 & 1;
+    Bit32u offset = address & 0x00000fff;
+    if (offset >= 0x3c6 && offset <= 0x3c9) {
+      if (!head)
+        SVGA_WRITE(offset, value, 1);
+    } else {
       BX_PANIC(("Unknown register 0x%08x write", address));
+    }
   } else if (address >= 0x700000 && address < 0x800000) {
     BX_GEFORCE_THIS s.memory[address - 0x700000 ^ BX_GEFORCE_THIS ramin_flip] = value;
   } else {
@@ -2792,7 +2831,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = get_current_time() >> 32;
   else if (address == 0x9420)
     value = BX_GEFORCE_THIS timer_alarm;
-  else if (address >= 0xc0300 && address < 0xc0400)
+  else if (address >= 0xc0300 && address < 0xc0400 ||
+           address >= 0xc2300 && address < 0xc2400)
     value = register_read8(address);
   else if (address == 0x10020c)
     value = BX_GEFORCE_THIS s.memsize;
@@ -2834,7 +2874,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS crtc_cursor_offset;
   } else if (address == 0x600810) {
     value = BX_GEFORCE_THIS crtc_cursor_config;
-  } else if (address >= 0x601300 && address < 0x601400) {
+  } else if (address >= 0x601300 && address < 0x601400 ||
+             address >= 0x603300 && address < 0x603400) {
     value = register_read8(address);
   } else if (address == 0x680300) {
     value = BX_GEFORCE_THIS ramdac_cu_start_pos;
@@ -2846,7 +2887,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS ramdac_vpll_b;
   } else if (address == 0x680828) { // PRAMDAC_FP_HCRTC
     value = 0x00000000; // Second monitor is disconnected
-  } else if (address >= 0x681300 && address < 0x681400) {
+  } else if (address >= 0x681300 && address < 0x681400 ||
+             address >= 0x683300 && address < 0x683400) {
     value = register_read8(address);
   } else if (address >= 0x700000 && address < 0x800000) {
     value = ramin_read32(address - 0x700000);
@@ -2965,7 +3007,8 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     }
   } else if (address == 0x9420) {
     BX_GEFORCE_THIS timer_alarm = value;
-  } else if (address >= 0xc0300 && address < 0xc0400) {
+  } else if (address >= 0xc0300 && address < 0xc0400 ||
+             address >= 0xc2300 && address < 0xc2400) {
     register_write8(address, value);
   } else if (address == 0x101000) {
     if (value >> 31)
@@ -3005,7 +3048,8 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
       BX_GEFORCE_THIS crtc.reg[0x31] & 0x01 || value & 0x00000001;
     BX_GEFORCE_THIS hw_cursor.size = value & 0x00010000 ? 64 : 32;
     BX_GEFORCE_THIS hw_cursor.bpp32 = value & 0x00001000;
-  } else if (address >= 0x601300 && address < 0x601400) {
+  } else if (address >= 0x601300 && address < 0x601400 ||
+             address >= 0x603300 && address < 0x603400) {
     register_write8(address, value);
   } else if (address == 0x680300) {
     Bit16s prevx = BX_GEFORCE_THIS hw_cursor.x;
@@ -3028,7 +3072,8 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
   } else if (address == 0x680578) {
     BX_GEFORCE_THIS ramdac_vpll_b = value;
     BX_GEFORCE_THIS calculate_retrace_timing();
-  } else if (address >= 0x681300 && address < 0x681400) {
+  } else if (address >= 0x681300 && address < 0x681400 ||
+             address >= 0x683300 && address < 0x683400) {
     register_write8(address, value);
   } else if (address >= 0x700000 && address < 0x800000) {
     ramin_write32(address - 0x700000, value);
