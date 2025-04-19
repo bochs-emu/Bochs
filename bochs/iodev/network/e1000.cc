@@ -12,7 +12,7 @@
 //  Copyright (c) 2007 Dan Aloni
 //  Copyright (c) 2004 Antony T Curtis
 //
-//  Copyright (C) 2011-2023  The Bochs Project
+//  Copyright (C) 2011-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1183,14 +1183,23 @@ void bx_e1000_c::xmit_seg()
     memmove(tp->vlan, tp->data, 4);
     memmove(tp->data, tp->data + 4, 8);
     memcpy(tp->data + 8, tp->vlan_header, 4);
-    BX_E1000_THIS ethdev->sendpkt(tp->vlan, tp->size + 4);
+    BX_E1000_THIS send_packet(tp->vlan, tp->size + 4);
   } else
-    BX_E1000_THIS ethdev->sendpkt(tp->data, tp->size);
+    BX_E1000_THIS send_packet(tp->data, tp->size);
   BX_E1000_THIS s.mac_reg[TPT]++;
   BX_E1000_THIS s.mac_reg[GPTC]++;
   n = BX_E1000_THIS s.mac_reg[TOTL];
   if ((BX_E1000_THIS s.mac_reg[TOTL] += BX_E1000_THIS s.tx.size) < n)
     BX_E1000_THIS s.mac_reg[TOTH]++;
+}
+
+void bx_e1000_c::send_packet(Bit8u *buf, Bit16u size)
+{
+  if ((BX_E1000_THIS s.phy_reg[PHY_CTRL] & 0x4000) != 0) {
+    BX_E1000_THIS rx_frame(buf, size);
+  } else {
+    BX_E1000_THIS ethdev->sendpkt(buf, size);
+  }
 }
 
 void bx_e1000_c::process_tx_desc(struct e1000_tx_desc *dp)
