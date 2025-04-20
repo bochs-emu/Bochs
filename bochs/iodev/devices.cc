@@ -1685,7 +1685,7 @@ void bx_pci_device_c::load_pci_rom(const char *path)
 void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsigned io_len)
 {
   Bit8u bnum, value8, oldval;
-  bool bar_change = 0, rom_change = 0;
+  Bit8u bar_change = 0;
 
   // ignore readonly registers
   if ((address < 4) || ((address > 7) && (address < 12)) || (address == 14) ||
@@ -1699,6 +1699,17 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
     bnum = ((address - 0x10) >> 2);
     if (pci_bar[bnum].type != BX_PCI_BAR_TYPE_NONE) {
       BX_DEBUG_PCI_WRITE(address, value, io_len);
+      if (pci_bar[bnum].type == BX_PCI_BAR_TYPE_IO) {
+        if (value >= 0xfffffffc) { // BAR reset
+          value = (value & ~(pci_bar[bnum].size - 1)) | 0x01;
+          bar_change = 2;
+        }
+      } else {
+        if (value >= 0xfffffff0) { // BAR reset
+          value = (value & ~(pci_bar[bnum].size - 1)) | (pci_conf[address & ~3] & 0x0f);
+          bar_change = 2;
+        }
+      }
       for (unsigned i=0; i<io_len; i++) {
         value8 = (value >> (i*8)) & 0xff;
         oldval = pci_conf[address+i];
@@ -1709,10 +1720,10 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
             value8 = (value8 & 0xf0) | (oldval & 0x0f);
           }
         }
-        bar_change |= (value8 != oldval);
+        bar_change |= (Bit8u)(value8 != oldval);
         pci_conf[address+i] = value8;
       }
-      if (bar_change) {
+      if (bar_change == 1) {
         if (pci_bar[bnum].type == BX_PCI_BAR_TYPE_IO) {
           if (DEV_pci_set_base_io(this, pci_bar[bnum].io.rh, pci_bar[bnum].io.wh,
                                   &pci_bar[bnum].addr, &pci_conf[0x10 + bnum * 4],
@@ -1732,14 +1743,18 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
     }
   } else if (((address & 0xfc) == 0x30) && (pci_rom_size > 0)) {
     BX_DEBUG_PCI_WRITE(address, value, io_len);
-    value &= (0xfffffc01 >> ((address & 0x03) * 8));
+    if (value >= 0xfffff800) { // BAR reset
+      value &= ~(pci_rom_size - 1);
+      bar_change = 2;
+    }
+    value &= (0xfffff801 >> ((address & 0x03) * 8));
     for (unsigned i=0; i<io_len; i++) {
       value8 = (value >> (i*8)) & 0xff;
       oldval = pci_conf[address+i];
-      rom_change |= (value8 != oldval);
+      bar_change |= (Bit8u)(value8 != oldval);
       pci_conf[address+i] = value8;
     }
-    if (rom_change) {
+    if (bar_change == 1) {
       if (DEV_pci_set_base_mem(this, pci_rom_read_handler, NULL,
                                &pci_rom_address, &pci_conf[0x30],
                                pci_rom_size)) {

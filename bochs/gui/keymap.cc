@@ -132,7 +132,7 @@ void bx_keymap_c::loadKeymap(const char *prefix, Bit32u stringToSymbol(const cha
       sprintf(keymap_file, "%s" DIRECTORY_SEPARATOR "keymaps" DIRECTORY_SEPARATOR "%s-pc-%s.map",
               bxshare, prefix, lang);
     } else {
-      char *prefix2 = new char[strlen(prefix + 2)];
+      char *prefix2 = new char[strlen(prefix) + 2];
       sprintf(prefix2, "%s-", prefix);
       if (strncmp(prefix2, basename(keymap_file), strlen(prefix2))) {
         BX_PANIC(("Keymap file not designed for this display library"));

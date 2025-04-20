@@ -24,6 +24,10 @@ Detailed change log :
     - Added advanced PCI option "altdevmap" to make real i440FX BIOS work
     - Ignore writes to ROM adddress if no ROM present
     - AGP aperture access now correctly implemented
+  - USB
+    - UHCI: USBCMD and USBSTS registers accept byte writes
+  - Networking
+    - E1000: Added loopback mode for diagnostics
   - ACPI
     - Fixed ACPI timer in normal and realtime mode
   - HPET
@@ -42,6 +46,10 @@ Detailed change log :
     - Add the 0x46 (GET_CONFIG) command. This allows ReactOS 0.4.15 to boot in normal mode (LiveCD)
     - The SENSE was not being cleared between commands. If one command failed, 
       the next successful command would still show the failed SENSE values.
+
+- GUI and display libraries
+    - Fixed buffer overflow when using keymap feature
+    - On Windows make sure file name parameters use backslash as separator
 
 - BIOS
   - ACPI fixes for the i440BX chipset
