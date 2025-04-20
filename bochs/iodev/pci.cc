@@ -718,7 +718,7 @@ void bx_pci_vbridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned i
         value8 = (pci_conf[0x1f] & ~value8) | 0x02;
         break;
       case 0x3e: // BCTRL
-        value8 = (value8 & 0xc1) | 0x80;
+        value8 = (value8 & 0xc9) | 0x80;
         break;
       case 0x19: // SBUSN - all bits r/w
       case 0x1a: // SUBUSN

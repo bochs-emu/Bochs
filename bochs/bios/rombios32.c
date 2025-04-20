@@ -928,13 +928,14 @@ static void pci_bios_init_bridges(PCIDevice *d)
           pci_config_writeb(d, 0x1d, 0x00);
           pci_config_writel(d, 0x20, 0x0000ffff);
           pci_config_writel(d, 0x24, 0x0000ffff);
+          pci_config_writeb(d, 0x3e, 0x80);
         } else {
           pci_config_writeb(d, 0x1c, pci_get_agp_iobase(agpdev));
           pci_config_writeb(d, 0x1d, pci_get_agp_iobase(agpdev) + 0x10);
           pci_config_writel(d, 0x20, pci_get_agp_memory(agpdev, 0));
           pci_config_writel(d, 0x24, pci_get_agp_memory(agpdev, PCI_ADDRESS_SPACE_MEM_PREFETCH));
+          pci_config_writeb(d, 0x3e, 0x88);
         }
-        pci_config_writeb(d, 0xee, 0x88);
       }
     }
 }
