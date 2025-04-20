@@ -254,7 +254,7 @@ void bx_pci_ide_c::timer()
       (BX_PIDE_THIS s.bmdma[channel].prd_current == 0)) {
     return;
   }
-  if (!BX_PIDE_THIS s.bmdma[channel].cmd_ssbm ||
+  if (!BX_PIDE_THIS s.bmdma[channel].cmd_rwcon ||
       !BX_PIDE_THIS s.bmdma[channel].data_ready) {
     bx_pc_system.activate_timer(BX_PIDE_THIS s.bmdma[channel].timer_index, 1, 0);
     return;
