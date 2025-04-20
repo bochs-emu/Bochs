@@ -217,7 +217,7 @@ bool cdrom_base_c::read_toc(Bit8u* buf, int* length, bool msf, int start_track, 
       p[7] = 0x00;    // Zero or (Hour/PHour)
       p[8] = 0x01;    // PMin
       p[9] = 0x00;    // PSec
-      p[11] = 0x00;    // PFrame
+      p[10] = 0x00;    // PFrame
 
       p += 11;
       p[0] = 0x01;    // session number (only 1)
