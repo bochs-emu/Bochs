@@ -266,11 +266,11 @@ bool cdrom_base_c::read_toc(Bit8u* buf, int* length, bool msf, int start_track, 
     //  return false;
   }
 
-  if (len > 0) {
-    if (length) *length = len;
-    return true;
-  } else
+  if (len <= 0)
     return false;
+  
+  if (length) *length = len;
+  return true;
 }
 
 bool BX_CPP_AttrRegparmN(3) cdrom_base_c::read_block(Bit8u* buf, Bit32u lba, int blocksize)
