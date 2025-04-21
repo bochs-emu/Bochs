@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -105,130 +105,172 @@ void cdrom_base_c::eject_cdrom()
   }
 }
 
+// note: when the data returned is verified to work in all cases, to make this
+//  faster and lighter code, we can simply hard code each format's return as a binary array.
+// (especially format 2)
 bool cdrom_base_c::read_toc(Bit8u* buf, int* length, bool msf, int start_track, int format)
 {
-  unsigned i;
-  Bit32u blocks;
-  int len = 4;
+  Bit32u blocks = capacity();
+  Bit8u *p;
+  int len = 0;
+
+  // we only support a starting track of 1
+  // mmc4r05a.pdf, 6.29.2.5 states that the track number should be 1 to 99 only...
+  // 6.30.3.2.3 states that a one track device has a track number of 1
+  if (start_track > 1) {
+    BX_ERROR(("Read TOC: Starting Track should be 0 or 1 (is %i)", start_track));
+    return false;
+  }
 
   switch (format) {
     case 0:
-      // From atapi specs : start track can be 0-63, AA
-      if ((start_track > 1) && (start_track != 0xaa))
-        return 0;
-
+      // we are 20 bytes in length
+      buf[0] = (((20 - 2) & 0xFF00) >> 8);
+      buf[1] = (((20 - 2) & 0x00FF) >> 0);
+      
+      // first and last track is 1
       buf[2] = 1;
       buf[3] = 1;
 
-      if (start_track <= 1) {
-        buf[len++] = 0; // Reserved
-        buf[len++] = 0x14; // ADR, control
-        buf[len++] = 1; // Track number
-        buf[len++] = 0; // Reserved
-
-        // Start address
-        if (msf) {
-          buf[len++] = 0; // reserved
-          buf[len++] = 0; // minute
-          buf[len++] = 2; // second
-          buf[len++] = 0; // frame
-        } else {
-          buf[len++] = 0;
-          buf[len++] = 0;
-          buf[len++] = 0;
-          buf[len++] = 0; // logical sector 0
-        }
-      }
-
-      // Lead out track
-      buf[len++] = 0; // Reserved
-      buf[len++] = 0x16; // ADR, control
-      buf[len++] = 0xaa; // Track number
-      buf[len++] = 0; // Reserved
-
-      blocks = capacity();
+      ////////////////////////////////////
+      // first descriptor
+      buf[4] = 0x00; // Reserved
+      buf[5] = 0x15; // ADR = 1, control = 5
+      buf[6] = 0x01; // Track number
+      buf[7] = 0x00; // Reserved
 
       // Start address
       if (msf) {
-        buf[len++] = 0; // reserved
-        buf[len++] = (Bit8u)(((blocks + 150) / 75) / 60); // minute
-        buf[len++] = (Bit8u)(((blocks + 150) / 75) % 60); // second
-        buf[len++] = (Bit8u)((blocks + 150) % 75); // frame;
+        buf[8] = 0x00;  // reserved
+        buf[9] = 0x00;  // minute
+        buf[10] = 0x02; // second
+        buf[11] = 0x00; // frame
       } else {
-        buf[len++] = (blocks >> 24) & 0xff;
-        buf[len++] = (blocks >> 16) & 0xff;
-        buf[len++] = (blocks >> 8) & 0xff;
-        buf[len++] = (blocks >> 0) & 0xff;
+        // logical sector 0
+        buf[8] = 0x00;
+        buf[9] = 0x00;
+        buf[10] = 0x00;
+        buf[11] = 0x00;
       }
-      buf[0] = ((len-2) >> 8) & 0xff;
-      buf[1] = (len-2) & 0xff;
+
+      ////////////////////////////////////
+      // second descriptor
+      
+      // Lead out track
+      buf[12] = 0x00; // Reserved
+      buf[13] = 0x16; // ADR = 1, control = 6
+      buf[14] = 0xAA; // Track number
+      buf[15] = 0x00; // Reserved
+
+      // Start address of next
+      // i.e.: size of this track
+      if (msf) {
+        buf[16] = 0; // reserved
+        buf[17] = (Bit8u) (((blocks + 150) / 75) / 60); // minute
+        buf[18] = (Bit8u) (((blocks + 150) / 75) % 60); // second
+        buf[19] = (Bit8u) ((blocks + 150) % 75);        // frame;
+      } else {
+        buf[16] = (blocks >> 24) & 0xFF;
+        buf[17] = (blocks >> 16) & 0xFF;
+        buf[18] = (blocks >> 8) & 0xFF;
+        buf[19] = (blocks >> 0) & 0xFF;
+      }
+      len = 20;
       break;
 
-    case 1:
-      // multi session stuff - emulate a single session only
-      buf[0] = 0;
-      buf[1] = 0x0a;
-      buf[2] = 1;
-      buf[3] = 1;
-      for (i = 0; i < 8; i++)
-        buf[4+i] = 0;
-      len = 12;
+    case 1: // multi session stuff - emulate a single session only (return zero bytes)
+    case 3: // 
+    case 4: // 
       break;
 
     case 2:
-      // raw toc - emulate a single session only (ported from qemu)
+      // we are 48 bytes in length
+      buf[0] = (((48 - 2) & 0xFF00) >> 8);
+      buf[1] = (((48 - 2) & 0x00FF) >> 0);
+      
+      // first and last track is 1
       buf[2] = 1;
       buf[3] = 1;
 
-      for (i = 0; i < 4; i++) {
-        buf[len++] = 1;
-        buf[len++] = 0x14;
-        buf[len++] = 0;
-        if (i < 3) {
-          buf[len++] = 0xa0 + i;
-        } else {
-          buf[len++] = 1;
-        }
-        buf[len++] = 0;
-        buf[len++] = 0;
-        buf[len++] = 0;
-        if (i < 2) {
-          buf[len++] = 0;
-          buf[len++] = 1;
-          buf[len++] = 0;
-          buf[len++] = 0;
-        } else if (i == 2) {
-          blocks = capacity();
-          if (msf) {
-            buf[len++] = 0; // reserved
-            buf[len++] = (Bit8u)(((blocks + 150) / 75) / 60); // minute
-            buf[len++] = (Bit8u)(((blocks + 150) / 75) % 60); // second
-            buf[len++] = (Bit8u)((blocks + 150) % 75); // frame;
-          } else {
-            buf[len++] = (blocks >> 24) & 0xff;
-            buf[len++] = (blocks >> 16) & 0xff;
-            buf[len++] = (blocks >> 8) & 0xff;
-            buf[len++] = (blocks >> 0) & 0xff;
-          }
-        } else {
-          buf[len++] = 0;
-          buf[len++] = 0;
-          buf[len++] = 0;
-          buf[len++] = 0;
-        }
-      }
-      buf[0] = ((len-2) >> 8) & 0xff;
-      buf[1] = (len-2) & 0xff;
+      // raw toc - emulate a single session only
+      p = &buf[4];
+      p[0] = 0x01;    // session number (only 1)
+      p[1] = 0x16;    // ADR = 1, Control = 6 (Data track, recorded uninterrupted)
+      p[2] = 0x00;    // TNO = 0
+      p[3] = 0xA0;    // POINT = 0xA0
+      p[4] = 0x00;    // Min
+      p[5] = 0x00;    // Sec
+      p[6] = 0x00;    // Frame
+      p[7] = 0x00;    // Zero or (Hour/PHour)
+      p[8] = 0x01;    // PMin
+      p[9] = 0x20;    // PSec
+      p[10] = 0x00;    // PFrame
+
+      p += 11;
+      p[0] = 0x01;    // session number (only 1)
+      p[1] = 0x16;    // ADR = 1, Control = 6 (Data track, recorded uninterrupted)
+      p[2] = 0x00;    // TNO = 0
+      p[3] = 0xA1;    // POINT = 0xA1
+      p[4] = 0x00;    // Min
+      p[5] = 0x00;    // Sec
+      p[6] = 0x00;    // Frame
+      p[7] = 0x00;    // Zero or (Hour/PHour)
+      p[8] = 0x01;    // PMin
+      p[9] = 0x00;    // PSec
+      p[10] = 0x00;    // PFrame
+
+      p += 11;
+      p[0] = 0x01;    // session number (only 1)
+      p[1] = 0x16;    // ADR = 1, Control = 6 (Data track, recorded uninterrupted)
+      p[2] = 0x00;    // TNO = 0
+      p[3] = 0xA2;    // POINT = 0xA2
+      p[4] = 0x00;    // Min
+      p[5] = 0x00;    // Sec
+      p[6] = 0x00;    // Frame
+      p[7] = 0x00;    // Zero or (Hour/PHour)
+      p[8] = (Bit8u) (((blocks + 150) / 75) / 60); // Pminute
+      p[9] = (Bit8u) (((blocks + 150) / 75) % 60); // Psecond
+      p[10] = (Bit8u) ((blocks + 150) % 75);       // Pframe;
+
+      p += 11;
+      p[0] = 0x01;    // session number (only 1)
+      p[1] = 0x15;    // ADR = 1, Control = 5 (Data track, recorded incremental)
+      p[2] = 0x00;    // TNO = 0
+      p[3] = 0x01;    // POINT = 0x01
+      p[4] = 0x00;    // Min
+      p[5] = 0x00;    // Sec
+      p[6] = 0x00;    // Frame
+      p[7] = 0x00;    // Zero or (Hour/PHour)
+      p[8] = 0x00;    // Pminute
+      p[9] = 0x02;    // Psecond
+      p[10] = 0x00;   // Pframe
+
+      len = 48;
       break;
 
-    default:
-      BX_PANIC(("cdrom: read_toc(): unknown format"));
-      return 0;
+    case 5:
+      // return the header only
+      buf[0] = ((2 & 0xFF00) >> 8);
+      buf[1] = ((2 & 0x00FF) >> 0);
+      
+      // first and last track is 0
+      buf[2] = 0;
+      buf[3] = 0;
+      len = 4;
+      break;
+      
+    // don't do the 'default' here.
+    // the calling function catches unknown format values
+    //default:
+    //  BX_PANIC(("cdrom: read_toc(): unknown format"));
+    //  return false;
   }
 
-  *length = len;
-
-  return 1;
+  if (len <= 0)
+    return false;
+  
+  if (length) *length = len;
+  return true;
 }
 
 bool BX_CPP_AttrRegparmN(3) cdrom_base_c::read_block(Bit8u* buf, Bit32u lba, int blocksize)

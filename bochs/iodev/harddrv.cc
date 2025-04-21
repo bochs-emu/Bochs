@@ -1708,16 +1708,14 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                   Bit16u alloc_length = read_16bit(controller->buffer + 7);
                   Bit8u format = (controller->buffer[9] >> 6);
                   switch (format) {
-// Win32:  I just read the TOC using Win32's IOCTRL functions (Ben)
+// Win32:  If it is a physical CDROM, I just read the TOC using Win32's IOCTRL functions (Ben)
 #if BX_SUPPORT_CDROM && defined(WIN32)
-                    case 2:
-                    case 3:
-                    case 4:
-                      if (msf != 1)
-                        BX_ERROR(("READ_TOC_EX: msf not set for format %i", format));
-                    case 0:
-                    case 1:
-                    case 5:
+                    case 0:  // msf can be 0 or 1
+                    case 1:  // msf can be 0 or 1
+                    case 2:  // msf must be 1 (but is ignored?)
+                    case 3:  // msf must be 1 (but is ignored?)
+                    case 4:  // msf must be 1 (but is ignored?)
+                    case 5:  // msf is ignored
                       if (!(BX_SELECTED_DRIVE(channel).cdrom.cd->read_toc(controller->buffer, &toc_length, msf, starting_track, format))) {
                         atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
                         raise_interrupt(channel);
