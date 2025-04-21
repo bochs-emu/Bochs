@@ -1,6 +1,6 @@
 Changes after 3.0:
 
-  This CHANGES file updated with commits merged till 4 Mar 2025, please refer to git log for more recent updates
+  This CHANGES file updated with commits merged till 24 Mar 2025, please refer to git log for more recent updates
 
 Detailed change log :
 
@@ -10,6 +10,7 @@ Detailed change log :
 
 - Bochs Debugger
   - Added new command line option "-dbg_gui" to start Bochs debugger with gui.
+    The dbg_gui option also supports "-dbg_gui:globalini" extension to use ini file from BXSHARE path for GUI debugger.
     Old "gui_debug" bochsrc option is deprecated and should not used anymore.
   - Added new 'step over' button in Bochs debugger GUI to execute an instruction stepping over subroutines
 
@@ -24,10 +25,6 @@ Detailed change log :
     - Added advanced PCI option "altdevmap" to make real i440FX BIOS work
     - Ignore writes to ROM adddress if no ROM present
     - AGP aperture access now correctly implemented
-  - USB
-    - UHCI: USBCMD and USBSTS registers accept byte writes
-  - Networking
-    - E1000: Added loopback mode for diagnostics
   - ACPI
     - Fixed ACPI timer in normal and realtime mode
   - HPET
@@ -36,16 +33,23 @@ Detailed change log :
     - Make sure that a panic before CMOS init doesn't damage the CMOS image
   - VGA / DDC
     - VGA / DDC: Fixed using EDID data from specified file
-    - VGA core: Added stub for the feature control register
+    - VGA core: Added stub for the feature control register. Currently writing to bit 3 only (should turn off display if set).
+    - VGA core: Don't report invalid CRTC register if used by extension.
   - Voodoo / Banshee
     - Added hardware cursor support for graphics snapshot (Cirrus/Voodoo)
     - Voodoo3: Split mem_read() with len > 8 in two 64-bit reads
     - Voodoo3: Fixed display timing in VGA mode with half dot clock
- - Hard Drive
+  - Hard Drive
     - Fix the reading of the HOB registers
     - Add the 0x46 (GET_CONFIG) command. This allows ReactOS 0.4.15 to boot in normal mode (LiveCD)
     - The SENSE was not being cleared between commands. If one command failed, 
       the next successful command would still show the failed SENSE values.
+  - Networking
+    - E1000: Added loopback mode for diagnostics
+  - USB
+    - UHCI fix: USBCMD and USBSTS register accept byte writes
+    - Changing device connected to USB port on the command line works again.
+      Port options are reset in that case.
 
 - GUI and display libraries
     - Fixed buffer overflow when using keymap feature

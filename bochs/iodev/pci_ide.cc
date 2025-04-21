@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2021  The Bochs Project
+//  Copyright (C) 2004-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -95,7 +95,7 @@ void bx_pci_ide_c::init(void)
     if (BX_PIDE_THIS s.bmdma[i].timer_index == BX_NULL_TIMER_HANDLE) {
       BX_PIDE_THIS s.bmdma[i].timer_index =
         DEV_register_timer(this, timer_handler, 1000, 0,0, "PIIX3 BM-DMA timer");
-        bx_pc_system.setTimerParam(BX_PIDE_THIS s.bmdma[i].timer_index, i);
+      bx_pc_system.setTimerParam(BX_PIDE_THIS s.bmdma[i].timer_index, i);
     }
   }
 
@@ -256,7 +256,7 @@ void bx_pci_ide_c::timer()
   }
   if (BX_PIDE_THIS s.bmdma[channel].cmd_rwcon &&
       !BX_PIDE_THIS s.bmdma[channel].data_ready) {
-    bx_pc_system.activate_timer(BX_PIDE_THIS s.bmdma[channel].timer_index, 1000, 0);
+    bx_pc_system.activate_timer(BX_PIDE_THIS s.bmdma[channel].timer_index, 1, 0);
     return;
   }
   DEV_MEM_READ_PHYSICAL(BX_PIDE_THIS s.bmdma[channel].prd_current, 4, (Bit8u *)&prd.addr);
@@ -400,7 +400,7 @@ void bx_pci_ide_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_PIDE_THIS s.bmdma[channel].prd_current = BX_PIDE_THIS s.bmdma[channel].dtpr;
         BX_PIDE_THIS s.bmdma[channel].buffer_top = BX_PIDE_THIS s.bmdma[channel].buffer;
         BX_PIDE_THIS s.bmdma[channel].buffer_idx = BX_PIDE_THIS s.bmdma[channel].buffer;
-        bx_pc_system.activate_timer(BX_PIDE_THIS s.bmdma[channel].timer_index, 1000, 0);
+        bx_pc_system.activate_timer(BX_PIDE_THIS s.bmdma[channel].timer_index, 1, 0);
       } else if (!(value & 0x01) && BX_PIDE_THIS s.bmdma[channel].cmd_ssbm) {
         BX_PIDE_THIS s.bmdma[channel].cmd_ssbm = 0;
         BX_PIDE_THIS s.bmdma[channel].status &= ~0x01;
