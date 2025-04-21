@@ -25,10 +25,6 @@ Detailed change log :
     - Added advanced PCI option "altdevmap" to make real i440FX BIOS work
     - Ignore writes to ROM adddress if no ROM present
     - AGP aperture access now correctly implemented
-  - USB
-    - UHCI: USBCMD and USBSTS registers accept byte writes
-  - Networking
-    - E1000: Added loopback mode for diagnostics
   - ACPI
     - Fixed ACPI timer in normal and realtime mode
   - HPET
@@ -43,14 +39,14 @@ Detailed change log :
     - Added hardware cursor support for graphics snapshot (Cirrus/Voodoo)
     - Voodoo3: Split mem_read() with len > 8 in two 64-bit reads
     - Voodoo3: Fixed display timing in VGA mode with half dot clock
- - Hard Drive
+  - Hard Drive
     - Fix the reading of the HOB registers
     - Add the 0x46 (GET_CONFIG) command. This allows ReactOS 0.4.15 to boot in normal mode (LiveCD)
     - The SENSE was not being cleared between commands. If one command failed, 
       the next successful command would still show the failed SENSE values.
- - E1000
-    - Added loopback mode
- - USB
+  - Networking
+    - E1000: Added loopback mode for diagnostics
+  - USB
     - UHCI fix: USBCMD and USBSTS register accept byte writes
     - Changing device connected to USB port on the command line works again.
       Port options are reset in that case.
