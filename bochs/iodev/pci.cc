@@ -239,6 +239,9 @@ bx_pci_bridge_c::reset(unsigned type)
     DEV_mem_set_memory_type(i, 1, 0);
   }
   BX_PCI_THIS pci_conf[0x72] = 0x02;
+  if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
+    BX_PCI_THIS pci_conf[0x73] = 0x38;
+  }
 }
 
 void bx_pci_bridge_c::register_state(void)
@@ -366,6 +369,13 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
         break;
       case 0x72:
         smram_control(value8); // SMRAM control register
+        break;
+      case 0x73:
+        if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I440BX) {
+          // TODO
+          BX_ERROR(("Extended SMRAM control register not spported yet"));
+          BX_PCI_THIS pci_conf[address+i] = (value8 | 0x38);
+        }
         break;
       case 0x7a:
         BX_PCI_THIS pci_conf[address+i] &= 0x0a;
