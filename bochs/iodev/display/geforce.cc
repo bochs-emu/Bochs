@@ -2713,7 +2713,7 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
 Bit64u bx_geforce_c::get_current_time()
 {
   return BX_GEFORCE_THIS timer_inittime1 +
-      bx_pc_system.time_nsec() - BX_GEFORCE_THIS timer_inittime2;
+    bx_pc_system.time_nsec() - BX_GEFORCE_THIS timer_inittime2 & ~BX_CONST64(0x1F);
 }
 
 void bx_geforce_c::set_irq_level(bool level)
