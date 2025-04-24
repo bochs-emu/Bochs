@@ -126,7 +126,7 @@ private:
 
   BX_GEFORCE_SMF Bit64u get_current_time();
 
-  BX_GEFORCE_SMF Bit32u ramht_lookup(Bit32u handle, Bit32u chid);
+  BX_GEFORCE_SMF void ramht_lookup(Bit32u handle, Bit32u chid, Bit32u* object, Bit8u* engine);
 
   BX_GEFORCE_SMF void execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
 

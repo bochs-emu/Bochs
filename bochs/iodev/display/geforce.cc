@@ -2016,7 +2016,7 @@ void bx_geforce_c::dma_write64(Bit32u object, Bit32u address, Bit64u value)
     BX_PANIC(("dma_write64: unknown DMA target 0x%02x", target));
 }
 
-Bit32u bx_geforce_c::ramht_lookup(Bit32u handle, Bit32u chid)
+void bx_geforce_c::ramht_lookup(Bit32u handle, Bit32u chid, Bit32u* object, Bit8u* engine)
 {
   Bit32u ramht_addr = (BX_GEFORCE_THIS fifo_ramht & 0xFFF) << 8;
   Bit32u ramht_bits = (BX_GEFORCE_THIS fifo_ramht >> 16 & 0xFF) + 9;
@@ -2028,7 +2028,7 @@ Bit32u bx_geforce_c::ramht_lookup(Bit32u handle, Bit32u chid)
     hash ^= (x & ((1 << ramht_bits) - 1));
     x >>= ramht_bits;
   }
-  hash ^= chid << (ramht_bits - 4);
+  hash ^= (chid & 0xF) << (ramht_bits - 4);
   hash = hash << 3;
 
   Bit32u it = hash;
@@ -2036,8 +2036,27 @@ Bit32u bx_geforce_c::ramht_lookup(Bit32u handle, Bit32u chid)
   do {
     if (ramin_read32(ramht_addr + it) == handle) {
       Bit32u context = ramin_read32(ramht_addr + it + 4);
-      BX_DEBUG(("ramht_lookup: 0x%08x -> 0x%08x, steps: %d", handle, context, steps));
-      return context;
+      Bit32u ctx_chid;
+      if (BX_GEFORCE_THIS card_type < 0x40)
+        ctx_chid = context >> 24 & 0x1F;
+      else
+        ctx_chid = context >> 23 & 0x1F;
+      if (chid == ctx_chid) {
+        BX_DEBUG(("ramht_lookup: 0x%08x -> 0x%08x, steps: %d", handle, context, steps));
+        if (object) {
+          if (BX_GEFORCE_THIS card_type < 0x40)
+            *object = (context & 0xFFFF) << 4;
+          else
+            *object = (context & 0xFFFFF) << 4;
+        }
+        if (engine) {
+          if (BX_GEFORCE_THIS card_type < 0x40)
+            *engine = context >> 16 & 0xFF;
+          else
+            *engine = context >> 20 & 0x7;
+        }
+        return;
+      }
     }
     steps++;
     it += 8;
@@ -2046,7 +2065,6 @@ Bit32u bx_geforce_c::ramht_lookup(Bit32u handle, Bit32u chid)
   } while (it != hash);
 
   BX_PANIC(("ramht_lookup failed for 0x%08x", handle));
-  return 0;
 }
 
 void bx_geforce_c::gdi_fillrect(Bit32u chid, bool clipped)
@@ -2624,14 +2642,9 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
         }
       }
     }
-    Bit32u context = ramht_lookup(param, chid);
-    if (BX_GEFORCE_THIS card_type < 0x40) {
-      BX_GEFORCE_THIS chs[chid].schs[subc].object = (context & 0xFFFF) << 4;
-      BX_GEFORCE_THIS chs[chid].schs[subc].engine = context >> 16 & 0xFF;
-    } else {
-      BX_GEFORCE_THIS chs[chid].schs[subc].object = (context & 0xFFFFF) << 4;
-      BX_GEFORCE_THIS chs[chid].schs[subc].engine = context >> 20 & 0x7;
-    }
+    ramht_lookup(param, chid,
+      &BX_GEFORCE_THIS chs[chid].schs[subc].object,
+      &BX_GEFORCE_THIS chs[chid].schs[subc].engine);
     if (BX_GEFORCE_THIS chs[chid].schs[subc].engine == 0x01) {
       Bit8u cls = ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object);
       if (cls == 0x62) {
@@ -2652,7 +2665,7 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
   } else if (method >= 0x040) {
     if (BX_GEFORCE_THIS chs[chid].schs[subc].engine == 0x01) {
       if (method >= 0x060 && method < 0x080)
-        param = (ramht_lookup(param, chid) & 0xFFFF) << 4;
+        ramht_lookup(param, chid, &param, nullptr);
       if (method == 0x041) {
         BX_GEFORCE_THIS chs[chid].notify_pending = true;
         BX_GEFORCE_THIS chs[chid].notify_type = param;
