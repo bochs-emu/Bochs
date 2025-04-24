@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1132,7 +1132,9 @@ void bx_ne2k_c::page0_write(Bit32u offset, Bit32u value, unsigned io_len)
     // Test loop mode (not supported)
     if (value & 0x06) {
       BX_NE2K_THIS s.TCR.loop_cntl = (value & 0x6) >> 1;
-      BX_INFO(("TCR write, loop mode %d not supported", BX_NE2K_THIS s.TCR.loop_cntl));
+      if (BX_NE2K_THIS s.TCR.loop_cntl != 1) {
+        BX_INFO(("TCR write, loop mode %d not supported", BX_NE2K_THIS s.TCR.loop_cntl));
+      }
     } else {
       BX_NE2K_THIS s.TCR.loop_cntl = 0;
     }
