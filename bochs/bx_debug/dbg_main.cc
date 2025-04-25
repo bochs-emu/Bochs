@@ -1734,23 +1734,23 @@ void bx_dbg_show_param_command(const char *param, bool xml)
 }
 
 // return non zero to cause a stop
-void bx_dbg_show_symbolic(unsigned cpu_index)
+void bx_dbg_show_symbolic(unsigned which_cpu)
 {
-  BX_CPU_C *cpu = BX_CPU(cpu_index);
+  BX_CPU_C *cpu = BX_CPU(which_cpu);
 
   bx_dbg_guard_state_t guard_state;
   BX_CPU(which_cpu)->dbg_get_guard_state(&guard_state);
 
   /* modes & address spaces */
   if (dbg_show_mask & BX_DBG_SHOW_MODE) {
-    if(cpu->get_cpu_mode() != last_cpu_mode[cpu_index]) {
+    if(cpu->get_cpu_mode() != last_cpu_mode[which_cpu]) {
       dbg_printf (FMT_TICK ": switched from '%s' to '%s'\n",
         bx_pc_system.time_ticks(),
-        cpu_mode_string(last_cpu_mode[cpu_index]),
+        cpu_mode_string(last_cpu_mode[which_cpu]),
         cpu_mode_string(cpu->get_cpu_mode()));
     }
 
-    if(last_cr3[cpu_index] != cpu->cr3)
+    if(last_cr3[which_cpu] != cpu->cr3)
       dbg_printf(FMT_TICK ": address space switched. CR3: 0x" FMT_PHY_ADDRX "\n",
         bx_pc_system.time_ticks(), cpu->cr3);
   }
@@ -1799,8 +1799,8 @@ void bx_dbg_show_symbolic(unsigned cpu_index)
     }
   }
 
-  last_cr3[cpu_index] = cpu->cr3;
-  last_cpu_mode[cpu_index] = cpu->get_cpu_mode();
+  last_cr3[which_cpu] = cpu->cr3;
+  last_cpu_mode[which_cpu] = cpu->get_cpu_mode();
   cpu->show_flag = 0;
 }
 
