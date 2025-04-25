@@ -4208,7 +4208,9 @@ extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned rem
 
 void bx_dbg_step_over_command()
 {
-  bx_address laddr = BX_CPU(dbg_cpu)->guard_found.guard_state.laddr;
+  bx_dbg_guard_state_t guard_state;
+  BX_CPU(dbg_cpu)->dbg_get_guard_state(&guard_state);
+  bx_address laddr = guard_state.laddr;
   Bit8u opcode_bytes[32];
 
   if (! bx_dbg_read_linear(dbg_cpu, laddr, 16, opcode_bytes))
@@ -4219,11 +4221,11 @@ void bx_dbg_step_over_command()
   bxInstruction_c i;
   int ret = -1;
 #if BX_SUPPORT_X86_64
-  if (IS_CODE_64(BX_CPU(dbg_cpu)->guard_found.guard_state.code_32_64))
+  if (IS_CODE_64(guard_state.code_32_64))
     ret = fetchDecode64(opcode_bytes, &i, 16);
   else
 #endif
-    ret = fetchDecode32(opcode_bytes, IS_CODE_32(BX_CPU(dbg_cpu)->guard_found.guard_state.code_32_64), &i, 16);
+    ret = fetchDecode32(opcode_bytes, IS_CODE_32(guard_state.code_32_64), &i, 16);
 
   if (ret < 0) {
     dbg_printf("bx_dbg_step_over_command:: Failed to fetch instructions !\n");
