@@ -1738,6 +1738,9 @@ void bx_dbg_show_symbolic(unsigned cpu_index)
 {
   BX_CPU_C *cpu = BX_CPU(cpu_index);
 
+  bx_dbg_guard_state_t guard_state;
+  BX_CPU(which_cpu)->dbg_get_guard_state(&guard_state);
+
   /* modes & address spaces */
   if (dbg_show_mask & BX_DBG_SHOW_MODE) {
     if(cpu->get_cpu_mode() != last_cpu_mode[cpu_index]) {
@@ -1756,7 +1759,7 @@ void bx_dbg_show_symbolic(unsigned cpu_index)
   if (dbg_show_mask & BX_DBG_SHOW_SOFTINT) {
     if(cpu->show_flag & Flag_softint) {
       dbg_printf(FMT_TICK ": softint ", bx_pc_system.time_ticks());
-      dbg_print_guard_found(cpu->get_cpu_mode(), &cpu->guard_found.guard_state);
+      dbg_print_guard_found(cpu->get_cpu_mode(), &guard_state);
       dbg_printf("\n");
     }
   }
@@ -1764,7 +1767,7 @@ void bx_dbg_show_symbolic(unsigned cpu_index)
   if (dbg_show_mask & BX_DBG_SHOW_EXTINT) {
     if((cpu->show_flag & Flag_intsig) && !(cpu->show_flag & Flag_softint)) {
       dbg_printf(FMT_TICK ": exception (not softint) ", bx_pc_system.time_ticks());
-      dbg_print_guard_found(cpu->get_cpu_mode(), &cpu->guard_found.guard_state);
+      dbg_print_guard_found(cpu->get_cpu_mode(), &guard_state);
       dbg_printf("\n");
     }
   }
@@ -1772,7 +1775,7 @@ void bx_dbg_show_symbolic(unsigned cpu_index)
   if (dbg_show_mask & BX_DBG_SHOW_IRET) {
     if(cpu->show_flag & Flag_iret) {
       dbg_printf(FMT_TICK ": iret ", bx_pc_system.time_ticks());
-      dbg_print_guard_found(cpu->get_cpu_mode(), &cpu->guard_found.guard_state);
+      dbg_print_guard_found(cpu->get_cpu_mode(), &guard_state);
       dbg_printf("\n");
     }
   }
@@ -1782,15 +1785,15 @@ void bx_dbg_show_symbolic(unsigned cpu_index)
   {
     if(cpu->show_flag & Flag_call) {
       bx_phy_address phy = 0;
-      bool valid = cpu->dbg_xlate_linear2phy(cpu->guard_found.guard_state.laddr, &phy);
+      bool valid = cpu->dbg_xlate_linear2phy(guard_state.laddr, &phy);
       dbg_printf(FMT_TICK ": call ", bx_pc_system.time_ticks());
-      dbg_print_guard_found(cpu->get_cpu_mode(), &cpu->guard_found.guard_state);
+      dbg_print_guard_found(cpu->get_cpu_mode(), &guard_state);
       if (!valid) dbg_printf(" phys not valid");
       else {
         dbg_printf(" (phy: 0x" FMT_PHY_ADDRX ") %s", phy,
           bx_dbg_symbolic_address(cpu->cr3 >> 12,
-              cpu->guard_found.guard_state.eip,
-              cpu->guard_found.guard_state.laddr - cpu->guard_found.guard_state.eip));
+              guard_state.eip,
+              guard_state.laddr - guard_state.eip));
       }
       dbg_printf("\n");
     }
