@@ -47,6 +47,8 @@ extern "C" {
 // use the default instead of always dumping all cpus.
 unsigned dbg_cpu = 0;
 static bx_list_c **dbg_cpu_list = NULL;
+static unsigned *last_cpu_mode = 0; // last CPU mode and CR3 value for each processor
+static bx_address *last_cr3 = 0;
 
 extern const char* cpu_mode_string(unsigned cpu_mode);
 extern void bx_sr_after_restore_state(void);
@@ -272,11 +274,17 @@ int bx_dbg_main(void)
 
   dbg_printf("Bochs internal debugger, type 'help' for help or 'c' to continue\n");
 
+  last_cr3 = new bx_address[BX_SMP_PROCESSORS];
+  last_cpu_mode = new unsigned[BX_SMP_PROCESSORS];
+
   dbg_cpu_list = new bx_list_c *[BX_SMP_PROCESSORS];
   for (int cpu=0; cpu<BX_SMP_PROCESSORS; cpu++) {
     char cpu_param_name[10];
     sprintf(cpu_param_name, "cpu%d", (int)cpu);
     dbg_cpu_list[cpu] = (bx_list_c*) SIM->get_param(cpu_param_name, SIM->get_bochs_root());
+
+    last_cr3[cpu] = 0;
+    last_cpu_mode[cpu] = 0;
   }
 
   switch_dbg_cpu(0);
@@ -780,6 +788,12 @@ void bx_dbg_exit(int code)
 
   delete [] dbg_cpu_list;
   dbg_cpu_list = NULL;
+
+  delete [] last_cr3;
+  last_cr3 = NULL;
+
+  delete [] last_cpu_mode;
+  last_cpu_mode = NULL;
 
   bx_atexit();
 
@@ -1720,23 +1734,20 @@ void bx_dbg_show_param_command(const char *param, bool xml)
 }
 
 // return non zero to cause a stop
-void bx_dbg_show_symbolic(void)
+void bx_dbg_show_symbolic(unsigned cpu_index)
 {
-  static unsigned last_cpu_mode = 0;
-  static bx_address last_cr3 = 0;
-
-  BX_CPU_C *cpu = BX_CPU(dbg_cpu);
+  BX_CPU_C *cpu = BX_CPU(cpu_index);
 
   /* modes & address spaces */
   if (dbg_show_mask & BX_DBG_SHOW_MODE) {
-    if(cpu->get_cpu_mode() != last_cpu_mode) {
+    if(cpu->get_cpu_mode() != last_cpu_mode[cpu_index]) {
       dbg_printf (FMT_TICK ": switched from '%s' to '%s'\n",
         bx_pc_system.time_ticks(),
-        cpu_mode_string(last_cpu_mode),
+        cpu_mode_string(last_cpu_mode[cpu_index]),
         cpu_mode_string(cpu->get_cpu_mode()));
     }
 
-    if(last_cr3 != cpu->cr3)
+    if(last_cr3[cpu_index] != cpu->cr3)
       dbg_printf(FMT_TICK ": address space switched. CR3: 0x" FMT_PHY_ADDRX "\n",
         bx_pc_system.time_ticks(), cpu->cr3);
   }
@@ -1785,8 +1796,8 @@ void bx_dbg_show_symbolic(void)
     }
   }
 
-  last_cr3 = cpu->cr3;
-  last_cpu_mode = cpu->get_cpu_mode();
+  last_cr3[cpu_index] = cpu->cr3;
+  last_cpu_mode[cpu_index] = cpu->get_cpu_mode();
   cpu->show_flag = 0;
 }
 
