@@ -515,7 +515,7 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
       BX_PANIC(("Config interface 'win32config' is required for gui debugger"));
     }
 #else
-    init_debug_dialog(bx_dbg._dbg_gui_globalini);
+    init_debug_dialog(bx_dbg.dbg_gui_globalini);
 #endif
   }
 #endif
