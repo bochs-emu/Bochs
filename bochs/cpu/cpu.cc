@@ -725,10 +725,11 @@ void BX_CPU_C::prefetch(void)
 #if BX_DEBUGGER
 bool BX_CPU_C::dbg_instruction_epilog(void)
 {
-  bx_address debug_eip = RIP;
-  Bit16u cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-
-  dbg_get_guard_state(&BX_CPU_THIS_PTR guard_found.guard_state);
+  // support for 'show' command in debugger
+  extern unsigned dbg_show_mask;
+  if(dbg_show_mask) {
+    bx_dbg_show_symbolic(BX_CPU_ID);
+  }
 
   //
   // Take care of break point conditions generated during instruction execution
@@ -737,6 +738,7 @@ bool BX_CPU_C::dbg_instruction_epilog(void)
   // Check if we hit read/write or time breakpoint
   if (BX_CPU_THIS_PTR break_point) {
     Bit64u tt = bx_pc_system.time_ticks();
+    dbg_get_guard_state(&BX_CPU_THIS_PTR guard_found.guard_state);
     switch (BX_CPU_THIS_PTR break_point) {
     case BREAK_POINT_TIME:
       BX_INFO(("[" FMT_LL "d] Caught time breakpoint", tt));
@@ -758,23 +760,23 @@ bool BX_CPU_C::dbg_instruction_epilog(void)
   if (BX_CPU_THIS_PTR magic_break) {
     BX_INFO(("[" FMT_LL "d] Stopped on MAGIC BREAKPOINT", bx_pc_system.time_ticks()));
     BX_CPU_THIS_PTR stop_reason = STOP_MAGIC_BREAK_POINT;
+    dbg_get_guard_state(&BX_CPU_THIS_PTR guard_found.guard_state);
     return true; // on a breakpoint
   }
 
   // convenient point to see if user requested debug break or typed Ctrl-C
   if (bx_guard.interrupt_requested) {
+    dbg_get_guard_state(&BX_CPU_THIS_PTR guard_found.guard_state);
     return true;
-  }
-
-  // support for 'show' command in debugger
-  extern unsigned dbg_show_mask;
-  if(dbg_show_mask) {
-    bx_dbg_show_symbolic();
   }
 
   // Just committed an instruction, before fetching a new one
   // see if debugger is looking for iaddr breakpoint of any type
   if (bx_guard.guard_for) {
+    bx_address debug_eip = RIP;
+    Bit16u cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+    dbg_get_guard_state(&BX_CPU_THIS_PTR guard_found.guard_state);
+
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_ALL) {
 #if (BX_DBG_MAX_VIR_BPOINTS > 0)
       if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_VIR) {

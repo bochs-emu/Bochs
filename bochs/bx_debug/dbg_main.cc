@@ -47,6 +47,8 @@ extern "C" {
 // use the default instead of always dumping all cpus.
 unsigned dbg_cpu = 0;
 static bx_list_c **dbg_cpu_list = NULL;
+static unsigned *last_cpu_mode = 0; // last CPU mode and CR3 value for each processor
+static bx_address *last_cr3 = 0;
 
 extern const char* cpu_mode_string(unsigned cpu_mode);
 extern void bx_sr_after_restore_state(void);
@@ -272,11 +274,17 @@ int bx_dbg_main(void)
 
   dbg_printf("Bochs internal debugger, type 'help' for help or 'c' to continue\n");
 
+  last_cr3 = new bx_address[BX_SMP_PROCESSORS];
+  last_cpu_mode = new unsigned[BX_SMP_PROCESSORS];
+
   dbg_cpu_list = new bx_list_c *[BX_SMP_PROCESSORS];
   for (int cpu=0; cpu<BX_SMP_PROCESSORS; cpu++) {
     char cpu_param_name[10];
     sprintf(cpu_param_name, "cpu%d", (int)cpu);
     dbg_cpu_list[cpu] = (bx_list_c*) SIM->get_param(cpu_param_name, SIM->get_bochs_root());
+
+    last_cr3[cpu] = 0;
+    last_cpu_mode[cpu] = 0;
   }
 
   switch_dbg_cpu(0);
@@ -780,6 +788,12 @@ void bx_dbg_exit(int code)
 
   delete [] dbg_cpu_list;
   dbg_cpu_list = NULL;
+
+  delete [] last_cr3;
+  last_cr3 = NULL;
+
+  delete [] last_cpu_mode;
+  last_cpu_mode = NULL;
 
   bx_atexit();
 
@@ -1720,23 +1734,23 @@ void bx_dbg_show_param_command(const char *param, bool xml)
 }
 
 // return non zero to cause a stop
-void bx_dbg_show_symbolic(void)
+void bx_dbg_show_symbolic(unsigned which_cpu)
 {
-  static unsigned last_cpu_mode = 0;
-  static bx_address last_cr3 = 0;
+  BX_CPU_C *cpu = BX_CPU(which_cpu);
 
-  BX_CPU_C *cpu = BX_CPU(dbg_cpu);
+  bx_dbg_guard_state_t guard_state;
+  BX_CPU(which_cpu)->dbg_get_guard_state(&guard_state);
 
   /* modes & address spaces */
   if (dbg_show_mask & BX_DBG_SHOW_MODE) {
-    if(cpu->get_cpu_mode() != last_cpu_mode) {
+    if(cpu->get_cpu_mode() != last_cpu_mode[which_cpu]) {
       dbg_printf (FMT_TICK ": switched from '%s' to '%s'\n",
         bx_pc_system.time_ticks(),
-        cpu_mode_string(last_cpu_mode),
+        cpu_mode_string(last_cpu_mode[which_cpu]),
         cpu_mode_string(cpu->get_cpu_mode()));
     }
 
-    if(last_cr3 != cpu->cr3)
+    if(last_cr3[which_cpu] != cpu->cr3)
       dbg_printf(FMT_TICK ": address space switched. CR3: 0x" FMT_PHY_ADDRX "\n",
         bx_pc_system.time_ticks(), cpu->cr3);
   }
@@ -1745,7 +1759,7 @@ void bx_dbg_show_symbolic(void)
   if (dbg_show_mask & BX_DBG_SHOW_SOFTINT) {
     if(cpu->show_flag & Flag_softint) {
       dbg_printf(FMT_TICK ": softint ", bx_pc_system.time_ticks());
-      dbg_print_guard_found(cpu->get_cpu_mode(), &cpu->guard_found.guard_state);
+      dbg_print_guard_found(cpu->get_cpu_mode(), &guard_state);
       dbg_printf("\n");
     }
   }
@@ -1753,7 +1767,7 @@ void bx_dbg_show_symbolic(void)
   if (dbg_show_mask & BX_DBG_SHOW_EXTINT) {
     if((cpu->show_flag & Flag_intsig) && !(cpu->show_flag & Flag_softint)) {
       dbg_printf(FMT_TICK ": exception (not softint) ", bx_pc_system.time_ticks());
-      dbg_print_guard_found(cpu->get_cpu_mode(), &cpu->guard_found.guard_state);
+      dbg_print_guard_found(cpu->get_cpu_mode(), &guard_state);
       dbg_printf("\n");
     }
   }
@@ -1761,7 +1775,7 @@ void bx_dbg_show_symbolic(void)
   if (dbg_show_mask & BX_DBG_SHOW_IRET) {
     if(cpu->show_flag & Flag_iret) {
       dbg_printf(FMT_TICK ": iret ", bx_pc_system.time_ticks());
-      dbg_print_guard_found(cpu->get_cpu_mode(), &cpu->guard_found.guard_state);
+      dbg_print_guard_found(cpu->get_cpu_mode(), &guard_state);
       dbg_printf("\n");
     }
   }
@@ -1771,22 +1785,22 @@ void bx_dbg_show_symbolic(void)
   {
     if(cpu->show_flag & Flag_call) {
       bx_phy_address phy = 0;
-      bool valid = cpu->dbg_xlate_linear2phy(cpu->guard_found.guard_state.laddr, &phy);
+      bool valid = cpu->dbg_xlate_linear2phy(guard_state.laddr, &phy);
       dbg_printf(FMT_TICK ": call ", bx_pc_system.time_ticks());
-      dbg_print_guard_found(cpu->get_cpu_mode(), &cpu->guard_found.guard_state);
+      dbg_print_guard_found(cpu->get_cpu_mode(), &guard_state);
       if (!valid) dbg_printf(" phys not valid");
       else {
         dbg_printf(" (phy: 0x" FMT_PHY_ADDRX ") %s", phy,
           bx_dbg_symbolic_address(cpu->cr3 >> 12,
-              cpu->guard_found.guard_state.eip,
-              cpu->guard_found.guard_state.laddr - cpu->guard_found.guard_state.eip));
+              guard_state.eip,
+              guard_state.laddr - guard_state.eip));
       }
       dbg_printf("\n");
     }
   }
 
-  last_cr3 = cpu->cr3;
-  last_cpu_mode = cpu->get_cpu_mode();
+  last_cr3[which_cpu] = cpu->cr3;
+  last_cpu_mode[which_cpu] = cpu->get_cpu_mode();
   cpu->show_flag = 0;
 }
 
@@ -4208,7 +4222,9 @@ extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned rem
 
 void bx_dbg_step_over_command()
 {
-  bx_address laddr = BX_CPU(dbg_cpu)->guard_found.guard_state.laddr;
+  bx_dbg_guard_state_t guard_state;
+  BX_CPU(dbg_cpu)->dbg_get_guard_state(&guard_state);
+  bx_address laddr = guard_state.laddr;
   Bit8u opcode_bytes[32];
 
   if (! bx_dbg_read_linear(dbg_cpu, laddr, 16, opcode_bytes))
@@ -4219,11 +4235,11 @@ void bx_dbg_step_over_command()
   bxInstruction_c i;
   int ret = -1;
 #if BX_SUPPORT_X86_64
-  if (IS_CODE_64(BX_CPU(dbg_cpu)->guard_found.guard_state.code_32_64))
+  if (IS_CODE_64(guard_state.code_32_64))
     ret = fetchDecode64(opcode_bytes, &i, 16);
   else
 #endif
-    ret = fetchDecode32(opcode_bytes, IS_CODE_32(BX_CPU(dbg_cpu)->guard_found.guard_state.code_32_64), &i, 16);
+    ret = fetchDecode32(opcode_bytes, IS_CODE_32(guard_state.code_32_64), &i, 16);
 
   if (ret < 0) {
     dbg_printf("bx_dbg_step_over_command:: Failed to fetch instructions !\n");

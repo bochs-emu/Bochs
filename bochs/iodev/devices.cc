@@ -1594,25 +1594,46 @@ void bx_pci_device_c::init_bar_mem(Bit8u num, Bit32u size, memory_handler_t rh,
 
 void bx_pci_device_c::register_pci_state(bx_list_c *list)
 {
+  char name[8];
+
   new bx_shadow_data_c(list, "pci_conf", pci_conf, 256, 1);
+  bx_list_c *pci_bars = new bx_list_c(list, "pci_bars", "PCI base address registers");
+  for (Bit8u i = 0; i < 6; i++) {
+    sprintf(name, "addr%u", i);
+    new bx_shadow_num_c(pci_bars, name, &pci_bar[i].addr, BASE_HEX);
+  }
 }
 
 void bx_pci_device_c::after_restore_pci_state(memory_handler_t mem_read_handler)
 {
   for (int i = 0; i < 6; i++) {
-    if (pci_bar[i].type == BX_PCI_BAR_TYPE_MEM) {
-      if (DEV_pci_set_base_mem(this, pci_bar[i].mem.rh, pci_bar[i].mem.wh,
-                           &pci_bar[i].addr, &pci_conf[0x10 + i * 4],
-                           pci_bar[i].size)) {
-        BX_INFO(("BAR #%d: mem base address = 0x%08x", i, pci_bar[i].addr));
-        pci_bar_change_notify();
-      }
-    } else if (pci_bar[i].type == BX_PCI_BAR_TYPE_IO) {
-      if (DEV_pci_set_base_io(this, pci_bar[i].io.rh, pci_bar[i].io.wh,
-                              &pci_bar[i].addr, &pci_conf[0x10 + i * 4],
-                              pci_bar[i].size, pci_bar[i].io.mask, pci_name)) {
-        BX_INFO(("BAR #%d: i/o base address = 0x%04x", i, pci_bar[i].addr));
-        pci_bar_change_notify();
+    if ((pci_bar[i].type != BX_PCI_BAR_TYPE_NONE) && (pci_bar[i].addr > 0)) {
+      if ((pci_bar[i].type == BX_PCI_BAR_TYPE_MEM) &&
+          ((pci_conf[0x04] & 0x02) != 0)) {
+        if (DEV_register_memory_handlers(this, pci_bar[i].mem.rh,
+                                         pci_bar[i].mem.wh, pci_bar[i].addr,
+                                         pci_bar[i].addr + pci_bar[i].size - 1)) {
+          BX_INFO(("BAR #%d: mem base address = 0x%08x", i, pci_bar[i].addr));
+          pci_bar_change_notify();
+        }
+      } else if ((pci_bar[i].type == BX_PCI_BAR_TYPE_IO) &&
+                 ((pci_conf[0x04] & 0x01) != 0)) {
+        bool ret = false;
+        for (unsigned j = 0; j < pci_bar[i].size; j++) {
+          if (pci_bar[i].io.mask[j] > 0) {
+            ret = DEV_register_ioread_handler(this, pci_bar[i].io.rh,
+                                              pci_bar[i].addr + j, pci_name,
+                                              pci_bar[i].io.mask[j]);
+            ret &= DEV_register_iowrite_handler(this, pci_bar[i].io.wh,
+                                                pci_bar[i].addr + j, pci_name,
+                                                pci_bar[i].io.mask[j]);
+          }
+          if (!ret) break;
+        }
+        if (ret) {
+          BX_INFO(("BAR #%d: i/o base address = 0x%04x", i, pci_bar[i].addr));
+          pci_bar_change_notify();
+        }
       }
     }
   }
