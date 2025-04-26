@@ -24,6 +24,7 @@
 #include "cpu/cpu.h"
 
 extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip);
+extern const char *stringify_EFLAGS(Bit32u eflags, char *s);
 
 #include "enh_dbg.h"
 
@@ -439,29 +440,8 @@ void upr(char* d)
 // create EFLAGS display for Status line
 void ShowEflags(char *buf)
 {
-    static const char *EflBName[16] = {
-        "cf", "pf", "af", "zf", "sf", "tf", "if", "df", "of", "nt", "rf", "vm", "ac", "vif", "vip", "id"
-    };
-    static const int EflBNameLen[16] = {
-        2,2,2,2,2,2,2,2,2,2,2,2,2,3,3,2
-    };
-    static const int EflBitVal[16] = {
-        1, 4, 0x10, 0x40, 0x80, 0x100, 0x200, 0x400, 0x800, 0x4000, 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000
-    };
-
     Bit32u Efl = (Bit32u) rV[EFL_Rnum];
-    int i = 16;
-    char *cp = buf + 6;
-
-    sprintf(buf,"IOPL=%1u", (Efl & 0x3000) >> 12);
-    while (--i >= 0)
-    {
-        *(cp++)= ' ';
-        strcpy (cp, EflBName[i]);       // copy the name of the bitflag
-        if ((Efl & EflBitVal[i]) != 0)  // if the bit is set, put the name in uppercase
-            upr(cp);
-        cp += EflBNameLen[i];
-    }
+    stringify_EFLAGS(Efl, buf);
 }
 
 // change the display on the status line if anything has changed
@@ -531,7 +511,7 @@ bool ReadBxLMem(Bit64u laddr, unsigned len, Bit8u *buf)
 }
 
 // binary conversion (and validity testing) on hex/decimal char string inputs
-Bit64u cvthex(char *p, Bit64u errval)
+Bit64u cvthex(const char *p, Bit64u errval)
 {
     Bit64u ret = 0;
     bool end = FALSE;
@@ -549,9 +529,9 @@ Bit64u cvthex(char *p, Bit64u errval)
     return ret;
 }
 
-Bit64u cvt64(char *nstr, bool negok)
+Bit64u cvt64(const char *nstr, bool negok)
 {
-    char *p, *s;
+    const char *p, *s;
     Bit64u ret = 0;
     bool neg = FALSE;
     p= nstr;
@@ -575,7 +555,7 @@ Bit64u cvt64(char *nstr, bool negok)
 }
 
 // "singlestep" disassembly lines from the internal debugger are sometimes ignored
-bool isSSDisasm(char *s)
+bool isSSDisasm(const char *s)
 {
     if (ignSSDisasm == FALSE)   // ignoring those lines?
         return FALSE;
