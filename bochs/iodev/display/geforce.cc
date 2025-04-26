@@ -952,12 +952,12 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
         BX_GEFORCE_THIS crtc.reg[BX_GEFORCE_THIS crtc.index] = value;
       } else {
         BX_GEFORCE_THIS svga_write_crtc(address, BX_GEFORCE_THIS crtc.index, value);
+        if (BX_GEFORCE_THIS crtc.index == 0x25 ||
+            BX_GEFORCE_THIS crtc.index == 0x2D ||
+            BX_GEFORCE_THIS crtc.index == 0x41) {
+          BX_GEFORCE_THIS calculate_retrace_timing();
+        }
         return;
-      }
-      if (BX_GEFORCE_THIS crtc.index == 0x25 ||
-          BX_GEFORCE_THIS crtc.index == 0x2D ||
-          BX_GEFORCE_THIS crtc.index == 0x41) {
-        BX_GEFORCE_THIS calculate_retrace_timing();
       }
       break;
     default:
@@ -2270,7 +2270,12 @@ void bx_geforce_c::iifc(Bit32u chid)
       }
       if (BX_GEFORCE_THIS chs[chid].iifc_color_bytes == 4) {
         Bit32u color = dma_read32(BX_GEFORCE_THIS chs[chid].iifc_palette, symbol * 4);
-        dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4, color);
+        if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2) {
+          color = ((color >> 19 & 0x1F) << 11) | ((color >> 10 & 0x3F) << 5) | (color >> 3 & 0x1F);
+          dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2, color);
+        }
+        else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4)
+          dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4, color);
       }
       symbol_index++;
     }
@@ -2624,6 +2629,7 @@ void bx_geforce_c::execute_iifc(Bit32u chid, Bit32u method, Bit32u param)
 
 void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param)
 {
+  bool software_method = false;
   BX_DEBUG(("execute_command: chid 0x%02x, subc 0x%02x, method 0x%03x, param 0x%08x",
     chid, subc, method, param));
   if (method == 0x000) {
@@ -2659,6 +2665,10 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
             ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0xC) << 4;
         }
       }
+    } else if (BX_GEFORCE_THIS chs[chid].schs[subc].engine == 0x00) {
+      software_method = true;
+    } else {
+      BX_DEBUG(("execute_command: unknown engine %d", BX_GEFORCE_THIS chs[chid].schs[subc].engine));
     }
   } else if (method == 0x014) {
     BX_GEFORCE_THIS fifo_cache1_ref_cnt = param;
@@ -2708,9 +2718,13 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
             BX_PANIC(("execute_command: interrupt should be triggered"));
         }
       }
+    } else if (BX_GEFORCE_THIS chs[chid].schs[subc].engine == 0x00) {
+      software_method = true;
+    } else {
+      BX_DEBUG(("execute_command: unknown engine %d", BX_GEFORCE_THIS chs[chid].schs[subc].engine));
     }
   }
-  if (BX_GEFORCE_THIS chs[chid].schs[subc].engine == 0x00) {
+  if (software_method) {
     BX_GEFORCE_THIS fifo_intr |= 0x00000001;
     update_irq_level();
     BX_GEFORCE_THIS fifo_cache1_pull0 |= 0x00000100;
@@ -2719,7 +2733,7 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
     BX_GEFORCE_THIS fifo_cache1_put += 4;
     if (BX_GEFORCE_THIS fifo_cache1_put == GEFORCE_CACHE1_SIZE * 4)
       BX_GEFORCE_THIS fifo_cache1_put = 0;
-    BX_DEBUG(("execute_command: software engine"));
+    BX_DEBUG(("execute_command: software method"));
   }
 }
 
