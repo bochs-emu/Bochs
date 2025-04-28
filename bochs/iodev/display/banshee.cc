@@ -3932,7 +3932,11 @@ void bx_voodoo_vga_c::mem_write(bx_phy_address addr, Bit8u value)
       } else {
         yti = (offset / pitch) / Y_TILESIZE;
       }
-      xti = ((offset % pitch) / (v->banshee.disp_bpp >> 3)) / X_TILESIZE;
+      if (v->banshee.double_width) {
+        xti = ((offset % pitch) / (v->banshee.disp_bpp >> 3)) / (X_TILESIZE / 2);
+      } else {
+        xti = ((offset % pitch) / (v->banshee.disp_bpp >> 3)) / X_TILESIZE;
+      }
       theVoodooDevice->set_tile_updated(xti, yti, 1);
     }
   } else {

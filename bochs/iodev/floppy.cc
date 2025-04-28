@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -750,7 +750,7 @@ void bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
         bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, 250, 0);
       } else if (prev_normal_operation && !normal_operation) {
         // transition from NORMAL to RESET
-        BX_FD_THIS s.main_status_reg &= FD_MS_NDMA;
+        BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
         BX_FD_THIS s.pending_command = FD_RESET; // RESET pending
       }
       BX_FD_THIS s.DOR = value;
@@ -811,7 +811,9 @@ void bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_FD_THIS lower_interrupt();
         break;
       } else if (BX_FD_THIS s.command_complete) {
-        if (BX_FD_THIS s.pending_command != FD_CMD_NOP)
+        if (BX_FD_THIS s.pending_command == FD_RESET) {
+          return; // Don't respond during reset
+        } else if (BX_FD_THIS s.pending_command != FD_CMD_NOP)
           BX_PANIC(("write 0x03f5: receiving new command 0x%02x, old one (0x%02x) pending",
             value, BX_FD_THIS s.pending_command));
         BX_FD_THIS s.command[0] = value;
