@@ -282,8 +282,13 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS timer_inittime2 = 0;
   BX_GEFORCE_THIS timer_alarm = 0;
   BX_GEFORCE_THIS graph_intr = 0;
+  BX_GEFORCE_THIS graph_nsource = 0;
   BX_GEFORCE_THIS graph_intr_en = 0;
+  BX_GEFORCE_THIS graph_ctx_switch4 = 0;
   BX_GEFORCE_THIS graph_status = 0;
+  BX_GEFORCE_THIS graph_trapped_addr = 0;
+  BX_GEFORCE_THIS graph_trapped_data = 0;
+  BX_GEFORCE_THIS graph_notify = 0;
   BX_GEFORCE_THIS graph_fifo = 0;
   BX_GEFORCE_THIS graph_channel_ctx_table = 0;
   BX_GEFORCE_THIS crtc_intr = 0;
@@ -2714,8 +2719,18 @@ void bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
             dma_write32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier, 0x8, 0);
             dma_write32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier, 0xC, 0);
           }
-          if (BX_GEFORCE_THIS chs[chid].notify_type)
-            BX_PANIC(("execute_command: interrupt should be triggered"));
+          if (BX_GEFORCE_THIS chs[chid].notify_type) {
+            BX_GEFORCE_THIS graph_intr |= 0x00000001;
+            update_irq_level();
+            BX_GEFORCE_THIS graph_nsource |= 0x00000001;
+            BX_GEFORCE_THIS graph_ctx_switch4 =
+              BX_GEFORCE_THIS chs[chid].schs[subc].object >> 4;
+            BX_GEFORCE_THIS graph_notify =
+              BX_GEFORCE_THIS chs[chid].schs[subc].notifier >> 4 | 0x00010000;
+            BX_GEFORCE_THIS graph_trapped_addr = method << 2 | subc << 16 | chid << 20;
+            BX_GEFORCE_THIS graph_trapped_data = param;
+            BX_DEBUG(("execute_command: notify interrupt triggered"));
+          }
         }
       }
     } else if (BX_GEFORCE_THIS chs[chid].schs[subc].engine == 0x00) {
@@ -2878,11 +2893,21 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     }
   } else if (address == 0x400100) {
     value = BX_GEFORCE_THIS graph_intr;
+  } else if (address == 0x400108) {
+    value = BX_GEFORCE_THIS graph_nsource;
   } else if (address == 0x40013C && BX_GEFORCE_THIS card_type >= 0x40 ||
              address == 0x400140 && BX_GEFORCE_THIS card_type < 0x40) {
     value = BX_GEFORCE_THIS graph_intr_en;
+  } else if (address == 0x400158) {
+    value = BX_GEFORCE_THIS graph_ctx_switch4;
   } else if (address == 0x400700) {
     value = BX_GEFORCE_THIS graph_status;
+  } else if (address == 0x400704) {
+    value = BX_GEFORCE_THIS graph_trapped_addr;
+  } else if (address == 0x400708) {
+    value = BX_GEFORCE_THIS graph_trapped_data;
+  } else if (address == 0x400718) {
+    value = BX_GEFORCE_THIS graph_notify;
   } else if (address == 0x400720) {
     value = BX_GEFORCE_THIS graph_fifo;
   } else if (address == 0x400780) {
@@ -3045,12 +3070,22 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
   } else if (address == 0x400100) {
     BX_GEFORCE_THIS graph_intr &= ~value;
     update_irq_level();
+  } else if (address == 0x400108) {
+    BX_GEFORCE_THIS graph_nsource = value;
   } else if (address == 0x40013C && BX_GEFORCE_THIS card_type >= 0x40 ||
              address == 0x400140 && BX_GEFORCE_THIS card_type < 0x40) {
     BX_GEFORCE_THIS graph_intr_en = value;
     update_irq_level();
+  } else if (address == 0x400158) {
+    BX_GEFORCE_THIS graph_ctx_switch4 = value;
   } else if (address == 0x400700) {
     BX_GEFORCE_THIS graph_status = value;
+  } else if (address == 0x400704) {
+    BX_GEFORCE_THIS graph_trapped_addr = value;
+  } else if (address == 0x400708) {
+    BX_GEFORCE_THIS graph_trapped_data = value;
+  } else if (address == 0x400718) {
+    BX_GEFORCE_THIS graph_notify = value;
   } else if (address == 0x400720) {
     BX_GEFORCE_THIS graph_fifo = value;
   } else if (address == 0x400780) {

@@ -182,8 +182,13 @@ private:
   Bit32u straps0_primary;
   Bit32u straps0_primary_original;
   Bit32u graph_intr;
+  Bit32u graph_nsource;
   Bit32u graph_intr_en;
+  Bit32u graph_ctx_switch4;
   Bit32u graph_status;
+  Bit32u graph_trapped_addr;
+  Bit32u graph_trapped_data;
+  Bit32u graph_notify;
   Bit32u graph_fifo;
   Bit32u graph_channel_ctx_table;
   Bit32u crtc_intr;
