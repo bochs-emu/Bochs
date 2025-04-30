@@ -165,6 +165,7 @@ private:
   Bit32u fifo_mode;
   Bit32u fifo_cache1_push1;
   Bit32u fifo_cache1_put;
+  Bit32u fifo_cache1_dma_push;
   Bit32u fifo_cache1_dma_instance;
   Bit32u fifo_cache1_dma_put;
   Bit32u fifo_cache1_dma_get;
