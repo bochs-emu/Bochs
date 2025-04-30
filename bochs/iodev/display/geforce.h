@@ -155,6 +155,8 @@ private:
 
   Bit32u mc_intr_en;
   Bit32u mc_enable;
+  Bit32u bus_intr;
+  Bit32u bus_intr_en;
   Bit32u fifo_intr;
   Bit32u fifo_intr_en;
   Bit32u fifo_ramht;

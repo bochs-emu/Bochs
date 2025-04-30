@@ -255,6 +255,8 @@ void bx_geforce_c::svga_init_members()
 
   BX_GEFORCE_THIS mc_intr_en = 0;
   BX_GEFORCE_THIS mc_enable = 0;
+  BX_GEFORCE_THIS bus_intr = 0;
+  BX_GEFORCE_THIS bus_intr_en = 0;
   BX_GEFORCE_THIS fifo_intr = 0;
   BX_GEFORCE_THIS fifo_intr_en = 0;
   BX_GEFORCE_THIS fifo_ramht = 0;
@@ -2766,6 +2768,8 @@ void bx_geforce_c::set_irq_level(bool level)
 Bit32u bx_geforce_c::get_mc_intr()
 {
   Bit32u value = 0x00000000;
+  if (BX_GEFORCE_THIS bus_intr & BX_GEFORCE_THIS bus_intr_en)
+    value |= 0x10000000;
   if (BX_GEFORCE_THIS fifo_intr & BX_GEFORCE_THIS fifo_intr_en)
     value |= 0x00000100;
   if (BX_GEFORCE_THIS graph_intr & BX_GEFORCE_THIS graph_intr_en)
@@ -2796,6 +2800,10 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS mc_intr_en;
   else if (address == 0x200)
     value = BX_GEFORCE_THIS mc_enable;
+  else if (address == 0x1100)
+    value = BX_GEFORCE_THIS bus_intr;
+  else if (address == 0x1140)
+    value = BX_GEFORCE_THIS bus_intr_en;
   else if (address >= 0x1800 && address < 0x1900) {
     Bit32u offset = address - 0x1800;
     value = 
@@ -3001,6 +3009,12 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS mc_enable = value;
   } else if (address >= 0x1800 && address < 0x1900) {
     BX_GEFORCE_THIS pci_write_handler(address - 0x1800, value, 4);
+  } else if (address == 0x1100) {
+    BX_GEFORCE_THIS bus_intr &= ~value;
+    update_irq_level();
+  } else if (address == 0x1140) {
+    BX_GEFORCE_THIS bus_intr_en = value;
+    update_irq_level();
   } else if (address == 0x2100) {
     BX_GEFORCE_THIS fifo_intr &= ~value;
     update_irq_level();
