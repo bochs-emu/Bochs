@@ -143,6 +143,7 @@ private:
   BX_GEFORCE_SMF void execute_ifc(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_surf2d(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_iifc(Bit32u chid, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_sifm(Bit32u chid, Bit32u method, Bit32u param);
 
   BX_GEFORCE_SMF Bit32u color_565_to_888(Bit16u value);
   BX_GEFORCE_SMF void gdi_fillrect(Bit32u chid, bool clipped);
@@ -151,6 +152,7 @@ private:
   BX_GEFORCE_SMF void iifc(Bit32u chid);
   BX_GEFORCE_SMF void copyarea(Bit32u chid);
   BX_GEFORCE_SMF void move(Bit32u chid);
+  BX_GEFORCE_SMF void sifm(Bit32u chid);
 
   struct {
     Bit8u index;
@@ -266,6 +268,17 @@ private:
     Bit32u blit_syx;
     Bit32u blit_dyx;
     Bit32u blit_hw;
+
+    Bit32u sifm_src;
+    Bit32u sifm_operation;
+    Bit32u sifm_color_fmt;
+    Bit32u sifm_color_bytes;
+    Bit32u sifm_syx;
+    Bit32u sifm_dyx;
+    Bit32u sifm_shw;
+    Bit32u sifm_dhw;
+    Bit32u sifm_sfmt;
+    Bit32u sifm_sofs;
 
     Bit32u m2mf_src;
     Bit32u m2mf_dst;
