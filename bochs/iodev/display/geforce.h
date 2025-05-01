@@ -123,12 +123,16 @@ private:
   BX_GEFORCE_SMF void dma_write64(Bit32u object, Bit32u address, Bit64u value);
   BX_GEFORCE_SMF Bit32u dma_pt_lookup(Bit32u object, Bit32u address);
   BX_GEFORCE_SMF Bit32u dma_lin_lookup(Bit32u object, Bit32u address);
+  BX_GEFORCE_SMF Bit32u ramfc_address(Bit32u chid, Bit32u offset);
+  BX_GEFORCE_SMF void ramfc_write32(Bit32u chid, Bit32u offset, Bit32u value);
+  BX_GEFORCE_SMF Bit32u ramfc_read32(Bit32u chid, Bit32u offset);
 
   BX_GEFORCE_SMF Bit64u get_current_time();
 
   BX_GEFORCE_SMF void ramht_lookup(Bit32u handle, Bit32u chid, Bit32u* object, Bit8u* engine);
 
-  BX_GEFORCE_SMF void execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void fifo_process(Bit32u chid);
+  BX_GEFORCE_SMF bool execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
 
   BX_GEFORCE_SMF void execute_clip(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_m2mf(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
@@ -171,6 +175,7 @@ private:
   Bit32u fifo_cache1_dma_get;
   Bit32u fifo_cache1_ref_cnt;
   Bit32u fifo_cache1_pull0;
+  Bit32u fifo_cache1_semaphore;
   Bit32u fifo_cache1_get;
   Bit32u fifo_cache1_method[GEFORCE_CACHE1_SIZE];
   Bit32u fifo_cache1_data[GEFORCE_CACHE1_SIZE];
@@ -207,6 +212,8 @@ private:
 
   bx_bitblt_rop_t rop_handler[0x100];
   Bit8u  rop_flags[0x100];
+
+  bool acquire_active;
 
   struct {
     Bit32u subr_return;
