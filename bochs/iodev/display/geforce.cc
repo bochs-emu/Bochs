@@ -2671,6 +2671,12 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
     chid, subc, method, param));
   if (method == 0x000) {
     if (BX_GEFORCE_THIS chs[chid].schs[subc].engine == 0x01) {
+      Bit32u word1 = ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0x4);
+      if (BX_GEFORCE_THIS card_type < 0x40)
+        word1 = word1 & 0x0000FFFF | BX_GEFORCE_THIS chs[chid].schs[subc].notifier >> 4 << 16;
+      else
+        word1 = word1 & 0xFFF00000 | BX_GEFORCE_THIS chs[chid].schs[subc].notifier >> 4;
+      ramin_write32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0x4, word1);
       Bit8u cls = ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object);
       if (cls == 0x62) {
         if (BX_GEFORCE_THIS card_type < 0x40) {
@@ -2689,6 +2695,11 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
       &BX_GEFORCE_THIS chs[chid].schs[subc].object,
       &BX_GEFORCE_THIS chs[chid].schs[subc].engine);
     if (BX_GEFORCE_THIS chs[chid].schs[subc].engine == 0x01) {
+      Bit32u word1 = ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0x4);
+      if (BX_GEFORCE_THIS card_type < 0x40)
+        BX_GEFORCE_THIS chs[chid].schs[subc].notifier = word1 >> 16 << 4;
+      else
+        BX_GEFORCE_THIS chs[chid].schs[subc].notifier = (word1 & 0xFFFFF) << 4;
       Bit8u cls = ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object);
       if (cls == 0x62) {
         if (BX_GEFORCE_THIS card_type < 0x40) {
