@@ -388,7 +388,7 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
   Bit16u index, pitch;
   Bit16u hwcx = v->banshee.hwcursor.x;
   Bit16u hwcy = v->banshee.hwcursor.y;
-  Bit8u hwcw = 64;
+  Bit8u hwcwm1 = 63;
   int i;
   bool overlay2d = false;
 
@@ -400,10 +400,10 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
     tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
     if (v->banshee.double_width) {
       hwcx <<= 1;
-      hwcw <<= 1;
+      hwcwm1 <<= 1;
     }
   }
-  if ((xc <= hwcx) && ((int)(xc + w) > (hwcx - hwcw + 1)) &&
+  if ((xc <= hwcx) && ((int)(xc + w) > (hwcx - hwcwm1)) &&
       (yc <= hwcy) && ((int)(yc + h) > (hwcy - 63))) {
     if ((v->banshee.io[io_vidProcCfg] & 0x81) == 0x81) {
       start = v->banshee.io[io_vidDesktopStartAddr];
@@ -418,17 +418,17 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
       pitch *= 128;
     }
 
-    if ((hwcx - hwcw + 1) < (int)xc) {
+    if ((hwcx - hwcwm1) < (int)xc) {
       cx = xc;
       if ((hwcx - xc + 1) > w) {
         cw = w;
       } else {
         cw = hwcx - xc + 1;
       }
-      px = hwcw - (hwcx - xc) - 1;
+      px = hwcwm1 - (hwcx - xc);
     } else {
-      cx = hwcx - hwcw + 1;
-      cw = (hwcx < (xc + w)) ? hwcw : w - (hwcx - hwcw - xc + 1);
+      cx = hwcx - hwcwm1;
+      cw = (hwcx < (xc + w)) ? hwcwm1 + 1 : w - (hwcx - hwcwm1 - xc);
       px = 0;
     }
     if ((hwcy - 63) < (int)yc) {
