@@ -342,6 +342,7 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS chs[i].ifc_words = nullptr;
 
     BX_GEFORCE_THIS chs[i].iifc_palette = 0;
+    BX_GEFORCE_THIS chs[i].iifc_palette_ofs = 0;
     BX_GEFORCE_THIS chs[i].iifc_color_fmt = 0;
     BX_GEFORCE_THIS chs[i].iifc_color_bytes = 0;
     BX_GEFORCE_THIS chs[i].iifc_bpp4 = 0;
@@ -2317,7 +2318,8 @@ void bx_geforce_c::iifc(Bit32u chid)
         symbol = BX_GEFORCE_THIS chs[chid].iifc_words[word_offset] >> symbol_offset & 0xFF;
       }
       if (BX_GEFORCE_THIS chs[chid].iifc_color_bytes == 4) {
-        Bit32u color = dma_read32(BX_GEFORCE_THIS chs[chid].iifc_palette, symbol * 4);
+        Bit32u color = dma_read32(BX_GEFORCE_THIS chs[chid].iifc_palette,
+          BX_GEFORCE_THIS chs[chid].iifc_palette_ofs + symbol * 4);
         if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2) {
           color = ((color >> 19 & 0x1F) << 11) | ((color >> 10 & 0x3F) << 5) | (color >> 3 & 0x1F);
           dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2, color);
@@ -2431,7 +2433,7 @@ void bx_geforce_c::sifm(Bit32u chid)
     (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   draw_offset += dy * dpitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
   if (BX_GEFORCE_THIS chs[chid].sifm_dhw != BX_GEFORCE_THIS chs[chid].sifm_shw)
-    BX_DEBUG(("SIFM scaling is not supported"));
+    BX_DEBUG(("SIFM scaling is not implemented"));
   for (Bit16u y = 0; y < dheight; y++) {
     for (Bit16u x = 0; x < dwidth; x++) {
       Bit32u srccolor;
@@ -2689,6 +2691,8 @@ void bx_geforce_c::execute_iifc(Bit32u chid, Bit32u method, Bit32u param)
     }
   } else if (method == 0x0fb)
     BX_GEFORCE_THIS chs[chid].iifc_bpp4 = param;
+  else if (method == 0x0fc)
+    BX_GEFORCE_THIS chs[chid].iifc_palette_ofs = param;
   else if (method == 0x0fd)
     BX_GEFORCE_THIS chs[chid].iifc_yx = param;
   else if (method == 0x0fe)
