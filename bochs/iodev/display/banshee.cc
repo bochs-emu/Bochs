@@ -3300,6 +3300,7 @@ void bx_banshee_c::blt_line(bool pline)
   int i, deltax, deltay, numpixels, d, dinc1, dinc2;
   int x, xinc1, xinc2, y, yinc1, yinc2;
   int x0, y0, x1, y1;
+  bool reversible = ((BLT.reg[blt_command] >> 9) & 1);
   bool lstipple = ((BLT.reg[blt_command] >> 12) & 1);
   Bit8u lpattern = BLT.reg[blt_lineStipple];
   Bit8u lrepeat = (BLT.reg[blt_lineStyle] & 0xff);
@@ -3316,6 +3317,9 @@ void bx_banshee_c::blt_line(bool pline)
     BX_DEBUG(("Polyline: %d/%d  -> %d/%d  ROP0 %02X", x0, y0, x1, y1, BLT.rop[0]));
   } else {
     BX_DEBUG(("Line: %d/%d  -> %d/%d  ROP0 %02X", x0, y0, x1, y1, BLT.rop[0]));
+  }
+  if (reversible) {
+    BX_ERROR(("Reversible lines not implemented yet"));
   }
   deltax = abs(x1 - x0);
   deltay = abs(y1 - y0);
