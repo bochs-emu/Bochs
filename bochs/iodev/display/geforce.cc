@@ -331,6 +331,7 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS chs[i].s2d_ofs_src = 0;
     BX_GEFORCE_THIS chs[i].s2d_ofs_dst = 0;
 
+    BX_GEFORCE_THIS chs[i].ifc_color_key_enable = false;
     BX_GEFORCE_THIS chs[i].ifc_operation = 0;
     BX_GEFORCE_THIS chs[i].ifc_color_fmt = 0;
     BX_GEFORCE_THIS chs[i].ifc_color_bytes = 0;
@@ -381,6 +382,9 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS chs[i].m2mf_buffer_notify = 0;
 
     BX_GEFORCE_THIS chs[i].rop = 0;
+
+    BX_GEFORCE_THIS chs[i].chroma_color_fmt = 0;
+    BX_GEFORCE_THIS chs[i].chroma_color = 0;
 
     BX_GEFORCE_THIS chs[i].patt_bg_color = 0;
     BX_GEFORCE_THIS chs[i].patt_fg_color = 0;
@@ -2269,7 +2273,10 @@ void bx_geforce_c::ifc(Bit32u chid)
             (Bit8u*)&patcolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
         else
           rop_fn((Bit8u*)&dstcolor, (Bit8u*)&srccolor, 0, 0, BX_GEFORCE_THIS chs[chid].s2d_color_bytes, 1);
-        dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4, dstcolor);
+        if (!BX_GEFORCE_THIS chs[chid].ifc_color_key_enable ||
+            dstcolor != (BX_GEFORCE_THIS chs[chid].chroma_color & 0x00FFFFFF)) {
+          dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4, dstcolor);
+        }
       } else if (BX_GEFORCE_THIS chs[chid].ifc_color_bytes == 2) {
         Bit16u dstcolor = dma_read16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2);
         Bit16u *ifc_words16 = (Bit16u*)BX_GEFORCE_THIS chs[chid].ifc_words;
@@ -2585,6 +2592,14 @@ void bx_geforce_c::execute_gdi(Bit32u chid, Bit32u method, Bit32u param)
     BX_GEFORCE_THIS chs[chid].gdi_fg_color = param;
 }
 
+void bx_geforce_c::execute_chroma(Bit32u chid, Bit32u method, Bit32u param)
+{
+  if (method == 0x0c0)
+    BX_GEFORCE_THIS chs[chid].chroma_color_fmt = param;
+  else if (method == 0x0c1)
+    BX_GEFORCE_THIS chs[chid].chroma_color = param;
+}
+
 void bx_geforce_c::execute_imageblit(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param)
 {
   if (method == 0x0bf)
@@ -2601,7 +2616,9 @@ void bx_geforce_c::execute_imageblit(Bit32u chid, Bit8u cls, Bit32u method, Bit3
 
 void bx_geforce_c::execute_ifc(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param)
 {
-  if (method == 0x0bf)
+  if (method == 0x061)
+    BX_GEFORCE_THIS chs[chid].ifc_color_key_enable = (ramin_read32(param) & 0xFF) != 0x30;
+  else if (method == 0x0bf)
     BX_GEFORCE_THIS chs[chid].ifc_operation = param;
   else if (method == 0x0c0) {
     BX_GEFORCE_THIS chs[chid].ifc_color_fmt = param;
@@ -2853,6 +2870,8 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
           execute_patt(chid, method, param);
         else if (cls == 0x4a)
           execute_gdi(chid, method, param);
+        else if (cls == 0x57)
+          execute_chroma(chid, method, param);
         else if (cls == 0x5f || cls == 0x9f)
           execute_imageblit(chid, cls, method, param);
         else if (cls == 0x61 || cls == 0x8a)

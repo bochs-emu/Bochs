@@ -139,6 +139,7 @@ private:
   BX_GEFORCE_SMF void execute_rop(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_patt(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_gdi(Bit32u chid, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_chroma(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_imageblit(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_ifc(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_surf2d(Bit32u chid, Bit32u method, Bit32u param);
@@ -243,6 +244,7 @@ private:
     Bit32u s2d_ofs_src;
     Bit32u s2d_ofs_dst;
 
+    bool ifc_color_key_enable;
     Bit32u ifc_operation;
     Bit32u ifc_color_fmt;
     Bit32u ifc_color_bytes;
@@ -293,6 +295,9 @@ private:
     Bit32u m2mf_buffer_notify;
 
     Bit8u  rop;
+
+    Bit32u chroma_color_fmt;
+    Bit32u chroma_color;
 
     Bit32u patt_bg_color;
     Bit32u patt_fg_color;
