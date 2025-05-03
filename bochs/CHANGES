@@ -35,6 +35,7 @@ Detailed change log :
     - VGA / DDC: Fixed using EDID data from specified file
     - VGA core: Added stub for the feature control register. Currently writing to bit 3 only (should turn off display if set).
     - VGA core: Don't report invalid CRTC register if used by extension.
+    - Bochs VBE: Skip address wrap during display update
   - Voodoo / Banshee
     - Added hardware cursor support for graphics snapshot (Cirrus/Voodoo)
     - Voodoo3: Split mem_read() with len > 8 in two 64-bit reads

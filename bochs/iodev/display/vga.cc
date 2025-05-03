@@ -329,6 +329,11 @@ void bx_vga_c::update(void)
       bx_svga_tileinfo_t info;
       Bit8u dac_size = BX_VGA_THIS vbe.dac_8bit ? 8 : 6;
 
+      if ((BX_VGA_THIS vbe.virtual_start + BX_VGA_THIS vbe.visible_screen_size) > BX_VGA_THIS s.memsize) {
+        BX_ERROR(("skip address wrap during update() (start = 0x%08x)",
+                  BX_VGA_THIS vbe.virtual_start));
+        return;
+      }
       iWidth = BX_VGA_THIS vbe.xres;
       iHeight = BX_VGA_THIS vbe.yres;
       pitch = BX_VGA_THIS vbe.line_offset;
@@ -583,6 +588,11 @@ void bx_vga_c::update(void)
       unsigned xc, yc, xti, yti;
       Bit32u row_addr;
 
+      if ((BX_VGA_THIS vbe.virtual_start + BX_VGA_THIS vbe.visible_screen_size) > BX_VGA_THIS s.memsize) {
+        BX_ERROR(("skip address wrap during update() (start = 0x%08x)",
+                  BX_VGA_THIS vbe.virtual_start));
+        return;
+      }
       if (BX_VGA_THIS vbe.yres < 1024) {
         BX_VGA_THIS determine_screen_dimensions(&iHeight, &iWidth);
       } else {
@@ -1196,7 +1206,7 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
         case VBE_DISPI_INDEX_X_OFFSET:
         {
           BX_DEBUG(("VBE offset x %d", value));
-          BX_VGA_THIS vbe.offset_x=(Bit16u)value;
+          BX_VGA_THIS vbe.offset_x = (Bit16u)value;
 
           BX_VGA_THIS vbe.virtual_start = BX_VGA_THIS vbe.offset_y * BX_VGA_THIS vbe.line_offset;
           if (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4) {
@@ -1204,31 +1214,22 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           } else {
             BX_VGA_THIS vbe.virtual_start += (BX_VGA_THIS vbe.offset_x >> 3);
           }
+          BX_VGA_THIS vbe.virtual_start &= BX_VGA_THIS s.vgamem_mask;
           needs_update = 1;
         } break;
 
         case VBE_DISPI_INDEX_Y_OFFSET:
         {
           BX_DEBUG(("VBE offset y %d", value));
-
-          Bit32u new_screen_start = value * BX_VGA_THIS vbe.line_offset;
-          if (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4) {
-            if ((new_screen_start + BX_VGA_THIS vbe.visible_screen_size) > BX_VGA_THIS s.memsize)
-            {
-              BX_PANIC(("VBE offset y %d out of bounds", value));
-              break;
-            }
-            new_screen_start += (BX_VGA_THIS vbe.offset_x * BX_VGA_THIS vbe.bpp_multiplier);
-          } else {
-            if ((new_screen_start + BX_VGA_THIS vbe.visible_screen_size) > (BX_VGA_THIS s.memsize >> 2))
-            {
-              BX_PANIC(("VBE offset y %d out of bounds", value));
-              break;
-            }
-            new_screen_start += (BX_VGA_THIS vbe.offset_x >> 3);
-          }
-          BX_VGA_THIS vbe.virtual_start = new_screen_start;
           BX_VGA_THIS vbe.offset_y = (Bit16u)value;
+
+          BX_VGA_THIS vbe.virtual_start = BX_VGA_THIS vbe.offset_y * BX_VGA_THIS vbe.line_offset;
+          if (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4) {
+            BX_VGA_THIS vbe.virtual_start += (BX_VGA_THIS vbe.offset_x * BX_VGA_THIS vbe.bpp_multiplier);
+          } else {
+            BX_VGA_THIS vbe.virtual_start += (BX_VGA_THIS vbe.offset_x >> 3);
+          }
+          BX_VGA_THIS vbe.virtual_start &= BX_VGA_THIS s.vgamem_mask;
           needs_update = 1;
         } break;
 
