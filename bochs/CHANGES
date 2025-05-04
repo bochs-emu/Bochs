@@ -13,11 +13,13 @@ Detailed change log :
     The dbg_gui option also supports "-dbg_gui:globalini" extension to use ini file from BXSHARE path for GUI debugger.
     Old "gui_debug" bochsrc option is deprecated and should not used anymore.
   - Added new 'step over' button in Bochs debugger GUI to execute an instruction stepping over subroutines
+  - Speed up Bochs emulation with debugger enabled by ~10%
 
 - Configure and compile
   - Fixed compilation with --enable-avx but without --enable-evex
   - Compilation fix for MacOS in keymap.cc
   - Updated MSVCPP project files
+  - For Win32 automatically replace forward slash with backward slash when dealing with filenames
 
 - I/O Devices
   - PCI
@@ -36,15 +38,29 @@ Detailed change log :
     - VGA core: Added stub for the feature control register. Currently writing to bit 3 only (should turn off display if set).
     - VGA core: Don't report invalid CRTC register if used by extension.
     - Bochs VBE: Skip address wrap during display update
+    - Fix graphics snapshot in low resolution modes
   - Voodoo / Banshee
     - Added hardware cursor support for graphics snapshot (Cirrus/Voodoo)
     - Voodoo3: Split mem_read() with len > 8 in two 64-bit reads
     - Voodoo3: Fixed display timing in VGA mode with half dot clock
+    - Banshee: Added missing 'double width' support for banked mode
   - Hard Drive
     - Fix the reading of the HOB registers
     - Add the 0x46 (GET_CONFIG) command. This allows ReactOS 0.4.15 to boot in normal mode (LiveCD)
     - The SENSE was not being cleared between commands. If one command failed, 
       the next successful command would still show the failed SENSE values.
+  - Floppy
+    - Floppy reset fixes found while testing real hardware
+      - Main status register only returns BUSY bit set during reset
+      - Command register writes are ignored during reset
+    - Attempt to make the FDC more like real hardware (Ben Lunt)
+      - Modify the source to return in milliseconds and then convert to microseconds for the timer
+      - Set DOR to normal operation after a reset via the Data Rate Select Register (0x3F4)
+      - Adjust the timing value to a smaller value (makes the floppy access faster)
+      - Real hardware sets the LOCK bit on by default
+      - Real hardware does not set the CHANGE DISK bit at reset
+      - Fix the `Illegal size for FIFO` error. Zero is a legal size on input, which translate to a size of 1.
+      - Fixed the `DUMP_REGISTERS` command to show the EOT value.
   - Networking
     - E1000: Added loopback mode for diagnostics
   - USB
