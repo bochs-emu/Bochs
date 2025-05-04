@@ -115,6 +115,8 @@ enum {
 //  that we can only have 2 drives (which is the case at the moment)
 #define FDC_DRV_MASK 0x01  // set to 0x03 if you have 4 drives.
 
+#define FDC_TIMER_VAL  10
+
 #if BX_USE_FD_SMF
 #  define BX_FD_SMF  static
 #  define BX_FD_THIS theFloppyController->
