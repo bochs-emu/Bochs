@@ -754,6 +754,12 @@ void bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
         // transition from NORMAL to RESET
         BX_FD_THIS s.main_status_reg = FD_MS_BUSY;
         BX_FD_THIS s.pending_command = FD_RESET; // RESET pending
+        // The following line allows ReactOS to recognize the floppy disk.
+        // ReactOS writes zero to the DOR when stopping the motor within its boot process
+        //   https://github.com/reactos/reactos/blob/master/boot/freeldr/freeldr/arch/i386/pc/pcdisk.c
+        //     DiskStopFloppyMotor() (At time of this writing, it is Line 780)
+        // ReactOS never sets the bit returning the controller to normal operation
+        //bx_pc_system.activate_timer(BX_FD_THIS s.floppy_timer_index, FDC_TIMER_VAL, 0);
       }
       BX_FD_THIS s.DOR = value;
 
