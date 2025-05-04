@@ -398,10 +398,10 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
     h = s.vdraw.height;
   } else {
     tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
-    if (v->banshee.double_width) {
-      hwcx <<= 1;
-      hwcwm1 <<= 1;
-    }
+  }
+  if (v->banshee.double_width) {
+    hwcx <<= 1;
+    hwcwm1 <<= 1;
   }
   if ((xc <= hwcx) && ((int)(xc + w) > (hwcx - hwcwm1)) &&
       (yc <= hwcy) && ((int)(yc + h) > (hwcy - 63))) {
@@ -704,8 +704,18 @@ bool bx_banshee_c::update(void)
         tile_ptr = bx_gui->get_snapshot_buffer();
         if (tile_ptr != NULL) {
           for (yc = 0; yc < iHeight; yc++) {
-            memcpy(tile_ptr, vid_ptr, info.pitch);
-            vid_ptr += pitch;
+            vid_ptr2  = vid_ptr;
+            tile_ptr2 = tile_ptr;
+            for (xc = 0; xc < iWidth; xc++) {
+              memcpy(tile_ptr2, vid_ptr2, (bpp >> 3));
+              if (!v->banshee.double_width || (xc & 1)) {
+                vid_ptr2 += (bpp >> 3);
+              }
+              tile_ptr2 += (info.bpp >> 3);
+            }
+            if (!v->banshee.half_mode || (yc & 1)) {
+              vid_ptr += pitch;
+            }
             tile_ptr += info.pitch;
           }
           if (v->banshee.hwcursor.enabled) {
