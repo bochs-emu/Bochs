@@ -2204,8 +2204,8 @@ Bit32u bx_geforce_c::color_565_to_888(Bit16u value)
 
 void bx_geforce_c::gdi_blit(Bit32u chid, Bit32u type)
 {
-  Bit16u dx = BX_GEFORCE_THIS chs[chid].gdi_image_xy & 0xFFFF;
-  Bit16u dy = BX_GEFORCE_THIS chs[chid].gdi_image_xy >> 16;
+  Bit16s dx = BX_GEFORCE_THIS chs[chid].gdi_image_xy & 0xFFFF;
+  Bit16s dy = BX_GEFORCE_THIS chs[chid].gdi_image_xy >> 16;
   Bit32u swidth = BX_GEFORCE_THIS chs[chid].gdi_image_swh & 0xFFFF;
   Bit32u dwidth = type ? BX_GEFORCE_THIS chs[chid].gdi_image_dwh & 0xFFFF : swidth;
   Bit32u height = BX_GEFORCE_THIS chs[chid].gdi_image_swh >> 16;
