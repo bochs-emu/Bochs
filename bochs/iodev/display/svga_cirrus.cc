@@ -1762,7 +1762,7 @@ void bx_svga_cirrus_c::update(void)
               if (!BX_CIRRUS_THIS svga_double_width || (xc & 1)) {
                 vid_ptr2 += (BX_CIRRUS_THIS svga_bpp >> 3);
               }
-              tile_ptr2 += (info.bpp >> 3);
+              tile_ptr2 += ((info.bpp + 1) >> 3);
             }
             if (!BX_CIRRUS_THIS s.y_doublescan || (yc & 1)) {
               vid_ptr += pitch;
