@@ -260,6 +260,7 @@ private:
 
     Bit32u iifc_palette;
     Bit32u iifc_palette_ofs;
+    Bit32u iifc_operation;
     Bit32u iifc_color_fmt;
     Bit32u iifc_color_bytes;
     Bit32u iifc_bpp4;

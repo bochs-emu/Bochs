@@ -344,6 +344,7 @@ void bx_geforce_c::svga_init_members()
 
     BX_GEFORCE_THIS chs[i].iifc_palette = 0;
     BX_GEFORCE_THIS chs[i].iifc_palette_ofs = 0;
+    BX_GEFORCE_THIS chs[i].iifc_operation = 0;
     BX_GEFORCE_THIS chs[i].iifc_color_fmt = 0;
     BX_GEFORCE_THIS chs[i].iifc_color_bytes = 0;
     BX_GEFORCE_THIS chs[i].iifc_bpp4 = 0;
@@ -2176,6 +2177,14 @@ void bx_geforce_c::pixel_operation(Bit32u chid, Bit32u op, Bit32u* dstcolor, con
       BX_GEFORCE_THIS rop_handler[rop]((Bit8u*)dstcolor, (Bit8u*)srccolor,
         0, 0, BX_GEFORCE_THIS chs[chid].s2d_color_bytes, 1);
     }
+  } else if (op == 5 && BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4) {
+    if (*srccolor) {
+      Bit8u alpha = *srccolor >> 24;
+      Bit8u b = ((*dstcolor & 0xFF) * (0xFF - alpha) >> 8) + (*srccolor & 0xFF);
+      Bit8u g = ((*dstcolor >> 8 & 0xFF) * (0xFF - alpha) >> 8) + (*srccolor >> 8 & 0xFF);
+      Bit8u r = ((*dstcolor >> 16 & 0xFF) * (0xFF - alpha) >> 8) + (*srccolor >> 16 & 0xFF);
+      *dstcolor = b << 0 | g << 8 | r << 16;
+    }
   } else {
     *dstcolor = *srccolor;
   }
@@ -2337,14 +2346,15 @@ void bx_geforce_c::iifc(Bit32u chid)
         symbol = BX_GEFORCE_THIS chs[chid].iifc_words[word_offset] >> symbol_offset & 0xFF;
       }
       if (BX_GEFORCE_THIS chs[chid].iifc_color_bytes == 4) {
-        Bit32u color = dma_read32(BX_GEFORCE_THIS chs[chid].iifc_palette,
+        Bit32u dstcolor = get_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_dst,
+          draw_offset, x, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
+        Bit32u srccolor = dma_read32(BX_GEFORCE_THIS chs[chid].iifc_palette,
           BX_GEFORCE_THIS chs[chid].iifc_palette_ofs + symbol * 4);
-        if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2) {
-          color = color_888_to_565(color);
-          dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2, color);
-        }
-        else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4)
-          dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4, color);
+        if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
+          srccolor = color_888_to_565(srccolor);
+        pixel_operation(chid, BX_GEFORCE_THIS chs[chid].iifc_operation, &dstcolor, &srccolor);
+        put_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset, x,
+          BX_GEFORCE_THIS chs[chid].s2d_color_bytes, dstcolor);
       }
       symbol_index++;
     }
@@ -2666,6 +2676,8 @@ void bx_geforce_c::execute_iifc(Bit32u chid, Bit32u method, Bit32u param)
 {
   if (method == 0x061)
     BX_GEFORCE_THIS chs[chid].iifc_palette = param;
+  else if (method == 0x0f9)
+    BX_GEFORCE_THIS chs[chid].iifc_operation = param;
   else if (method == 0x0fa) {
     BX_GEFORCE_THIS chs[chid].iifc_color_fmt = param;
     if (BX_GEFORCE_THIS chs[chid].iifc_color_fmt == 1 || // R5G6B5
