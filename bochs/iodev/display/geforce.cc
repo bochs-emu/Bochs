@@ -507,6 +507,15 @@ void bx_geforce_c::redraw_area(unsigned x0, unsigned y0,
   redraw_area((Bit32s)x0, (Bit32s)y0, width, height);
 }
 
+void bx_geforce_c::redraw_area(Bit32u offset, Bit32u width, Bit32u height)
+{
+  if (BX_GEFORCE_THIS svga_pitch != 0) {
+    Bit32u redraw_x = offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
+    Bit32u redraw_y = offset / BX_GEFORCE_THIS svga_pitch;
+    BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, width, height);
+  }
+}
+
 void bx_geforce_c::redraw_area(Bit32s x0, Bit32s y0, Bit32u width, Bit32u height)
 {
   if (x0 + (Bit32s)width <= 0 || y0 + (Bit32s)height <= 0)
@@ -2120,6 +2129,58 @@ void bx_geforce_c::ramht_lookup(Bit32u handle, Bit32u chid, Bit32u* object, Bit8
   BX_PANIC(("ramht_lookup failed for 0x%08x", handle));
 }
 
+Bit32u color_565_to_888(Bit16u value)
+{
+  Bit8u r, g, b;
+  EXTRACT_565_TO_888(value, r, g, b);
+  return r << 16 | g << 8 | b;
+}
+
+Bit16u color_888_to_565(Bit32u value)
+{
+  return ((value >> 19 & 0x1F) << 11) | ((value >> 10 & 0x3F) << 5) | (value >> 3 & 0x1F);
+}
+
+
+Bit32u bx_geforce_c::get_pixel(Bit32u obj, Bit32u ofs, Bit32u x, Bit32u cb)
+{
+  Bit32u result;
+  if (cb == 1)
+    result = dma_read8(obj, ofs + x);
+  else if (cb == 2)
+    result = dma_read16(obj, ofs + x * 2);
+  else
+    result = dma_read32(obj, ofs + x * 4);
+  return result;
+}
+
+void bx_geforce_c::put_pixel(Bit32u obj, Bit32u ofs, Bit32u x, Bit32u cb, Bit32u value)
+{
+  if (cb == 1)
+    dma_write8(obj, ofs + x, value);
+  else if (cb == 2)
+    dma_write16(obj, ofs + x * 2, value);
+  else
+    dma_write32(obj, ofs + x * 4, value);
+}
+
+void bx_geforce_c::pixel_operation(Bit32u chid, Bit32u op, Bit32u* dstcolor, const Bit32u* srccolor)
+{
+  if (op == 1) {
+    Bit8u rop = BX_GEFORCE_THIS chs[chid].rop;
+    if (BX_GEFORCE_THIS rop_flags[rop]) {
+      bx_ternary_rop(rop, (Bit8u*)dstcolor, (Bit8u*)srccolor,
+        (Bit8u*)&BX_GEFORCE_THIS chs[chid].patt_fg_color,
+        BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
+    } else {
+      BX_GEFORCE_THIS rop_handler[rop]((Bit8u*)dstcolor, (Bit8u*)srccolor,
+        0, 0, BX_GEFORCE_THIS chs[chid].s2d_color_bytes, 1);
+    }
+  } else {
+    *dstcolor = *srccolor;
+  }
+}
+
 void bx_geforce_c::gdi_fillrect(Bit32u chid, bool clipped)
 {
   Bit16s clipx0;
@@ -2159,47 +2220,19 @@ void bx_geforce_c::gdi_fillrect(Bit32u chid, bool clipped)
   Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].s2d_ofs_dst;
   draw_offset += dy * pitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
   Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
-  Bit8u rop = BX_GEFORCE_THIS chs[chid].gdi_operation != 1 ? 0xCC : BX_GEFORCE_THIS chs[chid].rop;
-  bx_bitblt_rop_t rop_fn = BX_GEFORCE_THIS rop_handler[rop];
-  bool rop_pattern = BX_GEFORCE_THIS rop_flags[rop];
-  Bit32u patcolor = BX_GEFORCE_THIS chs[chid].patt_fg_color;
   for (Bit16u y = 0; y < height; y++) {
     for (Bit16u x = 0; x < width; x++) {
       if (!clipped || x >= clipx0 && x < clipx1 && y >= clipy0 && y < clipy1) {
-        Bit32u dstcolor;
-        if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 1)
-          dstcolor = dma_read8(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x);
-        else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
-          dstcolor = dma_read16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2);
-        else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4)
-          dstcolor = dma_read32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4);
-        if (rop_pattern)
-          bx_ternary_rop(rop, (Bit8u*)&dstcolor, (Bit8u*)&srccolor,
-            (Bit8u*)&patcolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
-        else
-          rop_fn((Bit8u*)&dstcolor, (Bit8u*)&srccolor, 0, 0, BX_GEFORCE_THIS chs[chid].s2d_color_bytes, 1);
-        if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 1)
-          dma_write8(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x, dstcolor);
-        else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
-          dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2, dstcolor);
-        else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4)
-          dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4, dstcolor);
+        Bit32u dstcolor = get_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_dst,
+          draw_offset, x, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
+        pixel_operation(chid, BX_GEFORCE_THIS chs[chid].gdi_operation, &dstcolor, &srccolor);
+        put_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset, x,
+          BX_GEFORCE_THIS chs[chid].s2d_color_bytes, dstcolor);
       }
     }
     draw_offset += pitch;
   }
-  if (BX_GEFORCE_THIS svga_pitch != 0) {
-    Bit32u redraw_x = redraw_offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
-    Bit32u redraw_y = redraw_offset / BX_GEFORCE_THIS svga_pitch;
-    BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, width, height);
-  }
-}
-
-Bit32u bx_geforce_c::color_565_to_888(Bit16u value)
-{
-  Bit8u r, g, b;
-  EXTRACT_565_TO_888(value, r, g, b);
-  return r << 16 | g << 8 | b;
+  BX_GEFORCE_THIS redraw_area(redraw_offset, width, height);
 }
 
 void bx_geforce_c::gdi_blit(Bit32u chid, Bit32u type)
@@ -2220,10 +2253,6 @@ void bx_geforce_c::gdi_blit(Bit32u chid, Bit32u type)
   draw_offset += dy * pitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
   Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   Bit32u bit_index = 0;
-  Bit8u rop = BX_GEFORCE_THIS chs[chid].gdi_operation != 1 ? 0xCC : BX_GEFORCE_THIS chs[chid].rop;
-  bx_bitblt_rop_t rop_fn = BX_GEFORCE_THIS rop_handler[rop];
-  bool rop_pattern = BX_GEFORCE_THIS rop_flags[rop];
-  Bit32u patcolor = BX_GEFORCE_THIS chs[chid].patt_fg_color;
   for (Bit16u y = 0; y < height; y++) {
     for (Bit16u x = 0; x < dwidth; x++) {
       Bit32u word_offset = bit_index / 32;
@@ -2231,36 +2260,19 @@ void bx_geforce_c::gdi_blit(Bit32u chid, Bit32u type)
       bit_offset = bit_offset & 24 | 7 - (bit_offset & 7);
       bool pixel = BX_GEFORCE_THIS chs[chid].gdi_words[word_offset] >> bit_offset & 1;
       if (type || !type && pixel) {
-        Bit32u dstcolor;
-        if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 1)
-          dstcolor = dma_read16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x);
-        else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
-          dstcolor = dma_read16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2);
-        else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4)
-          dstcolor = dma_read32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4);
+        Bit32u dstcolor = get_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_dst,
+          draw_offset, x, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
         Bit32u srccolor = pixel ? fg_color : bg_color;
-        if (rop_pattern)
-          bx_ternary_rop(rop, (Bit8u*)&dstcolor, (Bit8u*)&srccolor,
-            (Bit8u*)&patcolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
-        else
-          rop_fn((Bit8u*)&dstcolor, (Bit8u*)&srccolor, 0, 0, BX_GEFORCE_THIS chs[chid].s2d_color_bytes, 1);
-        if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 1)
-          dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x, dstcolor);
-        else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
-          dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2, dstcolor);
-        else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4)
-          dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4, dstcolor);
+        pixel_operation(chid, BX_GEFORCE_THIS chs[chid].gdi_operation, &dstcolor, &srccolor);
+        put_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset, x,
+          BX_GEFORCE_THIS chs[chid].s2d_color_bytes, dstcolor);
       }
       bit_index++;
     }
     bit_index += swidth - dwidth;
     draw_offset += pitch;
   }
-  if (BX_GEFORCE_THIS svga_pitch != 0) {
-    Bit32u redraw_x = redraw_offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
-    Bit32u redraw_y = redraw_offset / BX_GEFORCE_THIS svga_pitch;
-    BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, dwidth, height);
-  }
+  BX_GEFORCE_THIS redraw_area(redraw_offset, dwidth, height);
 }
 
 void bx_geforce_c::ifc(Bit32u chid)
@@ -2275,33 +2287,21 @@ void bx_geforce_c::ifc(Bit32u chid)
   draw_offset += dy * pitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
   Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   Bit32u word_offset = 0;
-  Bit8u rop = BX_GEFORCE_THIS chs[chid].ifc_operation != 1 ? 0xCC : BX_GEFORCE_THIS chs[chid].rop;
-  bx_bitblt_rop_t rop_fn = BX_GEFORCE_THIS rop_handler[rop];
-  bool rop_pattern = BX_GEFORCE_THIS rop_flags[rop];
-  Bit32u patcolor = BX_GEFORCE_THIS chs[chid].patt_fg_color;
   for (Bit16u y = 0; y < height; y++) {
     for (Bit16u x = 0; x < dwidth; x++) {
       if (BX_GEFORCE_THIS chs[chid].ifc_color_bytes == 4) {
         Bit32u dstcolor = dma_read32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4);
         Bit32u srccolor = BX_GEFORCE_THIS chs[chid].ifc_words[word_offset];
-        if (rop_pattern)
-          bx_ternary_rop(rop, (Bit8u*)&dstcolor, (Bit8u*)&srccolor,
-            (Bit8u*)&patcolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
-        else
-          rop_fn((Bit8u*)&dstcolor, (Bit8u*)&srccolor, 0, 0, BX_GEFORCE_THIS chs[chid].s2d_color_bytes, 1);
+        pixel_operation(chid, BX_GEFORCE_THIS chs[chid].ifc_operation, &dstcolor, &srccolor);
         if (!BX_GEFORCE_THIS chs[chid].ifc_color_key_enable ||
             dstcolor != (BX_GEFORCE_THIS chs[chid].chroma_color & 0x00FFFFFF)) {
           dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4, dstcolor);
         }
       } else if (BX_GEFORCE_THIS chs[chid].ifc_color_bytes == 2) {
-        Bit16u dstcolor = dma_read16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2);
+        Bit32u dstcolor = dma_read16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2);
         Bit16u *ifc_words16 = (Bit16u*)BX_GEFORCE_THIS chs[chid].ifc_words;
-        Bit16u srccolor = ifc_words16[word_offset];
-        if (rop_pattern)
-          bx_ternary_rop(rop, (Bit8u*)&dstcolor, (Bit8u*)&srccolor,
-            (Bit8u*)&patcolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
-        else
-          rop_fn((Bit8u*)&dstcolor, (Bit8u*)&srccolor, 0, 0, BX_GEFORCE_THIS chs[chid].s2d_color_bytes, 1);
+        Bit32u srccolor = ifc_words16[word_offset];
+        pixel_operation(chid, BX_GEFORCE_THIS chs[chid].ifc_operation, &dstcolor, &srccolor);
         dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2, dstcolor);
       }
       word_offset++;
@@ -2309,11 +2309,7 @@ void bx_geforce_c::ifc(Bit32u chid)
     word_offset += swidth - dwidth;
     draw_offset += pitch;
   }
-  if (BX_GEFORCE_THIS svga_pitch != 0) {
-    Bit32u redraw_x = redraw_offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
-    Bit32u redraw_y = redraw_offset / BX_GEFORCE_THIS svga_pitch;
-    BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, dwidth, height);
-  }
+  BX_GEFORCE_THIS redraw_area(redraw_offset, dwidth, height);
 }
 
 void bx_geforce_c::iifc(Bit32u chid)
@@ -2344,7 +2340,7 @@ void bx_geforce_c::iifc(Bit32u chid)
         Bit32u color = dma_read32(BX_GEFORCE_THIS chs[chid].iifc_palette,
           BX_GEFORCE_THIS chs[chid].iifc_palette_ofs + symbol * 4);
         if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2) {
-          color = ((color >> 19 & 0x1F) << 11) | ((color >> 10 & 0x3F) << 5) | (color >> 3 & 0x1F);
+          color = color_888_to_565(color);
           dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2, color);
         }
         else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4)
@@ -2355,11 +2351,7 @@ void bx_geforce_c::iifc(Bit32u chid)
     symbol_index += swidth - dwidth;
     draw_offset += pitch;
   }
-  if (BX_GEFORCE_THIS svga_pitch != 0) {
-    Bit32u redraw_x = redraw_offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
-    Bit32u redraw_y = redraw_offset / BX_GEFORCE_THIS svga_pitch;
-    BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, dwidth, height);
-  }
+  BX_GEFORCE_THIS redraw_area(redraw_offset, dwidth, height);
 }
 
 void bx_geforce_c::copyarea(Bit32u chid)
@@ -2380,47 +2372,21 @@ void bx_geforce_c::copyarea(Bit32u chid)
   Bit32u redraw_offset = draw_offset + dy * dpitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes -
     (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   draw_offset += (dy + ydir * (height - 1)) * dpitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
-  Bit8u rop = BX_GEFORCE_THIS chs[chid].blit_operation != 1 ? 0xCC : BX_GEFORCE_THIS chs[chid].rop;
-  bx_bitblt_rop_t rop_fn = BX_GEFORCE_THIS rop_handler[rop];
-  bool rop_pattern = BX_GEFORCE_THIS rop_flags[rop];
-  Bit32u patcolor = BX_GEFORCE_THIS chs[chid].patt_fg_color;
   for (Bit16u y = 0; y < height; y++) {
     for (Bit16u x = 0; x < width; x++) {
       Bit16u xa = xdir ? width - x - 1 : x;
-      Bit32u dstcolor;
-      if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 1)
-        dstcolor = dma_read8(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + xa);
-      else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
-        dstcolor = dma_read16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + xa * 2);
-      else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4)
-        dstcolor = dma_read32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + xa * 4);
-      Bit32u srccolor;
-      if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 1)
-        srccolor = dma_read8(BX_GEFORCE_THIS chs[chid].s2d_img_src, src_offset + xa);
-      else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
-        srccolor = dma_read16(BX_GEFORCE_THIS chs[chid].s2d_img_src, src_offset + xa * 2);
-      else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4)
-        srccolor = dma_read32(BX_GEFORCE_THIS chs[chid].s2d_img_src, src_offset + xa * 4);
-      if (rop_pattern)
-        bx_ternary_rop(rop, (Bit8u*)&dstcolor, (Bit8u*)&srccolor,
-          (Bit8u*)&patcolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
-      else
-        rop_fn((Bit8u*)&dstcolor, (Bit8u*)&srccolor, 0, 0, BX_GEFORCE_THIS chs[chid].s2d_color_bytes, 1);
-      if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 1)
-        dma_write8(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + xa, dstcolor);
-      else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
-        dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + xa * 2, dstcolor);
-      else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4)
-        dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + xa * 4, dstcolor);
+      Bit32u dstcolor = get_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_dst,
+        draw_offset, xa, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
+      Bit32u srccolor = get_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_src,
+        src_offset, xa, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
+      pixel_operation(chid, BX_GEFORCE_THIS chs[chid].blit_operation, &dstcolor, &srccolor);
+      put_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset, xa,
+        BX_GEFORCE_THIS chs[chid].s2d_color_bytes, dstcolor);
     }
     src_offset += spitch * (1 - 2 * ydir);
     draw_offset += dpitch * (1 - 2 * ydir);
   }
-  if (BX_GEFORCE_THIS svga_pitch != 0) {
-    Bit32u redraw_x = redraw_offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
-    Bit32u redraw_y = redraw_offset / BX_GEFORCE_THIS svga_pitch;
-    BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, width, height);
-  }
+  BX_GEFORCE_THIS redraw_area(redraw_offset, width, height);
 }
 
 void bx_geforce_c::move(Bit32u chid)
@@ -2459,24 +2425,15 @@ void bx_geforce_c::sifm(Bit32u chid)
     BX_DEBUG(("SIFM scaling is not implemented"));
   for (Bit16u y = 0; y < dheight; y++) {
     for (Bit16u x = 0; x < dwidth; x++) {
-      Bit32u srccolor;
-      if (BX_GEFORCE_THIS chs[chid].sifm_color_bytes == 2)
-        srccolor = dma_read16(BX_GEFORCE_THIS chs[chid].sifm_src, src_offset + x * 2);
-      else if (BX_GEFORCE_THIS chs[chid].sifm_color_bytes == 4)
-        srccolor = dma_read32(BX_GEFORCE_THIS chs[chid].sifm_src, src_offset + x * 4);
-      if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
-        dma_write16(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 2, srccolor);
-      else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4)
-        dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset + x * 4, srccolor);
+      Bit32u srccolor = get_pixel(BX_GEFORCE_THIS chs[chid].sifm_src,
+        src_offset, x, BX_GEFORCE_THIS chs[chid].sifm_color_bytes);
+      put_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset, x,
+        BX_GEFORCE_THIS chs[chid].s2d_color_bytes, srccolor);
     }
     src_offset += spitch;
     draw_offset += dpitch;
   }
-  if (BX_GEFORCE_THIS svga_pitch != 0) {
-    Bit32u redraw_x = redraw_offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
-    Bit32u redraw_y = redraw_offset / BX_GEFORCE_THIS svga_pitch;
-    BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, dwidth, dheight);
-  }
+  BX_GEFORCE_THIS redraw_area(redraw_offset, dwidth, dheight);
 }
 
 void bx_geforce_c::execute_clip(Bit32u chid, Bit32u method, Bit32u param)
