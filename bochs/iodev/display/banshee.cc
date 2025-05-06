@@ -153,17 +153,17 @@ void bx_banshee_c::init_model(void)
   is_agp = SIM->is_agp_device(BX_PLUGIN_VOODOO);
   if (s.model == VOODOO_BANSHEE) {
     if (!is_agp) {
-      strcpy(model, "Experimental 3dfx Voodoo Banshee PCI");
+      strcpy(model, "3dfx Voodoo Banshee PCI");
     } else {
-      strcpy(model, "Experimental 3dfx Voodoo Banshee AGP");
+      strcpy(model, "3dfx Voodoo Banshee AGP");
     }
     DEV_register_pci_handlers2(this, &s.devfunc, BX_PLUGIN_VOODOO, model, is_agp);
     init_pci_conf(0x121a, 0x0003, 0x01, 0x030000, 0x00, BX_PCI_INTA);
   } else if (s.model == VOODOO_3) {
     if (!is_agp) {
-      strcpy(model, "Experimental 3dfx Voodoo 3 PCI");
+      strcpy(model, "3dfx Voodoo 3 PCI");
     } else {
-      strcpy(model, "Experimental 3dfx Voodoo 3 AGP");
+      strcpy(model, "3dfx Voodoo 3 AGP");
     }
     DEV_register_pci_handlers2(this, &s.devfunc, BX_PLUGIN_VOODOO, model, is_agp);
     init_pci_conf(0x121a, 0x0005, 0x01, 0x030000, 0x00, BX_PCI_INTA);
