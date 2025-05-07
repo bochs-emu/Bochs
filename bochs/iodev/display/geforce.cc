@@ -661,6 +661,13 @@ Bit8u bx_geforce_c::mem_read(bx_phy_address addr)
   if (!BX_GEFORCE_THIS crtc.reg[0x28])
     return BX_GEFORCE_THIS bx_vgacore_c::mem_read(addr);
 
+  if (addr >= 0xA0000 && addr <= 0xAFFFF) {
+    Bit32u offset = addr & 0xffff;
+    offset += BX_GEFORCE_THIS bank_base[0];
+    offset &= BX_GEFORCE_THIS memsize_mask;
+    return BX_GEFORCE_THIS s.memory[offset];
+  }
+
   return 0xFF;
 }
 
