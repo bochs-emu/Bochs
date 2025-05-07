@@ -757,7 +757,7 @@ void bx_voodoo_1_2_c::init_model(void)
        1000, 0, 0, 0, "voodoo_mode_change");
   }
   DEV_register_pci_handlers(this, &s.devfunc, BX_PLUGIN_VOODOO,
-                            "Experimental 3dfx Voodoo Graphics (SST-1/2)");
+                            "3dfx Voodoo Graphics (SST-1/2)");
   if (s.model == VOODOO_1) {
     init_pci_conf(0x121a, 0x0001, 0x02, 0x000000, 0x00, BX_PCI_INTA);
   } else if (s.model == VOODOO_2) {

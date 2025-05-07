@@ -410,10 +410,8 @@ currently work with.
   <row>
     <entry>3D video card</entry>
     <entry>Yes</entry>
-    <entry>Some of the 3dfx Voodoo graphics adapter models are supported now.
-      The code is still experimental, but at least the Voodoo1 and the Voodoo
-      Banshee PCI are known to work. For more information see
-      <xref linkend="voodoo-notes">.</entry>
+    <entry>Four 3dfx Voodoo graphics adapter models are supported now.
+      For more information see <xref linkend="voodoo-notes">.</entry>
   </row>
   <row>
     <entry>Plug&amp;play monitor</entry>
@@ -2435,10 +2433,10 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
     <row>
       <entry>--enable-voodoo</entry>
       <entry>no</entry>
-      <entry>Enable experimental 3dfx Voodoo Graphics emulation. The Voodoo1 is
-      known to work, the Voodoo2 support is not yet complete, but almost usable.
-      The Banshee / Voodoo3 support is under construction, but basically usable.
-      For more information see <xref linkend="voodoo-notes">.
+      <entry>Enable 3dfx Voodoo Graphics emulation. The Voodoo1 and Voodoo2 are
+      PCI add-on cards and the Banshee / Voodoo3 are VGA comaptible and can be
+      assigned to PCI or AGP. For more information see
+      <xref linkend="voodoo-notes">.
       </entry>
     </row>
     <row>
@@ -3707,12 +3705,10 @@ Example:
 <screen>
   voodoo: enabled=1, model=voodoo1
 </screen>
-This defines the Voodoo Graphics emulation (experimental). Currently
-supported models are 'voodoo1', 'voodoo2', 'banshee' and 'voodoo3'.
-The Voodoo2 support is not yet complete, but almost usable. The Banshee /
-Voodoo3 support is under construction, but basically usable. The 2D/3D cards
-require the vga extension option to be set to 'voodoo'. If the i440BX PCI
-chipset is selected, they can be assigned to AGP (slot #5). The GUI screen
+This defines the Voodoo Graphics emulation. Currently supported models are
+'voodoo1', 'voodoo2', 'banshee' and 'voodoo3'. The 2D/3D cards require the
+vga extension option to be set to 'voodoo'. If the i440BX PCI chipset is
+selected, they can be assigned to AGP (slot #5). The GUI screen
 update timing for all models is controlled by the related
 'vga' options. See <xref linkend="voodoo-notes"> for more information.
 </para>
