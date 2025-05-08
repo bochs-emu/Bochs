@@ -786,7 +786,7 @@ void bx_keyb_c::controller_enQ(Bit8u data, unsigned source)
 void bx_keyb_c::kbd_enQ_imm(Bit8u val)
 {
   if (BX_KEY_THIS s.kbd_internal_buffer.num_elements >= BX_KBD_ELEMENTS) {
-    BX_PANIC(("internal keyboard buffer full (imm)"));
+    BX_ERROR(("internal keyboard buffer full (imm) trying to enqueue 0x%02X", val));
     return;
   }
   BX_KEY_THIS s.kbd_controller.kbd_output_buffer = val;
@@ -1307,6 +1307,12 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
         controller_enQ(BX_KEY_THIS s.mouse.get_resolution_byte(), 1); // resolution
         controller_enQ(BX_KEY_THIS s.mouse.sample_rate, 1); // sample rate
         BX_DEBUG(("mouse: get mouse information"));
+        break;
+
+      case 0xe1: // Read secondary ID
+        controller_enQ(0xFA, 1); // ACK
+        controller_enQ(0x00, 1); // 0 = unknown, 1 = IBM TrackPoint (with one more byte)
+        BX_DEBUG(("mouse: read secondary ID returning 0x00"));
         break;
 
       case 0xeb: // Read Data (send a packet when in Remote Mode)

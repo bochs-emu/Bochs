@@ -148,7 +148,7 @@
 #  arrow_lake                 15th Gen Intel(R) Core(TM) Ultra 5 245K (ArrowLake)
 #
 #  ADD_FEATURES:
-#    Enable one of more CPU feature in the CPU configuration selected by MODEL.
+#    Enable one or more CPU features in the CPU configuration selected by MODEL.
 #    Could be useful for testing CPU with newer imaginary configurations by
 #    adding a specific feature or set of features to existing MODEL. The list 
 #    of features to add supplied through space or comma separated string.

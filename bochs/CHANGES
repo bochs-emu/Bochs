@@ -74,6 +74,9 @@ Detailed change log :
     - UHCI fix: USBCMD and USBSTS register accept byte writes
     - Changing device connected to USB port on the command line works again.
       Port options are reset in that case.
+  - Keyboard
+    - Change a Panic to an Error when trying to add a byte to the out-buffer
+    - Added the 0xE1 (Secondary ID) command
 
 - GUI and display libraries
   - Fixed buffer overflow when using keymap feature
