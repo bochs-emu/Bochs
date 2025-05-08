@@ -12,7 +12,9 @@ Detailed change log :
   - Added new command line option "-dbg_gui" to start Bochs debugger with gui.
     The dbg_gui option also supports "-dbg_gui:globalini" extension to use ini file from BXSHARE path for GUI debugger.
     Old "gui_debug" bochsrc option is deprecated and should not used anymore.
-  - Added new 'step over' button in Bochs debugger GUI to execute an instruction stepping over subroutines
+  - New 'step over' button in Bochs debugger GUI to execute an instruction stepping over subroutines
+  - New 'rla' command added to Bochs debugger
+    Usage: rla <addr> - continue until reaching the linear address <addr>
   - Speed up Bochs emulation with debugger enabled by ~10%
 
 - Configure and compile
