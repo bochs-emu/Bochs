@@ -511,8 +511,18 @@ Bit32u bx_pci_bridge_c::agp_aperture_read(bx_phy_address addr, unsigned len, boo
 bool bx_pci_bridge_c::agp_ap_write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
   bx_pci_bridge_c *class_ptr = (bx_pci_bridge_c*)param;
-  Bit32u value = *(Bit32u*)data;
-  class_ptr->agp_aperture_write(addr, value, len, 0);
+  if (len != 8) {
+    Bit32u value = *(Bit32u*)data;
+    class_ptr->agp_aperture_write(addr, value, len, 0);
+  } else {
+#ifdef BX_LITTLE_ENDIAN
+    class_ptr->agp_aperture_write(addr + 0, ((Bit32u*)data)[0], 4, 0);
+    class_ptr->agp_aperture_write(addr + 4, ((Bit32u*)data)[1], 4, 0);
+#else
+    class_ptr->agp_aperture_write(addr + 0, ((Bit32u*)data)[1], 4, 0);
+    class_ptr->agp_aperture_write(addr + 4, ((Bit32u*)data)[0], 4, 0);
+#endif
+  }
   return true;
 }
 
