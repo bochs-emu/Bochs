@@ -7231,7 +7231,7 @@ From here, you may use the following commands:
   next
   p
 
-  rla <addr>                  continue executing until the linear address <addr> is reached
+  rla   addr                  continue executing until the linear address 'addr' is reached
 
   Ctrl-C                      stop execution, and return to command line prompt
   Ctrl-D                      if at empty line on command line, exit
