@@ -688,6 +688,19 @@ bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
         (*((Bit8u*)data + 3) << 24);
       BX_DEBUG(("MMIO write to 0x%08x, value 0x%08x", offset, value));
       register_write32(offset, value);
+    } else if (len == 8) {
+      Bit64u value =
+        ((Bit64u)*((Bit8u*)data + 0) << 0) |
+        ((Bit64u)*((Bit8u*)data + 1) << 8) |
+        ((Bit64u)*((Bit8u*)data + 2) << 16) |
+        ((Bit64u)*((Bit8u*)data + 3) << 24) |
+        ((Bit64u)*((Bit8u*)data + 4) << 32) |
+        ((Bit64u)*((Bit8u*)data + 5) << 40) |
+        ((Bit64u)*((Bit8u*)data + 6) << 48) |
+        ((Bit64u)*((Bit8u*)data + 7) << 56);
+      BX_DEBUG(("MMIO write to 0x%08x, value 0x%016" FMT_64 "x", offset, value));
+      register_write32(offset, value);
+      register_write32(offset + 4, value >> 32);
     } else {
       BX_PANIC(("MMIO write len %d", len));
     }
