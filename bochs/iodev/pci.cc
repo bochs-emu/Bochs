@@ -455,19 +455,25 @@ bool bx_pci_bridge_c::agp_ap_read_handler(bx_phy_address addr, unsigned len,
                                           void *data, void *param)
 {
   bx_pci_bridge_c *class_ptr = (bx_pci_bridge_c*)param;
-  Bit32u value = class_ptr->agp_aperture_read(addr, len, 0);
+  Bit64u value = class_ptr->agp_aperture_read(addr, (len > 4) ? 4 : len, 0);
+  if (len > 4) {
+    value |= (((Bit64u)class_ptr->agp_aperture_read(addr + 4, len - 4, 0)) << 32);
+  }
   switch (len) {
     case 1:
       value &= 0xFF;
-      *((Bit8u *) data) = (Bit8u) value;
+      *((Bit8u *) data) = (Bit8u)value;
       break;
     case 2:
       value &= 0xFFFF;
-      *((Bit16u *) data) = (Bit16u) value;
+      *((Bit16u *) data) = (Bit16u)value;
       break;
     case 3:
     case 4:
-      *((Bit32u *) data) = value;
+      *((Bit32u *) data) = (Bit32u)value;
+      break;
+    case 8:
+      *((Bit64u *) data) = value;
       break;
     default:
       BX_ERROR(("Unsupported AGP aperture read length %d", len));

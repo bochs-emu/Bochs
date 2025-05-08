@@ -31,7 +31,7 @@ Detailed change log :
   - PCI (i440BX AGP)
     - AGP aperture access now correctly implemented
     - Fixed BCTRL and NBXCFG register
-    - AGP aperture read length of 3 and write length of 8 added
+    - AGP aperture read length of 3 and read/write length of 8 added
     - Mask out lower bits of the AGP GART entries
     - Added extended SMRAM control stub
   - ACPI
