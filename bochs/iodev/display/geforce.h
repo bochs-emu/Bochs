@@ -148,7 +148,7 @@ private:
 
   BX_GEFORCE_SMF Bit32u get_pixel(Bit32u obj, Bit32u ofs, Bit32u x, Bit32u cb);
   BX_GEFORCE_SMF void put_pixel(Bit32u obj, Bit32u ofs, Bit32u x, Bit32u cb, Bit32u value);
-  BX_GEFORCE_SMF void pixel_operation(Bit32u chid, Bit32u op, Bit32u* dstcolor, const Bit32u* srccolor);
+  BX_GEFORCE_SMF void pixel_operation(Bit32u chid, Bit32u op, Bit32u* dstcolor, const Bit32u* srccolor, Bit32u cb);
 
   BX_GEFORCE_SMF void gdi_fillrect(Bit32u chid, bool clipped);
   BX_GEFORCE_SMF void gdi_blit(Bit32u chid, Bit32u type);
