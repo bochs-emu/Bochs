@@ -900,9 +900,6 @@ void BX_CPU_C::init_tertiary_proc_based_vmexec_ctrls(void)
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_SPEC_CTRL_VIRTUALIZATION)) {
     cap->vmx_vmexec_ctrl3_supported_bits |= VMX_VM_EXEC_CTRL3_VIRTUALIZE_IA32_SPEC_CTRL;
   }
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX10_1) && BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX10_VL512)) {
-    cap->vmx_vmexec_ctrl3_supported_bits |= VMX_VM_EXEC_CTRL3_EMULATE_AVX10_VL256;
-  }
 }
 
 void BX_CPU_C::init_secondary_vmexit_ctrls(void)

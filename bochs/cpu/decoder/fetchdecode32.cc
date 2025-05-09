@@ -2069,15 +2069,6 @@ int BX_CPU_C::assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
 
 #if BX_SUPPORT_EVEX
   if ((op_flags & BX_PREPARE_EVEX) != 0) {
-    bool allow512 = BX_CPU_THIS_PTR cpuid->support_avx10_512();
-#if BX_SUPPORT_VMX
-    if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.vmexec_ctrls3.EMULATE_AVX10_VL256()) allow512 = false;
-#endif
-    if (! allow512 && i->getVL() == BX_VL512 && (op_flags & BX_EVEX_VL_IGNORE) == 0) {
-      BX_DEBUG(("%s: VL512 is not supported for this processor", i->getIaOpcodeNameShort()));
-      i->execute1 = &BX_CPU_C::BxError;
-    }
-
     if (i->getEvexb()) {
       if (! i->modC0()) {
         if ((op_flags & BX_PREPARE_EVEX_NO_BROADCAST) == BX_PREPARE_EVEX_NO_BROADCAST) {

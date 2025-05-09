@@ -120,7 +120,6 @@ x86_feature(BX_ISA_AMX_COMPLEX, "amx_complex")                          /* AMX-C
 x86_feature(BX_ISA_AMX_MOVRS, "amx_movrs")                              /* AMX-MOVRS Instructions */
 x86_feature(BX_ISA_AMX_AVX512, "amx_avx512")                            /* AMX-AVX512 Instructions */
 x86_feature(BX_ISA_AVX10_1, "avx10_1")                                  /* AVX10.1 Instructions */
-x86_feature(BX_ISA_AVX10_VL512, "avx10_vl512")                          /* AVX10 VL512 support */
 x86_feature(BX_ISA_AVX10_2, "avx10_2")                                  /* AVX10.2 Instructions */
 x86_feature(BX_ISA_AVX10_2_MOVRS, "avx10_2_movrs")                      /* AVX10.2 MOVRS Instructions */
 x86_feature(BX_ISA_XAPIC, "xapic")                                      /* XAPIC support */

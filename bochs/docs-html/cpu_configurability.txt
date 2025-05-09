@@ -805,12 +805,6 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Dependency: avx512
 
-- CPU Feature: avx10_vl512
-
- Support 512-bit vector length for AVX10.1
-
- Dependency: avx10_1
-
 - CPU Feature: avx10_2
 
  Introduce EVEX.U bit (previously must be '1) to enable embedded rounding for 256-bit reg/reg instructions.

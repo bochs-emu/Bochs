@@ -376,17 +376,15 @@ void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *
     //   [07:00]: AVX10 version
     //   [15:08]: reserved
     //   [16:16]: VL128 supported (always '1)
-    //   [17:17]: VL256 supported
-    //   [18:18]: VL512 supported
+    //   [17:17]: VL256 supported (always '1)
+    //   [18:18]: VL512 supported (always '1)
     //   [31:19]: reserved
     // ECX:
     //   [31:00]: reserved
     // EDX:
     //   [31:00]: reserved
     leaf->eax = 0;
-    leaf->ebx = avx10_level() | (1<<16) | (1<<17);
-    if (is_cpu_extension_supported(BX_ISA_AVX10_VL512))
-      leaf->ebx |= (1<<18);
+    leaf->ebx = avx10_level() | (1<<16) | (1<<17) | (1<<18);
     leaf->ecx = 0;
     leaf->edx = 0;
   }
@@ -401,10 +399,6 @@ unsigned bx_cpuid_t::avx10_level() const
   return 0;
 }
 #endif
-
-bool bx_cpuid_t::support_avx10_512() const {
-  return is_cpu_extension_supported(BX_ISA_AVX512) || is_cpu_extension_supported(BX_ISA_AVX10_VL512);
-}
 
 void bx_cpuid_t::get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_function_t *leaf, unsigned limited_max_leaf) const
 {
@@ -1558,8 +1552,6 @@ void bx_cpuid_t::sanity_checks() const
   // AVX10_VL512 or AVX10_2 -> AVX10_1 -> AVX2 -> AVX -> XSAVE -> SSE -> MMX
   if (is_cpu_extension_supported(BX_ISA_AVX10_2) && !is_cpu_extension_supported(BX_ISA_AVX10_1))
     BX_FATAL(("PANIC: AVX10_2 is reqired AVX10_1 to be enabled !"));
-  if (is_cpu_extension_supported(BX_ISA_AVX10_VL512) && !is_cpu_extension_supported(BX_ISA_AVX10_1))
-    BX_FATAL(("PANIC: AVX10_VL512 is enabled when AVX10 is not supported !"));
   if (is_cpu_extension_supported(BX_ISA_AVX10_1) && !is_cpu_extension_supported(BX_ISA_AVX2))
     BX_FATAL(("PANIC: AVX10 is enabled when AVX2 is not supported !"));
   if (is_cpu_extension_supported(BX_ISA_AVX512) && !is_cpu_extension_supported(BX_ISA_AVX2))
@@ -1661,9 +1653,6 @@ void bx_cpuid_t::sanity_checks() const
 
   // AMX -> AVX-512 or AVX10_VL512
   if (is_cpu_extension_supported(BX_ISA_AMX)) {
-    if (! is_cpu_extension_supported(BX_ISA_AVX512) && ! is_cpu_extension_supported(BX_ISA_AVX10_VL512))
-      BX_FATAL(("PANIC: AMX/TMUL must be disabled if both AVX-512 and AVX10.VL512 are not supported !"));
-
     if (is_cpu_extension_supported(BX_ISA_AMX_AVX512) && !is_cpu_extension_supported(BX_ISA_AVX10_2))
       BX_FATAL(("PANIC: AMX-AVX512 require AVX10_2 to be enabled !"));
   }
