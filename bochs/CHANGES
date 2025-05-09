@@ -1,6 +1,6 @@
 Changes after 3.0:
 
-  This CHANGES file updated with commits merged till 4 May 2025, please refer to git log for more recent updates
+  This CHANGES file updated with commits merged till 8 May 2025, please refer to git log for more recent updates
 
 Detailed change log :
 
@@ -12,7 +12,9 @@ Detailed change log :
   - Added new command line option "-dbg_gui" to start Bochs debugger with gui.
     The dbg_gui option also supports "-dbg_gui:globalini" extension to use ini file from BXSHARE path for GUI debugger.
     Old "gui_debug" bochsrc option is deprecated and should not used anymore.
-  - Added new 'step over' button in Bochs debugger GUI to execute an instruction stepping over subroutines
+  - New 'step over' button in Bochs debugger GUI to execute an instruction stepping over subroutines
+  - New 'rla' command added to Bochs debugger
+    Usage: rla <addr> - continue until reaching the linear address <addr>
   - Speed up Bochs emulation with debugger enabled by ~10%
 
 - Configure and compile
@@ -31,7 +33,6 @@ Detailed change log :
   - PCI (i440BX AGP)
     - AGP aperture access now correctly implemented
     - Fixed BCTRL and NBXCFG register
-    - AGP aperture read length of 3 and write length of 8 added
     - Mask out lower bits of the AGP GART entries
     - Added extended SMRAM control stub
   - ACPI
@@ -74,6 +75,9 @@ Detailed change log :
     - UHCI fix: USBCMD and USBSTS register accept byte writes
     - Changing device connected to USB port on the command line works again.
       Port options are reset in that case.
+  - Keyboard
+    - Change a Panic to an Error when trying to add a byte to the out-buffer
+    - Added the 0xE1 (Secondary ID) command
 
 - GUI and display libraries
   - Fixed buffer overflow when using keymap feature

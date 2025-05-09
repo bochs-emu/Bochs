@@ -52,8 +52,8 @@ public:
   static bool agp_ap_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   static bool agp_ap_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 
-  Bit32u agp_aperture_read(bx_phy_address addr, unsigned len, bool agp);
-  void   agp_aperture_write(bx_phy_address addr, Bit32u value, unsigned len, bool agp);
+  bool agp_aperture_read(bx_phy_address addr, unsigned len, Bit8u *data, bool agp);
+  bool agp_aperture_write(bx_phy_address addr, unsigned len, Bit8u *data, bool agp);
 
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 #if BX_DEBUGGER

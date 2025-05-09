@@ -118,6 +118,7 @@ void bx_dbg_unwatch_all(void);
 void bx_dbg_unwatch(bx_phy_address handle);
 void bx_dbg_continue_command(bool expression);
 void bx_dbg_stepN_command(int cpu, Bit32u count);
+int  bx_dbg_run_to_laddr(bx_address addr);
 void bx_dbg_set_auto_disassemble(bool enable);
 void bx_dbg_disassemble_switch_mode(void);
 void bx_dbg_set_disassemble_size(unsigned size);

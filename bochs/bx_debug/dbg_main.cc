@@ -4480,16 +4480,25 @@ void bx_dbg_step_over_command()
   }
 
   // calls, ints, loops and so on
-  int BpId = bx_dbg_lbreakpoint_command(bkStepOver, laddr + i.ilen(), NULL);
-  if (BpId == -1) {
+  if (bx_dbg_run_to_laddr(laddr + i.ilen()) == -1) {
     dbg_printf("bx_dbg_step_over_command:: Failed to set lbreakpoint !\n");
     return;
   }
+}
+
+int bx_dbg_run_to_laddr(bx_address laddr)
+{
+  // calls, ints, loops and so on
+  int BpId = bx_dbg_lbreakpoint_command(bkStepOver, laddr, NULL);
+  if (BpId == -1)
+    return -1;
 
   bx_dbg_continue_command(1);
 
   if (bx_dbg_del_lbreak(BpId))
     bx_dbg_breakpoint_changed();
+
+  return 1;
 }
 
 unsigned bx_dbg_disasm_wrapper(bool is_32, bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf, int disasm_style)

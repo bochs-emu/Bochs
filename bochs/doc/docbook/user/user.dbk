@@ -7227,6 +7227,12 @@ From here, you may use the following commands:
   s     all [count]           for SMP simulation, execute count instructions on all cpus
   step  all [count]
 
+  n                           execute instruction stepping over subroutines
+  next
+  p
+
+  rla   addr                  continue executing until the linear address 'addr' is reached
+
   Ctrl-C                      stop execution, and return to command line prompt
   Ctrl-D                      if at empty line on command line, exit
 

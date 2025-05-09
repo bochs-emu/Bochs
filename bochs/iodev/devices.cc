@@ -1568,8 +1568,7 @@ void bx_pci_device_c::init_pci_conf(Bit16u vid, Bit16u did, Bit8u rev,
   pci_conf[0x3d] = intpin;
 }
 
-void bx_pci_device_c::init_bar_io(Bit8u num, Bit16u size, bx_read_handler_t rh,
-                                  bx_write_handler_t wh, const Bit8u *mask)
+void bx_pci_device_c::init_bar_io(Bit8u num, Bit16u size, bx_read_handler_t rh, bx_write_handler_t wh, const Bit8u *mask)
 {
   if (num < 6) {
     pci_bar[num].type = BX_PCI_BAR_TYPE_IO;
@@ -1581,8 +1580,7 @@ void bx_pci_device_c::init_bar_io(Bit8u num, Bit16u size, bx_read_handler_t rh,
   }
 }
 
-void bx_pci_device_c::init_bar_mem(Bit8u num, Bit32u size, memory_handler_t rh,
-                                   memory_handler_t wh)
+void bx_pci_device_c::init_bar_mem(Bit8u num, Bit32u size, memory_handler_t rh, memory_handler_t wh)
 {
   if (num < 6) {
     pci_bar[num].type = BX_PCI_BAR_TYPE_MEM;
@@ -1638,8 +1636,7 @@ void bx_pci_device_c::after_restore_pci_state(memory_handler_t mem_read_handler)
     }
   }
   if (pci_rom_size > 0) {
-    if (DEV_pci_set_base_mem(this, mem_read_handler, NULL, &pci_rom_address,
-                             &pci_conf[0x30], pci_rom_size)) {
+    if (DEV_pci_set_base_mem(this, mem_read_handler, NULL, &pci_rom_address, &pci_conf[0x30], pci_rom_size)) {
       BX_INFO(("new ROM address: 0x%08x", pci_rom_address));
     }
   }
