@@ -80,7 +80,7 @@ void bx_piix3_c::init(void)
   DEV_register_pci_handlers(this, &BX_P2I_THIS s.devfunc, BX_PLUGIN_PCI2ISA,
       "PIIX3 PCI-to-ISA bridge");
 
-  DEV_register_iowrite_handler(this, write_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge", 1);
+  DEV_register_iowrite_handler(this, write_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge", 3);
   DEV_register_iowrite_handler(this, write_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge", 1);
   DEV_register_iowrite_handler(this, write_handler, 0x04D0, "PIIX3 PCI-to-ISA bridge", 1);
   DEV_register_iowrite_handler(this, write_handler, 0x04D1, "PIIX3 PCI-to-ISA bridge", 1);
@@ -288,6 +288,9 @@ void bx_piix3_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_ERROR(("write 0x%02x: APM command register not supported without ACPI", value));
       }
       BX_P2I_THIS s.apmc = value & 0xff;
+      if (io_len == 2) {
+        BX_P2I_THIS s.apms = (Bit8u)(value >> 8);
+      }
       break;
     case 0x00b3:
       BX_P2I_THIS s.apms = value & 0xff;

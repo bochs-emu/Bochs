@@ -34,6 +34,7 @@ Detailed change log :
     - AGP aperture access now correctly implemented
     - Fixed BCTRL and NBXCFG register
     - Mask out lower bits of the AGP GART entries
+    - Enable 16-bit writes to APM control port (used by real BIOS)
     - Added extended SMRAM control stub
   - ACPI
     - Fixed ACPI timer in normal and realtime mode
