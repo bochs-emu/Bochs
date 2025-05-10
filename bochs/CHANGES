@@ -27,6 +27,7 @@ Detailed change log :
 
 - Memory
   - Added support for overlapping r/o memory handlers (used for PCI ROM)
+  - Added support for mapping PCI ROM to expansion ROM space
 
 - I/O Devices
   - PCI (general)

@@ -830,6 +830,9 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
     memory_handler->end = end_addr;
     memory_handler->bitmap = bitmap;
     memory_handler->overlap = overlap;
+    if ((begin_addr >= 0xc0000) && (end_addr < 0xe0000)) {
+      bx_pc_system.MemoryMappingChanged();
+    }
   }
   return true;
 }
