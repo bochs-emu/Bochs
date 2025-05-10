@@ -25,6 +25,9 @@ Detailed change log :
 - Config interface
   - On Windows make sure file name parameters use backslash as separator
 
+- Memory
+  - Added support for overlapping r/o memory handlers (used for PCI ROM)
+
 - I/O Devices
   - PCI (general)
     - Rewrite of the IRQ signal handling for PCI / ACPI
