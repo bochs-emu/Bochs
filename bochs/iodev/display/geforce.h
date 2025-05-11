@@ -144,6 +144,7 @@ private:
   BX_GEFORCE_SMF void execute_ifc(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_surf2d(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_iifc(Bit32u chid, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_beta(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_sifm(Bit32u chid, Bit32u method, Bit32u param);
 
   BX_GEFORCE_SMF Bit32u get_pixel(Bit32u obj, Bit32u ofs, Bit32u x, Bit32u cb);
@@ -299,6 +300,8 @@ private:
     Bit32u m2mf_buffer_notify;
 
     Bit8u  rop;
+
+    Bit32u beta;
 
     Bit32u chroma_color_fmt;
     Bit32u chroma_color;

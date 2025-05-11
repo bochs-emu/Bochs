@@ -384,6 +384,8 @@ void bx_geforce_c::svga_init_members()
 
     BX_GEFORCE_THIS chs[i].rop = 0;
 
+    BX_GEFORCE_THIS chs[i].beta = 0;
+
     BX_GEFORCE_THIS chs[i].chroma_color_fmt = 0;
     BX_GEFORCE_THIS chs[i].chroma_color = 0;
 
@@ -2198,11 +2200,31 @@ void bx_geforce_c::pixel_operation(Bit32u chid, Bit32u op, Bit32u* dstcolor, con
     }
   } else if (op == 5 && cb == 4) {
     if (*srccolor) {
-      Bit8u alpha = *srccolor >> 24;
-      Bit8u b = ((*dstcolor & 0xFF) * (0xFF - alpha) >> 8) + (*srccolor & 0xFF);
-      Bit8u g = ((*dstcolor >> 8 & 0xFF) * (0xFF - alpha) >> 8) + (*srccolor >> 8 & 0xFF);
-      Bit8u r = ((*dstcolor >> 16 & 0xFF) * (0xFF - alpha) >> 8) + (*srccolor >> 16 & 0xFF);
-      *dstcolor = b << 0 | g << 8 | r << 16;
+      Bit8u sb = *srccolor;
+      Bit8u sg = *srccolor >> 8;
+      Bit8u sr = *srccolor >> 16;
+      Bit8u sa = *srccolor >> 24;
+      Bit32u beta = BX_GEFORCE_THIS chs[chid].beta;
+      if (beta != 0xFFFFFFFF) {
+        Bit8u bb = beta;
+        Bit8u bg = beta >> 8;
+        Bit8u br = beta >> 16;
+        Bit8u ba = beta >> 24;
+        sb = sb * bb / 0xFF;
+        sg = sg * bg / 0xFF;
+        sr = sr * br / 0xFF;
+        sa = sa * ba / 0xFF;
+      }
+      Bit8u db = *dstcolor;
+      Bit8u dg = *dstcolor >> 8;
+      Bit8u dr = *dstcolor >> 16;
+      Bit8u da = *dstcolor >> 24;
+      Bit8u isa = 0xFF - sa;
+      Bit8u b = BX_MIN(db * isa / 0xFF + sb, 0xFF);
+      Bit8u g = BX_MIN(dg * isa / 0xFF + sg, 0xFF);
+      Bit8u r = BX_MIN(dr * isa / 0xFF + sr, 0xFF);
+      Bit8u a = BX_MIN(da * isa / 0xFF + sa, 0xFF);
+      *dstcolor = b << 0 | g << 8 | r << 16 | a << 24;
     }
   } else {
     *dstcolor = *srccolor;
@@ -2687,8 +2709,8 @@ void bx_geforce_c::execute_surf2d(Bit32u chid, Bit32u method, Bit32u param)
     else if (BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 4) // R5G6B5
       BX_GEFORCE_THIS chs[chid].s2d_color_bytes = 2;
     else if (BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 0x6 || // X8R8G8B8_Z8R8G8B8
-     BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 0xA || // A8R8G8B8
-     BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 0xB)   // Y32
+             BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 0xA || // A8R8G8B8
+             BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 0xB)   // Y32
       BX_GEFORCE_THIS chs[chid].s2d_color_bytes = 4;
     else {
       BX_ERROR(("unknown 2d surface color format: 0x%02x",
@@ -2751,6 +2773,12 @@ void bx_geforce_c::execute_iifc(Bit32u chid, Bit32u method, Bit32u param)
       BX_GEFORCE_THIS chs[chid].iifc_words = nullptr;
     }
   }
+}
+
+void bx_geforce_c::execute_beta(Bit32u chid, Bit32u method, Bit32u param)
+{
+  if (method == 0x0c0)
+    BX_GEFORCE_THIS chs[chid].beta = param;
 }
 
 void bx_geforce_c::execute_sifm(Bit32u chid, Bit32u method, Bit32u param)
@@ -2895,6 +2923,8 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
           execute_surf2d(chid, method, param);
         else if (cls == 0x64)
           execute_iifc(chid, method, param);
+        else if (cls == 0x72)
+          execute_beta(chid, method, param);
         else if (cls == 0x89)
           execute_sifm(chid, method, param);
         if (BX_GEFORCE_THIS chs[chid].notify_pending) {
