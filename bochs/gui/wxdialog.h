@@ -25,6 +25,9 @@
 #include <wx/spinctrl.h>
 #include <wx/notebook.h>
 
+// log event types for both log options dialogs
+#define LOG_OPTS_N_TYPES 5
+
 ////////////////////////////////////////////////////////////////////
 // text messages used in several places
 ////////////////////////////////////////////////////////////////////
@@ -151,7 +154,6 @@ private:
 "the keyboard, you could ask for debug and info events from the keyboard\n"   \
 "to be reported.")
 #define ADVLOG_OPTS_TYPE_NAMES { wxT("Debug"), wxT("Info"), wxT("Warn"), wxT("Error"), wxT("Panic") }
-#define ADVLOG_OPTS_N_TYPES 5
 #define ADVLOG_DEFAULTS wxT("Use defaults for all devices")
   void Init();  // called automatically by ShowModal()
   void ShowHelp();
@@ -353,8 +355,7 @@ class LogOptionsDialog : public ParamDialog
 private:
 #define LOG_OPTS_TITLE wxT("Configure Log Events")
 #define LOG_OPTS_PROMPT wxT("How should Bochs respond to each type of event?")
-#define LOG_OPTS_TYPE_NAMES { wxT("Debug events"), wxT("Info events"), wxT("Error events"), wxT("Panic events") }
-#define LOG_OPTS_N_TYPES 4
+#define LOG_OPTS_TYPE_NAMES { wxT("Debug events"), wxT("Info events"), wxT("Warn events"), wxT("Error events"), wxT("Panic events") }
 #define LOG_OPTS_CHOICES { wxT("ignore"), wxT("log"), wxT("warn user"), wxT("ask user"), wxT("end simulation"), wxT("no change") }
 #define LOG_OPTS_N_CHOICES_NORMAL 5
 #define LOG_OPTS_N_CHOICES 6   // number of choices, including "no change"
