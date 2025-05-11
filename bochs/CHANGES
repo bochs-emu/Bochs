@@ -99,6 +99,7 @@ Detailed change log :
   - Fixes in AGP i/o and memory regions init
   - Fixed CHS assignment in int13_edd function
   - Fixed floppy media state for legacy drive types
+  - Legacy BIOS now can be used with a PCI VGABIOS
 
 - Misc
   - Added Linux manual page for the bxhub utility

@@ -3597,10 +3597,6 @@ startup if existing and saved on exit if modified. The Bochs BIOS doesn't
 this feature yet.
 </para>
 <note><para>
-  If you use the BIOS-bochs-legacy romimage BIOS option, you cannot use a PCI
-  enabled VGA ROM BIOS.
-</para></note>
-<note><para>
   If you use a SeaBIOS binary in romimage BIOS option, you must use a PCI
   enabled VGA ROM BIOS.
 </para></note>
@@ -3620,8 +3616,7 @@ This tells Bochs what VGA ROM BIOS to load (at 0xC0000).
 are provided in the source and binary distributions.</para>
 <note><para>
   Please check with the <link linkend="bochsopt-vga">vga option</link> to decide
-  what VGA BIOS to use. If you use the BIOS-bochs-legacy romimage BIOS option,
-  you cannot use a PCI enabled VGA ROM BIOS.
+  what VGA BIOS to use.
 </para></note>
 </section>
 
