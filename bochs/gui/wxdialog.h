@@ -2,7 +2,7 @@
 // $Id$
 ////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -150,8 +150,8 @@ private:
 "from a particular source.  For example if you are having problems with\n"    \
 "the keyboard, you could ask for debug and info events from the keyboard\n"   \
 "to be reported.")
-#define ADVLOG_OPTS_TYPE_NAMES { wxT("Debug"), wxT("Info"), wxT("Error"), wxT("Panic") }
-#define ADVLOG_OPTS_N_TYPES 4
+#define ADVLOG_OPTS_TYPE_NAMES { wxT("Debug"), wxT("Info"), wxT("Warn"), wxT("Error"), wxT("Panic") }
+#define ADVLOG_OPTS_N_TYPES 5
 #define ADVLOG_DEFAULTS wxT("Use defaults for all devices")
   void Init();  // called automatically by ShowModal()
   void ShowHelp();

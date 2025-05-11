@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2019  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -204,7 +204,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
   }
 
   if (! BX_CPU_THIS_PTR get_IF()) {
-    BX_INFO(("WARNING: HLT instruction with IF=0!"));
+    BX_WARN(("HLT instruction with IF=0!"));
   }
 
 #if BX_SUPPORT_VMX

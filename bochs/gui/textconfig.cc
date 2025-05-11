@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2024  The Bochs Project
+//  Copyright (C) 2002-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -580,15 +580,15 @@ static void bx_print_log_action_table()
 {
   // just try to print all the prefixes first.
   bx_printf("Current log settings:\n");
-  bx_printf("                 Debug      Info       Error       Panic\n");
-  bx_printf("ID    Device     Action     Action     Action      Action\n");
-  bx_printf("----  ---------  ---------  ---------  ----------  ----------\n");
+  bx_printf("                 Debug      Info       Warn       Error      Panic\n");
+  bx_printf("ID    Device     Action     Action     Action     Action     Action\n");
+  bx_printf("----  ---------  ---------  ---------  ---------  ---------  ----------\n");
   int i, j, imax=SIM->get_n_log_modules();
   for (i=0; i<imax; i++) {
     if (strcmp(SIM->get_prefix(i), BX_NULL_PREFIX)) {
-      bx_printf("%3d.  %s ", i, SIM->get_prefix(i));
+      bx_printf("%3d.  %s   ", i, SIM->get_prefix(i));
       for (j=0; j<SIM->get_max_log_level(); j++) {
-        bx_printf("%10s ", SIM->get_action_name(SIM->get_log_action(i, j)));
+        bx_printf("%-10s ", SIM->get_action_name(SIM->get_log_action(i, j)));
       }
       bx_printf("\n");
     }

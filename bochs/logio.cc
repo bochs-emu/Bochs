@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -45,6 +45,7 @@ const char* iofunctions::getlevel(int i) const
   static const char *loglevel[N_LOGLEV] = {
     "DEBUG",
     "INFO",
+    "WARN",
     "ERROR",
     "PANIC"
   };
@@ -313,6 +314,7 @@ int logfunctions::default_onoff[N_LOGLEV] =
 {
   ACT_IGNORE,  // ignore debug
   ACT_REPORT,  // report info
+  ACT_WARN,    // on warn, show message box
   ACT_REPORT,  // report error
 #if BX_WITH_SDL2 || BX_WITH_WX || BX_WITH_WIN32 || BX_WITH_X11
   ACT_ASK      // on panic, ask user what to do
@@ -419,6 +421,27 @@ void logfunctions::info(const char *fmt, ...)
   // the actions warn(), ask() and fatal() are not supported here
 }
 
+void logfunctions::lwarn(const char *fmt, ...)
+{
+  va_list ap;
+
+  assert(logio != NULL);
+
+  if (onoff[LOGLEV_WARN] == ACT_IGNORE) return;
+
+  va_start(ap, fmt);
+  logio->out(LOGLEV_INFO, prefix, fmt, ap);
+  va_end(ap);
+
+  if (onoff[LOGLEV_WARN] == ACT_WARN) {
+    va_start(ap, fmt);
+    warn(LOGLEV_WARN, prefix, fmt, ap);
+    va_end(ap);
+  }
+
+  // the actions ask() and fatal() are not supported here
+}
+
 void logfunctions::error(const char *fmt, ...)
 {
   va_list ap;
@@ -513,10 +536,14 @@ void logfunctions::warn(int level, const char *prefix, const char *fmt, va_list 
 
   // ensure the text screen is showing
   SIM->set_display_mode(DISP_MODE_CONFIG);
-  int val = SIM->log_dlg(prefix, level, buf1, BX_LOG_DLG_WARN);
-  if (val == BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS) {
-    // user said continue, and don't "ask" for this facility again.
-    setonoff(level, ACT_REPORT);
+  if (level == LOGLEV_WARN) {
+    SIM->message_box("WARNING", buf1);
+  } else {
+    int val = SIM->log_dlg(prefix, level, buf1, BX_LOG_DLG_WARN);
+    if (val == BX_LOG_ASK_CHOICE_CONTINUE_ALWAYS) {
+      // user said continue, and don't "ask" for this facility again.
+      setonoff(level, ACT_REPORT);
+    }
   }
   // return to simulation mode
   SIM->set_display_mode(DISP_MODE_SIM);

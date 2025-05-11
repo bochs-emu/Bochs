@@ -581,6 +581,7 @@ void bx_init_options()
   bx_list_c *logfn = new bx_list_c(menu, "logfn", "Logfunctions");
   new bx_list_c(logfn, "debug", "");
   new bx_list_c(logfn, "info", "");
+  new bx_list_c(logfn, "warn", "");
   new bx_list_c(logfn, "error", "");
   new bx_list_c(logfn, "panic", "");
 
@@ -2144,6 +2145,8 @@ static Bit32s parse_log_options(const char *context, int num_params, char *param
     level = LOGLEV_PANIC;
   } else if (!strcmp(params[0], "error")) {
     level = LOGLEV_ERROR;
+  } else if (!strcmp(params[0], "warn")) {
+    level = LOGLEV_WARN;
   } else if (!strcmp(params[0], "info")) {
     level = LOGLEV_INFO;
   } else { /* debug */
@@ -2794,6 +2797,13 @@ static int parse_line_formatted(const char *context, int num_params, char *param
   } else if (!strcmp(params[0], "error")) {
     if (num_params < 2) {
       PARSE_ERR(("%s: error directive malformed.", context));
+    }
+    if (parse_log_options(context, num_params, params) < 0) {
+      return -1;
+    }
+  } else if (!strcmp(params[0], "warn")) {
+    if (num_params < 2) {
+      PARSE_ERR(("%s: info directive malformed.", context));
     }
     if (parse_log_options(context, num_params, params) < 0) {
       return -1;
