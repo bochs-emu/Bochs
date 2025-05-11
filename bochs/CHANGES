@@ -4,6 +4,10 @@ Changes after 3.0:
 
 Detailed change log :
 
+- General
+  - Added new log level "warn" for important infos shown with a message box.
+    In the code BX_WARN is used and it is configurable like other log levels.
+
 - CPU emulation and instrumentation
   - CPU: Implemented MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS, (AMX TRANSPOSE MOVRS still not implemented)
   - Added new BX_INSTR_CPUID instrumentation callback, see instrumentation.txt doc for description
@@ -25,6 +29,10 @@ Detailed change log :
 - Config interface
   - On Windows make sure file name parameters use backslash as separator
 
+- Memory
+  - Added support for overlapping r/o memory handlers (used for PCI ROM)
+  - Added support for mapping PCI ROM to expansion ROM space
+
 - I/O Devices
   - PCI (general)
     - Rewrite of the IRQ signal handling for PCI / ACPI
@@ -34,6 +42,7 @@ Detailed change log :
     - AGP aperture access now correctly implemented
     - Fixed BCTRL and NBXCFG register
     - Mask out lower bits of the AGP GART entries
+    - Enable 16-bit writes to APM control port (used by real BIOS)
     - Added extended SMRAM control stub
   - ACPI
     - Fixed ACPI timer in normal and realtime mode

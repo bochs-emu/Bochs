@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  I/O memory handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -104,6 +104,7 @@ struct memory_handler_struct {
   bx_phy_address begin;
   bx_phy_address end;
   Bit16u bitmap;
+  bool overlap;
   memory_handler_t read_handler;
   memory_handler_t write_handler;
   memory_direct_access_handler_t da_handler;

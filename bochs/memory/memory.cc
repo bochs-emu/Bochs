@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -209,7 +209,18 @@ void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
           memory_handler->end >= a20addr &&
           memory_handler->read_handler(a20addr, len, data, memory_handler->param))
     {
-      return;
+#if BX_SUPPORT_PCI
+      if (BX_MEM_THIS pci_enabled && ((a20addr & 0xfffc0000) == 0x000c0000)) {
+        unsigned area = (unsigned)(a20addr >> 14) & 0x0f;
+        if (area > BX_MEM_AREA_F0000) area = BX_MEM_AREA_F0000;
+        if (BX_MEM_THIS memory_type[area][0] == 0) { // Read from ROM
+          return;
+        }
+      } else
+#endif
+      {
+        return;
+      }
     }
     memory_handler = memory_handler->next;
   }

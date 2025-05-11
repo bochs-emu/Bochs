@@ -65,11 +65,14 @@ BEGIN
     LTEXT           "Info events", IDLOGLBL2, 80, 47, 55, 14
     COMBOBOX        IDLOGEVT2, 155, 45, 65, 56, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Error events", IDLOGLBL3, 80, 67, 55, 14
+    LTEXT           "Warn events", IDLOGLBL3, 80, 67, 55, 14
     COMBOBOX        IDLOGEVT3, 155, 65, 65, 56, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Panic events", IDLOGLBL4, 80, 87, 55, 14
+    LTEXT           "Error events", IDLOGLBL4, 80, 87, 55, 14
     COMBOBOX        IDLOGEVT4, 155, 85, 65, 56, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Panic events", IDLOGLBL5, 80, 107, 55, 14
+    COMBOBOX        IDLOGEVT5, 155, 105, 65, 56, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX    "Specify log options per device", IDADVLOGOPT, 50, 135, 112, 14, BS_LEFTTEXT | WS_TABSTOP
     DEFPUSHBUTTON   "OK", IDOK, 35, 155, 50, 14

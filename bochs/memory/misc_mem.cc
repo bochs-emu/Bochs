@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  I/O memory handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -797,9 +797,11 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
     return false;
   if (!read_handler) // allow NULL write and fetch handler
     return false;
+  bool ro_handler = (!write_handler && !da_handler);
   BX_INFO(("Register memory access handlers: 0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX, begin_addr, end_addr));
   for (Bit32u page_idx = (Bit32u)(begin_addr >> 20); page_idx <= (Bit32u)(end_addr >> 20); page_idx++) {
     Bit16u bitmap = 0xffff;
+    bool overlap = false;
     if (begin_addr > (page_idx << 20)) {
       bitmap &= (0xffff << ((begin_addr >> 16) & 0xf));
     }
@@ -807,7 +809,10 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
       bitmap &= (0xffff >> (0x0f - ((end_addr >> 16) & 0xf)));
     }
     if (BX_MEM_THIS memory_handlers[page_idx] != NULL) {
-      if ((bitmap & BX_MEM_THIS memory_handlers[page_idx]->bitmap) != 0) {
+      if (((bitmap & BX_MEM_THIS memory_handlers[page_idx]->bitmap) == bitmap) && ro_handler) {
+        BX_INFO(("Registering overlapping r/o memory handler"));
+        overlap = true;
+      } else if ((bitmap & BX_MEM_THIS memory_handlers[page_idx]->bitmap) != 0) {
         BX_ERROR(("Register failed: overlapping memory handlers!"));
         return false;
       } else {
@@ -824,6 +829,10 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
     memory_handler->begin = begin_addr;
     memory_handler->end = end_addr;
     memory_handler->bitmap = bitmap;
+    memory_handler->overlap = overlap;
+    if ((begin_addr >= 0xc0000) && (end_addr < 0xe0000)) {
+      bx_pc_system.MemoryMappingChanged();
+    }
   }
   return true;
 }
@@ -854,12 +863,17 @@ bool BX_MEM_C::unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, 
     if (!memory_handler) {
       ret = false;  // we should have found it
       continue; // anyway, try the other pages
+    } else if (memory_handler->overlap) {
+      BX_INFO(("Unregistering overlapping r/o memory handler"));
     }
     if (prev)
       prev->next = memory_handler->next;
     else
       BX_MEM_THIS memory_handlers[page_idx] = memory_handler->next;
     delete memory_handler;
+    if ((begin_addr >= 0xc0000) && (end_addr < 0xe0000)) {
+      bx_pc_system.MemoryMappingChanged();
+    }
   }
   return ret;
 }

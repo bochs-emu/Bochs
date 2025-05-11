@@ -129,6 +129,8 @@ typedef enum {
 #define BX_LOG_OPTS_EXCLUDE(type, choice)  (             \
    /* can't die, ask or warn, on debug or info events */ \
    (type <= LOGLEV_INFO && (choice >= ACT_WARN))         \
+   /* can't die or ask, on warn events */                \
+   || (type == LOGLEV_WARN && (choice > ACT_WARN))       \
    /* can't ignore panics */                             \
    || (type == LOGLEV_PANIC && choice == ACT_IGNORE)     \
    )
