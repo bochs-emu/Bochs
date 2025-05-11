@@ -871,6 +871,9 @@ bool BX_MEM_C::unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, 
     else
       BX_MEM_THIS memory_handlers[page_idx] = memory_handler->next;
     delete memory_handler;
+    if ((begin_addr >= 0xc0000) && (end_addr < 0xe0000)) {
+      bx_pc_system.MemoryMappingChanged();
+    }
   }
   return ret;
 }
