@@ -735,12 +735,13 @@ log: bochsout.txt
 #=======================================================================
 # LOG CONTROLS
 #
-# Bochs has four severity levels for event logging.
+# Bochs has fife severity levels for event logging.
 #   panic: cannot proceed.  If you choose to continue after a panic,
 #          don't be surprised if you get strange behavior or crashes.
 #   error: something went wrong, but it is probably safe to continue the
 #          simulation.
-#   info: interesting or useful messages.
+#   warn:  important messages, by default show a message box for it.
+#   info:  interesting or useful messages.
 #   debug: messages useful only when debugging the code.  This may
 #          spit out thousands per second.
 #

@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "05 May 2025" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "11 May 2025" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -785,6 +785,19 @@ information  to the log file),  or ignore  (do nothing).
 Example:
   error: action=report
   error: action=warn
+
+
+.TP
+.I "warn:"
+This level can be used to show import messages to the
+user. By default it brings up a message box. The reason
+for this condition can be different. It can be originally
+caused by a bug or missing feature in the emulation, but
+other reasons are also possible.
+
+Example:
+  warn: action=report
+
 
 .TP
 .I "info:"

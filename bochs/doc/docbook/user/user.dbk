@@ -4234,33 +4234,35 @@ Default is %t%e%d
 </para>
 </section>
 
-<section id="bochsopt-debug-info-error-panic"><title>debug/info/error/panic</title>
+<section id="bochsopt-logevents"><title>debug/info/warn/error/panic</title>
 <para>
 Examples:
 <screen>
   debug: action=ignore, pci=report
   info: action=report
+  warn: action=warn
   error: action=report
   panic: action=ask
 </screen>
 
 During simulation, Bochs encounters certain events that the user might want to
-know about.  These events are divided into four levels of importance: debug,
-info, error, and panic.  Debug messages are usually only useful when writing
+know about.  These events are divided into five levels of importance: debug,
+info, warn, error, and panic.  Debug messages are usually only useful when writing
 Bochs code or when trying to locate a problem.  There may be thousands of debug
 messages per second, so be careful before turning them on.  Info messages tell
-about interesting events that don't happen that frequently.  Bochs produces an
-"error" message when it finds a condition that really shouldn't happen,  but
-doesn't endanger the simulation.  An example of an error might be if the
-emulated software produces an illegal disk command.  Panic messages mean that
-Bochs cannot simulate correctly and should probably shut down.
-A panic can be a configuration problem (like a misspelled bochsrc line) or an
-emulation problem (like an unsupported video mode).
+about interesting events that don't happen that frequently. Warn events can be
+used to show important messages to the user. By default it brings up a
+message box. Bochs produces an "error" message when it finds a condition that
+really shouldn't happen,  but doesn't endanger the simulation.  An example of
+an error might be if the emulated software produces an illegal disk command.
+Panic messages mean that Bochs cannot simulate correctly and should probably
+shut down. A panic can be a configuration problem (like a misspelled bochsrc
+line) or an emulation problem (like an unsupported video mode).
 </para>
 
 <para>
-The debug, info, error, and panic lines in the bochsrc control what Bochs will
-do when it encounters each type of event.  The allowed actions are: fatal
+The debug, info, warn, error, and panic lines in the bochsrc control what Bochs
+will do when it encounters each type of event.  The allowed actions are: fatal
 (terminate Bochs), ask (ask the user what to do), warn (show dialog with message
 and continue), report (print information to the console or log file), or ignore
 (do nothing). The recommended settings are listed in the sample above.
@@ -5382,7 +5384,7 @@ steps are done before the simulation is running.
 <para>
 During simulation, Bochs usually generates more or less log output. By default, it
 is sent to the console, otherwise to the specified <link linkend="bochsopt-log">log file</link>.
-The amount of output can be controlled with the <link linkend="bochsopt-debug-info-error-panic">log options</link>
+The amount of output can be controlled with the <link linkend="bochsopt-logevents">log options</link>
 in bochsrc, the start menu and the runtime configuration.
 </para>
 <para>
@@ -6889,7 +6891,7 @@ bit will be clear, so the next TD will be processed anyway.
     </para>
     <para>
       You can tell Bochs what to do in case of a panic, by re-configuring the
-      <link linkend="bochsopt-debug-info-error-panic">panic option</link>. If
+      <link linkend="bochsopt-logevents">panic option</link>. If
       you change the action to "ask", Bochs reports what has happened and asks
       you what to do. The appearance of the "ask" feature depends on the display
       library used and the platform. Some display libraries don't support it at all.
