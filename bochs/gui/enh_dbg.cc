@@ -831,7 +831,6 @@ int FillMMX(int LineCount)
         Bit64u mmreg = 0;
         if (p != NULL)
             mmreg = p->get64(); // get the value of "mmx(i)" register
-printf("PARAM_FP[%d}: %016llx\n", i, mmreg);
         sprintf (fputxt + 10, Fmt64b[UprCase], mmreg);
 
         p = RegObject[CurrentCPU][ST0_exp + i];
