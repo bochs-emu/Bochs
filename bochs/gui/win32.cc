@@ -676,7 +676,9 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   }
 
   win32_nokeyrepeat = gui_opts.nokeyrepeat;
+#if BX_SHOW_IPS
   hideIPS = gui_opts.hide_ips;
+#endif
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
   if (bx_dbg.debugger_active && bx_dbg.debugger_gui) {
     if (gui_ci) {

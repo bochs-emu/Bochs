@@ -10191,7 +10191,6 @@ pci_real_select_reg:
   pop dx
   ret
 
-#if BX_ROMBIOS32
 pci_set_pam_regs_ro:
   xor  bx, bx
   mov  di, #0x5a
@@ -10208,7 +10207,6 @@ pci_next_pam_reg:
   cmp  di, #0x5e
   jne pci_set_pam_regs_loop
   ret
-#endif
 
 .align 16
 pci_routing_table_structure:
@@ -10320,6 +10318,58 @@ pcibios_init_sel_reg:
   pop eax
   ret
 
+pcibios_init_vgarom:
+  push bx
+  mov  ecx, eax
+  xor  bx, bx
+  mov  dl, #0x58
+  call pcibios_init_sel_reg
+  mov  dx, #0x0cfe
+  in   ax, dx
+  mov  al, #0x22
+  cmp  ecx, #0x8000
+  jbe  set_pam1
+  mov  ah, #0x22
+set_pam1:
+  out  dx, ax
+  pop  bx
+  mov  dl, #0x30
+  call pcibios_init_sel_reg
+  mov  dx, #0x0cfc
+  mov  eax, #0x000c0001
+  out  dx, eax
+  push ds
+  mov  ax, #0xc000
+  mov  ds, ax
+  mov  es, ax
+  xor  si, si
+  xor  di, di
+  push ecx
+  shr  ecx, #1
+  rep
+    movsw
+  pop  ecx
+  pop  ds
+  push bx
+  xor  bx, bx
+  mov  dl, #0x58
+  call pcibios_init_sel_reg
+  mov  dx, #0x0cfe
+  in   ax, dx
+  or   al, #0x11
+  cmp  ecx, #0x8000
+  jbe  set_pam2
+  or   ah, #0x11
+set_pam2:
+  out  dx, ax
+  pop  bx
+  mov  dl, #0x30
+  call pcibios_init_sel_reg
+  mov  dx, #0x0cfc
+  xor  eax, eax
+  out  dx, eax
+  ret
+
 pcibios_init_iomem_bases:
   push bp
   mov  bp, sp
@@ -10394,6 +10444,25 @@ enable_iomem_space:
   in   al, dx
   or   al, #0x03
   out  dx, al
+  mov  dl, #0x0a ;; check class code
+  call pcibios_init_sel_reg
+  mov  dx, #0x0cfe
+  in   ax, dx
+  cmp  ax, #0x0300 ;; class VGA
+  jne  next_pci_dev
+  mov  dl, #0x30
+  call pcibios_init_sel_reg
+  in   eax, dx
+  mov  ecx, eax
+  mov  dx, #0x0cfc
+  mov  eax, #0xfffffffe
+  out  dx, eax
+  in   eax, dx
+  cmp  eax, ecx
+  je   next_pci_dev
+  xor  eax, #0xffffffff
+  inc  eax
+  call pcibios_init_vgarom
 next_pci_dev:
   mov  byte ptr[bp-8], #0x10
   inc  bx
@@ -11317,9 +11386,7 @@ vga_init_ok:
   mov  cx, #0xc800  ;; init option roms
   mov  ax, #0xe000
   call rom_scan
-#if BX_ROMBIOS32
   call pci_set_pam_regs_ro
-#endif
 
 #if BX_ELTORITO_BOOT
   call _interactive_bootkey
