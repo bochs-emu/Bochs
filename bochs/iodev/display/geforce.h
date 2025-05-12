@@ -303,6 +303,9 @@ private:
 
     Bit32u beta;
 
+    Bit32u clip_yx;
+    Bit32u clip_hw;
+
     Bit32u chroma_color_fmt;
     Bit32u chroma_color;
 
@@ -311,9 +314,9 @@ private:
 
     Bit32u gdi_operation;
     Bit32u gdi_color_fmt;
+    Bit32u gdi_clip_yx0;
+    Bit32u gdi_clip_yx1;
     Bit32u gdi_rect_color;
-    Bit32u gdi_rect_clip_yx0;
-    Bit32u gdi_rect_clip_yx1;
     Bit32u gdi_rect_xy;
     Bit32u gdi_rect_yx0;
     Bit32u gdi_rect_yx1;
