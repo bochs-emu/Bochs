@@ -795,18 +795,18 @@ int FillSSE(int LineCount)
     return (LineCount);
 }
 
+#if BX_SUPPORT_FPU
+extern double x87_to_double(Bit16u signExp, Bit64u signif);
+
 // this routine is only called if debugger already knows FPU is supported
 // -- but it might not be active
 int FillMMX(int LineCount)
 {
-    static double scale_factor = pow(2.0, -63.0);
-    int i;
-    Bit16u exp = 0;
-    Bit64u mmreg = 0;
     bx_param_num_c *p;
-    unsigned short exponent[8];
+    Bit16u exponent[8];
     char *cols[3];
     char fputxt[60];
+    int i;
 
     cols[0] = fputxt;
     if ((rV[CR0_Rnum] & 0xc) != 0)  // TS or EM flags in CR0 temporarily disable MMX/FPU/SSE
@@ -822,35 +822,25 @@ int FillMMX(int LineCount)
     cols[2] = fputxt + 32;
     strcpy (fputxt, "MM0-ST0");
     strcpy (fputxt + 18, " : ");
-    i = 7;
     for (i = 0; i < 8; i++)
     {
         fputxt[2] = i + '0';
         fputxt[6] = i + '0';
         RitemToRnum[LineCount] = i + ST0_Rnum;
         p = RegObject[CurrentCPU][ST0_Rnum + i];
+        Bit64u mmreg = 0;
         if (p != NULL)
             mmreg = p->get64(); // get the value of "mmx(i)" register
-        else
-            mmreg = 0;
-        sprintf (fputxt + 10,Fmt32b[UprCase],GET32H(mmreg));
-        sprintf (fputxt + 21,Fmt32b[UprCase], GET32L(mmreg));
+printf("PARAM_FP[%d}: %016llx\n", i, mmreg);
+        sprintf (fputxt + 10, Fmt64b[UprCase], mmreg);
 
         p = RegObject[CurrentCPU][ST0_exp + i];
+        Bit16u exp = 0;
         if (p != NULL)
             exp = (Bit16u) p->get64();  // get the exponent for this FPU register
-        else
-            exp = 0;
         exponent[i] = exp;              // save each one temporarily
-        double f = pow(2.0, ((0x7fff & exp) - 0x3fff));
-        if (exp & 0x8000)
-            f = -f;
-#ifdef _MSC_VER
-        f *= (double)(signed __int64)(mmreg>>1) * scale_factor * 2;
-#else
-        f *= mmreg*scale_factor;
-#endif
-        sprintf (cols[2],"%.3e",f);
+        double f = x87_to_double(exp, mmreg);
+        sprintf (cols[2],"%.3e", f);
         InsertListRow(cols, 3, REG_WND, LineCount, 3);  // 3 cols, group 3
         ++LineCount;
     }
@@ -859,13 +849,14 @@ int FillMMX(int LineCount)
     {
         fputxt[2] = i + '0';
         RitemToRnum[LineCount] = i + ST0_exp;
-        sprintf (fputxt+10,Fmt16b[UprCase], exponent[i]);   // col1
-        sprintf (fputxt+32,"%u", exponent[i]);      // col2
-        InsertListRow(cols, 3, REG_WND, LineCount, 3);  // 3 cols, group 3
+        sprintf (fputxt+10, Fmt16b[UprCase], exponent[i]);   // col1
+        sprintf (fputxt+32,"%u", exponent[i]);               // col2
+        InsertListRow(cols, 3, REG_WND, LineCount, 3);       // 3 cols, group 3
         ++LineCount;
     }
     return LineCount;
 }
+#endif
 
 // get values of Debug registers from simulation
 int FillDebugRegs(int itemnum)

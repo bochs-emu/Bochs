@@ -583,7 +583,7 @@ void BX_CPU_C::register_state(void)
     sprintf(name, "st%d", n);
     bx_list_c *STx = new bx_list_c(fpu, name);
     new bx_shadow_num_c(STx, "exp", &the_i387.st_space[n].signExp, BASE_HEX);
-    new bx_shadow_num_c(STx, "fraction", (Bit64s*) &the_i387.st_space[n].signif, BASE_HEX);
+    new bx_shadow_num_c(STx, "fraction", (Bit64u*) &the_i387.st_space[n].signif, BASE_HEX);
   }
   BXRS_DEC_PARAM_FIELD(fpu, tos, the_i387.tos);
 #endif
