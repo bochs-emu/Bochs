@@ -148,7 +148,7 @@ private:
   BX_GEFORCE_SMF void execute_sifm(Bit32u chid, Bit32u method, Bit32u param);
 
   BX_GEFORCE_SMF Bit32u get_pixel(Bit32u obj, Bit32u ofs, Bit32u x, Bit32u cb);
-  BX_GEFORCE_SMF void put_pixel(Bit32u obj, Bit32u ofs, Bit32u x, Bit32u cb, Bit32u value);
+  BX_GEFORCE_SMF void put_pixel(Bit32u chid, Bit32u ofs, Bit32u x, Bit32u value);
   BX_GEFORCE_SMF void pixel_operation(Bit32u chid, Bit32u op, Bit32u* dstcolor, const Bit32u* srccolor, Bit32u cb);
 
   BX_GEFORCE_SMF void gdi_fillrect(Bit32u chid, bool clipped);
@@ -285,6 +285,8 @@ private:
     Bit32u sifm_dyx;
     Bit32u sifm_shw;
     Bit32u sifm_dhw;
+    Bit32u sifm_dudx;
+    Bit32u sifm_dvdy;
     Bit32u sifm_sfmt;
     Bit32u sifm_sofs;
 
