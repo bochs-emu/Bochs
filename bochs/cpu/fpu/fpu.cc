@@ -507,9 +507,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPLEGACY(bxInstruction_c *i)
 
 #include <math.h>
 
-void BX_CPU_C::print_state_FPU(void)
+double x87_to_double(Bit16u signExp, Bit64u signif)
 {
   static double scale_factor = pow(2.0, -63.0);
+
+  double f = pow(2.0, ((0x7fff & signExp) - 0x3fff));
+  if (signExp & 0x8000) f = -f;
+#ifdef _MSC_VER
+  f *= (double)(signed __int64)(signif>>1) * scale_factor * 2;
+#else
+  f *= signif*scale_factor;
+#endif
+
+  return f;
+}
+
+void BX_CPU_C::print_state_FPU(void)
+{
   static const char* cw_round_control[] = {
     "NEAREST", "DOWN", "UP", "CHOP"
   };
@@ -570,13 +584,7 @@ void BX_CPU_C::print_state_FPU(void)
     const floatx80 &fp = BX_FPU_REG(i);
     unsigned tag = BX_CPU_THIS_PTR the_i387.FPU_gettagi((i-tos)&7);
     if (tag != FPU_Tag_Empty) tag = FPU_tagof(fp);
-    double f = pow(2.0, ((0x7fff & fp.signExp) - 0x3fff));
-    if (fp.signExp & 0x8000) f = -f;
-#ifdef _MSC_VER
-    f *= (double)(signed __int64)(fp.signif>>1) * scale_factor * 2;
-#else
-    f *= fp.signif*scale_factor;
-#endif
+    double f = x87_to_double(fp.signExp, fp.signif);
     softfloat_class_t f_class = extF80_class(fp);
     fprintf(stderr, "%sFP%d ST%d(%c):        raw 0x%04x:%08x%08x (%.10f) (%s)\n",
           i==tos?"=>":"  ", i, (i-tos)&7,

@@ -1,6 +1,6 @@
 Changes after 3.0:
 
-  This CHANGES file updated with commits merged till 8 May 2025, please refer to git log for more recent updates
+  This CHANGES file updated with commits merged till 11 May 2025, please refer to git log for more recent updates
 
 Detailed change log :
 
@@ -19,6 +19,7 @@ Detailed change log :
   - New 'step over' button in Bochs debugger GUI to execute an instruction stepping over subroutines
   - New 'rla' command added to Bochs debugger
     Usage: rla <addr> - continue until reaching the linear address <addr>
+  - Fix FPU/MMX state display in GUI debugger
   - Speed up Bochs emulation with debugger enabled by ~10%
 
 - Configure and compile
