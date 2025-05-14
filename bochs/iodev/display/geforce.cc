@@ -2589,12 +2589,9 @@ void bx_geforce_c::execute_patt(Bit32u chid, Bit32u method, Bit32u param)
     BX_GEFORCE_THIS chs[chid].patt_bg_color = param;
   else if (method == 0x0c5)
     BX_GEFORCE_THIS chs[chid].patt_fg_color = param;
-  else if (method == 0x0c6) {
+  else if (method == 0x0c6 || method == 0x0c7) {
     for (Bit32u i = 0; i < 32; i++)
-      BX_GEFORCE_THIS chs[chid].patt_data_mono[i] = 1 << i & param;
-  } else if (method == 0x0c7) {
-    for (Bit32u i = 0; i < 32; i++)
-      BX_GEFORCE_THIS chs[chid].patt_data_mono[i + 32] = 1 << i & param;
+      BX_GEFORCE_THIS chs[chid].patt_data_mono[i + (method & 1) * 32] = 1 << (i ^ 7) & param;
   } else if (method >= 0x140 && method < 0x160) {
     Bit32u i = (method - 0x140) * 2;
     BX_GEFORCE_THIS chs[chid].patt_data_color[i] = param & 0xFFFF;
