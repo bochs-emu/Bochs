@@ -394,8 +394,14 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS chs[i].chroma_color_fmt = 0;
     BX_GEFORCE_THIS chs[i].chroma_color = 0;
 
+    BX_GEFORCE_THIS chs[i].patt_shape = 0;
+    BX_GEFORCE_THIS chs[i].patt_type = 0;
     BX_GEFORCE_THIS chs[i].patt_bg_color = 0;
     BX_GEFORCE_THIS chs[i].patt_fg_color = 0;
+    for (int j = 0; j < 64; j++) {
+      BX_GEFORCE_THIS chs[i].patt_data_mono[j] = false;
+      BX_GEFORCE_THIS chs[i].patt_data_color[j] = 0;
+    }
 
     BX_GEFORCE_THIS chs[i].gdi_operation = 0;
     BX_GEFORCE_THIS chs[i].gdi_color_fmt = 0;
@@ -2194,13 +2200,18 @@ void bx_geforce_c::put_pixel(Bit32u chid, Bit32u ofs, Bit32u x, Bit32u value)
     dma_write32(BX_GEFORCE_THIS chs[chid].s2d_img_dst, ofs + x * 4, value);
 }
 
-void bx_geforce_c::pixel_operation(Bit32u chid, Bit32u op, Bit32u* dstcolor, const Bit32u* srccolor, Bit32u cb)
+void bx_geforce_c::pixel_operation(Bit32u chid, Bit32u op,
+  Bit32u* dstcolor, const Bit32u* srccolor, Bit32u cb, Bit32u px, Bit32u py)
 {
   if (op == 1) {
     Bit8u rop = BX_GEFORCE_THIS chs[chid].rop;
     if (BX_GEFORCE_THIS rop_flags[rop]) {
-      bx_ternary_rop(rop, (Bit8u*)dstcolor, (Bit8u*)srccolor,
-        (Bit8u*)&BX_GEFORCE_THIS chs[chid].patt_fg_color, cb);
+      Bit32u i = py % 8 * 8 + px % 8;
+      Bit32u patt_color = BX_GEFORCE_THIS chs[chid].patt_type == 1 ?
+        BX_GEFORCE_THIS chs[chid].patt_data_mono[i] ?
+          BX_GEFORCE_THIS chs[chid].patt_fg_color : BX_GEFORCE_THIS chs[chid].patt_bg_color :
+        BX_GEFORCE_THIS chs[chid].patt_data_color[i];
+      bx_ternary_rop(rop, (Bit8u*)dstcolor, (Bit8u*)srccolor, (Bit8u*)&patt_color, cb);
     } else {
       BX_GEFORCE_THIS rop_handler[rop]((Bit8u*)dstcolor, (Bit8u*)srccolor,
         0, 0, cb, 1);
@@ -2283,7 +2294,7 @@ void bx_geforce_c::gdi_fillrect(Bit32u chid, bool clipped)
         Bit32u dstcolor = get_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_dst,
           draw_offset, x, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
         pixel_operation(chid, BX_GEFORCE_THIS chs[chid].gdi_operation,
-          &dstcolor, &srccolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
+          &dstcolor, &srccolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes, dx + x, dy + y);
         put_pixel(chid, draw_offset, x, dstcolor);
       }
     }
@@ -2326,7 +2337,7 @@ void bx_geforce_c::gdi_blit(Bit32u chid, Bit32u type)
             draw_offset, x, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
           Bit32u srccolor = pixel ? fg_color : bg_color;
           pixel_operation(chid, BX_GEFORCE_THIS chs[chid].gdi_operation,
-            &dstcolor, &srccolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
+            &dstcolor, &srccolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes, dx + x, dy + y);
           put_pixel(chid, draw_offset, x, dstcolor);
         }
       }
@@ -2369,7 +2380,7 @@ void bx_geforce_c::ifc(Bit32u chid)
       }
       if (!skip_write) {
         pixel_operation(chid, BX_GEFORCE_THIS chs[chid].ifc_operation,
-          &dstcolor, &srccolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
+          &dstcolor, &srccolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes, dx + x, dy + y);
         put_pixel(chid, draw_offset, x, dstcolor);
       }
       word_offset++;
@@ -2416,7 +2427,8 @@ void bx_geforce_c::iifc(Bit32u chid)
             BX_GEFORCE_THIS chs[chid].iifc_palette_ofs + symbol * 4);
           if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
             dstcolor = color_565_to_888(dstcolor);
-          pixel_operation(chid, BX_GEFORCE_THIS chs[chid].iifc_operation, &dstcolor, &srccolor, 4);
+          pixel_operation(chid, BX_GEFORCE_THIS chs[chid].iifc_operation,
+            &dstcolor, &srccolor, 4, dx + x, dy + y);
           if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
             dstcolor = color_888_to_565(dstcolor);
           put_pixel(chid, draw_offset, x, dstcolor);
@@ -2456,7 +2468,7 @@ void bx_geforce_c::copyarea(Bit32u chid)
       Bit32u srccolor = get_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_src,
         src_offset, xa, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
       pixel_operation(chid, BX_GEFORCE_THIS chs[chid].blit_operation,
-        &dstcolor, &srccolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
+        &dstcolor, &srccolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes, dx + x, dy + y);
       put_pixel(chid, draw_offset, xa, dstcolor);
     }
     src_offset += spitch * (1 - 2 * ydir);
@@ -2509,7 +2521,7 @@ void bx_geforce_c::sifm(Bit32u chid)
       if (BX_GEFORCE_THIS chs[chid].sifm_color_fmt == 4)
         srccolor |= 0xFF000000;
       pixel_operation(chid, BX_GEFORCE_THIS chs[chid].sifm_operation,
-        &dstcolor, &srccolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
+        &dstcolor, &srccolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes, dx + x, dy + y);
       put_pixel(chid, draw_offset, x, dstcolor);
     }
     src_offset += spitch;
@@ -2569,10 +2581,26 @@ void bx_geforce_c::execute_rop(Bit32u chid, Bit32u method, Bit32u param)
 
 void bx_geforce_c::execute_patt(Bit32u chid, Bit32u method, Bit32u param)
 {
-  if (method == 0x0c4)
+  if (method == 0x0c2)
+    BX_GEFORCE_THIS chs[chid].patt_shape = param;
+  else if (method == 0x0c3)
+    BX_GEFORCE_THIS chs[chid].patt_type = param;
+  else if (method == 0x0c4)
     BX_GEFORCE_THIS chs[chid].patt_bg_color = param;
   else if (method == 0x0c5)
     BX_GEFORCE_THIS chs[chid].patt_fg_color = param;
+  else if (method == 0x0c6) {
+    for (Bit32u i = 0; i < 32; i++)
+      BX_GEFORCE_THIS chs[chid].patt_data_mono[i] = 1 << i & param;
+  } else if (method == 0x0c7) {
+    for (Bit32u i = 0; i < 32; i++)
+      BX_GEFORCE_THIS chs[chid].patt_data_mono[i + 32] = 1 << i & param;
+  } else if (method >= 0x140 && method < 0x160) {
+    Bit32u i = (method - 0x140) * 2;
+    BX_GEFORCE_THIS chs[chid].patt_data_color[i] = param & 0xFFFF;
+    BX_GEFORCE_THIS chs[chid].patt_data_color[i + 1] = param >> 16;
+  } else if (method >= 0x1c0 && method < 0x200)
+    BX_GEFORCE_THIS chs[chid].patt_data_color[method - 0x1c0] = param;
 }
 
 void bx_geforce_c::execute_gdi(Bit32u chid, Bit32u method, Bit32u param)
