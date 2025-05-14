@@ -204,7 +204,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::HLT(bxInstruction_c *i)
   }
 
   if (! BX_CPU_THIS_PTR get_IF()) {
-    BX_WARN(("HLT instruction with IF=0!"));
+#if BX_SUPPORT_SMP
+    if (BX_CPU_THIS_PTR msr.apicbase & 0x100) // warn for BSP only
+#endif
+      BX_WARN(("[CPU%d] HLT instruction with IF=0!", BX_CPU_ID));
   }
 
 #if BX_SUPPORT_VMX
