@@ -5718,6 +5718,7 @@ int13_harddisk(DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
   switch (GET_AH()) {
 
     case 0x00: /* disk controller reset */
+    case 0x0D: /* disk controller reset */
       ata_reset (device);
       goto int13_success;
       break;
