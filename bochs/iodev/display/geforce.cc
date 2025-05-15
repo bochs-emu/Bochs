@@ -2608,22 +2608,24 @@ void bx_geforce_c::execute_gdi(Bit32u chid, Bit32u method, Bit32u param)
     BX_GEFORCE_THIS chs[chid].gdi_color_fmt = param;
   else if (method == 0x0ff)
     BX_GEFORCE_THIS chs[chid].gdi_rect_color = param;
-  else if (method == 0x100)
-    BX_GEFORCE_THIS chs[chid].gdi_rect_xy = param;
-  else if (method == 0x101) {
-    BX_GEFORCE_THIS chs[chid].gdi_rect_wh = param;
-    gdi_fillrect(chid, false);
+  else if (method >= 0x100 && method < 0x140) {
+    if (method & 1) {
+      BX_GEFORCE_THIS chs[chid].gdi_rect_wh = param;
+      gdi_fillrect(chid, false);
+    } else
+      BX_GEFORCE_THIS chs[chid].gdi_rect_xy = param;
   } else if (method == 0x17d)
     BX_GEFORCE_THIS chs[chid].gdi_clip_yx0 = param;
   else if (method == 0x17e)
     BX_GEFORCE_THIS chs[chid].gdi_clip_yx1 = param;
   else if (method == 0x17f)
     BX_GEFORCE_THIS chs[chid].gdi_rect_color = param;
-  else if (method == 0x180)
-    BX_GEFORCE_THIS chs[chid].gdi_rect_yx0 = param;
-  else if (method == 0x181) {
-    BX_GEFORCE_THIS chs[chid].gdi_rect_yx1 = param;
-    gdi_fillrect(chid, true);
+  else if (method >= 0x180 && method < 0x1c0) {
+    if (method & 1) {
+      BX_GEFORCE_THIS chs[chid].gdi_rect_yx1 = param;
+      gdi_fillrect(chid, true);
+    } else
+      BX_GEFORCE_THIS chs[chid].gdi_rect_yx0 = param;
   } else if (method == 0x1fd)
     BX_GEFORCE_THIS chs[chid].gdi_fg_color = param;
   else if (method == 0x1fe)
