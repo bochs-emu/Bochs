@@ -2788,6 +2788,21 @@ void bx_geforce_c::execute_surf2d(Bit32u chid, Bit32u method, Bit32u param)
     BX_GEFORCE_THIS chs[chid].s2d_ofs_dst = param;
 }
 
+void bx_geforce_c::iifc_update_color_bytes(Bit32u chid)
+{
+  if (BX_GEFORCE_THIS chs[chid].iifc_color_fmt == 1 || // R5G6B5
+      BX_GEFORCE_THIS chs[chid].iifc_color_fmt == 2 || // A1R5G5B5
+      BX_GEFORCE_THIS chs[chid].iifc_color_fmt == 3)   // X1R5G5B5
+    BX_GEFORCE_THIS chs[chid].iifc_color_bytes = 2;
+  else if (BX_GEFORCE_THIS chs[chid].iifc_color_fmt == 4 || // A8R8G8B8
+           BX_GEFORCE_THIS chs[chid].iifc_color_fmt == 5)   // X8R8G8B8
+    BX_GEFORCE_THIS chs[chid].iifc_color_bytes = 4;
+  else {
+    BX_ERROR(("unknown IIFC color format: 0x%02x",
+      BX_GEFORCE_THIS chs[chid].iifc_color_fmt));
+  }
+}
+
 void bx_geforce_c::execute_iifc(Bit32u chid, Bit32u method, Bit32u param)
 {
   if (method == 0x061)
@@ -2796,17 +2811,7 @@ void bx_geforce_c::execute_iifc(Bit32u chid, Bit32u method, Bit32u param)
     BX_GEFORCE_THIS chs[chid].iifc_operation = param;
   else if (method == 0x0fa) {
     BX_GEFORCE_THIS chs[chid].iifc_color_fmt = param;
-    if (BX_GEFORCE_THIS chs[chid].iifc_color_fmt == 1 || // R5G6B5
-        BX_GEFORCE_THIS chs[chid].iifc_color_fmt == 2 || // A1R5G5B5
-        BX_GEFORCE_THIS chs[chid].iifc_color_fmt == 3)   // X1R5G5B5
-      BX_GEFORCE_THIS chs[chid].iifc_color_bytes = 2;
-    else if (BX_GEFORCE_THIS chs[chid].iifc_color_fmt == 4 || // A8R8G8B8
-             BX_GEFORCE_THIS chs[chid].iifc_color_fmt == 5)   // X8R8G8B8
-      BX_GEFORCE_THIS chs[chid].iifc_color_bytes = 4;
-    else {
-      BX_ERROR(("unknown IIFC color format: 0x%02x",
-        BX_GEFORCE_THIS chs[chid].iifc_color_fmt));
-    }
+    iifc_update_color_bytes(chid);
   } else if (method == 0x0fb)
     BX_GEFORCE_THIS chs[chid].iifc_bpp4 = param;
   else if (method == 0x0fc)
@@ -2896,8 +2901,8 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
         word1 = word1 & 0x0000FFFF | BX_GEFORCE_THIS chs[chid].schs[subc].notifier >> 4 << 16;
       else
         word1 = word1 & 0xFFF00000 | BX_GEFORCE_THIS chs[chid].schs[subc].notifier >> 4;
-      ramin_write32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0x4, word1);
-      Bit8u cls = ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object);
+      Bit32u word0 = ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object);
+      Bit8u cls = word0;
       if (cls == 0x62) {
         if (BX_GEFORCE_THIS card_type < 0x40) {
           ramin_write32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0x8,
@@ -2909,7 +2914,21 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
           ramin_write32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0xC,
             BX_GEFORCE_THIS chs[chid].s2d_img_dst >> 4);
         }
+      } else if (cls == 0x64) {
+        if (BX_GEFORCE_THIS card_type < 0x40)
+          word0 = word0 & 0xFFFC7FFF | BX_GEFORCE_THIS chs[chid].iifc_operation << 15;
+        else
+          word0 = word0 & 0xFFC7FFFF | BX_GEFORCE_THIS chs[chid].iifc_operation << 19;
+        ramin_write32(BX_GEFORCE_THIS chs[chid].schs[subc].object, word0);
+        if (BX_GEFORCE_THIS card_type < 0x40) {
+          word1 = word1 & 0xFFFF00FF | BX_GEFORCE_THIS chs[chid].iifc_color_fmt + 9 << 8;
+        } else {
+          // should be stored somewhere else
+          ramin_write32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0x10,
+            BX_GEFORCE_THIS chs[chid].iifc_color_fmt);
+        }
       }
+      ramin_write32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0x4, word1);
     }
     ramht_lookup(param, chid,
       &BX_GEFORCE_THIS chs[chid].schs[subc].object,
@@ -2920,7 +2939,8 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
         BX_GEFORCE_THIS chs[chid].schs[subc].notifier = word1 >> 16 << 4;
       else
         BX_GEFORCE_THIS chs[chid].schs[subc].notifier = (word1 & 0xFFFFF) << 4;
-      Bit8u cls = ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object);
+      Bit32u word0 = ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object);
+      Bit8u cls = word0;
       if (cls == 0x62) {
         if (BX_GEFORCE_THIS card_type < 0x40) {
           Bit32u srcdst = ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0x8);
@@ -2932,6 +2952,19 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
           BX_GEFORCE_THIS chs[chid].s2d_img_dst =
             ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0xC) << 4;
         }
+      } else if (cls == 0x64) {
+        Bit32u shift = BX_GEFORCE_THIS card_type < 0x40 ? 15 : 19;
+        BX_GEFORCE_THIS chs[chid].iifc_operation = word0 >> shift & 7;
+        if (BX_GEFORCE_THIS card_type < 0x40) {
+          BX_GEFORCE_THIS chs[chid].iifc_color_fmt = (word1 >> 8 & 0xFF) - 9;
+        } else {
+          // should be stored somewhere else
+          BX_GEFORCE_THIS chs[chid].iifc_color_fmt =
+            ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0x10);
+          if (BX_GEFORCE_THIS chs[chid].iifc_color_fmt == 0)
+            BX_GEFORCE_THIS chs[chid].iifc_color_fmt = 1;
+        }
+        iifc_update_color_bytes(chid);
       }
     } else if (BX_GEFORCE_THIS chs[chid].schs[subc].engine == 0x00) {
       software_method = true;

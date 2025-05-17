@@ -134,6 +134,8 @@ private:
   BX_GEFORCE_SMF void fifo_process(Bit32u chid);
   BX_GEFORCE_SMF bool execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
 
+  BX_GEFORCE_SMF void iifc_update_color_bytes(Bit32u chid);
+
   BX_GEFORCE_SMF void execute_clip(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_m2mf(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_rop(Bit32u chid, Bit32u method, Bit32u param);
