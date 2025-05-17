@@ -3329,7 +3329,7 @@ void bx_banshee_c::blt_line(bool pline)
     BX_DEBUG(("Line: %d/%d  -> %d/%d  ROP0 %02X", x0, y0, x1, y1, BLT.rop[0]));
   }
   if (reversible) {
-    BX_ERROR(("Reversible lines not implemented yet"));
+    BX_DEBUG(("Reversible lines not implemented yet"));
   }
   deltax = abs(x1 - x0);
   deltay = abs(y1 - y0);
@@ -3413,16 +3413,16 @@ void bx_banshee_c::blt_line(bool pline)
   BX_UNLOCK(render_mutex);
 }
 
-int calc_line_xpos(int x1, int y1, int x2, int y2, int yc, bool r)
+int calc_line_xpos(int x1, int y1, int x2, int y2, int yc)
 {
   int i, deltax, deltay, numpixels,
       d, dinc1, dinc2,
       x, xinc1, xinc2,
       y, yinc1, yinc2;
-  int xl = -1, xr = -1;
+  int xl = -1;
 
   if (x1 == x2) {
-    xl = xr = x1;
+    xl = x1;
   } else {
     deltax = abs(x2 - x1);
     deltay = abs(y2 - y1);
@@ -3460,10 +3460,9 @@ int calc_line_xpos(int x1, int y1, int x2, int y2, int yc, bool r)
     for (i = 0; i < numpixels; i++) {
       if (y == yc) {
         if (xl == -1) {
-          xl = xr = x;
+          xl = x;
         } else {
           if (x < xl) xl = x;
-          if (x > xr) xr = x;
         }
       }
       if (d < 0) {
@@ -3477,7 +3476,7 @@ int calc_line_xpos(int x1, int y1, int x2, int y2, int yc, bool r)
       }
     }
   }
-  return (r ? xr : xl);
+  return xl;
 }
 
 void bx_banshee_c::blt_polygon_fill(bool force)
@@ -3516,11 +3515,11 @@ void bx_banshee_c::blt_polygon_fill(bool force)
       y1 = BLT.pgn_r1y;
     }
     for (y = y0; y < y1; y++) {
-      x0 = calc_line_xpos(BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_l1x, BLT.pgn_l1y, y, 0);
+      x0 = calc_line_xpos(BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_l1x, BLT.pgn_l1y, y);
       if (y <= BLT.pgn_r0y) {
-        x1 = calc_line_xpos(BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_r0x, BLT.pgn_r0y, y, 1);
+        x1 = calc_line_xpos(BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_r0x, BLT.pgn_r0y, y);
       } else {
-        x1 = calc_line_xpos(BLT.pgn_r0x, BLT.pgn_r0y, BLT.pgn_r1x, BLT.pgn_r1y, y, 1);
+        x1 = calc_line_xpos(BLT.pgn_r0x, BLT.pgn_r0y, BLT.pgn_r1x, BLT.pgn_r1y, y);
       }
       if (BLT.pattern_blt) {
         if (!patrow0) {
@@ -3535,32 +3534,7 @@ void bx_banshee_c::blt_polygon_fill(bool force)
         }
       }
       dst_ptr1 = dst_ptr + y * dpitch + x0 * dpxsize;
-      if (blt_clip_check(x0, y)) {
-        if (colorkey_en & 2) {
-          rop = blt_colorkey_check(dst_ptr1, dpxsize, 1);
-        }
-        if (BLT.pattern_blt) {
-          if (patmono) {
-            mask = 0x80 >> ((x0 + BLT.patsx) & 7);
-            set = (*pat_ptr1 & mask) > 0;
-            if (set) {
-              color = &BLT.fgcolor[0];
-            } else {
-              color = &BLT.bgcolor[0];
-            }
-            if ((set) || !BLT.transp) {
-              BLT.rop_fn[rop](dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
-            }
-          } else {
-            color = (pat_ptr1 + ((x0 + BLT.patsx) & 7) * dpxsize);
-            BLT.rop_fn[rop](dst_ptr1, color, dpitch, dpxsize, dpxsize, 1);
-          }
-        } else {
-          BLT.rop_fn[rop](dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
-        }
-      }
-      dst_ptr1 += dpxsize;
-      for (x = x0 + 1; x < x1; x++) {
+      for (x = x0; x < x1; x++) {
         if (blt_clip_check(x, y)) {
           if (colorkey_en & 2) {
             rop = blt_colorkey_check(dst_ptr1, dpxsize, 1);

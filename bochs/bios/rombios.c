@@ -5718,6 +5718,7 @@ int13_harddisk(DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
   switch (GET_AH()) {
 
     case 0x00: /* disk controller reset */
+    case 0x0D: /* disk controller reset */
       ata_reset (device);
       goto int13_success;
       break;
@@ -5931,7 +5932,6 @@ int13_harddisk(DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
 
     case 0x09: /* initialize drive parameters */
     case 0x0c: /* seek to specified cylinder */
-    case 0x0d: /* alternate disk reset */
     case 0x11: /* recalibrate */
     case 0x14: /* controller internal diagnostic */
       BX_INFO("int13_harddisk: function %02xh unimplemented, returns success\n", GET_AH());
