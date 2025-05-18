@@ -52,7 +52,8 @@ Detailed change log :
   - CMOS
     - Make sure that a panic before CMOS init doesn't damage the CMOS image
   - VGA / DDC
-    - VGA / DDC: Fixed using EDID data from specified file
+    - DDC: Fixed using EDID data from specified file
+    - DDC: Added mode choice 'builtin_gui' to limit builtin values based on gui capabilities
     - VGA core: Added stub for the feature control register. Currently writing to bit 3 only (should turn off display if set).
     - VGA core: Don't report invalid CRTC register if used by extension.
     - Bochs VBE: Skip address wrap during display update

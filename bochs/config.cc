@@ -1025,6 +1025,7 @@ void bx_init_options()
   static const char *ddc_mode_list[] = {
     "disabled",
     "builtin",
+    "builtin_gui",
     "file",
     NULL
   };
