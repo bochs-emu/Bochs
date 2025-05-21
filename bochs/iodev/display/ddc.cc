@@ -27,6 +27,7 @@
 
 #include "bochs.h"
 #include "gui/siminterface.h"
+#include "gui/gui.h"
 #include "ddc.h"
 #include "param_names.h"
 
@@ -81,11 +82,11 @@ const Bit8u vesa_EDID[128] = {
   0x81, 0xCA,                      /* 0x002C Standard timing #4 (1280 x 720 @ 70 Hz) */
   0x81, 0x0A,                      /* 0x002E Standard timing #5 (1280 x 800 @ 70 Hz) */
   0xA9, 0xC0,                      /* 0x0030 Standard timing #6 (1600 x 900 @ 60 Hz) */
-  0xA9, 0x40,                      /* 0x0034 Standard timing #7 (1600 x 1200 @ 60 Hz) */
-  0xD1, 0x00,                      /* 0x0032 Standard timing #8 (1920 x 1080 @ 60 Hz) */
+  0xA9, 0x40,                      /* 0x0032 Standard timing #7 (1600 x 1200 @ 60 Hz) */
+  0xD1, 0x00,                      /* 0x0034 Standard timing #8 (1920 x 1080 @ 60 Hz) */
 
                                    /* 0x0036 First 18-byte descriptor (1920 x 1200) */
-  0x3C, 0x28,                      /*        Pixel clock = 154000000 Hz */
+  0x28, 0x3C,                      /*        Pixel clock = 154000000 Hz */
   0x80,                            /* 0x0038 Horizontal addressable pixels low byte (0x0780 & 0xFF) */
   0xA0,                            /* 0x0039 Horizontal blanking low byte (0x00A0 & 0xFF) */
   0x70,                            /* 0x003A Horizontal addressable pixels high 4 bits ((0x0780 & 0x0F00) >> 4), and */
@@ -111,45 +112,78 @@ const Bit8u vesa_EDID[128] = {
   0x1E,                            /* 0x0047 Flags (non-interlaced, no stereo, analog composite sync, sync on */
                                    /*        all three (RGB) video signals) */
 
-
-                                   /* 0x0048 Second 18-byte descriptor (1280 x 1024) */
-  0x30, 0x2a,                      /*        Pixel clock = 108000000 Hz */
-  0x00,                            /* 0x004A Horizontal addressable pixels low byte (0x0500 & 0xFF) */
-  0x98,                            /* 0x004B Horizontal blanking low byte (0x0198 & 0xFF) */
-  0x51,                            /* 0x004C Horizontal addressable pixels high 4 bits (0x0500 >> 8), and */
-                                   /*        Horizontal blanking high 4 bits (0x0198 >> 8) */
-  0x00,                            /* 0x004D Vertical addressable pixels low byte (0x0400 & 0xFF) */
-  0x2A,                            /* 0x004E Vertical blanking low byte (0x002A & 0xFF) */
-  0x40,                            /* 0x004F Vertical addressable pixels high 4 bits (0x0400 >> 8), and */
-                                   /*        Vertical blanking high 4 bits (0x002A >> 8) */
-  0x30,                            /* 0x0050 Horizontal front porch in pixels low byte (0x0030 & 0xFF) */
-  0x70,                            /* 0x0051 Horizontal sync pulse width in pixels low byte (0x0070 & 0xFF) */
-  0x13,                            /* 0x0052 Vertical front porch in lines low 4 bits (0x0001 & 0x0F), and */
-                                   /*        Vertical sync pulse width in lines low 4 bits (0x0003 & 0x0F) */
-  0x00,                            /* 0x0053 Horizontal front porch pixels high 2 bits (0x0030 >> 8), and */
-                                   /*        Horizontal sync pulse width in pixels high 2 bits (0x0070 >> 8), and */
-                                   /*        Vertical front porch in lines high 2 bits (0x0001 >> 4), and */
-                                   /*        Vertical sync pulse width in lines high 2 bits (0x0003 >> 4) */
-  0x2C,                            /* 0x0054 Horizontal addressable video image size in mm low 8 bits (0x012C & 0xFF) */
-  0xE1,                            /* 0x0055 Vertical addressable video image size in mm low 8 bits (0x00E1 & 0xFF) */
-  0x10,                            /* 0x0056 Horizontal addressable video image size in mm high 8 bits (0x012C >> 8), and */
-                                   /*        Vertical addressable video image size in mm high 8 bits (0x00E1 >> 8) */
-  0x00,                            /* 0x0057 Left and right border size in pixels (0x00) */
-  0x00,                            /* 0x0058 Top and bottom border size in lines (0x00) */
-  0x1E,                            /* 0x0059 Flags (non-interlaced, no stereo, analog composite sync, sync on */
-                                   /*        all three (RGB) video signals) */
-
-
-  0x00,0x00,0x00,0xFF,0x00,        /* 0x005A Third 18-byte descriptor - display product serial number */
+  0x00,0x00,0x00,0xFF,0x00,        /* 0x0048 Second 18-byte descriptor - display product serial number */
   '0','1','2','3','4','5','6','7','8','9',
   0x0A,0x20,0x20,
 
-  0x00,0x00,0x00,0xFC,0x00,        /* 0x006C Fourth 18-byte descriptor - display product name  */
+  0x00,0x00,0x00,0xFC,0x00,        /* 0x005A Third 18-byte descriptor - display product name  */
   'B','o','c','h','s',' ','S','c','r','e','e','n',
   0x0A,
 
+  0x00,0x00,0x00,0x10,0x00,0x00,   /* 0x006C Fourth 18-byte descriptor (unused) */
+  0x00,0x00,0x00,0x00,0x00,0x00,
+  0x00,0x00,0x00,0x00,0x00,0x00,
+
   0x00,                            /* 0x007E Extension block count (none)  */
   0x00,                            /* 0x007F Checksum (set by constructor) */
+};
+
+const Bit8u desc_1280x1024[18] = {
+                                   /* 0x0036 First 18-byte descriptor (1280 x 1024) */
+  0x30, 0x2a,                      /*        Pixel clock = 108000000 Hz */
+  0x00,                            /* 0x0038 Horizontal addressable pixels low byte (0x0500 & 0xFF) */
+  0x98,                            /* 0x0039 Horizontal blanking low byte (0x0198 & 0xFF) */
+  0x51,                            /* 0x003A Horizontal addressable pixels high 4 bits (0x0500 >> 8), and */
+                                   /*        Horizontal blanking high 4 bits (0x0198 >> 8) */
+  0x00,                            /* 0x003B Vertical addressable pixels low byte (0x0400 & 0xFF) */
+  0x2A,                            /* 0x003C Vertical blanking low byte (0x002A & 0xFF) */
+  0x40,                            /* 0x003D Vertical addressable pixels high 4 bits (0x0400 >> 8), and */
+                                   /*        Vertical blanking high 4 bits (0x002A >> 8) */
+  0x30,                            /* 0x003E Horizontal front porch in pixels low byte (0x0030 & 0xFF) */
+  0x70,                            /* 0x003F Horizontal sync pulse width in pixels low byte (0x0070 & 0xFF) */
+  0x13,                            /* 0x0040 Vertical front porch in lines low 4 bits (0x0001 & 0x0F), and */
+                                   /*        Vertical sync pulse width in lines low 4 bits (0x0003 & 0x0F) */
+  0x00,                            /* 0x0041 Horizontal front porch pixels high 2 bits (0x0030 >> 8), and */
+                                   /*        Horizontal sync pulse width in pixels high 2 bits (0x0070 >> 8), and */
+                                   /*        Vertical front porch in lines high 2 bits (0x0001 >> 4), and */
+                                   /*        Vertical sync pulse width in lines high 2 bits (0x0003 >> 4) */
+  0x2C,                            /* 0x0042 Horizontal addressable video image size in mm low 8 bits (0x012C & 0xFF) */
+  0xE1,                            /* 0x0043 Vertical addressable video image size in mm low 8 bits (0x00E1 & 0xFF) */
+  0x10,                            /* 0x0044 Horizontal addressable video image size in mm high 8 bits (0x012C >> 8), and */
+                                   /*        Vertical addressable video image size in mm high 8 bits (0x00E1 >> 8) */
+  0x00,                            /* 0x0045 Left and right border size in pixels (0x00) */
+  0x00,                            /* 0x0046 Top and bottom border size in lines (0x00) */
+  0x1E,                            /* 0x0047 Flags (non-interlaced, no stereo, analog composite sync, sync on */
+                                   /*        all three (RGB) video signals) */
+};
+
+const Bit8u desc_1024x768[18] = {
+                                   /* 0x0036 First 18-byte descriptor (1024 x 768) */
+  0x64, 0x19,                      /*        Pixel clock = 65000000 Hz */
+  0x00,                            /* 0x0038 Horizontal addressable pixels low byte (0x0500 & 0xFF) */
+  0x40,                            /* 0x0039 Horizontal blanking low byte (0x0198 & 0xFF) */
+  0x41,                            /* 0x003A Horizontal addressable pixels high 4 bits (0x0500 >> 8), and */
+                                   /*        Horizontal blanking high 4 bits (0x0198 >> 8) */
+  0x00,                            /* 0x003B Vertical addressable pixels low byte (0x0400 & 0xFF) */
+  0x26,                            /* 0x003C Vertical blanking low byte (0x002A & 0xFF) */
+  0x30,                            /* 0x003D Vertical addressable pixels high 4 bits (0x0400 >> 8), and */
+                                   /*        Vertical blanking high 4 bits (0x002A >> 8) */
+  0x18,                            /* 0x003E Horizontal front porch in pixels low byte (0x0030 & 0xFF) */
+  0x88,                            /* 0x003F Horizontal sync pulse width in pixels low byte (0x0070 & 0xFF) */
+  0x36,                            /* 0x0040 Vertical front porch in lines low 4 bits (0x0001 & 0x0F), and */
+                                   /*        Vertical sync pulse width in lines low 4 bits (0x0003 & 0x0F) */
+  0x00,                            /* 0x0041 Horizontal front porch pixels high 2 bits (0x0030 >> 8), and */
+                                   /*        Horizontal sync pulse width in pixels high 2 bits (0x0070 >> 8), and */
+                                   /*        Vertical front porch in lines high 2 bits (0x0001 >> 4), and */
+                                   /*        Vertical sync pulse width in lines high 2 bits (0x0003 >> 4) */
+  0x30,                            /* 0x0042 Horizontal addressable video image size in mm low 8 bits (0x012C & 0xFF) */
+  0xE4,                            /* 0x0043 Vertical addressable video image size in mm low 8 bits (0x00E1 & 0xFF) */
+  0x10,                            /* 0x0044 Horizontal addressable video image size in mm high 8 bits (0x012C >> 8), and */
+                                   /*        Vertical addressable video image size in mm high 8 bits (0x00E1 >> 8) */
+  0x00,                            /* 0x0045 Left and right border size in pixels (0x00) */
+  0x00,                            /* 0x0046 Top and bottom border size in lines (0x00) */
+  0x18,                            /* 0x0047 Flags (non-interlaced, no stereo, analog composite sync, sync on */
+                                   /*        all three (RGB) video signals) */
 };
 
 bx_ddc_c::bx_ddc_c(void)
@@ -168,6 +202,7 @@ void bx_ddc_c::init()
   struct stat stat_buf;
   const char *path;
   Bit8u checksum = 0;
+  Bit16u max_xres, max_yres, max_bpp;
 
   s.DCKhost = 1;
   s.DDAhost = 1;
@@ -177,8 +212,34 @@ void bx_ddc_c::init()
   s.ddc_rw = 1;
   s.edid_index = 0;
   s.ddc_mode = SIM->get_param_enum(BXPN_DDC_MODE)->get();
-  if (s.ddc_mode == BX_DDC_MODE_BUILTIN) {
+  if ((s.ddc_mode == BX_DDC_MODE_BUILTIN) || (s.ddc_mode == BX_DDC_MODE_BUILTIN_GUI)) {
     memcpy(s.edid_data, vesa_EDID, 128);
+    if (s.ddc_mode == BX_DDC_MODE_BUILTIN_GUI) {
+      bx_gui->get_capabilities(&max_xres, &max_yres, &max_bpp);
+      if ((max_xres <= 1920) || (max_yres <= 1200)) {
+        // entries disabled
+        s.edid_data[0x30] = 0x01;
+        s.edid_data[0x31] = 0x01;
+        s.edid_data[0x32] = 0x01;
+        s.edid_data[0x33] = 0x01;
+        s.edid_data[0x34] = 0x01;
+        s.edid_data[0x35] = 0x01;
+        if ((max_xres <= 1280) || (max_yres <= 1024)) {
+          s.edid_data[0x24] = 0xCE;
+          s.edid_data[0x2C] = 0x01;
+          s.edid_data[0x2D] = 0x01;
+          s.edid_data[0x2E] = 0x01;
+          s.edid_data[0x2F] = 0x01;
+          memcpy(&s.edid_data[0x36], desc_1024x768, 18);
+          BX_INFO(("Using EDID for resolution 1024x768"));
+        } else {
+          memcpy(&s.edid_data[0x36], desc_1280x1024, 18);
+          BX_INFO(("Using EDID for resolution 1280x1024"));
+        }
+      }
+    } else {
+      BX_INFO(("Using default EDID for resolution 1920x1200"));
+    }
     s.edid_extblock = 0;
   } else if (s.ddc_mode == BX_DDC_MODE_FILE) {
     path = SIM->get_param_string(BXPN_DDC_FILE)->getptr();
