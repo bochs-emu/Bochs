@@ -3335,6 +3335,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = register_read8(address);
   } else if (address == 0x680300) {
     value = BX_GEFORCE_THIS ramdac_cu_start_pos;
+  } else if (address == 0x680404) { // RAMDAC_NV10_CURSYNC
+    value = 0x00000000;
   } else if (address == 0x680508) {
     value = BX_GEFORCE_THIS ramdac_vpll;
   } else if (address == 0x68050c) {
