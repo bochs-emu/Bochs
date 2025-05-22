@@ -217,7 +217,7 @@ void bx_ddc_c::init()
     if (s.ddc_mode == BX_DDC_MODE_BUILTIN_GUI) {
       bx_gui->get_capabilities(&max_xres, &max_yres, &max_bpp);
       if ((max_xres <= 1920) || (max_yres <= 1200)) {
-        // entries disabled
+        // standard timing entries disabled
         s.edid_data[0x30] = 0x01;
         s.edid_data[0x31] = 0x01;
         s.edid_data[0x32] = 0x01;
@@ -225,7 +225,10 @@ void bx_ddc_c::init()
         s.edid_data[0x34] = 0x01;
         s.edid_data[0x35] = 0x01;
         if ((max_xres <= 1280) || (max_yres <= 1024)) {
+          // established timing entries disabled
           s.edid_data[0x24] = 0xCE;
+          s.edid_data[0x25] = 0x00;
+          // standard timing entries disabled
           s.edid_data[0x2C] = 0x01;
           s.edid_data[0x2D] = 0x01;
           s.edid_data[0x2E] = 0x01;
