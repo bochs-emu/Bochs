@@ -369,7 +369,10 @@ void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *
   if (!is_cpu_extension_supported(BX_ISA_AVX10_1))
     return;
 
-  if (subfunction == 0) {
+  unsigned avx10_lvl = avx10_level();
+
+  switch (subfunction) {
+  case 0:
     // EAX:
     //   [31:00]: maximum supported subleaf
     // EBX:
@@ -384,9 +387,25 @@ void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *
     // EDX:
     //   [31:00]: reserved
     leaf->eax = 0;
-    leaf->ebx = avx10_level() | (1<<16) | (1<<17) | (1<<18);
+    leaf->ebx = avx10_lvl | (1<<16) | (1<<17) | (1<<18);
     leaf->ecx = 0;
     leaf->edx = 0;
+    break;
+
+  case 1:
+    // EAX:
+    // EBX:
+    // ECX:
+    //   [2] AVX10_VNNI_INT instructions support
+    // EDX:
+    leaf->eax = 0;
+    leaf->ebx = 0;
+    leaf->ecx = (avx10_lvl >= 2) ? (1<<2) : 0;
+    leaf->edx = 0;
+    break;
+
+  default:
+    break;
   }
 #endif
 }

@@ -81,7 +81,7 @@ void mxcsr_to_softfloat_status_word_imm_override(softfloat_status_t &status, Bit
 void softfloat_status_word_rc_override(softfloat_status_t &status, bxInstruction_c *i)
 {
   /* must be VL512 otherwise EVEX.LL encodes vector length */
-  if (i->modC0() && i->getEvexb() && ((i->getVL() == BX_VL512) || (!i->getEvexU() && (i->getVL() == BX_VL256)))) {
+  if (i->modC0() && i->getEvexb() && (i->getVL() == BX_VL512)) {
     status.softfloat_roundingMode = i->getRC();
     status.softfloat_suppressException = softfloat_all_exceptions_mask;
     status.softfloat_exceptionMasks = softfloat_all_exceptions_mask;
