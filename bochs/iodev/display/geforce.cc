@@ -2425,9 +2425,9 @@ void bx_geforce_c::iifc(Bit32u chid)
           Bit32u symbol_offset = symbol_index % 4 * 8;
           symbol = BX_GEFORCE_THIS chs[chid].iifc_words[word_offset] >> symbol_offset & 0xFF;
         }
+        Bit32u dstcolor = get_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_dst,
+          draw_offset, x, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
         if (BX_GEFORCE_THIS chs[chid].iifc_color_bytes == 4) {
-          Bit32u dstcolor = get_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_dst,
-            draw_offset, x, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
           Bit32u srccolor = dma_read32(BX_GEFORCE_THIS chs[chid].iifc_palette,
             BX_GEFORCE_THIS chs[chid].iifc_palette_ofs + symbol * 4);
           if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
@@ -2436,8 +2436,13 @@ void bx_geforce_c::iifc(Bit32u chid)
             &dstcolor, &srccolor, 4, dx + x, dy + y);
           if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
             dstcolor = color_888_to_565(dstcolor);
-          put_pixel(chid, draw_offset, x, dstcolor);
+        } else if (BX_GEFORCE_THIS chs[chid].iifc_color_bytes == 2) {
+          Bit32u srccolor = dma_read16(BX_GEFORCE_THIS chs[chid].iifc_palette,
+            BX_GEFORCE_THIS chs[chid].iifc_palette_ofs + symbol * 2);
+          pixel_operation(chid, BX_GEFORCE_THIS chs[chid].iifc_operation,
+            &dstcolor, &srccolor, 2, dx + x, dy + y);
         }
+        put_pixel(chid, draw_offset, x, dstcolor);
       }
       symbol_index++;
     }
@@ -2915,6 +2920,8 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
             BX_GEFORCE_THIS chs[chid].s2d_img_dst >> 4);
         }
       } else if (cls == 0x64) {
+        ramin_write32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0x8,
+          BX_GEFORCE_THIS chs[chid].iifc_palette >> 4);
         if (BX_GEFORCE_THIS card_type < 0x40)
           word0 = word0 & 0xFFFC7FFF | BX_GEFORCE_THIS chs[chid].iifc_operation << 15;
         else
@@ -2953,6 +2960,8 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
             ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0xC) << 4;
         }
       } else if (cls == 0x64) {
+        BX_GEFORCE_THIS chs[chid].iifc_palette =
+          ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].object + 0x8) << 4;
         Bit32u shift = BX_GEFORCE_THIS card_type < 0x40 ? 15 : 19;
         BX_GEFORCE_THIS chs[chid].iifc_operation = word0 >> shift & 7;
         if (BX_GEFORCE_THIS card_type < 0x40) {
@@ -3018,7 +3027,7 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
           execute_chroma(chid, method, param);
         else if (cls == 0x5f || cls == 0x9f)
           execute_imageblit(chid, cls, method, param);
-        else if (cls == 0x61 || cls == 0x8a)
+        else if (cls == 0x61 || cls == 0x65 || cls == 0x8a)
           execute_ifc(chid, cls, method, param);
         else if (cls == 0x62)
           execute_surf2d(chid, method, param);
