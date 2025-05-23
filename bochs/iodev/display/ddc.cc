@@ -204,6 +204,9 @@ void bx_ddc_c::init()
   Bit8u checksum = 0;
   Bit16u max_xres, max_yres, max_bpp;
 
+  if (s.init_done)
+    return;
+
   s.DCKhost = 1;
   s.DDAhost = 1;
   s.DDAmon = 1;
@@ -218,8 +221,10 @@ void bx_ddc_c::init()
       bx_gui->get_capabilities(&max_xres, &max_yres, &max_bpp);
       if ((max_xres <= 1920) || (max_yres <= 1200)) {
         // standard timing entries disabled
-        s.edid_data[0x30] = 0x01;
-        s.edid_data[0x31] = 0x01;
+        if ((max_xres <= 1600) || (max_yres <= 900)) {
+          s.edid_data[0x30] = 0x01;
+          s.edid_data[0x31] = 0x01;
+        }
         s.edid_data[0x32] = 0x01;
         s.edid_data[0x33] = 0x01;
         s.edid_data[0x34] = 0x01;
@@ -277,6 +282,7 @@ void bx_ddc_c::init()
   if (checksum != 0) {
     s.edid_data[127] = (Bit8u)-checksum;
   }
+  s.init_done = true;
 }
 
 Bit8u bx_ddc_c::read()

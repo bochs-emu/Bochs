@@ -3684,7 +3684,8 @@ value is 1.
 <para>
 The parameter 'ddc' defines the behaviour of the DDC emulation that returns
 the monitor EDID data. By default, the 'builtin' values for 'Bochs Screen'
-are used. Other choices are 'disabled' (no DDC emulation) and 'file'
+are used. Other choices are 'builtin_gui' (limit builtin values based on
+gui capabilities), 'disabled' (no DDC emulation) and 'file'
 (read monitor EDID from file / path name separated with a colon).
 </para>
 <para>

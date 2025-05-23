@@ -259,7 +259,6 @@ bool bx_svga_cirrus_c::init_vga_extension(void)
   }
   BX_CIRRUS_THIS s.max_xres = 1600;
   BX_CIRRUS_THIS s.max_yres = 1200;
-  BX_CIRRUS_THIS ddc.init();
 #if BX_DEBUGGER
   // register device for the 'info device' command (calls debug_dump())
   bx_dbg_register_debug_info("cirrus", this);
@@ -365,6 +364,7 @@ void bx_svga_cirrus_c::reset(unsigned type)
   BX_CIRRUS_THIS bx_vgacore_c::reset(type);
   // reset SVGA stuffs.
   BX_CIRRUS_THIS svga_init_members();
+  BX_CIRRUS_THIS ddc.init();
 }
 
 void bx_svga_cirrus_c::register_state(void)
