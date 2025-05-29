@@ -205,7 +205,6 @@ void bx_banshee_c::init_model(void)
       pci_rom[0x7fff] = -checksum;
     }
   }
-  ddc.init();
 }
 
 void bx_banshee_c::reset(unsigned type)
@@ -262,6 +261,7 @@ void bx_banshee_c::reset(unsigned type)
   if (theVoodooVga != NULL) {
     theVoodooVga->banshee_set_vclk3((Bit32u)v->vidclk);
   }
+  ddc.init();
 
   // Deassert IRQ
   set_irq_level(0);

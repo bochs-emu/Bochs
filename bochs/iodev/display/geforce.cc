@@ -197,7 +197,6 @@ bool bx_geforce_c::init_vga_extension(void)
   BX_GEFORCE_THIS s.CRTC.max_reg = GEFORCE_CRTC_MAX;
   BX_GEFORCE_THIS s.max_xres = 2048;
   BX_GEFORCE_THIS s.max_yres = 1536;
-  BX_GEFORCE_THIS ddc.init();
   BX_INFO(("%s initialized", model_string));
 #if BX_DEBUGGER
   // register device for the 'info device' command (calls debug_dump())
@@ -482,6 +481,7 @@ void bx_geforce_c::reset(unsigned type)
   BX_GEFORCE_THIS bx_vgacore_c::reset(type);
   // reset SVGA stuffs.
   BX_GEFORCE_THIS svga_init_members();
+  BX_GEFORCE_THIS ddc.init();
   // Disable ROM shadowing to allow clearing of VRAM
   BX_GEFORCE_THIS pci_conf[0x50] = 0x00;
 }

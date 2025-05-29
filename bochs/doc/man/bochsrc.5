@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "11 May 2025" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "23 May 2025" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -359,7 +359,8 @@ ddc:
 
 This parameter defines the behaviour of the DDC emulation that returns
 the monitor EDID data. By default the 'builtin' values for 'Bochs Screen'
-are used. Other choices are 'disabled' (no DDC emulation) and 'file'
+are used. Other choices are 'builtin_gui' (limit builtin values based on
+gui capabilities), 'disabled' (no DDC emulation) and 'file'
 (read monitor EDID from file / path name separated with a colon).
 
 vbe_memsize:
