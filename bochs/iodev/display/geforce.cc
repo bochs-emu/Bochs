@@ -1145,6 +1145,15 @@ void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tilein
   }
 }
 
+Bit16u bx_geforce_c::get_crtc_vtotal()
+{
+  return BX_GEFORCE_THIS crtc.reg[6] +
+    ((BX_GEFORCE_THIS crtc.reg[7] & 0x01) << 8) +
+    ((BX_GEFORCE_THIS crtc.reg[7] & 0x20) << 4) +
+    ((BX_GEFORCE_THIS crtc.reg[0x25] & 1) << 10) +
+    ((BX_GEFORCE_THIS crtc.reg[0x41] & 1) << 11) + 2;
+}
+
 void bx_geforce_c::get_crtc_params(bx_crtc_params_t* crtcp, Bit32u* vclock)
 {
   Bit32u m = BX_GEFORCE_THIS ramdac_vpll & 0xFF;
@@ -1172,11 +1181,7 @@ void bx_geforce_c::get_crtc_params(bx_crtc_params_t* crtcp, Bit32u* vclock)
     *vclock = (Bit32u)((Bit64u)crystalFreq * n * nb / m / mb >> p);
     crtcp->htotal = BX_GEFORCE_THIS crtc.reg[0] +
                     ((BX_GEFORCE_THIS crtc.reg[0x2D] & 1) << 8) + 5;
-    crtcp->vtotal = BX_GEFORCE_THIS crtc.reg[6] +
-                    ((BX_GEFORCE_THIS crtc.reg[7] & 0x01) << 8) +
-                    ((BX_GEFORCE_THIS crtc.reg[7] & 0x20) << 4) +
-                    ((BX_GEFORCE_THIS crtc.reg[0x25] & 1) << 10) +
-                    ((BX_GEFORCE_THIS crtc.reg[0x41] & 1) << 11) + 2;
+    crtcp->vtotal = get_crtc_vtotal();
     crtcp->vbstart = BX_GEFORCE_THIS crtc.reg[21] +
                      ((BX_GEFORCE_THIS crtc.reg[7] & 0x08) << 5) +
                      ((BX_GEFORCE_THIS crtc.reg[9] & 0x20) << 4) +
@@ -1215,6 +1220,11 @@ void bx_geforce_c::update(void)
       BX_GEFORCE_THIS crtc.reg[0x19] >> 5 << 8 |
       (BX_GEFORCE_THIS crtc.reg[0x42] >> 6 & 1) << 11;
     iPitch <<= 3;
+
+    if (crtc28 & 0x80) {
+      crtc28 &= 0x7F;
+      BX_ERROR(("Slaved mode activated"));
+    }
 
     Bit8u iBpp;
     if (crtc28 == 0x01)
@@ -3291,7 +3301,14 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = register_read8(address);
   else if (address == 0x10020c)
     value = BX_GEFORCE_THIS s.memsize;
-  else if (address == 0x101000)
+  else if (address == 0x100320) { // PFB_ZCOMP_SIZE
+    if (BX_GEFORCE_THIS card_type == 0x20)
+      value = 0x00007fff;
+    else if (BX_GEFORCE_THIS card_type == 0x35)
+      value = 0x0005c7ff;
+    else
+      value = 0x0002e3ff;
+  } else if (address == 0x101000)
     value = BX_GEFORCE_THIS straps0_primary;
   else if (address >= 0x300000 && address < 0x310000) {
     Bit32u offset = address - 0x300000;
@@ -3339,6 +3356,11 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS crtc_cursor_offset;
   } else if (address == 0x600810) {
     value = BX_GEFORCE_THIS crtc_cursor_config;
+  } else if (address == 0x600868) {
+    Bit64u display_usec =
+      bx_virt_timer.time_usec(BX_GEFORCE_THIS vsync_realtime) - BX_GEFORCE_THIS s.display_start_usec;
+    display_usec = display_usec % BX_GEFORCE_THIS s.vtotal_usec;
+    value = BX_GEFORCE_THIS get_crtc_vtotal() * display_usec / BX_GEFORCE_THIS s.vtotal_usec;
   } else if (address >= 0x601300 && address < 0x601400 ||
              address >= 0x603300 && address < 0x603400) {
     value = register_read8(address);
