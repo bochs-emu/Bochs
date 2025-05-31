@@ -2231,33 +2231,55 @@ void bx_geforce_c::pixel_operation(Bit32u chid, Bit32u op,
       BX_GEFORCE_THIS rop_handler[rop]((Bit8u*)dstcolor, (Bit8u*)srccolor,
         0, 0, cb, 1);
     }
-  } else if (op == 5 && cb == 4) {
-    if (*srccolor) {
-      Bit8u sb = *srccolor;
-      Bit8u sg = *srccolor >> 8;
-      Bit8u sr = *srccolor >> 16;
-      Bit8u sa = *srccolor >> 24;
+  } else if (op == 5) {
+    if (cb == 4) {
+      if (*srccolor) {
+        Bit8u sb = *srccolor;
+        Bit8u sg = *srccolor >> 8;
+        Bit8u sr = *srccolor >> 16;
+        Bit8u sa = *srccolor >> 24;
+        Bit32u beta = BX_GEFORCE_THIS chs[chid].beta;
+        if (beta != 0xFFFFFFFF) {
+          Bit8u bb = beta;
+          Bit8u bg = beta >> 8;
+          Bit8u br = beta >> 16;
+          Bit8u ba = beta >> 24;
+          sb = sb * bb / 0xFF;
+          sg = sg * bg / 0xFF;
+          sr = sr * br / 0xFF;
+          sa = sa * ba / 0xFF;
+        }
+        Bit8u db = *dstcolor;
+        Bit8u dg = *dstcolor >> 8;
+        Bit8u dr = *dstcolor >> 16;
+        Bit8u da = *dstcolor >> 24;
+        Bit8u isa = 0xFF - sa;
+        Bit8u b = alpha_wrap(db * isa / 0xFF + sb);
+        Bit8u g = alpha_wrap(dg * isa / 0xFF + sg);
+        Bit8u r = alpha_wrap(dr * isa / 0xFF + sr);
+        Bit8u a = alpha_wrap(da * isa / 0xFF + sa);
+        *dstcolor = b << 0 | g << 8 | r << 16 | a << 24;
+      }
+    } else {
       Bit32u beta = BX_GEFORCE_THIS chs[chid].beta;
       if (beta != 0xFFFFFFFF) {
         Bit8u bb = beta;
         Bit8u bg = beta >> 8;
         Bit8u br = beta >> 16;
-        Bit8u ba = beta >> 24;
-        sb = sb * bb / 0xFF;
-        sg = sg * bg / 0xFF;
-        sr = sr * br / 0xFF;
-        sa = sa * ba / 0xFF;
+        Bit8u iba = 0xFF - (beta >> 24);
+        Bit8u sb = *srccolor & 0x1F;
+        Bit8u sg = *srccolor >> 5 & 0x3F;
+        Bit8u sr = *srccolor >> 11 & 0x1F;
+        Bit8u db = *dstcolor & 0x1F;
+        Bit8u dg = *dstcolor >> 5 & 0x3F;
+        Bit8u dr = *dstcolor >> 11 & 0x1F;
+        Bit8u b = (db * iba + sb * bb) / 0xFF;
+        Bit8u g = (dg * iba + sg * bg) / 0xFF;
+        Bit8u r = (dr * iba + sr * br) / 0xFF;
+        *dstcolor = b << 0 | g << 5 | r << 11;
+      } else {
+        *dstcolor = *srccolor;
       }
-      Bit8u db = *dstcolor;
-      Bit8u dg = *dstcolor >> 8;
-      Bit8u dr = *dstcolor >> 16;
-      Bit8u da = *dstcolor >> 24;
-      Bit8u isa = 0xFF - sa;
-      Bit8u b = alpha_wrap(db * isa / 0xFF + sb);
-      Bit8u g = alpha_wrap(dg * isa / 0xFF + sg);
-      Bit8u r = alpha_wrap(dr * isa / 0xFF + sr);
-      Bit8u a = alpha_wrap(da * isa / 0xFF + sa);
-      *dstcolor = b << 0 | g << 8 | r << 16 | a << 24;
     }
   } else {
     *dstcolor = *srccolor;
