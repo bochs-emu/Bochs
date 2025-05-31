@@ -257,11 +257,10 @@ Bit32u bx_acpi_ctrl_c::get_pmtmr(void)
 
 Bit16u bx_acpi_ctrl_c::get_pmsts(void)
 {
-  Bit16u pmsts = BX_ACPI_THIS s.pmsts;
   Bit64u value = muldiv64(bx_virt_timer.time_usec(BX_ACPI_THIS is_realtime), PM_FREQ, 1000000);
   if (value >= BX_ACPI_THIS s.tmr_overflow_time)
     BX_ACPI_THIS s.pmsts |= TMROF_EN;
-  return pmsts;
+  return BX_ACPI_THIS s.pmsts;
 }
 
 void bx_acpi_ctrl_c::pm_update_sci(void)
@@ -273,11 +272,11 @@ void bx_acpi_ctrl_c::pm_update_sci(void)
   // schedule a timer interruption if needed
   if ((BX_ACPI_THIS s.pmen & TMROF_EN) && !(pmsts & TMROF_EN)) {
     Bit64u current_time = bx_virt_timer.time_usec(BX_ACPI_THIS is_realtime);
-    Bit64u expire_time = muldiv64(BX_ACPI_THIS s.tmr_overflow_time, 1000000, PM_FREQ) + 10;
+    Bit64u expire_time = muldiv64(BX_ACPI_THIS s.tmr_overflow_time, 1000000, PM_FREQ) + 1;
     if (expire_time > current_time)
       bx_virt_timer.activate_timer(BX_ACPI_THIS s.timer_index, (Bit32u)(expire_time - current_time), 0);
     else
-      pm_update_sci();
+      BX_ACPI_THIS pm_update_sci();
   } else {
     bx_virt_timer.deactivate_timer(BX_ACPI_THIS s.timer_index);
   }

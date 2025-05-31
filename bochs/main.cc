@@ -308,6 +308,7 @@ void print_statistics_tree(bx_param_c *node, int level)
 
 int bxmain(void)
 {
+  bx_init_realtime64_usec();
 #ifdef HAVE_LOCALE_H
   // Initialize locale (for isprint() and other functions)
   setlocale (LC_ALL, "");
