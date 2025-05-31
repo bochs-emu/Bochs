@@ -627,7 +627,7 @@ bool bx_geforce_c::geforce_mem_read_handler(bx_phy_address addr, unsigned len,
       }
       return 1;
     } else {
-      BX_PANIC(("BAR2 read from 0x%08x", offset));
+      BX_ERROR(("BAR2 read from 0x%08x", offset));
     }
   }
 
