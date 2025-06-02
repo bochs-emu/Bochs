@@ -2413,6 +2413,9 @@ void bx_geforce_c::ifc(Bit32u chid)
       } else if (BX_GEFORCE_THIS chs[chid].ifc_color_bytes == 2) {
         Bit16u *ifc_words16 = (Bit16u*)BX_GEFORCE_THIS chs[chid].ifc_words;
         srccolor = ifc_words16[word_offset];
+      } else {
+        Bit8u *ifc_words8 = (Bit8u*)BX_GEFORCE_THIS chs[chid].ifc_words;
+        srccolor = ifc_words8[word_offset];
       }
       if (!skip_write) {
         if (BX_GEFORCE_THIS chs[chid].ifc_color_bytes == 4 &&
@@ -2769,7 +2772,9 @@ void bx_geforce_c::execute_ifc(Bit32u chid, Bit8u cls, Bit32u method, Bit32u par
     BX_GEFORCE_THIS chs[chid].ifc_operation = param;
   else if (method == 0x0c0) {
     BX_GEFORCE_THIS chs[chid].ifc_color_fmt = param;
-    if (BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 1 || // R5G6B5
+    if (BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 1) // Y8
+      BX_GEFORCE_THIS chs[chid].ifc_color_bytes = 1; // hack
+    else if (BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 1 || // R5G6B5
         BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 2 || // A1R5G5B5
         BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 3)   // X1R5G5B5
       BX_GEFORCE_THIS chs[chid].ifc_color_bytes = 2;
