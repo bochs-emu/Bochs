@@ -304,6 +304,7 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS ramdac_vpll = 0;
   BX_GEFORCE_THIS ramdac_vpll_b = 0;
   BX_GEFORCE_THIS ramdac_pll_select = 0;
+  BX_GEFORCE_THIS ramdac_general_control = 0;
 
   BX_GEFORCE_THIS acquire_active = false;
 
@@ -3406,6 +3407,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS ramdac_pll_select;
   } else if (address == 0x680578) {
     value = BX_GEFORCE_THIS ramdac_vpll_b;
+  } else if (address == 0x680600) {
+    value = BX_GEFORCE_THIS ramdac_general_control;
   } else if (address == 0x680828) { // PRAMDAC_FP_HCRTC
     value = 0x00000000; // Second monitor is disconnected
   } else if (address >= 0x681300 && address < 0x681400 ||
@@ -3605,6 +3608,9 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
   } else if (address == 0x680578) {
     BX_GEFORCE_THIS ramdac_vpll_b = value;
     BX_GEFORCE_THIS calculate_retrace_timing();
+  } else if (address == 0x680600) {
+    BX_GEFORCE_THIS ramdac_general_control = value;
+    BX_GEFORCE_THIS s.dac_shift = value >> 20 & 1 ? 0 : 2;
   } else if (address >= 0x681300 && address < 0x681400 ||
              address >= 0x683300 && address < 0x683400) {
     register_write8(address, value);

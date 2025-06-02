@@ -220,6 +220,7 @@ private:
   Bit32u ramdac_vpll;
   Bit32u ramdac_vpll_b;
   Bit32u ramdac_pll_select;
+  Bit32u ramdac_general_control;
 
   bx_bitblt_rop_t rop_handler[0x100];
   Bit8u  rop_flags[0x100];
