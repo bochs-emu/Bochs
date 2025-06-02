@@ -712,7 +712,7 @@ bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
         ((Bit64u)*((Bit8u*)data + 6) << 48) |
         ((Bit64u)*((Bit8u*)data + 7) << 56);
       BX_DEBUG(("MMIO write to 0x%08x, value 0x%016" FMT_64 "x", offset, value));
-      register_write32(offset, value);
+      register_write32(offset, (Bit32u)value);
       register_write32(offset + 4, value >> 32);
     } else {
       BX_PANIC(("MMIO write len %d", len));
@@ -2407,17 +2407,21 @@ void bx_geforce_c::ifc(Bit32u chid)
       if (BX_GEFORCE_THIS chs[chid].ifc_color_bytes == 4) {
         srccolor = BX_GEFORCE_THIS chs[chid].ifc_words[word_offset];
         if (BX_GEFORCE_THIS chs[chid].ifc_color_key_enable &&
-            srccolor == (BX_GEFORCE_THIS chs[chid].chroma_color & 0x00FFFFFF)) {
+            srccolor == (BX_GEFORCE_THIS chs[chid].chroma_color & 0x00FFFFFF))
           skip_write = true;
-        } else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
-          srccolor = color_888_to_565(srccolor);
       } else if (BX_GEFORCE_THIS chs[chid].ifc_color_bytes == 2) {
         Bit16u *ifc_words16 = (Bit16u*)BX_GEFORCE_THIS chs[chid].ifc_words;
         srccolor = ifc_words16[word_offset];
       }
       if (!skip_write) {
+        if (BX_GEFORCE_THIS chs[chid].ifc_color_bytes == 4 &&
+            BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
+          dstcolor = color_565_to_888(dstcolor);
         pixel_operation(chid, BX_GEFORCE_THIS chs[chid].ifc_operation,
-          &dstcolor, &srccolor, BX_GEFORCE_THIS chs[chid].s2d_color_bytes, dx + x, dy + y);
+          &dstcolor, &srccolor, BX_GEFORCE_THIS chs[chid].ifc_color_bytes, dx + x, dy + y);
+        if (BX_GEFORCE_THIS chs[chid].ifc_color_bytes == 4 &&
+            BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
+          dstcolor = color_888_to_565(dstcolor);
         put_pixel(chid, draw_offset, x, dstcolor);
       }
       word_offset++;
@@ -3382,7 +3386,7 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     Bit64u display_usec =
       bx_virt_timer.time_usec(BX_GEFORCE_THIS vsync_realtime) - BX_GEFORCE_THIS s.display_start_usec;
     display_usec = display_usec % BX_GEFORCE_THIS s.vtotal_usec;
-    value = BX_GEFORCE_THIS get_crtc_vtotal() * display_usec / BX_GEFORCE_THIS s.vtotal_usec;
+    value = (Bit32u)(BX_GEFORCE_THIS get_crtc_vtotal() * display_usec / BX_GEFORCE_THIS s.vtotal_usec);
   } else if (address >= 0x601300 && address < 0x601400 ||
              address >= 0x603300 && address < 0x603400) {
     value = register_read8(address);
