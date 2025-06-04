@@ -147,6 +147,7 @@ private:
   BX_GEFORCE_SMF void execute_ifc(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_surf2d(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_iifc(Bit32u chid, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_sifc(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_beta(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_sifm(Bit32u chid, Bit32u method, Bit32u param);
 
@@ -159,6 +160,7 @@ private:
   BX_GEFORCE_SMF void gdi_blit(Bit32u chid, Bit32u type);
   BX_GEFORCE_SMF void ifc(Bit32u chid);
   BX_GEFORCE_SMF void iifc(Bit32u chid);
+  BX_GEFORCE_SMF void sifc(Bit32u chid);
   BX_GEFORCE_SMF void copyarea(Bit32u chid);
   BX_GEFORCE_SMF void move(Bit32u chid);
   BX_GEFORCE_SMF void sifm(Bit32u chid);
@@ -276,6 +278,19 @@ private:
     Bit32u iifc_words_ptr;
     Bit32u iifc_words_left;
     Bit32u* iifc_words;
+
+    Bit32u sifc_operation;
+    Bit32u sifc_color_fmt;
+    Bit32u sifc_color_bytes;
+    Bit32u sifc_shw;
+    Bit32u sifc_dxds;
+    Bit32u sifc_dydt;
+    Bit32u sifc_clip_yx;
+    Bit32u sifc_clip_hw;
+    Bit32u sifc_syx;
+    Bit32u sifc_words_ptr;
+    Bit32u sifc_words_left;
+    Bit32u* sifc_words;
 
     Bit32u blit_operation;
     Bit32u blit_syx;

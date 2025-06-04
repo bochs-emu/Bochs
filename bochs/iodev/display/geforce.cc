@@ -355,6 +355,19 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS chs[i].iifc_words_left = 0;
     BX_GEFORCE_THIS chs[i].iifc_words = nullptr;
 
+    BX_GEFORCE_THIS chs[i].sifc_operation = 0;
+    BX_GEFORCE_THIS chs[i].sifc_color_fmt = 0;
+    BX_GEFORCE_THIS chs[i].sifc_color_bytes = 0;
+    BX_GEFORCE_THIS chs[i].sifc_shw = 0;
+    BX_GEFORCE_THIS chs[i].sifc_dxds = 0;
+    BX_GEFORCE_THIS chs[i].sifc_dydt = 0;
+    BX_GEFORCE_THIS chs[i].sifc_clip_yx = 0;
+    BX_GEFORCE_THIS chs[i].sifc_clip_hw = 0;
+    BX_GEFORCE_THIS chs[i].sifc_syx = 0;
+    BX_GEFORCE_THIS chs[i].sifc_words_ptr = 0;
+    BX_GEFORCE_THIS chs[i].sifc_words_left = 0;
+    BX_GEFORCE_THIS chs[i].sifc_words = nullptr;
+
     BX_GEFORCE_THIS chs[i].blit_operation = 0;
     BX_GEFORCE_THIS chs[i].blit_syx = 0;
     BX_GEFORCE_THIS chs[i].blit_dyx = 0;
@@ -2492,6 +2505,60 @@ void bx_geforce_c::iifc(Bit32u chid)
   BX_GEFORCE_THIS redraw_area(redraw_offset, dwidth, height);
 }
 
+void bx_geforce_c::sifc(Bit32u chid)
+{
+  Bit16u dx = BX_GEFORCE_THIS chs[chid].sifc_clip_yx & 0xFFFF;
+  Bit16u dy = BX_GEFORCE_THIS chs[chid].sifc_clip_yx >> 16;
+  Bit32u dsdx = 1099511627776.0 / BX_GEFORCE_THIS chs[chid].sifc_dxds;
+  Bit32u dtdy = 1099511627776.0 / BX_GEFORCE_THIS chs[chid].sifc_dydt;
+  Bit32u swidth = BX_GEFORCE_THIS chs[chid].sifc_shw & 0xFFFF;
+  Bit32u dwidth = BX_GEFORCE_THIS chs[chid].sifc_clip_hw & 0xFFFF;
+  Bit32u height = BX_GEFORCE_THIS chs[chid].sifc_clip_hw >> 16;
+  Bit32u pitch = BX_GEFORCE_THIS chs[chid].s2d_pitch >> 16;
+  Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].s2d_ofs_dst;
+  draw_offset += dy * pitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
+  Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
+  Bit32s sx0 = ((BX_GEFORCE_THIS chs[chid].sifc_syx & 0xFFFF) << 16) - (dx << 20) - 0x80000;
+  Bit32s sy = (BX_GEFORCE_THIS chs[chid].sifc_syx & 0xFFFF0000) - (dy << 20) - 0x80000;
+  if (sx0 < 0)
+    sx0 = 0;
+  if (sy < 0)
+    sy = 0;
+  Bit32u symbol_offset_y = 0;
+  for (Bit16u y = 0; y < height; y++) {
+    Bit32u sx = sx0;
+    for (Bit16u x = 0; x < dwidth; x++) {
+      Bit32u dstcolor = get_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_dst,
+        draw_offset, x, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
+      Bit32u srccolor;
+      Bit32u symbol_offset = symbol_offset_y + (sx >> 20);
+      if (BX_GEFORCE_THIS chs[chid].sifc_color_bytes == 4) {
+        srccolor = BX_GEFORCE_THIS chs[chid].sifc_words[symbol_offset];
+      } else if (BX_GEFORCE_THIS chs[chid].sifc_color_bytes == 2) {
+        Bit16u *sifc_words16 = (Bit16u*)BX_GEFORCE_THIS chs[chid].sifc_words;
+        srccolor = sifc_words16[symbol_offset];
+      } else {
+        Bit8u *sifc_words8 = (Bit8u*)BX_GEFORCE_THIS chs[chid].sifc_words;
+        srccolor = sifc_words8[symbol_offset];
+      }
+      if (BX_GEFORCE_THIS chs[chid].sifc_color_bytes == 4 &&
+          BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
+        dstcolor = color_565_to_888(dstcolor);
+      pixel_operation(chid, BX_GEFORCE_THIS chs[chid].sifc_operation,
+        &dstcolor, &srccolor, BX_GEFORCE_THIS chs[chid].sifc_color_bytes, dx + x, dy + y);
+      if (BX_GEFORCE_THIS chs[chid].sifc_color_bytes == 4 &&
+          BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
+        dstcolor = color_888_to_565(dstcolor);
+      put_pixel(chid, draw_offset, x, dstcolor);
+      sx += dsdx;
+    }
+    sy += dtdy;
+    symbol_offset_y = (sy >> 20) * swidth;
+    draw_offset += pitch;
+  }
+  BX_GEFORCE_THIS redraw_area(redraw_offset, dwidth, height);
+}
+
 void bx_geforce_c::copyarea(Bit32u chid)
 {
   Bit16u sx = BX_GEFORCE_THIS chs[chid].blit_syx & 0xFFFF;
@@ -2897,6 +2964,59 @@ void bx_geforce_c::execute_iifc(Bit32u chid, Bit32u method, Bit32u param)
   }
 }
 
+void bx_geforce_c::execute_sifc(Bit32u chid, Bit32u method, Bit32u param)
+{
+  if (method == 0x0bf)
+    BX_GEFORCE_THIS chs[chid].sifc_operation = param;
+  else if (method == 0x0c0) {
+    BX_GEFORCE_THIS chs[chid].sifc_color_fmt = param;
+    if (BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 1) // Y8
+      BX_GEFORCE_THIS chs[chid].sifc_color_bytes = 1; // hack
+    else if (BX_GEFORCE_THIS chs[chid].sifc_color_fmt == 1 || // R5G6B5
+        BX_GEFORCE_THIS chs[chid].sifc_color_fmt == 2 || // A1R5G5B5
+        BX_GEFORCE_THIS chs[chid].sifc_color_fmt == 3)   // X1R5G5B5
+      BX_GEFORCE_THIS chs[chid].sifc_color_bytes = 2;
+    else if (BX_GEFORCE_THIS chs[chid].sifc_color_fmt == 4 || // A8R8G8B8
+             BX_GEFORCE_THIS chs[chid].sifc_color_fmt == 5)   // X8R8G8B8
+      BX_GEFORCE_THIS chs[chid].sifc_color_bytes = 4;
+    else {
+      BX_ERROR(("unknown sifc color format: 0x%02x",
+        BX_GEFORCE_THIS chs[chid].sifc_color_fmt));
+    }
+  } else if (method == 0x0c1)
+    BX_GEFORCE_THIS chs[chid].sifc_shw = param;
+  else if (method == 0x0c2)
+    BX_GEFORCE_THIS chs[chid].sifc_dxds = param;
+  else if (method == 0x0c3)
+    BX_GEFORCE_THIS chs[chid].sifc_dydt = param;
+  else if (method == 0x0c4)
+    BX_GEFORCE_THIS chs[chid].sifc_clip_yx = param;
+  else if (method == 0x0c5)
+    BX_GEFORCE_THIS chs[chid].sifc_clip_hw = param;
+  else if (method == 0x0c6) {
+    BX_GEFORCE_THIS chs[chid].sifc_syx = param;
+    Bit32u width = BX_GEFORCE_THIS chs[chid].sifc_shw & 0xFFFF;
+    Bit32u height = BX_GEFORCE_THIS chs[chid].sifc_shw >> 16;
+    Bit32u wordCount = width * height * 
+      BX_GEFORCE_THIS chs[chid].sifc_color_bytes / 4;
+    if (BX_GEFORCE_THIS chs[chid].sifc_words != nullptr)
+      delete[] BX_GEFORCE_THIS chs[chid].sifc_words;
+    BX_GEFORCE_THIS chs[chid].sifc_words_ptr = 0;
+    BX_GEFORCE_THIS chs[chid].sifc_words_left = wordCount;
+    BX_GEFORCE_THIS chs[chid].sifc_words = new Bit32u[wordCount];
+  }
+  else if (method >= 0x100 && method < 0x800) {
+    BX_GEFORCE_THIS chs[chid].sifc_words[
+      BX_GEFORCE_THIS chs[chid].sifc_words_ptr++] = param;
+    BX_GEFORCE_THIS chs[chid].sifc_words_left--;
+    if (!BX_GEFORCE_THIS chs[chid].sifc_words_left) {
+      sifc(chid);
+      delete[] BX_GEFORCE_THIS chs[chid].sifc_words;
+      BX_GEFORCE_THIS chs[chid].sifc_words = nullptr;
+    }
+  }
+}
+
 void bx_geforce_c::execute_beta(Bit32u chid, Bit32u method, Bit32u param)
 {
   if (method == 0x0c0)
@@ -3081,6 +3201,8 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
           execute_surf2d(chid, method, param);
         else if (cls == 0x64)
           execute_iifc(chid, method, param);
+        else if (cls == 0x66)
+          execute_sifc(chid, method, param);
         else if (cls == 0x72)
           execute_beta(chid, method, param);
         else if (cls == 0x89)
