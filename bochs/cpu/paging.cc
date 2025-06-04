@@ -925,13 +925,15 @@ void BX_CPU_C::update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry
   }
 
   // Update A/D bits if needed
-  // Specifically, a processor that supports CET will never set the dirty flag in a paging-structure entry in which the R/W flag is clear
+  // As long as CR0.WP = 1, no processor that supports CET will ever set the dirty flag in a paging-structure entry in which the R/W flag is 0.
   bool set_dirty = write && !(entry[leaf] & 0x40);
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
+#if BX_SUPPORT_CET
+  if (BX_CPU_THIS_PTR cr0.get_WP() && BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
     if (set_dirty && !(entry[leaf] & 0x02)) {
       BX_PANIC(("PAE: asked to set dirty on paging leaf entry with R/W bit clear"));
     }
   }
+#endif
   if (!(entry[leaf] & 0x20) || set_dirty) {
     entry[leaf] |= 0x20; // Update A and possibly D bits
     if (set_dirty) entry[leaf] |= 0x40;
@@ -1239,13 +1241,15 @@ void BX_CPU_C::update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, Bx
   }
 
   // Update A/D bits if needed
-  // Specifically, a processor that supports CET will never set the dirty flag in a paging-structure entry in which the R/W flag is clear
+  // As long as CR0.WP = 1, no processor that supports CET will ever set the dirty flag in a paging-structure entry in which the R/W flag is 0.
   bool set_dirty = write && !(entry[leaf] & 0x40);
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
+#if BX_SUPPORT_CET
+  if (BX_CPU_THIS_PTR cr0.get_WP() && BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
     if (set_dirty && !(entry[leaf] & 0x02)) {
       BX_PANIC(("Legacy Paging: asked to set dirty on paging leaf entry with R/W bit clear"));
     }
   }
+#endif
   if (!(entry[leaf] & 0x20) || set_dirty) {
     entry[leaf] |= 0x20; // Update A and possibly D bits
     if (set_dirty) entry[leaf] |= 0x40;
