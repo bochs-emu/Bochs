@@ -397,6 +397,9 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS chs[i].m2mf_format = 0;
     BX_GEFORCE_THIS chs[i].m2mf_buffer_notify = 0;
 
+    BX_GEFORCE_THIS chs[i].d3d_semaphore_obj = 0;
+    BX_GEFORCE_THIS chs[i].d3d_semaphore_offset = 0;
+
     BX_GEFORCE_THIS chs[i].rop = 0;
 
     BX_GEFORCE_THIS chs[i].beta = 0;
@@ -2509,8 +2512,8 @@ void bx_geforce_c::sifc(Bit32u chid)
 {
   Bit16u dx = BX_GEFORCE_THIS chs[chid].sifc_clip_yx & 0xFFFF;
   Bit16u dy = BX_GEFORCE_THIS chs[chid].sifc_clip_yx >> 16;
-  Bit32u dsdx = 1099511627776.0 / BX_GEFORCE_THIS chs[chid].sifc_dxds;
-  Bit32u dtdy = 1099511627776.0 / BX_GEFORCE_THIS chs[chid].sifc_dydt;
+  Bit32u dsdx = (Bit32u)(BX_CONST64(1099511627776) / BX_GEFORCE_THIS chs[chid].sifc_dxds);
+  Bit32u dtdy = (Bit32u)(BX_CONST64(1099511627776) / BX_GEFORCE_THIS chs[chid].sifc_dydt);
   Bit32u swidth = BX_GEFORCE_THIS chs[chid].sifc_shw & 0xFFFF;
   Bit32u dwidth = BX_GEFORCE_THIS chs[chid].sifc_clip_hw & 0xFFFF;
   Bit32u height = BX_GEFORCE_THIS chs[chid].sifc_clip_hw >> 16;
@@ -3062,6 +3065,18 @@ void bx_geforce_c::execute_sifm(Bit32u chid, Bit32u method, Bit32u param)
   }
 }
 
+void bx_geforce_c::execute_d3d(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param)
+{
+  if (method == 0x069)
+    BX_GEFORCE_THIS chs[chid].d3d_semaphore_obj = param;
+  else if (method == 0x75b)
+    BX_GEFORCE_THIS chs[chid].d3d_semaphore_offset = param;
+  else if (method == 0x75c) {
+    dma_write32(BX_GEFORCE_THIS chs[chid].d3d_semaphore_obj,
+      BX_GEFORCE_THIS chs[chid].d3d_semaphore_offset, param);
+  }
+}
+
 bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param)
 {
   bool software_method = false;
@@ -3207,6 +3222,8 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
           execute_beta(chid, method, param);
         else if (cls == 0x89)
           execute_sifm(chid, method, param);
+        else if (cls == 0x97)
+          execute_d3d(chid, cls, method, param);
         if (BX_GEFORCE_THIS chs[chid].notify_pending) {
           BX_GEFORCE_THIS chs[chid].notify_pending = false;
           if ((ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier) & 0xFF) == 0x30) {

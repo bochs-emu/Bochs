@@ -150,6 +150,7 @@ private:
   BX_GEFORCE_SMF void execute_sifc(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_beta(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_sifm(Bit32u chid, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_d3d(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param);
 
   BX_GEFORCE_SMF Bit32u get_pixel(Bit32u obj, Bit32u ofs, Bit32u x, Bit32u cb);
   BX_GEFORCE_SMF void put_pixel(Bit32u chid, Bit32u ofs, Bit32u x, Bit32u value);
@@ -320,6 +321,9 @@ private:
     Bit32u m2mf_line_count;
     Bit32u m2mf_format;
     Bit32u m2mf_buffer_notify;
+
+    Bit32u d3d_semaphore_obj;
+    Bit32u d3d_semaphore_offset;
 
     Bit8u  rop;
 
