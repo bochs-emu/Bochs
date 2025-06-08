@@ -4877,7 +4877,7 @@ as well as other checks.
 <para>
 Example:
 <screen>
-  usb_ohci: enabled=1, port1=printer:printdata.bin
+  usb_ohci: enabled=1, port1=printer, options1=file:printdata.bin
 </screen>
 This option controls the presence of the USB OHCI host controller with a
 2-port hub. The port<replaceable>X</replaceable> parameter accepts the same device types with the same
@@ -4916,9 +4916,9 @@ companion, and the last pair to the third companion. Currently, there is no way 
 Example:
 <screen>
   usb_xhci: enabled=1, model="uPD720202", n_ports=4
-  usb_xhci: port1="disk:usbdisk.img"                   # defaults to super-speed
-  usb_xhci: port3="disk:usbdisk.img"                   # defaults to high-speed
-  usb_xhci: port1="speed:super, disk:usbdisk.img"      # defaults to the BBB protocol
+  usb_xhci: port1="disk", options1="path:usbdisk.img"  # defaults to super-speed
+  usb_xhci: port3="disk", options3="path:usbdisk.img"  # defaults to high-speed
+  usb_xhci: port1="disk", options1="speed:super, path:usbdisk.img" # defaults to the BBB protocol
   usb_xhci: port1=disk, options1="speed:super, path:usbdisk.img, proto:uasp"
   usb_xhci: port1=disk, options1="speed:super, path:usbdisk.img, proto:bbb"
   usb_xhci: port1=cdrom, options1="speed:super, path:bootcd.iso, proto:uasp"

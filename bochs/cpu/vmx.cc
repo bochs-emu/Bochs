@@ -745,8 +745,12 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
       }
 
       vm->pid_addr = (bx_phy_address) VMread64(VMCS_64BIT_CONTROL_POSTED_INTERRUPT_DESC_ADDR);
-      if (! IsValidPageAlignedPhyAddr(vm->pid_addr)) {
+      if (! IsValidPhyAddr(vm->pid_addr)) {
         BX_ERROR(("VMFAIL: VMCS EXEC CTRL: Posted Interrupt Descriptor phy addr malformed"));
+        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+      }
+      if ((vm->pid_addr & 0x3f) != 0) {
+        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: Posted Interrupt Descriptor phy addr must be 64-byte aligned"));
         return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
       }
     }

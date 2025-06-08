@@ -29,6 +29,7 @@ Detailed change log :
 
 - Config interface
   - On Windows make sure file name parameters use backslash as separator
+  - Removed backward compatibility mode for USB device options
 
 - Memory
   - Added support for overlapping r/o memory handlers (used for PCI ROM)
