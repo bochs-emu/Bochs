@@ -287,6 +287,7 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS graph_intr = 0;
   BX_GEFORCE_THIS graph_nsource = 0;
   BX_GEFORCE_THIS graph_intr_en = 0;
+  BX_GEFORCE_THIS graph_ctx_switch2 = 0;
   BX_GEFORCE_THIS graph_ctx_switch4 = 0;
   BX_GEFORCE_THIS graph_status = 0;
   BX_GEFORCE_THIS graph_trapped_addr = 0;
@@ -3239,10 +3240,12 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
             BX_GEFORCE_THIS graph_intr |= 0x00000001;
             update_irq_level();
             BX_GEFORCE_THIS graph_nsource |= 0x00000001;
+            BX_GEFORCE_THIS graph_notify = 0x00110000;
+            BX_GEFORCE_THIS graph_ctx_switch2 = BX_GEFORCE_THIS chs[chid].schs[subc].notifier >> 4;
+            if (BX_GEFORCE_THIS card_type < 0x40)
+              BX_GEFORCE_THIS graph_ctx_switch2 <<= 16;
             BX_GEFORCE_THIS graph_ctx_switch4 =
               BX_GEFORCE_THIS chs[chid].schs[subc].object >> 4;
-            BX_GEFORCE_THIS graph_notify =
-              BX_GEFORCE_THIS chs[chid].schs[subc].notifier >> 4 | 0x00010000;
             BX_GEFORCE_THIS graph_trapped_addr = method << 2 | subc << 16 | chid << 20;
             BX_GEFORCE_THIS graph_trapped_data = param;
             BX_DEBUG(("execute_command: notify interrupt triggered"));
@@ -3505,6 +3508,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
   } else if (address == 0x40013C && BX_GEFORCE_THIS card_type >= 0x40 ||
              address == 0x400140 && BX_GEFORCE_THIS card_type < 0x40) {
     value = BX_GEFORCE_THIS graph_intr_en;
+  } else if (address == 0x400150) {
+    value = BX_GEFORCE_THIS graph_ctx_switch2;
   } else if (address == 0x400158) {
     value = BX_GEFORCE_THIS graph_ctx_switch4;
   } else if (address == 0x400700) {
@@ -3694,6 +3699,8 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
              address == 0x400140 && BX_GEFORCE_THIS card_type < 0x40) {
     BX_GEFORCE_THIS graph_intr_en = value;
     update_irq_level();
+  } else if (address == 0x400150) {
+    BX_GEFORCE_THIS graph_ctx_switch2 = value;
   } else if (address == 0x400158) {
     BX_GEFORCE_THIS graph_ctx_switch4 = value;
   } else if (address == 0x400700) {

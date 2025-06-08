@@ -206,6 +206,7 @@ private:
   Bit32u graph_intr;
   Bit32u graph_nsource;
   Bit32u graph_intr_en;
+  Bit32u graph_ctx_switch2;
   Bit32u graph_ctx_switch4;
   Bit32u graph_status;
   Bit32u graph_trapped_addr;
