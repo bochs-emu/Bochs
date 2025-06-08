@@ -348,23 +348,32 @@ int AskFilename(HWND hwnd, bx_param_filename_c *param, char *buffer)
 
 void InitDlgFont(void)
 {
-  LOGFONT LFont;
+    NONCLIENTMETRICS ncm = { 0 };
+    ncm.cbSize = sizeof(ncm);
 
-  LFont.lfHeight         = 8;                // Default logical height of font
-  LFont.lfWidth          = 0;                // Default logical average character width
-  LFont.lfEscapement     = 0;                // angle of escapement
-  LFont.lfOrientation    = 0;                // base-line orientation angle
-  LFont.lfWeight         = FW_NORMAL;        // font weight
-  LFont.lfItalic         = 0;                // italic attribute flag
-  LFont.lfUnderline      = 0;                // underline attribute flag
-  LFont.lfStrikeOut      = 0;                // strikeout attribute flag
-  LFont.lfCharSet        = DEFAULT_CHARSET;  // character set identifier
-  LFont.lfOutPrecision   = OUT_DEFAULT_PRECIS;  // output precision
-  LFont.lfClipPrecision  = CLIP_DEFAULT_PRECIS; // clipping precision
-  LFont.lfQuality        = DEFAULT_QUALITY;     // output quality
-  LFont.lfPitchAndFamily = DEFAULT_PITCH;     // pitch and family
-  lstrcpy(LFont.lfFaceName, "Helv");          // pointer to typeface name string
-  DlgFont  = CreateFontIndirect(&LFont);
+    if (SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(ncm), &ncm, 0)) {
+        DlgFont = CreateFontIndirect(&ncm.lfMessageFont);
+    }
+    // fallback for Windows Server 2003 and Windows XP/2000
+    else {
+        LOGFONT LFont;
+
+        LFont.lfHeight = 8;                          // Default logical height of font
+        LFont.lfWidth = 0;                           // Default logical average character width
+        LFont.lfEscapement = 0;                      // angle of escapement
+        LFont.lfOrientation = 0;                     // base-line orientation angle
+        LFont.lfWeight = FW_NORMAL;                  // font weight
+        LFont.lfItalic = 0;                          // italic attribute flag
+        LFont.lfUnderline = 0;                       // underline attribute flag
+        LFont.lfStrikeOut = 0;                       // strikeout attribute flag
+        LFont.lfCharSet = DEFAULT_CHARSET;           // character set identifier
+        LFont.lfOutPrecision = OUT_DEFAULT_PRECIS;   // output precision
+        LFont.lfClipPrecision = CLIP_DEFAULT_PRECIS; // clipping precision
+        LFont.lfQuality = DEFAULT_QUALITY;           // output quality
+        LFont.lfPitchAndFamily = DEFAULT_PITCH;      // pitch and family
+        lstrcpy(LFont.lfFaceName, "Helv");           // pointer to typeface name string
+        DlgFont = CreateFontIndirect(&LFont);
+    }
 }
 
 LRESULT CALLBACK EditHexWndProc(HWND Window, UINT msg, WPARAM wParam, LPARAM lParam)
