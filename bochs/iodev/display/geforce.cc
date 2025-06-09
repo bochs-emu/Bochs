@@ -1117,7 +1117,14 @@ void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tilein
       for (unsigned cx = cx0; cx < cx1; cx++) {
         Bit8u dr, dg, db;
         if (display_color_bytes == 1) {
-          dr = dg = db = vid_ptr2[0];
+          if (info->is_indexed) {
+            dr = dg = db = vid_ptr2[0];
+          } else {
+            Bit8u index = vid_ptr2[0];
+            dr = (BX_GEFORCE_THIS s.pel.data[index].red << BX_GEFORCE_THIS s.dac_shift);
+            dg = (BX_GEFORCE_THIS s.pel.data[index].green << BX_GEFORCE_THIS s.dac_shift);
+            db = (BX_GEFORCE_THIS s.pel.data[index].blue << BX_GEFORCE_THIS s.dac_shift);
+          }
         } else if (display_color_bytes == 2) {
           EXTRACT_565_TO_888(vid_ptr2[0] << 0 | vid_ptr2[1] << 8, dr, dg, db);
         } else {
@@ -1334,6 +1341,7 @@ void bx_geforce_c::update(void)
   Bit8u * vid_ptr, * vid_ptr2;
   Bit8u * tile_ptr, * tile_ptr2;
   bx_svga_tileinfo_t info;
+  Bit8u dac_size = (BX_GEFORCE_THIS s.dac_shift == 0) ? 8 : 6;
 
   if (bx_gui->graphics_tile_info_common(&info)) {
     if (info.snapshot_mode) {
@@ -1488,9 +1496,9 @@ void bx_geforce_c::update(void)
                       vid_ptr2++;
                     }
                     colour = MAKE_COLOUR(
-                      BX_GEFORCE_THIS s.pel.data[colour].red, 6, info.red_shift, info.red_mask,
-                      BX_GEFORCE_THIS s.pel.data[colour].green, 6, info.green_shift, info.green_mask,
-                      BX_GEFORCE_THIS s.pel.data[colour].blue, 6, info.blue_shift, info.blue_mask);
+                      BX_GEFORCE_THIS s.pel.data[colour].red, dac_size, info.red_shift, info.red_mask,
+                      BX_GEFORCE_THIS s.pel.data[colour].green, dac_size, info.green_shift, info.green_mask,
+                      BX_GEFORCE_THIS s.pel.data[colour].blue, dac_size, info.blue_shift, info.blue_mask);
                     if (info.is_little_endian) {
                       for (i=0; i<info.bpp; i+=8) {
                         *(tile_ptr2++) = colour >> i;
