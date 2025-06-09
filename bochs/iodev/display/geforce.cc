@@ -186,10 +186,10 @@ bool bx_geforce_c::init_vga_extension(void)
   // initialize SVGA stuffs.
   BX_GEFORCE_THIS init_iohandlers(svga_read_handler, svga_write_handler, "geforce");
   DEV_register_ioread_handler(this, svga_read_handler, 0x03B4, "geforce", 2);
-  DEV_register_ioread_handler(this, svga_read_handler, 0x03D0, "geforce", 6);
+  DEV_register_ioread_handler(this, svga_read_handler, 0x03D0, "geforce", 7);
   DEV_register_ioread_handler(this, svga_read_handler, 0x03D2, "geforce", 2);
   DEV_register_ioread_handler(this, svga_read_handler, 0x03C3, "geforce", 3);
-  DEV_register_iowrite_handler(this, svga_write_handler, 0x03D0, "geforce", 6);
+  DEV_register_iowrite_handler(this, svga_write_handler, 0x03D0, "geforce", 7);
   DEV_register_iowrite_handler(this, svga_write_handler, 0x03D2, "geforce", 2);
   BX_GEFORCE_THIS svga_init_members();
   BX_GEFORCE_THIS svga_init_pcihandlers();
@@ -846,10 +846,16 @@ Bit32u bx_geforce_c::svga_read(Bit32u address, unsigned io_len)
 
   if (address == 0x03d0 || address == 0x03d2) // RMA_ACCESS
   {
+      if (io_len == 1) {
+        BX_ERROR(("port 0x3d0 access with io_len = 1"));
+        return 0;
+      }
       Bit8u crtc38 = BX_GEFORCE_THIS crtc.reg[0x38];
       bool rma_enable = crtc38 & 1;
-      if (!rma_enable)
-          BX_PANIC(("port 0x3d0 access is disabled"));
+      if (!rma_enable) {
+        BX_ERROR(("port 0x3d0 access is disabled"));
+        return 0;
+      }
       int rma_index = crtc38 >> 1;
       if (rma_index == 1) {
         if (address == 0x03d0) {
@@ -941,10 +947,16 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
 
   if (address == 0x03d0 || address == 0x03d2) // RMA_ACCESS
   {
+      if (io_len == 1) {
+        BX_DEBUG(("port 0x3d0 access with io_len = 1"));
+        return;
+      }
       Bit8u crtc38 = BX_GEFORCE_THIS crtc.reg[0x38];
       bool rma_enable = crtc38 & 1;
-      if (!rma_enable)
-        BX_PANIC(("port 0x3d0 access is disabled"));
+      if (!rma_enable) {
+        BX_ERROR(("port 0x3d0 access is disabled"));
+        return;
+      }
       int rma_index = crtc38 >> 1;
       if (rma_index == 1) {
         if (address == 0x03d0) {
@@ -962,7 +974,7 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
           //BX_DEBUG(("rma: address set to 0x%08x (hi)", BX_GEFORCE_THIS rma_addr));
         }
       } else if (rma_index == 2) {
-        BX_PANIC(("rma: write index 2"));
+        BX_ERROR(("rma: write index 2"));
       } else if (rma_index == 3) {
         bool vram = false;
         Bit32u offset = BX_GEFORCE_THIS rma_addr;
