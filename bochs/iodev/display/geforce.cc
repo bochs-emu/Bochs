@@ -2433,15 +2433,20 @@ void bx_geforce_c::ifc(Bit32u chid)
   draw_offset += dy * pitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
   Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   Bit32u word_offset = 0;
+  Bit32u chromacolor;
+  if (BX_GEFORCE_THIS chs[chid].ifc_color_key_enable) {
+    if (BX_GEFORCE_THIS chs[chid].ifc_color_bytes == 4)
+      chromacolor = BX_GEFORCE_THIS chs[chid].chroma_color & 0x00FFFFFF;
+    else if (BX_GEFORCE_THIS chs[chid].ifc_color_bytes == 2)
+      chromacolor = BX_GEFORCE_THIS chs[chid].chroma_color & 0x0000FFFF;
+    else
+      chromacolor = BX_GEFORCE_THIS chs[chid].chroma_color & 0x000000FF;
+  }
   for (Bit16u y = 0; y < height; y++) {
     for (Bit16u x = 0; x < dwidth; x++) {
       Bit32u srccolor;
-      bool skip_write = false;
       if (BX_GEFORCE_THIS chs[chid].ifc_color_bytes == 4) {
         srccolor = BX_GEFORCE_THIS chs[chid].ifc_words[word_offset];
-        if (BX_GEFORCE_THIS chs[chid].ifc_color_key_enable &&
-            srccolor == (BX_GEFORCE_THIS chs[chid].chroma_color & 0x00FFFFFF))
-          skip_write = true;
       } else if (BX_GEFORCE_THIS chs[chid].ifc_color_bytes == 2) {
         Bit16u *ifc_words16 = (Bit16u*)BX_GEFORCE_THIS chs[chid].ifc_words;
         srccolor = ifc_words16[word_offset];
@@ -2449,7 +2454,7 @@ void bx_geforce_c::ifc(Bit32u chid)
         Bit8u *ifc_words8 = (Bit8u*)BX_GEFORCE_THIS chs[chid].ifc_words;
         srccolor = ifc_words8[word_offset];
       }
-      if (!skip_write) {
+      if (!BX_GEFORCE_THIS chs[chid].ifc_color_key_enable || srccolor != chromacolor) {
         Bit32u dstcolor = get_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_dst,
           draw_offset, x, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
         if (BX_GEFORCE_THIS chs[chid].ifc_color_bytes == 4 &&
@@ -2598,18 +2603,21 @@ void bx_geforce_c::copyarea(Bit32u chid)
   Bit32u redraw_offset = draw_offset + dy * dpitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes -
     (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   draw_offset += (dy + ydir * (height - 1)) * dpitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
+  Bit32u chromacolor;
+  if (BX_GEFORCE_THIS chs[chid].blit_color_key_enable) {
+    if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 4)
+      chromacolor = BX_GEFORCE_THIS chs[chid].chroma_color & 0x00FFFFFF;
+    else if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 2)
+      chromacolor = BX_GEFORCE_THIS chs[chid].chroma_color & 0x0000FFFF;
+    else
+      chromacolor = BX_GEFORCE_THIS chs[chid].chroma_color & 0x000000FF;
+  }
   for (Bit16u y = 0; y < height; y++) {
     for (Bit16u x = 0; x < width; x++) {
       Bit16u xa = xdir ? width - x - 1 : x;
       Bit32u srccolor = get_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_src,
         src_offset, xa, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
-      bool skip_write = false;
-      if (BX_GEFORCE_THIS chs[chid].blit_color_key_enable) {
-        if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 1)
-          if (srccolor == (BX_GEFORCE_THIS chs[chid].chroma_color & 0x000000FF))
-            skip_write = true;
-      }
-      if (!skip_write) {
+      if (!BX_GEFORCE_THIS chs[chid].blit_color_key_enable || srccolor != chromacolor) {
         Bit32u dstcolor = get_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_dst,
           draw_offset, xa, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
         pixel_operation(chid, BX_GEFORCE_THIS chs[chid].blit_operation,
