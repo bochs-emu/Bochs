@@ -294,6 +294,7 @@ private:
     Bit32u sifc_words_left;
     Bit32u* sifc_words;
 
+    bool blit_color_key_enable;
     Bit32u blit_operation;
     Bit32u blit_syx;
     Bit32u blit_dyx;
