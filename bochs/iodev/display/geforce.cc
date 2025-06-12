@@ -3123,9 +3123,11 @@ void bx_geforce_c::execute_sifm(Bit32u chid, Bit32u method, Bit32u param)
     BX_GEFORCE_THIS chs[chid].sifm_src = param;
   else if (method == 0x0c0) {
     BX_GEFORCE_THIS chs[chid].sifm_color_fmt = param;
-    if (BX_GEFORCE_THIS chs[chid].sifm_color_fmt == 1 || // A1R5G5B5
-        BX_GEFORCE_THIS chs[chid].sifm_color_fmt == 2 || // X1R5G5B5
-        BX_GEFORCE_THIS chs[chid].sifm_color_fmt == 7)   // R5G6B5
+    if (BX_GEFORCE_THIS chs[chid].sifm_color_fmt == 8)        // ???
+      BX_GEFORCE_THIS chs[chid].sifm_color_bytes = 1;
+    else if (BX_GEFORCE_THIS chs[chid].sifm_color_fmt == 1 || // A1R5G5B5
+             BX_GEFORCE_THIS chs[chid].sifm_color_fmt == 2 || // X1R5G5B5
+             BX_GEFORCE_THIS chs[chid].sifm_color_fmt == 7)   // R5G6B5
       BX_GEFORCE_THIS chs[chid].sifm_color_bytes = 2;
     else if (BX_GEFORCE_THIS chs[chid].sifm_color_fmt == 3 || // A8R8G8B8
              BX_GEFORCE_THIS chs[chid].sifm_color_fmt == 4)   // X8R8G8B8
