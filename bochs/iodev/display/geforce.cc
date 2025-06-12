@@ -2398,9 +2398,10 @@ void bx_geforce_c::gdi_fillrect(Bit32u chid, bool clipped)
   }
   Bit32u pitch = BX_GEFORCE_THIS chs[chid].s2d_pitch >> 16;
   Bit32u srccolor = BX_GEFORCE_THIS chs[chid].gdi_rect_color;
-  Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].s2d_ofs_dst;
-  draw_offset += dy * pitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
-  Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
+  Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].s2d_ofs_dst +
+    dy * pitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
+  Bit32u redraw_offset = dma_lin_lookup(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset) -
+    (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   for (Bit16u y = 0; y < height; y++) {
     for (Bit16u x = 0; x < width; x++) {
       if (!clipped || x >= clipx0 && x < clipx1 && y >= clipy0 && y < clipy1) {
@@ -2434,9 +2435,10 @@ void bx_geforce_c::gdi_blit(Bit32u chid, Bit32u type)
     bg_color = color_565_to_888(bg_color);
     fg_color = color_565_to_888(fg_color);
   }
-  Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].s2d_ofs_dst;
-  draw_offset += dy * pitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
-  Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
+  Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].s2d_ofs_dst +
+    dy * pitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
+  Bit32u redraw_offset = dma_lin_lookup(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset) -
+    (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   Bit32u bit_index = 0;
   for (Bit16u y = 0; y < height; y++) {
     for (Bit16u x = 0; x < dwidth; x++) {
@@ -2470,9 +2472,10 @@ void bx_geforce_c::ifc(Bit32u chid)
   Bit32u dwidth = BX_GEFORCE_THIS chs[chid].ifc_dhw & 0xFFFF;
   Bit32u height = BX_GEFORCE_THIS chs[chid].ifc_dhw >> 16;
   Bit32u pitch = BX_GEFORCE_THIS chs[chid].s2d_pitch >> 16;
-  Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].s2d_ofs_dst;
-  draw_offset += dy * pitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
-  Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
+  Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].s2d_ofs_dst +
+    dy * pitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
+  Bit32u redraw_offset = dma_lin_lookup(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset) -
+    (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   Bit32u word_offset = 0;
   Bit32u chromacolor;
   if (BX_GEFORCE_THIS chs[chid].ifc_color_key_enable) {
@@ -2528,9 +2531,10 @@ void bx_geforce_c::iifc(Bit32u chid)
   Bit32u dwidth = BX_GEFORCE_THIS chs[chid].iifc_dhw & 0xFFFF;
   Bit32u height = BX_GEFORCE_THIS chs[chid].iifc_dhw >> 16;
   Bit32u pitch = BX_GEFORCE_THIS chs[chid].s2d_pitch >> 16;
-  Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].s2d_ofs_dst;
-  draw_offset += dy * pitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
-  Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
+  Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].s2d_ofs_dst +
+    dy * pitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
+  Bit32u redraw_offset = dma_lin_lookup(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset) -
+    (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   Bit32u symbol_index = 0;
   for (Bit16u y = 0; y < height; y++) {
     for (Bit16u x = 0; x < dwidth; x++) {
@@ -2582,9 +2586,10 @@ void bx_geforce_c::sifc(Bit32u chid)
   Bit32u dwidth = BX_GEFORCE_THIS chs[chid].sifc_clip_hw & 0xFFFF;
   Bit32u height = BX_GEFORCE_THIS chs[chid].sifc_clip_hw >> 16;
   Bit32u pitch = BX_GEFORCE_THIS chs[chid].s2d_pitch >> 16;
-  Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].s2d_ofs_dst;
-  draw_offset += dy * pitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
-  Bit32u redraw_offset = draw_offset - (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
+  Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].s2d_ofs_dst +
+    dy * pitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
+  Bit32u redraw_offset = dma_lin_lookup(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset) -
+    (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   Bit32s sx0 = ((BX_GEFORCE_THIS chs[chid].sifc_syx & 0xFFFF) << 16) - (dx << 20) - 0x80000;
   Bit32s sy = (BX_GEFORCE_THIS chs[chid].sifc_syx & 0xFFFF0000) - (dy << 20) - 0x80000;
   if (sx0 < 0)
@@ -2641,7 +2646,8 @@ void bx_geforce_c::copyarea(Bit32u chid)
   bool xdir = dx > sx;
   bool ydir = dy > sy;
   src_offset += (sy + ydir * (height - 1)) * spitch + sx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
-  Bit32u redraw_offset = draw_offset + dy * dpitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes -
+  Bit32u redraw_offset = dma_lin_lookup(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset) +
+    dy * dpitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes -
     (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   draw_offset += (dy + ydir * (height - 1)) * dpitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
   Bit32u chromacolor;
@@ -2698,12 +2704,12 @@ void bx_geforce_c::sifm(Bit32u chid)
   Bit16u dheight = BX_GEFORCE_THIS chs[chid].sifm_dhw >> 16;
   Bit32u spitch = BX_GEFORCE_THIS chs[chid].sifm_sfmt & 0xFFFF;
   Bit32u dpitch = BX_GEFORCE_THIS chs[chid].s2d_pitch >> 16;
-  Bit32u src_offset = BX_GEFORCE_THIS chs[chid].sifm_sofs;
-  Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].s2d_ofs_dst;
-  src_offset += sy * spitch + sx * BX_GEFORCE_THIS chs[chid].sifm_color_bytes;
-  Bit32u redraw_offset = draw_offset + dy * dpitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes -
+  Bit32u src_offset = BX_GEFORCE_THIS chs[chid].sifm_sofs +
+    sy * spitch + sx * BX_GEFORCE_THIS chs[chid].sifm_color_bytes;
+  Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].s2d_ofs_dst +
+    dy * dpitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
+  Bit32u redraw_offset = dma_lin_lookup(BX_GEFORCE_THIS chs[chid].s2d_img_dst, draw_offset) -
     (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
-  draw_offset += dy * dpitch + dx * BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
   if (BX_GEFORCE_THIS chs[chid].sifm_dudx != 0x00100000 ||
       BX_GEFORCE_THIS chs[chid].sifm_dvdy != 0x00100000)
     BX_ERROR(("SIFM scaling is not implemented"));
