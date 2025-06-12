@@ -554,19 +554,26 @@ void bx_geforce_c::redraw_area(Bit32s x0, Bit32s y0, Bit32u width, Bit32u height
   if (x0 + (Bit32s)width <= 0 || y0 + (Bit32s)height <= 0)
     return;
 
-  unsigned xti, yti, xt0, xt1, yt0, yt1;
-
   if (!BX_GEFORCE_THIS crtc.reg[0x28]) {
     BX_GEFORCE_THIS bx_vgacore_c::redraw_area(x0, y0, width, height);
     return;
   }
 
-  if (BX_GEFORCE_THIS svga_needs_update_mode) {
+  if (BX_GEFORCE_THIS svga_needs_update_mode)
     return;
+
+  if (s.y_doublescan) {
+    y0 <<= 1;
+    height <<= 1;
+  }
+  if (BX_GEFORCE_THIS svga_double_width) {
+    x0 <<= 1;
+    width <<= 1;
   }
 
   BX_GEFORCE_THIS svga_needs_update_tile = 1;
 
+  unsigned xti, yti, xt0, xt1, yt0, yt1;
   xt0 = x0 <= 0 ? 0 : x0 / X_TILESIZE;
   yt0 = y0 <= 0 ? 0 : y0 / Y_TILESIZE;
   if (x0 < (Bit32s)BX_GEFORCE_THIS svga_xres) {
@@ -793,6 +800,10 @@ void bx_geforce_c::mem_write(bx_phy_address addr, Bit8u value)
       offset -= (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
       x = (offset % BX_GEFORCE_THIS svga_pitch) / (BX_GEFORCE_THIS svga_bpp / 8);
       y = offset / BX_GEFORCE_THIS svga_pitch;
+      if (BX_GEFORCE_THIS s.y_doublescan)
+        y <<= 1;
+      if (BX_GEFORCE_THIS svga_double_width)
+        x <<= 1;
       SET_TILE_UPDATED(BX_GEFORCE_THIS, x / X_TILESIZE, y / Y_TILESIZE, 1);
     }
     return;
@@ -1083,9 +1094,15 @@ void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tilein
   Bit16s hwcx = BX_GEFORCE_THIS hw_cursor.x;
   Bit16s hwcy = BX_GEFORCE_THIS hw_cursor.y;
   Bit8u size = BX_GEFORCE_THIS hw_cursor.size;
+
+  if (BX_GEFORCE_THIS svga_double_width) {
+    hwcx <<= 1;
+    hwcy <<= 1;
+    size <<= 1;
+  }
+
   unsigned w, h;
   Bit8u* tile_ptr;
-
   if (info->snapshot_mode) {
     tile_ptr = bx_gui->get_snapshot_buffer();
     w = BX_GEFORCE_THIS svga_xres;
@@ -1108,13 +1125,16 @@ void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tilein
     if (info->bpp == 15) info->bpp = 16;
     tile_ptr += info->pitch * (cy0 - yc) + info->bpp / 8 * (cx0 - xc);
     unsigned pitch = BX_GEFORCE_THIS hw_cursor.size * cursor_color_bytes;
-    Bit8u* cursor_ptr = BX_GEFORCE_THIS s.memory +
-      BX_GEFORCE_THIS hw_cursor.offset + pitch * (cy0 - hwcy);
-    Bit8u* vid_ptr = BX_GEFORCE_THIS disp_ptr + BX_GEFORCE_THIS svga_pitch * cy0;
+    Bit8u* cursor_ptr = BX_GEFORCE_THIS s.memory + BX_GEFORCE_THIS hw_cursor.offset +
+      (pitch * (cy0 - hwcy) >> (int)BX_GEFORCE_THIS s.y_doublescan);
+    Bit8u* vid_ptr = BX_GEFORCE_THIS disp_ptr + (BX_GEFORCE_THIS svga_pitch * cy0 >>
+      (int)BX_GEFORCE_THIS s.y_doublescan);
     for (unsigned cy = cy0; cy < cy1; cy++) {
       Bit8u* tile_ptr2 = tile_ptr;
-      Bit8u* cursor_ptr2 = cursor_ptr + cursor_color_bytes * (cx0 - hwcx);
-      Bit8u* vid_ptr2 = vid_ptr + display_color_bytes * cx0;
+      Bit8u* cursor_ptr2 = cursor_ptr + (cursor_color_bytes * (cx0 - hwcx) >>
+        (int)BX_GEFORCE_THIS svga_double_width);
+      Bit8u* vid_ptr2 = vid_ptr + (display_color_bytes * cx0 >>
+        (int)BX_GEFORCE_THIS svga_double_width);
       for (unsigned cx = cx0; cx < cx1; cx++) {
         Bit8u dr, dg, db;
         if (display_color_bytes == 1) {
@@ -1173,12 +1193,16 @@ void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tilein
         } else {
           *(tile_ptr2++) = (Bit8u)color;
         }
-        cursor_ptr2 += cursor_color_bytes;
-        vid_ptr2 += display_color_bytes;
+        if (!BX_GEFORCE_THIS svga_double_width || (cx & 1)) {
+          cursor_ptr2 += cursor_color_bytes;
+          vid_ptr2 += display_color_bytes;
+        }
       }
       tile_ptr += info->pitch;
-      cursor_ptr += pitch;
-      vid_ptr += BX_GEFORCE_THIS svga_pitch;
+      if (!BX_GEFORCE_THIS s.y_doublescan || (cy & 1)) {
+        cursor_ptr += pitch;
+        vid_ptr += BX_GEFORCE_THIS svga_pitch;
+      }
     }
   }
 }
@@ -1284,8 +1308,16 @@ void bx_geforce_c::update(void)
       ((BX_GEFORCE_THIS crtc.reg[0x25] & 0x02) << 9) |
       ((BX_GEFORCE_THIS crtc.reg[0x41] & 0x04) << 9)) + 1;
 
-    if ((iWidth != BX_GEFORCE_THIS svga_xres) || (iHeight != BX_GEFORCE_THIS svga_yres)
-        || (iBpp != BX_GEFORCE_THIS svga_bpp)) {
+    if (BX_GEFORCE_THIS s.y_doublescan && iHeight > iWidth) {
+      iWidth <<= 1;
+      BX_GEFORCE_THIS svga_double_width = true;
+    } else {
+      BX_GEFORCE_THIS svga_double_width = false;
+    }
+
+    if (iWidth != BX_GEFORCE_THIS svga_xres ||
+        iHeight != BX_GEFORCE_THIS svga_yres ||
+        iBpp != BX_GEFORCE_THIS svga_bpp) {
       BX_INFO(("switched to %u x %u x %u", iWidth, iHeight, iBpp));
     }
 
@@ -1325,7 +1357,7 @@ void bx_geforce_c::update(void)
   }
 
   if (BX_GEFORCE_THIS svga_needs_update_dispentire) {
-    BX_GEFORCE_THIS redraw_area(0,0,width,height);
+    BX_GEFORCE_THIS redraw_area(0, 0, width, height);
     BX_GEFORCE_THIS svga_needs_update_dispentire = 0;
   }
 
@@ -1350,11 +1382,20 @@ void bx_geforce_c::update(void)
       tile_ptr = bx_gui->get_snapshot_buffer();
       if (tile_ptr != NULL) {
         for (yc = 0; yc < height; yc++) {
+          vid_ptr2  = vid_ptr;
+          tile_ptr2 = tile_ptr;
           if (BX_GEFORCE_THIS svga_dispbpp != 4) {
-            memcpy(tile_ptr, vid_ptr, info.pitch);
-            vid_ptr += pitch;
+            for (xc = 0; xc < width; xc++) {
+              memcpy(tile_ptr2, vid_ptr2, (BX_GEFORCE_THIS svga_bpp >> 3));
+              if (!BX_GEFORCE_THIS svga_double_width || (xc & 1)) {
+                vid_ptr2 += (BX_GEFORCE_THIS svga_bpp >> 3);
+              }
+              tile_ptr2 += ((info.bpp + 1) >> 3);
+            }
+            if (!BX_GEFORCE_THIS s.y_doublescan || (yc & 1)) {
+              vid_ptr += pitch;
+            }
           } else {
-            tile_ptr2 = tile_ptr;
             row_addr = BX_GEFORCE_THIS s.CRTC.start_addr + (yc * pitch);
             for (xc = 0; xc < width; xc++) {
               *(tile_ptr2++) = BX_GEFORCE_THIS get_vga_pixel(xc, yc, row_addr, 0xffff, 0, BX_GEFORCE_THIS s.memory);
