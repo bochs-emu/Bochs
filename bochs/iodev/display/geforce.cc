@@ -2927,19 +2927,7 @@ void bx_geforce_c::execute_ifc(Bit32u chid, Bit8u cls, Bit32u method, Bit32u par
     BX_GEFORCE_THIS chs[chid].ifc_operation = param;
   else if (method == 0x0c0) {
     BX_GEFORCE_THIS chs[chid].ifc_color_fmt = param;
-    if (BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 1) // Y8
-      BX_GEFORCE_THIS chs[chid].ifc_color_bytes = 1; // hack
-    else if (BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 1 || // R5G6B5
-        BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 2 || // A1R5G5B5
-        BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 3)   // X1R5G5B5
-      BX_GEFORCE_THIS chs[chid].ifc_color_bytes = 2;
-    else if (BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 4 || // A8R8G8B8
-             BX_GEFORCE_THIS chs[chid].ifc_color_fmt == 5)   // X8R8G8B8
-      BX_GEFORCE_THIS chs[chid].ifc_color_bytes = 4;
-    else {
-      BX_ERROR(("unknown IFC color format: 0x%02x",
-        BX_GEFORCE_THIS chs[chid].ifc_color_fmt));
-    }
+    update_color_bytes_ifc(chid);
   } else if (method == 0x0c1)
     BX_GEFORCE_THIS chs[chid].ifc_yx = param;
   else if (method == 0x0c2)
@@ -2976,6 +2964,7 @@ void bx_geforce_c::execute_surf2d(Bit32u chid, Bit32u method, Bit32u param)
     BX_GEFORCE_THIS chs[chid].s2d_img_dst = param;
   else if (method == 0x0c0) {
     BX_GEFORCE_THIS chs[chid].s2d_color_fmt = param;
+    Bit32u s2d_color_bytes_prev = BX_GEFORCE_THIS chs[chid].s2d_color_bytes;
     if (BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 1) // Y8
       BX_GEFORCE_THIS chs[chid].s2d_color_bytes = 1;
     else if (BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 4) // R5G6B5
@@ -2988,6 +2977,11 @@ void bx_geforce_c::execute_surf2d(Bit32u chid, Bit32u method, Bit32u param)
       BX_ERROR(("unknown 2d surface color format: 0x%02x",
         BX_GEFORCE_THIS chs[chid].s2d_color_fmt));
     }
+    if (BX_GEFORCE_THIS chs[chid].s2d_color_bytes != s2d_color_bytes_prev &&
+        (BX_GEFORCE_THIS chs[chid].s2d_color_bytes == 1 || s2d_color_bytes_prev == 1)) {
+      update_color_bytes_ifc(chid);
+      update_color_bytes_sifc(chid);
+    }
   } else if (method == 0x0c1)
     BX_GEFORCE_THIS chs[chid].s2d_pitch = param;
   else if (method == 0x0c2)
@@ -2996,18 +2990,42 @@ void bx_geforce_c::execute_surf2d(Bit32u chid, Bit32u method, Bit32u param)
     BX_GEFORCE_THIS chs[chid].s2d_ofs_dst = param;
 }
 
-void bx_geforce_c::iifc_update_color_bytes(Bit32u chid)
+void bx_geforce_c::update_color_bytes_ifc(Bit32u chid)
 {
-  if (BX_GEFORCE_THIS chs[chid].iifc_color_fmt == 1 || // R5G6B5
-      BX_GEFORCE_THIS chs[chid].iifc_color_fmt == 2 || // A1R5G5B5
-      BX_GEFORCE_THIS chs[chid].iifc_color_fmt == 3)   // X1R5G5B5
-    BX_GEFORCE_THIS chs[chid].iifc_color_bytes = 2;
-  else if (BX_GEFORCE_THIS chs[chid].iifc_color_fmt == 4 || // A8R8G8B8
-           BX_GEFORCE_THIS chs[chid].iifc_color_fmt == 5)   // X8R8G8B8
-    BX_GEFORCE_THIS chs[chid].iifc_color_bytes = 4;
+  BX_GEFORCE_THIS update_color_bytes(
+    BX_GEFORCE_THIS chs[chid].s2d_color_fmt,
+    BX_GEFORCE_THIS chs[chid].ifc_color_fmt,
+    &BX_GEFORCE_THIS chs[chid].ifc_color_bytes);
+}
+
+void bx_geforce_c::update_color_bytes_sifc(Bit32u chid)
+{
+  BX_GEFORCE_THIS update_color_bytes(
+    BX_GEFORCE_THIS chs[chid].s2d_color_fmt,
+    BX_GEFORCE_THIS chs[chid].sifc_color_fmt,
+    &BX_GEFORCE_THIS chs[chid].sifc_color_bytes);
+}
+
+void bx_geforce_c::update_color_bytes_iifc(Bit32u chid)
+{
+  BX_GEFORCE_THIS update_color_bytes(0,
+    BX_GEFORCE_THIS chs[chid].iifc_color_fmt,
+    &BX_GEFORCE_THIS chs[chid].iifc_color_bytes);
+}
+
+void bx_geforce_c::update_color_bytes(Bit32u s2d_color_fmt, Bit32u color_fmt, Bit32u* color_bytes)
+{
+  if (s2d_color_fmt == 1) // Y8
+    *color_bytes = 1; // hack
+  else if (color_fmt == 1 || // R5G6B5
+           color_fmt == 2 || // A1R5G5B5
+           color_fmt == 3)   // X1R5G5B5
+    *color_bytes = 2;
+  else if (color_fmt == 4 || // A8R8G8B8
+           color_fmt == 5)   // X8R8G8B8
+    *color_bytes = 4;
   else {
-    BX_ERROR(("unknown IIFC color format: 0x%02x",
-      BX_GEFORCE_THIS chs[chid].iifc_color_fmt));
+    BX_ERROR(("unknown color format: 0x%02x", color_fmt));
   }
 }
 
@@ -3019,7 +3037,7 @@ void bx_geforce_c::execute_iifc(Bit32u chid, Bit32u method, Bit32u param)
     BX_GEFORCE_THIS chs[chid].iifc_operation = param;
   else if (method == 0x0fa) {
     BX_GEFORCE_THIS chs[chid].iifc_color_fmt = param;
-    iifc_update_color_bytes(chid);
+    update_color_bytes_iifc(chid);
   } else if (method == 0x0fb)
     BX_GEFORCE_THIS chs[chid].iifc_bpp4 = param;
   else if (method == 0x0fc)
@@ -3058,19 +3076,7 @@ void bx_geforce_c::execute_sifc(Bit32u chid, Bit32u method, Bit32u param)
     BX_GEFORCE_THIS chs[chid].sifc_operation = param;
   else if (method == 0x0c0) {
     BX_GEFORCE_THIS chs[chid].sifc_color_fmt = param;
-    if (BX_GEFORCE_THIS chs[chid].s2d_color_fmt == 1) // Y8
-      BX_GEFORCE_THIS chs[chid].sifc_color_bytes = 1; // hack
-    else if (BX_GEFORCE_THIS chs[chid].sifc_color_fmt == 1 || // R5G6B5
-        BX_GEFORCE_THIS chs[chid].sifc_color_fmt == 2 || // A1R5G5B5
-        BX_GEFORCE_THIS chs[chid].sifc_color_fmt == 3)   // X1R5G5B5
-      BX_GEFORCE_THIS chs[chid].sifc_color_bytes = 2;
-    else if (BX_GEFORCE_THIS chs[chid].sifc_color_fmt == 4 || // A8R8G8B8
-             BX_GEFORCE_THIS chs[chid].sifc_color_fmt == 5)   // X8R8G8B8
-      BX_GEFORCE_THIS chs[chid].sifc_color_bytes = 4;
-    else {
-      BX_ERROR(("unknown sifc color format: 0x%02x",
-        BX_GEFORCE_THIS chs[chid].sifc_color_fmt));
-    }
+    update_color_bytes_sifc(chid);
   } else if (method == 0x0c1)
     BX_GEFORCE_THIS chs[chid].sifc_shw = param;
   else if (method == 0x0c2)
@@ -3241,7 +3247,7 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
           if (BX_GEFORCE_THIS chs[chid].iifc_color_fmt == 0)
             BX_GEFORCE_THIS chs[chid].iifc_color_fmt = 1;
         }
-        iifc_update_color_bytes(chid);
+        update_color_bytes_iifc(chid);
       }
     } else if (BX_GEFORCE_THIS chs[chid].schs[subc].engine == 0x00) {
       software_method = true;
