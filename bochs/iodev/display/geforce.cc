@@ -2840,7 +2840,8 @@ void bx_geforce_c::execute_gdi(Bit32u chid, Bit32u method, Bit32u param)
   else if (method == 0x1ff) {
     BX_GEFORCE_THIS chs[chid].gdi_image_xy = param;
     Bit32u width = BX_GEFORCE_THIS chs[chid].gdi_image_swh & 0xFFFF;
-    Bit32u wordCount = ALIGN(width * (BX_GEFORCE_THIS chs[chid].gdi_image_swh >> 16), 32) >> 5;
+    Bit32u height = BX_GEFORCE_THIS chs[chid].gdi_image_swh >> 16;
+    Bit32u wordCount = ALIGN(width * height, 32) >> 5;
     if (BX_GEFORCE_THIS chs[chid].gdi_words != nullptr)
       delete[] BX_GEFORCE_THIS chs[chid].gdi_words;
     BX_GEFORCE_THIS chs[chid].gdi_words_ptr = 0;
@@ -2870,7 +2871,8 @@ void bx_geforce_c::execute_gdi(Bit32u chid, Bit32u method, Bit32u param)
   else if (method == 0x2ff) {
     BX_GEFORCE_THIS chs[chid].gdi_image_xy = param;
     Bit32u width = BX_GEFORCE_THIS chs[chid].gdi_image_swh & 0xFFFF;
-    Bit32u wordCount = ALIGN(width * (BX_GEFORCE_THIS chs[chid].gdi_image_swh >> 16), 32) >> 5;
+    Bit32u height = BX_GEFORCE_THIS chs[chid].gdi_image_swh >> 16;
+    Bit32u wordCount = ALIGN(width * height, 32) >> 5;
     if (BX_GEFORCE_THIS chs[chid].gdi_words != nullptr)
       delete[] BX_GEFORCE_THIS chs[chid].gdi_words;
     BX_GEFORCE_THIS chs[chid].gdi_words_ptr = 0;
@@ -2946,8 +2948,8 @@ void bx_geforce_c::execute_ifc(Bit32u chid, Bit8u cls, Bit32u method, Bit32u par
     BX_GEFORCE_THIS chs[chid].ifc_shw = param;
     Bit32u width = BX_GEFORCE_THIS chs[chid].ifc_shw & 0xFFFF;
     Bit32u height = BX_GEFORCE_THIS chs[chid].ifc_shw >> 16;
-    Bit32u wordCount = width * height * 
-      BX_GEFORCE_THIS chs[chid].ifc_color_bytes / 4;
+    Bit32u wordCount = ALIGN(width * height *
+      BX_GEFORCE_THIS chs[chid].ifc_color_bytes, 4) >> 2;
     if (BX_GEFORCE_THIS chs[chid].ifc_words != nullptr)
       delete[] BX_GEFORCE_THIS chs[chid].ifc_words;
     BX_GEFORCE_THIS chs[chid].ifc_words_ptr = 0;
@@ -3083,8 +3085,8 @@ void bx_geforce_c::execute_sifc(Bit32u chid, Bit32u method, Bit32u param)
     BX_GEFORCE_THIS chs[chid].sifc_syx = param;
     Bit32u width = BX_GEFORCE_THIS chs[chid].sifc_shw & 0xFFFF;
     Bit32u height = BX_GEFORCE_THIS chs[chid].sifc_shw >> 16;
-    Bit32u wordCount = width * height * 
-      BX_GEFORCE_THIS chs[chid].sifc_color_bytes / 4;
+    Bit32u wordCount = ALIGN(width * height *
+      BX_GEFORCE_THIS chs[chid].sifc_color_bytes, 4) >> 2;
     if (BX_GEFORCE_THIS chs[chid].sifc_words != nullptr)
       delete[] BX_GEFORCE_THIS chs[chid].sifc_words;
     BX_GEFORCE_THIS chs[chid].sifc_words_ptr = 0;
