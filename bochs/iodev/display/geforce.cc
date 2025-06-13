@@ -272,6 +272,7 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS fifo_cache1_pull0 = 0;
   BX_GEFORCE_THIS fifo_cache1_semaphore = 0;
   BX_GEFORCE_THIS fifo_cache1_get = 0;
+  BX_GEFORCE_THIS fifo_grctx_instance = 0;
   for (int i = 0; i < GEFORCE_CACHE1_SIZE; i++) {
     BX_GEFORCE_THIS fifo_cache1_method[i] = 0;
     BX_GEFORCE_THIS fifo_cache1_data[i] = 0;
@@ -287,8 +288,10 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS graph_intr = 0;
   BX_GEFORCE_THIS graph_nsource = 0;
   BX_GEFORCE_THIS graph_intr_en = 0;
+  BX_GEFORCE_THIS graph_ctx_switch1 = 0;
   BX_GEFORCE_THIS graph_ctx_switch2 = 0;
   BX_GEFORCE_THIS graph_ctx_switch4 = 0;
+  BX_GEFORCE_THIS graph_ctxctl_cur = 0;
   BX_GEFORCE_THIS graph_status = 0;
   BX_GEFORCE_THIS graph_trapped_addr = 0;
   BX_GEFORCE_THIS graph_trapped_data = 0;
@@ -3333,11 +3336,15 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
             update_irq_level();
             BX_GEFORCE_THIS graph_nsource |= 0x00000001;
             BX_GEFORCE_THIS graph_notify = 0x00110000;
-            BX_GEFORCE_THIS graph_ctx_switch2 = BX_GEFORCE_THIS chs[chid].schs[subc].notifier >> 4;
+            Bit32u notifier = BX_GEFORCE_THIS chs[chid].schs[subc].notifier >> 4;
             if (BX_GEFORCE_THIS card_type < 0x40)
-              BX_GEFORCE_THIS graph_ctx_switch2 <<= 16;
+              BX_GEFORCE_THIS graph_ctx_switch2 = notifier << 16;
+            else
+              BX_GEFORCE_THIS graph_ctx_switch1 = notifier;
             BX_GEFORCE_THIS graph_ctx_switch4 =
               BX_GEFORCE_THIS chs[chid].schs[subc].object >> 4;
+            if (BX_GEFORCE_THIS card_type >= 0x40)
+              BX_GEFORCE_THIS graph_ctxctl_cur = BX_GEFORCE_THIS fifo_grctx_instance;
             BX_GEFORCE_THIS graph_trapped_addr = method << 2 | subc << 16 | chid << 20;
             BX_GEFORCE_THIS graph_trapped_data = param;
             BX_DEBUG(("execute_command: notify interrupt triggered"));
@@ -3381,11 +3388,15 @@ void bx_geforce_c::fifo_process(Bit32u chid)
     ramfc_write32(oldchid, 0x8, BX_GEFORCE_THIS fifo_cache1_ref_cnt);
     ramfc_write32(oldchid, 0xC, BX_GEFORCE_THIS fifo_cache1_dma_instance);
     ramfc_write32(oldchid, sro, BX_GEFORCE_THIS fifo_cache1_semaphore);
+    if (BX_GEFORCE_THIS card_type >= 0x40)
+      ramfc_write32(oldchid, 0x38, BX_GEFORCE_THIS fifo_grctx_instance);
     BX_GEFORCE_THIS fifo_cache1_dma_put = ramfc_read32(chid, 0x0);
     BX_GEFORCE_THIS fifo_cache1_dma_get = ramfc_read32(chid, 0x4);
     BX_GEFORCE_THIS fifo_cache1_ref_cnt = ramfc_read32(chid, 0x8);
     BX_GEFORCE_THIS fifo_cache1_dma_instance = ramfc_read32(chid, 0xC);
     BX_GEFORCE_THIS fifo_cache1_semaphore = ramfc_read32(chid, sro);
+    if (BX_GEFORCE_THIS card_type >= 0x40)
+      BX_GEFORCE_THIS fifo_grctx_instance = ramfc_read32(chid, 0x38);
     BX_GEFORCE_THIS fifo_cache1_push1 = BX_GEFORCE_THIS fifo_cache1_push1 & ~0x1F | chid;
   }
   BX_GEFORCE_THIS fifo_cache1_dma_push |= 0x100;
@@ -3540,6 +3551,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS fifo_cache1_pull0;
   } else if (address == 0x3270) {
     value = BX_GEFORCE_THIS fifo_cache1_get;
+  } else if (address == 0x32e0) {
+    value = BX_GEFORCE_THIS fifo_grctx_instance;
   } else if (address == 0x3304) {
     value = 0x00000001;
   } else if (address >= 0x3800 && address < 0x4000 && BX_GEFORCE_THIS card_type < 0x40 ||
@@ -3600,10 +3613,14 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
   } else if (address == 0x40013C && BX_GEFORCE_THIS card_type >= 0x40 ||
              address == 0x400140 && BX_GEFORCE_THIS card_type < 0x40) {
     value = BX_GEFORCE_THIS graph_intr_en;
+  } else if (address == 0x40014C) {
+    value = BX_GEFORCE_THIS graph_ctx_switch1;
   } else if (address == 0x400150) {
     value = BX_GEFORCE_THIS graph_ctx_switch2;
   } else if (address == 0x400158) {
     value = BX_GEFORCE_THIS graph_ctx_switch4;
+  } else if (address == 0x40032c) {
+    value = BX_GEFORCE_THIS graph_ctxctl_cur;
   } else if (address == 0x400700) {
     value = BX_GEFORCE_THIS graph_status;
   } else if (address == 0x400704) {
@@ -3755,6 +3772,8 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
       BX_GEFORCE_THIS fifo_cache1_pull0 &= ~0x00000100;
     }
     update_irq_level();
+  } else if (address == 0x32e0) {
+    BX_GEFORCE_THIS fifo_grctx_instance = value;
   } else if (address == 0x9100) {
     BX_GEFORCE_THIS timer_intr &= ~value;
   } else if (address == 0x9140) {
@@ -3791,10 +3810,14 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
              address == 0x400140 && BX_GEFORCE_THIS card_type < 0x40) {
     BX_GEFORCE_THIS graph_intr_en = value;
     update_irq_level();
+  } else if (address == 0x40014C) {
+    BX_GEFORCE_THIS graph_ctx_switch1 = value;
   } else if (address == 0x400150) {
     BX_GEFORCE_THIS graph_ctx_switch2 = value;
   } else if (address == 0x400158) {
     BX_GEFORCE_THIS graph_ctx_switch4 = value;
+  } else if (address == 0x40032c) {
+    BX_GEFORCE_THIS graph_ctxctl_cur = value;
   } else if (address == 0x400700) {
     BX_GEFORCE_THIS graph_status = value;
   } else if (address == 0x400704) {

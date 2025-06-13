@@ -194,6 +194,7 @@ private:
   Bit32u fifo_cache1_pull0;
   Bit32u fifo_cache1_semaphore;
   Bit32u fifo_cache1_get;
+  Bit32u fifo_grctx_instance;
   Bit32u fifo_cache1_method[GEFORCE_CACHE1_SIZE];
   Bit32u fifo_cache1_data[GEFORCE_CACHE1_SIZE];
   Bit32u rma_addr;
@@ -209,8 +210,10 @@ private:
   Bit32u graph_intr;
   Bit32u graph_nsource;
   Bit32u graph_intr_en;
+  Bit32u graph_ctx_switch1;
   Bit32u graph_ctx_switch2;
   Bit32u graph_ctx_switch4;
+  Bit32u graph_ctxctl_cur;
   Bit32u graph_status;
   Bit32u graph_trapped_addr;
   Bit32u graph_trapped_data;
