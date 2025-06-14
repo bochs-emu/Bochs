@@ -3488,12 +3488,11 @@ void bx_geforce_c::fifo_process(Bit32u chid)
         BX_DEBUG(("fifo: return to 0x%08x", BX_GEFORCE_THIS chs[chid].subr_return));
         BX_GEFORCE_THIS fifo_cache1_dma_get = BX_GEFORCE_THIS chs[chid].subr_return;
         BX_GEFORCE_THIS chs[chid].subr_active = false;
-      } else if ((word & 0xe0030003) == 0) {
-        // increasing methods
+      } else if ((word & 0xa0030003) == 0) {
         BX_GEFORCE_THIS chs[chid].dma_state.mthd = (word >> 2) & 0x7ff;
         BX_GEFORCE_THIS chs[chid].dma_state.subc = (word >> 13) & 7;
         BX_GEFORCE_THIS chs[chid].dma_state.mcnt = (word >> 18) & 0x7ff;
-        BX_GEFORCE_THIS chs[chid].dma_state.ni = 0;
+        BX_GEFORCE_THIS chs[chid].dma_state.ni = word & 0x40000000;
       } else {
         BX_PANIC(("fifo: unexpected word 0x%08x", word));
       }
