@@ -2693,6 +2693,13 @@ void bx_geforce_c::move(Bit32u chid)
     src_offset += BX_GEFORCE_THIS chs[chid].m2mf_src_pitch;
     dst_offset += BX_GEFORCE_THIS chs[chid].m2mf_dst_pitch;
   }
+  Bit32u dma_target = ramin_read32(BX_GEFORCE_THIS chs[chid].m2mf_dst) >> 12 & 0xFF;
+  if (dma_target == 0x03 || dma_target == 0x0b) {
+    Bit32u redraw_offset = dma_lin_lookup(
+      BX_GEFORCE_THIS chs[chid].m2mf_dst, BX_GEFORCE_THIS chs[chid].m2mf_dst_offset);
+    Bit32u width = BX_GEFORCE_THIS chs[chid].m2mf_line_length / (BX_GEFORCE_THIS svga_bpp >> 3);
+    BX_GEFORCE_THIS redraw_area(redraw_offset, width, BX_GEFORCE_THIS chs[chid].m2mf_line_count);
+  }
 }
 
 void bx_geforce_c::sifm(Bit32u chid)
