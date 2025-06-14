@@ -113,6 +113,7 @@ private:
   BX_GEFORCE_SMF Bit16u physical_read16(Bit32u address);
   BX_GEFORCE_SMF Bit32u physical_read32(Bit32u address);
   BX_GEFORCE_SMF void physical_write8(Bit32u address, Bit8u value);
+  BX_GEFORCE_SMF void physical_write16(Bit32u address, Bit16u value);
   BX_GEFORCE_SMF void physical_write32(Bit32u address, Bit32u value);
   BX_GEFORCE_SMF void physical_write64(Bit32u address, Bit64u value);
   BX_GEFORCE_SMF Bit8u dma_read8(Bit32u object, Bit32u address);
@@ -122,6 +123,8 @@ private:
   BX_GEFORCE_SMF void dma_write16(Bit32u object, Bit32u address, Bit16u value);
   BX_GEFORCE_SMF void dma_write32(Bit32u object, Bit32u address, Bit32u value);
   BX_GEFORCE_SMF void dma_write64(Bit32u object, Bit32u address, Bit64u value);
+  BX_GEFORCE_SMF void dma_copy(Bit32u dst_obj, Bit32u dst_addr,
+    Bit32u src_obj, Bit32u src_addr, Bit32u byte_count);
   BX_GEFORCE_SMF Bit32u dma_pt_lookup(Bit32u object, Bit32u address);
   BX_GEFORCE_SMF Bit32u dma_lin_lookup(Bit32u object, Bit32u address);
   BX_GEFORCE_SMF Bit32u ramfc_address(Bit32u chid, Bit32u offset);
@@ -166,7 +169,7 @@ private:
   BX_GEFORCE_SMF void iifc(Bit32u chid);
   BX_GEFORCE_SMF void sifc(Bit32u chid);
   BX_GEFORCE_SMF void copyarea(Bit32u chid);
-  BX_GEFORCE_SMF void move(Bit32u chid);
+  BX_GEFORCE_SMF void m2mf(Bit32u chid);
   BX_GEFORCE_SMF void sifm(Bit32u chid);
 
   struct {

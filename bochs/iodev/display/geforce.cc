@@ -2052,6 +2052,14 @@ void bx_geforce_c::physical_write8(Bit32u address, Bit8u value)
   DEV_MEM_WRITE_PHYSICAL(address, 1, &value);
 }
 
+void bx_geforce_c::physical_write16(Bit32u address, Bit16u value)
+{
+  Bit8u data[2];
+  data[0] = value >> 0 & 0xFF;
+  data[1] = value >> 8 & 0xFF;
+  DEV_MEM_WRITE_PHYSICAL(address, 2, data);
+}
+
 void bx_geforce_c::physical_write32(Bit32u address, Bit32u value)
 {
   Bit8u data[4];
@@ -2095,98 +2103,134 @@ Bit32u bx_geforce_c::dma_lin_lookup(Bit32u object, Bit32u address)
 Bit8u bx_geforce_c::dma_read8(Bit32u object, Bit32u address)
 {
   Bit32u flags = ramin_read32(object);
-  Bit32u target = flags >> 12 & 0xFF;
-  if (target == 0x21 || target == 0x29)
-    return physical_read8(dma_pt_lookup(object, address));
-  else if (target == 0x23 || target == 0x2b || target == 0x33 || target == 0x3b || target == 0x37)
-    return physical_read8(dma_lin_lookup(object, address));
-  else if (target == 0x03 || target == 0x0b)
-    return vram_read8(dma_lin_lookup(object, address));
+  Bit32u addr_abs;
+  if (flags & 0x00002000)
+    addr_abs = dma_lin_lookup(object, address);
   else
-    BX_PANIC(("dma_read8: unknown DMA target 0x%02x", target));
-  return 0;
+    addr_abs = dma_pt_lookup(object, address);
+  if (flags & 0x00020000)
+    return physical_read8(addr_abs);
+  else
+    return vram_read8(addr_abs);
 }
 
 Bit16u bx_geforce_c::dma_read16(Bit32u object, Bit32u address)
 {
   Bit32u flags = ramin_read32(object);
-  Bit32u target = flags >> 12 & 0xFF;
-  if (target == 0x21 || target == 0x29)
-    return physical_read16(dma_pt_lookup(object, address));
-  else if (target == 0x23 || target == 0x2b || target == 0x33 || target == 0x3b || target == 0x37)
-    return physical_read16(dma_lin_lookup(object, address));
-  else if (target == 0x03 || target == 0x0b)
-    return vram_read16(dma_lin_lookup(object, address));
+  Bit32u addr_abs;
+  if (flags & 0x00002000)
+    addr_abs = dma_lin_lookup(object, address);
   else
-    BX_PANIC(("dma_read16: unknown DMA target 0x%02x", target));
-  return 0;
+    addr_abs = dma_pt_lookup(object, address);
+  if (flags & 0x00020000)
+    return physical_read16(addr_abs);
+  else
+    return vram_read16(addr_abs);
 }
 
 Bit32u bx_geforce_c::dma_read32(Bit32u object, Bit32u address)
 {
   Bit32u flags = ramin_read32(object);
-  Bit32u target = flags >> 12 & 0xFF;
-  if (target == 0x21 || target == 0x29)
-    return physical_read32(dma_pt_lookup(object, address));
-  else if (target == 0x23 || target == 0x2b || target == 0x33 || target == 0x3b || target == 0x37)
-    return physical_read32(dma_lin_lookup(object, address));
-  else if (target == 0x03 || target == 0x0b)
-    return vram_read32(dma_lin_lookup(object, address));
+  Bit32u addr_abs;
+  if (flags & 0x00002000)
+    addr_abs = dma_lin_lookup(object, address);
   else
-    BX_PANIC(("dma_read32: unknown DMA target 0x%02x", target));
-  return 0;
+    addr_abs = dma_pt_lookup(object, address);
+  if (flags & 0x00020000)
+    return physical_read32(addr_abs);
+  else
+    return vram_read32(addr_abs);
 }
 
 void bx_geforce_c::dma_write8(Bit32u object, Bit32u address, Bit8u value)
 {
   Bit32u flags = ramin_read32(object);
-  Bit32u target = flags >> 12 & 0xFF;
-  if (target == 0x21 || target == 0x29)
-    physical_write8(dma_pt_lookup(object, address), value);
-  else if (target == 0x23 || target == 0x2b || target == 0x33 || target == 0x3b)
-    physical_write8(dma_lin_lookup(object, address), value);
-  else if (target == 0x03 || target == 0x0b)
-    vram_write8(dma_lin_lookup(object, address), value);
+  Bit32u addr_abs;
+  if (flags & 0x00002000)
+    addr_abs = dma_lin_lookup(object, address);
   else
-    BX_PANIC(("dma_write8: unknown DMA target 0x%02x", target));
+    addr_abs = dma_pt_lookup(object, address);
+  if (flags & 0x00020000)
+    physical_write8(addr_abs, value);
+  else
+    vram_write8(addr_abs, value);
 }
 
 void bx_geforce_c::dma_write16(Bit32u object, Bit32u address, Bit16u value)
 {
   Bit32u flags = ramin_read32(object);
-  Bit32u target = flags >> 12 & 0xFF;
-  if (target == 0x03 || target == 0x0b)
-    vram_write16(dma_lin_lookup(object, address), value);
+  Bit32u addr_abs;
+  if (flags & 0x00002000)
+    addr_abs = dma_lin_lookup(object, address);
   else
-    BX_PANIC(("dma_write16: unknown DMA target 0x%02x", target));
+    addr_abs = dma_pt_lookup(object, address);
+  if (flags & 0x00020000)
+    physical_write16(addr_abs, value);
+  else
+    vram_write16(addr_abs, value);
 }
 
 void bx_geforce_c::dma_write32(Bit32u object, Bit32u address, Bit32u value)
 {
   Bit32u flags = ramin_read32(object);
-  Bit32u target = flags >> 12 & 0xFF;
-  if (target == 0x21 || target == 0x29)
-    physical_write32(dma_pt_lookup(object, address), value);
-  else if (target == 0x23 || target == 0x2b || target == 0x33 || target == 0x3b)
-    physical_write32(dma_lin_lookup(object, address), value);
-  else if (target == 0x03 || target == 0x0b)
-    vram_write32(dma_lin_lookup(object, address), value);
+  Bit32u addr_abs;
+  if (flags & 0x00002000)
+    addr_abs = dma_lin_lookup(object, address);
   else
-    BX_PANIC(("dma_write32: unknown DMA target 0x%02x", target));
+    addr_abs = dma_pt_lookup(object, address);
+  if (flags & 0x00020000)
+    physical_write32(addr_abs, value);
+  else
+    vram_write32(addr_abs, value);
 }
 
 void bx_geforce_c::dma_write64(Bit32u object, Bit32u address, Bit64u value)
 {
   Bit32u flags = ramin_read32(object);
-  Bit32u target = flags >> 12 & 0xFF;
-  if (target == 0x21 || target == 0x29)
-    physical_write64(dma_pt_lookup(object, address), value);
-  else if (target == 0x23 || target == 0x2b || target == 0x33 || target == 0x3b)
-    physical_write64(dma_lin_lookup(object, address), value);
-  else if (target == 0x03 || target == 0x0b)
-    vram_write64(dma_lin_lookup(object, address), value);
+  Bit32u addr_abs;
+  if (flags & 0x00002000)
+    addr_abs = dma_lin_lookup(object, address);
   else
-    BX_PANIC(("dma_write64: unknown DMA target 0x%02x", target));
+    addr_abs = dma_pt_lookup(object, address);
+  if (flags & 0x00020000)
+    physical_write64(addr_abs, value);
+  else
+    vram_write64(addr_abs, value);
+}
+
+void bx_geforce_c::dma_copy(Bit32u dst_obj, Bit32u dst_addr,
+  Bit32u src_obj, Bit32u src_addr, Bit32u byte_count)
+{
+  Bit32u dst_flags = ramin_read32(dst_obj);
+  Bit32u src_flags = ramin_read32(src_obj);
+  Bit8u buffer[0x1000];
+  Bit32u bytes_left = byte_count;
+  while (bytes_left) {
+    Bit32u dst_addr_abs;
+    Bit32u src_addr_abs;
+    if (dst_flags & 0x00002000)
+      dst_addr_abs = dma_lin_lookup(dst_obj, dst_addr);
+    else
+      dst_addr_abs = dma_pt_lookup(dst_obj, dst_addr);
+    if (src_flags & 0x00002000)
+      src_addr_abs = dma_lin_lookup(src_obj, src_addr);
+    else
+      src_addr_abs = dma_pt_lookup(src_obj, src_addr);
+    Bit32u chunk_bytes = BX_MIN(bytes_left, BX_MIN(
+      0x1000 - (dst_addr_abs & 0xFFF),
+      0x1000 - (src_addr_abs & 0xFFF)));
+    if (src_flags & 0x00020000)
+      DEV_MEM_READ_PHYSICAL(src_addr_abs, chunk_bytes, buffer);
+    else
+      memcpy(buffer, BX_GEFORCE_THIS s.memory + src_addr_abs, chunk_bytes);
+    if (dst_flags & 0x00020000)
+      DEV_MEM_WRITE_PHYSICAL(dst_addr_abs, chunk_bytes, buffer);
+    else
+      memcpy(BX_GEFORCE_THIS s.memory + dst_addr_abs, buffer, chunk_bytes);
+    dst_addr += chunk_bytes;
+    src_addr += chunk_bytes;
+    bytes_left -= chunk_bytes;
+  }
 }
 
 Bit32u bx_geforce_c::ramfc_address(Bit32u chid, Bit32u offset)
@@ -2681,15 +2725,15 @@ void bx_geforce_c::copyarea(Bit32u chid)
   BX_GEFORCE_THIS redraw_area(redraw_offset, width, height);
 }
 
-void bx_geforce_c::move(Bit32u chid)
+void bx_geforce_c::m2mf(Bit32u chid)
 {
   Bit32u src_offset = BX_GEFORCE_THIS chs[chid].m2mf_src_offset;
   Bit32u dst_offset = BX_GEFORCE_THIS chs[chid].m2mf_dst_offset;
   for (Bit16u y = 0; y < BX_GEFORCE_THIS chs[chid].m2mf_line_count; y++) {
-    for (Bit16u x = 0; x < BX_GEFORCE_THIS chs[chid].m2mf_line_length; x++) {
-      Bit8u byte = dma_read8(BX_GEFORCE_THIS chs[chid].m2mf_src, src_offset + x);
-      dma_write8(BX_GEFORCE_THIS chs[chid].m2mf_dst, dst_offset + x, byte);
-    }
+    dma_copy(
+      BX_GEFORCE_THIS chs[chid].m2mf_dst, dst_offset,
+      BX_GEFORCE_THIS chs[chid].m2mf_src, src_offset,
+      BX_GEFORCE_THIS chs[chid].m2mf_line_length);
     src_offset += BX_GEFORCE_THIS chs[chid].m2mf_src_pitch;
     dst_offset += BX_GEFORCE_THIS chs[chid].m2mf_dst_pitch;
   }
@@ -2771,7 +2815,7 @@ void bx_geforce_c::execute_m2mf(Bit32u chid, Bit32u subc, Bit32u method, Bit32u 
     BX_GEFORCE_THIS chs[chid].m2mf_format = param;
   else if (method == 0x0ca) {
     BX_GEFORCE_THIS chs[chid].m2mf_buffer_notify = param;
-    move(chid);
+    m2mf(chid);
     if ((ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier) & 0xFF) == 0x30) {
       BX_DEBUG(("M2MF notify skipped"));
     } else {
