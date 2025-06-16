@@ -149,14 +149,14 @@ private:
   BX_GEFORCE_SMF void execute_patt(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_gdi(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_chroma(Bit32u chid, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void execute_imageblit(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void execute_ifc(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_imageblit(Bit32u chid, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_ifc(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_surf2d(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_iifc(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_sifc(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_beta(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_sifm(Bit32u chid, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void execute_d3d(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_d3d(Bit32u chid, Bit32u method, Bit32u param);
 
   BX_GEFORCE_SMF Bit32u get_pixel(Bit32u obj, Bit32u ofs, Bit32u x, Bit32u cb);
   BX_GEFORCE_SMF void put_pixel(Bit32u chid, Bit32u ofs, Bit32u x, Bit32u value);
@@ -171,6 +171,9 @@ private:
   BX_GEFORCE_SMF void copyarea(Bit32u chid);
   BX_GEFORCE_SMF void m2mf(Bit32u chid);
   BX_GEFORCE_SMF void sifm(Bit32u chid);
+
+  BX_GEFORCE_SMF void d3d_clear_surface(Bit32u chid);
+
 
   struct {
     Bit8u index;
@@ -333,8 +336,16 @@ private:
     Bit32u m2mf_format;
     Bit32u m2mf_buffer_notify;
 
+    Bit32u d3d_clip_horizontal;
+    Bit32u d3d_clip_vertical;
+    Bit32u d3d_surface_format;
+    Bit32u d3d_color_bytes;
+    Bit32u d3d_surface_pitch;
+    Bit32u d3d_surface_color_offset;
     Bit32u d3d_semaphore_obj;
     Bit32u d3d_semaphore_offset;
+    Bit32u d3d_color_clear_value;
+    Bit32u d3d_clear_surface;
 
     Bit8u  rop;
 

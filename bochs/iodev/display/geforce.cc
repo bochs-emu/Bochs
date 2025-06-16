@@ -402,8 +402,16 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS chs[i].m2mf_format = 0;
     BX_GEFORCE_THIS chs[i].m2mf_buffer_notify = 0;
 
+    BX_GEFORCE_THIS chs[i].d3d_clip_horizontal = 0;
+    BX_GEFORCE_THIS chs[i].d3d_clip_vertical = 0;
+    BX_GEFORCE_THIS chs[i].d3d_surface_format = 0;
+    BX_GEFORCE_THIS chs[i].d3d_color_bytes = 1;
+    BX_GEFORCE_THIS chs[i].d3d_surface_pitch = 0;
+    BX_GEFORCE_THIS chs[i].d3d_surface_color_offset = 0;
     BX_GEFORCE_THIS chs[i].d3d_semaphore_obj = 0;
     BX_GEFORCE_THIS chs[i].d3d_semaphore_offset = 0;
+    BX_GEFORCE_THIS chs[i].d3d_color_clear_value = 0;
+    BX_GEFORCE_THIS chs[i].d3d_clear_surface = 0;
 
     BX_GEFORCE_THIS chs[i].rop = 0;
 
@@ -2795,6 +2803,29 @@ void bx_geforce_c::sifm(Bit32u chid)
   BX_GEFORCE_THIS redraw_area(redraw_offset, dwidth, dheight);
 }
 
+void bx_geforce_c::d3d_clear_surface(Bit32u chid)
+{
+  Bit32u dx = BX_GEFORCE_THIS chs[chid].d3d_clip_horizontal & 0xFFFF;
+  Bit32u dy = BX_GEFORCE_THIS chs[chid].d3d_clip_vertical & 0xFFFF;
+  Bit32u width = BX_GEFORCE_THIS chs[chid].d3d_clip_horizontal >> 16;
+  Bit32u height = BX_GEFORCE_THIS chs[chid].d3d_clip_vertical >> 16;
+  Bit32u pitch = BX_GEFORCE_THIS chs[chid].d3d_surface_pitch & 0xFFFF;
+  Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].d3d_surface_color_offset +
+    dy * pitch + dx * BX_GEFORCE_THIS chs[chid].d3d_color_bytes;
+  Bit32u redraw_offset = draw_offset -
+    (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
+  for (Bit16u y = 0; y < height; y++) {
+    for (Bit16u x = 0; x < width; x++) {
+      if (BX_GEFORCE_THIS chs[chid].d3d_color_bytes == 2)
+        vram_write16(draw_offset + x * 2, BX_GEFORCE_THIS chs[chid].d3d_color_clear_value);
+      else
+        vram_write32(draw_offset + x * 4, BX_GEFORCE_THIS chs[chid].d3d_color_clear_value);
+    }
+    draw_offset += pitch;
+  }
+  BX_GEFORCE_THIS redraw_area(redraw_offset, width, height);
+}
+
 void bx_geforce_c::execute_clip(Bit32u chid, Bit32u method, Bit32u param)
 {
   if (method == 0x0c0)
@@ -2967,7 +2998,7 @@ void bx_geforce_c::execute_chroma(Bit32u chid, Bit32u method, Bit32u param)
     BX_GEFORCE_THIS chs[chid].chroma_color = param;
 }
 
-void bx_geforce_c::execute_imageblit(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param)
+void bx_geforce_c::execute_imageblit(Bit32u chid, Bit32u method, Bit32u param)
 {
   if (method == 0x061)
     BX_GEFORCE_THIS chs[chid].blit_color_key_enable = (ramin_read32(param) & 0xFF) != 0x30;
@@ -2983,7 +3014,7 @@ void bx_geforce_c::execute_imageblit(Bit32u chid, Bit8u cls, Bit32u method, Bit3
   }
 }
 
-void bx_geforce_c::execute_ifc(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param)
+void bx_geforce_c::execute_ifc(Bit32u chid, Bit32u method, Bit32u param)
 {
   if (method == 0x061)
     BX_GEFORCE_THIS chs[chid].ifc_color_key_enable = (ramin_read32(param) & 0xFF) != 0x30;
@@ -3088,9 +3119,8 @@ void bx_geforce_c::update_color_bytes(Bit32u s2d_color_fmt, Bit32u color_fmt, Bi
   else if (color_fmt == 4 || // A8R8G8B8
            color_fmt == 5)   // X8R8G8B8
     *color_bytes = 4;
-  else {
+  else
     BX_ERROR(("unknown color format: 0x%02x", color_fmt));
-  }
 }
 
 void bx_geforce_c::execute_iifc(Bit32u chid, Bit32u method, Bit32u param)
@@ -3222,15 +3252,37 @@ void bx_geforce_c::execute_sifm(Bit32u chid, Bit32u method, Bit32u param)
   }
 }
 
-void bx_geforce_c::execute_d3d(Bit32u chid, Bit8u cls, Bit32u method, Bit32u param)
+void bx_geforce_c::execute_d3d(Bit32u chid, Bit32u method, Bit32u param)
 {
   if (method == 0x069)
     BX_GEFORCE_THIS chs[chid].d3d_semaphore_obj = param;
+  else if (method == 0x080)
+    BX_GEFORCE_THIS chs[chid].d3d_clip_horizontal = param;
+  else if (method == 0x081)
+    BX_GEFORCE_THIS chs[chid].d3d_clip_vertical = param;
+  else if (method == 0x082) {
+    BX_GEFORCE_THIS chs[chid].d3d_surface_format = param;
+    Bit32u format_color = param & 0x0000000F;
+    if (format_color == 0x3)      // R5G6B5
+      BX_GEFORCE_THIS chs[chid].d3d_color_bytes = 2;
+    else if (format_color == 0x8) // A8R8G8B8
+      BX_GEFORCE_THIS chs[chid].d3d_color_bytes = 4;
+    else
+      BX_ERROR(("unknown D3D color format: 0x%01x", format_color));
+  } else if (method == 0x083)
+    BX_GEFORCE_THIS chs[chid].d3d_surface_pitch = param;
+  else if (method == 0x084)
+    BX_GEFORCE_THIS chs[chid].d3d_surface_color_offset = param;
   else if (method == 0x75b)
     BX_GEFORCE_THIS chs[chid].d3d_semaphore_offset = param;
   else if (method == 0x75c) {
     dma_write32(BX_GEFORCE_THIS chs[chid].d3d_semaphore_obj,
       BX_GEFORCE_THIS chs[chid].d3d_semaphore_offset, param);
+  } else if (method == 0x764) {
+    BX_GEFORCE_THIS chs[chid].d3d_color_clear_value = param;
+  } else if (method == 0x765) {
+    BX_GEFORCE_THIS chs[chid].d3d_clear_surface = param;
+    d3d_clear_surface(chid);
   }
 }
 
@@ -3366,21 +3418,21 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
         else if (cls == 0x57)
           execute_chroma(chid, method, param);
         else if (cls == 0x5f || cls == 0x9f)
-          execute_imageblit(chid, cls, method, param);
+          execute_imageblit(chid, method, param);
         else if (cls == 0x61 || cls == 0x65 || cls == 0x8a)
-          execute_ifc(chid, cls, method, param);
+          execute_ifc(chid, method, param);
         else if (cls == 0x62)
           execute_surf2d(chid, method, param);
         else if (cls == 0x64)
           execute_iifc(chid, method, param);
-        else if (cls == 0x66)
+        else if (cls == 0x66 || cls == 0x76)
           execute_sifc(chid, method, param);
         else if (cls == 0x72)
           execute_beta(chid, method, param);
         else if (cls == 0x89)
           execute_sifm(chid, method, param);
         else if (cls == 0x97)
-          execute_d3d(chid, cls, method, param);
+          execute_d3d(chid, method, param);
         if (BX_GEFORCE_THIS chs[chid].notify_pending) {
           BX_GEFORCE_THIS chs[chid].notify_pending = false;
           if ((ramin_read32(BX_GEFORCE_THIS chs[chid].schs[subc].notifier) & 0xFF) == 0x30) {
