@@ -320,7 +320,7 @@ bool bx_local_apic_c::is_selected(bx_phy_address addr)
 void bx_local_apic_c::read(bx_phy_address addr, void *data, unsigned len)
 {
   if((addr & ~0x3) != ((addr+len-1) & ~0x3)) {
-    BX_PANIC(("APIC read at address 0x" FMT_PHY_ADDRX " spans 32-bit boundary !", addr));
+    BX_ERROR(("APIC read at address 0x" FMT_PHY_ADDRX " spans 32-bit boundary !", addr));
     return;
   }
   Bit32u value = read_aligned(addr & ~0x3);
