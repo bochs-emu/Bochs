@@ -1687,7 +1687,7 @@ bool bx_gui_c::parse_common_gui_options(const char *arg, Bit8u flags)
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
     SIM->message_box("ERROR", "The 'gui_debug' option is deprecated - use command line option '-dbg_gui' instead");
 #else
-    SIM->message_box("ERROR", "Bochs debugger not available - ignoring 'gui_debug' option");
+    SIM->message_box("ERROR", "Bochs debugger gui not available - ignoring 'gui_debug' option");
 #endif
     return false;
 #if BX_SHOW_IPS
