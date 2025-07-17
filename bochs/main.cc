@@ -724,8 +724,8 @@ int bx_init_main(int argc, char *argv[])
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
       bx_dbg.debugger_active = true;
     }
-#if BX_DEBUGGER_GUI
     else if (!strncmp("-dbg_gui", argv[arg], 8)) {
+#if BX_DEBUGGER_GUI
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
       bx_dbg.debugger_active = true;
       bx_dbg.debugger_gui = true;
@@ -738,8 +738,10 @@ int bx_init_main(int argc, char *argv[])
       } else if (argv[arg][8] != 0) {
         BX_PANIC(("-dbg_gui option malformed"));
       }
-    }
+#else
+      BX_PANIC(("Bochs debugger gui not available - use command line debugger instead"));
 #endif
+    }
     else if (!strcmp("-dbglog", argv[arg])) {
       if (++arg >= argc) BX_PANIC(("-dbglog must be followed by a filename"));
       else SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set(argv[arg]);
