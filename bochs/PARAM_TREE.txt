@@ -107,6 +107,8 @@ display
   voodoo
     enabled
     model
+  geforce
+    model
 
 keyboard_mouse
   keyboard

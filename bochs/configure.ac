@@ -1949,9 +1949,9 @@ AC_ARG_ENABLE(clgd54xx,
     ]
   )
 
-AC_MSG_CHECKING(for GeForce emulation)
+AC_MSG_CHECKING(for GeForce emulation (experimental))
 AC_ARG_ENABLE(geforce,
-  AS_HELP_STRING([--enable-geforce], [enable GeForce emulation (no)]),
+  AS_HELP_STRING([--enable-geforce], [enable experimental GeForce emulation (no)]),
   [if test "$enableval" = yes; then
     AC_MSG_RESULT(yes)
     AC_DEFINE(BX_SUPPORT_GEFORCE, 1)

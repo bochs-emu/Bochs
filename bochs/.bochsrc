@@ -319,8 +319,9 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest.bin
 #   EXTENSION
 #     Here you can specify the display extension to be used. With the value
 #     'none' you can use standard VGA with no extension. Other supported
-#     values are 'vbe' for Bochs VBE, 'cirrus' for Cirrus SVGA support and
-#     'voodoo' for Voodoo Graphics support (see 'voodoo' option).
+#     values are 'vbe' for Bochs VBE, 'cirrus' for Cirrus SVGA support,
+#     'voodoo' for Voodoo Graphics support (see 'voodoo' option) and
+#     'geforce' for experimental GeForce support (see 'geforce' option).
 #
 #   UPDATE_FREQ
 #     This parameter specifies the number of display updates per second.
@@ -364,6 +365,20 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest.bin
 #   voodoo: enabled=1, model=voodoo2
 #=======================================================================
 #voodoo: enabled=1, model=voodoo1
+
+#=======================================================================
+# GEFORCE:
+# This defines the experimental GeForce emulation. Currently supported models
+# are 'geforce3', 'geforcefx5900' and 'geforce6800'. These 2D/3D AGP cards
+# require an external VGA BIOS, the vga extension option to be set to 'geforce'
+# and the i440BX PCI/AGP chipset with the 'geforce' device assigned to AGP
+# (slot #5). The gui screen update timing for all models is controlled by the
+# related 'vga' options.
+#
+# Examples:
+#   geforce: model=geforce3
+#=======================================================================
+#geforce: model=geforcefx5900
 
 #=======================================================================
 # KEYBOARD:
