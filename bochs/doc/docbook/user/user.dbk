@@ -2440,6 +2440,13 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
       </entry>
     </row>
     <row>
+      <entry>--enable-geforce</entry>
+      <entry>no</entry>
+      <entry>Enable experimental GeForce emulation. Basic support for three models
+      is available, but 3D is not done yet. For more information see <xref linkend="geforce-notes">.
+      </entry>
+    </row>
+    <row>
       <entry>--enable-iodebug</entry>
       <entry>yes if debugger is on</entry>
       <entry>
@@ -3662,9 +3669,10 @@ With the value 'none' you can use standard VGA with no extension. Other supporte
 values are 'vbe' for Bochs VBE (needs <filename>VGABIOS-lgpl-latest.bin</filename> as
 VGA BIOS, see <link linkend="bochsopt-vgaromimage">vgaromimage option</link>),
 'cirrus' for Cirrus SVGA support (needs <filename>VGABIOS-lgpl-latest-cirrus.bin</filename>
-as VGA BIOS) and 'voodoo' for Voodoo Graphics support (needs
+as VGA BIOS), 'voodoo' for Voodoo Graphics support (needs
 <filename>VGABIOS-lgpl-latest-banshee.bin</filename> as VGA BIOS / see
-<xref linkend="voodoo-notes"> for more information).
+<xref linkend="voodoo-notes"> for more information) and 'geforce' for experimental GeForce
+support (needs external VGABIOS / see <xref linkend="geforce-notes"> for more information).
 </para>
 <para>
 The VGA update frequency specifies the number of display updates per second.
@@ -3707,6 +3715,22 @@ vga extension option to be set to 'voodoo'. If the i440BX PCI chipset is
 selected, they can be assigned to AGP (slot #5). The GUI screen
 update timing for all models is controlled by the related
 'vga' options. See <xref linkend="voodoo-notes"> for more information.
+</para>
+</section>
+
+<section>
+<title>geforce</title>
+<para>
+Example:
+<screen>
+  geforce: model=geforce3
+</screen>
+This defines the experimental GeForce emulation. Currently supported models
+are 'geforce3', 'geforcefx5900' and 'geforce6800'. These 2D/3D AGP cards
+require an external VGA BIOS, the vga extension option to be set to 'geforce'
+# and the i440BX PCI/AGP chipset with the 'geforce' device assigned to AGP
+(slot #5). The gui screen update timing for all models is controlled by the
+related 'vga' options. See <xref linkend="geforce-notes"> for more information.
 </para>
 </section>
 
@@ -3854,8 +3878,8 @@ slot for PCI-only devices is also supported, but they are auto-assigned if
 not specified (e1000, es1370, pcidev, pcipnic, usb_ehci, usb_ohci, usb_xhci,
 voodoo). All device models except the network devices ne2k and e1000 can be
 used only once in the slot configuration. In case of the i440BX chipset, the
-slot #5 is the AGP slot. Currently only the 'voodoo' device can be assigned
-to AGP.
+slot #5 is the AGP slot. Currently only the 'voodoo' and 'geforce' devices can
+be assigned to AGP.
 </para>
 <para><command>advopts</command></para>
 <para>
@@ -9941,6 +9965,58 @@ Bochs VBE Display Drivers for Windows NT/2000
   voodoo: model=voodoo3
   </screen>
   </para>
+</section>
+
+<section id="geforce-notes">
+  <title>Notes about experimental GeForce emulation usage</title>
+
+  <para>
+  The GeForce graphics emulation currently implements basic support for three GeForce
+  models. Most of the 2D features are present, but 3D is still to do. Several
+  Windows versions up to Win 7 have been reported to work under consideration of
+  these limitations.
+  </para>
+  <para>
+  &FIXME; to be completed
+  </para>
+  <para>
+  These bochsrc settings are required for all GeForce models:
+  <screen>
+  vga: extension=geforce
+  pci: chipset=i440bx, slot5=geforce
+  </screen>
+  </para>
+  <para>
+  These bochsrc settings must be picked from the table below:
+  <screen>
+  geforce: model=<replaceable>Model</replaceable>
+  vgaromimage: file=<replaceable>VGABIOS</replaceable>
+  </screen>
+  </para>
+  <table><title>GeForce models and required VGABIOS</title>
+  <tgroup cols="3" align="left" colsep="1" rowsep="1">
+  <thead>
+  <row>
+    <entry>Model</entry>
+    <entry>VGABIOS</entry>
+  </row>
+  </thead>
+  <tbody>
+  <row>
+    <entry>geforce3</entry>
+    <entry>Leadtek.3Ti500.64.011105_AGP.bin</entry>
+  </row>
+  <row>
+    <entry>geforcefx5900</entry>
+    <entry>Leadtek.FX5900XT.128.041026_AGP.bin</entry>
+  </row>
+  <row>
+    <entry>geforce6800</entry>
+    <entry>Leadtek.6800GT.256.040702_AGP.bin</entry>
+  </row>
+  </tbody>
+  </tgroup>
+  </table>
 </section>
 
 <section id="harddisk-modes"><title>Disk Image Modes</title>
