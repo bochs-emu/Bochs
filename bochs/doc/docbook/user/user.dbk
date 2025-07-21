@@ -9987,7 +9987,7 @@ Bochs VBE Display Drivers for Windows NT/2000
   </screen>
   </para>
   <para>
-  These bochsrc settings must be picked from the table below:
+  These bochsrc settings must be picked from related columns of the table below:
   <screen>
   geforce: model=<replaceable>Model</replaceable>
   vgaromimage: file=<replaceable>VGABIOS</replaceable>
