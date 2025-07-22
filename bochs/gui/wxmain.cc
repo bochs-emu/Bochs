@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2024  The Bochs Project
+//  Copyright (C) 2002-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -737,7 +737,7 @@ void MyFrame::OnLogPrefs(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnLogPrefsDevice(wxCommandEvent& WXUNUSED(event))
 {
-  wxASSERT(SIM->get_max_log_level() == ADVLOG_OPTS_N_TYPES);
+  wxASSERT(SIM->get_max_log_level() == LOG_OPTS_N_TYPES);
   AdvancedLogOptionsDialog dlg(this, -1);
   dlg.SetRuntimeFlag(sim_thread != NULL);
   dlg.ShowModal();
