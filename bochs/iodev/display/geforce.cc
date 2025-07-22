@@ -3785,7 +3785,16 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
              address >= 0x683300 && address < 0x683400) {
     value = register_read8(address);
   } else if (address >= 0x700000 && address < 0x800000) {
-    value = ramin_read32(address - 0x700000);
+    Bit32u offset = address & 0x000fffff;
+    if (offset & 3) {
+      value =
+        ramin_read8(offset + 0) << 0 |
+        ramin_read8(offset + 1) << 8 |
+        ramin_read8(offset + 2) << 16 |
+        ramin_read8(offset + 3) << 24;
+    } else {
+      value = ramin_read32(offset);
+    }
   } else if (address >= 0x800000 && address < 0xA00000 ||
              address >= 0xC00000 && address < 0xE00000) {
     Bit32u chid;
