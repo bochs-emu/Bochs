@@ -178,9 +178,18 @@ bool cdrom_base_c::read_toc(Bit8u* buf, int* length, bool msf, int start_track, 
       len = 20;
       break;
 
-    case 1: // multi session stuff - emulate a single session only (return zero bytes)
-    case 3: // 
-    case 4: // 
+    case 1: // multi session stuff - emulate a single session only
+      // we are 12 bytes in length
+      buf[0] = (((12 - 2) & 0xFF00) >> 8);
+      buf[1] = (((12 - 2) & 0x00FF) >> 0);
+      buf[2] = 1;
+      buf[3] = 1;
+      memset(&buf[4], 0, 8);
+      len = 12;
+      break;
+
+    case 3: // (return zero bytes)
+    case 4: //
       break;
 
     case 2:
