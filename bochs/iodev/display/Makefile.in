@@ -99,6 +99,9 @@ libbx_vga.la: vga.lo vgacore.lo ddc.lo
 libbx_svga_cirrus.la: svga_cirrus.lo vgacore.lo ddc.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module svga_cirrus.lo vgacore.lo ddc.lo -o libbx_svga_cirrus.la -rpath $(PLUGIN_PATH)
 
+libbx_geforce.la: geforce.lo vgacore.lo ddc.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module geforce.lo vgacore.lo ddc.lo -o libbx_geforce.la -rpath $(PLUGIN_PATH)
+
 libbx_voodoo.la: voodoo.lo banshee.lo vgacore.lo ddc.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module voodoo.lo banshee.lo vgacore.lo ddc.lo -o libbx_voodoo.la -rpath $(PLUGIN_PATH)
 
@@ -112,6 +115,9 @@ bx_vga.dll: vga.o vgacore.o ddc.o
 
 bx_svga_cirrus.dll: svga_cirrus.o vgacore.o ddc.o
 	@LINK_DLL@ svga_cirrus.o vgacore.o ddc.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_geforce.dll: geforce.o vgacore.o ddc.o
+	@LINK_DLL@ geforce.o vgacore.o ddc.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_voodoo.dll: voodoo.o banshee.o vgacore.o ddc.o
 	@LINK_DLL@ voodoo.o banshee.o vgacore.o ddc.o $(WIN32_DLL_IMPORT_LIBRARY)
@@ -152,6 +158,13 @@ svga_cirrus.o: svga_cirrus.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h 
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
  vgacore.h bitblt.h ddc.h svga_cirrus.h ../virt_timer.h
+geforce.o: geforce.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../gui/paramtree.h ../../logio.h \
+ ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../pc_system.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ vgacore.h bitblt.h ddc.h geforce.h ../virt_timer.h
 vga.o: vga.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
  ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../param_names.h \
@@ -190,6 +203,13 @@ svga_cirrus.lo: svga_cirrus.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
  vgacore.h bitblt.h ddc.h svga_cirrus.h ../virt_timer.h
+geforce.lo: geforce.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../gui/paramtree.h ../../logio.h \
+ ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../pc_system.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ vgacore.h bitblt.h ddc.h geforce.h ../virt_timer.h
 vga.lo: vga.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
  ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
  ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../param_names.h \

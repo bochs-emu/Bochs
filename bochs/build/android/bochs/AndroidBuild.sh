@@ -29,7 +29,7 @@ if [ \! -f bin-$1/Makefile ] ; then
         	--enable-vmx=2 --enable-avx --enable-evex \
 		--enable-sb16 --enable-es1370 \
 		--enable-ne2000 --enable-pnic --enable-e1000 \
-		--enable-clgd54xx --enable-voodoo \
+		--enable-clgd54xx --enable-geforce --enable-voodoo \
 		--enable-all-optimizations \
 		--enable-usb --enable-usb-ohci --enable-usb-ehci --enable-usb-xhci \
 		--enable-busmouse --enable-large-ramfile \

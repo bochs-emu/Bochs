@@ -33,6 +33,7 @@ export LDFLAGS
             --enable-cet \
             --enable-pci \
             --enable-clgd54xx \
+            --enable-geforce \
             --enable-voodoo \
             --enable-usb \
             --enable-usb-ohci \

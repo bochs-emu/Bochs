@@ -36,6 +36,10 @@ Detailed change log :
   - Added support for mapping PCI ROM to expansion ROM space
 
 - I/O Devices
+  - GeForce (NEW)
+    Added basic support for three GeForce models. Most of the 2D features are present,
+    but 3D is still to do. Several Windows versions up to Win 7 have been reported to
+    work under consideration of these limitations.
   - PCI (general)
     - Rewrite of the IRQ signal handling for PCI / ACPI
     - Added advanced PCI option "altdevmap" to make real i440FX BIOS work

@@ -150,7 +150,7 @@
 #  ADD_FEATURES:
 #    Enable one or more CPU features in the CPU configuration selected by MODEL.
 #    Could be useful for testing CPU with newer imaginary configurations by
-#    adding a specific feature or set of features to existing MODEL. The list 
+#    adding a specific feature or set of features to existing MODEL. The list
 #    of features to add supplied through space or comma separated string.
 #
 #  EXCLUDE_FEATURES:
@@ -319,8 +319,9 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest.bin
 #   EXTENSION
 #     Here you can specify the display extension to be used. With the value
 #     'none' you can use standard VGA with no extension. Other supported
-#     values are 'vbe' for Bochs VBE, 'cirrus' for Cirrus SVGA support and
-#     'voodoo' for Voodoo Graphics support (see 'voodoo' option).
+#     values are 'vbe' for Bochs VBE, 'cirrus' for Cirrus SVGA support,
+#     'voodoo' for Voodoo Graphics support (see 'voodoo' option) and
+#     'geforce' for experimental GeForce support (see 'geforce' option).
 #
 #   UPDATE_FREQ
 #     This parameter specifies the number of display updates per second.
@@ -364,6 +365,20 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest.bin
 #   voodoo: enabled=1, model=voodoo2
 #=======================================================================
 #voodoo: enabled=1, model=voodoo1
+
+#=======================================================================
+# GEFORCE:
+# This defines the experimental GeForce emulation. Currently supported models
+# are 'geforce3', 'geforcefx5900' and 'geforce6800'. These 2D/3D AGP cards
+# require an external VGA BIOS, the vga extension option to be set to 'geforce'
+# and the i440BX PCI/AGP chipset with the 'geforce' device assigned to AGP
+# (slot #5). The gui screen update timing for all models is controlled by the
+# related 'vga' options.
+#
+# Example:
+#   geforce: model=geforce3
+#=======================================================================
+#geforce: model=geforcefx5900
 
 #=======================================================================
 # KEYBOARD:
@@ -1089,7 +1104,7 @@ speaker: enabled=1, mode=sound, volume=15
 # accepts the parameter "write_protected" with valid values 0 and 1 to select
 # the access mode (default is 0).
 #
-# For a high- or super-speed USB 'disk' device the optionsX parameter can include 
+# For a high- or super-speed USB 'disk' device the optionsX parameter can include
 # the 'proto:bbb' or 'proto:uasp' parameter specifying to use either the bulk-only
 # Protocol (default) or the USB Attached SCSI Protocol. If no such parameter
 # is given, the 'bbb' protocol is used. A Guest that doesn't support UASP
@@ -1135,8 +1150,8 @@ speaker: enabled=1, mode=sound, volume=15
 #=======================================================================
 # USB_XHCI:
 # This option controls the presence of the USB xHCI host controller with a
-# default 4-port hub. The portX parameter accepts the same device types 
-# with the same syntax as the UHCI controller (see above). The optionsX 
+# default 4-port hub. The portX parameter accepts the same device types
+# with the same syntax as the UHCI controller (see above). The optionsX
 # parameter is also available on xHCI.
 #
 # The xHCI emulation allows you to set the number of ports used with a range
@@ -1146,8 +1161,8 @@ speaker: enabled=1, mode=sound, volume=15
 # USB3 only and support super-speed devices. The second half ports (ports
 # 3 and 4) are USB2 and support speed settings of low, full, or high.
 # The xHCI also allows for different host controllers using the model=
-# parameter. Currently, the two allowed options are "uPD720202" and 
-# "uPD720201". The first defaults to 2 sockets (4 ports) and the later 
+# parameter. Currently, the two allowed options are "uPD720202" and
+# "uPD720201". The first defaults to 2 sockets (4 ports) and the later
 # defaults to 4 sockets (8 ports).
 #=======================================================================
 #usb_xhci: enabled=1               # defaults to the uPD720202 w/4 ports
@@ -1206,7 +1221,7 @@ speaker: enabled=1, mode=sound, volume=15
 # Example for breaking on "XCHGW %DI, %DI" or "XCHG %SP, %SP" execution
 #   magic_break: enabled=1 di sp
 #
-# If nothing is specified, the default will be used: XCHGW %BX, %BX 
+# If nothing is specified, the default will be used: XCHGW %BX, %BX
 #   magic_break: enabled=1
 #
 # Note: Windows XP ntldr can cause problems with XCHGW %BX, %BX
@@ -1235,7 +1250,7 @@ speaker: enabled=1, mode=sound, volume=15
 # very early when writing BIOS or OS code for example, without having to
 # bother with setting up a serial port or etc. Reading from port 0xE9 will
 # will return 0xe9 to let you know if the feature is available.
-# Leave this 0 unless you have a reason to use it. By enabling the 
+# Leave this 0 unless you have a reason to use it. By enabling the
 # 'all_rings' option, you can utilize the port e9 hack from ring3.
 #
 # Example:
@@ -1246,10 +1261,10 @@ speaker: enabled=1, mode=sound, volume=15
 
 #=======================================================================
 # IODEBUG:
-# I/O Interface to Bochs Debugger plugin allows the code running inside 
-# Bochs to monitor memory ranges, trace individual instructions, and 
-# observe register values during execution. By enabling the 'all_rings' 
-# option, you can utilize the iodebug ports from ring3. For more 
+# I/O Interface to Bochs Debugger plugin allows the code running inside
+# Bochs to monitor memory ranges, trace individual instructions, and
+# observe register values during execution. By enabling the 'all_rings'
+# option, you can utilize the iodebug ports from ring3. For more
 # information, refer to "Advanced debugger usage" documentation.
 #
 # Example:

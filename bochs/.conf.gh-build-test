@@ -37,6 +37,7 @@ case $which_config in
       --enable-cet \
       --enable-pci \
       --enable-clgd54xx \
+      --enable-geforce \
       --enable-voodoo \
       --enable-usb \
       --enable-usb-ohci \
@@ -89,6 +90,7 @@ case $which_config in
       --enable-e1000 \
       --enable-pci \
       --enable-clgd54xx \
+      --enable-geforce \
       --enable-voodoo \
       --enable-usb \
       --enable-usb-ohci \
@@ -112,6 +114,7 @@ case $which_config in
       --enable-vmx=1 \
       --enable-pci \
       --enable-clgd54xx \
+      --enable-geforce \
       --enable-voodoo \
       --enable-usb \
       --enable-usb-ohci \
@@ -134,6 +137,7 @@ case $which_config in
       --enable-x86-64 \
       --enable-pci \
       --enable-clgd54xx \
+      --enable-geforce \
       --enable-voodoo \
       --enable-usb \
       --enable-usb-ohci \
