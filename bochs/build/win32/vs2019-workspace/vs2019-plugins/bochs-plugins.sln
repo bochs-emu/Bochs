@@ -157,6 +157,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bx_win32config", "bx_win32c
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "softfloat3e", "softfloat3e.vcxproj", "{BDA1EB83-D53E-41A7-825F-0EFDC3D643E3}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "bx_geforce", "bx_geforce.vcxproj", "{BA9D6A14-8370-4C18-9E50-758ADABF9D84}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -749,6 +751,14 @@ Global
 		{BDA1EB83-D53E-41A7-825F-0EFDC3D643E3}.Release|Win32.Build.0 = Release|Win32
 		{BDA1EB83-D53E-41A7-825F-0EFDC3D643E3}.Release|x64.ActiveCfg = Release|x64
 		{BDA1EB83-D53E-41A7-825F-0EFDC3D643E3}.Release|x64.Build.0 = Release|x64
+		{BA9D6A14-8370-4C18-9E50-758ADABF9D84}.Debug|Win32.ActiveCfg = Debug|Win32
+		{BA9D6A14-8370-4C18-9E50-758ADABF9D84}.Debug|Win32.Build.0 = Debug|Win32
+		{BA9D6A14-8370-4C18-9E50-758ADABF9D84}.Debug|x64.ActiveCfg = Debug|x64
+		{BA9D6A14-8370-4C18-9E50-758ADABF9D84}.Debug|x64.Build.0 = Debug|x64
+		{BA9D6A14-8370-4C18-9E50-758ADABF9D84}.Release|Win32.ActiveCfg = Release|Win32
+		{BA9D6A14-8370-4C18-9E50-758ADABF9D84}.Release|Win32.Build.0 = Release|Win32
+		{BA9D6A14-8370-4C18-9E50-758ADABF9D84}.Release|x64.ActiveCfg = Release|x64
+		{BA9D6A14-8370-4C18-9E50-758ADABF9D84}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
