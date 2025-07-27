@@ -25892,11 +25892,22 @@ if test "$soundcard_present" = 1; then
 
       ;;
     *-linux* | *-freebsd*)
-      SOUNDLOW_OBJS='soundoss.o'
-      soundlow_drivers="oss"
-      soundlow_default="oss"
-      printf "%s\n" "#define BX_HAVE_SOUND_OSS 1" >>confdefs.h
+      bx_have_oss=0
+      ac_fn_c_check_header_compile "$LINENO" "sys/soundcard.h" "ac_cv_header_sys_soundcard_h" "$ac_includes_default"
+if test "x$ac_cv_header_sys_soundcard_h" = xyes
+then :
+  bx_have_oss=1
+fi
 
+      if test "$bx_have_oss" = 1; then
+        SOUNDLOW_OBJS='soundoss.o'
+        soundlow_drivers="oss"
+        soundlow_default="oss"
+        printf "%s\n" "#define BX_HAVE_SOUND_OSS 1" >>confdefs.h
+
+      else
+        soundlow_default="dummy"
+      fi
       bx_have_alsa=0
       ac_fn_c_check_header_compile "$LINENO" "alsa/asoundlib.h" "ac_cv_header_alsa_asoundlib_h" "$ac_includes_default"
 if test "x$ac_cv_header_alsa_asoundlib_h" = xyes

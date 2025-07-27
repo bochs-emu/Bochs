@@ -2106,10 +2106,16 @@ if test "$soundcard_present" = 1; then
       AC_DEFINE(BX_HAVE_SOUND_SDL, 1)
       ;;
     *-linux* | *-freebsd*)
-      SOUNDLOW_OBJS='soundoss.o'
-      soundlow_drivers="oss"
-      soundlow_default="oss"
-      AC_DEFINE(BX_HAVE_SOUND_OSS, 1)
+      bx_have_oss=0
+      AC_CHECK_HEADER([sys/soundcard.h], [bx_have_oss=1])
+      if test "$bx_have_oss" = 1; then
+        SOUNDLOW_OBJS='soundoss.o'
+        soundlow_drivers="oss"
+        soundlow_default="oss"
+        AC_DEFINE(BX_HAVE_SOUND_OSS, 1)
+      else
+        soundlow_default="dummy"
+      fi
       bx_have_alsa=0
       AC_CHECK_HEADER([alsa/asoundlib.h], [bx_have_alsa=1])
       if test "$bx_have_alsa" = 1; then
