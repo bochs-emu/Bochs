@@ -156,7 +156,7 @@ private:
   BX_GEFORCE_SMF void execute_sifc(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_beta(Bit32u chid, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_sifm(Bit32u chid, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void execute_d3d(Bit32u chid, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_d3d(Bit32u chid, Bit32u cls, Bit32u method, Bit32u param);
 
   BX_GEFORCE_SMF Bit32u get_pixel(Bit32u obj, Bit32u ofs, Bit32u x, Bit32u cb);
   BX_GEFORCE_SMF void put_pixel(Bit32u chid, Bit32u ofs, Bit32u x, Bit32u value);
@@ -173,6 +173,9 @@ private:
   BX_GEFORCE_SMF void sifm(Bit32u chid);
 
   BX_GEFORCE_SMF void d3d_clear_surface(Bit32u chid);
+  BX_GEFORCE_SMF void d3d_transform(Bit32u chid, float v[4]);
+  BX_GEFORCE_SMF void d3d_triangle(Bit32u chid, Bit32u i0, Bit32u i1, Bit32u i2);
+  BX_GEFORCE_SMF void d3d_process_vertex(Bit32u chid);
 
 
   struct {
@@ -342,6 +345,15 @@ private:
     Bit32u d3d_color_bytes;
     Bit32u d3d_surface_pitch;
     Bit32u d3d_surface_color_offset;
+    float d3d_composite_matrix[16];
+    float d3d_viewport_offset[4];
+    float d3d_viewport_scale[4];
+    float d3d_diffuse_color[4];
+    Bit32u d3d_vertex_data_array_format[16];
+    Bit32u d3d_begin_end;
+    Bit32u d3d_vertex_array_index;
+    float d3d_vertex_position[12];
+    float d3d_vertex_diffuse_color[16];
     Bit32u d3d_semaphore_obj;
     Bit32u d3d_semaphore_offset;
     Bit32u d3d_color_clear_value;
@@ -402,6 +414,7 @@ private:
   Bit32u memsize_mask;
   Bit32u bar2_size;
   Bit32u ramin_flip;
+  Bit32u class_mask;
 
   Bit8u *disp_ptr;
   Bit32u bank_base[2];
