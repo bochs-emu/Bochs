@@ -327,7 +327,7 @@ typedef struct {
 } bx_debug_t;
 
 #if BX_SHOW_IPS
-BOCHSAPI_MSVCONLY void bx_show_ips_handler(void);
+BOCHSAPI void bx_show_ips_handler(void);
 #endif
 void CDECL bx_signal_handler(int signum);
 BOCHSAPI_MSVCONLY int bx_atexit(void);

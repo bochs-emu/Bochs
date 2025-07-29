@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2011-2024  The Bochs Project
+//  Copyright (C) 2011-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -82,7 +82,7 @@ private:
 };
 
 void convert_float_to_s16le(float *src, unsigned srcsize, Bit8u *dst);
-BOCHSAPI_MSVCONLY Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
+BOCHSAPI Bit32u pcm_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
 
 extern BX_MUTEX(resampler_mutex);
 #ifndef __ANDROID__
@@ -91,7 +91,7 @@ extern BX_MUTEX(mixer_mutex);
 
 // the waveout class
 
-class BOCHSAPI_MSVCONLY bx_soundlow_waveout_c : public logfunctions {
+class BOCHSAPI bx_soundlow_waveout_c : public logfunctions {
 public:
   bx_soundlow_waveout_c();
   virtual ~bx_soundlow_waveout_c();
@@ -140,7 +140,7 @@ protected:
 
 // the wavein class
 
-class BOCHSAPI_MSVCONLY bx_soundlow_wavein_c : public logfunctions {
+class BOCHSAPI bx_soundlow_wavein_c : public logfunctions {
 public:
   bx_soundlow_wavein_c();
   virtual ~bx_soundlow_wavein_c();
@@ -160,7 +160,7 @@ protected:
 
 // the midiout class
 
-class BOCHSAPI_MSVCONLY bx_soundlow_midiout_c : public logfunctions {
+class BOCHSAPI bx_soundlow_midiout_c : public logfunctions {
 public:
   bx_soundlow_midiout_c();
   virtual ~bx_soundlow_midiout_c();
@@ -174,7 +174,7 @@ public:
 // This is the base class of the sound lowlevel support.
 // the lowlevel sound driver class returns pointers to the child objects
 
-class BOCHSAPI_MSVCONLY bx_sound_lowlevel_c : public logfunctions {
+class BOCHSAPI bx_sound_lowlevel_c : public logfunctions {
 public:
   static bool module_present(const char *type);
   static bx_sound_lowlevel_c* get_module(const char *type);

@@ -111,7 +111,7 @@ typedef struct {
 } bx_svga_tileinfo_t;
 
 
-BOCHSAPI_MSVCONLY Bit8u reverse_bitorder(Bit8u);
+BOCHSAPI Bit8u reverse_bitorder(Bit8u);
 
 BOCHSAPI extern class bx_gui_c *bx_gui;
 

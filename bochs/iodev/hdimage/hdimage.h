@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2005-2021  The Bochs Project
+//  Copyright (C) 2005-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -145,26 +145,26 @@ class cdrom_base_c;
 #ifdef BXIMAGE
 int bx_create_image_file(const char *filename);
 #endif
-BOCHSAPI_MSVCONLY int bx_read_image(int fd, Bit64s offset, void *buf, int count);
-BOCHSAPI_MSVCONLY int bx_write_image(int fd, Bit64s offset, void *buf, int count);
-BOCHSAPI_MSVCONLY int bx_close_image(int fd, const char *pathname);
+BOCHSAPI int bx_read_image(int fd, Bit64s offset, void *buf, int count);
+BOCHSAPI int bx_write_image(int fd, Bit64s offset, void *buf, int count);
+BOCHSAPI int bx_close_image(int fd, const char *pathname);
 #ifndef WIN32
 int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, time_t *mtime);
 #else
-BOCHSAPI_MSVCONLY int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, FILETIME *mtime);
+BOCHSAPI int hdimage_open_file(const char *pathname, int flags, Bit64u *fsize, FILETIME *mtime);
 #endif
 bool hdimage_detect_image_mode(const char *pathname, const char **image_mode);
-BOCHSAPI_MSVCONLY bool hdimage_backup_file(int fd, const char *backup_fname);
-BOCHSAPI_MSVCONLY bool hdimage_copy_file(const char *src, const char *dst);
+BOCHSAPI bool hdimage_backup_file(int fd, const char *backup_fname);
+BOCHSAPI bool hdimage_copy_file(const char *src, const char *dst);
 bool coherency_check(device_image_t *ro_disk, redolog_t *redolog);
 #ifndef WIN32
 Bit16u fat_datetime(time_t time, int return_time);
 #else
-Bit16u BOCHSAPI_MSVCONLY fat_datetime(FILETIME time, int return_time);
+Bit16u BOCHSAPI fat_datetime(FILETIME time, int return_time);
 #endif
 
 // base class
-class BOCHSAPI_MSVCONLY device_image_t
+class BOCHSAPI device_image_t
 {
   public:
       // Default constructor
@@ -432,7 +432,7 @@ class dll_image_t : public device_image_t
 #endif
 
 // REDOLOG class
-class BOCHSAPI_MSVCONLY redolog_t
+class BOCHSAPI redolog_t
 {
   public:
       redolog_t();
@@ -636,7 +636,7 @@ BOCHSAPI extern bx_hdimage_ctl_c bx_hdimage_ctl;
 // their name. The common hdimage code uses the static 'create' method
 // to locate and instantiate a device_image_t class.
 //
-class BOCHSAPI_MSVCONLY hdimage_locator_c {
+class BOCHSAPI hdimage_locator_c {
 public:
   static bool module_present(const char *mode);
   static void cleanup(void);

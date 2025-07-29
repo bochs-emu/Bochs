@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2002-2023 Zwane Mwaikambo, Stanislav Shwartsman
+//  Copyright (c) 2002-2025 Zwane Mwaikambo, Stanislav Shwartsman
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -154,7 +154,7 @@ static void apic_bus_broadcast_eoi(Bit8u vector)
 #endif
 
 // available even if APIC is not compiled in
-BOCHSAPI_MSVCONLY void apic_bus_deliver_smi(void)
+BOCHSAPI void apic_bus_deliver_smi(void)
 {
   BX_CPU(0)->deliver_SMI();
 }

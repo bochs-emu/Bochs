@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -89,8 +89,8 @@ typedef void (*eth_rx_handler_t)(void *arg, const void *buf, unsigned len);
 typedef Bit32u (*eth_rx_status_t)(void *arg);
 
 int execute_script(logfunctions *netdev, const char *name, char* arg1);
-void BOCHSAPI_MSVCONLY write_pktlog_txt(FILE *pktlog_txt, const Bit8u *buf, unsigned len, bool host_to_guest);
-size_t BOCHSAPI_MSVCONLY strip_whitespace(char *s);
+void BOCHSAPI write_pktlog_txt(FILE *pktlog_txt, const Bit8u *buf, unsigned len, bool host_to_guest);
+size_t BOCHSAPI strip_whitespace(char *s);
 
 //
 //  The eth_pktmover class is used by ethernet chip emulations
@@ -116,7 +116,7 @@ protected:
 // their name. Chip emulations use the static 'create' method
 // to locate and instantiate a pktmover class.
 //
-class BOCHSAPI_MSVCONLY eth_locator_c {
+class BOCHSAPI eth_locator_c {
 public:
   static bool module_present(const char *type);
   static void cleanup();
