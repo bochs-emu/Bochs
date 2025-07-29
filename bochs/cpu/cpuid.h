@@ -652,7 +652,8 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [21:21]  APX support
 //   [22:22]  reserved
 //   [23:23]  MWAIT and CPUID LEAF5 support (to be used by VMM)
-//   [31:24]  reserved
+//   [24:24]  SLSM: Static Lock Step Mode (IA32_INTEGRITY_STATUS_MSR[0] is supported)
+//   [31:25]  reserved
 
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED0              (1 <<  0)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED1              (1 <<  1)
@@ -678,6 +679,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_STD7_SUBLEAF1_EDX_APX                    (1 << 21)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED22             (1 << 22)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_MWAIT_AND_LEAF5        (1 << 23)
+#define BX_CPUID_STD7_SUBLEAF1_EDX_SLSM                   (1 << 24)
 // ...
 
 // CPUID defines - AMX extensions CPUID[0x0000001E].EAX
