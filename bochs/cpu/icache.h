@@ -172,6 +172,7 @@ public:
   BX_CPP_INLINE void handleSMC(bx_phy_address pAddr, Bit32u mask);
 
   BX_CPP_INLINE void flushICacheEntries(void);
+  BX_CPP_INLINE void flushPageSplitICacheEntries(void);
 
   BX_CPP_INLINE bxICacheEntry_c* get_entry(bx_phy_address pAddr, unsigned fetchModeMask)
   {
@@ -189,6 +190,8 @@ public:
 
   BX_CPP_INLINE bool breakLinks()
   {
+    flushPageSplitICacheEntries();
+
     // break all links between traces
     if (++traceLinkTimeStamp == 0xffffffff) {
       flushICacheEntries();
@@ -198,19 +201,23 @@ public:
   }
 };
 
+BX_CPP_INLINE void bxICache_c::flushPageSplitICacheEntries(void)
+{
+  nextPageSplitIndex = 0;
+  for (unsigned i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++)
+    pageSplitIndex[i].ppf = BX_ICACHE_INVALID_PHY_ADDRESS;
+}
+
 BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
 {
   bxICacheEntry_c* e = entry;
-  unsigned i;
 
-  for (i=0; i<BxICacheEntries; i++, e++) {
+  for (unsigned i=0; i<BxICacheEntries; i++, e++) {
     e->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
     e->traceMask = 0;
   }
 
-  nextPageSplitIndex = 0;
-  for (i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++)
-    pageSplitIndex[i].ppf = BX_ICACHE_INVALID_PHY_ADDRESS;
+  flushPageSplitICacheEntries();
 
   mpindex = 0;
 
