@@ -176,7 +176,7 @@ private:
   BX_GEFORCE_SMF void d3d_transform(Bit32u chid, float v[4]);
   BX_GEFORCE_SMF void d3d_triangle(Bit32u chid, Bit32u i0, Bit32u i1, Bit32u i2);
   BX_GEFORCE_SMF void d3d_process_vertex(Bit32u chid);
-
+  BX_GEFORCE_SMF Bit32u d3d_get_surface_pitch_z(Bit32u chid);
 
   struct {
     Bit8u index;
@@ -343,8 +343,14 @@ private:
     Bit32u d3d_clip_vertical;
     Bit32u d3d_surface_format;
     Bit32u d3d_color_bytes;
-    Bit32u d3d_surface_pitch;
+    Bit32u d3d_depth_bytes;
+    Bit32u d3d_surface_pitch_a;
+    Bit32u d3d_surface_pitch_z;
     Bit32u d3d_surface_color_offset;
+    Bit32u d3d_surface_zeta_offset;
+    Bit32u d3d_depth_test_enable;
+    float d3d_clip_min;
+    float d3d_clip_max;
     float d3d_composite_matrix[16];
     float d3d_viewport_offset[4];
     float d3d_viewport_scale[4];
@@ -356,6 +362,7 @@ private:
     float d3d_vertex_diffuse_color[16];
     Bit32u d3d_semaphore_obj;
     Bit32u d3d_semaphore_offset;
+    Bit32u d3d_zstencil_clear_value;
     Bit32u d3d_color_clear_value;
     Bit32u d3d_clear_surface;
 

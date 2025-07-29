@@ -406,8 +406,14 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS chs[i].d3d_clip_vertical = 0;
     BX_GEFORCE_THIS chs[i].d3d_surface_format = 0;
     BX_GEFORCE_THIS chs[i].d3d_color_bytes = 1;
-    BX_GEFORCE_THIS chs[i].d3d_surface_pitch = 0;
+    BX_GEFORCE_THIS chs[i].d3d_depth_bytes = 1;
+    BX_GEFORCE_THIS chs[i].d3d_surface_pitch_a = 0;
+    BX_GEFORCE_THIS chs[i].d3d_surface_pitch_z = 0;
     BX_GEFORCE_THIS chs[i].d3d_surface_color_offset = 0;
+    BX_GEFORCE_THIS chs[i].d3d_surface_zeta_offset = 0;
+    BX_GEFORCE_THIS chs[i].d3d_depth_test_enable = 0;
+    BX_GEFORCE_THIS chs[i].d3d_clip_min = 0.0f;
+    BX_GEFORCE_THIS chs[i].d3d_clip_max = 0.0f;
     for (int j = 0; j < 16; j++)
       BX_GEFORCE_THIS chs[i].d3d_composite_matrix[j] = 0.0f;
     for (int j = 0; j < 4; j++)
@@ -426,6 +432,7 @@ void bx_geforce_c::svga_init_members()
       BX_GEFORCE_THIS chs[i].d3d_vertex_diffuse_color[j] = 0.0f;
     BX_GEFORCE_THIS chs[i].d3d_semaphore_obj = 0;
     BX_GEFORCE_THIS chs[i].d3d_semaphore_offset = 0;
+    BX_GEFORCE_THIS chs[i].d3d_zstencil_clear_value = 0;
     BX_GEFORCE_THIS chs[i].d3d_color_clear_value = 0;
     BX_GEFORCE_THIS chs[i].d3d_clear_surface = 0;
 
@@ -2826,21 +2833,37 @@ void bx_geforce_c::d3d_clear_surface(Bit32u chid)
   Bit32u dy = BX_GEFORCE_THIS chs[chid].d3d_clip_vertical & 0xFFFF;
   Bit32u width = BX_GEFORCE_THIS chs[chid].d3d_clip_horizontal >> 16;
   Bit32u height = BX_GEFORCE_THIS chs[chid].d3d_clip_vertical >> 16;
-  Bit32u pitch = BX_GEFORCE_THIS chs[chid].d3d_surface_pitch & 0xFFFF;
-  Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].d3d_surface_color_offset +
-    dy * pitch + dx * BX_GEFORCE_THIS chs[chid].d3d_color_bytes;
-  Bit32u redraw_offset = draw_offset -
-    (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
-  for (Bit16u y = 0; y < height; y++) {
-    for (Bit16u x = 0; x < width; x++) {
-      if (BX_GEFORCE_THIS chs[chid].d3d_color_bytes == 2)
-        vram_write16(draw_offset + x * 2, BX_GEFORCE_THIS chs[chid].d3d_color_clear_value);
-      else
-        vram_write32(draw_offset + x * 4, BX_GEFORCE_THIS chs[chid].d3d_color_clear_value);
+  if (BX_GEFORCE_THIS chs[chid].d3d_clear_surface & 0x000000F0) {
+    Bit32u pitch = BX_GEFORCE_THIS chs[chid].d3d_surface_pitch_a & 0xFFFF;
+    Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].d3d_surface_color_offset +
+      dy * pitch + dx * BX_GEFORCE_THIS chs[chid].d3d_color_bytes;
+    Bit32u redraw_offset = draw_offset -
+      (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
+    for (Bit16u y = 0; y < height; y++) {
+      for (Bit16u x = 0; x < width; x++) {
+        if (BX_GEFORCE_THIS chs[chid].d3d_color_bytes == 2)
+          vram_write16(draw_offset + x * 2, BX_GEFORCE_THIS chs[chid].d3d_color_clear_value);
+        else
+          vram_write32(draw_offset + x * 4, BX_GEFORCE_THIS chs[chid].d3d_color_clear_value);
+      }
+      draw_offset += pitch;
     }
-    draw_offset += pitch;
+    BX_GEFORCE_THIS redraw_area(redraw_offset, width, height);
   }
-  BX_GEFORCE_THIS redraw_area(redraw_offset, width, height);
+  if (BX_GEFORCE_THIS chs[chid].d3d_clear_surface & 0x00000001) {
+    Bit32u pitch = d3d_get_surface_pitch_z(chid);
+    Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].d3d_surface_zeta_offset +
+      dy * pitch + dx * BX_GEFORCE_THIS chs[chid].d3d_depth_bytes;
+    for (Bit16u y = 0; y < height; y++) {
+      for (Bit16u x = 0; x < width; x++) {
+        if (BX_GEFORCE_THIS chs[chid].d3d_depth_bytes == 2)
+          vram_write16(draw_offset + x * 2, BX_GEFORCE_THIS chs[chid].d3d_zstencil_clear_value);
+        else
+          vram_write32(draw_offset + x * 4, BX_GEFORCE_THIS chs[chid].d3d_zstencil_clear_value);
+      }
+      draw_offset += pitch;
+    }
+  }
   for (int j = 0; j < 4; j++)
     BX_GEFORCE_THIS chs[chid].d3d_diffuse_color[j] = 1.0f;
 }
@@ -2917,15 +2940,21 @@ void bx_geforce_c::d3d_triangle(Bit32u chid, Bit32u i0, Bit32u i1, Bit32u i2)
   v2[1] -= min_y;
   width = BX_MIN(width, max_x - min_x + 1);
   height = BX_MIN(height, max_y - min_y + 1);
-  Bit32u pitch = BX_GEFORCE_THIS chs[chid].d3d_surface_pitch & 0xFFFF;
+  Bit32u pitch = BX_GEFORCE_THIS chs[chid].d3d_surface_pitch_a & 0xFFFF;
+  Bit32u pitch_zeta = d3d_get_surface_pitch_z(chid);
   Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].d3d_surface_color_offset +
     min_y * pitch + min_x * BX_GEFORCE_THIS chs[chid].d3d_color_bytes;
+  Bit32u draw_offset_zeta = BX_GEFORCE_THIS chs[chid].d3d_surface_zeta_offset +
+    min_y * pitch_zeta + min_x * BX_GEFORCE_THIS chs[chid].d3d_depth_bytes;
   Bit32u redraw_offset = draw_offset -
     (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   float p[2];
   float k8 = 255.0f / w012;
   float k6 = 63.0f / w012;
   float k5 = 31.0f / w012;
+  float clip_min = BX_GEFORCE_THIS chs[chid].d3d_clip_min;
+  float clip_max = BX_GEFORCE_THIS chs[chid].d3d_clip_max;
+  float clip_mul = 1.0f / (clip_max - clip_min);
   for (Bit16u y = 0; y < height; y++) {
     p[1] = y;
     for (Bit16u x = 0; x < width; x++) {
@@ -2934,25 +2963,48 @@ void bx_geforce_c::d3d_triangle(Bit32u chid, Bit32u i0, Bit32u i1, Bit32u i2)
       float w1 = edge_function(v2, v0, p);
       float w2 = edge_function(v0, v1, p);
       if (w0 >= 0.0f && w1 >= 0.0f && w2 >= 0.0f) {
-        float r = c0[0] * w0 + c1[0] * w1 + c2[0] * w2;
-        float g = c0[1] * w0 + c1[1] * w1 + c2[1] * w2;
-        float b = c0[2] * w0 + c1[2] * w1 + c2[2] * w2;
-        if (BX_GEFORCE_THIS chs[chid].d3d_color_bytes == 2) {
-          Bit8u r5 = r * k5 + 0.5;
-          Bit8u g6 = g * k6 + 0.5;
-          Bit8u b5 = b * k5 + 0.5;
-          Bit16u color = b5 << 0 | g6 << 5 | r5 << 11;
-          vram_write16(draw_offset + x * 2, color);
-        } else {
-          Bit8u r8 = r * k8 + 0.5;
-          Bit8u g8 = g * k8 + 0.5;
-          Bit8u b8 = b * k8 + 0.5;
-          Bit32u color = b8 << 0 | g8 << 8 | r8 << 16;
-          vram_write32(draw_offset + x * 4, color);
+        float z = (v0[2] * w0 + v1[2] * w1 + v2[2] * w2) / w012;
+        z = (z - clip_min) * clip_mul;
+        Bit32u z_new;
+        if (BX_GEFORCE_THIS chs[chid].d3d_depth_bytes == 2)
+          z_new = z * 65535.0f;
+        else
+          z_new = z * 16777215.0f;
+        bool draw = true;
+        if (BX_GEFORCE_THIS chs[chid].d3d_depth_test_enable) {
+          Bit32u z_prev;
+          if (BX_GEFORCE_THIS chs[chid].d3d_depth_bytes == 2)
+            z_prev = vram_read16(draw_offset_zeta + x * 2);
+          else
+            z_prev = vram_read32(draw_offset_zeta + x * 4) >> 8;
+          draw = z_new < z_prev;
+        }
+        if (draw) {
+          float r = c0[0] * w0 + c1[0] * w1 + c2[0] * w2;
+          float g = c0[1] * w0 + c1[1] * w1 + c2[1] * w2;
+          float b = c0[2] * w0 + c1[2] * w1 + c2[2] * w2;
+          if (BX_GEFORCE_THIS chs[chid].d3d_color_bytes == 2) {
+            Bit8u r5 = r * k5 + 0.5;
+            Bit8u g6 = g * k6 + 0.5;
+            Bit8u b5 = b * k5 + 0.5;
+            Bit16u color = b5 << 0 | g6 << 5 | r5 << 11;
+            vram_write16(draw_offset + x * 2, color);
+          } else {
+            Bit8u r8 = r * k8 + 0.5;
+            Bit8u g8 = g * k8 + 0.5;
+            Bit8u b8 = b * k8 + 0.5;
+            Bit32u color = b8 << 0 | g8 << 8 | r8 << 16;
+            vram_write32(draw_offset + x * 4, color);
+          }
+          if (BX_GEFORCE_THIS chs[chid].d3d_depth_bytes == 2)
+            vram_write16(draw_offset_zeta + x * 2, z_new);
+          else
+            vram_write32(draw_offset_zeta + x * 4, z_new << 8);
         }
       }
     }
     draw_offset += pitch;
+    draw_offset_zeta += pitch_zeta;
   }
   BX_GEFORCE_THIS redraw_area(redraw_offset, width, height);
 }
@@ -2980,6 +3032,14 @@ void bx_geforce_c::d3d_process_vertex(Bit32u chid)
       BX_GEFORCE_THIS chs[chid].d3d_vertex_array_index = 0;
     }
   }
+}
+
+Bit32u bx_geforce_c::d3d_get_surface_pitch_z(Bit32u chid)
+{
+  if (BX_GEFORCE_THIS card_type <= 0x35)
+    return BX_GEFORCE_THIS chs[chid].d3d_surface_pitch_a >> 16;
+  else
+    return BX_GEFORCE_THIS chs[chid].d3d_surface_pitch_z;
 }
 
 void bx_geforce_c::execute_clip(Bit32u chid, Bit32u method, Bit32u param)
@@ -3418,7 +3478,15 @@ void bx_geforce_c::execute_d3d(Bit32u chid, Bit32u cls, Bit32u method, Bit32u pa
     BX_GEFORCE_THIS chs[chid].d3d_clip_vertical = param;
   else if (method == 0x082) {
     BX_GEFORCE_THIS chs[chid].d3d_surface_format = param;
-    Bit32u format_color = param & 0x0000000F;
+    Bit32u format_color;
+    Bit32u format_depth;
+    if (cls == 0x0097) {
+      format_color = param & 0x0000000F;
+      format_depth = param >> 4 & 0x0000000F;
+    } else {
+      format_color = param & 0x0000001F;
+      format_depth = param >> 5 & 0x00000007;
+    }
     if (format_color == 0x3)      // R5G6B5
       BX_GEFORCE_THIS chs[chid].d3d_color_bytes = 2;
     else if (format_color == 0x5 || // X8R8G8B8_O8R8G8B8
@@ -3426,10 +3494,27 @@ void bx_geforce_c::execute_d3d(Bit32u chid, Bit32u cls, Bit32u method, Bit32u pa
       BX_GEFORCE_THIS chs[chid].d3d_color_bytes = 4;
     else
       BX_ERROR(("unknown D3D color format: 0x%01x", format_color));
+    if (format_depth == 0x1)      // Z16
+      BX_GEFORCE_THIS chs[chid].d3d_depth_bytes = 2;
+    else if (format_depth == 0x2) // Z24S8
+      BX_GEFORCE_THIS chs[chid].d3d_depth_bytes = 4;
+    else
+      BX_ERROR(("unknown D3D depth format: 0x%01x", format_depth));
   } else if (method == 0x083)
-    BX_GEFORCE_THIS chs[chid].d3d_surface_pitch = param;
+    BX_GEFORCE_THIS chs[chid].d3d_surface_pitch_a = param;
   else if (method == 0x084)
     BX_GEFORCE_THIS chs[chid].d3d_surface_color_offset = param;
+  else if (method == 0x085)
+    BX_GEFORCE_THIS chs[chid].d3d_surface_zeta_offset = param;
+  else if (method == 0x08b && cls > 0x0497)
+    BX_GEFORCE_THIS chs[chid].d3d_surface_pitch_z = param;
+  else if (method == 0x0c3 && cls == 0x0097 ||
+           method == 0x29d && cls >= 0x0497)
+    BX_GEFORCE_THIS chs[chid].d3d_depth_test_enable = param;
+  else if (method == 0x0e5)
+    BX_GEFORCE_THIS chs[chid].d3d_clip_min = *(float*)&param;
+  else if (method == 0x0e6)
+    BX_GEFORCE_THIS chs[chid].d3d_clip_max = *(float*)&param;
   else if (method >= 0x1a0 && method <= 0x1af && cls <= 0x0497 ||
            method >= 0x7c0 && method <= 0x7cf && cls > 0x0497) {
     Bit32u i = method & 0x00f;
@@ -3488,6 +3573,8 @@ void bx_geforce_c::execute_d3d(Bit32u chid, Bit32u cls, Bit32u method, Bit32u pa
   else if (method == 0x75c) {
     dma_write32(BX_GEFORCE_THIS chs[chid].d3d_semaphore_obj,
       BX_GEFORCE_THIS chs[chid].d3d_semaphore_offset, param);
+  } else if (method == 0x763) {
+    BX_GEFORCE_THIS chs[chid].d3d_zstencil_clear_value = param;
   } else if (method == 0x764) {
     BX_GEFORCE_THIS chs[chid].d3d_color_clear_value = param;
   } else if (method == 0x765) {
@@ -4027,8 +4114,15 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
       offset = address & 0x1FF;
     }
     value = 0x00000000;
-    if (offset >= 0x40 && offset <= 0x48) {
-      Bit32u curchid = BX_GEFORCE_THIS fifo_cache1_push1 & 0x1F;
+    Bit32u curchid = BX_GEFORCE_THIS fifo_cache1_push1 & 0x1F;
+    if (offset == 0x54 && address >= 0xC00000 && address < 0xE00000) {
+      if (BX_GEFORCE_THIS chs[chid].subr_active)
+        value = BX_GEFORCE_THIS chs[chid].subr_return;
+      else if (curchid == chid)
+        value = BX_GEFORCE_THIS fifo_cache1_dma_get;
+      else
+        value = ramfc_read32(chid, 0x4);
+    } else if (offset >= 0x40 && offset <= 0x48) {
       if (curchid == chid) {
         if (offset == 0x40)
           value = BX_GEFORCE_THIS fifo_cache1_dma_put;
