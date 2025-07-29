@@ -189,7 +189,7 @@ public:
 
   BX_CPP_INLINE bool breakLinks()
   {
-    // break all links bewteen traces
+    // break all links between traces
     if (++traceLinkTimeStamp == 0xffffffff) {
       flushICacheEntries();
       return true;
@@ -221,7 +221,7 @@ BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr, Bit32u mask)
 {
   Bit32u pAddrIndex = bxPageWriteStampTable::hash(pAddr);
 
-  // break all links bewteen traces
+  // break all links between traces
   if (breakLinks()) return;
 
   // Need to invalidate all traces in the trace cache that might include an
