@@ -172,7 +172,7 @@ public:
   BX_CPP_INLINE void handleSMC(bx_phy_address pAddr, Bit32u mask);
 
   BX_CPP_INLINE void flushICacheEntries(void);
-  BX_CPP_INLINE void flushPageSplitICacheEntries(void);
+  BX_CPP_INLINE void invalidatePageSplitICacheEntries(void);
 
   BX_CPP_INLINE bxICacheEntry_c* get_entry(bx_phy_address pAddr, unsigned fetchModeMask)
   {
@@ -190,7 +190,7 @@ public:
 
   BX_CPP_INLINE bool breakLinks()
   {
-    flushPageSplitICacheEntries();
+    invalidatePageSplitICacheEntries();
 
     // break all links between traces
     if (++traceLinkTimeStamp == 0xffffffff) {
@@ -201,13 +201,6 @@ public:
   }
 };
 
-BX_CPP_INLINE void bxICache_c::flushPageSplitICacheEntries(void)
-{
-  nextPageSplitIndex = 0;
-  for (unsigned i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++)
-    pageSplitIndex[i].ppf = BX_ICACHE_INVALID_PHY_ADDRESS;
-}
-
 BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
 {
   bxICacheEntry_c* e = entry;
@@ -217,7 +210,10 @@ BX_CPP_INLINE void bxICache_c::flushICacheEntries(void)
     e->traceMask = 0;
   }
 
-  flushPageSplitICacheEntries();
+  // flush all page split entries
+  nextPageSplitIndex = 0;
+  for (unsigned i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++)
+    pageSplitIndex[i].ppf = BX_ICACHE_INVALID_PHY_ADDRESS;
 
   mpindex = 0;
 
@@ -266,6 +262,17 @@ BX_CPP_INLINE void bxICache_c::handleSMC(bx_phy_address pAddr, Bit32u mask)
       }
     }
   }
+}
+
+BX_CPP_INLINE void bxICache_c::invalidatePageSplitICacheEntries(void)
+{
+  for (unsigned i=0;i<BX_ICACHE_PAGE_SPLIT_ENTRIES;i++) {
+    if (pageSplitIndex[i].ppf != BX_ICACHE_INVALID_PHY_ADDRESS) {
+      pageSplitIndex[i].ppf = BX_ICACHE_INVALID_PHY_ADDRESS;
+      flushSMC(pageSplitIndex[i].e);
+    }
+  }
+  nextPageSplitIndex = 0;
 }
 
 extern void flushICaches(void);
