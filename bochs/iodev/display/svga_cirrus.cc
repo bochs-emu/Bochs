@@ -37,7 +37,8 @@
 
 #include "iodev.h"
 #include "vgacore.h"
-#define BX_USE_BINARY_ROP
+#define BX_USE_BINARY_FWD_ROP
+#define BX_USE_BINARY_BKWD_ROP
 #include "bitblt.h"
 #include "ddc.h"
 #include "svga_cirrus.h"

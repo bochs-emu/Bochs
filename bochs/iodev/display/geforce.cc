@@ -25,7 +25,7 @@
 #include "iodev.h"
 #include "vgacore.h"
 #include "pci.h"
-#define BX_USE_BINARY_ROP
+#define BX_USE_BINARY_FWD_ROP
 #define BX_USE_TERNARY_ROP
 #include "bitblt.h"
 #include "ddc.h"

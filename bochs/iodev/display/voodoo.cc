@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2024  The Bochs Project
+//  Copyright (C) 2012-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -72,7 +72,8 @@
 #include "voodoo.h"
 #include "virt_timer.h"
 #include "bxthread.h"
-#define BX_USE_BINARY_ROP
+#define BX_USE_BINARY_FWD_ROP
+#define BX_USE_BINARY_BKWD_ROP
 #include "bitblt.h"
 
 #define LOG_THIS theVoodooDevice->
