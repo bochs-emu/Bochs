@@ -1935,7 +1935,7 @@ Bit8u bx_geforce_c::register_read8(Bit32u address)
       BX_PANIC(("Unknown register 0x%08x read", address));
     }
   } else if (address >= 0x700000 && address < 0x800000) {
-    value = BX_GEFORCE_THIS s.memory[address - 0x700000 ^ BX_GEFORCE_THIS ramin_flip];
+    value = BX_GEFORCE_THIS s.memory[(address - 0x700000) ^ BX_GEFORCE_THIS ramin_flip];
   } else {
     value = register_read32(address);
   }
@@ -1980,7 +1980,7 @@ void bx_geforce_c::register_write8(Bit32u address, Bit8u value)
       BX_PANIC(("Unknown register 0x%08x write", address));
     }
   } else if (address >= 0x700000 && address < 0x800000) {
-    BX_GEFORCE_THIS s.memory[address - 0x700000 ^ BX_GEFORCE_THIS ramin_flip] = value;
+    BX_GEFORCE_THIS s.memory[(address - 0x700000) ^ BX_GEFORCE_THIS ramin_flip] = value;
   } else {
     register_write32(address, (register_read32(address) & ~0xFF) | value);
   }
@@ -2525,7 +2525,7 @@ void bx_geforce_c::gdi_blit(Bit32u chid, Bit32u type)
         Bit32u word_offset = bit_index / 32;
         Bit32u bit_offset = bit_index % 32;
         bit_offset = (bit_offset & 24) | 7 - (bit_offset & 7);
-        bool pixel = BX_GEFORCE_THIS chs[chid].gdi_words[word_offset] >> bit_offset & 1;
+        bool pixel = (BX_GEFORCE_THIS chs[chid].gdi_words[word_offset] >> bit_offset) & 1;
         if (type || (!type && pixel)) {
           Bit32u dstcolor = get_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_dst,
             draw_offset, x, BX_GEFORCE_THIS chs[chid].s2d_color_bytes);
@@ -2938,8 +2938,8 @@ void bx_geforce_c::d3d_triangle(Bit32u chid, Bit32u i0, Bit32u i1, Bit32u i2)
   v1[1] -= min_y;
   v2[0] -= min_x;
   v2[1] -= min_y;
-  width = BX_MIN(width, max_x - min_x + 1);
-  height = BX_MIN(height, max_y - min_y + 1);
+  width = BX_MIN(Bit32s(width), max_x - min_x + 1);
+  height = BX_MIN(Bit32s(height), max_y - min_y + 1);
   Bit32u pitch = BX_GEFORCE_THIS chs[chid].d3d_surface_pitch_a & 0xFFFF;
   Bit32u pitch_zeta = d3d_get_surface_pitch_z(chid);
   Bit32u draw_offset = BX_GEFORCE_THIS chs[chid].d3d_surface_color_offset +
@@ -3470,6 +3470,12 @@ void bx_geforce_c::execute_sifm(Bit32u chid, Bit32u method, Bit32u param)
 
 void bx_geforce_c::execute_d3d(Bit32u chid, Bit32u cls, Bit32u method, Bit32u param)
 {
+  union param_ {
+    Bit32u param_integer;
+    float param_float;
+  } u;
+  u.param_integer = param;
+
   if (method == 0x069)
     BX_GEFORCE_THIS chs[chid].d3d_semaphore_obj = param;
   else if (method == 0x080)
@@ -3512,26 +3518,26 @@ void bx_geforce_c::execute_d3d(Bit32u chid, Bit32u cls, Bit32u method, Bit32u pa
            (method == 0x29d && cls >= 0x0497))
     BX_GEFORCE_THIS chs[chid].d3d_depth_test_enable = param;
   else if (method == 0x0e5)
-    BX_GEFORCE_THIS chs[chid].d3d_clip_min = *(float*)&param;
+    BX_GEFORCE_THIS chs[chid].d3d_clip_min = u.param_float;
   else if (method == 0x0e6)
-    BX_GEFORCE_THIS chs[chid].d3d_clip_max = *(float*)&param;
+    BX_GEFORCE_THIS chs[chid].d3d_clip_max = u.param_float;
   else if ((method >= 0x1a0 && method <= 0x1af && cls <= 0x0497) ||
            (method >= 0x7c0 && method <= 0x7cf && cls >  0x0497)) {
     Bit32u i = method & 0x00f;
-    BX_GEFORCE_THIS chs[chid].d3d_composite_matrix[i] = *(float*)&param;
+    BX_GEFORCE_THIS chs[chid].d3d_composite_matrix[i] = u.param_float;
   } else if (method >= 0x288 && method <= 0x28b) {
     Bit32u i = method & 0x003;
-    BX_GEFORCE_THIS chs[chid].d3d_viewport_offset[i] = *(float*)&param;
+    BX_GEFORCE_THIS chs[chid].d3d_viewport_offset[i] = u.param_float;
   } else if ((method >= 0x28c && method <= 0x28f && cls >= 0x0497) ||
              (method >= 0x2bc && method <= 0x2bf && cls  < 0x0497)) {
     Bit32u i = method & 0x003;
-    BX_GEFORCE_THIS chs[chid].d3d_viewport_scale[i] = *(float*)&param;
+    BX_GEFORCE_THIS chs[chid].d3d_viewport_scale[i] = u.param_float;
   } else if (method >= 0x540 && method <= 0x542 && cls <= 0x0497) {
     Bit32u i = method & 0x003;
     Bit32u attrib_count =
       BX_GEFORCE_THIS chs[chid].d3d_vertex_data_array_format[3] == 0x00000032 ? 2 : 1;
     BX_GEFORCE_THIS chs[chid].d3d_vertex_position[
-      BX_GEFORCE_THIS chs[chid].d3d_vertex_array_index / attrib_count + i] = *(float*)&param;
+      BX_GEFORCE_THIS chs[chid].d3d_vertex_array_index / attrib_count + i] = u.param_float;
     if (i == 2) {
       BX_GEFORCE_THIS chs[chid].d3d_vertex_array_index += 3 * attrib_count;
       d3d_process_vertex(chid);
@@ -3539,7 +3545,7 @@ void bx_geforce_c::execute_d3d(Bit32u chid, Bit32u cls, Bit32u method, Bit32u pa
   } else if ((method >= 0x558 && method <= 0x55a && cls == 0x0097) ||
              (method >= 0x54c && method <= 0x54e && cls >= 0x0497)) {
     Bit32u i = method & 0x003;
-    BX_GEFORCE_THIS chs[chid].d3d_diffuse_color[i] = *(float*)&param;
+    BX_GEFORCE_THIS chs[chid].d3d_diffuse_color[i] = u.param_float;
   } else if ((method >= 0x5d8 && method <= 0x5c7 && cls == 0x0097) ||
              (method >= 0x5d0 && method <= 0x5df && cls >= 0x0497)) {
     Bit32u i = method - (cls == 0x0097 ? 0x5d8 : 0x5d0);
@@ -3553,17 +3559,15 @@ void bx_geforce_c::execute_d3d(Bit32u chid, Bit32u cls, Bit32u method, Bit32u pa
   } else if (method == 0x606 && cls >= 0x0497) {
     Bit32u attrib_count =
       BX_GEFORCE_THIS chs[chid].d3d_vertex_data_array_format[3] == 0x00000032 ? 2 : 1;
-    Bit32u attrib_index = BX_GEFORCE_THIS chs[chid].d3d_vertex_array_index / 3 % attrib_count;
-    Bit32u vertex_index = BX_GEFORCE_THIS chs[chid].d3d_vertex_array_index / 3 / attrib_count;
+    Bit32u attrib_index = (BX_GEFORCE_THIS chs[chid].d3d_vertex_array_index / 3) % attrib_count;
+    Bit32u vertex_index = (BX_GEFORCE_THIS chs[chid].d3d_vertex_array_index / 3) / attrib_count;
     Bit32u array_index = BX_GEFORCE_THIS chs[chid].d3d_vertex_array_index % 3;
     if (attrib_index == 0) {
       array_index += vertex_index * 3;
-      BX_GEFORCE_THIS chs[chid].d3d_vertex_position[
-        array_index] = *(float*)&param;
+      BX_GEFORCE_THIS chs[chid].d3d_vertex_position[array_index] = u.param_float;
     } else {
       array_index += vertex_index * 4;
-      BX_GEFORCE_THIS chs[chid].d3d_vertex_diffuse_color[
-        array_index] = *(float*)&param;
+      BX_GEFORCE_THIS chs[chid].d3d_vertex_diffuse_color[array_index] = u.param_float;
     }
     BX_GEFORCE_THIS chs[chid].d3d_vertex_array_index++;
     if (BX_GEFORCE_THIS chs[chid].d3d_vertex_array_index % (3 * attrib_count) == 0)
