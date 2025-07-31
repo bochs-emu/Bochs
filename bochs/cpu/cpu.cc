@@ -316,6 +316,8 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
   }
 #endif
 
+  BX_ASSERT(entry->i->ilen() != 0);
+
   return entry;
 }
 
