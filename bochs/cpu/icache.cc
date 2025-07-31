@@ -78,6 +78,8 @@ void flushSMC(bxICacheEntry_c *e)
 
 void BX_CPU_C::BxEndTrace(bxInstruction_c *i)
 {
+  BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
+
   // do nothing, return to main cpu_loop
 }
 
