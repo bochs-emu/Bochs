@@ -2791,6 +2791,10 @@ if test "$with_wx" = yes; then
   # problems.
   case $target in
     *-pc-windows* | *-cygwin* | *-mingw32* | *-msys)
+       RC_CMD=`$WX_CONFIG --rescomp`
+       if test "x$RC_CMD" = x; then
+         RC_CMD="`which windres` -I. `$WX_CONFIG --cflags`"
+       fi
        EXTRA_BX_OBJS="$EXTRA_BX_OBJS wxbochs_resources.o"
 	   GUI_LINK_OPTS_WX="$GUI_LINK_OPTS_WX"
        ;;
@@ -3121,6 +3125,9 @@ case $target in
     else
       if test "$with_win32" != yes; then
         LIBS="$LIBS -lcomctl32"
+        if test "$gui_debugger" = 1; then
+          LIBS="$LIBS -lgdi32 -lcomdlg32"
+        fi
       fi
     fi
     CI_PLUGIN_OBJS="$CI_PLUGIN_OBJS \$(CI_OBJS_WIN32)"

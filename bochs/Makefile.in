@@ -375,7 +375,7 @@ libbochs.a:
 
 # for wxWidgets port, on win32 platform
 wxbochs_resources.o: wxbochs.rc win32res.rc bxversion.rc win32_enh_dbg.rc win32usbres.rc
-	`wx-config --rescomp` $(srcdir)/wxbochs.rc -o $@
+	$(RC_CMD) $(srcdir)/wxbochs.rc -o $@
 
 # for win32 gui
 win32res.o: win32res.rc bxversion.rc win32_enh_dbg.rc win32usbres.rc
