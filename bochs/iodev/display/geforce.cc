@@ -2524,7 +2524,7 @@ void bx_geforce_c::gdi_blit(Bit32u chid, Bit32u type)
       if (x >= clipx0 && x < clipx1 && y >= clipy0 && y < clipy1) {
         Bit32u word_offset = bit_index / 32;
         Bit32u bit_offset = bit_index % 32;
-        bit_offset = (bit_offset & 24) | 7 - (bit_offset & 7);
+        bit_offset = (bit_offset & 24) | (7 - (bit_offset & 7));
         bool pixel = (BX_GEFORCE_THIS chs[chid].gdi_words[word_offset] >> bit_offset) & 1;
         if (type || (!type && pixel)) {
           Bit32u dstcolor = get_pixel(BX_GEFORCE_THIS chs[chid].s2d_img_dst,
@@ -3546,7 +3546,7 @@ void bx_geforce_c::execute_d3d(Bit32u chid, Bit32u cls, Bit32u method, Bit32u pa
              (method >= 0x54c && method <= 0x54e && cls >= 0x0497)) {
     Bit32u i = method & 0x003;
     BX_GEFORCE_THIS chs[chid].d3d_diffuse_color[i] = u.param_float;
-  } else if ((method >= 0x5d8 && method <= 0x5c7 && cls == 0x0097) ||
+  } else if ((method >= 0x5d8 && method <= 0x5e7 && cls == 0x0097) ||
              (method >= 0x5d0 && method <= 0x5df && cls >= 0x0497)) {
     Bit32u i = method - (cls == 0x0097 ? 0x5d8 : 0x5d0);
     BX_GEFORCE_THIS chs[chid].d3d_vertex_data_array_format[i] = param;
@@ -3871,8 +3871,8 @@ void bx_geforce_c::fifo_process(Bit32u chid)
 
 Bit64u bx_geforce_c::get_current_time()
 {
-  return BX_GEFORCE_THIS timer_inittime1 +
-    bx_pc_system.time_nsec() - (BX_GEFORCE_THIS timer_inittime2 & ~BX_CONST64(0x1F));
+  return (BX_GEFORCE_THIS timer_inittime1 +
+    bx_pc_system.time_nsec() - BX_GEFORCE_THIS timer_inittime2) & ~BX_CONST64(0x1F);
 }
 
 void bx_geforce_c::set_irq_level(bool level)
