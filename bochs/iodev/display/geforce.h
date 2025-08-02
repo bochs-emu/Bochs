@@ -174,8 +174,9 @@ private:
 
   BX_GEFORCE_SMF void d3d_clear_surface(Bit32u chid);
   BX_GEFORCE_SMF void d3d_transform(Bit32u chid, float v[4]);
-  BX_GEFORCE_SMF void d3d_triangle(Bit32u chid, Bit32u i0, Bit32u i1, Bit32u i2);
+  BX_GEFORCE_SMF void d3d_triangle(Bit32u chid);
   BX_GEFORCE_SMF void d3d_process_vertex(Bit32u chid);
+  BX_GEFORCE_SMF void d3d_load_vertex(Bit32u chid, Bit32u index);
   BX_GEFORCE_SMF Bit32u d3d_get_surface_pitch_z(Bit32u chid);
 
   struct {
@@ -339,6 +340,8 @@ private:
     Bit32u m2mf_format;
     Bit32u m2mf_buffer_notify;
 
+    Bit32u d3d_vertex_a_obj;
+    Bit32u d3d_vertex_b_obj;
     Bit32u d3d_clip_horizontal;
     Bit32u d3d_clip_vertical;
     Bit32u d3d_surface_format;
@@ -346,20 +349,33 @@ private:
     Bit32u d3d_depth_bytes;
     Bit32u d3d_surface_pitch_a;
     Bit32u d3d_surface_pitch_z;
+    Bit32u d3d_window_offset;
     Bit32u d3d_surface_color_offset;
     Bit32u d3d_surface_zeta_offset;
     Bit32u d3d_depth_test_enable;
+    Bit32u d3d_lighting_enable;
     float d3d_clip_min;
     float d3d_clip_max;
+    Bit32u d3d_light_enable_mask;
+    float d3d_inverse_model_view_matrix[12];
     float d3d_composite_matrix[16];
+    float d3d_scene_ambient_color[4];
     float d3d_viewport_offset[4];
     float d3d_viewport_scale[4];
+    float d3d_light_diffuse_color[8][3];
+    float d3d_light_infinite_direction[8][3];
+    float d3d_normal[3];
     float d3d_diffuse_color[4];
+    Bit32u d3d_vertex_data_array_offset[16];
     Bit32u d3d_vertex_data_array_format[16];
     Bit32u d3d_begin_end;
-    Bit32u d3d_vertex_array_index;
-    float d3d_vertex_position[12];
-    float d3d_vertex_diffuse_color[16];
+    bool d3d_triangle_done;
+    Bit32u d3d_vertex_index;
+    Bit32u d3d_attrib_index;
+    Bit32u d3d_data_index;
+    float d3d_vertex_data[3][16][4];
+    Bit32u d3d_index_array_offset;
+    Bit32u d3d_index_array_dma;
     Bit32u d3d_semaphore_obj;
     Bit32u d3d_semaphore_offset;
     Bit32u d3d_zstencil_clear_value;
@@ -433,10 +449,6 @@ private:
     bool bpp32;
     bool enabled;
   } hw_cursor;
-
-  struct {
-    Bit16u x, y, w, h;
-  } redraw;
 
   bx_ddc_c ddc;
 
