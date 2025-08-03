@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -71,14 +71,21 @@ IMPLEMENT_GUI_PLUGIN_CODE(nogui)
 void bx_nogui_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
   put("NOGUI");
-  UNUSED(argc);
-  UNUSED(argv);
   UNUSED(headerbar_y);
 
   UNUSED(bochs_icon_bits);  // global variable
 
   if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
     BX_INFO(("private_colormap option ignored."));
+  }
+
+  // parse nogui specific options
+  if (argc > 1) {
+    for (int i = 1; i < argc; i++) {
+      if (!parse_common_gui_options(argv[i], BX_GUI_OPT_HIDE_IPS)) {
+        BX_PANIC(("Unknown nogui option '%s'", argv[i]));
+      }
+    }
   }
 }
 

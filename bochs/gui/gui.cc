@@ -1074,7 +1074,9 @@ bool bx_gui_c::palette_change_common(Bit8u index, Bit8u red, Bit8u green, Bit8u 
 void bx_gui_c::show_ips(Bit32u ips_count)
 {
 #if BX_SHOW_IPS
-  BX_INFO(("ips = %3.3fM", ips_count / 1000000.0));
+  if (!gui_opts.hide_ips) {
+    BX_INFO(("ips = %3.3fM", ips_count / 1000000.0));
+  }
 #endif
 }
 
