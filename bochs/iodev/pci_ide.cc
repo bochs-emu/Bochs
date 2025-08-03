@@ -111,6 +111,14 @@ void bx_pci_ide_c::init(void)
     init_pci_conf(0x8086, 0x7010, 0x00, 0x010180, 0x00, 0);
   }
   BX_PIDE_THIS init_bar_io(4, 16, read_handler, write_handler, &bmdma_iomask[0]);
+
+  // PCI IDE always provides 2 IDE channels
+  if (!SIM->get_param_bool("ata.0.resources.enabled")->get() ||
+      !SIM->get_param_bool("ata.1.resources.enabled")->get()) {
+    BX_INFO(("Enable primary and secondary IDE channel (override settings)"));
+    SIM->get_param("ata.0.resources")->reset();
+    SIM->get_param("ata.1.resources")->reset();
+  }
 }
 
 void bx_pci_ide_c::reset(unsigned type)

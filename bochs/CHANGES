@@ -73,6 +73,7 @@ Detailed change log :
     - Add the 0x46 (GET_CONFIG) command. This allows ReactOS 0.4.15 to boot in normal mode (LiveCD)
     - The SENSE was not being cleared between commands. If one command failed, 
       the next successful command would still show the failed SENSE values.
+    - PCI IDE always provides 2 IDE channels (override settings if necessary)
   - Floppy
     - Floppy reset fixes found while testing real hardware
       - Main status register only returns BUSY bit set during reset

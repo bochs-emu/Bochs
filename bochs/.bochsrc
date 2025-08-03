@@ -617,6 +617,7 @@ floppya: 1_44=/dev/fd0, status=inserted
 # the two base io addresses and the irq must be specified.
 #
 # ata0 and ata1 are enabled by default with the values shown below
+# These settings are required if PCI IDE is present.
 #
 # Examples:
 #   ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14

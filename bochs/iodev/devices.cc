@@ -266,13 +266,14 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     SIM->opt_plugin_ctrl("busmouse", 1);
   }
 #endif
+#if BX_SUPPORT_PCI
+  if (pci.enabled) {
+    // Plugin enables primary and secondary IDE channel if necessary
+    PLUG_load_plugin(pci_ide, PLUGTYPE_STANDARD);
+  }
+#endif
   if (is_harddrv_enabled()) {
     PLUG_load_plugin(harddrv, PLUGTYPE_STANDARD);
-#if BX_SUPPORT_PCI
-    if (pci.enabled) {
-      PLUG_load_plugin(pci_ide, PLUGTYPE_STANDARD);
-    }
-#endif
   }
 
   // system hardware

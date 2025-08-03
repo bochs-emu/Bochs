@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "19 Jul 2025" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "3 Aug 2025" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -635,6 +635,7 @@ Use directory as 1.44M VFAT media:
 These options enables up to 4 ata channels. For each channel
 the two base io addresses and the irq must be specified.
 ata0 and ata1 are enabled by default, with the values shown below.
+These settings are required if PCI IDE is present.
 
 Examples:
    ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
