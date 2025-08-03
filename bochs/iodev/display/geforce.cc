@@ -3113,7 +3113,7 @@ void bx_geforce_c::d3d_load_vertex(Bit32u chid, Bit32u index)
       d3d_vertex_data_array_format[attrib_index];
     Bit32u attrib_size = (attrib_format >> 4) & 0x0000000f;
     Bit32u attrib_stride = attrib_format >> 8;
-    for (int data_index = 0; data_index < attrib_size; data_index++) {
+    for (Bit32u data_index = 0; data_index < attrib_size; data_index++) {
       u.param_integer = dma_read32(array_obj, array_offset +
         index * attrib_stride + data_index * 4);
       BX_GEFORCE_THIS chs[chid].d3d_vertex_data[
@@ -3730,7 +3730,7 @@ void bx_geforce_c::execute_d3d(Bit32u chid, Bit32u cls, Bit32u method, Bit32u pa
       BX_GEFORCE_THIS chs[chid].d3d_index_array_dma & 1 ?
       BX_GEFORCE_THIS chs[chid].d3d_vertex_b_obj :
       BX_GEFORCE_THIS chs[chid].d3d_vertex_a_obj;
-    for (int v = vertex_first; v <= vertex_last; v++) {
+    for (Bit32u v = vertex_first; v <= vertex_last; v++) {
       Bit32u vertex_array_index = dma_read16(index_array_obj,
         BX_GEFORCE_THIS chs[chid].d3d_index_array_offset + v * 2);
       d3d_load_vertex(chid, vertex_array_index);
