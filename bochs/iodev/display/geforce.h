@@ -42,6 +42,178 @@
 
 #define BX_ROP_PATTERN 0x01
 
+struct gf_channel
+{
+  Bit32u subr_return;
+  bool subr_active;
+  struct {
+    Bit32u mthd;
+    Bit32u subc;
+    Bit32u mcnt;
+    bool ni;
+  } dma_state;
+  struct {
+    Bit32u object;
+    Bit8u engine;
+    Bit32u notifier;
+  } schs[GEFORCE_SUBCHANNEL_COUNT];
+
+  bool notify_pending;
+  Bit32u notify_type;
+
+  Bit32u s2d_img_src;
+  Bit32u s2d_img_dst;
+  Bit32u s2d_color_fmt;
+  Bit32u s2d_color_bytes;
+  Bit32u s2d_pitch;
+  Bit32u s2d_ofs_src;
+  Bit32u s2d_ofs_dst;
+
+  bool ifc_color_key_enable;
+  Bit32u ifc_operation;
+  Bit32u ifc_color_fmt;
+  Bit32u ifc_color_bytes;
+  Bit32u ifc_yx;
+  Bit32u ifc_dhw;
+  Bit32u ifc_shw;
+  Bit32u ifc_words_ptr;
+  Bit32u ifc_words_left;
+  Bit32u* ifc_words;
+
+  Bit32u iifc_palette;
+  Bit32u iifc_palette_ofs;
+  Bit32u iifc_operation;
+  Bit32u iifc_color_fmt;
+  Bit32u iifc_color_bytes;
+  Bit32u iifc_bpp4;
+  Bit32u iifc_yx;
+  Bit32u iifc_dhw;
+  Bit32u iifc_shw;
+  Bit32u iifc_words_ptr;
+  Bit32u iifc_words_left;
+  Bit32u* iifc_words;
+
+  Bit32u sifc_operation;
+  Bit32u sifc_color_fmt;
+  Bit32u sifc_color_bytes;
+  Bit32u sifc_shw;
+  Bit32u sifc_dxds;
+  Bit32u sifc_dydt;
+  Bit32u sifc_clip_yx;
+  Bit32u sifc_clip_hw;
+  Bit32u sifc_syx;
+  Bit32u sifc_words_ptr;
+  Bit32u sifc_words_left;
+  Bit32u* sifc_words;
+
+  bool blit_color_key_enable;
+  Bit32u blit_operation;
+  Bit32u blit_syx;
+  Bit32u blit_dyx;
+  Bit32u blit_hw;
+
+  Bit32u sifm_src;
+  Bit32u sifm_operation;
+  Bit32u sifm_color_fmt;
+  Bit32u sifm_color_bytes;
+  Bit32u sifm_syx;
+  Bit32u sifm_dyx;
+  Bit32u sifm_shw;
+  Bit32u sifm_dhw;
+  Bit32u sifm_dudx;
+  Bit32u sifm_dvdy;
+  Bit32u sifm_sfmt;
+  Bit32u sifm_sofs;
+
+  Bit32u m2mf_src;
+  Bit32u m2mf_dst;
+  Bit32u m2mf_src_offset;
+  Bit32u m2mf_dst_offset;
+  Bit32u m2mf_src_pitch;
+  Bit32u m2mf_dst_pitch;
+  Bit32u m2mf_line_length;
+  Bit32u m2mf_line_count;
+  Bit32u m2mf_format;
+  Bit32u m2mf_buffer_notify;
+
+  Bit32u d3d_vertex_a_obj;
+  Bit32u d3d_vertex_b_obj;
+  Bit32u d3d_clip_horizontal;
+  Bit32u d3d_clip_vertical;
+  Bit32u d3d_surface_format;
+  Bit32u d3d_color_bytes;
+  Bit32u d3d_depth_bytes;
+  Bit32u d3d_surface_pitch_a;
+  Bit32u d3d_surface_pitch_z;
+  Bit32u d3d_window_offset;
+  Bit32u d3d_surface_color_offset;
+  Bit32u d3d_surface_zeta_offset;
+  Bit32u d3d_depth_test_enable;
+  Bit32u d3d_lighting_enable;
+  float d3d_clip_min;
+  float d3d_clip_max;
+  Bit32u d3d_light_enable_mask;
+  float d3d_inverse_model_view_matrix[12];
+  float d3d_composite_matrix[16];
+  float d3d_scene_ambient_color[4];
+  float d3d_viewport_offset[4];
+  float d3d_viewport_scale[4];
+  float d3d_light_diffuse_color[8][3];
+  float d3d_light_infinite_direction[8][3];
+  float d3d_normal[3];
+  float d3d_diffuse_color[4];
+  Bit32u d3d_vertex_data_array_offset[16];
+  Bit32u d3d_vertex_data_array_format[16];
+  Bit32u d3d_begin_end;
+  bool d3d_triangle_done;
+  Bit32u d3d_vertex_index;
+  Bit32u d3d_attrib_index;
+  Bit32u d3d_data_index;
+  float d3d_vertex_data[3][16][4];
+  Bit32u d3d_index_array_offset;
+  Bit32u d3d_index_array_dma;
+  Bit32u d3d_semaphore_obj;
+  Bit32u d3d_semaphore_offset;
+  Bit32u d3d_zstencil_clear_value;
+  Bit32u d3d_color_clear_value;
+  Bit32u d3d_clear_surface;
+
+  Bit8u  rop;
+
+  Bit32u beta;
+
+  Bit32u clip_yx;
+  Bit32u clip_hw;
+
+  Bit32u chroma_color_fmt;
+  Bit32u chroma_color;
+
+  Bit32u patt_shape;
+  Bit32u patt_type;
+  Bit32u patt_bg_color;
+  Bit32u patt_fg_color;
+  bool patt_data_mono[64];
+  Bit32u patt_data_color[64];
+
+  Bit32u gdi_operation;
+  Bit32u gdi_color_fmt;
+  Bit32u gdi_clip_yx0;
+  Bit32u gdi_clip_yx1;
+  Bit32u gdi_rect_color;
+  Bit32u gdi_rect_xy;
+  Bit32u gdi_rect_yx0;
+  Bit32u gdi_rect_yx1;
+  Bit32u gdi_rect_wh;
+  Bit32u gdi_bg_color;
+  Bit32u gdi_fg_color;
+  Bit32u gdi_image_swh;
+  Bit32u gdi_image_dwh;
+  Bit32u gdi_image_xy;
+  Bit32u gdi_words_ptr;
+  Bit32u gdi_words_left;
+  Bit32u* gdi_words;
+};
+
 class bx_geforce_c : public bx_vgacore_c
 {
 public:
@@ -138,46 +310,46 @@ private:
   BX_GEFORCE_SMF void fifo_process(Bit32u chid);
   BX_GEFORCE_SMF bool execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
 
-  BX_GEFORCE_SMF void update_color_bytes_ifc(Bit32u chid);
-  BX_GEFORCE_SMF void update_color_bytes_sifc(Bit32u chid);
-  BX_GEFORCE_SMF void update_color_bytes_iifc(Bit32u chid);
+  BX_GEFORCE_SMF void update_color_bytes_ifc(gf_channel* ch);
+  BX_GEFORCE_SMF void update_color_bytes_sifc(gf_channel* ch);
+  BX_GEFORCE_SMF void update_color_bytes_iifc(gf_channel* ch);
   BX_GEFORCE_SMF void update_color_bytes(Bit32u s2d_color_fmt, Bit32u color_fmt, Bit32u* color_bytes);
 
-  BX_GEFORCE_SMF void execute_clip(Bit32u chid, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void execute_m2mf(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void execute_rop(Bit32u chid, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void execute_patt(Bit32u chid, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void execute_gdi(Bit32u chid, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void execute_chroma(Bit32u chid, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void execute_imageblit(Bit32u chid, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void execute_ifc(Bit32u chid, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void execute_surf2d(Bit32u chid, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void execute_iifc(Bit32u chid, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void execute_sifc(Bit32u chid, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void execute_beta(Bit32u chid, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void execute_sifm(Bit32u chid, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void execute_d3d(Bit32u chid, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_clip(gf_channel* ch, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_m2mf(gf_channel* ch, Bit32u subc, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_rop(gf_channel* ch, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_patt(gf_channel* ch, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_gdi(gf_channel* ch, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_chroma(gf_channel* ch, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_imageblit(gf_channel* ch, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_ifc(gf_channel* ch, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_surf2d(gf_channel* ch, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_iifc(gf_channel* ch, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_sifc(gf_channel* ch, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_beta(gf_channel* ch, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_sifm(gf_channel* ch, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
 
   BX_GEFORCE_SMF Bit32u get_pixel(Bit32u obj, Bit32u ofs, Bit32u x, Bit32u cb);
-  BX_GEFORCE_SMF void put_pixel(Bit32u chid, Bit32u ofs, Bit32u x, Bit32u value);
-  BX_GEFORCE_SMF void pixel_operation(Bit32u chid, Bit32u op,
+  BX_GEFORCE_SMF void put_pixel(gf_channel* ch, Bit32u ofs, Bit32u x, Bit32u value);
+  BX_GEFORCE_SMF void pixel_operation(gf_channel* ch, Bit32u op,
     Bit32u* dstcolor, const Bit32u* srccolor, Bit32u cb, Bit32u px, Bit32u py);
 
-  BX_GEFORCE_SMF void gdi_fillrect(Bit32u chid, bool clipped);
-  BX_GEFORCE_SMF void gdi_blit(Bit32u chid, Bit32u type);
-  BX_GEFORCE_SMF void ifc(Bit32u chid);
-  BX_GEFORCE_SMF void iifc(Bit32u chid);
-  BX_GEFORCE_SMF void sifc(Bit32u chid);
-  BX_GEFORCE_SMF void copyarea(Bit32u chid);
-  BX_GEFORCE_SMF void m2mf(Bit32u chid);
-  BX_GEFORCE_SMF void sifm(Bit32u chid);
+  BX_GEFORCE_SMF void gdi_fillrect(gf_channel* ch, bool clipped);
+  BX_GEFORCE_SMF void gdi_blit(gf_channel* ch, Bit32u type);
+  BX_GEFORCE_SMF void ifc(gf_channel* ch);
+  BX_GEFORCE_SMF void iifc(gf_channel* ch);
+  BX_GEFORCE_SMF void sifc(gf_channel* ch);
+  BX_GEFORCE_SMF void copyarea(gf_channel* ch);
+  BX_GEFORCE_SMF void m2mf(gf_channel* ch);
+  BX_GEFORCE_SMF void sifm(gf_channel* ch);
 
-  BX_GEFORCE_SMF void d3d_clear_surface(Bit32u chid);
-  BX_GEFORCE_SMF void d3d_transform(Bit32u chid, float v[4]);
-  BX_GEFORCE_SMF void d3d_triangle(Bit32u chid);
-  BX_GEFORCE_SMF void d3d_process_vertex(Bit32u chid);
-  BX_GEFORCE_SMF void d3d_load_vertex(Bit32u chid, Bit32u index);
-  BX_GEFORCE_SMF Bit32u d3d_get_surface_pitch_z(Bit32u chid);
+  BX_GEFORCE_SMF void d3d_clear_surface(gf_channel* ch);
+  BX_GEFORCE_SMF void d3d_transform(gf_channel* ch, float v[4]);
+  BX_GEFORCE_SMF void d3d_triangle(gf_channel* ch);
+  BX_GEFORCE_SMF void d3d_process_vertex(gf_channel* ch);
+  BX_GEFORCE_SMF void d3d_load_vertex(gf_channel* ch, Bit32u index);
+  BX_GEFORCE_SMF Bit32u d3d_get_surface_pitch_z(gf_channel* ch);
 
   struct {
     Bit8u index;
@@ -243,180 +415,11 @@ private:
   Bit32u ramdac_general_control;
 
   bx_bitblt_rop_t rop_handler[0x100];
-  Bit8u  rop_flags[0x100];
+  Bit8u rop_flags[0x100];
 
   bool acquire_active;
 
-  struct {
-    Bit32u subr_return;
-    bool subr_active;
-    struct {
-      Bit32u mthd;
-      Bit32u subc;
-      Bit32u mcnt;
-      bool ni;
-    } dma_state;
-    struct {
-      Bit32u object;
-      Bit8u engine;
-      Bit32u notifier;
-    } schs[GEFORCE_SUBCHANNEL_COUNT];
-
-    bool notify_pending;
-    Bit32u notify_type;
-
-    Bit32u s2d_img_src;
-    Bit32u s2d_img_dst;
-    Bit32u s2d_color_fmt;
-    Bit32u s2d_color_bytes;
-    Bit32u s2d_pitch;
-    Bit32u s2d_ofs_src;
-    Bit32u s2d_ofs_dst;
-
-    bool ifc_color_key_enable;
-    Bit32u ifc_operation;
-    Bit32u ifc_color_fmt;
-    Bit32u ifc_color_bytes;
-    Bit32u ifc_yx;
-    Bit32u ifc_dhw;
-    Bit32u ifc_shw;
-    Bit32u ifc_words_ptr;
-    Bit32u ifc_words_left;
-    Bit32u* ifc_words;
-
-    Bit32u iifc_palette;
-    Bit32u iifc_palette_ofs;
-    Bit32u iifc_operation;
-    Bit32u iifc_color_fmt;
-    Bit32u iifc_color_bytes;
-    Bit32u iifc_bpp4;
-    Bit32u iifc_yx;
-    Bit32u iifc_dhw;
-    Bit32u iifc_shw;
-    Bit32u iifc_words_ptr;
-    Bit32u iifc_words_left;
-    Bit32u* iifc_words;
-
-    Bit32u sifc_operation;
-    Bit32u sifc_color_fmt;
-    Bit32u sifc_color_bytes;
-    Bit32u sifc_shw;
-    Bit32u sifc_dxds;
-    Bit32u sifc_dydt;
-    Bit32u sifc_clip_yx;
-    Bit32u sifc_clip_hw;
-    Bit32u sifc_syx;
-    Bit32u sifc_words_ptr;
-    Bit32u sifc_words_left;
-    Bit32u* sifc_words;
-
-    bool blit_color_key_enable;
-    Bit32u blit_operation;
-    Bit32u blit_syx;
-    Bit32u blit_dyx;
-    Bit32u blit_hw;
-
-    Bit32u sifm_src;
-    Bit32u sifm_operation;
-    Bit32u sifm_color_fmt;
-    Bit32u sifm_color_bytes;
-    Bit32u sifm_syx;
-    Bit32u sifm_dyx;
-    Bit32u sifm_shw;
-    Bit32u sifm_dhw;
-    Bit32u sifm_dudx;
-    Bit32u sifm_dvdy;
-    Bit32u sifm_sfmt;
-    Bit32u sifm_sofs;
-
-    Bit32u m2mf_src;
-    Bit32u m2mf_dst;
-    Bit32u m2mf_src_offset;
-    Bit32u m2mf_dst_offset;
-    Bit32u m2mf_src_pitch;
-    Bit32u m2mf_dst_pitch;
-    Bit32u m2mf_line_length;
-    Bit32u m2mf_line_count;
-    Bit32u m2mf_format;
-    Bit32u m2mf_buffer_notify;
-
-    Bit32u d3d_vertex_a_obj;
-    Bit32u d3d_vertex_b_obj;
-    Bit32u d3d_clip_horizontal;
-    Bit32u d3d_clip_vertical;
-    Bit32u d3d_surface_format;
-    Bit32u d3d_color_bytes;
-    Bit32u d3d_depth_bytes;
-    Bit32u d3d_surface_pitch_a;
-    Bit32u d3d_surface_pitch_z;
-    Bit32u d3d_window_offset;
-    Bit32u d3d_surface_color_offset;
-    Bit32u d3d_surface_zeta_offset;
-    Bit32u d3d_depth_test_enable;
-    Bit32u d3d_lighting_enable;
-    float d3d_clip_min;
-    float d3d_clip_max;
-    Bit32u d3d_light_enable_mask;
-    float d3d_inverse_model_view_matrix[12];
-    float d3d_composite_matrix[16];
-    float d3d_scene_ambient_color[4];
-    float d3d_viewport_offset[4];
-    float d3d_viewport_scale[4];
-    float d3d_light_diffuse_color[8][3];
-    float d3d_light_infinite_direction[8][3];
-    float d3d_normal[3];
-    float d3d_diffuse_color[4];
-    Bit32u d3d_vertex_data_array_offset[16];
-    Bit32u d3d_vertex_data_array_format[16];
-    Bit32u d3d_begin_end;
-    bool d3d_triangle_done;
-    Bit32u d3d_vertex_index;
-    Bit32u d3d_attrib_index;
-    Bit32u d3d_data_index;
-    float d3d_vertex_data[3][16][4];
-    Bit32u d3d_index_array_offset;
-    Bit32u d3d_index_array_dma;
-    Bit32u d3d_semaphore_obj;
-    Bit32u d3d_semaphore_offset;
-    Bit32u d3d_zstencil_clear_value;
-    Bit32u d3d_color_clear_value;
-    Bit32u d3d_clear_surface;
-
-    Bit8u  rop;
-
-    Bit32u beta;
-
-    Bit32u clip_yx;
-    Bit32u clip_hw;
-
-    Bit32u chroma_color_fmt;
-    Bit32u chroma_color;
-
-    Bit32u patt_shape;
-    Bit32u patt_type;
-    Bit32u patt_bg_color;
-    Bit32u patt_fg_color;
-    bool patt_data_mono[64];
-    Bit32u patt_data_color[64];
-
-    Bit32u gdi_operation;
-    Bit32u gdi_color_fmt;
-    Bit32u gdi_clip_yx0;
-    Bit32u gdi_clip_yx1;
-    Bit32u gdi_rect_color;
-    Bit32u gdi_rect_xy;
-    Bit32u gdi_rect_yx0;
-    Bit32u gdi_rect_yx1;
-    Bit32u gdi_rect_wh;
-    Bit32u gdi_bg_color;
-    Bit32u gdi_fg_color;
-    Bit32u gdi_image_swh;
-    Bit32u gdi_image_dwh;
-    Bit32u gdi_image_xy;
-    Bit32u gdi_words_ptr;
-    Bit32u gdi_words_left;
-    Bit32u* gdi_words;
-  } chs[GEFORCE_CHANNEL_COUNT];
+  gf_channel chs[GEFORCE_CHANNEL_COUNT];
 
   Bit32u unk_regs[4*1024*1024]; // temporary
 
