@@ -296,10 +296,9 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
   bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrFetchPage + eipBiased;
   bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache.find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
-  if (entry == NULL)
+  if (entry == NULL || entry->i->ilen() == 0)
   {
-    // iCache miss. No validated instruction with matching fetch parameters
-    // is in the iCache.
+    // iCache miss. No validated instruction with matching fetch parameters is in the iCache.
     INC_ICACHE_STAT(iCacheMisses);
     entry = serveICacheMiss((Bit32u) eipBiased, pAddr);
   }
