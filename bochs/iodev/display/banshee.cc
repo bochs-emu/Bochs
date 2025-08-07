@@ -3400,11 +3400,13 @@ void bx_banshee_c::blt_line(bool pline)
   }
 
   if (!pline) {
-    dst_ptr1 = dst_ptr + y1 * dpitch + x1 * dpxsize;
-    if (colorkey_en & 2) {
-      rop = blt_colorkey_check(dst_ptr1, dpxsize, 1);
+    if (blt_clip_check(x1, y1)) {
+      dst_ptr1 = dst_ptr + y1 * dpitch + x1 * dpxsize;
+      if (colorkey_en & 2) {
+        rop = blt_colorkey_check(dst_ptr1, dpxsize, 1);
+      }
+      BLT.rop_fn[rop](dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
     }
-    BLT.rop_fn[rop](dst_ptr1, BLT.fgcolor, dpitch, dpxsize, dpxsize, 1);
   }
   blt_complete();
   BLT.reg[blt_srcXY] = BLT.reg[blt_dstXY];
