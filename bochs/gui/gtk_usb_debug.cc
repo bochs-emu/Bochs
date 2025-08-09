@@ -574,7 +574,7 @@ static void uhci_td_dialog(Bit32u addr)
   int ret, value;
   struct TD td;
   char buffer[COMMON_STR_SIZE];
-  GtkWidget *mainVbox, *entry[7], *checkbox[16], *grid[4], *label[7];
+  GtkWidget *mainVbox, *entry[7], *checkbox[16], *grid[4], *label[8];
   GtkWidget *Shbox, *Svbox, *Bhbox, *LPframe, *Sframe[2], *PHframe;
   GtkWidget *combo, *button[3];
   DUMP_PARAMS dump_params;

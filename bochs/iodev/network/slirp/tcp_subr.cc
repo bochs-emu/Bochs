@@ -462,6 +462,7 @@ void tcp_connect(struct socket *inso)
         break;
     default:
         slirplog_error("Unknown protocol");
+        return;
     }
     ret = getnameinfo((const struct sockaddr *) &inso->lhost.ss, addrlen, addrstr, sizeof(addrstr), portstr, sizeof(portstr), NI_NUMERICHOST|NI_NUMERICSERV);
     assert(ret == 0);

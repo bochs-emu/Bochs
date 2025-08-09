@@ -1761,7 +1761,7 @@ static uint8_t* find_acpi_pci2isa_entry(const uint8_t *data, int len)
     for (i = 0; i < len; i += 2) {
         if ((*(uint32_t *)&data[i] == 0x5f415349) &&
            (*(uint32_t *)(&data[i + 5]) == 0x5244415f)) {
-            return &data[i];
+            return (uint8_t*)&data[i];
         }
     }
     BX_PANIC("find_acpi_pci2isa_entry: did not find pci2isa entry");
@@ -1777,8 +1777,8 @@ void acpi_bios_init(void)
     struct facs_descriptor_rev1 *facs;
     struct multiple_apic_table *madt;
     uint8_t *dsdt, *ssdt;
-    struct acpi_20_hpet *hpet;
-    uint32_t hpet_addr;
+    struct acpi_20_hpet *hpet = NULL;
+    uint32_t hpet_addr = 0;
     uint32_t base_addr, rsdt_addr, fadt_addr, addr, facs_addr, dsdt_addr, ssdt_addr;
     uint32_t acpi_tables_size, madt_addr, madt_size;
     int i, hpet_enabled;
@@ -1799,7 +1799,7 @@ void acpi_bios_init(void)
     bios_table_cur_addr += sizeof(*rsdp);
 #endif
 
-    hpet_enabled = ((readl(ACPI_HPET_ADDRESS) >> 16) == 0x8086);
+    hpet_enabled = ((readl((const void*)ACPI_HPET_ADDRESS) >> 16) == 0x8086);
     if (hpet_enabled) {
         BX_INFO("HPET present at 0x%08x\n", ACPI_HPET_ADDRESS);
     }
