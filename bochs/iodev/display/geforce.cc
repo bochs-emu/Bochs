@@ -2828,7 +2828,7 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch)
           vec_op = (tokens[1] >> 21) & 0xf;
         else
           vec_op = (tokens[1] >> 22) & 0x1f;
-        float vec_result[4];
+        float vec_result[4] = {0,0,0,0};
         if (vec_op == 1) { // MOV
           for (int comp_index = 0; comp_index < 4; comp_index++) {
             vec_result[comp_index] = params[0][comp_index];
