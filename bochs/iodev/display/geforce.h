@@ -158,6 +158,8 @@ struct gf_channel
   float d3d_scene_ambient_color[4];
   float d3d_viewport_offset[4];
   float d3d_viewport_scale[4];
+  Bit32u d3d_transform_program[544][4];
+  float d3d_transform_constant[512][4];
   float d3d_light_diffuse_color[8][3];
   float d3d_light_infinite_direction[8][3];
   float d3d_normal[3];
@@ -168,7 +170,7 @@ struct gf_channel
   bool d3d_triangle_done;
   Bit32u d3d_vertex_index;
   Bit32u d3d_attrib_index;
-  Bit32u d3d_data_index;
+  Bit32u d3d_comp_index;
   float d3d_vertex_data[3][16][4];
   Bit32u d3d_index_array_offset;
   Bit32u d3d_index_array_dma;
@@ -177,6 +179,10 @@ struct gf_channel
   Bit32u d3d_zstencil_clear_value;
   Bit32u d3d_color_clear_value;
   Bit32u d3d_clear_surface;
+  Bit32u d3d_transform_execution_mode;
+  Bit32u d3d_transform_program_load;
+  Bit32u d3d_transform_program_start;
+  Bit32u d3d_transform_constant_load;
 
   Bit8u  rop;
 
