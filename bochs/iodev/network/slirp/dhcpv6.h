@@ -40,7 +40,7 @@
 #define DHCPV6_SERVER_PORT 547
 
 const struct in6_addr ALLDHCP_MULTICAST \
-    {                     \
+    { { {                 \
             0xff,         \
             0x02,         \
             0x00,         \
@@ -57,7 +57,7 @@ const struct in6_addr ALLDHCP_MULTICAST \
             0x01,         \
             0x00,         \
             0x02          \
-    };
+    } } };
 
 #define in6_dhcp_multicast(a) in6_equal(a, &ALLDHCP_MULTICAST)
 
