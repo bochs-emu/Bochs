@@ -148,10 +148,13 @@ struct gf_channel
   Bit32u d3d_window_offset;
   Bit32u d3d_surface_color_offset;
   Bit32u d3d_surface_zeta_offset;
+  Bit32u d3d_cull_face_enable;
   Bit32u d3d_depth_test_enable;
   Bit32u d3d_lighting_enable;
   float d3d_clip_min;
   float d3d_clip_max;
+  Bit32u d3d_cull_face;
+  Bit32u d3d_front_face;
   Bit32u d3d_light_enable_mask;
   float d3d_inverse_model_view_matrix[12];
   float d3d_composite_matrix[16];
@@ -168,6 +171,7 @@ struct gf_channel
   Bit32u d3d_vertex_data_array_format[16];
   Bit32u d3d_begin_end;
   bool d3d_triangle_done;
+  bool d3d_triangle_flip;
   Bit32u d3d_vertex_index;
   Bit32u d3d_attrib_index;
   Bit32u d3d_comp_index;
