@@ -119,12 +119,14 @@ void bx_cpuid_t::get_std_cpuid_monitor_mwait_leaf(cpuid_function_t *leaf, Bit32u
 
 #if BX_SUPPORT_APIC
 
+#if BX_SUPPORT_SMP
 BX_CPP_INLINE static Bit32u ilog2(Bit32u x)
 {
   Bit32u count = 0;
   while(x>>=1) count++;
   return count;
 }
+#endif
 
 // leaf 0x0000000B //
 void bx_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const

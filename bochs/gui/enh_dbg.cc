@@ -2741,10 +2741,7 @@ void ChangeReg()
     int i = RitemToRnum[L];
     if (i > EFER_Rnum)      // TODO: extend this to more reg -- need display names for all
         return;
-//  if (i > EFER_Rnum)
-//      *tmpcb = 0;
-//  else
-        sprintf (tmpcb,"0x" FMT_LL "X", rV[i]);
+    sprintf (tmpcb,"0x" FMT_LL "X", rV[i]);
     if (AskText("Change Register Value",RDispName[i],tmpcb))
     {
         Bit64u val = cvt64(tmpcb,TRUE);     // input either hex or decimal

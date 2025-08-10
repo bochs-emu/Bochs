@@ -638,7 +638,7 @@ void BX_CPU_C::prefetch(void)
 
 #if BX_CPU_LEVEL >= 5
     if (USER_PL && BX_CPU_THIS_PTR get_VIP() && BX_CPU_THIS_PTR get_VIF()) {
-      if (BX_CPU_THIS_PTR cr4.get_PVI() | (v8086_mode() && BX_CPU_THIS_PTR cr4.get_VME())) {
+      if (BX_CPU_THIS_PTR cr4.get_PVI() || (v8086_mode() && BX_CPU_THIS_PTR cr4.get_VME())) {
         BX_ERROR(("prefetch: inconsistent VME state"));
         exception(BX_GP_EXCEPTION, 0);
       }
