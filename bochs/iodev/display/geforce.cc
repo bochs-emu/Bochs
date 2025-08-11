@@ -871,7 +871,7 @@ void bx_geforce_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
         BX_ERROR(("rma: write index 2"));
       } else if (rma_index == 3) {
         bool vram = false;
-        Bit32u offset = BX_GEFORCE_THIS rma_addr;
+        Bit32u offset = BX_GEFORCE_THIS rma_addr & ~3; // Fix for 6800 GT BIOS
         if (BX_GEFORCE_THIS rma_addr & 0x80000000) {
           vram = true;
           offset &= ~0x80000000;
