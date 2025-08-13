@@ -137,6 +137,8 @@ struct gf_channel
   Bit32u m2mf_format;
   Bit32u m2mf_buffer_notify;
 
+  Bit32u d3d_color_obj;
+  Bit32u d3d_zeta_obj;
   Bit32u d3d_vertex_a_obj;
   Bit32u d3d_vertex_b_obj;
   Bit32u d3d_clip_horizontal;

@@ -2686,14 +2686,14 @@ void bx_geforce_c::d3d_clear_surface(gf_channel* ch)
     Bit32u pitch = ch->d3d_surface_pitch_a & 0xFFFF;
     Bit32u draw_offset = ch->d3d_surface_color_offset +
       dy * pitch + dx * ch->d3d_color_bytes;
-    Bit32u redraw_offset = draw_offset -
+    Bit32u redraw_offset = dma_lin_lookup(ch->d3d_color_obj, draw_offset) -
       (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
     for (Bit16u y = 0; y < height; y++) {
       for (Bit16u x = 0; x < width; x++) {
         if (ch->d3d_color_bytes == 2)
-          vram_write16(draw_offset + x * 2, ch->d3d_color_clear_value);
+          dma_write16(ch->d3d_color_obj, draw_offset + x * 2, ch->d3d_color_clear_value);
         else
-          vram_write32(draw_offset + x * 4, ch->d3d_color_clear_value);
+          dma_write32(ch->d3d_color_obj, draw_offset + x * 4, ch->d3d_color_clear_value);
       }
       draw_offset += pitch;
     }
@@ -2706,9 +2706,9 @@ void bx_geforce_c::d3d_clear_surface(gf_channel* ch)
     for (Bit16u y = 0; y < height; y++) {
       for (Bit16u x = 0; x < width; x++) {
         if (ch->d3d_depth_bytes == 2)
-          vram_write16(draw_offset + x * 2, ch->d3d_zstencil_clear_value);
+          dma_write16(ch->d3d_zeta_obj, draw_offset + x * 2, ch->d3d_zstencil_clear_value);
         else
-          vram_write32(draw_offset + x * 4, ch->d3d_zstencil_clear_value);
+          dma_write32(ch->d3d_zeta_obj, draw_offset + x * 4, ch->d3d_zstencil_clear_value);
       }
       draw_offset += pitch;
     }
@@ -3079,7 +3079,7 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch)
     draw_y1 * pitch + draw_x1 * ch->d3d_color_bytes;
   Bit32u draw_offset_zeta = ch->d3d_surface_zeta_offset +
     draw_y1 * pitch_zeta + draw_x1 * ch->d3d_depth_bytes;
-  Bit32u redraw_offset = draw_offset -
+  Bit32u redraw_offset = dma_lin_lookup(ch->d3d_color_obj, draw_offset) -
     (Bit32u)(BX_GEFORCE_THIS disp_ptr - BX_GEFORCE_THIS s.memory);
   float xy[2];
   float k8 = 255.0f / w012;
@@ -3109,9 +3109,9 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch)
             z_new = z * 16777215.0f;
           Bit32u z_prev;
           if (ch->d3d_depth_bytes == 2)
-            z_prev = vram_read16(draw_offset_zeta + x * 2);
+            z_prev = dma_read16(ch->d3d_zeta_obj, draw_offset_zeta + x * 2);
           else
-            z_prev = vram_read32(draw_offset_zeta + x * 4) >> 8;
+            z_prev = dma_read32(ch->d3d_zeta_obj, draw_offset_zeta + x * 4) >> 8;
           draw = z_new < z_prev;
         }
         if (draw) {
@@ -3123,19 +3123,19 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch)
             Bit8u g6 = BX_MIN(BX_MAX(g * k6, 0.0f), 63.0f) + 0.5f;
             Bit8u b5 = BX_MIN(BX_MAX(b * k5, 0.0f), 31.0f) + 0.5f;
             Bit16u color = b5 << 0 | g6 << 5 | r5 << 11;
-            vram_write16(draw_offset + x * 2, color);
+            dma_write16(ch->d3d_color_obj, draw_offset + x * 2, color);
           } else {
             Bit8u r8 = BX_MIN(BX_MAX(r * k8, 0.0f), 255.0f) + 0.5f;
             Bit8u g8 = BX_MIN(BX_MAX(g * k8, 0.0f), 255.0f) + 0.5f;
             Bit8u b8 = BX_MIN(BX_MAX(b * k8, 0.0f), 255.0f) + 0.5f;
             Bit32u color = b8 << 0 | g8 << 8 | r8 << 16;
-            vram_write32(draw_offset + x * 4, color);
+            dma_write32(ch->d3d_color_obj, draw_offset + x * 4, color);
           }
           if (ch->d3d_depth_test_enable) {
             if (ch->d3d_depth_bytes == 2)
-              vram_write16(draw_offset_zeta + x * 2, z_new);
+              dma_write16(ch->d3d_zeta_obj, draw_offset_zeta + x * 2, z_new);
             else
-              vram_write32(draw_offset_zeta + x * 4, z_new << 8);
+              dma_write32(ch->d3d_zeta_obj, draw_offset_zeta + x * 4, z_new << 8);
           }
         }
       }
@@ -3667,7 +3667,11 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       ch->d3d_diffuse_color[j] = 1.0f;
     for (int j = 0; j < 16; j++)
       ch->d3d_vertex_data_array_format[j] = 0;
-  } else if (method == 0x067)
+  } else if (method == 0x065)
+    ch->d3d_color_obj = param;
+  else if (method == 0x066)
+    ch->d3d_zeta_obj = param;
+  else if (method == 0x067)
     ch->d3d_vertex_a_obj = param;
   else if (method == 0x068)
     ch->d3d_vertex_b_obj = param;
