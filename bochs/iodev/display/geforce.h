@@ -113,6 +113,7 @@ struct gf_channel
   Bit32u blit_hw;
 
   Bit32u sifm_src;
+  bool sifm_swizzled;
   Bit32u sifm_operation;
   Bit32u sifm_color_fmt;
   Bit32u sifm_color_bytes;
