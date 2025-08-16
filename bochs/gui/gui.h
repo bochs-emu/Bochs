@@ -185,6 +185,7 @@ public:
 #if BX_USE_GUI_CONSOLE
   virtual void set_console_edit_mode(bool mode) {}
 #endif
+  virtual void start_update(void) {}
 
   // The following function(s) are defined already, and your
   // GUI code calls them

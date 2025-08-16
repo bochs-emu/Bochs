@@ -97,6 +97,8 @@ Detailed change log :
     - Added the 0xE1 (Secondary ID) command
 
 - GUI and display libraries
+  - Added new method start_update() used by VGA core to call some gui code before drawing.
+    This currently only used by X gui for processing palette update.
   - Fixed buffer overflow when using keymap feature
 
 - BIOS

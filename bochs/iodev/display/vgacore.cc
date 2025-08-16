@@ -1349,6 +1349,7 @@ void bx_vgacore_c::update(void)
       cs_visible = 0;
     }
   }
+  bx_gui->start_update();
 
   // fields that effect the way video memory is serialized into screen output:
   // GRAPHICS CONTROLLER:
