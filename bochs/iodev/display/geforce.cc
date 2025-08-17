@@ -514,7 +514,7 @@ bool bx_geforce_c::geforce_mem_read_handler(bx_phy_address addr, unsigned len,
     } else {
       BX_PANIC(("MMIO read len %d", len));
     }
-    return 1;
+    return true;
   }
 
   if (BX_GEFORCE_THIS card_type != 0x35 && addr >= BX_GEFORCE_THIS pci_bar[2].addr &&
@@ -534,7 +534,7 @@ bool bx_geforce_c::geforce_mem_read_handler(bx_phy_address addr, unsigned len,
       } else {
         BX_PANIC(("RAMIN read len %d", len));
       }
-      return 1;
+      return true;
     } else {
       BX_ERROR(("BAR2 read from 0x%08x", offset));
     }
@@ -555,7 +555,7 @@ bool bx_geforce_c::geforce_mem_read_handler(bx_phy_address addr, unsigned len,
     data_ptr--;
 #endif
   }
-  return 1;
+  return true;
 }
 
 Bit8u bx_geforce_c::mem_read(bx_phy_address addr)
@@ -590,7 +590,7 @@ Bit8u bx_geforce_c::mem_read(bx_phy_address addr)
     return BX_GEFORCE_THIS s.memory[offset];
   }
 
-  return 0xFF;
+  return 0xff;
 }
 
 bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
@@ -626,7 +626,7 @@ bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
     } else {
       BX_PANIC(("MMIO write len %d", len));
     }
-    return 1;
+    return true;
   }
 
   if (BX_GEFORCE_THIS card_type != 0x35 && addr >= BX_GEFORCE_THIS pci_bar[2].addr &&
@@ -647,7 +647,7 @@ bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
       } else {
         BX_PANIC(("RAMIN write len %d", len));
       }
-      return 1;
+      return true;
     } else {
       BX_PANIC(("BAR2 write to 0x%08x", offset));
     }
@@ -668,7 +668,7 @@ bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
     data_ptr--;
 #endif
   }
-  return 1;
+  return true;
 }
 
 void bx_geforce_c::mem_write(bx_phy_address addr, Bit8u value)
@@ -797,9 +797,8 @@ Bit32u bx_geforce_c::svga_read(Bit32u address, unsigned io_len)
   }
 
   if ((io_len == 2) && ((address & 1) == 0)) {
-    Bit32u value;
-    value = (Bit32u)SVGA_READ(address,1);
-    value |= (Bit32u)SVGA_READ(address+1,1) << 8;
+    Bit32u value  = (Bit32u)SVGA_READ(address,1);
+           value |= (Bit32u)SVGA_READ(address+1,1) << 8;
     return value;
   }
 
@@ -1144,8 +1143,6 @@ void bx_geforce_c::get_crtc_params(bx_crtc_params_t* crtcp, Bit32u* vclock)
 
 void bx_geforce_c::update(void)
 {
-  unsigned width, height, pitch;
-
   Bit8u crtc28 = BX_GEFORCE_THIS crtc.reg[0x28];
   if (!crtc28) {
     BX_GEFORCE_THIS bx_vgacore_c::update();
@@ -1218,6 +1215,8 @@ void bx_geforce_c::update(void)
     BX_GEFORCE_THIS s.last_fh = 0;
   }
 
+  unsigned width, height, pitch;
+
   if (BX_GEFORCE_THIS svga_dispbpp != 4) {
     width  = BX_GEFORCE_THIS svga_xres;
     height = BX_GEFORCE_THIS svga_yres;
@@ -1245,9 +1244,9 @@ void bx_geforce_c::update(void)
     BX_GEFORCE_THIS svga_needs_update_dispentire = 0;
   }
 
-  if (!BX_GEFORCE_THIS svga_needs_update_tile) {
+  if (!BX_GEFORCE_THIS svga_needs_update_tile)
     return;
-  }
+
   BX_GEFORCE_THIS svga_needs_update_tile = 0;
 
   unsigned xc, yc, xti, yti, hp;
@@ -1719,7 +1718,7 @@ void bx_geforce_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
     BX_GEFORCE_THIS hw_cursor.offset =
       (BX_GEFORCE_THIS crtc.reg[0x31] >> 2 << 11) |
       (BX_GEFORCE_THIS crtc.reg[0x30] & 0x7F) << 17 |
-      BX_GEFORCE_THIS crtc.reg[0x2f] << 24;
+       BX_GEFORCE_THIS crtc.reg[0x2f] << 24;
     BX_GEFORCE_THIS hw_cursor.offset += BX_GEFORCE_THIS crtc_cursor_offset;
     if (prev_enabled != BX_GEFORCE_THIS hw_cursor.enabled) {
       BX_GEFORCE_THIS redraw_area(BX_GEFORCE_THIS hw_cursor.x, BX_GEFORCE_THIS hw_cursor.y,
@@ -2231,13 +2230,11 @@ void bx_geforce_c::pixel_operation(gf_channel* ch, Bit32u op,
     if (BX_GEFORCE_THIS rop_flags[rop]) {
       Bit32u i = py % 8 * 8 + px % 8;
       Bit32u patt_color = ch->patt_type == 1 ?
-        ch->patt_data_mono[i] ?
-          ch->patt_fg_color : ch->patt_bg_color :
+        ch->patt_data_mono[i] ? ch->patt_fg_color : ch->patt_bg_color :
         ch->patt_data_color[i];
       bx_ternary_rop(rop, (Bit8u*)dstcolor, (Bit8u*)srccolor, (Bit8u*)&patt_color, cb);
     } else {
-      BX_GEFORCE_THIS rop_handler[rop]((Bit8u*)dstcolor, (Bit8u*)srccolor,
-        0, 0, cb, 1);
+      BX_GEFORCE_THIS rop_handler[rop]((Bit8u*)dstcolor, (Bit8u*)srccolor, 0, 0, cb, 1);
     }
   } else if (op == 5) {
     if (cb == 4) {
@@ -2400,8 +2397,7 @@ void bx_geforce_c::ifc(gf_channel* ch)
   Bit32u dwidth = ch->ifc_dhw & 0xFFFF;
   Bit32u height = ch->ifc_dhw >> 16;
   Bit32u pitch = ch->s2d_pitch >> 16;
-  Bit32u draw_offset = ch->s2d_ofs_dst +
-    dy * pitch + dx * ch->s2d_color_bytes;
+  Bit32u draw_offset = ch->s2d_ofs_dst + dy * pitch + dx * ch->s2d_color_bytes;
   Bit32u redraw_offset = dma_lin_lookup(ch->s2d_img_dst, draw_offset) -
     BX_GEFORCE_THIS disp_offset;
   Bit32u word_offset = 0;
@@ -2519,8 +2515,7 @@ void bx_geforce_c::sifc(gf_channel* ch)
   Bit32u dwidth = ch->sifc_clip_hw & 0xFFFF;
   Bit32u height = ch->sifc_clip_hw >> 16;
   Bit32u pitch = ch->s2d_pitch >> 16;
-  Bit32u draw_offset = ch->s2d_ofs_dst +
-    dy * pitch + dx * ch->s2d_color_bytes;
+  Bit32u draw_offset = ch->s2d_ofs_dst + dy * pitch + dx * ch->s2d_color_bytes;
   Bit32u redraw_offset = dma_lin_lookup(ch->s2d_img_dst, draw_offset) -
     BX_GEFORCE_THIS disp_offset;
   Bit32s sx0 = ((ch->sifc_syx & 0xFFFF) << 16) - (dx << 20) - 0x80000;
@@ -2533,8 +2528,7 @@ void bx_geforce_c::sifc(gf_channel* ch)
   for (Bit16u y = 0; y < height; y++) {
     Bit32u sx = sx0;
     for (Bit16u x = 0; x < dwidth; x++) {
-      Bit32u dstcolor = get_pixel(ch->s2d_img_dst,
-        draw_offset, x, ch->s2d_color_bytes);
+      Bit32u dstcolor = get_pixel(ch->s2d_img_dst, draw_offset, x, ch->s2d_color_bytes);
       Bit32u srccolor;
       Bit32u symbol_offset = symbol_offset_y + (sx >> 20);
       if (ch->sifc_color_bytes == 4) {
@@ -2661,10 +2655,8 @@ void bx_geforce_c::sifm(gf_channel* ch)
     BX_ERROR(("SIFM scaling is not implemented"));
   for (Bit16u y = 0; y < dheight; y++) {
     for (Bit16u x = 0; x < dwidth; x++) {
-      Bit32u dstcolor = get_pixel(ch->s2d_img_dst,
-        draw_offset, x, ch->s2d_color_bytes);
-      Bit32u srccolor = get_pixel(ch->sifm_src,
-        src_offset, x, ch->sifm_color_bytes);
+      Bit32u dstcolor = get_pixel(ch->s2d_img_dst, draw_offset, x, ch->s2d_color_bytes);
+      Bit32u srccolor = get_pixel(ch->sifm_src, src_offset, x, ch->sifm_color_bytes);
       if (ch->sifm_color_fmt == 4)
         srccolor |= 0xFF000000;
       pixel_operation(ch, ch->sifm_operation,
@@ -2720,9 +2712,9 @@ void bx_geforce_c::d3d_transform(gf_channel* ch, float v[4])
 {
   float tmp[4];
   float* m = ch->d3d_composite_matrix;
-  tmp[0] = v[0] * m[0] + v[1] * m[1] + v[2] * m[2] + v[3] * m[3];
-  tmp[1] = v[0] * m[4] + v[1] * m[5] + v[2] * m[6] + v[3] * m[7];
-  tmp[2] = v[0] * m[8] + v[1] * m[9] + v[2] * m[10] + v[3] * m[11];
+  tmp[0] = v[0] * m[0]  + v[1] * m[1]  + v[2] * m[2]  + v[3] * m[3];
+  tmp[1] = v[0] * m[4]  + v[1] * m[5]  + v[2] * m[6]  + v[3] * m[7];
+  tmp[2] = v[0] * m[8]  + v[1] * m[9]  + v[2] * m[10] + v[3] * m[11];
   tmp[3] = v[0] * m[12] + v[1] * m[13] + v[2] * m[14] + v[3] * m[15];
   for (int i = 0; i < 4; i++) {
     v[i] = tmp[i] / tmp[3];
@@ -3434,8 +3426,7 @@ void bx_geforce_c::execute_ifc(gf_channel* ch, Bit32u method, Bit32u param)
     ch->ifc_shw = param;
     Bit32u width = ch->ifc_shw & 0xFFFF;
     Bit32u height = ch->ifc_shw >> 16;
-    Bit32u wordCount = ALIGN(width * height *
-      ch->ifc_color_bytes, 4) >> 2;
+    Bit32u wordCount = ALIGN(width * height * ch->ifc_color_bytes, 4) >> 2;
     if (ch->ifc_words != nullptr)
       delete[] ch->ifc_words;
     ch->ifc_words_ptr = 0;
@@ -3544,8 +3535,7 @@ void bx_geforce_c::execute_iifc(gf_channel* ch, Bit32u method, Bit32u param)
     ch->iifc_shw = param;
     Bit32u width = ch->iifc_shw & 0xFFFF;
     Bit32u height = ch->iifc_shw >> 16;
-    Bit32u wordCount = ALIGN(width * height *
-      (ch->iifc_bpp4 ? 4 : 8), 32) >> 5;
+    Bit32u wordCount = ALIGN(width * height * (ch->iifc_bpp4 ? 4 : 8), 32) >> 5;
     if (ch->iifc_words != nullptr)
       delete[] ch->iifc_words;
     ch->iifc_words_ptr = 0;
@@ -3584,8 +3574,7 @@ void bx_geforce_c::execute_sifc(gf_channel* ch, Bit32u method, Bit32u param)
     ch->sifc_syx = param;
     Bit32u width = ch->sifc_shw & 0xFFFF;
     Bit32u height = ch->sifc_shw >> 16;
-    Bit32u wordCount = ALIGN(width * height *
-      ch->sifc_color_bytes, 4) >> 2;
+    Bit32u wordCount = ALIGN(width * height * ch->sifc_color_bytes, 4) >> 2;
     if (ch->sifc_words != nullptr)
       delete[] ch->sifc_words;
     ch->sifc_words_ptr = 0;
@@ -3593,8 +3582,7 @@ void bx_geforce_c::execute_sifc(gf_channel* ch, Bit32u method, Bit32u param)
     ch->sifc_words = new Bit32u[wordCount];
   }
   else if (method >= 0x100 && method < 0x800) {
-    ch->sifc_words[
-      ch->sifc_words_ptr++] = param;
+    ch->sifc_words[ch->sifc_words_ptr++] = param;
     ch->sifc_words_left--;
     if (!ch->sifc_words_left) {
       sifc(ch);
@@ -3928,14 +3916,11 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
             (ch->s2d_img_src >> 4) |
             (ch->s2d_img_dst >> 4 << 16));
         } else {
-          ramin_write32(ch->schs[subc].object + 0x8,
-            ch->s2d_img_src >> 4);
-          ramin_write32(ch->schs[subc].object + 0xC,
-            ch->s2d_img_dst >> 4);
+          ramin_write32(ch->schs[subc].object + 0x8, ch->s2d_img_src >> 4);
+          ramin_write32(ch->schs[subc].object + 0xC, ch->s2d_img_dst >> 4);
         }
       } else if (cls8 == 0x64) {
-        ramin_write32(ch->schs[subc].object + 0x8,
-          ch->iifc_palette >> 4);
+        ramin_write32(ch->schs[subc].object + 0x8, ch->iifc_palette >> 4);
         if (BX_GEFORCE_THIS card_type < 0x40)
           word0 = (word0 & 0xFFFC7FFF) | (ch->iifc_operation << 15);
         else
@@ -3945,8 +3930,7 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
           word1 = (word1 & 0xFFFF00FF) | ((ch->iifc_color_fmt + 9) << 8);
         } else {
           // should be stored somewhere else
-          ramin_write32(ch->schs[subc].object + 0x10,
-            ch->iifc_color_fmt);
+          ramin_write32(ch->schs[subc].object + 0x10, ch->iifc_color_fmt);
         }
       }
       ramin_write32(ch->schs[subc].object + 0x4, word1);
@@ -4082,7 +4066,7 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
               ch->schs[subc].object >> 4;
             if (BX_GEFORCE_THIS card_type >= 0x40)
               BX_GEFORCE_THIS graph_ctxctl_cur = BX_GEFORCE_THIS fifo_grctx_instance;
-            BX_GEFORCE_THIS graph_trapped_addr = method << 2 | subc << 16 | chid << 20;
+            BX_GEFORCE_THIS graph_trapped_addr = (method << 2) | (subc << 16) | (chid << 20);
             BX_GEFORCE_THIS graph_trapped_data = param;
             BX_DEBUG(("execute_command: notify interrupt triggered"));
           }
@@ -4098,7 +4082,7 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
     BX_GEFORCE_THIS fifo_intr |= 0x00000001;
     update_irq_level();
     BX_GEFORCE_THIS fifo_cache1_pull0 |= 0x00000100;
-    BX_GEFORCE_THIS fifo_cache1_method[BX_GEFORCE_THIS fifo_cache1_put / 4] = method << 2 | subc << 13;
+    BX_GEFORCE_THIS fifo_cache1_method[BX_GEFORCE_THIS fifo_cache1_put / 4] = (method << 2) | (subc << 13);
     BX_GEFORCE_THIS fifo_cache1_data[BX_GEFORCE_THIS fifo_cache1_put / 4] = param;
     BX_GEFORCE_THIS fifo_cache1_put += 4;
     if (BX_GEFORCE_THIS fifo_cache1_put == GEFORCE_CACHE1_SIZE * 4)
@@ -4145,9 +4129,7 @@ void bx_geforce_c::fifo_process(Bit32u chid)
       BX_GEFORCE_THIS fifo_cache1_dma_get);
     BX_GEFORCE_THIS fifo_cache1_dma_get += 4;
     if (ch->dma_state.mcnt) {
-      if (!execute_command(chid,
-          ch->dma_state.subc,
-          ch->dma_state.mthd, word)) {
+      if (!execute_command(chid, ch->dma_state.subc, ch->dma_state.mthd, word)) {
         BX_GEFORCE_THIS fifo_cache1_dma_get -= 4;
         break;
       }
