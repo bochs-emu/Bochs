@@ -2892,7 +2892,7 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch)
           sca_op = ((tokens[0] & 1) << 4) | ((tokens[1] >> 28) & 0x0f);
         else
           sca_op = (tokens[1] >> 27) & 0x1f;
-        float sca_result[4];
+        float sca_result[4] = {0,0,0,0};
         if (sca_op == 0) { // NOP
         } else if (sca_op == 1) { // MOV
           for (int comp_index = 0; comp_index < 4; comp_index++) {
