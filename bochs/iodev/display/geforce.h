@@ -456,6 +456,7 @@ private:
   Bit32u class_mask;
 
   Bit8u *disp_ptr;
+  Bit32u disp_offset;
   Bit32u bank_base[2];
 
   struct {
