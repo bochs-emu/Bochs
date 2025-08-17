@@ -432,6 +432,7 @@ static void warp_cursor(int dx, int dy)
      warp_dx = dx;
      warp_dy = dy;
      XWarpPointer(bx_x_display, None, None, 0, 0, 0, 0, dx, dy);
+     XFlush(bx_x_display);
   }
 }
 
