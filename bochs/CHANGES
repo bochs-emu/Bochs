@@ -25,6 +25,7 @@ Detailed change log :
 - Configure and compile
   - Fixed compilation with --enable-avx but without --enable-evex
   - Compilation fix for MacOS in keymap.cc
+  - Fixed compilation of plugin version on Windows with newer gcc versions
   - Updated MSVCPP project files
 
 - Config interface
@@ -38,12 +39,13 @@ Detailed change log :
 - I/O Devices
   - GeForce (NEW)
     Added basic support for three GeForce models. Most of the 2D features are present,
-    but 3D is still to do. Several Windows versions up to Win 7 have been reported to
+    but 3D is still WIP. Several Windows versions up to Win 7 have been reported to
     work under consideration of these limitations.
   - PCI (general)
     - Rewrite of the IRQ signal handling for PCI / ACPI
     - Added advanced PCI option "altdevmap" to make real i440FX BIOS work
     - Ignore writes to ROM adddress if no ROM present
+    - PCI IDE always provides 2 IDE channels (override settings if necessary)
   - PCI (i440BX AGP)
     - AGP aperture access now correctly implemented
     - Fixed BCTRL and NBXCFG register
@@ -68,6 +70,7 @@ Detailed change log :
     - Voodoo3: Split mem_read() with len > 8 in two 64-bit reads
     - Voodoo3: Fixed display timing in VGA mode with half dot clock
     - Banshee: Added missing 'double width' support for banked mode
+    - Banshee: Also perform clipping on the last pixel of a line
   - Hard Drive
     - Fix the reading of the HOB registers
     - Add the 0x46 (GET_CONFIG) command. This allows ReactOS 0.4.15 to boot in normal mode (LiveCD)
@@ -99,6 +102,7 @@ Detailed change log :
 - GUI and display libraries
   - Added new method start_update() used by VGA core to call some gui code before drawing.
     This currently only used by X gui for processing palette update.
+  - Added support for the display library option "hideIPS" in nogui
   - Fixed buffer overflow when using keymap feature
 
 - BIOS
