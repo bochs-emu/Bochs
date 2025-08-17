@@ -1553,6 +1553,7 @@ void bx_gui_c::console_refresh(bool force)
 {
   if (force) memset(console.oldscreen, 0xff, BX_CONSOLE_BUFSIZE);
   if (BX_GUI_THIS new_text_api) {
+    start_update();
     text_update_common(console.oldscreen, console.screen, console.cursor_addr,
                        &console.tminfo);
   } else {
