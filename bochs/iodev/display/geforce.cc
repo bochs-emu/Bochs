@@ -1934,24 +1934,33 @@ void bx_geforce_c::physical_write8(Bit32u address, Bit8u value)
 
 void bx_geforce_c::physical_write16(Bit32u address, Bit16u value)
 {
+#ifndef BX_LITTLE_ENDIAN
   Bit8u data[2];
   data[0] = (value >> 0) & 0xFF;
   data[1] = (value >> 8) & 0xFF;
+#else
+  Bit8u *data = (Bit8u *)(&value);
+#endif
   DEV_MEM_WRITE_PHYSICAL(address, 2, data);
 }
 
 void bx_geforce_c::physical_write32(Bit32u address, Bit32u value)
 {
+#ifndef BX_LITTLE_ENDIAN
   Bit8u data[4];
   data[0] = (value >> 0) & 0xFF;
   data[1] = (value >> 8) & 0xFF;
   data[2] = (value >> 16) & 0xFF;
   data[3] = (value >> 24) & 0xFF;
+#else
+  Bit8u *data = (Bit8u *)(&value);
+#endif
   DEV_MEM_WRITE_PHYSICAL(address, 4, data);
 }
 
 void bx_geforce_c::physical_write64(Bit32u address, Bit64u value)
 {
+#ifndef BX_LITTLE_ENDIAN
   Bit8u data[8];
   data[0] = (value >> 0) & 0xFF;
   data[1] = (value >> 8) & 0xFF;
@@ -1961,6 +1970,9 @@ void bx_geforce_c::physical_write64(Bit32u address, Bit64u value)
   data[5] = (value >> 40) & 0xFF;
   data[6] = (value >> 48) & 0xFF;
   data[7] = (value >> 56) & 0xFF;
+#else
+  Bit8u *data = (Bit8u *)(&value);
+#endif
   DEV_MEM_WRITE_PHYSICAL(address, 8, data);
 }
 
