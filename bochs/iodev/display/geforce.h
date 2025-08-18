@@ -79,6 +79,8 @@ struct gf_channel
   Bit32u ifc_words_ptr;
   Bit32u ifc_words_left;
   Bit32u* ifc_words;
+  bool ifc_upload;
+  Bit32u ifc_upload_offset;
 
   Bit32u iifc_palette;
   Bit32u iifc_palette_ofs;
@@ -161,6 +163,7 @@ struct gf_channel
   Bit32u d3d_light_enable_mask;
   float d3d_inverse_model_view_matrix[12];
   float d3d_composite_matrix[16];
+  Bit32u d3d_shader_program;
   float d3d_scene_ambient_color[4];
   float d3d_viewport_offset[4];
   float d3d_viewport_scale[4];
@@ -171,7 +174,10 @@ struct gf_channel
   float d3d_normal[3];
   float d3d_diffuse_color[4];
   Bit32u d3d_vertex_data_array_offset[16];
-  Bit32u d3d_vertex_data_array_format[16];
+  Bit32u d3d_vertex_data_array_format_type[16];
+  Bit32u d3d_vertex_data_array_format_size[16];
+  Bit32u d3d_vertex_data_array_format_stride[16];
+  bool d3d_vertex_data_array_format_dx[16];
   Bit32u d3d_begin_end;
   bool d3d_triangle_done;
   bool d3d_triangle_flip;

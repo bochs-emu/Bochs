@@ -2745,8 +2745,13 @@ float edge_function(float v0[4], float v1[4], float v2[4])
 
 void bx_geforce_c::d3d_triangle(gf_channel* ch)
 {
+  Bit32u dci; // diffuse color index
+  if (BX_GEFORCE_THIS card_type >= 0x40 &&
+      !ch->d3d_vertex_data_array_format_dx[0]) // guess
+    dci = 1;
+  else
+    dci = 3;
   float vs_out[3][16][4];
-  Bit32u dci = BX_GEFORCE_THIS card_type <= 0x35 ? 3 : 1;
   if ((ch->d3d_transform_execution_mode & 3) != 0) {
     for (int v = 0; v < 3; v++) {
       float tmp_regs[32][4];
@@ -3002,7 +3007,7 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch)
       }
     }
     if (BX_GEFORCE_THIS card_type >= 0x35 &&
-        (ch->d3d_transform_execution_mode & 3) != 2) {
+        (ch->d3d_transform_execution_mode & 0x100) == 0) {
       for (int v = 0; v < 3; v++) {
         for (int i = 0; i < 4; i++) {
           vs_out[v][0][i] /= vs_out[v][0][3];
@@ -3153,19 +3158,20 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch)
 
 void bx_geforce_c::d3d_process_vertex(gf_channel* ch)
 {
-  if ((ch->d3d_vertex_data_array_format[2] & 0x000000F0) == 0) {
+  if (ch->d3d_vertex_data_array_format_size[2] == 0) {
     for (int i = 0; i < 3; i++) {
       ch->d3d_vertex_data[ch->d3d_vertex_index - 1][2][i] =
         ch->d3d_normal[i];
     }
   }
-  if ((ch->d3d_vertex_data_array_format[3] & 0x000000F0) == 0) {
+  if (ch->d3d_vertex_data_array_format_size[3] == 0) {
     for (int i = 0; i < 4; i++) {
       ch->d3d_vertex_data[ch->d3d_vertex_index - 1][3][i] =
         ch->d3d_diffuse_color[i];
     }
   }
-  if (ch->d3d_begin_end == 5) { // TRIANGLES
+  if (ch->d3d_begin_end == 5 ||      // TRIANGLES
+      ch->d3d_begin_end == 0x1012) { // TRIANGLELIST
     if (ch->d3d_vertex_index == 3) {
       d3d_triangle(ch);
       ch->d3d_vertex_index = 0;
@@ -3206,10 +3212,8 @@ void bx_geforce_c::d3d_load_vertex(gf_channel* ch, Bit32u index)
     Bit32u array_obj = array_offset & 0x80000000 ?
       ch->d3d_vertex_b_obj : ch->d3d_vertex_a_obj;
     array_offset &= 0x7fffffff;
-    Bit32u attrib_format = ch->
-      d3d_vertex_data_array_format[attrib_index];
-    Bit32u comp_count = (attrib_format >> 4) & 0x0000000f;
-    Bit32u attrib_stride = attrib_format >> 8;
+    Bit32u comp_count = ch->d3d_vertex_data_array_format_size[attrib_index];
+    Bit32u attrib_stride = ch->d3d_vertex_data_array_format_stride[attrib_index];
     if (attrib_index == 0 && comp_count != 0) {
       ch->d3d_vertex_data[ch->d3d_vertex_index][0][2] = 0.0f;
       ch->d3d_vertex_data[ch->d3d_vertex_index][0][3] = 1.0f;
@@ -3436,22 +3440,35 @@ void bx_geforce_c::execute_ifc(gf_channel* ch, Bit32u method, Bit32u param)
     ch->ifc_dhw = param;
   else if (method == 0x0c3) {
     ch->ifc_shw = param;
-    Bit32u width = ch->ifc_shw & 0xFFFF;
-    Bit32u height = ch->ifc_shw >> 16;
-    Bit32u wordCount = ALIGN(width * height * ch->ifc_color_bytes, 4) >> 2;
-    if (ch->ifc_words != nullptr)
-      delete[] ch->ifc_words;
-    ch->ifc_words_ptr = 0;
-    ch->ifc_words_left = wordCount;
-    ch->ifc_words = new Bit32u[wordCount];
+    ch->ifc_upload = param == 0x10000400 && ch->ifc_dhw == 0x10000400 &&
+      ch->s2d_color_fmt == 0xB && ch->s2d_pitch == 0x10001000;
+    if (ch->ifc_upload) {
+      Bit16u dx = ch->ifc_yx & 0xFFFF;
+      Bit16u dy = ch->ifc_yx >> 16;
+      ch->ifc_upload_offset = ch->s2d_ofs_dst + ((dy << 12) | (dx << 2));
+    } else {
+      Bit32u width = ch->ifc_shw & 0xFFFF;
+      Bit32u height = ch->ifc_shw >> 16;
+      Bit32u wordCount = ALIGN(width * height * ch->ifc_color_bytes, 4) >> 2;
+      if (ch->ifc_words != nullptr)
+        delete[] ch->ifc_words;
+      ch->ifc_words_ptr = 0;
+      ch->ifc_words_left = wordCount;
+      ch->ifc_words = new Bit32u[wordCount];
+    }
   }
   else if (method >= 0x100 && method < 0x800) {
-    ch->ifc_words[ch->ifc_words_ptr++] = param;
-    ch->ifc_words_left--;
-    if (!ch->ifc_words_left) {
-      ifc(ch);
-      delete[] ch->ifc_words;
-      ch->ifc_words = nullptr;
+    if (ch->ifc_upload) {
+      dma_write32(ch->s2d_img_dst, ch->ifc_upload_offset, param);
+      ch->ifc_upload_offset += 4;
+    } else {
+      ch->ifc_words[ch->ifc_words_ptr++] = param;
+      ch->ifc_words_left--;
+      if (!ch->ifc_words_left) {
+        ifc(ch);
+        delete[] ch->ifc_words;
+        ch->ifc_words = nullptr;
+      }
     }
   }
 }
@@ -3666,8 +3683,12 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     ch->d3d_window_offset = 0;
     for (int j = 0; j < 4; j++)
       ch->d3d_diffuse_color[j] = 1.0f;
-    for (int j = 0; j < 16; j++)
-      ch->d3d_vertex_data_array_format[j] = 0;
+    for (int j = 0; j < 16; j++) {
+      ch->d3d_vertex_data_array_format_type[j] = 0;
+      ch->d3d_vertex_data_array_format_size[j] = 0;
+      ch->d3d_vertex_data_array_format_stride[j] = 0;
+      ch->d3d_vertex_data_array_format_dx[j] = false;
+    }
   } else if (method == 0x065)
     ch->d3d_color_obj = param;
   else if (method == 0x066)
@@ -3746,6 +3767,8 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   } else if (method >= 0x1a0 && method <= 0x1af && cls <= 0x0497) {
     Bit32u i = method & 0x00f;
     ch->d3d_composite_matrix[i] = u.param_float;
+  } else if (method == 0x239 && cls >= 0x0497) {
+    ch->d3d_shader_program = param;
   } else if (method >= 0x284 && method <= 0x286) {
     Bit32u i = method & 0x003;
     ch->d3d_scene_ambient_color[i] = u.param_float;
@@ -3754,7 +3777,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     ch->d3d_viewport_offset[i] = u.param_float;
     if (BX_GEFORCE_THIS card_type == 0x20)
       ch->d3d_transform_constant[0x3b][i] = u.param_float;
-    if (BX_GEFORCE_THIS card_type == 0x35)
+    else if (BX_GEFORCE_THIS card_type == 0x35)
       ch->d3d_transform_constant[0x77][i] = u.param_float;
   } else if ((method >= 0x28c && method <= 0x28f && cls >= 0x0497) ||
              (method >= 0x2bc && method <= 0x2bf && cls  < 0x0497)) {
@@ -3762,7 +3785,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     ch->d3d_viewport_scale[i] = u.param_float;
     if (BX_GEFORCE_THIS card_type == 0x20)
       ch->d3d_transform_constant[0x3a][i] = u.param_float;
-    if (BX_GEFORCE_THIS card_type == 0x35)
+    else if (BX_GEFORCE_THIS card_type == 0x35)
       ch->d3d_transform_constant[0x76][i] = u.param_float;
   } else if ((method >= 0x2c0 && method <= 0x2c3 && cls == 0x0097) ||
              (method >= 0x2e0 && method <= 0x2e3 && cls >= 0x0497)) {
@@ -3813,7 +3836,27 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   } else if ((method >= 0x5d8 && method <= 0x5e7 && cls == 0x0097) ||
              (method >= 0x5d0 && method <= 0x5df && cls >= 0x0497)) {
     Bit32u i = method - (cls == 0x0097 ? 0x5d8 : 0x5d0);
-    ch->d3d_vertex_data_array_format[i] = param;
+    ch->d3d_vertex_data_array_format_stride[i] = (param >> 8) & 0xff;
+    ch->d3d_vertex_data_array_format_dx[i] = (param & 0x00010000) != 0;
+    if (!ch->d3d_vertex_data_array_format_dx[i]) {
+      ch->d3d_vertex_data_array_format_type[i] = param & 0xf;
+      ch->d3d_vertex_data_array_format_size[i] = (param >> 4) & 0xf;
+    } else {
+      Bit32u dxtype = param & 0xff;
+      if (dxtype == 0x99) {
+        ch->d3d_vertex_data_array_format_type[i] = 2;
+        ch->d3d_vertex_data_array_format_size[i] = 2;
+      } else if (dxtype == 0xaa) {
+        ch->d3d_vertex_data_array_format_type[i] = 2;
+        ch->d3d_vertex_data_array_format_size[i] = 3;
+      } else if (dxtype == 0xbb) {
+        ch->d3d_vertex_data_array_format_type[i] = 2;
+        ch->d3d_vertex_data_array_format_size[i] = 4;
+      } else if (dxtype == 0xcc) {
+        ch->d3d_vertex_data_array_format_type[i] = 0;
+        ch->d3d_vertex_data_array_format_size[i] = 4;
+      }
+    }
   } else if ((method == 0x5ff && cls == 0x0097) ||
              (method == 0x602 && cls >= 0x0497)) {
     if (param == 0) {
@@ -3825,7 +3868,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     }
     ch->d3d_begin_end = param;
   } else if ((method == 0x600 && cls == 0x0097) ||
-             (method == 0x603 && cls == 0x0497)) {
+             (method == 0x603 && cls >= 0x0497)) {
     d3d_load_vertex(ch, param & 0x0000ffff);
     d3d_load_vertex(ch, param >> 16);
   } else if (method == 0x605 && cls >= 0x0497) {
@@ -3838,8 +3881,8 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       ch->d3d_vertex_data[ch->d3d_vertex_index][0][2] = 0.0f;
       ch->d3d_vertex_data[ch->d3d_vertex_index][0][3] = 1.0f;
     }
-    if ((ch->d3d_vertex_data_array_format[
-        ch->d3d_attrib_index] & 0x000000ff) == 0x00000040) {
+    if (ch->d3d_vertex_data_array_format_type[ch->d3d_attrib_index] == 0 &&
+        ch->d3d_vertex_data_array_format_size[ch->d3d_attrib_index] == 4) {
       for (Bit32u i = 0; i < 4; i++) {
         ch->d3d_vertex_data[ch->d3d_vertex_index][ch->d3d_attrib_index][
           ch->d3d_comp_index++] = ((param >> (i * 8)) & 0xff) / 255.0f;
@@ -3849,8 +3892,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
         ch->d3d_comp_index++] = u.param_float;
     }
     while (ch->d3d_comp_index ==
-           ((ch->d3d_vertex_data_array_format[
-             ch->d3d_attrib_index] >> 4) & 0x0000000f)) {
+           ch->d3d_vertex_data_array_format_size[ch->d3d_attrib_index]) {
       ch->d3d_comp_index = 0;
       ch->d3d_attrib_index++;
       if (ch->d3d_attrib_index == 16) {
