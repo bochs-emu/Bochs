@@ -2642,6 +2642,37 @@ void bx_geforce_c::m2mf(gf_channel* ch)
   }
 }
 
+void bx_geforce_c::tfc(gf_channel* ch)
+{
+  Bit16u dx = ch->tfc_yx & 0xFFFF;
+  Bit16u dy = ch->tfc_yx >> 16;
+  Bit16s clipx0 = (ch->tfc_clip_wx & 0xFFFF) - dx;
+  Bit16s clipy0 = (ch->tfc_clip_hy & 0xFFFF) - dy;
+  Bit16s clipx1 = clipx0 + (ch->tfc_clip_wx >> 16);
+  Bit16s clipy1 = clipy0 + (ch->tfc_clip_hy >> 16);
+  Bit32u width = ch->tfc_hw & 0xFFFF;
+  Bit32u height = ch->tfc_hw >> 16;
+  Bit32u pitch = ch->s2d_pitch >> 16;
+  Bit32u draw_offset = ch->s2d_ofs_dst + dy * pitch + dx * ch->s2d_color_bytes;
+  Bit32u word_offset = 0;
+  for (Bit16u y = 0; y < height; y++) {
+    for (Bit16u x = 0; x < width; x++) {
+      if (x >= clipx0 && x < clipx1 && y >= clipy0 && y < clipy1) {
+        Bit32u srccolor;
+        if (ch->tfc_color_bytes == 4) {
+          srccolor = ch->tfc_words[word_offset];
+        } else {
+          Bit16u *tfc_words16 = (Bit16u*)ch->tfc_words;
+          srccolor = tfc_words16[word_offset];
+        }
+        put_pixel(ch, draw_offset, x, srccolor);
+      }
+      word_offset++;
+    }
+    draw_offset += pitch;
+  }
+}
+
 void bx_geforce_c::sifm(gf_channel* ch)
 {
   if (ch->sifm_swizzled)
@@ -2743,6 +2774,16 @@ float edge_function(float v0[4], float v1[4], float v2[4])
   return (v1[0] - v0[0]) * (v2[1] - v0[1]) - (v1[1] - v0[1]) * (v2[0] - v0[0]);
 }
 
+float uint32_as_float(Bit32u val)
+{
+  union {
+    Bit32u ui32;
+    float f;
+  } conv;
+  conv.ui32 = val;
+  return conv.f;
+}
+
 void bx_geforce_c::d3d_triangle(gf_channel* ch)
 {
   Bit32u dci; // diffuse color index
@@ -2752,6 +2793,7 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch)
   else
     dci = 3;
   float vs_out[3][16][4];
+  static bool unknown_opcode_reported = false;
   if ((ch->d3d_transform_execution_mode & 3) != 0) {
     for (int v = 0; v < 3; v++) {
       float tmp_regs[32][4];
@@ -2850,20 +2892,19 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch)
           vec_op = (tokens[1] >> 23) & 0x1f;
         else
           vec_op = (tokens[1] >> 22) & 0x1f;
-        float vec_result[4] = {0,0,0,0};
+        float vec_result[4];
         if (vec_op == 0) { // NOP
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            vec_result[comp_index] = 0.0f;
         } else if (vec_op == 1) { // MOV
-          for (int comp_index = 0; comp_index < 4; comp_index++) {
+          for (int comp_index = 0; comp_index < 4; comp_index++)
             vec_result[comp_index] = params[0][comp_index];
-          }
         } else if (vec_op == 2) { // MUL
-          for (int comp_index = 0; comp_index < 4; comp_index++) {
+          for (int comp_index = 0; comp_index < 4; comp_index++)
             vec_result[comp_index] = params[0][comp_index] * params[1][comp_index];
-          }
         } else if (vec_op == 3) { // ADD
-          for (int comp_index = 0; comp_index < 4; comp_index++) {
+          for (int comp_index = 0; comp_index < 4; comp_index++)
             vec_result[comp_index] = params[0][comp_index] + params[2][comp_index];
-          }
         } else if (vec_op == 4) { // MAD
           for (int comp_index = 0; comp_index < 4; comp_index++) {
             vec_result[comp_index] = params[0][comp_index] * params[1][comp_index] +
@@ -2873,26 +2914,27 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch)
           float dot = 0.0f;
           for (int comp_index = 0; comp_index < 3; comp_index++)
             dot += params[0][comp_index] * params[1][comp_index];
-          for (int comp_index = 0; comp_index < 4; comp_index++) {
+          for (int comp_index = 0; comp_index < 4; comp_index++)
             vec_result[comp_index] = dot;
-          }
         } else if (vec_op == 7) { // DP4
           float dot = 0.0f;
           for (int comp_index = 0; comp_index < 4; comp_index++)
             dot += params[0][comp_index] * params[1][comp_index];
-          for (int comp_index = 0; comp_index < 4; comp_index++) {
+          for (int comp_index = 0; comp_index < 4; comp_index++)
             vec_result[comp_index] = dot;
-          }
         } else if (vec_op == 0xe) { // FRC
-          for (int comp_index = 0; comp_index < 4; comp_index++) {
+          for (int comp_index = 0; comp_index < 4; comp_index++)
             vec_result[comp_index] = params[0][comp_index] - floor(params[0][comp_index]);
-          }
         } else if (vec_op == 0xf) { // FLR
-          for (int comp_index = 0; comp_index < 4; comp_index++) {
+          for (int comp_index = 0; comp_index < 4; comp_index++)
             vec_result[comp_index] = floor(params[0][comp_index]);
-          }
         } else {
-          BX_ERROR(("Unknown VEC opcode 0x%02x", vec_op));
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            vec_result[comp_index] = 0.5f;
+          if (!unknown_opcode_reported) {
+            BX_ERROR(("Vertex shader: unknown VEC opcode 0x%02x", vec_op));
+            unknown_opcode_reported = true;
+          }
         }
         Bit32u sca_op;
         if (BX_GEFORCE_THIS card_type == 0x20)
@@ -2901,21 +2943,20 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch)
           sca_op = ((tokens[0] & 1) << 4) | ((tokens[1] >> 28) & 0x0f);
         else
           sca_op = (tokens[1] >> 27) & 0x1f;
-        float sca_result[4] = {0,0,0,0};
+        float sca_result[4];
         if (sca_op == 0) { // NOP
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            sca_result[comp_index] = 0.0f;
         } else if (sca_op == 1) { // MOV
-          for (int comp_index = 0; comp_index < 4; comp_index++) {
+          for (int comp_index = 0; comp_index < 4; comp_index++)
             sca_result[comp_index] = params[2][comp_index];
-          }
         } else if (sca_op == 2 || // RCP
                    sca_op == 3) { // RCC
-          for (int comp_index = 0; comp_index < 4; comp_index++) {
+          for (int comp_index = 0; comp_index < 4; comp_index++)
             sca_result[comp_index] = 1.0f / params[2][comp_index];
-          }
         } else if (sca_op == 4) { // RSQ
-          for (int comp_index = 0; comp_index < 4; comp_index++) {
+          for (int comp_index = 0; comp_index < 4; comp_index++)
             sca_result[comp_index] = 1.0f / sqrt(fabs(params[2][comp_index]));
-          }
         } else if (sca_op == 5) { // EXP
           float fl = floor(params[2][0]);
           sca_result[0] = exp2(fl);
@@ -2940,7 +2981,12 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch)
           sca_result[2] = (tmpx > 0.0f) ? pow(tmpy, tmpw) : 0.0f;
           sca_result[3] = 1.0f;
         } else {
-          BX_ERROR(("Unknown SCA opcode 0x%02x", sca_op));
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            sca_result[comp_index] = 0.5f;
+          if (!unknown_opcode_reported) {
+            BX_ERROR(("Vertex shader: unknown SCA opcode 0x%02x", sca_op));
+            unknown_opcode_reported = true;
+          }
         }
         if (BX_GEFORCE_THIS card_type == 0x20) {
           Bit32u dst_out_reg = (tokens[3] >> 3) & 0xf;
@@ -3092,10 +3138,16 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch)
   Bit32u redraw_offset = dma_lin_lookup(ch->d3d_color_obj, draw_offset) -
     BX_GEFORCE_THIS disp_offset;
   float xy[2];
-  float k8 = 255.0f / w012;
-  float k6 = 63.0f / w012;
-  float k5 = 31.0f / w012;
   float clip_mul = 1.0f / (ch->d3d_clip_max - ch->d3d_clip_min);
+  Bit32u ps_location = ch->d3d_shader_program & 3;
+  Bit32u ps_offset = ch->d3d_shader_program & ~3;
+  Bit32u ps_obj;
+  if (ps_location == 1)
+    ps_obj = ch->d3d_a_obj;
+  else if (ps_location == 2)
+    ps_obj = ch->d3d_b_obj;
+  else
+    ps_obj = 0;
   for (Bit16u y = 0; y < draw_height; y++) {
     xy[1] = y;
     for (Bit16u x = 0; x < draw_width; x++) {
@@ -3125,19 +3177,130 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch)
           draw = z_new < z_prev;
         }
         if (draw) {
-          float r = vs_out[0][dci][0] * w0 + vs_out[1][dci][0] * w1 + vs_out[2][dci][0] * w2;
-          float g = vs_out[0][dci][1] * w0 + vs_out[1][dci][1] * w1 + vs_out[2][dci][1] * w2;
-          float b = vs_out[0][dci][2] * w0 + vs_out[1][dci][2] * w1 + vs_out[2][dci][2] * w2;
+          float r = (vs_out[0][dci][0] * w0 + vs_out[1][dci][0] * w1 + vs_out[2][dci][0] * w2) / w012;
+          float g = (vs_out[0][dci][1] * w0 + vs_out[1][dci][1] * w1 + vs_out[2][dci][1] * w2) / w012;
+          float b = (vs_out[0][dci][2] * w0 + vs_out[1][dci][2] * w1 + vs_out[2][dci][2] * w2) / w012;
+          if (ps_obj != 0) {
+            float r2 = (vs_out[0][dci + 1][0] * w0 + vs_out[1][dci + 1][0] * w1 + vs_out[2][dci + 1][0] * w2) / w012;
+            float g2 = (vs_out[0][dci + 1][1] * w0 + vs_out[1][dci + 1][1] * w1 + vs_out[2][dci + 1][1] * w2) / w012;
+            float b2 = (vs_out[0][dci + 1][2] * w0 + vs_out[1][dci + 1][2] * w1 + vs_out[2][dci + 1][2] * w2) / w012;
+            float in[16][4];
+            in[1][0] = r;
+            in[1][1] = g;
+            in[1][2] = b;
+            in[1][3] = 1.0f;
+            in[2][0] = r2;
+            in[2][1] = g2;
+            in[2][2] = b2;
+            in[2][3] = 1.0f;
+            float tmp_regs[64][4];
+            tmp_regs[0][0] = r;
+            tmp_regs[0][1] = g;
+            tmp_regs[0][2] = b;
+            tmp_regs[0][3] = 1.0f;
+            Bit32u ps_offset2 = ps_offset;
+            for (;;) {
+              Bit32u dst_word = dma_read32(ps_obj, ps_offset2);
+              ps_offset2 += 4;
+              Bit32u src_words[3];
+              for (int p = 0; p < 3; p++) {
+                src_words[p] = dma_read32(ps_obj, ps_offset2);
+                ps_offset2 += 4;
+              }
+              float params[3][4];
+              for (int p = 0; p < 3; p++) {
+                Bit32u reg_type = src_words[p] & 3;
+                Bit32u swizzle[4];
+                for (int i = 0; i < 4; i++)
+                  swizzle[i] = (src_words[p] >> (9 + i * 2)) & 3;
+                float cnst[4];
+                if (reg_type == 2) {
+                  for (int comp_index = 0; comp_index < 4; comp_index++) {
+                    cnst[comp_index] = uint32_as_float(dma_read32(ps_obj, ps_offset2));
+                    ps_offset2 += 4;
+                  }
+                }
+                bool negate = (src_words[p] >> 17) & 1;
+                Bit32u tmp_index = (src_words[p] >> 2) & 0x3f;
+                for (int comp_index = 0; comp_index < 4; comp_index++) {
+                  int comp_index_swizzle = swizzle[comp_index];
+                  if (reg_type == 0) {
+                    params[p][comp_index] = tmp_regs[tmp_index][comp_index_swizzle];
+                  } else if (reg_type == 1) {
+                    Bit32u in_index = (dst_word >> 13) & 0xf;
+                    params[p][comp_index] = in[in_index][comp_index_swizzle];
+                  } else if (reg_type == 2) {
+                    params[p][comp_index] = cnst[comp_index_swizzle];
+                  }
+                  if (negate)
+                    params[p][comp_index] = -params[p][comp_index];
+                }
+              }
+              Bit32u op = (dst_word >> 24) & 0x3f;
+              float op_result[4];
+              if (op == 0) { // NOP
+              } else if (op == 1) { // MOV
+                for (int comp_index = 0; comp_index < 4; comp_index++)
+                  op_result[comp_index] = params[0][comp_index];
+              } else if (op == 2) { // MUL
+                for (int comp_index = 0; comp_index < 4; comp_index++)
+                  op_result[comp_index] = params[0][comp_index] * params[1][comp_index];
+              } else if (op == 3) { // ADD
+                for (int comp_index = 0; comp_index < 4; comp_index++)
+                  op_result[comp_index] = params[0][comp_index] + params[1][comp_index];
+              } else if (op == 4) { // MAD
+                for (int comp_index = 0; comp_index < 4; comp_index++) {
+                  op_result[comp_index] = params[0][comp_index] * params[1][comp_index] +
+                    params[2][comp_index];
+                }
+              } else if (op == 5) { // DP3
+                float dot = 0.0f;
+                for (int comp_index = 0; comp_index < 3; comp_index++)
+                  dot += params[0][comp_index] * params[1][comp_index];
+                for (int comp_index = 0; comp_index < 4; comp_index++)
+                  op_result[comp_index] = dot;
+              } else if (op == 6) { // DP4
+                float dot = 0.0f;
+                for (int comp_index = 0; comp_index < 4; comp_index++)
+                  dot += params[0][comp_index] * params[1][comp_index];
+                for (int comp_index = 0; comp_index < 4; comp_index++)
+                  op_result[comp_index] = dot;
+              } else {
+                for (int comp_index = 0; comp_index < 4; comp_index++)
+                  op_result[comp_index] = 0.5f;
+                if (!unknown_opcode_reported) {
+                  BX_ERROR(("Pixel shader: unknown opcode 0x%02x", op));
+                  unknown_opcode_reported = true;
+                }
+              }
+              if (op != 0) {
+                Bit32u mask = (dst_word >> 9) & 0xf;
+                Bit32u dst_tmp_reg = (dst_word >> 1) & 0x3f;
+                for (int comp_index = 0; comp_index < 4; comp_index++) {
+                  if ((mask & (1 << comp_index)) != 0)
+                    tmp_regs[dst_tmp_reg][comp_index] = op_result[comp_index];
+                }
+              }
+              if ((dst_word & 1) == 1)
+                break;
+            }
+            r = tmp_regs[0][0];
+            g = tmp_regs[0][1];
+            b = tmp_regs[0][2];
+          }
+          r = BX_MIN(BX_MAX(r, 0.0f), 1.0f);
+          g = BX_MIN(BX_MAX(g, 0.0f), 1.0f);
+          b = BX_MIN(BX_MAX(b, 0.0f), 1.0f);
           if (ch->d3d_color_bytes == 2) {
-            Bit8u r5 = BX_MIN(BX_MAX(r * k5, 0.0f), 31.0f) + 0.5f;
-            Bit8u g6 = BX_MIN(BX_MAX(g * k6, 0.0f), 63.0f) + 0.5f;
-            Bit8u b5 = BX_MIN(BX_MAX(b * k5, 0.0f), 31.0f) + 0.5f;
+            Bit8u r5 = r * 31.0f + 0.5f;
+            Bit8u g6 = g * 63.0f + 0.5f;
+            Bit8u b5 = b * 31.0f + 0.5f;
             Bit16u color = b5 << 0 | g6 << 5 | r5 << 11;
             dma_write16(ch->d3d_color_obj, draw_offset + x * 2, color);
           } else {
-            Bit8u r8 = BX_MIN(BX_MAX(r * k8, 0.0f), 255.0f) + 0.5f;
-            Bit8u g8 = BX_MIN(BX_MAX(g * k8, 0.0f), 255.0f) + 0.5f;
-            Bit8u b8 = BX_MIN(BX_MAX(b * k8, 0.0f), 255.0f) + 0.5f;
+            Bit8u r8 = r * 255.0f + 0.5f;
+            Bit8u g8 = g * 255.0f + 0.5f;
+            Bit8u b8 = b * 255.0f + 0.5f;
             Bit32u color = b8 << 0 | g8 << 8 | r8 << 16;
             dma_write32(ch->d3d_color_obj, draw_offset + x * 4, color);
           }
@@ -3202,10 +3365,6 @@ void bx_geforce_c::d3d_process_vertex(gf_channel* ch)
 
 void bx_geforce_c::d3d_load_vertex(gf_channel* ch, Bit32u index)
 {
-  union param_ {
-    Bit32u param_integer;
-    float param_float;
-  } u;
   for (int attrib_index = 0; attrib_index < 16; attrib_index++) {
     Bit32u array_offset = ch->
       d3d_vertex_data_array_offset[attrib_index];
@@ -3219,10 +3378,10 @@ void bx_geforce_c::d3d_load_vertex(gf_channel* ch, Bit32u index)
       ch->d3d_vertex_data[ch->d3d_vertex_index][0][3] = 1.0f;
     }
     for (Bit32u comp_index = 0; comp_index < comp_count; comp_index++) {
-      u.param_integer = dma_read32(array_obj, array_offset +
+      Bit32u ui32 = dma_read32(array_obj, array_offset +
         index * attrib_stride + comp_index * 4);
       ch->d3d_vertex_data[ch->d3d_vertex_index][
-        attrib_index][comp_index] = u.param_float;
+        attrib_index][comp_index] = uint32_as_float(ui32);
     }
   }
   ch->d3d_vertex_index++;
@@ -3517,9 +3676,14 @@ void bx_geforce_c::update_color_bytes_ifc(gf_channel* ch)
 void bx_geforce_c::update_color_bytes_sifc(gf_channel* ch)
 {
   BX_GEFORCE_THIS update_color_bytes(
-    ch->s2d_color_fmt,
-    ch->sifc_color_fmt,
+    ch->s2d_color_fmt, ch->sifc_color_fmt,
     &ch->sifc_color_bytes);
+}
+
+void bx_geforce_c::update_color_bytes_tfc(gf_channel* ch)
+{
+  BX_GEFORCE_THIS update_color_bytes(0,
+    ch->tfc_color_fmt, &ch->tfc_color_bytes);
 }
 
 void bx_geforce_c::update_color_bytes_iifc(gf_channel* ch)
@@ -3627,13 +3791,53 @@ void bx_geforce_c::execute_beta(gf_channel* ch, Bit32u method, Bit32u param)
     ch->beta = param;
 }
 
+void bx_geforce_c::execute_tfc(gf_channel* ch, Bit32u method, Bit32u param)
+{
+  if (method == 0x061) {
+    Bit8u cls8 = ramin_read32(param);
+    ch->tfc_swizzled = cls8 == 0x52 || cls8 == 0x9e;
+  } else if (method == 0x0c0) {
+    ch->tfc_color_fmt = param;
+    update_color_bytes_tfc(ch);
+  } else if (method == 0x0c1)
+    ch->tfc_yx = param;
+  else if (method == 0x0c2) {
+    ch->tfc_hw = param;
+    if (!ch->tfc_swizzled) {
+      Bit32u width = ch->tfc_hw & 0xFFFF;
+      Bit32u height = ch->tfc_hw >> 16;
+      Bit32u wordCount = ALIGN(width * height * ch->tfc_color_bytes, 4) >> 2;
+      if (ch->tfc_words != nullptr)
+        delete[] ch->tfc_words;
+      ch->tfc_words_ptr = 0;
+      ch->tfc_words_left = wordCount;
+      ch->tfc_words = new Bit32u[wordCount];
+    }
+  } else if (method == 0x0c3)
+    ch->tfc_clip_wx = param;
+  else if (method == 0x0c4)
+    ch->tfc_clip_hy = param;
+  else if (method >= 0x100 && method < 0x800) {
+    if (!ch->tfc_swizzled) {
+      ch->tfc_words[ch->tfc_words_ptr++] = param;
+      ch->tfc_words_left--;
+      if (!ch->tfc_words_left) {
+        tfc(ch);
+        delete[] ch->tfc_words;
+        ch->tfc_words = nullptr;
+      }
+    }
+  }
+}
+
 void bx_geforce_c::execute_sifm(gf_channel* ch, Bit32u method, Bit32u param)
 {
   if (method == 0x061)
     ch->sifm_src = param;
-  else if (method == 0x066)
-    ch->sifm_swizzled = (ramin_read32(param) & 0xFF) == 0x9e;
-  else if (method == 0x0c0) {
+  else if (method == 0x066) {
+    Bit8u cls8 = ramin_read32(param);
+    ch->sifm_swizzled = cls8 == 0x52 || cls8 == 0x9e;
+  } else if (method == 0x0c0) {
     ch->sifm_color_fmt = param;
     if (ch->sifm_color_fmt == 8)        // ???
       ch->sifm_color_bytes = 1;
@@ -3679,6 +3883,8 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   u.param_integer = param;
 
   if (method == 0x061) {
+    ch->d3d_a_obj = param;
+
     // These variables should be initialized somewhere else
     ch->d3d_window_offset = 0;
     for (int j = 0; j < 4; j++)
@@ -3689,7 +3895,9 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       ch->d3d_vertex_data_array_format_stride[j] = 0;
       ch->d3d_vertex_data_array_format_dx[j] = false;
     }
-  } else if (method == 0x065)
+  } else if (method == 0x062)
+    ch->d3d_b_obj = param;
+  else if (method == 0x065)
     ch->d3d_color_obj = param;
   else if (method == 0x066)
     ch->d3d_zeta_obj = param;
@@ -4091,6 +4299,8 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
           execute_sifc(ch, method, param);
         else if (cls8 == 0x72)
           execute_beta(ch, method, param);
+        else if (cls8 == 0x7b)
+          execute_tfc(ch, method, param);
         else if (cls8 == 0x89)
           execute_sifm(ch, method, param);
         else if (cls8 == 0x97)

@@ -114,6 +114,17 @@ struct gf_channel
   Bit32u blit_dyx;
   Bit32u blit_hw;
 
+  bool tfc_swizzled;
+  Bit32u tfc_color_fmt;
+  Bit32u tfc_color_bytes;
+  Bit32u tfc_yx;
+  Bit32u tfc_hw;
+  Bit32u tfc_clip_wx;
+  Bit32u tfc_clip_hy;
+  Bit32u tfc_words_ptr;
+  Bit32u tfc_words_left;
+  Bit32u* tfc_words;
+
   Bit32u sifm_src;
   bool sifm_swizzled;
   Bit32u sifm_operation;
@@ -139,6 +150,8 @@ struct gf_channel
   Bit32u m2mf_format;
   Bit32u m2mf_buffer_notify;
 
+  Bit32u d3d_a_obj;
+  Bit32u d3d_b_obj;
   Bit32u d3d_color_obj;
   Bit32u d3d_zeta_obj;
   Bit32u d3d_vertex_a_obj;
@@ -331,6 +344,7 @@ private:
 
   BX_GEFORCE_SMF void update_color_bytes_ifc(gf_channel* ch);
   BX_GEFORCE_SMF void update_color_bytes_sifc(gf_channel* ch);
+  BX_GEFORCE_SMF void update_color_bytes_tfc(gf_channel* ch);
   BX_GEFORCE_SMF void update_color_bytes_iifc(gf_channel* ch);
   BX_GEFORCE_SMF void update_color_bytes(Bit32u s2d_color_fmt, Bit32u color_fmt, Bit32u* color_bytes);
 
@@ -346,6 +360,7 @@ private:
   BX_GEFORCE_SMF void execute_iifc(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_sifc(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_beta(gf_channel* ch, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_tfc(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_sifm(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
 
@@ -360,6 +375,7 @@ private:
   BX_GEFORCE_SMF void iifc(gf_channel* ch);
   BX_GEFORCE_SMF void sifc(gf_channel* ch);
   BX_GEFORCE_SMF void copyarea(gf_channel* ch);
+  BX_GEFORCE_SMF void tfc(gf_channel* ch);
   BX_GEFORCE_SMF void m2mf(gf_channel* ch);
   BX_GEFORCE_SMF void sifm(gf_channel* ch);
 
