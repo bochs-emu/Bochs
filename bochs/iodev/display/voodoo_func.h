@@ -1139,8 +1139,10 @@ void swap_buffers(voodoo_state *v)
   }
 
   /* decrement the pending count and reset our state */
+  BX_LOCK(fifo_mutex);
   if (v->fbi.swaps_pending)
     v->fbi.swaps_pending--;
+  BX_UNLOCK(fifo_mutex);
   v->fbi.vblank_count = 0;
   v->fbi.vblank_swap_pending = 0;
 }
@@ -1159,9 +1161,7 @@ Bit32s swapbuffer(voodoo_state *v, Bit32u data)
   /* if we're not syncing to the retrace, process the command immediately */
   if (!(data & 1))
   {
-    BX_LOCK(fifo_mutex);
     swap_buffers(v);
-    BX_UNLOCK(fifo_mutex);
     return 0;
   } else {
     if (v->vtimer_running) {
