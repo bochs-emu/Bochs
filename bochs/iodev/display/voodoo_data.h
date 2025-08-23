@@ -1973,7 +1973,7 @@ BX_CPP_INLINE Bit32u fifo_remove(fifo_state *f, Bit32u *offset, Bit32u *data)
       next_out = 0;
     f->out = next_out;
   }
-  if (fifo_space(f) > 15) {
+  if (fifo_space(f) > 1) { // original value 15 - modified Aug 23, 2025
     bx_set_sem(&fifo_not_full);
   }
   return type;
