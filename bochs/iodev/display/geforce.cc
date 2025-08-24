@@ -2784,7 +2784,397 @@ float uint32_as_float(Bit32u val)
   return conv.f;
 }
 
-void bx_geforce_c::d3d_triangle(gf_channel* ch)
+void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[16][4])
+{
+  static bool unknown_opcode_reported = false;
+  for (int a = 0; a < 16; a++) {
+    out[a][0] = 0.0f;
+    out[a][1] = 0.0f;
+    out[a][2] = 0.0f;
+    out[a][3] = 1.0f;
+  }
+  Bit32u a0 = 0;
+  float tmp_regs[32][4];
+  for (Bit32u op_index = ch->d3d_transform_program_start;
+       op_index < 544; op_index++) {
+    Bit32u* tokens = ch->d3d_transform_program[op_index];
+    float params[3][4];
+    for (int p = 0; p < 3; p++) {
+      Bit32u tmp_index;
+      Bit32u reg_type;
+      bool negate;
+      Bit32u swizzle[4];
+      if (p == 0) {
+        if (BX_GEFORCE_THIS card_type <= 0x35) {
+          reg_type = (tokens[2] >> 26) & 3;
+          tmp_index = (tokens[2] >> 28) & 0xf;
+          negate = (tokens[1] >> 8) & 1;
+          for (int i = 0; i < 4; i++)
+            swizzle[i] = (tokens[1] >> (6 - i * 2)) & 3;
+        } else {
+          reg_type = (tokens[2] >> 23) & 3;
+          tmp_index = (tokens[2] >> 25) & 0x3f;
+          swizzle[3] = ((tokens[1] & 1) << 1) | ((tokens[2] >> 31) & 1);
+          swizzle[2] = (tokens[1] >> 1) & 3;
+          swizzle[1] = (tokens[1] >> 3) & 3;
+          swizzle[0] = (tokens[1] >> 5) & 3;
+          negate = (tokens[1] >> 7) & 1;
+        }
+      } else if (p == 1) {
+        if (BX_GEFORCE_THIS card_type <= 0x35) {
+          reg_type = (tokens[2] >> 11) & 3;
+          tmp_index = (tokens[2] >> 13) & 0xf;
+          negate = (tokens[2] >> 25) & 1;
+          for (int i = 0; i < 4; i++)
+            swizzle[i] = (tokens[2] >> (23 - i * 2)) & 3;
+        } else {
+          reg_type = (tokens[2] >> 6) & 3;
+          tmp_index = (tokens[2] >> 8) & 0x3f;
+          for (int i = 0; i < 4; i++)
+            swizzle[i] = (tokens[2] >> (20 - i * 2)) & 3;
+          negate = (tokens[2] >> 22) & 1;
+        }
+      } else if (p == 2) {
+        if (BX_GEFORCE_THIS card_type <= 0x35) {
+          reg_type = (tokens[3] >> 28) & 3;
+          tmp_index = ((tokens[2] & 3) << 2) | ((tokens[3] >> 30) & 3);
+          negate = (tokens[2] >> 10) & 1;
+          for (int i = 0; i < 4; i++)
+            swizzle[i] = (tokens[2] >> (8 - i * 2)) & 3;
+        } else {
+          reg_type = (tokens[3] >> 21) & 3;
+          tmp_index = (tokens[3] >> 23) & 0x3f;
+          swizzle[3] = (tokens[3] >> 29) & 3;
+          swizzle[2] = ((tokens[2] & 1) << 1) | ((tokens[3] >> 31) & 1);
+          swizzle[1] = (tokens[2] >> 1) & 3;
+          swizzle[0] = (tokens[2] >> 3) & 3;
+          negate = (tokens[2] >> 5) & 1;
+        }
+      }
+      for (int comp_index = 0; comp_index < 4; comp_index++) {
+        int comp_index_swizzle = swizzle[comp_index];
+        if (reg_type == 1) {
+          if (BX_GEFORCE_THIS card_type == 0x20 && tmp_index == 12)
+            params[p][comp_index] = out[0][comp_index_swizzle];
+          else
+            params[p][comp_index] = tmp_regs[tmp_index][comp_index_swizzle];
+        } else if (reg_type == 2) {
+          Bit32u in_index;
+          if (BX_GEFORCE_THIS card_type <= 0x35)
+            in_index = (tokens[1] >> 9) & 0xf;
+          else
+            in_index = (tokens[1] >> 8) & 0xf;
+          params[p][comp_index] = in[in_index][comp_index_swizzle];
+        } else if (reg_type == 3) {
+          Bit32u const_index;
+          if (BX_GEFORCE_THIS card_type == 0x20)
+            const_index = (tokens[1] >> 13) & 0xff;
+          else if (BX_GEFORCE_THIS card_type == 0x35)
+            const_index = (tokens[1] >> 14) & 0xff;
+          else
+            const_index = (tokens[1] >> 12) & 0x1ff;
+          if (((tokens[3] >> 1) & 1) != 0)
+            const_index = (const_index + a0) & 0x1ff;
+          params[p][comp_index] = ch->d3d_transform_constant[const_index][comp_index_swizzle];
+        }
+        if (negate)
+          params[p][comp_index] = -params[p][comp_index];
+      }
+    }
+    Bit32u vec_op;
+    if (BX_GEFORCE_THIS card_type == 0x20)
+      vec_op = (tokens[1] >> 21) & 0xf;
+    else if (BX_GEFORCE_THIS card_type == 0x35)
+      vec_op = (tokens[1] >> 23) & 0x1f;
+    else
+      vec_op = (tokens[1] >> 22) & 0x1f;
+    float vec_result[4];
+    if (vec_op == 0) { // NOP
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        vec_result[comp_index] = 0.0f;
+    } else if (vec_op == 1) { // MOV
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        vec_result[comp_index] = params[0][comp_index];
+    } else if (vec_op == 2) { // MUL
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        vec_result[comp_index] = params[0][comp_index] * params[1][comp_index];
+    } else if (vec_op == 3) { // ADD
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        vec_result[comp_index] = params[0][comp_index] + params[2][comp_index];
+    } else if (vec_op == 4) { // MAD
+      for (int comp_index = 0; comp_index < 4; comp_index++) {
+        vec_result[comp_index] = params[0][comp_index] * params[1][comp_index] +
+          params[2][comp_index];
+      }
+    } else if (vec_op == 5) { // DP3
+      float dot = 0.0f;
+      for (int comp_index = 0; comp_index < 3; comp_index++)
+        dot += params[0][comp_index] * params[1][comp_index];
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        vec_result[comp_index] = dot;
+    } else if (vec_op == 6) { // DPH
+      float dot = params[1][3];
+      for (int comp_index = 0; comp_index < 3; comp_index++)
+        dot += params[0][comp_index] * params[1][comp_index];
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        vec_result[comp_index] = dot;
+    } else if (vec_op == 7) { // DP4
+      float dot = 0.0f;
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        dot += params[0][comp_index] * params[1][comp_index];
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        vec_result[comp_index] = dot;
+    } else if (vec_op == 8) { // DST
+      vec_result[0] = 1.0f;
+      vec_result[1] = params[0][1] * params[1][1];
+      vec_result[2] = params[0][2];
+      vec_result[3] = params[1][3];
+    } else if (vec_op == 9) { // MIN
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        vec_result[comp_index] = BX_MIN(params[0][comp_index], params[1][comp_index]);
+    } else if (vec_op == 0xa) { // MAX
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        vec_result[comp_index] = BX_MAX(params[0][comp_index], params[1][comp_index]);
+    } else if (vec_op == 0xb) { // SLT
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        vec_result[comp_index] = params[0][comp_index] < params[1][comp_index] ? 1.0f : 0.0f;
+    } else if (vec_op == 0xc) { // SGE
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        vec_result[comp_index] = params[0][comp_index] >= params[1][comp_index] ? 1.0f : 0.0f;
+    } else if (vec_op == 0xd) { // ARL
+      a0 = floor(params[0][0]);
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        vec_result[comp_index] = 0.0f; // probably unused
+    } else if (vec_op == 0xe) { // FRC
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        vec_result[comp_index] = params[0][comp_index] - floor(params[0][comp_index]);
+    } else if (vec_op == 0xf) { // FLR
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        vec_result[comp_index] = floor(params[0][comp_index]);
+    } else {
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        vec_result[comp_index] = 0.5f;
+      if (!unknown_opcode_reported) {
+        BX_ERROR(("Vertex shader: unknown VEC opcode 0x%02x", vec_op));
+        unknown_opcode_reported = true;
+      }
+    }
+    Bit32u sca_op;
+    if (BX_GEFORCE_THIS card_type == 0x20)
+      sca_op = (tokens[1] >> 25) & 7;
+    else if (BX_GEFORCE_THIS card_type == 0x35)
+      sca_op = ((tokens[0] & 1) << 4) | ((tokens[1] >> 28) & 0x0f);
+    else
+      sca_op = (tokens[1] >> 27) & 0x1f;
+    float sca_result[4];
+    if (sca_op == 0) { // NOP
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        sca_result[comp_index] = 0.0f;
+    } else if (sca_op == 1) { // MOV
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        sca_result[comp_index] = params[2][comp_index];
+    } else if (sca_op == 2 || // RCP
+               sca_op == 3) { // RCC
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        sca_result[comp_index] = 1.0f / params[2][comp_index];
+    } else if (sca_op == 4) { // RSQ
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        sca_result[comp_index] = 1.0f / sqrt(fabs(params[2][comp_index]));
+    } else if (sca_op == 5) { // EXP
+      float fl = floor(params[2][0]);
+      sca_result[0] = exp2(fl);
+      sca_result[1] = params[2][0] - fl;
+      sca_result[2] = exp2(params[2][0]);
+      sca_result[3] = 1.0f;
+    } else if (sca_op == 7) { // LIT
+      float tmpx = params[2][0];
+      float tmpy = params[2][1];
+      float tmpw = params[2][3];
+      if (tmpx < 0.0f)
+        tmpx = 0.0f;
+      if (tmpy < 0.0f)
+        tmpy = 0.0f;
+      float epsilon = 1.0e-6f;
+      if (tmpw < -(128.0f - epsilon))
+        tmpw = -(128.0f - epsilon);
+      else if (tmpw > 128.0f - epsilon)
+        tmpw = 128.0f - epsilon;
+      sca_result[0] = 1.0f;
+      sca_result[1] = tmpx;
+      sca_result[2] = (tmpx > 0.0f) ? pow(tmpy, tmpw) : 0.0f;
+      sca_result[3] = 1.0f;
+    } else {
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        sca_result[comp_index] = 0.5f;
+      if (!unknown_opcode_reported) {
+        BX_ERROR(("Vertex shader: unknown SCA opcode 0x%02x", sca_op));
+        unknown_opcode_reported = true;
+      }
+    }
+    if (BX_GEFORCE_THIS card_type == 0x20) {
+      Bit32u dst_out_reg = (tokens[3] >> 3) & 0xf;
+      Bit32u dst_vec_mask = (tokens[3] >> 24) & 0xf;
+      Bit32u dst_sca_mask = (tokens[3] >> 16) & 0xf;
+      Bit32u dst_out_mask = (tokens[3] >> 12) & 0xf;
+      Bit32u dst_tmp_reg = (tokens[3] >> 20) & 0xf;
+      bool dst_out_sca = (tokens[3] >> 2) & 1;
+      for (int comp_index = 0; comp_index < 4; comp_index++) {
+        if ((dst_vec_mask & (8 >> comp_index)) != 0)
+          tmp_regs[dst_tmp_reg][comp_index] = vec_result[comp_index];
+        if ((dst_sca_mask & (8 >> comp_index)) != 0)
+          tmp_regs[dst_tmp_reg][comp_index] = sca_result[comp_index];
+        if ((dst_out_mask & (8 >> comp_index)) != 0) {
+          out[dst_out_reg][comp_index] = dst_out_sca ?
+            sca_result[comp_index] : vec_result[comp_index];
+        }
+      }
+    } else if (BX_GEFORCE_THIS card_type == 0x35) {
+      Bit32u dst_out_reg = (tokens[3] >> 2) & 0x1f;
+      Bit32u dst_tmp_reg = (tokens[0] >> 16) & 0xf;
+      Bit32u dst_vec_out_mask = (tokens[3] >> 12) & 0xf;
+      Bit32u dst_sca_out_mask = (tokens[3] >> 16) & 0xf;
+      Bit32u dst_vec_tmp_mask = (tokens[3] >> 20) & 0xf;
+      Bit32u dst_sca_tmp_mask = (tokens[3] >> 24) & 0xf;
+      for (int comp_index = 0; comp_index < 4; comp_index++) {
+        if (dst_out_reg != 0x1f) {
+          if ((dst_vec_out_mask & (8 >> comp_index)) != 0)
+            out[dst_out_reg][comp_index] = vec_result[comp_index];
+          if ((dst_sca_out_mask & (8 >> comp_index)) != 0)
+            out[dst_out_reg][comp_index] = sca_result[comp_index];
+        }
+        if (dst_tmp_reg != 0xf) {
+          if ((dst_vec_tmp_mask & (8 >> comp_index)) != 0)
+            tmp_regs[dst_tmp_reg][comp_index] = vec_result[comp_index];
+          if ((dst_sca_tmp_mask & (8 >> comp_index)) != 0)
+            tmp_regs[dst_tmp_reg][comp_index] = sca_result[comp_index];
+        }
+      }
+    } else {
+      Bit32u dst_out_reg = (tokens[3] >> 2) & 0x1f;
+      Bit32u dst_vec_mask = (tokens[3] >> 13) & 0xf;
+      Bit32u dst_sca_mask = (tokens[3] >> 17) & 0xf;
+      Bit32u dst_tmp_vec = (tokens[0] >> 15) & 0x3f;
+      Bit32u dst_tmp_sca = (tokens[3] >> 7) & 0x3f;
+      bool dst_out_vec = (tokens[0] >> 30) & 1;
+      for (int comp_index = 0; comp_index < 4; comp_index++) {
+        if ((dst_vec_mask & (8 >> comp_index)) != 0) {
+          if (dst_out_vec && dst_out_reg != 0x1f)
+            out[dst_out_reg][comp_index] = vec_result[comp_index];
+          if (dst_tmp_vec != 0x3f)
+            tmp_regs[dst_tmp_vec][comp_index] = vec_result[comp_index];
+        }
+        if ((dst_sca_mask & (8 >> comp_index)) != 0) {
+          if (!dst_out_vec && dst_out_reg != 0x1f)
+            out[dst_out_reg][comp_index] = sca_result[comp_index];
+          if (dst_tmp_sca != 0x3f)
+            tmp_regs[dst_tmp_sca][comp_index] = sca_result[comp_index];
+        }
+      }
+    }
+    if ((tokens[3] & 1) == 1)
+      break;
+  }
+}
+
+void bx_geforce_c::d3d_pixel_shader(gf_channel* ch, float in[16][4], float tmp_regs[64][4])
+{
+  static bool unknown_opcode_reported = false;
+  Bit32u ps_offset = ch->d3d_shader_offset;
+  for (;;) {
+    Bit32u dst_word = dma_read32(ch->d3d_shader_obj, ps_offset);
+    ps_offset += 4;
+    Bit32u src_words[3];
+    for (int p = 0; p < 3; p++) {
+      src_words[p] = dma_read32(ch->d3d_shader_obj, ps_offset);
+      ps_offset += 4;
+    }
+    float params[3][4];
+    for (int p = 0; p < 3; p++) {
+      Bit32u reg_type = src_words[p] & 3;
+      Bit32u swizzle[4];
+      for (int i = 0; i < 4; i++)
+        swizzle[i] = (src_words[p] >> (9 + i * 2)) & 3;
+      float cnst[4];
+      if (reg_type == 2) {
+        for (int comp_index = 0; comp_index < 4; comp_index++) {
+          cnst[comp_index] = uint32_as_float(
+            dma_read32(ch->d3d_shader_obj, ps_offset));
+          ps_offset += 4;
+        }
+      }
+      bool negate = (src_words[p] >> 17) & 1;
+      Bit32u tmp_index = (src_words[p] >> 2) & 0x3f;
+      for (int comp_index = 0; comp_index < 4; comp_index++) {
+        int comp_index_swizzle = swizzle[comp_index];
+        if (reg_type == 0) {
+          params[p][comp_index] = tmp_regs[tmp_index][comp_index_swizzle];
+        } else if (reg_type == 1) {
+          Bit32u in_index = (dst_word >> 13) & 0xf;
+          params[p][comp_index] = in[in_index][comp_index_swizzle];
+        } else if (reg_type == 2) {
+          params[p][comp_index] = cnst[comp_index_swizzle];
+        }
+        if (negate)
+          params[p][comp_index] = -params[p][comp_index];
+      }
+    }
+    Bit32u op = (dst_word >> 24) & 0x3f;
+    float op_result[4];
+    if (op == 0) { // NOP
+    } else if (op == 1) { // MOV
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        op_result[comp_index] = params[0][comp_index];
+    } else if (op == 2) { // MUL
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        op_result[comp_index] = params[0][comp_index] * params[1][comp_index];
+    } else if (op == 3) { // ADD
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        op_result[comp_index] = params[0][comp_index] + params[1][comp_index];
+    } else if (op == 4) { // MAD
+      for (int comp_index = 0; comp_index < 4; comp_index++) {
+        op_result[comp_index] = params[0][comp_index] * params[1][comp_index] +
+          params[2][comp_index];
+      }
+    } else if (op == 5) { // DP3
+      float dot = 0.0f;
+      for (int comp_index = 0; comp_index < 3; comp_index++)
+        dot += params[0][comp_index] * params[1][comp_index];
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        op_result[comp_index] = dot;
+    } else if (op == 6) { // DP4
+      float dot = 0.0f;
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        dot += params[0][comp_index] * params[1][comp_index];
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        op_result[comp_index] = dot;
+    } else if (op == 0x17) { // TEX
+      // Textures are not implemented
+      op_result[0] = 1.0f;
+      op_result[1] = 0.8f;
+      op_result[2] = 0.8f;
+      op_result[3] = 0.8f;
+    } else {
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        op_result[comp_index] = 0.5f;
+      if (!unknown_opcode_reported) {
+        BX_ERROR(("Pixel shader: unknown opcode 0x%02x", op));
+        unknown_opcode_reported = true;
+      }
+    }
+    if (op != 0) {
+      Bit32u mask = (dst_word >> 9) & 0xf;
+      Bit32u dst_tmp_reg = (dst_word >> 1) & 0x3f;
+      for (int comp_index = 0; comp_index < 4; comp_index++) {
+        if ((mask & (1 << comp_index)) != 0)
+          tmp_regs[dst_tmp_reg][comp_index] = op_result[comp_index];
+      }
+    }
+    if ((dst_word & 1) == 1)
+      break;
+  }
+}
+
+void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
 {
   Bit32u dci; // diffuse color index
   if (BX_GEFORCE_THIS card_type >= 0x40 &&
@@ -2792,266 +3182,20 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch)
     dci = 1;
   else
     dci = 3;
-  float vs_out[3][16][4];
-  static bool unknown_opcode_reported = false;
-  if ((ch->d3d_transform_execution_mode & 3) != 0) {
+  if (ch->d3d_shade_mode == 0x00001d00) { // FLAT
     for (int v = 0; v < 3; v++) {
-      float tmp_regs[32][4];
-      vs_out[v][dci][0] = 0.0f;
-      vs_out[v][dci][1] = 0.0f;
-      vs_out[v][dci][2] = 0.0f;
-      vs_out[v][dci][3] = 1.0f;
-      for (Bit32u op_index = ch->d3d_transform_program_start;
-           op_index < 544; op_index++) {
-        Bit32u* tokens = ch->d3d_transform_program[op_index];
-        float params[3][4];
-        for (int p = 0; p < 3; p++) {
-          Bit32u tmp_index;
-          Bit32u reg_type;
-          bool negate;
-          Bit32u swizzle[4];
-          if (p == 0) {
-            if (BX_GEFORCE_THIS card_type <= 0x35) {
-              reg_type = (tokens[2] >> 26) & 3;
-              tmp_index = (tokens[2] >> 28) & 0xf;
-              negate = (tokens[1] >> 8) & 1;
-              for (int i = 0; i < 4; i++)
-                swizzle[i] = (tokens[1] >> (6 - i * 2)) & 3;
-            } else {
-              reg_type = (tokens[2] >> 23) & 3;
-              tmp_index = (tokens[2] >> 25) & 0x3f;
-              swizzle[3] = ((tokens[1] & 1) << 1) | ((tokens[2] >> 31) & 1);
-              swizzle[2] = (tokens[1] >> 1) & 3;
-              swizzle[1] = (tokens[1] >> 3) & 3;
-              swizzle[0] = (tokens[1] >> 5) & 3;
-              negate = (tokens[1] >> 7) & 1;
-            }
-          } else if (p == 1) {
-            if (BX_GEFORCE_THIS card_type <= 0x35) {
-              reg_type = (tokens[2] >> 11) & 3;
-              tmp_index = (tokens[2] >> 13) & 0xf;
-              negate = (tokens[2] >> 25) & 1;
-              for (int i = 0; i < 4; i++)
-                swizzle[i] = (tokens[2] >> (23 - i * 2)) & 3;
-            } else {
-              reg_type = (tokens[2] >> 6) & 3;
-              tmp_index = (tokens[2] >> 8) & 0x3f;
-              for (int i = 0; i < 4; i++)
-                swizzle[i] = (tokens[2] >> (20 - i * 2)) & 3;
-              negate = (tokens[2] >> 22) & 1;
-            }
-          } else if (p == 2) {
-            if (BX_GEFORCE_THIS card_type <= 0x35) {
-              reg_type = (tokens[3] >> 28) & 3;
-              tmp_index = ((tokens[2] & 3) << 2) | ((tokens[3] >> 30) & 3);
-              negate = (tokens[2] >> 10) & 1;
-              for (int i = 0; i < 4; i++)
-                swizzle[i] = (tokens[2] >> (8 - i * 2)) & 3;
-            } else {
-              reg_type = (tokens[3] >> 21) & 3;
-              tmp_index = (tokens[3] >> 23) & 0x3f;
-              swizzle[3] = (tokens[3] >> 29) & 3;
-              swizzle[2] = ((tokens[2] & 1) << 1) | ((tokens[3] >> 31) & 1);
-              swizzle[1] = (tokens[2] >> 1) & 3;
-              swizzle[0] = (tokens[2] >> 3) & 3;
-              negate = (tokens[2] >> 5) & 1;
-            }
-          }
-          for (int comp_index = 0; comp_index < 4; comp_index++) {
-            int comp_index_swizzle = swizzle[comp_index];
-            if (reg_type == 1) {
-              if (BX_GEFORCE_THIS card_type == 0x20 && tmp_index == 12)
-                params[p][comp_index] = vs_out[v][0][comp_index_swizzle];
-              else
-                params[p][comp_index] = tmp_regs[tmp_index][comp_index_swizzle];
-            } else if (reg_type == 2) {
-              Bit32u in_index;
-              if (BX_GEFORCE_THIS card_type <= 0x35)
-                in_index = (tokens[1] >> 9) & 0xf;
-              else
-                in_index = (tokens[1] >> 8) & 0xf;
-              params[p][comp_index] = ch->d3d_vertex_data[v][in_index][comp_index_swizzle];
-            } else if (reg_type == 3) {
-              Bit32u const_index;
-              if (BX_GEFORCE_THIS card_type == 0x20)
-                const_index = (tokens[1] >> 13) & 0xff;
-              else if (BX_GEFORCE_THIS card_type == 0x35)
-                const_index = (tokens[1] >> 14) & 0xff;
-              else
-                const_index = (tokens[1] >> 12) & 0x3ff;
-              params[p][comp_index] = ch->d3d_transform_constant[const_index][comp_index_swizzle];
-            }
-            if (negate)
-              params[p][comp_index] = -params[p][comp_index];
-          }
-        }
-        Bit32u vec_op;
-        if (BX_GEFORCE_THIS card_type == 0x20)
-          vec_op = (tokens[1] >> 21) & 0xf;
-        else if (BX_GEFORCE_THIS card_type == 0x35)
-          vec_op = (tokens[1] >> 23) & 0x1f;
-        else
-          vec_op = (tokens[1] >> 22) & 0x1f;
-        float vec_result[4];
-        if (vec_op == 0) { // NOP
-          for (int comp_index = 0; comp_index < 4; comp_index++)
-            vec_result[comp_index] = 0.0f;
-        } else if (vec_op == 1) { // MOV
-          for (int comp_index = 0; comp_index < 4; comp_index++)
-            vec_result[comp_index] = params[0][comp_index];
-        } else if (vec_op == 2) { // MUL
-          for (int comp_index = 0; comp_index < 4; comp_index++)
-            vec_result[comp_index] = params[0][comp_index] * params[1][comp_index];
-        } else if (vec_op == 3) { // ADD
-          for (int comp_index = 0; comp_index < 4; comp_index++)
-            vec_result[comp_index] = params[0][comp_index] + params[2][comp_index];
-        } else if (vec_op == 4) { // MAD
-          for (int comp_index = 0; comp_index < 4; comp_index++) {
-            vec_result[comp_index] = params[0][comp_index] * params[1][comp_index] +
-              params[2][comp_index];
-          }
-        } else if (vec_op == 5) { // DP3
-          float dot = 0.0f;
-          for (int comp_index = 0; comp_index < 3; comp_index++)
-            dot += params[0][comp_index] * params[1][comp_index];
-          for (int comp_index = 0; comp_index < 4; comp_index++)
-            vec_result[comp_index] = dot;
-        } else if (vec_op == 7) { // DP4
-          float dot = 0.0f;
-          for (int comp_index = 0; comp_index < 4; comp_index++)
-            dot += params[0][comp_index] * params[1][comp_index];
-          for (int comp_index = 0; comp_index < 4; comp_index++)
-            vec_result[comp_index] = dot;
-        } else if (vec_op == 0xe) { // FRC
-          for (int comp_index = 0; comp_index < 4; comp_index++)
-            vec_result[comp_index] = params[0][comp_index] - floor(params[0][comp_index]);
-        } else if (vec_op == 0xf) { // FLR
-          for (int comp_index = 0; comp_index < 4; comp_index++)
-            vec_result[comp_index] = floor(params[0][comp_index]);
-        } else {
-          for (int comp_index = 0; comp_index < 4; comp_index++)
-            vec_result[comp_index] = 0.5f;
-          if (!unknown_opcode_reported) {
-            BX_ERROR(("Vertex shader: unknown VEC opcode 0x%02x", vec_op));
-            unknown_opcode_reported = true;
-          }
-        }
-        Bit32u sca_op;
-        if (BX_GEFORCE_THIS card_type == 0x20)
-          sca_op = (tokens[1] >> 25) & 7;
-        else if (BX_GEFORCE_THIS card_type == 0x35)
-          sca_op = ((tokens[0] & 1) << 4) | ((tokens[1] >> 28) & 0x0f);
-        else
-          sca_op = (tokens[1] >> 27) & 0x1f;
-        float sca_result[4];
-        if (sca_op == 0) { // NOP
-          for (int comp_index = 0; comp_index < 4; comp_index++)
-            sca_result[comp_index] = 0.0f;
-        } else if (sca_op == 1) { // MOV
-          for (int comp_index = 0; comp_index < 4; comp_index++)
-            sca_result[comp_index] = params[2][comp_index];
-        } else if (sca_op == 2 || // RCP
-                   sca_op == 3) { // RCC
-          for (int comp_index = 0; comp_index < 4; comp_index++)
-            sca_result[comp_index] = 1.0f / params[2][comp_index];
-        } else if (sca_op == 4) { // RSQ
-          for (int comp_index = 0; comp_index < 4; comp_index++)
-            sca_result[comp_index] = 1.0f / sqrt(fabs(params[2][comp_index]));
-        } else if (sca_op == 5) { // EXP
-          float fl = floor(params[2][0]);
-          sca_result[0] = exp2(fl);
-          sca_result[1] = params[2][0] - fl;
-          sca_result[2] = exp2(params[2][0]);
-          sca_result[3] = 1.0f;
-        } else if (sca_op == 7) { // LIT
-          float tmpx = params[2][0];
-          float tmpy = params[2][1];
-          float tmpw = params[2][3];
-          if (tmpx < 0.0f)
-            tmpx = 0.0f;
-          if (tmpy < 0.0f)
-            tmpy = 0.0f;
-          float epsilon = 1.0e-6f;
-          if (tmpw < -(128.0f - epsilon))
-            tmpw = -(128.0f - epsilon);
-          else if (tmpw > 128.0f - epsilon)
-            tmpw = 128.0f - epsilon;
-          sca_result[0] = 1.0f;
-          sca_result[1] = tmpx;
-          sca_result[2] = (tmpx > 0.0f) ? pow(tmpy, tmpw) : 0.0f;
-          sca_result[3] = 1.0f;
-        } else {
-          for (int comp_index = 0; comp_index < 4; comp_index++)
-            sca_result[comp_index] = 0.5f;
-          if (!unknown_opcode_reported) {
-            BX_ERROR(("Vertex shader: unknown SCA opcode 0x%02x", sca_op));
-            unknown_opcode_reported = true;
-          }
-        }
-        if (BX_GEFORCE_THIS card_type == 0x20) {
-          Bit32u dst_out_reg = (tokens[3] >> 3) & 0xf;
-          Bit32u dst_vec_mask = (tokens[3] >> 24) & 0xf;
-          Bit32u dst_sca_mask = (tokens[3] >> 16) & 0xf;
-          Bit32u dst_out_mask = (tokens[3] >> 12) & 0xf;
-          Bit32u dst_tmp_reg = (tokens[3] >> 20) & 0xf;
-          bool dst_out_sca = (tokens[3] >> 2) & 1;
-          for (int comp_index = 0; comp_index < 4; comp_index++) {
-            if ((dst_vec_mask & (8 >> comp_index)) != 0)
-              tmp_regs[dst_tmp_reg][comp_index] = vec_result[comp_index];
-            if ((dst_sca_mask & (8 >> comp_index)) != 0)
-              tmp_regs[dst_tmp_reg][comp_index] = sca_result[comp_index];
-            if ((dst_out_mask & (8 >> comp_index)) != 0) {
-              vs_out[v][dst_out_reg][comp_index] = dst_out_sca ?
-                sca_result[comp_index] : vec_result[comp_index];
-            }
-          }
-        } else if (BX_GEFORCE_THIS card_type == 0x35) {
-          Bit32u dst_out_reg = (tokens[3] >> 2) & 0x1f;
-          Bit32u dst_tmp_reg = (tokens[0] >> 16) & 0xf;
-          Bit32u dst_vec_out_mask = (tokens[3] >> 12) & 0xf;
-          Bit32u dst_sca_out_mask = (tokens[3] >> 16) & 0xf;
-          Bit32u dst_vec_tmp_mask = (tokens[3] >> 20) & 0xf;
-          Bit32u dst_sca_tmp_mask = (tokens[3] >> 24) & 0xf;
-          for (int comp_index = 0; comp_index < 4; comp_index++) {
-            if (dst_out_reg != 0x1f) {
-              if ((dst_vec_out_mask & (8 >> comp_index)) != 0)
-                vs_out[v][dst_out_reg][comp_index] = vec_result[comp_index];
-              if ((dst_sca_out_mask & (8 >> comp_index)) != 0)
-                vs_out[v][dst_out_reg][comp_index] = sca_result[comp_index];
-            }
-            if (dst_tmp_reg != 0xf) {
-              if ((dst_vec_tmp_mask & (8 >> comp_index)) != 0)
-                tmp_regs[dst_tmp_reg][comp_index] = vec_result[comp_index];
-              if ((dst_sca_tmp_mask & (8 >> comp_index)) != 0)
-                tmp_regs[dst_tmp_reg][comp_index] = sca_result[comp_index];
-            }
-          }
-        } else {
-          Bit32u dst_out_reg = (tokens[3] >> 2) & 0x1f;
-          Bit32u dst_vec_mask = (tokens[3] >> 13) & 0xf;
-          Bit32u dst_sca_mask = (tokens[3] >> 17) & 0xf;
-          Bit32u dst_tmp_vec = (tokens[0] >> 15) & 0x3f;
-          Bit32u dst_tmp_sca = (tokens[3] >> 7) & 0x3f;
-          bool dst_out_vec = (tokens[0] >> 30) & 1;
-          for (int comp_index = 0; comp_index < 4; comp_index++) {
-            if ((dst_vec_mask & (8 >> comp_index)) != 0) {
-              if (dst_out_vec && dst_out_reg != 0x1f)
-                vs_out[v][dst_out_reg][comp_index] = vec_result[comp_index];
-              if (dst_tmp_vec != 0x3f)
-                tmp_regs[dst_tmp_vec][comp_index] = vec_result[comp_index];
-            }
-            if ((dst_sca_mask & (8 >> comp_index)) != 0) {
-              if (!dst_out_vec && dst_out_reg != 0x1f)
-                vs_out[v][dst_out_reg][comp_index] = sca_result[comp_index];
-              if (dst_tmp_sca != 0x3f)
-                tmp_regs[dst_tmp_sca][comp_index] = sca_result[comp_index];
-            }
-          }
-        }
-        if ((tokens[3] & 1) == 1)
-          break;
+      for (int comp_index = 0; comp_index < 4; comp_index++) {
+        ch->d3d_vertex_data[(v + base) & 3][dci][comp_index] =
+          ch->d3d_vertex_data[ch->d3d_vertex_index - 1][dci][comp_index];
+        ch->d3d_vertex_data[(v + base) & 3][2][comp_index] =
+          ch->d3d_vertex_data[ch->d3d_vertex_index - 1][2][comp_index];
       }
     }
+  }
+  float vs_out[3][16][4];
+  if ((ch->d3d_transform_execution_mode & 3) != 0) {
+    for (int v = 0; v < 3; v++)
+      d3d_vertex_shader(ch, ch->d3d_vertex_data[(v + base) & 3], vs_out[v]);
     if (BX_GEFORCE_THIS card_type >= 0x35 &&
         (ch->d3d_transform_execution_mode & 0x100) == 0) {
       for (int v = 0; v < 3; v++) {
@@ -3067,7 +3211,7 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch)
   } else {
     if (ch->d3d_lighting_enable) {
       for (int v = 0; v < 3; v++) {
-        float* n = ch->d3d_vertex_data[v][2];
+        float* n = ch->d3d_vertex_data[(v + base) & 3][2];
         float nt[3];
         float* m = ch->d3d_inverse_model_view_matrix;
         nt[0] = n[0] * m[0] + n[1] * m[1] + n[2] * m[2];
@@ -3091,11 +3235,11 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch)
     } else {
       for (int v = 0; v < 3; v++)
         for (int i = 0; i < 3; i++)
-          vs_out[v][dci][i] = ch->d3d_vertex_data[v][3][i];
+          vs_out[v][dci][i] = ch->d3d_vertex_data[(v + base) & 3][3][i];
     }
     for (int v = 0; v < 3; v++) {
       for (int i = 0; i < 4; i++)
-        vs_out[v][0][i] = ch->d3d_vertex_data[v][0][i];
+        vs_out[v][0][i] = ch->d3d_vertex_data[(v + base) & 3][0][i];
       d3d_transform(ch, vs_out[v][0]);
     }
   }
@@ -3139,15 +3283,20 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch)
     BX_GEFORCE_THIS disp_offset;
   float xy[2];
   float clip_mul = 1.0f / (ch->d3d_clip_max - ch->d3d_clip_min);
-  Bit32u ps_location = ch->d3d_shader_program & 3;
-  Bit32u ps_offset = ch->d3d_shader_program & ~3;
-  Bit32u ps_obj;
-  if (ps_location == 1)
-    ps_obj = ch->d3d_a_obj;
-  else if (ps_location == 2)
-    ps_obj = ch->d3d_b_obj;
-  else
-    ps_obj = 0;
+  bool interpolate[16];
+  for (int a = 0; a < 16; a++) {
+    bool result = false;
+    for (int comp_index = 0; comp_index < 4; comp_index++) {
+      result |= vs_out[0][a][comp_index] != vs_out[1][a][comp_index];
+      result |= vs_out[1][a][comp_index] != vs_out[2][a][comp_index];
+    }
+    interpolate[a] = result;
+  }
+  float ps_in[16][4];
+  for (int i = 0; i < 2; i++)
+    if (!interpolate[dci + i])
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        ps_in[i + 1][comp_index] = vs_out[0][dci + i][comp_index];
   for (Bit16u y = 0; y < draw_height; y++) {
     xy[1] = y;
     for (Bit16u x = 0; x < draw_width; x++) {
@@ -3177,120 +3326,24 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch)
           draw = z_new < z_prev;
         }
         if (draw) {
-          float r = (vs_out[0][dci][0] * w0 + vs_out[1][dci][0] * w1 + vs_out[2][dci][0] * w2) / w012;
-          float g = (vs_out[0][dci][1] * w0 + vs_out[1][dci][1] * w1 + vs_out[2][dci][1] * w2) / w012;
-          float b = (vs_out[0][dci][2] * w0 + vs_out[1][dci][2] * w1 + vs_out[2][dci][2] * w2) / w012;
-          if (ps_obj != 0) {
-            float r2 = (vs_out[0][dci + 1][0] * w0 + vs_out[1][dci + 1][0] * w1 + vs_out[2][dci + 1][0] * w2) / w012;
-            float g2 = (vs_out[0][dci + 1][1] * w0 + vs_out[1][dci + 1][1] * w1 + vs_out[2][dci + 1][1] * w2) / w012;
-            float b2 = (vs_out[0][dci + 1][2] * w0 + vs_out[1][dci + 1][2] * w1 + vs_out[2][dci + 1][2] * w2) / w012;
-            float in[16][4];
-            in[1][0] = r;
-            in[1][1] = g;
-            in[1][2] = b;
-            in[1][3] = 1.0f;
-            in[2][0] = r2;
-            in[2][1] = g2;
-            in[2][2] = b2;
-            in[2][3] = 1.0f;
-            float tmp_regs[64][4];
-            tmp_regs[0][0] = r;
-            tmp_regs[0][1] = g;
-            tmp_regs[0][2] = b;
-            tmp_regs[0][3] = 1.0f;
-            Bit32u ps_offset2 = ps_offset;
-            for (;;) {
-              Bit32u dst_word = dma_read32(ps_obj, ps_offset2);
-              ps_offset2 += 4;
-              Bit32u src_words[3];
-              for (int p = 0; p < 3; p++) {
-                src_words[p] = dma_read32(ps_obj, ps_offset2);
-                ps_offset2 += 4;
+          for (int i = 0; i < 2; i++) {
+            if (interpolate[dci + i]) {
+              for (int comp_index = 0; comp_index < 4; comp_index++) {
+                ps_in[i + 1][comp_index] = (
+                  vs_out[0][dci + i][comp_index] * w0 +
+                  vs_out[1][dci + i][comp_index] * w1 +
+                  vs_out[2][dci + i][comp_index] * w2) / w012;
               }
-              float params[3][4];
-              for (int p = 0; p < 3; p++) {
-                Bit32u reg_type = src_words[p] & 3;
-                Bit32u swizzle[4];
-                for (int i = 0; i < 4; i++)
-                  swizzle[i] = (src_words[p] >> (9 + i * 2)) & 3;
-                float cnst[4];
-                if (reg_type == 2) {
-                  for (int comp_index = 0; comp_index < 4; comp_index++) {
-                    cnst[comp_index] = uint32_as_float(dma_read32(ps_obj, ps_offset2));
-                    ps_offset2 += 4;
-                  }
-                }
-                bool negate = (src_words[p] >> 17) & 1;
-                Bit32u tmp_index = (src_words[p] >> 2) & 0x3f;
-                for (int comp_index = 0; comp_index < 4; comp_index++) {
-                  int comp_index_swizzle = swizzle[comp_index];
-                  if (reg_type == 0) {
-                    params[p][comp_index] = tmp_regs[tmp_index][comp_index_swizzle];
-                  } else if (reg_type == 1) {
-                    Bit32u in_index = (dst_word >> 13) & 0xf;
-                    params[p][comp_index] = in[in_index][comp_index_swizzle];
-                  } else if (reg_type == 2) {
-                    params[p][comp_index] = cnst[comp_index_swizzle];
-                  }
-                  if (negate)
-                    params[p][comp_index] = -params[p][comp_index];
-                }
-              }
-              Bit32u op = (dst_word >> 24) & 0x3f;
-              float op_result[4];
-              if (op == 0) { // NOP
-              } else if (op == 1) { // MOV
-                for (int comp_index = 0; comp_index < 4; comp_index++)
-                  op_result[comp_index] = params[0][comp_index];
-              } else if (op == 2) { // MUL
-                for (int comp_index = 0; comp_index < 4; comp_index++)
-                  op_result[comp_index] = params[0][comp_index] * params[1][comp_index];
-              } else if (op == 3) { // ADD
-                for (int comp_index = 0; comp_index < 4; comp_index++)
-                  op_result[comp_index] = params[0][comp_index] + params[1][comp_index];
-              } else if (op == 4) { // MAD
-                for (int comp_index = 0; comp_index < 4; comp_index++) {
-                  op_result[comp_index] = params[0][comp_index] * params[1][comp_index] +
-                    params[2][comp_index];
-                }
-              } else if (op == 5) { // DP3
-                float dot = 0.0f;
-                for (int comp_index = 0; comp_index < 3; comp_index++)
-                  dot += params[0][comp_index] * params[1][comp_index];
-                for (int comp_index = 0; comp_index < 4; comp_index++)
-                  op_result[comp_index] = dot;
-              } else if (op == 6) { // DP4
-                float dot = 0.0f;
-                for (int comp_index = 0; comp_index < 4; comp_index++)
-                  dot += params[0][comp_index] * params[1][comp_index];
-                for (int comp_index = 0; comp_index < 4; comp_index++)
-                  op_result[comp_index] = dot;
-              } else {
-                for (int comp_index = 0; comp_index < 4; comp_index++)
-                  op_result[comp_index] = 0.5f;
-                if (!unknown_opcode_reported) {
-                  BX_ERROR(("Pixel shader: unknown opcode 0x%02x", op));
-                  unknown_opcode_reported = true;
-                }
-              }
-              if (op != 0) {
-                Bit32u mask = (dst_word >> 9) & 0xf;
-                Bit32u dst_tmp_reg = (dst_word >> 1) & 0x3f;
-                for (int comp_index = 0; comp_index < 4; comp_index++) {
-                  if ((mask & (1 << comp_index)) != 0)
-                    tmp_regs[dst_tmp_reg][comp_index] = op_result[comp_index];
-                }
-              }
-              if ((dst_word & 1) == 1)
-                break;
             }
-            r = tmp_regs[0][0];
-            g = tmp_regs[0][1];
-            b = tmp_regs[0][2];
           }
-          r = BX_MIN(BX_MAX(r, 0.0f), 1.0f);
-          g = BX_MIN(BX_MAX(g, 0.0f), 1.0f);
-          b = BX_MIN(BX_MAX(b, 0.0f), 1.0f);
+          float tmp_regs[64][4];
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            tmp_regs[0][comp_index] = ps_in[1][comp_index];
+          if (ch->d3d_shader_obj != 0)
+            d3d_pixel_shader(ch, ps_in, tmp_regs);
+          float r = BX_MIN(BX_MAX(tmp_regs[0][0], 0.0f), 1.0f);
+          float g = BX_MIN(BX_MAX(tmp_regs[0][1], 0.0f), 1.0f);
+          float b = BX_MIN(BX_MAX(tmp_regs[0][2], 0.0f), 1.0f);
           if (ch->d3d_color_bytes == 2) {
             Bit8u r5 = r * 31.0f + 0.5f;
             Bit8u g6 = g * 63.0f + 0.5f;
@@ -3336,28 +3389,39 @@ void bx_geforce_c::d3d_process_vertex(gf_channel* ch)
   if (ch->d3d_begin_end == 5 ||      // TRIANGLES
       ch->d3d_begin_end == 0x1012) { // TRIANGLELIST
     if (ch->d3d_vertex_index == 3) {
-      d3d_triangle(ch);
+      d3d_triangle(ch, 0);
       ch->d3d_vertex_index = 0;
     }
   } else if (ch->d3d_begin_end == 8) { // QUADS
-    if (ch->d3d_vertex_index == 3) {
-      d3d_triangle(ch);
-      ch->d3d_triangle_done = true;
-      ch->d3d_vertex_index = 1;
-    } else if (ch->d3d_vertex_index == 2 && ch->d3d_triangle_done) {
-      ch->d3d_triangle_flip = true;
-      d3d_triangle(ch);
-      ch->d3d_triangle_done = false;
-      ch->d3d_triangle_flip = false;
+    if (ch->d3d_vertex_index == 4) {
+      d3d_triangle(ch, 0);
+      d3d_triangle(ch, 2);
       ch->d3d_vertex_index = 0;
     }
-  } else if (ch->d3d_begin_end == 6 || // TRIANGLE_STRIP
-             ch->d3d_begin_end == 9) { // QUAD_STRIP
-    if (ch->d3d_vertex_index == 3 || ch->d3d_triangle_done) {
-      d3d_triangle(ch);
-      ch->d3d_triangle_done = true;
+  } else if (ch->d3d_begin_end == 6) { // TRIANGLE_STRIP
+    if (ch->d3d_vertex_index == 3 || ch->d3d_primitive_done) {
+      d3d_triangle(ch, 0);
+      ch->d3d_primitive_done = true;
       ch->d3d_triangle_flip = !ch->d3d_triangle_flip;
       if (ch->d3d_vertex_index == 3)
+        ch->d3d_vertex_index = 0;
+    }
+  } else if (ch->d3d_begin_end == 9) { // QUAD_STRIP
+    if (ch->d3d_vertex_index == 4 ||
+        (ch->d3d_vertex_index == 2 && ch->d3d_primitive_done)) {
+      if (ch->d3d_vertex_index == 4) {
+        d3d_triangle(ch, 0);
+        ch->d3d_triangle_flip = true;
+        d3d_triangle(ch, 1);
+        ch->d3d_triangle_flip = false;
+        ch->d3d_primitive_done = true;
+      } else {
+        d3d_triangle(ch, 2);
+        ch->d3d_triangle_flip = true;
+        d3d_triangle(ch, 3);
+        ch->d3d_triangle_flip = false;
+      }
+      if (ch->d3d_vertex_index == 4)
         ch->d3d_vertex_index = 0;
     }
   }
@@ -3386,7 +3450,7 @@ void bx_geforce_c::d3d_load_vertex(gf_channel* ch, Bit32u index)
   }
   ch->d3d_vertex_index++;
   d3d_process_vertex(ch);
-  if (ch->d3d_vertex_index == 3)
+  if (ch->d3d_vertex_index == 4)
     ch->d3d_vertex_index = 0; // should not happen
 }
 
@@ -3957,7 +4021,10 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     ch->d3d_lighting_enable = param;
     if (cls >= 0x0497) // hack
       ch->d3d_light_enable_mask = 1;
-  } else if (method == 0x0e5)
+  } else if ((method == 0x0df && cls == 0x0097) ||
+             (method == 0x0da && cls >= 0x0497))
+    ch->d3d_shade_mode = param;
+  else if (method == 0x0e5)
     ch->d3d_clip_min = u.param_float;
   else if (method == 0x0e6)
     ch->d3d_clip_max = u.param_float;
@@ -3977,6 +4044,14 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     ch->d3d_composite_matrix[i] = u.param_float;
   } else if (method == 0x239 && cls >= 0x0497) {
     ch->d3d_shader_program = param;
+    ch->d3d_shader_offset = ch->d3d_shader_program & ~3;
+    Bit32u location = ch->d3d_shader_program & 3;
+    if (location == 1)
+      ch->d3d_shader_obj = ch->d3d_a_obj;
+    else if (location == 2)
+      ch->d3d_shader_obj = ch->d3d_b_obj;
+    else
+      ch->d3d_shader_obj = 0;
   } else if (method >= 0x284 && method <= 0x286) {
     Bit32u i = method & 0x003;
     ch->d3d_scene_ambient_color[i] = u.param_float;
@@ -4068,7 +4143,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   } else if ((method == 0x5ff && cls == 0x0097) ||
              (method == 0x602 && cls >= 0x0497)) {
     if (param == 0) {
-      ch->d3d_triangle_done = false;
+      ch->d3d_primitive_done = false;
       ch->d3d_triangle_flip = false;
       ch->d3d_vertex_index = 0;
       ch->d3d_attrib_index = 0;
@@ -4107,7 +4182,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
         ch->d3d_attrib_index = 0;
         ch->d3d_vertex_index++;
         d3d_process_vertex(ch);
-        if (ch->d3d_vertex_index == 3)
+        if (ch->d3d_vertex_index == 4)
           ch->d3d_vertex_index = 0; // should not happen
       }
     }
@@ -4125,7 +4200,8 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
         ch->d3d_index_array_offset + v * 2);
       d3d_load_vertex(ch, vertex_array_index);
     }
-  } else if (method == 0x60a && cls == 0x0097) {
+  } else if ((method == 0x60a && cls == 0x0097) ||
+             (method == 0x0e7 && cls == 0x0497)) {
     for (int attrib_index = 0; attrib_index < 16; attrib_index++) {
       for (int comp_index = 0; comp_index < 4; comp_index++) {
         ch->d3d_vertex_data[0][attrib_index][comp_index] =
