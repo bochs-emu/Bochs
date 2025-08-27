@@ -156,6 +156,7 @@ struct gf_channel
   Bit32u d3d_zeta_obj;
   Bit32u d3d_vertex_a_obj;
   Bit32u d3d_vertex_b_obj;
+  Bit32u d3d_report_obj;
   Bit32u d3d_clip_horizontal;
   Bit32u d3d_clip_vertical;
   Bit32u d3d_surface_format;

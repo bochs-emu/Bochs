@@ -1144,7 +1144,13 @@ void bx_geforce_c::get_crtc_params(bx_crtc_params_t* crtcp, Bit32u* vclock)
 void bx_geforce_c::update(void)
 {
   Bit8u crtc28 = BX_GEFORCE_THIS crtc.reg[0x28];
-  if (!crtc28) {
+
+  if (crtc28 & 0x80) {
+    crtc28 &= 0x7F;
+    BX_ERROR(("Slaved mode activated"));
+  }
+
+  if (crtc28 == 0x00) {
     BX_GEFORCE_THIS bx_vgacore_c::update();
     return;
   }
@@ -1162,11 +1168,6 @@ void bx_geforce_c::update(void)
       (BX_GEFORCE_THIS crtc.reg[0x19] >> 5 << 8) |
       (BX_GEFORCE_THIS crtc.reg[0x42] >> 6 & 1) << 11;
     iPitch <<= 3;
-
-    if (crtc28 & 0x80) {
-      crtc28 &= 0x7F;
-      BX_ERROR(("Slaved mode activated"));
-    }
 
     Bit8u iBpp = 0;
     if (crtc28 == 0x01)
@@ -3153,6 +3154,12 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch, float in[16][4], float tmp_r
       op_result[1] = 0.8f;
       op_result[2] = 0.8f;
       op_result[3] = 0.8f;
+    } else if (op == 0x38) { // DP2
+      float dot = 0.0f;
+      for (int comp_index = 0; comp_index < 2; comp_index++)
+        dot += params[0][comp_index] * params[1][comp_index];
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        op_result[comp_index] = dot;
     } else {
       for (int comp_index = 0; comp_index < 4; comp_index++)
         op_result[comp_index] = 0.5f;
@@ -3415,14 +3422,13 @@ void bx_geforce_c::d3d_process_vertex(gf_channel* ch)
         d3d_triangle(ch, 1);
         ch->d3d_triangle_flip = false;
         ch->d3d_primitive_done = true;
+        ch->d3d_vertex_index = 0;
       } else {
         d3d_triangle(ch, 2);
         ch->d3d_triangle_flip = true;
         d3d_triangle(ch, 3);
         ch->d3d_triangle_flip = false;
       }
-      if (ch->d3d_vertex_index == 4)
-        ch->d3d_vertex_index = 0;
     }
   }
 }
@@ -3971,6 +3977,8 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     ch->d3d_vertex_b_obj = param;
   else if (method == 0x069)
     ch->d3d_semaphore_obj = param;
+  else if (method == 0x06a)
+    ch->d3d_report_obj = param;
   else if (method == 0x080)
     ch->d3d_clip_horizontal = param;
   else if (method == 0x081)
@@ -4140,6 +4148,12 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
         ch->d3d_vertex_data_array_format_size[i] = 4;
       }
     }
+  } else if ((method == 0x5f4 && cls == 0x0097) ||
+             (method == 0x600 && cls >= 0x0497)) {
+    Bit32u offset = param & 0x00ffffff;
+    dma_write64(ch->d3d_report_obj, offset + 0x0, get_current_time());
+    dma_write32(ch->d3d_report_obj, offset + 0x8, 0);
+    dma_write32(ch->d3d_report_obj, offset + 0xC, 0);
   } else if ((method == 0x5ff && cls == 0x0097) ||
              (method == 0x602 && cls >= 0x0497)) {
     if (param == 0) {
@@ -4154,7 +4168,11 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
              (method == 0x603 && cls >= 0x0497)) {
     d3d_load_vertex(ch, param & 0x0000ffff);
     d3d_load_vertex(ch, param >> 16);
-  } else if (method == 0x605 && cls >= 0x0497) {
+  } else if ((method == 0x602 && cls == 0x0097) ||
+             (method == 0x604 && cls >= 0x0497)) {
+    d3d_load_vertex(ch, param);
+  } else if ((method == 0x604 && cls == 0x0097) ||
+             (method == 0x605 && cls >= 0x0497)) {
     Bit32u vertex_first = param & 0x00ffffff;
     Bit32u vertex_last = vertex_first + (param >> 24);
     for (Bit32u v = vertex_first; v <= vertex_last; v++)
