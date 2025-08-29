@@ -107,6 +107,20 @@ For any information on Qemu, visit the website http://wiki.qemu.org/
 
 History
 -------
+vgabios-github-current : Aug 29 2025
+  - Volker
+    - Consider the mode-set option bits 4 and 7 when setting VGA mode
+    - Bochs VBE / Banshee: Fixed calculation of the VBE number of image pages
+    - Bochs VBE: Added 10 low resolution modes
+    - Banshee: Added 9 low resolution modes
+    - Cirrus: Added low resolution modes 320x200x16 and 320x200x24
+    - Cirrus: Added 32-bpp modes 0x76 (640x480) and 0x72 (800x600) based on the
+      specs (no VESA mode numbers yet)
+  - Emilio Silva
+    - Cirrus: Improved the VESA3 protected mode support and added binary with it
+      (function 0x00 still reporting version 2 / no extended information
+      returned by function 0x01)
+
 vgabios-0.9c : Jan 08 2025
   - Volker
     - Added support for Cirrus 4 bpp modes 0x58, 0x5d and 0x6c

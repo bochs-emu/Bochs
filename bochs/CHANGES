@@ -108,7 +108,7 @@ Detailed change log :
   - Added support for the display library option "hideIPS" in nogui
   - Fixed buffer overflow when using keymap feature
   - Use system font on win32 dialog boxes (win32 dialog box font is tiny on 1920x1080 Windows)
-  - X gui: added XFlush() in warp_pointer() call to fix mouse movement issues
+  - X gui: added XFlush() in warp_cursor() call to fix mouse movement issues
 
 - BIOS
   - ACPI fixes for the i440BX chipset
@@ -120,6 +120,11 @@ Detailed change log :
   - Fixed floppy media state for legacy drive types
   - Legacy BIOS now can be used with a PCI VGABIOS
   - Add service Int13h/0x0D
+  - i440fx.bin updated from GitHub repository
+
+- LGPL'd VGABIOS updated from GitHub repository
+  - Added some low resolution VESA modes and bugfixes for all versions
+  - Cirrus: Improved VESA3 proteced mode support and added binary with it
 
 - Misc
   - Added Linux manual page for the bxhub utility
