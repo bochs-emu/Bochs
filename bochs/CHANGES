@@ -1,6 +1,6 @@
 Changes after 3.0:
 
-  This CHANGES file updated with commits merged till 11 May 2025, please refer to git log for more recent updates
+  This CHANGES file updated with commits merged till 29 Aug 2025, please refer to git log for more recent updates
 
 Detailed change log :
 
@@ -11,6 +11,7 @@ Detailed change log :
 - CPU emulation and instrumentation
   - CPU: Implemented MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS, (AMX TRANSPOSE MOVRS still not implemented)
   - Added new BX_INSTR_CPUID instrumentation callback, see instrumentation.txt doc for description
+  - Bugfixes for CPU emulation correctness
 
 - Bochs Debugger
   - Added new command line option "-dbg_gui" to start Bochs debugger with gui.
@@ -27,6 +28,7 @@ Detailed change log :
   - Compilation fix for MacOS in keymap.cc
   - Fixed compilation of plugin version on Windows with newer gcc versions
   - Updated MSVCPP project files
+  - Win32: fix compilation error when SHOW_IPS is not compiled in
 
 - Config interface
   - On Windows make sure file name parameters use backslash as separator
@@ -61,6 +63,7 @@ Detailed change log :
   - VGA / DDC
     - DDC: Fixed using EDID data from specified file
     - DDC: Added mode choice 'builtin_gui' to limit builtin values based on gui capabilities
+    - DDC: Disable entry for 1152x870 mode if EDID reports 1024x768 maximum
     - VGA core: Added stub for the feature control register. Currently writing to bit 3 only (should turn off display if set).
     - VGA core: Don't report invalid CRTC register if used by extension.
     - Bochs VBE: Skip address wrap during display update
@@ -104,6 +107,8 @@ Detailed change log :
     This currently only used by X gui for processing palette update.
   - Added support for the display library option "hideIPS" in nogui
   - Fixed buffer overflow when using keymap feature
+  - Use system font on win32 dialog boxes (win32 dialog box font is tiny on 1920x1080 Windows)
+  - X gui: added XFlush() in warp_pointer() call to fix mouse movement issues
 
 - BIOS
   - ACPI fixes for the i440BX chipset
@@ -114,6 +119,7 @@ Detailed change log :
   - Fixed CHS assignment in int13_edd function
   - Fixed floppy media state for legacy drive types
   - Legacy BIOS now can be used with a PCI VGABIOS
+  - Add service Int13h/0x0D
 
 - Misc
   - Added Linux manual page for the bxhub utility
