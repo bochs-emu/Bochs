@@ -1133,7 +1133,7 @@ void bx_banshee_c::write_handler(void *this_ptr, Bit32u address, Bit32u value, u
 void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
 {
   Bit8u offset = (Bit8u)(address & 0xff);
-  Bit8u reg = (offset>>2), dac_idx, k, m, n, shift;
+  Bit8u reg = (offset>>2), dac_idx, fm, k, m, n, shift;
   Bit32u old = v->banshee.io[reg], mask;
   bool prev_hwce = v->banshee.hwcursor.enabled;
   Bit16u prev_hwcx = v->banshee.hwcursor.x;
@@ -1269,8 +1269,9 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
       } else {
         v->banshee.overlay.fy = 1.000;
       }
-      if (((v->banshee.io[reg] >> 16) & 3) != ((old >> 16) & 3)) {
-        BX_ERROR(("vidProcCfg: overlay filter mode %d not supported yet", (v->banshee.io[reg] >> 16) & 3));
+      fm = (v->banshee.io[reg] >> 16) & 3;
+      if ((fm > 0) && (fm != ((old >> 16) & 3))) {
+        BX_ERROR(("vidProcCfg: overlay filter mode %d not supported yet", fm));
       }
       v->banshee.desktop_tiled = ((v->banshee.io[reg] >> 24) & 1);
       v->banshee.overlay_tiled = ((v->banshee.io[reg] >> 25) & 1);
