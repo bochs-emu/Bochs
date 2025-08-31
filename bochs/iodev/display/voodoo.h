@@ -21,6 +21,8 @@
 #ifndef BX_IODEV_VOODOO_H
 #define BX_IODEV_VOODOO_H
 
+//#define BANSHEE_TILED_FB
+
 #define BX_VOODOO_THIS theVoodooDevice->
 #define BX_VOODOO_THIS_PTR theVoodooDevice
 #define BX_VVGA_THIS theVoodooVga->
