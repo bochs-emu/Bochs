@@ -69,6 +69,11 @@ struct gf_channel
   Bit32u s2d_ofs_src;
   Bit32u s2d_ofs_dst;
 
+  Bit32u swzs_img_obj;
+  Bit32u swzs_fmt;
+  Bit32u swzs_color_bytes;
+  Bit32u swzs_ofs;
+
   bool ifc_color_key_enable;
   Bit32u ifc_operation;
   Bit32u ifc_color_fmt;
@@ -204,6 +209,9 @@ struct gf_channel
   float d3d_vertex_data[4][16][4];
   Bit32u d3d_index_array_offset;
   Bit32u d3d_index_array_dma;
+  Bit32u d3d_texture_offset[4];
+  Bit32u d3d_texture_format[4];
+  Bit32u d3d_texture_image_rect[4];
   Bit32u d3d_semaphore_obj;
   Bit32u d3d_semaphore_offset;
   Bit32u d3d_zstencil_clear_value;
@@ -213,6 +221,8 @@ struct gf_channel
   Bit32u d3d_transform_program_load;
   Bit32u d3d_transform_program_start;
   Bit32u d3d_transform_constant_load;
+  Bit32u d3d_attrib_color;
+  Bit32u d3d_attrib_tex_coord;
 
   Bit8u  rop;
 
@@ -357,6 +367,7 @@ private:
   BX_GEFORCE_SMF void execute_rop(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_patt(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_gdi(gf_channel* ch, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_swzsurf(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_chroma(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_imageblit(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_ifc(gf_channel* ch, Bit32u method, Bit32u param);
@@ -370,6 +381,7 @@ private:
 
   BX_GEFORCE_SMF Bit32u get_pixel(Bit32u obj, Bit32u ofs, Bit32u x, Bit32u cb);
   BX_GEFORCE_SMF void put_pixel(gf_channel* ch, Bit32u ofs, Bit32u x, Bit32u value);
+  BX_GEFORCE_SMF void put_pixel_swzs(gf_channel* ch, Bit32u ofs, Bit32u value);
   BX_GEFORCE_SMF void pixel_operation(gf_channel* ch, Bit32u op,
     Bit32u* dstcolor, const Bit32u* srccolor, Bit32u cb, Bit32u px, Bit32u py);
 
@@ -385,6 +397,8 @@ private:
 
   BX_GEFORCE_SMF void d3d_clear_surface(gf_channel* ch);
   BX_GEFORCE_SMF void d3d_transform(gf_channel* ch, float v[4]);
+  BX_GEFORCE_SMF void d3d_sample_texture(gf_channel* ch,
+    Bit32u tex_unit, float s, float t, float r, float color[4]);
   BX_GEFORCE_SMF void d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[16][4]);
   BX_GEFORCE_SMF void d3d_pixel_shader(gf_channel* ch, float in[16][4], float tmp_regs[64][4]);
   BX_GEFORCE_SMF void d3d_triangle(gf_channel* ch, Bit32u base);
