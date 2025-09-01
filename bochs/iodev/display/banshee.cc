@@ -2426,6 +2426,23 @@ void bx_banshee_c::blt_complete()
         }
         w = BLT.dst_w;
         h = BLT.dst_h;
+      } else if (BLT.cmd == 8) {
+        if (BLT.pgn_l1x < BLT.src_x) {
+          x = BLT.pgn_l1x;
+        } else {
+          x = BLT.src_x;
+        }
+        if (BLT.pgn_r1x > BLT.src_x) {
+          w = BLT.pgn_r1x - x + 1;
+        } else {
+          w = BLT.src_x - x + 1;
+        }
+        y = BLT.src_y;
+        if (BLT.pgn_l1y > BLT.pgn_r1y) {
+          h = BLT.pgn_l1y - BLT.src_y + 1;
+        } else {
+          h = BLT.pgn_r1y - BLT.src_y + 1;
+        }
       } else {
         if (BLT.src_x < BLT.dst_x) {
           x = BLT.src_x;
