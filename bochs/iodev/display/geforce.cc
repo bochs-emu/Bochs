@@ -320,6 +320,8 @@ void bx_geforce_c::svga_init_members()
     BX_GEFORCE_THIS chs[i].s2d_color_bytes = 1;
     BX_GEFORCE_THIS chs[i].d3d_color_bytes = 1;
     BX_GEFORCE_THIS chs[i].d3d_depth_bytes = 1;
+    for (int j = 0; j < 10; j++)
+      BX_GEFORCE_THIS chs[i].d3d_attrib_tex_coord[j] = (j + 8) & 0xf;
   }
 
   for (int i = 0; i < 4 * 1024 * 1024; i++)
@@ -3369,12 +3371,7 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
     dci = ch->d3d_attrib_color & 0xf;
   else
     dci = 3;
-  Bit32u tci; // texture coordinates index
-  if (BX_GEFORCE_THIS card_type >= 0x40)
-    tci = ch->d3d_attrib_tex_coord & 0xf;
-  else
-    tci = 8;
-  Bit32u tex_count = BX_MIN(0x10 - tci, 4);
+  Bit32u tex_count = BX_GEFORCE_THIS card_type >= 0x35 ? 8 : 4;
   if (ch->d3d_shade_mode == 0x00001d00) { // FLAT
     for (int v = 0; v < 3; v++) {
       for (int comp_index = 0; comp_index < 4; comp_index++) {
@@ -3433,9 +3430,12 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
     for (int v = 0; v < 3; v++) {
       for (int comp_index = 0; comp_index < 4; comp_index++)
         vs_out[v][0][comp_index] = ch->d3d_vertex_data[(v + base) & 3][0][comp_index];
-      for (int i = 0; i < tex_count; i++)
-        for (int comp_index = 0; comp_index < 4; comp_index++)
-          vs_out[v][tci + i][comp_index] = ch->d3d_vertex_data[(v + base) & 3][i + 8][comp_index];
+      for (int i = 0; i < tex_count; i++) {
+        for (int comp_index = 0; comp_index < 4; comp_index++) {
+          vs_out[v][ch->d3d_attrib_tex_coord[i]][comp_index] =
+            ch->d3d_vertex_data[(v + base) & 3][i + 8][comp_index];
+        }
+      }
       d3d_transform(ch, vs_out[v][0]);
     }
   }
@@ -3493,10 +3493,10 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
     if (!interpolate[dci + i])
       for (int comp_index = 0; comp_index < 4; comp_index++)
         ps_in[i + 1][comp_index] = vs_out[0][dci + i][comp_index];
-  for (int i = 0; i < 4; i++)
-    if (!interpolate[tci + i])
+  for (int i = 0; i < tex_count; i++)
+    if (!interpolate[ch->d3d_attrib_tex_coord[i]])
       for (int comp_index = 0; comp_index < 4; comp_index++)
-        ps_in[i + 4][comp_index] = vs_out[0][tci + i][comp_index];
+        ps_in[i + 4][comp_index] = vs_out[0][ch->d3d_attrib_tex_coord[i]][comp_index];
   for (Bit16u y = 0; y < draw_height; y++) {
     xy[1] = y;
     for (Bit16u x = 0; x < draw_width; x++) {
@@ -3537,12 +3537,12 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
             }
           }
           for (int i = 0; i < tex_count; i++) {
-            if (interpolate[tci + i]) {
+            if (interpolate[ch->d3d_attrib_tex_coord[i]]) {
               for (int comp_index = 0; comp_index < 4; comp_index++) {
                 ps_in[i + 4][comp_index] = (
-                  vs_out[0][tci + i][comp_index] * w0 +
-                  vs_out[1][tci + i][comp_index] * w1 +
-                  vs_out[2][tci + i][comp_index] * w2) / w012;
+                  vs_out[0][ch->d3d_attrib_tex_coord[i]][comp_index] * w0 +
+                  vs_out[1][ch->d3d_attrib_tex_coord[i]][comp_index] * w1 +
+                  vs_out[2][ch->d3d_attrib_tex_coord[i]][comp_index] * w2) / w012;
               }
             }
           }
@@ -4368,7 +4368,10 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       ch->d3d_vertex_data_array_format_size[i] = (param >> 4) & 0xf;
     } else {
       Bit32u dxtype = param & 0xff;
-      if (dxtype == 0x99) {
+      if (dxtype == 0x44) {
+        ch->d3d_vertex_data_array_format_type[i] = 2;
+        ch->d3d_vertex_data_array_format_size[i] = 1;
+      } else if (dxtype == 0x99) {
         ch->d3d_vertex_data_array_format_type[i] = 2;
         ch->d3d_vertex_data_array_format_size[i] = 2;
       } else if (dxtype == 0xaa) {
@@ -4519,7 +4522,11 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   } else if (method == 0x7f1 && cls > 0x0497) {
     ch->d3d_attrib_color = param;
   } else if (method == 0x7f2 && cls > 0x0497) {
-    ch->d3d_attrib_tex_coord = param;
+    for (Bit32u i = 0; i < 8; i++)
+      ch->d3d_attrib_tex_coord[i] = (param >> (i * 4)) & 0xf;
+  } else if (method == 0x7f3 && cls > 0x0497) {
+    for (Bit32u i = 0; i < 2; i++)
+      ch->d3d_attrib_tex_coord[i + 8] = (param >> (i * 4)) & 0xf;
   }
 }
 

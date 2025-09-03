@@ -224,7 +224,7 @@ struct gf_channel
   Bit32u d3d_transform_program_start;
   Bit32u d3d_transform_constant_load;
   Bit32u d3d_attrib_color;
-  Bit32u d3d_attrib_tex_coord;
+  Bit32u d3d_attrib_tex_coord[10];
 
   Bit8u  rop;
 
