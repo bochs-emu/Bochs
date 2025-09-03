@@ -209,9 +209,11 @@ struct gf_channel
   float d3d_vertex_data[4][16][4];
   Bit32u d3d_index_array_offset;
   Bit32u d3d_index_array_dma;
-  Bit32u d3d_texture_offset[4];
-  Bit32u d3d_texture_format[4];
-  Bit32u d3d_texture_image_rect[4];
+  Bit32u d3d_texture_offset[16];
+  Bit32u d3d_texture_format[16];
+  Bit32u d3d_texture_control1[16];
+  Bit32u d3d_texture_image_rect[16];
+  Bit32u d3d_texture_control3[16];
   Bit32u d3d_semaphore_obj;
   Bit32u d3d_semaphore_offset;
   Bit32u d3d_zstencil_clear_value;
