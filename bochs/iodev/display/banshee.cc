@@ -2119,6 +2119,10 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
       if (BLT.cmd == 8) {
         BLT.pgn_init = 0;
       }
+      if (BLT.immed && ((BLT.cmd == 3) || (BLT.cmd == 4))) {
+        // Host-to-screen blts are always non-immediate
+        BLT.immed = 0;
+      }
       if (BLT.immed) {
         blt_execute();
       } else {
@@ -2294,27 +2298,23 @@ void bx_banshee_c::blt_execute()
       break;
     case 3:
     case 4:
-      if (!BLT.immed) {
-        if (BLT.cmd == 3) {
-          BLT.busy = 1;
-          if (BLT.pattern_blt) {
-            blt_host_to_screen_pattern();
-          } else {
-            blt_host_to_screen();
-          }
+      if (BLT.cmd == 3) {
+        BLT.busy = 1;
+        if (BLT.pattern_blt) {
+          blt_host_to_screen_pattern();
         } else {
-          if (BLT.pattern_blt) {
-            BX_ERROR(("TODO: 2D Host to screen stretch pattern blt"));
-          } else {
-            BLT.busy = 1;
-            blt_host_to_screen_stretch();
-          }
+          blt_host_to_screen();
         }
-        delete [] BLT.lamem;
-        BLT.lamem = NULL;
       } else {
-        BX_ERROR(("Host to screen blt: immediate execution not supported"));
+        if (BLT.pattern_blt) {
+          BX_ERROR(("TODO: 2D Host to screen stretch pattern blt"));
+        } else {
+          BLT.busy = 1;
+          blt_host_to_screen_stretch();
+        }
       }
+      delete [] BLT.lamem;
+      BLT.lamem = NULL;
       break;
     case 5:
       BLT.busy = 1;
