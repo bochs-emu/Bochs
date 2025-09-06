@@ -2883,15 +2883,10 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
     width = 1 << ((format >> 20) & 0xf);
     height = 1 << ((format >> 24) & 0xf);
   }
-  Bit32u x;
-  Bit32u y;
-  if (unnormalized) {
-    x = BX_MIN(BX_MAX(s, 0.0f), width);
-    y = BX_MIN(BX_MAX(t, 0.0f), height);
-  } else {
-    x = BX_MIN(BX_MAX(s, 0.0f), 1.0f) * width;
-    y = BX_MIN(BX_MAX(t, 0.0f), 1.0f) * height;
-  }
+  Bit32s xs = unnormalized ? s : s * width;
+  Bit32s ys = unnormalized ? t : t * height;
+  Bit32u x = BX_MIN(BX_MAX(xs, 0), width - 1);
+  Bit32u y = BX_MIN(BX_MAX(ys, 0), height - 1);
   Bit32u ofs = ch->d3d_texture_offset[tex_unit];
   if (linear) {
     Bit32u pitch;
@@ -3321,6 +3316,12 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch, float in[16][4], float tmp_r
         dot += params[0][comp_index] * params[1][comp_index];
       for (int comp_index = 0; comp_index < 4; comp_index++)
         op_result[comp_index] = dot;
+    } else if (op == 0x10) { // FRC
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        op_result[comp_index] = params[0][comp_index] - floor(params[0][comp_index]);
+    } else if (op == 0x11) { // FLR
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        op_result[comp_index] = floor(params[0][comp_index]);
     } else if (op == 0x17) { // TEX
       Bit32u tex_unit = (dst_word >> 17) & 0xf;
       d3d_sample_texture(ch, tex_unit,
@@ -3331,10 +3332,22 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch, float in[16][4], float tmp_r
         params[0][0] / params[0][3],
         params[0][1] / params[0][3],
         params[0][2] / params[0][3], op_result);
+    } else if (op == 0x1a) { // RCP
+      float rcp = 1.0f / params[0][0];
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        op_result[comp_index] = rcp;
     } else if (op == 0x1d) { // LG2
       float lg2 = log2(params[0][0]);
       for (int comp_index = 0; comp_index < 4; comp_index++)
         op_result[comp_index] = lg2;
+    } else if (op == 0x22) { // COS
+      float cosv = cos(params[0][0]);
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        op_result[comp_index] = cosv;
+    } else if (op == 0x23) { // SIN
+      float sinv = sin(params[0][0]);
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        op_result[comp_index] = sinv;
     } else if (op == 0x38) { // DP2
       float dot = 0.0f;
       for (int comp_index = 0; comp_index < 2; comp_index++)
@@ -3493,10 +3506,6 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
   Bit32u draw_y2 = BX_MIN(BX_MAX(tri_y2 + 1, (Bit32s)surf_y1), (Bit32s)surf_y2);
   if (draw_x2 < draw_x1 || draw_y2 < draw_y1)
     return; // overflow
-  for (int v = 0; v < 3; v++) {
-    vs_out[v][0][0] -= draw_x1;
-    vs_out[v][0][1] -= draw_y1;
-  }
   Bit32u draw_width = draw_x2 - draw_x1;
   Bit32u draw_height = draw_y2 - draw_y1;
   Bit32u pitch = ch->d3d_surface_pitch_a & 0xFFFF;
@@ -3507,7 +3516,6 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
     draw_y1 * pitch_zeta + draw_x1 * ch->d3d_depth_bytes;
   Bit32u redraw_offset = dma_lin_lookup(ch->d3d_color_obj, draw_offset) -
     BX_GEFORCE_THIS disp_offset;
-  float xy[2];
   float clip_mul = 1.0f / (ch->d3d_clip_max - ch->d3d_clip_min);
   bool interpolate[16];
   for (int a = 0; a < 16; a++) {
@@ -3542,13 +3550,13 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
       dst_factor_alpha = ch->d3d_blend_func_dfactor >> 16;
     }
   }
-  for (Bit16u y = 0; y < draw_height; y++) {
-    xy[1] = y;
-    for (Bit16u x = 0; x < draw_width; x++) {
-      xy[0] = x;
-      float w0 = edge_function(vs_out[1][0], vs_out[2][0], xy);
-      float w1 = edge_function(vs_out[2][0], vs_out[0][0], xy);
-      float w2 = edge_function(vs_out[0][0], vs_out[1][0], xy);
+  ps_in[0][1] = draw_y1 + 0.5f;
+  for (Bit16u y = 0; y < draw_height; y++, ps_in[0][1]++) {
+    ps_in[0][0] = draw_x1 + 0.5f;
+    for (Bit16u x = 0; x < draw_width; x++, ps_in[0][0]++) {
+      float w0 = edge_function(vs_out[1][0], vs_out[2][0], ps_in[0]);
+      float w1 = edge_function(vs_out[2][0], vs_out[0][0], ps_in[0]);
+      float w2 = edge_function(vs_out[0][0], vs_out[1][0], ps_in[0]);
       bool draw;
       if (clockwise)
         draw = w0 >= 0.0f && w1 >= 0.0f && w2 >= 0.0f;
