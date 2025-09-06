@@ -1791,6 +1791,7 @@ struct _banshee_info
     Bit32u lacnt;
     Bit32u laidx;
     Bit8u *lamem;
+    bool   lainit_done;
   } blt;
   struct {
     bool   enabled;

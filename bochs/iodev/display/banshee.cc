@@ -2123,10 +2123,9 @@ void bx_banshee_c::blt_reg_write(Bit8u reg, Bit32u value)
         // Host-to-screen blts are always non-immediate
         BLT.immed = 0;
       }
+      BLT.lainit_done = false;
       if (BLT.immed) {
         blt_execute();
-      } else {
-        blt_launch_area_setup();
       }
       break;
     case blt_commandExtra:
@@ -2226,10 +2225,14 @@ void bx_banshee_c::blt_launch_area_setup()
     default:
       BX_ERROR(("launchArea setup: command %d not handled yet", BLT.cmd));
   }
+  BLT.lainit_done = true;
 }
 
 void bx_banshee_c::blt_launch_area_write(Bit32u value)
 {
+  if (!BLT.lainit_done) {
+    blt_launch_area_setup();
+  }
   if (BLT.lacnt > 0) {
     BX_DEBUG(("launchArea write: value = 0x%08x", value));
     if (BLT.lamem != NULL) {
