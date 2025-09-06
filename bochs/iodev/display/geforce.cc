@@ -3460,7 +3460,7 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
     for (int v = 0; v < 3; v++) {
       for (int comp_index = 0; comp_index < 4; comp_index++)
         vs_out[v][0][comp_index] = ch->d3d_vertex_data[(v + base) & 3][0][comp_index];
-      for (int i = 0; i < tex_count; i++) {
+      for (unsigned i = 0; i < tex_count; i++) {
         for (int comp_index = 0; comp_index < 4; comp_index++) {
           vs_out[v][ch->d3d_attrib_tex_coord[i]][comp_index] =
             ch->d3d_vertex_data[(v + base) & 3][i + 8][comp_index];
@@ -3523,7 +3523,7 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
     if (!interpolate[dci + i])
       for (int comp_index = 0; comp_index < 4; comp_index++)
         ps_in[i + 1][comp_index] = vs_out[0][dci + i][comp_index];
-  for (int i = 0; i < tex_count; i++)
+  for (unsigned i = 0; i < tex_count; i++)
     if (!interpolate[ch->d3d_attrib_tex_coord[i]])
       for (int comp_index = 0; comp_index < 4; comp_index++)
         ps_in[i + 4][comp_index] = vs_out[0][ch->d3d_attrib_tex_coord[i]][comp_index];
@@ -3581,7 +3581,7 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
               }
             }
           }
-          for (int i = 0; i < tex_count; i++) {
+          for (unsigned i = 0; i < tex_count; i++) {
             if (interpolate[ch->d3d_attrib_tex_coord[i]]) {
               for (int comp_index = 0; comp_index < 4; comp_index++) {
                 ps_in[i + 4][comp_index] = (

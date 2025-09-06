@@ -406,7 +406,7 @@ private:
     Bit32u tex_unit, float s, float t, float r, float color[4]);
   BX_GEFORCE_SMF void d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[16][4]);
   BX_GEFORCE_SMF void d3d_pixel_shader(gf_channel* ch, float in[16][4], float tmp_regs[64][4]);
-  BX_GEFORCE_SMF float d3d_blend(gf_channel* ch, Bit32u factor, float src_rgb, float src_a, float dst_rgb, float dst_a);
+  static float d3d_blend(gf_channel* ch, Bit32u factor, float src_rgb, float src_a, float dst_rgb, float dst_a);
   BX_GEFORCE_SMF void d3d_triangle(gf_channel* ch, Bit32u base);
   BX_GEFORCE_SMF void d3d_process_vertex(gf_channel* ch);
   BX_GEFORCE_SMF void d3d_load_vertex(gf_channel* ch, Bit32u index);
