@@ -2141,9 +2141,11 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
       <entry>--enable-docbook</entry>
       <entry>detected</entry>
       <entry>
-      Build the docbook documentation in doc/docbook.  The configure
-      script will enable this option automatically if you have a program
-      called docbook2html installed.
+      Build the docbook documentation in doc/docbook. The configure script will
+      enable this option automatically if you have one of the programs <command>docbook2html</command>
+      or <command>openjade</command> installed. See the
+      <ulink url="../documentation/index.html">Documentation Guide</ulink> for more information
+      about the docbook format.
       </entry>
     </row>
     <row>
@@ -3007,6 +3009,22 @@ Sometimes it is possible to isolate the failing piece of code by disabling one o
 more configure options. For example, if the compilation fails somewhere in the cpu/avx*
 files, it might help to configure without <option>--enable-avx</option>. The same
 could be done with other Bochs facilities controlled by configure options.
+</para>
+</section>
+
+<section><title>HTML documentation build failure</title>
+<para>
+For building the Bochs HTML documenation the program <command>docbook2html</command> (usually present in a
+package called <emphasis>docbook-utils</emphasis>) can be used. Since the package dependencies force to install
+a big number of packages and most of them are not needed for this task. Using <command>openjade</command> is
+an alternative that needs only a small number of additional packages, but some are them are not installed
+automatically. If something is missing, <command>openjade</command> doesn't exit with an error, but dumps the
+source text on the console. These packages are required to build the Bochs HTML docs.
+<itemizedlist>
+  <listitem><para>DocBook version 4</para></listitem>
+  <listitem><para>DSSSL stylesheets</para></listitem>
+</itemizedlist>
+Linux distributions may use different names for these packages.
 </para>
 </section>
 
