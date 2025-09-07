@@ -248,6 +248,7 @@ struct gf_channel
 
   Bit32u gdi_operation;
   Bit32u gdi_color_fmt;
+  Bit32u gdi_mono_fmt;
   Bit32u gdi_clip_yx0;
   Bit32u gdi_clip_yx1;
   Bit32u gdi_rect_color;

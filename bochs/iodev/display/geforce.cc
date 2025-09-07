@@ -2394,7 +2394,8 @@ void bx_geforce_c::gdi_blit(gf_channel* ch, Bit32u type)
       if (x >= clipx0 && x < clipx1 && y >= clipy0 && y < clipy1) {
         Bit32u word_offset = bit_index / 32;
         Bit32u bit_offset = bit_index % 32;
-        bit_offset = (bit_offset & 24) | (7 - (bit_offset & 7));
+        if (ch->gdi_mono_fmt == 1)
+          bit_offset ^= 7;
         bool pixel = (ch->gdi_words[word_offset] >> bit_offset) & 1;
         if (type || (!type && pixel)) {
           Bit32u dstcolor = get_pixel(ch->s2d_img_dst,
@@ -3851,6 +3852,8 @@ void bx_geforce_c::execute_gdi(gf_channel* ch, Bit32u method, Bit32u param)
     ch->gdi_operation = param;
   else if (method == 0x0c0)
     ch->gdi_color_fmt = param;
+  else if (method == 0x0c1)
+    ch->gdi_mono_fmt = param;
   else if (method == 0x0ff)
     ch->gdi_rect_color = param;
   else if (method >= 0x100 && method < 0x140) {
@@ -3871,7 +3874,11 @@ void bx_geforce_c::execute_gdi(gf_channel* ch, Bit32u method, Bit32u param)
       gdi_fillrect(ch, true);
     } else
       ch->gdi_rect_yx0 = param;
-  } else if (method == 0x1fd)
+  } else if (method == 0x1fb)
+    ch->gdi_clip_yx0 = param;
+  else if (method == 0x1fc)
+    ch->gdi_clip_yx1 = param;
+  else if (method == 0x1fd)
     ch->gdi_fg_color = param;
   else if (method == 0x1fe)
     ch->gdi_image_swh = param;
@@ -4650,7 +4657,12 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
         word1 = (word1 & 0xFFF00000) | (ch->schs[subc].notifier >> 4);
       Bit32u word0 = ramin_read32(ch->schs[subc].object);
       Bit8u cls8 = word0;
-      if (cls8 == 0x62) {
+      if (cls8 == 0x4a) {
+        if (BX_GEFORCE_THIS card_type < 0x40)
+          word1 = (word1 & 0xFFFFFFFC) | ch->gdi_mono_fmt;
+        else
+          word1 = (word1 & 0xFCFFFFFF) | (ch->gdi_mono_fmt << 24);
+      } else if (cls8 == 0x62) {
         if (BX_GEFORCE_THIS card_type < 0x40) {
           ramin_write32(ch->schs[subc].object + 0x8,
             (ch->s2d_img_src >> 4) |
@@ -4686,7 +4698,12 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
         ch->schs[subc].notifier = (word1 & 0xFFFFF) << 4;
       Bit32u word0 = ramin_read32(ch->schs[subc].object);
       Bit8u cls8 = word0;
-      if (cls8 == 0x62) {
+      if (cls8 == 0x4a) {
+        if (BX_GEFORCE_THIS card_type < 0x40)
+          ch->gdi_mono_fmt = word1 & 3;
+        else
+          ch->gdi_mono_fmt = (word1 >> 24) & 3;
+      } else if (cls8 == 0x62) {
         if (BX_GEFORCE_THIS card_type < 0x40) {
           Bit32u srcdst = ramin_read32(ch->schs[subc].object + 0x8);
           ch->s2d_img_src = (srcdst & 0xFFFF) << 4;
