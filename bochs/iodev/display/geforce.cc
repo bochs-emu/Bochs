@@ -300,6 +300,8 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS graph_notify = 0;
   BX_GEFORCE_THIS graph_fifo = 0;
   BX_GEFORCE_THIS graph_channel_ctx_table = 0;
+  BX_GEFORCE_THIS graph_offset0 = 0;
+  BX_GEFORCE_THIS graph_pitch0 = 0;
   BX_GEFORCE_THIS crtc_intr = 0;
   BX_GEFORCE_THIS crtc_intr_en = 0;
   BX_GEFORCE_THIS crtc_start = 0;
@@ -4075,6 +4077,7 @@ void bx_geforce_c::execute_ifc(gf_channel* ch, Bit32u method, Bit32u param)
 
 void bx_geforce_c::execute_surf2d(gf_channel* ch, Bit32u method, Bit32u param)
 {
+  ch->s2d_locked = true;
   if (method == 0x061)
     ch->s2d_img_src = param;
   else if (method == 0x062)
@@ -4702,7 +4705,7 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
         word1 = (word1 & 0xFFF00000) | (ch->schs[subc].notifier >> 4);
       Bit32u word0 = ramin_read32(ch->schs[subc].object);
       Bit8u cls8 = word0;
-      if (cls8 == 0x4a) {
+      if (cls8 == 0x4a || cls8 == 0x4b) {
         if (BX_GEFORCE_THIS card_type < 0x40)
           word1 = (word1 & 0xFFFFFFFC) | ch->gdi_mono_fmt;
         else
@@ -4743,7 +4746,20 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
         ch->schs[subc].notifier = (word1 & 0xFFFFF) << 4;
       Bit32u word0 = ramin_read32(ch->schs[subc].object);
       Bit8u cls8 = word0;
-      if (cls8 == 0x4a) {
+      if (cls8 == 0x48) {
+        // Hack for XFree86 4.3.0
+        if (!ch->s2d_locked) {
+          Bit32u srcdst = ramin_read32(ch->schs[subc].object + 0x8);
+          ch->s2d_img_src = (srcdst & 0xFFFF) << 4;
+          ch->s2d_img_dst = srcdst >> 16 << 4;
+          ch->s2d_color_fmt = 4;
+          ch->s2d_color_bytes = 2;
+          ch->s2d_pitch = BX_GEFORCE_THIS graph_pitch0 & 0xffff;
+          ch->s2d_pitch |= BX_GEFORCE_THIS graph_pitch0 << 16;
+          ch->s2d_ofs_src = BX_GEFORCE_THIS graph_offset0;
+          ch->s2d_ofs_dst = BX_GEFORCE_THIS graph_offset0;
+        }
+      } else if (cls8 == 0x4a || cls8 == 0x4b) {
         if (BX_GEFORCE_THIS card_type < 0x40)
           ch->gdi_mono_fmt = word1 & 3;
         else
@@ -4815,9 +4831,9 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
         execute_m2mf(ch, subc, method, param);
       else if (cls8 == 0x43)
         execute_rop(ch, method, param);
-      else if (cls8 == 0x44)
+      else if (cls8 == 0x44 || cls8 == 0x18)
         execute_patt(ch, method, param);
-      else if (cls8 == 0x4a)
+      else if (cls8 == 0x4a || cls8 == 0x4b)
         execute_gdi(ch, method, param);
       else if (cls8 == 0x52 || cls8 == 0x9e)
         execute_swzsurf(ch, method, param);
@@ -4825,7 +4841,7 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
         execute_chroma(ch, method, param);
       else if (cls8 == 0x5f || cls8 == 0x9f)
         execute_imageblit(ch, method, param);
-      else if (cls8 == 0x61 || cls8 == 0x65 || cls8 == 0x8a)
+      else if (cls8 == 0x61 || cls8 == 0x65 || cls8 == 0x8a || cls8 == 0x21)
         execute_ifc(ch, method, param);
       else if (cls8 == 0x62)
         execute_surf2d(ch, method, param);
@@ -5159,6 +5175,10 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS graph_fifo;
   } else if (address == 0x400780) {
     value = BX_GEFORCE_THIS graph_channel_ctx_table;
+  } else if (address == 0x400820 && BX_GEFORCE_THIS card_type == 0x20) {
+    value = BX_GEFORCE_THIS graph_offset0;
+  } else if (address == 0x400850 && BX_GEFORCE_THIS card_type == 0x20) {
+    value = BX_GEFORCE_THIS graph_pitch0;
   } else if (address == 0x600100) {
     value = BX_GEFORCE_THIS crtc_intr;
   } else if (address == 0x600140) {
@@ -5374,6 +5394,10 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS graph_fifo = value;
   } else if (address == 0x400780) {
     BX_GEFORCE_THIS graph_channel_ctx_table = value;
+  } else if (address == 0x400820 && BX_GEFORCE_THIS card_type == 0x20) {
+    BX_GEFORCE_THIS graph_offset0 = value;
+  } else if (address == 0x400850 && BX_GEFORCE_THIS card_type == 0x20) {
+    BX_GEFORCE_THIS graph_pitch0 = value;
   } else if (address == 0x600100) {
     BX_GEFORCE_THIS crtc_intr &= ~value;
     update_irq_level();
@@ -5441,13 +5465,18 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
       }
       offset = address & 0x1FF;
     }
-    if (offset == 0x40) {
-      Bit32u curchid = BX_GEFORCE_THIS fifo_cache1_push1 & 0x1F;
-      if (curchid == chid)
-        BX_GEFORCE_THIS fifo_cache1_dma_put = value;
-      else
-        ramfc_write32(chid, 0x0, value);
-      fifo_process(chid);
+    if ((BX_GEFORCE_THIS fifo_mode & (1 << chid)) != 0) {
+      if (offset == 0x40) {
+        Bit32u curchid = BX_GEFORCE_THIS fifo_cache1_push1 & 0x1F;
+        if (curchid == chid)
+          BX_GEFORCE_THIS fifo_cache1_dma_put = value;
+        else
+          ramfc_write32(chid, 0x0, value);
+        fifo_process(chid);
+      }
+    } else if (address >= 0x800000 && address < 0xA00000) {
+      Bit32u subc = (address >> 13) & 7;
+      execute_command(chid, subc, offset / 4, value);
     }
   } else {
     BX_GEFORCE_THIS unk_regs[address / 4] = value;
