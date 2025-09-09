@@ -190,6 +190,8 @@ struct gf_channel
   Bit32u d3d_shader_obj;
   Bit32u d3d_shader_offset;
   float d3d_scene_ambient_color[4];
+  Bit32u d3d_viewport_horizontal;
+  Bit32u d3d_viewport_vertical;
   float d3d_viewport_offset[4];
   float d3d_viewport_scale[4];
   Bit32u d3d_transform_program[544][4];
@@ -278,8 +280,11 @@ public:
   virtual void reset(unsigned type);
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height);
-  void redraw_area(Bit32s x0, Bit32s y0, Bit32u width, Bit32u height);
-  void redraw_area(Bit32u offset, Bit32u width, Bit32u height);
+  // doubled coordinates in low resolution modes
+  void redraw_area_d(Bit32s x0, Bit32s y0, Bit32u width, Bit32u height);
+  // not doubled coordinates in low resolution modes
+  void redraw_area_nd(Bit32s x0, Bit32s y0, Bit32u width, Bit32u height);
+  void redraw_area_nd(Bit32u offset, Bit32u width, Bit32u height);
   virtual Bit8u mem_read(bx_phy_address addr);
   virtual void mem_write(bx_phy_address addr, Bit8u value);
   virtual void get_text_snapshot(Bit8u **text_snapshot,
@@ -406,7 +411,7 @@ private:
   BX_GEFORCE_SMF void d3d_sample_texture(gf_channel* ch,
     Bit32u tex_unit, float s, float t, float r, float color[4]);
   BX_GEFORCE_SMF void d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[16][4]);
-  BX_GEFORCE_SMF void d3d_pixel_shader(gf_channel* ch, float in[16][4], float tmp_regs[64][4]);
+  BX_GEFORCE_SMF void d3d_pixel_shader(gf_channel* ch, float in[16][4], float tmp_regs16[64][4], float tmp_regs32[64][4]);
   static float d3d_blend(gf_channel* ch, Bit32u factor, float src_rgb, float src_a, float dst_rgb, float dst_a);
   BX_GEFORCE_SMF void d3d_triangle(gf_channel* ch, Bit32u base);
   BX_GEFORCE_SMF void d3d_process_vertex(gf_channel* ch);

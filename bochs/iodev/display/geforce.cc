@@ -421,19 +421,32 @@ void bx_geforce_c::after_restore_state(void)
 void bx_geforce_c::redraw_area(unsigned x0, unsigned y0,
                                unsigned width, unsigned height)
 {
-  redraw_area((Bit32s)x0, (Bit32s)y0, width, height);
+  redraw_area_d((Bit32s)x0, (Bit32s)y0, width, height);
 }
 
-void bx_geforce_c::redraw_area(Bit32u offset, Bit32u width, Bit32u height)
+void bx_geforce_c::redraw_area_nd(Bit32u offset, Bit32u width, Bit32u height)
 {
   if (BX_GEFORCE_THIS svga_pitch != 0) {
     Bit32u redraw_x = offset % BX_GEFORCE_THIS svga_pitch / (BX_GEFORCE_THIS svga_bpp >> 3);
     Bit32u redraw_y = offset / BX_GEFORCE_THIS svga_pitch;
-    BX_GEFORCE_THIS redraw_area(redraw_x, redraw_y, width, height);
+    BX_GEFORCE_THIS redraw_area_nd(redraw_x, redraw_y, width, height);
   }
 }
 
-void bx_geforce_c::redraw_area(Bit32s x0, Bit32s y0, Bit32u width, Bit32u height)
+void bx_geforce_c::redraw_area_nd(Bit32s x0, Bit32s y0, Bit32u width, Bit32u height)
+{
+  if (s.y_doublescan) {
+    y0 <<= 1;
+    height <<= 1;
+  }
+  if (BX_GEFORCE_THIS svga_double_width) {
+    x0 <<= 1;
+    width <<= 1;
+  }
+  BX_GEFORCE_THIS redraw_area_d(x0, y0, width, height);
+}
+
+void bx_geforce_c::redraw_area_d(Bit32s x0, Bit32s y0, Bit32u width, Bit32u height)
 {
   if (x0 + (Bit32s)width <= 0 || y0 + (Bit32s)height <= 0)
     return;
@@ -445,15 +458,6 @@ void bx_geforce_c::redraw_area(Bit32s x0, Bit32s y0, Bit32u width, Bit32u height
 
   if (BX_GEFORCE_THIS svga_needs_update_mode)
     return;
-
-  if (s.y_doublescan) {
-    y0 <<= 1;
-    height <<= 1;
-  }
-  if (BX_GEFORCE_THIS svga_double_width) {
-    x0 <<= 1;
-    width <<= 1;
-  }
 
   BX_GEFORCE_THIS svga_needs_update_tile = 1;
 
@@ -471,7 +475,7 @@ void bx_geforce_c::redraw_area(Bit32s x0, Bit32s y0, Bit32u width, Bit32u height
     yt1 = (BX_GEFORCE_THIS svga_yres - 1) / Y_TILESIZE;
   }
   if ((x0 + width) > BX_GEFORCE_THIS svga_xres) {
-    BX_GEFORCE_THIS redraw_area(0, y0 + 1, x0 + width - BX_GEFORCE_THIS svga_xres, height);
+    BX_GEFORCE_THIS redraw_area_d(0, y0 + 1, x0 + width - BX_GEFORCE_THIS svga_xres, height);
   }
   for (yti=yt0; yti<=yt1; yti++) {
     for (xti=xt0; xti<=xt1; xti++) {
@@ -505,6 +509,11 @@ bool bx_geforce_c::geforce_mem_read_handler(bx_phy_address addr, unsigned len,
     if (len == 1) {
       *(Bit8u*)data = register_read8(offset);
       BX_DEBUG(("MMIO read from 0x%08x, value 0x%02x", offset, *(Bit8u*)data));
+    } else if (len == 2) {
+      Bit16u value = register_read32(offset);
+      BX_DEBUG(("MMIO read from 0x%08x, value 0x%04x", offset, value));
+      *((Bit8u*)data + 0) = (value >> 0) & 0xFF;
+      *((Bit8u*)data + 1) = (value >> 8) & 0xFF;
     } else if (len == 4) {
       Bit32u value = register_read32(offset);
       BX_DEBUG(("MMIO read from 0x%08x, value 0x%08x", offset, value));
@@ -713,6 +722,10 @@ void bx_geforce_c::mem_write(bx_phy_address addr, Bit8u value)
     BX_GEFORCE_THIS svga_needs_update_tile = 1;
     x = (offset % BX_GEFORCE_THIS svga_pitch) / (BX_GEFORCE_THIS svga_bpp / 8);
     y = offset / BX_GEFORCE_THIS svga_pitch;
+    if (BX_GEFORCE_THIS s.y_doublescan)
+      y <<= 1;
+    if (BX_GEFORCE_THIS svga_double_width)
+      x <<= 1;
     SET_TILE_UPDATED(BX_GEFORCE_THIS, x / X_TILESIZE, y / Y_TILESIZE, 1);
   }
 }
@@ -1242,7 +1255,7 @@ void bx_geforce_c::update(void)
   }
 
   if (BX_GEFORCE_THIS svga_needs_update_dispentire) {
-    BX_GEFORCE_THIS redraw_area(0, 0, width, height);
+    BX_GEFORCE_THIS redraw_area_d(0, 0, width, height);
     BX_GEFORCE_THIS svga_needs_update_dispentire = 0;
   }
 
@@ -1723,7 +1736,7 @@ void bx_geforce_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
        BX_GEFORCE_THIS crtc.reg[0x2f] << 24;
     BX_GEFORCE_THIS hw_cursor.offset += BX_GEFORCE_THIS crtc_cursor_offset;
     if (prev_enabled != BX_GEFORCE_THIS hw_cursor.enabled) {
-      BX_GEFORCE_THIS redraw_area(BX_GEFORCE_THIS hw_cursor.x, BX_GEFORCE_THIS hw_cursor.y,
+      BX_GEFORCE_THIS redraw_area_nd(BX_GEFORCE_THIS hw_cursor.x, BX_GEFORCE_THIS hw_cursor.y,
         BX_GEFORCE_THIS hw_cursor.size, BX_GEFORCE_THIS hw_cursor.size);
     }
   }
@@ -2363,7 +2376,7 @@ void bx_geforce_c::gdi_fillrect(gf_channel* ch, bool clipped)
     }
     draw_offset += pitch;
   }
-  BX_GEFORCE_THIS redraw_area(redraw_offset, width, height);
+  BX_GEFORCE_THIS redraw_area_nd(redraw_offset, width, height);
 }
 
 void bx_geforce_c::gdi_blit(gf_channel* ch, Bit32u type)
@@ -2411,7 +2424,7 @@ void bx_geforce_c::gdi_blit(gf_channel* ch, Bit32u type)
     bit_index += swidth - dwidth;
     draw_offset += pitch;
   }
-  BX_GEFORCE_THIS redraw_area(redraw_offset, dwidth, height);
+  BX_GEFORCE_THIS redraw_area_nd(redraw_offset, dwidth, height);
 }
 
 void bx_geforce_c::ifc(gf_channel* ch)
@@ -2470,7 +2483,7 @@ void bx_geforce_c::ifc(gf_channel* ch)
     word_offset += swidth - dwidth;
     draw_offset += pitch;
   }
-  BX_GEFORCE_THIS redraw_area(redraw_offset, dwidth, height);
+  BX_GEFORCE_THIS redraw_area_nd(redraw_offset, dwidth, height);
 }
 
 void bx_geforce_c::iifc(gf_channel* ch)
@@ -2527,7 +2540,7 @@ void bx_geforce_c::iifc(gf_channel* ch)
     symbol_index += swidth - dwidth;
     draw_offset += pitch;
   }
-  BX_GEFORCE_THIS redraw_area(redraw_offset, dwidth, height);
+  BX_GEFORCE_THIS redraw_area_nd(redraw_offset, dwidth, height);
 }
 
 void bx_geforce_c::sifc(gf_channel* ch)
@@ -2580,7 +2593,7 @@ void bx_geforce_c::sifc(gf_channel* ch)
     symbol_offset_y = (sy >> 20) * swidth;
     draw_offset += pitch;
   }
-  BX_GEFORCE_THIS redraw_area(redraw_offset, dwidth, height);
+  BX_GEFORCE_THIS redraw_area_nd(redraw_offset, dwidth, height);
 }
 
 void bx_geforce_c::copyarea(gf_channel* ch)
@@ -2631,7 +2644,7 @@ void bx_geforce_c::copyarea(gf_channel* ch)
     src_offset += spitch * (1 - 2 * ydir);
     draw_offset += dpitch * (1 - 2 * ydir);
   }
-  BX_GEFORCE_THIS redraw_area(redraw_offset, width, height);
+  BX_GEFORCE_THIS redraw_area_nd(redraw_offset, width, height);
 }
 
 void bx_geforce_c::m2mf(gf_channel* ch)
@@ -2651,7 +2664,7 @@ void bx_geforce_c::m2mf(gf_channel* ch)
     Bit32u redraw_offset = dma_lin_lookup(ch->m2mf_dst, ch->m2mf_dst_offset) -
       BX_GEFORCE_THIS disp_offset;
     Bit32u width = ch->m2mf_line_length / (BX_GEFORCE_THIS svga_bpp >> 3);
-    BX_GEFORCE_THIS redraw_area(redraw_offset, width, ch->m2mf_line_count);
+    BX_GEFORCE_THIS redraw_area_nd(redraw_offset, width, ch->m2mf_line_count);
   }
 }
 
@@ -2767,7 +2780,7 @@ void bx_geforce_c::sifm(gf_channel* ch)
       src_offset += spitch;
       draw_offset += dpitch;
     }
-    BX_GEFORCE_THIS redraw_area(redraw_offset, dwidth, dheight);
+    BX_GEFORCE_THIS redraw_area_nd(redraw_offset, dwidth, dheight);
   }
 }
 
@@ -2792,7 +2805,7 @@ void bx_geforce_c::d3d_clear_surface(gf_channel* ch)
       }
       draw_offset += pitch;
     }
-    BX_GEFORCE_THIS redraw_area(redraw_offset, width, height);
+    BX_GEFORCE_THIS redraw_area_nd(redraw_offset, width, height);
   }
   if (ch->d3d_clear_surface & 0x00000001) {
     Bit32u pitch = d3d_get_surface_pitch_z(ch);
@@ -3143,11 +3156,13 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
         sca_result[comp_index] = params[2][comp_index];
     } else if (sca_op == 2 || // RCP
                sca_op == 3) { // RCC
+      float rcp = 1.0f / params[2][0];
       for (int comp_index = 0; comp_index < 4; comp_index++)
-        sca_result[comp_index] = 1.0f / params[2][comp_index];
+        sca_result[comp_index] = rcp;
     } else if (sca_op == 4) { // RSQ
+      float rsq = 1.0f / sqrt(fabs(params[2][0]));
       for (int comp_index = 0; comp_index < 4; comp_index++)
-        sca_result[comp_index] = 1.0f / sqrt(fabs(params[2][comp_index]));
+        sca_result[comp_index] = rsq;
     } else if (sca_op == 5) { // EXP
       float fl = floor(params[2][0]);
       sca_result[0] = exp2(fl);
@@ -3171,6 +3186,10 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
       sca_result[1] = tmpx;
       sca_result[2] = (tmpx > 0.0f) ? pow(tmpy, tmpw) : 0.0f;
       sca_result[3] = 1.0f;
+    } else if (sca_op == 0xe) { // EX2
+      float ex2 = exp2(params[2][0]);
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        sca_result[comp_index] = ex2;
     } else {
       for (int comp_index = 0; comp_index < 4; comp_index++)
         sca_result[comp_index] = 0.5f;
@@ -3244,7 +3263,8 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
   }
 }
 
-void bx_geforce_c::d3d_pixel_shader(gf_channel* ch, float in[16][4], float tmp_regs[64][4])
+void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
+  float in[16][4], float tmp_regs16[64][4], float tmp_regs32[64][4])
 {
   static bool unknown_opcode_reported = false;
   Bit32u ps_offset = ch->d3d_shader_offset;
@@ -3261,9 +3281,6 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch, float in[16][4], float tmp_r
     bool const_loaded = false;
     for (int p = 0; p < 3; p++) {
       Bit32u reg_type = src_words[p] & 3;
-      Bit32u swizzle[4];
-      for (int i = 0; i < 4; i++)
-        swizzle[i] = (src_words[p] >> (9 + i * 2)) & 3;
       if (reg_type == 2 && !const_loaded) {
         for (int comp_index = 0; comp_index < 4; comp_index++) {
           cnst[comp_index] = uint32_as_float(
@@ -3272,12 +3289,18 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch, float in[16][4], float tmp_r
         }
         const_loaded = true;
       }
+      Bit32u swizzle[4];
+      for (int i = 0; i < 4; i++)
+        swizzle[i] = (src_words[p] >> (9 + i * 2)) & 3;
       bool negate = (src_words[p] >> 17) & 1;
-      Bit32u tmp_index = (src_words[p] >> 2) & 0x3f;
       for (int comp_index = 0; comp_index < 4; comp_index++) {
         int comp_index_swizzle = swizzle[comp_index];
         if (reg_type == 0) {
-          params[p][comp_index] = tmp_regs[tmp_index][comp_index_swizzle];
+          Bit32u tmp_index = (src_words[p] >> 2) & 0x3f;
+          bool fp16 = (src_words[p] >> 8) & 1;
+          params[p][comp_index] = fp16 ?
+            tmp_regs16[tmp_index][comp_index_swizzle] :
+            tmp_regs32[tmp_index][comp_index_swizzle];
         } else if (reg_type == 1) {
           Bit32u in_index = (dst_word >> 13) & 0xf;
           params[p][comp_index] = in[in_index][comp_index_swizzle];
@@ -3355,6 +3378,9 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch, float in[16][4], float tmp_r
         dot += params[0][comp_index] * params[1][comp_index];
       for (int comp_index = 0; comp_index < 4; comp_index++)
         op_result[comp_index] = dot;
+    } else if (op == 0x3a) { // DIV
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        op_result[comp_index] = params[0][comp_index] / params[1][0];
     } else {
       for (int comp_index = 0; comp_index < 4; comp_index++)
         op_result[comp_index] = 0.5f;
@@ -3366,9 +3392,17 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch, float in[16][4], float tmp_r
     if (op != 0) {
       Bit32u mask = (dst_word >> 9) & 0xf;
       Bit32u dst_tmp_reg = (dst_word >> 1) & 0x3f;
+      static const float dst_scales[] = {1.0f, 2.0f, 4.0f, 8.0f, 1.0f, 0.5f, 0.25f, 0.125f};
+      Bit32u dst_scale = (src_words[1] >> 28) & 7;
+      bool dst_fp16 = (dst_word >> 7) & 1;
       for (int comp_index = 0; comp_index < 4; comp_index++) {
-        if ((mask & (1 << comp_index)) != 0)
-          tmp_regs[dst_tmp_reg][comp_index] = op_result[comp_index];
+        if ((mask & (1 << comp_index)) != 0) {
+          float scaled_result = op_result[comp_index] * dst_scales[dst_scale];
+          if (dst_fp16)
+            tmp_regs16[dst_tmp_reg][comp_index] = scaled_result;
+          else
+            tmp_regs32[dst_tmp_reg][comp_index] = scaled_result;
+        }
       }
     }
     if ((dst_word & 1) == 1)
@@ -3551,13 +3585,14 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
       dst_factor_alpha = ch->d3d_blend_func_dfactor >> 16;
     }
   }
-  ps_in[0][1] = draw_y1 + 0.5f;
-  for (Bit16u y = 0; y < draw_height; y++, ps_in[0][1]++) {
-    ps_in[0][0] = draw_x1 + 0.5f;
-    for (Bit16u x = 0; x < draw_width; x++, ps_in[0][0]++) {
-      float w0 = edge_function(vs_out[1][0], vs_out[2][0], ps_in[0]);
-      float w1 = edge_function(vs_out[2][0], vs_out[0][0], ps_in[0]);
-      float w2 = edge_function(vs_out[0][0], vs_out[1][0], ps_in[0]);
+  float xy[2];
+  xy[1] = draw_y1 + 0.5f;
+  for (Bit16u y = 0; y < draw_height; y++, xy[1]++) {
+    xy[0] = draw_x1 + 0.5f;
+    for (Bit16u x = 0; x < draw_width; x++, xy[0]++) {
+      float w0 = edge_function(vs_out[1][0], vs_out[2][0], xy);
+      float w1 = edge_function(vs_out[2][0], vs_out[0][0], xy);
+      float w2 = edge_function(vs_out[0][0], vs_out[1][0], xy);
       bool draw;
       if (clockwise)
         draw = w0 >= 0.0f && w1 >= 0.0f && w2 >= 0.0f;
@@ -3600,15 +3635,21 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
               }
             }
           }
-          float tmp_regs[64][4];
+          float tmp_regs16[64][4];
+          float tmp_regs32[64][4];
           for (int comp_index = 0; comp_index < 4; comp_index++)
-            tmp_regs[0][comp_index] = ps_in[1][comp_index];
-          if (ch->d3d_shader_obj != 0)
-            d3d_pixel_shader(ch, ps_in, tmp_regs);
-          float r = BX_MIN(BX_MAX(tmp_regs[0][0], 0.0f), 1.0f);
-          float g = BX_MIN(BX_MAX(tmp_regs[0][1], 0.0f), 1.0f);
-          float b = BX_MIN(BX_MAX(tmp_regs[0][2], 0.0f), 1.0f);
-          float a = BX_MIN(BX_MAX(tmp_regs[0][3], 0.0f), 1.0f);
+            tmp_regs16[0][comp_index] = ps_in[1][comp_index];
+          if (ch->d3d_shader_obj != 0) {
+            ps_in[0][0] = xy[0] - (Bit16s)(ch->d3d_window_offset & 0xffff);
+            ps_in[0][1] = (ch->d3d_viewport_vertical >> 16) - (xy[1] - (Bit16s)(ch->d3d_window_offset >> 16));
+            ps_in[0][2] = 0.0f;
+            ps_in[0][3] = 1.0f;
+            d3d_pixel_shader(ch, ps_in, tmp_regs16, tmp_regs32);
+          }
+          float r = BX_MIN(BX_MAX(tmp_regs16[0][0], 0.0f), 1.0f);
+          float g = BX_MIN(BX_MAX(tmp_regs16[0][1], 0.0f), 1.0f);
+          float b = BX_MIN(BX_MAX(tmp_regs16[0][2], 0.0f), 1.0f);
+          float a = BX_MIN(BX_MAX(tmp_regs16[0][3], 0.0f), 1.0f);
           if (ch->d3d_blend_enable) {
             float sr = r;
             float sg = g;
@@ -3676,7 +3717,7 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
     draw_offset += pitch;
     draw_offset_zeta += pitch_zeta;
   }
-  BX_GEFORCE_THIS redraw_area(redraw_offset, draw_width, draw_height);
+  BX_GEFORCE_THIS redraw_area_nd(redraw_offset, draw_width, draw_height);
 }
 
 void bx_geforce_c::d3d_process_vertex(gf_channel* ch)
@@ -4401,6 +4442,10 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       ch->d3d_shader_obj = ch->d3d_b_obj;
     else
       ch->d3d_shader_obj = 0;
+  } else if (method == 0x280 && cls >= 0x0497) {
+    ch->d3d_viewport_horizontal = param;
+  } else if (method == 0x281 && cls >= 0x0497) {
+    ch->d3d_viewport_vertical = param;
   } else if (method >= 0x284 && method <= 0x286) {
     Bit32u i = method & 0x003;
     ch->d3d_scene_ambient_color[i] = u.param_float;
@@ -5188,6 +5233,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
         value = BX_GEFORCE_THIS fifo_cache1_dma_get;
       else
         value = ramfc_read32(chid, 0x4);
+    } else if (offset == 0x10) {
+      value = 0xffff;
     } else if (offset >= 0x40 && offset <= 0x48) {
       if (curchid == chid) {
         if (offset == 0x40)
@@ -5357,9 +5404,9 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS hw_cursor.x = (Bit32s)BX_GEFORCE_THIS ramdac_cu_start_pos << 20 >> 20;
     BX_GEFORCE_THIS hw_cursor.y = (Bit32s)BX_GEFORCE_THIS ramdac_cu_start_pos << 4 >> 20;
     if (BX_GEFORCE_THIS hw_cursor.size != 0) {
-      BX_GEFORCE_THIS redraw_area(prevx, prevy,
+      BX_GEFORCE_THIS redraw_area_nd(prevx, prevy,
         BX_GEFORCE_THIS hw_cursor.size, BX_GEFORCE_THIS hw_cursor.size);
-      BX_GEFORCE_THIS redraw_area(BX_GEFORCE_THIS hw_cursor.x, BX_GEFORCE_THIS hw_cursor.y,
+      BX_GEFORCE_THIS redraw_area_nd(BX_GEFORCE_THIS hw_cursor.x, BX_GEFORCE_THIS hw_cursor.y,
         BX_GEFORCE_THIS hw_cursor.size, BX_GEFORCE_THIS hw_cursor.size);
     }
   } else if (address == 0x680508) {
