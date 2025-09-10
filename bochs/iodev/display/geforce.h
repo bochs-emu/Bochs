@@ -61,6 +61,7 @@ struct gf_channel
   bool notify_pending;
   Bit32u notify_type;
 
+  bool s2d_locked;
   Bit32u s2d_img_src;
   Bit32u s2d_img_dst;
   Bit32u s2d_color_fmt;
@@ -469,6 +470,8 @@ private:
   Bit32u graph_notify;
   Bit32u graph_fifo;
   Bit32u graph_channel_ctx_table;
+  Bit32u graph_offset0;
+  Bit32u graph_pitch0;
   Bit32u crtc_intr;
   Bit32u crtc_intr_en;
   Bit32u crtc_start;
