@@ -217,6 +217,7 @@ struct gf_channel
   Bit32u d3d_index_array_dma;
   Bit32u d3d_texture_offset[16];
   Bit32u d3d_texture_format[16];
+  Bit32u d3d_texture_address[16];
   Bit32u d3d_texture_control1[16];
   Bit32u d3d_texture_image_rect[16];
   Bit32u d3d_texture_control3[16];
@@ -410,7 +411,7 @@ private:
   BX_GEFORCE_SMF void d3d_clear_surface(gf_channel* ch);
   BX_GEFORCE_SMF void d3d_transform(gf_channel* ch, float v[4]);
   BX_GEFORCE_SMF void d3d_sample_texture(gf_channel* ch,
-    Bit32u tex_unit, float s, float t, float r, float color[4]);
+    Bit32u tex_unit, float str[3], float color[4]);
   BX_GEFORCE_SMF void d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[16][4]);
   BX_GEFORCE_SMF void d3d_pixel_shader(gf_channel* ch, float in[16][4], float tmp_regs16[64][4], float tmp_regs32[64][4]);
   static float d3d_blend(gf_channel* ch, Bit32u factor, float src_rgb, float src_a, float dst_rgb, float dst_a);
