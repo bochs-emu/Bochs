@@ -204,6 +204,7 @@ public:
   virtual Bit8u  mem_read(bx_phy_address addr);
   virtual void   mem_write(bx_phy_address addr, Bit8u value);
 
+  virtual void   refresh_display(void *this_ptr, bool redraw);
   virtual void   redraw_area(unsigned x0, unsigned y0,
                              unsigned width, unsigned height);
 

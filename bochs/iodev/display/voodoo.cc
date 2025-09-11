@@ -613,9 +613,28 @@ bool bx_voodoo_base_c::update(void)
       tile_ptr = bx_gui->get_snapshot_buffer();
       if (tile_ptr != NULL) {
         for (yc = 0; yc < iHeight; yc++) {
-          memcpy(tile_ptr, vid_ptr, info.pitch);
-          vid_ptr += pitch;
+          vid_ptr2  = vid_ptr;
+          tile_ptr2 = tile_ptr;
+          for (xc = 0; xc < iWidth; xc++) {
+            index = *(vid_ptr2);
+            index |= *(vid_ptr2 + 1) << 8;
+            colour = MAKE_COLOUR(
+              v->fbi.pen[index] & 0x0000ff, 8, info.blue_shift, info.blue_mask,
+              v->fbi.pen[index] & 0x00ff00, 16, info.green_shift, info.green_mask,
+              v->fbi.pen[index] & 0xff0000, 24, info.red_shift, info.red_mask);
+            *(tile_ptr2++) = (colour & 0xff);
+            *(tile_ptr2++) = (Bit8u)(colour >> 8);
+            if (!v->banshee.double_width || (xc & 1)) {
+              vid_ptr2 += 2;
+            }
+          }
+          if (!v->banshee.half_mode || (yc & 1)) {
+            vid_ptr += pitch;
+          }
           tile_ptr += info.pitch;
+        }
+        if (v->banshee.hwcursor.enabled) {
+          draw_hwcursor(0, 0, &info);
         }
       }
     } else if (info.is_indexed) {
