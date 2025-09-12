@@ -74,7 +74,7 @@ class bx_nonvga_device_c : public bx_pci_device_c {
 public:
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height) {}
-  virtual void refresh_display(void *this_ptr, bool redraw) {}
+  virtual void refresh_display(bool redraw) {}
   virtual bool update(void) {return false;}
   virtual Bit32u get_vtotal_usec(void) {return 0;}
 };
@@ -101,7 +101,7 @@ public:
                                  unsigned height);
   virtual void   redraw_area(unsigned x0, unsigned y0, unsigned width,
                              unsigned height);
-  virtual void   refresh_display(void *this_ptr, bool redraw);
+  virtual void   refresh_display(bool redraw);
   virtual void   get_text_snapshot(Bit8u **text_snapshot, unsigned *txHeight,
                                    unsigned *txWidth);
   virtual bool   init_vga_extension(void) {return 0;}

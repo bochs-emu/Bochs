@@ -2396,19 +2396,18 @@ void bx_vgacore_c::redraw_area(unsigned x0, unsigned y0, unsigned width, unsigne
   }
 }
 
-void bx_vgacore_c::refresh_display(void *this_ptr, bool redraw)
+void bx_vgacore_c::refresh_display(bool redraw)
 {
-  bx_vgacore_c *vgadev = (bx_vgacore_c *) this_ptr;
 #if BX_SUPPORT_PCI
-  if (vgadev->s.vga_override && (vgadev->s.nvgadev != NULL)) {
-    vgadev->s.nvgadev->refresh_display(vgadev->s.nvgadev, redraw);
+  if (BX_VGA_THIS s.vga_override && (BX_VGA_THIS s.nvgadev != NULL)) {
+    BX_VGA_THIS s.nvgadev->refresh_display(redraw);
     return;
   }
 #endif
   if (redraw) {
-    vga_redraw_area(0, 0, vgadev->s.last_xres, vgadev->s.last_yres);
+    vga_redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
   }
-  vga_timer_handler(vgadev);
+  vga_timer_handler(BX_VGA_THIS_PTR);
 }
 
 void bx_vgacore_c::vga_timer_handler(void *this_ptr)

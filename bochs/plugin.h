@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2024  The Bochs Project
+//  Copyright (C) 2002-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -215,8 +215,7 @@ extern "C" {
   (bx_devices.pluginVgaDevice->vga_redraw_area(left, top, right, bottom))
 #define DEV_vga_get_text_snapshot(rawsnap, height, width) \
   (bx_devices.pluginVgaDevice->get_text_snapshot(rawsnap, height, width))
-#define DEV_vga_refresh(a) \
-  (bx_devices.pluginVgaDevice->refresh_display(bx_devices.pluginVgaDevice,a))
+#define DEV_vga_refresh(a) (bx_devices.pluginVgaDevice->refresh_display(a))
 #define DEV_vga_set_override(a,b) (bx_devices.pluginVgaDevice->set_override(a,b))
 
 ///////// PCI macros

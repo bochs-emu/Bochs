@@ -3993,12 +3993,12 @@ void bx_voodoo_vga_c::after_restore_state(void)
   theVoodooDevice->after_restore_state();
 }
 
-void bx_voodoo_vga_c::refresh_display(void *this_ptr, bool redraw)
+void bx_voodoo_vga_c::refresh_display(bool redraw)
 {
   if ((v->banshee.io[io_vidProcCfg] & 0x81) == 0x81) {
-    bx_vgacore_c::refresh_display(this_ptr, redraw);
+    bx_vgacore_c::refresh_display(redraw);
   } else {
-    theVoodooDevice->refresh_display(theVoodooDevice, redraw);
+    theVoodooDevice->refresh_display(redraw);
   }
 }
 

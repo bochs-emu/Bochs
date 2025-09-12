@@ -530,12 +530,12 @@ void bx_voodoo_base_c::start_fifo_thread(void)
   bx_create_sem(&vertical_sem);
 }
 
-void bx_voodoo_base_c::refresh_display(void *this_ptr, bool redraw)
+void bx_voodoo_base_c::refresh_display(bool redraw)
 {
   if (redraw) {
     v->fbi.video_changed = 1;
   }
-  vertical_timer_handler(this_ptr);
+  vertical_timer_handler(this);
   update();
 }
 

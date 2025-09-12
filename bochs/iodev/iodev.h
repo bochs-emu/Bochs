@@ -315,7 +315,7 @@ public:
   virtual void set_override(bool enabled, void *dev) {
     STUBFUNC(vga, set_override);
   }
-  virtual void refresh_display(void *this_ptr, bool redraw) {
+  virtual void refresh_display(bool redraw) {
     STUBFUNC(vga, refresh_display);
   }
 };
