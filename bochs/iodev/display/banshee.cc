@@ -512,14 +512,11 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
                   y1 = y0 + y;
                 }
                 offset = v->fbi.lfb_base + (x1 & 127) + ((x1 >> 7) * 128 * 32) + ((y1 & 31) * 128) + (y1 >> 5) * pitch * 128 * 32;
-                index = v->fbi.ram[offset];
-                index |= (v->fbi.ram[offset + 1] << 8);
-              } else
-#endif
-              {
-                index = *(vid_ptr);
-                index |= *(vid_ptr + 1) << 8;
+                vid_ptr = &v->fbi.ram[offset & v->fbi.mask];
               }
+#endif
+              index = *(vid_ptr);
+              index |= *(vid_ptr + 1) << 8;
               if (overlay2d &&
                   (x >= v->banshee.overlay.x0) &&
                   (x <= v->banshee.overlay.x1) &&
@@ -766,10 +763,29 @@ bool bx_banshee_c::update(void)
                 x = x0 + (xc << 1);
                 y = y0 + yc;
                 offset = v->fbi.lfb_base + (x & 127) + ((x >> 7) * 128 * 32) + ((y & 31) * 128) + (y >> 5) * pitch * 128 * 32;
-                vid_ptr2 = &v->fbi.ram[offset];
+                vid_ptr2 = &v->fbi.ram[offset & v->fbi.mask];
               }
 #endif
-              memcpy(tile_ptr2, vid_ptr2, (bpp >> 3));
+              colour = *vid_ptr2;
+              if (bpp > 8) {
+                colour |= (*(vid_ptr2 + 1)) << 8;
+                if (bpp > 16) {
+                  colour |= (*(vid_ptr2 + 2)) << 16;
+                }
+              }
+              if (v->banshee.overlay.enabled &&
+                  (xc >= v->banshee.overlay.x0) &&
+                  (xc <= v->banshee.overlay.x1) &&
+                  (yc >= v->banshee.overlay.y0) &&
+                  (yc <= v->banshee.overlay.y1) &&
+                  chromakey_check(colour, bpp)) {
+                colour = get_overlay_pixel(xc, yc, bpp);
+                for (i = 0; i < info.bpp; i += 8) {
+                  *(tile_ptr2 + (i >> 3)) = (Bit8u)(colour >> i);
+                }
+              } else {
+                memcpy(tile_ptr2, vid_ptr2, (bpp >> 3));
+              }
               if (!v->banshee.double_width || (xc & 1)) {
                 vid_ptr2 += (bpp >> 3);
               }
@@ -908,14 +924,11 @@ bool bx_banshee_c::update(void)
                           y = y0 + yc + r;
                         }
                         offset = v->fbi.lfb_base + (x & 127) + ((x >> 7) * 128 * 32) + ((y & 31) * 128) + (y >> 5) * pitch * 128 * 32;
-                        index = v->fbi.ram[offset];
-                        index |= (v->fbi.ram[offset + 1] << 8);
-                      } else
-#endif
-                      {
-                        index = *(vid_ptr2);
-                        index |= *(vid_ptr2 + 1) << 8;
+                        vid_ptr2 = &v->fbi.ram[offset & v->fbi.mask];
                       }
+#endif
+                      index = *(vid_ptr2);
+                      index |= *(vid_ptr2 + 1) << 8;
                       if (v->banshee.overlay.enabled &&
                           ((xc + c) >= v->banshee.overlay.x0) &&
                           ((xc + c) <= v->banshee.overlay.x1) &&
@@ -3031,10 +3044,11 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
   bool patrow0 = (BLT.reg[blt_commandExtra] & 0x08) > 0;
   Bit8u colorkey_en = BLT.reg[blt_commandExtra] & 3;
   Bit8u *patcolor;
-  int ncols, nrows, dx, dy, x, y, sx, sy, w, h;
+  int ncols, nrows, dx, dy, x, sx, sy, w, h;
   Bit8u pmask = 0, rop = 0, patline;
   bool set;
 #ifdef BANSHEE_TILED_FB
+  int y;
   Bit32u soffset, doffset;
   Bit16u sx1, sy1, dx1, dy1;
 #endif
@@ -3063,7 +3077,9 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
     spitch *= -1;
     dpitch *= -1;
   }
+#ifdef BANSHEE_TILED_FB
   y = 0;
+#endif
   nrows = h;
   do {
     src_ptr1 = src_ptr;
@@ -3126,11 +3142,13 @@ void bx_banshee_c::blt_screen_to_screen_pattern()
     } while (--ncols);
     src_ptr += spitch;
     dst_ptr += dpitch;
+#ifdef BANSHEE_TILED_FB
     if (BLT.y_dir) {
       y--;
     } else {
       y++;
     }
+#endif
   } while (--nrows);
   blt_complete();
   BX_UNLOCK(render_mutex);

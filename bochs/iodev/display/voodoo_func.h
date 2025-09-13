@@ -2879,6 +2879,9 @@ Bit32u cmdfifo_calc_depth_needed(cmdfifo_info *f)
     case 5:
       needed = 2 + ((command >> 3) & 0x7ffff);
       break;
+    case 6:
+      needed = 4;
+      break;
     default:
       BX_ERROR(("CMDFIFO: unsupported packet type %d", type));
   }
