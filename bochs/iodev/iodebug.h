@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -30,8 +30,8 @@ public:
   virtual ~bx_iodebug_c() {}
   virtual void init(void);
   virtual void reset (unsigned type) {}
-  virtual void mem_write(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, void *data);
-  virtual void mem_read(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, void *data);
+  virtual void mem_write(void *cpu, bx_phy_address addr, unsigned len, void *data);
+  virtual void mem_read(void *cpu, bx_phy_address addr, unsigned len, void *data);
 
 private:
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);

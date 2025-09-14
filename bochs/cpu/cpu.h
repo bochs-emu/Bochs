@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -463,10 +463,10 @@ typedef void (BX_CPU_C::*BxRepIterationPtr_tR)(bxInstruction_c *) BX_CPP_AttrReg
 
 #if BX_SUPPORT_SMP
 // multiprocessor simulation, we need an array of cpus and memories
-BOCHSAPI extern BX_CPU_C **bx_cpu_array;
+extern BX_CPU_C **bx_cpu_array;
 #else
 // single processor simulation, so there's one of everything
-BOCHSAPI extern BX_CPU_C   bx_cpu;
+extern BX_CPU_C   bx_cpu;
 #endif
 
 // notify internal debugger/instrumentation about memory access
@@ -890,7 +890,7 @@ struct BxOpcodeInfo_t;
 struct bx_cpu_statistics;
 class bx_cpuid_t;
 
-class BOCHSAPI BX_CPU_C : public logfunctions {
+class BX_CPU_C : public logfunctions {
 public: // for now...
 
   unsigned bx_cpuid;

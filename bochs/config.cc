@@ -401,7 +401,9 @@ void bx_plugin_ctrl_reset(bool init_done)
   SIM->get_param_bool("gameport", base)->set(1);
 #endif
 #if BX_SUPPORT_IODEBUG && BX_DEBUGGER
-  SIM->get_param_bool("iodebug", base)->set(1);
+  if (bx_dbg.debugger_active) {
+    SIM->get_param_bool("iodebug", base)->set(1);
+  }
 #endif
   SIM->opt_plugin_ctrl("*", 1);
 }

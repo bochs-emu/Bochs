@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2018 Stanislav Shwartsman
+//   Copyright (c) 2003-2025 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -473,7 +473,7 @@ const Bit32u MXCSR_PM = 0x00001000;
 
 const Bit32u MXCSR_RESET = 0x00001F80;  /* reset value of the MXCSR register */
 
-struct BOCHSAPI bx_mxcsr_t
+struct bx_mxcsr_t
 {
   Bit32u mxcsr;
 

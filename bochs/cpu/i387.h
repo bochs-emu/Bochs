@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2004-2015 Stanislav Shwartsman
+//   Copyright (c) 2004-2025 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -45,7 +45,7 @@
 //
 // Minimal i387 structure
 //
-struct BOCHSAPI_MSVCONLY i387_t
+struct i387_t
 {
     i387_t() {}
 

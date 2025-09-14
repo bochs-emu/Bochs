@@ -95,10 +95,10 @@ typedef BX_CPU_C *BX_CPU_C_PTR;
 
 #if BX_SUPPORT_SMP
 // multiprocessor simulation, we need an array of cpus
-BOCHSAPI BX_CPU_C_PTR *bx_cpu_array = NULL;
+BX_CPU_C_PTR *bx_cpu_array = NULL;
 #else
 // single processor simulation, so there's one of everything
-BOCHSAPI BX_CPU_C bx_cpu;
+BX_CPU_C bx_cpu;
 #endif
 
 BOCHSAPI BX_MEM_C bx_mem;

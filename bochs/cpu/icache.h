@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007-2015 Stanislav Shwartsman
+//   Copyright (c) 2007-2025 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -119,7 +119,7 @@ static const bx_phy_address BX_ICACHE_INVALID_PHY_ADDRESS = bx_phy_address(-1);
 
 void flushSMC(bxICacheEntry_c *e);
 
-class BOCHSAPI bxICache_c {
+class bxICache_c {
 public:
   bxICacheEntry_c entry[BxICacheEntries];
   bxInstruction_c mpool[BxICacheMemPool];

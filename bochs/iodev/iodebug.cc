@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -28,7 +28,6 @@
 
 #if BX_SUPPORT_IODEBUG
 
-#include "cpu/cpu.h"
 #include "iodebug.h"
 
 #include "bx_debug/debug.h"
@@ -154,22 +153,22 @@ void bx_iodebug_c::write(Bit32u addr, Bit32u dvalue, unsigned io_len)
 
     case 0x8AE2:
       fprintf(stderr, "request made by the guest os to disable tracing, iodebug port 0x8A00->0x8AE2\n");
-      BX_CPU(dbg_cpu)->trace = 0;
+	  bx_dbg_trace_command(false);
       break;
 
     case 0x8AE3:
       fprintf(stderr, "request made by the guest os to enable tracing, iodebug port 0x8A00->0x8AE3\n");
-      BX_CPU(dbg_cpu)->trace = 1;
+      bx_dbg_trace_command(true);
       break;
 
     case 0x8AE4:
       fprintf(stderr, "request made by the guest os to disable register tracing, iodebug port 0x8A00->0x8AE4\n");
-      BX_CPU(dbg_cpu)->trace_reg = 0;
+      bx_dbg_trace_reg_command(false);
       break;
 
     case 0x8AE5:
       fprintf(stderr, "request made by the guest os to enable register tracing, iodebug port 0x8A00->0x8AE5\n");
-      BX_CPU(dbg_cpu)->trace_reg = 1;
+      bx_dbg_trace_reg_command(true);
       break;
 #endif
     case 0x8AFF:
@@ -184,7 +183,7 @@ void bx_iodebug_c::write(Bit32u addr, Bit32u dvalue, unsigned io_len)
 
 
 // Static function
-void bx_iodebug_c::mem_write(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, void *data)
+void bx_iodebug_c::mem_write(void *cpu, bx_phy_address addr, unsigned len, void *data)
 {
   if(! bx_iodebug_s.enabled) return;
 
@@ -195,6 +194,7 @@ void bx_iodebug_c::mem_write(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, v
     area--;
 
 #if BX_DEBUGGER
+/*
     if (cpu != NULL) {
       fprintf(stdout, "IODEBUG CPU %d @ eip: " FMT_ADDRX " write at monitored memory location " FMT_PHY_ADDRX "\n",
          cpu->bx_cpuid, cpu->get_instruction_pointer(), addr);
@@ -202,14 +202,17 @@ void bx_iodebug_c::mem_write(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, v
     else {
       fprintf(stdout, "IODEBUG write at monitored memory location " FMT_PHY_ADDRX "\n", addr);
     }
+*/
     bx_guard.interrupt_requested = true;
 #else
     fprintf(stderr, "IODEBUG write to monitored memory area: %2u\t", area);
 
+/*
     if (cpu != NULL)
       fprintf(stderr, "by EIP:\t\t" FMT_ADDRX "\n\t", cpu->get_instruction_pointer());
     else
       fprintf(stderr, "(device origin)\t");
+*/
 
     fprintf(stderr, "range start: \t\t" FMT_PHY_ADDRX "\trange end:\t" FMT_PHY_ADDRX "\n\taddress accessed:\t%08X\tdata written:\t",
             bx_iodebug_s.monitored_mem_areas_start[area],
@@ -247,7 +250,7 @@ void bx_iodebug_c::mem_write(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, v
   }
 }
 
-void bx_iodebug_c::mem_read(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, void *data)
+void bx_iodebug_c::mem_read(void *cpu, bx_phy_address addr, unsigned len, void *data)
 {
   if(! bx_iodebug_s.enabled) return;
 
@@ -258,6 +261,7 @@ void bx_iodebug_c::mem_read(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, vo
     area--;
 
 #if BX_DEBUGGER
+/*
     if (cpu != NULL) {
       fprintf(stdout, "IODEBUG CPU %d @ eip: " FMT_ADDRX " read at monitored memory location " FMT_PHY_ADDRX "\n",
         cpu->bx_cpuid, cpu->get_instruction_pointer(), addr);
@@ -265,14 +269,17 @@ void bx_iodebug_c::mem_read(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, vo
     else {
       fprintf(stdout, "IODEBUG read at monitored memory location " FMT_PHY_ADDRX "\n", addr);
     }
+*/
     bx_guard.interrupt_requested = true;
 #else
     fprintf(stderr, "IODEBUG read at monitored memory area: %2u\t", area);
 
+/*
     if (cpu != NULL)
       fprintf(stderr, "by EIP:\t\t" FMT_ADDRX "\n\t", cpu->get_instruction_pointer());
     else
       fprintf(stderr, "(device origin)\t");
+*/
 
     fprintf(stderr, "range start: \t\t" FMT_PHY_ADDRX "\trange end:\t" FMT_PHY_ADDRX "\n\taddress accessed:\t" FMT_PHY_ADDRX "\tdata written:\t",
             bx_iodebug_s.monitored_mem_areas_start[area],
