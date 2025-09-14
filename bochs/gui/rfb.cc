@@ -7,7 +7,7 @@
 //    Donald Becker
 //    http://www.psyon.org
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -94,6 +94,7 @@ IMPLEMENT_GUI_PLUGIN_CODE(rfb)
 #include <errno.h>
 #endif
 
+#define closesocket(s) close(s)
 typedef int SOCKET;
 #ifndef INVALID_SOCKET
 #define INVALID_SOCKET -1
@@ -181,8 +182,8 @@ bool StopWinsock();
 #endif
 void rfbStartThread();
 void HandleRfbClient(SOCKET sClient);
-int ReadExact(int sock, char *buf, int len);
-int WriteExact(int sock, char *buf, int len);
+int ReadExact(SOCKET sock, char *buf, int len);
+int WriteExact(SOCKET sock, char *buf, int len);
 void DrawBitmap(int x, int y, int width, int height, char *bmap, char fg,
         char bg, bool update_client);
 void DrawChar(int x, int y, int width, int height, int fontx, int fonty,
@@ -1190,9 +1191,9 @@ BX_THREAD_FUNC(rfbServerThreadInit, indata)
         if(sClient != INVALID_SOCKET) {
             HandleRfbClient(sClient);
             sGlobal = INVALID_SOCKET;
-            close(sClient);
+            closesocket(sClient);
         } else {
-            close(sClient);
+            closesocket(sClient);
         }
     }
 
@@ -1259,13 +1260,13 @@ void HandleRfbClient(SOCKET sClient)
   sim.serverPixelFormat.redMax     = htons(sim.serverPixelFormat.redMax);
   sim.serverPixelFormat.greenMax   = htons(sim.serverPixelFormat.greenMax);
   sim.serverPixelFormat.blueMax    = htons(sim.serverPixelFormat.blueMax);
-  sim.nameLength = strlen(rfbName);
+  sim.nameLength = (U32)strlen(rfbName);
   sim.nameLength = htonl(sim.nameLength);
   if(WriteExact(sClient, (char *)&sim, rfbServerInitMessageSize) < 0) {
     BX_ERROR(("could send server initialization message."));
     return;
   }
-  if(WriteExact(sClient, rfbName, strlen(rfbName)) < 0) {
+  if(WriteExact(sClient, rfbName, (int)strlen(rfbName)) < 0) {
     BX_ERROR (("could not send server name."));
     return;
   }
@@ -1467,7 +1468,7 @@ void HandleRfbClient(SOCKET sClient)
 * occurred (errno is set to ETIMEDOUT if it timed out).
 */
 
-int ReadExact(int sock, char *buf, int len)
+int ReadExact(SOCKET sock, char *buf, int len)
 {
     while (len > 0) {
       int n = recv(sock, buf, len, 0);
@@ -1487,7 +1488,7 @@ int ReadExact(int sock, char *buf, int len)
 * ETIMEDOUT if it timed out).
 */
 
-int WriteExact(int sock, char *buf, int len)
+int WriteExact(SOCKET sock, char *buf, int len)
 {
     while (len > 0) {
       int n = send(sock, buf, len,0);
@@ -1686,7 +1687,7 @@ void rfbSetStatusText(int element, const char *text, bool active, Bit8u color)
              newBits, fgcolor, bgcolor, 0);
 
   delete [] newBits;
-  len = ((element > 0) && (strlen(text) > 4)) ? 4 : strlen(text);
+  len = ((element > 0) && ((unsigned)strlen(text) > 4)) ? 4 : (unsigned)strlen(text);
   for (i = 0; i < len; i++) {
     DrawChar(xleft + i * 8 + 2, rfbWindowY - rfbStatusbarY + 5, 8, 8, 0, 0,
              (char *) &sdl_font8x8[(unsigned) text[i]][0], fgcolor, bgcolor, 0);
@@ -1707,7 +1708,7 @@ DWORD WINAPI rfbShowIPSthread(LPVOID)
 {
   MSG msg;
 
-  UINT TimerId = SetTimer(NULL, 0, 1000, &IPSTimerProc);
+  UINT TimerId = (UINT)SetTimer(NULL, 0, 1000, &IPSTimerProc);
   while (keep_alive && GetMessage(&msg, NULL, 0, 0)) {
     DispatchMessage(&msg);
   }

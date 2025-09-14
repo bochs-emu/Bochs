@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -250,7 +250,7 @@ const char* bx_dbg_symbolic_address(bx_address context, bx_address xip, bx_addre
     snprintf (buf, 80, "no symbol");
     return buf;
   }
-  snprintf (buf, 80, "%s+%x", entr->name, (base+xip) - entr->start);
+  snprintf (buf, 80, "%s+" FMT_ADDRX "", entr->name, (base+xip) - entr->start);
   return buf;
 }
 
@@ -304,7 +304,7 @@ int bx_dbg_symbol_command(const char* filename, bool global, bx_address offset)
 
   while (fgets(buf, sizeof(buf), fp)) {
     // handle end of line (before error messages)
-    int len = strlen(buf);
+    int len = (int)strlen(buf);
     bool whole_line = (buf[len - 1] == '\n');
     if (whole_line)
       buf[len - 1] = 0;

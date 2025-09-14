@@ -606,9 +606,9 @@ Bit32u bx_banshee_c::get_overlay_pixel(unsigned xc, unsigned yc, Bit8u bpp)
       V = data[2] - 0x80;
       Y[1] = data[3] - 0x10;
     }
-    r = Y[px] * 1.164383 + V * 1.596027;
-    g = Y[px] * 1.164383 - U * 0.391762 - V * 0.812968;
-    b = Y[px] * 1.164383 + U * 2.017232;
+    r = (Bit16s)(Y[px] * 1.164383 + V * 1.596027);
+    g = (Bit16s)(Y[px] * 1.164383 - U * 0.391762 - V * 0.812968);
+    b = (Bit16s)(Y[px] * 1.164383 + U * 2.017232);
     CLAMP(r, 0x00, 0xff);
     CLAMP(g, 0x00, 0xff);
     CLAMP(b, 0x00, 0xff);
@@ -2640,9 +2640,9 @@ Bit32u bx_banshee_c::blt_yuv_conversion(Bit8u *ptr, Bit16u xc, Bit16u yc,
     V = data[2] - 0x80;
     Y[1] = data[3] - 0x10;
   }
-  r = Y[px] * 1.164383 + V * 1.596027;
-  g = Y[px] * 1.164383 - U * 0.391762 - V * 0.812968;
-  b = Y[px] * 1.164383 + U * 2.017232;
+  r = (Bit16s)(Y[px] * 1.164383 + V * 1.596027);
+  g = (Bit16s)(Y[px] * 1.164383 - U * 0.391762 - V * 0.812968);
+  b = (Bit16s)(Y[px] * 1.164383 + U * 2.017232);
   CLAMP(r, 0x00, 0xff);
   CLAMP(g, 0x00, 0xff);
   CLAMP(b, 0x00, 0xff);
