@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -112,9 +112,9 @@ void bx_keyb_c::init(void)
   DEV_register_irq(12, "8042 Keyboard controller (PS/2 mouse)");
 
   DEV_register_ioread_handler(this, read_handler,
-                                      0x0060, "8042 Keyboard controller", 1);
+                                      0x0060, "8042 Keyboard controller", 7);
   DEV_register_ioread_handler(this, read_handler,
-                                      0x0064, "8042 Keyboard controller", 1);
+                                      0x0064, "8042 Keyboard controller", 7);
   DEV_register_iowrite_handler(this, write_handler,
                                       0x0060, "8042 Keyboard controller", 1);
   DEV_register_iowrite_handler(this, write_handler,
