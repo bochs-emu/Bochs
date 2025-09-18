@@ -73,6 +73,8 @@ struct gf_channel
   Bit32u swzs_img_obj;
   Bit32u swzs_fmt;
   Bit32u swzs_color_bytes;
+  Bit32u swzs_width;
+  Bit32u swzs_height;
   Bit32u swzs_ofs;
 
   bool ifc_color_key_enable;

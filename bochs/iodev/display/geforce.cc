@@ -2671,22 +2671,31 @@ void bx_geforce_c::m2mf(gf_channel* ch)
   }
 }
 
-Bit32u swizzle(Bit32u x, Bit32u y)
+Bit32u swizzle(Bit32u x, Bit32u y, Bit32u width, Bit32u height)
 {
-  Bit32u z = 0;
-  Bit32u bitx = 1;
-  Bit32u bity = 2;
-  while (x != 0 || y != 0) {
-    if ((x & 1) != 0)
-      z |= bitx;
-    if ((y & 1) != 0)
-      z |= bity;
-    x >>= 1;
-    y >>= 1;
-    bitx <<= 2;
-    bity <<= 2;
-  }
-  return z;
+  bool xleft = true;
+  bool yleft = true;
+  Bit32u xbit = 1;
+  Bit32u ybit = 1;
+  Bit32u rbit = 1;
+  Bit32u r = 0;
+  do {
+    if (xleft) {
+      if ((x & xbit) != 0)
+        r |= rbit;
+      rbit <<= 1;
+      xbit <<= 1;
+      xleft = xbit < width;
+    }
+    if (yleft) {
+      if ((y & ybit) != 0)
+        r |= rbit;
+      rbit <<= 1;
+      ybit <<= 1;
+      yleft = ybit < height;
+    }
+  } while (xleft || yleft);
+  return r;
 }
 
 void bx_geforce_c::tfc(gf_channel* ch)
@@ -2712,7 +2721,8 @@ void bx_geforce_c::tfc(gf_channel* ch)
             srccolor = tfc_words16[word_offset];
           }
           put_pixel_swzs(ch, ch->swzs_ofs +
-            swizzle(x + dx, y + dy) * ch->swzs_color_bytes, srccolor);
+            swizzle(x + dx, y + dy, ch->swzs_width, ch->swzs_height) *
+            ch->swzs_color_bytes, srccolor);
         }
         word_offset++;
       }
@@ -2760,7 +2770,8 @@ void bx_geforce_c::sifm(gf_channel* ch)
       for (Bit16u x = 0; x < dwidth; x++) {
         Bit32u srccolor = get_pixel(ch->sifm_src, src_offset, x, ch->sifm_color_bytes);
         put_pixel_swzs(ch, ch->swzs_ofs +
-          swizzle(x + dx, y + dy) * ch->swzs_color_bytes, srccolor);
+          swizzle(x + dx, y + dy, ch->swzs_width, ch->swzs_height) *
+          ch->swzs_color_bytes, srccolor);
       }
       src_offset += spitch;
     }
@@ -2886,7 +2897,8 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
       format_color == 0x83 || // A4R4G4B4
       format_color == 0x84)   // R5G6B5
     color_bytes = 2;
-  else if (format_color == 0x07 || // X8R8G8B8
+  else if (format_color == 0x06 || // A8R8G8B8
+           format_color == 0x07 || // X8R8G8B8
            format_color == 0x12 || // A8R8G8B8
            format_color == 0x85)   // A8R8G8B8
     color_bytes = 4;
@@ -2958,7 +2970,7 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
       pitch = sizes[0] * color_bytes;
     ofs += xy[1] * pitch + xy[0] * color_bytes;
   } else
-    ofs += swizzle(xy[0], xy[1]) * color_bytes;
+    ofs += swizzle(xy[0], xy[1], sizes[0], sizes[1]) * color_bytes;
   Bit32u location = format & 3;
   Bit32u dma_obj = location == 1 ? ch->d3d_a_obj : ch->d3d_b_obj;
   if (format_color == 0x04 || format_color == 0x83) { // A4R4G4B4
@@ -2985,7 +2997,9 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
     color[1] = ((value >> 5) & 0x1f) / 31.0f;
     color[2] = ((value >> 0) & 0x1f) / 31.0f;
     color[3] = 1.0f;
-  } else if (format_color == 0x12 || format_color == 0x85) { // A8R8G8B8
+  } else if (format_color == 0x06 ||
+             format_color == 0x12 ||
+             format_color == 0x85) { // A8R8G8B8
     Bit32u value = dma_read32(dma_obj, ofs);
     color[0] = ((value >> 16) & 0xff) / 255.0f;
     color[1] = ((value >> 8) & 0xff) / 255.0f;
@@ -4062,6 +4076,8 @@ void bx_geforce_c::execute_swzsurf(gf_channel* ch, Bit32u method, Bit32u param)
     ch->swzs_img_obj = param;
   else if (method == 0x0c0) {
     ch->swzs_fmt = param;
+    ch->swzs_width = 1 << ((param >> 16) & 0xff);
+    ch->swzs_height = 1 << (param >> 24);
     Bit32u color_fmt = param & 0xffff;
     if (color_fmt == 1)          // Y8
       ch->swzs_color_bytes = 1;
