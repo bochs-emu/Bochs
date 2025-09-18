@@ -194,22 +194,19 @@ void bx_iodebug_c::mem_write(void *cpu, bx_phy_address addr, unsigned len, void 
     area--;
 
 #if BX_DEBUGGER
-/*
     if (cpu != NULL) {
       fprintf(stdout, "IODEBUG CPU %d @ eip: " FMT_ADDRX " write at monitored memory location " FMT_PHY_ADDRX "\n",
-         cpu->bx_cpuid, cpu->get_instruction_pointer(), addr);
-    }
-    else {
+         bx_dbg_get_cpu_id(cpu), bx_dbg_get_instruction_pointer(cpu), addr);
+    } else {
       fprintf(stdout, "IODEBUG write at monitored memory location " FMT_PHY_ADDRX "\n", addr);
     }
-*/
     bx_guard.interrupt_requested = true;
 #else
     fprintf(stderr, "IODEBUG write to monitored memory area: %2u\t", area);
 
 /*
     if (cpu != NULL)
-      fprintf(stderr, "by EIP:\t\t" FMT_ADDRX "\n\t", cpu->get_instruction_pointer());
+      fprintf(stderr, "by EIP:\t\t" FMT_ADDRX "\n\t", bx_dbg_get_instruction_pointer(cpu));
     else
       fprintf(stderr, "(device origin)\t");
 */
@@ -261,22 +258,19 @@ void bx_iodebug_c::mem_read(void *cpu, bx_phy_address addr, unsigned len, void *
     area--;
 
 #if BX_DEBUGGER
-/*
     if (cpu != NULL) {
       fprintf(stdout, "IODEBUG CPU %d @ eip: " FMT_ADDRX " read at monitored memory location " FMT_PHY_ADDRX "\n",
-        cpu->bx_cpuid, cpu->get_instruction_pointer(), addr);
-    }
-    else {
+        bx_dbg_get_cpu_id(cpu), bx_dbg_get_instruction_pointer(cpu), addr);
+    } else {
       fprintf(stdout, "IODEBUG read at monitored memory location " FMT_PHY_ADDRX "\n", addr);
     }
-*/
     bx_guard.interrupt_requested = true;
 #else
     fprintf(stderr, "IODEBUG read at monitored memory area: %2u\t", area);
 
 /*
     if (cpu != NULL)
-      fprintf(stderr, "by EIP:\t\t" FMT_ADDRX "\n\t", cpu->get_instruction_pointer());
+      fprintf(stderr, "by EIP:\t\t" FMT_ADDRX "\n\t", bx_dbg_get_instruction_pointer(cpu));
     else
       fprintf(stderr, "(device origin)\t");
 */

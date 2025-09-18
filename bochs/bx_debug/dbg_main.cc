@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -134,6 +134,18 @@ bx_watchpoint write_watchpoint[BX_DBG_MAX_WATCHPONTS];
 bx_watchpoint read_watchpoint[BX_DBG_MAX_WATCHPONTS];
 
 #define DBG_PRINTF_BUFFER_LEN 1024
+
+#if BX_SUPPORT_IODEBUG
+unsigned bx_dbg_get_cpu_id(void *cpu)
+{
+  return ((BX_CPU_C*)cpu)->bx_cpuid;
+}
+
+bx_address bx_dbg_get_instruction_pointer(void *cpu)
+{
+  return ((BX_CPU_C*)cpu)->get_instruction_pointer();
+}
+#endif
 
 void dbg_printf(const char *fmt, ...)
 {

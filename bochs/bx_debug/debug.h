@@ -36,6 +36,11 @@ Bit32u crc32(const Bit8u *buf, int len);
 
 extern Bit32u dbg_cpu;
 
+#if BX_SUPPORT_IODEBUG
+BOCHSAPI unsigned bx_dbg_get_cpu_id(void *cpu);
+BOCHSAPI bx_address bx_dbg_get_instruction_pointer(void *cpu);
+#endif
+
 BOCHSAPI void dbg_printf(const char *fmt, ...);
 
 typedef enum
