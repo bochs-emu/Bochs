@@ -32,9 +32,7 @@
 
 #include "bx_debug/debug.h"
 
-#define BX_IODEBUG_THIS this->
-
-#define BX_IODEBUG_MAX_AREAS 30
+#define LOG_THIS theIODebugDevice->
 
 bx_iodebug_c *theIODebugDevice = NULL;
 
@@ -52,6 +50,8 @@ PLUGIN_ENTRY_FOR_MODULE(iodebug)
   }
   return(0); // Success
 }
+
+#define BX_IODEBUG_MAX_AREAS 30
 
 struct bx_iodebug_s_type {
   bool enabled;
@@ -147,18 +147,26 @@ void bx_iodebug_c::write(Bit32u addr, Bit32u dvalue, unsigned io_len)
 
 #if BX_DEBUGGER
     case 0x8AE0:
-      fprintf(stderr, "request return to dbg prompt received, 0x8AE0 command (iodebug)\n");
-      bx_guard.interrupt_requested = true;
+      if (bx_dbg.debugger_active) {
+        dbg_printf("request return to dbg prompt received, 0x8AE0 command (iodebug)\n");
+        bx_guard.interrupt_requested = true;
+      } else {
+        BX_ERROR(("Debugger inactive - prompt not enabled"));
+      }
       break;
 
     case 0x8AE2:
-      fprintf(stderr, "request made by the guest os to disable tracing, iodebug port 0x8A00->0x8AE2\n");
-	  bx_dbg_trace_command(false);
+      dbg_printf("request made by the guest os to disable tracing, iodebug port 0x8A00->0x8AE2\n");
+      bx_dbg_trace_command(false);
       break;
 
     case 0x8AE3:
-      fprintf(stderr, "request made by the guest os to enable tracing, iodebug port 0x8A00->0x8AE3\n");
-      bx_dbg_trace_command(true);
+      if (bx_dbg.debugger_active) {
+        dbg_printf("request made by the guest os to enable tracing, iodebug port 0x8A00->0x8AE3\n");
+        bx_dbg_trace_command(true);
+      } else {
+        BX_ERROR(("Debugger inactive - tracing not enabled"));
+      }
       break;
 
     case 0x8AE4:
@@ -167,8 +175,12 @@ void bx_iodebug_c::write(Bit32u addr, Bit32u dvalue, unsigned io_len)
       break;
 
     case 0x8AE5:
-      fprintf(stderr, "request made by the guest os to enable register tracing, iodebug port 0x8A00->0x8AE5\n");
-      bx_dbg_trace_reg_command(true);
+      if (bx_dbg.debugger_active) {
+        dbg_printf("request made by the guest os to enable register tracing, iodebug port 0x8A00->0x8AE5\n");
+        bx_dbg_trace_reg_command(true);
+      } else {
+        BX_ERROR(("Debugger inactive - register tracing not enabled"));
+      }
       break;
 #endif
     case 0x8AFF:
@@ -189,32 +201,36 @@ void bx_iodebug_c::mem_write(void *cpu, bx_phy_address addr, unsigned len, void 
 
   unsigned area = bx_iodebug_c::range_test(addr, len);
   // Device is enabled, testing address ranges
-  if(area)
+  if (area)
   {
     area--;
 
 #if BX_DEBUGGER
-    if (cpu != NULL) {
-      fprintf(stdout, "IODEBUG CPU %d @ eip: " FMT_ADDRX " write at monitored memory location " FMT_PHY_ADDRX "\n",
-         bx_dbg_get_cpu_id(cpu), bx_dbg_get_instruction_pointer(cpu), addr);
-    } else {
-      fprintf(stdout, "IODEBUG write at monitored memory location " FMT_PHY_ADDRX "\n", addr);
-    }
-    bx_guard.interrupt_requested = true;
-#else
-    fprintf(stderr, "IODEBUG write to monitored memory area: %2u\t", area);
+    if (bx_dbg.debugger_active) {
+      if (cpu != NULL) {
+        dbg_printf("IODEBUG CPU %d @ eip: " FMT_ADDRX " write at monitored memory location " FMT_PHY_ADDRX "\n",
+                   bx_dbg_get_cpu_id(cpu), bx_dbg_get_instruction_pointer(cpu), addr);
+      } else {
+        dbg_printf("IODEBUG write at monitored memory location " FMT_PHY_ADDRX "\n", addr);
+      }
+      bx_guard.interrupt_requested = true;
+    } else
+#endif
+    {
+      fprintf(stderr, "IODEBUG write to monitored memory area: %2u\t", area);
 
 /*
-    if (cpu != NULL)
-      fprintf(stderr, "by EIP:\t\t" FMT_ADDRX "\n\t", bx_dbg_get_instruction_pointer(cpu));
-    else
-      fprintf(stderr, "(device origin)\t");
+      if (cpu != NULL)
+        fprintf(stderr, "by EIP:\t\t" FMT_ADDRX "\n\t", bx_dbg_get_instruction_pointer(cpu));
+      else
+        fprintf(stderr, "(device origin)\t");
 */
 
-    fprintf(stderr, "range start: \t\t" FMT_PHY_ADDRX "\trange end:\t" FMT_PHY_ADDRX "\n\taddress accessed:\t%08X\tdata written:\t",
-            bx_iodebug_s.monitored_mem_areas_start[area],
-            bx_iodebug_s.monitored_mem_areas_end[area],
-            (unsigned) addr);
+      fprintf(stderr, "range start: \t\t" FMT_PHY_ADDRX "\trange end:\t" FMT_PHY_ADDRX "\n\taddress accessed:\t" FMT_PHY_ADDRX "\tdata written:\t",
+              bx_iodebug_s.monitored_mem_areas_start[area],
+              bx_iodebug_s.monitored_mem_areas_end[area],
+              addr);
+    }
 
     switch(len)
     {
@@ -243,7 +259,6 @@ void bx_iodebug_c::mem_write(void *cpu, bx_phy_address addr, unsigned len, void 
       default:
         fprintf(stderr, "unsupported write size\n");
     }
-#endif
   }
 }
 
@@ -253,32 +268,36 @@ void bx_iodebug_c::mem_read(void *cpu, bx_phy_address addr, unsigned len, void *
 
   unsigned area = bx_iodebug_c::range_test(addr, len);
   // Device is enabled, testing address ranges
-  if(area)
+  if (area)
   {
     area--;
 
 #if BX_DEBUGGER
-    if (cpu != NULL) {
-      fprintf(stdout, "IODEBUG CPU %d @ eip: " FMT_ADDRX " read at monitored memory location " FMT_PHY_ADDRX "\n",
-        bx_dbg_get_cpu_id(cpu), bx_dbg_get_instruction_pointer(cpu), addr);
-    } else {
-      fprintf(stdout, "IODEBUG read at monitored memory location " FMT_PHY_ADDRX "\n", addr);
-    }
-    bx_guard.interrupt_requested = true;
-#else
-    fprintf(stderr, "IODEBUG read at monitored memory area: %2u\t", area);
+    if (bx_dbg.debugger_active) {
+      if (cpu != NULL) {
+        dbg_printf("IODEBUG CPU %d @ eip: " FMT_ADDRX " read at monitored memory location " FMT_PHY_ADDRX "\n",
+                   bx_dbg_get_cpu_id(cpu), bx_dbg_get_instruction_pointer(cpu), addr);
+      } else {
+        dbg_printf("IODEBUG read at monitored memory location " FMT_PHY_ADDRX "\n", addr);
+      }
+      bx_guard.interrupt_requested = true;
+    } else
+#endif
+    {
+      fprintf(stderr, "IODEBUG read at monitored memory area: %2u\t", area);
 
 /*
-    if (cpu != NULL)
-      fprintf(stderr, "by EIP:\t\t" FMT_ADDRX "\n\t", bx_dbg_get_instruction_pointer(cpu));
-    else
-      fprintf(stderr, "(device origin)\t");
+      if (cpu != NULL)
+        fprintf(stderr, "by EIP:\t\t" FMT_ADDRX "\n\t", bx_dbg_get_instruction_pointer(cpu));
+      else
+        fprintf(stderr, "(device origin)\t");
 */
 
-    fprintf(stderr, "range start: \t\t" FMT_PHY_ADDRX "\trange end:\t" FMT_PHY_ADDRX "\n\taddress accessed:\t" FMT_PHY_ADDRX "\tdata written:\t",
-            bx_iodebug_s.monitored_mem_areas_start[area],
-            bx_iodebug_s.monitored_mem_areas_end[area],
-            (unsigned) addr);
+      fprintf(stderr, "range start: \t\t" FMT_PHY_ADDRX "\trange end:\t" FMT_PHY_ADDRX "\n\taddress accessed:\t" FMT_PHY_ADDRX "\tdata written:\t",
+              bx_iodebug_s.monitored_mem_areas_start[area],
+              bx_iodebug_s.monitored_mem_areas_end[area],
+              addr);
+    }
 
     switch(len)
     {
@@ -307,7 +326,6 @@ void bx_iodebug_c::mem_read(void *cpu, bx_phy_address addr, unsigned len, void *
       default:
         fprintf(stderr, "unsupported read size\n");
     }
-#endif
   }
 }
 
