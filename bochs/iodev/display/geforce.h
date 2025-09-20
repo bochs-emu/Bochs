@@ -132,6 +132,8 @@ struct gf_channel
   Bit32u tfc_words_ptr;
   Bit32u tfc_words_left;
   Bit32u* tfc_words;
+  bool tfc_upload;
+  Bit32u tfc_upload_offset;
 
   Bit32u sifm_src;
   bool sifm_swizzled;
@@ -180,7 +182,9 @@ struct gf_channel
   Bit32u d3d_blend_func_dfactor;
   Bit32u d3d_cull_face_enable;
   Bit32u d3d_depth_test_enable;
+  Bit32u d3d_depth_write_enable;
   Bit32u d3d_lighting_enable;
+  Bit32u d3d_depth_func;
   Bit32u d3d_shade_mode;
   float d3d_clip_min;
   float d3d_clip_max;
@@ -224,6 +228,7 @@ struct gf_channel
   Bit32u d3d_texture_control0[16];
   Bit32u d3d_texture_control1[16];
   Bit32u d3d_texture_image_rect[16];
+  Bit32u d3d_texture_palette[16];
   Bit32u d3d_texture_control3[16];
   Bit32u d3d_semaphore_obj;
   Bit32u d3d_semaphore_offset;
