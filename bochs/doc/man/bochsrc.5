@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "3 Aug 2025" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "23 Sep 2025" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -295,8 +295,8 @@ at startup if existing and saved on exit if modified. The Bochs BIOS doesn't
 use this feature yet.
 
 .B NOTE:
-If you use a SeaBIOS binary in romimage BIOS option, you must use a PCI
-enabled VGA ROM BIOS.
+If you use a SeaBIOS binary in romimage BIOS option, you must use a VGA
+compatible PCI graphics adapter (ISA and AGP are not supported).
 
 Examples:
   romimage: file=bios/BIOS-bochs-latest, options=fastboot

@@ -3622,8 +3622,8 @@ startup if existing and saved on exit if modified. The Bochs BIOS doesn't
 this feature yet.
 </para>
 <note><para>
-  If you use a SeaBIOS binary in romimage BIOS option, you must use a PCI
-  enabled VGA ROM BIOS.
+  If you use a SeaBIOS binary in romimage BIOS option, you must use a VGA
+  compatible PCI graphics adapter (ISA and AGP are not supported).
 </para></note>
 </section>
 
