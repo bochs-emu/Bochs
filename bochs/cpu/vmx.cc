@@ -2657,6 +2657,11 @@ void BX_CPU_C::VMexitLoadHostState(void)
   if (x86_64_host)
      BX_DEBUG(("VMEXIT to x86-64 host"));
 
+  if (long64_mode() && !x86_64_host) {
+    BX_ERROR(("VMABORT: VMEXIT to 32-bit host from 64-bit guest !"));
+    VMabort(VMABORT_VMEXIT_TO_32BIT_HOST_FROM_64BIT_GUEST);
+  }
+
 #if BX_SUPPORT_VMX >= 2
   // modify EFER.LMA / EFER.LME before setting CR4
   if (vm->vmexit_ctrls1.LOAD_EFER_MSR()) {
