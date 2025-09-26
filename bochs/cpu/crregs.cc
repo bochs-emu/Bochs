@@ -987,7 +987,7 @@ bx_address BX_CPU_C::read_CR4(void)
 }
 #endif
 
-bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR0(bx_address cr0_val)
+bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR0(bx_address cr0_val, bool vmenter)
 {
   bx_cr0_t temp_cr0;
 
@@ -1023,7 +1023,8 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR0(bx_address cr0_val)
       BX_ERROR(("check_CR0(0x%08x): attempt to clear CR0.NE in vmx mode !", temp_cr0.get32()));
       return false;
     }
-    if (!BX_CPU_THIS_PTR in_vmx_guest || (BX_CPU_THIS_PTR in_vmx_guest && !BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.UNRESTRICTED_GUEST())) {
+    bool vmx_guest = BX_CPU_THIS_PTR in_vmx_guest || vmenter;
+    if (!vmx_guest || (vmx_guest && !BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.UNRESTRICTED_GUEST())) {
       if (!temp_cr0.get_PE() || !temp_cr0.get_PG()) {
         BX_ERROR(("check_CR0(0x%08x): attempt to clear CR0.PE/CR0.PG in vmx mode !", temp_cr0.get32()));
         return false;

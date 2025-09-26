@@ -4778,7 +4778,7 @@ public: // for now...
   BX_SMF int  int_number(unsigned s);
 
   BX_SMF bool SetCR0(bxInstruction_c *i, bx_address val);
-  BX_SMF bool check_CR0(bx_address val) BX_CPP_AttrRegparmN(1);
+  BX_SMF bool check_CR0(bx_address val, bool vmenter = false) BX_CPP_AttrRegparmN(1);
   BX_SMF bool SetCR3(bx_address val) BX_CPP_AttrRegparmN(1);
 #if BX_CPU_LEVEL >= 5
   BX_SMF bool SetCR4(bxInstruction_c *i, bx_address val);

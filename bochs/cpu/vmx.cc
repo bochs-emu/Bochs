@@ -2104,7 +2104,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
   guest.cr0 = (BX_CPU_THIS_PTR cr0.get32() & VMX_KEEP_CR0_BITS) | (guest.cr0 & ~VMX_KEEP_CR0_BITS);
 
-  if (! check_CR0(guest.cr0)) {
+  if (! check_CR0(guest.cr0, true /* vmenter */)) {
     BX_PANIC(("VMENTER CR0 is broken !"));
   }
   if (! check_CR4(guest.cr4)) {
