@@ -1,6 +1,6 @@
 Changes after 3.0:
 
-  This CHANGES file updated with commits merged till 29 Aug 2025, please refer to git log for more recent updates
+  This CHANGES file updated with commits merged till 25 Sep 2025, please refer to git log for more recent updates
 
 Detailed change log :
 
@@ -74,6 +74,11 @@ Detailed change log :
     - Voodoo3: Fixed display timing in VGA mode with half dot clock
     - Banshee: Added missing 'double width' support for banked mode
     - Banshee: Also perform clipping on the last pixel of a line
+    - Banshee: Fixed polygon redraw issues
+    - Banshee: Host-to-screen blts are always no-immediate
+    - Banshee: fixes for graphics snapshot in 3D mode
+    - Banshee: Added 2D overlay support to graphics snapshop
+    - Banshee: Added setup for CMDFIFO packet type 6 (AGP-to-VRAM transfer - not implemented yet)
   - Hard Drive
     - Fix the reading of the HOB registers
     - Add the 0x46 (GET_CONFIG) command. This allows ReactOS 0.4.15 to boot in normal mode (LiveCD)
@@ -101,6 +106,8 @@ Detailed change log :
   - Keyboard
     - Change a Panic to an Error when trying to add a byte to the out-buffer
     - Added the 0xE1 (Secondary ID) command
+    - Enable 16-bit and 32-bit reads from ports 0x60 and 0x64 (returning 8-bit value)
+      This fixes hang when booting Darwin CD (issue #610)
 
 - GUI and display libraries
   - Added new method start_update() used by VGA core to call some gui code before drawing.
