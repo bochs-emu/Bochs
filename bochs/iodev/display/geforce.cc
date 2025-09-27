@@ -29,6 +29,7 @@
 #define BX_USE_TERNARY_ROP
 #include "bitblt.h"
 #include "ddc.h"
+#include "pxextract.h"
 #include "geforce.h"
 #include "virt_timer.h"
 
@@ -55,20 +56,6 @@
 #define GEFORCE_PNPMMIO_SIZE        0x1000000
 
 #define ALIGN(x, a) (((x) + (a) - 1) & ~((a) - 1))
-
-#define EXTRACT_565_TO_888(val, a, b, c)          \
-  (a) = (((val) >> 8) & 0xf8) | (((val) >> 13) & 0x07); \
-  (b) = (((val) >> 3) & 0xfc) | (((val) >> 9) & 0x03);  \
-  (c) = (((val) << 3) & 0xf8) | (((val) >> 2) & 0x07);
-
-#define EXTRACT_x555_TO_888(val, a, b, c)         \
-  (a) = (((val) >> 7) & 0xf8) | (((val) >> 12) & 0x07); \
-  (b) = (((val) >> 2) & 0xf8) | (((val) >> 7) & 0x07);  \
-  (c) = (((val) << 3) & 0xf8) | (((val) >> 2) & 0x07);
-
-#define EXTRACT_1555_TO_8888(val, a, b, c, d)       \
-  (a) = ((Bit16s)(val) >> 15) & 0xff;           \
-  EXTRACT_x555_TO_888(val, b, c, d)
 
 static bx_geforce_c *theSvga = NULL;
 
@@ -1488,10 +1475,15 @@ void bx_geforce_c::update(void)
                     if (!BX_GEFORCE_THIS svga_double_width || (c & 1)) {
                       vid_ptr2 += 2;
                     }
-                    colour = MAKE_COLOUR(
-                      colour & 0x001f, 5, info.blue_shift, info.blue_mask,
-                      colour & 0x03e0, 10, info.green_shift, info.green_mask,
-                      colour & 0x7c00, 15, info.red_shift, info.red_mask);
+                    if (info.bpp >= 24) {
+                      EXTRACT_x555_TO_888(colour, red, green, blue);
+                      colour = (red << 16) | (green << 8) | blue;
+                    } else {
+                      colour = MAKE_COLOUR(
+                        colour & 0x001f, 5, info.blue_shift, info.blue_mask,
+                        colour & 0x03e0, 10, info.green_shift, info.green_mask,
+                        colour & 0x7c00, 15, info.red_shift, info.red_mask);
+                    }
                     if (info.is_little_endian) {
                       for (i=0; i<info.bpp; i+=8) {
                         *(tile_ptr2++) = colour >> i;
@@ -1538,10 +1530,15 @@ void bx_geforce_c::update(void)
                     if (!BX_GEFORCE_THIS svga_double_width || (c & 1)) {
                       vid_ptr2 += 2;
                     }
-                    colour = MAKE_COLOUR(
-                      colour & 0x001f, 5, info.blue_shift, info.blue_mask,
-                      colour & 0x07e0, 11, info.green_shift, info.green_mask,
-                      colour & 0xf800, 16, info.red_shift, info.red_mask);
+                    if (info.bpp >= 24) {
+                      EXTRACT_565_TO_888(colour, red, green, blue);
+                      colour = (red << 16) | (green << 8) | blue;
+                    } else {
+                      colour = MAKE_COLOUR(
+                        colour & 0x001f, 5, info.blue_shift, info.blue_mask,
+                        colour & 0x07e0, 11, info.green_shift, info.green_mask,
+                        colour & 0xf800, 16, info.red_shift, info.red_mask);
+                    }
                     if (info.is_little_endian) {
                       for (i=0; i<info.bpp; i+=8) {
                         *(tile_ptr2++) = colour >> i;
