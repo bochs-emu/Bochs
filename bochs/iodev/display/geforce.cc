@@ -2751,8 +2751,6 @@ void bx_geforce_c::tfc(gf_channel* ch)
 
 void bx_geforce_c::sifm(gf_channel* ch)
 {
-  Bit16u sx = (ch->sifm_syx & 0xFFFF) >> 4;
-  Bit16u sy = (ch->sifm_syx >> 16) >> 4;
   Bit16u dx = ch->sifm_dyx & 0xFFFF;
   Bit16u dy = ch->sifm_dyx >> 16;
 //Bit16u swidth = ch->sifm_shw & 0xFFFF;
@@ -2760,41 +2758,86 @@ void bx_geforce_c::sifm(gf_channel* ch)
   Bit16u dwidth = ch->sifm_dhw & 0xFFFF;
   Bit16u dheight = ch->sifm_dhw >> 16;
   Bit32u spitch = ch->sifm_sfmt & 0xFFFF;
-  Bit32u src_offset = ch->sifm_sofs +
-    sy * spitch + sx * ch->sifm_color_bytes;
-  if (ch->sifm_dudx != 0x00100000 ||
-      ch->sifm_dvdy != 0x00100000)
-    BX_ERROR(("SIFM scaling is not implemented"));
-  if (ch->sifm_swizzled) {
-    for (Bit16u y = 0; y < dheight; y++) {
-      for (Bit16u x = 0; x < dwidth; x++) {
-        Bit32u srccolor = get_pixel(ch->sifm_src, src_offset, x, ch->sifm_color_bytes);
-        put_pixel_swzs(ch, ch->swzs_ofs +
-          swizzle(x + dx, y + dy, ch->swzs_width, ch->swzs_height) *
-          ch->swzs_color_bytes, srccolor);
+  // SIFM without scaling is used frequently in some operating systems
+  if (ch->sifm_dudx == 0x00100000 && ch->sifm_dvdy == 0x00100000) {
+    Bit16u sx = (ch->sifm_syx & 0xFFFF) >> 4;
+    Bit16u sy = (ch->sifm_syx >> 16) >> 4;
+    Bit32u src_offset = ch->sifm_sofs + sy * spitch + sx * ch->sifm_color_bytes;
+    if (ch->sifm_swizzled) {
+      for (Bit16u y = 0; y < dheight; y++) {
+        for (Bit16u x = 0; x < dwidth; x++) {
+          Bit32u srccolor = get_pixel(ch->sifm_src, src_offset, x, ch->sifm_color_bytes);
+          put_pixel_swzs(ch, ch->swzs_ofs +
+            swizzle(x + dx, y + dy, ch->swzs_width, ch->swzs_height) *
+            ch->swzs_color_bytes, srccolor);
+        }
+        src_offset += spitch;
       }
-      src_offset += spitch;
+    } else {
+      Bit32u dpitch = ch->s2d_pitch >> 16;
+      Bit32u draw_offset = ch->s2d_ofs_dst +
+        dy * dpitch + dx * ch->s2d_color_bytes;
+      Bit32u redraw_offset = dma_lin_lookup(ch->s2d_img_dst, draw_offset) -
+        BX_GEFORCE_THIS disp_offset;
+      for (Bit16u y = 0; y < dheight; y++) {
+        for (Bit16u x = 0; x < dwidth; x++) {
+          Bit32u dstcolor = get_pixel(ch->s2d_img_dst, draw_offset, x, ch->s2d_color_bytes);
+          Bit32u srccolor = get_pixel(ch->sifm_src, src_offset, x, ch->sifm_color_bytes);
+          if (ch->sifm_color_fmt == 4)
+            srccolor |= 0xFF000000;
+          pixel_operation(ch, ch->sifm_operation,
+            &dstcolor, &srccolor, ch->s2d_color_bytes, dx + x, dy + y);
+          put_pixel(ch, draw_offset, x, dstcolor);
+        }
+        src_offset += spitch;
+        draw_offset += dpitch;
+      }
+      BX_GEFORCE_THIS redraw_area_nd(redraw_offset, dwidth, dheight);
     }
   } else {
-    Bit32u dpitch = ch->s2d_pitch >> 16;
-    Bit32u draw_offset = ch->s2d_ofs_dst +
-      dy * dpitch + dx * ch->s2d_color_bytes;
-    Bit32u redraw_offset = dma_lin_lookup(ch->s2d_img_dst, draw_offset) -
-      BX_GEFORCE_THIS disp_offset;
-    for (Bit16u y = 0; y < dheight; y++) {
-      for (Bit16u x = 0; x < dwidth; x++) {
-        Bit32u dstcolor = get_pixel(ch->s2d_img_dst, draw_offset, x, ch->s2d_color_bytes);
-        Bit32u srccolor = get_pixel(ch->sifm_src, src_offset, x, ch->sifm_color_bytes);
-        if (ch->sifm_color_fmt == 4)
-          srccolor |= 0xFF000000;
-        pixel_operation(ch, ch->sifm_operation,
-          &dstcolor, &srccolor, ch->s2d_color_bytes, dx + x, dy + y);
-        put_pixel(ch, draw_offset, x, dstcolor);
+    Bit32s sx0 = ((ch->sifm_syx & 0xFFFF) << 16) - (dx << 20) - 0x80000;
+    Bit32s sy = (ch->sifm_syx & 0xFFFF0000) - (dy << 20) - 0x80000;
+    if (sx0 < 0)
+      sx0 = 0;
+    if (sy < 0)
+      sy = 0;
+    if (ch->sifm_swizzled) {
+      for (Bit16u y = 0; y < dheight; y++) {
+        Bit32u sx = sx0;
+        Bit32u src_offset = ch->sifm_sofs + (sy >> 20) * spitch;
+        for (Bit16u x = 0; x < dwidth; x++) {
+          Bit32u srccolor = get_pixel(ch->sifm_src, src_offset, sx >> 20, ch->sifm_color_bytes);
+          put_pixel_swzs(ch, ch->swzs_ofs +
+            swizzle(x + dx, y + dy, ch->swzs_width, ch->swzs_height) *
+            ch->swzs_color_bytes, srccolor);
+          sx += ch->sifm_dudx;
+        }
+        sy += ch->sifm_dvdy;
       }
-      src_offset += spitch;
-      draw_offset += dpitch;
+    } else {
+      Bit32u dpitch = ch->s2d_pitch >> 16;
+      Bit32u draw_offset = ch->s2d_ofs_dst +
+        dy * dpitch + dx * ch->s2d_color_bytes;
+      Bit32u redraw_offset = dma_lin_lookup(ch->s2d_img_dst, draw_offset) -
+        BX_GEFORCE_THIS disp_offset;
+      for (Bit16u y = 0; y < dheight; y++) {
+        Bit32u sx = sx0;
+        Bit32u src_offset = ch->sifm_sofs + (sy >> 20) * spitch;
+        for (Bit16u x = 0; x < dwidth; x++) {
+          Bit32u dstcolor = get_pixel(ch->s2d_img_dst, draw_offset, x, ch->s2d_color_bytes);
+          Bit32u srccolor = get_pixel(ch->sifm_src, src_offset, sx >> 20, ch->sifm_color_bytes);
+          if (ch->sifm_color_fmt == 4)
+            srccolor |= 0xFF000000;
+          pixel_operation(ch, ch->sifm_operation,
+            &dstcolor, &srccolor, ch->s2d_color_bytes, dx + x, dy + y);
+          put_pixel(ch, draw_offset, x, dstcolor);
+          sx += ch->sifm_dudx;
+        }
+        sy += ch->sifm_dvdy;
+        draw_offset += dpitch;
+      }
+      BX_GEFORCE_THIS redraw_area_nd(redraw_offset, dwidth, dheight);
     }
-    BX_GEFORCE_THIS redraw_area_nd(redraw_offset, dwidth, dheight);
   }
 }
 
@@ -2890,12 +2933,17 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
     unnormalized = true;
   }
   Bit32u color_bytes;
-  if (format_color == 0x03 || // X1R5G5B5
+  if (format_color == 0x02 || // A1R5G5B5
+      format_color == 0x03 || // X1R5G5B5
       format_color == 0x04 || // A4R4G4B4
       format_color == 0x05 || // R5G6B5
+      format_color == 0x27 || // R6G5B5
+      format_color == 0x28 || // G8B8
       format_color == 0x82 || // A1R5G5B5
       format_color == 0x83 || // A4R4G4B4
-      format_color == 0x84)   // R5G6B5
+      format_color == 0x84 || // R5G6B5
+      format_color == 0x8b || // G8B8
+      format_color == 0x8f)   // R6G5B5
     color_bytes = 2;
   else if (format_color == 0x06 || // A8R8G8B8
            format_color == 0x07 || // X8R8G8B8
@@ -2973,66 +3021,196 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
     tex_ofs += swizzle(xy[0], xy[1], sizes[0], sizes[1]) * color_bytes;
   Bit32u tex_location = format & 3;
   Bit32u tex_dma_obj = tex_location == 1 ? ch->d3d_a_obj : ch->d3d_b_obj;
-  if (format_color == 0x04 || format_color == 0x83) { // A4R4G4B4
-    Bit16u value = dma_read16(tex_dma_obj, tex_ofs);
-    color[0] = ((value >> 8) & 0xf) / 15.0f;
-    color[1] = ((value >> 4) & 0xf) / 15.0f;
-    color[2] = ((value >> 0) & 0xf) / 15.0f;
-    color[3] = ((value >> 12) & 0xf) / 15.0f;
-  } else if (format_color == 0x05 || format_color == 0x84) { // R5G6B5
-    Bit16u value = dma_read16(tex_dma_obj, tex_ofs);
-    color[0] = ((value >> 11) & 0x1f) / 31.0f;
-    color[1] = ((value >> 5) & 0x3f) / 63.0f;
-    color[2] = ((value >> 0) & 0x1f) / 31.0f;
-    color[3] = 1.0f;
-  } else if (format_color == 0x82) { // A1R5G5B5
-    Bit16u value = dma_read16(tex_dma_obj, tex_ofs);
-    color[0] = ((value >> 10) & 0x1f) / 31.0f;
-    color[1] = ((value >> 5) & 0x1f) / 31.0f;
-    color[2] = ((value >> 0) & 0x1f) / 31.0f;
-    color[3] = (value >> 15) & 1;
-  } else if (format_color == 0x03) { // X1R5G5B5
-    Bit16u value = dma_read16(tex_dma_obj, tex_ofs);
-    color[0] = ((value >> 10) & 0x1f) / 31.0f;
-    color[1] = ((value >> 5) & 0x1f) / 31.0f;
-    color[2] = ((value >> 0) & 0x1f) / 31.0f;
-    color[3] = 1.0f;
-  } else if (format_color == 0x06 ||
-             format_color == 0x12 ||
-             format_color == 0x85) { // A8R8G8B8
-    Bit32u value = dma_read32(tex_dma_obj, tex_ofs);
-    color[0] = ((value >> 16) & 0xff) / 255.0f;
-    color[1] = ((value >> 8) & 0xff) / 255.0f;
-    color[2] = ((value >> 0) & 0xff) / 255.0f;
-    color[3] = ((value >> 24) & 0xff) / 255.0f;
-  } else if (format_color == 0x07) { // X8R8G8B8
-    Bit32u value = dma_read32(tex_dma_obj, tex_ofs);
-    color[0] = ((value >> 16) & 0xff) / 255.0f;
-    color[1] = ((value >> 8) & 0xff) / 255.0f;
-    color[2] = ((value >> 0) & 0xff) / 255.0f;
-    color[3] = 1.0f;
-  } else if (format_color == 0x0b) { // I8_A8R8G8B8
-    Bit32u pal = ch->d3d_texture_palette[tex_unit];
-    Bit32u pal_location = pal & 1;
-    Bit32u pal_dma_obj = pal_location == 1 ? ch->d3d_b_obj : ch->d3d_a_obj;
-    Bit32u pal_ofs = pal & 0xffffffc0;
-    Bit32u pal_index = dma_read8(tex_dma_obj, tex_ofs);
-    Bit32u value = dma_read32(pal_dma_obj, pal_ofs + pal_index * 4);
-    color[0] = ((value >> 16) & 0xff) / 255.0f;
-    color[1] = ((value >> 8) & 0xff) / 255.0f;
-    color[2] = ((value >> 0) & 0xff) / 255.0f;
-    color[3] = ((value >> 24) & 0xff) / 255.0f;
-  } else if (format_color == 0x1b) { // AY8
-    float value = dma_read8(tex_dma_obj, tex_ofs) / 255.0f;
-    color[0] = value;
-    color[1] = value;
-    color[2] = value;
-    color[3] = value;
+  Bit32s color_int[4];
+  float color_scale[4];
+  switch (format_color) {
+    case 0x04:
+    case 0x83: { // A4R4G4B4
+      Bit16u value = dma_read16(tex_dma_obj, tex_ofs);
+      color_int[0] = (value >> 12) & 0xf;
+      color_scale[0] = 1.0f / 15.0f;
+      color_int[1] = (value >> 8) & 0xf;
+      color_scale[1] = 1.0f / 15.0f;
+      color_int[2] = (value >> 4) & 0xf;
+      color_scale[2] = 1.0f / 15.0f;
+      color_int[3] = (value >> 0) & 0xf;
+      color_scale[3] = 1.0f / 15.0f;
+      break;
+    }
+    case 0x05:
+    case 0x84: { // R5G6B5
+      Bit16u value = dma_read16(tex_dma_obj, tex_ofs);
+      color_int[0] = 1;
+      color_scale[0] = 1.0f;
+      color_int[1] = (value >> 11) & 0x1f;
+      color_scale[1] = 1.0f / 31.0f;
+      color_int[2] = (value >> 5) & 0x3f;
+      color_scale[2] = 1.0f / 63.0f;
+      color_int[3] = (value >> 0) & 0x1f;
+      color_scale[3] = 1.0f / 31.0f;
+      break;
+    }
+    case 0x02:
+    case 0x82: { // A1R5G5B5
+      Bit16u value = dma_read16(tex_dma_obj, tex_ofs);
+      color_int[0] = (value >> 15) & 1;
+      color_scale[0] = 1.0f;
+      color_int[1] = (value >> 10) & 0x1f;
+      color_scale[1] = 1.0f / 31.0f;
+      color_int[2] = (value >> 5) & 0x1f;
+      color_scale[2] = 1.0f / 31.0f;
+      color_int[3] = (value >> 0) & 0x1f;
+      color_scale[3] = 1.0f / 31.0f;
+      break;
+    }
+    case 0x03: { // X1R5G5B5
+      Bit16u value = dma_read16(tex_dma_obj, tex_ofs);
+      color_int[0] = 1;
+      color_scale[0] = 1.0f;
+      color_int[1] = (value >> 10) & 0x1f;
+      color_scale[1] = 1.0f / 31.0f;
+      color_int[2] = (value >> 5) & 0x1f;
+      color_scale[2] = 1.0f / 31.0f;
+      color_int[3] = (value >> 0) & 0x1f;
+      color_scale[3] = 1.0f / 31.0f;
+      break;
+    }
+    case 0x27:
+    case 0x8f: { // R6G5B5
+      Bit16u value = dma_read16(tex_dma_obj, tex_ofs);
+      color_int[0] = 1;
+      color_scale[0] = 1.0f;
+      color_int[1] = (value >> 10) & 0x3f;
+      color_scale[1] = 1.0f / 63.0f;
+      color_int[2] = (value >> 5) & 0x1f;
+      color_scale[2] = 1.0f / 31.0f;
+      color_int[3] = (value >> 0) & 0x1f;
+      color_scale[3] = 1.0f / 31.0f;
+      break;
+    }
+    case 0x28:
+    case 0x8b: { // G8B8
+      Bit16u value = dma_read16(tex_dma_obj, tex_ofs);
+      color_int[0] = 1;
+      color_scale[0] = 1.0f;
+      color_int[1] = 1;
+      color_scale[1] = 1.0f;
+      color_int[2] = (value >> 8) & 0xff;
+      color_scale[2] = 1.0f / 255.0f;
+      color_int[3] = (value >> 0) & 0xff;
+      color_scale[3] = 1.0f / 255.0f;
+      break;
+    }
+    case 0x06:
+    case 0x12:
+    case 0x85: { // A8R8G8B8
+      Bit32u value = dma_read32(tex_dma_obj, tex_ofs);
+      color_int[0] = (value >> 24) & 0xff;
+      color_scale[0] = 1.0f / 255.0f;
+      color_int[1] = (value >> 16) & 0xff;
+      color_scale[1] = 1.0f / 255.0f;
+      color_int[2] = (value >> 8) & 0xff;
+      color_scale[2] = 1.0f / 255.0f;
+      color_int[3] = (value >> 0) & 0xff;
+      color_scale[3] = 1.0f / 255.0f;
+      break;
+    }
+    case 0x07: { // X8R8G8B8
+      Bit32u value = dma_read32(tex_dma_obj, tex_ofs);
+      color_int[0] = 1;
+      color_scale[0] = 1.0f;
+      color_int[1] = (value >> 16) & 0xff;
+      color_scale[1] = 1.0f / 255.0f;
+      color_int[2] = (value >> 8) & 0xff;
+      color_scale[2] = 1.0f / 255.0f;
+      color_int[3] = (value >> 0) & 0xff;
+      color_scale[3] = 1.0f / 255.0f;
+      break;
+    }
+    case 0x0b: { // I8_A8R8G8B8
+      Bit32u pal = ch->d3d_texture_palette[tex_unit];
+      Bit32u pal_location = pal & 1;
+      Bit32u pal_dma_obj = pal_location == 1 ? ch->d3d_b_obj : ch->d3d_a_obj;
+      Bit32u pal_ofs = pal & 0xffffffc0;
+      Bit32u pal_index = dma_read8(tex_dma_obj, tex_ofs);
+      Bit32u value = dma_read32(pal_dma_obj, pal_ofs + pal_index * 4);
+      color_int[0] = (value >> 24) & 0xff;
+      color_scale[0] = 1.0f / 255.0f;
+      color_int[1] = (value >> 16) & 0xff;
+      color_scale[1] = 1.0f / 255.0f;
+      color_int[2] = (value >> 8) & 0xff;
+      color_scale[2] = 1.0f / 255.0f;
+      color_int[3] = (value >> 0) & 0xff;
+      color_scale[3] = 1.0f / 255.0f;
+      break;
+    }
+    case 0x00:   // Y8
+    case 0x81: { // B8
+      Bit8u value = dma_read8(tex_dma_obj, tex_ofs);
+      color_int[0] = 1;
+      color_scale[0] = 1.0f;
+      color_int[1] = value;
+      color_scale[1] = 1.0f / 255.0f;
+      color_int[2] = value;
+      color_scale[2] = 1.0f / 255.0f;
+      color_int[3] = value;
+      color_scale[3] = 1.0f / 255.0f;
+      break;
+    }
+    case 0x1b: { // AY8
+      Bit8u value = dma_read8(tex_dma_obj, tex_ofs);
+      color_int[0] = value;
+      color_scale[0] = 1.0f / 255.0f;
+      color_int[1] = value;
+      color_scale[1] = 1.0f / 255.0f;
+      color_int[2] = value;
+      color_scale[2] = 1.0f / 255.0f;
+      color_int[3] = value;
+      color_scale[3] = 1.0f / 255.0f;
+      break;
+    }
+    default:
+      color_int[0] = 1;
+      color_scale[0] = 0.8f;
+      color_int[1] = 1;
+      color_scale[1] = 0.8f + str[0] * 0.2f;
+      color_int[2] = 1;
+      color_scale[2] = 0.6f + str[1] * 0.2f;
+      color_int[3] = 1;
+      color_scale[3] = 0.6f + str[2] * 0.2f;
+      break;
+  }
+  Bit32u signed_argb = ch->d3d_texture_filter[tex_unit] >> 28;
+  if (signed_argb != 0) {
+    for (Bit32u i = 0; i < 4; i++)
+      if ((signed_argb & (1 << i)) != 0) {
+        color_int[i] = (Bit8s)color_int[i];
+        color_scale[i] = 1.0f / 128.0f;
+      }
+  }
+  if (BX_GEFORCE_THIS card_type == 0x20) {
+    for (Bit32u i = 0; i < 4; i++) {
+      Bit32u j = (i + 3) & 3;
+      color[j] = color_int[i] * color_scale[i];
+    }
   } else {
-    color[0] = 0.8f + str[0] * 0.2f;
-    color[1] = 0.6f + str[1] * 0.2f;
-    color[2] = 0.6f + str[2] * 0.2f;
-    color[3] = 0.8f;
+    Bit16u s01 = ch->d3d_texture_control1[tex_unit];
+    for (Bit32u i = 0; i < 4; i++) {
+      Bit32u j = (i + 3) & 3;
+      switch ((s01 >> (8 + i * 2)) & 3) {
+        case 0:
+          color[j] = 0.0f;
+          break;
+        case 1:
+          color[j] = 1.0f;
+          break;
+        default: {
+          Bit32u swz = (s01 >> (i * 2)) & 3;
+          color[j] = color_int[swz] * color_scale[swz];
+          break;
+        }
+      }
+    }
   }
 }
 
@@ -3446,6 +3624,12 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
       float sinv = sin(params[0][0]);
       for (int comp_index = 0; comp_index < 4; comp_index++)
         op_result[comp_index] = sinv;
+    } else if (op == 0x33) { // TEXBEM
+      float xy[2];
+      xy[0] = params[0][0] + params[1][0] * params[2][0] + params[1][1] * params[2][1];
+      xy[1] = params[0][1] + params[1][0] * params[2][2] + params[1][1] * params[2][3];
+      Bit32u tex_unit = (dst_word >> 17) & 0xf;
+      d3d_sample_texture(ch, tex_unit, xy, op_result);
     } else if (op == 0x38) { // DP2
       float dot = 0.0f;
       for (int comp_index = 0; comp_index < 2; comp_index++)
@@ -3926,7 +4110,7 @@ void bx_geforce_c::d3d_load_vertex(gf_channel* ch, Bit32u index)
       ch->d3d_vertex_data[ch->d3d_vertex_index][attrib_index][2] = 0.0f;
       ch->d3d_vertex_data[ch->d3d_vertex_index][attrib_index][3] = 1.0f;
     }
-    if (format_type == 0 && comp_count == 4) {
+    if ((format_type == 0 || format_type == 4) && comp_count == 4) {
       Bit32u value = dma_read32(array_obj, array_offset + index * attrib_stride);
       for (Bit32u i = 0; i < 4; i++) {
         ch->d3d_vertex_data[ch->d3d_vertex_index][attrib_index][i] =
@@ -4756,7 +4940,8 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       ch->d3d_vertex_data[ch->d3d_vertex_index][ch->d3d_attrib_index][2] = 0.0f;
       ch->d3d_vertex_data[ch->d3d_vertex_index][ch->d3d_attrib_index][3] = 1.0f;
     }
-    if (ch->d3d_vertex_data_array_format_type[ch->d3d_attrib_index] == 0 &&
+    Bit32u format_type = ch->d3d_vertex_data_array_format_type[ch->d3d_attrib_index];
+    if ((format_type == 0 || format_type == 4) &&
         ch->d3d_vertex_data_array_format_size[ch->d3d_attrib_index] == 4) {
       for (Bit32u i = 0; i < 4; i++) {
         ch->d3d_vertex_data[ch->d3d_vertex_index][ch->d3d_attrib_index][
@@ -4846,6 +5031,8 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       ch->d3d_texture_control0[texture_index] = param;
     else if (texture_method == 4)
       ch->d3d_texture_control1[texture_index] = param;
+    else if (texture_method == 5)
+      ch->d3d_texture_filter[texture_index] = param;
     else if ((texture_method == 7 && cls == 0x0097) ||
              (texture_method == 6 && cls >= 0x0497))
       ch->d3d_texture_image_rect[texture_index] = param;

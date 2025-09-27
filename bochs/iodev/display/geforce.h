@@ -144,8 +144,8 @@ struct gf_channel
   Bit32u sifm_dyx;
   Bit32u sifm_shw;
   Bit32u sifm_dhw;
-  Bit32u sifm_dudx;
-  Bit32u sifm_dvdy;
+  Bit32s sifm_dudx;
+  Bit32s sifm_dvdy;
   Bit32u sifm_sfmt;
   Bit32u sifm_sofs;
 
@@ -227,6 +227,7 @@ struct gf_channel
   Bit32u d3d_texture_address[16];
   Bit32u d3d_texture_control0[16];
   Bit32u d3d_texture_control1[16];
+  Bit32u d3d_texture_filter[16];
   Bit32u d3d_texture_image_rect[16];
   Bit32u d3d_texture_palette[16];
   Bit32u d3d_texture_control3[16];
