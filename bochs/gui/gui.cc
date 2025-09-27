@@ -22,6 +22,7 @@
 #include <signal.h>
 #include "iodev.h"
 #include "virt_timer.h"
+#include "iodev/display/pxextract.h"
 #include "keymap.h"
 #include "gui/bitmaps/floppya.h"
 #include "gui/bitmaps/floppyb.h"
@@ -548,7 +549,8 @@ void bx_gui_c::snapshot_handler(void)
   int fd, i, j, pitch;
   Bit8u *snapshot_ptr = NULL;
   Bit8u *row_buffer, *pixel_ptr, *row_ptr;
-  Bit8u bmp_header[54], iBits, b1, b2;
+  Bit8u bmp_header[54], iBits, red, green, blue;
+  Bit16u color;
   Bit32u ilen, len, rlen;
   char filename[BX_PATHNAME_LEN], msg[80], *ext;
   Bit8u snap_fmt;
@@ -643,16 +645,16 @@ void bx_gui_c::snapshot_handler(void)
       } else if ((BX_GUI_THIS guest_bpp == 15) || (BX_GUI_THIS guest_bpp == 16)) {
         pixel_ptr = row_ptr;
         for (j = 0; j < (int)(BX_GUI_THIS guest_xres * 3); j+=3) {
-          b1 = *(pixel_ptr++);
-          b2 = *(pixel_ptr++);
-          *(row_buffer+j)   = (b1 << 3);
+          color = *(pixel_ptr++);
+          color |= (*(pixel_ptr++) << 8);
           if (BX_GUI_THIS guest_bpp == 15) {
-            *(row_buffer+j+1) = ((b1 & 0xe0) >> 2) | (b2 << 6);
-            *(row_buffer+j+2) = (b2 & 0x7c) << 1;
+            EXTRACT_x555_TO_888(color, red, green, blue);
           } else {
-            *(row_buffer+j+1) = ((b1 & 0xe0) >> 3) | (b2 << 5);
-            *(row_buffer+j+2) = (b2 & 0xf8);
+            EXTRACT_565_TO_888(color, red, green, blue);
           }
+          *(row_buffer+j)   = blue;
+          *(row_buffer+j+1) = green;
+          *(row_buffer+j+2) = red;
         }
       } else if (BX_GUI_THIS guest_bpp == 32) {
         pixel_ptr = row_ptr;

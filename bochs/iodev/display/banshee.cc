@@ -617,9 +617,7 @@ Bit32u bx_banshee_c::get_overlay_pixel(unsigned xc, unsigned yc, Bit8u bpp)
              (v->banshee.overlay.format == 7)) {
     index = data[px << 1];
     index |= data[(px << 1) + 1] << 8;
-    r = (index & 0xf800) >> 8;
-    g = (index & 0x07e0) >> 3;
-    b = (index & 0x1f) << 3;
+    EXTRACT_565_TO_888(index, r, g, b);
   }
   if (bpp == 16) {
     value = index;

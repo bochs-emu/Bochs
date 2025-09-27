@@ -37,6 +37,7 @@
 #include "iodev.h"
 #include "vgacore.h"
 #include "ddc.h"
+#include "pxextract.h"
 #include "vga.h"
 #include "virt_timer.h"
 
@@ -323,7 +324,8 @@ void bx_vga_c::update(void)
       unsigned xc, yc, xti, yti;
       unsigned r, c, w, h;
       int i;
-      unsigned long red, green, blue, colour;
+      Bit32u colour;
+      Bit8u red, green, blue;
       Bit8u * vid_ptr, * vid_ptr2;
       Bit8u * tile_ptr, * tile_ptr2;
       bx_svga_tileinfo_t info;
@@ -444,10 +446,15 @@ void bx_vga_c::update(void)
                       for (c=0; c<w; c++) {
                         colour = *(vid_ptr2++);
                         colour |= *(vid_ptr2++) << 8;
-                        colour = MAKE_COLOUR(
-                          colour & 0x001f, 5, info.blue_shift, info.blue_mask,
-                          colour & 0x03e0, 10, info.green_shift, info.green_mask,
-                          colour & 0x7c00, 15, info.red_shift, info.red_mask);
+                        if (info.bpp >= 24) {
+                          EXTRACT_x555_TO_888(colour, red, green, blue);
+                          colour = (red << 16) | (green << 8) | blue;
+                        } else {
+                          colour = MAKE_COLOUR(
+                            colour & 0x001f, 5, info.blue_shift, info.blue_mask,
+                            colour & 0x03e0, 10, info.green_shift, info.green_mask,
+                            colour & 0x7c00, 15, info.red_shift, info.red_mask);
+                        }
                         if (info.is_little_endian) {
                           for (i=0; i<info.bpp; i+=8) {
                             *(tile_ptr2++) = (Bit8u)(colour >> i);
@@ -479,10 +486,15 @@ void bx_vga_c::update(void)
                       for (c=0; c<w; c++) {
                         colour = *(vid_ptr2++);
                         colour |= *(vid_ptr2++) << 8;
-                        colour = MAKE_COLOUR(
-                          colour & 0x001f, 5, info.blue_shift, info.blue_mask,
-                          colour & 0x07e0, 11, info.green_shift, info.green_mask,
-                          colour & 0xf800, 16, info.red_shift, info.red_mask);
+                        if (info.bpp >= 24) {
+                          EXTRACT_565_TO_888(colour, red, green, blue);
+                          colour = (red << 16) | (green << 8) | blue;
+                        } else {
+                          colour = MAKE_COLOUR(
+                            colour & 0x001f, 5, info.blue_shift, info.blue_mask,
+                            colour & 0x07e0, 11, info.green_shift, info.green_mask,
+                            colour & 0xf800, 16, info.red_shift, info.red_mask);
+                        }
                         if (info.is_little_endian) {
                           for (i=0; i<info.bpp; i+=8) {
                             *(tile_ptr2++) = (Bit8u)(colour >> i);
