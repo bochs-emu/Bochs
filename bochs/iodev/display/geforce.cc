@@ -499,17 +499,13 @@ bool bx_geforce_c::geforce_mem_read_handler(bx_phy_address addr, unsigned len,
       *(Bit8u*)data = register_read8(offset);
       BX_DEBUG(("MMIO read from 0x%08x, value 0x%02x", offset, *(Bit8u*)data));
     } else if (len == 2) {
-      Bit16u value = register_read32(offset);
+      Bit16u value = (Bit16u)register_read32(offset);
       BX_DEBUG(("MMIO read from 0x%08x, value 0x%04x", offset, value));
-      *((Bit8u*)data + 0) = (value >> 0) & 0xFF;
-      *((Bit8u*)data + 1) = (value >> 8) & 0xFF;
+      *((Bit16u*)data) = value;
     } else if (len == 4) {
       Bit32u value = register_read32(offset);
       BX_DEBUG(("MMIO read from 0x%08x, value 0x%08x", offset, value));
-      *((Bit8u*)data + 0) = (value >> 0) & 0xFF;
-      *((Bit8u*)data + 1) = (value >> 8) & 0xFF;
-      *((Bit8u*)data + 2) = (value >> 16) & 0xFF;
-      *((Bit8u*)data + 3) = (value >> 24) & 0xFF;
+      *((Bit32u*)data) = value;
     } else {
       BX_PANIC(("MMIO read len %d", len));
     }
@@ -526,10 +522,7 @@ bool bx_geforce_c::geforce_mem_read_handler(bx_phy_address addr, unsigned len,
       } else if (len == 4) {
         Bit32u value = ramin_read32(offset);
         BX_DEBUG(("RAMIN read from 0x%08x, value 0x%08x", offset, value));
-        *((Bit8u*)data + 0) = (value >> 0) & 0xFF;
-        *((Bit8u*)data + 1) = (value >> 8) & 0xFF;
-        *((Bit8u*)data + 2) = (value >> 16) & 0xFF;
-        *((Bit8u*)data + 3) = (value >> 24) & 0xFF;
+        *((Bit32u*)data) = value;
       } else {
         BX_PANIC(("RAMIN read len %d", len));
       }
@@ -602,23 +595,11 @@ bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
       BX_DEBUG(("MMIO write to 0x%08x, value 0x%02x", offset, *(Bit8u*)data));
       register_write8(offset, *(Bit8u*)data);
     } else if (len == 4) {
-      Bit32u value =
-        (*((Bit8u*)data + 0) << 0) |
-        (*((Bit8u*)data + 1) << 8) |
-        (*((Bit8u*)data + 2) << 16) |
-        (*((Bit8u*)data + 3) << 24);
+      Bit32u value = *((Bit32u*)data);
       BX_DEBUG(("MMIO write to 0x%08x, value 0x%08x", offset, value));
       register_write32(offset, value);
     } else if (len == 8) {
-      Bit64u value =
-        ((Bit64u)*((Bit8u*)data + 0) << 0) |
-        ((Bit64u)*((Bit8u*)data + 1) << 8) |
-        ((Bit64u)*((Bit8u*)data + 2) << 16) |
-        ((Bit64u)*((Bit8u*)data + 3) << 24) |
-        ((Bit64u)*((Bit8u*)data + 4) << 32) |
-        ((Bit64u)*((Bit8u*)data + 5) << 40) |
-        ((Bit64u)*((Bit8u*)data + 6) << 48) |
-        ((Bit64u)*((Bit8u*)data + 7) << 56);
+      Bit64u value = *((Bit64u*)data);
       BX_DEBUG(("MMIO write to 0x%08x, value 0x%016" FMT_64 "x", offset, value));
       register_write32(offset, (Bit32u)value);
       register_write32(offset + 4, value >> 32);
@@ -636,11 +617,7 @@ bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
         BX_DEBUG(("RAMIN write to 0x%08x, value 0x%02x", offset, *(Bit8u*)data));
         ramin_write8(offset, *(Bit8u*)data);
       } else if (len == 4) {
-        Bit32u value =
-          (*((Bit8u*)data + 0) << 0) |
-          (*((Bit8u*)data + 1) << 8) |
-          (*((Bit8u*)data + 2) << 16) |
-          (*((Bit8u*)data + 3) << 24);
+        Bit32u value = *((Bit32u*)data);
         BX_DEBUG(("RAMIN write to 0x%08x, value 0x%08x", offset, value));
         ramin_write32(offset, value);
       } else {
