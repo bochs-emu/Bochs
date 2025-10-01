@@ -2815,20 +2815,43 @@ void bx_geforce_c::sifm(gf_channel* ch)
   }
 }
 
+bool bx_geforce_c::d3d_scissor_clip(gf_channel* ch,
+  Bit32u* x, Bit32u* y, Bit32u* width, Bit32u* height)
+{
+  if (BX_GEFORCE_THIS card_type >= 0x35) {
+    Bit32s surf_x2 = *x + *width;
+    Bit32s surf_y2 = *y + *height;
+    Bit32s scissor_x1 = (Bit32s)ch->d3d_scissor_x + ch->d3d_window_offset_x;
+    Bit32s scissor_y1 = (Bit32s)ch->d3d_scissor_y + ch->d3d_window_offset_y;
+    Bit32s scissor_x2 = scissor_x1 + (Bit32s)ch->d3d_scissor_width;
+    Bit32s scissor_y2 = scissor_y1 + (Bit32s)ch->d3d_scissor_height;
+    if (scissor_x1 >= surf_x2 || scissor_x2 <= (Bit32s)*x ||
+        scissor_y1 >= surf_y2 || scissor_y2 <= (Bit32s)*y)
+      return false;
+    *x = BX_MAX((Bit32s)*x, scissor_x1);
+    *y = BX_MAX((Bit32s)*y, scissor_y1);
+    *width = BX_MIN(surf_x2, scissor_x2) - *x;
+    *height = BX_MIN(surf_y2, scissor_y2) - *y;
+  }
+  return true;
+}
+
 void bx_geforce_c::d3d_clear_surface(gf_channel* ch)
 {
   Bit32u dx = ch->d3d_clip_horizontal & 0xFFFF;
   Bit32u dy = ch->d3d_clip_vertical & 0xFFFF;
   Bit32u width = ch->d3d_clip_horizontal >> 16;
   Bit32u height = ch->d3d_clip_vertical >> 16;
+  if (!d3d_scissor_clip(ch, &dx, &dy, &width, &height))
+    return;
   if (ch->d3d_clear_surface & 0x000000F0) {
     Bit32u pitch = ch->d3d_surface_pitch_a & 0xFFFF;
     Bit32u draw_offset = ch->d3d_surface_color_offset +
       dy * pitch + dx * ch->d3d_color_bytes;
     Bit32u redraw_offset = dma_lin_lookup(ch->d3d_color_obj, draw_offset) -
       BX_GEFORCE_THIS disp_offset;
-    for (Bit16u y = 0; y < height; y++) {
-      for (Bit16u x = 0; x < width; x++) {
+    for (Bit32u y = 0; y < height; y++) {
+      for (Bit32u x = 0; x < width; x++) {
         if (ch->d3d_color_bytes == 2)
           dma_write16(ch->d3d_color_obj, draw_offset + x * 2, ch->d3d_color_clear_value);
         else
@@ -2842,8 +2865,8 @@ void bx_geforce_c::d3d_clear_surface(gf_channel* ch)
     Bit32u pitch = d3d_get_surface_pitch_z(ch);
     Bit32u draw_offset = ch->d3d_surface_zeta_offset +
       dy * pitch + dx * ch->d3d_depth_bytes;
-    for (Bit16u y = 0; y < height; y++) {
-      for (Bit16u x = 0; x < width; x++) {
+    for (Bit32u y = 0; y < height; y++) {
+      for (Bit32u x = 0; x < width; x++) {
         if (ch->d3d_depth_bytes == 2)
           dma_write16(ch->d3d_zeta_obj, draw_offset + x * 2, ch->d3d_zstencil_clear_value);
         else
@@ -3792,8 +3815,8 @@ void bx_geforce_c::d3d_clip_to_screen(gf_channel* ch, float pos_clip[4], float p
         pos_screen[i] *= ch->d3d_viewport_scale[i];
       pos_screen[i] += ch->d3d_viewport_offset[i];
     }
-    pos_screen[0] += (Bit16s)(ch->d3d_window_offset & 0xffff);
-    pos_screen[1] += (Bit16s)(ch->d3d_window_offset >> 16);
+    pos_screen[0] += ch->d3d_window_offset_x;
+    pos_screen[1] += ch->d3d_window_offset_y;
   } else {
     for (int i = 0; i < 3; i++)
       pos_screen[i] = pos_clip[i];
@@ -3832,6 +3855,8 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
     return; // overflow
   Bit32u draw_width = draw_x2 - draw_x1;
   Bit32u draw_height = draw_y2 - draw_y1;
+  if (!d3d_scissor_clip(ch, &draw_x1, &draw_y1, &draw_width, &draw_height))
+    return;
   Bit32u pitch = ch->d3d_surface_pitch_a & 0xFFFF;
   Bit32u pitch_zeta = d3d_get_surface_pitch_z(ch);
   Bit32u draw_offset = ch->d3d_surface_color_offset +
@@ -3970,8 +3995,8 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
           for (int comp_index = 0; comp_index < 4; comp_index++)
             tmp_regs16[0][comp_index] = ps_in[1][comp_index];
           if (ch->d3d_shader_obj != 0) {
-            ps_in[0][0] = xy[0] - (Bit16s)(ch->d3d_window_offset & 0xffff);
-            ps_in[0][1] = (ch->d3d_viewport_vertical >> 16) - (xy[1] - (Bit16s)(ch->d3d_window_offset >> 16));
+            ps_in[0][0] = xy[0] - ch->d3d_window_offset_x;
+            ps_in[0][1] = (ch->d3d_viewport_vertical >> 16) - (xy[1] - ch->d3d_window_offset_y);
             ps_in[0][2] = 0.0f;
             d3d_pixel_shader(ch, ps_in, tmp_regs16, tmp_regs32);
           } else if (BX_GEFORCE_THIS card_type == 0x20) {
@@ -4124,6 +4149,7 @@ void bx_geforce_c::d3d_load_vertex(gf_channel* ch, Bit32u index)
     Bit32u array_obj = array_offset & 0x80000000 ?
       ch->d3d_vertex_b_obj : ch->d3d_vertex_a_obj;
     array_offset &= 0x7fffffff;
+    array_offset -= ramin_read32(array_obj) >> 20; // why?
     Bit32u format_type = ch->d3d_vertex_data_array_format_type[attrib_index];
     Bit32u comp_count = ch->d3d_vertex_data_array_format_size[attrib_index];
     Bit32u attrib_stride = ch->d3d_vertex_data_array_format_stride[attrib_index];
@@ -4685,7 +4711,8 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
 
   if (method == 0x000) {
     // There may be better place for initialization
-    ch->d3d_window_offset = 0;
+    ch->d3d_window_offset_x = 0;
+    ch->d3d_window_offset_y = 0;
     for (int j = 0; j < 4; j++)
       ch->d3d_diffuse_color[j] = 1.0f;
     for (int j = 0; j < 16; j++) {
@@ -4757,9 +4784,10 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     ch->d3d_surface_zeta_offset = param;
   else if (method == 0x08b && cls > 0x0497)
     ch->d3d_surface_pitch_z = param;
-  else if (method == 0x0ae && cls >= 0x0497)
-    ch->d3d_window_offset = param;
-  else if ((method == 0x0c1 && cls == 0x0097) ||
+  else if (method == 0x0ae && cls >= 0x0497) {
+    ch->d3d_window_offset_x = (Bit16s)param;
+    ch->d3d_window_offset_y = (Bit16s)(param >> 16);
+  } else if ((method == 0x0c1 && cls == 0x0097) ||
            (method == 0x0c4 && cls >= 0x0497))
     ch->d3d_blend_enable = param;
   else if ((method == 0x0c2 && cls == 0x0097) ||
@@ -4805,6 +4833,12 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   } else if (method >= 0x1a0 && method <= 0x1af && cls <= 0x0497) {
     Bit32u i = method & 0x00f;
     ch->d3d_composite_matrix[i] = u.param_float;
+  } else if (method == 0x230 && cls >= 0x0497) {
+    ch->d3d_scissor_x = param & 0x0000ffff;
+    ch->d3d_scissor_width = param >> 16;
+  } else if (method == 0x231 && cls >= 0x0497) {
+    ch->d3d_scissor_y = param & 0x0000ffff;
+    ch->d3d_scissor_height = param >> 16;
   } else if (method == 0x239 && cls >= 0x0497) {
     ch->d3d_shader_program = param;
     ch->d3d_shader_offset = ch->d3d_shader_program & ~3;
@@ -4840,8 +4874,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   } else if ((method >= 0x2c0 && method <= 0x2c3 && cls == 0x0097) ||
              (method >= 0x2e0 && method <= 0x2e3 && cls >= 0x0497)) {
     Bit32u i = method & 0x003;
-    ch->d3d_transform_program[
-      ch->d3d_transform_program_load][i] = param;
+    ch->d3d_transform_program[ch->d3d_transform_program_load][i] = param;
     if (i == 3)
       ch->d3d_transform_program_load++;
   } else if ((method >= 0x2e0 && method <= 0x2e3 && cls == 0x0097) ||
@@ -5001,10 +5034,12 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     }
   } else if ((method == 0x60a && cls == 0x0097) ||
              (method == 0x0e7 && cls == 0x0497)) {
-    for (int attrib_index = 0; attrib_index < 16; attrib_index++) {
-      for (int comp_index = 0; comp_index < 4; comp_index++) {
-        ch->d3d_vertex_data[0][attrib_index][comp_index] =
-          ch->d3d_vertex_data[2][attrib_index][comp_index];
+    if (ch->d3d_vertex_index != 2) {
+      for (int attrib_index = 0; attrib_index < 16; attrib_index++) {
+        for (int comp_index = 0; comp_index < 4; comp_index++) {
+          ch->d3d_vertex_data[ch->d3d_vertex_index][attrib_index][comp_index] =
+            ch->d3d_vertex_data[2 - (param & 1)][attrib_index][comp_index];
+        }
       }
     }
     d3d_process_vertex(ch);

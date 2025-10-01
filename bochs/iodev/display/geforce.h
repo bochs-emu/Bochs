@@ -174,7 +174,8 @@ struct gf_channel
   Bit32u d3d_depth_bytes;
   Bit32u d3d_surface_pitch_a;
   Bit32u d3d_surface_pitch_z;
-  Bit32u d3d_window_offset;
+  Bit16s d3d_window_offset_x;
+  Bit16s d3d_window_offset_y;
   Bit32u d3d_surface_color_offset;
   Bit32u d3d_surface_zeta_offset;
   Bit32u d3d_blend_enable;
@@ -193,6 +194,10 @@ struct gf_channel
   Bit32u d3d_light_enable_mask;
   float d3d_inverse_model_view_matrix[12];
   float d3d_composite_matrix[16];
+  Bit32u d3d_scissor_x;
+  Bit32u d3d_scissor_width;
+  Bit32u d3d_scissor_y;
+  Bit32u d3d_scissor_height;
   Bit32u d3d_shader_program;
   Bit32u d3d_shader_obj;
   Bit32u d3d_shader_offset;
@@ -420,6 +425,7 @@ private:
   BX_GEFORCE_SMF void m2mf(gf_channel* ch);
   BX_GEFORCE_SMF void sifm(gf_channel* ch);
 
+  BX_GEFORCE_SMF bool d3d_scissor_clip(gf_channel* ch, Bit32u* x, Bit32u* y, Bit32u* width, Bit32u* height);
   BX_GEFORCE_SMF void d3d_clear_surface(gf_channel* ch);
   BX_GEFORCE_SMF void d3d_sample_texture(gf_channel* ch,
     Bit32u tex_unit, float str[3], float color[4]);
