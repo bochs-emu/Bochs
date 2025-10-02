@@ -3646,8 +3646,8 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
   }
 }
 
-float bx_geforce_c::d3d_blend(gf_channel* ch, Bit32u factor,
-  float src_rgb, float src_a, float dst_rgb, float dst_a)
+float blend(Bit32u factor, float src_rgb, float src_a,
+            float dst_rgb, float dst_a, float const_rgb, float const_a)
 {
   switch (factor) {
     case 0x0000: // ZERO
@@ -3680,6 +3680,14 @@ float bx_geforce_c::d3d_blend(gf_channel* ch, Bit32u factor,
     case 0x0307: // ONE_MINUS_DST_COLOR
     case 0x100a:
       return 1.0f - dst_rgb;
+    case 0x100b: // CONSTANT_COLOR
+      return const_rgb;
+    case 0x100c: // ONE_MINUS_CONSTANT_COLOR
+      return 1.0f - const_rgb;
+    case 0x100d: // CONSTANT_ALPHA
+      return const_a;
+    case 0x100e: // ONE_MINUS_CONSTANT_ALPHA
+      return 1.0f - const_a;
     default:
       return 0.5f;
   }
@@ -4033,14 +4041,14 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
               db = color / 255.0f;
               da = 1.0f;
             }
-            r = sr * d3d_blend(ch, src_factor_rgb, sr, sa, dr, da) +
-                dr * d3d_blend(ch, dst_factor_rgb, sr, sa, dr, da);
-            g = sg * d3d_blend(ch, src_factor_rgb, sg, sa, dg, da) +
-                dg * d3d_blend(ch, dst_factor_rgb, sg, sa, dg, da);
-            b = sb * d3d_blend(ch, src_factor_rgb, sb, sa, db, da) +
-                db * d3d_blend(ch, dst_factor_rgb, sb, sa, db, da);
-            a = sa * d3d_blend(ch, src_factor_alpha, sa, sa, da, da) +
-                da * d3d_blend(ch, dst_factor_alpha, sa, sa, da, da);
+            r = sr * blend(src_factor_rgb, sr, sa, dr, da, ch->d3d_blend_color[0], ch->d3d_blend_color[3]) +
+                dr * blend(dst_factor_rgb, sr, sa, dr, da, ch->d3d_blend_color[0], ch->d3d_blend_color[3]);
+            g = sg * blend(src_factor_rgb, sg, sa, dg, da, ch->d3d_blend_color[1], ch->d3d_blend_color[3]) +
+                dg * blend(dst_factor_rgb, sg, sa, dg, da, ch->d3d_blend_color[1], ch->d3d_blend_color[3]);
+            b = sb * blend(src_factor_rgb, sb, sa, db, da, ch->d3d_blend_color[2], ch->d3d_blend_color[3]) +
+                db * blend(dst_factor_rgb, sb, sa, db, da, ch->d3d_blend_color[2], ch->d3d_blend_color[3]);
+            a = sa * blend(src_factor_alpha, sa, sa, da, da, ch->d3d_blend_color[3], ch->d3d_blend_color[3]) +
+                da * blend(dst_factor_alpha, sa, sa, da, da, ch->d3d_blend_color[3], ch->d3d_blend_color[3]);
             r = BX_MIN(BX_MAX(r, 0.0f), 1.0f);
             g = BX_MIN(BX_MAX(g, 0.0f), 1.0f);
             b = BX_MIN(BX_MAX(b, 0.0f), 1.0f);
@@ -4093,7 +4101,8 @@ void bx_geforce_c::d3d_process_vertex(gf_channel* ch)
           ch->d3d_vertex_data[ch->d3d_vertex_index][9 + j][i] = ch->d3d_texcoord[j][i];
   ch->d3d_vertex_index++;
   if (ch->d3d_begin_end == 5 ||      // TRIANGLES
-      ch->d3d_begin_end == 0x1012) { // TRIANGLELIST
+      ch->d3d_begin_end == 0x1012 || // TRIANGLELIST
+      ch->d3d_begin_end == 0x101a) {
     if (ch->d3d_vertex_index == 3) {
       d3d_triangle(ch, 0);
       ch->d3d_vertex_index = 0;
@@ -4805,7 +4814,13 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   else if ((method == 0x0d2 && cls == 0x0097) ||
            (method == 0x0c6 && cls >= 0x0497))
     ch->d3d_blend_func_dfactor = param;
-  else if ((method == 0x0d5 && cls == 0x0097) ||
+  else if ((method == 0x0d3 && cls == 0x0097) ||
+           (method == 0x0c7 && cls >= 0x0497)) {
+    ch->d3d_blend_color[0] = ((param >> 16) & 0xff) / 255.0f;
+    ch->d3d_blend_color[1] = ((param >> 8) & 0xff) / 255.0f;
+    ch->d3d_blend_color[2] = ((param >> 0) & 0xff) / 255.0f;
+    ch->d3d_blend_color[3] = ((param >> 24) & 0xff) / 255.0f;
+  } else if ((method == 0x0d5 && cls == 0x0097) ||
            (method == 0x29b && cls >= 0x0497))
     ch->d3d_depth_func = param;
   else if ((method == 0x0d7 && cls == 0x0097) ||
@@ -4945,10 +4960,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       ch->d3d_vertex_data_array_format_size[i] = (param >> 4) & 0xf;
     } else {
       Bit32u dxtype = param & 0xff;
-      if (dxtype == 0x44) {
-        ch->d3d_vertex_data_array_format_type[i] = 2;
-        ch->d3d_vertex_data_array_format_size[i] = 1;
-      } else if (dxtype == 0x99) {
+      if (dxtype == 0x99) {
         ch->d3d_vertex_data_array_format_type[i] = 2;
         ch->d3d_vertex_data_array_format_size[i] = 2;
       } else if (dxtype == 0xaa) {
@@ -4957,7 +4969,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       } else if (dxtype == 0xbb) {
         ch->d3d_vertex_data_array_format_type[i] = 2;
         ch->d3d_vertex_data_array_format_size[i] = 4;
-      } else if (dxtype == 0xcc) {
+      } else if (dxtype == 0xcc || dxtype == 0x44) {
         ch->d3d_vertex_data_array_format_type[i] = 0;
         ch->d3d_vertex_data_array_format_size[i] = 4;
       }

@@ -181,6 +181,7 @@ struct gf_channel
   Bit32u d3d_blend_enable;
   Bit32u d3d_blend_func_sfactor;
   Bit32u d3d_blend_func_dfactor;
+  float d3d_blend_color[4];
   Bit32u d3d_cull_face_enable;
   Bit32u d3d_depth_test_enable;
   Bit32u d3d_depth_write_enable;
@@ -431,7 +432,6 @@ private:
     Bit32u tex_unit, float str[3], float color[4]);
   BX_GEFORCE_SMF void d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[16][4]);
   BX_GEFORCE_SMF void d3d_pixel_shader(gf_channel* ch, float in[16][4], float tmp_regs16[64][4], float tmp_regs32[64][4]);
-  static float d3d_blend(gf_channel* ch, Bit32u factor, float src_rgb, float src_a, float dst_rgb, float dst_a);
   BX_GEFORCE_SMF void d3d_triangle(gf_channel* ch, Bit32u base);
   BX_GEFORCE_SMF void d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v1[16][4], float v2[16][4]);
   BX_GEFORCE_SMF void d3d_clip_to_screen(gf_channel* ch, float pos_clip[4], float pos_screen[4]);
