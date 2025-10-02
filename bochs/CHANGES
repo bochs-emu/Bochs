@@ -1,6 +1,6 @@
 Changes after 3.0:
 
-  This CHANGES file updated with commits merged till 25 Sep 2025, please refer to git log for more recent updates
+  This CHANGES file updated with commits merged till 2 Oct 2025, please refer to git log for more recent updates
 
 Detailed change log :
 
@@ -9,7 +9,7 @@ Detailed change log :
     In the code BX_WARN is used and it is configurable like other log levels.
 
 - CPU emulation and instrumentation
-  - CPU: Implemented MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS, (AMX TRANSPOSE MOVRS still not implemented)
+  - CPU: Implemented MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS
   - Added new BX_INSTR_CPUID instrumentation callback, see instrumentation.txt doc for description
   - Bugfixes for CPU emulation correctness
 
@@ -68,6 +68,7 @@ Detailed change log :
     - VGA core: Don't report invalid CRTC register if used by extension.
     - Bochs VBE: Skip address wrap during display update
     - Fix graphics snapshot in low resolution modes
+    - Rewrite of 15/16 to 24 bit conversion in Bochs VBE and Cirrus code
   - Voodoo / Banshee
     - Added hardware cursor support for graphics snapshot (Cirrus/Voodoo)
     - Voodoo3: Split mem_read() with len > 8 in two 64-bit reads
