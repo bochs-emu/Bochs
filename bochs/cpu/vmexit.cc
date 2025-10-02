@@ -334,17 +334,17 @@ const Bit32u BX_VMX_LO_MSR_END   = 0x00001FFF;
 const Bit32u BX_VMX_HI_MSR_START = 0xC0000000;
 const Bit32u BX_VMX_HI_MSR_END   = 0xC0001FFF;
 
-void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr)
+void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr, Bit32u qualification)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  bool readmsr = (op == VMX_VMEXIT_RDMSR || op == VMX_VMEXIT_RDMSRLIST);
+  bool readmsr = (op == VMX_VMEXIT_RDMSR || op == VMX_VMEXIT_RDMSR_IMM || op == VMX_VMEXIT_RDMSRLIST);
 
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
   if (! vm->vmexec_ctrls1.MSR_BITMAPS()) {
     BX_DEBUG(("VMEXIT: %sMSR 0x%08x", (readmsr) ? "RD" : "WR", msr));
-    VMexit(op, 0);
+    VMexit(op, 0); // if MSR Bitmaps disabled, exit qualification is always 0
   }
 
   bool vmexit = false;
@@ -371,7 +371,7 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr)
 
   if (vmexit) {
      BX_DEBUG(("VMEXIT: %sMSR 0x%08x", (readmsr) ? "RD" : "WR", msr));
-     VMexit(op, (op >= VMX_VMEXIT_RDMSRLIST) ? msr : 0);
+     VMexit(op, qualification);
   }
 }
 
