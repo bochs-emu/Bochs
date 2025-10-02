@@ -676,8 +676,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    Bit32u reason = (i->getIaOpcode() == BX_IA_RDMSR_EqId) ? VMX_VMEXIT_RDMSR_IMM : VMX_VMEXIT_RDMSR;
-    Bit32u qualification = (i->getIaOpcode() == BX_IA_RDMSR_EqId) ? i->dst() : 0;
+    Bit32u reason = VMX_VMEXIT_RDMSR;
+    Bit32u qualification = 0;
+#if BX_SUPPORT_AVX
+    if (i->getIaOpcode() == BX_IA_RDMSR_EqId) {
+      reason = VMX_VMEXIT_RDMSR_IMM;
+      qualification = i->dst();
+    }
+#endif
     VMexit_MSR(reason, index, qualification);
   }
 #endif
@@ -1406,8 +1412,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
-    Bit32u reason = (i->getIaOpcode() == BX_IA_WRMSRNS_IdEq) ? VMX_VMEXIT_WRMSRNS : VMX_VMEXIT_WRMSR;
-    Bit32u qualification = (i->getIaOpcode() == BX_IA_WRMSRNS_IdEq) ? i->src() : 0;
+    Bit32u reason = VMX_VMEXIT_WRMSR;
+    Bit32u qualification = 0;
+#if BX_SUPPORT_AVX
+    if (i->getIaOpcode() == BX_IA_WRMSRNS_IdEq) {
+      reason = VMX_VMEXIT_WRMSRNS;
+      qualification = i->src();
+    }
+#endif
     VMexit_MSR(reason, index, qualification);
   }
 #endif
