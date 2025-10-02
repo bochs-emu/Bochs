@@ -776,7 +776,8 @@ log: bochsout.txt
 panic: action=ask
 error: action=report
 info: action=report
-debug: action=ignore, pci=report # report BX_DEBUG from module 'pci'
+debug: action=ignore
+#debug: action=ignore, pci=report # report BX_DEBUG from module 'pci'
 
 #=======================================================================
 # DEBUGGER_LOG:
