@@ -196,7 +196,12 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
 
   // I just see if I can read a sector to verify that a
   // CD is in the drive and readable.
-  fd = (read_block(buffer, 0, 2048)) ? 1 : -1;
+  fd = (read_block(buffer, 0x10, 2048)) ? 1 : -1;
+  if (memcmp(buffer, "\x00\x42\x45\x41\x30\x31\x01\x00", 8) == 0) {
+    BX_INFO(("* Direct Media Access detected a Universal Disc Format (UDF) file system. (DVD?)"));
+    BX_INFO(("* Older Guests may not recognize the volume, giving a false indication that"));
+    BX_INFO(("*  Bochs' Direct Disc access is malfunctioning."));
+  }
   return (fd == 1);
 }
 
