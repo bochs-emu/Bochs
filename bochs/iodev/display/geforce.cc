@@ -4732,12 +4732,19 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     }
     ch->d3d_dci = 3;
     ch->d3d_tex_coord_count = BX_GEFORCE_THIS card_type >= 0x35 ? 8 : 4;
-    if (BX_GEFORCE_THIS card_type == 0x20)
+    if (BX_GEFORCE_THIS card_type == 0x20) {
       for (int j = 0; j < 4; j++)
         ch->d3d_attrib_tex_coord[j] = j + 9;
-    else
-      for (int j = 0; j < 10; j++)
-        ch->d3d_attrib_tex_coord[j] = (j + 8) & 0xf;
+    } else {
+      for (int j = 0; j < 8; j++) {
+        if (BX_GEFORCE_THIS card_type == 0x35)
+          ch->d3d_attrib_tex_coord[j] = j + 8;
+        else
+          ch->d3d_attrib_tex_coord[j] = j + 7;
+      }
+      ch->d3d_attrib_tex_coord[8] = 0xf;
+      ch->d3d_attrib_tex_coord[9] = 0xf;
+    }
   } else if (method == 0x061)
     ch->d3d_a_obj = param;
   else if (method == 0x062)
