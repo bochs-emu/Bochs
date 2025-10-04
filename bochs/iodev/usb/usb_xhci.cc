@@ -1376,6 +1376,7 @@ bool bx_usb_xhci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
       }
     }
     else {
+      BX_ERROR(("Read from port %d when portsc.pp = 0", port));
       val = 0;
     }
   }
