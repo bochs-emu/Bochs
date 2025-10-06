@@ -3499,6 +3499,7 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
 {
   static bool unknown_opcode_reported = false;
   Bit32u ps_offset = ch->d3d_shader_offset;
+  Bit32u cc[4];
   for (;;) {
     Bit32u dst_word = dma_read32(ch->d3d_shader_obj, ps_offset);
     ps_offset += 4;
@@ -3524,6 +3525,7 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
       for (int i = 0; i < 4; i++)
         swizzle[i] = (src_words[p] >> (9 + i * 2)) & 3;
       bool negate = (src_words[p] >> 17) & 1;
+      bool src_abs = (p == 0 ? src_words[0] >> 29 : src_words[p] >> 18) & 1;
       for (int comp_index = 0; comp_index < 4; comp_index++) {
         int comp_index_swizzle = swizzle[comp_index];
         if (reg_type == 0) {
@@ -3538,106 +3540,212 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
         } else if (reg_type == 2) {
           params[p][comp_index] = cnst[comp_index_swizzle];
         }
+        if (src_abs)
+          params[p][comp_index] = fabs(params[p][comp_index]);
         if (negate)
           params[p][comp_index] = -params[p][comp_index];
       }
     }
-    Bit32u op = (dst_word >> 24) & 0x3f;
-    float op_result[4];
-    if (op == 0) { // NOP
-    } else if (op == 1) { // MOV
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        op_result[comp_index] = params[0][comp_index];
-    } else if (op == 2) { // MUL
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        op_result[comp_index] = params[0][comp_index] * params[1][comp_index];
-    } else if (op == 3) { // ADD
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        op_result[comp_index] = params[0][comp_index] + params[1][comp_index];
-    } else if (op == 4) { // MAD
-      for (int comp_index = 0; comp_index < 4; comp_index++) {
-        op_result[comp_index] = params[0][comp_index] * params[1][comp_index] +
-          params[2][comp_index];
-      }
-    } else if (op == 5) { // DP3
-      float dot = 0.0f;
-      for (int comp_index = 0; comp_index < 3; comp_index++)
-        dot += params[0][comp_index] * params[1][comp_index];
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        op_result[comp_index] = dot;
-    } else if (op == 6) { // DP4
-      float dot = 0.0f;
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        dot += params[0][comp_index] * params[1][comp_index];
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        op_result[comp_index] = dot;
-    } else if (op == 0x10) { // FRC
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        op_result[comp_index] = params[0][comp_index] - floor(params[0][comp_index]);
-    } else if (op == 0x11) { // FLR
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        op_result[comp_index] = floor(params[0][comp_index]);
-    } else if (op == 0x17) { // TEX
-      Bit32u tex_unit = (dst_word >> 17) & 0xf;
-      d3d_sample_texture(ch, tex_unit, params[0], op_result);
-    } else if (op == 0x18) { // TXP
-      params[0][0] /= params[0][3];
-      params[0][1] /= params[0][3];
-      params[0][2] /= params[0][3];
-      Bit32u tex_unit = (dst_word >> 17) & 0xf;
-      d3d_sample_texture(ch, tex_unit, params[0], op_result);
-    } else if (op == 0x1a) { // RCP
-      float rcp = 1.0f / params[0][0];
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        op_result[comp_index] = rcp;
-    } else if (op == 0x1d) { // LG2
-      float lg2 = log2(params[0][0]);
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        op_result[comp_index] = lg2;
-    } else if (op == 0x22) { // COS
-      float cosv = cos(params[0][0]);
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        op_result[comp_index] = cosv;
-    } else if (op == 0x23) { // SIN
-      float sinv = sin(params[0][0]);
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        op_result[comp_index] = sinv;
-    } else if (op == 0x33) { // TEXBEM
-      float xy[2];
-      xy[0] = params[0][0] + params[1][0] * params[2][0] + params[1][1] * params[2][1];
-      xy[1] = params[0][1] + params[1][0] * params[2][2] + params[1][1] * params[2][3];
-      Bit32u tex_unit = (dst_word >> 17) & 0xf;
-      d3d_sample_texture(ch, tex_unit, xy, op_result);
-    } else if (op == 0x38) { // DP2
-      float dot = 0.0f;
-      for (int comp_index = 0; comp_index < 2; comp_index++)
-        dot += params[0][comp_index] * params[1][comp_index];
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        op_result[comp_index] = dot;
-    } else if (op == 0x3a) { // DIV
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        op_result[comp_index] = params[0][comp_index] / params[1][0];
-    } else {
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        op_result[comp_index] = 0.5f;
-      if (!unknown_opcode_reported) {
-        BX_ERROR(("Pixel shader: unknown opcode 0x%02x", op));
-        unknown_opcode_reported = true;
+    Bit32u cond = (src_words[0] >> 18) & 7;
+    bool execute;
+    if (cond == 7)
+      execute = true;
+    else {
+      execute = false;
+      for (int i = 0; i < 4; i++) {
+        Bit32u cond_swizzle = (src_words[0] >> (21 + i * 2)) & 3;
+        if ((cc[cond_swizzle] & cond) != 0) {
+          execute = true;
+          break;
+        }
       }
     }
-    if (op != 0) {
-      Bit32u mask = (dst_word >> 9) & 0xf;
-      Bit32u dst_tmp_reg = (dst_word >> 1) & 0x3f;
-      static const float dst_scales[] = {1.0f, 2.0f, 4.0f, 8.0f, 1.0f, 0.5f, 0.25f, 0.125f};
-      Bit32u dst_scale = (src_words[1] >> 28) & 7;
-      bool dst_fp16 = (dst_word >> 7) & 1;
-      for (int comp_index = 0; comp_index < 4; comp_index++) {
-        if ((mask & (1 << comp_index)) != 0) {
-          float scaled_result = op_result[comp_index] * dst_scales[dst_scale];
-          if (dst_fp16)
-            tmp_regs16[dst_tmp_reg][comp_index] = scaled_result;
+    if (execute) {
+      Bit32u op = (dst_word >> 24) & 0x3f;
+      float op_result[4];
+      switch (op) {
+        case 0: // NOP
+          break;
+        case 1: // MOV
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = params[0][comp_index];
+          break;
+        case 2: // MUL
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = params[0][comp_index] * params[1][comp_index];
+          break;
+        case 3: // ADD
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = params[0][comp_index] + params[1][comp_index];
+          break;
+        case 4: // MAD
+          for (int comp_index = 0; comp_index < 4; comp_index++) {
+            op_result[comp_index] = params[0][comp_index] * params[1][comp_index] +
+              params[2][comp_index];
+          }
+          break;
+        case 5: { // DP3
+          float dot = 0.0f;
+          for (int comp_index = 0; comp_index < 3; comp_index++)
+            dot += params[0][comp_index] * params[1][comp_index];
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = dot;
+          break;
+        }
+        case 6: { // DP4
+          float dot = 0.0f;
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            dot += params[0][comp_index] * params[1][comp_index];
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = dot;
+          break;
+        }
+        case 0xa: // SLT
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = params[0][comp_index] < params[1][comp_index] ? 1.0f : 0.0f;
+          break;
+        case 0xb: // SGE
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = params[0][comp_index] >= params[1][comp_index] ? 1.0f : 0.0f;
+          break;
+        case 0xc: // SLE
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = params[0][comp_index] <= params[1][comp_index] ? 1.0f : 0.0f;
+          break;
+        case 0xd: // SGT
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = params[0][comp_index] > params[1][comp_index] ? 1.0f : 0.0f;
+          break;
+        case 0xe: // SNE
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = params[0][comp_index] != params[1][comp_index] ? 1.0f : 0.0f;
+          break;
+        case 0xf: // SEQ
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = params[0][comp_index] == params[1][comp_index] ? 1.0f : 0.0f;
+          break;
+        case 0x10: // FRC
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = params[0][comp_index] - floor(params[0][comp_index]);
+          break;
+        case 0x11: // FLR
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = floor(params[0][comp_index]);
+          break;
+        case 0x17: { // TEX
+          Bit32u tex_unit = (dst_word >> 17) & 0xf;
+          d3d_sample_texture(ch, tex_unit, params[0], op_result);
+          break;
+        }
+        case 0x18: { // TXP
+          params[0][0] /= params[0][3];
+          params[0][1] /= params[0][3];
+          params[0][2] /= params[0][3];
+          Bit32u tex_unit = (dst_word >> 17) & 0xf;
+          d3d_sample_texture(ch, tex_unit, params[0], op_result);
+          break;
+        }
+        case 0x1a: { // RCP
+          float rcp = 1.0f / params[0][0];
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = rcp;
+          break;
+        }
+        case 0x1c: { // EX2
+          float ex2 = exp2(params[0][0]);
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = ex2;
+          break;
+        }
+        case 0x1d: { // LG2
+          float lg2 = log2(params[0][0]);
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = lg2;
+          break;
+        }
+        case 0x22: { // COS
+          float cosv = cos(params[0][0]);
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = cosv;
+          break;
+        }
+        case 0x23: { // SIN
+          float sinv = sin(params[0][0]);
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = sinv;
+          break;
+        }
+        case 0x2e: { // DP2A
+          float dot = 0.0f;
+          for (int comp_index = 0; comp_index < 2; comp_index++)
+            dot += params[0][comp_index] * params[1][comp_index];
+          dot += params[2][0];
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = dot;
+          break;
+        }
+        case 0x33: { // TEXBEM
+          float xy[2];
+          xy[0] = params[0][0] + params[1][0] * params[2][0] + params[1][1] * params[2][1];
+          xy[1] = params[0][1] + params[1][0] * params[2][2] + params[1][1] * params[2][3];
+          Bit32u tex_unit = (dst_word >> 17) & 0xf;
+          d3d_sample_texture(ch, tex_unit, xy, op_result);
+          break;
+        }
+        case 0x38: { // DP2
+          float dot = 0.0f;
+          for (int comp_index = 0; comp_index < 2; comp_index++)
+            dot += params[0][comp_index] * params[1][comp_index];
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = dot;
+          break;
+        }
+        case 0x3a: // DIV
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = params[0][comp_index] / params[1][0];
+          break;
+        default:
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = 0.5f;
+          if (!unknown_opcode_reported) {
+            BX_ERROR(("Pixel shader: unknown opcode 0x%02x", op));
+            unknown_opcode_reported = true;
+          }
+          break;
+      }
+      bool set_cc = (dst_word >> 8) & 1;
+      if (set_cc) {
+        for (int comp_index = 0; comp_index < 4; comp_index++) {
+          if (op_result[comp_index] < 0.0f)
+            cc[comp_index] = 1;
+          else if (op_result[comp_index] == 0.0f)
+            cc[comp_index] = 2;
           else
-            tmp_regs32[dst_tmp_reg][comp_index] = scaled_result;
+            cc[comp_index] = 4;
+        }
+      }
+      bool no_dst = (dst_word >> 30) & 1;
+      if (op != 0 && !no_dst) {
+        Bit32u mask = (dst_word >> 9) & 0xf;
+        Bit32u dst_tmp_reg = (dst_word >> 1) & 0x3f;
+        static const float dst_scales[] = {1.0f, 2.0f, 4.0f, 8.0f, 1.0f, 0.5f, 0.25f, 0.125f};
+        Bit32u dst_scale = (src_words[1] >> 28) & 7;
+        bool dst_fp16 = (dst_word >> 7) & 1;
+        bool saturate = (dst_word >> 31) & 1;
+        for (int comp_index = 0; comp_index < 4; comp_index++) {
+          if ((mask & (1 << comp_index)) != 0) {
+            float value = op_result[comp_index] * dst_scales[dst_scale];
+            if (saturate) {
+              if (value < 0.0f)
+                value = 0.0f;
+              else if (value > 1.0f)
+                value = 1.0f;
+            }
+            if (dst_fp16)
+              tmp_regs16[dst_tmp_reg][comp_index] = value;
+            else
+              tmp_regs32[dst_tmp_reg][comp_index] = value;
+          }
         }
       }
     }
@@ -3884,11 +3992,13 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
     interpolate[a] = result;
   }
   float ps_in[16][4];
-  for (int i = 0; i < 2; i++)
+  for (int comp_index = 0; comp_index < 4; comp_index++)
+    ps_in[3][comp_index] = 1.0f; // fog is not implemented
+  for (Bit32u i = 0; i < 2; i++)
     if (!interpolate[ch->d3d_dci + i])
       for (int comp_index = 0; comp_index < 4; comp_index++)
         ps_in[i + 1][comp_index] = v0[ch->d3d_dci + i][comp_index];
-  for (unsigned i = 0; i < ch->d3d_tex_coord_count; i++)
+  for (Bit32u i = 0; i < ch->d3d_tex_coord_count; i++)
     if (!interpolate[ch->d3d_attrib_tex_coord[i]])
       for (int comp_index = 0; comp_index < 4; comp_index++)
         ps_in[i + 4][comp_index] = v0[ch->d3d_attrib_tex_coord[i]][comp_index];
