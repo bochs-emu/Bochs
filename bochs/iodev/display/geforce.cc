@@ -4002,21 +4002,6 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
     if (!interpolate[ch->d3d_attrib_tex_coord[i]])
       for (int comp_index = 0; comp_index < 4; comp_index++)
         ps_in[i + 4][comp_index] = v0[ch->d3d_attrib_tex_coord[i]][comp_index];
-  Bit16u src_factor_rgb;
-  Bit16u src_factor_alpha;
-  Bit16u dst_factor_rgb;
-  Bit16u dst_factor_alpha;
-  if (ch->d3d_blend_enable) {
-    src_factor_rgb = ch->d3d_blend_func_sfactor & 0xffff;
-    dst_factor_rgb = ch->d3d_blend_func_dfactor & 0xffff;
-    if (BX_GEFORCE_THIS card_type == 0x20) {
-      src_factor_alpha = src_factor_rgb;
-      dst_factor_alpha = dst_factor_rgb;
-    } else {
-      src_factor_alpha = ch->d3d_blend_func_sfactor >> 16;
-      dst_factor_alpha = ch->d3d_blend_func_dfactor >> 16;
-    }
-  }
   float xy[2];
   xy[1] = draw_y1 + 0.5f;
   for (Bit16u y = 0; y < draw_height; y++, xy[1]++) {
@@ -4127,6 +4112,17 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
           float b = BX_MIN(BX_MAX(tmp_regs16[0][2], 0.0f), 1.0f);
           float a = BX_MIN(BX_MAX(tmp_regs16[0][3], 0.0f), 1.0f);
           if (ch->d3d_blend_enable) {
+            Bit16u src_factor_rgb = ch->d3d_blend_func_sfactor & 0xffff;
+            Bit16u dst_factor_rgb = ch->d3d_blend_func_dfactor & 0xffff;
+            Bit16u src_factor_alpha;
+            Bit16u dst_factor_alpha;
+            if (BX_GEFORCE_THIS card_type == 0x20) {
+              src_factor_alpha = src_factor_rgb;
+              dst_factor_alpha = dst_factor_rgb;
+            } else {
+              src_factor_alpha = ch->d3d_blend_func_sfactor >> 16;
+              dst_factor_alpha = ch->d3d_blend_func_dfactor >> 16;
+            }
             float sr = r;
             float sg = g;
             float sb = b;
