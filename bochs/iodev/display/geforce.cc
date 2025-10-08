@@ -3754,47 +3754,74 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
   }
 }
 
-float blend(Bit32u factor, float src_rgb, float src_a,
-            float dst_rgb, float dst_a, float const_rgb, float const_a)
+float blend_equation(Bit16u equation, float src, float src_factor, float dst, float dst_factor)
+{
+  switch (equation) {
+    case 0x0001: // ADD
+    case 0x8006: // FUNC_ADD
+    default:
+      return src * src_factor + dst * dst_factor;
+    case 0x0002: // SUBTRACT
+    case 0x800a: // FUNC_SUBTRACT
+      return src * src_factor - dst * dst_factor;
+    case 0x0003: // REV_SUBTRACT
+    case 0x800b: // FUNC_REVERSE_SUBTRACT
+      return dst * dst_factor - src * src_factor;
+    case 0x0004: // MIN
+    case 0x8007: // MIN
+      return BX_MIN(src, dst);
+    case 0x0005: // MAX
+    case 0x8008: // MAX
+      return BX_MAX(src, dst);
+  }
+}
+
+float blend_factor(Bit16u factor, float src_rgb, float src_a,
+                   float dst_rgb, float dst_a, float const_rgb, float const_a)
 {
   switch (factor) {
     case 0x0000: // ZERO
-    case 0x1001:
+    case 0x1001: // ZERO
       return 0.0f;
     case 0x0001: // ONE
-    case 0x1002:
+    case 0x1002: // ONE
       return 1.0f;
     case 0x0300: // SRC_COLOR
-    case 0x1003:
+    case 0x1003: // SRC_COLOR
       return src_rgb;
     case 0x0301: // ONE_MINUS_SRC_COLOR
-    case 0x1004:
+    case 0x1004: // INV_SRC_COLOR
       return 1.0f - src_rgb;
     case 0x0302: // SRC_ALPHA
-    case 0x1005:
+    case 0x1005: // SRC_ALPHA
       return src_a;
     case 0x0303: // ONE_MINUS_SRC_ALPHA
-    case 0x1006:
+    case 0x1006: // INV_SRC_ALPHA
       return 1.0f - src_a;
     case 0x0304: // DST_ALPHA
-    case 0x1007:
+    case 0x1007: // DEST_ALPHA
       return dst_a;
     case 0x0305: // ONE_MINUS_DST_ALPHA
-    case 0x1008:
+    case 0x1008: // INV_DEST_ALPHA
       return 1.0f - dst_a;
     case 0x0306: // DST_COLOR
-    case 0x1009:
+    case 0x1009: // DEST_COLOR
       return dst_rgb;
     case 0x0307: // ONE_MINUS_DST_COLOR
-    case 0x100a:
+    case 0x100a: // INV_DEST_COLOR
       return 1.0f - dst_rgb;
-    case 0x100b: // CONSTANT_COLOR
+    case 0x0308: // SRC_ALPHA_SATURATE
+    case 0x100b: // SRC_ALPHA_SAT
+      return BX_MIN(src_a, 1.0f - dst_a);
+    case 0x8001: // CONSTANT_COLOR
+    case 0x100e: // BLEND_FACTOR
       return const_rgb;
-    case 0x100c: // ONE_MINUS_CONSTANT_COLOR
+    case 0x8002: // ONE_MINUS_CONSTANT_COLOR
+    case 0x100f: // INV_BLEND_FACTOR
       return 1.0f - const_rgb;
-    case 0x100d: // CONSTANT_ALPHA
+    case 0x8003: // CONSTANT_ALPHA
       return const_a;
-    case 0x100e: // ONE_MINUS_CONSTANT_ALPHA
+    case 0x8004: // ONE_MINUS_CONSTANT_ALPHA
       return 1.0f - const_a;
     default:
       return 0.5f;
@@ -4112,17 +4139,6 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
         float b = BX_MIN(BX_MAX(tmp_regs16[0][2], 0.0f), 1.0f);
         float a = BX_MIN(BX_MAX(tmp_regs16[0][3], 0.0f), 1.0f);
         if (ch->d3d_blend_enable) {
-          Bit16u src_factor_rgb = ch->d3d_blend_func_sfactor & 0xffff;
-          Bit16u dst_factor_rgb = ch->d3d_blend_func_dfactor & 0xffff;
-          Bit16u src_factor_alpha;
-          Bit16u dst_factor_alpha;
-          if (BX_GEFORCE_THIS card_type == 0x20) {
-            src_factor_alpha = src_factor_rgb;
-            dst_factor_alpha = dst_factor_rgb;
-          } else {
-            src_factor_alpha = ch->d3d_blend_func_sfactor >> 16;
-            dst_factor_alpha = ch->d3d_blend_func_dfactor >> 16;
-          }
           float sr = r;
           float sg = g;
           float sb = b;
@@ -4147,14 +4163,26 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
             db = color / 255.0f;
             da = 1.0f;
           }
-          r = sr * blend(src_factor_rgb, sr, sa, dr, da, ch->d3d_blend_color[0], ch->d3d_blend_color[3]) +
-              dr * blend(dst_factor_rgb, sr, sa, dr, da, ch->d3d_blend_color[0], ch->d3d_blend_color[3]);
-          g = sg * blend(src_factor_rgb, sg, sa, dg, da, ch->d3d_blend_color[1], ch->d3d_blend_color[3]) +
-              dg * blend(dst_factor_rgb, sg, sa, dg, da, ch->d3d_blend_color[1], ch->d3d_blend_color[3]);
-          b = sb * blend(src_factor_rgb, sb, sa, db, da, ch->d3d_blend_color[2], ch->d3d_blend_color[3]) +
-              db * blend(dst_factor_rgb, sb, sa, db, da, ch->d3d_blend_color[2], ch->d3d_blend_color[3]);
-          a = sa * blend(src_factor_alpha, sa, sa, da, da, ch->d3d_blend_color[3], ch->d3d_blend_color[3]) +
-              da * blend(dst_factor_alpha, sa, sa, da, da, ch->d3d_blend_color[3], ch->d3d_blend_color[3]);
+          r = blend_equation(ch->d3d_blend_equation_rgb,
+                sr, blend_factor(ch->d3d_blend_sfactor_rgb, sr, sa, dr, da,
+                                 ch->d3d_blend_color[0], ch->d3d_blend_color[3]),
+                dr, blend_factor(ch->d3d_blend_dfactor_rgb, sr, sa, dr, da,
+                                 ch->d3d_blend_color[0], ch->d3d_blend_color[3]));
+          g = blend_equation(ch->d3d_blend_equation_rgb,
+                sg, blend_factor(ch->d3d_blend_sfactor_rgb, sg, sa, dg, da,
+                                 ch->d3d_blend_color[1], ch->d3d_blend_color[3]),
+                dg, blend_factor(ch->d3d_blend_dfactor_rgb, sg, sa, dg, da,
+                                 ch->d3d_blend_color[1], ch->d3d_blend_color[3]));
+          b = blend_equation(ch->d3d_blend_equation_rgb,
+                sb, blend_factor(ch->d3d_blend_sfactor_rgb, sb, sa, db, da,
+                                 ch->d3d_blend_color[2], ch->d3d_blend_color[3]),
+                db, blend_factor(ch->d3d_blend_dfactor_rgb, sb, sa, db, da,
+                                 ch->d3d_blend_color[2], ch->d3d_blend_color[3]));
+          a = blend_equation(ch->d3d_blend_equation_alpha,
+                sa, blend_factor(ch->d3d_blend_sfactor_alpha, sa, sa, da, da,
+                                 ch->d3d_blend_color[3], ch->d3d_blend_color[3]),
+                da, blend_factor(ch->d3d_blend_dfactor_alpha, sa, sa, da, da,
+                                 ch->d3d_blend_color[3], ch->d3d_blend_color[3]));
           r = BX_MIN(BX_MAX(r, 0.0f), 1.0f);
           g = BX_MIN(BX_MAX(g, 0.0f), 1.0f);
           b = BX_MIN(BX_MAX(b, 0.0f), 1.0f);
@@ -4920,13 +4948,25 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   else if ((method == 0x0c5 && cls == 0x0097) ||
            (method == 0x516 && cls >= 0x0497)) {
     ch->d3d_lighting_enable = param;
-  } else if ((method == 0x0d1 && cls == 0x0097) ||
-             (method == 0x0c5 && cls >= 0x0497))
-    ch->d3d_blend_func_sfactor = param;
-  else if ((method == 0x0d2 && cls == 0x0097) ||
-           (method == 0x0c6 && cls >= 0x0497))
-    ch->d3d_blend_func_dfactor = param;
-  else if ((method == 0x0d3 && cls == 0x0097) ||
+  } else if (method == 0x0d1 && cls == 0x0097) {
+    ch->d3d_blend_sfactor_rgb = (Bit16u)param;
+    ch->d3d_blend_sfactor_alpha = (Bit16u)param;
+  } else if (method == 0x0d2 && cls == 0x0097) {
+    ch->d3d_blend_dfactor_rgb = (Bit16u)param;
+    ch->d3d_blend_dfactor_alpha = (Bit16u)param;
+  } else if (method == 0x0d4 && cls == 0x0097) {
+    ch->d3d_blend_equation_rgb = (Bit16u)param;
+    ch->d3d_blend_equation_alpha = (Bit16u)param;
+  } else if (method == 0x0c5 && cls >= 0x0497) {
+    ch->d3d_blend_sfactor_rgb = (Bit16u)param;
+    ch->d3d_blend_sfactor_alpha = param >> 16;
+  } else if (method == 0x0c6 && cls >= 0x0497) {
+    ch->d3d_blend_dfactor_rgb = (Bit16u)param;
+    ch->d3d_blend_dfactor_alpha = param >> 16;
+  } else if (method == 0x0c8 && cls >= 0x0497) {
+    ch->d3d_blend_equation_rgb = (Bit16u)param;
+    ch->d3d_blend_equation_alpha = param >> 16;
+  } else if ((method == 0x0d3 && cls == 0x0097) ||
            (method == 0x0c7 && cls >= 0x0497)) {
     ch->d3d_blend_color[0] = ((param >> 16) & 0xff) / 255.0f;
     ch->d3d_blend_color[1] = ((param >> 8) & 0xff) / 255.0f;
