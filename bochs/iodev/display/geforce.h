@@ -179,8 +179,12 @@ struct gf_channel
   Bit32u d3d_surface_color_offset;
   Bit32u d3d_surface_zeta_offset;
   Bit32u d3d_blend_enable;
-  Bit32u d3d_blend_func_sfactor;
-  Bit32u d3d_blend_func_dfactor;
+  Bit16u d3d_blend_sfactor_rgb;
+  Bit16u d3d_blend_sfactor_alpha;
+  Bit16u d3d_blend_dfactor_rgb;
+  Bit16u d3d_blend_dfactor_alpha;
+  Bit16u d3d_blend_equation_rgb;
+  Bit16u d3d_blend_equation_alpha;
   float d3d_blend_color[4];
   Bit32u d3d_cull_face_enable;
   Bit32u d3d_depth_test_enable;
