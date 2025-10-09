@@ -178,6 +178,9 @@ struct gf_channel
   Bit16s d3d_window_offset_y;
   Bit32u d3d_surface_color_offset;
   Bit32u d3d_surface_zeta_offset;
+  Bit32u d3d_alpha_test_enable;
+  Bit32u d3d_alpha_func;
+  Bit32u d3d_alpha_ref;
   Bit32u d3d_blend_enable;
   Bit16u d3d_blend_sfactor_rgb;
   Bit16u d3d_blend_sfactor_alpha;
