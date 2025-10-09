@@ -3828,6 +3828,37 @@ float blend_factor(Bit16u factor, float src_rgb, float src_a,
   }
 }
 
+bool compare(Bit32u func, Bit32u val1, Bit32u val2)
+{
+  switch (func) {
+    case 1:
+    case 0x200: // NEVER
+      return false;
+    case 2:
+    case 0x201: // LESS
+    default:
+      return val1 < val2;
+    case 3:
+    case 0x202: // EQUAL
+      return val1 == val2;
+    case 4:
+    case 0x203: // LEQUAL
+      return val1 <= val2;
+    case 5:
+    case 0x204: // GREATER
+      return val1 > val2;
+    case 6:
+    case 0x205: // NOTEQUAL
+      return val1 != val2;
+    case 7:
+    case 0x206: // GEQUAL
+      return val1 >= val2;
+    case 8:
+    case 0x207: // ALWAYS
+      return true;
+  }
+}
+
 void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
 {
   if (ch->d3d_shade_mode == 0x00001d00) { // FLAT
@@ -4059,41 +4090,7 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
           z_prev = dma_read16(ch->d3d_zeta_obj, draw_offset_zeta + x * 2);
         else
           z_prev = dma_read32(ch->d3d_zeta_obj, draw_offset_zeta + x * 4) >> 8;
-        switch (ch->d3d_depth_func) {
-          case 1:
-          case 0x200: // NEVER
-            draw = false;
-            break;
-          case 2:
-          case 0x201: // LESS
-          default:
-            draw = z_new < z_prev;
-            break;
-          case 3:
-          case 0x202: // EQUAL
-            draw = z_new == z_prev;
-            break;
-          case 4:
-          case 0x203: // LEQUAL
-            draw = z_new <= z_prev;
-            break;
-          case 5:
-          case 0x204: // GREATER
-            draw = z_new > z_prev;
-            break;
-          case 6:
-          case 0x205: // NOTEQUAL
-            draw = z_new != z_prev;
-            break;
-          case 7:
-          case 0x206: // GEQUAL
-            draw = z_new >= z_prev;
-            break;
-          case 8:
-          case 0x207: // ALWAYS
-            draw = true;
-            break;
-        }
+        draw = compare(ch->d3d_depth_func, z_new, z_prev);
       }
       if (draw) {
         ps_in[0][3] = sp0[3] * b0 + sp1[3] * b1 + sp2[3] * b2;
@@ -4134,10 +4131,14 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
             d3d_sample_texture(ch, 0, ps_in[4], tmp_regs16[0]);
           }
         }
+        float a = BX_MIN(BX_MAX(tmp_regs16[0][3], 0.0f), 1.0f);
+        if (ch->d3d_alpha_test_enable) {
+          if (!compare(ch->d3d_alpha_func, (Bit32u)(a * 255.0f), ch->d3d_alpha_ref))
+            continue;
+        }
         float r = BX_MIN(BX_MAX(tmp_regs16[0][0], 0.0f), 1.0f);
         float g = BX_MIN(BX_MAX(tmp_regs16[0][1], 0.0f), 1.0f);
         float b = BX_MIN(BX_MAX(tmp_regs16[0][2], 0.0f), 1.0f);
-        float a = BX_MIN(BX_MAX(tmp_regs16[0][3], 0.0f), 1.0f);
         if (ch->d3d_blend_enable) {
           float sr = r;
           float sg = g;
@@ -4250,6 +4251,7 @@ void bx_geforce_c::d3d_process_vertex(gf_channel* ch)
     }
   } else if (ch->d3d_begin_end == 7 || // TRIANGLE_FAN
              ch->d3d_begin_end == 0xa || // POLYGON
+             ch->d3d_begin_end == 0x1015 ||
              ch->d3d_begin_end == 0x1017) {
     if (ch->d3d_vertex_index == 3 || ch->d3d_primitive_done) {
       d3d_triangle(ch, 0);
@@ -4936,7 +4938,16 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   else if (method == 0x0ae && cls >= 0x0497) {
     ch->d3d_window_offset_x = (Bit16s)param;
     ch->d3d_window_offset_y = (Bit16s)(param >> 16);
-  } else if ((method == 0x0c1 && cls == 0x0097) ||
+  } else if ((method == 0x0c0 && cls == 0x0097) ||
+             (method == 0x0c1 && cls >= 0x0497))
+    ch->d3d_alpha_test_enable = param;
+  else if ((method == 0x0cf && cls == 0x0097) ||
+           (method == 0x0c2 && cls >= 0x0497))
+    ch->d3d_alpha_func = param;
+  else if ((method == 0x0d0 && cls == 0x0097) ||
+           (method == 0x0c3 && cls >= 0x0497))
+    ch->d3d_alpha_ref = param;
+  else if ((method == 0x0c1 && cls == 0x0097) ||
            (method == 0x0c4 && cls >= 0x0497))
     ch->d3d_blend_enable = param;
   else if ((method == 0x0c2 && cls == 0x0097) ||
