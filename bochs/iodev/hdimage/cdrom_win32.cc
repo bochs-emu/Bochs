@@ -289,7 +289,9 @@ int cdrom_win32_c::read_sub_channel(Bit8u* buf, bool sub_q, bool msf, int start_
     if (DeviceIoControl(hFile, IOCTL_CDROM_READ_Q_CHANNEL, &q_data_format, sizeof(q_data_format), buffer, BX_CD_FRAMESIZE, &iBytesReturned, NULL)) {
       // WinXP expects the Audio Status byte to be valid, if not it assumes 
       //  an error with that track, and moves to the next one.
+#if !WIN_CDROM_FORCE_IOCTRL
       buffer[1] = mciStatus;
+#endif
       if (!sub_q) iBytesReturned = 4;
       memcpy(buf, buffer, BX_MIN(iBytesReturned, alloc_length));
       return iBytesReturned;
