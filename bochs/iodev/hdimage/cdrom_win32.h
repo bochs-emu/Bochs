@@ -29,9 +29,9 @@ struct CDROM_TRACK_INFO {
   Bit32u length;
 };
 
-#include <Mmsystem.h>
-
 #if !WIN_CDROM_FORCE_IOCTRL
+  #include <Mmsystem.h>
+  
   #define AUDIO_STATUS_NOT_VALID    0x00
   #define AUDIO_STATUS_PLAYING      0x11
   #define AUDIO_STATUS_PAUSED       0x12
