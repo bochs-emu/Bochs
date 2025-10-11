@@ -18,6 +18,8 @@
 //  License along with this library; if not, write to the Free Software
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
+#ifdef WIN32
+
 #define CDROM_TYPE_UNKNOWN  0
 #define CDROM_TYPE_DATA     1
 #define CDROM_TYPE_AUDIO    2
@@ -62,7 +64,6 @@ private:
   Bit32u msf2lba(Bit8u mins, Bit8u secs, Bit8u frames);
   void lba2msf(int lba, Bit8u *mins, Bit8u *secs, Bit8u *frames);
   int msf2tmsf(Bit8u *mins, Bit8u *secs, Bit8u *frames);
-#ifdef WIN32  // is this necessary?
   HANDLE hFile;
   int  cdrom_type;  // 0 = unknown, 1 = is a data cdrom, 2 = is an audio cdrom
   int  tot_tracks;
