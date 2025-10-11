@@ -1504,14 +1504,14 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                         case 0x0d: // CD-ROM
                         case 0x0e: // CD-ROM audio control
                         case 0x3f: // all
-                          BX_ERROR(("cdrom: MODE SENSE (curr), code=%x not implemented yet", PageCode));
+                          BX_ERROR(("cdrom: MODE SENSE (curr), code=0x%02X not implemented yet", PageCode));
                           atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
                           raise_interrupt(channel);
                           break;
 
                         default:
                           // not implemeted by this device
-                          BX_INFO(("cdrom: MODE SENSE PC=%x, PageCode=%x, not implemented by device", PC, PageCode));
+                          BX_INFO(("cdrom: MODE SENSE PC=0x%02X, PageCode=0x%02X, not implemented by device", PC, PageCode));
                           atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
                           raise_interrupt(channel);
                           break;
@@ -1689,7 +1689,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                         }
                         break;
                       default:
-                        BX_ERROR(("Read CD: unknown format"));
+                        BX_ERROR(("Read CD: unknown format: 0x%02X", (transfer_req & 0xf8)));
                         atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
                         raise_interrupt(channel);
                     }
@@ -1839,39 +1839,22 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
               case 0x42: // read sub-channel
                 {
-                  bool msf = get_packet_field(controller,1, 1, 1);
-                  bool sub_q = get_packet_field(controller,2, 6, 1);
+                  bool msf = get_packet_field(controller, 1, 1, 1);
+                  bool sub_q = get_packet_field(controller, 2, 6, 1);
                   Bit8u data_format = get_packet_byte(controller, 3);
                   Bit8u track_number = get_packet_byte(controller, 6);
                   Bit16u alloc_length = get_packet_word(controller, 7);
-                  int ret_len = 4; // header size
-                  UNUSED(msf);
-                  UNUSED(track_number);
 
                   if (!BX_SELECTED_DRIVE(channel).cdrom.ready) {
                     atapi_cmd_error(channel, SENSE_NOT_READY, ASC_MEDIUM_NOT_PRESENT, 1);
                     raise_interrupt(channel);
                   } else {
-                    controller->buffer[0] = 0;
-                    controller->buffer[1] = 0; // audio not supported
-                    controller->buffer[2] = 0;
-                    controller->buffer[3] = 0;
-
-                    if (sub_q) { // !sub_q == header only
-                      if ((data_format == 2) || (data_format == 3)) { // UPC or ISRC
-                        ret_len = 24;
-                        controller->buffer[4] = data_format;
-                        if (data_format == 3) {
-                          controller->buffer[5] = 0x14;
-                          controller->buffer[6] = 1;
-                        }
-                        controller->buffer[8] = 0; // no UPC, no ISRC
-                      } else {
-                        BX_ERROR(("Read sub-channel with SubQ not implemented (format=%d)", data_format));
-                        atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
-                        raise_interrupt(channel);
-                        break;
-                      }
+                    int ret_len = BX_SELECTED_DRIVE(channel).cdrom.cd->read_sub_channel(controller->buffer, sub_q, msf, track_number, data_format, alloc_length);
+                    if (ret_len == 0) {
+                      BX_ERROR(("Read sub-channel with SubQ not implemented (format=%d)", data_format));
+                      atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
+                      raise_interrupt(channel);
+                      break;
                     }
                     init_send_atapi_command(channel, atapi_command, ret_len, alloc_length);
                     ready_to_send_atapi(channel);
@@ -2080,18 +2063,60 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                   }
                 }
                 break;
+                
+              case 0x45: // play audio(10)
+              case 0xA5: // play audio(12)
+              {
+                Bit32u lba = read_32bit(controller->buffer + 2);
+                Bit32u length = (atapi_command == 0x45) ? read_16bit(controller->buffer + 7) : read_32bit(controller->buffer + 6);
+                if (BX_SELECTED_DRIVE(channel).cdrom.cd->play_audio(lba, length)) {
+                  atapi_cmd_nop(controller);
+                  raise_interrupt(channel);
+                } else {
+                  atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 0);
+                  raise_interrupt(channel);
+                }
+              } break;
+                
+              case 0x47: // play audio msf
+                if (BX_SELECTED_DRIVE(channel).cdrom.cd->play_audio_msf(controller->buffer)) {
+                  atapi_cmd_nop(controller);
+                  raise_interrupt(channel);
+                } else {
+                  atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 0);
+                  raise_interrupt(channel);
+                }
+                break;
+                
+              case 0x4e: // stop play/scan
+                if (BX_SELECTED_DRIVE(channel).cdrom.cd->stop_audio()) {
+                  atapi_cmd_nop(controller);
+                  raise_interrupt(channel);
+                } else {
+                  atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 0);
+                  raise_interrupt(channel);
+                }
+                break;
 
+              case 0x4b: // pause/resume
+              {
+                bool pause = (controller->buffer[8] & 1) == 0;
+                if (BX_SELECTED_DRIVE(channel).cdrom.cd->pause_resume_audio(pause)) {
+                  atapi_cmd_nop(controller);
+                  raise_interrupt(channel);
+                } else {
+                  atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 0);
+                  raise_interrupt(channel);
+                }
+              } break;
+                
               case 0x55: // mode select
               case 0xa6: // load/unload cd
-              case 0x4b: // pause/resume
-              case 0x45: // play audio
-              case 0x47: // play audio msf
               case 0xbc: // play cd
               case 0xb9: // read cd msf
               case 0x44: // read header
               case 0xba: // scan
               case 0xbb: // set cd speed
-              case 0x4e: // stop play/scan
                 BX_DEBUG_ATAPI(("ATAPI command 0x%x not implemented yet", atapi_command));
                 atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_ILLEGAL_OPCODE, 0);
                 raise_interrupt(channel);
