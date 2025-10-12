@@ -57,7 +57,7 @@ extern "C" {
 #if defined(WIN32)
 // windows.h included by bochs.h
 #include <winioctl.h>
-#include <Ntddcdrm.h>
+#include <ntddcdrm.h>
 
 #define BX_CD_FRAMESIZE     2048
 #define BX_RAW_SECTOR_SIZE  2352
