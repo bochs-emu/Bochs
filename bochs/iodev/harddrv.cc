@@ -1392,7 +1392,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                   bool Start = (controller->buffer[4] >> 0) & 1;
 
                   if (!LoEj && !Start) { // stop the disc
-                    BX_ERROR(("FIXME: Stop disc not implemented"));
+                    BX_SELECTED_DRIVE(channel).cdrom.cd->stop_audio();
                     atapi_cmd_nop(controller);
                     raise_interrupt(channel);
                   } else if (!LoEj && Start) { // start (spin up) the disc
@@ -1465,7 +1465,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                       switch (PageCode) {
                         case 0x01: // error recovery
                           init_send_atapi_command(channel, atapi_command, sizeof(error_recovery_t) + 8, alloc_length);
-
                           init_mode_sense_single(channel, &BX_SELECTED_DRIVE(channel).cdrom.current.error_recovery,
                                                  sizeof(error_recovery_t));
                           ready_to_send_atapi(channel);
@@ -1500,9 +1499,29 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                           controller->buffer[27] = 0;
                           ready_to_send_atapi(channel);
                           break;
+                          
+                        case 0x0e: // CD-ROM audio control
+                          init_send_atapi_command(channel, atapi_command, 16, alloc_length);
+                          controller->buffer[0] = 0;
+                          controller->buffer[1] = 14;
+                          controller->buffer[2] = (1<<2) | (0<<1);
+                          controller->buffer[3] = 0; // reserved
+                          controller->buffer[4] = 0; // reserved
+                          controller->buffer[5] = 0; // reserved
+                          controller->buffer[6] = 0; // reserved
+                          controller->buffer[7] = 0; // reserved
+                          controller->buffer[8] = 3; // connect channels 0 and 1 to this port
+                          controller->buffer[9] = 0xFF; // volume
+                          controller->buffer[10] = 0; // port muted
+                          controller->buffer[11] = 0;
+                          controller->buffer[12] = 0; // port muted
+                          controller->buffer[13] = 0;
+                          controller->buffer[14] = 0; // port muted
+                          controller->buffer[15] = 0;
+                          ready_to_send_atapi(channel);
+                          break;
 
                         case 0x0d: // CD-ROM
-                        case 0x0e: // CD-ROM audio control
                         case 0x3f: // all
                           BX_ERROR(("cdrom: MODE SENSE (curr), code=0x%02X not implemented yet", PageCode));
                           atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
@@ -2113,7 +2132,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               case 0x55: // mode select
               case 0xa6: // load/unload cd
               case 0xbc: // play cd
-              case 0xb9: // read cd msf
+              case 0xb9: // read cd msf (same as read cd except using msf instead of lba?)
               case 0x44: // read header
               case 0xba: // scan
               case 0xbb: // set cd speed
