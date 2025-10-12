@@ -30,15 +30,15 @@ struct CDROM_TRACK_INFO {
 };
 
 #if !WIN_CDROM_FORCE_IOCTRL
-  #include <Mmsystem.h>
-  
-  #define AUDIO_STATUS_NOT_VALID    0x00
-  #define AUDIO_STATUS_PLAYING      0x11
-  #define AUDIO_STATUS_PAUSED       0x12
-  #define AUDIO_STATUS_DONE         0x13
-  #define AUDIO_STATUS_STOPPED_ERR  0x14
-  #define AUDIO_STATUS_NO_CURRENT   0x15
+  #include <mmsystem.h>
 #endif
+  
+#define AUDIO_STATUS_NOT_VALID    0x00
+#define AUDIO_STATUS_PLAYING      0x11
+#define AUDIO_STATUS_PAUSED       0x12
+#define AUDIO_STATUS_DONE         0x13
+#define AUDIO_STATUS_STOPPED_ERR  0x14
+#define AUDIO_STATUS_NO_CURRENT   0x15
 
 // Header file for low-level OS specific CDROM emulation
 
@@ -68,14 +68,14 @@ private:
   int  cdrom_type;  // 0 = unknown, 1 = is a data cdrom, 2 = is an audio cdrom
   int  tot_tracks;
   struct CDROM_TRACK_INFO track_info[100];
+  Bit8u AudioStatus;
 
 #if !WIN_CDROM_FORCE_IOCTRL
   UINT wDeviceID;
   MCI_OPEN_PARMS mciOpenParms;
   MCI_SET_PARMS mciSetParms;
   MCI_PLAY_PARMS mciPlayParms;
-  Bit8u mciStatus;
-#endif
-
 #endif
 };
+
+#endif

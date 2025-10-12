@@ -36,6 +36,8 @@
 //     to force this code to use the DeviceIoControl() techniqe for all calls.
 //  7) This does not check to see if the Guest has a sound device installed.
 //     If the guest doesn't have a sound device, this should not play. FIX ME.
+//  8) This assumes there is only one CD-ROM on the Host and it cooresponds
+//     with the drive letter given in the bochsrc.txt file.
 
 #include "bochs.h"
 #if BX_SUPPORT_CDROM
@@ -78,12 +80,12 @@ cdrom_win32_c::cdrom_win32_c(const char *dev)
     path = strdup(dev);
   }
   using_file = 0;
+  AudioStatus = AUDIO_STATUS_NO_CURRENT;
 
 #if !WIN_CDROM_FORCE_IOCTRL
   // We also need to check that we aren't above 32-bit wide
   if ((Bit64u) &wDeviceID > 0xFFFFFFFFULL)
     BX_PANIC(("The MCI code assumes 32-bit addresses!"));
-  mciStatus = AUDIO_STATUS_NO_CURRENT;
 #endif
 }
 
@@ -127,7 +129,7 @@ void cdrom_win32_c::lba2msf(int lba, Bit8u *mins, Bit8u *secs, Bit8u *frames)
 // convert a whole disk MSF to a Track and a MSF on that track
 int cdrom_win32_c::msf2tmsf(Bit8u *mins, Bit8u *secs, Bit8u *frames)
 {
-  int lba = msf2lba(*mins, *secs, *frames);
+  Bit32u lba = msf2lba(*mins, *secs, *frames);
 
   for (int i=0; i<tot_tracks; i++) {
     if ((lba < track_info[0].address) ||
@@ -253,7 +255,7 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
 #if !WIN_CDROM_FORCE_IOCTRL
     // Open the CD audio device by specifying the device name.
     mciOpenParms.lpstrDeviceType = "cdaudio";
-    if (mciSendCommand(NULL, MCI_OPEN, MCI_OPEN_TYPE, (DWORD)(LPVOID) &mciOpenParms)) {
+    if (mciSendCommand(NULL, MCI_OPEN, MCI_OPEN_TYPE, (DWORD)(Bit64u) &mciOpenParms)) {
       // Failed to open device. Don't close it; just return error.
       return 0;
     }
@@ -263,7 +265,7 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
 
     // Set the time format to track/minute/second/frame (TMSF).
     mciSetParms.dwTimeFormat = MCI_FORMAT_TMSF;
-    if (mciSendCommand(wDeviceID, MCI_SET, MCI_SET_TIME_FORMAT, (DWORD)(LPVOID) &mciSetParms)) {
+    if (mciSendCommand(wDeviceID, MCI_SET, MCI_SET_TIME_FORMAT, (DWORD)(Bit64u) &mciSetParms)) {
       mciSendCommand(wDeviceID, MCI_CLOSE, 0, NULL);
       return 0;
     } 
@@ -289,11 +291,9 @@ int cdrom_win32_c::read_sub_channel(Bit8u* buf, bool sub_q, bool msf, int start_
     if (DeviceIoControl(hFile, IOCTL_CDROM_READ_Q_CHANNEL, &q_data_format, sizeof(q_data_format), buffer, BX_CD_FRAMESIZE, &iBytesReturned, NULL)) {
       // WinXP expects the Audio Status byte to be valid, if not it assumes 
       //  an error with that track, and moves to the next one.
-#if !WIN_CDROM_FORCE_IOCTRL
-      buffer[1] = mciStatus;
-#endif
+      buffer[1] = AudioStatus;
       if (!sub_q) iBytesReturned = 4;
-      memcpy(buf, buffer, BX_MIN(iBytesReturned, alloc_length));
+      memcpy(buf, buffer, BX_MIN(iBytesReturned, (DWORD) alloc_length));
       return iBytesReturned;
     } else
       return 0;
@@ -481,14 +481,14 @@ bool cdrom_win32_c::play_audio(Bit32u lba, Bit32u length) {
     return 0;
   mciPlayParms.dwTo = MCI_MAKE_TMSF(end_track, mins, secs, frames);
 
-  if (mciSendCommand(wDeviceID, MCI_PLAY, MCI_FROM | MCI_TO, (DWORD)(LPVOID) &mciPlayParms)) {
+  if (mciSendCommand(wDeviceID, MCI_PLAY, MCI_FROM | MCI_TO, (DWORD)(Bit64u) &mciPlayParms)) {
     mciSendCommand(wDeviceID, MCI_CLOSE, 0, NULL);
   } else
     ret = 1;
+#endif
   
   if (ret == 1)
-    mciStatus = AUDIO_STATUS_PLAYING;
-#endif
+    AudioStatus = AUDIO_STATUS_PLAYING;
   
   return ret;
 }
@@ -533,14 +533,14 @@ bool cdrom_win32_c::play_audio_msf(Bit8u* buf) {
     return 0;
   mciPlayParms.dwTo = MCI_MAKE_TMSF(end_track, mins, secs, frames);
 
-  if (mciSendCommand(wDeviceID, MCI_PLAY, MCI_FROM | MCI_TO, (DWORD)(LPVOID) &mciPlayParms)) {
+  if (mciSendCommand(wDeviceID, MCI_PLAY, MCI_FROM | MCI_TO, (DWORD)(Bit64u) &mciPlayParms)) {
     mciSendCommand(wDeviceID, MCI_CLOSE, 0, NULL);
   } else
     ret = 1;
+#endif
   
   if (ret == 1)
-    mciStatus = AUDIO_STATUS_PLAYING;
-#endif
+    AudioStatus = AUDIO_STATUS_PLAYING;
 
   return ret;
 }
@@ -553,9 +553,10 @@ bool cdrom_win32_c::stop_audio(void) {
     ret = DeviceIoControl(hFile, IOCTL_CDROM_STOP_AUDIO, NULL, 0, NULL, 0, NULL, NULL);
 #else
   mciSendCommand(wDeviceID, MCI_STOP, 0, NULL);
-  mciStatus = AUDIO_STATUS_DONE;
   ret = 1;
 #endif
+
+  AudioStatus = AUDIO_STATUS_DONE;
   return ret;
 }
 
@@ -568,17 +569,17 @@ bool cdrom_win32_c::pause_resume_audio(bool pause) {
       ret = DeviceIoControl(hFile, IOCTL_CDROM_PAUSE_AUDIO, NULL, 0, NULL, 0, NULL, NULL);
 #else
       mciSendCommand(wDeviceID, MCI_PAUSE, 0, NULL);
-      mciStatus = AUDIO_STATUS_PAUSED;
       ret = 1;
 #endif
+      AudioStatus = AUDIO_STATUS_PAUSED;
     } else {
 #if WIN_CDROM_FORCE_IOCTRL
       ret = DeviceIoControl(hFile, IOCTL_CDROM_RESUME_AUDIO, NULL, 0, NULL, 0, NULL, NULL);
 #else      
       mciSendCommand(wDeviceID, MCI_RESUME, 0, NULL);
-      mciStatus = AUDIO_STATUS_PLAYING;
       ret = 1;
 #endif
+      AudioStatus = AUDIO_STATUS_PLAYING;
     }
   }
   
