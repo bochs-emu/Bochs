@@ -66,7 +66,8 @@ struct gf_channel
   Bit32u s2d_img_dst;
   Bit32u s2d_color_fmt;
   Bit32u s2d_color_bytes;
-  Bit32u s2d_pitch;
+  Bit32u s2d_pitch_src;
+  Bit32u s2d_pitch_dst;
   Bit32u s2d_ofs_src;
   Bit32u s2d_ofs_dst;
 
@@ -78,17 +79,25 @@ struct gf_channel
   Bit32u swzs_ofs;
 
   bool ifc_color_key_enable;
+  bool ifc_clip_enable;
   Bit32u ifc_operation;
   Bit32u ifc_color_fmt;
   Bit32u ifc_color_bytes;
-  Bit32u ifc_yx;
-  Bit32u ifc_dhw;
-  Bit32u ifc_shw;
-  Bit32u ifc_words_ptr;
-  Bit32u ifc_words_left;
-  Bit32u* ifc_words;
-  bool ifc_upload;
-  Bit32u ifc_upload_offset;
+  Bit32u ifc_pixels_per_word;
+  Bit32u ifc_x;
+  Bit32u ifc_y;
+  Bit32u ifc_ofs_x;
+  Bit32u ifc_ofs_y;
+  Bit32u ifc_draw_offset;
+  Bit32u ifc_redraw_offset;
+  Bit32u ifc_dst_width;
+  Bit32u ifc_dst_height;
+  Bit32u ifc_src_width;
+  Bit32u ifc_src_height;
+  Bit32u ifc_clip_x0;
+  Bit32u ifc_clip_y0;
+  Bit32u ifc_clip_x1;
+  Bit32u ifc_clip_y1;
 
   Bit32u iifc_palette;
   Bit32u iifc_palette_ofs;
@@ -262,8 +271,10 @@ struct gf_channel
 
   Bit32u beta;
 
-  Bit32u clip_yx;
-  Bit32u clip_hw;
+  Bit16u clip_x;
+  Bit16u clip_y;
+  Bit16u clip_width;
+  Bit16u clip_height;
 
   Bit32u chroma_color_fmt;
   Bit32u chroma_color;
@@ -425,7 +436,7 @@ private:
 
   BX_GEFORCE_SMF void gdi_fillrect(gf_channel* ch, bool clipped);
   BX_GEFORCE_SMF void gdi_blit(gf_channel* ch, Bit32u type);
-  BX_GEFORCE_SMF void ifc(gf_channel* ch);
+  BX_GEFORCE_SMF void ifc(gf_channel* ch, Bit32u word);
   BX_GEFORCE_SMF void iifc(gf_channel* ch);
   BX_GEFORCE_SMF void sifc(gf_channel* ch);
   BX_GEFORCE_SMF void copyarea(gf_channel* ch);
