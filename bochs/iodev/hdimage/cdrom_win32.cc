@@ -64,6 +64,34 @@ extern "C" {
 
 #include <stdio.h>
 
+BOOL Is_WinXP_SP2_or_Later()
+{
+   OSVERSIONINFOEX osvi;
+   DWORDLONG dwlConditionMask = 0;
+   int op = VER_GREATER_EQUAL;
+
+   // Initialize the OSVERSIONINFOEX structure.
+   ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
+   osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+   osvi.dwMajorVersion = 5;
+   osvi.dwMinorVersion = 1;
+   osvi.wServicePackMajor = 2;
+   osvi.wServicePackMinor = 0;
+
+   // Initialize the condition mask.
+   VER_SET_CONDITION( dwlConditionMask, VER_MAJORVERSION, op );
+   VER_SET_CONDITION( dwlConditionMask, VER_MINORVERSION, op );
+   VER_SET_CONDITION( dwlConditionMask, VER_SERVICEPACKMAJOR, op );
+   VER_SET_CONDITION( dwlConditionMask, VER_SERVICEPACKMINOR, op );
+
+   // Perform the test.
+   return VerifyVersionInfo(
+      &osvi,
+      VER_MAJORVERSION | VER_MINORVERSION |
+      VER_SERVICEPACKMAJOR | VER_SERVICEPACKMINOR,
+      dwlConditionMask);
+}
+
 cdrom_win32_c::cdrom_win32_c(const char *dev)
 {
   char prefix[6];
@@ -169,6 +197,14 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
     using_file = 1;
     BX_INFO (("Opening image file as a cd"));
   }
+
+  // for (obsolete) binaries, who might possibly still require a Windows version
+  //  before WinXP, let's make the test.
+  if (!using_file && !Is_WinXP_SP2_or_Later()) {
+    BX_ERROR(("Direct disc access requires WinXP or later."));
+    return 0;
+  }
+
   hFile = CreateFile(drive, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
   if (hFile != INVALID_HANDLE_VALUE) {
     fd = 1;
