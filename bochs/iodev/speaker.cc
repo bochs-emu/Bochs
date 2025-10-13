@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003       David N. Welton <davidw@dedasys.com>.
-//  Copyright (C) 2003-2024  The Bochs Project
+//  Copyright (C) 2003-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -71,7 +71,11 @@ static const char *speaker_mode_list[] = {
   NULL
 };
 
+
 #if BX_SUPPORT_SOUNDLOW
+
+const Bit16s beep_vol_table[16] = {0, 56, 84, 126, 189, 284, 426, 639, 959, 1438, 2157, 3236, 4854, 7281, 10922, 16384};
+
 BX_MUTEX(beep_mutex);
 
 Bit32u beep_callback(void *dev, Bit16u rate, Bit8u *buffer, Bit32u len);
@@ -86,15 +90,15 @@ void speaker_init_options(void)
   bx_list_c *sound = (bx_list_c*)SIM->get_param("sound");
   bx_list_c *menu = new bx_list_c(sound, "speaker", "PC speaker output configuration");
   menu->set_options(menu->SERIES_ASK);
-  bx_param_bool_c *enabled = new bx_param_bool_c(menu, "enabled", "Enable speaker output",
+  bx_param_bool_c *enabled = new bx_param_bool_c(menu, "enabled", "Enable PC Speaker output",
       "Enables the PC speaker output", 1);
-  bx_param_enum_c *mode = new bx_param_enum_c(menu, "mode", "Speaker output mode",
+  bx_param_enum_c *mode = new bx_param_enum_c(menu, "mode", "PC Speaker output mode",
       "The mode can be one these: 'none', 'sound', 'system' or 'gui'",
       speaker_mode_list, 1, BX_SPK_MODE_NONE);
   mode->set_ask_format("Select speaker output mode [%s] ");
 #if BX_SUPPORT_SOUNDLOW
-  bx_param_num_c *volume = new bx_param_num_c(menu, "volume", "Speaker volume",
-      "Set the PC speaker volume", 0, 15, 15);
+  bx_param_num_c *volume = new bx_param_num_c(menu, "volume", "PC Speaker volume",
+      "Set the PC speaker volume", 0, 15, 8);
 #endif
   deplist = new bx_list_c(NULL);
   deplist->add(mode);
@@ -145,6 +149,10 @@ PLUGIN_ENTRY_FOR_MODULE(speaker)
     delete theSpeaker;
     SIM->unregister_addon_option("speaker");
     ((bx_list_c*)SIM->get_param("sound"))->remove("speaker");
+#if BX_SUPPORT_SOUNDLOW
+    bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+    misc_rt->remove("volume");
+#endif
     bx_devices.remove_sound_device();
   } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_OPTIONAL;
@@ -225,6 +233,12 @@ void bx_speaker_c::init(void)
 #endif
         BX_INIT_MUTEX(beep_mutex);
         beep_callback_id = waveout->register_wave_callback(theSpeaker, beep_callback);
+
+        // Runtime option
+        bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+        bx_param_num_c *volume = SIM->get_param_num("volume", base);
+        misc_rt->add(volume);
+        volume->set_handler(speaker_param_handler);
         BX_INFO(("Using lowlevel sound support for output"));
       } else {
         BX_ERROR(("Failed to use lowlevel sound support for output"));
@@ -304,7 +318,7 @@ Bit32u bx_speaker_c::dsp_generator(Bit16u rate, Bit8u *buffer, Bit32u len)
   double tmp_dsp_usec, step_usec;
 
   if (beep_level == 0) {
-    beep_level = (Bit16s)(0x4000 * (beep_volume / 15.0f));
+    beep_level = beep_vol_table[beep_volume];
   }
   Bit64u new_dsp_cb_usec = bx_get_realtime64_usec() - dsp_start_usec;
   if (dsp_cb_usec == 0) {
@@ -351,7 +365,7 @@ void bx_speaker_c::beep_on(float frequency)
         BX_LOCK(beep_mutex);
         beep_frequency = frequency;
         if (!beep_active) {
-          beep_level = (Bit16s)(0x4000 * (beep_volume / 15.0f));
+          beep_level = beep_vol_table[beep_volume];
         }
         beep_active = 1;
         BX_UNLOCK(beep_mutex);
@@ -454,3 +468,20 @@ void bx_speaker_c::set_line(bool level)
   BX_DEBUG(("setting speaker line to %d", level));
 #endif
 }
+
+#if BX_SUPPORT_SOUNDLOW
+// runtime parameter handler
+Bit64s bx_speaker_c::speaker_param_handler(bx_param_c *param, bool set, Bit64s val)
+{
+  if (set) {
+    const char *pname = param->get_name();
+    if (!strcmp(pname, "volume")) {
+      theSpeaker->set_volume((Bit8u)val);
+      BX_DEBUG(("Setting PC Speaker beep volume to %d", (Bit8u)val));
+    } else {
+      BX_PANIC(("sb16_param_handler called with unexpected parameter '%s'", pname));
+    }
+  }
+  return val;
+}
+#endif

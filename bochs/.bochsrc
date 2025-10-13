@@ -891,7 +891,7 @@ sound: driver=default, waveout=/dev/dsp. wavein=, midiout=
 # the Beep() function. The 'gui' mode forwards the beep to the related
 # gui methods (currently only used by the Carbon gui).
 #=======================================================================
-speaker: enabled=1, mode=sound, volume=15
+speaker: enabled=1, mode=sound, volume=8
 
 #=======================================================================
 # SB16:

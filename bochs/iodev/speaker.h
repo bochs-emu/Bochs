@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003       David N. Welton <davidw@dedasys.com>.
-//  Copyright (C) 2003-2024  The Bochs Project
+//  Copyright (C) 2003-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -51,7 +51,10 @@ public:
 #if BX_HAVE_REALTIME_USEC
     Bit32u dsp_generator(Bit16u rate, Bit8u *buffer, Bit32u len);
 #endif
+    void set_volume(Bit8u volume) { beep_volume = volume; }
+    static Bit64s speaker_param_handler(bx_param_c *param, bool set, Bit64s val);
 #endif
+
 private:
     float beep_frequency;  // 0 : beep is off
     unsigned output_mode;
