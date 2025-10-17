@@ -19,31 +19,14 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 /////////////////////////////////////////////////////////////////////////
 
-// These are the low-level CDROM functions which are called from 'harddrv.cc'.
-// Notes:
-//  1) Assumes the Host will be WinXP or higher (the check has been removed)
-//  2) Win10 still supports a lot of the DeviceIoControl() functions for the
-//     audio CDROM, but *does not* support the playback DeviceIoControl() even
-//     though it returns success.
-//  3) Therefore, the playback calls a technique newer than DeviceIoControl() 
-//     but older than MediaPlayer() called Media Control Interface (MCI).
-//  4) MCI is old enough, it assumes all addresses will be below the 4 gig
-//     mark and all addresses will be 32-bits wide. If Bochs is ran above
-//     the 4gig mark, this code will fail. (Checks are in place)
-//  5) Since MCI doesn't support all calls, *and* DeviceIoControl() doesn't
-//     support all calls (on Windows Vista and above), a mix of each is used.
-//  6) If your Windows system is before Vista, you can set the #define below
-//     to force this code to use the DeviceIoControl() techniqe for all calls.
-//  7) This does not check to see if the Guest has a sound device installed.
-//     If the guest doesn't have a sound device, this should not play. FIX ME.
-//  8) This assumes there is only one CD-ROM on the Host and it cooresponds
-//     with the drive letter given in the bochsrc.txt file.
+// These are the low-level CDROM functions which are called
+// from 'harddrv.cc'.  They effect the OS specific functionality
+// needed by the CDROM emulation in 'harddrv.cc'.  Mostly, just
+// ioctl() calls and such.  Should be fairly easy to add support
+// for your OS if it is not supported yet.
 
 #include "bochs.h"
 #if BX_SUPPORT_CDROM
-
-// set this to 1 if you run this on a Windows Host that is before Windows Vista
-#define WIN_CDROM_FORCE_IOCTRL  0
 
 #include "cdrom.h"
 #include "cdrom_win32.h"
@@ -57,10 +40,57 @@ extern "C" {
 #if defined(WIN32)
 // windows.h included by bochs.h
 #include <winioctl.h>
-#include <ntddcdrm.h>
 
-#define BX_CD_FRAMESIZE     2048
-#define BX_RAW_SECTOR_SIZE  2352
+
+static BOOL isWindowsXP;
+
+#define BX_CD_FRAMESIZE 2048
+#define CD_FRAMESIZE    2048
+
+// READ_TOC_EX structure(s) and #defines
+
+#define CDROM_READ_TOC_EX_FORMAT_TOC      0x00
+#define CDROM_READ_TOC_EX_FORMAT_SESSION  0x01
+#define CDROM_READ_TOC_EX_FORMAT_FULL_TOC 0x02
+#define CDROM_READ_TOC_EX_FORMAT_PMA      0x03
+#define CDROM_READ_TOC_EX_FORMAT_ATIP     0x04
+#define CDROM_READ_TOC_EX_FORMAT_CDTEXT   0x05
+
+#define IOCTL_CDROM_BASE              FILE_DEVICE_CD_ROM
+#define IOCTL_CDROM_READ_TOC_EX       CTL_CODE(IOCTL_CDROM_BASE, 0x0015, METHOD_BUFFERED, FILE_READ_ACCESS)
+#ifndef IOCTL_DISK_GET_LENGTH_INFO
+#define IOCTL_DISK_GET_LENGTH_INFO    CTL_CODE(IOCTL_DISK_BASE, 0x0017, METHOD_BUFFERED, FILE_READ_ACCESS)
+#endif
+
+typedef struct _CDROM_READ_TOC_EX {
+    UCHAR Format    : 4;
+    UCHAR Reserved1 : 3; // future expansion
+    UCHAR Msf       : 1;
+    UCHAR SessionTrack;
+    UCHAR Reserved2;     // future expansion
+    UCHAR Reserved3;     // future expansion
+} CDROM_READ_TOC_EX, *PCDROM_READ_TOC_EX;
+
+typedef struct _TRACK_DATA {
+    UCHAR Reserved;
+    UCHAR Control : 4;
+    UCHAR Adr : 4;
+    UCHAR TrackNumber;
+    UCHAR Reserved1;
+    UCHAR Address[4];
+} TRACK_DATA, *PTRACK_DATA;
+
+typedef struct _CDROM_TOC_SESSION_DATA {
+    // Header
+    UCHAR Length[2];  // add two bytes for this field
+    UCHAR FirstCompleteSession;
+    UCHAR LastCompleteSession;
+    // One track, representing the first track
+    // of the last finished session
+    TRACK_DATA TrackData[1];
+} CDROM_TOC_SESSION_DATA, *PCDROM_TOC_SESSION_DATA;
+
+// End READ_TOC_EX structure(s) and #defines
 
 #include <stdio.h>
 
@@ -71,6 +101,7 @@ BOOL Is_WinXP_SP2_or_Later()
    int op = VER_GREATER_EQUAL;
 
    // Initialize the OSVERSIONINFOEX structure.
+
    ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
    osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
    osvi.dwMajorVersion = 5;
@@ -79,12 +110,14 @@ BOOL Is_WinXP_SP2_or_Later()
    osvi.wServicePackMinor = 0;
 
    // Initialize the condition mask.
+
    VER_SET_CONDITION( dwlConditionMask, VER_MAJORVERSION, op );
    VER_SET_CONDITION( dwlConditionMask, VER_MINORVERSION, op );
    VER_SET_CONDITION( dwlConditionMask, VER_SERVICEPACKMAJOR, op );
    VER_SET_CONDITION( dwlConditionMask, VER_SERVICEPACKMINOR, op );
 
    // Perform the test.
+
    return VerifyVersionInfo(
       &osvi,
       VER_MAJORVERSION | VER_MINORVERSION |
@@ -99,8 +132,6 @@ cdrom_win32_c::cdrom_win32_c(const char *dev)
   sprintf(prefix, "CD%d", ++bx_cdrom_count);
   put(prefix);
   fd = -1; // File descriptor not yet allocated
-  cdrom_type = CDROM_TYPE_DATA;  // assume a data CD
-  tot_tracks = 0;
 
   if (dev == NULL) {
     path = NULL;
@@ -108,13 +139,7 @@ cdrom_win32_c::cdrom_win32_c(const char *dev)
     path = strdup(dev);
   }
   using_file = 0;
-  AudioStatus = AUDIO_STATUS_NO_CURRENT;
-
-#if !WIN_CDROM_FORCE_IOCTRL
-  // We also need to check that we aren't above 32-bit wide
-  if ((Bit64u) &wDeviceID > 0xFFFFFFFFULL)
-    BX_PANIC(("The MCI code assumes 32-bit addresses!"));
-#endif
+  isWindowsXP = Is_WinXP_SP2_or_Later();
 }
 
 cdrom_win32_c::~cdrom_win32_c(void)
@@ -122,61 +147,13 @@ cdrom_win32_c::~cdrom_win32_c(void)
   if (fd >= 0) {
     if (hFile != INVALID_HANDLE_VALUE)
       CloseHandle(hFile);
-#if !WIN_CDROM_FORCE_IOCTRL
-    mciSendCommand(wDeviceID, MCI_CLOSE, 0, NULL);
-#endif
     fd = -1;
   }
-}
-
-// lock or unlock the cdrom
-bool cdrom_win32_c::lock_cdrom(bool lock)
-{
-  PREVENT_MEDIA_REMOVAL pmr;
-  DWORD iBytesReturned;
-
-  pmr.PreventMediaRemoval = lock;
- 	return DeviceIoControl(hFile, IOCTL_STORAGE_MEDIA_REMOVAL, &pmr, sizeof(pmr), NULL, 0, &iBytesReturned, NULL);
-}
-
-// convert MSF to LBA
-Bit32u cdrom_win32_c::msf2lba(Bit8u mins, Bit8u secs, Bit8u frames)
-{
-  // LBA = (((m * 60) + s) * 75 + f) - LEAD_OFF_FRAMES
-  return ((((mins * 60) + secs) * 75) + frames) - 150;
-}
-
-// convert LBA to MSF
-void cdrom_win32_c::lba2msf(int lba, Bit8u *mins, Bit8u *secs, Bit8u *frames)
-{
-  *mins = lba / 4500;
-  *secs = (lba % 4500) / 75;
-  *frames = lba % 75;
-}
-
-// convert a whole disk MSF to a Track and a MSF on that track
-int cdrom_win32_c::msf2tmsf(Bit8u *mins, Bit8u *secs, Bit8u *frames)
-{
-  Bit32u lba = msf2lba(*mins, *secs, *frames);
-
-  for (int i=0; i<tot_tracks; i++) {
-    if ((lba < track_info[0].address) ||
-       ((lba >= track_info[i].address) && (lba < (track_info[i].address + track_info[i].length)))) {
-      lba -= track_info[i].address;
-      lba2msf(lba, mins, secs, frames);
-      return i + 1; // one-based
-    }
-  }
-  
-  return 0;
 }
 
 bool cdrom_win32_c::insert_cdrom(const char *dev)
 {
   unsigned char buffer[BX_CD_FRAMESIZE];
-  CDROM_READ_TOC_EX input;
-  DWORD iBytesReturned = 0;
-  CDROM_TOC *toc_table;
 
   // Load CD-ROM. Returns 0 if CD is not ready.
   if (dev != NULL) path = strdup(dev);
@@ -184,33 +161,32 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
   char drive[256];
   if ((path[1] == ':') && (strlen(path) == 2))
   {
-    // Use direct device access under Windows XP or newer
+    if (isWindowsXP) {
+      // Use direct device access under Windows XP or newer
 
-    // With all the backslashes it's hard to see, but to open D: drive
-    // the name would be: \\.\d:
-    sprintf(drive, "\\\\.\\%s", path);
-    BX_INFO (("Using direct access for cdrom."));
-    // This trick only works for Win2k and WinNT, so warn the user of that.
-    using_file = 0;
+      // With all the backslashes it's hard to see, but to open D: drive
+      // the name would be: \\.\d:
+      sprintf(drive, "\\\\.\\%s", path);
+      BX_INFO (("Using direct access for cdrom."));
+      // This trick only works for Win2k and WinNT, so warn the user of that.
+      using_file = 0;
+    } else {
+      BX_ERROR(("Your Windows version is no longer supported for direct access."));
+      return 0;
+    }
   } else {
     strcpy(drive,path);
     using_file = 1;
     BX_INFO (("Opening image file as a cd"));
   }
-
-  // for (obsolete) binaries, who might possibly still require a Windows version
-  //  before WinXP, let's make the test.
-  if (!using_file && !Is_WinXP_SP2_or_Later()) {
-    BX_ERROR(("Direct disc access requires WinXP or later."));
-    return 0;
-  }
-
-  hFile = CreateFile(drive, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
-  if (hFile != INVALID_HANDLE_VALUE) {
-    fd = 1;
-    if (!using_file) {
-      DWORD lpBytesReturned;
-      DeviceIoControl(hFile, IOCTL_STORAGE_LOAD_MEDIA, NULL, 0, NULL, 0, &lpBytesReturned, NULL);
+  if (isWindowsXP) {
+    hFile = CreateFile((char *)&drive, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_RANDOM_ACCESS, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+      fd = 1;
+      if (!using_file) {
+        DWORD lpBytesReturned;
+        DeviceIoControl(hFile, IOCTL_STORAGE_LOAD_MEDIA, NULL, 0, NULL, 0, &lpBytesReturned, NULL);
+      }
     }
   }
   if (fd < 0) {
@@ -218,122 +194,15 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
      return 0;
   }
 
-  if (!using_file) {
-    // We need to determine if the disc is a DATA disk or an Audio disk.
-    // To do so, we get the TOC and then check the CONTROL field of each
-    //  track returned: (bit 1 indicates copy protection and is ignored here)
-    //  00c0 = audio
-    //  00c1 = audio
-    //  10c1 = audio
-    //  10c1 = audio
-    //  01c0 = data
-    //  01c1 = data
-    //  11xx = reserved
-    
-    // lock drive
-    lock_cdrom(TRUE);
-    
-    // read the TOC
-    toc_table = (CDROM_TOC *) buffer;
-    memset(toc_table, 0, sizeof(CDROM_TOC)); // make sure all are zero, so the track_info.length calculation below is accurate on the last track calculation
-    memset(&input, 0, sizeof(input));        // the call fails if the reserved bytes are not zero!!!!!
-    input.Format = CDROM_READ_TOC_EX_FORMAT_TOC;
-    input.Msf = TRUE;
-    input.SessionTrack = 1;
-    if (DeviceIoControl(hFile, IOCTL_CDROM_READ_TOC_EX, &input, sizeof(input), toc_table, sizeof(CDROM_TOC), &iBytesReturned, NULL)) {
-      // unlock drive
-      lock_cdrom(FALSE);
-      
-      // check all of the tracks to see if they are all one type
-      // (the returned list will include the AA track)
-      tot_tracks = toc_table->LastTrack - toc_table->FirstTrack + 1;
-      bool data = FALSE, audio = FALSE;
-      for (int i=0; i<tot_tracks + 1; i++) {
-        switch (toc_table->TrackData[i].Control & 0b1101) {
-          case 0b0000:
-          case 0b0001:
-          case 0b1000:
-          case 0b1001:
-            // if is an audio track, store the information
-            track_info[i].address = msf2lba(toc_table->TrackData[i].Address[1], toc_table->TrackData[i].Address[2], toc_table->TrackData[i].Address[3]);
-            track_info[i].length = msf2lba(toc_table->TrackData[i+1].Address[1], toc_table->TrackData[i+1].Address[2], toc_table->TrackData[i+1].Address[3]) - track_info[i].address;
-            audio = TRUE;
-            break;
-          case 0b0100:
-          case 0b0101:
-            data = TRUE;
-            break;
-        }
-      }
-      
-      // if after the above, neither or both 'data' and 'audio' are set,
-      //  we don't recognize the disc.
-      // if only one or the other is set, we can continue.
-      if ((data && audio) || (!data && !audio))  {
-        BX_ERROR(("Unrecognized data/audio disc in drive. Returning a non-inserted state."));
-        cdrom_type = CDROM_TYPE_UNKNOWN;
-        return 0;
-      } else if (data && !audio) {
-        // I just see if I can read a sector to verify that a CD is in the drive and readable.
-        fd = (read_block(buffer, 0x10, BX_CD_FRAMESIZE)) ? 1 : -1;
-        if (fd && (memcmp(buffer, "\x00\x42\x45\x41\x30\x31\x01\x00", 8) == 0)) {
-          BX_INFO(("* Direct Media Access detected a Universal Disc Format (UDF) file system. (DVD?)"));
-          BX_INFO(("* Older Guests may not recognize the volume, giving a false indication that"));
-          BX_INFO(("*  Bochs' Direct Disc access is malfunctioning."));
-        }
-        cdrom_type = CDROM_TYPE_DATA;
-      } else if (!data && audio) {
-        // if it is audio, we got the track information above
-        cdrom_type = CDROM_TYPE_AUDIO;
-      }
-    }
-
-#if !WIN_CDROM_FORCE_IOCTRL
-    // Open the CD audio device by specifying the device name.
-    mciOpenParms.lpstrDeviceType = "cdaudio";
-    if (mciSendCommand(NULL, MCI_OPEN, MCI_OPEN_TYPE, (DWORD)(Bit64u) &mciOpenParms)) {
-      // Failed to open device. Don't close it; just return error.
-      return 0;
-    }
-    
-    // The device opened successfully; get the device ID.
-    wDeviceID = mciOpenParms.wDeviceID;
-
-    // Set the time format to track/minute/second/frame (TMSF).
-    mciSetParms.dwTimeFormat = MCI_FORMAT_TMSF;
-    if (mciSendCommand(wDeviceID, MCI_SET, MCI_SET_TIME_FORMAT, (DWORD)(Bit64u) &mciSetParms)) {
-      mciSendCommand(wDeviceID, MCI_CLOSE, 0, NULL);
-      return 0;
-    } 
-    fd = 1;
-#endif
+  // I just see if I can read a sector to verify that a
+  // CD is in the drive and readable.
+  fd = (read_block(buffer, 0x10, 2048)) ? 1 : -1;
+  if (memcmp(buffer, "\x00\x42\x45\x41\x30\x31\x01\x00", 8) == 0) {
+    BX_INFO(("* Direct Media Access detected a Universal Disc Format (UDF) file system. (DVD?)"));
+    BX_INFO(("* Older Guests may not recognize the volume, giving a false indication that"));
+    BX_INFO(("*  Bochs' Direct Disc access is malfunctioning."));
   }
-
   return (fd == 1);
-}
-
-int cdrom_win32_c::read_sub_channel(Bit8u* buf, bool sub_q, bool msf, int start_track, int format, int alloc_length)
-{
-  unsigned char buffer[BX_CD_FRAMESIZE];
-  CDROM_SUB_Q_DATA_FORMAT q_data_format;
-  DWORD iBytesReturned = 0;
-  
-  if (using_file) {
-    return cdrom_base_c::read_sub_channel(buf, sub_q, msf, start_track, format, alloc_length);
-  } else {
-    // IOCTL_CDROM_CURRENT_POSITION = 1, IOCTL_CDROM_MEDIA_CATALOG = 2, IOCTL_CDROM_TRACK_ISRC = 3
-    q_data_format.Format = format;
-    q_data_format.Track = start_track;
-    if (DeviceIoControl(hFile, IOCTL_CDROM_READ_Q_CHANNEL, &q_data_format, sizeof(q_data_format), buffer, BX_CD_FRAMESIZE, &iBytesReturned, NULL)) {
-      // WinXP expects the Audio Status byte to be valid, if not it assumes 
-      //  an error with that track, and moves to the next one.
-      buffer[1] = AudioStatus;
-      if (!sub_q) iBytesReturned = 4;
-      memcpy(buf, buffer, BX_MIN(iBytesReturned, (DWORD) alloc_length));
-      return iBytesReturned;
-    } else
-      return 0;
-  }
 }
 
 void cdrom_win32_c::eject_cdrom()
@@ -342,12 +211,11 @@ void cdrom_win32_c::eject_cdrom()
   // some ioctl() calls to really eject the CD as well.
 
   if (fd >= 0) {
-    if (!using_file) {
-      DWORD lpBytesReturned;
-      DeviceIoControl(hFile, IOCTL_STORAGE_EJECT_MEDIA, NULL, 0, NULL, 0, &lpBytesReturned, NULL);
-#if !WIN_CDROM_FORCE_IOCTRL
-      mciSendCommand(wDeviceID, MCI_CLOSE, 0, NULL);
-#endif
+    if (using_file == 0) {
+      if (isWindowsXP) {
+        DWORD lpBytesReturned;
+        DeviceIoControl(hFile, IOCTL_STORAGE_EJECT_MEDIA, NULL, 0, NULL, 0, &lpBytesReturned, NULL);
+      }
     } else {
       if (hFile != INVALID_HANDLE_VALUE) {
         CloseHandle(hFile);
@@ -358,39 +226,41 @@ void cdrom_win32_c::eject_cdrom()
   }
 }
 
-// Read CD TOC. Returns 0 if start track is out of bounds.
 bool cdrom_win32_c::read_toc(Bit8u* buf, int* length, bool msf, int start_track, int format)
 {
-  CDROM_READ_TOC_EX input;
-  DWORD iBytesReturned;
-  UCHAR data[804];
+  // Read CD TOC. Returns 0 if start track is out of bounds.
 
   if (fd < 0) {
     BX_PANIC(("cdrom: read_toc: file not open."));
     return 0;
   }
-  
+
   // This is a hack and works okay if there's one rom track only
   if (using_file) {
     return cdrom_base_c::read_toc(buf, length, msf, start_track, format);
-  } else {
+  } else if (isWindowsXP) {
     // the implementation below is the platform-dependent code required
     // to read the TOC from a physical cdrom.
     // This only works with WinXP or newer
-    memset(&input, 0, sizeof(input)); // the call fails if the reserved bytes are not zero!!!!!
+    CDROM_READ_TOC_EX input;
+    memset(&input, 0, sizeof(input));
     input.Format = format;
     input.Msf = msf;
     input.SessionTrack = start_track;
-    
-    if (DeviceIoControl(hFile, IOCTL_CDROM_READ_TOC_EX, &input, sizeof(input), data, 804, &iBytesReturned, NULL)) {
-      // now copy it to the users buffer and free our buffer
-      *length = data[1] + (data[0] << 8) + 2;
-      memcpy(buf, data, *length);
-      return 1;
-    }
+
+    // We have to allocate a chunk of memory to make sure it is aligned on a sector base.
+    UCHAR *data = (UCHAR *) VirtualAlloc(NULL, 2048*2, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
+    DWORD iBytesReturned;
+    DeviceIoControl(hFile, IOCTL_CDROM_READ_TOC_EX, &input, sizeof(input), data, 804, &iBytesReturned, NULL);
+    // now copy it to the users buffer and free our buffer
+    *length = data[1] + (data[0] << 8) + 2;
+    memcpy(buf, data, *length);
+    VirtualFree(data, 0, MEM_RELEASE);
+
+    return 1;
+  } else {
+    return 0;
   }
-  
-  return 0;
 }
 
 Bit32u cdrom_win32_c::capacity()
@@ -402,23 +272,26 @@ Bit32u cdrom_win32_c::capacity()
     ULARGE_INTEGER FileSize;
     FileSize.LowPart = GetFileSize(hFile, &FileSize.HighPart);
     return (Bit32u)(FileSize.QuadPart / 2048);
-  } else {  /* direct device access */
+  } else if (isWindowsXP) {  /* direct device access for XP or newer */
     LARGE_INTEGER length;
     DWORD iBytesReturned;
     DeviceIoControl(hFile, IOCTL_DISK_GET_LENGTH_INFO, NULL, 0, &length, sizeof(length), &iBytesReturned, NULL);
     return (Bit32u)(length.QuadPart / 2048);
+  } else {
+    return 0;
   }
 }
 
 bool BX_CPP_AttrRegparmN(3) cdrom_win32_c::read_block(Bit8u* buf, Bit32u lba, int blocksize)
 {
   // Read a single block from the CD
+
   LARGE_INTEGER pos;
-  DWORD iBytesReturned = 0;
+  ssize_t n = 0;
   Bit8u try_count = 3;
   Bit8u* buf1;
 
-  if (using_file && (blocksize == 2352)) {
+  if (blocksize == 2352) {
     memset(buf, 0, 2352);
     memset(buf+1, 0xff, 10);
     Bit32u raw_block = lba + 150;
@@ -430,196 +303,19 @@ bool BX_CPP_AttrRegparmN(3) cdrom_win32_c::read_block(Bit8u* buf, Bit32u lba, in
   } else {
     buf1 = buf;
   }
-  
-  if (cdrom_type == CDROM_TYPE_DATA) {
-    do {
-      pos.QuadPart = (LONGLONG) lba * BX_CD_FRAMESIZE;
+  do {
+    if (using_file || isWindowsXP) {
+      pos.QuadPart = (LONGLONG)lba*BX_CD_FRAMESIZE;
       pos.LowPart = SetFilePointer(hFile, pos.LowPart, &pos.HighPart, SEEK_SET);
       if ((pos.LowPart == 0xffffffff) && (GetLastError() != NO_ERROR)) {
         BX_PANIC(("cdrom: read_block: SetFilePointer returned error."));
       } else {
-        ReadFile(hFile, (void *) buf1, BX_CD_FRAMESIZE, &iBytesReturned, NULL);
+        ReadFile(hFile, (void *) buf1, BX_CD_FRAMESIZE, (LPDWORD) &n, NULL);
       }
-    } while ((iBytesReturned != BX_CD_FRAMESIZE) && (--try_count > 0));
-    return (iBytesReturned == BX_CD_FRAMESIZE);
-      
-  } else if ((cdrom_type == CDROM_TYPE_AUDIO) && !using_file) {
-    do {
-      // lock drive
-      lock_cdrom(TRUE);
-        
-      void *buffer = VirtualAlloc(NULL, BX_RAW_SECTOR_SIZE, MEM_COMMIT|MEM_RESERVE, PAGE_READWRITE);
-      if (buffer != NULL) {
-        RAW_READ_INFO raw_read;
-        raw_read.DiskOffset.QuadPart = (/*(LONGLONG) track_info[0].address +*/ lba) * BX_CD_FRAMESIZE; // TODO: we need a track number?
-        raw_read.SectorCount = 1;
-        raw_read.TrackMode = CDDA;
-        if (DeviceIoControl(hFile, IOCTL_CDROM_RAW_READ, &raw_read, sizeof(raw_read), buffer, BX_RAW_SECTOR_SIZE, &iBytesReturned, NULL)) {
-          memcpy(buf, buffer, blocksize);
-        } else
-          iBytesReturned = 0;
-        VirtualFree(buffer, 0, MEM_RELEASE);
-      }
-        
-      // unlock drive
-      lock_cdrom(FALSE);
-    } while ((iBytesReturned != BX_RAW_SECTOR_SIZE) && (--try_count > 0));
-    
-    return (iBytesReturned == BX_RAW_SECTOR_SIZE);
-  }
-
-  return 0;
-}
-
-bool cdrom_win32_c::seek(Bit32u lba)
-{
-  unsigned char buffer[BX_RAW_SECTOR_SIZE];
-
-  Bit32u block_size = (cdrom_type == CDROM_TYPE_AUDIO) ? BX_RAW_SECTOR_SIZE : BX_CD_FRAMESIZE;
-  return read_block(buffer, lba, block_size);
-}
-
-// play audio lba
-bool cdrom_win32_c::play_audio(Bit32u lba, Bit32u length) {
-  bool ret = 0;
-
-#if WIN_CDROM_FORCE_IOCTRL
-  if (!using_file) {
-    CDROM_PLAY_AUDIO_MSF input;
-    input.StartingM = lba / 4500;
-    input.StartingS = (lba % 4500) / 75;
-    input.StartingF = lba % 75;
-    lba += length;
-    input.EndingM = lba / 4500;
-    input.EndingS = (lba % 4500) / 75;
-    input.EndingF = lba % 75;
-    ret = DeviceIoControl(hFile, IOCTL_CDROM_PLAY_AUDIO_MSF, &input, sizeof(input), NULL, 0, NULL, NULL);
-  }
-#else
-  Bit8u mins, secs, frames;
-  int start_track, end_track;
-
-  // The call will have starting and ending values for the whole disc.
-  //  We have to calculate and adjust for the track
-  lba2msf(lba, &mins, &secs, &frames);
-  start_track = msf2tmsf(&mins, &secs, &frames);
-//  BX_INFO(("start: %i %i %i   %i: %i %i %i", buf[3], buf[4], buf[5], start_track, mins, secs, frames));
-  if (!start_track)
-    return 0;
-
-  mciPlayParms.dwFrom = MCI_MAKE_TMSF(start_track, mins, secs, frames);
-
-  lba += length;
-  lba2msf(lba, &mins, &secs, &frames);
-  end_track = msf2tmsf(&mins, &secs, &frames);
-//  BX_INFO(("end: %i %i %i   %i: %i %i %i", buf[6], buf[7], buf[8], end_track, mins, secs, frames));
-  if (!end_track)
-    return 0;
-  mciPlayParms.dwTo = MCI_MAKE_TMSF(end_track, mins, secs, frames);
-
-  if (mciSendCommand(wDeviceID, MCI_PLAY, MCI_FROM | MCI_TO, (DWORD)(Bit64u) &mciPlayParms)) {
-    mciSendCommand(wDeviceID, MCI_CLOSE, 0, NULL);
-  } else
-    ret = 1;
-#endif
-  
-  if (ret == 1)
-    AudioStatus = AUDIO_STATUS_PLAYING;
-  
-  return ret;
-}
-
-// play audio msf
-bool cdrom_win32_c::play_audio_msf(Bit8u* buf) {
-  bool ret = 0;
-
-#if WIN_CDROM_FORCE_IOCTRL
-  if (!using_file) {
-    CDROM_PLAY_AUDIO_MSF input;
-    input.StartingM = buf[3];
-    input.StartingS = buf[4];
-    input.StartingF = buf[5];
-    input.EndingM = buf[6];
-    input.EndingS = buf[7];
-    input.EndingF = buf[8];
-    ret = DeviceIoControl(hFile, IOCTL_CDROM_PLAY_AUDIO_MSF, &input, sizeof(input), NULL, 0, NULL, NULL);
-  }
-#else  
-  Bit8u mins, secs, frames;
-  int start_track, end_track;
-
-  // The call will have starting and ending values for the whole disc.
-  //  We have to calculate and adjust for the track
-  mins = buf[3];
-  secs = buf[4];
-  frames = buf[5];
-  start_track = msf2tmsf(&mins, &secs, &frames);
-//  BX_INFO(("start: %i %i %i   %i: %i %i %i", buf[3], buf[4], buf[5], start_track, mins, secs, frames));
-  if (!start_track)
-    return 0;
-
-  mciPlayParms.dwFrom = MCI_MAKE_TMSF(start_track, mins, secs, frames);
-
-  mins = buf[6];
-  secs = buf[7];
-  frames = buf[8];
-  end_track = msf2tmsf(&mins, &secs, &frames);
-//  BX_INFO(("end: %i %i %i   %i: %i %i %i", buf[6], buf[7], buf[8], end_track, mins, secs, frames));
-  if (!end_track)
-    return 0;
-  mciPlayParms.dwTo = MCI_MAKE_TMSF(end_track, mins, secs, frames);
-
-  if (mciSendCommand(wDeviceID, MCI_PLAY, MCI_FROM | MCI_TO, (DWORD)(Bit64u) &mciPlayParms)) {
-    mciSendCommand(wDeviceID, MCI_CLOSE, 0, NULL);
-  } else
-    ret = 1;
-#endif
-  
-  if (ret == 1)
-    AudioStatus = AUDIO_STATUS_PLAYING;
-
-  return ret;
-}
-
-bool cdrom_win32_c::stop_audio(void) {
-  bool ret = 0;
-  
-#if WIN_CDROM_FORCE_IOCTRL
-  if (!using_file)
-    ret = DeviceIoControl(hFile, IOCTL_CDROM_STOP_AUDIO, NULL, 0, NULL, 0, NULL, NULL);
-#else
-  mciSendCommand(wDeviceID, MCI_STOP, 0, NULL);
-  ret = 1;
-#endif
-
-  AudioStatus = AUDIO_STATUS_DONE;
-  return ret;
-}
-
-bool cdrom_win32_c::pause_resume_audio(bool pause) {
-  bool ret = 0;
-
-  if (!using_file) {
-    if (pause) {
-#if WIN_CDROM_FORCE_IOCTRL
-      ret = DeviceIoControl(hFile, IOCTL_CDROM_PAUSE_AUDIO, NULL, 0, NULL, 0, NULL, NULL);
-#else
-      mciSendCommand(wDeviceID, MCI_PAUSE, 0, NULL);
-      ret = 1;
-#endif
-      AudioStatus = AUDIO_STATUS_PAUSED;
-    } else {
-#if WIN_CDROM_FORCE_IOCTRL
-      ret = DeviceIoControl(hFile, IOCTL_CDROM_RESUME_AUDIO, NULL, 0, NULL, 0, NULL, NULL);
-#else      
-      mciSendCommand(wDeviceID, MCI_RESUME, 0, NULL);
-      ret = 1;
-#endif
-      AudioStatus = AUDIO_STATUS_PLAYING;
     }
-  }
-  
-  return ret;
+  } while ((n != BX_CD_FRAMESIZE) && (--try_count > 0));
+
+  return (n == BX_CD_FRAMESIZE);
 }
 
 #endif /* WIN32 */
