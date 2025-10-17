@@ -105,80 +105,6 @@ void cdrom_base_c::eject_cdrom()
   }
 }
 
-int cdrom_base_c::read_sub_channel(Bit8u* buf, bool sub_q, bool msf, int start_track, int format, int alloc_length) {
-  int ret_len = 4;
-  
-  buf[0] = 0;
-  buf[1] = 0; // audio status not supported
-  buf[2] = 0; 
-  buf[3] = 4;
-  
-  if (sub_q) { // !sub_q == header only
-    if (format == 1) {
-      buf[2] = 0;  // length (MSB -> LSB)
-      buf[3] = 12; // 
-                        
-      buf[ 4] = 1;  // format code = 1
-      buf[ 5] = (0 << 4) | (0 << 0); // ADR | CONTROL
-      buf[ 6] = 1;  // track number
-      buf[ 7] = 1;  // index number
-      if (msf) {
-        // in TIME format
-        Bit32u lba = /*BX_SELECTED_DRIVE(channel).cdrom.curr_lba*/ 0 + (2 * 75); // 150 = 2 second lead-in from start
-        int mins = (lba / 75) / 60;
-        int secs = (lba / 75) % 60;
-        int frames = lba % 75;
-        buf[ 8] = 0;  // Absolute CD Address (H = 0)
-        buf[ 9] = mins;  // M field (0 -> 99)
-        buf[10] = secs;  // S field (0 -> 59)
-        buf[11] = frames;  // F field (0 -> 74)
-        buf[12] = 0;  // Track Relative CD Address (H = 0)
-        buf[13] = mins;  // M field (0 -> 99)
-        buf[14] = secs;  // S field (0 -> 59)
-        buf[15] = frames;  // F field (0 -> 74)
-      } else {
-        // LBA = (((M * 60) + S) * 75) + F - 150
-        // in LBA format
-        buf[ 8] = 0;  // Absolute CD Address (MSB -> LSB)
-        buf[ 9] = 0;  //
-        buf[10] = 0;  //
-        buf[11] = 1;  //
-        buf[12] = 0;  // Track Relative CD Address (MSB -> LSB)
-        buf[13] = 0;  //
-        buf[14] = 0;  //
-        buf[15] = 1;  //
-      }
-      ret_len = 16;
-                        
-    } else if (format == 2) {
-      buf[3] = 20;
-      buf[4] = 2;
-      buf[8] = 0; // no MCN
-      memset(&buf[9], 0, 13);
-      buf[22] = 0; // zero
-      buf[23] = 0; // AFRAME (0 -> 4Ah)
-      ret_len = 24;
-
-    } else if (format == 3) {
-      buf[3] = 20;
-      buf[4] = 3;
-      buf[5] = (1 << 4) | (4 << 0); // 0x14
-      buf[6] = 1;
-      buf[7] = 0; // reserved
-      buf[8] = 0; // no ISRC
-      memset(&buf[9], 0, 12);
-      buf[21] = 0; // zero
-      buf[22] = 0; // AFRAME (0 -> 4Ah)
-      buf[23] = 0; // reserved
-      ret_len = 24;
-    } else {
-      ret_len = 0;
-    }
-  }
-  
-  return ret_len;
-}
-
 // note: when the data returned is verified to work in all cases, to make this
 //  faster and lighter code, we can simply hard code each format's return as a binary array.
 // (especially format 2)
@@ -427,24 +353,4 @@ bool cdrom_base_c::seek(Bit32u lba)
   unsigned char buffer[BX_CD_FRAMESIZE];
 
   return read_block(buffer, lba, BX_CD_FRAMESIZE);
-}
-
-bool cdrom_base_c::play_audio(Bit32u lba, Bit32u length) {
-  // unimplemented
-  return 0;
-}
-
-bool cdrom_base_c::play_audio_msf(Bit8u* buf) {
-  // unimplemented
-  return 0;
-}
-
-bool cdrom_base_c::stop_audio(void) {
-  // unimplemented
-  return 0;
-}
-
-bool cdrom_base_c::pause_resume_audio(bool pause) {
-  // unimplemented
-  return 0;
 }
