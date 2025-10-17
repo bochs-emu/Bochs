@@ -253,6 +253,7 @@ struct gf_channel
   Bit32u d3d_texture_image_rect[16];
   Bit32u d3d_texture_palette[16];
   Bit32u d3d_texture_control3[16];
+  Bit32u d3d_texture_key_color[16];
   Bit32u d3d_semaphore_obj;
   Bit32u d3d_semaphore_offset;
   Bit32u d3d_zstencil_clear_value;
