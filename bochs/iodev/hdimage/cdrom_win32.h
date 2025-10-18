@@ -24,7 +24,7 @@
 #define CDROM_TYPE_DATA     1
 #define CDROM_TYPE_AUDIO    2
 
-#if LOWLEVEL_AUDIO
+#if LOWLEVEL_CDAUDIO
 struct CDROM_TRACK_INFO {
   Bit32u address;
   Bit32u length;
@@ -56,7 +56,7 @@ public:
   bool read_block(Bit8u* buf, Bit32u lba, int blocksize) BX_CPP_AttrRegparmN(3);
   bool seek(Bit32u lba);
 
-#if LOWLEVEL_AUDIO
+#if LOWLEVEL_CDAUDIO
   bool play_audio(Bit32u lba, Bit32u length);
   bool play_audio_msf(Bit8u* buf);
   bool stop_audio(void);
@@ -67,7 +67,7 @@ private:
   bool lock_cdrom(bool lock);
   int  cdrom_type;  // 0 = unknown, 1 = is a data cdrom, 2 = is an audio cdrom
   int  tot_tracks;
-#if LOWLEVEL_AUDIO
+#if LOWLEVEL_CDAUDIO
   Bit32u msf2lba(Bit8u mins, Bit8u secs, Bit8u frames);
   void lba2msf(int lba, Bit8u *mins, Bit8u *secs, Bit8u *frames);
   int msf2tmsf(Bit8u *mins, Bit8u *secs, Bit8u *frames);

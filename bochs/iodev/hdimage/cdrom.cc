@@ -429,7 +429,7 @@ bool cdrom_base_c::seek(Bit32u lba)
   return read_block(buffer, lba, BX_CD_FRAMESIZE);
 }
 
-#if LOWLEVEL_AUDIO
+#if LOWLEVEL_CDAUDIO
 bool cdrom_base_c::play_audio(Bit32u lba, Bit32u length) {
   // unimplemented
   return 0;

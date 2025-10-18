@@ -108,7 +108,7 @@ cdrom_win32_c::cdrom_win32_c(const char *dev)
   }
   using_file = 0;
   cdrom_type = CDROM_TYPE_DATA;  // assume a data CD
-#if LOWLEVEL_AUDIO
+#if LOWLEVEL_CDAUDIO
   tot_tracks = 0;
   AudioStatus = AUDIO_STATUS_NO_CURRENT;
 #endif
@@ -119,7 +119,7 @@ cdrom_win32_c::~cdrom_win32_c(void)
   if (fd >= 0) {
     if (hFile != INVALID_HANDLE_VALUE)
       CloseHandle(hFile);
-#if LOWLEVEL_AUDIO
+#if LOWLEVEL_CDAUDIO
 #if !WIN_CDROM_FORCE_IOCTRL
     mciSendCommand(wDeviceID, MCI_CLOSE, 0, NULL);
 #endif
@@ -138,7 +138,7 @@ bool cdrom_win32_c::lock_cdrom(bool lock)
  	return DeviceIoControl(hFile, IOCTL_STORAGE_MEDIA_REMOVAL, &pmr, sizeof(pmr), NULL, 0, &iBytesReturned, NULL);
 }
 
-#if LOWLEVEL_AUDIO
+#if LOWLEVEL_CDAUDIO
 // convert MSF to LBA
 Bit32u cdrom_win32_c::msf2lba(Bit8u mins, Bit8u secs, Bit8u frames)
 {
@@ -255,7 +255,7 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
           case 0b0001:
           case 0b1000:
           case 0b1001:
-#if LOWLEVEL_AUDIO
+#if LOWLEVEL_CDAUDIO
             // if is an audio track, store the information
             track_info[i].address = msf2lba(toc_table->TrackData[i].Address[1], toc_table->TrackData[i].Address[2], toc_table->TrackData[i].Address[3]);
             track_info[i].length = msf2lba(toc_table->TrackData[i+1].Address[1], toc_table->TrackData[i+1].Address[2], toc_table->TrackData[i+1].Address[3]) - track_info[i].address;
@@ -285,7 +285,7 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
           BX_INFO(("*  Bochs' Direct Disc access is malfunctioning."));
         }
         cdrom_type = CDROM_TYPE_DATA;
-#if LOWLEVEL_AUDIO
+#if LOWLEVEL_CDAUDIO
       } else if (!data && audio) {
         // if it is audio, we got the track information above
         cdrom_type = CDROM_TYPE_AUDIO;
@@ -293,7 +293,7 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
       }
     }
 
-#if LOWLEVEL_AUDIO
+#if LOWLEVEL_CDAUDIO
 #if !WIN_CDROM_FORCE_IOCTRL
     // Open the CD audio device by specifying the device name.
     mciOpenParms.lpstrDeviceType = "cdaudio";
@@ -334,7 +334,7 @@ int cdrom_win32_c::read_sub_channel(Bit8u* buf, bool sub_q, bool msf, int start_
     if (DeviceIoControl(hFile, IOCTL_CDROM_READ_Q_CHANNEL, &q_data_format, sizeof(q_data_format), buffer, BX_CD_FRAMESIZE, &iBytesReturned, NULL)) {
       // WinXP expects the Audio Status byte to be valid, if not it assumes 
       //  an error with that track, and moves to the next one.
-#if LOWLEVEL_AUDIO
+#if LOWLEVEL_CDAUDIO
       buffer[1] = AudioStatus;
 #endif
       if (!sub_q) iBytesReturned = 4;
@@ -354,7 +354,7 @@ void cdrom_win32_c::eject_cdrom()
     if (!using_file) {
       DWORD lpBytesReturned;
       DeviceIoControl(hFile, IOCTL_STORAGE_EJECT_MEDIA, NULL, 0, NULL, 0, &lpBytesReturned, NULL);
-#if LOWLEVEL_AUDIO
+#if LOWLEVEL_CDAUDIO
 #if !WIN_CDROM_FORCE_IOCTRL
       mciSendCommand(wDeviceID, MCI_CLOSE, 0, NULL);
 #endif
@@ -454,7 +454,7 @@ bool BX_CPP_AttrRegparmN(3) cdrom_win32_c::read_block(Bit8u* buf, Bit32u lba, in
     } while ((iBytesReturned != BX_CD_FRAMESIZE) && (--try_count > 0));
     return (iBytesReturned == BX_CD_FRAMESIZE);
       
-#if LOWLEVEL_AUDIO
+#if LOWLEVEL_CDAUDIO
   } else if ((cdrom_type == CDROM_TYPE_AUDIO) && !using_file) {
     do {
       // lock drive
@@ -492,7 +492,7 @@ bool cdrom_win32_c::seek(Bit32u lba)
   return read_block(buffer, lba, block_size);
 }
 
-#if LOWLEVEL_AUDIO
+#if LOWLEVEL_CDAUDIO
 // play audio lba
 bool cdrom_win32_c::play_audio(Bit32u lba, Bit32u length) {
   bool ret = 0;
@@ -635,7 +635,7 @@ bool cdrom_win32_c::pause_resume_audio(bool pause) {
   
   return ret;
 }
-#endif  /* LOWLEVEL_AUDIO */
+#endif  /* LOWLEVEL_CDAUDIO */
 
 #endif /* WIN32 */
 
