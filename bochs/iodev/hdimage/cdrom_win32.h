@@ -24,6 +24,7 @@
 #define CDROM_TYPE_DATA     1
 #define CDROM_TYPE_AUDIO    2
 
+#if LOWLEVEL_AUDIO
 struct CDROM_TRACK_INFO {
   Bit32u address;
   Bit32u length;
@@ -39,6 +40,7 @@ struct CDROM_TRACK_INFO {
 #define AUDIO_STATUS_DONE         0x13
 #define AUDIO_STATUS_STOPPED_ERR  0x14
 #define AUDIO_STATUS_NO_CURRENT   0x15
+#endif
 
 // Header file for low-level OS specific CDROM emulation
 
@@ -54,28 +56,31 @@ public:
   bool read_block(Bit8u* buf, Bit32u lba, int blocksize) BX_CPP_AttrRegparmN(3);
   bool seek(Bit32u lba);
 
+#if LOWLEVEL_AUDIO
   bool play_audio(Bit32u lba, Bit32u length);
   bool play_audio_msf(Bit8u* buf);
   bool stop_audio(void);
   bool pause_resume_audio(bool pause);
+#endif
 
 private:
   bool lock_cdrom(bool lock);
+  int  cdrom_type;  // 0 = unknown, 1 = is a data cdrom, 2 = is an audio cdrom
+  int  tot_tracks;
+#if LOWLEVEL_AUDIO
   Bit32u msf2lba(Bit8u mins, Bit8u secs, Bit8u frames);
   void lba2msf(int lba, Bit8u *mins, Bit8u *secs, Bit8u *frames);
   int msf2tmsf(Bit8u *mins, Bit8u *secs, Bit8u *frames);
-  HANDLE hFile;
-  int  cdrom_type;  // 0 = unknown, 1 = is a data cdrom, 2 = is an audio cdrom
-  int  tot_tracks;
   struct CDROM_TRACK_INFO track_info[100];
   Bit8u AudioStatus;
-
 #if !WIN_CDROM_FORCE_IOCTRL
   UINT wDeviceID;
   MCI_OPEN_PARMS mciOpenParms;
   MCI_SET_PARMS mciSetParms;
   MCI_PLAY_PARMS mciPlayParms;
 #endif
+#endif
+  HANDLE hFile;
 };
 
 #endif
