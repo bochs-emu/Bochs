@@ -21,7 +21,7 @@
 
 // These are the low-level CDROM functions which are called from 'harddrv.cc'.
 // Notes about AUDIO CDROM's:
-//  0) To disable audio cdrom support, set BX_SUPPORT_CDROM to 0
+//  0) To disable audio cdrom support, set LOWLEVEL_CDAUDIO to 0
 //  1) Assumes the Host will be WinXP or higher (the check has been removed)
 //  2) Win10 still supports a lot of the DeviceIoControl() functions for the
 //     audio CDROM, but *does not* support the playback DeviceIoControl() even
