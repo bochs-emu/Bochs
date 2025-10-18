@@ -193,13 +193,6 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
     BX_INFO (("Using direct access for cdrom."));
     // This trick only works for Win2k and WinNT, so warn the user of that.
     using_file = 0;
-#if LOWLEVEL_AUDIO
-#if !WIN_CDROM_FORCE_IOCTRL
-  // We also need to check that we aren't above 32-bit wide
-  if ((Bit64u) &wDeviceID > 0xFFFFFFFFULL)
-    BX_PANIC(("The MCI code assumes 32-bit addresses!"));
-#endif
-#endif
   } else {
     strcpy(drive,path);
     using_file = 1;
@@ -304,7 +297,7 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
 #if !WIN_CDROM_FORCE_IOCTRL
     // Open the CD audio device by specifying the device name.
     mciOpenParms.lpstrDeviceType = "cdaudio";
-    if (mciSendCommand(NULL, MCI_OPEN, MCI_OPEN_TYPE, (DWORD)(Bit64u) &mciOpenParms)) {
+    if (mciSendCommand(NULL, MCI_OPEN, MCI_OPEN_TYPE, (DWORD_PTR) &mciOpenParms)) {
       // Failed to open device. Don't close it; just return error.
       return 0;
     }
@@ -314,7 +307,7 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
 
     // Set the time format to track/minute/second/frame (TMSF).
     mciSetParms.dwTimeFormat = MCI_FORMAT_TMSF;
-    if (mciSendCommand(wDeviceID, MCI_SET, MCI_SET_TIME_FORMAT, (DWORD)(Bit64u) &mciSetParms)) {
+    if (mciSendCommand(wDeviceID, MCI_SET, MCI_SET_TIME_FORMAT, (DWORD_PTR) &mciSetParms)) {
       mciSendCommand(wDeviceID, MCI_CLOSE, 0, NULL);
       return 0;
     } 
@@ -538,7 +531,7 @@ bool cdrom_win32_c::play_audio(Bit32u lba, Bit32u length) {
     return 0;
   mciPlayParms.dwTo = MCI_MAKE_TMSF(end_track, mins, secs, frames);
 
-  if (mciSendCommand(wDeviceID, MCI_PLAY, MCI_FROM | MCI_TO, (DWORD)(Bit64u) &mciPlayParms)) {
+  if (mciSendCommand(wDeviceID, MCI_PLAY, MCI_FROM | MCI_TO, (DWORD_PTR) &mciPlayParms)) {
     mciSendCommand(wDeviceID, MCI_CLOSE, 0, NULL);
   } else
     ret = 1;
@@ -590,7 +583,7 @@ bool cdrom_win32_c::play_audio_msf(Bit8u* buf) {
     return 0;
   mciPlayParms.dwTo = MCI_MAKE_TMSF(end_track, mins, secs, frames);
 
-  if (mciSendCommand(wDeviceID, MCI_PLAY, MCI_FROM | MCI_TO, (DWORD)(Bit64u) &mciPlayParms)) {
+  if (mciSendCommand(wDeviceID, MCI_PLAY, MCI_FROM | MCI_TO, (DWORD_PTR) &mciPlayParms)) {
     mciSendCommand(wDeviceID, MCI_CLOSE, 0, NULL);
   } else
     ret = 1;
