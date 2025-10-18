@@ -1392,7 +1392,11 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                   bool Start = (controller->buffer[4] >> 0) & 1;
 
                   if (!LoEj && !Start) { // stop the disc
+#if LOWLEVEL_AUDIO
                     BX_SELECTED_DRIVE(channel).cdrom.cd->stop_audio();
+#else
+                    BX_ERROR(("FIXME: Stop disc not implemented"));
+#endif
                     atapi_cmd_nop(controller);
                     raise_interrupt(channel);
                   } else if (!LoEj && Start) { // start (spin up) the disc
@@ -2083,6 +2087,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                 }
                 break;
                 
+#if LOWLEVEL_AUDIO
               case 0x45: // play audio(10)
               case 0xA5: // play audio(12)
               {
@@ -2128,7 +2133,13 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                   raise_interrupt(channel);
                 }
               } break;
-                
+#else
+              case 0x45: // play audio(10)
+              case 0xA5: // play audio(12)
+              case 0x47: // play audio msf
+              case 0x4e: // stop play/scan
+              case 0x4b: // pause/resume
+#endif
               case 0x55: // mode select
               case 0xa6: // load/unload cd
               case 0xbc: // play cd
