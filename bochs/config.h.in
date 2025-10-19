@@ -827,6 +827,7 @@ typedef Bit32u bx_phy_address;
 #define BX_SUPPORT_CDROM 0
 
 #if BX_SUPPORT_CDROM
+#  define LOWLEVEL_CDAUDIO  0
    // This is the C++ class name to use if we are supporting
    // low-level CDROM.
 #  define LOWLEVEL_CDROM cdrom_base_c

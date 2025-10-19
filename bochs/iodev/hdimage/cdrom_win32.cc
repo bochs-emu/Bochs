@@ -20,7 +20,8 @@
 /////////////////////////////////////////////////////////////////////////
 
 // These are the low-level CDROM functions which are called from 'harddrv.cc'.
-// Notes:
+// Notes about AUDIO CDROM's:
+//  0) To disable audio cdrom support, set LOWLEVEL_CDAUDIO to 0
 //  1) Assumes the Host will be WinXP or higher (the check has been removed)
 //  2) Win10 still supports a lot of the DeviceIoControl() functions for the
 //     audio CDROM, but *does not* support the playback DeviceIoControl() even
@@ -99,8 +100,6 @@ cdrom_win32_c::cdrom_win32_c(const char *dev)
   sprintf(prefix, "CD%d", ++bx_cdrom_count);
   put(prefix);
   fd = -1; // File descriptor not yet allocated
-  cdrom_type = CDROM_TYPE_DATA;  // assume a data CD
-  tot_tracks = 0;
 
   if (dev == NULL) {
     path = NULL;
@@ -108,7 +107,11 @@ cdrom_win32_c::cdrom_win32_c(const char *dev)
     path = strdup(dev);
   }
   using_file = 0;
+  cdrom_type = CDROM_TYPE_DATA;  // assume a data CD
+#if LOWLEVEL_CDAUDIO
+  tot_tracks = 0;
   AudioStatus = AUDIO_STATUS_NO_CURRENT;
+#endif
 }
 
 cdrom_win32_c::~cdrom_win32_c(void)
@@ -116,8 +119,10 @@ cdrom_win32_c::~cdrom_win32_c(void)
   if (fd >= 0) {
     if (hFile != INVALID_HANDLE_VALUE)
       CloseHandle(hFile);
+#if LOWLEVEL_CDAUDIO
 #if !WIN_CDROM_FORCE_IOCTRL
     mciSendCommand(wDeviceID, MCI_CLOSE, 0, NULL);
+#endif
 #endif
     fd = -1;
   }
@@ -133,6 +138,7 @@ bool cdrom_win32_c::lock_cdrom(bool lock)
  	return DeviceIoControl(hFile, IOCTL_STORAGE_MEDIA_REMOVAL, &pmr, sizeof(pmr), NULL, 0, &iBytesReturned, NULL);
 }
 
+#if LOWLEVEL_CDAUDIO
 // convert MSF to LBA
 Bit32u cdrom_win32_c::msf2lba(Bit8u mins, Bit8u secs, Bit8u frames)
 {
@@ -164,6 +170,7 @@ int cdrom_win32_c::msf2tmsf(Bit8u *mins, Bit8u *secs, Bit8u *frames)
   
   return 0;
 }
+#endif
 
 bool cdrom_win32_c::insert_cdrom(const char *dev)
 {
@@ -186,11 +193,6 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
     BX_INFO (("Using direct access for cdrom."));
     // This trick only works for Win2k and WinNT, so warn the user of that.
     using_file = 0;
-#if !WIN_CDROM_FORCE_IOCTRL
-  // We also need to check that we aren't above 32-bit wide
-  if ((Bit64u) &wDeviceID > 0xFFFFFFFFULL)
-    BX_PANIC(("The MCI code assumes 32-bit addresses!"));
-#endif
   } else {
     strcpy(drive,path);
     using_file = 1;
@@ -253,10 +255,12 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
           case 0b0001:
           case 0b1000:
           case 0b1001:
+#if LOWLEVEL_CDAUDIO
             // if is an audio track, store the information
             track_info[i].address = msf2lba(toc_table->TrackData[i].Address[1], toc_table->TrackData[i].Address[2], toc_table->TrackData[i].Address[3]);
             track_info[i].length = msf2lba(toc_table->TrackData[i+1].Address[1], toc_table->TrackData[i+1].Address[2], toc_table->TrackData[i+1].Address[3]) - track_info[i].address;
             audio = TRUE;
+#endif
             break;
           case 0b0100:
           case 0b0101:
@@ -281,16 +285,19 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
           BX_INFO(("*  Bochs' Direct Disc access is malfunctioning."));
         }
         cdrom_type = CDROM_TYPE_DATA;
+#if LOWLEVEL_CDAUDIO
       } else if (!data && audio) {
         // if it is audio, we got the track information above
         cdrom_type = CDROM_TYPE_AUDIO;
+#endif
       }
     }
 
+#if LOWLEVEL_CDAUDIO
 #if !WIN_CDROM_FORCE_IOCTRL
     // Open the CD audio device by specifying the device name.
     mciOpenParms.lpstrDeviceType = "cdaudio";
-    if (mciSendCommand(NULL, MCI_OPEN, MCI_OPEN_TYPE, (DWORD)(Bit64u) &mciOpenParms)) {
+    if (mciSendCommand(NULL, MCI_OPEN, MCI_OPEN_TYPE, (DWORD_PTR) &mciOpenParms)) {
       // Failed to open device. Don't close it; just return error.
       return 0;
     }
@@ -300,11 +307,12 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
 
     // Set the time format to track/minute/second/frame (TMSF).
     mciSetParms.dwTimeFormat = MCI_FORMAT_TMSF;
-    if (mciSendCommand(wDeviceID, MCI_SET, MCI_SET_TIME_FORMAT, (DWORD)(Bit64u) &mciSetParms)) {
+    if (mciSendCommand(wDeviceID, MCI_SET, MCI_SET_TIME_FORMAT, (DWORD_PTR) &mciSetParms)) {
       mciSendCommand(wDeviceID, MCI_CLOSE, 0, NULL);
       return 0;
     } 
     fd = 1;
+#endif
 #endif
   }
 
@@ -326,7 +334,9 @@ int cdrom_win32_c::read_sub_channel(Bit8u* buf, bool sub_q, bool msf, int start_
     if (DeviceIoControl(hFile, IOCTL_CDROM_READ_Q_CHANNEL, &q_data_format, sizeof(q_data_format), buffer, BX_CD_FRAMESIZE, &iBytesReturned, NULL)) {
       // WinXP expects the Audio Status byte to be valid, if not it assumes 
       //  an error with that track, and moves to the next one.
+#if LOWLEVEL_CDAUDIO
       buffer[1] = AudioStatus;
+#endif
       if (!sub_q) iBytesReturned = 4;
       memcpy(buf, buffer, BX_MIN(iBytesReturned, (DWORD) alloc_length));
       return iBytesReturned;
@@ -344,8 +354,10 @@ void cdrom_win32_c::eject_cdrom()
     if (!using_file) {
       DWORD lpBytesReturned;
       DeviceIoControl(hFile, IOCTL_STORAGE_EJECT_MEDIA, NULL, 0, NULL, 0, &lpBytesReturned, NULL);
+#if LOWLEVEL_CDAUDIO
 #if !WIN_CDROM_FORCE_IOCTRL
       mciSendCommand(wDeviceID, MCI_CLOSE, 0, NULL);
+#endif
 #endif
     } else {
       if (hFile != INVALID_HANDLE_VALUE) {
@@ -442,6 +454,7 @@ bool BX_CPP_AttrRegparmN(3) cdrom_win32_c::read_block(Bit8u* buf, Bit32u lba, in
     } while ((iBytesReturned != BX_CD_FRAMESIZE) && (--try_count > 0));
     return (iBytesReturned == BX_CD_FRAMESIZE);
       
+#if LOWLEVEL_CDAUDIO
   } else if ((cdrom_type == CDROM_TYPE_AUDIO) && !using_file) {
     do {
       // lock drive
@@ -465,6 +478,7 @@ bool BX_CPP_AttrRegparmN(3) cdrom_win32_c::read_block(Bit8u* buf, Bit32u lba, in
     } while ((iBytesReturned != BX_RAW_SECTOR_SIZE) && (--try_count > 0));
     
     return (iBytesReturned == BX_RAW_SECTOR_SIZE);
+#endif
   }
 
   return 0;
@@ -478,6 +492,7 @@ bool cdrom_win32_c::seek(Bit32u lba)
   return read_block(buffer, lba, block_size);
 }
 
+#if LOWLEVEL_CDAUDIO
 // play audio lba
 bool cdrom_win32_c::play_audio(Bit32u lba, Bit32u length) {
   bool ret = 0;
@@ -516,7 +531,7 @@ bool cdrom_win32_c::play_audio(Bit32u lba, Bit32u length) {
     return 0;
   mciPlayParms.dwTo = MCI_MAKE_TMSF(end_track, mins, secs, frames);
 
-  if (mciSendCommand(wDeviceID, MCI_PLAY, MCI_FROM | MCI_TO, (DWORD)(Bit64u) &mciPlayParms)) {
+  if (mciSendCommand(wDeviceID, MCI_PLAY, MCI_FROM | MCI_TO, (DWORD_PTR) &mciPlayParms)) {
     mciSendCommand(wDeviceID, MCI_CLOSE, 0, NULL);
   } else
     ret = 1;
@@ -568,7 +583,7 @@ bool cdrom_win32_c::play_audio_msf(Bit8u* buf) {
     return 0;
   mciPlayParms.dwTo = MCI_MAKE_TMSF(end_track, mins, secs, frames);
 
-  if (mciSendCommand(wDeviceID, MCI_PLAY, MCI_FROM | MCI_TO, (DWORD)(Bit64u) &mciPlayParms)) {
+  if (mciSendCommand(wDeviceID, MCI_PLAY, MCI_FROM | MCI_TO, (DWORD_PTR) &mciPlayParms)) {
     mciSendCommand(wDeviceID, MCI_CLOSE, 0, NULL);
   } else
     ret = 1;
@@ -620,6 +635,7 @@ bool cdrom_win32_c::pause_resume_audio(bool pause) {
   
   return ret;
 }
+#endif  /* LOWLEVEL_CDAUDIO */
 
 #endif /* WIN32 */
 

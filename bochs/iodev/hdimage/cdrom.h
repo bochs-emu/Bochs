@@ -54,11 +54,13 @@ public:
   // Seek for new block address.
   virtual bool seek(Bit32u lba);
 
+#if LOWLEVEL_CDAUDIO
   // play audio msf
   virtual bool play_audio(Bit32u lba, Bit32u length);
   virtual bool play_audio_msf(Bit8u* buf);
   virtual bool stop_audio(void);
   virtual bool pause_resume_audio(bool pause);
+#endif
 
 protected:
   int fd;
