@@ -1033,15 +1033,6 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
            BX_ERROR(("VMFAIL: VMENTRY bad injected event vector %d", vector));
            return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
          }
-/*
-         // injecting NMI
-         if (vm->pin_vmexec_ctrls.VIRTUAL_NMI()) {
-           if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED) {
-             BX_ERROR(("VMFAIL: VMENTRY injected NMI vector when blocked by NMI in interruptibility state", vector));
-             return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
-           }
-         }
-*/
          break;
 
        case BX_HARDWARE_EXCEPTION:
@@ -1984,6 +1975,18 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   {
     BX_ERROR(("VMENTER FAIL: VMCS guest interruptibility state broken"));
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+  }
+
+  if (vm->pin_vmexec_ctrls.VIRTUAL_NMI()) {
+    if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED) {
+      if (VMENTRY_INJECTING_EVENT(vm->vmentry_interr_info)) {
+        unsigned event_type = (vm->vmentry_interr_info >> 8) & 7;
+        if (event_type == BX_NMI) {  // injecting NMI
+          BX_PANIC(("VMENTER FAIL: VMENTRY injected NMI vector when blocked by NMI in interruptibility state"));
+          return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+        }
+      }
+    }
   }
 
 #if BX_SUPPORT_UINTR
