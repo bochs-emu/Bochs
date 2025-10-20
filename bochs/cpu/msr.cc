@@ -1178,6 +1178,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       if (! IsValidPageAlignedPhyAddr(val_64)) {
         BX_ERROR(("WRMSR SVM_HSAVE_PA_MSR: invalid or not page aligned physical address !"));
+        return false;
       }
       BX_CPU_THIS_PTR msr.svm_hsave_pa = val_64;
       break;
