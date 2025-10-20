@@ -741,6 +741,10 @@ bool BX_CPU_C::SvmInjectEvents(void)
         BX_ERROR(("SvmInjectEvents: invalid vector %d for HW exception", vector));
         return false;
       }
+      if (vector == BX_BR_EXCEPTION && long64_mode()) {
+        BX_ERROR(("SvmInjectEvents: invalid vector %d for long mode", vector));
+        return false;
+      }
       if (vector == BX_BP_EXCEPTION || vector == BX_OF_EXCEPTION) {
         type = BX_SOFTWARE_EXCEPTION;
       }
