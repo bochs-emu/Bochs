@@ -730,8 +730,7 @@ bool BX_CPU_C::SvmInjectEvents(void)
 
   switch(type) {
     case BX_NMI:
-      mask_event(BX_EVENT_NMI);
-      BX_CPU_THIS_PTR EXT = 1;
+      BX_CPU_THIS_PTR EXT = 1; // injected NMI doesn't mask delivery of further NMIs
       vector = 2;
       break;
 
