@@ -536,7 +536,7 @@ void bx_init_options()
     0);
   sel_config->set_by_name(BX_DEFAULT_CONFIG_INTERFACE);
 
-  static const char *bochs_start_names[] = { "quick", "load", "edit", "run" };
+  static const char *bochs_start_names[] = { "quick", "load", "edit", "run", NULL };
 
   // quick start option, set by command line arg
   new bx_param_enum_c(menu,

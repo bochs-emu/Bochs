@@ -148,11 +148,11 @@ PLUGIN_ENTRY_FOR_MODULE(speaker)
     bx_devices.pluginSpeaker = &bx_devices.stubSpeaker;
     delete theSpeaker;
     SIM->unregister_addon_option("speaker");
-    ((bx_list_c*)SIM->get_param("sound"))->remove("speaker");
 #if BX_SUPPORT_SOUNDLOW
     bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
     misc_rt->remove("volume");
 #endif
+    ((bx_list_c*)SIM->get_param("sound"))->remove("speaker");
     bx_devices.remove_sound_device();
   } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_OPTIONAL;
