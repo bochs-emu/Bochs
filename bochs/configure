@@ -1095,6 +1095,7 @@ enable_clgd54xx
 enable_geforce
 enable_voodoo
 enable_cdrom
+enable_cdaudio
 enable_sb16
 enable_es1370
 enable_gameport
@@ -1841,6 +1842,7 @@ Optional Features:
   --enable-geforce        enable experimental GeForce emulation (no)
   --enable-voodoo         enable 3dfx Voodoo Graphics emulation (no)
   --enable-cdrom          lowlevel CDROM support (yes)
+  --enable-cdaudio        lowlevel CD AUDIO support (no)
   --enable-sb16           Sound Blaster 16 Support (no)
   --enable-es1370         enable ES1370 soundcard support (no)
   --enable-gameport       enable standard PC gameport support (yes, if
@@ -6279,7 +6281,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 6282 "configure"' > conftest.$ac_ext
+  echo '#line 6284 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7792,11 +7794,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7795: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7797: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7799: \$? = $ac_status" >&5
+   echo "$as_me:7801: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -8027,11 +8029,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8030: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8032: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8034: \$? = $ac_status" >&5
+   echo "$as_me:8036: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -8096,11 +8098,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8099: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8101: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8103: \$? = $ac_status" >&5
+   echo "$as_me:8105: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9938,7 +9940,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9941 "configure"
+#line 9943 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10034,7 +10036,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10037 "configure"
+#line 10039 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12156,11 +12158,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12159: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12161: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12163: \$? = $ac_status" >&5
+   echo "$as_me:12165: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -12225,11 +12227,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12228: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12230: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12232: \$? = $ac_status" >&5
+   echo "$as_me:12234: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13265,7 +13267,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13268 "configure"
+#line 13270 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13361,7 +13363,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13364 "configure"
+#line 13366 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -14182,11 +14184,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14185: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14187: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:14189: \$? = $ac_status" >&5
+   echo "$as_me:14191: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -14251,11 +14253,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14254: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14256: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14258: \$? = $ac_status" >&5
+   echo "$as_me:14260: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16220,11 +16222,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16223: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16225: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16227: \$? = $ac_status" >&5
+   echo "$as_me:16229: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16455,11 +16457,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16458: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16460: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16462: \$? = $ac_status" >&5
+   echo "$as_me:16464: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16524,11 +16526,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16527: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16529: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16531: \$? = $ac_status" >&5
+   echo "$as_me:16533: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -18366,7 +18368,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18369 "configure"
+#line 18371 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -18462,7 +18464,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18465 "configure"
+#line 18467 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -20220,7 +20222,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 20223 "configure"
+#line 20225 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -25800,6 +25802,50 @@ printf "%s\n" "no" >&6; }
 
 fi
 
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for lowlevel CD AUDIO support" >&5
+printf %s "checking for lowlevel CD AUDIO support... " >&6; }
+# Check whether --enable-cdaudio was given.
+if test ${enable_cdaudio+y}
+then :
+  enableval=$enable_cdaudio; if test "$enableval" = yes; then
+     bx_cdaudio=1
+   else
+     bx_cdaudio=0
+   fi
+else case e in #(
+  e)  bx_cdaudio=0
+   ;;
+esac
+fi
+
+
+bx_win_link_winmm=0
+if test "$bx_cdaudio" = 1; then
+  printf "%s\n" "#define LOWLEVEL_CDAUDIO 1" >>confdefs.h
+
+  if test "$bx_cdrom" = 0; then
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+    as_fn_error $? "Lowlevel CD AUDIO requires lowlevel CDROM support" "$LINENO" 5
+  fi
+  case $target in
+    *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32* | *.msys)
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: win32" >&5
+printf "%s\n" "win32" >&6; }
+      bx_win_link_winmm=1
+      ;;
+    *)
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: dummy" >&5
+printf "%s\n" "dummy" >&6; }
+      ;;
+  esac
+else
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+  printf "%s\n" "#define LOWLEVEL_CDAUDIO 0" >>confdefs.h
+
+fi
+
 
 
 
@@ -25928,17 +25974,11 @@ fi
         fi
       fi
       ;;
-    *-pc-windows*)
+    *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32* | *.msys)
       SOUNDLOW_OBJS='soundwin.o'
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS winmm.lib"
-      soundlow_drivers="win"
-      soundlow_default="win"
-      printf "%s\n" "#define BX_HAVE_SOUND_WIN 1" >>confdefs.h
-
-      ;;
-    *-cygwin* | *-mingw32* | *-msys)
-      SOUNDLOW_OBJS='soundwin.o'
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
+      if test "$bx_plugins" = 0; then
+        bx_win_link_winmm=1
+      fi
       soundlow_drivers="win"
       soundlow_default="win"
       printf "%s\n" "#define BX_HAVE_SOUND_WIN 1" >>confdefs.h
@@ -26073,9 +26113,11 @@ printf "%s\n" "yes" >&6; }
     if test "$gameport_present" = 0; then
       GAME_OBJS='gameport.o'
       case $target in
-        *-cygwin* | *-mingw32* | *-msys)
-           DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
-           ;;
+        *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32* | *.msys)
+          if test "$bx_plugins" = 0; then
+            bx_win_link_winmm=1
+          fi
+          ;;
       esac
     fi
    else
@@ -26104,6 +26146,16 @@ fi
 
 
 
+if test "$bx_win_link_winmm" = 1; then
+  case $target in
+    *-cygwin* | *-mingw32* | *-msys)
+      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
+      ;;
+    *-pc-windows* | *-pc-winnt*)
+      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS winmm.lib"
+      ;;
+  esac
+fi
 
 BUSM_OBJS=''
 bx_busmouse=0

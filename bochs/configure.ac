@@ -2039,6 +2039,38 @@ else
   AC_DEFINE(BX_SUPPORT_CDROM, 0)
 fi
 
+AC_MSG_CHECKING(for lowlevel CD AUDIO support)
+AC_ARG_ENABLE(cdaudio,
+  AS_HELP_STRING([--enable-cdaudio], [lowlevel CD AUDIO support (no)]),
+  [if test "$enableval" = yes; then
+     bx_cdaudio=1
+   else
+     bx_cdaudio=0
+   fi],
+  [ bx_cdaudio=0 ]
+  )
+
+bx_win_link_winmm=0
+if test "$bx_cdaudio" = 1; then
+  AC_DEFINE(LOWLEVEL_CDAUDIO, 1)
+  if test "$bx_cdrom" = 0; then
+    AC_MSG_RESULT(yes)
+    AC_MSG_ERROR([Lowlevel CD AUDIO requires lowlevel CDROM support])
+  fi
+  case $target in
+    *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32* | *.msys)
+      AC_MSG_RESULT(win32)
+      bx_win_link_winmm=1
+      ;;
+    *)
+      AC_MSG_RESULT(dummy)
+      ;;
+  esac
+else
+  AC_MSG_RESULT(no)
+  AC_DEFINE(LOWLEVEL_CDAUDIO, 0)
+fi
+
 AC_SUBST(CDROM_OBJS)
 
 
@@ -2130,16 +2162,11 @@ if test "$soundcard_present" = 1; then
         fi
       fi
       ;;
-    *-pc-windows*)
+    *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32* | *.msys)
       SOUNDLOW_OBJS='soundwin.o'
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS winmm.lib"
-      soundlow_drivers="win"
-      soundlow_default="win"
-      AC_DEFINE(BX_HAVE_SOUND_WIN, 1)
-      ;;
-    *-cygwin* | *-mingw32* | *-msys)
-      SOUNDLOW_OBJS='soundwin.o'
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
+      if test "$bx_plugins" = 0; then
+        bx_win_link_winmm=1
+      fi
       soundlow_drivers="win"
       soundlow_default="win"
       AC_DEFINE(BX_HAVE_SOUND_WIN, 1)
@@ -2246,9 +2273,11 @@ AC_ARG_ENABLE(gameport,
     if test "$gameport_present" = 0; then
       GAME_OBJS='gameport.o'
       case $target in
-        *-cygwin* | *-mingw32* | *-msys)
-           DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
-           ;;
+        *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32* | *.msys)
+          if test "$bx_plugins" = 0; then
+            bx_win_link_winmm=1
+          fi
+          ;;
       esac
     fi
    else
@@ -2267,6 +2296,16 @@ AC_ARG_ENABLE(gameport,
   )
 AC_SUBST(GAME_OBJS)
 
+if test "$bx_win_link_winmm" = 1; then
+  case $target in
+    *-cygwin* | *-mingw32* | *-msys)
+      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
+      ;;
+    *-pc-windows* | *-pc-winnt*)
+      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS winmm.lib"
+      ;;
+  esac
+fi
 
 BUSM_OBJS=''
 bx_busmouse=0
