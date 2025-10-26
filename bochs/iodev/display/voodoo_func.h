@@ -2297,7 +2297,8 @@ void register_w(Bit32u offset, Bit32u data, bool log)
 
     case colBufferStride: /* Banshee */
       if (v->type >= VOODOO_BANSHEE && (chips & 1)) {
-        if (data & 0x8000)
+        v->banshee.col_tiled = ((data & 0x8000) != 0);
+        if (v->banshee.col_tiled)
           v->fbi.rowpixels = (data & 0x7f) << 6;
         else
           v->fbi.rowpixels = (data & 0x3fff) >> 1;
@@ -2314,7 +2315,8 @@ void register_w(Bit32u offset, Bit32u data, bool log)
       if (v->type >= VOODOO_BANSHEE && (chips & 1)) {
         Bit32u rowpixels;
 
-        if (data & 0x8000)
+        v->banshee.aux_tiled = ((data & 0x8000) != 0);
+        if (v->banshee.aux_tiled)
           rowpixels = (data & 0x7f) << 6;
         else
           rowpixels = (data & 0x3fff) >> 1;

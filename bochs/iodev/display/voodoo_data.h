@@ -1674,11 +1674,15 @@ struct _banshee_info
   Bit32u agp[0x80];  /* AGP registers */
   Bit8u  crtc[0x27]; /* VGA CRTC registers */
   Bit8u  disp_bpp;
+  bool needs_update_mode;
   bool half_mode;
   bool double_width;
   bool dac_8bit;
   bool desktop_tiled;
   bool overlay_tiled;
+  bool col_tiled;
+  bool aux_tiled;
+  Bit16u *tiled_x_remap;
   struct {
     bool enabled;
     bool mode;

@@ -349,7 +349,7 @@ void bx_banshee_c::after_restore_state(void)
   bx_pci_device_c::after_restore_pci_state(mem_read_handler);
   if ((v->banshee.io[io_vidProcCfg] & 0x01) && (theVoodooVga != NULL)) {
     v->fbi.clut_dirty = 1;
-    theVoodooVga->banshee_update_mode();
+    v->banshee.needs_update_mode = true;
   }
   start_fifo_thread();
 }
@@ -697,6 +697,9 @@ bool bx_banshee_c::update(void)
 #endif
   bx_svga_tileinfo_t info;
 
+  if (v->banshee.needs_update_mode) {
+    theVoodooVga->banshee_update_mode();
+  }
   if ((v->banshee.io[io_vidProcCfg] & 0x81) == 0x81) {
     BX_LOCK(render_mutex);
     bpp = v->banshee.disp_bpp;
@@ -1316,7 +1319,7 @@ void bx_banshee_c::write(Bit32u address, Bit32u value, unsigned io_len)
         v->fbi.clut_dirty = 1;
       if ((v->banshee.io[reg] & 0x01) && ((old & 0x01) == 0x00)) {
         if (theVoodooVga != NULL) {
-          theVoodooVga->banshee_update_mode();
+          v->banshee.needs_update_mode = true;
         }
         mode_change = true;
       } else if (!(v->banshee.io[reg] & 0x01) && ((old & 0x01) == 0x01)) {
@@ -4055,6 +4058,7 @@ void bx_voodoo_vga_c::banshee_update_mode(void)
   BX_VVGA_THIS s.last_yres = v->fbi.height;
   BX_VVGA_THIS s.last_bpp = v->banshee.disp_bpp;
   BX_VVGA_THIS s.last_fh = 0;
+  v->banshee.needs_update_mode = false;
 }
 
 void bx_voodoo_vga_c::banshee_set_dac_mode(bool mode)

@@ -323,6 +323,7 @@ void bx_voodoo_base_c::init(void)
     banshee_bitblt_init();
     s.max_xres = 1920;
     s.max_yres = 1440;
+    v->banshee.tiled_x_remap = new Bit16u[s.max_xres];
   } else {
     s.max_xres = 800;
     s.max_yres = 680;
