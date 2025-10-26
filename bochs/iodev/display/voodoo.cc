@@ -545,6 +545,10 @@ void bx_voodoo_base_c::redraw_area(unsigned x0, unsigned y0, unsigned width,
 {
   unsigned xt0, xt1, xti, yt0, yt1, yti;
 
+  if (v->banshee.needs_update_mode) {
+    return;
+  }
+
   xt0 = x0 / X_TILESIZE;
   yt0 = y0 / Y_TILESIZE;
   xt1 = (x0 + width  - 1) / X_TILESIZE;
