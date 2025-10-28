@@ -34,7 +34,7 @@
 
 // 0x3b4,0x3d4
 #define VGA_CRTC_MAX 0x18
-#define GEFORCE_CRTC_MAX 0x9F
+#define GEFORCE_CRTC_MAX 0xF0
 
 #define GEFORCE_CHANNEL_COUNT 32
 #define GEFORCE_SUBCHANNEL_COUNT 8
@@ -209,8 +209,12 @@ struct gf_channel
   Bit32u d3d_cull_face;
   Bit32u d3d_front_face;
   Bit32u d3d_light_enable_mask;
+  Bit32u d3d_texgen[8][4];
+  Bit32u d3d_texture_matrix_enable[16];
+  float d3d_model_view_matrix[16];
   float d3d_inverse_model_view_matrix[12];
   float d3d_composite_matrix[16];
+  float d3d_texture_matrix[8][16];
   Bit32u d3d_scissor_x;
   Bit32u d3d_scissor_width;
   Bit32u d3d_scissor_y;
@@ -515,6 +519,7 @@ private:
   Bit32u crtc_intr_en;
   Bit32u crtc_start;
   Bit32u crtc_config;
+  Bit32u crtc_raster_pos;
   Bit32u crtc_cursor_offset;
   Bit32u crtc_cursor_config;
   Bit32u ramdac_cu_start_pos;
