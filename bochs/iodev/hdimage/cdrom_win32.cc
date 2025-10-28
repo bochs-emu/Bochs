@@ -21,23 +21,19 @@
 
 // These are the low-level CDROM functions which are called from 'harddrv.cc'.
 // Notes about AUDIO CDROM's:
-//  0) To disable audio cdrom support, set LOWLEVEL_CDAUDIO to 0
-//  1) Assumes the Host will be WinXP or higher (the check has been removed)
+//  1) To disable audio cdrom support, set LOWLEVEL_CDAUDIO to 0
 //  2) Win10 still supports a lot of the DeviceIoControl() functions for the
 //     audio CDROM, but *does not* support the playback DeviceIoControl() even
 //     though it returns success.
 //  3) Therefore, the playback calls a technique newer than DeviceIoControl() 
 //     but older than MediaPlayer() called Media Control Interface (MCI).
-//  4) MCI is old enough, it assumes all addresses will be below the 4 gig
-//     mark and all addresses will be 32-bits wide. If Bochs is ran above
-//     the 4gig mark, this code will fail. (Checks are in place)
-//  5) Since MCI doesn't support all calls, *and* DeviceIoControl() doesn't
+//  4) Since MCI doesn't support all calls, *and* DeviceIoControl() doesn't
 //     support all calls (on Windows Vista and above), a mix of each is used.
-//  6) If your Windows system is before Vista, you can set the #define below
+//  5) If your Windows system is before Vista, you can set the #define below
 //     to force this code to use the DeviceIoControl() techniqe for all calls.
-//  7) This does not check to see if the Guest has a sound device installed.
+//  6) This does not check to see if the Guest has a sound device installed.
 //     If the guest doesn't have a sound device, this should not play. FIX ME.
-//  8) This assumes there is only one CD-ROM on the Host and it cooresponds
+//  7) This assumes there is only one CD-ROM on the Host and it cooresponds
 //     with the drive letter given in the bochsrc.txt file.
 
 #include "bochs.h"
@@ -220,7 +216,7 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
   }
 
   if (!using_file) {
-    // We need to determine if the disc is a DATA disk or an Audio disk.
+    // We need to determine if the disc is a DATA disk or an Audio disc.
     // To do so, we get the TOC and then check the CONTROL field of each
     //  track returned: (bit 1 indicates copy protection and is ignored here)
     //  00c0 = audio
