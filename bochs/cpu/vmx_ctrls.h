@@ -120,6 +120,8 @@ public:
 #define VMX_VM_EXEC_CTRL2_UMWAIT_TPAUSE_VMEXIT      (1 << 26) /* WAITPKG */
 #define VMX_VM_EXEC_CTRL2_PCONFIG_ENABLE            (1 << 27) // not implemented yet
 #define VMX_VM_EXEC_CTRL2_SGX_ENCLV_VMEXIT          (1 << 28) /* ENCLV/SGX (not implemented) */
+#define VMX_VM_EXEC_CTRL2_VMM_BUS_LOCK_DETECTION    (1 << 30) // not implemented yet
+#define VMX_VM_EXEC_CTRL2_INSTRUCTION_TIMEOUT       (1 << 31) // just never happens in Bochs but can be enabled
 
    bool VIRTUALIZE_APIC_ACCESSES() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_ACCESSES; }
    bool EPT_ENABLE() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL2_EPT_ENABLE; }
@@ -149,6 +151,8 @@ public:
    bool UMWAIT_TPAUSE_VMEXIT() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL2_UMWAIT_TPAUSE_VMEXIT; }
    bool PCONFIG_ENABLE() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL2_PCONFIG_ENABLE; }
    bool SGX_ENCLV_VMEXIT() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL2_SGX_ENCLV_VMEXIT; }
+   bool VMM_BUS_LOCK_DETECTION() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL2_VMM_BUS_LOCK_DETECTION; }
+   bool INSTRUCTION_TIMEOUT_VMEXIT() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL2_INSTRUCTION_TIMEOUT; }
 
    bool query_any(Bit32u mask) const { return (vmexec_ctrls & mask) != 0; }
    bool query_all(Bit32u mask) const { return (vmexec_ctrls & mask) == mask; }
