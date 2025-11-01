@@ -2377,6 +2377,14 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
       </entry>
     </row>
     <row>
+      <entry>--enable-cdaudio</entry>
+      <entry>yes</entry>
+      <entry>
+      Enable use of the CD AUDIO support of a real CD-ROM/DVD drive. This is currently
+      only supported on the Windows platform.
+      </entry>
+    </row>
+    <row>
       <entry>--enable-sb16</entry>
       <entry>no</entry>
       <entry>

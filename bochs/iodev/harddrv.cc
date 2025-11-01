@@ -1391,20 +1391,20 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                   bool LoEj = (controller->buffer[4] >> 1) & 1;
                   bool Start = (controller->buffer[4] >> 0) & 1;
 
-                  if (!LoEj && !Start) { // stop the disc
+                  if (!LoEj && !Start) { // stop the disk
 #if LOWLEVEL_CDAUDIO
                     BX_SELECTED_DRIVE(channel).cdrom.cd->stop_audio();
 #else
-                    BX_ERROR(("FIXME: Stop disc not implemented"));
+                    BX_ERROR(("FIXME: Stop disk not implemented"));
 #endif
                     atapi_cmd_nop(controller);
                     raise_interrupt(channel);
-                  } else if (!LoEj && Start) { // start (spin up) the disc
+                  } else if (!LoEj && Start) { // start (spin up) the disk
                     BX_SELECTED_DRIVE(channel).cdrom.cd->start_cdrom();
-                    BX_ERROR(("FIXME: ATAPI start disc not reading TOC"));
+                    BX_ERROR(("FIXME: ATAPI start disk not reading TOC"));
                     atapi_cmd_nop(controller);
                     raise_interrupt(channel);
-                  } else if (LoEj && !Start) { // Eject the disc
+                  } else if (LoEj && !Start) { // Eject the disk
                     atapi_cmd_nop(controller);
 
                     if (BX_SELECTED_DRIVE(channel).cdrom.ready) {
@@ -1418,7 +1418,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                       BX_SELECTED_DRIVE(channel).status_changed = 1;
                     }
                     raise_interrupt(channel);
-                  } else { // Load the disc
+                  } else { // Load the disk
                     // My guess is that this command only closes the tray, that's a no-op for us
                     atapi_cmd_nop(controller);
                     raise_interrupt(channel);
@@ -1885,7 +1885,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                 }
                 break;
 
-              case 0x51: // read disc info
+              case 0x51: // read disk info
                 // no-op to keep the Linux CD-ROM driver happy
                 atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
                 raise_interrupt(channel);

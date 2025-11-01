@@ -968,25 +968,25 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, Bit8u cmd_len, i
         goto fail;
       }
       break;
-    case 0x51:  // SCSI_CD_READ_DISC_INFO
+    case 0x51:  // SCSI_CD_READ_DISK_INFO
       if (type == SCSIDEV_TYPE_CDROM) {
         // This code is experimental. may need some help
-        BX_DEBUG(("Read Disc Information: Data type requested 0x%02X", buf[1] & 7));
+        BX_DEBUG(("Read Disk Information: Data type requested 0x%02X", buf[1] & 7));
         
-        switch (buf[1] & DISC_INFO_MASK) {
+        switch (buf[1] & DISK_INFO_MASK) {
           // MMC-6r2f, section 6.21.4, page 379(427) ??
-          case DISC_INFO_STANDARD: // Standard Disk Information
+          case DISK_INFO_STANDARD: // Standard Disk Information
             outbuf[ 0] = (32 * (0 * 8)) >> 8; // msb length 32 + (8 * number of OPC tables)
             outbuf[ 1] = (32 * (0 * 8)) >> 0; // lsb length
-            // Type = 0, Eraseable = 0, State of last session = 3 (Complete), Disc status = 2 (Finalized Disc)
-            outbuf[ 2] = (DISC_INFO_STANDARD << 5) | DI_STAND_N_ERASABLE | DI_STAND_LAST_STATE_COMP | DI_STAND_STATUS_FINAL;
-            outbuf[ 3] = 1; // number of first track on disc (1 based)
+            // Type = 0, Eraseable = 0, State of last session = 3 (Complete), Disk status = 2 (Finalized Disk)
+            outbuf[ 2] = (DISK_INFO_STANDARD << 5) | DI_STAND_N_ERASABLE | DI_STAND_LAST_STATE_COMP | DI_STAND_STATUS_FINAL;
+            outbuf[ 3] = 1; // number of first track on disk (1 based)
             outbuf[ 4] = 1; // number of sessions (LSB)
             outbuf[ 5] = 1; // first track number in last session (LSB)
             outbuf[ 6] = 1; // last track number in last session (LSB)
             // DID_V, DBC_V, URU, DAC_V, R, Legacy?, BG Format Status
             outbuf[ 7] = DI_STAND_DID_N_VALID | DI_STAND_DBC_N_VALID | DI_STAND_URU_OKAY | DI_STAND_DAC_N_VALID | DI_STAND_N_LEGACY | DI_STAND_BG_FORMAT_0;
-            outbuf[ 8] = DI_STAND_DISC_TYPE_0; // Disc Type ( 0 = CD-ROM)
+            outbuf[ 8] = DI_STAND_DISK_TYPE_0; // Disk Type ( 0 = CD-ROM)
             outbuf[ 9] = 0; // number of sessions (MSB)
             outbuf[10] = 0; // first track number in last session (MSB)
             outbuf[11] = 0; // last track number in last session (MSB)
@@ -1006,7 +1006,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, Bit8u cmd_len, i
             outbuf[22] = 0; // 
             outbuf[23] = 0; // 
             
-            outbuf[24] = 0; // Disc bar code (only when DBC_V bit is set)
+            outbuf[24] = 0; // Disk bar code (only when DBC_V bit is set)
             outbuf[25] = 0; // 
             outbuf[26] = 0; // 
             outbuf[27] = 0; // 
@@ -1015,7 +1015,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, Bit8u cmd_len, i
             outbuf[30] = 0; // 
             outbuf[31] = 0; // 
             
-            outbuf[32] = 0; // disc application code (only when DAC_V bit is set)
+            outbuf[32] = 0; // disk application code (only when DAC_V bit is set)
             
             outbuf[33] = 0; // number of OPC Table entries
             
@@ -1024,25 +1024,25 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, Bit8u cmd_len, i
             // return length
             r->buf_len = (2 + 32) + (0 * 8); // (len word + sizeof(information)) + (OPC Table Entry count * Size of entry)
             break;
-          case DISC_INFO_TRACK: // Track Resources Information
+          case DISK_INFO_TRACK: // Track Resources Information
             // I am not absolutely sure these are the correct values.
             outbuf[ 0] =  0; // msb length
             outbuf[ 1] = 10; // lsb length
-            outbuf[ 2] = DISC_INFO_TRACK | (0 << 0); // Type = 1, reserved
+            outbuf[ 2] = DISK_INFO_TRACK | (0 << 0); // Type = 1, reserved
             outbuf[ 3] = 0; // reserved
-            outbuf[ 4] = ((7927 >> 8) & 0xFF); // maximum possible tracks on disc (MSB)
-            outbuf[ 5] = ((7927 >> 0) & 0xFF); // maximum possible tracks on disc (LSB)
-            outbuf[ 6] = ((7927 >> 8) & 0xFF); // number of tracks on disc (MSB)
-            outbuf[ 7] = ((7927 >> 0) & 0xFF); // number of tracks on disc (LSB)
-            outbuf[ 8] = ((99 >> 8) & 0xFF); // Maximum possible number of appendable tracks on disc (MSB)
-            outbuf[ 9] = ((99 >> 0) & 0xFF); // Maximum possible number of appendable tracks on disc (LSB)
-            outbuf[10] = ((99 >> 8) & 0xFF); // Current number of appendable tracks on disc (MSB)
-            outbuf[11] = ((99 >> 0) & 0xFF); // Current number of appendable tracks on disc (LSB)
+            outbuf[ 4] = ((7927 >> 8) & 0xFF); // maximum possible tracks on disk (MSB)
+            outbuf[ 5] = ((7927 >> 0) & 0xFF); // maximum possible tracks on disk (LSB)
+            outbuf[ 6] = ((7927 >> 8) & 0xFF); // number of tracks on disk (MSB)
+            outbuf[ 7] = ((7927 >> 0) & 0xFF); // number of tracks on disk (LSB)
+            outbuf[ 8] = ((99 >> 8) & 0xFF); // Maximum possible number of appendable tracks on disk (MSB)
+            outbuf[ 9] = ((99 >> 0) & 0xFF); // Maximum possible number of appendable tracks on disk (LSB)
+            outbuf[10] = ((99 >> 8) & 0xFF); // Current number of appendable tracks on disk (MSB)
+            outbuf[11] = ((99 >> 0) & 0xFF); // Current number of appendable tracks on disk (LSB)
             
             // return length
             r->buf_len = 12;
             break;
-          case DISC_INFO_POW_RES: // POW Resources Information
+          case DISK_INFO_POW_RES: // POW Resources Information
             
             // unsupported, so return 0 bytes
             
@@ -1556,7 +1556,7 @@ int scsi_device_t::scsi_do_modepage(Bit8u *p, Bit8u pc, Bit8u sub_page, Bit8u pa
           p[ 3] = 0x00;                 // link size (valid only if LS_V = 1, and type = "packet/incremental")
           p[ 4] = 0x00;                 // reserved
           p[ 5] = 0x00;                 // host application code
-          p[ 6] = 0x00;                 // session format (CD-DA or CD-ROM discs)
+          p[ 6] = 0x00;                 // session format (CD-DA or CD-ROM disks)
           p[ 7] = 0x00;                 // reserved
           p[ 8] = (0    >> 24) & 0xFF;  // packet size (MSB) (valid only if FP = 1)
           p[ 9] = (0    >> 16) & 0xFF;  // packet size

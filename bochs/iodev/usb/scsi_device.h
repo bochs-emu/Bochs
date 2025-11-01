@@ -101,39 +101,39 @@ enum scsi_reason {
 #define EVENT_STATUS_DEV_BUSY    (1<<6)  // Device Busy       (bit 6)
 #define EVENT_STATUS_RESERVED_7  (1<<7)  // reserved          (bit 7)
 
-// SCSI_CD_READ_DISC_INFO items
-#define DISC_INFO_MASK           0x07  // mask to get disk info type
-#define DISC_INFO_STANDARD       0
+// SCSI_CD_READ_DISK_INFO items
+#define DISK_INFO_MASK           0x07  // mask to get disk info type
+#define DISK_INFO_STANDARD       0
   #define DI_STAND_N_ERASABLE      (0<<4)  // Non-erasable
   #define DI_STAND_ERASABLE        (1<<4)  // Erasable
   #define DI_STAND_LAST_STATE_MT   (0<<2)  // Empty session
   #define DI_STAND_LAST_STATE_INC  (1<<2)  // Incomplete session
   #define DI_STAND_LAST_STATE_DAM  (2<<2)  // Damaged session
   #define DI_STAND_LAST_STATE_COMP (3<<2)  // Complete session
-  #define DI_STAND_STATUS_MT       (0<<0)  // Empty disc
-  #define DI_STAND_STATUS_INC      (1<<0)  // Incomplete disc
-  #define DI_STAND_STATUS_FINAL    (2<<0)  // Finalized disc
+  #define DI_STAND_STATUS_MT       (0<<0)  // Empty disk
+  #define DI_STAND_STATUS_INC      (1<<0)  // Incomplete disk
+  #define DI_STAND_STATUS_FINAL    (2<<0)  // Finalized disk
   #define DI_STAND_STATUS_OTHER    (3<<0)  // Other type
-  #define DI_STAND_DID_N_VALID     (0<<7)  // Disc ID area not valid
-  #define DI_STAND_DID_VALID       (1<<7)  // Disc ID area valid
-  #define DI_STAND_DBC_N_VALID     (0<<6)  // Disc Barcode area not valid
-  #define DI_STAND_DBC_VALID       (1<<6)  // Disc Barcode area valid
+  #define DI_STAND_DID_N_VALID     (0<<7)  // Disk ID area not valid
+  #define DI_STAND_DID_VALID       (1<<7)  // Disk ID area valid
+  #define DI_STAND_DBC_N_VALID     (0<<6)  // Disk Barcode area not valid
+  #define DI_STAND_DBC_VALID       (1<<6)  // Disk Barcode area valid
   #define DI_STAND_URU_N_OKAY      (0<<5)  // Unrestricted use not okay
   #define DI_STAND_URU_OKAY        (1<<5)  // Unrestricted use okay
-  #define DI_STAND_DAC_N_VALID     (0<<4)  // Disc Application Code not valid
-  #define DI_STAND_DAC_VALID       (1<<4)  // Disc Application Code valid
+  #define DI_STAND_DAC_N_VALID     (0<<4)  // Disk Application Code not valid
+  #define DI_STAND_DAC_VALID       (1<<4)  // Disk Application Code valid
   #define DI_STAND_N_LEGACY        (0<<2)  // Not Legacy?
   #define DI_STAND_LEGACY          (1<<2)  // Legacy?
   #define DI_STAND_BG_FORMAT_0     (0<<0)  // Background Format Status code 0
   #define DI_STAND_BG_FORMAT_1     (1<<0)  // Background Format Status code 1
   #define DI_STAND_BG_FORMAT_2     (2<<0)  // Background Format Status code 2
   #define DI_STAND_BG_FORMAT_3     (3<<0)  // Background Format Status code 3
-  #define DI_STAND_DISC_TYPE_0      0x00   // Disc type: CD-DA or CD-ROM
-  #define DI_STAND_DISC_TYPE_1      0x10   // Disc type: CD-I disc
-  #define DI_STAND_DISC_TYPE_2      0x20   // Disc type: CD-ROM XA Disc
-  #define DI_STAND_DISC_TYPE_x      0xFF   // Disc type: Undefined
-#define DISC_INFO_TRACK          1
-#define DISC_INFO_POW_RES        2
+  #define DI_STAND_DISK_TYPE_0      0x00   // Disk type: CD-DA or CD-ROM
+  #define DI_STAND_DISK_TYPE_1      0x10   // Disk type: CD-I disk
+  #define DI_STAND_DISK_TYPE_2      0x20   // Disk type: CD-ROM XA Disk
+  #define DI_STAND_DISK_TYPE_x      0xFF   // Disk type: Undefined
+#define DISK_INFO_TRACK          1
+#define DISK_INFO_POW_RES        2
 
 // SCSI Page Mode attributes
 #define PAGE_CONTROL_CURRENT     0

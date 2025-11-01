@@ -198,7 +198,7 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
   // for (obsolete) binaries, who might possibly still require a Windows version
   //  before WinXP, let's make the test.
   if (!using_file && !Is_WinXP_SP2_or_Later()) {
-    BX_ERROR(("Direct disc access requires WinXP or later."));
+    BX_ERROR(("Direct disk access requires WinXP or later."));
     return 0;
   }
 
@@ -216,7 +216,7 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
   }
 
   if (!using_file) {
-    // We need to determine if the disc is a DATA disk or an Audio disc.
+    // We need to determine if the disk is a DATA disk or an Audio disk.
     // To do so, we get the TOC and then check the CONTROL field of each
     //  track returned: (bit 1 indicates copy protection and is ignored here)
     //  00c0 = audio
@@ -266,19 +266,19 @@ bool cdrom_win32_c::insert_cdrom(const char *dev)
       }
       
       // if after the above, neither or both 'data' and 'audio' are set,
-      //  we don't recognize the disc.
+      //  we don't recognize the disk.
       // if only one or the other is set, we can continue.
       if ((data && audio) || (!data && !audio))  {
-        BX_ERROR(("Unrecognized data/audio disc in drive. Returning a non-inserted state."));
+        BX_ERROR(("Unrecognized data/audio disk in drive. Returning a non-inserted state."));
         cdrom_type = CDROM_TYPE_UNKNOWN;
         return 0;
       } else if (data && !audio) {
         // I just see if I can read a sector to verify that a CD is in the drive and readable.
         fd = (read_block(buffer, 0x10, BX_CD_FRAMESIZE)) ? 1 : -1;
         if (fd && (memcmp(buffer, "\x00\x42\x45\x41\x30\x31\x01\x00", 8) == 0)) {
-          BX_INFO(("* Direct Media Access detected a Universal Disc Format (UDF) file system. (DVD?)"));
+          BX_INFO(("* Direct Media Access detected a Universal Disk Format (UDF) file system. (DVD?)"));
           BX_INFO(("* Older Guests may not recognize the volume, giving a false indication that"));
-          BX_INFO(("*  Bochs' Direct Disc access is malfunctioning."));
+          BX_INFO(("*  Bochs' Direct Disk access is malfunctioning."));
         }
         cdrom_type = CDROM_TYPE_DATA;
 #if LOWLEVEL_CDAUDIO
@@ -509,7 +509,7 @@ bool cdrom_win32_c::play_audio(Bit32u lba, Bit32u length) {
   Bit8u mins, secs, frames;
   int start_track, end_track;
 
-  // The call will have starting and ending values for the whole disc.
+  // The call will have starting and ending values for the whole disk.
   //  We have to calculate and adjust for the track
   lba2msf(lba, &mins, &secs, &frames);
   start_track = msf2tmsf(&mins, &secs, &frames);
@@ -558,7 +558,7 @@ bool cdrom_win32_c::play_audio_msf(Bit8u* buf) {
   Bit8u mins, secs, frames;
   int start_track, end_track;
 
-  // The call will have starting and ending values for the whole disc.
+  // The call will have starting and ending values for the whole disk.
   //  We have to calculate and adjust for the track
   mins = buf[3];
   secs = buf[4];
