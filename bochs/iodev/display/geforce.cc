@@ -3510,6 +3510,85 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
   }
 }
 
+float rc_get_var(Bit32u cw, Bit32u shift, float regs[16][4], Bit32u civ)
+{
+  Bit32u x = cw >> shift;
+  Bit32u reg = x & 0xf;
+  Bit32u pir = (x >> 4) & 1;
+  Bit32u map = (x >> 5) & 7;
+  Bit32u cir = (bool)pir ? 3 : civ;
+  float value = regs[reg][cir];
+  switch (map) {
+    case 1:  // UNSIGNED_INVERT
+      return 1.0f - value;
+    case 6:  // SIGNED_IDENTITY
+    default: // unimplemented
+      return value;
+    case 7:  // SIGNED_NEGATE
+      return -value;
+  }
+}
+
+void bx_geforce_c::d3d_register_combiners(gf_channel* ch, float ps_in[16][4], float out[4])
+{
+  float regs[16][4];
+  for (Bit32u ci = 0; ci < 4; ci++) {
+    regs[0][ci] = 0.0f;
+    regs[3][ci] = 1.0f;
+    regs[4][ci] = ps_in[1][ci];
+    regs[5][ci] = ps_in[2][ci];
+  }
+  for (Bit32u t = 0; t < 4; t++)
+    if (((ch->d3d_texture_control0[t] >> 30) & 1) != 0)
+      d3d_sample_texture(ch, t, ps_in[4 + t], regs[8 + t]);
+  for (Bit32u s = 0; s < ch->d3d_combiner_control_num_stages; s++) {
+    float vars[4][4];
+    Bit32u icws[2] = {
+      ch->d3d_combiner_color_icw[s],
+      ch->d3d_combiner_alpha_icw[s]
+    };
+    for (Bit32u civ = 0; civ < 4; civ++) {
+      Bit32u icw = icws[(Bit32u)(civ == 3)];
+      vars[0][civ] = rc_get_var(icw, 24, regs, civ);
+      vars[1][civ] = rc_get_var(icw, 16, regs, civ);
+      vars[2][civ] = rc_get_var(icw, 8, regs, civ);
+      vars[3][civ] = rc_get_var(icw, 0, regs, civ);
+    }
+    Bit32u ocws[2] = {
+      ch->d3d_combiner_color_ocw[s],
+      ch->d3d_combiner_alpha_ocw[s]
+    };
+    for (Bit32u ci = 0; ci < 4; ci++) {
+      Bit32u ocw = ocws[(Bit32u)(ci == 3)];
+      Bit32u cd = ocw & 0xf;
+      Bit32u ab = (ocw >> 4) & 0xf;
+      Bit32u muxsum = (ocw >> 8) & 0xf;
+      if (ab != 0)
+        regs[ab][ci] = vars[0][ci] * vars[1][ci];
+      if (cd != 0)
+        regs[cd][ci] = vars[2][ci] * vars[3][ci];
+      if (muxsum != 0)
+        regs[muxsum][ci] = vars[0][ci] * vars[1][ci] + vars[2][ci] * vars[3][ci];
+    }
+  }
+  for (Bit32u ci = 0; ci < 4; ci++)
+    regs[0xe][ci] = regs[5][ci] + regs[0xc][ci];
+  float vars[6][3];
+  for (Bit32u civ = 0; civ < 3; civ++) {
+    vars[0][civ] = rc_get_var(ch->d3d_combiner_final[0], 24, regs, civ);
+    vars[1][civ] = rc_get_var(ch->d3d_combiner_final[0], 16, regs, civ);
+    vars[2][civ] = rc_get_var(ch->d3d_combiner_final[0], 8, regs, civ);
+    vars[3][civ] = rc_get_var(ch->d3d_combiner_final[0], 0, regs, civ);
+    vars[4][civ] = rc_get_var(ch->d3d_combiner_final[1], 24, regs, civ);
+    vars[5][civ] = rc_get_var(ch->d3d_combiner_final[1], 16, regs, civ);
+  }
+  out[3] = rc_get_var(ch->d3d_combiner_final[1], 8, regs, 3);
+  for (Bit32u civ = 0; civ < 3; civ++) {
+    out[civ] = vars[0][civ] * vars[1][civ] +
+      (1.0f - vars[0][civ]) * vars[2][civ] + vars[3][civ];
+  }
+}
+
 void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
   float in[16][4], float tmp_regs16[64][4], float tmp_regs32[64][4])
 {
@@ -3911,14 +3990,17 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
                 k = 0.0f;
               color_comp += ch->d3d_light_diffuse_color[light_index][i] * k;
               vs_out[v][ch->d3d_dci][i] = color_comp;
+              vs_out[v][ch->d3d_dci + 1][i] = 0.0f;
             }
           }
         }
       }
     } else {
       for (int v = 0; v < 3; v++)
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 4; i++) {
           vs_out[v][ch->d3d_dci][i] = ch->d3d_vertex_data[(v + base) & 3][3][i];
+          vs_out[v][ch->d3d_dci + 1][i] = 0.0f;
+        }
     }
     Bit32u tcai = BX_GEFORCE_THIS card_type == 0x20 ? 9 : 8;
     for (int v = 0; v < 3; v++) {
@@ -4159,15 +4241,13 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
         float tmp_regs32[64][4];
         for (int comp_index = 0; comp_index < 4; comp_index++)
           tmp_regs16[0][comp_index] = ps_in[1][comp_index];
-        if (ch->d3d_shader_obj != 0) {
+        if (ch->d3d_combiner_control_num_stages != 0) {
+          d3d_register_combiners(ch, ps_in, tmp_regs16[0]);
+        } else if (ch->d3d_shader_obj != 0) {
           ps_in[0][0] = xy[0] - ch->d3d_window_offset_x;
           ps_in[0][1] = (ch->d3d_viewport_vertical >> 16) - (xy[1] - ch->d3d_window_offset_y);
           ps_in[0][2] = 0.0f;
           d3d_pixel_shader(ch, ps_in, tmp_regs16, tmp_regs32);
-        } else if (BX_GEFORCE_THIS card_type == 0x20) {
-          if (((ch->d3d_texture_control0[0] >> 30) & 1) != 0) {
-            d3d_sample_texture(ch, 0, ps_in[4], tmp_regs16[0]);
-          }
         }
         float a = BX_MIN(BX_MAX(tmp_regs16[0][3], 0.0f), 1.0f);
         if (ch->d3d_alpha_test_enable) {
@@ -4986,7 +5066,14 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     ch->d3d_surface_zeta_offset = param;
   else if (method == 0x08b && cls > 0x0497)
     ch->d3d_surface_pitch_z = param;
-  else if (method == 0x0ae && cls >= 0x0497) {
+  else if (method >= 0x098 && method <= 0x09f && cls == 0x0097) {
+    Bit32u i = method & 0x007;
+    ch->d3d_combiner_alpha_icw[i] = param;
+  } else if ((method >= 0x0a2 && method <= 0x0a3 && cls == 0x0097) ||
+             (method >= 0x23d && method <= 0x23e && cls == 0x0497)) {
+    Bit32u i = method - (cls == 0x0097 ? 0x0a2 : 0x23d);
+    ch->d3d_combiner_final[i] = param;
+  } else if (method == 0x0ae && cls >= 0x0497) {
     ch->d3d_window_offset_x = (Bit16s)param;
     ch->d3d_window_offset_y = (Bit16s)(param >> 16);
   } else if ((method == 0x0c0 && cls == 0x0097) ||
@@ -5097,6 +5184,17 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       ch->d3d_shader_obj = ch->d3d_b_obj;
     else
       ch->d3d_shader_obj = 0;
+  } else if (method >= 0x240 && method <= 0x27f && cls == 0x0497) {
+    Bit32u stage = (method >> 3) & 7;
+    Bit32u rc_method = method & 7;
+    if (rc_method == 0)
+      ch->d3d_combiner_alpha_icw[stage] = param;
+    else if (rc_method == 1)
+      ch->d3d_combiner_color_icw[stage] = param;
+    else if (rc_method == 4)
+      ch->d3d_combiner_alpha_ocw[stage] = param;
+    else if (rc_method == 5)
+      ch->d3d_combiner_color_ocw[stage] = param;
   } else if (method == 0x280 && cls >= 0x0497) {
     ch->d3d_viewport_horizontal = param;
   } else if (method == 0x281 && cls >= 0x0497) {
@@ -5111,12 +5209,18 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       ch->d3d_transform_constant[0x3b][i] = u.param_float;
     else if (BX_GEFORCE_THIS card_type == 0x35)
       ch->d3d_transform_constant[0x77][i] = u.param_float;
+  } else if (method >= 0x2a8 && method <= 0x2af && cls == 0x0097) {
+    Bit32u i = method & 0x007;
+    ch->d3d_combiner_alpha_ocw[i] = param;
+  } else if (method >= 0x2b0 && method <= 0x2b7 && cls == 0x0097) {
+    Bit32u i = method & 0x007;
+    ch->d3d_combiner_color_icw[i] = param;
   } else if ((method >= 0x2b8 && method <= 0x2bb && cls == 0x0097) ||
              (method >= 0x740 && method <= 0x74f && cls >= 0x0497)) {
     Bit32u texture_index = method - (cls == 0x0097 ? 0x2b8 : 0x740);
     ch->d3d_texture_key_color[texture_index] = param;
-  } else if ((method >= 0x28c && method <= 0x28f && cls >= 0x0497) ||
-             (method >= 0x2bc && method <= 0x2bf && cls  < 0x0497)) {
+  } else if ((method >= 0x2bc && method <= 0x2bf && cls  < 0x0497) ||
+             (method >= 0x28c && method <= 0x28f && cls >= 0x0497)) {
     Bit32u i = method & 0x003;
     ch->d3d_viewport_scale[i] = u.param_float;
     if (BX_GEFORCE_THIS card_type == 0x20)
@@ -5358,6 +5462,13 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   } else if (method == 0x765) {
     ch->d3d_clear_surface = param;
     d3d_clear_surface(ch);
+  } else if (method >= 0x790 && method <= 0x797 && cls == 0x0097) {
+    Bit32u i = method & 0x007;
+    ch->d3d_combiner_color_ocw[i] = param;
+  } else if ((method == 0x798 && cls == 0x0097) ||
+             (method == 0x23f && cls == 0x0497)) {
+    ch->d3d_combiner_control = param;
+    ch->d3d_combiner_control_num_stages = param & 7;
   } else if (method == 0x7a5) {
     ch->d3d_transform_execution_mode = param;
   } else if (method == 0x7a7) {
