@@ -187,6 +187,8 @@ struct gf_channel
   Bit16s d3d_window_offset_y;
   Bit32u d3d_surface_color_offset;
   Bit32u d3d_surface_zeta_offset;
+  Bit32u d3d_combiner_alpha_icw[8];
+  Bit32u d3d_combiner_final[2];
   Bit32u d3d_alpha_test_enable;
   Bit32u d3d_alpha_func;
   Bit32u d3d_alpha_ref;
@@ -226,6 +228,8 @@ struct gf_channel
   Bit32u d3d_viewport_horizontal;
   Bit32u d3d_viewport_vertical;
   float d3d_viewport_offset[4];
+  Bit32u d3d_combiner_alpha_ocw[8];
+  Bit32u d3d_combiner_color_icw[8];
   float d3d_viewport_scale[4];
   Bit32u d3d_transform_program[544][4];
   float d3d_transform_constant[512][4];
@@ -263,6 +267,9 @@ struct gf_channel
   Bit32u d3d_zstencil_clear_value;
   Bit32u d3d_color_clear_value;
   Bit32u d3d_clear_surface;
+  Bit32u d3d_combiner_color_ocw[8];
+  Bit32u d3d_combiner_control;
+  Bit32u d3d_combiner_control_num_stages;
   Bit32u d3d_transform_execution_mode;
   Bit32u d3d_transform_program_load;
   Bit32u d3d_transform_program_start;
@@ -454,6 +461,7 @@ private:
   BX_GEFORCE_SMF void d3d_sample_texture(gf_channel* ch,
     Bit32u tex_unit, float str[3], float color[4]);
   BX_GEFORCE_SMF void d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[16][4]);
+  BX_GEFORCE_SMF void d3d_register_combiners(gf_channel* ch, float ps_in[16][4], float out[4]);
   BX_GEFORCE_SMF void d3d_pixel_shader(gf_channel* ch, float in[16][4], float tmp_regs16[64][4], float tmp_regs32[64][4]);
   BX_GEFORCE_SMF void d3d_triangle(gf_channel* ch, Bit32u base);
   BX_GEFORCE_SMF void d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v1[16][4], float v2[16][4]);
