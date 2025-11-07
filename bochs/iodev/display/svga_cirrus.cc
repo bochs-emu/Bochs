@@ -3775,7 +3775,6 @@ void bx_svga_cirrus_c::svga_patterncopy_memsrc()
 void bx_svga_cirrus_c::svga_simplebitblt_memsrc()
 {
   Bit8u *srcptr = &BX_CIRRUS_THIS bitblt.memsrc[0];
-  Bit8u work_colorexp[2048];
   Bit16u w;
   int pattern_x;
   int byteofs = (BX_CIRRUS_THIS control.reg[0x2f] >> 5) & 0x03;
@@ -3794,11 +3793,13 @@ void bx_svga_cirrus_c::svga_simplebitblt_memsrc()
       return;
     }
 
+    Bit8u *work_colorexp = new Bit8u[BX_CIRRUS_THIS bitblt.bltwidth];
     w = BX_CIRRUS_THIS bitblt.bltwidth / BX_CIRRUS_THIS bitblt.pixelwidth;
     svga_colorexpand(work_colorexp,srcptr,w,BX_CIRRUS_THIS bitblt.pixelwidth);
     (*BX_CIRRUS_THIS bitblt.rop_handler)(
         BX_CIRRUS_THIS bitblt.dst + pattern_x, work_colorexp + pattern_x, 0, 0,
         BX_CIRRUS_THIS bitblt.bltwidth - pattern_x, 1);
+    delete [] work_colorexp;
   } else {
     if (BX_CIRRUS_THIS bitblt.bltmode != 0) {
       BX_ERROR(("cpu-to-video BLT: unknown bltmode %02x",BX_CIRRUS_THIS bitblt.bltmode));
