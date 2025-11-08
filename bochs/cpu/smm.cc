@@ -487,10 +487,10 @@ bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
   smm_state.smm_revision_id = SMRAM_FIELD(saved_state, SMRAM_FIELD_SMM_REVISION_ID);
 
-  smm_state.cr0.val32 = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR0);
+  smm_state.cr0.val = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR0);
   smm_state.cr3 = SMRAM_FIELD64(saved_state, SMRAM_FIELD_CR3_HI32, SMRAM_FIELD_CR3);
-  smm_state.cr4.val32 = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4);
-  smm_state.efer.val32 = SMRAM_FIELD(saved_state, SMRAM_FIELD_EFER);
+  smm_state.cr4.val = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4);
+  smm_state.efer.val = SMRAM_FIELD(saved_state, SMRAM_FIELD_EFER);
   smm_state.eflags = SMRAM_FIELD(saved_state, SMRAM_FIELD_EFLAGS);
 
   for (int n=0; n<BX_GENERAL_REGISTERS; n++) {
@@ -598,11 +598,11 @@ bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
   smm_state.smm_revision_id = SMRAM_FIELD(saved_state, SMRAM_FIELD_SMM_REVISION_ID);
 
-  smm_state.cr0.val32 = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR0);
+  smm_state.cr0.val = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR0);
   smm_state.cr3 = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR3);
 #if BX_CPU_LEVEL >= 5
-  smm_state.cr4.val32 = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4);
-  smm_state.efer.val32 = SMRAM_FIELD(saved_state, SMRAM_FIELD_EFER);
+  smm_state.cr4.val = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4);
+  smm_state.efer.val = SMRAM_FIELD(saved_state, SMRAM_FIELD_EFER);
 #endif
 
   smm_state.eflags = SMRAM_FIELD(saved_state, SMRAM_FIELD_EFLAGS);

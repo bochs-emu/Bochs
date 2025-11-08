@@ -91,12 +91,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DdRd(bxInstruction_c *i)
     case 6: // DR6
 #if BX_CPU_LEVEL <= 4
       // On 386/486 bit12 is settable
-      BX_CPU_THIS_PTR dr6.val32 = (BX_CPU_THIS_PTR dr6.val32 & 0xffff0ff0) |
-                            (val_32 & 0x0000f00f);
+      BX_CPU_THIS_PTR dr6.val = (BX_CPU_THIS_PTR dr6.val & 0xffff0ff0) |
+                                (val_32 & 0x0000f00f);
 #else
       // On Pentium+, bit12 is always zero
-      BX_CPU_THIS_PTR dr6.val32 = (BX_CPU_THIS_PTR dr6.val32 & 0xffff0ff0) |
-                            (val_32 & 0x0000e00f);
+      BX_CPU_THIS_PTR dr6.val = (BX_CPU_THIS_PTR dr6.val & 0xffff0ff0) |
+                                (val_32 & 0x0000e00f);
 #endif
       break;
 
@@ -273,8 +273,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
         exception(BX_GP_EXCEPTION, 0);
       }
       // On Pentium+, bit12 is always zero
-      BX_CPU_THIS_PTR dr6.val32 = (BX_CPU_THIS_PTR dr6.val32 & 0xffff0ff0) |
-                            (val_64 & 0x0000e00f);
+      BX_CPU_THIS_PTR dr6.val = (BX_CPU_THIS_PTR dr6.val & 0xffff0ff0) |
+                                (val_64 & 0x0000e00f);
       break;
 
     case 5: // DR5

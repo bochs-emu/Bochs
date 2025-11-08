@@ -360,20 +360,20 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(cpu, DR1, dr[1]);
   BXRS_HEX_PARAM_FIELD(cpu, DR2, dr[2]);
   BXRS_HEX_PARAM_FIELD(cpu, DR3, dr[3]);
-  BXRS_HEX_PARAM_FIELD(cpu, DR6, dr6.val32);
-  BXRS_HEX_PARAM_FIELD(cpu, DR7, dr7.val32);
+  BXRS_HEX_PARAM_FIELD(cpu, DR6, dr6.val);
+  BXRS_HEX_PARAM_FIELD(cpu, DR7, dr7.val);
 #endif
 
-  BXRS_HEX_PARAM_FIELD(cpu, CR0, cr0.val32);
+  BXRS_HEX_PARAM_FIELD(cpu, CR0, cr0.val);
   BXRS_HEX_PARAM_FIELD(cpu, CR2, cr2);
   BXRS_HEX_PARAM_FIELD(cpu, CR3, cr3);
 #if BX_CPU_LEVEL >= 5
-  BXRS_HEX_PARAM_FIELD(cpu, CR4, cr4.val32);
+  BXRS_HEX_PARAM_FIELD(cpu, CR4, cr4.val);
 #endif
 
 #if BX_CPU_LEVEL >= 6
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_XSAVE)) {
-    BXRS_HEX_PARAM_FIELD(cpu, XCR0, xcr0.val32);
+    BXRS_HEX_PARAM_FIELD(cpu, XCR0, xcr0.val);
   }
 #endif
 
@@ -459,7 +459,7 @@ void BX_CPU_C::register_state(void)
 #if BX_SUPPORT_APIC
   BXRS_HEX_PARAM_FIELD(MSR, apicbase, msr.apicbase);
 #endif
-  BXRS_HEX_PARAM_FIELD(MSR, EFER, efer.val32);
+  BXRS_HEX_PARAM_FIELD(MSR, EFER, efer.val);
   BXRS_HEX_PARAM_FIELD(MSR,  star, msr.star);
 #if BX_SUPPORT_X86_64
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LONG_MODE)) {
@@ -1031,7 +1031,7 @@ void BX_CPU_C::reset(unsigned source)
   // handle reserved bits
 #if BX_CPU_LEVEL == 3
   // reserved bits all set to 1 on 386
-  BX_CPU_THIS_PTR cr0.val32 |= 0x7fffffe0;
+  BX_CPU_THIS_PTR cr0.val |= 0x7fffffe0;
 #endif
 
 #if BX_CPU_LEVEL >= 3

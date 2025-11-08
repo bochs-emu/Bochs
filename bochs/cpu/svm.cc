@@ -510,7 +510,7 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
       // special case : entering paged real mode
       BX_DEBUG(("VMRUN: entering paged real mode"));
       paged_real_mode = true;
-      guest.cr0.val32 &= ~BX_CR0_PG_MASK;
+      guest.cr0.val &= ~BX_CR0_PG_MASK;
     }
   }
 
@@ -557,7 +557,7 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   BX_CPU_THIS_PTR cr3 = guest.cr3;
 
   if (paged_real_mode)
-    BX_CPU_THIS_PTR cr0.val32 |= BX_CR0_PG_MASK;
+    BX_CPU_THIS_PTR cr0.val |= BX_CR0_PG_MASK;
 
   SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb->ctrls;
   if (! ctrls->nested_paging) {
@@ -1335,10 +1335,10 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(IDTR, base, BX_CPU_THIS_PTR vmcb->host_state.idtr.base);
   BXRS_HEX_PARAM_FIELD(IDTR, limit, BX_CPU_THIS_PTR vmcb->host_state.idtr.limit);
 
-  BXRS_HEX_PARAM_FIELD(host, efer, BX_CPU_THIS_PTR vmcb->host_state.efer.val32);
-  BXRS_HEX_PARAM_FIELD(host, cr0, BX_CPU_THIS_PTR vmcb->host_state.cr0.val32);
+  BXRS_HEX_PARAM_FIELD(host, efer, BX_CPU_THIS_PTR vmcb->host_state.efer.val);
+  BXRS_HEX_PARAM_FIELD(host, cr0, BX_CPU_THIS_PTR vmcb->host_state.cr0.val);
   BXRS_HEX_PARAM_FIELD(host, cr3, BX_CPU_THIS_PTR vmcb->host_state.cr3);
-  BXRS_HEX_PARAM_FIELD(host, cr4, BX_CPU_THIS_PTR vmcb->host_state.cr4.val32);
+  BXRS_HEX_PARAM_FIELD(host, cr4, BX_CPU_THIS_PTR vmcb->host_state.cr4.val);
   BXRS_HEX_PARAM_FIELD(host, eflags, BX_CPU_THIS_PTR vmcb->host_state.eflags);
   BXRS_HEX_PARAM_FIELD(host, rip, BX_CPU_THIS_PTR vmcb->host_state.rip);
   BXRS_HEX_PARAM_FIELD(host, rsp, BX_CPU_THIS_PTR vmcb->host_state.rsp);
