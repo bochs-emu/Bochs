@@ -558,15 +558,17 @@ void BX_CPU_C::register_state(void)
 #endif
 
 #if BX_SUPPORT_UINTR
-  bx_list_c *UINTR = new bx_list_c(cpu, "UINTR");
-  BXRS_PARAM_BOOL(UINTR, UIF, uintr.UIF);
-  BXRS_HEX_PARAM_FIELD(UINTR, uirr, uintr.uirr);
-  BXRS_HEX_PARAM_FIELD(UINTR, ui_handler, uintr.ui_handler);
-  BXRS_HEX_PARAM_FIELD(UINTR, stack_adjust, uintr.stack_adjust);
-  BXRS_HEX_PARAM_FIELD(UINTR, uinv, uintr.uinv);
-  BXRS_HEX_PARAM_FIELD(UINTR, uitt_size, uintr.uitt_size);
-  BXRS_HEX_PARAM_FIELD(UINTR, uitt_addr, uintr.uitt_addr);
-  BXRS_HEX_PARAM_FIELD(UINTR, upid_addr, uintr.upid_addr);
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
+    bx_list_c *UINTR = new bx_list_c(cpu, "UINTR");
+    BXRS_PARAM_BOOL(UINTR, UIF, uintr.UIF);
+    BXRS_HEX_PARAM_FIELD(UINTR, uirr, uintr.uirr);
+    BXRS_HEX_PARAM_FIELD(UINTR, ui_handler, uintr.ui_handler);
+    BXRS_HEX_PARAM_FIELD(UINTR, stack_adjust, uintr.stack_adjust);
+    BXRS_HEX_PARAM_FIELD(UINTR, uinv, uintr.uinv);
+    BXRS_HEX_PARAM_FIELD(UINTR, uitt_size, uintr.uitt_size);
+    BXRS_HEX_PARAM_FIELD(UINTR, uitt_addr, uintr.uitt_addr);
+    BXRS_HEX_PARAM_FIELD(UINTR, upid_addr, uintr.upid_addr);
+  }
 #endif
 
 #if BX_SUPPORT_FPU
