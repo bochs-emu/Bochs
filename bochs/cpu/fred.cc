@@ -28,4 +28,35 @@
 
 #if BX_SUPPORT_X86_64
 
+// FIXME: long_mode64 requirement must be handled through opcode tables attributes
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETS(bxInstruction_c *i)
+{
+  if (! BX_CPU_THIS_PTR cr4.get_FRED()) {
+    BX_ERROR(("%s: FRED in not enabled in CR4", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  if (CPL > 0) {
+    BX_ERROR(("%s: CPL must be 0", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  speculative_RSP();
+  RSP += 8;                // skip error code so that RSP references the return state
+
+  Bit64u new_RIP = pop_64();
+  Bit64u temp_CS = pop_64();
+  Bit64u new_RFLAGS = pop_64();
+  Bit64u new_RSP = pop_64();
+  Bit64u temp_SS = pop_64();
+
+  if (! isCanonical(new_RIP) /* || tempCS & 0xFFFFFFFF_FFF8FFFF != current CS */ /* newRFLAGS & 0xFFFFFFFF_FFC2802A != 2 */ /* tempSS & 0xFFF8FFFF != currentSS */ ) {
+    BX_ERROR(("%s: #GP(0)", i->getIaOpcodeNameShort()));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
 #endif
