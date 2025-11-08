@@ -1110,7 +1110,10 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       BX_CPU_THIS_PTR msr.ia32_fred_stack_levels = val_64;
       break;
     case BX_MSR_IA32_FRED_CONFIG:
-      // FIXME: ADD RESERVED BITS CHECKING
+      if (val_64 & 0x834) {
+        BX_ERROR(("WRMSR: attempt to set reserved bits of BX_MSR_IA32_FRED_CONFIG !"));
+        return false;
+      }
       BX_CPU_THIS_PTR msr.ia32_fred_cfg = val_64;
       break;
 #endif

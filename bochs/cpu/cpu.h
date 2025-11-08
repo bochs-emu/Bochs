@@ -378,6 +378,18 @@ BX_CPP_INLINE bool IsCanonicalToWidth(bx_address addr, unsigned LIN_ADDRESS_WIDT
 
 BX_CPP_INLINE bool IsCanonical48(bx_address addr) { return IsCanonicalToWidth(addr, 48); }
 BX_CPP_INLINE bool IsCanonical57(bx_address addr) { return IsCanonicalToWidth(addr, 57); }
+
+// sign-extend from the highest implemented address bit up to bit 63
+BX_CPP_INLINE Bit64u CanonicalizeAddress(Bit64u laddr)
+{
+  if (laddr & BX_CONST64(0x0000800000000000)) {
+    return laddr | BX_CONST64(0xffff000000000000);
+  }
+  else {
+    return laddr & BX_CONST64(0x0000ffffffffffff);
+  }
+}
+
 #endif
 
 BX_CPP_INLINE bool IsValidPhyAddr(bx_phy_address addr)
@@ -1232,6 +1244,9 @@ public: // for now...
   bool  in_smm;
   unsigned cpu_mode;
   bool  user_pl;
+#if BX_SUPPORT_FRED
+  unsigned CSL;
+#endif
 #if BX_CPU_LEVEL >= 5
   bool  ignore_bad_msrs;
 #endif
@@ -2693,6 +2708,12 @@ public: // for now...
   BX_SMF void ENDBRANCH64(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
   /* CET instructions */
+
+#if BX_SUPPORT_FRED
+  BX_SMF void ERETS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ERETU(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LKGS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
 
   BX_SMF void MOVDIR64B(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
@@ -4775,6 +4796,9 @@ public: // for now...
   BX_SMF bool interrupts_inhibited(unsigned mask);
   BX_SMF const char *strseg(bx_segment_reg_t *seg);
   BX_SMF void interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u error_code);
+#if BX_SUPPORT_FRED
+  BX_SMF void FRED_EventDelivery(Bit8u vector, unsigned type, bool push_error, Bit16u error_code);
+#endif
   BX_SMF void real_mode_int(Bit8u vector, bool push_error, Bit16u error_code);
   BX_SMF void protected_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16u error_code);
 #if BX_SUPPORT_X86_64
@@ -5887,7 +5911,8 @@ enum {
   BX_HARDWARE_EXCEPTION = 3,  // all exceptions except #BP and #OF
   BX_SOFTWARE_INTERRUPT = 4,
   BX_PRIVILEGED_SOFTWARE_INTERRUPT = 5,
-  BX_SOFTWARE_EXCEPTION = 6
+  BX_SOFTWARE_EXCEPTION = 6,
+  BX_EVENT_OTHER = 7          // SYSCALL and SYSENTER with FRED
 };
 
 class bxInstruction_c;
