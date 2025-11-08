@@ -56,19 +56,6 @@ void BX_CPU_C::set_VMCBPTR(Bit64u vmcbptr)
   }
 }
 
-// When loading segment bases from the VMCB or the host save area
-// (on VMRUN or #VMEXIT), segment bases are canonicalized (i.e.
-// sign-extended from the highest implemented address bit to bit 63)
-BX_CPP_INLINE Bit64u CanonicalizeAddress(Bit64u laddr)
-{
-  if (laddr & BX_CONST64(0x0000800000000000)) {
-    return laddr | BX_CONST64(0xffff000000000000);
-  }
-  else {
-    return laddr & BX_CONST64(0x0000ffffffffffff);
-  }
-}
-
 BX_CPP_INLINE Bit8u BX_CPU_C::vmcb_read8(unsigned offset)
 {
   Bit8u val_8;

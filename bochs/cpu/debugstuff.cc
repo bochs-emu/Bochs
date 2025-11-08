@@ -77,6 +77,15 @@ const char* stringify_CR0(Bit32u cr0, char *s)
   return s;
 }
 
+#if BX_SUPPORT_FRED
+const char* stringify_CR4_HI(Bit32u cr4_hi, char *s)
+{
+  sprintf(s, "%s",
+    (cr4_hi & (1<<0))  ? "FRED" : "fred");
+  return s;
+}
+#endif
+
 const char* stringify_CR4(Bit32u cr4, char *s)
 {
   sprintf(s, "%s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s %s",
