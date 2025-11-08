@@ -683,6 +683,16 @@ typedef struct
   Bit64u ia32_interrupt_ssp_table;
 #endif
 
+ // FRED
+#if BX_SUPPORT_FRED
+  Bit64u ia32_fred_rsp[4];
+#if BX_SUPPORT_CET
+  Bit64u ia32_fred_ssp[4];
+#endif
+  Bit64u ia32_fred_stack_levels;
+  Bit64u ia32_fred_cfg;
+#endif
+
 #if BX_SUPPORT_MONITOR_MWAIT
   Bit32u ia32_umwait_ctrl;
 #endif
