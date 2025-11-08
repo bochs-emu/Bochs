@@ -1,6 +1,6 @@
 Changes after 3.0:
 
-  This CHANGES file updated with commits merged till 2 Oct 2025, please refer to git log for more recent updates
+  This CHANGES file updated with commits merged till 11 Nov 2025, please refer to git log for more recent updates
 
 Detailed change log :
 
@@ -86,6 +86,9 @@ Detailed change log :
     - The SENSE was not being cleared between commands. If one command failed, 
       the next successful command would still show the failed SENSE values.
     - PCI IDE always provides 2 IDE channels (override settings if necessary)
+  - CD-ROM
+    - Support use of the CD AUDIO support of a real CD-ROM/DVD drive. This is currently
+      only supported on the Windows platform. To enable compile with --enable-cdaudio.
   - Floppy
     - Floppy reset fixes found while testing real hardware
       - Main status register only returns BUSY bit set during reset
@@ -104,11 +107,17 @@ Detailed change log :
     - UHCI fix: USBCMD and USBSTS register accept byte writes
     - Changing device connected to USB port on the command line works again.
       Port options are reset in that case.
+    - Log error if trying to read from a non-powered port.
   - Keyboard
     - Change a Panic to an Error when trying to add a byte to the out-buffer
     - Added the 0xE1 (Secondary ID) command
     - Enable 16-bit and 32-bit reads from ports 0x60 and 0x64 (returning 8-bit value)
       This fixes hang when booting Darwin CD (issue #610)
+  - PC Speaker
+    - Support PC speaker volume control
+      - Added an amplitude table for the volume setup (using factor 1.5 between values).
+      - Set default volume setting to 8.
+      - Added runtime option to change the volume.
 
 - GUI and display libraries
   - Added new method start_update() used by VGA core to call some gui code before drawing.
