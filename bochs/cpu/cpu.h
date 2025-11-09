@@ -4922,19 +4922,22 @@ public: // for now...
   BX_SMF Bit32u  get_descriptor_h(const bx_descriptor_t *) BX_CPP_AttrRegparmN(1);
   BX_SMF bool set_segment_ar_data(bx_segment_reg_t *seg, bool valid, Bit16u raw_selector,
                          bx_address base, Bit32u limit_scaled, Bit16u ar_data);
-  BX_SMF void    check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_rpl, Bit8u check_cpl);
+  BX_SMF void check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_rpl, Bit8u check_cpl);
   // the basic assumption of the code that load_cs and load_ss cannot fail !
-  BX_SMF void    load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
-  BX_SMF void    load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
-  BX_SMF void    touch_segment(bx_selector_t *selector, bx_descriptor_t *descriptor) BX_CPP_AttrRegparmN(2);
-  BX_SMF void    fetch_raw_descriptor(const bx_selector_t *selector,
+  BX_SMF void load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
+  BX_SMF void load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
+  BX_SMF void touch_segment(bx_selector_t *selector, bx_descriptor_t *descriptor) BX_CPP_AttrRegparmN(2);
+  BX_SMF void fetch_raw_descriptor(const bx_selector_t *selector,
                          Bit32u *dword1, Bit32u *dword2, unsigned exception_no);
   BX_SMF bool fetch_raw_descriptor2(const bx_selector_t *selector,
                          Bit32u *dword1, Bit32u *dword2) BX_CPP_AttrRegparmN(3);
-  BX_SMF void    load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value) BX_CPP_AttrRegparmN(2);
-  BX_SMF void    load_null_selector(bx_segment_reg_t *seg, unsigned value) BX_CPP_AttrRegparmN(2);
+  BX_SMF void load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value) BX_CPP_AttrRegparmN(2);
+  BX_SMF void load_null_selector(bx_segment_reg_t *seg, unsigned value) BX_CPP_AttrRegparmN(2);
+  BX_SMF void setup_flat_CS(unsigned dpl, bool longmode);
+  BX_SMF void setup_flat_SS(unsigned dpl);
+
 #if BX_SUPPORT_X86_64
-  BX_SMF void    fetch_raw_descriptor_64(const bx_selector_t *selector,
+  BX_SMF void fetch_raw_descriptor_64(const bx_selector_t *selector,
                          Bit32u *dword1, Bit32u *dword2, Bit32u *dword3, unsigned exception_no);
   BX_SMF bool fetch_raw_descriptor2_64(const bx_selector_t *selector,
                          Bit32u *dword1, Bit32u *dword2, Bit32u *dword3);

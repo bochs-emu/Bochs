@@ -677,3 +677,37 @@ bool BX_CPU_C::fetch_raw_descriptor2_64(const bx_selector_t *selector, Bit32u *d
   return true;
 }
 #endif
+
+void BX_CPU_C::setup_flat_CS(unsigned dpl, bool longmode)
+{
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = dpl;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0;          // base address
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF; // scaled segment limit
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g            = 1;          // 4k granularity
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0;          // available for use by system
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b          = !longmode;
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l            =  longmode;
+#endif
+}
+
+void BX_CPU_C::setup_flat_SS(unsigned dpl)
+{
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid    = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p        = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl      = dpl;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment  = 1; /* data/code segment */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type     = BX_DATA_READ_WRITE_ACCESSED;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base         = 0;          // base address
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled = 0xFFFFFFFF; // scaled segment limit
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.g            = 1;          // 4k granularity
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b          = 1;          // 32-bit mode
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.avl          = 0;          // available for use by system
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.l            = 0;
+#endif
+}

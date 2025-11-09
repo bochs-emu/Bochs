@@ -2733,20 +2733,7 @@ void BX_CPU_C::VMexitLoadHostState(void)
   parse_selector(host_state->segreg_selector[BX_SEG_REG_CS],
                &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid    = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p        = 1;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl      = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment  = 1;  /* data/code segment */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type     = BX_CODE_EXEC_READ_ACCESSED;
-
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xffffffff;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl = 0;
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g   = 1; /* page granular */
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b = !x86_64_host;
-#if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l   =  x86_64_host;
-#endif
+  setup_flat_CS(0, x86_64_host);
 
   // DATA selector loaded from VMCS
   //    valid   <= if selector is not all-zero
