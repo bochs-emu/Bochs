@@ -293,7 +293,7 @@ void BX_CPU_C::SvmExitSaveGuestState(void)
   vmcb_write64(SVM_GUEST_CR0, BX_CPU_THIS_PTR cr0.get32());
   vmcb_write64(SVM_GUEST_CR2, BX_CPU_THIS_PTR cr2);
   vmcb_write64(SVM_GUEST_CR3, BX_CPU_THIS_PTR cr3);
-  vmcb_write64(SVM_GUEST_CR4, BX_CPU_THIS_PTR cr4.get32());
+  vmcb_write64(SVM_GUEST_CR4, BX_CPU_THIS_PTR cr4.get());
 
   vmcb_write64(SVM_GUEST_DR6, BX_CPU_THIS_PTR dr6.get32());
   vmcb_write64(SVM_GUEST_DR7, BX_CPU_THIS_PTR dr7.get32());
@@ -454,9 +454,9 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
     BX_ERROR(("VMRUN: Guest CR4[63:32] is not zero"));
     return false;
   }
-  guest.cr4.set32(cr4_lo);
+  guest.cr4.set(cr4_lo);
 
-  if (guest.cr4.get32() & ~BX_CPU_THIS_PTR cr4_suppmask) {
+  if (guest.cr4.get() & ~BX_CPU_THIS_PTR cr4_suppmask) {
     BX_ERROR(("VMRUN: Guest CR4 reserved bits set"));
     return false;
   }
@@ -534,13 +534,13 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
     BX_ERROR(("SVM: VMRUN CR0 is broken !"));
     return false;
   }
-  if (! check_CR4(guest.cr4.get32())) {
+  if (! check_CR4(guest.cr4.get())) {
     BX_ERROR(("SVM: VMRUN CR4 is broken !"));
     return false;
   }
 
   BX_CPU_THIS_PTR cr0.set32(guest.cr0.get32());
-  BX_CPU_THIS_PTR cr4.set32(guest.cr4.get32());
+  BX_CPU_THIS_PTR cr4.set(guest.cr4.get());
   BX_CPU_THIS_PTR cr3 = guest.cr3;
 
   if (paged_real_mode)

@@ -340,7 +340,7 @@ void BX_CPU_C::debug(bx_address offset)
 
   Bit32u cr0 = BX_CPU_THIS_PTR cr0.get32();
 #if BX_CPU_LEVEL >= 5
-  Bit32u cr4 = BX_CPU_THIS_PTR cr4.get32();
+  bx_address cr4 = BX_CPU_THIS_PTR cr4.get();
 #endif
 
 #if BX_SUPPORT_X86_64

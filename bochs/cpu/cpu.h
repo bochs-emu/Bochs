@@ -1014,7 +1014,7 @@ public: // for now...
   bx_address cr3;
 #if BX_CPU_LEVEL >= 5
   bx_cr4_t   cr4;
-  Bit32u cr4_suppmask;
+  bx_address cr4_suppmask;
 #if BX_SUPPORT_X86_64
   unsigned linaddr_width;
 #endif
@@ -4817,7 +4817,7 @@ public: // for now...
 #if BX_CPU_LEVEL >= 5
   BX_SMF bool SetCR4(bxInstruction_c *i, bx_address val);
   BX_SMF bool check_CR4(bx_address val) BX_CPP_AttrRegparmN(1);
-  BX_SMF Bit32u get_cr4_allow_mask(void);
+  BX_SMF bx_address get_cr4_allow_mask(void);
 #endif
 #if BX_CPU_LEVEL >= 6
   BX_SMF bool CheckPDPTR(bx_phy_address cr3_val) BX_CPP_AttrRegparmN(1);

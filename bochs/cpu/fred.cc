@@ -64,7 +64,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, bool push_error, 
   // if CPL == 3 AND event is not an exception nested on event delivery AND event is not #DF
   Bit32u event_SL = 0;
   if (CPL == 3 && BX_CPU_THIS_PTR last_exception_type == 0 && vector != BX_DF_EXCEPTION) {
-    event_SL = 0
+    event_SL = 0;
   }
   else {
     if (type == BX_EXTERNAL_INTERRUPT) {
@@ -113,17 +113,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, bool push_error, 
     parse_selector((BX_CPU_THIS_PTR msr.star >> 32) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = 0;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0; /* base address */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  /* scaled segment limit */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g            = 1; /* 4k granularity */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b          = 0;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l            = 1; /* 64-bit code */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0; /* available for use by system */
+    setup_flat_CS(0, true); // CPL0, long mode
 
     handleCpuModeChange(); // mode change could only happen when in long_mode()
 
@@ -135,17 +125,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, bool push_error, 
     parse_selector(((BX_CPU_THIS_PTR msr.star >> 32) + 8) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p       = 1;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl     = 0;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment = 1; /* data/code segment */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base         = 0; /* base address */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled = 0xFFFFFFFF;  /* scaled segment limit */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.g            = 1; /* 4k granularity */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b          = 1; /* 32 bit stack */
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.l            = 0;
-    BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.avl          = 0; /* available for use by system */
+    setup_flat_SS(0);
 
     Bit64u old_GS_BASE = MSR_GSBASE;
     MSR_GSBASE = BX_CPU_THIS_PTR msr.kernelgsbase;
