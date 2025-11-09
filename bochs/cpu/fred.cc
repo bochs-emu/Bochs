@@ -38,8 +38,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, bool push_error, 
   Bit32u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
   old_CS |= old_CSL << 16;
 #if BX_SUPPORT_CET
-  // FIXME double check: CR4.CET AND IA32_S_CET.ENDBR_EN AND IA32_S_CET.TRACKER
-  if (cr4.get_CET() && EndbranchEnabled(0))
+  if (cr4.get_CET() && WaitingForEndbranch(0))
     old_CS |= (1 << 18); // cache the shadow stack tracking control in old_CS[18]
 #endif
 
@@ -145,14 +144,14 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, bool push_error, 
 
   // save state on stack
   // Save return state on new regular stack; memory accesses here have supervisor privilege
-  push_64(0);  // first 8 bytes pushed are all zeros
-  push_64(0 /*FIXME event_data*/);
-  push_64(old_SS);
-  push_64(old_RSP);
-  push_64(old_flags);
-  push_64(old_CS);
-  push_64(old_RIP);
-  push_64(error_code);
+  write_new_stack_qword(new_RSP - 8,  0, 0);    // first 8 bytes pushed are all zeros
+  write_new_stack_qword(new_RSP - 16, 0, 0 /*FIXME event_data*/);
+  write_new_stack_qword(new_RSP - 24, 0, old_SS);
+  write_new_stack_qword(new_RSP - 32, 0, old_RSP);
+  write_new_stack_qword(new_RSP - 40, 0, old_flags);
+  write_new_stack_qword(new_RSP - 48, 0, old_CS);
+  write_new_stack_qword(new_RSP - 56, 0, old_RIP);
+  write_new_stack_qword(new_RSP - 64, 0, error_code);
 
 #if BX_SUPPORT_CET
   if (ShadowStackEnabled(0) && old_CPL == 0) {
@@ -216,13 +215,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETS(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
 {
   if (! BX_CPU_THIS_PTR cr4.get_FRED()) {
-    BX_ERROR(("%s: FRED in not enabled in CR4", i->getIaOpcodeNameShort()));
+    BX_ERROR(("ERETU: FRED in not enabled in CR4"));
     exception(BX_UD_EXCEPTION, 0);
   }
 
   if (CPL > 0) {
-    BX_ERROR(("%s: CPL must be 0", i->getIaOpcodeNameShort()));
+    BX_ERROR(("ERETU: CPL must be 0"));
     exception(BX_UD_EXCEPTION, 0);
+  }
+
+  if (CSL > 0) {
+    BX_ERROR(("ERETU: CSL must be 0"));
+    exception(BX_GP_EXCEPTION, 0);
   }
 
   RSP_SPECULATIVE;
