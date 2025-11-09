@@ -558,7 +558,7 @@ void BX_CPU_C::register_state(void)
 #endif
 
 #if BX_SUPPORT_UINTR
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UINTR)) {
     bx_list_c *UINTR = new bx_list_c(cpu, "UINTR");
     BXRS_PARAM_BOOL(UINTR, UIF, uintr.UIF);
     BXRS_HEX_PARAM_FIELD(UINTR, uirr, uintr.uirr);
