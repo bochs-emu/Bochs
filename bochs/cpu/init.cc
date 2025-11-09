@@ -1061,7 +1061,7 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR cr4.set32(0);
+  BX_CPU_THIS_PTR cr4.set(0);
   BX_CPU_THIS_PTR cr4_suppmask = get_cr4_allow_mask();
 #if BX_SUPPORT_X86_64
   BX_CPU_THIS_PTR linaddr_width = 48;
@@ -1429,7 +1429,7 @@ void BX_CPU_C::assert_checks(void)
 
 #if BX_CPU_LEVEL >= 5
   // check CR4 consistency
-  if (! check_CR4(BX_CPU_THIS_PTR cr4.get32()))
+  if (! check_CR4(BX_CPU_THIS_PTR cr4.get()))
     BX_PANIC(("assert_checks: CR4 consistency checks failed !"));
 #endif
 

@@ -621,7 +621,7 @@ bx_address BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_CR4_Write(bxInstruction_c *i,
   }
 
   // keep untouched all the bits set in CR4 mask
-  return (BX_CPU_THIS_PTR cr4.get32() & vm->vm_cr4_mask) | (val & ~vm->vm_cr4_mask);
+  return (BX_CPU_THIS_PTR cr4.get() & vm->vm_cr4_mask) | (val & ~vm->vm_cr4_mask);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CR8_Read(bxInstruction_c *i)
