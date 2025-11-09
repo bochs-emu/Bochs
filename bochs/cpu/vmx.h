@@ -354,6 +354,22 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_64BIT_GUEST_IA32_RTIT_CTL_HI                  0x00002815
 #define VMCS_64BIT_GUEST_IA32_PKRS                         0x00002818 /* Supervisor-Mode Protection Keys */
 #define VMCS_64BIT_GUEST_IA32_PKRS_HI                      0x00002819
+#define VMCS_64BIT_GUEST_IA32_FRED_CONFIG                  0x0000281A /* FRED */
+#define VMCS_64BIT_GUEST_IA32_FRED_CONFIG_HI               0x0000281B
+#define VMCS_64BIT_GUEST_IA32_FRED_RSP1                    0x0000281C /* FRED */
+#define VMCS_64BIT_GUEST_IA32_FRED_RSP1_HI                 0x0000281D
+#define VMCS_64BIT_GUEST_IA32_FRED_RSP2                    0x0000281E /* FRED */
+#define VMCS_64BIT_GUEST_IA32_FRED_RSP2_HI                 0x0000281F
+#define VMCS_64BIT_GUEST_IA32_FRED_RSP3                    0x00002820 /* FRED */
+#define VMCS_64BIT_GUEST_IA32_FRED_RSP3_HI                 0x00002821
+#define VMCS_64BIT_GUEST_IA32_FRED_STACK_LEVELS            0x00002822 /* FRED */
+#define VMCS_64BIT_GUEST_IA32_FRED_STACK_LEVELS_HI         0x00002823
+#define VMCS_64BIT_GUEST_IA32_FRED_SSP1                    0x00002824 /* FRED */
+#define VMCS_64BIT_GUEST_IA32_FRED_SSP1_HI                 0x00002825
+#define VMCS_64BIT_GUEST_IA32_FRED_SSP2                    0x00002826 /* FRED */
+#define VMCS_64BIT_GUEST_IA32_FRED_SSP2_HI                 0x00002827
+#define VMCS_64BIT_GUEST_IA32_FRED_SSP3                    0x00002828 /* FRED */
+#define VMCS_64BIT_GUEST_IA32_FRED_SSP3_HI                 0x00002829
 #define VMCS_64BIT_GUEST_IA32_SPEC_CTRL                    0x0000282E /* MSR_IA32_SPEC_CTRL virtualization */
 #define VMCS_64BIT_GUEST_IA32_SPEC_CTRL_HI                 0x0000282F
 #define VMCS_64BIT_GUEST_DEADLINE                          0x00002830 /* APIC timer virtualization (not implemented) */
@@ -369,6 +385,22 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_64BIT_HOST_IA32_PERF_GLOBAL_CTRL_HI           0x00002C05
 #define VMCS_64BIT_HOST_IA32_PKRS                          0x00002C06 /* Supervisor-Mode Protection Keys */
 #define VMCS_64BIT_HOST_IA32_PKRS_HI                       0x00002C07
+#define VMCS_64BIT_HOST_IA32_FRED_CONFIG                   0x00002C08 /* FRED */
+#define VMCS_64BIT_HOST_IA32_FRED_CONFIG_HI                0x00002C09
+#define VMCS_64BIT_HOST_IA32_FRED_RSP1                     0x00002C0A /* FRED */
+#define VMCS_64BIT_HOST_IA32_FRED_RSP1_HI                  0x00002C0B
+#define VMCS_64BIT_HOST_IA32_FRED_RSP2                     0x00002C0C /* FRED */
+#define VMCS_64BIT_HOST_IA32_FRED_RSP2_HI                  0x00002C0D
+#define VMCS_64BIT_HOST_IA32_FRED_RSP3                     0x00002C0E /* FRED */
+#define VMCS_64BIT_HOST_IA32_FRED_RSP3_HI                  0x00002C0F
+#define VMCS_64BIT_HOST_IA32_FRED_STACK_LEVELS             0x00002C10 /* FRED */
+#define VMCS_64BIT_HOST_IA32_FRED_STACK_LEVELS_HI          0x00002C11
+#define VMCS_64BIT_HOST_IA32_FRED_SSP1                     0x00002C12 /* FRED */
+#define VMCS_64BIT_HOST_IA32_FRED_SSP1_HI                  0x00002C13
+#define VMCS_64BIT_HOST_IA32_FRED_SSP2                     0x00002C14 /* FRED */
+#define VMCS_64BIT_HOST_IA32_FRED_SSP2_HI                  0x00002C15
+#define VMCS_64BIT_HOST_IA32_FRED_SSP3                     0x00002C16 /* FRED */
+#define VMCS_64BIT_HOST_IA32_FRED_SSP3_HI                  0x00002C17
 #define VMCS_64BIT_HOST_IA32_SPEC_CTRL                     0x00002C1A /* MSR_IA32_SPEC_CTRL virtualization */
 #define VMCS_64BIT_HOST_IA32_SPEC_CTRL_HI                  0x00002C1B
 
