@@ -2116,7 +2116,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
 
   BX_CPU_THIS_PTR cr0.set32((Bit32u) guest.cr0);
-  BX_CPU_THIS_PTR cr4.set32((Bit32u) guest.cr4);
+  BX_CPU_THIS_PTR cr4.set(guest.cr4);
   BX_CPU_THIS_PTR cr3 = guest.cr3;
 
 #if BX_SUPPORT_VMX >= 2
@@ -2462,7 +2462,7 @@ void BX_CPU_C::VMexitSaveGuestState(Bit32u reason, Bit32u vector)
 
   VMwrite_natural(VMCS_GUEST_CR0, BX_CPU_THIS_PTR cr0.get32());
   VMwrite_natural(VMCS_GUEST_CR3, BX_CPU_THIS_PTR cr3);
-  VMwrite_natural(VMCS_GUEST_CR4, BX_CPU_THIS_PTR cr4.get32());
+  VMwrite_natural(VMCS_GUEST_CR4, BX_CPU_THIS_PTR cr4.get());
 
 #if BX_SUPPORT_VMX >= 2
   if (vm->vmexec_ctrls2.EPT_ENABLE()) {
@@ -2692,7 +2692,7 @@ void BX_CPU_C::VMexitLoadHostState(void)
   }
 
   BX_CPU_THIS_PTR cr0.set32((Bit32u) host_state->cr0);
-  BX_CPU_THIS_PTR cr4.set32((Bit32u) host_state->cr4);
+  BX_CPU_THIS_PTR cr4.set(host_state->cr4);
   BX_CPU_THIS_PTR cr3 = host_state->cr3;
 
   if (! x86_64_host && BX_CPU_THIS_PTR cr4.get_PAE()) {
