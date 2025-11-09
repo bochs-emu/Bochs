@@ -55,7 +55,8 @@ struct gf_texture
   Bit32u control0;
   bool enabled;
   Bit32u control1;
-  Bit32u filter;
+  bool signed_any;
+  bool signed_comp[4];
   Bit32u image_rect;
   Bit32u pal_dma_obj;
   Bit32u pal_ofs;
@@ -234,7 +235,8 @@ struct gf_channel
   Bit32u d3d_light_enable_mask;
   Bit32u d3d_texgen[8][4];
   Bit32u d3d_texture_matrix_enable[16];
-  float d3d_model_view_matrix[16];
+  Bit32u d3d_view_matrix_enable;
+  float d3d_model_view_matrix[2][16];
   float d3d_inverse_model_view_matrix[12];
   float d3d_composite_matrix[16];
   float d3d_texture_matrix[8][16];
@@ -286,9 +288,11 @@ struct gf_channel
   Bit32u d3d_transform_program_load;
   Bit32u d3d_transform_program_start;
   Bit32u d3d_transform_constant_load;
-  Bit32u d3d_attrib_color;
-  Bit32u d3d_dci;
-  Bit32u d3d_attrib_tex_coord[10];
+  Bit32u d3d_attrib_in_normal;
+  Bit32u d3d_attrib_in_color[2];
+  Bit32u d3d_attrib_out_color[2];
+  Bit32u d3d_attrib_in_tex_coord[16];
+  Bit32u d3d_attrib_out_tex_coord[16];
   Bit32u d3d_tex_coord_count;
 
   Bit8u  rop;
