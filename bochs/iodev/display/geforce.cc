@@ -291,6 +291,7 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS graph_trapped_data = 0;
   BX_GEFORCE_THIS graph_notify = 0;
   BX_GEFORCE_THIS graph_fifo = 0;
+  BX_GEFORCE_THIS graph_bpixel = 0;
   BX_GEFORCE_THIS graph_channel_ctx_table = 0;
   BX_GEFORCE_THIS graph_offset0 = 0;
   BX_GEFORCE_THIS graph_pitch0 = 0;
@@ -335,7 +336,7 @@ void bx_geforce_c::svga_init_members()
 
   BX_GEFORCE_THIS hw_cursor.x = 0;
   BX_GEFORCE_THIS hw_cursor.y = 0;
-  BX_GEFORCE_THIS hw_cursor.size = 0;
+  BX_GEFORCE_THIS hw_cursor.size = 32;
   BX_GEFORCE_THIS hw_cursor.offset = 0;
   BX_GEFORCE_THIS hw_cursor.bpp32 = false;
   BX_GEFORCE_THIS hw_cursor.enabled = false;
@@ -961,6 +962,22 @@ Bit8u alpha_wrap(int value)
   return -(value >> 8) ^ value;
 }
 
+Bit16u bx_geforce_c::cursor_read16(Bit32u address)
+{
+  if (BX_GEFORCE_THIS hw_cursor.vram)
+    return vram_read16(address);
+  else
+    return ramin_read16(address);
+}
+
+Bit32u bx_geforce_c::cursor_read32(Bit32u address)
+{
+  if (BX_GEFORCE_THIS hw_cursor.vram)
+    return vram_read32(address);
+  else
+    return ramin_read32(address);
+}
+
 void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info)
 {
   Bit16s hwcx = BX_GEFORCE_THIS hw_cursor.x;
@@ -997,13 +1014,13 @@ void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tilein
     if (info->bpp == 15) info->bpp = 16;
     tile_ptr += info->pitch * (cy0 - yc) + info->bpp / 8 * (cx0 - xc);
     unsigned pitch = BX_GEFORCE_THIS hw_cursor.size * cursor_color_bytes;
-    Bit8u* cursor_ptr = BX_GEFORCE_THIS s.memory + BX_GEFORCE_THIS hw_cursor.offset +
+    Bit32u cursor_ofs = BX_GEFORCE_THIS hw_cursor.offset +
       (pitch * (cy0 - hwcy) >> (int)BX_GEFORCE_THIS s.y_doublescan);
     Bit8u* vid_ptr = BX_GEFORCE_THIS disp_ptr + (BX_GEFORCE_THIS svga_pitch * cy0 >>
       (int)BX_GEFORCE_THIS s.y_doublescan);
     for (unsigned cy = cy0; cy < cy1; cy++) {
       Bit8u* tile_ptr2 = tile_ptr;
-      Bit8u* cursor_ptr2 = cursor_ptr + (cursor_color_bytes * (cx0 - hwcx) >>
+      Bit32u cursor_ofs2 = cursor_ofs + (cursor_color_bytes * (cx0 - hwcx) >>
         (int)BX_GEFORCE_THIS svga_double_width);
       Bit8u* vid_ptr2 = vid_ptr + (display_color_bytes * cx0 >>
         (int)BX_GEFORCE_THIS svga_double_width);
@@ -1027,18 +1044,21 @@ void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tilein
         }
         Bit32u color;
         if (BX_GEFORCE_THIS hw_cursor.bpp32) {
-          if (*(Bit32u*)cursor_ptr2) {
-            Bit8u ica = 0xFF - cursor_ptr2[3];
-            Bit8u b = alpha_wrap(db * ica / 0xFF + cursor_ptr2[0]);
-            Bit8u g = alpha_wrap(dg * ica / 0xFF + cursor_ptr2[1]);
-            Bit8u r = alpha_wrap(dr * ica / 0xFF + cursor_ptr2[2]);
+          Bit32u cursor_color = cursor_read32(cursor_ofs2);
+          if (cursor_color != 0) {
+            Bit8u alpha, cr, cg, cb;
+            EXTRACT_8888_TO_8888(cursor_color, alpha, cr, cg, cb);
+            Bit8u ica = 0xFF - alpha;
+            Bit8u b = alpha_wrap(db * ica / 0xFF + cb);
+            Bit8u g = alpha_wrap(dg * ica / 0xFF + cg);
+            Bit8u r = alpha_wrap(dr * ica / 0xFF + cr);
             color = b << 0 | g << 8 | r << 16;
           } else {
             color = db << 0 | dg << 8 | dr << 16;
           }
         } else {
           Bit8u alpha, cr, cg, cb;
-          EXTRACT_1555_TO_8888(cursor_ptr2[0] << 0 | cursor_ptr2[1] << 8, alpha, cr, cg, cb);
+          EXTRACT_1555_TO_8888(cursor_read16(cursor_ofs2), alpha, cr, cg, cb);
           if (alpha) {
             color = cb << 0 | cg << 8 | cr << 16;
           } else {
@@ -1066,13 +1086,13 @@ void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tilein
           *(tile_ptr2++) = (Bit8u)color;
         }
         if (!BX_GEFORCE_THIS svga_double_width || (cx & 1)) {
-          cursor_ptr2 += cursor_color_bytes;
+          cursor_ofs2 += cursor_color_bytes;
           vid_ptr2 += display_color_bytes;
         }
       }
       tile_ptr += info->pitch;
       if (!BX_GEFORCE_THIS s.y_doublescan || (cy & 1)) {
-        cursor_ptr += pitch;
+        cursor_ofs += pitch;
         vid_ptr += BX_GEFORCE_THIS svga_pitch;
       }
     }
@@ -1717,6 +1737,10 @@ void bx_geforce_c::svga_write_crtc(Bit32u address, unsigned index, Bit8u value)
     BX_GEFORCE_THIS hw_cursor.enabled =
       (BX_GEFORCE_THIS crtc.reg[0x31] & 0x01) ||
       (BX_GEFORCE_THIS crtc_cursor_config & 0x00000001);
+    BX_GEFORCE_THIS hw_cursor.vram =
+      (BX_GEFORCE_THIS crtc.reg[0x30] & 0x80) ||
+      (BX_GEFORCE_THIS crtc_cursor_config & 0x00000100) ||
+      (BX_GEFORCE_THIS card_type >= 0x40);
     BX_GEFORCE_THIS hw_cursor.offset =
       (BX_GEFORCE_THIS crtc.reg[0x31] >> 2 << 11) |
       (BX_GEFORCE_THIS crtc.reg[0x30] & 0x7F) << 17 |
@@ -1891,6 +1915,11 @@ void bx_geforce_c::vram_write64(Bit32u address, Bit64u value)
 Bit8u bx_geforce_c::ramin_read8(Bit32u address)
 {
   return vram_read8(address ^ BX_GEFORCE_THIS ramin_flip);
+}
+
+Bit16u bx_geforce_c::ramin_read16(Bit32u address)
+{
+  return vram_read16(address ^ BX_GEFORCE_THIS ramin_flip);
 }
 
 Bit32u bx_geforce_c::ramin_read32(Bit32u address)
@@ -2259,9 +2288,11 @@ void bx_geforce_c::pixel_operation(gf_channel* ch, Bit32u op,
     Bit8u rop = ch->rop;
     if (BX_GEFORCE_THIS rop_flags[rop]) {
       Bit32u i = py % 8 * 8 + px % 8;
-      Bit32u patt_color = ch->patt_type == 1 ?
-        ch->patt_data_mono[i] ? ch->patt_fg_color : ch->patt_bg_color :
-        ch->patt_data_color[i];
+      Bit32u patt_color;
+      if (ch->patt_type_color)
+        patt_color = ch->patt_data_color[i];
+      else
+        patt_color = ch->patt_data_mono[i] ? ch->patt_fg_color : ch->patt_bg_color;
       bx_ternary_rop(rop, (Bit8u*)dstcolor, (Bit8u*)srccolor, (Bit8u*)&patt_color, cb);
     } else {
       BX_GEFORCE_THIS rop_handler[rop]((Bit8u*)dstcolor, (Bit8u*)srccolor, 0, 0, cb, 1);
@@ -4451,7 +4482,7 @@ void unpack_attribute(Bit32u value, bool d3d, float comp[4])
 
 void bx_geforce_c::d3d_load_vertex(gf_channel* ch, Bit32u index)
 {
-  for (int attrib_index = 0; attrib_index < 16; attrib_index++) {
+  for (int attrib_index = 0; attrib_index < ch->d3d_attrib_count; attrib_index++) {
     Bit32u array_offset = ch->d3d_vertex_data_array_offset[attrib_index];
     Bit32u array_obj = array_offset & 0x80000000 ?
       ch->d3d_vertex_b_obj : ch->d3d_vertex_a_obj;
@@ -4547,7 +4578,7 @@ void bx_geforce_c::execute_patt(gf_channel* ch, Bit32u method, Bit32u param)
   if (method == 0x0c2)
     ch->patt_shape = param;
   else if (method == 0x0c3)
-    ch->patt_type = param;
+    ch->patt_type_color = param == 2;
   else if (method == 0x0c4)
     ch->patt_bg_color = param;
   else if (method == 0x0c5)
@@ -4569,7 +4600,7 @@ void bx_geforce_c::execute_patt(gf_channel* ch, Bit32u method, Bit32u param)
     ch->patt_data_color[method - 0x1c0] = param;
 }
 
-void bx_geforce_c::execute_gdi(gf_channel* ch, Bit32u method, Bit32u param)
+void bx_geforce_c::execute_gdi(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
 {
   if (method == 0x0bf)
     ch->gdi_operation = param;
@@ -4597,15 +4628,20 @@ void bx_geforce_c::execute_gdi(gf_channel* ch, Bit32u method, Bit32u param)
       gdi_fillrect(ch, true);
     } else
       ch->gdi_rect_yx0 = param;
-  } else if (method == 0x1fb)
+  } else if ((method == 0x1fb && cls == 0x004a) ||
+             (method == 0x2fb && cls == 0x004b))
     ch->gdi_clip_yx0 = param;
-  else if (method == 0x1fc)
+  else if ((method == 0x1fc && cls == 0x004a) ||
+           (method == 0x2fc && cls == 0x004b))
     ch->gdi_clip_yx1 = param;
-  else if (method == 0x1fd)
+  else if ((method == 0x1fd && cls == 0x004a) ||
+           (method == 0x2fd && cls == 0x004b))
     ch->gdi_fg_color = param;
-  else if (method == 0x1fe)
+  else if ((method == 0x1fe && cls == 0x004a) ||
+           (method == 0x2fe && cls == 0x004b))
     ch->gdi_image_swh = param;
-  else if (method == 0x1ff) {
+  else if ((method == 0x1ff && cls == 0x004a) ||
+           (method == 0x2ff && cls == 0x004b)) {
     ch->gdi_image_xy = param;
     Bit32u width = ch->gdi_image_swh & 0xFFFF;
     Bit32u height = ch->gdi_image_swh >> 16;
@@ -4615,7 +4651,8 @@ void bx_geforce_c::execute_gdi(gf_channel* ch, Bit32u method, Bit32u param)
     ch->gdi_words_ptr = 0;
     ch->gdi_words_left = wordCount;
     ch->gdi_words = new Bit32u[wordCount];
-  } else if (method >= 0x200 && method < 0x280) {
+  } else if ((method >= 0x200 && method < 0x280 && cls == 0x004a) ||
+             (method >= 0x300 && method < 0x380 && cls == 0x004b)) {
     ch->gdi_words[ch->gdi_words_ptr++] = param;
     ch->gdi_words_left--;
     if (!ch->gdi_words_left) {
@@ -4623,19 +4660,26 @@ void bx_geforce_c::execute_gdi(gf_channel* ch, Bit32u method, Bit32u param)
       delete[] ch->gdi_words;
       ch->gdi_words = nullptr;
     }
-  } else if (method == 0x2f9)
+  } else if ((method == 0x2f9 && cls == 0x004a) ||
+             (method == 0x4f9 && cls == 0x004b))
     ch->gdi_clip_yx0 = param;
-  else if (method == 0x2fa)
+  else if ((method == 0x2fa && cls == 0x004a) ||
+           (method == 0x4fa && cls == 0x004b))
     ch->gdi_clip_yx1 = param;
-  else if (method == 0x2fb)
+  else if ((method == 0x2fb && cls == 0x004a) ||
+           (method == 0x4fb && cls == 0x004b))
     ch->gdi_bg_color = param;
-  else if (method == 0x2fc)
+  else if ((method == 0x2fc && cls == 0x004a) ||
+           (method == 0x4fc && cls == 0x004b))
     ch->gdi_fg_color = param;
-  else if (method == 0x2fd)
+  else if ((method == 0x2fd && cls == 0x004a) ||
+           (method == 0x4fd && cls == 0x004b))
     ch->gdi_image_swh = param;
-  else if (method == 0x2fe)
+  else if ((method == 0x2fe && cls == 0x004a) ||
+           (method == 0x4fe && cls == 0x004b))
     ch->gdi_image_dwh = param;
-  else if (method == 0x2ff) {
+  else if ((method == 0x2ff && cls == 0x004a) ||
+           (method == 0x4ff && cls == 0x004b)) {
     ch->gdi_image_xy = param;
     Bit32u width = ch->gdi_image_swh & 0xFFFF;
     Bit32u height = ch->gdi_image_swh >> 16;
@@ -4645,7 +4689,8 @@ void bx_geforce_c::execute_gdi(gf_channel* ch, Bit32u method, Bit32u param)
     ch->gdi_words_ptr = 0;
     ch->gdi_words_left = wordCount;
     ch->gdi_words = new Bit32u[wordCount];
-  } else if (method >= 0x300 && method < 0x380) {
+  } else if ((method >= 0x300 && method < 0x380 && cls == 0x004a) ||
+             (method >= 0x500 && method < 0x580 && cls == 0x004b)) {
     ch->gdi_words[ch->gdi_words_ptr++] = param;
     ch->gdi_words_left--;
     if (!ch->gdi_words_left) {
@@ -4766,19 +4811,7 @@ void bx_geforce_c::execute_surf2d(gf_channel* ch, Bit32u method, Bit32u param)
   else if (method == 0x0c0) {
     ch->s2d_color_fmt = param;
     Bit32u s2d_color_bytes_prev = ch->s2d_color_bytes;
-    if (ch->s2d_color_fmt == 0x1)        // Y8
-      ch->s2d_color_bytes = 1;
-    else if (ch->s2d_color_fmt == 0x4 || // R5G6B5
-             ch->s2d_color_fmt == 0x5)   // Y16
-      ch->s2d_color_bytes = 2;
-    else if (ch->s2d_color_fmt == 0x6 || // X8R8G8B8_Z8R8G8B8
-             ch->s2d_color_fmt == 0xA || // A8R8G8B8
-             ch->s2d_color_fmt == 0xB)   // Y32
-      ch->s2d_color_bytes = 4;
-    else {
-      BX_ERROR(("unknown 2d surface color format: 0x%02x",
-        ch->s2d_color_fmt));
-    }
+    update_color_bytes_s2d(ch);
     if (ch->s2d_color_bytes != s2d_color_bytes_prev &&
         (ch->s2d_color_bytes == 1 || s2d_color_bytes_prev == 1)) {
       update_color_bytes_ifc(ch);
@@ -4791,6 +4824,25 @@ void bx_geforce_c::execute_surf2d(gf_channel* ch, Bit32u method, Bit32u param)
     ch->s2d_ofs_src = param;
   else if (method == 0x0c3)
     ch->s2d_ofs_dst = param;
+}
+
+void bx_geforce_c::update_color_bytes_s2d(gf_channel* ch)
+{
+  if (ch->s2d_color_fmt == 0x1)        // Y8
+    ch->s2d_color_bytes = 1;
+  else if (ch->s2d_color_fmt == 0x2 || // X1R5G5B5_Z1R5G5B5
+           ch->s2d_color_fmt == 0x4 || // R5G6B5
+           ch->s2d_color_fmt == 0x5)   // Y16
+    ch->s2d_color_bytes = 2;
+  else if (ch->s2d_color_fmt == 0x6 || // X8R8G8B8_Z8R8G8B8
+           ch->s2d_color_fmt == 0x7 || // X8R8G8B8_O8R8G8B8
+           ch->s2d_color_fmt == 0xA || // A8R8G8B8
+           ch->s2d_color_fmt == 0xB)   // Y32
+    ch->s2d_color_bytes = 4;
+  else {
+    BX_ERROR(("unknown 2d surface color format: 0x%02x",
+      ch->s2d_color_fmt));
+  }
 }
 
 void bx_geforce_c::update_color_bytes_ifc(gf_channel* ch)
@@ -5023,13 +5075,16 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       ch->d3d_window_offset_x = 2048;
       ch->d3d_window_offset_y = 2048;
       ch->d3d_attrib_index = 7;
+      ch->d3d_attrib_count = 8;
     } else {
       ch->d3d_window_offset_x = 0;
       ch->d3d_window_offset_y = 0;
+      ch->d3d_attrib_index = 0;
+      ch->d3d_attrib_count = 16;
     }
     for (int j = 0; j < 4; j++)
       ch->d3d_diffuse_color[j] = 1.0f;
-    for (int j = 0; j < 16; j++) {
+    for (int j = 0; j < ch->d3d_attrib_count; j++) {
       ch->d3d_vertex_data_array_format_type[j] = 0;
       ch->d3d_vertex_data_array_format_size[j] = 0;
       ch->d3d_vertex_data_array_format_stride[j] = 0;
@@ -5607,6 +5662,8 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
         tex->signed_any = signed_argb != 0;
         for (Bit32u i = 0; i < 4; i++)
           tex->signed_comp[i] = (signed_argb & (1 << i)) != 0;
+      } else {
+        tex->signed_any = false;
       }
     } else if ((texture_method == 5 && cls == 0x0096) ||
                (texture_method == 7 && cls == 0x0097) ||
@@ -5673,10 +5730,14 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
       Bit32u word0 = ramin_read32(ch->schs[subc].object);
       Bit8u cls8 = word0;
       if (cls8 == 0x4a || cls8 == 0x4b) {
-        if (BX_GEFORCE_THIS card_type < 0x40)
+        if (BX_GEFORCE_THIS card_type < 0x40) {
+          word0 = (word0 & 0xFFFC7FFF) | (ch->gdi_operation << 15);
           word1 = (word1 & 0xFFFFFFFC) | ch->gdi_mono_fmt;
-        else
+        } else {
+          word0 = (word0 & 0xFFC7FFFF) | (ch->gdi_operation << 19);
           word1 = (word1 & 0xFCFFFFFF) | (ch->gdi_mono_fmt << 24);
+        }
+        ramin_write32(ch->schs[subc].object, word0);
       } else if (cls8 == 0x62) {
         if (BX_GEFORCE_THIS card_type < 0x40) {
           ramin_write32(ch->schs[subc].object + 0x8,
@@ -5714,23 +5775,26 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
       Bit32u word0 = ramin_read32(ch->schs[subc].object);
       Bit8u cls8 = word0;
       if (cls8 == 0x48) {
-        // Hack for XFree86 4.3.0
+        // Hack for XFree86 4.1.0 - 4.3.0
         if (!ch->s2d_locked) {
           Bit32u srcdst = ramin_read32(ch->schs[subc].object + 0x8);
           ch->s2d_img_src = (srcdst & 0xFFFF) << 4;
           ch->s2d_img_dst = srcdst >> 16 << 4;
-          ch->s2d_color_fmt = 4;
-          ch->s2d_color_bytes = 2;
+          ch->s2d_color_fmt = BX_GEFORCE_THIS graph_bpixel & 0xf;
+          update_color_bytes_s2d(ch);
           ch->s2d_pitch_src = BX_GEFORCE_THIS graph_pitch0 & 0xffff;
           ch->s2d_pitch_dst = ch->s2d_pitch_src;
           ch->s2d_ofs_src = BX_GEFORCE_THIS graph_offset0;
           ch->s2d_ofs_dst = BX_GEFORCE_THIS graph_offset0;
         }
       } else if (cls8 == 0x4a || cls8 == 0x4b) {
-        if (BX_GEFORCE_THIS card_type < 0x40)
+        if (BX_GEFORCE_THIS card_type < 0x40) {
+          ch->gdi_operation = (word0 >> 15) & 7;
           ch->gdi_mono_fmt = word1 & 3;
-        else
+        } else {
+          ch->gdi_operation = (word0 >> 19) & 7;
           ch->gdi_mono_fmt = (word1 >> 24) & 3;
+        }
       } else if (cls8 == 0x62) {
         if (BX_GEFORCE_THIS card_type < 0x40) {
           Bit32u srcdst = ramin_read32(ch->schs[subc].object + 0x8);
@@ -5808,7 +5872,7 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
           break;
         case 0x4a:
         case 0x4b:
-          execute_gdi(ch, method, param);
+          execute_gdi(ch, cls, method, param);
           break;
         case 0x52:
         case 0x9e:
@@ -6171,6 +6235,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS graph_notify;
   } else if (address == 0x400720) {
     value = BX_GEFORCE_THIS graph_fifo;
+  } else if (address == 0x400724) {
+    value = BX_GEFORCE_THIS graph_bpixel;
   } else if (address == 0x400780) {
     value = BX_GEFORCE_THIS graph_channel_ctx_table;
   } else if (address == 0x400820 && BX_GEFORCE_THIS card_type == 0x20) {
@@ -6391,6 +6457,8 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS graph_notify = value;
   } else if (address == 0x400720) {
     BX_GEFORCE_THIS graph_fifo = value;
+  } else if (address == 0x400724) {
+    BX_GEFORCE_THIS graph_bpixel = value;
   } else if (address == 0x400780) {
     BX_GEFORCE_THIS graph_channel_ctx_table = value;
   } else if (address == 0x400820 && BX_GEFORCE_THIS card_type == 0x20) {
@@ -6414,7 +6482,10 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
   } else if (address == 0x600810) {
     BX_GEFORCE_THIS crtc_cursor_config = value;
     BX_GEFORCE_THIS hw_cursor.enabled =
-      (BX_GEFORCE_THIS crtc.reg[0x31] & 0x01) || value & 0x00000001;
+      (BX_GEFORCE_THIS crtc.reg[0x31] & 0x01) || (value & 0x00000001);
+    BX_GEFORCE_THIS hw_cursor.vram =
+      (BX_GEFORCE_THIS crtc.reg[0x30] & 0x80) || (value & 0x00000100) ||
+      (BX_GEFORCE_THIS card_type >= 0x40);
     BX_GEFORCE_THIS hw_cursor.size = value & 0x00010000 ? 64 : 32;
     BX_GEFORCE_THIS hw_cursor.bpp32 = value & 0x00001000;
   } else if ((address >= 0x601300 && address < 0x601400) ||
@@ -6426,12 +6497,10 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS ramdac_cu_start_pos = value;
     BX_GEFORCE_THIS hw_cursor.x = (Bit32s)BX_GEFORCE_THIS ramdac_cu_start_pos << 20 >> 20;
     BX_GEFORCE_THIS hw_cursor.y = (Bit32s)BX_GEFORCE_THIS ramdac_cu_start_pos << 4 >> 20;
-    if (BX_GEFORCE_THIS hw_cursor.size != 0) {
-      BX_GEFORCE_THIS redraw_area_nd(prevx, prevy,
-        BX_GEFORCE_THIS hw_cursor.size, BX_GEFORCE_THIS hw_cursor.size);
-      BX_GEFORCE_THIS redraw_area_nd(BX_GEFORCE_THIS hw_cursor.x, BX_GEFORCE_THIS hw_cursor.y,
-        BX_GEFORCE_THIS hw_cursor.size, BX_GEFORCE_THIS hw_cursor.size);
-    }
+    BX_GEFORCE_THIS redraw_area_nd(prevx, prevy,
+      BX_GEFORCE_THIS hw_cursor.size, BX_GEFORCE_THIS hw_cursor.size);
+    BX_GEFORCE_THIS redraw_area_nd(BX_GEFORCE_THIS hw_cursor.x, BX_GEFORCE_THIS hw_cursor.y,
+      BX_GEFORCE_THIS hw_cursor.size, BX_GEFORCE_THIS hw_cursor.size);
   } else if (address == 0x680508) {
     BX_GEFORCE_THIS ramdac_vpll = value;
     BX_GEFORCE_THIS calculate_retrace_timing();

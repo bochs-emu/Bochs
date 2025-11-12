@@ -261,6 +261,7 @@ struct gf_channel
   float d3d_normal[3];
   float d3d_diffuse_color[4];
   float d3d_texcoord[4][4];
+  Bit32u d3d_attrib_count;
   Bit32u d3d_vertex_data_array_offset[16];
   Bit32u d3d_vertex_data_array_format_type[16];
   Bit32u d3d_vertex_data_array_format_size[16];
@@ -308,7 +309,7 @@ struct gf_channel
   Bit32u chroma_color;
 
   Bit32u patt_shape;
-  Bit32u patt_type;
+  bool patt_type_color;
   Bit32u patt_bg_color;
   Bit32u patt_fg_color;
   bool patt_data_mono[64];
@@ -378,6 +379,8 @@ private:
   BX_GEFORCE_SMF void   svga_init_members();
   BX_GEFORCE_SMF void   bitblt_init();
 
+  BX_GEFORCE_SMF Bit16u cursor_read16(Bit32u address);
+  BX_GEFORCE_SMF Bit32u cursor_read32(Bit32u address);
   BX_GEFORCE_SMF void draw_hardware_cursor(unsigned, unsigned, bx_svga_tileinfo_t *);
 
   // 0x3b4-0x3b5,0x3d4-0x3d5
@@ -401,6 +404,7 @@ private:
   BX_GEFORCE_SMF void vram_write32(Bit32u address, Bit32u value);
   BX_GEFORCE_SMF void vram_write64(Bit32u address, Bit64u value);
   BX_GEFORCE_SMF Bit8u ramin_read8(Bit32u address);
+  BX_GEFORCE_SMF Bit16u ramin_read16(Bit32u address);
   BX_GEFORCE_SMF Bit32u ramin_read32(Bit32u address);
   BX_GEFORCE_SMF void ramin_write8(Bit32u address, Bit8u value);
   BX_GEFORCE_SMF void ramin_write32(Bit32u address, Bit32u value);
@@ -433,6 +437,7 @@ private:
   BX_GEFORCE_SMF void fifo_process(Bit32u chid);
   BX_GEFORCE_SMF bool execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
 
+  BX_GEFORCE_SMF void update_color_bytes_s2d(gf_channel* ch);
   BX_GEFORCE_SMF void update_color_bytes_ifc(gf_channel* ch);
   BX_GEFORCE_SMF void update_color_bytes_sifc(gf_channel* ch);
   BX_GEFORCE_SMF void update_color_bytes_tfc(gf_channel* ch);
@@ -443,7 +448,7 @@ private:
   BX_GEFORCE_SMF void execute_m2mf(gf_channel* ch, Bit32u subc, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_rop(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_patt(gf_channel* ch, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void execute_gdi(gf_channel* ch, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_gdi(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_swzsurf(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_chroma(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_imageblit(gf_channel* ch, Bit32u method, Bit32u param);
@@ -536,6 +541,7 @@ private:
   Bit32u graph_trapped_data;
   Bit32u graph_notify;
   Bit32u graph_fifo;
+  Bit32u graph_bpixel;
   Bit32u graph_channel_ctx_table;
   Bit32u graph_offset0;
   Bit32u graph_pitch0;
@@ -585,6 +591,7 @@ private:
   Bit32u bank_base[2];
 
   struct {
+    bool vram;
     Bit32u offset;
     Bit16s x, y;
     Bit8u size;
