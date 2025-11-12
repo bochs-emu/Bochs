@@ -210,6 +210,7 @@
 #define BX_USE_GAMEPORT_SMF 1  // Gameport
 #define BX_USE_CIRRUS_SMF   1  // SVGA Cirrus
 #define BX_USE_GEFORCE_SMF  1  // GeForce
+#define BX_USE_R128_SMF     1  // Rage 128 PRO
 #define BX_USE_BUSM_SMF     1  // Bus Mouse
 #define BX_USE_ACPI_SMF     1  // ACPI
 
@@ -227,7 +228,7 @@
    || !BX_USE_USB_OHCI_SMF || !BX_USE_USB_EHCI_SMF || !BX_USE_USB_XHCI_SMF \
    || !BX_USE_PCIPNIC_SMF || !BX_USE_PIDE_SMF || !BX_USE_ACPI_SMF \
    || !BX_USE_EFI_SMF || !BX_USE_GAMEPORT_SMF || !BX_USE_PCIDEV_SMF \
-   || !BX_USE_CIRRUS_SMF || !BX_USE_GEFORCE_SMF)
+   || !BX_USE_CIRRUS_SMF || !BX_USE_GEFORCE_SMF || !BX_USE_R128_SMF)
 #error You must use SMF to have plugins
 #endif
 
