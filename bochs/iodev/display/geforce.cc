@@ -685,10 +685,7 @@ void bx_geforce_c::mem_write(bx_phy_address addr, Bit8u value)
   }
 
   if (addr >= 0xA0000 && addr <= 0xAFFFF) {
-    Bit32u offset;
-    unsigned x, y;
-
-    offset = addr & 0xffff;
+    Bit32u offset = addr & 0xffff;
     if (BX_GEFORCE_THIS crtc.reg[0x1c] & 0x80) {
       BX_GEFORCE_THIS s.memory[offset ^ BX_GEFORCE_THIS ramin_flip] = value;
       return;
@@ -697,8 +694,8 @@ void bx_geforce_c::mem_write(bx_phy_address addr, Bit8u value)
     offset &= BX_GEFORCE_THIS memsize_mask;
     BX_GEFORCE_THIS s.memory[offset] = value;
     BX_GEFORCE_THIS svga_needs_update_tile = 1;
-    x = (offset % BX_GEFORCE_THIS svga_pitch) / (BX_GEFORCE_THIS svga_bpp / 8);
-    y = offset / BX_GEFORCE_THIS svga_pitch;
+    unsigned x = (offset % BX_GEFORCE_THIS svga_pitch) / (BX_GEFORCE_THIS svga_bpp / 8);
+    unsigned y = offset / BX_GEFORCE_THIS svga_pitch;
     if (BX_GEFORCE_THIS s.y_doublescan)
       y <<= 1;
     if (BX_GEFORCE_THIS svga_double_width)
@@ -4410,9 +4407,9 @@ void bx_geforce_c::d3d_process_vertex(gf_channel* ch)
     for (int i = 0; i < 4; i++)
       ch->d3d_vertex_data[ch->d3d_vertex_index][ch->d3d_attrib_in_color[0]][i] = ch->d3d_diffuse_color[i];
   if (BX_GEFORCE_THIS card_type <= 0x20)
-    for (int j = 0; j < ch->d3d_tex_coord_count; j++)
+    for (unsigned j = 0; j < ch->d3d_tex_coord_count; j++)
       if (ch->d3d_vertex_data_array_format_size[ch->d3d_attrib_in_tex_coord[j]] == 0)
-        for (int i = 0; i < 4; i++)
+        for (unsigned i = 0; i < 4; i++)
           ch->d3d_vertex_data[ch->d3d_vertex_index][ch->d3d_attrib_in_tex_coord[j]][i] = ch->d3d_texcoord[j][i];
   ch->d3d_vertex_index++;
   if (ch->d3d_begin_end == 5 ||      // TRIANGLES
@@ -4482,7 +4479,7 @@ void unpack_attribute(Bit32u value, bool d3d, float comp[4])
 
 void bx_geforce_c::d3d_load_vertex(gf_channel* ch, Bit32u index)
 {
-  for (int attrib_index = 0; attrib_index < ch->d3d_attrib_count; attrib_index++) {
+  for (Bit32u attrib_index = 0; attrib_index < ch->d3d_attrib_count; attrib_index++) {
     Bit32u array_offset = ch->d3d_vertex_data_array_offset[attrib_index];
     Bit32u array_obj = array_offset & 0x80000000 ?
       ch->d3d_vertex_b_obj : ch->d3d_vertex_a_obj;
@@ -5082,9 +5079,9 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       ch->d3d_attrib_index = 0;
       ch->d3d_attrib_count = 16;
     }
-    for (int j = 0; j < 4; j++)
+    for (unsigned j = 0; j < 4; j++)
       ch->d3d_diffuse_color[j] = 1.0f;
-    for (int j = 0; j < ch->d3d_attrib_count; j++) {
+    for (unsigned j = 0; j < ch->d3d_attrib_count; j++) {
       ch->d3d_vertex_data_array_format_type[j] = 0;
       ch->d3d_vertex_data_array_format_size[j] = 0;
       ch->d3d_vertex_data_array_format_stride[j] = 0;
@@ -5113,7 +5110,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       ch->d3d_attrib_in_tex_coord[j] = 0xf;
       ch->d3d_attrib_out_tex_coord[j] = 0xf;
     }
-    for (int j = 0; j < ch->d3d_tex_coord_count; j++) {
+    for (unsigned j = 0; j < ch->d3d_tex_coord_count; j++) {
       if (cls == 0x0096)
         ch->d3d_attrib_in_tex_coord[j] = j + 3;
       else if (cls == 0x0097)
@@ -6570,17 +6567,13 @@ void bx_geforce_c::svga_init_pcihandlers(void)
   }
   BX_GEFORCE_THIS init_pci_conf(0x10DE, devid, revid, 0x030000, 0x00, BX_PCI_INTA);
 
-  BX_GEFORCE_THIS init_bar_mem(0, GEFORCE_PNPMMIO_SIZE, geforce_mem_read_handler,
-                               geforce_mem_write_handler);
+  BX_GEFORCE_THIS init_bar_mem(0, GEFORCE_PNPMMIO_SIZE, geforce_mem_read_handler, geforce_mem_write_handler);
   BX_GEFORCE_THIS pci_conf[0x14] = 0x08;
-  BX_GEFORCE_THIS init_bar_mem(1, BX_GEFORCE_THIS s.memsize, geforce_mem_read_handler,
-                               geforce_mem_write_handler);
-  if (BX_GEFORCE_THIS card_type != 0x15 &&
-      BX_GEFORCE_THIS card_type != 0x35) {
+  BX_GEFORCE_THIS init_bar_mem(1, BX_GEFORCE_THIS s.memsize, geforce_mem_read_handler, geforce_mem_write_handler);
+  if (BX_GEFORCE_THIS card_type != 0x15 && BX_GEFORCE_THIS card_type != 0x35) {
     if (BX_GEFORCE_THIS card_type == 0x20)
       BX_GEFORCE_THIS pci_conf[0x18] = 0x08;
-    BX_GEFORCE_THIS init_bar_mem(2, BX_GEFORCE_THIS bar2_size, geforce_mem_read_handler,
-                                 geforce_mem_write_handler);
+    BX_GEFORCE_THIS init_bar_mem(2, BX_GEFORCE_THIS bar2_size, geforce_mem_read_handler, geforce_mem_write_handler);
   }
   BX_GEFORCE_THIS pci_rom_address = 0;
   BX_GEFORCE_THIS pci_rom_read_handler = geforce_mem_read_handler;
