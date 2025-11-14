@@ -1815,10 +1815,12 @@ void bx_x_gui_c::xkeypress(KeySym keysym, int press_release)
     kmodchange = set_modifier_keys(BX_MOD_KEY_CAPS, !press_release);
   }
 
-  if (console_running() && !press_release) {
-    if (((keysym >= XK_space) && (keysym <= XK_asciitilde)) ||
-        (keysym == XK_Return) || (keysym == XK_BackSpace)) {
-      console_key_enq((Bit8u)(keysym & 0xff));
+  if (console_running()) {
+    if (!press_release) {
+      if (((keysym >= XK_space) && (keysym <= XK_asciitilde)) ||
+          (keysym == XK_Return) || (keysym == XK_BackSpace)) {
+        console_key_enq((Bit8u)(keysym & 0xff));
+      }
     }
     return;
   }

@@ -858,10 +858,12 @@ void bx_rfb_gui_c::rfbKeyPressed(Bit32u key, int press_release)
 {
   Bit32u key_event;
 
-  if (console_running() && press_release) {
-    if (((key >= XK_space) && (key <= XK_asciitilde)) ||
-        (key == XK_Return) || (key == XK_BackSpace)) {
-      console_key_enq((Bit8u)(key & 0xff));
+  if (console_running()) {
+    if (press_release) {
+      if (((key >= XK_space) && (key <= XK_asciitilde)) ||
+          (key == XK_Return) || (key == XK_BackSpace)) {
+        console_key_enq((Bit8u)(key & 0xff));
+      }
     }
     return;
   }
