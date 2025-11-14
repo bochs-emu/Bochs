@@ -7,7 +7,7 @@
 //    Donald Becker
 //    http://www.psyon.org
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -804,10 +804,12 @@ void bx_vncsrv_gui_c::vncKeyPressed(Bit32u key, int press_release)
 {
   Bit32u key_event;
 
-  if (console_running() && press_release) {
-    if (((key >= XK_space) && (key <= XK_asciitilde)) ||
-        (key == XK_Return) || (key == XK_BackSpace)) {
-      console_key_enq((Bit8u)(key & 0xff));
+  if (console_running()) {
+    if (press_release) {
+      if (((key >= XK_space) && (key <= XK_asciitilde)) ||
+          (key == XK_Return) || (key == XK_BackSpace)) {
+        console_key_enq((Bit8u)(key & 0xff));
+      }
     }
     return;
   }

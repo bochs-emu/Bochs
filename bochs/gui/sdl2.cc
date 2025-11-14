@@ -760,7 +760,7 @@ void bx_sdl2_gui_c::handle_events(void)
               console_key_enq(ascii);
             }
           }
-          break;
+          return;
         }
         // mouse capture toggle-check
         if (sdl_fullscreen_toggle == 0) {
@@ -777,6 +777,7 @@ void bx_sdl2_gui_c::handle_events(void)
           }
           if (mouse_toggle) {
             toggle_mouse_enable();
+            return;
           }
         }
         // handle command mode
@@ -873,6 +874,10 @@ void bx_sdl2_gui_c::handle_events(void)
         break;
 
       case SDL_KEYUP:
+        // handle gui console mode
+        if (console_running()) {
+          return;
+        }
         // check modifier keys
         if ((sdl_event.key.keysym.sym == SDLK_LSHIFT) ||
             (sdl_event.key.keysym.sym == SDLK_RSHIFT)) {

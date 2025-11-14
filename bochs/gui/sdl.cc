@@ -782,7 +782,7 @@ void bx_sdl_gui_c::handle_events(void)
             }
 #endif
           }
-          break;
+          return;
         }
         // mouse capture toggle-check
         if (sdl_fullscreen_toggle == 0) {
@@ -897,6 +897,10 @@ void bx_sdl_gui_c::handle_events(void)
         break;
 
       case SDL_KEYUP:
+        // handle gui console mode
+        if (console_running()) {
+          return;
+        }
         // check modifier keys
         if ((sdl_event.key.keysym.sym == SDLK_LSHIFT) ||
             (sdl_event.key.keysym.sym == SDLK_RSHIFT)) {
