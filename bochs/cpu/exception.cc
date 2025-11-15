@@ -1045,7 +1045,12 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 
   BX_CPU_THIS_PTR last_exception_type = exception_type;
 
-  interrupt(vector, BX_HARDWARE_EXCEPTION, push_error, error_code);
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED())
+    FRED_EventDelivery(vector, BX_HARDWARE_EXCEPTION, error_code, 0);
+  else
+#endif
+    interrupt(vector, BX_HARDWARE_EXCEPTION, push_error, error_code);
 
   BX_CPU_THIS_PTR last_exception_type = 0; // error resolved
 

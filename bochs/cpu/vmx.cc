@@ -1255,7 +1255,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
   if (vm->vmexit_ctrls1.LOAD_HOST_CET_STATE()) {
     host_state->msr_ia32_s_cet = VMread_natural(VMCS_HOST_IA32_S_CET);
     if (!IsCanonical(host_state->msr_ia32_s_cet) || (!x86_64_host && GET32H(host_state->msr_ia32_s_cet))) {
-       BX_ERROR(("VMFAIL: VMCS host IA32_S_CET/EB_LEG_BITMAP_BASE non canonical or invalid"));
+       BX_ERROR(("VMFAIL: VMCS host IA32_S_CET/ENDBR_LEGACY_BITMAP_BASE non canonical or invalid"));
        return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
 
@@ -1298,6 +1298,33 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
 #endif
 
 #if BX_SUPPORT_X86_64
+
+#if BX_SUPPORT_FRED
+  if (vm->vmexit_ctrls2.LOAD_HOST_FRED()) {
+    host_state->msr_ia32_fred_config = VMread_natural(VMCS_64BIT_HOST_IA32_FRED_CONFIG);
+    if (host_state->msr_ia32_fred_config & 0x834) {
+      BX_ERROR(("VMFAIL: VMCS host IA32_FRED_CONFIG reserved bits set!"));
+      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
+    }
+
+    host_state->msr_ia32_fred_stack_levels = VMread_natural(VMCS_64BIT_HOST_IA32_FRED_STACK_LEVELS);
+
+    for (unsigned i=1; i<4; i++) {
+      host_state->msr_ia32_fred_rsp[i] = VMread_natural(VMCS_64BIT_HOST_IA32_FRED_RSP1 + (i-1)*2);
+      if (!IsCanonical(host_state->msr_ia32_fred_rsp[i]) || (host_state->msr_ia32_fred_rsp[i] & 0x3f) != 0) {
+        BX_ERROR(("VMFAIL: VMCS host IA32_FRED_RSP%d is not canonical or reserved bits set!", i));
+        return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
+      }
+#if BX_SUPPORT_CET
+      host_state->msr_ia32_fred_ssp[i] = VMread_natural(VMCS_64BIT_HOST_IA32_FRED_SSP1 + (i-1)*2);
+      if (!IsCanonical(host_state->msr_ia32_fred_ssp[i]) || (host_state->msr_ia32_fred_ssp[i] & 0x7) != 0) {
+        BX_ERROR(("VMFAIL: VMCS host IA32_FRED_SSP%d is not canonical or reserved bits set!", i));
+        return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
+      }
+#endif
+    }
+  }
+#endif
 
 #if BX_SUPPORT_VMX >= 2
   if (vm->vmexit_ctrls1.LOAD_EFER_MSR()) {
@@ -1467,6 +1494,10 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
         BX_ERROR(("VMENTER FAIL: VMCS CR4.PCIDE set in 32-bit guest"));
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
      }
+     if (guest.cr4 & BX_CR4_FRED_MASK) {
+        BX_ERROR(("VMENTER FAIL: VMCS CR4.FRED set in 32-bit guest"));
+        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+     }
   }
 
   if (vm->vmentry_ctrls.LOAD_DBG_CTRLS()) {
@@ -1487,7 +1518,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   if (vm->vmentry_ctrls.LOAD_GUEST_CET_STATE()) {
     guest.msr_ia32_s_cet = VMread_natural(VMCS_GUEST_IA32_S_CET);
     if (!IsCanonical(guest.msr_ia32_s_cet) || (!x86_64_guest && GET32H(guest.msr_ia32_s_cet))) {
-       BX_ERROR(("VMFAIL: VMCS guest IA32_S_CET/EB_LEG_BITMAP_BASE non canonical or invalid"));
+       BX_ERROR(("VMFAIL: VMCS guest IA32_S_CET/ENDBR_LEGACY_BITMAP_BASE non canonical or invalid"));
        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
 
@@ -1520,6 +1551,33 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     if (GET32H(guest.pkrs) != 0) {
       BX_ERROR(("VMFAIL: invalid guest IA32_PKRS value"));
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+  }
+#endif
+
+#if BX_SUPPORT_FRED
+  if (vm->vmentry_ctrls.LOAD_GUEST_FRED()) {
+    guest.msr_ia32_fred_config = VMread_natural(VMCS_64BIT_GUEST_IA32_FRED_CONFIG);
+    if (guest.msr_ia32_fred_config & 0x834) {
+      BX_ERROR(("VMFAIL: VMCS guest IA32_FRED_CONFIG reserved bits set!"));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+
+    guest.msr_ia32_fred_stack_levels = VMread_natural(VMCS_64BIT_GUEST_IA32_FRED_STACK_LEVELS);
+
+    for (unsigned i=1; i<4; i++) {
+      guest.msr_ia32_fred_rsp[i] = VMread_natural(VMCS_64BIT_GUEST_IA32_FRED_RSP1 + (i-1)*2);
+      if (!IsCanonical(guest.msr_ia32_fred_rsp[i]) || (guest.msr_ia32_fred_rsp[i] & 0x3f) != 0) {
+        BX_ERROR(("VMFAIL: VMCS guest IA32_FRED_RSP%d is not canonical or reserved bits set!", i));
+        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+      }
+#if BX_SUPPORT_CET
+      guest.msr_ia32_fred_ssp[i] = VMread_natural(VMCS_64BIT_GUEST_IA32_FRED_SSP1 + (i-1)*2);
+      if (!IsCanonical(guest.msr_ia32_fred_ssp[i]) || (guest.msr_ia32_fred_ssp[i] & 0x7) != 0) {
+        BX_ERROR(("VMFAIL: VMCS guest IA32_FRED_SSP%d is not canonical or reserved bits set!", i));
+        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+      }
+#endif
     }
   }
 #endif
@@ -1669,6 +1727,27 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
         }
      }
   }
+
+#if BX_SUPPORT_FRED
+  if ((guest.cr4 & BX_CR4_FRED_MASK) != 0) {
+     if (guest.sregs[BX_SEG_REG_SS].cache.dpl != 0 && guest.sregs[BX_SEG_REG_SS].cache.dpl != 3) {
+       BX_ERROR(("VMENTER FAIL: VMCS guest SS.DPL must be 0 or 3 while CR4.FRED=1"));
+       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+     }
+
+     if (guest.sregs[BX_SEG_REG_SS].cache.dpl == 0 && ! guest.sregs[BX_SEG_REG_SS].cache.u.segment.l) {
+       BX_ERROR(("VMENTER FAIL: VMCS guest SS.L indicates CPL0 compatibility mode while CR4.FRED=1"));
+       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+     }
+
+     if (guest.sregs[BX_SEG_REG_SS].cache.dpl == 3) {
+       if ((guest.rflags & EFlagsIOPLMask) != 0) {
+         BX_ERROR(("VMENTER FAIL: VMCS guest RFLAGS.IOPL must be 0 when SS.DPL==3 while CR4.FRED=1"));
+         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+       }
+     }
+  }
+#endif
 
   switch (guest.sregs[BX_SEG_REG_CS].cache.type) {
     case BX_CODE_EXEC_ONLY_ACCESSED:
@@ -1968,13 +2047,24 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
       BX_ERROR(("VMENTER FAIL: VMCS guest interruptibility state broken when entering non active CPU state %d", guest.activity_state));
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
-  }
 
-  if ((guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_BY_STI) &&
-      (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_BY_MOV_SS))
-  {
-    BX_ERROR(("VMENTER FAIL: VMCS guest interruptibility state broken"));
-    return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    if ((guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_BY_STI) &&
+        (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_BY_MOV_SS))
+    {
+      BX_ERROR(("VMENTER FAIL: VMCS guest interruptibility state broken"));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+
+#if BX_SUPPORT_FRED
+    if ((guest.cr4 & BX_CR4_FRED_MASK) != 0) {
+      if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_BY_STI) {
+        if (guest.sregs[BX_SEG_REG_SS].cache.dpl == 3) {
+          BX_ERROR(("VMENTER FAIL: VMCS guest interruptibility state indicates BLOCKED_BY_STI while SS.DPL==3 and CR4.FRED=1"));
+          return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+        }
+      }
+    }
+#endif
   }
 
 #if BX_SUPPORT_UINTR
@@ -2148,6 +2238,19 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 #if BX_SUPPORT_PKEYS
   if (vm->vmentry_ctrls.LOAD_GUEST_PKRS()) {
     set_PKeys(BX_CPU_THIS_PTR pkru, guest.pkrs);
+  }
+#endif
+
+#if BX_SUPPORT_FRED
+  if (vm->vmentry_ctrls.LOAD_GUEST_FRED()) {
+    BX_CPU_THIS_PTR msr.ia32_fred_cfg = guest.msr_ia32_fred_config;
+    BX_CPU_THIS_PTR msr.ia32_fred_stack_levels = guest.msr_ia32_fred_stack_levels;
+    for (unsigned i=1;i < 4; i++) {
+      BX_CPU_THIS_PTR msr.ia32_fred_rsp[i] = guest.msr_ia32_fred_rsp[i];
+#if BX_SUPPORT_CET
+      BX_CPU_THIS_PTR msr.ia32_fred_ssp[i] = guest.msr_ia32_fred_ssp[i];
+#endif
+    }
   }
 #endif
 
@@ -2490,6 +2593,19 @@ void BX_CPU_C::VMexitSaveGuestState(Bit32u reason, Bit32u vector)
   }
 #endif
 
+#if BX_SUPPORT_FRED
+  if (vm->vmexit_ctrls2.SAVE_GUEST_FRED()) {
+    VMwrite_natural(VMCS_64BIT_GUEST_IA32_FRED_CONFIG, BX_CPU_THIS_PTR msr.ia32_fred_cfg);
+    VMwrite_natural(VMCS_64BIT_GUEST_IA32_FRED_STACK_LEVELS, BX_CPU_THIS_PTR msr.ia32_fred_stack_levels);
+    for (unsigned i=1;i < 4; i++) {
+      VMwrite_natural(VMCS_64BIT_GUEST_IA32_FRED_RSP1 + 2*i, BX_CPU_THIS_PTR msr.ia32_fred_rsp[i]);
+#if BX_SUPPORT_CET
+      VMwrite_natural(VMCS_64BIT_GUEST_IA32_FRED_SSP1 + 2*i, BX_CPU_THIS_PTR msr.ia32_fred_ssp[i]);
+#endif
+    }
+  }
+#endif
+
 #if BX_SUPPORT_UINTR
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UINTR)) {
     VMwrite16(VMCS_16BIT_GUEST_UINV, BX_CPU_THIS_PTR uintr.uinv);
@@ -2824,6 +2940,19 @@ void BX_CPU_C::VMexitLoadHostState(void)
 #if BX_SUPPORT_PKEYS
   if (vm->vmexit_ctrls1.LOAD_HOST_PKRS()) {
     set_PKeys(BX_CPU_THIS_PTR pkru, host_state->pkrs);
+  }
+#endif
+
+#if BX_SUPPORT_FRED
+  if (vm->vmexit_ctrls2.LOAD_HOST_FRED()) {
+    BX_CPU_THIS_PTR msr.ia32_fred_cfg = host_state->msr_ia32_fred_config;
+    BX_CPU_THIS_PTR msr.ia32_fred_stack_levels = host_state->msr_ia32_fred_stack_levels;
+    for (unsigned i=1;i < 4; i++) {
+      BX_CPU_THIS_PTR msr.ia32_fred_rsp[i] = host_state->msr_ia32_fred_rsp[i];
+#if BX_SUPPORT_CET
+      BX_CPU_THIS_PTR msr.ia32_fred_ssp[i] = host_state->msr_ia32_fred_ssp[i];
+#endif
+    }
   }
 #endif
 

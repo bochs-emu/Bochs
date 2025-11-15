@@ -699,7 +699,7 @@ typedef struct
 #if BX_SUPPORT_FRED
   Bit64u ia32_fred_rsp[4];
 #if BX_SUPPORT_CET
-  Bit64u ia32_fred_ssp[4];
+  Bit64u ia32_fred_ssp[4]; // ia32_fred_ssp0 doesn't exists and never should be used
 #endif
   Bit64u ia32_fred_stack_levels;
   Bit64u ia32_fred_cfg;
@@ -4797,7 +4797,9 @@ public: // for now...
   BX_SMF const char *strseg(bx_segment_reg_t *seg);
   BX_SMF void interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u error_code);
 #if BX_SUPPORT_FRED
-  BX_SMF void FRED_EventDelivery(Bit8u vector, unsigned type, bool push_error, Bit16u error_code);
+  BX_SMF void FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code, unsigned ilen = 0);
+  BX_SMF Bit64u fred_event_data(Bit8u vector, unsigned type) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit32u fred_event_information(Bit8u vector, unsigned type, unsigned ilen) BX_CPP_AttrRegparmN(3);
 #endif
   BX_SMF void real_mode_int(Bit8u vector, bool push_error, Bit16u error_code);
   BX_SMF void protected_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16u error_code);
@@ -4921,10 +4923,12 @@ public: // for now...
   BX_SMF void iret_protected(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
   BX_SMF void long_iret(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void swapgs();
 #endif
 #if BX_SUPPORT_CET
   BX_SMF void shadow_stack_switch(bx_address new_SSP) BX_CPP_AttrRegparmN(1);
   BX_SMF void call_far_shadow_stack_push(Bit16u cs, bx_address lip, bx_address old_ssp) BX_CPP_AttrRegparmN(3);
+  BX_SMF bx_address shadow_stack_restore(Bit16u raw_cs_selector, bx_address return_rip) BX_CPP_AttrRegparmN(2);
   BX_SMF bx_address shadow_stack_restore(Bit16u raw_cs_selector, const bx_descriptor_t &cs_descriptor, bx_address return_rip) BX_CPP_AttrRegparmN(3);
 #endif
   BX_SMF void validate_seg_reg(unsigned seg);
@@ -5913,6 +5917,13 @@ enum {
   BX_SOFTWARE_EXCEPTION = 6,
   BX_EVENT_OTHER = 7          // SYSCALL and SYSENTER with FRED
 };
+
+#if BX_SUPPORT_FRED
+enum {
+  BX_EVENT_SYSCALL = 1,       // used on FRED event with event type BX_EVENT_OTHER
+  BX_EVENT_SYSENTER = 2
+};
+#endif
 
 class bxInstruction_c;
 
