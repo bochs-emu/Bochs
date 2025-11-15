@@ -2457,6 +2457,13 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
       </entry>
     </row>
     <row>
+      <entry>--enable-r128</entry>
+      <entry>no</entry>
+      <entry>Enable ATI Rage 128 PRO emulation. This AGP graphics card requires
+      PCI support and must be assigned to the AGP slot. For more information see <xref linkend="r128-notes">.
+      </entry>
+    </row>
+    <row>
       <entry>--enable-iodebug</entry>
       <entry>yes if debugger is on</entry>
       <entry>
@@ -3697,8 +3704,9 @@ VGA BIOS, see <link linkend="bochsopt-vgaromimage">vgaromimage option</link>),
 'cirrus' for Cirrus SVGA support (needs <filename>VGABIOS-lgpl-latest-cirrus.bin</filename>
 as VGA BIOS), 'voodoo' for Voodoo Graphics support (needs
 <filename>VGABIOS-lgpl-latest-banshee.bin</filename> as VGA BIOS / see
-<xref linkend="voodoo-notes"> for more information) and 'geforce' for experimental GeForce
-support (needs external VGABIOS / see <xref linkend="geforce-notes"> for more information).
+<xref linkend="voodoo-notes"> for more information), 'geforce' for experimental GeForce
+support (needs external VGABIOS / see <xref linkend="geforce-notes"> for more information)
+and 'r128' for ATI Rage 128 PRO support (needs external VGABIOS / see <xref linkend="r128-notes"> for more information).
 </para>
 <para>
 The VGA update frequency specifies the number of display updates per second.
@@ -3757,6 +3765,21 @@ require an external VGA BIOS, the vga extension option to be set to 'geforce'
 # and the i440BX PCI/AGP chipset with the 'geforce' device assigned to AGP
 (slot #5). The gui screen update timing for all models is controlled by the
 related 'vga' options. See <xref linkend="geforce-notes"> for more information.
+</para>
+</section>
+
+<section>
+<title>r128</title>
+<para>
+Example:
+<screen>
+  vga: extension=r128
+</screen>
+This defines the ATI Rage 128 PRO emulation. This 2D/3D AGP card requires
+an external VGA BIOS, the vga extension option to be set to 'r128' and the
+i440BX PCI/AGP chipset with the 'r128' device assigned to AGP (slot #5).
+The gui screen update timing is controlled by the related 'vga' options.
+See <xref linkend="r128-notes"> for more information.
 </para>
 </section>
 
@@ -3904,7 +3927,7 @@ slot for PCI-only devices is also supported, but they are auto-assigned if
 not specified (e1000, es1370, pcidev, pcipnic, usb_ehci, usb_ohci, usb_xhci,
 voodoo). All device models except the network devices ne2k and e1000 can be
 used only once in the slot configuration. In case of the i440BX chipset, the
-slot #5 is the AGP slot. Currently only the 'voodoo' and 'geforce' devices can
+slot #5 is the AGP slot. Currently only the 'voodoo', 'geforce' and 'r128' devices can
 be assigned to AGP.
 </para>
 <para><command>advopts</command></para>
@@ -10044,6 +10067,34 @@ Bochs VBE Display Drivers for Windows NT/2000
   </tbody>
   </tgroup>
   </table>
+</section>
+
+<section id="r128-notes">
+  <title>Notes about ATI Rage 128 PRO emulation usage</title>
+
+  <para>
+  The ATI Rage 128 PRO emulation implements support for the ATI Rage 128 PRO
+  AGP graphics card. This 2D/3D AGP card provides VGA-compatible functionality
+  along with accelerated 2D graphics capabilities. The emulation requires an
+  external VGA BIOS image compatible with the ATI Rage 128 PRO.
+  </para>
+  <para>
+  The ATI Rage 128 PRO must be assigned to the AGP slot (slot #5) when using
+  the i440BX PCI/AGP chipset. The card cannot be used in regular PCI slots.
+  </para>
+  <para>
+  These bochsrc settings are required for ATI Rage 128 PRO:
+  <screen>
+  vga: extension=r128
+  pci: chipset=i440bx, slot5=r128
+  vgaromimage: file=<replaceable>VGABIOS</replaceable>
+  </screen>
+  </para>
+  <para>
+  You will need to obtain a VGA BIOS image compatible with the ATI Rage 128 PRO.
+  The BIOS image should be an AGP version compatible with the Rage 128 PRO chipset.
+  The BIOS image should be likely downloaded at VGA Musuem or The Retro Web.
+  </para>
 </section>
 
 <section id="harddisk-modes"><title>Disk Image Modes</title>
