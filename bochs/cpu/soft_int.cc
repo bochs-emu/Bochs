@@ -85,8 +85,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR EXT = 1;
 
-  // interrupt is not RSP safe
-  interrupt(1, BX_PRIVILEGED_SOFTWARE_INTERRUPT, 0, 0);
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED())
+    FRED_EventDelivery(1, BX_PRIVILEGED_SOFTWARE_INTERRUPT, 0, i->ilen());
+  else
+#endif
+    interrupt(1, BX_PRIVILEGED_SOFTWARE_INTERRUPT, 0, 0);
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                       FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
@@ -113,8 +117,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT3(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
 
-  // interrupt is not RSP safe
-  interrupt(3, BX_SOFTWARE_EXCEPTION, 0, 0);
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED())
+    FRED_EventDelivery(3, BX_SOFTWARE_EXCEPTION, 0, i->ilen());
+  else
+#endif
+    interrupt(3, BX_SOFTWARE_EXCEPTION, 0, 0);
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                       FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
@@ -151,7 +159,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
 
-  interrupt(vector, BX_SOFTWARE_INTERRUPT, 0, 0);
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED())
+    FRED_EventDelivery(vector, BX_SOFTWARE_INTERRUPT, 0, i->ilen());
+  else
+#endif
+    interrupt(vector, BX_SOFTWARE_INTERRUPT, 0, 0);
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                       FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,
@@ -177,8 +190,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INTO(bxInstruction_c *i)
     BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
 
-    // interrupt is not RSP safe
-    interrupt(4, BX_SOFTWARE_EXCEPTION, 0, 0);
+#if BX_SUPPORT_FRED
+    if (BX_CPU_THIS_PTR cr4.get_FRED())
+      FRED_EventDelivery(4, BX_SOFTWARE_EXCEPTION, 0, i->ilen());
+    else
+#endif
+      interrupt(4, BX_SOFTWARE_EXCEPTION, 0, 0);
 
     BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
                         FAR_BRANCH_PREV_CS, FAR_BRANCH_PREV_RIP,

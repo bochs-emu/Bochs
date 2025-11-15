@@ -148,7 +148,6 @@ void BX_CPU_C::init_MSRs()
   msr_desc[BX_MSR_IA32_FRED_RSP3] = new MSR_Descriptor("MSR_IA32_FRED_RSP3", BX_ISA_FRED);
   msr_desc[BX_MSR_IA32_FRED_STKLVLS] = new MSR_Descriptor("MSR_IA32_FRED_STKLVLS", BX_ISA_FRED);
 #if BX_SUPPORT_CET
-  msr_desc[BX_MSR_IA32_FRED_SSP0] = new MSR_Descriptor("MSR_IA32_FRED_SSP0", BX_ISA_FRED);
   msr_desc[BX_MSR_IA32_FRED_SSP1] = new MSR_Descriptor("MSR_IA32_FRED_SSP1", BX_ISA_FRED);
   msr_desc[BX_MSR_IA32_FRED_SSP2] = new MSR_Descriptor("MSR_IA32_FRED_SSP2", BX_ISA_FRED);
   msr_desc[BX_MSR_IA32_FRED_SSP3] = new MSR_Descriptor("MSR_IA32_FRED_SSP3", BX_ISA_FRED);
@@ -394,11 +393,10 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       val64 = BX_CPU_THIS_PTR msr.ia32_fred_rsp[index - BX_MSR_IA32_FRED_RSP0];
       break;
 #if BX_SUPPORT_CET
-    case BX_MSR_IA32_FRED_SSP0:
     case BX_MSR_IA32_FRED_SSP1:
     case BX_MSR_IA32_FRED_SSP2:
     case BX_MSR_IA32_FRED_SSP3:
-      val64 = BX_CPU_THIS_PTR msr.ia32_fred_ssp[index - BX_MSR_IA32_FRED_SSP0];
+      val64 = BX_CPU_THIS_PTR msr.ia32_fred_ssp[index - BX_MSR_IA32_FRED_SSP1];
       break;
 #endif
     case BX_MSR_IA32_FRED_STKLVLS:
@@ -1091,7 +1089,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       BX_CPU_THIS_PTR msr.ia32_fred_rsp[index - BX_MSR_IA32_FRED_RSP0] = val_64;
       break;
 #if BX_SUPPORT_CET
-    case BX_MSR_IA32_FRED_SSP0:
     case BX_MSR_IA32_FRED_SSP1:
     case BX_MSR_IA32_FRED_SSP2:
     case BX_MSR_IA32_FRED_SSP3:
@@ -1103,7 +1100,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR: attempt to write non 8byte-aligned address to BX_MSR_IA32_FRED_SSPi !"));
         return false;
       }
-      BX_CPU_THIS_PTR msr.ia32_fred_ssp[index - BX_MSR_IA32_FRED_SSP0] = val_64;
+      BX_CPU_THIS_PTR msr.ia32_fred_ssp[index - BX_MSR_IA32_FRED_SSP1] = val_64;
       break;
 #endif
     case BX_MSR_IA32_FRED_STKLVLS:

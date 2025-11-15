@@ -580,7 +580,6 @@ void BX_CPU_C::register_state(void)
     BXRS_HEX_PARAM_FIELD(MSR, ia32_fred_rsp2, msr.ia32_fred_rsp[2]);
     BXRS_HEX_PARAM_FIELD(MSR, ia32_fred_rsp3, msr.ia32_fred_rsp[3]);
 #if BX_SUPPORT_CET
-    BXRS_HEX_PARAM_FIELD(MSR, ia32_fred_ssp0, msr.ia32_fred_ssp[0]);
     BXRS_HEX_PARAM_FIELD(MSR, ia32_fred_ssp1, msr.ia32_fred_ssp[1]);
     BXRS_HEX_PARAM_FIELD(MSR, ia32_fred_ssp2, msr.ia32_fred_ssp[2]);
     BXRS_HEX_PARAM_FIELD(MSR, ia32_fred_ssp3, msr.ia32_fred_ssp[3]);
@@ -1098,7 +1097,7 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_SUPPORT_FRED
-  CSL = 0;
+  BX_CPU_THIS_PTR CSL = 0;
   BX_CPU_THIS_PTR msr.ia32_fred_cfg = 0;
   BX_CPU_THIS_PTR msr.ia32_fred_stack_levels = 0;
   for (n=0;n<4;n++) {

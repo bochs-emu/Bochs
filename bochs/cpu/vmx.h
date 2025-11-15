@@ -701,6 +701,15 @@ typedef struct bx_VMCS_GUEST_STATE
    bx_address interrupt_ssp_table_address;
 #endif
 
+#if BX_SUPPORT_FRED
+   Bit64u msr_ia32_fred_config;
+   Bit64u msr_ia32_fred_rsp[4]; // msr_ia32_fred_rsp[0] doesn't exists in VMCS, added for convinience
+#if BX_SUPPORT_CET
+   Bit64u msr_ia32_fred_ssp[4]; // msr_ia32_fred_ssp[0] doesn't exists in VMCS, added for convinience
+#endif
+   Bit64u msr_ia32_fred_stack_levels;
+#endif
+
 #if BX_SUPPORT_UINTR
    Bit16u uintr_uinv;
 #endif
@@ -746,6 +755,15 @@ typedef struct bx_VMCS_HOST_STATE
    Bit64u msr_ia32_s_cet;
    bx_address ssp;
    bx_address interrupt_ssp_table_address;
+#endif
+
+#if BX_SUPPORT_FRED
+   Bit64u msr_ia32_fred_config;
+   Bit64u msr_ia32_fred_rsp[4]; // msr_ia32_fred_rsp[0] doesn't exists in VMCS, added for convinience
+#if BX_SUPPORT_CET
+   Bit64u msr_ia32_fred_ssp[4]; // msr_ia32_fred_ssp[0] doesn't exists in VMCS, added for convinience
+#endif
+   Bit64u msr_ia32_fred_stack_levels;
 #endif
 
 #if BX_SUPPORT_PKEYS
