@@ -1095,7 +1095,7 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_SUPPORT_FRED
-  CSL = 0;
+  BX_CPU_THIS_PTR CSL = 0;
   BX_CPU_THIS_PTR msr.ia32_fred_cfg = 0;
   BX_CPU_THIS_PTR msr.ia32_fred_stack_levels = 0;
   for (n=0;n<4;n++) {

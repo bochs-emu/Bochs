@@ -941,6 +941,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
+
+#if BX_SUPPORT_X86_64 && BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+    BX_ERROR(("%s: Not supported when FRED is enabled in CR4", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
   if (real_mode() || CPL != 0) {
     BX_ERROR(("SYSEXIT from real mode or with CPL<>0 !"));
     exception(BX_GP_EXCEPTION, 0);
@@ -1118,6 +1126,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
+
+#if BX_SUPPORT_X86_64 && BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+    BX_ERROR(("%s: Not supported when FRED is enabled in CR4", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
   bx_address temp_RIP;
 
   BX_DEBUG(("Execute SYSRET instruction"));
@@ -1230,6 +1246,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SWAPGS(bxInstruction_c *i)
 {
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+    BX_ERROR(("%s: Not supported when FRED is enabled in CR4", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
   if(CPL != 0)
     exception(BX_GP_EXCEPTION, 0);
 

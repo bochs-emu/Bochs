@@ -639,6 +639,10 @@ typedef Bit32u bx_phy_address;
   #error "UINTR require x86-64 support"
 #endif
 
+#if BX_SUPPORT_FRED && BX_SUPPORT_X86_64 == 0
+  #error "FRED require x86-64 support"
+#endif
+
 #if BX_SUPPORT_SVM && BX_SUPPORT_X86_64 == 0
   #error "SVM require x86-64 support"
 #endif
