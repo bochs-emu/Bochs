@@ -1335,6 +1335,13 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR4(bx_address cr4_val)
       BX_ERROR(("check_CR4(): attempt to set CR4.PCIDE when EFER.LMA=0"));
       return false;
     }
+
+#if BX_SUPPORT_FRED
+    if (temp_cr4.get_FRED()) {
+      BX_ERROR(("check_CR4(): attempt to set CR4.FRED when EFER.LMA=0"));
+      return false;
+    }
+#endif
   }
 #endif
 
