@@ -1075,7 +1075,7 @@ void bx_local_apic_c::set_divide_configuration(Bit32u value)
   value = ((value & 8) >> 1) | (value & 3);
   BX_ASSERT(value >= 0 && value <= 7);
   timer_divide_factor = (value==7) ? 1 : (2 << value);
-  BX_INFO(("set timer divide factor to %d", timer_divide_factor));
+  BX_DEBUG(("set timer divide factor to %d", timer_divide_factor));
 }
 
 void bx_local_apic_c::set_initial_timer_count(Bit32u value)
