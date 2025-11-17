@@ -850,7 +850,7 @@ Bit32u bx_rage128_c::svga_read(Bit32u address, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
-#endif // !BX_USE_R128_SMF
+#endif // !BX_USE_RAGE128_SMF
 
   if (address == 0x03C3 && io_len == 2)
     return VGA_READ(address, 1) | VGA_READ(address + 1, 1) << 8;
@@ -926,7 +926,7 @@ void bx_rage128_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
-#endif // !BX_USE_R128_SMF
+#endif // !BX_USE_RAGE128_SMF
 
   // ATI Rage 128 PRO does not have RMA (Register Memory Access) registers
   // Ports 0x03D0-0x03D5 are standard VGA CRTC registers
@@ -2522,7 +2522,7 @@ void bx_rage128_c::register_write32(Bit32u address, Bit32u value)
 }
 
 // I/O port mask for ATI Rage 128 (256 bytes, similar to banshee)
-static const Bit8u r128_iomask[256] = {4,0,0,0,7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1,
+static const Bit8u rage128_iomask[256] = {4,0,0,0,7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1,
                                        7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1,
                                        7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1,
                                        7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1,7,1,3,1,
@@ -2556,7 +2556,7 @@ void bx_rage128_c::svga_init_pcihandlers(void)
   
   // BAR1: I/O ports at b800 [size=256] - I/O bar for register access
   BX_RAGE128_THIS pci_conf[0x14] = 0x01; // I/O space
-  BX_RAGE128_THIS init_bar_io(1, 256, svga_read_handler, svga_write_handler, r128_iomask);
+  BX_RAGE128_THIS init_bar_io(1, 256, svga_read_handler, svga_write_handler, rage128_iomask);
   
   // BAR2: Memory at ffdfc000 (32-bit, non-prefetchable) [size=16K] - Register map
   BX_RAGE128_THIS pci_conf[0x18] = 0x00; // Memory space, 32-bit, non-prefetchable

@@ -2457,10 +2457,10 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
       </entry>
     </row>
     <row>
-      <entry>--enable-r128</entry>
+      <entry>--enable-rage128</entry>
       <entry>no</entry>
       <entry>Enable ATI Rage 128 PRO emulation. This AGP graphics card requires
-      PCI support and must be assigned to the AGP slot. For more information see <xref linkend="r128-notes">.
+      PCI support and must be assigned to the AGP slot. For more information see <xref linkend="rage128-notes">.
       </entry>
     </row>
     <row>
@@ -3706,7 +3706,7 @@ as VGA BIOS), 'voodoo' for Voodoo Graphics support (needs
 <filename>VGABIOS-lgpl-latest-banshee.bin</filename> as VGA BIOS / see
 <xref linkend="voodoo-notes"> for more information), 'geforce' for experimental GeForce
 support (needs external VGABIOS / see <xref linkend="geforce-notes"> for more information)
-and 'r128' for ATI Rage 128 PRO support (needs external VGABIOS / see <xref linkend="r128-notes"> for more information).
+and 'rage128' for ATI Rage 128 PRO support (needs external VGABIOS / see <xref linkend="rage128-notes"> for more information).
 </para>
 <para>
 The VGA update frequency specifies the number of display updates per second.
@@ -3769,17 +3769,17 @@ related 'vga' options. See <xref linkend="geforce-notes"> for more information.
 </section>
 
 <section>
-<title>r128</title>
+<title>rage128</title>
 <para>
 Example:
 <screen>
-  vga: extension=r128
+  vga: extension=rage128
 </screen>
 This defines the ATI Rage 128 PRO emulation. This 2D/3D AGP card requires
-an external VGA BIOS, the vga extension option to be set to 'r128' and the
-i440BX PCI/AGP chipset with the 'r128' device assigned to AGP (slot #5).
+an external VGA BIOS, the vga extension option to be set to 'rage128' and the
+i440BX PCI/AGP chipset with the 'rage128' device assigned to AGP (slot #5).
 The gui screen update timing is controlled by the related 'vga' options.
-See <xref linkend="r128-notes"> for more information.
+See <xref linkend="rage128-notes"> for more information.
 </para>
 </section>
 
@@ -3927,7 +3927,7 @@ slot for PCI-only devices is also supported, but they are auto-assigned if
 not specified (e1000, es1370, pcidev, pcipnic, usb_ehci, usb_ohci, usb_xhci,
 voodoo). All device models except the network devices ne2k and e1000 can be
 used only once in the slot configuration. In case of the i440BX chipset, the
-slot #5 is the AGP slot. Currently only the 'voodoo', 'geforce' and 'r128' devices can
+slot #5 is the AGP slot. Currently only the 'voodoo', 'geforce' and 'rage128' devices can
 be assigned to AGP.
 </para>
 <para><command>advopts</command></para>
@@ -10069,7 +10069,7 @@ Bochs VBE Display Drivers for Windows NT/2000
   </table>
 </section>
 
-<section id="r128-notes">
+<section id="rage128-notes">
   <title>Notes about ATI Rage 128 PRO emulation usage</title>
 
   <para>
@@ -10085,8 +10085,8 @@ Bochs VBE Display Drivers for Windows NT/2000
   <para>
   These bochsrc settings are required for ATI Rage 128 PRO:
   <screen>
-  vga: extension=r128
-  pci: chipset=i440bx, slot5=r128
+  vga: extension=rage128
+  pci: chipset=i440bx, slot5=rage128
   vgaromimage: file=<replaceable>VGABIOS</replaceable>
   </screen>
   </para>

@@ -76,7 +76,7 @@ extern "C" {
 #define BX_PLUGIN_IOAPIC    "ioapic"
 #define BX_PLUGIN_HPET      "hpet"
 #define BX_PLUGIN_VOODOO    "voodoo"
-#define BX_PLUGIN_R128      "r128"
+#define BX_PLUGIN_RAGE128   "rage128"
 
 
 #define BX_REGISTER_DEVICE_DEVMODEL(a,b,c,d) pluginRegisterDeviceDevmodel(a,b,c,d)
@@ -444,7 +444,7 @@ PLUGIN_ENTRY_FOR_MODULE(iodebug);
 PLUGIN_ENTRY_FOR_MODULE(ioapic);
 PLUGIN_ENTRY_FOR_MODULE(hpet);
 PLUGIN_ENTRY_FOR_MODULE(voodoo);
-PLUGIN_ENTRY_FOR_MODULE(r128);
+PLUGIN_ENTRY_FOR_MODULE(rage128);
 // config interface plugins
 PLUGIN_ENTRY_FOR_MODULE(textconfig);
 PLUGIN_ENTRY_FOR_MODULE(win32config);
