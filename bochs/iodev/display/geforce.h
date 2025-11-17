@@ -251,6 +251,7 @@ struct gf_channel
   Bit32u d3d_viewport_horizontal;
   Bit32u d3d_viewport_vertical;
   float d3d_viewport_offset[4];
+  float d3d_combiner_const_color[8][2][4];
   Bit32u d3d_combiner_alpha_ocw[8];
   Bit32u d3d_combiner_color_icw[8];
   float d3d_viewport_scale[4];
@@ -267,6 +268,7 @@ struct gf_channel
   Bit32u d3d_vertex_data_array_format_size[16];
   Bit32u d3d_vertex_data_array_format_stride[16];
   bool d3d_vertex_data_array_format_dx[16];
+  bool d3d_vertex_data_array_format_homogeneous[16];
   Bit32u d3d_begin_end;
   bool d3d_primitive_done;
   bool d3d_triangle_flip;
@@ -333,6 +335,12 @@ struct gf_channel
   Bit32u gdi_words_ptr;
   Bit32u gdi_words_left;
   Bit32u* gdi_words;
+
+  Bit32u rect_operation;
+  Bit32u rect_color_fmt;
+  Bit32u rect_color;
+  Bit32u rect_xy;
+  Bit32u rect_hw;
 };
 
 class bx_geforce_c : public bx_vgacore_c
@@ -451,6 +459,7 @@ private:
   BX_GEFORCE_SMF void execute_gdi(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_swzsurf(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_chroma(gf_channel* ch, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_rect(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_imageblit(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_ifc(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_surf2d(gf_channel* ch, Bit32u method, Bit32u param);
@@ -469,6 +478,7 @@ private:
 
   BX_GEFORCE_SMF void gdi_fillrect(gf_channel* ch, bool clipped);
   BX_GEFORCE_SMF void gdi_blit(gf_channel* ch, Bit32u type);
+  BX_GEFORCE_SMF void rect(gf_channel* ch);
   BX_GEFORCE_SMF void ifc(gf_channel* ch, Bit32u word);
   BX_GEFORCE_SMF void iifc(gf_channel* ch);
   BX_GEFORCE_SMF void sifc(gf_channel* ch);
