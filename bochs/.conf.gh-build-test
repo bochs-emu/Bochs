@@ -39,7 +39,7 @@ case $which_config in
       --enable-clgd54xx \
       --enable-geforce \
       --enable-voodoo \
-      --enable-r128 \
+      --enable-rage128 \
       --enable-usb \
       --enable-usb-ohci \
       --enable-usb-ehci \
@@ -93,7 +93,7 @@ case $which_config in
       --enable-clgd54xx \
       --enable-geforce \
       --enable-voodoo \
-      --enable-r128 \
+      --enable-rage128 \
       --enable-usb \
       --enable-usb-ohci \
       --enable-usb-ehci \
@@ -118,7 +118,7 @@ case $which_config in
       --enable-clgd54xx \
       --enable-geforce \
       --enable-voodoo \
-      --enable-r128 \
+      --enable-rage128 \
       --enable-usb \
       --enable-usb-ohci \
       --enable-usb-ehci \
@@ -142,7 +142,7 @@ case $which_config in
       --enable-clgd54xx \
       --enable-geforce \
       --enable-voodoo \
-      --enable-r128 \
+      --enable-rage128 \
       --enable-usb \
       --enable-usb-ohci \
       --enable-usb-ehci \
