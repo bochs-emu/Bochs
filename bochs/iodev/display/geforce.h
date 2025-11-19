@@ -506,6 +506,7 @@ private:
     Bit8u reg[GEFORCE_CRTC_MAX+1];
   } crtc; // 0x3b4-5/0x3d4-5
 
+  bool mc_soft_intr;
   Bit32u mc_intr_en;
   Bit32u mc_enable;
   Bit32u bus_intr;
