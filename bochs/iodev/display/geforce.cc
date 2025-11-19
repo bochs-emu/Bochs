@@ -246,6 +246,7 @@ void bx_geforce_c::svga_init_members()
   for (int i = 0; i <= GEFORCE_CRTC_MAX; i++)
     BX_GEFORCE_THIS crtc.reg[i] = 0x00;
 
+  BX_GEFORCE_THIS mc_soft_intr = false;
   BX_GEFORCE_THIS mc_intr_en = 0;
   BX_GEFORCE_THIS mc_enable = 0;
   BX_GEFORCE_THIS bus_intr = 0;
@@ -6194,7 +6195,8 @@ Bit32u bx_geforce_c::get_mc_intr()
 
 void bx_geforce_c::update_irq_level()
 {
-  set_irq_level(get_mc_intr() && BX_GEFORCE_THIS mc_intr_en & 1);
+  set_irq_level((get_mc_intr() && BX_GEFORCE_THIS mc_intr_en & 1) ||
+    (BX_GEFORCE_THIS mc_soft_intr && BX_GEFORCE_THIS mc_intr_en & 2));
 }
 
 
@@ -6209,6 +6211,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
       value = BX_GEFORCE_THIS card_type << 20;
   } else if (address == 0x100) {
     value = get_mc_intr();
+    if (BX_GEFORCE_THIS mc_soft_intr)
+      value |= 0x80000000;
   } else if (address == 0x140)
     value = BX_GEFORCE_THIS mc_intr_en;
   else if (address == 0x200)
@@ -6462,7 +6466,10 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
 
 void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
 {
-  if (address == 0x140) {
+  if (address == 0x100) {
+    BX_GEFORCE_THIS mc_soft_intr = (bool)(value >> 31);
+    update_irq_level();
+  } else if (address == 0x140) {
     BX_GEFORCE_THIS mc_intr_en = value;
     update_irq_level();
   } else if (address == 0x200) {
