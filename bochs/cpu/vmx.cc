@@ -1059,8 +1059,8 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
              BX_ERROR(("VMFAIL: VMENTRY bad MTF injection with vector=%d", vector));
              return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
            }
+           break;
          }
-         break;
 
        default:
          BX_ERROR(("VMFAIL: VMENTRY bad injected event type %d", event_type));
