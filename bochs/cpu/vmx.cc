@@ -1053,7 +1053,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
          }
          break;
 
-       case 7: /* MTF */
+       case BX_EVENT_OTHER: /* MTF or FRED */
          if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_MONITOR_TRAP_FLAG)) {
            if (vector != 0) {
              BX_ERROR(("VMFAIL: VMENTRY bad MTF injection with vector=%d", vector));
@@ -1061,6 +1061,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
            }
            break;
          }
+         // fall through
 
        default:
          BX_ERROR(("VMFAIL: VMENTRY bad injected event type %d", event_type));
@@ -2100,6 +2101,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
         BX_ERROR(("VMENTER FAIL: VMCS guest interrupts blocked when injecting NMI"));
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
       }
+
       if (vm->pin_vmexec_ctrls.VIRTUAL_NMI()) {
         if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED) {
           BX_ERROR(("VMENTER FAIL: VMENTRY injected NMI vector when blocked by NMI in interruptibility state"));
@@ -2383,7 +2385,7 @@ void BX_CPU_C::VMenterInjectEvents(void)
   unsigned push_error = vm->vmentry_interr_info & (1 << 11);
   unsigned error_code = push_error ? vm->vmentry_excep_err_code : 0;
 
-  if (type == 7) {
+  if (type == BX_EVENT_OTHER) {
     if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_MONITOR_TRAP_FLAG)) {
       signal_event(BX_EVENT_VMX_MONITOR_TRAP_FLAG);
       return;
@@ -4419,6 +4421,18 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
 #endif
 #if BX_SUPPORT_PKEYS
   BXRS_HEX_PARAM_FIELD(host, pkrs, vm->host_state.pkrs);
+#endif
+#if BX_SUPPORT_FRED
+  BXRS_HEX_PARAM_FIELD(host, ia32_fred_config, vm->host_state.msr_ia32_fred_config);
+  BXRS_HEX_PARAM_FIELD(host, ia32_fred_stack_levels, vm->host_state.msr_ia32_fred_stack_levels);
+  BXRS_HEX_PARAM_FIELD(host, ia32_fred_rsp1, vm->host_state.msr_ia32_fred_rsp[1]);
+  BXRS_HEX_PARAM_FIELD(host, ia32_fred_rsp2, vm->host_state.msr_ia32_fred_rsp[2]);
+  BXRS_HEX_PARAM_FIELD(host, ia32_fred_rsp3, vm->host_state.msr_ia32_fred_rsp[3]);
+#if BX_SUPPORT_CET
+  BXRS_HEX_PARAM_FIELD(host, ia32_fred_ssp1, vm->host_state.msr_ia32_fred_ssp[1]);
+  BXRS_HEX_PARAM_FIELD(host, ia32_fred_ssp2, vm->host_state.msr_ia32_fred_ssp[2]);
+  BXRS_HEX_PARAM_FIELD(host, ia32_fred_ssp3, vm->host_state.msr_ia32_fred_ssp[3]);
+#endif
 #endif
 }
 
