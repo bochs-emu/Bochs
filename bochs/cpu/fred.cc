@@ -377,6 +377,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
   else {
     // load newCS using tempCS[15:0]; // load each as is done by IRET, including
     // load newSS using tempSS[15:0]; // checks that may lead to a fault
+    BX_PANIC(("ERETU: not yet implemented"));
   }
 
   if (to_long_mode) {
@@ -446,6 +447,35 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
   }
 
   BX_NEXT_TRACE(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::LKGS_Ew(bxInstruction_c *i)
+{
+  Bit16u segsel;
+
+  if (CPL > 0) {
+    BX_ERROR(("LKGS_Ew: CPL must be 0"));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  /* op2 is a register or memory reference */
+  if (i->modC0()) {
+    segsel = BX_READ_16BIT_REG(i->src());
+  }
+  else {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
+    segsel  = read_linear_word(i->seg(), get_laddr64(i->seg(), eaddr));
+  }
+
+  // back up current GS segment base into MSR_KERNEL_GS_BASE
+  swapgs();
+
+  load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], segsel);
+
+  // restore old GS segment base and put new loaded base into MSR_KERNEL_GS_BASE
+  swapgs();
+
+  BX_NEXT_INSTR(i);
 }
 
 #endif
