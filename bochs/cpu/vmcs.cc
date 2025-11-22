@@ -410,6 +410,12 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_SHADOW_HI:
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_SPEC_CTRL_VIRTUALIZATION);
 
+#if BX_SUPPORT_FRED
+    case VMCS_64BIT_CONTROL_INJECTED_EVENT_DATA:
+    case VMCS_64BIT_CONTROL_INJECTED_EVENT_DATA_HI:
+      return is_cpu_extension_supported(BX_ISA_FRED);
+#endif
+
     /* VMCS 64-bit read only data fields */
     /* binary 0010_01xx_xxxx_xxx0 */
     case VMCS_64BIT_GUEST_PHYSICAL_ADDR:
@@ -419,6 +425,12 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_MSR_DATA:
     case VMCS_64BIT_MSR_DATA_HI:
       return is_cpu_extension_supported(BX_ISA_MSRLIST);
+
+#if BX_SUPPORT_FRED
+    case VMCS_64BIT_ORIGINAL_EVENT_DATA:
+    case VMCS_64BIT_ORIGINAL_EVENT_DATA_HI:
+      return is_cpu_extension_supported(BX_ISA_FRED);
+#endif
 #endif
 
     /* VMCS 64-bit guest state fields */

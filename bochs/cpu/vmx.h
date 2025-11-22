@@ -319,6 +319,8 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_SHADOW_HI           0x0000204D
 #define VMCS_64BIT_CONTROL_GUEST_DEADLINE_SHADOW              0x0000204E /* APIC timer virtualization (not implemented) */
 #define VMCS_64BIT_CONTROL_GUEST_DEADLINE_SHADOW_HI           0x0000204F
+#define VMCS_64BIT_CONTROL_INJECTED_EVENT_DATA                0x00002052 /* FRED */
+#define VMCS_64BIT_CONTROL_INJECTED_EVENT_DATA_HI             0x00002053
 
 
 /* VMCS 64-bit read only data fields */
@@ -327,6 +329,8 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_64BIT_GUEST_PHYSICAL_ADDR_HI                  0x00002401
 #define VMCS_64BIT_MSR_DATA                                0x00002402 /* MSRLIST */
 #define VMCS_64BIT_MSR_DATA_HI                             0x00002403
+#define VMCS_64BIT_ORIGINAL_EVENT_DATA                     0x00002404 /* FRED */
+#define VMCS_64BIT_ORIGINAL_EVENT_DATA_HI                  0x00002405
 
 /* VMCS 64-bit guest state fields */
 /* binary 0010_10xx_xxxx_xxx0 */

@@ -177,7 +177,13 @@ void BX_CPU_C::HandleExtInterrupt(void)
   {
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
-    interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
+
+#if BX_SUPPORT_FRED
+    if (BX_CPU_THIS_PTR cr4.get_FRED())
+      FRED_EventDelivery(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
+    else
+#endif
+      interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
   }
 
   BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
@@ -196,7 +202,13 @@ void BX_CPU_C::SvmVirtualInterruptAcknowledge(void)
 
   BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
-  interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
+
+#if BX_SUPPORT_FRED
+    if (BX_CPU_THIS_PTR cr4.get_FRED())
+      FRED_EventDelivery(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
+    else
+#endif
+      interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
 
   BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
 }
@@ -362,7 +374,12 @@ bool BX_CPU_C::handleAsyncEvent(void)
 #endif
     mask_event(BX_EVENT_NMI);
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, 2, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
-    interrupt(2, BX_NMI, 0, 0);
+#if BX_SUPPORT_FRED
+    if (BX_CPU_THIS_PTR cr4.get_FRED())
+      FRED_EventDelivery(2, BX_NMI, 0, 0);
+    else
+#endif
+      interrupt(2, BX_NMI, 0, 0);
   }
 #if BX_SUPPORT_VMX
   else if (is_pending(BX_EVENT_VMX_INTERRUPT_WINDOW_EXITING) && BX_CPU_THIS_PTR get_IF()) {
