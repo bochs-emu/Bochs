@@ -2712,7 +2712,7 @@ public: // for now...
 #if BX_SUPPORT_FRED
   BX_SMF void ERETS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void ERETU(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void LKGS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void LKGS_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
   BX_SMF void MOVDIR64B(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

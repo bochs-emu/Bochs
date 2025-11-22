@@ -1492,6 +1492,9 @@ static const Bit64u BxOpcodeTable0F00[] = {
   form_opcode(ATTR_NNN2, BX_IA_LLDT_Ew),
   form_opcode(ATTR_NNN3, BX_IA_LTR_Ew),
   form_opcode(ATTR_NNN4, BX_IA_VERR_Ew),
+#if BX_SUPPORT_FRED && BX_SUPPORT_X86_64
+  form_opcode(ATTR_NNN6 | ATTR_SSE_PREFIX_F2 | ATTR_IS64, BX_IA_LKGS_Ew),
+#endif
   last_opcode(ATTR_NNN5, BX_IA_VERW_Ew)
 };
 
