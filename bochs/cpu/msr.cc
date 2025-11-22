@@ -603,7 +603,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
     case BX_MSR_TSC_AUX:
       if (! is_cpu_extension_supported(BX_ISA_RDTSCP)) {
-        BX_ERROR(("RDMSR MSR_TSC_AUX: RTDSCP feature not enabled in the cpu model"));
+        BX_ERROR(("RDMSR MSR_TSC_AUX: RDTSCP feature not enabled in the cpu model"));
         return handle_unknown_rdmsr(index, msr);
       }
       val64 = BX_CPU_THIS_PTR msr.tsc_aux;   // 32 bit MSR
