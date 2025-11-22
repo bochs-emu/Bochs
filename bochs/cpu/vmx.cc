@@ -1977,18 +1977,6 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
   }
 
-  if (vm->pin_vmexec_ctrls.VIRTUAL_NMI()) {
-    if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED) {
-      if (VMENTRY_INJECTING_EVENT(vm->vmentry_interr_info)) {
-        unsigned event_type = (vm->vmentry_interr_info >> 8) & 7;
-        if (event_type == BX_NMI) {  // injecting NMI
-          BX_PANIC(("VMENTER FAIL: VMENTRY injected NMI vector when blocked by NMI in interruptibility state"));
-          return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
-        }
-      }
-    }
-  }
-
 #if BX_SUPPORT_UINTR
   if (vm->vmentry_ctrls.LOAD_UINV()) {
     guest.uintr_uinv = VMread16(VMCS_16BIT_GUEST_UINV);
@@ -2009,18 +1997,27 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   if (VMENTRY_INJECTING_EVENT(vm->vmentry_interr_info)) {
     unsigned event_type = (vm->vmentry_interr_info >> 8) & 7;
     unsigned vector = vm->vmentry_interr_info & 0xff;
+
     if (event_type == BX_EXTERNAL_INTERRUPT) {
       if ((guest.interruptibility_state & 0x3) != 0 || (guest.rflags & EFlagsIFMask) == 0) {
         BX_ERROR(("VMENTER FAIL: VMCS guest interrupts blocked when injecting external interrupt"));
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
       }
     }
+
     if (event_type == BX_NMI) {
       if ((guest.interruptibility_state & 0x3) != 0) {
         BX_ERROR(("VMENTER FAIL: VMCS guest interrupts blocked when injecting NMI"));
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
       }
+      if (vm->pin_vmexec_ctrls.VIRTUAL_NMI()) {
+        if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_NMI_BLOCKED) {
+          BX_ERROR(("VMENTER FAIL: VMENTRY injected NMI vector when blocked by NMI in interruptibility state"));
+          return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+        }
+      }
     }
+
     if (guest.activity_state == BX_ACTIVITY_STATE_WAIT_FOR_SIPI) {
       BX_ERROR(("VMENTER FAIL: No guest interruptions are allowed when entering Wait-For-Sipi state"));
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
