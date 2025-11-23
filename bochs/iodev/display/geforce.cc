@@ -632,6 +632,11 @@ bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
         Bit32u value = *((Bit32u*)data);
         BX_DEBUG(("RAMIN write to 0x%08x, value 0x%08x", offset, value));
         ramin_write32(offset, value);
+      } else if (len == 8) {
+        Bit64u value = *((Bit64u*)data);
+        BX_DEBUG(("RAMIN write to 0x%08x, value 0x%016" FMT_64 "x", offset, value));
+        ramin_write32(offset, (Bit32u)value);
+        ramin_write32(offset + 4, value >> 32);
       } else {
         BX_PANIC(("RAMIN write len %d", len));
       }
@@ -1325,7 +1330,6 @@ void bx_geforce_c::update(void)
           break;
         case 15:
         case 16:
-        case 24:
         case 32:
           BX_ERROR(("current guest pixel format is unsupported on indexed colour host displays, svga_dispbpp=%d",
             BX_GEFORCE_THIS svga_dispbpp));
@@ -1544,56 +1548,6 @@ void bx_geforce_c::update(void)
                         colour & 0x07e0, 11, info.green_shift, info.green_mask,
                         colour & 0xf800, 16, info.red_shift, info.red_mask);
                     }
-                    if (info.is_little_endian) {
-                      for (i=0; i<info.bpp; i+=8) {
-                        *(tile_ptr2++) = colour >> i;
-                      }
-                    } else {
-                      for (i=info.bpp-8; i>-8; i-=8) {
-                        *(tile_ptr2++) = colour >> i;
-                      }
-                    }
-                  }
-                  if (!BX_GEFORCE_THIS s.y_doublescan || (r & 1)) {
-                    vid_ptr  += pitch;
-                  }
-                  tile_ptr += info.pitch;
-                }
-                draw_hardware_cursor(xc, yc, &info);
-                bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
-                SET_TILE_UPDATED(BX_GEFORCE_THIS, xti, yti, 0);
-              }
-            }
-          }
-          break;
-        case 24:
-          for (yc=0, yti = 0; yc<height; yc+=Y_TILESIZE, yti++) {
-            for (xc=0, xti = 0; xc<width; xc+=X_TILESIZE, xti++) {
-              if (GET_TILE_UPDATED (xti, yti)) {
-                if (!BX_GEFORCE_THIS s.y_doublescan) {
-                  vid_ptr = BX_GEFORCE_THIS disp_ptr + (yc * pitch + 3 * xc);
-                } else {
-                  if (!BX_GEFORCE_THIS svga_double_width) {
-                    vid_ptr = BX_GEFORCE_THIS disp_ptr + ((yc >> 1) * pitch + 3 * xc);
-                  } else {
-                    vid_ptr = BX_GEFORCE_THIS disp_ptr + ((yc >> 1) * pitch + 3 * (xc >> 1));
-                  }
-                }
-                tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
-                for (r=0; r<h; r++) {
-                  vid_ptr2  = vid_ptr;
-                  tile_ptr2 = tile_ptr;
-                  for (c=0; c<w; c++) {
-                    blue = *(vid_ptr2);
-                    green = *(vid_ptr2+1);
-                    red = *(vid_ptr2+2);
-                    if (!BX_GEFORCE_THIS svga_double_width || (c & 1)) {
-                      vid_ptr2 += 3;
-                    }
-                    colour = MAKE_COLOUR(
-                      red, 8, info.red_shift, info.red_mask,
-                      green, 8, info.green_shift, info.green_mask,
-                      blue, 8, info.blue_shift, info.blue_mask);
                     if (info.is_little_endian) {
                       for (i=0; i<info.bpp; i+=8) {
                         *(tile_ptr2++) = colour >> i;
@@ -2752,9 +2706,12 @@ void bx_geforce_c::tfc(gf_channel* ch)
           Bit32u srccolor;
           if (ch->tfc_color_bytes == 4) {
             srccolor = ch->tfc_words[word_offset];
-          } else {
+          } else if (ch->tfc_color_bytes == 2) {
             Bit16u *tfc_words16 = (Bit16u*)ch->tfc_words;
             srccolor = tfc_words16[word_offset];
+          } else {
+            Bit8u *tfc_words8 = (Bit8u*)ch->tfc_words;
+            srccolor = tfc_words8[word_offset];
           }
           put_pixel_swzs(ch, ch->swzs_ofs +
             swizzle(x + dx, y + dy, ch->swzs_width, ch->swzs_height) *
@@ -2772,9 +2729,12 @@ void bx_geforce_c::tfc(gf_channel* ch)
           Bit32u srccolor;
           if (ch->tfc_color_bytes == 4) {
             srccolor = ch->tfc_words[word_offset];
-          } else {
+          } else if (ch->tfc_color_bytes == 2) {
             Bit16u *tfc_words16 = (Bit16u*)ch->tfc_words;
             srccolor = tfc_words16[word_offset];
+          } else {
+            Bit8u *tfc_words8 = (Bit8u*)ch->tfc_words;
+            srccolor = tfc_words8[word_offset];
           }
           put_pixel(ch, draw_offset, x, srccolor);
         }
@@ -4900,6 +4860,7 @@ void bx_geforce_c::execute_surf2d(gf_channel* ch, Bit32u method, Bit32u param)
         (ch->s2d_color_bytes == 1 || s2d_color_bytes_prev == 1)) {
       update_color_bytes_ifc(ch);
       update_color_bytes_sifc(ch);
+      update_color_bytes_tfc(ch);
     }
   } else if (method == 0x0c1) {
     ch->s2d_pitch_src = param & 0xFFFF;
@@ -4945,8 +4906,9 @@ void bx_geforce_c::update_color_bytes_sifc(gf_channel* ch)
 
 void bx_geforce_c::update_color_bytes_tfc(gf_channel* ch)
 {
-  BX_GEFORCE_THIS update_color_bytes(0,
-    ch->tfc_color_fmt, &ch->tfc_color_bytes);
+  BX_GEFORCE_THIS update_color_bytes(
+    ch->s2d_color_fmt, ch->tfc_color_fmt,
+    &ch->tfc_color_bytes);
 }
 
 void bx_geforce_c::update_color_bytes_iifc(gf_channel* ch)
