@@ -574,7 +574,6 @@ void BX_CPU_C::register_state(void)
 #if BX_SUPPORT_FRED
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FRED)) {
     bx_list_c *FRED = new bx_list_c(cpu, "FRED");
-    BXRS_HEX_PARAM_FIELD(FRED, CSL, CSL);
     BXRS_HEX_PARAM_FIELD(MSR, ia32_fred_rsp0, msr.ia32_fred_rsp[0]);
     BXRS_HEX_PARAM_FIELD(MSR, ia32_fred_rsp1, msr.ia32_fred_rsp[1]);
     BXRS_HEX_PARAM_FIELD(MSR, ia32_fred_rsp2, msr.ia32_fred_rsp[2]);
@@ -1097,7 +1096,6 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_SUPPORT_FRED
-  BX_CPU_THIS_PTR CSL = 0;
   BX_CPU_THIS_PTR msr.ia32_fred_cfg = 0;
   BX_CPU_THIS_PTR msr.ia32_fred_stack_levels = 0;
   for (n=0;n<4;n++) {
