@@ -119,7 +119,7 @@ struct bx_cr0_t {
 #define BX_CR4_FRED_MASK            (BX_CONST64(1) << 32)
 
 struct bx_cr4_t {
-  bx_address val; // 32bit value of register
+  bx_address val; // value of register
 
 #define IMPLEMENT_UPPER_CRREG_ACCESSORS(name, bitnum)                       \
   BX_CPP_INLINE bool get_##name() const {                                   \
