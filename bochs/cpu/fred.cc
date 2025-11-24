@@ -185,7 +185,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
 
   // update event related state
   // FIXME: If the NMI was being injected by VM entry, the existing treatment applies: physical-NMI blocking
-  // is not changed, but virtual NMIs are blocked if the “virtual NMIs” VM-execution control is 1
+  // is not changed, but virtual NMIs are blocked if the "virtual NMI" VM-execution control is 1
   if (type == BX_NMI)
     mask_event(BX_EVENT_NMI);
   CPL = 0;
@@ -459,7 +459,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LKGS_Ew(bxInstruction_c *i)
   Bit16u segsel;
 
   if (i->modC0()) {
-    segsel = BX_READ_16BIT_REG(i->src());
+    segsel = BX_READ_16BIT_REG(i->dst());
   }
   else {
     bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);

@@ -574,17 +574,17 @@ void BX_CPU_C::register_state(void)
 #if BX_SUPPORT_FRED
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_FRED)) {
     bx_list_c *FRED = new bx_list_c(cpu, "FRED");
-    BXRS_HEX_PARAM_FIELD(MSR, ia32_fred_rsp0, msr.ia32_fred_rsp[0]);
-    BXRS_HEX_PARAM_FIELD(MSR, ia32_fred_rsp1, msr.ia32_fred_rsp[1]);
-    BXRS_HEX_PARAM_FIELD(MSR, ia32_fred_rsp2, msr.ia32_fred_rsp[2]);
-    BXRS_HEX_PARAM_FIELD(MSR, ia32_fred_rsp3, msr.ia32_fred_rsp[3]);
+    BXRS_HEX_PARAM_FIELD(FRED, ia32_fred_rsp0, msr.ia32_fred_rsp[0]);
+    BXRS_HEX_PARAM_FIELD(FRED, ia32_fred_rsp1, msr.ia32_fred_rsp[1]);
+    BXRS_HEX_PARAM_FIELD(FRED, ia32_fred_rsp2, msr.ia32_fred_rsp[2]);
+    BXRS_HEX_PARAM_FIELD(FRED, ia32_fred_rsp3, msr.ia32_fred_rsp[3]);
 #if BX_SUPPORT_CET
-    BXRS_HEX_PARAM_FIELD(MSR, ia32_fred_ssp1, msr.ia32_fred_ssp[1]);
-    BXRS_HEX_PARAM_FIELD(MSR, ia32_fred_ssp2, msr.ia32_fred_ssp[2]);
-    BXRS_HEX_PARAM_FIELD(MSR, ia32_fred_ssp3, msr.ia32_fred_ssp[3]);
+    BXRS_HEX_PARAM_FIELD(FRED, ia32_fred_ssp1, msr.ia32_fred_ssp[1]);
+    BXRS_HEX_PARAM_FIELD(FRED, ia32_fred_ssp2, msr.ia32_fred_ssp[2]);
+    BXRS_HEX_PARAM_FIELD(FRED, ia32_fred_ssp3, msr.ia32_fred_ssp[3]);
 #endif
-    BXRS_HEX_PARAM_FIELD(MSR, ia32_fred_stack_levels, msr.ia32_fred_stack_levels);
-    BXRS_HEX_PARAM_FIELD(MSR, ia32_fred_cfg, msr.ia32_fred_cfg);
+    BXRS_HEX_PARAM_FIELD(FRED, ia32_fred_stack_levels, msr.ia32_fred_stack_levels);
+    BXRS_HEX_PARAM_FIELD(FRED, ia32_fred_cfg, msr.ia32_fred_cfg);
   }
 #endif
 
