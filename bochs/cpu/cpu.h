@@ -196,6 +196,9 @@ const Bit64u BX_PHY_ADDRESS_RESERVED_BITS = (~BX_PHY_ADDRESS_MASK);
 #endif
 
 #define CPL       (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.rpl)
+#if BX_SUPPORT_FRED
+#define CSL       (BX_CPU_THIS_PTR msr.ia32_fred_cfg & 0x3)
+#endif
 
 #define USER_PL   (BX_CPU_THIS_PTR user_pl) /* CPL == 3 */
 
@@ -1244,9 +1247,6 @@ public: // for now...
   bool  in_smm;
   unsigned cpu_mode;
   bool  user_pl;
-#if BX_SUPPORT_FRED
-  unsigned CSL;
-#endif
 #if BX_CPU_LEVEL >= 5
   bool  ignore_bad_msrs;
 #endif
@@ -5080,6 +5080,10 @@ public: // for now...
 
 #if BX_CPU_LEVEL >= 6
   BX_SMF unsigned get_cr8(void);
+#endif
+
+#if BX_SUPPORT_FRED
+  BX_SMF BX_CPP_INLINE void set_CSL(unsigned new_CSL) { BX_CPU_THIS_PTR msr.ia32_fred_cfg = (BX_CPU_THIS_PTR msr.ia32_fred_cfg & ~0x3) | new_CSL; }
 #endif
 
   BX_SMF bx_address get_segment_base(unsigned seg);

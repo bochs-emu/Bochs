@@ -33,7 +33,7 @@
 void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code, unsigned ilen)
 {
   Bit32u old_CPL = CPL;
-  Bit32u old_CSL = (CPL == 3) ? 0 : BX_CPU_THIS_PTR CSL;
+  Bit32u old_CSL = (CPL == 3) ? 0 : CSL;
 
   Bit32u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
   old_CS |= old_CSL << 16;
@@ -146,7 +146,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   BX_CPU_THIS_PTR eflags = 0x2; // Clear EFLAGS, bit1 is always set
   clearEFlagsOSZAPC();	        // update lazy flags state
   RSP = new_RSP;
-  BX_CPU_THIS_PTR CSL = new_CSL;
+  set_CSL(new_CSL);
 
 #if BX_SUPPORT_CET
   if (ShadowStackEnabled(0)) SSP = new_SSP;
@@ -257,7 +257,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETS(bxInstruction_c *i)
 
   // ERETS will not numberically increase stack level
   Bit32u new_CSL = (temp_CS >> 16) & 0x3;
-         new_CSL = BX_MIN(BX_CPU_THIS_PTR CSL, new_CSL);
+         new_CSL = BX_MIN(CSL, new_CSL);
 
 #if BX_SUPPORT_CET
   if (ShadowStackEnabled(0)) {
@@ -266,7 +266,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETS(bxInstruction_c *i)
       BX_ERROR(("ERETS: new SSP not canonical !"));
       exception(BX_GP_EXCEPTION, 0);
     }
-    if (new_CSL < BX_CPU_THIS_PTR CSL && BX_CPU_THIS_PTR msr.ia32_fred_ssp[BX_CPU_THIS_PTR CSL] != SSP) {
+    if (new_CSL < CSL && BX_CPU_THIS_PTR msr.ia32_fred_ssp[CSL] != SSP) {
       BX_ERROR(("IRETS changing stack level: SSP mismatch"));
       exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
     }
@@ -285,7 +285,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETS(bxInstruction_c *i)
   RIP = new_RIP;
   setEFlags(new_RFLAGS);
   RSP = new_RSP;
-  BX_CPU_THIS_PTR CSL = new_CSL;
+  set_CSL(new_CSL);
 
   // update event-related state
   bool STI_block = (temp_SS >> 16) & 0x1;
@@ -325,7 +325,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  if (BX_CPU_THIS_PTR CSL > 0) {
+  if (CSL > 0) {
     BX_ERROR(("ERETU: CSL must be 0"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -451,14 +451,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LKGS_Ew(bxInstruction_c *i)
 {
-  Bit16u segsel;
-
   if (CPL > 0) {
     BX_ERROR(("LKGS_Ew: CPL must be 0"));
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  /* op2 is a register or memory reference */
+  Bit16u segsel;
+
   if (i->modC0()) {
     segsel = BX_READ_16BIT_REG(i->src());
   }
