@@ -1147,13 +1147,13 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
   }
 #endif
 
-  host_state->cr4 = (bx_address) VMread_natural(VMCS_HOST_CR4);
-  if (~host_state->cr4 & VMX_MSR_CR4_FIXED0) {
-     BX_ERROR(("VMFAIL: VMCS host state invalid CR4 0x" FMT_ADDRX, host_state->cr4));
+  host_state->cr4.val = VMread_natural(VMCS_HOST_CR4);
+  if (~host_state->cr4.get() & VMX_MSR_CR4_FIXED0) {
+     BX_ERROR(("VMFAIL: VMCS host state invalid CR4 0x" FMT_ADDRX, host_state->cr4.val));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
-  if (host_state->cr4 & ~VMX_MSR_CR4_FIXED1) {
-     BX_ERROR(("VMFAIL: VMCS host state invalid CR4 0x" FMT_ADDRX, host_state->cr4));
+  if (host_state->cr4.get() & ~VMX_MSR_CR4_FIXED1) {
+     BX_ERROR(("VMFAIL: VMCS host state invalid CR4 0x" FMT_ADDRX, host_state->cr4.val));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
 
@@ -1281,7 +1281,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
        return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
 
-    if ((host_state->cr4 & BX_CR4_CET_MASK) && (host_state->cr0 & BX_CR0_WP_MASK) == 0) {
+    if (host_state->cr4.get_CET() && (host_state->cr0 & BX_CR0_WP_MASK) == 0) {
       BX_ERROR(("FAIL: VMCS host CR4.CET=1 when CR0.WP=0"));
       return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
@@ -1344,7 +1344,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
 #endif
 
   if (x86_64_host) {
-     if ((host_state->cr4 & BX_CR4_PAE_MASK) == 0) {
+     if (! host_state->cr4.get_PAE()) {
         BX_ERROR(("VMFAIL: VMCS host CR4.PAE=0 with x86-64 host"));
         return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
      }
@@ -1358,7 +1358,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
         BX_ERROR(("VMFAIL: VMCS host RIP > 32 bit"));
         return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
      }
-     if (host_state->cr4 & BX_CR4_PCIDE_MASK) {
+     if (host_state->cr4.get_PCIDE()) {
         BX_ERROR(("VMFAIL: VMCS host CR4.PCIDE set"));
         return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
      }
@@ -1472,30 +1472,30 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
 #endif
 
-  guest.cr4 = VMread_natural(VMCS_GUEST_CR4);
-  if (~guest.cr4 & VMX_MSR_CR4_FIXED0) {
+  guest.cr4.val = VMread_natural(VMCS_GUEST_CR4);
+  if (~guest.cr4.get() & VMX_MSR_CR4_FIXED0) {
      BX_ERROR(("VMENTER FAIL: VMCS guest invalid CR4"));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
 
-  if (guest.cr4 & ~VMX_MSR_CR4_FIXED1) {
+  if (guest.cr4.get() & ~VMX_MSR_CR4_FIXED1) {
      BX_ERROR(("VMENTER FAIL: VMCS guest invalid CR4"));
      return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
   }
 
 #if BX_SUPPORT_X86_64
   if (x86_64_guest) {
-     if ((guest.cr4 & BX_CR4_PAE_MASK) == 0) {
+     if (! guest.cr4.get_PAE()) {
         BX_ERROR(("VMENTER FAIL: VMCS guest CR4.PAE=0 in x86-64 mode"));
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
      }
   }
   else {
-     if (guest.cr4 & BX_CR4_PCIDE_MASK) {
+     if (guest.cr4.get_PCIDE()) {
         BX_ERROR(("VMENTER FAIL: VMCS CR4.PCIDE set in 32-bit guest"));
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
      }
-     if (guest.cr4 & BX_CR4_FRED_MASK) {
+     if (guest.cr4.get_FRED()) {
         BX_ERROR(("VMENTER FAIL: VMCS CR4.FRED set in 32-bit guest"));
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
      }
@@ -1511,7 +1511,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 #endif
 
 #if BX_SUPPORT_CET
-  if ((guest.cr4 & BX_CR4_CET_MASK) && (guest.cr0 & BX_CR0_WP_MASK) == 0) {
+  if (guest.cr4.get_CET() && (guest.cr0 & BX_CR0_WP_MASK) == 0) {
     BX_ERROR(("VMENTER FAIL: VMCS guest CR4.CET=1 when CR0.WP=0"));
     return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
   }
@@ -1730,7 +1730,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
 
 #if BX_SUPPORT_FRED
-  if ((guest.cr4 & BX_CR4_FRED_MASK) != 0) {
+  if (guest.cr4.get_FRED()) {
      if (guest.sregs[BX_SEG_REG_SS].cache.dpl != 0 && guest.sregs[BX_SEG_REG_SS].cache.dpl != 3) {
        BX_ERROR(("VMENTER FAIL: VMCS guest SS.DPL must be 0 or 3 while CR4.FRED=1"));
        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
@@ -2057,7 +2057,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     }
 
 #if BX_SUPPORT_FRED
-    if ((guest.cr4 & BX_CR4_FRED_MASK) != 0) {
+    if (guest.cr4.get_FRED()) {
       if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_BY_STI) {
         if (guest.sregs[BX_SEG_REG_SS].cache.dpl == 3) {
           BX_ERROR(("VMENTER FAIL: VMCS guest interruptibility state indicates BLOCKED_BY_STI while SS.DPL==3 and CR4.FRED=1"));
@@ -2139,7 +2139,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     }
   }
 
-  if (! x86_64_guest && (guest.cr4 & BX_CR4_PAE_MASK) != 0 && (guest.cr0 & BX_CR0_PG_MASK) != 0) {
+  if (! x86_64_guest && guest.cr4.get_PAE() && (guest.cr0 & BX_CR0_PG_MASK) != 0) {
 #if BX_SUPPORT_VMX >= 2
     if (vm->vmexec_ctrls2.EPT_ENABLE()) {
       for (n=0;n<4;n++)
@@ -2203,12 +2203,12 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   if (! check_CR0(guest.cr0, true /* vmenter */)) {
     BX_PANIC(("VMENTER CR0 is broken !"));
   }
-  if (! check_CR4(guest.cr4)) {
+  if (! check_CR4(guest.cr4.get())) {
     BX_PANIC(("VMENTER CR4 is broken !"));
   }
 
   BX_CPU_THIS_PTR cr0.set32((Bit32u) guest.cr0);
-  BX_CPU_THIS_PTR cr4.set(guest.cr4);
+  BX_CPU_THIS_PTR cr4 = guest.cr4;
   BX_CPU_THIS_PTR cr3 = guest.cr3;
 
 #if BX_SUPPORT_VMX >= 2
@@ -2810,12 +2810,12 @@ void BX_CPU_C::VMexitLoadHostState(void)
   if (! check_CR0(host_state->cr0)) {
     BX_PANIC(("VMEXIT CR0 is broken !"));
   }
-  if (! check_CR4(host_state->cr4)) {
+  if (! check_CR4(host_state->cr4.get())) {
     BX_PANIC(("VMEXIT CR4 is broken !"));
   }
 
   BX_CPU_THIS_PTR cr0.set32((Bit32u) host_state->cr0);
-  BX_CPU_THIS_PTR cr4.set(host_state->cr4);
+  BX_CPU_THIS_PTR cr4 = host_state->cr4;
   BX_CPU_THIS_PTR cr3 = host_state->cr3;
 
   if (! x86_64_host && BX_CPU_THIS_PTR cr4.get_PAE()) {
@@ -4394,7 +4394,7 @@ void BX_CPU_C::register_vmx_state(bx_param_c *parent)
 
   BXRS_HEX_PARAM_FIELD(host, CR0, vm->host_state.cr0);
   BXRS_HEX_PARAM_FIELD(host, CR3, vm->host_state.cr3);
-  BXRS_HEX_PARAM_FIELD(host, CR4, vm->host_state.cr4);
+  BXRS_HEX_PARAM_FIELD(host, CR4, vm->host_state.cr4.val);
   BXRS_HEX_PARAM_FIELD(host, ES, vm->host_state.segreg_selector[BX_SEG_REG_ES]);
   BXRS_HEX_PARAM_FIELD(host, CS, vm->host_state.segreg_selector[BX_SEG_REG_CS]);
   BXRS_HEX_PARAM_FIELD(host, SS, vm->host_state.segreg_selector[BX_SEG_REG_SS]);

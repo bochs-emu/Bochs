@@ -665,7 +665,7 @@ typedef struct bx_VMCS_GUEST_STATE
 {
    bx_address cr0;
    bx_address cr3;
-   bx_address cr4;
+   bx_cr4_t   cr4;
    bx_address dr7;
 
    bx_address rip;
@@ -727,7 +727,7 @@ typedef struct bx_VMCS_HOST_STATE
 {
    bx_address cr0;
    bx_address cr3;
-   bx_address cr4;
+   bx_cr4_t   cr4;
 
    Bit16u segreg_selector[6];
 
