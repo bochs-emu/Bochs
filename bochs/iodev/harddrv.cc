@@ -2078,7 +2078,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     controller->buffer[3] = (return_length & 0xFF);
 
                     // I think the last parameter needs to be 'alloc_length', but ReactOS won't boot unless it is this:
-                    init_send_atapi_command(channel, atapi_command, return_length + 4, return_length + 4);
+                    init_send_atapi_command(channel, atapi_command, return_length + 4, alloc_length);
                     ready_to_send_atapi(channel);
                   } else {
                     atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 0);
