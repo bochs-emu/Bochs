@@ -168,6 +168,7 @@ struct gf_channel
 
   Bit32u sifm_src;
   bool sifm_swizzled;
+  bool sifm_swizzled_0389;
   Bit32u sifm_operation;
   Bit32u sifm_color_fmt;
   Bit32u sifm_color_bytes;
@@ -467,7 +468,7 @@ private:
   BX_GEFORCE_SMF void execute_sifc(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_beta(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_tfc(gf_channel* ch, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void execute_sifm(gf_channel* ch, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_sifm(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
 
   BX_GEFORCE_SMF Bit32u get_pixel(Bit32u obj, Bit32u ofs, Bit32u x, Bit32u cb);
@@ -485,7 +486,7 @@ private:
   BX_GEFORCE_SMF void copyarea(gf_channel* ch);
   BX_GEFORCE_SMF void tfc(gf_channel* ch);
   BX_GEFORCE_SMF void m2mf(gf_channel* ch);
-  BX_GEFORCE_SMF void sifm(gf_channel* ch);
+  BX_GEFORCE_SMF void sifm(gf_channel* ch, bool swizzled);
 
   BX_GEFORCE_SMF bool d3d_scissor_clip(gf_channel* ch, Bit32u* x, Bit32u* y, Bit32u* width, Bit32u* height);
   BX_GEFORCE_SMF void d3d_clear_surface(gf_channel* ch);

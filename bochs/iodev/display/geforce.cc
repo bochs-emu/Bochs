@@ -2745,7 +2745,7 @@ void bx_geforce_c::tfc(gf_channel* ch)
   }
 }
 
-void bx_geforce_c::sifm(gf_channel* ch)
+void bx_geforce_c::sifm(gf_channel* ch, bool swizzled)
 {
   Bit16u dx = ch->sifm_dyx & 0xFFFF;
   Bit16u dy = ch->sifm_dyx >> 16;
@@ -2759,7 +2759,7 @@ void bx_geforce_c::sifm(gf_channel* ch)
     Bit16u sx = (ch->sifm_syx & 0xFFFF) >> 4;
     Bit16u sy = (ch->sifm_syx >> 16) >> 4;
     Bit32u src_offset = ch->sifm_sofs + sy * spitch + sx * ch->sifm_color_bytes;
-    if (ch->sifm_swizzled) {
+    if (swizzled) {
       for (Bit16u y = 0; y < dheight; y++) {
         for (Bit16u x = 0; x < dwidth; x++) {
           Bit32u srccolor = get_pixel(ch->sifm_src, src_offset, x, ch->sifm_color_bytes);
@@ -2797,7 +2797,7 @@ void bx_geforce_c::sifm(gf_channel* ch)
       sx0 = 0;
     if (sy < 0)
       sy = 0;
-    if (ch->sifm_swizzled) {
+    if (swizzled) {
       for (Bit16u y = 0; y < dheight; y++) {
         Bit32u sx = sx0;
         Bit32u src_offset = ch->sifm_sofs + (sy >> 20) * spitch;
@@ -3156,6 +3156,7 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
       color_scale[3] = 1.0f / 255.0f;
       break;
     }
+    case 0x01:
     case 0x1b: { // AY8
       Bit8u value = dma_read8(tex->dma_obj, tex_ofs);
       color_int[0] = value;
@@ -4249,7 +4250,6 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
     draw_y1 * pitch_zeta + draw_x1 * ch->d3d_depth_bytes;
   Bit32u redraw_offset = dma_lin_lookup(ch->d3d_color_obj, draw_offset) -
     BX_GEFORCE_THIS disp_offset;
-  float clip_mul = 1.0f / (ch->d3d_clip_max - ch->d3d_clip_min);
   bool interpolate[16];
   for (int a = 0; a < 16; a++) {
     bool result = false;
@@ -4290,16 +4290,14 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
       Bit32u z_new;
       if (ch->d3d_depth_test_enable) {
         float z = sp0[2] * b0 + sp1[2] * b1 + sp2[2] * b2;
-        z = (z - ch->d3d_clip_min) * clip_mul;
-        if (ch->d3d_depth_bytes == 2)
-          z_new = z * 65535.0f;
-        else
-          z_new = z * 16777215.0f;
         Bit32u z_prev;
-        if (ch->d3d_depth_bytes == 2)
+        if (ch->d3d_depth_bytes == 2) {
+          z_new = BX_GEFORCE_THIS card_type <= 0x20 ? z : z * 65535.0f;
           z_prev = dma_read16(ch->d3d_zeta_obj, draw_offset_zeta + x * 2);
-        else
+        } else {
+          z_new = BX_GEFORCE_THIS card_type <= 0x20 ? z : z * 16777215.0f;
           z_prev = dma_read32(ch->d3d_zeta_obj, draw_offset_zeta + x * 4) >> 8;
+        }
         draw = compare(ch->d3d_depth_func, z_new, z_prev);
       }
       if (draw) {
@@ -5063,13 +5061,17 @@ void bx_geforce_c::execute_tfc(gf_channel* ch, Bit32u method, Bit32u param)
   }
 }
 
-void bx_geforce_c::execute_sifm(gf_channel* ch, Bit32u method, Bit32u param)
+void bx_geforce_c::execute_sifm(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
 {
   if (method == 0x061)
     ch->sifm_src = param;
   else if (method == 0x066) {
-    Bit8u cls8 = ramin_read32(param);
-    ch->sifm_swizzled = cls8 == 0x52 || cls8 == 0x9e;
+    Bit8u surf_cls8 = ramin_read32(param);
+    bool swizzled = surf_cls8 == 0x52 || surf_cls8 == 0x9e;
+    if (cls == 0x0389)
+      ch->sifm_swizzled_0389 = swizzled;
+    else
+      ch->sifm_swizzled = swizzled;
   } else if (method == 0x0c0) {
     ch->sifm_color_fmt = param;
     if (ch->sifm_color_fmt == 8)        // ???
@@ -5103,7 +5105,7 @@ void bx_geforce_c::execute_sifm(gf_channel* ch, Bit32u method, Bit32u param)
     ch->sifm_sofs = param;
   else if (method == 0x103) {
     ch->sifm_syx = param;
-    sifm(ch);
+    sifm(ch, cls == 0x0389 ? ch->sifm_swizzled_0389 : ch->sifm_swizzled);
   }
 }
 
@@ -5984,7 +5986,7 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
           execute_tfc(ch, method, param);
           break;
         case 0x89:
-          execute_sifm(ch, method, param);
+          execute_sifm(ch, cls, method, param);
           break;
         case 0x96:
         case 0x97:
