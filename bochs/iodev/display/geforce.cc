@@ -4127,8 +4127,10 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
   }
   bool clipped[3];
   Bit32u clip_count = 0;
+  float zscale = BX_GEFORCE_THIS card_type <= 0x20 ?
+    1.0f / ch->d3d_viewport_scale[2] : 1.0f;
   for (int v = 0; v < 3; v++) {
-    clipped[v] = vs_out[v][0][2] < -vs_out[v][0][3];
+    clipped[v] = vs_out[v][0][2] * zscale < -vs_out[v][0][3];
     if (clipped[v])
       clip_count++;
   }
@@ -4142,8 +4144,8 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
     for (int v0 = 0; v0 < 3; v0++) {
       Bit32u v1 = (v0 + 1) % 3;
       if (clipped[v0] != clipped[v1]) {
-        float k = vs_out[v1][0][2] + vs_out[v1][0][3];
-        float t = k / (k - vs_out[v0][0][2] - vs_out[v0][0][3]);
+        float k = vs_out[v1][0][2] * zscale + vs_out[v1][0][3];
+        float t = k / (k - vs_out[v0][0][2] * zscale - vs_out[v0][0][3]);
         float omt = 1.0f - t;
         for (int a = 0; a < 16; a++) {
           for (int comp_index = 0; comp_index < 4; comp_index++) {
@@ -5228,6 +5230,8 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       ch->d3d_depth_bytes = 4;
     else
       BX_ERROR(("unknown D3D depth format: 0x%01x", format_depth));
+    if (cls == 0x0096)
+      ch->d3d_viewport_scale[2] = ch->d3d_depth_bytes == 2 ? 32767.0f : 8388607.0f;
   } else if (method == 0x083)
     ch->d3d_surface_pitch_a = param;
   else if (method == 0x084)
@@ -5425,7 +5429,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
              (method >= 0x740 && method <= 0x74f && cls >= 0x0497)) {
     Bit32u texture_index = method - (cls == 0x0097 ? 0x2b8 : 0x740);
     ch->d3d_texture[texture_index].key_color = param;
-  } else if ((method >= 0x2bc && method <= 0x2bf && cls  < 0x0497) ||
+  } else if ((method >= 0x2bc && method <= 0x2bf && cls == 0x0097) ||
              (method >= 0x28c && method <= 0x28f && cls >= 0x0497)) {
     Bit32u i = method & 0x003;
     ch->d3d_viewport_scale[i] = u.param_float;
