@@ -1695,9 +1695,10 @@ it, defaults will be used for all settings.  To change the settings, you can
 run <command>configure</command> with options that override the
 defaults.  You can get a list of valid configure options by typing
 <command>configure --help</command>.  One useful configure option is
---prefix=<replaceable>directory</replaceable>, which sets the directory in
-which Bochs will be installed.  All the possible configure options are
-documented in a <link linkend="config-opts">later section</link>.
+--prefix=<replaceable>directory</replaceable>, which sets the root directory in
+which Bochs will be installed (default is <replaceable>/usr/local</replaceable>).
+All the possible configure options are documented in a
+<link linkend="config-opts">later section</link>.
 
 
 </para>
@@ -1852,19 +1853,22 @@ at least to erase any files that it created.
 Once the program has been built, the next step is typically to run
 <command>make install</command> to copy the executables, documentation, and
 other required files into a public place so that all users can use it.
-By default, the files are copied to some directories in /usr/local. The following
-tables show the directories and their contents.
+By default, the files are copied to some directories in /usr/local unless a
+different installation prefix was specified in the <command>configure</command>
+stage. Another way to change the installation root is to set the <varname>DESTDIR</varname>
+variable in the <command>make install</command> command line.
+The following tables show the subdirectories and their contents.
 </para>
 <table><title>Installed files</title>
   <tgroup cols="2" align="left" colsep="1" rowsep="1">
   <tbody>
     <row>
       <entry>bin</entry>
-      <entry>binary executables (bochs, bximage)</entry>
+      <entry>binary executables (bochs, bximage, bxhub)</entry>
     </row>
     <row>
       <entry>lib/bochs/plugins</entry>
-      <entry>plugins (if present)</entry>
+      <entry>plugins (if present - see note)</entry>
     </row>
     <row>
       <entry>man/man1</entry>
@@ -1885,6 +1889,11 @@ tables show the directories and their contents.
   </tbody>
   </tgroup>
 </table>
+<note><para>
+When compiling with plugins enabled on platforms using <command>libtool</command>
+it is required to use an absolute path as the installation root. Using <varname>HOME</varname>
+or <varname>PWD</varname> variables as prefix may help in that case.
+</para></note>
 </section>
 
 <section><title>Installing the DLX Linux demo</title>
