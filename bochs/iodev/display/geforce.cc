@@ -2405,8 +2405,8 @@ void bx_geforce_c::gdi_blit(gf_channel* ch, Bit32u type)
 
 void bx_geforce_c::rect(gf_channel* ch)
 {
-  Bit16s dx = ch->rect_xy >> 16;
-  Bit16s dy = ch->rect_xy & 0xFFFF;
+  Bit16s dx = ch->rect_yx & 0xFFFF;
+  Bit16s dy = ch->rect_yx >> 16;
   Bit16u width = ch->rect_hw & 0xFFFF;
   Bit16u height = ch->rect_hw >> 16;
   Bit32u pitch = ch->s2d_pitch_dst;
@@ -4779,7 +4779,7 @@ void bx_geforce_c::execute_rect(gf_channel* ch, Bit32u method, Bit32u param)
       ch->rect_hw = param;
       rect(ch);
     } else
-      ch->rect_xy = param;
+      ch->rect_yx = param;
   }
 }
 

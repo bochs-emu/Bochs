@@ -340,7 +340,7 @@ struct gf_channel
   Bit32u rect_operation;
   Bit32u rect_color_fmt;
   Bit32u rect_color;
-  Bit32u rect_xy;
+  Bit32u rect_yx;
   Bit32u rect_hw;
 };
 
