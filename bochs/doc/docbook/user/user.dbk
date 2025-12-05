@@ -3938,7 +3938,8 @@ with realtime. With the value 'none' the Bochs time relies on the IPS
 value and no host time synchronization is used. The 'slowdown' method
 sacrifices performance to preserve reproducibility while allowing host
 time correlation. The 'realtime' method sacrifices reproducibility to
-preserve performance and host-time correlation.
+preserve performance and host-time correlation. It was reported that
+guest systems with ACPI support work better in 'realtime' mode.
 It is possible to enable both synchronization methods.
 </para>
 <para><command>rtc_sync</command></para>
