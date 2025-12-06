@@ -477,8 +477,14 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
         ccode = pval0 + (pval1 << 1) + (v->banshee.hwcursor.mode << 2);
         if ((ccode == 0) || (ccode == 5)) {
           colour = v->banshee.hwcursor.color[0];
+          if (v->banshee.disp_bpp == 16) {
+            colour = v->fbi.pen[(Bit16u)colour];
+          }
         } else if ((ccode == 2) || (ccode == 7)) {
           colour = v->banshee.hwcursor.color[1];
+          if (v->banshee.disp_bpp == 16) {
+            colour = v->fbi.pen[(Bit16u)colour];
+          }
         } else {
           if (v->banshee.half_mode) {
             if (v->banshee.double_width) {
