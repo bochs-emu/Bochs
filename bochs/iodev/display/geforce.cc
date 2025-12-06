@@ -1045,31 +1045,42 @@ void bx_geforce_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tilein
           dg = vid_ptr2[1];
           dr = vid_ptr2[2];
         }
-        Bit32u color;
+        Bit8u b, g, r;
         if (BX_GEFORCE_THIS hw_cursor.bpp32) {
           Bit32u cursor_color = cursor_read32(cursor_ofs2);
           if (cursor_color != 0) {
             Bit8u alpha, cr, cg, cb;
             EXTRACT_8888_TO_8888(cursor_color, alpha, cr, cg, cb);
             Bit8u ica = 0xFF - alpha;
-            Bit8u b = alpha_wrap(db * ica / 0xFF + cb);
-            Bit8u g = alpha_wrap(dg * ica / 0xFF + cg);
-            Bit8u r = alpha_wrap(dr * ica / 0xFF + cr);
-            color = b << 0 | g << 8 | r << 16;
+            b = alpha_wrap(db * ica / 0xFF + cb);
+            g = alpha_wrap(dg * ica / 0xFF + cg);
+            r = alpha_wrap(dr * ica / 0xFF + cr);
           } else {
-            color = db << 0 | dg << 8 | dr << 16;
+            b = db;
+            g = dg;
+            r = dr;
           }
         } else {
           Bit8u alpha, cr, cg, cb;
           EXTRACT_1555_TO_8888(cursor_read16(cursor_ofs2), alpha, cr, cg, cb);
           if (alpha) {
-            color = cb << 0 | cg << 8 | cr << 16;
+            b = cb;
+            g = cg;
+            r = cr;
           } else {
-            Bit8u b = db ^ cb;
-            Bit8u g = dg ^ cg;
-            Bit8u r = dr ^ cr;
-            color = b << 0 | g << 8 | r << 16;
+            b = db ^ cb;
+            g = dg ^ cg;
+            r = dr ^ cr;
           }
+        }
+        Bit32u color;
+        if (display_color_bytes == 1) {
+          color = b << 0 | g << 8 | r << 16;
+        } else {
+          color =
+            BX_GEFORCE_THIS s.pel.data[b].blue << 0 |
+            BX_GEFORCE_THIS s.pel.data[g].green << 8 |
+            BX_GEFORCE_THIS s.pel.data[r].red << 16;
         }
         if (!info->is_indexed) {
           color = MAKE_COLOUR(
@@ -1486,7 +1497,10 @@ void bx_geforce_c::update(void)
                     }
                     if (info.bpp >= 24) {
                       EXTRACT_x555_TO_888(colour, red, green, blue);
-                      colour = (red << 16) | (green << 8) | blue;
+                      colour =
+                        (BX_GEFORCE_THIS s.pel.data[red].red << 16) |
+                        (BX_GEFORCE_THIS s.pel.data[green].green << 8) |
+                        BX_GEFORCE_THIS s.pel.data[blue].blue;
                     } else {
                       colour = MAKE_COLOUR(
                         colour & 0x001f, 5, info.blue_shift, info.blue_mask,
@@ -1541,7 +1555,10 @@ void bx_geforce_c::update(void)
                     }
                     if (info.bpp >= 24) {
                       EXTRACT_565_TO_888(colour, red, green, blue);
-                      colour = (red << 16) | (green << 8) | blue;
+                      colour =
+                        (BX_GEFORCE_THIS s.pel.data[red].red << 16) |
+                        (BX_GEFORCE_THIS s.pel.data[green].green << 8) |
+                        BX_GEFORCE_THIS s.pel.data[blue].blue;
                     } else {
                       colour = MAKE_COLOUR(
                         colour & 0x001f, 5, info.blue_shift, info.blue_mask,
@@ -1595,9 +1612,9 @@ void bx_geforce_c::update(void)
                       vid_ptr2 += 4;
                     }
                     colour = MAKE_COLOUR(
-                      red, 8, info.red_shift, info.red_mask,
-                      green, 8, info.green_shift, info.green_mask,
-                      blue, 8, info.blue_shift, info.blue_mask);
+                      BX_GEFORCE_THIS s.pel.data[red].red, 8, info.red_shift, info.red_mask,
+                      BX_GEFORCE_THIS s.pel.data[green].green, 8, info.green_shift, info.green_mask,
+                      BX_GEFORCE_THIS s.pel.data[blue].blue, 8, info.blue_shift, info.blue_mask);
                     if (info.is_little_endian) {
                       for (i=0; i<info.bpp; i+=8) {
                         *(tile_ptr2++) = colour >> i;
