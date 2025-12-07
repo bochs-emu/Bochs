@@ -4459,55 +4459,64 @@ void bx_geforce_c::d3d_process_vertex(gf_channel* ch)
         for (unsigned i = 0; i < 4; i++)
           ch->d3d_vertex_data[ch->d3d_vertex_index][ch->d3d_attrib_in_tex_coord[j]][i] = ch->d3d_texcoord[j][i];
   ch->d3d_vertex_index++;
-  if (ch->d3d_begin_end == 5 ||      // TRIANGLES
-      ch->d3d_begin_end == 0x1012 || // TRIANGLELIST
-      ch->d3d_begin_end == 0x101a) {
-    if (ch->d3d_vertex_index == 3) {
-      d3d_triangle(ch, 0);
-      ch->d3d_vertex_index = 0;
-    }
-  } else if (ch->d3d_begin_end == 6) { // TRIANGLE_STRIP
-    if (ch->d3d_vertex_index == 3 || ch->d3d_primitive_done) {
-      d3d_triangle(ch, 0);
-      ch->d3d_primitive_done = true;
-      ch->d3d_triangle_flip = !ch->d3d_triangle_flip;
-      if (ch->d3d_vertex_index == 3)
+  switch (ch->d3d_begin_end) {
+    case 5:      // TRIANGLES
+    case 0x1012: // TRIANGLELIST
+    case 0x101a:
+      if (ch->d3d_vertex_index == 3) {
+        d3d_triangle(ch, 0);
         ch->d3d_vertex_index = 0;
-    }
-  } else if (ch->d3d_begin_end == 7 || // TRIANGLE_FAN
-             ch->d3d_begin_end == 0xa || // POLYGON
-             ch->d3d_begin_end == 0x1015 ||
-             ch->d3d_begin_end == 0x1017) {
-    if (ch->d3d_vertex_index == 3 || ch->d3d_primitive_done) {
-      d3d_triangle(ch, 0);
-      ch->d3d_primitive_done = true;
-      ch->d3d_triangle_flip = !ch->d3d_triangle_flip;
-      if (ch->d3d_vertex_index == 3)
-        ch->d3d_vertex_index = 1;
-    }
-  } else if (ch->d3d_begin_end == 8) { // QUADS
-    if (ch->d3d_vertex_index == 4) {
-      d3d_triangle(ch, 0);
-      d3d_triangle(ch, 2);
-      ch->d3d_vertex_index = 0;
-    }
-  } else if (ch->d3d_begin_end == 9) { // QUAD_STRIP
-    if (ch->d3d_vertex_index == 4 ||
-        (ch->d3d_vertex_index == 2 && ch->d3d_primitive_done)) {
+      }
+      break;
+    case 6:      // TRIANGLE_STRIP
+      if (ch->d3d_vertex_index == 3 || ch->d3d_primitive_done) {
+        d3d_triangle(ch, 0);
+        ch->d3d_primitive_done = true;
+        ch->d3d_triangle_flip = !ch->d3d_triangle_flip;
+        if (ch->d3d_vertex_index == 3)
+          ch->d3d_vertex_index = 0;
+      }
+      break;
+    case 7:      // TRIANGLE_FAN
+    case 0xa:    // POLYGON
+    case 0x1015:
+    case 0x1017:
+      if (ch->d3d_vertex_index == 3 || ch->d3d_primitive_done) {
+        d3d_triangle(ch, 0);
+        ch->d3d_primitive_done = true;
+        ch->d3d_triangle_flip = !ch->d3d_triangle_flip;
+        if (ch->d3d_vertex_index == 3)
+          ch->d3d_vertex_index = 1;
+      }
+      break;
+    case 8:      // QUADS
       if (ch->d3d_vertex_index == 4) {
         d3d_triangle(ch, 0);
-        ch->d3d_triangle_flip = true;
-        d3d_triangle(ch, 1);
-        ch->d3d_triangle_flip = false;
-        ch->d3d_primitive_done = true;
-        ch->d3d_vertex_index = 0;
-      } else {
         d3d_triangle(ch, 2);
-        ch->d3d_triangle_flip = true;
-        d3d_triangle(ch, 3);
-        ch->d3d_triangle_flip = false;
+        ch->d3d_vertex_index = 0;
       }
-    }
+      break;
+    case 9:      // QUAD_STRIP
+      if (ch->d3d_vertex_index == 4 ||
+          (ch->d3d_vertex_index == 2 && ch->d3d_primitive_done)) {
+        if (ch->d3d_vertex_index == 4) {
+          d3d_triangle(ch, 0);
+          ch->d3d_triangle_flip = true;
+          d3d_triangle(ch, 1);
+          ch->d3d_triangle_flip = false;
+          ch->d3d_primitive_done = true;
+          ch->d3d_vertex_index = 0;
+        } else {
+          d3d_triangle(ch, 2);
+          ch->d3d_triangle_flip = true;
+          d3d_triangle(ch, 3);
+          ch->d3d_triangle_flip = false;
+        }
+      }
+      break;
+    default:     // not implemented
+      ch->d3d_vertex_index = 0;
+      break;
   }
 }
 
@@ -4553,8 +4562,6 @@ void bx_geforce_c::d3d_load_vertex(gf_channel* ch, Bit32u index)
     }
   }
   d3d_process_vertex(ch);
-  if (ch->d3d_vertex_index == 4)
-    ch->d3d_vertex_index = 0; // should not happen
 }
 
 Bit32u bx_geforce_c::d3d_get_surface_pitch_z(gf_channel* ch)
@@ -5641,11 +5648,8 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
         }
       }
     }
-    if (process) {
+    if (process)
       d3d_process_vertex(ch);
-      if (ch->d3d_vertex_index == 4)
-        ch->d3d_vertex_index = 0; // should not happen
-    }
   } else if (method == 0x607 && cls >= 0x0497) {
     ch->d3d_index_array_offset = param;
   } else if (method == 0x608 && cls >= 0x0497) {
