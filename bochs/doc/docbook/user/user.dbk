@@ -2461,8 +2461,8 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
     <row>
       <entry>--enable-geforce</entry>
       <entry>no</entry>
-      <entry>Enable experimental GeForce emulation. Basic support for three models
-      is available, but 3D is not done yet. For more information see <xref linkend="geforce-notes">.
+      <entry>Enable experimental GeForce emulation. Basic support for four models
+      is available, but 3D is still WIP. For more information see <xref linkend="geforce-notes">.
       </entry>
     </row>
     <row>
@@ -3761,9 +3761,9 @@ Example:
   geforce: model=geforce3
 </screen>
 This defines the experimental GeForce emulation. Currently supported models
-are 'geforce3', 'geforcefx5900' and 'geforce6800'. These 2D/3D AGP cards
-require an external VGA BIOS, the vga extension option to be set to 'geforce'
-# and the i440BX PCI/AGP chipset with the 'geforce' device assigned to AGP
+are 'geforce2', 'geforce3', 'geforcefx5900' and 'geforce6800'. These 2D/3D AGP
+cards require an external VGA BIOS, the vga extension option to be set to 'geforce'
+and the i440BX PCI/AGP chipset with the 'geforce' device assigned to AGP
 (slot #5). The gui screen update timing for all models is controlled by the
 related 'vga' options. See <xref linkend="geforce-notes"> for more information.
 </para>
@@ -10008,8 +10008,8 @@ Bochs VBE Display Drivers for Windows NT/2000
   <title>Notes about experimental GeForce emulation usage</title>
 
   <para>
-  The GeForce graphics emulation currently implements basic support for three GeForce
-  models. Most of the 2D features are present, but 3D is still to do. Several
+  The GeForce graphics emulation currently implements basic support for four GeForce
+  models. Most of the 2D features are present, but 3D is still WIP. Several
   Windows versions up to Win 7 have been reported to work under consideration of
   these limitations.
   </para>
@@ -10039,6 +10039,10 @@ Bochs VBE Display Drivers for Windows NT/2000
   </row>
   </thead>
   <tbody>
+  <row>
+    <entry>geforce2</entry>
+    <entry>Leadtek.2Pro.64.010403_AGP.bin</entry>
+  </row>
   <row>
     <entry>geforce3</entry>
     <entry>Leadtek.3Ti500.64.011105_AGP.bin</entry>
