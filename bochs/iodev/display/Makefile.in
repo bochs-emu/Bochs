@@ -105,6 +105,9 @@ libbx_geforce.la: geforce.lo vgacore.lo ddc.lo
 libbx_voodoo.la: voodoo.lo banshee.lo vgacore.lo ddc.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module voodoo.lo banshee.lo vgacore.lo ddc.lo -o libbx_voodoo.la -rpath $(PLUGIN_PATH)
 
+libbx_rage128.la: rage128.lo vgacore.lo ddc.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module rage128.lo vgacore.lo ddc.lo -o libbx_rage128.la -rpath $(PLUGIN_PATH)
+
 #### building DLLs for win32 (Cygwin and MinGW/MSYS)
 bx_%.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
@@ -121,6 +124,9 @@ bx_geforce.dll: geforce.o vgacore.o ddc.o
 
 bx_voodoo.dll: voodoo.o banshee.o vgacore.o ddc.o
 	@LINK_DLL@ voodoo.o banshee.o vgacore.o ddc.o $(WIN32_DLL_IMPORT_LIBRARY)
+
+bx_rage128.dll: rage128.o vgacore.o ddc.o
+	@LINK_DLL@ rage128.o vgacore.o ddc.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 ##### end DLL section
 
@@ -185,6 +191,13 @@ voodoo.o: voodoo.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osde
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
  ../pci.h vgacore.h ddc.h voodoo.h ../virt_timer.h ../../bxthread.h \
  bitblt.h voodoo_types.h voodoo_data.h voodoo_main.h voodoo_func.h
+rage128.o: rage128.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../gui/paramtree.h ../../logio.h \
+ ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../pc_system.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ ../pci.h vgacore.h bitblt.h ddc.h pxextract.h rage128.h ../virt_timer.h
 banshee.lo: banshee.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../gui/paramtree.h ../../logio.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
@@ -230,3 +243,10 @@ voodoo.lo: voodoo.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osd
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
  ../pci.h vgacore.h ddc.h voodoo.h ../virt_timer.h ../../bxthread.h \
  bitblt.h voodoo_types.h voodoo_data.h voodoo_main.h voodoo_func.h
+rage128.lo: rage128.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../gui/paramtree.h ../../logio.h \
+ ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../pc_system.h \
+ ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
+ ../pci.h vgacore.h bitblt.h ddc.h pxextract.h rage128.h ../virt_timer.h
