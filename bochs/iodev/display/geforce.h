@@ -49,6 +49,9 @@ struct gf_texture
   Bit32u format;
   bool linear;
   bool unnormalized;
+  bool compressed;
+  bool dxt_alpha_data;
+  bool dxt_alpha_explicit;
   Bit32u color_bytes;
   Bit32u base_size[3];
   Bit32u wrap[3];
@@ -408,6 +411,7 @@ private:
   BX_GEFORCE_SMF Bit8u vram_read8(Bit32u address);
   BX_GEFORCE_SMF Bit16u vram_read16(Bit32u address);
   BX_GEFORCE_SMF Bit32u vram_read32(Bit32u address);
+  BX_GEFORCE_SMF Bit64u vram_read64(Bit32u address);
   BX_GEFORCE_SMF void vram_write8(Bit32u address, Bit8u value);
   BX_GEFORCE_SMF void vram_write16(Bit32u address, Bit16u value);
   BX_GEFORCE_SMF void vram_write32(Bit32u address, Bit32u value);
@@ -420,6 +424,7 @@ private:
   BX_GEFORCE_SMF Bit8u physical_read8(Bit32u address);
   BX_GEFORCE_SMF Bit16u physical_read16(Bit32u address);
   BX_GEFORCE_SMF Bit32u physical_read32(Bit32u address);
+  BX_GEFORCE_SMF Bit64u physical_read64(Bit32u address);
   BX_GEFORCE_SMF void physical_write8(Bit32u address, Bit8u value);
   BX_GEFORCE_SMF void physical_write16(Bit32u address, Bit16u value);
   BX_GEFORCE_SMF void physical_write32(Bit32u address, Bit32u value);
@@ -427,6 +432,7 @@ private:
   BX_GEFORCE_SMF Bit8u dma_read8(Bit32u object, Bit32u address);
   BX_GEFORCE_SMF Bit16u dma_read16(Bit32u object, Bit32u address);
   BX_GEFORCE_SMF Bit32u dma_read32(Bit32u object, Bit32u address);
+  BX_GEFORCE_SMF Bit64u dma_read64(Bit32u object, Bit32u address);
   BX_GEFORCE_SMF void dma_write8(Bit32u object, Bit32u address, Bit8u value);
   BX_GEFORCE_SMF void dma_write16(Bit32u object, Bit32u address, Bit16u value);
   BX_GEFORCE_SMF void dma_write32(Bit32u object, Bit32u address, Bit32u value);

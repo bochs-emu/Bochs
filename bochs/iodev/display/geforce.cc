@@ -1850,6 +1850,19 @@ Bit32u bx_geforce_c::vram_read32(Bit32u address)
     BX_GEFORCE_THIS s.memory[address + 3] << 24;
 }
 
+Bit64u bx_geforce_c::vram_read64(Bit32u address)
+{
+  return
+    (Bit64u)BX_GEFORCE_THIS s.memory[address + 0] << 0 |
+    (Bit64u)BX_GEFORCE_THIS s.memory[address + 1] << 8 |
+    (Bit64u)BX_GEFORCE_THIS s.memory[address + 2] << 16 |
+    (Bit64u)BX_GEFORCE_THIS s.memory[address + 3] << 24 |
+    (Bit64u)BX_GEFORCE_THIS s.memory[address + 4] << 32 |
+    (Bit64u)BX_GEFORCE_THIS s.memory[address + 5] << 40 |
+    (Bit64u)BX_GEFORCE_THIS s.memory[address + 6] << 48 |
+    (Bit64u)BX_GEFORCE_THIS s.memory[address + 7] << 56;
+}
+
 void bx_geforce_c::vram_write8(Bit32u address, Bit8u value)
 {
   BX_GEFORCE_THIS s.memory[address + 0] = value;
@@ -1925,6 +1938,15 @@ Bit32u bx_geforce_c::physical_read32(Bit32u address)
   Bit8u data[4];
   DEV_MEM_READ_PHYSICAL(address, 4, data);
   return data[0] << 0 | data[1] << 8 | data[2] << 16 | data[3] << 24;
+}
+
+Bit64u bx_geforce_c::physical_read64(Bit32u address)
+{
+  Bit8u data[8];
+  DEV_MEM_READ_PHYSICAL(address, 8, data);
+  return (Bit64u)data[0] << 0 | (Bit64u)data[1] << 8 | (Bit64u)data[2] << 16 |
+    (Bit64u)data[3] << 24 | (Bit64u)data[4] << 32 | (Bit64u)data[5] << 40 |
+    (Bit64u)data[6] << 48 | (Bit64u)data[7] << 56;
 }
 
 void bx_geforce_c::physical_write8(Bit32u address, Bit8u value)
@@ -2032,6 +2054,20 @@ Bit32u bx_geforce_c::dma_read32(Bit32u object, Bit32u address)
     return physical_read32(addr_abs);
   else
     return vram_read32(addr_abs & BX_GEFORCE_THIS memsize_mask);
+}
+
+Bit64u bx_geforce_c::dma_read64(Bit32u object, Bit32u address)
+{
+  Bit32u flags = ramin_read32(object);
+  Bit32u addr_abs;
+  if (flags & 0x00002000)
+    addr_abs = dma_lin_lookup(object, address);
+  else
+    addr_abs = dma_pt_lookup(object, address);
+  if (flags & 0x00020000)
+    return physical_read64(addr_abs);
+  else
+    return vram_read64(addr_abs & BX_GEFORCE_THIS memsize_mask);
 }
 
 void bx_geforce_c::dma_write8(Bit32u object, Bit32u address, Bit8u value)
@@ -2935,6 +2971,9 @@ void texture_process_format(gf_texture* tex)
 {
   tex->linear = false;
   tex->unnormalized = false;
+  tex->compressed = false;
+  tex->dxt_alpha_data = false;
+  tex->dxt_alpha_explicit = false;
   if ((tex->format & 0x80) != 0) {
     if ((tex->format & 0x20) != 0)
       tex->linear = true;
@@ -2945,6 +2984,16 @@ void texture_process_format(gf_texture* tex)
              tex->format == 0x1b) {
     tex->linear = true;
     tex->unnormalized = true;
+  }
+  if (tex->format == 0x0c || // DXT1
+      tex->format == 0x0e || // DXT23
+      tex->format == 0x0f || // DXT45
+      tex->format == 0x86 || // DXT1
+      tex->format == 0x87 || // DXT23
+      tex->format == 0x88) { // DXT45
+    tex->compressed = true;
+    tex->dxt_alpha_data = tex->format != 0x0c && tex->format != 0x86;
+    tex->dxt_alpha_explicit = tex->format == 0x0e || tex->format == 0x87;
   }
   if (tex->format == 0x02 || // A1R5G5B5
       tex->format == 0x03 || // X1R5G5B5
@@ -3025,8 +3074,14 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
       xy[i] = c == 1.0f ? sizes[i] - 1 : c * sizes[i];
     }
   }
+
   Bit32u tex_ofs = tex->offset;
-  if (tex->linear) {
+  if (tex->compressed) {
+    Bit32u pitch = sizes[0] * (tex->dxt_alpha_data ? 4 : 2);
+    Bit32u bx = xy[0] >> 2;
+    Bit32u by = xy[1] >> 2;
+    tex_ofs += by * pitch + bx * (tex->dxt_alpha_data ? 16 : 8);
+  } else if (tex->linear) {
     Bit32u pitch;
     if (BX_GEFORCE_THIS card_type >= 0x40)
       pitch = tex->control3 & 0x000fffff;
@@ -3040,6 +3095,180 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
   Bit32s color_int[4];
   float color_scale[4];
   switch (tex->format) {
+    case 0x0c:   // DXT1
+    case 0x0e:   // DXT23
+    case 0x0f:   // DXT45
+    case 0x86:   // DXT1
+    case 0x87:   // DXT23
+    case 0x88: { // DXT45
+      Bit32u ox = xy[0] & 3;
+      Bit32u oy = xy[1] & 3;
+      if (tex->dxt_alpha_data) {
+        Bit64u alpha_word = dma_read64(tex->dma_obj, tex_ofs);
+        if (tex->dxt_alpha_explicit) {
+          color_int[0] = (alpha_word >> (oy * 16 + ox * 4)) & 0xf;
+          color_scale[0] = 1.0f / 15.0f;
+        } else {
+          Bit32u alpha_index = (alpha_word >> (16 + oy * 12 + ox * 3)) & 7;
+          switch (alpha_index) {
+            case 0: {
+              Bit8u alpha0 = (Bit8u)alpha_word;
+              color_int[0] = alpha0;
+              color_scale[0] = 1.0f / 255.0f;
+              break;
+            }
+            case 1: {
+              Bit8u alpha1 = (Bit8u)(alpha_word >> 8);
+              color_int[0] = alpha1;
+              color_scale[0] = 1.0f / 255.0f;
+              break;
+            }
+            case 2: {
+              Bit8u alpha0 = (Bit8u)alpha_word;
+              Bit8u alpha1 = (Bit8u)(alpha_word >> 8);
+              if (alpha0 > alpha1) {
+                color_int[0] = 6 * alpha0 + alpha1;
+                color_scale[0] = 1.0f / 1785.0f;
+              } else {
+                color_int[0] = 4 * alpha0 + alpha1;
+                color_scale[0] = 1.0f / 1275.0f;
+              }
+              break;
+            }
+            case 3: {
+              Bit8u alpha0 = (Bit8u)alpha_word;
+              Bit8u alpha1 = (Bit8u)(alpha_word >> 8);
+              if (alpha0 > alpha1) {
+                color_int[0] = 5 * alpha0 + 2 * alpha1;
+                color_scale[0] = 1.0f / 1785.0f;
+              } else {
+                color_int[0] = 3 * alpha0 + 2 * alpha1;
+                color_scale[0] = 1.0f / 1275.0f;
+              }
+              break;
+            }
+            case 4: {
+              Bit8u alpha0 = (Bit8u)alpha_word;
+              Bit8u alpha1 = (Bit8u)(alpha_word >> 8);
+              if (alpha0 > alpha1) {
+                color_int[0] = 4 * alpha0 + 3 * alpha1;
+                color_scale[0] = 1.0f / 1785.0f;
+              } else {
+                color_int[0] = 2 * alpha0 + 3 * alpha1;
+                color_scale[0] = 1.0f / 1275.0f;
+              }
+              break;
+            }
+            case 5: {
+              Bit8u alpha0 = (Bit8u)alpha_word;
+              Bit8u alpha1 = (Bit8u)(alpha_word >> 8);
+              if (alpha0 > alpha1) {
+                color_int[0] = 3 * alpha0 + 4 * alpha1;
+                color_scale[0] = 1.0f / 1785.0f;
+              } else {
+                color_int[0] = alpha0 + 4 * alpha1;
+                color_scale[0] = 1.0f / 1275.0f;
+              }
+              break;
+            }
+            case 6: {
+              Bit8u alpha0 = (Bit8u)alpha_word;
+              Bit8u alpha1 = (Bit8u)(alpha_word >> 8);
+              if (alpha0 > alpha1) {
+                color_int[0] = 2 * alpha0 + 5 * alpha1;
+                color_scale[0] = 1.0f / 1785.0f;
+              } else {
+                color_int[0] = 0;
+                color_scale[0] = 1.0f;
+              }
+              break;
+            }
+            case 7: {
+              Bit8u alpha0 = (Bit8u)alpha_word;
+              Bit8u alpha1 = (Bit8u)(alpha_word >> 8);
+              if (alpha0 > alpha1) {
+                color_int[0] = alpha0 + 6 * alpha1;
+                color_scale[0] = 1.0f / 1785.0f;
+              } else {
+                color_int[0] = 1;
+                color_scale[0] = 1.0f;
+              }
+              break;
+            }
+          }
+        }
+      } else {
+        color_int[0] = 1;
+        color_scale[0] = 1.0f;
+      }
+      Bit64u color_word = dma_read64(tex->dma_obj, tex_ofs + (tex->dxt_alpha_data ? 8 : 0));
+      Bit32u color_index = (color_word >> (32 + oy * 8 + ox * 2)) & 3;
+      switch (color_index) {
+        case 0: {
+          Bit16u color0 = (Bit16u)color_word;
+          color_int[1] = (color0 >> 11) & 0x1f;
+          color_scale[1] = 1.0f / 31.0f;
+          color_int[2] = (color0 >> 5) & 0x3f;
+          color_scale[2] = 1.0f / 63.0f;
+          color_int[3] = (color0 >> 0) & 0x1f;
+          color_scale[3] = 1.0f / 31.0f;
+          break;
+        }
+        case 1: {
+          Bit16u color1 = (Bit16u)(color_word >> 16);
+          color_int[1] = (color1 >> 11) & 0x1f;
+          color_scale[1] = 1.0f / 31.0f;
+          color_int[2] = (color1 >> 5) & 0x3f;
+          color_scale[2] = 1.0f / 63.0f;
+          color_int[3] = (color1 >> 0) & 0x1f;
+          color_scale[3] = 1.0f / 31.0f;
+          break;
+        }
+        case 2: {
+          Bit16u color0 = (Bit16u)color_word;
+          Bit16u color1 = (Bit16u)(color_word >> 16);
+          if (color0 > color1) {
+            color_int[1] = 2 * ((color0 >> 11) & 0x1f) + ((color1 >> 11) & 0x1f);
+            color_scale[1] = 1.0f / 93.0f;
+            color_int[2] = 2 * ((color0 >> 5) & 0x3f) + ((color1 >> 5) & 0x3f);
+            color_scale[2] = 1.0f / 189.0f;
+            color_int[3] = 2 * ((color0 >> 0) & 0x1f) + ((color1 >> 0) & 0x1f);
+            color_scale[3] = 1.0f / 93.0f;
+          } else {
+            color_int[1] = ((color0 >> 11) & 0x1f) + ((color1 >> 11) & 0x1f);
+            color_scale[1] = 1.0f / 62.0f;
+            color_int[2] = ((color0 >> 5) & 0x3f) + ((color1 >> 5) & 0x3f);
+            color_scale[2] = 1.0f / 126.0f;
+            color_int[3] = ((color0 >> 0) & 0x1f) + ((color1 >> 0) & 0x1f);
+            color_scale[3] = 1.0f / 62.0f;
+          }
+          break;
+        }
+        case 3: {
+          Bit16u color0 = (Bit16u)color_word;
+          Bit16u color1 = (Bit16u)(color_word >> 16);
+          if (color0 > color1) {
+            color_int[1] = 2 * ((color1 >> 11) & 0x1f) + ((color0 >> 11) & 0x1f);
+            color_scale[1] = 1.0f / 93.0f;
+            color_int[2] = 2 * ((color1 >> 5) & 0x3f) + ((color0 >> 5) & 0x3f);
+            color_scale[2] = 1.0f / 189.0f;
+            color_int[3] = 2 * ((color1 >> 0) & 0x1f) + ((color0 >> 0) & 0x1f);
+            color_scale[3] = 1.0f / 93.0f;
+          } else {
+            color_int[0] = 0;
+            color_scale[0] = 1.0f;
+            color_int[1] = 0;
+            color_scale[1] = 1.0f;
+            color_int[2] = 0;
+            color_scale[2] = 1.0f;
+            color_int[3] = 0;
+            color_scale[3] = 1.0f;
+          }
+          break;
+        }
+      }
+      break;
+    }
     case 0x04:
     case 0x83: { // A4R4G4B4
       Bit16u value = dma_read16(tex->dma_obj, tex_ofs);
