@@ -47,13 +47,17 @@ struct gf_texture
   Bit32u offset;
   Bit32u dma_obj;
   Bit32u format;
+  bool cubemap;
   bool linear;
   bool unnormalized;
   bool compressed;
   bool dxt_alpha_data;
   bool dxt_alpha_explicit;
   Bit32u color_bytes;
+  Bit32u levels;
   Bit32u base_size[3];
+  Bit32u size[3];
+  Bit32u face_bytes;
   Bit32u wrap[3];
   Bit32u control0;
   bool enabled;
@@ -497,7 +501,7 @@ private:
   BX_GEFORCE_SMF bool d3d_scissor_clip(gf_channel* ch, Bit32u* x, Bit32u* y, Bit32u* width, Bit32u* height);
   BX_GEFORCE_SMF void d3d_clear_surface(gf_channel* ch);
   BX_GEFORCE_SMF void d3d_sample_texture(gf_channel* ch,
-    gf_texture* tex, float str[3], float color[4]);
+    gf_texture* tex, float coords_in[3], float color[4]);
   BX_GEFORCE_SMF void d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[16][4]);
   BX_GEFORCE_SMF void d3d_register_combiners(gf_channel* ch, float ps_in[16][4], float out[4]);
   BX_GEFORCE_SMF void d3d_pixel_shader(gf_channel* ch, float in[16][4], float tmp_regs16[64][4], float tmp_regs32[64][4]);

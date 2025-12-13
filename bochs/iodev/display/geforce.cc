@@ -2985,53 +2985,121 @@ void texture_process_format(gf_texture* tex)
     tex->linear = true;
     tex->unnormalized = true;
   }
-  if (tex->format == 0x0c || // DXT1
-      tex->format == 0x0e || // DXT23
-      tex->format == 0x0f || // DXT45
-      tex->format == 0x86 || // DXT1
-      tex->format == 0x87 || // DXT23
-      tex->format == 0x88) { // DXT45
+  if (tex->format == 0x0c ||        // DXT1
+      tex->format == 0x0e ||        // DXT23
+      tex->format == 0x0f ||        // DXT45
+      tex->format == 0x86 ||        // DXT1
+      tex->format == 0x87 ||        // DXT23
+      tex->format == 0x88) {        // DXT45
     tex->compressed = true;
     tex->dxt_alpha_data = tex->format != 0x0c && tex->format != 0x86;
     tex->dxt_alpha_explicit = tex->format == 0x0e || tex->format == 0x87;
-  }
-  if (tex->format == 0x02 || // A1R5G5B5
-      tex->format == 0x03 || // X1R5G5B5
-      tex->format == 0x04 || // A4R4G4B4
-      tex->format == 0x05 || // R5G6B5
-      tex->format == 0x27 || // R6G5B5
-      tex->format == 0x28 || // G8B8
-      tex->format == 0x82 || // A1R5G5B5
-      tex->format == 0x83 || // A4R4G4B4
-      tex->format == 0x84 || // R5G6B5
-      tex->format == 0x8b || // G8B8
-      tex->format == 0x8f)   // R6G5B5
+    tex->color_bytes = tex->dxt_alpha_data ? 16 : 8;
+  } else if (tex->format == 0x02 || // A1R5G5B5
+             tex->format == 0x03 || // X1R5G5B5
+             tex->format == 0x04 || // A4R4G4B4
+             tex->format == 0x05 || // R5G6B5
+             tex->format == 0x27 || // R6G5B5
+             tex->format == 0x28 || // G8B8
+             tex->format == 0x82 || // A1R5G5B5
+             tex->format == 0x83 || // A4R4G4B4
+             tex->format == 0x84 || // R5G6B5
+             tex->format == 0x8b || // G8B8
+             tex->format == 0x8f)   // R6G5B5
     tex->color_bytes = 2;
-  else if (tex->format == 0x06 || // A8R8G8B8
-           tex->format == 0x07 || // X8R8G8B8
-           tex->format == 0x12 || // A8R8G8B8
-           tex->format == 0x85)   // A8R8G8B8
+  else if (tex->format == 0x06 ||   // A8R8G8B8
+           tex->format == 0x07 ||   // X8R8G8B8
+           tex->format == 0x12 ||   // A8R8G8B8
+           tex->format == 0x85)     // A8R8G8B8
     tex->color_bytes = 4;
   else
     tex->color_bytes = 1;
 }
 
-void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
-  gf_texture* tex, float str[3], float color[4])
+void texture_update_size(gf_texture* tex, Bit32u cls)
 {
-  Bit32u sizes[2];
-  if (tex->linear || BX_GEFORCE_THIS card_type >= 0x40) {
-    sizes[0] = tex->image_rect >> 16;
-    sizes[1] = tex->image_rect & 0x0000ffff;
+  if (tex->linear || cls >= 0x4097) {
+    tex->size[0] = tex->image_rect >> 16;
+    tex->size[1] = tex->image_rect & 0x0000ffff;
   } else {
-    sizes[0] = 1 << tex->base_size[0];
-    sizes[1] = 1 << tex->base_size[1];
+    tex->size[0] = 1 << tex->base_size[0];
+    tex->size[1] = 1 << tex->base_size[1];
+  }
+  Bit32u lw = tex->size[0];
+  Bit32u lh = tex->size[1];
+  tex->face_bytes = 0;
+  for (Bit32u i = 0; i < tex->levels; i++) {
+    Bit32u level_bytes = lw * lh * tex->color_bytes;
+    if (tex->compressed)
+      level_bytes /= 16;
+    tex->face_bytes += level_bytes;
+    lw /= 2;
+    lh /= 2;
+    if (lw == 0)
+      lw = 1;
+    if (lh == 0)
+      lh = 1;
+  }
+}
+
+void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
+  gf_texture* tex, float coords_in[3], float color[4])
+{
+  float* coords;
+  float coords_cubemap[3];
+  Bit32u tex_ofs = tex->offset;
+  if (tex->cubemap) {
+    Bit32u face;
+    float coords_abs[3];
+    for (Bit32u i = 0; i < 3; i++)
+      coords_abs[i] = fabs(coords_in[i]);
+    if (coords_abs[0] > coords_abs[1] && coords_abs[0] > coords_abs[2]) {
+      coords_cubemap[0] = coords_cubemap[1] = 1.0f / coords_abs[0];
+      if (coords_in[0] > 0.0f) {
+        face = 0;
+        coords_cubemap[0] *= -coords_in[2];
+        coords_cubemap[1] *= -coords_in[1];
+      } else {
+        face = 1;
+        coords_cubemap[0] *= coords_in[2];
+        coords_cubemap[1] *= -coords_in[1];
+      }
+    } else if (coords_abs[1] > coords_abs[0] && coords_abs[1] > coords_abs[2]) {
+      coords_cubemap[0] = coords_cubemap[1] = 1.0f / coords_abs[1];
+      if (coords_in[1] > 0.0f) {
+        face = 2;
+        coords_cubemap[0] *= coords_in[0];
+        coords_cubemap[1] *= coords_in[2];
+      } else {
+        face = 3;
+        coords_cubemap[0] *= coords_in[0];
+        coords_cubemap[1] *= -coords_in[2];
+      }
+    } else {
+      coords_cubemap[0] = coords_cubemap[1] = 1.0f / coords_abs[2];
+      if (coords_in[2] > 0.0f) {
+        face = 4;
+        coords_cubemap[0] *= coords_in[0];
+        coords_cubemap[1] *= -coords_in[1];
+      } else {
+        face = 5;
+        coords_cubemap[0] *= -coords_in[0];
+        coords_cubemap[1] *= -coords_in[1];
+      }
+    }
+    coords_cubemap[0] = (coords_cubemap[0] + 1.0f) * 0.5f;
+    coords_cubemap[1] = (coords_cubemap[1] + 1.0f) * 0.5f;
+    coords_cubemap[2] = 0.0f;
+    coords = coords_cubemap;
+    tex_ofs += face * tex->face_bytes;
+  } else {
+    coords = coords_in;
   }
   Bit32u xy[2];
   for (int i = 0; i < 2; i++) {
     if (tex->unnormalized) {
-      Bit32s c = str[i];
-      Bit32u size = sizes[i];
+      Bit32s c = coords[i];
+      Bit32u size = tex->size[i];
       if (c < 0 || c >= size) {
         switch (tex->wrap[i]) {
           case 1:  // WRAP
@@ -3053,7 +3121,7 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
       }
       xy[i] = c;
     } else {
-      float c = str[i];
+      float c = coords[i];
       if (c < 0.0f || c > 1.0f) {
         switch (tex->wrap[i]) {
           case 1:  // WRAP
@@ -3071,27 +3139,23 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
             break;
         }
       }
-      xy[i] = c == 1.0f ? sizes[i] - 1 : c * sizes[i];
+      xy[i] = c == 1.0f ? tex->size[i] - 1 : c * tex->size[i];
     }
   }
-
-  Bit32u tex_ofs = tex->offset;
   if (tex->compressed) {
-    Bit32u pitch = sizes[0] * (tex->dxt_alpha_data ? 4 : 2);
+    Bit32u pitch = tex->size[0] * (tex->dxt_alpha_data ? 4 : 2);
     Bit32u bx = xy[0] >> 2;
     Bit32u by = xy[1] >> 2;
-    tex_ofs += by * pitch + bx * (tex->dxt_alpha_data ? 16 : 8);
+    tex_ofs += by * pitch + bx * tex->color_bytes;
   } else if (tex->linear) {
     Bit32u pitch;
     if (BX_GEFORCE_THIS card_type >= 0x40)
       pitch = tex->control3 & 0x000fffff;
     else
       pitch = tex->control1 >> 16;
-    if (pitch == 0)
-      pitch = sizes[0] * tex->color_bytes;
     tex_ofs += xy[1] * pitch + xy[0] * tex->color_bytes;
   } else
-    tex_ofs += swizzle(xy[0], xy[1], sizes[0], sizes[1]) * tex->color_bytes;
+    tex_ofs += swizzle(xy[0], xy[1], tex->size[0], tex->size[1]) * tex->color_bytes;
   Bit32s color_int[4];
   float color_scale[4];
   switch (tex->format) {
@@ -3419,11 +3483,11 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
       color_int[0] = 1;
       color_scale[0] = 0.8f;
       color_int[1] = 1;
-      color_scale[1] = 0.8f + str[0] * 0.2f;
+      color_scale[1] = 0.8f + coords[0] * 0.2f;
       color_int[2] = 1;
-      color_scale[2] = 0.6f + str[1] * 0.2f;
+      color_scale[2] = 0.6f + coords[1] * 0.2f;
       color_int[3] = 1;
-      color_scale[3] = 0.6f + str[2] * 0.2f;
+      color_scale[3] = 0.6f + coords[2] * 0.2f;
       break;
   }
   if (tex->signed_any) {
@@ -4078,6 +4142,12 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
             op_result[comp_index] = lg2;
           break;
         }
+        case 0x1f: { // LRP
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = params[0][comp_index] * params[1][comp_index] +
+              (1.0f - params[0][comp_index]) * params[2][comp_index];
+          break;
+        }
         case 0x22: { // COS
           float cosv = cos(params[0][0]);
           for (int comp_index = 0; comp_index < 4; comp_index++)
@@ -4100,12 +4170,13 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
           break;
         }
         case 0x33: { // TEXBEM
-          float xy[2];
-          xy[0] = params[0][0] + params[1][0] * params[2][0] + params[1][1] * params[2][1];
-          xy[1] = params[0][1] + params[1][0] * params[2][2] + params[1][1] * params[2][3];
+          float coords[3];
+          coords[0] = params[0][0] + params[1][0] * params[2][0] + params[1][1] * params[2][1];
+          coords[1] = params[0][1] + params[1][0] * params[2][2] + params[1][1] * params[2][3];
+          coords[2] = 0.0f;
           Bit32u tex_unit = (dst_word >> 17) & 0xf;
           gf_texture* tex = &ch->d3d_texture[tex_unit];
-          d3d_sample_texture(ch, tex, xy, op_result);
+          d3d_sample_texture(ch, tex, coords, op_result);
           break;
         }
         case 0x38: { // DP2
@@ -4310,10 +4381,10 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
               if (k < 0.0f)
                 k = 0.0f;
               color_comp += ch->d3d_light_diffuse_color[light_index][i] * k;
-              vs_out[v][ch->d3d_attrib_out_color[0]][i] = color_comp;
-              vs_out[v][ch->d3d_attrib_out_color[1]][i] = 0.0f;
             }
           }
+          vs_out[v][ch->d3d_attrib_out_color[0]][i] = color_comp;
+          vs_out[v][ch->d3d_attrib_out_color[1]][i] = 0.0f;
         }
       }
     } else {
@@ -4331,14 +4402,61 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
       for (Bit32u i = 0; i < ch->d3d_tex_coord_count; i++) {
         float* tc = vs_out[v][ch->d3d_attrib_out_tex_coord[i]];
         for (int comp_index = 0; comp_index < 4; comp_index++) {
-          switch (ch->d3d_texgen[i][comp_index]) {
+          Bit32u texgen = ch->d3d_texgen[i][comp_index];
+          switch (texgen) {
             case 0x0000:   // disabled
               tc[comp_index] = ch->d3d_vertex_data[(v + base) & 3][
                 ch->d3d_attrib_in_tex_coord[i]][comp_index];
               break;
             case 0x2400: { // EYE_LINEAR
               float* r = &ch->d3d_model_view_matrix[0][comp_index * 4];
-              tc[comp_index] = p[0] * r[0]  + p[1] * r[1]  + p[2] * r[2]  + p[3] * r[3];
+              tc[comp_index] = p[0] * r[0] + p[1] * r[1] + p[2] * r[2] + p[3] * r[3];
+              break;
+            }
+            case 0x2402:   // SPHERE_MAP
+            case 0x8512: { // REFLECTION_MAP
+              float* n = ch->d3d_vertex_data[(v + base) & 3][ch->d3d_attrib_in_normal];
+              float nt[3];
+              float* im = ch->d3d_inverse_model_view_matrix;
+              nt[0] = n[0] * im[0] + n[1] * im[1] + n[2] * im[2];
+              nt[1] = n[0] * im[4] + n[1] * im[5] + n[2] * im[6];
+              nt[2] = n[0] * im[8] + n[1] * im[9] + n[2] * im[10];
+              float pt[3];
+              float* mv = ch->d3d_model_view_matrix[0];
+              pt[0] = p[0] * mv[0]  + p[1] * mv[1]  + p[2] * mv[2]  + p[3] * mv[3];
+              pt[1] = p[0] * mv[4]  + p[1] * mv[5]  + p[2] * mv[6]  + p[3] * mv[7];
+              pt[2] = p[0] * mv[8]  + p[1] * mv[9]  + p[2] * mv[10] + p[3] * mv[11];
+              float u[3];
+              float plen = sqrt(pt[0] * pt[0] + pt[1] * pt[1] + pt[2] * pt[2]);
+              u[0] = pt[0] / plen;
+              u[1] = pt[1] / plen;
+              u[2] = pt[2] / plen;
+              float r[3];
+              float ntu = nt[0] * u[0] + nt[1] * u[1] + nt[2] * u[2];
+              r[0] = u[0] - 2 * nt[0] * ntu;
+              r[1] = u[1] - 2 * nt[1] * ntu;
+              r[2] = u[2] - 2 * nt[2] * ntu;
+              if (texgen == 0x2402) {
+                float m = 2 * sqrt(r[0] * r[0] + r[1] * r[1] + (r[2] + 1.0f) * (r[2] + 1.0f));
+                if (comp_index < 2)
+                  tc[comp_index] = r[comp_index] / m + 0.5f;
+                else
+                  tc[comp_index] = 0.0f;
+              } else {
+                if (comp_index < 3)
+                  tc[comp_index] = r[comp_index];
+                else
+                  tc[comp_index] = 0.0f;
+              }
+              break;
+            }
+            case 0x8511: { // NORMAL_MAP
+              if (comp_index < 3) {
+                float* n = ch->d3d_vertex_data[(v + base) & 3][ch->d3d_attrib_in_normal];
+                float* r = &ch->d3d_inverse_model_view_matrix[comp_index * 4];
+                tc[comp_index] = n[0] * r[0] + n[1] * r[1] + n[2] * r[2];
+              } else
+                tc[comp_index] = 0.0f;
               break;
             }
             default:       // not implemented
@@ -4426,19 +4544,13 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
 
 void bx_geforce_c::d3d_clip_to_screen(gf_channel* ch, float pos_clip[4], float pos_screen[4])
 {
-  if (ch->d3d_vertex_data_array_format_homogeneous[0])
-    pos_screen[3] = pos_clip[3];
-  else
-    pos_screen[3] = 1.0f / pos_clip[3];
+  pos_screen[3] = 1.0f / pos_clip[3];
   if (((ch->d3d_transform_execution_mode & 3) != 0 &&
       (ch->d3d_transform_execution_mode & 0x100) == 0 &&
       BX_GEFORCE_THIS card_type >= 0x35) ||
       (ch->d3d_transform_execution_mode & 3) == 0) {
     for (int i = 0; i < 3; i++) {
-      if (ch->d3d_vertex_data_array_format_homogeneous[0])
-        pos_screen[i] = pos_clip[i];
-      else
-        pos_screen[i] = pos_clip[i] * pos_screen[3];
+      pos_screen[i] = pos_clip[i] * pos_screen[3];
       if ((ch->d3d_view_matrix_enable & 1) != 0) {
         pos_screen[i] *= ch->d3d_model_view_matrix[1][i];
         pos_screen[i] += ch->d3d_model_view_matrix[1][i + 4];
@@ -4676,6 +4788,13 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
 
 void bx_geforce_c::d3d_process_vertex(gf_channel* ch)
 {
+  if (ch->d3d_vertex_data_array_format_homogeneous[0]) {
+    float* p = ch->d3d_vertex_data[ch->d3d_vertex_index][0];
+    p[3] = 1.0f / p[3];
+    p[0] *= p[3];
+    p[1] *= p[3];
+    p[2] *= p[3];
+  }
   if (ch->d3d_vertex_data_array_format_size[ch->d3d_attrib_in_normal] == 0)
     for (int i = 0; i < 3; i++)
       ch->d3d_vertex_data[ch->d3d_vertex_index][ch->d3d_attrib_in_normal][i] = ch->d3d_normal[i];
@@ -5956,19 +6075,23 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       tex->offset = param;
     else if (texture_method == 1) {
       tex->dma_obj = (param & 3) == 1 ? ch->d3d_a_obj : ch->d3d_b_obj;
+      tex->cubemap = (param & 4) != 0;
       if (cls == 0x0096) {
         tex->format = (param >> 7) & 0x1f;
+        tex->levels = (param >> 12) & 0xf;
         tex->base_size[0] = (param >> 16) & 0xf;
         tex->base_size[1] = (param >> 20) & 0xf;
         tex->wrap[0] = (param >> 24) & 0xf;
         tex->wrap[1] = (param >> 28) & 0xf;
       } else {
         tex->format = (param >> 8) & 0xff;
+        tex->levels = (param >> 16) & 0xf;
         tex->base_size[0] = (param >> 20) & 0xf;
         tex->base_size[1] = (param >> 24) & 0xf;
         tex->base_size[2] = (param >> 28) & 0xf;
       }
       texture_process_format(tex);
+      texture_update_size(tex, cls);
     } else if (texture_method == 2 && cls != 0x0096) {
       tex->wrap[0] = (param >> 0) & 0xf;
       tex->wrap[1] = (param >> 8) & 0xf;
@@ -5998,6 +6121,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
                (texture_method == 7 && cls == 0x0097) ||
                (texture_method == 6 && cls >= 0x0497)) {
       tex->image_rect = param;
+      texture_update_size(tex, cls);
     } else if ((texture_method == 7 && cls == 0x0096) ||
                (texture_method == 8 && cls == 0x0097)) {
       tex->pal_dma_obj = (param & 1) == 1 ? ch->d3d_b_obj : ch->d3d_a_obj;
