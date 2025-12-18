@@ -356,7 +356,10 @@ void BX_CPU_C::debug(bx_address offset)
     BX_INFO(("| CR0=0x%08x: %s", cr0, stringify_CR0(cr0, s)));
     BX_INFO(("| CR2=0x" FMT_ADDRX64, BX_CPU_THIS_PTR cr2));
     BX_INFO(("| CR3=0x" FMT_ADDRX64, BX_CPU_THIS_PTR cr3));
-    BX_INFO(("| CR4=0x%08x: %s", cr4, stringify_CR4(cr4, s)));
+    BX_INFO(("| CR4=0x%08x: %s", GET32L(cr4), stringify_CR4(cr4, s)));
+#if BX_SUPPORT_FRED
+    BX_INFO(("| CR4_HI=0x%08x: %s", GET32H(cr4), stringify_CR4_HI(GET32H(cr4), s)));
+#endif
   }
   else
 #endif // BX_SUPPORT_X86_64
