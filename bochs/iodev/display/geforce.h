@@ -233,8 +233,17 @@ struct gf_channel
   Bit32u d3d_cull_face_enable;
   Bit32u d3d_depth_test_enable;
   Bit32u d3d_depth_write_enable;
+  Bit32u d3d_stencil_mask;
+  Bit32u d3d_stencil_func;
+  Bit32u d3d_stencil_func_ref;
+  Bit32u d3d_stencil_func_mask;
+  Bit32u d3d_stencil_op_sfail;
+  Bit32u d3d_stencil_op_dpfail;
+  Bit32u d3d_stencil_op_dppass;
   Bit32u d3d_lighting_enable;
+  Bit32u d3d_stencil_test_enable;
   Bit32u d3d_depth_func;
+  Bit32u d3d_color_mask;
   Bit32u d3d_shade_mode;
   float d3d_clip_min;
   float d3d_clip_max;

@@ -2936,16 +2936,28 @@ void bx_geforce_c::d3d_clear_surface(gf_channel* ch)
     }
     BX_GEFORCE_THIS redraw_area_nd(redraw_offset, width, height);
   }
-  if (ch->d3d_clear_surface & 0x00000001) {
+  bool depth_clear = (ch->d3d_clear_surface & 0x00000001) != 0;
+  bool stencil_clear = (ch->d3d_clear_surface & 0x00000002) != 0;
+  if (depth_clear || stencil_clear) {
     Bit32u pitch = d3d_get_surface_pitch_z(ch);
     Bit32u draw_offset = ch->d3d_surface_zeta_offset +
       dy * pitch + dx * ch->d3d_depth_bytes;
     for (Bit32u y = 0; y < height; y++) {
       for (Bit32u x = 0; x < width; x++) {
-        if (ch->d3d_depth_bytes == 2)
-          dma_write16(ch->d3d_zeta_obj, draw_offset + x * 2, ch->d3d_zstencil_clear_value);
-        else
-          dma_write32(ch->d3d_zeta_obj, draw_offset + x * 4, ch->d3d_zstencil_clear_value);
+        if (ch->d3d_depth_bytes == 2) {
+          if (depth_clear)
+            dma_write16(ch->d3d_zeta_obj, draw_offset + x * 2, ch->d3d_zstencil_clear_value);
+        } else {
+          if (depth_clear) {
+            if (stencil_clear)
+              dma_write32(ch->d3d_zeta_obj, draw_offset + x * 4, ch->d3d_zstencil_clear_value);
+            else {
+              dma_write8(ch->d3d_zeta_obj, draw_offset + x * 4 + 1, (Bit8u)(ch->d3d_zstencil_clear_value >> 8));
+              dma_write16(ch->d3d_zeta_obj, draw_offset + x * 4 + 2, (Bit16u)(ch->d3d_zstencil_clear_value >> 16));
+            }
+          } else
+            dma_write8(ch->d3d_zeta_obj, draw_offset + x * 4, (Bit8u)ch->d3d_zstencil_clear_value);
+        }
       }
       draw_offset += pitch;
     }
@@ -4667,125 +4679,199 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
     xy[0] = draw_x1 + 0.5f;
     for (Bit16u x = 0; x < draw_width; x++, xy[0]++) {
       float b0 = edge_function(sp1, sp2, xy);
+      if (clockwise) {
+        if (b0 < 0.0f)
+          continue;
+      } else {
+        if (b0 > 0.0f)
+          continue;
+      }
       float b1 = edge_function(sp2, sp0, xy);
+      if (clockwise) {
+        if (b1 < 0.0f)
+          continue;
+      } else {
+        if (b1 > 0.0f)
+          continue;
+      }
       float b2 = edge_function(sp0, sp1, xy);
-      bool draw;
-      if (clockwise)
-        draw = b0 >= 0.0f && b1 >= 0.0f && b2 >= 0.0f;
-      else
-        draw = b0 <= 0.0f && b1 <= 0.0f && b2 <= 0.0f;
-      if (! draw) continue;
+      if (clockwise) {
+        if (b2 < 0.0f)
+          continue;
+      } else {
+        if (b2 > 0.0f)
+          continue;
+      }
       b0 /= b012;
       b1 /= b012;
       b2 /= b012;
       Bit32u z_new;
-      if (ch->d3d_depth_test_enable) {
-        float z = sp0[2] * b0 + sp1[2] * b1 + sp2[2] * b2;
+      Bit8u stencil;
+      if (ch->d3d_depth_test_enable || ch->d3d_stencil_test_enable) {
         Bit32u z_prev;
-        if (ch->d3d_depth_bytes == 2) {
-          z_new = BX_GEFORCE_THIS card_type <= 0x20 ? z : z * 65535.0f;
+        if (ch->d3d_depth_bytes == 2)
           z_prev = dma_read16(ch->d3d_zeta_obj, draw_offset_zeta + x * 2);
-        } else {
-          z_new = BX_GEFORCE_THIS card_type <= 0x20 ? z : z * 16777215.0f;
-          z_prev = dma_read32(ch->d3d_zeta_obj, draw_offset_zeta + x * 4) >> 8;
+        else {
+          Bit32u zstencil = dma_read32(ch->d3d_zeta_obj, draw_offset_zeta + x * 4);
+          z_prev = zstencil >> 8;
+          stencil = (Bit8u)zstencil;
         }
-        draw = compare(ch->d3d_depth_func, z_new, z_prev);
-      }
-      if (draw) {
-        ps_in[0][3] = sp0[3] * b0 + sp1[3] * b1 + sp2[3] * b2;
-        b0 *= sp0[3] / ps_in[0][3];
-        b1 *= sp1[3] / ps_in[0][3];
-        b2 *= sp2[3] / ps_in[0][3];
-        for (int i = 0; i < 2; i++) {
-          if (interpolate[ch->d3d_attrib_out_color[i]]) {
-            for (int comp_index = 0; comp_index < 4; comp_index++) {
-              ps_in[i + 1][comp_index] =
-                v0[ch->d3d_attrib_out_color[i]][comp_index] * b0 +
-                v1[ch->d3d_attrib_out_color[i]][comp_index] * b1 +
-                v2[ch->d3d_attrib_out_color[i]][comp_index] * b2;
-            }
-          }
+        bool depth_test_pass = true;
+        if (ch->d3d_depth_test_enable) {
+          float z = sp0[2] * b0 + sp1[2] * b1 + sp2[2] * b2;
+          if (BX_GEFORCE_THIS card_type <= 0x20)
+            z_new = z;
+          else if (ch->d3d_depth_bytes == 2)
+            z_new = z * 65535.0f;
+          else
+            z_new = z * 16777215.0f;
+          depth_test_pass = compare(ch->d3d_depth_func, z_new, z_prev);
         }
-        for (unsigned i = 0; i < ch->d3d_tex_coord_count; i++) {
-          if (interpolate[ch->d3d_attrib_out_tex_coord[i]]) {
-            for (int comp_index = 0; comp_index < 4; comp_index++) {
-              ps_in[i + 4][comp_index] =
-                v0[ch->d3d_attrib_out_tex_coord[i]][comp_index] * b0 +
-                v1[ch->d3d_attrib_out_tex_coord[i]][comp_index] * b1 +
-                v2[ch->d3d_attrib_out_tex_coord[i]][comp_index] * b2;
-            }
-          }
-        }
-        float tmp_regs16[64][4];
-        float tmp_regs32[64][4];
-        for (int comp_index = 0; comp_index < 4; comp_index++)
-          tmp_regs16[0][comp_index] = ps_in[1][comp_index];
-        if (ch->d3d_combiner_control_num_stages != 0) {
-          d3d_register_combiners(ch, ps_in, tmp_regs16[0]);
-        } else if (ch->d3d_shader_obj != 0) {
-          ps_in[0][0] = xy[0] - ch->d3d_window_offset_x;
-          ps_in[0][1] = (ch->d3d_viewport_vertical >> 16) - (xy[1] - ch->d3d_window_offset_y);
-          ps_in[0][2] = 0.0f;
-          d3d_pixel_shader(ch, ps_in, tmp_regs16, tmp_regs32);
-        }
-        float a = BX_MIN(BX_MAX(tmp_regs16[0][3], 0.0f), 1.0f);
-        if (ch->d3d_alpha_test_enable) {
-          if (!compare(ch->d3d_alpha_func, (Bit32u)(a * 255.0f), ch->d3d_alpha_ref))
-            continue;
-        }
-        float r = BX_MIN(BX_MAX(tmp_regs16[0][0], 0.0f), 1.0f);
-        float g = BX_MIN(BX_MAX(tmp_regs16[0][1], 0.0f), 1.0f);
-        float b = BX_MIN(BX_MAX(tmp_regs16[0][2], 0.0f), 1.0f);
-        if (ch->d3d_blend_enable) {
-          float sr = r;
-          float sg = g;
-          float sb = b;
-          float sa = a;
-          float dr, dg, db, da;
-          if (ch->d3d_color_bytes == 2) {
-            Bit16u color = dma_read16(ch->d3d_color_obj, draw_offset + x * 2);
-            dr = ((color >> 11) & 0x1f) / 31.0f;
-            dg = ((color >> 5) & 0x3f) / 63.0f;
-            db = ((color >> 0) & 0x1f) / 31.0f;
-            da = 1.0f;
-          } else if (ch->d3d_color_bytes == 4) {
-            Bit32u color = dma_read32(ch->d3d_color_obj, draw_offset + x * 4);
-            dr = ((color >> 16) & 0xff) / 255.0f;
-            dg = ((color >> 8) & 0xff) / 255.0f;
-            db = ((color >> 0) & 0xff) / 255.0f;
-            da = ((color >> 24) & 0xff) / 255.0f;
+        bool stencil_test_pass = true;
+        if (ch->d3d_stencil_test_enable) {
+          stencil_test_pass = compare(ch->d3d_stencil_func,
+            ch->d3d_stencil_func_ref & ch->d3d_stencil_func_mask,
+            stencil & ch->d3d_stencil_func_mask);
+          Bit32u stencil_op;
+          if (stencil_test_pass) {
+            if (depth_test_pass)
+              stencil_op = ch->d3d_stencil_op_dppass;
+            else
+              stencil_op = ch->d3d_stencil_op_dpfail;
           } else {
-            Bit8u color = dma_read8(ch->d3d_color_obj, draw_offset + x);
-            dr = 0.0f;
-            dg = 0.0f;
-            db = color / 255.0f;
-            da = 1.0f;
+            stencil_op = ch->d3d_stencil_op_sfail;
           }
-          r = blend_equation(ch->d3d_blend_equation_rgb,
-                sr, blend_factor(ch->d3d_blend_sfactor_rgb, sr, sa, dr, da,
-                                 ch->d3d_blend_color[0], ch->d3d_blend_color[3]),
-                dr, blend_factor(ch->d3d_blend_dfactor_rgb, sr, sa, dr, da,
-                                 ch->d3d_blend_color[0], ch->d3d_blend_color[3]));
-          g = blend_equation(ch->d3d_blend_equation_rgb,
-                sg, blend_factor(ch->d3d_blend_sfactor_rgb, sg, sa, dg, da,
-                                 ch->d3d_blend_color[1], ch->d3d_blend_color[3]),
-                dg, blend_factor(ch->d3d_blend_dfactor_rgb, sg, sa, dg, da,
-                                 ch->d3d_blend_color[1], ch->d3d_blend_color[3]));
-          b = blend_equation(ch->d3d_blend_equation_rgb,
-                sb, blend_factor(ch->d3d_blend_sfactor_rgb, sb, sa, db, da,
-                                 ch->d3d_blend_color[2], ch->d3d_blend_color[3]),
-                db, blend_factor(ch->d3d_blend_dfactor_rgb, sb, sa, db, da,
-                                 ch->d3d_blend_color[2], ch->d3d_blend_color[3]));
-          a = blend_equation(ch->d3d_blend_equation_alpha,
-                sa, blend_factor(ch->d3d_blend_sfactor_alpha, sa, sa, da, da,
-                                 ch->d3d_blend_color[3], ch->d3d_blend_color[3]),
-                da, blend_factor(ch->d3d_blend_dfactor_alpha, sa, sa, da, da,
-                                 ch->d3d_blend_color[3], ch->d3d_blend_color[3]));
-          r = BX_MIN(BX_MAX(r, 0.0f), 1.0f);
-          g = BX_MIN(BX_MAX(g, 0.0f), 1.0f);
-          b = BX_MIN(BX_MAX(b, 0.0f), 1.0f);
-          a = BX_MIN(BX_MAX(a, 0.0f), 1.0f);
+          switch (stencil_op) {
+            case 0x1e00: // KEEP
+            default:
+              break;
+            case 0x0000: // ZERO
+              stencil = 0x00;
+              break;
+            case 0x1e01: // REPLACE
+              stencil = ch->d3d_stencil_func_ref;
+              break;
+            case 0x1e02: // INCRSAT
+              if (stencil < 0xff)
+                stencil++;
+              break;
+            case 0x1e03: // DECRSAT
+              if (stencil > 0x00)
+                stencil--;
+              break;
+            case 0x150a: // INVERT
+              stencil = ~stencil;
+              break;
+            case 0x8507: // INCR
+              stencil++;
+              break;
+            case 0x8508: // DECR
+              stencil--;
+              break;
+          }
+          if (stencil_op != 0x1e00) {
+            stencil &= ch->d3d_stencil_mask;
+            dma_write8(ch->d3d_zeta_obj, draw_offset_zeta + x * 4, stencil);
+          }
         }
+        if (!depth_test_pass || !stencil_test_pass)
+          continue;
+      }
+      ps_in[0][3] = sp0[3] * b0 + sp1[3] * b1 + sp2[3] * b2;
+      b0 *= sp0[3] / ps_in[0][3];
+      b1 *= sp1[3] / ps_in[0][3];
+      b2 *= sp2[3] / ps_in[0][3];
+      for (int i = 0; i < 2; i++) {
+        if (interpolate[ch->d3d_attrib_out_color[i]]) {
+          for (int comp_index = 0; comp_index < 4; comp_index++) {
+            ps_in[i + 1][comp_index] =
+              v0[ch->d3d_attrib_out_color[i]][comp_index] * b0 +
+              v1[ch->d3d_attrib_out_color[i]][comp_index] * b1 +
+              v2[ch->d3d_attrib_out_color[i]][comp_index] * b2;
+          }
+        }
+      }
+      for (Bit32u i = 0; i < ch->d3d_tex_coord_count; i++) {
+        if (interpolate[ch->d3d_attrib_out_tex_coord[i]]) {
+          for (int comp_index = 0; comp_index < 4; comp_index++) {
+            ps_in[i + 4][comp_index] =
+              v0[ch->d3d_attrib_out_tex_coord[i]][comp_index] * b0 +
+              v1[ch->d3d_attrib_out_tex_coord[i]][comp_index] * b1 +
+              v2[ch->d3d_attrib_out_tex_coord[i]][comp_index] * b2;
+          }
+        }
+      }
+      float tmp_regs16[64][4];
+      float tmp_regs32[64][4];
+      for (int comp_index = 0; comp_index < 4; comp_index++)
+        tmp_regs16[0][comp_index] = ps_in[1][comp_index];
+      if (ch->d3d_combiner_control_num_stages != 0) {
+        d3d_register_combiners(ch, ps_in, tmp_regs16[0]);
+      } else if (ch->d3d_shader_obj != 0) {
+        ps_in[0][0] = xy[0] - ch->d3d_window_offset_x;
+        ps_in[0][1] = (ch->d3d_viewport_vertical >> 16) - (xy[1] - ch->d3d_window_offset_y);
+        ps_in[0][2] = 0.0f;
+        d3d_pixel_shader(ch, ps_in, tmp_regs16, tmp_regs32);
+      }
+      float a = BX_MIN(BX_MAX(tmp_regs16[0][3], 0.0f), 1.0f);
+      if (ch->d3d_alpha_test_enable) {
+        if (!compare(ch->d3d_alpha_func, (Bit32u)(a * 255.0f), ch->d3d_alpha_ref))
+          continue;
+      }
+      float r = BX_MIN(BX_MAX(tmp_regs16[0][0], 0.0f), 1.0f);
+      float g = BX_MIN(BX_MAX(tmp_regs16[0][1], 0.0f), 1.0f);
+      float b = BX_MIN(BX_MAX(tmp_regs16[0][2], 0.0f), 1.0f);
+      if (ch->d3d_blend_enable) {
+        float sr = r;
+        float sg = g;
+        float sb = b;
+        float sa = a;
+        float dr, dg, db, da;
+        if (ch->d3d_color_bytes == 2) {
+          Bit16u color = dma_read16(ch->d3d_color_obj, draw_offset + x * 2);
+          dr = ((color >> 11) & 0x1f) / 31.0f;
+          dg = ((color >> 5) & 0x3f) / 63.0f;
+          db = ((color >> 0) & 0x1f) / 31.0f;
+          da = 1.0f;
+        } else if (ch->d3d_color_bytes == 4) {
+          Bit32u color = dma_read32(ch->d3d_color_obj, draw_offset + x * 4);
+          dr = ((color >> 16) & 0xff) / 255.0f;
+          dg = ((color >> 8) & 0xff) / 255.0f;
+          db = ((color >> 0) & 0xff) / 255.0f;
+          da = ((color >> 24) & 0xff) / 255.0f;
+        } else {
+          Bit8u color = dma_read8(ch->d3d_color_obj, draw_offset + x);
+          dr = 0.0f;
+          dg = 0.0f;
+          db = color / 255.0f;
+          da = 1.0f;
+        }
+        r = blend_equation(ch->d3d_blend_equation_rgb,
+              sr, blend_factor(ch->d3d_blend_sfactor_rgb, sr, sa, dr, da,
+                               ch->d3d_blend_color[0], ch->d3d_blend_color[3]),
+              dr, blend_factor(ch->d3d_blend_dfactor_rgb, sr, sa, dr, da,
+                               ch->d3d_blend_color[0], ch->d3d_blend_color[3]));
+        g = blend_equation(ch->d3d_blend_equation_rgb,
+              sg, blend_factor(ch->d3d_blend_sfactor_rgb, sg, sa, dg, da,
+                               ch->d3d_blend_color[1], ch->d3d_blend_color[3]),
+              dg, blend_factor(ch->d3d_blend_dfactor_rgb, sg, sa, dg, da,
+                               ch->d3d_blend_color[1], ch->d3d_blend_color[3]));
+        b = blend_equation(ch->d3d_blend_equation_rgb,
+              sb, blend_factor(ch->d3d_blend_sfactor_rgb, sb, sa, db, da,
+                               ch->d3d_blend_color[2], ch->d3d_blend_color[3]),
+              db, blend_factor(ch->d3d_blend_dfactor_rgb, sb, sa, db, da,
+                               ch->d3d_blend_color[2], ch->d3d_blend_color[3]));
+        a = blend_equation(ch->d3d_blend_equation_alpha,
+              sa, blend_factor(ch->d3d_blend_sfactor_alpha, sa, sa, da, da,
+                               ch->d3d_blend_color[3], ch->d3d_blend_color[3]),
+              da, blend_factor(ch->d3d_blend_dfactor_alpha, sa, sa, da, da,
+                               ch->d3d_blend_color[3], ch->d3d_blend_color[3]));
+        r = BX_MIN(BX_MAX(r, 0.0f), 1.0f);
+        g = BX_MIN(BX_MAX(g, 0.0f), 1.0f);
+        b = BX_MIN(BX_MAX(b, 0.0f), 1.0f);
+        a = BX_MIN(BX_MAX(a, 0.0f), 1.0f);
+      }
+      if (ch->d3d_color_mask != 0) {
         if (ch->d3d_color_bytes == 2) {
           Bit8u r5 = r * 31.0f + 0.5f;
           Bit8u g6 = g * 63.0f + 0.5f;
@@ -4803,12 +4889,12 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
           Bit8u color = b * 255.0f + 0.5f;
           dma_write8(ch->d3d_color_obj, draw_offset + x, color);
         }
-        if (ch->d3d_depth_test_enable && ch->d3d_depth_write_enable) {
-          if (ch->d3d_depth_bytes == 2)
-            dma_write16(ch->d3d_zeta_obj, draw_offset_zeta + x * 2, z_new);
-          else
-            dma_write32(ch->d3d_zeta_obj, draw_offset_zeta + x * 4, z_new << 8);
-        }
+      }
+      if (ch->d3d_depth_test_enable && ch->d3d_depth_write_enable) {
+        if (ch->d3d_depth_bytes == 2)
+          dma_write16(ch->d3d_zeta_obj, draw_offset_zeta + x * 2, z_new);
+        else
+          dma_write32(ch->d3d_zeta_obj, draw_offset_zeta + x * 4, (z_new << 8) | stencil);
       }
     }
     draw_offset += pitch;
@@ -5673,9 +5759,12 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
            (method == 0x29d && cls >= 0x0497))
     ch->d3d_depth_test_enable = param;
   else if ((method == 0x0c5 && cls <= 0x0097) ||
-           (method == 0x516 && cls >= 0x0497)) {
+           (method == 0x516 && cls >= 0x0497))
     ch->d3d_lighting_enable = param;
-  } else if (method == 0x0d1 && cls <= 0x0097) {
+  else if ((method == 0x0cb && cls <= 0x0097) ||
+           (method == 0x0ca && cls >= 0x0497))
+    ch->d3d_stencil_test_enable = param;
+  else if (method == 0x0d1 && cls <= 0x0097) {
     ch->d3d_blend_sfactor_rgb = (Bit16u)param;
     ch->d3d_blend_sfactor_alpha = (Bit16u)param;
   } else if (method == 0x0d2 && cls <= 0x0097) {
@@ -5702,9 +5791,33 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   } else if ((method == 0x0d5 && cls <= 0x0097) ||
              (method == 0x29b && cls >= 0x0497))
     ch->d3d_depth_func = param;
+  else if ((method == 0x0d6 && cls <= 0x0097) ||
+           (method == 0x0c9 && cls >= 0x0497))
+    ch->d3d_color_mask = param;
   else if ((method == 0x0d7 && cls <= 0x0097) ||
            (method == 0x29c && cls >= 0x0497))
     ch->d3d_depth_write_enable = param;
+  else if ((method == 0x0d8 && cls <= 0x0097) ||
+           (method == 0x0cb && cls >= 0x0497))
+    ch->d3d_stencil_mask = param;
+  else if ((method == 0x0d9 && cls <= 0x0097) ||
+           (method == 0x0cc && cls >= 0x0497))
+    ch->d3d_stencil_func = param;
+  else if ((method == 0x0da && cls <= 0x0097) ||
+           (method == 0x0cd && cls >= 0x0497))
+    ch->d3d_stencil_func_ref = param;
+  else if ((method == 0x0db && cls <= 0x0097) ||
+           (method == 0x0ce && cls >= 0x0497))
+    ch->d3d_stencil_func_mask = param;
+  else if ((method == 0x0dc && cls <= 0x0097) ||
+           (method == 0x0cf && cls >= 0x0497))
+    ch->d3d_stencil_op_sfail = param;
+  else if ((method == 0x0dd && cls <= 0x0097) ||
+           (method == 0x0d0 && cls >= 0x0497))
+    ch->d3d_stencil_op_dpfail = param;
+  else if ((method == 0x0de && cls <= 0x0097) ||
+           (method == 0x0d1 && cls >= 0x0497))
+    ch->d3d_stencil_op_dppass = param;
   else if ((method == 0x0df && cls <= 0x0097) ||
            (method == 0x0da && cls >= 0x0497))
     ch->d3d_shade_mode = param;
@@ -5916,11 +6029,18 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
              (method >= 0x548 && method <= 0x54a && cls >= 0x0497)) {
     Bit32u i = method & 0x003;
     ch->d3d_normal[i] = u.param_float;
+  } else if ((method >= 0x314 && method <= 0x317 && cls == 0x0096) ||
+             (method >= 0x554 && method <= 0x557 && cls == 0x0097) ||
+             (method >= 0x70c && method <= 0x70f && cls >= 0x0497)) {
+    Bit32u i = method & 0x003;
+    ch->d3d_diffuse_color[i] = u.param_float;
   } else if ((method >= 0x318 && method <= 0x31a && cls == 0x0096) ||
              (method >= 0x558 && method <= 0x55a && cls == 0x0097) ||
              (method >= 0x54c && method <= 0x54e && cls >= 0x0497)) {
     Bit32u i = method & 0x003;
     ch->d3d_diffuse_color[i] = u.param_float;
+    if (i == 2)
+      ch->d3d_diffuse_color[3] = 1.0f;
   } else if ((method >= 0x324 && method <= 0x337 && cls == 0x0096) ||
              (method >= 0x564 && method <= 0x58b && cls == 0x0097)) {
     Bit32u method_offset = method - (cls == 0x0096 ? 0x324 : 0x564);
