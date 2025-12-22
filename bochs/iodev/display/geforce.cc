@@ -3551,6 +3551,9 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
   }
   Bit32u a0 = 0;
   float tmp_regs[32][4];
+  for (Bit32u r = 0; r < ch->d3d_vs_temp_regs_count; r++)
+    for (Bit32u ci = 0; ci < 4; ci++)
+      tmp_regs[r][ci] = 0.0f;
   for (Bit32u op_index = ch->d3d_transform_program_start;
        op_index < 544; op_index++) {
     Bit32u* tokens = ch->d3d_transform_program[op_index];
@@ -3645,89 +3648,116 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
     else
       vec_op = (tokens[1] >> 22) & 0x1f;
     float vec_result[4];
-    if (vec_op == 0) { // NOP
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = 0.0f;
-    } else if (vec_op == 1) { // MOV
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = params[0][comp_index];
-    } else if (vec_op == 2) { // MUL
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = params[0][comp_index] * params[1][comp_index];
-    } else if (vec_op == 3) { // ADD
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = params[0][comp_index] + params[2][comp_index];
-    } else if (vec_op == 4) { // MAD
-      for (int comp_index = 0; comp_index < 4; comp_index++) {
-        vec_result[comp_index] = params[0][comp_index] * params[1][comp_index] +
-          params[2][comp_index];
+    switch (vec_op) {
+      case 0: // NOP
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = 0.0f;
+        break;
+      case 1: // MOV
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = params[0][comp_index];
+        break;
+      case 2: // MUL
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = params[0][comp_index] * params[1][comp_index];
+        break;
+      case 3: // ADD
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = params[0][comp_index] + params[2][comp_index];
+        break;
+      case 4: // MAD
+        for (int comp_index = 0; comp_index < 4; comp_index++) {
+          vec_result[comp_index] = params[0][comp_index] * params[1][comp_index] +
+            params[2][comp_index];
+        }
+        break;
+      case 5: { // DP3
+        float dp3 = dot(params[0], params[1]);
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = dp3;
+        break;
       }
-    } else if (vec_op == 5) { // DP3
-      float dp3 = dot(params[0], params[1]);
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = dp3;
-    } else if (vec_op == 6) { // DPH
-      float dph = dot(params[0], params[1]) + params[1][3];
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = dph;
-    } else if (vec_op == 7) { // DP4
-      float dp4 = 0.0f;
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        dp4 += params[0][comp_index] * params[1][comp_index];
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = dp4;
-    } else if (vec_op == 8) { // DST
-      vec_result[0] = 1.0f;
-      vec_result[1] = params[0][1] * params[1][1];
-      vec_result[2] = params[0][2];
-      vec_result[3] = params[1][3];
-    } else if (vec_op == 9) { // MIN
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = BX_MIN(params[0][comp_index], params[1][comp_index]);
-    } else if (vec_op == 0xa) { // MAX
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = BX_MAX(params[0][comp_index], params[1][comp_index]);
-    } else if (vec_op == 0xb) { // SLT
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = params[0][comp_index] < params[1][comp_index] ? 1.0f : 0.0f;
-    } else if (vec_op == 0xc) { // SGE
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = params[0][comp_index] >= params[1][comp_index] ? 1.0f : 0.0f;
-    } else if (vec_op == 0xd) { // ARL
-      a0 = floor(params[0][0]);
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = 0.0f; // probably unused
-    } else if (vec_op == 0xe) { // FRC
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = params[0][comp_index] - floor(params[0][comp_index]);
-    } else if (vec_op == 0xf) { // FLR
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = floor(params[0][comp_index]);
-    } else if (vec_op == 0x10) { // SEQ
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = params[0][comp_index] == params[1][comp_index] ? 1.0f : 0.0f;
-    } else if (vec_op == 0x11) { // SFL
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = 0.0f;
-    } else if (vec_op == 0x12) { // SGT
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = params[0][comp_index] > params[1][comp_index] ? 1.0f : 0.0f;
-    } else if (vec_op == 0x13) { // SLE
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = params[0][comp_index] <= params[1][comp_index] ? 1.0f : 0.0f;
-    } else if (vec_op == 0x14) { // SNE
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = params[0][comp_index] != params[1][comp_index] ? 1.0f : 0.0f;
-    } else if (vec_op == 0x15) { // STR
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = 1.0f;
-    } else {
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        vec_result[comp_index] = 0.5f;
-      if (!unknown_opcode_reported) {
-        BX_ERROR(("Vertex shader: unknown VEC opcode 0x%02x", vec_op));
-        unknown_opcode_reported = true;
+      case 6: { // DPH
+        float dph = dot(params[0], params[1]) + params[1][3];
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = dph;
+        break;
       }
+      case 7: { // DP4
+        float dp4 = 0.0f;
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          dp4 += params[0][comp_index] * params[1][comp_index];
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = dp4;
+        break;
+      }
+      case 8: // DST
+        vec_result[0] = 1.0f;
+        vec_result[1] = params[0][1] * params[1][1];
+        vec_result[2] = params[0][2];
+        vec_result[3] = params[1][3];
+        break;
+      case 9: // MIN
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = BX_MIN(params[0][comp_index], params[1][comp_index]);
+        break;
+      case 0xa: // MAX
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = BX_MAX(params[0][comp_index], params[1][comp_index]);
+        break;
+      case 0xb: // SLT
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = params[0][comp_index] < params[1][comp_index] ? 1.0f : 0.0f;
+        break;
+      case 0xc: // SGE
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = params[0][comp_index] >= params[1][comp_index] ? 1.0f : 0.0f;
+        break;
+      case 0xd: // ARL
+        a0 = floor(params[0][0]);
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = 0.0f; // probably unused
+        break;
+      case 0xe: // FRC
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = params[0][comp_index] - floor(params[0][comp_index]);
+        break;
+      case 0xf: // FLR
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = floor(params[0][comp_index]);
+        break;
+      case 0x10: // SEQ
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = params[0][comp_index] == params[1][comp_index] ? 1.0f : 0.0f;
+        break;
+      case 0x11: // SFL
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = 0.0f;
+        break;
+      case 0x12: // SGT
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = params[0][comp_index] > params[1][comp_index] ? 1.0f : 0.0f;
+        break;
+      case 0x13: // SLE
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = params[0][comp_index] <= params[1][comp_index] ? 1.0f : 0.0f;
+        break;
+      case 0x14: // SNE
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = params[0][comp_index] != params[1][comp_index] ? 1.0f : 0.0f;
+        break;
+      case 0x15: // STR
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = 1.0f;
+        break;
+      default:
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          vec_result[comp_index] = 0.5f;
+        if (!unknown_opcode_reported) {
+          BX_ERROR(("Vertex shader: unknown VEC opcode 0x%02x", vec_op));
+          unknown_opcode_reported = true;
+        }
+        break;
     }
     Bit32u sca_op;
     if (BX_GEFORCE_THIS card_type == 0x20)
@@ -3738,55 +3768,69 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
       sca_op = (tokens[1] >> 27) & 0x1f;
     bool paired_ops = vec_op != 0 && sca_op != 0;
     float sca_result[4];
-    if (sca_op == 0) { // NOP
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        sca_result[comp_index] = 0.0f;
-    } else if (sca_op == 1) { // MOV
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        sca_result[comp_index] = params[2][comp_index];
-    } else if (sca_op == 2 || // RCP
-               sca_op == 3) { // RCC
-      float rcp = 1.0f / params[2][0];
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        sca_result[comp_index] = rcp;
-    } else if (sca_op == 4) { // RSQ
-      float rsq = 1.0f / sqrt(fabs(params[2][0]));
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        sca_result[comp_index] = rsq;
-    } else if (sca_op == 5) { // EXP
-      float fl = floor(params[2][0]);
-      sca_result[0] = exp2(fl);
-      sca_result[1] = params[2][0] - fl;
-      sca_result[2] = exp2(params[2][0]);
-      sca_result[3] = 1.0f;
-    } else if (sca_op == 7) { // LIT
-      float tmpx = params[2][0];
-      float tmpy = params[2][1];
-      float tmpw = params[2][3];
-      if (tmpx < 0.0f)
-        tmpx = 0.0f;
-      if (tmpy < 0.0f)
-        tmpy = 0.0f;
-      float epsilon = 1.0e-6f;
-      if (tmpw < -(128.0f - epsilon))
-        tmpw = -(128.0f - epsilon);
-      else if (tmpw > 128.0f - epsilon)
-        tmpw = 128.0f - epsilon;
-      sca_result[0] = 1.0f;
-      sca_result[1] = tmpx;
-      sca_result[2] = (tmpx > 0.0f) ? pow(tmpy, tmpw) : 0.0f;
-      sca_result[3] = 1.0f;
-    } else if (sca_op == 0xe) { // EX2
-      float ex2 = exp2(params[2][0]);
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        sca_result[comp_index] = ex2;
-    } else {
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        sca_result[comp_index] = 0.5f;
-      if (!unknown_opcode_reported) {
-        BX_ERROR(("Vertex shader: unknown SCA opcode 0x%02x", sca_op));
-        unknown_opcode_reported = true;
+    switch (sca_op) {
+      case 0: // NOP
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          sca_result[comp_index] = 0.0f;
+        break;
+      case 1: // MOV
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          sca_result[comp_index] = params[2][comp_index];
+        break;
+      case 2: // RCP
+      case 3: { // RCC
+        float rcp = 1.0f / params[2][0];
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          sca_result[comp_index] = rcp;
+        break;
       }
+      case 4: { // RSQ
+        float rsq = 1.0f / sqrt(fabs(params[2][0]));
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          sca_result[comp_index] = rsq;
+        break;
+      }
+      case 5: { // EXP
+        float fl = floor(params[2][0]);
+        sca_result[0] = exp2(fl);
+        sca_result[1] = params[2][0] - fl;
+        sca_result[2] = exp2(params[2][0]);
+        sca_result[3] = 1.0f;
+        break;
+      }
+      case 7: { // LIT
+        float tmpx = params[2][0];
+        float tmpy = params[2][1];
+        float tmpw = params[2][3];
+        if (tmpx < 0.0f)
+          tmpx = 0.0f;
+        if (tmpy < 0.0f)
+          tmpy = 0.0f;
+        float epsilon = 1.0e-6f;
+        if (tmpw < -(128.0f - epsilon))
+          tmpw = -(128.0f - epsilon);
+        else if (tmpw > 128.0f - epsilon)
+          tmpw = 128.0f - epsilon;
+        sca_result[0] = 1.0f;
+        sca_result[1] = tmpx;
+        sca_result[2] = (tmpx > 0.0f) ? pow(tmpy, tmpw) : 0.0f;
+        sca_result[3] = 1.0f;
+        break;
+      }
+      case 0xe: { // EX2
+        float ex2 = exp2(params[2][0]);
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          sca_result[comp_index] = ex2;
+        break;
+      }
+      default:
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          sca_result[comp_index] = 0.5f;
+        if (!unknown_opcode_reported) {
+          BX_ERROR(("Vertex shader: unknown SCA opcode 0x%02x", sca_op));
+          unknown_opcode_reported = true;
+        }
+        break;
     }
     if (BX_GEFORCE_THIS card_type == 0x20) {
       Bit32u dst_out_reg = (tokens[3] >> 3) & 0xf;
@@ -4716,7 +4760,7 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
           z_prev = zstencil >> 8;
           stencil = (Bit8u)zstencil;
         }
-        bool depth_test_pass = true;
+        bool depth_test_pass;
         if (ch->d3d_depth_test_enable) {
           float z = sp0[2] * b0 + sp1[2] * b1 + sp2[2] * b2;
           if (BX_GEFORCE_THIS card_type <= 0x20)
@@ -4726,10 +4770,10 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
           else
             z_new = z * 16777215.0f;
           depth_test_pass = compare(ch->d3d_depth_func, z_new, z_prev);
-        }
-        bool stencil_test_pass = true;
+        } else
+          depth_test_pass = true;
         if (ch->d3d_stencil_test_enable) {
-          stencil_test_pass = compare(ch->d3d_stencil_func,
+          bool stencil_test_pass = compare(ch->d3d_stencil_func,
             ch->d3d_stencil_func_ref & ch->d3d_stencil_func_mask,
             stencil & ch->d3d_stencil_func_mask);
           Bit32u stencil_op;
@@ -4773,8 +4817,10 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
             stencil &= ch->d3d_stencil_mask;
             dma_write8(ch->d3d_zeta_obj, draw_offset_zeta + x * 4, stencil);
           }
+          if (!stencil_test_pass)
+            continue;
         }
-        if (!depth_test_pass || !stencil_test_pass)
+        if (!depth_test_pass)
           continue;
       }
       ps_in[0][3] = sp0[3] * b0 + sp1[3] * b1 + sp2[3] * b2;
@@ -5630,6 +5676,14 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       ch->d3d_vertex_data_array_format_dx[j] = false;
       ch->d3d_vertex_data_array_format_homogeneous[j] = false;
     }
+    if (cls == 0x0096)
+      ch->d3d_vs_temp_regs_count = 0;
+    else if (cls == 0x0097)
+      ch->d3d_vs_temp_regs_count = 12;
+    else if (cls <= 0x0497)
+      ch->d3d_vs_temp_regs_count = 16;
+    else
+      ch->d3d_vs_temp_regs_count = 32;
     if (cls == 0x0096) {
       ch->d3d_combiner_control_num_stages = 2;
       ch->d3d_tex_coord_count = 2;

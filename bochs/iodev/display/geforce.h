@@ -319,6 +319,7 @@ struct gf_channel
   Bit32u d3d_attrib_out_color[2];
   Bit32u d3d_attrib_in_tex_coord[16];
   Bit32u d3d_attrib_out_tex_coord[16];
+  Bit32u d3d_vs_temp_regs_count;
   Bit32u d3d_tex_coord_count;
 
   Bit8u  rop;
