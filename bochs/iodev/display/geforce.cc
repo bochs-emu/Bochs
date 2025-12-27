@@ -251,6 +251,10 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS mc_enable = 0;
   BX_GEFORCE_THIS bus_intr = 0;
   BX_GEFORCE_THIS bus_intr_en = 0;
+  BX_GEFORCE_THIS fifo_wait = false;
+  BX_GEFORCE_THIS fifo_wait_soft = false;
+  BX_GEFORCE_THIS fifo_wait_flip = false;
+  BX_GEFORCE_THIS fifo_wait_acquire = false;
   BX_GEFORCE_THIS fifo_intr = 0;
   BX_GEFORCE_THIS fifo_intr_en = 0;
   BX_GEFORCE_THIS fifo_ramht = 0;
@@ -290,6 +294,9 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS graph_status = 0;
   BX_GEFORCE_THIS graph_trapped_addr = 0;
   BX_GEFORCE_THIS graph_trapped_data = 0;
+  BX_GEFORCE_THIS graph_flip_read = 0;
+  BX_GEFORCE_THIS graph_flip_write = 0;
+  BX_GEFORCE_THIS graph_flip_modulo = 0;
   BX_GEFORCE_THIS graph_notify = 0;
   BX_GEFORCE_THIS graph_fifo = 0;
   BX_GEFORCE_THIS graph_bpixel = 0;
@@ -308,8 +315,6 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS ramdac_vpll_b = 0;
   BX_GEFORCE_THIS ramdac_pll_select = 0;
   BX_GEFORCE_THIS ramdac_general_control = 0;
-
-  BX_GEFORCE_THIS acquire_active = false;
 
   memset(BX_GEFORCE_THIS chs, 0x00, sizeof(BX_GEFORCE_THIS chs));
   for (int i = 0; i < GEFORCE_CHANNEL_COUNT; i++) {
@@ -494,10 +499,9 @@ void bx_geforce_c::vertical_timer()
       BX_GEFORCE_THIS crtc_intr_en, BX_GEFORCE_THIS mc_intr_en));
     update_irq_level();
   }
-  if (BX_GEFORCE_THIS acquire_active) {
-    BX_GEFORCE_THIS acquire_active = false;
-    for (int i = 0; i < GEFORCE_CHANNEL_COUNT; i++)
-      fifo_process(i);
+  if (BX_GEFORCE_THIS fifo_wait_acquire) {
+    BX_GEFORCE_THIS fifo_wait_acquire = false;
+    fifo_process();
   }
 }
 
@@ -4750,7 +4754,7 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
       b1 /= b012;
       b2 /= b012;
       Bit32u z_new;
-      Bit8u stencil = 0;
+      Bit8u stencil = 0x00;
       if (ch->d3d_depth_test_enable || ch->d3d_stencil_test_enable) {
         Bit32u z_prev;
         if (ch->d3d_depth_bytes == 2)
@@ -5723,6 +5727,20 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       else
         ch->d3d_attrib_out_tex_coord[j] = j + 7;
     }
+  } else if (method == 0x048)
+    BX_GEFORCE_THIS graph_flip_read = param;
+  else if (method == 0x049)
+    BX_GEFORCE_THIS graph_flip_write = param;
+  else if (method == 0x04a)
+    BX_GEFORCE_THIS graph_flip_modulo = param;
+  else if (method == 0x04b) {
+    BX_GEFORCE_THIS graph_flip_write++;
+    BX_GEFORCE_THIS graph_flip_write %= BX_GEFORCE_THIS graph_flip_modulo;
+  } else if (method == 0x04c) {
+    if (BX_GEFORCE_THIS graph_flip_read == BX_GEFORCE_THIS graph_flip_write) {
+      BX_GEFORCE_THIS fifo_wait_flip = true;
+      BX_GEFORCE_THIS fifo_wait = true;
+    }
   } else if (method == 0x061)
     ch->d3d_a_obj = param;
   else if (method == 0x062)
@@ -6369,6 +6387,10 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     ch->d3d_semaphore_offset = param;
   else if (method == 0x75c) {
     dma_write32(ch->d3d_semaphore_obj, ch->d3d_semaphore_offset, param);
+  } else if (method == 0x75d) {
+    // Semaphore release mechanism should be used instead
+    BX_GEFORCE_THIS crtc_start = param;
+    BX_GEFORCE_THIS svga_needs_update_mode = 1;
   } else if (method == 0x763) {
     ch->d3d_zstencil_clear_value = param;
   } else if (method == 0x764) {
@@ -6405,8 +6427,9 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   }
 }
 
-bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param)
+int bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param)
 {
+  int result = 0;
   bool software_method = false;
   BX_DEBUG(("execute_command: chid 0x%02x, subc 0x%02x, method 0x%03x, param 0x%08x",
     chid, subc, method, param));
@@ -6532,8 +6555,9 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
     Bit32u semaphore_offset = BX_GEFORCE_THIS fifo_cache1_semaphore >> 20;
     if (method == 0x01a) {
       if (dma_read32(semaphore_obj, semaphore_offset) != param) {
-        BX_GEFORCE_THIS acquire_active = true;
-        return false;
+        BX_GEFORCE_THIS fifo_wait_acquire = true;
+        BX_GEFORCE_THIS fifo_wait = true;
+        result = 2;
       }
     } else {
       dma_write32(semaphore_obj, semaphore_offset, param);
@@ -6607,6 +6631,8 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
         case 0x96:
         case 0x97:
           execute_d3d(ch, cls, method, param);
+          if (BX_GEFORCE_THIS fifo_wait_flip)
+            result = 1;
           break;
       }
       if (ch->notify_pending) {
@@ -6632,8 +6658,6 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
             BX_GEFORCE_THIS graph_ctx_switch1 = notifier;
           BX_GEFORCE_THIS graph_ctx_switch4 =
             ch->schs[subc].object >> 4;
-          if (BX_GEFORCE_THIS card_type >= 0x40)
-            BX_GEFORCE_THIS graph_ctxctl_cur = BX_GEFORCE_THIS fifo_grctx_instance;
           BX_GEFORCE_THIS graph_trapped_addr = (method << 2) | (subc << 16) | (chid << 20);
           BX_GEFORCE_THIS graph_trapped_data = param;
           BX_DEBUG(("execute_command: notify interrupt triggered"));
@@ -6651,6 +6675,8 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
     }
   }
   if (software_method) {
+    BX_GEFORCE_THIS fifo_wait_soft = true;
+    BX_GEFORCE_THIS fifo_wait = true;
     BX_GEFORCE_THIS fifo_intr |= 0x00000001;
     update_irq_level();
     BX_GEFORCE_THIS fifo_cache1_pull0 |= 0x00000100;
@@ -6660,12 +6686,25 @@ bool bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit3
     if (BX_GEFORCE_THIS fifo_cache1_put == GEFORCE_CACHE1_SIZE * 4)
       BX_GEFORCE_THIS fifo_cache1_put = 0;
     BX_DEBUG(("execute_command: software method"));
+    result = 1;
   }
-  return true;
+  return result;
+}
+
+void bx_geforce_c::fifo_process()
+{
+  BX_GEFORCE_THIS fifo_wait =
+    BX_GEFORCE_THIS fifo_wait_soft ||
+    BX_GEFORCE_THIS fifo_wait_flip ||
+    BX_GEFORCE_THIS fifo_wait_acquire;
+  for (int i = 0; i < GEFORCE_CHANNEL_COUNT; i++)
+    fifo_process(i);
 }
 
 void bx_geforce_c::fifo_process(Bit32u chid)
 {
+  if (BX_GEFORCE_THIS fifo_wait)
+    return;
   Bit32u oldchid = BX_GEFORCE_THIS fifo_cache1_push1 & 0x1F;
   if (oldchid == chid) {
     if (BX_GEFORCE_THIS fifo_cache1_dma_put == BX_GEFORCE_THIS fifo_cache1_dma_get)
@@ -6692,8 +6731,10 @@ void bx_geforce_c::fifo_process(Bit32u chid)
     BX_GEFORCE_THIS fifo_cache1_dma_instance = ramfc_read32(chid, 0xC);
     if (BX_GEFORCE_THIS card_type >= 0x20)
       BX_GEFORCE_THIS fifo_cache1_semaphore = ramfc_read32(chid, sro);
-    if (BX_GEFORCE_THIS card_type >= 0x40)
+    if (BX_GEFORCE_THIS card_type >= 0x40) {
       BX_GEFORCE_THIS fifo_grctx_instance = ramfc_read32(chid, 0x38);
+      BX_GEFORCE_THIS graph_ctxctl_cur = BX_GEFORCE_THIS fifo_grctx_instance | 0x01000000;
+    }
     BX_GEFORCE_THIS fifo_cache1_push1 = (BX_GEFORCE_THIS fifo_cache1_push1 & ~0x1F) | chid;
   }
   BX_GEFORCE_THIS fifo_cache1_dma_push |= 0x100;
@@ -6705,13 +6746,17 @@ void bx_geforce_c::fifo_process(Bit32u chid)
       BX_GEFORCE_THIS fifo_cache1_dma_get);
     BX_GEFORCE_THIS fifo_cache1_dma_get += 4;
     if (ch->dma_state.mcnt) {
-      if (!execute_command(chid, ch->dma_state.subc, ch->dma_state.mthd, word)) {
+      int cmd_result = execute_command(chid,
+        ch->dma_state.subc, ch->dma_state.mthd, word);
+      if (cmd_result <= 1) {
+        if (!ch->dma_state.ni)
+          ch->dma_state.mthd++;
+        ch->dma_state.mcnt--;
+      } else {
         BX_GEFORCE_THIS fifo_cache1_dma_get -= 4;
-        break;
       }
-      if (!ch->dma_state.ni)
-        ch->dma_state.mthd++;
-      ch->dma_state.mcnt--;
+      if (cmd_result != 0)
+        break;
     } else {
       if ((word & 0xe0000003) == 0x20000000) {
         // old jump
@@ -7101,6 +7146,10 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     } else {
       BX_GEFORCE_THIS fifo_intr &= ~0x00000001;
       BX_GEFORCE_THIS fifo_cache1_pull0 &= ~0x00000100;
+      if (BX_GEFORCE_THIS fifo_wait_soft) {
+        BX_GEFORCE_THIS fifo_wait_soft = false;
+        fifo_process();
+      }
     }
     update_irq_level();
   } else if (address == 0x32e0) {
@@ -7157,6 +7206,16 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS graph_trapped_data = value;
   } else if (address == 0x400718) {
     BX_GEFORCE_THIS graph_notify = value;
+  } else if (address == 0x40071c) {
+    if ((value & 0x00000002) != 0) {
+      BX_GEFORCE_THIS graph_flip_read++;
+      BX_GEFORCE_THIS graph_flip_read %= BX_GEFORCE_THIS graph_flip_modulo;
+      if (BX_GEFORCE_THIS fifo_wait_flip &&
+          BX_GEFORCE_THIS graph_flip_read != BX_GEFORCE_THIS graph_flip_write) {
+        BX_GEFORCE_THIS fifo_wait_flip = false;
+        fifo_process();
+      }
+    }
   } else if (address == 0x400720) {
     BX_GEFORCE_THIS graph_fifo = value;
   } else if (address == 0x400724) {
