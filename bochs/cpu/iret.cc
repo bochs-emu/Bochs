@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2019 Stanislav Shwartsman
+//   Copyright (c) 2005-2025 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -510,41 +510,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     }
     else {
       parse_selector(raw_ss_selector, &ss_selector);
-
-      /* selector RPL must = RPL of return CS selector,
-       * else #GP(SS selector) */
-      if (ss_selector.rpl != cs_selector.rpl) {
-        BX_ERROR(("iret64: SS.rpl != CS.rpl"));
-        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc);
-      }
-
-      /* selector index must be within its descriptor table limits,
-       * else #GP(SS selector) */
-      fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-      parse_descriptor(dword1, dword2, &ss_descriptor);
-
-      /* AR byte must indicate a writable data segment,
-       * else #GP(SS selector) */
-      if (ss_descriptor.valid==0 || ss_descriptor.segment==0 ||
-          IS_CODE_SEGMENT(ss_descriptor.type) ||
-         !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
-      {
-        BX_ERROR(("iret64: SS AR byte not writable or code segment"));
-        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc);
-      }
-
-      /* stack segment DPL must equal the RPL of the return CS selector,
-       * else #GP(SS selector) */
-      if (ss_descriptor.dpl != cs_selector.rpl) {
-        BX_ERROR(("iret64: SS.dpl != CS selector RPL"));
-        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc);
-      }
-
-      /* SS must be present, else #NP(SS selector) */
-      if (! IS_PRESENT(ss_descriptor)) {
-        BX_ERROR(("iret64: SS not present!"));
-        exception(BX_NP_EXCEPTION, raw_ss_selector & 0xfffc);
-      }
+      fetch_ss_descriptor(raw_ss_selector, &ss_selector, &ss_descriptor, cs_selector.rpl, BX_GP_EXCEPTION);
     }
 
     Bit8u prev_cpl = CPL; /* previous CPL */
