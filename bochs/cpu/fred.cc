@@ -375,9 +375,48 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
     setup_flat_SS(3);
   }
   else {
-    // load newCS using tempCS[15:0]; // load each as is done by IRET, including
-    // load newSS using tempSS[15:0]; // checks that may lead to a fault
-    BX_PANIC(("ERETU: not yet implemented"));
+    // load newCS using tempCS[15:0];
+    // load newSS using tempSS[15:0];
+    // load each as is done by IRET, including checks that may lead to a fault
+    bx_selector_t cs_selector, ss_selector;
+    bx_descriptor_t cs_descriptor, ss_descriptor;
+    Bit32u dword1, dword2;
+    Bit16u raw_cs_selector = temp_CS & 0xffff;
+    Bit16u raw_ss_selector = temp_SS & 0xffff;
+
+    parse_selector(raw_cs_selector, &cs_selector);
+    // return CS selector must be non-null, else #GP(0)
+    if ((raw_cs_selector & 0xfffc) == 0) {
+      BX_ERROR(("ERETU: return CS selector null"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+
+    fetch_raw_descriptor(&cs_selector, &dword1, &dword2, BX_GP_EXCEPTION);
+    parse_descriptor(dword1, dword2, &cs_descriptor);
+
+    // return CS selector RPL must be >= CPL, else #GP(return selector)
+    if (cs_selector.rpl < CPL) {
+      BX_ERROR(("ERETU: return selector RPL < CPL"));
+      exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
+    }
+
+    // check code-segment descriptor
+    check_cs(&cs_descriptor, raw_cs_selector, 0, cs_selector.rpl);
+
+    parse_selector(raw_ss_selector, &ss_selector);
+    fetch_ss_descriptor(raw_ss_selector, &ss_selector, &ss_descriptor, cs_selector.rpl, BX_GP_EXCEPTION);
+
+    load_cs(&cs_selector, &cs_descriptor, cs_descriptor.dpl);
+
+    if ((raw_ss_selector & 0xfffc) != 0) {
+      // load SS:RSP from stack
+      // load the SS-cache with SS descriptor
+      load_ss(&ss_selector, &ss_descriptor, cs_selector.rpl);
+    }
+    else {
+      // we are in 64-bit mode !
+      load_null_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], raw_ss_selector);
+    }
   }
 
   if (to_long_mode) {
