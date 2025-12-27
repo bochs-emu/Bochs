@@ -4750,7 +4750,7 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
       b1 /= b012;
       b2 /= b012;
       Bit32u z_new;
-      Bit8u stencil;
+      Bit8u stencil = 0;
       if (ch->d3d_depth_test_enable || ch->d3d_stencil_test_enable) {
         Bit32u z_prev;
         if (ch->d3d_depth_bytes == 2)
