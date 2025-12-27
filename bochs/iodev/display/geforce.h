@@ -469,8 +469,9 @@ private:
 
   BX_GEFORCE_SMF void ramht_lookup(Bit32u handle, Bit32u chid, Bit32u* object, Bit8u* engine);
 
+  BX_GEFORCE_SMF void fifo_process();
   BX_GEFORCE_SMF void fifo_process(Bit32u chid);
-  BX_GEFORCE_SMF bool execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF int execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
 
   BX_GEFORCE_SMF void update_color_bytes_s2d(gf_channel* ch);
   BX_GEFORCE_SMF void update_color_bytes_ifc(gf_channel* ch);
@@ -539,6 +540,10 @@ private:
   Bit32u mc_enable;
   Bit32u bus_intr;
   Bit32u bus_intr_en;
+  bool fifo_wait;
+  bool fifo_wait_soft;
+  bool fifo_wait_flip;
+  bool fifo_wait_acquire;
   Bit32u fifo_intr;
   Bit32u fifo_intr_en;
   Bit32u fifo_ramht;
@@ -578,6 +583,9 @@ private:
   Bit32u graph_status;
   Bit32u graph_trapped_addr;
   Bit32u graph_trapped_data;
+  Bit32u graph_flip_read;
+  Bit32u graph_flip_write;
+  Bit32u graph_flip_modulo;
   Bit32u graph_notify;
   Bit32u graph_fifo;
   Bit32u graph_bpixel;
@@ -599,8 +607,6 @@ private:
 
   bx_bitblt_rop_t rop_handler[0x100];
   Bit8u rop_flags[0x100];
-
-  bool acquire_active;
 
   gf_channel chs[GEFORCE_CHANNEL_COUNT];
 
