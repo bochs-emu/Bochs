@@ -1,6 +1,6 @@
 Changes after 3.0:
 
-  This CHANGES file updated with commits merged till 11 Nov 2025, please refer to git log for more recent updates
+  This CHANGES file updated with commits merged till 27 Dec 2025, please refer to git log for more recent updates
 
 Detailed change log :
 
@@ -10,6 +10,7 @@ Detailed change log :
 
 - CPU emulation and instrumentation
   - CPU: Implemented MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS
+  - CPU: implemented IA32_APERF (0xe7) and IA32_MPERF (0xe8) MSRs
   - Added new BX_INSTR_CPUID instrumentation callback, see instrumentation.txt doc for description
   - Bugfixes for CPU emulation correctness
 
@@ -69,6 +70,7 @@ Detailed change log :
     - Bochs VBE: Skip address wrap during display update
     - Fix graphics snapshot in low resolution modes
     - Rewrite of 15/16 to 24 bit conversion in Bochs VBE and Cirrus code
+    - SVGA Cirrus Mem write: Fixed x/y tile to update in case display start != 0
   - Voodoo / Banshee
     - Added hardware cursor support for graphics snapshot (Cirrus/Voodoo)
     - Voodoo3: Split mem_read() with len > 8 in two 64-bit reads
@@ -80,6 +82,7 @@ Detailed change log :
     - Banshee: fixes for graphics snapshot in 3D mode
     - Banshee: Added 2D overlay support to graphics snapshop
     - Banshee: Added setup for CMDFIFO packet type 6 (AGP-to-VRAM transfer - not implemented yet)
+    - Banshee: Apply gamma correction in 16 bpp mode to cursor colors
   - Hard Drive
     - Fix the reading of the HOB registers
     - Add the 0x46 (GET_CONFIG) command. This allows ReactOS 0.4.15 to boot in normal mode (LiveCD)
@@ -120,12 +123,18 @@ Detailed change log :
       - Added runtime option to change the volume.
 
 - GUI and display libraries
+  - In gui console mode don't send key events to the emulator
   - Added new method start_update() used by VGA core to call some gui code before drawing.
     This currently only used by X gui for processing palette update.
   - Added support for the display library option "hideIPS" in nogui
   - Fixed buffer overflow when using keymap feature
   - Use system font on win32 dialog boxes (win32 dialog box font is tiny on 1920x1080 Windows)
   - X gui: added XFlush() in warp_cursor() call to fix mouse movement issues
+  - WX gui:
+    - Fixed mouse toggle shortcut ctrl+alt+g
+    - Report maximum host resolution correctly
+    - To avoid crash, don't return in case the user selects 'continue' if
+      resolution is out of bounds. Set up display buffer as usual instead.
 
 - BIOS
   - ACPI fixes for the i440BX chipset
@@ -145,6 +154,7 @@ Detailed change log :
 
 - Misc
   - Added Linux manual page for the bxhub utility
+  - Documentation updates
 
 -------------------------------------------------------------------------
 Changes in 3.0 (Frebruary 16, 2025):
