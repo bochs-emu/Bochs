@@ -320,8 +320,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
     new_stack.cache = ss_descriptor;
     new_stack.selector.rpl = cs_descriptor.dpl;
     // add cpl to the selector value
-    new_stack.selector.value = (0xfffc & new_stack.selector.value) |
-    new_stack.selector.rpl;
+    new_stack.selector.value = (0xfffc & new_stack.selector.value) | new_stack.selector.rpl;
 
     /* load new SS:SP value from TSS */
     if (ss_descriptor.u.segment.d_b) {

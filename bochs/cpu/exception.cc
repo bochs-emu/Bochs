@@ -457,10 +457,10 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
         exception(BX_TS_EXCEPTION, 0); /* TS(ext) */
       }
 
-      // selector index must be within its descriptor table limits
-      // else #TS(SS selector + EXT)
       parse_selector(SS_for_cpl_x, &ss_selector);
 
+      // selector index must be within its descriptor table limits
+      // else #TS(SS selector + EXT)
       fetch_ss_descriptor(SS_for_cpl_x, &ss_selector, &ss_descriptor, cs_descriptor.dpl, BX_TS_EXCEPTION);
 
       // IP must be within CS segment boundaries, else #GP(0)
