@@ -4777,6 +4777,8 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
         } else
           depth_test_pass = true;
         if (ch->d3d_stencil_test_enable) {
+          // it should not be possible to have ch->d3d_stencil_test_enable and ch->d3d_depth_bytes == 2 conditions at the same time
+          assert(ch->d3d_depth_bytes != 2);
           bool stencil_test_pass = compare(ch->d3d_stencil_func,
             ch->d3d_stencil_func_ref & ch->d3d_stencil_func_mask,
             stencil & ch->d3d_stencil_func_mask);
