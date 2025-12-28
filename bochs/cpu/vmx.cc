@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2024 Stanislav Shwartsman
+//   Copyright (c) 2009-2025 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1026,6 +1026,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
           return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
         }
 
+        // with FRED, allow bit [13] to be set indicating injection of nested hardware exception
         if ((vm->vmentry_interr_info & 0x00001000) != 0 && event_type != BX_HARDWARE_EXCEPTION) {
           BX_ERROR(("VMFAIL: VMENTRY injecting nested exception for event type != 3"));
           return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -1070,12 +1071,29 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
          break;
 
        case BX_EVENT_OTHER: /* MTF or FRED */
-         if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_MONITOR_TRAP_FLAG)) {
-           if (vector != 0) {
-             BX_ERROR(("VMFAIL: VMENTRY bad MTF injection with vector=%d", vector));
+#if BX_SUPPORT_FRED
+         if (is_cpu_extension_supported(BX_ISA_FRED)) {
+           if (vector > 1) {
+             BX_ERROR(("VMFAIL: VMENTRY FRED SYSCALL/SYSENTER event injection with vector=%d", vector));
+             return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+           }
+           // FRED SYSCALL/SYSENTER injection
+           if (vm->vmentry_instr_length > 15) {
+             BX_ERROR(("VMFAIL: VMENTRY FRED bad SYSCALL/SYSENTER injected event instr length=%d", vm->vmentry_instr_length));
              return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
            }
            break;
+         }
+         else
+#endif
+         {
+           if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_MONITOR_TRAP_FLAG)) {
+             if (vector != 0) {
+               BX_ERROR(("VMFAIL: VMENTRY bad MTF injection with vector=%d", vector));
+               return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+             }
+             break;
+           }
          }
          // fall through
 
@@ -1511,10 +1529,12 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
         BX_ERROR(("VMENTER FAIL: VMCS CR4.PCIDE set in 32-bit guest"));
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
      }
+#if BX_SUPPORT_FRED
      if (guest.cr4.get_FRED()) {
         BX_ERROR(("VMENTER FAIL: VMCS CR4.FRED set in 32-bit guest"));
         return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
      }
+#endif
   }
 
   if (vm->vmentry_ctrls.LOAD_DBG_CTRLS()) {
@@ -2454,16 +2474,21 @@ void BX_CPU_C::VMenterInjectEvents(void)
   vm->idt_vector_error_code = error_code;
 
 #if BX_SUPPORT_UINTR
-  if (BX_CPU_THIS_PTR cr4.get_UINTR() && long64_mode() && vector == BX_CPU_THIS_PTR uintr.uinv)
+  if (BX_CPU_THIS_PTR cr4.get_UINTR() && long64_mode() && vector == BX_CPU_THIS_PTR uintr.uinv) {
     Process_UINTR_Notification();
+  }
   else
 #endif
+  {
 #if BX_SUPPORT_FRED
-    if (BX_CPU_THIS_PTR cr4.get_FRED())
-      FRED_EventDelivery(vector, type, error_code, vm->vmentry_instr_length);
-    else
+    if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+      BX_CPU_THIS_PTR fred_event_info = get_fred_event_info(vector, type, bool(vm->vmentry_interr_info & (1<<13)), vm->vmentry_instr_length);
+      BX_CPU_THIS_PTR fred_event_data = VMread64(VMCS_64BIT_CONTROL_INJECTED_EVENT_DATA);
+    }
 #endif
-      interrupt(vector, type, push_error, error_code);
+
+    interrupt(vector, type, push_error, error_code);
+  }
 
   BX_CPU_THIS_PTR last_exception_type = 0; // error resolved
 }
@@ -3058,6 +3083,11 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
   if (BX_CPU_THIS_PTR in_event) {
     VMwrite32(VMCS_32BIT_IDT_VECTORING_INFO, vm->idt_vector_info | 0x80000000);
     VMwrite32(VMCS_32BIT_IDT_VECTORING_ERR_CODE, vm->idt_vector_error_code);
+#if BX_SUPPORT_FRED
+    if (is_cpu_extension_supported(BX_ISA_FRED)) {
+      VMwrite64(VMCS_64BIT_ORIGINAL_EVENT_DATA, BX_CPU_THIS_PTR fred_event_data);
+    }
+#endif
     BX_CPU_THIS_PTR in_event = false;
   }
   else {

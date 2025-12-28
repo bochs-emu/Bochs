@@ -868,7 +868,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 
 #if BX_SUPPORT_FRED
   if (BX_CPU_THIS_PTR cr4.get_FRED()) {
-    FRED_EventDelivery(BX_EVENT_SYSENTER, BX_EVENT_OTHER, 0, i->ilen());
+    set_fred_event_info_and_data(BX_EVENT_SYSENTER, BX_EVENT_OTHER, false, i->ilen());
+    FRED_EventDelivery(BX_EVENT_SYSENTER, BX_EVENT_OTHER, 0);
     BX_NEXT_TRACE(i);
   }
 #endif
@@ -1048,7 +1049,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 
 #if BX_SUPPORT_FRED
   if (BX_CPU_THIS_PTR cr4.get_FRED()) {
-    FRED_EventDelivery(BX_EVENT_SYSCALL, BX_EVENT_OTHER, 0, i->ilen());
+    set_fred_event_info_and_data(BX_EVENT_SYSCALL, BX_EVENT_OTHER, false, i->ilen());
+    FRED_EventDelivery(BX_EVENT_SYSENTER, BX_EVENT_OTHER, 0);
     BX_NEXT_TRACE(i);
   }
 #endif
