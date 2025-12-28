@@ -1021,13 +1021,13 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 
 #if BX_SUPPORT_FRED
      if (is_cpu_extension_supported(BX_ISA_FRED)) {
-        if (vm->vmentry_interr_info & 0x7fffe000) {
+        if (vm->vmentry_interr_info & 0x7fffd000) { // unmask bit [13]
           BX_ERROR(("VMFAIL: VMENTRY broken interruption info field"));
           return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
         }
 
         // with FRED, allow bit [13] to be set indicating injection of nested hardware exception
-        if ((vm->vmentry_interr_info & 0x00001000) != 0 && event_type != BX_HARDWARE_EXCEPTION) {
+        if ((vm->vmentry_interr_info & 0x00002000) != 0 && event_type != BX_HARDWARE_EXCEPTION) {
           BX_ERROR(("VMFAIL: VMENTRY injecting nested exception for event type != 3"));
           return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
         }
@@ -1070,9 +1070,10 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
          }
          break;
 
-       case BX_EVENT_OTHER: /* MTF or FRED */
+       case BX_EVENT_OTHER: { /* MTF or FRED */
 #if BX_SUPPORT_FRED
-         if (is_cpu_extension_supported(BX_ISA_FRED)) {
+         unsigned fred_guest = VMread_natural(VMCS_GUEST_CR4) & BX_CR4_FRED_MASK;
+         if (fred_guest) {
            if (vector > 1) {
              BX_ERROR(("VMFAIL: VMENTRY FRED SYSCALL/SYSENTER event injection with vector=%d", vector));
              return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -1096,7 +1097,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
            }
          }
          // fall through
-
+       }
        default:
          BX_ERROR(("VMFAIL: VMENTRY bad injected event type %d", event_type));
          return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
@@ -3084,7 +3085,7 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
     VMwrite32(VMCS_32BIT_IDT_VECTORING_INFO, vm->idt_vector_info | 0x80000000);
     VMwrite32(VMCS_32BIT_IDT_VECTORING_ERR_CODE, vm->idt_vector_error_code);
 #if BX_SUPPORT_FRED
-    if (is_cpu_extension_supported(BX_ISA_FRED)) {
+    if (BX_CPU_THIS_PTR cr4.get_FRED()) {
       VMwrite64(VMCS_64BIT_ORIGINAL_EVENT_DATA, BX_CPU_THIS_PTR fred_event_data);
     }
 #endif
