@@ -1280,6 +1280,10 @@ public: // for now...
   // for exceptions
   static jmp_buf jmp_buf_env;
   unsigned last_exception_type;
+#if BX_SUPPORT_FRED
+  Bit32u fred_event_info;
+  Bit64u fred_event_data;
+#endif
 
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
   const volatile Bit8u *cpuloop_stack_anchor = NULL;
@@ -4797,9 +4801,10 @@ public: // for now...
   BX_SMF const char *strseg(bx_segment_reg_t *seg);
   BX_SMF void interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u error_code);
 #if BX_SUPPORT_FRED
-  BX_SMF void FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code, unsigned ilen = 0);
-  BX_SMF Bit64u fred_event_data(Bit8u vector, unsigned type) BX_CPP_AttrRegparmN(2);
-  BX_SMF Bit32u fred_event_information(Bit8u vector, unsigned type, unsigned ilen) BX_CPP_AttrRegparmN(3);
+  BX_SMF void FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code);
+  BX_SMF void set_fred_event_info_and_data(Bit8u vector, unsigned type, bool nested_exception, unsigned ilen);
+  BX_SMF Bit64u get_fred_event_data(Bit8u vector, unsigned type) BX_CPP_AttrRegparmN(2);
+  BX_SMF Bit32u get_fred_event_info(Bit8u vector, unsigned type, bool nested_exception, unsigned ilen);
 #endif
   BX_SMF void real_mode_int(Bit8u vector, bool push_error, Bit16u error_code);
   BX_SMF void protected_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16u error_code);

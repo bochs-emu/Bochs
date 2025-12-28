@@ -30,8 +30,12 @@
 
 // FIXME: long_mode64 requirement must be handled through opcode tables attributes
 
-void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code, unsigned ilen)
+void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code)
 {
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
+  BX_CPU_THIS_PTR in_event = true;
+#endif
+
   Bit32u old_CPL = CPL;
   Bit32u old_CSL = (CPL == 3) ? 0 : CSL;
 
@@ -50,7 +54,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   else if (type == BX_NMI)
     old_SS |= (1 << 18);
   // old_SS[63:32] contains FRED event information
-  old_SS |= Bit64u(fred_event_information(vector, type, ilen)) << 32;
+  old_SS |= Bit64u(BX_CPU_THIS_PTR fred_event_info) << 32;
 
   Bit64u old_RIP = RIP;
   Bit64u new_RIP = BX_CPU_THIS_PTR msr.ia32_fred_cfg & ~0xfff;
@@ -61,9 +65,11 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
     exception(BX_GP_EXCEPTION, 0);
   }
 
+  bool nested = (BX_CPU_THIS_PTR fred_event_info & (1 << 26)) != 0;
+
   // if CPL == 3 AND event is not an exception nested on event delivery AND event is not #DF
   Bit32u event_SL = 0;
-  if (CPL == 3 && BX_CPU_THIS_PTR last_exception_type == 0 && vector != BX_DF_EXCEPTION) {
+  if (CPL == 3 && !nested && vector != BX_DF_EXCEPTION) {
     event_SL = 0;
   }
   else {
@@ -155,7 +161,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   // save state on stack
   // Save return state on new regular stack; memory accesses here have supervisor privilege
   write_new_stack_qword(new_RSP - 8,  0, 0);    // first 8 bytes pushed are all zeros
-  write_new_stack_qword(new_RSP - 16, 0, fred_event_data(vector, type));
+  write_new_stack_qword(new_RSP - 16, 0, BX_CPU_THIS_PTR fred_event_data);
   write_new_stack_qword(new_RSP - 24, 0, old_SS);
   write_new_stack_qword(new_RSP - 32, 0, old_RSP);
   write_new_stack_qword(new_RSP - 40, 0, old_flags);
@@ -184,24 +190,39 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
 #endif
 
   // update event related state
-  // FIXME: If the NMI was being injected by VM entry, the existing treatment applies: physical-NMI blocking
-  // is not changed, but virtual NMIs are blocked if the "virtual NMI" VM-execution control is 1
-  if (type == BX_NMI)
-    mask_event(BX_EVENT_NMI);
+
+  if (type == BX_NMI) {
+#if BX_SUPPORT_VMX
+    if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.pin_vmexec_ctrls.NMI_EXITING()) {
+      if (BX_CPU_THIS_PTR vmcs.pin_vmexec_ctrls.VIRTUAL_NMI()) mask_event(BX_EVENT_VMX_VIRTUAL_NMI);
+    }
+    else
+#endif
+      mask_event(BX_EVENT_NMI);
+  }
+
   CPL = 0;
   BX_CPU_THIS_PTR debug_trap = 0;
+  BX_CPU_THIS_PTR fred_event_info = 0;
+  BX_CPU_THIS_PTR fred_event_data = 0;
+
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
+  BX_CPU_THIS_PTR in_event = false;
+#endif
 }
 
-Bit64u BX_CPP_AttrRegparmN(2) BX_CPU_C::fred_event_data(Bit8u vector, unsigned type)
+Bit64u BX_CPP_AttrRegparmN(2) BX_CPU_C::get_fred_event_data(Bit8u vector, unsigned type)
 {
-  if (type == BX_HARDWARE_EXCEPTION && vector == BX_PF_EXCEPTION)
-    return BX_CPU_THIS_PTR cr2;
+  if (type == BX_HARDWARE_EXCEPTION) {
+    if (vector == BX_PF_EXCEPTION)
+      return BX_CPU_THIS_PTR cr2;
+
+    if (vector == BX_NM_EXCEPTION)
+      return 0; // until MSR_XFD_ERR is implemented
+  }
 
   if (vector == BX_DB_EXCEPTION)
     return BX_CPU_THIS_PTR debug_trap & 0x0000400f;
-
-  if (vector == BX_NM_EXCEPTION)
-    return 0; // until MSR_XFD_ERR is implemented
 
   if (type == BX_NMI)
     return 0; // until NMI source reporting is implemented
@@ -209,20 +230,27 @@ Bit64u BX_CPP_AttrRegparmN(2) BX_CPU_C::fred_event_data(Bit8u vector, unsigned t
   return 0;
 }
 
-Bit32u BX_CPP_AttrRegparmN(3) BX_CPU_C::fred_event_information(Bit8u vector, unsigned type, unsigned ilen)
+Bit32u BX_CPU_C::get_fred_event_info(Bit8u vector, unsigned type, bool nested_exception, unsigned ilen)
 {
   Bit32u event_info = vector | (type << 16);
 
   if (long64_mode())
     event_info |= (1 << 25);
 
-  if (BX_CPU_THIS_PTR last_exception_type != 0 && vector != BX_DF_EXCEPTION)
-    event_info |= (1 << 26);
+  if (vector != BX_DF_EXCEPTION) {
+    if (nested_exception) event_info |= (1 << 26);
+  }
 
   // add ilen() of instruction caused the event to bits [31:28] for INTn, INT1, INT3/INTO, SYSCALL and SYSENTER
   event_info |= (ilen << 28);
 
   return event_info;
+}
+
+void BX_CPU_C::set_fred_event_info_and_data(Bit8u vector, unsigned type, bool nested_exception, unsigned ilen)
+{
+  BX_CPU_THIS_PTR fred_event_info = get_fred_event_info(vector, type, nested_exception, ilen);
+  BX_CPU_THIS_PTR fred_event_data = get_fred_event_data(vector, type);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETS(bxInstruction_c *i)

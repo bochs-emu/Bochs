@@ -1286,7 +1286,7 @@ if test "$support_uintr" -gt 0 -a "$use_x86_64" = 0; then
 fi
 
 support_fred=0
-AC_MSG_CHECKING(for Flexible Interrupt Delivery FRED support)
+AC_MSG_CHECKING(for Flexible Interrupt Delivery FRED support (experimental))
 AC_ARG_ENABLE(fred,
   AS_HELP_STRING([--enable-fred], [for Flexible Interrupt Delivery FRED support (no)]),
   [if test "$enableval" = yes; then
@@ -1374,7 +1374,7 @@ AC_ARG_ENABLE(monitor_mwait,
   ]
   )
 
-AC_MSG_CHECKING(for limited hardware performance monitoring emulation support (experimental))
+AC_MSG_CHECKING(for limited hardware performance monitoring emulation support)
 AC_ARG_ENABLE(perfmon,
   AS_HELP_STRING([--enable-perfmon], [support for limited hardware performance monitoring emulation (yes, if cpu level > 5 - experimental)]),
   [if test "$enableval" = yes; then

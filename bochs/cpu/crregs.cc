@@ -1175,7 +1175,10 @@ bx_address BX_CPU_C::get_cr4_allow_mask(void)
 {
   bx_address allowMask = 0;
 
-  // CR4 bits definitions:
+  // CR4.HI bits definitions:
+  //   [32]    FRED: Flexible Return and Event Delivery Enable R/W
+
+  // CR4.LO bits definitions:
   //   [31-28] Reserved, Must be Zero
   //   [27]    LASS: Linear Address Separation Enable R/W
   //   [26]    Reserved, Must be Zero

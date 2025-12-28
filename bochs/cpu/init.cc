@@ -1189,6 +1189,10 @@ void BX_CPU_C::reset(unsigned source)
 
   BX_CPU_THIS_PTR EXT = 0;
   BX_CPU_THIS_PTR last_exception_type = 0;
+#if BX_SUPPORT_FRED
+  BX_CPU_THIS_PTR fred_event_info = 0;
+  BX_CPU_THIS_PTR fred_event_data = 0;
+#endif
 
   // invalidate the code prefetch queue
   BX_CPU_THIS_PTR eipPageBias = 0;
