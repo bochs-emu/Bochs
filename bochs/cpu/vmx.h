@@ -999,14 +999,18 @@ const Bit32u BX_VMCS_SHADOW_BIT_MASK = 0x80000000;
 //       IA32_VMX_TRUE_ENTRY_CTLS MSRs are supported.
 // 56:56 if set software can use VM entry to deliver a hardware exception
 //       with or without an error code, regardless of vector
-// 57:63 reserved, must be zero
+// 57:57 reserved, must be zero
+// 58:58 VMX nested exception support (FRED)
+// 59:63 reserved, must be zero
 //
 
 #define VMX_MSR_VMX_BASIC_LO (BX_CPU_THIS_PTR vmcs_map->get_vmcs_revision_id())
 #define VMX_MSR_VMX_BASIC_HI \
-     (VMX_VMCS_AREA_SIZE | ((!is_cpu_extension_supported(BX_ISA_LONG_MODE)) << 16) | \
-     (BX_MEMTYPE_WB << 18) | (1<<22)) | ((BX_SUPPORT_VMX >= 2) ? (1<<23) : 0) | \
-     (is_cpu_extension_supported(BX_ISA_CET) ? (1<<24) : 0)
+     ((VMX_VMCS_AREA_SIZE | ((!is_cpu_extension_supported(BX_ISA_LONG_MODE)) << 16) | \
+      (BX_MEMTYPE_WB << 18) | (1<<22)) | \
+     ((BX_SUPPORT_VMX >= 2) ? (1<<23) : 0) |\
+      (is_cpu_extension_supported(BX_ISA_CET) ? (1<<24) : 0) |\
+      (is_cpu_extension_supported(BX_ISA_FRED) ? (1<<26) : 0))
 
 #define VMX_MSR_VMX_BASIC \
    GET64_FROM_HI32_LO32(VMX_MSR_VMX_BASIC_HI, VMX_MSR_VMX_BASIC_LO)

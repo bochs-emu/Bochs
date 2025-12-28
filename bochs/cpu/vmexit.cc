@@ -257,7 +257,8 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
   // [10:08] | Interrupt/Exception type
   // [11:11] | error code pushed to the stack
   // [12:12] | NMI unblocking due to IRET
-  // [30:13] | reserved
+  // [13:13] | nested event identification (FRED)
+  // [30:14] | reserved
   // [31:31] | interruption info valid
   //
 
@@ -267,6 +268,12 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
     vm->idt_vector_info = vector | (type << 8);
     if (errcode_valid)
       vm->idt_vector_info |= (1 << 11); // error code delivered
+#if BX_SUPPORT_FRED
+    if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+      if (BX_CPU_THIS_PTR last_exception_type != 0 && vector != BX_DF_EXCEPTION)
+        vm->idt_vector_info |= (1 << 13);
+    }
+#endif
 
     BX_CPU_THIS_PTR nmi_unblocking_iret = false;
     return;
@@ -294,7 +301,8 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
   // [10: 8] interruption type
   // [11:11] error code delivered
   // [12:12] NMI unblocking due to IRET
-  // [30:13] reserved
+  // [13:13] nested event identification (FRED)
+  // [30:14] reserved
   // [31:31] valid
 
   Bit32u interruption_info = vector | (type << 8);
@@ -304,6 +312,16 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
 
   if (BX_CPU_THIS_PTR nmi_unblocking_iret)
     interruption_info |= (1 << 12);
+
+  // Set bit [13] if the vmexit is due to a nested exception encountered during delivery
+  // of an earlier event using FRED delivery. It is not set for vmexits due to #DF or
+  // events encountered during IDT event delivery.
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+    if (BX_CPU_THIS_PTR last_exception_type != 0 && vector != BX_DF_EXCEPTION)
+      interruption_info |= (1 << 13);
+  }
+#endif
 
   VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO, interruption_info);
   VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_ERR_CODE, errcode);

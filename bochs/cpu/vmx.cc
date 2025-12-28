@@ -1019,9 +1019,25 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
      if (event_type == BX_HARDWARE_EXCEPTION && vector < BX_CPU_HANDLED_EXCEPTIONS)
         push_error_reference = exception_push_error(vector);
 
-     if (vm->vmentry_interr_info & 0x7ffff000) {
-        BX_ERROR(("VMFAIL: VMENTRY broken interruption info field"));
-        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+#if BX_SUPPORT_FRED
+     if (is_cpu_extension_supported(BX_ISA_FRED)) {
+        if (vm->vmentry_interr_info & 0x7fffe000) {
+          BX_ERROR(("VMFAIL: VMENTRY broken interruption info field"));
+          return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+        }
+
+        if ((vm->vmentry_interr_info & 0x00001000) != 0 && event_type != BX_HARDWARE_EXCEPTION) {
+          BX_ERROR(("VMFAIL: VMENTRY injecting nested exception for event type != 3"));
+          return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+        }
+     }
+     else
+#endif
+     {
+        if (vm->vmentry_interr_info & 0x7ffff000) {
+          BX_ERROR(("VMFAIL: VMENTRY broken interruption info field"));
+          return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+        }
      }
 
      switch (event_type) {
