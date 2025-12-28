@@ -1096,13 +1096,15 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_SUPPORT_FRED
-  BX_CPU_THIS_PTR msr.ia32_fred_cfg = 0;
-  BX_CPU_THIS_PTR msr.ia32_fred_stack_levels = 0;
-  for (n=0;n<4;n++) {
+  if (source == BX_RESET_HARDWARE) {
+    BX_CPU_THIS_PTR msr.ia32_fred_cfg = 0;
+    BX_CPU_THIS_PTR msr.ia32_fred_stack_levels = 0;
+    for (n=0;n<4;n++) {
 #if BX_SUPPORT_CET
-    BX_CPU_THIS_PTR msr.ia32_fred_ssp[n] = 0;
+      BX_CPU_THIS_PTR msr.ia32_fred_ssp[n] = 0;
 #endif
-    BX_CPU_THIS_PTR msr.ia32_fred_rsp[n] = 0;
+      BX_CPU_THIS_PTR msr.ia32_fred_rsp[n] = 0;
+    }
   }
 #endif
 #endif // BX_CPU_LEVEL >= 6

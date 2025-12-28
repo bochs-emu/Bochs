@@ -28,8 +28,6 @@
 
 #if BX_SUPPORT_X86_64 && BX_SUPPORT_FRED
 
-// FIXME: long_mode64 requirement must be handled through opcode tables attributes
-
 void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code)
 {
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
@@ -121,7 +119,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   }
 #endif
 
-  // ESTABLISH NEW CONTEXT — OLD STATE WILL BE RESTORED IF THERE IS A SUBSEQUENT EXCEPTION -> FIXME: HOW ???
+  // ESTABLISH NEW CONTEXT: OLD STATE WILL BE RESTORED IF THERE IS A SUBSEQUENT EXCEPTION -> FIXME: HOW ???
 
   // update segment registers if event occurred in ring 3
   if (CPL == 3) {
@@ -170,22 +168,24 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   write_new_stack_qword(new_RSP - 64, 0, error_code);
 
 #if BX_SUPPORT_CET
-  if (ShadowStackEnabled(0)) {
-    if (old_CPL == 0) {
-      shadow_stack_write_dword(new_SSP - 4,  CPL, 0); // store 4 bytes of zeros to SSP-4
-      new_SSP &= ~BX_CONST64(0x7);
-      shadow_stack_write_qword(new_SSP - 8,  CPL, old_CS);
-      shadow_stack_write_qword(new_SSP - 16, CPL, old_RIP);
-      shadow_stack_write_qword(new_SSP - 24, CPL, old_SSP);
-      new_SSP -= 24;
+  if (BX_CPU_THIS_PTR cr4.get_CET()) {
+    if (ShadowStackEnabled(0)) {
+      if (old_CPL == 0) {
+        shadow_stack_write_dword(new_SSP - 4,  CPL, 0); // store 4 bytes of zeros to SSP-4
+        new_SSP &= ~BX_CONST64(0x7);
+        shadow_stack_write_qword(new_SSP - 8,  CPL, old_CS);
+        shadow_stack_write_qword(new_SSP - 16, CPL, old_RIP);
+        shadow_stack_write_qword(new_SSP - 24, CPL, old_SSP);
+        new_SSP -= 24;
+      }
+      SSP = new_SSP;
     }
-    SSP = new_SSP;
-  }
 
-  if (ShadowStackEnabled(3) && old_CPL == 3) {
-    BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = CanonicalizeAddress(BX_CPU_THIS_PTR msr.ia32_pl_ssp[3]);
-    //if IA32_S_CET.ENDBR_EN = 1
-    //    THEN IA32_S_CET[11:10] = 0; // IDLE with SUPPRESS = 0 FIXME
+    if (ShadowStackEnabled(3) && old_CPL == 3) {
+      BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = CanonicalizeAddress(BX_CPU_THIS_PTR msr.ia32_pl_ssp[3]);
+    }
+
+    reset_endbranch_tracker(0);
   }
 #endif
 
