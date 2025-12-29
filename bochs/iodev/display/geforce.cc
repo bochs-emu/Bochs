@@ -376,6 +376,7 @@ void bx_geforce_c::svga_init_members()
   memset(BX_GEFORCE_THIS s.memory, 0x00, BX_GEFORCE_THIS s.memsize);
   BX_GEFORCE_THIS disp_ptr = BX_GEFORCE_THIS s.memory;
   BX_GEFORCE_THIS disp_offset = 0;
+  BX_GEFORCE_THIS disp_end_offset = 0;
 
   // VCLK defaults after reset
   BX_GEFORCE_THIS s.vclk[0] = 25180000;
@@ -672,14 +673,14 @@ void bx_geforce_c::mem_write(bx_phy_address addr, Bit8u value)
 {
   if ((addr >= BX_GEFORCE_THIS pci_bar[1].addr) &&
       (addr < (BX_GEFORCE_THIS pci_bar[1].addr + BX_GEFORCE_THIS s.memsize))) {
-    unsigned x, y;
     Bit32u offset = addr & BX_GEFORCE_THIS memsize_mask;
     BX_GEFORCE_THIS s.memory[offset] = value;
-    if (BX_GEFORCE_THIS svga_pitch != 0) {
+    if (offset < BX_GEFORCE_THIS disp_end_offset &&
+        offset >= BX_GEFORCE_THIS disp_offset) {
       BX_GEFORCE_THIS svga_needs_update_tile = 1;
       offset -= BX_GEFORCE_THIS disp_offset;
-      x = (offset % BX_GEFORCE_THIS svga_pitch) / (BX_GEFORCE_THIS svga_bpp / 8);
-      y = offset / BX_GEFORCE_THIS svga_pitch;
+      Bit32u x = (offset % BX_GEFORCE_THIS svga_pitch) / (BX_GEFORCE_THIS svga_bpp / 8);
+      Bit32u y = offset / BX_GEFORCE_THIS svga_pitch;
       if (BX_GEFORCE_THIS s.y_doublescan)
         y <<= 1;
       if (BX_GEFORCE_THIS svga_double_width)
@@ -1237,6 +1238,7 @@ void bx_geforce_c::update(void)
     BX_GEFORCE_THIS svga_dispbpp = iBpp;
     BX_GEFORCE_THIS disp_ptr = BX_GEFORCE_THIS s.memory + iTopOffset;
     BX_GEFORCE_THIS disp_offset = iTopOffset;
+    BX_GEFORCE_THIS disp_end_offset = iTopOffset + iPitch * iHeight;
     BX_GEFORCE_THIS svga_pitch = iPitch;
     // compatibilty settings for VGA core
     BX_GEFORCE_THIS s.last_xres = iWidth;
@@ -4180,15 +4182,22 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
           Bit32u tex_unit = (dst_word >> 17) & 0xf;
           gf_texture* tex = &ch->d3d_texture[tex_unit];
           d3d_sample_texture(ch, tex, params[0], op_result);
+          if (((dst_word >> 21) & 1) != 0)
+            for (int comp_index = 0; comp_index < 4; comp_index++)
+              op_result[comp_index] = op_result[comp_index] * 2.0f - 1.0f;
           break;
         }
         case 0x18: { // TXP
-          params[0][0] /= params[0][3];
-          params[0][1] /= params[0][3];
-          params[0][2] /= params[0][3];
+          float winv = 1.0f / params[0][3];
+          params[0][0] *= winv;
+          params[0][1] *= winv;
+          params[0][2] *= winv;
           Bit32u tex_unit = (dst_word >> 17) & 0xf;
           gf_texture* tex = &ch->d3d_texture[tex_unit];
           d3d_sample_texture(ch, tex, params[0], op_result);
+          if (((dst_word >> 21) & 1) != 0)
+            for (int comp_index = 0; comp_index < 4; comp_index++)
+              op_result[comp_index] = op_result[comp_index] * 2.0f - 1.0f;
           break;
         }
         case 0x1a: { // RCP
@@ -4243,6 +4252,9 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
           Bit32u tex_unit = (dst_word >> 17) & 0xf;
           gf_texture* tex = &ch->d3d_texture[tex_unit];
           d3d_sample_texture(ch, tex, coords, op_result);
+          if (((dst_word >> 21) & 1) != 0)
+            for (int comp_index = 0; comp_index < 4; comp_index++)
+              op_result[comp_index] = op_result[comp_index] * 2.0f - 1.0f;
           break;
         }
         case 0x38: { // DP2
@@ -4723,6 +4735,9 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
         ps_in[i + 4][comp_index] = v0[ch->d3d_attrib_out_tex_coord[i]][comp_index];
   float xy[2];
   xy[1] = draw_y1 + 0.5f;
+  float b012inv = 1.0f / b012;
+  bool stencil_test_enable = ch->d3d_stencil_test_enable && ch->d3d_depth_bytes != 2;
+  bool zstencil_enable = ch->d3d_depth_test_enable || stencil_test_enable;
   for (Bit16u y = 0; y < draw_height; y++, xy[1]++) {
     xy[0] = draw_x1 + 0.5f;
     for (Bit16u x = 0; x < draw_width; x++, xy[0]++) {
@@ -4750,12 +4765,12 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
         if (b2 > 0.0f)
           continue;
       }
-      b0 /= b012;
-      b1 /= b012;
-      b2 /= b012;
+      b0 *= b012inv;
+      b1 *= b012inv;
+      b2 *= b012inv;
       Bit32u z_new;
       Bit8u stencil = 0x00;
-      if (ch->d3d_depth_test_enable || ch->d3d_stencil_test_enable) {
+      if (zstencil_enable) {
         Bit32u z_prev;
         if (ch->d3d_depth_bytes == 2)
           z_prev = dma_read16(ch->d3d_zeta_obj, draw_offset_zeta + x * 2);
@@ -4776,9 +4791,7 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
           depth_test_pass = compare(ch->d3d_depth_func, z_new, z_prev);
         } else
           depth_test_pass = true;
-        if (ch->d3d_stencil_test_enable) {
-          // it should not be possible to have ch->d3d_stencil_test_enable and ch->d3d_depth_bytes == 2 conditions at the same time
-          assert(ch->d3d_depth_bytes != 2);
+        if (stencil_test_enable) {
           bool stencil_test_pass = compare(ch->d3d_stencil_func,
             ch->d3d_stencil_func_ref & ch->d3d_stencil_func_mask,
             stencil & ch->d3d_stencil_func_mask);
@@ -6515,10 +6528,8 @@ int bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32
           ch->s2d_img_src = (srcdst & 0xFFFF) << 4;
           ch->s2d_img_dst = srcdst >> 16 << 4;
         } else {
-          ch->s2d_img_src =
-            ramin_read32(ch->schs[subc].object + 0x8) << 4;
-          ch->s2d_img_dst =
-            ramin_read32(ch->schs[subc].object + 0xC) << 4;
+          ch->s2d_img_src = ramin_read32(ch->schs[subc].object + 0x8) << 4;
+          ch->s2d_img_dst = ramin_read32(ch->schs[subc].object + 0xC) << 4;
         }
       } else if (cls8 == 0x64) {
         ch->iifc_palette =
@@ -6656,8 +6667,7 @@ int bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32
             BX_GEFORCE_THIS graph_ctx_switch2 = notifier << 16;
           else
             BX_GEFORCE_THIS graph_ctx_switch1 = notifier;
-          BX_GEFORCE_THIS graph_ctx_switch4 =
-            ch->schs[subc].object >> 4;
+          BX_GEFORCE_THIS graph_ctx_switch4 = ch->schs[subc].object >> 4;
           BX_GEFORCE_THIS graph_trapped_addr = (method << 2) | (subc << 16) | (chid << 20);
           BX_GEFORCE_THIS graph_trapped_data = param;
           BX_DEBUG(("execute_command: notify interrupt triggered"));

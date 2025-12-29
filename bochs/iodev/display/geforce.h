@@ -633,6 +633,7 @@ private:
 
   Bit8u *disp_ptr;
   Bit32u disp_offset;
+  Bit32u disp_end_offset;
   Bit32u bank_base[2];
 
   struct {
