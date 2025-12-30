@@ -1499,13 +1499,14 @@ bool bx_banshee_c::mem_read_handler(bx_phy_address addr, unsigned len,
 {
   bx_banshee_c *class_ptr = (bx_banshee_c*)param;
   if (len > 8) {
-    Bit64u *data64 = (Bit64u*)data;
 #ifdef BX_LITTLE_ENDIAN
+    Bit64u *data64 = (Bit64u*)data;
     class_ptr->mem_read(addr, 8, &data64[0]);
     class_ptr->mem_read(addr + 8, len - 8, &data64[1]);
 #else
-    class_ptr->mem_read(addr, 8, &data64[1]);
-    class_ptr->mem_read(addr + 8, len - 8, &data64[0]);
+    Bit8u *data8 = (Bit8u*)data;
+    class_ptr->mem_read(addr, 8, &data8[8]);
+    class_ptr->mem_read(addr + 8, len - 8, &data8[16 - len]);
 #endif
   } else {
     class_ptr->mem_read(addr, len, data);
@@ -1517,14 +1518,15 @@ bool bx_banshee_c::mem_write_handler(bx_phy_address addr, unsigned len,
                                      void *data, void *param)
 {
   bx_banshee_c *class_ptr = (bx_banshee_c*)param;
-  if (len == 16) {
-    Bit64u *data64 = (Bit64u*)data;
+  if (len > 8) {
 #ifdef BX_LITTLE_ENDIAN
+    Bit64u *data64 = (Bit64u*)data;
     class_ptr->mem_write(addr, 8, &data64[0]);
-    class_ptr->mem_write(addr + 8, 8, &data64[1]);
+    class_ptr->mem_write(addr + 8, len - 8, &data64[1]);
 #else
-    class_ptr->mem_write(addr, 8, &data64[1]);
-    class_ptr->mem_write(addr + 8, 8, &data64[0]);
+    Bit8u *data8 = (Bit8u*)data;
+    class_ptr->mem_write(addr, 8, &data8[8]);
+    class_ptr->mem_write(addr + 8, len - 8, &data8[16 - len]);
 #endif
   } else {
     class_ptr->mem_write(addr, len, data);
