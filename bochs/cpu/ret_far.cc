@@ -136,6 +136,13 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
     BX_DEBUG(("return_protected: return to OUTER PRIVILEGE LEVEL"));
 
+#if BX_SUPPORT_FRED
+    if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+      BX_ERROR(("return_protected: ring transition is not allowed when FRED is enabled"));
+      exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
+    }
+#endif
+
 #if BX_SUPPORT_MONITOR_MWAIT
     BX_CPU_THIS_PTR monitor.reset_umonitor();
 #endif
@@ -237,15 +244,11 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 }
 
 #if BX_SUPPORT_CET
-  bx_address BX_CPP_AttrRegparmN(3)
-BX_CPU_C::shadow_stack_restore(Bit16u raw_cs_selector, const bx_descriptor_t &cs_descriptor, bx_address return_rip)
+  bx_address BX_CPP_AttrRegparmN(2)
+BX_CPU_C::shadow_stack_restore(Bit16u raw_cs_selector, bx_address return_lip)
 {
-  bx_address return_lip = return_rip;
-  if (! long_mode() || ! cs_descriptor.u.segment.l)
-    return_lip = (Bit32u) (return_lip + cs_descriptor.u.segment.base);
-
   if (SSP & 0x7) {
-    BX_ERROR(("return_protected: SSP must be 8-byte aligned"));
+    BX_ERROR(("shadow_stack_restore: SSP must be 8-byte aligned"));
     exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
   }
 
@@ -271,5 +274,15 @@ BX_CPU_C::shadow_stack_restore(Bit16u raw_cs_selector, const bx_descriptor_t &cs
   }
 
   return prevSSP;
+}
+
+  bx_address BX_CPP_AttrRegparmN(3)
+BX_CPU_C::shadow_stack_restore(Bit16u raw_cs_selector, const bx_descriptor_t &cs_descriptor, bx_address return_rip)
+{
+  bx_address return_lip = return_rip;
+  if (! long_mode() || ! cs_descriptor.u.segment.l)
+    return_lip = (Bit32u) (return_lip + cs_descriptor.u.segment.base);
+
+  return shadow_stack_restore(raw_cs_selector, return_lip);
 }
 #endif

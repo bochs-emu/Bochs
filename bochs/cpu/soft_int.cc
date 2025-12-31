@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -85,7 +85,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT1(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR EXT = 1;
 
-  // interrupt is not RSP safe
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED())
+    set_fred_event_info_and_data(1, BX_PRIVILEGED_SOFTWARE_INTERRUPT, false, i->ilen());
+#endif
+
   interrupt(1, BX_PRIVILEGED_SOFTWARE_INTERRUPT, 0, 0);
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
@@ -113,7 +117,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT3(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
 
-  // interrupt is not RSP safe
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED())
+    set_fred_event_info_and_data(3, BX_SOFTWARE_EXCEPTION, false, i->ilen());
+#endif
+
   interrupt(3, BX_SOFTWARE_EXCEPTION, 0, 0);
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
@@ -151,6 +159,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INT_Ib(bxInstruction_c *i)
   BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
 
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED())
+    set_fred_event_info_and_data(vector, BX_SOFTWARE_INTERRUPT, false, i->ilen());
+#endif
+
   interrupt(vector, BX_SOFTWARE_INTERRUPT, 0, 0);
 
   BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,
@@ -177,7 +190,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INTO(bxInstruction_c *i)
     BX_CPU_THIS_PTR show_flag |= Flag_softint;
 #endif
 
-    // interrupt is not RSP safe
+#if BX_SUPPORT_FRED
+    if (BX_CPU_THIS_PTR cr4.get_FRED())
+      set_fred_event_info_and_data(4, BX_SOFTWARE_EXCEPTION, false, i->ilen());
+#endif
+
     interrupt(4, BX_SOFTWARE_EXCEPTION, 0, 0);
 
     BX_INSTR_FAR_BRANCH(BX_CPU_ID, BX_INSTR_IS_INT,

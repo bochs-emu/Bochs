@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2023-2024  The Bochs Project
+//  Copyright (C) 2023-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -153,3 +153,4 @@ x86_feature(BX_ISA_MOVDIR64B, "movdir64b")                              /* MOVDI
 x86_feature(BX_ISA_MSRLIST, "msrlist")                                  /* RDMSRLIST/WRMSRLIST instructions support */
 x86_feature(BX_ISA_RAO_INT, "rao_int")                                  /* RAO-INT instructions support */
 x86_feature(BX_ISA_MOVRS, "movrs")                                      /* MOVRS instructions support */
+x86_feature(BX_ISA_FRED, "fred")                                        /* FRED: Flexible Return and Event Deivery support */

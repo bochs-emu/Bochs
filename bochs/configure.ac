@@ -1285,6 +1285,29 @@ if test "$support_uintr" -gt 0 -a "$use_x86_64" = 0; then
   AC_MSG_ERROR([User Level Interrupt feature emulation require x86-64 enabled])
 fi
 
+support_fred=0
+AC_MSG_CHECKING(for Flexible Interrupt Delivery FRED support (experimental))
+AC_ARG_ENABLE(fred,
+  AS_HELP_STRING([--enable-fred], [for Flexible Interrupt Delivery FRED support (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_FRED, 1)
+    support_fred=1
+   elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_FRED, 0)
+   fi
+   ],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_FRED, 0)
+  ]
+  )
+
+if test "$support_fred" -gt 0 -a "$use_x86_64" = 0; then
+  AC_MSG_ERROR([Flexible Interrupt Delivery (FRED) emulation require x86-64 enabled])
+fi
+
 AC_MSG_CHECKING(for 3DNow! support)
 AC_ARG_ENABLE(3dnow,
   AS_HELP_STRING([--enable-3dnow], [3DNow! support (no - incomplete)]),
@@ -1351,7 +1374,7 @@ AC_ARG_ENABLE(monitor_mwait,
   ]
   )
 
-AC_MSG_CHECKING(for limited hardware performance monitoring emulation support (experimental))
+AC_MSG_CHECKING(for limited hardware performance monitoring emulation support)
 AC_ARG_ENABLE(perfmon,
   AS_HELP_STRING([--enable-perfmon], [support for limited hardware performance monitoring emulation (yes, if cpu level > 5 - experimental)]),
   [if test "$enableval" = yes; then
