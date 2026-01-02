@@ -253,6 +253,7 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS bus_intr_en = 0;
   BX_GEFORCE_THIS fifo_wait = false;
   BX_GEFORCE_THIS fifo_wait_soft = false;
+  BX_GEFORCE_THIS fifo_wait_notify = false;
   BX_GEFORCE_THIS fifo_wait_flip = false;
   BX_GEFORCE_THIS fifo_wait_acquire = false;
   BX_GEFORCE_THIS fifo_intr = 0;
@@ -261,6 +262,7 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS fifo_ramfc = 0;
   BX_GEFORCE_THIS fifo_ramro = 0;
   BX_GEFORCE_THIS fifo_mode = 0;
+  BX_GEFORCE_THIS fifo_cache1_push0 = 0;
   BX_GEFORCE_THIS fifo_cache1_push1 = 0;
   BX_GEFORCE_THIS fifo_cache1_put = 0;
   BX_GEFORCE_THIS fifo_cache1_dma_push = 0;
@@ -502,6 +504,7 @@ void bx_geforce_c::vertical_timer()
   }
   if (BX_GEFORCE_THIS fifo_wait_acquire) {
     BX_GEFORCE_THIS fifo_wait_acquire = false;
+    update_fifo_wait();
     fifo_process();
   }
 }
@@ -6670,6 +6673,8 @@ int bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32
           BX_GEFORCE_THIS graph_ctx_switch4 = ch->schs[subc].object >> 4;
           BX_GEFORCE_THIS graph_trapped_addr = (method << 2) | (subc << 16) | (chid << 20);
           BX_GEFORCE_THIS graph_trapped_data = param;
+          BX_GEFORCE_THIS fifo_wait_notify = true;
+          BX_GEFORCE_THIS fifo_wait = true;
           BX_DEBUG(("execute_command: notify interrupt triggered"));
         }
       }
@@ -6701,19 +6706,31 @@ int bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32
   return result;
 }
 
-void bx_geforce_c::fifo_process()
+void bx_geforce_c::update_fifo_wait()
 {
   BX_GEFORCE_THIS fifo_wait =
     BX_GEFORCE_THIS fifo_wait_soft ||
+    BX_GEFORCE_THIS fifo_wait_notify ||
     BX_GEFORCE_THIS fifo_wait_flip ||
     BX_GEFORCE_THIS fifo_wait_acquire;
-  for (int i = 0; i < GEFORCE_CHANNEL_COUNT; i++)
-    fifo_process(i);
+}
+
+void bx_geforce_c::fifo_process()
+{
+  Bit32u offset = (BX_GEFORCE_THIS fifo_cache1_push1 & 0x1f) + 1;
+  for (Bit32u i = 0; i < GEFORCE_CHANNEL_COUNT; i++)
+    fifo_process((i + offset) & 0x1f);
 }
 
 void bx_geforce_c::fifo_process(Bit32u chid)
 {
   if (BX_GEFORCE_THIS fifo_wait)
+    return;
+  if ((BX_GEFORCE_THIS fifo_mode & (1 << chid)) == 0)
+    return;
+  if ((BX_GEFORCE_THIS fifo_cache1_push0 & 1) == 0)
+    return;
+  if ((BX_GEFORCE_THIS fifo_cache1_pull0 & 1) == 0)
     return;
   Bit32u oldchid = BX_GEFORCE_THIS fifo_cache1_push1 & 0x1F;
   if (oldchid == chid) {
@@ -6748,6 +6765,10 @@ void bx_geforce_c::fifo_process(Bit32u chid)
     BX_GEFORCE_THIS fifo_cache1_push1 = (BX_GEFORCE_THIS fifo_cache1_push1 & ~0x1F) | chid;
   }
   BX_GEFORCE_THIS fifo_cache1_dma_push |= 0x100;
+  if (BX_GEFORCE_THIS fifo_cache1_dma_instance == 0) {
+    BX_PANIC(("fifo: DMA instance = 0"));
+    return;
+  }
   gf_channel* ch = &BX_GEFORCE_THIS chs[chid];
   while (BX_GEFORCE_THIS fifo_cache1_dma_get != BX_GEFORCE_THIS fifo_cache1_dma_put) {
     BX_DEBUG(("fifo: processing at 0x%08x", BX_GEFORCE_THIS fifo_cache1_dma_get));
@@ -6881,6 +6902,8 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
       value = 0x00000000;
   } else if (address == 0x2504) {
     value = BX_GEFORCE_THIS fifo_mode;
+  } else if (address == 0x3200) {
+    value = BX_GEFORCE_THIS fifo_cache1_push0;
   } else if (address == 0x3204) {
     value = BX_GEFORCE_THIS fifo_cache1_push1;
   } else if (address == 0x3210) {
@@ -7132,7 +7155,14 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
   } else if (address == 0x2220 && BX_GEFORCE_THIS card_type >= 0x40) {
     BX_GEFORCE_THIS fifo_ramfc = value;
   } else if (address == 0x2504) {
+    bool process = (BX_GEFORCE_THIS fifo_mode | value) != BX_GEFORCE_THIS fifo_mode;
     BX_GEFORCE_THIS fifo_mode = value;
+    if (process)
+      fifo_process();
+  } else if (address == 0x3200) {
+    BX_GEFORCE_THIS fifo_cache1_push0 = value;
+    if ((BX_GEFORCE_THIS fifo_cache1_push0 & 1) != 0)
+      fifo_process();
   } else if (address == 0x3204) {
     BX_GEFORCE_THIS fifo_cache1_push1 = value;
   } else if (address == 0x3210) {
@@ -7149,6 +7179,8 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
     BX_GEFORCE_THIS fifo_cache1_ref_cnt = value;
   } else if (address == 0x3250) {
     BX_GEFORCE_THIS fifo_cache1_pull0 = value;
+    if ((BX_GEFORCE_THIS fifo_cache1_pull0 & 1) != 0)
+      fifo_process();
   } else if (address == 0x3270) {
     BX_GEFORCE_THIS fifo_cache1_get = value & (GEFORCE_CACHE1_SIZE * 4 - 1);
     if (BX_GEFORCE_THIS fifo_cache1_get != BX_GEFORCE_THIS fifo_cache1_put) {
@@ -7158,6 +7190,7 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
       BX_GEFORCE_THIS fifo_cache1_pull0 &= ~0x00000100;
       if (BX_GEFORCE_THIS fifo_wait_soft) {
         BX_GEFORCE_THIS fifo_wait_soft = false;
+        update_fifo_wait();
         fifo_process();
       }
     }
@@ -7194,6 +7227,11 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
   } else if (address == 0x400100) {
     BX_GEFORCE_THIS graph_intr &= ~value;
     update_irq_level();
+    if (BX_GEFORCE_THIS fifo_wait_notify && BX_GEFORCE_THIS graph_intr == 0) {
+      BX_GEFORCE_THIS fifo_wait_notify = false;
+      update_fifo_wait();
+      fifo_process();
+    }
   } else if (address == 0x400108) {
     BX_GEFORCE_THIS graph_nsource = value;
   } else if ((address == 0x40013C && BX_GEFORCE_THIS card_type >= 0x40) ||
@@ -7223,6 +7261,7 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
       if (BX_GEFORCE_THIS fifo_wait_flip &&
           BX_GEFORCE_THIS graph_flip_read != BX_GEFORCE_THIS graph_flip_write) {
         BX_GEFORCE_THIS fifo_wait_flip = false;
+        update_fifo_wait();
         fifo_process();
       }
     }

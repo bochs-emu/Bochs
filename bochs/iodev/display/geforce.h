@@ -469,6 +469,7 @@ private:
 
   BX_GEFORCE_SMF void ramht_lookup(Bit32u handle, Bit32u chid, Bit32u* object, Bit8u* engine);
 
+  BX_GEFORCE_SMF void update_fifo_wait();
   BX_GEFORCE_SMF void fifo_process();
   BX_GEFORCE_SMF void fifo_process(Bit32u chid);
   BX_GEFORCE_SMF int execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
@@ -542,6 +543,7 @@ private:
   Bit32u bus_intr_en;
   bool fifo_wait;
   bool fifo_wait_soft;
+  bool fifo_wait_notify;
   bool fifo_wait_flip;
   bool fifo_wait_acquire;
   Bit32u fifo_intr;
@@ -550,6 +552,7 @@ private:
   Bit32u fifo_ramfc;
   Bit32u fifo_ramro;
   Bit32u fifo_mode;
+  Bit32u fifo_cache1_push0;
   Bit32u fifo_cache1_push1;
   Bit32u fifo_cache1_put;
   Bit32u fifo_cache1_dma_push;
