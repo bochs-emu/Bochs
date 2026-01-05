@@ -1695,9 +1695,10 @@ it, defaults will be used for all settings.  To change the settings, you can
 run <command>configure</command> with options that override the
 defaults.  You can get a list of valid configure options by typing
 <command>configure --help</command>.  One useful configure option is
---prefix=<replaceable>directory</replaceable>, which sets the directory in
-which Bochs will be installed.  All the possible configure options are
-documented in a <link linkend="config-opts">later section</link>.
+--prefix=<replaceable>directory</replaceable>, which sets the root directory in
+which Bochs will be installed (default is <replaceable>/usr/local</replaceable>).
+All the possible configure options are documented in a
+<link linkend="config-opts">later section</link>.
 
 
 </para>
@@ -1852,19 +1853,22 @@ at least to erase any files that it created.
 Once the program has been built, the next step is typically to run
 <command>make install</command> to copy the executables, documentation, and
 other required files into a public place so that all users can use it.
-By default, the files are copied to some directories in /usr/local. The following
-tables show the directories and their contents.
+By default, the files are copied to some directories in /usr/local unless a
+different installation prefix was specified in the <command>configure</command>
+stage. Another way to change the installation root is to set the <varname>DESTDIR</varname>
+variable in the <command>make install</command> command line.
+The following tables show the subdirectories and their contents.
 </para>
 <table><title>Installed files</title>
   <tgroup cols="2" align="left" colsep="1" rowsep="1">
   <tbody>
     <row>
       <entry>bin</entry>
-      <entry>binary executables (bochs, bximage)</entry>
+      <entry>binary executables (bochs, bximage, bxhub)</entry>
     </row>
     <row>
       <entry>lib/bochs/plugins</entry>
-      <entry>plugins (if present)</entry>
+      <entry>plugins (if present - see note)</entry>
     </row>
     <row>
       <entry>man/man1</entry>
@@ -1885,6 +1889,11 @@ tables show the directories and their contents.
   </tbody>
   </tgroup>
 </table>
+<note><para>
+When compiling with plugins enabled on platforms using <command>libtool</command>
+it is required to use an absolute path as the installation root. Using <varname>HOME</varname>
+or <varname>PWD</varname> variables as prefix may help in that case.
+</para></note>
 </section>
 
 <section><title>Installing the DLX Linux demo</title>
@@ -2452,8 +2461,8 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
     <row>
       <entry>--enable-geforce</entry>
       <entry>no</entry>
-      <entry>Enable experimental GeForce emulation. Basic support for three models
-      is available, but 3D is not done yet. For more information see <xref linkend="geforce-notes">.
+      <entry>Enable experimental GeForce emulation. Basic support for four models
+      is available, but 3D is still WIP. For more information see <xref linkend="geforce-notes">.
       </entry>
     </row>
     <row>
@@ -3774,9 +3783,9 @@ Example:
   geforce: model=geforce3
 </screen>
 This defines the experimental GeForce emulation. Currently supported models
-are 'geforce3', 'geforcefx5900' and 'geforce6800'. These 2D/3D AGP cards
-require an external VGA BIOS, the vga extension option to be set to 'geforce'
-# and the i440BX PCI/AGP chipset with the 'geforce' device assigned to AGP
+are 'geforce2', 'geforce3', 'geforcefx5900' and 'geforce6800'. These 2D/3D AGP
+cards require an external VGA BIOS, the vga extension option to be set to 'geforce'
+and the i440BX PCI/AGP chipset with the 'geforce' device assigned to AGP
 (slot #5). The gui screen update timing for all models is controlled by the
 related 'vga' options. See <xref linkend="geforce-notes"> for more information.
 </para>
@@ -3951,7 +3960,8 @@ with realtime. With the value 'none' the Bochs time relies on the IPS
 value and no host time synchronization is used. The 'slowdown' method
 sacrifices performance to preserve reproducibility while allowing host
 time correlation. The 'realtime' method sacrifices reproducibility to
-preserve performance and host-time correlation.
+preserve performance and host-time correlation. It was reported that
+guest systems with ACPI support work better in 'realtime' mode.
 It is possible to enable both synchronization methods.
 </para>
 <para><command>rtc_sync</command></para>
@@ -10020,8 +10030,8 @@ Bochs VBE Display Drivers for Windows NT/2000
   <title>Notes about experimental GeForce emulation usage</title>
 
   <para>
-  The GeForce graphics emulation currently implements basic support for three GeForce
-  models. Most of the 2D features are present, but 3D is still to do. Several
+  The GeForce graphics emulation currently implements basic support for four GeForce
+  models. Most of the 2D features are present, but 3D is still WIP. Several
   Windows versions up to Win 7 have been reported to work under consideration of
   these limitations.
   </para>
@@ -10051,6 +10061,10 @@ Bochs VBE Display Drivers for Windows NT/2000
   </row>
   </thead>
   <tbody>
+  <row>
+    <entry>geforce2</entry>
+    <entry>Leadtek.2Pro.64.010403_AGP.bin</entry>
+  </row>
   <row>
     <entry>geforce3</entry>
     <entry>Leadtek.3Ti500.64.011105_AGP.bin</entry>

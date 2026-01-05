@@ -369,11 +369,11 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest.bin
 #=======================================================================
 # GEFORCE:
 # This defines the experimental GeForce emulation. Currently supported models
-# are 'geforce3', 'geforcefx5900' and 'geforce6800'. These 2D/3D AGP cards
-# require an external VGA BIOS, the vga extension option to be set to 'geforce'
-# and the i440BX PCI/AGP chipset with the 'geforce' device assigned to AGP
-# (slot #5). The gui screen update timing for all models is controlled by the
-# related 'vga' options.
+# are 'geforce2', 'geforce3', 'geforcefx5900' and 'geforce6800'. These 2D/3D AGP
+# cards require an external VGA BIOS, the vga extension option to be set to
+# 'geforce' and the i440BX PCI/AGP chipset with the 'geforce' device assigned to
+# AGP (slot #5). The gui screen update timing for all models is controlled by
+# the related 'vga' options.
 #
 # Example:
 #   geforce: model=geforce3

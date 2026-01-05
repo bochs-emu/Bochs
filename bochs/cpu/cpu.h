@@ -4927,10 +4927,11 @@ public: // for now...
   BX_SMF void load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
   BX_SMF void load_ss(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cpl) BX_CPP_AttrRegparmN(3);
   BX_SMF void touch_segment(bx_selector_t *selector, bx_descriptor_t *descriptor) BX_CPP_AttrRegparmN(2);
+  BX_SMF void fetch_ss_descriptor(Bit16u raw_ss_selector, const bx_selector_t *ss_selector, bx_descriptor_t *ss_descriptor,
+                         unsigned cs_rpl, unsigned exception_no);
   BX_SMF void fetch_raw_descriptor(const bx_selector_t *selector,
                          Bit32u *dword1, Bit32u *dword2, unsigned exception_no);
-  BX_SMF bool fetch_raw_descriptor2(const bx_selector_t *selector,
-                         Bit32u *dword1, Bit32u *dword2) BX_CPP_AttrRegparmN(3);
+  BX_SMF bool fetch_raw_descriptor2(const bx_selector_t *selector, Bit32u *dword1, Bit32u *dword2) BX_CPP_AttrRegparmN(3);
   BX_SMF void load_seg_reg(bx_segment_reg_t *seg, Bit16u new_value) BX_CPP_AttrRegparmN(2);
   BX_SMF void load_null_selector(bx_segment_reg_t *seg, unsigned value) BX_CPP_AttrRegparmN(2);
   BX_SMF void setup_flat_CS(unsigned dpl, bool longmode);

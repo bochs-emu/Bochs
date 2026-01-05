@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2019  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -457,42 +457,11 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
         exception(BX_TS_EXCEPTION, 0); /* TS(ext) */
       }
 
+      parse_selector(SS_for_cpl_x, &ss_selector);
+
       // selector index must be within its descriptor table limits
       // else #TS(SS selector + EXT)
-      parse_selector(SS_for_cpl_x, &ss_selector);
-      // fetch 2 dwords of descriptor; call handles out of limits checks
-      fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_TS_EXCEPTION);
-      parse_descriptor(dword1, dword2, &ss_descriptor);
-
-      // selector rpl must = dpl of code segment,
-      // else #TS(SS selector + ext)
-      if (ss_selector.rpl != cs_descriptor.dpl) {
-        BX_ERROR(("interrupt(): SS.rpl != CS.dpl"));
-        exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-      }
-
-      // stack seg DPL must = DPL of code segment,
-      // else #TS(SS selector + ext)
-      if (ss_descriptor.dpl != cs_descriptor.dpl) {
-        BX_ERROR(("interrupt(): SS.dpl != CS.dpl"));
-        exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-      }
-
-      // descriptor must indicate writable data segment,
-      // else #TS(SS selector + EXT)
-      if (ss_descriptor.valid==0 || ss_descriptor.segment==0 ||
-           IS_CODE_SEGMENT(ss_descriptor.type) ||
-          !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
-      {
-        BX_ERROR(("interrupt(): SS is not writable data segment"));
-        exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-      }
-
-      // seg must be present, else #SS(SS selector + ext)
-      if (! IS_PRESENT(ss_descriptor)) {
-        BX_ERROR(("interrupt(): SS not present"));
-        exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-      }
+      fetch_ss_descriptor(SS_for_cpl_x, &ss_selector, &ss_descriptor, cs_descriptor.dpl, BX_TS_EXCEPTION);
 
       // IP must be within CS segment boundaries, else #GP(0)
       if (gate_dest_offset > cs_descriptor.u.segment.limit_scaled) {

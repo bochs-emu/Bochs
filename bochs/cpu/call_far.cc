@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2024 Stanislav Shwartsman
+//   Copyright (c) 2005-2025 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -294,37 +294,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
     // selector index must be within its descriptor table limits,
     //   else #TS(SS selector)
     parse_selector(SS_for_cpl_x, &ss_selector);
-    fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_TS_EXCEPTION);
-    parse_descriptor(dword1, dword2, &ss_descriptor);
 
-    // selector's RPL must equal DPL of code segment,
-    //   else #TS(SS selector)
-    if (ss_selector.rpl != cs_descriptor.dpl) {
-      BX_ERROR(("call_gate: SS selector.rpl != CS descr.dpl"));
-      exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-    }
-
-    // stack segment DPL must equal DPL of code segment,
-    //   else #TS(SS selector)
-    if (ss_descriptor.dpl != cs_descriptor.dpl) {
-      BX_ERROR(("call_gate: SS descr.rpl != CS descr.dpl"));
-      exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-    }
-
-    // descriptor must indicate writable data segment,
-    //   else #TS(SS selector)
-    if (ss_descriptor.valid==0 || ss_descriptor.segment==0 ||
-        IS_CODE_SEGMENT(ss_descriptor.type) || !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
-    {
-      BX_ERROR(("call_gate: ss descriptor is not writable data seg"));
-      exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-    }
-
-    // segment must be present, else #SS(SS selector)
-    if (! IS_PRESENT(ss_descriptor)) {
-      BX_ERROR(("call_gate: ss descriptor not present"));
-      exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-    }
+    fetch_ss_descriptor(SS_for_cpl_x, &ss_selector, &ss_descriptor, cs_descriptor.dpl, BX_TS_EXCEPTION);
 
     // get word count from call gate, mask to 5 bits
     unsigned param_count = gate_descriptor->u.gate.param_count & 0x1f;
@@ -349,8 +320,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
     new_stack.cache = ss_descriptor;
     new_stack.selector.rpl = cs_descriptor.dpl;
     // add cpl to the selector value
-    new_stack.selector.value = (0xfffc & new_stack.selector.value) |
-    new_stack.selector.rpl;
+    new_stack.selector.value = (0xfffc & new_stack.selector.value) | new_stack.selector.rpl;
 
     /* load new SS:SP value from TSS */
     if (ss_descriptor.u.segment.d_b) {
