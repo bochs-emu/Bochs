@@ -54,6 +54,7 @@ void BX_CPU_C::init_MSRs()
     msr_desc[i] = NULL;
 
   msr_desc[BX_MSR_TSC] = new MSR_Descriptor("BX_IA32_TSC", BX_ISA_PENTIUM);
+  msr_desc[BX_MSR_PLATFORM_ID] = new MSR_Descriptor("MSR_PLATFORM_ID", BX_ISA_PENTIUM);
 
 #if BX_SUPPORT_APIC
   msr_desc[BX_MSR_APICBASE] = new MSR_Descriptor("MSR_APICBASE", BX_ISA_PENTIUM);
@@ -263,6 +264,10 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       val64 = BX_CPU_THIS_PTR msr.sysenter_eip_msr;
       break;
 #endif
+
+    case BX_MSR_PLATFORM_ID:
+      val64 = 0;
+      break;
 
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_MTRRCAP:   // read only MSR

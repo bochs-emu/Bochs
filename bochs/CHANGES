@@ -9,6 +9,11 @@ Detailed change log :
     In the code BX_WARN is used and it is configurable like other log levels.
 
 - CPU emulation and instrumentation
+  - Hypervisor CPUID handling
+    CPUID leaves 0x40000000-0x400000FF now return zeros instead of advertising
+    hypervisor presence. This prevents Windows from attempting to use Hyper-V
+    enlightenments that Bochs does not implement.
+
   - CPU: Implemented MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS
   - Added new BX_INSTR_CPUID instrumentation callback, see instrumentation.txt doc for description
   - Bugfixes for CPU emulation correctness
@@ -33,12 +38,33 @@ Detailed change log :
 - Config interface
   - On Windows make sure file name parameters use backslash as separator
   - Removed backward compatibility mode for USB device options
+  - Increased maximum host memory size to 8192 MB (was 2048 MB)
 
 - Memory
+  - PCI hole support for >3GB RAM (NEW)
+    Added guest physical address translation for systems with more than 3GB RAM.
+    RAM from 3GB-4GB is remapped above 4GB to make room for PCI MMIO space.
+    The bx_translate_gpa_to_linear() helper handles the remapping transparently.
+    Works correctly with 2GB, 4GB, 8GB, 12GB, 16GB, and larger RAM configurations.
+
   - Added support for overlapping r/o memory handlers (used for PCI ROM)
   - Added support for mapping PCI ROM to expansion ROM space
 
 - I/O Devices
+  - fw_cfg (NEW)
+    Added QEMU-compatible fw_cfg device for UEFI/OVMF firmware support.
+    Provides system configuration to firmware via I/O ports 0x510-0x51B:
+    - E820 memory map with PCI hole (3GB-4GB reserved for MMIO)
+    - ACPI tables (RSDP, XSDT, FADT, FACS, DSDT, MADT, HPET)
+    - RAM size and CPU count information
+    - DMA protocol for table loading
+    This enables booting UEFI operating systems including Windows Server 2025
+    and modern Linux distributions with OVMF firmware.
+  - ACPI Tables
+    Added dynamic ACPI table generation for UEFI firmware compatibility.
+    Tables are compatible with PIIX4 PM/ACPI and include proper DSDT.
+    The generated DSDT is aligned with the default PCI/PIIX device model.
+
   - GeForce (NEW)
     Added basic support for three GeForce models. Most of the 2D features are present,
     but 3D is still WIP. Several Windows versions up to Win 7 have been reported to
@@ -3123,7 +3149,7 @@ Detailed change log :
  [1021758] GNU/k*BSD host support by Robert Millan
   [969967] int 15/ah=87h clearing cr0 by Ben Lunt
  [1048327] Russian Keymap by Dmitry Soshnikov
-  [851332] DESTDIR support for install_dlx by Ville Skyttä
+  [851332] DESTDIR support for install_dlx by Ville Skyttï¿½
   [970929] gdbstub support for MinGW tool chains by Muranaka Masaki
  [1021740] Turn gdb stub into a runtime option by Charles Duffy
  [1063329] RFB key press/release bug fix by Remko van der Vossen

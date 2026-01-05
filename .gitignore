@@ -47,6 +47,15 @@ bochs-msvc-src.zip
 /bochs/bios/rombios*.txt
 /bochs/bios/rombios*.bin
 /bochs/bios/rombios32.out
+/bochs/bios/acpi-dsdt-preprocessed.*
+
+# Local test artifacts
+/bochsout_test.txt
+/serial_test.log
+/test_config.bxrc
+
+# ACPI DSDT generation temporary outputs (bochs/tools/gen_acpi_dsdt_aml.py)
+/bochs/tools/_acpi_dsdt_aml.*
 
 # /bochs/build/linux/
 /bochs/build/linux/DOC-linux.html
