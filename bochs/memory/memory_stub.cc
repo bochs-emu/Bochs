@@ -80,8 +80,8 @@ Bit64u BX_MEMORY_STUB_C::get_memory_len(void)
 Bit8u* BX_MEMORY_STUB_C::alloc_vector_aligned(Bit64u bytes, Bit64u alignment)
 {
   Bit64u test_mask = alignment - 1;
-  BX_MEM_THIS actual_vector = new Bit8u [(Bit32u)(bytes + test_mask)];
-  if (BX_MEM_THIS actual_vector == 0) {
+  BX_MEM_THIS actual_vector = new Bit8u [bytes + test_mask];
+  if (BX_MEM_THIS actual_vector == NULL) {
     BX_PANIC(("alloc_vector_aligned: unable to allocate host RAM !"));
     return 0;
   }
