@@ -901,8 +901,10 @@ bool bx_vga_c::vbe_mmio_read_handler(bx_phy_address addr, unsigned len, void *da
     *((Bit8u *)data) = (Bit8u)value;
   } else if (len == 2) {
     *((Bit16u *)data) = (Bit16u)value;
-  } else {
+  } else if (len == 4) {
     *((Bit32u *)data) = value;
+  } else
+    BX_PANIC(("vbe_mmio_read_handler: not supported len=%d", len));
   }
 
   return true;
@@ -918,8 +920,10 @@ bool bx_vga_c::vbe_mmio_write_handler(bx_phy_address addr, unsigned len, void *d
     value = *((Bit8u *)data);
   } else if (len == 2) {
     value = *((Bit16u *)data);
-  } else {
+  } else if (len == 4) {
     value = *((Bit32u *)data);
+  } else {
+    BX_PANIC(("vbe_mmio_write_handler: not supported len=%d", len));
   }
 
   if (offset >= PCI_VGA_BOCHS_OFFSET && offset < (PCI_VGA_BOCHS_OFFSET + PCI_VGA_BOCHS_SIZE)) {
