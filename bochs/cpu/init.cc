@@ -1202,19 +1202,6 @@ void BX_CPU_C::reset(unsigned source)
 
   BX_CPU_THIS_PTR cpu_state_use_ok = 0;
 
-  handleCpuModeChange();
-#if BX_SUPPORT_FPU
-  handleFpuMmxModeChange();
-#endif
-#if BX_CPU_LEVEL >= 6
-  handleSseModeChange();
-#if BX_SUPPORT_AVX
-  handleAvxModeChange();
-#endif
-#endif
-
-  TLB_flush();
-
 #if BX_CPU_LEVEL >= 6
   // Reset XMM state - unchanged on #INIT
   if (source == BX_RESET_HARDWARE) {
