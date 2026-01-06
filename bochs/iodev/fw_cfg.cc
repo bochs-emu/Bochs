@@ -269,7 +269,8 @@ void bx_fw_cfg_c::process_dma(Bit64u dma_addr)
   // Descriptor structure: control (4 bytes), length (4 bytes), address (8 bytes)
   Bit8u desc[16];
   
-  BX_DEBUG(("fw_cfg DMA: reading descriptor from guest addr 0x%016llx", (unsigned long long)dma_addr));
+  BX_DEBUG(("fw_cfg DMA: reading descriptor from guest addr 0x" FMT_PHY_ADDRX,
+            (Bit64u)dma_addr));
   
   BX_MEM_THIS dmaReadPhysicalPage(dma_addr, 16, desc);
   
@@ -285,8 +286,10 @@ void bx_fw_cfg_c::process_dma(Bit64u dma_addr)
                    ((Bit64u)desc[12] << 24) | ((Bit64u)desc[13] << 16) |
                    ((Bit64u)desc[14] << 8) | ((Bit64u)desc[15]);
   
-  BX_DEBUG(("fw_cfg DMA: control=0x%08x, length=%u, address=0x%016llx", control, length, (unsigned long long)address));
-  BX_INFO(("fw_cfg DMA: control=0x%08x, length=%u, address=0x%016llx, cur_entry=0x%04x", control, length, (unsigned long long)address, cur_entry));
+  BX_DEBUG(("fw_cfg DMA: control=0x%08x, length=%u, address=0x" FMT_PHY_ADDRX,
+            control, length, (Bit64u)address));
+  BX_INFO(("fw_cfg DMA: control=0x%08x, length=%u, address=0x" FMT_PHY_ADDRX ", cur_entry=0x%04x",
+           control, length, (Bit64u)address, cur_entry));
   
   // Handle SELECT operation
   if (control & FW_CFG_DMA_CTL_SELECT) {
@@ -329,7 +332,8 @@ void bx_fw_cfg_c::process_dma(Bit64u dma_addr)
       }
       
       cur_offset += to_read;
-      BX_DEBUG(("fw_cfg DMA: read %u bytes from entry 0x%04x to 0x%016llx", to_read, key, address));
+      BX_DEBUG(("fw_cfg DMA: read %u bytes from entry 0x%04x to 0x" FMT_PHY_ADDRX,
+            to_read, key, (Bit64u)address));
       
       // Clear the READ bit to indicate completion (keep ERROR if set)
       control &= ~FW_CFG_DMA_CTL_READ;
@@ -466,7 +470,8 @@ void bx_fw_cfg_c::write(Bit32u address, Bit32u value, unsigned io_len)
       } else if (offset == 4) {
         // Low 32 bits written to port 0x518 - triggers DMA
         BX_FW_CFG_THIS dma_addr = (BX_FW_CFG_THIS dma_addr & 0xFFFFFFFF00000000ULL) | (Bit64u)swapped_value;
-        BX_INFO(("fw_cfg: DMA trigger, address = 0x%016llx", (unsigned long long)BX_FW_CFG_THIS dma_addr));
+        BX_INFO(("fw_cfg: DMA trigger, address = 0x" FMT_PHY_ADDRX,
+           (Bit64u)BX_FW_CFG_THIS dma_addr));
         process_dma(BX_FW_CFG_THIS dma_addr);
         BX_FW_CFG_THIS dma_addr = 0;
       }
@@ -477,7 +482,8 @@ void bx_fw_cfg_c::write(Bit32u address, Bit32u value, unsigned io_len)
       
       // Trigger when last byte written (offset 7)
       if (offset == 7) {
-        BX_DEBUG(("fw_cfg: DMA trigger (byte), address = 0x%016llx", (unsigned long long)BX_FW_CFG_THIS dma_addr));
+        BX_DEBUG(("fw_cfg: DMA trigger (byte), address = 0x" FMT_PHY_ADDRX,
+            (Bit64u)BX_FW_CFG_THIS dma_addr));
         process_dma(BX_FW_CFG_THIS dma_addr);
         BX_FW_CFG_THIS dma_addr = 0;
       }
@@ -490,8 +496,9 @@ void bx_fw_cfg_c::generate_e820_map(void)
 {
   // Get total RAM size from Bochs memory system (get_memory_len returns BYTES, not MB!)
   Bit64u ram_size = BX_MEM_THIS get_memory_len();
-  BX_INFO(("fw_cfg: Total RAM size = 0x%llx bytes (%llu MB)", 
-           (unsigned long long)ram_size, (unsigned long long)(ram_size / (1024ULL * 1024ULL))));
+  BX_INFO(("fw_cfg: Total RAM size = 0x" FMT_ADDRX64 " bytes (" FMT_LL "u MB)",
+           (Bit64u)ram_size,
+           (Bit64u)(ram_size / (1024ULL * 1024ULL))));
   
   // Build e820 table (matching QEMU's simpler layout for < 4GB RAM)
   const int MAX_E820_ENTRIES = 16;
@@ -536,9 +543,11 @@ void bx_fw_cfg_c::generate_e820_map(void)
   // Log e820 entries for debugging
   BX_INFO(("fw_cfg: Generated %d e820 entries:", nr_e820));
   for (int i = 0; i < nr_e820; i++) {
-    BX_INFO(("  Entry %d: addr=0x%016llx len=0x%016llx type=%d", 
-             i, (unsigned long long)table[i].address, 
-             (unsigned long long)table[i].length, table[i].type));
+    BX_INFO(("  Entry %d: addr=0x" FMT_PHY_ADDRX " len=0x" FMT_PHY_ADDRX " type=%d",
+         i,
+         (Bit64u)table[i].address,
+         (Bit64u)table[i].length,
+         table[i].type));
   }
   
   delete[] table;
@@ -581,8 +590,9 @@ void bx_fw_cfg_c::generate_acpi_tables(void)
   Bit64u ram_size = BX_MEM_THIS get_memory_len();
   Bit32u num_cpus = BX_SMP_PROCESSORS;
   
-  BX_INFO(("fw_cfg: generating ACPI tables for %u CPUs, %llu MB RAM",
-           num_cpus, (unsigned long long)(ram_size / (1024ULL * 1024ULL))));
+  BX_INFO(("fw_cfg: generating ACPI tables for %u CPUs, " FMT_LL "u MB RAM",
+           num_cpus,
+           (Bit64u)(ram_size / (1024ULL * 1024ULL))));
   
   // Create ACPI tables generator
   bx_acpi_tables_c acpi_gen;

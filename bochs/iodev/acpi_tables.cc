@@ -8,6 +8,7 @@
 
 #include "bochs.h"
 #include "acpi_tables.h"
+#include <cstddef>
 #include <cstring>
 
 // Pre-compiled DSDT from Bochs BIOS (bios/acpi-dsdt.hex)
