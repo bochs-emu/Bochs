@@ -903,7 +903,7 @@ bool bx_vga_c::vbe_mmio_read_handler(bx_phy_address addr, unsigned len, void *da
     *((Bit16u *)data) = (Bit16u)value;
   } else if (len == 4) {
     *((Bit32u *)data) = value;
-  } else
+  } else {
     BX_PANIC(("vbe_mmio_read_handler: not supported len=%d", len));
   }
 
