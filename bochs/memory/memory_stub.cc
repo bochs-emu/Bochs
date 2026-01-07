@@ -124,21 +124,23 @@ void BX_MEMORY_STUB_C::init_memory(Bit64u guest, Bit64u host, Bit32u block_size)
   memset(BX_MEM_THIS rom, 0xff, BIOSROMSZ + EXROMSIZE + 4096);
 
   BX_MEM_THIS block_size = block_size;
-  // block count can now exceed 32-bit for large memory configurations
-  Bit64u num_blocks = BX_MEM_THIS len / BX_MEM_THIS block_size;
+  // block must be large enough to fit num_blocks in 32-bit
+  BX_ASSERT((BX_MEM_THIS len / BX_MEM_THIS block_size) <= 0xffffffff);
+
+  Bit32u num_blocks = (Bit32u)(BX_MEM_THIS len / BX_MEM_THIS block_size);
   BX_INFO(("%.2fMB", (float)(BX_MEM_THIS len / (1024.0*1024.0))));
-  BX_INFO(("mem block size = 0x%08x, blocks=" FMT_LL "u", BX_MEM_THIS block_size, num_blocks));
-  BX_MEM_THIS blocks = new Bit8u* [(size_t)num_blocks];
+  BX_INFO(("mem block size = 0x%08x, blocks=%u", BX_MEM_THIS block_size, num_blocks));
+  BX_MEM_THIS blocks = new Bit8u* [num_blocks];
   if (0) {
     // all guest memory is allocated, just map it
-    for (Bit64u idx = 0; idx < num_blocks; idx++) {
+    for (unsigned idx = 0; idx < num_blocks; idx++) {
       BX_MEM_THIS blocks[idx] = BX_MEM_THIS vector + (idx * BX_MEM_THIS block_size);
     }
     BX_MEM_THIS used_blocks = num_blocks;
   }
   else {
     // host cannot allocate all requested guest memory
-    for (Bit64u idx = 0; idx < num_blocks; idx++) {
+    for (unsigned idx = 0; idx < num_blocks; idx++) {
       BX_MEM_THIS blocks[idx] = NULL;
     }
     BX_MEM_THIS used_blocks = 0;
@@ -147,7 +149,7 @@ void BX_MEMORY_STUB_C::init_memory(Bit64u guest, Bit64u host, Bit32u block_size)
 
 Bit8u* BX_MEMORY_STUB_C::get_vector(bx_phy_address addr)
 {
-  Bit64u block = addr / BX_MEM_THIS block_size;
+  Bit32u block = (Bit32u)(addr / BX_MEM_THIS block_size);
 #if (BX_LARGE_RAMFILE)
   if (!BX_MEM_THIS blocks[block] || (BX_MEM_THIS blocks[block] == BX_MEM_THIS swapped_out))
 #else
@@ -173,9 +175,9 @@ void BX_MEMORY_STUB_C::read_block(Bit32u block)
 }
 #endif
 
-void BX_MEMORY_STUB_C::allocate_block(Bit64u block)
+void BX_MEMORY_STUB_C::allocate_block(Bit32u block)
 {
-  const Bit64u max_blocks = BX_MEM_THIS allocated / BX_MEM_THIS block_size;
+  const Bit32u max_blocks = (Bit32u)(BX_MEM_THIS allocated / BX_MEM_THIS block_size);
 
 #if BX_LARGE_RAMFILE
   /*
@@ -183,7 +185,7 @@ void BX_MEMORY_STUB_C::allocate_block(Bit64u block)
    * First, see if there is any spare host memory blocks we can still freely allocate
    */
   if (BX_MEM_THIS used_blocks >= max_blocks) {
-    Bit64u original_replacement_block = BX_MEM_THIS next_swapout_idx;
+    Bit32u original_replacement_block = BX_MEM_THIS next_swapout_idx;
     // Find a block to replace
     bool used_for_tlb;
     Bit8u *buffer;
