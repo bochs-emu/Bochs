@@ -868,6 +868,10 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 #endif
 
+  case BX_MSR_PLATFORM_ID:
+    BX_ERROR(("WRMSR: PLATFORM_ID is a read only MSR"));
+    return false;
+
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_MTRRCAP:
       BX_ERROR(("WRMSR: MTRRCAP is read only MSR"));
