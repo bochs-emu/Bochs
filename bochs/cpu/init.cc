@@ -897,7 +897,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR prev_rip = RIP = 0x0000FFF0;
 #endif
 
-  BX_CPU_THIS_PTR speculative_rsp = 0;
+  BX_CPU_THIS_PTR speculative_rsp = false;
 
   /* CS (Code Segment) and descriptor cache */
   /* Note: on a real cpu, CS initially points to upper memory.  After
