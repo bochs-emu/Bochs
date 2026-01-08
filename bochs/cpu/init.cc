@@ -888,6 +888,7 @@ void BX_CPU_C::reset(unsigned source)
 
   BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
   BX_CPU_THIS_PTR debug_trap = 0;
+  BX_CPU_THIS_PTR async_event = 0;
 
   /* instruction pointer */
 #if BX_CPU_LEVEL < 2
@@ -895,6 +896,8 @@ void BX_CPU_C::reset(unsigned source)
 #else /* from 286 up */
   BX_CPU_THIS_PTR prev_rip = RIP = 0x0000FFF0;
 #endif
+
+  BX_CPU_THIS_PTR speculative_rsp = false;
 
   /* CS (Code Segment) and descriptor cache */
   /* Note: on a real cpu, CS initially points to upper memory.  After

@@ -39,6 +39,7 @@ typedef MSR_Descriptor* MSR_DescriptorPtr;
 
 enum MSR_Register {
   BX_MSR_TSC            = 0x010,
+  BX_MSR_PLATFORM_ID    = 0x017,
   BX_MSR_APICBASE       = 0x01b,
   BX_MSR_TSC_ADJUST     = 0x03b,
   BX_MSR_TSC_DEADLINE   = 0x6e0,
