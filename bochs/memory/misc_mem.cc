@@ -107,7 +107,7 @@ Bit64s memory_param_save_handler(void *devptr, bx_param_c *param)
   const char *pname = param->get_name();
 
   if (! strncmp(pname, "blk", 3)) {
-    Bit64u blk_index = atoi(pname + 3);
+    Bit32u blk_index = atoi(pname + 3);
     if (! BX_MEM(0)->blocks[blk_index])
       return -1;
 #if BX_LARGE_RAMFILE
@@ -144,14 +144,14 @@ void memory_param_restore_handler(void *devptr, bx_param_c *param, Bit64s val)
   const char *pname = param->get_name();
 
   if (! strncmp(pname, "blk", 3)) {
-    Bit64u blk_index = atoi(pname + 3);
+    Bit32u blk_index = atoi(pname + 3);
 #if BX_LARGE_RAMFILE
-    if ((Bit64s) val == -2) {
+    if ((Bit32s) val == -2) {
       BX_MEM(0)->blocks[blk_index] = BX_MEM(0)->swapped_out;
       return;
     }
 #endif
-     if((Bit64s) val < 0) {
+     if((Bit32s) val < 0) {
         BX_MEM(0)->blocks[blk_index] = NULL;
         return;
       }

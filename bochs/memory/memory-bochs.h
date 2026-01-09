@@ -75,10 +75,10 @@ protected:
   Bit8u   *rom;      // 512k BIOS rom space + 128k expansion rom space
   Bit8u   *bogus;    // 4k for unexisting memory
 
-  Bit64u used_blocks;
+  Bit32u used_blocks;
 #if BX_LARGE_RAMFILE
   static Bit8u * const swapped_out; // NULL; // (NULL - sizeof(Bit8u));
-  Bit64u  next_swapout_idx;
+  Bit32u  next_swapout_idx;
   FILE    *overflow_file;
 
   BX_MEM_SMF void read_block(Bit32u block);

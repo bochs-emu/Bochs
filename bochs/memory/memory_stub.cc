@@ -226,7 +226,7 @@ void BX_MEMORY_STUB_C::allocate_block(Bit32u block)
     BX_DEBUG(("allocate_block: block=0x%x, replaced 0x%x", block, BX_MEM_THIS next_swapout_idx));
   }
   else {
-    BX_MEM_THIS blocks[block] = BX_MEM_THIS vector + (BX_MEM_THIS used_blocks++ * BX_MEM_THIS block_size);
+    BX_MEM_THIS blocks[block] = BX_MEM_THIS vector + (Bit64u(BX_MEM_THIS used_blocks++) * BX_MEM_THIS block_size);
     BX_DEBUG(("allocate_block: block=0x%x used 0x%x of 0x%x",
           block, BX_MEM_THIS used_blocks, max_blocks));
   }
@@ -236,7 +236,7 @@ void BX_MEMORY_STUB_C::allocate_block(Bit32u block)
     BX_PANIC(("FATAL ERROR: all available memory is already allocated !"));
   }
   else {
-    BX_MEM_THIS blocks[block] = BX_MEM_THIS vector + (BX_MEM_THIS used_blocks * BX_MEM_THIS block_size);
+    BX_MEM_THIS blocks[block] = BX_MEM_THIS vector + (Bit64u(BX_MEM_THIS used_blocks) * BX_MEM_THIS block_size);
     BX_MEM_THIS used_blocks++;
   }
   BX_DEBUG(("allocate_block: used_blocks=0x%x of 0x%x", BX_MEM_THIS used_blocks, max_blocks));
