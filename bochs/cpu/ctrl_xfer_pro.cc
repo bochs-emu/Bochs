@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2019  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -42,6 +42,15 @@ void BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_
       BX_ERROR(("check_cs(0x%04x): Both CS.L and CS.D_B bits enabled !", cs_raw));
       exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
     }
+
+#if BX_SUPPORT_FRED
+    if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+      if (check_rpl == 0 && !descriptor->u.segment.l) {
+        BX_ERROR(("check_cs(0x%04x): attempt to enter compatibility mode under FRED enabled", cs_raw));
+        exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+      }
+    }
+#endif
   }
 #endif
 

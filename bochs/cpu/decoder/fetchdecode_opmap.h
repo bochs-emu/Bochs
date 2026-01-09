@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2017-2023 Stanislav Shwartsman
+//   Copyright (c) 2017-2025 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1492,6 +1492,9 @@ static const Bit64u BxOpcodeTable0F00[] = {
   form_opcode(ATTR_NNN2, BX_IA_LLDT_Ew),
   form_opcode(ATTR_NNN3, BX_IA_LTR_Ew),
   form_opcode(ATTR_NNN4, BX_IA_VERR_Ew),
+#if BX_SUPPORT_FRED && BX_SUPPORT_X86_64
+  form_opcode(ATTR_NNN6 | ATTR_SSE_PREFIX_F2 | ATTR_IS64, BX_IA_LKGS_Ew),
+#endif
   last_opcode(ATTR_NNN5, BX_IA_VERW_Ew)
 };
 
@@ -1527,6 +1530,10 @@ static const Bit64u BxOpcodeTable0F01[] = {
   form_opcode(ATTR_NNN1 | ATTR_RRR0 | ATTR_MODC0 | ATTR_SSE_NO_PREFIX, BX_IA_MONITOR),  // 0F 01 C8
   form_opcode(ATTR_NNN1 | ATTR_RRR1 | ATTR_MODC0 | ATTR_SSE_NO_PREFIX, BX_IA_MWAIT),    // 0F 01 C9
   form_opcode(ATTR_NNN1 | ATTR_RRR2 | ATTR_MODC0 | ATTR_SSE_NO_PREFIX, BX_IA_CLAC),     // 0F 01 CA
+#if BX_SUPPORT_FRED && BX_SUPPORT_X86_64
+  form_opcode(ATTR_NNN1 | ATTR_RRR2 | ATTR_MODC0 | ATTR_SSE_PREFIX_F3 | ATTR_IS64, BX_IA_ERETU),
+  form_opcode(ATTR_NNN1 | ATTR_RRR2 | ATTR_MODC0 | ATTR_SSE_PREFIX_F2 | ATTR_IS64, BX_IA_ERETS),
+#endif
   form_opcode(ATTR_NNN1 | ATTR_RRR3 | ATTR_MODC0 | ATTR_SSE_NO_PREFIX, BX_IA_STAC),     // 0F 01 CB
 
   form_opcode(ATTR_NNN2 | ATTR_RRR0 | ATTR_MODC0 | ATTR_SSE_NO_PREFIX, BX_IA_XGETBV),   // 0F 01 D0

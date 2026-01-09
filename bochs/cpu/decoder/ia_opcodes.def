@@ -2885,6 +2885,12 @@ bx_define_opcode(BX_IA_MOVRS_GdEd, "movrs", "movrsl", &BX_CPU_C::MOV64_GdEdM, NU
 bx_define_opcode(BX_IA_MOVRS_GqEq, "movrs", "movrsq", &BX_CPU_C::MOV_GqEqM, NULL, BX_ISA_MOVRS, OP_Gq, OP_Eq, OP_NONE, OP_NONE, 0)
 #endif
 
+#if BX_SUPPORT_FRED
+bx_define_opcode(BX_IA_ERETS, "erets", "erets", NULL, &BX_CPU_C::ERETS, BX_ISA_FRED, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_ERETU, "eretu", "eretu", NULL, &BX_CPU_C::ERETU, BX_ISA_FRED, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_LKGS_Ew, "lkgs", "lkgs", &BX_CPU_C::LKGS_Ew, &BX_CPU_C::LKGS_Ew, BX_ISA_FRED, OP_Ew, OP_NONE, OP_NONE, OP_NONE, 0)
+#endif
+
 #if BX_SUPPORT_EVEX
 #include "ia_opcodes_evex.def"
 #endif // BX_SUPPORT_EVEX

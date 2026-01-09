@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2009  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -76,6 +76,15 @@ const char* stringify_CR0(Bit32u cr0, char *s)
     (cr0 & (1<<0))  ? "PE" : "pe");
   return s;
 }
+
+#if BX_SUPPORT_FRED
+const char* stringify_CR4_HI(Bit32u cr4_hi, char *s)
+{
+  sprintf(s, "%s",
+    (cr4_hi & (1<<0))  ? "FRED" : "fred");
+  return s;
+}
+#endif
 
 const char* stringify_CR4(Bit32u cr4, char *s)
 {
@@ -331,7 +340,7 @@ void BX_CPU_C::debug(bx_address offset)
 
   Bit32u cr0 = BX_CPU_THIS_PTR cr0.get32();
 #if BX_CPU_LEVEL >= 5
-  Bit32u cr4 = BX_CPU_THIS_PTR cr4.get32();
+  bx_address cr4 = BX_CPU_THIS_PTR cr4.get();
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -347,7 +356,10 @@ void BX_CPU_C::debug(bx_address offset)
     BX_INFO(("| CR0=0x%08x: %s", cr0, stringify_CR0(cr0, s)));
     BX_INFO(("| CR2=0x" FMT_ADDRX64, BX_CPU_THIS_PTR cr2));
     BX_INFO(("| CR3=0x" FMT_ADDRX64, BX_CPU_THIS_PTR cr3));
-    BX_INFO(("| CR4=0x%08x: %s", cr4, stringify_CR4(cr4, s)));
+    BX_INFO(("| CR4=0x%08x: %s", GET32L(cr4), stringify_CR4(cr4, s)));
+#if BX_SUPPORT_FRED
+    BX_INFO(("| CR4_HI=0x%08x: %s", GET32H(cr4), stringify_CR4_HI(GET32H(cr4), s)));
+#endif
   }
   else
 #endif // BX_SUPPORT_X86_64

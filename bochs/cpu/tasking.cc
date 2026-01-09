@@ -807,11 +807,11 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     }
     if (ShadowStackEnabled(CPL)) {
       if (tempSSP & 0x3) {
-        BX_ERROR(("shadow_stack_restore: tempSSP must be 4-byte aligned"));
+        BX_ERROR(("task switch shadow_stack_restore: tempSSP must be 4-byte aligned"));
         exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
       }
       if (GET32H(tempSSP)!=0) {
-        BX_ERROR(("shadow_stack_restore: prevSSP must be 32-bit in 32-bit mode"));
+        BX_ERROR(("task switch shadow_stack_restore: prevSSP must be 32-bit in 32-bit mode"));
         exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
       }
       SSP = tempSSP;
