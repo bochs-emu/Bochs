@@ -55,6 +55,7 @@ extern "C" {
 #define BX_PLUGIN_DMA       "dma"
 #define BX_PLUGIN_PIC       "pic"
 #define BX_PLUGIN_PIT       "pit"
+#define BX_PLUGIN_FW_CFG    "fw_cfg"
 #define BX_PLUGIN_PCI       "pci"
 #define BX_PLUGIN_PCI2ISA   "pci2isa"
 #define BX_PLUGIN_PCI_IDE   "pci_ide"
@@ -416,6 +417,7 @@ PLUGIN_ENTRY_FOR_MODULE(cmos);
 PLUGIN_ENTRY_FOR_MODULE(dma);
 PLUGIN_ENTRY_FOR_MODULE(pic);
 PLUGIN_ENTRY_FOR_MODULE(pit);
+PLUGIN_ENTRY_FOR_MODULE(fw_cfg);
 PLUGIN_ENTRY_FOR_MODULE(vga);
 PLUGIN_ENTRY_FOR_MODULE(svga_cirrus);
 PLUGIN_ENTRY_FOR_MODULE(geforce);

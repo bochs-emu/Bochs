@@ -1040,6 +1040,9 @@ plugin_t bx_builtin_plugins[] = {
   BUILTIN_OPT_PLUGIN_ENTRY(biosdev),
   BUILTIN_OPT_PLUGIN_ENTRY(speaker),
   BUILTIN_OPT_PLUGIN_ENTRY(extfpuirq),
+#if BX_SUPPORT_PCI
+  BUILTIN_OPTPCI_PLUGIN_ENTRY(acpi),
+#endif
   BUILTIN_OPT_PLUGIN_ENTRY(parallel),
   BUILTIN_OPT_PLUGIN_ENTRY(serial),
 #if BX_SUPPORT_BUSMOUSE

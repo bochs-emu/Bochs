@@ -162,10 +162,31 @@ void bx_acpi_ctrl_c::reset(unsigned type)
   BX_ACPI_THIS pci_conf[0x3c] = 0x00; // IRQ
 
   // PM base 0x40 - 0x43
-  BX_ACPI_THIS pci_conf[0x40] = 0x01;
-  BX_ACPI_THIS pci_conf[0x41] = 0x00;
-  BX_ACPI_THIS pci_conf[0x42] = 0x00;
-  BX_ACPI_THIS pci_conf[0x43] = 0x00;
+  // Note: the reset default (0x0001) indicates an unconfigured PCI I/O BAR.
+  // Do not map the ACPI I/O window at address 0x0000/0x0001.
+  //
+  // When running with UEFI firmware (OVMF), seed QEMU-like defaults so the
+  // ACPI PM timer is available very early.
+  const bool uefi_enabled = SIM->get_param_bool(BXPN_FW_CFG_ENABLED)->get();
+  Bit32u pmbar = ReadHostDWordFromLittleEndian((Bit32u*) &BX_ACPI_THIS pci_conf[0x40]);
+  if (!uefi_enabled) {
+    // Upstream-compatible reset behavior.
+    BX_ACPI_THIS pci_conf[0x40] = 0x01;
+    BX_ACPI_THIS pci_conf[0x41] = 0x00;
+    BX_ACPI_THIS pci_conf[0x42] = 0x00;
+    BX_ACPI_THIS pci_conf[0x43] = 0x00;
+  } else {
+    if ((pmbar & 0xffc0) == 0) {
+      // Default to 0xB000 (I/O BAR => bit0 set).
+      BX_ACPI_THIS pci_conf[0x40] = 0x01;
+      BX_ACPI_THIS pci_conf[0x41] = 0xB0;
+      BX_ACPI_THIS pci_conf[0x42] = 0x00;
+      BX_ACPI_THIS pci_conf[0x43] = 0x00;
+    } else {
+      // Preserve base, keep only the read-only bit semantics on the low byte.
+      BX_ACPI_THIS pci_conf[0x40] = (BX_ACPI_THIS pci_conf[0x40] & 0xc0) | 0x01;
+    }
+  }
 
   // clear DEVACTB register on PIIX4 ACPI reset
   BX_ACPI_THIS pci_conf[0x58] = 0x00;
@@ -179,10 +200,25 @@ void bx_acpi_ctrl_c::reset(unsigned type)
   BX_ACPI_THIS pci_conf[0x67] = 0x98;
 
   // SM base 0x90 - 0x93
-  BX_ACPI_THIS pci_conf[0x90] = 0x01;
-  BX_ACPI_THIS pci_conf[0x91] = 0x00;
-  BX_ACPI_THIS pci_conf[0x92] = 0x00;
-  BX_ACPI_THIS pci_conf[0x93] = 0x00;
+  Bit32u smbar = ReadHostDWordFromLittleEndian((Bit32u*) &BX_ACPI_THIS pci_conf[0x90]);
+  if (!uefi_enabled) {
+    // Upstream-compatible reset behavior.
+    BX_ACPI_THIS pci_conf[0x90] = 0x01;
+    BX_ACPI_THIS pci_conf[0x91] = 0x00;
+    BX_ACPI_THIS pci_conf[0x92] = 0x00;
+    BX_ACPI_THIS pci_conf[0x93] = 0x00;
+  } else {
+    if ((smbar & 0xfff0) == 0) {
+      // Default to 0xB100 (I/O BAR => bit0 set).
+      BX_ACPI_THIS pci_conf[0x90] = 0x01;
+      BX_ACPI_THIS pci_conf[0x91] = 0xB1;
+      BX_ACPI_THIS pci_conf[0x92] = 0x00;
+      BX_ACPI_THIS pci_conf[0x93] = 0x00;
+    } else {
+      // Preserve base, keep only the read-only bit semantics on the low byte.
+      BX_ACPI_THIS pci_conf[0x90] = (BX_ACPI_THIS pci_conf[0x90] & 0xf0) | 0x01;
+    }
+  }
 
   BX_ACPI_THIS s.pmsts = 0;
   BX_ACPI_THIS s.pmen = 0;
@@ -202,6 +238,22 @@ void bx_acpi_ctrl_c::reset(unsigned type)
 
   for (i = 0; i < 32; i++) {
     BX_ACPI_THIS s.smbus.data[i] = 0;
+  }
+
+  // Map the ACPI I/O windows only when the BAR is configured (non-zero base).
+  pmbar = ReadHostDWordFromLittleEndian((Bit32u*) &BX_ACPI_THIS pci_conf[0x40]);
+  smbar = ReadHostDWordFromLittleEndian((Bit32u*) &BX_ACPI_THIS pci_conf[0x90]);
+  if ((pmbar & 0xffc0) != 0) {
+    DEV_pci_set_base_io(BX_ACPI_THIS_PTR, read_handler, write_handler,
+                        &BX_ACPI_THIS s.pm_base,
+                        &BX_ACPI_THIS pci_conf[0x40],
+                        64, &acpi_pm_iomask[0], "ACPI PM base");
+  }
+  if ((smbar & 0xfff0) != 0) {
+    DEV_pci_set_base_io(BX_ACPI_THIS_PTR, read_handler, write_handler,
+                        &BX_ACPI_THIS s.sm_base,
+                        &BX_ACPI_THIS pci_conf[0x90],
+                        16, &acpi_sm_iomask[0], "ACPI SM base");
   }
 }
 

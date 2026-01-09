@@ -3180,7 +3180,29 @@ Bochs must be set up to use system and VGA BIOS like this:
 We recommend to use the ROM images distributed with Bochs or one of the latest
 <ulink url="http://www.seabios.org/">SeaBIOS</ulink> images. BIOS images designed
 for real hardware mostly do not work properly. Please see the <xref linkend="bochsopt-romimage">
-for more information.
+</para>
+
+<para>
+<emphasis>UEFI Firmware Support:</emphasis> Bochs supports UEFI boot using OVMF
+(Open Virtual Machine Firmware) from the TianoCore EDK2 project. To use UEFI:
+<screen>
+  romimage: file=OVMF.fd, address=0xffc00000
+</screen>
+UEFI boot requires the fw_cfg device which provides system configuration to the
+firmware via I/O ports 0x510-0x51B. This includes the E820 memory map, ACPI tables,
+RAM size, and CPU count. Enable it with:
+<screen>
+  fw_cfg: enabled=1
+</screen>
+For best results with OVMF graphics output, configure VGA as a PCI device:
+<screen>
+  pci: enabled=1, chipset=i440fx, slot1=pcivga
+</screen>
+The ACPI DSDT AML is built into Bochs and generated from the Bochs DSDT DSL
+source using the ACPICA iasl compiler.
+For developers, bochs/tools/gen_acpi_dsdt_aml.py can regenerate the embedded
+AML header.
+UEFI boot has been tested with Windows Server 2025 and modern Linux distributions.
 </para>
 
 <para>

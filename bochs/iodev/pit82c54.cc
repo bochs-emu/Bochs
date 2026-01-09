@@ -206,7 +206,38 @@ pit_82C54::pit_82C54(void)
   init();
 }
 
-void pit_82C54::reset(unsigned type) {}
+void pit_82C54::reset(unsigned type)
+{
+  int i;
+
+  for (i=0; i<=MAX_COUNTER; i++) {
+    counter[i].count = 0;
+    counter[i].count_binary = 0;
+    counter[i].count_LSB_latched = 0;
+    counter[i].count_MSB_latched = 0;
+    counter[i].status_latched = 0;
+    counter[i].read_state = LSByte;
+    counter[i].write_state = LSByte;
+    counter[i].inlatch = 0;
+    counter[i].rw_mode = 1;
+    counter[i].mode = 4;
+    counter[i].bcd_mode = 0;
+    counter[i].GATE = 1;
+    counter[i].OUTpin = 1;
+    counter[i].outlatch = 0;
+    counter[i].status_latch = 0;
+    counter[i].next_change_time = 0;
+    // Match historical init-time defaults to avoid changing
+    // power-on behavior now that reset() is called during startup.
+    counter[i].null_count = 0;
+    counter[i].first_pass = 0;
+    counter[i].triggerGATE = 0;
+    counter[i].state_bit_1 = 0;
+    counter[i].state_bit_2 = 0;
+    counter[i].count_written = 1;
+  }
+  seen_problems = 0;
+}
 
 void pit_82C54::register_state(bx_param_c *parent)
 {

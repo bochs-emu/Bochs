@@ -72,6 +72,8 @@ OBJS_THAT_CANNOT_BE_PLUGINS = \
 OBJS_THAT_CAN_BE_PLUGINS = \
   pic.o \
   pit.o \
+  fw_cfg.o \
+  acpi_tables.o \
   serial.o \
   parallel.o \
   floppy.o \

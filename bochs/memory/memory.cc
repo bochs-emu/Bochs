@@ -40,6 +40,10 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
 {
   Bit8u *data_ptr;
   bx_phy_address a20addr = A20ADDR(addr);
+
+  // Translate guest physical address to linear memory offset (handles PCI hole)
+  bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
+
   struct memory_handler_struct *memory_handler = NULL;
 
   // Note: accesses should always be contained within a single page
@@ -48,7 +52,7 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
   }
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  BX_MEM_THIS check_monitor(a20addr, len);
+  BX_MEM_THIS check_monitor(linear_addr, len);
 #endif
 
   bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
@@ -84,8 +88,13 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
 
 mem_write:
 
-  // all memory access fits in single 4K page
-  if ((a20addr < BX_MEM_THIS len) && !is_bios) {
+  // all memory access fits in single 4K page - use translated linear address
+  if ((linear_addr < BX_MEM_THIS len) && !is_bios) {
+    // Check if address is in PCI hole - do not access RAM backing store!
+    if (bx_is_pci_hole_addr(a20addr)) {
+      return;
+    }
+
     // all of data is within limits of physical memory
     if (a20addr < 0x000a0000 || a20addr >= 0x00100000)
     {
@@ -178,6 +187,10 @@ void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
 {
   Bit8u *data_ptr;
   bx_phy_address a20addr = A20ADDR(addr);
+
+  // Translate guest physical address to linear memory offset (handles PCI hole)
+  bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
+
   struct memory_handler_struct *memory_handler = NULL;
 
   // Note: accesses should always be contained within a single page
@@ -227,7 +240,14 @@ void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
 
 mem_read:
 
-  if ((a20addr < BX_MEM_THIS len) && !is_bios) {
+  // Use translated linear address for bounds check
+  if ((linear_addr < BX_MEM_THIS len) && !is_bios) {
+    // Check if address is in PCI hole - do not access RAM backing store!
+    if (bx_is_pci_hole_addr(a20addr)) {
+      memset(data, 0xff, len);
+      return;
+    }
+
     // all of data is within limits of physical memory
     if (a20addr < 0x000a0000 || a20addr >= 0x00100000)
     {

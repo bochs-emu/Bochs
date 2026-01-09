@@ -215,11 +215,16 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\iodev\acpi_tables.cc" />
     <ClCompile Include="..\iodev\devices.cc" />
+    <ClCompile Include="..\iodev\fw_cfg.cc" />
     <ClCompile Include="..\iodev\slowdown_timer.cc" />
     <ClCompile Include="..\iodev\virt_timer.cc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\iodev\acpi_dsdt_aml.h" />
+    <ClInclude Include="..\iodev\acpi_tables.h" />
+    <ClInclude Include="..\iodev\fw_cfg.h" />
     <ClInclude Include="..\iodev\iodev.h" />
     <ClInclude Include="..\iodev\slowdown_timer.h" />
     <ClInclude Include="..\iodev\virt_timer.h" />
