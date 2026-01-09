@@ -115,7 +115,7 @@ Bit64s memory_param_save_handler(void *devptr, bx_param_c *param)
       return -2;
 #endif
     // Return the block offset into the array
-    Bit32u val = (Bit32u) (BX_MEM(0)->blocks[blk_index] - BX_MEM(0)->vector);
+    Bit64u val = (Bit64u) (BX_MEM(0)->blocks[blk_index] - BX_MEM(0)->vector);
     if ((val & (BX_MEM_THIS block_size-1)) == 0)
        return val / BX_MEM_THIS block_size;
   } else if (!strcmp(pname, "flash_data")) {
