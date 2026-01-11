@@ -490,6 +490,8 @@ mouse: enabled=0
 #  original i440FX doesn't support them. The options 'noacpi' and 'nohpet' make
 #  it possible to disable them. The option 'noagp' disables the incomplete AGP
 #  subsystem of the i440BX chipset.
+#  If PCI is enabled, the 'nofloppy' option disables the FDC if no floppy drive
+#  is configured.
 #
 # Example:
 #   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k, advopts=noacpi
