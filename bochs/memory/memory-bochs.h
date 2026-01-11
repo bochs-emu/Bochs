@@ -85,6 +85,7 @@ public:
 
   BX_MEM_SMF Bit64u get_memory_len(void);
   BX_MEM_SMF void allocate_block(Bit32u index);
+  BX_MEM_SMF Bit32u get_num_blocks();
   BX_MEM_SMF Bit8u* alloc_vector_aligned(Bit64u bytes, Bit64u alignment);
 
 #if BX_SUPPORT_MONITOR_MWAIT

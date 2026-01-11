@@ -77,6 +77,15 @@ Bit64u BX_MEMORY_STUB_C::get_memory_len(void)
   return (BX_MEM_THIS len);
 }
 
+Bit32u BX_MEMORY_STUB_C::get_num_blocks()
+{
+  Bit32u num_blocks = BX_MEM_THIS len / BX_MEM_THIS block_size;
+  if ((BX_MEM_THIS len % BX_MEM_THIS block_size) != 0)
+    num_blocks++;
+
+  return num_blocks;
+}
+
 Bit8u* BX_MEMORY_STUB_C::alloc_vector_aligned(Bit64u bytes, Bit64u alignment)
 {
   Bit64u test_mask = alignment - 1;
@@ -127,7 +136,7 @@ void BX_MEMORY_STUB_C::init_memory(Bit64u guest, Bit64u host, Bit32u block_size)
   // block must be large enough to fit num_blocks in 32-bit
   BX_ASSERT((BX_MEM_THIS len / BX_MEM_THIS block_size) <= 0xffffffff);
 
-  Bit32u num_blocks = (Bit32u)(BX_MEM_THIS len / BX_MEM_THIS block_size);
+  Bit32u num_blocks = get_num_blocks();
   BX_INFO(("%.2fMB", (float)(BX_MEM_THIS len / (1024.0*1024.0))));
   BX_INFO(("mem block size = 0x%08x, blocks=%u", BX_MEM_THIS block_size, num_blocks));
   BX_MEM_THIS blocks = new Bit8u* [num_blocks];
@@ -177,7 +186,9 @@ void BX_MEMORY_STUB_C::read_block(Bit32u block)
 
 void BX_MEMORY_STUB_C::allocate_block(Bit32u block)
 {
-  const Bit32u max_blocks = (Bit32u)(BX_MEM_THIS allocated / BX_MEM_THIS block_size);
+  Bit32u max_blocks = (Bit32u)(BX_MEM_THIS allocated / BX_MEM_THIS block_size);
+  if ((BX_MEM_THIS allocated % BX_MEM_THIS block_size) != 0)
+    max_blocks++;
 
 #if BX_LARGE_RAMFILE
   /*
