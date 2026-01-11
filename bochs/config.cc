@@ -735,8 +735,8 @@ void bx_init_options()
       "block_size",
       "Memory block granularity (kilobytes)",
       "Granularity of host memory allocation",
-      4, 8192,
-      128);
+      0, 8192,
+      0);
   mem_block_size->set_ask_format("Enter memory block size (KB): [%d] ");
   ram->set_options(ram->SERIES_ASK);
 
