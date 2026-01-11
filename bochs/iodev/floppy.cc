@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -180,7 +180,7 @@ PLUGIN_ENTRY_FOR_MODULE(floppy)
   } else if (mode == PLUGIN_FINI) {
     delete theFloppyController;
   } else if (mode == PLUGIN_PROBE){
-    return (int)PLUGTYPE_CORE;
+    return (int)PLUGTYPE_STANDARD;
   }
   return 0; // Success
 }

@@ -226,7 +226,7 @@ void bx_hard_drive_c::init(void)
     }
 
     // We don't want to register addresses 0x3f6 and 0x3f7 as they are handled by the floppy controller if present
-    if (((BX_HD_THIS channels[channel].ioaddr2 != 0) && (BX_HD_THIS channels[channel].ioaddr2 != 0x3f0)) || !PLUG_device_present("floppy")) {
+    if ((BX_HD_THIS channels[channel].ioaddr2 != 0) && ((BX_HD_THIS channels[channel].ioaddr2 != 0x3f0) || !PLUG_device_present("floppy"))) {
       for (unsigned addr=0x6; addr<=0x7; addr++) {
         DEV_register_ioread_handler(this, read_handler,
                               BX_HD_THIS channels[channel].ioaddr2+addr, string, 1);

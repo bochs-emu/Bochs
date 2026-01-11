@@ -261,7 +261,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
       (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() != BX_FDD_NONE) ||
       (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get() != BX_FDD_NONE)) {
 #endif
-    PLUG_load_plugin(floppy, PLUGTYPE_CORE);
+    PLUG_load_plugin(floppy, PLUGTYPE_STANDARD);
 #if BX_SUPPORT_PCI
   }
 #endif
