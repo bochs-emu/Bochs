@@ -914,7 +914,7 @@ bool bx_vga_c::vbe_mmio_write_handler(bx_phy_address addr, unsigned len, void *d
 {
   bx_vga_c *class_ptr = (bx_vga_c *)param;
   Bit32u offset = (Bit32u)(addr & 0xfff);
-  Bit32u value;
+  Bit32u value = 0;
 
   if (len == 1) {
     value = *((Bit8u *)data);
