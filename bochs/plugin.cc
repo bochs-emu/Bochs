@@ -1142,6 +1142,7 @@ plugin_t bx_builtin_plugins[] = {
   BUILTIN_IMG_PLUGIN_ENTRY(vmware4),
   BUILTIN_IMG_PLUGIN_ENTRY(vbox),
   BUILTIN_IMG_PLUGIN_ENTRY(vpc),
+  BUILTIN_IMG_PLUGIN_ENTRY(vhdx),
   BUILTIN_IMG_PLUGIN_ENTRY(vvfat),
   {"NULL", PLUGTYPE_NULL, 0, NULL, 0}
 };
