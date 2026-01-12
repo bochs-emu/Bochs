@@ -71,9 +71,6 @@ void bx_pic_c::init(void)
   DEV_register_iowrite_handler(this, write_handler, 0x00A0, "8259 PIC", 1);
   DEV_register_iowrite_handler(this, write_handler, 0x00A1, "8259 PIC", 1);
 
-  // Ensure init() and reset() stay in sync.
-  reset(0);
-
 #if BX_DEBUGGER
   // register device for the 'info device' command (calls debug_dump())
   bx_dbg_register_debug_info("pic", this);

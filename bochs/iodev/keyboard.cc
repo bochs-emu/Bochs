@@ -189,53 +189,7 @@ void bx_keyb_c::init(void)
 
 void bx_keyb_c::reset(unsigned type)
 {
-  resetinternals(1);
-
   BX_KEY_THIS s.kbd_internal_buffer.led_status = 0;
-  BX_KEY_THIS s.kbd_internal_buffer.scanning_enabled = 1;
-
-  BX_KEY_THIS s.mouse_internal_buffer.num_elements = 0;
-  for (int i=0; i<BX_MOUSE_BUFF_SIZE; i++)
-    BX_KEY_THIS s.mouse_internal_buffer.buffer[i] = 0;
-  BX_KEY_THIS s.mouse_internal_buffer.head = 0;
-
-  BX_KEY_THIS s.kbd_controller.pare = 0;
-  BX_KEY_THIS s.kbd_controller.tim  = 0;
-  BX_KEY_THIS s.kbd_controller.auxb = 0;
-  BX_KEY_THIS s.kbd_controller.keyl = 1;
-  BX_KEY_THIS s.kbd_controller.c_d  = 1;
-  BX_KEY_THIS s.kbd_controller.sysf = 0;
-  BX_KEY_THIS s.kbd_controller.inpb = 0;
-  BX_KEY_THIS s.kbd_controller.outb = 0;
-
-  BX_KEY_THIS s.kbd_controller.kbd_clock_enabled = 1;
-  BX_KEY_THIS s.kbd_controller.aux_clock_enabled = 0;
-  BX_KEY_THIS s.kbd_controller.allow_irq1 = 1;
-  BX_KEY_THIS s.kbd_controller.allow_irq12 = 1;
-  BX_KEY_THIS s.kbd_controller.kbd_output_buffer = 0;
-  BX_KEY_THIS s.kbd_controller.aux_output_buffer = 0;
-  BX_KEY_THIS s.kbd_controller.last_comm = 0;
-  BX_KEY_THIS s.kbd_controller.expecting_port60h = 0;
-  BX_KEY_THIS s.kbd_controller.irq1_requested = 0;
-  BX_KEY_THIS s.kbd_controller.irq12_requested = 0;
-  BX_KEY_THIS s.kbd_controller.expecting_mouse_parameter = 0;
-  BX_KEY_THIS s.kbd_controller.bat_in_progress = 0;
-  BX_KEY_THIS s.kbd_controller.scancodes_translate = 1;
-
-  BX_KEY_THIS s.kbd_controller.timer_pending = 0;
-
-  BX_KEY_THIS s.mouse.mode            = MOUSE_MODE_RESET;
-  BX_KEY_THIS s.mouse.enable          = 0;
-  BX_KEY_THIS s.mouse.delayed_dx      = 0;
-  BX_KEY_THIS s.mouse.delayed_dy      = 0;
-  BX_KEY_THIS s.mouse.delayed_dz      = 0;
-  BX_KEY_THIS s.mouse.im_request      = 0;
-  BX_KEY_THIS s.mouse.im_mode         = 0;
-
-  for (int i=0; i<BX_KBD_CONTROLLER_QSIZE; i++)
-    BX_KEY_THIS s.controller_Q[i] = 0;
-  BX_KEY_THIS s.controller_Qsize = 0;
-  BX_KEY_THIS s.controller_Qsource = 0;
 }
 
 void bx_keyb_c::register_state(void)

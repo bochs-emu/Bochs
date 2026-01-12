@@ -277,6 +277,13 @@ void bx_hard_drive_c::init(void)
       BX_CONTROLLER(channel,device).mdma_mode           = 0;
       BX_CONTROLLER(channel,device).udma_mode           = 0;
 
+      // Reset HOB registers
+      BX_CONTROLLER(channel,device).hob.feature         = 0;
+      BX_CONTROLLER(channel,device).hob.nsector         = 0;
+      BX_CONTROLLER(channel,device).hob.sector          = 0;
+      BX_CONTROLLER(channel,device).hob.lcyl            = 0;
+      BX_CONTROLLER(channel,device).hob.hcyl            = 0;
+
       // If not present
       BX_HD_THIS channels[channel].drives[device].device_type  = IDE_NONE;
       BX_HD_THIS channels[channel].drives[device].identify_set = 0;
@@ -572,47 +579,6 @@ void bx_hard_drive_c::reset(unsigned type)
   for (unsigned channel=0; channel<BX_MAX_ATA_CHANNEL; channel++) {
     if (BX_HD_THIS channels[channel].irq)
       DEV_pic_lower_irq(BX_HD_THIS channels[channel].irq);
-
-    for (Bit8u device=0; device<2; device++) {
-      // Initialize controller state
-      BX_CONTROLLER(channel,device).status.busy           = 0;
-      BX_CONTROLLER(channel,device).status.drive_ready    = 1;
-      BX_CONTROLLER(channel,device).status.write_fault    = 0;
-      BX_CONTROLLER(channel,device).status.seek_complete  = 1;
-      BX_CONTROLLER(channel,device).status.drq            = 0;
-      BX_CONTROLLER(channel,device).status.corrected_data = 0;
-      BX_CONTROLLER(channel,device).status.index_pulse    = 0;
-      BX_CONTROLLER(channel,device).status.index_pulse_count = 0;
-      BX_CONTROLLER(channel,device).status.err            = 0;
-
-      BX_CONTROLLER(channel,device).error_register = 0x01; // diagnostic code: no error
-      BX_CONTROLLER(channel,device).head_no        = 0;
-      BX_CONTROLLER(channel,device).sector_count   = 1;
-      BX_CONTROLLER(channel,device).sector_no      = 1;
-      BX_CONTROLLER(channel,device).cylinder_no    = 0;
-      BX_CONTROLLER(channel,device).current_command = 0x00;
-      BX_CONTROLLER(channel,device).buffer_total_size = 0;
-      BX_CONTROLLER(channel,device).buffer_index = 0;
-
-      BX_CONTROLLER(channel,device).control.reset       = 0;
-      BX_CONTROLLER(channel,device).control.disable_irq = 0;
-      BX_CONTROLLER(channel,device).control.read_hob    = 0;
-      BX_CONTROLLER(channel,device).reset_in_progress   = 0;
-
-      BX_CONTROLLER(channel,device).multiple_sectors    = 0;
-      BX_CONTROLLER(channel,device).lba_mode            = 0;
-
-      BX_CONTROLLER(channel,device).features            = 0;
-      BX_CONTROLLER(channel,device).mdma_mode           = 0;
-      BX_CONTROLLER(channel,device).udma_mode           = 0;
-
-      // Reset HOB registers
-      BX_CONTROLLER(channel,device).hob.feature = 0;
-      BX_CONTROLLER(channel,device).hob.nsector = 0;
-      BX_CONTROLLER(channel,device).hob.sector  = 0;
-      BX_CONTROLLER(channel,device).hob.lcyl    = 0;
-      BX_CONTROLLER(channel,device).hob.hcyl    = 0;
-    }
   }
 }
 
