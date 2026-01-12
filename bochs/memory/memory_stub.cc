@@ -203,7 +203,7 @@ void BX_MEMORY_STUB_C::allocate_block(Bit32u block)
     do {
       do {
         // Wrap if necessary
-        if (++(BX_MEM_THIS next_swapout_idx)==((BX_MEM_THIS len)/BX_MEM_THIS block_size))
+        if (++(BX_MEM_THIS next_swapout_idx) == get_num_blocks())
           BX_MEM_THIS next_swapout_idx = 0;
         if (BX_MEM_THIS next_swapout_idx == original_replacement_block)
           BX_PANIC(("FATAL ERROR: Insufficient working RAM, all blocks are currently used for TLB entries!"));
