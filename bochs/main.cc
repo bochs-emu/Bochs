@@ -1309,7 +1309,7 @@ void bx_init_hardware()
   bx_param_num_c *bxp_memblock_size = SIM->get_param_num(BXPN_MEM_BLOCK_SIZE);
   Bit32u memBlockSize = (Bit32u)(bxp_memblock_size->get64() * 1024);
   if (memBlockSize < 4096) {
-    memBlockSize = hostMemSize / 4096;
+    memBlockSize = memSize / 4096;
     if (memBlockSize < 4096) memBlockSize = 4096;
     BX_INFO(("Auto-adjusting memory block size to %u", memBlockSize));
   }
