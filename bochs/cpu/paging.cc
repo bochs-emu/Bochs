@@ -2617,6 +2617,12 @@ bool BX_CPU_C::check_addr_in_tlb_buffers(const Bit8u *addr, const Bit8u *end)
   }
 #endif
 
+  if (((const bx_hostpageaddr_t)BX_CPU_THIS_PTR eipFetchPtr >= (const bx_hostpageaddr_t)addr) &&
+      ((const bx_hostpageaddr_t)BX_CPU_THIS_PTR eipFetchPtr  < (const bx_hostpageaddr_t)end)) return true;
+
+  if (((const bx_hostpageaddr_t)BX_CPU_THIS_PTR espHostPtr >= (const bx_hostpageaddr_t)addr) &&
+      ((const bx_hostpageaddr_t)BX_CPU_THIS_PTR espHostPtr  < (const bx_hostpageaddr_t)end)) return true;
+
   for (unsigned tlb_entry_num=0; tlb_entry_num < BX_DTLB_SIZE; tlb_entry_num++) {
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR DTLB.entry[tlb_entry_num];
     if (tlbEntry->valid()) {
