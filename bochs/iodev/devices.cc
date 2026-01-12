@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -219,6 +219,8 @@ void bx_devices_c::init(BX_MEM_C *newmem)
         } else {
           BX_ERROR(("Disabling AGP not supported by PCI chipset"));
         }
+      } else if (!strcmp(argv[i], "nofloppy")) {
+        pci.advopts |= BX_PCI_ADVOPT_NOFLOPPY;
       } else {
         BX_ERROR(("Unknown advanced PCI option '%s'", argv[i]));
       }
@@ -258,7 +260,15 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   if (pluginVgaDevice == &stubVga) {
     PLUG_load_plugin_var(BX_PLUGIN_VGA, PLUGTYPE_VGA);
   }
-  PLUG_load_plugin(floppy, PLUGTYPE_CORE);
+#if BX_SUPPORT_PCI
+  if (!pci.enabled || ((pci.advopts & BX_PCI_ADVOPT_NOFLOPPY) == 0) ||
+      (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() != BX_FDD_NONE) ||
+      (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get() != BX_FDD_NONE)) {
+#endif
+    PLUG_load_plugin(floppy, PLUGTYPE_STANDARD);
+#if BX_SUPPORT_PCI
+  }
+#endif
 
 #if BX_SUPPORT_APIC
   PLUG_load_plugin(ioapic, PLUGTYPE_STANDARD);
@@ -366,6 +376,27 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     }
     free(argv[i]);
     argv[i] = NULL;
+  }
+
+  // generate CMOS values for boot sequence if not using a CMOS image
+  if (!SIM->get_param_bool(BXPN_CMOSIMAGE_ENABLED)->get()) {
+    // Set the "non-extended" boot device (first floppy or first hard disk).
+    if (SIM->get_param_enum(BXPN_BOOTDRIVE1)->get() != BX_BOOT_FLOPPYA) {
+      // system boot sequence C:, A:
+      DEV_cmos_set_reg(0x2d, DEV_cmos_get_reg(0x2d) & 0xdf);
+    } else { // 'a'
+      // system boot sequence A:, C:
+      DEV_cmos_set_reg(0x2d, DEV_cmos_get_reg(0x2d) | 0x20);
+    }
+
+    // Set the "extended" boot sequence, bytes 0x38 and 0x3D (needed for cdrom booting)
+    BX_INFO(("Using boot sequence %s, %s, %s",
+             SIM->get_param_enum(BXPN_BOOTDRIVE1)->get_selected(),
+             SIM->get_param_enum(BXPN_BOOTDRIVE2)->get_selected(),
+             SIM->get_param_enum(BXPN_BOOTDRIVE3)->get_selected()));
+    DEV_cmos_set_reg(0x3d, SIM->get_param_enum(BXPN_BOOTDRIVE1)->get() |
+                           (SIM->get_param_enum(BXPN_BOOTDRIVE2)->get() << 4));
+
   }
 
   if (timer_handle != BX_NULL_TIMER_HANDLE) {

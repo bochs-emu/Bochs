@@ -490,6 +490,8 @@ mouse: enabled=0
 #  original i440FX doesn't support them. The options 'noacpi' and 'nohpet' make
 #  it possible to disable them. The option 'noagp' disables the incomplete AGP
 #  subsystem of the i440BX chipset.
+#  If PCI is enabled, the 'nofloppy' option disables the FDC if no floppy drive
+#  is configured.
 #
 # Example:
 #   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k, advopts=noacpi
@@ -582,6 +584,7 @@ private_colormap: enabled=0
 #   floppya: image=path, status=inserted  (guess media type from image size)
 #   floppya: 1_44=vvfat:path, status=inserted  (use directory as VFAT media)
 #   floppya: type=1_44                    (1.44M 3.5" floppy drive, no media)
+#   floppya: type=none                    (no floppy, to be used with pci: advopts=nofloppy)
 #
 # The path should be the name of a disk image file.  On Unix, you can use a raw
 # device name such as /dev/fd0 on Linux.  On win32 platforms, use drive letters
@@ -592,6 +595,7 @@ private_colormap: enabled=0
 # The optional parameter 'write_protected' can be used to control the media
 # write protect switch. By default it is turned off.
 #=======================================================================
+#floppya: type=none
 floppya: 1_44=/dev/fd0, status=inserted
 #floppya: image=../1.44, status=inserted
 #floppya: 1_44=/dev/fd0H1440, status=inserted
@@ -604,6 +608,7 @@ floppya: 1_44=/dev/fd0, status=inserted
 # FLOPPYB:
 # See FLOPPYA above for syntax
 #=======================================================================
+#floppyb: type=none
 #floppyb: 1_44=b:, status=inserted
 #floppyb: 1_44=b.img, status=inserted
 

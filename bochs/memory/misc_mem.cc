@@ -86,7 +86,8 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host, Bit32u block_size)
 // The blocks in RAM must also be flushed to the save file.
 void ramfile_save_handler(void *devptr, FILE *fp)
 {
-  for (Bit32u idx = 0; idx < (BX_MEM(0)->len / BX_MEM_THIS block_size); idx++) {
+  Bit32u num_blocks = BX_MEM(0)->get_num_blocks();
+  for (Bit32u idx = 0; idx < num_blocks; idx++) {
     if ((BX_MEM(0)->blocks[idx]) && (BX_MEM(0)->blocks[idx] != BX_MEM(0)->swapped_out))
     {
       bx_phy_address address = bx_phy_address(idx) * BX_MEM_THIS block_size;
@@ -179,7 +180,7 @@ void BX_MEM_C::register_state()
   char param_name[15];
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "memory", "Memory State");
-  Bit32u num_blocks = (Bit32u)(BX_MEM_THIS len / BX_MEM_THIS block_size);
+  Bit32u num_blocks = get_num_blocks();
 #if BX_LARGE_RAMFILE
   bx_shadow_filedata_c *ramfile = new bx_shadow_filedata_c(list, "ram", &(BX_MEM_THIS overflow_file));
   ramfile->set_sr_handlers(this, ramfile_save_handler, (filedata_restore_handler)NULL);

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -135,6 +135,7 @@ enum {
 #define BX_PCI_ADVOPT_NOHPET    0x02
 #define BX_PCI_ADVOPT_ALTDEVMAP 0x04
 #define BX_PCI_ADVOPT_NOAGP     0x08
+#define BX_PCI_ADVOPT_NOFLOPPY  0x10
 
 typedef struct {
   Bit8u  type;

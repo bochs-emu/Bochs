@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -180,7 +180,7 @@ PLUGIN_ENTRY_FOR_MODULE(floppy)
   } else if (mode == PLUGIN_FINI) {
     delete theFloppyController;
   } else if (mode == PLUGIN_PROBE){
-    return (int)PLUGTYPE_CORE;
+    return (int)PLUGTYPE_STANDARD;
   }
   return 0; // Success
 }
@@ -304,7 +304,7 @@ void bx_floppy_ctrl_c::init(void)
     }
   }
 
-  // generate CMOS values for floppy and boot sequence if not using a CMOS image
+  // generate CMOS values for floppy if not using a CMOS image
   if (!SIM->get_param_bool(BXPN_CMOSIMAGE_ENABLED)->get()) {
     /* CMOS Floppy Type and Equipment Byte register */
     DEV_cmos_set_reg(0x10, cmos_value);
@@ -314,23 +314,6 @@ void bx_floppy_ctrl_c::init(void)
     } else {
       DEV_cmos_set_reg(0x14, (DEV_cmos_get_reg(0x14) & 0x3e));
     }
-
-    // Set the "non-extended" boot device (first floppy or first hard disk).
-    if (SIM->get_param_enum(BXPN_BOOTDRIVE1)->get() != BX_BOOT_FLOPPYA) {
-      // system boot sequence C:, A:
-      DEV_cmos_set_reg(0x2d, DEV_cmos_get_reg(0x2d) & 0xdf);
-    } else { // 'a'
-      // system boot sequence A:, C:
-      DEV_cmos_set_reg(0x2d, DEV_cmos_get_reg(0x2d) | 0x20);
-    }
-
-    // Set the "extended" boot sequence, bytes 0x38 and 0x3D (needed for cdrom booting)
-    BX_INFO(("Using boot sequence %s, %s, %s",
-             SIM->get_param_enum(BXPN_BOOTDRIVE1)->get_selected(),
-             SIM->get_param_enum(BXPN_BOOTDRIVE2)->get_selected(),
-             SIM->get_param_enum(BXPN_BOOTDRIVE3)->get_selected()));
-    DEV_cmos_set_reg(0x3d, SIM->get_param_enum(BXPN_BOOTDRIVE1)->get() |
-                           (SIM->get_param_enum(BXPN_BOOTDRIVE2)->get() << 4));
 
     // Set the signature check flag in cmos, inverted for compatibility
     DEV_cmos_set_reg(0x38, SIM->get_param_bool(BXPN_FLOPPYSIGCHECK)->get() |
