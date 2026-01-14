@@ -73,38 +73,9 @@ protected:
   }
 } bx_vhdx_match;
 
-// CRC-32C (Castagnoli) implementation for VHDX checksum
-// Polynomial: 0x1EDC6F41 (reversed: 0x82F63B78)
-static Bit32u crc32c_table[256];
-static bool crc32c_initialized = false;
-
-void vhdx_init_crc32c()
+static Bit32u vhdx_checksum(Bit8u *buf, size_t size)
 {
-  if (crc32c_initialized) return;
-
-  for (unsigned i = 0; i < 256; i++) {
-    Bit32u crc = i;
-    for (int j = 0; j < 8; j++) {
-      if (crc & 1) {
-        crc = (crc >> 1) ^ 0x82F63B78;
-      } else {
-        crc >>= 1;
-      }
-    }
-    crc32c_table[i] = crc;
-  }
-  crc32c_initialized = true;
-}
-
-Bit32u vhdx_checksum(Bit8u *buf, size_t size)
-{
-  vhdx_init_crc32c();
-
-  Bit32u crc = 0xFFFFFFFF;
-  for (size_t i = 0; i < size; i++) {
-    crc = crc32c_table[(crc ^ buf[i]) & 0xFF] ^ (crc >> 8);
-  }
-  return ~crc;
+  return crc32c(buf, size);
 }
 
 bool guid_eq(const Bit8u *guid1, const Bit8u *guid2)
