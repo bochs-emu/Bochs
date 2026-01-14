@@ -1,2 +1,7 @@
 * text=auto eol=lf
 configure binary
+
+# Explicitly enforce LF on frequently-edited generated/interop files.
+bochs/iodev/fw_cfg.cc text eol=lf
+bochs/iodev/fw_cfg.h  text eol=lf
+bochs/iodev/acpi_dsdt_aml.h text eol=lf

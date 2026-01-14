@@ -23,6 +23,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "bochs.h"
+#include "memory-bochs.h"
 #include "param_names.h"
 #include "cpu/cpu.h"
 #include "iodev/iodev.h"
@@ -512,9 +513,52 @@ void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress)
                          path));
 }
 
+void BX_MEM_C::reset(void)
+{
+  // Reset memory state for UEFI support
+  // UEFI firmware (OVMF) modifies ROM during execution, so we need to reload it on reset
+
+  // Reset flash state to initial values (same as init_memory)
+  BX_MEM_THIS bios_write_enabled = false;
+  BX_MEM_THIS flash_status = 0x80;  // WSM ready
+  BX_MEM_THIS flash_wsm_state = FLASH_READ_ARRAY;
+  BX_MEM_THIS flash_modified = false;
+
+  // Clear ROM presence tracking (so load_ROM doesn't PANIC on address conflicts)
+  for (int i = 0; i < 65; i++) {
+    BX_MEM_THIS rom_present[i] = false;
+  }
+
+  // Clear ROM area and reload from disk
+  memset(BX_MEM_THIS rom, 0xff, BIOSROMSZ + EXROMSIZE);
+
+  // Reload system BIOS ROM
+  BX_MEM_THIS load_ROM(SIM->get_param_string(BXPN_ROM_PATH)->getptr(),
+                       SIM->get_param_num(BXPN_ROM_ADDRESS)->get(), 0);
+
+  // Reload VGABIOS ROM if configured
+  if (!SIM->get_param_string(BXPN_VGA_ROM_PATH)->isempty()) {
+    BX_MEM_THIS load_ROM(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr(), 0xc0000, 1);
+  }
+
+  // Reload optional ROMs
+  char pname[24];
+  for (int i = 0; i < BX_N_OPTROM_IMAGES; i++) {
+    sprintf(pname, "%s.%d", BXPN_OPTROM_BASE, i + 1);
+    bx_list_c *base = (bx_list_c*)SIM->get_param(pname);
+    if (!SIM->get_param_string("file", base)->isempty()) {
+      BX_MEM_THIS load_ROM(SIM->get_param_string("file", base)->getptr(),
+                           SIM->get_param_num("address", base)->get(), 2);
+    }
+  }
+
+  BX_DEBUG(("memory reset: ROM images reloaded"));
+}
+
 bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf)
 {
   bx_phy_address a20addr = A20ADDR(addr);
+  bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
   struct memory_handler_struct *memory_handler = NULL;
   bool ret = true, use_memory_handler = false, use_smram = false;
 
@@ -543,6 +587,8 @@ bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, B
   }
 
   for (; len>0; len--) {
+    // Keep translated address in sync as we increment a20addr.
+    linear_addr = bx_translate_gpa_to_linear(a20addr);
     if (use_memory_handler) {
       memory_handler->read_handler(a20addr, 1, buf, memory_handler->param);
     }
@@ -564,14 +610,18 @@ bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, B
         }
       } else {
         // Read from ShadowRAM
-        *buf = *(BX_MEM_THIS get_vector(a20addr));
+        *buf = *(BX_MEM_THIS get_vector(linear_addr));
       }
     }
 #endif  // #if BX_SUPPORT_PCI
-    else if ((a20addr < BX_MEM_THIS len) && !is_bios)
+    else if ((linear_addr < BX_MEM_THIS len) && !is_bios)
     {
-      if (a20addr < 0x000c0000 || a20addr >= 0x00100000) {
-        *buf = *(BX_MEM_THIS get_vector(a20addr));
+      if (bx_is_pci_hole_addr(a20addr)) {
+        *buf = 0xff;
+        ret = false; // MMIO hole without handler
+      }
+      else if (a20addr < 0x000c0000 || a20addr >= 0x00100000) {
+        *buf = *(BX_MEM_THIS get_vector(linear_addr));
       }
       // must be in C0000 - FFFFF range
       else if ((a20addr & 0xfffe0000) == 0x000e0000) {
@@ -610,12 +660,9 @@ bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, B
 bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf)
 {
   bx_phy_address a20addr = A20ADDR(addr);
+  bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
   struct memory_handler_struct *memory_handler = NULL;
   bool use_memory_handler = false, use_smram = false;
-
-  if ((a20addr + len - 1) > BX_MEM_THIS len) {
-    return false; // error, beyond limits of memory
-  }
 
   bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
 #if BX_PHY_ADDRESS_LONG
@@ -642,6 +689,8 @@ bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit
   }
 
   for (; len>0; len--) {
+    // Keep translated address in sync as we increment a20addr.
+    linear_addr = bx_translate_gpa_to_linear(a20addr);
     if (use_memory_handler) {
       memory_handler->write_handler(a20addr, 1, buf, memory_handler->param);
     }
@@ -651,7 +700,7 @@ bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit
       if (area > BX_MEM_AREA_F0000) area = BX_MEM_AREA_F0000;
       if (BX_MEM_THIS memory_type[area][1] == true) {
         // Write to ShadowRAM
-        *(BX_MEM_THIS get_vector(a20addr)) = *buf;
+        *(BX_MEM_THIS get_vector(linear_addr)) = *buf;
       } else {
         // Ignore write to ROM
       }
@@ -659,7 +708,13 @@ bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit
 #endif  // #if BX_SUPPORT_PCI
     else if ((a20addr < 0x000c0000 || a20addr >= 0x00100000) && !is_bios)
     {
-      *(BX_MEM_THIS get_vector(a20addr)) = *buf;
+      if (bx_is_pci_hole_addr(a20addr)) {
+        return false; // MMIO hole without handler
+      }
+      if (linear_addr >= BX_MEM_THIS len) {
+        return false; // out of bounds
+      }
+      *(BX_MEM_THIS get_vector(linear_addr)) = *buf;
     }
     buf++;
     a20addr++;
@@ -671,6 +726,9 @@ bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit
 Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
 {
   bx_phy_address a20addr = A20ADDR(addr);
+
+  // Translate guest physical address to linear memory offset (handles PCI hole)
+  bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
 
   bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
 #if BX_PHY_ADDRESS_LONG
@@ -685,12 +743,12 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
     if ((a20addr >= 0x000a0000 && a20addr < 0x000c0000) && (BX_MEM_THIS smram_available))
     {
       if (BX_MEM_THIS smram_enable || cpu->smm_mode())
-        return BX_MEM_THIS get_vector(a20addr);
+        return BX_MEM_THIS get_vector(linear_addr);
     }
   }
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  if (write && BX_MEM_THIS is_monitor(a20addr & ~((bx_phy_address)(0xfff)), 0xfff)) {
+  if (write && BX_MEM_THIS is_monitor(linear_addr & ~((bx_phy_address)(0xfff)), 0xfff)) {
     // Vetoed! Write monitored page !
     return(NULL);
   }
@@ -706,6 +764,14 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
         return(NULL); // Vetoed! memory handler for i/o apic, vram, mmio and PCI PnP
     }
     memory_handler = memory_handler->next;
+  }
+
+  // Never allow direct access in the PCI/MMIO hole, except for the BIOS/UEFI
+  // ROM window which is backed by BX_MEM_THIS rom[]. Without this exception,
+  // instruction fetch from the reset vector at 0xFFFFFFF0 will panic when a
+  // >3GB RAM PCI hole is enabled.
+  if (bx_is_pci_hole_addr(a20addr) && !is_bios) {
+    return(NULL);
   }
 
   if (! write) {
@@ -725,14 +791,15 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
         }
       } else {
         // Read from ShadowRAM
-        return BX_MEM_THIS get_vector(a20addr);
+        return BX_MEM_THIS get_vector(linear_addr);
       }
     }
 #endif
-    else if ((a20addr < BX_MEM_THIS len) && !is_bios)
+    // Use translated linear address for bounds check
+    else if ((linear_addr < BX_MEM_THIS len) && !is_bios)
     {
       if (a20addr < 0x000c0000 || a20addr >= 0x00100000) {
-        return BX_MEM_THIS get_vector(a20addr);
+        return BX_MEM_THIS get_vector(linear_addr);
       }
       // must be in C0000 - FFFFF range
       else if ((a20addr & 0xfffe0000) == 0x000e0000) {
@@ -745,7 +812,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
     }
 #if BX_PHY_ADDRESS_LONG
     else if (a20addr > BX_CONST64(0xffffffff)) {
-      // Error, requested addr is out of bounds.
+      // Address above 4GB that doesn't map to RAM - use bogus memory
       return (Bit8u *) &BX_MEM_THIS bogus[a20addr & 0xfff];
     }
 #endif
@@ -761,7 +828,8 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
   }
   else
   { // op == {BX_WRITE, BX_RW}
-    if ((a20addr >= BX_MEM_THIS len) || is_bios)
+    // Use translated linear address for bounds check
+    if ((linear_addr >= BX_MEM_THIS len) || is_bios)
       return(NULL); // Error, requested addr is out of bounds.
     else if (a20addr >= 0x000a0000 && a20addr < 0x000c0000)
       return(NULL); // Vetoed!  Mem mapped IO (VGA)
@@ -777,7 +845,7 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
     else
     {
       if (a20addr < 0x000c0000 || a20addr >= 0x00100000) {
-        return BX_MEM_THIS get_vector(a20addr);
+        return BX_MEM_THIS get_vector(linear_addr);
       }
       else {
         return(NULL);  // Vetoed!  ROMs
@@ -852,10 +920,13 @@ bool BX_MEM_C::unregisterMemoryHandlers(void *param, bx_phy_address begin_addr, 
     }
     struct memory_handler_struct *memory_handler = BX_MEM_THIS memory_handlers[page_idx];
     struct memory_handler_struct *prev = NULL;
+    // Fixed: Use || (OR) to continue searching until we find an EXACT match
+    // (matching param AND begin AND end). The previous && logic would stop
+    // on the first handler with a matching param, even if begin/end differed.
     while (memory_handler &&
-         memory_handler->param != param &&
-         memory_handler->begin != begin_addr &&
-         memory_handler->end != end_addr)
+         (memory_handler->param != param ||
+          memory_handler->begin != begin_addr ||
+          memory_handler->end != end_addr))
     {
       memory_handler->bitmap &= ~bitmap;
       prev = memory_handler;

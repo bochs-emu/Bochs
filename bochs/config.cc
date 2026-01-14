@@ -726,7 +726,7 @@ void bx_init_options()
       "host",
       "Host allocated memory size (megabytes)",
       "Amount of host allocated memory in megabytes",
-      1, 2048,
+      1, 8192,
       BX_DEFAULT_MEM_MEGS);
   host_ramsize->set_ask_format("Enter host memory size (MB): [%d] ");
   ram->set_options(ram->SERIES_ASK);
@@ -1625,6 +1625,14 @@ void bx_init_options()
       "all_rings",
       "Enable port 0xE9 hack for all rings",
       "Debug messages written to i/o port 0xE9 from ring3 will be displayed on console",
+      0);
+
+    // fw_cfg device (UEFI/OVMF support)
+    bx_list_c *fw_cfg = new bx_list_c(misc, "fw_cfg", "QEMU fw_cfg device (UEFI/OVMF support)");
+    new bx_param_bool_c(fw_cfg,
+      "enabled",
+      "Enable fw_cfg device",
+      "Enables the QEMU-compatible fw_cfg device used by UEFI/OVMF firmware",
       0);
 
 #if BX_SUPPORT_IODEBUG
@@ -3188,6 +3196,12 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         PARSE_ERR(("%s: port_e9_hack directive malformed.", context));
       }
     }
+  } else if (!strcmp(params[0], "fw_cfg")) {
+    for (i=1; i<num_params; i++) {
+      if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param(BXPN_FW_CFG_ROOT)) < 0) {
+        PARSE_ERR(("%s: fw_cfg directive malformed.", context));
+      }
+    }
   } else if (!strcmp(params[0], "iodebug")) {
 #if BX_SUPPORT_IODEBUG
     if (num_params != 2) {
@@ -3583,6 +3597,7 @@ int bx_write_configuration(const char *rc, int overwrite)
   fprintf(fp, "print_timestamps: enabled=%d\n", bx_dbg.print_timestamps);
   bx_write_debugger_options(fp);
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_PORT_E9_HACK_ROOT), NULL, 0);
+  bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_FW_CFG_ROOT), NULL, 0);
 #if BX_SUPPORT_IODEBUG
   fprintf(fp, "iodebug: all_rings=%d\n", SIM->get_param_bool(BXPN_IODEBUG_ALL_RINGS)->get());
 #endif

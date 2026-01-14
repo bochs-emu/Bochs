@@ -145,6 +145,10 @@ bool bx_vga_c::init_vga_extension(void)
       BX_VGA_THIS pci_conf[0x10] = 0x08;
       BX_VGA_THIS init_bar_mem(0, BX_VGA_THIS s.memsize,
                                mem_read_handler, mem_write_handler);
+
+      // Add BAR2 for QEMU-compatible VBE MMIO (used by OVMF QemuVideoDxe)
+      BX_VGA_THIS init_bar_mem(2, PCI_VGA_MMIO_SIZE,
+                               vbe_mmio_read_handler, vbe_mmio_write_handler);
     }
     BX_VGA_THIS pci_rom_address = 0;
     BX_VGA_THIS pci_rom_read_handler = mem_read_handler;
@@ -787,7 +791,7 @@ bx_vga_c::vbe_mem_read(bx_phy_address addr)
   }
 
   // check for out of memory read
-  if (offset > BX_VGA_THIS s.memsize)
+  if (offset >= BX_VGA_THIS s.memsize)
     return 0;
 
   return (BX_VGA_THIS s.memory[offset]);
@@ -817,9 +821,9 @@ bx_vga_c::vbe_mem_write(bx_phy_address addr, Bit8u value)
   } else {
     // make sure we don't flood the logfile
     static int count=0;
-    if (count<100) {
+    if (count<10) {
       count ++;
-      BX_INFO(("VBE_mem_write out of video memory write at %x",offset));
+      BX_DEBUG(("VBE_mem_write out of video memory write at %x",offset));
     }
   }
 
@@ -836,6 +840,101 @@ bx_vga_c::vbe_mem_write(bx_phy_address addr, Bit8u value)
       SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
     }
   }
+}
+
+// MMIO handlers for BAR2 (QEMU-compatible VBE MMIO)
+bool bx_vga_c::vbe_mmio_read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
+{
+  bx_vga_c *class_ptr = (bx_vga_c *)param;
+  Bit32u offset = (Bit32u)(addr & 0xfff);
+  Bit32u value = 0xffffffff;
+
+  if (offset >= PCI_VGA_BOCHS_OFFSET && offset < (PCI_VGA_BOCHS_OFFSET + PCI_VGA_BOCHS_SIZE)) {
+    Bit32u reg_offset = offset - PCI_VGA_BOCHS_OFFSET;
+    Bit16u index = reg_offset >> 1;
+    class_ptr->vbe.curindex = index;
+
+    switch (index) {
+      case VBE_DISPI_INDEX_ID:
+        value = class_ptr->vbe.cur_dispi;
+        break;
+      case VBE_DISPI_INDEX_XRES:
+        value = class_ptr->vbe.get_capabilities ? class_ptr->vbe.max_xres : class_ptr->vbe.xres;
+        break;
+      case VBE_DISPI_INDEX_YRES:
+        value = class_ptr->vbe.get_capabilities ? class_ptr->vbe.max_yres : class_ptr->vbe.yres;
+        break;
+      case VBE_DISPI_INDEX_BPP:
+        value = class_ptr->vbe.get_capabilities ? class_ptr->vbe.max_bpp : class_ptr->vbe.bpp;
+        break;
+      case VBE_DISPI_INDEX_ENABLE:
+        value = class_ptr->vbe.enabled;
+        if (class_ptr->vbe.get_capabilities) value |= VBE_DISPI_GETCAPS;
+        if (class_ptr->vbe.dac_8bit) value |= VBE_DISPI_8BIT_DAC;
+        break;
+      case VBE_DISPI_INDEX_BANK:
+        value = class_ptr->vbe.bank[0];
+        break;
+      case VBE_DISPI_INDEX_X_OFFSET:
+        value = class_ptr->vbe.offset_x;
+        break;
+      case VBE_DISPI_INDEX_Y_OFFSET:
+        value = class_ptr->vbe.offset_y;
+        break;
+      case VBE_DISPI_INDEX_VIRT_WIDTH:
+        value = class_ptr->vbe.virtual_xres;
+        break;
+      case VBE_DISPI_INDEX_VIRT_HEIGHT:
+        value = class_ptr->vbe.virtual_yres;
+        break;
+      case VBE_DISPI_INDEX_VIDEO_MEMORY_64K:
+        value = (Bit16u)(class_ptr->s.memsize >> 16);
+        break;
+      default:
+        BX_ERROR(("VBE MMIO read: unknown index 0x%x", index));
+        value = 0;
+        break;
+    }
+  }
+
+  if (len == 1) {
+    *((Bit8u *)data) = (Bit8u)value;
+  } else if (len == 2) {
+    *((Bit16u *)data) = (Bit16u)value;
+  } else if (len == 4) {
+    *((Bit32u *)data) = value;
+  } else {
+    BX_PANIC(("vbe_mmio_read_handler: not supported len=%d", len));
+  }
+
+  return true;
+}
+
+bool bx_vga_c::vbe_mmio_write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
+{
+  bx_vga_c *class_ptr = (bx_vga_c *)param;
+  Bit32u offset = (Bit32u)(addr & 0xfff);
+  Bit32u value = 0;
+
+  if (len == 1) {
+    value = *((Bit8u *)data);
+  } else if (len == 2) {
+    value = *((Bit16u *)data);
+  } else if (len == 4) {
+    value = *((Bit32u *)data);
+  } else {
+    BX_PANIC(("vbe_mmio_write_handler: not supported len=%d", len));
+  }
+
+  if (offset >= PCI_VGA_BOCHS_OFFSET && offset < (PCI_VGA_BOCHS_OFFSET + PCI_VGA_BOCHS_SIZE)) {
+    Bit32u reg_offset = offset - PCI_VGA_BOCHS_OFFSET;
+    Bit16u index = reg_offset >> 1;
+
+    class_ptr->vbe.curindex = index;
+    vbe_write_handler(class_ptr, VBE_DISPI_IOPORT_DATA, value, (len == 1) ? 1U : 2U);
+  }
+
+  return true;
 }
 
 Bit32u bx_vga_c::vbe_read_handler(void *this_ptr, Bit32u address, unsigned io_len)

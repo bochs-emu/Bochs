@@ -60,8 +60,6 @@ bx_pic_c::~bx_pic_c(void)
 
 void bx_pic_c::init(void)
 {
-  int i;
-
   /* 8259 PIC (Programmable Interrupt Controller) */
   DEV_register_ioread_handler(this, read_handler, 0x0020, "8259 PIC", 1);
   DEV_register_ioread_handler(this, read_handler, 0x0021, "8259 PIC", 1);
@@ -73,6 +71,15 @@ void bx_pic_c::init(void)
   DEV_register_iowrite_handler(this, write_handler, 0x00A0, "8259 PIC", 1);
   DEV_register_iowrite_handler(this, write_handler, 0x00A1, "8259 PIC", 1);
 
+#if BX_DEBUGGER
+  // register device for the 'info device' command (calls debug_dump())
+  bx_dbg_register_debug_info("pic", this);
+#endif
+}
+
+void bx_pic_c::reset(unsigned type)
+{
+  int i;
 
   BX_PIC_THIS s.master_pic.master = 1;
   BX_PIC_THIS s.master_pic.interrupt_offset = 0x08; /* IRQ0 = INT 0x08 */
@@ -119,14 +126,7 @@ void bx_pic_c::init(void)
   BX_PIC_THIS s.slave_pic.edge_level = 0;
   for (i = 0; i < 8; i++)
     BX_PIC_THIS s.slave_pic.IRQ_in[i] = 0;
-
-#if BX_DEBUGGER
-  // register device for the 'info device' command (calls debug_dump())
-  bx_dbg_register_debug_info("pic", this);
-#endif
 }
-
-void bx_pic_c::reset(unsigned type) {}
 
 void bx_pic_c::register_state(void)
 {

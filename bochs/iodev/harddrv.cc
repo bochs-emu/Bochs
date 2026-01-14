@@ -277,6 +277,13 @@ void bx_hard_drive_c::init(void)
       BX_CONTROLLER(channel,device).mdma_mode           = 0;
       BX_CONTROLLER(channel,device).udma_mode           = 0;
 
+      // Reset HOB registers
+      BX_CONTROLLER(channel,device).hob.feature         = 0;
+      BX_CONTROLLER(channel,device).hob.nsector         = 0;
+      BX_CONTROLLER(channel,device).hob.sector          = 0;
+      BX_CONTROLLER(channel,device).hob.lcyl            = 0;
+      BX_CONTROLLER(channel,device).hob.hcyl            = 0;
+
       // If not present
       BX_HD_THIS channels[channel].drives[device].device_type  = IDE_NONE;
       BX_HD_THIS channels[channel].drives[device].identify_set = 0;
