@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2025  The Bochs Project
+//  Copyright (C) 2025-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -41,7 +41,7 @@ PLUGIN_ENTRY_FOR_MODULE(fw_cfg)
   } else if (mode == PLUGIN_FINI) {
     delete theFwCfgDevice;
   } else if (mode == PLUGIN_PROBE) {
-    return (int)PLUGTYPE_OPTIONAL;
+    return (int)PLUGTYPE_CORE;
   }
   return(0); // Success
 }

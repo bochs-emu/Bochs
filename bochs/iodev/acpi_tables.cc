@@ -1,10 +1,15 @@
 /////////////////////////////////////////////////////////////////////////
 // ACPI table generation for UEFI/OVMF support
-// Copyright (C) 2025 The Bochs Project
+// Copyright (C) 2025-2026 The Bochs Project
 //
 // Uses pre-compiled DSDT from Bochs BIOS (bios/acpi-dsdt.hex)
 // which includes proper PCI root bridge, interrupt routing, etc.
 /////////////////////////////////////////////////////////////////////////
+
+// Define BX_PLUGGABLE in files that can be compiled into plugins.  For
+// platforms that require a special tag on exported symbols, BX_PLUGGABLE
+// is used to know when we are exporting symbols and when we are importing.
+#define BX_PLUGGABLE
 
 #include "bochs.h"
 #include "acpi_tables.h"
