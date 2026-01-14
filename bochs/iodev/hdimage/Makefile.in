@@ -51,7 +51,7 @@ LIBTOOL=@LIBTOOL@
 WIN32_DLL_IMPORT_LIBRARY=../../@WIN32_DLL_IMPORT_LIB@
 
 CDROM_OBJS = @CDROM_OBJS@
-HDIMAGE_EXTRA_OBJS = vbox.o vmware3.o vmware4.o vpc.o vhdx.o vvfat.o
+HDIMAGE_EXTRA_OBJS = vbox.o vmware3.o vmware4.o vpc.o vvfat.o
 
 HDIMAGE_LINK_OPTS =
 HDIMAGE_LINK_OPTS_VCPP = user32.lib
@@ -68,7 +68,7 @@ OBJS_THAT_CAN_BE_PLUGINS = \
 
 NONPLUGIN_OBJS = @IODEV_EXT_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_EXT_PLUGIN_OBJS@
-HDIMAGE_DLL_TARGETS = bx_vbox_img.dll bx_vmware3_img.dll bx_vmware4_img.dll bx_vpc_img.dll bx_vhdx_img.dll bx_vvfat_img.dll
+HDIMAGE_DLL_TARGETS = bx_vbox_img.dll bx_vmware3_img.dll bx_vmware4_img.dll bx_vpc_img.dll bx_vvfat_img.dll
 
 all: libhdimage.a
 
@@ -109,9 +109,6 @@ bx_vmware4_img.dll: vmware4.o
 
 bx_vpc_img.dll: vpc.o
 	@LINK_DLL@ vpc.o $(WIN32_DLL_IMPORT_LIBRARY)
-
-bx_vhdx_img.dll: vhdx.o
-	@LINK_DLL@ vhdx.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_vvfat_img.dll: vvfat.o
 	@LINK_DLL@ vvfat.o $(WIN32_DLL_IMPORT_LIBRARY) $(HDIMAGE_LINK_OPTS@LINK_VAR@)
