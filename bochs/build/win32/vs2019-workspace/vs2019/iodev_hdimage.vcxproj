@@ -222,7 +222,6 @@
     <ClCompile Include="..\iodev\hdimage\vmware3.cc" />
     <ClCompile Include="..\iodev\hdimage\vmware4.cc" />
     <ClCompile Include="..\iodev\hdimage\vpc.cc" />
-    <ClCompile Include="..\iodev\hdimage\vhdx.cc" />
     <ClCompile Include="..\iodev\hdimage\vvfat.cc" />
   </ItemGroup>
   <ItemGroup>
@@ -234,7 +233,6 @@
     <ClInclude Include="..\iodev\hdimage\vmware3.h" />
     <ClInclude Include="..\iodev\hdimage\vmware4.h" />
     <ClInclude Include="..\iodev\hdimage\vpc.h" />
-    <ClInclude Include="..\iodev\hdimage\vhdx.h" />
     <ClInclude Include="..\iodev\hdimage\vvfat.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
