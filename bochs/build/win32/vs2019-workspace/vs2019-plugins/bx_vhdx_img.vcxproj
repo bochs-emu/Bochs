@@ -207,6 +207,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\iodev\hdimage\crc32c.cc" />
     <ClCompile Include="..\iodev\hdimage\vhdx.cc" />
   </ItemGroup>
   <ItemGroup>

@@ -217,6 +217,7 @@
   <ItemGroup>
     <ClCompile Include="..\iodev\hdimage\cdrom.cc" />
     <ClCompile Include="..\iodev\hdimage\cdrom_win32.cc" />
+    <ClCompile Include="..\iodev\hdimage\crc32c.cc" />
     <ClCompile Include="..\iodev\hdimage\hdimage.cc" />
     <ClCompile Include="..\iodev\hdimage\vbox.cc" />
     <ClCompile Include="..\iodev\hdimage\vmware3.cc" />
