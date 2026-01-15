@@ -41,6 +41,7 @@
 #define VHDX_HEADER1_OFFSET      (64 * 1024)
 #define VHDX_HEADER2_OFFSET      (128 * 1024)
 #define VHDX_REGION_TABLE_OFFSET (192 * 1024)
+#define VHDX_REGION_TABLE2_OFFSET (256 * 1024)
 #define VHDX_HEADER_SIZE         (4 * 1024)
 #define VHDX_REGION_TABLE_SIZE   (64 * 1024)
 
@@ -83,6 +84,10 @@
   { 0x24, 0x42, 0xa5, 0x2f, 0x1b, 0xcd, 0x76, 0x48, \
     0xb2, 0x11, 0x5d, 0xbe, 0xd8, 0x3b, 0xf4, 0xb8 }
 
+#define VHDX_METADATA_PAGE83_DATA_GUID \
+  { 0xAB, 0x12, 0xCA, 0xBE, 0xE6, 0xB2, 0x23, 0x45, \
+    0x93, 0xEF, 0xC3, 0x09, 0xE0, 0x00, 0xC7, 0x46 }
+
 #define VHDX_METADATA_LOGICAL_SECTOR_SIZE_GUID \
   { 0x1d, 0xbf, 0x41, 0x81, 0x6f, 0xa9, 0x09, 0x47, \
     0xba, 0x47, 0xf2, 0x33, 0xa8, 0xfa, 0xab, 0x5f }
@@ -90,6 +95,11 @@
 #define VHDX_METADATA_PHYSICAL_SECTOR_SIZE_GUID \
   { 0xc7, 0x48, 0xa3, 0xcd, 0x5d, 0x44, 0x71, 0x44, \
     0x9c, 0xc9, 0xe9, 0x88, 0x52, 0x51, 0xc5, 0x56 }
+
+// Metadata entry flags
+#define VHDX_METADATA_FLAG_IS_USER         0x00000001
+#define VHDX_METADATA_FLAG_IS_VIRTUAL_DISK 0x00000002
+#define VHDX_METADATA_FLAG_IS_REQUIRED     0x00000004
 
 // Endian conversion for little-endian VHDX format
 #if defined(BX_LITTLE_ENDIAN)
@@ -107,9 +117,6 @@
 #define cpu_to_le32(val) bx_bswap32(val)
 #define cpu_to_le64(val) bx_bswap64(val)
 #endif
-
-Bit32u vhdx_checksum(Bit8u *buf, size_t size);
-bool guid_eq(const Bit8u *guid1, const Bit8u *guid2);
 
 // Force on-disk layout packing.
 #if defined(_MSC_VER)
@@ -237,6 +244,10 @@ class vhdx_image_t : public device_image_t
     int parse_region_table();
     int parse_metadata();
     Bit64s get_sector_offset(Bit64s sector_num);
+    Bit64s get_sector_offset_for_write(Bit64s sector_num);
+    Bit64s alloc_payload_block(Bit64u bat_payload_index);
+    bool zero_fill(Bit64u start, Bit64u length);
+    bool write_bat_entry(Bit64u bat_index);
     int validate_checksum(Bit8u *buf, size_t size, Bit32u expected_crc);
 
     int fd;
@@ -255,6 +266,8 @@ class vhdx_image_t : public device_image_t
     Bit32u bat_entry_count;     // total entries available in BAT region
     Bit32u bat_entries;         // entries actually used (per metadata)
     Bit64u *bat;              // Block Allocation Table
+
+    Bit64u file_end;          // tracked end-of-file for allocation-on-write
 
     const char *pathname;
 };

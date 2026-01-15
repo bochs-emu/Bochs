@@ -78,7 +78,12 @@ static Bit32u vhdx_checksum(Bit8u *buf, size_t size)
   return crc32c(buf, size);
 }
 
-bool guid_eq(const Bit8u *guid1, const Bit8u *guid2)
+static Bit64u vhdx_align_up(Bit64u value, Bit64u align)
+{
+  return (value + (align - 1)) & ~(align - 1);
+}
+
+static bool guid_eq(const Bit8u *guid1, const Bit8u *guid2)
 {
   return memcmp(guid1, guid2, 16) == 0;
 }
@@ -177,7 +182,7 @@ int vhdx_image_t::parse_header()
 
 int vhdx_image_t::parse_region_table()
 {
-  Bit8u region_buf[VHDX_REGION_TABLE_SIZE];
+  Bit8u *region_buf = new Bit8u[VHDX_REGION_TABLE_SIZE];
   vhdx_region_table_header_t *region_header;
   vhdx_region_table_entry_t *entries;
   Bit32u checksum, entry_count;
@@ -189,6 +194,7 @@ int vhdx_image_t::parse_region_table()
   // Read region table
   if (bx_read_image(fd, VHDX_REGION_TABLE_OFFSET, (char*)region_buf, VHDX_REGION_TABLE_SIZE) != VHDX_REGION_TABLE_SIZE) {
     BX_ERROR(("VHDX: cannot read region table"));
+    delete[] region_buf;
     return -1;
   }
 
@@ -196,6 +202,7 @@ int vhdx_image_t::parse_region_table()
 
   if (le32_to_cpu(region_header->signature) != VHDX_REGION_SIGNATURE) {
     BX_ERROR(("VHDX: invalid region table signature: 0x%08x", le32_to_cpu(region_header->signature)));
+    delete[] region_buf;
     return -1;
   }
 
@@ -204,6 +211,7 @@ int vhdx_image_t::parse_region_table()
   region_header->checksum = 0;
   if (validate_checksum(region_buf, VHDX_REGION_TABLE_SIZE, checksum) != 0) {
     BX_ERROR(("VHDX: region table checksum failed"));
+    delete[] region_buf;
     return -1;
   }
   region_header->checksum = cpu_to_le32(checksum);
@@ -212,6 +220,7 @@ int vhdx_image_t::parse_region_table()
   BX_DEBUG(("VHDX: region entry_count=%u", entry_count));
   if (entry_count > 2047) {
     BX_ERROR(("VHDX: invalid region entry count: %u", entry_count));
+    delete[] region_buf;
     return -1;
   }
 
@@ -240,6 +249,8 @@ int vhdx_image_t::parse_region_table()
                 (unsigned long long)metadata_offset, (unsigned long long)metadata_length));
     }
   }
+
+  delete[] region_buf;
 
   if (bat_offset == 0 || metadata_offset == 0) {
     BX_ERROR(("VHDX: BAT or metadata region not found. bat_offset=%llu, metadata_offset=%llu", (unsigned long long)bat_offset, (unsigned long long)metadata_offset));
@@ -539,6 +550,8 @@ int vhdx_image_t::open(const char* _pathname, int flags)
     return -1;
   }
 
+  file_end = imgsize;
+
   // Check if this is a VHDX file
   int format_check = check_format(fd, imgsize);
   if (format_check < 0) {
@@ -651,6 +664,129 @@ void vhdx_image_t::close(void)
   }
 }
 
+bool vhdx_image_t::zero_fill(Bit64u start, Bit64u length)
+{
+  if (length == 0) {
+    return true;
+  }
+
+  const size_t chunk = 64 * 1024;
+  Bit8u *zeros = new Bit8u[chunk];
+  memset(zeros, 0, chunk);
+
+  Bit64u off = start;
+  Bit64u remaining = length;
+  while (remaining > 0) {
+    const int to_write = (remaining > (Bit64u)chunk) ? (int)chunk : (int)remaining;
+    if (bx_write_image(fd, (Bit64s)off, zeros, to_write) != to_write) {
+      delete[] zeros;
+      return false;
+    }
+    off += (Bit64u)to_write;
+    remaining -= (Bit64u)to_write;
+  }
+
+  delete[] zeros;
+  return true;
+}
+
+bool vhdx_image_t::write_bat_entry(Bit64u bat_index)
+{
+  if (bat_index >= (Bit64u)bat_entries) {
+    return false;
+  }
+  Bit64u le = cpu_to_le64(bat[bat_index]);
+  const Bit64u disk_off = bat_offset + (bat_index * (Bit64u)sizeof(Bit64u));
+  return bx_write_image(fd, (Bit64s)disk_off, &le, (int)sizeof(le)) == (int)sizeof(le);
+}
+
+Bit64s vhdx_image_t::alloc_payload_block(Bit64u bat_payload_index)
+{
+  // Payload blocks must start on a 1MB boundary.
+  const Bit64u align = (Bit64u)VHDX_SECTOR_BITMAP_BLOCK_SIZE;
+  const Bit64u new_block_off = vhdx_align_up(file_end, align);
+
+  if ((new_block_off & ~VHDX_BAT_FILE_OFF_MASK) != 0) {
+    BX_ERROR(("VHDX: allocation offset not 1MB-aligned: %llu", (unsigned long long)new_block_off));
+    return -1;
+  }
+
+  // Pad to alignment and zero-initialize the new payload block.
+  if (new_block_off > file_end) {
+    if (!zero_fill(file_end, new_block_off - file_end)) {
+      BX_ERROR(("VHDX: failed to pad file to alignment"));
+      return -1;
+    }
+  }
+
+  if (!zero_fill(new_block_off, (Bit64u)block_size)) {
+    BX_ERROR(("VHDX: failed to zero-fill new payload block"));
+    return -1;
+  }
+
+  const Bit64u new_entry = (new_block_off & VHDX_BAT_FILE_OFF_MASK) |
+                           (Bit64u)VHDX_BAT_STATE_PAYLOAD_BLOCK_FULLY_PRESENT;
+  bat[bat_payload_index] = new_entry;
+  if (!write_bat_entry(bat_payload_index)) {
+    BX_ERROR(("VHDX: failed to write BAT entry %llu", (unsigned long long)bat_payload_index));
+    return -1;
+  }
+
+  file_end = new_block_off + (Bit64u)block_size;
+  return (Bit64s)new_block_off;
+}
+
+Bit64s vhdx_image_t::get_sector_offset_for_write(Bit64s sector_num)
+{
+  if (sector_num < 0 || sector_num >= sector_count) {
+    return -1;
+  }
+
+  Bit64u payload_block_index = (Bit64u)(sector_num / (Bit64s)sectors_per_block);
+  Bit32u sector_in_block = (Bit32u)(sector_num % (Bit64s)sectors_per_block);
+
+  if (chunk_ratio == 0) {
+    BX_ERROR(("VHDX: invalid chunk_ratio 0"));
+    return -1;
+  }
+
+  Bit64u bat_payload_index = payload_block_index + (payload_block_index / (Bit64u)chunk_ratio);
+  if (bat_payload_index >= (Bit64u)bat_entries) {
+    BX_ERROR(("VHDX: BAT payload index out of range: %llu (max %u)",
+              (unsigned long long)bat_payload_index, bat_entries));
+    return -1;
+  }
+
+  Bit64u payload_entry = bat[bat_payload_index];
+  Bit64u state = payload_entry & VHDX_BAT_STATE_BIT_MASK;
+
+  if (state == VHDX_BAT_STATE_PAYLOAD_BLOCK_PARTIALLY_PRESENT) {
+    BX_ERROR(("VHDX: payload block is partially present (differencing images not supported)"));
+    return -1;
+  }
+
+  if (state != VHDX_BAT_STATE_PAYLOAD_BLOCK_FULLY_PRESENT) {
+    // Allocate-on-write for dynamic base images.
+    Bit64s new_block_off = alloc_payload_block(bat_payload_index);
+    if (new_block_off < 0) {
+      return -1;
+    }
+    payload_entry = bat[bat_payload_index];
+    state = payload_entry & VHDX_BAT_STATE_BIT_MASK;
+    if (state != VHDX_BAT_STATE_PAYLOAD_BLOCK_FULLY_PRESENT) {
+      BX_ERROR(("VHDX: allocation did not result in fully-present block"));
+      return -1;
+    }
+  }
+
+  Bit64u file_offset = payload_entry & VHDX_BAT_FILE_OFF_MASK;
+  if (file_offset == 0) {
+    return -1;
+  }
+  file_offset += (Bit64u)sector_in_block * (Bit64u)logical_sector_size;
+  return (Bit64s)file_offset;
+}
+
 Bit64s vhdx_image_t::lseek(Bit64s offset, int whence)
 {
   if (whence == SEEK_SET) {
@@ -701,22 +837,28 @@ ssize_t vhdx_image_t::write(const void* buf, size_t count)
   Bit64s sectors_to_write = count / logical_sector_size;
 
   while (sectors_to_write > 0) {
-    Bit64s offset = get_sector_offset(cur_sector);
-
-    if (offset < 0) {
-      BX_ERROR(("VHDX: write to unmapped sector %llu not supported", (unsigned long long)cur_sector));
-      return -1;
-    } else {
-      int ret = bx_write_image(fd, offset, (void*)cbuf, logical_sector_size);
-      if (ret != (int)logical_sector_size) {
-        BX_ERROR(("VHDX: write error at sector %llu", (unsigned long long)cur_sector));
-        return -1;
-      }
+    const Bit64s sector_in_block = cur_sector % (Bit64s)sectors_per_block;
+    Bit64s sectors_left_in_block = (Bit64s)sectors_per_block - sector_in_block;
+    if (sectors_left_in_block > sectors_to_write) {
+      sectors_left_in_block = sectors_to_write;
     }
 
-    cur_sector++;
-    cbuf += logical_sector_size;
-    sectors_to_write--;
+    Bit64s offset = get_sector_offset_for_write(cur_sector);
+    if (offset < 0) {
+      BX_ERROR(("VHDX: write: failed to map/allocate sector %llu", (unsigned long long)cur_sector));
+      return -1;
+    }
+
+    const int bytes = (int)(sectors_left_in_block * (Bit64s)logical_sector_size);
+    int ret = bx_write_image(fd, offset, (void*)cbuf, bytes);
+    if (ret != bytes) {
+      BX_ERROR(("VHDX: write error at sector %llu", (unsigned long long)cur_sector));
+      return -1;
+    }
+
+    cur_sector += sectors_left_in_block;
+    cbuf += (size_t)bytes;
+    sectors_to_write -= sectors_left_in_block;
   }
 
   return count;
@@ -730,18 +872,306 @@ Bit32u vhdx_image_t::get_capabilities()
 #ifdef BXIMAGE
 int vhdx_image_t::create_image(const char *pathname, Bit64u size)
 {
-  // Image creation not implemented
-  return -1;
+  const Bit32u logical_sector = 512;
+  const Bit32u physical_sector = 512;
+  const Bit32u new_block_size = 2 * 1024 * 1024;
+  const Bit32u log_length = (Bit32u)VHDX_SECTOR_BITMAP_BLOCK_SIZE; // 1 MiB
+  const Bit64u log_offset = (Bit64u)VHDX_SECTOR_BITMAP_BLOCK_SIZE; // 1 MiB
+
+  if (size == 0) {
+    BX_FATAL(("ERROR: invalid VHDX size"));
+  }
+  if ((new_block_size < VHDX_BLOCK_SIZE_MIN) || (new_block_size > VHDX_BLOCK_SIZE_MAX) ||
+      ((new_block_size & (new_block_size - 1)) != 0)) {
+    BX_FATAL(("ERROR: invalid VHDX block size"));
+  }
+
+  const Bit64u virtual_size = vhdx_align_up(size, (Bit64u)logical_sector);
+  const Bit64u data_blocks_cnt = (virtual_size + (Bit64u)new_block_size - 1ULL) / (Bit64u)new_block_size;
+
+  const Bit32u sectors_per_block = new_block_size / logical_sector;
+  const Bit64u bitmap_bits = (Bit64u)VHDX_SECTOR_BITMAP_BLOCK_SIZE * 8ULL;
+  const Bit64u chunk_ratio = bitmap_bits / (Bit64u)sectors_per_block;
+  if (chunk_ratio == 0 || ((chunk_ratio & (chunk_ratio - 1ULL)) != 0)) {
+    BX_FATAL(("ERROR: invalid VHDX chunk ratio"));
+  }
+
+  Bit64u used_entries = 0;
+  if (data_blocks_cnt > 0) {
+    used_entries = data_blocks_cnt + ((data_blocks_cnt - 1ULL) / chunk_ratio);
+  }
+
+  Bit64u bat_bytes_needed = used_entries * (Bit64u)sizeof(Bit64u);
+  if (bat_bytes_needed == 0) {
+    bat_bytes_needed = (Bit64u)sizeof(Bit64u);
+  }
+  Bit64u bat_length64 = vhdx_align_up(bat_bytes_needed, (Bit64u)VHDX_SECTOR_BITMAP_BLOCK_SIZE);
+  if (bat_length64 > 0xFFFFFFFFULL) {
+    BX_FATAL(("ERROR: VHDX BAT too large"));
+  }
+  const Bit32u bat_length = (Bit32u)bat_length64;
+  const Bit32u metadata_length = (Bit32u)VHDX_SECTOR_BITMAP_BLOCK_SIZE; // 1 MiB
+
+  // QEMU-compatible layout: 1MiB header section, 1MiB log, then BAT + metadata.
+  const Bit64u bat_offset = log_offset + (Bit64u)log_length; // 2 MiB
+  const Bit64u metadata_offset = bat_offset + (Bit64u)bat_length; // 1 MiB aligned
+
+  int fd = bx_create_image_file(pathname);
+  if (fd < 0) {
+    BX_FATAL(("ERROR: failed to create vhdx image file"));
+  }
+
+  // File identifier area up to the first header (64 KiB).
+  {
+    Bit8u *file_id_buf = new Bit8u[VHDX_HEADER1_OFFSET];
+    memset(file_id_buf, 0, VHDX_HEADER1_OFFSET);
+    memcpy(file_id_buf, VHDX_FILE_SIGNATURE, 8);
+    if (bx_write_image(fd, 0, file_id_buf, VHDX_HEADER1_OFFSET) != VHDX_HEADER1_OFFSET) {
+      delete[] file_id_buf;
+      ::close(fd);
+      BX_FATAL(("ERROR: The disk image is not complete - could not write VHDX file identifier"));
+    }
+    delete[] file_id_buf;
+  }
+
+  // Two headers (choose the one with the higher sequence on open).
+  {
+    Bit8u header_buf[VHDX_HEADER_SIZE];
+    vhdx_header_t *hdr = (vhdx_header_t*)header_buf;
+
+    memset(header_buf, 0, sizeof(header_buf));
+    hdr->signature = cpu_to_le32(VHDX_HEADER_SIGNATURE);
+    hdr->sequence_number = cpu_to_le64(1);
+    hdr->version = cpu_to_le16(1);
+    hdr->log_version = cpu_to_le16(0);
+    hdr->log_length = cpu_to_le32(log_length);
+    hdr->log_offset = cpu_to_le64(log_offset);
+    hdr->checksum = 0;
+    hdr->checksum = cpu_to_le32(vhdx_checksum(header_buf, VHDX_HEADER_SIZE));
+    if (bx_write_image(fd, VHDX_HEADER1_OFFSET, header_buf, VHDX_HEADER_SIZE) != VHDX_HEADER_SIZE) {
+      ::close(fd);
+      BX_FATAL(("ERROR: The disk image is not complete - could not write VHDX header 1"));
+    }
+
+    memset(header_buf, 0, sizeof(header_buf));
+    hdr->signature = cpu_to_le32(VHDX_HEADER_SIGNATURE);
+    hdr->sequence_number = cpu_to_le64(0);
+    hdr->version = cpu_to_le16(1);
+    hdr->log_version = cpu_to_le16(0);
+    hdr->log_length = cpu_to_le32(log_length);
+    hdr->log_offset = cpu_to_le64(log_offset);
+    hdr->checksum = 0;
+    hdr->checksum = cpu_to_le32(vhdx_checksum(header_buf, VHDX_HEADER_SIZE));
+    if (bx_write_image(fd, VHDX_HEADER2_OFFSET, header_buf, VHDX_HEADER_SIZE) != VHDX_HEADER_SIZE) {
+      ::close(fd);
+      BX_FATAL(("ERROR: The disk image is not complete - could not write VHDX header 2"));
+    }
+  }
+
+  // Region table (64 KiB) with BAT and metadata regions.
+  {
+    Bit8u *region_buf = new Bit8u[VHDX_REGION_TABLE_SIZE];
+    memset(region_buf, 0, VHDX_REGION_TABLE_SIZE);
+
+    vhdx_region_table_header_t *region_header = (vhdx_region_table_header_t*)region_buf;
+    region_header->signature = cpu_to_le32(VHDX_REGION_SIGNATURE);
+    region_header->checksum = 0;
+    region_header->entry_count = cpu_to_le32(2);
+    region_header->reserved = 0;
+
+    vhdx_region_table_entry_t *entries = (vhdx_region_table_entry_t*)(region_buf + sizeof(vhdx_region_table_header_t));
+    const Bit8u bat_guid[] = VHDX_REGION_BAT_GUID;
+    const Bit8u metadata_guid[] = VHDX_REGION_METADATA_GUID;
+
+    memcpy(entries[0].guid, bat_guid, 16);
+    entries[0].file_offset = cpu_to_le64(bat_offset);
+    entries[0].length = cpu_to_le32(bat_length);
+    entries[0].required = cpu_to_le32(1);
+
+    memcpy(entries[1].guid, metadata_guid, 16);
+    entries[1].file_offset = cpu_to_le64(metadata_offset);
+    entries[1].length = cpu_to_le32(metadata_length);
+    entries[1].required = cpu_to_le32(1);
+
+    region_header->checksum = cpu_to_le32(vhdx_checksum(region_buf, VHDX_REGION_TABLE_SIZE));
+    if (bx_write_image(fd, VHDX_REGION_TABLE_OFFSET, region_buf, VHDX_REGION_TABLE_SIZE) != VHDX_REGION_TABLE_SIZE) {
+      delete[] region_buf;
+      ::close(fd);
+      BX_FATAL(("ERROR: The disk image is not complete - could not write VHDX region table"));
+    }
+
+    // Some tooling expects the second region table copy at 256 KiB.
+    if (bx_write_image(fd, VHDX_REGION_TABLE2_OFFSET, region_buf, VHDX_REGION_TABLE_SIZE) != VHDX_REGION_TABLE_SIZE) {
+      delete[] region_buf;
+      ::close(fd);
+      BX_FATAL(("ERROR: The disk image is not complete - could not write VHDX region table 2"));
+    }
+    delete[] region_buf;
+  }
+
+  // Log region: currently unused (no journal), but required by qemu-img.
+  {
+    const size_t chunk = 64 * 1024;
+    Bit8u *zeros = new Bit8u[chunk];
+    memset(zeros, 0, chunk);
+    Bit64u off = log_offset;
+    Bit64u remaining = (Bit64u)log_length;
+    while (remaining > 0) {
+      const int to_write = (remaining > (Bit64u)chunk) ? (int)chunk : (int)remaining;
+      if (bx_write_image(fd, (Bit64s)off, zeros, to_write) != to_write) {
+        delete[] zeros;
+        ::close(fd);
+        BX_FATAL(("ERROR: The disk image is not complete - could not write VHDX log"));
+      }
+      off += (Bit64u)to_write;
+      remaining -= (Bit64u)to_write;
+    }
+    delete[] zeros;
+  }
+
+  // BAT region: all entries not-present (zeros).
+  {
+    const size_t chunk = 64 * 1024;
+    Bit8u *zeros = new Bit8u[chunk];
+    memset(zeros, 0, chunk);
+    Bit64u off = bat_offset;
+    Bit64u remaining = bat_length;
+    while (remaining > 0) {
+      const int to_write = (remaining > (Bit64u)chunk) ? (int)chunk : (int)remaining;
+      if (bx_write_image(fd, (Bit64s)off, zeros, to_write) != to_write) {
+        delete[] zeros;
+        ::close(fd);
+        BX_FATAL(("ERROR: The disk image is not complete - could not write VHDX BAT"));
+      }
+      off += (Bit64u)to_write;
+      remaining -= (Bit64u)to_write;
+    }
+    delete[] zeros;
+  }
+
+  // Metadata region.
+  {
+    Bit8u *metadata_buf = new Bit8u[metadata_length];
+    memset(metadata_buf, 0, metadata_length);
+    memcpy(metadata_buf, "metadata", 8);
+
+    vhdx_metadata_table_header_t *meta_header = (vhdx_metadata_table_header_t*)metadata_buf;
+    meta_header->reserved = 0;
+    meta_header->entry_count = cpu_to_le16(5);
+
+    vhdx_metadata_table_entry_t *meta_entries = (vhdx_metadata_table_entry_t*)(metadata_buf + sizeof(vhdx_metadata_table_header_t));
+    const Bit8u file_params_guid[] = VHDX_METADATA_FILE_PARAMS_GUID;
+    const Bit8u virt_size_guid[] = VHDX_METADATA_VIRTUAL_DISK_SIZE_GUID;
+    const Bit8u page83_guid[] = VHDX_METADATA_PAGE83_DATA_GUID;
+    const Bit8u log_sect_size_guid[] = VHDX_METADATA_LOGICAL_SECTOR_SIZE_GUID;
+    const Bit8u phys_sect_size_guid[] = VHDX_METADATA_PHYSICAL_SECTOR_SIZE_GUID;
+
+    // QEMU (and the spec examples) place metadata item payloads starting at
+    // 64KiB within the metadata region.
+    Bit32u data_off = 64 * 1024;
+    data_off = (Bit32u)((data_off + 7) & ~7);
+    const Bit32u meta_flags_required = VHDX_METADATA_FLAG_IS_REQUIRED;
+    const Bit32u meta_flags_required_vdisk = VHDX_METADATA_FLAG_IS_REQUIRED | VHDX_METADATA_FLAG_IS_VIRTUAL_DISK;
+
+    if ((Bit64u)data_off + 16ULL + sizeof(vhdx_file_parameters_t) + sizeof(Bit64u) + 2 * sizeof(Bit32u) > (Bit64u)metadata_length) {
+      delete[] metadata_buf;
+      ::close(fd);
+      BX_FATAL(("ERROR: VHDX metadata region too small"));
+    }
+
+    // Page83 data (16 bytes).
+    memcpy(meta_entries[0].item_id, page83_guid, 16);
+    meta_entries[0].offset = cpu_to_le32(data_off);
+    meta_entries[0].length = cpu_to_le32(16);
+    meta_entries[0].flags = cpu_to_le32(meta_flags_required_vdisk);
+    meta_entries[0].reserved = 0;
+    {
+      // A stable, non-zero identifier (doesn't need to be globally unique for our use).
+      const Bit8u page83_data[16] = { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0,
+                                     0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88 };
+      memcpy(metadata_buf + data_off, page83_data, sizeof(page83_data));
+    }
+    data_off += 16;
+    data_off = (Bit32u)((data_off + 7) & ~7);
+
+    // File parameters
+    memcpy(meta_entries[1].item_id, file_params_guid, 16);
+    meta_entries[1].offset = cpu_to_le32(data_off);
+    meta_entries[1].length = cpu_to_le32(sizeof(vhdx_file_parameters_t));
+    meta_entries[1].flags = cpu_to_le32(meta_flags_required);
+    meta_entries[1].reserved = 0;
+    vhdx_file_parameters_t *params = (vhdx_file_parameters_t*)(metadata_buf + data_off);
+    params->block_size = cpu_to_le32(new_block_size);
+    params->flags = cpu_to_le32(0);
+    data_off += (Bit32u)sizeof(vhdx_file_parameters_t);
+    data_off = (Bit32u)((data_off + 7) & ~7);
+
+    // Virtual disk size
+    memcpy(meta_entries[2].item_id, virt_size_guid, 16);
+    meta_entries[2].offset = cpu_to_le32(data_off);
+    meta_entries[2].length = cpu_to_le32(sizeof(Bit64u));
+    meta_entries[2].flags = cpu_to_le32(meta_flags_required_vdisk);
+    meta_entries[2].reserved = 0;
+    *(Bit64u*)(metadata_buf + data_off) = cpu_to_le64(virtual_size);
+    data_off += (Bit32u)sizeof(Bit64u);
+    data_off = (Bit32u)((data_off + 7) & ~7);
+
+    // Logical sector size
+    memcpy(meta_entries[3].item_id, log_sect_size_guid, 16);
+    meta_entries[3].offset = cpu_to_le32(data_off);
+    meta_entries[3].length = cpu_to_le32(sizeof(Bit32u));
+    meta_entries[3].flags = cpu_to_le32(meta_flags_required_vdisk);
+    meta_entries[3].reserved = 0;
+    *(Bit32u*)(metadata_buf + data_off) = cpu_to_le32(logical_sector);
+    data_off += (Bit32u)sizeof(Bit32u);
+    data_off = (Bit32u)((data_off + 7) & ~7);
+
+    // Physical sector size
+    memcpy(meta_entries[4].item_id, phys_sect_size_guid, 16);
+    meta_entries[4].offset = cpu_to_le32(data_off);
+    meta_entries[4].length = cpu_to_le32(sizeof(Bit32u));
+    meta_entries[4].flags = cpu_to_le32(meta_flags_required_vdisk);
+    meta_entries[4].reserved = 0;
+    *(Bit32u*)(metadata_buf + data_off) = cpu_to_le32(physical_sector);
+
+    if (bx_write_image(fd, (Bit64s)metadata_offset, metadata_buf, metadata_length) != (int)metadata_length) {
+      delete[] metadata_buf;
+      ::close(fd);
+      BX_FATAL(("ERROR: The disk image is not complete - could not write VHDX metadata"));
+    }
+    delete[] metadata_buf;
+  }
+
+  ::close(fd);
+  return 0;
 }
 #else
 bool vhdx_image_t::save_state(const char *backup_fname)
 {
-  // Read-only format, no state to save
-  return false;
+  return hdimage_backup_file(fd, backup_fname);
 }
 
 void vhdx_image_t::restore_state(const char *backup_fname)
 {
-  // Read-only format, no state to restore
+  int temp_fd;
+  Bit64u imgsize;
+
+  if ((temp_fd = hdimage_open_file(backup_fname, O_RDONLY, &imgsize, NULL)) < 0) {
+    BX_PANIC(("Cannot open vhdx image backup '%s'", backup_fname));
+    return;
+  }
+
+  if (check_format(temp_fd, imgsize) < HDIMAGE_FORMAT_OK) {
+    ::close(temp_fd);
+    BX_PANIC(("Cannot detect vhdx image header"));
+    return;
+  }
+  ::close(temp_fd);
+  close();
+  if (!hdimage_copy_file(backup_fname, pathname)) {
+    BX_PANIC(("Failed to restore vhdx image '%s'", pathname));
+    return;
+  }
+  device_image_t::open(pathname);
 }
 #endif

@@ -421,6 +421,8 @@ device_image_t* create_hard_disk_image(const char *filename, const char *imgmode
     hdimage->create_image(filename, size);
   } else if(!strcmp(imgmode, "vpc")) {
     hdimage->create_image(filename, size);
+  } else if(!strcmp(imgmode, "vhdx")) {
+    hdimage->create_image(filename, size);
   } else if(!strcmp(imgmode, "vmware4")) {
     hdimage->create_image(filename, size);
   } else {
