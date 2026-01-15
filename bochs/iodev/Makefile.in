@@ -105,7 +105,7 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc: $(IODEV_DLL_TARGETS) bx_keyboard.dll bx_pit.dll bx_gameport.dll bx_serial.dll bx_floppy.dll
+plugins_msvc: $(IODEV_DLL_TARGETS) bx_fw_cfg.dll bx_keyboard.dll bx_pit.dll bx_gameport.dll bx_serial.dll bx_floppy.dll
 
 libiodev.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libiodev.a

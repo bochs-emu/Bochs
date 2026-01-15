@@ -283,6 +283,17 @@ romimage: file=$BXSHARE/BIOS-bochs-latest, options=fastboot
 #romimage: file=mybios.bin, address=0xfff80000 # 512k at memory top
 
 #=======================================================================
+# FW_CFG:
+# UEFI Firmware Support: Bochs supports UEFI boot using OVMF (Open Virtual
+# Machine Firmware) from the TianoCore EDK2 project. To use UEFI:
+#  romimage: file=OVMF.fd, address=0xffc00000
+# UEFI boot requires the fw_cfg device which provides system configuration to
+# the firmware via I/O ports 0x510-0x51B. This includes the E820 memory map,
+# ACPI tables, RAM size, and CPU count. See user doc for more info.
+#=======================================================================
+#fw_cfg: enabled=1
+
+#=======================================================================
 # VGAROMIMAGE
 # You now need to load a VGA ROM BIOS into C0000.
 #=======================================================================
