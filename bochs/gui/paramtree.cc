@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010-2024  The Bochs Project
+//  Copyright (C) 2010-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1180,6 +1180,7 @@ bx_list_c::bx_list_c(bx_param_c *parent)
   : bx_param_c(SIM->gen_param_id(), "list", "")
 {
   set_type(BXT_LIST);
+  this->unsafe = false;
   this->size = 0;
   this->head = NULL;
   this->tail = NULL;
@@ -1192,32 +1193,18 @@ bx_list_c::bx_list_c(bx_param_c *parent)
   init("");
 }
 
-bx_list_c::bx_list_c(bx_param_c *parent, const char *name, const char *title)
-  : bx_param_c(SIM->gen_param_id(), name, "")
-{
-  set_type (BXT_LIST);
-  this->size = 0;
-  this->head = NULL;
-  this->tail = NULL;
-  this->parent = NULL;
-  if (parent) {
-    BX_ASSERT(parent->get_type() == BXT_LIST);
-    this->parent = (bx_list_c *)parent;
-    this->parent->add(this);
-  }
-  this->restore_handler = NULL;
-  init(title);
-}
-
 bx_list_c::bx_list_c(bx_param_c *parent, const char *name, const char *title, bx_param_c **init_list)
   : bx_param_c(SIM->gen_param_id(), name, "")
 {
   set_type(BXT_LIST);
+  this->unsafe = false;
   this->size = 0;
   this->head = NULL;
   this->tail = NULL;
-  while (init_list[this->size] != NULL)
-    add(init_list[this->size]);
+  if (init_list != NULL) {
+    while (init_list[this->size] != NULL)
+      add(init_list[this->size]);
+  }
   this->parent = NULL;
   if (parent) {
     BX_ASSERT(parent->get_type() == BXT_LIST);
@@ -1268,6 +1255,7 @@ void bx_list_c::set_parent(bx_param_c *newparent)
 bx_list_c* bx_list_c::clone()
 {
   bx_list_c *newlist = new bx_list_c(NULL, name, title);
+  newlist->unsafe_insertions(this->unsafe);
   for (int i=0; i<get_size(); i++)
     newlist->add(get(i));
   newlist->set_options(options);
@@ -1276,7 +1264,7 @@ bx_list_c* bx_list_c::clone()
 
 void bx_list_c::add(bx_param_c *param)
 {
-  if ((param->get_parent() == this) && (get_by_name(param->get_name()) != NULL)) {
+  if (!unsafe && (param->get_parent() == this) && (get_by_name(param->get_name()) != NULL)) {
     BX_PANIC(("parameter '%s' already exists in list '%s'", param->get_name(), this->get_name()));
     return;
   }
