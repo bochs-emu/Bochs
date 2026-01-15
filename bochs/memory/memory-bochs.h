@@ -42,9 +42,9 @@ const Bit32u EXROMSIZE = (0x20000);    // ROMs 0xc0000-0xdffff (area 0xe0000-0xf
 const Bit32u BIOS_MASK  = BIOSROMSZ-1;
 const Bit32u EXROM_MASK = EXROMSIZE-1;
 
-// Guest physical memory layout helpers (for configurations with a 3–4GB PCI MMIO hole).
-// When RAM is >3GB, RAM from 3GB–4GB is typically remapped above 4GB so that
-// the 3–4GB region can be used for PCI MMIO.
+// Guest physical memory layout helpers (for configurations with a 3GB to 4GB PCI MMIO hole).
+// When RAM is >3GB, RAM from 3GB to 4GB is typically remapped above 4GB so that
+// the 3GB to 4GB region can be used for PCI MMIO.
 const bx_phy_address BX_PCI_HOLE_START = (bx_phy_address)0xC0000000ULL;   // 3GB
 const bx_phy_address BX_PCI_HOLE_END   = (bx_phy_address)0x100000000ULL;  // 4GB
 const bx_phy_address BX_PCI_HOLE_SIZE  = (bx_phy_address)(BX_PCI_HOLE_END - BX_PCI_HOLE_START);

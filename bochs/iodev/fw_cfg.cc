@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2025  The Bochs Project
+//  Copyright (C) 2025-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -41,7 +41,7 @@ PLUGIN_ENTRY_FOR_MODULE(fw_cfg)
   } else if (mode == PLUGIN_FINI) {
     delete theFwCfgDevice;
   } else if (mode == PLUGIN_PROBE) {
-    return (int)PLUGTYPE_OPTIONAL;
+    return (int)PLUGTYPE_CORE;
   }
   return(0); // Success
 }
@@ -286,10 +286,8 @@ void bx_fw_cfg_c::process_dma(Bit64u dma_addr)
                    ((Bit64u)desc[12] << 24) | ((Bit64u)desc[13] << 16) |
                    ((Bit64u)desc[14] << 8) | ((Bit64u)desc[15]);
   
-  BX_DEBUG(("fw_cfg DMA: control=0x%08x, length=%u, address=0x" FMT_PHY_ADDRX,
-            control, length, (Bit64u)address));
-  BX_INFO(("fw_cfg DMA: control=0x%08x, length=%u, address=0x" FMT_PHY_ADDRX ", cur_entry=0x%04x",
-           control, length, (Bit64u)address, cur_entry));
+  BX_DEBUG(("fw_cfg DMA: control=0x%08x, length=%u, address=0x" FMT_PHY_ADDRX ", cur_entry=0x%04x",
+            control, length, (Bit64u)address, cur_entry));
   
   // Handle SELECT operation
   if (control & FW_CFG_DMA_CTL_SELECT) {
@@ -466,11 +464,11 @@ void bx_fw_cfg_c::write(Bit32u address, Bit32u value, unsigned io_len)
       if (offset == 0) {
         // High 32 bits written to port 0x514
         BX_FW_CFG_THIS dma_addr = ((Bit64u)swapped_value) << 32;
-        BX_INFO(("fw_cfg: DMA high 32 bits = 0x%08x", swapped_value));
+        BX_DEBUG(("fw_cfg: DMA high 32 bits = 0x%08x", swapped_value));
       } else if (offset == 4) {
         // Low 32 bits written to port 0x518 - triggers DMA
         BX_FW_CFG_THIS dma_addr = (BX_FW_CFG_THIS dma_addr & 0xFFFFFFFF00000000ULL) | (Bit64u)swapped_value;
-        BX_INFO(("fw_cfg: DMA trigger, address = 0x" FMT_PHY_ADDRX,
+        BX_DEBUG(("fw_cfg: DMA trigger, address = 0x" FMT_PHY_ADDRX,
            (Bit64u)BX_FW_CFG_THIS dma_addr));
         process_dma(BX_FW_CFG_THIS dma_addr);
         BX_FW_CFG_THIS dma_addr = 0;
