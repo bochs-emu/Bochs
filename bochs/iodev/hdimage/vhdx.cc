@@ -88,6 +88,30 @@ static bool guid_eq(const Bit8u *guid1, const Bit8u *guid2)
   return memcmp(guid1, guid2, 16) == 0;
 }
 
+#ifdef BXIMAGE
+
+#include <stdlib.h>
+#include <time.h>
+
+static void vhdx_generate_page83_data(Bit8u out[16])
+{
+  static bool seeded = false;
+  if (!seeded) {
+    seeded = true;
+    srand((unsigned)time(NULL) ^ (unsigned)clock());
+  }
+
+  for (int i = 0; i < 16; i++) {
+    out[i] = (Bit8u)(rand() & 0xFF);
+  }
+
+  // Make it UUIDv4-ish (not required by the VHDX spec, but tidy).
+  out[6] = (Bit8u)((out[6] & 0x0F) | 0x40);
+  out[8] = (Bit8u)((out[8] & 0x3F) | 0x80);
+}
+
+#endif
+
 int vhdx_image_t::check_format(int fd, Bit64u imgsize)
 {
   Bit8u buf[8];
@@ -986,12 +1010,12 @@ int vhdx_image_t::create_image(const char *pathname, Bit64u size)
     memcpy(entries[0].guid, bat_guid, 16);
     entries[0].file_offset = cpu_to_le64(bat_offset);
     entries[0].length = cpu_to_le32(bat_length);
-    entries[0].required = cpu_to_le32(1);
+    entries[0].required = cpu_to_le32(0);
 
     memcpy(entries[1].guid, metadata_guid, 16);
     entries[1].file_offset = cpu_to_le64(metadata_offset);
     entries[1].length = cpu_to_le32(metadata_length);
-    entries[1].required = cpu_to_le32(1);
+    entries[1].required = cpu_to_le32(0);
 
     region_header->checksum = cpu_to_le32(vhdx_checksum(region_buf, VHDX_REGION_TABLE_SIZE));
     if (bx_write_image(fd, VHDX_REGION_TABLE_OFFSET, region_buf, VHDX_REGION_TABLE_SIZE) != VHDX_REGION_TABLE_SIZE) {
@@ -1086,9 +1110,8 @@ int vhdx_image_t::create_image(const char *pathname, Bit64u size)
     meta_entries[0].flags = cpu_to_le32(meta_flags_required_vdisk);
     meta_entries[0].reserved = 0;
     {
-      // A stable, non-zero identifier (doesn't need to be globally unique for our use).
-      const Bit8u page83_data[16] = { 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0,
-                                     0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88 };
+      Bit8u page83_data[16];
+      vhdx_generate_page83_data(page83_data);
       memcpy(metadata_buf + data_off, page83_data, sizeof(page83_data));
     }
     data_off += 16;

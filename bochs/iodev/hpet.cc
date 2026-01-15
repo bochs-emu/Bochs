@@ -241,6 +241,7 @@ void bx_hpet_c::reset(unsigned type)
   s.hpet_reference_value = BX_CONST64(0);
   s.hpet_reference_time = BX_CONST64(0);
   s.config = BX_CONST64(0);
+  s.isr = 0;
   DEV_pit_enable_irq(1);
   DEV_cmos_enable_irq(1);
 }

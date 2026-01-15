@@ -76,6 +76,11 @@
 
 #define VBE_DISPI_LFB_PHYSICAL_ADDRESS   0xE0000000
 
+// QEMU-compatible MMIO BAR2 definitions
+#define PCI_VGA_MMIO_SIZE     0x1000
+#define PCI_VGA_BOCHS_OFFSET  0x500
+#define PCI_VGA_BOCHS_SIZE    0x16
+
 // End Bochs VBE definitions
 
 #if BX_USE_VGA_SMF
@@ -128,6 +133,10 @@ protected:
 
   static Bit32u vbe_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   vbe_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
+
+  // MMIO handlers for BAR2 (QEMU-compatible VBE MMIO)
+  BX_VGA_SMF bool vbe_mmio_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  BX_VGA_SMF bool vbe_mmio_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 
 #if BX_USE_VGA_SMF == 0
   Bit32u vbe_read(Bit32u address, unsigned io_len);

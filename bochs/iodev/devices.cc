@@ -253,6 +253,10 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   PLUG_load_plugin(dma, PLUGTYPE_CORE);
   PLUG_load_plugin(pic, PLUGTYPE_CORE);
   PLUG_load_plugin(pit, PLUGTYPE_CORE);
+  // Load fw_cfg device for UEFI/OVMF firmware support (provides system info via I/O ports 0x510-0x51B)
+  if (SIM->get_param_bool(BXPN_FW_CFG_ENABLED)->get()) {
+    PLUG_load_plugin(fw_cfg, PLUGTYPE_CORE);
+  }
   if (pluginVgaDevice == &stubVga) {
     PLUG_load_plugin_var(BX_PLUGIN_VGA, PLUGTYPE_VGA);
   }
@@ -346,13 +350,21 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   DEV_cmos_set_reg(0x34, (Bit8u) (extended_memory_in_64k & 0xff));
   DEV_cmos_set_reg(0x35, (Bit8u) ((extended_memory_in_64k >> 8) & 0xff));
 
-  Bit64u memory_above_4gb = (mem->get_memory_len() > BX_CONST64(0x100000000)) ?
-                            (mem->get_memory_len() - BX_CONST64(0x100000000)) : 0;
-  if (memory_above_4gb) {
-    DEV_cmos_set_reg(0x5b, (Bit8u)(memory_above_4gb >> 16));
-    DEV_cmos_set_reg(0x5c, (Bit8u)(memory_above_4gb >> 24));
-    DEV_cmos_set_reg(0x5d, memory_above_4gb >> 32);
-  }
+  // Report memory above 4GB via the QEMU-compatible CMOS extension at 0x5b-0x5d.
+  // Legacy rombios uses these registers to construct the E820 entry for RAM above 4GB.
+  //
+  // Important: for configurations that reserve a 3GB-4GB PCI MMIO hole, RAM above 3GB
+  // is remapped above 4GB, so the amount of RAM above 4GB is (total_ram - 3GB), not
+  // merely (total_ram - 4GB).
+  Bit64u memory_len = mem->get_memory_len();
+  Bit64u memory_above_4gb = (memory_len > BX_CONST64(0xC0000000)) ?
+                            (memory_len - BX_CONST64(0xC0000000)) : 0;
+
+  // Stored in units of 64KB.
+  Bit64u memory_above_4gb_in_64k = (memory_above_4gb >> 16);
+  DEV_cmos_set_reg(0x5b, (Bit8u)(memory_above_4gb_in_64k & 0xff));
+  DEV_cmos_set_reg(0x5c, (Bit8u)((memory_above_4gb_in_64k >> 8) & 0xff));
+  DEV_cmos_set_reg(0x5d, (Bit8u)((memory_above_4gb_in_64k >> 16) & 0xff));
 
   options = SIM->get_param_string(BXPN_ROM_OPTIONS)->getptr();
   argc = bx_split_option_list("ROM image options", options, argv, 16);
@@ -434,6 +446,11 @@ void bx_devices_c::reset(unsigned type)
   }
 #endif
   mem->disable_smram();
+  // Reset memory (reload ROM images) for UEFI firmware support
+  // UEFI modifies ROM during execution, so it must be reloaded on hardware reset
+  if (type == BX_RESET_HARDWARE && SIM->get_param_bool(BXPN_FW_CFG_ENABLED)->get()) {
+    mem->reset();
+  }
   bx_reset_plugins(type);
   release_keys();
   if (paste.buf != NULL) {
