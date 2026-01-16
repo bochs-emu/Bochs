@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1206,7 +1206,7 @@ void bx_init_options()
       "Type of floppy drive",
       "Type of floppy drive",
       floppy_devtype_names,
-      (i==0)?BX_FDD_350HD:BX_FDD_NONE,
+      ((i==0) && !BX_SUPPORT_PCI) ? BX_FDD_350HD:BX_FDD_NONE,
       BX_FDD_NONE);
     devtype->set_ask_format("What type of floppy drive? [%s] ");
     devtype->set_handler(bx_param_handler);

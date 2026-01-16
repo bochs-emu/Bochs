@@ -501,7 +501,7 @@ mouse: enabled=0
 #  original i440FX doesn't support them. The options 'noacpi' and 'nohpet' make
 #  it possible to disable them. The option 'noagp' disables the incomplete AGP
 #  subsystem of the i440BX chipset.
-#  If PCI is enabled, the 'nofloppy' option disables the FDC if no floppy drive
+#  If PCI is enabled, the 'nofdc' option disables the FDC if no floppy drive
 #  is configured.
 #
 # Example:
@@ -595,7 +595,7 @@ private_colormap: enabled=0
 #   floppya: image=path, status=inserted  (guess media type from image size)
 #   floppya: 1_44=vvfat:path, status=inserted  (use directory as VFAT media)
 #   floppya: type=1_44                    (1.44M 3.5" floppy drive, no media)
-#   floppya: type=none                    (no floppy, to be used with pci: advopts=nofloppy)
+#   floppya: type=none                    (no floppy, to be used with pci: advopts=nofdc)
 #
 # The path should be the name of a disk image file.  On Unix, you can use a raw
 # device name such as /dev/fd0 on Linux.  On win32 platforms, use drive letters

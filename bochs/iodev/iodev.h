@@ -135,7 +135,7 @@ enum {
 #define BX_PCI_ADVOPT_NOHPET    0x02
 #define BX_PCI_ADVOPT_ALTDEVMAP 0x04
 #define BX_PCI_ADVOPT_NOAGP     0x08
-#define BX_PCI_ADVOPT_NOFLOPPY  0x10
+#define BX_PCI_ADVOPT_NOFDC     0x10
 
 typedef struct {
   Bit8u  type;

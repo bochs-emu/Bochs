@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "11 Jan 2026" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "16 Jan 2026" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -519,7 +519,7 @@ By default the "Bochs i440FX" chipset enables the ACPI and HPET devices, but
 original i440FX doesn't support them. The options 'noacpi' and 'nohpet' make
 it possible to disable them. The option 'noagp' disables the incomplete AGP
 subsystem of the i440BX chipset.
-If PCI is enabled, the 'nofloppy' option disables the FDC if no floppy drive
+If PCI is enabled, the 'nofdc' option disables the FDC if no floppy drive
 is configured.
 
 Example:
