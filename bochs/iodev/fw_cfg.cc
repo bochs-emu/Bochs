@@ -51,7 +51,7 @@ Bit32s fw_cfg_options_parser(const char *context, int num_params, char *params[]
 {
   if (!strcmp(params[0], "fw_cfg")) {
     for (int i = 1; i < num_params; i++) {
-      if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param(BXPN_FW_CFG_ROOT)) < 0) {
+      if (SIM->parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param(BXPN_FW_CFG_ROOT)) < 0) {
         BX_PANIC(("%s: fw_cfg directive malformed.", context));
       }
     }
