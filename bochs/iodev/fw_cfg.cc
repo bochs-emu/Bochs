@@ -33,15 +33,57 @@
 
 bx_fw_cfg_c *theFwCfgDevice = NULL;
 
+// builtin configuration handling functions
+
+void fw_cfg_init_options(void)
+{
+  bx_param_c *misc = SIM->get_param("misc");
+
+  bx_list_c *fw_cfg = new bx_list_c(misc, "fw_cfg", "QEMU fw_cfg device (UEFI/OVMF support)");
+  new bx_param_bool_c(fw_cfg,
+    "enabled",
+    "Enable fw_cfg device",
+    "Enables the QEMU-compatible fw_cfg device used by UEFI/OVMF firmware",
+    1);
+}
+
+Bit32s fw_cfg_options_parser(const char *context, int num_params, char *params[])
+{
+  if (!strcmp(params[0], "fw_cfg")) {
+    for (int i = 1; i < num_params; i++) {
+      if (bx_parse_param_from_list(context, params[i], (bx_list_c*) SIM->get_param(BXPN_FW_CFG_ROOT)) < 0) {
+        BX_PANIC(("%s: fw_cfg directive malformed.", context));
+      }
+    }
+  } else {
+    BX_PANIC(("%s: unknown directive '%s'", context, params[0]));
+  }
+  return 0;
+}
+
+Bit32s fw_cfg_options_save(FILE *fp)
+{
+  return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_FW_CFG_ROOT), NULL, 0);
+}
+
+// device plugin entry point
+
 PLUGIN_ENTRY_FOR_MODULE(fw_cfg)
 {
   if (mode == PLUGIN_INIT) {
     theFwCfgDevice = new bx_fw_cfg_c();
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theFwCfgDevice, BX_PLUGIN_FW_CFG);
+    // add new configuration parameter for the config interface
+    fw_cfg_init_options();
+    // register add-on option for bochsrc and command line
+    SIM->register_addon_option("fw_cfg", fw_cfg_options_parser, fw_cfg_options_save);
   } else if (mode == PLUGIN_FINI) {
     delete theFwCfgDevice;
+    SIM->unregister_addon_option("fw_cfg");
+    bx_list_c *menu = (bx_list_c*)SIM->get_param("misc");
+    menu->remove("fw_cfg");
   } else if (mode == PLUGIN_PROBE) {
-    return (int)PLUGTYPE_CORE;
+    return (int)PLUGTYPE_OPTIONAL;
   }
   return(0); // Success
 }
@@ -168,6 +210,11 @@ void bx_fw_cfg_c::init(void)
 
 void bx_fw_cfg_c::reset(unsigned type)
 {
+  // Reset memory (reload ROM images) for UEFI firmware support
+  // UEFI modifies ROM during execution, so it must be reloaded on hardware reset
+  if (type == BX_RESET_HARDWARE && SIM->get_param_bool(BXPN_FW_CFG_ENABLED)->get()) {
+    bx_mem.reset();
+  }
   cur_entry = FW_CFG_INVALID;
   cur_offset = 0;
   dma_addr = 0;

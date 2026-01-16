@@ -253,10 +253,6 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   PLUG_load_plugin(dma, PLUGTYPE_CORE);
   PLUG_load_plugin(pic, PLUGTYPE_CORE);
   PLUG_load_plugin(pit, PLUGTYPE_CORE);
-  // Load fw_cfg device for UEFI/OVMF firmware support (provides system info via I/O ports 0x510-0x51B)
-  if (SIM->get_param_bool(BXPN_FW_CFG_ENABLED)->get()) {
-    PLUG_load_plugin(fw_cfg, PLUGTYPE_CORE);
-  }
   if (pluginVgaDevice == &stubVga) {
     PLUG_load_plugin_var(BX_PLUGIN_VGA, PLUGTYPE_VGA);
   }
@@ -448,11 +444,6 @@ void bx_devices_c::reset(unsigned type)
   }
 #endif
   mem->disable_smram();
-  // Reset memory (reload ROM images) for UEFI firmware support
-  // UEFI modifies ROM during execution, so it must be reloaded on hardware reset
-  if (type == BX_RESET_HARDWARE && SIM->get_param_bool(BXPN_FW_CFG_ENABLED)->get()) {
-    mem->reset();
-  }
   bx_reset_plugins(type);
   release_keys();
   if (paste.buf != NULL) {
