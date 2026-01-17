@@ -217,14 +217,17 @@ void bx_fw_cfg_c::init(void)
 
 void bx_fw_cfg_c::reset(unsigned type)
 {
+  static bool first_reset = true;
+
   // Reset memory (reload ROM images) for UEFI firmware support
   // UEFI modifies ROM during execution, so it must be reloaded on hardware reset
-  if (type == BX_RESET_HARDWARE && SIM->get_param_bool(BXPN_FW_CFG_ENABLED)->get()) {
+  if (!first_reset && (type == BX_RESET_HARDWARE) && SIM->get_param_bool(BXPN_FW_CFG_ENABLED)->get()) {
     bx_mem.reset();
   }
   cur_entry = FW_CFG_INVALID;
   cur_offset = 0;
   dma_addr = 0;
+  first_reset = false;
 }
 
 void bx_fw_cfg_c::add_bytes(Bit16u key, Bit8u *data, Bit32u len)
