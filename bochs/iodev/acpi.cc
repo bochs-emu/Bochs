@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2006-2025  The Bochs Project
+//  Copyright (C) 2006-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -153,6 +153,7 @@ void bx_acpi_ctrl_c::init(void)
 
 void bx_acpi_ctrl_c::reset(unsigned type)
 {
+  static bool uefi_enabled = false;
   unsigned i;
 
   BX_ACPI_THIS pci_conf[0x04] = 0x00; // command_io + command_mem
@@ -167,7 +168,9 @@ void bx_acpi_ctrl_c::reset(unsigned type)
   //
   // When running with UEFI firmware (OVMF), seed QEMU-like defaults so the
   // ACPI PM timer is available very early.
-  const bool uefi_enabled = SIM->get_param_bool(BXPN_FW_CFG_ENABLED)->get();
+  if (PLUG_device_present(BX_PLUGIN_FW_CFG)) {
+    uefi_enabled = SIM->get_param_bool(BXPN_FW_CFG_ENABLED)->get();
+  }
   Bit32u pmbar = ReadHostDWordFromLittleEndian((Bit32u*) &BX_ACPI_THIS pci_conf[0x40]);
   if (!uefi_enabled) {
     // Upstream-compatible reset behavior.

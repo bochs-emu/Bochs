@@ -117,6 +117,13 @@ void bx_fw_cfg_c::init(void)
 {
   BX_DEBUG(("Init $Id$"));
 
+  // Check if the device is disabled or not configured
+  if (!SIM->get_param_bool(BXPN_FW_CFG_ENABLED)->get()) {
+    BX_INFO(("UEFI firmware support disabled"));
+    // mark unused plugin for removal
+    ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("fw_cfg"))->set(0);
+    return;
+  }
   // Initialize all entries
   for (int i = 0; i < FW_CFG_MAX_ENTRY; i++) {
     entries[i].data = NULL;
