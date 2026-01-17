@@ -215,6 +215,10 @@ struct gf_channel
   Bit32u d3d_surface_pitch_z;
   Bit16s d3d_window_offset_x;
   Bit16s d3d_window_offset_y;
+  Bit32u d3d_window_clip_x1[8];
+  Bit32u d3d_window_clip_x2[8];
+  Bit32u d3d_window_clip_y1[8];
+  Bit32u d3d_window_clip_y2[8];
   Bit32u d3d_surface_color_offset;
   Bit32u d3d_surface_zeta_offset;
   Bit32u d3d_combiner_alpha_icw[8];
@@ -268,8 +272,10 @@ struct gf_channel
   float d3d_specular_params[6];
   float d3d_specular_power;
   float d3d_scene_ambient_color[4];
-  Bit32u d3d_viewport_horizontal;
-  Bit32u d3d_viewport_vertical;
+  Bit32u d3d_viewport_x;
+  Bit32u d3d_viewport_width;
+  Bit32u d3d_viewport_y;
+  Bit32u d3d_viewport_height;
   float d3d_viewport_offset[4];
   float d3d_combiner_const_color[8][2][4];
   Bit32u d3d_combiner_alpha_ocw[8];
@@ -286,6 +292,7 @@ struct gf_channel
   float d3d_diffuse_color[4];
   float d3d_texcoord[4][4];
   Bit32u d3d_attrib_count;
+  Bit32u d3d_vertex_data_base_index;
   Bit32u d3d_vertex_data_array_offset[16];
   Bit32u d3d_vertex_data_array_format_type[16];
   Bit32u d3d_vertex_data_array_format_size[16];
@@ -319,6 +326,7 @@ struct gf_channel
   Bit32u d3d_attrib_out_color[2];
   Bit32u d3d_attrib_in_tex_coord[16];
   Bit32u d3d_attrib_out_tex_coord[16];
+  bool d3d_attrib_out_enable[32];
   Bit32u d3d_vs_temp_regs_count;
   Bit32u d3d_tex_coord_count;
 
@@ -517,6 +525,8 @@ private:
   BX_GEFORCE_SMF void sifm(gf_channel* ch, bool swizzled);
 
   BX_GEFORCE_SMF bool d3d_scissor_clip(gf_channel* ch, Bit32u* x, Bit32u* y, Bit32u* width, Bit32u* height);
+  BX_GEFORCE_SMF bool d3d_viewport_clip(gf_channel* ch, Bit32u* x, Bit32u* y, Bit32u* width, Bit32u* height);
+  BX_GEFORCE_SMF bool d3d_window_clip(gf_channel* ch, Bit32u* x, Bit32u* y, Bit32u* width, Bit32u* height);
   BX_GEFORCE_SMF void d3d_clear_surface(gf_channel* ch);
   BX_GEFORCE_SMF void d3d_sample_texture(gf_channel* ch,
     gf_texture* tex, float coords_in[3], float color[4]);

@@ -2853,8 +2853,8 @@ void bx_geforce_c::sifm(gf_channel* ch, bool swizzled)
       BX_GEFORCE_THIS redraw_area_nd(redraw_offset, dwidth, dheight);
     }
   } else {
-    Bit32s sx0 = ((ch->sifm_syx & 0xFFFF) << 16) - (dx << 20) - 0x80000;
-    Bit32s sy = (ch->sifm_syx & 0xFFFF0000) - (dy << 20) - 0x80000;
+    Bit32s sx0 = ((ch->sifm_syx & 0xFFFF) << 16) - 0x80000;
+    Bit32s sy = (ch->sifm_syx & 0xFFFF0000) - 0x80000;
     if (sx0 < 0)
       sx0 = 0;
     if (sy < 0)
@@ -2916,6 +2916,48 @@ bool bx_geforce_c::d3d_scissor_clip(gf_channel* ch,
     *y = BX_MAX((Bit32s)*y, scissor_y1);
     *width = BX_MIN(surf_x2, scissor_x2) - *x;
     *height = BX_MIN(surf_y2, scissor_y2) - *y;
+  }
+  return true;
+}
+
+bool bx_geforce_c::d3d_viewport_clip(gf_channel* ch,
+  Bit32u* x, Bit32u* y, Bit32u* width, Bit32u* height)
+{
+  if (BX_GEFORCE_THIS card_type >= 0x35) {
+    Bit32s surf_x2 = *x + *width;
+    Bit32s surf_y2 = *y + *height;
+    Bit32s viewport_x1 = (Bit32s)ch->d3d_viewport_x + ch->d3d_window_offset_x;
+    Bit32s viewport_y1 = (Bit32s)ch->d3d_viewport_y + ch->d3d_window_offset_y;
+    Bit32s viewport_x2 = viewport_x1 + (Bit32s)ch->d3d_viewport_width;
+    Bit32s viewport_y2 = viewport_y1 + (Bit32s)ch->d3d_viewport_height;
+    if (viewport_x1 >= surf_x2 || viewport_x2 <= (Bit32s)*x ||
+        viewport_y1 >= surf_y2 || viewport_y2 <= (Bit32s)*y)
+      return false;
+    *x = BX_MAX((Bit32s)*x, viewport_x1);
+    *y = BX_MAX((Bit32s)*y, viewport_y1);
+    *width = BX_MIN(surf_x2, viewport_x2) - *x;
+    *height = BX_MIN(surf_y2, viewport_y2) - *y;
+  }
+  return true;
+}
+
+bool bx_geforce_c::d3d_window_clip(gf_channel* ch,
+  Bit32u* x, Bit32u* y, Bit32u* width, Bit32u* height)
+{
+  if (BX_GEFORCE_THIS card_type >= 0x35) {
+    Bit32s surf_x2 = *x + *width;
+    Bit32s surf_y2 = *y + *height;
+    Bit32s window_x1 = (Bit32s)ch->d3d_window_clip_x1[0] + ch->d3d_window_offset_x;
+    Bit32s window_y1 = (Bit32s)ch->d3d_window_clip_y1[0] + ch->d3d_window_offset_y;
+    Bit32s window_x2 = (Bit32s)ch->d3d_window_clip_x2[0] + ch->d3d_window_offset_x + 1;
+    Bit32s window_y2 = (Bit32s)ch->d3d_window_clip_y2[0] + ch->d3d_window_offset_y + 1;
+    if (window_x1 >= surf_x2 || window_x2 <= (Bit32s)*x ||
+        window_y1 >= surf_y2 || window_y2 <= (Bit32s)*y)
+      return false;
+    *x = BX_MAX((Bit32s)*x, window_x1);
+    *y = BX_MAX((Bit32s)*y, window_y1);
+    *width = BX_MIN(surf_x2, window_x2) - *x;
+    *height = BX_MIN(surf_y2, window_y2) - *y;
   }
   return true;
 }
@@ -3002,7 +3044,8 @@ void texture_process_format(gf_texture* tex)
       tex->unnormalized = true;
     tex->format &= 0x9f;
   } else if (tex->format == 0x12 ||
-             tex->format == 0x1b) {
+             tex->format == 0x1b ||
+             tex->format == 0x1e) {
     tex->linear = true;
     tex->unnormalized = true;
   }
@@ -3031,6 +3074,7 @@ void texture_process_format(gf_texture* tex)
   else if (tex->format == 0x06 ||   // A8R8G8B8
            tex->format == 0x07 ||   // X8R8G8B8
            tex->format == 0x12 ||   // A8R8G8B8
+           tex->format == 0x1e ||   // X8R8G8B8
            tex->format == 0x85)     // A8R8G8B8
     tex->color_bytes = 4;
   else
@@ -3449,7 +3493,8 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
       color_scale[3] = 1.0f / 255.0f;
       break;
     }
-    case 0x07: { // X8R8G8B8
+    case 0x07:
+    case 0x1e: { // X8R8G8B8
       Bit32u value = dma_read32(tex->dma_obj, tex_ofs);
       color_int[0] = 1;
       color_scale[0] = 1.0f;
@@ -4588,12 +4633,13 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
       }
     }
   }
-  for (Bit32u v = 0; v < 3; v++) {
-    for (Bit32u i = 0; i < 2; i++) {
-      float* color = vs_out[v][ch->d3d_attrib_out_color[i]];
-      for (Bit32u ci = 0; ci < 4; ci++)
-        color[ci] = BX_MIN(BX_MAX(color[ci], 0.0f), 1.0f);
-    }
+  for (Bit32u i = 0; i < 2; i++) {
+    if (ch->d3d_attrib_out_enable[i])
+      for (Bit32u v = 0; v < 3; v++) {
+        float* color = vs_out[v][ch->d3d_attrib_out_color[i]];
+        for (Bit32u ci = 0; ci < 4; ci++)
+          color[ci] = BX_MIN(BX_MAX(color[ci], 0.0f), 1.0f);
+      }
   }
   bool clipped[3];
   Bit32u clip_count = 0;
@@ -4706,6 +4752,10 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
     return; // overflow
   Bit32u draw_width = draw_x2 - draw_x1;
   Bit32u draw_height = draw_y2 - draw_y1;
+  if (!d3d_window_clip(ch, &draw_x1, &draw_y1, &draw_width, &draw_height))
+    return;
+  if (!d3d_viewport_clip(ch, &draw_x1, &draw_y1, &draw_width, &draw_height))
+    return;
   if (!d3d_scissor_clip(ch, &draw_x1, &draw_y1, &draw_width, &draw_height))
     return;
   Bit32u pitch = ch->d3d_surface_pitch_a & 0xFFFF;
@@ -4877,7 +4927,7 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
         d3d_register_combiners(ch, ps_in, tmp_regs16[0]);
       } else if (ch->d3d_shader_obj != 0) {
         ps_in[0][0] = xy[0] - ch->d3d_window_offset_x;
-        ps_in[0][1] = (ch->d3d_viewport_vertical >> 16) - (xy[1] - ch->d3d_window_offset_y);
+        ps_in[0][1] = ch->d3d_viewport_height - (xy[1] - ch->d3d_window_offset_y);
         ps_in[0][2] = 0.0f;
         d3d_pixel_shader(ch, ps_in, tmp_regs16, tmp_regs32);
       }
@@ -5068,27 +5118,28 @@ void unpack_attribute(Bit32u value, bool d3d, float comp[4])
 
 void bx_geforce_c::d3d_load_vertex(gf_channel* ch, Bit32u index)
 {
+  Bit32u index_adj = ch->d3d_vertex_data_base_index + index;
   for (Bit32u attrib_index = 0; attrib_index < ch->d3d_attrib_count; attrib_index++) {
     Bit32u array_offset = ch->d3d_vertex_data_array_offset[attrib_index];
     Bit32u array_obj = array_offset & 0x80000000 ?
       ch->d3d_vertex_b_obj : ch->d3d_vertex_a_obj;
     array_offset &= 0x7fffffff;
     array_offset -= ramin_read32(array_obj) >> 20; // why?
-    Bit32u format_type = ch->d3d_vertex_data_array_format_type[attrib_index];
-    Bit32u comp_count = ch->d3d_vertex_data_array_format_size[attrib_index];
     Bit32u attrib_stride = ch->d3d_vertex_data_array_format_stride[attrib_index];
+    array_offset += index_adj * attrib_stride;
+    Bit32u comp_count = ch->d3d_vertex_data_array_format_size[attrib_index];
     if (comp_count != 0) {
       ch->d3d_vertex_data[ch->d3d_vertex_index][attrib_index][2] = 0.0f;
       ch->d3d_vertex_data[ch->d3d_vertex_index][attrib_index][3] = 1.0f;
     }
+    Bit32u format_type = ch->d3d_vertex_data_array_format_type[attrib_index];
     if ((format_type == 0 || format_type == 4) && comp_count == 4) {
-      Bit32u value = dma_read32(array_obj, array_offset + index * attrib_stride);
+      Bit32u value = dma_read32(array_obj, array_offset);
       unpack_attribute(value, format_type == 0,
         ch->d3d_vertex_data[ch->d3d_vertex_index][attrib_index]);
     } else {
       for (Bit32u comp_index = 0; comp_index < comp_count; comp_index++) {
-        Bit32u ui32 = dma_read32(array_obj, array_offset +
-          index * attrib_stride + comp_index * 4);
+        Bit32u ui32 = dma_read32(array_obj, array_offset + comp_index * 4);
         ch->d3d_vertex_data[ch->d3d_vertex_index][
           attrib_index][comp_index] = uint32_as_float(ui32);
       }
@@ -5676,6 +5727,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   } u;
   u.param_integer = param;
 
+  if (method <= 0x085) { // [1] Workaround for "compiler limit: blocks nested too deeply"
   if (method == 0x000) {
     // There may be better place for initialization
     if (cls == 0x0096) {
@@ -5725,6 +5777,8 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     }
     ch->d3d_attrib_out_color[0] = 3;
     ch->d3d_attrib_out_color[1] = 4;
+    for (int j = 0; j < 32; j++)
+      ch->d3d_attrib_out_enable[j] = true;
     for (int j = 0; j < 16; j++) {
       ch->d3d_attrib_in_tex_coord[j] = 0xf;
       ch->d3d_attrib_out_tex_coord[j] = 0xf;
@@ -5817,7 +5871,8 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     ch->d3d_surface_color_offset = param;
   else if (method == 0x085)
     ch->d3d_surface_zeta_offset = param;
-  else if (method == 0x08b && cls > 0x0497)
+  } else { // [2] Workaround for "compiler limit: blocks nested too deeply"
+  if (method == 0x08b && cls > 0x0497)
     ch->d3d_surface_pitch_z = param;
   else if ((method >= 0x098 && method <= 0x099 && cls == 0x0096) ||
            (method >= 0x098 && method <= 0x09f && cls == 0x0097)) {
@@ -5830,6 +5885,15 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   } else if (method == 0x0ae && cls >= 0x0497) {
     ch->d3d_window_offset_x = (Bit16s)param;
     ch->d3d_window_offset_y = (Bit16s)(param >> 16);
+  } else if (method >= 0x0b0 && method <= 0x0bf && cls >= 0x0497) {
+    Bit32u index = (method >> 1) & 7;
+    if ((method & 1) == 0) {
+      ch->d3d_window_clip_x1[index] = param & 0x0000ffff;
+      ch->d3d_window_clip_x2[index] = param >> 16;
+    } else {
+      ch->d3d_window_clip_y1[index] = param & 0x0000ffff;
+      ch->d3d_window_clip_y2[index] = param >> 16;
+    }
   } else if ((method == 0x0c0 && cls <= 0x0097) ||
              (method == 0x0c1 && cls >= 0x0497))
     ch->d3d_alpha_test_enable = param;
@@ -5995,9 +6059,11 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     else if (rc_method == 5)
       ch->d3d_combiner_color_ocw[stage] = param;
   } else if (method == 0x280 && cls >= 0x0497) {
-    ch->d3d_viewport_horizontal = param;
+    ch->d3d_viewport_x = param & 0x0000ffff;
+    ch->d3d_viewport_width = param >> 16;
   } else if (method == 0x281 && cls >= 0x0497) {
-    ch->d3d_viewport_vertical = param;
+    ch->d3d_viewport_y = param & 0x0000ffff;
+    ch->d3d_viewport_height = param >> 16;
   } else if ((method >= 0x1a8 && method <= 0x1ad && cls == 0x0096) ||
              (method >= 0x278 && method <= 0x27d && cls == 0x0097) ||
              (method >= 0x500 && method <= 0x505 && cls == 0x0497)) {
@@ -6154,6 +6220,8 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
              (method >= 0x5a0 && method <= 0x5af && cls >= 0x0497)) {
     Bit32u i = method - (cls == 0x0097 ? 0x5c8 : 0x5a0);
     ch->d3d_vertex_data_array_offset[i] = param;
+  } else if (method == 0x5cf && cls > 0x0497) {
+    ch->d3d_vertex_data_base_index = param;
   } else if ((method >= 0x340 && method <= 0x34f && cls == 0x0096) ||
              (method >= 0x5d8 && method <= 0x5e7 && cls == 0x0097) ||
              (method >= 0x5d0 && method <= 0x5df && cls >= 0x0497)) {
@@ -6440,7 +6508,11 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   } else if (method == 0x7f3 && cls > 0x0497) {
     for (Bit32u i = 0; i < 2; i++)
       ch->d3d_attrib_out_tex_coord[i + 8] = (param >> (i * 4)) & 0xf;
+  } else if (method == 0x7fd && cls > 0x0497) {
+    for (Bit32u i = 0; i < 32; i++)
+      ch->d3d_attrib_out_enable[i] = (bool)((param >> i) & 1);
   }
+  } // [3] Workaround for "compiler limit: blocks nested too deeply"
 }
 
 int bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param)
