@@ -1627,7 +1627,7 @@ void FillPAGE()
             if((lin - start_lin) != (phy - start_phy)) {
                 if(start_lin != 1) {
                     sprintf (pa_lin,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_lin, lin - 1);
-                    sprintf (pa_phy,"0x" FMT_LLCAPX " - 0x" FMT_LLCAPX,
+                    sprintf (pa_phy,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64,
                         start_phy, start_phy + (lin-1-start_lin));
                     AddPagingLine (LineCount,pa_lin,pa_phy);
                     ++LineCount;
@@ -1638,7 +1638,7 @@ void FillPAGE()
         } else {
             if(start_lin != 1) {
                 sprintf (pa_lin,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_lin, lin - 1);
-                sprintf (pa_phy,"0x" FMT_LLCAPX " - 0x" FMT_LLCAPX,
+                sprintf (pa_phy,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64,
                     start_phy, start_phy + (lin-1-start_lin));
                 AddPagingLine (LineCount,pa_lin,pa_phy);
                 ++LineCount;
@@ -1658,8 +1658,8 @@ void FillPAGE()
         lin++;
     }
     if(start_lin != 1) {
-        sprintf (pa_lin,"0x" FMT_ADDRX64 " - 0x%08X", start_lin, -1);
-        sprintf (pa_phy,"0x" FMT_LLCAPX " - 0x" FMT_LLCAPX,start_phy, start_phy + (lin-1-start_lin));
+        sprintf (pa_lin,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_lin, -1);
+        sprintf (pa_phy,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_phy, start_phy + (lin-1-start_lin));
         AddPagingLine (LineCount,pa_lin,pa_phy);
     }
     RedrawColumns(DUMP_WND);
