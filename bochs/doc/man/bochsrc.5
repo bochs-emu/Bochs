@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "11 Jan 2026" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "16 Jan 2026" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -306,6 +306,18 @@ Examples:
   romimage: file=mybios.bin, address=0xfff80000
 
 .TP
+.I "fw_cfg:"
+UEFI Firmware Support: Bochs supports UEFI boot using OVMF (Open Virtual
+Machine Firmware) from the TianoCore EDK2 project. UEFI boot requires the
+fw_cfg device which provides system configuration to the firmware via
+I/O ports 0x510-0x51B. This includes the E820 memory map, ACPI tables,
+RAM size, and CPU count. See user doc for more info.
+
+Example:
+  romimage: file=OVMF.fd, address=0xffc00000
+  fw_cfg: enabled=1
+
+.TP
 .I "vgaromimage:"
 You also need to load a VGA ROM BIOS into 0xC0000.
 
@@ -519,7 +531,7 @@ By default the "Bochs i440FX" chipset enables the ACPI and HPET devices, but
 original i440FX doesn't support them. The options 'noacpi' and 'nohpet' make
 it possible to disable them. The option 'noagp' disables the incomplete AGP
 subsystem of the i440BX chipset.
-If PCI is enabled, the 'nofloppy' option disables the FDC if no floppy drive
+If PCI is enabled, the 'nofdc' option disables the FDC if no floppy drive
 is configured.
 
 Example:

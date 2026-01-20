@@ -219,8 +219,8 @@ void bx_devices_c::init(BX_MEM_C *newmem)
         } else {
           BX_ERROR(("Disabling AGP not supported by PCI chipset"));
         }
-      } else if (!strcmp(argv[i], "nofloppy")) {
-        pci.advopts |= BX_PCI_ADVOPT_NOFLOPPY;
+      } else if (!strcmp(argv[i], "nofdc")) {
+        pci.advopts |= BX_PCI_ADVOPT_NOFDC;
       } else {
         BX_ERROR(("Unknown advanced PCI option '%s'", argv[i]));
       }
@@ -253,20 +253,18 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   PLUG_load_plugin(dma, PLUGTYPE_CORE);
   PLUG_load_plugin(pic, PLUGTYPE_CORE);
   PLUG_load_plugin(pit, PLUGTYPE_CORE);
-  // Load fw_cfg device for UEFI/OVMF firmware support (provides system info via I/O ports 0x510-0x51B)
-  if (SIM->get_param_bool(BXPN_FW_CFG_ENABLED)->get()) {
-    PLUG_load_plugin(fw_cfg, PLUGTYPE_CORE);
-  }
   if (pluginVgaDevice == &stubVga) {
     PLUG_load_plugin_var(BX_PLUGIN_VGA, PLUGTYPE_VGA);
   }
 #if BX_SUPPORT_PCI
-  if (!pci.enabled || ((pci.advopts & BX_PCI_ADVOPT_NOFLOPPY) == 0) ||
+  if (!pci.enabled || ((pci.advopts & BX_PCI_ADVOPT_NOFDC) == 0) ||
       (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() != BX_FDD_NONE) ||
       (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get() != BX_FDD_NONE)) {
 #endif
     PLUG_load_plugin(floppy, PLUGTYPE_STANDARD);
 #if BX_SUPPORT_PCI
+  } else {
+    BX_INFO(("FDC device loading disabled"));
   }
 #endif
 
@@ -446,11 +444,6 @@ void bx_devices_c::reset(unsigned type)
   }
 #endif
   mem->disable_smram();
-  // Reset memory (reload ROM images) for UEFI firmware support
-  // UEFI modifies ROM during execution, so it must be reloaded on hardware reset
-  if (type == BX_RESET_HARDWARE && SIM->get_param_bool(BXPN_FW_CFG_ENABLED)->get()) {
-    mem->reset();
-  }
   bx_reset_plugins(type);
   release_keys();
   if (paste.buf != NULL) {

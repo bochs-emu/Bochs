@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2024  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1040,6 +1040,7 @@ plugin_t bx_builtin_plugins[] = {
   BUILTIN_OPT_PLUGIN_ENTRY(biosdev),
   BUILTIN_OPT_PLUGIN_ENTRY(speaker),
   BUILTIN_OPT_PLUGIN_ENTRY(extfpuirq),
+  BUILTIN_OPT_PLUGIN_ENTRY(fw_cfg),
 #if BX_SUPPORT_PCI
   BUILTIN_OPTPCI_PLUGIN_ENTRY(acpi),
 #endif
