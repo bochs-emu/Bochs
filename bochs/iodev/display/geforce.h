@@ -612,6 +612,7 @@ private:
   Bit32u crtc_raster_pos;
   Bit32u crtc_cursor_offset;
   Bit32u crtc_cursor_config;
+  Bit32u crtc_gpio_ext;
   Bit32u ramdac_cu_start_pos;
   Bit32u ramdac_vpll;
   Bit32u ramdac_vpll_b;
