@@ -312,6 +312,7 @@ void bx_geforce_c::svga_init_members()
   BX_GEFORCE_THIS crtc_raster_pos = 0;
   BX_GEFORCE_THIS crtc_cursor_offset = 0;
   BX_GEFORCE_THIS crtc_cursor_config = 0;
+  BX_GEFORCE_THIS crtc_gpio_ext = 0;
   BX_GEFORCE_THIS ramdac_cu_start_pos = 0;
   BX_GEFORCE_THIS ramdac_vpll = 0;
   BX_GEFORCE_THIS ramdac_vpll_b = 0;
@@ -7107,6 +7108,10 @@ Bit32u bx_geforce_c::register_read32(Bit32u address)
     value = BX_GEFORCE_THIS crtc_cursor_offset;
   } else if (address == 0x600810) {
     value = BX_GEFORCE_THIS crtc_cursor_config;
+  } else if (address == 0x60081c) {
+    value = BX_GEFORCE_THIS crtc_gpio_ext;
+    if (BX_GEFORCE_THIS card_type == 0x35)
+      value |= 0x04000000;
   } else if (address == 0x600868) {
     Bit64u display_usec =
       bx_virt_timer.time_usec(BX_GEFORCE_THIS vsync_realtime) - BX_GEFORCE_THIS s.display_start_usec;
@@ -7372,6 +7377,8 @@ void bx_geforce_c::register_write32(Bit32u address, Bit32u value)
       (BX_GEFORCE_THIS card_type >= 0x40);
     BX_GEFORCE_THIS hw_cursor.size = value & 0x00010000 ? 64 : 32;
     BX_GEFORCE_THIS hw_cursor.bpp32 = value & 0x00001000;
+  } else if (address == 0x60081c) {
+    BX_GEFORCE_THIS crtc_gpio_ext = value;
   } else if ((address >= 0x601300 && address < 0x601400) ||
              (address >= 0x603300 && address < 0x603400)) {
     register_write8(address, value);
