@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2025  The Bochs Project
+//  Copyright (C) 2025-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -425,7 +425,12 @@ void bx_geforce_c::register_state(void)
 void bx_geforce_c::after_restore_state(void)
 {
   bx_pci_device_c::after_restore_pci_state(geforce_mem_read_handler);
-  BX_GEFORCE_THIS bx_vgacore_c::after_restore_state();
+  if (BX_GEFORCE_THIS crtc.reg[0x28] == 0x00) {
+    BX_GEFORCE_THIS bx_vgacore_c::after_restore_state();
+  } else {
+    BX_GEFORCE_THIS svga_needs_update_mode = 1;
+    BX_GEFORCE_THIS update();
+  }
 }
 
 void bx_geforce_c::redraw_area(unsigned x0, unsigned y0,
