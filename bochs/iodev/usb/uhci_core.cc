@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2025  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2025  The Bochs Project
+//                2009-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -238,7 +238,7 @@ void bx_uhci_core_c::uhci_register_state(bx_list_c *parent)
 
 void bx_uhci_core_c::after_restore_state(void)
 {
-  bx_pci_device_c::after_restore_pci_state(NULL);
+  bx_pci_device_c::after_restore_pci_state();
   for (int j=0; j<USB_UHCI_PORTS; j++) {
     if (hub.usb_port[j].device != NULL) {
       hub.usb_port[j].device->after_restore_state();

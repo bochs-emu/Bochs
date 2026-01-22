@@ -4,7 +4,7 @@
 //
 //  Experimental USB EHCI adapter (partly ported from Qemu)
 //
-//  Copyright (C) 2015-2025  The Bochs Project
+//  Copyright (C) 2015-2026  The Bochs Project
 //
 //  Copyright(c) 2008  Emutex Ltd. (address@hidden)
 //  Copyright(c) 2011-2012 Red Hat, Inc.
@@ -505,7 +505,7 @@ void bx_usb_ehci_c::after_restore_state(void)
 {
   int i;
 
-  bx_pci_device_c::after_restore_pci_state(NULL);
+  bx_pci_device_c::after_restore_pci_state();
   for (i=0; i<USB_EHCI_PORTS; i++) {
     if (BX_EHCI_THIS hub.usb_port[i].device != NULL) {
       BX_EHCI_THIS hub.usb_port[i].device->after_restore_state();

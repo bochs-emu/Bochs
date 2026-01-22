@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2025  The Bochs Project
+//  Copyright (C) 2012-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -850,7 +850,7 @@ void bx_voodoo_1_2_c::register_state(void)
 
 void bx_voodoo_1_2_c::after_restore_state(void)
 {
-  bx_pci_device_c::after_restore_pci_state(NULL);
+  bx_pci_device_c::after_restore_pci_state();
   if (s.vdraw.override_on) {
     // force update
     v->fbi.video_changed = 1;

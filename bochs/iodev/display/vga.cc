@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //  PCI VGA dummy adapter Copyright (C) 2002,2003  Mike Nordell
 //
 //  This library is free software; you can redistribute it and/or
@@ -150,9 +150,8 @@ bool bx_vga_c::init_vga_extension(void)
       BX_VGA_THIS init_bar_mem(2, PCI_VGA_MMIO_SIZE,
                                vbe_mmio_read_handler, vbe_mmio_write_handler);
     }
-    BX_VGA_THIS pci_rom_address = 0;
-    BX_VGA_THIS pci_rom_read_handler = mem_read_handler;
-    BX_VGA_THIS load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr());
+    BX_VGA_THIS load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr(),
+                             mem_read_handler);
   }
 #endif
 #if BX_DEBUGGER
@@ -221,7 +220,7 @@ void bx_vga_c::after_restore_state(void)
   bx_vgacore_c::after_restore_state();
 #if BX_SUPPORT_PCI
   if (BX_VGA_THIS pci_enabled) {
-    bx_pci_device_c::after_restore_pci_state(mem_read_handler);
+    bx_pci_device_c::after_restore_pci_state();
   }
 #endif
   if (BX_VGA_THIS vbe.enabled) {
@@ -672,7 +671,7 @@ Bit8u bx_vga_c::mem_read(bx_phy_address addr)
 #if BX_SUPPORT_PCI
   if ((BX_VGA_THIS pci_enabled) && (BX_VGA_THIS pci_rom_size > 0)) {
     Bit32u mask = (BX_VGA_THIS pci_rom_size - 1);
-    if (((Bit32u)addr & ~mask) == BX_VGA_THIS pci_rom_address) {
+    if (((Bit32u)addr & ~mask) == BX_VGA_THIS pci_bar[PCI_ROM_SLOT].addr) {
       if (BX_VGA_THIS pci_conf[0x30] & 0x01) {
         return BX_VGA_THIS pci_rom[addr & mask];
       } else {

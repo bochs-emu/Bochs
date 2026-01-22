@@ -5,7 +5,7 @@
 //  Copyright (c) 2004 Makoto Suzuki (suzu)
 //                     Volker Ruppert (vruppert)
 //                     Robin Kay (komadori)
-//  Copyright (C) 2004-2025  The Bochs Project
+//  Copyright (C) 2004-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -418,7 +418,7 @@ void bx_svga_cirrus_c::after_restore_state(void)
 {
 #if BX_SUPPORT_PCI
   if (BX_CIRRUS_THIS pci_enabled) {
-    bx_pci_device_c::after_restore_pci_state(cirrus_mem_read_handler);
+    bx_pci_device_c::after_restore_pci_state();
   }
 #endif
   if ((BX_CIRRUS_THIS sequencer.reg[0x07] & 0x01) == CIRRUS_SR7_BPP_VGA) {
@@ -544,7 +544,7 @@ Bit8u bx_svga_cirrus_c::mem_read(bx_phy_address addr)
 #if BX_SUPPORT_PCI
   if ((BX_CIRRUS_THIS pci_enabled) && (BX_CIRRUS_THIS pci_rom_size > 0)) {
     Bit32u mask = (BX_CIRRUS_THIS pci_rom_size - 1);
-    if (((Bit32u)addr & ~mask) == BX_CIRRUS_THIS pci_rom_address) {
+    if (((Bit32u)addr & ~mask) == BX_CIRRUS_THIS pci_bar[PCI_ROM_SLOT].addr) {
       if (BX_CIRRUS_THIS pci_conf[0x30] & 0x01) {
         return BX_CIRRUS_THIS pci_rom[addr & mask];
       } else {
@@ -3067,9 +3067,8 @@ void bx_svga_cirrus_c::svga_init_pcihandlers(void)
                               cirrus_mem_write_handler);
   BX_CIRRUS_THIS init_bar_mem(1, CIRRUS_PNPMMIO_SIZE, cirrus_mem_read_handler,
                               cirrus_mem_write_handler);
-  BX_CIRRUS_THIS pci_rom_address = 0;
-  BX_CIRRUS_THIS pci_rom_read_handler = cirrus_mem_read_handler;
-  BX_CIRRUS_THIS load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr());
+  BX_CIRRUS_THIS load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr(),
+                              cirrus_mem_read_handler);
 }
 
 void bx_svga_cirrus_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)

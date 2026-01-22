@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -341,11 +341,9 @@ void bx_ne2k_c::init_card(Bit8u card)
     BX_NE2K_THIS pci_conf[0x07] = 0x02;
     init_bar_io(0, 32, read_handler, write_handler, &ne2k_iomask[0]);
     BX_NE2K_THIS s.base_address = 0x0;
-    BX_NE2K_THIS pci_rom_address = 0;
-    BX_NE2K_THIS pci_rom_read_handler = mem_read_handler;
     bootrom = SIM->get_param_string("bootrom", base);
     if (!bootrom->isempty()) {
-      BX_NE2K_THIS load_pci_rom(bootrom->getptr());
+      BX_NE2K_THIS load_pci_rom(bootrom->getptr(), mem_read_handler);
     }
   }
 #endif
@@ -580,7 +578,7 @@ void bx_ne2k_c::ne2k_register_state(bx_list_c *parent, Bit8u card)
 void bx_ne2k_c::after_restore_state(void)
 {
   if (BX_NE2K_THIS s.pci_enabled) {
-    bx_pci_device_c::after_restore_pci_state(mem_read_handler);
+    bx_pci_device_c::after_restore_pci_state();
   }
 }
 #endif

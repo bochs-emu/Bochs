@@ -125,17 +125,19 @@ class cdrom_base_c;
   else if (io_len == 4) \
     BX_DEBUG(("write PCI register 0x%02X value 0x%08X (len=4)", addr, value));
 
+#define BX_PCI_ADVOPT_NOACPI    0x01
+#define BX_PCI_ADVOPT_NOHPET    0x02
+#define BX_PCI_ADVOPT_ALTDEVMAP 0x04
+#define BX_PCI_ADVOPT_NOAGP     0x08
+#define BX_PCI_ADVOPT_NOFDC     0x10
+
 enum {
   BX_PCI_BAR_TYPE_NONE = 0,
   BX_PCI_BAR_TYPE_MEM  = 1,
   BX_PCI_BAR_TYPE_IO   = 2
 };
 
-#define BX_PCI_ADVOPT_NOACPI    0x01
-#define BX_PCI_ADVOPT_NOHPET    0x02
-#define BX_PCI_ADVOPT_ALTDEVMAP 0x04
-#define BX_PCI_ADVOPT_NOAGP     0x08
-#define BX_PCI_ADVOPT_NOFDC     0x10
+#define PCI_ROM_SLOT 6
 
 typedef struct {
   Bit8u  type;
@@ -158,7 +160,7 @@ typedef struct {
 class BOCHSAPI bx_pci_device_c : public bx_devmodel_c {
 public:
   bx_pci_device_c(): pci_rom(NULL), pci_rom_size(0) {
-    for (int i = 0; i < 6; i++) memset(&pci_bar[i], 0, sizeof(bx_pci_bar_t));
+    for (int i = 0; i < 7; i++) memset(&pci_bar[i], 0, sizeof(bx_pci_bar_t));
   }
   virtual ~bx_pci_device_c() {
     if (pci_rom != NULL) delete [] pci_rom;
@@ -175,8 +177,8 @@ public:
                    bx_write_handler_t wh, const Bit8u *mask);
   void init_bar_mem(Bit8u num, Bit32u size, memory_handler_t rh, memory_handler_t wh);
   void register_pci_state(bx_list_c *list);
-  void after_restore_pci_state(memory_handler_t mem_read_handler);
-  void load_pci_rom(const char *path);
+  void after_restore_pci_state(void);
+  void load_pci_rom(const char *path, memory_handler_t mem_read_handler);
 
   void set_name(const char *name) {pci_name = name;}
   const char* get_name(void) {return pci_name;}
@@ -184,11 +186,9 @@ public:
 protected:
   const char *pci_name;
   Bit8u pci_conf[256];
-  bx_pci_bar_t pci_bar[6];
+  bx_pci_bar_t pci_bar[7];
   Bit8u  *pci_rom;
-  Bit32u pci_rom_address;
   Bit32u pci_rom_size;
-  memory_handler_t pci_rom_read_handler;
 };
 #endif
 

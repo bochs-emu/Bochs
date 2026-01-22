@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003  Fen Systems Ltd. (http://www.fensystems.co.uk/)
-//  Copyright (C) 2003-2021  The Bochs Project
+//  Copyright (C) 2003-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -167,11 +167,9 @@ void bx_pcipnic_c::init(void)
   BX_PNIC_THIS ethdev = DEV_net_init_module(base, rx_handler, rx_status_handler, this);
 
   BX_PNIC_THIS init_bar_io(4, 16, read_handler, write_handler, &pnic_iomask[0]);
-  BX_PNIC_THIS pci_rom_address = 0;
-  BX_PNIC_THIS pci_rom_read_handler = mem_read_handler;
   bootrom = SIM->get_param_string("bootrom", base);
   if (!bootrom->isempty()) {
-    BX_PNIC_THIS load_pci_rom(bootrom->getptr());
+    BX_PNIC_THIS load_pci_rom(bootrom->getptr(), mem_read_handler);
   }
 
   BX_INFO(("PCI Pseudo NIC initialized"));
@@ -237,7 +235,7 @@ void bx_pcipnic_c::register_state(void)
 
 void bx_pcipnic_c::after_restore_state(void)
 {
-  bx_pci_device_c::after_restore_pci_state(mem_read_handler);
+  bx_pci_device_c::after_restore_pci_state();
 }
 
 void bx_pcipnic_c::set_irq_level(bool level)

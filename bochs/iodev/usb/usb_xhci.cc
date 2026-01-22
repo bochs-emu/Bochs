@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2010-2025  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2011-2025  The Bochs Project
+//                2011-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1103,7 +1103,7 @@ void bx_usb_xhci_c::register_state(void)
 
 void bx_usb_xhci_c::after_restore_state(void)
 {
-  bx_pci_device_c::after_restore_pci_state(NULL);
+  bx_pci_device_c::after_restore_pci_state();
   for (unsigned int j=0; j<BX_XHCI_THIS hub.n_ports; j++) {
     if (BX_XHCI_THIS hub.usb_port[j].device != NULL) {
       BX_XHCI_THIS hub.usb_port[j].device->after_restore_state();

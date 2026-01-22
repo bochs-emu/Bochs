@@ -424,7 +424,7 @@ void bx_geforce_c::register_state(void)
 
 void bx_geforce_c::after_restore_state(void)
 {
-  bx_pci_device_c::after_restore_pci_state(geforce_mem_read_handler);
+  bx_pci_device_c::after_restore_pci_state();
   if (BX_GEFORCE_THIS crtc.reg[0x28] == 0x00) {
     BX_GEFORCE_THIS bx_vgacore_c::after_restore_state();
   } else {
@@ -580,7 +580,7 @@ Bit8u bx_geforce_c::mem_read(bx_phy_address addr)
 {
   if (BX_GEFORCE_THIS pci_rom_size > 0) {
     Bit32u mask = (BX_GEFORCE_THIS pci_rom_size - 1);
-    if (((Bit32u)addr & ~mask) == BX_GEFORCE_THIS pci_rom_address) {
+    if (((Bit32u)addr & ~mask) == BX_GEFORCE_THIS pci_bar[PCI_ROM_SLOT].addr) {
       if (BX_GEFORCE_THIS pci_conf[0x30] & 0x01) {
         if (BX_GEFORCE_THIS pci_conf[0x50] == 0x00)
           return BX_GEFORCE_THIS pci_rom[addr & mask];
@@ -7474,9 +7474,8 @@ void bx_geforce_c::svga_init_pcihandlers(void)
       BX_GEFORCE_THIS pci_conf[0x18] = 0x08;
     BX_GEFORCE_THIS init_bar_mem(2, BX_GEFORCE_THIS bar2_size, geforce_mem_read_handler, geforce_mem_write_handler);
   }
-  BX_GEFORCE_THIS pci_rom_address = 0;
-  BX_GEFORCE_THIS pci_rom_read_handler = geforce_mem_read_handler;
-  BX_GEFORCE_THIS load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr());
+  BX_GEFORCE_THIS load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr(),
+                               geforce_mem_read_handler);
 
   BX_GEFORCE_THIS pci_conf[0x2c] = 0x7D;
   BX_GEFORCE_THIS pci_conf[0x2d] = 0x10;

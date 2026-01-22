@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2017-2025  The Bochs Project
+//  Copyright (C) 2017-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -174,9 +174,7 @@ void bx_banshee_c::init_model(void)
   init_bar_mem(0, 0x2000000, mem_read_handler, mem_write_handler);
   init_bar_mem(1, 0x2000000, mem_read_handler, mem_write_handler);
   init_bar_io(2, 256, read_handler, write_handler, banshee_iomask);
-  pci_rom_address = 0;
-  pci_rom_read_handler = mem_read_handler;
-  load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr());
+  load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr(), mem_read_handler);
   // Zero out Banshee i/o registers and init strapInfo
   memset(v->banshee.io, 0, sizeof(v->banshee.io));
   v->banshee.io[io_strapInfo] = 0x00000060;
@@ -346,7 +344,7 @@ void bx_banshee_c::register_state(void)
 
 void bx_banshee_c::after_restore_state(void)
 {
-  bx_pci_device_c::after_restore_pci_state(mem_read_handler);
+  bx_pci_device_c::after_restore_pci_state();
   if ((v->banshee.io[io_vidProcCfg] & 0x01) && (theVoodooVga != NULL)) {
     v->fbi.clut_dirty = 1;
     v->banshee.needs_update_mode = true;
@@ -1543,7 +1541,7 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
 
   if (pci_rom_size > 0) {
     Bit32u mask = (pci_rom_size - 1);
-    if (((Bit32u)addr & ~mask) == pci_rom_address) {
+    if (((Bit32u)addr & ~mask) == pci_bar[PCI_ROM_SLOT].addr) {
 #ifdef BX_LITTLE_ENDIAN
       Bit8u *data_ptr = (Bit8u *) data;
 #else // BX_BIG_ENDIAN
