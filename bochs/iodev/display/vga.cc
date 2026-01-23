@@ -669,9 +669,9 @@ bool bx_vga_c::mem_read_handler(bx_phy_address addr, unsigned len, void *data, v
 Bit8u bx_vga_c::mem_read(bx_phy_address addr)
 {
 #if BX_SUPPORT_PCI
-  if ((BX_VGA_THIS pci_enabled) && (BX_VGA_THIS pci_rom_size > 0)) {
-    Bit32u mask = (BX_VGA_THIS pci_rom_size - 1);
-    if (((Bit32u)addr & ~mask) == BX_VGA_THIS pci_bar[PCI_ROM_SLOT].addr) {
+  if ((BX_VGA_THIS pci_enabled) && (BX_VGA_THIS pci_bar[PCI_ROM_BAR].size > 0)) {
+    Bit32u mask = (BX_VGA_THIS pci_bar[PCI_ROM_BAR].size - 1);
+    if (((Bit32u)addr & ~mask) == BX_VGA_THIS pci_bar[PCI_ROM_BAR].addr) {
       if (BX_VGA_THIS pci_conf[0x30] & 0x01) {
         return BX_VGA_THIS pci_rom[addr & mask];
       } else {

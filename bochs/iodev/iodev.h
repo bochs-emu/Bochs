@@ -137,7 +137,7 @@ enum {
   BX_PCI_BAR_TYPE_IO   = 2
 };
 
-#define PCI_ROM_SLOT 6
+#define PCI_ROM_BAR 6
 
 typedef struct {
   Bit8u  type;
@@ -159,7 +159,7 @@ typedef struct {
 
 class BOCHSAPI bx_pci_device_c : public bx_devmodel_c {
 public:
-  bx_pci_device_c(): pci_rom(NULL), pci_rom_size(0) {
+  bx_pci_device_c(): pci_rom(NULL) {
     for (int i = 0; i < 7; i++) memset(&pci_bar[i], 0, sizeof(bx_pci_bar_t));
   }
   virtual ~bx_pci_device_c() {
@@ -188,7 +188,6 @@ protected:
   Bit8u pci_conf[256];
   bx_pci_bar_t pci_bar[7];
   Bit8u  *pci_rom;
-  Bit32u pci_rom_size;
 };
 #endif
 

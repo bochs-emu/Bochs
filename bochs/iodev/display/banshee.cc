@@ -181,7 +181,7 @@ void bx_banshee_c::init_model(void)
   if (is_agp) {
     v->banshee.io[io_strapInfo] |= 0x0000000c;
   }
-  if (pci_rom_size > 0x8000) {
+  if (pci_bar[PCI_ROM_BAR].size > 0x8000) {
     v->banshee.io[io_strapInfo] |= 0x00000002;
   }
   // Modify device IDs in LGPL'd VGABIOS if required
@@ -246,7 +246,7 @@ void bx_banshee_c::reset(unsigned type)
     pci_conf[0x5b] = 0x07;
   }
   for (i = 0; i < 4; i++) {
-    pci_conf[0x2c + i] = pci_rom[(pci_rom_size - 8) + i];
+    pci_conf[0x2c + i] = pci_rom[(pci_bar[PCI_ROM_BAR].size - 8) + i];
   }
   v->banshee.io[io_pciInit0] = 0x01800040;
   v->banshee.io[io_sipMonitor] = 0x40000000;
@@ -1539,9 +1539,9 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
   Bit32u pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
   unsigned i, x, y;
 
-  if (pci_rom_size > 0) {
-    Bit32u mask = (pci_rom_size - 1);
-    if (((Bit32u)addr & ~mask) == pci_bar[PCI_ROM_SLOT].addr) {
+  if (pci_bar[PCI_ROM_BAR].size > 0) {
+    Bit32u mask = (pci_bar[PCI_ROM_BAR].size - 1);
+    if (((Bit32u)addr & ~mask) == pci_bar[PCI_ROM_BAR].addr) {
 #ifdef BX_LITTLE_ENDIAN
       Bit8u *data_ptr = (Bit8u *) data;
 #else // BX_BIG_ENDIAN

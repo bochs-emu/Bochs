@@ -578,9 +578,9 @@ bool bx_geforce_c::geforce_mem_read_handler(bx_phy_address addr, unsigned len,
 
 Bit8u bx_geforce_c::mem_read(bx_phy_address addr)
 {
-  if (BX_GEFORCE_THIS pci_rom_size > 0) {
-    Bit32u mask = (BX_GEFORCE_THIS pci_rom_size - 1);
-    if (((Bit32u)addr & ~mask) == BX_GEFORCE_THIS pci_bar[PCI_ROM_SLOT].addr) {
+  if (BX_GEFORCE_THIS pci_bar[PCI_ROM_BAR].size > 0) {
+    Bit32u mask = (BX_GEFORCE_THIS pci_bar[PCI_ROM_BAR].size - 1);
+    if (((Bit32u)addr & ~mask) == BX_GEFORCE_THIS pci_bar[PCI_ROM_BAR].addr) {
       if (BX_GEFORCE_THIS pci_conf[0x30] & 0x01) {
         if (BX_GEFORCE_THIS pci_conf[0x50] == 0x00)
           return BX_GEFORCE_THIS pci_rom[addr & mask];

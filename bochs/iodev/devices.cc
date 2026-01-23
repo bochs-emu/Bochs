@@ -1653,10 +1653,10 @@ void bx_pci_device_c::after_restore_pci_state()
         if (DEV_register_memory_handlers(this, pci_bar[i].mem.rh,
                                          pci_bar[i].mem.wh, pci_bar[i].addr,
                                          pci_bar[i].addr + pci_bar[i].size - 1)) {
-          if (i < PCI_ROM_SLOT) {
+          if (i < PCI_ROM_BAR) {
             BX_INFO(("BAR #%d: mem base address = 0x%08x", i, pci_bar[i].addr));
           } else {
-            BX_INFO(("new ROM address: 0x%08x", pci_bar[PCI_ROM_SLOT].addr));
+            BX_INFO(("new ROM address: 0x%08x", pci_bar[PCI_ROM_BAR].addr));
           }
           pci_bar_change_notify();
         }
@@ -1688,6 +1688,7 @@ void bx_pci_device_c::load_pci_rom(const char *path, memory_handler_t mem_read_h
   struct stat stat_buf;
   int fd, ret;
   unsigned long size, max_size;
+  Bit32u pci_rom_size;
 
   if (*path == '\0') {
     BX_PANIC(("PCI ROM image undefined"));
@@ -1737,7 +1738,7 @@ void bx_pci_device_c::load_pci_rom(const char *path, memory_handler_t mem_read_h
   }
   close(fd);
 
-  init_bar_mem(PCI_ROM_SLOT, pci_rom_size, mem_read_handler, NULL);
+  init_bar_mem(PCI_ROM_BAR, pci_rom_size, mem_read_handler, NULL);
 
   BX_INFO(("loaded PCI ROM '%s' (size=%u / PCI=%uk)", path, (unsigned) stat_buf.st_size, pci_rom_size >> 10));
 }
@@ -1802,10 +1803,10 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
         }
       }
     }
-  } else if (((address & 0xfc) == 0x30) && (pci_rom_size > 0)) {
+  } else if (((address & 0xfc) == 0x30) && (pci_bar[PCI_ROM_BAR].size > 0)) {
     BX_DEBUG_PCI_WRITE(address, value, io_len);
     if (value >= 0xfffff800) { // BAR reset
-      value &= ~(pci_rom_size - 1);
+      value &= ~(pci_bar[PCI_ROM_BAR].size - 1);
       bar_change = 2;
     }
     value &= (0xfffff801 >> ((address & 0x03) * 8));
@@ -1816,10 +1817,10 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
       pci_conf[address+i] = value8;
     }
     if (bar_change == 1) {
-      if (DEV_pci_set_base_mem(this, pci_bar[PCI_ROM_SLOT].mem.rh, NULL,
-                                   &pci_bar[PCI_ROM_SLOT].addr, &pci_conf[0x30],
-                                   pci_bar[PCI_ROM_SLOT].size)) {
-        BX_INFO(("new ROM address = 0x%08x", pci_bar[PCI_ROM_SLOT].addr));
+      if (DEV_pci_set_base_mem(this, pci_bar[PCI_ROM_BAR].mem.rh, NULL,
+                                   &pci_bar[PCI_ROM_BAR].addr, &pci_conf[0x30],
+                                   pci_bar[PCI_ROM_BAR].size)) {
+        BX_INFO(("new ROM address = 0x%08x", pci_bar[PCI_ROM_BAR].addr));
       }
     }
   } else if (address == 0x3c) {

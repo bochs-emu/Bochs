@@ -1493,7 +1493,7 @@ bool bx_ne2k_c::mem_read(bx_phy_address addr, unsigned len, void *data)
 {
   Bit8u  *data_ptr;
 
-  Bit32u mask = (BX_NE2K_THIS pci_rom_size - 1);
+  Bit32u mask = (BX_NE2K_THIS pci_bar[PCI_ROM_BAR].size - 1);
 #ifdef BX_LITTLE_ENDIAN
   data_ptr = (Bit8u *) data;
 #else // BX_BIG_ENDIAN

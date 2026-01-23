@@ -712,9 +712,9 @@ bool bx_e1000_c::mem_read(bx_phy_address addr, unsigned len, void *data)
   Bit32u offset, value = 0;
   Bit16u index;
 
-  if (BX_E1000_THIS pci_rom_size > 0) {
-    Bit32u mask = (BX_E1000_THIS pci_rom_size - 1);
-    if (((Bit32u)addr & ~mask) == BX_E1000_THIS pci_bar[PCI_ROM_SLOT].addr) {
+  if (BX_E1000_THIS pci_bar[PCI_ROM_BAR].size > 0) {
+    Bit32u mask = (BX_E1000_THIS pci_bar[PCI_ROM_BAR].size - 1);
+    if (((Bit32u)addr & ~mask) == BX_E1000_THIS pci_bar[PCI_ROM_BAR].addr) {
 #ifdef BX_LITTLE_ENDIAN
       data8_ptr = (Bit8u *) data;
 #else // BX_BIG_ENDIAN
