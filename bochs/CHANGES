@@ -142,6 +142,8 @@ Detailed change log :
       - Added an amplitude table for the volume setup (using factor 1.5 between values).
       - Set default volume setting to 8.
       - Added runtime option to change the volume.
+  - Disk images
+    - VHDX disk image support added
 
 - GUI and display libraries
   - In gui console mode don't send key events to the emulator

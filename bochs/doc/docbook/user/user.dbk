@@ -4122,7 +4122,7 @@ This defines the type and characteristics of all attached ata devices:
 <row>
   <entry> mode  </entry>
   <entry> image type, only valid for disks </entry>
-  <entry> [flat | concat | dll | sparse | vmware3 | vmware4 | undoable | growing | volatile | vpc | vbox | vvfat ]</entry>
+  <entry> [flat | concat | dll | sparse | vmware3 | vmware4 | vhdx | undoable | growing | volatile | vpc | vbox | vvfat ]</entry>
 </row>
 <row> <entry> cylinders </entry> <entry> only valid for disks </entry> </row>
 <row> <entry> heads </entry> <entry> only valid for disks </entry> </row>
@@ -4209,6 +4209,9 @@ vmware3 : vmware version 3 disk support
 </para></listitem>
 <listitem><para>
 vmware4 : vmware version 4 disk support (aka VMDK)
+</para></listitem>
+<listitem><para>
+vhdx : VHDX disk support
 </para></listitem>
 <listitem><para>
 undoable : read-only base file with commitable redolog
@@ -10144,6 +10147,11 @@ If unspecified, the default "mode" is flat.
        vmware version 4 (VMDK) compatibility
        </entry>
  </row>
+ <row> <entry> vhdx </entry> <entry> VHDX disk support </entry>
+       <entry>
+       VHDX compatibility
+       </entry>
+ </row>
  <row> <entry> undoable </entry> <entry> read-only base file with a commitable redolog </entry>
        <entry>
        commitable, rollbackable
@@ -10484,8 +10492,8 @@ Only vmware versions 3 and 4 disk image files are supported.
     An undoable disk is based on a read-only image, associated
     with a growing redolog, that contains all changes (writes)
     made to the base image content. Currently, base images of
-    types 'flat', 'sparse', 'growing', 'vmware3', 'vmware4' and
-    'vpc' are supported.
+    types 'flat', 'sparse', 'growing', 'vmware3', 'vmware4',
+    'vpc' and 'vhdx' are supported.
 </para>
 <para>
     This redolog is dynamically created at runtime, if it does not
@@ -10636,8 +10644,8 @@ Be sure to enter "growing" when selecting the image type.
     A volatile disk is based on a read-only image, associated with
     a growing redolog, that contains all changes (writes)
     made to the base image content. Currently, base images of
-    types 'flat', 'sparse', 'growing', 'vmware3', 'vmware4', 'vpc' and
-    'vbox' are supported.
+    types 'flat', 'sparse', 'growing', 'vmware3', 'vmware4', 'vpc',
+    'vhdx and ''vbox' are supported.
 </para>
 <para>
     The redolog is dynamically created at runtime, when
@@ -10978,6 +10986,11 @@ Other arguments:
     <entry>Yes</entry>
   </row>
   <row>
+    <entry>vhdx</entry>
+    <entry>Yes</entry>
+    <entry>Yes</entry>
+  </row>
+  <row>
     <entry>growing</entry>
     <entry>Yes</entry>
     <entry>Yes</entry>
@@ -11042,8 +11055,8 @@ suffix ".orig".
 <para>
 This function can be used to determine the disk image format, geometry
 and size. Note that Bochs can only detect the formats growing, sparse,
-vmware3, vmware4, vpc and vbox correctly. Other images with a file size
-multiple of 512 are treated as flat ones. If the image doesn't support
+vmware3, vmware4, vpc vbox and vhdx correctly. Other images with a file
+size multiple of 512 are treated as flat ones. If the image doesn't support
 returning the geometry, the cylinders are calculated based on 16 heads
 and 63 sectors per track.
 </para>
