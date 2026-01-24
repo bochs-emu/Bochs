@@ -217,11 +217,13 @@
   <ItemGroup>
     <ClCompile Include="..\iodev\hdimage\cdrom.cc" />
     <ClCompile Include="..\iodev\hdimage\cdrom_win32.cc" />
+    <ClCompile Include="..\iodev\hdimage\crc32c.cc" />
     <ClCompile Include="..\iodev\hdimage\hdimage.cc" />
     <ClCompile Include="..\iodev\hdimage\vbox.cc" />
     <ClCompile Include="..\iodev\hdimage\vmware3.cc" />
     <ClCompile Include="..\iodev\hdimage\vmware4.cc" />
     <ClCompile Include="..\iodev\hdimage\vpc.cc" />
+    <ClCompile Include="..\iodev\hdimage\vhdx.cc" />
     <ClCompile Include="..\iodev\hdimage\vvfat.cc" />
   </ItemGroup>
   <ItemGroup>
@@ -233,6 +235,7 @@
     <ClInclude Include="..\iodev\hdimage\vmware3.h" />
     <ClInclude Include="..\iodev\hdimage\vmware4.h" />
     <ClInclude Include="..\iodev\hdimage\vpc.h" />
+    <ClInclude Include="..\iodev\hdimage\vhdx.h" />
     <ClInclude Include="..\iodev\hdimage\vvfat.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
