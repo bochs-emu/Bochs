@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2021  The Bochs Project
+# Copyright (C) 2012-2026  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -51,7 +51,7 @@ LIBTOOL=@LIBTOOL@
 WIN32_DLL_IMPORT_LIBRARY=../../@WIN32_DLL_IMPORT_LIB@
 
 CDROM_OBJS = @CDROM_OBJS@
-HDIMAGE_EXTRA_OBJS = vbox.o vmware3.o vmware4.o vpc.o vhdx.o crc32c.o vvfat.o
+HDIMAGE_EXTRA_OBJS = vbox.o vmware3.o vmware4.o vpc.o vhdx.o vvfat.o
 
 HDIMAGE_LINK_OPTS =
 HDIMAGE_LINK_OPTS_VCPP = user32.lib
@@ -65,6 +65,9 @@ OBJS_THAT_CANNOT_BE_PLUGINS = \
 
 OBJS_THAT_CAN_BE_PLUGINS = \
   $(HDIMAGE_EXTRA_OBJS)
+
+OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
+  crc32c.o
 
 NONPLUGIN_OBJS = @IODEV_EXT_NON_PLUGIN_OBJS@
 PLUGIN_OBJS = @IODEV_EXT_PLUGIN_OBJS@
@@ -93,6 +96,10 @@ libhdimage.a: $(NONPLUGIN_OBJS)
 
 libbx_%_img.la: %.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module $< -o $@ -rpath $(PLUGIN_PATH)
+
+# special link rules for plugins that require more than one object file
+libbx_vhdx_img.la: vhdx.lo crc32c.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module vhdx.lo crc32c.lo -o libbx_vhdx_img.la -rpath $(PLUGIN_PATH)
 
 #### building DLLs for win32 (Cygwin and MinGW/MSYS)
 bx_%_img.dll: %.o
