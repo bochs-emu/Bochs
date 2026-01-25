@@ -26,6 +26,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "pc_system.h"
 #include "dma.h"
 
 #include "bx_debug/debug.h"

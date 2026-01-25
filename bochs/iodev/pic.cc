@@ -25,6 +25,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "pc_system.h"
 #include "pic.h"
 
 #include "bx_debug/debug.h"

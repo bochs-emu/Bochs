@@ -29,6 +29,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "pc_system.h"
 #include "harddrv.h"
 #include "hdimage/hdimage.h"
 #include "hdimage/cdrom.h"

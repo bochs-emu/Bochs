@@ -47,6 +47,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "pc_system.h"
 #include "gui/keymap.h"
 #include <math.h>
 #include "keyboard.h"

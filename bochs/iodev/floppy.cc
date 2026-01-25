@@ -106,6 +106,7 @@ extern "C" {
 }
 #endif
 #include "iodev.h"
+#include "pc_system.h"
 #include "hdimage/hdimage.h"
 
 #include "bx_debug/debug.h"

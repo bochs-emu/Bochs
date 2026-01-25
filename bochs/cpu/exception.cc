@@ -30,6 +30,7 @@
 #endif
 
 #include "param_names.h"
+#include "pc_system.h"
 #include "iodev/iodev.h"
 
 #include "bx_debug/debug.h"

@@ -28,7 +28,6 @@
 #include "bochs.h"
 #include "plugin.h"
 #include "param_names.h"
-#include "pc_system.h"
 #include "memory/memory-bochs.h"
 #include "gui/siminterface.h"
 #include "gui/gui.h"

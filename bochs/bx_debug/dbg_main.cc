@@ -29,6 +29,7 @@ extern "C" {
 #include "cpu/cpu.h"
 #include "cpu/decoder/ia_opcodes.h"
 #include "iodev/iodev.h"
+#include "pc_system.h"
 #if BX_DEBUGGER
 
 #define LOG_THIS genlog->

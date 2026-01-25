@@ -23,6 +23,7 @@
 #include "param_names.h"
 #include "cpu/cpu.h"
 #include "iodev/iodev.h"
+#include "pc_system.h"
 #include "iodev/hdimage/hdimage.h"
 #if BX_NETWORKING
 #include "iodev/network/netmod.h"

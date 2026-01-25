@@ -34,7 +34,8 @@
 #include "apic.h"
 #endif
 
-#include "iodev/iodev.h"
+#include "pc_system.h"
+#include "gui/siminterface.h"
 
 #include "bx_debug/debug.h"
 

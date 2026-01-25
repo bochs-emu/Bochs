@@ -28,6 +28,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "pc_system.h"
 #include "busmouse.h"
 
 #if BX_SUPPORT_BUSMOUSE

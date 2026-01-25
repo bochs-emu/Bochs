@@ -26,7 +26,8 @@
 #include "memory-bochs.h"
 #include "param_names.h"
 #include "cpu/cpu.h"
-#include "iodev/iodev.h"
+#include "gui/siminterface.h"
+#include "pc_system.h"
 #define LOG_THIS BX_MEM(0)->
 
 #define BX_MEM_HANDLERS   ((BX_CONST64(1) << BX_PHY_ADDRESS_WIDTH) >> 20) /* one per megabyte */

@@ -28,6 +28,8 @@
 
 #include "apic.h"
 #include "scalar_arith.h"
+
+#include "pc_system.h"
 #include "iodev/iodev.h"
 
 extern bool simulate_xapic;

@@ -34,6 +34,7 @@
 #endif
 
 #include "iodev/iodev.h"
+#include "pc_system.h"
 
 #include "bx_debug/debug.h"
 

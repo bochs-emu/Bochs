@@ -23,6 +23,7 @@
 #include "bochs.h"
 #include "cpu/cpu.h"
 #include "iodev/iodev.h"
+#include "pc_system.h"
 #define LOG_THIS BX_MEM_THIS
 
 //

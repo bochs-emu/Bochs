@@ -30,6 +30,7 @@
 #endif
 
 #include "iodev/iodev.h"
+#include "pc_system.h"
 
 //
 // Repeat Speedups methods
