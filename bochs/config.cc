@@ -3151,7 +3151,7 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     if (strncmp(params[1], "enabled=", 8)) {
       PARSE_ERR(("%s: magic_break directive malformed.", context));
     }
-    if (params[1][8] == '0') {
+    if ((params[1][8] == '0') || (!bx_dbg.debugger_active)) {
       BX_INFO(("Ignoring magic break points"));
     } else if (params[1][8] == '1') {
       bx_dbg_set_magic_bp_mask(bx_dbg_get_magic_bp_mask_from_str(params[1]));
@@ -3447,8 +3447,10 @@ int bx_write_log_options(FILE *fp, bx_list_c *base)
 int bx_write_debugger_options(FILE *fp)
 {
 #if BX_DEBUGGER
+  char str[40];
   fprintf(fp, "debugger_log: %s\n", SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr());
-  fprintf(fp, "magic_break: enabled=1 0x%x\n", bx_dbg.magic_break);
+  bx_dbg_get_magic_bp_str_from_mask(bx_dbg.magic_break, str);
+  fprintf(fp, "magic_break: enabled=%d%s\n", bx_dbg.magic_break != 0, str);
   // TODO: debug symbols
 #endif
 #if BX_GDBSTUB

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -2383,6 +2383,17 @@ void bx_dbg_print_magic_bp_mask_from_str(Bit8u mask)
   }
 
   dbg_printf("\n");
+}
+
+void bx_dbg_get_magic_bp_str_from_mask(Bit8u mask, char *str)
+{
+  str[0] = 0;
+  for (int i = 1; i < 8; i++) {
+    if (mask & (1 << i)) {
+      strcat(str, " ");
+      strcat(str, magic_bp_regs[i]);
+    }
+  }
 }
 
 Bit8u bx_dbg_get_magic_bp_mask_from_str(const char *str)
