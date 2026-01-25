@@ -250,13 +250,13 @@ void bx_acpi_ctrl_c::reset(unsigned type)
     DEV_pci_set_base_io(BX_ACPI_THIS_PTR, read_handler, write_handler,
                         &BX_ACPI_THIS s.pm_base,
                         &BX_ACPI_THIS pci_conf[0x40],
-                        64, &acpi_pm_iomask[0], "ACPI PM base");
+                        64, &acpi_pm_iomask[0], "ACPI PM base", 1);
   }
   if ((smbar & 0xfff0) != 0) {
     DEV_pci_set_base_io(BX_ACPI_THIS_PTR, read_handler, write_handler,
                         &BX_ACPI_THIS s.sm_base,
                         &BX_ACPI_THIS pci_conf[0x90],
-                        16, &acpi_sm_iomask[0], "ACPI SM base");
+                        16, &acpi_sm_iomask[0], "ACPI SM base", 1);
   }
 }
 
@@ -285,14 +285,14 @@ void bx_acpi_ctrl_c::after_restore_state(void)
   if (DEV_pci_set_base_io(BX_ACPI_THIS_PTR, read_handler, write_handler,
                          &BX_ACPI_THIS s.pm_base,
                          &BX_ACPI_THIS pci_conf[0x40],
-                         64, &acpi_pm_iomask[0], "ACPI PM base"))
+                         64, &acpi_pm_iomask[0], "ACPI PM base", 1))
   {
      BX_INFO(("new PM base address: 0x%04x", BX_ACPI_THIS s.pm_base));
   }
   if (DEV_pci_set_base_io(BX_ACPI_THIS_PTR, read_handler, write_handler,
                          &BX_ACPI_THIS s.sm_base,
                          &BX_ACPI_THIS pci_conf[0x90],
-                         16, &acpi_sm_iomask[0], "ACPI SM base"))
+                         16, &acpi_sm_iomask[0], "ACPI SM base", 1))
   {
      BX_INFO(("new SM base address: 0x%04x", BX_ACPI_THIS s.sm_base));
   }
@@ -619,7 +619,7 @@ set_value:
     if (DEV_pci_set_base_io(BX_ACPI_THIS_PTR, read_handler, write_handler,
                             &BX_ACPI_THIS s.pm_base,
                             &BX_ACPI_THIS pci_conf[0x40],
-                            64, &acpi_pm_iomask[0], "ACPI PM base"))
+                            64, &acpi_pm_iomask[0], "ACPI PM base", 1))
     {
        BX_INFO(("new PM base address: 0x%04x", BX_ACPI_THIS s.pm_base));
     }
@@ -628,7 +628,7 @@ set_value:
     if (DEV_pci_set_base_io(BX_ACPI_THIS_PTR, read_handler, write_handler,
                             &BX_ACPI_THIS s.sm_base,
                             &BX_ACPI_THIS pci_conf[0x90],
-                            16, &acpi_sm_iomask[0], "ACPI SM base"))
+                            16, &acpi_sm_iomask[0], "ACPI SM base", 1))
     {
        BX_INFO(("new SM base address: 0x%04x", BX_ACPI_THIS s.sm_base));
     }

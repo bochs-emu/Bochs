@@ -453,7 +453,7 @@ public:
                         Bit32u *addr, Bit8u *pci_conf, unsigned size);
   bool pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_write_handler_t f2,
                        Bit32u *addr, Bit8u *pci_conf, unsigned size,
-                       const Bit8u *iomask, const char *name);
+                       const Bit8u *iomask, const char *name, bool ioae);
 #endif
   bool is_agp_present();
 

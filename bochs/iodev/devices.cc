@@ -1557,15 +1557,17 @@ bool bx_devices_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_
 
 bool bx_devices_c::pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_write_handler_t f2,
                                       Bit32u *addr, Bit8u *pci_conf, unsigned size,
-                                      const Bit8u *iomask, const char *name)
+                                      const Bit8u *iomask, const char *name, bool ioae)
 {
   unsigned i;
-  Bit32u oldbase = *addr, newbase;
+  Bit32u oldbase = *addr, newbase = 0;
   Bit16u mask = ~(size - 1);
   Bit8u pci_flags = pci_conf[0x00] & 0x03;
   pci_conf[0x00] &= (mask & 0xfc);
   pci_conf[0x01] &= (mask >> 8);
-  newbase = ReadHostDWordFromLittleEndian((Bit32u*)pci_conf);
+  if (ioae) {
+    newbase = ReadHostDWordFromLittleEndian((Bit32u*)pci_conf);
+  }
   pci_conf[0x00] |= pci_flags;
   if (((newbase & 0xfffc) != mask) && (newbase != oldbase)) { // skip PCI probe
     if (oldbase > 0) {
@@ -1748,6 +1750,7 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
 {
   Bit8u bnum, value8, oldval;
   Bit8u bar_change = 0;
+  unsigned i;
 
   // ignore readonly registers
   if ((address < 4) || ((address > 7) && (address < 12)) || (address == 14) ||
@@ -1772,7 +1775,7 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
           bar_change = 2;
         }
       }
-      for (unsigned i=0; i<io_len; i++) {
+      for (i = 0; i < io_len; i++) {
         value8 = (value >> (i*8)) & 0xff;
         oldval = pci_conf[address+i];
         if (((address+i) & 0x03) == 0) {
@@ -1789,7 +1792,7 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
         if (pci_bar[bnum].type == BX_PCI_BAR_TYPE_IO) {
           if (DEV_pci_set_base_io(this, pci_bar[bnum].io.rh, pci_bar[bnum].io.wh,
                                   &pci_bar[bnum].addr, &pci_conf[0x10 + bnum * 4],
-                                  pci_bar[bnum].size, pci_bar[bnum].io.mask, pci_name)) {
+                                  pci_bar[bnum].size, pci_bar[bnum].io.mask, pci_name, pci_conf[0x04] & 1)) {
             BX_INFO(("BAR #%d: i/o base address = 0x%04x", bnum, pci_bar[bnum].addr));
             pci_bar_change_notify();
           }
@@ -1810,7 +1813,7 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
       bar_change = 2;
     }
     value &= (0xfffff801 >> ((address & 0x03) * 8));
-    for (unsigned i=0; i<io_len; i++) {
+    for (i = 0; i < io_len; i++) {
       value8 = (value >> (i*8)) & 0xff;
       oldval = pci_conf[address+i];
       bar_change |= (Bit8u)(value8 != oldval);
@@ -1830,6 +1833,22 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
         BX_INFO(("new IRQ line = %d", value8));
       }
       pci_conf[0x3c] = value8;
+    }
+  } else if (address == 0x04) {
+    oldval = pci_conf[0x04];
+    pci_write_handler(0x04, value, io_len);
+    value8 = pci_conf[0x04];
+    if ((value8 & 1) != (oldval & 1)) {
+      for (i = 0; i < 6; i++) {
+        if (pci_bar[i].type == BX_PCI_BAR_TYPE_IO) {
+          if (DEV_pci_set_base_io(this, pci_bar[i].io.rh, pci_bar[i].io.wh,
+                                  &pci_bar[i].addr, &pci_conf[0x10 + i * 4],
+                                  pci_bar[i].size, pci_bar[i].io.mask, pci_name, value8 & 1)) {
+            BX_INFO(("BAR #%d: i/o base address = 0x%04x", i, pci_bar[i].addr));
+            pci_bar_change_notify();
+          }
+        }
+      }
     }
   } else {
     pci_write_handler(address, value, io_len);
