@@ -1854,16 +1854,18 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
     }
     if ((value8 & 2) != (oldval & 2)) {
       for (i = 0; i < 7; i++) {
-        Bit8u baddr = (i < PCI_ROM_BAR) ? (0x10 + i * 4) : 0x30;
-        if (DEV_pci_set_base_mem(this, pci_bar[i].mem.rh, pci_bar[i].mem.wh,
-                                   &pci_bar[i].addr, &pci_conf[baddr],
-                                   pci_bar[i].size, (value & 2) != 0)) {
-          if (i < PCI_ROM_BAR) {
-            BX_INFO(("BAR #%d: mem base address = 0x%08x", i, pci_bar[i].addr));
-          } else {
-            BX_INFO(("new ROM address: 0x%08x", pci_bar[PCI_ROM_BAR].addr));
+        if (pci_bar[i].type == BX_PCI_BAR_TYPE_MEM) {
+          Bit8u baddr = (i < PCI_ROM_BAR) ? (0x10 + i * 4) : 0x30;
+          if (DEV_pci_set_base_mem(this, pci_bar[i].mem.rh, pci_bar[i].mem.wh,
+                                     &pci_bar[i].addr, &pci_conf[baddr],
+                                     pci_bar[i].size, (value & 2) != 0)) {
+            if (i < PCI_ROM_BAR) {
+              BX_INFO(("BAR #%d: mem base address = 0x%08x", i, pci_bar[i].addr));
+            } else {
+              BX_INFO(("new ROM address: 0x%08x", pci_bar[PCI_ROM_BAR].addr));
+            }
+            pci_bar_change_notify();
           }
-          pci_bar_change_notify();
         }
       }
     }
