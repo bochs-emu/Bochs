@@ -1004,12 +1004,14 @@ static void pci_bios_init_pcirom(PCIDevice *d, uint32_t paddr)
 {
     PCIDevice d1, *i440fx = &d1;
     uint32_t tmpaddr, size;
-    uint8_t reg, v;
+    uint8_t cmd, reg, v;
     int copied, shift, tmpsize;
 
     i440fx->bus = 0;
     i440fx->devfn = 0;
     if (paddr != 0) {
+        cmd = pci_config_readw(d, PCI_COMMAND);
+        pci_config_writew(d, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
         size = readb((void *)(paddr + 2));
         if (size & 0x03) {
             size &= 0xfc;
@@ -1043,6 +1045,7 @@ static void pci_bios_init_pcirom(PCIDevice *d, uint32_t paddr)
         BX_INFO("PCI ROM copied to 0x%05x (size=0x%05x)\n", pci_bios_rom_start, size);
         pci_bios_rom_start += size;
         pci_config_writeb(d, PCI_ROM_ADDRESS, 0x00);
+        pci_config_writew(d, PCI_COMMAND, cmd);
     }
 }
 
