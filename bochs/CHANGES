@@ -69,6 +69,7 @@ Detailed change log :
     - Added advanced PCI option "altdevmap" to make real i440FX BIOS work
     - Ignore writes to ROM adddress if no ROM present
     - PCI IDE always provides 2 IDE channels (override settings if necessary)
+    - PCI BAR handling now depends on PCI command register bits IOAE and MAE
   - PCI (i440BX AGP)
     - AGP aperture access now correctly implemented
     - Fixed BCTRL and NBXCFG register

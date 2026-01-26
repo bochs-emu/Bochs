@@ -1528,9 +1528,9 @@ bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
 }
 
 bool bx_devices_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
-                                       Bit32u *addr, Bit8u *pci_conf, unsigned size)
+                                       Bit32u *addr, Bit8u *pci_conf, unsigned size, bool mae)
 {
-  Bit32u oldbase = *addr, newbase;
+  Bit32u oldbase = *addr, newbase = 0;
   Bit32u mask = ~(size - 1);
   Bit8u pci_flags = pci_conf[0x00] & 0x0f;
   if ((pci_flags & 0x06) > 0) {
@@ -1540,7 +1540,9 @@ bool bx_devices_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_
   pci_conf[0x01] &= (mask >> 8) & 0xff;
   pci_conf[0x02] &= (mask >> 16) & 0xff;
   pci_conf[0x03] &= (mask >> 24) & 0xff;
-  newbase = ReadHostDWordFromLittleEndian((Bit32u*)pci_conf);
+  if (mae) {
+    newbase = ReadHostDWordFromLittleEndian((Bit32u*)pci_conf);
+  }
   pci_conf[0x00] |= pci_flags;
   if (newbase != mask && newbase != oldbase) { // skip PCI probe
     if (oldbase > 0) {
@@ -1799,7 +1801,7 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
         } else {
           if (DEV_pci_set_base_mem(this, pci_bar[bnum].mem.rh, pci_bar[bnum].mem.wh,
                                    &pci_bar[bnum].addr, &pci_conf[0x10 + bnum * 4],
-                                   pci_bar[bnum].size)) {
+                                   pci_bar[bnum].size, (pci_conf[0x04] & 2) != 0)) {
             BX_INFO(("BAR #%d: mem base address = 0x%08x", bnum, pci_bar[bnum].addr));
             pci_bar_change_notify();
           }
@@ -1822,7 +1824,7 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
     if (bar_change == 1) {
       if (DEV_pci_set_base_mem(this, pci_bar[PCI_ROM_BAR].mem.rh, NULL,
                                    &pci_bar[PCI_ROM_BAR].addr, &pci_conf[0x30],
-                                   pci_bar[PCI_ROM_BAR].size)) {
+                                   pci_bar[PCI_ROM_BAR].size, (pci_conf[0x04] & 2) != 0)) {
         BX_INFO(("new ROM address = 0x%08x", pci_bar[PCI_ROM_BAR].addr));
       }
     }
@@ -1834,7 +1836,7 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
       }
       pci_conf[0x3c] = value8;
     }
-  } else if (address == 0x04) {
+  } else if ((address == 0x04) && ((pci_conf[0x0e] & 0x03) == 0)) {
     oldval = pci_conf[0x04];
     pci_write_handler(0x04, value, io_len);
     value8 = pci_conf[0x04];
@@ -1847,6 +1849,21 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
             BX_INFO(("BAR #%d: i/o base address = 0x%04x", i, pci_bar[i].addr));
             pci_bar_change_notify();
           }
+        }
+      }
+    }
+    if ((value8 & 2) != (oldval & 2)) {
+      for (i = 0; i < 7; i++) {
+        Bit8u baddr = (i < PCI_ROM_BAR) ? (0x10 + i * 4) : 0x30;
+        if (DEV_pci_set_base_mem(this, pci_bar[i].mem.rh, pci_bar[i].mem.wh,
+                                   &pci_bar[i].addr, &pci_conf[baddr],
+                                   pci_bar[i].size, (value & 2) != 0)) {
+          if (i < PCI_ROM_BAR) {
+            BX_INFO(("BAR #%d: mem base address = 0x%08x", i, pci_bar[i].addr));
+          } else {
+            BX_INFO(("new ROM address: 0x%08x", pci_bar[PCI_ROM_BAR].addr));
+          }
+          pci_bar_change_notify();
         }
       }
     }

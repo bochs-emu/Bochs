@@ -449,7 +449,7 @@ public:
   bool register_pci_handlers(bx_pci_device_c *device, Bit8u *devfunc,
                              const char *name, const char *descr, Bit8u bus = 0);
   bool pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
-                        Bit32u *addr, Bit8u *pci_conf, unsigned size);
+                        Bit32u *addr, Bit8u *pci_conf, unsigned size, bool mae);
   bool pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_write_handler_t f2,
                        Bit32u *addr, Bit8u *pci_conf, unsigned size,
                        const Bit8u *iomask, const char *name, bool ioae);
