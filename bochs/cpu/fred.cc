@@ -152,10 +152,6 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   RSP = new_RSP;
   set_CSL(new_CSL);
 
-#if BX_SUPPORT_CET
-  if (ShadowStackEnabled(0)) SSP = new_SSP;
-#endif
-
   // save state on stack
   // Save return state on new regular stack; memory accesses here have supervisor privilege
   write_new_stack_qword(new_RSP - 8,  0, 0);    // first 8 bytes pushed are all zeros
@@ -166,7 +162,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   write_new_stack_qword(new_RSP - 48, 0, old_CS);
   write_new_stack_qword(new_RSP - 56, 0, old_RIP);
   write_new_stack_qword(new_RSP - 64, 0, error_code);
-  new_RSP -= 64;
+  RSP -= 64;
 
 #if BX_SUPPORT_CET
   if (BX_CPU_THIS_PTR cr4.get_CET()) {

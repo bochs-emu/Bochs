@@ -5089,7 +5089,7 @@ public: // for now...
 #endif
 
 #if BX_SUPPORT_FRED
-  BX_SMF BX_CPP_INLINE void set_CSL(unsigned new_CSL) { BX_CPU_THIS_PTR msr.ia32_fred_cfg = (BX_CPU_THIS_PTR msr.ia32_fred_cfg & ~0x3) | new_CSL; }
+  BX_SMF BX_CPP_INLINE void set_CSL(unsigned new_CSL) { BX_CPU_THIS_PTR msr.ia32_fred_cfg = (BX_CPU_THIS_PTR msr.ia32_fred_cfg & ~BX_CONST64(0x3)) | new_CSL; }
 #endif
 
   BX_SMF bx_address get_segment_base(unsigned seg);
