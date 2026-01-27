@@ -34,7 +34,6 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   BX_CPU_THIS_PTR in_event = true;
 #endif
 
-  Bit32u old_CPL = CPL;
   Bit32u old_CSL = (CPL == 3) ? 0 : CSL;
 
   Bit32u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
@@ -100,7 +99,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   else
     new_RSP = (RSP - (BX_CPU_THIS_PTR msr.ia32_fred_cfg & 0x1C0)) & ~BX_CONST64(0x3F); // decrement RSP and align to 64-bytes
 
-  Bit32u old_flags = read_eflags();
+  Bit32u old_eflags = read_eflags();
 
 #if BX_SUPPORT_CET
   Bit64u old_SSP = SSP;
@@ -119,7 +118,32 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   }
 #endif
 
-  // ESTABLISH NEW CONTEXT: OLD STATE WILL BE RESTORED IF THERE IS A SUBSEQUENT EXCEPTION -> FIXME: HOW ???
+  // ESTABLISH NEW CONTEXT
+
+  // save state on stacks
+  // Save return state on new regular stack; memory accesses here have supervisor privilege
+  write_new_stack_qword(new_RSP - 8,  0, 0);    // first 8 bytes pushed are all zeros
+  write_new_stack_qword(new_RSP - 16, 0, BX_CPU_THIS_PTR fred_event_data);
+  write_new_stack_qword(new_RSP - 24, 0, old_SS);
+  write_new_stack_qword(new_RSP - 32, 0, old_RSP);
+  write_new_stack_qword(new_RSP - 40, 0, old_eflags);
+  write_new_stack_qword(new_RSP - 48, 0, old_CS);
+  write_new_stack_qword(new_RSP - 56, 0, old_RIP);
+  write_new_stack_qword(new_RSP - 64, 0, error_code);
+
+#if BX_SUPPORT_CET
+  if (ShadowStackEnabled(0)) {
+    if (CPL == 0) {
+      shadow_stack_write_dword(new_SSP - 4,  CPL, 0); // store 4 bytes of zeros to SSP-4
+      new_SSP &= ~BX_CONST64(0x7);
+      shadow_stack_write_qword(new_SSP - 8,  CPL, old_CS);
+      shadow_stack_write_qword(new_SSP - 16, CPL, old_RIP);
+      shadow_stack_write_qword(new_SSP - 24, CPL, old_SSP);
+      new_SSP -= 24;
+    }
+    SSP = new_SSP;
+  }
+#endif
 
   // update segment registers if event occurred in ring 3
   if (CPL == 3) {
@@ -149,36 +173,12 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   RIP = new_RIP;
   BX_CPU_THIS_PTR eflags = 0x2; // Clear EFLAGS, bit1 is always set
   clearEFlagsOSZAPC();	        // update lazy flags state
-  RSP = new_RSP;
+  RSP = new_RSP - 64;
   set_CSL(new_CSL);
-
-  // save state on stack
-  // Save return state on new regular stack; memory accesses here have supervisor privilege
-  write_new_stack_qword(new_RSP - 8,  0, 0);    // first 8 bytes pushed are all zeros
-  write_new_stack_qword(new_RSP - 16, 0, BX_CPU_THIS_PTR fred_event_data);
-  write_new_stack_qword(new_RSP - 24, 0, old_SS);
-  write_new_stack_qword(new_RSP - 32, 0, old_RSP);
-  write_new_stack_qword(new_RSP - 40, 0, old_flags);
-  write_new_stack_qword(new_RSP - 48, 0, old_CS);
-  write_new_stack_qword(new_RSP - 56, 0, old_RIP);
-  write_new_stack_qword(new_RSP - 64, 0, error_code);
-  RSP -= 64;
 
 #if BX_SUPPORT_CET
   if (BX_CPU_THIS_PTR cr4.get_CET()) {
-    if (ShadowStackEnabled(0)) {
-      if (old_CPL == 0) {
-        shadow_stack_write_dword(new_SSP - 4,  CPL, 0); // store 4 bytes of zeros to SSP-4
-        new_SSP &= ~BX_CONST64(0x7);
-        shadow_stack_write_qword(new_SSP - 8,  CPL, old_CS);
-        shadow_stack_write_qword(new_SSP - 16, CPL, old_RIP);
-        shadow_stack_write_qword(new_SSP - 24, CPL, old_SSP);
-        new_SSP -= 24;
-      }
-      SSP = new_SSP;
-    }
-
-    if (ShadowStackEnabled(3) && old_CPL == 3) {
+    if (ShadowStackEnabled(3) && CPL == 3) {
       BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = CanonicalizeAddress(BX_CPU_THIS_PTR msr.ia32_pl_ssp[3]);
     }
 
