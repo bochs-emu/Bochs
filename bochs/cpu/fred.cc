@@ -56,7 +56,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
 
   Bit64u old_RIP = RIP;
   Bit64u new_RIP = BX_CPU_THIS_PTR msr.ia32_fred_cfg & ~0xfff;
-  if (CPL == 3)
+  if (CPL == 0)
     new_RIP += 256;
   if (! IsCanonical(new_RIP)) {
     BX_ERROR(("FRED Event Delivery: non canonical value in BX_MSR_IA32_FRED_CONFIG !"));
