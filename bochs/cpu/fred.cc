@@ -166,6 +166,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   write_new_stack_qword(new_RSP - 48, 0, old_CS);
   write_new_stack_qword(new_RSP - 56, 0, old_RIP);
   write_new_stack_qword(new_RSP - 64, 0, error_code);
+  new_RSP -= 64;
 
 #if BX_SUPPORT_CET
   if (BX_CPU_THIS_PTR cr4.get_CET()) {
