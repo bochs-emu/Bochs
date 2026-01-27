@@ -3098,9 +3098,10 @@ void bx_geforce_c::d3d_clear_surface(gf_channel* ch)
   }
 }
 
-float edge_function(float v0[4], float v1[4], float v2[4])
+double edge_function(float v0[4], float v1[4], float v2[4])
 {
-  return (v1[0] - v0[0]) * (v2[1] - v0[1]) - (v1[1] - v0[1]) * (v2[0] - v0[0]);
+  return ((double)v1[0] - v0[0]) * ((double)v2[1] - v0[1]) -
+         ((double)v1[1] - v0[1]) * ((double)v2[0] - v0[0]);
 }
 
 float uint32_as_float(Bit32u val)
@@ -4726,10 +4727,10 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
   }
   bool clipped[3];
   Bit32u clip_count = 0;
-  float zscale = BX_GEFORCE_THIS card_type <= 0x20 ?
-    1.0f / ch->d3d_viewport_scale[2] : 1.0f;
+  float clip_thresh = BX_GEFORCE_THIS card_type <= 0x20 ?
+    ch->d3d_viewport_offset[2] - ch->d3d_clip_min : 1.0f;
   for (int v = 0; v < 3; v++) {
-    clipped[v] = vs_out[v][0][2] * zscale < -vs_out[v][0][3];
+    clipped[v] = vs_out[v][0][2] < -vs_out[v][0][3] * clip_thresh;
     if (clipped[v])
       clip_count++;
   }
@@ -4743,8 +4744,8 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
     for (int v0 = 0; v0 < 3; v0++) {
       Bit32u v1 = (v0 + 1) % 3;
       if (clipped[v0] != clipped[v1]) {
-        float k = vs_out[v1][0][2] * zscale + vs_out[v1][0][3];
-        float t = k / (k - vs_out[v0][0][2] * zscale - vs_out[v0][0][3]);
+        float k = vs_out[v1][0][2] + vs_out[v1][0][3] * clip_thresh;
+        float t = k / (k - vs_out[v0][0][2] - vs_out[v0][0][3] * clip_thresh);
         float omt = 1.0f - t;
         for (int a = 0; a < 16; a++) {
           for (int comp_index = 0; comp_index < 4; comp_index++) {
@@ -4809,9 +4810,9 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
   d3d_clip_to_screen(ch, v0[0], sp0);
   d3d_clip_to_screen(ch, v1[0], sp1);
   d3d_clip_to_screen(ch, v2[0], sp2);
-  float b012 = edge_function(sp0, sp1, sp2);
+  double b012 = edge_function(sp0, sp1, sp2);
   bool front_face_cw = ch->d3d_front_face == 0x00000900;
-  bool clockwise = b012 > 0.0f;
+  bool clockwise = b012 > 0.0;
   bool front_face = (clockwise != ch->d3d_triangle_flip) == front_face_cw;
   if (ch->d3d_cull_face_enable) {
     if ((ch->d3d_cull_face == 0x00000405 && !front_face) ||
@@ -4871,39 +4872,42 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
         ps_in[i + 4][comp_index] = v0[ch->d3d_attrib_out_tex_coord[i]][comp_index];
   float xy[2];
   xy[1] = draw_y1 + 0.5f;
-  float b012inv = 1.0f / b012;
+  double b012inv = 1.0 / b012;
   bool stencil_test_enable = ch->d3d_stencil_test_enable && ch->d3d_depth_bytes != 2;
   bool zstencil_enable = ch->d3d_depth_test_enable || stencil_test_enable;
   for (Bit16u y = 0; y < draw_height; y++, xy[1]++) {
     xy[0] = draw_x1 + 0.5f;
     for (Bit16u x = 0; x < draw_width; x++, xy[0]++) {
-      float b0 = edge_function(sp1, sp2, xy);
+      double b0 = edge_function(sp1, sp2, xy);
       if (clockwise) {
-        if (b0 < 0.0f)
+        if (b0 < 0.0)
           continue;
       } else {
-        if (b0 > 0.0f)
+        if (b0 > 0.0)
           continue;
       }
-      float b1 = edge_function(sp2, sp0, xy);
+      double b1 = edge_function(sp2, sp0, xy);
       if (clockwise) {
-        if (b1 < 0.0f)
+        if (b1 < 0.0)
           continue;
       } else {
-        if (b1 > 0.0f)
+        if (b1 > 0.0)
           continue;
       }
-      float b2 = edge_function(sp0, sp1, xy);
+      double b2 = edge_function(sp0, sp1, xy);
       if (clockwise) {
-        if (b2 < 0.0f)
+        if (b2 < 0.0)
           continue;
       } else {
-        if (b2 > 0.0f)
+        if (b2 > 0.0)
           continue;
       }
       b0 *= b012inv;
       b1 *= b012inv;
       b2 *= b012inv;
+      float z = sp0[2] * b0 + sp1[2] * b1 + sp2[2] * b2;
+      if (z > ch->d3d_clip_max)
+        continue;
       Bit32u z_new;
       Bit8u stencil = 0x00;
       if (zstencil_enable) {
@@ -4917,7 +4921,6 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
         }
         bool depth_test_pass;
         if (ch->d3d_depth_test_enable) {
-          float z = sp0[2] * b0 + sp1[2] * b1 + sp2[2] * b2;
           if (BX_GEFORCE_THIS card_type <= 0x20)
             z_new = z;
           else if (ch->d3d_depth_bytes == 2)
