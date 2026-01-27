@@ -311,7 +311,7 @@ bool bx_local_apic_c::is_selected(bx_phy_address addr)
 {
   if (mode != BX_APIC_XAPIC_MODE) return 0;
 
-  if((addr & ~0xfff) == base_addr) {
+  if(PPFOf(addr) == base_addr) {
     if((addr & 0xf) != 0)
       BX_INFO(("warning: misaligned APIC access. addr=0x" FMT_PHY_ADDRX, addr));
     return true;
@@ -325,7 +325,7 @@ void bx_local_apic_c::read(bx_phy_address addr, void *data, unsigned len)
     BX_ERROR(("APIC read at address 0x" FMT_PHY_ADDRX " spans 32-bit boundary !", addr));
     return;
   }
-  Bit32u value = read_aligned(addr & ~0x3);
+  Bit32u value = read_aligned(addr & ~BX_CONST64(0x3));
   if(len == 4) { // must be 32-bit aligned
     *((Bit32u *)data) = value;
     return;
