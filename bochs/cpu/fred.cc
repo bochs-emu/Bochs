@@ -55,7 +55,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   old_SS |= Bit64u(BX_CPU_THIS_PTR fred_event_info) << 32;
 
   Bit64u old_RIP = RIP;
-  Bit64u new_RIP = BX_CPU_THIS_PTR msr.ia32_fred_cfg & ~0xfff;
+  Bit64u new_RIP = BX_CPU_THIS_PTR msr.ia32_fred_cfg & ~BX_CONST64(0xfff);
   if (CPL == 0)
     new_RIP += 256;
   if (! IsCanonical(new_RIP)) {
