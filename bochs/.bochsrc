@@ -298,9 +298,9 @@ romimage: file=$BXSHARE/BIOS-bochs-latest, options=fastboot
 # You now need to load a VGA ROM BIOS into C0000.
 #=======================================================================
 vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest.bin
-#vgaromimage: file=bios/VGABIOS-lgpl-latest-cirrus.bin
+#vgaromimage: file=bios/VGABIOS-lgpl/VGABIOS-lgpl-latest-cirrus.bin
 #vgaromimage: file=$BXSHARE/vgabios-cirrus.bin-1.13.0 # http://www.seabios.org/SeaVGABIOS
-#vgaromimage: file=bios/VGABIOS-elpin-2.40
+#vgaromimage: file=bios/VGABIOS-elpin/VGABIOS-elpin-2.40
 
 #=======================================================================
 # OPTROMIMAGE[1-4]:

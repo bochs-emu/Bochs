@@ -3670,7 +3670,7 @@ this feature yet.
 <para>
 Examples:
 <screen>
-  vgaromimage: file=bios/VGABIOS-elpin-2.40
+  vgaromimage: file=bios/VGABIOS-elpin/VGABIOS-elpin-2.40
   vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest.bin
   vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest-cirrus.bin
 </screen>
@@ -11377,7 +11377,7 @@ cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 cpu: cpuid_limit_winnt=0
 clock: sync=realtime, time0=local
 memory: guest=512, host=512
-vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus.bin
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl/VGABIOS-lgpl-latest-cirrus.bin
 vga: extension=cirrus, update_freq=5
 pci: enabled=1, chipset=i440fx, slot1=cirrus
 </screen>
@@ -11398,7 +11398,7 @@ cpu: count=1, ips=55000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 cpu: cpuid_limit_winnt=0
 clock: sync=realtime, time0=local
 memory: guest=512, host=512
-vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus.bin
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl/VGABIOS-lgpl-latest-cirrus.bin
 vga: extension=cirrus, update_freq=5
 pci: enabled=1, chipset=i440fx, slot1=cirrus
 </screen>
@@ -11469,7 +11469,7 @@ cpu: count=1, ips=75000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 cpu: cpuid_limit_winnt=0
 clock: sync=realtime, time0=local
 memory: guest=512, host=512
-vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus.bin
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl/VGABIOS-lgpl-latest-cirrus.bin
 vga: extension=cirrus, update_freq=5
 pci: enabled=1, chipset=i440fx, slot1=cirrus
 </screen>
@@ -11502,7 +11502,7 @@ cpu: count=1, ips=100000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 cpu: cpuid_limit_winnt=0
 clock: sync=realtime, time0=local
 memory: guest=1024, host=1024
-vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus.bin
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl/VGABIOS-lgpl-latest-cirrus.bin
 vga: extension=cirrus, update_freq=5
 pci: enabled=1, chipset=i440fx, slot1=cirrus
 </screen>
@@ -11527,7 +11527,7 @@ cpu: count=1, ips=150000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 cpu: cpuid_limit_winnt=0
 clock: sync=realtime, time0=local
 memory: guest=2048, host=2048
-vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus.bin
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl/VGABIOS-lgpl-latest-cirrus.bin
 vga: extension=cirrus, update_freq=5
 pci: enabled=1, chipset=i440fx, slot1=cirrus
 </screen>
@@ -11557,7 +11557,7 @@ cpu: count=1, ips=325000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 cpu: cpuid_limit_winnt=0
 clock: sync=realtime, time0=local
 memory: guest=2048, host=2048
-vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus.bin
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl/VGABIOS-lgpl-latest-cirrus.bin
 vga: extension=cirrus, update_freq=5
 pci: enabled=1, chipset=i440fx, slot1=cirrus
 </screen>
@@ -11669,7 +11669,7 @@ ata1: enabled=0
 ata2: enabled=0
 ata3: enabled=0
 romimage: file=bios/BIOS-bochs-latest
-vgaromimage: file=bios/VGABIOS-lgpl-latest.bin
+vgaromimage: file=bios/VGABIOS-lgpl/VGABIOS-lgpl-latest.bin
 megs: 64
 parport1: enabled=1, file="lp.pipe"
 com1: enabled=0
