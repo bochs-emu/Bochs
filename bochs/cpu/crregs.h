@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007-2020 Stanislav Shwartsman
+//   Copyright (c) 2007-2025 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -116,8 +116,18 @@ struct bx_cr0_t {
 #define BX_CR4_LASS_MASK            (1 << 27)
 #define BX_CR4_LAM_SUPERVISOR_MASK  (1 << 28)
 
+#define BX_CR4_FRED_MASK            (BX_CONST64(1) << 32)
+
 struct bx_cr4_t {
-  Bit32u  val; // 32bit value of register
+  bx_address val; // value of register
+
+#define IMPLEMENT_UPPER_CRREG_ACCESSORS(name, bitnum)                       \
+  BX_CPP_INLINE bool get_##name() const {                                   \
+    return 1 & (val >> bitnum);                                             \
+  }                                                                         \
+  BX_CPP_INLINE void set_##name(Bit8u newval) {                             \
+    val = (val & ~(BX_CONST64(1)<<bitnum)) | (Bit64u(!!newval) << bitnum);  \
+  }
 
   IMPLEMENT_CRREG_ACCESSORS(VME, 0);
   IMPLEMENT_CRREG_ACCESSORS(PVI, 1);
@@ -150,12 +160,15 @@ struct bx_cr4_t {
   IMPLEMENT_CRREG_ACCESSORS(UINTR, 25);
   IMPLEMENT_CRREG_ACCESSORS(LASS, 27);
   IMPLEMENT_CRREG_ACCESSORS(LAM_SUPERVISOR, 28);
+#if BX_SUPPORT_FRED
+  IMPLEMENT_UPPER_CRREG_ACCESSORS(FRED, 32);
+#endif
 
-  BX_CPP_INLINE Bit32u get32() const { return val; }
-  BX_CPP_INLINE void set32(Bit32u val32) { val = val32; }
+  BX_CPP_INLINE bx_address get() const { return val; }
+  BX_CPP_INLINE void set(bx_address value) { val = value; }
 };
 
-const Bit32u BX_CR4_FLUSH_TLB_MASK = (BX_CR4_PSE_MASK | BX_CR4_PAE_MASK | BX_CR4_PGE_MASK | BX_CR4_LA57_MASK | BX_CR4_PCIDE_MASK | BX_CR4_SMEP_MASK | BX_CR4_SMAP_MASK | BX_CR4_PKE_MASK | BX_CR4_CET_MASK | BX_CR4_PKS_MASK | BX_CR4_LASS_MASK);
+const bx_address BX_CR4_FLUSH_TLB_MASK = (BX_CR4_PSE_MASK | BX_CR4_PAE_MASK | BX_CR4_PGE_MASK | BX_CR4_LA57_MASK | BX_CR4_PCIDE_MASK | BX_CR4_SMEP_MASK | BX_CR4_SMAP_MASK | BX_CR4_PKE_MASK | BX_CR4_CET_MASK | BX_CR4_PKS_MASK | BX_CR4_LASS_MASK);
 
 #endif  // #if BX_CPU_LEVEL >= 5
 

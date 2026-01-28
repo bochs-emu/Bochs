@@ -14,6 +14,7 @@ set echo
             --enable-avx \
             --enable-evex \
             --enable-cet \
+            --enable-fred \
             --enable-pci \
             --enable-clgd54xx \
             --enable-geforce \

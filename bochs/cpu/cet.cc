@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2019 Stanislav Shwartsman
+//   Copyright (c) 2019-2025 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -351,6 +351,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRUSSQ(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SETSSBSY(bxInstruction_c *i)
 {
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+    BX_ERROR(("%s: Not supported when FRED is enabled in CR4", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
   if (! ShadowStackEnabled(0)) {
     BX_ERROR(("%s: shadow stack not enabled", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
@@ -379,6 +386,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SETSSBSY(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLRSSBSY(bxInstruction_c *i)
 {
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+    BX_ERROR(("%s: Not supported when FRED is enabled in CR4", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
   if (! ShadowStackEnabled(0)) {
     BX_ERROR(("%s: shadow stack not enabled", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
