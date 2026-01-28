@@ -277,8 +277,8 @@ memory: guest=512, host=256, block_size=512
 #=======================================================================
 romimage: file=$BXSHARE/BIOS-bochs-latest, options=fastboot
 #romimage: file=$BXSHARE/BIOS-bochs-legacy
-#romimage: file=$BXSHARE/bios.bin-1.13.0 # http://www.seabios.org/SeaBIOS
-#romimage: file=$BXSHARE/i440fx.bin, flash_data=escd.bin
+#romimage: file=$BXSHARE/SeaBIOS/bios.bin-1.13.0 # http://www.seabios.org/SeaBIOS
+#romimage: file=$BXSHARE/i440fx/i440fx.bin, flash_data=escd.bin
 #romimage: file=asus_p6np5.bin, flash_data=escd.bin
 #romimage: file=mybios.bin, address=0xfff80000 # 512k at memory top
 
@@ -297,7 +297,7 @@ romimage: file=$BXSHARE/BIOS-bochs-latest, options=fastboot
 # VGAROMIMAGE
 # You now need to load a VGA ROM BIOS into C0000.
 #=======================================================================
-vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest.bin
+vgaromimage: file=$BXSHARE/VGABIOS-lgpl/VGABIOS-lgpl-latest.bin
 #vgaromimage: file=bios/VGABIOS-lgpl/VGABIOS-lgpl-latest-cirrus.bin
 #vgaromimage: file=$BXSHARE/vgabios-cirrus.bin-1.13.0 # http://www.seabios.org/SeaVGABIOS
 #vgaromimage: file=bios/VGABIOS-elpin/VGABIOS-elpin-2.40
