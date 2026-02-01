@@ -4,7 +4,7 @@
 //
 //  32 bit Bochs BIOS init code
 //  Copyright (C) 2006       Fabrice Bellard
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1660,6 +1660,8 @@ struct madt_int_override
 } __attribute__((__packed__));
 
 #include "acpi-dsdt.hex"
+#undef __ACPI_DSDT_HEX__
+#include "acpi-dsdt-nohpet.hex"
 
 static inline uint16_t cpu_to_le16(uint16_t x)
 {
@@ -1761,7 +1763,7 @@ static uint8_t* find_acpi_pci2isa_entry(const uint8_t *data, int len)
 {
     int i;
 
-    for (i = 0; i < len; i += 2) {
+    for (i = 0; i < len; i++) {
         if ((*(uint32_t *)&data[i] == 0x5f415349) &&
            (*(uint32_t *)(&data[i + 5]) == 0x5244415f)) {
             return (uint8_t*)&data[i];
@@ -1824,7 +1826,11 @@ void acpi_bios_init(void)
 
     dsdt_addr = addr;
     dsdt = (void *)(addr);
-    addr += sizeof(AmlCode);
+    if (hpet_enabled) {
+        addr += sizeof(AmlCode1);
+    } else {
+        addr += sizeof(AmlCode2);
+    }
 
     ssdt_addr = addr;
     ssdt = (void *)(addr);
@@ -1909,7 +1915,11 @@ void acpi_bios_init(void)
     BX_INFO("Firmware waking vector %p\n", &facs->firmware_waking_vector);
 
     /* DSDT */
-    memcpy(dsdt, AmlCode, sizeof(AmlCode));
+    if (hpet_enabled) {
+        memcpy(dsdt, AmlCode1, sizeof(AmlCode1));
+    } else {
+        memcpy(dsdt, AmlCode2, sizeof(AmlCode2));
+    }
     if (chipset_i440bx) {
         int size = ssdt_addr - dsdt_addr;
         uint8_t *ptr = find_acpi_pci2isa_entry(dsdt, size);

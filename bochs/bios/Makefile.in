@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2023  The Bochs Project
+# Copyright (C) 2001-2026  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -105,10 +105,17 @@ rombios32.o: rombios32.c acpi-dsdt.hex rombios.h
 
 ifneq ($(IASL), not_found)
 acpi-dsdt.hex: acpi-dsdt.dsl
+	cpp -P -DBX_HPET $< $<.i
+	iasl -tc -p $@ $<.i
+	rm $<.i
+	sed -i -e's/^unsigned/const unsigned/;s/ACPI-DSDT_HEX/ACPI_DSDT_HEX/g;s/acpi-dsdt_aml_code/AmlCode1/g' $@
+	mv $@ $@.tmp
 	cpp -P $< $<.i
 	iasl -tc -p $@ $<.i
 	rm $<.i
-	sed -i -e's/^unsigned/const unsigned/;s/ACPI-DSDT_HEX/ACPI_DSDT_HEX/g;s/acpi-dsdt_aml_code/AmlCode/g' $@
+	sed -i -e's/^unsigned/const unsigned/;s/ACPI-DSDT_HEX/ACPI_DSDT_HEX/g;s/acpi-dsdt_aml_code/AmlCode2/g' $@
+	mv $@ acpi-dsdt-nohpet.hex
+	mv $@.tmp $@
 endif
 
 rombios32start.o: rombios32start.S
