@@ -980,7 +980,7 @@ bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
           }
           break;
         case 0x04:
-          BX_EHCI_THIS hub.op_regs.UsbSts.inti ^= (value & USBINTR_MASK);
+          BX_EHCI_THIS hub.op_regs.UsbSts.inti &= ~(value & USBINTR_MASK);
           BX_EHCI_THIS update_irq();
           break;
         case 0x08:
