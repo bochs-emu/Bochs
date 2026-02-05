@@ -343,6 +343,7 @@ bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
 
   ctrls->intercept_vector[0] = vmcb_read32(SVM_CONTROL32_INTERCEPT1);
   ctrls->intercept_vector[1] = vmcb_read32(SVM_CONTROL32_INTERCEPT2);
+  ctrls->intercept_vector[2] = vmcb_read32(SVM_CONTROL32_INTERCEPT3);
 
   if (! SVM_INTERCEPT(SVM_INTERCEPT1_VMRUN)) {
     BX_ERROR(("VMRUN: VMRUN intercept bit is not set!"));
@@ -1288,6 +1289,7 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, exceptions_intercept, BX_CPU_THIS_PTR vmcb->ctrls.exceptions_intercept);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, intercept_vector0, BX_CPU_THIS_PTR vmcb->ctrls.intercept_vector[0]);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, intercept_vector1, BX_CPU_THIS_PTR vmcb->ctrls.intercept_vector[1]);
+  BXRS_HEX_PARAM_FIELD(vmcb_ctrls, intercept_vector2, BX_CPU_THIS_PTR vmcb->ctrls.intercept_vector[2]);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, iopm_base, BX_CPU_THIS_PTR vmcb->ctrls.iopm_base);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, msrpm_base, BX_CPU_THIS_PTR vmcb->ctrls.msrpm_base);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, exitintinfo, BX_CPU_THIS_PTR vmcb->ctrls.exitintinfo);

@@ -217,29 +217,33 @@ struct bx_dr7_t {
 
 #if BX_CPU_LEVEL >= 5
 
-#define BX_EFER_SCE_MASK       (1 <<  0)
-#define BX_EFER_LME_MASK       (1 <<  8)
-#define BX_EFER_LMA_MASK       (1 << 10)
-#define BX_EFER_NXE_MASK       (1 << 11)
-#define BX_EFER_SVME_MASK      (1 << 12)
-#define BX_EFER_LMSLE_MASK     (1 << 13)
-#define BX_EFER_FFXSR_MASK     (1 << 14)
-#define BX_EFER_TCE_MASK       (1 << 15)
+#define BX_EFER_SCE_MASK               (1 <<  0)
+#define BX_EFER_LME_MASK               (1 <<  8)
+#define BX_EFER_LMA_MASK               (1 << 10)
+#define BX_EFER_NXE_MASK               (1 << 11)
+#define BX_EFER_SVME_MASK              (1 << 12)
+#define BX_EFER_LMSLE_MASK             (1 << 13)
+#define BX_EFER_FFXSR_MASK             (1 << 14)
+#define BX_EFER_TCE_MASK               (1 << 15)
+#define BX_EFER_MCOMMIT_MASK           (1 << 17)
+#define BX_EFER_INTERRUPTIBLE_WBINVD   (1 << 18)
 
 struct bx_efer_t {
   Bit32u val; // 32bit value of register
 
-  IMPLEMENT_CRREG_ACCESSORS(SCE,    0);
+  IMPLEMENT_CRREG_ACCESSORS(SCE,      0);
 #if BX_SUPPORT_X86_64
-  IMPLEMENT_CRREG_ACCESSORS(LME,    8);
-  IMPLEMENT_CRREG_ACCESSORS(LMA,   10);
+  IMPLEMENT_CRREG_ACCESSORS(LME,      8);
+  IMPLEMENT_CRREG_ACCESSORS(LMA,     10);
 #endif
-  IMPLEMENT_CRREG_ACCESSORS(NXE,   11);
+  IMPLEMENT_CRREG_ACCESSORS(NXE,     11);
 #if BX_SUPPORT_X86_64
-  IMPLEMENT_CRREG_ACCESSORS(SVME,  12); /* AMD Secure Virtual Machine */
-  IMPLEMENT_CRREG_ACCESSORS(LMSLE, 13); /* AMD Long Mode Segment Limit */
-  IMPLEMENT_CRREG_ACCESSORS(FFXSR, 14);
-  IMPLEMENT_CRREG_ACCESSORS(TCE,   15); /* AMD Translation Cache Extensions */
+  IMPLEMENT_CRREG_ACCESSORS(SVME,    12); /* AMD Secure Virtual Machine */
+  IMPLEMENT_CRREG_ACCESSORS(LMSLE,   13); /* AMD Long Mode Segment Limit */
+  IMPLEMENT_CRREG_ACCESSORS(FFXSR,   14);
+  IMPLEMENT_CRREG_ACCESSORS(TCE,     15); /* AMD Translation Cache Extensions */
+  IMPLEMENT_CRREG_ACCESSORS(MCOMMIT, 17); /* MCOMMIT instruction support (AMD) - not implemented */
+  IMPLEMENT_CRREG_ACCESSORS(INTERRUPTIBLE_WBINVD, 18); /* not implemented */
 #endif
 
   BX_CPP_INLINE Bit32u get32() const { return val; }

@@ -29,69 +29,82 @@
 #define BX_SVM_REVISION 0x01 /* FIXME: check what is real SVM revision */
 
 enum SVM_intercept_codes {
-   SVM_VMEXIT_CR0_READ  = 0,
-   SVM_VMEXIT_CR2_READ  = 2,
-   SVM_VMEXIT_CR3_READ  = 3,
-   SVM_VMEXIT_CR4_READ  = 4,
-   SVM_VMEXIT_CR8_READ  = 8,
-   SVM_VMEXIT_CR0_WRITE = 16,
-   SVM_VMEXIT_CR2_WRITE = 18,
-   SVM_VMEXIT_CR3_WRITE = 19,
-   SVM_VMEXIT_CR4_WRITE = 20,
-   SVM_VMEXIT_CR8_WRITE = 24,
-   SVM_VMEXIT_DR0_READ  = 32,
-   SVM_VMEXIT_DR0_WRITE = 48,
-   SVM_VMEXIT_EXCEPTION = 64,
-   SVM_VMEXIT_PF_EXCEPTION = (64+BX_PF_EXCEPTION),
-   SVM_VMEXIT_INTR = 96,
-   SVM_VMEXIT_NMI = 97,
-   SVM_VMEXIT_SMI = 98,
-   SVM_VMEXIT_INIT = 99,
-   SVM_VMEXIT_VINTR = 100,
-   SVM_VMEXIT_CR0_SEL_WRITE = 101,
-   SVM_VMEXIT_IDTR_READ = 102,
-   SVM_VMEXIT_GDTR_READ = 103,
-   SVM_VMEXIT_LDTR_READ = 104,
-   SVM_VMEXIT_TR_READ = 105,
-   SVM_VMEXIT_IDTR_WRITE = 106,
-   SVM_VMEXIT_GDTR_WRITE = 107,
-   SVM_VMEXIT_LDTR_WRITE = 108,
-   SVM_VMEXIT_TR_WRITE = 109,
-   SVM_VMEXIT_RDTSC = 110,
-   SVM_VMEXIT_RDPMC = 111,
-   SVM_VMEXIT_PUSHF = 112,
-   SVM_VMEXIT_POPF = 113,
-   SVM_VMEXIT_CPUID = 114,
-   SVM_VMEXIT_RSM = 115,
-   SVM_VMEXIT_IRET = 116,
-   SVM_VMEXIT_SOFTWARE_INTERRUPT = 117,
-   SVM_VMEXIT_INVD = 118,
-   SVM_VMEXIT_PAUSE = 119,
-   SVM_VMEXIT_HLT = 120,
-   SVM_VMEXIT_INVLPG = 121,
-   SVM_VMEXIT_INVLPGA = 122,
-   SVM_VMEXIT_IO = 123,
-   SVM_VMEXIT_MSR = 124,
-   SVM_VMEXIT_TASK_SWITCH = 125,
-   SVM_VMEXIT_FERR_FREEZE = 126,
-   SVM_VMEXIT_SHUTDOWN = 127,
-   SVM_VMEXIT_VMRUN = 128,
-   SVM_VMEXIT_VMMCALL = 129,
-   SVM_VMEXIT_VMLOAD = 130,
-   SVM_VMEXIT_VMSAVE = 131,
-   SVM_VMEXIT_STGI = 132,
-   SVM_VMEXIT_CLGI = 133,
-   SVM_VMEXIT_SKINIT = 134,
-   SVM_VMEXIT_RDTSCP = 135,
-   SVM_VMEXIT_ICEBP = 136,
-   SVM_VMEXIT_WBINVD = 137,
-   SVM_VMEXIT_MONITOR = 138,
-   SVM_VMEXIT_MWAIT = 139,
-   SVM_VMEXIT_MWAIT_CONDITIONAL = 140,
-   SVM_VMEXIT_XSETBV = 141,
-   SVM_VMEXIT_NPF = 1024,
-   SVM_VMEXIT_AVIC_INCOMPLETE_IPI = 1025,
-   SVM_VMEXIT_AVIC_NOACCEL = 1026
+   SVM_VMEXIT_CR0_READ  = 0x0,
+   SVM_VMEXIT_CR2_READ  = 0x2,
+   SVM_VMEXIT_CR3_READ  = 0x3,
+   SVM_VMEXIT_CR4_READ  = 0x4,
+   SVM_VMEXIT_CR8_READ  = 0x8,
+   SVM_VMEXIT_CR0_WRITE = 0x10,
+   SVM_VMEXIT_CR2_WRITE = 0x12,
+   SVM_VMEXIT_CR3_WRITE = 0x13,
+   SVM_VMEXIT_CR4_WRITE = 0x14,
+   SVM_VMEXIT_CR8_WRITE = 0x18,
+   SVM_VMEXIT_DR0_READ  = 0x20,
+   SVM_VMEXIT_DR0_WRITE = 0x30,
+   SVM_VMEXIT_EXCEPTION = 0x40,
+   SVM_VMEXIT_PF_EXCEPTION = (0x40+BX_PF_EXCEPTION),
+   SVM_VMEXIT_INTR = 0x60,
+   SVM_VMEXIT_NMI = 0x61,
+   SVM_VMEXIT_SMI = 0x62,
+   SVM_VMEXIT_INIT = 0x63,
+   SVM_VMEXIT_VINTR = 0x64,
+   SVM_VMEXIT_CR0_SEL_WRITE = 0x65,
+   SVM_VMEXIT_IDTR_READ = 0x66,
+   SVM_VMEXIT_GDTR_READ = 0x67,
+   SVM_VMEXIT_LDTR_READ = 0x68,
+   SVM_VMEXIT_TR_READ = 0x69,
+   SVM_VMEXIT_IDTR_WRITE = 0x6a,
+   SVM_VMEXIT_GDTR_WRITE = 0x6b,
+   SVM_VMEXIT_LDTR_WRITE = 0x6c,
+   SVM_VMEXIT_TR_WRITE = 0x6d,
+   SVM_VMEXIT_RDTSC = 0x6e,
+   SVM_VMEXIT_RDPMC = 0x6f,
+   SVM_VMEXIT_PUSHF = 0x70,
+   SVM_VMEXIT_POPF = 0x71,
+   SVM_VMEXIT_CPUID = 0x72,
+   SVM_VMEXIT_RSM = 0x73,
+   SVM_VMEXIT_IRET = 0x74,
+   SVM_VMEXIT_SOFTWARE_INTERRUPT = 0x75,
+   SVM_VMEXIT_INVD = 0x76,
+   SVM_VMEXIT_PAUSE = 0x77,
+   SVM_VMEXIT_HLT = 0x78,
+   SVM_VMEXIT_INVLPG = 0x79,
+   SVM_VMEXIT_INVLPGA = 0x7a,
+   SVM_VMEXIT_IO = 0x7b,
+   SVM_VMEXIT_MSR = 0x7c,
+   SVM_VMEXIT_TASK_SWITCH = 0x7d,
+   SVM_VMEXIT_FERR_FREEZE = 0x7e,
+   SVM_VMEXIT_SHUTDOWN = 0x7f,
+   SVM_VMEXIT_VMRUN = 0x80,
+   SVM_VMEXIT_VMMCALL = 0x81,
+   SVM_VMEXIT_VMLOAD = 0x82,
+   SVM_VMEXIT_VMSAVE = 0x83,
+   SVM_VMEXIT_STGI = 0x84,
+   SVM_VMEXIT_CLGI = 0x85,
+   SVM_VMEXIT_SKINIT = 0x86,
+   SVM_VMEXIT_RDTSCP = 0x87,
+   SVM_VMEXIT_ICEBP = 0x88,
+   SVM_VMEXIT_WBINVD = 0x89,
+   SVM_VMEXIT_MONITOR = 0x8a,
+   SVM_VMEXIT_MWAIT = 0x8b,
+   SVM_VMEXIT_MWAIT_CONDITIONAL = 0x8c,
+   SVM_VMEXIT_XSETBV = 0x8d,
+   SVM_VMEXIT_RDPRU = 0x8e,
+   SVM_VMEXIT_EFER_WRITE_TRAP = 0x8f,
+   SVM_VMEXIT_CR0_WRITE_TRAP = 0x90,
+   SVM_VMEXIT_CR3_WRITE_TRAP = 0x93,
+   SVM_VMEXIT_CR4_WRITE_TRAP = 0x94,
+   SVM_VMEXIT_INVLPGB = 0xa0,
+   SVM_VMEXIT_INVLPGB_ILLEGAL = 0xa1,
+   SVM_VMEXIT_INVPCID = 0xa2,
+   SVM_VMEXIT_MCOMMIT = 0xa3,
+   SVM_VMEXIT_TLBSYNC = 0xa4,
+   SVM_VMEXIT_BUSLOCK = 0xa5,
+   SVM_VMEXIT_IDLE_HLT = 0xa6,
+   SVM_VMEXIT_NPF = 0x400,
+   SVM_VMEXIT_AVIC_INCOMPLETE_IPI = 0x401,
+   SVM_VMEXIT_AVIC_NOACCEL = 0x402,
+   SVM_VMEXIT_VMGEXIT = 0x403
 };
 
 #define SVM_VMEXIT_INVALID (-1)
@@ -107,6 +120,7 @@ enum SVM_intercept_codes {
 #define SVM_CONTROL32_INTERCEPT_EXCEPTIONS      (0x008)
 #define SVM_CONTROL32_INTERCEPT1                (0x00c)
 #define SVM_CONTROL32_INTERCEPT2                (0x010)
+#define SVM_CONTROL32_INTERCEPT3                (0x014)
 
 #define SVM_CONTROL16_PAUSE_FILTER_THRESHOLD    (0x03c)
 #define SVM_CONTROL16_PAUSE_FILTER_COUNT        (0x03e)
@@ -204,10 +218,17 @@ enum SVM_intercept_codes {
 #define SVM_GUEST_TR_LIMIT                      (0x494)
 #define SVM_GUEST_TR_BASE                       (0x498)
 
+#define SVM_GUEST_PL0_SSP                       (0x4a0)
+#define SVM_GUEST_PL1_SSP                       (0x4a8)
+#define SVM_GUEST_PL2_SSP                       (0x4b0)
+#define SVM_GUEST_PL3_SSP                       (0x4b8)
+#define SVM_GUEST_U_CET                         (0x4c0)
+
 #define SVM_GUEST_CPL                           (0x4cb)
 #define SVM_GUEST_EFER_MSR                      (0x4d0)
 #define SVM_GUEST_EFER_MSR_HI                   (0x4d4)
 
+#define SVM_GUEST_XSS                           (0x540)
 #define SVM_GUEST_CR4                           (0x548)
 #define SVM_GUEST_CR4_HI                        (0x54c)
 #define SVM_GUEST_CR3                           (0x550)
@@ -221,6 +242,9 @@ enum SVM_intercept_codes {
 #define SVM_GUEST_RFLAGS_HI                     (0x574)
 #define SVM_GUEST_RIP                           (0x578)
 #define SVM_GUEST_RSP                           (0x5d8)
+#define SVM_GUEST_S_CET                         (0x5e0)
+#define SVM_GUEST_SSP                           (0x5e8)
+#define SVM_GUEST_ISST_ADDR                     (0x5f0)
 #define SVM_GUEST_RAX                           (0x5f8)
 #define SVM_GUEST_STAR_MSR                      (0x600)
 #define SVM_GUEST_LSTAR_MSR                     (0x608)
@@ -238,6 +262,28 @@ enum SVM_intercept_codes {
 #define SVM_GUEST_BR_TO_MSR                     (0x680)
 #define SVM_GUEST_LAST_EXCEPTION_FROM_MSR       (0x688)
 #define SVM_GUEST_LAST_EXCEPTION_TO_MSR         (0x690)
+
+#define SVM_GUEST_SPEC_CTRL                     (0x6e0)
+#define SVM_GUEST_PKRU                          (0x6e8)
+#define SVM_GUEST_TSC_AUX                       (0x6ec)
+#define SVM_GUEST_TSC_SCALE                     (0x6f0)
+#define SVM_GUEST_TSC_OFFSET                    (0x6f8)
+
+#define SVM_GUEST_RCX                           (0x708)
+#define SVM_GUEST_RDX                           (0x710)
+#define SVM_GUEST_RBX                           (0x718)
+#define SVM_GUEST_SECURE_AVIC_CTL               (0x720)
+#define SVM_GUEST_RBP                           (0x728)
+#define SVM_GUEST_RSI                           (0x730)
+#define SVM_GUEST_RDI                           (0x738)
+#define SVM_GUEST_R8                            (0x740)
+#define SVM_GUEST_R9                            (0x748)
+#define SVM_GUEST_R10                           (0x750)
+#define SVM_GUEST_R11                           (0x758)
+#define SVM_GUEST_R12                           (0x760)
+#define SVM_GUEST_R13                           (0x768)
+#define SVM_GUEST_R14                           (0x770)
+#define SVM_GUEST_R15                           (0x778)
 
 struct SVM_HOST_STATE
 {
@@ -291,7 +337,7 @@ struct SVM_CONTROLS
   Bit16u dr_wr_ctrl;
   Bit32u exceptions_intercept;
 
-  Bit32u intercept_vector[2];
+  Bit32u intercept_vector[3];
 
   Bit32u exitintinfo;
   Bit32u exitintinfo_error_code;
@@ -344,6 +390,12 @@ struct VMCB_CACHE
 // ========================
 
 enum {
+  // vector0[15:00]: intercept reads of CR0-CR15
+  // vector0[31:16]: intercept writes of CR0-CR15
+  // vector1[15:00]: intercept reads of DR0-DR15
+  // vector1[31:16]: intercept writes of DR0-DR15
+  // vector2[31:00]: intercept exception vectors 0-31
+  // vector3[31:00]:
   SVM_INTERCEPT0_INTR = 0,
   SVM_INTERCEPT0_NMI = 1,
   SVM_INTERCEPT0_SMI = 2,
@@ -376,6 +428,8 @@ enum {
   SVM_INTERCEPT0_TASK_SWITCH = 29,
   SVM_INTERCEPT0_FERR_FREEZE = 30,
   SVM_INTERCEPT0_SHUTDOWN = 31,
+  // vector4[16:00]:
+  // vector4[31:16]: Intercept writes of CR0-CR15 (trap)
   SVM_INTERCEPT1_VMRUN = 32,
   SVM_INTERCEPT1_VMMCALL = 33,
   SVM_INTERCEPT1_VMLOAD = 34,
@@ -391,6 +445,14 @@ enum {
   SVM_INTERCEPT1_MWAIT_ARMED = 44,
   SVM_INTERCEPT1_XSETBV = 45,
   SVM_INTERCEPT1_RDPRU = 46,
+  SVM_INTERCEPT1_EFER_WRITE_TRAP = 47,
+  SVM_INTERCEPT1_CR0_WRITE_TRAP = 48,
+  // vector5[31:00]:
+  SVM_INTERCEPT2_INVLPGB = 64,
+  SVM_INTERCEPT2_INVLPGB_ILLEGAL = 65,
+  SVM_INTERCEPT2_INVPCID = 66,
+  SVM_INTERCEPT2_MCOMMIT = 67,
+  SVM_INTERCEPT2_TLBSYNC = 68
 };
 
 #define SVM_INTERCEPT(intercept_bitnum) \

@@ -4009,6 +4009,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVVPID(bxInstruction_c *i)
   BX_NEXT_TRACE(i);
 }
 
+#if BX_SUPPORT_SVM
+#include "svm.h"
+#endif
+
 #if BX_CPU_LEVEL >= 6
 enum {
   BX_INVPCID_INDIVIDUAL_ADDRESS_NON_GLOBAL_INVALIDATION,
@@ -4048,6 +4052,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVPCID(bxInstruction_c *i)
     BX_ERROR(("%s: with CPL!=0 cause #GP(0)", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(SVM_INTERCEPT2_INVPCID)) Svm_Vmexit(SVM_VMEXIT_INVPCID);
+  }
+#endif
 
   bx_address type;
 #if BX_SUPPORT_X86_64
