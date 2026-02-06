@@ -126,6 +126,9 @@ void bx_fw_cfg_c::init(void)
     ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("fw_cfg"))->set(0);
     return;
   }
+  if (SIM->get_param_enum(BXPN_PCI_CHIPSET)->get() != BX_PCI_CHIPSET_I440FX) {
+    BX_PANIC(("The fw_cfg device only supports the i440FX chipset"));
+  }
   // Initialize all entries
   for (int i = 0; i < FW_CFG_MAX_ENTRY; i++) {
     entries[i].data = NULL;
