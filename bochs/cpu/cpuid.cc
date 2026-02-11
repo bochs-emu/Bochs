@@ -1355,9 +1355,7 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra) const
   if (is_cpu_extension_supported(BX_ISA_WRMSRNS))
     eax |= BX_CPUID_STD7_SUBLEAF1_EAX_WRMSRNS;
 
-  //   [20:20]  NMI source reporting
-  if (is_cpu_extension_supported(BX_ISA_FRED))
-    eax |= BX_CPUID_STD7_SUBLEAF1_EAX_NMI_SOURCE_REPORTING;
+  //   [20:20]  NMI source reporting - not implemented yet
 
   //   [21:21]  AMX-FP16 support
 #if BX_SUPPORT_AMX
