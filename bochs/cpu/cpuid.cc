@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2014-2024 Stanislav Shwartsman
+//   Copyright (c) 2014-2025 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1344,13 +1344,18 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra) const
   //   [10:10]  Fast zero-length REP MOVSB - not supported, can be enabled through extra
   //   [11:11]  Fast zero-length REP STOSB - not supported, can be enabled through extra
   //   [12:12]  Fast zero-length REP CMPSB/SCASB - not supported, can be enabled through extra
-  //   [18:13]  reserved
+  //   [16:13]  reserved
+
+  //   [17:17]  Flexible Return and Event Delivery (FRED) support
+  //   [18:18]  LKGS instruction support
+  if (is_cpu_extension_supported(BX_ISA_FRED))
+    eax |= BX_CPUID_STD7_SUBLEAF1_EAX_FRED | BX_CPUID_STD7_SUBLEAF1_EAX_LKGS;
 
   //   [19:19]  WRMSRNS instruction
   if (is_cpu_extension_supported(BX_ISA_WRMSRNS))
     eax |= BX_CPUID_STD7_SUBLEAF1_EAX_WRMSRNS;
 
-  //   [20:20]  reserved
+  //   [20:20]  NMI source reporting - not implemented yet
 
   //   [21:21]  AMX-FP16 support
 #if BX_SUPPORT_AMX

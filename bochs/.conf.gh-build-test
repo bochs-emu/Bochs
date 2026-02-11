@@ -35,6 +35,7 @@ case $which_config in
       --enable-evex \
       --enable-amx \
       --enable-cet \
+      --enable-fred \
       --enable-pci \
       --enable-clgd54xx \
       --enable-geforce \
@@ -78,6 +79,7 @@ case $which_config in
       --enable-vmx=2 \
       --enable-avx \
       --enable-cet \
+      --enable-fred \
       --enable-evex \
       --enable-amx \
       --enable-uintr \

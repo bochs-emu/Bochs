@@ -150,7 +150,7 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR cr0.set_PG(0); // paging disabled (bit 31)
 
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR cr4.set32(0);
+  BX_CPU_THIS_PTR cr4.set(0);
 #endif
 
 #if BX_CPU_LEVEL >= 5
@@ -438,7 +438,7 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
   SMRAM_FIELD(saved_state, SMRAM_FIELD_CR0) = BX_CPU_THIS_PTR cr0.get32();
   SMRAM_FIELD(saved_state, SMRAM_FIELD_CR3_HI32) = GET32H(BX_CPU_THIS_PTR cr3);
   SMRAM_FIELD(saved_state, SMRAM_FIELD_CR3) = GET32L(BX_CPU_THIS_PTR cr3);
-  SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4) = BX_CPU_THIS_PTR cr4.get32();
+  SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4) = BX_CPU_THIS_PTR cr4.get();
   SMRAM_FIELD(saved_state, SMRAM_FIELD_EFER) = BX_CPU_THIS_PTR efer.get32();
 
   SMRAM_FIELD(saved_state, SMRAM_FIELD_SMBASE_OFFSET)   = BX_CPU_THIS_PTR smbase;
@@ -551,7 +551,7 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
   SMRAM_FIELD(saved_state, SMRAM_FIELD_CR0) = BX_CPU_THIS_PTR cr0.get32();
   SMRAM_FIELD(saved_state, SMRAM_FIELD_CR3) = BX_CPU_THIS_PTR cr3;
 #if BX_CPU_LEVEL >= 5
-  SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4) = BX_CPU_THIS_PTR cr4.get32();
+  SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4) = BX_CPU_THIS_PTR cr4.get();
   SMRAM_FIELD(saved_state, SMRAM_FIELD_EFER) = BX_CPU_THIS_PTR efer.get32();
 #endif
   SMRAM_FIELD(saved_state, SMRAM_FIELD_DR6) = BX_CPU_THIS_PTR dr6.get32();
@@ -708,7 +708,7 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
   }
 
 #if BX_CPU_LEVEL >= 5
-  if (!check_CR4(smm_state->cr4.get32())) {
+  if (!check_CR4(smm_state->cr4.get())) {
     BX_PANIC(("SMM restore: CR4 consistency check failed !"));
     return false;
   }
@@ -716,7 +716,7 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
 
   BX_CPU_THIS_PTR cr0.set32(smm_state->cr0.get32());
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR cr4.set32(smm_state->cr4.get32());
+  BX_CPU_THIS_PTR cr4.set(smm_state->cr4.get());
 #endif
   BX_CPU_THIS_PTR cr3 = smm_state->cr3;
 

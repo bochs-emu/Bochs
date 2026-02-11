@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2023 Stanislav Shwartsman
+//   Copyright (c) 2011-2025 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -178,6 +178,12 @@ void BX_CPU_C::HandleExtInterrupt(void)
   {
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
+
+#if BX_SUPPORT_FRED
+    if (BX_CPU_THIS_PTR cr4.get_FRED())
+      set_fred_event_info_and_data(vector, BX_EXTERNAL_INTERRUPT, false, 0);
+#endif
+
     interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
   }
 
@@ -197,6 +203,12 @@ void BX_CPU_C::SvmVirtualInterruptAcknowledge(void)
 
   BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
+
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED())
+    set_fred_event_info_and_data(vector, BX_EXTERNAL_INTERRUPT, false, 0);
+#endif
+
   interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
 
   BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
@@ -363,6 +375,12 @@ bool BX_CPU_C::handleAsyncEvent(void)
 #endif
     mask_event(BX_EVENT_NMI);
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, 2, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
+
+#if BX_SUPPORT_FRED
+    if (BX_CPU_THIS_PTR cr4.get_FRED())
+      set_fred_event_info_and_data(2, BX_NMI, false, 0);
+#endif
+
     interrupt(2, BX_NMI, 0, 0);
   }
 #if BX_SUPPORT_VMX
