@@ -389,6 +389,15 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
   }
 
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+    if (cs_selector.rpl > CPL) {
+      BX_ERROR(("iret64: ring transition is not allowed when FRED is enabled"));
+      exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
+    }
+  }
+#endif
+
   // check code-segment descriptor
   check_cs(&cs_descriptor, raw_cs_selector, 0, cs_selector.rpl);
 
@@ -439,13 +448,6 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
   else {
 
     BX_DEBUG(("LONG MODE INTERRUPT RETURN TO OUTER PRIVILEGE LEVEL or 64 BIT MODE"));
-
-#if BX_SUPPORT_FRED
-    if (BX_CPU_THIS_PTR cr4.get_FRED()) {
-      BX_ERROR(("iret64: ring transition is not allowed when FRED is enabled"));
-      exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
-    }
-#endif
 
     /* 64bit opsize
      * ============
