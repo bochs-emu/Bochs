@@ -176,8 +176,8 @@ Bit32u zambezi_t::get_svm_extensions_bitmask(void) const
 //       BX_CPUID_SVM_VMCB_CLEAN_BITS | // not implemented yet
          BX_CPUID_SVM_FLUSH_BY_ASID |
 //       BX_CPUID_SVM_DECODE_ASSIST | // not implemented yet
-         BX_CPUID_SVM_PAUSE_FILTER;  // not implemented yet
-//       BX_CPUID_SVM_PAUSE_FILTER_THRESHOLD; // not implemented yet
+         BX_CPUID_SVM_PAUSE_FILTER |
+         BX_CPUID_SVM_PAUSE_FILTER_THRESHOLD;
 }
 #endif
 

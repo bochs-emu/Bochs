@@ -357,7 +357,8 @@ struct SVM_CONTROLS
   Bit64u ncr3;
 
   Bit16u pause_filter_count;
-//Bit16u pause_filter_threshold;
+  Bit16u pause_filter_threshold;
+  Bit64u last_pause_time;
 };
 
 #if defined(NEED_CPU_REG_SHORTCUTS)

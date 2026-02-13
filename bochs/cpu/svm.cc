@@ -31,6 +31,7 @@
 #include "svm.h"
 #include "cpuid.h"
 
+#include "pc_system.h"
 #include "gui/paramtree.h"
 #include "decoder/ia_opcodes.h"
 
@@ -371,6 +372,13 @@ bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
     ctrls->pause_filter_count = vmcb_read16(SVM_CONTROL16_PAUSE_FILTER_COUNT);
   else
     ctrls->pause_filter_count = 0;
+
+  if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_PAUSE_FILTER_THRESHOLD))
+    ctrls->pause_filter_threshold = vmcb_read16(SVM_CONTROL16_PAUSE_FILTER_THRESHOLD);
+  else
+    ctrls->pause_filter_threshold = 0;
+
+  ctrls->last_pause_time = 0;
 
   ctrls->nested_paging = vmcb_read8(SVM_CONTROL_NESTED_PAGING_ENABLE);
   if (! BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_NESTED_PAGING)) {
@@ -971,6 +979,15 @@ void BX_CPU_C::SvmInterceptPAUSE(void)
 {
   if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_PAUSE_FILTER)) {
     SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb->ctrls;
+    if (BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_PAUSE_FILTER_THRESHOLD)) {
+      Bit64u currtime = bx_pc_system.time_ticks();
+      Bit64u time_from_last_pause = currtime - ctrls->last_pause_time;
+      ctrls->last_pause_time = currtime;
+      if (time_from_last_pause > ctrls->pause_filter_threshold) {
+        ctrls->pause_filter_count = vmcb_read16(SVM_CONTROL16_PAUSE_FILTER_COUNT);
+        return;
+      }
+    }
     if (ctrls->pause_filter_count) {
       ctrls->pause_filter_count--;
       return;
@@ -1290,6 +1307,9 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, v_intr_vector, BX_CPU_THIS_PTR vmcb->ctrls.v_intr_vector);
   BXRS_PARAM_BOOL(vmcb_ctrls, nested_paging, BX_CPU_THIS_PTR vmcb->ctrls.nested_paging);
   BXRS_HEX_PARAM_FIELD(vmcb_ctrls, ncr3, BX_CPU_THIS_PTR vmcb->ctrls.ncr3);
+  BXRS_HEX_PARAM_FIELD(vmcb_ctrls, pause_filter_count, BX_CPU_THIS_PTR vmcb->ctrls.pause_filter_count);
+  BXRS_HEX_PARAM_FIELD(vmcb_ctrls, pause_filter_threshold, BX_CPU_THIS_PTR vmcb->ctrls.pause_filter_threshold);
+  BXRS_HEX_PARAM_FIELD(vmcb_ctrls, last_pause_time, BX_CPU_THIS_PTR vmcb->ctrls.last_pause_time);
 
   //
   // VMCB Host State
