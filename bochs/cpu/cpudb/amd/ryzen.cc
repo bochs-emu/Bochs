@@ -201,6 +201,9 @@ Bit32u ryzen_t::get_svm_extensions_bitmask(void) const
 //       BX_CPUID_SVM_DECODE_ASSIST | // not implemented yet
          BX_CPUID_SVM_PAUSE_FILTER |
          BX_CPUID_SVM_PAUSE_FILTER_THRESHOLD;
+//       BX_CPUID_SVM_AVIC; // not implemented yet
+//       BX_CPUID_SVM_NESTED_VIRTUALIZATION; // not implemented yet
+//       BX_CPUID_SVM_VIRTUAL_GIF; // not implemented yet
 }
 #endif
 
@@ -526,20 +529,38 @@ void ryzen_t::get_ext_cpuid_leaf_A(cpuid_function_t *leaf) const
   leaf->ebx = 0x8000;   /* number of ASIDs */
   leaf->ecx = 0;
 
-  // * [0:0]   NP - Nested paging support
-  // * [1:1]   LBR virtualization
-  // * [2:2]   SVM Lock
-  // * [3:3]   NRIPS - Next RIP save on VMEXIT
-  // * [4:4]   TscRate - MSR based TSC ratio control
-  // * [5:5]   VMCB Clean bits support
-  // * [6:6]   Flush by ASID support
-  // * [7:7]   Decode assists support
-  //   [8:8]   Reserved
-  //   [9:9]   Reserved
-  // * [10:10] Pause filter support
-  //   [11:11] Reserved
-  // * [12:12] Pause filter threshold support
-  // * [13:13] Advanced Virtual Interrupt Controller
+  // *  [0:0]   NP - Nested paging support
+  // *  [1:1]   LBR virtualization
+  // *  [2:2]   SVM Lock
+  // *  [3:3]   NRIPS - Next RIP save on VMEXIT
+  // *  [4:4]   TscRate - MSR based TSC ratio control
+  // *  [5:5]   VMCB Clean bits support
+  // *  [6:6]   Flush by ASID support
+  // *  [7:7]   Decode assists support
+  //    [8:8]   PMC (Performance Monitoring Counter) virtualization
+  //    [9:9]   Reserved
+  // *  [10:10] Pause filter support
+  // *  [11:11] Reserved
+  // *  [12:12] Pause filter threshold support
+  // *  [13:13] Advanced Virtual Interrupt Controller
+  //    [14:14] Reserved
+  // *  [15:15] Nested Virtualization (virtualized VMLOAD and VMSAVE) Support
+  // *  [16:16] Virtual GIF
+  //    [17:17] Guest Mode Execute Trap (GMET)
+  //    [18:18] Advanced Virtual Interrupt Controller X2APIC mode
+  //    [19:19] SSS_Check: SVM Supervisor Shadow Stack restrictions
+  //    [20:20] SPEC_CTRL MSR virtualization
+  //    [21:21] ROGPT: Read Only Guest Page Table support
+  //    [22:22] Reserved
+  //    [23:23] When host CR4.MCE=1 and guest CR4.MCE=0, #MC in a guest do not cause shutdown and always intercepted
+  //    [24:24] INVLPGB/TLBSYNC hypervisor enable in VMCB and TLBSYNC intercept support
+  //    [25:25] NMI virtualization
+  //    [26:26] IBS (Instruction Based Sampling) virtualization
+  //    [27:27] ExtLvtAvicAccessChg: Extended Interrupt LVT Register AVIC Access changes
+  //    [28:28] Guest VMCB address check
+  //    [29:29] Bus Lock Threshold
+  //    [30:30] Idle HLT intercep
+  //    [31:31] Reserved
   leaf->edx = get_svm_extensions_bitmask();
 }
 
