@@ -2412,15 +2412,7 @@ int bx_split_option_list(const char *msg, const char *rawopt, char **argv, int m
 
 bool is_deprecated_option(const char *oldparam, const char **newparam)
 {
-  if ((!strcmp(oldparam, "keyboard_serial_delay")) ||
-             (!strcmp(oldparam, "keyboard_paste_delay")) ||
-             (!strcmp(oldparam, "keyboard_type")) ||
-             (!strcmp(oldparam, "keyboard_mapping")) ||
-             (!strcmp(oldparam, "keyboardmapping"))) {
-    // replaced v2.6 / removed v2.6.7
-    *newparam = "keyboard";
-    return 1;
-  } else if (!strcmp(oldparam, "user_shortcut")) {
+  if (!strcmp(oldparam, "user_shortcut")) {
     // replaced v2.6.1 / removed v2.6.9
     *newparam = "keyboard";
     return 1;
@@ -2434,6 +2426,12 @@ bool is_deprecated_option(const char *oldparam, const char **newparam)
   } else if (!strcmp(oldparam, "user_plugin")) {
     // replaced / removed after v2.6.11
     *newparam = "plugin_ctrl";
+    return 1;
+#endif
+#if BX_DEBUGGER
+  } else if (!strcmp(oldparam, "debugger_log")) {
+    // replaced / removed after v3.0
+    *newparam = "debugger";
     return 1;
 #endif
   }
@@ -2748,11 +2746,6 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: logprefix directive has wrong # args.", context));
     }
     SIM->get_param_string(BXPN_LOG_PREFIX)->set(params[1]);
-  } else if (!strcmp(params[0], "debugger_log")) {
-    if (num_params != 2) {
-      PARSE_ERR(("%s: debugger_log directive has wrong # args.", context));
-    }
-    SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set(params[1]);
   } else if (!strcmp(params[0], "panic")) {
     if (num_params < 2) {
       PARSE_ERR(("%s: panic directive malformed.", context));
@@ -3188,6 +3181,28 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         PARSE_ERR(("%s: port_e9_hack directive malformed.", context));
       }
     }
+  } else if (!strcmp(params[0], "debugger")) {
+#if BX_DEBUGGER
+    for (i=1; i<num_params; i++) {
+      if (!strncmp(params[i], "log=", 4)) {
+        SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set(&params[i][4]);
+      } else if (!strncmp(params[i], "gui=", 4)) {
+#if BX_DEBUGGER_GUI
+        if (params[i][4] == '0' || !strcmp(&params[i][4], "false")) {
+          bx_dbg.debugger_gui = false;
+        } else if (params[i][4] == '1' || !strcmp(&params[i][4], "true")) {
+          bx_dbg.debugger_gui = true;
+        }
+#else
+        PARSE_WARN(("%s: Bochs debugger gui not available", context));
+#endif
+      } else {
+        PARSE_WARN(("%s: unknown parameter for debugger ignored.", context));
+      }
+    }
+#else
+    PARSE_WARN(("%s: Bochs is not compiled with internal debugger support", context));
+#endif
   } else if (!strcmp(params[0], "iodebug")) {
 #if BX_SUPPORT_IODEBUG
     if (num_params != 2) {
@@ -3448,7 +3463,8 @@ int bx_write_debugger_options(FILE *fp)
 {
 #if BX_DEBUGGER
   char str[40];
-  fprintf(fp, "debugger_log: %s\n", SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr());
+  fprintf(fp, "debugger: log=%s, gui=%s\n", SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr(),
+          bx_dbg.debugger_gui ? "true":"false");
   bx_dbg_get_magic_bp_str_from_mask(bx_dbg.magic_break, str);
   fprintf(fp, "magic_break: enabled=%d%s\n", bx_dbg.magic_break != 0, str);
   // TODO: debug symbols

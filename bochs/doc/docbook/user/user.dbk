@@ -4370,16 +4370,29 @@ problem like "could not find hard drive image."
 </tip>
 </section>
 
-<section><title>debugger_log</title>
+<section><title>debugger</title>
 <para>
 Examples:
 <screen>
-  debugger_log: debugger.out
-  debugger_log: /dev/null              (Unix only)
-  debugger_log: -
+  debugger: log=debugger.out, gui=true
+  debugger: log=/dev/null              (Unix only)
+  debugger: log=-
 </screen>
+</para>
+<para>
+This defines the parameters of the Bochs internal debugger.
+</para>
+<para><command>log</command></para>
+<para>
 Give the path of the log file you'd like Bochs to log debugger output.
-If you really don't want it, make it '/dev/null', or '-'.
+If you really don't want it, make it /dev/null or '-'.
+</para>
+<para><command>gui</command></para>
+<para>
+If this parameter is set to 'true' or '1' the debugger gui is used instead
+of the command line version. This parameter available only if Bochs is built
+with debugger gui support and the debugger is activated with the command
+line option '-dbg'.
 </para>
 </section>
 
@@ -7729,17 +7742,13 @@ For example:
 </screen>
 </para>
 <para>
-At runtime you need to add the value <option>gui_debug</option> to the
-<link linkend="bochsopt-displaylibrary">display_library</link> options parameter
-in order to use the GUI instead of the command line debugger. This example shows
-how to use it with the 'x' GUI:
-<screen>
-display_library: x, options="gui_debug"
-</screen>
+At runtime you need use the command line option <option>-dbg_gui</option> or the
+command option <option>-dbg</option> in combination with the <option>gui</option>
+parameter of the <option>debugger</option> bochsrc option in order to use the GUI
+instead of the command line debugger.
 </para>
-<note><para>The wxWidgets port of Bochs always uses this debugger GUI. Passing
-the option to the display library is not necessary, since the command line
-interface is not available then.
+<note><para>The wxWidgets port of Bochs always uses this debugger GUI, since the
+command line interface is not available then.
 </para></note>
 <section><title>Overview</title>
 <para>
@@ -11688,7 +11697,7 @@ pci: enabled=0
 # no loader
 log: osr5.log
 logprefix: %t-%e-%i%d
-debugger_log: -
+debugger: log=-
 panic: action=ask
 error: action=report
 info: action=report

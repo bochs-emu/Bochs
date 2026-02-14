@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "28 Jan 2026" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "14 Feb 2026" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -853,14 +853,25 @@ Example:
   debug: action=ignore
 
 .TP
-.I "debugger_log:"
-Give the path of the log file you'd like Bochs to log debugger output.
-If you really don't want it, make it '/dev/null', or '-'.
+.I "debugger:"
+This defines the parameters of the Bochs internal debugger.
 
-Example:
-  log: debugger.out
-  log: /dev/null              (unix only)
-  log: -
+log
+
+Give the path of the log file you'd like Bochs to log debugger output.
+If you really don't want it, make it /dev/null or '-'.
+
+gui
+
+If this parameter is set to 'true' or '1' the debugger gui is used instead
+of the command line version. This parameter available only if Bochs is built
+with debugger gui support and the debugger is activated with the command
+line option '-dbg'.
+
+Examples:
+  debugger: log=debugger.out, gui=true
+  debugger: log=/dev/null       (unix only)
+  debugger: log=-
 
 .TP
 .I "com1: \fP, \fIcom2: \fP, \fIcom3: \fPor \fIcom4:"

@@ -796,16 +796,25 @@ debug: action=ignore
 #debug: action=ignore, pci=report # report BX_DEBUG from module 'pci'
 
 #=======================================================================
-# DEBUGGER_LOG:
-# Give the path of the log file you'd like Bochs to log debugger output.
-# If you really don't want it, make it /dev/null or '-'. :^(
+# DEBUGGER:
+# This defines the parameters of the Bochs internal debugger:
 #
-# Examples:
-#   debugger_log: ./debugger.out
+#  LOG:
+#  Give the path of the log file you'd like Bochs to log debugger output.
+#  If you really don't want it, make it /dev/null or '-'. :^(
+#
+#  GUI:
+#  If this parameter is set to 'true' or '1' the debugger gui is used instead
+#  of the command line version. This parameter available only if Bochs is built
+#  with debugger gui support and the debugger is activated with the command
+#  line option '-dbg'.
+#
+# Example:
+#   debugger: log=./debugger.out, gui=true
 #=======================================================================
-#debugger_log: /dev/null
-#debugger_log: debugger.out
-debugger_log: -
+#debugger: log=/dev/null
+#debugger: log=debugger.out
+debugger: log=-
 
 #=======================================================================
 # COM1, COM2, COM3, COM4:
