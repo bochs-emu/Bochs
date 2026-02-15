@@ -805,9 +805,10 @@ debug: action=ignore
 #
 #  GUI:
 #  If this parameter is set to 'true' or '1' the debugger gui is used instead
-#  of the command line version. This parameter available only if Bochs is built
-#  with debugger gui support and the debugger is activated with the command
-#  line option '-dbg'.
+#  of the command line version. The special value 'globalini' enables the gui
+#  and forces the usage of an ini file from BXSHARE path. The gui parameter is
+#  available only if Bochs is built with debugger gui support and the debugger
+#  is activated with the command line option '-dbg'.
 #
 # Example:
 #   debugger: log=./debugger.out, gui=true

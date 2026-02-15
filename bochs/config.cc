@@ -3192,6 +3192,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
           bx_dbg.debugger_gui = false;
         } else if (params[i][4] == '1' || !strcmp(&params[i][4], "true")) {
           bx_dbg.debugger_gui = true;
+        } else if (!strcmp(&params[i][4], "globalini")) {
+          bx_dbg.debugger_gui = true;
+          bx_dbg.dbg_gui_globalini = true;
         }
 #else
         PARSE_WARN(("%s: Bochs debugger gui not available", context));
@@ -3463,8 +3466,16 @@ int bx_write_debugger_options(FILE *fp)
 {
 #if BX_DEBUGGER
   char str[40];
-  fprintf(fp, "debugger: log=%s, gui=%s\n", SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr(),
-          bx_dbg.debugger_gui ? "true":"false");
+  fprintf(fp, "debugger: log=%s, gui=", SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr());
+  if (bx_dbg.debugger_gui) {
+    if (bx_dbg.dbg_gui_globalini) {
+      fprintf(fp, "globalini\n");
+    } else {
+      fprintf(fp, "true\n");
+    }
+  } else {
+    fprintf(fp, "false\n");
+  }
   bx_dbg_get_magic_bp_str_from_mask(bx_dbg.magic_break, str);
   fprintf(fp, "magic_break: enabled=%d%s\n", bx_dbg.magic_break != 0, str);
   // TODO: debug symbols

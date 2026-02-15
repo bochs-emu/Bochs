@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "14 Feb 2026" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "15 Feb 2026" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -864,9 +864,10 @@ If you really don't want it, make it /dev/null or '-'.
 gui
 
 If this parameter is set to 'true' or '1' the debugger gui is used instead
-of the command line version. This parameter available only if Bochs is built
-with debugger gui support and the debugger is activated with the command
-line option '-dbg'.
+of the command line version. The special value 'globalini' enables the gui
+and forces the usage of an ini file from BXSHARE path. The gui parameter is
+available only if Bochs is built with debugger gui support and the debugger
+is activated with the command line option '-dbg'.
 
 Examples:
   debugger: log=debugger.out, gui=true
