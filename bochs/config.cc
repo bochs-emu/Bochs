@@ -3467,13 +3467,17 @@ int bx_write_debugger_options(FILE *fp)
 #if BX_DEBUGGER
   char str[40];
   fprintf(fp, "debugger: log=%s, gui=", SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr());
+#if BX_DEBUGGER_GUI
   if (bx_dbg.debugger_gui) {
     if (bx_dbg.dbg_gui_globalini) {
       fprintf(fp, "globalini\n");
     } else {
       fprintf(fp, "true\n");
     }
-  } else {
+  }
+  else
+#endif
+  {
     fprintf(fp, "false\n");
   }
   bx_dbg_get_magic_bp_str_from_mask(bx_dbg.magic_break, str);
