@@ -88,9 +88,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UIRET(bxInstruction_c *i)
 
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
-  Bit64u new_rip      = stack_read_qword(RSP + 8);
-  Bit32u new_eflags   = (Bit32u) stack_read_qword(RSP + 16);
-  Bit64u new_rsp      = stack_read_qword(RSP + 24);
+  Bit64u new_rip      = stack_read_qword(RSP);
+  Bit32u new_eflags   = (Bit32u) stack_read_qword(RSP + 8);
+  Bit64u new_rsp      = stack_read_qword(RSP + 16);
 
   if (!IsCanonical(new_rip)) {
     BX_ERROR(("UIRET #GP(0): return RIP is not canonical"));
