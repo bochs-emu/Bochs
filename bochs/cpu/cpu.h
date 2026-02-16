@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -4443,7 +4443,7 @@ public: // for now...
   BX_SMF void CLUI(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void TESTUI(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void UIRET(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void SENDUIPI_Gq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SENDUIPI_Eq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
   BX_SMF void RDPID_Ed(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

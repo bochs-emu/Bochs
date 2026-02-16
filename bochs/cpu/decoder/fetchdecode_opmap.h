@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2017-2025 Stanislav Shwartsman
+//   Copyright (c) 2017-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -2862,7 +2862,7 @@ static const Bit64u BxOpcodeTable0FC7[] = {
   form_opcode(ATTR_OS64 | ATTR_MODC0 | ATTR_NNN7 | ATTR_NO_SSE_PREFIX_F2_F3, BX_IA_RDSEED_Eq),
 #endif
 #if BX_SUPPORT_X86_64 && BX_SUPPORT_UINTR
-  form_opcode(ATTR_IS64 | ATTR_MODC0 | ATTR_NNN6 | ATTR_SSE_PREFIX_F3, BX_IA_SENDUIPI_Gq),
+  form_opcode(ATTR_IS64 | ATTR_MODC0 | ATTR_NNN6 | ATTR_SSE_PREFIX_F3, BX_IA_SENDUIPI_Eq),
 #endif
   form_opcode(ATTR_NNN7 | ATTR_MODC0 | ATTR_SSE_PREFIX_F3, BX_IA_RDPID_Ed),
   form_opcode_lockable(ATTR_OS16_32 | ATTR_NNN1 | ATTR_MOD_MEM, BX_IA_CMPXCHG8B),

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2023 Stanislav Shwartsman
+//   Copyright (c) 2023-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -165,7 +165,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TESTUI(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SENDUIPI_Gq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SENDUIPI_Eq(bxInstruction_c *i)
 {
   if (! BX_CPU_THIS_PTR cr4.get_UINTR()) {
     BX_ERROR(("%s: UINTR in not enabled in CR4", i->getIaOpcodeNameShort()));
