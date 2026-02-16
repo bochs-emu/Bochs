@@ -1628,7 +1628,7 @@ void bx_init_options()
       0);
 
 #if BX_SUPPORT_IODEBUG
-// iodebug all rings
+  // iodebug all rings
   new bx_param_bool_c(misc,
       "iodebug_all_rings",
       "Enable iodebug ports for all rings",
@@ -1636,6 +1636,7 @@ void bx_init_options()
       0);
 #endif
 
+#if BX_GDBSTUB
   // GDB stub
   menu = new bx_list_c(misc, "gdbstub", "GDB Stub Options");
   menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
@@ -1671,6 +1672,7 @@ void bx_init_options()
     0, BX_MAX_BIT32U,
     0);
   enabled->set_dependent_list(menu->clone());
+#endif
 
 #if BX_PLUGINS
   // user-defined options subtree
@@ -1705,7 +1707,7 @@ void bx_init_options()
       "-", BX_PATHNAME_LEN);
   path->set_ask_format("Enter debugger log filename: [%s] ");
   path->set_extension("log");
-  path->set_enabled(BX_DEBUGGER);
+  path->set_enabled(0); // eanbled by -dbg command line option
 
   // runtime options
   menu = new bx_list_c(special_menus, "runtime", "Runtime options");
