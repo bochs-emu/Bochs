@@ -177,7 +177,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SENDUIPI_Gq(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  Bit64u index = BX_READ_64BIT_REG(i->src());
+  Bit64u index = BX_READ_64BIT_REG(i->dst());
   if (index > BX_CPU_THIS_PTR uintr.uitt_size) {
     BX_ERROR(("SENDUIPI: value of the source operand exceeds UITT.SIZE"));
     exception(BX_GP_EXCEPTION, 0);
