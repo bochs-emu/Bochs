@@ -69,6 +69,7 @@ struct gf_texture
   Bit32u pal_ofs;
   Bit32u control3;
   Bit32u key_color;
+  float offset_matrix[4];
 };
 
 struct gf_channel
@@ -317,6 +318,8 @@ struct gf_channel
   Bit32u d3d_combiner_color_ocw[8];
   Bit32u d3d_combiner_control;
   Bit32u d3d_combiner_control_num_stages;
+  Bit32u d3d_tex_shader_op[4];
+  Bit32u d3d_tex_shader_previous[4];
   Bit32u d3d_transform_execution_mode;
   Bit32u d3d_transform_program_load;
   Bit32u d3d_transform_program_start;
@@ -531,7 +534,7 @@ private:
   BX_GEFORCE_SMF void d3d_sample_texture(gf_channel* ch,
     gf_texture* tex, float coords_in[3], float color[4]);
   BX_GEFORCE_SMF void d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[16][4]);
-  BX_GEFORCE_SMF void d3d_register_combiners(gf_channel* ch, float ps_in[16][4], float out[4]);
+  BX_GEFORCE_SMF void d3d_register_combiners(gf_channel* ch, float regs[16][4], float out[4]);
   BX_GEFORCE_SMF void d3d_pixel_shader(gf_channel* ch, float in[16][4], float tmp_regs16[64][4], float tmp_regs32[64][4]);
   BX_GEFORCE_SMF void d3d_normal_to_view(gf_channel* ch, float n[3], float nt[3]);
   BX_GEFORCE_SMF void d3d_triangle(gf_channel* ch, Bit32u base);

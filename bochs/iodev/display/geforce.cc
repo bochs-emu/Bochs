@@ -4067,22 +4067,8 @@ float rc_get_var(Bit32u cw, Bit32u shift, float regs[16][4], Bit32u civ)
   }
 }
 
-void bx_geforce_c::d3d_register_combiners(gf_channel* ch, float ps_in[16][4], float out[4])
+void bx_geforce_c::d3d_register_combiners(gf_channel* ch, float regs[16][4], float out[4])
 {
-  float regs[16][4];
-  for (Bit32u ci = 0; ci < 4; ci++) {
-    regs[0][ci] = 0.0f;
-    regs[3][ci] = 1.0f;
-    regs[4][ci] = ps_in[1][ci];
-    regs[5][ci] = ps_in[2][ci];
-  }
-  regs[0xe][3] = 0.0f;
-  regs[0xf][3] = 0.0f;
-  for (Bit32u t = 0; t < ch->d3d_tex_coord_count; t++) {
-    gf_texture* tex = &ch->d3d_texture[t];
-    if (tex->enabled)
-      d3d_sample_texture(ch, tex, ps_in[4 + t], regs[8 + t]);
-  }
   for (Bit32u s = 0; s < ch->d3d_combiner_control_num_stages; s++) {
     Bit32u icws[2] = {
       ch->d3d_combiner_color_icw[s],
@@ -4310,20 +4296,14 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
           for (int comp_index = 0; comp_index < 4; comp_index++)
             op_result[comp_index] = floor(params[0][comp_index]);
           break;
-        case 0x17: { // TEX
-          Bit32u tex_unit = (dst_word >> 17) & 0xf;
-          gf_texture* tex = &ch->d3d_texture[tex_unit];
-          d3d_sample_texture(ch, tex, params[0], op_result);
-          if (((dst_word >> 21) & 1) != 0)
-            for (int comp_index = 0; comp_index < 4; comp_index++)
-              op_result[comp_index] = op_result[comp_index] * 2.0f - 1.0f;
-          break;
-        }
         case 0x18: { // TXP
           float winv = 1.0f / params[0][3];
           params[0][0] *= winv;
           params[0][1] *= winv;
           params[0][2] *= winv;
+          // fallthrough
+        }
+        case 0x17: { // TEX
           Bit32u tex_unit = (dst_word >> 17) & 0xf;
           gf_texture* tex = &ch->d3d_texture[tex_unit];
           d3d_sample_texture(ch, tex, params[0], op_result);
@@ -4376,6 +4356,10 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
             op_result[comp_index] = dp2a;
           break;
         }
+        case 0x34: // TXPBEM
+          params[0][0] /= params[0][3];
+          params[0][1] /= params[0][3];
+          // fallthrough
         case 0x33: { // TEXBEM
           float coords[3];
           coords[0] = params[0][0] + params[1][0] * params[2][0] + params[1][1] * params[2][1];
@@ -5009,13 +4993,65 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
       float tmp_regs32[64][4];
       for (int comp_index = 0; comp_index < 4; comp_index++)
         tmp_regs16[0][comp_index] = ps_in[1][comp_index];
-      if (ch->d3d_combiner_control_num_stages != 0) {
-        d3d_register_combiners(ch, ps_in, tmp_regs16[0]);
-      } else if (ch->d3d_shader_obj != 0) {
+      bool ps_enable = ch->d3d_shader_obj != 0;
+      bool rc_enable = ch->d3d_combiner_control_num_stages != 0;
+      float rc_regs[16][4];
+      if (ps_enable) {
         ps_in[0][0] = xy[0] - ch->d3d_window_offset_x;
         ps_in[0][1] = ch->d3d_viewport_height - (xy[1] - ch->d3d_window_offset_y);
         ps_in[0][2] = 0.0f;
-        d3d_pixel_shader(ch, ps_in, tmp_regs16, tmp_regs32);
+        if (rc_enable)
+          d3d_pixel_shader(ch, ps_in, &rc_regs[8], tmp_regs32);
+        else
+          d3d_pixel_shader(ch, ps_in, tmp_regs16, tmp_regs32);
+      }
+      if (rc_enable) {
+        for (Bit32u ci = 0; ci < 4; ci++) {
+          rc_regs[0][ci] = 0.0f;
+          rc_regs[3][ci] = 1.0f;
+          rc_regs[4][ci] = ps_in[1][ci];
+          rc_regs[5][ci] = ps_in[2][ci];
+        }
+        rc_regs[0xe][3] = 0.0f;
+        rc_regs[0xf][3] = 0.0f;
+        if (!ps_enable) {
+          for (Bit32u t = 0; t < ch->d3d_tex_coord_count; t++) {
+            switch (ch->d3d_tex_shader_op[t]) {
+              case 0x00:   // NONE
+                break;
+              case 0x01:   // PROJECT2D
+              case 0x03: { // CUBEMAP
+                gf_texture* tex = &ch->d3d_texture[t];
+                d3d_sample_texture(ch, tex, ps_in[4 + t], rc_regs[8 + t]);
+                break;
+              }
+              case 0x06: { // BUMPENVMAP
+                float* in_coords = ps_in[4 + t];
+                float* prev_color = rc_regs[8 + ch->d3d_tex_shader_previous[t]];
+                float coords[3];
+                gf_texture* tex = &ch->d3d_texture[t];
+                coords[0] = in_coords[0] / in_coords[3] +
+                  tex->offset_matrix[0] * prev_color[2] +
+                  tex->offset_matrix[3] * prev_color[1];
+                coords[1] = in_coords[1] / in_coords[3] +
+                  tex->offset_matrix[1] * prev_color[2] +
+                  tex->offset_matrix[2] * prev_color[1];
+                coords[2] = 0.0f;
+                d3d_sample_texture(ch, tex, coords, rc_regs[8 + t]);
+                break;
+              }
+              default: {   // not implemented
+                float* color = rc_regs[8 + t];
+                color[0] = 0.0f;
+                color[1] = 0.5f;
+                color[2] = 0.5f;
+                color[3] = 1.0f;
+                break;
+              }
+            }
+          }
+        }
+        d3d_register_combiners(ch, rc_regs, tmp_regs16[0]);
       }
       float a = BX_MIN(BX_MAX(tmp_regs16[0][3], 0.0f), 1.0f);
       if (ch->d3d_alpha_test_enable) {
@@ -6529,6 +6565,8 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
         tex->enabled = param >> 31;
       else
         tex->enabled = (param >> 30) & 1;
+      if (cls == 0x0096)
+        ch->d3d_tex_shader_op[texture_index] = tex->enabled ? 0x01 : 0x00;
     } else if ((texture_method == 3 && cls == 0x0096) ||
                (texture_method == 4 && cls != 0x0096)) {
       tex->control1 = param;
@@ -6552,6 +6590,8 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
                (texture_method == 8 && cls == 0x0097)) {
       tex->pal_dma_obj = (param & 1) == 1 ? ch->d3d_b_obj : ch->d3d_a_obj;
       tex->pal_ofs = param & 0xffffffc0;
+    } else if (texture_method >= 10 && texture_method <= 13 && cls == 0x0097) {
+      tex->offset_matrix[texture_method - 10] = u.param_float;
     }
   } else if (method == 0x75b)
     ch->d3d_semaphore_offset = param;
@@ -6576,6 +6616,12 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
              (method == 0x23f && cls == 0x0497)) {
     ch->d3d_combiner_control = param;
     ch->d3d_combiner_control_num_stages = param & 0xf;
+  } else if (method == 0x79c && cls == 0x0097) {
+    for (Bit32u i = 0; i < 4; i++)
+      ch->d3d_tex_shader_op[i] = (param >> (i * 5)) & 0x1f;
+  } else if (method == 0x79e && cls == 0x0097) {
+    ch->d3d_tex_shader_previous[2] = (param >> 16) & 3;
+    ch->d3d_tex_shader_previous[3] = (param >> 20) & 3;
   } else if (method == 0x7a5) {
     ch->d3d_transform_execution_mode = param;
   } else if (method == 0x7a7) {
