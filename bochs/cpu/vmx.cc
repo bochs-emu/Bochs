@@ -1774,7 +1774,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
      }
 
-     if (guest.sregs[BX_SEG_REG_SS].cache.dpl == 0 && ! guest.sregs[BX_SEG_REG_SS].cache.u.segment.l) {
+     if (guest.sregs[BX_SEG_REG_SS].cache.dpl == 0 && ! guest.sregs[BX_SEG_REG_CS].cache.u.segment.l) {
        BX_ERROR(("VMENTER FAIL: VMCS guest SS.L indicates CPL0 compatibility mode while CR4.FRED=1"));
        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
      }
