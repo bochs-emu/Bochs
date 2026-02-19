@@ -2011,6 +2011,27 @@ AC_ARG_ENABLE(voodoo,
     AC_DEFINE(BX_SUPPORT_VOODOO, 0)
     ]
   )
+
+AC_MSG_CHECKING(for ATI Rage 128 PRO emulation)
+AC_ARG_ENABLE(rage128,
+  AS_HELP_STRING([--enable-rage128], [enable ATI Rage 128 PRO emulation (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    if test "$pci" != "1"; then
+      AC_MSG_ERROR([ATI Rage 128 PRO emulation requires PCI support])
+    fi
+    AC_DEFINE(BX_SUPPORT_RAGE128, 1)
+    DISPLAY_OBJS="$DISPLAY_OBJS rage128.o"
+    DISPLAY_DLL_TARGETS="$DISPLAY_DLL_TARGETS bx_rage128.dll"
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_RAGE128, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_RAGE128, 0)
+    ]
+  )
 AC_SUBST(DISPLAY_OBJS)
 AC_SUBST(DISPLAY_EXTRA_OBJS)
 AC_SUBST(DISPLAY_DLL_TARGETS)
