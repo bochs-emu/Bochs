@@ -290,7 +290,7 @@ void BX_CPU_C::send_uipi(Bit32u notification_destination, Bit32u notification_ve
   //    ICR[64:32] = the APIC_ID from NDST[15:8] (legacy apic mode) or NDST[31:0] (x2apic mode)
   //    ICR[31:8] = 0 (indicating a physically addressed fixed-mode IPI)
 #if BX_SUPPORT_APIC
-  BX_CPU_THIS_PTR lapic->send_ipi(x2apic_mode() ? notification_destination : (notification_destination >> 8), notification_vector);
+  BX_CPU_THIS_PTR lapic->write_x2apic(BX_LAPIC_ICR_LO, x2apic_mode() ? notification_destination : (notification_destination >> 8), notification_vector);
 #endif
 }
 
