@@ -1360,6 +1360,8 @@ bool bx_local_apic_c::write_x2apic(unsigned index, Bit32u val32_hi, Bit32u val32
     return true;
   case BX_LAPIC_ICR_LO:
     // handle full 64-bit write
+    icr_lo = val32_lo;
+    icr_hi = val32_hi;
     send_ipi(val32_hi, val32_lo);
     return true;
   case BX_LAPIC_TPR:
