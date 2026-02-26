@@ -298,6 +298,8 @@ bool apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bool trig_m
 
 BX_CPP_INLINE bool is_x2apic_msr_range(Bit32u index) { return index >= 0x800 && index <= 0x8FF; }
 
+BX_CPP_INLINE Bit32u x2apic_msr_to_apic_register_index(Bit32u msr) { return (msr - 0x800) << 4; }
+
 #endif // if BX_SUPPORT_APIC
 
 #endif

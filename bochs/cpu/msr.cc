@@ -242,7 +242,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
   if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
     if (is_x2apic_msr_range(index)) {
       if (x2apic_mode())
-        return BX_CPU_THIS_PTR lapic->read_x2apic(index, msr);
+        return BX_CPU_THIS_PTR lapic->read_x2apic(x2apic_msr_to_apic_register_index(index), msr);
       else
         return false;
     }
@@ -842,7 +842,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
   if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
     if (is_x2apic_msr_range(index)) {
       if (x2apic_mode())
-        return BX_CPU_THIS_PTR lapic->write_x2apic(index, val32_hi, val32_lo);
+        return BX_CPU_THIS_PTR lapic->write_x2apic(x2apic_msr_to_apic_register_index(index), val32_hi, val32_lo);
       else
         return false;
     }

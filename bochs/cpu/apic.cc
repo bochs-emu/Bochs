@@ -1237,8 +1237,6 @@ void bx_local_apic_c::mwaitx_timer_expired(void *this_ptr)
 // return false when x2apic is not supported/not readable
 bool bx_local_apic_c::read_x2apic(unsigned index, Bit64u *val_64)
 {
-  index = (index - 0x800) << 4;
-
   switch(index) {
   // return full 32-bit lapic id
   case BX_LAPIC_ID:
@@ -1311,8 +1309,6 @@ bool bx_local_apic_c::read_x2apic(unsigned index, Bit64u *val_64)
 // return false when x2apic is not supported/not writeable
 bool bx_local_apic_c::write_x2apic(unsigned index, Bit32u val32_hi, Bit32u val32_lo)
 {
-  index = (index - 0x800) << 4;
-
   if (index != BX_LAPIC_ICR_LO) {
     // upper 32-bit are reserved for all x2apic MSRs except for the ICR
     if (val32_hi != 0)
