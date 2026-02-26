@@ -534,7 +534,7 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
       break;
     case BX_LAPIC_ICR_LO: // interrupt command reg 0-31
       icr_lo = value & ~(1<<12);  // force delivery status bit = 0(idle)
-      send_ipi((icr_hi >> 24) & 0xff, icr_lo);
+      send_ipi(icr_hi, icr_lo);
       break;
     case BX_LAPIC_ICR_HI: // interrupt command reg 31-63
       icr_hi = value & 0xff000000;
@@ -661,6 +661,9 @@ void bx_local_apic_c::send_ipi(apic_dest_t dest, Bit32u lo_cmd)
   int delivery_mode = (lo_cmd >> 8) & 7;
   int vector = (lo_cmd & 0xff);
   bool accepted = false;
+
+  if (mode == BX_APIC_XAPIC_MODE)
+    dest = (dest >> 24) & 0xff;
 
   if(delivery_mode == APIC_DM_INIT)
   {
