@@ -1622,7 +1622,8 @@ bx_define_opcode(BX_IA_EVEX_VMINMAXPH_VphHphWphIb_Kmask, "vminmaxph", "vminmaxph
 bx_define_opcode(BX_IA_EVEX_VMINMAXSH_VshHphWshIb_Kmask, "vminmaxsh", "vminmaxsh", &BX_CPU_C::LOAD_MASK_Ww, &BX_CPU_C::VMINMAXSH_MASK_VshHphWshIbR, BX_ISA_AVX10_2, OP_Vsh, OP_Hph, OP_mVsh, OP_NONE, BX_PREPARE_EVEX_NO_BROADCAST | BX_EVEX_VL_IGNORE)
 bx_define_opcode(BX_IA_EVEX_VMINMAXBF16_VphHphWphIb_Kmask, "vminmaxbf16", "vminmaxbf16", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorW, &BX_CPU_C::VMINMAXBF16_MASK_VphHphWphIbR, BX_ISA_AVX10_2, OP_Vph, OP_Hph, OP_mVph, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
 
-bx_define_opcode(BX_IA_EVEX_VCVT2PS2PHX_VphHpsWps_Kmask, "vcvt2ps2phx", "vcvt2ps2phx", &BX_CPU_C::LOAD_BROADCAST_VectorD, &BX_CPU_C::VCVT2PS2PHX_MASK_VphHpsWpsR, BX_ISA_AVX10_2, OP_Vph, OP_Hps, OP_mVps, OP_NONE, BX_PREPARE_EVEX) // no fault suppression
+bx_define_opcode(BX_IA_EVEX_VCVT2PS2PHX_VphHpsWps, "vcvt2ps2phx", "vcvt2ps2phx", &BX_CPU_C::LOAD_BROADCAST_VectorD, &BX_CPU_C::VCVT2PS2PHX_MASK_VphHpsWpsR, BX_ISA_AVX10_2, OP_Vph, OP_Hps, OP_mVps, OP_NONE, BX_PREPARE_EVEX)
+bx_define_opcode(BX_IA_EVEX_VCVT2PS2PHX_VphHpsWps_Kmask, "vcvt2ps2phx", "vcvt2ps2phx", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VCVT2PS2PHX_MASK_VphHpsWpsR, BX_ISA_AVX10_2, OP_Vph, OP_Hps, OP_mVps, OP_NONE, BX_PREPARE_EVEX)
 
 bx_define_opcode(BX_IA_EVEX_VCVTTPS2QQS_VdqWps, "vcvttps2qqs", "vcvttps2qqs", &BX_CPU_C::LOAD_BROADCAST_Half_VectorD, &BX_CPU_C::VCVTTPS2QQS_VdqWpsR, BX_ISA_AVX10_2, OP_Vqq, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
 bx_define_opcode(BX_IA_EVEX_VCVTTPS2QQS_VdqWps_Kmask, "vcvttps2qqs", "vcvttps2qqs", &BX_CPU_C::LOAD_BROADCAST_MASK_Half_VectorD, &BX_CPU_C::VCVTTPS2QQS_MASK_VdqWpsR, BX_ISA_AVX10_2, OP_Vqq, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX)
