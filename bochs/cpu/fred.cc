@@ -106,8 +106,11 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   Bit64u new_SSP = 0;
   if (ShadowStackEnabled(0)) {
     if (CPL == 3 || new_CSL > old_CSL) {
-      BX_ASSERT(new_CSL != 0);
-      new_SSP = BX_CPU_THIS_PTR msr.ia32_fred_ssp[new_CSL];
+      // FRED transitions use IA32_PL0_SSP MSR as IA32_FRED_SSP0
+      if (new_CSL == 0)
+        new_SSP = BX_CPU_THIS_PTR msr.ia32_pl_ssp[0];
+      else
+        new_SSP = BX_CPU_THIS_PTR msr.ia32_fred_ssp[new_CSL];
       if (new_SSP & 0x4) {
         BX_ERROR(("FRED Event Delivery: Shadow Stack not 8-byte aligned !"));
         exception(BX_GP_EXCEPTION, 0);
