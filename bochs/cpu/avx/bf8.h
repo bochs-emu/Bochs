@@ -54,12 +54,11 @@ BX_CPP_INLINE float16 convert_bf8_to_fp16(float_bf8 op)
 // Infinity is preserved for the non-saturated versions. NaN at input is propagated as QNaN.
 // If the result is infinity or too big to be represented, then for the saturated version, E5M2_MAX is returned,
 // for the non-saturated versions, infinity is returned.
-// The UE (underflow) flag is set when the result is both denormal and inexact.
 
 // DAZ is not obeyed and always assumed DAZ==0. FTZ is not obeyed and always assumed FTZ==0.
 // All MXCSR mask bits DM, IM, OM, PM, UM are implicitly set.
 
-BX_CPP_INLINE float_bf8 convert_truncate_fp16_to_bf8_bias(float16 a, Bit8u bias, bool saturate_overflow, struct softfloat_status_t *status)
+BX_CPP_INLINE float_bf8 convert_truncate_fp16_to_bf8_bias(float16 a, Bit8u bias, bool saturate_overflow)
 {
   int signA   = signF16UI(a);
   Bit8s expA  = expF16UI(a);
@@ -78,12 +77,8 @@ BX_CPP_INLINE float_bf8 convert_truncate_fp16_to_bf8_bias(float16 a, Bit8u bias,
       return z;
     }
 
-    softfloat_raiseFlags(status, softfloat_flag_invalid);
     return (a >> 8) | 0x02; // make it QNaN
   }
-
-  if (! expA && sigA)
-    softfloat_raiseFlags(status, softfloat_flag_denormal);
 
   // normal, zero or denormal number, convert applying round-to-nearest-even
   Bit16u rounding_bias = (Bit16u) bias;
@@ -94,18 +89,13 @@ BX_CPP_INLINE float_bf8 convert_truncate_fp16_to_bf8_bias(float16 a, Bit8u bias,
   }
   else {
     z = (Bit8u) roundA;
-    if ((roundA<<8) != a) {
-      softfloat_raiseFlags(status, softfloat_flag_inexact);
-      if (bf8_is_denormal(z))
-        softfloat_raiseFlags(status, softfloat_flag_underflow);
-    }
   }
 
   return z;
 }
 
 // convert half precision floating point number (fp16) to E5M2 BF8 number
-BX_CPP_INLINE float_bf8 convert_ne_fp16_to_bf8(float16 a, bool saturate_overflow, struct softfloat_status_t *status)
+BX_CPP_INLINE float_bf8 convert_ne_fp16_to_bf8(float16 a, bool saturate_overflow)
 {
   // BF8 matching FP16 format but mantissa is 8-bit shorter
   // so conversion of FP16 to BF8 require to round FP16 mantissa to its bit 8
@@ -128,7 +118,7 @@ BX_CPP_INLINE float_bf8 convert_ne_fp16_to_bf8(float16 a, bool saturate_overflow
   // Sticky bits: 0x7F
   // Value of Guard bit: ((a >> 8) & 0x1)          Increment value: 0x7F + bit(a[8])
 
-  return convert_truncate_fp16_to_bf8_bias(a, 0x007F + ((a >> 8) & 0x1), saturate_overflow, status);
+  return convert_truncate_fp16_to_bf8_bias(a, 0x007F + ((a >> 8) & 0x1), saturate_overflow);
 }
 
 #endif
