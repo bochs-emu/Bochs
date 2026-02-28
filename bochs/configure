@@ -1095,6 +1095,7 @@ enable_raw_serial
 enable_clgd54xx
 enable_geforce
 enable_voodoo
+enable_rage128
 enable_cdrom
 enable_cdaudio
 enable_sb16
@@ -1843,6 +1844,7 @@ Optional Features:
   --enable-clgd54xx       enable CLGD54XX emulation (no)
   --enable-geforce        enable experimental GeForce emulation (no)
   --enable-voodoo         enable 3dfx Voodoo Graphics emulation (no)
+  --enable-rage128           enable ATI Rage 128 PRO emulation (no)
   --enable-cdrom          lowlevel CDROM support (yes)
   --enable-cdaudio        lowlevel CD AUDIO support (no)
   --enable-sb16           Sound Blaster 16 Support (no)
@@ -25762,6 +25764,39 @@ else case e in #(
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
     printf "%s\n" "#define BX_SUPPORT_VOODOO 0" >>confdefs.h
+
+
+   ;;
+esac
+fi
+
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for ATI Rage 128 PRO emulation" >&5
+printf %s "checking for ATI Rage 128 PRO emulation... " >&6; }
+# Check whether --enable-rage128 was given.
+if test ${enable_rage128+y}
+then :
+  enableval=$enable_rage128; if test "$enableval" = yes; then
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+    if test "$pci" != "1"; then
+      as_fn_error $? "ATI Rage 128 PRO emulation requires PCI support" "$LINENO" 5
+    fi
+    printf "%s\n" "#define BX_SUPPORT_RAGE128 1" >>confdefs.h
+
+    DISPLAY_OBJS="$DISPLAY_OBJS rage128.o"
+    DISPLAY_DLL_TARGETS="$DISPLAY_DLL_TARGETS bx_rage128.dll"
+   else
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+    printf "%s\n" "#define BX_SUPPORT_RAGE128 0" >>confdefs.h
+
+   fi
+else case e in #(
+  e)
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+    printf "%s\n" "#define BX_SUPPORT_RAGE128 0" >>confdefs.h
 
 
    ;;
