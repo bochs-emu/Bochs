@@ -1073,7 +1073,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 
        case BX_EVENT_OTHER: { /* MTF or FRED */
 #if BX_SUPPORT_FRED
-         unsigned fred_guest = VMread_natural(VMCS_GUEST_CR4) & BX_CR4_FRED_MASK;
+         bool fred_guest = (VMread_natural(VMCS_GUEST_CR4) & BX_CR4_FRED_MASK) != 0;
          if (fred_guest) {
            if (vector > 1) {
              BX_ERROR(("VMFAIL: VMENTRY FRED SYSCALL/SYSENTER event injection with vector=%d", vector));
