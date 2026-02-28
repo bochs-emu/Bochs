@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -759,7 +759,7 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
       break;
 #if BX_SUPPORT_FRED
     case BX_EVENT_OTHER:
-      BX_ASSERT(vector < 2);
+      BX_ASSERT(vector <= 2);
       break;
 #endif
 

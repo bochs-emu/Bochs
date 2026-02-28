@@ -1075,14 +1075,22 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
 #if BX_SUPPORT_FRED
          bool fred_guest = (VMread_natural(VMCS_GUEST_CR4) & BX_CR4_FRED_MASK) != 0;
          if (fred_guest) {
-           if (vector > 1) {
+           if (vector > 2) {
              BX_ERROR(("VMFAIL: VMENTRY FRED SYSCALL/SYSENTER event injection with vector=%d", vector));
              return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
            }
-           // FRED SYSCALL/SYSENTER injection
-           if (vm->vmentry_instr_length > 15) {
-             BX_ERROR(("VMFAIL: VMENTRY FRED bad SYSCALL/SYSENTER injected event instr length=%d", vm->vmentry_instr_length));
-             return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+           if (vector != 0) {
+             // FRED SYSCALL/SYSENTER injection -> check instruction length field
+             if (vm->vmentry_instr_length > 15) {
+               BX_ERROR(("VMFAIL: VMENTRY FRED bad SYSCALL/SYSENTER injected event vector=%d instr length=%d", vector, vm->vmentry_instr_length));
+               return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+             }
+           }
+           else { // vector == 0
+             if (! BX_SUPPORT_VMX_EXTENSION(BX_VMX_MONITOR_TRAP_FLAG)) {
+               BX_ERROR(("VMFAIL: VMENTRY MTF injection when MTF is not supported"));
+               return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
+             }
            }
            break;
          }
@@ -2450,14 +2458,18 @@ void BX_CPU_C::VMenterInjectEvents(void)
       break;
 
     case BX_EVENT_OTHER:
-#if BX_SUPPORT_FRED
-      if (BX_CPU_THIS_PTR cr4.get_FRED()) break;
-#endif
-      if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_MONITOR_TRAP_FLAG)) {
-        BX_ASSERT(vector == 0);
+      if (vector == 0) {
+        BX_ASSERT(BX_SUPPORT_VMX_EXTENSION(BX_VMX_MONITOR_TRAP_FLAG));
         signal_event(BX_EVENT_VMX_MONITOR_TRAP_FLAG);
         return;
       }
+#if BX_SUPPORT_FRED
+      if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+        BX_ASSERT(vector <= 2);
+        is_INT = true; // increment RIP with vmentry_instr_length
+        break;
+      }
+#endif
 
     default:
       BX_PANIC(("VMENTER: unsupported event injection type %d !", type));

@@ -5930,7 +5930,8 @@ enum {
 
 #if BX_SUPPORT_FRED
 enum {
-  BX_EVENT_SYSCALL = 1,       // used on FRED event with event type BX_EVENT_OTHER
+  BX_EVENT_MONITOR_TRAP_FLAG = 0,   // vector == 0 indicates injected MTF
+  BX_EVENT_SYSCALL = 1,             // used on FRED event with event type BX_EVENT_OTHER
   BX_EVENT_SYSENTER = 2
 };
 #endif
