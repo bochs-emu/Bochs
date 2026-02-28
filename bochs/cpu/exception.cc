@@ -757,6 +757,11 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
     case BX_NMI:
     case BX_HARDWARE_EXCEPTION:
       break;
+#if BX_SUPPORT_FRED
+    case BX_EVENT_OTHER:
+      BX_ASSERT(vector < 2);
+      break;
+#endif
 
     default:
       BX_PANIC(("interrupt(): unknown exception type %d", type));
