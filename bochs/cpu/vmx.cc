@@ -2423,13 +2423,6 @@ void BX_CPU_C::VMenterInjectEvents(void)
   unsigned push_error = vm->vmentry_interr_info & (1 << 11);
   unsigned error_code = push_error ? vm->vmentry_excep_err_code : 0;
 
-  if (type == BX_EVENT_OTHER) {
-    if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_MONITOR_TRAP_FLAG)) {
-      signal_event(BX_EVENT_VMX_MONITOR_TRAP_FLAG);
-      return;
-    }
-  }
-
   bool is_INT = false;
   switch(type) {
     case BX_EXTERNAL_INTERRUPT:
@@ -2455,6 +2448,16 @@ void BX_CPU_C::VMenterInjectEvents(void)
     case BX_SOFTWARE_EXCEPTION:
       is_INT = true;
       break;
+
+    case BX_EVENT_OTHER:
+#if BX_SUPPORT_FRED
+      if (BX_CPU_THIS_PTR cr4.get_FRED()) break;
+#endif
+      if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_MONITOR_TRAP_FLAG)) {
+        BX_ASSERT(vector == 0);
+        signal_event(BX_EVENT_VMX_MONITOR_TRAP_FLAG);
+        return;
+      }
 
     default:
       BX_PANIC(("VMENTER: unsupported event injection type %d !", type));
