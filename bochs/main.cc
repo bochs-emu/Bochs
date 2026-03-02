@@ -260,7 +260,7 @@ void print_tree(bx_param_c *node, int level, bool xml)
         break;
       }
     case BXT_PARAM_DATA:
-      dbg_printf("'binary data size=%d'", ((bx_shadow_data_c*)node)->get_size());
+      dbg_printf("'binary data size=" FMT_LL "u'", ((bx_shadow_data_c*)node)->get_size());
       break;
     default:
       dbg_printf("(unknown parameter type)");
