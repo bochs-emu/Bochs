@@ -1,6 +1,6 @@
 Changes after 3.0:
 
-  This CHANGES file updated with commits merged till 24 Jan 2026, please refer to git log for more recent updates
+  This CHANGES file updated with commits merged till 3 Mar 2026, please refer to git log for more recent updates
 
 Detailed change log :
 
@@ -13,15 +13,21 @@ Detailed change log :
   - CPU: implemented IA32_APERF (0xe7) and IA32_MPERF (0xe8) MSRs
   - CPU: implemented Flexible Return and Delivery (FRED) architecture emulation
   - Added new BX_INSTR_CPUID instrumentation callback, see instrumentation.txt doc for description
-  - Bugfixes for CPU emulation correctness
+  - Bugfixes for CPU emulation correctness (critical bugfixes for UINTR, CET, SVM emulation)
 
 - Bochs Debugger
   - Added new command line option "-dbg_gui" to start Bochs debugger with gui.
     The dbg_gui option also supports "-dbg_gui:globalini" extension to use ini file from BXSHARE path for GUI debugger.
-    Old "gui_debug" bochsrc option is deprecated and should not used anymore.
+    Old "gui_debug" bochsrc option is deprecated and support for it was removed.
   - New 'step over' button in Bochs debugger GUI to execute an instruction stepping over subroutines
   - New 'rla' command added to Bochs debugger
     Usage: rla <addr> - continue until reaching the linear address <addr>
+  - Added new .bochsrc option 'debugger' to set parameters for the Bochs debugger.
+    - Parameter 'log' replaces the 'debugger_log' option
+    - Parameter 'gui' is a replacement for the removed 'gui_debug' option
+      Now the debugger gui can be activated either with '-dbg_gui' command line option
+      or with '-dbg' in combination with this parameter set to 'true'
+    - Parameter 'gui' also accepts the value 'globalini' to enable the gui and to force the usage of a global ini file from BXSHARE path
   - Fix FPU/MMX state display in GUI debugger
   - Speed up Bochs emulation with debugger enabled by ~10%
 
@@ -164,6 +170,10 @@ Detailed change log :
       resolution is out of bounds. Set up display buffer as usual instead.
 
 - BIOS
+  - ACPI BIOS: Added temporary solution for ACPI with HPET disabled.
+    Create AML code with and without HPET entry and copy one of it depending on HPET presence.
+    This fixes "unknown device" in not HPET aware guest OS.
+  - Enable PCI command register bit MAE while copying PCI ROM
   - ACPI fixes for the i440BX chipset
   - Fixed some not working hotkeys
   - PCI BIOS now sets expansion ROM space to R/W during POST
