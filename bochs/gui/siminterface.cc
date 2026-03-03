@@ -1280,6 +1280,61 @@ static int bx_restore_getline(FILE *fp, char *line, int maxlen)
   return (ret != NULL) ? len : 0;
 }
 
+static bool bx_shadow_data_read(FILE *fp, Bit8u *dst, Bit64u data_size, const char *path)
+{
+  // Read in chunks so very large blobs don't rely on a single huge stdio call.
+  const size_t chunk_size = 16 * 1024 * 1024;
+  // On 32-bit hosts, size_t may be smaller than the serialized blob size.
+  // Reject early instead of truncating pointer math/casts below.
+  const Bit64u max_size_t = (Bit64u)(~((size_t)0));
+
+  if (data_size > max_size_t) {
+    BX_ERROR(("restore_bochs_param(): data size " FMT_LL "u in '%s' exceeds host addressable range", data_size, path));
+    return false;
+  }
+
+  Bit64u pos = 0;
+  while (pos < data_size) {
+    size_t count = (size_t)(data_size - pos);
+    if (count > chunk_size) count = chunk_size;
+    // State files are expected to contain at least data_size bytes.
+    if (fread(dst + (size_t)pos, 1, count, fp) != count) {
+      BX_ERROR(("restore_bochs_param(): short read in '%s' at offset " FMT_LL "u", path, pos));
+      return false;
+    }
+    pos += count;
+  }
+
+  return true;
+}
+
+static bool bx_shadow_data_write(FILE *fp, const Bit8u *src, Bit64u data_size, const char *path)
+{
+  // Write in chunks to keep behavior deterministic for multi-GB state files.
+  const size_t chunk_size = 16 * 1024 * 1024;
+  // Keep pointer offset casts safe on all targets (especially 32-bit builds).
+  const Bit64u max_size_t = (Bit64u)(~((size_t)0));
+
+  if (data_size > max_size_t) {
+    BX_ERROR(("save_sr_param(): data size " FMT_LL "u in '%s' exceeds host addressable range", data_size, path));
+    return false;
+  }
+
+  Bit64u pos = 0;
+  while (pos < data_size) {
+    size_t count = (size_t)(data_size - pos);
+    if (count > chunk_size) count = chunk_size;
+    // Partial writes would corrupt the checkpoint image.
+    if (fwrite(src + (size_t)pos, 1, count, fp) != count) {
+      BX_ERROR(("save_sr_param(): short write in '%s' at offset " FMT_LL "u", path, pos));
+      return false;
+    }
+    pos += count;
+  }
+
+  return true;
+}
+
 bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, const char *restore_name)
 {
   char devstate[BX_PATHNAME_LEN], devdata[BX_PATHNAME_LEN];
@@ -1340,7 +1395,10 @@ bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, co
                       sprintf(devdata, "%s/%s", sr_path, ptr);
                       fp2 = fopen(devdata, "rb");
                       if (fp2 != NULL) {
-                        fread(dparam->getptr(), 1, dparam->get_size(), fp2);
+                        if (!bx_shadow_data_read(fp2, dparam->getptr(), dparam->get_size(), devdata)) {
+                          fclose(fp2);
+                          return 0;
+                        }
                         fclose(fp2);
                       }
                     } else if (!strcmp(ptr, "[")) {
@@ -1457,22 +1515,28 @@ bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
             strcpy(tmpstr, pname);
           fp2 = fopen(tmpstr, "wb");
           if (fp2 != NULL) {
-            fwrite(dparam->getptr(), 1, dparam->get_size(), fp2);
+            if (!bx_shadow_data_write(fp2, dparam->getptr(), dparam->get_size(), tmpstr)) {
+              fclose(fp2);
+              return 0;
+            }
             fclose(fp2);
           }
         } else {
           fprintf(fp, "[\n");
-          for (i=0; i < (int)dparam->get_size(); i++) {
-            if ((i % 16) == 0) {
+          // Text-format dumps are rare, but keep indexing 64-bit for consistency
+          // with large binary parameters.
+          Bit64u data_size = dparam->get_size();
+          for (Bit64u idx=0; idx < data_size; idx++) {
+            if ((idx % 16) == 0) {
               for (j=0; j<(level+1); j++)
                 fprintf(fp, "  ");
             } else {
               fprintf(fp, ", ");
             }
-            fprintf(fp, "0x%02x", dparam->get(i));
-            if (i == (int)(dparam->get_size() - 1)) {
+            fprintf(fp, "0x%02x", dparam->get(idx));
+            if (idx == (data_size - 1)) {
               fprintf(fp, "\n");
-            } else if ((i % 16) == 15) {
+            } else if ((idx % 16) == 15) {
               fprintf(fp, ",\n");
             }
           }

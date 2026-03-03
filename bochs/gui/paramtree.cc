@@ -1110,7 +1110,7 @@ void bx_param_filename_c::set_initial_val(const char *buf)
 bx_shadow_data_c::bx_shadow_data_c(bx_param_c *parent,
     const char *name,
     Bit8u *ptr_to_data,
-    Bit32u data_size,
+    Bit64u data_size,
     bool is_text)
   : bx_param_c(SIM->gen_param_id(), name, "")
 {
@@ -1125,7 +1125,7 @@ bx_shadow_data_c::bx_shadow_data_c(bx_param_c *parent,
   }
 }
 
-Bit8u bx_shadow_data_c::get(Bit32u index)
+Bit8u bx_shadow_data_c::get(Bit64u index)
 {
   if (index < data_size) {
     return data_ptr[index];
@@ -1134,7 +1134,7 @@ Bit8u bx_shadow_data_c::get(Bit32u index)
   }
 }
 
-void bx_shadow_data_c::set(Bit32u index, Bit8u value)
+void bx_shadow_data_c::set(Bit64u index, Bit8u value)
 {
   if (index < data_size) {
     data_ptr[index] = value;

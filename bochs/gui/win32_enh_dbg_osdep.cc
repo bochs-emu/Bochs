@@ -1881,7 +1881,7 @@ void MakeBL(HTREEITEM *h_P, bx_param_c *p)
             sprintf(tmpcb + j,": %s", tmpstr);
             break;
         case BXT_PARAM_DATA:
-            sprintf (tmpcb + j,": binary data, size=%d",((bx_shadow_data_c*)p)->get_size());
+            sprintf (tmpcb + j,": binary data, size=" FMT_LL "u",((bx_shadow_data_c*)p)->get_size());
             break;
     }
     MakeTreeChild (h_P, i, &h_new);
