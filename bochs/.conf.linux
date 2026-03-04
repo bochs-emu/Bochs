@@ -43,6 +43,7 @@ case $which_config in
                 --enable-pci \
                 --enable-clgd54xx \
                 --enable-geforce \
+                --enable-nvriva \
                 --enable-voodoo \
                 --enable-usb \
                 --enable-usb-ohci \
@@ -76,6 +77,7 @@ case $which_config in
                 --enable-pci \
                 --enable-clgd54xx \
                 --enable-geforce \
+                --enable-nvriva \
                 --enable-voodoo \
                 --enable-usb \
                 --enable-usb-ohci \
