@@ -710,14 +710,20 @@ void BX_CPU_C::prefetch(void)
   else {
     BX_CPU_THIS_PTR eipFetchPtr = (const Bit8u*) getHostMemAddr(BX_CPU_THIS_PTR pAddrFetchPage, BX_EXECUTE);
 
-    // Sanity checks
+    // Sanity checks — also handle PCI hole addresses (0xC0000000..0xFFFFFFFF)
+    // which are not backed by RAM and must not be compared directly against
+    // the memory length without first translating through the PCI hole mapping.
     if (! BX_CPU_THIS_PTR eipFetchPtr) {
       bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrFetchPage + pageOffset;
-      if (pAddr >= BX_MEM(0)->get_memory_len()) {
-        BX_PANIC(("prefetch: running in bogus memory, pAddr=0x" FMT_PHY_ADDRX, pAddr));
+      if (bx_is_pci_hole_addr(pAddr)) {
+        BX_PANIC(("prefetch: direct read vetoed for PCI hole address, pAddr=0x" FMT_PHY_ADDRX, pAddr));
+      }
+      bx_phy_address linear_pAddr = bx_translate_gpa_to_linear(pAddr);
+      if (linear_pAddr >= BX_MEM(0)->get_memory_len()) {
+        BX_PANIC(("prefetch: running in bogus memory, pAddr=0x" FMT_PHY_ADDRX " linear=0x" FMT_PHY_ADDRX, pAddr, linear_pAddr));
       }
       else {
-        BX_PANIC(("prefetch: getHostMemAddr vetoed direct read, pAddr=0x" FMT_PHY_ADDRX, pAddr));
+        BX_PANIC(("prefetch: getHostMemAddr vetoed direct read, pAddr=0x" FMT_PHY_ADDRX " linear=0x" FMT_PHY_ADDRX, pAddr, linear_pAddr));
       }
     }
   }

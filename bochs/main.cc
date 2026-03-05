@@ -1349,8 +1349,10 @@ void bx_init_hardware()
     sprintf(pname, "%s.%d", BXPN_OPTRAM_BASE, i+1);
     base = (bx_list_c*) SIM->get_param(pname);
     if (!SIM->get_param_string("file", base)->isempty())
+      // get64() instead of get() — load_RAM takes bx_phy_address which is
+      // 64-bit; get() truncates to Bit32s, losing addresses above 2GB.
       BX_MEM(0)->load_RAM(SIM->get_param_string("file", base)->getptr(),
-                          SIM->get_param_num("address", base)->get());
+                          SIM->get_param_num("address", base)->get64());
   }
 
 #if BX_SUPPORT_SMP == 0

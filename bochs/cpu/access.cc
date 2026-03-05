@@ -29,8 +29,9 @@ bx_address bx_asize_mask[] = {
   0xffff,                         // as16 (asize = '00)
   0xffffffff,                     // as32 (asize = '01)
 #if BX_SUPPORT_X86_64
-  BX_CONST64(0xffffffffffffffff), // as64 (asize = '10)
-  BX_CONST64(0xffffffffffffffff)  // as64 (asize = '11)
+  // Explicit cast prevents MSVC narrowing warnings when bx_address is 64-bit
+  (bx_address) BX_CONST64(0xffffffffffffffff), // as64 (asize = '10)
+  (bx_address) BX_CONST64(0xffffffffffffffff)  // as64 (asize = '11)
 #endif
 };
 

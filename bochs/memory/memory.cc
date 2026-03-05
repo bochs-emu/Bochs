@@ -53,7 +53,8 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
   }
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  BX_MEM_THIS check_monitor(linear_addr, len);
+  // MWAIT monitors physical pages — must use a20addr, not post-PCI-hole linear_addr.
+  BX_MEM_THIS check_monitor(a20addr, len);
 #endif
 
   bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);

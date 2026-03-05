@@ -337,7 +337,7 @@ void bx_local_apic_c::read(bx_phy_address addr, void *data, unsigned len)
   else if (len == 2)
     *((Bit16u *)data) = value & 0xffff;
   else
-    BX_PANIC(("Unsupported APIC read at address 0x" FMT_PHY_ADDRX ", len=%d", addr, len));
+    BX_PANIC(("Unsupported APIC read at address 0x" FMT_PHY_ADDRX ", len=%u", addr, len));
 }
 
 void bx_local_apic_c::write(bx_phy_address addr, void *data, unsigned len)

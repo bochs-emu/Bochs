@@ -109,7 +109,9 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
 
   bxInstruction_c *i = entry->i;
 
-  Bit32u pageOffset = PAGE_OFFSET((Bit32u) pAddr);
+  // Use 64-bit mask instead of PAGE_OFFSET((Bit32u) pAddr) to avoid truncating
+  // physical addresses above 4GB, which caused wrong page offsets for >4GB RAM.
+  Bit32u pageOffset = (Bit32u)(pAddr & (bx_phy_address)0xfff);
   Bit32u traceMask = 0;
 
 #if BX_SUPPORT_SMP == 0
