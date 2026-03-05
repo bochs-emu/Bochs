@@ -382,7 +382,7 @@ void BX_MEM_C::dmaWritePhysicalPage(bx_phy_address addr, unsigned len, Bit8u *da
 
   Bit8u *memptr = getHostMemAddr(NULL, addr, BX_WRITE);
   if (memptr != NULL) {
-    pageWriteStampTable.decWriteStamp(addr);
+    pageWriteStampTable.decWriteStamp(A20ADDR(addr));
     memcpy(memptr, data, len);
   }
   else {

@@ -106,9 +106,9 @@ public:
   // Assumption: write does not split 4K page.
   BX_CPP_INLINE void decWriteStamp(bx_phy_address pAddr, unsigned len)
   {
-     if (len == 0) return;
+    if (len == 0) return;
 
-     Bit32u index = index_of(pAddr);
+    Bit32u index = index_of(pAddr);
 
     if (fineGranularityMapping[index]) {
        bx_phy_address linear_addr = bx_translate_gpa_to_linear(pAddr);
