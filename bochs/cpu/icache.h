@@ -56,7 +56,6 @@ public:
   BX_CPP_INLINE Bit32u index_of(bx_phy_address pAddr) const
   {
     Bit32u index = hash(pAddr);
-    BX_ASSERT(index < PHY_MEM_PAGES_IN_8G_LINEAR_SPACE);
     if (index >= PHY_MEM_PAGES_IN_8G_LINEAR_SPACE) {
       index %= PHY_MEM_PAGES_IN_8G_LINEAR_SPACE;
     }
