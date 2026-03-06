@@ -24,47 +24,75 @@
 #ifndef BX_ICACHE_H
 #define BX_ICACHE_H
 
+// Required for bx_translate_gpa_to_linear() used in hash/index calculations
+#include "memory/memory-bochs.h"
+
 extern void handleSMC(bx_phy_address pAddr, Bit32u mask);
 
 class bxPageWriteStampTable
 {
-  const Bit32u PHY_MEM_PAGES_IN_4G_SPACE;
+  // Expanded from 4G (1M pages) to 8G (2M pages) to cover the full linear
+  // address space after PCI hole subtraction for systems with >4GB guest RAM.
+  const Bit32u PHY_MEM_PAGES_IN_8G_LINEAR_SPACE;
   Bit32u *fineGranularityMapping;
 
 public:
-  bxPageWriteStampTable(): PHY_MEM_PAGES_IN_4G_SPACE(1024*1024) {
-    fineGranularityMapping = new Bit32u[PHY_MEM_PAGES_IN_4G_SPACE];
+  bxPageWriteStampTable(): PHY_MEM_PAGES_IN_8G_LINEAR_SPACE(2 * 1024 * 1024) {
+    fineGranularityMapping = new Bit32u[PHY_MEM_PAGES_IN_8G_LINEAR_SPACE];
     resetWriteStamps();
   }
  ~bxPageWriteStampTable() { delete [] fineGranularityMapping; }
 
+  // Translate guest physical address through PCI hole mapping before hashing.
+  // Without this, addresses above 4GB alias into the wrong page slots because
+  // a raw (Bit32u) cast truncates the upper 32 bits of the physical address.
   BX_CPP_INLINE static Bit32u hash(bx_phy_address pAddr) {
-    // can share writeStamps between multiple pages if >32 bit phy address
-    return ((Bit32u) pAddr) >> 12;
+    bx_phy_address linear_addr = bx_translate_gpa_to_linear(pAddr);
+    return (Bit32u)(linear_addr >> 12);
+  }
+
+  // Bounds-checked index into fineGranularityMapping[]. The modulo fallback
+  // prevents out-of-bounds access in release builds if the assert is disabled.
+  BX_CPP_INLINE Bit32u index_of(bx_phy_address pAddr) const
+  {
+    Bit32u index = hash(pAddr);
+    if (index >= PHY_MEM_PAGES_IN_8G_LINEAR_SPACE) {
+      index %= PHY_MEM_PAGES_IN_8G_LINEAR_SPACE;
+    }
+    return index;
   }
 
   BX_CPP_INLINE Bit32u getFineGranularityMapping(bx_phy_address pAddr) const
   {
-    return fineGranularityMapping[hash(pAddr)];
+    return fineGranularityMapping[index_of(pAddr)];
   }
 
+  // Mark icache occupancy bits for the 128-byte sub-page regions spanned
+  // by [pAddr, pAddr+len). Uses translated linear address for the page offset
+  // to avoid truncating 64-bit physical addresses via PAGE_OFFSET((Bit32u)).
   BX_CPP_INLINE void markICache(bx_phy_address pAddr, unsigned len)
   {
-    Bit32u mask  = 1 << (PAGE_OFFSET((Bit32u) pAddr) >> 7);
-           mask |= 1 << (PAGE_OFFSET((Bit32u) pAddr + len - 1) >> 7);
+    if (len == 0) return;
 
-    fineGranularityMapping[hash(pAddr)] |= mask;
+    bx_phy_address linear_addr = bx_translate_gpa_to_linear(pAddr);
+    Bit32u page_offset_begin = (Bit32u)(linear_addr & (bx_phy_address)0xfff);
+    Bit32u page_offset_end = (Bit32u)((linear_addr + len - 1) & (bx_phy_address)0xfff);
+
+    Bit32u mask  = 1 << (page_offset_begin >> 7);
+           mask |= 1 << (page_offset_end >> 7);
+
+    fineGranularityMapping[index_of(pAddr)] |= mask;
   }
 
   BX_CPP_INLINE void markICacheMask(bx_phy_address pAddr, Bit32u mask)
   {
-    fineGranularityMapping[hash(pAddr)] |= mask;
+    fineGranularityMapping[index_of(pAddr)] |= mask;
   }
 
   // whole page is being altered
   BX_CPP_INLINE void decWriteStamp(bx_phy_address pAddr)
   {
-    Bit32u index = hash(pAddr);
+    Bit32u index = index_of(pAddr);
 
     if (fineGranularityMapping[index]) {
       handleSMC(pAddr, 0xffffffff); // one of the CPUs might be running trace from this page
@@ -72,14 +100,21 @@ public:
     }
   }
 
-  // assumption: write does not split 4K page
+  // Invalidate icache sub-page regions overlapping the write at [pAddr, pAddr+len).
+  // Uses translated linear address for page offset computation (same fix as markICache).
+  // Assumption: write does not split 4K page.
   BX_CPP_INLINE void decWriteStamp(bx_phy_address pAddr, unsigned len)
   {
-    Bit32u index = hash(pAddr);
+    if (len == 0) return;
+
+    Bit32u index = index_of(pAddr);
 
     if (fineGranularityMapping[index]) {
-       Bit32u mask  = 1 << (PAGE_OFFSET((Bit32u) pAddr) >> 7);
-              mask |= 1 << (PAGE_OFFSET((Bit32u) pAddr + len - 1) >> 7);
+       bx_phy_address linear_addr = bx_translate_gpa_to_linear(pAddr);
+       Bit32u page_offset_begin = (Bit32u)(linear_addr & (bx_phy_address)0xfff);
+       Bit32u page_offset_end = (Bit32u)((linear_addr + len - 1) & (bx_phy_address)0xfff);
+       Bit32u mask  = 1 << (page_offset_begin >> 7);
+              mask |= 1 << (page_offset_end >> 7);
 
        if (fineGranularityMapping[index] & mask) {
           // one of the CPUs might be running trace from this page
@@ -94,7 +129,7 @@ public:
 
 BX_CPP_INLINE void bxPageWriteStampTable::resetWriteStamps(void)
 {
-  for (Bit32u i=0; i<PHY_MEM_PAGES_IN_4G_SPACE; i++) {
+  for (Bit32u i=0; i<PHY_MEM_PAGES_IN_8G_LINEAR_SPACE; i++) {
     fineGranularityMapping[i] = 0;
   }
 }

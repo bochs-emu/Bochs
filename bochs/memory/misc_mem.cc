@@ -474,7 +474,10 @@ void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress)
 {
   struct stat stat_buf;
   int fd, ret;
-  unsigned long size, offset;
+  // Use Bit64u for size (not unsigned long) to handle images >4GB on 32-bit hosts.
+  // Use bx_phy_address for gpa to properly handle addresses above 4GB.
+  Bit64u size;
+  bx_phy_address gpa;
 
   if (*path == '\0') {
     BX_PANIC(("RAM: Optional RAM image undefined"));
@@ -497,22 +500,55 @@ void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress)
     return;
   }
 
-  size = (unsigned long)stat_buf.st_size;
+  size = (Bit64u) stat_buf.st_size;
 
-  offset = (unsigned long)ramaddress;
+  // Load page-by-page: translate each GPA through A20 gate and PCI hole
+  // mapping, and clamp reads to page boundaries to handle non-contiguous
+  // physical-to-linear mappings across the PCI hole region.
+  gpa = ramaddress;
   while (size > 0) {
-    ret = read(fd, (bx_ptr_t) BX_MEM_THIS get_vector(offset), size);
-    if (ret <= 0) {
-      BX_PANIC(("RAM: read failed on RAM image: '%s'",path));
+    bx_phy_address a20addr = A20ADDR(gpa);
+
+    if (bx_is_pci_hole_addr(a20addr)) {
+      close(fd);
+      BX_PANIC(("RAM: image target address 0x" FMT_PHY_ADDRX " is in PCI hole", a20addr));
+      return;
     }
-    size -= ret;
-    offset += ret;
+
+    bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
+    if (linear_addr >= BX_MEM_THIS len) {
+      close(fd);
+      BX_PANIC(("RAM: image target address 0x" FMT_PHY_ADDRX " (linear 0x" FMT_PHY_ADDRX ") is beyond RAM", a20addr, linear_addr));
+      return;
+    }
+
+    bx_phy_address remains_in_page = (bx_phy_address)0x1000 - (a20addr & (bx_phy_address)0xfff);
+    bx_phy_address remains_in_ram = BX_MEM_THIS len - linear_addr;
+    Bit64u chunk = size;
+    if (chunk > (Bit64u) remains_in_page) chunk = (Bit64u) remains_in_page;
+    if (chunk > (Bit64u) remains_in_ram) chunk = (Bit64u) remains_in_ram;
+
+    if (chunk == 0) {
+      close(fd);
+      BX_PANIC(("RAM: no writable RAM left while loading image at 0x" FMT_PHY_ADDRX, a20addr));
+      return;
+    }
+
+    ret = read(fd, (bx_ptr_t) BX_MEM_THIS get_vector(linear_addr), (unsigned) chunk);
+    if (ret <= 0) {
+      close(fd);
+      BX_PANIC(("RAM: read failed on RAM image: '%s'",path));
+      return;
+    }
+
+    size -= (Bit64u) ret;
+    gpa = A20ADDR(gpa + (bx_phy_address) ret);
   }
   close(fd);
-  BX_INFO(("ram at 0x%05x/%u ('%s')",
-                        (unsigned) ramaddress,
-                        (unsigned) stat_buf.st_size,
-                         path));
+  BX_INFO(("ram at 0x" FMT_PHY_ADDRX "/" FMT_LL "u ('%s')",
+                        ramaddress,
+                        (Bit64u) stat_buf.st_size,
+                        path));
 }
 
 void BX_MEM_C::reset(void)
@@ -750,7 +786,8 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
   }
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  if (write && BX_MEM_THIS is_monitor(linear_addr & ~((bx_phy_address)(0xfff)), 0xfff)) {
+  // MWAIT monitors physical pages — must use a20addr, not post-PCI-hole linear_addr.
+  if (write && BX_MEM_THIS is_monitor(a20addr & ~((bx_phy_address)(0xfff)), 0xfff)) {
     // Vetoed! Write monitored page !
     return(NULL);
   }

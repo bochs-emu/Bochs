@@ -147,6 +147,7 @@ int  bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base);
 #endif
 
 Bit32u crc32(const Bit8u *buf, int len);
+Bit32u crc32_extend(Bit32u seed_crc, const Bit8u *buf, int len);
 
 // used to print param tree from debugger
 void print_tree(bx_param_c *node, int level = 0, bool xml = false);
