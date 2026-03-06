@@ -143,7 +143,9 @@ void BX_MEMORY_STUB_C::init_memory(Bit64u guest, Bit64u host, Bit32u block_size)
   if (0) {
     // all guest memory is allocated, just map it
     for (unsigned idx = 0; idx < num_blocks; idx++) {
-      BX_MEM_THIS blocks[idx] = BX_MEM_THIS vector + (idx * BX_MEM_THIS block_size);
+      // Cast idx to Bit64u before multiply to prevent 32x32 overflow when
+      // idx * block_size exceeds 4GB (e.g. block 256 * 16MB = 4GB wraps to 0).
+      BX_MEM_THIS blocks[idx] = BX_MEM_THIS vector + (Bit64u(idx) * BX_MEM_THIS block_size);
     }
     BX_MEM_THIS used_blocks = num_blocks;
   }
