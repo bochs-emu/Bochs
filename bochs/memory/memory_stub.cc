@@ -77,16 +77,12 @@ Bit64u BX_MEMORY_STUB_C::get_memory_len(void)
   return (BX_MEM_THIS len);
 }
 
-// Use Bit64u intermediate to prevent silent truncation when len > 4GB,
-// since Bit64u / Bit32u would otherwise implicitly truncate to Bit32u.
 Bit32u BX_MEMORY_STUB_C::get_num_blocks()
 {
-  Bit64u num_blocks64 = BX_MEM_THIS len / BX_MEM_THIS block_size;
+  Bit32u num_blocks = BX_MEM_THIS len / BX_MEM_THIS block_size;
   if ((BX_MEM_THIS len % BX_MEM_THIS block_size) != 0)
-    num_blocks64++;
-
-  BX_ASSERT(num_blocks64 <= 0xffffffffu);
-  return (Bit32u) num_blocks64;
+    num_blocks++;
+  return num_blocks;
 }
 
 Bit8u* BX_MEMORY_STUB_C::alloc_vector_aligned(Bit64u bytes, Bit64u alignment)
