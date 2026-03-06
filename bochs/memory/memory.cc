@@ -42,9 +42,6 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
   Bit8u *data_ptr;
   bx_phy_address a20addr = A20ADDR(addr);
 
-  // Translate guest physical address to linear memory offset (handles PCI hole)
-  bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
-
   struct memory_handler_struct *memory_handler = NULL;
 
   // Note: accesses should always be contained within a single page
@@ -53,7 +50,8 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
   }
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  BX_MEM_THIS check_monitor(linear_addr, len);
+  // MWAIT monitors physical pages - must use a20addr, not post-PCI-hole linear_addr
+  BX_MEM_THIS check_monitor(a20addr, len);
 #endif
 
   bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
@@ -90,7 +88,7 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
 mem_write:
 
   // all memory access fits in single 4K page - use translated linear address
-  if ((linear_addr < BX_MEM_THIS len) && !is_bios) {
+  if ((bx_translate_gpa_to_linear(a20addr) < BX_MEM_THIS len) && !is_bios) {
     // Check if address is in PCI hole - do not access RAM backing store!
     if (bx_is_pci_hole_addr(a20addr)) {
       return;
@@ -189,9 +187,6 @@ void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
   Bit8u *data_ptr;
   bx_phy_address a20addr = A20ADDR(addr);
 
-  // Translate guest physical address to linear memory offset (handles PCI hole)
-  bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
-
   struct memory_handler_struct *memory_handler = NULL;
 
   // Note: accesses should always be contained within a single page
@@ -242,7 +237,7 @@ void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
 mem_read:
 
   // Use translated linear address for bounds check
-  if ((linear_addr < BX_MEM_THIS len) && !is_bios) {
+  if ((bx_translate_gpa_to_linear(a20addr) < BX_MEM_THIS len) && !is_bios) {
     // Check if address is in PCI hole - do not access RAM backing store!
     if (bx_is_pci_hole_addr(a20addr)) {
       memset(data, 0xff, len);
@@ -381,7 +376,8 @@ void BX_MEM_C::dmaWritePhysicalPage(bx_phy_address addr, unsigned len, Bit8u *da
 
   Bit8u *memptr = getHostMemAddr(NULL, addr, BX_WRITE);
   if (memptr != NULL) {
-    pageWriteStampTable.decWriteStamp(addr);
+    bx_phy_address a20addr = A20ADDR(addr);
+    pageWriteStampTable.decWriteStamp(a20addr);
     memcpy(memptr, data, len);
   }
   else {

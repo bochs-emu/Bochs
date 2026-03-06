@@ -348,9 +348,6 @@ Bit8u *BX_MEMORY_STUB_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsi
 {
   bx_phy_address a20addr = A20ADDR(addr);
 
-  // Translate guest physical address to linear memory offset (handles PCI hole)
-  bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
-
   // Never allow direct access in the PCI/MMIO hole. Without a handler this
   // address range must not alias into the RAM backing store.
   if (bx_is_pci_hole_addr(a20addr)) {
@@ -360,11 +357,15 @@ Bit8u *BX_MEMORY_STUB_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsi
   bool write = rw & 1;
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  if (write && BX_MEM_THIS is_monitor(linear_addr & ~((bx_phy_address)(0xfff)), 0xfff)) {
+  // MWAIT monitors physical pages - must use a20addr, not post-PCI-hole linear_addr
+  if (write && BX_MEM_THIS is_monitor(a20addr & ~((bx_phy_address)(0xfff)), 0xfff)) {
     // Vetoed! Write monitored page !
     return(NULL);
   }
 #endif
+
+  // Translate guest physical address to linear memory offset (handles PCI hole)
+  bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
 
   if (! write) {
     if (linear_addr < BX_MEM_THIS len)
@@ -395,7 +396,8 @@ void BX_MEMORY_STUB_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, uns
   }
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  BX_MEM_THIS check_monitor(linear_addr, len);
+  // MWAIT monitors physical pages - must use a20addr, not post-PCI-hole linear_addr.
+  BX_MEM_THIS check_monitor(a20addr, len);
 #endif
 
   // all memory access fits in single 4K page
@@ -407,22 +409,22 @@ void BX_MEMORY_STUB_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, uns
 
     // all of data is within limits of physical memory
     if (len == 8) {
-      pageWriteStampTable.decWriteStamp(linear_addr, 8);
+      pageWriteStampTable.decWriteStamp(a20addr, 8);
       WriteHostQWordToLittleEndian((Bit64u*) BX_MEM_THIS get_vector(linear_addr), *(Bit64u*)data);
       return;
     }
     if (len == 4) {
-      pageWriteStampTable.decWriteStamp(linear_addr, 4);
+      pageWriteStampTable.decWriteStamp(a20addr, 4);
       WriteHostDWordToLittleEndian((Bit32u*) BX_MEM_THIS get_vector(linear_addr), *(Bit32u*)data);
       return;
     }
     if (len == 2) {
-      pageWriteStampTable.decWriteStamp(linear_addr, 2);
+      pageWriteStampTable.decWriteStamp(a20addr, 2);
       WriteHostWordToLittleEndian((Bit16u*) BX_MEM_THIS get_vector(linear_addr), *(Bit16u*)data);
       return;
     }
     if (len == 1) {
-      pageWriteStampTable.decWriteStamp(linear_addr, 1);
+      pageWriteStampTable.decWriteStamp(a20addr, 1);
       * (BX_MEM_THIS get_vector(linear_addr)) = * (Bit8u *) data;
       return;
     }
@@ -437,7 +439,7 @@ void BX_MEMORY_STUB_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, uns
     while(1) {
       // Write in chunks of 8 bytes if we can
       if ((len & 7) == 0) {
-        pageWriteStampTable.decWriteStamp(linear_addr, 8);
+        pageWriteStampTable.decWriteStamp(a20addr, 8);
         WriteHostQWordToLittleEndian((Bit64u*) BX_MEM_THIS get_vector(linear_addr), *(Bit64u*)data_ptr);
         len -= 8;
         linear_addr += 8;
@@ -448,7 +450,7 @@ void BX_MEMORY_STUB_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, uns
 #endif
         if (len == 0) return;
       } else {
-        pageWriteStampTable.decWriteStamp(linear_addr, 1);
+        pageWriteStampTable.decWriteStamp(a20addr, 1);
         *(BX_MEM_THIS get_vector(linear_addr)) = *data_ptr;
         if (len == 1) return;
         len--;
@@ -461,7 +463,7 @@ void BX_MEMORY_STUB_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, uns
       }
     }
 
-    pageWriteStampTable.decWriteStamp(linear_addr);
+    pageWriteStampTable.decWriteStamp(a20addr);
 
   } else {
     // access outside limits of physical memory, ignore
