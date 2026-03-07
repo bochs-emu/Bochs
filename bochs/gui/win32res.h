@@ -10,9 +10,10 @@
 #define IDEDITGRP    1160
 #define IDEDITBOX    1170
 #define IDSIMU       1180
-#define IDRESTORE    1190
-#define IDQUIT       1195
-#define LOGOPT_DLG   1200
+#define IDRESTORE    1185
+#define IDQUIT       1190
+#define IDOPTGRP     1195
+#define IDNOPARATXT  1205
 #define IDDEVLIST    1210
 #define IDLOGLBL1    1221
 #define IDLOGLBL2    1222
@@ -26,7 +27,7 @@
 #define IDLOGEVT5    1235
 #define IDADVLOGOPT  1240
 #define IDAPPLY      1250
-#define PLUGIN_CTRL_DLG 1300
+#define IDREVERT     1255
 #define IDPLUGTXT1   1305
 #define IDPLUGLIST1  1310
 #define IDPLUGTXT2   1315
