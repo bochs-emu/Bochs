@@ -2809,7 +2809,7 @@ void bx_geforce_c::m2mf(gf_channel* ch)
 Bit32u swizzle(Bit32u x, Bit32u y, Bit32u width, Bit32u height)
 {
   bool xleft = true;
-  bool yleft = true;
+  bool yleft = height != 1;
   Bit32u xbit = 1;
   Bit32u ybit = 1;
   Bit32u rbit = 1;
@@ -3673,9 +3673,14 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
   }
 }
 
-float dot(float x[3], float y[3])
+float dot3(float x[3], float y[3])
 {
   return x[0] * y[0] + x[1] * y[1] + x[2] * y[2];
+}
+
+float dot4(float x[4], float y[4])
+{
+  return x[0] * y[0] + x[1] * y[1] + x[2] * y[2] + x[3] * y[3];
 }
 
 void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[16][4])
@@ -3810,21 +3815,19 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
         }
         break;
       case 5: { // DP3
-        float dp3 = dot(params[0], params[1]);
+        float dp3 = dot3(params[0], params[1]);
         for (int comp_index = 0; comp_index < 4; comp_index++)
           vec_result[comp_index] = dp3;
         break;
       }
       case 6: { // DPH
-        float dph = dot(params[0], params[1]) + params[1][3];
+        float dph = dot3(params[0], params[1]) + params[1][3];
         for (int comp_index = 0; comp_index < 4; comp_index++)
           vec_result[comp_index] = dph;
         break;
       }
       case 7: { // DP4
-        float dp4 = 0.0f;
-        for (int comp_index = 0; comp_index < 4; comp_index++)
-          dp4 += params[0][comp_index] * params[1][comp_index];
+        float dp4 = dot4(params[0], params[1]);
         for (int comp_index = 0; comp_index < 4; comp_index++)
           vec_result[comp_index] = dp4;
         break;
@@ -4152,9 +4155,14 @@ void bx_geforce_c::d3d_register_combiners(gf_channel* ch, float regs[16][4], flo
   }
 }
 
+float length(float v[3])
+{
+  return sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+}
+
 void normalize(float in[3], float out[3])
 {
-  float scale = 1.0f / sqrt(in[0] * in[0] + in[1] * in[1] + in[2] * in[2]);
+  float scale = 1.0f / length(in);
   out[0] = in[0] * scale;
   out[1] = in[1] * scale;
   out[2] = in[2] * scale;
@@ -4251,19 +4259,25 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
           }
           break;
         case 5: { // DP3
-          float dp3 = dot(params[0], params[1]);
+          float dp3 = dot3(params[0], params[1]);
           for (int comp_index = 0; comp_index < 4; comp_index++)
             op_result[comp_index] = dp3;
           break;
         }
         case 6: { // DP4
-          float dp4 = 0.0f;
-          for (int comp_index = 0; comp_index < 4; comp_index++)
-            dp4 += params[0][comp_index] * params[1][comp_index];
+          float dp4 = dot4(params[0], params[1]);
           for (int comp_index = 0; comp_index < 4; comp_index++)
             op_result[comp_index] = dp4;
           break;
         }
+        case 8:   // MIN
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = BX_MIN(params[0][comp_index], params[1][comp_index]);
+          break;
+        case 9:   // MAX
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = BX_MAX(params[0][comp_index], params[1][comp_index]);
+          break;
         case 0xa: // SLT
           for (int comp_index = 0; comp_index < 4; comp_index++)
             op_result[comp_index] = params[0][comp_index] < params[1][comp_index] ? 1.0f : 0.0f;
@@ -4544,6 +4558,23 @@ bool compare(Bit32u func, Bit32u val1, Bit32u val2)
   }
 }
 
+void bx_geforce_c::d3d_position_to_view3(gf_channel* ch, float p[3], float pt[3])
+{
+  float* m = ch->d3d_model_view_matrix[0];
+  pt[0] = p[0] * m[0]  + p[1] * m[1]  + p[2] * m[2]  + p[3] * m[3];
+  pt[1] = p[0] * m[4]  + p[1] * m[5]  + p[2] * m[6]  + p[3] * m[7];
+  pt[2] = p[0] * m[8]  + p[1] * m[9]  + p[2] * m[10] + p[3] * m[11];
+}
+
+void bx_geforce_c::d3d_position_to_view4(gf_channel* ch, float p[4], float pt[4])
+{
+  float* m = ch->d3d_model_view_matrix[0];
+  pt[0] = p[0] * m[0]  + p[1] * m[1]  + p[2] * m[2]  + p[3] * m[3];
+  pt[1] = p[0] * m[4]  + p[1] * m[5]  + p[2] * m[6]  + p[3] * m[7];
+  pt[2] = p[0] * m[8]  + p[1] * m[9]  + p[2] * m[10] + p[3] * m[11];
+  pt[3] = p[0] * m[12] + p[1] * m[13] + p[2] * m[14] + p[3] * m[15];
+}
+
 void bx_geforce_c::d3d_normal_to_view(gf_channel* ch, float n[3], float nt[3])
 {
   float* m = ch->d3d_inverse_model_view_matrix;
@@ -4585,14 +4616,14 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
         for (int light_index = 0; light_index < 8; light_index++) {
           Bit32u light_type = (ch->d3d_light_enable_mask >> (light_index * 2)) & 3;
           if (light_type == 1) {
-            float n_dot_l = dot(nt, ch->d3d_light_inf_direction[light_index]);
+            float n_dot_l = dot3(nt, ch->d3d_light_inf_direction[light_index]);
             if (n_dot_l < 0.0f)
               n_dot_l = 0.0f;
             for (int ci = 0; ci < 3; ci++) {
               color[0][ci] += ch->d3d_light_ambient_color[light_index][ci] +
                 ch->d3d_light_diffuse_color[light_index][ci] * n_dot_l;
             }
-            float n_dot_hv = dot(nt, ch->d3d_light_inf_half_vector[light_index]);
+            float n_dot_hv = dot3(nt, ch->d3d_light_inf_half_vector[light_index]);
             if (n_dot_hv < 0.0f)
               n_dot_hv = 0.0f;
             if (n_dot_hv != 0.0f) {
@@ -4627,28 +4658,29 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
                 ch->d3d_attrib_in_tex_coord[i]][comp_index];
               break;
             case 0x2400: { // EYE_LINEAR
-              float* r = &ch->d3d_model_view_matrix[0][comp_index * 4];
-              tc[comp_index] = p[0] * r[0] + p[1] * r[1] + p[2] * r[2] + p[3] * r[3];
+              float pt[4];
+              d3d_position_to_view4(ch, p, pt);
+              tc[comp_index] = dot4(ch->d3d_texgen_plane[i][comp_index], pt);
               break;
             }
+            case 0x2401:   // OBJECT_LINEAR
+              tc[comp_index] = dot4(ch->d3d_texgen_plane[i][comp_index], p);
+              break;
             case 0x2402:   // SPHERE_MAP
             case 0x8512: { // REFLECTION_MAP
               float nt[3];
               float* n = ch->d3d_vertex_data[(v + base) & 3][ch->d3d_attrib_in_normal];
               d3d_normal_to_view(ch, n, nt);
               float pt[3];
-              float* mv = ch->d3d_model_view_matrix[0];
-              pt[0] = p[0] * mv[0]  + p[1] * mv[1]  + p[2] * mv[2]  + p[3] * mv[3];
-              pt[1] = p[0] * mv[4]  + p[1] * mv[5]  + p[2] * mv[6]  + p[3] * mv[7];
-              pt[2] = p[0] * mv[8]  + p[1] * mv[9]  + p[2] * mv[10] + p[3] * mv[11];
+              d3d_position_to_view3(ch, p, pt);
               float u[3];
               normalize(pt, u);
               float r[3];
-              float ntu = nt[0] * u[0] + nt[1] * u[1] + nt[2] * u[2];
+              float ntu = dot3(nt, u);
               r[0] = u[0] - 2 * nt[0] * ntu;
               r[1] = u[1] - 2 * nt[1] * ntu;
               r[2] = u[2] - 2 * nt[2] * ntu;
-              if (texgen == 0x2402) {
+              if (texgen == 0x2402) { // SPHERE_MAP
                 float m = 2 * sqrt(r[0] * r[0] + r[1] * r[1] + (r[2] + 1.0f) * (r[2] + 1.0f));
                 if (comp_index < 2)
                   tc[comp_index] = r[comp_index] / m + 0.5f;
@@ -4666,7 +4698,7 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
               if (comp_index < 3) {
                 float* n = ch->d3d_vertex_data[(v + base) & 3][ch->d3d_attrib_in_normal];
                 float* r = &ch->d3d_inverse_model_view_matrix[comp_index * 4];
-                tc[comp_index] = n[0] * r[0] + n[1] * r[1] + n[2] * r[2];
+                tc[comp_index] = dot3(n, r);
               } else
                 tc[comp_index] = 0.0f;
               break;
@@ -4686,6 +4718,32 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
           for (int comp_index = 0; comp_index < 4; comp_index++)
             tc[comp_index] = ttc[comp_index];
         }
+      }
+      if (ch->d3d_fog_enable) {
+        float fog_dist;
+        switch (ch->d3d_fog_gen_mode) {
+          case 0:   // SPEC_ALPHA
+            fog_dist = ch->d3d_vertex_data[(v + base) & 3][ch->d3d_attrib_in_color[1]][3];
+            break;
+          case 1: { // RADIAL
+            float pt[3];
+            d3d_position_to_view3(ch, p, pt);
+            fog_dist = length(pt);
+            break;
+          }
+          case 2:   // PLANAR
+          case 3: { // ABS_PLANAR
+            float* m = ch->d3d_model_view_matrix[0];
+            fog_dist = p[0] * m[8] + p[1] * m[9] + p[2] * m[10] + p[3] * m[11];
+            if (ch->d3d_fog_gen_mode == 3) // ABS_PLANAR
+              fog_dist = fabs(fog_dist);
+            break;
+          }
+          default:  // not implemented
+            fog_dist = 3.0f;
+            break;
+        }
+        vs_out[v][ch->d3d_attrib_out_fogc][0] = fog_dist;
       }
       if (ch->d3d_view_matrix_enable == 0 ||
           ch->d3d_view_matrix_enable == 2 ||
@@ -4844,8 +4902,12 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
     interpolate[a] = result;
   }
   float ps_in[16][4];
-  for (int comp_index = 0; comp_index < 4; comp_index++)
-    ps_in[3][comp_index] = 1.0f; // fog is not implemented
+  float rc_regs[16][4];
+  float fog_factor = 1.0f;
+  ps_in[3][1] = fog_factor;
+  rc_regs[3][3] = fog_factor;
+  for (Bit32u ci = 0; ci < 3; ci++)
+    rc_regs[3][ci] = ch->d3d_fog_color[ci];
   for (Bit32u i = 0; i < 2; i++)
     if (!interpolate[ch->d3d_attrib_out_color[i]])
       for (int comp_index = 0; comp_index < 4; comp_index++)
@@ -4995,7 +5057,49 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
         tmp_regs16[0][comp_index] = ps_in[1][comp_index];
       bool ps_enable = ch->d3d_shader_obj != 0;
       bool rc_enable = ch->d3d_combiner_control_num_stages != 0;
-      float rc_regs[16][4];
+      if (ch->d3d_fog_enable) {
+        float fog_dist =
+          v0[ch->d3d_attrib_out_fogc][0] * b0 +
+          v1[ch->d3d_attrib_out_fogc][0] * b1 +
+          v2[ch->d3d_attrib_out_fogc][0] * b2;
+        switch (ch->d3d_fog_mode) {
+          case 0x2601: // LINEAR
+            fog_factor = ch->d3d_fog_params[1] *
+              fog_dist + ch->d3d_fog_params[0] - 1.0f;
+            break;
+          case 0x804:  // LINEAR_ABS
+            fog_factor = ch->d3d_fog_params[1] *
+              fabs(fog_dist) + ch->d3d_fog_params[0] - 1.0f;
+            break;
+          case 0x800:  // EXP
+            fog_factor = exp2(16.0f * (ch->d3d_fog_params[1] *
+              fog_dist + ch->d3d_fog_params[0] - 1.5f));
+            break;
+          case 0x802:  // EXP_ABS
+            fog_factor = exp2(16.0f * (ch->d3d_fog_params[1] *
+              fabs(fog_dist) + ch->d3d_fog_params[0] - 1.5f));
+            break;
+          case 0x801:  // EXP2
+            fog_factor = exp(-pow(4.709f * (ch->d3d_fog_params[1] *
+              fog_dist + ch->d3d_fog_params[0] - 1.5f), 2.0f));
+            break;
+          case 0x803:  // EXP2_ABS
+            fog_factor = exp(-pow(4.709f * (ch->d3d_fog_params[1] *
+              fabs(fog_dist) + ch->d3d_fog_params[0] - 1.5f), 2.0f));
+            break;
+          default:     // not implemented
+            fog_factor = 0.5f;
+            break;
+        }
+        if (fog_factor < 0.0f)
+          fog_factor = 0.0f;
+        if (fog_factor > 1.0f)
+          fog_factor = 1.0f;
+        if (ps_enable)
+          ps_in[3][1] = fog_factor;
+        if (rc_enable)
+          rc_regs[3][3] = fog_factor;
+      }
       if (ps_enable) {
         ps_in[0][0] = xy[0] - ch->d3d_window_offset_x;
         ps_in[0][1] = ch->d3d_viewport_height - (xy[1] - ch->d3d_window_offset_y);
@@ -5008,7 +5112,6 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
       if (rc_enable) {
         for (Bit32u ci = 0; ci < 4; ci++) {
           rc_regs[0][ci] = 0.0f;
-          rc_regs[3][ci] = 1.0f;
           rc_regs[4][ci] = ps_in[1][ci];
           rc_regs[5][ci] = ps_in[2][ci];
         }
@@ -5899,6 +6002,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     }
     ch->d3d_attrib_out_color[0] = 3;
     ch->d3d_attrib_out_color[1] = 4;
+    ch->d3d_attrib_out_fogc = 5;
     for (int j = 0; j < 32; j++)
       ch->d3d_attrib_out_enable[j] = true;
     for (int j = 0; j < 16; j++) {
@@ -6004,6 +6108,24 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
              (method >= 0x23d && method <= 0x23e && cls == 0x0497)) {
     Bit32u i = method - (cls <= 0x0097 ? 0x0a2 : 0x23d);
     ch->d3d_combiner_final[i] = param;
+  } else if ((method == 0x0a7 && cls <= 0x0097) ||
+             (method == 0x233 && cls >= 0x0497)) {
+    ch->d3d_fog_mode = param;
+  } else if ((method == 0x0a8 && cls <= 0x0097) ||
+             (method == 0x232 && cls >= 0x0497)) {
+    ch->d3d_fog_gen_mode = param;
+  } else if ((method >= 0x1a0 && method <= 0x1a2 && cls == 0x0096) ||
+             (method >= 0x270 && method <= 0x272 && cls == 0x0097) ||
+             (method >= 0x234 && method <= 0x236 && cls >= 0x0497)) {
+    Bit32u i = method & 3;
+    ch->d3d_fog_params[i] = u.param_float;
+  } else if ((method == 0x0a9 && cls <= 0x0097) ||
+             (method == 0x0db && cls == 0x0497)) {
+    ch->d3d_fog_enable = param;
+  } else if ((method == 0x0aa && cls <= 0x0097) ||
+             (method == 0x0dc && cls == 0x0497)) {
+    for (Bit32u ci = 0; ci < 4; ci++)
+      ch->d3d_fog_color[ci] = ((param >> (ci * 8)) & 0xff) / 255.0f;
   } else if (method == 0x0ae && cls >= 0x0497) {
     ch->d3d_window_offset_x = (Bit16s)param;
     ch->d3d_window_offset_y = (Bit16s)(param >> 16);
@@ -6147,6 +6269,14 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     Bit32u tex_index = method_offset >> 4;
     Bit32u i = method_offset & 0x00f;
     ch->d3d_texture_matrix[tex_index][i] = u.param_float;
+  } else if ((method >= 0x180 && method <= 0x19f && cls == 0x0096) ||
+             (method >= 0x210 && method <= 0x24f && cls == 0x0097) ||
+             (method >= 0x380 && method <= 0x3ff && cls == 0x0497)) {
+    Bit32u method_offset = method - (cls == 0x0096 ? 0x180 : (cls == 0x0097 ? 0x210 : 0x380));
+    Bit32u tex_index = method_offset >> 4;
+    Bit32u tex_coord = (method_offset >> 2) & 3;
+    Bit32u i = method_offset & 0x003;
+    ch->d3d_texgen_plane[tex_index][tex_coord][i] = u.param_float;
   } else if (method == 0x230 && cls >= 0x0497) {
     ch->d3d_scissor_x = param & 0x0000ffff;
     ch->d3d_scissor_width = param >> 16;
@@ -6319,6 +6449,10 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     ch->d3d_diffuse_color[i] = u.param_float;
     if (i == 2)
       ch->d3d_diffuse_color[3] = 1.0f;
+  } else if ((method == 0x31b && cls == 0x0096) ||
+             (method == 0x55b && cls == 0x0097) ||
+             (method == 0x653 && cls >= 0x0497)) {
+    unpack_attribute(param, false, ch->d3d_diffuse_color);
   } else if ((method >= 0x324 && method <= 0x337 && cls == 0x0096) ||
              (method >= 0x564 && method <= 0x58b && cls == 0x0097)) {
     Bit32u method_offset = method - (cls == 0x0096 ? 0x324 : 0x564);
@@ -6634,6 +6768,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   } else if (method == 0x7f1 && cls > 0x0497) {
     ch->d3d_attrib_out_color[0] = param & 0xf;
     ch->d3d_attrib_out_color[1] = (param >> 4) & 0xf;
+    ch->d3d_attrib_out_fogc = (param >> 24) == 6 ? 5 : 1; // hack
   } else if (method == 0x7f2 && cls > 0x0497) {
     for (Bit32u i = 0; i < 8; i++)
       ch->d3d_attrib_out_tex_coord[i] = (param >> (i * 4)) & 0xf;
@@ -6643,6 +6778,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   } else if (method == 0x7fd && cls > 0x0497) {
     for (Bit32u i = 0; i < 32; i++)
       ch->d3d_attrib_out_enable[i] = (bool)((param >> i) & 1);
+    ch->d3d_fog_enable = ch->d3d_attrib_out_enable[4];
   }
   } // [3] Workaround for "compiler limit: blocks nested too deeply"
 }
