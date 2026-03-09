@@ -214,6 +214,11 @@ struct gf_channel
   Bit32u d3d_depth_bytes;
   Bit32u d3d_surface_pitch_a;
   Bit32u d3d_surface_pitch_z;
+  Bit32u d3d_fog_mode;
+  Bit32u d3d_fog_gen_mode;
+  float d3d_fog_params[3];
+  Bit32u d3d_fog_enable;
+  float d3d_fog_color[4];
   Bit16s d3d_window_offset_x;
   Bit16s d3d_window_offset_y;
   Bit32u d3d_window_clip_x1[8];
@@ -263,6 +268,7 @@ struct gf_channel
   float d3d_inverse_model_view_matrix[12];
   float d3d_composite_matrix[16];
   float d3d_texture_matrix[8][16];
+  float d3d_texgen_plane[8][4][4];
   Bit32u d3d_scissor_x;
   Bit32u d3d_scissor_width;
   Bit32u d3d_scissor_y;
@@ -327,6 +333,7 @@ struct gf_channel
   Bit32u d3d_attrib_in_normal;
   Bit32u d3d_attrib_in_color[2];
   Bit32u d3d_attrib_out_color[2];
+  Bit32u d3d_attrib_out_fogc;
   Bit32u d3d_attrib_in_tex_coord[16];
   Bit32u d3d_attrib_out_tex_coord[16];
   bool d3d_attrib_out_enable[32];
@@ -536,6 +543,8 @@ private:
   BX_GEFORCE_SMF void d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[16][4]);
   BX_GEFORCE_SMF void d3d_register_combiners(gf_channel* ch, float regs[16][4], float out[4]);
   BX_GEFORCE_SMF void d3d_pixel_shader(gf_channel* ch, float in[16][4], float tmp_regs16[64][4], float tmp_regs32[64][4]);
+  BX_GEFORCE_SMF void d3d_position_to_view3(gf_channel* ch, float p[3], float pt[3]);
+  BX_GEFORCE_SMF void d3d_position_to_view4(gf_channel* ch, float p[4], float pt[4]);
   BX_GEFORCE_SMF void d3d_normal_to_view(gf_channel* ch, float n[3], float nt[3]);
   BX_GEFORCE_SMF void d3d_triangle(gf_channel* ch, Bit32u base);
   BX_GEFORCE_SMF void d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v1[16][4], float v2[16][4]);
