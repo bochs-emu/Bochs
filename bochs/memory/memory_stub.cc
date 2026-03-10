@@ -278,15 +278,22 @@ bool BX_MEMORY_STUB_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigne
   bool ret = true;
 
   for (; len>0; len--) {
-    if (a20addr < BX_MEM_THIS len) {
-      *buf = *(BX_MEM_THIS get_vector(a20addr));
+    if (bx_is_pci_hole_addr(a20addr)) {
+      *buf = 0xff;
+      ret = false;
     }
     else {
-      *buf = 0xff;
-      ret = false; // error, beyond limits of memory
+      bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
+      if (linear_addr < BX_MEM_THIS len) {
+        *buf = *(BX_MEM_THIS get_vector(linear_addr));
+      }
+      else {
+        *buf = 0xff;
+        ret = false; // error, beyond limits of memory
+      }
     }
     buf++;
-    a20addr++;
+    a20addr = A20ADDR(a20addr + 1);
   }
 
   return ret;
@@ -296,15 +303,28 @@ bool BX_MEMORY_STUB_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigne
 bool BX_MEMORY_STUB_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf)
 {
   bx_phy_address a20addr = A20ADDR(addr);
+  unsigned remaining = len;
 
-  if ((a20addr + len - 1) > BX_MEM_THIS len) {
-    return false; // error, beyond limits of memory
+  while (remaining > 0) {
+    if (bx_is_pci_hole_addr(a20addr)) {
+      return false;
+    }
+
+    bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
+    if (linear_addr >= BX_MEM_THIS len) {
+      return false; // error, beyond limits of memory
+    }
+
+    a20addr = A20ADDR(a20addr + 1);
+    remaining--;
   }
 
+  a20addr = A20ADDR(addr);
   for (; len>0; len--) {
-    *(BX_MEM_THIS get_vector(a20addr)) = *buf;
+    bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
+    *(BX_MEM_THIS get_vector(linear_addr)) = *buf;
     buf++;
-    a20addr++;
+    a20addr = A20ADDR(a20addr + 1);
   }
   return true;
 }
@@ -315,18 +335,32 @@ bool BX_MEMORY_STUB_C::dbg_crc32(bx_phy_address addr1, bx_phy_address addr2, Bit
   if (addr1 > addr2)
     return false;
 
-  if (addr2 >= BX_MEM_THIS len)
-    return false; // error, specified address past last phy mem addr
+  bx_phy_address remaining = (addr2 - addr1) + 1;
+  if (remaining == 0)
+    return false;
 
-  unsigned len = 1 + addr2 - addr1;
+  bx_phy_address addr = addr1;
 
-  // do not cross 4K boundary
-  while(1) {
-    unsigned remainsInPage = 0x1000 - (addr1 & 0xfff);
-    unsigned access_length = (len < remainsInPage) ? len : remainsInPage;
-    *crc = crc32(BX_MEM_THIS get_vector(addr1), access_length);
-    addr1 += access_length;
-    len -= access_length;
+  while (remaining > 0) {
+    bx_phy_address a20addr = A20ADDR(addr);
+    if (bx_is_pci_hole_addr(a20addr)) {
+      return false;
+    }
+
+    bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
+    if (linear_addr >= BX_MEM_THIS len) {
+      return false;
+    }
+
+    bx_phy_address remainsInPage = (bx_phy_address) 0x1000 - (a20addr & (bx_phy_address) 0xfff);
+    bx_phy_address access_length = (remaining < remainsInPage) ? remaining : remainsInPage;
+    if (access_length > (BX_MEM_THIS len - linear_addr)) {
+      return false;
+    }
+
+    *crc = crc32_extend(*crc, BX_MEM_THIS get_vector(linear_addr), (int) access_length);
+    addr += access_length;
+    remaining -= access_length;
   }
 
   return true;
