@@ -1350,7 +1350,7 @@ void bx_init_hardware()
     base = (bx_list_c*) SIM->get_param(pname);
     if (!SIM->get_param_string("file", base)->isempty())
       BX_MEM(0)->load_RAM(SIM->get_param_string("file", base)->getptr(),
-                          SIM->get_param_num("address", base)->get());
+                          SIM->get_param_num("address", base)->get64());
   }
 
 #if BX_SUPPORT_SMP == 0
