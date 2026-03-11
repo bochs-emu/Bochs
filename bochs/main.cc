@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -735,12 +735,14 @@ int bx_init_main(int argc, char *argv[])
     else if (!strcmp("-debugger", argv[arg]) || !strcmp("-dbg", argv[arg])) {
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
       SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set_enabled(1);
+      SIM->get_param(BXPN_IODEBUG_ALL_RINGS)->set_enabled(1);
       bx_dbg.debugger_active = true;
     }
     else if (!strncmp("-dbg_gui", argv[arg], 8)) {
 #if BX_DEBUGGER_GUI
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
       SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set_enabled(1);
+      SIM->get_param(BXPN_IODEBUG_ALL_RINGS)->set_enabled(1);
       bx_dbg.debugger_active = true;
       bx_dbg.debugger_gui = true;
       if ((strlen(argv[arg]) > 9) && (argv[arg][8] == ':')) {

@@ -1628,12 +1628,14 @@ void bx_init_options()
       0);
 
 #if BX_SUPPORT_IODEBUG
+  bx_list_c *iodebug = new bx_list_c(misc, "iodebug", "I/O interface to debugger");
   // iodebug all rings
-  new bx_param_bool_c(misc,
-      "iodebug_all_rings",
+  new bx_param_bool_c(iodebug,
+      "all_rings",
       "Enable iodebug ports for all rings",
       "I/O Interface to Bochs Debugger plugin for all rings",
       0);
+  SIM->get_param(BXPN_IODEBUG_ALL_RINGS)->set_enabled(0); // eanbled by -dbg command line option
 #endif
 
 #if BX_GDBSTUB

@@ -52,7 +52,7 @@ BEGIN
     GROUPBOX        "Edit Options", IDEDITGRP, 100, 10, 95, 132
     LISTBOX         IDEDITBOX, 105, 20, 85, 130, WS_TABSTOP
     GROUPBOX        "Options", IDOPTGRP, 200, 10, 270, 132
-    LTEXT           "Nothing to configure in this section !", IDNOPARATXT, 260, 70, 120, 14
+    LTEXT           "Select section to configure in list box !", IDNOPARATXT, 260, 70, 120, 14
     LTEXT           "Available", IDPLUGTXT1, 240, 25, 55, 14, NOT WS_VISIBLE
     LISTBOX         IDPLUGLIST1, 215, 35, 85, 100, WS_VSCROLL | WS_TABSTOP | NOT WS_VISIBLE
     LTEXT           "Loaded", IDPLUGTXT2, 400, 25, 55, 14, NOT WS_VISIBLE
