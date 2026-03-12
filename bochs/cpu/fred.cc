@@ -53,6 +53,9 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   // old_SS[63:32] contains FRED event information
   old_SS |= Bit64u(BX_CPU_THIS_PTR fred_event_info) << 32;
 
+  BX_DEBUG(("FRED event delivery type=%d vector=%d augmented CS=%08x:%08x augmented SS=%08x:%08x",
+     type, vector, GET32H(old_CS), GET32L(old_CS), GET32H(old_SS), GET32L(old_SS)));
+
   Bit64u old_RIP = RIP;
   Bit64u new_RIP = BX_CPU_THIS_PTR msr.ia32_fred_cfg & ~BX_CONST64(0xfff);
   if (CPL == 0)
