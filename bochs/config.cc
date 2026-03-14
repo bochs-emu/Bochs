@@ -1716,6 +1716,9 @@ void bx_init_options()
   bx_list_c *cdrom = new bx_list_c(menu, "cdrom", "CD-ROM options");
   cdrom->set_runtime_param(1);
   cdrom->set_options(cdrom->SHOW_PARENT);
+  sound = new bx_list_c(menu, "sound", "Sound options");
+  sound->set_options(cdrom->SHOW_PARENT);
+  sound->set_runtime_param(1);
   // misc runtime options
   misc = new bx_list_c(menu, "misc", "Misc options");
   misc->set_runtime_param(1);

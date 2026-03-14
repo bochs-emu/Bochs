@@ -512,6 +512,7 @@ edit_opts_t start_options[] = {
 edit_opts_t runtime_options[] = {
   {"CD-ROM", BXPN_MENU_RUNTIME_CDROM, false},
   {"USB", BXPN_MENU_RUNTIME_USB, false},
+  {"Sound", BXPN_MENU_RUNTIME_SOUND, false},
   {"Misc", BXPN_MENU_RUNTIME_MISC, false},
   {"Log Options", "#logopts", false},
   {NULL, NULL, false}

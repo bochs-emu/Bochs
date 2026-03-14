@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2026  The Bochs Project
+//  Copyright (C) 2009-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -163,7 +163,7 @@
 #define BXPN_PORT_E9_HACK_ALL_RINGS      "misc.port_e9_hack.all_rings"
 #define BXPN_FW_CFG_ROOT                 "misc.fw_cfg"
 #define BXPN_FW_CFG_ENABLED              "misc.fw_cfg.enabled"
-#define BXPN_IODEBUG_ALL_RINGS           "misc.iodebug.all_rings"
+#define BXPN_IODEBUG_ALL_RINGS           "misc.iodebug_all_rings"
 #define BXPN_GDBSTUB                     "misc.gdbstub"
 #define BXPN_LOG_FILENAME                "log.filename"
 #define BXPN_LOG_PREFIX                  "log.prefix"
@@ -171,6 +171,7 @@
 #define BXPN_MENU_DISK                   "menu.disk"
 #define BXPN_MENU_DISK_WIN32             "menu.disk_win32"
 #define BXPN_MENU_RUNTIME_CDROM          "menu.runtime.cdrom"
+#define BXPN_MENU_RUNTIME_SOUND          "menu.runtime.sound"
 #define BXPN_MENU_RUNTIME_USB            "menu.runtime.usb"
 #define BXPN_MENU_RUNTIME_MISC           "menu.runtime.misc"
 

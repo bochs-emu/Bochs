@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -251,7 +251,7 @@ bx_sb16_c::~bx_sb16_c(void)
     fclose(LOGFILE);
 
   SIM->get_bochs_root()->remove("sb16");
-  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_SOUND);
   misc_rt->remove("sb16");
   BX_DEBUG(("Exit"));
 }
@@ -434,7 +434,7 @@ void bx_sb16_c::init(void)
   MPU.current_timer = 0;
 
   // init runtime parameters
-  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_SOUND);
   bx_list_c *menu = new bx_list_c(misc_rt, "sb16", "SB16 Runtime Options");
   menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
 

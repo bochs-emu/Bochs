@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2003       David N. Welton <davidw@dedasys.com>.
-//  Copyright (C) 2003-2025  The Bochs Project
+//  Copyright (C) 2003-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -150,7 +150,7 @@ PLUGIN_ENTRY_FOR_MODULE(speaker)
     delete theSpeaker;
     SIM->unregister_addon_option("speaker");
 #if BX_SUPPORT_SOUNDLOW
-    bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+    bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_SOUND);
     misc_rt->remove("volume");
 #endif
     ((bx_list_c*)SIM->get_param("sound"))->remove("speaker");
@@ -236,7 +236,7 @@ void bx_speaker_c::init(void)
         beep_callback_id = waveout->register_wave_callback(theSpeaker, beep_callback);
 
         // Runtime option
-        bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+        bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_SOUND);
         bx_param_num_c *volume = SIM->get_param_num("volume", base);
         misc_rt->add(volume);
         volume->set_handler(speaker_param_handler);
