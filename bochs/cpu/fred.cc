@@ -427,6 +427,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
 
     parse_selector(raw_ss_selector, &ss_selector);
     fetch_ss_descriptor(raw_ss_selector, &ss_selector, &ss_descriptor, cs_selector.rpl, BX_GP_EXCEPTION);
+
+    to_long_mode = cs_descriptor.u.segment.l;
   }
 
   if (to_long_mode) {
