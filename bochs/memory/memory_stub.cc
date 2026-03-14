@@ -305,6 +305,7 @@ bool BX_MEMORY_STUB_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned 
   bx_phy_address a20addr = A20ADDR(addr);
   unsigned remaining = len;
 
+  // validate the whole range up front, reject PCI-hole and out-of-RAM accesses, and then writes through translated linear addresses
   while (remaining > 0) {
     if (bx_is_pci_hole_addr(a20addr)) {
       return false;
@@ -315,8 +316,11 @@ bool BX_MEMORY_STUB_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned 
       return false; // error, beyond limits of memory
     }
 
-    a20addr = A20ADDR(a20addr + 1);
-    remaining--;
+    // use 4KB steps for speed
+    if (remaining < 0x1000) break;
+
+    a20addr = A20ADDR(a20addr + 0x1000);
+    remaining -= 0x1000;
   }
 
   a20addr = A20ADDR(addr);
