@@ -912,16 +912,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 
   setup_flat_CS(0, long_mode());
 
-#if BX_SUPPORT_X86_64
-  handleCpuModeChange(); // mode change could happen only when in long_mode()
-#else
-  updateFetchModeMask(/* CS reloaded */);
-#endif
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = 0; // CPL=0
-#endif
-
   parse_selector((BX_CPU_THIS_PTR msr.sysenter_cs_msr + 8) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
@@ -1006,14 +996,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
     EIP = EDX;
   }
 
-#if BX_SUPPORT_X86_64
-  handleCpuModeChange(); // mode change could happen only when in long_mode()
-#else
-  updateFetchModeMask(/* CS reloaded */);
-#endif
-
-  handleAlignmentCheck(/* CPL change */);
-
   parse_selector(((BX_CPU_THIS_PTR msr.sysenter_cs_msr + (i->os64L() ? 40:24)) & BX_SELECTOR_RPL_MASK) | 3,
             &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
@@ -1078,12 +1060,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 
     setup_flat_CS(0, true); // CPL0, long mode
 
-    handleCpuModeChange(); // mode change could only happen when in long_mode()
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-    BX_CPU_THIS_PTR alignment_check_mask = 0; // CPL=0
-#endif
-
     // set up SS segment, flat, 64-bit DPL=0
     parse_selector(((BX_CPU_THIS_PTR msr.star >> 32) + 8) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
@@ -1106,12 +1082,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
     setup_flat_CS(0, false); // CPL0, 32-bit mode
-
-    updateFetchModeMask(/* CS reloaded */);
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-    BX_CPU_THIS_PTR alignment_check_mask = 0; // CPL=0
-#endif
 
     // set up SS segment, flat, 32-bit DPL=0
     parse_selector(((BX_CPU_THIS_PTR msr.star >> 32) + 8) & BX_SELECTOR_RPL_MASK,
@@ -1199,10 +1169,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
       temp_RIP = ECX;
     }
 
-    handleCpuModeChange(); // mode change could only happen when in long64 mode
-
-    handleAlignmentCheck(/* CPL change */);
-
     parse_selector((Bit16u)(((BX_CPU_THIS_PTR msr.star >> 48) + 8) | 3),
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
@@ -1224,10 +1190,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 
     setup_flat_CS(3, false); // CPL3, 32-bit mode
 
-    updateFetchModeMask(/* CS reloaded */);
-
-    handleAlignmentCheck(/* CPL change */);
-
     parse_selector((Bit16u)(((BX_CPU_THIS_PTR msr.star >> 48) + 8) | 3),
                      &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
@@ -1241,8 +1203,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
     BX_CPU_THIS_PTR assert_IF();
     temp_RIP = ECX;
   }
-
-  handleCpuModeChange();
 
   RIP = temp_RIP;
 

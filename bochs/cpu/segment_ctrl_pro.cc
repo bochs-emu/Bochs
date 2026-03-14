@@ -731,6 +731,16 @@ void BX_CPU_C::setup_flat_CS(unsigned dpl, bool longmode)
 #if BX_SUPPORT_X86_64
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l            =  longmode;
 #endif
+
+#if BX_SUPPORT_X86_64
+  handleCpuModeChange(); // mode change could happen only when in long_mode()
+#else
+  updateFetchModeMask(/* CS reloaded */);
+#endif
+
+#if BX_CPU_LEVEL >= 4
+  handleAlignmentCheck(/* CPL change */);
+#endif
 }
 
 void BX_CPU_C::setup_flat_SS(unsigned dpl)
