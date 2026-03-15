@@ -199,7 +199,7 @@ void cleanupDlgList(bx_list_c *list)
 
 // tooltips code
 
-HWND hwndTT, tt_hwndDlg;
+HWND hwndTT = NULL, tt_hwndDlg;
 HHOOK tt_hhk;
 const char *tt_text;
 
@@ -210,6 +210,9 @@ BOOL CreateParamDlgTooltip(HWND hwndDlg)
 {
   InitCommonControls();
   tt_hwndDlg = hwndDlg;
+  if (hwndTT != NULL)
+    DestroyWindow(hwndTT);
+
   hwndTT = CreateWindowEx(0, TOOLTIPS_CLASS, (LPSTR) NULL,
     TTS_ALWAYSTIP, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
     CW_USEDEFAULT, tt_hwndDlg, (HMENU) NULL, NULL, NULL);

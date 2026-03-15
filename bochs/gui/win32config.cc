@@ -629,7 +629,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
         }
       }
       SetFocus(GetDlgItem(hDlg, choice));
-//      CreateParamDlgTooltip(hDlg);
+      CreateParamDlgTooltip(hDlg);
       return FALSE;
     case WM_CLOSE:
       if (runtime) {
@@ -732,6 +732,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
                 if (list != NULL) {
                   if (list->get_size() > 0) {
                     opts_ptr->size = CreateParamList(hDlg, optnum, 0, 200, 15, false, list, 0);
+                    CreateParamDlgTooltip(hDlg);
                     opts_ptr->init = true;
                   }
                 }
@@ -779,6 +780,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
           if (list != NULL) {
             if (list->get_size() > 0) {
               win32ParamDialog(hDlg, opts_ptr->param);
+              CreateParamDlgTooltip(hDlg);
             } else {
               MessageBox(hDlg, "Nothing to configure in this section", "Warning", MB_ICONEXCLAMATION);
             }
