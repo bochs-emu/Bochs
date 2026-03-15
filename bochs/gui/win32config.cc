@@ -651,7 +651,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
             SIM->reset_all_param();
             SIM->read_rc(rcfile->getptr());
             i = 0;
-            while (runtime_options[i].label != NULL) {
+            while (start_options[i].label != NULL) {
               if (start_options[i].init) {
                 if (i == 0) {
                   InitPluginCtrl(hDlg);
@@ -739,13 +739,14 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
               if (list != NULL) {
                 dlg_resized = ResizeDialog(hDlg, opts_ptr->size, dlg_resized);
                 SetWindowText(GetDlgItem(hDlg, IDOPTGRP), list->get_title());
-                ShowWindow(GetDlgItem(hDlg, IDNOPARATXT), SW_HIDE);
-                ShowParamList(hDlg, 0, true, list);
-                ShowWindow(GetDlgItem(hDlg, IDAPPLY), SW_NORMAL);
-                ShowWindow(GetDlgItem(hDlg, IDREVERT), SW_NORMAL);
-                EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);
-                EnableWindow(GetDlgItem(hDlg, IDREVERT), FALSE);
-                if (list->get_size() == 0) {
+                if (list->get_size() > 0) {
+                  ShowWindow(GetDlgItem(hDlg, IDNOPARATXT), SW_HIDE);
+                  ShowParamList(hDlg, 0, true, list);
+                  ShowWindow(GetDlgItem(hDlg, IDAPPLY), SW_NORMAL);
+                  ShowWindow(GetDlgItem(hDlg, IDREVERT), SW_NORMAL);
+                  EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);
+                  EnableWindow(GetDlgItem(hDlg, IDREVERT), FALSE);
+                } else {
                   SetWindowText(GetDlgItem(hDlg, IDNOPARATXT), "Nothing to configure in this section !");
                   ShowWindow(GetDlgItem(hDlg, IDNOPARATXT), SW_NORMAL);
                 }
