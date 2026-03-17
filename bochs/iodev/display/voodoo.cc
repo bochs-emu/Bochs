@@ -89,8 +89,9 @@ voodoo_state *v;
 
 // builtin configuration handling functions
 
-void voodoo_init_options(void)
+void voodoo_init_options(Bit16u type)
 {
+  bx_param_bool_c *enabled = NULL;
   static const char *voodoo_model_list[] = {
     "voodoo1",
     "voodoo2",
@@ -102,18 +103,22 @@ void voodoo_init_options(void)
   bx_param_c *display = SIM->get_param("display");
   bx_list_c *menu = new bx_list_c(display, "voodoo", "Voodoo Graphics");
   menu->set_options(menu->SHOW_PARENT);
-  bx_param_bool_c *enabled = new bx_param_bool_c(menu,
-    "enabled",
-    "Enable Voodoo Graphics emulation",
-    "Enables the 3dfx Voodoo Graphics emulation",
-    1);
+  if (type == PLUGTYPE_OPTIONAL) {
+    enabled = new bx_param_bool_c(menu,
+      "enabled",
+      "Enable Voodoo Graphics emulation",
+      "Enables the 3dfx Voodoo Graphics emulation",
+      1);
+  }
   new bx_param_enum_c(menu,
     "model",
     "Voodoo model",
     "Selects the Voodoo model to emulate.",
     voodoo_model_list,
     VOODOO_1, VOODOO_1);
-  enabled->set_dependent_list(menu->clone());
+  if (type == PLUGTYPE_OPTIONAL) {
+    enabled->set_dependent_list(menu->clone());
+  }
 }
 
 Bit32s voodoo_options_parser(const char *context, int num_params, char *params[])
@@ -150,7 +155,7 @@ PLUGIN_ENTRY_FOR_MODULE(voodoo)
       BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVoodooDevice, BX_PLUGIN_VOODOO);
     }
     // add new configuration parameter for the config interface
-    voodoo_init_options();
+    voodoo_init_options(type);
     // register add-on option for bochsrc and command line
     SIM->register_addon_option("voodoo", voodoo_options_parser, voodoo_options_save);
   } else if (mode == PLUGIN_FINI) {
@@ -292,12 +297,14 @@ void bx_voodoo_base_c::init(void)
 {
   // Read in values from config interface
   bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_VOODOO);
-  // Check if the device is disabled or not configured
-  if (!SIM->get_param_bool("enabled", base)->get()) {
-    BX_INFO(("Voodoo disabled"));
-    // mark unused plugin for removal
-    ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("voodoo"))->set(0);
+  if (SIM->get_param_bool("enabled", base) != NULL) {
+    // Check if the device is disabled or not configured
+    if (!SIM->get_param_bool("enabled", base)->get()) {
+      BX_INFO(("Voodoo disabled"));
+      // mark unused plugin for removal
+      ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("voodoo"))->set(0);
     return;
+    }
   }
   s.model = (Bit8u)SIM->get_param_enum("model", base)->get();
   s.devfunc = 0x00;

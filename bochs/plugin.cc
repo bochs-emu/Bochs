@@ -1206,10 +1206,11 @@ int bx_load_plugin_np(const char *name, Bit16u type)
         bx_builtin_plugins[i].loadtype = type;
         bx_builtin_plugins[i].plugin_entry(NULL, type, PLUGIN_INIT);
         bx_builtin_plugins[i].initialized = 1;
+        return 1;
       } else {
         BX_PANIC(("plugin '%s' already loaded", name));
+        return 0;
       }
-      return 1;
     }
     i++;
   }
