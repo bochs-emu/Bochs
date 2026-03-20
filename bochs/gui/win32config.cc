@@ -495,7 +495,7 @@ edit_opts_t start_options[] = {
   {"Logfile", "log", true, false, {0, 0}},
   {"Log Options", "#logopts", true, false, {0, 0}},
   {"CPU", "cpu", true, false, {0, 0}},
-  {"Memory", "memory", false, false, {0, 0}},
+  {"Memory", "memory", true, false, {0, 0}},
   {"Clock & CMOS", "clock_cmos", true, false, {0, 0}},
   {"PCI", "pci", true, false, {0, 0}},
   {"Display & Interface", "display", true, false, {0, 0}},
@@ -512,11 +512,11 @@ edit_opts_t start_options[] = {
 };
 
 edit_opts_t runtime_options[] = {
+  {"Log Options", "#logopts", true, false, {0, 0}},
   {"CD-ROM", BXPN_MENU_RUNTIME_CDROM, true, false, {0, 0}},
-  {"USB", BXPN_MENU_RUNTIME_USB, false, false, {0, 0}},
+  {"USB", BXPN_MENU_RUNTIME_USB, true, false, {0, 0}},
   {"Sound", BXPN_MENU_RUNTIME_SOUND, true, false, {0, 0}},
   {"Misc", BXPN_MENU_RUNTIME_MISC, true, false, {0, 0}},
-  {"Log Options", "#logopts", true, false, {0, 0}},
   {NULL, NULL, false, false, {0, 0}}
 };
 
@@ -689,7 +689,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
                 ShowWindow(GetDlgItem(hDlg, IDNOPARATXT), SW_HIDE);
                 list = (bx_list_c*)SIM->get_param(opts_ptr->param);
                 if (list != NULL) {
-                  ShowParamList(hDlg, 0, false, list);
+                  ShowParamList(hDlg, 500, false, list);
                   ShowWindow(GetDlgItem(hDlg, IDAPPLY), SW_HIDE);
                   ShowWindow(GetDlgItem(hDlg, IDREVERT), SW_HIDE);
                   EnableWindow(GetDlgItem(hDlg, IDREVERT), TRUE);
@@ -731,7 +731,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
               if (!opts_ptr->init) {
                 if (list != NULL) {
                   if (list->get_size() > 0) {
-                    opts_ptr->size = CreateParamList(hDlg, optnum, 0, 200, 15, false, list, 0);
+                    opts_ptr->size = CreateParamList(hDlg, optnum, getNextDlgID(), 200, 15, false, list, 0);
                     CreateParamDlgTooltip(hDlg);
                     opts_ptr->init = true;
                   }
@@ -741,8 +741,13 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
                 dlg_resized = ResizeDialog(hDlg, opts_ptr->size, dlg_resized);
                 SetWindowText(GetDlgItem(hDlg, IDOPTGRP), list->get_title());
                 if (list->get_size() > 0) {
+                  if ((list->get_options() & list->USE_TAB_WINDOW) != 0) {
+                    ShowWindow(GetDlgItem(hDlg, IDOPTGRP), SW_HIDE);
+                  } else {
+                    ShowWindow(GetDlgItem(hDlg, IDOPTGRP), SW_SHOW);
+                  }
                   ShowWindow(GetDlgItem(hDlg, IDNOPARATXT), SW_HIDE);
-                  ShowParamList(hDlg, 0, true, list);
+                  ShowParamList(hDlg, 500, true, list);
                   ShowWindow(GetDlgItem(hDlg, IDAPPLY), SW_NORMAL);
                   ShowWindow(GetDlgItem(hDlg, IDREVERT), SW_NORMAL);
                   EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);

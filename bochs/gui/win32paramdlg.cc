@@ -67,6 +67,11 @@ UINT nextDlgID;
 dlg_list_t *dlg_lists = NULL;
 bool embedded = false;
 
+UINT getNextDlgID(void)
+{
+  return nextDlgID;
+}
+
 UINT registerDlgList(UINT mid, UINT lid, bx_list_c *list)
 {
   dlg_list_t *dlg_list = new dlg_list_t;
@@ -92,6 +97,9 @@ UINT registerDlgList(UINT mid, UINT lid, bx_list_c *list)
     temp->next = dlg_list;
   }
   nextDlgID += items;
+  if ((list->get_options() & list->USE_TAB_WINDOW) != 0) {
+    nextDlgID++;
+  }
   return dlg_list->dlg_base_id;
 }
 
@@ -107,18 +115,21 @@ UINT findDlgListBaseID(bx_list_c *list)
   return 0;
 }
 
-bx_param_c *findParamFromDlgID(UINT mid, UINT cid)
+bx_param_c *findParamFromDlgID(UINT mid, UINT cid, bool list)
 {
   dlg_list_t *dlg_list;
   int i;
 
   for (dlg_list = dlg_lists; dlg_list; dlg_list = dlg_list->next) {
-    if ((mid == dlg_list->dlg_menu_id) && (cid >= dlg_list->dlg_base_id) && (cid < (dlg_list->dlg_base_id + dlg_list->list->get_size()))) {
-      i = cid - dlg_list->dlg_base_id;
-      return dlg_list->list->get(i);
-    }
-    if ((mid == dlg_list->dlg_menu_id) && cid == dlg_list->dlg_list_id) {
-      return dlg_list->list;
+    if (list) {
+      if ((mid == dlg_list->dlg_menu_id) && cid == dlg_list->dlg_list_id) {
+        return dlg_list->list;
+      }
+    } else {
+      if ((mid == dlg_list->dlg_menu_id) && (cid >= dlg_list->dlg_base_id) && (cid < (dlg_list->dlg_base_id + dlg_list->list->get_size()))) {
+        i = cid - dlg_list->dlg_base_id;
+        return dlg_list->list->get(i);
+      }
     }
   }
   return NULL;
@@ -296,10 +307,10 @@ VOID OnWMNotify(HWND hDlg, UINT mid, LPARAM lParam)
   id = nmhdr.idFrom;
   if (code == (UINT)TCN_SELCHANGE) {
     j = (UINT)(id - ID_PARAM);
-    tmplist = (bx_list_c *)findParamFromDlgID(mid, j);
+    tmplist = (bx_list_c *)findParamFromDlgID(mid, j, true);
     if (tmplist != NULL) {
       k = (UINT)TabCtrl_GetCurSel(GetDlgItem(hDlg, id));
-      cid = findDlgListBaseID(tmplist);
+      cid = findDlgListBaseID(tmplist) + 1;
       for (i = 0; i < (UINT)tmplist->get_size(); i++) {
         ShowParamList(hDlg, cid + i, (i == k), (bx_list_c*)tmplist->get(i));
       }
@@ -313,7 +324,7 @@ VOID OnWMNotify(HWND hDlg, UINT mid, LPARAM lParam)
     lpttt = (LPTOOLTIPTEXT) lParam;
 
     if ((idCtrl >= ID_PARAM) && (idCtrl < ID_BROWSE)) {
-      bx_param_c *param = findParamFromDlgID(mid, idCtrl - ID_PARAM);
+      bx_param_c *param = findParamFromDlgID(mid, idCtrl - ID_PARAM, false);
       if (param != NULL) {
         tt_text = param->get_description();
         if (lstrlen(tt_text) > 0) {
@@ -436,7 +447,7 @@ void InitParamDialog(bool _embedded)
   if (!embedded) {
     InitDlgFont();
     RegisterScrollWindow(NULL);
-    nextDlgID = 1;
+    nextDlgID = 0;
     embedded = _embedded;
   }
 }
@@ -793,6 +804,9 @@ SIZE CreateParamList(HWND hDlg, UINT mid, UINT lid, UINT xpos, UINT ypos, BOOL h
   items = list->get_size();
   options = list->get_options();
   cid = registerDlgList(mid, lid, list);
+  if (options & list->USE_TAB_WINDOW) {
+    if (cid == lid) cid++;
+  }
   x0 = xpos + 5;
   size.cx = 195;
   if (options & list->USE_TAB_WINDOW) {
@@ -888,6 +902,7 @@ SIZE CreateParamList(HWND hDlg, UINT mid, UINT lid, UINT xpos, UINT ypos, BOOL h
   }
   if (options & list->USE_TAB_WINDOW) {
     CreateTabControl(hDlg, lid, xpos, ypos, size, hide, list);
+    size.cy += 4;
   } else if (scrollwin != NULL) {
     MapDialogRect(hDlg, &vrect);
     SendMessage(scrollwin, WM_USER, 0x1234, vrect.bottom);
@@ -1010,8 +1025,14 @@ void ShowParamList(HWND hDlg, UINT lid, BOOL show, bx_list_c *list)
   HWND Button, Updown;
   BOOL ishow;
 
-  ShowWindow(GetDlgItem(hDlg, ID_PARAM + lid), show ? SW_SHOW : SW_HIDE);
+  if (lid < 500) {
+    ShowWindow(GetDlgItem(hDlg, ID_PARAM + lid), show ? SW_SHOW : SW_HIDE);
+  }
   cid = findDlgListBaseID(list);
+  if (list->get_options() & list->USE_TAB_WINDOW) {
+    ShowWindow(GetDlgItem(hDlg, ID_PARAM + cid), show ? SW_SHOW : SW_HIDE);
+    cid++;
+  }
   for (i = 0; i < list->get_size(); i++) {
     if (list->get(i)->get_type() == BXT_LIST) {
       ishow = show;
@@ -1139,7 +1160,7 @@ UINT HandleChildWindowEvents(HWND hDlg, UINT mid, UINT_PTR id, UINT_PTR nc, bx_l
 
   if ((id >= ID_BROWSE) && (id < (ID_BROWSE + nextDlgID))) {
     i = (UINT)(id - ID_BROWSE);
-    bx_param_string_c *sparam = (bx_param_string_c *)findParamFromDlgID(mid, i);
+    bx_param_string_c *sparam = (bx_param_string_c *)findParamFromDlgID(mid, i, false);
     if (sparam != NULL) {
       GetDlgItemText(hDlg, ID_PARAM + i, fname, BX_PATHNAME_LEN);
       if (AskFilename(hDlg, (bx_param_filename_c *)sparam, fname) > 0) {
@@ -1152,7 +1173,7 @@ UINT HandleChildWindowEvents(HWND hDlg, UINT mid, UINT_PTR id, UINT_PTR nc, bx_l
   } else if ((id >= ID_PARAM) && (id < (ID_PARAM + nextDlgID))) {
     if ((nc == EN_CHANGE) || ((nc == CBN_SELCHANGE)) || (nc == BN_CLICKED)) {
       i = (UINT)(id - ID_PARAM);
-      bx_param_c *param = findParamFromDlgID(mid, i);
+      bx_param_c *param = findParamFromDlgID(mid, i, false);
       if (param != NULL) {
         ProcessDependentList(hDlg, param, TRUE);
         ret = BXPD_UPDATE_DEPS;
@@ -1196,7 +1217,7 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
     case WM_INITDIALOG:
       list = (bx_list_c*)SIM->get_param((const char*)lParam);
       SetWindowText(Window, list->get_title());
-      size = CreateParamList(Window, 0, 0, 6, 6, FALSE, list, 1);
+      size = CreateParamList(Window, 0, nextDlgID, 6, 6, FALSE, list, 1);
       SetDefaultButtons(Window, size.cx / 2 - 50, size.cy + 12);
       GetWindowRect(Window, &r2);
       r.left = 0;
@@ -1273,7 +1294,7 @@ static INT_PTR CALLBACK FloppyParamDlgProc(HWND Window, UINT AMessage, WPARAM wP
     case WM_INITDIALOG:
       list = (bx_list_c*)SIM->get_param((const char*)lParam);
       SetWindowText(Window, list->get_title());
-      size = CreateParamList(Window, 0, 0, 6, 6, FALSE, list, true);
+      size = CreateParamList(Window, 0, nextDlgID, 6, 6, FALSE, list, true);
       CreateLabel(Window, 99, 60, size.cy + 12, 175, FALSE,
                   "Clicking OK signals a media change for this drive.");
       CreateButton(Window, IDCREATE, size.cx / 2 - 85, size.cy + 30, FALSE, "Create Image");

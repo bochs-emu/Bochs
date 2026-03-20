@@ -30,6 +30,7 @@
 #define BXPD_EDIT_START  4
 #define BXPD_EDIT_END    8
 
+UINT getNextDlgID(void);
 BOOL CreateParamDlgTooltip(HWND hwndDlg);
 VOID OnWMNotify(HWND hDlg, UINT mid, LPARAM lParam);
 int AskFilename(HWND hwnd, bx_param_filename_c *param, char *buffer);
