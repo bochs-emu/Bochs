@@ -488,7 +488,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [7:6]    reserved
 //   [8:8]    AVX512 VP2INTERSECT instructions support
 //   [9:9]    SRBDS_CTRL: IA32_MCU_OPT_CTRL MSR
-//   [10:10]  MD clear
+//   [10:10]  MCU_OPT_CTRL MSR support (formely MD clear)
 //   [11:11]  RTM_ALWAYS_ABORT
 //   [12:12]  reserved
 //   [13:13]  RTM_FORCE_ABORT
@@ -650,7 +650,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [19:19]  AVX10 support and CPUID leaf 0x24
 //   [20:20]  reserved
 //   [21:21]  APX support
-//   [22:22]  reserved
+//   [22:22]  SEC_TEE_ATTESTATION - SGX and TDE support attestation rooted in the Security Engine
 //   [23:23]  MWAIT and CPUID LEAF5 support (to be used by VMM)
 //   [24:24]  SLSM: Static Lock Step Mode (IA32_INTEGRITY_STATUS_MSR[0] is supported)
 //   [31:25]  reserved
@@ -677,7 +677,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_STD7_SUBLEAF1_EDX_AVX10                  (1 << 19)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED20             (1 << 20)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_APX                    (1 << 21)
-#define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED22             (1 << 22)
+#define BX_CPUID_STD7_SUBLEAF1_EDX_SEC_TEE_ATTESTATION    (1 << 22)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_MWAIT_AND_LEAF5        (1 << 23)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_SLSM                   (1 << 24)
 // ...
