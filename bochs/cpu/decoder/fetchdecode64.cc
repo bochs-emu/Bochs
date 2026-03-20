@@ -810,15 +810,23 @@ int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
     return(-1);
   remain--;
   unsigned opcode_byte = *iptr++; // fetch new b1
-  // there are instructions only from maps 1,2,3 and 7 for now
+  // there are instructions only from maps 1,2,3,5 and 7 for now
   if (vex_opc_map != 1 && vex_opc_map != 2 && vex_opc_map != 3 && vex_opc_map != 5 && vex_opc_map != 7)
     return(ia_opcode);
+#if BX_SUPPORT_AMX == 0
+  if (vex_opc_map == 5) // map5 is defined only with AMX instructions for now
+    return(ia_opcode);
+#endif
   opcode_byte += 256 * vex_opc_map;
   bool has_modrm = (opcode_byte != 0x177); // if not VZEROUPPER/VZEROALL opcode
   opcode_byte -= 256;
+#if BX_SUPPORT_AMX
   // tables skip maps 4 and 6, need to adjust index
   if (vex_opc_map == 5) opcode_byte -= 256; // map4 tables skipped
   if (vex_opc_map == 7) opcode_byte -= 512; // map4 and map6 tables skipped
+#else
+  if (vex_opc_map == 7) opcode_byte -= 768; // map4,5,6 tables skipped
+#endif
 
   unsigned rm = 0, nnn = 0;
   if (has_modrm) {
