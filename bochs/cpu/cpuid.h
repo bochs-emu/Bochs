@@ -689,7 +689,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [2:2] AMX-COMPLEX
 //   [3:3] AMX-FP16
 //   [4:4] AMX-FP8
-//   [5:5] AMX-TRANSPOSE
+//   [5:5] AMX-TRANSPOSE (deprecated)
 //   [6:6] AMX-TF32 (FP19)
 //   [7:7] AMX-AVX512
 //   [8:8] AMX-MOVRS

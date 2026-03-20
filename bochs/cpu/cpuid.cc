@@ -330,7 +330,7 @@ void bx_cpuid_t::get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_
     //    [2] AMX-COMPLEX
     //    [3] AMX-FP16
     //    [4] AMX-FP8
-    //    [5] AMX-TRANSPOSE
+    //    [5] AMX-TRANSPOSE (deprecated)
     //    [6] AMX-TF32 (FP19)
     //    [7] AMX-AVX512
     //    [8] AMX-MOVRS
@@ -343,8 +343,8 @@ void bx_cpuid_t::get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_
       leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_COMPLEX;
     if (is_cpu_extension_supported(BX_ISA_AMX_FP16))
       leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP16;
-    // AMX_FP8
-    // AMX_TRANSPOSE
+    if (is_cpu_extension_supported(BX_ISA_AMX_FP8))
+      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP8;
     if (is_cpu_extension_supported(BX_ISA_AMX_TF32))
       leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_TF32;
     if (is_cpu_extension_supported(BX_ISA_AMX_AVX512))

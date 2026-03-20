@@ -9,6 +9,7 @@ Detailed change log :
     In the code BX_WARN is used and it is configurable like other log levels.
 
 - CPU emulation and instrumentation
+  - CPU: Implemented AMX-FP8 ISA extension
   - CPU: Implemented MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS
   - CPU: implemented IA32_APERF (0xe7) and IA32_MPERF (0xe8) MSRs
   - CPU: implemented Flexible Return and Delivery (FRED) architecture emulation

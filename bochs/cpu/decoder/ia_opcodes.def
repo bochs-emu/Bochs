@@ -2790,6 +2790,10 @@ bx_define_opcode(BX_IA_TDPFP16PS_TnnnTrmTreg, "tdpfp16ps", "tdpfp16ps", NULL, &B
 bx_define_opcode(BX_IA_TCMMRLFP16PS_TnnnTrmTreg, "tcmmrlfp16ps", "tcmmrlfp16ps", NULL, &BX_CPU_C::TCMMRLFP16PS_TnnnTrmTreg, BX_ISA_AMX_COMPLEX, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
 bx_define_opcode(BX_IA_TCMMIMFP16PS_TnnnTrmTreg, "tcmmimfp16ps", "tcmmimfp16ps", NULL, &BX_CPU_C::TCMMIMFP16PS_TnnnTrmTreg, BX_ISA_AMX_COMPLEX, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
 bx_define_opcode(BX_IA_TMMULTF32PS_TnnnTrmTreg, "tmmultf32ps", "tmmultf32ps", NULL, &BX_CPU_C::TMMULTF32PS_TnnnTrmTreg, BX_ISA_AMX_TF32, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
+bx_define_opcode(BX_IA_TDPBF8PS_TnnnTrmTreg, "tdpbf8ps", "tdpbf8ps", NULL, &BX_CPU_C::TDPBF8PS_TnnnTrmTreg, BX_ISA_AMX_FP8, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
+bx_define_opcode(BX_IA_TDPHF8PS_TnnnTrmTreg, "tdphf8ps", "tdpbh8ps", NULL, &BX_CPU_C::TDPHF8PS_TnnnTrmTreg, BX_ISA_AMX_FP8, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
+bx_define_opcode(BX_IA_TDPBHF8PS_TnnnTrmTreg, "tdpbhf8ps", "tdpbf8ps", NULL, &BX_CPU_C::TDPBHF8PS_TnnnTrmTreg, BX_ISA_AMX_FP8, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
+bx_define_opcode(BX_IA_TDPHBF8PS_TnnnTrmTreg, "tdphbf8ps", "tdpbh8ps", NULL, &BX_CPU_C::TDPHBF8PS_TnnnTrmTreg, BX_ISA_AMX_FP8, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
 #endif
 
 #if BX_SUPPORT_AVX
