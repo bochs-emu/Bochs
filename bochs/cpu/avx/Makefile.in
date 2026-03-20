@@ -43,6 +43,7 @@ BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I$(srcdir)/../.. -I../../@INSTRUMENT_D
 # Objects which are only used for AVX / EVEX code
 AVX_OBJS = \
 	amx.o \
+	amx_avx512.o \
 	avx.o \
 	avx_pfp.o \
 	avx_cvt.o \
@@ -104,6 +105,18 @@ dist-clean: clean
 #  gcc -MM -I.. -I../.. -I../../instrument/stubs *.cc | sed 's/\.cc/.@CPP_SUFFIX@/g'
 ###########################################
 amx.o: amx.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h \
+ ../../misc/bswap.h ../cpu.h ../decoder/decoder.h ../decoder/features.h \
+ ../../instrument/stubs/instrument.h ../i387.h \
+ ../softfloat3e/include/softfloat_types.h ../../config.h ../fpu/tag_w.h \
+ ../fpu/status_w.h ../fpu/control_w.h ../crregs.h ../descriptor.h \
+ ../decoder/instr.h ../lazy_flags.h ../tlb.h ../icache.h ../xmm.h \
+ ../vmx.h ../vmx_ctrls.h ../stack.h ../access.h amx.h ../../cpu/xmm.h \
+ ../softfloat3e/include/softfloat.h \
+ ../softfloat3e/include/softfloat_types.h \
+ ../softfloat3e/include/softfloat-extra.h \
+ ../softfloat3e/include/internals.h bf16.h ../../cpu/decoder/ia_opcodes.h \
+ ../../cpu/decoder/ia_opcodes.def ../../cpu/decoder/ia_opcodes_evex.def
+amx_avx512.o: amx_avx512.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h \
  ../../misc/bswap.h ../cpu.h ../decoder/decoder.h ../decoder/features.h \
  ../../instrument/stubs/instrument.h ../i387.h \
  ../softfloat3e/include/softfloat_types.h ../../config.h ../fpu/tag_w.h \
