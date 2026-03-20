@@ -1990,6 +1990,24 @@ AC_ARG_ENABLE(geforce,
     ]
   )
 
+AC_MSG_CHECKING(for RIVA TNT2 M64 emulation (experimental))
+AC_ARG_ENABLE(nvriva,
+  AS_HELP_STRING([--enable-nvriva], [enable experimental RIVA TNT2 M64 emulation (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_NVRIVA, 1)
+    DISPLAY_OBJS="$DISPLAY_OBJS nvriva.o"
+    DISPLAY_DLL_TARGETS="$DISPLAY_DLL_TARGETS bx_nvriva.dll"
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_NVRIVA, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_NVRIVA, 0)
+    ]
+  )
+
 AC_MSG_CHECKING(for 3dfx Voodoo Graphics emulation)
 AC_ARG_ENABLE(voodoo,
   AS_HELP_STRING([--enable-voodoo], [enable 3dfx Voodoo Graphics emulation (no)]),
