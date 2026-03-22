@@ -187,120 +187,116 @@ dist-clean: clean
 ###########################################
 acpi.o: acpi.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h pci.h acpi.h virt_timer.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h pci.h acpi.h virt_timer.h ../pc_system.h
 acpi_tables.o: acpi_tables.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h acpi_tables.h acpi_dsdt_aml.h
 biosdev.o: biosdev.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h biosdev.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h biosdev.h
 busmouse.o: busmouse.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h busmouse.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h busmouse.h
 cmos.o: cmos.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h cmos.h virt_timer.h utctime.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h cmos.h virt_timer.h ../pc_system.h utctime.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../cpu/decoder/decoder.h \
  ../cpu/decoder/features.h
 devices.o: devices.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h ../gui/keymap.h \
- ../instrument/stubs/instrument.h ../iodev/virt_timer.h \
- ../iodev/slowdown_timer.h ../iodev/sound/soundmod.h \
- ../iodev/network/netmod.h ../iodev/usb/usb_common.h \
- ../iodev/usb/usb_pcap.h ../iodev/hdimage/hdimage.h ../bx_debug/debug.h \
- ../config.h ../osdep.h ../cpu/decoder/decoder.h \
- ../cpu/decoder/features.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../gui/keymap.h ../instrument/stubs/instrument.h \
+ ../iodev/virt_timer.h ../pc_system.h ../iodev/slowdown_timer.h \
+ ../iodev/sound/soundmod.h ../iodev/network/netmod.h \
+ ../iodev/usb/usb_common.h ../iodev/usb/usb_pcap.h \
+ ../iodev/hdimage/hdimage.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../cpu/decoder/decoder.h ../cpu/decoder/features.h
 dma.o: dma.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h dma.h ../bx_debug/debug.h ../config.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h dma.h ../bx_debug/debug.h ../config.h \
  ../osdep.h ../cpu/decoder/decoder.h ../cpu/decoder/features.h
 extfpuirq.o: extfpuirq.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h extfpuirq.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h extfpuirq.h
 floppy.o: floppy.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h hdimage/hdimage.h ../bx_debug/debug.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h hdimage/hdimage.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../cpu/decoder/decoder.h \
  ../cpu/decoder/features.h floppy.h
 fw_cfg.o: fw_cfg.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h fw_cfg.h acpi_tables.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h fw_cfg.h acpi_tables.h
 gameport.o: gameport.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h gameport.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h gameport.h
 harddrv.o: harddrv.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h harddrv.h hdimage/hdimage.h \
- hdimage/cdrom.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h harddrv.h hdimage/hdimage.h hdimage/cdrom.h
 hpet.o: hpet.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h hpet.h ../bx_debug/debug.h ../config.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h hpet.h ../bx_debug/debug.h ../config.h \
  ../osdep.h ../cpu/decoder/decoder.h ../cpu/decoder/features.h
 ioapic.o: ioapic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h ioapic.h ../bx_debug/debug.h ../config.h \
- ../osdep.h ../cpu/decoder/decoder.h ../cpu/decoder/features.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ioapic.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../cpu/decoder/decoder.h ../cpu/decoder/features.h
 iodebug.o: iodebug.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h iodebug.h ../bx_debug/debug.h \
- ../config.h ../osdep.h ../cpu/decoder/decoder.h \
- ../cpu/decoder/features.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h iodebug.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../cpu/decoder/decoder.h ../cpu/decoder/features.h
 keyboard.o: keyboard.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h ../gui/keymap.h keyboard.h scancodes.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h ../gui/keymap.h keyboard.h scancodes.h
 parallel.o: parallel.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h parallel.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h parallel.h
 pci2isa.o: pci2isa.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h pci.h pci2isa.h ../bx_debug/debug.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h pci.h pci2isa.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../cpu/decoder/decoder.h \
  ../cpu/decoder/features.h
 pci.o: pci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h pci.h ../bx_debug/debug.h ../config.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h pci.h ../bx_debug/debug.h ../config.h \
  ../osdep.h ../cpu/decoder/decoder.h ../cpu/decoder/features.h
 pcidev.o: pcidev.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h
 pci_ide.o: pci_ide.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h pci.h pci_ide.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h pci.h pci_ide.h
 pic.o: pic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h pic.h ../bx_debug/debug.h ../config.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h pic.h ../bx_debug/debug.h ../config.h \
  ../osdep.h ../cpu/decoder/decoder.h ../cpu/decoder/features.h
 pit82c54.o: pit82c54.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h pit82c54.h ../bx_debug/debug.h \
- ../config.h ../osdep.h ../cpu/decoder/decoder.h \
- ../cpu/decoder/features.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h pit82c54.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../cpu/decoder/decoder.h ../cpu/decoder/features.h
 pit.o: pit.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h pit.h pit82c54.h virt_timer.h speaker.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h pit.h pit82c54.h virt_timer.h ../pc_system.h speaker.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../cpu/decoder/decoder.h \
  ../cpu/decoder/features.h
 scancodes.o: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
@@ -308,145 +304,140 @@ scancodes.o: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h
  scancodes.h
 serial.o: serial.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h serial.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h serial.h
 serial_raw.o: serial_raw.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h
 slowdown_timer.o: slowdown_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../param_names.h ../gui/siminterface.h \
  ../gui/paramtree.h ../pc_system.h slowdown_timer.h
 speaker.o: speaker.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h speaker.h sound/soundlow.h ../bxthread.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h speaker.h sound/soundlow.h ../bxthread.h \
  sound/soundmod.h
 unmapped.o: unmapped.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h unmapped.h ../bx_debug/debug.h \
- ../config.h ../osdep.h ../cpu/decoder/decoder.h \
- ../cpu/decoder/features.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h unmapped.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../cpu/decoder/decoder.h ../cpu/decoder/features.h
 virt_timer.o: virt_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../gui/siminterface.h ../gui/paramtree.h \
  ../param_names.h virt_timer.h ../pc_system.h
 acpi.lo: acpi.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h pci.h acpi.h virt_timer.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h pci.h acpi.h virt_timer.h ../pc_system.h
 acpi_tables.lo: acpi_tables.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h acpi_tables.h acpi_dsdt_aml.h
 biosdev.lo: biosdev.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h biosdev.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h biosdev.h
 busmouse.lo: busmouse.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h busmouse.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h busmouse.h
 cmos.lo: cmos.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h cmos.h virt_timer.h utctime.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h cmos.h virt_timer.h ../pc_system.h utctime.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../cpu/decoder/decoder.h \
  ../cpu/decoder/features.h
 devices.lo: devices.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h ../gui/keymap.h \
- ../instrument/stubs/instrument.h ../iodev/virt_timer.h \
- ../iodev/slowdown_timer.h ../iodev/sound/soundmod.h \
- ../iodev/network/netmod.h ../iodev/usb/usb_common.h \
- ../iodev/usb/usb_pcap.h ../iodev/hdimage/hdimage.h ../bx_debug/debug.h \
- ../config.h ../osdep.h ../cpu/decoder/decoder.h \
- ../cpu/decoder/features.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../gui/keymap.h ../instrument/stubs/instrument.h \
+ ../iodev/virt_timer.h ../pc_system.h ../iodev/slowdown_timer.h \
+ ../iodev/sound/soundmod.h ../iodev/network/netmod.h \
+ ../iodev/usb/usb_common.h ../iodev/usb/usb_pcap.h \
+ ../iodev/hdimage/hdimage.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../cpu/decoder/decoder.h ../cpu/decoder/features.h
 dma.lo: dma.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h dma.h ../bx_debug/debug.h ../config.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h dma.h ../bx_debug/debug.h ../config.h \
  ../osdep.h ../cpu/decoder/decoder.h ../cpu/decoder/features.h
 extfpuirq.lo: extfpuirq.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h extfpuirq.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h extfpuirq.h
 floppy.lo: floppy.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h hdimage/hdimage.h ../bx_debug/debug.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h hdimage/hdimage.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../cpu/decoder/decoder.h \
  ../cpu/decoder/features.h floppy.h
 fw_cfg.lo: fw_cfg.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h fw_cfg.h acpi_tables.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h fw_cfg.h acpi_tables.h
 gameport.lo: gameport.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h gameport.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h gameport.h
 harddrv.lo: harddrv.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h harddrv.h hdimage/hdimage.h \
- hdimage/cdrom.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h harddrv.h hdimage/hdimage.h hdimage/cdrom.h
 hpet.lo: hpet.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h hpet.h ../bx_debug/debug.h ../config.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h hpet.h ../bx_debug/debug.h ../config.h \
  ../osdep.h ../cpu/decoder/decoder.h ../cpu/decoder/features.h
 ioapic.lo: ioapic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h ioapic.h ../bx_debug/debug.h ../config.h \
- ../osdep.h ../cpu/decoder/decoder.h ../cpu/decoder/features.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ioapic.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../cpu/decoder/decoder.h ../cpu/decoder/features.h
 iodebug.lo: iodebug.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h iodebug.h ../bx_debug/debug.h \
- ../config.h ../osdep.h ../cpu/decoder/decoder.h \
- ../cpu/decoder/features.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h iodebug.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../cpu/decoder/decoder.h ../cpu/decoder/features.h
 keyboard.lo: keyboard.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h ../gui/keymap.h keyboard.h scancodes.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h ../gui/keymap.h keyboard.h scancodes.h
 parallel.lo: parallel.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h parallel.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h parallel.h
 pci2isa.lo: pci2isa.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h pci.h pci2isa.h ../bx_debug/debug.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h pci.h pci2isa.h ../bx_debug/debug.h \
  ../config.h ../osdep.h ../cpu/decoder/decoder.h \
  ../cpu/decoder/features.h
 pci.lo: pci.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h pci.h ../bx_debug/debug.h ../config.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h pci.h ../bx_debug/debug.h ../config.h \
  ../osdep.h ../cpu/decoder/decoder.h ../cpu/decoder/features.h
 pcidev.lo: pcidev.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h
 pci_ide.lo: pci_ide.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h pci.h pci_ide.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h pci.h pci_ide.h
 pic.lo: pic.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h pic.h ../bx_debug/debug.h ../config.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h pic.h ../bx_debug/debug.h ../config.h \
  ../osdep.h ../cpu/decoder/decoder.h ../cpu/decoder/features.h
 pit82c54.lo: pit82c54.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h pit82c54.h ../bx_debug/debug.h \
- ../config.h ../osdep.h ../cpu/decoder/decoder.h \
- ../cpu/decoder/features.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h pit82c54.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../cpu/decoder/decoder.h ../cpu/decoder/features.h
 pit.lo: pit.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h pit.h pit82c54.h virt_timer.h speaker.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h pit.h pit82c54.h virt_timer.h ../pc_system.h speaker.h \
  ../bx_debug/debug.h ../config.h ../osdep.h ../cpu/decoder/decoder.h \
  ../cpu/decoder/features.h
 scancodes.lo: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
@@ -454,26 +445,25 @@ scancodes.lo: scancodes.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.
  scancodes.h
 serial.lo: serial.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h serial.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h serial.h
 serial_raw.lo: serial_raw.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h
 slowdown_timer.lo: slowdown_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../param_names.h ../gui/siminterface.h \
  ../gui/paramtree.h ../pc_system.h slowdown_timer.h
 speaker.lo: speaker.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h speaker.h sound/soundlow.h ../bxthread.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h ../pc_system.h speaker.h sound/soundlow.h ../bxthread.h \
  sound/soundmod.h
 unmapped.lo: unmapped.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
- ../pc_system.h ../memory/memory-bochs.h ../gui/siminterface.h \
- ../gui/paramtree.h ../gui/gui.h unmapped.h ../bx_debug/debug.h \
- ../config.h ../osdep.h ../cpu/decoder/decoder.h \
- ../cpu/decoder/features.h
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h unmapped.h ../bx_debug/debug.h ../config.h ../osdep.h \
+ ../cpu/decoder/decoder.h ../cpu/decoder/features.h
 virt_timer.lo: virt_timer.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../gui/siminterface.h ../gui/paramtree.h \
  ../param_names.h virt_timer.h ../pc_system.h
