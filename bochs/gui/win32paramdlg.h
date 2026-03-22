@@ -37,6 +37,7 @@ int AskFilename(HWND hwnd, bx_param_filename_c *param, char *buffer);
 void InitParamDialog(bool _embedded);
 void CleanupParamDialog(bx_list_c *list);
 SIZE CreateParamList(HWND hDlg, UINT mid, UINT lid, UINT xpos, UINT ypos, BOOL hide, bx_list_c *list, UINT grpbox);
+void RemoveParamList(HWND hDlg, UINT lid, bx_list_c *list);
 void ShowParamList(HWND hDlg, UINT lid, BOOL show, bx_list_c *list);
 UINT HandleChildWindowEvents(HWND hDlg, UINT mid, UINT_PTR id, UINT_PTR nc, bx_list_c *list);
 INT_PTR win32ParamDialog(HWND parent, const char *menu);

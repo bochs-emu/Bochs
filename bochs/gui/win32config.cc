@@ -501,12 +501,12 @@ edit_opts_t start_options[] = {
   {"Display & Interface", "display", true, false, {0, 0}},
   {"Keyboard & Mouse", "keyboard_mouse", true, false, {0, 0}},
   {"Disk & Boot", BXPN_MENU_DISK_WIN32, false, false, {0, 0}},
-  {"Serial / Parallel / USB", "ports", false, false, {0, 0}},
-  {"Network card", "network", false, false, {0, 0}},
-  {"Sound card", "sound", false, false, {0, 0}},
+  {"Serial / Parallel / USB", "ports", true, false, {0, 0}},
+  {"Network card", "network", true, false, {0, 0}},
+  {"Sound card", "sound", true, false, {0, 0}},
   {"Other", "misc", true, false, {0, 0}},
 #if BX_PLUGINS
-  {"User-defined Options", "user", false, false, {0, 0}},
+  {"User-defined Options", "user", true, false, {0, 0}},
 #endif
   {NULL, NULL, false, false, {0, 0}}
 };
@@ -685,14 +685,18 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
                 ShowPluginCtrl(hDlg, false);
               } else if (!lstrcmp(opts_ptr->param, "#logopts")) {
                 ShowLogOptions(hDlg, false);
-              } else {
+              } else if (opts_ptr->newdlg) {
                 ShowWindow(GetDlgItem(hDlg, IDNOPARATXT), SW_HIDE);
                 list = (bx_list_c*)SIM->get_param(opts_ptr->param);
                 if (list != NULL) {
-                  ShowParamList(hDlg, 500, false, list);
-                  ShowWindow(GetDlgItem(hDlg, IDAPPLY), SW_HIDE);
-                  ShowWindow(GetDlgItem(hDlg, IDREVERT), SW_HIDE);
-                  EnableWindow(GetDlgItem(hDlg, IDREVERT), TRUE);
+                  if (list->get_size() > 0) {
+                    ShowParamList(hDlg, 500, false, list);
+                    ShowWindow(GetDlgItem(hDlg, IDAPPLY), SW_HIDE);
+                    ShowWindow(GetDlgItem(hDlg, IDREVERT), SW_HIDE);
+                    EnableWindow(GetDlgItem(hDlg, IDREVERT), TRUE);
+                    RemoveParamList(hDlg, 500, list);
+                    opts_ptr->init = false;
+                  }
                 }
               }
             } else {

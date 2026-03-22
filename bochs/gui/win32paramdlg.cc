@@ -912,6 +912,39 @@ SIZE CreateParamList(HWND hDlg, UINT mid, UINT lid, UINT xpos, UINT ypos, BOOL h
   return size;
 }
 
+void RemoveParamList(HWND hDlg, UINT lid, bx_list_c *list)
+{
+  UINT cid;
+  int i;
+  HWND Button, Updown;
+
+  if (lid < 500) {
+    DestroyWindow(GetDlgItem(hDlg, ID_PARAM + lid));
+  }
+  cid = findDlgListBaseID(list);
+  if (list->get_options() & list->USE_TAB_WINDOW) {
+    DestroyWindow(GetDlgItem(hDlg, ID_PARAM + cid));
+    cid++;
+  }
+  for (i = 0; i < list->get_size(); i++) {
+    if (list->get(i)->get_type() == BXT_LIST) {
+      RemoveParamList(hDlg, cid + i, (bx_list_c*)list->get(i));
+    } else {
+      DestroyWindow(GetDlgItem(hDlg, ID_LABEL + cid + i));
+      DestroyWindow(GetDlgItem(hDlg, ID_PARAM + cid + i));
+      Button = GetDlgItem(hDlg, ID_BROWSE + cid + i);
+      if (Button != NULL) {
+        DestroyWindow(Button);
+      }
+      Updown = GetDlgItem(hDlg, ID_UPDOWN + cid + i);
+      if (Updown != NULL) {
+        DestroyWindow(Updown);
+      }
+    }
+  }
+  cleanupDlgList(list);
+}
+
 void SetParamList(HWND hDlg, bx_list_c *list)
 {
   bx_param_c *param;
