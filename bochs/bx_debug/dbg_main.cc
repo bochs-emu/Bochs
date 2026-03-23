@@ -1108,6 +1108,8 @@ void bx_dbg_info_control_regs_command(unsigned cpu)
   extern const char* stringify_XCR0(Bit32u xcr0, char *s);
   char s[256];
 
+  dbg_printf("CPL=%d\n", BX_CPU(cpu)->get_cpl());
+
   Bit32u cr0 = SIM->get_param_num("CR0", dbg_cpu_list[cpu])->get();
   dbg_printf("CR0=0x%08x: %s\n", cr0, stringify_CR0(cr0, s));
 
