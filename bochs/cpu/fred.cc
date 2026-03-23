@@ -34,6 +34,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   BX_CPU_THIS_PTR in_event = true;
 #endif
 
+  Bit32u old_CPL = CPL;
   Bit32u old_CSL = (CPL == 3) ? 0 : CSL;
 
   Bit32u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
@@ -161,12 +162,6 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
 
     setup_flat_CS(0, true); // CPL0, long mode
 
-    handleCpuModeChange(); // mode change could only happen when in long_mode()
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-    BX_CPU_THIS_PTR alignment_check_mask = 0; // CPL=0
-#endif
-
     // set up SS segment, flat, 64-bit DPL=0
     parse_selector(((BX_CPU_THIS_PTR msr.star >> 32) + 8) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
@@ -185,7 +180,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
 
 #if BX_SUPPORT_CET
   if (BX_CPU_THIS_PTR cr4.get_CET()) {
-    if (ShadowStackEnabled(3) && CPL == 3) {
+    if (ShadowStackEnabled(3) && old_CPL == 3) {
       BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = CanonicalizeAddress(BX_CPU_THIS_PTR msr.ia32_pl_ssp[3]);
     }
 
@@ -213,6 +208,9 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   BX_CPU_THIS_PTR in_event = false;
 #endif
+
+  // Loading CS will invalidate the EIP fetch window.
+  invalidate_prefetch_q();
 }
 
 Bit64u BX_CPP_AttrRegparmN(2) BX_CPU_C::get_fred_event_data(Bit8u vector, unsigned type)

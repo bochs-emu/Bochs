@@ -2898,6 +2898,14 @@ void BX_CPU_C::VMexitLoadHostState(void)
   }
 #endif
 
+  // set flags directly, avoid setEFlags side effects
+  BX_CPU_THIS_PTR eflags = 0x2; // Bit1 is always set
+  // Update lazy flags state
+  clearEFlagsOSZAPC();
+
+  RIP = BX_CPU_THIS_PTR prev_rip = host_state->rip;
+  RSP = host_state->rsp;
+
   // CS selector loaded from VMCS
   //    valid   <= 1
   //    base    <= 0
@@ -2985,9 +2993,6 @@ void BX_CPU_C::VMexitLoadHostState(void)
   BX_CPU_THIS_PTR idtr.base = host_state->idtr_base;
   BX_CPU_THIS_PTR idtr.limit = 0xFFFF;
 
-  RIP = BX_CPU_THIS_PTR prev_rip = host_state->rip;
-  RSP = host_state->rsp;
-
 #if BX_SUPPORT_CET
   if (vm->vmexit_ctrls1.LOAD_HOST_CET_STATE()) {
     SSP = host_state->ssp;
@@ -3023,11 +3028,6 @@ void BX_CPU_C::VMexitLoadHostState(void)
 
   BX_CPU_THIS_PTR inhibit_mask = 0;
   BX_CPU_THIS_PTR debug_trap = 0;
-
-  // set flags directly, avoid setEFlags side effects
-  BX_CPU_THIS_PTR eflags = 0x2; // Bit1 is always set
-  // Update lazy flags state
-  clearEFlagsOSZAPC();
 
   BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
 
