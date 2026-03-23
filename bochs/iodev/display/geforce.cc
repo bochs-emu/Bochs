@@ -4361,6 +4361,12 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
             op_result[comp_index] = sinv;
           break;
         }
+        case 0x26: { // POW
+          float powv = pow(params[0][0], params[1][0]);
+          for (int comp_index = 0; comp_index < 4; comp_index++)
+            op_result[comp_index] = powv;
+          break;
+        }
         case 0x2e: { // DP2A
           float dp2a = 0.0f;
           for (int comp_index = 0; comp_index < 2; comp_index++)
@@ -4921,6 +4927,13 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
   double b012inv = 1.0 / b012;
   bool stencil_test_enable = ch->d3d_stencil_test_enable && ch->d3d_depth_bytes != 2;
   bool zstencil_enable = ch->d3d_depth_test_enable || stencil_test_enable;
+  bool ps_enable = ch->d3d_shader_obj != 0;
+  bool rc_enable = ch->d3d_combiner_control_num_stages != 0;
+  float ps_tmp_regs16[64][4];
+  float ps_tmp_regs32[64][4];
+  float (*ps_tmp_regs_exp)[4] = ps_tmp_regs16;
+  if (ps_enable && ((ch->d3d_shader_control & 0x00000040) != 0))
+    ps_tmp_regs_exp = ps_tmp_regs32;
   for (Bit16u y = 0; y < draw_height; y++, xy[1]++) {
     xy[0] = draw_x1 + 0.5f;
     for (Bit16u x = 0; x < draw_width; x++, xy[0]++) {
@@ -5051,12 +5064,8 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
           }
         }
       }
-      float tmp_regs16[64][4];
-      float tmp_regs32[64][4];
       for (int comp_index = 0; comp_index < 4; comp_index++)
-        tmp_regs16[0][comp_index] = ps_in[1][comp_index];
-      bool ps_enable = ch->d3d_shader_obj != 0;
-      bool rc_enable = ch->d3d_combiner_control_num_stages != 0;
+        ps_tmp_regs16[0][comp_index] = ps_in[1][comp_index];
       if (ch->d3d_fog_enable) {
         float fog_dist =
           v0[ch->d3d_attrib_out_fogc][0] * b0 +
@@ -5105,9 +5114,9 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
         ps_in[0][1] = ch->d3d_viewport_height - (xy[1] - ch->d3d_window_offset_y);
         ps_in[0][2] = 0.0f;
         if (rc_enable)
-          d3d_pixel_shader(ch, ps_in, &rc_regs[8], tmp_regs32);
+          d3d_pixel_shader(ch, ps_in, &rc_regs[8], ps_tmp_regs32);
         else
-          d3d_pixel_shader(ch, ps_in, tmp_regs16, tmp_regs32);
+          d3d_pixel_shader(ch, ps_in, ps_tmp_regs16, ps_tmp_regs32);
       }
       if (rc_enable) {
         for (Bit32u ci = 0; ci < 4; ci++) {
@@ -5154,16 +5163,16 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
             }
           }
         }
-        d3d_register_combiners(ch, rc_regs, tmp_regs16[0]);
+        d3d_register_combiners(ch, rc_regs, ps_tmp_regs_exp[0]);
       }
-      float a = BX_MIN(BX_MAX(tmp_regs16[0][3], 0.0f), 1.0f);
+      float a = BX_MIN(BX_MAX(ps_tmp_regs_exp[0][3], 0.0f), 1.0f);
       if (ch->d3d_alpha_test_enable) {
         if (!compare(ch->d3d_alpha_func, (Bit32u)(a * 255.0f), ch->d3d_alpha_ref))
           continue;
       }
-      float r = BX_MIN(BX_MAX(tmp_regs16[0][0], 0.0f), 1.0f);
-      float g = BX_MIN(BX_MAX(tmp_regs16[0][1], 0.0f), 1.0f);
-      float b = BX_MIN(BX_MAX(tmp_regs16[0][2], 0.0f), 1.0f);
+      float r = BX_MIN(BX_MAX(ps_tmp_regs_exp[0][0], 0.0f), 1.0f);
+      float g = BX_MIN(BX_MAX(ps_tmp_regs_exp[0][1], 0.0f), 1.0f);
+      float b = BX_MIN(BX_MAX(ps_tmp_regs_exp[0][2], 0.0f), 1.0f);
       if (ch->d3d_blend_enable) {
         float sr = r;
         float sg = g;
@@ -6562,7 +6571,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     Bit32u vertex_last = vertex_first + (param >> 24);
     for (Bit32u v = vertex_first; v <= vertex_last; v++)
       d3d_load_vertex(ch, v);
-  } else if ((method == 0x600 && cls == 0x0096) ||
+  } else if ((method >= 0x600 && method <= 0x6ff && cls == 0x0096) ||
              (method == 0x606 && cls >= 0x0097)) {
     if (cls == 0x0096)
       while (ch->d3d_vertex_data_array_format_size[ch->d3d_attrib_index] == 0) {
@@ -6650,7 +6659,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       tex->pal_ofs = param & 0xffffffc0;
     } else
       tex->control3 = param;
-  } else if (method >= 0x620 && method <= 0x63f) {
+  } else if (method >= 0x620 && method <= 0x63f && cls >= 0x0097) {
     Bit32u comp_index = method & 1;
     Bit32u attrib_index = (method >> 1) & 0xf;
     ch->d3d_vertex_data_imm[attrib_index][comp_index] = u.param_float;
@@ -6660,7 +6669,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       if (attrib_index == 0)
         d3d_process_vertex(ch, true);
     }
-  } else if (method >= 0x640 && method <= 0x64f) {
+  } else if (method >= 0x640 && method <= 0x64f && cls >= 0x0097) {
     Bit32u attrib_index = method & 0xf;
     ch->d3d_vertex_data_imm[attrib_index][0] = (Bit16s)(param & 0xffff);
     ch->d3d_vertex_data_imm[attrib_index][1] = (Bit16s)(param >> 16);
@@ -6668,7 +6677,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     ch->d3d_vertex_data_imm[attrib_index][3] = 1.0f;
     if (attrib_index == 0)
       d3d_process_vertex(ch, true);
-  } else if (method >= 0x650 && method <= 0x65f) {
+  } else if (method >= 0x650 && method <= 0x65f && cls >= 0x0097) {
     Bit32u attrib_index = method & 0xf;
     unpack_attribute(param, false, ch->d3d_vertex_data_imm[attrib_index]);
     if (attrib_index == 0)
@@ -6755,9 +6764,11 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     } else if (texture_method >= 10 && texture_method <= 13 && cls == 0x0097) {
       tex->offset_matrix[texture_method - 10] = u.param_float;
     }
-  } else if (method == 0x75b)
+  } else if (method == 0x758) {
+    ch->d3d_shader_control = param;
+  } else if (method == 0x75b) {
     ch->d3d_semaphore_offset = param;
-  else if (method == 0x75c) {
+  } else if (method == 0x75c) {
     dma_write32(ch->d3d_semaphore_obj, ch->d3d_semaphore_offset, param);
   } else if (method == 0x75d) {
     // Semaphore release mechanism should be used instead
