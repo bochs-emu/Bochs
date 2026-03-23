@@ -485,39 +485,48 @@ void ShowLogOptions(HWND hDlg, bool show)
 typedef struct {
   const char *label;
   const char *param;
-  bool newdlg;
   bool init;
   SIZE size;
 } edit_opts_t;
 
 edit_opts_t start_options[] = {
-  {"Plugin Control", "#plugins", true, false, {0, 0}},
-  {"Logfile", "log", true, false, {0, 0}},
-  {"Log Options", "#logopts", true, false, {0, 0}},
-  {"CPU", "cpu", true, false, {0, 0}},
-  {"Memory", "memory", true, false, {0, 0}},
-  {"Clock & CMOS", "clock_cmos", true, false, {0, 0}},
-  {"PCI", "pci", true, false, {0, 0}},
-  {"Display & Interface", "display", true, false, {0, 0}},
-  {"Keyboard & Mouse", "keyboard_mouse", true, false, {0, 0}},
-  {"Disk & Boot", BXPN_MENU_DISK_WIN32, false, false, {0, 0}},
-  {"Serial / Parallel / USB", "ports", true, false, {0, 0}},
-  {"Network card", "network", true, false, {0, 0}},
-  {"Sound card", "sound", true, false, {0, 0}},
-  {"Other", "misc", true, false, {0, 0}},
-#if BX_PLUGINS
-  {"User-defined Options", "user", true, false, {0, 0}},
+  {"Plugin Control", "#plugins", false, {0, 0}},
+  {"Logfile", "log", false, {0, 0}},
+  {"Log Options", "#logopts", false, {0, 0}},
+  {"CPU", "cpu", false, {0, 0}},
+  {"Memory", "memory", false, {0, 0}},
+  {"Clock & CMOS", "clock_cmos", false, {0, 0}},
+  {"PCI", "pci", false, {0, 0}},
+  {"Display & Interface", "display", false, {0, 0}},
+  {"Keyboard & Mouse", "keyboard_mouse", false, {0, 0}},
+  {"Floppy & Boot", BXPN_MENU_FLOPPY_BOOT, false, {0, 0}},
+  {"ATA controller 0", "ata.0", false, {0, 0}},
+#if BX_MAX_ATA_CHANNEL>1
+  {"ATA controller 1", "ata.1", false, {0, 0}},
 #endif
-  {NULL, NULL, false, false, {0, 0}}
+#if BX_MAX_ATA_CHANNEL>2
+  {"ATA controller 2", "ata.2", false, {0, 0}},
+#endif
+#if BX_MAX_ATA_CHANNEL>3
+  {"ATA controller 3", "ata.3", false, {0, 0}},
+#endif
+  {"Serial / Parallel / USB", "ports", false, {0, 0}},
+  {"Network card", "network", false, {0, 0}},
+  {"Sound card", "sound", false, {0, 0}},
+  {"Other", "misc", false, {0, 0}},
+#if BX_PLUGINS
+  {"User-defined Options", "user", false, {0, 0}},
+#endif
+  {NULL, NULL, false, {0, 0}}
 };
 
 edit_opts_t runtime_options[] = {
-  {"Log Options", "#logopts", true, false, {0, 0}},
-  {"CD-ROM", BXPN_MENU_RUNTIME_CDROM, true, false, {0, 0}},
-  {"USB", BXPN_MENU_RUNTIME_USB, true, false, {0, 0}},
-  {"Sound", BXPN_MENU_RUNTIME_SOUND, true, false, {0, 0}},
-  {"Misc", BXPN_MENU_RUNTIME_MISC, true, false, {0, 0}},
-  {NULL, NULL, false, false, {0, 0}}
+  {"Log Options", "#logopts", false, {0, 0}},
+  {"CD-ROM", BXPN_MENU_RUNTIME_CDROM, false, {0, 0}},
+  {"USB", BXPN_MENU_RUNTIME_USB, false, {0, 0}},
+  {"Sound", BXPN_MENU_RUNTIME_SOUND, false, {0, 0}},
+  {"Misc", BXPN_MENU_RUNTIME_MISC, false, {0, 0}},
+  {NULL, NULL, false, {0, 0}}
 };
 
 bool ResizeDialog(HWND hDlg, SIZE size, bool force)
@@ -602,7 +611,6 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
     case WM_INITDIALOG:
       runtime = (bool)lParam;
       opts_ptr = NULL;
-      EnableWindow(GetDlgItem(hDlg, IDEDITCFG), FALSE);
       if (runtime) {
         SetWindowText(hDlg, "Bochs Runtime Menu");
         EnableWindow(GetDlgItem(hDlg, IDREADRC), FALSE);
@@ -685,7 +693,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
                 ShowPluginCtrl(hDlg, false);
               } else if (!lstrcmp(opts_ptr->param, "#logopts")) {
                 ShowLogOptions(hDlg, false);
-              } else if (opts_ptr->newdlg) {
+              } else {
                 ShowWindow(GetDlgItem(hDlg, IDNOPARATXT), SW_HIDE);
                 list = (bx_list_c*)SIM->get_param(opts_ptr->param);
                 if (list != NULL) {
@@ -713,7 +721,6 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
                 InitPluginCtrl(hDlg);
                 opts_ptr->init = true;
               }
-              EnableWindow(GetDlgItem(hDlg, IDEDITCFG), FALSE);
               if (dlg_resized) {
                 dlg_resized = ResizeDialog(hDlg, opts_ptr->size, true);
               }
@@ -724,13 +731,12 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
                 HandleLogOptions(hDlg, WM_INITDIALOG, wParam, (LPARAM)runtime);
                 opts_ptr->init = true;
               }
-              EnableWindow(GetDlgItem(hDlg, IDEDITCFG), FALSE);
               if (dlg_resized) {
                 dlg_resized = ResizeDialog(hDlg, opts_ptr->size, true);
               }
               ShowLogOptions(hDlg, true);
               break;
-            } else if (opts_ptr->newdlg) {
+            } else {
               list = (bx_list_c*)SIM->get_param(opts_ptr->param);
               if (!opts_ptr->init) {
                 if (list != NULL) {
@@ -761,40 +767,8 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
                   ShowWindow(GetDlgItem(hDlg, IDNOPARATXT), SW_NORMAL);
                 }
               }
-              EnableWindow(GetDlgItem(hDlg, IDEDITCFG), FALSE);
               break;
-            } else {
-              dlg_resized = ResizeDialog(hDlg, opts_ptr->size, dlg_resized);
-              ShowWindow(GetDlgItem(hDlg, IDNOPARATXT), SW_NORMAL);
-              list = (bx_list_c*)SIM->get_param(opts_ptr->param);
-              if (list != NULL) {
-                SetWindowText(GetDlgItem(hDlg, IDOPTGRP), list->get_title());
-                if (list->get_size() > 0) {
-                  SetWindowText(GetDlgItem(hDlg, IDNOPARATXT), "Press EDIT button to configure !");
-                  EnableWindow(GetDlgItem(hDlg, IDEDITCFG), TRUE);
-                } else {
-                  SetWindowText(GetDlgItem(hDlg, IDNOPARATXT), "Nothing to configure in this section !");
-                  EnableWindow(GetDlgItem(hDlg, IDEDITCFG), FALSE);
-                }
-              }
             }
-          }
-          if (code != LBN_DBLCLK) {
-            break;
-          }
-        case IDEDITCFG:
-          if (opts_ptr == NULL)
-            break;
-          list = (bx_list_c*)SIM->get_param(opts_ptr->param);
-          if (list != NULL) {
-            if (list->get_size() > 0) {
-              win32ParamDialog(hDlg, opts_ptr->param);
-              CreateParamDlgTooltip(hDlg);
-            } else {
-              MessageBox(hDlg, "Nothing to configure in this section", "Warning", MB_ICONEXCLAMATION);
-            }
-          } else {
-            MessageBox(hDlg, "Nothing to configure in this section", "Warning", MB_ICONEXCLAMATION);
           }
           break;
         case IDRESETCFG:

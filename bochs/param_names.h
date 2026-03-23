@@ -169,7 +169,7 @@
 #define BXPN_LOG_PREFIX                  "log.prefix"
 #define BXPN_DEBUGGER_LOG_FILENAME       "log.debugger_filename"
 #define BXPN_MENU_DISK                   "menu.disk"
-#define BXPN_MENU_DISK_WIN32             "menu.disk_win32"
+#define BXPN_MENU_FLOPPY_BOOT            "menu.floppy_boot"
 #define BXPN_MENU_RUNTIME_CDROM          "menu.runtime.cdrom"
 #define BXPN_MENU_RUNTIME_SOUND          "menu.runtime.sound"
 #define BXPN_MENU_RUNTIME_USB            "menu.runtime.usb"

@@ -5,8 +5,7 @@
 #define IDCONFIG     1110
 #define IDREADRC     1120
 #define IDWRITERC    1130
-#define IDEDITCFG    1140
-#define IDRESETCFG   1150
+#define IDRESETCFG   1140
 #define IDEDITGRP    1160
 #define IDEDITBOX    1170
 #define IDSIMU       1180

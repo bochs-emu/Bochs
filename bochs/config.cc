@@ -1521,23 +1521,14 @@ void bx_init_options()
   menu->set_options(menu->SHOW_PARENT);
 
 #ifdef WIN32
-  // disk menu for win32paramdlg
-  bx_param_c *disk_menu2_init_list[] = {
-    SIM->get_param("floppy"),
-    SIM->get_param("ata.0"),
-#if BX_MAX_ATA_CHANNEL>1
-    SIM->get_param("ata.1"),
-#endif
-#if BX_MAX_ATA_CHANNEL>2
-    SIM->get_param("ata.2"),
-#endif
-#if BX_MAX_ATA_CHANNEL>3
-    SIM->get_param("ata.3"),
-#endif
+  // floppy/boot menu for win32paramdlg
+  bx_param_c *floppy_boot_init_list[] = {
+    SIM->get_param(BXPN_FLOPPYA),
+    SIM->get_param(BXPN_FLOPPYB),
     SIM->get_param("boot_params"),
     NULL
   };
-  menu = new bx_list_c(special_menus, "disk_win32", "Bochs Disk Options", disk_menu2_init_list);
+  menu = new bx_list_c(special_menus, "floppy_boot", "Bochs Disk Options", floppy_boot_init_list);
   menu->set_options(menu->USE_TAB_WINDOW);
 #endif
 

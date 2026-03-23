@@ -40,17 +40,16 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Bochs Start Menu"
 FONT 8, "Helv"
 BEGIN
-    GROUPBOX        "Configuration", IDCONFIG, 10, 10, 70, 97
+    GROUPBOX        "Configuration", IDCONFIG, 10, 10, 70, 77
     PUSHBUTTON      "L&oad", IDREADRC, 20, 25, 50, 14
     PUSHBUTTON      "&Save", IDWRITERC, 20, 45, 50, 14
-    PUSHBUTTON      "&Edit", IDEDITCFG, 20, 65, 50, 14
-    PUSHBUTTON      "Rese&t", IDRESETCFG, 20, 85, 50, 14
-    GROUPBOX        "Simulation", IDSIMU, 10, 145, 185, 40
-    DEFPUSHBUTTON   "Sta&rt", IDOK, 20, 160, 50, 14
-    PUSHBUTTON      "Restore St&ate", IDRESTORE, 80, 160, 50, 14
-    PUSHBUTTON      "&Quit", IDQUIT, 140, 160, 50, 14
-    GROUPBOX        "Edit Options", IDEDITGRP, 100, 10, 95, 132
-    LISTBOX         IDEDITBOX, 105, 20, 85, 130, WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Rese&t", IDRESETCFG, 20, 65, 50, 14
+    GROUPBOX        "Simulation", IDSIMU, 10, 95, 70, 77
+    DEFPUSHBUTTON   "Sta&rt", IDOK, 20, 110, 50, 14
+    PUSHBUTTON      "Restore St&ate", IDRESTORE, 20, 130, 50, 14
+    PUSHBUTTON      "&Quit", IDQUIT, 20, 150, 50, 14
+    GROUPBOX        "Edit Options", IDEDITGRP, 100, 10, 95, 162
+    LISTBOX         IDEDITBOX, 105, 20, 85, 150, WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Options", IDOPTGRP, 200, 10, 270, 132
     LTEXT           "Select section to configure in list box !", IDNOPARATXT, 260, 70, 120, 14
     LTEXT           "Available", IDPLUGTXT1, 240, 25, 55, 14, NOT WS_VISIBLE
