@@ -714,7 +714,7 @@ static unsigned sreg_mod1or2_base32[8] = {
 extern int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit16u ia_opcode, bool is_64);
 extern Bit16u findOpcode(const Bit64u *opMap, Bit32u opMsk);
 
-static const Bit8u *decodeModrm32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned mod, unsigned nnn, unsigned rm)
+static const Bit8u *decodeModrm32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned mod, unsigned rm)
 {
   unsigned seg = BX_SEG_REG_DS;
 
@@ -879,7 +879,7 @@ static const Bit8u *parseModrm32(const Bit8u *iptr, unsigned &remain, bxInstruct
     i->assertModC0();
   }
   else {
-    iptr = decodeModrm32(iptr, remain, i, modrm->mod, modrm->nnn, modrm->rm);
+    iptr = decodeModrm32(iptr, remain, i, modrm->mod, modrm->rm);
   }
 
   return iptr;
@@ -1221,7 +1221,7 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, 
 }
 
 #if BX_SUPPORT_AVX
-BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, bool had_evex = false, bool displ8 = false)
+BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, Bit32u had_evex = 0, bool displ8 = false)
 {
   bool use_vvv = false;
 #if BX_SUPPORT_EVEX
@@ -1319,7 +1319,7 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
     case BX_SRC_VIB:
       if (is_64) {
 #if BX_SUPPORT_EVEX
-        if (had_evex)
+        if (had_evex != 0)
           i->setSrcReg(n, ((i->Ib() << 1) & 0x10) | (i->Ib() >> 4));
         else
 #endif
@@ -1347,7 +1347,7 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
     }
 
 #if BX_SUPPORT_EVEX
-    if (had_evex && displ8 && mem_src) {
+    if (had_evex != 0 && displ8 && mem_src) {
       displ8_scale = evex_displ8_compression(i, ia_opcode, src, type, vex_w);
     }
 #endif
@@ -1605,7 +1605,10 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
     }
   }
 
-  BxDecodeError decode_err = assign_srcs(i, ia_opcode, false, modrm.nnn, modrm.rm, vvv, vex_w, true, displ8);
+  // evex cannot be zero because opcode map 0 is not populated
+  BX_ASSERT(evex != 0);
+
+  BxDecodeError decode_err = assign_srcs(i, ia_opcode, false, modrm.nnn, modrm.rm, vvv, vex_w, evex, displ8);
   if (decode_err != BX_DECODE_OK)
     ia_opcode = BX_IA_ERROR;
 
