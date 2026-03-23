@@ -992,9 +992,6 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   if (! iptr)
     return(-1);
 
-  unsigned nnn = modrm.nnn;
-  unsigned rm  = modrm.rm;
-
   bool displ8 = (modrm.mod == 0x40); // mod == 01b
 
   if (i->modC0()) {
@@ -1003,6 +1000,9 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
     // EVEX.b in reg form implies 512-bit vector length
     if (i->getEvexb()) i->setVL(BX_VL512);
   }
+
+  unsigned nnn = modrm.nnn;
+  unsigned rm  = modrm.rm;
 
   Bit32u vl = i->getVL()-1; // 0: VL128, 1: VL256, 3: VL512
   Bit32u decmask = (1 << IS64_OFFSET) |
