@@ -72,6 +72,18 @@ struct gf_texture
   float offset_matrix[4];
 };
 
+struct gf_light
+{
+  float ambient_color[3];
+  float diffuse_color[3];
+  float specular_color[3];
+  float inf_half_vector[3];
+  float inf_direction[3];
+  float spot_direction[4];
+  float local_position[3];
+  float local_attenuation[3];
+};
+
 struct gf_channel
 {
   Bit32u subr_return;
@@ -214,6 +226,11 @@ struct gf_channel
   Bit32u d3d_depth_bytes;
   Bit32u d3d_surface_pitch_a;
   Bit32u d3d_surface_pitch_z;
+  bool d3d_local_viewer;
+  Bit32u d3d_color_material_emission;
+  Bit32u d3d_color_material_ambient;
+  Bit32u d3d_color_material_diffuse;
+  Bit32u d3d_color_material_specular;
   Bit32u d3d_fog_mode;
   Bit32u d3d_fog_gen_mode;
   float d3d_fog_params[3];
@@ -259,6 +276,8 @@ struct gf_channel
   float d3d_clip_max;
   Bit32u d3d_cull_face;
   Bit32u d3d_front_face;
+  Bit32u d3d_normalize_enable;
+  float d3d_material_factor[4];
   Bit32u d3d_separate_specular;
   Bit32u d3d_light_enable_mask;
   Bit32u d3d_texgen[8][4];
@@ -284,17 +303,14 @@ struct gf_channel
   Bit32u d3d_viewport_y;
   Bit32u d3d_viewport_height;
   float d3d_viewport_offset[4];
+  float d3d_eye_position[4];
   float d3d_combiner_const_color[8][2][4];
   Bit32u d3d_combiner_alpha_ocw[8];
   Bit32u d3d_combiner_color_icw[8];
   float d3d_viewport_scale[4];
   Bit32u d3d_transform_program[544][4];
   float d3d_transform_constant[512][4];
-  float d3d_light_ambient_color[8][3];
-  float d3d_light_diffuse_color[8][3];
-  float d3d_light_specular_color[8][3];
-  float d3d_light_inf_half_vector[8][3];
-  float d3d_light_inf_direction[8][3];
+  gf_light d3d_light[8];
   Bit32u d3d_attrib_count;
   Bit32u d3d_vertex_data_base_index;
   Bit32u d3d_vertex_data_array_offset[16];
