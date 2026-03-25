@@ -447,7 +447,7 @@ void InitParamDialog(bool _embedded)
   if (!embedded) {
     InitDlgFont();
     RegisterScrollWindow(NULL);
-    nextDlgID = 0;
+    nextDlgID = 1;
     embedded = _embedded;
   }
 }
@@ -530,7 +530,7 @@ HWND CreateGroupbox(HWND hDlg, UINT cid, UINT xpos, UINT ypos, SIZE size, BOOL h
     r.bottom = r.top + size.cy;
   }
   MapDialogRect(hDlg, &r);
-  if (list->get_options() & list->USE_BOX_TITLE) {
+  if (!root && (list->get_options() & list->USE_BOX_TITLE)) {
     title = list->get_title();
   }
   Groupbox = CreateWindow("BUTTON", title, BS_GROUPBOX | WS_CHILD, r.left, r.top,
@@ -1250,7 +1250,7 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
     case WM_INITDIALOG:
       list = (bx_list_c*)SIM->get_param((const char*)lParam);
       SetWindowText(Window, list->get_title());
-      size = CreateParamList(Window, 0, nextDlgID, 6, 6, FALSE, list, 1);
+      size = CreateParamList(Window, 0, 0, 6, 6, FALSE, list, 1);
       SetDefaultButtons(Window, size.cx / 2 - 50, size.cy + 12);
       GetWindowRect(Window, &r2);
       r.left = 0;
@@ -1327,7 +1327,7 @@ static INT_PTR CALLBACK FloppyParamDlgProc(HWND Window, UINT AMessage, WPARAM wP
     case WM_INITDIALOG:
       list = (bx_list_c*)SIM->get_param((const char*)lParam);
       SetWindowText(Window, list->get_title());
-      size = CreateParamList(Window, 0, nextDlgID, 6, 6, FALSE, list, true);
+      size = CreateParamList(Window, 0, 0, 6, 6, FALSE, list, 1);
       CreateLabel(Window, 99, 60, size.cy + 12, 175, FALSE,
                   "Clicking OK signals a media change for this drive.");
       CreateButton(Window, IDCREATE, size.cx / 2 - 85, size.cy + 30, FALSE, "Create Image");

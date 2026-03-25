@@ -208,6 +208,7 @@ void ShowPluginCtrl(HWND hDlg, bool show)
 {
   if (show) {
     SetWindowText(GetDlgItem(hDlg, IDOPTGRP), "Optional Plugin Control");
+    ShowWindow(GetDlgItem(hDlg, IDOPTGRP), show ? SW_NORMAL : SW_HIDE);
   }
   ShowWindow(GetDlgItem(hDlg, IDPLUGTXT1), show ? SW_NORMAL : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDPLUGLIST1), show ? SW_NORMAL : SW_HIDE);
@@ -379,6 +380,8 @@ void InitLogOptions(HWND hDlg, BOOL advanced)
   } else {
     SetStandardLogOptions(hDlg);
   }
+  CreateParamList(hDlg, 0, 0, 206, 135, false, (bx_list_c*)SIM->get_param("log"), 2);
+  CreateParamDlgTooltip(hDlg);
 }
 
 UINT HandleLogOptions(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -436,6 +439,7 @@ UINT HandleLogOptions(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
               break;
             case IDAPPLY:
             case IDREVERT:
+              ret = HandleChildWindowEvents(hDlg, 0, LOWORD(wParam), noticode, (bx_list_c*)SIM->get_param("log"));
               if (LOWORD(wParam) == IDAPPLY) {
                 ApplyLogOptions(hDlg, advanced);
               } else {
@@ -447,11 +451,15 @@ UINT HandleLogOptions(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
                 }
                 EnableWindow(GetDlgItem(hDlg, IDADVLOGOPT), TRUE);
               }
-              EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);
-              EnableWindow(GetDlgItem(hDlg, IDREVERT), FALSE);
-              changed = FALSE;
-              ret = BXPD_EDIT_END;
+              if (ret == 0) {
+                EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);
+                EnableWindow(GetDlgItem(hDlg, IDREVERT), FALSE);
+                changed = FALSE;
+                ret = BXPD_EDIT_END;
+              }
               break;
+            default:
+              ret = HandleChildWindowEvents(hDlg, 0, LOWORD(wParam), noticode, (bx_list_c*)SIM->get_param("log"));
           }
       }
       break;
@@ -463,6 +471,7 @@ void ShowLogOptions(HWND hDlg, bool show)
 {
   if (show) {
     SetWindowText(GetDlgItem(hDlg, IDOPTGRP), "Log Options");
+    ShowWindow(GetDlgItem(hDlg, IDOPTGRP), show ? SW_NORMAL : SW_HIDE);
   }
   ShowWindow(GetDlgItem(hDlg, IDDEVLIST), show ? SW_NORMAL : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDLOGLBL1), show ? SW_NORMAL : SW_HIDE);
@@ -480,6 +489,7 @@ void ShowLogOptions(HWND hDlg, bool show)
   ShowWindow(GetDlgItem(hDlg, IDREVERT), show ? SW_NORMAL : SW_HIDE);
   EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);
   EnableWindow(GetDlgItem(hDlg, IDREVERT), show ? FALSE : TRUE);
+  ShowParamList(hDlg, 0, show, (bx_list_c*)SIM->get_param("log"));
 }
 
 typedef struct {
@@ -491,8 +501,6 @@ typedef struct {
 
 edit_opts_t start_options[] = {
   {"Plugin Control", "#plugins", false, {0, 0}},
-  {"Logfile", "log", false, {0, 0}},
-  {"Log Options", "#logopts", false, {0, 0}},
   {"CPU", "cpu", false, {0, 0}},
   {"Memory", "memory", false, {0, 0}},
   {"Clock & CMOS", "clock_cmos", false, {0, 0}},
@@ -513,6 +521,7 @@ edit_opts_t start_options[] = {
   {"Serial / Parallel / USB", "ports", false, {0, 0}},
   {"Network card", "network", false, {0, 0}},
   {"Sound card", "sound", false, {0, 0}},
+  {"Log Options", "#logopts", false, {0, 0}},
   {"Other", "misc", false, {0, 0}},
 #if BX_PLUGINS
   {"User-defined Options", "user", false, {0, 0}},
@@ -521,15 +530,15 @@ edit_opts_t start_options[] = {
 };
 
 edit_opts_t runtime_options[] = {
-  {"Log Options", "#logopts", false, {0, 0}},
   {"CD-ROM", BXPN_MENU_RUNTIME_CDROM, false, {0, 0}},
   {"USB", BXPN_MENU_RUNTIME_USB, false, {0, 0}},
   {"Sound", BXPN_MENU_RUNTIME_SOUND, false, {0, 0}},
   {"Misc", BXPN_MENU_RUNTIME_MISC, false, {0, 0}},
+  {"Log Options", "#logopts", false, {0, 0}},
   {NULL, NULL, false, {0, 0}}
 };
 
-bool ResizeDialog(HWND hDlg, SIZE size, bool force)
+void ResizeDialog(HWND hDlg, SIZE size)
 {
   static RECT ri;
   static bool dlg_size_init = false;
@@ -551,7 +560,7 @@ bool ResizeDialog(HWND hDlg, SIZE size, bool force)
   r1.left = 200;
   r1.top = 10;
   r1.right = 270;
-  r1.bottom = 132;
+  r1.bottom = 162;
   MapDialogRect(hDlg, &r1);
   r2.left = 355;
   r2.top = 125;
@@ -583,15 +592,15 @@ bool ResizeDialog(HWND hDlg, SIZE size, bool force)
     r3.top = r1.bottom - 15;
     resize1 = true;
   }
-  if (resize0 || force) {
+  if (resize0) {
     MoveWindow(hDlg, r0.left, r0.top, r0.right, r0.bottom, TRUE);
+    ri = r0;
   }
-  if (resize1 || force) {
+  if (resize1) {
     MoveWindow(GetDlgItem(hDlg, IDOPTGRP), r1.left, r1.top, r1.right, r1.bottom, TRUE);
     MoveWindow(GetDlgItem(hDlg, IDAPPLY), r2.left, r2.top, r2.right, r2.bottom, TRUE);
     MoveWindow(GetDlgItem(hDlg, IDREVERT), r3.left, r3.top, r3.right, r3.bottom, TRUE);
   }
-  return (resize0 || resize1);
 }
 
 static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -600,7 +609,6 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
   static BOOL optedit = FALSE;
   static edit_opts_t *opts_ptr;
   static int optnum = -1;
-  static bool dlg_resized = false;
   int choice, code, i, id;
   UINT ret = 0;
   bx_list_c *list;
@@ -721,19 +729,20 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
                 InitPluginCtrl(hDlg);
                 opts_ptr->init = true;
               }
-              if (dlg_resized) {
-                dlg_resized = ResizeDialog(hDlg, opts_ptr->size, true);
-              }
+              ResizeDialog(hDlg, opts_ptr->size);
               ShowPluginCtrl(hDlg, true);
               break;
             } else if (!lstrcmp(opts_ptr->param, "#logopts")) {
               if (!opts_ptr->init) {
                 HandleLogOptions(hDlg, WM_INITDIALOG, wParam, (LPARAM)runtime);
+                if (runtime) {
+                  opts_ptr->size = {0, 0};
+                } else {
+                  opts_ptr->size = {272, 195};
+                }
                 opts_ptr->init = true;
               }
-              if (dlg_resized) {
-                dlg_resized = ResizeDialog(hDlg, opts_ptr->size, true);
-              }
+              ResizeDialog(hDlg, opts_ptr->size);
               ShowLogOptions(hDlg, true);
               break;
             } else {
@@ -748,7 +757,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
                 }
               }
               if (list != NULL) {
-                dlg_resized = ResizeDialog(hDlg, opts_ptr->size, dlg_resized);
+                ResizeDialog(hDlg, opts_ptr->size);
                 SetWindowText(GetDlgItem(hDlg, IDOPTGRP), list->get_title());
                 if (list->get_size() > 0) {
                   if ((list->get_options() & list->USE_TAB_WINDOW) != 0) {
@@ -763,6 +772,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
                   EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);
                   EnableWindow(GetDlgItem(hDlg, IDREVERT), FALSE);
                 } else {
+                  ShowWindow(GetDlgItem(hDlg, IDOPTGRP), SW_SHOW);
                   SetWindowText(GetDlgItem(hDlg, IDNOPARATXT), "Nothing to configure in this section !");
                   ShowWindow(GetDlgItem(hDlg, IDNOPARATXT), SW_NORMAL);
                 }
