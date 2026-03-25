@@ -4160,6 +4160,16 @@ float length(float v[3])
   return sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 }
 
+float normalize(float v[3])
+{
+  float l = length(v);
+  float scale = 1.0f / l;
+  v[0] *= scale;
+  v[1] *= scale;
+  v[2] *= scale;
+  return l;
+}
+
 void normalize(float in[3], float out[3])
 {
   float scale = 1.0f / length(in);
@@ -4587,80 +4597,156 @@ void normal_to_view(gf_channel* ch, float n[3], float nt[3])
   nt[0] = n[0] * m[0] + n[1] * m[1] + n[2] * m[2];
   nt[1] = n[0] * m[4] + n[1] * m[5] + n[2] * m[6];
   nt[2] = n[0] * m[8] + n[1] * m[9] + n[2] * m[10];
+  if (ch->d3d_normalize_enable)
+    normalize(nt);
 }
 
 void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
 {
   if (ch->d3d_shade_mode == 0x00001d00) { // FLAT
-    for (int v = 0; v < 3; v++) {
-      for (int comp_index = 0; comp_index < 4; comp_index++) {
-        ch->d3d_vertex_data[(v + base) & 3][ch->d3d_attrib_in_color[0]][comp_index] =
-          ch->d3d_vertex_data[ch->d3d_vertex_index - 1][ch->d3d_attrib_in_color[0]][comp_index];
-        ch->d3d_vertex_data[(v + base) & 3][ch->d3d_attrib_in_normal][comp_index] =
-          ch->d3d_vertex_data[ch->d3d_vertex_index - 1][ch->d3d_attrib_in_normal][comp_index];
+    float (*v_pr)[4] = ch->d3d_vertex_data[ch->d3d_vertex_index - 1];
+    for (Bit32u vi = 0; vi < 3; vi++) {
+      float (*v_in)[4] = ch->d3d_vertex_data[(vi + base) & 3];
+      for (Bit32u ci = 0; ci < 4; ci++) {
+        v_in[ch->d3d_attrib_in_color[0]][ci] = v_pr[ch->d3d_attrib_in_color[0]][ci];
+        v_in[ch->d3d_attrib_in_normal][ci] = v_pr[ch->d3d_attrib_in_normal][ci];
       }
     }
   }
   float vs_out[3][16][4];
-  if ((ch->d3d_transform_execution_mode & 3) != 0) {
-    for (int v = 0; v < 3; v++)
-      d3d_vertex_shader(ch, ch->d3d_vertex_data[(v + base) & 3], vs_out[v]);
-  } else {
-    if (ch->d3d_lighting_enable) {
-      for (int v = 0; v < 3; v++) {
-        float nt[3];
-        float* n = ch->d3d_vertex_data[(v + base) & 3][ch->d3d_attrib_in_normal];
-        normal_to_view(ch, n, nt);
-        float* color[2] = {
-          vs_out[v][ch->d3d_attrib_out_color[0]],
-          vs_out[v][ch->d3d_attrib_out_color[1]]
-        };
-        for (int ci = 0; ci < 3; ci++) {
-          color[0][ci] = ch->d3d_scene_ambient_color[ci];
-          color[1][ci] = 0.0f;
+  for (Bit32u vi = 0; vi < 3; vi++) {
+    float (*v_out)[4] = vs_out[vi];
+    float (*v_in)[4] = ch->d3d_vertex_data[(vi + base) & 3];
+    if ((ch->d3d_transform_execution_mode & 3) != 0) {
+      d3d_vertex_shader(ch, v_in, v_out);
+    } else {
+      float* p = v_out[0];
+      for (Bit32u ci = 0; ci < 4; ci++)
+        p[ci] = v_in[0][ci];
+      float* color_out[2] = {
+        v_out[ch->d3d_attrib_out_color[0]],
+        v_out[ch->d3d_attrib_out_color[1]]
+      };
+      float* color_in[2] = {
+        v_in[ch->d3d_attrib_in_color[0]],
+        v_in[ch->d3d_attrib_in_color[1]]
+      };
+      if (ch->d3d_lighting_enable) {
+        for (Bit32u ci = 0; ci < 3; ci++) {
+          switch (ch->d3d_color_material_ambient) {
+            case 0:
+            default:
+              color_out[0][ci] = ch->d3d_scene_ambient_color[ci];
+              break;
+            case 1:
+              color_out[0][ci] = color_in[0][ci] * ch->d3d_material_factor[ci];
+              break;
+            case 2:
+              color_out[0][ci] = color_in[1][ci] * ch->d3d_material_factor[ci];
+              break;
+          }
+          color_out[1][ci] = 0.0f;
         }
-        for (int light_index = 0; light_index < 8; light_index++) {
+        float nt[3];
+        float* n = v_in[ch->d3d_attrib_in_normal];
+        normal_to_view(ch, n, nt);
+        float pt[3];
+        position_to_view3(ch, p, pt);
+        for (Bit32u light_index = 0; light_index < 8; light_index++) {
           Bit32u light_type = (ch->d3d_light_enable_mask >> (light_index * 2)) & 3;
+          if (light_type == 0)
+            continue;
+          float n_dot_ld;
+          float n_dot_hv;
+          float att;
+          gf_light* light = &ch->d3d_light[light_index];
           if (light_type == 1) {
-            float n_dot_l = dot3(nt, ch->d3d_light_inf_direction[light_index]);
-            if (n_dot_l < 0.0f)
-              n_dot_l = 0.0f;
-            for (int ci = 0; ci < 3; ci++) {
-              color[0][ci] += ch->d3d_light_ambient_color[light_index][ci] +
-                ch->d3d_light_diffuse_color[light_index][ci] * n_dot_l;
+            n_dot_ld = dot3(nt, light->inf_direction);
+            if (ch->d3d_local_viewer) {
+              float ed[3];
+              for (Bit32u ci = 0; ci < 3; ci++)
+                ed[ci] = ch->d3d_eye_position[ci] - pt[ci];
+              normalize(ed);
+              float hv[3];
+              hv[0] = light->inf_direction[0] + ed[0];
+              hv[1] = light->inf_direction[1] + ed[1];
+              hv[2] = light->inf_direction[2] + ed[2];
+              normalize(hv);
+              n_dot_hv = dot3(nt, hv);
+            } else {
+              n_dot_hv = dot3(nt, light->inf_half_vector);
             }
-            float n_dot_hv = dot3(nt, ch->d3d_light_inf_half_vector[light_index]);
-            if (n_dot_hv < 0.0f)
-              n_dot_hv = 0.0f;
-            if (n_dot_hv != 0.0f) {
-              for (int ci = 0; ci < 3; ci++) {
-                color[ch->d3d_separate_specular][ci] +=
-                  ch->d3d_light_specular_color[light_index][ci] *
-                  pow(n_dot_hv, ch->d3d_specular_power);
-              }
+            att = 1.0f;
+          } else {
+            float ld[3];
+            for (Bit32u ci = 0; ci < 3; ci++)
+              ld[ci] = light->local_position[ci] - pt[ci];
+            float d = normalize(ld);
+            n_dot_ld = dot3(nt, ld);
+            float hv[3];
+            if (ch->d3d_local_viewer) {
+              float ed[3];
+              for (Bit32u ci = 0; ci < 3; ci++)
+                ed[ci] = ch->d3d_eye_position[ci] - pt[ci];
+              normalize(ed);
+              hv[0] = ld[0] + ed[0];
+              hv[1] = ld[1] + ed[1];
+              hv[2] = ld[2] + ed[2];
+            } else {
+              hv[0] = ld[0];
+              hv[1] = ld[1];
+              hv[2] = ld[2] + 1.0f;
+            }
+            normalize(hv);
+            n_dot_hv = dot3(nt, hv);
+            att = 1.0f / (
+              light->local_attenuation[0] +
+              light->local_attenuation[1] * d +
+              light->local_attenuation[2] * d * d);
+            if (light_type == 3) {
+              float rho = -dot3(light->spot_direction, ld);
+              if (rho > light->spot_direction[3])
+                continue;
+            }
+          }
+          if (n_dot_ld < 0.0f)
+            n_dot_ld = 0.0f;
+          for (Bit32u ci = 0; ci < 3; ci++) {
+            float ambient = light->ambient_color[ci];
+            float diffuse = att * light->diffuse_color[ci] * n_dot_ld;
+            if (ch->d3d_color_material_ambient == 1)
+              ambient *= color_in[0][ci];
+            else if (ch->d3d_color_material_ambient == 2)
+              ambient *= color_in[1][ci];
+            if (ch->d3d_color_material_diffuse == 1)
+              diffuse *= color_in[0][ci];
+            else if (ch->d3d_color_material_diffuse == 2)
+              diffuse *= color_in[1][ci];
+            color_out[0][ci] += ambient + diffuse;
+          }
+          if (n_dot_hv < 0.0f)
+            n_dot_hv = 0.0f;
+          if (n_dot_hv != 0.0f) {
+            float pf = pow(n_dot_hv, ch->d3d_specular_power);
+            for (Bit32u ci = 0; ci < 3; ci++) {
+              color_out[ch->d3d_separate_specular][ci] +=
+                att * light->specular_color[ci] * pf;
             }
           }
         }
-      }
-    } else {
-      for (int v = 0; v < 3; v++)
-        for (int i = 0; i < 4; i++) {
-          vs_out[v][ch->d3d_attrib_out_color[0]][i] =
-            ch->d3d_vertex_data[(v + base) & 3][ch->d3d_attrib_in_color[0]][i];
-          vs_out[v][ch->d3d_attrib_out_color[1]][i] = 0.0f;
+      } else {
+        for (Bit32u ci = 0; ci < 4; ci++) {
+          color_out[0][ci] = color_in[0][ci];
+          color_out[1][ci] = 0.0f;
         }
-    }
-    for (int v = 0; v < 3; v++) {
-      float* p = vs_out[v][0];
-      for (int comp_index = 0; comp_index < 4; comp_index++)
-        p[comp_index] = ch->d3d_vertex_data[(v + base) & 3][0][comp_index];
+      }
       for (Bit32u i = 0; i < ch->d3d_tex_coord_count; i++) {
-        float* tc = vs_out[v][ch->d3d_attrib_out_tex_coord[i]];
+        float* tc = v_out[ch->d3d_attrib_out_tex_coord[i]];
         for (int comp_index = 0; comp_index < 4; comp_index++) {
           Bit32u texgen = ch->d3d_texgen[i][comp_index];
           switch (texgen) {
             case 0x0000:   // disabled
-              tc[comp_index] = ch->d3d_vertex_data[(v + base) & 3][
+              tc[comp_index] = v_in[
                 ch->d3d_attrib_in_tex_coord[i]][comp_index];
               break;
             case 0x2400: { // EYE_LINEAR
@@ -4675,7 +4761,7 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
             case 0x2402:   // SPHERE_MAP
             case 0x8512: { // REFLECTION_MAP
               float nt[3];
-              float* n = ch->d3d_vertex_data[(v + base) & 3][ch->d3d_attrib_in_normal];
+              float* n = v_in[ch->d3d_attrib_in_normal];
               normal_to_view(ch, n, nt);
               float pt[3];
               position_to_view3(ch, p, pt);
@@ -4702,7 +4788,7 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
             }
             case 0x8511: { // NORMAL_MAP
               if (comp_index < 3) {
-                float* n = ch->d3d_vertex_data[(v + base) & 3][ch->d3d_attrib_in_normal];
+                float* n = v_in[ch->d3d_attrib_in_normal];
                 float* r = &ch->d3d_inverse_model_view_matrix[comp_index * 4];
                 tc[comp_index] = dot3(n, r);
               } else
@@ -4729,7 +4815,7 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
         float fog_dist;
         switch (ch->d3d_fog_gen_mode) {
           case 0:   // SPEC_ALPHA
-            fog_dist = ch->d3d_vertex_data[(v + base) & 3][ch->d3d_attrib_in_color[1]][3];
+            fog_dist = v_in[ch->d3d_attrib_in_color[1]][3];
             break;
           case 1: { // RADIAL
             float pt[3];
@@ -4749,7 +4835,7 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
             fog_dist = 3.0f;
             break;
         }
-        vs_out[v][ch->d3d_attrib_out_fogc][0] = fog_dist;
+        v_out[ch->d3d_attrib_out_fogc][0] = fog_dist;
       }
       if (ch->d3d_view_matrix_enable == 0 ||
           ch->d3d_view_matrix_enable == 2 ||
@@ -4764,14 +4850,13 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
           p[comp_index] = tp[comp_index];
       }
     }
-  }
-  for (Bit32u i = 0; i < 2; i++) {
-    if (ch->d3d_attrib_out_enable[i])
-      for (Bit32u v = 0; v < 3; v++) {
-        float* color = vs_out[v][ch->d3d_attrib_out_color[i]];
+    for (Bit32u i = 0; i < 2; i++) {
+      if (ch->d3d_attrib_out_enable[i]) {
+        float* color = v_out[ch->d3d_attrib_out_color[i]];
         for (Bit32u ci = 0; ci < 4; ci++)
           color[ci] = BX_MIN(BX_MAX(color[ci], 0.0f), 1.0f);
       }
+    }
   }
   bool clipped[3];
   Bit32u clip_count = 0;
@@ -5968,12 +6053,10 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     if (cls == 0x0096) {
       ch->d3d_window_offset_x = 2048;
       ch->d3d_window_offset_y = 2048;
-      ch->d3d_attrib_index = 7;
       ch->d3d_attrib_count = 8;
     } else {
       ch->d3d_window_offset_x = 0;
       ch->d3d_window_offset_y = 0;
-      ch->d3d_attrib_index = 0;
       ch->d3d_attrib_count = 16;
     }
     for (Bit32u j = 0; j < ch->d3d_attrib_count; j++) {
@@ -6118,6 +6201,22 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
              (method >= 0x23d && method <= 0x23e && cls == 0x0497)) {
     Bit32u i = method - (cls <= 0x0097 ? 0x0a2 : 0x23d);
     ch->d3d_combiner_final[i] = param;
+  } else if ((method == 0x0a5 && cls <= 0x0097) ||
+             (method == 0x509 && cls == 0x0497)) {
+    ch->d3d_local_viewer = (param & 0x00010000) != 0;
+  } else if ((method == 0x0a6 && cls <= 0x0097) ||
+             (method == 0x0e4 && cls >= 0x0497)) {
+    if (cls == 0x0096) {
+      ch->d3d_color_material_emission = (param >> 0) & 1;
+      ch->d3d_color_material_ambient = (param >> 1) & 1;
+      ch->d3d_color_material_diffuse = (param >> 2) & 1;
+      ch->d3d_color_material_specular = (param >> 3) & 1;
+    } else {
+      ch->d3d_color_material_emission = (param >> 0) & 3;
+      ch->d3d_color_material_ambient = (param >> 2) & 3;
+      ch->d3d_color_material_diffuse = (param >> 4) & 3;
+      ch->d3d_color_material_specular = (param >> 6) & 3;
+    }
   } else if ((method == 0x0a7 && cls <= 0x0097) ||
              (method == 0x233 && cls >= 0x0497)) {
     ch->d3d_fog_mode = param;
@@ -6239,8 +6338,14 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   else if ((method == 0x0e8 && cls <= 0x0097) ||
            (method == 0x60d && cls >= 0x0497))
     ch->d3d_front_face = param;
-  else if ((method == 0x0ee && cls <= 0x0097) ||
-           (method == 0x50a && cls >= 0x0497))
+  else if ((method == 0x0e9 && cls <= 0x0097) ||
+           (method == 0x0df && cls >= 0x0497))
+    ch->d3d_normalize_enable = param;
+  else if (method >= 0x0ea && method <= 0x0ed && cls <= 0x0097) {
+    Bit32u i = method - 0x0ea;
+    ch->d3d_material_factor[i] = u.param_float;
+  } else if ((method == 0x0ee && cls <= 0x0097) ||
+             (method == 0x50a && cls >= 0x0497))
     ch->d3d_separate_specular = param & 1;
   else if ((method == 0x0ef && cls <= 0x0097) ||
            (method == 0x508 && cls >= 0x0497))
@@ -6353,6 +6458,9 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       ch->d3d_transform_constant[0x3b][i] = u.param_float;
     else if (BX_GEFORCE_THIS card_type == 0x35)
       ch->d3d_transform_constant[0x77][i] = u.param_float;
+  } else if (method >= 0x294 && method <= 0x297 && cls >= 0x0097) {
+    Bit32u i = method - 0x294;
+    ch->d3d_eye_position[i] = u.param_float;
   } else if (method >= 0x09c && method <= 0x09d && cls == 0x0096) {
     Bit32u i = method & 1;
     for (Bit32u s = 0; s < 2; s++) {
@@ -6413,20 +6521,30 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       light_index = (method >> 4) & 7;
       light_method = (method & 0x00f) | ((method & 0x080) >> 3);
     }
+    gf_light* light = &ch->d3d_light[light_index];
     if (light_method >= 0x00 && light_method <= 0x02) {
-      ch->d3d_light_ambient_color[light_index][light_method] = u.param_float;
+      light->ambient_color[light_method] = u.param_float;
     } else if (light_method >= 0x03 && light_method <= 0x05) {
       Bit32u i = light_method - 0x03;
-      ch->d3d_light_diffuse_color[light_index][i] = u.param_float;
+      light->diffuse_color[i] = u.param_float;
     } else if (light_method >= 0x06 && light_method <= 0x08) {
       Bit32u i = light_method - 0x06;
-      ch->d3d_light_specular_color[light_index][i] = u.param_float;
+      light->specular_color[i] = u.param_float;
     } else if (light_method >= 0x0a && light_method <= 0x0c) {
       Bit32u i = light_method - 0x0a;
-      ch->d3d_light_inf_half_vector[light_index][i] = u.param_float;
+      light->inf_half_vector[i] = u.param_float;
     } else if (light_method >= 0x0d && light_method <= 0x0f) {
       Bit32u i = light_method - 0x0d;
-      ch->d3d_light_inf_direction[light_index][i] = u.param_float;
+      light->inf_direction[i] = u.param_float;
+    } else if (light_method >= 0x13 && light_method <= 0x16) {
+      Bit32u i = light_method - 0x13;
+      light->spot_direction[i] = u.param_float;
+    } else if (light_method >= 0x17 && light_method <= 0x19) {
+      Bit32u i = light_method - 0x17;
+      light->local_position[i] = u.param_float;
+    } else if (light_method >= 0x1a && light_method <= 0x1c) {
+      Bit32u i = light_method - 0x1a;
+      light->local_attenuation[i] = u.param_float;
     }
   } else if ((method >= 0x300 && method <= 0x302 && cls == 0x0096) ||
              (method >= 0x540 && method <= 0x542 && cls == 0x0097)) {
@@ -6547,7 +6665,7 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
              (method == 0x4ff && cls == 0x0096) ||
              (method == 0x5ff && cls <= 0x0097) ||
              (method == 0x602 && cls >= 0x0497)) {
-    if (param == 0) {
+    if (param != 0) {
       ch->d3d_primitive_done = false;
       ch->d3d_triangle_flip = false;
       ch->d3d_vertex_index = 0;
