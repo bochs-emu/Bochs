@@ -522,13 +522,8 @@ HWND CreateGroupbox(HWND hDlg, UINT cid, UINT xpos, UINT ypos, SIZE size, BOOL h
   code = ID_PARAM + cid;
   r.left = xpos;
   r.top = ypos;
-  if (root) {
-    r.right = size.cx - r.left + 5;
-    r.bottom = size.cy - r.top + 10;
-  } else {
-    r.right = r.left + size.cx;
-    r.bottom = r.top + size.cy;
-  }
+  r.right = r.left + size.cx;
+  r.bottom = r.top + size.cy;
   MapDialogRect(hDlg, &r);
   if (!root && (list->get_options() & list->USE_BOX_TITLE)) {
     title = list->get_title();
@@ -855,7 +850,7 @@ SIZE CreateParamList(HWND hDlg, UINT mid, UINT lid, UINT xpos, UINT ypos, BOOL h
     if (!SIM->get_init_done() || param->get_runtime_param()) {
       ihide = hide || ((i != 0) && (options & list->USE_TAB_WINDOW));
       if (param->get_type() == BXT_LIST) {
-        lsize = CreateParamList(hDlg, mid, cid, x0 + 4, y + 1, ihide, (bx_list_c*)param, 2);
+        lsize = CreateParamList(hDlg, mid, cid, x0 + 4, y + 1, ihide, (bx_list_c*)param, (options & list->USE_TAB_WINDOW) ? 1 : 2);
         if ((lsize.cx + 18) > size.cx) {
           size.cx = lsize.cx + 18;
         }
@@ -1251,11 +1246,11 @@ static INT_PTR CALLBACK ParamDlgProc(HWND Window, UINT AMessage, WPARAM wParam, 
       list = (bx_list_c*)SIM->get_param((const char*)lParam);
       SetWindowText(Window, list->get_title());
       size = CreateParamList(Window, 0, 0, 6, 6, FALSE, list, 1);
-      SetDefaultButtons(Window, size.cx / 2 - 50, size.cy + 12);
+      SetDefaultButtons(Window, size.cx / 2 - 48, size.cy + 11);
       GetWindowRect(Window, &r2);
       r.left = 0;
       r.top = 0;
-      r.right = size.cx + 18;
+      r.right = size.cx + 22;
       r.bottom = size.cy + 52;
       MapDialogRect(Window, &r);
       MoveWindow(Window, r2.left, r2.top, r.right, r.bottom, TRUE);
@@ -1330,12 +1325,12 @@ static INT_PTR CALLBACK FloppyParamDlgProc(HWND Window, UINT AMessage, WPARAM wP
       size = CreateParamList(Window, 0, 0, 6, 6, FALSE, list, 1);
       CreateLabel(Window, 99, 60, size.cy + 12, 175, FALSE,
                   "Clicking OK signals a media change for this drive.");
-      CreateButton(Window, IDCREATE, size.cx / 2 - 85, size.cy + 30, FALSE, "Create Image");
-      SetDefaultButtons(Window, size.cx / 2 - 25, size.cy + 30);
+      CreateButton(Window, IDCREATE, size.cx / 2 - 80, size.cy + 29, FALSE, "Create Image");
+      SetDefaultButtons(Window, size.cx / 2 - 20, size.cy + 29);
       GetWindowRect(Window, &r2);
       r.left = 0;
       r.top = 0;
-      r.right = size.cx + 18;
+      r.right = size.cx + 22;
       r.bottom = size.cy + 70;
       MapDialogRect(Window, &r);
       MoveWindow(Window, r2.left, r2.top, r.right, r.bottom, TRUE);

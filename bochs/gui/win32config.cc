@@ -218,11 +218,12 @@ void ShowPluginCtrl(HWND hDlg, bool show)
   ShowWindow(GetDlgItem(hDlg, IDUNLOAD), show ? SW_NORMAL : SW_HIDE);
 }
 
-void HandlePluginCtrl(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+BOOL HandlePluginCtrl(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   int i;
   long code;
   char plugname[20], message[80];
+  BOOL changed = FALSE;
 
   switch (msg) {
     case WM_COMMAND:
@@ -251,6 +252,7 @@ void HandlePluginCtrl(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             SendMessage(GetDlgItem(hDlg, IDPLUGLIST1), LB_DELETESTRING, i, 0);
             SendMessage(GetDlgItem(hDlg, IDPLUGLIST2), LB_ADDSTRING, 0, (LPARAM)plugname);
             EnableWindow(GetDlgItem(hDlg, IDLOAD), FALSE);
+            changed = TRUE;
           }
           break;
         case IDUNLOAD:
@@ -262,11 +264,13 @@ void HandlePluginCtrl(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
             SendMessage(GetDlgItem(hDlg, IDPLUGLIST1), LB_ADDSTRING, 0, (LPARAM)plugname);
             SendMessage(GetDlgItem(hDlg, IDPLUGLIST2), LB_DELETESTRING, i, 0);
             EnableWindow(GetDlgItem(hDlg, IDUNLOAD), FALSE);
+            changed = TRUE;
           }
           break;
       }
       break;
   }
+  return changed;
 }
 
 void SetStandardLogOptions(HWND hDlg)
@@ -361,11 +365,12 @@ void ApplyLogOptions(HWND hDlg, BOOL advanced)
   EnableWindow(GetDlgItem(hDlg, IDADVLOGOPT), TRUE);
 }
 
-void InitLogOptions(HWND hDlg, BOOL advanced)
+void BuildLogModulesList(HWND hDlg)
 {
   int idx, mod;
   char name[32];
 
+  SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_RESETCONTENT, 0, 0);
   for (mod=0; mod<SIM->get_n_log_modules(); mod++) {
     if (lstrcmp(SIM->get_logfn_name(mod), "?")) {
       lstrcpyn(name, SIM->get_logfn_name(mod), 32);
@@ -373,15 +378,20 @@ void InitLogOptions(HWND hDlg, BOOL advanced)
       SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_SETITEMDATA, idx, mod);
     }
   }
+}
+
+void InitLogOptions(HWND hDlg, BOOL advanced)
+{
+  BuildLogModulesList(hDlg);
   if (advanced) {
     SendMessage(GetDlgItem(hDlg, IDADVLOGOPT), BM_SETCHECK, BST_CHECKED, 0);
     SendMessage(GetDlgItem(hDlg, IDDEVLIST), LB_SETCURSEL, 0, 0);
     SetAdvancedLogOptions(hDlg);
   } else {
     SetStandardLogOptions(hDlg);
+    CreateParamList(hDlg, 0, 0, 206, 135, false, (bx_list_c*)SIM->get_param("log"), 2);
+    CreateParamDlgTooltip(hDlg);
   }
-  CreateParamList(hDlg, 0, 0, 206, 135, false, (bx_list_c*)SIM->get_param("log"), 2);
-  CreateParamDlgTooltip(hDlg);
 }
 
 UINT HandleLogOptions(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -439,7 +449,9 @@ UINT HandleLogOptions(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
               break;
             case IDAPPLY:
             case IDREVERT:
-              ret = HandleChildWindowEvents(hDlg, 0, LOWORD(wParam), noticode, (bx_list_c*)SIM->get_param("log"));
+              if (SIM->get_param("log") != NULL) {
+                ret = HandleChildWindowEvents(hDlg, 0, LOWORD(wParam), noticode, (bx_list_c*)SIM->get_param("log"));
+              }
               if (LOWORD(wParam) == IDAPPLY) {
                 ApplyLogOptions(hDlg, advanced);
               } else {
@@ -459,7 +471,9 @@ UINT HandleLogOptions(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
               }
               break;
             default:
-              ret = HandleChildWindowEvents(hDlg, 0, LOWORD(wParam), noticode, (bx_list_c*)SIM->get_param("log"));
+              if (SIM->get_param("log") != NULL) {
+                ret = HandleChildWindowEvents(hDlg, 0, LOWORD(wParam), noticode, (bx_list_c*)SIM->get_param("log"));
+              }
           }
       }
       break;
@@ -467,11 +481,14 @@ UINT HandleLogOptions(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
   return ret;
 }
 
-void ShowLogOptions(HWND hDlg, bool show)
+void ShowLogOptions(HWND hDlg, bool show, bool refresh)
 {
   if (show) {
     SetWindowText(GetDlgItem(hDlg, IDOPTGRP), "Log Options");
     ShowWindow(GetDlgItem(hDlg, IDOPTGRP), show ? SW_NORMAL : SW_HIDE);
+    if (refresh) {
+      BuildLogModulesList(hDlg);
+    }
   }
   ShowWindow(GetDlgItem(hDlg, IDDEVLIST), show ? SW_NORMAL : SW_HIDE);
   ShowWindow(GetDlgItem(hDlg, IDLOGLBL1), show ? SW_NORMAL : SW_HIDE);
@@ -489,7 +506,9 @@ void ShowLogOptions(HWND hDlg, bool show)
   ShowWindow(GetDlgItem(hDlg, IDREVERT), show ? SW_NORMAL : SW_HIDE);
   EnableWindow(GetDlgItem(hDlg, IDAPPLY), FALSE);
   EnableWindow(GetDlgItem(hDlg, IDREVERT), show ? FALSE : TRUE);
-  ShowParamList(hDlg, 0, show, (bx_list_c*)SIM->get_param("log"));
+  if (SIM->get_param("log") != NULL) {
+    ShowParamList(hDlg, 0, show, (bx_list_c*)SIM->get_param("log"));
+  }
 }
 
 typedef struct {
@@ -563,12 +582,12 @@ void ResizeDialog(HWND hDlg, SIZE size)
   r1.bottom = 162;
   MapDialogRect(hDlg, &r1);
   r2.left = 355;
-  r2.top = 125;
+  r2.top = 155;
   r2.right = 50;
   r2.bottom = 14;
   MapDialogRect(hDlg, &r2);
   r3.left = 415;
-  r3.top = 125;
+  r3.top = 155;
   r3.right = 50;
   r3.bottom = 14;
   MapDialogRect(hDlg, &r3);
@@ -607,6 +626,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
 {
   static bool runtime;
   static BOOL optedit = FALSE;
+  static BOOL plugin_update = FALSE;
   static edit_opts_t *opts_ptr;
   static int optnum = -1;
   int choice, code, i, id;
@@ -700,7 +720,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
               if (!lstrcmp(opts_ptr->param, "#plugins")) {
                 ShowPluginCtrl(hDlg, false);
               } else if (!lstrcmp(opts_ptr->param, "#logopts")) {
-                ShowLogOptions(hDlg, false);
+                ShowLogOptions(hDlg, false, false);
               } else {
                 ShowWindow(GetDlgItem(hDlg, IDNOPARATXT), SW_HIDE);
                 list = (bx_list_c*)SIM->get_param(opts_ptr->param);
@@ -736,14 +756,15 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
               if (!opts_ptr->init) {
                 HandleLogOptions(hDlg, WM_INITDIALOG, wParam, (LPARAM)runtime);
                 if (runtime) {
-                  opts_ptr->size = {0, 0};
+                  opts_ptr->size = {260, 139};
                 } else {
                   opts_ptr->size = {272, 195};
                 }
                 opts_ptr->init = true;
               }
               ResizeDialog(hDlg, opts_ptr->size);
-              ShowLogOptions(hDlg, true);
+              ShowLogOptions(hDlg, true, plugin_update);
+              plugin_update = false;
               break;
             } else {
               list = (bx_list_c*)SIM->get_param(opts_ptr->param);
@@ -821,7 +842,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
         default:
           if (opts_ptr != NULL) {
             if (!lstrcmp(opts_ptr->param, "#plugins")) {
-              HandlePluginCtrl(hDlg, msg, wParam, lParam);
+              plugin_update = HandlePluginCtrl(hDlg, msg, wParam, lParam);
             } else if (!lstrcmp(opts_ptr->param, "#logopts")) {
               ret = HandleLogOptions(hDlg, msg, wParam, lParam);
             } else {
