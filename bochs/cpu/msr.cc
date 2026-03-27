@@ -1031,7 +1031,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       {
         Bit32u xss_suport_mask = get_ia32_xss_allow_mask();
         if (val_64 & ~Bit64u(xss_suport_mask)) {
-          BX_ERROR(("WRMSR: attempt to set reserved/not supported bit in BX_MSR_XSS"));
+          BX_ERROR(("WRMSR: attempt to set reserved/not supported bit in BX_MSR_XSS: %08x:%08x", val32_hi, val32_lo));
           return false;
         }
         BX_CPU_THIS_PTR msr.ia32_xss = val_64;
