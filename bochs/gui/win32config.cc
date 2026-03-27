@@ -537,7 +537,8 @@ edit_opts_t start_options[] = {
 #if BX_MAX_ATA_CHANNEL>3
   {"ATA controller 3", "ata.3", false, {0, 0}},
 #endif
-  {"Serial / Parallel / USB", "ports", false, {0, 0}},
+  {"Serial / Parallel", BXPN_MENU_PORTS_WIN32, false, {0, 0}},
+  {"USB configuration", BXPN_MENU_USB_WIN32, false, {0, 0}},
   {"Network card", "network", false, {0, 0}},
   {"Sound card", "sound", false, {0, 0}},
   {"Log Options", "#logopts", false, {0, 0}},
@@ -622,6 +623,18 @@ void ResizeDialog(HWND hDlg, SIZE size)
   }
 }
 
+void MainMenuSetTitle(HWND hDlg, const char *rcfile)
+{
+  char title[BX_PATHNAME_LEN];
+
+  if (lstrlen(rcfile) > 0) {
+    wsprintf(title, "Bochs Start Menu (%s)", rcfile);
+  } else {
+    wsprintf(title, "Bochs Start Menu (unnamed config)");
+  }
+  SetWindowText(hDlg, title);
+}
+
 static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   static bool runtime;
@@ -653,6 +666,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
         }
         choice = IDOK;
       } else {
+        MainMenuSetTitle(hDlg, SIM->get_param_string(BXPN_BOCHSRC_FILE_NAME)->getptr());
         i = 0;
         while (start_options[i].label != NULL) {
           SendMessage(GetDlgItem(hDlg, IDEDITBOX), LB_ADDSTRING, 0, (LPARAM)start_options[i].label);
@@ -686,12 +700,13 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
           if (AskFilename(hDlg, rcfile, NULL) > 0) {
             SIM->reset_all_param();
             SIM->read_rc(rcfile->getptr());
+            MainMenuSetTitle(hDlg, rcfile->getptr());
             i = 0;
             while (start_options[i].label != NULL) {
               if (start_options[i].init) {
                 if (i == 0) {
                   InitPluginCtrl(hDlg);
-                } else if (i == 2) {
+                } else if (!lstrcmp(start_options[i].param, "#logopts")) {
                   HandleLogOptions(hDlg, WM_COMMAND, IDREVERT, 0);
                 } else {
                   list = (bx_list_c*)SIM->get_param(opts_ptr->param);
@@ -710,6 +725,7 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
           rcfile->set_options(rcfile->SAVE_FILE_DIALOG);
           if (AskFilename(hDlg, rcfile, NULL) > 0) {
             SIM->write_rc(rcfile->getptr(), 1);
+            MainMenuSetTitle(hDlg, rcfile->getptr());
           }
           delete rcfile;
           break;

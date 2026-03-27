@@ -26,6 +26,7 @@
 // define parameter path names.  These names give the location in the
 // parameter tree where each can be found.  The names correspond to
 // the old BXP_* enum values, which have been eliminated.
+#define BXPN_BOCHSRC_FILE_NAME           "general.bochsrc"
 #define BXPN_SEL_CONFIG_INTERFACE        "general.config_interface"
 #define BXPN_BOCHS_START                 "general.start_mode"
 #define BXPN_BOCHS_BENCHMARK             "general.benchmark"
@@ -170,6 +171,8 @@
 #define BXPN_DEBUGGER_LOG_FILENAME       "log.debugger_filename"
 #define BXPN_MENU_DISK                   "menu.disk"
 #define BXPN_MENU_FLOPPY_BOOT            "menu.floppy_boot"
+#define BXPN_MENU_PORTS_WIN32            "menu.ports"
+#define BXPN_MENU_USB_WIN32              "menu.usb"
 #define BXPN_MENU_RUNTIME_CDROM          "menu.runtime.cdrom"
 #define BXPN_MENU_RUNTIME_SOUND          "menu.runtime.sound"
 #define BXPN_MENU_RUNTIME_USB            "menu.runtime.usb"

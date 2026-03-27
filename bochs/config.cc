@@ -314,6 +314,9 @@ void bx_init_usb_options(const char *usb_name, const char *pname, int maxports, 
     device->set_dependent_bitmap(0, 0);
   }
   enabled->set_dependent_list(deplist);
+#ifdef WIN32
+  ((bx_list_c*)SIM->get_param(BXPN_MENU_USB_WIN32))->add(menu);
+#endif
 }
 
 #if BX_USB_DEBUGGER
@@ -363,6 +366,9 @@ void bx_init_usb_debug_options(bx_list_c *base)
   );
   type->set_dependent_list(usb_debug->clone(), 1);
   type->set_dependent_bitmap(USB_DEBUG_NONE, 0);
+#ifdef WIN32
+  ((bx_list_c*)SIM->get_param(BXPN_MENU_USB_WIN32))->add(usb_debug);
+#endif
 }
 #endif
 #endif
@@ -526,7 +532,14 @@ void bx_init_options()
   // general options subtree
   menu = new bx_list_c(root_param, "general", "");
 
- // config interface option, set in bochsrc or command line
+  // Active config file name after loading/saving configuration
+  new bx_param_filename_c(menu,
+      "bochsrc",
+      "Active configuration file",
+      "",
+      "", BX_PATHNAME_LEN);
+
+  // config interface option, set in bochsrc or command line
   bx_init_config_interface_list();
   bx_param_enum_c *sel_config = new bx_param_enum_c(menu,
     "config_interface", "Configuration interface",
@@ -1530,6 +1543,14 @@ void bx_init_options()
   };
   menu = new bx_list_c(special_menus, "floppy_boot", "Bochs Disk Options", floppy_boot_init_list);
   menu->set_options(menu->USE_TAB_WINDOW);
+  // serial/parallel menu for win32paramdlg
+  menu = new bx_list_c(special_menus, "ports", "Serial / Parallel Ports Options");
+  menu->set_options(menu->USE_TAB_WINDOW);
+#if BX_SUPPORT_PCIUSB
+  // USB menu for win32paramdlg
+  menu = new bx_list_c(special_menus, "usb", "USB Configuration");
+  menu->set_options(menu->USE_TAB_WINDOW);
+#endif
 #endif
 
   // ports subtree
@@ -1795,6 +1816,7 @@ int bx_read_configuration(const char *rcfile)
     BX_PANIC (("reading from %s failed", rcfile));
     return -1;
   }
+  SIM->get_param_string(BXPN_BOCHSRC_FILE_NAME)->set(rcfile);
   // update log actions
   for (int level=0; level<N_LOGLEV; level++) {
     int action = SIM->get_default_log_action(level);
@@ -3632,5 +3654,7 @@ int bx_write_configuration(const char *rc, int overwrite)
   bx_write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_USB_DEBUG), "usb_debug", 0);
 #endif
   fclose(fp);
+  // store name of current config
+  SIM->get_param_string(BXPN_BOCHSRC_FILE_NAME)->set(rc);
   return 0;
 }

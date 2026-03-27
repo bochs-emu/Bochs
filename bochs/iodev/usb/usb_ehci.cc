@@ -225,9 +225,12 @@ bx_usb_ehci_c::~bx_usb_ehci_c()
     remove_device(i);
   }
 
-  SIM->get_bochs_root()->remove("usb_ehci");
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   usb_rt->remove("ehci");
+#ifdef WIN32
+  ((bx_list_c*)SIM->get_param(BXPN_MENU_USB_WIN32))->remove("usb_ehci");
+#endif
+  SIM->get_bochs_root()->remove("usb_ehci");
   BX_DEBUG(("Exit"));
 }
 

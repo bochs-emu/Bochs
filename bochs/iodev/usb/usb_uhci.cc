@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2025  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2025  The Bochs Project
+//                2009-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -122,10 +122,12 @@ bx_usb_uhci_c::~bx_usb_uhci_c()
     remove_device(i);
   }
 
-  SIM->get_bochs_root()->remove("usb_uhci");
   bx_list_c *usb_rt = (bx_list_c *) SIM->get_param(BXPN_MENU_RUNTIME_USB);
   usb_rt->remove("uhci");
-
+#ifdef WIN32
+  ((bx_list_c*)SIM->get_param(BXPN_MENU_USB_WIN32))->remove("usb_uhci");
+#endif
+  SIM->get_bochs_root()->remove("usb_uhci");
   BX_DEBUG(("Exit"));
 }
 
