@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2024 Stanislav Shwartsman
+//   Copyright (c) 2008-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -95,9 +95,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   /////////////////////////////////////////////////////////////////////////////
   if ((requested_feature_bitmap & (BX_XCR0_SSE_MASK | BX_XCR0_YMM_MASK)) != 0)
   {
-    // store MXCSR - write cannot cause any boundary cross because XSAVE image is 64-byte aligned
-    write_virtual_dword(i->seg(), eaddr + 24, BX_MXCSR_REGISTER);
-    write_virtual_dword(i->seg(), eaddr + 28, MXCSR_MASK);
+    xsave_mxcsr_state(i, eaddr);
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -197,9 +195,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
 
   if ((xstate_bv & (BX_XCR0_SSE_MASK|BX_XCR0_YMM_MASK)) != 0)
   {
-    // write cannot cause any boundary cross because XSAVE image is 64-byte aligned
-    write_virtual_dword(i->seg(), eaddr + 24, BX_MXCSR_REGISTER);
-    write_virtual_dword(i->seg(), eaddr + 28, MXCSR_MASK);
+    xsave_mxcsr_state(i, eaddr);
   }
 
   if ((xstate_bv & BX_XCR0_SSE_MASK) != 0)
@@ -361,16 +357,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   // Legacy form of XRSTOR loads the MXCSR register from memory whenever the
   // RFBM[1](SSE) or RFBM[2](AVX) is set, regardless of the values of XSTATE_BV[1] and XSTATE_BV[2]
   // For compaction form and XRSTORS, MXCSR is part of SSE state and handled together with it
-  if (((requested_feature_bitmap & (BX_XCR0_SSE_MASK|BX_XCR0_YMM_MASK)) != 0 && ! compaction && ! xrstors) ||
-      ((requested_feature_bitmap & restore_mask & BX_XCR0_SSE_MASK) != 0 && (compaction || xrstors)))
+  if ((requested_feature_bitmap & (BX_XCR0_SSE_MASK|BX_XCR0_YMM_MASK)) != 0 && ! compaction && ! xrstors)
   {
-    // read cannot cause any boundary cross because XSAVE image is 64-byte aligned
-    Bit32u new_mxcsr = read_virtual_dword(i->seg(), eaddr + 24);
-    if(new_mxcsr & ~MXCSR_MASK) {
-       BX_ERROR(("%s: corrupted MXCSR state restored new_mxcsr=0x%08x", i->getIaOpcodeNameShort(), new_mxcsr));
-       exception(BX_GP_EXCEPTION, 0);
-    }
-    BX_MXCSR_REGISTER = new_mxcsr;
+    xrstor_mxcsr_state(i, eaddr);
   }
 
   /////////////////////////////////////////////////////////////////////////////
@@ -378,11 +367,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   {
     if (restore_mask & BX_XCR0_SSE_MASK) {
       xrstor_sse_state(i, eaddr+XSAVE_SSE_STATE_OFFSET);
+      if (compaction || xrstors)
+        xrstor_mxcsr_state(i, eaddr);
     }
     else {
       xrstor_init_sse_state();
       if (compaction || xrstors)
-        BX_MXCSR_REGISTER = MXCSR_RESET;
+        xrstor_init_mxcsr_state();
     }
   }
 
@@ -633,6 +624,31 @@ bool BX_CPU_C::xsave_x87_state_xinuse(void)
   }
 
   return false;
+}
+
+// MXCSR state management //
+
+void BX_CPU_C::xsave_mxcsr_state(bxInstruction_c *i, bx_address eaddr)
+{
+  // store MXCSR - write cannot cause any boundary cross because XSAVE image is 64-byte aligned
+  write_virtual_dword(i->seg(), eaddr + 24, BX_MXCSR_REGISTER);
+  write_virtual_dword(i->seg(), eaddr + 28, MXCSR_MASK);
+}
+
+void BX_CPU_C::xrstor_mxcsr_state(bxInstruction_c *i, bx_address eaddr)
+{
+  // read cannot cause any boundary cross because XSAVE image is 64-byte aligned
+  Bit32u new_mxcsr = read_virtual_dword(i->seg(), eaddr + 24);
+  if(new_mxcsr & ~MXCSR_MASK) {
+     BX_ERROR(("%s: corrupted MXCSR state restored new_mxcsr=0x%08x", i->getIaOpcodeNameShort(), new_mxcsr));
+     exception(BX_GP_EXCEPTION, 0);
+  }
+  BX_MXCSR_REGISTER = new_mxcsr;
+}
+
+void BX_CPU_C::xrstor_init_mxcsr_state(void)
+{
+  BX_MXCSR_REGISTER = MXCSR_RESET;
 }
 
 // SSE state management //

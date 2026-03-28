@@ -5191,6 +5191,10 @@ public: // for now...
   BX_SMF Bit32u get_ia32_xss_allow_mask(void);
   BX_SMF Bit32u get_xinuse_vector(Bit32u requested_feature_bitmap);
 
+  BX_SMF void xsave_mxcsr_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_mxcsr_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_init_mxcsr_state(void);
+
   BX_SMF bool xsave_x87_state_xinuse(void);
   BX_SMF void xsave_x87_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_x87_state(bxInstruction_c *i, bx_address offset);
