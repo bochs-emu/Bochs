@@ -107,6 +107,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
     {
       if (! xsave_restore[feature].len) {
         BX_ERROR(("%s: feature #%d requested to save but not implemented !", i->getIaOpcodeNameShort(), feature));
+        xstate_bv &= ~Bit64u(feature_mask); // W/A, feature not implemented so mark its state as not in use in xstate_bv
         continue;
       }
 
