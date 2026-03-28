@@ -1001,6 +1001,8 @@ void SetParamList(HWND hDlg, bx_list_c *list)
   }
 }
 
+void ProcessDependentList(HWND hDlg, bx_param_c *param, BOOL enabled);
+
 void ResetParamList(HWND hDlg, bx_list_c *list)
 {
   bx_param_c *param;
@@ -1041,6 +1043,7 @@ void ResetParamList(HWND hDlg, bx_list_c *list)
           SetWindowText(GetDlgItem(hDlg, ID_PARAM + cid), buffer);
         }
       }
+      ProcessDependentList(hDlg, param, TRUE);
     }
     if ((i + 1) >= (UINT)list->get_size()) break;
   }
