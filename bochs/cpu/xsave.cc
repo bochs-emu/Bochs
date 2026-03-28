@@ -360,8 +360,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   /////////////////////////////////////////////////////////////////////////////
   // Legacy form of XRSTOR loads the MXCSR register from memory whenever the
   // RFBM[1](SSE) or RFBM[2](AVX) is set, regardless of the values of XSTATE_BV[1] and XSTATE_BV[2]
-  if (((requested_feature_bitmap & (BX_XCR0_SSE_MASK|BX_XCR0_YMM_MASK)) != 0 && ! compaction) ||
-      ((requested_feature_bitmap & restore_mask & BX_XCR0_SSE_MASK) != 0 && compaction))
+  // For compaction form and XRSTORS, MXCSR is part of SSE state and handled together with it
+  if (((requested_feature_bitmap & (BX_XCR0_SSE_MASK|BX_XCR0_YMM_MASK)) != 0 && ! compaction && ! xrstors) ||
+      ((requested_feature_bitmap & restore_mask & BX_XCR0_SSE_MASK) != 0 && (compaction || xrstors)))
   {
     // read cannot cause any boundary cross because XSAVE image is 64-byte aligned
     Bit32u new_mxcsr = read_virtual_dword(i->seg(), eaddr + 24);
@@ -375,10 +376,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   /////////////////////////////////////////////////////////////////////////////
   if ((requested_feature_bitmap & BX_XCR0_SSE_MASK) != 0)
   {
-    if (restore_mask & BX_XCR0_SSE_MASK)
+    if (restore_mask & BX_XCR0_SSE_MASK) {
       xrstor_sse_state(i, eaddr+XSAVE_SSE_STATE_OFFSET);
-    else
+    }
+    else {
       xrstor_init_sse_state();
+      if (compaction || xrstors)
+        BX_MXCSR_REGISTER = MXCSR_RESET;
+    }
   }
 
   if (compaction) {
