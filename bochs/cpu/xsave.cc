@@ -193,13 +193,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
     xsave_x87_state(i, eaddr);
   }
 
-  if ((xstate_bv & (BX_XCR0_SSE_MASK|BX_XCR0_YMM_MASK)) != 0)
-  {
-    xsave_mxcsr_state(i, eaddr);
-  }
-
   if ((xstate_bv & BX_XCR0_SSE_MASK) != 0)
   {
+    xsave_mxcsr_state(i, eaddr); // for XSAVEC/XSAVES MXCSR is treated as part of SSE state
     xsave_sse_state(i, eaddr+XSAVE_SSE_STATE_OFFSET);
   }
 
