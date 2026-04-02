@@ -467,7 +467,7 @@ void bx_usb_xhci_c::reset(unsigned type)
 #if ADDR_CAP_64
       { 0x10, 0x40 }, { 0x11, 0x00 }, // 64-bit wide and anywhere in the 64-bit address space
 #else
-      { 0x10, 0x00 }, { 0x11, 0x00 }, // 64-bit wide and anywhere in the 64-bit address space
+      { 0x10, 0x00 }, { 0x11, 0x00 }, // 32-bit wide and anywhere in the 32-bit address space
 #endif  // ADDR_CAP_64
       { 0x12, 0x50 }, { 0x13, 0xF0 }, //
       { 0x14, 0x00 }, { 0x15, 0x00 }, //
