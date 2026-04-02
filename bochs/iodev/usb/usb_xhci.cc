@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010-2025  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//  Copyright (C) 2010-2026  Benjamin D Lunt (fys [at] fysnet [dot] net)
 //                2011-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
@@ -464,7 +464,11 @@ void bx_usb_xhci_c::reset(unsigned type)
       { 0x0F, 0x00 },                 // BIST is not supported
 
       // address space 0x10 - 0x17
-      { 0x10, 0x04 }, { 0x11, 0x00 }, // 64-bit wide and anywhere in the 64-bit address space
+#if ADDR_CAP_64
+      { 0x10, 0x40 }, { 0x11, 0x00 }, // 64-bit wide and anywhere in the 64-bit address space
+#else
+      { 0x10, 0x00 }, { 0x11, 0x00 }, // 64-bit wide and anywhere in the 64-bit address space
+#endif  // ADDR_CAP_64
       { 0x12, 0x50 }, { 0x13, 0xF0 }, //
       { 0x14, 0x00 }, { 0x15, 0x00 }, //
       { 0x16, 0x00 }, { 0x17, 0x00 }, //
@@ -731,7 +735,11 @@ void bx_usb_xhci_c::reset_port(int p)
   BX_XHCI_THIS hub.usb_port[p].portsc.lws = 0;
   BX_XHCI_THIS hub.usb_port[p].portsc.pic = 0;
   BX_XHCI_THIS hub.usb_port[p].portsc.speed = 0;
+#if PORT_POWER_CTRL
   BX_XHCI_THIS hub.usb_port[p].portsc.pp  = 0;
+#else
+  BX_XHCI_THIS hub.usb_port[p].portsc.pp  = 1;
+#endif  // PORT_POWER_CTRL
   BX_XHCI_THIS hub.usb_port[p].portsc.pls = PLS_U0;  // always ready to go (for our sake anyway)
   BX_XHCI_THIS hub.usb_port[p].portsc.pr  = 0;
   BX_XHCI_THIS hub.usb_port[p].portsc.oca = 0;
@@ -1878,8 +1886,11 @@ bool bx_usb_xhci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
             SIM->usb_debug_trigger(USB_DEBUG_XHCI, USB_DEBUG_RESET, 0, 0, 0);
 #endif
           }
-        } else
+        }
+#if PORT_POWER_CTRL
+        else
           BX_XHCI_THIS hub.usb_port[port].portsc.pp = 0;
+#endif  // PORT_POWER_CTRL
         break;
       case 0x04:
         if (BX_XHCI_THIS hub.usb_port[port].portsc.pp) {
