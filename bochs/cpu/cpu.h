@@ -4852,6 +4852,7 @@ public: // for now...
 #endif
 
   BX_SMF void reset(unsigned source);
+  BX_SMF void allowVmxForFirmware(void);
   BX_SMF void shutdown(void);
   BX_SMF void enter_sleep_state(unsigned state);
   BX_SMF void handleCpuModeChange(void);

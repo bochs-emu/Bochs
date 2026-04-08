@@ -1307,6 +1307,24 @@ void BX_CPU_C::reset(unsigned source)
   BX_INSTR_RESET(BX_CPU_ID, source);
 }
 
+void BX_CPU_C::allowVmxForFirmware(void)
+{
+#if BX_SUPPORT_VMX
+  // The Bochs BIOS enables VMX in IA32_FEATURE_CONTROL itself. External
+  // firmware uses the fw_cfg path and needs the same setup from the emulator.
+  if (! is_cpu_extension_supported(BX_ISA_VMX)) {
+    return;
+  }
+
+  const Bit32u required_bits = BX_IA32_FEATURE_CONTROL_BITS;
+  if ((BX_CPU_THIS_PTR msr.ia32_feature_ctrl & required_bits) == required_bits) {
+    return;
+  }
+
+  BX_CPU_THIS_PTR msr.ia32_feature_ctrl |= required_bits;
+#endif
+}
+
 void BX_CPU_C::sanity_checks(void)
 {
   Bit32u eax = EAX, ecx = ECX, edx = EDX, ebx = EBX, esp = ESP, ebp = EBP, esi = ESI, edi = EDI;
