@@ -279,13 +279,9 @@ bool usb_hub_device_c::set_option(const char *option)
       BX_ERROR(("ignoring invalid number of ports (%d)", hub.n_ports));
       hub.n_ports = USB_HUB_DEF_PORTS;
     } else {
-#if BX_WITH_WX
       if (hub.n_ports > 4) {
         hub.config->set_options(bx_list_c::SHOW_PARENT | bx_list_c::USE_SCROLL_WINDOW);
-      }
-      else
-#endif
-      {
+      } else {
         hub.config->set_options(bx_list_c::SHOW_PARENT);
       }
     }
