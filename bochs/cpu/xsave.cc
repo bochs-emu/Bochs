@@ -106,10 +106,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
     if ((requested_feature_bitmap & feature_mask) != 0)
     {
       if (! xsaveopt || (xinuse & feature_mask) != 0) {
-        if (xsave_restore[feature].xsave_method == NULL)
+        bx_address feature_offset = eaddr + xsave_restore[feature].offset;
+
+        if (xsave_restore[feature].xsave_method == NULL) {
+          // at least check that we would not fault while attempting to write, check that we can write-access first and last byte of the XSAVE area
+          // touch the memory but no write actually occurs
+          read_RMW_virtual_byte(i->seg(), feature_offset); // no lock, should be touch only
+          read_RMW_virtual_byte(i->seg(), feature_offset + xsave_restore[feature].len - 1); // no lock, should be touch only
+
           BX_ERROR(("%s: feature #%d requested to save but not implemented !", i->getIaOpcodeNameShort(), feature));
+        }
         else
-          CALL_XSAVE_FN(xsave_restore[feature].xsave_method)(i, eaddr+xsave_restore[feature].offset);
+          CALL_XSAVE_FN(xsave_restore[feature].xsave_method)(i, feature_offset);
       }
 
       if (xinuse & feature_mask)
@@ -206,10 +214,18 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
     if ((requested_feature_bitmap & feature_mask) != 0)
     {
       if (xinuse & feature_mask) {
-        if (xsave_restore[feature].xsave_method == NULL)
+        bx_address feature_offset = eaddr + offset;
+
+        if (xsave_restore[feature].xsave_method == NULL) {
+          // at least check that we would not fault while attempting to write, check that we can write-access first and last byte of the XSAVE area
+          // touch the memory but no write actually occurs
+          read_RMW_virtual_byte(i->seg(), feature_offset); // no lock, should be touch only
+          read_RMW_virtual_byte(i->seg(), feature_offset + xsave_restore[feature].len - 1); // no lock, should be touch only
+
           BX_ERROR(("%s: feature #%d requested to save but not implemented !", i->getIaOpcodeNameShort(), feature));
+        }
         else
-          CALL_XSAVE_FN(xsave_restore[feature].xsave_method)(i, eaddr+offset);
+          CALL_XSAVE_FN(xsave_restore[feature].xsave_method)(i, feature_offset);
       }
 
       offset += xsave_restore[feature].len;
