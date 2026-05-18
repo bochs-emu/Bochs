@@ -106,10 +106,12 @@ void bx_nogui_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
 void bx_nogui_gui_c::handle_events(void)
 {
+#if BX_SHOW_IPS
   if (ips_update) {
     BX_INFO(("%s", ips_text));
     ips_update = false;
   }
+#endif
 }
 
 
