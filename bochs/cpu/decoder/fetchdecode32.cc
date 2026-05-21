@@ -2196,8 +2196,7 @@ void BX_CPU_C::init_FetchDecodeTables(void)
         case BX_ISA_AVX512_BITALG:
         case BX_ISA_AVX512_BF16:
         case BX_ISA_AVX512_FP16:
-          // It is possible that AVX512 is not supported on this processor but AVX10 is (for example AVX10_VL256 only)
-          // AVX10_1 includes all above AVX512 extensions
+          // It is possible that AVX512 is not supported on this processor but AVX10 is AVX10_1 includes all above AVX512 extensions
           if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX10_1)) continue;
 
         default: break;

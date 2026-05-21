@@ -66,8 +66,7 @@ enum BxDecodeError {
 #define FetchWORD(iptr) ReadHostWordFromLittleEndian((Bit16u*)(iptr))
 #define FetchQWORD(iptr) ReadHostQWordFromLittleEndian((Bit64u*)(iptr));
 
-#define BX_PREPARE_AMX               (0x800)
-#define BX_EVEX_VL_IGNORE            (0x400 | BX_PREPARE_EVEX)
+#define BX_PREPARE_AMX               (0x400)
 #define BX_PREPARE_EVEX_NO_BROADCAST (0x200 | BX_PREPARE_EVEX)
 #define BX_PREPARE_EVEX_NO_SAE       (0x100 | BX_PREPARE_EVEX)
 #define BX_PREPARE_EVEX              (0x80)
