@@ -460,6 +460,16 @@ void BX_CPU_C::handleFpuMmxModeChange(void)
   updateFetchModeMask(); /* FPU_MMX_OK changed */
 }
 
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxProtectedModeRequired(bxInstruction_c *i)
+{
+  if (! protected_mode())
+    exception(BX_UD_EXCEPTION, 0);
+
+  BX_ASSERT(0);
+
+  BX_NEXT_TRACE(i); // keep compiler happy
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoFPU(bxInstruction_c *i)
 {
   if (BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())

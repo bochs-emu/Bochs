@@ -4461,6 +4461,7 @@ public: // for now...
 
   BX_SMF void BxNoFPU(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxNoMMX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxProtectedModeRequired(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_CPU_LEVEL >= 6
   BX_SMF void BxNoSSE(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_AVX
