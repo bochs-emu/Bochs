@@ -1715,7 +1715,7 @@ static const Bit64u BxOpcodeGroup_EVEX_0F3A16[] = {
   last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128 | ATTR_VEX_W1 | ATTR_MASK_K0 | ATTR_IS64, BX_IA_EVEX_VPEXTRQ_EqVdqIb)
 };
 
-static const Bit64u BxOpcodeGroup_EVEX_0F3A17[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128 | ATTR_VEX_W0 | ATTR_MASK_K0, BX_IA_EVEX_VEXTRACTPS_EdVpsIb) };
+static const Bit64u BxOpcodeGroup_EVEX_0F3A17[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128 | ATTR_MASK_K0, BX_IA_EVEX_VEXTRACTPS_EdVpsIb) };
 
 static const Bit64u BxOpcodeGroup_EVEX_0F3A18[] = {
   form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL256_512 | ATTR_VEX_W0 | ATTR_MASK_K0, BX_IA_EVEX_VINSERTF32x4_VpsHpsWpsIb),
