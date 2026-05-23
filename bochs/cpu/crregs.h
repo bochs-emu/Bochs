@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007-2025 Stanislav Shwartsman
+//   Copyright (c) 2007-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -292,6 +292,8 @@ const unsigned XSAVE_APX_STATE_LEN          = 128;
 const unsigned XSAVE_FPU_STATE_OFFSET       = 0;
 const unsigned XSAVE_SSE_STATE_OFFSET       = 160;
 const unsigned XSAVE_YMM_STATE_OFFSET       = 576;
+const unsigned XSAVE_BNDREGS_STATE_OFFSET   = 960;
+const unsigned XSAVE_BNDCFG_STATE_OFFSET    = 1024;
 const unsigned XSAVE_OPMASK_STATE_OFFSET    = 1088;
 const unsigned XSAVE_ZMM_HI256_STATE_OFFSET = 1152;
 const unsigned XSAVE_HI_ZMM_STATE_OFFSET    = 1664;

@@ -383,13 +383,23 @@ BX_CPP_INLINE bool IsCanonical48(bx_address addr) { return IsCanonicalToWidth(ad
 BX_CPP_INLINE bool IsCanonical57(bx_address addr) { return IsCanonicalToWidth(addr, 57); }
 
 // sign-extend from the highest implemented address bit up to bit 63
-BX_CPP_INLINE Bit64u CanonicalizeAddress(Bit64u laddr)
+BX_CPP_INLINE Bit64u CanonicalizeAddress48(Bit64u laddr)
 {
   if (laddr & BX_CONST64(0x0000800000000000)) {
     return laddr | BX_CONST64(0xffff000000000000);
   }
   else {
     return laddr & BX_CONST64(0x0000ffffffffffff);
+  }
+}
+
+BX_CPP_INLINE Bit64u CanonicalizeAddress57(Bit64u laddr)
+{
+  if (laddr & BX_CONST64(0x0100000000000000)) {
+    return laddr | BX_CONST64(0xfe00000000000000);
+  }
+  else {
+    return laddr & BX_CONST64(0x01ffffffffffffff);
   }
 }
 
@@ -4553,6 +4563,7 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF BX_CPP_INLINE bool IsCanonical(bx_address addr) { return IsCanonicalToWidth(addr, BX_CPU_THIS_PTR linaddr_width); }
   BX_SMF bool IsCanonicalAccess(bx_address addr, unsigned rw, bool user) BX_CPP_AttrRegparmN(3);
+  BX_SMF BX_CPP_INLINE bx_address CanonicalizeAddress(bx_address addr) { return (BX_CPU_THIS_PTR linaddr_width == 57) ? CanonicalizeAddress57(addr) : CanonicalizeAddress48(addr); }
 #endif
 
   BX_SMF bool write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len, bool align = false) BX_CPP_AttrRegparmN(4);
