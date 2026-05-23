@@ -84,6 +84,7 @@ x86_feature(BX_ISA_TBM, "tbm")                                             /* TB
 x86_feature(BX_ISA_SVM, "svm")                                             /* SVM instruction (AMD) */
 x86_feature(BX_ISA_VMX, "vmx")                                             /* VMX instruction */
 x86_feature(BX_ISA_SMX, "smx")                                             /* SMX instruction */
+x86_feature(BX_ISA_MPX, "mpx")                                             /* MPX instruction */
 x86_feature(BX_ISA_RDRAND, "rdrand")                                       /* RDRAND instruction */
 x86_feature(BX_ISA_RDSEED, "rdseed")                                       /* RDSEED instruction */
 x86_feature(BX_ISA_ADX, "adx")                                             /* ADCX/ADOX instruction */

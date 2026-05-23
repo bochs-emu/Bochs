@@ -397,8 +397,13 @@ static BxOpcodeDecodeDescriptor32 decode32_descriptor[] =
 #if BX_CPU_LEVEL >= 6
    /* 0F 18 */ { &decoder32_modrm, BxOpcodeTable0F18 },
    /* 0F 19 */ { &decoder32_modrm, BxOpcodeTableMultiByteNOP },
+#if BX_SUPPORT_MPX
+   /* 0F 1A */ { &decoder32_modrm, BxOpcodeTable0F1A },
+   /* 0F 1B */ { &decoder32_modrm, BxOpcodeTable0F1B },
+#else
    /* 0F 1A */ { &decoder32_modrm, BxOpcodeTableMultiByteNOP },
    /* 0F 1B */ { &decoder32_modrm, BxOpcodeTableMultiByteNOP },
+#endif
    /* 0F 1C */ { &decoder32_modrm, BxOpcodeTableMultiByteNOP },
    /* 0F 1D */ { &decoder32_modrm, BxOpcodeTableMultiByteNOP },
 #if BX_SUPPORT_CET
@@ -2079,6 +2084,16 @@ int BX_CPU_C::assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
   BX_ASSERT(i->execute1);
 
   Bit32u op_flags = BxOpcodesTable[ia_opcode].opflags;
+
+#if BX_SUPPORT_MPX
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MPX)) {
+    // near branch without BND (F2) prefix might initialize BND0-3, the original handler is called through execute2
+    if ((fetchModeMask & BX_FETCH_MODE_BNDREGS_CLEAR) != 0 && (op_flags & BX_MPX_BNDREGS_CLEAR) != 0 && i->lockRepUsedValue() != 2) {
+      i->handlers.execute2 = i->execute1;
+      i->execute1 = &BX_CPU_C::BxMpxBndRegsInitBranch;
+    }
+  }
+#endif
 
 #if BX_SUPPORT_EVEX
   if ((op_flags & BX_PREPARE_EVEX) != 0) {

@@ -352,7 +352,7 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_64BIT_GUEST_IA32_PDPTE2_HI                    0x0000280F
 #define VMCS_64BIT_GUEST_IA32_PDPTE3                       0x00002810
 #define VMCS_64BIT_GUEST_IA32_PDPTE3_HI                    0x00002811
-#define VMCS_64BIT_GUEST_IA32_BNDCFGS                      0x00002812 /* MPX (not implemented) */
+#define VMCS_64BIT_GUEST_IA32_BNDCFGS                      0x00002812 /* MPX */
 #define VMCS_64BIT_GUEST_IA32_BNDCFGS_HI                   0x00002813
 #define VMCS_64BIT_GUEST_IA32_RTIT_CTL                     0x00002814 /* Processor Trace (not implemented) */
 #define VMCS_64BIT_GUEST_IA32_RTIT_CTL_HI                  0x00002815
@@ -720,6 +720,10 @@ typedef struct bx_VMCS_GUEST_STATE
 
 #if BX_SUPPORT_PKEYS
    Bit32u pkrs;
+#endif
+
+#if BX_SUPPORT_MPX
+   Bit64u bndcfgs;
 #endif
 } VMCS_GUEST_STATE;
 

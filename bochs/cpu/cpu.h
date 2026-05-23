@@ -1063,6 +1063,24 @@ public: // for now...
   Bit32u xcr0_suppmask, ia32_xss_suppmask;
 #endif
 
+#if BX_SUPPORT_MPX
+  Bit64u bndl[4];
+  Bit64u bndh[4];
+  Bit64u bndcfg[2];
+  Bit64u bndstatus;
+
+  // BND0-3 were initialized by near branch but the registers are not cleared yet (see sync_bndregs)
+  bool   bndregs_clear;
+  Bit64u bndregs_clear_icount; // icount of the branch which set bndregs_clear, used to undo it if the branch faults
+
+  enum {
+    BX_NO_MPX_EXCEPTION = 0,
+    BX_MPX_BOUNDS_VIOLATION = 1,
+    BX_MPX_INVALID_BD_ENTRY = 2,
+    BX_MPX_RESERVED = 3
+  };
+#endif
+
 #if BX_SUPPORT_PKEYS
   // protection keys
   Bit32u pkru;
@@ -1294,6 +1312,11 @@ public: // for now...
   BX_SMF void set_evex_ok();
   BX_SMF void clear_evex_ok();
   BX_SMF bool get_evex_ok();
+
+#if BX_SUPPORT_MPX
+  BX_SMF void mpxregs_clear_enable();
+  BX_SMF void mpxregs_clear_disable();
+#endif
 
   BX_SMF void set_amx_ok();
   BX_SMF void clear_amx_ok();
@@ -2738,6 +2761,30 @@ public: // for now...
 
   BX_SMF void INVPCID(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
+
+  /* MPX instructions */
+#if BX_SUPPORT_MPX
+  BX_SMF void BNDMK_BndEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BNDCL_BndEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BNDCU_BndEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BNDCN_BndEd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BNDMOV_GBndEBndR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BNDMOV_GBndMq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BNDMOV_MqGBnd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BNDLDX32_BndM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BNDSTX32_MGBnd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_X86_64
+  BX_SMF void BNDMK_BndEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BNDCL_BndEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BNDCU_BndEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BNDCN_BndEq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BNDMOV_GBndMdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BNDMOV_MdqGBnd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BNDLDX64_BndM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BNDSTX64_MGBnd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+#endif
+  /* MPX instructions */
 
   /* CET instructions */
 #if BX_SUPPORT_CET
@@ -4977,6 +5024,9 @@ public: // for now...
   BX_SMF void handleSseModeChange(void);
   BX_SMF void handleAvxModeChange(void);
 #endif
+#if BX_SUPPORT_MPX
+  BX_SMF void handleBndModeChange(void);
+#endif
 #if BX_SUPPORT_UINTR
   BX_SMF void send_uipi(Bit32u notification_destination, Bit32u notification_vector);
   BX_SMF void uintr_uirr_update();
@@ -5329,6 +5379,18 @@ public: // for now...
   BX_SMF void xrstor_sse_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_init_sse_state(void);
 
+#if BX_SUPPORT_MPX
+  BX_SMF bool xsave_bndregs_state_xinuse(void);
+  BX_SMF void xsave_bndregs_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_bndregs_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_init_bndregs_state(void);
+
+  BX_SMF bool xsave_bndcfg_state_xinuse(void);
+  BX_SMF void xsave_bndcfg_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_bndcfg_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_init_bndcfg_state(void);
+#endif
+
 #if BX_SUPPORT_AVX
   BX_SMF bool xsave_ymm_state_xinuse(void);
   BX_SMF void xsave_ymm_state(bxInstruction_c *i, bx_address offset);
@@ -5395,6 +5457,15 @@ public: // for now...
   BX_SMF void xrstor_init_scaledata_state(void);
 #endif
 #endif
+
+#if BX_SUPPORT_MPX
+ BX_SMF unsigned MPX_Enabled(void);
+ BX_SMF BX_CPP_INLINE void sync_bndregs(void) { if (BX_CPU_THIS_PTR bndregs_clear) xrstor_init_bndregs_state(); }
+ BX_SMF void BxMpxBndRegsInitBranch(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+
+#define BX_BNDCFG_MPX_ENABLED (1)
+#define BX_BNDCFG_MPX_ENABLED_AND_BNDPRESERVE (3)
 
 #if BX_SUPPORT_CET
  BX_SMF bool ShadowStackEnabled(unsigned cpl) BX_CPP_AttrRegparmN(1);
@@ -5642,8 +5713,9 @@ BX_CPP_INLINE Bit32u BX_CPP_AttrRegparmN(1) BX_CPU_C::BxResolve32(bxInstruction_
 // bit 4 - SSE_OK
 // bit 5 - AVX_OK
 // bit 6 - EVEX_OK
-// bit 7 - AMX_OK
-// bit 8 - SCALEDATA_OK
+// bit 7 - BNDREGS_CLEAR (near branches might initialize BND0-3)
+// bit 8 - AMX_OK
+// bit 9 - SCALEDATA_OK
 //
 
 enum {
@@ -5654,14 +5726,17 @@ enum {
   BX_FETCH_MODE_SSE_OK            = (1 << 4),
   BX_FETCH_MODE_AVX_OK            = (1 << 5),
   BX_FETCH_MODE_EVEX_OK           = (1 << 6),
-  BX_FETCH_MODE_AMX_OK            = (1 << 7),
-  BX_FETCH_MODE_SCALEDATA_OK      = (1 << 8)
+  BX_FETCH_MODE_BNDREGS_CLEAR     = (1 << 7),
+  BX_FETCH_MODE_AMX_OK            = (1 << 8),
+  BX_FETCH_MODE_SCALEDATA_OK      = (1 << 9)
 };
 
 // number of fetchModeMask bits which could be set with current configuration
 // (the trace cache and instruction cache rely on it, update when adding new fetchModeMask bits)
 #if BX_SUPPORT_AMX
-const unsigned BX_FETCH_MODE_MASK_BITS = 9;
+const unsigned BX_FETCH_MODE_MASK_BITS = 10;
+#elif BX_SUPPORT_MPX
+const unsigned BX_FETCH_MODE_MASK_BITS = 8;
 #else
 const unsigned BX_FETCH_MODE_MASK_BITS = 7;
 #endif
@@ -5681,6 +5756,11 @@ BX_CPP_INLINE bool BX_CPU_C::get_avx_ok() { return (BX_CPU_THIS_PTR cpu_state_us
 BX_CPP_INLINE void BX_CPU_C::set_evex_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_EVEX_OK; }
 BX_CPP_INLINE void BX_CPU_C::clear_evex_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~BX_FETCH_MODE_EVEX_OK; }
 BX_CPP_INLINE bool BX_CPU_C::get_evex_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_EVEX_OK); }
+
+#if BX_SUPPORT_MPX
+BX_CPP_INLINE void BX_CPU_C::mpxregs_clear_enable() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_BNDREGS_CLEAR; }
+BX_CPP_INLINE void BX_CPU_C::mpxregs_clear_disable() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~BX_FETCH_MODE_BNDREGS_CLEAR; }
+#endif
 
 BX_CPP_INLINE void BX_CPU_C::set_amx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_AMX_OK; }
 BX_CPP_INLINE void BX_CPU_C::clear_amx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~(BX_FETCH_MODE_AMX_OK | BX_FETCH_MODE_SCALEDATA_OK); }

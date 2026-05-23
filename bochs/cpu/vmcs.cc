@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2025 Stanislav Shwartsman
+//   Copyright (c) 2009-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -465,6 +465,12 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_GUEST_IA32_PDPTE3:
     case VMCS_64BIT_GUEST_IA32_PDPTE3_HI:
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT);
+#endif
+
+#if BX_SUPPORT_MPX
+    case VMCS_64BIT_GUEST_IA32_BNDCFGS:
+    case VMCS_64BIT_GUEST_IA32_BNDCFGS_HI:
+      return is_cpu_extension_supported(BX_ISA_MPX);
 #endif
 
 #if BX_SUPPORT_PKEYS
@@ -993,6 +999,7 @@ void BX_CPU_C::init_vmexit_ctrls(void)
   //      [20] Save guest MSR_EFER on VMEXIT
   //      [21] Load host MSR_EFER on VMEXIT
   //      [22] Save VMX preemption timer counter on VMEXIT
+  //      [23] Clear BNDCFGS on VMEXIT (MPX)
   //      [27] Clear UINV state on VMEXIT
   //      [28] Save host CET state on VMEXIT
   //      [29] Save host MSR_IA32_PKRS on VMEXIT
@@ -1019,6 +1026,10 @@ void BX_CPU_C::init_vmexit_ctrls(void)
   }
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_PREEMPTION_TIMER))
     cap->vmx_vmexit_ctrl1_supported_bits |= VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER;
+#endif
+#if BX_SUPPORT_MPX
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MPX))
+    cap->vmx_vmexit_ctrl1_supported_bits |= VMX_VMEXIT_CTRL1_CLEAR_BNDCFGS;
 #endif
 #if BX_SUPPORT_UINTR
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UINTR))
@@ -1055,6 +1066,7 @@ void BX_CPU_C::init_vmentry_ctrls(void)
   //      [13] Load guest MSR_PERF_GLOBAL_CTRL
   //      [14] Load guest MSR_PAT
   //      [15] Load guest MSR_EFER
+  //      [16] Load guest MSR_BNDCFGS (MPX)
   //      [17] Load guest CET state
   //      [19] Load guest UINV state
   //      [22] Load guest MSR_IA32_PKRS value
@@ -1075,6 +1087,10 @@ void BX_CPU_C::init_vmentry_ctrls(void)
     cap->vmx_vmentry_ctrl_supported_bits |= VMX_VMENTRY_CTRL1_LOAD_PAT_MSR;
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EFER))
     cap->vmx_vmentry_ctrl_supported_bits |= VMX_VMENTRY_CTRL1_LOAD_EFER_MSR;
+#endif
+#if BX_SUPPORT_MPX
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MPX))
+    cap->vmx_vmentry_ctrl_supported_bits |= VMX_VMENTRY_CTRL1_LOAD_BNDCFGS;
 #endif
 #if BX_SUPPORT_CET
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET))

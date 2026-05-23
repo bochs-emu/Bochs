@@ -1700,6 +1700,44 @@ static const Bit64u BxOpcodeTable0F18[] = {
 };
 #endif
 
+// opcode 0F 1A
+#if BX_SUPPORT_MPX
+static const Bit64u BxOpcodeTable0F1A[] = {
+  form_opcode(ATTR_IS32 | ATTR_SSE_NO_PREFIX | ATTR_MOD_MEM, BX_IA_BNDLDX32_BndM),
+  form_opcode(ATTR_IS32 | ATTR_SSE_PREFIX_F3, BX_IA_BNDCL_BndEd),
+  form_opcode(ATTR_IS32 | ATTR_SSE_PREFIX_F2, BX_IA_BNDCU_BndEd),
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_MODC0,               BX_IA_BNDMOV_GBndEBnd),
+  form_opcode(ATTR_IS32 | ATTR_SSE_PREFIX_66 | ATTR_MOD_MEM, BX_IA_BNDMOV_GBndMq),
+
+#if BX_SUPPORT_X86_64
+  form_opcode(ATTR_IS64 | ATTR_SSE_NO_PREFIX | ATTR_MOD_MEM, BX_IA_BNDLDX64_BndM),
+  form_opcode(ATTR_IS64 | ATTR_SSE_PREFIX_F3, BX_IA_BNDCL_BndEq),
+  form_opcode(ATTR_IS64 | ATTR_SSE_PREFIX_F2, BX_IA_BNDCU_BndEq),
+  form_opcode(ATTR_IS64 | ATTR_SSE_PREFIX_66 | ATTR_MOD_MEM, BX_IA_BNDMOV_GBndMdq),
+#endif
+
+  last_opcode(0, BX_IA_NOP) // multi byte-NOP
+};
+
+// opcode 0F 1B
+static const Bit64u BxOpcodeTable0F1B[] = {
+  form_opcode(ATTR_IS32 | ATTR_SSE_NO_PREFIX | ATTR_MOD_MEM, BX_IA_BNDSTX32_MGBnd),
+  form_opcode(ATTR_IS32 | ATTR_SSE_PREFIX_F3 | ATTR_MOD_MEM, BX_IA_BNDMK_BndEd),
+  form_opcode(ATTR_IS32 | ATTR_SSE_PREFIX_F2, BX_IA_BNDCN_BndEd),
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_MODC0,               BX_IA_BNDMOV_EBndGBnd),
+  form_opcode(ATTR_IS32 | ATTR_SSE_PREFIX_66 | ATTR_MOD_MEM, BX_IA_BNDMOV_MqGBnd),
+
+#if BX_SUPPORT_X86_64
+  form_opcode(ATTR_IS64 | ATTR_SSE_NO_PREFIX | ATTR_MOD_MEM, BX_IA_BNDSTX64_MGBnd),
+  form_opcode(ATTR_IS64 | ATTR_SSE_PREFIX_F3 | ATTR_MOD_MEM, BX_IA_BNDMK_BndEq),
+  form_opcode(ATTR_IS64 | ATTR_SSE_PREFIX_F2, BX_IA_BNDCN_BndEq),
+  form_opcode(ATTR_IS64 | ATTR_SSE_PREFIX_66 | ATTR_MOD_MEM, BX_IA_BNDMOV_MdqGBnd),
+#endif
+
+  last_opcode(0, BX_IA_NOP) // multi byte-NOP
+};
+#endif
+
 // opcode 0F 1E
 #if BX_SUPPORT_CET
 static const Bit64u BxOpcodeTable0F1E[] = {

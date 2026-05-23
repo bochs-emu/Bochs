@@ -993,6 +993,11 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 #endif
     }
     BX_CPU_THIS_PTR speculative_rsp = false;
+#if BX_SUPPORT_MPX
+    // near branch which requested BND0-3 initialization has faulted
+    if (BX_CPU_THIS_PTR bndregs_clear && BX_CPU_THIS_PTR bndregs_clear_icount == get_icount())
+      BX_CPU_THIS_PTR bndregs_clear = false;
+#endif
 
     if (vector != BX_DB_EXCEPTION) BX_CPU_THIS_PTR assert_RF();
 

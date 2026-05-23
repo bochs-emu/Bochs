@@ -732,6 +732,12 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
   }
   BX_CPU_THIS_PTR speculative_rsp = false;
 
+#if BX_SUPPORT_MPX
+  // near branch which requested BND0-3 initialization has faulted
+  if (BX_CPU_THIS_PTR bndregs_clear && BX_CPU_THIS_PTR bndregs_clear_icount == get_icount())
+    BX_CPU_THIS_PTR bndregs_clear = false;
+#endif
+
   mask_event(BX_EVENT_SVM_VIRQ_PENDING);
 
   BX_CPU_THIS_PTR in_svm_guest = false;

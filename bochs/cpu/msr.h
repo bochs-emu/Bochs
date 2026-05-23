@@ -274,6 +274,10 @@ enum MSR_Register {
   BX_MSR_IA32_UINTR_TT = 0x98A, // interface to UITT_ADDR
 #endif
 
+#if BX_SUPPORT_MPX
+  BX_MSR_BNDCFGS = 0xD90,
+#endif
+
   BX_MSR_XSS = 0xDA0,
 
   /* AMD MSRs */

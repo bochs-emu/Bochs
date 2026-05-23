@@ -69,6 +69,11 @@ enum BxDecodeError {
 #define FetchWORD(iptr) ReadHostWordFromLittleEndian((Bit16u*)(iptr))
 #define FetchQWORD(iptr) ReadHostQWordFromLittleEndian((Bit64u*)(iptr));
 
+#if BX_SUPPORT_MPX
+#define BX_MPX_BNDREGS_CLEAR         (0x1000)
+#else
+#define BX_MPX_BNDREGS_CLEAR         (0)
+#endif
 #define BX_PREPARE_SCALEDATA         (0x800 | BX_PREPARE_AMX)
 #define BX_PREPARE_AMX               (0x400)
 #define BX_PREPARE_EVEX_NO_BROADCAST (0x200 | BX_PREPARE_EVEX)
@@ -89,7 +94,7 @@ struct bxIAOpcodeTable {
   BxExecutePtr_tR execute2;
 #endif
   Bit8u src[4];
-#if BX_SUPPORT_EVEX || BX_SUPPORT_AMX
+#if BX_SUPPORT_EVEX || BX_SUPPORT_AMX || BX_SUPPORT_MPX
   Bit16u opflags;
 #else
   Bit8u  opflags;

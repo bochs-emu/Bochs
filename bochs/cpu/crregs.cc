@@ -1435,6 +1435,9 @@ bool BX_CPU_C::SetCR4(bxInstruction_c *i, bx_address val)
   handleAvxModeChange();
 #endif
 #endif
+#if BX_SUPPORT_MPX
+  handleBndModeChange(); /* CR4.OSXSAVE might change */
+#endif
 
   // re-calculate protection keys if CR4.PKE/CR4.PKS was set
 #if BX_SUPPORT_PKEYS
@@ -1792,8 +1795,27 @@ void BX_CPU_C::xsave_xrestor_init(void)
   }
 #endif
 
-  // XCR0[3]: BNDREGS state (not implemented, deprecated)
-  // XCR0[4]: BNDCFG state (not implemented, deprecated)
+#if BX_SUPPORT_MPX
+  // XCR0[3]: BNDREGS state
+  // XCR0[4]: BNDCFG state
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MPX)) {
+    xsave_restore[xcr0_t::BX_XCR0_BNDREGS_BIT].len    = XSAVE_BNDREGS_STATE_LEN;
+    xsave_restore[xcr0_t::BX_XCR0_BNDREGS_BIT].offset = XSAVE_BNDREGS_STATE_OFFSET;
+    xsave_restore[xcr0_t::BX_XCR0_BNDREGS_BIT].attr   = 0;
+    xsave_restore[xcr0_t::BX_XCR0_BNDREGS_BIT].xstate_in_use_method = &BX_CPU_C::xsave_bndregs_state_xinuse;
+    xsave_restore[xcr0_t::BX_XCR0_BNDREGS_BIT].xsave_method = &BX_CPU_C::xsave_bndregs_state;
+    xsave_restore[xcr0_t::BX_XCR0_BNDREGS_BIT].xrstor_method = &BX_CPU_C::xrstor_bndregs_state;
+    xsave_restore[xcr0_t::BX_XCR0_BNDREGS_BIT].xrstor_init_method = &BX_CPU_C::xrstor_init_bndregs_state;
+
+    xsave_restore[xcr0_t::BX_XCR0_BNDCFG_BIT].len    = XSAVE_BNDCFG_STATE_LEN;
+    xsave_restore[xcr0_t::BX_XCR0_BNDCFG_BIT].offset = XSAVE_BNDCFG_STATE_OFFSET;
+    xsave_restore[xcr0_t::BX_XCR0_BNDCFG_BIT].attr   = 0;
+    xsave_restore[xcr0_t::BX_XCR0_BNDCFG_BIT].xstate_in_use_method = &BX_CPU_C::xsave_bndcfg_state_xinuse;
+    xsave_restore[xcr0_t::BX_XCR0_BNDCFG_BIT].xsave_method = &BX_CPU_C::xsave_bndcfg_state;
+    xsave_restore[xcr0_t::BX_XCR0_BNDCFG_BIT].xrstor_method = &BX_CPU_C::xrstor_bndcfg_state;
+    xsave_restore[xcr0_t::BX_XCR0_BNDCFG_BIT].xrstor_init_method = &BX_CPU_C::xrstor_init_bndcfg_state;
+  }
+#endif
 
 #if BX_SUPPORT_EVEX
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX512)) {
@@ -1959,6 +1981,10 @@ Bit32u BX_CPU_C::get_efer_allow_mask(void)
 Bit32u BX_CPU_C::get_xcr0_allow_mask(void)
 {
   Bit32u allowMask = BX_XCR0_FPU_MASK | BX_XCR0_SSE_MASK;
+#if BX_SUPPORT_MPX
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MPX))
+    allowMask |= BX_XCR0_BNDREGS_MASK | BX_XCR0_BNDCFG_MASK;
+#endif
 #if BX_SUPPORT_AVX
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX))
     allowMask |= BX_XCR0_YMM_MASK;

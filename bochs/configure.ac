@@ -1427,6 +1427,23 @@ AC_ARG_ENABLE(memtype,
   ]
   )
 
+AC_MSG_CHECKING(for MPX support)
+AC_ARG_ENABLE(mpx,
+  AS_HELP_STRING([--enable-mpx], [support for MPX emulation]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_MPX, 1)
+   elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_MPX, 0)
+   fi
+   ],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_MPX, 0)
+  ]
+  )
+
 support_avx=0
 AVX_LIB_VAR=''
 AC_MSG_CHECKING(for AVX instructions support)

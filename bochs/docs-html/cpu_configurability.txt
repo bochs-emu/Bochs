@@ -547,6 +547,17 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Dependency: SMX and GETSEC instruction not yet implemented in Bochs
 
+- CPU Feature: mpx
+
+BX_CPUID_STD7_SUBLEAF0_EBX_MPX;
+
+ Enables CPUID[0x00000007].subleaf[0].EBX[14]: MPX support flag.
+ Enables BNDCFGS MSR register (0xD90)
+ Enables BNDCFG and BNDREGS XSAVE state managment and BND registers, MPX instructions emulation
+ VMX support
+
+ Dependency: xsave
+
 - CPU Feature: rdrand
 
  Enables CPUID[0x00000001].ECX[30] flag.
