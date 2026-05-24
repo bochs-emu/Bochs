@@ -437,9 +437,9 @@ typedef struct msr {
          if (! IsValidPhyAddr(new_val)) return 0;
          break;
        default:
-         if ((val64 ^ new_val) & reserved) return 0;
          break;
      }
+     if ((val64 ^ new_val) & reserved) return 0;
      val64 = new_val;
      return 1;
   }
