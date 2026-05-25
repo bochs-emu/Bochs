@@ -152,6 +152,8 @@ void usb_io_write(Bit16u addr, Bit32u value, unsigned io_len);
 
 bx_list_c* get_uhci_state(void);
 
+bx_param_enum_c* get_hc_port_device(Bit8u port);
+
 Bit32u xhci_read_dword(const Bit32u address);
 
 #endif  // BX_USB_DEBUGGER

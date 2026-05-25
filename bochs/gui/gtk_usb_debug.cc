@@ -892,6 +892,7 @@ static void uhci_display_td(GtkWidget *widget, gpointer data)
 int uhci_debug_dialog(int type, int param1)
 {
   bx_list_c *UHCI_state = NULL;
+  bx_param_enum_c* device;
   int i, ret;
   Bit32u frame_addr, frame_num;
   char buffer[COMMON_STR_SIZE];
@@ -1030,13 +1031,23 @@ int uhci_debug_dialog(int type, int param1)
   gtk_entry_set_text(GTK_ENTRY(uhci_entry[UHCI_REG_PORT0]), buffer);
   g_signal_connect(GTK_EDITABLE(uhci_entry[UHCI_REG_PORT0]), "changed",
                    G_CALLBACK(on_entry_changed), &u_changed[UHCI_REG_PORT0]);
-  SIM->get_param_enum("port1.device", host_param)->dump_param(buffer, COMMON_STR_SIZE, 1);
+  device = get_hc_port_device(1);
+  if (device != NULL) {
+    device->dump_param(buffer, COMMON_STR_SIZE, 1);
+  } else {
+    strcpy(buffer, "none");
+  }
   gtk_entry_set_text(GTK_ENTRY(ro_entry[1]), buffer);
   sprintf(buffer, "0x%04X", usb_io_read(pci_bar_address + 18, 2));
   gtk_entry_set_text(GTK_ENTRY(uhci_entry[UHCI_REG_PORT1]), buffer);
   g_signal_connect(GTK_EDITABLE(uhci_entry[UHCI_REG_PORT1]), "changed",
                    G_CALLBACK(on_entry_changed), &u_changed[UHCI_REG_PORT1]);
-  SIM->get_param_enum("port2.device", host_param)->dump_param(buffer, COMMON_STR_SIZE, 1);
+  device = get_hc_port_device(2);
+  if (device != NULL) {
+    device->dump_param(buffer, COMMON_STR_SIZE, 1);
+  } else {
+    strcpy(buffer, "none");
+  }
   gtk_entry_set_text(GTK_ENTRY(ro_entry[2]), buffer);
 
   frame_addr += (frame_num * sizeof(Bit32u));

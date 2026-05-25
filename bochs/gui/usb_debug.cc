@@ -421,6 +421,28 @@ bx_list_c* get_uhci_state()
   return (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
 }
 
+bx_param_enum_c* get_hc_port_device(Bit8u port)
+{
+  bx_param_enum_c* device = NULL;
+  char pname[80];
+  Bit8u ehci_port;
+
+  if ((port > 0) && (port < 3)) {
+    if (usb_debug_devid == -1) {
+      sprintf(pname, "%s.port%d.device", hc_param_str[usb_debug_type], port);
+      device = SIM->get_param_enum(pname);
+    } else {
+      ehci_port = ((usb_debug_devid << 1) | (port - 1)) + 1;
+      sprintf(pname, "usb_ehci.hub.port%d.portsc.po", ehci_port);
+      if (SIM->get_param_bool(pname, SIM->get_bochs_root())->get()) {
+        sprintf(pname, "%s.port%d.device", hc_param_str[USB_DEBUG_EHCI], ehci_port);
+        device = SIM->get_param_enum(pname);
+      }
+    }
+  }
+  return device;
+}
+
 Bit32u xhci_read_dword(const Bit32u address)
 {
   Bit32u value = 0;

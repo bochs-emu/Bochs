@@ -76,9 +76,17 @@ int usb_debug_dialog(int break_type, Bit64u param0, int param1, int param2)
   bx_param_enum_c *debug_type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
 
   // check to make sure the specified HC is enabled
-  host_param = SIM->get_param(hc_param_str[usb_debug_type]);
+  if (usb_debug_devid == -1) {
+    host_param = SIM->get_param(hc_param_str[usb_debug_type]);
+  } else {
+    host_param = SIM->get_param(hc_param_str[USB_DEBUG_EHCI]);
+  }
   if ((host_param == NULL) || !SIM->get_param_bool("enabled", host_param)->get()) {
-    sprintf(str, "Selected USB HC not enabled: %s", debug_type->get_choice(usb_debug_type));
+    if (usb_debug_devid == -1) {
+      sprintf(str, "Selected USB HC not enabled: %s", debug_type->get_choice(usb_debug_type));
+    } else {
+      sprintf(str, "Selected USB HC not enabled: %s", debug_type->get_choice(USB_DEBUG_EHCI));
+    }
     MessageBox(getBochsWindow(), str, NULL, MB_ICONINFORMATION);
     return 0;
   }
@@ -329,6 +337,7 @@ bx_list_c *UHCI_state = NULL;
 // returns -1 if error, else returns ID to control to set the focus to
 int hc_uhci_init(HWND hwnd)
 {
+  bx_param_enum_c* device;
   char str[COMMON_STR_SIZE];
   Bit32u frame_addr, frame_num;
   int ret = IDOK;
@@ -393,9 +402,19 @@ int hc_uhci_init(HWND hwnd)
   SetDlgItemText(hwnd, IDC_U_REG_PORT1, str);
 
   // display the port types
-  SIM->get_param_enum("port1.device", host_param)->dump_param(str, COMMON_STR_SIZE, 1);
+  device = get_hc_port_device(1);
+  if (device != NULL) {
+    device->dump_param(str, COMMON_STR_SIZE, 1);
+  } else {
+    strcpy(str, "none");
+  }
   SetDlgItemText(hwnd, IDC_U_REG_PORT0_TYPE, str);
-  SIM->get_param_enum("port2.device", host_param)->dump_param(str, COMMON_STR_SIZE, 1);
+  device = get_hc_port_device(2);
+  if (device != NULL) {
+    device->dump_param(str, COMMON_STR_SIZE, 1);
+  } else {
+    strcpy(str, "none");
+  }
   SetDlgItemText(hwnd, IDC_U_REG_PORT1_TYPE, str);
 
   frame_addr += (frame_num * sizeof(Bit32u));
