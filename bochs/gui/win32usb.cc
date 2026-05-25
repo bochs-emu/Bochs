@@ -69,27 +69,9 @@ HWND getBochsWindow()
 // return -1 to quit emulation
 int usb_debug_dialog(int break_type, Bit64u param0, int param1, int param2)
 {
-  char str[COMMON_STR_SIZE];
   int ret;
 
-  // get the (host controller) type we are to debug
-  bx_param_enum_c *debug_type = SIM->get_param_enum(BXPN_USB_DEBUG_TYPE);
-
-  // check to make sure the specified HC is enabled
-  if (usb_debug_devid == -1) {
-    host_param = SIM->get_param(hc_param_str[usb_debug_type]);
-  } else {
-    host_param = SIM->get_param(hc_param_str[USB_DEBUG_EHCI]);
-  }
-  if ((host_param == NULL) || !SIM->get_param_bool("enabled", host_param)->get()) {
-    if (usb_debug_devid == -1) {
-      sprintf(str, "Selected USB HC not enabled: %s", debug_type->get_choice(usb_debug_type));
-    } else {
-      sprintf(str, "Selected USB HC not enabled: %s", debug_type->get_choice(USB_DEBUG_EHCI));
-    }
-    MessageBox(getBochsWindow(), str, NULL, MB_ICONINFORMATION);
-    return 0;
-  }
+  host_param = SIM->get_param(hc_param_str[usb_debug_type]);
 
   // create a font for the TreeView
   hTreeViewFont = CreateFont(14, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, ANSI_CHARSET,

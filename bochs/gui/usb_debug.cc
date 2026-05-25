@@ -309,7 +309,11 @@ void usb_dbg_register_type(int type, int devid)
 
 int usb_dbg_interface(int type, Bit64u param0, int param1, int param2)
 {
-  if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() > 0) {
+  if (usb_debug_type != SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get()) {
+    BX_WARN(("Selected USB HC type not present - USB debugger disabled"));
+    SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->set(USB_DEBUG_NONE);
+  }
+  if (usb_debug_type != USB_DEBUG_NONE) {
     // if "start_frame" is 0, do the debug_window
     // if "start_frame" is 1, wait for the trigger from the HC
     //  (set the value to 2, then return, allowing the trigger to envoke it)
