@@ -39,6 +39,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AADD_EdGdM(bxInstruction_c *i)
   Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src());
 
+#if BX_SUPPORT_MEMTYPE
+  if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
+    BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR address_xlation.paddress1));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+#endif
+
   write_RMW_linear_dword(op1_32 + op2_32);
   BX_NEXT_INSTR(i);
 }
@@ -58,6 +65,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AADD_EqGqM(bxInstruction_c *i)
 
   Bit64u op1_64 = read_RMW_virtual_qword(i->seg(), eaddr);
   Bit64u op2_64 = BX_READ_64BIT_REG(i->src());
+
+#if BX_SUPPORT_MEMTYPE
+  if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
+    BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR address_xlation.paddress1));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+#endif
 
   write_RMW_linear_qword(op1_64 + op2_64);
   BX_NEXT_INSTR(i);
@@ -79,6 +93,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAND_EdGdM(bxInstruction_c *i)
   Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src());
 
+#if BX_SUPPORT_MEMTYPE
+  if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
+    BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR address_xlation.paddress1));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+#endif
+
   write_RMW_linear_dword(op1_32 & op2_32);
   BX_NEXT_INSTR(i);
 }
@@ -98,6 +119,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAND_EqGqM(bxInstruction_c *i)
 
   Bit64u op1_64 = read_RMW_virtual_qword(i->seg(), eaddr);
   Bit64u op2_64 = BX_READ_64BIT_REG(i->src());
+
+#if BX_SUPPORT_MEMTYPE
+  if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
+    BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR address_xlation.paddress1));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+#endif
 
   write_RMW_linear_qword(op1_64 & op2_64);
   BX_NEXT_INSTR(i);
@@ -119,6 +147,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AOR_EdGdM(bxInstruction_c *i)
   Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src());
 
+#if BX_SUPPORT_MEMTYPE
+  if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
+    BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR address_xlation.paddress1));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+#endif
+
   write_RMW_linear_dword(op1_32 | op2_32);
   BX_NEXT_INSTR(i);
 }
@@ -138,6 +173,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AOR_EqGqM(bxInstruction_c *i)
 
   Bit64u op1_64 = read_RMW_virtual_qword(i->seg(), eaddr);
   Bit64u op2_64 = BX_READ_64BIT_REG(i->src());
+
+#if BX_SUPPORT_MEMTYPE
+  if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
+    BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR address_xlation.paddress1));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+#endif
 
   write_RMW_linear_qword(op1_64 | op2_64);
   BX_NEXT_INSTR(i);
@@ -159,6 +201,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AXOR_EdGdM(bxInstruction_c *i)
   Bit32u op1_32 = read_RMW_virtual_dword(i->seg(), eaddr);
   Bit32u op2_32 = BX_READ_32BIT_REG(i->src());
 
+#if BX_SUPPORT_MEMTYPE
+  if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
+    BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR address_xlation.paddress1));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+#endif
+
   write_RMW_linear_dword(op1_32 ^ op2_32);
   BX_NEXT_INSTR(i);
 }
@@ -178,6 +227,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AXOR_EqGqM(bxInstruction_c *i)
 
   Bit64u op1_64 = read_RMW_virtual_qword(i->seg(), eaddr);
   Bit64u op2_64 = BX_READ_64BIT_REG(i->src());
+
+#if BX_SUPPORT_MEMTYPE
+  if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
+    BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR address_xlation.paddress1));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+#endif
 
   write_RMW_linear_qword(op1_64 ^ op2_64);
   BX_NEXT_INSTR(i);
