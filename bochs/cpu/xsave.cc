@@ -218,7 +218,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
     xsave_sse_state(i, eaddr+XSAVE_SSE_STATE_OFFSET);
   }
 
-  if (requested_feature_bitmap) {
+  if (requested_feature_bitmap & ~(BX_XCR0_FPU_MASK | BX_XCR0_SSE_MASK)) {
     // check that we would not fault while attempting to write, check that we can write-access last byte of the XSAVE area to be written
     // touch the memory but no write actually occurs
     read_RMW_virtual_byte(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap, true) - 1) & asize_mask); // no lock, touch only
