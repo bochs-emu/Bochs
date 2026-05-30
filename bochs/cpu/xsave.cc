@@ -63,7 +63,7 @@ BX_CPP_INLINE bx_address xsave_area_last_byte(Bit32u requested_feature_bitmap, b
     return offset;
   }
 
-  unsigned last_feature_to_save = most_significant_bitq(requested_feature_bitmap);
+  unsigned last_feature_to_save = most_significant_bitd(requested_feature_bitmap);
 
   return xsave_restore[last_feature_to_save].offset + xsave_restore[last_feature_to_save].len;
 }
@@ -100,37 +100,39 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   Bit32u requested_feature_bitmap = BX_CPU_THIS_PTR xcr0.get32() & EAX;
   Bit32u xinuse = get_xinuse_vector(requested_feature_bitmap);
 
-  // check that we would not fault while attempting to write, check that we can write-access last byte of the XSAVE area to be written
-  // touch the memory but no write actually occurs
-  read_RMW_virtual_byte(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap) - 1) & asize_mask); // no lock, touch only
+  if (requested_feature_bitmap) {
+    // check that we would not fault while attempting to write, check that we can write-access last byte of the XSAVE area to be written
+    // touch the memory but no write actually occurs
+    read_RMW_virtual_byte(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap) - 1) & asize_mask); // no lock, touch only
 
-  /////////////////////////////////////////////////////////////////////////////
-  if ((requested_feature_bitmap & BX_XCR0_FPU_MASK) != 0)
-  {
-    if (! xsaveopt || (xinuse & BX_XCR0_FPU_MASK) != 0)
-      xsave_x87_state(i, eaddr);
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-  if ((requested_feature_bitmap & (BX_XCR0_SSE_MASK | BX_XCR0_YMM_MASK)) != 0)
-  {
-    xsave_mxcsr_state(i, eaddr);
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-  for (unsigned feature = xcr0_t::BX_XCR0_SSE_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
-  {
-    Bit32u feature_mask = (1 << feature);
-
-    if ((requested_feature_bitmap & feature_mask) != 0)
+    /////////////////////////////////////////////////////////////////////////////
+    if ((requested_feature_bitmap & BX_XCR0_FPU_MASK) != 0)
     {
-      bx_address feature_offset = (eaddr + xsave_restore[feature].offset) & asize_mask;
+      if (! xsaveopt || (xinuse & BX_XCR0_FPU_MASK) != 0)
+        xsave_x87_state(i, eaddr);
+    }
 
-      if (! xsaveopt || (xinuse & feature_mask) != 0) {
-        if (xsave_restore[feature].xsave_method == NULL)
-          BX_ERROR(("%s: feature #%d requested to save but not implemented !", i->getIaOpcodeNameShort(), feature));
-        else
-          CALL_XSAVE_FN(xsave_restore[feature].xsave_method)(i, feature_offset);
+    /////////////////////////////////////////////////////////////////////////////
+    if ((requested_feature_bitmap & (BX_XCR0_SSE_MASK | BX_XCR0_YMM_MASK)) != 0)
+    {
+      xsave_mxcsr_state(i, eaddr);
+    }
+
+    /////////////////////////////////////////////////////////////////////////////
+    for (unsigned feature = xcr0_t::BX_XCR0_SSE_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
+    {
+      Bit32u feature_mask = (1 << feature);
+
+      if ((requested_feature_bitmap & feature_mask) != 0)
+      {
+        bx_address feature_offset = (eaddr + xsave_restore[feature].offset) & asize_mask;
+
+        if (! xsaveopt || (xinuse & feature_mask) != 0) {
+          if (xsave_restore[feature].xsave_method == NULL)
+            BX_ERROR(("%s: feature #%d requested to save but not implemented !", i->getIaOpcodeNameShort(), feature));
+          else
+            CALL_XSAVE_FN(xsave_restore[feature].xsave_method)(i, feature_offset);
+        }
       }
     }
   }
@@ -214,29 +216,31 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
     xsave_sse_state(i, eaddr+XSAVE_SSE_STATE_OFFSET);
   }
 
-  // check that we would not fault while attempting to write, check that we can write-access last byte of the XSAVE area to be written
-  // touch the memory but no write actually occurs
-  read_RMW_virtual_byte(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap, true) - 1) & asize_mask); // no lock, touch only
+  if (requested_feature_bitmap) {
+    // check that we would not fault while attempting to write, check that we can write-access last byte of the XSAVE area to be written
+    // touch the memory but no write actually occurs
+    read_RMW_virtual_byte(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap, true) - 1) & asize_mask); // no lock, touch only
 
-  Bit32u offset = XSAVE_YMM_STATE_OFFSET;
+    Bit32u offset = XSAVE_YMM_STATE_OFFSET;
 
-  /////////////////////////////////////////////////////////////////////////////
-  for (unsigned feature = xcr0_t::BX_XCR0_YMM_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
-  {
-    Bit32u feature_mask = (1 << feature);
-
-    if ((requested_feature_bitmap & feature_mask) != 0)
+    /////////////////////////////////////////////////////////////////////////////
+    for (unsigned feature = xcr0_t::BX_XCR0_YMM_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
     {
-      if (xinuse & feature_mask) {
-        bx_address feature_offset = (eaddr + offset) & asize_mask;
+      Bit32u feature_mask = (1 << feature);
 
-        if (xsave_restore[feature].xsave_method == NULL)
-          BX_ERROR(("%s: feature #%d requested to save but not implemented !", i->getIaOpcodeNameShort(), feature));
-        else
-          CALL_XSAVE_FN(xsave_restore[feature].xsave_method)(i, feature_offset);
+      if ((requested_feature_bitmap & feature_mask) != 0)
+      {
+        if (xinuse & feature_mask) {
+          bx_address feature_offset = (eaddr + offset) & asize_mask;
+
+          if (xsave_restore[feature].xsave_method == NULL)
+            BX_ERROR(("%s: feature #%d requested to save but not implemented !", i->getIaOpcodeNameShort(), feature));
+          else
+            CALL_XSAVE_FN(xsave_restore[feature].xsave_method)(i, feature_offset);
+        }
+
+        offset += xsave_restore[feature].len;
       }
-
-      offset += xsave_restore[feature].len;
     }
   }
 
@@ -357,6 +361,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
   Bit32u requested_feature_bitmap = xcr0 & EAX;
   Bit64u format = (compaction) ? (xcomp_bv & ~XSAVEC_COMPACTION_ENABLED) : (~XSAVEC_COMPACTION_ENABLED);
   Bit32u restore_mask = xstate_bv & format;
+
+  if (! requested_feature_bitmap) {
+    BX_NEXT_INSTR(i);
+    return;
+  }
 
   /////////////////////////////////////////////////////////////////////////////
   if ((requested_feature_bitmap & BX_XCR0_FPU_MASK) != 0)
