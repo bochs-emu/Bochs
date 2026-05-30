@@ -48,6 +48,7 @@ extern XSaveRestoreStateHelper xsave_restore[];
 
 #include "scalar_arith.h"
 
+#if BX_CPU_LEVEL >= 6
 BX_CPP_INLINE bx_address xsave_area_last_byte(Bit32u requested_feature_bitmap, bool compaction = false)
 {
   if (compaction) {
@@ -67,6 +68,7 @@ BX_CPP_INLINE bx_address xsave_area_last_byte(Bit32u requested_feature_bitmap, b
 
   return xsave_restore[last_feature_to_save].offset + xsave_restore[last_feature_to_save].len;
 }
+#endif
 
 /* 0F AE /4 */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
