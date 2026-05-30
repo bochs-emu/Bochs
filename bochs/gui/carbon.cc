@@ -1976,7 +1976,7 @@ static BxEvent * CarbonSiminterfaceCallback (void *theClass, BxEvent *event)
 {
   event->retcode = 0;  // default return code
 
-  if(event->type == BX_ASYNC_EVT_LOG_MSG || event->type == BX_SYNC_EVT_LOG_ASK)
+  if(event->type == BX_ASYNC_EVT_LOG_MSG/* || event->type == BX_SYNC_EVT_LOG_ASK*/)
   {
     DialogRef                     alertDialog;
     CFStringRef                   title;
