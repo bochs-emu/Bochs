@@ -835,7 +835,7 @@ void bx_carbon_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   // loads keymap for x11
   if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
-    bx_keymap.loadKeymap(NULL); // I have no function to convert X windows symbols
+    bx_keymap.loadKeymap("x11", NULL); // I have no function to convert X windows symbols
   }
 }
 
