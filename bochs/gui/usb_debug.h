@@ -150,6 +150,7 @@ Bit32u usb_io_read(Bit16u addr, unsigned io_len);
 
 void usb_io_write(Bit16u addr, Bit32u value, unsigned io_len);
 
+bx_list_c* get_ohci_state(void);
 bx_list_c* get_uhci_state(void);
 
 bx_param_enum_c* get_hc_port_device(Bit8u port);

@@ -3252,9 +3252,9 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         PARSE_ERR(("%s: usb_debug directive malformed.", context));
       }
     }
-    // we currently only support the xHCI controller type, so give
-    //  an error if it is something else.
-    if ((type->get() == USB_DEBUG_OHCI) || (type->get() == USB_DEBUG_EHCI)) {
+    // we currently don't support the EHCI controller type, so give
+    //  an error if it is selected.
+    if (type->get() == USB_DEBUG_EHCI) {
       PARSE_ERR(("%s: usb_debug: type='%s' not supported yet.", context,
                  type->get_selected()));
     }

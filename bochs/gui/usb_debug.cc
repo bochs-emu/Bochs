@@ -297,8 +297,8 @@ bool uhci_add_queue(struct USB_UHCI_QUEUE_STACK *stack, const Bit32u addr)
 void usb_dbg_register_type(int type, int devid)
 {
   if (type != USB_DEBUG_NONE) {
-    if ((type != USB_DEBUG_UHCI) && (type != USB_DEBUG_XHCI)) {
-      BX_PANIC(("USB debugger does not yet support type %d", type));
+    if (type == USB_DEBUG_EHCI) {
+      BX_PANIC(("USB debugger does not yet support type EHCI"));
     } else {
       usb_debug_type = type;
       usb_debug_devid = devid;
@@ -309,9 +309,14 @@ void usb_dbg_register_type(int type, int devid)
 
 int usb_dbg_interface(int type, Bit64u param0, int param1, int param2)
 {
-  if (usb_debug_type != SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get()) {
-    BX_WARN(("Selected USB HC type not present - USB debugger disabled"));
-    SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->set(USB_DEBUG_NONE);
+  static bool first_call = true;
+
+  if (first_call) {
+    if (usb_debug_type != SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get()) {
+      BX_WARN(("Selected USB HC type not present - USB debugger disabled"));
+      SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->set(USB_DEBUG_NONE);
+    }
+    first_call = false;
   }
   if (usb_debug_type != USB_DEBUG_NONE) {
     // if "start_frame" is 0, do the debug_window
@@ -421,6 +426,18 @@ bx_list_c* get_uhci_state()
     strcpy(pname, "usb_uhci");
   } else {
     sprintf(pname, "usb_ehci.uhci%d", usb_debug_devid);
+  }
+  return (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
+}
+
+bx_list_c* get_ohci_state()
+{
+  char pname[32];
+
+  if (usb_debug_devid == -1) {
+    strcpy(pname, "usb_ohci");
+  } else {
+    sprintf(pname, "usb_ehci.ohci%d", usb_debug_devid);
   }
   return (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
 }

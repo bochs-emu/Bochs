@@ -309,6 +309,10 @@ INT_PTR CALLBACK hc_uhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
           }
           break;
       }
+      break;
+    case WM_CLOSE:
+      SendMessage(hDlg, WM_COMMAND, ID_QUIT_EMU, 0);
+      break;
   }
 
   return 0;
@@ -817,11 +821,74 @@ INT_PTR CALLBACK hc_uhci_callback_td(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
 // lParam: type is in low 8 bits, break_type in high 8-bits of low word
 INT_PTR CALLBACK hc_ohci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+  char str[COMMON_STR_SIZE];
+  int ret;
+
+  switch (msg) {
+    case WM_INITDIALOG:
+      sprintf(str, "Bochs for Windows -- USB Debug: OHCI Host Controller");
+      SetWindowText(hDlg, str);
+
+      ret = hc_ohci_init(hDlg);
+      if (ret < 0) {
+        MessageBox(hDlg, "Error initializing dialog", NULL, MB_ICONINFORMATION);
+      }
+
+      if (ret >= 0) {
+        SetFocus(GetDlgItem(hDlg, ret));
+        return FALSE;
+      } else
+        return TRUE;
+    case WM_COMMAND:
+      switch (HIWORD(wParam)) {
+        case BN_CLICKED:
+          switch (LOWORD(wParam)) {
+            case ID_CONTINUE_EMU:
+              SIM->get_param_bool(BXPN_USB_DEBUG_RESET)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_RESET) == BST_CHECKED) ? true : false);
+              SIM->get_param_bool(BXPN_USB_DEBUG_ENABLE)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_ENABLE) == BST_CHECKED) ? true : false);
+              SIM->get_param_bool(BXPN_USB_DEBUG_DOORBELL)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_DOORBELL) == BST_CHECKED) ? true : false);
+              SIM->get_param_bool(BXPN_USB_DEBUG_EVENT)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_EVENT) == BST_CHECKED) ? true : false);
+              SIM->get_param_bool(BXPN_USB_DEBUG_DATA)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_DATA) == BST_CHECKED) ? true : false);
+              SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_SOF) == BST_CHECKED) ? BX_USB_DEBUG_SOF_SET : BX_USB_DEBUG_SOF_NONE);
+              SIM->get_param_bool(BXPN_USB_DEBUG_NON_EXIST)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_NONEXIST) == BST_CHECKED) ? true : false);
+              EndDialog(hDlg, 1);
+              break;
+            case ID_QUIT_EMU:
+              EndDialog(hDlg, -1);  // -1 to quit the SIM
+              break;
+          }
+          break;
+      }
+      break;
+    case WM_CLOSE:
+      SendMessage(hDlg, WM_COMMAND, ID_QUIT_EMU, 0);
+      break;
+  }
 
   return 0;
 }
 
-int hc_ohci_init(HWND hwnd) {
+bx_list_c *OHCI_state = NULL;
+
+int hc_ohci_init(HWND hwnd)
+{
+  char str[COMMON_STR_SIZE];
+
+  OHCI_state = get_ohci_state();
+  if (OHCI_state == NULL)
+    return -1;
+
+  CheckDlgButton(hwnd, IDC_DEBUG_RESET,    SIM->get_param_bool(BXPN_USB_DEBUG_RESET)->get() ? BST_CHECKED : BST_UNCHECKED);
+  CheckDlgButton(hwnd, IDC_DEBUG_ENABLE,   SIM->get_param_bool(BXPN_USB_DEBUG_ENABLE)->get() ? BST_CHECKED : BST_UNCHECKED);
+  CheckDlgButton(hwnd, IDC_DEBUG_DOORBELL, SIM->get_param_bool(BXPN_USB_DEBUG_DOORBELL)->get() ? BST_CHECKED : BST_UNCHECKED);
+  CheckDlgButton(hwnd, IDC_DEBUG_EVENT,    SIM->get_param_bool(BXPN_USB_DEBUG_EVENT)->get() ? BST_CHECKED : BST_UNCHECKED);
+  CheckDlgButton(hwnd, IDC_DEBUG_DATA,     SIM->get_param_bool(BXPN_USB_DEBUG_DATA)->get() ? BST_CHECKED : BST_UNCHECKED);
+  CheckDlgButton(hwnd, IDC_DEBUG_SOF,     (SIM->get_param_num(BXPN_USB_DEBUG_START_FRAME)->get() > BX_USB_DEBUG_SOF_NONE) ? BST_CHECKED : BST_UNCHECKED);
+  CheckDlgButton(hwnd, IDC_DEBUG_NONEXIST, SIM->get_param_bool(BXPN_USB_DEBUG_NON_EXIST)->get() ? BST_CHECKED : BST_UNCHECKED);
+
+  pci_bar_address = get_pci_bar_addr((bx_shadow_data_c*)SIM->get_param("hub.pci_conf", OHCI_state), 0);
+  sprintf(str, "0x%08X", pci_bar_address);
+  SetDlgItemText(hwnd, IDC_PORT_ADDR, str);
 
   return 0;
 }
@@ -959,6 +1026,10 @@ INT_PTR CALLBACK hc_xhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
           }
           break;
       }
+      break;
+    case WM_CLOSE:
+      SendMessage(hDlg, WM_COMMAND, ID_QUIT_EMU, 0);
+      break;
       /*
       * https://social.msdn.microsoft.com/Forums/en-US/60402c1d-d7a6-4406-9b83-67fa74c24104/select-an-item-in-a-treeview-with-a-right-click?forum=vcmfcatl
     case WM_NOTIFY:
