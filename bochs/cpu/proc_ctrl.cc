@@ -1427,6 +1427,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRPKRU(bxInstruction_c *i)
 
   BX_CPU_THIS_PTR set_PKeys(EAX, BX_CPU_THIS_PTR pkrs);
 
+  TLB_flush();
+
   BX_NEXT_TRACE(i);
 }
 
