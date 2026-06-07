@@ -328,7 +328,7 @@ int hc_uhci_init(HWND hwnd)
   Bit32u frame_addr, frame_num;
   int ret = IDOK;
 
-  UHCI_state = get_uhci_state();
+  UHCI_state = get_usb_hc_state(USB_DEBUG_UHCI);
   if (UHCI_state == NULL)
     return -1;
 
@@ -829,6 +829,9 @@ INT_PTR CALLBACK hc_ohci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
       sprintf(str, "Bochs for Windows -- USB Debug: OHCI Host Controller");
       SetWindowText(hDlg, str);
 
+      // call the initializer
+      TreeView = GetDlgItem(hDlg, IDC_STACK);
+      SNDMSG(TreeView, WM_SETFONT, (WPARAM) hTreeViewFont, FALSE);
       ret = hc_ohci_init(hDlg);
       if (ret < 0) {
         MessageBox(hDlg, "Error initializing dialog", NULL, MB_ICONINFORMATION);
@@ -844,6 +847,9 @@ INT_PTR CALLBACK hc_ohci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
         case BN_CLICKED:
           switch (LOWORD(wParam)) {
             case ID_CONTINUE_EMU:
+              if (TreeView)
+                TreeView_DeleteAllItems(TreeView);
+              TreeView = NULL;
               SIM->get_param_bool(BXPN_USB_DEBUG_RESET)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_RESET) == BST_CHECKED) ? true : false);
               SIM->get_param_bool(BXPN_USB_DEBUG_ENABLE)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_ENABLE) == BST_CHECKED) ? true : false);
               SIM->get_param_bool(BXPN_USB_DEBUG_DOORBELL)->set((IsDlgButtonChecked(hDlg, IDC_DEBUG_DOORBELL) == BST_CHECKED) ? true : false);
@@ -854,6 +860,9 @@ INT_PTR CALLBACK hc_ohci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
               EndDialog(hDlg, 1);
               break;
             case ID_QUIT_EMU:
+              if (TreeView)
+                TreeView_DeleteAllItems(TreeView);
+              TreeView = NULL;
               EndDialog(hDlg, -1);  // -1 to quit the SIM
               break;
           }
@@ -872,9 +881,12 @@ bx_list_c *OHCI_state = NULL;
 
 int hc_ohci_init(HWND hwnd)
 {
+  bx_param_enum_c* device;
   char str[COMMON_STR_SIZE];
+  Bit32u dword;
+  int ret = IDOK;
 
-  OHCI_state = get_ohci_state();
+  OHCI_state = get_usb_hc_state(USB_DEBUG_OHCI);
   if (OHCI_state == NULL)
     return -1;
 
@@ -889,8 +901,100 @@ int hc_ohci_init(HWND hwnd)
   pci_bar_address = get_pci_bar_addr((bx_shadow_data_c*)SIM->get_param("hub.pci_conf", OHCI_state), 0);
   sprintf(str, "0x%08X", pci_bar_address);
   SetDlgItemText(hwnd, IDC_PORT_ADDR, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x04);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_CONTROL, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x08);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_COMMAND_STATUS, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x0c);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_INTERRUPT_STATUS, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x10);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_INTERRUPT_ENABLE, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x18);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_HCCA, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x1c);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_PERI_CURRENT_ED, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x20);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_CTRL_HEAD_ED, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x24);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_CTRL_CURRENT_ED, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x28);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_BULK_HEAD_ED, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x2c);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_BULK_CURRENT_ED, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x30);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_DONE_HEAD, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x34);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_FM_INTERVAL, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x38);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_FM_REMAINING, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x3c);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_FM_NUMBER, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x40);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_PERIODIC_START, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x44);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_LS_THRESHOLD, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x48);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_RH_DESCRIPTOR_A, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x4c);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_RH_DESCRIPTOR_B, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x50);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_RH_STATUS, str);
 
-  return 0;
+  dword = usb_mmio_read_dword(pci_bar_address + 0x54);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_PORT0, str);
+  dword = usb_mmio_read_dword(pci_bar_address + 0x58);
+  sprintf(str, "0x%08X", dword);
+  SetDlgItemText(hwnd, IDC_O_REG_PORT1, str);
+
+  // display the port types
+  device = get_hc_port_device(1);
+  if (device != NULL) {
+    device->dump_param(str, COMMON_STR_SIZE, 1);
+  } else {
+    strcpy(str, "none");
+  }
+  SetDlgItemText(hwnd, IDC_O_REG_PORT0_TYPE, str);
+  device = get_hc_port_device(2);
+  if (device != NULL) {
+    device->dump_param(str, COMMON_STR_SIZE, 1);
+  } else {
+    strcpy(str, "none");
+  }
+  SetDlgItemText(hwnd, IDC_O_REG_PORT1_TYPE, str);
+
+  tree_items = 0;
+  TreeView_DeleteAllItems(TreeView);
+
+  bool valid = 0;
+  // TODO
+
+  if (!valid) {
+    TreeView_SetBkColor(TreeView, COLORREF(0x00A9A9A9));
+    SetDlgItemText(hwnd, IDC_TREE_COMMENT, "This trigger does not populate the TreeView");
+  } else
+    SetDlgItemText(hwnd, IDC_TREE_COMMENT, "TreeView populated");
+
+  return ret;
 }
 
 
@@ -1089,43 +1193,43 @@ int hc_xhci_init(HWND hwnd)
   SetDlgItemText(hwnd, IDC_PORT_ADDR, str);
 
   for (i=0; i<8; i++) {
-    dword = xhci_read_dword(pci_bar_address + (i * 4));
+    dword = usb_mmio_read_dword(pci_bar_address + (i * 4));
     sprintf(str, "0x%08X", dword);
     SetDlgItemText(hwnd, IDC_X_REG_CAPLENGTH + i, str);
   }
-  offset = xhci_read_dword(pci_bar_address + 0) & 0xFF;
+  offset = usb_mmio_read_dword(pci_bar_address + 0) & 0xFF;
 
-  dword = xhci_read_dword(pci_bar_address + offset + 0x00);
+  dword = usb_mmio_read_dword(pci_bar_address + offset + 0x00);
   sprintf(str, "0x%08X", dword);
   SetDlgItemText(hwnd, IDC_X_REG_COMMAND, str);
-  dword = xhci_read_dword(pci_bar_address + offset + 0x04);
+  dword = usb_mmio_read_dword(pci_bar_address + offset + 0x04);
   sprintf(str, "0x%08X", dword);
   SetDlgItemText(hwnd, IDC_X_REG_STATUS, str);
-  dword = xhci_read_dword(pci_bar_address + offset + 0x08);
+  dword = usb_mmio_read_dword(pci_bar_address + offset + 0x08);
   sprintf(str, "0x%08X", dword);
   SetDlgItemText(hwnd, IDC_X_REG_PAGESIZE, str);
-  dword = xhci_read_dword(pci_bar_address + offset + 0x14);
+  dword = usb_mmio_read_dword(pci_bar_address + offset + 0x14);
   sprintf(str, "0x%08X", dword);
   SetDlgItemText(hwnd, IDC_X_REG_DEVICE_NOTE, str);
   // we can't read this using DEV_MEM_READ_PHYSICAL since the handler will return zero
   sprintf(str, "0x" FMT_ADDRX64, SIM->get_param_num("hub.op_regs.HcCrcr.actual", XHCI_state)->get64());
   SetDlgItemText(hwnd, IDC_X_REG_COMMAND_RING, str);
-  qword = xhci_read_dword(pci_bar_address + offset + 0x30) |
-   ((Bit64u) xhci_read_dword(pci_bar_address + offset + 0x34) << 32);
+  qword = usb_mmio_read_dword(pci_bar_address + offset + 0x30) |
+   ((Bit64u) usb_mmio_read_dword(pci_bar_address + offset + 0x34) << 32);
   sprintf(str, "0x" FMT_ADDRX64, qword);
   SetDlgItemText(hwnd, IDC_X_REG_DEV_CONTEXT_BASE, str);
-  dword = xhci_read_dword(pci_bar_address + offset + 0x38);
+  dword = usb_mmio_read_dword(pci_bar_address + offset + 0x38);
   sprintf(str, "0x%08X", dword);
   SetDlgItemText(hwnd, IDC_X_REG_CONFIGURE, str);
 
-  offset = xhci_read_dword(pci_bar_address + 0x18);
-  dword = xhci_read_dword(pci_bar_address + offset + 0);
+  offset = usb_mmio_read_dword(pci_bar_address + 0x18);
+  dword = usb_mmio_read_dword(pci_bar_address + offset + 0);
   sprintf(str, "0x%08X", dword);
   SetDlgItemText(hwnd, IDC_X_REG_MFINDEX, str);
 
   // show up to 10 port register sets
   for (i = 0; i < (unsigned)SIM->get_param_num(BXPN_XHCI_N_PORTS)->get(); i++) {
-    dword = xhci_read_dword(pci_bar_address + XHCI_PORT_SET_OFFSET + (i * 16));
+    dword = usb_mmio_read_dword(pci_bar_address + XHCI_PORT_SET_OFFSET + (i * 16));
     sprintf(str, "0x%08X", dword);
     SetDlgItemText(hwnd, IDC_X_REG_PORT0 + i, str);
     sprintf(str1, "port%d.device", i + 1);

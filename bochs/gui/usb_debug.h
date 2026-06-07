@@ -147,15 +147,13 @@ int usb_debug_dialog(int break_type, Bit64u param0, int param1, int param2);
 Bit32u get_pci_bar_addr(bx_shadow_data_c *pci_conf, Bit8u bar_num);
 
 Bit32u usb_io_read(Bit16u addr, unsigned io_len);
+Bit32u usb_mmio_read_dword(const Bit32u address);
 
 void usb_io_write(Bit16u addr, Bit32u value, unsigned io_len);
 
-bx_list_c* get_ohci_state(void);
-bx_list_c* get_uhci_state(void);
+bx_list_c* get_usb_hc_state(int type);
 
 bx_param_enum_c* get_hc_port_device(Bit8u port);
-
-Bit32u xhci_read_dword(const Bit32u address);
 
 #endif  // BX_USB_DEBUGGER
 #endif  // BX_USB_DEBUG_H

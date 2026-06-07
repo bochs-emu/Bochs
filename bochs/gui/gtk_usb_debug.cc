@@ -907,7 +907,7 @@ int uhci_debug_dialog(int type, int param1)
     {"Port 1 Register", NULL, 4, attribs_u_ports}
   };
 
-  UHCI_state = get_uhci_state();
+  UHCI_state = get_usb_hc_state(USB_DEBUG_UHCI);
   if (UHCI_state == NULL)
     return -1;
 
@@ -2919,25 +2919,25 @@ int xhci_debug_dialog(int type, int param1)
   sprintf(buffer, "0x%08X", pci_bar_address);
   gtk_entry_set_text(GTK_ENTRY(entry[0]), buffer);
   for (i = 0; i < 8; i++) {
-    dword = xhci_read_dword(pci_bar_address + (i * 4));
+    dword = usb_mmio_read_dword(pci_bar_address + (i * 4));
     sprintf(buffer, "0x%08X", dword);
     gtk_entry_set_text(GTK_ENTRY(entry[i + 1]), buffer);
     g_signal_connect(GTK_EDITABLE(entry[i + 1]), "changed", G_CALLBACK(on_entry_changed), NULL);
   }
-  offset = xhci_read_dword(pci_bar_address + 0) & 0xFF;
-  dword = xhci_read_dword(pci_bar_address + offset + 0x00);
+  offset = usb_mmio_read_dword(pci_bar_address + 0) & 0xFF;
+  dword = usb_mmio_read_dword(pci_bar_address + offset + 0x00);
   sprintf(buffer, "0x%08X", dword);
   gtk_entry_set_text(GTK_ENTRY(entry[9]), buffer);
   g_signal_connect(GTK_EDITABLE(entry[9]), "changed", G_CALLBACK(on_entry_changed), NULL);
-  dword = xhci_read_dword(pci_bar_address + offset + 0x04);
+  dword = usb_mmio_read_dword(pci_bar_address + offset + 0x04);
   sprintf(buffer, "0x%08X", dword);
   gtk_entry_set_text(GTK_ENTRY(entry[10]), buffer);
   g_signal_connect(GTK_EDITABLE(entry[10]), "changed", G_CALLBACK(on_entry_changed), NULL);
-  dword = xhci_read_dword(pci_bar_address + offset + 0x08);
+  dword = usb_mmio_read_dword(pci_bar_address + offset + 0x08);
   sprintf(buffer, "0x%08X", dword);
   gtk_entry_set_text(GTK_ENTRY(entry[11]), buffer);
   g_signal_connect(GTK_EDITABLE(entry[11]), "changed", G_CALLBACK(on_entry_changed), NULL);
-  dword = xhci_read_dword(pci_bar_address + offset + 0x14);
+  dword = usb_mmio_read_dword(pci_bar_address + offset + 0x14);
   sprintf(buffer, "0x%08X", dword);
   gtk_entry_set_text(GTK_ENTRY(entry[12]), buffer);
   g_signal_connect(GTK_EDITABLE(entry[12]), "changed", G_CALLBACK(on_entry_changed), NULL);
@@ -2945,24 +2945,24 @@ int xhci_debug_dialog(int type, int param1)
   sprintf(buffer, "0x" FMT_ADDRX64, SIM->get_param_num("hub.op_regs.HcCrcr.actual", xHCI_state)->get64());
   gtk_entry_set_text(GTK_ENTRY(entry[13]), buffer);
   g_signal_connect(GTK_EDITABLE(entry[13]), "changed", G_CALLBACK(on_entry_changed), NULL);
-  Bit64u qword = xhci_read_dword(pci_bar_address + offset + 0x30) |
-   ((Bit64u) xhci_read_dword(pci_bar_address + offset + 0x34) << 32);
+  Bit64u qword = usb_mmio_read_dword(pci_bar_address + offset + 0x30) |
+   ((Bit64u) usb_mmio_read_dword(pci_bar_address + offset + 0x34) << 32);
   sprintf(buffer, "0x" FMT_ADDRX64, qword);
   gtk_entry_set_text(GTK_ENTRY(entry[14]), buffer);
   g_signal_connect(GTK_EDITABLE(entry[14]), "changed", G_CALLBACK(on_entry_changed), NULL);
-  dword = xhci_read_dword(pci_bar_address + offset + 0x38);
+  dword = usb_mmio_read_dword(pci_bar_address + offset + 0x38);
   sprintf(buffer, "0x%08X", dword);
   gtk_entry_set_text(GTK_ENTRY(entry[15]), buffer);
   g_signal_connect(GTK_EDITABLE(entry[15]), "changed", G_CALLBACK(on_entry_changed), NULL);
 
-  offset = xhci_read_dword(pci_bar_address + 0x18);
-  dword = xhci_read_dword(pci_bar_address + offset + 0);
+  offset = usb_mmio_read_dword(pci_bar_address + 0x18);
+  dword = usb_mmio_read_dword(pci_bar_address + offset + 0);
   sprintf(buffer, "0x%08X", dword);
   gtk_entry_set_text(GTK_ENTRY(entry[16]), buffer);
   g_signal_connect(GTK_EDITABLE(entry[16]), "changed", G_CALLBACK(on_entry_changed), NULL);
   // show up to 10 port register sets
   for (i = 0; i < n_ports; i++) {
-    dword = xhci_read_dword(pci_bar_address + XHCI_PORT_SET_OFFSET + (i * 16));
+    dword = usb_mmio_read_dword(pci_bar_address + XHCI_PORT_SET_OFFSET + (i * 16));
     sprintf(buffer, "0x%08X", dword);
     gtk_entry_set_text(GTK_ENTRY(entry[i * 2 + 17]), buffer);
     g_signal_connect(GTK_EDITABLE(entry[i * 2 + 17]), "changed", G_CALLBACK(on_entry_changed), NULL);

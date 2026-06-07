@@ -413,31 +413,36 @@ Bit32u usb_io_read(Bit16u addr, unsigned io_len)
   return bx_devices.inp(addr, io_len);
 }
 
+Bit32u usb_mmio_read_dword(const Bit32u address)
+{
+  Bit32u value = 0;
+
+  if (address > 0) {
+    DEV_MEM_READ_PHYSICAL(address, 4, (Bit8u*)&value);
+  }
+  return value;
+}
+
 void usb_io_write(Bit16u addr, Bit32u value, unsigned io_len)
 {
   bx_devices.outp(addr, value, io_len);
 }
 
-bx_list_c* get_uhci_state()
+bx_list_c* get_usb_hc_state(int type)
 {
-  char pname[32];
+  char hc_type[8], pname[32];
 
-  if (usb_debug_devid == -1) {
-    strcpy(pname, "usb_uhci");
+  if (type == USB_DEBUG_UHCI) {
+    strcpy(hc_type, "uhci");
+  } else if (type == USB_DEBUG_OHCI) {
+    strcpy(hc_type, "ohci");
   } else {
-    sprintf(pname, "usb_ehci.uhci%d", usb_debug_devid);
+    return NULL;
   }
-  return (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
-}
-
-bx_list_c* get_ohci_state()
-{
-  char pname[32];
-
   if (usb_debug_devid == -1) {
-    strcpy(pname, "usb_ohci");
+    sprintf(pname, "usb_%s", hc_type);
   } else {
-    sprintf(pname, "usb_ehci.ohci%d", usb_debug_devid);
+    sprintf(pname, "usb_ehci.%s%d", hc_type, usb_debug_devid);
   }
   return (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
 }
@@ -462,16 +467,6 @@ bx_param_enum_c* get_hc_port_device(Bit8u port)
     }
   }
   return device;
-}
-
-Bit32u xhci_read_dword(const Bit32u address)
-{
-  Bit32u value = 0;
-
-  if (address > 0) {
-    DEV_MEM_READ_PHYSICAL(address, 4, (Bit8u*)&value);
-  }
-  return value;
 }
 
 #endif
