@@ -768,9 +768,9 @@ void BX_CPU_C::xrstor_init_ymm_state(void)
   // set YMM8-YMM15 only in 64-bit mode
   unsigned num_regs = long64_mode() ? 16 : 8;
 
-  // initialize upper part of AVX registers with reset values
+  // initialize ONLY upper part of AVX registers with reset values
   for(unsigned index=0; index < num_regs; index++) {
-    BX_CLEAR_AVX_HIGH128(index);
+    BX_CPU_THIS_PTR vmm[index].vmm128(1).clear();
   }
 }
 
