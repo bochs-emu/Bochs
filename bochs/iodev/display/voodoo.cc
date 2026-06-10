@@ -145,15 +145,17 @@ Bit32s voodoo_options_parser(const char *context, int num_params, char *params[]
       for (int i = 1; i < num_params; i++) {
         if (SIM->parse_param_from_list(context, params[i], base) < 0) {
           if (theVoodooDevice != NULL) {
-            BX_ERROR(("%s: unknown parameter for voodoo ignored.", context));
+            BX_ERROR(("%s: unknown parameter '%s' for voodoo ignored.", context, params[i]));
           }
         }
       }
     } else {
-      if (!strncmp(params[1], "model=", 6)) {
-        SIM->get_param_enum(BXPN_VGA_EXT_MODEL)->set_by_name(&params[1][6]);
-      } else {
-        BX_ERROR(("%s: unknown parameter for voodoo ignored.", context));
+      for (int i = 1; i < num_params; i++) {
+        if (!strncmp(params[i], "model=", 6)) {
+          SIM->get_param_enum(BXPN_VGA_EXT_MODEL)->set_by_name(&params[i][6]);
+        } else {
+          theVoodooVga->error("%s: unknown parameter '%s' for voodoo ignored.", context, params[i]);
+        }
       }
     }
   }
