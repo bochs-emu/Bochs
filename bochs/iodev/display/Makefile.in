@@ -158,6 +158,12 @@ ddc.o: ddc.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h
  ../../misc/bswap.h ../../gui/siminterface.h ../../gui/paramtree.h \
  ../../gui/gui.h ddc.h ../../param_names.h
 geforce.o: geforce.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../logio.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../memory/memory-bochs.h \
+ ../../gui/siminterface.h ../../gui/paramtree.h ../../gui/gui.h vgacore.h \
+ ../pci.h bitblt.h ddc.h pxextract.h geforce.h ../virt_timer.h \
+ ../../pc_system.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h
 nvriva.o: nvriva.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../gui/paramtree.h ../../logio.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
@@ -165,12 +171,6 @@ nvriva.o: nvriva.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
  vgacore.h bitblt.h ddc.h nvriva.h ../virt_timer.h
- ../../osdep.h ../../logio.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h ../../memory/memory-bochs.h \
- ../../gui/siminterface.h ../../gui/paramtree.h ../../gui/gui.h vgacore.h \
- ../pci.h bitblt.h ddc.h pxextract.h geforce.h ../virt_timer.h \
- ../../pc_system.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h
 svga_cirrus.o: svga_cirrus.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../logio.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../memory/memory-bochs.h \
@@ -208,6 +208,12 @@ ddc.lo: ddc.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.
  ../../misc/bswap.h ../../gui/siminterface.h ../../gui/paramtree.h \
  ../../gui/gui.h ddc.h ../../param_names.h
 geforce.lo: geforce.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../logio.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../memory/memory-bochs.h \
+ ../../gui/siminterface.h ../../gui/paramtree.h ../../gui/gui.h vgacore.h \
+ ../pci.h bitblt.h ddc.h pxextract.h geforce.h ../virt_timer.h \
+ ../../pc_system.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h
 nvriva.lo: nvriva.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../gui/paramtree.h ../../logio.h \
  ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
@@ -215,12 +221,6 @@ nvriva.lo: nvriva.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../bx_debug/debug.h ../../config.h ../../osdep.h \
  ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
  vgacore.h bitblt.h ddc.h nvriva.h ../virt_timer.h
- ../../osdep.h ../../logio.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h ../../memory/memory-bochs.h \
- ../../gui/siminterface.h ../../gui/paramtree.h ../../gui/gui.h vgacore.h \
- ../pci.h bitblt.h ddc.h pxextract.h geforce.h ../virt_timer.h \
- ../../pc_system.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h
 svga_cirrus.lo: svga_cirrus.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
  ../../osdep.h ../../logio.h ../../misc/bswap.h ../../plugin.h \
  ../../extplugin.h ../../param_names.h ../../memory/memory-bochs.h \
