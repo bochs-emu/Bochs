@@ -105,7 +105,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVE(bxInstruction_c *i)
   if (requested_feature_bitmap) {
     // check that we would not fault while attempting to write, check that we can write-access last byte of the XSAVE area to be written
     // touch the memory but no write actually occurs
-    read_RMW_virtual_byte(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap) - 1) & asize_mask); // no lock, touch only
+    tickle_write_virtual(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap) - 1) & asize_mask, 1);
 
     /////////////////////////////////////////////////////////////////////////////
     if ((requested_feature_bitmap & BX_XCR0_FPU_MASK) != 0)
@@ -221,7 +221,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
   if (requested_feature_bitmap & ~(BX_XCR0_FPU_MASK | BX_XCR0_SSE_MASK)) {
     // check that we would not fault while attempting to write, check that we can write-access last byte of the XSAVE area to be written
     // touch the memory but no write actually occurs
-    read_RMW_virtual_byte(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap, true) - 1) & asize_mask); // no lock, touch only
+    tickle_write_virtual(i->seg(), (eaddr + xsave_area_last_byte(requested_feature_bitmap, true) - 1) & asize_mask, 1);
 
     Bit32u offset = XSAVE_YMM_STATE_OFFSET;
 

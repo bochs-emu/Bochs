@@ -4600,6 +4600,10 @@ public: // for now...
   BX_SMF void tickle_read_virtual_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF void tickle_read_virtual(unsigned seg, bx_address offset) BX_CPP_AttrRegparmN(2);
 
+  BX_SMF void tickle_write_linear(unsigned seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
+  BX_SMF void tickle_write_virtual_32(unsigned seg, Bit32u offset, unsigned len) BX_CPP_AttrRegparmN(3);
+  BX_SMF void tickle_write_virtual(unsigned seg, bx_address offset, unsigned len) BX_CPP_AttrRegparmN(3);
+
   BX_SMF Bit8u read_virtual_byte_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit16u read_virtual_word_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit32u read_virtual_dword_32(unsigned seg, Bit32u offset) BX_CPP_AttrRegparmN(2);
