@@ -359,7 +359,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #if BX_SUPPORT_APIC
     case BX_MSR_APICBASE:
       val64 = BX_CPU_THIS_PTR msr.apicbase;
-      BX_INFO(("RDMSR: Read %08x:%08x from MSR_APICBASE", GET32H(val64), GET32L(val64)));
+      BX_DEBUG(("RDMSR: Read %08x:%08x from MSR_APICBASE", GET32H(val64), GET32L(val64)));
       break;
 #endif
 
@@ -1031,7 +1031,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       {
         Bit32u xss_suport_mask = get_ia32_xss_allow_mask();
         if (val_64 & ~Bit64u(xss_suport_mask)) {
-          BX_ERROR(("WRMSR: attempt to set reserved/not supported bit in BX_MSR_XSS"));
+          BX_ERROR(("WRMSR: attempt to set reserved/not supported bit in BX_MSR_XSS: %08x:%08x", val32_hi, val32_lo));
           return false;
         }
         BX_CPU_THIS_PTR msr.ia32_xss = val_64;

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -835,7 +835,7 @@ void bx_carbon_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   // loads keymap for x11
   if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
-    bx_keymap.loadKeymap(NULL); // I have no function to convert X windows symbols
+    bx_keymap.loadKeymap("x11", NULL); // I have no function to convert X windows symbols
   }
 }
 
@@ -1976,7 +1976,7 @@ static BxEvent * CarbonSiminterfaceCallback (void *theClass, BxEvent *event)
 {
   event->retcode = 0;  // default return code
 
-  if(event->type == BX_ASYNC_EVT_LOG_MSG || event->type == BX_SYNC_EVT_LOG_ASK)
+  if(event->type == BX_ASYNC_EVT_LOG_MSG || event->type == BX_SYNC_EVT_LOG_DLG)
   {
     DialogRef                     alertDialog;
     CFStringRef                   title;
@@ -2046,7 +2046,7 @@ static BxEvent * CarbonSiminterfaceCallback (void *theClass, BxEvent *event)
   switch(event->type)
   {
     case BX_SYNC_EVT_TICK:
-    case BX_SYNC_EVT_LOG_ASK:
+    case BX_SYNC_EVT_LOG_DLG:
       break;
     default:
       BX_INFO(("Callback tracing: Evt: %d (%s)", event->type,

@@ -1230,13 +1230,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF32x4_MASK_WpsVpsIbR(bxInstruction
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF32x4_MASK_WpsVpsIbM(bxInstruction_c *i)
 {
+  BxPackedXmmRegister tmp, op;
   unsigned len = i->getVL(), offset = i->Ib() & (len - 1);
-  BxPackedAvxRegister op;
-  op.vmm128(0) = BX_READ_AVX_REG_LANE(i->src(), offset);
+  op = BX_READ_AVX_REG_LANE(i->src(), offset);
 
-  Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask()) & 0xf;
+  // first check that memory could be written (no fault suppression)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  avx_masked_store32(i, eaddr, &op, opmask);
+  tickle_write_virtual(i->seg(), eaddr, 16);
+
+  Bit32u mask = BX_READ_8BIT_OPMASK(i->opmask()) & 0xf;
+
+  if (mask) {
+    // all permission already checked - perform RMW for simplicity and speed
+    read_virtual_xmmword(i->seg(), eaddr, &tmp);
+    xmm_blendps(&tmp, &op, mask);
+    write_virtual_xmmword(i->seg(), eaddr, &tmp);
+  }
 
   BX_NEXT_INSTR(i);
 }
@@ -1259,13 +1268,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF64x2_MASK_WpdVpdIbR(bxInstruction
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF64x2_MASK_WpdVpdIbM(bxInstruction_c *i)
 {
+  BxPackedXmmRegister tmp, op;
   unsigned len = i->getVL(), offset = i->Ib() & (len - 1);
-  BxPackedAvxRegister op;
-  op.vmm128(0) = BX_READ_AVX_REG_LANE(i->src(), offset);
+  op = BX_READ_AVX_REG_LANE(i->src(), offset);
 
-  Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask()) & 0x3;
+  // first check that memory could be written (no fault suppression)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  avx_masked_store64(i, eaddr, &op, opmask);
+  tickle_write_virtual(i->seg(), eaddr, 16);
+
+  Bit32u mask = BX_READ_8BIT_OPMASK(i->opmask()) & 0x3;
+
+  if (mask) {
+    // all permission already checked - perform RMW for simplicity and speed
+    read_virtual_xmmword(i->seg(), eaddr, &tmp);
+    xmm_blendpd(&tmp, &op, mask);
+    write_virtual_xmmword(i->seg(), eaddr, &tmp);
+  }
 
   BX_NEXT_INSTR(i);
 }
@@ -1297,14 +1315,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF64x4_WpdVpdIbM(bxInstruction_c *i
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF64x4_MASK_WpdVpdIbM(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), tmp;
   if (i->Ib() & 0x1)
     op.vmm256(0) = op.vmm256(1);
 
-  Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask()) & 0xf;
+  Bit32u mask = BX_READ_8BIT_OPMASK(i->opmask()) & 0xf;
 
+  // first check that memory could be written (no fault suppression)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  avx_masked_store64(i, eaddr, &op, opmask);
+  tickle_write_virtual(i->seg(), eaddr, 32);
+
+  if (mask) {
+    // all permission already checked - perform RMW for simplicity and speed
+    read_virtual_ymmword(i->seg(), eaddr, &tmp.vmm256(0));
+    simd_blendpd(&tmp, &op, mask, 4);
+    write_virtual_ymmword(i->seg(), eaddr, &tmp.vmm256(0));
+  }
+
   BX_NEXT_INSTR(i);
 }
 
@@ -1320,12 +1347,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF32x8_MASK_WpsVpsIbR(bxInstruction
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF32x8_MASK_WpsVpsIbM(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), tmp;
   if (i->Ib() & 0x1)
     op.vmm256(0) = op.vmm256(1);
 
+  Bit32u mask = BX_READ_8BIT_OPMASK(i->opmask());
+
+  // first check that memory could be written (no fault suppression)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  avx_masked_store32(i, eaddr, &op, BX_READ_8BIT_OPMASK(i->opmask()));
+  tickle_write_virtual(i->seg(), eaddr, 32);
+
+  if (mask) {
+    // all permission already checked - perform RMW for simplicity and speed
+    read_virtual_ymmword(i->seg(), eaddr, &tmp.vmm256(0));
+    simd_blendps(&tmp, &op, mask, 8);
+    write_virtual_ymmword(i->seg(), eaddr, &tmp.vmm256(0));
+  }
+
   BX_NEXT_INSTR(i);
 }
 

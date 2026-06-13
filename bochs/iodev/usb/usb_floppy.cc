@@ -5,7 +5,7 @@
 //  UFI/CBI floppy disk storage device support
 //
 //  Copyright (c) 2015-2023  Benjamin David Lunt
-//  Copyright (C) 2015-2023  The Bochs Project
+//  Copyright (C) 2015-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -387,7 +387,7 @@ usb_floppy_device_c::usb_floppy_device_c()
   status->set_handler(floppy_param_handler);
   status->set_ask_format("Is the device inserted or ejected? [%s] ");
   if (SIM->is_wx_selected()) {
-    bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
+    bx_list_c *usb = (bx_list_c*)SIM->get_param("usb");
     usb->add(s.config);
   }
 
@@ -402,7 +402,7 @@ usb_floppy_device_c::~usb_floppy_device_c(void)
     delete [] s.dev_buffer;
   free(s.image_mode);
   if (SIM->is_wx_selected()) {
-    bx_list_c *usb = (bx_list_c*)SIM->get_param("ports.usb");
+    bx_list_c *usb = (bx_list_c*)SIM->get_param("usb");
     usb->remove(s.config->get_name());
   }
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);

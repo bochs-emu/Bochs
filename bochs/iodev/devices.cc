@@ -233,7 +233,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     if ((chipset == BX_PCI_CHIPSET_I440FX) ||
         (chipset == BX_PCI_CHIPSET_I440BX)) {
       // UHCI is a part of the PIIX3/PIIX4, so load / enable it
-      if (!PLUG_device_present("usb_uhci")) {
+      if (!PLUG_device_present("usb_uhci", false)) {
         SIM->opt_plugin_ctrl("usb_uhci", 1);
       }
       SIM->get_param_bool(BXPN_UHCI_ENABLED)->set(1);
@@ -1533,8 +1533,11 @@ bool bx_devices_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_
   Bit32u oldbase = *addr, newbase = 0;
   Bit32u mask = ~(size - 1);
   Bit8u pci_flags = pci_conf[0x00] & 0x0f;
-  if ((pci_flags & 0x06) > 0) {
-    BX_ERROR(("Ignoring PCI base memory flag 0x%02x for now", pci_flags));
+  if ((pci_flags & 0x06) == 0x04) {
+    Bit32u tmpaddr = ReadHostDWordFromLittleEndian((Bit32u*)&pci_conf[4]);
+    if (tmpaddr != 0) {
+      BX_PANIC(("64-bit PCI BAR not supported yet (high = 0x%08x)", tmpaddr));
+    }
   }
   pci_conf[0x00] &= (mask & 0xf0);
   pci_conf[0x01] &= (mask >> 8) & 0xff;
@@ -1626,10 +1629,20 @@ void bx_pci_device_c::init_bar_io(Bit8u num, Bit16u size, bx_read_handler_t rh, 
   }
 }
 
-void bx_pci_device_c::init_bar_mem(Bit8u num, Bit32u size, memory_handler_t rh, memory_handler_t wh)
+void bx_pci_device_c::init_bar_mem(Bit8u num, Bit32u size, memory_handler_t rh, memory_handler_t wh, bool is64bit)
 {
-  if (num < 7) {
+  if (is64bit) {
+    if ((num < 6) && ((num & 1) == 0)) {
+      pci_bar[num].type = BX_PCI_BAR_TYPE_MEM;
+      pci_bar[num + 1].type = BX_PCI_BAR_TYPE_MEMHI;
+    } else {
+      BX_ERROR(("Invalid BAR for 64-bit selected"));
+      return;
+    }
+  } else {
     pci_bar[num].type = BX_PCI_BAR_TYPE_MEM;
+  }
+  if (num < 7) {
     pci_bar[num].size = size;
     pci_bar[num].mem.rh = rh;
     pci_bar[num].mem.wh = wh;
@@ -1771,11 +1784,13 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
           value = (value & ~(pci_bar[bnum].size - 1)) | 0x01;
           bar_change = 2;
         }
-      } else {
+      } else if (pci_bar[bnum].type == BX_PCI_BAR_TYPE_MEM) {
         if (value >= 0xfffffff0) { // BAR reset
           value = (value & ~(pci_bar[bnum].size - 1)) | (pci_conf[address & ~3] & 0x0f);
           bar_change = 2;
         }
+      } else if (value == 0xffffffff) {
+        bar_change = 2;
       }
       for (i = 0; i < io_len; i++) {
         value8 = (value >> (i*8)) & 0xff;
@@ -1783,7 +1798,7 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
         if (((address+i) & 0x03) == 0) {
           if (pci_bar[bnum].type == BX_PCI_BAR_TYPE_IO) {
             value8 = (value8 & 0xfc) | 0x01;
-          } else {
+          } else if (pci_bar[bnum].type == BX_PCI_BAR_TYPE_MEM)  {
             value8 = (value8 & 0xf0) | (oldval & 0x0f);
           }
         }
@@ -1799,6 +1814,9 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
             pci_bar_change_notify();
           }
         } else {
+          if (pci_bar[bnum].type == BX_PCI_BAR_TYPE_MEMHI) {
+            bnum &= ~1;
+          }
           if (DEV_pci_set_base_mem(this, pci_bar[bnum].mem.rh, pci_bar[bnum].mem.wh,
                                    &pci_bar[bnum].addr, &pci_conf[0x10 + bnum * 4],
                                    pci_bar[bnum].size, (pci_conf[0x04] & 2) != 0)) {

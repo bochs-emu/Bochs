@@ -47,13 +47,53 @@
 
 bx_vga_c *theVga = NULL;
 
+enum {
+  BX_VBE_MEMSIZE_4MB,
+  BX_VBE_MEMSIZE_8MB,
+  BX_VBE_MEMSIZE_16MB,
+  BX_VBE_MEMSIZE_32MB
+};
+
+void vga_init_options(void)
+{
+  static const char *vbe_memsize_list[] = {
+    "4",
+    "8",
+    "16",
+    "32",
+    NULL
+  };
+  bx_param_enum_c *model = SIM->get_param_enum(BXPN_VGA_EXT_MODEL);
+  model->set_enabled(1);
+  model->set_label("VBE memory size (MB)");
+  model->set_description("Size of VBE memory in MB");
+  model->set_choices(vbe_memsize_list, BX_VBE_MEMSIZE_16MB, BX_VBE_MEMSIZE_4MB);
+
+  bx_list_c *deplist = new bx_list_c(NULL);
+  deplist->add(model);
+  SIM->get_param_enum(BXPN_VGA_EXTENSION)->set_dependent_list(deplist, 0);
+  SIM->get_param_enum(BXPN_VGA_EXTENSION)->set_dependent_bitmap(BX_VGA_EXTENSION_VBE, 1);
+}
+
+void vga_cleanup_options(void)
+{
+  bx_param_enum_c *model = SIM->get_param_enum(BXPN_VGA_EXT_MODEL);
+  model->set_choices(NULL, 0, 0);
+  model->set_label("Model");
+  model->set_enabled(0);
+  SIM->get_param_enum(BXPN_VGA_EXTENSION)->set_dependent_list(NULL, 0);
+}
+
 PLUGIN_ENTRY_FOR_MODULE(vga)
 {
   if (mode == PLUGIN_INIT) {
     theVga = new bx_vga_c();
     bx_devices.pluginVgaDevice = theVga;
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVga, BX_PLUGIN_VGA);
+    // add new configuration parameter for the config interface
+    vga_init_options();
   } else if (mode == PLUGIN_FINI) {
+    vga_cleanup_options();
     delete theVga;
   } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_VGA;
@@ -94,7 +134,7 @@ bool bx_vga_c::init_vga_extension(void)
       DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
       DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
     }
-    BX_VGA_THIS s.memsize = atoi(SIM->get_param_enum(BXPN_VBE_MEMSIZE)->get_selected()) << 20;
+    BX_VGA_THIS s.memsize = atoi(SIM->get_param_enum(BXPN_VGA_EXT_MODEL)->get_selected()) << 20;
     if (!BX_VGA_THIS pci_enabled) {
       BX_VGA_THIS vbe.base_address = VBE_DISPI_LFB_PHYSICAL_ADDRESS;
       DEV_register_memory_handlers(theVga, mem_read_handler, mem_write_handler,

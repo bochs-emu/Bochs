@@ -1,6 +1,6 @@
 Changes after 3.0:
 
-  This CHANGES file updated with commits merged till 3 Mar 2026, please refer to git log for more recent updates
+  This CHANGES file updated with commits merged till 4 Apr 2026, please refer to git log for more recent updates
 
 Detailed change log :
 
@@ -9,11 +9,12 @@ Detailed change log :
     In the code BX_WARN is used and it is configurable like other log levels.
 
 - CPU emulation and instrumentation
+  - CPU: Implemented AMX-FP8 ISA extension
   - CPU: Implemented MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS
   - CPU: implemented IA32_APERF (0xe7) and IA32_MPERF (0xe8) MSRs
   - CPU: implemented Flexible Return and Delivery (FRED) architecture emulation
   - Added new BX_INSTR_CPUID instrumentation callback, see instrumentation.txt doc for description
-  - Bugfixes for CPU emulation correctness (critical bugfixes for UINTR, CET, SVM emulation)
+  - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of XSAVEC/XSAVES, PKeys, AVX BMI1/BMI2, AVX512, UINTR, CET and SVM)
 
 - Bochs Debugger
   - Added new command line option "-dbg_gui" to start Bochs debugger with gui.
@@ -39,6 +40,8 @@ Detailed change log :
   - Win32: fix compilation error when SHOW_IPS is not compiled in
 
 - Config interface
+  - Win32 start/runtime configure dialogs rewritten and look much more user friendly now
+  - USB configuration is now a separate menu item in all config interfaces
   - On Windows make sure file name parameters use backslash as separator
   - Removed backward compatibility mode for USB device options
 
@@ -76,6 +79,7 @@ Detailed change log :
     - Added advanced PCI option "altdevmap" to make real i440FX BIOS work
     - Ignore writes to ROM adddress if no ROM present
     - PCI IDE always provides 2 IDE channels (override settings if necessary)
+    - Added stub for 64-bit PCI BAR handling. Writing to upper 32-bit of a 64-bit BAR now possible.
     - PCI BAR handling now depends on PCI command register bits IOAE and MAE
   - PCI (i440BX AGP)
     - AGP aperture access now correctly implemented
@@ -120,6 +124,8 @@ Detailed change log :
   - CD-ROM
     - Support use of the CD AUDIO support of a real CD-ROM/DVD drive. This is currently
       only supported on the Windows platform. To enable compile with --enable-cdaudio.
+    - Return a valid track info structure for the Read_TOC (format 1) command.
+      This lets guest to determine if the CD-ROM is a data or an audio CD-ROM.
   - Floppy
     - Floppy reset fixes found while testing real hardware
       - Main status register only returns BUSY bit set during reset
@@ -139,6 +145,7 @@ Detailed change log :
     - E1000: Added loopback mode for diagnostics
   - USB
     - UHCI fix: USBCMD and USBSTS register accept byte writes
+    - USB debugger now supports the UHCI companion controllers of EHCI
     - Changing device connected to USB port on the command line works again.
       Port options are reset in that case.
     - Log error if trying to read from a non-powered port.
@@ -163,6 +170,7 @@ Detailed change log :
   - Fixed buffer overflow when using keymap feature
   - Use system font on win32 dialog boxes (win32 dialog box font is tiny on 1920x1080 Windows)
   - X gui: added XFlush() in warp_cursor() call to fix mouse movement issues
+  - Fixed possible deadlock in nogui at show_ips()
   - WX gui:
     - Fixed mouse toggle shortcut ctrl+alt+g
     - Report maximum host resolution correctly
@@ -184,6 +192,7 @@ Detailed change log :
   - Legacy BIOS now can be used with a PCI VGABIOS
   - Add service Int13h/0x0D
   - i440fx.bin updated from GitHub repository
+  - include OVMF BIOS image to Bochs package
 
 - LGPL'd VGABIOS updated from GitHub repository
   - Added some low resolution VESA modes and bugfixes for all versions

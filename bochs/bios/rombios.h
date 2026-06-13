@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2006-2020  The Bochs Project
+//  Copyright (C) 2006-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -227,6 +227,7 @@
 
 #define PCI_ADDRESS_SPACE_MEM		0x00
 #define PCI_ADDRESS_SPACE_IO		0x01
+#define PCI_ADDRESS_SPACE_MEM_64_BIT	0x04
 #define PCI_ADDRESS_SPACE_MEM_PREFETCH	0x08
 
 #define PCI_ROM_SLOT 6

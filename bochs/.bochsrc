@@ -1206,8 +1206,10 @@ speaker: enabled=1, mode=sound, volume=8
 #=======================================================================
 # USB Debugger:
 # This is the experimental USB Debugger for the Windows Platform.
-# Specify a type (none, uhci, ohci, ehci, xhci) and one or more triggers.
-# (Currently, only xhci is supported, with some uhci in the process)
+# Specify a type (none, uhci, ohci, ehci, xhci), a device (if required) and
+# one or more triggers.
+# Currently, only uhci and xhci are supported, including the uhci companions
+# of ehci (devices "ehci/uhci0", "ehci/uhci1" and "ehci/uhci2").
 # Triggers:
 #   reset:       will break and load the debugger on a port reset
 #   enable:      will break and load the debugger on a port enable
@@ -1219,6 +1221,7 @@ speaker: enabled=1, mode=sound, volume=8
 #   non_exist:   will break and load the debugger on a non-existant port access
 # (experimental and is under development)
 #=======================================================================
+#usb_debug: type=uhci, device=uhci, reset=1, enable=1, start_frame=1, doorbell=1, event=1, data=1, non_exist=1
 #usb_debug: type=xhci, reset=1, enable=1, start_frame=1, doorbell=1, event=1, data=1, non_exist=1
 
 #=======================================================================

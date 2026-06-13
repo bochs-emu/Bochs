@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2013-2014  Volker Ruppert
+//  Copyright (C) 2013-2026  Volker Ruppert
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -135,6 +135,9 @@ LRESULT CALLBACK ScrollWinProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
         redraw = TRUE;
       }
+      break;
+    case WM_COMMAND:
+      SendMessage(GetParent(hwnd), msg, wParam,lParam);
       break;
   }
   if (redraw) {

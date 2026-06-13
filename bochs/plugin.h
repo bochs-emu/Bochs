@@ -82,7 +82,7 @@ extern "C" {
 
 #define BX_REGISTER_DEVICE_DEVMODEL(a,b,c,d) pluginRegisterDeviceDevmodel(a,b,c,d)
 #define BX_UNREGISTER_DEVICE_DEVMODEL(a,b) pluginUnregisterDeviceDevmodel(a,b)
-#define PLUG_device_present(a) pluginDevicePresent(a)
+#define PLUG_device_present(a,b) pluginDevicePresent(a,b)
 
 #if BX_PLUGINS
 
@@ -92,7 +92,7 @@ extern "C" {
 #define PLUG_get_plugins_count(type) bx_get_plugins_count(type)
 #define PLUG_get_plugin_name(type,index) bx_get_plugin_name(type,index)
 #define PLUG_get_plugin_flags(type,index) bx_get_plugin_flags(type,index)
-#define PLUG_load_plugin_var(name,type) {bx_load_plugin(name,type);}
+#define PLUG_load_plugin_var(name,type) bx_load_plugin(name,type)
 #define PLUG_load_opt_plugin(name) bx_load_plugin(name,PLUGTYPE_OPTIONAL)
 #define PLUG_unload_opt_plugin(name) bx_unload_plugin(name,1)
 #define PLUG_unload_plugin_type(name,type) {bx_unload_plugin_type(name,type);}
@@ -305,7 +305,7 @@ typedef void (*deviceReset_t)(unsigned);
 
 BOCHSAPI void pluginRegisterDeviceDevmodel(plugin_t *plugin, Bit16u type, bx_devmodel_c *dev, const char *name);
 BOCHSAPI void pluginUnregisterDeviceDevmodel(const char *name, Bit16u type);
-BOCHSAPI bool pluginDevicePresent(const char *name);
+BOCHSAPI bool pluginDevicePresent(const char *name, bool core);
 
 /* === IO port stuff === */
 BOCHSAPI extern int (*pluginRegisterIOReadHandler)(void *thisPtr, ioReadHandler_t callback,

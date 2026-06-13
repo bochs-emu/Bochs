@@ -1150,6 +1150,11 @@ static void pci_bios_init_device(PCIDevice *d)
                             *paddr += size;
                         }
                         init_bar[i] = 1;
+                        if ((val & 0x06) == PCI_ADDRESS_SPACE_MEM_64_BIT) {
+                          pci_set_io_region_addr(d, i + 1, 0);
+                          init_bar[i + 1] = 1;
+                          i++;
+                        }
                     }
                 }
             }

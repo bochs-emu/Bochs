@@ -835,7 +835,7 @@ static const bool is_exception_OK[3][3] = {
 };
 
 struct BxExceptionInfo {
-  unsigned exception_type;
+  int exception_type;
   unsigned exception_class;
   bool push_error;
 };
@@ -916,7 +916,7 @@ bool BX_CPU_C::exception_push_error(unsigned vector)
 // error_code: if exception generates and error, push this error code
 void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 {
-  unsigned exception_type = BX_ET_BENIGN;
+  int exception_type = BX_ET_BENIGN;
   unsigned exception_class = BX_EXCEPTION_CLASS_FAULT;
   bool push_error = false;
 
@@ -1017,21 +1017,21 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
   /* if we've already had 1st exception, see if 2nd causes a
    * Double Fault instead. Otherwise, just record 1st exception.
    */
-  if (exception_type != BX_ET_DOUBLE_FAULT) {
+  if (BX_CPU_THIS_PTR last_exception_type != BX_ET_NONE && exception_type != BX_ET_DOUBLE_FAULT) {
     if (! is_exception_OK[BX_CPU_THIS_PTR last_exception_type][exception_type]) {
       exception(BX_DF_EXCEPTION, 0);
     }
   }
 
 #if BX_SUPPORT_FRED
-  set_fred_event_info_and_data(vector, BX_HARDWARE_EXCEPTION, BX_CPU_THIS_PTR last_exception_type != 0, 0);
+  set_fred_event_info_and_data(vector, BX_HARDWARE_EXCEPTION, BX_CPU_THIS_PTR last_exception_type != BX_ET_NONE, 0);
 #endif
 
   BX_CPU_THIS_PTR last_exception_type = exception_type;
 
   interrupt(vector, BX_HARDWARE_EXCEPTION, push_error, error_code);
 
-  BX_CPU_THIS_PTR last_exception_type = 0; // error resolved
+  BX_CPU_THIS_PTR last_exception_type = BX_ET_NONE; // error resolved
 
 #if BX_SUPPORT_FRED
   BX_CPU_THIS_PTR fred_event_info = 0;

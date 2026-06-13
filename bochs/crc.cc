@@ -50,7 +50,10 @@ static void init_crc32(void)
   }
 }
 
-Bit32u crc32(const Bit8u *buf, int len)
+// Incremental CRC-32: continues from a previously finalized CRC value.
+// Required for computing CRC across non-contiguous memory regions (e.g.
+// page-chunked address ranges that skip the PCI hole).
+Bit32u crc32_extend(Bit32u seed_crc, const Bit8u *buf, int len)
 {
   const Bit8u *p;
   Bit32u crc;
@@ -58,8 +61,13 @@ Bit32u crc32(const Bit8u *buf, int len)
   if (!crc32_table[1])    /* if not already done, */
     init_crc32();   /* build table */
 
-  crc = 0xffffffff;       /* preload shift register, per CRC-32 spec */
+  crc = ~seed_crc;        /* continue from previous finalized CRC value */
   for (p = buf; len > 0; ++p, --len)
     crc = (crc << 8) ^ crc32_table[(crc >> 24) ^ *p];
   return ~crc;            /* transmit complement, per CRC-32 spec */
+}
+
+Bit32u crc32(const Bit8u *buf, int len)
+{
+  return crc32_extend(0, buf, len);
 }

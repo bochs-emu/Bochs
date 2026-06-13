@@ -132,8 +132,9 @@ class cdrom_base_c;
 
 enum {
   BX_PCI_BAR_TYPE_NONE = 0,
-  BX_PCI_BAR_TYPE_MEM  = 1,
-  BX_PCI_BAR_TYPE_IO   = 2
+  BX_PCI_BAR_TYPE_IO,
+  BX_PCI_BAR_TYPE_MEM,
+  BX_PCI_BAR_TYPE_MEMHI
 };
 
 #define PCI_ROM_BAR 6
@@ -174,7 +175,7 @@ public:
                      Bit8u headt, Bit8u intpin);
   void init_bar_io(Bit8u num, Bit16u size, bx_read_handler_t rh,
                    bx_write_handler_t wh, const Bit8u *mask);
-  void init_bar_mem(Bit8u num, Bit32u size, memory_handler_t rh, memory_handler_t wh);
+  void init_bar_mem(Bit8u num, Bit32u size, memory_handler_t rh, memory_handler_t wh, bool is64bit = false);
   void register_pci_state(bx_list_c *list);
   void after_restore_pci_state(void);
   void load_pci_rom(const char *path, memory_handler_t mem_read_handler);

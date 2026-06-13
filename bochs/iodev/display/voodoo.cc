@@ -89,51 +89,86 @@ voodoo_state *v;
 
 // builtin configuration handling functions
 
-void voodoo_init_options(void)
-{
-  static const char *voodoo_model_list[] = {
-    "voodoo1",
-    "voodoo2",
-    "banshee",
-    "voodoo3",
-    NULL
-  };
+static const char *voodoo_model_list[] = {
+  "voodoo1",
+  "voodoo2",
+  "banshee",
+  "voodoo3",
+  NULL
+};
 
-  bx_param_c *display = SIM->get_param("display");
-  bx_list_c *menu = new bx_list_c(display, "voodoo", "Voodoo Graphics");
-  menu->set_options(menu->SHOW_PARENT);
-  bx_param_bool_c *enabled = new bx_param_bool_c(menu,
-    "enabled",
-    "Enable Voodoo Graphics emulation",
-    "Enables the 3dfx Voodoo Graphics emulation",
-    1);
-  new bx_param_enum_c(menu,
-    "model",
-    "Voodoo model",
-    "Selects the Voodoo model to emulate.",
-    voodoo_model_list,
-    VOODOO_1, VOODOO_1);
-  enabled->set_dependent_list(menu->clone());
+void voodoo_init_options(Bit16u type)
+{
+  if (type == PLUGTYPE_OPTIONAL) {
+    bx_param_c *display = SIM->get_param("display");
+    bx_list_c *menu = new bx_list_c(display, "voodoo", "Voodoo Graphics");
+    menu->set_options(menu->SHOW_PARENT);
+    bx_param_bool_c *enabled = new bx_param_bool_c(menu,
+      "enabled",
+      "Enable Voodoo Graphics emulation",
+      "Enables the 3dfx Voodoo Graphics emulation",
+      1);
+    new bx_param_enum_c(menu,
+      "model",
+      "Voodoo model",
+      "Selects the Voodoo model to emulate.",
+      voodoo_model_list,
+      VOODOO_1, VOODOO_1);
+    enabled->set_dependent_list(menu->clone());
+  } else {
+    bx_param_enum_c *model = SIM->get_param_enum(BXPN_VGA_EXT_MODEL);
+    model->set_enabled(1);
+    model->set_label("Voodoo model");
+    model->set_description("Selects the Voodoo model to emulate");
+    model->set_choices(voodoo_model_list, VOODOO_BANSHEE, VOODOO_1);
+  }
+}
+
+void voodoo_cleanup_options(void)
+{
+  if (theVoodooVga == NULL) {
+    bx_list_c *menu = (bx_list_c*)SIM->get_param("display");
+    menu->remove("voodoo");
+  } else {
+    bx_param_enum_c *model = SIM->get_param_enum(BXPN_VGA_EXT_MODEL);
+    model->set_choices(NULL, 0, 0);
+    model->set_label("Model");
+    model->set_enabled(0);
+  }
 }
 
 Bit32s voodoo_options_parser(const char *context, int num_params, char *params[])
 {
   if (!strcmp(params[0], "voodoo")) {
-    bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_VOODOO);
-    for (int i = 1; i < num_params; i++) {
-      if (SIM->parse_param_from_list(context, params[i], base) < 0) {
-        BX_ERROR(("%s: unknown parameter for voodoo ignored.", context));
+    if (theVoodooVga == NULL) {
+      bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_VOODOO);
+      for (int i = 1; i < num_params; i++) {
+        if (SIM->parse_param_from_list(context, params[i], base) < 0) {
+          if (theVoodooDevice != NULL) {
+            BX_ERROR(("%s: unknown parameter '%s' for voodoo ignored.", context, params[i]));
+          }
+        }
+      }
+    } else {
+      for (int i = 1; i < num_params; i++) {
+        if (!strncmp(params[i], "model=", 6)) {
+          SIM->get_param_enum(BXPN_VGA_EXT_MODEL)->set_by_name(&params[i][6]);
+        } else {
+          theVoodooVga->error("%s: unknown parameter '%s' for voodoo ignored.", context, params[i]);
+        }
       }
     }
-  } else {
-    BX_PANIC(("%s: unknown directive '%s'", context, params[0]));
   }
   return 0;
 }
 
 Bit32s voodoo_options_save(FILE *fp)
 {
-  return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_VOODOO), NULL, 0);
+  if (theVoodooVga == NULL) {
+    return SIM->write_param_list(fp, (bx_list_c*) SIM->get_param(BXPN_VOODOO), NULL, 0);
+  } else {
+    return fprintf(fp, "voodoo: model=%s\n", SIM->get_param_enum(BXPN_VGA_EXT_MODEL)->get_selected());
+  }
 }
 
 // device plugin entry point
@@ -150,13 +185,12 @@ PLUGIN_ENTRY_FOR_MODULE(voodoo)
       BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVoodooDevice, BX_PLUGIN_VOODOO);
     }
     // add new configuration parameter for the config interface
-    voodoo_init_options();
+    voodoo_init_options(type);
     // register add-on option for bochsrc and command line
     SIM->register_addon_option("voodoo", voodoo_options_parser, voodoo_options_save);
   } else if (mode == PLUGIN_FINI) {
+    voodoo_cleanup_options();
     SIM->unregister_addon_option("voodoo");
-    bx_list_c *menu = (bx_list_c*)SIM->get_param("display");
-    menu->remove("voodoo");
     if (theVoodooVga != NULL) {
       delete theVoodooVga;
       theVoodooVga = NULL;
@@ -291,15 +325,19 @@ bx_voodoo_base_c::~bx_voodoo_base_c()
 void bx_voodoo_base_c::init(void)
 {
   // Read in values from config interface
-  bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_VOODOO);
-  // Check if the device is disabled or not configured
-  if (!SIM->get_param_bool("enabled", base)->get()) {
-    BX_INFO(("Voodoo disabled"));
-    // mark unused plugin for removal
-    ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("voodoo"))->set(0);
-    return;
+  if (theVoodooVga == NULL) {
+    bx_list_c *base = (bx_list_c*) SIM->get_param(BXPN_VOODOO);
+    // Check if the device is disabled or not configured
+    if (!SIM->get_param_bool("enabled", base)->get()) {
+      BX_INFO(("Voodoo disabled"));
+      // mark unused plugin for removal
+      ((bx_param_bool_c*)((bx_list_c*)SIM->get_param(BXPN_PLUGIN_CTRL))->get_by_name("voodoo"))->set(0);
+      return;
+    }
+    s.model = (Bit8u)SIM->get_param_enum("model", base)->get();
+  } else {
+    s.model = (Bit8u)SIM->get_param_enum(BXPN_VGA_EXT_MODEL)->get();
   }
-  s.model = (Bit8u)SIM->get_param_enum("model", base)->get();
   s.devfunc = 0x00;
   v = new voodoo_state;
   memset(v, 0, sizeof(voodoo_state));
@@ -339,8 +377,7 @@ void bx_voodoo_base_c::init(void)
     start_fifo_thread();
   }
 
-  BX_INFO(("3dfx Voodoo Graphics adapter (model=%s) initialized",
-           SIM->get_param_enum("model", base)->get_selected()));
+  BX_INFO(("3dfx Voodoo Graphics adapter (model=%s) initialized", voodoo_model_list[s.model]));
 }
 
 void bx_voodoo_base_c::voodoo_register_state(bx_list_c *parent)

@@ -52,13 +52,13 @@
 #define IDC_DUMP                        4162
 
 // common to all for HCs
-#define ID_QUIT_EMU                     4200
-#define ID_CONTINUE_EMU                 4201
-#define IDC_PORT_ADDR                   4202
-#define IDC_FRAME_ADDRESS               4203
-#define ID_APPLY                        4204
-#define IDC_STACK                       4205
-#define IDC_TREE_COMMENT                4206
+#define ID_QUIT_EMU                     IDCANCEL
+#define ID_CONTINUE_EMU                 IDOK
+#define IDC_PORT_ADDR                   4200
+#define IDC_FRAME_ADDRESS               4201
+#define ID_APPLY                        4202
+#define IDC_STACK                       4203
+#define IDC_TREE_COMMENT                4204
 
 #define IDC_STATIC                      -1
 
@@ -123,6 +123,34 @@
 
 
 // OHCI items start with 6000
+#define IDC_O_REG_CONTROL                 6000
+#define IDC_O_REG_COMMAND_STATUS          6001
+#define IDC_O_REG_INTERRUPT_STATUS        6002
+#define IDC_O_REG_INTERRUPT_ENABLE        6003
+#define IDC_O_REG_HCCA                    6004
+#define IDC_O_REG_PERI_CURRENT_ED         6005
+#define IDC_O_REG_CTRL_HEAD_ED            6006
+#define IDC_O_REG_CTRL_CURRENT_ED         6007
+#define IDC_O_REG_BULK_HEAD_ED            6008
+#define IDC_O_REG_BULK_CURRENT_ED         6009
+#define IDC_O_REG_DONE_HEAD               6010
+#define IDC_O_REG_FM_INTERVAL             6011
+#define IDC_O_REG_FM_REMAINING            6012
+#define IDC_O_REG_FM_NUMBER               6013
+#define IDC_O_REG_PERIODIC_START          6014
+#define IDC_O_REG_LS_THRESHOLD            6015
+#define IDC_O_REG_RH_DESCRIPTOR_A         6016
+#define IDC_O_REG_RH_DESCRIPTOR_B         6017
+#define IDC_O_REG_RH_STATUS               6018
+#define IDC_O_REG_PORT0                   6020
+#define IDC_O_REG_PORT1                   6021
+
+#define IDC_O_REG_CONTROL_B               6100
+#define IDC_O_REG_PORT0_B                 6110
+#define IDC_O_REG_PORT1_B                 6111
+
+#define IDC_O_REG_PORT0_TYPE              6140
+#define IDC_O_REG_PORT1_TYPE              6141
 
 
 

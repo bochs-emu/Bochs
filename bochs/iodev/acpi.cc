@@ -168,7 +168,7 @@ void bx_acpi_ctrl_c::reset(unsigned type)
   //
   // When running with UEFI firmware (OVMF), seed QEMU-like defaults so the
   // ACPI PM timer is available very early.
-  if (PLUG_device_present(BX_PLUGIN_FW_CFG)) {
+  if (PLUG_device_present(BX_PLUGIN_FW_CFG, false)) {
     uefi_enabled = SIM->get_param_bool(BXPN_FW_CFG_ENABLED)->get();
   }
   Bit32u pmbar = ReadHostDWordFromLittleEndian((Bit32u*) &BX_ACPI_THIS pci_conf[0x40]);

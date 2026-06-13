@@ -350,6 +350,7 @@ public:
   const char **get_choices() { return choices; }
   const char *get_selected() { return choices[val.number - min]; }
   int find_by_name(const char *s);
+  void set_choices(const char **choices, Bit64s initial_val, Bit64s value_base = 0);
   virtual void set(Bit64s val);
   bool set_by_name(const char *s);
   void set_dependent_list(bx_list_c *l, bool enable_all);

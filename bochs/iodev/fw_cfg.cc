@@ -24,8 +24,10 @@
 
 #define BX_PLUGGABLE
 
-#define NEED_CPU_REG_SHORTCUTS 1
 #include "iodev.h"
+#if BX_SUPPORT_VMX
+#include "cpu/cpu.h"
+#endif
 #include "fw_cfg.h"
 #include "acpi_tables.h"
 
@@ -232,6 +234,15 @@ void bx_fw_cfg_c::reset(unsigned type)
   cur_entry = FW_CFG_INVALID;
   cur_offset = 0;
   dma_addr = 0;
+
+  // The Bochs BIOS enables VMX on its own. External firmware uses fw_cfg,
+  // whose reset callback runs after CPU reset, so allow VMX here first.
+#if BX_SUPPORT_VMX
+  for (unsigned cpu = 0; cpu < BX_SMP_PROCESSORS; cpu++) {
+    BX_CPU(cpu)->allowVmxForFirmware();
+  }
+#endif
+
   first_reset = false;
 }
 

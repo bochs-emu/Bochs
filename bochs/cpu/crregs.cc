@@ -1327,11 +1327,6 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::check_CR4(bx_address cr4_val)
       BX_ERROR(("check_CR4(): attempt to clear CR4.PAE when EFER.LMA=1"));
       return false;
     }
-
-    if(temp_cr4.get_LA57() != BX_CPU_THIS_PTR cr4.get_LA57()) {
-      BX_ERROR(("check_CR4(): attempt to change CR4.LA57 when EFER.LMA=1"));
-      return false;
-    }
   }
   else {
     if (temp_cr4.get_PCIDE()) {
@@ -1375,8 +1370,17 @@ bool BX_CPU_C::SetCR4(bxInstruction_c *i, bx_address val)
 
 #if BX_SUPPORT_CET
   if(temp_cr4.get_CET() && !BX_CPU_THIS_PTR cr0.get_WP()) {
-    BX_ERROR(("check_CR4(): attempt to set CR4.CET when CR0.WP=0"));
+    BX_ERROR(("SetCR4(): attempt to set CR4.CET when CR0.WP=0"));
     return false;
+  }
+#endif
+
+#if BX_SUPPORT_X86_64
+  if (long_mode()) {
+    if(temp_cr4.get_LA57() != BX_CPU_THIS_PTR cr4.get_LA57()) {
+      BX_ERROR(("SetCR4(): attempt to change CR4.LA57 when EFER.LMA=1"));
+      return false;
+    }
   }
 #endif
 

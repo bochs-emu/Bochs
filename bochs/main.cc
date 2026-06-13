@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -735,12 +735,18 @@ int bx_init_main(int argc, char *argv[])
     else if (!strcmp("-debugger", argv[arg]) || !strcmp("-dbg", argv[arg])) {
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
       SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set_enabled(1);
+#if BX_SUPPORT_IODEBUG
+      SIM->get_param(BXPN_IODEBUG_ALL_RINGS)->set_enabled(1);
+#endif
       bx_dbg.debugger_active = true;
     }
     else if (!strncmp("-dbg_gui", argv[arg], 8)) {
 #if BX_DEBUGGER_GUI
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
       SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set_enabled(1);
+#if BX_SUPPORT_IODEBUG
+      SIM->get_param(BXPN_IODEBUG_ALL_RINGS)->set_enabled(1);
+#endif
       bx_dbg.debugger_active = true;
       bx_dbg.debugger_gui = true;
       if ((strlen(argv[arg]) > 9) && (argv[arg][8] == ':')) {
@@ -1350,7 +1356,7 @@ void bx_init_hardware()
     base = (bx_list_c*) SIM->get_param(pname);
     if (!SIM->get_param_string("file", base)->isempty())
       BX_MEM(0)->load_RAM(SIM->get_param_string("file", base)->getptr(),
-                          SIM->get_param_num("address", base)->get());
+                          SIM->get_param_num("address", base)->get64());
   }
 
 #if BX_SUPPORT_SMP == 0

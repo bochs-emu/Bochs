@@ -270,7 +270,7 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
       vm->idt_vector_info |= (1 << 11); // error code delivered
 #if BX_SUPPORT_FRED
     if (BX_CPU_THIS_PTR cr4.get_FRED()) {
-      if (BX_CPU_THIS_PTR last_exception_type != 0 && vector != BX_DF_EXCEPTION)
+      if (BX_CPU_THIS_PTR last_exception_type != BX_ET_NONE && vector != BX_DF_EXCEPTION)
         vm->idt_vector_info |= (1 << 13);
     }
 #endif
@@ -318,7 +318,7 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
   // events encountered during IDT event delivery.
 #if BX_SUPPORT_FRED
   if (BX_CPU_THIS_PTR cr4.get_FRED()) {
-    if (BX_CPU_THIS_PTR last_exception_type != 0 && vector != BX_DF_EXCEPTION)
+    if (BX_CPU_THIS_PTR last_exception_type != BX_ET_NONE && vector != BX_DF_EXCEPTION)
       interruption_info |= (1 << 13);
   }
 #endif

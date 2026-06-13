@@ -706,16 +706,8 @@ bx_param_enum_c::bx_param_enum_c(bx_param_c *parent,
   : bx_param_num_c(parent, name, label, description, value_base, BX_MAX_BIT64S, initial_val)
 {
   set_type(BXT_PARAM_ENUM);
-  this->choices = choices;
-  // count number of choices, set max
-  const char **p = choices;
-  while (*p != NULL) p++;
-  this->min = value_base;
-  // now that the max is known, replace the BX_MAX_BIT64S sent to the parent
-  // class constructor with the real max.
-  this->max = value_base + (p - choices - 1);
   this->deps_bitmap = NULL;
-  set(initial_val);
+  set_choices(choices, initial_val, value_base);
 }
 
 bx_param_enum_c::~bx_param_enum_c()
@@ -728,6 +720,27 @@ void bx_param_enum_c::set(Bit64s val)
 {
   bx_param_num_c::set(val);
   update_dependents();
+}
+
+void bx_param_enum_c::set_choices(const char **choices, Bit64s initial_val, Bit64s value_base)
+{
+  static const char *dummy_list[] = {
+    "    ",
+    NULL
+  };
+  if (choices != NULL) {
+    this->choices = choices;
+  } else {
+    this->choices = dummy_list;
+  }
+  // count number of choices, set max
+  const char **p = this->choices;
+  while (*p != NULL) p++;
+  this->min = value_base;
+  // now that the max is known, replace the BX_MAX_BIT64S sent to the parent
+  // class constructor with the real max.
+  this->max = value_base + (p - this->choices - 1);
+  set(initial_val);
 }
 
 int bx_param_enum_c::find_by_name(const char *s)
@@ -750,6 +763,9 @@ bool bx_param_enum_c::set_by_name(const char *s)
 
 void bx_param_enum_c::set_dependent_list(bx_list_c *l, bool enable_all)
 {
+  if (dependent_list != NULL) {
+    delete dependent_list;
+  }
   dependent_list = l;
   deps_bitmap = new Bit64u[(unsigned)(max - min + 1)];
   for (int i=0; i<(max-min+1); i++) {

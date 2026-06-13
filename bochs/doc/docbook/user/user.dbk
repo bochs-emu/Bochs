@@ -6807,12 +6807,18 @@ The USB emulation has been tested on numerous Guests. You can find these results
 </para>
 <para>
 <screen>
-  usb_debug: type=none|uhci|ohci|ehci|xhci, reset=1, enable=1, start_frame=1, doorbell=1, event=1, data=1, non_exist=1
+  usb_debug: type=none|uhci|ohci|ehci|xhci, device=none reset=1, enable=1, start_frame=1, doorbell=1, event=1, data=1, non_exist=1
 </screen>
 </para>
 <para>
 Currently only <emphasis>none</emphasis>, <emphasis>uhci</emphasis>, or <emphasis>xhci</emphasis> can be specified as the type.
 Future additions will include the other two controller types.
+</para>
+<para>
+The device parameter is only required when debugging one of the companion
+controllers of EHCI. Currently supported are the UHCI companions only (devices
+<replaceable>ehci/uhci0</replaceable>, <replaceable>ehci/uhci1</replaceable> and
+<replaceable>ehci/uhci2</replaceable>).
 </para>
 <para>
 Only one type may be specified. You can only debug one controller type at a time.

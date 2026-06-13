@@ -238,7 +238,7 @@ bx_es1370_c::~bx_es1370_c()
 
   SIM->unregister_runtime_config_handler(s.rt_conf_id);
   SIM->get_bochs_root()->remove("es1370");
-  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_SOUND);
   misc_rt->remove("es1370");
   BX_DEBUG(("Exit"));
 }
@@ -321,7 +321,7 @@ void bx_es1370_c::init(void)
   BX_ES1370_THIS s.midicmd_index = 0;
 
   // init runtime parameters
-  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_SOUND);
   bx_list_c *menu = new bx_list_c(misc_rt, "es1370", "ES1370 Runtime Options");
   menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
 

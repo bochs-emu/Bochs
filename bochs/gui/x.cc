@@ -2126,7 +2126,10 @@ x11_control_c::x11_control_c(int _type, int x, int y, unsigned int w, unsigned i
 
 x11_control_c::~x11_control_c()
 {
-  if (value != NULL) free(value);
+  if (value != NULL) {
+    delete [] value;
+    value = NULL;
+  }
 }
 
 void x11_control_c::set_pos(int x, int y)

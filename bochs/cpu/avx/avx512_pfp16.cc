@@ -330,7 +330,7 @@ static BX_CPP_INLINE float16 float16_reduce(float16 a, Bit8u scale, softfloat_st
   if (a == float16_negative_inf || a == float16_positive_inf)
     return 0;
 
-  float16 tmp = f16_roundToInt(a, scale, &status);
+  float16 tmp = f16_roundToInt(a, scale, softfloat_getRoundingMode(&status), false, &status);
   return f16_sub(a, tmp, &status);
 }
 

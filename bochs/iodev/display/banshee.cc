@@ -3969,7 +3969,7 @@ bool bx_voodoo_vga_c::init_vga_extension(void)
 {
   bool ret = 0;
 
-  Bit8u model = (Bit8u)SIM->get_param_enum("model", (bx_list_c*)SIM->get_param(BXPN_VOODOO))->get();
+  Bit8u model = (Bit8u)SIM->get_param_enum(BXPN_VGA_EXT_MODEL)->get();
   if (model < VOODOO_BANSHEE) {
     theVoodooDevice = new bx_voodoo_1_2_c();
     theVoodooDevice->init();

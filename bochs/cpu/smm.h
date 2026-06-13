@@ -153,7 +153,7 @@ enum SMMRAM_Fields {
   SMRAM_FIELD_CR0,
   SMRAM_FIELD_CR3_HI32,     // zero when physical address size 32-bit
   SMRAM_FIELD_CR3,
-  SMRAM_FIELD_CR4_HI32,     // always zero
+  SMRAM_FIELD_CR4_HI32,
   SMRAM_FIELD_CR4,
   SMRAM_FIELD_EFER_HI32,    // always zero
   SMRAM_FIELD_EFER,
