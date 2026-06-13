@@ -461,11 +461,11 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_STD7_SUBLEAF0_ECX_AVX512_VPOPCNTDQ       (1 << 14)
 #define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED15             (1 << 15)
 #define BX_CPUID_STD7_SUBLEAF0_ECX_LA57                   (1 << 16)
-#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED17             (1 << 17)
-#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED18             (1 << 18)
-#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED19             (1 << 19)
-#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED20             (1 << 20)
-#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED21             (1 << 21)
+#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED17             (1 << 17) /* MPX MAWAU */
+#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED18             (1 << 18) /* MPX MAWAU */
+#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED19             (1 << 19) /* MPX MAWAU */
+#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED20             (1 << 20) /* MPX MAWAU */
+#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED21             (1 << 21) /* MPX MAWAU */
 #define BX_CPUID_STD7_SUBLEAF0_ECX_RDPID                  (1 << 22)
 #define BX_CPUID_STD7_SUBLEAF0_ECX_KEYLOCKER              (1 << 23)
 #define BX_CPUID_STD7_SUBLEAF0_ECX_BUS_LOCK_DETECT        (1 << 24)
