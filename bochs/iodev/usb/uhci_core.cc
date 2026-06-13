@@ -729,8 +729,8 @@ void bx_uhci_core_c::uhci_timer(void)
 #ifdef BX_LITTLE_ENDIAN
         DEV_MEM_READ_PHYSICAL(item & ~0xF, sizeof(struct QUEUE), (Bit8u *) &queue);
 #else
-        DEV_MEM_READ_PHYSICAL((item & ~0xF) + 0, sizeof(Bit32u), &queue.horz);
-        DEV_MEM_READ_PHYSICAL((item & ~0xF) + 4, sizeof(Bit32u), &queue.vert);
+        DEV_MEM_READ_PHYSICAL((item & ~0xF) + 0, sizeof(Bit32u), (Bit8u *) &queue.horz);
+        DEV_MEM_READ_PHYSICAL((item & ~0xF) + 4, sizeof(Bit32u), (Bit8u *) &queue.vert);
 #endif
 
         // this massively populates the log file, so I keep it commented out
@@ -760,10 +760,10 @@ void bx_uhci_core_c::uhci_timer(void)
 #ifdef BX_LITTLE_ENDIAN
       DEV_MEM_READ_PHYSICAL(address, sizeof(struct TD), (Bit8u *) &td);
 #else
-      DEV_MEM_READ_PHYSICAL(address +  0, sizeof(bit32u), &td.dword0);
-      DEV_MEM_READ_PHYSICAL(address +  4, sizeof(bit32u), &td.dword1);
-      DEV_MEM_READ_PHYSICAL(address +  8, sizeof(bit32u), &td.dword2);
-      DEV_MEM_READ_PHYSICAL(address + 12, sizeof(bit32u), &td.dword3);
+      DEV_MEM_READ_PHYSICAL(address +  0, sizeof(bit32u), (Bit8u *) &td.dword0);
+      DEV_MEM_READ_PHYSICAL(address +  4, sizeof(bit32u), (Bit8u *) &td.dword1);
+      DEV_MEM_READ_PHYSICAL(address +  8, sizeof(bit32u), (Bit8u *) &td.dword2);
+      DEV_MEM_READ_PHYSICAL(address + 12, sizeof(bit32u), (Bit8u *) &td.dword3);
 #endif
       const bool depthbreadth = (td.dword0 & 0x0004) ? 1 : 0;     // 1 = depth first, 0 = breadth first
       const bool is_active = (td.dword1 & (1<<23)) > 0;
