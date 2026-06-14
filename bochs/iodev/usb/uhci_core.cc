@@ -364,7 +364,11 @@ Bit32u bx_uhci_core_c::read(Bit32u address, unsigned io_len)
   if (offset != 0x06)
     BX_DEBUG(("register read from address 0x%04X:  0x%08X (%2i bits)", (unsigned) address, (Bit32u) val, io_len * 8));
 
+#ifdef BX_LITTLE_ENDIAN
   return(val);
+#else
+  return bx_bswap32(val);
+#endif
 }
 
 // static IO port write callback handler
