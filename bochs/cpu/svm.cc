@@ -648,8 +648,12 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
 
   // VMEXITs are FAULT-like: restore RIP/RSP to value before VMEXIT occurred
   RIP = BX_CPU_THIS_PTR prev_rip;
-  if (BX_CPU_THIS_PTR speculative_rsp)
+  if (BX_CPU_THIS_PTR speculative_rsp) {
     RSP = BX_CPU_THIS_PTR prev_rsp;
+#if BX_SUPPORT_CET
+    SSP = BX_CPU_THIS_PTR prev_ssp;
+#endif
+  }
   BX_CPU_THIS_PTR speculative_rsp = false;
 
   mask_event(BX_EVENT_SVM_VIRQ_PENDING);

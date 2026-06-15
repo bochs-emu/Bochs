@@ -360,7 +360,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INSW32_YwDX(bxInstruction_c *i)
 #endif
   {
     // trigger any segment or page faults before reading from IO port
-    value16 = read_RMW_virtual_word_32(BX_SEG_REG_ES, edi); // no lock
+    value16 = read_RMW_virtual_word(BX_SEG_REG_ES, edi); // no lock
 
     value16 = BX_INP(DX, 2);
 

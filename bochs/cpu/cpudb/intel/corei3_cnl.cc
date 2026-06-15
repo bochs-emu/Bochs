@@ -493,7 +493,7 @@ void corei3_cnl_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *le
     // [14:14]    AVX512 VPOPCNTDQ: AVX512 VPOPCNTD/VPOPCNTQ instructions
     // [15:15]    reserved
     // [16:16]    LA57: LA57 and 5-level paging
-    // [21:17]    reserved
+    // [21:17]    MPX User Address-Width Adjust (MAWAU)
     // [22:22]    RDPID: Read Processor ID support
     // [24:23]    reserved
     // [25:25]    CLDEMOTE: CLDEMOTE instruction support

@@ -248,20 +248,22 @@ enum BX_Instr_CacheControl {
   BX_INSTR_WBINVD = 11
 };
 
-// possible types passed to BX_INSTR_FAR_BRANCH() and BX_INSTR_UCNEAR_BRANCH()
+// possible types passed to BX_INSTR_FAR_BRANCH() and BX_INSTR_NEAR_BRANCH()
 enum BX_Instr_Branch {
-  BX_INSTR_IS_JMP = 10,
-  BX_INSTR_IS_JMP_INDIRECT = 11,
-  BX_INSTR_IS_CALL = 12,
-  BX_INSTR_IS_CALL_INDIRECT = 13,
-  BX_INSTR_IS_RET = 14,
-  BX_INSTR_IS_IRET = 15,
-  BX_INSTR_IS_INT = 16,
-  BX_INSTR_IS_SYSCALL = 17,
-  BX_INSTR_IS_SYSRET = 18,
-  BX_INSTR_IS_SYSENTER = 19,
-  BX_INSTR_IS_SYSEXIT = 20,
-  BX_INSTR_IS_UIRET = 21
+  BX_INSTR_IS_JMP_CONDITIONAL_NOT_TAKEN = 10,
+  BX_INSTR_IS_JMP_CONDITIONAL_TAKEN = 11,
+  BX_INSTR_IS_JMP = 12,
+  BX_INSTR_IS_JMP_INDIRECT = 13,
+  BX_INSTR_IS_CALL = 14,
+  BX_INSTR_IS_CALL_INDIRECT = 15,
+  BX_INSTR_IS_RET = 16,
+  BX_INSTR_IS_IRET = 17,
+  BX_INSTR_IS_INT = 18,
+  BX_INSTR_IS_SYSCALL = 19,
+  BX_INSTR_IS_SYSRET = 20,
+  BX_INSTR_IS_SYSENTER = 21,
+  BX_INSTR_IS_SYSEXIT = 22,
+  BX_INSTR_IS_UIRET = 23
 };
 
 // possible types passed to BX_INSTR_PREFETCH_HINT()
@@ -4729,8 +4731,8 @@ public: // for now...
   BX_SMF Bit8u* v2h_read_byte(bx_address laddr, bool user) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit8u* v2h_write_byte(bx_address laddr, bool user) BX_CPP_AttrRegparmN(2);
 
-  BX_SMF void branch_near16(Bit16u new_IP) BX_CPP_AttrRegparmN(1);
-  BX_SMF void branch_near32(Bit32u new_EIP) BX_CPP_AttrRegparmN(1);
+  BX_SMF void branch_near16(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void branch_near32(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
   BX_SMF void branch_near64(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
