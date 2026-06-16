@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2025  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//  Copyright (C) 2009-2026  Benjamin D Lunt (fys [at] fysnet [dot] net)
 //                2009-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
@@ -363,11 +363,6 @@ Bit32u bx_uhci_core_c::read(Bit32u address, unsigned io_len)
   // don't flood the log with reads from the Frame Register
   if (offset != 0x06)
     BX_DEBUG(("register read from address 0x%04X:  0x%08X (%2i bits)", (unsigned) address, (Bit32u) val, io_len * 8));
-
-#ifndef BX_LITTLE_ENDIAN
-  // the Guest will expect the return value to be in little-endian form
-  val = bx_bswap32(val);
-#endif
 
   return(val);
 }
@@ -1006,7 +1001,6 @@ bool bx_uhci_core_c::DoTransfer(Bit32u address, struct TD *td)
       case USB_TOKEN_OUT:
       case USB_TOKEN_SETUP:
         if (maxlen > 0) {
-          // no need to endian this. It is little endian no matter what
           DEV_MEM_READ_PHYSICAL_DMA(td->dword3, maxlen, p->packet.data);
         }
         ret = broadcast_packet(&p->packet);
@@ -1034,7 +1028,6 @@ bool bx_uhci_core_c::DoTransfer(Bit32u address, struct TD *td)
         ret = USB_RET_BABBLE;
       }
       if (len > 0) {
-        // no need to endian this. It is little endian no matter what
         DEV_MEM_WRITE_PHYSICAL_DMA(td->dword3, len, p->packet.data);
       }
     } else {
