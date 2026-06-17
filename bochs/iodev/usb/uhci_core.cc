@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2025  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//  Copyright (C) 2009-2026  Benjamin D Lunt (fys [at] fysnet [dot] net)
 //                2009-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
@@ -726,7 +726,12 @@ void bx_uhci_core_c::uhci_timer(void)
         }
 
         // read in the queue
+#ifdef BX_LITTLE_ENDIAN
         DEV_MEM_READ_PHYSICAL(item & ~0xF, sizeof(struct QUEUE), (Bit8u *) &queue);
+#else
+        DEV_MEM_READ_PHYSICAL((item & ~0xF) + 0, sizeof(Bit32u), (Bit8u *) &queue.horz);
+        DEV_MEM_READ_PHYSICAL((item & ~0xF) + 4, sizeof(Bit32u), (Bit8u *) &queue.vert);
+#endif
 
         // this massively populates the log file, so I keep it commented out
         //BX_DEBUG(("Queue at 0x%08X:  horz = 0x%08X, vert = 0x%08X", item & ~0xF, queue.horz, queue.vert));
@@ -752,7 +757,14 @@ void bx_uhci_core_c::uhci_timer(void)
 
       // else, we found a Transfer Descriptor
       address = item & ~0xF;
+#ifdef BX_LITTLE_ENDIAN
       DEV_MEM_READ_PHYSICAL(address, sizeof(struct TD), (Bit8u *) &td);
+#else
+      DEV_MEM_READ_PHYSICAL(address +  0, sizeof(Bit32u), (Bit8u *) &td.dword0);
+      DEV_MEM_READ_PHYSICAL(address +  4, sizeof(Bit32u), (Bit8u *) &td.dword1);
+      DEV_MEM_READ_PHYSICAL(address +  8, sizeof(Bit32u), (Bit8u *) &td.dword2);
+      DEV_MEM_READ_PHYSICAL(address + 12, sizeof(Bit32u), (Bit8u *) &td.dword3);
+#endif
       const bool depthbreadth = (td.dword0 & 0x0004) ? 1 : 0;     // 1 = depth first, 0 = breadth first
       const bool is_active = (td.dword1 & (1<<23)) > 0;
       bool was_short = 0, was_stall = 0;
