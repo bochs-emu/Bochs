@@ -2134,7 +2134,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                       controller->buffer[return_length +  8] =  0;  // end lba
                       controller->buffer[return_length +  9] =  0;
                       controller->buffer[return_length + 10] =  0;
-                      controller->buffer[return_length + 11] = 16;
+                      controller->buffer[return_length + 11] = 16; // TODO: This needs to be the last available sector
                       controller->buffer[return_length + 12] =  (Bit8u) (PERFORMANCE_PER_SEC >> 24);  // end performance
                       controller->buffer[return_length + 13] =  (Bit8u) (PERFORMANCE_PER_SEC >> 16);
                       controller->buffer[return_length + 14] =  (Bit8u) (PERFORMANCE_PER_SEC >>  8);
@@ -2154,6 +2154,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     ;
                 }
                 
+                // if we return CHECK CONDITION on a descriptor we don't support, ReactOS crashes.
                 //if (return_length == 8) {
                 //  atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 0);
                 //  raise_interrupt(channel);
