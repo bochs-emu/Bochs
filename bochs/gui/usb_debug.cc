@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C)      2025  Benjamin David Lunt
-//  Copyright (C) 2003-2025  The Bochs Project
+//  Copyright (C) 2003-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -270,6 +270,7 @@ const char *string_sct_str[] = {
 };
 
 int usb_debug_type = USB_DEBUG_NONE;
+int usb_debug_devid = -1;
 bx_param_c *host_param = NULL;
 Bit32u pci_bar_address;
 bool u_changed[UHCI_REG_COUNT];
@@ -293,13 +294,14 @@ bool uhci_add_queue(struct USB_UHCI_QUEUE_STACK *stack, const Bit32u addr)
   return false;
 }
 
-void usb_dbg_register_type(int type)
+void usb_dbg_register_type(int type, int devid)
 {
   if (type != USB_DEBUG_NONE) {
-    if ((type != USB_DEBUG_UHCI) && (type != USB_DEBUG_XHCI)) {
-      BX_PANIC(("USB debugger does not yet support type %d", type));
+    if (type == USB_DEBUG_EHCI) {
+      BX_PANIC(("USB debugger does not yet support type EHCI"));
     } else {
       usb_debug_type = type;
+      usb_debug_devid = devid;
       bx_gui->set_usbdbg_bitmap(0);
     }
   }
@@ -307,7 +309,16 @@ void usb_dbg_register_type(int type)
 
 int usb_dbg_interface(int type, Bit64u param0, int param1, int param2)
 {
-  if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() > 0) {
+  static bool first_call = true;
+
+  if (first_call) {
+    if (usb_debug_type != SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get()) {
+      BX_WARN(("Selected USB HC type not present - USB debugger disabled"));
+      SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->set(USB_DEBUG_NONE);
+    }
+    first_call = false;
+  }
+  if (usb_debug_type != USB_DEBUG_NONE) {
     // if "start_frame" is 0, do the debug_window
     // if "start_frame" is 1, wait for the trigger from the HC
     //  (set the value to 2, then return, allowing the trigger to envoke it)
@@ -402,12 +413,7 @@ Bit32u usb_io_read(Bit16u addr, unsigned io_len)
   return bx_devices.inp(addr, io_len);
 }
 
-void usb_io_write(Bit16u addr, Bit32u value, unsigned io_len)
-{
-  bx_devices.outp(addr, value, io_len);
-}
-
-Bit32u xhci_read_dword(const Bit32u address)
+Bit32u usb_mmio_read_dword(const Bit32u address)
 {
   Bit32u value = 0;
 
@@ -415,6 +421,52 @@ Bit32u xhci_read_dword(const Bit32u address)
     DEV_MEM_READ_PHYSICAL(address, 4, (Bit8u*)&value);
   }
   return value;
+}
+
+void usb_io_write(Bit16u addr, Bit32u value, unsigned io_len)
+{
+  bx_devices.outp(addr, value, io_len);
+}
+
+bx_list_c* get_usb_hc_state(int type)
+{
+  char hc_type[8], pname[32];
+
+  if (type == USB_DEBUG_UHCI) {
+    strcpy(hc_type, "uhci");
+  } else if (type == USB_DEBUG_OHCI) {
+    strcpy(hc_type, "ohci");
+  } else {
+    return NULL;
+  }
+  if (usb_debug_devid == -1) {
+    sprintf(pname, "usb_%s", hc_type);
+  } else {
+    sprintf(pname, "usb_ehci.%s%d", hc_type, usb_debug_devid);
+  }
+  return (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
+}
+
+bx_param_enum_c* get_hc_port_device(Bit8u port)
+{
+  bx_param_enum_c* device = NULL;
+  char pname[80];
+  Bit8u ehci_port;
+
+  if ((port > 0) && (port < 3)) {
+    if (usb_debug_devid == -1) {
+      sprintf(pname, "%s.port%d.device", hc_param_str[usb_debug_type], port);
+      device = SIM->get_param_enum(pname);
+    } else {
+      ehci_port = ((usb_debug_devid << 1) | (port - 1)) + 1;
+      sprintf(pname, "usb_ehci.hub.port%d.portsc.po", ehci_port);
+      if (SIM->get_param_bool(pname, SIM->get_bochs_root())->get()) {
+        sprintf(pname, "%s.port%d.device", hc_param_str[USB_DEBUG_EHCI], ehci_port);
+        device = SIM->get_param_enum(pname);
+      }
+    }
+  }
+  return device;
 }
 
 #endif

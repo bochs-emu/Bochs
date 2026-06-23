@@ -216,6 +216,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\iodev\acpi.cc" />
+    <ClCompile Include="..\iodev\acpi_tables.cc" />
     <ClCompile Include="..\iodev\biosdev.cc" />
     <ClCompile Include="..\iodev\busmouse.cc" />
     <ClCompile Include="..\iodev\cmos.cc" />
@@ -223,6 +224,7 @@
     <ClCompile Include="..\iodev\dma.cc" />
     <ClCompile Include="..\iodev\extfpuirq.cc" />
     <ClCompile Include="..\iodev\floppy.cc" />
+    <ClCompile Include="..\iodev\fw_cfg.cc" />
     <ClCompile Include="..\iodev\gameport.cc" />
     <ClCompile Include="..\iodev\harddrv.cc" />
     <ClCompile Include="..\iodev\hpet.cc" />
@@ -246,12 +248,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\iodev\acpi.h" />
+    <ClInclude Include="..\iodev\acpi_dsdt_aml.h" />
+    <ClInclude Include="..\iodev\acpi_tables.h" />
     <ClInclude Include="..\iodev\biosdev.h" />
     <ClInclude Include="..\iodev\busmouse.h" />
     <ClInclude Include="..\iodev\cmos.h" />
     <ClInclude Include="..\iodev\dma.h" />
     <ClInclude Include="..\iodev\extfpuirq.h" />
     <ClInclude Include="..\iodev\floppy.h" />
+    <ClInclude Include="..\iodev\fw_cfg.h" />
     <ClInclude Include="..\iodev\gameport.h" />
     <ClInclude Include="..\iodev\harddrv.h" />
     <ClInclude Include="..\iodev\hpet.h" />

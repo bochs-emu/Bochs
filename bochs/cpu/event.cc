@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2023 Stanislav Shwartsman
+//   Copyright (c) 2011-2025 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -34,6 +34,7 @@
 #endif
 
 #include "iodev/iodev.h"
+#include "pc_system.h"
 
 #include "bx_debug/debug.h"
 
@@ -177,6 +178,12 @@ void BX_CPU_C::HandleExtInterrupt(void)
   {
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
+
+#if BX_SUPPORT_FRED
+    if (BX_CPU_THIS_PTR cr4.get_FRED())
+      set_fred_event_info_and_data(vector, BX_EXTERNAL_INTERRUPT, false, 0);
+#endif
+
     interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
   }
 
@@ -196,6 +203,12 @@ void BX_CPU_C::SvmVirtualInterruptAcknowledge(void)
 
   BX_INSTR_HWINTERRUPT(BX_CPU_ID, vector,
       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
+
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED())
+    set_fred_event_info_and_data(vector, BX_EXTERNAL_INTERRUPT, false, 0);
+#endif
+
   interrupt(vector, BX_EXTERNAL_INTERRUPT, 0, 0);
 
   BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
@@ -362,6 +375,12 @@ bool BX_CPU_C::handleAsyncEvent(void)
 #endif
     mask_event(BX_EVENT_NMI);
     BX_INSTR_HWINTERRUPT(BX_CPU_ID, 2, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value, RIP);
+
+#if BX_SUPPORT_FRED
+    if (BX_CPU_THIS_PTR cr4.get_FRED())
+      set_fred_event_info_and_data(2, BX_NMI, false, 0);
+#endif
+
     interrupt(2, BX_NMI, 0, 0);
   }
 #if BX_SUPPORT_VMX
@@ -455,6 +474,7 @@ bool BX_CPU_C::interrupts_inhibited(unsigned mask)
 void BX_CPU_C::deliver_SIPI(unsigned vector)
 {
   if (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_WAIT_FOR_SIPI) {
+    unmask_event(BX_EVENT_INIT | BX_EVENT_SMI | BX_EVENT_NMI);
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest)
       VMexit(VMX_VMEXIT_SIPI, vector);
@@ -462,7 +482,6 @@ void BX_CPU_C::deliver_SIPI(unsigned vector)
     BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
     RIP = 0;
     load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS], vector*0x100);
-    unmask_event(BX_EVENT_INIT | BX_EVENT_SMI | BX_EVENT_NMI);
     BX_INFO(("CPU %d started up at %04X:%08X by APIC",
                    BX_CPU_THIS_PTR bx_cpuid, vector*0x100, EIP));
   } else {

@@ -22,6 +22,7 @@
 
 #include "bochs.h"
 #include "cpu/cpu.h"
+#include "pc_system.h"
 #include "iodev/iodev.h"
 #include "bx_debug/debug.h"
 #define LOG_THIS bx_pc_system.

@@ -77,11 +77,20 @@ Bit64u BX_MEMORY_STUB_C::get_memory_len(void)
   return (BX_MEM_THIS len);
 }
 
+Bit32u BX_MEMORY_STUB_C::get_num_blocks()
+{
+  Bit32u num_blocks = BX_MEM_THIS len / BX_MEM_THIS block_size;
+  if ((BX_MEM_THIS len % BX_MEM_THIS block_size) != 0)
+    num_blocks++;
+
+  return num_blocks;
+}
+
 Bit8u* BX_MEMORY_STUB_C::alloc_vector_aligned(Bit64u bytes, Bit64u alignment)
 {
   Bit64u test_mask = alignment - 1;
-  BX_MEM_THIS actual_vector = new Bit8u [(Bit32u)(bytes + test_mask)];
-  if (BX_MEM_THIS actual_vector == 0) {
+  BX_MEM_THIS actual_vector = new Bit8u [bytes + test_mask];
+  if (BX_MEM_THIS actual_vector == NULL) {
     BX_PANIC(("alloc_vector_aligned: unable to allocate host RAM !"));
     return 0;
   }
@@ -127,14 +136,16 @@ void BX_MEMORY_STUB_C::init_memory(Bit64u guest, Bit64u host, Bit32u block_size)
   // block must be large enough to fit num_blocks in 32-bit
   BX_ASSERT((BX_MEM_THIS len / BX_MEM_THIS block_size) <= 0xffffffff);
 
-  Bit32u num_blocks = (Bit32u)(BX_MEM_THIS len / BX_MEM_THIS block_size);
+  Bit32u num_blocks = get_num_blocks();
   BX_INFO(("%.2fMB", (float)(BX_MEM_THIS len / (1024.0*1024.0))));
   BX_INFO(("mem block size = 0x%08x, blocks=%u", BX_MEM_THIS block_size, num_blocks));
   BX_MEM_THIS blocks = new Bit8u* [num_blocks];
   if (0) {
     // all guest memory is allocated, just map it
     for (unsigned idx = 0; idx < num_blocks; idx++) {
-      BX_MEM_THIS blocks[idx] = BX_MEM_THIS vector + (idx * BX_MEM_THIS block_size);
+      // Cast idx to Bit64u before multiply to prevent 32x32 overflow when
+      // idx * block_size exceeds 4GB (e.g. block 256 * 16MB = 4GB wraps to 0).
+      BX_MEM_THIS blocks[idx] = BX_MEM_THIS vector + (Bit64u(idx) * BX_MEM_THIS block_size);
     }
     BX_MEM_THIS used_blocks = num_blocks;
   }
@@ -177,7 +188,9 @@ void BX_MEMORY_STUB_C::read_block(Bit32u block)
 
 void BX_MEMORY_STUB_C::allocate_block(Bit32u block)
 {
-  const Bit32u max_blocks = (Bit32u)(BX_MEM_THIS allocated / BX_MEM_THIS block_size);
+  Bit32u max_blocks = (Bit32u)(BX_MEM_THIS allocated / BX_MEM_THIS block_size);
+  if ((BX_MEM_THIS allocated % BX_MEM_THIS block_size) != 0)
+    max_blocks++;
 
 #if BX_LARGE_RAMFILE
   /*
@@ -192,7 +205,7 @@ void BX_MEMORY_STUB_C::allocate_block(Bit32u block)
     do {
       do {
         // Wrap if necessary
-        if (++(BX_MEM_THIS next_swapout_idx)==((BX_MEM_THIS len)/BX_MEM_THIS block_size))
+        if (++(BX_MEM_THIS next_swapout_idx) == get_num_blocks())
           BX_MEM_THIS next_swapout_idx = 0;
         if (BX_MEM_THIS next_swapout_idx == original_replacement_block)
           BX_PANIC(("FATAL ERROR: Insufficient working RAM, all blocks are currently used for TLB entries!"));
@@ -226,9 +239,9 @@ void BX_MEMORY_STUB_C::allocate_block(Bit32u block)
     BX_DEBUG(("allocate_block: block=0x%x, replaced 0x%x", block, BX_MEM_THIS next_swapout_idx));
   }
   else {
-    BX_MEM_THIS blocks[block] = BX_MEM_THIS vector + (BX_MEM_THIS used_blocks++ * BX_MEM_THIS block_size);
-    BX_DEBUG(("allocate_block: block=0x%x used 0x%x of 0x%x",
-          block, BX_MEM_THIS used_blocks, max_blocks));
+    BX_MEM_THIS blocks[block] = BX_MEM_THIS vector + (Bit64u(BX_MEM_THIS used_blocks) * BX_MEM_THIS block_size);
+    BX_MEM_THIS used_blocks++;
+    BX_DEBUG(("allocate_block: block=0x%x used 0x%x of 0x%x", block, BX_MEM_THIS used_blocks, max_blocks));
   }
 #else
   // Legacy default allocator
@@ -236,7 +249,7 @@ void BX_MEMORY_STUB_C::allocate_block(Bit32u block)
     BX_PANIC(("FATAL ERROR: all available memory is already allocated !"));
   }
   else {
-    BX_MEM_THIS blocks[block] = BX_MEM_THIS vector + (BX_MEM_THIS used_blocks * BX_MEM_THIS block_size);
+    BX_MEM_THIS blocks[block] = BX_MEM_THIS vector + (Bit64u(BX_MEM_THIS used_blocks) * BX_MEM_THIS block_size);
     BX_MEM_THIS used_blocks++;
   }
   BX_DEBUG(("allocate_block: used_blocks=0x%x of 0x%x", BX_MEM_THIS used_blocks, max_blocks));
@@ -265,21 +278,22 @@ bool BX_MEMORY_STUB_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigne
   bool ret = true;
 
   for (; len>0; len--) {
-    if (a20addr < BX_MEM_THIS len) {
-      *buf = *(BX_MEM_THIS get_vector(a20addr));
-    }
-#if BX_PHY_ADDRESS_LONG
-    else if (a20addr > BX_CONST64(0xffffffff)) {
+    if (bx_is_pci_hole_addr(a20addr)) {
       *buf = 0xff;
-      ret = false; // error, beyond limits of memory
+      ret = false;
     }
-#endif
     else {
-      *buf = 0xff;
-      ret = false; // error, beyond limits of memory
+      bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
+      if (linear_addr < BX_MEM_THIS len) {
+        *buf = *(BX_MEM_THIS get_vector(linear_addr));
+      }
+      else {
+        *buf = 0xff;
+        ret = false; // error, beyond limits of memory
+      }
     }
     buf++;
-    a20addr++;
+    a20addr = A20ADDR(a20addr + 1);
   }
 
   return ret;
@@ -289,15 +303,32 @@ bool BX_MEMORY_STUB_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigne
 bool BX_MEMORY_STUB_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf)
 {
   bx_phy_address a20addr = A20ADDR(addr);
+  unsigned remaining = len;
 
-  if ((a20addr + len - 1) > BX_MEM_THIS len) {
-    return false; // error, beyond limits of memory
+  // validate the whole range up front, reject PCI-hole and out-of-RAM accesses, and then writes through translated linear addresses
+  while (remaining > 0) {
+    if (bx_is_pci_hole_addr(a20addr)) {
+      return false;
+    }
+
+    bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
+    if (linear_addr >= BX_MEM_THIS len) {
+      return false; // error, beyond limits of memory
+    }
+
+    // use 4KB steps for speed
+    if (remaining < 0x1000) break;
+
+    a20addr = A20ADDR(a20addr + 0x1000);
+    remaining -= 0x1000;
   }
 
+  a20addr = A20ADDR(addr);
   for (; len>0; len--) {
-    *(BX_MEM_THIS get_vector(a20addr)) = *buf;
+    bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
+    *(BX_MEM_THIS get_vector(linear_addr)) = *buf;
     buf++;
-    a20addr++;
+    a20addr = A20ADDR(a20addr + 1);
   }
   return true;
 }
@@ -308,18 +339,32 @@ bool BX_MEMORY_STUB_C::dbg_crc32(bx_phy_address addr1, bx_phy_address addr2, Bit
   if (addr1 > addr2)
     return false;
 
-  if (addr2 >= BX_MEM_THIS len)
-    return false; // error, specified address past last phy mem addr
+  bx_phy_address remaining = (addr2 - addr1) + 1;
+  if (remaining == 0)
+    return false;
 
-  unsigned len = 1 + addr2 - addr1;
+  bx_phy_address addr = addr1;
 
-  // do not cross 4K boundary
-  while(1) {
-    unsigned remainsInPage = 0x1000 - (addr1 & 0xfff);
-    unsigned access_length = (len < remainsInPage) ? len : remainsInPage;
-    *crc = crc32(BX_MEM_THIS get_vector(addr1), access_length);
-    addr1 += access_length;
-    len -= access_length;
+  while (remaining > 0) {
+    bx_phy_address a20addr = A20ADDR(addr);
+    if (bx_is_pci_hole_addr(a20addr)) {
+      return false;
+    }
+
+    bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
+    if (linear_addr >= BX_MEM_THIS len) {
+      return false;
+    }
+
+    bx_phy_address remainsInPage = (bx_phy_address) 0x1000 - (a20addr & (bx_phy_address) 0xfff);
+    bx_phy_address access_length = (remaining < remainsInPage) ? remaining : remainsInPage;
+    if (access_length > (BX_MEM_THIS len - linear_addr)) {
+      return false;
+    }
+
+    *crc = crc32_extend(*crc, BX_MEM_THIS get_vector(linear_addr), (int) access_length);
+    addr += access_length;
+    remaining -= access_length;
   }
 
   return true;
@@ -343,27 +388,37 @@ Bit8u *BX_MEMORY_STUB_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsi
 {
   bx_phy_address a20addr = A20ADDR(addr);
 
+  // Never allow direct access in the PCI/MMIO hole. Without a handler this
+  // address range must not alias into the RAM backing store.
+  if (bx_is_pci_hole_addr(a20addr)) {
+    return(NULL);
+  }
+
   bool write = rw & 1;
 
 #if BX_SUPPORT_MONITOR_MWAIT
+  // MWAIT monitors physical pages - must use a20addr, not post-PCI-hole linear_addr
   if (write && BX_MEM_THIS is_monitor(a20addr & ~((bx_phy_address)(0xfff)), 0xfff)) {
     // Vetoed! Write monitored page !
     return(NULL);
   }
 #endif
 
+  // Translate guest physical address to linear memory offset (handles PCI hole)
+  bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
+
   if (! write) {
-    if (a20addr < BX_MEM_THIS len)
-      return BX_MEM_THIS get_vector(a20addr);
+    if (linear_addr < BX_MEM_THIS len)
+      return BX_MEM_THIS get_vector(linear_addr);
     else
       // Error, requested addr is out of bounds.
       return (Bit8u *) &BX_MEM_THIS bogus[a20addr & 0xfff];
   }
   else
   { // op == {BX_WRITE, BX_RW}
-    if (a20addr >= BX_MEM_THIS len)
+    if (linear_addr >= BX_MEM_THIS len)
       return(NULL); // Error, requested addr is out of bounds.
-    return BX_MEM_THIS get_vector(a20addr);
+    return BX_MEM_THIS get_vector(linear_addr);
   }
 }
 
@@ -372,36 +427,46 @@ void BX_MEMORY_STUB_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, uns
   Bit8u *data_ptr;
   bx_phy_address a20addr = A20ADDR(addr);
 
+  // Translate guest physical address to linear memory offset (handles PCI hole)
+  bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
+  bx_phy_address phys_addr = a20addr;
+
   // Note: accesses should always be contained within a single page
   if ((addr>>12) != ((addr+len-1)>>12)) {
     BX_PANIC(("writePhysicalPage: cross page access at address 0x" FMT_PHY_ADDRX ", len=%d", addr, len));
   }
 
 #if BX_SUPPORT_MONITOR_MWAIT
+  // MWAIT monitors physical pages - must use a20addr, not post-PCI-hole linear_addr.
   BX_MEM_THIS check_monitor(a20addr, len);
 #endif
 
   // all memory access fits in single 4K page
-  if (a20addr < BX_MEM_THIS len) {
+  if (linear_addr < BX_MEM_THIS len) {
+    // Check if address is in PCI hole - do not access RAM backing store!
+    if (bx_is_pci_hole_addr(a20addr)) {
+      return;
+    }
+
     // all of data is within limits of physical memory
     if (len == 8) {
-      pageWriteStampTable.decWriteStamp(a20addr, 8);
-      WriteHostQWordToLittleEndian((Bit64u*) BX_MEM_THIS get_vector(a20addr), *(Bit64u*)data);
+      pageWriteStampTable.decWriteStamp(phys_addr, 8);
+      WriteHostQWordToLittleEndian((Bit64u*) BX_MEM_THIS get_vector(linear_addr), *(Bit64u*)data);
       return;
     }
     if (len == 4) {
-      pageWriteStampTable.decWriteStamp(a20addr, 4);
-      WriteHostDWordToLittleEndian((Bit32u*) BX_MEM_THIS get_vector(a20addr), *(Bit32u*)data);
+      pageWriteStampTable.decWriteStamp(phys_addr, 4);
+      WriteHostDWordToLittleEndian((Bit32u*) BX_MEM_THIS get_vector(linear_addr), *(Bit32u*)data);
       return;
     }
     if (len == 2) {
-      pageWriteStampTable.decWriteStamp(a20addr, 2);
-      WriteHostWordToLittleEndian((Bit16u*) BX_MEM_THIS get_vector(a20addr), *(Bit16u*)data);
+      pageWriteStampTable.decWriteStamp(phys_addr, 2);
+      WriteHostWordToLittleEndian((Bit16u*) BX_MEM_THIS get_vector(linear_addr), *(Bit16u*)data);
       return;
     }
     if (len == 1) {
-      pageWriteStampTable.decWriteStamp(a20addr, 1);
-      * (BX_MEM_THIS get_vector(a20addr)) = * (Bit8u *) data;
+      pageWriteStampTable.decWriteStamp(phys_addr, 1);
+      * (BX_MEM_THIS get_vector(linear_addr)) = * (Bit8u *) data;
       return;
     }
     // len == other, just fall thru to special cases handling
@@ -415,10 +480,11 @@ void BX_MEMORY_STUB_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, uns
     while(1) {
       // Write in chunks of 8 bytes if we can
       if ((len & 7) == 0) {
-        pageWriteStampTable.decWriteStamp(a20addr, 8);
-        WriteHostQWordToLittleEndian((Bit64u*) BX_MEM_THIS get_vector(a20addr), *(Bit64u*)data_ptr);
+      pageWriteStampTable.decWriteStamp(phys_addr, 8);
+        WriteHostQWordToLittleEndian((Bit64u*) BX_MEM_THIS get_vector(linear_addr), *(Bit64u*)data_ptr);
         len -= 8;
-        a20addr += 8;
+      phys_addr += 8;
+        linear_addr += 8;
 #ifdef BX_LITTLE_ENDIAN
         data_ptr += 8;
 #else
@@ -426,11 +492,12 @@ void BX_MEMORY_STUB_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, uns
 #endif
         if (len == 0) return;
       } else {
-        pageWriteStampTable.decWriteStamp(a20addr, 1);
-        *(BX_MEM_THIS get_vector(a20addr)) = *data_ptr;
+        pageWriteStampTable.decWriteStamp(phys_addr, 1);
+        *(BX_MEM_THIS get_vector(linear_addr)) = *data_ptr;
         if (len == 1) return;
         len--;
-        a20addr++;
+        phys_addr++;
+        linear_addr++;
 #ifdef BX_LITTLE_ENDIAN
         data_ptr++;
 #else // BX_BIG_ENDIAN
@@ -439,11 +506,11 @@ void BX_MEMORY_STUB_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, uns
       }
     }
 
-    pageWriteStampTable.decWriteStamp(a20addr);
+    pageWriteStampTable.decWriteStamp(phys_addr);
 
   } else {
     // access outside limits of physical memory, ignore
-    BX_DEBUG(("Write outside the limits of physical memory (0x" FMT_PHY_ADDRX ") (ignore)", a20addr));
+    BX_DEBUG(("Write outside the limits of physical memory (0x" FMT_PHY_ADDRX " -> linear 0x" FMT_PHY_ADDRX ") (ignore)", a20addr, linear_addr));
   }
 }
 
@@ -452,26 +519,35 @@ void BX_MEMORY_STUB_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsi
   Bit8u *data_ptr;
   bx_phy_address a20addr = A20ADDR(addr);
 
+  // Translate guest physical address to linear memory offset (handles PCI hole)
+  bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
+
   // Note: accesses should always be contained within a single page
   if ((addr>>12) != ((addr+len-1)>>12)) {
     BX_PANIC(("readPhysicalPage: cross page access at address 0x" FMT_PHY_ADDRX ", len=%d", addr, len));
   }
 
-  if (a20addr < BX_MEM_THIS len) {
+  if (linear_addr < BX_MEM_THIS len) {
+    // Check if address is in PCI hole - do not access RAM backing store!
+    if (bx_is_pci_hole_addr(a20addr)) {
+      memset(data, 0xff, len);
+      return;
+    }
+
     if (len == 8) {
-      * (Bit64u*) data = ReadHostQWordFromLittleEndian((Bit64u*) BX_MEM_THIS get_vector(a20addr));
+      * (Bit64u*) data = ReadHostQWordFromLittleEndian((Bit64u*) BX_MEM_THIS get_vector(linear_addr));
       return;
     }
     if (len == 4) {
-      * (Bit32u*) data = ReadHostDWordFromLittleEndian((Bit32u*) BX_MEM_THIS get_vector(a20addr));
+      * (Bit32u*) data = ReadHostDWordFromLittleEndian((Bit32u*) BX_MEM_THIS get_vector(linear_addr));
       return;
     }
     if (len == 2) {
-      * (Bit16u*) data = ReadHostWordFromLittleEndian((Bit16u*) BX_MEM_THIS get_vector(a20addr));
+      * (Bit16u*) data = ReadHostWordFromLittleEndian((Bit16u*) BX_MEM_THIS get_vector(linear_addr));
       return;
     }
     if (len == 1) {
-      * (Bit8u *) data = * (BX_MEM_THIS get_vector(a20addr));
+      * (Bit8u *) data = * (BX_MEM_THIS get_vector(linear_addr));
       return;
     }
     // len == other case can just fall thru to special cases handling
@@ -486,9 +562,9 @@ void BX_MEMORY_STUB_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsi
     while(1) {
       // Read in chunks of 8 bytes if we can
       if ((len & 7) == 0) {
-        *((Bit64u*)data_ptr) = ReadHostQWordFromLittleEndian((Bit64u*) BX_MEM_THIS get_vector(a20addr));
+        *((Bit64u*)data_ptr) = ReadHostQWordFromLittleEndian((Bit64u*) BX_MEM_THIS get_vector(linear_addr));
         len -= 8;
-        a20addr += 8;
+        linear_addr += 8;
 #ifdef BX_LITTLE_ENDIAN
         data_ptr += 8;
 #else
@@ -497,10 +573,10 @@ void BX_MEMORY_STUB_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsi
 
         if (len == 0) return;
       } else {
-        *data_ptr = *(BX_MEM_THIS get_vector(a20addr));
+        *data_ptr = *(BX_MEM_THIS get_vector(linear_addr));
         if (len == 1) return;
         len--;
-        a20addr++;
+        linear_addr++;
 #ifdef BX_LITTLE_ENDIAN
         data_ptr++;
 #else // BX_BIG_ENDIAN

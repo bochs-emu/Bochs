@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2017-2025  The Bochs Project
+//  Copyright (C) 2017-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -174,16 +174,14 @@ void bx_banshee_c::init_model(void)
   init_bar_mem(0, 0x2000000, mem_read_handler, mem_write_handler);
   init_bar_mem(1, 0x2000000, mem_read_handler, mem_write_handler);
   init_bar_io(2, 256, read_handler, write_handler, banshee_iomask);
-  pci_rom_address = 0;
-  pci_rom_read_handler = mem_read_handler;
-  load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr());
+  load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr(), mem_read_handler);
   // Zero out Banshee i/o registers and init strapInfo
   memset(v->banshee.io, 0, sizeof(v->banshee.io));
   v->banshee.io[io_strapInfo] = 0x00000060;
   if (is_agp) {
     v->banshee.io[io_strapInfo] |= 0x0000000c;
   }
-  if (pci_rom_size > 0x8000) {
+  if (pci_bar[PCI_ROM_BAR].size > 0x8000) {
     v->banshee.io[io_strapInfo] |= 0x00000002;
   }
   // Modify device IDs in LGPL'd VGABIOS if required
@@ -248,7 +246,7 @@ void bx_banshee_c::reset(unsigned type)
     pci_conf[0x5b] = 0x07;
   }
   for (i = 0; i < 4; i++) {
-    pci_conf[0x2c + i] = pci_rom[(pci_rom_size - 8) + i];
+    pci_conf[0x2c + i] = pci_rom[(pci_bar[PCI_ROM_BAR].size - 8) + i];
   }
   v->banshee.io[io_pciInit0] = 0x01800040;
   v->banshee.io[io_sipMonitor] = 0x40000000;
@@ -346,7 +344,7 @@ void bx_banshee_c::register_state(void)
 
 void bx_banshee_c::after_restore_state(void)
 {
-  bx_pci_device_c::after_restore_pci_state(mem_read_handler);
+  bx_pci_device_c::after_restore_pci_state();
   if ((v->banshee.io[io_vidProcCfg] & 0x01) && (theVoodooVga != NULL)) {
     v->fbi.clut_dirty = 1;
     v->banshee.needs_update_mode = true;
@@ -477,8 +475,14 @@ void bx_banshee_c::draw_hwcursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *i
         ccode = pval0 + (pval1 << 1) + (v->banshee.hwcursor.mode << 2);
         if ((ccode == 0) || (ccode == 5)) {
           colour = v->banshee.hwcursor.color[0];
+          if (v->banshee.disp_bpp == 16) {
+            colour = v->fbi.pen[(Bit16u)colour];
+          }
         } else if ((ccode == 2) || (ccode == 7)) {
           colour = v->banshee.hwcursor.color[1];
+          if (v->banshee.disp_bpp == 16) {
+            colour = v->fbi.pen[(Bit16u)colour];
+          }
         } else {
           if (v->banshee.half_mode) {
             if (v->banshee.double_width) {
@@ -1493,13 +1497,14 @@ bool bx_banshee_c::mem_read_handler(bx_phy_address addr, unsigned len,
 {
   bx_banshee_c *class_ptr = (bx_banshee_c*)param;
   if (len > 8) {
-    Bit64u *data64 = (Bit64u*)data;
 #ifdef BX_LITTLE_ENDIAN
+    Bit64u *data64 = (Bit64u*)data;
     class_ptr->mem_read(addr, 8, &data64[0]);
     class_ptr->mem_read(addr + 8, len - 8, &data64[1]);
 #else
-    class_ptr->mem_read(addr, 8, &data64[1]);
-    class_ptr->mem_read(addr + 8, len - 8, &data64[0]);
+    Bit8u *data8 = (Bit8u*)data;
+    class_ptr->mem_read(addr, 8, &data8[8]);
+    class_ptr->mem_read(addr + 8, len - 8, &data8[16 - len]);
 #endif
   } else {
     class_ptr->mem_read(addr, len, data);
@@ -1511,14 +1516,15 @@ bool bx_banshee_c::mem_write_handler(bx_phy_address addr, unsigned len,
                                      void *data, void *param)
 {
   bx_banshee_c *class_ptr = (bx_banshee_c*)param;
-  if (len == 16) {
-    Bit64u *data64 = (Bit64u*)data;
+  if (len > 8) {
 #ifdef BX_LITTLE_ENDIAN
+    Bit64u *data64 = (Bit64u*)data;
     class_ptr->mem_write(addr, 8, &data64[0]);
-    class_ptr->mem_write(addr + 8, 8, &data64[1]);
+    class_ptr->mem_write(addr + 8, len - 8, &data64[1]);
 #else
-    class_ptr->mem_write(addr, 8, &data64[1]);
-    class_ptr->mem_write(addr + 8, 8, &data64[0]);
+    Bit8u *data8 = (Bit8u*)data;
+    class_ptr->mem_write(addr, 8, &data8[8]);
+    class_ptr->mem_write(addr + 8, len - 8, &data8[16 - len]);
 #endif
   } else {
     class_ptr->mem_write(addr, len, data);
@@ -1533,9 +1539,9 @@ void bx_banshee_c::mem_read(bx_phy_address addr, unsigned len, void *data)
   Bit32u pitch = v->banshee.io[io_vidDesktopOverlayStride] & 0x7fff;
   unsigned i, x, y;
 
-  if (pci_rom_size > 0) {
-    Bit32u mask = (pci_rom_size - 1);
-    if (((Bit32u)addr & ~mask) == pci_rom_address) {
+  if (pci_bar[PCI_ROM_BAR].size > 0) {
+    Bit32u mask = (pci_bar[PCI_ROM_BAR].size - 1);
+    if (((Bit32u)addr & ~mask) == pci_bar[PCI_ROM_BAR].addr) {
 #ifdef BX_LITTLE_ENDIAN
       Bit8u *data_ptr = (Bit8u *) data;
 #else // BX_BIG_ENDIAN
@@ -3963,7 +3969,7 @@ bool bx_voodoo_vga_c::init_vga_extension(void)
 {
   bool ret = 0;
 
-  Bit8u model = (Bit8u)SIM->get_param_enum("model", (bx_list_c*)SIM->get_param(BXPN_VOODOO))->get();
+  Bit8u model = (Bit8u)SIM->get_param_enum(BXPN_VGA_EXT_MODEL)->get();
   if (model < VOODOO_BANSHEE) {
     theVoodooDevice = new bx_voodoo_1_2_c();
     theVoodooDevice->init();

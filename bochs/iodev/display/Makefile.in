@@ -1,4 +1,4 @@
-# Copyright (C) 2012-2021  The Bochs Project
+# Copyright (C) 2012-2026  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -141,92 +141,88 @@ dist-clean: clean
 # building plugins.
 ###########################################
 banshee.o: banshee.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../gui/paramtree.h ../../logio.h \
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h ../../pc_system.h \
- ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
- ../pci.h vgacore.h ddc.h voodoo.h ../virt_timer.h ../../bxthread.h \
- bitblt.h voodoo_types.h voodoo_data.h voodoo_main.h
-ddc.o: ddc.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
- ../../misc/bswap.h ../../gui/siminterface.h ddc.h ../../param_names.h
-svga_cirrus.o: svga_cirrus.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../gui/paramtree.h ../../logio.h \
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h ../../pc_system.h \
- ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
- vgacore.h bitblt.h ddc.h svga_cirrus.h ../virt_timer.h
+ ../../osdep.h ../../logio.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../memory/memory-bochs.h \
+ ../../gui/siminterface.h ../../gui/paramtree.h ../../gui/gui.h ../pci.h \
+ vgacore.h ddc.h voodoo.h ../virt_timer.h ../../pc_system.h \
+ ../../bxthread.h bitblt.h ../../bx_debug/debug.h ../../config.h \
+ ../../osdep.h ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
+ voodoo_types.h voodoo_data.h pxextract.h voodoo_main.h
+ddc.o: ddc.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h \
+ ../../misc/bswap.h ../../gui/siminterface.h ../../gui/paramtree.h \
+ ../../gui/gui.h ddc.h ../../param_names.h
 geforce.o: geforce.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../gui/paramtree.h ../../logio.h \
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h ../../pc_system.h \
- ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
- vgacore.h bitblt.h ddc.h geforce.h ../virt_timer.h
+ ../../osdep.h ../../logio.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../memory/memory-bochs.h \
+ ../../gui/siminterface.h ../../gui/paramtree.h ../../gui/gui.h vgacore.h \
+ ../pci.h bitblt.h ddc.h pxextract.h geforce.h ../virt_timer.h \
+ ../../pc_system.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h
+svga_cirrus.o: svga_cirrus.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../logio.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../memory/memory-bochs.h \
+ ../../gui/siminterface.h ../../gui/paramtree.h ../../gui/gui.h vgacore.h \
+ bitblt.h ddc.h pxextract.h svga_cirrus.h ../virt_timer.h \
+ ../../pc_system.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h
 vga.o: vga.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
- ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../param_names.h \
- ../../pc_system.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
- vgacore.h ddc.h vga.h ../virt_timer.h
+ ../../logio.h ../../misc/bswap.h ../../plugin.h ../../extplugin.h \
+ ../../param_names.h ../../memory/memory-bochs.h ../../gui/siminterface.h \
+ ../../gui/paramtree.h ../../gui/gui.h vgacore.h ddc.h pxextract.h vga.h \
+ ../virt_timer.h ../../pc_system.h ../../bx_debug/debug.h ../../config.h \
+ ../../osdep.h ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h
 vgacore.o: vgacore.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../gui/paramtree.h ../../logio.h \
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h ../../pc_system.h \
- ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
- vgacore.h ../virt_timer.h
+ ../../osdep.h ../../logio.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../memory/memory-bochs.h \
+ ../../gui/siminterface.h ../../gui/paramtree.h ../../gui/gui.h vgacore.h \
+ ../virt_timer.h ../../pc_system.h ../../bx_debug/debug.h ../../config.h \
+ ../../osdep.h ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h
 voodoo.o: voodoo.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
- ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../param_names.h \
- ../../pc_system.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
- ../pci.h vgacore.h ddc.h voodoo.h ../virt_timer.h ../../bxthread.h \
- bitblt.h voodoo_types.h voodoo_data.h voodoo_main.h voodoo_func.h
+ ../../logio.h ../../misc/bswap.h ../../plugin.h ../../extplugin.h \
+ ../../param_names.h ../../memory/memory-bochs.h ../../gui/siminterface.h \
+ ../../gui/paramtree.h ../../gui/gui.h ../pci.h vgacore.h ddc.h voodoo.h \
+ ../virt_timer.h ../../pc_system.h ../../bxthread.h bitblt.h \
+ voodoo_types.h voodoo_data.h pxextract.h voodoo_main.h voodoo_func.h
 banshee.lo: banshee.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../gui/paramtree.h ../../logio.h \
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h ../../pc_system.h \
- ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
- ../pci.h vgacore.h ddc.h voodoo.h ../virt_timer.h ../../bxthread.h \
- bitblt.h voodoo_types.h voodoo_data.h voodoo_main.h
-ddc.lo: ddc.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
- ../../misc/bswap.h ../../gui/siminterface.h ddc.h ../../param_names.h
-svga_cirrus.lo: svga_cirrus.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../gui/paramtree.h ../../logio.h \
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h ../../pc_system.h \
- ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
- vgacore.h bitblt.h ddc.h svga_cirrus.h ../virt_timer.h
+ ../../osdep.h ../../logio.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../memory/memory-bochs.h \
+ ../../gui/siminterface.h ../../gui/paramtree.h ../../gui/gui.h ../pci.h \
+ vgacore.h ddc.h voodoo.h ../virt_timer.h ../../pc_system.h \
+ ../../bxthread.h bitblt.h ../../bx_debug/debug.h ../../config.h \
+ ../../osdep.h ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h \
+ voodoo_types.h voodoo_data.h pxextract.h voodoo_main.h
+ddc.lo: ddc.@CPP_SUFFIX@ ../../bochs.h ../../config.h ../../osdep.h ../../logio.h \
+ ../../misc/bswap.h ../../gui/siminterface.h ../../gui/paramtree.h \
+ ../../gui/gui.h ddc.h ../../param_names.h
 geforce.lo: geforce.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../gui/paramtree.h ../../logio.h \
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h ../../pc_system.h \
- ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
- vgacore.h bitblt.h ddc.h geforce.h ../virt_timer.h
+ ../../osdep.h ../../logio.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../memory/memory-bochs.h \
+ ../../gui/siminterface.h ../../gui/paramtree.h ../../gui/gui.h vgacore.h \
+ ../pci.h bitblt.h ddc.h pxextract.h geforce.h ../virt_timer.h \
+ ../../pc_system.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h
+svga_cirrus.lo: svga_cirrus.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
+ ../../osdep.h ../../logio.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../memory/memory-bochs.h \
+ ../../gui/siminterface.h ../../gui/paramtree.h ../../gui/gui.h vgacore.h \
+ bitblt.h ddc.h pxextract.h svga_cirrus.h ../virt_timer.h \
+ ../../pc_system.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
+ ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h
 vga.lo: vga.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
- ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../param_names.h \
- ../../pc_system.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
- vgacore.h ddc.h vga.h ../virt_timer.h
+ ../../logio.h ../../misc/bswap.h ../../plugin.h ../../extplugin.h \
+ ../../param_names.h ../../memory/memory-bochs.h ../../gui/siminterface.h \
+ ../../gui/paramtree.h ../../gui/gui.h vgacore.h ddc.h pxextract.h vga.h \
+ ../virt_timer.h ../../pc_system.h ../../bx_debug/debug.h ../../config.h \
+ ../../osdep.h ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h
 vgacore.lo: vgacore.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h \
- ../../osdep.h ../../gui/paramtree.h ../../logio.h \
- ../../instrument/stubs/instrument.h ../../misc/bswap.h ../../plugin.h \
- ../../extplugin.h ../../param_names.h ../../pc_system.h \
- ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
- vgacore.h ../virt_timer.h
+ ../../osdep.h ../../logio.h ../../misc/bswap.h ../../plugin.h \
+ ../../extplugin.h ../../param_names.h ../../memory/memory-bochs.h \
+ ../../gui/siminterface.h ../../gui/paramtree.h ../../gui/gui.h vgacore.h \
+ ../virt_timer.h ../../pc_system.h ../../bx_debug/debug.h ../../config.h \
+ ../../osdep.h ../../cpu/decoder/decoder.h ../../cpu/decoder/features.h
 voodoo.lo: voodoo.@CPP_SUFFIX@ ../iodev.h ../../bochs.h ../../config.h ../../osdep.h \
- ../../gui/paramtree.h ../../logio.h ../../instrument/stubs/instrument.h \
- ../../misc/bswap.h ../../plugin.h ../../extplugin.h ../../param_names.h \
- ../../pc_system.h ../../bx_debug/debug.h ../../config.h ../../osdep.h \
- ../../memory/memory-bochs.h ../../gui/siminterface.h ../../gui/gui.h \
- ../pci.h vgacore.h ddc.h voodoo.h ../virt_timer.h ../../bxthread.h \
- bitblt.h voodoo_types.h voodoo_data.h voodoo_main.h voodoo_func.h
+ ../../logio.h ../../misc/bswap.h ../../plugin.h ../../extplugin.h \
+ ../../param_names.h ../../memory/memory-bochs.h ../../gui/siminterface.h \
+ ../../gui/paramtree.h ../../gui/gui.h ../pci.h vgacore.h ddc.h voodoo.h \
+ ../virt_timer.h ../../pc_system.h ../../bxthread.h bitblt.h \
+ voodoo_types.h voodoo_data.h pxextract.h voodoo_main.h voodoo_func.h

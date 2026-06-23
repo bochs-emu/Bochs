@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2023-2024  The Bochs Project
+//  Copyright (C) 2023-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -116,6 +116,7 @@ x86_feature(BX_ISA_AMX_INT8, "amx_int8")                                /* AMX-I
 x86_feature(BX_ISA_AMX_BF16, "amx_bf16")                                /* AMX-BF16 Instructions */
 x86_feature(BX_ISA_AMX_FP16, "amx_fp16")                                /* AMX-FP16 Instructions */
 x86_feature(BX_ISA_AMX_TF32, "amx_tf32")                                /* AMX-TF32 Instructions */
+x86_feature(BX_ISA_AMX_FP8, "amx_fp8")                                  /* AMX-FP8 Instructions */
 x86_feature(BX_ISA_AMX_COMPLEX, "amx_complex")                          /* AMX-COMPLEX Instructions */
 x86_feature(BX_ISA_AMX_MOVRS, "amx_movrs")                              /* AMX-MOVRS Instructions */
 x86_feature(BX_ISA_AMX_AVX512, "amx_avx512")                            /* AMX-AVX512 Instructions */
@@ -153,3 +154,4 @@ x86_feature(BX_ISA_MOVDIR64B, "movdir64b")                              /* MOVDI
 x86_feature(BX_ISA_MSRLIST, "msrlist")                                  /* RDMSRLIST/WRMSRLIST instructions support */
 x86_feature(BX_ISA_RAO_INT, "rao_int")                                  /* RAO-INT instructions support */
 x86_feature(BX_ISA_MOVRS, "movrs")                                      /* MOVRS instructions support */
+x86_feature(BX_ISA_FRED, "fred")                                        /* FRED: Flexible Return and Event Deivery support */

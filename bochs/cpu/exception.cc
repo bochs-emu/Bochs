@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2019  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -30,6 +30,7 @@
 #endif
 
 #include "param_names.h"
+#include "pc_system.h"
 #include "iodev/iodev.h"
 
 #include "bx_debug/debug.h"
@@ -457,42 +458,11 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
         exception(BX_TS_EXCEPTION, 0); /* TS(ext) */
       }
 
+      parse_selector(SS_for_cpl_x, &ss_selector);
+
       // selector index must be within its descriptor table limits
       // else #TS(SS selector + EXT)
-      parse_selector(SS_for_cpl_x, &ss_selector);
-      // fetch 2 dwords of descriptor; call handles out of limits checks
-      fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_TS_EXCEPTION);
-      parse_descriptor(dword1, dword2, &ss_descriptor);
-
-      // selector rpl must = dpl of code segment,
-      // else #TS(SS selector + ext)
-      if (ss_selector.rpl != cs_descriptor.dpl) {
-        BX_ERROR(("interrupt(): SS.rpl != CS.dpl"));
-        exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-      }
-
-      // stack seg DPL must = DPL of code segment,
-      // else #TS(SS selector + ext)
-      if (ss_descriptor.dpl != cs_descriptor.dpl) {
-        BX_ERROR(("interrupt(): SS.dpl != CS.dpl"));
-        exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-      }
-
-      // descriptor must indicate writable data segment,
-      // else #TS(SS selector + EXT)
-      if (ss_descriptor.valid==0 || ss_descriptor.segment==0 ||
-           IS_CODE_SEGMENT(ss_descriptor.type) ||
-          !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
-      {
-        BX_ERROR(("interrupt(): SS is not writable data segment"));
-        exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-      }
-
-      // seg must be present, else #SS(SS selector + ext)
-      if (! IS_PRESENT(ss_descriptor)) {
-        BX_ERROR(("interrupt(): SS not present"));
-        exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-      }
+      fetch_ss_descriptor(SS_for_cpl_x, &ss_selector, &ss_descriptor, cs_descriptor.dpl, BX_TS_EXCEPTION);
 
       // IP must be within CS segment boundaries, else #GP(0)
       if (gate_dest_offset > cs_descriptor.u.segment.limit_scaled) {
@@ -787,6 +757,11 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
     case BX_NMI:
     case BX_HARDWARE_EXCEPTION:
       break;
+#if BX_SUPPORT_FRED
+    case BX_EVENT_OTHER:
+      BX_ASSERT(vector <= 2);
+      break;
+#endif
 
     default:
       BX_PANIC(("interrupt(): unknown exception type %d", type));
@@ -808,7 +783,12 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
 
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
-    long_mode_int(vector, soft_int, push_error, error_code);
+#if BX_SUPPORT_FRED
+    if (BX_CPU_THIS_PTR cr4.get_FRED())
+      FRED_EventDelivery(vector, type, error_code);
+    else
+#endif
+      long_mode_int(vector, soft_int, push_error, error_code);
   }
   else
 #endif
@@ -855,7 +835,7 @@ static const bool is_exception_OK[3][3] = {
 };
 
 struct BxExceptionInfo {
-  unsigned exception_type;
+  int exception_type;
   unsigned exception_class;
   bool push_error;
 };
@@ -936,7 +916,7 @@ bool BX_CPU_C::exception_push_error(unsigned vector)
 // error_code: if exception generates and error, push this error code
 void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 {
-  unsigned exception_type = BX_ET_BENIGN;
+  int exception_type = BX_ET_BENIGN;
   unsigned exception_class = BX_EXCEPTION_CLASS_FAULT;
   bool push_error = false;
 
@@ -1037,17 +1017,26 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
   /* if we've already had 1st exception, see if 2nd causes a
    * Double Fault instead. Otherwise, just record 1st exception.
    */
-  if (exception_type != BX_ET_DOUBLE_FAULT) {
+  if (BX_CPU_THIS_PTR last_exception_type != BX_ET_NONE && exception_type != BX_ET_DOUBLE_FAULT) {
     if (! is_exception_OK[BX_CPU_THIS_PTR last_exception_type][exception_type]) {
       exception(BX_DF_EXCEPTION, 0);
     }
   }
 
+#if BX_SUPPORT_FRED
+  set_fred_event_info_and_data(vector, BX_HARDWARE_EXCEPTION, BX_CPU_THIS_PTR last_exception_type != BX_ET_NONE, 0);
+#endif
+
   BX_CPU_THIS_PTR last_exception_type = exception_type;
 
   interrupt(vector, BX_HARDWARE_EXCEPTION, push_error, error_code);
 
-  BX_CPU_THIS_PTR last_exception_type = 0; // error resolved
+  BX_CPU_THIS_PTR last_exception_type = BX_ET_NONE; // error resolved
+
+#if BX_SUPPORT_FRED
+  BX_CPU_THIS_PTR fred_event_info = 0;
+  BX_CPU_THIS_PTR fred_event_data = 0;
+#endif
 
   longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
 }

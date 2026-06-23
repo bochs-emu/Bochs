@@ -485,11 +485,7 @@ void tigerlake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *lea
     // * [14:14] AVX512 VPOPCNTDQ: AVX512 VPOPCNTD/VPOPCNTQ instructions
     //   [15:15] reserved
     //   [16:16] LA57: LA57 and 5-level paging
-    //   [17:17] reserved
-    //   [18:18] reserved
-    //   [19:19] reserved
-    //   [20:20] reserved
-    //   [21:21] reserved
+    //   [21:17] MPX User Address-Width Adjust (MAWAU)
     // * [22:22] RDPID: Read Processor ID support
     // ! [23:23] Keylocker support
     //   [24:24] reserved

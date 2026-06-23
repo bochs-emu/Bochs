@@ -308,7 +308,7 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
     bxInstruction_c *i = entry->i;
     if (i->getIaOpcode() != (long64_mode() ? BX_IA_ENDBRANCH64 : BX_IA_ENDBRANCH32) && i->getIaOpcode() != BX_IA_INT3) {
       if (LegacyEndbranchTreatment(CPL)) {
-        BX_ERROR(("Endbranch is expected for CPL=%d", CPL));
+        BX_ERROR(("#CP(ENDBRANCH): Endbranch is expected for CPL=%d", CPL));
         exception(BX_CP_EXCEPTION, BX_CP_ENDBRANCH);
       }
     }

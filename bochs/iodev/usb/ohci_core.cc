@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2025  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2025  The Bochs Project
+//                2009-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -30,6 +30,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "pc_system.h"
 
 #if BX_SUPPORT_PCI && BX_SUPPORT_USB_OHCI
 
@@ -75,6 +76,9 @@ bx_ohci_core_c::bx_ohci_core_c()
   put("ohci_core", "OHCIC");
   memset((void*)&hub, 0, sizeof(bx_ohci_core_t));
   hub.timer_index = BX_NULL_TIMER_HANDLE;
+#if BX_USB_DEBUGGER
+  usb_debug = false;
+#endif
 }
 
 bx_ohci_core_c::~bx_ohci_core_c()
@@ -277,13 +281,13 @@ void bx_ohci_core_c::reset_port(int p)
   hub.usb_port[p].HcRhPortStatus.pes       = 0;
 }
 
-void bx_ohci_core_c::ohci_register_state(bx_list_c *parent)
+void bx_ohci_core_c::ohci_register_state(const char *pname, bx_list_c *parent)
 {
   unsigned i;
   char portnum[8];
   bx_list_c *hub1, *port, *reg;
 
-  bx_list_c *list = new bx_list_c(parent, "usb_ohci", "USB OHCI State");
+  bx_list_c *list = new bx_list_c(parent, pname, "OHCI State");
   hub1 = new bx_list_c(list, "hub");
   reg = new bx_list_c(hub1, "HcControl");
   BXRS_PARAM_BOOL(reg, rwe, hub.op_regs.HcControl.rwe);
@@ -362,7 +366,7 @@ void bx_ohci_core_c::ohci_register_state(bx_list_c *parent)
 
 void bx_ohci_core_c::after_restore_state(void)
 {
-  bx_pci_device_c::after_restore_pci_state(NULL);
+  bx_pci_device_c::after_restore_pci_state();
   for (int j=0; j<USB_OHCI_PORTS; j++) {
     if (hub.usb_port[j].device != NULL) {
       hub.usb_port[j].device->after_restore_state();
@@ -801,21 +805,27 @@ bool bx_ohci_core_c::mem_write(bx_phy_address addr, unsigned len, void *data)
     case 0x60: // HcRhPortStatus[3]
 #if (USB_OHCI_PORTS < 4)
   #if BX_USB_DEBUGGER
-      SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_NONEXIST, 0, 0, 0);
+      if (usb_debug) {
+        SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_NONEXIST, 0, 0, 0);
+      }
   #endif
       break;
 #endif
     case 0x5C: // HcRhPortStatus[2]
 #if (USB_OHCI_PORTS < 3)
   #if BX_USB_DEBUGGER
-      SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_NONEXIST, 0, 0, 0);
+      if (usb_debug) {
+        SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_NONEXIST, 0, 0, 0);
+      }
   #endif
       break;
 #endif
     case 0x58: // HcRhPortStatus[1]
 #if (USB_OHCI_PORTS < 2)
   #if BX_USB_DEBUGGER
-      SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_NONEXIST, 0, 0, 0);
+      if (usb_debug) {
+        SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_NONEXIST, 0, 0, 0);
+      }
   #endif
       break;
 #endif
@@ -830,7 +840,9 @@ bool bx_ohci_core_c::mem_write(bx_phy_address addr, unsigned len, void *data)
           hub.usb_port[p].HcRhPortStatus.csc = 1;
         else {
 #if BX_USB_DEBUGGER
-          SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_ENABLE, 0, 0, 0);
+          if (usb_debug) {
+            SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_ENABLE, 0, 0, 0);
+          }
 #endif
           hub.usb_port[p].HcRhPortStatus.pes = 1;
         }
@@ -849,7 +861,9 @@ bool bx_ohci_core_c::mem_write(bx_phy_address addr, unsigned len, void *data)
           hub.usb_port[p].HcRhPortStatus.csc = 1;
         else {
 #if BX_USB_DEBUGGER
-          SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_RESET, 0, 0, 0);
+          if (usb_debug) {
+            SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_RESET, 0, 0, 0);
+          }
 #endif
           reset_port(p);
           hub.usb_port[p].HcRhPortStatus.pps = 1;
@@ -919,7 +933,9 @@ void bx_ohci_core_c::ohci_timer(void)
 
   if (hub.op_regs.HcControl.hcfs == OHCI_USB_OPERATIONAL) {
 #if BX_USB_DEBUGGER
-    SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_FRAME, 0, 0, 0);
+    if (usb_debug) {
+      SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_FRAME, 0, 0, 0);
+    }
 #endif
     // set remaining to the interval amount.
     hub.op_regs.HcFmRemainingToggle = hub.op_regs.HcFmInterval.fit;
@@ -1161,7 +1177,9 @@ int bx_ohci_core_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed, int toggl
   }
 
 #if BX_USB_DEBUGGER
-  SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_COMMAND, 0, 0, 0);
+  if (usb_debug) {
+    SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_COMMAND, 0, 0, 0);
+  }
 #endif
 
   // The td->cc field should be 111x if it hasn't been processed yet.

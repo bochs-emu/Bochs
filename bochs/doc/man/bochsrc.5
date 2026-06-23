@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "23 Sep 2025" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "15 Feb 2026" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -306,11 +306,23 @@ Examples:
   romimage: file=mybios.bin, address=0xfff80000
 
 .TP
+.I "fw_cfg:"
+UEFI Firmware Support: Bochs supports UEFI boot using OVMF (Open Virtual
+Machine Firmware) from the TianoCore EDK2 project. UEFI boot requires the
+fw_cfg device which provides system configuration to the firmware via
+I/O ports 0x510-0x51B. This includes the E820 memory map, ACPI tables,
+RAM size, and CPU count. See user doc for more info.
+
+Example:
+  romimage: file=OVMF.fd, address=0xffc00000
+  fw_cfg: enabled=1
+
+.TP
 .I "vgaromimage:"
 You also need to load a VGA ROM BIOS into 0xC0000.
 
 Examples:
-  vgaromimage: file=bios/VGABIOS-elpin-2.40
+  vgaromimage: file=bios/VGABIOS-elpin/VGABIOS-elpin-2.40
   vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest.bin
   vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest-cirrus.bin
 
@@ -389,8 +401,8 @@ Example:
 .TP
 .I "geforce:"
 This defines the experimental GeForce emulation. Currently supported models
-are 'geforce3', 'geforcefx5900' and 'geforce6800'. These 2D/3D AGP cards
-require an external VGA BIOS, the vga extension option to be set to 'geforce'
+are 'geforce2', 'geforce3', 'geforcefx5900' and 'geforce6800'. These 2D/3D AGP
+cards require an external VGA BIOS, the vga extension option to be set to 'geforce'
 and the i440BX PCI/AGP chipset with the 'geforce' device assigned to AGP
 (slot #5). The gui screen update timing for all models is controlled by the
 related 'vga' options.
@@ -519,6 +531,8 @@ By default the "Bochs i440FX" chipset enables the ACPI and HPET devices, but
 original i440FX doesn't support them. The options 'noacpi' and 'nohpet' make
 it possible to disable them. The option 'noagp' disables the incomplete AGP
 subsystem of the i440BX chipset.
+If PCI is enabled, the 'nofdc' option disables the FDC if no floppy drive
+is configured.
 
 Example:
   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k, advopts=noacpi
@@ -649,7 +663,7 @@ Examples:
 This defines the type and characteristics of all attached ata devices:
    type=       type of attached device [disk|cdrom]
    path=       path of the image
-   mode=       image mode [flat|concat|sparse|vmware3|vmware4|undoable|growing|volatile|vpc|vbox|vvfat], only valid for disks
+   mode=       image mode [flat|concat|sparse|vmware3|vmware4|vhdx|undoable|growing|volatile|vpc|vbox|vvfat], only valid for disks
    cylinders=  only valid for disks
    heads=      only valid for disks
    spt=        only valid for disks
@@ -680,6 +694,7 @@ The mode option defines how the disk image is handled. Disks can be defined as:
   - sparse : stackable, commitable, rollbackable
   - vmware3 : vmware3 disk support
   - vmware4 : vmware4 disk support (aka VMDK)
+  - vhdx : VHDX disk support
   - undoable : flat file with commitable redolog
   - growing : growing file
   - volatile : flat file with volatile redolog
@@ -838,14 +853,26 @@ Example:
   debug: action=ignore
 
 .TP
-.I "debugger_log:"
-Give the path of the log file you'd like Bochs to log debugger output.
-If you really don't want it, make it '/dev/null', or '-'.
+.I "debugger:"
+This defines the parameters of the Bochs internal debugger.
 
-Example:
-  log: debugger.out
-  log: /dev/null              (unix only)
-  log: -
+log
+
+Give the path of the log file you'd like Bochs to log debugger output.
+If you really don't want it, make it /dev/null or '-'.
+
+gui
+
+If this parameter is set to 'true' or '1' the debugger gui is used instead
+of the command line version. The special value 'globalini' enables the gui
+and forces the usage of an ini file from BXSHARE path. The gui parameter is
+available only if Bochs is built with debugger gui support and the debugger
+is activated with the command line option '-dbg'.
+
+Examples:
+  debugger: log=debugger.out, gui=true
+  debugger: log=/dev/null       (unix only)
+  debugger: log=-
 
 .TP
 .I "com1: \fP, \fIcom2: \fP, \fIcom3: \fPor \fIcom4:"

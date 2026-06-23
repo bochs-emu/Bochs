@@ -2,8 +2,8 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2010-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2011-2024  The Bochs Project
+//  Copyright (C) 2010-2026  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//                2011-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -82,7 +82,7 @@
 #define U2_DEVICE_EXIT_LAT   0
 
 // HCCPARAMS1
-#define ADDR_CAP_64              1
+#define ADDR_CAP_64              0  // default to 32-bit only
 #define BW_NEGOTIATION           1
 #define CONTEXT_SIZE            64  // Size of the CONTEXT blocks (32 or 64)
 #define PORT_POWER_CTRL          1  // 1 = port power is controlled by port register's power bit, 0 = power always on

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2019 Stanislav Shwartsman
+//   Copyright (c) 2005-2025 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -136,6 +136,13 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
     BX_DEBUG(("return_protected: return to OUTER PRIVILEGE LEVEL"));
 
+#if BX_SUPPORT_FRED
+    if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+      BX_ERROR(("return_protected: ring transition is not allowed when FRED is enabled"));
+      exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
+    }
+#endif
+
 #if BX_SUPPORT_MONITOR_MWAIT
     BX_CPU_THIS_PTR monitor.reset_umonitor();
 #endif
@@ -176,38 +183,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
       }
     }
     else {
-      fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-      parse_descriptor(dword1, dword2, &ss_descriptor);
-
-      /* selector RPL must = RPL of the return CS selector,
-       * else #GP(selector) */
-      if (ss_selector.rpl != cs_selector.rpl) {
-        BX_ERROR(("return_protected: ss.rpl != cs.rpl"));
-        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc);
-      }
-
-      /* descriptor AR byte must indicate a writable data segment,
-       * else #GP(selector) */
-      if (ss_descriptor.valid==0 || ss_descriptor.segment==0 ||
-           IS_CODE_SEGMENT(ss_descriptor.type) ||
-          !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
-      {
-        BX_ERROR(("return_protected: SS.AR byte not writable data"));
-        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc);
-      }
-
-      /* descriptor dpl must = RPL of the return CS selector,
-       * else #GP(selector) */
-      if (ss_descriptor.dpl != cs_selector.rpl) {
-        BX_ERROR(("return_protected: SS.dpl != cs.rpl"));
-        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc);
-      }
-
-      /* segment must be present else #SS(selector) */
-      if (! IS_PRESENT(ss_descriptor)) {
-        BX_ERROR(("return_protected: ss.present == 0"));
-        exception(BX_SS_EXCEPTION, raw_ss_selector & 0xfffc);
-      }
+      fetch_ss_descriptor(raw_ss_selector, &ss_selector, &ss_descriptor, cs_selector.rpl, BX_GP_EXCEPTION);
     }
 
 #if BX_SUPPORT_CET
@@ -268,15 +244,11 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 }
 
 #if BX_SUPPORT_CET
-  bx_address BX_CPP_AttrRegparmN(3)
-BX_CPU_C::shadow_stack_restore(Bit16u raw_cs_selector, const bx_descriptor_t &cs_descriptor, bx_address return_rip)
+  bx_address BX_CPP_AttrRegparmN(2)
+BX_CPU_C::shadow_stack_restore(Bit16u raw_cs_selector, bx_address return_lip)
 {
-  bx_address return_lip = return_rip;
-  if (! long_mode() || ! cs_descriptor.u.segment.l)
-    return_lip = (Bit32u) (return_lip + cs_descriptor.u.segment.base);
-
   if (SSP & 0x7) {
-    BX_ERROR(("return_protected: SSP must be 8-byte aligned"));
+    BX_ERROR(("shadow_stack_restore: SSP must be 8-byte aligned"));
     exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
   }
 
@@ -302,5 +274,15 @@ BX_CPU_C::shadow_stack_restore(Bit16u raw_cs_selector, const bx_descriptor_t &cs
   }
 
   return prevSSP;
+}
+
+  bx_address BX_CPP_AttrRegparmN(3)
+BX_CPU_C::shadow_stack_restore(Bit16u raw_cs_selector, const bx_descriptor_t &cs_descriptor, bx_address return_rip)
+{
+  bx_address return_lip = return_rip;
+  if (! long_mode() || ! cs_descriptor.u.segment.l)
+    return_lip = (Bit32u) (return_lip + cs_descriptor.u.segment.base);
+
+  return shadow_stack_restore(raw_cs_selector, return_lip);
 }
 #endif

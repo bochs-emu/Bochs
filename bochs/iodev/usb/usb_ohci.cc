@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2024  The Bochs Project
+//                2009-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -85,7 +85,7 @@ PLUGIN_ENTRY_FOR_MODULE(usb_ohci)
     SIM->register_addon_option("usb_ohci", usb_ohci_options_parser, usb_ohci_options_save);
   } else if (mode == PLUGIN_FINI) {
     SIM->unregister_addon_option("usb_ohci");
-    bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.usb");
+    bx_list_c *menu = (bx_list_c*)SIM->get_param("usb");
     delete theUSB_OHCI;
     menu->remove("ohci");
   } else if (mode == PLUGIN_PROBE) {
@@ -121,9 +121,9 @@ bx_usb_ohci_c::~bx_usb_ohci_c()
     remove_device(i);
   }
 
-  SIM->get_bochs_root()->remove("usb_ohci");
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   usb_rt->remove("ohci");
+  SIM->get_bochs_root()->remove("usb_ohci");
   BX_DEBUG(("Exit"));
 }
 
@@ -177,7 +177,11 @@ void bx_usb_ohci_c::init(void)
 
 #if BX_USB_DEBUGGER
   if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() == USB_DEBUG_OHCI) {
-    SIM->register_usb_debug_type(USB_DEBUG_OHCI);
+    bx_param_string_c *pdev = SIM->get_param_string(BXPN_USB_DEBUG_DEVICE);
+    if (pdev->isempty() || !strcmp(pdev->getptr(), "ohci")) {
+      BX_OHCI_THIS enable_usbdbg();
+      SIM->register_usb_debug_type(USB_DEBUG_OHCI, -1);
+    }
   }
 #endif
 
@@ -200,7 +204,7 @@ void bx_usb_ohci_c::reset(unsigned type)
 
 void bx_usb_ohci_c::register_state()
 {
-  BX_OHCI_THIS ohci_register_state(SIM->get_bochs_root());
+  BX_OHCI_THIS ohci_register_state("usb_ohci", SIM->get_bochs_root());
 }
 
 void bx_usb_ohci_c::after_restore_state()

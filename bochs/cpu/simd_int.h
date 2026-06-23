@@ -1138,7 +1138,7 @@ BX_CPP_INLINE Bit32u simd_pconflictd(const BxPackedAvxRegister *op, int index)
 {
   Bit32u result = 0;
   // compare index element with all previous elements
-  for (int i=0; i<index-1; i++) {
+  for (int i=0; i < index; i++) {
     if (op->vmm32u(index) == op->vmm32u(i)) result |= (1 << i);
   }
   return result;
@@ -1148,7 +1148,7 @@ BX_CPP_INLINE Bit32u simd_pconflictq(const BxPackedAvxRegister *op, int index)
 {
   Bit32u result = 0;
   // compare index element with all previous elements
-  for (int i=0; i<index-1; i++) {
+  for (int i=0; i < index; i++) {
     if (op->vmm64u(index) == op->vmm64u(i)) result |= (1 << i);
   }
   return result;

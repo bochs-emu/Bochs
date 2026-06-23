@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2010-2024 Stanislav Shwartsman
+//   Copyright (c) 2010-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -461,11 +461,11 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_STD7_SUBLEAF0_ECX_AVX512_VPOPCNTDQ       (1 << 14)
 #define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED15             (1 << 15)
 #define BX_CPUID_STD7_SUBLEAF0_ECX_LA57                   (1 << 16)
-#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED17             (1 << 17)
-#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED18             (1 << 18)
-#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED19             (1 << 19)
-#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED20             (1 << 20)
-#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED21             (1 << 21)
+#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED17             (1 << 17) /* MPX MAWAU */
+#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED18             (1 << 18) /* MPX MAWAU */
+#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED19             (1 << 19) /* MPX MAWAU */
+#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED20             (1 << 20) /* MPX MAWAU */
+#define BX_CPUID_STD7_SUBLEAF0_ECX_RESERVED21             (1 << 21) /* MPX MAWAU */
 #define BX_CPUID_STD7_SUBLEAF0_ECX_RDPID                  (1 << 22)
 #define BX_CPUID_STD7_SUBLEAF0_ECX_KEYLOCKER              (1 << 23)
 #define BX_CPUID_STD7_SUBLEAF0_ECX_BUS_LOCK_DETECT        (1 << 24)
@@ -488,7 +488,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [7:6]    reserved
 //   [8:8]    AVX512 VP2INTERSECT instructions support
 //   [9:9]    SRBDS_CTRL: IA32_MCU_OPT_CTRL MSR
-//   [10:10]  MD clear
+//   [10:10]  MCU_OPT_CTRL MSR support (formely MD clear)
 //   [11:11]  RTM_ALWAYS_ABORT
 //   [12:12]  reserved
 //   [13:13]  RTM_FORCE_ABORT
@@ -650,7 +650,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [19:19]  AVX10 support and CPUID leaf 0x24
 //   [20:20]  reserved
 //   [21:21]  APX support
-//   [22:22]  reserved
+//   [22:22]  SEC_TEE_ATTESTATION - SGX and TDE support attestation rooted in the Security Engine
 //   [23:23]  MWAIT and CPUID LEAF5 support (to be used by VMM)
 //   [24:24]  SLSM: Static Lock Step Mode (IA32_INTEGRITY_STATUS_MSR[0] is supported)
 //   [31:25]  reserved
@@ -677,7 +677,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_STD7_SUBLEAF1_EDX_AVX10                  (1 << 19)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED20             (1 << 20)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_APX                    (1 << 21)
-#define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED22             (1 << 22)
+#define BX_CPUID_STD7_SUBLEAF1_EDX_SEC_TEE_ATTESTATION    (1 << 22)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_MWAIT_AND_LEAF5        (1 << 23)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_SLSM                   (1 << 24)
 // ...
@@ -689,7 +689,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [2:2] AMX-COMPLEX
 //   [3:3] AMX-FP16
 //   [4:4] AMX-FP8
-//   [5:5] AMX-TRANSPOSE
+//   [5:5] AMX-TRANSPOSE (deprecated)
 //   [6:6] AMX-TF32 (FP19)
 //   [7:7] AMX-AVX512
 //   [8:8] AMX-MOVRS
@@ -804,7 +804,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 // [5:5]   VMCB Clean bits support
 // [6:6]   Flush by ASID support
 // [7:7]   Decode assists support
-// [8:8]   Reserved
+// [8:8]   PMC (Performance Monitoring Counter) virtualization
 // [9:9]   Reserved
 // [10:10] Pause filter support
 // [11:11] Reserved
@@ -813,25 +813,53 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 // [14:14] Reserved
 // [15:15] Nested Virtualization (virtualized VMLOAD and VMSAVE) Support
 // [16:16] Virtual GIF
-// [17:17] Guest Mode Execute Trap (CMET)
+// [17:17] Guest Mode Execute Trap (GMET)
+// [18:18] Advanced Virtual Interrupt Controller X2APIC mode
+// [19:19] SSS_Check: SVM Supervisor Shadow Stack restrictions
+// [20:20] SPEC_CTRL MSR virtualization
+// [21:21] ROGPT: Read Only Guest Page Table support
+// [22:22] Reserved
+// [23:23] When host CR4.MCE=1 and guest CR4.MCE=0, #MC in a guest do not cause shutdown and always intercepted
+// [24:24] INVLPGB/TLBSYNC hypervisor enable in VMCB and TLBSYNC intercept support
+// [25:25] NMI virtualization
+// [26:26] IBS (Instruction Based Sampling) virtualization
+// [27:27] ExtLvtAvicAccessChg: Extended Interrupt LVT Register AVIC Access changes
+// [28:28] Guest VMCB address check
+// [29:29] Bus Lock Threshold
+// [30:30] Idle HLT intercep
+// [31:31] Reserved
 
-#define BX_CPUID_SVM_NESTED_PAGING           (1 <<  0)
-#define BX_CPUID_SVM_LBR_VIRTUALIZATION      (1 <<  1)
-#define BX_CPUID_SVM_SVM_LOCK                (1 <<  2)
-#define BX_CPUID_SVM_NRIP_SAVE               (1 <<  3)
-#define BX_CPUID_SVM_TSCRATE                 (1 <<  4)
-#define BX_CPUID_SVM_VMCB_CLEAN_BITS         (1 <<  5)
-#define BX_CPUID_SVM_FLUSH_BY_ASID           (1 <<  6)
-#define BX_CPUID_SVM_DECODE_ASSIST           (1 <<  7)
-#define BX_CPUID_SVM_RESERVED8               (1 <<  8)
-#define BX_CPUID_SVM_RESERVED9               (1 <<  9)
-#define BX_CPUID_SVM_PAUSE_FILTER            (1 << 10)
-#define BX_CPUID_SVM_RESERVED11              (1 << 11)
-#define BX_CPUID_SVM_PAUSE_FILTER_THRESHOLD  (1 << 12)
-#define BX_CPUID_SVM_AVIC                    (1 << 13)
-#define BX_CPUID_SVM_RESERVED14              (1 << 14)
-#define BX_CPUID_SVM_NESTED_VIRTUALIZATION   (1 << 15)
-#define BX_CPUID_SVM_VIRTUAL_GIF             (1 << 16)
-#define BX_CPUID_SVM_CMET                    (1 << 17)
+#define BX_CPUID_SVM_NESTED_PAGING               (1 <<  0)
+#define BX_CPUID_SVM_LBR_VIRTUALIZATION          (1 <<  1)
+#define BX_CPUID_SVM_SVM_LOCK                    (1 <<  2)
+#define BX_CPUID_SVM_NRIP_SAVE                   (1 <<  3)
+#define BX_CPUID_SVM_TSCRATE                     (1 <<  4)
+#define BX_CPUID_SVM_VMCB_CLEAN_BITS             (1 <<  5)
+#define BX_CPUID_SVM_FLUSH_BY_ASID               (1 <<  6)
+#define BX_CPUID_SVM_DECODE_ASSIST               (1 <<  7)
+#define BX_CPUID_SVM_PMC_VIRTUALIZATION          (1 <<  8)
+#define BX_CPUID_SVM_RESERVED9                   (1 <<  9)
+#define BX_CPUID_SVM_PAUSE_FILTER                (1 << 10)
+#define BX_CPUID_SVM_RESERVED11                  (1 << 11)
+#define BX_CPUID_SVM_PAUSE_FILTER_THRESHOLD      (1 << 12)
+#define BX_CPUID_SVM_AVIC                        (1 << 13)
+#define BX_CPUID_SVM_RESERVED14                  (1 << 14)
+#define BX_CPUID_SVM_NESTED_VIRTUALIZATION       (1 << 15)
+#define BX_CPUID_SVM_VIRTUAL_GIF                 (1 << 16)
+#define BX_CPUID_SVM_GMET                        (1 << 17)
+#define BX_CPUID_SVM_X2AVIC                      (1 << 18)
+#define BX_CPUID_SVM_SSS_CHECK                   (1 << 19)
+#define BX_CPUID_SVM_SPEC_CTRL_VIRT              (1 << 20)
+#define BX_CPUID_SVM_ROGPT                       (1 << 21)
+#define BX_CPUID_SVM_RESERVED22                  (1 << 22)
+#define BX_CPUID_SVM_HOST_MCE_OVERRIDE           (1 << 23)
+#define BX_CPUID_SVM_TLBICTRL                    (1 << 24)
+#define BX_CPUID_SVM_VNMI                        (1 << 25)
+#define BX_CPUID_SVM_IBS_VIRTUALIZATION          (1 << 26)
+#define BX_CPUID_SVM_EXT_LVT_APIC_ACCESS_CHANGES (1 << 27)
+#define BX_CPUID_SVM_NESTED_VMCB_ADDR_CHECK      (1 << 28)
+#define BX_CPUID_SVM_BUS_LOCK_THRESHOLD          (1 << 29)
+#define BX_CPUID_SVM_IDLE_HALT                   (1 << 30)
+#define BX_CPUID_SVM_RESERVED31                  (1 << 31)
 
 #endif

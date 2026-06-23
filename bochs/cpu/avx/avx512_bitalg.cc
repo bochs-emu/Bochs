@@ -38,7 +38,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCONFLICTD_MASK_VdqWdqR(bxInstruction_c *
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   unsigned len = i->getVL();
 
-  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
+  for (int n=DWORD_ELEMENTS(len)-1; n >= 0; n--) {
     op.vmm32u(n) = simd_pconflictd(&op, n);
   }
 
@@ -57,7 +57,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCONFLICTQ_MASK_VdqWdqR(bxInstruction_c *
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   unsigned len = i->getVL();
 
-  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
+  for (int n=QWORD_ELEMENTS(len)-1; n >= 0; n--) {
     op.vmm64u(n) = simd_pconflictq(&op, n);
   }
 
@@ -202,7 +202,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPSHUFBITQMB_MASK_KGqHdqWdqR(bxInstruction
     Bit64u src = op1.vmm64u(n), ctrl = op2.vmm64u(n);
 
     Bit32u tmp = 0;
-    for (unsigned i=0; i < 7; i++) {
+    for (unsigned i=0; i < 8; i++) {
       tmp |= Bit32u((src >> (ctrl & 0x3F)) & 0x1) << i;
       ctrl >>= 8;
     }

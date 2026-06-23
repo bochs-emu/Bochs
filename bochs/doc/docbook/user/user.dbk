@@ -1695,9 +1695,10 @@ it, defaults will be used for all settings.  To change the settings, you can
 run <command>configure</command> with options that override the
 defaults.  You can get a list of valid configure options by typing
 <command>configure --help</command>.  One useful configure option is
---prefix=<replaceable>directory</replaceable>, which sets the directory in
-which Bochs will be installed.  All the possible configure options are
-documented in a <link linkend="config-opts">later section</link>.
+--prefix=<replaceable>directory</replaceable>, which sets the root directory in
+which Bochs will be installed (default is <replaceable>/usr/local</replaceable>).
+All the possible configure options are documented in a
+<link linkend="config-opts">later section</link>.
 
 
 </para>
@@ -1852,19 +1853,22 @@ at least to erase any files that it created.
 Once the program has been built, the next step is typically to run
 <command>make install</command> to copy the executables, documentation, and
 other required files into a public place so that all users can use it.
-By default, the files are copied to some directories in /usr/local. The following
-tables show the directories and their contents.
+By default, the files are copied to some directories in /usr/local unless a
+different installation prefix was specified in the <command>configure</command>
+stage. Another way to change the installation root is to set the <varname>DESTDIR</varname>
+variable in the <command>make install</command> command line.
+The following tables show the subdirectories and their contents.
 </para>
 <table><title>Installed files</title>
   <tgroup cols="2" align="left" colsep="1" rowsep="1">
   <tbody>
     <row>
       <entry>bin</entry>
-      <entry>binary executables (bochs, bximage)</entry>
+      <entry>binary executables (bochs, bximage, bxhub)</entry>
     </row>
     <row>
       <entry>lib/bochs/plugins</entry>
-      <entry>plugins (if present)</entry>
+      <entry>plugins (if present - see note)</entry>
     </row>
     <row>
       <entry>man/man1</entry>
@@ -1885,6 +1889,11 @@ tables show the directories and their contents.
   </tbody>
   </tgroup>
 </table>
+<note><para>
+When compiling with plugins enabled on platforms using <command>libtool</command>
+it is required to use an absolute path as the installation root. Using <varname>HOME</varname>
+or <varname>PWD</varname> variables as prefix may help in that case.
+</para></note>
 </section>
 
 <section><title>Installing the DLX Linux demo</title>
@@ -2452,8 +2461,8 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
     <row>
       <entry>--enable-geforce</entry>
       <entry>no</entry>
-      <entry>Enable experimental GeForce emulation. Basic support for three models
-      is available, but 3D is not done yet. For more information see <xref linkend="geforce-notes">.
+      <entry>Enable experimental GeForce emulation. Basic support for four models
+      is available, but 3D is still WIP. For more information see <xref linkend="geforce-notes">.
       </entry>
     </row>
     <row>
@@ -3171,7 +3180,29 @@ Bochs must be set up to use system and VGA BIOS like this:
 We recommend to use the ROM images distributed with Bochs or one of the latest
 <ulink url="http://www.seabios.org/">SeaBIOS</ulink> images. BIOS images designed
 for real hardware mostly do not work properly. Please see the <xref linkend="bochsopt-romimage">
-for more information.
+</para>
+
+<para>
+<emphasis>UEFI Firmware Support:</emphasis> Bochs supports UEFI boot using OVMF
+(Open Virtual Machine Firmware) from the TianoCore EDK2 project. To use UEFI:
+<screen>
+  romimage: file=OVMF.fd, address=0xffc00000
+</screen>
+UEFI boot requires the fw_cfg device which provides system configuration to the
+firmware via I/O ports 0x510-0x51B. This includes the E820 memory map, ACPI tables,
+RAM size, and CPU count. Enable it with:
+<screen>
+  fw_cfg: enabled=1
+</screen>
+For best results with OVMF graphics output, configure VGA as a PCI device:
+<screen>
+  pci: enabled=1, chipset=i440fx, slot1=pcivga
+</screen>
+The ACPI DSDT AML is built into Bochs and generated from the Bochs DSDT DSL
+source using the ACPICA iasl compiler.
+For developers, bochs/tools/gen_acpi_dsdt_aml.py can regenerate the embedded
+AML header.
+UEFI boot has been tested with Windows Server 2025 and modern Linux distributions.
 </para>
 
 <para>
@@ -3639,7 +3670,7 @@ this feature yet.
 <para>
 Examples:
 <screen>
-  vgaromimage: file=bios/VGABIOS-elpin-2.40
+  vgaromimage: file=bios/VGABIOS-elpin/VGABIOS-elpin-2.40
   vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest.bin
   vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest-cirrus.bin
 </screen>
@@ -3752,9 +3783,9 @@ Example:
   geforce: model=geforce3
 </screen>
 This defines the experimental GeForce emulation. Currently supported models
-are 'geforce3', 'geforcefx5900' and 'geforce6800'. These 2D/3D AGP cards
-require an external VGA BIOS, the vga extension option to be set to 'geforce'
-# and the i440BX PCI/AGP chipset with the 'geforce' device assigned to AGP
+are 'geforce2', 'geforce3', 'geforcefx5900' and 'geforce6800'. These 2D/3D AGP
+cards require an external VGA BIOS, the vga extension option to be set to 'geforce'
+and the i440BX PCI/AGP chipset with the 'geforce' device assigned to AGP
 (slot #5). The gui screen update timing for all models is controlled by the
 related 'vga' options. See <xref linkend="geforce-notes"> for more information.
 </para>
@@ -3914,7 +3945,8 @@ PCI chipset. These options can be specified as comma-separated values.
 By default, the "Bochs i440FX" chipset enables the ACPI and HPET devices, but
 original i440FX doesn't support them. The options 'noacpi' and 'nohpet' make
 it possible to disable them. The option 'noagp' disables the incomplete AGP
-subsystem of the i440BX chipset.
+subsystem of the i440BX chipset. If PCI is enabled, the 'nofdc' option disables
+the FDC if no floppy drive is configured.
 </para>
 </section>
 
@@ -3929,7 +3961,8 @@ with realtime. With the value 'none' the Bochs time relies on the IPS
 value and no host time synchronization is used. The 'slowdown' method
 sacrifices performance to preserve reproducibility while allowing host
 time correlation. The 'realtime' method sacrifices reproducibility to
-preserve performance and host-time correlation.
+preserve performance and host-time correlation. It was reported that
+guest systems with ACPI support work better in 'realtime' mode.
 It is possible to enable both synchronization methods.
 </para>
 <para><command>rtc_sync</command></para>
@@ -4089,7 +4122,7 @@ This defines the type and characteristics of all attached ata devices:
 <row>
   <entry> mode  </entry>
   <entry> image type, only valid for disks </entry>
-  <entry> [flat | concat | dll | sparse | vmware3 | vmware4 | undoable | growing | volatile | vpc | vbox | vvfat ]</entry>
+  <entry> [flat | concat | dll | sparse | vmware3 | vmware4 | vhdx | undoable | growing | volatile | vpc | vbox | vvfat ]</entry>
 </row>
 <row> <entry> cylinders </entry> <entry> only valid for disks </entry> </row>
 <row> <entry> heads </entry> <entry> only valid for disks </entry> </row>
@@ -4176,6 +4209,9 @@ vmware3 : vmware version 3 disk support
 </para></listitem>
 <listitem><para>
 vmware4 : vmware version 4 disk support (aka VMDK)
+</para></listitem>
+<listitem><para>
+vhdx : VHDX disk support
 </para></listitem>
 <listitem><para>
 undoable : read-only base file with commitable redolog
@@ -4334,16 +4370,30 @@ problem like "could not find hard drive image."
 </tip>
 </section>
 
-<section><title>debugger_log</title>
+<section><title>debugger</title>
 <para>
 Examples:
 <screen>
-  debugger_log: debugger.out
-  debugger_log: /dev/null              (Unix only)
-  debugger_log: -
+  debugger: log=debugger.out, gui=true
+  debugger: log=/dev/null              (Unix only)
+  debugger: log=-
 </screen>
+</para>
+<para>
+This defines the parameters of the Bochs internal debugger.
+</para>
+<para><command>log</command></para>
+<para>
 Give the path of the log file you'd like Bochs to log debugger output.
-If you really don't want it, make it '/dev/null', or '-'.
+If you really don't want it, make it /dev/null or '-'.
+</para>
+<para><command>gui</command></para>
+<para>
+If this parameter is set to 'true' or '1' the debugger gui is used instead
+of the command line version. The special value 'globalini' enables the gui
+and forces the usage of an ini file from BXSHARE path. The gui parameter is
+available only if Bochs is built with debugger gui support and the debugger
+is activated with the command line option '-dbg'.
 </para>
 </section>
 
@@ -6757,12 +6807,18 @@ The USB emulation has been tested on numerous Guests. You can find these results
 </para>
 <para>
 <screen>
-  usb_debug: type=none|uhci|ohci|ehci|xhci, reset=1, enable=1, start_frame=1, doorbell=1, event=1, data=1, non_exist=1
+  usb_debug: type=none|uhci|ohci|ehci|xhci, device=none reset=1, enable=1, start_frame=1, doorbell=1, event=1, data=1, non_exist=1
 </screen>
 </para>
 <para>
 Currently only <emphasis>none</emphasis>, <emphasis>uhci</emphasis>, or <emphasis>xhci</emphasis> can be specified as the type.
 Future additions will include the other two controller types.
+</para>
+<para>
+The device parameter is only required when debugging one of the companion
+controllers of EHCI. Currently supported are the UHCI companions only (devices
+<replaceable>ehci/uhci0</replaceable>, <replaceable>ehci/uhci1</replaceable> and
+<replaceable>ehci/uhci2</replaceable>).
 </para>
 <para>
 Only one type may be specified. You can only debug one controller type at a time.
@@ -7693,17 +7749,13 @@ For example:
 </screen>
 </para>
 <para>
-At runtime you need to add the value <option>gui_debug</option> to the
-<link linkend="bochsopt-displaylibrary">display_library</link> options parameter
-in order to use the GUI instead of the command line debugger. This example shows
-how to use it with the 'x' GUI:
-<screen>
-display_library: x, options="gui_debug"
-</screen>
+At runtime you need use the command line option <option>-dbg_gui</option> or the
+command option <option>-dbg</option> in combination with the <option>gui</option>
+parameter of the <option>debugger</option> bochsrc option in order to use the GUI
+instead of the command line debugger.
 </para>
-<note><para>The wxWidgets port of Bochs always uses this debugger GUI. Passing
-the option to the display library is not necessary, since the command line
-interface is not available then.
+<note><para>The wxWidgets port of Bochs always uses this debugger GUI, since the
+command line interface is not available then.
 </para></note>
 <section><title>Overview</title>
 <para>
@@ -9998,8 +10050,8 @@ Bochs VBE Display Drivers for Windows NT/2000
   <title>Notes about experimental GeForce emulation usage</title>
 
   <para>
-  The GeForce graphics emulation currently implements basic support for three GeForce
-  models. Most of the 2D features are present, but 3D is still to do. Several
+  The GeForce graphics emulation currently implements basic support for four GeForce
+  models. Most of the 2D features are present, but 3D is still WIP. Several
   Windows versions up to Win 7 have been reported to work under consideration of
   these limitations.
   </para>
@@ -10029,6 +10081,10 @@ Bochs VBE Display Drivers for Windows NT/2000
   </row>
   </thead>
   <tbody>
+  <row>
+    <entry>geforce2</entry>
+    <entry>Leadtek.2Pro.64.010403_AGP.bin</entry>
+  </row>
   <row>
     <entry>geforce3</entry>
     <entry>Leadtek.3Ti500.64.011105_AGP.bin</entry>
@@ -10105,6 +10161,11 @@ If unspecified, the default "mode" is flat.
  <row> <entry> vmware4 </entry> <entry> vmware4 disk support </entry>
        <entry>
        vmware version 4 (VMDK) compatibility
+       </entry>
+ </row>
+ <row> <entry> vhdx </entry> <entry> VHDX disk support </entry>
+       <entry>
+       VHDX compatibility
        </entry>
  </row>
  <row> <entry> undoable </entry> <entry> read-only base file with a commitable redolog </entry>
@@ -10447,8 +10508,8 @@ Only vmware versions 3 and 4 disk image files are supported.
     An undoable disk is based on a read-only image, associated
     with a growing redolog, that contains all changes (writes)
     made to the base image content. Currently, base images of
-    types 'flat', 'sparse', 'growing', 'vmware3', 'vmware4' and
-    'vpc' are supported.
+    types 'flat', 'sparse', 'growing', 'vmware3', 'vmware4',
+    'vpc' and 'vhdx' are supported.
 </para>
 <para>
     This redolog is dynamically created at runtime, if it does not
@@ -10599,8 +10660,8 @@ Be sure to enter "growing" when selecting the image type.
     A volatile disk is based on a read-only image, associated with
     a growing redolog, that contains all changes (writes)
     made to the base image content. Currently, base images of
-    types 'flat', 'sparse', 'growing', 'vmware3', 'vmware4', 'vpc' and
-    'vbox' are supported.
+    types 'flat', 'sparse', 'growing', 'vmware3', 'vmware4', 'vpc',
+    'vhdx and ''vbox' are supported.
 </para>
 <para>
     The redolog is dynamically created at runtime, when
@@ -10941,6 +11002,11 @@ Other arguments:
     <entry>Yes</entry>
   </row>
   <row>
+    <entry>vhdx</entry>
+    <entry>Yes</entry>
+    <entry>Yes</entry>
+  </row>
+  <row>
     <entry>growing</entry>
     <entry>Yes</entry>
     <entry>Yes</entry>
@@ -11005,8 +11071,8 @@ suffix ".orig".
 <para>
 This function can be used to determine the disk image format, geometry
 and size. Note that Bochs can only detect the formats growing, sparse,
-vmware3, vmware4, vpc and vbox correctly. Other images with a file size
-multiple of 512 are treated as flat ones. If the image doesn't support
+vmware3, vmware4, vpc vbox and vhdx correctly. Other images with a file
+size multiple of 512 are treated as flat ones. If the image doesn't support
 returning the geometry, the cylinders are calculated based on 16 heads
 and 63 sectors per track.
 </para>
@@ -11327,7 +11393,7 @@ cpu: count=1, ips=50000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 cpu: cpuid_limit_winnt=0
 clock: sync=realtime, time0=local
 memory: guest=512, host=512
-vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus.bin
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl/VGABIOS-lgpl-latest-cirrus.bin
 vga: extension=cirrus, update_freq=5
 pci: enabled=1, chipset=i440fx, slot1=cirrus
 </screen>
@@ -11348,7 +11414,7 @@ cpu: count=1, ips=55000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 cpu: cpuid_limit_winnt=0
 clock: sync=realtime, time0=local
 memory: guest=512, host=512
-vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus.bin
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl/VGABIOS-lgpl-latest-cirrus.bin
 vga: extension=cirrus, update_freq=5
 pci: enabled=1, chipset=i440fx, slot1=cirrus
 </screen>
@@ -11419,7 +11485,7 @@ cpu: count=1, ips=75000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 cpu: cpuid_limit_winnt=0
 clock: sync=realtime, time0=local
 memory: guest=512, host=512
-vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus.bin
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl/VGABIOS-lgpl-latest-cirrus.bin
 vga: extension=cirrus, update_freq=5
 pci: enabled=1, chipset=i440fx, slot1=cirrus
 </screen>
@@ -11452,7 +11518,7 @@ cpu: count=1, ips=100000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 cpu: cpuid_limit_winnt=0
 clock: sync=realtime, time0=local
 memory: guest=1024, host=1024
-vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus.bin
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl/VGABIOS-lgpl-latest-cirrus.bin
 vga: extension=cirrus, update_freq=5
 pci: enabled=1, chipset=i440fx, slot1=cirrus
 </screen>
@@ -11477,7 +11543,7 @@ cpu: count=1, ips=150000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 cpu: cpuid_limit_winnt=0
 clock: sync=realtime, time0=local
 memory: guest=2048, host=2048
-vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus.bin
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl/VGABIOS-lgpl-latest-cirrus.bin
 vga: extension=cirrus, update_freq=5
 pci: enabled=1, chipset=i440fx, slot1=cirrus
 </screen>
@@ -11507,7 +11573,7 @@ cpu: count=1, ips=325000000, reset_on_triple_fault=1, ignore_bad_msrs=1
 cpu: cpuid_limit_winnt=0
 clock: sync=realtime, time0=local
 memory: guest=2048, host=2048
-vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl-latest-cirrus.bin
+vgaromimage: file=D:/path/to/your/bios/VGABIOS-lgpl/VGABIOS-lgpl-latest-cirrus.bin
 vga: extension=cirrus, update_freq=5
 pci: enabled=1, chipset=i440fx, slot1=cirrus
 </screen>
@@ -11619,7 +11685,7 @@ ata1: enabled=0
 ata2: enabled=0
 ata3: enabled=0
 romimage: file=bios/BIOS-bochs-latest
-vgaromimage: file=bios/VGABIOS-lgpl-latest.bin
+vgaromimage: file=bios/VGABIOS-lgpl/VGABIOS-lgpl-latest.bin
 megs: 64
 parport1: enabled=1, file="lp.pipe"
 com1: enabled=0
@@ -11638,7 +11704,7 @@ pci: enabled=0
 # no loader
 log: osr5.log
 logprefix: %t-%e-%i%d
-debugger_log: -
+debugger: log=-
 panic: action=ask
 error: action=report
 info: action=report

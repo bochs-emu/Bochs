@@ -2,8 +2,8 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2009-2025  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2025  The Bochs Project
+//  Copyright (C) 2009-2026  Benjamin D Lunt (fys [at] fysnet [dot] net)
+//                2009-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -49,6 +49,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "pc_system.h"
 
 #if BX_SUPPORT_PCI && BX_SUPPORT_USB_UHCI
 
@@ -68,6 +69,9 @@ bx_uhci_core_c::bx_uhci_core_c()
   put("uhci_core", "UHCIC");
   memset((void*)&hub, 0, sizeof(bx_uhci_core_t));
   hub.timer_index = BX_NULL_TIMER_HANDLE;
+#if BX_USB_DEBUGGER
+  usb_debug = false;
+#endif
 }
 
 bx_uhci_core_c::~bx_uhci_core_c()
@@ -179,13 +183,13 @@ void bx_uhci_core_c::reset_uhci(unsigned type)
   }
 }
 
-void bx_uhci_core_c::uhci_register_state(bx_list_c *parent)
+void bx_uhci_core_c::uhci_register_state(const char *pname, bx_list_c *parent)
 {
   unsigned j;
   char portnum[8];
   bx_list_c *hub1, *usb_cmd, *usb_st, *usb_en, *port;
 
-  bx_list_c *list = new bx_list_c(parent, "usb_uhci", "USB UHCI State");
+  bx_list_c *list = new bx_list_c(parent, pname, "UHCI State");
   hub1 = new bx_list_c(list, "hub");
   usb_cmd = new bx_list_c(hub1, "usb_command");
   BXRS_PARAM_BOOL(usb_cmd, max_packet_size, hub.usb_command.max_packet_size);
@@ -238,7 +242,7 @@ void bx_uhci_core_c::uhci_register_state(bx_list_c *parent)
 
 void bx_uhci_core_c::after_restore_state(void)
 {
-  bx_pci_device_c::after_restore_pci_state(NULL);
+  bx_pci_device_c::after_restore_pci_state();
   for (int j=0; j<USB_UHCI_PORTS; j++) {
     if (hub.usb_port[j].device != NULL) {
       hub.usb_port[j].device->after_restore_state();
@@ -516,8 +520,10 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x14: // port #3 non existent, but linux systems check it to see if there are more than 2
       BX_ERROR(("write to non existent offset 0x14 (port #3)"));
 #if BX_USB_DEBUGGER
-      // Non existant Register Port (the next one after the last)
-      SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_NONEXIST, 0, 0, 0);
+      if (usb_debug) {
+        // Non existant Register Port (the next one after the last)
+        SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_NONEXIST, 0, 0, 0);
+      }
 #endif
       break;
 
@@ -529,7 +535,7 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
         if (hub.usb_port[port].reset && ((value & (1 << 9)) != 0))
           break;
 #if BX_USB_DEBUGGER
-        if ((value & (1 << 9)) && !hub.usb_port[port].reset)
+        if (usb_debug && (value & (1 << 9)) && !hub.usb_port[port].reset)
           SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_RESET, 0, port, 0);
 #endif
         if (value & ((1<<5) | (1<<4) | (1<<0)))
@@ -558,7 +564,9 @@ void bx_uhci_core_c::write(Bit32u address, Bit32u value, unsigned io_len)
         hub.usb_port[port].resume = (value & (1<<6)) ? 1 : 0;
         if (!hub.usb_port[port].enabled && (value & (1<<2))) {
 #if BX_USB_DEBUGGER
-          SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_ENABLE, 0, port, 0);
+          if (usb_debug) {
+            SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_ENABLE, 0, port, 0);
+          }
 #endif
           hub.usb_port[port].enable_changed = 0;
         } else
@@ -642,7 +650,9 @@ bool bx_uhci_core_c::uhci_add_queue(struct USB_UHCI_QUEUE_STACK *stack, const Bi
 void bx_uhci_core_c::uhci_timer(void)
 {
 #if BX_USB_DEBUGGER
-  SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_FRAME, 0, 0, 0);
+  if (usb_debug) {
+    SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_FRAME, 0, 0, 0);
+  }
 #endif
 
   // If the "global reset" bit was set by software
@@ -716,7 +726,12 @@ void bx_uhci_core_c::uhci_timer(void)
         }
 
         // read in the queue
+#ifdef BX_LITTLE_ENDIAN
         DEV_MEM_READ_PHYSICAL(item & ~0xF, sizeof(struct QUEUE), (Bit8u *) &queue);
+#else
+        DEV_MEM_READ_PHYSICAL((item & ~0xF) + 0, sizeof(Bit32u), (Bit8u *) &queue.horz);
+        DEV_MEM_READ_PHYSICAL((item & ~0xF) + 4, sizeof(Bit32u), (Bit8u *) &queue.vert);
+#endif
 
         // this massively populates the log file, so I keep it commented out
         //BX_DEBUG(("Queue at 0x%08X:  horz = 0x%08X, vert = 0x%08X", item & ~0xF, queue.horz, queue.vert));
@@ -742,7 +757,14 @@ void bx_uhci_core_c::uhci_timer(void)
 
       // else, we found a Transfer Descriptor
       address = item & ~0xF;
+#ifdef BX_LITTLE_ENDIAN
       DEV_MEM_READ_PHYSICAL(address, sizeof(struct TD), (Bit8u *) &td);
+#else
+      DEV_MEM_READ_PHYSICAL(address +  0, sizeof(Bit32u), (Bit8u *) &td.dword0);
+      DEV_MEM_READ_PHYSICAL(address +  4, sizeof(Bit32u), (Bit8u *) &td.dword1);
+      DEV_MEM_READ_PHYSICAL(address +  8, sizeof(Bit32u), (Bit8u *) &td.dword2);
+      DEV_MEM_READ_PHYSICAL(address + 12, sizeof(Bit32u), (Bit8u *) &td.dword3);
+#endif
       const bool depthbreadth = (td.dword0 & 0x0004) ? 1 : 0;     // 1 = depth first, 0 = breadth first
       const bool is_active = (td.dword1 & (1<<23)) > 0;
       bool was_short = 0, was_stall = 0;
@@ -768,8 +790,10 @@ void bx_uhci_core_c::uhci_timer(void)
           // write back the status to the TD
           DEV_MEM_WRITE_PHYSICAL(address + sizeof(Bit32u), sizeof(Bit32u), (Bit8u *) &td.dword1);
 #if BX_USB_DEBUGGER
-          // trigger again so that the user can see the processed packet
-          SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_COMMAND, 0, address, USB_LPARAM_FLAG_AFTER);
+          if (usb_debug) {
+            // trigger again so that the user can see the processed packet
+            SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_COMMAND, 0, address, USB_LPARAM_FLAG_AFTER);
+          }
 #endif
           // we processed another td within this queue line
           td_count++;
@@ -921,7 +945,9 @@ bool bx_uhci_core_c::DoTransfer(Bit32u address, struct TD *td)
   BX_DEBUG(("TD found at address 0x%08X:  0x%08X  0x%08X  0x%08X  0x%08X", address, td->dword0, td->dword1, td->dword2, td->dword3));
 
 #if BX_USB_DEBUGGER
-  SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_COMMAND, 0, address, USB_LPARAM_FLAG_BEFORE);
+  if (usb_debug) {
+    SIM->usb_debug_trigger(USB_DEBUG_UHCI, USB_DEBUG_COMMAND, 0, address, USB_LPARAM_FLAG_BEFORE);
+  }
 #endif
 
   // check TD to make sure it is valid

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2002-2025 Zwane Mwaikambo, Stanislav Shwartsman
+//  Copyright (c) 2002-2026 Zwane Mwaikambo, Stanislav Shwartsman
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -28,6 +28,8 @@
 
 #include "apic.h"
 #include "scalar_arith.h"
+
+#include "pc_system.h"
 #include "iodev/iodev.h"
 
 extern bool simulate_xapic;
@@ -309,7 +311,7 @@ bool bx_local_apic_c::is_selected(bx_phy_address addr)
 {
   if (mode != BX_APIC_XAPIC_MODE) return 0;
 
-  if((addr & ~0xfff) == base_addr) {
+  if(PPFOf(addr) == base_addr) {
     if((addr & 0xf) != 0)
       BX_INFO(("warning: misaligned APIC access. addr=0x" FMT_PHY_ADDRX, addr));
     return true;
@@ -323,7 +325,7 @@ void bx_local_apic_c::read(bx_phy_address addr, void *data, unsigned len)
     BX_ERROR(("APIC read at address 0x" FMT_PHY_ADDRX " spans 32-bit boundary !", addr));
     return;
   }
-  Bit32u value = read_aligned(addr & ~0x3);
+  Bit32u value = read_aligned(addr & ~BX_CONST64(0x3));
   if(len == 4) { // must be 32-bit aligned
     *((Bit32u *)data) = value;
     return;
@@ -532,7 +534,7 @@ void bx_local_apic_c::write_aligned(bx_phy_address addr, Bit32u value)
       break;
     case BX_LAPIC_ICR_LO: // interrupt command reg 0-31
       icr_lo = value & ~(1<<12);  // force delivery status bit = 0(idle)
-      send_ipi((icr_hi >> 24) & 0xff, icr_lo);
+      send_ipi(icr_hi, icr_lo);
       break;
     case BX_LAPIC_ICR_HI: // interrupt command reg 31-63
       icr_hi = value & 0xff000000;
@@ -659,6 +661,9 @@ void bx_local_apic_c::send_ipi(apic_dest_t dest, Bit32u lo_cmd)
   int delivery_mode = (lo_cmd >> 8) & 7;
   int vector = (lo_cmd & 0xff);
   bool accepted = false;
+
+  if (mode == BX_APIC_XAPIC_MODE)
+    dest = (dest >> 24) & 0xff;
 
   if(delivery_mode == APIC_DM_INIT)
   {
@@ -1235,8 +1240,6 @@ void bx_local_apic_c::mwaitx_timer_expired(void *this_ptr)
 // return false when x2apic is not supported/not readable
 bool bx_local_apic_c::read_x2apic(unsigned index, Bit64u *val_64)
 {
-  index = (index - 0x800) << 4;
-
   switch(index) {
   // return full 32-bit lapic id
   case BX_LAPIC_ID:
@@ -1309,8 +1312,6 @@ bool bx_local_apic_c::read_x2apic(unsigned index, Bit64u *val_64)
 // return false when x2apic is not supported/not writeable
 bool bx_local_apic_c::write_x2apic(unsigned index, Bit32u val32_hi, Bit32u val32_lo)
 {
-  index = (index - 0x800) << 4;
-
   if (index != BX_LAPIC_ICR_LO) {
     // upper 32-bit are reserved for all x2apic MSRs except for the ICR
     if (val32_hi != 0)
@@ -1358,6 +1359,8 @@ bool bx_local_apic_c::write_x2apic(unsigned index, Bit32u val32_hi, Bit32u val32
     return true;
   case BX_LAPIC_ICR_LO:
     // handle full 64-bit write
+    icr_lo = val32_lo;
+    icr_hi = val32_hi;
     send_ipi(val32_hi, val32_lo);
     return true;
   case BX_LAPIC_TPR:

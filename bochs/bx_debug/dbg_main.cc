@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -29,6 +29,7 @@ extern "C" {
 #include "cpu/cpu.h"
 #include "cpu/decoder/ia_opcodes.h"
 #include "iodev/iodev.h"
+#include "pc_system.h"
 #if BX_DEBUGGER
 
 #define LOG_THIS genlog->
@@ -1107,6 +1108,8 @@ void bx_dbg_info_control_regs_command(unsigned cpu)
   extern const char* stringify_XCR0(Bit32u xcr0, char *s);
   char s[256];
 
+  dbg_printf("CPL=%d\n", BX_CPU(cpu)->get_cpl());
+
   Bit32u cr0 = SIM->get_param_num("CR0", dbg_cpu_list[cpu])->get();
   dbg_printf("CR0=0x%08x: %s\n", cr0, stringify_CR0(cr0, s));
 
@@ -1136,6 +1139,16 @@ void bx_dbg_info_control_regs_command(unsigned cpu)
     dbg_printf("XCR0=0x%08x: %s\n", xcr0, stringify_XCR0(xcr0, s));
   }
 #endif
+
+  if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_PKU)) {
+    Bit32u pkru = SIM->get_param_num("pkru", dbg_cpu_list[cpu])->get();
+    dbg_printf("PKRU=0x%08x\n", pkru);
+  }
+
+  if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_PKS)) {
+    Bit32u pkrs = SIM->get_param_num("pkrs", dbg_cpu_list[cpu])->get();
+    dbg_printf("PKRS=0x%08x\n", pkrs);
+  }
 }
 
 void bx_dbg_info_control_regs_command()
@@ -2382,6 +2395,17 @@ void bx_dbg_print_magic_bp_mask_from_str(Bit8u mask)
   }
 
   dbg_printf("\n");
+}
+
+void bx_dbg_get_magic_bp_str_from_mask(Bit8u mask, char *str)
+{
+  str[0] = 0;
+  for (int i = 1; i < 8; i++) {
+    if (mask & (1 << i)) {
+      strcat(str, " ");
+      strcat(str, magic_bp_regs[i]);
+    }
+  }
 }
 
 Bit8u bx_dbg_get_magic_bp_mask_from_str(const char *str)

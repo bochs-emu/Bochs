@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2024  The Bochs Project
+//                2009-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -193,16 +193,23 @@ public:
   virtual ~bx_uhci_core_c();
   virtual void init_uhci(Bit8u devfunc, Bit16u venid, Bit16u devid, Bit8u rev, Bit8u headt, Bit8u intp);
   virtual void reset_uhci(unsigned);
-  void    uhci_register_state(bx_list_c *parent);
+  void    uhci_register_state(const char *pname, bx_list_c *parent);
   virtual void after_restore_state(void);
   virtual void set_port_device(int port, usb_device_c *dev);
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
   int event_handler(int event, void *ptr, int port);
 
+#if BX_USB_DEBUGGER
+  void enable_usbdbg() {usb_debug = true;}
+#endif
+
 protected:
   bx_uhci_core_t hub;
   Bit8u          global_reset;
+#if BX_USB_DEBUGGER
+  bool           usb_debug;
+#endif
 
   USBAsync *packets;
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2007-2020 Stanislav Shwartsman
+//   Copyright (c) 2007-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -116,8 +116,18 @@ struct bx_cr0_t {
 #define BX_CR4_LASS_MASK            (1 << 27)
 #define BX_CR4_LAM_SUPERVISOR_MASK  (1 << 28)
 
+#define BX_CR4_FRED_MASK            (BX_CONST64(1) << 32)
+
 struct bx_cr4_t {
-  Bit32u  val; // 32bit value of register
+  bx_address val; // value of register
+
+#define IMPLEMENT_UPPER_CRREG_ACCESSORS(name, bitnum)                       \
+  BX_CPP_INLINE bool get_##name() const {                                   \
+    return 1 & (val >> bitnum);                                             \
+  }                                                                         \
+  BX_CPP_INLINE void set_##name(Bit8u newval) {                             \
+    val = (val & ~(BX_CONST64(1)<<bitnum)) | (Bit64u(!!newval) << bitnum);  \
+  }
 
   IMPLEMENT_CRREG_ACCESSORS(VME, 0);
   IMPLEMENT_CRREG_ACCESSORS(PVI, 1);
@@ -150,12 +160,15 @@ struct bx_cr4_t {
   IMPLEMENT_CRREG_ACCESSORS(UINTR, 25);
   IMPLEMENT_CRREG_ACCESSORS(LASS, 27);
   IMPLEMENT_CRREG_ACCESSORS(LAM_SUPERVISOR, 28);
+#if BX_SUPPORT_FRED
+  IMPLEMENT_UPPER_CRREG_ACCESSORS(FRED, 32);
+#endif
 
-  BX_CPP_INLINE Bit32u get32() const { return val; }
-  BX_CPP_INLINE void set32(Bit32u val32) { val = val32; }
+  BX_CPP_INLINE bx_address get() const { return val; }
+  BX_CPP_INLINE void set(bx_address value) { val = value; }
 };
 
-const Bit32u BX_CR4_FLUSH_TLB_MASK = (BX_CR4_PSE_MASK | BX_CR4_PAE_MASK | BX_CR4_PGE_MASK | BX_CR4_LA57_MASK | BX_CR4_PCIDE_MASK | BX_CR4_SMEP_MASK | BX_CR4_SMAP_MASK | BX_CR4_PKE_MASK | BX_CR4_CET_MASK | BX_CR4_PKS_MASK | BX_CR4_LASS_MASK);
+const bx_address BX_CR4_FLUSH_TLB_MASK = (BX_CR4_PSE_MASK | BX_CR4_PAE_MASK | BX_CR4_PGE_MASK | BX_CR4_LA57_MASK | BX_CR4_PCIDE_MASK | BX_CR4_SMEP_MASK | BX_CR4_SMAP_MASK | BX_CR4_PKE_MASK | BX_CR4_CET_MASK | BX_CR4_PKS_MASK | BX_CR4_LASS_MASK);
 
 #endif  // #if BX_CPU_LEVEL >= 5
 
@@ -217,29 +230,33 @@ struct bx_dr7_t {
 
 #if BX_CPU_LEVEL >= 5
 
-#define BX_EFER_SCE_MASK       (1 <<  0)
-#define BX_EFER_LME_MASK       (1 <<  8)
-#define BX_EFER_LMA_MASK       (1 << 10)
-#define BX_EFER_NXE_MASK       (1 << 11)
-#define BX_EFER_SVME_MASK      (1 << 12)
-#define BX_EFER_LMSLE_MASK     (1 << 13)
-#define BX_EFER_FFXSR_MASK     (1 << 14)
-#define BX_EFER_TCE_MASK       (1 << 15)
+#define BX_EFER_SCE_MASK               (1 <<  0)
+#define BX_EFER_LME_MASK               (1 <<  8)
+#define BX_EFER_LMA_MASK               (1 << 10)
+#define BX_EFER_NXE_MASK               (1 << 11)
+#define BX_EFER_SVME_MASK              (1 << 12)
+#define BX_EFER_LMSLE_MASK             (1 << 13)
+#define BX_EFER_FFXSR_MASK             (1 << 14)
+#define BX_EFER_TCE_MASK               (1 << 15)
+#define BX_EFER_MCOMMIT_MASK           (1 << 17)
+#define BX_EFER_INTERRUPTIBLE_WBINVD   (1 << 18)
 
 struct bx_efer_t {
   Bit32u val; // 32bit value of register
 
-  IMPLEMENT_CRREG_ACCESSORS(SCE,    0);
+  IMPLEMENT_CRREG_ACCESSORS(SCE,      0);
 #if BX_SUPPORT_X86_64
-  IMPLEMENT_CRREG_ACCESSORS(LME,    8);
-  IMPLEMENT_CRREG_ACCESSORS(LMA,   10);
+  IMPLEMENT_CRREG_ACCESSORS(LME,      8);
+  IMPLEMENT_CRREG_ACCESSORS(LMA,     10);
 #endif
-  IMPLEMENT_CRREG_ACCESSORS(NXE,   11);
+  IMPLEMENT_CRREG_ACCESSORS(NXE,     11);
 #if BX_SUPPORT_X86_64
-  IMPLEMENT_CRREG_ACCESSORS(SVME,  12); /* AMD Secure Virtual Machine */
-  IMPLEMENT_CRREG_ACCESSORS(LMSLE, 13); /* AMD Long Mode Segment Limit */
-  IMPLEMENT_CRREG_ACCESSORS(FFXSR, 14);
-  IMPLEMENT_CRREG_ACCESSORS(TCE,   15); /* AMD Translation Cache Extensions */
+  IMPLEMENT_CRREG_ACCESSORS(SVME,    12); /* AMD Secure Virtual Machine */
+  IMPLEMENT_CRREG_ACCESSORS(LMSLE,   13); /* AMD Long Mode Segment Limit */
+  IMPLEMENT_CRREG_ACCESSORS(FFXSR,   14);
+  IMPLEMENT_CRREG_ACCESSORS(TCE,     15); /* AMD Translation Cache Extensions */
+  IMPLEMENT_CRREG_ACCESSORS(MCOMMIT, 17); /* MCOMMIT instruction support (AMD) - not implemented */
+  IMPLEMENT_CRREG_ACCESSORS(INTERRUPTIBLE_WBINVD, 18); /* not implemented */
 #endif
 
   BX_CPP_INLINE Bit32u get32() const { return val; }
@@ -254,6 +271,8 @@ const unsigned XSAVE_HEADER_LEN             = 64;
 const unsigned XSAVE_FPU_STATE_LEN          = 160;
 const unsigned XSAVE_SSE_STATE_LEN          = 256;
 const unsigned XSAVE_YMM_STATE_LEN          = 256;
+const unsigned XSAVE_BNDREGS_STATE_LEN      = 64;     // deprecated
+const unsigned XSAVE_BNDCFG_STATE_LEN       = 64;     // deprecated
 const unsigned XSAVE_OPMASK_STATE_LEN       = 64;
 const unsigned XSAVE_ZMM_HI256_STATE_LEN    = 512;
 const unsigned XSAVE_HI_ZMM_STATE_LEN       = 1024;
@@ -273,6 +292,8 @@ const unsigned XSAVE_APX_STATE_LEN          = 128;
 const unsigned XSAVE_FPU_STATE_OFFSET       = 0;
 const unsigned XSAVE_SSE_STATE_OFFSET       = 160;
 const unsigned XSAVE_YMM_STATE_OFFSET       = 576;
+const unsigned XSAVE_BNDREGS_STATE_OFFSET   = 960;
+const unsigned XSAVE_BNDCFG_STATE_OFFSET    = 1024;
 const unsigned XSAVE_OPMASK_STATE_OFFSET    = 1088;
 const unsigned XSAVE_ZMM_HI256_STATE_OFFSET = 1152;
 const unsigned XSAVE_HI_ZMM_STATE_OFFSET    = 1664;
@@ -416,9 +437,9 @@ typedef struct msr {
          if (! IsValidPhyAddr(new_val)) return 0;
          break;
        default:
-         if ((val64 ^ new_val) & reserved) return 0;
          break;
      }
+     if ((val64 ^ new_val) & reserved) return 0;
      val64 = new_val;
      return 1;
   }

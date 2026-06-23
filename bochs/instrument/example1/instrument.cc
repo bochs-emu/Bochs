@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2006-2015 Stanislav Shwartsman
+//   Copyright (c) 2006-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -122,22 +122,17 @@ void bxInstrumentation::branch_taken(bx_address new_eip)
   target_linear = BX_CPU(cpu_id)->get_laddr(BX_SEG_REG_CS, new_eip);
 }
 
-void bxInstrumentation::bx_instr_cnear_branch_taken(bx_address branch_eip, bx_address new_eip)
+void bxInstrumentation::bx_instr_near_branch_taken(unsigned what, bx_address branch_eip, bx_address new_eip)
 {
   branch_taken(new_eip);
 }
 
-void bxInstrumentation::bx_instr_cnear_branch_not_taken(bx_address branch_eip)
+void bxInstrumentation::bx_instr_near_branch_not_taken(bx_address branch_eip)
 {
   if (!active || !ready) return;
 
   is_branch = 1;
   is_taken = 0;
-}
-
-void bxInstrumentation::bx_instr_ucnear_branch(unsigned what, bx_address branch_eip, bx_address new_eip)
-{
-  branch_taken(new_eip);
 }
 
 void bxInstrumentation::bx_instr_far_branch(unsigned what, Bit16u prev_cs, bx_address prev_eip, Bit16u new_cs, bx_address new_eip)

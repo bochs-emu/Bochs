@@ -460,6 +460,16 @@ void BX_CPU_C::handleFpuMmxModeChange(void)
   updateFetchModeMask(); /* FPU_MMX_OK changed */
 }
 
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxProtectedModeRequired(bxInstruction_c *i)
+{
+  if (! protected_mode())
+    exception(BX_UD_EXCEPTION, 0);
+
+  BX_ASSERT(0);
+
+  BX_NEXT_TRACE(i); // keep compiler happy
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoFPU(bxInstruction_c *i)
 {
   if (BX_CPU_THIS_PTR cr0.get_EM() || BX_CPU_THIS_PTR cr0.get_TS())
@@ -643,6 +653,10 @@ void BX_CPU_C::handleCpuContextChange(void)
 #if BX_SUPPORT_AVX
   handleAvxModeChange();
 #endif
+#endif
+
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR linaddr_width = BX_CPU_THIS_PTR cr4.get_LA57() ? 57 : 48;
 #endif
 }
 
@@ -865,6 +879,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
     BX_ERROR(("%s: not recognized in real mode !", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+    set_fred_event_info_and_data(BX_EVENT_SYSENTER, BX_EVENT_OTHER, false, i->ilen());
+    FRED_EventDelivery(BX_EVENT_SYSENTER, BX_EVENT_OTHER, 0);
+    BX_NEXT_TRACE(i);
+  }
+#endif
+
   if ((BX_CPU_THIS_PTR msr.sysenter_cs_msr & BX_SELECTOR_RPL_MASK) == 0) {
     BX_ERROR(("SYSENTER with zero sysenter_cs_msr !"));
     exception(BX_GP_EXCEPTION, 0);
@@ -903,16 +926,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 
   setup_flat_CS(0, long_mode());
 
-#if BX_SUPPORT_X86_64
-  handleCpuModeChange(); // mode change could happen only when in long_mode()
-#else
-  updateFetchModeMask(/* CS reloaded */);
-#endif
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-  BX_CPU_THIS_PTR alignment_check_mask = 0; // CPL=0
-#endif
-
   parse_selector((BX_CPU_THIS_PTR msr.sysenter_cs_msr + 8) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
@@ -941,6 +954,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 6
+
+#if BX_SUPPORT_X86_64 && BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+    BX_ERROR(("%s: Not supported when FRED is enabled in CR4", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
   if (real_mode() || CPL != 0) {
     BX_ERROR(("SYSEXIT from real mode or with CPL<>0 !"));
     exception(BX_GP_EXCEPTION, 0);
@@ -989,14 +1010,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSEXIT(bxInstruction_c *i)
     EIP = EDX;
   }
 
-#if BX_SUPPORT_X86_64
-  handleCpuModeChange(); // mode change could happen only when in long_mode()
-#else
-  updateFetchModeMask(/* CS reloaded */);
-#endif
-
-  handleAlignmentCheck(/* CPL change */);
-
   parse_selector(((BX_CPU_THIS_PTR msr.sysenter_cs_msr + (i->os64L() ? 40:24)) & BX_SELECTOR_RPL_MASK) | 3,
             &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
@@ -1030,6 +1043,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+    set_fred_event_info_and_data(BX_EVENT_SYSCALL, BX_EVENT_OTHER, false, i->ilen());
+    FRED_EventDelivery(BX_EVENT_SYSENTER, BX_EVENT_OTHER, 0);
+    BX_NEXT_TRACE(i);
+  }
+#endif
+
 #if BX_SUPPORT_CET
   unsigned old_CPL = CPL;
 #endif
@@ -1053,12 +1074,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 
     setup_flat_CS(0, true); // CPL0, long mode
 
-    handleCpuModeChange(); // mode change could only happen when in long_mode()
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-    BX_CPU_THIS_PTR alignment_check_mask = 0; // CPL=0
-#endif
-
     // set up SS segment, flat, 64-bit DPL=0
     parse_selector(((BX_CPU_THIS_PTR msr.star >> 32) + 8) & BX_SELECTOR_RPL_MASK,
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
@@ -1081,12 +1096,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
 
     setup_flat_CS(0, false); // CPL0, 32-bit mode
-
-    updateFetchModeMask(/* CS reloaded */);
-
-#if BX_SUPPORT_ALIGNMENT_CHECK
-    BX_CPU_THIS_PTR alignment_check_mask = 0; // CPL=0
-#endif
 
     // set up SS segment, flat, 32-bit DPL=0
     parse_selector(((BX_CPU_THIS_PTR msr.star >> 32) + 8) & BX_SELECTOR_RPL_MASK,
@@ -1118,6 +1127,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 {
 #if BX_CPU_LEVEL >= 5
+
+#if BX_SUPPORT_X86_64 && BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+    BX_ERROR(("%s: Not supported when FRED is enabled in CR4", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
   bx_address temp_RIP;
 
   BX_DEBUG(("Execute SYSRET instruction"));
@@ -1166,10 +1183,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
       temp_RIP = ECX;
     }
 
-    handleCpuModeChange(); // mode change could only happen when in long64 mode
-
-    handleAlignmentCheck(/* CPL change */);
-
     parse_selector((Bit16u)(((BX_CPU_THIS_PTR msr.star >> 48) + 8) | 3),
                        &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
@@ -1191,10 +1204,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 
     setup_flat_CS(3, false); // CPL3, 32-bit mode
 
-    updateFetchModeMask(/* CS reloaded */);
-
-    handleAlignmentCheck(/* CPL change */);
-
     parse_selector((Bit16u)(((BX_CPU_THIS_PTR msr.star >> 48) + 8) | 3),
                      &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
@@ -1208,8 +1217,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
     BX_CPU_THIS_PTR assert_IF();
     temp_RIP = ECX;
   }
-
-  handleCpuModeChange();
 
   RIP = temp_RIP;
 
@@ -1228,14 +1235,26 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
 
 #if BX_SUPPORT_X86_64
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SWAPGS(bxInstruction_c *i)
+void BX_CPU_C::swapgs()
 {
-  if(CPL != 0)
-    exception(BX_GP_EXCEPTION, 0);
-
   Bit64u temp_GS_base = MSR_GSBASE;
   MSR_GSBASE = BX_CPU_THIS_PTR msr.kernelgsbase;
   BX_CPU_THIS_PTR msr.kernelgsbase = temp_GS_base;
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SWAPGS(bxInstruction_c *i)
+{
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+    BX_ERROR(("%s: Not supported when FRED is enabled in CR4", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
+  if(CPL != 0)
+    exception(BX_GP_EXCEPTION, 0);
+
+  swapgs();
 
   BX_NEXT_INSTR(i);
 }
@@ -1407,6 +1426,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRPKRU(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
 
   BX_CPU_THIS_PTR set_PKeys(EAX, BX_CPU_THIS_PTR pkrs);
+
+  TLB_flush();
 
   BX_NEXT_TRACE(i);
 }

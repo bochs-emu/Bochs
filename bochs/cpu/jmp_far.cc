@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2019 Stanislav Shwartsman
+//   Copyright (c) 2005-2025 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -75,6 +75,12 @@ BX_CPU_C::jump_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         BX_ERROR(("jump_protected: gate type %u unsupported in long mode", (unsigned) descriptor.type));
         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
       }
+#if BX_SUPPORT_FRED
+      if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+        BX_ERROR(("jump_protected: call gate not allowed when FRED is enabled"));
+        exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+      }
+#endif
       // gate must be present else #NP(gate selector)
       if (! IS_PRESENT(descriptor)) {
         BX_ERROR(("jump_protected: call gate not present!"));

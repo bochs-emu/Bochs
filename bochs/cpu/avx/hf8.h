@@ -61,7 +61,7 @@ BX_CPP_INLINE float_hf8 pack_float_hf8(int sign, int exp, int signif) { return (
 static const int fp16_to_hf8_exp_rebias = BX_FP16_BIAS - BX_HF8_BIAS;
 
 // convert E4M3 HF8 number to half precision floating point value (fp16)
-BX_CPP_INLINE float16 convert_hf8_to_fp16(float_hf8 a, struct softfloat_status_t *status)
+BX_CPP_INLINE float16 convert_hf8_to_fp16(float_hf8 a)
 {
   int sign = hf8_sign(a);
   int exp = hf8_exp(a);
@@ -71,7 +71,6 @@ BX_CPP_INLINE float16 convert_hf8_to_fp16(float_hf8 a, struct softfloat_status_t
 
   if (! exp && signif) {
     // convert denormal into a normal fp16 number
-    softfloat_raiseFlags(status, softfloat_flag_denormal);
     int lzcnt = (signif > 0x1) ? 1 : 2;
         lzcnt = (signif > 0x3) ? 0 : lzcnt;
     exp_norm -= lzcnt;
@@ -101,7 +100,7 @@ BX_CPP_INLINE float16 convert_hf8_to_fp16(float_hf8 a, struct softfloat_status_t
 // DAZ is not obeyed and always assumed DAZ==0. FTZ is not obeyed and always assumed FTZ==0.
 // All MXCSR mask bits DM, IM, OM, PM, UM are implicitly set.
 
-BX_CPP_INLINE float_hf8 convert_truncate_fp16_to_hf8_bias(float16 a, Bit8u bias, bool saturate_overflow, struct softfloat_status_t *status)
+BX_CPP_INLINE float_hf8 convert_truncate_fp16_to_hf8_bias(float16 a, Bit8u bias, bool saturate_overflow)
 {
   int aSign   = signF16UI(a);
   Bit8s aExp  = expF16UI(a);
@@ -116,7 +115,6 @@ BX_CPP_INLINE float_hf8 convert_truncate_fp16_to_hf8_bias(float16 a, Bit8u bias,
     if (! aSig)
       goto overflow;   // a is infinity
 
-    softfloat_raiseFlags(status, softfloat_flag_invalid);
     return pack_float_hf8(aSign, 0xF, 0x7);
   }
 
@@ -134,7 +132,6 @@ overflow:
 
   // handle input denormal or zero
   if (! aExp) {
-    if (aSig) softfloat_raiseFlags(status, softfloat_flag_denormal);
     signif = (aSig + (int(bias) << 7));
     signif = signif >> (fp16_to_hf8_exp_rebias + 7);
     return pack_float_hf8(aSign, 0, signif);
@@ -158,7 +155,7 @@ overflow:
 }
 
 // Convert half precision floating point number (fp16) to E4M3 HF8 number
-BX_CPP_INLINE float_hf8 convert_ne_fp16_to_hf8(float16 a, bool saturate_overflow, struct softfloat_status_t *status)
+BX_CPP_INLINE float_hf8 convert_ne_fp16_to_hf8(float16 a, bool saturate_overflow)
 {
   int aSign   = signF16UI(a);
   Bit8s aExp  = expF16UI(a);
@@ -170,7 +167,6 @@ BX_CPP_INLINE float_hf8 convert_ne_fp16_to_hf8(float16 a, bool saturate_overflow
     if (! aSig)
       goto overflow;   // a is infinity
 
-    softfloat_raiseFlags(status, softfloat_flag_invalid);
     return pack_float_hf8(aSign, 0xF, 0x7);
   }
 
@@ -184,10 +180,9 @@ overflow:
       return pack_float_hf8(aSign, 0xF, 0x7);
   }
 
-  // raise denormal or handle zero
-  if (! aExp) {
-    if (aSig) softfloat_raiseFlags(status, softfloat_flag_denormal);
-    else return pack_float_hf8(aSign, 0, 0);
+  // handle zero
+  if (! aExp && !aSig) {
+    return pack_float_hf8(aSign, 0, 0);
   }
 
   // underflow

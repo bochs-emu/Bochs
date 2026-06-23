@@ -111,7 +111,11 @@ float64 f64_mulAdd(float64 a, float64 b, float64 c, uint8_t op, struct softfloat
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if (! expA) {
-        if (! sigA) goto zeroProd;
+        if (! sigA) {
+            if (sigB && !expB)
+                softfloat_raiseFlags(status, softfloat_flag_denormal);
+            goto zeroProd;
+        }
         softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalF64Sig(sigA);
         expA = normExpSig.exp;

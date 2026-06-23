@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -28,7 +28,6 @@
 #include "bochs.h"
 #include "plugin.h"
 #include "param_names.h"
-#include "pc_system.h"
 #include "memory/memory-bochs.h"
 #include "gui/siminterface.h"
 #include "gui/gui.h"
@@ -125,16 +124,20 @@ class cdrom_base_c;
   else if (io_len == 4) \
     BX_DEBUG(("write PCI register 0x%02X value 0x%08X (len=4)", addr, value));
 
-enum {
-  BX_PCI_BAR_TYPE_NONE = 0,
-  BX_PCI_BAR_TYPE_MEM  = 1,
-  BX_PCI_BAR_TYPE_IO   = 2
-};
-
 #define BX_PCI_ADVOPT_NOACPI    0x01
 #define BX_PCI_ADVOPT_NOHPET    0x02
 #define BX_PCI_ADVOPT_ALTDEVMAP 0x04
 #define BX_PCI_ADVOPT_NOAGP     0x08
+#define BX_PCI_ADVOPT_NOFDC     0x10
+
+enum {
+  BX_PCI_BAR_TYPE_NONE = 0,
+  BX_PCI_BAR_TYPE_IO,
+  BX_PCI_BAR_TYPE_MEM,
+  BX_PCI_BAR_TYPE_MEMHI
+};
+
+#define PCI_ROM_BAR 6
 
 typedef struct {
   Bit8u  type;
@@ -156,8 +159,8 @@ typedef struct {
 
 class BOCHSAPI bx_pci_device_c : public bx_devmodel_c {
 public:
-  bx_pci_device_c(): pci_rom(NULL), pci_rom_size(0) {
-    for (int i = 0; i < 6; i++) memset(&pci_bar[i], 0, sizeof(bx_pci_bar_t));
+  bx_pci_device_c(): pci_rom(NULL) {
+    for (int i = 0; i < 7; i++) memset(&pci_bar[i], 0, sizeof(bx_pci_bar_t));
   }
   virtual ~bx_pci_device_c() {
     if (pci_rom != NULL) delete [] pci_rom;
@@ -172,10 +175,10 @@ public:
                      Bit8u headt, Bit8u intpin);
   void init_bar_io(Bit8u num, Bit16u size, bx_read_handler_t rh,
                    bx_write_handler_t wh, const Bit8u *mask);
-  void init_bar_mem(Bit8u num, Bit32u size, memory_handler_t rh, memory_handler_t wh);
+  void init_bar_mem(Bit8u num, Bit32u size, memory_handler_t rh, memory_handler_t wh, bool is64bit = false);
   void register_pci_state(bx_list_c *list);
-  void after_restore_pci_state(memory_handler_t mem_read_handler);
-  void load_pci_rom(const char *path);
+  void after_restore_pci_state(void);
+  void load_pci_rom(const char *path, memory_handler_t mem_read_handler);
 
   void set_name(const char *name) {pci_name = name;}
   const char* get_name(void) {return pci_name;}
@@ -183,11 +186,8 @@ public:
 protected:
   const char *pci_name;
   Bit8u pci_conf[256];
-  bx_pci_bar_t pci_bar[6];
+  bx_pci_bar_t pci_bar[7];
   Bit8u  *pci_rom;
-  Bit32u pci_rom_address;
-  Bit32u pci_rom_size;
-  memory_handler_t pci_rom_read_handler;
 };
 #endif
 
@@ -450,10 +450,10 @@ public:
   bool register_pci_handlers(bx_pci_device_c *device, Bit8u *devfunc,
                              const char *name, const char *descr, Bit8u bus = 0);
   bool pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
-                        Bit32u *addr, Bit8u *pci_conf, unsigned size);
+                        Bit32u *addr, Bit8u *pci_conf, unsigned size, bool mae);
   bool pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_write_handler_t f2,
                        Bit32u *addr, Bit8u *pci_conf, unsigned size,
-                       const Bit8u *iomask, const char *name);
+                       const Bit8u *iomask, const char *name, bool ioae);
 #endif
   bool is_agp_present();
 

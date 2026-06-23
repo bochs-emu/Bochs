@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  I/O port handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -219,6 +219,8 @@ void bx_devices_c::init(BX_MEM_C *newmem)
         } else {
           BX_ERROR(("Disabling AGP not supported by PCI chipset"));
         }
+      } else if (!strcmp(argv[i], "nofdc")) {
+        pci.advopts |= BX_PCI_ADVOPT_NOFDC;
       } else {
         BX_ERROR(("Unknown advanced PCI option '%s'", argv[i]));
       }
@@ -231,7 +233,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     if ((chipset == BX_PCI_CHIPSET_I440FX) ||
         (chipset == BX_PCI_CHIPSET_I440BX)) {
       // UHCI is a part of the PIIX3/PIIX4, so load / enable it
-      if (!PLUG_device_present("usb_uhci")) {
+      if (!PLUG_device_present("usb_uhci", false)) {
         SIM->opt_plugin_ctrl("usb_uhci", 1);
       }
       SIM->get_param_bool(BXPN_UHCI_ENABLED)->set(1);
@@ -254,7 +256,17 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   if (pluginVgaDevice == &stubVga) {
     PLUG_load_plugin_var(BX_PLUGIN_VGA, PLUGTYPE_VGA);
   }
-  PLUG_load_plugin(floppy, PLUGTYPE_CORE);
+#if BX_SUPPORT_PCI
+  if (!pci.enabled || ((pci.advopts & BX_PCI_ADVOPT_NOFDC) == 0) ||
+      (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() != BX_FDD_NONE) ||
+      (SIM->get_param_enum(BXPN_FLOPPYB_DEVTYPE)->get() != BX_FDD_NONE)) {
+#endif
+    PLUG_load_plugin(floppy, PLUGTYPE_STANDARD);
+#if BX_SUPPORT_PCI
+  } else {
+    BX_INFO(("FDC device loading disabled"));
+  }
+#endif
 
 #if BX_SUPPORT_APIC
   PLUG_load_plugin(ioapic, PLUGTYPE_STANDARD);
@@ -336,13 +348,21 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   DEV_cmos_set_reg(0x34, (Bit8u) (extended_memory_in_64k & 0xff));
   DEV_cmos_set_reg(0x35, (Bit8u) ((extended_memory_in_64k >> 8) & 0xff));
 
-  Bit64u memory_above_4gb = (mem->get_memory_len() > BX_CONST64(0x100000000)) ?
-                            (mem->get_memory_len() - BX_CONST64(0x100000000)) : 0;
-  if (memory_above_4gb) {
-    DEV_cmos_set_reg(0x5b, (Bit8u)(memory_above_4gb >> 16));
-    DEV_cmos_set_reg(0x5c, (Bit8u)(memory_above_4gb >> 24));
-    DEV_cmos_set_reg(0x5d, memory_above_4gb >> 32);
-  }
+  // Report memory above 4GB via the QEMU-compatible CMOS extension at 0x5b-0x5d.
+  // Legacy rombios uses these registers to construct the E820 entry for RAM above 4GB.
+  //
+  // Important: for configurations that reserve a 3GB-4GB PCI MMIO hole, RAM above 3GB
+  // is remapped above 4GB, so the amount of RAM above 4GB is (total_ram - 3GB), not
+  // merely (total_ram - 4GB).
+  Bit64u memory_len = mem->get_memory_len();
+  Bit64u memory_above_4gb = (memory_len > BX_CONST64(0xC0000000)) ?
+                            (memory_len - BX_CONST64(0xC0000000)) : 0;
+
+  // Stored in units of 64KB.
+  Bit64u memory_above_4gb_in_64k = (memory_above_4gb >> 16);
+  DEV_cmos_set_reg(0x5b, (Bit8u)(memory_above_4gb_in_64k & 0xff));
+  DEV_cmos_set_reg(0x5c, (Bit8u)((memory_above_4gb_in_64k >> 8) & 0xff));
+  DEV_cmos_set_reg(0x5d, (Bit8u)((memory_above_4gb_in_64k >> 16) & 0xff));
 
   options = SIM->get_param_string(BXPN_ROM_OPTIONS)->getptr();
   argc = bx_split_option_list("ROM image options", options, argv, 16);
@@ -354,6 +374,27 @@ void bx_devices_c::init(BX_MEM_C *newmem)
     }
     free(argv[i]);
     argv[i] = NULL;
+  }
+
+  // generate CMOS values for boot sequence if not using a CMOS image
+  if (!SIM->get_param_bool(BXPN_CMOSIMAGE_ENABLED)->get()) {
+    // Set the "non-extended" boot device (first floppy or first hard disk).
+    if (SIM->get_param_enum(BXPN_BOOTDRIVE1)->get() != BX_BOOT_FLOPPYA) {
+      // system boot sequence C:, A:
+      DEV_cmos_set_reg(0x2d, DEV_cmos_get_reg(0x2d) & 0xdf);
+    } else { // 'a'
+      // system boot sequence A:, C:
+      DEV_cmos_set_reg(0x2d, DEV_cmos_get_reg(0x2d) | 0x20);
+    }
+
+    // Set the "extended" boot sequence, bytes 0x38 and 0x3D (needed for cdrom booting)
+    BX_INFO(("Using boot sequence %s, %s, %s",
+             SIM->get_param_enum(BXPN_BOOTDRIVE1)->get_selected(),
+             SIM->get_param_enum(BXPN_BOOTDRIVE2)->get_selected(),
+             SIM->get_param_enum(BXPN_BOOTDRIVE3)->get_selected()));
+    DEV_cmos_set_reg(0x3d, SIM->get_param_enum(BXPN_BOOTDRIVE1)->get() |
+                           (SIM->get_param_enum(BXPN_BOOTDRIVE2)->get() << 4));
+
   }
 
   if (timer_handle != BX_NULL_TIMER_HANDLE) {
@@ -1487,19 +1528,24 @@ bool bx_devices_c::register_pci_handlers(bx_pci_device_c *dev,
 }
 
 bool bx_devices_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_handler_t f2,
-                                       Bit32u *addr, Bit8u *pci_conf, unsigned size)
+                                       Bit32u *addr, Bit8u *pci_conf, unsigned size, bool mae)
 {
-  Bit32u oldbase = *addr, newbase;
+  Bit32u oldbase = *addr, newbase = 0;
   Bit32u mask = ~(size - 1);
   Bit8u pci_flags = pci_conf[0x00] & 0x0f;
-  if ((pci_flags & 0x06) > 0) {
-    BX_ERROR(("Ignoring PCI base memory flag 0x%02x for now", pci_flags));
+  if ((pci_flags & 0x06) == 0x04) {
+    Bit32u tmpaddr = ReadHostDWordFromLittleEndian((Bit32u*)&pci_conf[4]);
+    if (tmpaddr != 0) {
+      BX_PANIC(("64-bit PCI BAR not supported yet (high = 0x%08x)", tmpaddr));
+    }
   }
   pci_conf[0x00] &= (mask & 0xf0);
   pci_conf[0x01] &= (mask >> 8) & 0xff;
   pci_conf[0x02] &= (mask >> 16) & 0xff;
   pci_conf[0x03] &= (mask >> 24) & 0xff;
-  newbase = ReadHostDWordFromLittleEndian((Bit32u*)pci_conf);
+  if (mae) {
+    newbase = ReadHostDWordFromLittleEndian((Bit32u*)pci_conf);
+  }
   pci_conf[0x00] |= pci_flags;
   if (newbase != mask && newbase != oldbase) { // skip PCI probe
     if (oldbase > 0) {
@@ -1516,15 +1562,17 @@ bool bx_devices_c::pci_set_base_mem(void *this_ptr, memory_handler_t f1, memory_
 
 bool bx_devices_c::pci_set_base_io(void *this_ptr, bx_read_handler_t f1, bx_write_handler_t f2,
                                       Bit32u *addr, Bit8u *pci_conf, unsigned size,
-                                      const Bit8u *iomask, const char *name)
+                                      const Bit8u *iomask, const char *name, bool ioae)
 {
   unsigned i;
-  Bit32u oldbase = *addr, newbase;
+  Bit32u oldbase = *addr, newbase = 0;
   Bit16u mask = ~(size - 1);
   Bit8u pci_flags = pci_conf[0x00] & 0x03;
   pci_conf[0x00] &= (mask & 0xfc);
   pci_conf[0x01] &= (mask >> 8);
-  newbase = ReadHostDWordFromLittleEndian((Bit32u*)pci_conf);
+  if (ioae) {
+    newbase = ReadHostDWordFromLittleEndian((Bit32u*)pci_conf);
+  }
   pci_conf[0x00] |= pci_flags;
   if (((newbase & 0xfffc) != mask) && (newbase != oldbase)) { // skip PCI probe
     if (oldbase > 0) {
@@ -1581,10 +1629,20 @@ void bx_pci_device_c::init_bar_io(Bit8u num, Bit16u size, bx_read_handler_t rh, 
   }
 }
 
-void bx_pci_device_c::init_bar_mem(Bit8u num, Bit32u size, memory_handler_t rh, memory_handler_t wh)
+void bx_pci_device_c::init_bar_mem(Bit8u num, Bit32u size, memory_handler_t rh, memory_handler_t wh, bool is64bit)
 {
-  if (num < 6) {
+  if (is64bit) {
+    if ((num < 6) && ((num & 1) == 0)) {
+      pci_bar[num].type = BX_PCI_BAR_TYPE_MEM;
+      pci_bar[num + 1].type = BX_PCI_BAR_TYPE_MEMHI;
+    } else {
+      BX_ERROR(("Invalid BAR for 64-bit selected"));
+      return;
+    }
+  } else {
     pci_bar[num].type = BX_PCI_BAR_TYPE_MEM;
+  }
+  if (num < 7) {
     pci_bar[num].size = size;
     pci_bar[num].mem.rh = rh;
     pci_bar[num].mem.wh = wh;
@@ -1597,22 +1655,26 @@ void bx_pci_device_c::register_pci_state(bx_list_c *list)
 
   new bx_shadow_data_c(list, "pci_conf", pci_conf, 256, 1);
   bx_list_c *pci_bars = new bx_list_c(list, "pci_bars", "PCI base address registers");
-  for (Bit8u i = 0; i < 6; i++) {
+  for (Bit8u i = 0; i < 7; i++) {
     sprintf(name, "addr%u", i);
     new bx_shadow_num_c(pci_bars, name, &pci_bar[i].addr, BASE_HEX);
   }
 }
 
-void bx_pci_device_c::after_restore_pci_state(memory_handler_t mem_read_handler)
+void bx_pci_device_c::after_restore_pci_state()
 {
-  for (int i = 0; i < 6; i++) {
+  for (int i = 0; i < 7; i++) {
     if ((pci_bar[i].type != BX_PCI_BAR_TYPE_NONE) && (pci_bar[i].addr > 0)) {
       if ((pci_bar[i].type == BX_PCI_BAR_TYPE_MEM) &&
           ((pci_conf[0x04] & 0x02) != 0)) {
         if (DEV_register_memory_handlers(this, pci_bar[i].mem.rh,
                                          pci_bar[i].mem.wh, pci_bar[i].addr,
                                          pci_bar[i].addr + pci_bar[i].size - 1)) {
-          BX_INFO(("BAR #%d: mem base address = 0x%08x", i, pci_bar[i].addr));
+          if (i < PCI_ROM_BAR) {
+            BX_INFO(("BAR #%d: mem base address = 0x%08x", i, pci_bar[i].addr));
+          } else {
+            BX_INFO(("new ROM address: 0x%08x", pci_bar[PCI_ROM_BAR].addr));
+          }
           pci_bar_change_notify();
         }
       } else if ((pci_bar[i].type == BX_PCI_BAR_TYPE_IO) &&
@@ -1636,18 +1698,14 @@ void bx_pci_device_c::after_restore_pci_state(memory_handler_t mem_read_handler)
       }
     }
   }
-  if (pci_rom_size > 0) {
-    if (DEV_pci_set_base_mem(this, mem_read_handler, NULL, &pci_rom_address, &pci_conf[0x30], pci_rom_size)) {
-      BX_INFO(("new ROM address: 0x%08x", pci_rom_address));
-    }
-  }
 }
 
-void bx_pci_device_c::load_pci_rom(const char *path)
+void bx_pci_device_c::load_pci_rom(const char *path, memory_handler_t mem_read_handler)
 {
   struct stat stat_buf;
   int fd, ret;
   unsigned long size, max_size;
+  Bit32u pci_rom_size;
 
   if (*path == '\0') {
     BX_PANIC(("PCI ROM image undefined"));
@@ -1697,6 +1755,8 @@ void bx_pci_device_c::load_pci_rom(const char *path)
   }
   close(fd);
 
+  init_bar_mem(PCI_ROM_BAR, pci_rom_size, mem_read_handler, NULL);
+
   BX_INFO(("loaded PCI ROM '%s' (size=%u / PCI=%uk)", path, (unsigned) stat_buf.st_size, pci_rom_size >> 10));
 }
 
@@ -1705,6 +1765,7 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
 {
   Bit8u bnum, value8, oldval;
   Bit8u bar_change = 0;
+  unsigned i;
 
   // ignore readonly registers
   if ((address < 4) || ((address > 7) && (address < 12)) || (address == 14) ||
@@ -1723,19 +1784,21 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
           value = (value & ~(pci_bar[bnum].size - 1)) | 0x01;
           bar_change = 2;
         }
-      } else {
+      } else if (pci_bar[bnum].type == BX_PCI_BAR_TYPE_MEM) {
         if (value >= 0xfffffff0) { // BAR reset
           value = (value & ~(pci_bar[bnum].size - 1)) | (pci_conf[address & ~3] & 0x0f);
           bar_change = 2;
         }
+      } else if (value == 0xffffffff) {
+        bar_change = 2;
       }
-      for (unsigned i=0; i<io_len; i++) {
+      for (i = 0; i < io_len; i++) {
         value8 = (value >> (i*8)) & 0xff;
         oldval = pci_conf[address+i];
         if (((address+i) & 0x03) == 0) {
           if (pci_bar[bnum].type == BX_PCI_BAR_TYPE_IO) {
             value8 = (value8 & 0xfc) | 0x01;
-          } else {
+          } else if (pci_bar[bnum].type == BX_PCI_BAR_TYPE_MEM)  {
             value8 = (value8 & 0xf0) | (oldval & 0x0f);
           }
         }
@@ -1746,38 +1809,41 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
         if (pci_bar[bnum].type == BX_PCI_BAR_TYPE_IO) {
           if (DEV_pci_set_base_io(this, pci_bar[bnum].io.rh, pci_bar[bnum].io.wh,
                                   &pci_bar[bnum].addr, &pci_conf[0x10 + bnum * 4],
-                                  pci_bar[bnum].size, pci_bar[bnum].io.mask, pci_name)) {
+                                  pci_bar[bnum].size, pci_bar[bnum].io.mask, pci_name, pci_conf[0x04] & 1)) {
             BX_INFO(("BAR #%d: i/o base address = 0x%04x", bnum, pci_bar[bnum].addr));
             pci_bar_change_notify();
           }
         } else {
+          if (pci_bar[bnum].type == BX_PCI_BAR_TYPE_MEMHI) {
+            bnum &= ~1;
+          }
           if (DEV_pci_set_base_mem(this, pci_bar[bnum].mem.rh, pci_bar[bnum].mem.wh,
                                    &pci_bar[bnum].addr, &pci_conf[0x10 + bnum * 4],
-                                   pci_bar[bnum].size)) {
+                                   pci_bar[bnum].size, (pci_conf[0x04] & 2) != 0)) {
             BX_INFO(("BAR #%d: mem base address = 0x%08x", bnum, pci_bar[bnum].addr));
             pci_bar_change_notify();
           }
         }
       }
     }
-  } else if (((address & 0xfc) == 0x30) && (pci_rom_size > 0)) {
+  } else if (((address & 0xfc) == 0x30) && (pci_bar[PCI_ROM_BAR].size > 0)) {
     BX_DEBUG_PCI_WRITE(address, value, io_len);
     if (value >= 0xfffff800) { // BAR reset
-      value &= ~(pci_rom_size - 1);
+      value &= ~(pci_bar[PCI_ROM_BAR].size - 1);
       bar_change = 2;
     }
     value &= (0xfffff801 >> ((address & 0x03) * 8));
-    for (unsigned i=0; i<io_len; i++) {
+    for (i = 0; i < io_len; i++) {
       value8 = (value >> (i*8)) & 0xff;
       oldval = pci_conf[address+i];
       bar_change |= (Bit8u)(value8 != oldval);
       pci_conf[address+i] = value8;
     }
     if (bar_change == 1) {
-      if (DEV_pci_set_base_mem(this, pci_rom_read_handler, NULL,
-                               &pci_rom_address, &pci_conf[0x30],
-                               pci_rom_size)) {
-        BX_INFO(("new ROM address = 0x%08x", pci_rom_address));
+      if (DEV_pci_set_base_mem(this, pci_bar[PCI_ROM_BAR].mem.rh, NULL,
+                                   &pci_bar[PCI_ROM_BAR].addr, &pci_conf[0x30],
+                                   pci_bar[PCI_ROM_BAR].size, (pci_conf[0x04] & 2) != 0)) {
+        BX_INFO(("new ROM address = 0x%08x", pci_bar[PCI_ROM_BAR].addr));
       }
     }
   } else if (address == 0x3c) {
@@ -1787,6 +1853,39 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
         BX_INFO(("new IRQ line = %d", value8));
       }
       pci_conf[0x3c] = value8;
+    }
+  } else if ((address == 0x04) && ((pci_conf[0x0e] & 0x03) == 0)) {
+    oldval = pci_conf[0x04];
+    pci_write_handler(0x04, value, io_len);
+    value8 = pci_conf[0x04];
+    if ((value8 & 1) != (oldval & 1)) {
+      for (i = 0; i < 6; i++) {
+        if (pci_bar[i].type == BX_PCI_BAR_TYPE_IO) {
+          if (DEV_pci_set_base_io(this, pci_bar[i].io.rh, pci_bar[i].io.wh,
+                                  &pci_bar[i].addr, &pci_conf[0x10 + i * 4],
+                                  pci_bar[i].size, pci_bar[i].io.mask, pci_name, value8 & 1)) {
+            BX_INFO(("BAR #%d: i/o base address = 0x%04x", i, pci_bar[i].addr));
+            pci_bar_change_notify();
+          }
+        }
+      }
+    }
+    if ((value8 & 2) != (oldval & 2)) {
+      for (i = 0; i < 7; i++) {
+        if (pci_bar[i].type == BX_PCI_BAR_TYPE_MEM) {
+          Bit8u baddr = (i < PCI_ROM_BAR) ? (0x10 + i * 4) : 0x30;
+          if (DEV_pci_set_base_mem(this, pci_bar[i].mem.rh, pci_bar[i].mem.wh,
+                                     &pci_bar[i].addr, &pci_conf[baddr],
+                                     pci_bar[i].size, (value & 2) != 0)) {
+            if (i < PCI_ROM_BAR) {
+              BX_INFO(("BAR #%d: mem base address = 0x%08x", i, pci_bar[i].addr));
+            } else {
+              BX_INFO(("new ROM address: 0x%08x", pci_bar[PCI_ROM_BAR].addr));
+            }
+            pci_bar_change_notify();
+          }
+        }
+      }
     }
   } else {
     pci_write_handler(address, value, io_len);

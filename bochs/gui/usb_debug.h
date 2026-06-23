@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C)      2025  Benjamin David Lunt
-//  Copyright (C) 2003-2025 The Bochs Project
+//  Copyright (C) 2003-2026 The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -87,6 +87,7 @@ struct QUEUE {
 extern const char *hc_param_str[];
 
 extern int usb_debug_type;
+extern int usb_debug_devid;
 extern bx_param_c *host_param;
 extern Bit32u pci_bar_address;
 
@@ -135,7 +136,7 @@ extern const char *ep_state_str[];
 extern const char *string_sct_str[];
 
 // USB debug API
-void usb_dbg_register_type(int type);
+void usb_dbg_register_type(int type, int devid);
 
 int usb_dbg_interface(int type, Bit64u param0, int param1, int param2);
 
@@ -146,10 +147,13 @@ int usb_debug_dialog(int break_type, Bit64u param0, int param1, int param2);
 Bit32u get_pci_bar_addr(bx_shadow_data_c *pci_conf, Bit8u bar_num);
 
 Bit32u usb_io_read(Bit16u addr, unsigned io_len);
+Bit32u usb_mmio_read_dword(const Bit32u address);
 
 void usb_io_write(Bit16u addr, Bit32u value, unsigned io_len);
 
-Bit32u xhci_read_dword(const Bit32u address);
+bx_list_c* get_usb_hc_state(int type);
+
+bx_param_enum_c* get_hc_port_device(Bit8u port);
 
 #endif  // BX_USB_DEBUGGER
 #endif  // BX_USB_DEBUG_H

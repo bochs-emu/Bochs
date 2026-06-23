@@ -1132,7 +1132,7 @@ static BX_CPP_INLINE float32 float32_reduce(float32 a, Bit8u scale, softfloat_st
   if (a == float32_negative_inf || a == float32_positive_inf)
     return 0;
 
-  float32 tmp = f32_roundToInt(a, scale, &status);
+  float32 tmp = f32_roundToInt(a, scale, softfloat_getRoundingMode(&status), false, &status);
   return f32_sub(a, tmp, &status);
 }
 
@@ -1141,7 +1141,7 @@ static BX_CPP_INLINE float64 float64_reduce(float64 a, Bit8u scale, softfloat_st
   if (a == float64_negative_inf || a == float64_positive_inf)
     return 0;
 
-  float64 tmp = f64_roundToInt(a, scale, &status);
+  float64 tmp = f64_roundToInt(a, scale, softfloat_getRoundingMode(&status), false, &status);
   return f64_sub(a, tmp, &status);
 }
 

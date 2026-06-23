@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -809,7 +809,7 @@ void bx_carbon_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     vgafont[i] = NULL;
   }
   CreateMenus();
-  CreateVGAFont(vga_charmap);
+  CreateVGAFont((Bit8u (*))vga_charmap);
   CreateTile();
   CreateWindows();
 
@@ -835,7 +835,7 @@ void bx_carbon_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   // loads keymap for x11
   if (SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get()) {
-    bx_keymap.loadKeymap(NULL); // I have no function to convert X windows symbols
+    bx_keymap.loadKeymap("x11", NULL); // I have no function to convert X windows symbols
   }
 }
 
@@ -1122,7 +1122,7 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       forceUpdate = 1;
   }
   if (charmap_updated == 1) {
-    CreateVGAFont(vga_charmap);
+    CreateVGAFont((Bit8u (*))vga_charmap);
     charmap_updated = 0;
     forceUpdate = 1;
   }
@@ -1387,7 +1387,7 @@ void bx_carbon_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight,
     if(fwidth != font_width || fheight != font_height) {
        font_width = fwidth;
        font_height = fheight;
-       CreateVGAFont(vga_charmap);
+       CreateVGAFont((Bit8u (*))vga_charmap);
     }
   }
 
@@ -1976,7 +1976,7 @@ static BxEvent * CarbonSiminterfaceCallback (void *theClass, BxEvent *event)
 {
   event->retcode = 0;  // default return code
 
-  if(event->type == BX_ASYNC_EVT_LOG_MSG || event->type == BX_SYNC_EVT_LOG_ASK)
+  if(event->type == BX_ASYNC_EVT_LOG_MSG || event->type == BX_SYNC_EVT_LOG_DLG)
   {
     DialogRef                     alertDialog;
     CFStringRef                   title;
@@ -2046,7 +2046,7 @@ static BxEvent * CarbonSiminterfaceCallback (void *theClass, BxEvent *event)
   switch(event->type)
   {
     case BX_SYNC_EVT_TICK:
-    case BX_SYNC_EVT_LOG_ASK:
+    case BX_SYNC_EVT_LOG_DLG:
       break;
     default:
       BX_INFO(("Callback tracing: Evt: %d (%s)", event->type,

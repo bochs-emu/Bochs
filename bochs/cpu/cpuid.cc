@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2014-2024 Stanislav Shwartsman
+//   Copyright (c) 2014-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -330,7 +330,7 @@ void bx_cpuid_t::get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_
     //    [2] AMX-COMPLEX
     //    [3] AMX-FP16
     //    [4] AMX-FP8
-    //    [5] AMX-TRANSPOSE
+    //    [5] AMX-TRANSPOSE (deprecated)
     //    [6] AMX-TF32 (FP19)
     //    [7] AMX-AVX512
     //    [8] AMX-MOVRS
@@ -343,8 +343,8 @@ void bx_cpuid_t::get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_
       leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_COMPLEX;
     if (is_cpu_extension_supported(BX_ISA_AMX_FP16))
       leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP16;
-    // AMX_FP8
-    // AMX_TRANSPOSE
+    if (is_cpu_extension_supported(BX_ISA_AMX_FP8))
+      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP8;
     if (is_cpu_extension_supported(BX_ISA_AMX_TF32))
       leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_TF32;
     if (is_cpu_extension_supported(BX_ISA_AMX_AVX512))
@@ -1167,11 +1167,7 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ecx(Bit32u extra) const
     ecx |= BX_CPUID_STD7_SUBLEAF0_ECX_LA57;
 #endif
 
-  // [17:17] reserved
-  // [18:18] reserved
-  // [19:19] reserved
-  // [20:20] reserved
-  // [21:21] reserved
+  // [21:17] MPX MAWAU - MPX user address-width adjust
 
   // [22:22] RDPID: Read Processor ID support
   if (is_cpu_extension_supported(BX_ISA_RDPID))
@@ -1344,13 +1340,18 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra) const
   //   [10:10]  Fast zero-length REP MOVSB - not supported, can be enabled through extra
   //   [11:11]  Fast zero-length REP STOSB - not supported, can be enabled through extra
   //   [12:12]  Fast zero-length REP CMPSB/SCASB - not supported, can be enabled through extra
-  //   [18:13]  reserved
+  //   [16:13]  reserved
+
+  //   [17:17]  Flexible Return and Event Delivery (FRED) support
+  //   [18:18]  LKGS instruction support
+  if (is_cpu_extension_supported(BX_ISA_FRED))
+    eax |= BX_CPUID_STD7_SUBLEAF1_EAX_FRED | BX_CPUID_STD7_SUBLEAF1_EAX_LKGS;
 
   //   [19:19]  WRMSRNS instruction
   if (is_cpu_extension_supported(BX_ISA_WRMSRNS))
     eax |= BX_CPUID_STD7_SUBLEAF1_EAX_WRMSRNS;
 
-  //   [20:20]  reserved
+  //   [20:20]  NMI source reporting - not implemented yet
 
   //   [21:21]  AMX-FP16 support
 #if BX_SUPPORT_AMX

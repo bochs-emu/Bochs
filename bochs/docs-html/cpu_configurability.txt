@@ -1073,6 +1073,19 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Comments:
    - if AVX10.2 (feature avx10_2) is enabled the avx10_2_movrs must be enabled as well
 
+- CPU Feature: fred
+
+ Enables FRED (Flexible Event Return and Delivery) and new instructions (LKGS, ERETU, ERETS), alters behavior of several existing instructions.
+ Enables CPUID[0x00000007].subleaf[1].EAX[17] flag (FRED) and CPUID[0x00000007].subleaf[1].EAX[18] flag (LKGS)
+ Controls ability to set CR4[32] (FRED) Enable bit.
+ Enables new FRED MSR state:
+        IA32_FRED_RSP0-IA32_FRED_RSP3 MSR (0x1cc-0x1cf), IA32_FRED_STKLVLS MSR (0x1d0), IA32_FRED_SSP1-IA32_FRED_SSP3 MSR (0x1d1-0x1d3),
+        IA32_FRED_CONFIG MSR (0x988)
+ Includes VMX support.
+
+ Dependency: BX_SUPPORT_FRED
+             longmode
+
 ---------------------------------------------------------------------------------------------------
 
 Description of some CPUID buts not directly controlled by above features:

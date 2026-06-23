@@ -74,6 +74,7 @@ void bx_dbg_set_magic_bp_mask(Bit8u new_mask);
 void bx_dbg_clr_magic_bp_mask(Bit8u mask);
 Bit8u bx_dbg_get_magic_bp_mask_from_str(const char *str);
 void bx_dbg_print_magic_bp_mask_from_str(Bit8u mask);
+void bx_dbg_get_magic_bp_str_from_mask(Bit8u mask, char *str);
 bool bx_dbg_read_linear(unsigned which_cpu, bx_address laddr, unsigned len, Bit8u *buf);
 bool bx_dbg_write_linear(unsigned which_cpu, bx_address laddr, unsigned len, Bit8u *buf);
 Bit16u bx_dbg_get_selector_value(unsigned int seg_no);

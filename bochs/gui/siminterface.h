@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -456,13 +456,6 @@ enum {
 };
 
 enum {
-  BX_VBE_MEMSIZE_4MB,
-  BX_VBE_MEMSIZE_8MB,
-  BX_VBE_MEMSIZE_16MB,
-  BX_VBE_MEMSIZE_32MB
-};
-
-enum {
   BX_MOUSE_TYPE_NONE,
   BX_MOUSE_TYPE_PS2,
   BX_MOUSE_TYPE_IMPS2,
@@ -735,7 +728,7 @@ public:
     void *userdata) {}
   virtual int configuration_interface(const char* name, ci_command_t command) {return -1; }
 #if BX_USB_DEBUGGER
-  virtual void register_usb_debug_type(int type) {}
+  virtual void register_usb_debug_type(int type, int devid = -1) {}
   virtual void usb_debug_trigger(int type, int trigger, Bit64u param0, int param1, int param2) {}
   virtual int usb_debug_interface(int type, Bit64u param0, int param1, int param2) { return -1; }
 #endif

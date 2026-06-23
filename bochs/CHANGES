@@ -1,6 +1,6 @@
 Changes after 3.0:
 
-  This CHANGES file updated with commits merged till 11 Nov 2025, please refer to git log for more recent updates
+  This CHANGES file updated with commits merged till 4 Apr 2026, please refer to git log for more recent updates
 
 Detailed change log :
 
@@ -9,17 +9,27 @@ Detailed change log :
     In the code BX_WARN is used and it is configurable like other log levels.
 
 - CPU emulation and instrumentation
+  - CPU: Implemented AMX-FP8 ISA extension
   - CPU: Implemented MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS
-  - Added new BX_INSTR_CPUID instrumentation callback, see instrumentation.txt doc for description
-  - Bugfixes for CPU emulation correctness
+  - CPU: implemented IA32_APERF (0xe7) and IA32_MPERF (0xe8) MSRs
+  - CPU: implemented Flexible Return and Delivery (FRED) architecture emulation
+  - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of XSAVEC/XSAVES, PKeys, AVX BMI1/BMI2, AVX512, UINTR, CET and SVM)
+  - Updated instrumentation callbacks, see description in instrumentation.txt
+    - Added new BX_INSTR_CPUID instrumentation callback, branch callbacks simplified
 
 - Bochs Debugger
   - Added new command line option "-dbg_gui" to start Bochs debugger with gui.
     The dbg_gui option also supports "-dbg_gui:globalini" extension to use ini file from BXSHARE path for GUI debugger.
-    Old "gui_debug" bochsrc option is deprecated and should not used anymore.
+    Old "gui_debug" bochsrc option is deprecated and support for it was removed.
   - New 'step over' button in Bochs debugger GUI to execute an instruction stepping over subroutines
   - New 'rla' command added to Bochs debugger
     Usage: rla <addr> - continue until reaching the linear address <addr>
+  - Added new .bochsrc option 'debugger' to set parameters for the Bochs debugger.
+    - Parameter 'log' replaces the 'debugger_log' option
+    - Parameter 'gui' is a replacement for the removed 'gui_debug' option
+      Now the debugger gui can be activated either with '-dbg_gui' command line option
+      or with '-dbg' in combination with this parameter set to 'true'
+    - Parameter 'gui' also accepts the value 'globalini' to enable the gui and to force the usage of a global ini file from BXSHARE path
   - Fix FPU/MMX state display in GUI debugger
   - Speed up Bochs emulation with debugger enabled by ~10%
 
@@ -31,14 +41,36 @@ Detailed change log :
   - Win32: fix compilation error when SHOW_IPS is not compiled in
 
 - Config interface
+  - Win32 start/runtime configure dialogs rewritten and look much more user friendly now
+  - USB configuration is now a separate menu item in all config interfaces
   - On Windows make sure file name parameters use backslash as separator
   - Removed backward compatibility mode for USB device options
 
 - Memory
+  - Increased maximum host memory size to 8192 MB (was 2048 MB)
+  - PCI hole support for >3GB RAM (NEW)
+    Added guest physical address translation for systems with more than 3GB RAM.
+    RAM from 3GB-4GB is remapped above 4GB to make room for PCI MMIO space.
+    The bx_translate_gpa_to_linear() helper handles the remapping transparently.
+    Works correctly with 2GB, 4GB, 8GB, 12GB, 16GB, and larger RAM configurations.
   - Added support for overlapping r/o memory handlers (used for PCI ROM)
   - Added support for mapping PCI ROM to expansion ROM space
 
 - I/O Devices
+  - fw_cfg (NEW)
+    Added QEMU-compatible fw_cfg device for UEFI/OVMF firmware support.
+    Provides system configuration to firmware via I/O ports 0x510-0x51B:
+    - E820 memory map with PCI hole (3GB-4GB reserved for MMIO)
+    - ACPI tables (RSDP, XSDT, FADT, FACS, DSDT, MADT, HPET)
+    - RAM size and CPU count information
+    - DMA protocol for table loading
+    This enables booting UEFI operating systems including Windows Server 2025
+    and modern Linux distributions with OVMF firmware.
+  - ACPI Tables
+    Added dynamic ACPI table generation for UEFI firmware compatibility.
+    Tables are compatible with PIIX4 PM/ACPI and include proper DSDT.
+    The generated DSDT is aligned with the default PCI/PIIX device model.
+
   - GeForce (NEW)
     Added basic support for three GeForce models. Most of the 2D features are present,
     but 3D is still WIP. Several Windows versions up to Win 7 have been reported to
@@ -48,6 +80,8 @@ Detailed change log :
     - Added advanced PCI option "altdevmap" to make real i440FX BIOS work
     - Ignore writes to ROM adddress if no ROM present
     - PCI IDE always provides 2 IDE channels (override settings if necessary)
+    - Added stub for 64-bit PCI BAR handling. Writing to upper 32-bit of a 64-bit BAR now possible.
+    - PCI BAR handling now depends on PCI command register bits IOAE and MAE
   - PCI (i440BX AGP)
     - AGP aperture access now correctly implemented
     - Fixed BCTRL and NBXCFG register
@@ -69,6 +103,7 @@ Detailed change log :
     - Bochs VBE: Skip address wrap during display update
     - Fix graphics snapshot in low resolution modes
     - Rewrite of 15/16 to 24 bit conversion in Bochs VBE and Cirrus code
+    - SVGA Cirrus Mem write: Fixed x/y tile to update in case display start != 0
   - Voodoo / Banshee
     - Added hardware cursor support for graphics snapshot (Cirrus/Voodoo)
     - Voodoo3: Split mem_read() with len > 8 in two 64-bit reads
@@ -80,6 +115,7 @@ Detailed change log :
     - Banshee: fixes for graphics snapshot in 3D mode
     - Banshee: Added 2D overlay support to graphics snapshop
     - Banshee: Added setup for CMDFIFO packet type 6 (AGP-to-VRAM transfer - not implemented yet)
+    - Banshee: Apply gamma correction in 16 bpp mode to cursor colors
   - Hard Drive
     - Fix the reading of the HOB registers
     - Add the 0x46 (GET_CONFIG) command. This allows ReactOS 0.4.15 to boot in normal mode (LiveCD)
@@ -89,6 +125,8 @@ Detailed change log :
   - CD-ROM
     - Support use of the CD AUDIO support of a real CD-ROM/DVD drive. This is currently
       only supported on the Windows platform. To enable compile with --enable-cdaudio.
+    - Return a valid track info structure for the Read_TOC (format 1) command.
+      This lets guest to determine if the CD-ROM is a data or an audio CD-ROM.
   - Floppy
     - Floppy reset fixes found while testing real hardware
       - Main status register only returns BUSY bit set during reset
@@ -101,10 +139,14 @@ Detailed change log :
       - Real hardware does not set the CHANGE DISK bit at reset
       - Fix the `Illegal size for FIFO` error. Zero is a legal size on input, which translate to a size of 1.
       - Fixed the `DUMP_REGISTERS` command to show the EOT value.
+    - Added advanced PCI option 'nofdc'
+      - If PCI is enabled, the 'nofdc' option disables the FDC if no floppy drive is configured
+      - Enable first floppy drive by default only if Bochs is not compiled with PCI
   - Networking
     - E1000: Added loopback mode for diagnostics
   - USB
     - UHCI fix: USBCMD and USBSTS register accept byte writes
+    - USB debugger now supports the UHCI companion controllers of EHCI
     - Changing device connected to USB port on the command line works again.
       Port options are reset in that case.
     - Log error if trying to read from a non-powered port.
@@ -118,16 +160,29 @@ Detailed change log :
       - Added an amplitude table for the volume setup (using factor 1.5 between values).
       - Set default volume setting to 8.
       - Added runtime option to change the volume.
+  - Disk images
+    - VHDX disk image support added
 
 - GUI and display libraries
+  - In gui console mode don't send key events to the emulator
   - Added new method start_update() used by VGA core to call some gui code before drawing.
     This currently only used by X gui for processing palette update.
   - Added support for the display library option "hideIPS" in nogui
   - Fixed buffer overflow when using keymap feature
   - Use system font on win32 dialog boxes (win32 dialog box font is tiny on 1920x1080 Windows)
   - X gui: added XFlush() in warp_cursor() call to fix mouse movement issues
+  - Fixed possible deadlock in nogui at show_ips()
+  - WX gui:
+    - Fixed mouse toggle shortcut ctrl+alt+g
+    - Report maximum host resolution correctly
+    - To avoid crash, don't return in case the user selects 'continue' if
+      resolution is out of bounds. Set up display buffer as usual instead.
 
 - BIOS
+  - ACPI BIOS: Added temporary solution for ACPI with HPET disabled.
+    Create AML code with and without HPET entry and copy one of it depending on HPET presence.
+    This fixes "unknown device" in not HPET aware guest OS.
+  - Enable PCI command register bit MAE while copying PCI ROM
   - ACPI fixes for the i440BX chipset
   - Fixed some not working hotkeys
   - PCI BIOS now sets expansion ROM space to R/W during POST
@@ -138,6 +193,7 @@ Detailed change log :
   - Legacy BIOS now can be used with a PCI VGABIOS
   - Add service Int13h/0x0D
   - i440fx.bin updated from GitHub repository
+  - include OVMF BIOS image to Bochs package
 
 - LGPL'd VGABIOS updated from GitHub repository
   - Added some low resolution VESA modes and bugfixes for all versions
@@ -145,6 +201,7 @@ Detailed change log :
 
 - Misc
   - Added Linux manual page for the bxhub utility
+  - Documentation updates
 
 -------------------------------------------------------------------------
 Changes in 3.0 (Frebruary 16, 2025):
@@ -3123,7 +3180,7 @@ Detailed change log :
  [1021758] GNU/k*BSD host support by Robert Millan
   [969967] int 15/ah=87h clearing cr0 by Ben Lunt
  [1048327] Russian Keymap by Dmitry Soshnikov
-  [851332] DESTDIR support for install_dlx by Ville Skyttä
+  [851332] DESTDIR support for install_dlx by Ville Skyttï¿½
   [970929] gdbstub support for MinGW tool chains by Muranaka Masaki
  [1021740] Turn gdb stub into a runtime option by Charles Duffy
  [1063329] RFB key press/release bug fix by Remko van der Vossen

@@ -28,6 +28,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "pc_system.h"
 #include "gameport.h"
 
 #ifdef __linux__

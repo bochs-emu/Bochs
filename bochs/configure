@@ -1070,6 +1070,7 @@ enable_svm
 enable_protection_keys
 enable_cet
 enable_uintr
+enable_fred
 enable_3dnow
 enable_alignment_check
 enable_monitor_mwait
@@ -1811,6 +1812,7 @@ Optional Features:
                           User-Mode Protection Keys support (no)
   --enable-cet            Control Flow Enforcement Technology support (no)
   --enable-uintr          for User Level Interrupt support (no)
+  --enable-fred           for Flexible Interrupt Delivery FRED support (no)
   --enable-3dnow          3DNow! support (no - incomplete)
   --enable-alignment-check
                           alignment check (#AC) support (yes, if cpu level >
@@ -6281,7 +6283,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 6284 "configure"' > conftest.$ac_ext
+  echo '#line 6286 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7794,11 +7796,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7797: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7799: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7801: \$? = $ac_status" >&5
+   echo "$as_me:7803: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -8029,11 +8031,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8032: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8034: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:8036: \$? = $ac_status" >&5
+   echo "$as_me:8038: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -8098,11 +8100,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:8101: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:8103: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:8105: \$? = $ac_status" >&5
+   echo "$as_me:8107: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9940,7 +9942,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9943 "configure"
+#line 9945 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -10036,7 +10038,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 10039 "configure"
+#line 10041 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12158,11 +12160,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12161: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12163: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12165: \$? = $ac_status" >&5
+   echo "$as_me:12167: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -12227,11 +12229,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12230: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12232: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12234: \$? = $ac_status" >&5
+   echo "$as_me:12236: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13267,7 +13269,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13270 "configure"
+#line 13272 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13363,7 +13365,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13366 "configure"
+#line 13368 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -14184,11 +14186,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14187: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14189: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:14191: \$? = $ac_status" >&5
+   echo "$as_me:14193: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -14253,11 +14255,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14256: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14258: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14260: \$? = $ac_status" >&5
+   echo "$as_me:14262: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16222,11 +16224,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16225: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16227: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16229: \$? = $ac_status" >&5
+   echo "$as_me:16231: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16457,11 +16459,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16460: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16462: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16464: \$? = $ac_status" >&5
+   echo "$as_me:16466: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16526,11 +16528,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16529: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16531: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16533: \$? = $ac_status" >&5
+   echo "$as_me:16535: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -18368,7 +18370,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18371 "configure"
+#line 18373 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -18464,7 +18466,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18467 "configure"
+#line 18469 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -20222,7 +20224,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 20225 "configure"
+#line 20227 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -24689,6 +24691,41 @@ if test "$support_uintr" -gt 0 -a "$use_x86_64" = 0; then
   as_fn_error $? "User Level Interrupt feature emulation require x86-64 enabled" "$LINENO" 5
 fi
 
+support_fred=0
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for Flexible Interrupt Delivery FRED support (experimental)" >&5
+printf %s "checking for Flexible Interrupt Delivery FRED support (experimental)... " >&6; }
+# Check whether --enable-fred was given.
+if test ${enable_fred+y}
+then :
+  enableval=$enable_fred; if test "$enableval" = yes; then
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+    printf "%s\n" "#define BX_SUPPORT_FRED 1" >>confdefs.h
+
+    support_fred=1
+   elif test "$enableval" = no; then
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+    printf "%s\n" "#define BX_SUPPORT_FRED 0" >>confdefs.h
+
+   fi
+
+else case e in #(
+  e)
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+    printf "%s\n" "#define BX_SUPPORT_FRED 0" >>confdefs.h
+
+
+   ;;
+esac
+fi
+
+
+if test "$support_fred" -gt 0 -a "$use_x86_64" = 0; then
+  as_fn_error $? "Flexible Interrupt Delivery (FRED) emulation require x86-64 enabled" "$LINENO" 5
+fi
+
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for 3DNow! support" >&5
 printf %s "checking for 3DNow! support... " >&6; }
 # Check whether --enable-3dnow was given.
@@ -24797,8 +24834,8 @@ esac
 fi
 
 
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for limited hardware performance monitoring emulation support (experimental)" >&5
-printf %s "checking for limited hardware performance monitoring emulation support (experimental)... " >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for limited hardware performance monitoring emulation support" >&5
+printf %s "checking for limited hardware performance monitoring emulation support... " >&6; }
 # Check whether --enable-perfmon was given.
 if test ${enable_perfmon+y}
 then :
