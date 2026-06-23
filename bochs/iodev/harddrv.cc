@@ -2127,18 +2127,18 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                       controller->buffer[return_length +  1] =  0;
                       controller->buffer[return_length +  2] =  0;
                       controller->buffer[return_length +  3] = 16;
-                      controller->buffer[return_length +  4] =  (Bit8u) (PERFORMANCE_PER_SEC >> 24);  // start performance
-                      controller->buffer[return_length +  5] =  (Bit8u) (PERFORMANCE_PER_SEC >> 16);
-                      controller->buffer[return_length +  6] =  (Bit8u) (PERFORMANCE_PER_SEC >>  8);
-                      controller->buffer[return_length +  7] =  (Bit8u) (PERFORMANCE_PER_SEC >>  0);
-                      controller->buffer[return_length +  8] =  0;  // end lba
-                      controller->buffer[return_length +  9] =  0;
-                      controller->buffer[return_length + 10] =  0;
-                      controller->buffer[return_length + 11] = 16; // TODO: This needs to be the last available sector
-                      controller->buffer[return_length + 12] =  (Bit8u) (PERFORMANCE_PER_SEC >> 24);  // end performance
-                      controller->buffer[return_length + 13] =  (Bit8u) (PERFORMANCE_PER_SEC >> 16);
-                      controller->buffer[return_length + 14] =  (Bit8u) (PERFORMANCE_PER_SEC >>  8);
-                      controller->buffer[return_length + 15] =  (Bit8u) (PERFORMANCE_PER_SEC >>  0);
+                      controller->buffer[return_length +  4] = (Bit8u) (PERFORMANCE_PER_SEC >> 24);  // start performance
+                      controller->buffer[return_length +  5] = (Bit8u) (PERFORMANCE_PER_SEC >> 16);
+                      controller->buffer[return_length +  6] = (Bit8u) (PERFORMANCE_PER_SEC >>  8);
+                      controller->buffer[return_length +  7] = (Bit8u) (PERFORMANCE_PER_SEC >>  0);
+                      controller->buffer[return_length +  8] = (Bit8u) (BX_SELECTED_DRIVE(channel).cdrom.max_lba >> 24);  // end lba
+                      controller->buffer[return_length +  9] = (Bit8u) (BX_SELECTED_DRIVE(channel).cdrom.max_lba >> 16);
+                      controller->buffer[return_length + 10] = (Bit8u) (BX_SELECTED_DRIVE(channel).cdrom.max_lba >>  8);
+                      controller->buffer[return_length + 11] = (Bit8u) (BX_SELECTED_DRIVE(channel).cdrom.max_lba >>  0);
+                      controller->buffer[return_length + 12] = (Bit8u) (PERFORMANCE_PER_SEC >> 24);  // end performance
+                      controller->buffer[return_length + 13] = (Bit8u) (PERFORMANCE_PER_SEC >> 16);
+                      controller->buffer[return_length + 14] = (Bit8u) (PERFORMANCE_PER_SEC >>  8);
+                      controller->buffer[return_length + 15] = (Bit8u) (PERFORMANCE_PER_SEC >>  0);
 #undef PERFORMANCE_PER_SEC
                       return_length += 16;
                     }
@@ -2164,7 +2164,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                   controller->buffer[1] = (Bit8u) ((return_length - 4) >> 16);
                   controller->buffer[2] = (Bit8u) ((return_length - 4) >>  8);
                   controller->buffer[3] = (Bit8u) ((return_length - 4) >>  0);
-                  init_send_atapi_command(channel, atapi_command, return_length, BX_MIN(return_length, num_descs));
+                  init_send_atapi_command(channel, atapi_command, return_length, num_descs);
                   ready_to_send_atapi(channel);
                 //}
               } break;
