@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2014-2025  The Bochs Project
+//  Copyright (C) 2014-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1057,17 +1057,10 @@ unsigned bx_sdl2_gui_c::create_bitmap(const unsigned char *bmap, unsigned xdim, 
       xdim,
       ydim,
       32,
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-      0xff000000,
-      0x00ff0000,
-      0x0000ff00,
-      0x00000000
-#else
-      0x000000ff,
-      0x0000ff00,
-      0x00ff0000,
-      0x00000000
-#endif
+      0, // Set default masks based on depth
+      0,
+      0,
+      0
       );
 
   if (!tmp->surface) {
