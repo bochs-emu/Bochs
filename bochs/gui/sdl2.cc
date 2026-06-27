@@ -68,14 +68,6 @@ IMPLEMENT_GUI_PLUGIN_CODE(sdl2)
 
 #define LOG_THIS theGui->
 
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-const Uint32 status_leds[3] = {0x00ff0000, 0x0040ff00, 0x00ffff00};
-const Uint32 status_gray_text = 0x80808000;
-#else
-const Uint32 status_leds[3] = {0x0000ff00, 0x00ff4000, 0x00ffff00};
-const Uint32 status_gray_text = 0x00808080;
-#endif
-
 static Bit32u convertStringToSDLKey(const char *string);
 
 #define MAX_SDL_BITMAPS 32
@@ -99,7 +91,7 @@ static unsigned bx_bitmap_right_xorigin = 0; // pixels from right
 static unsigned disp_bpp=8;
 unsigned char menufont[256][8];
 Uint32 sdl_palette[256];
-Uint32 headerbar_fg, headerbar_bg;
+Uint32 headerbar_fg, headerbar_bg = 0;
 Bit8u old_mousebuttons=0, new_mousebuttons=0;
 int old_mousex=0, new_mousex=0;
 int old_mousey=0, new_mousey=0;
@@ -111,6 +103,8 @@ int statusbar_height = 18;
 static unsigned statusitem_pos[12] = {
   0, 170, 220, 270, 320, 370, 420, 470, 520, 570, 620, 670
 };
+Uint32 status_leds[3];
+Uint32 status_gray_text;
 static bool statusitem_active[12];
 #if BX_SHOW_IPS
 SDL_TimerID timer_id;
@@ -1012,16 +1006,22 @@ void bx_sdl2_gui_c::dimension_update(unsigned x, unsigned y,
   if (sdl_fullscreen_toggle == 0) {
     SDL_SetWindowSize(window, x, y + headerbar_height + statusbar_height);
     sdl_screen = SDL_GetWindowSurface(window);
-    headerbar_fg = SDL_MapRGB(
-        sdl_screen->format,
-        BX_HEADERBAR_FG_RED,
-        BX_HEADERBAR_FG_GREEN,
-        BX_HEADERBAR_FG_BLUE);
-    headerbar_bg = SDL_MapRGB(
-        sdl_screen->format,
-        BX_HEADERBAR_BG_RED,
-        BX_HEADERBAR_BG_GREEN,
-        BX_HEADERBAR_BG_BLUE);
+    if (headerbar_bg == 0) {
+      headerbar_fg = SDL_MapRGB(
+          sdl_screen->format,
+          BX_HEADERBAR_FG_RED,
+          BX_HEADERBAR_FG_GREEN,
+          BX_HEADERBAR_FG_BLUE);
+      headerbar_bg = SDL_MapRGB(
+          sdl_screen->format,
+          BX_HEADERBAR_BG_RED,
+          BX_HEADERBAR_BG_GREEN,
+          BX_HEADERBAR_BG_BLUE);
+      status_leds[0] = SDL_MapRGB(sdl_screen->format, 0x00, 0xff, 0x00); // green
+      status_leds[1] = SDL_MapRGB(sdl_screen->format, 0xff, 0x40, 0x00); // red
+      status_leds[2] = SDL_MapRGB(sdl_screen->format, 0xff, 0xff, 0x00); // yellow
+      status_gray_text = SDL_MapRGB(sdl_screen->format, 0x80, 0x80, 0x80);
+    }
   } else {
     SDL_SetWindowSize(window, x, y);
     // BUG: SDL2 does not update the surface here
