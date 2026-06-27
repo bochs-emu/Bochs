@@ -3860,7 +3860,6 @@ public: // for now...
   BX_SMF void TDPFP16PS_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TCMMRLFP16PS_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TCMMIMFP16PS_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
-  BX_SMF void TMMULTF32PS_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TDPBF8PS_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TDPHF8PS_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TDPBHF8PS_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);

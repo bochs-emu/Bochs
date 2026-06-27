@@ -331,7 +331,7 @@ void bx_cpuid_t::get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_
     //    [3] AMX-FP16
     //    [4] AMX-FP8
     //    [5] AMX-TRANSPOSE (deprecated)
-    //    [6] AMX-TF32 (FP19)
+    //    [6] AMX-TF32 (deprecated)
     //    [7] AMX-AVX512
     //    [8] AMX-MOVRS
     // [31:9] reserved
@@ -345,8 +345,6 @@ void bx_cpuid_t::get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_
       leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP16;
     if (is_cpu_extension_supported(BX_ISA_AMX_FP8))
       leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP8;
-    if (is_cpu_extension_supported(BX_ISA_AMX_TF32))
-      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_TF32;
     if (is_cpu_extension_supported(BX_ISA_AMX_AVX512))
       leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_AVX512;
     if (is_cpu_extension_supported(BX_ISA_AMX_MOVRS))
@@ -1442,8 +1440,7 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
     edx |= BX_CPUID_STD7_SUBLEAF1_EDX_AVX_VNNI_INT16;
 #endif
 
-  //   [12:11]  reserved
-  //   [13:13]  User Timer support
+  //   [13:11]  reserved
   //   [14:14]  PREFETCHITI: PREFETCHIT0/T1 instruction
   //   [15:15]  USER_MSR: support for URDMSR/UWRMSR instructions
   //   [16:16]  reserved
@@ -1664,7 +1661,6 @@ void bx_cpuid_t::sanity_checks() const
     if (is_cpu_extension_supported(BX_ISA_AMX_INT8) ||
         is_cpu_extension_supported(BX_ISA_AMX_BF16) ||
         is_cpu_extension_supported(BX_ISA_AMX_FP16) ||
-        is_cpu_extension_supported(BX_ISA_AMX_TF32) ||
         is_cpu_extension_supported(BX_ISA_AMX_COMPLEX) ||
         is_cpu_extension_supported(BX_ISA_AMX_MOVRS) ||
         is_cpu_extension_supported(BX_ISA_AMX_AVX512))

@@ -668,7 +668,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_STD7_SUBLEAF1_EDX_AVX_VNNI_INT16         (1 << 10)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED11             (1 << 11)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED12             (1 << 12)
-#define BX_CPUID_STD7_SUBLEAF1_EDX_USER_TIMER             (1 << 13)
+#define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED13             (1 << 13)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_PREFETCHI              (1 << 14)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_USER_MSR               (1 << 15)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED16             (1 << 16)
@@ -690,20 +690,20 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [3:3] AMX-FP16
 //   [4:4] AMX-FP8
 //   [5:5] AMX-TRANSPOSE (deprecated)
-//   [6:6] AMX-TF32 (FP19)
+//   [6:6] AMX-TF32 (deprecated)
 //   [7:7] AMX-AVX512
 //   [8:8] AMX-MOVRS
 //  [31:9] reserved
 
-#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_INT8              (1 <<  0)
-#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_BF16              (1 <<  1)
-#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_COMPLEX           (1 <<  2)
-#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP16              (1 <<  3)
-#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP8               (1 <<  4)
-#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_TRANSPOSE         (1 <<  5)
-#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_TF32              (1 <<  6)
-#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_AVX512            (1 <<  7)
-#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_MOVRS             (1 <<  8)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_INT8                 (1 <<  0)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_BF16                 (1 <<  1)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_COMPLEX              (1 <<  2)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP16                 (1 <<  3)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP8                  (1 <<  4)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_TRANSPOSE_DEPRECATED (1 <<  5)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_TF32_DEPRECATED      (1 <<  6)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_AVX512               (1 <<  7)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_MOVRS                (1 <<  8)
 
 // CPUID defines - STD2 features CPUID[0x80000001].EDX
 // -----------------------------

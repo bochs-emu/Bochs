@@ -176,7 +176,7 @@ public:
 #define VMX_VM_EXEC_CTRL3_IPI_VIRTUALIZATION        (1 <<  4) /* IPI virtualization (not implemented) */
 #define VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST            (1 <<  6) /* MSRLIST */
 #define VMX_VM_EXEC_CTRL3_VIRTUALIZE_IA32_SPEC_CTRL (1 <<  7)
-#define VMX_VM_EXEC_CTRL3_EMULATE_AVX10_VL256       (1 << 13) /* deprecated */
+#define VMX_VM_EXEC_CTRL3_APIC_TIMER_VIRTUALIZATION (1 <<  8) // not implemented
 
    bool LOADIWKEY_VMEXIT() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL3_LOADIWKEY_VMEXIT; }
    bool HLAT_ENABLE() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL3_HLAT_ENABLE; }
@@ -185,6 +185,7 @@ public:
    bool IPI_VIRTUALIZATION() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL3_IPI_VIRTUALIZATION; }
    bool ENABLE_MSRLIST() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST; }
    bool VIRTUALIZE_IA32_SPEC_CTRL() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL3_VIRTUALIZE_IA32_SPEC_CTRL; }
+   bool APIC_TIMER_VIRTUALIZATION() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL3_APIC_TIMER_VIRTUALIZATION; }
 
    bool query_any(Bit64u mask) const { return (vmexec_ctrls & mask) != 0; }
    bool query_all(Bit64u mask) const { return (vmexec_ctrls & mask) == mask; }

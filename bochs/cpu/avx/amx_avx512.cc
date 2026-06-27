@@ -38,22 +38,22 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::tilemov_row(bxInstruction_c *i, bool immed
 
   unsigned row, row_chunk;
   if (immediate_form) {
-    row = i->Ib() & 0x3f;
-    row_chunk = i->Ib() >> 6;
+    row = i->Ib();
   }
   else {
     row = (unsigned) BX_READ_16BIT_REG(i->src2());
-    row_chunk = (unsigned) (BX_READ_32BIT_REG(i->src2()) >> 16);
   }
+
+  row &= 0xf;
 
   unsigned tile_num_rows = BX_CPU_THIS_PTR amx->tile_num_rows(tile_src);
-  if (row > tile_num_rows || row_chunk /* do not support multi-line rows yet */) {
-    BX_ERROR(("%s: row=%d:%d out of range for tile %d", i->getIaOpcodeNameShort(), row, row_chunk, tile_src));
-    exception(BX_GP_EXCEPTION, 0);
+  if (row > tile_num_rows) {
+    dst->clear();
   }
-
-  AMX::TILE *tsrc = &(BX_CPU_THIS_PTR amx->tile[tile_src]);
-  *dst = tsrc->row[row];
+  else {
+    AMX::TILE *tsrc = &(BX_CPU_THIS_PTR amx->tile[tile_src]);
+    *dst = tsrc->row[row];
+  }
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILEMOVROW_VdqTrm(bxInstruction_c *i)
