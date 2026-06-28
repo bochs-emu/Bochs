@@ -2084,9 +2084,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     controller->buffer[1] = 0;
                     controller->buffer[2] = (return_length >> 8);
                     controller->buffer[3] = (return_length & 0xFF);
-
-                    // I think the last parameter needs to be 'alloc_length', but ReactOS won't boot unless it is this:
-                    init_send_atapi_command(channel, atapi_command, return_length + 4, return_length + 4);
+                    init_send_atapi_command(channel, atapi_command, return_length + 4, alloc_length);
                     ready_to_send_atapi(channel);
                   } else {
                     atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 0);
@@ -2094,6 +2092,82 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                   }
                 }
                 break;
+                
+              case 0xac:  // GET PERFORMANCE
+              {
+                Bit8u  data_type = controller->buffer[1] & 0x1F;
+                Bit32u lba = read_32bit(controller->buffer + 2);
+                Bit16u num_descs = read_16bit(controller->buffer + 8); // in bytes?
+                Bit8u  type = controller->buffer[10];
+                
+                // create the descriptor header
+                Bit32u return_length = 8;
+                controller->buffer[4] = 0x00;  // Write = 0 (Read), Except = 0 (nominal performance)
+                controller->buffer[5] = 0x00;  // reserved
+                controller->buffer[6] = 0x00;  // reserved
+                controller->buffer[7] = 0x00;  // reserved
+                
+                // what type is the guest requesting?
+                switch (type) {
+                  case 0:  // performance data
+                    // if the bottom two bits of data_type are not zero,
+                    //  we don't return a valid return.
+                    //  00b = nominal performance descriptor only
+                    //  01b = Entire performance list
+                    //  10b = performance exceptions only
+                    //  11b = reserved
+                    if (((data_type & 3) == 0) && // just the nominal performance descriptor
+                        // if bit 2 is set (write performance), we don't return a valid return
+                        // 0b = read performance
+                        // 1b = write performance
+                        ((data_type & 4) == 0)) { // must be asking for the read performance
+                        // we ignore bits 4:3 as the Tolerance value requested
+#define PERFORMANCE_PER_SEC  ((Bit32u) 2352 * 75) // bytes per second per sector read time (if we assume 1x speed cdroms)
+                      controller->buffer[return_length +  0] =  0;  // start lba
+                      controller->buffer[return_length +  1] =  0;
+                      controller->buffer[return_length +  2] =  0;
+                      controller->buffer[return_length +  3] = 16;
+                      controller->buffer[return_length +  4] = (Bit8u) (PERFORMANCE_PER_SEC >> 24);  // start performance
+                      controller->buffer[return_length +  5] = (Bit8u) (PERFORMANCE_PER_SEC >> 16);
+                      controller->buffer[return_length +  6] = (Bit8u) (PERFORMANCE_PER_SEC >>  8);
+                      controller->buffer[return_length +  7] = (Bit8u) (PERFORMANCE_PER_SEC >>  0);
+                      controller->buffer[return_length +  8] = (Bit8u) (BX_SELECTED_DRIVE(channel).cdrom.max_lba >> 24);  // end lba
+                      controller->buffer[return_length +  9] = (Bit8u) (BX_SELECTED_DRIVE(channel).cdrom.max_lba >> 16);
+                      controller->buffer[return_length + 10] = (Bit8u) (BX_SELECTED_DRIVE(channel).cdrom.max_lba >>  8);
+                      controller->buffer[return_length + 11] = (Bit8u) (BX_SELECTED_DRIVE(channel).cdrom.max_lba >>  0);
+                      controller->buffer[return_length + 12] = (Bit8u) (PERFORMANCE_PER_SEC >> 24);  // end performance
+                      controller->buffer[return_length + 13] = (Bit8u) (PERFORMANCE_PER_SEC >> 16);
+                      controller->buffer[return_length + 14] = (Bit8u) (PERFORMANCE_PER_SEC >>  8);
+                      controller->buffer[return_length + 15] = (Bit8u) (PERFORMANCE_PER_SEC >>  0);
+#undef PERFORMANCE_PER_SEC
+                      return_length += 16;
+                    }
+                    break;
+                  // we don't (currently) support any other type
+                  case 1:  // unusable area data
+                  case 2:  // defect status data
+                  case 3:  // write speed descriptor
+                  case 4:  // DBI
+                  case 5:  // DBI Cache Zone
+                  default: // all else
+                    // must return Check Condition, Illegal Request/Invalid Field in CDB
+                    ;
+                }
+                
+                // if we return CHECK CONDITION on a descriptor we don't support, ReactOS crashes.
+                //if (return_length == 8) {
+                //  atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 0);
+                //  raise_interrupt(channel);
+                //} else {
+                  // 32-bit (MSB) length returned
+                  controller->buffer[0] = (Bit8u) ((return_length - 4) >> 24);
+                  controller->buffer[1] = (Bit8u) ((return_length - 4) >> 16);
+                  controller->buffer[2] = (Bit8u) ((return_length - 4) >>  8);
+                  controller->buffer[3] = (Bit8u) ((return_length - 4) >>  0);
+                  init_send_atapi_command(channel, atapi_command, return_length, num_descs);
+                  ready_to_send_atapi(channel);
+                //}
+              } break;
                 
 #if LOWLEVEL_CDAUDIO
               case 0x45: // play audio(10)
