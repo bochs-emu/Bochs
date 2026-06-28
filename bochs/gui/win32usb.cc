@@ -817,6 +817,7 @@ INT_PTR CALLBACK hc_uhci_callback_td(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //  OHCI
 //
+static bool o_changed[IDC_O_EN_END - IDC_O_EN_START + 1];
 
 // lParam: type is in low 8 bits, break_type in high 8-bits of low word
 INT_PTR CALLBACK hc_ohci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -836,6 +837,9 @@ INT_PTR CALLBACK hc_ohci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
       if (ret < 0) {
         MessageBox(hDlg, "Error initializing dialog", NULL, MB_ICONINFORMATION);
       }
+
+      memset(o_changed, 0, sizeof(o_changed));
+      EnableWindow(GetDlgItem(hDlg, ID_APPLY), 0);
 
       if (ret >= 0) {
         SetFocus(GetDlgItem(hDlg, ret));
@@ -865,6 +869,25 @@ INT_PTR CALLBACK hc_ohci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
               TreeView = NULL;
               EndDialog(hDlg, -1);  // -1 to quit the SIM
               break;
+            case ID_APPLY:
+              hc_ohci_save(hDlg);
+              break;
+            case IDC_O_REG_CONTROL_B:
+              do_attributes(hDlg, IDC_O_REG_CONTROL, 8, "Control Register", attribs_o_control);
+              break;
+            case IDC_O_REG_PORT0_B:
+              do_attributes(hDlg, IDC_O_REG_PORT0, 8, "Port0 Register", attribs_o_ports);
+              break;
+            case IDC_O_REG_PORT1_B:
+              do_attributes(hDlg, IDC_O_REG_PORT1, 8, "Port1 Register", attribs_o_ports);
+              break;
+          }
+          break;
+        // one of the edit controls changed
+        case EN_CHANGE:
+          if ((LOWORD(wParam) >= IDC_O_EN_START) && (LOWORD(wParam) <= IDC_O_EN_END)) {
+            o_changed[LOWORD(wParam) - IDC_O_EN_START] = 1;
+            EnableWindow(GetDlgItem(hDlg, ID_APPLY), 1);
           }
           break;
       }
@@ -997,6 +1020,14 @@ int hc_ohci_init(HWND hwnd)
   return ret;
 }
 
+int hc_ohci_save(HWND hwnd)
+{
+
+  MessageBox(hwnd, "OHCI: Save to controller is not yet implemented!", NULL, MB_ICONINFORMATION);
+
+  return 0;
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //  EHCI
@@ -1125,7 +1156,7 @@ INT_PTR CALLBACK hc_xhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
         // one of the edit controls changed
         case EN_CHANGE:
           if ((LOWORD(wParam) >= IDC_X_EN_START) && (LOWORD(wParam) <= IDC_X_EN_END)) {
-            u_changed[LOWORD(wParam) - IDC_X_EN_START] = 1;
+            x_changed[LOWORD(wParam) - IDC_X_EN_START] = 1;
             EnableWindow(GetDlgItem(hDlg, ID_APPLY), 1);
           }
           break;

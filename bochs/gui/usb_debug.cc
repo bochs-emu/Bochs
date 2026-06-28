@@ -93,6 +93,51 @@ struct S_ATTRIBUTES attribs_u_ports[] = {
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
+//  OHCI
+//
+struct S_ATTRIBUTES attribs_o_control[] = {
+                                             //          |      31 chars + null          | <- max
+  { (1<<10),                 (1<<10),                10, "RomoteWakeupEnable"             , {-1, } },
+  { (1<<9),                  (1<<9),                  9, "RemoteWakeupConnected"          , {-1, } },
+  { (1<<8),                  (1<<8),                  8, "InterruptRouting"               , {-1, } },
+  { (1<<7),                  (1<<7),                  7, "HostControllerFunctionalState 1", {-1, } },
+  { (1<<6),                  (1<<6),                  6, "HostControllerFunctionalState 0", {-1, } },
+  { (1<<5),                  (1<<5),                  5, "BulkListEnable"                 , {-1, } },
+  { (1<<4),                  (1<<4),                  4, "ControlListEnable"              , {-1, } },
+  { (1<<3),                  (1<<3),                  3, "IsochronusEnable"               , {-1, } },
+  { (1<<2),                  (1<<2),                  2, "PeriodicListEnable"             , {-1, } },
+  { (1<<1),                  (1<<1),                  1, "ControlBulkServiceRatio 1"      , {-1, } },
+  { (1<<0),                  (1<<0),                  0, "ControlBulkServiceRatio 0"      , {-1, } },
+  { 0,                   (Bit32u) -1,                 -1, "\0"                             , {-1, } }
+};
+
+struct S_ATTRIBUTES attribs_o_ports[] = {
+                                             //          |      31 chars + null          | <- max
+  { (1<<20),                 (1<<20),                20, "PortResetStatusChange"          , {-1, } },
+  { (1<<19),                 (1<<19),                19, "PortOverCurrentIndicatorChange" , {-1, } },
+  { (1<<18),                 (1<<18),                18, "PortSuspendStatusChange"        , {-1, } },
+  { (1<<17),                 (1<<17),                17, "PortEnableStatusChange"         , {-1, } },
+  { (1<<16),                 (1<<16),                16, "ConnectStatusChange"            , {-1, } },
+  { (1<<15),                 (1<<15),                15, "Reserved"                       , {-1, } },
+  { (1<<14),                 (1<<14),                14, "Reserved"                       , {-1, } },
+  { (1<<13),                 (1<<13),                13, "Reserved"                       , {-1, } },
+  { (1<<12),                 (1<<12),                12, "Reserved"                       , {-1, } },
+  { (1<<11),                 (1<<11),                11, "Reserved"                       , {-1, } },
+  { (1<<10),                 (1<<10),                10, "Reserved"                       , {-1, } },
+  { (1<< 9),                 (1<< 9),                 9, "LowSpeedDeviceAttached"         , {-1, } },
+  { (1<< 8),                 (1<< 8),                 8, "PortPowerStatus"                , {-1, } },
+  { (1<< 7),                 (1<< 7),                 7, "Reserved"                       , {-1, } },
+  { (1<< 6),                 (1<< 6),                 6, "Reserved"                       , {-1, } },
+  { (1<< 5),                 (1<< 5),                 5, "Reserved"                       , {-1, } },
+  { (1<< 4),                 (1<< 4),                 4, "PortResetStatus"                , {-1, } },
+  { (1<< 3),                 (1<< 3),                 3, "PortOverCurrentIndicator"       , {-1, } },
+  { (1<< 2),                 (1<< 2),                 2, "PortSuspendStatus"              , {-1, } },
+  { (1<< 1),                 (1<< 1),                 1, "PortEnableStatus"               , {-1, } },
+  { (1<< 0),                 (1<< 0),                 0, "CurrentConnectStatus"           , {-1, } },
+  { 0,                   (Bit32u) -1,                 -1, "\0"                            , {-1, } }
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 //  XHCI
 //
 struct S_ATTRIBUTES attribs_x_ports[] = {

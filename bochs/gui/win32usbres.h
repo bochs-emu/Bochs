@@ -123,6 +123,7 @@
 
 
 // OHCI items start with 6000
+#define IDC_O_EN_START                   6000
 #define IDC_O_REG_CONTROL                 6000
 #define IDC_O_REG_COMMAND_STATUS          6001
 #define IDC_O_REG_INTERRUPT_STATUS        6002
@@ -144,6 +145,7 @@
 #define IDC_O_REG_RH_STATUS               6018
 #define IDC_O_REG_PORT0                   6020
 #define IDC_O_REG_PORT1                   6021
+#define IDC_O_EN_END                     6021
 
 #define IDC_O_REG_CONTROL_B               6100
 #define IDC_O_REG_PORT0_B                 6110

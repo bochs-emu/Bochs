@@ -101,6 +101,10 @@ extern bool u_changed[UHCI_REG_COUNT];
 
 bool uhci_add_queue(struct USB_UHCI_QUEUE_STACK *stack, const Bit32u addr);
 
+// OHCI
+extern struct S_ATTRIBUTES attribs_o_control[];
+extern struct S_ATTRIBUTES attribs_o_ports[];
+
 // xHCI
 #define VIEW_TRB_TYPE_NONE      0
 #define VIEW_TRB_TYPE_COMMAND   1
