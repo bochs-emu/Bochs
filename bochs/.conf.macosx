@@ -1,18 +1,33 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 # this sets up the compile for MacOS X
 #
-# To support plugins on macosx, you must have "dlcompat" installed.  You can
-# get dlcompat by installing the fink package "dlcompat-devel".  On the SF
-# compile farm, dlcompat is in /sw/include and /sw/lib, so we have added
-# those paths to the environment variables.
+# To support plugins on macosx, you must have "dlcompat" installed.  You can get
+# dlcompat by installing the fink package "dlcompat-devel".  On the SF compile
+# farm, dlcompat is in /sw/include and /sw/lib, so we have added those paths to
+# the environment variables.
 
-set echo
-CFLAGS="-pipe -O3 -I/sw/include -fomit-frame-pointer -finline-functions -falign-loops=16 -falign-jumps=16 -falign-functions=16 -falign-labels=16 -falign-loops-max-skip=15 -falign-jumps-max-skip=15 -fprefetch-loop-arrays $CFLAGS"
+CC_NAME="$(basename "$CC" 2>/dev/null)"
+if [ "x$CC_NAME" = "xclang" ]; then
+    # Clang and Clang++ on MacOS do not support these optimization flags in my
+    # testing, and they were making any build impossible.
+    echo "Disabling some GCC-specific optimizations."
+
+    ADDED_FLAGS="-pipe -O3 -I/sw/include -fomit-frame-pointer \
+        -finline-functions"
+else
+    ADDED_FLAGS="-pipe -O3 -I/sw/include -fomit-frame-pointer \
+        -finline-functions -falign-loops=16 -falign-jumps=16 \
+        -falign-functions=16 -falign-labels=16 -falign-loops-max-skip=15 \
+        -falign-jumps-max-skip=15 -fprefetch-loop-arrays"
+fi
+
+CFLAGS="$ADDED_FLAGS $CFLAGS"
+CPPFLAGS="$ADDED_FLAGS $CPPFLAGS"
+CXXFLAGS="$ADDED_FLAGS $CXXFLAGS"
+LDFLAGS="-L/sw/lib $LDFLAGS"
+
 CPATH="/sw/include"
-CPPFLAGS=""
-CXXFLAGS="$CFLAGS"
-LDFLAGS="-L/sw/lib"
 
 export CFLAGS
 export CPATH
@@ -20,28 +35,87 @@ export CPPFLAGS
 export CXXFLAGS
 export LDFLAGS
 
-./configure --enable-sb16 \
-	    --enable-ne2000 \
-	    --enable-all-optimizations \
-            --enable-cpu-level=6 \
-            --enable-3dnow \
-            --enable-x86-64 \
-            --enable-vmx=2 \
-            --enable-svm \
-            --enable-avx \
-            --enable-evex \
-            --enable-cet \
-            --enable-fred \
-            --enable-pci \
-            --enable-clgd54xx \
-            --enable-geforce \
-            --enable-voodoo \
-            --enable-usb \
-            --enable-usb-ohci \
-            --enable-usb-ehci \
-            --enable-usb-xhci \
-            --enable-busmouse \
-            --enable-es1370 \
-            --enable-e1000 \
-	    --enable-plugins \
-	    ${CONFIGURE_ARGS}
+if [ "x$1" = 'x' ]; then
+    ./configure \
+        --enable-sb16 \
+        --enable-ne2000 \
+        --enable-all-optimizations \
+        --enable-cpu-level=6 \
+        --enable-3dnow \
+        --enable-x86-64 \
+        --enable-vmx=2 \
+        --enable-svm \
+        --enable-avx \
+        --enable-evex \
+        --enable-cet \
+        --enable-fred \
+        --enable-pci \
+        --enable-clgd54xx \
+        --enable-geforce \
+        --enable-voodoo \
+        --enable-usb \
+        --enable-usb-ohci \
+        --enable-usb-ehci \
+        --enable-usb-xhci \
+        --enable-busmouse \
+        --enable-es1370 \
+        --enable-e1000 \
+        --enable-plugins \
+        ${CONFIGURE_ARGS}
+elif [ "$1" = 'nosound' ]; then
+    # Frequently, finding the QuickTime framework is not possible; it was
+    # available for a relatively short time, and most people lay on either one
+    # side or the other of the gap. This preset removes the need for it, until
+    # an alternative backend is implemented.
+    echo 'Disabling sound output.'
+    ./configure \
+        --enable-ne2000 \
+        --enable-all-optimizations \
+        --enable-cpu-level=6 \
+        --enable-3dnow \
+        --enable-x86-64 \
+        --enable-vmx=2 \
+        --enable-svm \
+        --enable-avx \
+        --enable-evex \
+        --enable-cet \
+        --enable-fred \
+        --enable-pci \
+        --enable-clgd54xx \
+        --enable-geforce \
+        --enable-voodoo \
+        --enable-usb \
+        --enable-usb-ohci \
+        --enable-usb-ehci \
+        --enable-usb-xhci \
+        --enable-busmouse \
+        --enable-e1000 \
+        ${CONFIGURE_ARGS}
+else
+    ./configure \
+        --enable-sb16 \
+        --enable-ne2000 \
+        --enable-all-optimizations \
+        --enable-cpu-level=6 \
+        --enable-3dnow \
+        --enable-x86-64 \
+        --enable-vmx=2 \
+        --enable-svm \
+        --enable-avx \
+        --enable-evex \
+        --enable-cet \
+        --enable-fred \
+        --enable-pci \
+        --enable-clgd54xx \
+        --enable-geforce \
+        --enable-voodoo \
+        --enable-usb \
+        --enable-usb-ohci \
+        --enable-usb-ehci \
+        --enable-usb-xhci \
+        --enable-busmouse \
+        --enable-es1370 \
+        --enable-e1000 \
+        ${CONFIGURE_ARGS}
+fi
+
