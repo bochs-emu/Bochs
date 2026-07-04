@@ -4226,6 +4226,8 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
           params[p][comp_index] = in[in_index][comp_index_swizzle];
         } else if (reg_type == 2) {
           params[p][comp_index] = cnst[comp_index_swizzle];
+        } else { // reg_type == 3
+          params[p][comp_index] = 0; // default case to avoid non-initialized variable warning
         }
         if (src_abs)
           params[p][comp_index] = fabs(params[p][comp_index]);
