@@ -148,6 +148,7 @@
 #define IDC_O_EN_END                     6021
 
 #define IDC_O_REG_CONTROL_B               6100
+#define IDC_O_REG_COMMAND_STATUS_B        6101
 #define IDC_O_REG_PORT0_B                 6110
 #define IDC_O_REG_PORT1_B                 6111
 

@@ -97,7 +97,7 @@ struct S_ATTRIBUTES attribs_u_ports[] = {
 //
 struct S_ATTRIBUTES attribs_o_control[] = {
                                              //          |      31 chars + null          | <- max
-  { (1<<10),                 (1<<10),                10, "RomoteWakeupEnable"             , {-1, } },
+  { (1<<10),                 (1<<10),                10, "RemoteWakeupEnable"             , {-1, } },
   { (1<<9),                  (1<<9),                  9, "RemoteWakeupConnected"          , {-1, } },
   { (1<<8),                  (1<<8),                  8, "InterruptRouting"               , {-1, } },
   { (1<<7),                  (1<<7),                  7, "HostControllerFunctionalState 1", {-1, } },
@@ -108,7 +108,18 @@ struct S_ATTRIBUTES attribs_o_control[] = {
   { (1<<2),                  (1<<2),                  2, "PeriodicListEnable"             , {-1, } },
   { (1<<1),                  (1<<1),                  1, "ControlBulkServiceRatio 1"      , {-1, } },
   { (1<<0),                  (1<<0),                  0, "ControlBulkServiceRatio 0"      , {-1, } },
-  { 0,                   (Bit32u) -1,                 -1, "\0"                             , {-1, } }
+  { 0,                   (Bit32u) -1,                 -1, "\0"                            , {-1, } }
+};
+
+struct S_ATTRIBUTES attribs_o_cmd_sts[] = {
+                                             //          |      31 chars + null          | <- max
+  { (1<<17),                 (1<<17),                 5, "SchedulingOverrunCount 1"       , {-1, } },
+  { (1<<16),                 (1<<16),                 4, "SchedulingOverrunCount 0"       , {-1, } },
+  { (1<<3),                  (1<<3),                  3, "OwnershipChangeRequest"         , {-1, } },
+  { (1<<2),                  (1<<2),                  2, "BulkListFilled"                 , {-1, } },
+  { (1<<1),                  (1<<1),                  1, "ControlListFilled"              , {-1, } },
+  { (1<<0),                  (1<<0),                  0, "HostControllerReset"            , {-1, } },
+  { 0,                   (Bit32u) -1,                 -1, "\0"                            , {-1, } }
 };
 
 struct S_ATTRIBUTES attribs_o_ports[] = {

@@ -875,6 +875,9 @@ INT_PTR CALLBACK hc_ohci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
             case IDC_O_REG_CONTROL_B:
               do_attributes(hDlg, IDC_O_REG_CONTROL, 8, "Control Register", attribs_o_control);
               break;
+            case IDC_O_REG_COMMAND_STATUS_B:
+              do_attributes(hDlg, IDC_O_REG_COMMAND_STATUS, 8, "Command Status Register", attribs_o_cmd_sts);
+              break;
             case IDC_O_REG_PORT0_B:
               do_attributes(hDlg, IDC_O_REG_PORT0, 8, "Port0 Register", attribs_o_ports);
               break;

@@ -103,6 +103,7 @@ bool uhci_add_queue(struct USB_UHCI_QUEUE_STACK *stack, const Bit32u addr);
 
 // OHCI
 extern struct S_ATTRIBUTES attribs_o_control[];
+extern struct S_ATTRIBUTES attribs_o_cmd_sts[];
 extern struct S_ATTRIBUTES attribs_o_ports[];
 
 // xHCI
