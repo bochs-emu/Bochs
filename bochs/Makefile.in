@@ -286,7 +286,7 @@ misc/vbox.o: $(srcdir)/iodev/hdimage/vbox.cc $(srcdir)/iodev/hdimage/vbox.h \
 
 misc/bxhub.o: $(srcdir)/misc/bxhub.cc $(srcdir)/iodev/network/netmod.h \
   $(srcdir)/iodev/network/netutil.h $(srcdir)/misc/bxcompat.h
-	$(CC) @DASH@c $(BX_INCDIRS) $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bxhub.cc @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bxhub.cc @OFP@$@
 
 misc/netutil.o: $(srcdir)/iodev/network/netutil.cc $(srcdir)/iodev/network/netutil.h \
   $(srcdir)/iodev/network/netmod.h $(srcdir)/misc/bxcompat.h
