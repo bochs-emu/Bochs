@@ -138,6 +138,7 @@ fi
 
 AC_PROG_CC
 AC_PROG_CXX
+AC_PROG_AR
 AC_PROG_MAKE_SET
 
 if test "$NO_LT" != 1; then
