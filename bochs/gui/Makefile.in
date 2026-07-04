@@ -46,6 +46,7 @@ LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 X_CFLAGS = @X_CFLAGS@
 RANLIB = @RANLIB@
+AR = @AR@
 PLUGIN_PATH=@libdir@
 top_builddir    = ..
 LIBTOOL=@LIBTOOL@

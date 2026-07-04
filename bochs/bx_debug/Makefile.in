@@ -36,6 +36,7 @@ CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 RANLIB = @RANLIB@
+AR = @AR@
 
 # Definitely use flex.  Use flex version >= 2.5.4
 # Flex version 2.5.2 was reported not to work

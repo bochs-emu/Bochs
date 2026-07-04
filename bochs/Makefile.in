@@ -109,6 +109,7 @@ GUI_LINK_OPTS_WX = @GUI_LINK_OPTS_WX@
 GUI_LINK_OPTS = @GUI_LINK_OPTS@
 DEVICE_LINK_OPTS = @DEVICE_LINK_OPTS@
 RANLIB = @RANLIB@
+AR = @AR@
 
 CFLAGS_CONSOLE = @CFLAGS@ $(MCH_CFLAGS) $(FLA_FLAGS)
 CXXFLAGS_CONSOLE = @CXXFLAGS_CONSOLE@ $(MCH_CFLAGS) $(FLA_FLAGS)
@@ -376,7 +377,7 @@ gui/libgui.a::
 
 libbochs.a:
 	-rm -f libbochs.a
-	ar rv libbochs.a $(EXTERN_ENVIRONMENT_OBJS)
+	$(AR) rv libbochs.a $(EXTERN_ENVIRONMENT_OBJS)
 	$(RANLIB) libbochs.a
 
 # for wxWidgets port, on win32 platform
