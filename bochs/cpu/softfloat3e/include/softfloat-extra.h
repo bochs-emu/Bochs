@@ -36,26 +36,30 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef softfloat_extra_h
 #define softfloat_extra_h 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "internals.h"
 
 // ======= float16 ======= //
 
-BX_CPP_INLINE bool f16_sign(float16 a)
+static inline bool f16_sign(float16 a)
 {
     return signF16UI(a);
 }
 
-BX_CPP_INLINE int8_t f16_exp(float16 a)
+static inline int8_t f16_exp(float16 a)
 {
     return expF16UI(a);
 }
 
-BX_CPP_INLINE uint16_t f16_fraction(float16 a)
+static inline uint16_t f16_fraction(float16 a)
 {
     return fracF16UI(a);
 }
 
-BX_CPP_INLINE float16 f16_denormal_to_zero(float16 a)
+static inline float16 f16_denormal_to_zero(float16 a)
 {
     if (! expF16UI(a) && fracF16UI(a))
         return a & 0x8000;
@@ -64,22 +68,22 @@ BX_CPP_INLINE float16 f16_denormal_to_zero(float16 a)
 
 // ======= float32 ======= //
 
-BX_CPP_INLINE bool f32_sign(float32 a)
+static inline bool f32_sign(float32 a)
 {
     return signF32UI(a);
 }
 
-BX_CPP_INLINE int16_t f32_exp(float32 a)
+static inline int16_t f32_exp(float32 a)
 {
     return expF32UI(a);
 }
 
-BX_CPP_INLINE uint32_t f32_fraction(float32 a)
+static inline uint32_t f32_fraction(float32 a)
 {
     return fracF32UI(a);
 }
 
-BX_CPP_INLINE float32 f32_denormal_to_zero(float32 a)
+static inline float32 f32_denormal_to_zero(float32 a)
 {
     if (! expF32UI(a) && fracF32UI(a))
         return a & 0x80000000;
@@ -88,22 +92,22 @@ BX_CPP_INLINE float32 f32_denormal_to_zero(float32 a)
 
 // ======= float64 ======= //
 
-BX_CPP_INLINE bool f64_sign(float64 a)
+static inline bool f64_sign(float64 a)
 {
     return signF64UI(a);
 }
 
-BX_CPP_INLINE int16_t f64_exp(float64 a)
+static inline int16_t f64_exp(float64 a)
 {
     return expF64UI(a);
 }
 
-BX_CPP_INLINE uint64_t f64_fraction(float64 a)
+static inline uint64_t f64_fraction(float64 a)
 {
     return fracF64UI(a);
 }
 
-BX_CPP_INLINE float64 f64_denormal_to_zero(float64 a)
+static inline float64 f64_denormal_to_zero(float64 a)
 {
     if (! expF64UI(a) && fracF64UI(a))
         return a & ((uint64_t)(1) << 63);
@@ -112,24 +116,28 @@ BX_CPP_INLINE float64 f64_denormal_to_zero(float64 a)
 
 // ======= floatx80 ======= //
 
-BX_CPP_INLINE bool extF80_isUnsupported(extFloat80_t a)
+static inline bool extF80_isUnsupported(extFloat80_t a)
 {
     return ((a.signExp & 0x7FFF) && !(a.signif & BX_CONST64(0x8000000000000000)));
 }
 
-BX_CPP_INLINE bool extF80_sign(extFloat80_t a)
+static inline bool extF80_sign(extFloat80_t a)
 {
     return signExtF80UI64(a.signExp);
 }
 
-BX_CPP_INLINE int16_t extF80_exp(extFloat80_t a)
+static inline int16_t extF80_exp(extFloat80_t a)
 {
     return expExtF80UI64(a.signExp);
 }
 
-BX_CPP_INLINE uint64_t extF80_fraction(extFloat80_t a)
+static inline uint64_t extF80_fraction(extFloat80_t a)
 {
     return a.signif;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

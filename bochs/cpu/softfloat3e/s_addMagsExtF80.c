@@ -65,7 +65,7 @@ extFloat80_t softfloat_addMagsExtF80(uint16_t uiA64, uint64_t uiA0, uint16_t uiB
             goto propagateNaN;
         if (sigB && ! expB)
             softfloat_raiseFlags(status, softfloat_flag_denormal);
-        return packToExtF80(uiA64, uiA0);
+        return packToExtF80_noSign(uiA64, uiA0);
     }
     if (expB == 0x7FFF) {
         if (sigB << 1) goto propagateNaN;

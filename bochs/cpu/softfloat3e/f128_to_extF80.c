@@ -73,7 +73,7 @@ extFloat80_t f128_to_extF80(float128_t a, struct softfloat_status_t *status)
             uiZ64 = packToExtF80UI64(sign, 0x7FFF);
             uiZ0  = UINT64_C(0x8000000000000000);
         }
-        return packToExtF80(uiZ64, uiZ0);
+        return packToExtF80_noSign(uiZ64, uiZ0);
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/

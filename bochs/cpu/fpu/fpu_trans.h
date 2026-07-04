@@ -28,7 +28,11 @@
 
 #include "softfloat-specialize.h"
 
-extern floatx80 softfloat_propagateNaNExtF80UI(uint16_t uiA64, uint64_t uiA0, uint16_t uiB64, uint64_t uiB0, struct softfloat_status_t *status);
+// This caused me some significant trouble to find. Maybe this whole dependency
+// structure should be handled better.
+extern "C" {
+    extern floatx80 softfloat_propagateNaNExtF80UI(uint16_t uiA64, uint64_t uiA0, uint16_t uiB64, uint64_t uiB0, struct softfloat_status_t *status);
+}
 
 /*----------------------------------------------------------------------------
 | Software IEC/IEEE extended double-precision operations.

@@ -36,6 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef internals_h
 #define internals_h 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdint.h>
 //#include "primitives.h"
@@ -109,7 +113,7 @@ float64 softfloat_normRoundPackToF64(bool, int16_t, uint64_t, struct softfloat_s
 #define isNaNExtF80UI(a64, a0) ((((a64) & 0x7FFF) == 0x7FFF) && ((a0) & UINT64_C(0x7FFFFFFFFFFFFFFF)))
 
 extFloat80_t packToExtF80(bool, uint16_t, uint64_t);
-extFloat80_t packToExtF80(uint16_t, uint64_t);
+extFloat80_t packToExtF80_noSign(uint16_t, uint64_t);
 
 /*----------------------------------------------------------------------------
 *----------------------------------------------------------------------------*/
@@ -138,5 +142,9 @@ float128_t
  softfloat_roundPackToF128(bool, int32_t, uint64_t, uint64_t, uint64_t, struct softfloat_status_t *);
 float128_t
  softfloat_normRoundPackToF128(bool, int32_t, uint64_t, uint64_t, struct softfloat_status_t *);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -36,6 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef primitives_h
 #define primitives_h 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdint.h>
 #include "config.h"
@@ -505,6 +509,10 @@ struct uint128 softfloat_mul128By32(uint64_t a64, uint64_t a0, uint32_t b)
 *----------------------------------------------------------------------------*/
 void
  softfloat_mul128To256M(uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0, uint64_t *zPtr);
+#endif
+
+#ifdef __cplusplus
+}
 #endif
 
 #endif

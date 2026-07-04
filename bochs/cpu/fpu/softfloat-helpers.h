@@ -26,6 +26,10 @@ these four paragraphs for those parts of this code that are retained.
 #ifndef _SOFTFLOAT_HELPERS_H_
 #define _SOFTFLOAT_HELPERS_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <assert.h>
 
 #include "../softfloat3e/include/primitives.h"
@@ -154,5 +158,9 @@ BX_CPP_INLINE void sub128(Bit64u a0, Bit64u a1, Bit64u b0, Bit64u b1, Bit64u *z0
     *z1Ptr = a1 - b1;
     *z0Ptr = a0 - b0 - (a1 < b1);
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

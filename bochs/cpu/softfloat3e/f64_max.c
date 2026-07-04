@@ -51,5 +51,5 @@ float64 f64_max(float64 a, float64 b, struct softfloat_status_t *status)
         b = f64_denormal_to_zero(b);
     }
 
-    return (f64_compare(a, b, status) == softfloat_relation_greater) ? a : b;
+    return (f64_compare(a, b, 0, status) == softfloat_relation_greater) ? a : b;
 }

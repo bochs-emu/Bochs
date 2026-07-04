@@ -47,7 +47,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 | Floating-Point Arithmetic.
 *----------------------------------------------------------------------------*/
 
-extFloat80_t extF80_scale(extFloat80_t a, extFloat80_t b, softfloat_status_t *status)
+extFloat80_t extF80_scale(extFloat80_t a, extFloat80_t b, struct softfloat_status_t *status)
 {
     uint16_t uiA64;
     uint64_t uiA0;
@@ -65,7 +65,7 @@ extFloat80_t extF80_scale(extFloat80_t a, extFloat80_t b, softfloat_status_t *st
     if (extF80_isUnsupported(a) || extF80_isUnsupported(b)) {
 invalid:
         softfloat_raiseFlags(status, softfloat_flag_invalid);
-        return packToExtF80(defaultNaNExtF80UI64, defaultNaNExtF80UI0);
+        return packToExtF80_noSign(defaultNaNExtF80UI64, defaultNaNExtF80UI0);
     }
 
     /*------------------------------------------------------------------------

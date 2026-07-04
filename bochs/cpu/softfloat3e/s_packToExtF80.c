@@ -38,7 +38,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "internals.h"
 #include "softfloat.h"
 
-extFloat80_t packToExtF80(uint16_t signExp, uint64_t sig)
+extFloat80_t packToExtF80_noSign(uint16_t signExp, uint64_t sig)
 {
     extFloat80_t z;
     z.signExp = signExp;

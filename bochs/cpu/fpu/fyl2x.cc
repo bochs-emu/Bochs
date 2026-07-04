@@ -32,12 +32,12 @@ these four paragraphs for those parts of this code that are retained.
 static const floatx80 floatx80_one = packFloatx80(0, 0x3fff, BX_CONST64(0x8000000000000000));
 
 static const float128_t float128_one =
-    packFloat128(BX_CONST64(0x3fff000000000000), BX_CONST64(0x0000000000000000));
+    pack2Float128(BX_CONST64(0x3fff000000000000), BX_CONST64(0x0000000000000000));
 static const float128_t float128_two =
-    packFloat128(BX_CONST64(0x4000000000000000), BX_CONST64(0x0000000000000000));
+    pack2Float128(BX_CONST64(0x4000000000000000), BX_CONST64(0x0000000000000000));
 
 static const float128_t float128_ln2inv2 =
-    packFloat128(BX_CONST64(0x400071547652b82f), BX_CONST64(0xe1777d0ffda0d23a));
+    pack2Float128(BX_CONST64(0x400071547652b82f), BX_CONST64(0xe1777d0ffda0d23a));
 
 #define SQRT2_HALF_SIG 	BX_CONST64(0xb504f333f9de6484)
 

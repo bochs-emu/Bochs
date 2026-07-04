@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-float32 f32_range(float32 a, float32 b, bool is_max, bool is_abs, int sign_ctrl, softfloat_status_t *status)
+float32 f32_range(float32 a, float32 b, bool is_max, bool is_abs, int sign_ctrl, struct softfloat_status_t *status)
 {
     bool signA;
     int16_t expA;

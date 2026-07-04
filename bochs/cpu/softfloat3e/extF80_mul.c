@@ -63,7 +63,7 @@ extFloat80_t extF80_mul(extFloat80_t a, extFloat80_t b, struct softfloat_status_
     // handle unsupported extended double-precision floating encodings
     if (extF80_isUnsupported(a) || extF80_isUnsupported(b)) {
         softfloat_raiseFlags(status, softfloat_flag_invalid);
-        return packToExtF80(defaultNaNExtF80UI64, defaultNaNExtF80UI0);
+        return packToExtF80_noSign(defaultNaNExtF80UI64, defaultNaNExtF80UI0);
     }
 
     /*------------------------------------------------------------------------
@@ -150,5 +150,5 @@ extFloat80_t extF80_mul(extFloat80_t a, extFloat80_t b, struct softfloat_status_
         uiZ64 = packToExtF80UI64(signZ, 0x7FFF);
         uiZ0  = UINT64_C(0x8000000000000000);
     }
-    return packToExtF80(uiZ64, uiZ0);
+    return packToExtF80_noSign(uiZ64, uiZ0);
 }

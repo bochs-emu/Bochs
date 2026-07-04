@@ -36,6 +36,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef softfloat_types_h
 #define softfloat_types_h 1
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdint.h>
 #include "config.h"
 
@@ -85,7 +89,7 @@ struct f64_t {
 #endif
 };
 
-typedef uint128 float128_t;
+typedef struct uint128 float128_t;
 
 /*----------------------------------------------------------------------------
 | The format of an 80-bit extended floating-point number in memory.  This
@@ -118,5 +122,9 @@ struct extFloat80M {
 | significand of the native type.
 *----------------------------------------------------------------------------*/
 typedef struct extFloat80M extFloat80_t, floatx80;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

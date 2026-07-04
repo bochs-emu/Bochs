@@ -66,11 +66,11 @@ extFloat80_t
         if (expB == 0x7FFF) {
             if ((sigB<<1)) goto propagateNaN;
             softfloat_raiseFlags(status, softfloat_flag_invalid);
-            return packToExtF80(defaultNaNExtF80UI64, defaultNaNExtF80UI0);
+            return packToExtF80_noSign(defaultNaNExtF80UI64, defaultNaNExtF80UI0);
         }
         if (sigB && ! expB)
             softfloat_raiseFlags(status, softfloat_flag_denormal);
-        return packToExtF80(uiA64, uiA0);
+        return packToExtF80_noSign(uiA64, uiA0);
     }
     if (expB == 0x7FFF) {
         if ((sigB<<1)) goto propagateNaN;

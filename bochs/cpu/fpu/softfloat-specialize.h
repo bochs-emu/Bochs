@@ -30,6 +30,10 @@ these four paragraphs for those parts of this code that are retained.
 #ifndef _SOFTFLOAT_SPECIALIZE_H_
 #define _SOFTFLOAT_SPECIALIZE_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "../softfloat3e/include/softfloat_types.h"
 
 /*============================================================================
@@ -203,7 +207,7 @@ BX_CPP_INLINE float128_t packFloat128(int zSign, Bit32s zExp, Bit64u zSig0, Bit6
 | floating-point value, returning the result.
 *----------------------------------------------------------------------------*/
 
-BX_CPP_INLINE float128_t packFloat128(Bit64u zHi, Bit64u zLo)
+BX_CPP_INLINE float128_t pack2Float128(Bit64u zHi, Bit64u zLo)
 {
     float128_t z;
     z.v0  = zLo;
@@ -214,9 +218,13 @@ BX_CPP_INLINE float128_t packFloat128(Bit64u zHi, Bit64u zLo)
 #ifdef _MSC_VER
 #define PACK_FLOAT_128(hi,lo) { lo, hi }
 #else
-#define PACK_FLOAT_128(hi,lo) packFloat128(BX_CONST64(hi),BX_CONST64(lo))
+#define PACK_FLOAT_128(hi,lo) pack2Float128(BX_CONST64(hi),BX_CONST64(lo))
 #endif
 
 #endif /* FLOAT128 */
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

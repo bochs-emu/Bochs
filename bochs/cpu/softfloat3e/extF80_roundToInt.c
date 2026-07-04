@@ -52,7 +52,7 @@ extFloat80_t
     // handle unsupported extended double-precision floating encodings
     if (extF80_isUnsupported(a)) {
         softfloat_raiseFlags(status, softfloat_flag_invalid);
-        return packToExtF80(defaultNaNExtF80UI64, defaultNaNExtF80UI0);
+        return packToExtF80_noSign(defaultNaNExtF80UI64, defaultNaNExtF80UI0);
     }
 
     /*------------------------------------------------------------------------
@@ -120,5 +120,5 @@ extFloat80_t
         if (sigZ > sigA)
             softfloat_setRoundingUp(status);
     }
-    return packToExtF80(uiZ64, sigZ);
+    return packToExtF80_noSign(uiZ64, sigZ);
 }

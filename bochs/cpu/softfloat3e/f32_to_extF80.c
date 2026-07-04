@@ -67,7 +67,7 @@ extFloat80_t f32_to_extF80(float32 a, struct softfloat_status_t *status)
             uiZ64 = packToExtF80UI64(sign, 0x7FFF);
             uiZ0  = UINT64_C(0x8000000000000000);
         }
-        return packToExtF80(uiZ64, uiZ0);
+        return packToExtF80_noSign(uiZ64, uiZ0);
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -84,5 +84,5 @@ extFloat80_t f32_to_extF80(float32 a, struct softfloat_status_t *status)
     *------------------------------------------------------------------------*/
     uiZ64 = packToExtF80UI64(sign, exp + 0x3F80);
     uiZ0  = (uint64_t) (frac | 0x00800000)<<40;
-    return packToExtF80(uiZ64, uiZ0);
+    return packToExtF80_noSign(uiZ64, uiZ0);
 }

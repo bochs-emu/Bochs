@@ -46,7 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 | value `b', or 'float_relation_unordered' otherwise.
 *----------------------------------------------------------------------------*/
 
-int extF80_compare(extFloat80_t a, extFloat80_t b, int quiet, softfloat_status_t *status)
+int extF80_compare(extFloat80_t a, extFloat80_t b, int quiet, struct softfloat_status_t *status)
 {
     uint16_t uiA64;
     uint64_t uiA0;

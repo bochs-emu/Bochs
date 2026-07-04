@@ -51,5 +51,5 @@ float32 f32_min(float32 a, float32 b, struct softfloat_status_t *status)
         b = f32_denormal_to_zero(b);
     }
 
-    return (f32_compare(a, b, status) == softfloat_relation_less) ? a : b;
+    return (f32_compare(a, b, 0, status) == softfloat_relation_less) ? a : b;
 }

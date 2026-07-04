@@ -51,5 +51,5 @@ float16 f16_max(float16 a, float16 b, struct softfloat_status_t *status)
         b = f16_denormal_to_zero(b);
     }
 
-    return (f16_compare(a, b, status) == softfloat_relation_greater) ? a : b;
+    return (f16_compare(a, b, 0, status) == softfloat_relation_greater) ? a : b;
 }

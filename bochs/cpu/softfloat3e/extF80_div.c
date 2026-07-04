@@ -185,5 +185,5 @@ extFloat80_t extF80_div(extFloat80_t a, extFloat80_t b, struct softfloat_status_
     *------------------------------------------------------------------------*/
  invalid:
     softfloat_raiseFlags(status, softfloat_flag_invalid);
-    return packToExtF80(defaultNaNExtF80UI64, defaultNaNExtF80UI0);
+    return packToExtF80_noSign(defaultNaNExtF80UI64, defaultNaNExtF80UI0);
 }

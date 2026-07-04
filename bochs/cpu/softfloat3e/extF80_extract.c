@@ -60,7 +60,7 @@ extFloat80_t extF80_extract(extFloat80_t *a, struct softfloat_status_t *status)
     // handle unsupported extended double-precision floating encodings
     if (extF80_isUnsupported(*a)) {
         softfloat_raiseFlags(status, softfloat_flag_invalid);
-        *a = packToExtF80(defaultNaNExtF80UI64, defaultNaNExtF80UI0);
+        *a = packToExtF80_noSign(defaultNaNExtF80UI64, defaultNaNExtF80UI0);
         return *a;
     }
     /*------------------------------------------------------------------------
