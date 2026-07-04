@@ -37,6 +37,7 @@ CXXFLAGS = @CXXFLAGS@ @GUI_CXXFLAGS@
 LDFLAGS    = @LDFLAGS@
 LIBS       = @LIBS@
 RANLIB     = @RANLIB@
+AR         = @AR@
 
 L_TARGET = libfpu.a
 

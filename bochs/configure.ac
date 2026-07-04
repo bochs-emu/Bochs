@@ -2474,7 +2474,7 @@ SLASH="/"
 CXXFP=""
 CFP=""
 OFP="-o "
-MAKELIB="ar rv \$@"
+MAKELIB="\$(AR) rv \$@"
 RMCOMMAND="rm -f "
 # first define link variables without libtool
 LINK="\$(CXX) -o \$@ \$(CXXFLAGS) \$(LDFLAGS)"

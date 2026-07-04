@@ -37,6 +37,7 @@ CXXFLAGS = @CXXFLAGS@ @GUI_CXXFLAGS@
 LDFLAGS    = @LDFLAGS@
 LIBS       = @LIBS@
 RANLIB     = @RANLIB@
+AR         = @AR@
 
 BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I$(srcdir)/../.. -I../../@INSTRUMENT_DIR@ -I$(srcdir)/../../@INSTRUMENT_DIR@
 

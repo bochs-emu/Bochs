@@ -45,6 +45,7 @@ CPPFLAGS = $(BX_INCDIRS) @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 RANLIB = @RANLIB@
+AR = @AR@
 PLUGIN_PATH=@libdir@
 top_builddir    = ../..
 LIBTOOL=@LIBTOOL@
