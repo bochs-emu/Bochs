@@ -267,6 +267,7 @@ struct bx_efer_t {
 
 #if BX_CPU_LEVEL >= 6
 
+// assumption: should fit in 16-bit
 const unsigned XSAVE_HEADER_LEN             = 64;
 const unsigned XSAVE_FPU_STATE_LEN          = 160;
 const unsigned XSAVE_SSE_STATE_LEN          = 256;
@@ -289,6 +290,7 @@ const unsigned XSAVE_XTILECFG_STATE_LEN     = 64;
 const unsigned XSAVE_XTILEDATA_STATE_LEN    = 8192;
 const unsigned XSAVE_APX_STATE_LEN          = 128;
 
+// assumption: should fit in 16-bit
 const unsigned XSAVE_FPU_STATE_OFFSET       = 0;
 const unsigned XSAVE_SSE_STATE_OFFSET       = 160;
 const unsigned XSAVE_YMM_STATE_OFFSET       = 576;
@@ -389,13 +391,18 @@ typedef void (BX_CPU_C::*XRestorInitPtr_tR)(void);
 #endif
 
 struct XSaveRestoreStateHelper {
-  unsigned len;
-  unsigned offset;
+  Bit16u len;
+  Bit16u offset;
+  Bit32u attr;
   XSaveStateInUsePtr_tR xstate_in_use_method;
   XSavePtr_tR xsave_method;
   XRestorPtr_tR xrstor_method;
   XRestorInitPtr_tR xrstor_init_method;
 };
+
+const unsigned BX_XSAVE_XSS_ONLY    = 0x1;
+const unsigned BX_XSAVE_ALIGN64     = 0x2;
+const unsigned BX_XSAVE_XFD_SUPPORT = 0x4;
 
 #endif
 

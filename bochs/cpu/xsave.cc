@@ -49,7 +49,17 @@ extern XSaveRestoreStateHelper xsave_restore[];
 #include "scalar_arith.h"
 
 #if BX_CPU_LEVEL >= 6
-BX_CPP_INLINE bx_address xsave_area_last_byte(Bit32u requested_feature_bitmap, bool compaction = false)
+BX_CPP_INLINE Bit32u xsave_offset_align64_if_needed(Bit32u offset, unsigned feature)
+{
+  if ((xsave_restore[feature].attr & BX_XSAVE_ALIGN64) != 0) {
+    // enforce 64-bit alignment
+    if ((offset & 0x3f) != 0)
+      offset += 64 - (offset & 0x3f);
+  }
+  return offset;
+}
+
+BX_CPP_INLINE Bit32u xsave_area_last_byte(Bit32u requested_feature_bitmap, bool compaction = false)
 {
   if (compaction) {
     Bit32u offset = XSAVE_YMM_STATE_OFFSET;
@@ -57,8 +67,10 @@ BX_CPP_INLINE bx_address xsave_area_last_byte(Bit32u requested_feature_bitmap, b
     for (unsigned feature = xcr0_t::BX_XCR0_YMM_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
     {
       Bit32u feature_mask = (1 << feature);
-      if ((requested_feature_bitmap & feature_mask) != 0)
+      if ((requested_feature_bitmap & feature_mask) != 0) {
+        offset =  xsave_offset_align64_if_needed(offset, feature);
         offset += xsave_restore[feature].len;
+      }
     }
 
     return offset;
@@ -232,6 +244,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSAVEC(bxInstruction_c *i)
 
       if ((requested_feature_bitmap & feature_mask) != 0)
       {
+        offset = xsave_offset_align64_if_needed(offset, feature);
+
         if (xinuse & feature_mask) {
           bx_address feature_offset = (eaddr + offset) & asize_mask;
 
@@ -413,6 +427,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
     for (unsigned feature = xcr0_t::BX_XCR0_YMM_BIT; feature < xcr0_t::BX_XCR0_LAST; feature++)
     {
       Bit32u feature_mask = (1 << feature);
+
+      if (format & feature_mask)
+        offset = xsave_offset_align64_if_needed(offset, feature);
 
       if ((requested_feature_bitmap & feature_mask) != 0)
       {

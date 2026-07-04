@@ -259,9 +259,9 @@ void bx_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *
       leaf->eax = xsave_restore[subfunction].len;
       leaf->ebx = xsave_restore[subfunction].offset;
       // ECX[0] - set if this component managed through IA32_XSS register
-      // ECX[1] - set to indicate this component must be aligned to 64-byte
+      // ECX[1] - set to indicate this component must be aligned to 64-byte when the compacted format of an XSAVE area is used
       // ECX[2] - XFD support for this component
-      leaf->ecx = (cpu->ia32_xss_suppmask & (1 << subfunction)) != 0;
+      leaf->ecx = xsave_restore[subfunction].attr;
       leaf->edx = 0;
     }
   }
