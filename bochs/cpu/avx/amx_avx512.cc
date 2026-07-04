@@ -36,7 +36,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::tilemov_row(bxInstruction_c *i, bool immed
   unsigned tile_src = i->src1();
   check_tile(i, tile_src);
 
-  unsigned row, row_chunk;
+  unsigned row;
   if (immediate_form) {
     row = i->Ib();
   }
