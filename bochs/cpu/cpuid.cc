@@ -1442,7 +1442,13 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
 
   //   [13:11]  reserved
   //   [14:14]  PREFETCHITI: PREFETCHIT0/T1 instruction
+
   //   [15:15]  USER_MSR: support for URDMSR/UWRMSR instructions
+#if BX_SUPPORT_X86_64
+  if (is_cpu_extension_supported(BX_ISA_USER_MSR))
+    edx |= BX_CPUID_STD7_SUBLEAF1_EDX_USER_MSR;
+#endif
+
   //   [16:16]  reserved
 
   //   [17:17]  Flexible UIRET: UIRET sets UIF to the RFLAGS[1] image loaded from the stack

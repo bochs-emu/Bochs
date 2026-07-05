@@ -2879,6 +2879,15 @@ bx_define_opcode(BX_IA_KTESTD_KGdKEd, "ktestd", "ktestd", &BX_CPU_C::BxError, &B
 // RDMSR/WRMSRNS imm form
 bx_define_opcode(BX_IA_RDMSR_EqId, "rdmsr", "rdmsr", NULL, &BX_CPU_C::RDMSR, BX_ISA_MSR_IMM, OP_Eq, OP_Id, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_WRMSRNS_IdEq, "wrmsrns", "wrmsrns", NULL, &BX_CPU_C::WRMSR, BX_ISA_MSR_IMM, OP_Id, OP_Eq, OP_NONE, OP_NONE, BX_TRACE_END)
+
+// URDMSR/UWRMSR imm form
+bx_define_opcode(BX_IA_URDMSR_EqId, "urdmsr", "urdmsr", NULL, &BX_CPU_C::URDMSR, BX_ISA_USER_MSR, OP_Eq, OP_Id, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_UWRMSR_IdEq, "uwrmsr", "uwrmsr", NULL, &BX_CPU_C::UWRMSR, BX_ISA_USER_MSR, OP_Id, OP_Eq, OP_NONE, OP_NONE, BX_TRACE_END)
+#endif
+
+#if BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_URDMSR_EqGq, "urdmsr", "urdmsr", NULL, &BX_CPU_C::URDMSR, BX_ISA_USER_MSR, OP_Eq, OP_Gq, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_UWRMSR_GqEq, "uwrmsr", "uwrmsr", NULL, &BX_CPU_C::UWRMSR, BX_ISA_USER_MSR, OP_Gq, OP_Eq, OP_NONE, OP_NONE, BX_TRACE_END)
 #endif
 
 // MOVRS only supported in 64-bit mode

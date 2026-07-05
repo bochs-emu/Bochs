@@ -41,6 +41,11 @@ enum MSR_Register {
   BX_MSR_TSC            = 0x010,
   BX_MSR_PLATFORM_ID    = 0x017,
   BX_MSR_APICBASE       = 0x01b,
+
+#if BX_SUPPORT_X86_64
+  BX_MSR_IA32_USER_MSR_CTL = 0x01c,
+#endif
+
   BX_MSR_TSC_ADJUST     = 0x03b,
   BX_MSR_TSC_DEADLINE   = 0x6e0,
 

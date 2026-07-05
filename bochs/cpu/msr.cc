@@ -60,6 +60,10 @@ void BX_CPU_C::init_MSRs()
   msr_desc[BX_MSR_APICBASE] = new MSR_Descriptor("MSR_APICBASE", BX_ISA_PENTIUM);
 #endif
 
+#if BX_SUPPORT_X86_64
+  msr_desc[BX_MSR_IA32_USER_MSR_CTL] = new MSR_Descriptor("MSR_IA32_USER_MSR_CTL", BX_ISA_USER_MSR);
+#endif
+
   msr_desc[BX_MSR_IA32_APERF] = new MSR_Descriptor("MSR_IA32_APERF", BX_ISA_PENTIUM);
   msr_desc[BX_MSR_IA32_MPERF] = new MSR_Descriptor("MSR_IA32_MPERF", BX_ISA_PENTIUM);
 
@@ -275,7 +279,14 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       // IA32_MPERF MSR increments in proportion to a fixed frequency, which is configured when the processor is booted.
       // IA32_APERF MSR increments in proportion to actual performance, while accounting for hardware coordination of P-state and TM1/TM2; or software initiated throttling.
       //     use system (not virtualized) TSC counter
-      return BX_CPU_THIS_PTR get_TSC();
+      val64 = BX_CPU_THIS_PTR get_TSC();
+      break;
+
+#if BX_SUPPORT_X86_64
+    case BX_MSR_IA32_USER_MSR_CTL:
+      val64 = BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl;
+      break;
+#endif
 
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:
@@ -728,14 +739,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     Bit32u reason = VMX_VMEXIT_RDMSR;
-    Bit32u qualification = 0;
 #if BX_SUPPORT_AVX
     if (i->getIaOpcode() == BX_IA_RDMSR_EqId) {
       reason = VMX_VMEXIT_RDMSR_IMM;
-      qualification = i->dst();
     }
 #endif
-    VMexit_MSR(reason, index, qualification);
+    VMexit_MSR(reason, index, 0);
   }
 #endif
 
@@ -877,6 +886,16 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_IA32_MPERF:
       BX_INFO(("WRMSR: ignore write into MSR IA32_MPERF"));
       break;
+
+#if BX_SUPPORT_X86_64
+    case BX_MSR_IA32_USER_MSR_CTL:
+      if (! IsCanonical(val_64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_USER_MSR_CTL !"));
+        return false;
+      }
+      BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl = val_64;
+      break;
+#endif
 
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:
@@ -1520,12 +1539,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     Bit32u reason = VMX_VMEXIT_WRMSR;
     Bit32u qualification = 0;
-#if BX_SUPPORT_AVX
-    if (i->getIaOpcode() == BX_IA_WRMSRNS_IdEq) {
+    if (i->getIaOpcode() != BX_IA_WRMSR) {
       reason = VMX_VMEXIT_WRMSRNS;
-      qualification = i->src();
+      qualification = 1; // For WRMSR, the exit qualification is 0, while for WRMSRNS it is 1
     }
-#endif
     VMexit_MSR(reason, index, qualification);
   }
 #endif
@@ -1646,6 +1663,85 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSRLIST(bxInstruction_c *i)
   }
 
   BX_NEXT_TRACE(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::URDMSR(bxInstruction_c *i)
+{
+  Bit32u index;
+#if BX_SUPPORT_AVX
+  if (i->getIaOpcode() == BX_IA_URDMSR_EqId) index = i->Id();
+  else
+#endif
+    index = BX_READ_64BIT_REG(i->src());
+
+  if ((BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl & 0x1) == 0) {
+    BX_ERROR(("%s: USER_MSR is disabled in IA32_USER_MSR_CTL", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  if (index > 0x3fff) {
+    BX_ERROR(("%s: MSR %x cannot be read by instruction", i->getIaOpcodeNameShort(), index));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  Bit8u access_control = system_read_byte(LPFOf(BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl) + (index >> 3));
+  if (access_control & (1 << (index & 7)))
+  {
+#if BX_SUPPORT_VMX
+    if (BX_CPU_THIS_PTR in_vmx_guest)
+      VMexit_MSR(VMX_VMEXIT_URDMSR, index, 0);
+#endif
+
+    Bit64u val_64 = 0;
+    if (!rdmsr(index, &val_64))
+      exception(BX_GP_EXCEPTION, 0);
+    BX_WRITE_64BIT_REG(i->dst(), val_64);
+  }
+  else {
+    BX_ERROR(("%s: MSR %x cannot be read by instruction", i->getIaOpcodeNameShort(), index));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::UWRMSR(bxInstruction_c *i)
+{
+  Bit32u index;
+#if BX_SUPPORT_AVX
+  if (i->getIaOpcode() == BX_IA_UWRMSR_IdEq) index = i->Id();
+  else
+#endif
+    index = BX_READ_64BIT_REG(i->dst());
+
+  if ((BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl & 0x1) == 0) {
+    BX_ERROR(("%s: USER_MSR is disabled in IA32_USER_MSR_CTL", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  if (index > 0x3fff) {
+    BX_ERROR(("%s: MSR %x cannot be written by instruction", i->getIaOpcodeNameShort(), index));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  Bit8u access_control = system_read_byte(LPFOf(BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl) + (index >> 3) + 2048);
+  if (access_control & (1 << (index & 7)))
+  {
+#if BX_SUPPORT_VMX
+    if (BX_CPU_THIS_PTR in_vmx_guest)
+      VMexit_MSR(VMX_VMEXIT_UWRMSR, index, 0);
+#endif
+
+    Bit64u val_64 = BX_READ_64BIT_REG(i->src());
+    if (!wrmsr(index, val_64))
+      exception(BX_GP_EXCEPTION, 0);
+  }
+  else {
+    BX_ERROR(("%s: MSR %x cannot be written by instruction", i->getIaOpcodeNameShort(), index));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  BX_NEXT_INSTR(i);
 }
 
 #endif

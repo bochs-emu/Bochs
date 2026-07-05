@@ -533,6 +533,11 @@ void BX_CPU_C::register_state(void)
     BXRS_HEX_PARAM_FIELD(MSR, ia32_umwait_ctrl, msr.ia32_umwait_ctrl);
   }
 #endif
+#if BX_SUPPORT_X86_64
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_USER_MSR)) {
+    BXRS_HEX_PARAM_FIELD(MSR, ia32_user_msr_ctrl, msr.ia32_user_msr_ctrl);
+  }
+#endif
 
 #if BX_SUPPORT_SVM
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM)) {
@@ -1080,6 +1085,10 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_CPU_THIS_PTR msr.ia32_umwait_ctrl = 0;
+#endif
+
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl = 0;
 #endif
 
 #if BX_SUPPORT_SVM
