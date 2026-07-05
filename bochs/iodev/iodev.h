@@ -29,7 +29,6 @@
 #include "plugin.h"
 #include "param_names.h"
 #include "memory/memory-bochs.h"
-#include "gui/siminterface.h"
 #include "gui/gui.h"
 
 /* number of IRQ lines supported.  In an ISA PC there are two
