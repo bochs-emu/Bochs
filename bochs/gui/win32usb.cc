@@ -23,7 +23,7 @@
 
 #if BX_USB_DEBUGGER
 
-#include "windowsx.h"
+#include <windowsx.h>
 
 #include "win32dialog.h"
 
@@ -3706,8 +3706,6 @@ BOOL    a_single;
 DWORD64 a_attrib;
 const struct S_ATTRIBUTES *a_attributes;
 HWND ListBox = NULL;
-
-#include <windowsx.h>
 
 static INT_PTR CALLBACK attribute_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
