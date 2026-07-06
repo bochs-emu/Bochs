@@ -77,7 +77,6 @@ bool BX_CPU_C::handleWaitForEvent(void)
 
     if (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_ACTIVE) {
       // happens also when MWAIT monitor was hit
-//    BX_INFO(("handleWaitForEvent: reset detected in HLT state"));
       break;
     }
 
