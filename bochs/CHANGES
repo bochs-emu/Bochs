@@ -1,6 +1,6 @@
 Changes after 3.0:
 
-  This CHANGES file updated with commits merged till 4 Apr 2026, please refer to git log for more recent updates
+  This CHANGES file updated with commits merged till 7 Jul 2026, please refer to git log for more recent updates
 
 Detailed change log :
 
@@ -40,12 +40,14 @@ Detailed change log :
   - Fixed compilation of plugin version on Windows with newer gcc versions
   - Updated MSVCPP project files
   - Win32: fix compilation error when SHOW_IPS is not compiled in
+  - Compilation fixes for Big Endian host (PPC32 Mac)
 
 - Config interface
   - Win32 start/runtime configure dialogs rewritten and look much more user friendly now
   - USB configuration is now a separate menu item in all config interfaces
   - On Windows make sure file name parameters use backslash as separator
   - Removed backward compatibility mode for USB device options
+  - Rewrite of the VGA extension and model handling
 
 - Memory
   - Increased maximum host memory size to 8192 MB (was 2048 MB)
@@ -307,6 +309,7 @@ Detailed change log :
     - VGA core: added support for read/write modes in odd/even (text) mode
     - VGA core: fixed write mode 3 with data rotation
     - Added VBE memory size option (requires latest VGABIOS)
+    - VGA core: Added offset check in mem_write() to avoid OOB writes
   - Cirrus SVGA
     - Added support for hardware cursor in VGA mode
     - Fixed text mode cursor blinking / text mode cursor rendering issues
@@ -341,6 +344,7 @@ Detailed change log :
     - Sound drivers: Moving audio buffers to waveout class fixes wavemode 2 & 3
     - Added PCM playback/recording support using PulseAudio simple API
     - ES1370: fixing status register access makes mixer work
+    - SB16: fix OPL timer mask check missing bit isolation
   - Networking
     - Added support for using libslirp library instead of builtin slirp code
     - Updated builtin slirp based on libslirp 4.8.0 (including IPv6 support)
