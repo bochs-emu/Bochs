@@ -11,7 +11,7 @@ Bochs is capable of running most Operating Systems inside the emulation
 including Linux, DOS or Microsoft Windows.
 
 Bochs provides many different modes of operation, in support of a wide 
-variety of usecases.  The 'typical' use of Bochs is to provide complete 
+variety of use-cases. The 'typical' use of Bochs is to provide complete 
 x86 PC emulation, including the x86 processor, hardware devices, and memory.
 This allows you to run OSes and software within the emulator on your workstation,
 much like you have a machine inside of a machine. For instance, let's say 
@@ -21,17 +21,17 @@ your Unix/X11 workstation, displaying a window on your workstation, simulating
 a monitor on a PC.
 
 ## Bochs' Approach
-Bochs is an emulator - not virtualization software.  It is portable across many 
-architectures: x86, ARM, MIPS, etc.  This means it must be able to emulate 
+Bochs is an emulator - not virtualization software. It is portable across many 
+architectures: x86, ARM, MIPS, etc. This means it must be able to emulate 
 every CPU instruction.
 
 This distinguishes Bochs from virtualization solutions like e.g. VirtualBox,
-VMWare, etc.  Those projects provide a nice user experience and fast
+VMWare, etc. Those projects provide a nice user experience and fast
 performance, at the cost of hardware constraints, some non-determinism and 
 some necessary hacks to get programs working.
 
 Bochs' emulation provides a controlled, accurate execution environment, at 
-the cost of speed/performance.  This can be advantageous in some situations,
+the cost of speed/performance. This can be advantageous in some situations,
 for example:
 * When developing an operating system or bootloader
 * When dealing with very old, mission-critical software
