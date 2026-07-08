@@ -1281,10 +1281,6 @@ public: // for now...
   BX_SMF void clear_avx_ok();
   BX_SMF bool get_avx_ok();
 
-  BX_SMF void set_opmask_ok();
-  BX_SMF void clear_opmask_ok();
-  BX_SMF bool get_opmask_ok();
-
   BX_SMF void set_evex_ok();
   BX_SMF void clear_evex_ok();
   BX_SMF bool get_evex_ok();
@@ -4485,7 +4481,6 @@ public: // for now...
   BX_SMF void BxNoAVX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 #if BX_SUPPORT_EVEX
-  BX_SMF void BxNoOpMask(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxNoEVEX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 #if BX_SUPPORT_AMX
@@ -5544,9 +5539,8 @@ enum {
   BX_FETCH_MODE_FPU_MMX_OK = (1 << 3),
   BX_FETCH_MODE_SSE_OK     = (1 << 4),
   BX_FETCH_MODE_AVX_OK     = (1 << 5),
-  BX_FETCH_MODE_OPMASK_OK  = (1 << 6),
-  BX_FETCH_MODE_EVEX_OK    = (1 << 7),
-  BX_FETCH_MODE_AMX_OK     = (1 << 8)
+  BX_FETCH_MODE_EVEX_OK    = (1 << 6),
+  BX_FETCH_MODE_AMX_OK     = (1 << 7)
 };
 
 BX_CPP_INLINE void BX_CPU_C::set_fpu_mmx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_FPU_MMX_OK; }
@@ -5558,12 +5552,8 @@ BX_CPP_INLINE void BX_CPU_C::clear_sse_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &
 BX_CPP_INLINE bool BX_CPU_C::get_sse_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_SSE_OK); }
 
 BX_CPP_INLINE void BX_CPU_C::set_avx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_AVX_OK; }
-BX_CPP_INLINE void BX_CPU_C::clear_avx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~(BX_FETCH_MODE_AVX_OK | BX_FETCH_MODE_EVEX_OK | BX_FETCH_MODE_OPMASK_OK); }
+BX_CPP_INLINE void BX_CPU_C::clear_avx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~(BX_FETCH_MODE_AVX_OK | BX_FETCH_MODE_EVEX_OK); }
 BX_CPP_INLINE bool BX_CPU_C::get_avx_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_AVX_OK); }
-
-BX_CPP_INLINE void BX_CPU_C::set_opmask_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_OPMASK_OK; }
-BX_CPP_INLINE void BX_CPU_C::clear_opmask_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~BX_FETCH_MODE_OPMASK_OK; }
-BX_CPP_INLINE bool BX_CPU_C::get_opmask_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_OPMASK_OK); }
 
 BX_CPP_INLINE void BX_CPU_C::set_evex_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_EVEX_OK; }
 BX_CPP_INLINE void BX_CPU_C::clear_evex_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~BX_FETCH_MODE_EVEX_OK; }

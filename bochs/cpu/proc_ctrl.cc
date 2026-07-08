@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -537,18 +537,10 @@ void BX_CPU_C::handleAvxModeChange(void)
       set_avx_ok();
 
 #if BX_SUPPORT_EVEX
-      if ((~BX_CPU_THIS_PTR xcr0.get32() & BX_XCR0_OPMASK_MASK) != 0) {
-        clear_opmask_ok();
+      if ((~BX_CPU_THIS_PTR xcr0.get32() & (BX_XCR0_ZMM_HI256_MASK | BX_XCR0_HI_ZMM_MASK | BX_XCR0_OPMASK_MASK)) != 0)
         clear_evex_ok();
-      }
-      else {
-        set_opmask_ok();
-
-        if ((~BX_CPU_THIS_PTR xcr0.get32() & (BX_XCR0_ZMM_HI256_MASK | BX_XCR0_HI_ZMM_MASK)) != 0)
-          clear_evex_ok();
-        else
-          set_evex_ok();
-      }
+      else
+        set_evex_ok();
 #endif
     }
   }
@@ -582,22 +574,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoAVX(bxInstruction_c *i)
 #endif
 
 #if BX_SUPPORT_EVEX
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoOpMask(bxInstruction_c *i)
-{
-  if (! protected_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE())
-    exception(BX_UD_EXCEPTION, 0);
-
-  if (~BX_CPU_THIS_PTR xcr0.get32() & (BX_XCR0_SSE_MASK | BX_XCR0_YMM_MASK | BX_XCR0_OPMASK_MASK))
-    exception(BX_UD_EXCEPTION, 0);
-
-  if(BX_CPU_THIS_PTR cr0.get_TS())
-    exception(BX_NM_EXCEPTION, 0);
-
-  BX_ASSERT(0);
-
-  BX_NEXT_TRACE(i); // keep compiler happy
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoEVEX(bxInstruction_c *i)
 {
   if (! protected_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE())

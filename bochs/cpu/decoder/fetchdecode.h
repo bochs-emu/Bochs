@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013-2019 Stanislav Shwartsman
+//   Copyright (c) 2013-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -66,11 +66,11 @@ enum BxDecodeError {
 #define FetchWORD(iptr) ReadHostWordFromLittleEndian((Bit16u*)(iptr))
 #define FetchQWORD(iptr) ReadHostQWordFromLittleEndian((Bit64u*)(iptr));
 
-#define BX_PREPARE_AMX               (0x800)
-#define BX_PREPARE_EVEX_NO_BROADCAST (0x400 | BX_PREPARE_EVEX)
-#define BX_PREPARE_EVEX_NO_SAE       (0x200 | BX_PREPARE_EVEX)
-#define BX_PREPARE_EVEX              (0x100)
-#define BX_PREPARE_OPMASK            (0x80)
+#define BX_PREPARE_AMX               (0x400)
+#define BX_PREPARE_EVEX_NO_BROADCAST (0x200 | BX_PREPARE_EVEX)
+#define BX_PREPARE_EVEX_NO_SAE       (0x100 | BX_PREPARE_EVEX)
+#define BX_PREPARE_EVEX              (0x80)
+#define BX_PREPARE_OPMASK            (BX_PREPARE_EVEX)
 #define BX_PREPARE_AVX               (0x40)
 #define BX_PREPARE_SSE               (0x20)
 #define BX_PREPARE_MMX               (0x10)
