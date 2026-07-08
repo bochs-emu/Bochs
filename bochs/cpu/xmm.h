@@ -354,17 +354,16 @@ typedef BxPackedYmmRegister BxPackedAvxRegister;
 #define BX_READ_AVX_REG_LANE(index, line) \
      (BX_CPU_THIS_PTR vmm[index].vmm128(line))
 
-/* write AVX register and potentialy clear upper part of the register */
-#define BX_WRITE_YMM_REGZ_VLEN(index, reg256, vlen)               \
-    { (BX_YMM_REG(index)) = (reg256);                             \
-      if (vlen == BX_VL256) { BX_CLEAR_AVX_HIGH256(index); }      \
-      else if (vlen == BX_VL128) { BX_CLEAR_AVX_HIGH128(index); } \
-    }
-
 /* clear upper part of the AVX register */
 #define BX_CLEAR_AVX_REGZ(index, vlen)                              \
     { if ((vlen) == BX_VL256) { BX_CLEAR_AVX_HIGH256(index); }      \
       else if ((vlen) == BX_VL128) { BX_CLEAR_AVX_HIGH128(index); } \
+    }
+
+/* write AVX register and potentialy clear upper part of the register */
+#define BX_WRITE_YMM_REGZ_VLEN(index, reg256, vlen)               \
+    { (BX_YMM_REG(index)) = (reg256);                             \
+      BX_CLEAR_AVX_REGZ(index, vlen);                             \
     }
 
 /* write AVX register and potentialy clear upper part of the register */
