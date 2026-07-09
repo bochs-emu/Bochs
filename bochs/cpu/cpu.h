@@ -1266,6 +1266,9 @@ public: // for now...
 #if BX_CPU_LEVEL >= 5
   bool  ignore_bad_msrs;
 #endif
+#if BX_SUPPORT_AVX
+  bx_avx_vector_length maxvl;
+#endif
 
   Bit32u cpu_state_use_ok;       // format of BX_FETCH_MODE_*
 

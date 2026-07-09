@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2025 Stanislav Shwartsman
+//   Copyright (c) 2003-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -283,7 +283,8 @@ typedef BxPackedYmmRegister BxPackedAvxRegister;
 #define BX_READ_YMM_REG(index) (BX_CPU_THIS_PTR vmm[index].vmm256(0))
 
 /* clear upper part of the ZMM register */
-#define BX_CLEAR_AVX_HIGH256(index) { BX_CPU_THIS_PTR vmm[index].vmm256(1).clear(); }
+#define BX_CLEAR_AVX_HIGH256(index) \
+  if (BX_CPU_THIS_PTR maxvl > BX_VL256) { BX_CPU_THIS_PTR vmm[index].vmm256(1).clear(); }
 
 #else /* BX_SUPPORT_EVEX */
 
@@ -297,10 +298,15 @@ typedef BxPackedYmmRegister BxPackedAvxRegister;
 
 #define BX_YMM_REG BX_READ_YMM_REG
 
+/* clear YMM register, upper part of the ZMM register unchanged */
+#define BX_CLEAR_YMM_REG(index) { BX_YMM_REG(index).clear(); }
+
 /* clear upper part of AVX128 register */
-#define BX_CLEAR_AVX_HIGH128(index) \
-    { BX_CPU_THIS_PTR vmm[index].vmm128(1).clear(); \
-      BX_CLEAR_AVX_HIGH256(index); }
+#define BX_CLEAR_AVX_HIGH128(index)                 \
+    if (BX_CPU_THIS_PTR maxvl > BX_VL128) {         \
+      BX_CPU_THIS_PTR vmm[index].vmm128(1).clear(); \
+      BX_CLEAR_AVX_HIGH256(index);                  \
+    }                                               \
 
 /* write YMM register and clear upper part of the AVX register */
 #define BX_WRITE_YMM_REGZ(index, reg) \
@@ -347,7 +353,7 @@ typedef BxPackedYmmRegister BxPackedAvxRegister;
 
 #define BX_AVX_REG BX_READ_AVX_REG
 
-/* write AVX register */
+/* write full AVX register */
 #define BX_WRITE_AVX_REG(index, reg) { (BX_CPU_THIS_PTR vmm[index]) = (reg); }
 
 /* read AVX register lane */
@@ -360,17 +366,28 @@ typedef BxPackedYmmRegister BxPackedAvxRegister;
       else if ((vlen) == BX_VL128) { BX_CLEAR_AVX_HIGH128(index); } \
     }
 
-/* write AVX register and potentialy clear upper part of the register */
-#define BX_WRITE_YMM_REGZ_VLEN(index, reg256, vlen)               \
-    { (BX_YMM_REG(index)) = (reg256);                             \
-      BX_CLEAR_AVX_REGZ(index, vlen);                             \
-    }
+/* write 256-bit YMM register up to vector length and clear upper part of the register */
+#define BX_WRITE_YMM_REGZ_VLEN(index, reg256, vlen) {              \
+     if ((vlen) == BX_VL128) {                                     \
+       BX_XMM_REG(index) = reg256.ymm128(0);                       \
+       BX_CLEAR_AVX_HIGH128(index);                                \
+     } else {                                                      \
+       BX_WRITE_YMM_REGZ(index, reg256);                           \
+     }                                                             \
+}
 
-/* write AVX register and potentialy clear upper part of the register */
-#define BX_WRITE_AVX_REGZ(index, reg, vlen)                       \
-    { BX_CPU_THIS_PTR vmm[index] = (reg);                         \
-      BX_CLEAR_AVX_REGZ(index, vlen);                             \
-    }
+/* write AVX register up to vector length and clear upper part of the register */
+#define BX_WRITE_AVX_REGZ(index, reg, vlen) {                      \
+     if ((vlen) == BX_VL256) {                                     \
+       BX_YMM_REG(index) = reg.vmm256(0);                          \
+       BX_CLEAR_AVX_HIGH256(index);                                \
+     } else if ((vlen) == BX_VL128) {                              \
+       BX_XMM_REG(index) = reg.vmm128(0);                          \
+       BX_CLEAR_AVX_HIGH128(index);                                \
+     } else {                                                      \
+       BX_WRITE_AVX_REG(index, reg);                               \
+     }                                                             \
+}
 
 /* clear AVX register */
 #define BX_CLEAR_AVX_REG(index) { BX_CPU_THIS_PTR vmm[index].clear(); }

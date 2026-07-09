@@ -289,7 +289,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF32x4_MASK_VpsMps(bxInstruction_
   }
   else {
     if (i->isZeroMasking()) {
-      BX_CLEAR_AVX_REG(i->dst());
+      BX_CLEAR_YMM_REG(i->dst());
+      BX_CLEAR_AVX_HIGH256(i->dst()); // clear to MAXVL
     }
     else {
       BX_CLEAR_AVX_REGZ(i->dst(), len);
@@ -318,7 +319,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF64x2_MASK_VpdMpd(bxInstruction_
   }
   else {
     if (i->isZeroMasking()) {
-      BX_CLEAR_AVX_REG(i->dst());
+      BX_CLEAR_YMM_REG(i->dst());
+      BX_CLEAR_AVX_HIGH256(i->dst()); // clear to MAXVL
     }
     else {
       BX_CLEAR_AVX_REGZ(i->dst(), len);
@@ -360,8 +362,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF64x4_MASK_VpdMpd(bxInstruction_
     avx512_write_regq_masked(i, &dst, BX_VL512, opmask);
   }
   else {
-    if (i->isZeroMasking())
-      BX_CLEAR_AVX_REG(i->dst());
+    if (i->isZeroMasking()) {
+      BX_CLEAR_YMM_REG(i->dst());
+      BX_CLEAR_AVX_HIGH256(i->dst()); // clear to MAXVL
+    }
   }
 
   BX_NEXT_INSTR(i);
@@ -383,8 +387,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VBROADCASTF32x8_MASK_VpsMps(bxInstruction_
     avx512_write_regd_masked(i, &dst, BX_VL512, opmask);
   }
   else {
-    if (i->isZeroMasking())
-      BX_CLEAR_AVX_REG(i->dst());
+    if (i->isZeroMasking()) {
+      BX_CLEAR_YMM_REG(i->dst());
+      BX_CLEAR_AVX_HIGH256(i->dst()); // clear to MAXVL
+    }
   }
 
   BX_NEXT_INSTR(i);

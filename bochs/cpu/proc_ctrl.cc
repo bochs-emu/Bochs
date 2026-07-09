@@ -553,6 +553,15 @@ void BX_CPU_C::handleAvxModeChange(void)
     set_amx_ok();
 #endif
 
+  if (BX_CPU_THIS_PTR cr4.get_OSXSAVE()) {
+    if ((BX_CPU_THIS_PTR xcr0.get32() & (BX_XCR0_ZMM_HI256_MASK | BX_XCR0_HI_ZMM_MASK | BX_XCR0_OPMASK_MASK)) != 0)
+      BX_CPU_THIS_PTR maxvl = BX_VL512;
+    else if ((BX_CPU_THIS_PTR xcr0.get32() & BX_XCR0_YMM_MASK) != 0)
+      BX_CPU_THIS_PTR maxvl = BX_VL256;
+    else
+      BX_CPU_THIS_PTR maxvl = BX_VL128;
+  }
+
   updateFetchModeMask(); /* AVX_OK changed */
 }
 
