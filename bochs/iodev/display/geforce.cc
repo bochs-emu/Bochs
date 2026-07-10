@@ -2245,7 +2245,7 @@ void bx_geforce_c::dma_copy(Bit32u dst_obj, Bit32u dst_addr,
     if (src_flags & 0x00020000)
       DEV_MEM_READ_PHYSICAL(src_addr_abs, chunk_bytes, buffer);
     else
-      memcpy(buffer, BX_GEFORCE_THIS s.memory + src_addr_abs, chunk_bytes);
+      memcpy(buffer, BX_GEFORCE_THIS s.memory + (src_addr_abs & BX_GEFORCE_THIS memsize_mask), chunk_bytes);
     if (dst_flags & 0x00020000)
       DEV_MEM_WRITE_PHYSICAL(dst_addr_abs, chunk_bytes, buffer);
     else
