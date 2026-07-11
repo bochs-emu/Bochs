@@ -997,8 +997,10 @@ void BX_CPU_C::xrstor_cet_u_state(bxInstruction_c *i, bx_address offset)
   Bit64u ia32_pl3_ssp = read_virtual_qword(i->seg(), (offset + 8) & asize_mask);
 
   // XRSTOR on CET state does all reserved bits and canonicality check like WRMSR would do
-  wrmsr(BX_MSR_IA32_U_CET, ctrl);
-  wrmsr(BX_MSR_IA32_PL3_SSP, ia32_pl3_ssp);
+  if (!wrmsr(BX_MSR_IA32_U_CET, ctrl))
+    exception(BX_GP_EXCEPTION, 0);
+  if (!wrmsr(BX_MSR_IA32_PL3_SSP, ia32_pl3_ssp))
+    exception(BX_GP_EXCEPTION, 0);
 }
 
 void BX_CPU_C::xrstor_init_cet_u_state(void)
@@ -1032,9 +1034,12 @@ void BX_CPU_C::xrstor_cet_s_state(bxInstruction_c *i, bx_address offset)
   Bit64u ia32_pl2_ssp = read_virtual_qword(i->seg(), (offset + 16) & asize_mask);
 
   // XRSTOR on CET state does all reserved bits and canonicality check like WRMSR would do
-  wrmsr(BX_MSR_IA32_PL0_SSP, ia32_pl0_ssp);
-  wrmsr(BX_MSR_IA32_PL1_SSP, ia32_pl1_ssp);
-  wrmsr(BX_MSR_IA32_PL2_SSP, ia32_pl2_ssp);
+  if (!wrmsr(BX_MSR_IA32_PL0_SSP, ia32_pl0_ssp))
+    exception(BX_GP_EXCEPTION, 0);
+  if (!wrmsr(BX_MSR_IA32_PL1_SSP, ia32_pl1_ssp))
+    exception(BX_GP_EXCEPTION, 0);
+  if (!wrmsr(BX_MSR_IA32_PL2_SSP, ia32_pl2_ssp))
+    exception(BX_GP_EXCEPTION, 0);
 }
 
 void BX_CPU_C::xrstor_init_cet_s_state(void)
@@ -1094,12 +1099,18 @@ void BX_CPU_C::xrstor_uintr_state(bxInstruction_c *i, bx_address offset)
   Bit64u uitt_addr    = read_virtual_qword(i->seg(), (offset + 40) & asize_mask);
 
   // XRSTOR on UINTR state does all reserved bits and canonicality check like WRMSR would do
-  wrmsr(BX_MSR_IA32_UINTR_HANDLER, ui_handler);
-  wrmsr(BX_MSR_IA32_UINTR_STACKADJUST, stack_adjust);
-  wrmsr(BX_MSR_IA32_UINTR_PD, upid_addr);
-  wrmsr(BX_MSR_IA32_UINTR_TT, uitt_addr);
-  wrmsr(BX_MSR_IA32_UINTR_MISC, misc);   // make sure all faults happen before
-  wrmsr(BX_MSR_IA32_UINTR_RR, uirr);
+  if (!wrmsr(BX_MSR_IA32_UINTR_HANDLER, ui_handler))
+    exception(BX_GP_EXCEPTION, 0);
+  if (!wrmsr(BX_MSR_IA32_UINTR_STACKADJUST, stack_adjust))
+    exception(BX_GP_EXCEPTION, 0);
+  if (!wrmsr(BX_MSR_IA32_UINTR_PD, upid_addr))
+    exception(BX_GP_EXCEPTION, 0);
+  if (!wrmsr(BX_MSR_IA32_UINTR_TT, uitt_addr))
+    exception(BX_GP_EXCEPTION, 0);
+  if (!wrmsr(BX_MSR_IA32_UINTR_MISC, misc))   // make sure all faults happen before
+    exception(BX_GP_EXCEPTION, 0);
+  if (!wrmsr(BX_MSR_IA32_UINTR_RR, uirr))
+    exception(BX_GP_EXCEPTION, 0);
 
   BX_CPU_THIS_PTR uintr.UIF = UIF;
   uintr_control(); // potentially enable user interrupt delivery
