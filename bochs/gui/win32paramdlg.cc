@@ -211,7 +211,7 @@ void cleanupDlgList(bx_list_c *list)
 // tooltips code
 
 HWND hwndTT = NULL, tt_hwndDlg;
-HHOOK tt_hhk;
+HHOOK tt_hhk = NULL;
 const char *tt_text;
 
 BOOL CALLBACK EnumChildProc(HWND hwndCtrl, LPARAM lParam);
@@ -233,6 +233,9 @@ BOOL CreateParamDlgTooltip(HWND hwndDlg)
 
   if (!EnumChildWindows(tt_hwndDlg, (WNDENUMPROC) EnumChildProc, 0))
     return FALSE;
+
+  if (tt_hhk != NULL)
+    UnhookWindowsHookEx(tt_hhk);
 
   tt_hhk = SetWindowsHookEx(WH_GETMESSAGE, GetMsgProc,
     (HINSTANCE) NULL, GetCurrentThreadId());
