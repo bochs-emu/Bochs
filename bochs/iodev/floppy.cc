@@ -190,6 +190,8 @@ bx_floppy_ctrl_c::bx_floppy_ctrl_c()
 {
   put("FLOPPY");
   memset(&s, 0, sizeof(s));
+  s.media[0].fd = -1;
+  s.media[1].fd = -1;
   s.floppy_timer_index = BX_NULL_TIMER_HANDLE;
   s.statusbar_id[0] = -1;
   s.statusbar_id[1] = -1;
