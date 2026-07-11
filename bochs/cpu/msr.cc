@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2008-2025 Stanislav Shwartsman
+//   Copyright (c) 2008-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -828,6 +828,30 @@ bool isValidMSR_IA32_SPEC_CTRL(Bit64u val_64)
 }
 
 #if BX_CPU_LEVEL >= 5
+
+//
+// - An execution of WRMSR causes a #GP if it would load any of the following MSRs with a non-canonical address:
+//      IA32_BNDCFGS, IA32_DS_AREA, IA32_FS_BASE, IA32_GS_BASE,
+//      IA32_INTERRUPT_SSP_TABLE_ADDR, IA32_KERNEL_GS_BASE, IA32_LSTAR, IA32_PL0_SSP,
+//      IA32_PL1_SSP, IA32_PL2_SSP, IA32_PL3_SSP, IA32_RTIT_ADDR0_A, IA32_RTIT_ADDR0_B,
+//      IA32_RTIT_ADDR1_A, IA32_RTIT_ADDR1_B, IA32_RTIT_ADDR2_A, IA32_RTIT_ADDR2_B,
+//      IA32_RTIT_ADDR3_A, IA32_RTIT_ADDR3_B, IA32_S_CET, IA32_SYSENTER_EIP, IA32_SYSENTER_ESP,
+//      IA32_UINTR_HANDLER, IA32_UINTR_PD, IA32_UINTR_STACKADJUST, IA32_U_CET, and
+//      IA32_UINTR_TT
+// - An execution of XRSTORS causes a #GP if it would load any of the following MSRs with a non-canonical address:
+//      IA32_PL0_SSP, IA32_PL1_SSP, IA32_PL2_SSP, IA32_PL3_SSP, IA32_RTIT_ADDR0_A,
+//      IA32_RTIT_ADDR0_B, IA32_RTIT_ADDR1_A, IA32_RTIT_ADDR1_B, IA32_RTIT_ADDR2_A,
+//      IA32_RTIT_ADDR2_B, IA32_RTIT_ADDR3_A, IA32_RTIT_ADDR3_B, IA32_U_CET,
+//      IA32_UINTR_HANDLER, IA32_UINTR_PD, IA32_UINTR_STACKADJUST, or IA32_UINTR_TT
+//
+// With a small number of exceptions, this enforcement checks for CPU canonicality and is thus independent of the
+// current paging mode. Thus, a processor that supports 5-level paging will allow the instructions mentioned
+// above to load these registers with addresses that are 57-bit canonical but not 48-bit canonical, even if 4-level
+// paging is active. (As a result, instructions that store these values — SGDT, SIDT, SLDT, STR, RDFSBASE,
+// RDGSBASE, RDMSR, XSAVE, XSAVEC, XSAVEOPT, and XSAVES — may save addresses that are 57-bit canonical
+// but not 48-bit canonical, even if 4-level paging is active)
+//
+
 bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 {
   Bit32u val32_lo = GET32L(val_64);
@@ -889,7 +913,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
 #if BX_SUPPORT_X86_64
     case BX_MSR_IA32_USER_MSR_CTL:
-      if (! IsCanonical(val_64)) {
+      if (! IsCpuidCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_USER_MSR_CTL !"));
         return false;
       }
@@ -904,7 +928,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
     case BX_MSR_SYSENTER_ESP:
 #if BX_SUPPORT_X86_64
-      if (! IsCanonical(val_64)) {
+      if (! IsCpuidCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_SYSENTER_ESP !"));
         return false;
       }
@@ -914,7 +938,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
     case BX_MSR_SYSENTER_EIP:
 #if BX_SUPPORT_X86_64
-      if (! IsCanonical(val_64)) {
+      if (! IsCpuidCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_SYSENTER_EIP !"));
         return false;
       }
@@ -1061,7 +1085,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #if BX_SUPPORT_CET
     case BX_MSR_IA32_U_CET:
     case BX_MSR_IA32_S_CET:
-      if (! IsCanonical(val_64) || is_invalid_cet_control(val_64)) {
+      if (! IsCpuidCanonical(val_64) || is_invalid_cet_control(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical or invalid value to BX_MSR_IA32_U_CET/BX_MSR_IA32_S_CET !"));
         return false;
       }
@@ -1072,7 +1096,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_IA32_PL1_SSP:
     case BX_MSR_IA32_PL2_SSP:
     case BX_MSR_IA32_PL3_SSP:
-      if (! IsCanonical(val_64)) {
+      if (! IsCpuidCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_PLi_SSP !"));
         return false;
       }
@@ -1084,7 +1108,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR:
-      if (! IsCanonical(val_64)) {
+      if (! IsCpuidCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR !"));
         return false;
       }
@@ -1097,7 +1121,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_IA32_FRED_RSP1:
     case BX_MSR_IA32_FRED_RSP2:
     case BX_MSR_IA32_FRED_RSP3:
-      if (! IsCanonical(val_64)) {
+      if (! IsCpuidCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_FRED_RSPi !"));
         return false;
       }
@@ -1111,7 +1135,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_IA32_FRED_SSP1:
     case BX_MSR_IA32_FRED_SSP2:
     case BX_MSR_IA32_FRED_SSP3:
-      if (! IsCanonical(val_64)) {
+      if (! IsCpuidCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_FRED_SSPi !"));
         return false;
       }
@@ -1140,14 +1164,14 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       uintr_uirr_update(); // potentially signal or clear user-level-interrupt
       break;
     case BX_MSR_IA32_UINTR_HANDLER:
-      if (! IsCanonical(val_64)) {
+      if (! IsCpuidCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_HANDLER !"));
         return false;
       }
       BX_CPU_THIS_PTR uintr.ui_handler = val_64;
       break;
     case BX_MSR_IA32_UINTR_STACKADJUST:
-      if (! IsCanonical(val_64)) {
+      if (! IsCpuidCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_STACKADJUST !"));
         return false;
       }
@@ -1162,7 +1186,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       BX_CPU_THIS_PTR uintr.uinv      = GET32H(val_64);
       break;
     case BX_MSR_IA32_UINTR_PD:
-      if (! IsCanonical(val_64)) {
+      if (! IsCpuidCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_PD !"));
         return false;
       }
@@ -1173,7 +1197,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       BX_CPU_THIS_PTR uintr.upid_addr = val_64;
       break;
     case BX_MSR_IA32_UINTR_TT:
-      if (! IsCanonical(val_64)) {
+      if (! IsCpuidCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_TT !"));
         return false;
       }
@@ -1326,7 +1350,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR MSR_LSTAR: long mode support not enabled in the cpu model"));
         return false;
       }
-      if (! IsCanonical(val_64)) {
+      if (! IsCpuidCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_LSTAR !"));
         return false;
       }
@@ -1338,7 +1362,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR MSR_CSTAR: long mode support not enabled in the cpu model"));
         return false;
       }
-      if (! IsCanonical(val_64)) {
+      if (! IsCpuidCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_CSTAR !"));
         return false;
       }
@@ -1358,7 +1382,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR MSR_FSBASE: long mode support not enabled in the cpu model"));
         return false;
       }
-      if (! IsCanonical(val_64)) {
+      if (! IsCpuidCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_FSBASE !"));
         return false;
       }
@@ -1370,7 +1394,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR MSR_GSBASE: long mode support not enabled in the cpu model"));
         return false;
       }
-      if (! IsCanonical(val_64)) {
+      if (! IsCpuidCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_GSBASE !"));
         return false;
       }
@@ -1382,7 +1406,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR MSR_KERNELGSBASE: long mode support not enabled in the cpu model"));
         return false;
       }
-      if (! IsCanonical(val_64)) {
+      if (! IsCpuidCanonical(val_64)) {
         BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_KERNELGSBASE !"));
         return false;
       }

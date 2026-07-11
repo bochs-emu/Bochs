@@ -4569,6 +4569,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE bool IsCanonical(bx_address addr) { return IsCanonicalToWidth(addr, BX_CPU_THIS_PTR linaddr_width); }
   BX_SMF bool IsCanonicalAccess(bx_address addr, unsigned rw, bool user) BX_CPP_AttrRegparmN(3);
   BX_SMF BX_CPP_INLINE bx_address CanonicalizeAddress(bx_address addr) { return (BX_CPU_THIS_PTR linaddr_width == 57) ? CanonicalizeAddress57(addr) : CanonicalizeAddress48(addr); }
+  BX_SMF BX_CPP_INLINE bool IsCpuidCanonical(bx_address addr) { return IsCanonicalToWidth(addr, BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LA57) ? 57 : 48); }
 #endif
 
   BX_SMF bool write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len, bool align = false) BX_CPP_AttrRegparmN(4);

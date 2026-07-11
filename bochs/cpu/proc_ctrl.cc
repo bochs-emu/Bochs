@@ -1300,6 +1300,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRFSBASE_Eq(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   Bit64u fsbase = BX_READ_64BIT_REG(i->src());
+  // check true paging mode canonicality according to SDM
   if (!IsCanonical(fsbase)) {
     BX_ERROR(("%s: canonical failure !", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -1327,6 +1328,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRGSBASE_Eq(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   Bit64u gsbase = BX_READ_64BIT_REG(i->src());
+  // check true paging mode canonicality according to SDM
   if (!IsCanonical(gsbase)) {
     BX_ERROR(("%s: canonical failure !", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
