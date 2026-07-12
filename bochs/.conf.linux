@@ -2,6 +2,7 @@
 #
 # .conf.linux
 #
+
 if test $# = 0; then
   which_config=plugins
 else
@@ -18,7 +19,6 @@ export CC
 export CXX
 export CFLAGS
 export CXXFLAGS
-
 
 case $which_config in
 
@@ -57,9 +57,62 @@ case $which_config in
                 ${CONFIGURE_ARGS}
     ;;
 
+  allwarnings)
+    #######################################################################
+    # configuration 2 for maximum debugging opportunities
+    # Include plugins, every possible gui.
+    #######################################################################
+
+    CFLAGS="-Wall -Wextra -Wpedantic -g3 -O0"
+    CXXFLAGS="-Wall -Wextra -Wpedantic -g3 -O0"
+
+    if ! [ -z "$2" ]; then
+        case "$2" in
+            sanitize)
+                CFLAGS="$CFLAGS -fsanitize=address,undefined -fno-common"
+                CXXFLAGS="$CFLAGS"
+
+                export ASAN_OPTIONS="check_initialization_order=1,debug=true,detect_stack_use_after_return=true,detect_invalid_pointer_pairs=3"
+                ;;
+        esac
+    fi
+
+    export CFLAGS
+    export CXXFLAGS
+
+    ./configure --enable-sb16 \
+                --enable-ne2000 \
+                --enable-all-optimizations \
+                --enable-cpu-level=6 \
+                --enable-3dnow \
+                --enable-x86-64 \
+                --enable-vmx=2 \
+                --enable-svm \
+                --enable-avx \
+                --enable-evex \
+                --enable-cet \
+                --enable-pci \
+                --enable-clgd54xx \
+                --enable-geforce \
+                --enable-voodoo \
+                --enable-usb \
+                --enable-usb-ohci \
+                --enable-usb-ehci \
+                --enable-usb-xhci \
+                --enable-busmouse \
+                --enable-es1370 \
+                --enable-e1000 \
+                --enable-plugins \
+                --enable-show-ips \
+                --enable-debugger \
+                --enable-debugger-gui \
+                --with-all-libs \
+                ${CONFIGURE_ARGS}
+    ;;
+
   plugins)
     #######################################################################
-    # configuration 2 for release binary RPMs
+    # configuration 3 for release binary RPMs
     # Include plugins, every possible gui.
     #######################################################################
     ./configure --enable-sb16 \
