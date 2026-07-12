@@ -1775,8 +1775,10 @@ void bx_reset_options()
   // serial/parallel/usb
   SIM->get_param("ports")->reset();
 
+#if BX_NETWORKING
   // network devices
   SIM->get_param("network")->reset();
+#endif
 
   // sound devices
   SIM->get_param("sound")->reset();
