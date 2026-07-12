@@ -2021,7 +2021,7 @@ BX_CPP_INLINE Bit64u pmultishiftqb_scalar(Bit64u val_64, Bit64u control)
   return MMXUQ(result);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMULTISHIFTQB_VdqHdqWdqR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMULTISHIFTQB_MASK_VdqHdqWdqR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
   unsigned len = i->getVL();
@@ -2030,24 +2030,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMULTISHIFTQB_VdqHdqWdqR(bxInstruction_c 
     op1.vmm64u(n) = pmultishiftqb_scalar(op2.vmm64u(n), op1.vmm64u(n));
   }
 
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-  BX_NEXT_INSTR(i);
-}
+  if (i->opmask())
+    avx512_write_regb_masked(i, &op1, len, BX_READ_OPMASK(i->opmask()));
+  else
+    BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMULTISHIFTQB_MASK_VdqHdqWdqR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()), dst = BX_READ_AVX_REG(i->dst());
-  Bit32u mask = BX_READ_8BIT_OPMASK(i->opmask());
-  unsigned len = i->getVL();
-
-  for (unsigned n=0, tmp_mask = mask; n < QWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
-    if (tmp_mask & 0x1)
-      dst.vmm64u(n) = pmultishiftqb_scalar(op2.vmm64u(n), op1.vmm64u(n));
-    else if (i->isZeroMasking())
-      dst.vmm64u(n) = 0;
-  }
-
-  BX_WRITE_AVX_REGZ(i->dst(), dst, len);
   BX_NEXT_INSTR(i);
 }
 

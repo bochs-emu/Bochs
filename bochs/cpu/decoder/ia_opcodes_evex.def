@@ -579,7 +579,6 @@ bx_define_opcode(BX_IA_EVEX_VPMADD52LUQ_VdqHdqWdq_Kmask, "vpmadd52luq", "vpmadd5
 bx_define_opcode(BX_IA_EVEX_VPMADD52HUQ_VdqHdqWdq, "vpmadd52huq", "vpmadd52huq", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VPMADD52HUQ_VdqHdqWdqR, BX_ISA_AVX512_IFMA52, OP_Vdq, OP_Hdq, OP_mVdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
 bx_define_opcode(BX_IA_EVEX_VPMADD52HUQ_VdqHdqWdq_Kmask, "vpmadd52huq", "vpmadd52huq", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorQ, &BX_CPU_C::VPMADD52HUQ_MASK_VdqHdqWdqR, BX_ISA_AVX512_IFMA52, OP_Vdq, OP_Hdq, OP_mVdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
 
-bx_define_opcode(BX_IA_EVEX_VPMULTISHIFTQB_VdqHdqWdq, "vpmultishiftqb", "vpmultishiftqb", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VPMULTISHIFTQB_VdqHdqWdqR, BX_ISA_AVX512_VBMI, OP_Vdq, OP_Hdq, OP_mVdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
 bx_define_opcode(BX_IA_EVEX_VPMULTISHIFTQB_VdqHdqWdq_Kmask, "vpmultishiftqb", "vpmultishiftqb", &BX_CPU_C::LOAD_BROADCAST_VectorQ, &BX_CPU_C::VPMULTISHIFTQB_MASK_VdqHdqWdqR, BX_ISA_AVX512_VBMI, OP_Vdq, OP_Hdq, OP_mVdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
 
 bx_define_opcode(BX_IA_EVEX_VPERMB_VdqHdqWdq_Kmask, "vpermb", "vpermb", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VPERMB_MASK_VdqHdqWdqR, BX_ISA_AVX512_VBMI, OP_Vdq, OP_Hdq, OP_mVdq, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
