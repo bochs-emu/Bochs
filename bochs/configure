@@ -27967,12 +27967,14 @@ printf %s "checking for the pthreads library -l$flag... " >&6; }
 	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <pthread.h>
+                void* test(void* a) { (void)a; return (void*)0; }
+
 int
 main (void)
 {
-pthread_t th; pthread_join(th, 0);
-		     pthread_attr_init(0); pthread_cleanup_push(0, 0);
-		     pthread_create(0,0,0,0); pthread_cleanup_pop(0);
+pthread_t th = {0}; pthread_attr_t th_attr; pthread_join(th, 0);
+		     pthread_attr_init(&th_attr); pthread_cleanup_push(0, 0);
+		     pthread_create(&th,0,test,0); pthread_cleanup_pop(0);
   ;
   return 0;
 }
@@ -28015,7 +28017,8 @@ printf %s "checking for joinable pthread attribute... " >&6; }
 int
 main (void)
 {
-int attr=PTHREAD_CREATE_JOINABLE;
+int
+    attr=PTHREAD_CREATE_JOINABLE; (void)attr;
   ;
   return 0;
 }
@@ -28036,7 +28039,8 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
 int
 main (void)
 {
-int attr=PTHREAD_CREATE_UNDETACHED;
+int
+        attr=PTHREAD_CREATE_UNDETACHED; (void)attr;
   ;
   return 0;
 }
