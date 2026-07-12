@@ -130,7 +130,7 @@ Bit32s ne2k_options_parser(const char *context, int num_params, char *params[])
     if (!SIM->get_param_bool("enabled", base)->get()) {
       SIM->get_param_enum("ethmod", base)->set_by_name("null");
     }
-    if (!SIM->get_param_string("mac", base)->isempty()) {
+    if (!SIM->get_param_bytestring("mac", base)->isempty()) {
       // MAC address is already initialized
       valid |= 0x04;
     }
@@ -320,7 +320,7 @@ void bx_ne2k_c::init_card(Bit8u card)
   // Read in values from config interface
   sprintf(pname, "%s%d", BXPN_NE2K, card);
   bx_list_c *base = (bx_list_c*) SIM->get_param(pname);
-  memcpy(macaddr, SIM->get_param_string("mac", base)->getptr(), 6);
+  memcpy(macaddr, SIM->get_param_bytestring("mac", base)->getptr(), 6);
   sprintf(s.devname, "ne2k%d", card);
   put(s.devname);
   sprintf(s.ldevname, "NE2000 NIC #%d", card);

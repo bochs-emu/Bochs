@@ -2378,7 +2378,7 @@ int bx_parse_nic_params(const char *context, const char *param, bx_list_c *base)
     if (n == 0) valid |= 0x80;
     else valid |= 0x40;
   } else if (!strncmp(param, "mac=", 4)) {
-    bsp = (bx_param_bytestring_c*)SIM->get_param_string("mac", base);
+    bsp = SIM->get_param_bytestring("mac", base);
     if (bsp->parse_param(&param[4]) == 0) {
       PARSE_ERR(("%s: '%s' mac address malformed.", context, base->get_name()));
     } else {

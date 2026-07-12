@@ -614,6 +614,7 @@ public:
   virtual bx_param_c *get_param(const char *pname, bx_param_c *base=NULL) {return NULL;}
   virtual bx_param_num_c *get_param_num(const char *pname, bx_param_c *base=NULL) {return NULL;}
   virtual bx_param_string_c *get_param_string(const char *pname, bx_param_c *base=NULL) {return NULL;}
+  virtual bx_param_bytestring_c *get_param_bytestring(const char *pname, bx_param_c *base=NULL) {return NULL;}
   virtual bx_param_bool_c *get_param_bool(const char *pname, bx_param_c *base=NULL) {return NULL;}
   virtual bx_param_enum_c *get_param_enum(const char *pname, bx_param_c *base=NULL) {return NULL;}
   virtual unsigned gen_param_id() {return 0;}
