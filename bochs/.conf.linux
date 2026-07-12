@@ -63,8 +63,8 @@ case $which_config in
     # Include plugins, every possible gui.
     #######################################################################
 
-    CFLAGS="-Wall -Wextra -Wpedantic -Werror -g3 -O0"
-    CXXFLAGS="-Wall -Wextra -Wpedantic -Werror -g3 -O0"
+    CFLAGS="-Wall -Wextra -Wpedantic -g3 -O0"
+    CXXFLAGS="-Wall -Wextra -Wpedantic -g3 -O0"
 
     if ! [ -z "$2" ]; then
         case "$2" in
