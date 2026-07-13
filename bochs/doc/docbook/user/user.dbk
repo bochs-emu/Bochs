@@ -3518,6 +3518,21 @@ will be completely bogus !
 Determine whether to limit maximum CPUID function to 2. This mode is required
 to work around WinNT installation and boot issues.
 </para>
+<para><command>cpuid_freq</command></para>
+<para>
+Select how the CPUID frequency leaves 0x15 (Time Stamp Counter and Nominal
+Core Crystal Clock Information) and 0x16 (Processor Frequency Information)
+are reported by CPU models that implement them. With <option>hardware</option>
+(default) the values dumped from the modeled hardware are reported; note that
+modern guest kernels trust these leaves for TSC calibration while the emulated
+TSC actually advances at the <option>ips</option> rate, so guest timekeeping
+can run off by orders of magnitude. With <option>none</option> the frequencies
+are reported as not enumerated and guests fall back to timer-based calibration,
+measuring the true tick rate. With <option>ips</option> the leaves report the
+emulated tick rate itself, so guests that trust CPUID also obtain the true
+rate. The CPUID brand string of the selected model is not affected by this
+option; use the <option>brand_string</option> option to override it.
+</para>
 <para><command>mwait_is_nop</command></para>
 <para>
 When this option is enabled MWAIT will not put the CPU into a sleep state.

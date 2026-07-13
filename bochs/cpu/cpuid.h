@@ -35,6 +35,14 @@ struct cpuid_function_t {
 
 class VMCS_Mapping;
 
+// modes of the bochsrc 'cpu: cpuid_freq=' option controlling how the CPUID
+// frequency leaves 0x15/0x16 are reported (see bx_cpuid_t::get_freq_leaf_15)
+enum {
+  BX_CPUID_FREQ_HARDWARE = 0, // values dumped from the modeled hardware
+  BX_CPUID_FREQ_NONE = 1,     // frequencies not enumerated
+  BX_CPUID_FREQ_IPS = 2       // derived from the emulated tick rate (ips)
+};
+
 class bx_cpuid_t {
 public:
   bx_cpuid_t(BX_CPU_C *_cpu);
@@ -143,6 +151,13 @@ protected:
   Bit32u get_ext_cpuid_leaf_1_edx_intel() const;
 
   void get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const;
+
+  // CPUID leaves 0x15/0x16 declare the TSC and processor base frequencies of
+  // the CPU the model was dumped from, while the emulated TSC advances at the
+  // 'ips' rate; the 'cpu: cpuid_freq=' option chooses how they are reported.
+  // The eax/ebx/ecx arguments carry the hardware dump values of the model.
+  void get_freq_leaf_15(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx) const;
+  void get_freq_leaf_16(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx) const;
 
   BX_CPP_INLINE void get_leaf(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx, Bit32u edx) const
   {

@@ -451,6 +451,53 @@ void bx_cpuid_t::get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_
 #endif
 }
 
+// leaf 0x00000015 - Time Stamp Counter and Nominal Core Crystal Clock Information
+void bx_cpuid_t::get_freq_leaf_15(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx) const
+{
+  static unsigned cpuid_freq = SIM->get_param_enum(BXPN_CPUID_FREQ)->get();
+
+  switch(cpuid_freq) {
+  case BX_CPUID_FREQ_NONE:
+    // EBX=0: TSC/crystal ratio not enumerated, ECX=0: crystal not enumerated;
+    // guests fall back to their own timer calibration and measure the true rate
+    get_leaf(leaf, 0, 0, 0, 0);
+    break;
+  case BX_CPUID_FREQ_IPS:
+    // TSC frequency = core crystal clock * EBX/EAX: report the true tick rate
+    // as a crystal running at 'ips' Hz with a 1/1 ratio
+    get_leaf(leaf, 1, 1, (Bit32u) SIM->get_param_num(BXPN_IPS)->get(), 0);
+    break;
+  case BX_CPUID_FREQ_HARDWARE:
+  default:
+    get_leaf(leaf, eax, ebx, ecx, 0);
+    break;
+  }
+}
+
+// leaf 0x00000016 - Processor Frequency Information
+void bx_cpuid_t::get_freq_leaf_16(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx) const
+{
+  static unsigned cpuid_freq = SIM->get_param_enum(BXPN_CPUID_FREQ)->get();
+
+  switch(cpuid_freq) {
+  case BX_CPUID_FREQ_NONE:
+    // EAX=0: processor base frequency not enumerated
+    get_leaf(leaf, 0, 0, 0, 0);
+    break;
+  case BX_CPUID_FREQ_IPS:
+    {
+      // report base and max frequency of the emulated tick rate in MHz
+      Bit32u mhz = (Bit32u)((SIM->get_param_num(BXPN_IPS)->get() + 500000) / 1000000);
+      get_leaf(leaf, mhz, mhz, 100, 0);
+    }
+    break;
+  case BX_CPUID_FREQ_HARDWARE:
+  default:
+    get_leaf(leaf, eax, ebx, ecx, 0);
+    break;
+  }
+}
+
 void bx_cpuid_t::get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32u function, cpuid_function_t *leaf) const
 {
   static const char *brand_string_ovr = (const char *)SIM->get_param_string(BXPN_BRAND_STRING)->getptr();

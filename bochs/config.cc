@@ -698,6 +698,11 @@ void bx_init_options()
       "cpuid_limit_winnt", "Limit max CPUID function to 3",
       "Limit max CPUID function reported to 3 to workaround WinNT issue",
       0);
+  static const char *cpuid_freq_names[] = { "hardware", "none", "ips", NULL };
+  new bx_param_enum_c(cpu_param,
+      "cpuid_freq", "CPUID frequency leaves 0x15/0x16 mode",
+      "Report CPUID frequency leaves 0x15/0x16 from the hardware dump of the selected model, as not enumerated, or derived from the emulated tick rate (ips)",
+      cpuid_freq_names, 0, 0);
 #if BX_SUPPORT_MONITOR_MWAIT
   new bx_param_bool_c(cpu_param,
       "mwait_is_nop", "Don't put CPU to sleep state by MWAIT",
@@ -3615,10 +3620,11 @@ int bx_write_configuration(const char *rc, int overwrite)
 #else
   fprintf(fp, "cpu: count=1, ips=%u, ", SIM->get_param_num(BXPN_IPS)->get());
 #endif
-  fprintf(fp, "model=%s, reset_on_triple_fault=%d, cpuid_limit_winnt=%d",
+  fprintf(fp, "model=%s, reset_on_triple_fault=%d, cpuid_limit_winnt=%d, cpuid_freq=%s",
     SIM->get_param_enum(BXPN_CPU_MODEL)->get_selected(),
     SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get(),
-    SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get());
+    SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get(),
+    SIM->get_param_enum(BXPN_CPUID_FREQ)->get_selected());
 #if BX_CPU_LEVEL >= 5
   fprintf(fp, ", ignore_bad_msrs=%d", SIM->get_param_bool(BXPN_IGNORE_BAD_MSRS)->get());
 #endif

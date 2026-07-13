@@ -216,10 +216,10 @@ void corei7_icelake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid
     get_reserved_leaf(leaf);
     return;
   case 0x00000015: // CPUID leaf 0x00000015 - Time Stamp Counter and Core Crystal Clock Information Leaf
-    get_leaf(leaf, 0x00000002, 0x0000004e, 0x0249f000, 0x00000000);
+    get_freq_leaf_15(leaf, 0x00000002, 0x0000004e, 0x0249f000);
     return;
   case 0x00000016: // CPUID leaf 0x00000016 - Processor Frequency Information Leaf
-    get_leaf(leaf, 0x000005dc, 0x00000f3c, 0x00000064, 0x00000000);
+    get_freq_leaf_16(leaf, 0x000005dc, 0x00000f3c, 0x00000064);
     return;
   case 0x00000017:
     get_reserved_leaf(leaf);
