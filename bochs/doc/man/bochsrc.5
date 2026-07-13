@@ -175,6 +175,15 @@ cpuid_limit_winnt:
 Determine whether to limit maximum CPUID function to 2. This mode is
 required to workaround WinNT installation and boot issues.
 
+cpuid_freq:
+
+Select how the CPUID frequency leaves 0x15/0x16 are reported by CPU models
+that implement them (hardware/none/ips). With 'hardware' (default) the
+values dumped from the modeled hardware are reported, but modern guest
+kernels trust these leaves for TSC calibration while the emulated TSC
+actually advances at the IPS rate. With 'none' the frequencies are reported
+as not enumerated, with 'ips' the leaves report the emulated tick rate.
+
 mwait_is_nop:
 
 When this option is enabled MWAIT will not put the CPU into a sleep state.

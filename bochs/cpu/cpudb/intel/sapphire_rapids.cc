@@ -238,10 +238,10 @@ void sapphire_rapids_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpui
     get_reserved_leaf(leaf);
     return;
   case 0x00000015: // CPUID leaf 0x00000015 - Time Stamp Counter and Core Crystal Clock Information Leaf
-    get_leaf(leaf, 0x00000002, 0x000000b0, 0x017d7840, 0x00000000);
+    get_freq_leaf_15(leaf, 0x00000002, 0x000000b0, 0x017d7840);
     return;
   case 0x00000016: // CPUID leaf 0x00000016 - Processor Frequency Information Leaf
-    get_leaf(leaf, 0x00000898, 0x000012c0, 0x00000064, 0x00000000);
+    get_freq_leaf_16(leaf, 0x00000898, 0x000012c0, 0x00000064);
     return;
   case 0x00000017:
     get_reserved_leaf(leaf);
