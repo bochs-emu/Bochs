@@ -1,6 +1,6 @@
 Changes after 3.0:
 
-  This CHANGES file updated with commits merged till 7 Jul 2026, please refer to git log for more recent updates
+  This CHANGES file updated with commits merged till 13 Jul 2026, please refer to git log for more recent updates
 
 Detailed change log :
 
@@ -17,6 +17,7 @@ Detailed change log :
   - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of XSAVEC/XSAVES, PKeys, AVX BMI1/BMI2, AVX512, AMX, UINTR, CET and SVM)
   - Updated instrumentation callbacks, see description in instrumentation.txt
     - Added new BX_INSTR_CPUID instrumentation callback, branch callbacks simplified
+  - Add CPU 'cpuid_freq' option to control reporting of CPUID leaves 0x15/0x16. See .bochsrc example or user documentation for more details.
 
 - Bochs Debugger
   - Added new command line option "-dbg_gui" to start Bochs debugger with gui.
