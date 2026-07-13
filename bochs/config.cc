@@ -676,7 +676,7 @@ void bx_init_options()
       "ips", "Emulated instructions per second (IPS)",
       "Emulated instructions per second, used to calibrate bochs emulated time with wall clock time.",
       BX_MIN_IPS, BX_MAX_BIT32U,
-      4000000);
+      50000000);
 #if BX_SUPPORT_SMP
   new bx_param_num_c(cpu_param,
       "quantum", "Quantum ticks in SMP simulation",
