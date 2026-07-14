@@ -3775,7 +3775,7 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
           if (BX_GEFORCE_THIS card_type == 0x20)
             const_index = (tokens[1] >> 13) & 0xff;
           else if (BX_GEFORCE_THIS card_type == 0x35)
-            const_index = (tokens[1] >> 14) & 0xff;
+            const_index = (tokens[1] >> 14) & 0x1ff;
           else
             const_index = (tokens[1] >> 12) & 0x1ff;
           if (((tokens[3] >> 1) & 1) != 0)
@@ -3961,6 +3961,12 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
         sca_result[3] = 1.0f;
         break;
       }
+      case 0xd: { // LG2
+        float lg2 = log2(params[2][0]);
+        for (int comp_index = 0; comp_index < 4; comp_index++)
+          sca_result[comp_index] = lg2;
+        break;
+      }
       case 0xe: { // EX2
         float ex2 = exp2(params[2][0]);
         for (int comp_index = 0; comp_index < 4; comp_index++)
@@ -4002,10 +4008,12 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
       Bit32u dst_sca_tmp_mask = (tokens[3] >> 24) & 0xf;
       for (int comp_index = 0; comp_index < 4; comp_index++) {
         if (dst_out_reg != 0x1f) {
-          if ((dst_vec_out_mask & (8 >> comp_index)) != 0)
-            out[dst_out_reg][comp_index] = vec_result[comp_index];
-          if ((dst_sca_out_mask & (8 >> comp_index)) != 0)
+          bool sca_out = (dst_sca_out_mask & (8 >> comp_index)) != 0;
+          bool vec_out = (dst_vec_out_mask & (8 >> comp_index)) != 0;
+          if (sca_out)
             out[dst_out_reg][comp_index] = sca_result[comp_index];
+          if (vec_out)
+            out[sca_out ? 0 : dst_out_reg][comp_index] = vec_result[comp_index];
         }
         if (dst_tmp_reg != 0xf)
           if ((dst_vec_tmp_mask & (8 >> comp_index)) != 0)
@@ -4637,6 +4645,7 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
         v_in[ch->d3d_attrib_in_color[1]]
       };
       if (ch->d3d_lighting_enable) {
+        color_out[0][3] = ch->d3d_material_factor[3];
         for (Bit32u ci = 0; ci < 3; ci++) {
           switch (ch->d3d_color_material_ambient) {
             case 0:
@@ -6346,7 +6355,8 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   else if ((method == 0x0e9 && cls <= 0x0097) ||
            (method == 0x0df && cls >= 0x0497))
     ch->d3d_normalize_enable = param;
-  else if (method >= 0x0ea && method <= 0x0ed && cls <= 0x0097) {
+  else if ((method >= 0x0ea && method <= 0x0ed && cls <= 0x0097) ||
+                              (method == 0x0ed && cls == 0x0497)) {
     Bit32u i = method - 0x0ea;
     ch->d3d_material_factor[i] = u.param_float;
   } else if ((method == 0x0ee && cls <= 0x0097) ||
@@ -6374,14 +6384,20 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     Bit32u i = method & 0x00f;
     Bit32u m = (method >> 4) & 1;
     ch->d3d_model_view_matrix[m][i] = u.param_float;
+    if (BX_GEFORCE_THIS card_type == 0x35)
+      ch->d3d_transform_constant[0x44 + (i >> 2)][i & 3] = u.param_float;
   } else if ((method >= 0x120 && method <= 0x12b && cls == 0x0096) ||
              (method >= 0x160 && method <= 0x16b && cls >= 0x0097 && cls <= 0x0497)) {
     Bit32u i = method & 0x00f;
     ch->d3d_inverse_model_view_matrix[i] = u.param_float;
+    if (BX_GEFORCE_THIS card_type == 0x35)
+      ch->d3d_transform_constant[0x48 + (i >> 2)][i & 3] = u.param_float;
   } else if ((method >= 0x140 && method <= 0x14f && cls == 0x0096) ||
              (method >= 0x1a0 && method <= 0x1af && cls >= 0x0097 && cls <= 0x0497)) {
     Bit32u i = method & 0x00f;
     ch->d3d_composite_matrix[i] = u.param_float;
+    if (BX_GEFORCE_THIS card_type == 0x35)
+      ch->d3d_transform_constant[0x3C + (i >> 2)][i & 3] = u.param_float;
   } else if ((method >= 0x150 && method <= 0x16f && cls == 0x0096) ||
              (method >= 0x1b0 && method <= 0x1ef && cls == 0x0097) ||
              (method >= 0x1b0 && method <= 0x22f && cls == 0x0497)) {
@@ -6389,6 +6405,14 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     Bit32u tex_index = method_offset >> 4;
     Bit32u i = method_offset & 0x00f;
     ch->d3d_texture_matrix[tex_index][i] = u.param_float;
+    if (BX_GEFORCE_THIS card_type == 0x35) {
+      Bit32u const_ofs = i >> 2;
+      if (tex_index <= 3)
+        const_ofs += 0x80 + tex_index * 8;
+      else
+        const_ofs += 0x04 + (tex_index - 4) * 8;
+      ch->d3d_transform_constant[const_ofs][i & 3] = u.param_float;
+    }
   } else if ((method >= 0x180 && method <= 0x19f && cls == 0x0096) ||
              (method >= 0x210 && method <= 0x24f && cls == 0x0097) ||
              (method >= 0x380 && method <= 0x3ff && cls == 0x0497)) {
@@ -6538,6 +6562,8 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     } else if (light_method >= 0x0a && light_method <= 0x0c) {
       Bit32u i = light_method - 0x0a;
       light->inf_half_vector[i] = u.param_float;
+      if (BX_GEFORCE_THIS card_type == 0x35)
+        ch->d3d_transform_constant[0x30 + light_index][i] = u.param_float;
     } else if (light_method >= 0x0d && light_method <= 0x0f) {
       Bit32u i = light_method - 0x0d;
       light->inf_direction[i] = u.param_float;
@@ -6547,9 +6573,13 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
     } else if (light_method >= 0x17 && light_method <= 0x19) {
       Bit32u i = light_method - 0x17;
       light->local_position[i] = u.param_float;
+      if (BX_GEFORCE_THIS card_type == 0x35)
+        ch->d3d_transform_constant[0x64 + light_index][i] = u.param_float;
     } else if (light_method >= 0x1a && light_method <= 0x1c) {
       Bit32u i = light_method - 0x1a;
       light->local_attenuation[i] = u.param_float;
+      if (BX_GEFORCE_THIS card_type == 0x35)
+        ch->d3d_transform_constant[0x30 + light_index][i] = u.param_float;
     }
   } else if ((method >= 0x300 && method <= 0x302 && cls == 0x0096) ||
              (method >= 0x540 && method <= 0x542 && cls == 0x0097)) {
