@@ -73,7 +73,7 @@ Changes after Bochs 3.0:
 - XSAVE: add missing #GP(0) if XRSTOR write to MSR and it cause #GP due to reserved bits, invalid or non-canonical value write
 
 -------------------------------------------------------------------------
-Changes in Bochs 3.0 (Frebruary 16, 2025)
+Changes in Bochs 3.0 (February 16, 2025)
 
 ! Implemented AVX512_FP16 instructions (enabled in Xeon Sapphire Rapids CPU definition)
 ! Implemented MONITORLESS MWAIT support
