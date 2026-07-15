@@ -3695,7 +3695,7 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
     out[a][2] = 0.0f;
     out[a][3] = 1.0f;
   }
-  Bit32u a0 = 0;
+  Bit32s addr_regs[2][4] = { 0 };
   float tmp_regs[32][4];
   for (Bit32u r = 0; r < ch->d3d_vs_temp_regs_count; r++)
     for (Bit32u ci = 0; ci < 4; ci++)
@@ -3778,8 +3778,21 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
             const_index = (tokens[1] >> 14) & 0x1ff;
           else
             const_index = (tokens[1] >> 12) & 0x1ff;
-          if (((tokens[3] >> 1) & 1) != 0)
-            const_index = (const_index + a0) & 0x1ff;
+          if (((tokens[3] >> 1) & 1) != 0) {
+            Bit32u addr_reg_sel;
+            Bit32u addr_swz;
+            if (BX_GEFORCE_THIS card_type == 0x20) {
+              addr_reg_sel = 0;
+              addr_swz = 0;
+            } else {
+              addr_reg_sel = (tokens[0] >> 24) & 1;
+              if (BX_GEFORCE_THIS card_type == 0x35)
+                addr_swz = (tokens[0] >> 1) & 3;
+              else
+                addr_swz = tokens[0] & 3;
+            }
+            const_index = (const_index + addr_regs[addr_reg_sel][addr_swz]) & 0x1ff;
+          }
           params[p][comp_index] = ch->d3d_transform_constant[const_index][comp_index_swizzle];
         }
         if (negate)
@@ -3793,6 +3806,7 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
       vec_op = (tokens[1] >> 23) & 0x1f;
     else
       vec_op = (tokens[1] >> 22) & 0x1f;
+    bool addr_write = false;
     float vec_result[4];
     switch (vec_op) {
       case 0: // NOP
@@ -3858,9 +3872,9 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
           vec_result[comp_index] = params[0][comp_index] >= params[1][comp_index] ? 1.0f : 0.0f;
         break;
       case 0xd: // ARL
-        a0 = floor(params[0][0]);
+        addr_write = true;
         for (int comp_index = 0; comp_index < 4; comp_index++)
-          vec_result[comp_index] = 0.0f; // probably unused
+          vec_result[comp_index] = floor(params[0][comp_index]);
         break;
       case 0xe: // FRC
         for (int comp_index = 0; comp_index < 4; comp_index++)
@@ -3990,7 +4004,10 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
       Bit32u dst_tmp_reg = (tokens[3] >> 20) & 0xf;
       bool dst_out_sca = (tokens[3] >> 2) & 1;
       for (int comp_index = 0; comp_index < 4; comp_index++) {
-        if ((dst_vec_mask & (8 >> comp_index)) != 0)
+        if (addr_write) {
+          if (comp_index == 0)
+            addr_regs[0][0] = (Bit32s)vec_result[0];
+        } else if ((dst_vec_mask & (8 >> comp_index)) != 0)
           tmp_regs[dst_tmp_reg][comp_index] = vec_result[comp_index];
         if ((dst_sca_mask & (8 >> comp_index)) != 0)
           tmp_regs[paired_ops ? 1 : dst_tmp_reg][comp_index] = sca_result[comp_index];
@@ -4017,7 +4034,10 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
         }
         if (dst_tmp_reg != 0xf)
           if ((dst_vec_tmp_mask & (8 >> comp_index)) != 0)
-            tmp_regs[dst_tmp_reg][comp_index] = vec_result[comp_index];
+            if (addr_write)
+              addr_regs[dst_tmp_reg & 1][comp_index] = (Bit32s)vec_result[comp_index];
+            else
+              tmp_regs[dst_tmp_reg][comp_index] = vec_result[comp_index];
         if ((dst_sca_tmp_mask & (8 >> comp_index)) != 0) {
           if (paired_ops)
             tmp_regs[1][comp_index] = sca_result[comp_index];
@@ -4037,7 +4057,10 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
           if (dst_out_vec && dst_out_reg != 0x1f)
             out[dst_out_reg][comp_index] = vec_result[comp_index];
           if (dst_tmp_vec != 0x3f)
-            tmp_regs[dst_tmp_vec][comp_index] = vec_result[comp_index];
+            if (addr_write)
+              addr_regs[dst_tmp_vec & 1][comp_index] = (Bit32s)vec_result[comp_index];
+            else
+              tmp_regs[dst_tmp_vec][comp_index] = vec_result[comp_index];
         }
         if ((dst_sca_mask & (8 >> comp_index)) != 0) {
           if (!dst_out_vec && dst_out_reg != 0x1f)
@@ -6676,6 +6699,9 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       if (dxtype == 0x44) {
         ch->d3d_vertex_data_array_format_type[i] = 4;
         ch->d3d_vertex_data_array_format_size[i] = 4;
+      } else if (dxtype == 0x88) {
+        ch->d3d_vertex_data_array_format_type[i] = 2;
+        ch->d3d_vertex_data_array_format_size[i] = 1;
       } else if (dxtype == 0x99) {
         ch->d3d_vertex_data_array_format_type[i] = 2;
         ch->d3d_vertex_data_array_format_size[i] = 2;
