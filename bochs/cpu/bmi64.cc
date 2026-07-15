@@ -172,8 +172,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BEXTR_GqEqBqR(bxInstruction_c *i)
   unsigned len   = control >> 8;
 
   Bit64u op1_64 = bextrq(BX_READ_64BIT_REG(i->src1()), start, len);
-  SET_FLAGS_OSZAPC_LOGIC_64(op1_64);
   BX_WRITE_64BIT_REG(i->dst(), op1_64);
+
+  clearEFlagsOSZAPC();
+  if (op1_64 == 0)
+    assert_ZF();
 
   BX_NEXT_INSTR(i);
 }

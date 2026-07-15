@@ -162,8 +162,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BEXTR_GdEdBdR(bxInstruction_c *i)
   unsigned len   = control >> 8;
 
   Bit32u op1_32 = bextrd(BX_READ_32BIT_REG(i->src1()), start, len);
-  SET_FLAGS_OSZAPC_LOGIC_32(op1_32);
   BX_WRITE_32BIT_REGZ(i->dst(), op1_32);
+
+  clearEFlagsOSZAPC();
+  if (op1_32 == 0)
+    assert_ZF();
 
   BX_NEXT_INSTR(i);
 }
