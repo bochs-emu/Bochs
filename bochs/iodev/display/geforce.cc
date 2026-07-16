@@ -4032,12 +4032,14 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
           if (vec_out)
             out[sca_out ? 0 : dst_out_reg][comp_index] = vec_result[comp_index];
         }
-        if (dst_tmp_reg != 0xf)
-          if ((dst_vec_tmp_mask & (8 >> comp_index)) != 0)
+        if (dst_tmp_reg != 0xf) {
+          if ((dst_vec_tmp_mask & (8 >> comp_index)) != 0) {
             if (addr_write)
               addr_regs[dst_tmp_reg & 1][comp_index] = (Bit32s)vec_result[comp_index];
             else
               tmp_regs[dst_tmp_reg][comp_index] = vec_result[comp_index];
+          }
+        }
         if ((dst_sca_tmp_mask & (8 >> comp_index)) != 0) {
           if (paired_ops)
             tmp_regs[1][comp_index] = sca_result[comp_index];
@@ -4056,11 +4058,12 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
         if ((dst_vec_mask & (8 >> comp_index)) != 0) {
           if (dst_out_vec && dst_out_reg != 0x1f)
             out[dst_out_reg][comp_index] = vec_result[comp_index];
-          if (dst_tmp_vec != 0x3f)
+          if (dst_tmp_vec != 0x3f) {
             if (addr_write)
               addr_regs[dst_tmp_vec & 1][comp_index] = (Bit32s)vec_result[comp_index];
             else
               tmp_regs[dst_tmp_vec][comp_index] = vec_result[comp_index];
+          }
         }
         if ((dst_sca_mask & (8 >> comp_index)) != 0) {
           if (!dst_out_vec && dst_out_reg != 0x1f)
