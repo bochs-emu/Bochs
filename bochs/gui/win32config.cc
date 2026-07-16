@@ -751,12 +751,12 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
                   }
                 }
               }
-            } else {
-              ShowWindow(GetDlgItem(hDlg, IDNOPARATXT), SW_HIDE);
             }
             optnum = SendMessage(GetDlgItem(hDlg, IDEDITBOX), LB_GETCURSEL, 0, 0);
             if (optnum < 0) {
               break;
+            } else {
+              ShowWindow(GetDlgItem(hDlg, IDNOPARATXT), SW_HIDE);
             }
             if (runtime) {
               opts_ptr = &runtime_options[optnum];
