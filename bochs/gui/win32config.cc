@@ -755,6 +755,9 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
               ShowWindow(GetDlgItem(hDlg, IDNOPARATXT), SW_HIDE);
             }
             optnum = SendMessage(GetDlgItem(hDlg, IDEDITBOX), LB_GETCURSEL, 0, 0);
+            if (optnum < 0) {
+              break;
+            }
             if (runtime) {
               opts_ptr = &runtime_options[optnum];
             } else {
