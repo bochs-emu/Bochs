@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2024  The Bochs Project
+//  Copyright (C) 2008-2026  The Bochs Project
 
 #include "bochs.h"
 #include "bx_debug/debug.h"
@@ -488,12 +488,9 @@ void InsertListRow(char *ColumnText[], int ColumnCount, int listnum, int LineCou
     }
     else
     {
-    // it might be easier to use the gtk_list_store_set_valuesv() function?
-        gtk_list_store_set (GTK_LIST_STORE(Database), &iter, 0, ColumnText[0], 1, ColumnText[1],
-            2, ColumnText[2], 3, ColumnText[3], 4, ColumnText[4], 5, ColumnText[5],
-            6, ColumnText[6], 7, ColumnText[7], 8, ColumnText[8], 9, ColumnText[9],
-            10, ColumnText[10], 11, ColumnText[11], 12, ColumnText[12], 13, ColumnText[13],
-            14, ColumnText[14], 15, ColumnText[15], 16, ColumnText[16], 17, ColumnText[17], 18, (gint) LineCount, -1);
+        for (int i = 0; i < ColumnCount; i++) {
+            gtk_list_store_set (GTK_LIST_STORE(Database), &iter, i, ColumnText[i], -1);
+        }
     }
 }
 
