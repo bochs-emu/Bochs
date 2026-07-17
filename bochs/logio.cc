@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -270,8 +270,10 @@ void iofunctions::out(int level, const char *prefix, const char *fmt, va_list ap
   vsnprintf(msg, sizeof(msg), fmt, ap);
   fprintf(logfd, "%s\n", msg);
   fflush(logfd);
-  if (SIM->has_log_viewer()) {
-    SIM->log_msg(msgpfx, level, msg);
+  if (SIM) {
+    if (SIM->has_log_viewer()) {
+      SIM->log_msg(msgpfx, level, msg);
+    }
   }
   BX_UNLOCK(logio_mutex);
 }
