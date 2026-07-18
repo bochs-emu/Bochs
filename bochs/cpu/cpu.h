@@ -3593,6 +3593,8 @@ public: // for now...
   BX_SMF void VPCOMPRESSW_MASK_WdqVdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPEXPANDB_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPEXPANDW_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPEXPANDB_MASK_VdqWdqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPEXPANDW_MASK_VdqWdqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void VPMOVQB_WdqVdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPMOVDB_WdqVdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

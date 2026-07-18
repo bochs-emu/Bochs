@@ -51,7 +51,7 @@ Changes after Bochs 3.0:
 + PKEYS: Flush TLB after updating PKRU with WRPKRU instruction
 - XSAVE: Outside 64-bit mode, Hi16_ZMM state is always in its initial configuration. Fixed wrong return value in xsave_hi_zmm_state_xinuse method.
 + VMX: Fixed actitivity state and blocking by NMI after WAIT_FOR_SIPI VMEXIT
-+ AVX-512: Fixed bug in VPSHUFBITQMB instruction implementation
++ AVX512: Fixed bug in VPSHUFBITQMB instruction implementation
 + BMI: Fixed decoding of AVX BMI1/BMI2 instructions in 32-bit mode (The operand size is always 32 bits if not in 64-bit mode, VEX.W1 is ignored in non-64-bit modes)
 - BMI: BMI instructions are not recognized outside of protected mode and should #UD
 - VMX and LA57: Fix issues with VMENTER/VMEXIT attempting to toggle CR4.LA57
@@ -67,10 +67,14 @@ Changes after Bochs 3.0:
 - Legacy IO: Fixed linear address calculation for memory access in INSW instruction while in long64 mode (32-bit segment based access was used instead of long64 mode access)
 + AMX: deprecated AMX_TF32 and adjusted AMX_AVX512 implementation according to recently published specification rev62 + bugfixes
 + EVEX/GFNI: properly apply masking to EVEX form of VGF2P8AFFINEQB/VGF2P8AFFINEINVQB instructions
-+ AVX-512: Properly apply masking to VPMULTISHIFTQB instruction
++ AVX512: Properly apply masking to VPMULTISHIFTQB instruction
 - AVX512: Fixed MAXVL definition: instead of maximum allowed vector length for this CPUID, MAXVL should be determined by the current value of XCR0. Update zero upper to MAXVL for all AVX/AVX512 instructions.
 - LA57: Fixed MSR canonicality check during WRMSR operation - "this enforcement checks for CPU canonicality and is thus independent of the current paging mode"
 - XSAVE: add missing #GP(0) if XRSTOR write to MSR and it cause #GP due to reserved bits, invalid or non-canonical value write
+- BMI: Updated undocumented flags handling for BEXTR instruction to match real HW
++ AVX512: add missing zero upper for VPBROADCASTMB2Q and VPBROADCASTMW2D instructions
+- XSAVE: XSAVE of PKRU state should write only 4 bytes at keep other 4 bytes unmodified
++ AVX512: correctly handle masked VPEXPANDB/VPEXPANDW instructions with memory operand
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.0 (February 16, 2025)

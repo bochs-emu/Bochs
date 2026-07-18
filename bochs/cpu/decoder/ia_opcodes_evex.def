@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013-2024 Stanislav Shwartsman
+//   Copyright (c) 2013-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1114,8 +1114,8 @@ bx_define_opcode(BX_IA_EVEX_VCOMPRESSPD_WpdVpd_Kmask, "vcompresspd", "vcompressp
 
 bx_define_opcode(BX_IA_EVEX_VPEXPANDB_VdqWdq, "vpexpandb", "vpexpandb", &BX_CPU_C::VMOVUPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX512_VBMI2, OP_Vdq, OP_mVdq8,  OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_EVEX_VPEXPANDW_VdqWdq, "vpexpandw", "vpexpandw", &BX_CPU_C::VMOVUPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX512_VBMI2, OP_Vdq, OP_mVdq16, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
-bx_define_opcode(BX_IA_EVEX_VPEXPANDB_VdqWdq_Kmask, "vpexpandb", "vpexpandb", &BX_CPU_C::LOAD_MASK_VectorB, &BX_CPU_C::VPEXPANDB_MASK_VdqWdqR, BX_ISA_AVX512_VBMI2, OP_Vdq, OP_mVdq8,  OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
-bx_define_opcode(BX_IA_EVEX_VPEXPANDW_VdqWdq_Kmask, "vpexpandw", "vpexpandw", &BX_CPU_C::LOAD_MASK_VectorW, &BX_CPU_C::VPEXPANDW_MASK_VdqWdqR, BX_ISA_AVX512_VBMI2, OP_Vdq, OP_mVdq16, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_VPEXPANDB_VdqWdq_Kmask, "vpexpandb", "vpexpandb", &BX_CPU_C::VPEXPANDB_MASK_VdqWdqM, &BX_CPU_C::VPEXPANDB_MASK_VdqWdqR, BX_ISA_AVX512_VBMI2, OP_Vdq, OP_mVdq8,  OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_VPEXPANDW_VdqWdq_Kmask, "vpexpandw", "vpexpandw", &BX_CPU_C::VPEXPANDW_MASK_VdqWdqM, &BX_CPU_C::VPEXPANDW_MASK_VdqWdqR, BX_ISA_AVX512_VBMI2, OP_Vdq, OP_mVdq16, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 
 bx_define_opcode(BX_IA_EVEX_VPEXPANDD_VdqWdq, "vpexpandd", "vpexpandd", &BX_CPU_C::VMOVUPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX512, OP_Vdq, OP_mVdq32, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_EVEX_VPEXPANDQ_VdqWdq, "vpexpandq", "vpexpandq", &BX_CPU_C::VMOVUPS_VpsWpsM, &BX_CPU_C::VMOVAPS_VpsWpsR, BX_ISA_AVX512, OP_Vdq, OP_mVdq64, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
