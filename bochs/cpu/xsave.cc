@@ -956,7 +956,7 @@ bool BX_CPU_C::xsave_hi_zmm_state_xinuse(void)
 // PKRU state management //
 void BX_CPU_C::xsave_pkru_state(bxInstruction_c *i, bx_address offset)
 {
-  write_virtual_qword(i->seg(), offset, (Bit64u) BX_CPU_THIS_PTR pkru);
+  write_virtual_dword(i->seg(), offset, BX_CPU_THIS_PTR pkru);
 }
 
 void BX_CPU_C::xrstor_pkru_state(bxInstruction_c *i, bx_address offset)
