@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2025  The Bochs Project
+//  Copyright (C) 2008-2026  The Bochs Project
 
 #include "config.h"
 
@@ -152,7 +152,7 @@ Bit64u rV[EFER_Rnum + 1];   // current values of registers
 Bit64u PV[EFER_Rnum + 1];   // previous values of registers
 Bit32s GDT_Len;             // "limits" (= bytesize-1) for GDT and IDT
 Bit32s IDT_Len;
-Bit8u RegColor[TOT_REG_NUM];    // specifies foreground and background color of registers
+Bit8u RegColor[TOT_REG_NUM+10];    // specifies foreground and background color of registers
 // Text color is red if the upper bit is set. Background is set according to ColorList.
 int RitemToRnum[TOT_REG_NUM];   // mapping from Reg List Item# to register number
 
@@ -1658,7 +1658,7 @@ void FillPAGE()
         lin++;
     }
     if(start_lin != 1) {
-        sprintf (pa_lin,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_lin, -1);
+        sprintf (pa_lin,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_lin, (Bit64u)-1);
         sprintf (pa_phy,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_phy, start_phy + (lin-1-start_lin));
         AddPagingLine (LineCount,pa_lin,pa_phy);
     }

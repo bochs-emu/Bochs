@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2021  The Bochs Project
+//  Copyright (C) 2008-2026  The Bochs Project
 
 
 #ifndef BX_ENH_DBG_DEF_H
@@ -385,7 +385,7 @@ extern int CmdHInsert;                     // index of next history entry to sto
 #define XMMF_hi     96
 #define EXTRA_REGS  28
 
-extern Bit8u RegColor[TOT_REG_NUM];    // specifies foreground and background color of registers
+extern Bit8u RegColor[TOT_REG_NUM+10];    // specifies foreground and background color of registers
 // Text color is red if the upper bit is set. Background is set according to ColorList.
 extern int RitemToRnum[TOT_REG_NUM];   // mapping from Reg List Item# to register number
 
