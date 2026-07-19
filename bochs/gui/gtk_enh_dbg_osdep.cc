@@ -218,7 +218,7 @@ unsigned int CurScrX;
 
 char SelMem[260];       // flag array for which list rows are "selected"
 char SelAsm[MAX_ASM];
-char SelReg[TOT_REG_NUM + EXTRA_REGS];
+char SelReg[STD_REG_NUM + EXTRA_REGS];
 
 // "run" the standard dialog box -- get text from the user
 bool ShowAskDialog()
@@ -562,7 +562,7 @@ int GetNextSelectedLI(int listnum, int StartPt)
     if (listnum == REG_WND)
     {
         Sel = SelReg;
-        end = TOT_REG_NUM + EXTRA_REGS;
+        end = STD_REG_NUM + EXTRA_REGS;
     }
     if (L < -1)
         L = -1;
@@ -991,7 +991,7 @@ void EndListUpdate(int listnum)
     // clear selections for each list on a list update
     if (listnum == REG_WND)
     {
-        i = TOT_REG_NUM + EXTRA_REGS;
+        i = STD_REG_NUM + EXTRA_REGS;
         while (--i >= 0)
             SelReg[i] = 0;
     }
@@ -1237,7 +1237,7 @@ gboolean RegMouseDown_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
     GrayMenuItem (0, CMD_WPTWR);        // disable watchpoints for physdumps (not selected)
     GrayMenuItem (0, CMD_WPTRD);
     GrayMenuItem (1, CMD_BRKPT);        // enable ASM breakpoints (window is selected by default)
-    row = TOT_REG_NUM + EXTRA_REGS;
+    row = STD_REG_NUM + EXTRA_REGS;
     while (--row >= 0)
         SelReg[row] = 0;
     onrow = (bool) gtk_tree_view_get_path_at_pos (GTK_TREE_VIEW(LV[0]),
@@ -1247,8 +1247,8 @@ gboolean RegMouseDown_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
     pathdat = gtk_tree_path_get_indices (path);
     row = (int) *pathdat;
     gtk_tree_path_free (path);
-    if (row >= TOT_REG_NUM + EXTRA_REGS || row < 0)
-        row = TOT_REG_NUM + EXTRA_REGS -1;
+    if (row >= STD_REG_NUM + EXTRA_REGS || row < 0)
+        row = STD_REG_NUM + EXTRA_REGS -1;
     SelReg[row] = TRUE;
     Invalidate (REG_WND);
 

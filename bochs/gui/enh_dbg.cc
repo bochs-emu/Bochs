@@ -147,14 +147,14 @@ static const char* RegLCName[EFER_Rnum + 1] = {
     "gdtr","idtr","ldtr","tr","cr0","cr2","cr3","cr4","efer"
 };
 static char* RDispName[EFER_Rnum + 1];
-static bx_param_num_c *RegObject[BX_MAX_SMP_THREADS_SUPPORTED][TOT_REG_NUM + EXTRA_REGS];
+static bx_param_num_c *RegObject[BX_MAX_SMP_THREADS_SUPPORTED][STD_REG_NUM + EXTRA_REGS];
 Bit64u rV[EFER_Rnum + 1];   // current values of registers
 Bit64u PV[EFER_Rnum + 1];   // previous values of registers
 Bit32s GDT_Len;             // "limits" (= bytesize-1) for GDT and IDT
 Bit32s IDT_Len;
-Bit8u RegColor[TOT_REG_NUM+10];    // specifies foreground and background color of registers
+Bit8u RegColor[STD_REG_NUM+EXTRA_REGS];    // specifies foreground and background color of registers
 // Text color is red if the upper bit is set. Background is set according to ColorList.
-int RitemToRnum[TOT_REG_NUM];   // mapping from Reg List Item# to register number
+int RitemToRnum[STD_REG_NUM];   // mapping from Reg List Item# to register number
 
 Bit64u ladrmin = 0; // bochs linear addressing access variables
 Bit64u ladrmax = 0;
@@ -1204,7 +1204,7 @@ void InitRegObjects()
     {
         // RegObject[j]s are all initialized to NULL when allocated in the BSS area
         // but it doesn't hurt anything to do it again, once
-        int i = TOT_REG_NUM + EXTRA_REGS;
+        int i = STD_REG_NUM + EXTRA_REGS;
         while (--i >= 0)
             RegObject[cpu][i] = (bx_param_num_c *) NULL;
 
@@ -2160,7 +2160,7 @@ void DoAllInit()
     p -= 512;           // 2 "hex" bytes per byte value
     tmpcb = p;
 
-    i = TOT_REG_NUM;        // fake up a color table -- there are just enough, currently
+    i = STD_REG_NUM;        // fake up a color table -- there are just enough, currently
     int j = 7;      // color 7 = orange
     while (i > 0)
     {
@@ -2735,7 +2735,7 @@ void ChangeReg()
 {
     // Change a register -- search for the first selected register
     int L = GetNextSelectedLI(REG_WND, -1);
-    if (AtBreak == FALSE || L == -1 || L >= TOT_REG_NUM)
+    if (AtBreak == FALSE || L == -1 || L >= STD_REG_NUM)
         return;
 
     int i = RitemToRnum[L];
