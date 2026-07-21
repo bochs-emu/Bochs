@@ -328,7 +328,8 @@ struct gf_channel
   float d3d_vertex_data[4][16][4];
   float d3d_vertex_data_imm[16][4];
   Bit32u d3d_index_array_offset;
-  Bit32u d3d_index_array_dma;
+  bool d3d_index_array_dma;
+  bool d3d_index_array_type_16;
   gf_texture d3d_texture[16];
   Bit32u d3d_shader_control;
   Bit32u d3d_semaphore_obj;

@@ -6811,15 +6811,19 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
   } else if (method == 0x607 && cls >= 0x0497) {
     ch->d3d_index_array_offset = param;
   } else if (method == 0x608 && cls >= 0x0497) {
-    ch->d3d_index_array_dma = param;
+    ch->d3d_index_array_dma = (param & 1) != 0;
+    ch->d3d_index_array_type_16 = ((param >> 4) & 1) != 0;
   } else if (method == 0x609 && cls >= 0x0497) {
     Bit32u vertex_first = param & 0x00ffffff;
     Bit32u vertex_last = vertex_first + (param >> 24);
-    Bit32u index_array_obj = ch->d3d_index_array_dma & 1 ?
+    Bit32u index_array_obj = ch->d3d_index_array_dma ?
       ch->d3d_vertex_b_obj : ch->d3d_vertex_a_obj;
     for (Bit32u v = vertex_first; v <= vertex_last; v++) {
-      Bit32u vertex_array_index = dma_read16(index_array_obj,
-        ch->d3d_index_array_offset + v * 2);
+      Bit32u vertex_array_index;
+      if (ch->d3d_index_array_type_16)
+        vertex_array_index = dma_read16(index_array_obj, ch->d3d_index_array_offset + v * 2);
+      else
+        vertex_array_index = dma_read32(index_array_obj, ch->d3d_index_array_offset + v * 4);
       d3d_load_vertex(ch, vertex_array_index);
     }
   } else if ((method == 0x60a && cls == 0x0097) ||
