@@ -3192,6 +3192,7 @@ void texture_update_size(gf_texture* tex, Bit32u cls)
     if (lh == 0)
       lh = 1;
   }
+  tex->face_bytes = ALIGN(tex->face_bytes, 128);
 }
 
 void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
@@ -3953,6 +3954,26 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
         sca_result[0] = exp2(fl);
         sca_result[1] = params[2][0] - fl;
         sca_result[2] = exp2(params[2][0]);
+        sca_result[3] = 1.0f;
+        break;
+      }
+      case 6: { // LOG
+        float fa = fabs(params[2][0]);
+        if (fa != 0.0f) {
+          if (isinf(fa)) {
+            sca_result[0] = INFINITY;
+            sca_result[1] = 1.0f;
+            sca_result[2] = INFINITY;
+          } else {
+            sca_result[0] = floor(log2(fa));
+            sca_result[1] = fa / exp2(floor(log2(fa)));
+            sca_result[2] = log2(fa);
+          }
+        } else {
+          sca_result[0] = -INFINITY;
+          sca_result[1] = 1.0f;
+          sca_result[2] = -INFINITY;
+        }
         sca_result[3] = 1.0f;
         break;
       }
