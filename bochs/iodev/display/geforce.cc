@@ -793,14 +793,16 @@ void bx_geforce_c::mem_write(bx_phy_address addr, Bit8u value)
     offset += BX_GEFORCE_THIS bank_base[0];
     offset &= BX_GEFORCE_THIS memsize_mask;
     BX_GEFORCE_THIS s.memory[offset] = value;
-    BX_GEFORCE_THIS svga_needs_update_tile = 1;
-    unsigned x = (offset % BX_GEFORCE_THIS svga_pitch) / (BX_GEFORCE_THIS svga_bpp / 8);
-    unsigned y = offset / BX_GEFORCE_THIS svga_pitch;
-    if (BX_GEFORCE_THIS s.y_doublescan)
-      y <<= 1;
-    if (BX_GEFORCE_THIS svga_double_width)
-      x <<= 1;
-    SET_TILE_UPDATED(BX_GEFORCE_THIS, x / X_TILESIZE, y / Y_TILESIZE, 1);
+    if (BX_GEFORCE_THIS svga_pitch != 0) {
+      BX_GEFORCE_THIS svga_needs_update_tile = 1;
+      Bit32u x = (offset % BX_GEFORCE_THIS svga_pitch) / (BX_GEFORCE_THIS svga_bpp / 8);
+      Bit32u y = offset / BX_GEFORCE_THIS svga_pitch;
+      if (BX_GEFORCE_THIS s.y_doublescan)
+        y <<= 1;
+      if (BX_GEFORCE_THIS svga_double_width)
+        x <<= 1;
+      SET_TILE_UPDATED(BX_GEFORCE_THIS, x / X_TILESIZE, y / Y_TILESIZE, 1);
+    }
   }
 }
 
@@ -5513,6 +5515,10 @@ void bx_geforce_c::d3d_load_vertex(gf_channel* ch, Bit32u index)
         Bit32u value = dma_read32(array_obj, array_offset);
         unpack_attribute(value, format_type == 0,
           ch->d3d_vertex_data[ch->d3d_vertex_index][ai]);
+      } else if (format_type == 5 && comp_count == 2) {
+        Bit32u value = dma_read32(array_obj, array_offset);
+        ch->d3d_vertex_data[ch->d3d_vertex_index][ai][0] = (float)(Bit16s)value;
+        ch->d3d_vertex_data[ch->d3d_vertex_index][ai][1] = (float)(Bit16s)(value >> 16);
       } else {
         for (Bit32u ci = 0; ci < comp_count; ci++) {
           Bit32u ui32 = dma_read32(array_obj, array_offset + ci * 4);
@@ -6738,6 +6744,9 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       } else if (dxtype == 0xcc) {
         ch->d3d_vertex_data_array_format_type[i] = 0;
         ch->d3d_vertex_data_array_format_size[i] = 4;
+      } else if (dxtype == 0xee) {
+        ch->d3d_vertex_data_array_format_type[i] = 5;
+        ch->d3d_vertex_data_array_format_size[i] = 2;
       }
     }
   } else if ((method == 0x5f4 && cls == 0x0097) ||
@@ -6794,6 +6803,10 @@ void bx_geforce_c::execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u
       unpack_attribute(param, format_type == 0,
         ch->d3d_vertex_data[ch->d3d_vertex_index][ch->d3d_attrib_index]);
       ch->d3d_comp_index = 4;
+    } else if (format_type == 5 && ch->d3d_vertex_data_array_format_size[ch->d3d_attrib_index] == 2) {
+      ch->d3d_vertex_data[ch->d3d_vertex_index][ch->d3d_attrib_index][0] = (float)(Bit16s)param;
+      ch->d3d_vertex_data[ch->d3d_vertex_index][ch->d3d_attrib_index][1] = (float)(Bit16s)(param >> 16);
+      ch->d3d_comp_index = 2;
     } else {
       ch->d3d_vertex_data[ch->d3d_vertex_index][ch->d3d_attrib_index][
         ch->d3d_comp_index++] = u.param_float;
