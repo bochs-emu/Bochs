@@ -65,7 +65,6 @@ bool BX_CPU_C::handleWaitForEvent(void)
       if (BX_CPU_THIS_PTR activity_state >= BX_ACTIVITY_STATE_MWAIT)
         BX_CPU_THIS_PTR monitor.reset_monitor();
 #endif
-      BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
       BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
       break;
     }
@@ -450,6 +449,7 @@ bool BX_CPU_C::handleAsyncEvent(void)
     BX_CPU_THIS_PTR async_event = 0;
   }
 
+  BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
   return 0; // Continue executing cpu_loop.
 }
 

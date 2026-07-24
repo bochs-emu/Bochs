@@ -3177,6 +3177,7 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
     if (vector == 2) mask_event(BX_EVENT_NMI);
   }
 
+  BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
   BX_CPU_THIS_PTR EXT = 0;
   BX_CPU_THIS_PTR last_exception_type = BX_ET_NONE; // error resolved
 
