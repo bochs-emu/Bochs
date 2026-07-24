@@ -3710,9 +3710,12 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
     for (int p = 0; p < 3; p++) {
       Bit32u tmp_index;
       Bit32u reg_type;
+      bool absolute = false;
       bool negate;
       Bit32u swizzle[4];
       if (p == 0) {
+        if (BX_GEFORCE_THIS card_type >= 0x35)
+          absolute = (tokens[0] >> 21) & 1;
         if (BX_GEFORCE_THIS card_type <= 0x35) {
           reg_type = (tokens[2] >> 26) & 3;
           tmp_index = (tokens[2] >> 28) & 0xf;
@@ -3729,6 +3732,8 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
           negate = (tokens[1] >> 7) & 1;
         }
       } else if (p == 1) {
+        if (BX_GEFORCE_THIS card_type >= 0x35)
+          absolute = (tokens[0] >> 22) & 1;
         if (BX_GEFORCE_THIS card_type <= 0x35) {
           reg_type = (tokens[2] >> 11) & 3;
           tmp_index = (tokens[2] >> 13) & 0xf;
@@ -3743,6 +3748,8 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
           negate = (tokens[2] >> 22) & 1;
         }
       } else if (p == 2) {
+        if (BX_GEFORCE_THIS card_type >= 0x35)
+          absolute = (tokens[0] >> 23) & 1;
         if (BX_GEFORCE_THIS card_type <= 0x35) {
           reg_type = (tokens[3] >> 28) & 3;
           tmp_index = ((tokens[2] & 3) << 2) | ((tokens[3] >> 30) & 3);
@@ -3798,6 +3805,8 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
           }
           params[p][comp_index] = ch->d3d_transform_constant[const_index][comp_index_swizzle];
         }
+        if (absolute)
+          params[p][comp_index] = fabs(params[p][comp_index]);
         if (negate)
           params[p][comp_index] = -params[p][comp_index];
       }
@@ -4238,7 +4247,7 @@ void normalize(float in[3], float out[3])
   out[2] = in[2] * scale;
 }
 
-void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
+bool bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
   float in[16][4], float tmp_regs16[64][4], float tmp_regs32[64][4])
 {
   static bool unknown_opcode_reported = false;
@@ -4382,6 +4391,8 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
           for (int comp_index = 0; comp_index < 4; comp_index++)
             op_result[comp_index] = floor(params[0][comp_index]);
           break;
+        case 0x12: // KIL
+          return true;
         case 0x18: { // TXP
           float winv = 1.0f / params[0][3];
           params[0][0] *= winv;
@@ -4389,6 +4400,10 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
           params[0][2] *= winv;
           // fallthrough
         }
+        case 0x2f: // TXL
+          // Level of detail parameter is not implemented
+        case 0x31: // TXB
+          // Bias parameter is not implemented
         case 0x17: { // TEX
           Bit32u tex_unit = (dst_word >> 17) & 0xf;
           gf_texture* tex = &ch->d3d_texture[tex_unit];
@@ -4529,6 +4544,7 @@ void bx_geforce_c::d3d_pixel_shader(gf_channel* ch,
     if ((dst_word & 1) == 1)
       break;
   }
+  return false;
 }
 
 float blend_equation(Bit16u equation, float src, float src_factor, float dst, float dst_factor)
@@ -5261,10 +5277,8 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
         ps_in[0][0] = xy[0] - ch->d3d_window_offset_x;
         ps_in[0][1] = ch->d3d_viewport_height - (xy[1] - ch->d3d_window_offset_y);
         ps_in[0][2] = 0.0f;
-        if (rc_enable)
-          d3d_pixel_shader(ch, ps_in, &rc_regs[8], ps_tmp_regs32);
-        else
-          d3d_pixel_shader(ch, ps_in, ps_tmp_regs16, ps_tmp_regs32);
+        if (d3d_pixel_shader(ch, ps_in, rc_enable ? &rc_regs[8] : ps_tmp_regs16, ps_tmp_regs32))
+          continue;
       }
       if (rc_enable) {
         for (Bit32u ci = 0; ci < 4; ci++) {
