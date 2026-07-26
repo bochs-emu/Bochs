@@ -916,6 +916,27 @@ int hc_ohci_init(HWND hwnd)
   if (OHCI_state == NULL)
     return -1;
 
+  // set the dialog title to the break type
+  switch (g_params.break_type) {
+    case USB_DEBUG_FRAME:
+      SetWindowText(hwnd, "OHCI Debug Dialog: Break Type: Start of Frame");
+      break;
+    case USB_DEBUG_COMMAND:
+      SetWindowText(hwnd, "OHCI Debug Dialog: Break Type: Doorbell");
+      break;
+    case USB_DEBUG_NONEXIST:
+      SetWindowText(hwnd, "OHCI Debug Dialog: Break Type: Non-existant Port Write");
+      break;
+    case USB_DEBUG_RESET:
+      sprintf(str, "OHCI Debug Dialog: Break Type: Port %d Reset", g_params.wParam);
+      SetWindowText(hwnd, str);
+      break;
+    case USB_DEBUG_ENABLE:
+      sprintf(str, "OHCI Debug Dialog: Break Type: Port %d Enable", g_params.wParam);
+      SetWindowText(hwnd, str);
+      break;
+  }
+
   CheckDlgButton(hwnd, IDC_DEBUG_RESET,    SIM->get_param_bool(BXPN_USB_DEBUG_RESET)->get() ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_DEBUG_ENABLE,   SIM->get_param_bool(BXPN_USB_DEBUG_ENABLE)->get() ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_DEBUG_DOORBELL, SIM->get_param_bool(BXPN_USB_DEBUG_DOORBELL)->get() ? BST_CHECKED : BST_UNCHECKED);

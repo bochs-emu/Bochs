@@ -841,7 +841,7 @@ bool bx_ohci_core_c::mem_write(bx_phy_address addr, unsigned len, void *data)
         else {
 #if BX_USB_DEBUGGER
           if (usb_debug) {
-            SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_ENABLE, 0, 0, 0);
+            SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_ENABLE, 0, p, 0);
           }
 #endif
           hub.usb_port[p].HcRhPortStatus.pes = 1;
@@ -862,7 +862,7 @@ bool bx_ohci_core_c::mem_write(bx_phy_address addr, unsigned len, void *data)
         else {
 #if BX_USB_DEBUGGER
           if (usb_debug) {
-            SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_RESET, 0, 0, 0);
+            SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_RESET, 0, p, 0);
           }
 #endif
           reset_port(p);
@@ -1178,7 +1178,7 @@ int bx_ohci_core_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed, int toggl
 
 #if BX_USB_DEBUGGER
   if (usb_debug) {
-    SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_COMMAND, 0, 0, 0);
+    SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_COMMAND, 0, addr, USB_LPARAM_FLAG_BEFORE);
   }
 #endif
 
