@@ -40,6 +40,9 @@
 #define GEFORCE_SUBCHANNEL_COUNT 8
 #define GEFORCE_CACHE1_SIZE 64
 
+#define GEFORCE_CLASS_COUNT 0x10000
+#define GEFORCE_METHOD_COUNT 0x800
+
 #define BX_ROP_PATTERN 0x01
 
 struct gf_texture
@@ -435,15 +438,25 @@ public:
 protected:
   virtual void update(void);
 
-private:
+public:
+  typedef void (*gf_method_handler)(bx_geforce_c* this_ptr,
+    gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+
   static Bit32u svga_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   svga_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
-#if !BX_USE_CIRRUS_SMF
+#if !BX_USE_GEFORCE_SMF
   Bit32u svga_read(Bit32u address, unsigned io_len);
   void   svga_write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
   BX_GEFORCE_SMF void   svga_init_members();
   BX_GEFORCE_SMF void   bitblt_init();
+  BX_GEFORCE_SMF void   init_method_handlers();
+  BX_GEFORCE_SMF void   set_method_handler(Bit32u cls, Bit32u method, gf_method_handler handler);
+  BX_GEFORCE_SMF void   set_method_handler(Bit32u cls, Bit32u method_start, Bit32u method_end, gf_method_handler handler);
+  BX_GEFORCE_SMF void   set_d3d_method_handler(Bit32u cl0096, Bit32u cl0097,
+    Bit32u cl0497, Bit32u cl4097, Bit32u method_start, Bit32u method_end, gf_method_handler handler);
+  BX_GEFORCE_SMF void   set_d3d_method_handler(Bit32u cl0096, Bit32u cl0097,
+    Bit32u cl0497, Bit32u cl4097, Bit32u method, gf_method_handler handler);
 
   BX_GEFORCE_SMF Bit16u cursor_read16(Bit32u address);
   BX_GEFORCE_SMF Bit32u cursor_read32(Bit32u address);
@@ -644,6 +657,12 @@ private:
   Bit32u ramdac_pll_select;
   Bit32u ramdac_general_control;
 
+  gf_method_handler empty_method_handlers[GEFORCE_METHOD_COUNT];
+  gf_method_handler cl0096_method_handlers[GEFORCE_METHOD_COUNT];
+  gf_method_handler cl0097_method_handlers[GEFORCE_METHOD_COUNT];
+  gf_method_handler cl0497_method_handlers[GEFORCE_METHOD_COUNT];
+  gf_method_handler cl4097_method_handlers[GEFORCE_METHOD_COUNT];
+  gf_method_handler* class_method_handlers[GEFORCE_CLASS_COUNT];
   bx_bitblt_rop_t rop_handler[0x100];
   Bit8u rop_flags[0x100];
 
