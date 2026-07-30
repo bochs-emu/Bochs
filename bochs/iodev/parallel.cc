@@ -450,11 +450,11 @@ const char* bx_parallel_c::parport_file_param_handler(bx_param_string_c *param, 
 {
   if ((set) && (strcmp(val, oldval))) {
     int port = atoi((param->get_parent())->get_name()) - 1;
-    if (BX_PAR_THIS s[port].output != NULL) {
-      fclose(BX_PAR_THIS s[port].output);
-      BX_PAR_THIS s[port].output = NULL;
+    if (theParallelDevice->s[port].output != NULL) {
+      fclose(theParallelDevice->s[port].output);
+      theParallelDevice->s[port].output = NULL;
     }
-    BX_PAR_THIS s[port].file_changed = 1;
+    theParallelDevice->s[port].file_changed = 1;
     // virtual_printer() re-opens the output file on demand
   }
   return val;

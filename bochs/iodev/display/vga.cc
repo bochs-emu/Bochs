@@ -694,6 +694,7 @@ void bx_vga_c::update(void)
 
 bool bx_vga_c::mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
+  bx_vga_c *class_ptr = (bx_vga_c *) param;
   Bit8u *data_ptr;
 #ifdef BX_LITTLE_ENDIAN
   data_ptr = (Bit8u *) data;
@@ -701,7 +702,7 @@ bool bx_vga_c::mem_read_handler(bx_phy_address addr, unsigned len, void *data, v
   data_ptr = (Bit8u *) data + (len - 1);
 #endif
   for (unsigned i = 0; i < len; i++) {
-    *data_ptr = theVga->mem_read(addr);
+    *data_ptr = class_ptr->mem_read(addr);
     addr++;
 #ifdef BX_LITTLE_ENDIAN
     data_ptr++;
@@ -744,6 +745,7 @@ Bit8u bx_vga_c::mem_read(bx_phy_address addr)
 
 bool bx_vga_c::mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
+  bx_vga_c *class_ptr = (bx_vga_c *) param;
   Bit8u *data_ptr;
 #ifdef BX_LITTLE_ENDIAN
   data_ptr = (Bit8u *) data;
@@ -751,7 +753,7 @@ bool bx_vga_c::mem_write_handler(bx_phy_address addr, unsigned len, void *data, 
   data_ptr = (Bit8u *) data + (len - 1);
 #endif
   for (unsigned i = 0; i < len; i++) {
-    theVga->mem_write(addr, *data_ptr);
+    class_ptr->mem_write(addr, *data_ptr);
     addr++;
 #ifdef BX_LITTLE_ENDIAN
     data_ptr++;
@@ -1088,7 +1090,7 @@ void bx_vga_c::vbe_write_handler(void *this_ptr, Bit32u address, Bit32u value, u
   class_ptr->vbe_write(address, value, io_len);
 }
 
-Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
+void bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
