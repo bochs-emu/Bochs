@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2024 Stanislav Shwartsman
+//   Copyright (c) 2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -25,7 +25,7 @@
 #include "cpu/cpu.h"
 #include "gui/siminterface.h"
 #include "param_names.h"
-#include "arrow_lake.h"
+#include "wildcat_lake.h"
 
 #define LOG_THIS cpu->
 
@@ -33,7 +33,7 @@
 
 #define VMCS_REVISION_ID 0x04
 
-arrow_lake_t::arrow_lake_t(BX_CPU_C *cpu):
+wildcat_lake_t::wildcat_lake_t(BX_CPU_C *cpu):
 #if BX_SUPPORT_VMX
     bx_cpuid_t(cpu, VMCS_REVISION_ID)
 #else
@@ -41,7 +41,7 @@ arrow_lake_t::arrow_lake_t(BX_CPU_C *cpu):
 #endif
 {
   if (BX_SUPPORT_VMX == 1)
-    BX_INFO(("You must compile with --enable-vmx=2 for Intel Core Arrow Lake VMX configuration"));
+    BX_INFO(("You must compile with --enable-vmx=2 for Intel Core Wildcat Lake VMX configuration"));
 
   if (! BX_SUPPORT_MONITOR_MWAIT)
     BX_INFO(("WARNING: MONITOR/MWAIT support is not compiled in !"));
@@ -136,8 +136,13 @@ arrow_lake_t::arrow_lake_t(BX_CPU_C *cpu):
   enable_cpu_extension(BX_ISA_SERIALIZE);
   enable_cpu_extension(BX_ISA_CMPCCXADD);
   enable_cpu_extension(BX_ISA_LASS);
+  enable_cpu_extension(BX_ISA_WRMSRNS);
+  enable_cpu_extension(BX_ISA_MSRLIST);
 #if BX_SUPPORT_UINTR
   enable_cpu_extension(BX_ISA_UINTR);
+#endif
+#if BX_SUPPORT_FRED
+  enable_cpu_extension(BX_ISA_FRED);
 #endif
   enable_cpu_extension(BX_ISA_SCA_MITIGATIONS);
 
@@ -145,9 +150,9 @@ arrow_lake_t::arrow_lake_t(BX_CPU_C *cpu):
   max_ext_leaf = 0x80000008;
 }
 
-void arrow_lake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
+void wildcat_lake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  static const char* brand_string = "Intel(R) Core(TM) Ultra 5 245K\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+  static const char* brand_string = "Intel(R) Core(TM) 5 320\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
 
   static bool cpuid_limit_winnt = SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get();
   if (cpuid_limit_winnt)
@@ -193,10 +198,10 @@ void arrow_lake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fun
     get_std_cpuid_leaf_4(subfunction, leaf);
     return;
   case 0x00000005: // CPUID leaf 0x00000005 - MONITOR/MWAIT leaf
-    get_std_cpuid_monitor_mwait_leaf(leaf, 0x10102020);
+    get_std_cpuid_monitor_mwait_leaf(leaf, 0x10002020);
     return;
   case 0x00000006: // CPUID leaf 0x00000006 - Thermal and Power Management Leaf
-    get_leaf(leaf, 0x00880075, 0x00000002, 0x00000401, 0x00000003);
+    get_leaf(leaf, 0x00dfcff7, 0x00000002, 0x00000409, 0x00000003);
     return;
   case 0x00000007:
     get_std_cpuid_leaf_7(subfunction, leaf);
@@ -227,10 +232,10 @@ void arrow_lake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fun
     get_reserved_leaf(leaf);
     return;
   case 0x00000015: // CPUID leaf 0x00000015 - Time Stamp Counter and Core Crystal Clock Information Leaf
-    get_freq_leaf_15(leaf, 0x00000002, 0x000000da, 0x0249f000);
+    get_freq_leaf_15(leaf, 0x00000002, 0x00000082, 0x0249f000);
     return;
   case 0x00000016: // CPUID leaf 0x00000016 - Processor Frequency Information Leaf
-    get_freq_leaf_16(leaf, 0x00001068, 0x00001450, 0x00000064);
+    get_freq_leaf_16(leaf, 0x000009c4, 0x000011f8, 0x00000064);
     return;
   case 0x00000017:
     get_reserved_leaf(leaf);
@@ -253,6 +258,9 @@ void arrow_lake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fun
     return;
   case 0x00000020: // HRESET Information
   case 0x00000023: // Arch Perfmon Leaf Information (not supported)
+  case 0x00000024: // Converged Vector ISA (AVX10)
+  case 0x00000027: // Intel Resource Director Technology (Intel RDT) Asymmetric Monitoring (not supported)
+  case 0x00000028: // Intel Resource Director Technology (Intel RDT) Asymmetric Allocation (not supported)
   default:
     get_reserved_leaf(leaf);
     return;
@@ -260,7 +268,7 @@ void arrow_lake_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_fun
 }
 
 #if BX_SUPPORT_VMX >= 2
-Bit32u arrow_lake_t::get_vmx_extensions_bitmask(void) const
+Bit32u wildcat_lake_t::get_vmx_extensions_bitmask(void) const
 {
   return BX_VMX_TPR_SHADOW |
          BX_VMX_VIRTUAL_NMI |
@@ -296,7 +304,7 @@ Bit32u arrow_lake_t::get_vmx_extensions_bitmask(void) const
 // leaf 0x00000000 //
 
 // leaf 0x00000001 //
-void arrow_lake_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
+void wildcat_lake_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information
   //   [3:0]   Stepping ID
@@ -305,7 +313,7 @@ void arrow_lake_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [13:12] Type: 0=OEM, 1=overdrive, 2=dual cpu, 3=reserved
   //   [19:16] Extended Model
   //   [27:20] Extended Family
-  leaf->eax = 0x000c0662;
+  leaf->eax = 0x000d0651;
 
   // EBX:
   //   [7:0]   Brand ID
@@ -406,7 +414,7 @@ void arrow_lake_t::get_std_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x00000003 - Processor Serial Number (not supported) //
 
 // leaf 0x00000004 //
-void arrow_lake_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const
+void wildcat_lake_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000004 - Deterministic Cache Parameters
   switch(subfunction) {
@@ -429,9 +437,9 @@ void arrow_lake_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *le
     leaf->edx = 0x00000000;
     return;
   case 3:
-    leaf->eax = 0xfc1fc163;
+    leaf->eax = 0xfc0fc163;
     leaf->ebx = 0x02c0003f;
-    leaf->ecx = 0x00007fff;
+    leaf->ecx = 0x00001fff;
     leaf->edx = 0x00000004;
     return;
   default:
@@ -446,7 +454,7 @@ void arrow_lake_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_function_t *le
 // leaf 0x00000006 Thermal and Power Management Leaf //
 
 // leaf 0x00000007 //
-void arrow_lake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const
+void wildcat_lake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   switch(subfunction) {
   case 0:
@@ -575,9 +583,9 @@ void arrow_lake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *le
     // * [11:11] Fast zero-length REP STOSB
     //   [12:12] Fast zero-length REP CMPSB/SCASB
     //   [13:16] Reserved
-    //   [17:17] Flexible Return and Event Delivery (FRED) support
-    //   [18:18] LKGS instruction support
-    //   [19:19] WRMSRNS instruction
+    // * [17:17] Flexible Return and Event Delivery (FRED) support
+    // * [18:18] LKGS instruction support
+    // * [19:19] WRMSRNS instruction
     //   [20:20] NMI source reporting
     //   [21:21] AMX-FB16 support
     // ! [22:22] HRESET and CPUID leaf 0x20 support
@@ -585,7 +593,7 @@ void arrow_lake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *le
     //   [24:24] Reserved
     //   [25:25] Reserved
     // ! [26:26] LAM: Linear Address Masking
-    //   [27:27] MSRLIST: RDMSRLIST/WRMSRLIST instructions and the IA32_BARRIER MSR
+    // * [27:27] MSRLIST: RDMSRLIST/WRMSRLIST instructions and the IA32_BARRIER MSR
     //   [28:28] Reserved
     //   [29:29] Reserved
     // ! [30:30] Prevent INVD execution after BIOS is done
@@ -599,7 +607,11 @@ void arrow_lake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *le
     //   [31:04] Reserved
     leaf->ebx = 0;
 
-    //   [31:00] Reserved
+    //   [00:00] RDT_M_ASYM: Asymmetrical Intel RDT Monitoring capability
+    // ! [01:01] RDT_A_ASYM: Asymmetrical Intel RDT Allocation capability
+    //   [04:02] Reserved
+    //   [05:05] MSR_IMM: support immediate forms of RDMSR and WRMSRNS instructions
+    //   [31:06] Reserved
     leaf->ecx = 0;
 
     //   [0:3]   Reserved
@@ -656,7 +668,7 @@ void arrow_lake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *le
 // leaf 0x00000009 direct cache access not supported //
 
 // leaf 0x0000000A //
-void arrow_lake_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
+void wildcat_lake_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 {
   // CPUID function 0x0000000A - Architectural Performance Monitoring Leaf
   leaf->eax = 0x0d300806;
@@ -682,7 +694,7 @@ void arrow_lake_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 // leaf 0x00000017 - System-On-Chip Vendor Attribute Enumeration //
 
 // leaf 0x00000018
-void arrow_lake_t::get_std_cpuid_leaf_18(Bit32u subfunction, cpuid_function_t *leaf) const
+void wildcat_lake_t::get_std_cpuid_leaf_18(Bit32u subfunction, cpuid_function_t *leaf) const
 {
   // CPUID function 0x00000018 - Deterministic Address Translation Parameters
   switch(subfunction) {
@@ -731,13 +743,13 @@ void arrow_lake_t::get_std_cpuid_leaf_18(Bit32u subfunction, cpuid_function_t *l
   case 7:
     leaf->eax = 0x00000000;
     leaf->ebx = 0x00080007;
-    leaf->ecx = 0x00000080;
+    leaf->ecx = 0x00000100;
     leaf->edx = 0x00004043;
     return;
   case 8:
     leaf->eax = 0x00000000;
     leaf->ebx = 0x00080009;
-    leaf->ecx = 0x00000080;
+    leaf->ecx = 0x00000100;
     leaf->edx = 0x00004043;
     return;
   default:
@@ -751,7 +763,7 @@ void arrow_lake_t::get_std_cpuid_leaf_18(Bit32u subfunction, cpuid_function_t *l
 // leaf 0x80000000 //
 
 // leaf 0x80000001 //
-void arrow_lake_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
+void wildcat_lake_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 {
   // EAX:       CPU Version Information (reserved for Intel)
   leaf->eax = 0;
@@ -799,11 +811,11 @@ void arrow_lake_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
 // leaf 0x80000007 - Advanced Power Management //
 // leaf 0x80000008 //
 
-void arrow_lake_t::dump_cpuid(void) const
+void wildcat_lake_t::dump_cpuid(void) const
 {
   bx_cpuid_t::dump_cpuid(max_std_leaf, max_ext_leaf);
 }
 
-bx_cpuid_t *create_arrow_lake_cpuid(BX_CPU_C *cpu) { return new arrow_lake_t(cpu); }
+bx_cpuid_t *create_wildcat_lake_cpuid(BX_CPU_C *cpu) { return new wildcat_lake_t(cpu); }
 
 #endif

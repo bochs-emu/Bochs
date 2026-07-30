@@ -146,6 +146,7 @@
 #  tigerlake                  11th Gen Intel(R) Core(TM) i5-1135G7 (TigerLake)
 #  sapphire_rapids            Intel(R) Xeon(R) w9-3475X (Sappire Rapids)
 #  arrow_lake                 15th Gen Intel(R) Core(TM) Ultra 5 245K (ArrowLake)
+#  wildcat_lake               Intel(R) Core(TM) 5 320 (PantherLake)
 #
 #  ADD_FEATURES:
 #    Enable one or more CPU features in the CPU configuration selected by MODEL.

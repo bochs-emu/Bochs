@@ -6093,6 +6093,11 @@ features enabled at compile time (3rd column).
     <entry>15th Gen Intel(R) Core(TM) Ultra 5 245K (ArrowLake)</entry>
     <entry>cpu level 6, x86-64, avx</entry>
   </row>
+  <row>
+    <entry>wildcat_lake</entry>
+    <entry>Intel(R) Core(TM) 5 320 (PantherLake)</entry>
+    <entry>cpu level 6, x86-64, avx</entry>
+  </row>
 </tbody>
 </tgroup>
 </table>

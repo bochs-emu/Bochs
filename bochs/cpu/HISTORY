@@ -12,6 +12,7 @@ Changes after Bochs 3.0:
 ! Implemented AMX-FP8 ISA extension
 ! Added MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS
 ! Implemented USER_MSR extensions emulation (URDMSR/UWRMSR)
+! CPUID: Added Wildcat Lake CPU definition (features FRED, WRMSRNS, MSRLIST)
 - CPUID: AVX10 CPUID leaf should always report CPUID[EAX=0x24][ECX=0]:EBX[17:16] as '11 indicating AVX10.128+AVX10.256 support, all EVEX.256 features are deprecated
 + CET: As long as CR0.WP = 1, no processor that supports CET will ever set the dirty flag in a paging-structure entry in which the R/W flag is 0. The CR0.WP check was missing in the PANIC logic.
 + VMX: Posted-Interrupt Descriptor Address (PID_ADDR) VMX field must be only 64-byte aligned and not 4K-aligned
@@ -75,6 +76,9 @@ Changes after Bochs 3.0:
 + AVX512: add missing zero upper for VPBROADCASTMB2Q and VPBROADCASTMW2D instructions
 - XSAVE: XSAVE of PKRU state should write only 4 bytes at keep other 4 bytes unmodified
 + AVX512: correctly handle masked VPEXPANDB/VPEXPANDW instructions with memory operand
+- x87: correctly handle preudo-denormal zero in FRNDINT instruction
+- VMX: fix VMX guest activity state reported on VMEXIT occured during HLT (should be BX_ACTIVITY_STATE_HLT=1)
++ CPUID: Update Arrow Lake CPUID - enable missing leaf CPUID leaf=7.subleaf=1[EDX]
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.0 (February 16, 2025)
