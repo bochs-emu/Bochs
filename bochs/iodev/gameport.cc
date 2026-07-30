@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2003-2021  The Bochs Project
+//  Copyright (C) 2003-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -148,7 +148,7 @@ void bx_gameport_c::poll_joydev(void)
   FD_SET(BX_GAMEPORT_THIS joyfd, &joyfds);
   e.type = 0;
   if (select(BX_GAMEPORT_THIS joyfd+1, &joyfds, NULL, NULL, &tv)) {
-    read(BX_GAMEPORT_THIS joyfd, &e, sizeof(struct js_event));
+    ::read(BX_GAMEPORT_THIS joyfd, &e, sizeof(struct js_event));
     if (e.type & JS_EVENT_BUTTON) {
       if (e.value == 1) {
         BX_GAMEPORT_THIS port &= ~(0x10 << e.number);
