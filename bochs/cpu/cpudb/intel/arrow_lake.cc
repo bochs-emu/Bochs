@@ -535,7 +535,7 @@ void arrow_lake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *le
     //   [16:16] TSXLDTRK: TSX suspent load tracking support
     //   [17:17] reserved
     //   [18:18] PCONFIG support
-    // * [19:19] Architectural LBRs support
+    // ! [19:19] Architectural LBRs support
     // * [20:20] CET IBT: Support CET indirect branch tracking
     //   [21:21] reserved
     //   [22:22] AMX BF16 support
@@ -608,9 +608,7 @@ void arrow_lake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *le
     //   [8:8]   AMX-COMPLEX: AMX-COMPLEX instructions support
     //   [9:9]   Reserved
     // * [10:10] AVX-VNNI-INT16: AVX-VNNI-INT16 instructions support
-    //   [11:11] Reserved
-    //   [12:12] Reserved
-    //   [13:13] User Timer support
+    //   [11:13] Reserved
     //   [14:14] PREFETCHI: PREFETCHIT0/1 instructions support
     //   [15:15] USER_MSR: Support for the URDMSR and UWRMSR instructions
     //   [16:16] Reserved
@@ -622,7 +620,7 @@ void arrow_lake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *le
     //   [22:22] Reserved
     //   [23:23] MWAIT and CPUID LEAF5 support (to be used by VMM)
     //   [31:24] Reserved
-    leaf->edx = 0;
+    leaf->edx = get_std_cpuid_leaf_7_subleaf_1_edx();
     break;
 
   case 2:
@@ -659,7 +657,7 @@ void arrow_lake_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *le
 void arrow_lake_t::get_std_cpuid_leaf_A(cpuid_function_t *leaf) const
 {
   // CPUID function 0x0000000A - Architectural Performance Monitoring Leaf
-  leaf->eax = 0x0D300806;
+  leaf->eax = 0x0d300806;
   leaf->ebx = 0x00000280;
   leaf->ecx = 0x00000007;
   leaf->edx = 0x00008603;

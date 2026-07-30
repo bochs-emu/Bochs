@@ -1149,9 +1149,9 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra) const
 }
 
 // leaf 0x00000007, subleaf 1 - ECX
-Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_ecx() const
+Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_ecx(Bit32u extra) const
 {
-  Bit32u ecx = 0;
+  Bit32u ecx = extra;
 
   // CPUID defines - features CPUID[0x00000007].ECX  [subleaf 1]
   // -----------------------------
