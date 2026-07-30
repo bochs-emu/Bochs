@@ -819,6 +819,14 @@ bool bx_usb_ehci_c::get_port_routing(int port, int *n_cc, int *n_pcc)
 
 bool bx_usb_ehci_c::read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
+#if !BX_USE_USB_EHCI_SMF
+  bx_usb_ehci_c *class_ptr = (bx_usb_ehci_c *) param;
+  return class_ptr->mem_read(addr, len, data);
+}
+
+bool bx_usb_ehci_c::mem_read(bx_phy_address addr, unsigned len, void *data)
+{
+#endif
   Bit32u val = 0, val_hi = 0;
   int port;
   const Bit32u offset = (Bit32u) (addr - BX_EHCI_THIS pci_bar[0].addr);
@@ -941,6 +949,14 @@ bool bx_usb_ehci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
 
 bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
+#if !BX_USE_USB_EHCI_SMF
+  bx_usb_ehci_c *class_ptr = (bx_usb_ehci_c *) param;
+  return class_ptr->mem_write(addr, len, data);
+}
+
+bool bx_usb_ehci_c::mem_write(bx_phy_address addr, unsigned len, void *data)
+{
+#endif
   Bit32u value = *((Bit32u *) data);
   Bit32u value_hi = *((Bit32u *) ((Bit8u *) data + 4));     // Q: should value and value_hi to be swapped on BIG_ENDIAN platform ?
   bool oldcfg, oldpo, oldpr, oldfpr;
@@ -2529,10 +2545,10 @@ Bit64s bx_usb_ehci_c::usb_param_handler(bx_param_c *param, bool set, Bit64s val)
     portnum = atoi((param->get_parent())->get_name()+4) - 1;
     bool empty = (val == 0);
     if ((portnum >= 0) && (portnum < USB_EHCI_PORTS)) {
-      if (empty && (BX_EHCI_THIS hub.usb_port[portnum].device != NULL)) {
-        BX_EHCI_THIS device_change |= (1 << portnum);
-      } else if (!empty && (BX_EHCI_THIS hub.usb_port[portnum].device == NULL)) {
-        BX_EHCI_THIS device_change |= (1 << portnum);
+      if (empty && (theUSB_EHCI->hub.usb_port[portnum].device != NULL)) {
+        theUSB_EHCI->device_change |= (1 << portnum);
+      } else if (!empty && (theUSB_EHCI->hub.usb_port[portnum].device == NULL)) {
+        theUSB_EHCI->device_change |= (1 << portnum);
       } else if (val != ((bx_param_enum_c*)param)->get()) {
         BX_ERROR(("usb_param_handler(): port #%d already in use", portnum+1));
         val = ((bx_param_enum_c*)param)->get();
@@ -2550,15 +2566,15 @@ Bit64s bx_usb_ehci_c::usb_param_oc_handler(bx_param_c *param, bool set, Bit64s v
   if (set && val) {
     int portnum = atoi((param->get_parent())->get_name()+4) - 1;
     if ((portnum >= 0) && (portnum < USB_EHCI_PORTS)) {
-      if (BX_EHCI_THIS hub.usb_port[portnum].portsc.ccs) {
+      if (theUSB_EHCI->hub.usb_port[portnum].portsc.ccs) {
         // EHCI, section 4.2.5, page 58
-        BX_EHCI_THIS hub.usb_port[portnum].portsc.occ = 1;
-        BX_EHCI_THIS hub.usb_port[portnum].portsc.oca = 1;
-        BX_EHCI_THIS hub.usb_port[portnum].portsc.pec = 1;
-        BX_EHCI_THIS hub.usb_port[portnum].portsc.ped = 0;
-        BX_EHCI_THIS hub.usb_port[portnum].portsc.pp = 0; // optional (the HC may leave power on, limiting the current)
+        theUSB_EHCI->hub.usb_port[portnum].portsc.occ = 1;
+        theUSB_EHCI->hub.usb_port[portnum].portsc.oca = 1;
+        theUSB_EHCI->hub.usb_port[portnum].portsc.pec = 1;
+        theUSB_EHCI->hub.usb_port[portnum].portsc.ped = 0;
+        theUSB_EHCI->hub.usb_port[portnum].portsc.pp = 0; // optional (the HC may leave power on, limiting the current)
         BX_DEBUG(("Over-current signaled on port #%d.", portnum + 1));
-        BX_EHCI_THIS raise_irq(USBSTS_PCD);
+        theUSB_EHCI->raise_irq(USBSTS_PCD);
       }
     } else {
       BX_ERROR(("Over-current: Bad portnum given: %d", portnum + 1));
@@ -2572,7 +2588,7 @@ Bit64s bx_usb_ehci_c::usb_param_oc_handler(bx_param_c *param, bool set, Bit64s v
 bool bx_usb_ehci_c::usb_param_enable_handler(bx_param_c *param, bool en)
 {
   int portnum = atoi((param->get_parent())->get_name()+4) - 1;
-  if (en && (BX_EHCI_THIS hub.usb_port[portnum].device != NULL)) {
+  if (en && (theUSB_EHCI->hub.usb_port[portnum].device != NULL)) {
     en = 0;
   }
   return en;

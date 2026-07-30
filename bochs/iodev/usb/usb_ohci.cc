@@ -279,10 +279,10 @@ Bit64s bx_usb_ohci_c::usb_param_handler(bx_param_c *param, bool set, Bit64s val)
     int portnum = atoi((param->get_parent())->get_name()+4) - 1;
     bool empty = (val == 0);
     if ((portnum >= 0) && (portnum < USB_OHCI_PORTS)) {
-      if (empty && BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ccs) {
-        BX_OHCI_THIS device_change |= (1 << portnum);
-      } else if (!empty && !BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ccs) {
-        BX_OHCI_THIS device_change |= (1 << portnum);
+      if (empty && theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.ccs) {
+        theUSB_OHCI->device_change |= (1 << portnum);
+      } else if (!empty && !theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.ccs) {
+        theUSB_OHCI->device_change |= (1 << portnum);
       } else if (val != ((bx_param_enum_c *) param)->get()) {
         BX_ERROR(("usb_param_handler(): port #%d already in use", portnum+1));
         val = ((bx_param_enum_c *) param)->get();
@@ -298,24 +298,24 @@ Bit64s bx_usb_ohci_c::usb_param_handler(bx_param_c *param, bool set, Bit64s val)
 Bit64s bx_usb_ohci_c::usb_param_oc_handler(bx_param_c *param, bool set, Bit64s val)
 {
   if (set && val) {
-    if (BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.nocp == 0) {
+    if (theUSB_OHCI->hub.op_regs.HcRhDescriptorA.nocp == 0) {
       int portnum = atoi((param->get_parent())->get_name()+4) - 1;
       if ((portnum >= 0) && (portnum < USB_OHCI_PORTS)) {
-        if (BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ccs) {
+        if (theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.ccs) {
           // is over current reported on a per-port basis?
-          if (BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.ocpm == 1) {
-            BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ocic = 1;
-            BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.poci = 1;
-            BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.pes = 0;
-            BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.pesc = 1;
-            BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.pps = 0;
+          if (theUSB_OHCI->hub.op_regs.HcRhDescriptorA.ocpm == 1) {
+            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.ocic = 1;
+            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.poci = 1;
+            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.pes = 0;
+            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.pesc = 1;
+            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.pps = 0;
             BX_DEBUG(("Over-current signaled on port #%d.", portnum + 1));
           // else over current is reported globally
           } else {
-            BX_OHCI_THIS hub.op_regs.HcRhStatus.oci = 1;
+            theUSB_OHCI->hub.op_regs.HcRhStatus.oci = 1;
             BX_DEBUG(("Global over-current signaled."));
           }
-          BX_OHCI_THIS set_interrupt(OHCI_INTR_RHSC);
+          theUSB_OHCI->set_interrupt(OHCI_INTR_RHSC);
         }
       } else {
         BX_ERROR(("Over-current: Bad portnum given: %d", portnum + 1));
@@ -332,7 +332,7 @@ Bit64s bx_usb_ohci_c::usb_param_oc_handler(bx_param_c *param, bool set, Bit64s v
 bool bx_usb_ohci_c::usb_param_enable_handler(bx_param_c *param, bool en)
 {
   int portnum = atoi((param->get_parent())->get_name() + 4) - 1;
-  if (en && (BX_OHCI_THIS hub.usb_port[portnum].device != NULL)) {
+  if (en && (theUSB_OHCI->hub.usb_port[portnum].device != NULL)) {
     en = 0;
   }
   return en;

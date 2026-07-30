@@ -24,9 +24,11 @@
 #define BX_IODEV_USB_XHCI_H
 
 #if BX_USE_USB_XHCI_SMF
+#  define BX_XHCI_SMF  static
 #  define BX_XHCI_THIS theUSB_XHCI->
 #  define BX_XHCI_THIS_PTR theUSB_XHCI
 #else
+#  define BX_XHCI_SMF
 #  define BX_XHCI_THIS this->
 #  define BX_XHCI_THIS_PTR this
 #endif
@@ -616,58 +618,57 @@ private:
   int           xhci_timer_index;
   USBAsync      *packets;
 
-  static void reset_hc();
-  static void reset_port(int);
-  static void reset_port_usb3(int, int);
-  static bool save_hc_state(void);
-  static bool restore_hc_state(void);
+  void reset_hc();
+  BX_XHCI_SMF void reset_port(int);
+  BX_XHCI_SMF void reset_port_usb3(int, int);
+  BX_XHCI_SMF bool save_hc_state(void);
+  BX_XHCI_SMF bool restore_hc_state(void);
 
-  static void update_irq(unsigned interrupter);
+  BX_XHCI_SMF void update_irq(unsigned interrupter);
 
-  static void init_device(Bit8u port, bx_list_c *portconf);
-  static void remove_device(Bit8u port);
-  static bool set_connect_status(Bit8u port, bool connected);
+  BX_XHCI_SMF void init_device(Bit8u port, bx_list_c *portconf);
+  BX_XHCI_SMF void remove_device(Bit8u port);
+  BX_XHCI_SMF bool set_connect_status(Bit8u port, bool connected);
 
-  static int  broadcast_speed(SLOT_CONTEXT& slot_context);
-  static int  broadcast_packet(USBPacket *p, int port);
-  static Bit8u get_psceg(int port);
+  BX_XHCI_SMF int  broadcast_speed(SLOT_CONTEXT& slot_context);
+  BX_XHCI_SMF int  broadcast_packet(USBPacket *p, int port);
+  BX_XHCI_SMF Bit8u get_psceg(int port);
   static void xhci_timer_handler(void *);
   void xhci_timer(void);
 
-  static Bit64u process_transfer_ring(int slot, int ep, Bit64u ring_addr, bool *rcs, int primary_sid);
-  static void process_command_ring(void);
-  static void get_stream_info(struct STREAM_CONTEXT *context, Bit64u address, int index);
-  static void put_stream_info(struct STREAM_CONTEXT *context, Bit64u address, int index);
-  static void write_event_TRB(unsigned interrupter, Bit64u parameter, Bit32u status,
+  BX_XHCI_SMF Bit64u process_transfer_ring(int slot, int ep, Bit64u ring_addr, bool *rcs, int primary_sid);
+  BX_XHCI_SMF void process_command_ring(void);
+  BX_XHCI_SMF void get_stream_info(struct STREAM_CONTEXT *context, Bit64u address, int index);
+  BX_XHCI_SMF void put_stream_info(struct STREAM_CONTEXT *context, Bit64u address, int index);
+  BX_XHCI_SMF void write_event_TRB(unsigned interrupter, Bit64u parameter, Bit32u status,
                               Bit32u command, bool fire_int);
-  static Bit32u NEC_verification(Bit64u parameter);
-  static void init_event_ring(unsigned interrupter);
-  static void read_TRB(bx_phy_address addr, struct TRB *trb);
-  static void write_TRB(bx_phy_address addr, Bit64u parameter, Bit32u status, Bit32u command);
-  static void update_slot_context(int slot);
-  static void update_ep_context(int slot, int ep);
-  static void dump_slot_context(const Bit32u *context, int slot);
-  static void dump_ep_context(const Bit32u *context, int slot, int ep);
-  static void dump_stream_context(const Bit32u *context);
-  static void copy_slot_from_buffer(struct SLOT_CONTEXT *slot_context, const Bit8u *buffer);
-  static void copy_ep_from_buffer(struct EP_CONTEXT *ep_context, const Bit8u *buffer);
-  static void copy_slot_to_buffer(Bit32u *buffer, int slot);
-  static void copy_ep_to_buffer(Bit32u *buffer, int slot, int ep);
-  static void copy_stream_from_buffer(struct STREAM_CONTEXT *context, const Bit8u *buffer);
-  static void copy_stream_to_buffer(Bit8u *buffer, const struct STREAM_CONTEXT *context);
-  static int  validate_slot_context(const struct SLOT_CONTEXT *slot_context, int trb_command, int slot);
-  static int  validate_ep_context(const struct EP_CONTEXT *ep_context, int trb_command, Bit32u a_flags, int port_num, int ep_num);
-  static int  create_unique_address(int slot);
-  static int  send_set_address(int addr, int port_num, SLOT_CONTEXT& slot_context);
+  BX_XHCI_SMF Bit32u NEC_verification(Bit64u parameter);
+  BX_XHCI_SMF void init_event_ring(unsigned interrupter);
+  BX_XHCI_SMF void read_TRB(bx_phy_address addr, struct TRB *trb);
+  BX_XHCI_SMF void write_TRB(bx_phy_address addr, Bit64u parameter, Bit32u status, Bit32u command);
+  BX_XHCI_SMF void update_slot_context(int slot);
+  BX_XHCI_SMF void update_ep_context(int slot, int ep);
+  BX_XHCI_SMF void dump_slot_context(const Bit32u *context, int slot);
+  BX_XHCI_SMF void dump_ep_context(const Bit32u *context, int slot, int ep);
+  BX_XHCI_SMF void dump_stream_context(const Bit32u *context);
+  BX_XHCI_SMF void copy_slot_from_buffer(struct SLOT_CONTEXT *slot_context, const Bit8u *buffer);
+  BX_XHCI_SMF void copy_ep_from_buffer(struct EP_CONTEXT *ep_context, const Bit8u *buffer);
+  BX_XHCI_SMF void copy_slot_to_buffer(Bit32u *buffer, int slot);
+  BX_XHCI_SMF void copy_ep_to_buffer(Bit32u *buffer, int slot, int ep);
+  BX_XHCI_SMF void copy_stream_from_buffer(struct STREAM_CONTEXT *context, const Bit8u *buffer);
+  BX_XHCI_SMF void copy_stream_to_buffer(Bit8u *buffer, const struct STREAM_CONTEXT *context);
+  BX_XHCI_SMF int  validate_slot_context(const struct SLOT_CONTEXT *slot_context, int trb_command, int slot);
+  BX_XHCI_SMF int  validate_ep_context(const struct EP_CONTEXT *ep_context, int trb_command, Bit32u a_flags, int port_num, int ep_num);
+  BX_XHCI_SMF int  create_unique_address(int slot);
+  BX_XHCI_SMF int  send_set_address(int addr, int port_num, SLOT_CONTEXT& slot_context);
 
-  static void dump_xhci_core(unsigned int slots, unsigned int eps);
+  BX_XHCI_SMF void dump_xhci_core(unsigned int slots, unsigned int eps);
 
-#if BX_USE_USB_XHCI_SMF
   static bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   static bool write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-#else
-  bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-  bool write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+#if !BX_USE_USB_XHCI_SMF
+  bool mem_read(bx_phy_address addr, unsigned len, void *data);
+  bool mem_write(bx_phy_address addr, unsigned len, void *data);
 #endif
 
   static void runtime_config_handler(void *);
