@@ -2914,6 +2914,8 @@ void bx_geforce_c::sifm(gf_channel* ch, bool swizzled)
       for (Bit16u y = 0; y < dheight; y++) {
         for (Bit16u x = 0; x < dwidth; x++) {
           Bit32u srccolor = get_pixel(ch->sifm_src, src_offset, x, ch->sifm_color_bytes);
+          if (ch->sifm_color_bytes == 2 && ch->swzs_color_bytes == 4)
+            srccolor = color_565_to_888(srccolor);
           put_pixel_swzs(ch, ch->swzs_ofs +
             swizzle(x + dx, y + dy, ch->swzs_width, ch->swzs_height) *
             ch->swzs_color_bytes, srccolor);
@@ -2943,7 +2945,7 @@ void bx_geforce_c::sifm(gf_channel* ch, bool swizzled)
     }
   } else {
     Bit32s sx0 = ((ch->sifm_syx & 0xFFFF) << 16) - 0x80000;
-    Bit32s sy = (ch->sifm_syx & 0xFFFF0000) - 0x80000;
+    Bit32s sy = (ch->sifm_syx & 0xFFFF0000) + ((Bit32s)ch->sifm_dvdy < 0 ? 0x80000 : -0x80000);
     if (sx0 < 0)
       sx0 = 0;
     if (sy < 0)
@@ -2954,6 +2956,8 @@ void bx_geforce_c::sifm(gf_channel* ch, bool swizzled)
         Bit32u src_offset = ch->sifm_sofs + (sy >> 20) * spitch;
         for (Bit16u x = 0; x < dwidth; x++) {
           Bit32u srccolor = get_pixel(ch->sifm_src, src_offset, sx >> 20, ch->sifm_color_bytes);
+          if (ch->sifm_color_bytes == 2 && ch->swzs_color_bytes == 4)
+            srccolor = color_565_to_888(srccolor);
           put_pixel_swzs(ch, ch->swzs_ofs +
             swizzle(x + dx, y + dy, ch->swzs_width, ch->swzs_height) *
             ch->swzs_color_bytes, srccolor);
@@ -3122,6 +3126,8 @@ float uint32_as_float(Bit32u val)
 
 void texture_process_format(gf_texture* tex)
 {
+  static bool unknown_format_reported = false;
+
   tex->linear = false;
   tex->unnormalized = false;
   tex->compressed = false;
@@ -3139,36 +3145,52 @@ void texture_process_format(gf_texture* tex)
     tex->linear = true;
     tex->unnormalized = true;
   }
-  if (tex->format == 0x0c ||        // DXT1
-      tex->format == 0x0e ||        // DXT23
-      tex->format == 0x0f ||        // DXT45
-      tex->format == 0x86 ||        // DXT1
-      tex->format == 0x87 ||        // DXT23
-      tex->format == 0x88) {        // DXT45
-    tex->compressed = true;
-    tex->dxt_alpha_data = tex->format != 0x0c && tex->format != 0x86;
-    tex->dxt_alpha_explicit = tex->format == 0x0e || tex->format == 0x87;
-    tex->color_bytes = tex->dxt_alpha_data ? 16 : 8;
-  } else if (tex->format == 0x02 || // A1R5G5B5
-             tex->format == 0x03 || // X1R5G5B5
-             tex->format == 0x04 || // A4R4G4B4
-             tex->format == 0x05 || // R5G6B5
-             tex->format == 0x27 || // R6G5B5
-             tex->format == 0x28 || // G8B8
-             tex->format == 0x82 || // A1R5G5B5
-             tex->format == 0x83 || // A4R4G4B4
-             tex->format == 0x84 || // R5G6B5
-             tex->format == 0x8b || // G8B8
-             tex->format == 0x8f)   // R6G5B5
-    tex->color_bytes = 2;
-  else if (tex->format == 0x06 ||   // A8R8G8B8
-           tex->format == 0x07 ||   // X8R8G8B8
-           tex->format == 0x12 ||   // A8R8G8B8
-           tex->format == 0x1e ||   // X8R8G8B8
-           tex->format == 0x85)     // A8R8G8B8
-    tex->color_bytes = 4;
-  else
-    tex->color_bytes = 1;
+  switch (tex->format) {
+    case 0x0c: // DXT1
+    case 0x0e: // DXT23
+    case 0x0f: // DXT45
+    case 0x86: // DXT1
+    case 0x87: // DXT23
+    case 0x88: // DXT45
+      tex->compressed = true;
+      tex->dxt_alpha_data = tex->format != 0x0c && tex->format != 0x86;
+      tex->dxt_alpha_explicit = tex->format == 0x0e || tex->format == 0x87;
+      tex->color_bytes = tex->dxt_alpha_data ? 16 : 8;
+      break;
+    case 0x02: // A1R5G5B5
+    case 0x03: // X1R5G5B5
+    case 0x04: // A4R4G4B4
+    case 0x05: // R5G6B5
+    case 0x27: // R6G5B5
+    case 0x28: // G8B8
+    case 0x82: // A1R5G5B5
+    case 0x83: // A4R4G4B4
+    case 0x84: // R5G6B5
+    case 0x8b: // G8B8
+    case 0x8f: // R6G5B5
+      tex->color_bytes = 2;
+      break;
+    case 0x06: // A8R8G8B8
+    case 0x07: // X8R8G8B8
+    case 0x12: // A8R8G8B8
+    case 0x1e: // X8R8G8B8
+    case 0x85: // A8R8G8B8
+      tex->color_bytes = 4;
+      break;
+    default:
+      if (!unknown_format_reported) {
+        BX_ERROR(("unknown texture format 0x%02x", tex->format));
+        unknown_format_reported = true;
+      }
+      // fallthrough
+    case 0x00: // Y8
+    case 0x01: // AY8
+    case 0x0b: // I8_A8R8G8B8
+    case 0x1b: // AY8
+    case 0x81: // B8
+      tex->color_bytes = 1;
+      break;
+  }
 }
 
 void texture_update_size(gf_texture* tex, Bit32u cls)
@@ -3920,6 +3942,12 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
       case 0x15: // STR
         for (int comp_index = 0; comp_index < 4; comp_index++)
           vec_result[comp_index] = 1.0f;
+        break;
+      case 0x16: // SSG
+        for (int comp_index = 0; comp_index < 4; comp_index++) {
+          vec_result[comp_index] = params[0][comp_index] == 0.0f ? 0.0f :
+            params[0][comp_index] < 0.0f ? -1.0f : 1.0f;
+        }
         break;
       default:
         for (int comp_index = 0; comp_index < 4; comp_index++)
