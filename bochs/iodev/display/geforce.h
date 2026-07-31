@@ -440,9 +440,14 @@ public:
 protected:
   virtual void update(void);
 
-public:
-  typedef void (*gf_method_handler)(bx_geforce_c* this_ptr,
+private:
+#if BX_USE_GEFORCE_SMF
+  typedef void (*gf_method_handler)(
     gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+#else
+  typedef void (bx_geforce_c::*gf_method_handler)(
+    gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+#endif
 
   static Bit32u svga_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   svga_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
@@ -546,6 +551,149 @@ public:
   BX_GEFORCE_SMF void execute_beta(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_tfc(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_sifm(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+
+  BX_GEFORCE_SMF void d3d_mh_object(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_flip_read(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_flip_write(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_flip_modulo(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_flip_incr(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_fifo_wait(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_a_obj(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_b_obj(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_vertex_obj(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_color_obj(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_zeta_obj(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_vertex_a_obj(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_vertex_b_obj(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_semaphore_obj(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_report_obj(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_clip_horizontal(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_clip_vertical(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_surface_format(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_surface_pitch_a(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_surface_color_offset(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_surface_zeta_offset(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_surface_pitch_z(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_combiner_alpha_icw(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_combiner_final(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0096_0a5(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0096_0a6(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_fog_mode(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_fog_gen_mode(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_fog_params(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_fog_enable(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_fog_color(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_window_offset(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_window_clip(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_alpha_test_enable(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_alpha_func(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_alpha_ref(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_blend_enable(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_cull_face_enable(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_depth_test_enable(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_lighting_enable(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_stencil_test_enable(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_blend_sfactor_0096(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_blend_dfactor_0096(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_blend_equation_0096(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_blend_sfactor_0497(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_blend_dfactor_0497(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_blend_equation_0497(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_blend_color(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_depth_func(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_color_mask(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_depth_write_enable(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_stencil_mask(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_stencil_func(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_stencil_func_ref(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_stencil_func_mask(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0096_0dc(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_stencil_op_dpfail(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_stencil_op_dppass(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_shade_mode(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_clip_min(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_clip_max(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_cull_face(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_front_face(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_normalize_enable(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_material_factor(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_separate_specular(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_light_enable_mask(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_texgen(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_texture_matrix_enable(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_view_matrix_enable(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_model_view_matrix(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_inverse_model_view_matrix(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_composite_matrix(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_texture_matrix(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_texgen_plane(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_scissor_x_width(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_scissor_y_height(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_shader_program(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0497_240(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_viewport_x_width(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_viewport_y_height(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_specular_params(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_scene_ambient_color(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_viewport_offset(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_eye_position(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0096_09c(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0097_298(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_combiner_alpha_ocw(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_combiner_color_icw(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_texture_key_color(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_viewport_scale(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_transform_program(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_transform_constant(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_light(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0096_300(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0497_540(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0096_306(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0096_30c(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0096_314(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0096_318(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0096_31b(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_texcoord(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0097_5c8(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_vertex_data_base_index(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_vertex_data_array_format(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0097_5f4(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0096_37f(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0096_380(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0096_440(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0096_500(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_vertex_data(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_index_array_offset(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_index_array_dma(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0497_609(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0097_60a(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0497_610(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0097_620(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0097_640(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0097_650(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_0097_680(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_texture(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_shader_control(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_semaphore_offset(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_75c(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_75d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_zstencil_clear_value(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_color_clear_value(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_clear_surface(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_combiner_color_ocw(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_combiner_control(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_tex_shader_op(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_tex_shader_previous(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_transform_execution_mode(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_transform_program_load(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_transform_program_start(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_transform_constant_load(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_4097_7f1(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_4097_7f2(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_4097_7f3(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_4097_7fd(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void empty_method_handler(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+
   BX_GEFORCE_SMF void execute_d3d(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
 
   BX_GEFORCE_SMF Bit32u get_pixel(Bit32u obj, Bit32u ofs, Bit32u x, Bit32u cb);
@@ -569,6 +717,7 @@ public:
   BX_GEFORCE_SMF bool d3d_viewport_clip(gf_channel* ch, Bit32u* x, Bit32u* y, Bit32u* width, Bit32u* height);
   BX_GEFORCE_SMF bool d3d_window_clip(gf_channel* ch, Bit32u* x, Bit32u* y, Bit32u* width, Bit32u* height);
   BX_GEFORCE_SMF void d3d_clear_surface(gf_channel* ch);
+  BX_GEFORCE_SMF void d3d_texture_process_format(gf_texture* tex);
   BX_GEFORCE_SMF void d3d_sample_texture(gf_channel* ch,
     gf_texture* tex, float coords_in[3], float color[4]);
   BX_GEFORCE_SMF void d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[16][4]);
@@ -713,8 +862,8 @@ public:
 
   void vertical_timer();
 
-  BX_GEFORCE_SMF bool geforce_mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-  BX_GEFORCE_SMF bool geforce_mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bool geforce_mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bool geforce_mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
 };
 
 #endif // BX_SUPPORT_GEFORCE
