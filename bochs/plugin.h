@@ -191,10 +191,10 @@ extern "C" {
 #define DEV_bulk_io_host_addr() (bx_devices.bulkIOHostAddr)
 
 ///////// DMA macros
-#define DEV_dma_register_8bit_channel(channel, dmaRead, dmaWrite, name) \
-  (bx_devices.pluginDmaDevice->registerDMA8Channel(channel, dmaRead, dmaWrite, name))
-#define DEV_dma_register_16bit_channel(channel, dmaRead, dmaWrite, name) \
-  (bx_devices.pluginDmaDevice->registerDMA16Channel(channel, dmaRead, dmaWrite, name))
+#define DEV_dma_register_8bit_channel(channel, this_ptr, dmaRead, dmaWrite, name) \
+  (bx_devices.pluginDmaDevice->registerDMA8Channel(channel, this_ptr, dmaRead, dmaWrite, name))
+#define DEV_dma_register_16bit_channel(channel, this_ptr, dmaRead, dmaWrite, name) \
+  (bx_devices.pluginDmaDevice->registerDMA16Channel(channel, this_ptr, dmaRead, dmaWrite, name))
 #define DEV_dma_unregister_channel(channel) \
   (bx_devices.pluginDmaDevice->unregisterDMAChannel(channel))
 #define DEV_dma_set_drq(channel, val) \

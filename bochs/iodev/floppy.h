@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -120,9 +120,11 @@ enum {
 #if BX_USE_FD_SMF
 #  define BX_FD_SMF  static
 #  define BX_FD_THIS theFloppyController->
+#  define BX_FD_THISP theFloppyController
 #else
 #  define BX_FD_SMF
 #  define BX_FD_THIS this->
+#  define BX_FD_THISP this
 #endif
 
 typedef struct {
@@ -241,8 +243,13 @@ private:
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
   BX_FD_SMF bool   set_media_status(unsigned drive, bool    status);
-  BX_FD_SMF Bit16u dma_write(Bit8u *buffer, Bit16u maxlen);
-  BX_FD_SMF Bit16u dma_read(Bit8u *buffer, Bit16u maxlen);
+
+  static Bit16u dma_write_handler(void *this_ptr, Bit8u *buffer, Bit16u maxlen);
+  static Bit16u dma_read_handler(void *this_ptr, Bit8u *buffer, Bit16u maxlen);
+#if !BX_USE_FD_SMF
+  Bit16u dma_write(Bit8u *buffer, Bit16u maxlen);
+  Bit16u dma_read(Bit8u *buffer, Bit16u maxlen);
+#endif
   BX_FD_SMF void   floppy_command(void);
   BX_FD_SMF void   do_floppy_xfer(Bit8u *buffer, Bit8u drive, Bit8u fromto);
   BX_FD_SMF void   floppy_xfer(Bit8u drive, Bit32u offset, Bit8u *buffer, Bit32u bytes, Bit8u direction);

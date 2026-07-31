@@ -241,17 +241,17 @@ public:
 class BOCHSAPI bx_dma_stub_c : public bx_devmodel_c {
 public:
   virtual bool registerDMA8Channel(
-    unsigned channel,
-    Bit16u (* dmaRead)(Bit8u *data_byte, Bit16u maxlen),
-    Bit16u (* dmaWrite)(Bit8u *data_byte, Bit16u maxlen),
+    unsigned channel, void *this_ptr,
+    Bit16u (* dmaRead)(void *this_ptr, Bit8u *data_byte, Bit16u maxlen),
+    Bit16u (* dmaWrite)(void *this_ptr, Bit8u *data_byte, Bit16u maxlen),
     const char *name)
   {
     STUBFUNC(dma, registerDMA8Channel); return false;
   }
   virtual bool registerDMA16Channel(
-    unsigned channel,
-    Bit16u (* dmaRead)(Bit16u *data_word, Bit16u maxlen),
-    Bit16u (* dmaWrite)(Bit16u *data_word, Bit16u maxlen),
+    unsigned channel, void *this_ptr,
+    Bit16u (* dmaRead)(void *this_ptr, Bit16u *data_word, Bit16u maxlen),
+    Bit16u (* dmaWrite)(void *this_ptr, Bit16u *data_word, Bit16u maxlen),
     const char *name)
   {
     STUBFUNC(dma, registerDMA16Channel); return false;

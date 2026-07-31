@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -118,7 +118,7 @@ void pit_82C54::set_OUT(counter_type &thisctr, bool data)
   if (thisctr.OUTpin != data) {
     thisctr.OUTpin = data;
     if (thisctr.out_handler != NULL) {
-      thisctr.out_handler(data);
+      thisctr.out_handler(thisctr.out_this_ptr, data);
     }
   }
 }
@@ -969,7 +969,8 @@ bool pit_82C54::new_count_ready(int countnum) const
   return (counter[countnum].write_state != MSByte_multiple);
 }
 
-void pit_82C54::set_OUT_handler(Bit8u counternum, out_handler_t outh)
+void pit_82C54::set_OUT_handler(Bit8u counternum, void *this_ptr, out_handler_t outh)
 {
+  counter[counternum].out_this_ptr = this_ptr;
   counter[counternum].out_handler = outh;
 }
