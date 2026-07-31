@@ -5420,14 +5420,28 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
           Bit8u g6 = g * 63.0f + 0.5f;
           Bit8u b5 = b * 31.0f + 0.5f;
           Bit16u color = b5 << 0 | g6 << 5 | r5 << 11;
-          dma_write16(ch->d3d_color_obj, draw_offset + x * 2, color);
+          if (ch->d3d_color_mask == 0x01010101) {
+            dma_write16(ch->d3d_color_obj, draw_offset + x * 2, color);
+          } else {
+            Bit16u dstcolor = dma_read16(ch->d3d_color_obj, draw_offset + x * 2);
+            dstcolor &= ~ch->d3d_color_mask_565;
+            dstcolor |= color & ch->d3d_color_mask_565;
+            dma_write16(ch->d3d_color_obj, draw_offset + x * 2, dstcolor);
+          }
         } else if (ch->d3d_color_bytes == 4) {
           Bit8u r8 = r * 255.0f + 0.5f;
           Bit8u g8 = g * 255.0f + 0.5f;
           Bit8u b8 = b * 255.0f + 0.5f;
           Bit8u a8 = a * 255.0f + 0.5f;
           Bit32u color = b8 << 0 | g8 << 8 | r8 << 16 | a8 << 24;
-          dma_write32(ch->d3d_color_obj, draw_offset + x * 4, color);
+          if (ch->d3d_color_mask == 0x01010101) {
+            dma_write32(ch->d3d_color_obj, draw_offset + x * 4, color);
+          } else {
+            Bit32u dstcolor = dma_read32(ch->d3d_color_obj, draw_offset + x * 4);
+            dstcolor &= ~ch->d3d_color_mask_8888;
+            dstcolor |= color & ch->d3d_color_mask_8888;
+            dma_write32(ch->d3d_color_obj, draw_offset + x * 4, dstcolor);
+          }
         } else {
           Bit8u color = b * 255.0f + 0.5f;
           dma_write8(ch->d3d_color_obj, draw_offset + x, color);
@@ -6529,6 +6543,22 @@ void d3d_mh_depth_func(bx_geforce_c* this_ptr, gf_channel* ch, Bit32u cls, Bit32
 void d3d_mh_color_mask(bx_geforce_c* this_ptr, gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
 {
   ch->d3d_color_mask = param;
+  ch->d3d_color_mask_565 = 0;
+  ch->d3d_color_mask_8888 = 0;
+  if (((param >> 0) & 1) != 0) {
+    ch->d3d_color_mask_565 |= 0x001f;
+    ch->d3d_color_mask_8888 |= 0x000000ff;
+  }
+  if (((param >> 8) & 1) != 0) {
+    ch->d3d_color_mask_565 |= 0x07e0;
+    ch->d3d_color_mask_8888 |= 0x0000ff00;
+  }
+  if (((param >> 16) & 1) != 0) {
+    ch->d3d_color_mask_565 |= 0xf800;
+    ch->d3d_color_mask_8888 |= 0x00ff0000;
+  }
+  if (((param >> 24) & 1) != 0)
+    ch->d3d_color_mask_8888 |= 0xff000000;
 }
 
 void d3d_mh_depth_write_enable(bx_geforce_c* this_ptr, gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
