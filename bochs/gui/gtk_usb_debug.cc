@@ -914,25 +914,24 @@ int uhci_debug_dialog(int type, int param1)
   main_dialog = gtk_dialog_new();
   switch (type) {
     case USB_DEBUG_FRAME:
-      gtk_window_set_title(GTK_WINDOW(main_dialog), "UHCI Debug Dialog: Break Type: Start of Frame");
+      sprintf(buffer, "%s Debug Dialog: Break Type: Start of Frame", get_usb_hc_name(USB_DEBUG_UHCI));
       break;
     case USB_DEBUG_COMMAND:
-      gtk_window_set_title(GTK_WINDOW(main_dialog), "UHCI Debug Dialog: Break Type: Doorbell");
+      sprintf(buffer, "%s Debug Dialog: Break Type: Doorbell", get_usb_hc_name(USB_DEBUG_UHCI));
       break;
     case USB_DEBUG_NONEXIST:
-      gtk_window_set_title(GTK_WINDOW(main_dialog), "UHCI Debug Dialog: Break Type: Non-Existant Port Write");
+      sprintf(buffer, "%s Debug Dialog: Break Type: Non-Existant Port Write", get_usb_hc_name(USB_DEBUG_UHCI));
       break;
     case USB_DEBUG_RESET:
-      sprintf(buffer, "UHCI Debug Dialog: Break Type: Port %d Reset", param1);
-      gtk_window_set_title(GTK_WINDOW(main_dialog), buffer);
+      sprintf(buffer, "%s Debug Dialog: Break Type: Port %d Reset", get_usb_hc_name(USB_DEBUG_UHCI), param1);
       break;
     case USB_DEBUG_ENABLE:
-      sprintf(buffer, "UHCI Debug Dialog: Break Type: Port %d Enable", param1);
-      gtk_window_set_title(GTK_WINDOW(main_dialog), buffer);
+      sprintf(buffer, "%s Debug Dialog: Break Type: Port %d Enable", get_usb_hc_name(USB_DEBUG_UHCI), param1);
       break;
     default:
-      gtk_window_set_title(GTK_WINDOW(main_dialog), "UHCI Debug Dialog");
+      sprintf(buffer, "%s Debug Dialog", get_usb_hc_name(USB_DEBUG_UHCI));
   }
+  gtk_window_set_title(GTK_WINDOW(main_dialog), buffer);
   gtk_window_set_default_size(GTK_WINDOW(main_dialog), 600, 500);
   gtk_window_set_keep_above(GTK_WINDOW(main_dialog), TRUE);
   button[0] = gtk_dialog_add_button(GTK_DIALOG(main_dialog), "Continue", GTK_RESPONSE_OK);

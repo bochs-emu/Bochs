@@ -503,6 +503,28 @@ bx_list_c* get_usb_hc_state(int type)
   return (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
 }
 
+const char* get_usb_hc_name(int type)
+{
+  static char hc_name[16];
+
+  if (type == USB_DEBUG_UHCI) {
+    if (usb_debug_devid == -1) {
+      strcpy(hc_name, "UHCI");
+    } else {
+      sprintf(hc_name, "EHCI/UHCI%d", usb_debug_devid);
+    }
+  } else if (type == USB_DEBUG_OHCI) {
+    if (usb_debug_devid == -1) {
+      strcpy(hc_name, "OHCI");
+    } else {
+      sprintf(hc_name, "EHCI/OHCI%d", usb_debug_devid);
+    }
+  } else {
+    return NULL;
+  }
+  return (const char*)hc_name;
+}
+
 bx_param_enum_c* get_hc_port_device(Bit8u port)
 {
   bx_param_enum_c* device = NULL;

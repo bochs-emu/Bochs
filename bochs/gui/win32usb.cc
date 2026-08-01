@@ -335,23 +335,23 @@ int hc_uhci_init(HWND hwnd)
   // set the dialog title to the break type
   switch (g_params.break_type) {
     case USB_DEBUG_FRAME:
-      SetWindowText(hwnd, "UHCI Debug Dialog: Break Type: Start of Frame");
+      sprintf(str, "%s Debug Dialog: Break Type: Start of Frame", get_usb_hc_name(USB_DEBUG_UHCI));
+      SetWindowText(hwnd, str);
       break;
     case USB_DEBUG_COMMAND:
-      SetWindowText(hwnd, "UHCI Debug Dialog: Break Type: Doorbell");
+      sprintf(str, "%s Debug Dialog: Break Type: Doorbell", get_usb_hc_name(USB_DEBUG_UHCI));
+      SetWindowText(hwnd, str);
       break;
-    //case USB_DEBUG_EVENT:
-    //  SetWindowText(hwnd, "UHCI Debug Dialog: Break Type: Event Ring");
-    //  break;
     case USB_DEBUG_NONEXIST:
-      SetWindowText(hwnd, "UHCI Debug Dialog: Break Type: Non-existant Port Write");
+      sprintf(str, "%s Debug Dialog: Break Type: Non-existant Port Write", get_usb_hc_name(USB_DEBUG_UHCI));
+      SetWindowText(hwnd, str);
       break;
     case USB_DEBUG_RESET:
-      sprintf(str, "UHCI Debug Dialog: Break Type: Port %d Reset", g_params.wParam);
+      sprintf(str, "%s Debug Dialog: Break Type: Port %d Reset", get_usb_hc_name(USB_DEBUG_UHCI), g_params.wParam);
       SetWindowText(hwnd, str);
       break;
     case USB_DEBUG_ENABLE:
-      sprintf(str, "UHCI Debug Dialog: Break Type: Port %d Enable", g_params.wParam);
+      sprintf(str, "%s Debug Dialog: Break Type: Port %d Enable", get_usb_hc_name(USB_DEBUG_UHCI), g_params.wParam);
       SetWindowText(hwnd, str);
       break;
   }
@@ -909,7 +909,7 @@ int hc_ohci_init(HWND hwnd)
 {
   bx_param_enum_c* device;
   char str[COMMON_STR_SIZE];
-  Bit32u dword;
+  Bit32u dword, frame_addr;
   int ret = IDOK;
 
   OHCI_state = get_usb_hc_state(USB_DEBUG_OHCI);
@@ -919,20 +919,23 @@ int hc_ohci_init(HWND hwnd)
   // set the dialog title to the break type
   switch (g_params.break_type) {
     case USB_DEBUG_FRAME:
-      SetWindowText(hwnd, "OHCI Debug Dialog: Break Type: Start of Frame");
+      sprintf(str, "%s Debug Dialog: Break Type: Start of Frame", get_usb_hc_name(USB_DEBUG_OHCI));
+      SetWindowText(hwnd, str);
       break;
     case USB_DEBUG_COMMAND:
-      SetWindowText(hwnd, "OHCI Debug Dialog: Break Type: Doorbell");
+      sprintf(str, "%s Debug Dialog: Break Type: Doorbell", get_usb_hc_name(USB_DEBUG_OHCI));
+      SetWindowText(hwnd, str);
       break;
     case USB_DEBUG_NONEXIST:
-      SetWindowText(hwnd, "OHCI Debug Dialog: Break Type: Non-existant Port Write");
+      sprintf(str, "%s Debug Dialog: Break Type: Non-existant Port Write", get_usb_hc_name(USB_DEBUG_OHCI));
+      SetWindowText(hwnd, str);
       break;
     case USB_DEBUG_RESET:
-      sprintf(str, "OHCI Debug Dialog: Break Type: Port %d Reset", g_params.wParam);
+      sprintf(str, "%s Debug Dialog: Break Type: Port %d Reset", get_usb_hc_name(USB_DEBUG_OHCI), g_params.wParam);
       SetWindowText(hwnd, str);
       break;
     case USB_DEBUG_ENABLE:
-      sprintf(str, "OHCI Debug Dialog: Break Type: Port %d Enable", g_params.wParam);
+      sprintf(str, "%s Debug Dialog: Break Type: Port %d Enable", get_usb_hc_name(USB_DEBUG_OHCI), g_params.wParam);
       SetWindowText(hwnd, str);
       break;
   }
@@ -1029,11 +1032,40 @@ int hc_ohci_init(HWND hwnd)
   }
   SetDlgItemText(hwnd, IDC_O_REG_PORT1_TYPE, str);
 
+  frame_addr = 0; // TODO
+  sprintf(str, "0x%08X", frame_addr);
+  SetDlgItemText(hwnd, IDC_FRAME_ADDRESS, str);
+
   tree_items = 0;
   TreeView_DeleteAllItems(TreeView);
 
   bool valid = 0;
-  // TODO
+  switch (g_params.break_type) {
+    // The process_td() function was called
+    case USB_DEBUG_COMMAND:
+    // The start of a frame timer was triggered
+    case USB_DEBUG_FRAME:
+      SetDlgItemText(hwnd, IDC_RING_TYPE, "SOF Frame Address");
+      if (frame_addr != 0x00000000) {
+        // TODO
+      }
+      break;
+
+    // an event triggered. We ignore these in the ohci
+    //case USB_DEBUG_EVENT:
+    //  break;
+
+    // first byte (word, dword, qword) of first non-existant port was written to
+    case USB_DEBUG_NONEXIST:
+    // port reset (non-root reset)
+    case USB_DEBUG_RESET:
+    // enable changed
+    case USB_DEBUG_ENABLE:
+      SetDlgItemText(hwnd, IDC_RING_TYPE, "None");
+      SetDlgItemText(hwnd, IDC_FRAME_ADDRESS, "None");
+      EnableWindow(GetDlgItem(hwnd, IDC_VIEW_TD), FALSE);
+      break;
+  }
 
   if (!valid) {
     TreeView_SetBkColor(TreeView, COLORREF(0x00A9A9A9));

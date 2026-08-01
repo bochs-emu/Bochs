@@ -1335,6 +1335,12 @@ int bx_ohci_core_c::process_td(struct OHCI_TD *td, struct OHCI_ED *ed, int toggl
       ED_SET_H(ed, 1);
     }
   }
+#if BX_USB_DEBUGGER
+  if (usb_debug) {
+    // trigger again so that the user can see the processed packet
+    SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_COMMAND, 0, addr, USB_LPARAM_FLAG_AFTER);
+  }
+#endif
 
   BX_DEBUG((" td->cbp = 0x%08X   ret = %d  len = %d  td->cc = %d   td->ec = %d  ed->h = %d", TD_GET_CBP(td), ret, maxlen, TD_GET_CC(td), TD_GET_EC(td), ED_GET_H(ed)));
   BX_DEBUG(("    td->t = %d  ed->c = %d", TD_GET_T(td), ED_GET_C(ed)));
