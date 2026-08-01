@@ -39,7 +39,7 @@
 
 #if BX_SUPPORT_GEFORCE
 
-#define LOG_THIS BX_GEFORCE_THIS
+#define LOG_THIS theSvga->
 
 #if BX_USE_GEFORCE_SMF
 #define VGA_READ(addr,len)       bx_vgacore_c::read_handler(theSvga,addr,len)
@@ -137,6 +137,9 @@ PLUGIN_ENTRY_FOR_MODULE(geforce)
   }
   return 0; // Success
 }
+
+#undef LOG_THIS
+#define LOG_THIS BX_GEFORCE_THIS
 
 bx_geforce_c::bx_geforce_c() : bx_vgacore_c()
 {
@@ -596,6 +599,9 @@ void bx_geforce_c::vertical_timer()
   }
 }
 
+#undef LOG_THIS
+#define LOG_THIS class_ptr->
+
 bool bx_geforce_c::geforce_mem_read_handler(bx_phy_address addr, unsigned len,
                                             void *data, void *param)
 {
@@ -656,41 +662,6 @@ bool bx_geforce_c::geforce_mem_read_handler(bx_phy_address addr, unsigned len,
 #endif
   }
   return true;
-}
-
-Bit8u bx_geforce_c::mem_read(bx_phy_address addr)
-{
-  if (BX_GEFORCE_THIS pci_bar[PCI_ROM_BAR].size > 0) {
-    Bit32u mask = (BX_GEFORCE_THIS pci_bar[PCI_ROM_BAR].size - 1);
-    if (((Bit32u)addr & ~mask) == BX_GEFORCE_THIS pci_bar[PCI_ROM_BAR].addr) {
-      if (BX_GEFORCE_THIS pci_conf[0x30] & 0x01) {
-        if (BX_GEFORCE_THIS pci_conf[0x50] == 0x00)
-          return BX_GEFORCE_THIS pci_rom[addr & mask];
-        else
-          return BX_GEFORCE_THIS s.memory[(addr & mask) ^ BX_GEFORCE_THIS ramin_flip];
-      } else {
-        return 0xff;
-      }
-    }
-  }
-
-  if ((addr >= BX_GEFORCE_THIS pci_bar[1].addr) &&
-      (addr < (BX_GEFORCE_THIS pci_bar[1].addr + BX_GEFORCE_THIS s.memsize))) {
-    Bit32u offset = addr & BX_GEFORCE_THIS memsize_mask;
-    return BX_GEFORCE_THIS s.memory[offset];
-  }
-
-  if (!BX_GEFORCE_THIS crtc.reg[0x28])
-    return BX_GEFORCE_THIS bx_vgacore_c::mem_read(addr);
-
-  if (addr >= 0xA0000 && addr <= 0xAFFFF) {
-    Bit32u offset = addr & 0xffff;
-    offset += BX_GEFORCE_THIS bank_base[0];
-    offset &= BX_GEFORCE_THIS memsize_mask;
-    return BX_GEFORCE_THIS s.memory[offset];
-  }
-
-  return 0xff;
 }
 
 bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
@@ -759,6 +730,44 @@ bool bx_geforce_c::geforce_mem_write_handler(bx_phy_address addr, unsigned len,
 #endif
   }
   return true;
+}
+
+#undef LOG_THIS
+#define LOG_THIS BX_GEFORCE_THIS
+
+Bit8u bx_geforce_c::mem_read(bx_phy_address addr)
+{
+  if (BX_GEFORCE_THIS pci_bar[PCI_ROM_BAR].size > 0) {
+    Bit32u mask = (BX_GEFORCE_THIS pci_bar[PCI_ROM_BAR].size - 1);
+    if (((Bit32u)addr & ~mask) == BX_GEFORCE_THIS pci_bar[PCI_ROM_BAR].addr) {
+      if (BX_GEFORCE_THIS pci_conf[0x30] & 0x01) {
+        if (BX_GEFORCE_THIS pci_conf[0x50] == 0x00)
+          return BX_GEFORCE_THIS pci_rom[addr & mask];
+        else
+          return BX_GEFORCE_THIS s.memory[(addr & mask) ^ BX_GEFORCE_THIS ramin_flip];
+      } else {
+        return 0xff;
+      }
+    }
+  }
+
+  if ((addr >= BX_GEFORCE_THIS pci_bar[1].addr) &&
+      (addr < (BX_GEFORCE_THIS pci_bar[1].addr + BX_GEFORCE_THIS s.memsize))) {
+    Bit32u offset = addr & BX_GEFORCE_THIS memsize_mask;
+    return BX_GEFORCE_THIS s.memory[offset];
+  }
+
+  if (!BX_GEFORCE_THIS crtc.reg[0x28])
+    return BX_GEFORCE_THIS bx_vgacore_c::mem_read(addr);
+
+  if (addr >= 0xA0000 && addr <= 0xAFFFF) {
+    Bit32u offset = addr & 0xffff;
+    offset += BX_GEFORCE_THIS bank_base[0];
+    offset &= BX_GEFORCE_THIS memsize_mask;
+    return BX_GEFORCE_THIS s.memory[offset];
+  }
+
+  return 0xff;
 }
 
 void bx_geforce_c::mem_write(bx_phy_address addr, Bit8u value)
