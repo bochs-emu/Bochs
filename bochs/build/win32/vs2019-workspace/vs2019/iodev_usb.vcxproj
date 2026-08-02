@@ -245,6 +245,7 @@
     <ClInclude Include="..\iodev\usb\usb_pcap.h" />
     <ClInclude Include="..\iodev\usb\usb_printer.h" />
     <ClInclude Include="..\iodev\usb\usb_uhci.h" />
+    <ClInclude Include="..\iodev\usb\usb_xhci-defs.h" />
     <ClInclude Include="..\iodev\usb\usb_xhci.h" />
     <ClInclude Include="..\qemu-queue.h" />
   </ItemGroup>

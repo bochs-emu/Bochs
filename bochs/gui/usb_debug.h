@@ -79,9 +79,6 @@ struct QUEUE {
 };
 #pragma pack (pop)
 
-// from usb_xhci.h
-#define OPS_REGS_OFFSET   0x20
-#define XHCI_PORT_SET_OFFSET  (0x400 + OPS_REGS_OFFSET)
 // copy&paste end
 
 extern const char *hc_param_str[];

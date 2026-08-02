@@ -34,8 +34,6 @@
 #include "win32usbres.h"
 #include "win32usb.h"
 
-#include "iodev/usb/usb_common.h"
-
 static const int dlg_resource[5] = {
   0,
   USB_DEBUG_UHCI_DLG,
@@ -1236,7 +1234,7 @@ INT_PTR CALLBACK hc_xhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
   return 0;
 }
 
-#include "iodev/usb/usb_xhci.h"
+#include "iodev/usb/usb_xhci-defs.h"
 
 bx_list_c *XHCI_state = NULL;
 

@@ -70,6 +70,7 @@
 
 #include "pci.h"
 #include "usb_common.h"
+#include "usb_xhci-defs.h"
 #include "usb_xhci.h"
 
 #define LOG_THIS theUSB_XHCI->
