@@ -1146,15 +1146,15 @@ void bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           // check that we don't set xres during vbe enabled
           if (!BX_VGA_THIS vbe.enabled)
           {
-            // check for within max xres range
-            if (value <= BX_VGA_THIS vbe.max_xres)
+            // check for within valid xres range
+            if ((value >= 320) && (value <= BX_VGA_THIS vbe.max_xres))
             {
               BX_VGA_THIS vbe.xres=(Bit16u) value;
               BX_INFO(("VBE set xres (%d)", value));
             }
             else
             {
-              BX_INFO(("VBE set xres more then max xres (%d)", value));
+              BX_ERROR(("VBE set xres not in valid range (%d)", value));
             }
           }
           else
@@ -1168,15 +1168,15 @@ void bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           // check that we don't set yres during vbe enabled
           if (!BX_VGA_THIS vbe.enabled)
           {
-            // check for within max yres range
-            if (value <= BX_VGA_THIS vbe.max_yres)
+            // check for within valid yres range
+            if ((value >= 200) && (value <= BX_VGA_THIS vbe.max_yres))
             {
               BX_VGA_THIS vbe.yres=(Bit16u) value;
               BX_INFO(("VBE set yres (%d)", value));
             }
             else
             {
-              BX_INFO(("VBE set yres more then max yres (%d)", value));
+              BX_ERROR(("VBE set yres not in valid range (%d)", value));
             }
           }
           else
@@ -1410,6 +1410,10 @@ void bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           //        adjust result width based upon virt_height=yres
           Bit16u new_width=value;
           Bit16u new_height;
+          if (new_width == 0) {
+            new_width = BX_VGA_THIS vbe.xres;
+            BX_INFO(("VBE reset virtual width to xres %d", new_width));
+          }
           if (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4) {
             new_height = (BX_VGA_THIS s.memsize / BX_VGA_THIS vbe.bpp_multiplier) / new_width;
           } else {
