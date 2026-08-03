@@ -346,6 +346,7 @@ struct gf_channel
   Bit32u d3d_combiner_control;
   Bit32u d3d_combiner_control_num_stages;
   Bit32u d3d_tex_shader_op[4];
+  Bit32u d3d_tex_shader_dotmapping[4];
   Bit32u d3d_tex_shader_previous[4];
   Bit32u d3d_transform_execution_mode;
   Bit32u d3d_transform_program_load;
@@ -657,12 +658,12 @@ private:
   BX_GEFORCE_SMF void d3d_mh_0097_5c8(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void d3d_mh_vertex_data_base_index(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void d3d_mh_vertex_data_array_format(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void d3d_mh_0097_5f4(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void d3d_mh_0096_37f(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void d3d_mh_0096_380(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void d3d_mh_0096_440(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void d3d_mh_0096_500(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
-  BX_GEFORCE_SMF void d3d_mh_vertex_data(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_get_report(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_begin_end(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_array_element16(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_array_element32(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_draw_arrays(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_inline_array(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void d3d_mh_index_array_offset(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void d3d_mh_index_array_dma(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void d3d_mh_0497_609(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
@@ -683,6 +684,7 @@ private:
   BX_GEFORCE_SMF void d3d_mh_combiner_color_ocw(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void d3d_mh_combiner_control(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void d3d_mh_tex_shader_op(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void d3d_mh_tex_shader_dotmapping(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void d3d_mh_tex_shader_previous(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void d3d_mh_transform_execution_mode(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void d3d_mh_transform_program_load(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
