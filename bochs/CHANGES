@@ -9,7 +9,10 @@ Brief summary :
   - Added UEFI/OVMF firmware support to Bochs through QEMU-compatible fw_cfg device
     This enables booting UEFI operating systems including Windows Server 2025
     and modern Linux distributions with OVMF firmware.
-  - Added basic support for GeForce 3D card emulation
+  - Added basic support for GeForce 3D card emulation (4 AGP models, 2D almost
+    complete, 3D still WIP)
+  - AGP support in i440BX chipset now almost correctly implemented
+  - Many fixes in the devices code (PCI, VGA, Voodoo, hard drive, floppy, USB)
 
 Detailed change log :
 
@@ -86,7 +89,7 @@ Detailed change log :
     The generated DSDT is aligned with the default PCI/PIIX device model.
 
   - GeForce (NEW)
-    Added basic support for three GeForce models. Most of the 2D features are present,
+    Added basic support for four GeForce models. Most of the 2D features are present,
     but 3D is still WIP. Several Windows versions up to Win 7 have been reported to
     work under consideration of these limitations.
   - PCI (general)
