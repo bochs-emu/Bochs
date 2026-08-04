@@ -1156,13 +1156,17 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_ecx(Bit32u extra) const
   // CPUID defines - features CPUID[0x00000007].ECX  [subleaf 1]
   // -----------------------------
 
-  //   [0:4]    reserved
+  //    [0:4]   reserved
 
-  //   [5:5]    Support immediate forms of RDMSR and WRMSRNS instructions
+  //    [5:5]   Support immediate forms of RDMSR and WRMSRNS instructions
   if (is_cpu_extension_supported(BX_ISA_MSR_IMM))
     ecx |= BX_CPUID_STD7_SUBLEAF1_ECX_MSR_IMM;
 
-  //   [31:5]   reserved
+  //   [10:6]   reserved
+
+  //  [11:11]   Support ACE instructions (not supported yet)
+
+  //  [31:12]   reserved
 
   return ecx;
 }

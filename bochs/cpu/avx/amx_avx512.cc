@@ -31,7 +31,7 @@
 #include "amx.h"
 #include "cpu/decoder/ia_opcodes.h"
 
-bool BX_CPP_AttrRegparmN(3) BX_CPU_C::tilemov_row(bxInstruction_c *i, bool immediate_form, BxPackedAvxRegister *dst)
+bool BX_CPP_AttrRegparmN(3) BX_CPU_C::tilemov_read_row(bxInstruction_c *i, bool immediate_form, BxPackedAvxRegister *dst)
 {
   unsigned tile_src = i->src1();
   check_tile(i, tile_src);
@@ -60,7 +60,7 @@ bool BX_CPP_AttrRegparmN(3) BX_CPU_C::tilemov_row(bxInstruction_c *i, bool immed
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILEMOVROW_VdqTrm(bxInstruction_c *i)
 {
   BxPackedAvxRegister dst;
-  bool result = tilemov_row(i, i->getIaOpcode() == BX_IA_EVEX_TILEMOVROW_VdqTrmIb, &dst);
+  bool result = tilemov_read_row(i, i->getIaOpcode() == BX_IA_EVEX_TILEMOVROW_VdqTrmIb, &dst);
   BX_WRITE_AVX_REG(i->dst(), dst);
   if (result)
     BX_CPU_THIS_PTR amx->restart();
@@ -76,7 +76,7 @@ extern softfloat_status_t prepare_ne_softfloat_status_helper(bool denormals_are_
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWD2PS_VpsTrm(bxInstruction_c *i)
 {
   BxPackedAvxRegister dst;
-  bool result = tilemov_row(i, i->getIaOpcode() == BX_IA_EVEX_TCVTROWD2PS_VpsTrmIb, &dst);
+  bool result = tilemov_read_row(i, i->getIaOpcode() == BX_IA_EVEX_TCVTROWD2PS_VpsTrmIb, &dst);
   if (!result) {
     BX_CLEAR_AVX_REG(i->dst());
     BX_NEXT_INSTR(i);
@@ -98,7 +98,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWD2PS_VpsTrm(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2PHL_VphTrm(bxInstruction_c *i)
 {
   BxPackedAvxRegister dst;
-  bool result = tilemov_row(i, i->getIaOpcode() == BX_IA_EVEX_TCVTROWPS2PHL_VphTrmIb, &dst);
+  bool result = tilemov_read_row(i, i->getIaOpcode() == BX_IA_EVEX_TCVTROWPS2PHL_VphTrmIb, &dst);
   if (!result) {
     BX_CLEAR_AVX_REG(i->dst());
     BX_NEXT_INSTR(i);
@@ -120,7 +120,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2PHL_VphTrm(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2PHH_VphTrm(bxInstruction_c *i)
 {
   BxPackedAvxRegister dst;
-  bool result = tilemov_row(i, i->getIaOpcode() == BX_IA_EVEX_TCVTROWPS2PHH_VphTrmIb, &dst);
+  bool result = tilemov_read_row(i, i->getIaOpcode() == BX_IA_EVEX_TCVTROWPS2PHH_VphTrmIb, &dst);
   if (!result) {
     BX_CLEAR_AVX_REG(i->dst());
     BX_NEXT_INSTR(i);
@@ -142,7 +142,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2PHH_VphTrm(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2BF16L_VphTrm(bxInstruction_c *i)
 {
   BxPackedAvxRegister dst;
-  bool result = tilemov_row(i, i->getIaOpcode() == BX_IA_EVEX_TCVTROWPS2BF16L_VphTrmIb, &dst);
+  bool result = tilemov_read_row(i, i->getIaOpcode() == BX_IA_EVEX_TCVTROWPS2BF16L_VphTrmIb, &dst);
   if (!result) {
     BX_CLEAR_AVX_REG(i->dst());
     BX_NEXT_INSTR(i);
@@ -161,7 +161,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2BF16L_VphTrm(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2BF16H_VphTrm(bxInstruction_c *i)
 {
   BxPackedAvxRegister dst;
-  bool result = tilemov_row(i, i->getIaOpcode() == BX_IA_EVEX_TCVTROWPS2BF16H_VphTrmIb, &dst);
+  bool result = tilemov_read_row(i, i->getIaOpcode() == BX_IA_EVEX_TCVTROWPS2BF16H_VphTrmIb, &dst);
   if (!result) {
     BX_CLEAR_AVX_REG(i->dst());
     BX_NEXT_INSTR(i);

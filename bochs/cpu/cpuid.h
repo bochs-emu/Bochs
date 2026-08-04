@@ -639,12 +639,15 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 
 // CPUID defines - features CPUID[0x00000007].ECX  [subleaf 1]
 // -----------------------------
-//   [0:4]    reserved
-//   [5:5]    Support immediate forms of RDMSR and WRMSRNS instructions
-//   [31:5]   reserved
+//    [0:4]   reserved
+//    [5:5]   Support immediate forms of RDMSR and WRMSRNS instructions
+//   [10:6]   reserved
+//  [11:11]   ACE support
+//  [31:12]   reserved
 
 #define BX_CPUID_STD7_SUBLEAF1_ECX_MSR_IMM                (1 <<  5)
 // ...
+#define BX_CPUID_STD7_SUBLEAF1_ECX_ACE                    (1 << 11)
 
 // CPUID defines - features CPUID[0x00000007].EDX  [subleaf 1]
 // -----------------------------

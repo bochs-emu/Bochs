@@ -4916,7 +4916,7 @@ public: // for now...
   BX_SMF void check_tile(bxInstruction_c *i, unsigned tile_num) BX_CPP_AttrRegparmN(2);
   BX_SMF void check_tiles(bxInstruction_c *i, unsigned tile_dst, unsigned tile_src1, unsigned tile_src2);
   BX_SMF bool configure_tiles(bxInstruction_c *i, const BxPackedAvxRegister &tilecfg) BX_CPP_AttrRegparmN(2);
-  BX_SMF bool tilemov_row(bxInstruction_c *i, bool immediate_form, BxPackedAvxRegister *dst) BX_CPP_AttrRegparmN(3);
+  BX_SMF bool tilemov_read_row(bxInstruction_c *i, bool immediate_form, BxPackedAvxRegister *dst) BX_CPP_AttrRegparmN(3);
 #endif
 
 #if BX_CPU_LEVEL >= 5
