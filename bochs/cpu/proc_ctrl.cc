@@ -26,6 +26,8 @@
 #include "cpuid.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+extern void flushICaches(void);
+
 #if BX_SUPPORT_SVM
 #include "svm.h"
 #endif

@@ -24,6 +24,7 @@
 #include "pc_system.h"
 #include "param_names.h"
 #include "cpu/cpu.h"
+#include "cpu/icache.h"
 #include "memory/memory-bochs.h"
 #define LOG_THIS BX_MEM(0)->
 

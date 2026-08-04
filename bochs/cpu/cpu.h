@@ -424,6 +424,8 @@ class BX_MEM_C;
 class bxInstruction_c;
 class bx_local_apic_c;
 class AMX;
+class bxICache_c;
+class bxICacheEntry_c;
 
 // <TAG-TYPE-EXECUTEPTR-START>
 #if BX_USE_CPU_SMF
@@ -739,7 +741,6 @@ typedef struct
 #include "decoder/instr.h"
 #include "lazy_flags.h"
 #include "tlb.h"
-#include "icache.h"
 
 // general purpose register
 #if BX_SUPPORT_X86_64
@@ -1379,10 +1380,7 @@ public: // for now...
   } PDPTR_CACHE;
 #endif
 
-  // An instruction cache.  Each entry should be exactly 32 bytes, and
-  // this structure should be aligned on a 32-byte boundary to be friendly
-  // with the host cache lines.
-  bxICache_c iCache BX_CPP_AlignN(32);
+  bxICache_c *iCache; // better to be aligned to 64-bytes boundary
   Bit32u fetchModeMask;
 
   struct {

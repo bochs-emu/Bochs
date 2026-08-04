@@ -26,7 +26,7 @@
 
 extern void handleSMC(bx_phy_address pAddr, Bit32u mask);
 
-class bxPageWriteStampTable
+class alignas(64) bxPageWriteStampTable
 {
   const Bit32u PHY_MEM_PAGES_IN_4G_SPACE;
   Bit32u *fineGranularityMapping;
@@ -119,7 +119,7 @@ static const bx_phy_address BX_ICACHE_INVALID_PHY_ADDRESS = bx_phy_address(-1);
 
 void flushSMC(bxICacheEntry_c *e);
 
-class bxICache_c {
+class alignas(64) bxICache_c {
 public:
   bxICacheEntry_c entry[BxICacheEntries];
   bxInstruction_c mpool[BxICacheMemPool];

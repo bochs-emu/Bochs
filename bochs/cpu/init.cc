@@ -25,6 +25,8 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "icache.h"
+
 #include "gui/siminterface.h"
 #include "param_names.h"
 #include "cpustats.h"
@@ -204,6 +206,8 @@ void BX_CPU_C::initialize(void)
 
   BX_CPU_THIS_PTR cpuid->sanity_checks();
 #endif
+
+  iCache = new bxICache_c;
 
   init_FetchDecodeTables(); // must be called after init_isa_features_bitmask()
 
@@ -849,6 +853,8 @@ void BX_CPU_C::after_restore_state(void)
 
 BX_CPU_C::~BX_CPU_C()
 {
+  delete iCache;
+
 #if BX_CPU_LEVEL >= 4
   delete cpuid;
 #endif

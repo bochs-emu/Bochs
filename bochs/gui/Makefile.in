@@ -234,7 +234,7 @@ enh_dbg.o: enh_dbg.@CPP_SUFFIX@ ../config.h ../bochs.h ../config.h ../osdep.h \
  ../cpu/i387.h ../cpu/softfloat3e/include/softfloat_types.h \
  ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
  ../cpu/crregs.h ../cpu/descriptor.h ../cpu/decoder/instr.h \
- ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/icache.h ../cpu/xmm.h \
+ ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/xmm.h \
  ../cpu/vmx.h ../cpu/vmx_ctrls.h ../cpu/access.h enh_dbg.h wenhdbg_res.h
 gtk_enh_dbg_osdep.o: gtk_enh_dbg_osdep.@CPP_SUFFIX@ ../bochs.h ../config.h \
  ../osdep.h ../logio.h ../misc/bswap.h ../bx_debug/debug.h ../config.h \
@@ -350,7 +350,7 @@ enh_dbg.lo: enh_dbg.@CPP_SUFFIX@ ../config.h ../bochs.h ../config.h ../osdep.h \
  ../cpu/i387.h ../cpu/softfloat3e/include/softfloat_types.h \
  ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
  ../cpu/crregs.h ../cpu/descriptor.h ../cpu/decoder/instr.h \
- ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/icache.h ../cpu/xmm.h \
+ ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/xmm.h \
  ../cpu/vmx.h ../cpu/vmx_ctrls.h ../cpu/access.h enh_dbg.h wenhdbg_res.h
 gtk_enh_dbg_osdep.lo: gtk_enh_dbg_osdep.@CPP_SUFFIX@ ../bochs.h ../config.h \
  ../osdep.h ../logio.h ../misc/bswap.h ../bx_debug/debug.h ../config.h \

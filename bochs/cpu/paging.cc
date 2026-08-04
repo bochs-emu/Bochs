@@ -22,6 +22,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "icache.h"
 #include "cpuid.h"
 #include "msr.h"
 #define LOG_THIS BX_CPU_THIS_PTR
@@ -409,7 +410,7 @@ void BX_CPU_C::TLB_flush(void)
 #endif
 
   // break all links bewteen traces
-  BX_CPU_THIS_PTR iCache.breakLinks();
+  BX_CPU_THIS_PTR iCache->breakLinks();
 }
 
 #if BX_CPU_LEVEL >= 6
@@ -430,7 +431,7 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
 #endif
 
   // break all links bewteen traces
-  BX_CPU_THIS_PTR iCache.breakLinks();
+  BX_CPU_THIS_PTR iCache->breakLinks();
 }
 #endif
 
@@ -450,7 +451,7 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
 #endif
 
   // break all links bewteen traces
-  BX_CPU_THIS_PTR iCache.breakLinks();
+  BX_CPU_THIS_PTR iCache->breakLinks();
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
