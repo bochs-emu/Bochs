@@ -28,6 +28,7 @@
 #include "usb_debug.h"
 // hacks for iodev / USB internals
 #include "iodev.h"
+#include "iodev/usb/usb_uhci-defs.h"
 #include "iodev/usb/usb_xhci-defs.h"
 
 #include <gtk/gtk.h>

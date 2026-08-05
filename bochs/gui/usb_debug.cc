@@ -24,6 +24,7 @@
 #if BX_USB_DEBUGGER
 
 #include "usb_debug.h"
+#include "iodev/usb/usb_uhci-defs.h"
 
 #define LOG_THIS genlog->
 

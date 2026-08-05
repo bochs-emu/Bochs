@@ -53,34 +53,6 @@ enum {
   UHCI_REG_COUNT
 };
 
-// copy&paste start
-// from uhci_core.h
-#define USB_UHCI_QUEUE_STACK_SIZE  256
-
-#define USB_UHCI_IS_LINK_VALID(item)  ((item & 1) == 0)  // return TRUE if valid link address
-#define USB_UHCI_IS_LINK_QUEUE(item)  ((item & 2) == 2)  // return TRUE if link is a queue pointer
-
-struct USB_UHCI_QUEUE_STACK {
-  int    queue_cnt;
-  Bit32u queue_stack[USB_UHCI_QUEUE_STACK_SIZE];
-};
-
-#pragma pack (push, 1)
-struct TD {
-  Bit32u dword0;
-  Bit32u dword1;
-  Bit32u dword2;
-  Bit32u dword3;
-};
-
-struct QUEUE {
-  Bit32u horz;
-  Bit32u vert;
-};
-#pragma pack (pop)
-
-// copy&paste end
-
 extern const char *hc_param_str[];
 
 extern int usb_debug_type;

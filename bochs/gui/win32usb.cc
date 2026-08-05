@@ -316,6 +316,8 @@ INT_PTR CALLBACK hc_uhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
   return 0;
 }
 
+#include "iodev/usb/usb_uhci-defs.h"
+
 bx_list_c *UHCI_state = NULL;
 
 // returns -1 if error, else returns ID to control to set the focus to
