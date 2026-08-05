@@ -425,7 +425,7 @@ class bxInstruction_c;
 class bx_local_apic_c;
 class AMX;
 class bxICache_c;
-class bxICacheEntry_c;
+struct bxICacheEntry_c;
 
 // <TAG-TYPE-EXECUTEPTR-START>
 #if BX_USE_CPU_SMF
