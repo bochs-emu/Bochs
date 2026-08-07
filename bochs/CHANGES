@@ -13,6 +13,7 @@ Brief summary :
     complete, 3D still WIP)
   - AGP support in i440BX chipset now almost correctly implemented
   - Many fixes in the devices code (PCI, VGA, Voodoo, hard drive, floppy, USB)
+  - LGPL'd VGABIOS updated to version 0.9d
 
 Detailed change log :
 
@@ -215,7 +216,7 @@ Detailed change log :
   - i440fx.bin updated from GitHub repository
   - include OVMF BIOS image to Bochs package
 
-- LGPL'd VGABIOS updated from GitHub repository
+- LGPL'd VGABIOS updated to version 0.9d
   - Added some low resolution VESA modes and bugfixes for all versions
   - Cirrus: Improved VESA3 proteced mode support and added binary with it
 
