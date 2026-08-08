@@ -230,6 +230,12 @@ bx_define_opcode(BX_IA_SUB_GwEw_ZERO_IDIOM, "sub", "subw", NULL, &BX_CPU_C::ZERO
 bx_define_opcode(BX_IA_SUB_EdGd_ZERO_IDIOM, "sub", "subl", NULL, &BX_CPU_C::ZERO_IDIOM_GdR, 0, OP_Ed, OP_Gd, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_SUB_GdEd_ZERO_IDIOM, "sub", "subl", NULL, &BX_CPU_C::ZERO_IDIOM_GdR, 0, OP_Gd, OP_Ed, OP_NONE, OP_NONE, 0)
 
+bx_define_opcode(BX_IA_TEST_EwGw_IDIOM, "test", "testw", NULL, &BX_CPU_C::TEST_GwR_ZERO_IDIOM, 0, OP_Ew, OP_Gw, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_TEST_EdGd_IDIOM, "test", "testl", NULL, &BX_CPU_C::TEST_GdR_ZERO_IDIOM, 0, OP_Ed, OP_Gd, OP_NONE, OP_NONE, 0)
+#if BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_TEST_EqGq_IDIOM, "test", "testq", NULL, &BX_CPU_C::TEST_GqR_ZERO_IDIOM, 0, OP_Eq, OP_Gq, OP_NONE, OP_NONE, 0)
+#endif
+
 bx_define_opcode(BX_IA_ADD_GbEb, "add", "addb", &BX_CPU_C::ADD_GbEbM, &BX_CPU_C::ADD_GbEbR, 0, OP_Gb, OP_Eb, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_OR_GbEb, "or", "orb", &BX_CPU_C::OR_GbEbM, &BX_CPU_C::OR_GbEbR, 0, OP_Gb, OP_Eb, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_ADC_GbEb, "adc", "adcb", &BX_CPU_C::ADC_GbEbM, &BX_CPU_C::ADC_GbEbR, 0, OP_Gb, OP_Eb, OP_NONE, OP_NONE, 0)
@@ -1258,6 +1264,11 @@ bx_define_opcode(BX_IA_PSLLDQ_UdqIb, "pslldq", "pslldq", &BX_CPU_C::BxError, &BX
 bx_define_opcode(BX_IA_LFENCE, "lfence", "lfence", &BX_CPU_C::BxError, &BX_CPU_C::NOP, BX_ISA_SSE2, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_SFENCE, "sfence", "sfence", &BX_CPU_C::BxError, &BX_CPU_C::NOP, BX_ISA_SSE, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MFENCE, "mfence", "mfence", &BX_CPU_C::BxError, &BX_CPU_C::NOP, BX_ISA_SSE2, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
+
+bx_define_opcode(BX_IA_XORPS_VpsWps_ZERO_IDIOM, "xorps", "xorps", NULL, &BX_CPU_C::ZERO_IDIOM_SSE_VdqR, BX_ISA_SSE, OP_Vps, OP_Wps, OP_NONE, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_XORPD_VpdWpd_ZERO_IDIOM, "xorpd", "xorpd", NULL, &BX_CPU_C::ZERO_IDIOM_SSE_VdqR, BX_ISA_SSE2, OP_Vpd, OP_Wpd, OP_NONE, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_PXOR_VdqWdq_ZERO_IDIOM,  "pxor",  "pxor",  NULL, &BX_CPU_C::ZERO_IDIOM_SSE_VdqR, BX_ISA_SSE2, OP_Vps, OP_Wps, OP_NONE, OP_NONE, BX_PREPARE_SSE)
+
 // SSE and SSE2
 
 // SSE3

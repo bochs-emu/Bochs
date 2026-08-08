@@ -1844,9 +1844,6 @@ public: // for now...
   BX_SMF void BSWAP_RX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BSWAP_ERX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void ZERO_IDIOM_GwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ZERO_IDIOM_GdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
   BX_SMF void ADD_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void OR_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void ADC_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2106,6 +2103,16 @@ public: // for now...
   BX_SMF void SMSW_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SMSW_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LMSW_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ZERO_IDIOM_GwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ZERO_IDIOM_GdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ZERO_IDIOM_SSE_VdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void TEST_GwR_ZERO_IDIOM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TEST_GdR_ZERO_IDIOM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_X86_64
+  BX_SMF void TEST_GqR_ZERO_IDIOM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
 
   // LOAD methods
   BX_SMF void LOAD_Eb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);

@@ -326,6 +326,7 @@
     <ClCompile Include="..\cpu\vmx.cc" />
     <ClCompile Include="..\cpu\wide_int.cc" />
     <ClCompile Include="..\cpu\xsave.cc" />
+    <ClCompile Include="..\cpu\idiom.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\bochs.h" />

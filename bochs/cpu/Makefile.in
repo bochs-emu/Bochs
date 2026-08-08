@@ -132,6 +132,7 @@ OBJS = \
 	rdrand.o \
 	rao.o \
 	wide_int.o \
+	idiom.o \
 	decoder/disasm.o
 	
 # Objects which are only used for x86-64 code
@@ -850,6 +851,12 @@ xsave.o: xsave.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  lazy_flags.h tlb.h xmm.h vmx.h vmx_ctrls.h stack.h access.h cpuid.h \
  msr.h svm.h decoder/ia_opcodes.h decoder/ia_opcodes.def \
  decoder/ia_opcodes_evex.def scalar_arith.h avx/amx.h ../cpu/xmm.h
+idiom.o: idiom.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
+ ../misc/bswap.h cpu.h decoder/decoder.h decoder/features.h \
+ ../instrument/stubs/instrument.h i387.h \
+ softfloat3e/include/softfloat_types.h ../config.h fpu/tag_w.h \
+ fpu/status_w.h fpu/control_w.h crregs.h descriptor.h decoder/instr.h \
+ lazy_flags.h tlb.h xmm.h vmx.h vmx_ctrls.h stack.h access.h
 disasm.o: decoder/disasm.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h decoder/../cpu.h decoder/../decoder/decoder.h \
  decoder/../decoder/features.h ../instrument/stubs/instrument.h \
