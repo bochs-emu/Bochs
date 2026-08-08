@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -367,6 +367,9 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
                     (value8 >> 6) & 1, (value8 >> 7) & 1));
           DEV_mem_set_bios_rom_access(BIOS_ROM_LOWER, (value8 >> 6) & 1);
           DEV_mem_set_bios_rom_access(BIOS_ROM_EXTENDED, (value8 >> 7) & 1);
+        }
+        if ((value8 & 0x20) != (oldval & 0x20)) {
+          BX_ERROR(("%sable FERR# input and IGNNE# output (unsupported)", ((value8 & 0x20) != 0) ? "En":"Dis"));
         }
         BX_P2I_THIS pci_conf[address+i] = value8;
         break;
