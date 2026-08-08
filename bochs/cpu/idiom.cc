@@ -72,6 +72,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TEST_GqR_ZERO_IDIOM(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ZERO_IDIOM_SSE_VdqR(bxInstruction_c *i)
 {
+#if BX_CPU_LEVEL >= 6
   BX_XMM_REG(i->dst()).clear();
+#endif
   BX_NEXT_INSTR(i);
 }
