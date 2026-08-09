@@ -111,6 +111,7 @@ void bx_devices_c::init_stubs()
   pluginPciIdeController = &stubPciIde;
   pluginACPIController = &stubACPIController;
 #endif
+  pluginExtFpuIRQ = &stubExtFpuIRQ;
 }
 
 void bx_devices_c::init(BX_MEM_C *newmem)

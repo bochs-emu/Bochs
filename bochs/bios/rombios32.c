@@ -865,6 +865,7 @@ static void pci_bios_init_bridges(PCIDevice *d)
         }
         outb(0x4d0, elcr[0]);
         outb(0x4d1, elcr[1]);
+        pci_config_writeb(d, 0x4e, 0x23); /* Enable coprocessor error function */
         BX_INFO("PIIX3/PIIX4 init: elcr=%02x %02x\n",
                 elcr[0], elcr[1]);
       } else if (device_id == PCI_DEVICE_ID_INTEL_82441 || device_id == PCI_DEVICE_ID_INTEL_82437) {

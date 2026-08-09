@@ -272,6 +272,10 @@ extern "C" {
 #define DEV_gameport_set_enabled(a) BX_ERROR(("gameport emulation not present"))
 #endif
 
+///////// External FPU IRQ macros
+#define DEV_extfpuirq_set_enabled(a) bx_devices.pluginExtFpuIRQ->set_enabled(a)
+#define DEV_extfpuirq_set_fpu_error(a) bx_devices.pluginExtFpuIRQ->set_fpu_error(a)
+
 
 #if BX_HAVE_DLFCN_H
 #include <dlfcn.h>

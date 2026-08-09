@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -98,6 +98,11 @@ void bx_pc_system_c::clear_INTR(void)
     BX_INFO(("pc_system: Setting INTR=0 on bootstrap processor %d", BX_BOOTSTRAP_PROCESSOR));
 
   BX_CPU(BX_BOOTSTRAP_PROCESSOR)->clear_INTR();
+}
+
+void bx_pc_system_c::set_IGNNE(bool val)
+{
+  // TODO: Forward IGNNE# to cpu
 }
 
 //

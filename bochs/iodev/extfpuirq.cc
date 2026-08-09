@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -28,6 +28,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "pc_system.h"
 #include "extfpuirq.h"
 
 #define LOG_THIS theExternalFpuIrq->
@@ -38,6 +39,7 @@ PLUGIN_ENTRY_FOR_MODULE(extfpuirq)
 {
   if (mode == PLUGIN_INIT) {
     theExternalFpuIrq = new bx_extfpuirq_c();
+    bx_devices.pluginExtFpuIRQ = theExternalFpuIrq;
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theExternalFpuIrq, BX_PLUGIN_EXTFPUIRQ);
   } else if (mode == PLUGIN_FINI) {
     delete theExternalFpuIrq;
@@ -66,8 +68,10 @@ void bx_extfpuirq_c::init(void)
 
 void bx_extfpuirq_c::reset(unsigned type)
 {
-  // We should handle IGNNE here
-  DEV_pic_lower_irq(13);
+//  if (enabled && FERR) {
+    DEV_pic_lower_irq(13);
+    bx_pc_system.set_IGNNE(true);
+//  }
 }
 
 // static IO port write callback handler
@@ -86,6 +90,20 @@ void bx_extfpuirq_c::write(Bit32u address, Bit32u value, unsigned io_len)
   UNUSED(this_ptr);
 #endif // !BX_USE_EFI_SMF
 
-  // We should handle IGNNE here
-  DEV_pic_lower_irq(13);
+//  if (enabled && FERR) {
+    DEV_pic_lower_irq(13);
+    bx_pc_system.set_IGNNE(true);
+//  }
+}
+
+void bx_extfpuirq_c::set_fpu_error(bool val)
+{
+  if (enabled) {
+    FERR = val;
+    if (val) {
+      DEV_pic_raise_irq(13);
+    } else {
+      bx_pc_system.set_IGNNE(false);
+    }
+  }
 }

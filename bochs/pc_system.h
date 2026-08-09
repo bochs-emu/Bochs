@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -171,6 +171,8 @@ public:
 
   void raise_INTR(void);
   void clear_INTR(void);
+
+  void set_IGNNE(bool val);  // clear FPU error
 
   // Cpu and System Reset
   int Reset(unsigned type);

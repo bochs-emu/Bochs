@@ -369,7 +369,12 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
           DEV_mem_set_bios_rom_access(BIOS_ROM_EXTENDED, (value8 >> 7) & 1);
         }
         if ((value8 & 0x20) != (oldval & 0x20)) {
-          BX_ERROR(("%sable FERR# input and IGNNE# output (unsupported)", ((value8 & 0x20) != 0) ? "En":"Dis"));
+          if (PLUG_device_present(BX_PLUGIN_EXTFPUIRQ, false)) {
+            BX_ERROR(("%sable FERR# input and IGNNE# output (unsupported)", ((value8 & 0x20) != 0) ? "En":"Dis"));
+            DEV_extfpuirq_set_enabled((value8 & 0x20) != 0);
+          } else {
+            BX_ERROR(("External FPU IRQ plugin not loaded"));
+          }
         }
         BX_P2I_THIS pci_conf[address+i] = value8;
         break;

@@ -379,6 +379,16 @@ public:
 };
 #endif
 
+class BOCHSAPI bx_efirq_stub_c : public bx_devmodel_c {
+public:
+  virtual void set_enabled(bool val) {
+    STUBFUNC(extfpuirq, set_enabled);
+  }
+  virtual void set_fpu_error(bool val) {
+    STUBFUNC(extfpuirq, set_fpu_error);
+  }
+};
+
 class BOCHSAPI bx_devices_c : public logfunctions {
 public:
   bx_devices_c();
@@ -480,6 +490,7 @@ public:
   bx_pci_ide_stub_c *pluginPciIdeController;
   bx_acpi_ctrl_stub_c *pluginACPIController;
 #endif
+  bx_efirq_stub_c  *pluginExtFpuIRQ;
 
   // stub classes that the pointers (above) can point to until a plugin is
   // loaded
@@ -504,6 +515,7 @@ public:
   bx_pci_ide_stub_c stubPciIde;
   bx_acpi_ctrl_stub_c stubACPIController;
 #endif
+  bx_efirq_stub_c stubExtFpuIRQ;
 
   // Some info to pass to devices which can handled bulk IO.  This allows
   // the interface to remain the same for IO devices which can't handle
