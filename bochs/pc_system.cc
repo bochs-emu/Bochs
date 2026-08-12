@@ -103,7 +103,9 @@ void bx_pc_system_c::clear_INTR(void)
 void bx_pc_system_c::set_IGNNE(bool val)
 {
   // TODO: Handle this in the CPU code
+#if BX_SUPPORT_FPU
   BX_CPU(BX_BOOTSTRAP_PROCESSOR)->FPU_ignore_numeric_exception(val);
+#endif
 }
 
 //
