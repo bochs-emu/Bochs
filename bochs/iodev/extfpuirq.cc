@@ -64,6 +64,8 @@ void bx_extfpuirq_c::init(void)
   // called once when bochs initializes
   DEV_register_iowrite_handler(this, write_handler, 0x00F0, "External FPU IRQ", 1);
   DEV_register_irq(13, "External FPU IRQ");
+  enabled = !SIM->get_param_bool(BXPN_PCI_ENABLED)->get();
+  FERR = false;
 }
 
 void bx_extfpuirq_c::reset(unsigned type)
