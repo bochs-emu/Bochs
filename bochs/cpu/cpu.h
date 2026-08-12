@@ -5189,6 +5189,7 @@ public: // for now...
 #if BX_SUPPORT_FPU
   BX_SMF void print_state_FPU(void);
   BX_SMF void FPU_check_pending_exceptions(void);
+  BX_SMF void FPU_ignore_numeric_exception(bool val);
   BX_SMF void FPU_update_last_instruction(bxInstruction_c *i);
   BX_SMF void FPU_stack_underflow(bxInstruction_c *i, int stnr, int pop_stack = 0);
   BX_SMF void FPU_stack_overflow(bxInstruction_c *i);

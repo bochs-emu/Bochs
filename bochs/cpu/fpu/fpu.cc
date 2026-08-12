@@ -69,8 +69,15 @@ void BX_CPU_C::FPU_check_pending_exceptions(void)
         // MSDOS compatibility external interrupt (IRQ13)
         BX_INFO(("math_abort: MSDOS compatibility FPU exception"));
         DEV_pic_raise_irq(13);
+        // Here we should set FERR# (Reset after FSW B/ES are cleared)
+//        DEV_extfpuirq_set_fpu_error(true);
      }
   }
+}
+
+void BX_CPU_C::FPU_ignore_numeric_exception(bool val)
+{
+  // TODO
 }
 
 Bit16u BX_CPU_C::x87_get_FCS(void)

@@ -381,12 +381,8 @@ public:
 
 class BOCHSAPI bx_efirq_stub_c : public bx_devmodel_c {
 public:
-  virtual void set_enabled(bool val) {
-    STUBFUNC(extfpuirq, set_enabled);
-  }
-  virtual void set_fpu_error(bool val) {
-    STUBFUNC(extfpuirq, set_fpu_error);
-  }
+  virtual void set_enabled(bool val) {}
+  virtual void set_fpu_error(bool val) {}
 };
 
 class BOCHSAPI bx_devices_c : public logfunctions {
