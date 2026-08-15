@@ -13,6 +13,7 @@ Brief summary :
     complete, 3D still WIP)
   - AGP support in i440BX chipset now almost correctly implemented
   - Many fixes in the devices code (PCI, VGA, Voodoo, hard drive, floppy, USB)
+  - BIOS fixes for PCI/AGP init and ACPI tables
   - LGPL'd VGABIOS updated to version 0.9d
 
 Detailed change log :
