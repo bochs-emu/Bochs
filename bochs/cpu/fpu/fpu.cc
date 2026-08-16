@@ -443,8 +443,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTENV(bxInstruction_c *i)
   fpu_save_environment(i);
   /* mask all floating point exceptions */
   FPU_CONTROL_WORD |= FPU_CW_Exceptions_Mask;
-  /* clear the B and ES bits in the status word */
-  FPU_PARTIAL_STATUS &= ~(FPU_SW_Backward|FPU_SW_Summary);
 
   clear_unmasked_fpu_exception();
 
