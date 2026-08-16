@@ -165,6 +165,9 @@ public:
   //    386:      20 bits
   bx_phy_address a20_mask;
 
+  // IGNNE# pin: Ignore x87 Numeric Exception
+  bool IGNNE;
+
   volatile bool kill_bochs_request;
 
   void set_HRQ(bool val);  // set the Hold ReQuest line
@@ -172,7 +175,8 @@ public:
   void raise_INTR(void);
   void clear_INTR(void);
 
-  void set_IGNNE(bool val);  // clear FPU error
+  bool get_IGNNE() { return IGNNE; }
+  void set_IGNNE(bool val) { IGNNE = val; }
 
   // Cpu and System Reset
   int Reset(unsigned type);

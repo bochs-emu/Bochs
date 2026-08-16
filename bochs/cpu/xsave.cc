@@ -629,14 +629,10 @@ void BX_CPU_C::xrstor_x87_state(bxInstruction_c *i, bx_address offset)
   BX_CPU_THIS_PTR the_i387 = restore_i387;
 
   /* check for unmasked exceptions */
-  if (FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask) {
-    /* set the B and ES bits in the status-word */
-    FPU_PARTIAL_STATUS |= FPU_SW_Summary | FPU_SW_Backward;
-  }
-  else {
-    /* clear the B and ES bits in the status-word */
-    FPU_PARTIAL_STATUS &= ~(FPU_SW_Summary | FPU_SW_Backward);
-  }
+  if (FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask)
+    set_unmasked_fpu_exception();
+  else
+    clear_unmasked_fpu_exception();
 }
 
 void BX_CPU_C::xrstor_init_x87_state(void)

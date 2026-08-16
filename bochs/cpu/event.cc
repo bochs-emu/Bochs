@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2025 Stanislav Shwartsman
+//   Copyright (c) 2011-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -69,6 +69,11 @@ bool BX_CPU_C::handleWaitForEvent(void)
       break;
     }
 
+    if (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_WAIT_FOR_X87 && BX_CPU_THIS_PTR get_IGNNE()) {
+      // #IGNNE is raised, end of waiting
+      break;
+    }
+
     if (is_unmasked_event_pending(BX_EVENT_VMX_PREEMPTION_TIMER_EXPIRED)) {
       // Exit from waiting loop and proceed to VMEXIT
       break;
@@ -110,6 +115,10 @@ bool BX_CPU_C::handleWaitForEvent(void)
 
     BX_TICKN(10); // when in HLT run time faster for single CPU
   }
+
+  // wakeup if were waiting for x87
+  if (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_WAIT_FOR_X87)
+    BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
 
   return 0;
 }
@@ -468,6 +477,11 @@ void BX_CPU_C::inhibit_interrupts(unsigned mask)
 bool BX_CPU_C::interrupts_inhibited(unsigned mask)
 {
   return (get_icount() <= BX_CPU_THIS_PTR inhibit_icount) && (BX_CPU_THIS_PTR inhibit_mask & mask) == mask;
+}
+
+bool BX_CPU_C::get_IGNNE()
+{
+  return bx_pc_system.get_IGNNE();
 }
 
 void BX_CPU_C::deliver_SIPI(unsigned vector)

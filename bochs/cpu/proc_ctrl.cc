@@ -172,6 +172,7 @@ void BX_CPU_C::enter_sleep_state(unsigned state)
 
   case BX_ACTIVITY_STATE_MWAIT:
   case BX_ACTIVITY_STATE_MWAIT_IF:
+  case BX_ACTIVITY_WAIT_FOR_X87:
     break;
 
   default:
