@@ -1201,6 +1201,7 @@ public: // for now...
     BX_ACTIVITY_STATE_SHUTDOWN,
     BX_ACTIVITY_STATE_WAIT_FOR_SIPI,
     BX_VMX_LAST_ACTIVITY_STATE = BX_ACTIVITY_STATE_WAIT_FOR_SIPI,
+    BX_ACTIVITY_WAIT_FOR_X87,
     BX_ACTIVITY_STATE_MWAIT,
     BX_ACTIVITY_STATE_MWAIT_IF
   };
@@ -5047,6 +5048,9 @@ public: // for now...
   BX_SMF void    deliver_NMI(void);
   BX_SMF void    deliver_SMI(void);
   BX_SMF void    deliver_SIPI(unsigned vector);
+
+  BX_SMF bool    get_IGNNE();
+
 #if BX_SUPPORT_UINTR
   BX_SMF void    deliver_UINTR();
   BX_SMF void    Process_UINTR_Notification();
@@ -5189,11 +5193,12 @@ public: // for now...
 #if BX_SUPPORT_FPU
   BX_SMF void print_state_FPU(void);
   BX_SMF void FPU_check_pending_exceptions(void);
-  BX_SMF void FPU_ignore_numeric_exception(bool val);
   BX_SMF void FPU_update_last_instruction(bxInstruction_c *i);
   BX_SMF void FPU_stack_underflow(bxInstruction_c *i, int stnr, int pop_stack = 0);
   BX_SMF void FPU_stack_overflow(bxInstruction_c *i);
   BX_SMF unsigned FPU_exception(bxInstruction_c *i, unsigned exception, bool = 0);
+  BX_SMF void set_unmasked_fpu_exception();
+  BX_SMF void clear_unmasked_fpu_exception();
   BX_SMF bx_address fpu_save_environment(bxInstruction_c *i);
   BX_SMF bx_address fpu_load_environment(bxInstruction_c *i);
   BX_SMF Bit8u pack_FPU_TW(Bit16u tag_word);
