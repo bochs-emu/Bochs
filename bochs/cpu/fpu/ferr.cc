@@ -178,6 +178,8 @@ unsigned BX_CPU_C::FPU_exception(bxInstruction_c *i, unsigned exception, bool is
 // Family Developer's Manual: Volume 1
 //
 
+#include "iodev/iodev.h"
+
 void BX_CPU_C::FPU_check_pending_exceptions(void)
 {
   if(BX_CPU_THIS_PTR the_i387.get_partial_status() & FPU_SW_Summary)
@@ -195,15 +197,15 @@ void BX_CPU_C::FPU_check_pending_exceptions(void)
      {
         // MSDOS compatibility mode
         if (! BX_CPU_THIS_PTR get_IGNNE()) {
-          // if "deferred" method of reporting the error is used here is the time to assert FERR#
+          // with "deferred" method of reporting the error here is the time to assert FERR#
+          DEV_extfpuirq_set_fpu_error(true);
+
           enter_sleep_state(BX_ACTIVITY_WAIT_FOR_X87);
           longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
         }
      }
   }
 }
-
-#include "iodev/iodev.h"
 
 // this code uses "immediate" method of reporting errors for simplicity
 void BX_CPU_C::set_unmasked_fpu_exception()
