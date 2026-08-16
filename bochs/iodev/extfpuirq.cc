@@ -70,10 +70,10 @@ void bx_extfpuirq_c::init(void)
 
 void bx_extfpuirq_c::reset(unsigned type)
 {
-//  if (enabled && FERR) {
+  if (enabled /* && FERR */) {
     DEV_pic_lower_irq(13);
     bx_pc_system.set_IGNNE(true);
-//  }
+  }
 }
 
 // static IO port write callback handler
@@ -92,10 +92,10 @@ void bx_extfpuirq_c::write(Bit32u address, Bit32u value, unsigned io_len)
   UNUSED(this_ptr);
 #endif // !BX_USE_EFI_SMF
 
-//  if (enabled && FERR) {
+  if (BX_EXTFPUIRQ_THIS enabled /* && BX_EXTFPUIRQ_THIS FERR */) {
     DEV_pic_lower_irq(13);
     bx_pc_system.set_IGNNE(true);
-//  }
+  }
 }
 
 void bx_extfpuirq_c::set_fpu_error(bool val)
