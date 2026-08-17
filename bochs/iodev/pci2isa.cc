@@ -370,7 +370,7 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
         }
         if ((value8 & 0x20) != (oldval & 0x20)) {
           if (PLUG_device_present(BX_PLUGIN_EXTFPUIRQ, false)) {
-            BX_ERROR(("%sable FERR# input and IGNNE# output (unsupported)", ((value8 & 0x20) != 0) ? "En":"Dis"));
+            BX_INFO(("%sable FERR# input and IGNNE# output", ((value8 & 0x20) != 0) ? "En":"Dis"));
             DEV_extfpuirq_set_enabled((value8 & 0x20) != 0);
           } else {
             BX_ERROR(("External FPU IRQ plugin not loaded"));
