@@ -79,6 +79,7 @@ Changes in Bochs 3.1 (coming soon):
 - x87: correctly handle preudo-denormal zero in FRNDINT instruction
 - VMX: fix VMX guest activity state reported on VMEXIT occured during HLT (should be BX_ACTIVITY_STATE_HLT=1)
 + CPUID: Update Arrow Lake CPUID - enable missing leaf CPUID leaf=7.subleaf=1[EDX]
+- x87: Implemented MS-DOS Compatibility mode for handling x87 FPU exceptions, FERR# and IGNNE# pins enabled when 'extfpuirq' plugin is enabled
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.0 (February 16, 2025)

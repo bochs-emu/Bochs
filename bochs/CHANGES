@@ -2,6 +2,7 @@ Changes in 3.1 (coming soon):
 
 Brief summary :
   - CPU: Implemented FRED, USER_MSR, MOVRS, AMX-FP8 ISA extensions emulation
+  - CPU: Implemented MS-DOS Compatibility mode for handling x87 FPU exceptions, FERR# and IGNNE# pins enabled when 'extfpuirq' plugin is enabled
   - CPUDB: Added new Wildcat Lake CPU definition featuring FRED, WRMSRNS and MSRLIST
   - Bugfixes for CPU emulation correctness
     (critical bugfixes for emulation of XSAVEC/XSAVES, PKeys, AVX BMI1/BMI2, AVX512, AMX, UINTR, CET and SVM)
@@ -23,12 +24,13 @@ Detailed change log :
     In the code BX_WARN is used and it is configurable like other log levels.
 
 - CPU emulation and instrumentation
-  - CPU: Implemented AMX-FP8 ISA extension
-  - CPU: Implemented MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS
-  - CPU: implemented IA32_APERF (0xe7) and IA32_MPERF (0xe8) MSRs
-  - CPU: implemented Flexible Return and Delivery (FRED) architecture emulation
-  - CPU: implemented USER_MSR extensions emulation (URDMSR/UWRMSR)
+  - Implemented AMX-FP8 ISA extension
+  - Implemented MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS
+  - Implemented IA32_APERF (0xe7) and IA32_MPERF (0xe8) MSRs
+  - Implemented Flexible Return and Delivery (FRED) architecture emulation
+  - Implemented USER_MSR extensions emulation (URDMSR/UWRMSR)
   - CPUDB: Added new Wildcat Lake CPU definition featuring FRED, WRMSRNS and MSRLIST
+  - Implemented MS-DOS Compatibility mode for handling x87 FPU exceptions, FERR# and IGNNE# pins enabled when 'extfpuirq' plugin is enabled
   - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of XSAVEC/XSAVES, PKeys, AVX BMI1/BMI2, AVX512, AMX, UINTR, CET and SVM)
   - Updated instrumentation callbacks, see description in instrumentation.txt
     - Added new BX_INSTR_CPUID instrumentation callback, branch callbacks simplified
