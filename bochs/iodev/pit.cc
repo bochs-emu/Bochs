@@ -419,7 +419,11 @@ void bx_pit_c::speaker_handler(void *this_ptr, bool value)
 {
   bx_pit_c *class_ptr = (bx_pit_c*) this_ptr;
   if (class_ptr->s.timer.get_mode(2) != 3) {
-    DEV_speaker_set_line(value & class_ptr->s.speaker_data_on);
+    bool new_speaker_level = value & class_ptr->s.speaker_data_on;
+    if(class_ptr->s.speaker_level != new_speaker_level) {
+      DEV_speaker_set_line(new_speaker_level);
+      class_ptr->s.speaker_level = new_speaker_level;
+    }
   }
 }
 
