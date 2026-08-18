@@ -1680,19 +1680,19 @@ void bx_pci_device_c::after_restore_pci_state()
         }
       } else if ((pci_bar[i].type == BX_PCI_BAR_TYPE_IO) &&
                  ((pci_conf[0x04] & 0x01) != 0)) {
-        bool ret = false;
+        bool ret1 = false, ret2 = false;
         for (unsigned j = 0; j < pci_bar[i].size; j++) {
           if (pci_bar[i].io.mask[j] > 0) {
-            ret = DEV_register_ioread_handler(this, pci_bar[i].io.rh,
-                                              pci_bar[i].addr + j, pci_name,
-                                              pci_bar[i].io.mask[j]);
-            ret &= DEV_register_iowrite_handler(this, pci_bar[i].io.wh,
+            ret1 = DEV_register_ioread_handler(this, pci_bar[i].io.rh,
+                                               pci_bar[i].addr + j, pci_name,
+                                               pci_bar[i].io.mask[j]);
+            ret2 = DEV_register_iowrite_handler(this, pci_bar[i].io.wh,
                                                 pci_bar[i].addr + j, pci_name,
                                                 pci_bar[i].io.mask[j]);
           }
-          if (!ret) break;
+          if (!ret1 || !ret2) break;
         }
-        if (ret) {
+        if (ret1 && ret2) {
           BX_INFO(("BAR #%d: i/o base address = 0x%04x", i, pci_bar[i].addr));
           pci_bar_change_notify();
         }

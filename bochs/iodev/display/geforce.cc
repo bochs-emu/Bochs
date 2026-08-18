@@ -3775,7 +3775,7 @@ void bx_geforce_c::d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[
     out[a][2] = 0.0f;
     out[a][3] = 1.0f;
   }
-  Bit32s addr_regs[2][4] = { 0 };
+  Bit32s addr_regs[2][4] = { { 0 } };
   float tmp_regs[32][4];
   for (Bit32u r = 0; r < ch->d3d_vs_temp_regs_count; r++)
     for (Bit32u ci = 0; ci < 4; ci++)
