@@ -1347,7 +1347,7 @@ DLX Linux screenshot.
 </thead>
 <tbody>
 
-<row><entry>bios.bin-1.13.0 </entry> <entry> SeaBIOS ROM image </entry> </row>
+<row><entry>bios.bin-1.16.0 </entry> <entry> SeaBIOS ROM image </entry> </row>
 <row><entry>BIOS-bochs-latest </entry> <entry> default ROM BIOS image for Bochs </entry> </row>
 <row><entry>BIOS-bochs-legacy </entry> <entry> ROM BIOS image without 32-bit init code </entry> </row>
 <row><entry>bochs.exe </entry> <entry> the main Bochs executable </entry> </row>
@@ -1573,7 +1573,7 @@ description of each one.
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-banshee.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Voodoo Banshee extension enabled </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-latest-banshee-debug.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs with the Voodoo Banshee extension enabled and debug output to the logfile </entry> </row>
 <row><entry>/usr/share/bochs/VGABIOS-lgpl-README </entry> <entry> readme for the LGPL'd VGA BIOS </entry> </row>
-<row><entry>/usr/share/bochs/bios.bin-1.13.0 </entry> <entry> SeaBIOS ROM image </entry> </row>
+<row><entry>/usr/share/bochs/bios.bin-1.16.0 </entry> <entry> SeaBIOS ROM image </entry> </row>
 <row><entry>/usr/share/bochs/vgabios-cirrus.bin-1.13.0 </entry> <entry> SeaVGABIOS ROM image (for Cirrus adapter)</entry> </row>
 <row><entry>/usr/share/bochs/i440fx.bin </entry> <entry> i440fx ROM BIOS image </entry> </row>
 <row><entry>/usr/share/bochs/README-i440fx </entry> <entry> README for i440fx ROM image </entry> </row>
@@ -3157,7 +3157,7 @@ system BIOS and VGA BIOS images.
 <tbody>
 <row><entry>BIOS-bochs-latest </entry> <entry> default ROM BIOS image for Bochs </entry> </row>
 <row><entry>BIOS-bochs-legacy </entry> <entry> ROM BIOS image without 32-bit init code (for i386 and ISA graphics card emulation) </entry> </row>
-<row><entry>bios.bin-1.13.0 </entry> <entry> SeaBIOS ROM image </entry> </row>
+<row><entry>bios.bin-1.16.0 </entry> <entry> SeaBIOS ROM image </entry> </row>
 <row><entry>VGABIOS-elpin-2.40 </entry> <entry> legacy VGA BIOS image for Bochs </entry> </row>
 <row><entry>VGABIOS-lgpl-latest.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs </entry> </row>
 <row><entry>VGABIOS-lgpl-latest-debug.bin </entry> <entry> LGPL'd VGA BIOS image for Bochs with debug output to the logfile </entry> </row>

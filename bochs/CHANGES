@@ -17,6 +17,7 @@ Brief summary :
   - VHDX disk image support added
   - BIOS fixes for PCI/AGP init and ACPI tables
   - LGPL'd VGABIOS updated to version 0.9d
+  - Updated SeaBIOS ROM image to current version 1.16.0
 
 Detailed change log :
 
@@ -219,6 +220,7 @@ Detailed change log :
   - Add service Int13h/0x0D
   - i440fx.bin updated from GitHub repository (built from source)
   - include OVMF BIOS image to Bochs package
+  - Updated SeaBIOS ROM image to current version 1.16.0
 
 - LGPL'd VGABIOS updated to version 0.9d
   - Added some low resolution VESA modes and bugfixes for all versions
