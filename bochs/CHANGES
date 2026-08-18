@@ -14,6 +14,7 @@ Brief summary :
     complete, 3D still WIP)
   - AGP support in i440BX chipset now almost correctly implemented
   - Many fixes in the devices code (PCI, VGA, Voodoo, hard drive, floppy, USB)
+  - VHDX disk image support added
   - BIOS fixes for PCI/AGP init and ACPI tables
   - LGPL'd VGABIOS updated to version 0.9d
 
@@ -216,7 +217,7 @@ Detailed change log :
   - Fixed floppy media state for legacy drive types
   - Legacy BIOS now can be used with a PCI VGABIOS
   - Add service Int13h/0x0D
-  - i440fx.bin updated from GitHub repository
+  - i440fx.bin updated from GitHub repository (built from source)
   - include OVMF BIOS image to Bochs package
 
 - LGPL'd VGABIOS updated to version 0.9d
