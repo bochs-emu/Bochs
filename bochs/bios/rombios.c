@@ -10511,11 +10511,9 @@ pcibios_init_irqs:
   jne  pci_init_end
   mov  dl, #0x4c
   call pcibios_init_sel_reg
-  push bx
   mov  dx, #0x0cfe
   mov  al, #0x23 ;; enable coprocessor error function
   out  dx, al
-  pop  bx
   mov  dl, [si+34]
   call pcibios_init_sel_reg
   push bx ;; save irq router bus + devfunc

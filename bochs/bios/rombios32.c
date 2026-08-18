@@ -482,7 +482,7 @@ static int cmos_readb(int addr)
 
 void setup_mtrr(void)
 {
-    int i, vcnt, fix, wc;
+    int i, vcnt, fix;
     uint32_t mtrr_cap;
     union {
         uint8_t valb[8];
@@ -500,7 +500,6 @@ void setup_mtrr(void)
     mtrr_cap = rdmsr(MSR_MTRRcap);
     vcnt = mtrr_cap & 0xff;
     fix = mtrr_cap & 0x100;
-    wc = mtrr_cap & 0x400;
     if (!vcnt || !fix)
         return;
 
@@ -2396,7 +2395,7 @@ smbios_type_17_init(void *start, uint32_t memory_size_mb, int instance)
     p->type_detail = 0;
 
     start += sizeof(struct smbios_type_17);
-    snprintf(start, 8, "DIMM %d", instance);
+    snprintf(start, 12, "DIMM %d", instance);
     start += strlen(start) + 1;
     *((uint8_t *)start) = 0;
 
@@ -2493,7 +2492,7 @@ void smbios_init(void)
     bios_table_cur_addr = align(bios_table_cur_addr, 16);
     start = (void *)(bios_table_cur_addr);
 
-	p = (char *)start + sizeof(struct smbios_entry_point);
+    p = (char *)start + sizeof(struct smbios_entry_point);
 
 #define add_struct(fn) do { \
     q = (fn); \
