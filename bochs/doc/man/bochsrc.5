@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "15 Feb 2026" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "18 Aug 2026" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -48,8 +48,8 @@ directly with this option and some of them install a config option that is
 only available when the plugin device is loaded. The value "1" means to load
 the plugin and "0" will unload it (if loaded before).
 
-These plugins will be loaded by default (if present): 'biosdev', 'extfpuirq',
-\&'gameport', 'iodebug','parallel', 'serial', 'speaker' and 'unmapped'.
+These plugins will be loaded by default (if present): 'biosdev', 'gameport',
+\&'iodebug','parallel', 'serial', 'speaker' and 'unmapped'.
 
 These plugins are also supported, but they are usually loaded directly with
 their bochsrc option: 'e1000', 'es1370', 'ne2k', 'pcidev', 'pcipnic', 'sb16',

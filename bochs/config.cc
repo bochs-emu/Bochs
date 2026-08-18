@@ -404,7 +404,6 @@ void bx_plugin_ctrl_reset(bool init_done)
   SIM->get_param_bool("unmapped", base)->set(1);
   SIM->get_param_bool("biosdev", base)->set(1);
   SIM->get_param_bool("speaker", base)->set(1);
-  SIM->get_param_bool("extfpuirq", base)->set(1);
   SIM->get_param_bool("parallel", base)->set(1);
   SIM->get_param_bool("serial", base)->set(1);
 #if BX_SUPPORT_GAMEPORT

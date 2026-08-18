@@ -44,7 +44,7 @@ PLUGIN_ENTRY_FOR_MODULE(extfpuirq)
   } else if (mode == PLUGIN_FINI) {
     delete theExternalFpuIrq;
   } else if (mode == PLUGIN_PROBE) {
-    return (int)PLUGTYPE_OPTIONAL;
+    return (int)PLUGTYPE_STANDARD;
   }
   return(0); // Success
 }

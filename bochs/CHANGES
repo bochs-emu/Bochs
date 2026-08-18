@@ -2,7 +2,8 @@ Changes in 3.1 (coming soon):
 
 Brief summary :
   - CPU: Implemented FRED, USER_MSR, MOVRS, AMX-FP8 ISA extensions emulation
-  - CPU: Implemented MS-DOS Compatibility mode for handling x87 FPU exceptions, FERR# and IGNNE# pins enabled when 'extfpuirq' plugin is enabled
+  - CPU: Implemented MS-DOS Compatibility mode for handling x87 FPU exceptions, external logic handles FERR# and IGNNE# pins if enabled
+    The 'extfpuirq' plugin is now always loaded if FPU is present
   - CPUDB: Added new Wildcat Lake CPU definition featuring FRED, WRMSRNS and MSRLIST
   - Bugfixes for CPU emulation correctness
     (critical bugfixes for emulation of XSAVEC/XSAVES, PKeys, AVX BMI1/BMI2, AVX512, AMX, UINTR, CET and SVM)
@@ -32,7 +33,8 @@ Detailed change log :
   - Implemented Flexible Return and Delivery (FRED) architecture emulation
   - Implemented USER_MSR extensions emulation (URDMSR/UWRMSR)
   - CPUDB: Added new Wildcat Lake CPU definition featuring FRED, WRMSRNS and MSRLIST
-  - Implemented MS-DOS Compatibility mode for handling x87 FPU exceptions, FERR# and IGNNE# pins enabled when 'extfpuirq' plugin is enabled
+  - CPU: Implemented MS-DOS Compatibility mode for handling x87 FPU exceptions, external logic handles FERR# and IGNNE# pins if enabled
+    The 'extfpuirq' plugin is now always loaded if FPU is present
   - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of XSAVEC/XSAVES, PKeys, AVX BMI1/BMI2, AVX512, AMX, UINTR, CET and SVM)
   - Updated instrumentation callbacks, see description in instrumentation.txt
     - Added new BX_INSTR_CPUID instrumentation callback, branch callbacks simplified

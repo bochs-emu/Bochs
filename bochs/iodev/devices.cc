@@ -269,6 +269,9 @@ void bx_devices_c::init(BX_MEM_C *newmem)
   }
 #endif
 
+#if BX_SUPPORT_FPU
+  PLUG_load_plugin(extfpuirq, PLUGTYPE_STANDARD);
+#endif
 #if BX_SUPPORT_APIC
   PLUG_load_plugin(ioapic, PLUGTYPE_STANDARD);
 #endif

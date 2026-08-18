@@ -3303,8 +3303,8 @@ only available when the plugin device is loaded. The value "1" means to load
 the plugin and "0" will unload it (if loaded before).
 </para>
 <para>
-These plugins will be loaded by default (if present): 'biosdev', 'extfpuirq',
-'gameport', 'iodebug','parallel', 'serial', 'speaker' and 'unmapped'.
+These plugins will be loaded by default (if present): 'biosdev', 'gameport',
+'iodebug','parallel', 'serial', 'speaker' and 'unmapped'.
 </para>
 <para>
 These plugins are also supported, but they are usually loaded directly with
@@ -8061,7 +8061,7 @@ simulation is starting.
     <row>
       <entry>extfpuirq</entry>
       <entry>EXFIRQ</entry>
-      <entry>External FPU IRQ</entry>
+      <entry>External FPU IRQ logic</entry>
     </row>
     <row>
       <entry>floppy</entry>
