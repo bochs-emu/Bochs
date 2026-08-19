@@ -499,7 +499,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rd(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rd(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeNameShort()));
@@ -604,7 +604,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR3(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR4(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeNameShort()));
@@ -971,7 +971,7 @@ bx_address BX_CPU_C::read_CR0(void)
   return cr0_val;
 }
 
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
 bx_address BX_CPU_C::read_CR4(void)
 {
   bx_address cr4_val = BX_CPU_THIS_PTR cr4.get();
@@ -1170,7 +1170,7 @@ bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
   return true;
 }
 
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
 bx_address BX_CPU_C::get_cr4_allow_mask(void)
 {
   bx_address allowMask = 0;
@@ -1213,6 +1213,7 @@ bx_address BX_CPU_C::get_cr4_allow_mask(void)
   if (is_cpu_extension_supported(BX_ISA_VME))
     allowMask |= BX_CR4_VME_MASK | BX_CR4_PVI_MASK;
 
+#if BX_CPU_LEVEL >= 5
   if (is_cpu_extension_supported(BX_ISA_PENTIUM))
     allowMask |= BX_CR4_TSD_MASK;
 
@@ -1305,7 +1306,8 @@ bx_address BX_CPU_C::get_cr4_allow_mask(void)
   if (is_cpu_extension_supported(BX_ISA_FRED))
     allowMask |= BX_CR4_FRED_MASK;
 #endif
-#endif
+#endif // #if BX_CPU_LEVEL >= 6
+#endif // #if BX_CPU_LEVEL >= 5
 
   return allowMask;
 }
@@ -1441,7 +1443,7 @@ bool BX_CPU_C::SetCR4(bxInstruction_c *i, bx_address val)
 
   return true;
 }
-#endif // BX_CPU_LEVEL >= 5
+#endif // BX_CPU_LEVEL >= 4
 
 bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
 {
@@ -1900,6 +1902,8 @@ void BX_CPU_C::xsave_xrestor_init(void)
   // XCR0[19]: APX state (not implemented)
 }
 
+#endif
+
 #if BX_CPU_LEVEL >= 5
 
 Bit32u BX_CPU_C::get_efer_allow_mask(void)
@@ -1928,6 +1932,8 @@ Bit32u BX_CPU_C::get_efer_allow_mask(void)
 }
 
 #endif
+
+#if BX_CPU_LEVEL >= 6
 
 Bit32u BX_CPU_C::get_xcr0_allow_mask(void)
 {

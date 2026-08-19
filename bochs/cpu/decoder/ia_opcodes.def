@@ -487,11 +487,11 @@ bx_define_opcode(BX_IA_LMSW_Ew, "lmsw", "lmsw", &BX_CPU_C::LMSW_Ew, &BX_CPU_C::L
 bx_define_opcode(BX_IA_MOV_CR0Rd, "mov", "movl", NULL, &BX_CPU_C::MOV_CR0Rd, 0, OP_Cd, OP_Ed, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_MOV_CR2Rd, "mov", "movl", NULL, &BX_CPU_C::MOV_CR2Rd, 0, OP_Cd, OP_Ed, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOV_CR3Rd, "mov", "movl", NULL, &BX_CPU_C::MOV_CR3Rd, 0, OP_Cd, OP_Ed, OP_NONE, OP_NONE, BX_TRACE_END)
-bx_define_opcode(BX_IA_MOV_CR4Rd, "mov", "movl", NULL, &BX_CPU_C::MOV_CR4Rd, BX_ISA_PENTIUM, OP_Cd, OP_Ed, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_MOV_CR4Rd, "mov", "movl", NULL, &BX_CPU_C::MOV_CR4Rd, BX_ISA_486, OP_Cd, OP_Ed, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_MOV_RdCR0, "mov", "movl", NULL, &BX_CPU_C::MOV_RdCR0, 0, OP_Ed, OP_Cd, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOV_RdCR2, "mov", "movl", NULL, &BX_CPU_C::MOV_RdCR2, 0, OP_Ed, OP_Cd, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOV_RdCR3, "mov", "movl", NULL, &BX_CPU_C::MOV_RdCR3, 0, OP_Ed, OP_Cd, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_MOV_RdCR4, "mov", "movl", NULL, &BX_CPU_C::MOV_RdCR4, BX_ISA_PENTIUM, OP_Ed, OP_Cd, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_MOV_RdCR4, "mov", "movl", NULL, &BX_CPU_C::MOV_RdCR4, BX_ISA_486, OP_Ed, OP_Cd, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOV_RdDd, "mov", "movl", NULL, &BX_CPU_C::MOV_RdDd, 0, OP_Ed, OP_Dd, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOV_DdRd, "mov", "movl", NULL, &BX_CPU_C::MOV_DdRd, 0, OP_Dd, OP_Ed, OP_NONE, OP_NONE, BX_TRACE_END)
 

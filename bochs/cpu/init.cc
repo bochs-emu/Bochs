@@ -371,7 +371,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(cpu, CR0, cr0.val);
   BXRS_HEX_PARAM_FIELD(cpu, CR2, cr2);
   BXRS_HEX_PARAM_FIELD(cpu, CR3, cr3);
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   BXRS_HEX_PARAM_FIELD(cpu, CR4, cr4.val);
 #endif
 
@@ -1072,7 +1072,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR cr3 = 0;
 #endif
 
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cr4.set(0);
   BX_CPU_THIS_PTR cr4_suppmask = get_cr4_allow_mask();
 #if BX_SUPPORT_X86_64
@@ -1461,7 +1461,7 @@ void BX_CPU_C::assert_checks(void)
   if (! check_CR0(BX_CPU_THIS_PTR cr0.get32()))
     BX_PANIC(("assert_checks: CR0 consistency checks failed !"));
 
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   // check CR4 consistency
   if (! check_CR4(BX_CPU_THIS_PTR cr4.get()))
     BX_PANIC(("assert_checks: CR4 consistency checks failed !"));

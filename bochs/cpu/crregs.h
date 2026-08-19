@@ -86,8 +86,8 @@ struct bx_cr0_t {
   BX_CPP_INLINE void set32(Bit32u val32) { val = val32 | 0x10; }
 };
 
-#if BX_CPU_LEVEL >= 5
 
+#if BX_CPU_LEVEL >= 4
 #define BX_CR4_VME_MASK             (1 << 0)
 #define BX_CR4_PVI_MASK             (1 << 1)
 #define BX_CR4_TSD_MASK             (1 << 2)
@@ -131,6 +131,7 @@ struct bx_cr4_t {
 
   IMPLEMENT_CRREG_ACCESSORS(VME, 0);
   IMPLEMENT_CRREG_ACCESSORS(PVI, 1);
+#if BX_CPU_LEVEL >= 5
   IMPLEMENT_CRREG_ACCESSORS(TSD, 2);
   IMPLEMENT_CRREG_ACCESSORS(DE,  3);
   IMPLEMENT_CRREG_ACCESSORS(PSE, 4);
@@ -163,14 +164,17 @@ struct bx_cr4_t {
 #if BX_SUPPORT_FRED
   IMPLEMENT_UPPER_CRREG_ACCESSORS(FRED, 32);
 #endif
+#endif  // #if BX_CPU_LEVEL >= 5
 
   BX_CPP_INLINE bx_address get() const { return val; }
   BX_CPP_INLINE void set(bx_address value) { val = value; }
 };
 
+#if BX_CPU_LEVEL >= 5
 const bx_address BX_CR4_FLUSH_TLB_MASK = (BX_CR4_PSE_MASK | BX_CR4_PAE_MASK | BX_CR4_PGE_MASK | BX_CR4_LA57_MASK | BX_CR4_PCIDE_MASK | BX_CR4_SMEP_MASK | BX_CR4_SMAP_MASK | BX_CR4_PKE_MASK | BX_CR4_CET_MASK | BX_CR4_PKS_MASK | BX_CR4_LASS_MASK);
+#endif
 
-#endif  // #if BX_CPU_LEVEL >= 5
+#endif  // #if BX_CPU_LEVEL >= 4
 
 struct bx_dr6_t {
   Bit32u val; // 32bit value of register

@@ -1032,18 +1032,18 @@ public: // for now...
   bx_cr0_t   cr0;
   bx_address cr2;
   bx_address cr3;
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   bx_cr4_t   cr4;
   bx_address cr4_suppmask;
 #if BX_SUPPORT_X86_64
   unsigned linaddr_width;
 #endif
-
-  bx_efer_t efer;
-  Bit32u efer_suppmask;
 #endif
 
 #if BX_CPU_LEVEL >= 5
+  bx_efer_t efer;
+  Bit32u efer_suppmask;
+
   // TSC: Time Stamp Counter
   // Instead of storing a counter and incrementing it every instruction, we
   // remember the time in ticks that it was reset to zero.  With a little
@@ -4854,7 +4854,7 @@ public: // for now...
   BX_SMF bool SetCR0(bxInstruction_c *i, bx_address val);
   BX_SMF bool check_CR0(bx_address val, bool vmenter = false) BX_CPP_AttrRegparmN(1);
   BX_SMF bool SetCR3(bx_address val) BX_CPP_AttrRegparmN(1);
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   BX_SMF bool SetCR4(bxInstruction_c *i, bx_address val);
   BX_SMF bool check_CR4(bx_address val) BX_CPP_AttrRegparmN(1);
   BX_SMF bx_address get_cr4_allow_mask(void);
@@ -4871,7 +4871,7 @@ public: // for now...
 #endif
 
   BX_SMF bx_address read_CR0(void);
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   BX_SMF bx_address read_CR4(void);
 #endif
 #if BX_CPU_LEVEL >= 6

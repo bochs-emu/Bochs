@@ -1259,7 +1259,7 @@ void InitRegObjects()
         RegObject[cpu][CR0_Rnum] = SIM->get_param_num("CR0", cpu_list);
         RegObject[cpu][CR2_Rnum] = SIM->get_param_num("CR2", cpu_list);
         RegObject[cpu][CR3_Rnum] = SIM->get_param_num("CR3", cpu_list);
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
         RegObject[cpu][CR4_Rnum] = SIM->get_param_num("CR4", cpu_list);
 #endif
 #if BX_CPU_LEVEL >= 6

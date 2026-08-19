@@ -85,8 +85,10 @@ struct BX_SMM_State
 
   bx_cr0_t   cr0;
   bx_address cr3;
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   bx_cr4_t   cr4;
+#endif
+#if BX_CPU_LEVEL >= 5
   bx_efer_t efer;
 #endif
 
