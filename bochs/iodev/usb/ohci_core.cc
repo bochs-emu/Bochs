@@ -932,11 +932,6 @@ void bx_ohci_core_c::ohci_timer(void)
   Bit16u zero = 0;
 
   if (hub.op_regs.HcControl.hcfs == OHCI_USB_OPERATIONAL) {
-#if BX_USB_DEBUGGER
-    if (usb_debug) {
-      SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_FRAME, 0, 0, 0);
-    }
-#endif
     // set remaining to the interval amount.
     hub.op_regs.HcFmRemainingToggle = hub.op_regs.HcFmInterval.fit;
     hub.sof_time = bx_pc_system.time_usec();
@@ -950,6 +945,11 @@ void bx_ohci_core_c::ohci_timer(void)
     if ((hub.op_regs.HcFmNumber == 0x8000) || (hub.op_regs.HcFmNumber == 0x0000)) {
       set_interrupt(OHCI_INTR_FNO);
     }
+#if BX_USB_DEBUGGER
+    if (usb_debug) {
+      SIM->usb_debug_trigger(USB_DEBUG_OHCI, USB_DEBUG_FRAME, 0, 0, 0);
+    }
+#endif
 
     //
     set_interrupt(OHCI_INTR_SF);
