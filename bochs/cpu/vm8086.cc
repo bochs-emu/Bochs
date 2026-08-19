@@ -123,7 +123,7 @@ void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector, Bit32
 #endif
 }
 
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   #define BX_CR4_VME_ENABLED (BX_CPU_THIS_PTR cr4.get_VME())
 #else
   #define BX_CR4_VME_ENABLED (0)
@@ -143,7 +143,7 @@ void BX_CPU_C::iret16_stack_return_from_v86(bxInstruction_c *i)
   cs_raw  = pop_16();
   flags16 = pop_16();
 
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   if (BX_CPU_THIS_PTR cr4.get_VME() && BX_CPU_THIS_PTR get_IOPL() < 3)
   {
     if (((flags16 & EFlagsIFMask) && BX_CPU_THIS_PTR get_VIP()) ||
@@ -202,7 +202,7 @@ void BX_CPU_C::iret32_stack_return_from_v86(bxInstruction_c *i)
 
 bool BX_CPU_C::v86_redirect_interrupt(Bit8u vector)
 {
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   if (BX_CPU_THIS_PTR cr4.get_VME())
   {
     bx_address tr_base = BX_CPU_THIS_PTR tr.cache.u.segment.base;

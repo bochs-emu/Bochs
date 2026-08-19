@@ -1121,9 +1121,12 @@ void bx_dbg_info_control_regs_command(unsigned cpu)
   dbg_printf("    PCD=page-level cache disable=%d\n", (cr3>>4) & 1);
   dbg_printf("    PWT=page-level write-through=%d\n", (cr3>>3) & 1);
 
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   Bit32u cr4 = SIM->get_param_num("CR4", dbg_cpu_list[cpu])->get();
   dbg_printf("CR4=0x%08x: %s\n", cr4, stringify_CR4(cr4, s));
+#endif
+
+#if BX_CPU_LEVEL >= 5
 #if BX_SUPPORT_X86_64
   if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_LONG_MODE)) {
     dbg_printf("CR8: 0x%x\n", BX_CPU(cpu)->get_cr8());
