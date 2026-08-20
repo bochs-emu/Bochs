@@ -1081,10 +1081,10 @@ bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
         BX_ERROR(("SetCR0(): attempt to leave 64 bit mode with CR4.PCIDE set !"));
         return false;
       }
-      if (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].dword.hrx != 0) {
-        BX_PANIC(("SetCR0(): attempt to leave x86-64 LONG mode with RIP upper != 0"));
-      }
       BX_CPU_THIS_PTR efer.set_LMA(0);
+
+      // clear upper part of RIP when leaving 64-bit long mode
+      BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RIP);
     }
   }
 #endif  // #if BX_SUPPORT_X86_64
