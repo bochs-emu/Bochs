@@ -146,7 +146,9 @@ Detailed change log :
     - Banshee: Apply gamma correction in 16 bpp mode to cursor colors
   - Hard Drive
     - Fix the reading of the HOB registers
-    - Add the 0x46 (GET_CONFIG) command. This allows ReactOS 0.4.15 to boot in normal mode (LiveCD)
+    - Add the ATAPI commands 0x46 (GET_CONFIG) and 0xAC (GET PERFORMANCE)
+      This allows ReactOS 0.4.15 to boot in normal mode (LiveCD) as well as
+      graphical Live Environment (latest BootCD)
     - The SENSE was not being cleared between commands. If one command failed, 
       the next successful command would still show the failed SENSE values.
     - PCI IDE always provides 2 IDE channels (override settings if necessary)
