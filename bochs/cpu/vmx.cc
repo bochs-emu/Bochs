@@ -2311,7 +2311,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   // Handle special case of CS.LIMIT demotion (new descriptor limit is
   // smaller than current one)
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled > guest.sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
-    BX_CPU_THIS_PTR iCache.flushICacheEntries();
+    BX_CPU_THIS_PTR iCache->flushICacheEntries();
 #endif
 
   for(unsigned segreg=0; segreg<6; segreg++)
