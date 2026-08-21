@@ -283,11 +283,15 @@ void bx_piix3_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   switch (address) {
     case 0x00b2:
+#if BX_SUPPORT_APIC
       if (PLUG_device_present(BX_PLUGIN_ACPI, false)) {
         DEV_acpi_generate_smi((Bit8u)value);
       } else {
         BX_ERROR(("write 0x%02x: APM command register not supported without ACPI", value));
       }
+#else
+      BX_ERROR(("write 0x%02x: APM command register not supported without APIC", value));
+#endif
       BX_P2I_THIS s.apmc = value & 0xff;
       if (io_len == 2) {
         BX_P2I_THIS s.apms = (Bit8u)(value >> 8);

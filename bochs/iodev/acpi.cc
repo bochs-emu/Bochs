@@ -337,6 +337,7 @@ void bx_acpi_ctrl_c::pm_update_sci(void)
   }
 }
 
+#if BX_SUPPORT_APIC
 void bx_acpi_ctrl_c::generate_smi(Bit8u value)
 {
   /* ACPI specs 3.0, 4.7.2.5 */
@@ -350,6 +351,7 @@ void bx_acpi_ctrl_c::generate_smi(Bit8u value)
     apic_bus_deliver_smi();
   }
 }
+#endif
 
 // static IO port read callback handler
 // redirects to non-static class handler to avoid virtual functions
