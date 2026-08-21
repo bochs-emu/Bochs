@@ -186,21 +186,20 @@ void bx_term_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   // really ends up having fun
   if (!strcmp(SIM->get_param_string(BXPN_LOG_FILENAME)->getptr(), "-"))
     BX_PANIC(("cannot log to stderr in term mode"));
+  initscr();
 #else
-  FILE *old_stdin = stdin;
-  FILE *old_stdout = stdout;
+  FILE *scr_fp = NULL;
   scr_fd = open("/dev/ptmx",O_RDWR);
   if(scr_fd > 0){
-    stdin = stdout = fdopen(scr_fd,"wr");
+    scr_fp = fdopen(scr_fd,"w+");
     grantpt(scr_fd);
     unlockpt(scr_fd);
     fprintf(stderr, "\nBochs connected to screen \"%s\"\n",ptsname(scr_fd));
   }
-#endif
-  initscr();
-#if BX_DEBUGGER_TERM
-  stdin = old_stdin;
-  stdout = old_stdout;
+  // Drive curses from the pty rather than reassigning stdin/stdout: those are
+  // not modifiable lvalues on every platform (musl declares them FILE *const).
+  if (scr_fp == NULL || newterm(NULL, scr_fp, scr_fp) == NULL)
+    initscr();
 #endif
   start_color();
   cbreak();
