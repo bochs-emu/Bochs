@@ -1085,6 +1085,11 @@ The <replaceable>tagname</replaceable> tells which release you want, and it can 
     </thead>
     <tbody>
       <row>
+        <entry>3.0</entry>
+        <entry>REL_3_0_FINAL</entry>
+        <entry>February 16, 2025</entry>
+      </row>
+      <row>
         <entry>2.8</entry>
         <entry>REL_2_8_FINAL</entry>
         <entry>March 10, 2024</entry>
@@ -8069,9 +8074,19 @@ simulation is starting.
       <entry>Floppy controller</entry>
     </row>
     <row>
+      <entry>FW_CFG</entry>
+      <entry>FWCFG</entry>
+      <entry>UEFI/OVMF firmware support</entry>
+    </row>
+    <row>
       <entry>gameport</entry>
       <entry>GAME</entry>
       <entry>Standard PC gameport</entry>
+    </row>
+    <row>
+      <entry>GEFORCE</entry>
+      <entry>GEFORC</entry>
+      <entry>GeForce graphics adapter (AGP)</entry>
     </row>
     <row>
       <entry>GDBST</entry>
