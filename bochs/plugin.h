@@ -95,6 +95,7 @@ extern "C" {
 #define PLUG_load_opt_plugin(name) bx_load_plugin(name,PLUGTYPE_OPTIONAL)
 #define PLUG_unload_opt_plugin(name) bx_unload_plugin(name,1)
 #define PLUG_unload_plugin_type(name,type) {bx_unload_plugin_type(name,type);}
+#define PLUG_find_plugin(name) bx_find_plugin(name)
 
 #define DEV_register_ioread_handler(b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
 #define DEV_register_iowrite_handler(b,c,d,e,f) pluginRegisterIOWriteHandler(b,c,d,e,f)
@@ -122,6 +123,7 @@ extern "C" {
 #define PLUG_load_plugin_var(name,type) bx_load_plugin_np(name,type)
 #define PLUG_load_opt_plugin(name) bx_load_plugin_np(name,PLUGTYPE_OPTIONAL)
 #define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1)
+#define PLUG_find_plugin(name) bx_find_plugin_np(name)
 
 #define DEV_register_ioread_handler(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e,f)
 #define DEV_register_iowrite_handler(b,c,d,e,f) bx_devices.register_io_write_handler(b,c,d,e,f)
@@ -346,6 +348,7 @@ void plugin_abort(plugin_t *plugin);
 Bit8u bx_get_plugins_count(Bit16u type);
 const char* bx_get_plugin_name(Bit16u type, Bit8u index);
 Bit8u bx_get_plugin_flags(Bit16u type, Bit8u index);
+Bit16u bx_find_plugin(const char *name);
 #endif
 bool bx_load_plugin(const char *name, Bit16u type);
 bool bx_unload_plugin(const char *name, bool devflag);
@@ -364,6 +367,7 @@ const char* bx_get_plugin_name_np(Bit16u type, Bit8u index);
 Bit8u bx_get_plugin_flags_np(Bit16u type, Bit8u index);
 int bx_load_plugin_np(const char *name, Bit16u type);
 int bx_unload_opt_plugin(const char *name, bool devflag);
+Bit16u bx_find_plugin_np(const char *name);
 #endif
 
 // every plugin must define this, within the extern"C" block, so that

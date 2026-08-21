@@ -1620,7 +1620,11 @@ bool bx_real_sim_c::opt_plugin_ctrl(const char *plugname, bool load)
     return 1;
   }
   if (plugin_ctrl->get_by_name(plugname) == NULL) {
-    BX_PANIC(("Plugin '%s' not found", plugname));
+    if (load && (PLUG_find_plugin(plugname) != PLUGTYPE_NULL)) {
+      BX_WARN(("Plugin '%s' is not optional", plugname));
+    } else {
+      BX_PANIC(("Plugin '%s' not found", plugname));
+    }
     return 0;
   }
   if (load != PLUG_device_present(plugname, false)) {
