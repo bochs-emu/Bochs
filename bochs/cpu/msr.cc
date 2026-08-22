@@ -222,7 +222,7 @@ void BX_CPU_C::init_MSRs()
 
   ext_msr_desc[BX_MSR_EFER - 0xc0000000] = new MSR_Descriptor("MSR_EFER", BX_ISA_PENTIUM, false, ~Bit64u(get_efer_allow_mask()));
   // requires BX_ISA_SYSCALL_SYSRET_LEGACY or BX_ISA_LONG_MODE
-  ext_msr_desc[BX_MSR_STAR - 0xc0000000] = new MSR_Descriptor("MSR_STAR", BX_ISA_PENTIUM);
+  ext_msr_desc[BX_MSR_STAR - 0xc0000000] = new MSR_Descriptor("MSR_STAR", is_cpu_extension_supported(BX_ISA_LONG_MODE) ? BX_ISA_LONG_MODE : BX_ISA_SYSCALL_SYSRET_LEGACY);
 
 #if BX_SUPPORT_X86_64
   ext_msr_desc[BX_MSR_LSTAR - 0xc0000000] = new MSR_Descriptor("MSR_LSTAR", BX_ISA_LONG_MODE, true /* force canonical */);
@@ -616,10 +616,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
     case BX_MSR_STAR:
-      if ((BX_CPU_THIS_PTR efer_suppmask & BX_EFER_SCE_MASK) == 0) {
-        BX_ERROR(("RDMSR MSR_STAR: SYSCALL/SYSRET support not enabled in the cpu model"));
-        return false;
-      }
       val64 = BX_CPU_THIS_PTR msr.star;
       break;
 
@@ -1179,10 +1175,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_STAR:
-      if ((BX_CPU_THIS_PTR efer_suppmask & BX_EFER_SCE_MASK) == 0) {
-        BX_ERROR(("WRMSR MSR_STAR: SYSCALL/SYSRET support not enabled in the cpu model"));
-        return false;
-      }
       BX_CPU_THIS_PTR msr.star = val_64;
       break;
 
