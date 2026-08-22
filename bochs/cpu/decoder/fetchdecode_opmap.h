@@ -1008,7 +1008,7 @@ static const Bit64u BxOpcodeTableB8xBF[] = {
   last_opcode(ATTR_OS16, BX_IA_MOV_EwIw)
 };
 
-// opcode D0
+// opcode C0
 static const Bit64u BxOpcodeTableC0[] = {
   form_opcode(ATTR_NNN0, BX_IA_ROL_EbIb),
   form_opcode(ATTR_NNN1, BX_IA_ROR_EbIb),
