@@ -82,6 +82,7 @@ Changes in Bochs 3.1 (coming soon):
 - x87: Implemented MS-DOS Compatibility mode for handling x87 FPU exceptions, FERR# and IGNNE# pins enabled when 'extfpuirq' plugin is enabled
 + i486dx4: expose CR4 to support VME/PVI
 - x86-64: attempt to leave x86-64 long mode with 64-bit RIP value by writing to CR0 truncates RIP to 32-bit value
+- i486: fixed reset value of dr6 register
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.0 (February 16, 2025)
