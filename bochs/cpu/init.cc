@@ -840,10 +840,6 @@ void BX_CPU_C::after_restore_state(void)
   set_PKeys(BX_CPU_THIS_PTR pkru, BX_CPU_THIS_PTR pkrs);
 #endif
 
-#if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR linaddr_width = BX_CPU_THIS_PTR cr4.get_LA57() ? 57 : 48;
-#endif
-
   handleCpuContextChange();
 
   assert_checks();
