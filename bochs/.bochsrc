@@ -184,7 +184,7 @@
 #    required to workaround WinNT installation and boot issues.
 #
 #  FORCE_IGNNE:
-#    Always act like if #IGGNE pin was asserted on CPU input.
+#    Always act like if #IGNNE pin was asserted on CPU input.
 #    Avoid potential deadlock after unmasked x87 exception handling and FERR#
 #    assertion.
 #

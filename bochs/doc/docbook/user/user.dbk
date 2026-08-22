@@ -3525,7 +3525,7 @@ to work around WinNT installation and boot issues.
 </para>
 <para><command>force_ignne</command></para>
 <para>
-Always act like if #IGGNE pin was asserted on CPU input.
+Always act like if #IGNNE pin was asserted on CPU input.
 Avoid potential deadlock after unmasked x87 exception handling and FERR# assertion.
 </para>
 <para><command>cpuid_freq</command></para>
