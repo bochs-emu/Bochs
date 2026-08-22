@@ -54,14 +54,14 @@ void BX_CPU_C::init_MSRs()
     msr_desc[i] = NULL;
 
   msr_desc[BX_MSR_TSC] = new MSR_Descriptor("BX_IA32_TSC", BX_ISA_PENTIUM);
-  msr_desc[BX_MSR_PLATFORM_ID] = new MSR_Descriptor("MSR_PLATFORM_ID", BX_ISA_PENTIUM);
+  msr_desc[BX_MSR_PLATFORM_ID] = new MSR_Descriptor("MSR_PLATFORM_ID", BX_ISA_PENTIUM, false, ~BX_CONST64(0)); // read only
 
 #if BX_SUPPORT_APIC
   msr_desc[BX_MSR_APICBASE] = new MSR_Descriptor("MSR_APICBASE", BX_ISA_PENTIUM);
 #endif
 
 #if BX_SUPPORT_X86_64
-  msr_desc[BX_MSR_IA32_USER_MSR_CTL] = new MSR_Descriptor("MSR_IA32_USER_MSR_CTL", BX_ISA_USER_MSR);
+  msr_desc[BX_MSR_IA32_USER_MSR_CTL] = new MSR_Descriptor("MSR_IA32_USER_MSR_CTL", BX_ISA_USER_MSR, true /* force_canonical */);
 #endif
 
   msr_desc[BX_MSR_IA32_APERF] = new MSR_Descriptor("MSR_IA32_APERF", BX_ISA_PENTIUM);
@@ -69,28 +69,28 @@ void BX_CPU_C::init_MSRs()
 
 #if BX_CPU_LEVEL >= 6
   msr_desc[BX_MSR_SYSENTER_CS] = new MSR_Descriptor("MSR_IA32_SYSENTER_CS", BX_ISA_SYSENTER_SYSEXIT);
-  msr_desc[BX_MSR_SYSENTER_ESP] = new MSR_Descriptor("MSR_IA32_SYSENTER_ESP", BX_ISA_SYSENTER_SYSEXIT);
-  msr_desc[BX_MSR_SYSENTER_EIP] = new MSR_Descriptor("MSR_IA32_SYSENTER_EIP", BX_ISA_SYSENTER_SYSEXIT);
+  msr_desc[BX_MSR_SYSENTER_ESP] = new MSR_Descriptor("MSR_IA32_SYSENTER_ESP", BX_ISA_SYSENTER_SYSEXIT, true /* force_canonical */);
+  msr_desc[BX_MSR_SYSENTER_EIP] = new MSR_Descriptor("MSR_IA32_SYSENTER_EIP", BX_ISA_SYSENTER_SYSEXIT, true /* force_canonical */);
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  msr_desc[BX_MSR_MTRRCAP] = new MSR_Descriptor("MSR_IA32_MTRR_CAP", BX_ISA_MTRR);
+  msr_desc[BX_MSR_MTRRCAP] = new MSR_Descriptor("MSR_IA32_MTRR_CAP", BX_ISA_MTRR, false, ~BX_CONST64(0)); // read only
   msr_desc[BX_MSR_MTRRPHYSBASE0] = new MSR_Descriptor("MSR_IA32_MTRRPHYSBASE0", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRPHYSMASK0] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK0", BX_ISA_MTRR, BX_CONST64(0x7ff)); // bits [10:0] are reserved
+  msr_desc[BX_MSR_MTRRPHYSMASK0] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK0", BX_ISA_MTRR, false, BX_CONST64(0x7ff)); // bits [10:0] are reserved
   msr_desc[BX_MSR_MTRRPHYSBASE1] = new MSR_Descriptor("MSR_IA32_MTRRPHYSBASE1", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRPHYSMASK1] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK1", BX_ISA_MTRR, BX_CONST64(0x7ff));
+  msr_desc[BX_MSR_MTRRPHYSMASK1] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK1", BX_ISA_MTRR, false, BX_CONST64(0x7ff));
   msr_desc[BX_MSR_MTRRPHYSBASE2] = new MSR_Descriptor("MSR_IA32_MTRRPHYSBASE2", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRPHYSMASK2] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK2", BX_ISA_MTRR, BX_CONST64(0x7ff));
+  msr_desc[BX_MSR_MTRRPHYSMASK2] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK2", BX_ISA_MTRR, false, BX_CONST64(0x7ff));
   msr_desc[BX_MSR_MTRRPHYSBASE3] = new MSR_Descriptor("MSR_IA32_MTRRPHYSBASE3", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRPHYSMASK3] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK3", BX_ISA_MTRR, BX_CONST64(0x7ff));
+  msr_desc[BX_MSR_MTRRPHYSMASK3] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK3", BX_ISA_MTRR, false, BX_CONST64(0x7ff));
   msr_desc[BX_MSR_MTRRPHYSBASE4] = new MSR_Descriptor("MSR_IA32_MTRRPHYSBASE4", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRPHYSMASK4] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK4", BX_ISA_MTRR, BX_CONST64(0x7ff));
+  msr_desc[BX_MSR_MTRRPHYSMASK4] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK4", BX_ISA_MTRR, false, BX_CONST64(0x7ff));
   msr_desc[BX_MSR_MTRRPHYSBASE5] = new MSR_Descriptor("MSR_IA32_MTRRPHYSBASE5", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRPHYSMASK5] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK5", BX_ISA_MTRR, BX_CONST64(0x7ff));
+  msr_desc[BX_MSR_MTRRPHYSMASK5] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK5", BX_ISA_MTRR, false, BX_CONST64(0x7ff));
   msr_desc[BX_MSR_MTRRPHYSBASE6] = new MSR_Descriptor("MSR_IA32_MTRRPHYSBASE6", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRPHYSMASK6] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK6", BX_ISA_MTRR, BX_CONST64(0x7ff));
+  msr_desc[BX_MSR_MTRRPHYSMASK6] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK6", BX_ISA_MTRR, false, BX_CONST64(0x7ff));
   msr_desc[BX_MSR_MTRRPHYSBASE7] = new MSR_Descriptor("MSR_IA32_MTRRPHYSBASE7", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRPHYSMASK7] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK7", BX_ISA_MTRR, BX_CONST64(0x7ff));
+  msr_desc[BX_MSR_MTRRPHYSMASK7] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK7", BX_ISA_MTRR, false, BX_CONST64(0x7ff));
 
   msr_desc[BX_MSR_MTRRFIX64K_00000] = new MSR_Descriptor("MSR_IA32_MTRRFIX64K_00000", BX_ISA_MTRR);
   msr_desc[BX_MSR_MTRRFIX16K_80000] = new MSR_Descriptor("MSR_IA32_MTRRFIX16K_80000", BX_ISA_MTRR);
@@ -105,7 +105,7 @@ void BX_CPU_C::init_MSRs()
   msr_desc[BX_MSR_MTRRFIX4K_F0000] = new MSR_Descriptor("MSR_IA32_MTRRFIX4K_F0000", BX_ISA_MTRR);
   msr_desc[BX_MSR_MTRRFIX4K_F8000] = new MSR_Descriptor("MSR_IA32_MTRRFIX4K_F8000", BX_ISA_MTRR);
 
-  msr_desc[BX_MSR_MTRR_DEFTYPE] = new MSR_Descriptor("MSR_IA32_MTRR_DEFTYPE", BX_ISA_MTRR, BX_CONST64(0xfffffffffffff300)); // bits [63-12], [9:8] are reserved
+  msr_desc[BX_MSR_MTRR_DEFTYPE] = new MSR_Descriptor("MSR_IA32_MTRR_DEFTYPE", BX_ISA_MTRR, false, BX_CONST64(0xfffffffffffff300)); // bits [63-12], [9:8] are reserved
   msr_desc[BX_MSR_PAT] = new MSR_Descriptor("BX_IA32_PAT", BX_ISA_PAT);
 #endif
 
@@ -116,28 +116,28 @@ void BX_CPU_C::init_MSRs()
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  msr_desc[BX_MSR_XSS] = new MSR_Descriptor("MSR_IA32_XSS", BX_ISA_XSAVES, ~Bit64u(get_ia32_xss_allow_mask()));
+  msr_desc[BX_MSR_XSS] = new MSR_Descriptor("MSR_IA32_XSS", BX_ISA_XSAVES, false, ~Bit64u(get_ia32_xss_allow_mask()));
 #endif
 
 #if BX_SUPPORT_CET
-  msr_desc[BX_MSR_IA32_U_CET] = new MSR_Descriptor("MSR_IA32_U_CET", BX_ISA_CET);
-  msr_desc[BX_MSR_IA32_S_CET] = new MSR_Descriptor("MSR_IA32_S_CET", BX_ISA_CET);
+  msr_desc[BX_MSR_IA32_U_CET] = new MSR_Descriptor("MSR_IA32_U_CET", BX_ISA_CET, true /* force canonical */);
+  msr_desc[BX_MSR_IA32_S_CET] = new MSR_Descriptor("MSR_IA32_S_CET", BX_ISA_CET, true /* force canonical */);
 
-  msr_desc[BX_MSR_IA32_PL0_SSP] = new MSR_Descriptor("MSR_IA32_PL0_SSP", BX_ISA_CET, BX_CONST64(0x3)); // force 4-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_PL1_SSP] = new MSR_Descriptor("MSR_IA32_PL1_SSP", BX_ISA_CET, BX_CONST64(0x3)); // force 4-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_PL2_SSP] = new MSR_Descriptor("MSR_IA32_PL2_SSP", BX_ISA_CET, BX_CONST64(0x3)); // force 4-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_PL3_SSP] = new MSR_Descriptor("MSR_IA32_PL3_SSP", BX_ISA_CET, BX_CONST64(0x3)); // force 4-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_PL0_SSP] = new MSR_Descriptor("MSR_IA32_PL0_SSP", BX_ISA_CET, true, BX_CONST64(0x3)); // force 4-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_PL1_SSP] = new MSR_Descriptor("MSR_IA32_PL1_SSP", BX_ISA_CET, true, BX_CONST64(0x3)); // force 4-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_PL2_SSP] = new MSR_Descriptor("MSR_IA32_PL2_SSP", BX_ISA_CET, true, BX_CONST64(0x3)); // force 4-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_PL3_SSP] = new MSR_Descriptor("MSR_IA32_PL3_SSP", BX_ISA_CET, true, BX_CONST64(0x3)); // force 4-byte alignment of the MSR value
 
-  msr_desc[BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR] = new MSR_Descriptor("MSR_IA32_INTERRUPT_SSP_TABLE_ADDR", BX_ISA_CET);
+  msr_desc[BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR] = new MSR_Descriptor("MSR_IA32_INTERRUPT_SSP_TABLE_ADDR", BX_ISA_CET, true /* force canonical */);
 #endif
 
 #if BX_SUPPORT_UINTR
   msr_desc[BX_MSR_IA32_UINTR_RR] = new MSR_Descriptor("MSR_IA32_UINTR_RR", BX_ISA_UINTR);
-  msr_desc[BX_MSR_IA32_UINTR_HANDLER] = new MSR_Descriptor("MSR_IA32_UINTR_HANDLER", BX_ISA_UINTR);
-  msr_desc[BX_MSR_IA32_UINTR_STACKADJUST] = new MSR_Descriptor("MSR_IA32_UINTR_STACKADJUST", BX_ISA_UINTR);
-  msr_desc[BX_MSR_IA32_UINTR_MISC] = new MSR_Descriptor("MSR_IA32_UINTR_MISC", BX_ISA_UINTR, BX_CONST64(0xffffff0000000000));
-  msr_desc[BX_MSR_IA32_UINTR_PD] = new MSR_Descriptor("MSR_IA32_UINTR_PD", BX_ISA_UINTR, BX_CONST64(0x3f)); // bits [5:0] are reserved
-  msr_desc[BX_MSR_IA32_UINTR_TT] = new MSR_Descriptor("MSR_IA32_UINTR_TT", BX_ISA_UINTR, BX_CONST64(0x0e)); // bits [3:1] are reserved
+  msr_desc[BX_MSR_IA32_UINTR_HANDLER] = new MSR_Descriptor("MSR_IA32_UINTR_HANDLER", BX_ISA_UINTR, true /* force canonical */);
+  msr_desc[BX_MSR_IA32_UINTR_STACKADJUST] = new MSR_Descriptor("MSR_IA32_UINTR_STACKADJUST", BX_ISA_UINTR, true /* force canonical */);
+  msr_desc[BX_MSR_IA32_UINTR_MISC] = new MSR_Descriptor("MSR_IA32_UINTR_MISC", BX_ISA_UINTR, false, BX_CONST64(0xffffff0000000000));
+  msr_desc[BX_MSR_IA32_UINTR_PD] = new MSR_Descriptor("MSR_IA32_UINTR_PD", BX_ISA_UINTR, true, BX_CONST64(0x3f)); // bits [5:0] are reserved
+  msr_desc[BX_MSR_IA32_UINTR_TT] = new MSR_Descriptor("MSR_IA32_UINTR_TT", BX_ISA_UINTR, true, BX_CONST64(0x0e)); // bits [3:1] are reserved
 #endif
 
 #if BX_SUPPORT_PKEYS
@@ -145,17 +145,17 @@ void BX_CPU_C::init_MSRs()
 #endif
 
 #if BX_SUPPORT_FRED
-  msr_desc[BX_MSR_IA32_FRED_RSP0] = new MSR_Descriptor("MSR_IA32_FRED_RSP0", BX_ISA_FRED, BX_CONST64(0x3f)); // force 64-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_FRED_RSP1] = new MSR_Descriptor("MSR_IA32_FRED_RSP1", BX_ISA_FRED, BX_CONST64(0x3f)); // force 64-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_FRED_RSP2] = new MSR_Descriptor("MSR_IA32_FRED_RSP2", BX_ISA_FRED, BX_CONST64(0x3f)); // force 64-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_FRED_RSP3] = new MSR_Descriptor("MSR_IA32_FRED_RSP3", BX_ISA_FRED, BX_CONST64(0x3f)); // force 64-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_RSP0] = new MSR_Descriptor("MSR_IA32_FRED_RSP0", BX_ISA_FRED, true, BX_CONST64(0x3f)); // force 64-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_RSP1] = new MSR_Descriptor("MSR_IA32_FRED_RSP1", BX_ISA_FRED, true, BX_CONST64(0x3f)); // force 64-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_RSP2] = new MSR_Descriptor("MSR_IA32_FRED_RSP2", BX_ISA_FRED, true, BX_CONST64(0x3f)); // force 64-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_RSP3] = new MSR_Descriptor("MSR_IA32_FRED_RSP3", BX_ISA_FRED, true, BX_CONST64(0x3f)); // force 64-byte alignment of the MSR value
   msr_desc[BX_MSR_IA32_FRED_STKLVLS] = new MSR_Descriptor("MSR_IA32_FRED_STKLVLS", BX_ISA_FRED);
 #if BX_SUPPORT_CET
-  msr_desc[BX_MSR_IA32_FRED_SSP1] = new MSR_Descriptor("MSR_IA32_FRED_SSP1", BX_ISA_FRED, BX_CONST64(0x7)); // force 8-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_FRED_SSP2] = new MSR_Descriptor("MSR_IA32_FRED_SSP2", BX_ISA_FRED, BX_CONST64(0x7)); // force 8-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_FRED_SSP3] = new MSR_Descriptor("MSR_IA32_FRED_SSP3", BX_ISA_FRED, BX_CONST64(0x7)); // force 8-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_SSP1] = new MSR_Descriptor("MSR_IA32_FRED_SSP1", BX_ISA_FRED, true, BX_CONST64(0x7)); // force 8-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_SSP2] = new MSR_Descriptor("MSR_IA32_FRED_SSP2", BX_ISA_FRED, true, BX_CONST64(0x7)); // force 8-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_SSP3] = new MSR_Descriptor("MSR_IA32_FRED_SSP3", BX_ISA_FRED, true, BX_CONST64(0x7)); // force 8-byte alignment of the MSR value
 #endif
-  msr_desc[BX_MSR_IA32_FRED_CONFIG] = new MSR_Descriptor("BX_MSR_IA32_FRED_CONFIG", BX_ISA_FRED, 0x834);
+  msr_desc[BX_MSR_IA32_FRED_CONFIG] = new MSR_Descriptor("BX_MSR_IA32_FRED_CONFIG", BX_ISA_FRED, BX_CONST64(0x834));
 #endif
 
 #if BX_CPU_LEVEL >= 6
@@ -166,41 +166,42 @@ void BX_CPU_C::init_MSRs()
   msr_desc[BX_MSR_IA32_BARRIER] = new MSR_Descriptor("BX_MSR_IA32_BARRIER", BX_ISA_MSRLIST);
 
   // SCA prevention MSRs
-  msr_desc[BX_MSR_IA32_ARCH_CAPABILITIES] = new MSR_Descriptor("MSR_IA32_ARCH_CAPABILITIES", BX_ISA_SCA_MITIGATIONS);
+  msr_desc[BX_MSR_IA32_ARCH_CAPABILITIES] = new MSR_Descriptor("MSR_IA32_ARCH_CAPABILITIES", BX_ISA_SCA_MITIGATIONS, false, ~BX_CONST64(0)); // read only
   msr_desc[BX_MSR_IA32_SPEC_CTRL] = new MSR_Descriptor("MSR_IA32_SPEC_CTRL", BX_ISA_SCA_MITIGATIONS);
   // IA32_PRED_CMD MSR:
   //    [0] - Indirect Branch Prediction Barrier (IBPB)
   // [63:1] - reserved
-  msr_desc[BX_MSR_IA32_PRED_CMD] = new MSR_Descriptor("MSR_IA32_PRED_CMD", BX_ISA_SCA_MITIGATIONS, ~BX_CONST64(1));
+  msr_desc[BX_MSR_IA32_PRED_CMD] = new MSR_Descriptor("MSR_IA32_PRED_CMD", BX_ISA_SCA_MITIGATIONS, false, ~BX_CONST64(1));
   // IA32_FLUSH_CMD MSR:
   //    [0] - WBINVD DL1 Cache
   // [63:1] - reserved
-  msr_desc[BX_MSR_IA32_FLUSH_CMD] = new MSR_Descriptor("MSR_IA32_FLUSH_CMD", BX_ISA_SCA_MITIGATIONS, ~BX_CONST64(1));
+  msr_desc[BX_MSR_IA32_FLUSH_CMD] = new MSR_Descriptor("MSR_IA32_FLUSH_CMD", BX_ISA_SCA_MITIGATIONS, false, ~BX_CONST64(1));
 
 #if BX_SUPPORT_VMX
   msr_desc[BX_MSR_IA32_FEATURE_CONTROL] = new MSR_Descriptor("MSR_IA32_FEATURE_CONTROL", BX_ISA_VMX);
-  msr_desc[BX_MSR_VMX_BASIC] = new MSR_Descriptor("MSR_VMX_BASIC", BX_ISA_VMX);
-  msr_desc[BX_MSR_VMX_PINBASED_CTRLS] = new MSR_Descriptor("MSR_VMX_PINBASED_CTRLS", BX_ISA_VMX);
-  msr_desc[BX_MSR_VMX_PROCBASED_CTRLS] = new MSR_Descriptor("MSR_VMX_PROCBASED_CTRLS", BX_ISA_VMX);
-  msr_desc[BX_MSR_VMX_VMEXIT_CTRLS] = new MSR_Descriptor("MSR_VMX_VMEXIT_CTRLS", BX_ISA_VMX);
-  msr_desc[BX_MSR_VMX_VMEXIT_CTRLS2] = new MSR_Descriptor("MSR_VMX_VMEXIT_CTRLS2", BX_ISA_VMX);
-  msr_desc[BX_MSR_VMX_VMENTRY_CTRLS] = new MSR_Descriptor("MSR_VMX_VMENTRY_CTRLS", BX_ISA_VMX);
-  msr_desc[BX_MSR_VMX_PROCBASED_CTRLS2] = new MSR_Descriptor("MSR_VMX_PROCBASED_CTRLS2", BX_ISA_VMX);
-  msr_desc[BX_MSR_VMX_PROCBASED_CTRLS3] = new MSR_Descriptor("MSR_VMX_PROCBASED_CTRLS3", BX_ISA_VMX);
+  // all these VMX MSRs are read only
+  msr_desc[BX_MSR_VMX_BASIC] = new MSR_Descriptor("MSR_VMX_BASIC", BX_ISA_VMX, false, ~BX_CONST64(0));
+  msr_desc[BX_MSR_VMX_PINBASED_CTRLS] = new MSR_Descriptor("MSR_VMX_PINBASED_CTRLS", BX_ISA_VMX, false, ~BX_CONST64(0));
+  msr_desc[BX_MSR_VMX_PROCBASED_CTRLS] = new MSR_Descriptor("MSR_VMX_PROCBASED_CTRLS", BX_ISA_VMX, false, ~BX_CONST64(0));
+  msr_desc[BX_MSR_VMX_VMEXIT_CTRLS] = new MSR_Descriptor("MSR_VMX_VMEXIT_CTRLS", BX_ISA_VMX, false, ~BX_CONST64(0));
+  msr_desc[BX_MSR_VMX_VMEXIT_CTRLS2] = new MSR_Descriptor("MSR_VMX_VMEXIT_CTRLS2", BX_ISA_VMX, false, ~BX_CONST64(0));
+  msr_desc[BX_MSR_VMX_VMENTRY_CTRLS] = new MSR_Descriptor("MSR_VMX_VMENTRY_CTRLS", BX_ISA_VMX, false, ~BX_CONST64(0));
+  msr_desc[BX_MSR_VMX_PROCBASED_CTRLS2] = new MSR_Descriptor("MSR_VMX_PROCBASED_CTRLS2", BX_ISA_VMX, false, ~BX_CONST64(0));
+  msr_desc[BX_MSR_VMX_PROCBASED_CTRLS3] = new MSR_Descriptor("MSR_VMX_PROCBASED_CTRLS3", BX_ISA_VMX, false, ~BX_CONST64(0));
 #if BX_SUPPORT_VMX >= 2
-  msr_desc[BX_MSR_VMX_TRUE_PINBASED_CTRLS] = new MSR_Descriptor("MSR_VMX_TRUE_PINBASED_CTRLS", BX_ISA_VMX);
-  msr_desc[BX_MSR_VMX_TRUE_PROCBASED_CTRLS] = new MSR_Descriptor("MSR_VMX_TRUE_PROCBASED_CTRLS", BX_ISA_VMX);
-  msr_desc[BX_MSR_VMX_TRUE_VMEXIT_CTRLS] = new MSR_Descriptor("MSR_VMX_TRUE_VMEXIT_CTRLS", BX_ISA_VMX);
-  msr_desc[BX_MSR_VMX_TRUE_VMENTRY_CTRLS] = new MSR_Descriptor("MSR_VMX_TRUE_VMENTRY_CTRLS", BX_ISA_VMX);
-  msr_desc[BX_MSR_VMX_EPT_VPID_CAP] = new MSR_Descriptor("MSR_VMX_EPT_VPID_CAP", BX_ISA_VMX);
-  msr_desc[BX_MSR_VMX_VMFUNC] = new MSR_Descriptor("MSR_VMX_VMFUNC", BX_ISA_VMX);
+  msr_desc[BX_MSR_VMX_TRUE_PINBASED_CTRLS] = new MSR_Descriptor("MSR_VMX_TRUE_PINBASED_CTRLS", BX_ISA_VMX, false, ~BX_CONST64(0));
+  msr_desc[BX_MSR_VMX_TRUE_PROCBASED_CTRLS] = new MSR_Descriptor("MSR_VMX_TRUE_PROCBASED_CTRLS", BX_ISA_VMX, false, ~BX_CONST64(0));
+  msr_desc[BX_MSR_VMX_TRUE_VMEXIT_CTRLS] = new MSR_Descriptor("MSR_VMX_TRUE_VMEXIT_CTRLS", BX_ISA_VMX, false, ~BX_CONST64(0));
+  msr_desc[BX_MSR_VMX_TRUE_VMENTRY_CTRLS] = new MSR_Descriptor("MSR_VMX_TRUE_VMENTRY_CTRLS", BX_ISA_VMX, false, ~BX_CONST64(0));
+  msr_desc[BX_MSR_VMX_EPT_VPID_CAP] = new MSR_Descriptor("MSR_VMX_EPT_VPID_CAP", BX_ISA_VMX, false, ~BX_CONST64(0));
+  msr_desc[BX_MSR_VMX_VMFUNC] = new MSR_Descriptor("MSR_VMX_VMFUNC", BX_ISA_VMX, false, ~BX_CONST64(0));
 #endif
-  msr_desc[BX_MSR_VMX_MISC] = new MSR_Descriptor("MSR_VMX_MISC", BX_ISA_VMX);
-  msr_desc[BX_MSR_VMX_CR0_FIXED0] = new MSR_Descriptor("MSR_VMX_CR0_FIXED0", BX_ISA_VMX);
-  msr_desc[BX_MSR_VMX_CR0_FIXED1] = new MSR_Descriptor("MSR_VMX_CR0_FIXED1", BX_ISA_VMX);
-  msr_desc[BX_MSR_VMX_CR4_FIXED0] = new MSR_Descriptor("MSR_VMX_CR4_FIXED0", BX_ISA_VMX);
-  msr_desc[BX_MSR_VMX_CR4_FIXED1] = new MSR_Descriptor("MSR_VMX_CR4_FIXED1", BX_ISA_VMX);
-  msr_desc[BX_MSR_VMX_VMCS_ENUM] = new MSR_Descriptor("MSR_VMX_VMCS_ENUM", BX_ISA_VMX);
+  msr_desc[BX_MSR_VMX_MISC] = new MSR_Descriptor("MSR_VMX_MISC", BX_ISA_VMX, false, ~BX_CONST64(0));
+  msr_desc[BX_MSR_VMX_CR0_FIXED0] = new MSR_Descriptor("MSR_VMX_CR0_FIXED0", BX_ISA_VMX, false, ~BX_CONST64(0));
+  msr_desc[BX_MSR_VMX_CR0_FIXED1] = new MSR_Descriptor("MSR_VMX_CR0_FIXED1", BX_ISA_VMX, false, ~BX_CONST64(0));
+  msr_desc[BX_MSR_VMX_CR4_FIXED0] = new MSR_Descriptor("MSR_VMX_CR4_FIXED0", BX_ISA_VMX, false, ~BX_CONST64(0));
+  msr_desc[BX_MSR_VMX_CR4_FIXED1] = new MSR_Descriptor("MSR_VMX_CR4_FIXED1", BX_ISA_VMX, false, ~BX_CONST64(0));
+  msr_desc[BX_MSR_VMX_VMCS_ENUM] = new MSR_Descriptor("MSR_VMX_VMCS_ENUM", BX_ISA_VMX, false, ~BX_CONST64(0));
 #endif
 
 #if BX_SUPPORT_PERFMON
@@ -888,15 +889,30 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #endif
 
   if (index < BX_MSR_MAX_INDEX) {
-    if (! msr_desc[index]) return handle_unknown_wrmsr(index, val_64);
-    if (! is_cpu_extension_supported(msr_desc[index]->get_cpu_feature())) {
-      BX_ERROR(("WRMSR %s: '%s' feature not enabled in the cpu model", msr_desc[index]->get_name(), get_cpu_feature_name(msr_desc[index]->get_cpu_feature())));
+    MSR_Descriptor *msr_desciptor = msr_desc[index];
+    if (! msr_desciptor) return handle_unknown_wrmsr(index, val_64);
+    if (! is_cpu_extension_supported(msr_desciptor->get_cpu_feature())) {
+      BX_ERROR(("WRMSR %s: '%s' feature not enabled in the cpu model", msr_desciptor->get_name(), get_cpu_feature_name(msr_desciptor->get_cpu_feature())));
       return false;
     }
-    if (msr_desc[index]->check_reserved_bits_violation(val_64)) {
-      BX_ERROR(("WRMSR: attempt to set reserved bits of %s", msr_desc[index]->get_name()));
-      return false;
+    if (msr_desciptor->check_reserved_bits_violation(val_64)) {
+      if (msr_desciptor->read_only()) {
+        BX_ERROR(("WRMSR: %s is read only", msr_desc[index]->get_name()));
+        return false;
+      }
+      else {
+        BX_ERROR(("WRMSR: attempt to set reserved bits of %s", msr_desc[index]->get_name()));
+        return false;
+      }
     }
+#if BX_SUPPORT_X86_64
+    if (msr_desciptor->canonical()) {
+      if (! IsCpuidCanonical(val_64)) {
+        BX_ERROR(("WRMSR: attempt to write non-canonical value to %s", msr_desc[index]->get_name()));
+        return false;
+      }
+    }
+#endif
 
     switch(index) {
 #if BX_SUPPORT_PERFMON
@@ -922,10 +938,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
 #if BX_SUPPORT_X86_64
     case BX_MSR_IA32_USER_MSR_CTL:
-      if (! IsCpuidCanonical(val_64)) {
-        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_USER_MSR_CTL !"));
-        return false;
-      }
       BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl = val_64;
       break;
 #endif
@@ -936,35 +948,15 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
     case BX_MSR_SYSENTER_ESP:
-#if BX_SUPPORT_X86_64
-      if (! IsCpuidCanonical(val_64)) {
-        BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_SYSENTER_ESP !"));
-        return false;
-      }
-#endif
       BX_CPU_THIS_PTR msr.sysenter_esp_msr = val_64;
       break;
 
     case BX_MSR_SYSENTER_EIP:
-#if BX_SUPPORT_X86_64
-      if (! IsCpuidCanonical(val_64)) {
-        BX_ERROR(("WRMSR: attempt to write non-canonical value to MSR_SYSENTER_EIP !"));
-        return false;
-      }
-#endif
       BX_CPU_THIS_PTR msr.sysenter_eip_msr = val_64;
       break;
 #endif
 
-    case BX_MSR_PLATFORM_ID:
-      BX_ERROR(("WRMSR: PLATFORM_ID is a read only MSR"));
-      return false;
-
 #if BX_CPU_LEVEL >= 6
-    case BX_MSR_MTRRCAP:
-      BX_ERROR(("WRMSR: MTRRCAP is read only MSR"));
-      return false;
-
     case BX_MSR_MTRRPHYSBASE0:
     case BX_MSR_MTRRPHYSBASE1:
     case BX_MSR_MTRRPHYSBASE2:
@@ -1078,8 +1070,8 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #if BX_SUPPORT_CET
     case BX_MSR_IA32_U_CET:
     case BX_MSR_IA32_S_CET:
-      if (! IsCpuidCanonical(val_64) || is_invalid_cet_control(val_64)) {
-        BX_ERROR(("WRMSR: attempt to write non-canonical or invalid value to BX_MSR_IA32_U_CET/BX_MSR_IA32_S_CET !"));
+      if (is_invalid_cet_control(val_64)) {
+        BX_ERROR(("WRMSR: attempt to write invalid value to BX_MSR_IA32_U_CET/BX_MSR_IA32_S_CET !"));
         return false;
       }
       BX_CPU_THIS_PTR msr.ia32_cet_control[index == BX_MSR_IA32_U_CET] = val_64;
@@ -1089,18 +1081,10 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_IA32_PL1_SSP:
     case BX_MSR_IA32_PL2_SSP:
     case BX_MSR_IA32_PL3_SSP:
-      if (! IsCpuidCanonical(val_64)) {
-        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_PLi_SSP !"));
-        return false;
-      }
       BX_CPU_THIS_PTR msr.ia32_pl_ssp[index - BX_MSR_IA32_PL0_SSP] = val_64;
       break;
 
     case BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR:
-      if (! IsCpuidCanonical(val_64)) {
-        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR !"));
-        return false;
-      }
       BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table = val_64;
       break;
 #endif
@@ -1110,20 +1094,12 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_IA32_FRED_RSP1:
     case BX_MSR_IA32_FRED_RSP2:
     case BX_MSR_IA32_FRED_RSP3:
-      if (! IsCpuidCanonical(val_64)) {
-        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_FRED_RSPi !"));
-        return false;
-      }
       BX_CPU_THIS_PTR msr.ia32_fred_rsp[index - BX_MSR_IA32_FRED_RSP0] = val_64;
       break;
 #if BX_SUPPORT_CET
     case BX_MSR_IA32_FRED_SSP1:
     case BX_MSR_IA32_FRED_SSP2:
     case BX_MSR_IA32_FRED_SSP3:
-      if (! IsCpuidCanonical(val_64)) {
-        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_FRED_SSPi !"));
-        return false;
-      }
       BX_CPU_THIS_PTR msr.ia32_fred_ssp[index - BX_MSR_IA32_FRED_SSP1 + 1] = val_64;
       break;
 #endif
@@ -1141,17 +1117,9 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       uintr_uirr_update(); // potentially signal or clear user-level-interrupt
       break;
     case BX_MSR_IA32_UINTR_HANDLER:
-      if (! IsCpuidCanonical(val_64)) {
-        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_HANDLER !"));
-        return false;
-      }
       BX_CPU_THIS_PTR uintr.ui_handler = val_64;
       break;
     case BX_MSR_IA32_UINTR_STACKADJUST:
-      if (! IsCpuidCanonical(val_64)) {
-        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_STACKADJUST !"));
-        return false;
-      }
       BX_CPU_THIS_PTR uintr.stack_adjust = val_64;
       break;
     case BX_MSR_IA32_UINTR_MISC: // reserved bits already checked above
@@ -1159,17 +1127,9 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       BX_CPU_THIS_PTR uintr.uinv      = GET32H(val_64);
       break;
     case BX_MSR_IA32_UINTR_PD: // reserved bits already checked above
-      if (! IsCpuidCanonical(val_64)) {
-        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_PD !"));
-        return false;
-      }
       BX_CPU_THIS_PTR uintr.upid_addr = val_64;
       break;
     case BX_MSR_IA32_UINTR_TT: // reserved bits already checked above
-      if (! IsCpuidCanonical(val_64)) {
-        BX_ERROR(("WRMSR: attempt to write non-canonical value to BX_MSR_IA32_UINTR_TT !"));
-        return false;
-      }
       BX_CPU_THIS_PTR uintr.uitt_addr = val_64;
       break;
 #endif
@@ -1192,10 +1152,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       return true;
 
     // SCA prevention MSRs
-    case BX_MSR_IA32_ARCH_CAPABILITIES:
-      BX_ERROR(("WRMSR: IA32_ARCH_CAPABILITIES is read only MSR"));
-      return false;
-
     case BX_MSR_IA32_SPEC_CTRL:
 #if BX_SUPPORT_VMX >= 2
       if (BX_CPU_THIS_PTR in_vmx_guest && vm->vmexec_ctrls3.VIRTUALIZE_IA32_SPEC_CTRL())
@@ -1220,37 +1176,8 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         BX_ERROR(("WRMSR: IA32_FEATURE_CONTROL_MSR VMX lock bit is set !"));
         return false;
       }
-/*
-      if (val_64 & ~((Bit64u)(BX_IA32_FEATURE_CONTROL_BITS))) {
-        BX_ERROR(("WRMSR: attempt to set reserved bits of IA32_FEATURE_CONTROL_MSR !"));
-        return false;
-      }
-*/
       BX_CPU_THIS_PTR msr.ia32_feature_ctrl = val32_lo;
       break;
-
-    case BX_MSR_VMX_BASIC:
-    case BX_MSR_VMX_PINBASED_CTRLS:
-    case BX_MSR_VMX_PROCBASED_CTRLS:
-    case BX_MSR_VMX_PROCBASED_CTRLS2:
-    case BX_MSR_VMX_PROCBASED_CTRLS3:
-    case BX_MSR_VMX_VMEXIT_CTRLS:
-    case BX_MSR_VMX_VMEXIT_CTRLS2:
-    case BX_MSR_VMX_VMENTRY_CTRLS:
-    case BX_MSR_VMX_MISC:
-    case BX_MSR_VMX_CR0_FIXED0:
-    case BX_MSR_VMX_CR0_FIXED1:
-    case BX_MSR_VMX_CR4_FIXED0:
-    case BX_MSR_VMX_CR4_FIXED1:
-    case BX_MSR_VMX_VMCS_ENUM:
-    case BX_MSR_VMX_EPT_VPID_CAP:
-    case BX_MSR_VMX_TRUE_PINBASED_CTRLS:
-    case BX_MSR_VMX_TRUE_PROCBASED_CTRLS:
-    case BX_MSR_VMX_TRUE_VMEXIT_CTRLS:
-    case BX_MSR_VMX_TRUE_VMENTRY_CTRLS:
-    case BX_MSR_VMX_VMFUNC:
-      BX_ERROR(("WRMSR: VMX read only MSR"));
-      return false;
 #endif
 
     default:

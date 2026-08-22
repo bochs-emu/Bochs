@@ -26,14 +26,17 @@ class MSR_Descriptor {
 private:
   const char *msrname;
   unsigned cpu_feature;
+  bool force_canonical;
   Bit64u reserved;
 
 public:
-  MSR_Descriptor(const char *name, unsigned feature, Bit64u reserved_bits = 0): msrname(name), cpu_feature(feature), reserved(reserved_bits) {}
+  MSR_Descriptor(const char *name, unsigned feature, bool canonical = false, Bit64u reserved_bits = 0): msrname(name), cpu_feature(feature), force_canonical(canonical), reserved(reserved_bits) {}
  ~MSR_Descriptor() {}
 
   const char* get_name() const { return msrname; }
   unsigned get_cpu_feature() const { return cpu_feature; }
+  bool canonical() const { return force_canonical; }
+  bool read_only() const { return ~reserved == 0; }
 
   void set_reserved_bits(Bit64u reserved_bits) { reserved = reserved_bits; }
 
