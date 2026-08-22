@@ -2096,7 +2096,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
               case 0xac:  // GET PERFORMANCE
               {
                 Bit8u  data_type = controller->buffer[1] & 0x1F;
-                Bit32u lba = read_32bit(controller->buffer + 2);
+                // Bit32u lba = read_32bit(controller->buffer + 2); // unused
                 Bit16u num_descs = read_16bit(controller->buffer + 8); // in bytes?
                 Bit8u  type = controller->buffer[10];
                 
