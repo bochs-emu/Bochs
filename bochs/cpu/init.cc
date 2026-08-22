@@ -994,10 +994,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR idtr.limit =     0xFFFF; /* always byte granular */
 
   /* LDTR (Local Descriptor Table Register) */
-  BX_CPU_THIS_PTR ldtr.selector.value = 0x0000;
-  BX_CPU_THIS_PTR ldtr.selector.index = 0x0000;
-  BX_CPU_THIS_PTR ldtr.selector.ti    = 0;
-  BX_CPU_THIS_PTR ldtr.selector.rpl   = 0;
+  parse_selector(0x0, &BX_CPU_THIS_PTR ldtr.selector);
 
   BX_CPU_THIS_PTR ldtr.cache.valid    = SegValidCache; /* valid */
   BX_CPU_THIS_PTR ldtr.cache.p        = 1; /* present */
@@ -1008,12 +1005,13 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled =   0xFFFF;
   BX_CPU_THIS_PTR ldtr.cache.u.segment.avl = 0;
   BX_CPU_THIS_PTR ldtr.cache.u.segment.g   = 0;  /* byte granular */
+  BX_CPU_THIS_PTR ldtr.cache.u.segment.d_b = 0;  /* just to make sure it is initialized */
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR ldtr.cache.u.segment.l   = 0;  /* just to make sure it is initialized */
+#endif
 
   /* TR (Task Register) */
-  BX_CPU_THIS_PTR tr.selector.value = 0x0000;
-  BX_CPU_THIS_PTR tr.selector.index = 0x0000; /* undefined */
-  BX_CPU_THIS_PTR tr.selector.ti    = 0;
-  BX_CPU_THIS_PTR tr.selector.rpl   = 0;
+  parse_selector(0x0, &BX_CPU_THIS_PTR tr.selector);
 
   BX_CPU_THIS_PTR tr.cache.valid    = SegValidCache; /* valid */
   BX_CPU_THIS_PTR tr.cache.p        = 1; /* present */
@@ -1024,6 +1022,10 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled =     0xFFFF;
   BX_CPU_THIS_PTR tr.cache.u.segment.avl = 0;
   BX_CPU_THIS_PTR tr.cache.u.segment.g   = 0;  /* byte granular */
+  BX_CPU_THIS_PTR tr.cache.u.segment.d_b = 0;  /* just to make sure it is initialized */
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR tr.cache.u.segment.l   = 0;  /* just to make sure it is initialized */
+#endif
 
   BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
 
