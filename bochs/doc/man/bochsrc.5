@@ -175,6 +175,11 @@ cpuid_limit_winnt:
 Determine whether to limit maximum CPUID function to 2. This mode is
 required to workaround WinNT installation and boot issues.
 
+force_ignne:
+
+Always act like if #IGGNE pin was asserted on CPU input.
+Avoid potential deadlock after unmasked x87 exception handling and FERR# assertion.
+
 cpuid_freq:
 
 Select how the CPUID frequency leaves 0x15/0x16 are reported by CPU models

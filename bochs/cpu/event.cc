@@ -481,6 +481,10 @@ bool BX_CPU_C::interrupts_inhibited(unsigned mask)
 
 bool BX_CPU_C::get_IGNNE()
 {
+  static bool force_ignne = SIM->get_param_bool(BXPN_FORCE_IGNNE)->get();
+  if (force_ignne)
+    return true;
+
   return bx_pc_system.get_IGNNE();
 }
 

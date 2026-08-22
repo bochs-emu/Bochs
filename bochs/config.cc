@@ -697,6 +697,10 @@ void bx_init_options()
       "cpuid_limit_winnt", "Limit max CPUID function to 3",
       "Limit max CPUID function reported to 3 to workaround WinNT issue",
       0);
+  new bx_param_bool_c(cpu_param,
+      "force_ignne", "Force IGNNE# pin on CPU input",
+      "Always act like if IGNNE# is asserted, forcing to ignore x87 unmasked exception handling through FERR#",
+      0);
   static const char *cpuid_freq_names[] = { "hardware", "none", "ips", NULL };
   new bx_param_enum_c(cpu_param,
       "cpuid_freq", "CPUID frequency leaves 0x15/0x16 mode",

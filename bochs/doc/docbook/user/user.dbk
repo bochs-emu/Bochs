@@ -3523,6 +3523,11 @@ will be completely bogus !
 Determine whether to limit maximum CPUID function to 2. This mode is required
 to work around WinNT installation and boot issues.
 </para>
+<para><command>force_ignne</command></para>
+<para>
+Always act like if #IGGNE pin was asserted on CPU input.
+Avoid potential deadlock after unmasked x87 exception handling and FERR# assertion.
+</para>
 <para><command>cpuid_freq</command></para>
 <para>
 Select how the CPUID frequency leaves 0x15 (Time Stamp Counter and Nominal
