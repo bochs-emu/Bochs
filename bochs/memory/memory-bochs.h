@@ -45,13 +45,13 @@ const Bit32u EXROM_MASK = EXROMSIZE-1;
 // Guest physical memory layout helpers (for configurations with a 3GB to 4GB PCI MMIO hole).
 // When RAM is >3GB, RAM from 3GB to 4GB is typically remapped above 4GB so that
 // the 3GB to 4GB region can be used for PCI MMIO.
-const bx_phy_address BX_PCI_HOLE_START = (bx_phy_address)0xC0000000ULL;   // 3GB
-const bx_phy_address BX_PCI_HOLE_END   = (bx_phy_address)0x100000000ULL;  // 4GB
-const bx_phy_address BX_PCI_HOLE_SIZE  = (bx_phy_address)(BX_PCI_HOLE_END - BX_PCI_HOLE_START);
+const bx_phy_address BX_PCI_HOLE_START = 0xC0000000;  // 3GB
+const bx_phy_address BX_PCI_HOLE_LAST  = 0xFFFFFFFF;  // 4GB - 1
+const bx_phy_address BX_PCI_HOLE_SIZE  = BX_PCI_HOLE_LAST - BX_PCI_HOLE_START + 1;
 
 static BX_CPP_INLINE bool bx_is_pci_hole_addr(bx_phy_address gpa)
 {
-  return (gpa >= BX_PCI_HOLE_START) && (gpa < BX_PCI_HOLE_END);
+  return (gpa >= BX_PCI_HOLE_START) && (gpa <= BX_PCI_HOLE_LAST);
 }
 
 // Translate guest physical address to Bochs linear RAM backing-store offset.
@@ -59,9 +59,11 @@ static BX_CPP_INLINE bool bx_is_pci_hole_addr(bx_phy_address gpa)
 // - For addresses < 4GB, keep the address as-is (including the PCI hole region for MMIO).
 static BX_CPP_INLINE bx_phy_address bx_translate_gpa_to_linear(bx_phy_address gpa)
 {
-  if (gpa >= BX_PCI_HOLE_END) {
+#if BX_PHY_ADDRESS_LONG
+  if (gpa > BX_PCI_HOLE_LAST) {
     return gpa - BX_PCI_HOLE_SIZE;
   }
+#endif
   return gpa;
 }
 

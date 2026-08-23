@@ -766,13 +766,6 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Dependency: amx
 
-- CPU Feature: amx_tf32
-
- Enables CPUID[0x0000001E].subleaf[1].EAX[6]: AMX TF32 extensions support.
- Enables AMX_TF32 instructions (will #UD otherwise).
-
- Dependency: amx
-
 - CPU Feature: amx_complex
 
  Enables CPUID[0x00000007].subleaf[1].EDX[8]: AMX_COMPLEX extensions flag.
@@ -1085,6 +1078,15 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Dependency: BX_SUPPORT_FRED
              longmode
+
+- CPU Feature: user_msr
+
+ Enables USER_MSR new instructions (URDMSR and UWRMSR)
+ Enables CPUID[0x00000007].subleaf[1].EAX[15] flag (USER_MSR)
+ Enables new MSR register (0x1C) - IA32_USER_MSR_CTRL
+ Includes VMX support.
+
+ Dependency: longmode
 
 ---------------------------------------------------------------------------------------------------
 

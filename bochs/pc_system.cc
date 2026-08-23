@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -70,6 +70,7 @@ void bx_pc_system_c::initialize(Bit32u ips)
   triggeredTimer = 0;
   HRQ = 0;
   kill_bochs_request = 0;
+  IGNNE = 0;
 
   // parameter 'ips' is the processor speed in Instructions-Per-Second
   m_ips = double(ips) / 1000000.0L;
@@ -81,7 +82,7 @@ void bx_pc_system_c::set_HRQ(bool val)
 {
   HRQ = val;
   if (val)
-    BX_CPU(0)->async_event = 1;
+    BX_CPU(BX_BOOTSTRAP_PROCESSOR)->async_event = 1;
 }
 
 void bx_pc_system_c::raise_INTR(void)
@@ -232,6 +233,7 @@ void bx_pc_system_c::register_state(void)
   BXRS_DEC_PARAM_SIMPLE(list, lastTimeUsec);
   BXRS_DEC_PARAM_SIMPLE(list, usecSinceLast);
   BXRS_PARAM_BOOL(list, HRQ, HRQ);
+  BXRS_PARAM_BOOL(list, IGNNE, IGNNE);
 
   bx_list_c *timers = new bx_list_c(list, "timer");
   for (unsigned i = 0; i < numTimers; i++) {

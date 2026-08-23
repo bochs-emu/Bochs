@@ -647,26 +647,28 @@ void BX_CPU_C::init_ept_vpid_capabilities(void)
 
   // EPT/VPID capabilities
   // -----------------------------------------------------------
-  //  [0] - BX_EPT_ENTRY_EXECUTE_ONLY support
-  //  [6] - 4-levels EPT page walk length
-  //  [8] - allow UC EPT paging structure memory type
-  // [14] - allow WB EPT paging structure memory type
-  // [16] - EPT 2M pages support
-  // [17] - EPT 1G pages support
-  // [20] - INVEPT instruction supported
-  // [21] - EPT A/D bits supported
-  // [22] - advanced VM-exit information for EPT violations (tied to MBE support)
-  // [23] - Enable Shadow Stack control bit is supported in EPTP (CET)
-  // [25] - INVEPT single-context invalidation supported
-  // [26] - INVEPT all-context invalidation supported
-  // [32] - INVVPID instruction supported
-  // [40] - individual-address INVVPID is supported
-  // [41] - single-context INVVPID is supported
-  // [42] - all-context INVVPID is supported
-  // [43] - single-context-retaining-globals INVVPID is supported
+  // *   [0] - BX_EPT_ENTRY_EXECUTE_ONLY support
+  // *   [6] - 4-levels EPT page walk length
+  //     [7] - 5-levels EPT page walk length
+  // *   [8] - allow UC EPT paging structure memory type
+  // *  [14] - allow WB EPT paging structure memory type
+  // *  [16] - EPT 2M pages support
+  //    [17] - EPT 1G pages support
+  // *  [20] - INVEPT instruction supported
+  //    [21] - EPT A/D bits supported
+  //    [22] - advanced VM-exit information for EPT violations (tied to MBE support)
+  //    [23] - Enable Shadow Stack control bit is supported in EPTP (CET)
+  // *  [25] - INVEPT single-context invalidation supported
+  // *  [26] - INVEPT all-context invalidation supported
+  //    [32] - INVVPID instruction supported
+  //    [40] - individual-address INVVPID is supported
+  //    [41] - single-context INVVPID is supported
+  //    [42] - all-context INVVPID is supported
+  //    [43] - single-context-retaining-globals INVVPID is supported
+  // [48-53] - max HLAT prefix size (not implemented)
 
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT)) {
-    cap->vmx_ept_vpid_cap_supported_bits = BX_CONST64(0x06114141);
+    cap->vmx_ept_vpid_cap_supported_bits = BX_CONST64(0x06114141); // these bits are always set when EPT supported
     if (is_cpu_extension_supported(BX_ISA_1G_PAGES))
       cap->vmx_ept_vpid_cap_supported_bits |= (1 << 17);
     if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_ACCESS_DIRTY))

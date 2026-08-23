@@ -22,24 +22,7 @@
 #ifndef BX_IODEV_UHCI_CORE_H
 #define BX_IODEV_UHCI_CORE_H
 
-#define USB_UHCI_PORTS 2
-
-#define STATUS2_IOC (1<<0)
-#define STATUS2_SPD (1<<1)
-
-#define USB_UHCI_QUEUE_STACK_SIZE  256
-#define USB_UHCI_LOOP_COUNT        256
-
-#define USB_UHCI_IS_LINK_VALID(item)  ((item & 1) == 0)  // return TRUE if valid link address
-#define USB_UHCI_IS_LINK_QUEUE(item)  ((item & 2) == 2)  // return TRUE if link is a queue pointer
-
-// the standard max bandwidth (bytes per frame) for the UHCI is 1280 bytes
-#define USB_UHCI_STD_MAX_BANDWIDTH  1280
-
-struct USB_UHCI_QUEUE_STACK {
-  int    queue_cnt;
-  Bit32u queue_stack[USB_UHCI_QUEUE_STACK_SIZE];
-};
+#include "usb_uhci-defs.h"
 
 typedef struct {
   int    timer_index;
@@ -172,20 +155,6 @@ typedef struct {
   int    loop_reached;   // did we reach our bandwidth loop limit
   Bit8u  devfunc;
 } bx_uhci_core_t;
-
-#pragma pack (push, 1)
-struct TD {
-  Bit32u dword0;
-  Bit32u dword1;
-  Bit32u dword2;
-  Bit32u dword3;
-};
-
-struct QUEUE {
-  Bit32u horz;
-  Bit32u vert;
-};
-#pragma pack (pop)
 
 class bx_uhci_core_c : public bx_pci_device_c {
 public:

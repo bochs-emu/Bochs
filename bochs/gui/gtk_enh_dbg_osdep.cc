@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2024  The Bochs Project
+//  Copyright (C) 2008-2026  The Bochs Project
 
 #include "bochs.h"
 #include "bx_debug/debug.h"
@@ -218,7 +218,7 @@ unsigned int CurScrX;
 
 char SelMem[260];       // flag array for which list rows are "selected"
 char SelAsm[MAX_ASM];
-char SelReg[TOT_REG_NUM + EXTRA_REGS];
+char SelReg[STD_REG_NUM + EXTRA_REGS];
 
 // "run" the standard dialog box -- get text from the user
 bool ShowAskDialog()
@@ -488,12 +488,9 @@ void InsertListRow(char *ColumnText[], int ColumnCount, int listnum, int LineCou
     }
     else
     {
-    // it might be easier to use the gtk_list_store_set_valuesv() function?
-        gtk_list_store_set (GTK_LIST_STORE(Database), &iter, 0, ColumnText[0], 1, ColumnText[1],
-            2, ColumnText[2], 3, ColumnText[3], 4, ColumnText[4], 5, ColumnText[5],
-            6, ColumnText[6], 7, ColumnText[7], 8, ColumnText[8], 9, ColumnText[9],
-            10, ColumnText[10], 11, ColumnText[11], 12, ColumnText[12], 13, ColumnText[13],
-            14, ColumnText[14], 15, ColumnText[15], 16, ColumnText[16], 17, ColumnText[17], 18, (gint) LineCount, -1);
+        for (int i = 0; i < ColumnCount; i++) {
+            gtk_list_store_set (GTK_LIST_STORE(Database), &iter, i, ColumnText[i], -1);
+        }
     }
 }
 
@@ -565,7 +562,7 @@ int GetNextSelectedLI(int listnum, int StartPt)
     if (listnum == REG_WND)
     {
         Sel = SelReg;
-        end = TOT_REG_NUM + EXTRA_REGS;
+        end = STD_REG_NUM + EXTRA_REGS;
     }
     if (L < -1)
         L = -1;
@@ -994,7 +991,7 @@ void EndListUpdate(int listnum)
     // clear selections for each list on a list update
     if (listnum == REG_WND)
     {
-        i = TOT_REG_NUM + EXTRA_REGS;
+        i = STD_REG_NUM + EXTRA_REGS;
         while (--i >= 0)
             SelReg[i] = 0;
     }
@@ -1240,7 +1237,7 @@ gboolean RegMouseDown_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
     GrayMenuItem (0, CMD_WPTWR);        // disable watchpoints for physdumps (not selected)
     GrayMenuItem (0, CMD_WPTRD);
     GrayMenuItem (1, CMD_BRKPT);        // enable ASM breakpoints (window is selected by default)
-    row = TOT_REG_NUM + EXTRA_REGS;
+    row = STD_REG_NUM + EXTRA_REGS;
     while (--row >= 0)
         SelReg[row] = 0;
     onrow = (bool) gtk_tree_view_get_path_at_pos (GTK_TREE_VIEW(LV[0]),
@@ -1250,8 +1247,8 @@ gboolean RegMouseDown_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
     pathdat = gtk_tree_path_get_indices (path);
     row = (int) *pathdat;
     gtk_tree_path_free (path);
-    if (row >= TOT_REG_NUM + EXTRA_REGS || row < 0)
-        row = TOT_REG_NUM + EXTRA_REGS -1;
+    if (row >= STD_REG_NUM + EXTRA_REGS || row < 0)
+        row = STD_REG_NUM + EXTRA_REGS -1;
     SelReg[row] = TRUE;
     Invalidate (REG_WND);
 

@@ -482,7 +482,7 @@ static int cmos_readb(int addr)
 
 void setup_mtrr(void)
 {
-    int i, vcnt, fix, wc;
+    int i, vcnt, fix;
     uint32_t mtrr_cap;
     union {
         uint8_t valb[8];
@@ -500,7 +500,6 @@ void setup_mtrr(void)
     mtrr_cap = rdmsr(MSR_MTRRcap);
     vcnt = mtrr_cap & 0xff;
     fix = mtrr_cap & 0x100;
-    wc = mtrr_cap & 0x400;
     if (!vcnt || !fix)
         return;
 
@@ -865,6 +864,9 @@ static void pci_bios_init_bridges(PCIDevice *d)
         }
         outb(0x4d0, elcr[0]);
         outb(0x4d1, elcr[1]);
+        if (smp_cpus == 1) {
+          pci_config_writeb(d, 0x4e, 0x23); /* Enable coprocessor error function */
+        }
         BX_INFO("PIIX3/PIIX4 init: elcr=%02x %02x\n",
                 elcr[0], elcr[1]);
       } else if (device_id == PCI_DEVICE_ID_INTEL_82441 || device_id == PCI_DEVICE_ID_INTEL_82437) {
@@ -2188,7 +2190,7 @@ smbios_entry_point_init(void *start,
     }
 
 /* Type 0 -- BIOS Information */
-#define RELEASE_DATE_STR "16/02/2025"
+#define RELEASE_DATE_STR "23/08/2026"
 static void *
 smbios_type_0_init(void *start)
 {
@@ -2393,7 +2395,7 @@ smbios_type_17_init(void *start, uint32_t memory_size_mb, int instance)
     p->type_detail = 0;
 
     start += sizeof(struct smbios_type_17);
-    snprintf(start, 8, "DIMM %d", instance);
+    snprintf(start, 12, "DIMM %d", instance);
     start += strlen(start) + 1;
     *((uint8_t *)start) = 0;
 
@@ -2490,7 +2492,7 @@ void smbios_init(void)
     bios_table_cur_addr = align(bios_table_cur_addr, 16);
     start = (void *)(bios_table_cur_addr);
 
-	p = (char *)start + sizeof(struct smbios_entry_point);
+    p = (char *)start + sizeof(struct smbios_entry_point);
 
 #define add_struct(fn) do { \
     q = (fn); \

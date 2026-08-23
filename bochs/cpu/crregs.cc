@@ -499,7 +499,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR3Rd(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rd(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeNameShort()));
@@ -604,7 +604,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR3(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR4(bxInstruction_c *i)
 {
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   // CPL is always 0 in real mode
   if (/* !real_mode() && */ CPL!=0) {
     BX_ERROR(("%s: CPL!=0 not in real mode", i->getIaOpcodeNameShort()));
@@ -971,7 +971,7 @@ bx_address BX_CPU_C::read_CR0(void)
   return cr0_val;
 }
 
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
 bx_address BX_CPU_C::read_CR4(void)
 {
   bx_address cr4_val = BX_CPU_THIS_PTR cr4.get();
@@ -1081,10 +1081,10 @@ bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
         BX_ERROR(("SetCR0(): attempt to leave 64 bit mode with CR4.PCIDE set !"));
         return false;
       }
-      if (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].dword.hrx != 0) {
-        BX_PANIC(("SetCR0(): attempt to leave x86-64 LONG mode with RIP upper != 0"));
-      }
       BX_CPU_THIS_PTR efer.set_LMA(0);
+
+      // clear upper part of RIP when leaving 64-bit long mode
+      BX_CLEAR_64BIT_HIGH(BX_64BIT_REG_RIP);
     }
   }
 #endif  // #if BX_SUPPORT_X86_64
@@ -1170,7 +1170,7 @@ bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
   return true;
 }
 
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
 bx_address BX_CPU_C::get_cr4_allow_mask(void)
 {
   bx_address allowMask = 0;
@@ -1213,6 +1213,7 @@ bx_address BX_CPU_C::get_cr4_allow_mask(void)
   if (is_cpu_extension_supported(BX_ISA_VME))
     allowMask |= BX_CR4_VME_MASK | BX_CR4_PVI_MASK;
 
+#if BX_CPU_LEVEL >= 5
   if (is_cpu_extension_supported(BX_ISA_PENTIUM))
     allowMask |= BX_CR4_TSD_MASK;
 
@@ -1305,7 +1306,8 @@ bx_address BX_CPU_C::get_cr4_allow_mask(void)
   if (is_cpu_extension_supported(BX_ISA_FRED))
     allowMask |= BX_CR4_FRED_MASK;
 #endif
-#endif
+#endif // #if BX_CPU_LEVEL >= 6
+#endif // #if BX_CPU_LEVEL >= 5
 
   return allowMask;
 }
@@ -1441,7 +1443,7 @@ bool BX_CPU_C::SetCR4(bxInstruction_c *i, bx_address val)
 
   return true;
 }
-#endif // BX_CPU_LEVEL >= 5
+#endif // BX_CPU_LEVEL >= 4
 
 bool BX_CPP_AttrRegparmN(1) BX_CPU_C::SetCR3(bx_address val)
 {
@@ -1747,13 +1749,14 @@ void BX_CPU_C::iobreakpoint_match(unsigned port, unsigned len)
 
 #if BX_CPU_LEVEL >= 6
 
-XSaveRestoreStateHelper xsave_restore[xcr0_t::BX_XCR0_LAST] = { {0, 0, NULL, NULL, NULL, NULL} };
+XSaveRestoreStateHelper xsave_restore[xcr0_t::BX_XCR0_LAST] = { {0, 0, 0, NULL, NULL, NULL, NULL} };
 
 void BX_CPU_C::xsave_xrestor_init(void)
 {
   // XCR0[0]: x87 state
   xsave_restore[xcr0_t::BX_XCR0_FPU_BIT].len    = XSAVE_FPU_STATE_LEN;
   xsave_restore[xcr0_t::BX_XCR0_FPU_BIT].offset = XSAVE_FPU_STATE_OFFSET;
+  xsave_restore[xcr0_t::BX_XCR0_FPU_BIT].attr   = 0;
   xsave_restore[xcr0_t::BX_XCR0_FPU_BIT].xstate_in_use_method = &BX_CPU_C::xsave_x87_state_xinuse;
   xsave_restore[xcr0_t::BX_XCR0_FPU_BIT].xsave_method = &BX_CPU_C::xsave_x87_state;
   xsave_restore[xcr0_t::BX_XCR0_FPU_BIT].xrstor_method = &BX_CPU_C::xrstor_x87_state;
@@ -1762,6 +1765,7 @@ void BX_CPU_C::xsave_xrestor_init(void)
   // XCR0[1]: SSE state
   xsave_restore[xcr0_t::BX_XCR0_SSE_BIT].len    = XSAVE_SSE_STATE_LEN;
   xsave_restore[xcr0_t::BX_XCR0_SSE_BIT].offset = XSAVE_SSE_STATE_OFFSET;
+  xsave_restore[xcr0_t::BX_XCR0_SSE_BIT].attr   = 0;
   xsave_restore[xcr0_t::BX_XCR0_SSE_BIT].xstate_in_use_method = &BX_CPU_C::xsave_sse_state_xinuse;
   xsave_restore[xcr0_t::BX_XCR0_SSE_BIT].xsave_method = &BX_CPU_C::xsave_sse_state;
   xsave_restore[xcr0_t::BX_XCR0_SSE_BIT].xrstor_method = &BX_CPU_C::xrstor_sse_state;
@@ -1772,6 +1776,7 @@ void BX_CPU_C::xsave_xrestor_init(void)
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX)) {
     xsave_restore[xcr0_t::BX_XCR0_YMM_BIT].len    = XSAVE_YMM_STATE_LEN;
     xsave_restore[xcr0_t::BX_XCR0_YMM_BIT].offset = XSAVE_YMM_STATE_OFFSET;
+    xsave_restore[xcr0_t::BX_XCR0_YMM_BIT].attr   = 0;
     xsave_restore[xcr0_t::BX_XCR0_YMM_BIT].xstate_in_use_method = &BX_CPU_C::xsave_ymm_state_xinuse;
     xsave_restore[xcr0_t::BX_XCR0_YMM_BIT].xsave_method = &BX_CPU_C::xsave_ymm_state;
     xsave_restore[xcr0_t::BX_XCR0_YMM_BIT].xrstor_method = &BX_CPU_C::xrstor_ymm_state;
@@ -1787,6 +1792,7 @@ void BX_CPU_C::xsave_xrestor_init(void)
     // XCR0[5]: OPMASK state
     xsave_restore[xcr0_t::BX_XCR0_OPMASK_BIT].len    = XSAVE_OPMASK_STATE_LEN;
     xsave_restore[xcr0_t::BX_XCR0_OPMASK_BIT].offset = XSAVE_OPMASK_STATE_OFFSET;
+    xsave_restore[xcr0_t::BX_XCR0_OPMASK_BIT].attr   = 0;
     xsave_restore[xcr0_t::BX_XCR0_OPMASK_BIT].xstate_in_use_method = &BX_CPU_C::xsave_opmask_state_xinuse;
     xsave_restore[xcr0_t::BX_XCR0_OPMASK_BIT].xsave_method = &BX_CPU_C::xsave_opmask_state;
     xsave_restore[xcr0_t::BX_XCR0_OPMASK_BIT].xrstor_method = &BX_CPU_C::xrstor_opmask_state;
@@ -1795,6 +1801,7 @@ void BX_CPU_C::xsave_xrestor_init(void)
     // XCR0[6]: ZMM_HI256 state
     xsave_restore[xcr0_t::BX_XCR0_ZMM_HI256_BIT].len    = XSAVE_ZMM_HI256_STATE_LEN;
     xsave_restore[xcr0_t::BX_XCR0_ZMM_HI256_BIT].offset = XSAVE_ZMM_HI256_STATE_OFFSET;
+    xsave_restore[xcr0_t::BX_XCR0_ZMM_HI256_BIT].attr   = 0;
     xsave_restore[xcr0_t::BX_XCR0_ZMM_HI256_BIT].xstate_in_use_method = &BX_CPU_C::xsave_zmm_hi256_state_xinuse;
     xsave_restore[xcr0_t::BX_XCR0_ZMM_HI256_BIT].xsave_method = &BX_CPU_C::xsave_zmm_hi256_state;
     xsave_restore[xcr0_t::BX_XCR0_ZMM_HI256_BIT].xrstor_method = &BX_CPU_C::xrstor_zmm_hi256_state;
@@ -1803,6 +1810,7 @@ void BX_CPU_C::xsave_xrestor_init(void)
     // XCR0[7]: ZMM_HI state
     xsave_restore[xcr0_t::BX_XCR0_HI_ZMM_BIT].len    = XSAVE_HI_ZMM_STATE_LEN;
     xsave_restore[xcr0_t::BX_XCR0_HI_ZMM_BIT].offset = XSAVE_HI_ZMM_STATE_OFFSET;
+    xsave_restore[xcr0_t::BX_XCR0_HI_ZMM_BIT].attr   = 0;
     xsave_restore[xcr0_t::BX_XCR0_HI_ZMM_BIT].xstate_in_use_method = &BX_CPU_C::xsave_hi_zmm_state_xinuse;
     xsave_restore[xcr0_t::BX_XCR0_HI_ZMM_BIT].xsave_method = &BX_CPU_C::xsave_hi_zmm_state;
     xsave_restore[xcr0_t::BX_XCR0_HI_ZMM_BIT].xrstor_method = &BX_CPU_C::xrstor_hi_zmm_state;
@@ -1817,6 +1825,7 @@ void BX_CPU_C::xsave_xrestor_init(void)
     // XCR0[9]: PKRU state
     xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].len    = XSAVE_PKRU_STATE_LEN;
     xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].offset = XSAVE_PKRU_STATE_OFFSET;
+    xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].attr   = 0;
     xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].xstate_in_use_method = &BX_CPU_C::xsave_pkru_state_xinuse;
     xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].xsave_method = &BX_CPU_C::xsave_pkru_state;
     xsave_restore[xcr0_t::BX_XCR0_PKRU_BIT].xrstor_method = &BX_CPU_C::xrstor_pkru_state;
@@ -1831,6 +1840,7 @@ void BX_CPU_C::xsave_xrestor_init(void)
     // XCR0[11]: CET User State
     xsave_restore[xcr0_t::BX_XCR0_CET_U_BIT].len    = XSAVE_CET_U_STATE_LEN;
     xsave_restore[xcr0_t::BX_XCR0_CET_U_BIT].offset = 0;    // IA32_XSS only
+    xsave_restore[xcr0_t::BX_XCR0_CET_U_BIT].attr   = BX_XSAVE_XSS_ONLY;
     xsave_restore[xcr0_t::BX_XCR0_CET_U_BIT].xstate_in_use_method = &BX_CPU_C::xsave_cet_u_state_xinuse;
     xsave_restore[xcr0_t::BX_XCR0_CET_U_BIT].xsave_method = &BX_CPU_C::xsave_cet_u_state;
     xsave_restore[xcr0_t::BX_XCR0_CET_U_BIT].xrstor_method = &BX_CPU_C::xrstor_cet_u_state;
@@ -1839,6 +1849,7 @@ void BX_CPU_C::xsave_xrestor_init(void)
     // XCR0[12]: CET Supervisor State
     xsave_restore[xcr0_t::BX_XCR0_CET_S_BIT].len    = XSAVE_CET_S_STATE_LEN;
     xsave_restore[xcr0_t::BX_XCR0_CET_S_BIT].offset = 0;    // IA32_XSS only
+    xsave_restore[xcr0_t::BX_XCR0_CET_S_BIT].attr   = BX_XSAVE_XSS_ONLY;
     xsave_restore[xcr0_t::BX_XCR0_CET_S_BIT].xstate_in_use_method = &BX_CPU_C::xsave_cet_s_state_xinuse;
     xsave_restore[xcr0_t::BX_XCR0_CET_S_BIT].xsave_method = &BX_CPU_C::xsave_cet_s_state;
     xsave_restore[xcr0_t::BX_XCR0_CET_S_BIT].xrstor_method = &BX_CPU_C::xrstor_cet_s_state;
@@ -1853,6 +1864,7 @@ void BX_CPU_C::xsave_xrestor_init(void)
     // XCR0[14]: UINTR State
     xsave_restore[xcr0_t::BX_XCR0_UINTR_BIT].len    = XSAVE_UINTR_STATE_LEN;
     xsave_restore[xcr0_t::BX_XCR0_UINTR_BIT].offset = 0;    // IA32_XSS only
+    xsave_restore[xcr0_t::BX_XCR0_UINTR_BIT].attr   = BX_XSAVE_XSS_ONLY;
     xsave_restore[xcr0_t::BX_XCR0_UINTR_BIT].xstate_in_use_method = &BX_CPU_C::xsave_uintr_state_xinuse;
     xsave_restore[xcr0_t::BX_XCR0_UINTR_BIT].xsave_method = &BX_CPU_C::xsave_uintr_state;
     xsave_restore[xcr0_t::BX_XCR0_UINTR_BIT].xrstor_method = &BX_CPU_C::xrstor_uintr_state;
@@ -1870,6 +1882,7 @@ void BX_CPU_C::xsave_xrestor_init(void)
     // XCR0[17]: AMX XTILECFG state
     xsave_restore[xcr0_t::BX_XCR0_XTILECFG_BIT].len    = XSAVE_XTILECFG_STATE_LEN;
     xsave_restore[xcr0_t::BX_XCR0_XTILECFG_BIT].offset = XSAVE_XTILECFG_STATE_OFFSET;
+    xsave_restore[xcr0_t::BX_XCR0_XTILECFG_BIT].attr   = BX_XSAVE_ALIGN64;
     xsave_restore[xcr0_t::BX_XCR0_XTILECFG_BIT].xstate_in_use_method = &BX_CPU_C::xsave_tilecfg_state_xinuse;
     xsave_restore[xcr0_t::BX_XCR0_XTILECFG_BIT].xsave_method = &BX_CPU_C::xsave_tilecfg_state;
     xsave_restore[xcr0_t::BX_XCR0_XTILECFG_BIT].xrstor_method = &BX_CPU_C::xrstor_tilecfg_state;
@@ -1878,6 +1891,7 @@ void BX_CPU_C::xsave_xrestor_init(void)
     // XCR0[18]: AMX XTILEDATA state
     xsave_restore[xcr0_t::BX_XCR0_XTILEDATA_BIT].len    = XSAVE_XTILEDATA_STATE_LEN;
     xsave_restore[xcr0_t::BX_XCR0_XTILEDATA_BIT].offset = XSAVE_XTILEDATA_STATE_OFFSET;
+    xsave_restore[xcr0_t::BX_XCR0_XTILEDATA_BIT].attr   = BX_XSAVE_ALIGN64;
     xsave_restore[xcr0_t::BX_XCR0_XTILEDATA_BIT].xstate_in_use_method = &BX_CPU_C::xsave_tiledata_state_xinuse;
     xsave_restore[xcr0_t::BX_XCR0_XTILEDATA_BIT].xsave_method = &BX_CPU_C::xsave_tiledata_state;
     xsave_restore[xcr0_t::BX_XCR0_XTILEDATA_BIT].xrstor_method = &BX_CPU_C::xrstor_tiledata_state;
@@ -1887,6 +1901,8 @@ void BX_CPU_C::xsave_xrestor_init(void)
 
   // XCR0[19]: APX state (not implemented)
 }
+
+#endif
 
 #if BX_CPU_LEVEL >= 5
 
@@ -1916,6 +1932,8 @@ Bit32u BX_CPU_C::get_efer_allow_mask(void)
 }
 
 #endif
+
+#if BX_CPU_LEVEL >= 6
 
 Bit32u BX_CPU_C::get_xcr0_allow_mask(void)
 {

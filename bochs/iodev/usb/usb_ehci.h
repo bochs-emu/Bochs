@@ -4,7 +4,7 @@
 //
 //  Experimental USB EHCI adapter (partly ported from Qemu)
 //
-//  Copyright (C) 2015-2023  The Bochs Project
+//  Copyright (C) 2015-2026  The Bochs Project
 //
 //  Copyright(c) 2008  Emutex Ltd. (address@hidden)
 //  Copyright(c) 2011-2012 Red Hat, Inc.
@@ -37,9 +37,11 @@
 #define BX_IODEV_USB_EHCI_H
 
 #if BX_USE_USB_EHCI_SMF
+#  define BX_EHCI_SMF  static
 #  define BX_EHCI_THIS theUSB_EHCI->
 #  define BX_EHCI_THIS_PTR theUSB_EHCI
 #else
+#  define BX_EHCI_SMF
 #  define BX_EHCI_THIS this->
 #  define BX_EHCI_THIS_PTR this
 #endif
@@ -366,12 +368,12 @@ private:
   void reset_hc(void);
   void reset_port(int);
 
-  static void init_device(Bit8u port, bx_list_c *portconf);
-  static void remove_device(Bit8u port);
-  static bool set_connect_status(Bit8u port, bool connected);
-  static void change_port_owner(int port);
-  static Bit64u create_port_routing(int n_cc, int n_pcc);
-  static bool get_port_routing(int port, int *n_cc, int *n_pcc);
+  BX_EHCI_SMF void init_device(Bit8u port, bx_list_c *portconf);
+  BX_EHCI_SMF void remove_device(Bit8u port);
+  BX_EHCI_SMF bool set_connect_status(Bit8u port, bool connected);
+  BX_EHCI_SMF void change_port_owner(int port);
+  BX_EHCI_SMF Bit64u create_port_routing(int n_cc, int n_pcc);
+  BX_EHCI_SMF bool get_port_routing(int port, int *n_cc, int *n_pcc);
 
   // EHCI core methods ported from QEMU 1.2.2
   void update_irq(void);
@@ -430,12 +432,11 @@ private:
   static void ehci_frame_handler(void *);
   void ehci_frame_timer(void);
 
-#if BX_USE_USB_EHCI_SMF
   static bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   static bool write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-#else
-  bool read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-  bool write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+#if !BX_USE_USB_EHCI_SMF
+  bool mem_read(bx_phy_address addr, unsigned len, void *data);
+  bool mem_write(bx_phy_address addr, unsigned len, void *data);
 #endif
 
   static void runtime_config_handler(void *);

@@ -24,7 +24,6 @@
 #ifndef BX_BF8_HELPER
 #define BX_BF8_HELPER
 
-// TF32: s|eeeeeeee|mmmmmmmmmm-------------
 // FP32: s|eeeeeeee|mmmmmmmmmmmmmmmmmmmmmmm
 // BF16: s|eeeeeeee|mmmmmmm
 //  F16: s|eeeee|mmmmmmmmmm

@@ -1,6 +1,24 @@
-Changes after 3.0:
+Changes in 3.1 (August 23, 2026):
 
-  This CHANGES file updated with commits merged till 4 Apr 2026, please refer to git log for more recent updates
+Brief summary :
+  - CPU: Implemented FRED, USER_MSR, MOVRS, AMX-FP8 ISA extensions emulation
+  - CPU: Implemented MS-DOS Compatibility mode for handling x87 FPU exceptions, external logic handles FERR# and IGNNE# pins if enabled
+    The 'extfpuirq' plugin is now always loaded if FPU is present
+  - CPUDB: Added new Wildcat Lake CPU definition featuring FRED, WRMSRNS and MSRLIST
+  - Bugfixes for CPU emulation correctness
+    (critical bugfixes for emulation of XSAVEC/XSAVES, PKeys, AVX BMI1/BMI2, AVX512, AMX, UINTR, CET and SVM)
+  - Increased maximum supported host memory size to 8192 MB (was 2048 MB)
+  - Added UEFI/OVMF firmware support to Bochs through QEMU-compatible fw_cfg device
+    This enables booting UEFI operating systems including Windows Server 2025
+    and modern Linux distributions with OVMF firmware.
+  - Added basic support for GeForce 3D card emulation (4 AGP models, 2D almost
+    complete, 3D still WIP)
+  - AGP support in i440BX chipset now almost correctly implemented
+  - Many fixes in the devices code (PCI, VGA, Voodoo, hard drive, floppy, USB)
+  - VHDX disk image support added
+  - BIOS fixes for PCI/AGP init and ACPI tables
+  - LGPL'd VGABIOS updated to version 0.9d
+  - Updated SeaBIOS ROM image to current version 1.16.0
 
 Detailed change log :
 
@@ -9,13 +27,18 @@ Detailed change log :
     In the code BX_WARN is used and it is configurable like other log levels.
 
 - CPU emulation and instrumentation
-  - CPU: Implemented AMX-FP8 ISA extension
-  - CPU: Implemented MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS
-  - CPU: implemented IA32_APERF (0xe7) and IA32_MPERF (0xe8) MSRs
-  - CPU: implemented Flexible Return and Delivery (FRED) architecture emulation
-  - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of XSAVEC/XSAVES, PKeys, AVX BMI1/BMI2, AVX512, UINTR, CET and SVM)
+  - Implemented AMX-FP8 ISA extension
+  - Implemented MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS
+  - Implemented IA32_APERF (0xe7) and IA32_MPERF (0xe8) MSRs
+  - Implemented Flexible Return and Delivery (FRED) architecture emulation
+  - Implemented USER_MSR extensions emulation (URDMSR/UWRMSR)
+  - CPUDB: Added new Wildcat Lake CPU definition featuring FRED, WRMSRNS and MSRLIST
+  - CPU: Implemented MS-DOS Compatibility mode for handling x87 FPU exceptions, external logic handles FERR# and IGNNE# pins if enabled
+    The 'extfpuirq' plugin is now always loaded if FPU is present
+  - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of XSAVEC/XSAVES, PKeys, AVX BMI1/BMI2, AVX512, AMX, UINTR, CET and SVM)
   - Updated instrumentation callbacks, see description in instrumentation.txt
     - Added new BX_INSTR_CPUID instrumentation callback, branch callbacks simplified
+  - Add CPU 'cpuid_freq' option to control reporting of CPUID leaves 0x15/0x16. See .bochsrc example or user documentation for more details.
 
 - Bochs Debugger
   - Added new command line option "-dbg_gui" to start Bochs debugger with gui.
@@ -39,12 +62,14 @@ Detailed change log :
   - Fixed compilation of plugin version on Windows with newer gcc versions
   - Updated MSVCPP project files
   - Win32: fix compilation error when SHOW_IPS is not compiled in
+  - Compilation fixes for Big Endian host (PPC32 Mac)
 
 - Config interface
   - Win32 start/runtime configure dialogs rewritten and look much more user friendly now
   - USB configuration is now a separate menu item in all config interfaces
   - On Windows make sure file name parameters use backslash as separator
   - Removed backward compatibility mode for USB device options
+  - Rewrite of the VGA extension and model handling
 
 - Memory
   - Increased maximum host memory size to 8192 MB (was 2048 MB)
@@ -72,7 +97,7 @@ Detailed change log :
     The generated DSDT is aligned with the default PCI/PIIX device model.
 
   - GeForce (NEW)
-    Added basic support for three GeForce models. Most of the 2D features are present,
+    Added basic support for four GeForce models. Most of the 2D features are present,
     but 3D is still WIP. Several Windows versions up to Win 7 have been reported to
     work under consideration of these limitations.
   - PCI (general)
@@ -104,6 +129,9 @@ Detailed change log :
     - Fix graphics snapshot in low resolution modes
     - Rewrite of 15/16 to 24 bit conversion in Bochs VBE and Cirrus code
     - SVGA Cirrus Mem write: Fixed x/y tile to update in case display start != 0
+    - VGA core: Added sanity checks in VBE code to avoid crash when writing incorrect values to VBE_DISPI_INDEX_VIRT_WIDTH
+      - Don't accept resolution request lower than 320 x 200
+      - Writing value 0 resets virtual width to current xres
   - Voodoo / Banshee
     - Added hardware cursor support for graphics snapshot (Cirrus/Voodoo)
     - Voodoo3: Split mem_read() with len > 8 in two 64-bit reads
@@ -118,7 +146,9 @@ Detailed change log :
     - Banshee: Apply gamma correction in 16 bpp mode to cursor colors
   - Hard Drive
     - Fix the reading of the HOB registers
-    - Add the 0x46 (GET_CONFIG) command. This allows ReactOS 0.4.15 to boot in normal mode (LiveCD)
+    - Add the ATAPI commands 0x46 (GET_CONFIG) and 0xAC (GET PERFORMANCE)
+      This allows ReactOS 0.4.15 to boot in normal mode (LiveCD) as well as
+      graphical Live Environment (latest BootCD)
     - The SENSE was not being cleared between commands. If one command failed, 
       the next successful command would still show the failed SENSE values.
     - PCI IDE always provides 2 IDE channels (override settings if necessary)
@@ -192,10 +222,11 @@ Detailed change log :
   - Fixed floppy media state for legacy drive types
   - Legacy BIOS now can be used with a PCI VGABIOS
   - Add service Int13h/0x0D
-  - i440fx.bin updated from GitHub repository
+  - i440fx.bin updated from GitHub repository (built from source)
   - include OVMF BIOS image to Bochs package
+  - Updated SeaBIOS ROM image to current version 1.16.0
 
-- LGPL'd VGABIOS updated from GitHub repository
+- LGPL'd VGABIOS updated to version 0.9d
   - Added some low resolution VESA modes and bugfixes for all versions
   - Cirrus: Improved VESA3 proteced mode support and added binary with it
 
@@ -204,7 +235,7 @@ Detailed change log :
   - Documentation updates
 
 -------------------------------------------------------------------------
-Changes in 3.0 (Frebruary 16, 2025):
+Changes in 3.0 (February 16, 2025):
 
 Brief summary :
  - Include Bochs debugger support in all release binaries.
@@ -306,6 +337,7 @@ Detailed change log :
     - VGA core: added support for read/write modes in odd/even (text) mode
     - VGA core: fixed write mode 3 with data rotation
     - Added VBE memory size option (requires latest VGABIOS)
+    - VGA core: Added offset check in mem_write() to avoid OOB writes
   - Cirrus SVGA
     - Added support for hardware cursor in VGA mode
     - Fixed text mode cursor blinking / text mode cursor rendering issues
@@ -340,6 +372,7 @@ Detailed change log :
     - Sound drivers: Moving audio buffers to waveout class fixes wavemode 2 & 3
     - Added PCM playback/recording support using PulseAudio simple API
     - ES1370: fixing status register access makes mixer work
+    - SB16: fix OPL timer mask check missing bit isolation
   - Networking
     - Added support for using libslirp library instead of builtin slirp code
     - Updated builtin slirp based on libslirp 4.8.0 (including IPv6 support)

@@ -356,7 +356,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr, Bit32u
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  bool readmsr = (op == VMX_VMEXIT_RDMSR || op == VMX_VMEXIT_RDMSR_IMM || op == VMX_VMEXIT_RDMSRLIST);
+  bool readmsr = (op == VMX_VMEXIT_RDMSR || op == VMX_VMEXIT_RDMSR_IMM || op == VMX_VMEXIT_RDMSRLIST || op == VMX_VMEXIT_URDMSR);
 
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2024 Stanislav Shwartsman
+//   Copyright (c) 2011-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1000,10 +1000,6 @@ static const Bit64u BxOpcodeGroup_VEX_0F3847[] = {
 };
 
 #if BX_SUPPORT_AMX
-static const Bit64u BxOpcodeGroup_VEX_0F3848[] = {
-  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_VL128 | ATTR_MODC0 | ATTR_IS64, BX_IA_TMMULTF32PS_TnnnTrmTreg)
-};
-
 static const Bit64u BxOpcodeGroup_VEX_0F3849[] = {
   form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0 | ATTR_VL128 | ATTR_NNN0 | ATTR_RRR0 | ATTR_MODC0 | ATTR_IS64, BX_IA_TILERELEASE),
   form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0 | ATTR_VL128 | ATTR_MOD_MEM | ATTR_IS64, BX_IA_LDTILECFG),
@@ -1604,6 +1600,16 @@ static const Bit64u BxOpcodeGroup_VEX_0F3AF0[] = {
   last_opcode(ATTR_SSE_PREFIX_F2 | ATTR_VL128,                           BX_IA_RORX_GdEdIb)
 };
 
+static const Bit64u BxOpcodeGroup_VEX_MAP7_F6[] = {
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VL128 | ATTR_VEX_W0 | ATTR_MODC0 | ATTR_NNN0 | ATTR_IS64, BX_IA_WRMSRNS_IdEq),
+  last_opcode(ATTR_SSE_PREFIX_F2 | ATTR_VL128 | ATTR_VEX_W0 | ATTR_MODC0 | ATTR_NNN0 | ATTR_IS64, BX_IA_RDMSR_EqId)
+};
+
+static const Bit64u BxOpcodeGroup_VEX_MAP7_F8[] = {
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VL128 | ATTR_VEX_W0 | ATTR_MODC0 | ATTR_NNN0 | ATTR_IS64, BX_IA_UWRMSR_IdEq),
+  last_opcode(ATTR_SSE_PREFIX_F2 | ATTR_VL128 | ATTR_VEX_W0 | ATTR_MODC0 | ATTR_NNN0 | ATTR_IS64, BX_IA_URDMSR_EqId)
+};
+
 #if BX_SUPPORT_AMX
 static const Bit64u BxOpcodeGroup_VEX_MAP5_FD[] = {
   form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0 | ATTR_VL128 | ATTR_MODC0 | ATTR_IS64, BX_IA_TDPBF8PS_TnnnTrmTreg),
@@ -1612,11 +1618,6 @@ static const Bit64u BxOpcodeGroup_VEX_MAP5_FD[] = {
   last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_VL128 | ATTR_MODC0 | ATTR_IS64, BX_IA_TDPHBF8PS_TnnnTrmTreg)
 };
 #endif
-
-static const Bit64u BxOpcodeGroup_VEX_MAP7_F6[] = {
-  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VL128 | ATTR_VEX_W0 | ATTR_MODC0 | ATTR_NNN0 | ATTR_IS64, BX_IA_WRMSRNS_IdEq),
-  last_opcode(ATTR_SSE_PREFIX_F2 | ATTR_VL128 | ATTR_VEX_W0 | ATTR_MODC0 | ATTR_NNN0 | ATTR_IS64, BX_IA_RDMSR_EqId)
-};
 
 /* ************************************************************************ */
 
@@ -1952,13 +1953,12 @@ const Bit64u *BxOpcodeTableVEX[256*(4 + (BX_SUPPORT_AMX ? 1 : 0))] = {
   /* 45  */ BxOpcodeGroup_VEX_0F3845,
   /* 46  */ BxOpcodeGroup_VEX_0F3846,
   /* 47  */ BxOpcodeGroup_VEX_0F3847,
+  /* 48  */ BxOpcodeGroup_ERR,
 #if BX_SUPPORT_AMX
-  /* 48  */ BxOpcodeGroup_VEX_0F3848,
   /* 49  */ BxOpcodeGroup_VEX_0F3849,
   /* 4A  */ BxOpcodeGroup_VEX_0F384A,
   /* 4B  */ BxOpcodeGroup_VEX_0F384B,
 #else
-  /* 48  */ BxOpcodeGroup_ERR,
   /* 49  */ BxOpcodeGroup_ERR,
   /* 4A  */ BxOpcodeGroup_ERR,
   /* 4B  */ BxOpcodeGroup_ERR,
@@ -2929,7 +2929,7 @@ const Bit64u *BxOpcodeTableVEX[256*(4 + (BX_SUPPORT_AMX ? 1 : 0))] = {
   /* F5 */ BxOpcodeGroup_ERR,
   /* F6 */ BxOpcodeGroup_VEX_MAP7_F6,
   /* F7 */ BxOpcodeGroup_ERR,
-  /* F8 */ BxOpcodeGroup_ERR,
+  /* F8 */ BxOpcodeGroup_VEX_MAP7_F8,
   /* F9 */ BxOpcodeGroup_ERR,
   /* FA */ BxOpcodeGroup_ERR,
   /* FB */ BxOpcodeGroup_ERR,

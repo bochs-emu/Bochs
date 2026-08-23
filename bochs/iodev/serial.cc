@@ -1483,7 +1483,7 @@ void bx_serial_c::tx_timer(void)
 #if defined(SERIAL_ENABLE)
       BX_DEBUG(("com%d: write: '%c'", port+1, BX_SER_THIS s[port].tsrbuffer));
       if (BX_SER_THIS s[port].tty_id >= 0) {
-        write(BX_SER_THIS s[port].tty_id, (bx_ptr_t) & BX_SER_THIS s[port].tsrbuffer, 1);
+        ::write(BX_SER_THIS s[port].tty_id, (bx_ptr_t) & BX_SER_THIS s[port].tsrbuffer, 1);
       }
 #endif
       break;
@@ -1640,7 +1640,7 @@ void bx_serial_c::rx_timer(void)
       case BX_SER_MODE_TERM:
 #if BX_HAVE_SELECT && defined(SERIAL_ENABLE)
         if ((BX_SER_THIS s[port].tty_id >= 0) && (select(BX_SER_THIS s[port].tty_id + 1, &fds, NULL, NULL, &tval) == 1)) {
-          (void) read(BX_SER_THIS s[port].tty_id, &chbuf, 1);
+          (void) ::read(BX_SER_THIS s[port].tty_id, &chbuf, 1);
           BX_DEBUG(("com%d: read: '%c'", port+1, chbuf));
           data_ready = 1;
         }
@@ -1806,9 +1806,9 @@ const char* bx_serial_c::serial_file_param_handler(bx_param_string_c *param, boo
 {
   if ((set) && (strcmp(val, oldval))) {
     int port = atoi((param->get_parent())->get_name()) - 1;
-    if (BX_SER_THIS s[port].output != NULL) {
-      fclose(BX_SER_THIS s[port].output);
-      BX_SER_THIS s[port].output = NULL;
+    if (theSerialDevice->s[port].output != NULL) {
+      fclose(theSerialDevice->s[port].output);
+      theSerialDevice->s[port].output = NULL;
     }
     // tx_timer() re-opens the output file on demand
   }

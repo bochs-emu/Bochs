@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -954,7 +954,7 @@ Bit16u cdrom_boot();
 
 // static char bios_svn_version_string[] = "$Revision$ $Date$";
 
-#define BIOS_COPYRIGHT_STRING "(c) 2001-2025  The Bochs Project"
+#define BIOS_COPYRIGHT_STRING "(c) 2001-2026  The Bochs Project"
 
 #if DEBUG_ATA
 #  define BX_DEBUG_ATA(a...) BX_DEBUG(a)
@@ -10509,6 +10509,11 @@ pcibios_init_irqs:
   in   ax, dx
   cmp  ax, [si+12] ;; check irq router
   jne  pci_init_end
+  mov  dl, #0x4c
+  call pcibios_init_sel_reg
+  mov  dx, #0x0cfe
+  mov  al, #0x23 ;; enable coprocessor error function
+  out  dx, al
   mov  dl, [si+34]
   call pcibios_init_sel_reg
   push bx ;; save irq router bus + devfunc

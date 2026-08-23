@@ -48,6 +48,8 @@
 #define BXPN_IGNORE_BAD_MSRS             "cpu.ignore_bad_msrs"
 #define BXPN_CONFIGURABLE_MSRS_PATH      "cpu.msrs"
 #define BXPN_CPUID_LIMIT_WINNT           "cpu.cpuid_limit_winnt"
+#define BXPN_FORCE_IGNNE                 "cpu.force_ignne"
+#define BXPN_CPUID_FREQ                  "cpu.cpuid_freq"
 #define BXPN_MWAIT_IS_NOP                "cpu.mwait_is_nop"
 #define BXPN_BRAND_STRING                "cpu.brand_string"
 #define BXPN_MEMORY                      "memory.standard.ram"

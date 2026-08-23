@@ -372,6 +372,7 @@ enum BxCpuMode {
 };
 
 const unsigned BX_MSR_MAX_INDEX = 0x1000;
+const unsigned BX_EXTENDED_MSR_MAX_INDEX = 0x200;
 
 extern const char* cpu_mode_string(unsigned cpu_mode);
 
@@ -424,6 +425,8 @@ class BX_MEM_C;
 class bxInstruction_c;
 class bx_local_apic_c;
 class AMX;
+class bxICache_c;
+struct bxICacheEntry_c;
 
 // <TAG-TYPE-EXECUTEPTR-START>
 #if BX_USE_CPU_SMF
@@ -726,6 +729,10 @@ typedef struct
 
   Bit32u ia32_spec_ctrl; // SCA
 
+#if BX_SUPPORT_X86_64
+  Bit64u ia32_user_msr_ctrl;
+#endif
+
   /* TODO finish of the others */
 } bx_regs_msr_t;
 #endif
@@ -735,7 +742,6 @@ typedef struct
 #include "decoder/instr.h"
 #include "lazy_flags.h"
 #include "tlb.h"
-#include "icache.h"
 
 // general purpose register
 #if BX_SUPPORT_X86_64
@@ -1027,18 +1033,18 @@ public: // for now...
   bx_cr0_t   cr0;
   bx_address cr2;
   bx_address cr3;
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   bx_cr4_t   cr4;
   bx_address cr4_suppmask;
 #if BX_SUPPORT_X86_64
   unsigned linaddr_width;
 #endif
-
-  bx_efer_t efer;
-  Bit32u efer_suppmask;
 #endif
 
 #if BX_CPU_LEVEL >= 5
+  bx_efer_t efer;
+  Bit32u efer_suppmask;
+
   // TSC: Time Stamp Counter
   // Instead of storing a counter and incrementing it every instruction, we
   // remember the time in ticks that it was reset to zero.  With a little
@@ -1196,6 +1202,7 @@ public: // for now...
     BX_ACTIVITY_STATE_SHUTDOWN,
     BX_ACTIVITY_STATE_WAIT_FOR_SIPI,
     BX_VMX_LAST_ACTIVITY_STATE = BX_ACTIVITY_STATE_WAIT_FOR_SIPI,
+    BX_ACTIVITY_WAIT_FOR_X87,
     BX_ACTIVITY_STATE_MWAIT,
     BX_ACTIVITY_STATE_MWAIT_IF
   };
@@ -1262,6 +1269,9 @@ public: // for now...
 #if BX_CPU_LEVEL >= 5
   bool  ignore_bad_msrs;
 #endif
+#if BX_SUPPORT_AVX
+  bx_avx_vector_length maxvl;
+#endif
 
   Bit32u cpu_state_use_ok;       // format of BX_FETCH_MODE_*
 
@@ -1276,10 +1286,6 @@ public: // for now...
   BX_SMF void set_avx_ok();
   BX_SMF void clear_avx_ok();
   BX_SMF bool get_avx_ok();
-
-  BX_SMF void set_opmask_ok();
-  BX_SMF void clear_opmask_ok();
-  BX_SMF bool get_opmask_ok();
 
   BX_SMF void set_evex_ok();
   BX_SMF void clear_evex_ok();
@@ -1376,10 +1382,7 @@ public: // for now...
   } PDPTR_CACHE;
 #endif
 
-  // An instruction cache.  Each entry should be exactly 32 bytes, and
-  // this structure should be aligned on a 32-byte boundary to be friendly
-  // with the host cache lines.
-  bxICache_c iCache BX_CPP_AlignN(32);
+  bxICache_c *iCache; // better to be aligned to 64-bytes boundary
   Bit32u fetchModeMask;
 
   struct {
@@ -1843,9 +1846,6 @@ public: // for now...
   BX_SMF void BSWAP_RX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BSWAP_ERX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
-  BX_SMF void ZERO_IDIOM_GwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-  BX_SMF void ZERO_IDIOM_GdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
   BX_SMF void ADD_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void OR_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void ADC_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -2105,6 +2105,16 @@ public: // for now...
   BX_SMF void SMSW_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void SMSW_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LMSW_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ZERO_IDIOM_GwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ZERO_IDIOM_GdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ZERO_IDIOM_SSE_VdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void TEST_GwR_ZERO_IDIOM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TEST_GdR_ZERO_IDIOM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#if BX_SUPPORT_X86_64
+  BX_SMF void TEST_GqR_ZERO_IDIOM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
 
   // LOAD methods
   BX_SMF void LOAD_Eb(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3590,6 +3600,8 @@ public: // for now...
   BX_SMF void VPCOMPRESSW_MASK_WdqVdq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPEXPANDB_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPEXPANDW_MASK_VdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPEXPANDB_MASK_VdqWdqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPEXPANDW_MASK_VdqWdqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void VPMOVQB_WdqVdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPMOVDB_WdqVdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3699,8 +3711,6 @@ public: // for now...
 
   BX_SMF void VPMADD52LUQ_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPMADD52HUQ_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
-
-  BX_SMF void VPMULTISHIFTQB_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VPMULTISHIFTQB_MASK_VdqHdqWdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void VPSHLDW_MASK_VdqHdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -3860,7 +3870,6 @@ public: // for now...
   BX_SMF void TDPFP16PS_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TCMMRLFP16PS_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TCMMIMFP16PS_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
-  BX_SMF void TMMULTF32PS_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TDPBF8PS_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TDPHF8PS_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TDPBHF8PS_TnnnTrmTreg(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
@@ -4448,6 +4457,8 @@ public: // for now...
 #if BX_SUPPORT_X86_64
   BX_SMF void WRMSRLIST(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void RDMSRLIST(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void URDMSR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void UWRMSR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
 #if BX_SUPPORT_PKEYS
@@ -4480,7 +4491,6 @@ public: // for now...
   BX_SMF void BxNoAVX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 #if BX_SUPPORT_EVEX
-  BX_SMF void BxNoOpMask(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void BxNoEVEX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 #if BX_SUPPORT_AMX
@@ -4566,6 +4576,7 @@ public: // for now...
   BX_SMF BX_CPP_INLINE bool IsCanonical(bx_address addr) { return IsCanonicalToWidth(addr, BX_CPU_THIS_PTR linaddr_width); }
   BX_SMF bool IsCanonicalAccess(bx_address addr, unsigned rw, bool user) BX_CPP_AttrRegparmN(3);
   BX_SMF BX_CPP_INLINE bx_address CanonicalizeAddress(bx_address addr) { return (BX_CPU_THIS_PTR linaddr_width == 57) ? CanonicalizeAddress57(addr) : CanonicalizeAddress48(addr); }
+  BX_SMF BX_CPP_INLINE bool IsCpuidCanonical(bx_address addr) { return IsCanonicalToWidth(addr, BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LA57) ? 57 : 48); }
 #endif
 
   BX_SMF bool write_virtual_checks(bx_segment_reg_t *seg, Bit32u offset, unsigned len, bool align = false) BX_CPP_AttrRegparmN(4);
@@ -4844,7 +4855,7 @@ public: // for now...
   BX_SMF bool SetCR0(bxInstruction_c *i, bx_address val);
   BX_SMF bool check_CR0(bx_address val, bool vmenter = false) BX_CPP_AttrRegparmN(1);
   BX_SMF bool SetCR3(bx_address val) BX_CPP_AttrRegparmN(1);
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   BX_SMF bool SetCR4(bxInstruction_c *i, bx_address val);
   BX_SMF bool check_CR4(bx_address val) BX_CPP_AttrRegparmN(1);
   BX_SMF bx_address get_cr4_allow_mask(void);
@@ -4861,7 +4872,7 @@ public: // for now...
 #endif
 
   BX_SMF bx_address read_CR0(void);
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   BX_SMF bx_address read_CR4(void);
 #endif
 #if BX_CPU_LEVEL >= 6
@@ -4912,7 +4923,7 @@ public: // for now...
   BX_SMF void check_tile(bxInstruction_c *i, unsigned tile_num) BX_CPP_AttrRegparmN(2);
   BX_SMF void check_tiles(bxInstruction_c *i, unsigned tile_dst, unsigned tile_src1, unsigned tile_src2);
   BX_SMF bool configure_tiles(bxInstruction_c *i, const BxPackedAvxRegister &tilecfg) BX_CPP_AttrRegparmN(2);
-  BX_SMF void tilemov_row(bxInstruction_c *i, bool immediate_form, BxPackedAvxRegister *dst) BX_CPP_AttrRegparmN(3);
+  BX_SMF bool tilemov_read_row(bxInstruction_c *i, bool immediate_form, BxPackedAvxRegister *dst) BX_CPP_AttrRegparmN(3);
 #endif
 
 #if BX_CPU_LEVEL >= 5
@@ -5038,6 +5049,9 @@ public: // for now...
   BX_SMF void    deliver_NMI(void);
   BX_SMF void    deliver_SMI(void);
   BX_SMF void    deliver_SIPI(unsigned vector);
+
+  BX_SMF bool    get_IGNNE();
+
 #if BX_SUPPORT_UINTR
   BX_SMF void    deliver_UINTR();
   BX_SMF void    Process_UINTR_Notification();
@@ -5184,6 +5198,8 @@ public: // for now...
   BX_SMF void FPU_stack_underflow(bxInstruction_c *i, int stnr, int pop_stack = 0);
   BX_SMF void FPU_stack_overflow(bxInstruction_c *i);
   BX_SMF unsigned FPU_exception(bxInstruction_c *i, unsigned exception, bool = 0);
+  BX_SMF void set_unmasked_fpu_exception();
+  BX_SMF void clear_unmasked_fpu_exception();
   BX_SMF bx_address fpu_save_environment(bxInstruction_c *i);
   BX_SMF bx_address fpu_load_environment(bxInstruction_c *i);
   BX_SMF Bit8u pack_FPU_TW(Bit16u tag_word);
@@ -5539,9 +5555,8 @@ enum {
   BX_FETCH_MODE_FPU_MMX_OK = (1 << 3),
   BX_FETCH_MODE_SSE_OK     = (1 << 4),
   BX_FETCH_MODE_AVX_OK     = (1 << 5),
-  BX_FETCH_MODE_OPMASK_OK  = (1 << 6),
-  BX_FETCH_MODE_EVEX_OK    = (1 << 7),
-  BX_FETCH_MODE_AMX_OK     = (1 << 8)
+  BX_FETCH_MODE_EVEX_OK    = (1 << 6),
+  BX_FETCH_MODE_AMX_OK     = (1 << 7)
 };
 
 BX_CPP_INLINE void BX_CPU_C::set_fpu_mmx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_FPU_MMX_OK; }
@@ -5553,12 +5568,8 @@ BX_CPP_INLINE void BX_CPU_C::clear_sse_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &
 BX_CPP_INLINE bool BX_CPU_C::get_sse_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_SSE_OK); }
 
 BX_CPP_INLINE void BX_CPU_C::set_avx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_AVX_OK; }
-BX_CPP_INLINE void BX_CPU_C::clear_avx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~(BX_FETCH_MODE_AVX_OK | BX_FETCH_MODE_EVEX_OK | BX_FETCH_MODE_OPMASK_OK); }
+BX_CPP_INLINE void BX_CPU_C::clear_avx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~(BX_FETCH_MODE_AVX_OK | BX_FETCH_MODE_EVEX_OK); }
 BX_CPP_INLINE bool BX_CPU_C::get_avx_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_AVX_OK); }
-
-BX_CPP_INLINE void BX_CPU_C::set_opmask_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_OPMASK_OK; }
-BX_CPP_INLINE void BX_CPU_C::clear_opmask_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~BX_FETCH_MODE_OPMASK_OK; }
-BX_CPP_INLINE bool BX_CPU_C::get_opmask_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_OPMASK_OK); }
 
 BX_CPP_INLINE void BX_CPU_C::set_evex_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_EVEX_OK; }
 BX_CPP_INLINE void BX_CPU_C::clear_evex_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~BX_FETCH_MODE_EVEX_OK; }

@@ -404,7 +404,6 @@ void bx_plugin_ctrl_reset(bool init_done)
   SIM->get_param_bool("unmapped", base)->set(1);
   SIM->get_param_bool("biosdev", base)->set(1);
   SIM->get_param_bool("speaker", base)->set(1);
-  SIM->get_param_bool("extfpuirq", base)->set(1);
   SIM->get_param_bool("parallel", base)->set(1);
   SIM->get_param_bool("serial", base)->set(1);
 #if BX_SUPPORT_GAMEPORT
@@ -676,7 +675,7 @@ void bx_init_options()
       "ips", "Emulated instructions per second (IPS)",
       "Emulated instructions per second, used to calibrate bochs emulated time with wall clock time.",
       BX_MIN_IPS, BX_MAX_BIT32U,
-      4000000);
+      50000000);
 #if BX_SUPPORT_SMP
   new bx_param_num_c(cpu_param,
       "quantum", "Quantum ticks in SMP simulation",
@@ -698,6 +697,15 @@ void bx_init_options()
       "cpuid_limit_winnt", "Limit max CPUID function to 3",
       "Limit max CPUID function reported to 3 to workaround WinNT issue",
       0);
+  new bx_param_bool_c(cpu_param,
+      "force_ignne", "Force IGNNE# pin on CPU input",
+      "Always act like if IGNNE# is asserted, forcing to ignore x87 unmasked exception handling through FERR#",
+      0);
+  static const char *cpuid_freq_names[] = { "hardware", "none", "ips", NULL };
+  new bx_param_enum_c(cpu_param,
+      "cpuid_freq", "CPUID frequency leaves 0x15/0x16 mode",
+      "Report CPUID frequency leaves 0x15/0x16 from the hardware dump of the selected model, as not enumerated, or derived from the emulated tick rate (ips)",
+      cpuid_freq_names, 0, 0);
 #if BX_SUPPORT_MONITOR_MWAIT
   new bx_param_bool_c(cpu_param,
       "mwait_is_nop", "Don't put CPU to sleep state by MWAIT",
@@ -1775,8 +1783,10 @@ void bx_reset_options()
   // serial/parallel/usb
   SIM->get_param("ports")->reset();
 
+#if BX_NETWORKING
   // network devices
   SIM->get_param("network")->reset();
+#endif
 
   // sound devices
   SIM->get_param("sound")->reset();
@@ -2376,7 +2386,7 @@ int bx_parse_nic_params(const char *context, const char *param, bx_list_c *base)
     if (n == 0) valid |= 0x80;
     else valid |= 0x40;
   } else if (!strncmp(param, "mac=", 4)) {
-    bsp = (bx_param_bytestring_c*)SIM->get_param_string("mac", base);
+    bsp = SIM->get_param_bytestring("mac", base);
     if (bsp->parse_param(&param[4]) == 0) {
       PARSE_ERR(("%s: '%s' mac address malformed.", context, base->get_name()));
     } else {
@@ -3613,10 +3623,11 @@ int bx_write_configuration(const char *rc, int overwrite)
 #else
   fprintf(fp, "cpu: count=1, ips=%u, ", SIM->get_param_num(BXPN_IPS)->get());
 #endif
-  fprintf(fp, "model=%s, reset_on_triple_fault=%d, cpuid_limit_winnt=%d",
+  fprintf(fp, "model=%s, reset_on_triple_fault=%d, cpuid_limit_winnt=%d, cpuid_freq=%s",
     SIM->get_param_enum(BXPN_CPU_MODEL)->get_selected(),
     SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get(),
-    SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get());
+    SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get(),
+    SIM->get_param_enum(BXPN_CPUID_FREQ)->get_selected());
 #if BX_CPU_LEVEL >= 5
   fprintf(fp, ", ignore_bad_msrs=%d", SIM->get_param_bool(BXPN_IGNORE_BAD_MSRS)->get());
 #endif

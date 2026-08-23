@@ -1,18 +1,33 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 # this sets up the compile for MacOS X
 #
-# To support plugins on macosx, you must have "dlcompat" installed.  You can
-# get dlcompat by installing the fink package "dlcompat-devel".  On the SF
-# compile farm, dlcompat is in /sw/include and /sw/lib, so we have added
-# those paths to the environment variables.
+# To support plugins on macosx, you must have "dlcompat" installed.  You can get
+# dlcompat by installing the fink package "dlcompat-devel".  On the SF compile
+# farm, dlcompat is in /sw/include and /sw/lib, so we have added those paths to
+# the environment variables.
 
-set echo
-CFLAGS="-pipe -O3 -I/sw/include -fomit-frame-pointer -finline-functions -falign-loops=16 -falign-jumps=16 -falign-functions=16 -falign-labels=16 -falign-loops-max-skip=15 -falign-jumps-max-skip=15 -fprefetch-loop-arrays $CFLAGS"
+CC_NAME="$(basename "$CC" 2>/dev/null)"
+if [ "x$CC_NAME" = "xclang" ]; then
+    # Clang and Clang++ on MacOS do not support these optimization flags in my
+    # testing, and they were making any build impossible.
+    echo "Disabling some GCC-specific optimizations."
+
+    ADDED_FLAGS="-pipe -O3 -I/sw/include -fomit-frame-pointer \
+        -finline-functions"
+else
+    ADDED_FLAGS="-pipe -O3 -I/sw/include -fomit-frame-pointer \
+        -finline-functions -falign-loops=16 -falign-jumps=16 \
+        -falign-functions=16 -falign-labels=16 -falign-loops-max-skip=15 \
+        -falign-jumps-max-skip=15 -fprefetch-loop-arrays"
+fi
+
+CFLAGS="$ADDED_FLAGS $CFLAGS"
+CPPFLAGS="$ADDED_FLAGS $CPPFLAGS"
+CXXFLAGS="$ADDED_FLAGS $CXXFLAGS"
+LDFLAGS="-L/sw/lib $LDFLAGS"
+
 CPATH="/sw/include"
-CPPFLAGS=""
-CXXFLAGS="$CFLAGS"
-LDFLAGS="-L/sw/lib"
 
 export CFLAGS
 export CPATH
@@ -20,29 +35,48 @@ export CPPFLAGS
 export CXXFLAGS
 export LDFLAGS
 
-./configure --enable-sb16 \
-	    --enable-ne2000 \
-	    --enable-all-optimizations \
-            --enable-cpu-level=6 \
-            --enable-3dnow \
-            --enable-x86-64 \
-            --enable-vmx=2 \
-            --enable-svm \
-            --enable-avx \
-            --enable-evex \
-            --enable-cet \
-            --enable-fred \
-            --enable-pci \
-            --enable-clgd54xx \
-            --enable-geforce \
-            --enable-nvriva \
-            --enable-voodoo \
-            --enable-usb \
-            --enable-usb-ohci \
-            --enable-usb-ehci \
-            --enable-usb-xhci \
-            --enable-busmouse \
-            --enable-es1370 \
-            --enable-e1000 \
-	    --enable-plugins \
-	    ${CONFIGURE_ARGS}
+CONFIGURE_ARGS="${CONFIGURE_ARGS} --enable-all-optimizations \
+    --enable-cpu-level=6 --enable-3dnow --enable-x86-64 --enable-vmx=2 \
+    --enable-svm --enable-avx --enable-evex --enable-cet --enable-fred \
+    --enable-pci --enable-clgd54xx --enable-geforce --enable-nvriva --enable-voodoo \
+    --enable-usb --enable-usb-ohci --enable-usb-ehci --enable-usb-xhci \
+    --enable-busmouse"
+
+macosx_nosound=no
+macosx_nonetwork=no
+
+for i in "$@"; do
+    case "$i" in
+        # QuickTime is rarely available on MacOSX--it was only shipped for a
+        # very short window, and most people running MacOS fall on the outsides
+        # of that window, so we should provide an option to disable it, until
+        # there's a new backend written.
+        nosound)
+            macosx_nosound=yes
+            ;;
+        # I'm getting errors on this (even as far back as 2.8!) on MacOS 11.7,
+        # 15.4, and 26. I'm not totally certain what the error is, but until I
+        # fix it, this option will be here.
+        nonetwork)
+            macosx_nonetwork=yes
+            ;;
+        *)
+            printf 'Unknown argument %s.' "$i"
+            exit 1
+            ;;
+    esac
+done
+
+if [ "$macosx_nosound" = 'no' ]; then
+    CONFIGURE_ARGS="$CONFIGURE_ARGS --enable-sb16 --enable-es1370"
+else
+    echo 'Sound disabled.'
+fi
+
+if [ "$macosx_nonetwork" = 'no' ]; then
+    CONFIGURE_ARGS="$CONFIGURE_ARGS --enable-ne2000 --enable-e1000"
+else
+    echo 'Networking disabled.'
+fi
+
+./configure $CONFIGURE_ARGS

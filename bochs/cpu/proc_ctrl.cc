@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -25,6 +25,8 @@
 #include "cpu.h"
 #include "cpuid.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+extern void flushICaches(void);
 
 #if BX_SUPPORT_SVM
 #include "svm.h"
@@ -170,6 +172,7 @@ void BX_CPU_C::enter_sleep_state(unsigned state)
 
   case BX_ACTIVITY_STATE_MWAIT:
   case BX_ACTIVITY_STATE_MWAIT_IF:
+  case BX_ACTIVITY_WAIT_FOR_X87:
     break;
 
   default:
@@ -537,18 +540,10 @@ void BX_CPU_C::handleAvxModeChange(void)
       set_avx_ok();
 
 #if BX_SUPPORT_EVEX
-      if ((~BX_CPU_THIS_PTR xcr0.get32() & BX_XCR0_OPMASK_MASK) != 0) {
-        clear_opmask_ok();
+      if ((~BX_CPU_THIS_PTR xcr0.get32() & (BX_XCR0_ZMM_HI256_MASK | BX_XCR0_HI_ZMM_MASK | BX_XCR0_OPMASK_MASK)) != 0)
         clear_evex_ok();
-      }
-      else {
-        set_opmask_ok();
-
-        if ((~BX_CPU_THIS_PTR xcr0.get32() & (BX_XCR0_ZMM_HI256_MASK | BX_XCR0_HI_ZMM_MASK)) != 0)
-          clear_evex_ok();
-        else
-          set_evex_ok();
-      }
+      else
+        set_evex_ok();
 #endif
     }
   }
@@ -560,6 +555,15 @@ void BX_CPU_C::handleAvxModeChange(void)
   else
     set_amx_ok();
 #endif
+
+  if (BX_CPU_THIS_PTR cr4.get_OSXSAVE()) {
+    if ((BX_CPU_THIS_PTR xcr0.get32() & (BX_XCR0_ZMM_HI256_MASK | BX_XCR0_HI_ZMM_MASK | BX_XCR0_OPMASK_MASK)) != 0)
+      BX_CPU_THIS_PTR maxvl = BX_VL512;
+    else if ((BX_CPU_THIS_PTR xcr0.get32() & BX_XCR0_YMM_MASK) != 0)
+      BX_CPU_THIS_PTR maxvl = BX_VL256;
+    else
+      BX_CPU_THIS_PTR maxvl = BX_VL128;
+  }
 
   updateFetchModeMask(); /* AVX_OK changed */
 }
@@ -582,22 +586,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoAVX(bxInstruction_c *i)
 #endif
 
 #if BX_SUPPORT_EVEX
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoOpMask(bxInstruction_c *i)
-{
-  if (! protected_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE())
-    exception(BX_UD_EXCEPTION, 0);
-
-  if (~BX_CPU_THIS_PTR xcr0.get32() & (BX_XCR0_SSE_MASK | BX_XCR0_YMM_MASK | BX_XCR0_OPMASK_MASK))
-    exception(BX_UD_EXCEPTION, 0);
-
-  if(BX_CPU_THIS_PTR cr0.get_TS())
-    exception(BX_NM_EXCEPTION, 0);
-
-  BX_ASSERT(0);
-
-  BX_NEXT_TRACE(i); // keep compiler happy
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoEVEX(bxInstruction_c *i)
 {
   if (! protected_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE())
@@ -1315,6 +1303,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRFSBASE_Eq(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   Bit64u fsbase = BX_READ_64BIT_REG(i->src());
+  // check true paging mode canonicality according to SDM
   if (!IsCanonical(fsbase)) {
     BX_ERROR(("%s: canonical failure !", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -1342,6 +1331,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRGSBASE_Eq(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   Bit64u gsbase = BX_READ_64BIT_REG(i->src());
+  // check true paging mode canonicality according to SDM
   if (!IsCanonical(gsbase)) {
     BX_ERROR(("%s: canonical failure !", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);

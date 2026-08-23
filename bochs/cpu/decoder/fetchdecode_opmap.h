@@ -744,6 +744,12 @@ static const Bit64u BxOpcodeTable84[] = { last_opcode(0, BX_IA_TEST_EbGb) };
 // opcode 85
 static const Bit64u BxOpcodeTable85[] = {
 #if BX_SUPPORT_X86_64
+  form_opcode(ATTR_OS64 | ATTR_SRC_EQ_DST, BX_IA_TEST_EqGq_IDIOM),
+#endif
+  form_opcode(ATTR_OS32 | ATTR_SRC_EQ_DST, BX_IA_TEST_EdGd_IDIOM),
+  form_opcode(ATTR_OS16 | ATTR_SRC_EQ_DST, BX_IA_TEST_EwGw_IDIOM),
+
+#if BX_SUPPORT_X86_64
   form_opcode(ATTR_OS64, BX_IA_TEST_EqGq),
 #endif
   form_opcode(ATTR_OS32, BX_IA_TEST_EdGd),
@@ -1002,7 +1008,7 @@ static const Bit64u BxOpcodeTableB8xBF[] = {
   last_opcode(ATTR_OS16, BX_IA_MOV_EwIw)
 };
 
-// opcode D0
+// opcode C0
 static const Bit64u BxOpcodeTableC0[] = {
   form_opcode(ATTR_NNN0, BX_IA_ROL_EbIb),
   form_opcode(ATTR_NNN1, BX_IA_ROR_EbIb),
@@ -2044,7 +2050,10 @@ static const Bit64u BxOpcodeTable0F56[] = {
 
 // opcode 0F 57
 static const Bit64u BxOpcodeTable0F57[] = {
+  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_SRC_EQ_DST, BX_IA_XORPS_VpsWps_ZERO_IDIOM),
   form_opcode(ATTR_SSE_NO_PREFIX, BX_IA_XORPS_VpsWps),
+
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_SRC_EQ_DST, BX_IA_XORPD_VpdWpd_ZERO_IDIOM),
   last_opcode(ATTR_SSE_PREFIX_66, BX_IA_XORPD_VpdWpd)
 };
 
@@ -3078,6 +3087,7 @@ static const Bit64u BxOpcodeTable0FEE[] = {
 // opcode 0F EF
 static const Bit64u BxOpcodeTable0FEF[] = {
   form_opcode(ATTR_SSE_NO_PREFIX, BX_IA_PXOR_PqQq),
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_SRC_EQ_DST, BX_IA_PXOR_VdqWdq_ZERO_IDIOM),
   last_opcode(ATTR_SSE_PREFIX_66, BX_IA_PXOR_VdqWdq)
 };
 

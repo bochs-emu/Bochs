@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -230,10 +230,10 @@ private:
     int     head;
   } mouse_internal_buffer;
 
-  static void lower_interrupt(Bit8u port);
-  static void raise_interrupt(Bit8u port, int type);
+  BX_SER_SMF void lower_interrupt(Bit8u port);
+  BX_SER_SMF void raise_interrupt(Bit8u port, int type);
 
-  static void rx_fifo_enq(Bit8u port, Bit8u data);
+  BX_SER_SMF void rx_fifo_enq(Bit8u port, Bit8u data);
 
   static void tx_timer_handler(void *);
   BX_SER_SMF void tx_timer(void);
@@ -248,7 +248,7 @@ private:
   void mouse_enq(int delta_x, int delta_y, int delta_z, unsigned button_state, bool absxy);
   void update_mouse_data(void);
 
-  static const char *ser_get_name(Bit32u address, Bit8u port, bool read);
+  BX_SER_SMF const char *ser_get_name(Bit32u address, Bit8u port, bool read);
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 #if !BX_USE_SER_SMF

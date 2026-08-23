@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2025 Stanislav Shwartsman
+//   Copyright (c) 2011-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -65,8 +65,12 @@ bool BX_CPU_C::handleWaitForEvent(void)
       if (BX_CPU_THIS_PTR activity_state >= BX_ACTIVITY_STATE_MWAIT)
         BX_CPU_THIS_PTR monitor.reset_monitor();
 #endif
-      BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
       BX_CPU_THIS_PTR inhibit_mask = 0; // clear inhibits for after resume
+      break;
+    }
+
+    if (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_WAIT_FOR_X87 && BX_CPU_THIS_PTR get_IGNNE()) {
+      // #IGNNE is raised, end of waiting
       break;
     }
 
@@ -77,7 +81,6 @@ bool BX_CPU_C::handleWaitForEvent(void)
 
     if (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_ACTIVE) {
       // happens also when MWAIT monitor was hit
-//    BX_INFO(("handleWaitForEvent: reset detected in HLT state"));
       break;
     }
 
@@ -112,6 +115,10 @@ bool BX_CPU_C::handleWaitForEvent(void)
 
     BX_TICKN(10); // when in HLT run time faster for single CPU
   }
+
+  // wakeup if were waiting for x87
+  if (BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_WAIT_FOR_X87)
+    BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
 
   return 0;
 }
@@ -451,6 +458,7 @@ bool BX_CPU_C::handleAsyncEvent(void)
     BX_CPU_THIS_PTR async_event = 0;
   }
 
+  BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
   return 0; // Continue executing cpu_loop.
 }
 
@@ -469,6 +477,15 @@ void BX_CPU_C::inhibit_interrupts(unsigned mask)
 bool BX_CPU_C::interrupts_inhibited(unsigned mask)
 {
   return (get_icount() <= BX_CPU_THIS_PTR inhibit_icount) && (BX_CPU_THIS_PTR inhibit_mask & mask) == mask;
+}
+
+bool BX_CPU_C::get_IGNNE()
+{
+  static bool force_ignne = SIM->get_param_bool(BXPN_FORCE_IGNNE)->get();
+  if (force_ignne)
+    return true;
+
+  return bx_pc_system.get_IGNNE();
 }
 
 void BX_CPU_C::deliver_SIPI(unsigned vector)

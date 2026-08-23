@@ -1112,12 +1112,12 @@ Bit64s bx_es1370_c::es1370_param_handler(bx_param_c *param, bool set, Bit64s val
   if (set) {
     const char *pname = param->get_name();
     if (!strcmp(pname, "wavemode")) {
-      if (val != BX_ES1370_THIS wavemode) {
-        BX_ES1370_THIS wave_changed |= 1;
+      if (val != theES1370Device->wavemode) {
+        theES1370Device->wave_changed |= 1;
       }
     } else if (!strcmp(pname, "midimode")) {
-      if (val != BX_ES1370_THIS midimode) {
-        BX_ES1370_THIS midi_changed |= 1;
+      if (val != theES1370Device->midimode) {
+        theES1370Device->midi_changed |= 1;
       }
     } else {
       BX_PANIC(("es1370_param_handler called with unexpected parameter '%s'", pname));
@@ -1133,9 +1133,9 @@ const char* bx_es1370_c::es1370_param_string_handler(bx_param_string_c *param, b
   if (set && (strcmp(val, oldval))) {
     const char *pname = param->get_name();
     if (!strcmp(pname, "wavefile")) {
-      BX_ES1370_THIS wave_changed |= 2;
+      theES1370Device->wave_changed |= 2;
     } else if (!strcmp(pname, "midifile")) {
-      BX_ES1370_THIS midi_changed |= 2;
+      theES1370Device->midi_changed |= 2;
     } else {
       BX_PANIC(("es1370_param_string_handler called with unexpected parameter '%s'", pname));
     }

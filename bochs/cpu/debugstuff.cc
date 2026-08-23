@@ -339,7 +339,7 @@ void BX_CPU_C::debug(bx_address offset)
     (unsigned) BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS].cache.u.segment.d_b));
 
   Bit32u cr0 = BX_CPU_THIS_PTR cr0.get32();
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   bx_address cr4 = BX_CPU_THIS_PTR cr4.get();
 #endif
 
@@ -369,7 +369,7 @@ void BX_CPU_C::debug(bx_address offset)
     BX_INFO(("| CR0=0x%08x: %s", cr0, stringify_CR0(cr0, s)));
     BX_INFO(("| CR2=0x%08x", (unsigned) BX_CPU_THIS_PTR cr2));
     BX_INFO(("| CR3=0x%08x", (unsigned) BX_CPU_THIS_PTR cr3));
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
     BX_INFO(("| CR4=0x%08x: %s", cr4, stringify_CR4(cr4, s)));
 #endif
   }

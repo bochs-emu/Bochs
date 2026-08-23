@@ -324,7 +324,7 @@ Bit32s e1000_options_parser(const char *context, int num_params, char *params[])
     if (!SIM->get_param_bool("enabled", base)->get()) {
       SIM->get_param_enum("ethmod", base)->set_by_name("null");
     }
-    if (!SIM->get_param_string("mac", base)->isempty()) {
+    if (!SIM->get_param_bytestring("mac", base)->isempty()) {
       // MAC address is already initialized
       valid |= 0x04;
     }
@@ -540,7 +540,7 @@ void bx_e1000_c::init_card(Bit8u card)
   sprintf(s.devname, "e1000%c", 65+card);
   sprintf(s.ldevname, "Intel(R) Gigabit Ethernet #%d", card);
   put(s.devname);
-  memcpy(macaddr, SIM->get_param_string("mac", base)->getptr(), 6);
+  memcpy(macaddr, SIM->get_param_bytestring("mac", base)->getptr(), 6);
 
   memcpy(BX_E1000_THIS s.eeprom_data, e1000_eeprom_template,
          sizeof(e1000_eeprom_template));

@@ -828,6 +828,18 @@ void bx_unload_plugin_type(const char *name, Bit16u type)
   }
 }
 
+Bit16u bx_find_plugin(const char *name)
+{
+  plugin_t *plugin;
+
+  for (plugin = plugins; plugin; plugin = plugin->next) {
+    if (!strcmp(plugin->name, name)) {
+      return plugin->type;
+    }
+  }
+  return PLUGTYPE_NULL;
+}
+
 #endif   /* end of #if BX_PLUGINS */
 
 /*************************************************************************/
@@ -1046,7 +1058,6 @@ plugin_t bx_builtin_plugins[] = {
   BUILTIN_OPT_PLUGIN_ENTRY(unmapped),
   BUILTIN_OPT_PLUGIN_ENTRY(biosdev),
   BUILTIN_OPT_PLUGIN_ENTRY(speaker),
-  BUILTIN_OPT_PLUGIN_ENTRY(extfpuirq),
   BUILTIN_OPT_PLUGIN_ENTRY(fw_cfg),
 #if BX_SUPPORT_PCI
   BUILTIN_OPTPCI_PLUGIN_ENTRY(acpi),
@@ -1155,6 +1166,7 @@ plugin_t bx_builtin_plugins[] = {
   BUILTIN_IMG_PLUGIN_ENTRY(vpc),
   BUILTIN_IMG_PLUGIN_ENTRY(vhdx),
   BUILTIN_IMG_PLUGIN_ENTRY(vvfat),
+  {"extfpuirq", PLUGTYPE_STANDARD, 0, NULL, 0}, // Temporarily added to avoid panic
   {"NULL", PLUGTYPE_NULL, 0, NULL, 0}
 };
 
@@ -1201,6 +1213,19 @@ Bit8u bx_get_plugin_flags_np(Bit16u type, Bit8u index)
     i++;
   }
   return 0;
+}
+
+Bit16u bx_find_plugin_np(const char *name)
+{
+  int i = 0;
+
+  while (strcmp(bx_builtin_plugins[i].name, "NULL")) {
+    if (!strcmp(bx_builtin_plugins[i].name, name)) {
+      return bx_builtin_plugins[i].type;
+    }
+    i++;
+  }
+  return PLUGTYPE_NULL;
 }
 
 int bx_load_plugin_np(const char *name, Bit16u type)

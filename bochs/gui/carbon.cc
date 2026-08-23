@@ -809,7 +809,7 @@ void bx_carbon_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     vgafont[i] = NULL;
   }
   CreateMenus();
-  CreateVGAFont(vga_charmap);
+  CreateVGAFont((Bit8u (*))vga_charmap);
   CreateTile();
   CreateWindows();
 
@@ -1122,7 +1122,7 @@ void bx_carbon_gui_c::text_update(Bit8u *old_text, Bit8u *new_text,
       forceUpdate = 1;
   }
   if (charmap_updated == 1) {
-    CreateVGAFont(vga_charmap);
+    CreateVGAFont((Bit8u (*))vga_charmap);
     charmap_updated = 0;
     forceUpdate = 1;
   }
@@ -1387,7 +1387,7 @@ void bx_carbon_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight,
     if(fwidth != font_width || fheight != font_height) {
        font_width = fwidth;
        font_height = fheight;
-       CreateVGAFont(vga_charmap);
+       CreateVGAFont((Bit8u (*))vga_charmap);
     }
   }
 

@@ -12,7 +12,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Setup MSYS2
       uses: msys2/setup-msys2@v2
@@ -29,7 +29,7 @@ jobs:
       run: cd bochs && mv build/win32/vs2019-workspace/vs2019 vs2019
 
     - name: Add msbuild to PATH
-      uses: microsoft/setup-msbuild@v2
+      uses: microsoft/setup-msbuild@v3
 
     - name: Build
       run: msbuild bochs\vs2019\bochs.sln /t:Build /p:Configuration=Release /p:Platform=x64
@@ -39,7 +39,7 @@ jobs:
       run: echo "SHORT_GITHUB_SHA=$(git rev-parse --short ${{ github.sha }})" >> $GITHUB_ENV
 
     - name: Upload main binary artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: bochs-${{ env.SHORT_GITHUB_SHA }}-msvc.exe
         path: bochs/obj-release/bochs.exe

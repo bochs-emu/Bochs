@@ -230,6 +230,12 @@ bx_define_opcode(BX_IA_SUB_GwEw_ZERO_IDIOM, "sub", "subw", NULL, &BX_CPU_C::ZERO
 bx_define_opcode(BX_IA_SUB_EdGd_ZERO_IDIOM, "sub", "subl", NULL, &BX_CPU_C::ZERO_IDIOM_GdR, 0, OP_Ed, OP_Gd, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_SUB_GdEd_ZERO_IDIOM, "sub", "subl", NULL, &BX_CPU_C::ZERO_IDIOM_GdR, 0, OP_Gd, OP_Ed, OP_NONE, OP_NONE, 0)
 
+bx_define_opcode(BX_IA_TEST_EwGw_IDIOM, "test", "testw", NULL, &BX_CPU_C::TEST_GwR_ZERO_IDIOM, 0, OP_Ew, OP_Gw, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_TEST_EdGd_IDIOM, "test", "testl", NULL, &BX_CPU_C::TEST_GdR_ZERO_IDIOM, 0, OP_Ed, OP_Gd, OP_NONE, OP_NONE, 0)
+#if BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_TEST_EqGq_IDIOM, "test", "testq", NULL, &BX_CPU_C::TEST_GqR_ZERO_IDIOM, 0, OP_Eq, OP_Gq, OP_NONE, OP_NONE, 0)
+#endif
+
 bx_define_opcode(BX_IA_ADD_GbEb, "add", "addb", &BX_CPU_C::ADD_GbEbM, &BX_CPU_C::ADD_GbEbR, 0, OP_Gb, OP_Eb, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_OR_GbEb, "or", "orb", &BX_CPU_C::OR_GbEbM, &BX_CPU_C::OR_GbEbR, 0, OP_Gb, OP_Eb, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_ADC_GbEb, "adc", "adcb", &BX_CPU_C::ADC_GbEbM, &BX_CPU_C::ADC_GbEbR, 0, OP_Gb, OP_Eb, OP_NONE, OP_NONE, 0)
@@ -481,11 +487,11 @@ bx_define_opcode(BX_IA_LMSW_Ew, "lmsw", "lmsw", &BX_CPU_C::LMSW_Ew, &BX_CPU_C::L
 bx_define_opcode(BX_IA_MOV_CR0Rd, "mov", "movl", NULL, &BX_CPU_C::MOV_CR0Rd, 0, OP_Cd, OP_Ed, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_MOV_CR2Rd, "mov", "movl", NULL, &BX_CPU_C::MOV_CR2Rd, 0, OP_Cd, OP_Ed, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOV_CR3Rd, "mov", "movl", NULL, &BX_CPU_C::MOV_CR3Rd, 0, OP_Cd, OP_Ed, OP_NONE, OP_NONE, BX_TRACE_END)
-bx_define_opcode(BX_IA_MOV_CR4Rd, "mov", "movl", NULL, &BX_CPU_C::MOV_CR4Rd, BX_ISA_PENTIUM, OP_Cd, OP_Ed, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_MOV_CR4Rd, "mov", "movl", NULL, &BX_CPU_C::MOV_CR4Rd, BX_ISA_486, OP_Cd, OP_Ed, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_MOV_RdCR0, "mov", "movl", NULL, &BX_CPU_C::MOV_RdCR0, 0, OP_Ed, OP_Cd, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOV_RdCR2, "mov", "movl", NULL, &BX_CPU_C::MOV_RdCR2, 0, OP_Ed, OP_Cd, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOV_RdCR3, "mov", "movl", NULL, &BX_CPU_C::MOV_RdCR3, 0, OP_Ed, OP_Cd, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_MOV_RdCR4, "mov", "movl", NULL, &BX_CPU_C::MOV_RdCR4, BX_ISA_PENTIUM, OP_Ed, OP_Cd, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_MOV_RdCR4, "mov", "movl", NULL, &BX_CPU_C::MOV_RdCR4, BX_ISA_486, OP_Ed, OP_Cd, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOV_RdDd, "mov", "movl", NULL, &BX_CPU_C::MOV_RdDd, 0, OP_Ed, OP_Dd, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MOV_DdRd, "mov", "movl", NULL, &BX_CPU_C::MOV_DdRd, 0, OP_Dd, OP_Ed, OP_NONE, OP_NONE, BX_TRACE_END)
 
@@ -1258,6 +1264,11 @@ bx_define_opcode(BX_IA_PSLLDQ_UdqIb, "pslldq", "pslldq", &BX_CPU_C::BxError, &BX
 bx_define_opcode(BX_IA_LFENCE, "lfence", "lfence", &BX_CPU_C::BxError, &BX_CPU_C::NOP, BX_ISA_SSE2, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_SFENCE, "sfence", "sfence", &BX_CPU_C::BxError, &BX_CPU_C::NOP, BX_ISA_SSE, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_MFENCE, "mfence", "mfence", &BX_CPU_C::BxError, &BX_CPU_C::NOP, BX_ISA_SSE2, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
+
+bx_define_opcode(BX_IA_XORPS_VpsWps_ZERO_IDIOM, "xorps", "xorps", NULL, &BX_CPU_C::ZERO_IDIOM_SSE_VdqR, BX_ISA_SSE, OP_Vps, OP_Wps, OP_NONE, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_XORPD_VpdWpd_ZERO_IDIOM, "xorpd", "xorpd", NULL, &BX_CPU_C::ZERO_IDIOM_SSE_VdqR, BX_ISA_SSE2, OP_Vpd, OP_Wpd, OP_NONE, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_PXOR_VdqWdq_ZERO_IDIOM,  "pxor",  "pxor",  NULL, &BX_CPU_C::ZERO_IDIOM_SSE_VdqR, BX_ISA_SSE2, OP_Vps, OP_Wps, OP_NONE, OP_NONE, BX_PREPARE_SSE)
+
 // SSE and SSE2
 
 // SSE3
@@ -2790,7 +2801,6 @@ bx_define_opcode(BX_IA_TDPBF16PS_TnnnTrmTreg, "tdpbf16ps", "tdpbf16ps", NULL, &B
 bx_define_opcode(BX_IA_TDPFP16PS_TnnnTrmTreg, "tdpfp16ps", "tdpfp16ps", NULL, &BX_CPU_C::TDPFP16PS_TnnnTrmTreg, BX_ISA_AMX_FP16, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
 bx_define_opcode(BX_IA_TCMMRLFP16PS_TnnnTrmTreg, "tcmmrlfp16ps", "tcmmrlfp16ps", NULL, &BX_CPU_C::TCMMRLFP16PS_TnnnTrmTreg, BX_ISA_AMX_COMPLEX, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
 bx_define_opcode(BX_IA_TCMMIMFP16PS_TnnnTrmTreg, "tcmmimfp16ps", "tcmmimfp16ps", NULL, &BX_CPU_C::TCMMIMFP16PS_TnnnTrmTreg, BX_ISA_AMX_COMPLEX, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
-bx_define_opcode(BX_IA_TMMULTF32PS_TnnnTrmTreg, "tmmultf32ps", "tmmultf32ps", NULL, &BX_CPU_C::TMMULTF32PS_TnnnTrmTreg, BX_ISA_AMX_TF32, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
 bx_define_opcode(BX_IA_TDPBF8PS_TnnnTrmTreg, "tdpbf8ps", "tdpbf8ps", NULL, &BX_CPU_C::TDPBF8PS_TnnnTrmTreg, BX_ISA_AMX_FP8, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
 bx_define_opcode(BX_IA_TDPHF8PS_TnnnTrmTreg, "tdphf8ps", "tdpbh8ps", NULL, &BX_CPU_C::TDPHF8PS_TnnnTrmTreg, BX_ISA_AMX_FP8, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
 bx_define_opcode(BX_IA_TDPBHF8PS_TnnnTrmTreg, "tdpbhf8ps", "tdpbf8ps", NULL, &BX_CPU_C::TDPBHF8PS_TnnnTrmTreg, BX_ISA_AMX_FP8, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
@@ -2880,6 +2890,15 @@ bx_define_opcode(BX_IA_KTESTD_KGdKEd, "ktestd", "ktestd", &BX_CPU_C::BxError, &B
 // RDMSR/WRMSRNS imm form
 bx_define_opcode(BX_IA_RDMSR_EqId, "rdmsr", "rdmsr", NULL, &BX_CPU_C::RDMSR, BX_ISA_MSR_IMM, OP_Eq, OP_Id, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_WRMSRNS_IdEq, "wrmsrns", "wrmsrns", NULL, &BX_CPU_C::WRMSR, BX_ISA_MSR_IMM, OP_Id, OP_Eq, OP_NONE, OP_NONE, BX_TRACE_END)
+
+// URDMSR/UWRMSR imm form
+bx_define_opcode(BX_IA_URDMSR_EqId, "urdmsr", "urdmsr", NULL, &BX_CPU_C::URDMSR, BX_ISA_USER_MSR, OP_Eq, OP_Id, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_UWRMSR_IdEq, "uwrmsr", "uwrmsr", NULL, &BX_CPU_C::UWRMSR, BX_ISA_USER_MSR, OP_Id, OP_Eq, OP_NONE, OP_NONE, BX_TRACE_END)
+#endif
+
+#if BX_SUPPORT_X86_64
+bx_define_opcode(BX_IA_URDMSR_EqGq, "urdmsr", "urdmsr", NULL, &BX_CPU_C::URDMSR, BX_ISA_USER_MSR, OP_Eq, OP_Gq, OP_NONE, OP_NONE, BX_TRACE_END)
+bx_define_opcode(BX_IA_UWRMSR_GqEq, "uwrmsr", "uwrmsr", NULL, &BX_CPU_C::UWRMSR, BX_ISA_USER_MSR, OP_Gq, OP_Eq, OP_NONE, OP_NONE, BX_TRACE_END)
 #endif
 
 // MOVRS only supported in 64-bit mode

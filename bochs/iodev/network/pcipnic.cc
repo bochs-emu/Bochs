@@ -64,7 +64,7 @@ Bit32s pnic_options_parser(const char *context, int num_params, char *params[])
     if (!SIM->get_param_bool("enabled", base)->get()) {
       SIM->get_param_enum("ethmod", base)->set_by_name("null");
     }
-    if (!SIM->get_param_string("mac", base)->isempty()) {
+    if (!SIM->get_param_bytestring("mac", base)->isempty()) {
       // MAC address is already initialized
       valid |= 0x04;
     }
@@ -152,7 +152,7 @@ void bx_pcipnic_c::init(void)
     return;
   }
 
-  memcpy(BX_PNIC_THIS s.macaddr, SIM->get_param_string("mac", base)->getptr(), 6);
+  memcpy(BX_PNIC_THIS s.macaddr, SIM->get_param_bytestring("mac", base)->getptr(), 6);
 
   BX_PNIC_THIS s.devfunc = 0x00;
   DEV_register_pci_handlers(this, &BX_PNIC_THIS s.devfunc, BX_PLUGIN_PCIPNIC,

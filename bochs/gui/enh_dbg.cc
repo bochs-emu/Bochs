@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2025  The Bochs Project
+//  Copyright (C) 2008-2026  The Bochs Project
 
 #include "config.h"
 
@@ -147,14 +147,14 @@ static const char* RegLCName[EFER_Rnum + 1] = {
     "gdtr","idtr","ldtr","tr","cr0","cr2","cr3","cr4","efer"
 };
 static char* RDispName[EFER_Rnum + 1];
-static bx_param_num_c *RegObject[BX_MAX_SMP_THREADS_SUPPORTED][TOT_REG_NUM + EXTRA_REGS];
+static bx_param_num_c *RegObject[BX_MAX_SMP_THREADS_SUPPORTED][STD_REG_NUM + EXTRA_REGS];
 Bit64u rV[EFER_Rnum + 1];   // current values of registers
 Bit64u PV[EFER_Rnum + 1];   // previous values of registers
 Bit32s GDT_Len;             // "limits" (= bytesize-1) for GDT and IDT
 Bit32s IDT_Len;
-Bit8u RegColor[TOT_REG_NUM];    // specifies foreground and background color of registers
+Bit8u RegColor[STD_REG_NUM+EXTRA_REGS];    // specifies foreground and background color of registers
 // Text color is red if the upper bit is set. Background is set according to ColorList.
-int RitemToRnum[TOT_REG_NUM];   // mapping from Reg List Item# to register number
+int RitemToRnum[STD_REG_NUM];   // mapping from Reg List Item# to register number
 
 Bit64u ladrmin = 0; // bochs linear addressing access variables
 Bit64u ladrmax = 0;
@@ -1204,7 +1204,7 @@ void InitRegObjects()
     {
         // RegObject[j]s are all initialized to NULL when allocated in the BSS area
         // but it doesn't hurt anything to do it again, once
-        int i = TOT_REG_NUM + EXTRA_REGS;
+        int i = STD_REG_NUM + EXTRA_REGS;
         while (--i >= 0)
             RegObject[cpu][i] = (bx_param_num_c *) NULL;
 
@@ -1259,7 +1259,7 @@ void InitRegObjects()
         RegObject[cpu][CR0_Rnum] = SIM->get_param_num("CR0", cpu_list);
         RegObject[cpu][CR2_Rnum] = SIM->get_param_num("CR2", cpu_list);
         RegObject[cpu][CR3_Rnum] = SIM->get_param_num("CR3", cpu_list);
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
         RegObject[cpu][CR4_Rnum] = SIM->get_param_num("CR4", cpu_list);
 #endif
 #if BX_CPU_LEVEL >= 6
@@ -1658,7 +1658,7 @@ void FillPAGE()
         lin++;
     }
     if(start_lin != 1) {
-        sprintf (pa_lin,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_lin, -1);
+        sprintf (pa_lin,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_lin, (Bit64u)-1);
         sprintf (pa_phy,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_phy, start_phy + (lin-1-start_lin));
         AddPagingLine (LineCount,pa_lin,pa_phy);
     }
@@ -2160,7 +2160,7 @@ void DoAllInit()
     p -= 512;           // 2 "hex" bytes per byte value
     tmpcb = p;
 
-    i = TOT_REG_NUM;        // fake up a color table -- there are just enough, currently
+    i = STD_REG_NUM;        // fake up a color table -- there are just enough, currently
     int j = 7;      // color 7 = orange
     while (i > 0)
     {
@@ -2735,7 +2735,7 @@ void ChangeReg()
 {
     // Change a register -- search for the first selected register
     int L = GetNextSelectedLI(REG_WND, -1);
-    if (AtBreak == FALSE || L == -1 || L >= TOT_REG_NUM)
+    if (AtBreak == FALSE || L == -1 || L >= STD_REG_NUM)
         return;
 
     int i = RitemToRnum[L];

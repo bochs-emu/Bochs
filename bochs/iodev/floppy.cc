@@ -190,6 +190,8 @@ bx_floppy_ctrl_c::bx_floppy_ctrl_c()
 {
   put("FLOPPY");
   memset(&s, 0, sizeof(s));
+  s.media[0].fd = -1;
+  s.media[1].fd = -1;
   s.floppy_timer_index = BX_NULL_TIMER_HANDLE;
   s.statusbar_id[0] = -1;
   s.statusbar_id[1] = -1;
@@ -215,7 +217,7 @@ bx_floppy_ctrl_c::~bx_floppy_ctrl_c()
 
 void bx_floppy_ctrl_c::init(void)
 {
-  DEV_dma_register_8bit_channel(2, dma_read, dma_write, "Floppy Drive");
+  DEV_dma_register_8bit_channel(2, this, dma_read_handler, dma_write_handler, "Floppy Drive");
   DEV_register_irq(6, "Floppy Drive");
   for (unsigned addr=0x03F0; addr<=0x03F7; addr++) {
     DEV_register_ioread_handler(this, read_handler, addr, "Floppy Drive", 1);
@@ -563,7 +565,7 @@ Bit32u bx_floppy_ctrl_c::read(Bit32u address, unsigned io_len)
           (((BX_FD_THIS s.pending_command & 0x5f) == (FD_CMD_MFM | FD_CMD_READ_NORMAL_DATA)) ||
            ((BX_FD_THIS s.pending_command & 0x5f) == (FD_CMD_MFM | FD_CMD_READ_DELETED_DATA)) ||
            ((BX_FD_THIS s.pending_command & 0x5f) == (FD_CMD_MFM | FD_CMD_READ_TRACK)))) {
-        dma_write(&value, 1);
+        dma_write_handler(BX_FD_THISP, &value, 1);
         lower_interrupt();
         // don't enter idle phase until we've given CPU last data byte
         if (BX_FD_THIS s.TC) enter_idle_phase();
@@ -794,7 +796,7 @@ void bx_floppy_ctrl_c::write(Bit32u address, Bit32u value, unsigned io_len)
          ((BX_FD_THIS s.pending_command & 0x5f) == (FD_CMD_MFM | FD_CMD_SCAN_EQUAL))  ||
          ((BX_FD_THIS s.pending_command & 0x5f) == (FD_CMD_MFM | FD_CMD_SCAN_LOW_EQUAL))  ||
          ((BX_FD_THIS s.pending_command & 0x5f) == (FD_CMD_MFM | FD_CMD_SCAN_HIGH_EQUAL)))) {
-        BX_FD_THIS dma_read((Bit8u *) &value, 1);
+        BX_FD_THIS dma_read_handler(BX_FD_THISP, (Bit8u *) &value, 1);
         BX_FD_THIS lower_interrupt();
         break;
       } else if (BX_FD_THIS s.command_complete) {
@@ -1914,8 +1916,16 @@ void bx_floppy_ctrl_c::timer()
   }
 }
 
+Bit16u bx_floppy_ctrl_c::dma_write_handler(void *this_ptr, Bit8u *buffer, Bit16u maxlen)
+{
+#if !BX_USE_FD_SMF
+  bx_floppy_ctrl_c *class_ptr = (bx_floppy_ctrl_c *) this_ptr;
+  return class_ptr->dma_write(buffer, maxlen);
+}
+
 Bit16u bx_floppy_ctrl_c::dma_write(Bit8u *buffer, Bit16u maxlen)
 {
+#endif
   // A DMA write is from I/O to Memory
   // We need to return the next data byte(s) from the floppy buffer
   // to be transfered via the DMA to memory. (read block from floppy)
@@ -1974,8 +1984,16 @@ Bit16u bx_floppy_ctrl_c::dma_write(Bit8u *buffer, Bit16u maxlen)
 // On physical hardware, we can set the sector ID to something different,
 //  but all sectors are consecutively formatted starting with physical sector 1,
 //  written in order to physical sector EOT.
+Bit16u bx_floppy_ctrl_c::dma_read_handler(void *this_ptr, Bit8u *buffer, Bit16u maxlen)
+{
+#if !BX_USE_FD_SMF
+  bx_floppy_ctrl_c *class_ptr = (bx_floppy_ctrl_c *) this_ptr;
+  return class_ptr->dma_read(buffer, maxlen);
+}
+
 Bit16u bx_floppy_ctrl_c::dma_read(Bit8u *buffer, Bit16u maxlen)
 {
+#endif
   // A DMA read is from Memory to I/O
   // We need to write the data_byte which was already transfered from memory
   // via DMA to I/O (write block to floppy)
@@ -3016,10 +3034,10 @@ Bit64s bx_floppy_ctrl_c::floppy_param_handler(bx_param_c *param, bool set, Bit64
   if (set) {
     Bit8u drive = atoi(base->get_name());
     if (!strcmp(param->get_name(), "status")) {
-      BX_FD_THIS s.media[drive].status_changed = 1;
+      theFloppyController->s.media[drive].status_changed = 1;
     } else if (!strcmp(param->get_name(), "readonly")) {
-      BX_FD_THIS s.media[drive].write_protected = (bool)val;
-      BX_FD_THIS s.media[drive].status_changed = 1;
+      theFloppyController->s.media[drive].write_protected = (bool)val;
+      theFloppyController->s.media[drive].status_changed = 1;
     }
   }
   return val;
@@ -3044,7 +3062,7 @@ const char* bx_floppy_ctrl_c::floppy_param_string_handler(bx_param_string_c *par
       }
       if (SIM->get_param_enum("status", base)->get() == BX_INSERTED) {
         // tell the device model that we removed, then inserted the disk
-        BX_FD_THIS s.media[drive].status_changed = 1;
+        theFloppyController->s.media[drive].status_changed = 1;
       }
     }
   } else {

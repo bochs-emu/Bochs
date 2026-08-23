@@ -492,7 +492,7 @@ void parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
         break;
 
       default: // reserved
-        temp->valid    = 0;
+        temp->valid = 0;
         break;
     }
   }

@@ -23,7 +23,7 @@
 
 #if BX_USB_DEBUGGER
 
-#include "windowsx.h"
+#include <windowsx.h>
 
 #include "win32dialog.h"
 
@@ -33,8 +33,6 @@
 #include "usb_debug.h"
 #include "win32usbres.h"
 #include "win32usb.h"
-
-#include "iodev/usb/usb_common.h"
 
 static const int dlg_resource[5] = {
   0,
@@ -318,6 +316,8 @@ INT_PTR CALLBACK hc_uhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
   return 0;
 }
 
+#include "iodev/usb/usb_uhci-defs.h"
+
 bx_list_c *UHCI_state = NULL;
 
 // returns -1 if error, else returns ID to control to set the focus to
@@ -335,23 +335,23 @@ int hc_uhci_init(HWND hwnd)
   // set the dialog title to the break type
   switch (g_params.break_type) {
     case USB_DEBUG_FRAME:
-      SetWindowText(hwnd, "UHCI Debug Dialog: Break Type: Start of Frame");
+      sprintf(str, "%s Debug Dialog: Break Type: Start of Frame", get_usb_hc_name(USB_DEBUG_UHCI));
+      SetWindowText(hwnd, str);
       break;
     case USB_DEBUG_COMMAND:
-      SetWindowText(hwnd, "UHCI Debug Dialog: Break Type: Doorbell");
+      sprintf(str, "%s Debug Dialog: Break Type: Doorbell", get_usb_hc_name(USB_DEBUG_UHCI));
+      SetWindowText(hwnd, str);
       break;
-    //case USB_DEBUG_EVENT:
-    //  SetWindowText(hwnd, "UHCI Debug Dialog: Break Type: Event Ring");
-    //  break;
     case USB_DEBUG_NONEXIST:
-      SetWindowText(hwnd, "UHCI Debug Dialog: Break Type: Non-existant Port Write");
+      sprintf(str, "%s Debug Dialog: Break Type: Non-existant Port Write", get_usb_hc_name(USB_DEBUG_UHCI));
+      SetWindowText(hwnd, str);
       break;
     case USB_DEBUG_RESET:
-      sprintf(str, "UHCI Debug Dialog: Break Type: Port %d Reset", g_params.wParam);
+      sprintf(str, "%s Debug Dialog: Break Type: Port %d Reset", get_usb_hc_name(USB_DEBUG_UHCI), g_params.wParam);
       SetWindowText(hwnd, str);
       break;
     case USB_DEBUG_ENABLE:
-      sprintf(str, "UHCI Debug Dialog: Break Type: Port %d Enable", g_params.wParam);
+      sprintf(str, "%s Debug Dialog: Break Type: Port %d Enable", get_usb_hc_name(USB_DEBUG_UHCI), g_params.wParam);
       SetWindowText(hwnd, str);
       break;
   }
@@ -817,6 +817,7 @@ INT_PTR CALLBACK hc_uhci_callback_td(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //  OHCI
 //
+static bool o_changed[IDC_O_EN_END - IDC_O_EN_START + 1];
 
 // lParam: type is in low 8 bits, break_type in high 8-bits of low word
 INT_PTR CALLBACK hc_ohci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -836,6 +837,9 @@ INT_PTR CALLBACK hc_ohci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
       if (ret < 0) {
         MessageBox(hDlg, "Error initializing dialog", NULL, MB_ICONINFORMATION);
       }
+
+      memset(o_changed, 0, sizeof(o_changed));
+      EnableWindow(GetDlgItem(hDlg, ID_APPLY), 0);
 
       if (ret >= 0) {
         SetFocus(GetDlgItem(hDlg, ret));
@@ -865,6 +869,28 @@ INT_PTR CALLBACK hc_ohci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
               TreeView = NULL;
               EndDialog(hDlg, -1);  // -1 to quit the SIM
               break;
+            case ID_APPLY:
+              hc_ohci_save(hDlg);
+              break;
+            case IDC_O_REG_CONTROL_B:
+              do_attributes(hDlg, IDC_O_REG_CONTROL, 8, "Control Register", attribs_o_control);
+              break;
+            case IDC_O_REG_COMMAND_STATUS_B:
+              do_attributes(hDlg, IDC_O_REG_COMMAND_STATUS, 8, "Command Status Register", attribs_o_cmd_sts);
+              break;
+            case IDC_O_REG_PORT0_B:
+              do_attributes(hDlg, IDC_O_REG_PORT0, 8, "Port0 Register", attribs_o_ports);
+              break;
+            case IDC_O_REG_PORT1_B:
+              do_attributes(hDlg, IDC_O_REG_PORT1, 8, "Port1 Register", attribs_o_ports);
+              break;
+          }
+          break;
+        // one of the edit controls changed
+        case EN_CHANGE:
+          if ((LOWORD(wParam) >= IDC_O_EN_START) && (LOWORD(wParam) <= IDC_O_EN_END)) {
+            o_changed[LOWORD(wParam) - IDC_O_EN_START] = 1;
+            EnableWindow(GetDlgItem(hDlg, ID_APPLY), 1);
           }
           break;
       }
@@ -883,12 +909,36 @@ int hc_ohci_init(HWND hwnd)
 {
   bx_param_enum_c* device;
   char str[COMMON_STR_SIZE];
-  Bit32u dword;
+  Bit32u dword, frame_addr;
   int ret = IDOK;
 
   OHCI_state = get_usb_hc_state(USB_DEBUG_OHCI);
   if (OHCI_state == NULL)
     return -1;
+
+  // set the dialog title to the break type
+  switch (g_params.break_type) {
+    case USB_DEBUG_FRAME:
+      sprintf(str, "%s Debug Dialog: Break Type: Start of Frame", get_usb_hc_name(USB_DEBUG_OHCI));
+      SetWindowText(hwnd, str);
+      break;
+    case USB_DEBUG_COMMAND:
+      sprintf(str, "%s Debug Dialog: Break Type: Doorbell", get_usb_hc_name(USB_DEBUG_OHCI));
+      SetWindowText(hwnd, str);
+      break;
+    case USB_DEBUG_NONEXIST:
+      sprintf(str, "%s Debug Dialog: Break Type: Non-existant Port Write", get_usb_hc_name(USB_DEBUG_OHCI));
+      SetWindowText(hwnd, str);
+      break;
+    case USB_DEBUG_RESET:
+      sprintf(str, "%s Debug Dialog: Break Type: Port %d Reset", get_usb_hc_name(USB_DEBUG_OHCI), g_params.wParam);
+      SetWindowText(hwnd, str);
+      break;
+    case USB_DEBUG_ENABLE:
+      sprintf(str, "%s Debug Dialog: Break Type: Port %d Enable", get_usb_hc_name(USB_DEBUG_OHCI), g_params.wParam);
+      SetWindowText(hwnd, str);
+      break;
+  }
 
   CheckDlgButton(hwnd, IDC_DEBUG_RESET,    SIM->get_param_bool(BXPN_USB_DEBUG_RESET)->get() ? BST_CHECKED : BST_UNCHECKED);
   CheckDlgButton(hwnd, IDC_DEBUG_ENABLE,   SIM->get_param_bool(BXPN_USB_DEBUG_ENABLE)->get() ? BST_CHECKED : BST_UNCHECKED);
@@ -982,11 +1032,40 @@ int hc_ohci_init(HWND hwnd)
   }
   SetDlgItemText(hwnd, IDC_O_REG_PORT1_TYPE, str);
 
+  frame_addr = 0; // TODO
+  sprintf(str, "0x%08X", frame_addr);
+  SetDlgItemText(hwnd, IDC_FRAME_ADDRESS, str);
+
   tree_items = 0;
   TreeView_DeleteAllItems(TreeView);
 
   bool valid = 0;
-  // TODO
+  switch (g_params.break_type) {
+    // The process_td() function was called
+    case USB_DEBUG_COMMAND:
+    // The start of a frame timer was triggered
+    case USB_DEBUG_FRAME:
+      SetDlgItemText(hwnd, IDC_RING_TYPE, "SOF Frame Address");
+      if (frame_addr != 0x00000000) {
+        // TODO
+      }
+      break;
+
+    // an event triggered. We ignore these in the ohci
+    //case USB_DEBUG_EVENT:
+    //  break;
+
+    // first byte (word, dword, qword) of first non-existant port was written to
+    case USB_DEBUG_NONEXIST:
+    // port reset (non-root reset)
+    case USB_DEBUG_RESET:
+    // enable changed
+    case USB_DEBUG_ENABLE:
+      SetDlgItemText(hwnd, IDC_RING_TYPE, "None");
+      SetDlgItemText(hwnd, IDC_FRAME_ADDRESS, "None");
+      EnableWindow(GetDlgItem(hwnd, IDC_VIEW_TD), FALSE);
+      break;
+  }
 
   if (!valid) {
     TreeView_SetBkColor(TreeView, COLORREF(0x00A9A9A9));
@@ -995,6 +1074,14 @@ int hc_ohci_init(HWND hwnd)
     SetDlgItemText(hwnd, IDC_TREE_COMMENT, "TreeView populated");
 
   return ret;
+}
+
+int hc_ohci_save(HWND hwnd)
+{
+
+  MessageBox(hwnd, "OHCI: Save to controller is not yet implemented!", NULL, MB_ICONINFORMATION);
+
+  return 0;
 }
 
 
@@ -1125,7 +1212,7 @@ INT_PTR CALLBACK hc_xhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
         // one of the edit controls changed
         case EN_CHANGE:
           if ((LOWORD(wParam) >= IDC_X_EN_START) && (LOWORD(wParam) <= IDC_X_EN_END)) {
-            u_changed[LOWORD(wParam) - IDC_X_EN_START] = 1;
+            x_changed[LOWORD(wParam) - IDC_X_EN_START] = 1;
             EnableWindow(GetDlgItem(hDlg, ID_APPLY), 1);
           }
           break;
@@ -1149,7 +1236,7 @@ INT_PTR CALLBACK hc_xhci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lPa
   return 0;
 }
 
-#include "iodev/usb/usb_xhci.h"
+#include "iodev/usb/usb_xhci-defs.h"
 
 bx_list_c *XHCI_state = NULL;
 
@@ -3672,8 +3759,6 @@ BOOL    a_single;
 DWORD64 a_attrib;
 const struct S_ATTRIBUTES *a_attributes;
 HWND ListBox = NULL;
-
-#include <windowsx.h>
 
 static INT_PTR CALLBACK attribute_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {

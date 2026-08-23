@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "15 Feb 2026" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "22 Aug 2026" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -48,8 +48,8 @@ directly with this option and some of them install a config option that is
 only available when the plugin device is loaded. The value "1" means to load
 the plugin and "0" will unload it (if loaded before).
 
-These plugins will be loaded by default (if present): 'biosdev', 'extfpuirq',
-\&'gameport', 'iodebug','parallel', 'serial', 'speaker' and 'unmapped'.
+These plugins will be loaded by default (if present): 'biosdev', 'gameport',
+\&'iodebug','parallel', 'serial', 'speaker' and 'unmapped'.
 
 These plugins are also supported, but they are usually loaded directly with
 their bochsrc option: 'e1000', 'es1370', 'ne2k', 'pcidev', 'pcipnic', 'sb16',
@@ -174,6 +174,20 @@ cpuid_limit_winnt:
 
 Determine whether to limit maximum CPUID function to 2. This mode is
 required to workaround WinNT installation and boot issues.
+
+force_ignne:
+
+Always act like if #IGNNE pin was asserted on CPU input.
+Avoid potential deadlock after unmasked x87 exception handling and FERR# assertion.
+
+cpuid_freq:
+
+Select how the CPUID frequency leaves 0x15/0x16 are reported by CPU models
+that implement them (hardware/none/ips). With 'hardware' (default) the
+values dumped from the modeled hardware are reported, but modern guest
+kernels trust these leaves for TSC calibration while the emulated TSC
+actually advances at the IPS rate. With 'none' the frequencies are reported
+as not enumerated, with 'ips' the leaves report the emulated tick rate.
 
 mwait_is_nop:
 

@@ -110,14 +110,20 @@ bx_vga_c::bx_vga_c() : bx_vgacore_c()
 
 bx_vga_c::~bx_vga_c()
 {
-  SIM->get_bochs_root()->remove("vga");
+  if (BX_VGA_THIS s.memory == NULL) {
+    delete [] BX_VGA_THIS s.memory;
+    BX_VGA_THIS s.memory = NULL;
+  }
+
+  if (SIM->get_bochs_root())
+    SIM->get_bochs_root()->remove("vga");
+
   BX_DEBUG(("Exit"));
 }
 
 bool bx_vga_c::init_vga_extension(void)
 {
-  unsigned addr;
-  bool ret = 0;
+  bool ret = false;
 
   BX_VGA_THIS init_iohandlers(read_handler, write_handler, "vga_video");
   BX_VGA_THIS pci_enabled = SIM->is_pci_device("pcivga");
@@ -130,7 +136,7 @@ bool bx_vga_c::init_vga_extension(void)
   BX_VGA_THIS vbe.base_address = 0x0000;
   if (!strcmp(BX_VGA_THIS vga_ext->get_selected(), "vbe")) {
     BX_VGA_THIS put("BXVGA");
-    for (addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
+    for (unsigned addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
       DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
       DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
     }
@@ -165,7 +171,7 @@ bool bx_vga_c::init_vga_extension(void)
     BX_VGA_THIS s.max_xres = BX_VGA_THIS vbe.max_xres;
     BX_VGA_THIS s.max_yres = BX_VGA_THIS vbe.max_yres;
     BX_VGA_THIS vbe_present = 1;
-    ret = 1;
+    ret = true;
 
     BX_INFO(("VBE Bochs Display Extension Enabled (%d MB)", BX_VGA_THIS s.memsize >> 20));
   }
@@ -688,6 +694,7 @@ void bx_vga_c::update(void)
 
 bool bx_vga_c::mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
+  bx_vga_c *class_ptr = (bx_vga_c *) param;
   Bit8u *data_ptr;
 #ifdef BX_LITTLE_ENDIAN
   data_ptr = (Bit8u *) data;
@@ -695,7 +702,7 @@ bool bx_vga_c::mem_read_handler(bx_phy_address addr, unsigned len, void *data, v
   data_ptr = (Bit8u *) data + (len - 1);
 #endif
   for (unsigned i = 0; i < len; i++) {
-    *data_ptr = theVga->mem_read(addr);
+    *data_ptr = class_ptr->mem_read(addr);
     addr++;
 #ifdef BX_LITTLE_ENDIAN
     data_ptr++;
@@ -738,6 +745,7 @@ Bit8u bx_vga_c::mem_read(bx_phy_address addr)
 
 bool bx_vga_c::mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
+  bx_vga_c *class_ptr = (bx_vga_c *) param;
   Bit8u *data_ptr;
 #ifdef BX_LITTLE_ENDIAN
   data_ptr = (Bit8u *) data;
@@ -745,7 +753,7 @@ bool bx_vga_c::mem_write_handler(bx_phy_address addr, unsigned len, void *data, 
   data_ptr = (Bit8u *) data + (len - 1);
 #endif
   for (unsigned i = 0; i < len; i++) {
-    theVga->mem_write(addr, *data_ptr);
+    class_ptr->mem_write(addr, *data_ptr);
     addr++;
 #ifdef BX_LITTLE_ENDIAN
     data_ptr++;
@@ -1082,7 +1090,7 @@ void bx_vga_c::vbe_write_handler(void *this_ptr, Bit32u address, Bit32u value, u
   class_ptr->vbe_write(address, value, io_len);
 }
 
-Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
+void bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -1138,15 +1146,15 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           // check that we don't set xres during vbe enabled
           if (!BX_VGA_THIS vbe.enabled)
           {
-            // check for within max xres range
-            if (value <= BX_VGA_THIS vbe.max_xres)
+            // check for within valid xres range
+            if ((value >= 320) && (value <= BX_VGA_THIS vbe.max_xres))
             {
               BX_VGA_THIS vbe.xres=(Bit16u) value;
               BX_INFO(("VBE set xres (%d)", value));
             }
             else
             {
-              BX_INFO(("VBE set xres more then max xres (%d)", value));
+              BX_ERROR(("VBE set xres not in valid range (%d)", value));
             }
           }
           else
@@ -1160,15 +1168,15 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           // check that we don't set yres during vbe enabled
           if (!BX_VGA_THIS vbe.enabled)
           {
-            // check for within max yres range
-            if (value <= BX_VGA_THIS vbe.max_yres)
+            // check for within valid yres range
+            if ((value >= 200) && (value <= BX_VGA_THIS vbe.max_yres))
             {
               BX_VGA_THIS vbe.yres=(Bit16u) value;
               BX_INFO(("VBE set yres (%d)", value));
             }
             else
             {
-              BX_INFO(("VBE set yres more then max yres (%d)", value));
+              BX_ERROR(("VBE set yres not in valid range (%d)", value));
             }
           }
           else
@@ -1402,6 +1410,10 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           //        adjust result width based upon virt_height=yres
           Bit16u new_width=value;
           Bit16u new_height;
+          if (new_width == 0) {
+            new_width = BX_VGA_THIS vbe.xres;
+            BX_INFO(("VBE reset virtual width to xres %d", new_width));
+          }
           if (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4) {
             new_height = (BX_VGA_THIS s.memsize / BX_VGA_THIS vbe.bpp_multiplier) / new_width;
           } else {

@@ -25,6 +25,8 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "icache.h"
+
 #include "gui/siminterface.h"
 #include "param_names.h"
 #include "cpustats.h"
@@ -205,6 +207,8 @@ void BX_CPU_C::initialize(void)
   BX_CPU_THIS_PTR cpuid->sanity_checks();
 #endif
 
+  iCache = new bxICache_c;
+
   init_FetchDecodeTables(); // must be called after init_isa_features_bitmask()
 
 #if BX_CPU_LEVEL >= 6
@@ -367,7 +371,7 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_FIELD(cpu, CR0, cr0.val);
   BXRS_HEX_PARAM_FIELD(cpu, CR2, cr2);
   BXRS_HEX_PARAM_FIELD(cpu, CR3, cr3);
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   BXRS_HEX_PARAM_FIELD(cpu, CR4, cr4.val);
 #endif
 
@@ -531,6 +535,11 @@ void BX_CPU_C::register_state(void)
 #if BX_SUPPORT_MONITOR_MWAIT
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_WAITPKG)) {
     BXRS_HEX_PARAM_FIELD(MSR, ia32_umwait_ctrl, msr.ia32_umwait_ctrl);
+  }
+#endif
+#if BX_SUPPORT_X86_64
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_USER_MSR)) {
+    BXRS_HEX_PARAM_FIELD(MSR, ia32_user_msr_ctrl, msr.ia32_user_msr_ctrl);
   }
 #endif
 
@@ -831,10 +840,6 @@ void BX_CPU_C::after_restore_state(void)
   set_PKeys(BX_CPU_THIS_PTR pkru, BX_CPU_THIS_PTR pkrs);
 #endif
 
-#if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR linaddr_width = BX_CPU_THIS_PTR cr4.get_LA57() ? 57 : 48;
-#endif
-
   handleCpuContextChange();
 
   assert_checks();
@@ -844,6 +849,8 @@ void BX_CPU_C::after_restore_state(void)
 
 BX_CPU_C::~BX_CPU_C()
 {
+  delete iCache;
+
 #if BX_CPU_LEVEL >= 4
   delete cpuid;
 #endif
@@ -987,10 +994,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR idtr.limit =     0xFFFF; /* always byte granular */
 
   /* LDTR (Local Descriptor Table Register) */
-  BX_CPU_THIS_PTR ldtr.selector.value = 0x0000;
-  BX_CPU_THIS_PTR ldtr.selector.index = 0x0000;
-  BX_CPU_THIS_PTR ldtr.selector.ti    = 0;
-  BX_CPU_THIS_PTR ldtr.selector.rpl   = 0;
+  parse_selector(0x0, &BX_CPU_THIS_PTR ldtr.selector);
 
   BX_CPU_THIS_PTR ldtr.cache.valid    = SegValidCache; /* valid */
   BX_CPU_THIS_PTR ldtr.cache.p        = 1; /* present */
@@ -1001,12 +1005,13 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR ldtr.cache.u.segment.limit_scaled =   0xFFFF;
   BX_CPU_THIS_PTR ldtr.cache.u.segment.avl = 0;
   BX_CPU_THIS_PTR ldtr.cache.u.segment.g   = 0;  /* byte granular */
+  BX_CPU_THIS_PTR ldtr.cache.u.segment.d_b = 0;  /* just to make sure it is initialized */
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR ldtr.cache.u.segment.l   = 0;  /* just to make sure it is initialized */
+#endif
 
   /* TR (Task Register) */
-  BX_CPU_THIS_PTR tr.selector.value = 0x0000;
-  BX_CPU_THIS_PTR tr.selector.index = 0x0000; /* undefined */
-  BX_CPU_THIS_PTR tr.selector.ti    = 0;
-  BX_CPU_THIS_PTR tr.selector.rpl   = 0;
+  parse_selector(0x0, &BX_CPU_THIS_PTR tr.selector);
 
   BX_CPU_THIS_PTR tr.cache.valid    = SegValidCache; /* valid */
   BX_CPU_THIS_PTR tr.cache.p        = 1; /* present */
@@ -1017,6 +1022,10 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR tr.cache.u.segment.limit_scaled =     0xFFFF;
   BX_CPU_THIS_PTR tr.cache.u.segment.avl = 0;
   BX_CPU_THIS_PTR tr.cache.u.segment.g   = 0;  /* byte granular */
+  BX_CPU_THIS_PTR tr.cache.u.segment.d_b = 0;  /* just to make sure it is initialized */
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR tr.cache.u.segment.l   = 0;  /* just to make sure it is initialized */
+#endif
 
   BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
 
@@ -1027,10 +1036,12 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
 #if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR dr6.set32(0xFFFF0FF0);
-#else
-  BX_CPU_THIS_PTR dr6.set32(0xFFFF1FF0);
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_486))
+    BX_CPU_THIS_PTR dr6.set32(0xFFFF0FF0);
+  else
 #endif
+    BX_CPU_THIS_PTR dr6.set32(0xFFFF1FF0); // on 386 bit 12 was set to '1 upon reset
+
   BX_CPU_THIS_PTR dr7.set32(0x00000400);
 
   BX_CPU_THIS_PTR in_smm = false;
@@ -1061,7 +1072,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR cr3 = 0;
 #endif
 
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   BX_CPU_THIS_PTR cr4.set(0);
   BX_CPU_THIS_PTR cr4_suppmask = get_cr4_allow_mask();
 #if BX_SUPPORT_X86_64
@@ -1080,6 +1091,10 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_CPU_THIS_PTR msr.ia32_umwait_ctrl = 0;
+#endif
+
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl = 0;
 #endif
 
 #if BX_SUPPORT_SVM
@@ -1446,7 +1461,7 @@ void BX_CPU_C::assert_checks(void)
   if (! check_CR0(BX_CPU_THIS_PTR cr0.get32()))
     BX_PANIC(("assert_checks: CR0 consistency checks failed !"));
 
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   // check CR4 consistency
   if (! check_CR4(BX_CPU_THIS_PTR cr4.get()))
     BX_PANIC(("assert_checks: CR4 consistency checks failed !"));

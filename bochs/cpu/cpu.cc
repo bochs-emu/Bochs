@@ -28,6 +28,8 @@
 #include "pc_system.h"
 #include "cpustats.h"
 
+#include "icache.h"
+
 #include "bx_debug/debug.h"
 
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
@@ -294,7 +296,7 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
   INC_ICACHE_STAT(iCacheLookups);
 
   bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrFetchPage + eipBiased;
-  bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache.find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+  bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache->find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
   if (entry == NULL || entry->i->ilen() == 0)
   {
@@ -362,7 +364,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::linkTrace(bxInstruction_c *i)
 
   BX_SYNC_TIME_IF_SINGLE_PROCESSOR(0);
 
-  bxInstruction_c *next = i->getNextTrace(BX_CPU_THIS_PTR iCache.traceLinkTimeStamp);
+  bxInstruction_c *next = i->getNextTrace(BX_CPU_THIS_PTR iCache->traceLinkTimeStamp);
   if (next) {
     BX_EXECUTE_INSTRUCTION(next);
     return;
@@ -377,11 +379,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::linkTrace(bxInstruction_c *i)
   INC_ICACHE_STAT(iCacheLookups);
 
   bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrFetchPage + eipBiased;
-  bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache.find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+  bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache->find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
   if (entry != NULL) // link traces - handle only hit cases
   {
-    i->setNextTrace(entry->i, BX_CPU_THIS_PTR iCache.traceLinkTimeStamp);
+    i->setNextTrace(entry->i, BX_CPU_THIS_PTR iCache->traceLinkTimeStamp);
     i = entry->i;
     BX_EXECUTE_INSTRUCTION(i);
   }
@@ -636,7 +638,7 @@ void BX_CPU_C::prefetch(void)
 #endif
   {
 
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
     if (USER_PL && BX_CPU_THIS_PTR get_VIP() && BX_CPU_THIS_PTR get_VIF()) {
       if (BX_CPU_THIS_PTR cr4.get_PVI() || (v8086_mode() && BX_CPU_THIS_PTR cr4.get_VME())) {
         BX_ERROR(("prefetch: inconsistent VME state"));

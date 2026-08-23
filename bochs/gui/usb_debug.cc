@@ -24,6 +24,7 @@
 #if BX_USB_DEBUGGER
 
 #include "usb_debug.h"
+#include "iodev/usb/usb_uhci-defs.h"
 
 #define LOG_THIS genlog->
 
@@ -90,6 +91,62 @@ struct S_ATTRIBUTES attribs_u_ports[] = {
   { (1<< 1),                 (1<< 1),                 1, "Current Status Change"          , {-1, } },
   { (1<< 0),                 (1<< 0),                 0, "Current Connect Status"         , {-1, } },
   { 0,                   (Bit32u) -1,                 -1, "\0"                             , {-1, } }
+};
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+//  OHCI
+//
+struct S_ATTRIBUTES attribs_o_control[] = {
+                                             //          |      31 chars + null          | <- max
+  { (1<<10),                 (1<<10),                10, "RemoteWakeupEnable"             , {-1, } },
+  { (1<<9),                  (1<<9),                  9, "RemoteWakeupConnected"          , {-1, } },
+  { (1<<8),                  (1<<8),                  8, "InterruptRouting"               , {-1, } },
+  { (1<<7),                  (1<<7),                  7, "HostControllerFunctionalState 1", {-1, } },
+  { (1<<6),                  (1<<6),                  6, "HostControllerFunctionalState 0", {-1, } },
+  { (1<<5),                  (1<<5),                  5, "BulkListEnable"                 , {-1, } },
+  { (1<<4),                  (1<<4),                  4, "ControlListEnable"              , {-1, } },
+  { (1<<3),                  (1<<3),                  3, "IsochronusEnable"               , {-1, } },
+  { (1<<2),                  (1<<2),                  2, "PeriodicListEnable"             , {-1, } },
+  { (1<<1),                  (1<<1),                  1, "ControlBulkServiceRatio 1"      , {-1, } },
+  { (1<<0),                  (1<<0),                  0, "ControlBulkServiceRatio 0"      , {-1, } },
+  { 0,                   (Bit32u) -1,                 -1, "\0"                            , {-1, } }
+};
+
+struct S_ATTRIBUTES attribs_o_cmd_sts[] = {
+                                             //          |      31 chars + null          | <- max
+  { (1<<17),                 (1<<17),                 5, "SchedulingOverrunCount 1"       , {-1, } },
+  { (1<<16),                 (1<<16),                 4, "SchedulingOverrunCount 0"       , {-1, } },
+  { (1<<3),                  (1<<3),                  3, "OwnershipChangeRequest"         , {-1, } },
+  { (1<<2),                  (1<<2),                  2, "BulkListFilled"                 , {-1, } },
+  { (1<<1),                  (1<<1),                  1, "ControlListFilled"              , {-1, } },
+  { (1<<0),                  (1<<0),                  0, "HostControllerReset"            , {-1, } },
+  { 0,                   (Bit32u) -1,                 -1, "\0"                            , {-1, } }
+};
+
+struct S_ATTRIBUTES attribs_o_ports[] = {
+                                             //          |      31 chars + null          | <- max
+  { (1<<20),                 (1<<20),                20, "PortResetStatusChange"          , {-1, } },
+  { (1<<19),                 (1<<19),                19, "PortOverCurrentIndicatorChange" , {-1, } },
+  { (1<<18),                 (1<<18),                18, "PortSuspendStatusChange"        , {-1, } },
+  { (1<<17),                 (1<<17),                17, "PortEnableStatusChange"         , {-1, } },
+  { (1<<16),                 (1<<16),                16, "ConnectStatusChange"            , {-1, } },
+  { (1<<15),                 (1<<15),                15, "Reserved"                       , {-1, } },
+  { (1<<14),                 (1<<14),                14, "Reserved"                       , {-1, } },
+  { (1<<13),                 (1<<13),                13, "Reserved"                       , {-1, } },
+  { (1<<12),                 (1<<12),                12, "Reserved"                       , {-1, } },
+  { (1<<11),                 (1<<11),                11, "Reserved"                       , {-1, } },
+  { (1<<10),                 (1<<10),                10, "Reserved"                       , {-1, } },
+  { (1<< 9),                 (1<< 9),                 9, "LowSpeedDeviceAttached"         , {-1, } },
+  { (1<< 8),                 (1<< 8),                 8, "PortPowerStatus"                , {-1, } },
+  { (1<< 7),                 (1<< 7),                 7, "Reserved"                       , {-1, } },
+  { (1<< 6),                 (1<< 6),                 6, "Reserved"                       , {-1, } },
+  { (1<< 5),                 (1<< 5),                 5, "Reserved"                       , {-1, } },
+  { (1<< 4),                 (1<< 4),                 4, "PortResetStatus"                , {-1, } },
+  { (1<< 3),                 (1<< 3),                 3, "PortOverCurrentIndicator"       , {-1, } },
+  { (1<< 2),                 (1<< 2),                 2, "PortSuspendStatus"              , {-1, } },
+  { (1<< 1),                 (1<< 1),                 1, "PortEnableStatus"               , {-1, } },
+  { (1<< 0),                 (1<< 0),                 0, "CurrentConnectStatus"           , {-1, } },
+  { 0,                   (Bit32u) -1,                 -1, "\0"                            , {-1, } }
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -445,6 +502,28 @@ bx_list_c* get_usb_hc_state(int type)
     sprintf(pname, "usb_ehci.%s%d", hc_type, usb_debug_devid);
   }
   return (bx_list_c*)SIM->get_param(pname, SIM->get_bochs_root());
+}
+
+const char* get_usb_hc_name(int type)
+{
+  static char hc_name[16];
+
+  if (type == USB_DEBUG_UHCI) {
+    if (usb_debug_devid == -1) {
+      strcpy(hc_name, "UHCI");
+    } else {
+      sprintf(hc_name, "EHCI/UHCI%d", usb_debug_devid);
+    }
+  } else if (type == USB_DEBUG_OHCI) {
+    if (usb_debug_devid == -1) {
+      strcpy(hc_name, "OHCI");
+    } else {
+      sprintf(hc_name, "EHCI/OHCI%d", usb_debug_devid);
+    }
+  } else {
+    return NULL;
+  }
+  return (const char*)hc_name;
 }
 
 bx_param_enum_c* get_hc_port_device(Bit8u port)

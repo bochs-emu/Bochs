@@ -26,6 +26,8 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "icache.h"
+
 #include "gui/siminterface.h"
 #include "param_names.h"
 #include "cpustats.h"
@@ -42,7 +44,7 @@ extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned rem
 void flushICaches(void)
 {
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
-    BX_CPU(i)->iCache.flushICacheEntries();
+    BX_CPU(i)->iCache->flushICacheEntries();
     BX_CPU(i)->async_event |= BX_ASYNC_EVENT_STOP_TRACE;
   }
 
@@ -54,8 +56,9 @@ void handleSMC(bx_phy_address pAddr, Bit32u mask)
   INC_SMC_STAT(smc);
 
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
-    BX_CPU(i)->async_event |= BX_ASYNC_EVENT_STOP_TRACE;
-    BX_CPU(i)->iCache.handleSMC(pAddr, mask);
+    BX_CPU(i)->iCache->handleSMC(pAddr, mask);
+    if (BX_CPU(i)->pAddrFetchPage == PPFOf(pAddr))
+      BX_CPU(i)->async_event |= BX_ASYNC_EVENT_STOP_TRACE;
   }
 }
 
@@ -94,9 +97,9 @@ void genDummyICacheEntry(bxInstruction_c *i)
 
 bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAddr)
 {
-  bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache.get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+  bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache->get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
-  BX_CPU_THIS_PTR iCache.alloc_trace(entry);
+  BX_CPU_THIS_PTR iCache->alloc_trace(entry);
 
   // Cache miss. We weren't so lucky, but let's be optimistic - try to build
   // trace from incoming instruction bytes stream !
@@ -162,7 +165,7 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
 #endif
       }
 
-      BX_CPU_THIS_PTR iCache.commit_page_split_trace(BX_CPU_THIS_PTR pAddrFetchPage, entry);
+      BX_CPU_THIS_PTR iCache->commit_page_split_trace(BX_CPU_THIS_PTR pAddrFetchPage, entry);
       return entry;
     }
 
@@ -196,7 +199,7 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
         if (mergeTraces(entry, i, pAddr)) {
           entry->traceMask |= traceMask;
           pageWriteStampTable.markICacheMask(pAddr, entry->traceMask);
-          BX_CPU_THIS_PTR iCache.commit_trace(entry->tlen);
+          BX_CPU_THIS_PTR iCache->commit_trace(entry->tlen);
           return entry;
         }
       }
@@ -214,7 +217,7 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
 #endif
   }
 
-  BX_CPU_THIS_PTR iCache.commit_trace(entry->tlen);
+  BX_CPU_THIS_PTR iCache->commit_trace(entry->tlen);
 
   return entry;
 }
@@ -223,7 +226,7 @@ bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_ad
 {
   BX_ASSERT(!bx_dbg.debugger_active);
 
-  bxICacheEntry_c *e = BX_CPU_THIS_PTR iCache.find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+  bxICacheEntry_c *e = BX_CPU_THIS_PTR iCache->find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
   if (e != NULL)
   {

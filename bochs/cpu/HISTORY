@@ -1,0 +1,910 @@
+CPU: HISTORY of bugfixes and features implemented, tracked since Bochs 2.3.7 release (June 3, 2008)
+
+Legend:
+
+[!] New feature implemented or capability added
+[+] High severity issue fixed, most likely would be observed in real world workloads
+[-] Medium-Low severity issue fixed
+
+-------------------------------------------------------------------------
+Changes in Bochs 3.1 (August 23, 2026):
+
+! Implemented AMX-FP8 ISA extension
+! Added MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS
+! Implemented USER_MSR extensions emulation (URDMSR/UWRMSR)
+! CPUID: Added Wildcat Lake CPU definition (features FRED, WRMSRNS, MSRLIST)
+- CPUID: AVX10 CPUID leaf should always report CPUID[EAX=0x24][ECX=0]:EBX[17:16] as '11 indicating AVX10.128+AVX10.256 support, all EVEX.256 features are deprecated
++ CET: As long as CR0.WP = 1, no processor that supports CET will ever set the dirty flag in a paging-structure entry in which the R/W flag is 0. The CR0.WP check was missing in the PANIC logic.
++ VMX: Posted-Interrupt Descriptor Address (PID_ADDR) VMX field must be only 64-byte aligned and not 4K-aligned
+- APIC: Unaligned apic reads should not cause PANIC (correct behavior might be still not implemented, any bytes read beyond memory mapped register boundary should simply return zero)
++ ICache: Missing page split fetch #PF due to failed ICache invalidation occur when 2nd page of the page split access was remapped and TLB invalidated, the page split trace survived in ICache and got hit.
++ VMX: Bochs didn't not protect from clearing CR0 fixed bits (PE/PG) by guest when Unrestricted Guest = 0
+- VMX: Fixed VMX Abort error codes to be written into VMCS_VMX_ABORT_FIELD
+- VMX: Implement VMX Abort condition for exiting to 32-bit host from 64-bit guest
++ VMX: Implemented correct VMEXIT qualification for RDMSRLIST/WRMSRLIST, RDMSR_IMM and WRMSRNS instructions
++ VMX: Fixed RDMSR_IMM instruction VMX behavior (was not detected as readmsr and checked WRMSR bitmaps instead of RDMSR)
++ SVM: Fix false Bochs PANIC while loading host state during VMEXIT
++ SVM: Added missing #GP in case of invalid on non-page aligned write to MSR SVM_HSAVE_PA_MSR
++ VMX: Added missing VMENTER check: Interruptibility state[3] (blocking by NMI) must be 0 if the "virtual NMIs" VM-execution control is 1 and VMENTER injecting NMI event
++ SVM: Added missing VMENTER abort (VMEXIT_INVALID) if attempting to inject #BR/#OF exception to long64_mode guest
+- SVM: Avoid VMCB corruption in case of failed VMENTRY (VMEXIT_INVALID), do not update VMCB except for exit reason and exitinfo
+- SVM: An injected NMI does not block delivery of further NMIs
+- VMX: Processor that doesn't support FRED or MTF event injection should treat event type = 7 as reserved
+! MSR: Implemented MSR IA32_APERF and MSR IA32_MPERF to reduce log pollution with 'unknown MSR' message
+- x86: Intel SDM bug for iret implementation: the SDM states that SS not-present should issue #NP(selector) but actually it is #SS(selector)
+- MSR: if CPU feature is emulated by Bochs but not supported in current CPU model -> issue #GP on read/write of related MSRs instead of allowing to ignore them by ignore_bad_msr
+! MSR: add r/o MSR_PLATFORM_ID for compatibility with EFI BIOSes (return 0 on read)
++ x86: Fixed memory corruption when currently used stack or code page was swapped out by memory stub (under BX_LARGE_RAMFILE mode), while still being in use. This requires the page to be not in TLB, so it is quite rare condition!
+! Implemented Flexible Return and Delivery (FRED) ISA extension (to be enabled in Panther Lake model)
+! SVM: added support of INVPCID SVM intercept
+! SVM: Implemented Pause Filter Threshold SVM extension
++ UINTR: fix source argument of SENDUIPI instructions
++ UINTR: fixed UIRET reading arguments (RIP/RSP/RFLAGS) from stack
+- X2APIC: When write to ICR in x2apic mode still keep written value in APIC ICR register
++ UINTR: SENDUIPI - sending of IPI is done by writing to the local APIC's ICR register, make sure APIC ICR register gets updated
+- AVX10.2: FP8/HF8 convert instructions never update MXCSR according to new AVX 10.2 rev6.0
+- AVX10.2: VCVT2PS2PHX support masked fault suppression according to new AVX 10.2 rev6.0
+- XSAVE: Correctly restore MXCSR by XRSTORS instruction - for compaction form and XRSTORS, MXCSR is part of SSE state and should handled together with it
++ XSAVE: Correctly restore state by XRSTOR/XRSTORS instructions when compaction was used - properly advance offset for components that not requested to be restored
+- XSAVE: MXCSR value shouldn't affect INUSE for SSE state
+- FMA: add missing #DE signalling for FMA instructions when product is [denormal * zero]
++ PKEYS: use of PKRU/PKRS should be determined by user/supervisor page and not by user/supervisor access. PKRU protects user pages, PKRS protects supervisor pages.
++ PKEYS: Flush TLB after updating PKRU with WRPKRU instruction
+- XSAVE: Outside 64-bit mode, Hi16_ZMM state is always in its initial configuration. Fixed wrong return value in xsave_hi_zmm_state_xinuse method.
++ VMX: Fixed actitivity state and blocking by NMI after WAIT_FOR_SIPI VMEXIT
++ AVX512: Fixed bug in VPSHUFBITQMB instruction implementation
++ BMI: Fixed decoding of AVX BMI1/BMI2 instructions in 32-bit mode (The operand size is always 32 bits if not in 64-bit mode, VEX.W1 is ignored in non-64-bit modes)
+- BMI: BMI instructions are not recognized outside of protected mode and should #UD
+- VMX and LA57: Fix issues with VMENTER/VMEXIT attempting to toggle CR4.LA57
+- EVEX: EVEX encoded VEXTRACTPS instruction should be encoded with EVEN.WIG (ignore EVEX.W)
+- XSAVE: tickle last byte of save area before XSAVE/XRSTORE to capture all possible memory faults before starting save/restore
+! XSAVE: implement XSAVE component ECX[1] - indicate this component must be aligned to 64-byte when the compacted format of an XSAVE area is used
+- RAO: RAO access to UC memory type cause #GP(0)
+- AVX512: Fix redundant #PE signalling by VREDUCE* instructions
+- AVX512: Correctly handle zero masking for VMOVAPS/VMOVAPD, no memory access supposed to happen and no side effects
++ AVX512: Fixed bug in VPCONFLICTD/VPCONFLICTQ instructions implementation
+- AVX512: VEXTRACT(I/F)32X4, VEXTRACT(I/F)32X8, VEXTRACT(I/F)64X2, VEXTRACT(I/F)64X4 do not support memory fault suppression
++ XRSTOR: correctly initialize YMM state (by mistake upper 256-bit were affected)
+- Legacy IO: Fixed linear address calculation for memory access in INSW instruction while in long64 mode (32-bit segment based access was used instead of long64 mode access)
++ AMX: deprecated AMX_TF32 and adjusted AMX_AVX512 implementation according to recently published specification rev62 + bugfixes
++ EVEX/GFNI: properly apply masking to EVEX form of VGF2P8AFFINEQB/VGF2P8AFFINEINVQB instructions
++ AVX512: Properly apply masking to VPMULTISHIFTQB instruction
+- AVX512: Fixed MAXVL definition: instead of maximum allowed vector length for this CPUID, MAXVL should be determined by the current value of XCR0. Update zero upper to MAXVL for all AVX/AVX512 instructions.
+- LA57: Fixed MSR canonicality check during WRMSR operation - "this enforcement checks for CPU canonicality and is thus independent of the current paging mode"
+- XSAVE: add missing #GP(0) if XRSTOR write to MSR and it cause #GP due to reserved bits, invalid or non-canonical value write
+- BMI: Updated undocumented flags handling for BEXTR instruction to match real HW
++ AVX512: add missing zero upper for VPBROADCASTMB2Q and VPBROADCASTMW2D instructions
+- XSAVE: XSAVE of PKRU state should write only 4 bytes at keep other 4 bytes unmodified
++ AVX512: correctly handle masked VPEXPANDB/VPEXPANDW instructions with memory operand
+- x87: correctly handle preudo-denormal zero in FRNDINT instruction
+- VMX: fix VMX guest activity state reported on VMEXIT occured during HLT (should be BX_ACTIVITY_STATE_HLT=1)
++ CPUID: Update Arrow Lake CPUID - enable missing leaf CPUID leaf=7.subleaf=1[EDX]
+- x87: Implemented MS-DOS Compatibility mode for handling x87 FPU exceptions, FERR# and IGNNE# pins enabled when 'extfpuirq' plugin is enabled
++ i486dx4: expose CR4 to support VME/PVI
+- x86-64: attempt to leave x86-64 long mode with 64-bit RIP value by writing to CR0 truncates RIP to 32-bit value
+- i486: fixed reset value of dr6 register
+
+-------------------------------------------------------------------------
+Changes in Bochs 3.0 (February 16, 2025)
+
+! Implemented AVX512_FP16 instructions (enabled in Xeon Sapphire Rapids CPU definition)
+! Implemented MONITORLESS MWAIT support
+! UINTR: Implemented FLEXIBLE UIRET support
+! VMX: Implemented VMX support for the IA32_SPEC_CTRL MSR
+! CPUID: Old bx_generic configurable CPUID model is deprecated and removed from the source code
+! CPUID: Added i386 CPU definition (Model=3 with x87 FPU support only)
+! CPUID: Added i486DX4 CPU definition (Model=4 with x87 FPU and VME support only)
+! CPUID: Added AMD Athlon XP CPU definition (Model=6 with SSE, 3DNow! and 3DNow! Ext)
+- CPUID: AMD K6-2 Chomper CPU model doesn't support 3DNow! Ext
+! CPUID: Added Arrow Lake CPU definition (features AVX-VNNI, AVX-IFMA, AVX-VNNI-INT8, AVX-VNNI-INT16, AVX_NE_CONVERT, GFNI, VAES/VPCLMULQDQ, SHA512, SM3/SM4, CMPCCXADD, LASS, SERIALIZE, UINTR)
+! Implemented support for AVX10_1 ISA extension and AVX10 CPUID leaf 0x24 (to be enabled in Xeon Granite Rapids)
+! Implemented support for AVX10_2 ISA extension
+! Implemented support for RAO-INT ISA extension
+! Implemented support for MSR_IMM ISA extension
+! AMX: implemented AMX_TF32 and AMX_AVX512 ISA extensions
++ Rewrite CPUID extended_topology_leaf 0x0000000B change from Release 2.8 to support Win11 boot (including SMP support)
+- x87: changes in accuracy of computation for x87 transcendential functions (FSIN/FCOS/FSINCOS, FPTAN, FPATAN, F2XM1, FYL2X, FYL2XP1)
+- FXRSTOR/XRSTOR: do not change x87 state if restore of entire state cannot be completed
+- CET/VMX: VMX_VMEXIT_CTRL2_SHADOW_STACK_BUSY_CTRL was misplaced on bit2 instead of bit3
++ SHA: Fixed critical bug in SHA1RNDS4 instruction
++ XSAVEC/XSAVES: Fixed corruption of MXCSR/x87 state by SSE state saving in XSAVEC/XSAVES instructions (bug introduced in release 2.8)
++ MSR: Support more bits in IA32_SPEC_CTRL MSR for 'Sapphire Rapids' and 'Arrow Lake' models (prevented to boot Win11)
++ LASS: Rewritten LASS implementation, code from release 2.8 was broken and caused spurious supervisor LASS violations (prevented to boot Win11)
++ AVX-VNNI-INT8: fixed decoding of AVX-VNNI-INT8 instructions (instructions VPDPBSSD* and VPDPBSUD* were swapped in decoder tables)
++ WAITPKG: Fixed handling of IA32_UMWAIT_CTRL==0 case (MSR should be ignored in this case), caused infinite delay of UMWAIT/TPAUSE instructions (prevented to boot Win11)
+- CMPCCXADD: CMPCCXADD instructions are supported only in 64-bit mode
+- CPUID: Correctly report CPUID leafs 0x19-0x1c as reserved/not implemented on Sappire Rapids with AMX compiled on
+- AVX-512: EVEX form of VMPSADBW instruction must require EVEX.W0
+- AVX-512: Do not allow SAE forms of AVX512_BF16 instructions, fix disasm of VDPBF16PS instruction
+- AVX-512: Denormal (#DE) should not be reported for src2 of VSCALEF* instructions
+- Legacy: allow EFLAGS.ID and EFLAGS.AC to be set only if 486 or newer model is configured - prevent setting of these bits for i386 model
+- VME: allow updating EFLAGS.VIF and EFLAGS.VIP only if CPU model supports VME feature
+- AVX-512: fixed decoding of AVX-512 EVEX 0F6E/0F7E/0FD6 opcodes and also MAP5_6E/MAP5_7E. Require VL128, ignore EVEX_W for FP16 opcodes on MAP5.
+- Legacy: On configurations with no FPU CR0.ET (CR0[4]) should be always clear to indicate no x87 FPU is present
++ APIC: Match logical destination: in both flat and clustered logical mode, a destination mask of all set bits indicates a broadcast. Was not done in flat logical mode.
+- MSR: MSR_IA32_XSS should not be accessible if XSAVES feature is not enabled
+- AMX: Update in TILELOAD* instruction behavior
++ SSE: fix unpcklps/unpckhps instructions to be supported under SSE instead of SSE2
++ CPUID: Report 3DNow! in CPUID only if compiled in
++ 3DNow: Implement 3DNow! instructions (not accurate implementation yet, doesn't handle Undefined behavior like real HW)
+- 3DNow: Split 3DNow! and 3DNow! Extensions features, AMD K6-2 Chomper doesn't support 3DNow! Extensions + updated list of instructions included in 3DNow! Extensions
+- 3DNow: PF2ID 3DNow! instruction require saturation to be applied to the result in case of overflow
+- CPUID: Do not report WBNOINVD instruction for processors without LONG MODE supported (TODO: find better enable or add dedicated feature)
++ VMX: Fix VMENTER to unrestricted guest mode: SS.DPL is always loaded from the SS access-rights field. This will be the current privilege level (CPL) after the VMEntry completes.
+
+-------------------------------------------------------------------------
+Changes in Bochs 2.8 (March 10, 2024)
+
++ MONITOR/MWAIT: MONITOR relies on tickle_read_virtual to set the physical address, but it was only doing so on TLB miss. So a MONITOR with a TLB hit would arm the most recently accessed address instead of the requested one.
+- MONITOR/MWAIT: Fixed APIC MWAIT timer activation
++ VMX: Fixed unexpected VM-exit(invalid-guest-state) due to the blocking by SMI bit is set.
++ VMX: Fixed the INIT signal remains pending even after delivery of VM-exit/#VMEXIT(INIT)
+! Implemented VMX Mode Based Execution Control (MBE) emulation (required for Windows 11 guest)
+! Implemented Advanced VM-exit information for EPT violations (tied to MBE Control)
+! Implemented MSR IA32_SPEC_CTRL Virtualization VMX extension (enabled in Sapphire Rapids)
+! Implemented Posted-Interrupt Processing VMX extension emulation
+! Implemented VMX 'Shadow Stack Prematurely Busy' control and secondary VMEXIT control
+- VMX: Implemented missing SPP Misconfiguration condition (odd bits of SPP PTE entry are reserved)
+- VMX: Fix SPP walk and VMCS access memory type to WB (match memory type listed in IA32_VMX_BASIC MSR)
++ VMX: Fix TLB caching of SPP walked pages: prevent WriteOK for all SPP walked pages
++ VMX: Fixed VMCS guest segment consistency checks (patch by rei141)
++ VMX: Fixed "Bochs does not handle NMI blocking correctly when running virtual machines"
++ VMX: VMEXIT due to HW exception from unrestricted (real mode) guest should not report any error code
++ VMX: The guest-physical address written in Page-Modification-Logging (PML) should be 4-KByte aligned
++ SHA: Fixed implementation of SHA1RNDS4 instruction
++ ADOX: Fixed OF flag calculation for ADOX instruction (The instruction sets the OF flag with the carry generated by the unsigned addition of the operands) - prevented boot of Windows 10
+! Implemented 57-bit Linear Address and 5-Level Paging support
+! Implemented Linear Address Separation extension (LASS)
+! Implemented User-Level Interrupts (UINTR)
+! Implemented VMX Monitor Trap Flag (MTF) handling
+! Implemented WRMSRNS: Non Serializing version of WRMSR instruction
+! Implemented MSRLIST: RDMSRLIST/WRMSRLIST and corresponding VMX support
+! Implemented AVX512_BF16 instructions
+! Implemented AVX IFMA52 instructions
+! Implemented AVX-NE-CONVERT instructions
+! Implemented AVX VNNI-INT8 and AVX VNNI-INT16 instructions
+! Implemented CMPCCXADD instructions
+! Implemented SM3/SM4 instructions
+! Implemented SHA-512 instructions
+! Implemented SERIALIZE instruction
+! Implemented MOVDIRI/MOVDIR64B instructions
+! Implemented WAITPKG (UMONITOR/UMWAIT/TPAUSE) instructions
+! Implemented AMX (TILECFG/AMX-INT8/AMX-BF16/AMX-FP16/AMX-COMPLEX) support
+! CPUID: Added Xeon Sapphire Rapids CPU definition (features PKS, WAITPKG, UINTR, AVX512_BF16, MOVDIRI/MOVDIR64, LA57, AMX, SERIALIZE); Missing: AVX512_FP16, HLAT, IPI Virtualization, XSAVE-XFD
+- Updates to various CPUID models
+- AVX-512: Added missing masked load support for EVEX VPMOVSX*/VPMOVZX* instructions and also for EVEX encoded VCVTPH2PS instruction
+- AVX-512: Fixed "masked half vector load broadcast dword" handling, affected instructions: EVEX encoded VCVTPS2PD, VCVT(T)PS2(U)QQ, VCVT(U)DQ2PD
+- AVX-512: Fixed load length for masked VEXPANDD/Q/PS/PD with memory form + introduce masked fault suppression
+- AVX-512: Fixed load length for masked VPSHUFBITQMB with memory form + introduce masked fault suppression
+- Tasking: Fixed potential missing #NM (due to CR0.TS=1) after #TS exception occured beyond commit point
++ SVM: Preserve original VMCBPTR in SVM VMLOAD/VMSAVE instructions
++ SVM: Add missing SVM VMEXIT in case of triple fault shutdown
+- Fixed decoder bug which was duplicating opcode 0F38F6 into 0F38F9. 0F38F9 should be MOVDIRI opcode instead.
++ VMX: Fixed VMCS_GUEST_PENDING_DBG_EXCEPTIONS saved on VMEXIT (should be cleared after most of VMEXITs)
++ VMX/CET: Fixed supervisor shadow stack EPT violation detection
++ CET: XSAVE/XRSTOR wrongly determined if CTE is in XINIT state
++ GFNI: Fixed incorrect computation in GF2 affine_byte operation
++ x87: Fixed FPATAN(-1, -1) or in general FPATAN(x, y) where |y|=|x|
+- x87: Implemented special behavior for 287-compatibility FSTP opcode: D9D8..D9DF - Behaves the same as FSTP but won't cause a stack underflow exception.
+- VMX: CET disable in configuration script altered VMX behavior (like EPTP reserved bits)
+- VMX: VMFUNC instruction acted as NOP and not #UD when compiled with BX_SUPPORT_VMX=1
+- SVM: Fixed INVLPGA behavior - invalidate only TLB entries pointed by rAX and not entire TLB, fix disasm for INVLPGA
+! SVM: Implemented SVM VM_CR_MSR and INIT redirect (required for booting SMP with SVM)
++ XSAVE: rewrite XSAVE/XRSTORE CPUID leaf 0xD reporting with a lot of bugfixes
+- AVX-512: VPBROADCASTB_MASK_VdqWbM with mask was broken, accidentially zeroed the mask, due to Bit64u computation overflow (1 << 64) == 1
++ PORT_IO: Mark IN/OUT instructions as TraceEnd, they could have significant side effects like raising interrupts which have to be handled in main loop
+- AVX-VNNI: Fixed decoding of VPDPBSSDS and VPDPBSUDS instructions (bug in decode tables)
+- Better and more correct EFLAGS.RF management (simply set it after repeat iteration ended without completing all elements)
+- Set EFLAGS.RF on triple fault before shutdown or VMEXIT
++ VMX: Fixed RFLAGS.RF saved to the guest state on VMEXIT. Handled cases: APIC-access VMexits, EPT-based VMexits and also VMexits was caused directly by an event that would normally be delivered through the IDT.
+- FP16: Fixed rounding to f16 floating point (using Softfloat3e code as reference).
+- CET: Should always use old SSP for shadow_stack_clear_busy in case of IRET and not new
+- AVX-512: Fixed VGETMANTSD/PD instruction implementation
+- AVX-512 VREDUCE* should never raise #Denormal, #Overflow or #Underflow
++ XRSTOR: Fixed very severe issue in XRSTOR with compaction/XRSTORS (prevented win10 to boot with CET)
++ XSAVEC/XSAVES: Do not allow 'compaction' of SSE state (prevented win10 to boot with CET)
+- MONITORX/MWAITX: MWAITX timer value of 0 (EBX=0) should skip the timer and wakeup only from MONITORX store
+- MONITORX/MWAITX: It is possible that MWAITX wakeup from timed mwait but APIC timer was still not reset.
+  Corruption would happen if MWAIT is called again to setup the timer while it still running from previous time.
+  Also spurious wakeup could possibly happen as timer will send wakeup when it stops counting.
+
+-------------------------------------------------------------------------
+Changes in Bochs 2.7 (August 1, 2021)
+
+- CET: Fixed CET fault on task switch when new task SSP is not 8-byte aligned. Bochs did #GP while SDM says #TS
+- CET: Flush TLB* after CR4.CET got modified
+- CET: DS Seg override is kept for CET Endranch suppress hint even if overridden by other prefixes later
++ CPUID: When BX_SUPPORT_SMP is not defined, clear the bit in CPUID.[EAX=1].Bit[28] to indicate Hyper-Threading is unavailable
++ VMX: Enable access to XSS_EXITING_BITMAP VMCS field (0x0000202c)
++ VMX: Fixed Sub-Page-Protection (SPP) EPT violation condition
++ TSC_MULTIPLER: Effective TSC computation with TSC multipler need to use 128-bit multiply
+- APIC: If Local APIC is disabled by setting IA32_APIC_BASE[11] (APIC global enable bit) to 0, the spurious-interrupt vector register (MSR 0x80f) initialized back to 0xff, LVT entries cleared and timer stopped
+! TSC: Implemented TSC_ADJUST MSR and enabled in all relevant CPU models
+! Protection Keys: Implemented Supervisor-Mode Protection Keys (PKS)
+- Protection Keys: Added missing protection keys (PKU) write disable control over supervisor mode access when CR0.WP = 1
+- VMX/CET: Added missing SSP[1:0] check on VMENTER/VMEXIT (announced on SDM 072 revision)
+! AVX_VNNI: Implemented AVX encoded VNNI extensions (not enabled in any CPUID yet)
+- Fixed buffer overflow in LOAD_Wdq method when MXCSR.MM=1
+- MMX: Fixed behavior of MMX PSRAW/PSRAD instructions with shift count zero - they still must to invalidate x87 tags for destination register
+! CPUID: Added TigerLake CPU definition (features CET and CLWB support, not implemented KEYLOCKER)
+- CPUID: Enable FDP Deprecation for IceLake model
++ SVM: Fixed V_TPR handling (prevented Hyper-V from running)
+- SVM: Implement MSR PAT handling for AMD SVM emulation
++ SVM: Fixed EXITINFO error code after nested page fault (prevented Hyper-V from running)
+- SVM: Implement ability to intercept SMI
++ SVM: Hack to w/a NX page faults while translating SMM code access through nested paging, ignore isExecute attribute to access and treat code fetches as data reads (prevented Hyper-V from running)
++ SVM: Never turn off EFER.SVME when entering SMM mode (prevented Hyper-V from running)
++ VMX: Fixed exit qualification info for VMREAD and VMWRITE instructions
++ VMX: fixed exit qualification info for INVEPT/INVVPID/INVPCID instructions
+
+-------------------------------------------------------------------------
+Changes in Bochs 2.6.11 (January 5, 2020)
+
+! Implemented CET (Control Flow Enforcement Technology) emulation
++ PKEY: PKRU should affect only user-mode memory accesses (bug in page translation)
++ PKEY: fixed set_PKRU method, was using RAX value instead of actual protection key
+- APIC: Add ability to configure APIC LVT_CMCI register (0x2f0), Bochs will never fire interrupts through it as machine check not implemented but at least it can be configured now and not #GP
+- X2APIC: X2APIC MSR range should be MSRs 0x800..0x8FF and not until MSR 0xBFF, caused unexpected #GP faults while reading/writing MSRs and unexpected VMEXIT/VMEntry failures
++ AVX512_BITALG: Fixed decoding of VPBROADCASTMW2D opcode
++ AVX512_VNNI: Fixed decoding of AVX512_VNNI instructions
++ AVX512_VBMI2: Fixed decoding of VPSHLDVW/VPSHRDVW/VPSHLDVD/VPSHLDVQ/VPSHRDVD/VPSHRDVQ
++ AVX512_BW: Fixed decoding of VPACKSSDW/VPACKUSDW opcodes - allow broadcast
++ AVX512_VBMI: Fixed decoding of VPERMI2B/VPERMT2B and VPERMB instructions
++ AVX512: Fix broadcast with mask of all zero after vector length consideration - no memory access should be made
++ AVX512_BITALG: Fixed decoding of VPSHUFBITQMB instruction
++ VMX/SVM: vmcshostptr not invalidated after memory swapped
++ GFNI: add missing decoding of GFNI opcodes without VEX/EVEX in 64-bit mode
++ GFNI: add broadcast and fault suppression support for EVEX encoded GFNI
++ SHA: Fixed bug in SHA256RNDS2 instruction (wrong sha transformation used)
++ SHA: Fixed decoding of SHA1RNDS4 instruction (decoder mistakely required 0x66 prefix)
+- SHA: SHA instructions with 128-bit memory operand require to be explicitly aligned
+- AVX512: EVEX.Z is forbidden for any vector instruction using opmask as source or destination (should cause #UD)
++ AVX512: Allow masked fault suppression for many AVX512 instructions
++ AVX512_VBMI2: Fixed shift count from register source for VBMI2 shift instructions (VPSHRDVD/VPSHLDVD/VPSHRDVQ/VPSHLDVQ)
+- AVX512: VPBROADCASTB/W/D/Q opcodes with GPR source can be reg/reg only form
+- AVX512: Fixed masked fault suppression for AVX-512 broadcast instructions with VL < 512
+- CPUDB: Enable AVX512_CD for Icelake-U configuration
+- CPUDB: Allow Icelake-U CPU model to exists without EVEX
+- CPUDB: CNL model should not report AVX512_VBMI when compiled with no EVEX
+- XSAVE: part of ZMM_HI256 and HI_ZMM state accessible in 64-bit mode only
+
+-------------------------------------------------------------------------
+Changes in Bochs 2.6.10 (December 1, 2019)
+
+! x87: implemented FOPCODE and FDP deprecation features
++ legacy: fixed undefined behavior when decoding VEX (0xC4 or 0xC5 opcode), EVEX (0x62 opcode) or XOP (opcode 0x8F) instructions crossing fetch boundary (bug introduced in 2.6.9)
++ VMX: implemented correct VM-exit instruction information for INVPCID, RDRAND/RDSEED and XSAVES/XRSTORS instruction Vmexits
+- VMX: Give priority for VMX induced #UD in INVPCID and RDTSCP instructions over all other exceptions that could be generated there
+- VMX: implemented SKL style segment AR packing (compression to 16bit) in addition to NHM style packing (rotate by 8bit)
+! CPUID: Added Skylake-X CPU definition with AVX-512 support
+! CPUID: Added Cannonlake CPU definition (features more AVX-512 levels, UMIP, SHA, PKU support)
+! CPUID: Added Icelake-U CPU definition (features more AVX-512 levels, UMIP, SHA, GFNI, VAES, PKU support)
++ CPUID: Report MONITORX/MWAITX as enabled in Ryzen CPU model
+! CPUID: Implemented SCA (Side-Channel-Attack) Prevention reporting and corresponding MSR registers, enabled for Icelake-U CPU definition
+! VMX Implement new VMX extension: injection of a software interrupt, software exception, or privileged software exception with an instruction length of 0
+! VMX: Implement EPT-Based Sub-Page Protection
++ AVX-512: Fixed VPOPCNT/VPLZCNT instructions handling with K0 mask
+! AVX-512: implemented AVX-512 VBMI2 instructions
+! AVX-512: implemented AVX-512 VNNI instructions
+! AVX-512: implemented AVX-512 BITALG instructions
+! AVX-512: implemented AVX-512 VP2INTERSECT instructions
+! AVX/AES: implemented VAES instructions / VPCLMULQDQ instruction
+! Implemented GFNI instructions
++ AVX-512: Fixed compressed displacement form for several AVX-512 instructions
++ ADOX: Fixed opcode of ADOX instruction
+- AVX: VMOVSS/VMOVSD opcodes should be VEX.LIG form instead of VEX.L0
+- AVX-512: Fixed decoding of VPEXTRB/W/D/Q, VPINSRB/W/D/Q and VINSERTPS/VEXTRACTPS instructions with EVEX prefix (should be allowed only with EVEX.VL=VL128)
++ AVX-512: Fixed decoding of VPMOVZXWD/VPMOVZXWQ/VPMOVSXWD/VPMOVSXWQ instructions with EVEX prefix and mask
+- POPF/POPFQ always clear EFLAGS.RF (instead of reading it from memory)
+- AVX-512: Fix decoding of /reg in modrm form for instructions referring KMASK registers (the decoder allowed usage of non-existing KMASK registers)
++ PCID: Handle TLB invalidation hint during MOV to CR3 with CR4.PCID enabled, setting the hint wrongly caused #GP due to reserved bits set in CR3 (patch by Kent Williams)
++ MOVBE: Fixed MOVBE_MqGq opcode decoding
+- VMX: Added missing TLB entry invalidation in case EPT fault. (An EPT violation invalidates any guest-physical mappings that would be used to translate the guest-physical address that caused the EPT violation, an EPT violation should not recur if the original access is performed again, even if the INVEPT instruction was not executed)
+- Paging: fixed PDE4M reserved bits checking when physical address configured wider than 40 bit
+- CLZERO: fixed decoding of the CLZERO AMD instruction, was always #UD even if enabled
+
+-------------------------------------------------------------------------
+Changes in Bochs 2.6.9 (April 9, 2017)
+
+! VMX: Implemented Page Modification Logging (PML)
+! VMX: Implemented TSC Scaling Extension
+! Paging: Implemented Protection Keys
+! Implemented UMIP: User Mode Instruction Prevention (don't allow execution of SLDT/SIDT/SGDT/STR/SMSW with CPL>0)
+! Implemented RDPID instruction
+! Implemented VPOPCNTD/VPOPCNTQ AVX512 instructions
++ Removed victim caches because it caused assertion failures in proc_ctrl.cc (SF bug #1372)
++ 386 with FPU - was not able to start any instruction, generated #UD instead (2.6.8 introduced bug)
+- Memtype: fixed VMCS access memory type
++ x86-64: Fixed bug in OR_EqGqM handler used with FS or GS segment
+- Fixed call gate handling from call far instruction (found with rdos)
+- VMX: VMENTER to Wait-For-SIPI state is fixed, was vetoed by VMENTER consistency checks
+- VMX: Implemented missed VMX consistency checks related to VM-entering non active CPU state (shutdown, wait-for-sipi)
++ SMM: Fixed restore of segment selector (all segments and also TR/LDTR were affected)
++ AVX/XOP/EVEX: fixed potential segmentation fault while decoding AVX/XOP/EVEX opcodes
+- AVX: Fixed reset value of XCR0
++ EPT: Implemented missing EPT misconfiguration condition for EPT non-leaf entries
+
+-------------------------------------------------------------------------
+Changes in Bochs 2.6.8 (May 3, 2015)
+
+! CPUDB: Added Pentium (P54C) configuration to CPUDB
+! CPUDB: Added Broadwell ULT configuration to CPUDB
+! Added memory type support to CPU model
+- Fixed bug in write_new_stack_qword method in 32-bit mode (dword write was done instead) (Bochs 2.6.7 introduced bug)
+- SMM: Fixed corrupted AR byte of TR, LDTR and segment registers after SMM save/restore
++ x86-64: fixed FS and GS access in 64-bit long mode (segment base was added twise) (Bochs 2.6.7 introduced bug)
+- skip all segment limit checks for true 4G segments (data segments with base=0, limit=0xffffffff)
++ 386 with no FPU - was not able to start any instruction, generated #UD instead
+
+-------------------------------------------------------------------------
+Changes in Bochs 2.6.7 (November 2, 2014)
+
+! Implemented AVX-512BW/AVX-512DQ/AVX-512VL emulation
+! implemented AVX512-IFMA532 instructions emulation
+! implemented AVX512-VBMI instructions emulation
+! implemented CLWB instruction emulation
++ VMX: Fixed external interrupt VMEXIT when RFLAGS.IF=0 and 'external interrupt exiting' control is set (Bochs 2.6.1 introduced bug in event masking/unmasking code)
++ AVX-512: Fixed bug in VCMPPS masked instruction implementation
++ AVX-512: Fixed AVX-512 masked FP convert instructions with non-k0 mask (behaved as non masked versions)
++ AVX-512: Fixed VCVTUSI2SD_VsdEq implementation (bug in softfloat uint64_to_float64 function)
+- AVX-512: Fixed missed #UD due to invalid EVEX prefix fields for several AVX-512 opcodes (VFIXUPIMMSS/SD, FMA)
+- AVX-512: VZEROUPPER/VZEROALL instructions should zero only lower 16 registers and do not affect higher 16 registers
+- AVX-512: Added missing denormal exception signalling for VSCALEFSS/SD/PS/PD instructions
+- AVX-512: Fixed denormal argument handling in VGETMANTSS/SD/PS/PD, VRCP14SS/SD/PS/PD and VRSQRT14SS/SD/PS/PD instructions
++ AVX-512: Fixed bug in the VRSQRT14SS/SD/PS/PD instructions for floating point arguments with mantissa = 0
++ x86-64: Fixed CMPXCHG16B behavior when TLB miss is occured and access_read_linear was called
++ CPUID: Enable back architectural perfomance monitoring reporting in CPUID (disabled in Bochs 2.6.2)
+- CPUID: "Yonah" and "Atom N-270" should report max virtual address as 32-bit in leaf 0x80000008
+
+-------------------------------------------------------------------------
+Changes in Bochs 2.6.5 (June 1, 2014)
+
+! CPUDB: Added Intel(R) Core(TM) i7-4770 CPU (Haswell) configuration to CPUDB
+! CPUDB: Added AMD A8-5600K APU (Trinity) configuration to CPUDB
+! Implemented FCS/FDS Deprecation CPU feature
+! Implemented SHA instructions emulation
+! Implemented AVX-512 instructions emulation
+! Implemented XSAVEC instruction emulation
+! Implemented XGETBV with ECX=1, returns the current XINUSE state
++ VMX: VMX preeemption timer expired VMEXIT should not wakeup sleeping guest (from HLT, SHUTDOWN or WAIT-FOR-SIPI state)
+- VMX: CMPXHG instructions should always write to the memory destination, even if the value unchanged - it affects VMEXIT conditions for the full apic virtualization
+- Loading of SS disables interrupts until the next instruction completes but only under assumption that previous instruction didn't load SS also - the code included also interrupt inhibit due to STI (Bochs 2.6.2 bug)
+- XOP: fixed possibly missed #UD exception for XOP instructions used with SSE prefix
+- AVX, XOP: fixed decoding of opcodes with VexW64 group in 32-bit mode
+- AVX: gather instructions should not check for #AC exception
+- AVX: fixed memory access size for AVX2 shift instructions with shift count located in memory
++ TBM: fixed 64-bit TBM instructions with memory access (did 32-bit load instead of 64-bit)
++ BMI2: fixed operands order for PEXT/PDEP instructions
++ RDRAND: fixed decoding of RDRAND instructions (all operand sizes were mapped to 16-bit)
+- VMX: fixed instruction info reported at VMEXIT for instructions with memory form without INDEX register (Gather implementation bug)
++ VMX/SVM: fixed possible RSP corruption after VMEXIT with speculative_rsp set (speculative_rsp was not cleared properly)
+- SSE/AVX: fixed DPPS/DPPD instructions to match HSW implementation (NaN handling for DPPS, intermediate unmasked exceptions for DPPS and DPPD)
+- VMX, RESET: Do not clear IA32_FEATURE_CTRL MSR on INIT (will clear the VMX lock bit)
+- XSAVE: XSAVE/XRSTOR which is not 4-byte aligned cause #AC(0) instead of #GP(0) when alignment check is enabled
+- CPUDB: AMD Zambezi CPU doesn't support TBM and XSAVEOPT instructions
+- XSAVE: Fixed check of condition when a processor state component is not enabled in XCR0 but the corresponding save mask bit in XSAVE.HEADER.XSTATE_BV is 1 (an attempt to execute XRSTOR should cause a #GP(0) exception)
++ XSAVE: Implemented XINUSE vector (as ideal XINUSE); when executing XSAVE, the XSTATE_BV[i] is set to the value of XINUSE[i] for all XSAVE'ed features.
++ XSAVE: Implemented INIT optimization for XSAVEOPT instruction
+
+-------------------------------------------------------------------------
+Changes in Bochs 2.6.2 (May 26, 2013)
+
+! VMX: implemented VMENTER to non-active guest state (HLT, SHUTDOWN, WAIT-FOR-SIPI)
++ VMX: fixed write of guest segment access rights VMCS fields (32-bit field was truncated to 16-bit) (Bochs 2.6.1 bug)
+- MSR: do not recognize MTRR and PAT MSRs when MTRR/PAT features are disabled
+- Loading of SS disables interrupts until the next instruction completes but only under assumption that previous instruction didn't load SS also.
+! CPUDB: Allow CPU_LEVEL=5 configurations (pentium_mmx and amd_k2_chomper) even when Bochs is compiled with CPU_LEVEL > 5
++ CPUDB: All generic cpuid STD leafs > 2 were corrupted
++ CPUID: Don't report Architectural Performance Monitoring in CPUID. Reporting true capabilities breaks Win7 x64 installation.
++ CPUDB: Added X2APIC support to Ivy Bridge configuration.
+- CPUDB: Enable all supported VMX capabilities for bx_generic CPUID configuration.
+
+-------------------------------------------------------------------------
+Changes in Bochs 2.6.1 (April 7, 2013)
+
+! Implemented Supervisor Mode Access Protection (SMAP) support
+! Implemented injection of Monitor Trap Flag (MTF) event [The MTF VMEXEC control is still not implemented]
+! Implemented VMX APIC Registers Virtualization and VMX Virtual Interrupt Delivery emulation
+! Implemented VMCS Shadowing secondary VMEXIT control emulation
+! Implemented #VE exception secondary VMEXIT control emulation
+! Implemented (hacked) RDRAND and RDSEED instructions
+! CPUDB: Added AMD FX-4100 (Zambezi) configuration to CPUDB
+! SVM: Added SVM Pause filter support [Pause filter threshold support is not implemented yet]
+- VMX: Implemented Virtual NMI pin-based VM-Execution control
+- SMC: Correctly handle SMC with trace chaining optimization (a trace could be chained to the SMC invalidated trace) (Bochs 2.6 introduced corner case bug)
+- SMC: Close 4GB alialing SMC hole (partial solution)
+- CPUID: fixed broken ADX enable in CPUID when bx_generic cpuid was used (Bochs 2.6 bug)
+- VMX: correct error_code field check for event injection (VMCS_32BIT_CONTROL_VMENTRY_INTERRUPTION_INFO), fail only when when push_error is set and error_code[31:16] != 0
+- VMX: NMI injection should mask NMI events
+- MTRR: fixed reset value for MSR 0x2ff (MtrrDefType)
+- Improved and fixed event handling logic (involved fixes in events delivery, especially NMI window exiting)
+- Fixed double and triple fault detection in exception.cc
+- VMX: Fixed exit qualification for VMX_VMEXIT_APIC_ACCESS VMEXIT
+- VMX: VmEntry should do TPR Virtualization (TPR Shadow + APIC Access Virtualization case is affected) and even could possibly cause TPR Threshold VMEXIT
+- WRMSR: WRMSR instruction should stop trace execution
+- WRMSR: fixed MSR_APICBASE write when X2APIC mode is already enabled
+- SVM: Fixed priority of CR4 Write intercept vs #GP exceptions
++ AVX2: Fixed bug in VPBROADCASTW_VdqWw instruction
+- AVX: Fixed spurious #AC exception for AVX MASKMOV instructions
+- AVX: Fixed memory access size for VMOVDDUP instruction with VEX.L=0
+- AVX: Fixed address for AVX VMASKMOV memory access in corner case of wrap over address size boundary
+- XSAVE: Fixed XCR0 reserved combination checking in XSETBV instruction
+- SMEP: SMEP introduced system-inaccessible pages so TLB should distinguish between normal pages (which always system-accessible) and system-inaccessible pages
++ SFENCE instruction require SSE and not SSE2
+- VMX: fixed error code check for exceptions injected into unrestricted guest
++ SVM: implemented missed RSM, LDTR READ/WRITE, TR READ/WRITE and IRET intercepts
++ SVM: suppress 'entering paged real mode' CR0 check for SVM guest (allowing CR0 intercept instead of #GP due to illegal CR0 bits combination)
+- x86 Debugger: on HW task swicth need to clear pending single step only and not all pending breakpoints
+
+-------------------------------------------------------------------------
+Changes in Bochs 2.6 (September 2, 2012)
+
+! Added AMD's SVM (Secure Virtual Machine) emulation support including extensions: Nested Paging, NRIP
+! Added AMD's Local APIC Extensions emulation support
+! Implemented EPT A/D bits support
+- VMX: VMX preepmtion timer event should not be taken if interrupts are inhibited by MOV_SS
+- VMX: EPT misconfiguration should always take priority above EPT permissions violation (translate_guest_physical corner case bug)
+- VMX: EPT reserved bits set should cause EPT misconfiguration and not EPT violation
+- VMX: EPT walk for guest CR3 address should be considered 'page walk'
++ VMX: Correctly handle guest EFER.LMA and EFER.LME when loading unrestricted guest with CR0.PG = 0
++ VMX: Fixed reading of VMX MSR bitmaps / Fixed memory overflow
++ VMX: VMEXIT Instruction Length VMCS field not always getting updated (Intel undocumented feature)
+- AVX: Added missed #UD condition because of VEX.VVV for several VEX/XOP instructions
++ AVX: Fixed bug in AVX FMA float-multiply-subtract instructions
+- AVX: Fixed segment limit check for AVX memory accesses
++ GATHER: Fixed bug in VGATHERQPS instruction
++ XOP: Fixed FMA4 instructions sources
++ XOP: Fixed instructions with operands order depending on VEX.W (fixed VEX.W read from instruction object)
+- AVX F16: Fixed VCVTPH2PS instruction implementation (ignore DAZ, never report denormal exception)
+- Interrupt inhibit could be potentially missed after MOV_SS instruction
+- CPUID: Fixed Yonah max reported CPUID leaf CPUID[0].EAX when cpuid_limit_winnt option is enabled
+- VME: fixed v8086 interrupt redirection in VME mode
+- Tasking: Fixed CS.LIMIT check after hardware task switch caused by JMP_FAR
+- Tasking: Fixed exception in case of bad CR3 or PDPTR during hardware task switch
+- CPUID: Promoted Misaligned SSE to CPU option which could be reported by CPUDB object
+! Added Turion64 (Tyler) configuration to the CPUDB
+! Added Corei5 750 (Lynnfield) configuration to the CPUDB
+! Added AMD Phenom X3 8650 (Toliman) configuration to the CPUDB
+! Added Corei7 3770K (Ivy Bridge) configuration to the CPUDB
++ X2APIC: fixed #GP error when sending IPI through X2APIC
+- X2APIC: incorrect write to self IPI X2APIC register (with reserved bits set) should not trigger the self IPI
++ LAPIC: fixed timer interrupts after reloading of LAPIC Timer Divide Configuration register
+- SSE: fixed 'missed unmasked underflow' problem
++ CPUID: fixed broken VMX CPU configuration when bx_generic cpuid was used
+- x86 Debugger: don't trigger breakpoint hit in case of fault or VMEXIT occured during same memory operation
+- x86 Debugger: correctly handle breakpoint check for laddr wrap (two linear addresses must be checked for #BP instead of one)
+- GATHER: update gather mask handling to match latest Intel SDM definition
+- VME: implemented VME state consistency check
+- SSE: MASKMOVDQU instruction should check ***write*** permissions for all 16-bytes even if mask is all-zero
+- SSE: improved NaN handling for DPPS/DPPD instructions (matching IVB implementation)
+- AVX: fixed #AC exception check for AVX128 instructions that reading only 8-bytes from the memory (VCVTPS2PD_VpdWps and VCVTDQ2PD_VpdWq)
+- x86 Debugger: fixed x86 hardware breakpoint handling, if *any* enabled breakpoint matched, need to set status bits for *all* matching breakpoints, even for disabled ones
+- SMM: Fixed VMX state restore after SMM in CPU compiled with no x86-64
+- MOVBE: Fixed #UD exception when MOVBE instruction used with prefix 0x66
+- MMX: Fixed memory access size for several MMX instructions
+- x86 Debugger: preserve DR6.BS and DR6.DB on exception, only software clears these bits
+- SSE cvt instructions: transition from FPU to MMX state has higher priority than SSE exception (#XF/#UD) (Bochs 2.4.2 bug)
+
+-------------------------------------------------------------------------
+Changes in Bochs 2.5.1 (January 6, 2012)
+
+! Added Athlon64 (Venice) configuration to the CPUDB
+- BMI: fixed EFLAGS after BMI instructions (set EFLAGS while preserving PF was not implemented properly in 2.5 release)
+- VMX: fixed VMFUNC instruction behavior to align with Intel SDM revision 041
++ VMX: fixed VirtualBox VMX guest Guru Meditation - FS.BASE got corrupted after saving/restoring unusable FS selector
++ VMX: fixed Bochs PANIC crash when doing I/O access crossing VMX I/O permission bitmaps
++ VMX: Fixed Guest Physical Address VMCS register after EPT violation or misconfiguration
+- VMX: EPT misconfiguration don't update guest linear address field and VMEXIT qualification = 0
+- VMX: Fixed EPT violation VMEXIT qualification (bit 8 'is_page_walk' was inverted)
+- LAPIC: read of non-existing LAPIC register should raise APIC_ERR_ILLEGAL_ADDR in ESR LAPIC register
+- LAPIC: write to legacy non-existing RRD LAPIC register should not raise any errors in ESR LAPIC register
++ MSR: access to AMD extended MSR space was impossible due to a bug in RDMSR/WRMSR code
+
+-------------------------------------------------------------------------
+Changes in Bochs 2.5 (November 27, 2011)
+
+! Implemented fully configurable CPUID !
+! Added ability to configure CPUID model and CPUID family through .bochsrc
+! Implemented AVX instructions support and XSAVEOPT instruction
+! Implemented AVX float16 convert instructions (VCVTPS2PH and VCVTPH2PS)
+! Implemented AVX2 instructions support (including Gather and FMA)
+! Implemented Bit Manipulation Instructions (BMI1/BMI2) support and LZCNT instruction support
+! Implemented Supervisor Mode Execution Protection (SMEP) support
+! Implemented VMX preemption timer VMEXIT control
+! Implemented Pause-Loop Exiting Secondary VMEXIT control
+! Implemented Alternative Access to CR8 AMD's feature - LOCK CR0 treated as CR8
+! Implemented INVPCID instruction support
+! Implemented AMD SSE4A instructions support (based on patch submitted to QEMU)
+! Implemented AMD XOP/FMA4/TBM instructions support
+! Implemented TSC-Deadline APIC timer mode support
++ SSE, x86-64: Fixed fetchdecode problem with decoding CRC32_GdEv instruction forms (and other instructions with BxOSizeGrp)
+- SSE: Fixed bugs in FUZ mode for SSE instructions
+- SSE: Fixed reporting of unmasked underflow (#U) together with precision (#P)
+- SSE: CLTS instruction must end trace because it changes fetchModeMask flags (SSE_Ok and AVX_Ok)
++ Save/Restore: Fixed restore of CPU segments in real mode (corrupted segment valid bit)
+- VMX: Fixed VMX_MSR_VMX_EPT_VPID_CAP MSR value (1G pages support bit was corrupted)
+- VMX: Fixed typo that corrupted loaded DR7 value after VMENTER
+- VMX: Fixed bug in "NMI Window Exiting" implementation
+! VMX: Implemented VM Functions support and EPTP-Switching VM Function
+- X86 Debugger: improved code breakpoint handling
+- Partially handle 32-bit linear address wrap in legacy mode (handle page split system memory accesses)
+- SSE, XSAVE: correctly handle x87 control word reserved bits in FXRSTOR/XRSTOR instructions
+- SMP: Fixed spurious wakeup from WAIT_FOR_SIPI after INIT event
++ MONITOR/MWAIT: Do monitor on cache line granularity only + bugfix possible TLB caching of monitored line
+- VMX: Fixed natural width fields read and write length when x86-64 is not compiled in (still need to fix the case when x86-64 disabled in .bochsrc)
+- CPUID: CPUID.0x00000001.ECX[27] (OSXSAVE) should be reported as r/o copy of CR4.OSXSAVE
+- CPUID: CPUID.0x00000001.EBX[23:16] (number of logical processors) should always be reported when CPUID[0x00000001].EDX[28] (HT) is set
++ CPUID: CPUID.0x00000005.EDX (MONITOR/MWAIT leaf) has to be properly reported - required for Fedora 15
+- CPUID: CPUID.0x00000007.EAX fixed - report max sub-leaf that supported in leaf 7
+- CPUID: CPUID_LIMIT_WINNT mode should affect only CPUID leaves >= 3 and < 80000000
++ CPUID: CPUID.0x0000000D fixed to report correct values (EAX<-XCR0 supported bits, EBX<-XSAVE size for enabled features only, ECX<-XSAVE size for all supported features) - required for Ubuntu 11.04
+- CPUID: Enable FXSAVE/FXRSTOR only for configurations with SSE support (PII Klamath doesn't have FXSAVE/FSRSTOR either)
+! Added ability to configure NX support without x86-64
+- MOVBE: MOVBE instruction exists only in memory form
+- SYSCALL/SYSRET: SYSCALL/SYSRET instructions are not supported in legacy mode for Intel processors
+- CPUID: CPUID.0x80000001.EDX[11] SYSCALL/SYSRET support should not be reported outside long64 mode if legacy mode SYSCALL/SYSRET is not supported
++ VMX: added missed VMEXIT for XSETBV instruction
+- x86-64: fixed EFLAGS after DEC_Eq instruction
++ make RDTSC 'end of trace' instruction - guarantee that any pair ot RDTSC/RDTSCP on same CPU do not belong to same trace (and therefore will always update time and etc) - required for Win7 Thin
+
+-------------------------------------------------------------------------
+Changes in Bochs 2.4.6 (February 22, 2011)
+
+! x86-64: Implemented PCID support
+! x86-64: Implemented FS/GS BASE access instructions
+! Added ability to configure CPUID stepping through .bochsrc
+- The mode with long paddr but only 32-bit laddr (PSE-36) didn't work correclty with code located > 32bit paddr (LPF vs PPF issue)
+- Compatibility: Compatibility issue with PUSH32_SREG fixed
+- CPUID: Debug Extensions was introduced only in Pentium CPU
+- CPUID: leaf[0xD].EAX should report supported bit fields of XCR0
+- Fixed prority between CPL != 0 (#GP) and invalid register index (#UD) in MOV to/from CR/DR
+- SSE: #GP on 16-byte misaligned SSE address have higher priority than any segment related faults
+- SSE: STTNI loads are not required to be 16-byte aligned
+- SSE: Fixed reporting of #P exception together with unmasked overflow
++ SSE: Fixed bug in PCMPGTQ instruction
++ VMX: Fixed external interrupt VMEXIT when RFLAGS.IF=0 and 'external interrupt exiting' control is set
+- VMX: Fixed VMEXIT reason reported by RDTSCP instruction
+- VMX, MWAIT: Do not allow MWAIT to enter MWAIT_IF sleep state when “interrupt-window exiting” VMX control is set and RFLAGS.IF = 0
+- VMX: (partial fix) stuffed load should check for EPT read permissions only, todo: A/D bits update should check EPT write permissions
++ Save/Restore: Fixed restore of CPU state in real or v8086 mode (2.4.5 missed case)
+- x86-64: Fixed #SS exception error code in long mode interrupt to same priviledge level corner case
+- x86-64: Fixed missed canonical check on system memory access
+- x86-64: Clear upper part of 64-bit register even on 32-bit shift/rotate instructions with zero shift control
+- x86-64: INVLPG to non-canonical address should be converted to NOP and not fault
++ x86-64: Fixed IRET in long mode
+- x87, x86-64: Fixed failures + Bochs PANIC when REX prefix is used with X87/MMX instructions
++ x87, SSE, XSAVE: Fixed save/restore of x87 registers in FXSAVE/FXRSTOR and XSAVE/XRSTOR
+- Fixed asize wrap for instruction flows with several memory accesses
+- FXSAVE: Fixed FXSAVE/FXRSTOR exceptions
+- FXSAVE: Do not save XMM state if CR4.OSFXSR is clear
++ Big Endian: Fixed failures on big endian hosts (fetchdecode + CPUID + PINSRW_PqEwIb instruction)
+
+-------------------------------------------------------------------------
+Changes in Bochs 2.4.5 (April 25, 2010):
+
++ Fixed SIGSEGV crash in Memory object (occurs when accessing byte @ BX_MEM_LEN + 1)
+- Compatibility MMX and SSE: Compatibility issue with MASKMOV faults fixed
+- Compatibility SSE: FXRSTOR always restore MXCSR
+- Compatibility: BSWAP os_16() operand size undefined behavior implemented (zero out 16-bit destination)
+- x87: Fixed partial update of x87 state in FLDENV/FRSTOR instruction (not complete for FRSTOR)
+- x87: Improved precision of F2XM1/FSIN/FCOS/FSINCOS/FTAN instructions
+- x87: Fixed FPREM/FPREM1 FSW.Cx flags
++ Save/Restore: Fixed restore of CPU state in real mode with CS.RPL != 0
++ Fixed SS.RPL after SYSRET instruction
+- LAPIC: Fixed delivering of interrupt 0xFF via lapic
+- Trace cache: Fixed SMC detection bug with trace cache disabled
+! AES: Implemented PCLMULQDQ AES instruction
+- Fixed bug in CALL_EwM opcode definition
+- Bugfixes in hardware task switch flow
+- Fixed possible state corruption by exception generated from task switch caused by interrupt/exception
+- Check PDPTRs when reloading CR3 in task_switch
+- Fixed MTRR_DEFTYPE MSR reset value
+! APIC: Implemented X2APIC and extended topology CPUID leaf
+! VMX: Implemented VMX controls for loading/storing of MSR_PAT and MSR_EFER
+! VMX: extra instruction info for VMEXIT on INS/OUTS instructions
+! VMX: enabled secondary proc-based vmexec controls
+! VMX: Implemented APIC virtualization
+! VMX: implemented WBINVD VMEXIT control
+! VMX: implemented RDTSCP VMEXIT control
+! VMX: Implemented Descriptor Table Access VMEXIT control
+! VMX: Implemented Virtualize X2APIC mode
+! VMX: Implemented Unrestricted Guest mode
+! VMX: Enabled extended VMX capability MSRs
+- VMX: RDTSCP instruction should #UD in VMX guest if secondary proc-based vmexec controls are not enabled
++ VMX: Implemented default treatment of SMIs and SMM with VMX operation mode
+- VMX: Fixed 'VMEXIT on MWAIT' qualification field
++ VMX: Fixed 'errorno' and 'EXT' after VMEXIT / VMENTER with hardware exception injection
++ VMX: implemented IA32_FEATURE_CONTROL_MSR and IA32_VMX_MSR_MISC
++ VMX: Fixed software interrupt injection in CR4.VME mode
++ VMX: Fixed TPR shadow handling outside VMX guest mode
+- VMX: Fixed VMREAD/VMWRITE of ACCESS_RIGHTS VMCS fields (rotate instead of shift)
+- VMX: Fixed VMEXIT reason for "Guest State Checks Failure" Vmexit occured in VMLAUNCH/VMRESUME
++ VMX: Fixed VMX_VMEXIT_CTRL1_INTA_ON_VMEXIT control check from VMexit_ExtInterrupt()
++ VMX: Fixed VMCS_32BIT_VMEXIT_INTERRUPTION_INFO field on VMX_VMEXIT_EXTERNAL_INTERRUPT VMEXIT
++ VMX: Fixed IA32_MSR_VMX_VMENTRY_CTRLS MSR value
+- VMX: Fixed 'VMEXIT on instruction' qualification in 32-bit guest mode
+- 386: CR4 read should #UD on 386 CPU
+- CPUID: Fixed CPUID function 0x80000005 for Intel CPUs (should be reserved)
+- CPUID: Fixed CPUID with EAX > max supported CPUID leaf
+- X86 Debugger: INT1 should set EXT bit
++ MONITOR/MWAIT: rewritten MONITOR/MWAIT implementation from scratch
+- MONITOR/MWAIT: fixed segment permissions check in MONITOR instruction
+- MONITOR/MWAIT: fixed MONITOR/MWAIT when using >32bit physical address
++ x86-64: Fixed loading NULL SS selector in RETF when jumping to outer privilege level in long mode
+- x86-64: Fixed priority between #GP and #NP when calling/jumping to call_gate64
+- x86-64: Fixed RSP/RBP corruption when ENTER64 instruction fails
++ x86-64: Fixed IDIV32 incorrect result due to extra sign-extension of Bit32s destination
++ x86-64: Fixed IDIV64 incorrect result bug
+- x86-64: Fixed EFLAGS after IMUL_RAXEq instruction
+- x86-64: NX fault could be missed case fixed
+- x86-64: CS.L should be ignored when not in long mode: call_protected() fixed
+- x86-64: Fixed LAR instruction checks for call gate in long mode (2.4.2 missed case)
+- x86-64: SYSRET check for canonical RCX fixed, needed only in 64-bit operand case
+- x86-64: SWAPGS should #UD outside of long64 mode
++ SSE: Fix MOVDQ2Q/MOVQ2DQ/MOVMSKPS/MOVMSKPD instructions (operands swapped)
++ SSE: Fix PEXTRB/PEXTRW/PEXTRD/EXTRACTPS instruction operands
+- SSE: PMOVMSKB, MOVMSKPS/PD, MOVQ2DQ, MOVDQ2Q, MOVHPD/LPD should #UD with non-supported MODRM values
++ SSE: Decoding of instructions PSHUFLW/PSHUFHW fixed
+- SSE: Do not report post-computational SIMD exceptions if unmasked pre-computational SIMD exception occured
+- SSE: LFENCE/SFENCE/MFENCE should #UD if no SSE2 enabled
+- RDMSR/WRMSR will always fail on obviosly not-supported MSRs (index >= BX_MSR_MAX_INDEX)
+- VME: Fixed VIF flag in POPFW instruction
+- Instrumentation: Fixed CR0.NW and CR0.CD accessors
+- Enable FXSAVE/FXRSTOR for Pentium II configuration (P6 + MMX) only
++ Handle DMA also when CPU is halted
+- Trace cache: Fixed special case of CS.LIMIT demotion (new descriptor limit is smaller than current one)
+
+-------------------------------------------------------------------------
+Changes in Bochs 2.4.2 (November 12, 2009)
+
++ Lazy Flags: Fixed shift instructions flags (2.3.5 introduced bug)
+- VMX: fixed VMEXIT on RDMSR/WRMSR instructions
+- VMX: fixed VMREAD/VMWRITE on 16-bit VMCS fields
++ VMX: fixed VMWRITE instruction with reg/mem operands
+- VMX: Fixed corrupted CS:RIP/SS:RSP on VMEXIT on exception corner case
+- VMX: Fixed VMCS_32BIT_VMEXIT_INSTRUCTION_LENGTH field after crashed software interrupt
+- VMX: Fixed guest pending debug exceptions VMCS field in case of VMEXIT on event
++ VMX: Fixed VMEXIT on I/O bitmaps control
+- Fixed segment descriptor 'Accessed' bit handling
+- Fixed pushing params into new stack in call_far instructions
+- VME: Fixed TSS limit check when fetching VME redirection bitmap from INT_Ib()
+- Compatibility: Compatibility issue with POP32_SREG fixed
+- X86 Debugger: Fixed bug in single-step execution mode (EFLAGS.TF) handling
+- X86 Debugger: CLFLUSH also visible to hardware data breakpoint logic
+- X86 Debugger: Fixed code break point check after MOV_SS instruction
+- X86 Debugger: Fixed code break point handling by repeat instructions
+- VME: Fixed VIF flag handling in IRETW VME mode
++ Bugfixes with long physical address configurations
+- SYSENTER/SYSEXIT with non-canonical RSP should #GP and not #SS
+- fetchdecode SSE prefix added for several opcodes
+- Fixed x87/sse unmasked underflow response when result is exact (different from masked response)
++ SSE: Removed redundant FPU2MMX transition from CVTDQ2PS_VpsWdq instruction
+- SSE cvt instructions: do not cause transition to MMX state/check for x87 exceptions if no MMX reg was touched (2.4 introduced bug)
++ SSE: Fixed MASKMOVDQU segment override bug
+- x87: FNOP instruction should update FCS:FIP and FOO fields
+- x87: clear C1 by FFREE/FFREEP instructions
+- AR byte (AR.TYPE) update fix for unreal mode (2.3.7 missed case)
+- NXE: report I/D bit in #PF error code only if CR4.PAE enabled, EFER.NXE isn't enough
+- Paging: Fixed page walks reserved bits handling
+- Paging: Fixed Dirty bit update for 1G page table entry
+- Paging: Fixed PSE translation when physical address > 32 bit
+- WRMSR: Fixed MTRR reserved bits checking (2.4.1 missed cases) - revealed BIOS bug
+! VMX: Implemented VMX TPR shadow
+- VMX and WRMSR: Fixed physical address validation routine
+- Fixed priority between #GP and #TS in interrupt()
+- Fixed CS.TYPE after SYSENTER/SYSEXIT/SYSCALL/SYSRET instructions
+- Fixed loading of null segment with SELECTOR.RPL != 0
+- Fixed 32-bit wrap for several instructions (bug was optimized out because the instructions don't exist in long64 mode)
+- XSAVE: XSETBV should #GP in v8086 mode and should not #UD in real mode
++ XSAVE: Fixed MXCSR restore in XRSTOR instruction
+- XSAVE: Implemented header update in XRSTOR instruction
+- x86-64: Fixed priority between #AC and #GP on access crossing canonical boundaries
++ x86-64, Lazy Flags: Fixed setting of CF and OF flags by IMUL64 instructions
++ x86-64: Fixed error code for long mode exception/interrupt fault
+- x86-64: Fixed LAR/LSL instructions in 64-bit mode
++ x86-64: Fixed assertion failure in asize32 I/O string instruction in long64 mode
+- XSAVE and FXSAVE: fixed restore of x87 status word (FSW.B and FSW.ES bits)
+- Fixed instruction flow corruption by boundaryFetch
+- x87: Fixed FYL2X/FYL2XP1/FPATAN instructions
+
+-------------------------------------------------------------------------
+Changes in Bochs 2.4.1 (June 7, 2009)
+
+- Fixed page fault during task switch flow
+- G15 group opcodes have SSE prefix semantics (#UD when SSE prefix is used)
+- x87: Write results of FLD_SINGLE and FLD_DOUBLE even in case of unmasked denormal exception
+- x87: Fixed NaN handling in x87 load-convert-op instructions (2.4 missed cases)
+- x87: Fixed C1 (rounding up) bit handling in FRNDINT instruction
+- x87: Fixed FPREM/FPREM1 instructions (C2 bit and denormal operands handling)
+- x87: Fixed FSCALE with denormal operands
++ x87: Fixed FADD/FSUB/FSUBR float_x80 with denormal operands
+- x87: Fixed exception conditions (masked/unmasked) for x87 FSTI(P)/FBSTP instructions - report only IE when integer destination overflow occur
++ x87: Fix x87 exceptions management: check first for faults (IE, DZ, DE) and only then for traps (OE, UE, PE)
+- x87: Fixed FPU_SW after memory write exception in FST* instructions
++ x87: Implemented biasing of unmasked x87 over/underflow result
+! CPUID: CPUID Fixes to satisfy WinXP 64
++ CPUID: 1G paging CPUID bit fixed (2.4 introduced bug)
++ CPUID: PSE-36 paging CPUID bit fixed
++ CPUID: APIC CPUID bit was enabled only for CPU_LEVEL >= 6 (2.4 introduced bug)
+- VMX: VMENTER/VMEXIT should fail if executed after MOV_SS instruction
+- VMX: VMENTER with SMI disabled allowed only from SMM mode
+- VMX: more VMENTER/VMEXIT state checks implemented
++ SSE: Fixed ROUNDxx instructions implementation (2.3.7 introduced bug)
+- WRMSR: Fixed MTRR reserved bits checking
+- VMX: Fixed VMXON pointer concept
+- Paging: Fixed page table "Accessed" bit handling in legacy PAE mode
+- Added PDPTR validation when reloading CR0.PG, CR4.PAE or CR3
++ VMX: fixed masked CR3 value when VMENTER/VMEXIT to legacy PAE mode
+
+-------------------------------------------------------------------------
+Changes in Bochs 2.4 (May 3, 2009)
+
+! X86 Debugger: implemented X86 IO breakpoints
+- X86 Debugger: Fixes in DR6 handling for X86 debugger
+- x86-64: #GP when writing to upper part of DR6/DR7
++ Added missed I/O permissions check in INSW methods
+- Fixed bug in CALL FAR memory access permissions checks
++ x86-64: Fixed CALL FAR between legacy and 64-bit modes
+- RDMSR: Fixed typo bug in MTRR read RDMSR (2.3.7 introduced bug)
+- Fixed CS.LIMIT checks in real mode/big real mode with 16-bit operand size
+- Push error code if segment violation occurs when pushing arguments into a new stack
+- x86-64: Fixed missed canonical fault when mem access split cross canonical boundary
+- SSE: Fixed exception priority corner case for SSE instructions
+- Fixed bug in triple fault detection (2.3.7 introduced bug)
++ Fixed priviledge level handling in push into new stack methods (2.3.7 introduced bug)
+- WRMSR: Added missed #GP fault when writing invalid memtype to MTRR/PAT
+- CALL instructions should push old EIP to stack before checking new EIP for CS.limits
+- Fixed segment limit violations with 4G segment limit (2.3.6 introduced bug)
+- x87: Fixed restore of FCS field in FXRSTOR/XRSTOR
++ x87: Added missed prepare_FPU for FPATAN
+- x87: Do not touch X87.FDS/X87.FDP if no memory access in FPU instruction
++ x87: Fixed x87 Inexact Result (#P) unmasked responce
++ x87: Fixed masked x87 stack underflow responce for FLD_STi instruction
++ x87: Partially fixed x87 Underflow/Overflow (#P) unmasked responce
+- x87: Fixed x87 rounding up bit (C1)
+- x87: Fixed unmasked exception response for x87 floating point compare instructions
+- x87: Fixed NaN handling in x87 load-convert-op instructions
++ x87: Fixed FLDL2T instruction with rouning-up round control
+- x87: Fixed missed denormal exception in FSCALE instruction
+- x87: Fixed missed denormal exception in FRNDINT instruction
+- x87: Do not affect x87 state on x87 instruction causing memory fault
+- x86-64: Fixed alignment check to be on laddr instead of eaddr for CMPXCHG16B
+- Fixed address size truncation for XLAT instruction
++ Fixed bug with TR.LIMIT check in get_SS_ESP_from_TSS
++ SMM: Save/Restore segment registers cache valid bit in SMM state maps
+- SSE: Fixed handling of SSE prefixes for EMMS instruction - should #UD
+- SSE: No alignment check required for 16-byte 'unaligned' access
+- Fixed task switch flow
+- x86-64: Added missed CR0 reserved bits #GP in long mode
+- x86-64: Added missed CR3 reserved bits #GP in long mode
++ AES: Fixed typo bug in AES implementation
++ MONITOR/MWAIT fixes
+- Avoid 32-bit EIP wrap in prefetch() without proper faulting
+- x87: Don't cause FPU2MMX transition if memory exception occured
++ Fixed WBINVD corrupting second CPU instruction flow
+- Fixed theoretically possible pageWriteStamp overflow
+- Fixed exceptions handling in v8086 mode
++ Fixed CPU runaway after pressing RESET button
+- Fixed CPU state after INIT (software reset)
+- APIC: Reimplemented INIT delivery to CPU
+- Paging: Handle correctly large pages invalidation by INVLPG
+- Make CS segment always writeable in real mode
+- Fixed #DF exception error code (must be always zero, including EXT bit)
+- x86-64: Added missed canonical fault in case of INVLPG to non-canonical linear address
++ x86-64: Fixed SYSENTER/SYSEXIT MSRs read by RDMSR in 64-bit mode
++ x86-64: Fixed SYSENTER/SYSEXIT trace cache bug in x86-64 mode
++ x86-64: Fixed XSAVE fetchdecode in x86-64 mode (2.3.7 introduced bug)
+- x86-64: Fixed missed instructions break point in x86-64 mode
+- x86-64: Fixed writable data segment check in long mode (2.3.6 introduced bug)
++ x86-64: Fixed bug in CR8 read
++ x86-64: Fixed bug in BSWAP_RRX 64-bit instruction
+- Fixed false boundary fetch failures due to CS.LIMIT
++ VMX: INT1 (IceBP) is not considered software interrupt but priviledge software interrupt
+- X86 Debugger: Correcly handle EFLAGS.RF flag
+- WRMSR: Fixed write to MSR.APICBASE reserved bits
+! LAPIC: Support for LAPIC global disable bit
+! LAPIC: Implemented local APIC cluster addressing model
+- LAPIC: Fixed bug in LAPIC DFR register read
+- VME: Fixed stack corruption in VME mode (2.3.7 introduced bug)
+- Fixed fetchModeMask bug - performance/possible SMC in v8086 mode
+- Fixed exceptions order between #PF and #GP in POPFD instruction
+- Added missed EIP limit check in real mode interrupt
+- Fixed descriptor_h limit field (used for SMM) after SYSENTER/SYSEXIT/SYSCALL/SYSRET
+- Fixed priority between #NP and #GP when jumping/calling to tss
+- VME: Fixed TR.LIMIT when checking TSS permission bitmap from Int_Ib() in VME mode
++ x86-64: Fixed code fetch problem after jumping to > 32 bit distance in x86-64 mode
+
+-------------------------------------------------------------------------
+Changes in Bochs 2.3.7 (June 3, 2008)
+
++ Fixed parity flag (PF) handling bug
++ x87: Fixed incorrect emulation of FSTP instruction
+- Correctly implement CLFLUSH protection/paging checks
+- Paging: Do not try to update access/dirty bit if it is already set
+- x86-64: Canonical check should have higher priority than #AC check
++ SSE: Fixed #GP alignment check for SSE stores
++ CPUID: Fixes in CPUID
+- Fixed reset value of TR.TYPE
+- Fixes for linear address wrap in legacy (not long64) mode
+- x86-64: Fixed priority between exceptions in call through call gate in 64-bit mode
++ x86-64: Fixed long mode exception handling
++ x86-64: Implemented CALL_Far64 and JMP_Far64 according to Intel docs
+! x86-64: SYSENTER/SYSEXIT in long mode implemented
++ Fixed triple fault detection bug
++ SSE: Fixed MASKMOVDQU instruction decoding
+- prefetch hint should be NOP when used in reg/reg mode
+- x86-64: #GP when trying to set reserved bits of CR4_HI in 64-bit mode
+- x86-64: #GP when trying to set reserved bits of EFER MSR
++ x86-64: clear upper part of RSI/RDI when executing rep instructions with 32-bit asize even if no repeat iterations were executed (because of RCX=0 for example)
++ x86-64: write SYSENTER_EIP_MSR and SYSENTER_ESP_MSR as 64-bit when x86-64 supported
+- x86-64: set MSR_FMASK reset value
+- x86-64: MSR_FMASK should be 32-bit only
+- check for fetch permissions when doing ITLB lookup
+- x86-64: #GP when trying to write non-canonical address to MSR_CSTAR or MSR_LSTAR
+- correct repeat instructions timing
+- fixed timing of faulted instructions
++ Fixes to support busy TSS in TR
+- mark TSS as busy in TSS descriptor/TR after it is loaded
++ x86-64: Fixed LEAVE instruction decoding in 64-bit mode
+- x86-64: Added missed canonical fault exception in many places
+- fixed 286 tss handling (descriptor wasn't parsed correctly)
+- fixed PANIC message in interrupt through incorrect task gate
++ x86-64: Fixed ret_near decoding in 64-bit mode
++ SSE: Fixed destination register for SSE4.2 string instructions
+- WRMSR: support 64-bit write to MSR_TSC using WRMSR instruction
+- fixed save/restore param type for async_event
++ SSE: Fixed bug in ROUNDPS/PD/SS/SD
+- x86-64: Ignore CS.L bit when EFER.LMA is not set
+- Add potentially missed CPU mode change in SYSCALL/RET/ENTER/EXIT
+- sysenter/exit should be supported in v8086 mode as well
+- fixed missed CS.LIMIT check in all far calls/jmps in real/v8086 mode
+! x87: Handle undocumented FPU opcodes
+- Correctly handle limit check for BIG real mode support
+- Correctly push error code after task switch in exception()
++ x86-64: Fixed LAR/LSL instructions in 64-bit mode
+- x86-64: Added canonical check for LIDT/LGDT instructions in 64-bit mode
++ x86-64: Fixed loading of SS null selector in long mode afer exception
+- Many fetchdecode fixes to support missed opcode groups (G1A, G11)
+- Fixed address size wraparound in bittest/bitset instuctions
+- Fixed bug in #AC exception detection
+- Paging: Check for reserved bits in paging PAE and PSE modes
+- Fixed bug with Expand down segment limit
+- Fixed restore state in task switch
+- x87: Fixed floating point opcode (FOO) field
++ x87: FPU instructions which load data from memory must access memory first and only then check for FPU stack overflow. Memory access might fault before.
+- x87: Fixed FPU tags after FLDENV/FNSAVE instructions
+- x87: update FPU TW before saving FPU state by FNSAVE or FNSTENV
+- SSE: Fixed FRSTOR instruction
+- x86-64: Fixed 2nd dword of 64-bit descriptor check
+- Fixed TSS limit check in task switch routine
+- x86-64: Fixed effective address wrap in 64-bit mode with 32-bit address size
++ Fixed SMSW instruction in 32-bit and 64-bit modes
++ x87: Fixes in FPU status word C1 bit clear/set
+- SSE convert instructions: do not cause transition to MMX state if no MMX reg was touched
++ Fixes in PUSHA/POPA instructions
+- x86-64: Added canonical check for SYSENTER MSRs in WRMSR
++ x86-64: Fixed LLDT and LTR instructions in 64-bit mode
+- x86-64: Fixed error code for not 64-bit CS in interrupt from long mode
+- Fixes in CMPXHG8B instruction - slight speedup and correct #AC check
+- Clear segment descriptor cache when loading null selector
++ Fixed ENTER instruction implementation
+- x86-64: Check RIP for canonical boundaries in 64-bit mode during prefetch()
++ SSE: Fixed bug in BLENDVPS/PD instructions
+- Paging: Fixed setting of reserved bits in CR3 register
++ x86-64: Clear upper 32-bit of RIP/RSP when leaving 64-bit mode
++ x86-64: Fixed call to 64-bit call gate
+- x86-64: Fixed code/data decriptor fields in 64-bit mode
++ Fixed CPL bug in CS segment loading
+- X86 Debugger: DR4/DR5 #UD with debug extension enabled have higher priority than CPL <> 0
+- Paging: PML4 access bit will be set only if the page was actually accessed
++ Fixed EFLAGS update in IRET instruction
++ Fixed SS/ESP stack access in IRET instruction
+- X86 Debugger: Fixed x86 debugger to work when guest2host tlb is enabled
++ x86-64: Fixed missed #DE exception in x86-64 IDIV instruction
+- Fixed handling of segment AR byte in BIG real mode
+- Paging: Fixed bug in global pages TLB invalidation
+- Fixed CPU CPL restore in V8086 mode
+- x86-64: Handle reserved bits of CR8 register
+- X86 Debugger: Fixed len8 PANIC in setting of DR7 register in 64-bit mode
+- X86 Debugger: Fixed x86 data breakpoint match when breakpoint length is 8 bytes
+! X86 Debugger: Implemented GD bit in DR7 register

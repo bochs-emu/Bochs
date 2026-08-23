@@ -770,6 +770,8 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
   BX_DEBUG(("interrupt(): vector = %02x, TYPE = %u, EXT = %u",
       vector, type, (unsigned) BX_CPU_THIS_PTR EXT));
 
+  BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
+
   // Discard any traps and inhibits for new context; traps will
   // resume upon return.
   BX_CPU_THIS_PTR debug_trap = 0;

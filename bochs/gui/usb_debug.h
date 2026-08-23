@@ -53,37 +53,6 @@ enum {
   UHCI_REG_COUNT
 };
 
-// copy&paste start
-// from uhci_core.h
-#define USB_UHCI_QUEUE_STACK_SIZE  256
-
-#define USB_UHCI_IS_LINK_VALID(item)  ((item & 1) == 0)  // return TRUE if valid link address
-#define USB_UHCI_IS_LINK_QUEUE(item)  ((item & 2) == 2)  // return TRUE if link is a queue pointer
-
-struct USB_UHCI_QUEUE_STACK {
-  int    queue_cnt;
-  Bit32u queue_stack[USB_UHCI_QUEUE_STACK_SIZE];
-};
-
-#pragma pack (push, 1)
-struct TD {
-  Bit32u dword0;
-  Bit32u dword1;
-  Bit32u dword2;
-  Bit32u dword3;
-};
-
-struct QUEUE {
-  Bit32u horz;
-  Bit32u vert;
-};
-#pragma pack (pop)
-
-// from usb_xhci.h
-#define OPS_REGS_OFFSET   0x20
-#define XHCI_PORT_SET_OFFSET  (0x400 + OPS_REGS_OFFSET)
-// copy&paste end
-
 extern const char *hc_param_str[];
 
 extern int usb_debug_type;
@@ -100,6 +69,11 @@ extern struct S_ATTRIBUTES attribs_u_ports[];
 extern bool u_changed[UHCI_REG_COUNT];
 
 bool uhci_add_queue(struct USB_UHCI_QUEUE_STACK *stack, const Bit32u addr);
+
+// OHCI
+extern struct S_ATTRIBUTES attribs_o_control[];
+extern struct S_ATTRIBUTES attribs_o_cmd_sts[];
+extern struct S_ATTRIBUTES attribs_o_ports[];
 
 // xHCI
 #define VIEW_TRB_TYPE_NONE      0
@@ -152,6 +126,7 @@ Bit32u usb_mmio_read_dword(const Bit32u address);
 void usb_io_write(Bit16u addr, Bit32u value, unsigned io_len);
 
 bx_list_c* get_usb_hc_state(int type);
+const char* get_usb_hc_name(int type);
 
 bx_param_enum_c* get_hc_port_device(Bit8u port);
 

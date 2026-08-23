@@ -109,6 +109,7 @@ GUI_LINK_OPTS_WX = @GUI_LINK_OPTS_WX@
 GUI_LINK_OPTS = @GUI_LINK_OPTS@
 DEVICE_LINK_OPTS = @DEVICE_LINK_OPTS@
 RANLIB = @RANLIB@
+AR = @AR@
 
 CFLAGS_CONSOLE = @CFLAGS@ $(MCH_CFLAGS) $(FLA_FLAGS)
 CXXFLAGS_CONSOLE = @CXXFLAGS_CONSOLE@ $(MCH_CFLAGS) $(FLA_FLAGS)
@@ -286,7 +287,7 @@ misc/vbox.o: $(srcdir)/iodev/hdimage/vbox.cc $(srcdir)/iodev/hdimage/vbox.h \
 
 misc/bxhub.o: $(srcdir)/misc/bxhub.cc $(srcdir)/iodev/network/netmod.h \
   $(srcdir)/iodev/network/netutil.h $(srcdir)/misc/bxcompat.h
-	$(CC) @DASH@c $(BX_INCDIRS) $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bxhub.cc @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bxhub.cc @OFP@$@
 
 misc/netutil.o: $(srcdir)/iodev/network/netutil.cc $(srcdir)/iodev/network/netutil.h \
   $(srcdir)/iodev/network/netmod.h $(srcdir)/misc/bxcompat.h
@@ -376,7 +377,7 @@ gui/libgui.a::
 
 libbochs.a:
 	-rm -f libbochs.a
-	ar rv libbochs.a $(EXTERN_ENVIRONMENT_OBJS)
+	$(AR) rv libbochs.a $(EXTERN_ENVIRONMENT_OBJS)
 	$(RANLIB) libbochs.a
 
 # for wxWidgets port, on win32 platform

@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2021  The Bochs Project
+//  Copyright (C) 2008-2026  The Bochs Project
 
 
 #ifndef BX_ENH_DBG_DEF_H
@@ -354,8 +354,8 @@ extern int CmdHInsert;                     // index of next history entry to sto
 #define DR3_Rnum    69
 #define DR6_Rnum    70
 #define DR7_Rnum    71
-// #define TR0_Rnum 71  -- put Test Registers in here when they are supported
-#define TOT_REG_NUM 72
+// #define TR0_Rnum 72  -- put Test Registers in here when they are supported
+#define STD_REG_NUM 72
 // extra "register numbers" for registers that have more than one part
 #define GDTR_Lim    72
 #define IDTR_Lim    73
@@ -385,9 +385,9 @@ extern int CmdHInsert;                     // index of next history entry to sto
 #define XMMF_hi     96
 #define EXTRA_REGS  28
 
-extern Bit8u RegColor[TOT_REG_NUM];    // specifies foreground and background color of registers
+extern Bit8u RegColor[STD_REG_NUM+EXTRA_REGS];   // specifies foreground and background color of registers
 // Text color is red if the upper bit is set. Background is set according to ColorList.
-extern int RitemToRnum[TOT_REG_NUM];   // mapping from Reg List Item# to register number
+extern int RitemToRnum[STD_REG_NUM];   // mapping from Reg List Item# to register number
 
 // do the linear breakpoint list as 2 arrays, rather than a structure -- much easier to search!
 extern bx_address BrkLAddr[BX_DBG_MAX_LIN_BPOINTS+1];

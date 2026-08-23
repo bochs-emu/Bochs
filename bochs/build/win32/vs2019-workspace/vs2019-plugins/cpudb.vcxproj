@@ -246,6 +246,7 @@
     <ClCompile Include="..\cpu\cpudb\intel\pentium_mmx.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\sapphire_rapids.cc" />
     <ClCompile Include="..\cpu\cpudb\intel\tigerlake.cc" />
+    <ClCompile Include="..\cpu\cpudb\intel\wildcat_lake.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\bochs.h" />
@@ -283,6 +284,7 @@
     <ClInclude Include="..\cpu\cpudb\intel\pentium_mmx.h" />
     <ClInclude Include="..\cpu\cpudb\intel\sapphire_rapids.h" />
     <ClInclude Include="..\cpu\cpudb\intel\tigerlake.h" />
+    <ClInclude Include="..\cpu\cpudb\intel\wildcat_lake.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

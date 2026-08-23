@@ -24,6 +24,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "icache.h"
 #include "cpuid.h"
 #include "msr.h"
 #define LOG_THIS BX_CPU_THIS_PTR
@@ -2310,7 +2311,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   // Handle special case of CS.LIMIT demotion (new descriptor limit is
   // smaller than current one)
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled > guest.sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
-    BX_CPU_THIS_PTR iCache.flushICacheEntries();
+    BX_CPU_THIS_PTR iCache->flushICacheEntries();
 #endif
 
   for(unsigned segreg=0; segreg<6; segreg++)
@@ -3177,6 +3178,7 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
     if (vector == 2) mask_event(BX_EVENT_NMI);
   }
 
+  BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
   BX_CPU_THIS_PTR EXT = 0;
   BX_CPU_THIS_PTR last_exception_type = BX_ET_NONE; // error resolved
 

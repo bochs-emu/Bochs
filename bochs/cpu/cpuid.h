@@ -35,6 +35,14 @@ struct cpuid_function_t {
 
 class VMCS_Mapping;
 
+// modes of the bochsrc 'cpu: cpuid_freq=' option controlling how the CPUID
+// frequency leaves 0x15/0x16 are reported (see bx_cpuid_t::get_freq_leaf_15)
+enum {
+  BX_CPUID_FREQ_HARDWARE = 0, // values dumped from the modeled hardware
+  BX_CPUID_FREQ_NONE = 1,     // frequencies not enumerated
+  BX_CPUID_FREQ_IPS = 2       // derived from the emulated tick rate (ips)
+};
+
 class bx_cpuid_t {
 public:
   bx_cpuid_t(BX_CPU_C *_cpu);
@@ -135,7 +143,7 @@ protected:
   Bit32u get_std_cpuid_leaf_7_ecx(Bit32u extra = 0) const;
   Bit32u get_std_cpuid_leaf_7_edx(Bit32u extra = 0) const;
   Bit32u get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra = 0) const;
-  Bit32u get_std_cpuid_leaf_7_subleaf_1_ecx() const;
+  Bit32u get_std_cpuid_leaf_7_subleaf_1_ecx(Bit32u extra = 0) const;
   Bit32u get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra = 0) const;
 
   Bit32u get_ext_cpuid_leaf_1_ecx(Bit32u extra = 0) const;
@@ -143,6 +151,13 @@ protected:
   Bit32u get_ext_cpuid_leaf_1_edx_intel() const;
 
   void get_ext_cpuid_leaf_8(cpuid_function_t *leaf) const;
+
+  // CPUID leaves 0x15/0x16 declare the TSC and processor base frequencies of
+  // the CPU the model was dumped from, while the emulated TSC advances at the
+  // 'ips' rate; the 'cpu: cpuid_freq=' option chooses how they are reported.
+  // The eax/ebx/ecx arguments carry the hardware dump values of the model.
+  void get_freq_leaf_15(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx) const;
+  void get_freq_leaf_16(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx) const;
 
   BX_CPP_INLINE void get_leaf(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx, Bit32u edx) const
   {
@@ -624,12 +639,15 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 
 // CPUID defines - features CPUID[0x00000007].ECX  [subleaf 1]
 // -----------------------------
-//   [0:4]    reserved
-//   [5:5]    Support immediate forms of RDMSR and WRMSRNS instructions
-//   [31:5]   reserved
+//    [0:4]   reserved
+//    [5:5]   Support immediate forms of RDMSR and WRMSRNS instructions
+//   [10:6]   reserved
+//  [11:11]   ACE support
+//  [31:12]   reserved
 
 #define BX_CPUID_STD7_SUBLEAF1_ECX_MSR_IMM                (1 <<  5)
 // ...
+#define BX_CPUID_STD7_SUBLEAF1_ECX_ACE                    (1 << 11)
 
 // CPUID defines - features CPUID[0x00000007].EDX  [subleaf 1]
 // -----------------------------
@@ -668,7 +686,7 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 #define BX_CPUID_STD7_SUBLEAF1_EDX_AVX_VNNI_INT16         (1 << 10)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED11             (1 << 11)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED12             (1 << 12)
-#define BX_CPUID_STD7_SUBLEAF1_EDX_USER_TIMER             (1 << 13)
+#define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED13             (1 << 13)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_PREFETCHI              (1 << 14)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_USER_MSR               (1 << 15)
 #define BX_CPUID_STD7_SUBLEAF1_EDX_RESERVED16             (1 << 16)
@@ -690,20 +708,20 @@ typedef bx_cpuid_t* (*bx_create_cpuid_method)(BX_CPU_C *cpu);
 //   [3:3] AMX-FP16
 //   [4:4] AMX-FP8
 //   [5:5] AMX-TRANSPOSE (deprecated)
-//   [6:6] AMX-TF32 (FP19)
+//   [6:6] AMX-TF32 (deprecated)
 //   [7:7] AMX-AVX512
 //   [8:8] AMX-MOVRS
 //  [31:9] reserved
 
-#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_INT8              (1 <<  0)
-#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_BF16              (1 <<  1)
-#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_COMPLEX           (1 <<  2)
-#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP16              (1 <<  3)
-#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP8               (1 <<  4)
-#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_TRANSPOSE         (1 <<  5)
-#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_TF32              (1 <<  6)
-#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_AVX512            (1 <<  7)
-#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_MOVRS             (1 <<  8)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_INT8                 (1 <<  0)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_BF16                 (1 <<  1)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_COMPLEX              (1 <<  2)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP16                 (1 <<  3)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP8                  (1 <<  4)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_TRANSPOSE_DEPRECATED (1 <<  5)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_TF32_DEPRECATED      (1 <<  6)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_AVX512               (1 <<  7)
+#define BX_CPUID_AMX_EXTENSIONS_EAX_AMX_MOVRS                (1 <<  8)
 
 // CPUID defines - STD2 features CPUID[0x80000001].EDX
 // -----------------------------

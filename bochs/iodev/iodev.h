@@ -29,7 +29,6 @@
 #include "plugin.h"
 #include "param_names.h"
 #include "memory/memory-bochs.h"
-#include "gui/siminterface.h"
 #include "gui/gui.h"
 
 /* number of IRQ lines supported.  In an ISA PC there are two
@@ -242,17 +241,17 @@ public:
 class BOCHSAPI bx_dma_stub_c : public bx_devmodel_c {
 public:
   virtual bool registerDMA8Channel(
-    unsigned channel,
-    Bit16u (* dmaRead)(Bit8u *data_byte, Bit16u maxlen),
-    Bit16u (* dmaWrite)(Bit8u *data_byte, Bit16u maxlen),
+    unsigned channel, void *this_ptr,
+    Bit16u (* dmaRead)(void *this_ptr, Bit8u *data_byte, Bit16u maxlen),
+    Bit16u (* dmaWrite)(void *this_ptr, Bit8u *data_byte, Bit16u maxlen),
     const char *name)
   {
     STUBFUNC(dma, registerDMA8Channel); return false;
   }
   virtual bool registerDMA16Channel(
-    unsigned channel,
-    Bit16u (* dmaRead)(Bit16u *data_word, Bit16u maxlen),
-    Bit16u (* dmaWrite)(Bit16u *data_word, Bit16u maxlen),
+    unsigned channel, void *this_ptr,
+    Bit16u (* dmaRead)(void *this_ptr, Bit16u *data_word, Bit16u maxlen),
+    Bit16u (* dmaWrite)(void *this_ptr, Bit16u *data_word, Bit16u maxlen),
     const char *name)
   {
     STUBFUNC(dma, registerDMA16Channel); return false;
@@ -380,6 +379,12 @@ public:
 };
 #endif
 
+class BOCHSAPI bx_efirq_stub_c : public bx_devmodel_c {
+public:
+  virtual void set_enabled(bool val) {}
+  virtual void set_fpu_error(bool val) {}
+};
+
 class BOCHSAPI bx_devices_c : public logfunctions {
 public:
   bx_devices_c();
@@ -481,6 +486,7 @@ public:
   bx_pci_ide_stub_c *pluginPciIdeController;
   bx_acpi_ctrl_stub_c *pluginACPIController;
 #endif
+  bx_efirq_stub_c  *pluginExtFpuIRQ;
 
   // stub classes that the pointers (above) can point to until a plugin is
   // loaded
@@ -505,6 +511,7 @@ public:
   bx_pci_ide_stub_c stubPciIde;
   bx_acpi_ctrl_stub_c stubACPIController;
 #endif
+  bx_efirq_stub_c stubExtFpuIRQ;
 
   // Some info to pass to devices which can handled bulk IO.  This allows
   // the interface to remain the same for IO devices which can't handle

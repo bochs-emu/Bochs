@@ -185,7 +185,7 @@ Bit64s bx_pci_ide_c::param_save_handler(void *devptr, bx_param_c *param)
 {
 #if !BX_USE_PIDE_SMF
   bx_pci_ide_c *class_ptr = (bx_pci_ide_c *) devptr;
-  return class_ptr->param_save(param, val);
+  return class_ptr->param_save(param);
 }
 
 Bit64s bx_pci_ide_c::param_save(bx_param_c *param)
