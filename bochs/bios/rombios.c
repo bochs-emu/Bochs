@@ -954,7 +954,7 @@ Bit16u cdrom_boot();
 
 // static char bios_svn_version_string[] = "$Revision$ $Date$";
 
-#define BIOS_COPYRIGHT_STRING "(c) 2001-2025  The Bochs Project"
+#define BIOS_COPYRIGHT_STRING "(c) 2001-2026  The Bochs Project"
 
 #if DEBUG_ATA
 #  define BX_DEBUG_ATA(a...) BX_DEBUG(a)

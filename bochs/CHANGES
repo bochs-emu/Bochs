@@ -1,4 +1,4 @@
-Changes in 3.1 (coming soon):
+Changes in 3.1 (August 23, 2026):
 
 Brief summary :
   - CPU: Implemented FRED, USER_MSR, MOVRS, AMX-FP8 ISA extensions emulation

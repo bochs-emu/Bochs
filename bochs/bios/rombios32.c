@@ -2190,7 +2190,7 @@ smbios_entry_point_init(void *start,
     }
 
 /* Type 0 -- BIOS Information */
-#define RELEASE_DATE_STR "16/02/2025"
+#define RELEASE_DATE_STR "23/08/2026"
 static void *
 smbios_type_0_init(void *start)
 {
