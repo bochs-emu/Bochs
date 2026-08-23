@@ -3549,6 +3549,9 @@ GIT repository. The online documentation, disk images and screenshots must be up
 
 <section id="update-website"><title>Updating the Bochs website content</title>
 <para>
+&FIXME; This section is out of date.
+</para>
+<para>
 The main HTML content of the Bochs website (except online documentation) is stored
 in the <filename>Bochs-sfsite</filename> GIT repository on SourceForge. Unlike
 other SF projects you don't need to upload these files to the Bochs project webspace.
@@ -3589,6 +3592,9 @@ Connection to shell.sourceforge.net closed.
 </section>
 
 <section id="update-online-docs"><title>Updating the online documentation</title>
+<para>
+&FIXME; This section is out of date.
+</para>
 <para>
 To update the online documentation, a file called <filename>bochsdoc.tar.gz</filename>
 must be generated with the <command>make</command>. This file must be uploaded
