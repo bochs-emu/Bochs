@@ -7,7 +7,7 @@ Legend:
 [-] Medium-Low severity issue fixed
 
 -------------------------------------------------------------------------
-Changes in Bochs 3.1 (coming soon):
+Changes in Bochs 3.1 (August 23, 2026):
 
 ! Implemented AMX-FP8 ISA extension
 ! Added MOVRS ISA support: MOVRS, AVX10.2 MOVRS, AMX MOVRS
