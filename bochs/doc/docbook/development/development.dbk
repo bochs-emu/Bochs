@@ -3457,7 +3457,7 @@ unpack the release TAR file from above.
 <para>
 In Cygwin or mingw32/mingw64:
 <screen>
-  sh .conf.win32-vcpp         # runs configure
+  sh .conf.win64-vcpp         # runs configure for 64-bit
   make win32_snap             # unzip workspace, make a win32 source ZIP
 </screen>
 The source ZIP is present in the parent directory of the Bochs root and now
@@ -3467,7 +3467,7 @@ if necessary.
 <para>
 Open up Visual C++ and load the workspace file Bochs.sln.  Check
 the Build:Set Active Project Configuration is set the way you want it.
-For releases I use "x64 Release".
+For releases I'm using "x64 Release".
 </para>
 <para>
 Do make <emphasis>install_win32</emphasis> into the NSIS folder in the Bochs

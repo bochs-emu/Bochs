@@ -3863,8 +3863,8 @@ VERSION="3.1"
 VER_MAJOR=3
 VER_MINOR=1
 VER_REVISION=0
-VER_DEV=0
-REL_STRING="Built from GitHub snapshot on August 23, 2026"
+VER_DEV=1
+REL_STRING="Built from GitHub snapshot after release 3.1"
 REL_TIMESTAMP=`grep "Updated:" $srcdir/README | sed 's/Updated: //'`
 
 
