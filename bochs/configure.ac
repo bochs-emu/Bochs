@@ -14,8 +14,8 @@ VER_MINOR=1
 dnl // this should be > 90 for pre-release of next version otherwise revision level
 VER_REVISION=0
 dnl // this should be 0 for release and 1 for development version
-VER_DEV=0
-REL_STRING="Built from GitHub snapshot on August 23, 2026"
+VER_DEV=1
+REL_STRING="Built from GitHub snapshot after release 3.1"
 REL_TIMESTAMP=`grep "Updated:" $srcdir/README | sed 's/Updated: //'`
 
 changequote(<<, >>)

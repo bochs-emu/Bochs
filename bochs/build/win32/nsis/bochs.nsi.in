@@ -152,14 +152,9 @@ SectionEnd
 Section "ROM Images (required)" SecROMs
   SectionIn 1 2 RO
 
-  SetOutPath "$INSTDIR"
+  SetOutPath "$INSTDIR\bios"
 
-  File "${SRCDIR}\BIOS-bochs-*"
-  File "${SRCDIR}\VGABIOS-elpin\*"
-  File "${SRCDIR}\VGABIOS-lgpl\*"
-  File "${SRCDIR}\i440fx\*"
-  File "${SRCDIR}\SeaBIOS\*"
-  File "${SRCDIR}\OVMF\*"
+  File "${SRCDIR}\bios\*"
 SectionEnd
 
 Section "Documentation in HTML" SecDocs
