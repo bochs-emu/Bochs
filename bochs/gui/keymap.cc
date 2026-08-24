@@ -30,10 +30,6 @@
 #include "gui.h"
 #include "keymap.h"
 
-#if defined(__APPLE__)
-#include <libgen.h>
-#endif
-
 // Table of bochs "BX_KEY_*" symbols
 // the table must be in BX_KEY_* order
 const char *bx_key_symbol[BX_KEY_NBKEYS] = {
