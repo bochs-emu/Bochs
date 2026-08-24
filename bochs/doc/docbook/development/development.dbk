@@ -3551,7 +3551,7 @@ GIT repository. The disk images and screenshots must be uploaded manually.
 <para>
 The main HTML content of the Bochs website is stored in the <filename>Bochs-sfsite</filename>
 GIT repository on SourceForge. Since updating from the SF shell is no longer
-supported and GIT commit cannot trigger an update of the webspace, it must be
+supported and a GIT commit cannot trigger an update of the webspace, it must be
 done manually using <command>sftp</command>.
 <screen>
 $ sftp vruppert@web.sf.net
@@ -3568,8 +3568,8 @@ sftp> exit
 <section id="update-online-docs"><title>Updating the online documentation</title>
 <para>
 After generating the HTML documentation on Linux or with Cygwin, the files must
-be updated in the <filename>Bochs-sfsite</filename>GIT repository on SourceForge
-(subdirectory doc/docbook) and then uploaded to the Bochs webspace.
+be updated in the <filename>Bochs-sfsite</filename> GIT repository on SourceForge
+(subdirectory <filename>doc/docbook</filename>) and then uploaded to the Bochs webspace.
 See <link linkend="update-website">previous section</link> for details.
 The updated files can be accessed from the sidebar of the Bochs website.
 </para>
