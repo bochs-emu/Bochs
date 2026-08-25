@@ -1337,7 +1337,7 @@ BX_CPP_INLINE void xmm_psrld(BxPackedXmmRegister *op, Bit64u shift_64)
 
 BX_CPP_INLINE void xmm_psrlq(BxPackedXmmRegister *op, Bit64u shift_64)
 {
-  if(shift_64 > 64) op->clear();
+  if(shift_64 > 63) op->clear();
   else
   {
     Bit8u shift = (Bit8u) shift_64;
