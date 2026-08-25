@@ -6,7 +6,7 @@
 // ported from QEMU block driver with some additions (see below)
 //
 // Copyright (c) 2004,2005  Johannes E. Schindelin
-// Copyright (C) 2010-2025  The Bochs Project
+// Copyright (C) 2010-2026  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -552,14 +552,66 @@ void vvfat_image_t::init_fat(void)
   }
 }
 
+void lfn_to_sfn(const char *lfn, char sfn[12], int sequence) {
+  char base[9] = { 0, };
+  char ext[4] = { 0, };
+  char sequ[5] = { 0, };
+  
+  // Find extension
+  const char *dot = strrchr(lfn, '.');
+  int ext_len = 0;
+  int base_len = (int) (dot ? (dot - lfn) : strlen(lfn));
+  
+  // Copy and filter base name
+  int j = 0;
+  for (int k = 0; k < base_len && j<8; k++) {
+    if (lfn[k] != ' ' && lfn[k] != '.' && lfn[k] != ',')
+      base[j++] = toupper((unsigned char) lfn[k]);
+  }
+  
+  // Copy and filter extension (max 3 chars)
+  if (dot) {
+    ext_len = (int) strlen(dot + 1);
+    j = 0;
+    for (int k = 1; dot[k] != '\0' && j < 3; k++)
+      ext[j++] = toupper((unsigned char) dot[k]);
+  }
+  
+  // do we need to add the '~' stuff?
+  if ((base_len <= 8) && (dot != NULL) && (ext_len <= 3)) {
+    memset(sfn, ' ', 11);
+    memcpy(sfn, base, strlen(base));
+    memcpy(sfn + 8, ext, strlen(ext));
+    sfn[11] = '\0';
+    return;
+  }
+  
+  // Append short tail designation
+  // (crashes if sequence > 9999999 ?)
+  sprintf(sequ, "~%i", sequence);
+  int max = 8 - (int) strlen(sequ);
+  base[max] = '\0';
+  strcat(base, sequ);
+  
+  // Format as 8.3 string
+  sprintf(sfn, "%-8s%-3s", base, ext);
+  
+  // Remove space padding if needed or keep fixed 11 bytes
+  for (int k=0; k<11; k++) {
+    if (sfn[k] == ' ')
+      sfn[k] = ' ';
+  }
+  sfn[11] = '\0';
+}
+
 direntry_t* vvfat_image_t::create_short_and_long_name(
   unsigned int directory_start, const char* filename, int is_dot)
 {
-  int i, j, long_index = directory.next;
+  int long_index = directory.next;
   direntry_t* entry = NULL;
   direntry_t* entry_long = NULL;
-  char tempfn[BX_PATHNAME_LEN];
-  bool shorten = false;
+  char sfn[12];
+  int sequence = 0;
 
   if (is_dot) {
     entry = (direntry_t*)array_get_next(&directory);
@@ -570,78 +622,24 @@ direntry_t* vvfat_image_t::create_short_and_long_name(
 
   entry_long = create_long_filename(filename);
 
-  // short name should not contain spaces
-  j = 0;
-  for (i = 0; i < (int)strlen(filename); i++) {
-    if (filename[i] != ' ')
-      tempfn[j++] = filename[i];
-  }
-  tempfn[j] = 0;
-
-  i = strlen(tempfn);
-  for (j = i - 1; j > 0  && tempfn[j] != '.'; j--);
-  if (j > 0) {
-    if (j > 8) {
-      i = 8;
-      shorten = true;
-    } else {
-      i = j;
-    }
-  } else if (i > 8) {
-    i = 8;
-    shorten = true;
-  }
-
-  entry = (direntry_t*)array_get_next(&directory);
-  memset(entry->name, 0x20, 11);
-  memcpy(entry->name, tempfn, i);
-
-  if (j > 0)
-    for (i = 0; i < 3 && tempfn[j+1+i]; i++)
-      entry->name[i + 8] = tempfn[j+1+i];
-
-  // upcase & remove unwanted characters
-  for (i=10;i>=0;i--) {
-    if (i==10 || i==7) for (;i>0 && entry->name[i]==' ';i--);
-    if ((entry->name[i]<' ') || (entry->name[i]>0x7f)
-      || strchr(".*?<>|\":/\\[];,+='",entry->name[i]))
-      entry->name[i]='_';
-    else if (entry->name[i]>='a' && entry->name[i]<='z')
-      entry->name[i]+='A'-'a';
-  }
-  if (entry->name[0] == 0xe5) entry->name[0] = 0x05;
-  if (shorten) {
-    entry->name[6] = '~';
-    entry->name[7] = '0';
-  }
-
   // mangle duplicates
+  lfn_to_sfn(filename, sfn, sequence); // first time assume no duplicates
+  entry = (direntry_t*) array_get_next(&directory);
+  memset(entry->name, ' ', 11);
+  memcpy(entry->name, sfn, 11);
   while (1) {
     direntry_t* entry1 = (direntry_t*)array_get(&directory, directory_start);
-    int j;
-
+    
     for (;entry1<entry;entry1++)
       if (!is_long_name(entry1) && !memcmp(entry1->name,entry->name,11))
         break; // found dupe
     if (entry1==entry) // no dupe found
       break;
-
-    // use all 8 characters of name
-    if (entry->name[7]==' ') {
-      int j;
-      for(j=6;j>0 && entry->name[j]==' ';j--)
-        entry->name[j]='~';
-    }
-
+    
     // increment number
-    for (j=7;j>0 && entry->name[j]=='9';j--)
-      entry->name[j]='0';
-    if (j > 0) {
-      if (entry->name[j]<'0' || entry->name[j]>'9')
-        entry->name[j]='0';
-      else
-        entry->name[j]++;
-    }
+    lfn_to_sfn(filename, sfn, ++sequence);
+    memset(entry->name, ' ', 11);
+    memcpy(entry->name, sfn, 11);
   }
 
   // calculate checksum; propagate to long name
@@ -997,7 +995,7 @@ int vvfat_image_t::init_directories(const char* dirname)
   mapping->info.dir.parent_mapping_index = -1;
   mapping->first_mapping_index = -1;
   mapping->path = strdup(dirname);
-  i = strlen(mapping->path);
+  i = (int) strlen(mapping->path);
   if (i > 0 && mapping->path[i - 1] == '/')
     mapping->path[i - 1] = '\0';
   mapping->mode = MODE_DIRECTORY;
@@ -1459,7 +1457,7 @@ direntry_t* vvfat_image_t::read_direntry(Bit8u *buffer, char *filename)
           while ((i > 0) && (filename[i] == ' ')) filename[i--] = 0;
           if (entry->name[8] != ' ') strcat(filename, ".");
           memcpy(filename+i+2, entry->name + 8, 3);
-          i = strlen(filename) - 1;
+          i = (int) (strlen(filename) - 1);
           while (filename[i] == ' ') filename[i--] = 0;
           for (i = 0; i < (int)strlen(filename); i++) {
             if ((filename[i] > 0x40) && (filename[i] < 0x5b)) {
