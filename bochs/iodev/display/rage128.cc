@@ -2753,6 +2753,56 @@ void bx_rage128_c::debug_dump(int argc, char **argv)
              dp_gui_master_cntl, dst_offset, dst_pitch, src_offset, src_pitch, dp_datatype, dp_mix);
   dbg_printf("3D: TEX_CNTL_C=0x%08x Z_OFFSET=0x%08x Z_PITCH=0x%08x MISC=0x%08x SETUP=0x%08x\n",
              t3d.tex_cntl, t3d.z_offset, t3d.z_pitch, t3d.misc_3d_state_cntl, t3d.setup_cntl);
+
+  // "info device rage128 vram <file>": write the whole VRAM image to a file
+  if ((argc >= 2) && !strcmp(argv[0], "vram")) {
+    FILE *fp = fopen(argv[1], "wb");
+    if (fp == NULL) {
+      dbg_printf("cannot create '%s'\n", argv[1]);
+    } else {
+      size_t n = fwrite(BX_RAGE128_THIS s.memory, 1, vram_size, fp);
+      fclose(fp);
+      dbg_printf("wrote %u bytes of VRAM to '%s'\n", (unsigned)n, argv[1]);
+    }
+    return;
+  }
+
+  // "info device rage128 3d": the complete engine/texture context
+  if ((argc >= 1) && !strcmp(argv[0], "3d")) {
+    dbg_printf("scanout: CRTC_OFFSET=0x%08x latched=0x%08x pending=%d CRTC_PITCH=0x%08x\n",
+               crtc_offset, crtc_offset_latched, crtc_offset_pending, crtc_pitch);
+    dbg_printf("2D: DEFAULT_OFFSET=0x%08x DEFAULT_PITCH=0x%08x DST_PITCH_REG=0x%08x SC_TL=0x%08x SC_BR=0x%08x\n",
+               default_offset, default_pitch, dst_pitch_reg, sc_top_left, sc_bottom_right);
+    dbg_printf("2D: CLR_CMP_CNTL=0x%08x CLR_SRC=0x%08x MASK=0x%08x WRITE_MASK=0x%08x AUX_SC=0x%08x\n",
+               clr_cmp_cntl, clr_cmp_clr_src, clr_cmp_mask, dp_write_mask, aux_sc_cntl);
+    dbg_printf("PM4: RPTR_ADDR=0x%08x RETIRE=0x%08x INDOFF=0x%08x INDSIZE=0x%08x MICRO_CNTL=0x%08x VC_DEBUG=0x%08x\n",
+               pm4_rptr_addr, cce_retire_rptr, pm4_iw_indoff, pm4_iw_indsize, pm4_micro_cntl, pm4_vc_debug_config);
+    dbg_printf("PM4: fifo rd=%u wr=%u executing=%d ind_busy=%d batch_pending=%d\n",
+               cce_fifo_rd, cce_fifo_wr, (int)cce_executing, (int)pm4_ind_busy, (int)cce_batch_pending);
+    dbg_printf("3D: FPU_SETUP=0x%08x SETUP_CNTL_PM4=0x%08x WINDOW_XY=0x%08x Z_STEN=0x%08x STEN_REF=0x%08x PLANE_MASK=0x%08x\n",
+               t3d.fpu_setup, t3d.setup_cntl_pm4, t3d.window_xy_offset, t3d.z_sten_cntl, t3d.sten_ref_mask, t3d.plane_3d_mask);
+    dbg_printf("3D: PRIM_TEX_CNTL=0x%08x PRIM_COMBINE=0x%08x TEX_SIZE_PITCH=0x%08x SEC_TEX_CNTL=0x%08x SEC_COMBINE=0x%08x\n",
+               t3d.prim_tex_cntl, t3d.prim_tex_combine_cntl, t3d.tex_size_pitch, t3d.sec_tex_cntl, t3d.sec_tex_combine_cntl);
+    dbg_printf("3D: SCALE_3D_CNTL=0x%08x CONST_COLOR=0x%08x FOG=0x%08x CLR_CMP_3D=0x%08x/0x%08x TEX_CK=0x%08x/0x%08x\n",
+               t3d.scale_3d_cntl, t3d.constant_color, t3d.fog_color, t3d.clr_cmp_clr_3d, t3d.clr_cmp_msk_3d,
+               t3d.tex_clr_cmp_clr, t3d.tex_clr_cmp_msk);
+    dbg_printf("3D: PRIM_TEX_OFFSET[0..10]:");
+    for (int i = 0; i < 11; i++) dbg_printf(" %08x", t3d.prim_tex_offset[i]);
+    dbg_printf("\n3D: SEC_TEX_OFFSET[0..10]: ");
+    for (int i = 0; i < 11; i++) dbg_printf(" %08x", t3d.sec_tex_offset[i]);
+    dbg_printf("\n");
+    dbg_printf("OV0: enabled=%d SCALE_CNTL=0x%08x Y_X_START=0x%08x Y_X_END=0x%08x LOAD_CNTL=0x%08x\n",
+               (int)ov0_enabled, ov0.active[RAGE128_OV0_REG(RAGE128_OV0_SCALE_CNTL)],
+               ov0.active[RAGE128_OV0_REG(RAGE128_OV0_Y_X_START)],
+               ov0.active[RAGE128_OV0_REG(RAGE128_OV0_Y_X_END)], ov0_reg_load_cntl);
+    dbg_printf("cursor: latched en=%d offset=0x%08x posn=0x%08x hvoff=0x%08x lock=%d\n",
+               (int)cur_lat_en, cur_lat_offset, cur_lat_posn, cur_lat_hvoff, (int)cur_lock);
+    dbg_printf("surfaces:");
+    for (int n = 0; n < 4; n++)
+      dbg_printf(" [%d: lo=%08x hi=%08x info=%08x]", n, surf_lower[n], surf_upper[n], surf_info[n]);
+    dbg_printf(" xlate=%d\n", (int)surf_xlate_on);
+    return;
+  }
   if (argc > 0) {
     bx_vgacore_c::debug_dump(argc, argv);
   }
