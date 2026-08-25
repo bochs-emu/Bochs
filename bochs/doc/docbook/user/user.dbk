@@ -10217,6 +10217,14 @@ Bochs VBE Display Drivers for Windows NT/2000
   emulation (1002:5046 / 1002:0018 for AGP, 1002:5452 / 1002:001C for PCI) are
   the ones these BIOS images and the ATI driver INFs expect.
   </para>
+  <para>
+  The video BIOS locates its registers through the PCI bus/device/function
+  the system BIOS hands to its init entry in AX and the PCI BIOS BAR query.
+  Both shipped system BIOS images work: with SeaBIOS
+  (<filename>bios/SeaBIOS/bios.bin-1.16.0</filename>) the ROM receives the real
+  device address; with the Bochs ROM BIOS the emulated card pre-seeds its
+  BIOS_1_SCRATCH register so the ROM's IO-base locator still finds the IO BAR.
+  </para>
 </section>
 
 <section id="harddisk-modes"><title>Disk Image Modes</title>

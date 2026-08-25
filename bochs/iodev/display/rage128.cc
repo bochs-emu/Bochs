@@ -267,6 +267,25 @@ void bx_rage128_c::chip_reset(void)
 
   mm_index = 0;
   memset(bios_scratch, 0, sizeof(bios_scratch));
+  // System-BIOS compatibility seed for BIOS_1_SCRATCH (hardware resets it
+  // to 0). The Rage 128 video BIOS never reads its BARs at runtime: at
+  // POST its rom_init stores the PCI bus/devfn the system BIOS passes in
+  // AX, asks PCI BIOS INT 1A/B109 for BAR1 and writes {ROM segment, that
+  // AX word} to BIOS_1_SCRATCH+0/+2 at the real IO base; every later
+  // register access (INT 10h mode sets, the VBE memory size, the driver
+  // hand-off) first checks that stored base and otherwise scans
+  // 'in ax, XX16' for XX = 0xff..0x01 looking for the signature word.
+  // The Bochs ROM BIOS (rom_scan) does not implement the PCI Firmware
+  // Specification convention and calls the init entry with AX = 0xF000
+  // (its own segment), so the B109 query hits bus 0xF0, the ROM adopts a
+  // dead IO base and its locator never finds BAR1: all register reads then
+  // return 0xFF (VBE reports "-64 KB", no modes, no LFB, the hardware
+  // init never runs). Pre-loading the register with exactly what rom_init
+  // would have written at the true base (segment 0xC000, signature
+  // 0xF000) makes the locator scan land on BAR1 instead. A BIOS that does
+  // pass the device address (SeaBIOS, real firmware) makes the ROM
+  // overwrite this value before its first use, so it is inert there.
+  bios_scratch[1] = 0xf000c000;
   memset(t3d.fog_table, 0xff, sizeof(t3d.fog_table));
   fog_table_wr_index = 0;
   tex_pal_wr_index = 0;
@@ -781,8 +800,9 @@ Bit32u bx_rage128_c::svga_read(Bit32u address, unsigned io_len)
       return dac_mask_prog;
     case 0x03b5:
     case 0x03d5:
+      // CRTC indices above 0x20 read 0xff; 0x19-0x20 are plain storage
       if (BX_RAGE128_THIS s.CRTC.address > 0x18) {
-        if (BX_RAGE128_THIS s.CRTC.address < 0x40)
+        if (BX_RAGE128_THIS s.CRTC.address <= 0x20)
           return ext_crtc[BX_RAGE128_THIS s.CRTC.address];
         return 0xff;
       }
@@ -821,7 +841,7 @@ void bx_rage128_c::svga_write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x03b5:
     case 0x03d5:
       if (BX_RAGE128_THIS s.CRTC.address > 0x18) {
-        if (BX_RAGE128_THIS s.CRTC.address < 0x40)
+        if (BX_RAGE128_THIS s.CRTC.address <= 0x20)
           ext_crtc[BX_RAGE128_THIS s.CRTC.address] = (Bit8u)value;
         return;
       }
