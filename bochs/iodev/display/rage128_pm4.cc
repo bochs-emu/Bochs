@@ -105,6 +105,10 @@ void bx_rage128_c::pm4_thread_init(void)
   cce_fifo_tag = new Bit8u[RAGE128_CCE_FIFO_DWORDS];
   cce_pl = new Bit32u[RAGE128_PM4_MAX_PAYLOAD];
   ind_pl = new Bit32u[RAGE128_PM4_MAX_PAYLOAD];
+  vsnap_cap = 16u << 20;  // 16 MB: hundreds of per-frame vertex buffers
+  vsnap_buf = new Bit8u[vsnap_cap];
+  vsnap_used = 0;
+  vsnap_n = 0;
   cce_fifo_rd = 0;
   cce_fifo_wr = 0;
   cce_retire_rptr = 0;
@@ -144,6 +148,7 @@ void bx_rage128_c::pm4_thread_close(void)
   delete [] cce_fifo_tag; cce_fifo_tag = NULL;
   delete [] cce_pl; cce_pl = NULL;
   delete [] ind_pl; ind_pl = NULL;
+  delete [] vsnap_buf; vsnap_buf = NULL;
   cce_thread_started = false;
 }
 
@@ -384,6 +389,81 @@ Bit32u bx_rage128_c::pm4_splice_ib(Bit32u wr, Bit32u off, Bit32u n, Bit32u rptr)
   return wr;
 }
 
+// Walk the just-spliced IB FIFO region [fstart, fend) and copy every
+// vertex buffer its op23 (GEN_INDX_PRIM) draws reference into the snapshot
+// arena, keyed by the resolved fetch address the executor will compute.
+// CPU thread only, before the FIFO write pointer is published.
+void bx_rage128_c::pm4_snapshot_ib(Bit32u fstart, Bit32u fend)
+{
+  Bit32u p = fstart;
+  while (p != fend) {
+    Bit32u h = cce_fifo[p & RAGE128_CCE_FIFO_MASK];
+    p++;
+    switch (RAGE128_PM4_TYPE(h)) {
+      case 0: p += RAGE128_PM4_COUNT(h); break;
+      case 1: p += 2; break;
+      case 2: break;
+      case 3: {
+        Bit32u cnt = RAGE128_PM4_COUNT(h);
+        if (RAGE128_PM4_T3_OPCODE(h) == RAGE128_PM4_OP_3D_RNDR_GEN_INDX_PRIM && cnt >= 4) {
+          Bit32u raw  = cce_fifo[(p + 0) & RAGE128_CCE_FIFO_MASK];
+          Bit32u fmt  = cce_fifo[(p + 2) & RAGE128_CCE_FIFO_MASK];
+          Bit32u cntl = cce_fifo[(p + 3) & RAGE128_CCE_FIFO_MASK];
+          Bit32u num  = RAGE128_VC_NUM(cntl);
+          Bit32u walk = RAGE128_VC_PRIM_WALK(cntl);
+          Bit32u stride = r3d_vertex_dwords(fmt);
+          Bit32u maxidx = 0;
+          bool have = false;
+          if (stride && num) {
+            if (walk == RAGE128_VC_WALK_IND) {
+              if (4 + (num + 1) / 2 <= cnt) {
+                for (Bit32u k = 0; k < num; k++) {
+                  Bit32u w = cce_fifo[(p + 4 + k / 2) & RAGE128_CCE_FIFO_MASK];
+                  Bit32u idx = (k & 1) ? (w >> 16) : (w & 0xffff);
+                  if (idx > maxidx) maxidx = idx;
+                }
+                have = true;
+              }
+            } else if (walk == RAGE128_VC_WALK_LIST) {
+              maxidx = num - 1;
+              have = true;
+            }
+          }
+          if (have) {
+            Bit32u span = (maxidx + 1) * stride * 4;
+            Bit32u key = pm4_vm_addr(raw);
+            if ((vsnap_used + span <= vsnap_cap) && (vsnap_n < 4096) &&
+                pm4_bus_read_block(raw, vsnap_buf + vsnap_used, span)) {
+              vsnap_ent[vsnap_n].lo = key;
+              vsnap_ent[vsnap_n].hi = key + span;
+              vsnap_ent[vsnap_n].off = vsnap_used;
+              vsnap_used += span;
+              vsnap_n++;
+            }
+          }
+        }
+        p += cnt;
+        break;
+      }
+    }
+  }
+}
+
+// Serve a vertex read from the snapshot arena; false = not captured (the
+// caller falls back to the live GART/AGP fetch). CCE thread; reads only
+// state the pump published before the FIFO write pointer.
+bool bx_rage128_c::vsnap_lookup(Bit32u addr, Bit32u len, Bit8u *dst)
+{
+  Bit32u n = vsnap_n;
+  for (Bit32u i = 0; i < n; i++) {
+    if ((addr >= vsnap_ent[i].lo) && (addr + len <= vsnap_ent[i].hi)) {
+      memcpy(dst, vsnap_buf + vsnap_ent[i].off + (addr - vsnap_ent[i].lo), len);
+      return true;
+    }
+  }
+  return false;
+}
+
 // Pump: ring -> local FIFO copy (CPU thread). Returns 1 when the ring is
 // fully fetched, 0 when the FIFO is full, -1 on a dead bus read.
 int bx_rage128_c::pm4_pump(void)
@@ -397,6 +477,14 @@ int bx_rage128_c::pm4_pump(void)
   mask = pm4_ring_mask();
   wptr = pm4_wptr & mask;
   wr = cce_fifo_wr;
+
+  // Recycle the vertex-snapshot arena when the executor is caught up (no
+  // snapshot can be in use). Append-only otherwise, so a snapshot the
+  // executor is mid-read stays put.
+  if (cce_fifo_rd == wr) {
+    vsnap_used = 0;
+    vsnap_n = 0;
+  }
 
   while (pm4_rptr != wptr) {
     Bit32u v;
@@ -425,7 +513,11 @@ int bx_rage128_c::pm4_pump(void)
         pump_ib_state = 2;
       } else if (pump_ib_state == 2) {
         pump_ib_state = 0;
+        Bit32u sstart = wr;
         wr = pm4_splice_ib(wr, pump_ib_addr, v, pm4_rptr);
+        // Copy every vertex buffer this IB's op23 draws reference, before
+        // publishing the FIFO write pointer that lets the executor run it.
+        pm4_snapshot_ib(sstart, wr);
       }
     } else {
       switch (RAGE128_PM4_TYPE(v)) {

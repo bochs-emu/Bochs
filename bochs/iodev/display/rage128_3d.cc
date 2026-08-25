@@ -252,6 +252,13 @@ static void r3d_decode_vertex(Bit32u fmt, const Bit32u *d, r3d_vtx_t *v)
     v->rhw2 = v->rhw;
 }
 
+static Bit32u rage128_3d_vertex_dwords(Bit32u fmt);
+
+Bit32u bx_rage128_c::r3d_vertex_dwords(Bit32u fmt)
+{
+  return rage128_3d_vertex_dwords(fmt);
+}
+
 static Bit32u rage128_3d_vertex_dwords(Bit32u fmt)
 {
   Bit32u n = 3;
@@ -1668,9 +1675,13 @@ bool bx_rage128_c::r3d_fetch_vertex(Bit32u base, Bit32u stride, Bit32u idx, Bit3
     *out = vtx_cache.v[idx];
     return true;
   }
-  for (Bit32u j = 0; j < stride; j++) {
-    if (!pm4_bus_read(base + (idx * stride + j) * 4, &vdw[j]))
-      return false;
+  // Prefer the submit-time snapshot (immune to the guest recycling the
+  // buffer under the lagging executor); fall back to a live GART/AGP fetch.
+  if (!vsnap_lookup(base + idx * stride * 4, stride * 4, (Bit8u*)vdw)) {
+    for (Bit32u j = 0; j < stride; j++) {
+      if (!pm4_bus_read(base + (idx * stride + j) * 4, &vdw[j]))
+        return false;
+    }
   }
   r3d_decode_vertex(fmt, vdw, out);
   if (vtx_cache.cur) {

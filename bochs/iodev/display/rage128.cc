@@ -2767,6 +2767,27 @@ void bx_rage128_c::debug_dump(int argc, char **argv)
     return;
   }
 
+  // "info device rage128 vm,<hexaddr>,<ndwords>": resolve a CCE VM-space
+  // address exactly as the vertex/ring fetch does (AGP aperture or PCI GART
+  // walk) and print the dwords, plus a float interpretation. This is the
+  // fetch the op23 vertex walker uses; a garbage result here is a fetch bug,
+  // sane vertices mean the fetch is correct and the fault is downstream.
+  if ((argc >= 3) && !strcmp(argv[0], "vm")) {
+    Bit32u addr = (Bit32u)strtoul(argv[1], NULL, 16);
+    Bit32u n = (Bit32u)strtoul(argv[2], NULL, 0);
+    if (n > 64) n = 64;
+    dbg_printf("VM %08x  (pci_gart_page=%08x agp_base=%08x master_ok=%d)\n",
+               addr, pci_gart_page, agp_base, (int)pm4_bus_master_ok());
+    for (Bit32u k = 0; k < n; k++) {
+      Bit32u v = 0xdeadbeef;
+      bool ok = pm4_bus_read(addr + k * 4, &v);
+      float f;
+      memcpy(&f, &v, 4);
+      dbg_printf("  [%08x] %08x  %g%s\n", addr + k * 4, v, f, ok ? "" : "  (dead)");
+    }
+    return;
+  }
+
   // "info device rage128 fifo,<file>": the CCE command FIFO (the last
   // RAGE128_CCE_FIFO_DWORDS dwords the executor was handed, ring order),
   // followed by the tag bytes; the read/write indices are printed.

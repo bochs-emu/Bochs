@@ -501,6 +501,9 @@ private:
   void   pm4_flip_notify(void);
   bool   pm4_enqueue_write(Bit32u off, Bit32u val);
   bool   pm4_enqueue_indirect(Bit32u off, Bit32u n);
+  Bit32u r3d_vertex_dwords(Bit32u fmt);
+  void   pm4_snapshot_ib(Bit32u fstart, Bit32u fend);
+  bool   vsnap_lookup(Bit32u addr, Bit32u len, Bit8u *dst);
   Bit32u pm4_splice_ib(Bit32u wr, Bit32u off, Bit32u n, Bit32u rptr);
   void   cce_fifo_reserve(Bit32u wr, Bit32u need);
   bool   cce_get(Bit32u *val);
@@ -785,6 +788,20 @@ private:
   Bit32u cce_shadow_last;
   Bit32u *cce_pl;
   Bit32u *ind_pl;
+  // Vertex-buffer snapshots: op23 (GEN_INDX_PRIM) draws reference a
+  // separate vertex buffer the executor would otherwise fetch live at
+  // execute time, on the CCE thread and lagging the guest -- so the guest
+  // can recycle the buffer first. The pump copies each referenced buffer
+  // on the CPU thread at submit time (as it splices the IB that carries
+  // the draw) into this arena, and the executor reads it here. Append-only
+  // (never reallocated, so an in-flight executor read stays valid) and
+  // reset only when the executor is idle. Overflow falls back to the live
+  // fetch, i.e. the prior behaviour.
+  Bit8u  *vsnap_buf;
+  Bit32u vsnap_cap;
+  volatile Bit32u vsnap_used;
+  struct r128_vsnap_ent_t { Bit32u lo, hi, off; } vsnap_ent[4096];
+  volatile Bit32u vsnap_n;
   volatile int cce_executing;
   volatile int cce_batch_pending;
   volatile int cce_drain_req;
