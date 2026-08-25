@@ -391,6 +391,7 @@ private:
   bool   agp_image_write(Bit32u off, const Bit8u *src, Bit32u len);
   Bit32u surf_xlate(Bit32u addr);
   Bit32u bank_deint_addr(Bit32u addr);
+  Bit32u scanout_addr(Bit32u sy, Bit32u xoff);
   void   vram_dirty(Bit32u addr, Bit32u len);
 
   // ---- rage128.cc: display block (PLL / CRTC / DAC / cursor / scanout) ----
@@ -709,6 +710,12 @@ private:
   // never touches the linear-framebuffer desktop or 3D.
   bool     bank_deint;      // de-interleave the scanout this frame
   bool     vga_banked_mode; // a banked VBE mode set WP_SEL since the last mode change
+  // Tiled display surface (CRTC_OFFSET_CNTL TILE_EN): the framebuffer is laid
+  // out in 64-byte x 16-line tiles (r128_tile_off), so the scanout must
+  // de-tile. Used by ICD/D3D apps that render to a tiled front buffer
+  // (3DMark 99 MAX). Recomputed each frame in update().
+  bool     scanout_tiled;
+  Bit32u   scanout_tile_line, scanout_tile_xin, scanout_tile_c0;
   bool     disp_blank;
   bool     disp_dac_const;
   Bit32u   disp_dac_const_color;

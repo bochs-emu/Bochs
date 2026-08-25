@@ -243,6 +243,8 @@ void bx_rage128_c::init_members(void)
   disp_base = 0;
   bank_deint = false;
   vga_banked_mode = false;
+  scanout_tiled = false;
+  scanout_tile_line = scanout_tile_xin = scanout_tile_c0 = 0;
   disp_dblscan = false;
   disp_blank = false;
   disp_dac_const = false;
@@ -978,6 +980,21 @@ Bit32u bx_rage128_c::bank_deint_addr(Bit32u addr)
   if (ReadHostDWordFromLittleEndian((Bit32u*)&BX_RAGE128_THIS s.memory[addr]) == 0)
     return (addr + 0x1000000) & vram_mask;
   return addr;
+}
+
+// VRAM byte address of a display pixel at scanline sy, byte offset xoff into
+// that line. When the display surface is tiled (CRTC_OFFSET_CNTL TILE_EN),
+// walk the 64-byte x 16-line tile transform off the frame's anchor exactly as
+// 86Box's scan_remap does; otherwise it is the plain linear address. A tiled
+// front buffer read linearly is the scrambled 3DMark 99 MAX picture.
+Bit32u bx_rage128_c::scanout_addr(Bit32u sy, Bit32u xoff)
+{
+  if (scanout_tiled) {
+    return (scanout_tile_c0 + r128_tile_off(scanout_tile_xin + xoff,
+                                            scanout_tile_line + sy,
+                                            disp_pitch)) & vram_mask;
+  }
+  return (disp_base + sy * disp_pitch + xoff) & vram_mask;
 }
 
 // Mark the display tiles covering VRAM bytes [addr, addr+len) as dirty
@@ -2666,6 +2683,17 @@ void bx_rage128_c::update(void)
   // keep the plain linear scanout.
   bank_deint = (vram_size == 0x02000000) && disp_ext && vga_banked_mode;
 
+  // Tiled display surface: an ICD/D3D front buffer laid out in 64x16 tiles.
+  scanout_tiled = r128_tiled_ok(crtc_offset_cntl & RAGE128_CRTC_TILE_EN, disp_pitch);
+  if (scanout_tiled) {
+    scanout_tile_line = crtc_offset_cntl & 15u;
+    scanout_tile_xin  = disp_base & 63u;
+    scanout_tile_c0   = disp_base - (scanout_tile_line << 6) - scanout_tile_xin;
+    // The incremental dirty-tile tracking marks tiles by linear address; a
+    // tiled surface breaks that mapping, so repaint the whole frame.
+    needs_update_dispentire = true;
+  }
+
   if (needs_update_dispentire) {
     redraw_area(0, 0, width, height);
     needs_update_dispentire = false;
@@ -2703,8 +2731,8 @@ void bx_rage128_c::update(void)
       tile_ptr2 = tile_ptr;
       for (xc = 0; xc < width; xc++) {
         unsigned sx = disp_hdbl ? (xc >> 1) : xc;
-        Bit32u addr = disp_base + sy * disp_pitch + ((disp_bpp == 4) ? (sx >> 1) : sx * pxbytes);
-        Bit32u paddr = bank_deint_addr(addr);
+        Bit32u xoff = (disp_bpp == 4) ? (sx >> 1) : sx * pxbytes;
+        Bit32u paddr = bank_deint_addr(scanout_addr(sy, xoff));
         if (disp_blank) colour = 0;
         else if (disp_dac_const) colour = disp_dac_const_color;
         else colour = rage128_fetch_pixel(&vram[paddr], disp_bpp, this, sx, lsb_nibble, pel8, dac_shift);
@@ -2762,13 +2790,12 @@ void bx_rage128_c::paint_tile(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info
   for (r = 0; r < h; r++) {
     unsigned y = yc + r;
     unsigned sy = disp_dblscan ? (y >> 1) : y;
-    Bit32u rowaddr = disp_base + sy * disp_pitch;
     tile_ptr2 = tile_ptr;
     for (c = 0; c < w; c++) {
       unsigned x = xc + c;
       unsigned sx = disp_hdbl ? (x >> 1) : x;
-      Bit32u addr = rowaddr + ((disp_bpp == 4) ? (sx >> 1) : sx * pxbytes);
-      Bit32u paddr = bank_deint_addr(addr);
+      Bit32u xoff = (disp_bpp == 4) ? (sx >> 1) : sx * pxbytes;
+      Bit32u paddr = bank_deint_addr(scanout_addr(sy, xoff));
       if (disp_blank) colour = 0;
       else if (disp_dac_const) colour = disp_dac_const_color;
       else colour = rage128_fetch_pixel(&vram[paddr], disp_bpp, this, sx, lsb_nibble, pel8, dac_shift);
