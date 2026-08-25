@@ -266,6 +266,8 @@ void bx_rage128_c::chip_reset(void)
   pm4_drain_wait();
 
   mm_index = 0;
+  timing_valid = false;
+  gui_xres = gui_yres = gui_bpp = 0;
   memset(bios_scratch, 0, sizeof(bios_scratch));
   // System-BIOS compatibility seed for BIOS_1_SCRATCH (hardware resets it
   // to 0). The Rage 128 video BIOS never reads its BARs at runtime: at
@@ -510,7 +512,7 @@ void bx_rage128_c::fold_deferred(void)
   }
   if (timing_dirty) {
     timing_dirty = false;
-    bx_vgacore_c::calculate_retrace_timing();
+    timing_recalc();
   }
   if (palette_dirty) {
     palette_dirty = false;
@@ -528,7 +530,28 @@ void bx_rage128_c::timing_update(void)
   if (on_cce_thread())
     timing_dirty = true;
   else
-    bx_vgacore_c::calculate_retrace_timing();
+    timing_recalc();
+}
+
+// Hand the CRTC timing to the VGA core only when it actually changed: the
+// core's calculate_retrace_timing() restarts its vertical timer, so doing
+// it on every CRTC_GEN_CNTL/PLL write (cursor enable toggles, mode-set
+// housekeeping) would starve the vertical blank events (cursor latch,
+// VBLANK/VSYNC interrupts, page flips) and stall the frame counter.
+void bx_rage128_c::timing_recalc(void)
+{
+  bx_crtc_params_t p;
+  Bit32u vclock = 0;
+
+  get_crtc_params(&p, &vclock);
+  if (timing_valid && (vclock == timing_vclock) &&
+      (p.htotal == timing_last.htotal) && (p.vtotal == timing_last.vtotal) &&
+      (p.vbstart == timing_last.vbstart) && (p.vrstart == timing_last.vrstart))
+    return;
+  timing_valid = true;
+  timing_last = p;
+  timing_vclock = vclock;
+  bx_vgacore_c::calculate_retrace_timing();
 }
 
 // Fold the engine's busy->idle event into GEN_INT_STATUS[19] (CPU thread only)
@@ -595,7 +618,7 @@ void bx_rage128_c::vertical_timer(void)
     if (ppll_update_pending) {
       ppll_commit();
       ppll_update_pending = false;
-      bx_vgacore_c::calculate_retrace_timing();
+      timing_recalc();
     }
     // Page flip: a pending CRTC_OFFSET takes effect at vertical blank
     if (crtc_offset_pending && !crtc_offset_lock) {
@@ -763,6 +786,9 @@ void bx_rage128_c::after_restore_state(void)
     if (surf_info[n] & RAGE128_SURF_INFO_MASK) surf_xlate_on = true;
   ov0_update();
   cursor_publish();
+  timing_valid = false;
+  timing_recalc();
+  gui_xres = gui_yres = gui_bpp = 0;
   needs_update_mode = true;
   needs_update_dispentire = true;
   gen_int_update();
@@ -1987,22 +2013,32 @@ bool bx_rage128_c::display_reg_write(Bit32u off, Bit32u val, Bit32u mask)
       return true;
     case RAGE128_CRTC_GEN_CNTL: {
       Bit32u was_ext = crtc_gen_cntl & RAGE128_CRTC_EXT_DISP_EN;
+      Bit32u gen_old = crtc_gen_cntl;
       MERGE(crtc_gen_cntl);
       if (!was_ext && (crtc_gen_cntl & RAGE128_CRTC_EXT_DISP_EN))
         crtc_v_disp_active = (crtc_v_total_disp >> 16) & 0x7ff;
       disp_ext = (crtc_gen_cntl & RAGE128_CRTC_EXT_DISP_EN) != 0;
-      update_banking();
-      needs_update_mode = true;
-      needs_update_dispentire = true;
-      timing_update();
+      // CRTC_CUR_EN [16] and CRTC_CUR_MODE [22:20] only feed the cursor,
+      // which is latched at vertical blank; drivers toggle them on every
+      // pointer show/hide, so they must not re-derive the mode.
+      if ((gen_old ^ crtc_gen_cntl) & ~(RAGE128_CRTC_CUR_EN | 0x00700000)) {
+        update_banking();
+        needs_update_mode = true;
+        needs_update_dispentire = true;
+        timing_update();
+      }
       return true;
     }
-    case RAGE128_CRTC_EXT_CNTL:
+    case RAGE128_CRTC_EXT_CNTL: {
+      Bit32u ext_old = crtc_ext_cntl;
       MERGE(crtc_ext_cntl);
-      update_banking();
-      needs_update_mode = true;
-      needs_update_dispentire = true;
+      if (ext_old != crtc_ext_cntl) {
+        update_banking();
+        needs_update_mode = true;
+        needs_update_dispentire = true;
+      }
       return true;
+    }
     case RAGE128_DAC_CNTL: {
       Bit32u dac_old = dac_cntl;
       MERGE(dac_cntl);
@@ -2039,22 +2075,30 @@ bool bx_rage128_c::display_reg_write(Bit32u off, Bit32u val, Bit32u mask)
     case RAGE128_PALETTE_DATA:
       palette_data_write(val, mask);
       return true;
-    case RAGE128_CRTC_H_TOTAL_DISP:
+    case RAGE128_CRTC_H_TOTAL_DISP: {
+      Bit32u old = crtc_h_total_disp;
       MERGE(crtc_h_total_disp);
-      needs_update_mode = true;
-      timing_update();
+      if (old != crtc_h_total_disp) {
+        needs_update_mode = true;
+        timing_update();
+      }
       return true;
+    }
     case RAGE128_CRTC_H_SYNC_STRT_WID:
       MERGE(crtc_h_sync_strt_wid);
       timing_update();
       return true;
-    case RAGE128_CRTC_V_TOTAL_DISP:
+    case RAGE128_CRTC_V_TOTAL_DISP: {
+      Bit32u old = crtc_v_total_disp, old_active = crtc_v_disp_active;
       MERGE(crtc_v_total_disp);
       if (mask & 0x07ff0000)
         crtc_v_disp_active = (crtc_v_total_disp >> 16) & 0x7ff;
-      needs_update_mode = true;
-      timing_update();
+      if ((old != crtc_v_total_disp) || (old_active != crtc_v_disp_active)) {
+        needs_update_mode = true;
+        timing_update();
+      }
       return true;
+    }
     case RAGE128_CRTC_V_SYNC_STRT_WID:
       MERGE(crtc_v_sync_strt_wid);
       timing_update();
@@ -2544,6 +2588,7 @@ void bx_rage128_c::update(void)
   if (!disp_ext) {
     if (ext_last) {
       ext_last = false;
+      gui_xres = gui_yres = gui_bpp = 0;  // the VGA core re-reports its geometry
       BX_RAGE128_THIS s.last_xres = 0;
       BX_RAGE128_THIS s.last_yres = 0;
       BX_RAGE128_THIS s.vga_mem_updated |= 1;
@@ -2556,7 +2601,13 @@ void bx_rage128_c::update(void)
 
   if (needs_update_mode) {
     update_mode();
-    bx_gui->dimension_update(disp_xres, disp_yres, 0, 0, (disp_bpp == 15) ? 16 : ((disp_bpp == 4) ? 8 : disp_bpp));
+    unsigned bpp = (disp_bpp == 15) ? 16 : ((disp_bpp == 4) ? 8 : disp_bpp);
+    if ((disp_xres != gui_xres) || (disp_yres != gui_yres) || (bpp != gui_bpp)) {
+      bx_gui->dimension_update(disp_xres, disp_yres, 0, 0, bpp);
+      gui_xres = disp_xres;
+      gui_yres = disp_yres;
+      gui_bpp = bpp;
+    }
     needs_update_mode = false;
     needs_update_dispentire = true;
   }

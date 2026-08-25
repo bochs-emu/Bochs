@@ -410,6 +410,7 @@ private:
   void   latch_crtc_offset(void);
   void   cursor_publish(void);
   void   cursor_frame_latch(void);
+  void   timing_recalc(void);
   void   cursor_rect(Bit32u posn, Bit32u hvoff, int *x0, int *y0, int *x1, int *y1);
   void   paint_tile(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info, Bit8u *pel8);
   void   paint_tiles_in(int x0, int y0, int x1, int y1);
@@ -614,6 +615,13 @@ private:
   volatile int gui_idle_event;
   volatile bool irq_dirty;
   volatile bool timing_dirty;
+  // Last CRTC timing handed to the VGA core (a recalculation restarts the
+  // core's vertical timer, so it is only done when the timing changed)
+  bool   timing_valid;
+  bx_crtc_params_t timing_last;
+  Bit32u timing_vclock;
+  // Geometry last reported to the GUI through dimension_update()
+  unsigned gui_xres, gui_yres, gui_bpp;
   volatile bool palette_dirty;
 
   // Display block
