@@ -2767,6 +2767,24 @@ void bx_rage128_c::debug_dump(int argc, char **argv)
     return;
   }
 
+  // "info device rage128 fifo,<file>": the CCE command FIFO (the last
+  // RAGE128_CCE_FIFO_DWORDS dwords the executor was handed, ring order),
+  // followed by the tag bytes; the read/write indices are printed.
+  if ((argc >= 2) && !strcmp(argv[0], "fifo")) {
+    FILE *fp = fopen(argv[1], "wb");
+    if ((fp == NULL) || (cce_fifo == NULL)) {
+      dbg_printf("cannot create '%s' or no FIFO\n", argv[1]);
+      if (fp) fclose(fp);
+    } else {
+      fwrite(cce_fifo, sizeof(Bit32u), RAGE128_CCE_FIFO_DWORDS, fp);
+      fwrite(cce_fifo_tag, 1, RAGE128_CCE_FIFO_DWORDS, fp);
+      fclose(fp);
+      dbg_printf("wrote FIFO (%u dwords + tags) to '%s': rd=%u wr=%u retire=0x%08x\n",
+                 RAGE128_CCE_FIFO_DWORDS, argv[1], cce_fifo_rd, cce_fifo_wr, cce_retire_rptr);
+    }
+    return;
+  }
+
   // "info device rage128 3d": the complete engine/texture context
   if ((argc >= 1) && !strcmp(argv[0], "3d")) {
     dbg_printf("scanout: CRTC_OFFSET=0x%08x latched=0x%08x pending=%d CRTC_PITCH=0x%08x\n",
