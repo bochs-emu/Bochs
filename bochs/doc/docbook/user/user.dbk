@@ -3829,11 +3829,15 @@ related 'vga' options. See <xref linkend="geforce-notes"> for more information.
 <para>
 Example:
 <screen>
-  vga: extension=rage128
+  vga: extension=rage128, model=32
+  rage128: threads=2
 </screen>
-This defines the ATI Rage 128 PRO emulation. This 2D/3D AGP card requires
+This defines the ATI Rage 128 PRO emulation. This 2D/3D card requires
 an external VGA BIOS, the vga extension option to be set to 'rage128' and the
-i440BX PCI/AGP chipset with the 'rage128' device assigned to AGP (slot #5).
+'rage128' device assigned to a PCI slot or (with the i440BX chipset) to the
+AGP slot #5. The 'model' value selects the video memory size in MB (16 or 32,
+default 32). The optional 'rage128' line sets the number of render threads
+used by the 3D rasterizer (1 to 8, default 1).
 The gui screen update timing is controlled by the related 'vga' options.
 See <xref linkend="rage128-notes"> for more information.
 </para>
@@ -10170,26 +10174,48 @@ Bochs VBE Display Drivers for Windows NT/2000
 
   <para>
   The ATI Rage 128 PRO emulation implements support for the ATI Rage 128 PRO
-  AGP graphics card. This 2D/3D AGP card provides VGA-compatible functionality
-  along with accelerated 2D graphics capabilities. The emulation requires an
-  external VGA BIOS image compatible with the ATI Rage 128 PRO.
+  graphics card family: the Rage 128 PRO GL (AGP, PCI device ID 5046) when the
+  device is assigned to the AGP slot, and the Rage 128 PRO Ultra/II (PCI, device
+  ID 5452) when it is assigned to a regular PCI slot. The model provides the
+  VGA-compatible core, the extended CRTC/PLL/DAC display path (4 to 32 bpp),
+  the hardware cursor, the 2D GUI engine (register triggered and PM4 packets),
+  the PM4/CCE command processor with ring buffer, indirect buffers, PCI GART
+  and AGP aperture bus mastering, a software 3D rasterizer (textures with
+  mipmapping, Z/stencil, alpha blending, fog) and the OV0 video overlay.
+  The emulation requires an external VGA BIOS image compatible with the ATI
+  Rage 128 PRO.
   </para>
   <para>
-  The ATI Rage 128 PRO must be assigned to the AGP slot (slot #5) when using
-  the i440BX PCI/AGP chipset. The card cannot be used in regular PCI slots.
-  </para>
-  <para>
-  These bochsrc settings are required for ATI Rage 128 PRO:
+  These bochsrc settings are required for the AGP card (Rage 128 PRO GL,
+  device ID 5046, i440BX chipset, AGP slot #5):
   <screen>
-  vga: extension=rage128
+  vga: extension=rage128, model=32
   pci: chipset=i440bx, slot5=rage128
-  vgaromimage: file=<replaceable>VGABIOS</replaceable>
+  vgaromimage: file=Rage128progl_zerostate.VBI
+  </screen>
+  and these for the PCI card (Rage 128 PRO II / Ultra, device ID 5452, any
+  regular PCI slot):
+  <screen>
+  vga: extension=rage128, model=32
+  pci: chipset=i440fx, slot1=rage128
+  vgaromimage: file=Rage128proIIpci_zerostate.VBI
+  </screen>
+  The 3D rasterizer can use several host threads; the number is set with
+  the optional 'rage128' option:
+  <screen>
+  rage128: threads=4
   </screen>
   </para>
   <para>
-  You will need to obtain a VGA BIOS image compatible with the ATI Rage 128 PRO.
-  The BIOS image should be an AGP version compatible with the Rage 128 PRO chipset.
-  The BIOS image should be likely downloaded at VGA Musuem or The Retro Web.
+  The video BIOS must match the card variant selected by the slot: use the
+  Rage 128 PRO GL AGP BIOS image (<filename>Rage128progl_zerostate.VBI</filename>)
+  when the device is assigned to the AGP slot, and the Rage 128 PRO II PCI BIOS
+  image (<filename>Rage128proIIpci_zerostate.VBI</filename>) when it is assigned
+  to a PCI slot. These are the "zero state" runtime ROM images (the BIOS scratch
+  state left behind by the dump origin is cleared), the same images the 86Box
+  emulation of this card uses. The device IDs and subsystem IDs presented by the
+  emulation (1002:5046 / 1002:0018 for AGP, 1002:5452 / 1002:001C for PCI) are
+  the ones these BIOS images and the ATI driver INFs expect.
   </para>
 </section>
 

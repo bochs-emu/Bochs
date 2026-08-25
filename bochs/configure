@@ -1095,6 +1095,7 @@ enable_raw_serial
 enable_clgd54xx
 enable_geforce
 enable_voodoo
+enable_rage128
 enable_cdrom
 enable_cdaudio
 enable_sb16
@@ -25783,6 +25784,7 @@ printf "%s\n" "yes" >&6; }
     printf "%s\n" "#define BX_SUPPORT_RAGE128 1" >>confdefs.h
 
     DISPLAY_OBJS="$DISPLAY_OBJS rage128.o"
+    DISPLAY_EXTRA_OBJS="$DISPLAY_EXTRA_OBJS rage128_2d.o rage128_3d.o rage128_pm4.o rage128_ov0.o"
     DISPLAY_DLL_TARGETS="$DISPLAY_DLL_TARGETS bx_rage128.dll"
    else
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
