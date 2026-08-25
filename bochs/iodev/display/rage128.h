@@ -409,6 +409,10 @@ private:
   void   update_mode(void);
   void   latch_crtc_offset(void);
   void   cursor_publish(void);
+  void   cursor_frame_latch(void);
+  void   cursor_rect(Bit32u posn, Bit32u hvoff, int *x0, int *y0, int *x1, int *y1);
+  void   paint_tile(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info, Bit8u *pel8);
+  void   paint_tiles_in(int x0, int y0, int x1, int y1);
   void   draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info);
   Bit32u get_display_usec(void);
   Bit32u get_current_line(void);
@@ -647,6 +651,15 @@ private:
   bool   cur_lock;
   Bit32u cur_clr0;
   Bit32u cur_clr1;
+  // Cursor tuple as latched at the last vertical blank (what scanout
+  // composites this frame) and the "bitmap rewritten in VRAM" flag
+  bool   cur_lat_en;
+  Bit32u cur_lat_offset;
+  Bit32u cur_lat_posn;
+  Bit32u cur_lat_hvoff;
+  Bit32u cur_lat_clr0;
+  Bit32u cur_lat_clr1;
+  volatile bool cur_bitmap_dirty;
   Bit32u ovr_clr;
   Bit32u ovr_wid_left_right;
   Bit32u ovr_wid_top_bottom;

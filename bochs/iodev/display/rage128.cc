@@ -604,6 +604,8 @@ void bx_rage128_c::vertical_timer(void)
     }
     // OV0 / subpicture register latch happens once per frame
     ov0_frame_latch();
+    // Hardware cursor tuple is picked up whole at vertical blank
+    cursor_frame_latch();
   } else {
     // Display start: schedule the CRTC_VLINE compare-line event
     Bit32u cmp = crtc_vline & 0x7ff;
@@ -674,6 +676,12 @@ void bx_rage128_c::register_state(void)
   BXRS_PARAM_BOOL(disp, cur_lock, cur_lock);
   new bx_shadow_num_c(disp, "cur_clr0", &cur_clr0, BASE_HEX);
   new bx_shadow_num_c(disp, "cur_clr1", &cur_clr1, BASE_HEX);
+  BXRS_PARAM_BOOL(disp, cur_lat_en, cur_lat_en);
+  new bx_shadow_num_c(disp, "cur_lat_offset", &cur_lat_offset, BASE_HEX);
+  new bx_shadow_num_c(disp, "cur_lat_posn", &cur_lat_posn, BASE_HEX);
+  new bx_shadow_num_c(disp, "cur_lat_hvoff", &cur_lat_hvoff, BASE_HEX);
+  new bx_shadow_num_c(disp, "cur_lat_clr0", &cur_lat_clr0, BASE_HEX);
+  new bx_shadow_num_c(disp, "cur_lat_clr1", &cur_lat_clr1, BASE_HEX);
   new bx_shadow_num_c(disp, "ovr_clr", &ovr_clr, BASE_HEX);
   new bx_shadow_num_c(disp, "dac_ext_cntl", &dac_ext_cntl, BASE_HEX);
   new bx_shadow_num_c(disp, "mem_vga_wp_sel", &mem_vga_wp_sel, BASE_HEX);
@@ -928,6 +936,13 @@ Bit32u bx_rage128_c::surf_xlate(Bit32u addr)
 // Mark the display tiles covering VRAM bytes [addr, addr+len) as dirty
 void bx_rage128_c::vram_dirty(Bit32u addr, Bit32u len)
 {
+  // A rewrite of the 64x64x2bpp cursor image (1 KB at the latched
+  // CUR_OFFSET) changes the cursor shape without any register write
+  if (cur_lat_en) {
+    Bit32u ca = addr & vram_mask;
+    if ((ca < cur_lat_offset + 64 * 16) && (ca + len > cur_lat_offset))
+      cur_bitmap_dirty = true;
+  }
   if (!disp_ext || (disp_pitch == 0)) {
     BX_RAGE128_THIS s.vga_mem_updated |= 1;
     bx_vgacore_c::vga_redraw_area(0, 0, BX_RAGE128_THIS s.last_xres, BX_RAGE128_THIS s.last_yres);
@@ -1763,6 +1778,10 @@ void bx_rage128_c::latch_crtc_offset(void)
   needs_update_dispentire = true;
 }
 
+// CUR_LOCK is one flag surfaced as bit 31 of the three geometry registers:
+// while locked, writes land only in the programmed images; the write that
+// clears the lock publishes the whole tuple. The published tuple is picked
+// up by scanout at the next vertical blank (cursor_frame_latch).
 void bx_rage128_c::cursor_publish(void)
 {
   if (cur_lock)
@@ -1770,7 +1789,110 @@ void bx_rage128_c::cursor_publish(void)
   cur_offset_act = cur_offset;
   cur_posn_act = cur_horz_vert_posn;
   cur_hvoff_act = cur_horz_vert_off;
-  if (disp_ext) needs_update_dispentire = true;
+}
+
+// Screen rectangle covered by a cursor tuple (the image is 64x64, the
+// HORZ/VERT_OFF fields clip its top-left corner)
+void bx_rage128_c::cursor_rect(Bit32u posn, Bit32u hvoff, int *x0, int *y0, int *x1, int *y1)
+{
+  *x0 = (posn >> 16) & 0x7ff;
+  *y0 = posn & 0x7ff;
+  *x1 = *x0 + 64 - (int)((hvoff >> 16) & 0x3f);
+  *y1 = *y0 + 64 - (int)(hvoff & 0x3f);
+}
+
+// Vertical blank: latch the cursor tuple the CRTC composites for the next
+// frame. Only the tiles under the old and the new cursor are invalidated
+// and repainted right away, so cursor motion runs at the frame rate and
+// costs a few tiles rather than a full-screen refresh at the (much lower)
+// VGA update rate.
+void bx_rage128_c::cursor_frame_latch(void)
+{
+  bool en = disp_ext && ((crtc_gen_cntl & RAGE128_CRTC_CUR_EN) != 0);
+  bool changed = (en != cur_lat_en);
+  if (en && !changed) {
+    changed = (cur_offset_act != cur_lat_offset) || (cur_posn_act != cur_lat_posn) ||
+              (cur_hvoff_act != cur_lat_hvoff) || (cur_clr0 != cur_lat_clr0) ||
+              (cur_clr1 != cur_lat_clr1) || cur_bitmap_dirty;
+  }
+  if (!changed) {
+    cur_bitmap_dirty = false;
+    return;
+  }
+  int ox0, oy0, ox1, oy1, nx0, ny0, nx1, ny1;
+  bool old_en = cur_lat_en;
+  cursor_rect(cur_lat_posn, cur_lat_hvoff, &ox0, &oy0, &ox1, &oy1);
+  cur_lat_en = en;
+  cur_lat_offset = cur_offset_act & 0x01fffff0;
+  cur_lat_posn = cur_posn_act;
+  cur_lat_hvoff = cur_hvoff_act;
+  cur_lat_clr0 = cur_clr0;
+  cur_lat_clr1 = cur_clr1;
+  cur_bitmap_dirty = false;
+  cursor_rect(cur_lat_posn, cur_lat_hvoff, &nx0, &ny0, &nx1, &ny1);
+  if (!disp_ext)
+    return;
+
+  int bx0 = 0x7fffffff, by0 = 0x7fffffff, bx1 = 0, by1 = 0;
+  if (old_en && (ox1 > ox0) && (oy1 > oy0)) {
+    redraw_area(ox0, oy0, ox1 - ox0, oy1 - oy0);
+    if (ox0 < bx0) bx0 = ox0;
+    if (oy0 < by0) by0 = oy0;
+    if (ox1 > bx1) bx1 = ox1;
+    if (oy1 > by1) by1 = oy1;
+  }
+  if (en && (nx1 > nx0) && (ny1 > ny0)) {
+    redraw_area(nx0, ny0, nx1 - nx0, ny1 - ny0);
+    if (nx0 < bx0) bx0 = nx0;
+    if (ny0 < by0) by0 = ny0;
+    if (nx1 > bx1) bx1 = nx1;
+    if (ny1 > by1) by1 = ny1;
+  }
+  // A pending mode change (or a mode not yet shown) is handled by update()
+  if (needs_update_mode || needs_update_dispentire || !ext_last)
+    return;
+  if ((bx1 > bx0) && (by1 > by0))
+    paint_tiles_in(bx0, by0, bx1, by1);
+}
+
+// Paint the dirty display tiles intersecting [x0,x1) x [y0,y1) now
+void bx_rage128_c::paint_tiles_in(int x0, int y0, int x1, int y1)
+{
+  bx_svga_tileinfo_t info;
+  Bit8u pel8[256 * 3];
+  unsigned w, h;
+
+  if (!bx_gui->graphics_tile_info_common(&info))
+    return;
+  if (info.snapshot_mode)
+    return;
+  if (info.is_indexed && (disp_bpp != 8) && (disp_bpp != 4))
+    return;
+  if (x0 < 0) x0 = 0;
+  if (y0 < 0) y0 = 0;
+  if (x1 > (int)disp_xres) x1 = disp_xres;
+  if (y1 > (int)disp_yres) y1 = disp_yres;
+  if ((x0 >= x1) || (y0 >= y1))
+    return;
+  for (int i = 0; i < 256; i++) {
+    pel8[i * 3 + 0] = BX_RAGE128_THIS s.pel.data[i].red;
+    pel8[i * 3 + 1] = BX_RAGE128_THIS s.pel.data[i].green;
+    pel8[i * 3 + 2] = BX_RAGE128_THIS s.pel.data[i].blue;
+  }
+  unsigned xt0 = x0 / X_TILESIZE, xt1 = (x1 - 1) / X_TILESIZE;
+  unsigned yt0 = y0 / Y_TILESIZE, yt1 = (y1 - 1) / Y_TILESIZE;
+  for (unsigned yti = yt0; yti <= yt1; yti++) {
+    for (unsigned xti = xt0; xti <= xt1; xti++) {
+      if (!GET_TILE_UPDATED(xti, yti))
+        continue;
+      unsigned xc = xti * X_TILESIZE, yc = yti * Y_TILESIZE;
+      paint_tile(xc, yc, &info, pel8);
+      bx_gui->graphics_tile_get(xc, yc, &w, &h);
+      bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
+      SET_TILE_UPDATED(BX_RAGE128_THIS, xti, yti, 0);
+    }
+  }
+  bx_gui->flush();
 }
 
 void bx_rage128_c::snapshot_take(void)
@@ -2021,12 +2143,10 @@ bool bx_rage128_c::display_reg_write(Bit32u off, Bit32u val, Bit32u mask)
     case RAGE128_CUR_CLR0:
       MERGE(cur_clr0);
       cur_clr0 &= 0x00ffffff;
-      if (disp_ext) needs_update_dispentire = true;
       return true;
     case RAGE128_CUR_CLR1:
       MERGE(cur_clr1);
       cur_clr1 &= 0x00ffffff;
-      if (disp_ext) needs_update_dispentire = true;
       return true;
     case RAGE128_OVR_CLR:
       MERGE(ovr_clr);
@@ -2102,6 +2222,13 @@ void bx_rage128_c::display_reset(void)
   cur_lock = false;
   cur_clr0 = 0;
   cur_clr1 = 0;
+  cur_lat_en = false;
+  cur_lat_offset = 0;
+  cur_lat_posn = 0;
+  cur_lat_hvoff = 0;
+  cur_lat_clr0 = 0;
+  cur_lat_clr1 = 0;
+  cur_bitmap_dirty = false;
   ovr_clr = 0;
   ovr_wid_left_right = 0;
   ovr_wid_top_bottom = 0;
@@ -2286,20 +2413,21 @@ void bx_rage128_c::update_mode(void)
 // transparent (XOR=0) or inverts the screen (XOR=1).
 void bx_rage128_c::draw_hardware_cursor(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info)
 {
-  if (!(crtc_gen_cntl & RAGE128_CRTC_CUR_EN) || disp_dac_const || disp_blank)
+  // Composited from the tuple latched at the last vertical blank
+  if (!cur_lat_en || disp_dac_const || disp_blank)
     return;
 
-  int posx = (cur_posn_act >> 16) & 0x7ff;
-  int posy = cur_posn_act & 0x7ff;
-  int xoff = (cur_hvoff_act >> 16) & 0x3f;
-  int yoff = cur_hvoff_act & 0x3f;
+  int posx = (cur_lat_posn >> 16) & 0x7ff;
+  int posy = cur_lat_posn & 0x7ff;
+  int xoff = (cur_lat_hvoff >> 16) & 0x3f;
+  int yoff = cur_lat_hvoff & 0x3f;
   int cw = 64 - xoff;
   int ch = 64 - yoff;
   if ((cw <= 0) || (ch <= 0))
     return;
-  Bit32u base = cur_offset_act & 0x01fffff0;
-  Bit32u col0 = cur_clr0;
-  Bit32u col1 = cur_clr1;
+  Bit32u base = cur_lat_offset;
+  Bit32u col0 = cur_lat_clr0;
+  Bit32u col1 = cur_lat_clr1;
 
   unsigned w, h;
   Bit8u *tile_ptr;
@@ -2443,7 +2571,7 @@ void bx_rage128_c::update(void)
     return;
   needs_update_tile = false;
 
-  unsigned xc, yc, xti, yti, r, c, w, h;
+  unsigned xc, yc, xti, yti, w, h;
   int i;
   Bit32u colour;
   Bit8u *tile_ptr, *tile_ptr2;
@@ -2504,39 +2632,56 @@ void bx_rage128_c::update(void)
     for (xc = 0, xti = 0; xc < width; xc += X_TILESIZE, xti++) {
       if (!GET_TILE_UPDATED(xti, yti))
         continue;
-      tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
-      for (r = 0; r < h; r++) {
-        unsigned y = yc + r;
-        unsigned sy = disp_dblscan ? (y >> 1) : y;
-        Bit32u rowaddr = disp_base + sy * disp_pitch;
-        tile_ptr2 = tile_ptr;
-        for (c = 0; c < w; c++) {
-          unsigned x = xc + c;
-          Bit32u addr = rowaddr + ((disp_bpp == 4) ? (x >> 1) : x * pxbytes);
-          if (disp_blank) colour = 0;
-          else if (disp_dac_const) colour = disp_dac_const_color;
-          else colour = rage128_fetch_pixel(&vram[addr & vram_mask], disp_bpp, this, x, lsb_nibble, pel8, dac_shift);
-          if (info.is_indexed) {
-            *(tile_ptr2++) = (disp_bpp == 8) ? vram[addr & vram_mask] : (Bit8u)colour;
-          } else {
-            colour = MAKE_COLOUR(colour, 24, info.red_shift, info.red_mask,
-                                 colour, 16, info.green_shift, info.green_mask,
-                                 colour, 8, info.blue_shift, info.blue_mask);
-            if (info.is_little_endian) {
-              for (i = 0; i < info.bpp; i += 8) *(tile_ptr2++) = (Bit8u)(colour >> i);
-            } else {
-              for (i = info.bpp - 8; i > -8; i -= 8) *(tile_ptr2++) = (Bit8u)(colour >> i);
-            }
-          }
-        }
-        tile_ptr += info.pitch;
-      }
-      draw_overlay(xc, yc, &info);
-      draw_hardware_cursor(xc, yc, &info);
+      paint_tile(xc, yc, &info, pel8);
+      bx_gui->graphics_tile_get(xc, yc, &w, &h);
       bx_gui->graphics_tile_update_in_place(xc, yc, w, h);
       SET_TILE_UPDATED(BX_RAGE128_THIS, xti, yti, 0);
     }
   }
+}
+
+// Render one display tile (framebuffer, then overlay and cursor on top)
+// into the GUI tile buffer
+void bx_rage128_c::paint_tile(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info, Bit8u *pel8)
+{
+  unsigned w, h, r, c;
+  int i;
+  Bit32u colour;
+  Bit8u *tile_ptr, *tile_ptr2;
+  Bit8u dac_shift = BX_RAGE128_THIS s.dac_shift;
+  unsigned pxbytes = (disp_bpp + 7) / 8;
+  bool lsb_nibble = (dac_cntl & RAGE128_DAC_4BPP_PIX_ORDER) != 0;
+  Bit8u *vram = BX_RAGE128_THIS s.memory;
+
+  tile_ptr = bx_gui->graphics_tile_get(xc, yc, &w, &h);
+  for (r = 0; r < h; r++) {
+    unsigned y = yc + r;
+    unsigned sy = disp_dblscan ? (y >> 1) : y;
+    Bit32u rowaddr = disp_base + sy * disp_pitch;
+    tile_ptr2 = tile_ptr;
+    for (c = 0; c < w; c++) {
+      unsigned x = xc + c;
+      Bit32u addr = rowaddr + ((disp_bpp == 4) ? (x >> 1) : x * pxbytes);
+      if (disp_blank) colour = 0;
+      else if (disp_dac_const) colour = disp_dac_const_color;
+      else colour = rage128_fetch_pixel(&vram[addr & vram_mask], disp_bpp, this, x, lsb_nibble, pel8, dac_shift);
+      if (info->is_indexed) {
+        *(tile_ptr2++) = (disp_bpp == 8) ? vram[addr & vram_mask] : (Bit8u)colour;
+      } else {
+        colour = MAKE_COLOUR(colour, 24, info->red_shift, info->red_mask,
+                             colour, 16, info->green_shift, info->green_mask,
+                             colour, 8, info->blue_shift, info->blue_mask);
+        if (info->is_little_endian) {
+          for (i = 0; i < info->bpp; i += 8) *(tile_ptr2++) = (Bit8u)(colour >> i);
+        } else {
+          for (i = info->bpp - 8; i > -8; i -= 8) *(tile_ptr2++) = (Bit8u)(colour >> i);
+        }
+      }
+    }
+    tile_ptr += info->pitch;
+  }
+  draw_overlay(xc, yc, info);
+  draw_hardware_cursor(xc, yc, info);
 }
 
 #if BX_DEBUGGER
