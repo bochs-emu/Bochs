@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2023  The Bochs Project
+//                2009-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -173,7 +173,7 @@ usb_printer_device_c::usb_printer_device_c()
   fname = new bx_param_filename_c(s.config, "file", "File", "", "", BX_PATHNAME_LEN);
   fname->set_handler(printfile_handler);
   if (SIM->is_wx_selected()) {
-    bx_list_c *usb = (bx_list_c *) SIM->get_param("ports.usb");
+    bx_list_c *usb = (bx_list_c *) SIM->get_param("usb");
     usb->add(s.config);
   }
   put("usb_printer", "USBPRN");
@@ -185,7 +185,7 @@ usb_printer_device_c::~usb_printer_device_c(void)
     fclose(s.fp);
   }
   if (SIM->is_wx_selected()) {
-    bx_list_c *usb = (bx_list_c *) SIM->get_param("ports.usb");
+    bx_list_c *usb = (bx_list_c *) SIM->get_param("usb");
     usb->remove(s.config->get_name());
   }
   bx_list_c *usb_rt = (bx_list_c *) SIM->get_param(BXPN_MENU_RUNTIME_USB);

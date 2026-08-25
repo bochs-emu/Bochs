@@ -8,14 +8,14 @@ AC_CONFIG_HEADERS([config.h])
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
-VERSION="3.0.devel"
+VERSION="3.1"
 VER_MAJOR=3
-VER_MINOR=0
+VER_MINOR=1
 dnl // this should be > 90 for pre-release of next version otherwise revision level
 VER_REVISION=0
 dnl // this should be 0 for release and 1 for development version
 VER_DEV=1
-REL_STRING="Built from GitHub snapshot after release 3.0"
+REL_STRING="Built from GitHub snapshot after release 3.1"
 REL_TIMESTAMP=`grep "Updated:" $srcdir/README | sed 's/Updated: //'`
 
 changequote(<<, >>)
@@ -138,6 +138,7 @@ fi
 
 AC_PROG_CC
 AC_PROG_CXX
+AC_PROG_AR
 AC_PROG_MAKE_SET
 
 if test "$NO_LT" != 1; then
@@ -1285,6 +1286,29 @@ if test "$support_uintr" -gt 0 -a "$use_x86_64" = 0; then
   AC_MSG_ERROR([User Level Interrupt feature emulation require x86-64 enabled])
 fi
 
+support_fred=0
+AC_MSG_CHECKING(for Flexible Interrupt Delivery FRED support (experimental))
+AC_ARG_ENABLE(fred,
+  AS_HELP_STRING([--enable-fred], [for Flexible Interrupt Delivery FRED support (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_FRED, 1)
+    support_fred=1
+   elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_FRED, 0)
+   fi
+   ],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_FRED, 0)
+  ]
+  )
+
+if test "$support_fred" -gt 0 -a "$use_x86_64" = 0; then
+  AC_MSG_ERROR([Flexible Interrupt Delivery (FRED) emulation require x86-64 enabled])
+fi
+
 AC_MSG_CHECKING(for 3DNow! support)
 AC_ARG_ENABLE(3dnow,
   AS_HELP_STRING([--enable-3dnow], [3DNow! support (no - incomplete)]),
@@ -1351,7 +1375,7 @@ AC_ARG_ENABLE(monitor_mwait,
   ]
   )
 
-AC_MSG_CHECKING(for limited hardware performance monitoring emulation support (experimental))
+AC_MSG_CHECKING(for limited hardware performance monitoring emulation support)
 AC_ARG_ENABLE(perfmon,
   AS_HELP_STRING([--enable-perfmon], [support for limited hardware performance monitoring emulation (yes, if cpu level > 5 - experimental)]),
   [if test "$enableval" = yes; then
@@ -2472,7 +2496,7 @@ SLASH="/"
 CXXFP=""
 CFP=""
 OFP="-o "
-MAKELIB="ar rv \$@"
+MAKELIB="\$(AR) rv \$@"
 RMCOMMAND="rm -f "
 # first define link variables without libtool
 LINK="\$(CXX) -o \$@ \$(CXXFLAGS) \$(LDFLAGS)"
@@ -3369,9 +3393,11 @@ for flag in $acx_pthread_flags; do
 	# pthread_cleanup_push because it is one of the few pthread
 	# functions on Solaris that doesn't have a non-functional libc stub.
 	# We try pthread_create on general principles.
-	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]], [[pthread_t th; pthread_join(th, 0);
-		     pthread_attr_init(0); pthread_cleanup_push(0, 0);
-		     pthread_create(0,0,0,0); pthread_cleanup_pop(0); ]])],[acx_pthread_ok=yes],[])
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>
+                void* test(void* a) { (void)a; return (void*)0; } 
+             ]], [[pthread_t th = {0}; pthread_attr_t th_attr; pthread_join(th, 0);
+		     pthread_attr_init(&th_attr); pthread_cleanup_push(0, 0);
+		     pthread_create(&th,0,test,0); pthread_cleanup_pop(0); ]])],[acx_pthread_ok=yes],[])
 
 	LIBS="$save_LIBS"
 	CFLAGS="$save_CFLAGS"
@@ -3396,9 +3422,11 @@ if test "x$acx_pthread_ok" = xyes; then
 	# Detect AIX lossage: threads are created detached by default
 	# and the JOINABLE attribute has a nonstandard name (UNDETACHED).
 	AC_MSG_CHECKING([for joinable pthread attribute])
-	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]], [[int attr=PTHREAD_CREATE_JOINABLE;]])],[ok=PTHREAD_CREATE_JOINABLE],[ok=unknown])
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]], [[int
+    attr=PTHREAD_CREATE_JOINABLE; (void)attr;]])],[ok=PTHREAD_CREATE_JOINABLE],[ok=unknown])
 	if test x"$ok" = xunknown; then
-		AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]], [[int attr=PTHREAD_CREATE_UNDETACHED;]])],[ok=PTHREAD_CREATE_UNDETACHED],[ok=unknown])
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]], [[int
+        attr=PTHREAD_CREATE_UNDETACHED; (void)attr;]])],[ok=PTHREAD_CREATE_UNDETACHED],[ok=unknown])
 	fi
 	if test x"$ok" != xPTHREAD_CREATE_JOINABLE; then
 		AC_DEFINE(PTHREAD_CREATE_JOINABLE, $ok,

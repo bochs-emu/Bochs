@@ -238,10 +238,10 @@ void sapphire_rapids_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpui
     get_reserved_leaf(leaf);
     return;
   case 0x00000015: // CPUID leaf 0x00000015 - Time Stamp Counter and Core Crystal Clock Information Leaf
-    get_leaf(leaf, 0x00000002, 0x000000b0, 0x017d7840, 0x00000000);
+    get_freq_leaf_15(leaf, 0x00000002, 0x000000b0, 0x017d7840);
     return;
   case 0x00000016: // CPUID leaf 0x00000016 - Processor Frequency Information Leaf
-    get_leaf(leaf, 0x00000898, 0x000012c0, 0x00000064, 0x00000000);
+    get_freq_leaf_16(leaf, 0x00000898, 0x000012c0, 0x00000064);
     return;
   case 0x00000017:
     get_reserved_leaf(leaf);
@@ -523,7 +523,7 @@ void sapphire_rapids_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_
     // * [14:14] AVX512 VPOPCNTDQ: AVX512 VPOPCNTD/VPOPCNTQ instructions
     //   [15:15] reserved
     // * [16:16] LA57: LA57 and 5-level paging
-    //   [21:17] reserved
+    //   [21:17] MPX User Address-Width Adjust (MAWAU)
     // * [22:22] RDPID: Read Processor ID support
     //   [23:23] Keylocker support
     // ! [24:24] BUS_LOCK_DETECT: Indicates support for bus lock debug exceptions

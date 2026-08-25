@@ -163,6 +163,9 @@ Bit16u fat_datetime(time_t time, int return_time);
 Bit16u BOCHSAPI fat_datetime(FILETIME time, int return_time);
 #endif
 
+// CRC-32C (Castagnoli) helper (used e.g. by VHDX checksum validation).
+Bit32u crc32c(const Bit8u *buf, size_t len);
+
 // base class
 class BOCHSAPI device_image_t
 {

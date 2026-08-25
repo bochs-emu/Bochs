@@ -68,51 +68,72 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_VpdWpdR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_MASK_VpsWpsM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  bx_address laddr = get_laddr(i->seg(), eaddr);
-
-  unsigned len = i->getVL(), len_in_bytes = BYTE_ELEMENTS(len);
-  if (laddr & (len_in_bytes-1)) {
-    BX_ERROR(("AVX masked read len=%d: #GP misaligned access", len_in_bytes));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
   BxPackedAvxRegister reg;
   unsigned mask = BX_READ_16BIT_OPMASK(i->opmask());
-  avx_masked_load32(i, eaddr, &reg, mask);
+  unsigned len = i->getVL();
 
-  if (i->isZeroMasking()) {
-    BX_WRITE_AVX_REGZ(i->dst(), reg, len);
+  if (mask) {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    bx_address laddr = get_laddr(i->seg(), eaddr);
+
+    unsigned len_in_bytes = BYTE_ELEMENTS(len);
+    if (laddr & (len_in_bytes-1)) {
+      BX_ERROR(("AVX masked read len=%d: #GP misaligned access", len_in_bytes));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+
+    avx_masked_load32(i, eaddr, &reg, mask);
+
+    if (i->isZeroMasking()) {
+      BX_WRITE_AVX_REGZ(i->dst(), reg, len);
+    }
+    else {
+      simd_blendps(&BX_READ_AVX_REG(i->dst()), &reg, mask, DWORD_ELEMENTS(len));
+      BX_CLEAR_AVX_REGZ(i->dst(), len);
+    }
   }
   else {
-    simd_blendps(&BX_READ_AVX_REG(i->dst()), &reg, mask, DWORD_ELEMENTS(len));
-    BX_CLEAR_AVX_REGZ(i->dst(), len);
+    if (i->isZeroMasking())
+      BX_AVX_REG(i->dst()).clear();
+    else
+      BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
+
 
   BX_NEXT_INSTR(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_VpdWpdM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  bx_address laddr = get_laddr(i->seg(), eaddr);
-
-  unsigned len = i->getVL(), len_in_bytes = BYTE_ELEMENTS(len);
-  if (laddr & (len_in_bytes-1)) {
-    BX_ERROR(("AVX masked read len=%d: #GP misaligned access", len_in_bytes));
-    exception(BX_GP_EXCEPTION, 0);
-  }
-
   BxPackedAvxRegister reg;
   unsigned mask = BX_READ_8BIT_OPMASK(i->opmask());
-  avx_masked_load64(i, eaddr, &reg, mask);
+  unsigned len = i->getVL();
 
-  if (i->isZeroMasking()) {
-    BX_WRITE_AVX_REGZ(i->dst(), reg, len);
+  if (mask) {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    bx_address laddr = get_laddr(i->seg(), eaddr);
+
+    unsigned len_in_bytes = BYTE_ELEMENTS(len);
+    if (laddr & (len_in_bytes-1)) {
+      BX_ERROR(("AVX masked read len=%d: #GP misaligned access", len_in_bytes));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+
+    avx_masked_load64(i, eaddr, &reg, mask);
+
+    if (i->isZeroMasking()) {
+      BX_WRITE_AVX_REGZ(i->dst(), reg, len);
+    }
+    else {
+      simd_blendpd(&BX_READ_AVX_REG(i->dst()), &reg, mask, QWORD_ELEMENTS(len));
+      BX_CLEAR_AVX_REGZ(i->dst(), len);
+    }
   }
   else {
-    simd_blendpd(&BX_READ_AVX_REG(i->dst()), &reg, mask, QWORD_ELEMENTS(len));
-    BX_CLEAR_AVX_REGZ(i->dst(), len);
+    if (i->isZeroMasking())
+      BX_AVX_REG(i->dst()).clear();
+    else
+      BX_CLEAR_AVX_REGZ(i->dst(), len);
   }
 
   BX_NEXT_INSTR(i);
@@ -120,32 +141,40 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_VpdWpdM(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPS_MASK_WpsVpsM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  bx_address laddr = get_laddr(i->seg(), eaddr);
+  unsigned mask = BX_READ_16BIT_OPMASK(i->opmask());
 
-  unsigned len_in_bytes = BYTE_ELEMENTS(i->getVL());
-  if (laddr & (len_in_bytes-1)) {
-    BX_ERROR(("AVX masked write len=%d: #GP misaligned access", len_in_bytes));
-    exception(BX_GP_EXCEPTION, 0);
+  if (mask) {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    bx_address laddr = get_laddr(i->seg(), eaddr);
+
+    unsigned len_in_bytes = BYTE_ELEMENTS(i->getVL());
+    if (laddr & (len_in_bytes-1)) {
+      BX_ERROR(("AVX masked write len=%d: #GP misaligned access", len_in_bytes));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+
+    avx_masked_store32(i, eaddr, &BX_READ_AVX_REG(i->src()), mask);
   }
-
-  avx_masked_store32(i, eaddr, &BX_READ_AVX_REG(i->src()), BX_READ_16BIT_OPMASK(i->opmask()));
 
   BX_NEXT_INSTR(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVAPD_MASK_WpdVpdM(bxInstruction_c *i)
 {
-  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  bx_address laddr = get_laddr(i->seg(), eaddr);
+  unsigned mask = BX_READ_8BIT_OPMASK(i->opmask());
 
-  unsigned len_in_bytes = BYTE_ELEMENTS(i->getVL());
-  if (laddr & (len_in_bytes-1)) {
-    BX_ERROR(("AVX masked write len=%d: #GP misaligned access", len_in_bytes));
-    exception(BX_GP_EXCEPTION, 0);
+  if (mask) {
+    bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+    bx_address laddr = get_laddr(i->seg(), eaddr);
+
+    unsigned len_in_bytes = BYTE_ELEMENTS(i->getVL());
+    if (laddr & (len_in_bytes-1)) {
+      BX_ERROR(("AVX masked write len=%d: #GP misaligned access", len_in_bytes));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+
+    avx_masked_store64(i, eaddr, &BX_READ_AVX_REG(i->src()), mask);
   }
-
-  avx_masked_store64(i, eaddr, &BX_READ_AVX_REG(i->src()), BX_READ_8BIT_OPMASK(i->opmask()));
 
   BX_NEXT_INSTR(i);
 }

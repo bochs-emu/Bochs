@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013-2023 Stanislav Shwartsman
+//   Copyright (c) 2013-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1230,13 +1230,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF32x4_MASK_WpsVpsIbR(bxInstruction
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF32x4_MASK_WpsVpsIbM(bxInstruction_c *i)
 {
+  BxPackedXmmRegister tmp, op;
   unsigned len = i->getVL(), offset = i->Ib() & (len - 1);
-  BxPackedAvxRegister op;
-  op.vmm128(0) = BX_READ_AVX_REG_LANE(i->src(), offset);
+  op = BX_READ_AVX_REG_LANE(i->src(), offset);
 
-  Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask()) & 0xf;
+  // first check that memory could be written (no fault suppression)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  avx_masked_store32(i, eaddr, &op, opmask);
+  tickle_write_virtual(i->seg(), eaddr, 16);
+
+  Bit32u mask = BX_READ_8BIT_OPMASK(i->opmask()) & 0xf;
+
+  if (mask) {
+    // all permission already checked - perform RMW for simplicity and speed
+    read_virtual_xmmword(i->seg(), eaddr, &tmp);
+    xmm_blendps(&tmp, &op, mask);
+    write_virtual_xmmword(i->seg(), eaddr, &tmp);
+  }
 
   BX_NEXT_INSTR(i);
 }
@@ -1259,13 +1268,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF64x2_MASK_WpdVpdIbR(bxInstruction
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF64x2_MASK_WpdVpdIbM(bxInstruction_c *i)
 {
+  BxPackedXmmRegister tmp, op;
   unsigned len = i->getVL(), offset = i->Ib() & (len - 1);
-  BxPackedAvxRegister op;
-  op.vmm128(0) = BX_READ_AVX_REG_LANE(i->src(), offset);
+  op = BX_READ_AVX_REG_LANE(i->src(), offset);
 
-  Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask()) & 0x3;
+  // first check that memory could be written (no fault suppression)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  avx_masked_store64(i, eaddr, &op, opmask);
+  tickle_write_virtual(i->seg(), eaddr, 16);
+
+  Bit32u mask = BX_READ_8BIT_OPMASK(i->opmask()) & 0x3;
+
+  if (mask) {
+    // all permission already checked - perform RMW for simplicity and speed
+    read_virtual_xmmword(i->seg(), eaddr, &tmp);
+    xmm_blendpd(&tmp, &op, mask);
+    write_virtual_xmmword(i->seg(), eaddr, &tmp);
+  }
 
   BX_NEXT_INSTR(i);
 }
@@ -1297,14 +1315,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF64x4_WpdVpdIbM(bxInstruction_c *i
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF64x4_MASK_WpdVpdIbM(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), tmp;
   if (i->Ib() & 0x1)
     op.vmm256(0) = op.vmm256(1);
 
-  Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask()) & 0xf;
+  Bit32u mask = BX_READ_8BIT_OPMASK(i->opmask()) & 0xf;
 
+  // first check that memory could be written (no fault suppression)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  avx_masked_store64(i, eaddr, &op, opmask);
+  tickle_write_virtual(i->seg(), eaddr, 32);
+
+  if (mask) {
+    // all permission already checked - perform RMW for simplicity and speed
+    read_virtual_ymmword(i->seg(), eaddr, &tmp.vmm256(0));
+    simd_blendpd(&tmp, &op, mask, 4);
+    write_virtual_ymmword(i->seg(), eaddr, &tmp.vmm256(0));
+  }
+
   BX_NEXT_INSTR(i);
 }
 
@@ -1320,12 +1347,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF32x8_MASK_WpsVpsIbR(bxInstruction
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXTRACTF32x8_MASK_WpsVpsIbM(bxInstruction_c *i)
 {
-  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
+  BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), tmp;
   if (i->Ib() & 0x1)
     op.vmm256(0) = op.vmm256(1);
 
+  Bit32u mask = BX_READ_8BIT_OPMASK(i->opmask());
+
+  // first check that memory could be written (no fault suppression)
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  avx_masked_store32(i, eaddr, &op, BX_READ_8BIT_OPMASK(i->opmask()));
+  tickle_write_virtual(i->seg(), eaddr, 32);
+
+  if (mask) {
+    // all permission already checked - perform RMW for simplicity and speed
+    read_virtual_ymmword(i->seg(), eaddr, &tmp.vmm256(0));
+    simd_blendps(&tmp, &op, mask, 8);
+    write_virtual_ymmword(i->seg(), eaddr, &tmp.vmm256(0));
+  }
+
   BX_NEXT_INSTR(i);
 }
 
@@ -1553,6 +1591,40 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VBLENDMPD_MASK_VpdHpdWpdR(bxInstruction_c 
 
 // compress, expand
 
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPEXPANDB_MASK_VdqWdqM(bxInstruction_c *i)
+{
+  BxPackedAvxRegister result, op;
+  if (i->isZeroMasking())
+    result.clear();
+  else
+    result = BX_READ_AVX_REG(i->dst());
+
+  Bit64u opmask = BX_READ_OPMASK(i->opmask());
+  unsigned len = i->getVL();
+  if (len != BX_VL512) // avoid accidential zero of the mask, due to Bit64u computation overflow (1 << 64) == 1
+    opmask &= CUT_OPMASK_TO(BYTE_ELEMENTS(len));
+
+  if (opmask) {
+    // the EXPAND is going to read an element for each bit set to '1 in the opmask
+    // and place it into the element corresponding to the opmask bit in the result
+    // so it will read popcntq(opmask) bits from the source
+    Bit64u load_mask = (opmask == BX_CONST64(0xFFFFFFFFFFFFFFFF)) ? opmask : (1 << popcntq(opmask)) - 1;
+    avx_masked_load8(i, BX_CPU_RESOLVE_ADDR(i), &op, load_mask); // read only popcntq(opmask) elements from the memory
+
+    for (unsigned n = 0, k = 0; n < BYTE_ELEMENTS(len); n++, opmask >>= 1) {
+      if (! opmask) break;
+
+      if (opmask & 0x1) {
+        result.vmmubyte(n) = op.vmmubyte(k);
+        k++;
+      }
+    }
+  }
+
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  BX_NEXT_INSTR(i);
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPEXPANDB_MASK_VdqWdqR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src()), result;
@@ -1564,12 +1636,45 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPEXPANDB_MASK_VdqWdqR(bxInstruction_c *i)
   Bit64u opmask = BX_READ_OPMASK(i->opmask());
   unsigned len = i->getVL(), k = 0;
 
-  for (unsigned n = 0; n < len*16; n++, opmask >>= 1) {
+  for (unsigned n = 0; n < BYTE_ELEMENTS(len); n++, opmask >>= 1) {
     if (! opmask) break;
 
     if (opmask & 0x1) {
       result.vmmubyte(n) = op.vmmubyte(k);
       k++;
+    }
+  }
+
+  BX_WRITE_AVX_REGZ(i->dst(), result, len);
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPEXPANDW_MASK_VdqWdqM(bxInstruction_c *i)
+{
+  BxPackedAvxRegister result, op;
+  if (i->isZeroMasking())
+    result.clear();
+  else
+    result = BX_READ_AVX_REG(i->dst());
+
+  Bit32u opmask = BX_READ_32BIT_OPMASK(i->opmask());
+  unsigned len = i->getVL();
+  opmask &= CUT_OPMASK_TO(WORD_ELEMENTS(len));
+
+  if (opmask) {
+    // the EXPAND is going to read an element for each bit set to '1 in the opmask
+    // and place it into the element corresponding to the opmask bit in the result
+    // so it will read popcntd(opmask) bits from the source
+    Bit32u load_mask = (1 << popcntd(opmask)) - 1;
+    avx_masked_load16(i, BX_CPU_RESOLVE_ADDR(i), &op, load_mask); // read only popcntd(opmask) elements from the memory
+
+    for (unsigned n = 0, k = 0; n < WORD_ELEMENTS(len); n++, opmask >>= 1) {
+      if (! opmask) break;
+
+      if (opmask & 0x1) {
+        result.vmm16u(n) = op.vmm16u(k);
+        k++;
+      }
     }
   }
 
@@ -1588,7 +1693,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPEXPANDW_MASK_VdqWdqR(bxInstruction_c *i)
   Bit32u opmask = BX_READ_32BIT_OPMASK(i->opmask());
   unsigned len = i->getVL(), k = 0;
 
-  for (unsigned n = 0; n < len*8; n++, opmask >>= 1) {
+  for (unsigned n = 0; n < WORD_ELEMENTS(len); n++, opmask >>= 1) {
     if (! opmask) break;
 
     if (opmask & 0x1) {
@@ -1620,7 +1725,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXPANDPS_MASK_VpsWpsM(bxInstruction_c *i)
     Bit32u load_mask = (1 << popcntw(opmask)) - 1;
     avx_masked_load32(i, BX_CPU_RESOLVE_ADDR(i), &op, load_mask); // read only popcntw(opmask) elements from the memory
 
-    for (unsigned n = 0, k = 0; n < len*4; n++, opmask >>= 1) {
+    for (unsigned n = 0, k = 0; n < DWORD_ELEMENTS(len); n++, opmask >>= 1) {
       if (! opmask) break;
 
       if (opmask & 0x1) {
@@ -1645,7 +1750,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXPANDPS_MASK_VpsWpsR(bxInstruction_c *i)
   Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
   unsigned len = i->getVL(), k = 0;
 
-  for (unsigned n = 0; n < len*4; n++, opmask >>= 1) {
+  for (unsigned n = 0; n < DWORD_ELEMENTS(len); n++, opmask >>= 1) {
     if (! opmask) break;
 
     if (opmask & 0x1) {
@@ -1677,7 +1782,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXPANDPD_MASK_VpdWpdM(bxInstruction_c *i)
     Bit32u load_mask = (1 << popcntb(opmask)) - 1;
     avx_masked_load64(i, BX_CPU_RESOLVE_ADDR(i), &op, load_mask); // read only popcntb(opmask) elements from the memory
 
-    for (unsigned n = 0, k = 0; n < len*2; n++, opmask >>= 1) {
+    for (unsigned n = 0, k = 0; n < QWORD_ELEMENTS(len); n++, opmask >>= 1) {
       if (! opmask) break;
 
       if (opmask & 0x1) {
@@ -1702,7 +1807,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VEXPANDPD_MASK_VpdWpdR(bxInstruction_c *i)
   Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask());
   unsigned len = i->getVL();
 
-  for (unsigned n = 0, k = 0; n < len*2; n++, opmask >>= 1) {
+  for (unsigned n = 0, k = 0; n < QWORD_ELEMENTS(len); n++, opmask >>= 1) {
     if (! opmask) break;
 
     if (opmask & 0x1) {
@@ -1722,7 +1827,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMPRESSB_MASK_WdqVdq(bxInstruction_c *i
   Bit64u opmask = BX_READ_OPMASK(i->opmask());
   unsigned len = i->getVL(), n = 0, k = 0;
 
-  for (; n < len*16; n++, opmask >>= 1) {
+  for (; n < BYTE_ELEMENTS(len); n++, opmask >>= 1) {
     if (! opmask) break;
 
     if (opmask & 0x1) {
@@ -1751,7 +1856,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMPRESSW_MASK_WdqVdq(bxInstruction_c *i
   Bit32u opmask = BX_READ_32BIT_OPMASK(i->opmask());
   unsigned len = i->getVL(), n = 0, k = 0;
 
-  for (; n < len*8; n++, opmask >>= 1) {
+  for (; n < WORD_ELEMENTS(len); n++, opmask >>= 1) {
     if (! opmask) break;
 
     if (opmask & 0x1) {
@@ -1780,7 +1885,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCOMPRESSPS_MASK_WpsVps(bxInstruction_c *i
   Bit32u opmask = BX_READ_16BIT_OPMASK(i->opmask());
   unsigned len = i->getVL(), n = 0, k = 0;
 
-  for (; n < len*4; n++, opmask >>= 1) {
+  for (; n < DWORD_ELEMENTS(len); n++, opmask >>= 1) {
     if (! opmask) break;
 
     if (opmask & 0x1) {
@@ -1809,7 +1914,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCOMPRESSPD_MASK_WpdVpd(bxInstruction_c *i
   Bit32u opmask = BX_READ_8BIT_OPMASK(i->opmask());
   unsigned len = i->getVL(), n = 0, k = 0;
 
-  for (; n < len*2; n++, opmask >>= 1) {
+  for (; n < QWORD_ELEMENTS(len); n++, opmask >>= 1) {
     if (! opmask) break;
 
     if (opmask & 0x1) {
@@ -1983,7 +2088,7 @@ BX_CPP_INLINE Bit64u pmultishiftqb_scalar(Bit64u val_64, Bit64u control)
   return MMXUQ(result);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMULTISHIFTQB_VdqHdqWdqR(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMULTISHIFTQB_MASK_VdqHdqWdqR(bxInstruction_c *i)
 {
   BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2());
   unsigned len = i->getVL();
@@ -1992,24 +2097,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMULTISHIFTQB_VdqHdqWdqR(bxInstruction_c 
     op1.vmm64u(n) = pmultishiftqb_scalar(op2.vmm64u(n), op1.vmm64u(n));
   }
 
-  BX_WRITE_AVX_REGZ(i->dst(), op1, len);
-  BX_NEXT_INSTR(i);
-}
+  if (i->opmask())
+    avx512_write_regb_masked(i, &op1, len, BX_READ_OPMASK(i->opmask()));
+  else
+    BX_WRITE_AVX_REGZ(i->dst(), op1, len);
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMULTISHIFTQB_MASK_VdqHdqWdqR(bxInstruction_c *i)
-{
-  BxPackedAvxRegister op1 = BX_READ_AVX_REG(i->src1()), op2 = BX_READ_AVX_REG(i->src2()), dst = BX_READ_AVX_REG(i->dst());
-  Bit32u mask = BX_READ_8BIT_OPMASK(i->opmask());
-  unsigned len = i->getVL();
-
-  for (unsigned n=0, tmp_mask = mask; n < QWORD_ELEMENTS(len); n++, tmp_mask >>= 1) {
-    if (tmp_mask & 0x1)
-      dst.vmm64u(n) = pmultishiftqb_scalar(op2.vmm64u(n), op1.vmm64u(n));
-    else if (i->isZeroMasking())
-      dst.vmm64u(n) = 0;
-  }
-
-  BX_WRITE_AVX_REGZ(i->dst(), dst, len);
   BX_NEXT_INSTR(i);
 }
 

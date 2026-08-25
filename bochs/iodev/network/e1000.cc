@@ -12,7 +12,7 @@
 //  Copyright (c) 2007 Dan Aloni
 //  Copyright (c) 2004 Antony T Curtis
 //
-//  Copyright (C) 2011-2025  The Bochs Project
+//  Copyright (C) 2011-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -35,6 +35,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "pc_system.h"
 #if BX_SUPPORT_PCI && BX_SUPPORT_E1000
 
 #include "pci.h"
@@ -323,7 +324,7 @@ Bit32s e1000_options_parser(const char *context, int num_params, char *params[])
     if (!SIM->get_param_bool("enabled", base)->get()) {
       SIM->get_param_enum("ethmod", base)->set_by_name("null");
     }
-    if (!SIM->get_param_string("mac", base)->isempty()) {
+    if (!SIM->get_param_bytestring("mac", base)->isempty()) {
       // MAC address is already initialized
       valid |= 0x04;
     }
@@ -539,7 +540,7 @@ void bx_e1000_c::init_card(Bit8u card)
   sprintf(s.devname, "e1000%c", 65+card);
   sprintf(s.ldevname, "Intel(R) Gigabit Ethernet #%d", card);
   put(s.devname);
-  memcpy(macaddr, SIM->get_param_string("mac", base)->getptr(), 6);
+  memcpy(macaddr, SIM->get_param_bytestring("mac", base)->getptr(), 6);
 
   memcpy(BX_E1000_THIS s.eeprom_data, e1000_eeprom_template,
          sizeof(e1000_eeprom_template));
@@ -562,11 +563,9 @@ void bx_e1000_c::init_card(Bit8u card)
 
   BX_E1000_THIS init_bar_mem(0, 0x20000, mem_read_handler, mem_write_handler);
   BX_E1000_THIS init_bar_io(1, 32, read_handler, write_handler, &e1000_iomask[0]);
-  BX_E1000_THIS pci_rom_address = 0;
-  BX_E1000_THIS pci_rom_read_handler = mem_read_handler;
   bootrom = SIM->get_param_string("bootrom", base);
   if (!bootrom->isempty()) {
-    BX_E1000_THIS load_pci_rom(bootrom->getptr());
+    BX_E1000_THIS load_pci_rom(bootrom->getptr(), mem_read_handler);
   }
 
   if (BX_E1000_THIS s.tx_timer_index == BX_NULL_TIMER_HANDLE) {
@@ -696,7 +695,7 @@ void bx_e1000_c::e1000_register_state(bx_list_c *parent, Bit8u card)
 
 void bx_e1000_c::after_restore_state(void)
 {
-  bx_pci_device_c::after_restore_pci_state(mem_read_handler);
+  bx_pci_device_c::after_restore_pci_state();
 }
 
 bool bx_e1000_c::mem_read_handler(bx_phy_address addr, unsigned len,
@@ -714,9 +713,9 @@ bool bx_e1000_c::mem_read(bx_phy_address addr, unsigned len, void *data)
   Bit32u offset, value = 0;
   Bit16u index;
 
-  if (BX_E1000_THIS pci_rom_size > 0) {
-    Bit32u mask = (BX_E1000_THIS pci_rom_size - 1);
-    if (((Bit32u)addr & ~mask) == BX_E1000_THIS pci_rom_address) {
+  if (BX_E1000_THIS pci_bar[PCI_ROM_BAR].size > 0) {
+    Bit32u mask = (BX_E1000_THIS pci_bar[PCI_ROM_BAR].size - 1);
+    if (((Bit32u)addr & ~mask) == BX_E1000_THIS pci_bar[PCI_ROM_BAR].addr) {
 #ifdef BX_LITTLE_ENDIAN
       data8_ptr = (Bit8u *) data;
 #else // BX_BIG_ENDIAN

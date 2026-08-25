@@ -386,7 +386,7 @@ void bx_rfb_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u yc,
 
 void bx_rfb_gui_c::text_update(Bit8u *old_text, Bit8u *new_text, unsigned long cursor_x, unsigned long cursor_y, bx_vga_tminfo_t *tm_info)
 {
-  // present for compatibilty
+  // present for compatibility
 }
 
 int bx_rfb_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)

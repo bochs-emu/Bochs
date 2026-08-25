@@ -42,6 +42,31 @@ const Bit32u EXROMSIZE = (0x20000);    // ROMs 0xc0000-0xdffff (area 0xe0000-0xf
 const Bit32u BIOS_MASK  = BIOSROMSZ-1;
 const Bit32u EXROM_MASK = EXROMSIZE-1;
 
+// Guest physical memory layout helpers (for configurations with a 3GB to 4GB PCI MMIO hole).
+// When RAM is >3GB, RAM from 3GB to 4GB is typically remapped above 4GB so that
+// the 3GB to 4GB region can be used for PCI MMIO.
+const bx_phy_address BX_PCI_HOLE_START = 0xC0000000;  // 3GB
+const bx_phy_address BX_PCI_HOLE_LAST  = 0xFFFFFFFF;  // 4GB - 1
+const bx_phy_address BX_PCI_HOLE_SIZE  = BX_PCI_HOLE_LAST - BX_PCI_HOLE_START + 1;
+
+static BX_CPP_INLINE bool bx_is_pci_hole_addr(bx_phy_address gpa)
+{
+  return (gpa >= BX_PCI_HOLE_START) && (gpa <= BX_PCI_HOLE_LAST);
+}
+
+// Translate guest physical address to Bochs linear RAM backing-store offset.
+// - For addresses >= 4GB, subtract the PCI hole size so the RAM backing store is contiguous.
+// - For addresses < 4GB, keep the address as-is (including the PCI hole region for MMIO).
+static BX_CPP_INLINE bx_phy_address bx_translate_gpa_to_linear(bx_phy_address gpa)
+{
+#if BX_PHY_ADDRESS_LONG
+  if (gpa > BX_PCI_HOLE_LAST) {
+    return gpa - BX_PCI_HOLE_SIZE;
+  }
+#endif
+  return gpa;
+}
+
 class BOCHSAPI BX_MEMORY_STUB_C : public logfunctions {
 protected:
   Bit64u  len, allocated;  // could be > 4G
@@ -85,6 +110,7 @@ public:
 
   BX_MEM_SMF Bit64u get_memory_len(void);
   BX_MEM_SMF void allocate_block(Bit32u index);
+  BX_MEM_SMF Bit32u get_num_blocks();
   BX_MEM_SMF Bit8u* alloc_vector_aligned(Bit64u bytes, Bit64u alignment);
 
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -185,6 +211,7 @@ public:
 
   BX_MEM_SMF void    load_ROM(const char *path, bx_phy_address romaddress, Bit8u type);
   BX_MEM_SMF void    load_RAM(const char *path, bx_phy_address romaddress);
+  BX_MEM_SMF void    reset(void);  // Reset memory state (reload ROM for UEFI support)
 
   BX_MEM_SMF bool dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf);
 #if (BX_DEBUGGER || BX_GDBSTUB)

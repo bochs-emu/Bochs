@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2024  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //  PCI VGA dummy adapter Copyright (C) 2002,2003  Mike Nordell
 //
 //  This library is free software; you can redistribute it and/or
@@ -76,6 +76,11 @@
 
 #define VBE_DISPI_LFB_PHYSICAL_ADDRESS   0xE0000000
 
+// QEMU-compatible MMIO BAR2 definitions
+#define PCI_VGA_MMIO_SIZE     0x1000
+#define PCI_VGA_BOCHS_OFFSET  0x500
+#define PCI_VGA_BOCHS_SIZE    0x16
+
 // End Bochs VBE definitions
 
 #if BX_USE_VGA_SMF
@@ -93,8 +98,8 @@ public:
   bx_vga_c();
   virtual ~bx_vga_c();
   virtual void   reset(unsigned type);
-  BX_VGA_SMF bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
-  BX_VGA_SMF bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bool mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static  bool mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
   virtual Bit8u  mem_read(bx_phy_address addr);
   virtual void   mem_write(bx_phy_address addr, Bit8u value);
   virtual void   register_state(void);
@@ -129,9 +134,13 @@ protected:
   static Bit32u vbe_read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   vbe_write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
 
+  // MMIO handlers for BAR2 (QEMU-compatible VBE MMIO)
+  static bool vbe_mmio_read_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+  static bool vbe_mmio_write_handler(bx_phy_address addr, unsigned len, void *data, void *param);
+
 #if BX_USE_VGA_SMF == 0
   Bit32u vbe_read(Bit32u address, unsigned io_len);
-  void  vbe_write(Bit32u address, Bit32u value, unsigned io_len, bool no_log);
+  void  vbe_write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
 
 private:

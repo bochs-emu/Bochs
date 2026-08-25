@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2024  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -762,15 +762,19 @@ void pluginUnregisterDeviceDevmodel(const char *name, Bit16u type)
 /* Plugin system: Check if a plugin is loaded                           */
 /************************************************************************/
 
-bool pluginDevicePresent(const char *name)
+bool pluginDevicePresent(const char *name, bool core)
 {
   device_t *device;
 
-  for (device = devices; device; device = device->next)
-  {
-    if (!strcmp(name, device->name)) return 1;
+  if (core) {
+    for (device = core_devices; device; device = device->next) {
+      if (!strcmp(name, device->name)) return 1;
+    }
+  } else {
+    for (device = devices; device; device = device->next) {
+      if (!strcmp(name, device->name)) return 1;
+    }
   }
-
   return 0;
 }
 
@@ -822,6 +826,18 @@ void bx_unload_plugin_type(const char *name, Bit16u type)
       break;
     }
   }
+}
+
+Bit16u bx_find_plugin(const char *name)
+{
+  plugin_t *plugin;
+
+  for (plugin = plugins; plugin; plugin = plugin->next) {
+    if (!strcmp(plugin->name, name)) {
+      return plugin->type;
+    }
+  }
+  return PLUGTYPE_NULL;
 }
 
 #endif   /* end of #if BX_PLUGINS */
@@ -1042,7 +1058,10 @@ plugin_t bx_builtin_plugins[] = {
   BUILTIN_OPT_PLUGIN_ENTRY(unmapped),
   BUILTIN_OPT_PLUGIN_ENTRY(biosdev),
   BUILTIN_OPT_PLUGIN_ENTRY(speaker),
-  BUILTIN_OPT_PLUGIN_ENTRY(extfpuirq),
+  BUILTIN_OPT_PLUGIN_ENTRY(fw_cfg),
+#if BX_SUPPORT_PCI
+  BUILTIN_OPTPCI_PLUGIN_ENTRY(acpi),
+#endif
   BUILTIN_OPT_PLUGIN_ENTRY(parallel),
   BUILTIN_OPT_PLUGIN_ENTRY(serial),
 #if BX_SUPPORT_BUSMOUSE
@@ -1145,7 +1164,9 @@ plugin_t bx_builtin_plugins[] = {
   BUILTIN_IMG_PLUGIN_ENTRY(vmware4),
   BUILTIN_IMG_PLUGIN_ENTRY(vbox),
   BUILTIN_IMG_PLUGIN_ENTRY(vpc),
+  BUILTIN_IMG_PLUGIN_ENTRY(vhdx),
   BUILTIN_IMG_PLUGIN_ENTRY(vvfat),
+  {"extfpuirq", PLUGTYPE_STANDARD, 0, NULL, 0}, // Temporarily added to avoid panic
   {"NULL", PLUGTYPE_NULL, 0, NULL, 0}
 };
 
@@ -1194,6 +1215,19 @@ Bit8u bx_get_plugin_flags_np(Bit16u type, Bit8u index)
   return 0;
 }
 
+Bit16u bx_find_plugin_np(const char *name)
+{
+  int i = 0;
+
+  while (strcmp(bx_builtin_plugins[i].name, "NULL")) {
+    if (!strcmp(bx_builtin_plugins[i].name, name)) {
+      return bx_builtin_plugins[i].type;
+    }
+    i++;
+  }
+  return PLUGTYPE_NULL;
+}
+
 int bx_load_plugin_np(const char *name, Bit16u type)
 {
   int i = 0;
@@ -1204,10 +1238,11 @@ int bx_load_plugin_np(const char *name, Bit16u type)
         bx_builtin_plugins[i].loadtype = type;
         bx_builtin_plugins[i].plugin_entry(NULL, type, PLUGIN_INIT);
         bx_builtin_plugins[i].initialized = 1;
+        return 1;
       } else {
         BX_PANIC(("plugin '%s' already loaded", name));
+        return 0;
       }
-      return 1;
     }
     i++;
   }

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2023 Stanislav Shwartsman
+//   Copyright (c) 2023-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -88,9 +88,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UIRET(bxInstruction_c *i)
 
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
-  Bit64u new_rip      = stack_read_qword(RSP + 8);
-  Bit32u new_eflags   = (Bit32u) stack_read_qword(RSP + 16);
-  Bit64u new_rsp      = stack_read_qword(RSP + 24);
+  Bit64u new_rip      = stack_read_qword(RSP);
+  Bit32u new_eflags   = (Bit32u) stack_read_qword(RSP + 8);
+  Bit64u new_rsp      = stack_read_qword(RSP + 16);
 
   if (!IsCanonical(new_rip)) {
     BX_ERROR(("UIRET #GP(0): return RIP is not canonical"));
@@ -165,7 +165,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TESTUI(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SENDUIPI_Gq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SENDUIPI_Eq(bxInstruction_c *i)
 {
   if (! BX_CPU_THIS_PTR cr4.get_UINTR()) {
     BX_ERROR(("%s: UINTR in not enabled in CR4", i->getIaOpcodeNameShort()));
@@ -177,7 +177,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SENDUIPI_Gq(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  Bit64u index = BX_READ_64BIT_REG(i->src());
+  Bit64u index = BX_READ_64BIT_REG(i->dst());
   if (index > BX_CPU_THIS_PTR uintr.uitt_size) {
     BX_ERROR(("SENDUIPI: value of the source operand exceeds UITT.SIZE"));
     exception(BX_GP_EXCEPTION, 0);
@@ -290,7 +290,7 @@ void BX_CPU_C::send_uipi(Bit32u notification_destination, Bit32u notification_ve
   //    ICR[64:32] = the APIC_ID from NDST[15:8] (legacy apic mode) or NDST[31:0] (x2apic mode)
   //    ICR[31:8] = 0 (indicating a physically addressed fixed-mode IPI)
 #if BX_SUPPORT_APIC
-  BX_CPU_THIS_PTR lapic->send_ipi(x2apic_mode() ? notification_destination : (notification_destination >> 8), notification_vector);
+  BX_CPU_THIS_PTR lapic->write_x2apic(BX_LAPIC_ICR_LO, x2apic_mode() ? notification_destination : (notification_destination & 0xff00) << 16, notification_vector);
 #endif
 }
 

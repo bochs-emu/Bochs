@@ -73,7 +73,7 @@ BX_CPU_C::writeEFlags(Bit32u flags, Bit32u changeMask)
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_486))
     supportMask |= (EFlagsIDMask | EFlagsACMask); // ID/AC
 #endif
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_VME))
     supportMask |= (EFlagsVIPMask | EFlagsVIFMask); // VIP/VIF
 #endif

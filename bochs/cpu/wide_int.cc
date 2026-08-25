@@ -155,7 +155,7 @@ void long_div(Bit128u *quotient,Bit64u *remainder,const Bit128u *dividend,Bit64u
   quotient->hi  = q.hi;
 }
 
-void long_idiv(Bit128s *quotient,Bit64s *remainder,Bit128s *dividend,Bit64s divisor)
+void long_idiv(Bit128s *quotient,Bit64s *remainder,const Bit128s *dividend,Bit64s divisor)
 {
   unsigned s1,s2;
   Bit128s temp;

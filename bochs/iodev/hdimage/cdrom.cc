@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -258,7 +258,22 @@ bool cdrom_base_c::read_toc(Bit8u* buf, int* length, bool msf, int start_track, 
       buf[1] = (((12 - 2) & 0x00FF) >> 0);
       buf[2] = 1;
       buf[3] = 1;
-      memset(&buf[4], 0, 8);
+       // this assumes we are a data CD-ROM (Audio will return something other than 0x14)
+       buf[ 4] = 0;      // reserved
+       buf[ 5] = 0x14;   // adr in high nibble, cntrl in low nibble (0x17 if dvd+r, 0x14 all others)
+       buf[ 6] = 1;      // first track number in last complete session
+       buf[ 7] = 0;      // reserved
+       if (msf) {          // MSF is 00:02:00
+         buf[ 8] = 0;      // zero
+         buf[ 9] = 0;      // minute
+         buf[10] = 2;      // second
+         buf[11] = 0;      // frame
+       } else {
+         buf[ 8] = 0;      // MSB: Start Address of first track in last session
+         buf[ 9] = 0;      // 
+         buf[10] = 0;      //  (returns zero)
+         buf[11] = 0;      // LSB:
+       }
       len = 12;
       break;
 

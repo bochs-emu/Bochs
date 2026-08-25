@@ -790,7 +790,7 @@ void bx_cmos_c::update_clock()
   struct utctm *time_calendar;
   unsigned year, month, day, century;
   Bit8u val_bcd, hour;
-  Bit64s mintvalset=-62167219200,maxtvalset[2]={253402300799, 745690751999};
+  Bit64s mintvalset=BX_CONST64(-62167219200), maxtvalset[2]={BX_CONST64(253402300799), BX_CONST64(745690751999)};
 
   while(BX_CMOS_THIS s.timeval>maxtvalset[BX_CMOS_THIS s.rtc_mode_binary?1:0]) {BX_CMOS_THIS s.timeval-=(maxtvalset[BX_CMOS_THIS s.rtc_mode_binary?1:0]-mintvalset+1);}
   while(BX_CMOS_THIS s.timeval<mintvalset) {BX_CMOS_THIS s.timeval+=(maxtvalset[BX_CMOS_THIS s.rtc_mode_binary?1:0]-mintvalset+1);}

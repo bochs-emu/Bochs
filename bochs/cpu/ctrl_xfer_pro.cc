@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2019  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -24,6 +24,8 @@
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
+#include "icache.h"
+
 /* pass zero in check_rpl if no needed selector RPL checking for
    non-conforming segments */
 void BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_rpl, Bit8u check_cpl)
@@ -42,6 +44,15 @@ void BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_
       BX_ERROR(("check_cs(0x%04x): Both CS.L and CS.D_B bits enabled !", cs_raw));
       exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
     }
+
+#if BX_SUPPORT_FRED
+    if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+      if (descriptor->dpl == 0 && !descriptor->u.segment.l) {
+        BX_ERROR(("check_cs(0x%04x): attempt to enter compatibility mode with CPL=0 under FRED enabled", cs_raw));
+        exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+      }
+    }
+#endif
   }
 #endif
 
@@ -88,7 +99,7 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
   // Handle special case of CS.LIMIT demotion (new descriptor limit is
   // smaller than current one)
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled > descriptor->u.segment.limit_scaled)
-    BX_CPU_THIS_PTR iCache.flushICacheEntries();
+    BX_CPU_THIS_PTR iCache->flushICacheEntries();
 #endif
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector = *selector;

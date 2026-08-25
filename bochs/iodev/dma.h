@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -45,13 +45,13 @@ public:
   virtual void debug_dump(int argc, char **argv);
 #endif
 
-  virtual bool registerDMA8Channel(unsigned channel,
-    Bit16u (* dmaRead)(Bit8u *data_byte, Bit16u maxlen),
-    Bit16u (* dmaWrite)(Bit8u *data_byte, Bit16u maxlen),
+  virtual bool registerDMA8Channel(unsigned channel, void *this_ptr,
+    Bit16u (* dmaRead)(void *this_ptr, Bit8u *data_byte, Bit16u maxlen),
+    Bit16u (* dmaWrite)(void *this_ptr, Bit8u *data_byte, Bit16u maxlen),
     const char *name);
-  virtual bool registerDMA16Channel(unsigned channel,
-    Bit16u (* dmaRead)(Bit16u *data_word, Bit16u maxlen),
-    Bit16u (* dmaWrite)(Bit16u *data_word, Bit16u maxlen),
+  virtual bool registerDMA16Channel(unsigned channel, void *this_ptr,
+    Bit16u (* dmaRead)(void *this_ptr, Bit16u *data_word, Bit16u maxlen),
+    Bit16u (* dmaWrite)(void *this_ptr, Bit16u *data_word, Bit16u maxlen),
     const char *name);
   virtual bool unregisterDMAChannel(unsigned channel);
 
@@ -97,10 +97,12 @@ private:
   Bit8u   ext_page_reg[16]; // Extra page registers (unused)
 
   struct {
-    Bit16u (* dmaRead8)(Bit8u *data_byte, Bit16u maxlen);
-    Bit16u (* dmaWrite8)(Bit8u *data_byte, Bit16u maxlen);
-    Bit16u (* dmaRead16)(Bit16u *data_word, Bit16u maxlen);
-    Bit16u (* dmaWrite16)(Bit16u *data_word, Bit16u maxlen);
+    void *this_ptr8;
+    Bit16u (* dmaRead8)(void *this_ptr, Bit8u *data_byte, Bit16u maxlen);
+    Bit16u (* dmaWrite8)(void *this_ptr, Bit8u *data_byte, Bit16u maxlen);
+    void *this_ptr16;
+    Bit16u (* dmaRead16)(void *this_ptr, Bit16u *data_word, Bit16u maxlen);
+    Bit16u (* dmaWrite16)(void *this_ptr, Bit16u *data_word, Bit16u maxlen);
   } h[4]; // DMA read and write handlers
 };
 

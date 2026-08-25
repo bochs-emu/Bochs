@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -28,6 +28,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "pc_system.h"
 
 #if BX_SUPPORT_SB16
 
@@ -250,7 +251,7 @@ bx_sb16_c::~bx_sb16_c(void)
     fclose(LOGFILE);
 
   SIM->get_bochs_root()->remove("sb16");
-  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_SOUND);
   misc_rt->remove("sb16");
   BX_DEBUG(("Exit"));
 }
@@ -433,7 +434,7 @@ void bx_sb16_c::init(void)
   MPU.current_timer = 0;
 
   // init runtime parameters
-  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_SOUND);
   bx_list_c *menu = new bx_list_c(misc_rt, "sb16", "SB16 Runtime Options");
   menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
 
@@ -1566,8 +1567,16 @@ void bx_sb16_c::dsp_dmadone(bool irq)
 // now the actual transfer routines, called by the DMA controller
 // note that read = from application to soundcard (output),
 // and write = from soundcard to application (input)
+Bit16u bx_sb16_c::dma_read8_handler(void *this_ptr, Bit8u *buffer, Bit16u maxlen)
+{
+#if !BX_USE_SB16_SMF
+  bx_sb16_c *class_ptr = (bx_sb16_c *) this_ptr;
+  return class_ptr->dma_read8(buffer, maxlen);
+}
+
 Bit16u bx_sb16_c::dma_read8(Bit8u *buffer, Bit16u maxlen)
 {
+#endif
   Bit16u len = 0;
 
   DEV_dma_set_drq(BX_SB16_DMAL, 0);  // the timer will raise it again
@@ -1586,8 +1595,16 @@ Bit16u bx_sb16_c::dma_read8(Bit8u *buffer, Bit16u maxlen)
   return len;
 }
 
+Bit16u bx_sb16_c::dma_write8_handler(void *this_ptr, Bit8u *buffer, Bit16u maxlen)
+{
+#if !BX_USE_SB16_SMF
+  bx_sb16_c *class_ptr = (bx_sb16_c *) this_ptr;
+  return class_ptr->dma_write8(buffer, maxlen);
+}
+
 Bit16u bx_sb16_c::dma_write8(Bit8u *buffer, Bit16u maxlen)
 {
+#endif
   Bit16u len = 0;
 
   DEV_dma_set_drq(BX_SB16_DMAL, 0);  // the timer will raise it again
@@ -1606,8 +1623,16 @@ Bit16u bx_sb16_c::dma_write8(Bit8u *buffer, Bit16u maxlen)
   return len;
 }
 
+Bit16u bx_sb16_c::dma_read16_handler(void *this_ptr, Bit16u *buffer, Bit16u maxlen)
+{
+#if !BX_USE_SB16_SMF
+  bx_sb16_c *class_ptr = (bx_sb16_c *) this_ptr;
+  return class_ptr->dma_read16(buffer, maxlen);
+}
+
 Bit16u bx_sb16_c::dma_read16(Bit16u *buffer, Bit16u maxlen)
 {
+#endif
   Bit16u len = 0;
   Bit8u *buf8;
 
@@ -1630,8 +1655,16 @@ Bit16u bx_sb16_c::dma_read16(Bit16u *buffer, Bit16u maxlen)
   return len;
 }
 
+Bit16u bx_sb16_c::dma_write16_handler(void *this_ptr, Bit16u *buffer, Bit16u maxlen)
+{
+#if !BX_USE_SB16_SMF
+  bx_sb16_c *class_ptr = (bx_sb16_c *) this_ptr;
+  return class_ptr->dma_write16(buffer, maxlen);
+}
+
 Bit16u bx_sb16_c::dma_write16(Bit16u *buffer, Bit16u maxlen)
 {
+#endif
   Bit16u len = 0;
   Bit8u *buf8;
 
@@ -1908,7 +1941,7 @@ void bx_sb16_c::set_irq_dma()
 
   // And register the new 8bits DMA Channel
   if ((!isInitialized) || (oldDMA8 != BX_SB16_DMAL))
-    DEV_dma_register_8bit_channel(BX_SB16_DMAL, dma_read8, dma_write8, "SB16");
+    DEV_dma_register_8bit_channel(BX_SB16_DMAL, BX_SB16_THISP, dma_read8_handler, dma_write8_handler, "SB16");
 
   // and the 16 bit DMA
   oldDMA16=BX_SB16_DMAH;
@@ -1941,7 +1974,7 @@ void bx_sb16_c::set_irq_dma()
 
   // And register the new 16bits DMA Channel
   if ((BX_SB16_DMAH != 0) && (oldDMA16 != BX_SB16_DMAH))
-    DEV_dma_register_16bit_channel(BX_SB16_DMAH, dma_read16, dma_write16, "SB16");
+    DEV_dma_register_16bit_channel(BX_SB16_DMAH, BX_SB16_THISP, dma_read16_handler, dma_write16_handler, "SB16");
 
   // If not already initialized
   if(!isInitialized) {
@@ -2357,7 +2390,7 @@ void bx_sb16_c::opl_timerevent()
       }
       if (((++OPL.timer[i]) & mask) == 0) { // overflow occurred, set flags accordingly
         OPL.timer[i] = OPL.timerinit[i];      // reset the counter
-        if ((OPL.tmask[i/2] >> (6 - (i % 2))) == 0) { // set flags only if unmasked
+        if ((OPL.tmask[i/2] & (1 << (6 - (i % 2)))) == 0) { // set flags only if unmasked
           writelog(MIDILOG(5), "OPL Timer Interrupt: Chip %d, Timer %d", i/2, 1 << (i % 2));
           OPL.tflag[i/2] |= 1 << (6 - (i % 2));   // set the overflow flag
           OPL.tflag[i/2] |= 1 << 7;             // set the IRQ flag
@@ -3168,16 +3201,16 @@ Bit64s bx_sb16_c::sb16_param_handler(bx_param_c *param, bool set, Bit64s val)
   if (set) {
     const char *pname = param->get_name();
     if (!strcmp(pname, "dmatimer")) {
-      BX_SB16_THIS dmatimer = (Bit32u)val;
+      theSB16Device->dmatimer = (Bit32u)val;
     } else if (!strcmp(pname, "loglevel")) {
-      BX_SB16_THIS loglevel = (int)val;
+      theSB16Device->loglevel = (int)val;
     } else if (!strcmp(pname, "midimode")) {
-      if (val != BX_SB16_THIS midimode) {
-        BX_SB16_THIS midi_changed |= 1;
+      if (val != theSB16Device->midimode) {
+        theSB16Device->midi_changed |= 1;
       }
     } else if (!strcmp(pname, "wavemode")) {
-      if (val != BX_SB16_THIS wavemode) {
-        BX_SB16_THIS wave_changed |= 1;
+      if (val != theSB16Device->wavemode) {
+        theSB16Device->wave_changed |= 1;
       }
     } else {
       BX_PANIC(("sb16_param_handler called with unexpected parameter '%s'", pname));
@@ -3193,13 +3226,13 @@ const char* bx_sb16_c::sb16_param_string_handler(bx_param_string_c *param, bool 
   if (set && (strcmp(val, oldval))) {
     const char *pname = param->get_name();
     if (!strcmp(pname, "wavefile")) {
-      BX_SB16_THIS wave_changed |= 2;
+      theSB16Device->wave_changed |= 2;
     } else if (!strcmp(pname, "midifile")) {
-      BX_SB16_THIS midi_changed |= 2;
+      theSB16Device->midi_changed |= 2;
     } else if (!strcmp(pname, "log")) {
-      if (LOGFILE != NULL) {
-        fclose(LOGFILE);
-        LOGFILE = NULL;
+      if (theSB16Device->logfile != NULL) {
+        fclose(theSB16Device->logfile);
+        theSB16Device->logfile = NULL;
       }
       // writelog() re-opens the log file on demand
     } else {

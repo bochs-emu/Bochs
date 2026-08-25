@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C)      2023  Benjamin David Lunt
-//  Copyright (C) 2003-2025  The Bochs Project
+//  Copyright (C) 2003-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -28,8 +28,8 @@
 #include "usb_debug.h"
 // hacks for iodev / USB internals
 #include "iodev.h"
-#include "iodev/usb/usb_common.h"
-#include "iodev/usb/usb_xhci.h"
+#include "iodev/usb/usb_uhci-defs.h"
+#include "iodev/usb/usb_xhci-defs.h"
 
 #include <gtk/gtk.h>
 #include <glib.h>
@@ -892,6 +892,7 @@ static void uhci_display_td(GtkWidget *widget, gpointer data)
 int uhci_debug_dialog(int type, int param1)
 {
   bx_list_c *UHCI_state = NULL;
+  bx_param_enum_c* device;
   int i, ret;
   Bit32u frame_addr, frame_num;
   char buffer[COMMON_STR_SIZE];
@@ -906,32 +907,31 @@ int uhci_debug_dialog(int type, int param1)
     {"Port 1 Register", NULL, 4, attribs_u_ports}
   };
 
-  UHCI_state = (bx_list_c*)SIM->get_param("usb_uhci", SIM->get_bochs_root());
+  UHCI_state = get_usb_hc_state(USB_DEBUG_UHCI);
   if (UHCI_state == NULL)
     return -1;
 
   main_dialog = gtk_dialog_new();
   switch (type) {
     case USB_DEBUG_FRAME:
-      gtk_window_set_title(GTK_WINDOW(main_dialog), "UHCI Debug Dialog: Break Type: Start of Frame");
+      sprintf(buffer, "%s Debug Dialog: Break Type: Start of Frame", get_usb_hc_name(USB_DEBUG_UHCI));
       break;
     case USB_DEBUG_COMMAND:
-      gtk_window_set_title(GTK_WINDOW(main_dialog), "UHCI Debug Dialog: Break Type: Doorbell");
+      sprintf(buffer, "%s Debug Dialog: Break Type: Doorbell", get_usb_hc_name(USB_DEBUG_UHCI));
       break;
     case USB_DEBUG_NONEXIST:
-      gtk_window_set_title(GTK_WINDOW(main_dialog), "UHCI Debug Dialog: Break Type: Non-Existant Port Write");
+      sprintf(buffer, "%s Debug Dialog: Break Type: Non-Existant Port Write", get_usb_hc_name(USB_DEBUG_UHCI));
       break;
     case USB_DEBUG_RESET:
-      sprintf(buffer, "UHCI Debug Dialog: Break Type: Port %d Reset", param1);
-      gtk_window_set_title(GTK_WINDOW(main_dialog), buffer);
+      sprintf(buffer, "%s Debug Dialog: Break Type: Port %d Reset", get_usb_hc_name(USB_DEBUG_UHCI), param1);
       break;
     case USB_DEBUG_ENABLE:
-      sprintf(buffer, "UHCI Debug Dialog: Break Type: Port %d Enable", param1);
-      gtk_window_set_title(GTK_WINDOW(main_dialog), buffer);
+      sprintf(buffer, "%s Debug Dialog: Break Type: Port %d Enable", get_usb_hc_name(USB_DEBUG_UHCI), param1);
       break;
     default:
-      gtk_window_set_title(GTK_WINDOW(main_dialog), "UHCI Debug Dialog");
+      sprintf(buffer, "%s Debug Dialog", get_usb_hc_name(USB_DEBUG_UHCI));
   }
+  gtk_window_set_title(GTK_WINDOW(main_dialog), buffer);
   gtk_window_set_default_size(GTK_WINDOW(main_dialog), 600, 500);
   gtk_window_set_keep_above(GTK_WINDOW(main_dialog), TRUE);
   button[0] = gtk_dialog_add_button(GTK_DIALOG(main_dialog), "Continue", GTK_RESPONSE_OK);
@@ -1030,13 +1030,23 @@ int uhci_debug_dialog(int type, int param1)
   gtk_entry_set_text(GTK_ENTRY(uhci_entry[UHCI_REG_PORT0]), buffer);
   g_signal_connect(GTK_EDITABLE(uhci_entry[UHCI_REG_PORT0]), "changed",
                    G_CALLBACK(on_entry_changed), &u_changed[UHCI_REG_PORT0]);
-  SIM->get_param_enum("port1.device", host_param)->dump_param(buffer, COMMON_STR_SIZE, 1);
+  device = get_hc_port_device(1);
+  if (device != NULL) {
+    device->dump_param(buffer, COMMON_STR_SIZE, 1);
+  } else {
+    strcpy(buffer, "none");
+  }
   gtk_entry_set_text(GTK_ENTRY(ro_entry[1]), buffer);
   sprintf(buffer, "0x%04X", usb_io_read(pci_bar_address + 18, 2));
   gtk_entry_set_text(GTK_ENTRY(uhci_entry[UHCI_REG_PORT1]), buffer);
   g_signal_connect(GTK_EDITABLE(uhci_entry[UHCI_REG_PORT1]), "changed",
                    G_CALLBACK(on_entry_changed), &u_changed[UHCI_REG_PORT1]);
-  SIM->get_param_enum("port2.device", host_param)->dump_param(buffer, COMMON_STR_SIZE, 1);
+  device = get_hc_port_device(2);
+  if (device != NULL) {
+    device->dump_param(buffer, COMMON_STR_SIZE, 1);
+  } else {
+    strcpy(buffer, "none");
+  }
   gtk_entry_set_text(GTK_ENTRY(ro_entry[2]), buffer);
 
   frame_addr += (frame_num * sizeof(Bit32u));
@@ -2908,25 +2918,25 @@ int xhci_debug_dialog(int type, int param1)
   sprintf(buffer, "0x%08X", pci_bar_address);
   gtk_entry_set_text(GTK_ENTRY(entry[0]), buffer);
   for (i = 0; i < 8; i++) {
-    dword = xhci_read_dword(pci_bar_address + (i * 4));
+    dword = usb_mmio_read_dword(pci_bar_address + (i * 4));
     sprintf(buffer, "0x%08X", dword);
     gtk_entry_set_text(GTK_ENTRY(entry[i + 1]), buffer);
     g_signal_connect(GTK_EDITABLE(entry[i + 1]), "changed", G_CALLBACK(on_entry_changed), NULL);
   }
-  offset = xhci_read_dword(pci_bar_address + 0) & 0xFF;
-  dword = xhci_read_dword(pci_bar_address + offset + 0x00);
+  offset = usb_mmio_read_dword(pci_bar_address + 0) & 0xFF;
+  dword = usb_mmio_read_dword(pci_bar_address + offset + 0x00);
   sprintf(buffer, "0x%08X", dword);
   gtk_entry_set_text(GTK_ENTRY(entry[9]), buffer);
   g_signal_connect(GTK_EDITABLE(entry[9]), "changed", G_CALLBACK(on_entry_changed), NULL);
-  dword = xhci_read_dword(pci_bar_address + offset + 0x04);
+  dword = usb_mmio_read_dword(pci_bar_address + offset + 0x04);
   sprintf(buffer, "0x%08X", dword);
   gtk_entry_set_text(GTK_ENTRY(entry[10]), buffer);
   g_signal_connect(GTK_EDITABLE(entry[10]), "changed", G_CALLBACK(on_entry_changed), NULL);
-  dword = xhci_read_dword(pci_bar_address + offset + 0x08);
+  dword = usb_mmio_read_dword(pci_bar_address + offset + 0x08);
   sprintf(buffer, "0x%08X", dword);
   gtk_entry_set_text(GTK_ENTRY(entry[11]), buffer);
   g_signal_connect(GTK_EDITABLE(entry[11]), "changed", G_CALLBACK(on_entry_changed), NULL);
-  dword = xhci_read_dword(pci_bar_address + offset + 0x14);
+  dword = usb_mmio_read_dword(pci_bar_address + offset + 0x14);
   sprintf(buffer, "0x%08X", dword);
   gtk_entry_set_text(GTK_ENTRY(entry[12]), buffer);
   g_signal_connect(GTK_EDITABLE(entry[12]), "changed", G_CALLBACK(on_entry_changed), NULL);
@@ -2934,24 +2944,24 @@ int xhci_debug_dialog(int type, int param1)
   sprintf(buffer, "0x" FMT_ADDRX64, SIM->get_param_num("hub.op_regs.HcCrcr.actual", xHCI_state)->get64());
   gtk_entry_set_text(GTK_ENTRY(entry[13]), buffer);
   g_signal_connect(GTK_EDITABLE(entry[13]), "changed", G_CALLBACK(on_entry_changed), NULL);
-  Bit64u qword = xhci_read_dword(pci_bar_address + offset + 0x30) |
-   ((Bit64u) xhci_read_dword(pci_bar_address + offset + 0x34) << 32);
+  Bit64u qword = usb_mmio_read_dword(pci_bar_address + offset + 0x30) |
+   ((Bit64u) usb_mmio_read_dword(pci_bar_address + offset + 0x34) << 32);
   sprintf(buffer, "0x" FMT_ADDRX64, qword);
   gtk_entry_set_text(GTK_ENTRY(entry[14]), buffer);
   g_signal_connect(GTK_EDITABLE(entry[14]), "changed", G_CALLBACK(on_entry_changed), NULL);
-  dword = xhci_read_dword(pci_bar_address + offset + 0x38);
+  dword = usb_mmio_read_dword(pci_bar_address + offset + 0x38);
   sprintf(buffer, "0x%08X", dword);
   gtk_entry_set_text(GTK_ENTRY(entry[15]), buffer);
   g_signal_connect(GTK_EDITABLE(entry[15]), "changed", G_CALLBACK(on_entry_changed), NULL);
 
-  offset = xhci_read_dword(pci_bar_address + 0x18);
-  dword = xhci_read_dword(pci_bar_address + offset + 0);
+  offset = usb_mmio_read_dword(pci_bar_address + 0x18);
+  dword = usb_mmio_read_dword(pci_bar_address + offset + 0);
   sprintf(buffer, "0x%08X", dword);
   gtk_entry_set_text(GTK_ENTRY(entry[16]), buffer);
   g_signal_connect(GTK_EDITABLE(entry[16]), "changed", G_CALLBACK(on_entry_changed), NULL);
   // show up to 10 port register sets
   for (i = 0; i < n_ports; i++) {
-    dword = xhci_read_dword(pci_bar_address + XHCI_PORT_SET_OFFSET + (i * 16));
+    dword = usb_mmio_read_dword(pci_bar_address + XHCI_PORT_SET_OFFSET + (i * 16));
     sprintf(buffer, "0x%08X", dword);
     gtk_entry_set_text(GTK_ENTRY(entry[i * 2 + 17]), buffer);
     g_signal_connect(GTK_EDITABLE(entry[i * 2 + 17]), "changed", G_CALLBACK(on_entry_changed), NULL);

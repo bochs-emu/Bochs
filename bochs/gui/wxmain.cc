@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -334,6 +334,7 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
   EVT_MENU(ID_Edit_Keyboard, MyFrame::OnEditKeyboard)
   EVT_MENU(ID_Edit_Boot, MyFrame::OnEditBoot)
   EVT_MENU(ID_Edit_Serial_Parallel, MyFrame::OnEditSerialParallel)
+  EVT_MENU(ID_Edit_USB, MyFrame::OnEditUSB)
   EVT_MENU(ID_Edit_Network, MyFrame::OnEditNet)
   EVT_MENU(ID_Edit_Sound, MyFrame::OnEditSound)
   EVT_MENU(ID_Edit_Other, MyFrame::OnEditOther)
@@ -392,7 +393,8 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
   menuEdit->Append(ID_Edit_Display, wxT("&Display + Interface..."));
   menuEdit->Append(ID_Edit_Keyboard, wxT("&Keyboard + Mouse..."));
   menuEdit->Append(ID_Edit_Boot, wxT("&Boot..."));
-  menuEdit->Append(ID_Edit_Serial_Parallel, wxT("&Serial/Parallel/USB..."));
+  menuEdit->Append(ID_Edit_Serial_Parallel, wxT("&Serial/Parallel..."));
+  menuEdit->Append(ID_Edit_USB, wxT("&USB Configuration..."));
   menuEdit->Append(ID_Edit_Network, wxT("&Network..."));
   menuEdit->Append(ID_Edit_Sound, wxT("S&ound..."));
   menuEdit->Append(ID_Edit_Other, wxT("&Other..."));
@@ -637,23 +639,51 @@ void MyFrame::OnEditBoot(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnEditSerialParallel(wxCommandEvent& WXUNUSED(event))
 {
-  ParamDialog dlg(this, -1);
   bx_list_c *list = (bx_list_c*) SIM->get_param("ports");
-  dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
-  dlg.AddParam(list);
-  dlg.SetRuntimeFlag(sim_thread != NULL);
-  dlg.ShowModal();
+  if (list->get_size() > 0) {
+    ParamDialog dlg(this, -1);
+    dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
+    dlg.AddParam(list);
+    dlg.SetRuntimeFlag(sim_thread != NULL);
+    dlg.ShowModal();
+  } else {
+    wxMessageBox(wxT("Nothing to configure in this section!"),
+                 wxT("Not enabled"), wxOK | wxICON_ERROR, this);
+  }
+}
+
+void MyFrame::OnEditUSB(wxCommandEvent& WXUNUSED(event))
+{
+#if BX_SUPPORT_PCIUSB
+  bx_list_c *list = (bx_list_c*) SIM->get_param("usb");
+  if (list->get_size() > 0) {
+    ParamDialog dlg(this, -1);
+    dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
+    dlg.AddParam(list);
+    dlg.SetRuntimeFlag(sim_thread != NULL);
+    dlg.ShowModal();
+  }
+  else
+#endif
+  {
+    wxMessageBox(wxT("Nothing to configure in this section!"),
+                 wxT("Not enabled"), wxOK | wxICON_ERROR, this);
+  }
 }
 
 void MyFrame::OnEditNet(wxCommandEvent& WXUNUSED(event))
 {
+#if BX_NETWORKING
   bx_list_c *list = (bx_list_c*) SIM->get_param("network");
-  if (list != NULL) {
+  if (list->get_size() > 0) {
     ParamDialog dlg(this, -1);
     dlg.SetTitle(wxString(list->get_title(), wxConvUTF8));
     dlg.AddParam(list);
     dlg.ShowModal();
-  } else {
+  }
+  else
+#endif
+  {
     wxMessageBox(wxT("Nothing to configure in this section!"),
                  wxT("Not enabled"), wxOK | wxICON_ERROR, this);
   }

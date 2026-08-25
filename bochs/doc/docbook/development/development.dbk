@@ -129,6 +129,7 @@ For the configuration interface there are also some different implementations: t
 <row><entry>cpu/avx</entry><entry>sources for emulating AVX instructions</entry></row>
 <row><entry>cpu/cpudb</entry><entry>sources for emulating different cpu models</entry></row>
 <row><entry>cpu/fpu</entry><entry>the fpu emulation sources</entry></row>
+<row><entry>cpu/softfloat3e</entry><entry>the softfloat library sources release 3e</entry></row>
 <row><entry>disasm</entry><entry>the disassembler for the Bochs debugger</entry></row>
 <row><entry>doc/docbook</entry><entry>the Bochs documentation in DocBook format</entry></row>
 <row><entry>doc/man</entry><entry>Bochs manual pages</entry></row>
@@ -3457,7 +3458,7 @@ unpack the release TAR file from above.
 <para>
 In Cygwin or mingw32/mingw64:
 <screen>
-  sh .conf.win32-vcpp         # runs configure
+  sh .conf.win64-vcpp         # runs configure for 64-bit
   make win32_snap             # unzip workspace, make a win32 source ZIP
 </screen>
 The source ZIP is present in the parent directory of the Bochs root and now
@@ -3467,7 +3468,7 @@ if necessary.
 <para>
 Open up Visual C++ and load the workspace file Bochs.sln.  Check
 the Build:Set Active Project Configuration is set the way you want it.
-For releases I use "x64 Release".
+For releases I'm using "x64 Release".
 </para>
 <para>
 Do make <emphasis>install_win32</emphasis> into the NSIS folder in the Bochs
@@ -3514,10 +3515,9 @@ News" section on SF.
 <section id="project-webspace"><title>Bochs project webspace</title>
 <para>
 The Bochs project webspace is stored under the SF directory <filename>/home/project-web/bochs</filename>.
-It can be accessed from the SF shell using SSH or with the commands <command>sftp</command>,
-<command>scp</command> and <command>rsync</command>. Some parts of the directory
-structure must be updated from the local CVS repository, others from <filename>Bochs-sfsite</filename>
-GIT repository. The online documentation, disk images and screenshots must be uploaded manually.
+It can be accessed with the commands <command>sftp</command>, <command>scp</command> and <command>rsync</command>.
+Most of the content must be updated from <filename>Bochs-sfsite</filename>
+GIT repository. The disk images and screenshots must be uploaded manually.
 <table>
 <title>Directory structure</title>
 <tgroup cols="2">
@@ -3549,63 +3549,36 @@ GIT repository. The online documentation, disk images and screenshots must be up
 
 <section id="update-website"><title>Updating the Bochs website content</title>
 <para>
-The main HTML content of the Bochs website (except online documentation) is stored
-in the <filename>Bochs-sfsite</filename> GIT repository on SourceForge. Unlike
-other SF projects you don't need to upload these files to the Bochs project webspace.
-Running a simple 'git pull' on the SF shell is enough after new the files have been
-pushed to the repository. The example below shows how to start the SF shell with SSH
-and to update the HTML files.
+The main HTML content of the Bochs website is stored in the <filename>Bochs-sfsite</filename>
+GIT repository on SourceForge. Since updating from the SF shell is no longer
+supported and a GIT commit cannot trigger an update of the webspace, it must be
+done manually using <command>sftp</command>.
 <screen>
-ssh -t vruppert,bochs@shell.sourceforge.net create
-
-Requesting a new shell for "vruppert" and waiting for it to start.
-queued... creating... starting...
-
-This is an interactive shell created for user vruppert,bochs.
-Use the "timeleft" command to see how much time remains before shutdown.
-Use the "shutdown" command to destroy the shell before the time limit.
-For path information and login help, type "sf-help".
-
-[vruppert@shell-24002 ~]$ cd /home/project-web/bochs/htdocs/
-[vruppert@shell-24002 htdocs]$ git pull /home/git/p/bochs/Bochs-sfsite.git/
-remote: Counting objects: 5, done.
-remote: Compressing objects: 100% (3/3), done.
-remote: Total 3 (delta 2), reused 0 (delta 0)
-Unpacking objects: 100% (3/3), done.
-From /home/git/p/bochs/Bochs-sfsite
- * branch            HEAD       -> FETCH_HEAD
-Updating 7fca1d7..b1aca46
-Fast-forward
- index.html | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-[vruppert@shell-24002 htdocs]$ shutdown
-Requesting that your shell be shut down.
-This request will be processed soon.
-[vruppert@shell-21003 htdocs]$ Connection to 10.60.21.43 closed by remote host.
-Connection to 10.60.21.43 closed.
-Connection to shell.sourceforge.net closed.
+$ sftp vruppert@web.sf.net
+Connected to web.sf.net.
+sftp> cd /home/project-web/bochs/htdocs
+sftp> put index.html
+Uploading index.html to /home/project-web/bochs/htdocs/index.html
+index.html                                                                                       100%  241     0.2KB/s   00:01
+sftp> exit
 </screen>
 </para>
 </section>
 
 <section id="update-online-docs"><title>Updating the online documentation</title>
 <para>
-To update the online documentation, a file called <filename>bochsdoc.tar.gz</filename>
-must be generated with the <command>make</command>. This file must be uploaded
-to the location of the online documentation on SF using <command>scp</command>.
-<screen>
-cd doc/docbook
-make bochsdoc.tar.gz
-scp bochsdoc.tar.gz vruppert,bochs@web.sf.net:htdocs/doc/docbook
-</screen>
-After a successful upload, the HTML files must be unpacked from the SF shell.
-See section <link linkend="update-website">Updating the Bochs website content</link>
-how to create a shell.
-<screen>
-cd /home/project-web/bochs/htdocs/doc/docbook
-tar xvzf bochsdoc.tar.gz
-</screen>
+After generating the HTML documentation on Linux or with Cygwin, the files must
+be updated in the <filename>Bochs-sfsite</filename> GIT repository on SourceForge
+(subdirectory <filename>doc/docbook</filename>) and then uploaded to the Bochs webspace.
+See <link linkend="update-website">previous section</link> for details.
 The updated files can be accessed from the sidebar of the Bochs website.
+</para>
+<para>
+In addition to this a file called <filename>bochsdoc.tar.gz</filename> must be
+generated with the <command>make</command>. This file also must be uploaded to
+the location of the online documentation on SF using <command>sftp</command>.
+This file will be downloaded in the build process on platforms that cannot
+generate the HTML docs.
 </para>
 </section>
 

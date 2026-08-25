@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2024  The Bochs Project
+//                2009-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -22,24 +22,7 @@
 #ifndef BX_IODEV_UHCI_CORE_H
 #define BX_IODEV_UHCI_CORE_H
 
-#define USB_UHCI_PORTS 2
-
-#define STATUS2_IOC (1<<0)
-#define STATUS2_SPD (1<<1)
-
-#define USB_UHCI_QUEUE_STACK_SIZE  256
-#define USB_UHCI_LOOP_COUNT        256
-
-#define USB_UHCI_IS_LINK_VALID(item)  ((item & 1) == 0)  // return TRUE if valid link address
-#define USB_UHCI_IS_LINK_QUEUE(item)  ((item & 2) == 2)  // return TRUE if link is a queue pointer
-
-// the standard max bandwidth (bytes per frame) for the UHCI is 1280 bytes
-#define USB_UHCI_STD_MAX_BANDWIDTH  1280
-
-struct USB_UHCI_QUEUE_STACK {
-  int    queue_cnt;
-  Bit32u queue_stack[USB_UHCI_QUEUE_STACK_SIZE];
-};
+#include "usb_uhci-defs.h"
 
 typedef struct {
   int    timer_index;
@@ -173,36 +156,29 @@ typedef struct {
   Bit8u  devfunc;
 } bx_uhci_core_t;
 
-#pragma pack (push, 1)
-struct TD {
-  Bit32u dword0;
-  Bit32u dword1;
-  Bit32u dword2;
-  Bit32u dword3;
-};
-
-struct QUEUE {
-  Bit32u horz;
-  Bit32u vert;
-};
-#pragma pack (pop)
-
 class bx_uhci_core_c : public bx_pci_device_c {
 public:
   bx_uhci_core_c();
   virtual ~bx_uhci_core_c();
   virtual void init_uhci(Bit8u devfunc, Bit16u venid, Bit16u devid, Bit8u rev, Bit8u headt, Bit8u intp);
   virtual void reset_uhci(unsigned);
-  void    uhci_register_state(bx_list_c *parent);
+  void    uhci_register_state(const char *pname, bx_list_c *parent);
   virtual void after_restore_state(void);
   virtual void set_port_device(int port, usb_device_c *dev);
   virtual void pci_write_handler(Bit8u address, Bit32u value, unsigned io_len);
 
   int event_handler(int event, void *ptr, int port);
 
+#if BX_USB_DEBUGGER
+  void enable_usbdbg() {usb_debug = true;}
+#endif
+
 protected:
   bx_uhci_core_t hub;
   Bit8u          global_reset;
+#if BX_USB_DEBUGGER
+  bool           usb_debug;
+#endif
 
   USBAsync *packets;
 

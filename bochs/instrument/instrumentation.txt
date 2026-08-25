@@ -66,22 +66,16 @@ state.  The  callback  receives  monitored  memory  range and MWAIT flags as a
 parameters.
 
 
-	void bx_instr_cnear_branch_taken(unsigned cpu, bx_address branch_rip, bx_address new_rip);
+	void bx_instr_near_branch_taken(unsigned cpu, unsigned what, bx_address branch_rip, bx_address new_rip);
 
 The  callback  is  called  each time, when currently executed instruction is a
-conditional near branch and it is taken.
+near branch (conditional or unconditional) and it was taken.
 
 
-	void bx_instr_cnear_branch_not_taken(unsigned cpu, bx_address branch_rip);
+	void bx_instr_near_branch_not_taken(unsigned cpu, bx_address branch_rip);
 
 The  callback  is  called  each time, when currently executed instruction is a
 conditional near branch and it is not taken.
-
-
-	void bx_instr_ucnear_branch(unsigned cpu, unsigned what, bx_address branch_rip, bx_address new_rip);
-
-The  callback  is  called each time, when currently executed instruction is an
-unconditional near branch (always taken).
 
 
 	void bx_instr_far_branch(unsigned cpu, unsigned what, Bit16u prev_cs, bx_address prev_rip, Bit16u new_cs, bx_address new_rip);
@@ -89,19 +83,22 @@ unconditional near branch (always taken).
 The  callback  is  called each time, when currently executed instruction is an
 unconditional far branch (always taken).
 
-Possible operation types, passed through bx_instr_ucnear_branch and bx_instr_far_branch are:
+Possible operation types, passed through bx_instr_near_branch_taken and bx_instr_far_branch are:
 
-	#define BX_INSTR_IS_JMP            10
-	#define BX_INSTR_IS_JMP_INDIRECT   11
-	#define BX_INSTR_IS_CALL           12
-	#define BX_INSTR_IS_CALL_INDIRECT  13
-	#define BX_INSTR_IS_RET            14
-	#define BX_INSTR_IS_IRET           15
-	#define BX_INSTR_IS_INT            16
-	#define BX_INSTR_IS_SYSCALL        17
-	#define BX_INSTR_IS_SYSRET         18
-	#define BX_INSTR_IS_SYSENTER       19
-	#define BX_INSTR_IS_SYSEXIT        20
+  BX_INSTR_IS_JMP_CONDITIONAL_NOT_TAKEN = 10
+  BX_INSTR_IS_JMP_CONDITIONAL_TAKEN = 11
+  BX_INSTR_IS_JMP = 12
+  BX_INSTR_IS_JMP_INDIRECT = 13
+  BX_INSTR_IS_CALL = 14
+  BX_INSTR_IS_CALL_INDIRECT = 15
+  BX_INSTR_IS_RET = 16
+  BX_INSTR_IS_IRET = 17
+  BX_INSTR_IS_INT = 18
+  BX_INSTR_IS_SYSCALL = 19
+  BX_INSTR_IS_SYSRET = 20
+  BX_INSTR_IS_SYSENTER = 21
+  BX_INSTR_IS_SYSEXIT = 22
+  BX_INSTR_IS_UIRET = 23
 
 
 	void bx_instr_vmexit(unsigned cpu, Bit32u reason, Bit64u qualification);

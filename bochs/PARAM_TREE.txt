@@ -29,6 +29,8 @@ cpu
   reset_on_triple_fault
   msrs
   cpuid_limit_winnt
+  force_ignne
+  cpuid_freq
   mwait_is_nop
   brand_string
 
@@ -189,24 +191,25 @@ ports
       outfile
     2
       (same options as ports.parallel.1)
-  usb
-    uhci
-      enabled
-      port1
-        device
-        options
-      port2
-        device
-        options
-    ohci
-      (same options as ports.usb.uhci)
-    ehci
-      (same options as ports.usb.uhci)
-      companion
-    xhci
-      (same options as ports.usb.uhci)
-      model
-      n_ports
+
+usb
+  uhci
+    enabled
+    port1
+      device
+      options
+    port2
+      device
+      options
+  ohci
+    (same options as usb.uhci)
+  ehci
+    (same options as usb.uhci)
+    companion
+  xhci
+    (same options as usb.uhci)
+    model
+    n_ports
   usb_debug
     type
     reset

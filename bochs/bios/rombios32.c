@@ -4,7 +4,7 @@
 //
 //  32 bit Bochs BIOS init code
 //  Copyright (C) 2006       Fabrice Bellard
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -482,7 +482,7 @@ static int cmos_readb(int addr)
 
 void setup_mtrr(void)
 {
-    int i, vcnt, fix, wc;
+    int i, vcnt, fix;
     uint32_t mtrr_cap;
     union {
         uint8_t valb[8];
@@ -500,7 +500,6 @@ void setup_mtrr(void)
     mtrr_cap = rdmsr(MSR_MTRRcap);
     vcnt = mtrr_cap & 0xff;
     fix = mtrr_cap & 0x100;
-    wc = mtrr_cap & 0x400;
     if (!vcnt || !fix)
         return;
 
@@ -865,6 +864,9 @@ static void pci_bios_init_bridges(PCIDevice *d)
         }
         outb(0x4d0, elcr[0]);
         outb(0x4d1, elcr[1]);
+        if (smp_cpus == 1) {
+          pci_config_writeb(d, 0x4e, 0x23); /* Enable coprocessor error function */
+        }
         BX_INFO("PIIX3/PIIX4 init: elcr=%02x %02x\n",
                 elcr[0], elcr[1]);
       } else if (device_id == PCI_DEVICE_ID_INTEL_82441 || device_id == PCI_DEVICE_ID_INTEL_82437) {
@@ -1004,12 +1006,14 @@ static void pci_bios_init_pcirom(PCIDevice *d, uint32_t paddr)
 {
     PCIDevice d1, *i440fx = &d1;
     uint32_t tmpaddr, size;
-    uint8_t reg, v;
+    uint8_t cmd, reg, v;
     int copied, shift, tmpsize;
 
     i440fx->bus = 0;
     i440fx->devfn = 0;
     if (paddr != 0) {
+        cmd = pci_config_readw(d, PCI_COMMAND);
+        pci_config_writew(d, PCI_COMMAND, cmd | PCI_COMMAND_MEMORY);
         size = readb((void *)(paddr + 2));
         if (size & 0x03) {
             size &= 0xfc;
@@ -1043,6 +1047,7 @@ static void pci_bios_init_pcirom(PCIDevice *d, uint32_t paddr)
         BX_INFO("PCI ROM copied to 0x%05x (size=0x%05x)\n", pci_bios_rom_start, size);
         pci_bios_rom_start += size;
         pci_config_writeb(d, PCI_ROM_ADDRESS, 0x00);
+        pci_config_writew(d, PCI_COMMAND, cmd);
     }
 }
 
@@ -1147,6 +1152,11 @@ static void pci_bios_init_device(PCIDevice *d)
                             *paddr += size;
                         }
                         init_bar[i] = 1;
+                        if ((val & 0x06) == PCI_ADDRESS_SPACE_MEM_64_BIT) {
+                          pci_set_io_region_addr(d, i + 1, 0);
+                          init_bar[i + 1] = 1;
+                          i++;
+                        }
                     }
                 }
             }
@@ -1657,6 +1667,8 @@ struct madt_int_override
 } __attribute__((__packed__));
 
 #include "acpi-dsdt.hex"
+#undef __ACPI_DSDT_HEX__
+#include "acpi-dsdt-nohpet.hex"
 
 static inline uint16_t cpu_to_le16(uint16_t x)
 {
@@ -1758,7 +1770,7 @@ static uint8_t* find_acpi_pci2isa_entry(const uint8_t *data, int len)
 {
     int i;
 
-    for (i = 0; i < len; i += 2) {
+    for (i = 0; i < len; i++) {
         if ((*(uint32_t *)&data[i] == 0x5f415349) &&
            (*(uint32_t *)(&data[i + 5]) == 0x5244415f)) {
             return (uint8_t*)&data[i];
@@ -1821,7 +1833,11 @@ void acpi_bios_init(void)
 
     dsdt_addr = addr;
     dsdt = (void *)(addr);
-    addr += sizeof(AmlCode);
+    if (hpet_enabled) {
+        addr += sizeof(AmlCode1);
+    } else {
+        addr += sizeof(AmlCode2);
+    }
 
     ssdt_addr = addr;
     ssdt = (void *)(addr);
@@ -1906,7 +1922,11 @@ void acpi_bios_init(void)
     BX_INFO("Firmware waking vector %p\n", &facs->firmware_waking_vector);
 
     /* DSDT */
-    memcpy(dsdt, AmlCode, sizeof(AmlCode));
+    if (hpet_enabled) {
+        memcpy(dsdt, AmlCode1, sizeof(AmlCode1));
+    } else {
+        memcpy(dsdt, AmlCode2, sizeof(AmlCode2));
+    }
     if (chipset_i440bx) {
         int size = ssdt_addr - dsdt_addr;
         uint8_t *ptr = find_acpi_pci2isa_entry(dsdt, size);
@@ -2170,7 +2190,7 @@ smbios_entry_point_init(void *start,
     }
 
 /* Type 0 -- BIOS Information */
-#define RELEASE_DATE_STR "16/02/2025"
+#define RELEASE_DATE_STR "23/08/2026"
 static void *
 smbios_type_0_init(void *start)
 {
@@ -2375,7 +2395,7 @@ smbios_type_17_init(void *start, uint32_t memory_size_mb, int instance)
     p->type_detail = 0;
 
     start += sizeof(struct smbios_type_17);
-    snprintf(start, 8, "DIMM %d", instance);
+    snprintf(start, 12, "DIMM %d", instance);
     start += strlen(start) + 1;
     *((uint8_t *)start) = 0;
 
@@ -2472,7 +2492,7 @@ void smbios_init(void)
     bios_table_cur_addr = align(bios_table_cur_addr, 16);
     start = (void *)(bios_table_cur_addr);
 
-	p = (char *)start + sizeof(struct smbios_entry_point);
+    p = (char *)start + sizeof(struct smbios_entry_point);
 
 #define add_struct(fn) do { \
     q = (fn); \

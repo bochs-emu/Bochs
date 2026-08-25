@@ -149,8 +149,8 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR cr0.set_TS(0); // no task switch (bit 3)
   BX_CPU_THIS_PTR cr0.set_PG(0); // paging disabled (bit 31)
 
-#if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR cr4.set32(0);
+#if BX_CPU_LEVEL >= 4
+  BX_CPU_THIS_PTR cr4.set(0);
 #endif
 
 #if BX_CPU_LEVEL >= 5
@@ -274,7 +274,7 @@ void BX_CPU_C::init_SMRAM(void)
   smram_map[SMRAM_FIELD_CR0] = SMRAM_TRANSLATE(0x7f58);
   smram_map[SMRAM_FIELD_CR3_HI32] = SMRAM_TRANSLATE(0x7f54);    // zero when physical address size 32-bit
   smram_map[SMRAM_FIELD_CR3] = SMRAM_TRANSLATE(0x7f50);
-  smram_map[SMRAM_FIELD_CR4_HI32] = SMRAM_TRANSLATE(0x7f4c);    // always zero
+  smram_map[SMRAM_FIELD_CR4_HI32] = SMRAM_TRANSLATE(0x7f4c);
   smram_map[SMRAM_FIELD_CR4] = SMRAM_TRANSLATE(0x7f48);
   smram_map[SMRAM_FIELD_SSP_HI32] = SMRAM_TRANSLATE(0x7f44);
   smram_map[SMRAM_FIELD_SSP] = SMRAM_TRANSLATE(0x7f40);
@@ -438,7 +438,10 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
   SMRAM_FIELD(saved_state, SMRAM_FIELD_CR0) = BX_CPU_THIS_PTR cr0.get32();
   SMRAM_FIELD(saved_state, SMRAM_FIELD_CR3_HI32) = GET32H(BX_CPU_THIS_PTR cr3);
   SMRAM_FIELD(saved_state, SMRAM_FIELD_CR3) = GET32L(BX_CPU_THIS_PTR cr3);
-  SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4) = BX_CPU_THIS_PTR cr4.get32();
+#if BX_SUPPORT_FRED
+  SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4_HI32) = GET32H(BX_CPU_THIS_PTR cr4.get());
+#endif
+  SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4) = GET32L(BX_CPU_THIS_PTR cr4.get());
   SMRAM_FIELD(saved_state, SMRAM_FIELD_EFER) = BX_CPU_THIS_PTR efer.get32();
 
   SMRAM_FIELD(saved_state, SMRAM_FIELD_SMBASE_OFFSET)   = BX_CPU_THIS_PTR smbase;
@@ -489,7 +492,7 @@ bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
   smm_state.cr0.val = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR0);
   smm_state.cr3 = SMRAM_FIELD64(saved_state, SMRAM_FIELD_CR3_HI32, SMRAM_FIELD_CR3);
-  smm_state.cr4.val = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4);
+  smm_state.cr4.val = SMRAM_FIELD64(saved_state, SMRAM_FIELD_CR4_HI32, SMRAM_FIELD_CR4);
   smm_state.efer.val = SMRAM_FIELD(saved_state, SMRAM_FIELD_EFER);
   smm_state.eflags = SMRAM_FIELD(saved_state, SMRAM_FIELD_EFLAGS);
 
@@ -550,8 +553,10 @@ void BX_CPU_C::smram_save_state(Bit32u *saved_state)
 
   SMRAM_FIELD(saved_state, SMRAM_FIELD_CR0) = BX_CPU_THIS_PTR cr0.get32();
   SMRAM_FIELD(saved_state, SMRAM_FIELD_CR3) = BX_CPU_THIS_PTR cr3;
+#if BX_CPU_LEVEL >= 4
+  SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4) = BX_CPU_THIS_PTR cr4.get();
+#endif
 #if BX_CPU_LEVEL >= 5
-  SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4) = BX_CPU_THIS_PTR cr4.get32();
   SMRAM_FIELD(saved_state, SMRAM_FIELD_EFER) = BX_CPU_THIS_PTR efer.get32();
 #endif
   SMRAM_FIELD(saved_state, SMRAM_FIELD_DR6) = BX_CPU_THIS_PTR dr6.get32();
@@ -600,8 +605,10 @@ bool BX_CPU_C::smram_restore_state(const Bit32u *saved_state)
 
   smm_state.cr0.val = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR0);
   smm_state.cr3 = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR3);
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   smm_state.cr4.val = SMRAM_FIELD(saved_state, SMRAM_FIELD_CR4);
+#endif
+#if BX_CPU_LEVEL >= 5
   smm_state.efer.val = SMRAM_FIELD(saved_state, SMRAM_FIELD_EFER);
 #endif
 
@@ -707,16 +714,16 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
     return false;
   }
 
-#if BX_CPU_LEVEL >= 5
-  if (!check_CR4(smm_state->cr4.get32())) {
+#if BX_CPU_LEVEL >= 4
+  if (!check_CR4(smm_state->cr4.get())) {
     BX_PANIC(("SMM restore: CR4 consistency check failed !"));
     return false;
   }
 #endif
 
   BX_CPU_THIS_PTR cr0.set32(smm_state->cr0.get32());
-#if BX_CPU_LEVEL >= 5
-  BX_CPU_THIS_PTR cr4.set32(smm_state->cr4.get32());
+#if BX_CPU_LEVEL >= 4
+  BX_CPU_THIS_PTR cr4.set(smm_state->cr4.get());
 #endif
   BX_CPU_THIS_PTR cr3 = smm_state->cr3;
 

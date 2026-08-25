@@ -26,20 +26,35 @@ class MSR_Descriptor {
 private:
   const char *msrname;
   unsigned cpu_feature;
+  bool force_canonical;
+  Bit64u reserved;
 
 public:
-  MSR_Descriptor(const char *name, unsigned feature): msrname(name), cpu_feature(feature) {}
+  MSR_Descriptor(const char *name, unsigned feature, bool canonical = false, Bit64u reserved_bits = 0): msrname(name), cpu_feature(feature), force_canonical(canonical), reserved(reserved_bits) {}
  ~MSR_Descriptor() {}
 
   const char* get_name() const { return msrname; }
   unsigned get_cpu_feature() const { return cpu_feature; }
+  bool canonical() const { return force_canonical; }
+  bool read_only() const { return ~reserved == 0; }
+
+  void set_reserved_bits(Bit64u reserved_bits) { reserved = reserved_bits; }
+
+  Bit64u get_reserved_bits() const { return reserved; }
+  bool check_reserved_bits_violation(Bit64u value) const { return value & reserved; }
 };
 
 typedef MSR_Descriptor* MSR_DescriptorPtr;
 
 enum MSR_Register {
   BX_MSR_TSC            = 0x010,
+  BX_MSR_PLATFORM_ID    = 0x017,
   BX_MSR_APICBASE       = 0x01b,
+
+#if BX_SUPPORT_X86_64
+  BX_MSR_IA32_USER_MSR_CTL = 0x01c,
+#endif
+
   BX_MSR_TSC_ADJUST     = 0x03b,
   BX_MSR_TSC_DEADLINE   = 0x6e0,
 
@@ -53,6 +68,9 @@ enum MSR_Register {
   BX_MSR_IA32_ARCH_CAPABILITIES = 0x10a,
   BX_MSR_IA32_FLUSH_CMD         = 0x10b,
 
+  BX_MSR_IA32_MPERF = 0xe7,
+  BX_MSR_IA32_APERF = 0xe8,
+
 #if BX_CPU_LEVEL >= 6
   BX_MSR_SYSENTER_CS  = 0x174,
   BX_MSR_SYSENTER_ESP = 0x175,
@@ -61,6 +79,18 @@ enum MSR_Register {
 
   BX_MSR_IA32_XFD = 0x1c4,
   BX_MSR_IA32_XFD_ERROR = 0x1c5,
+
+#if BX_SUPPORT_X86_64
+  BX_MSR_IA32_FRED_RSP0    = 0x1cc,
+  BX_MSR_IA32_FRED_RSP1    = 0x1cd,
+  BX_MSR_IA32_FRED_RSP2    = 0x1ce,
+  BX_MSR_IA32_FRED_RSP3    = 0x1cf,
+  BX_MSR_IA32_FRED_STKLVLS = 0x1d0,
+  BX_MSR_IA32_FRED_SSP1    = 0x1d1,
+  BX_MSR_IA32_FRED_SSP2    = 0x1d2,
+  BX_MSR_IA32_FRED_SSP3    = 0x1d3,
+  BX_MSR_IA32_FRED_CONFIG  = 0x1d4,
+#endif
 
   BX_MSR_DEBUGCTLMSR      = 0x1d9,
   BX_MSR_LASTBRANCHFROMIP = 0x1db,
@@ -169,8 +199,6 @@ enum MSR_Register {
   BX_MSR_IA32_UINTR_MISC = 0x988,
   BX_MSR_IA32_UINTR_PD = 0x989, // interface to UPID_ADDR
   BX_MSR_IA32_UINTR_TT = 0x98A, // interface to UITT_ADDR
-
-  BX_MSR_IA32_UINTR_TIMER = 0x1B00, // for User Timer feature (not implemented yet)
 #endif
 
   BX_MSR_XSS = 0xDA0,

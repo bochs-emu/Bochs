@@ -1883,6 +1883,9 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
   }
 
   offset += BX_VGA_THIS s.ext_offset;
+  if (((offset << 2) + 3) >= BX_VGA_THIS s.memsize) {
+    return; // out of bounds
+  }
 
   switch (BX_VGA_THIS s.graphics_ctrl.write_mode) {
     unsigned i;

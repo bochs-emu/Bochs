@@ -152,16 +152,9 @@ SectionEnd
 Section "ROM Images (required)" SecROMs
   SectionIn 1 2 RO
 
-  SetOutPath "$INSTDIR"
+  SetOutPath "$INSTDIR\bios"
 
-  File "${SRCDIR}\BIOS-bochs-*"
-  File "${SRCDIR}\VGABIOS-*"
-  File "${SRCDIR}\i440fx.bin"
-  File "${SRCDIR}\bios.bin-*"
-  File "${SRCDIR}\vgabios-cirrus.bin-*"
-  File "${SRCDIR}\SeaBIOS-README.txt"
-  File "${SRCDIR}\SeaVGABIOS-README.txt"
-  File "${SRCDIR}\README-i440fx.txt"
+  File "${SRCDIR}\bios\*"
 SectionEnd
 
 Section "Documentation in HTML" SecDocs
@@ -337,6 +330,9 @@ Section "Uninstall"
   Delete "$INSTDIR\SeaBIOS-README.txt"
   Delete "$INSTDIR\SeaVGABIOS-README.txt"
   Delete "$INSTDIR\i440fx.bin"
+  Delete "$INSTDIR\README-i440fx"
+  Delete "$INSTDIR\RELEASEX64_OVMF.fd"
+  Delete "$INSTDIR\OVMF-pure-efi.fd"
   Delete "$INSTDIR\dlxlinux\*"
   Delete "$INSTDIR\docs\index.html"
   Delete "$INSTDIR\docs\user\*"

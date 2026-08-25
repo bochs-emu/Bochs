@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -249,10 +249,16 @@ private:
   } emuldata;
 
       /* DMA input and output, 8 and 16 bit */
-  BX_SB16_SMF Bit16u dma_write8(Bit8u *buffer, Bit16u maxlen);
-  BX_SB16_SMF Bit16u dma_read8(Bit8u *buffer, Bit16u maxlen);
-  BX_SB16_SMF Bit16u dma_write16(Bit16u *buffer, Bit16u maxlen);
-  BX_SB16_SMF Bit16u dma_read16(Bit16u *buffer, Bit16u maxlen);
+  static Bit16u dma_write8_handler(void *this_ptr, Bit8u *buffer, Bit16u maxlen);
+  static Bit16u dma_read8_handler(void *this_ptr, Bit8u *buffer, Bit16u maxlen);
+  static Bit16u dma_write16_handler(void *this_ptr, Bit16u *buffer, Bit16u maxlen);
+  static Bit16u dma_read16_handler(void *this_ptr, Bit16u *buffer, Bit16u maxlen);
+#if !BX_USE_SB16_SMF
+  Bit16u dma_write8(Bit8u *buffer, Bit16u maxlen);
+  Bit16u dma_read8(Bit8u *buffer, Bit16u maxlen);
+  Bit16u dma_write16(Bit16u *buffer, Bit16u maxlen);
+  Bit16u dma_read16(Bit16u *buffer, Bit16u maxlen);
+#endif
 
       /* the MPU 401 part of the emulator */
   BX_SB16_SMF Bit32u mpu_status();                   // read status port   3x1

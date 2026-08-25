@@ -26,6 +26,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "pc_system.h"
 #include "dma.h"
 
 #include "bx_debug/debug.h"
@@ -67,9 +68,9 @@ bx_dma_c::~bx_dma_c()
   BX_DEBUG(("Exit"));
 }
 
-bool bx_dma_c::registerDMA8Channel(unsigned channel,
-    Bit16u (* dmaRead)(Bit8u *data_byte, Bit16u maxlen),
-    Bit16u (* dmaWrite)(Bit8u *data_byte, Bit16u maxlen),
+bool bx_dma_c::registerDMA8Channel(unsigned channel, void *this_ptr,
+    Bit16u (* dmaRead)(void *this_ptr, Bit8u *data_byte, Bit16u maxlen),
+    Bit16u (* dmaWrite)(void *this_ptr, Bit8u *data_byte, Bit16u maxlen),
     const char *name)
 {
   if (channel > 3) {
@@ -81,15 +82,16 @@ bool bx_dma_c::registerDMA8Channel(unsigned channel,
     return false; // Fail
   }
   BX_INFO(("channel %u used by %s", channel, name));
+  BX_DMA_THIS h[channel].this_ptr8  = this_ptr;
   BX_DMA_THIS h[channel].dmaRead8  = dmaRead;
   BX_DMA_THIS h[channel].dmaWrite8 = dmaWrite;
   BX_DMA_THIS s[0].chan[channel].used = true;
   return true; // OK
 }
 
-bool bx_dma_c::registerDMA16Channel(unsigned channel,
-    Bit16u (* dmaRead)(Bit16u *data_word, Bit16u maxlen),
-    Bit16u (* dmaWrite)(Bit16u *data_word, Bit16u maxlen),
+bool bx_dma_c::registerDMA16Channel(unsigned channel, void *this_ptr,
+    Bit16u (* dmaRead)(void *this_ptr, Bit16u *data_word, Bit16u maxlen),
+    Bit16u (* dmaWrite)(void *this_ptr, Bit16u *data_word, Bit16u maxlen),
     const char *name)
 {
   if ((channel < 4) || (channel > 7)) {
@@ -102,6 +104,7 @@ bool bx_dma_c::registerDMA16Channel(unsigned channel,
   }
   BX_INFO(("channel %u used by %s", channel, name));
   channel &= 0x03;
+  BX_DMA_THIS h[channel].this_ptr16  = this_ptr;
   BX_DMA_THIS h[channel].dmaRead16  = dmaRead;
   BX_DMA_THIS h[channel].dmaWrite16 = dmaWrite;
   BX_DMA_THIS s[1].chan[channel].used = true;
@@ -137,20 +140,20 @@ void bx_dma_c::init(void)
 
   // 0000..000F
   for (i=0x0000; i<=0x000F; i++) {
-    DEV_register_ioread_handler(this, read_handler, i, "DMA controller", 1);
-    DEV_register_iowrite_handler(this, write_handler, i, "DMA controller", 3);
+    DEV_register_ioread_handler(this, read_handler, i, "DMA controller", 7);
+    DEV_register_iowrite_handler(this, write_handler, i, "DMA controller", 7);
   }
 
   // 00080..008F
   for (i=0x0080; i<=0x008F; i++) {
-    DEV_register_ioread_handler(this, read_handler, i, "DMA controller", 1);
-    DEV_register_iowrite_handler(this, write_handler, i, "DMA controller", 3);
+    DEV_register_ioread_handler(this, read_handler, i, "DMA controller", 7);
+    DEV_register_iowrite_handler(this, write_handler, i, "DMA controller", 7);
   }
 
   // 000C0..00DE
   for (i=0x00C0; i<=0x00DE; i+=2) {
-    DEV_register_ioread_handler(this, read_handler, i, "DMA controller", 1);
-    DEV_register_iowrite_handler(this, write_handler, i, "DMA controller", 3);
+    DEV_register_ioread_handler(this, read_handler, i, "DMA controller", 7);
+    DEV_register_iowrite_handler(this, write_handler, i, "DMA controller", 7);
   }
 
   for (i=0; i<2; i++) {
@@ -192,6 +195,13 @@ void bx_dma_c::reset_controller(unsigned num)
   BX_DMA_THIS s[num].command_reg = 0;
   BX_DMA_THIS s[num].status_reg = 0;
   BX_DMA_THIS s[num].flip_flop = 0;
+
+  for (unsigned c=0; c<4; c++) {
+    BX_DMA_THIS s[num].chan[c].mode.mode_type = 0;
+    BX_DMA_THIS s[num].chan[c].mode.address_decrement = 0;
+    BX_DMA_THIS s[num].chan[c].mode.autoinit_enable = 0;
+    BX_DMA_THIS s[num].chan[c].mode.transfer_type = 0;
+  }
 }
 
 void bx_dma_c::register_state(void)
@@ -249,6 +259,11 @@ bx_dma_c::read(Bit32u address, unsigned io_len)
   Bit8u channel;
 
   BX_DEBUG(("read addr=%04x", (unsigned) address));
+
+  if (io_len > 1) {
+    BX_DEBUG(("io read from address %08x, len=%u (using LSB)",
+              (unsigned) address, (unsigned) io_len));
+  }
 
 #if BX_DMA_FLOPPY_IO < 1
   /* if we're not supporting DMA/floppy IO just return a bogus value */
@@ -388,9 +403,9 @@ bx_dma_c::write(Bit32u address, Bit32u value, unsigned io_len)
       return;
     }
 
-    BX_ERROR(("io write to address %08x, len=%u",
+    BX_DEBUG(("io write to address %08x, len=%u (using LSB)",
              (unsigned) address, (unsigned) io_len));
-    return;
+    value &= 0xff;
   }
 
   BX_DEBUG(("write: address=%04x value=%02x",
@@ -703,7 +718,7 @@ void bx_dma_c::raise_HLDA(void)
 
     if (!ma_sl) {
       if (BX_DMA_THIS h[channel].dmaWrite8)
-        len = BX_DMA_THIS h[channel].dmaWrite8(buffer, maxlen);
+        len = BX_DMA_THIS h[channel].dmaWrite8(BX_DMA_THIS h[channel].this_ptr8, buffer, maxlen);
       else
         BX_PANIC(("no dmaWrite handler for channel %u.", channel));
 
@@ -712,7 +727,7 @@ void bx_dma_c::raise_HLDA(void)
       BX_DBG_DMA_REPORT(phy_addr, len, BX_WRITE, buffer[0]); // FIXME
     } else {
       if (BX_DMA_THIS h[channel].dmaWrite16)
-        len = BX_DMA_THIS h[channel].dmaWrite16((Bit16u*)buffer, maxlen / 2);
+        len = BX_DMA_THIS h[channel].dmaWrite16(BX_DMA_THIS h[channel].this_ptr16, (Bit16u*)buffer, maxlen / 2);
       else
         BX_PANIC(("no dmaWrite handler for channel %u.", channel));
 
@@ -727,14 +742,14 @@ void bx_dma_c::raise_HLDA(void)
       DEV_MEM_READ_PHYSICAL_DMA(phy_addr, maxlen, buffer);
 
       if (BX_DMA_THIS h[channel].dmaRead8)
-        len = BX_DMA_THIS h[channel].dmaRead8(buffer, maxlen);
+        len = BX_DMA_THIS h[channel].dmaRead8(BX_DMA_THIS h[channel].this_ptr8, buffer, maxlen);
 
       BX_DBG_DMA_REPORT(phy_addr, len, BX_READ, buffer[0]); // FIXME
     } else {
       DEV_MEM_READ_PHYSICAL_DMA(phy_addr, maxlen, buffer);
 
       if (BX_DMA_THIS h[channel].dmaRead16)
-        len = BX_DMA_THIS h[channel].dmaRead16((Bit16u*)buffer, maxlen / 2);
+        len = BX_DMA_THIS h[channel].dmaRead16(BX_DMA_THIS h[channel].this_ptr16, (Bit16u*)buffer, maxlen / 2);
 
       BX_DBG_DMA_REPORT(phy_addr, len * 2, BX_READ, buffer[0] | (buffer[1] << 16)); // FIXME
     }
@@ -743,12 +758,12 @@ void bx_dma_c::raise_HLDA(void)
 
     if (!ma_sl) {
       if (BX_DMA_THIS h[channel].dmaWrite8)
-        len = BX_DMA_THIS h[channel].dmaWrite8(buffer, 1);
+        len = BX_DMA_THIS h[channel].dmaWrite8(BX_DMA_THIS h[channel].this_ptr8, buffer, 1);
       else
         BX_PANIC(("no dmaWrite handler for channel %u.", channel));
     } else {
       if (BX_DMA_THIS h[channel].dmaWrite16)
-        len = BX_DMA_THIS h[channel].dmaWrite16((Bit16u*)buffer, 1);
+        len = BX_DMA_THIS h[channel].dmaWrite16(BX_DMA_THIS h[channel].this_ptr16, (Bit16u*)buffer, 1);
       else
         BX_PANIC(("no dmaWrite handler for channel %u.", channel));
     }

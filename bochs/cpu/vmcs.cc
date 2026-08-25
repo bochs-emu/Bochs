@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2024 Stanislav Shwartsman
+//   Copyright (c) 2009-2025 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -410,6 +410,12 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_SHADOW_HI:
       return BX_SUPPORT_VMX_EXTENSION(BX_VMX_SPEC_CTRL_VIRTUALIZATION);
 
+#if BX_SUPPORT_FRED
+    case VMCS_64BIT_CONTROL_INJECTED_EVENT_DATA:
+    case VMCS_64BIT_CONTROL_INJECTED_EVENT_DATA_HI:
+      return is_cpu_extension_supported(BX_ISA_FRED);
+#endif
+
     /* VMCS 64-bit read only data fields */
     /* binary 0010_01xx_xxxx_xxx0 */
     case VMCS_64BIT_GUEST_PHYSICAL_ADDR:
@@ -419,6 +425,12 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_MSR_DATA:
     case VMCS_64BIT_MSR_DATA_HI:
       return is_cpu_extension_supported(BX_ISA_MSRLIST);
+
+#if BX_SUPPORT_FRED
+    case VMCS_64BIT_ORIGINAL_EVENT_DATA:
+    case VMCS_64BIT_ORIGINAL_EVENT_DATA_HI:
+      return is_cpu_extension_supported(BX_ISA_FRED);
+#endif
 #endif
 
     /* VMCS 64-bit guest state fields */
@@ -461,6 +473,26 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
       return is_cpu_extension_supported(BX_ISA_PKS);
 #endif
 
+#if BX_SUPPORT_FRED
+    case VMCS_64BIT_GUEST_IA32_FRED_CONFIG:
+    case VMCS_64BIT_GUEST_IA32_FRED_CONFIG_HI:
+    case VMCS_64BIT_GUEST_IA32_FRED_RSP1:
+    case VMCS_64BIT_GUEST_IA32_FRED_RSP1_HI:
+    case VMCS_64BIT_GUEST_IA32_FRED_RSP2:
+    case VMCS_64BIT_GUEST_IA32_FRED_RSP2_HI:
+    case VMCS_64BIT_GUEST_IA32_FRED_RSP3:
+    case VMCS_64BIT_GUEST_IA32_FRED_RSP3_HI:
+    case VMCS_64BIT_GUEST_IA32_FRED_STACK_LEVELS:
+    case VMCS_64BIT_GUEST_IA32_FRED_STACK_LEVELS_HI:
+    case VMCS_64BIT_GUEST_IA32_FRED_SSP1:
+    case VMCS_64BIT_GUEST_IA32_FRED_SSP1_HI:
+    case VMCS_64BIT_GUEST_IA32_FRED_SSP2:
+    case VMCS_64BIT_GUEST_IA32_FRED_SSP2_HI:
+    case VMCS_64BIT_GUEST_IA32_FRED_SSP3:
+    case VMCS_64BIT_GUEST_IA32_FRED_SSP3_HI:
+      return is_cpu_extension_supported(BX_ISA_FRED);
+#endif
+
 #if BX_SUPPORT_VMX >= 2    
     case VMCS_64BIT_GUEST_IA32_SPEC_CTRL:
     case VMCS_64BIT_GUEST_IA32_SPEC_CTRL_HI:
@@ -487,6 +519,26 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_HOST_IA32_PKRS:
     case VMCS_64BIT_HOST_IA32_PKRS_HI:
       return is_cpu_extension_supported(BX_ISA_PKS);
+#endif
+
+#if BX_SUPPORT_FRED
+    case VMCS_64BIT_HOST_IA32_FRED_CONFIG:
+    case VMCS_64BIT_HOST_IA32_FRED_CONFIG_HI:
+    case VMCS_64BIT_HOST_IA32_FRED_RSP1:
+    case VMCS_64BIT_HOST_IA32_FRED_RSP1_HI:
+    case VMCS_64BIT_HOST_IA32_FRED_RSP2:
+    case VMCS_64BIT_HOST_IA32_FRED_RSP2_HI:
+    case VMCS_64BIT_HOST_IA32_FRED_RSP3:
+    case VMCS_64BIT_HOST_IA32_FRED_RSP3_HI:
+    case VMCS_64BIT_HOST_IA32_FRED_STACK_LEVELS:
+    case VMCS_64BIT_HOST_IA32_FRED_STACK_LEVELS_HI:
+    case VMCS_64BIT_HOST_IA32_FRED_SSP1:
+    case VMCS_64BIT_HOST_IA32_FRED_SSP1_HI:
+    case VMCS_64BIT_HOST_IA32_FRED_SSP2:
+    case VMCS_64BIT_HOST_IA32_FRED_SSP2_HI:
+    case VMCS_64BIT_HOST_IA32_FRED_SSP3:
+    case VMCS_64BIT_HOST_IA32_FRED_SSP3_HI:
+      return is_cpu_extension_supported(BX_ISA_FRED);
 #endif
 
 #if BX_SUPPORT_VMX >= 2
@@ -595,26 +647,28 @@ void BX_CPU_C::init_ept_vpid_capabilities(void)
 
   // EPT/VPID capabilities
   // -----------------------------------------------------------
-  //  [0] - BX_EPT_ENTRY_EXECUTE_ONLY support
-  //  [6] - 4-levels EPT page walk length
-  //  [8] - allow UC EPT paging structure memory type
-  // [14] - allow WB EPT paging structure memory type
-  // [16] - EPT 2M pages support
-  // [17] - EPT 1G pages support
-  // [20] - INVEPT instruction supported
-  // [21] - EPT A/D bits supported
-  // [22] - advanced VM-exit information for EPT violations (tied to MBE support)
-  // [23] - Enable Shadow Stack control bit is supported in EPTP (CET)
-  // [25] - INVEPT single-context invalidation supported
-  // [26] - INVEPT all-context invalidation supported
-  // [32] - INVVPID instruction supported
-  // [40] - individual-address INVVPID is supported
-  // [41] - single-context INVVPID is supported
-  // [42] - all-context INVVPID is supported
-  // [43] - single-context-retaining-globals INVVPID is supported
+  // *   [0] - BX_EPT_ENTRY_EXECUTE_ONLY support
+  // *   [6] - 4-levels EPT page walk length
+  //     [7] - 5-levels EPT page walk length
+  // *   [8] - allow UC EPT paging structure memory type
+  // *  [14] - allow WB EPT paging structure memory type
+  // *  [16] - EPT 2M pages support
+  //    [17] - EPT 1G pages support
+  // *  [20] - INVEPT instruction supported
+  //    [21] - EPT A/D bits supported
+  //    [22] - advanced VM-exit information for EPT violations (tied to MBE support)
+  //    [23] - Enable Shadow Stack control bit is supported in EPTP (CET)
+  // *  [25] - INVEPT single-context invalidation supported
+  // *  [26] - INVEPT all-context invalidation supported
+  //    [32] - INVVPID instruction supported
+  //    [40] - individual-address INVVPID is supported
+  //    [41] - single-context INVVPID is supported
+  //    [42] - all-context INVVPID is supported
+  //    [43] - single-context-retaining-globals INVVPID is supported
+  // [48-53] - max HLAT prefix size (not implemented)
 
   if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT)) {
-    cap->vmx_ept_vpid_cap_supported_bits = BX_CONST64(0x06114141);
+    cap->vmx_ept_vpid_cap_supported_bits = BX_CONST64(0x06114141); // these bits are always set when EPT supported
     if (is_cpu_extension_supported(BX_ISA_1G_PAGES))
       cap->vmx_ept_vpid_cap_supported_bits |= (1 << 17);
     if (BX_SUPPORT_VMX_EXTENSION(BX_VMX_EPT_ACCESS_DIRTY))

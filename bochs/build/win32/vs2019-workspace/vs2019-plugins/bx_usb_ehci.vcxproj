@@ -213,6 +213,7 @@
   <ItemGroup>
     <ClInclude Include="..\iodev\iodev.h" />
     <ClInclude Include="..\iodev\usb\ohci_core.h" />
+    <ClInclude Include="..\iodev\usb\usb_uhci-defs.h" />
     <ClInclude Include="..\iodev\usb\uhci_core.h" />
     <ClInclude Include="..\iodev\usb\usb_ehci.h" />
   </ItemGroup>

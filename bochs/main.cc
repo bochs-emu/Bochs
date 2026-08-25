@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -23,6 +23,7 @@
 #include "param_names.h"
 #include "cpu/cpu.h"
 #include "iodev/iodev.h"
+#include "pc_system.h"
 #include "iodev/hdimage/hdimage.h"
 #if BX_NETWORKING
 #include "iodev/network/netmod.h"
@@ -104,6 +105,17 @@ BX_CPU_C bx_cpu;
 BOCHSAPI BX_MEM_C bx_mem;
 
 char *bochsrc_filename = NULL;
+
+Bit32u round_up_to_power_of_2(Bit32u x)
+{
+  Bit32u r = x - 1;
+  r |= r >> 1;
+  r |= r >> 2;
+  r |= r >> 4;
+  r |= r >> 8;
+  r |= r >> 16;
+  return r + 1;
+}
 
 size_t bx_get_timestamp(char *buffer)
 {
@@ -248,7 +260,7 @@ void print_tree(bx_param_c *node, int level, bool xml)
         break;
       }
     case BXT_PARAM_DATA:
-      dbg_printf("'binary data size=%d'", ((bx_shadow_data_c*)node)->get_size());
+      dbg_printf("'binary data size=" FMT_LL "u'", ((bx_shadow_data_c*)node)->get_size());
       break;
     default:
       dbg_printf("(unknown parameter type)");
@@ -722,11 +734,19 @@ int bx_init_main(int argc, char *argv[])
 #if BX_DEBUGGER
     else if (!strcmp("-debugger", argv[arg]) || !strcmp("-dbg", argv[arg])) {
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
+      SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set_enabled(1);
+#if BX_SUPPORT_IODEBUG
+      SIM->get_param(BXPN_IODEBUG_ALL_RINGS)->set_enabled(1);
+#endif
       bx_dbg.debugger_active = true;
     }
     else if (!strncmp("-dbg_gui", argv[arg], 8)) {
 #if BX_DEBUGGER_GUI
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
+      SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set_enabled(1);
+#if BX_SUPPORT_IODEBUG
+      SIM->get_param(BXPN_IODEBUG_ALL_RINGS)->set_enabled(1);
+#endif
       bx_dbg.debugger_active = true;
       bx_dbg.debugger_gui = true;
       if ((strlen(argv[arg]) > 9) && (argv[arg][8] == ':')) {
@@ -1223,7 +1243,7 @@ void bx_init_hardware()
   if ((strlen(msrs_file) > 0) && strcmp(msrs_file, "none"))
     BX_INFO(("  load configurable MSRs from file \"%s\"", msrs_file));
 #endif
-  BX_INFO(("IPS is set to %d", (Bit32u) SIM->get_param_num(BXPN_IPS)->get()));
+  BX_INFO(("IPS is set to %u", (Bit32u) SIM->get_param_num(BXPN_IPS)->get()));
   BX_INFO(("CPU configuration"));
 #if BX_SUPPORT_SMP
   BX_INFO(("  SMP support: yes, quantum=%d", SIM->get_param_num(BXPN_SMP_QUANTUM)->get()));
@@ -1308,6 +1328,12 @@ void bx_init_hardware()
 
   bx_param_num_c *bxp_memblock_size = SIM->get_param_num(BXPN_MEM_BLOCK_SIZE);
   Bit32u memBlockSize = (Bit32u)(bxp_memblock_size->get64() * 1024);
+  if (memBlockSize < 4096) {
+    memBlockSize = memSize / 4096;
+    if (memBlockSize < 4096) memBlockSize = 4096;
+    memBlockSize = round_up_to_power_of_2(memBlockSize);
+    BX_INFO(("Auto-adjusting memory block size to %u", memBlockSize));
+  }
 
   BX_MEM(0)->init_memory(memSize, hostMemSize, memBlockSize);
 
@@ -1330,7 +1356,7 @@ void bx_init_hardware()
     base = (bx_list_c*) SIM->get_param(pname);
     if (!SIM->get_param_string("file", base)->isempty())
       BX_MEM(0)->load_RAM(SIM->get_param_string("file", base)->getptr(),
-                          SIM->get_param_num("address", base)->get());
+                          SIM->get_param_num("address", base)->get64());
   }
 
 #if BX_SUPPORT_SMP == 0

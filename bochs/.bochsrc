@@ -8,8 +8,8 @@
 # only available when the plugin device is loaded. The value "1" means to load
 # the plugin and "0" will unload it (if loaded before).
 #
-# These plugins will be loaded by default (if present): 'biosdev', 'extfpuirq',
-# 'gameport', 'iodebug','parallel', 'serial', 'speaker' and 'unmapped'.
+# These plugins will be loaded by default (if present): 'biosdev', 'gameport',
+# 'iodebug','parallel', 'serial', 'speaker' and 'unmapped'.
 #
 # These plugins are also supported, but they are usually loaded directly with
 # their bochsrc option: 'e1000', 'es1370', 'ne2k', 'pcidev', 'pcipnic', 'sb16',
@@ -146,6 +146,7 @@
 #  tigerlake                  11th Gen Intel(R) Core(TM) i5-1135G7 (TigerLake)
 #  sapphire_rapids            Intel(R) Xeon(R) w9-3475X (Sappire Rapids)
 #  arrow_lake                 15th Gen Intel(R) Core(TM) Ultra 5 245K (ArrowLake)
+#  wildcat_lake               Intel(R) Core(TM) 5 320 (PantherLake)
 #
 #  ADD_FEATURES:
 #    Enable one or more CPU features in the CPU configuration selected by MODEL.
@@ -181,6 +182,22 @@
 #  CPUID_LIMIT_WINNT:
 #    Determine whether to limit maximum CPUID function to 2. This mode is
 #    required to workaround WinNT installation and boot issues.
+#
+#  FORCE_IGNNE:
+#    Always act like if #IGNNE pin was asserted on CPU input.
+#    Avoid potential deadlock after unmasked x87 exception handling and FERR#
+#    assertion.
+#
+#  CPUID_FREQ:
+#    Select how the CPUID frequency leaves 0x15/0x16 are reported by CPU
+#    models that implement them (hardware/none/ips). With 'hardware'
+#    (default) the values dumped from the modeled hardware are reported,
+#    but modern guest kernels trust these leaves for TSC calibration while
+#    the emulated TSC actually advances at the IPS rate, so guest
+#    timekeeping can run off by orders of magnitude. With 'none' the
+#    frequencies are reported as not enumerated and guests fall back to
+#    timer based calibration, with 'ips' the leaves report the emulated
+#    tick rate itself.
 #
 #  MSRS:
 #    Define path to user CPU Model Specific Registers (MSRs) specification.
@@ -277,19 +294,30 @@ memory: guest=512, host=256, block_size=512
 #=======================================================================
 romimage: file=$BXSHARE/BIOS-bochs-latest, options=fastboot
 #romimage: file=$BXSHARE/BIOS-bochs-legacy
-#romimage: file=$BXSHARE/bios.bin-1.13.0 # http://www.seabios.org/SeaBIOS
-#romimage: file=$BXSHARE/i440fx.bin, flash_data=escd.bin
+#romimage: file=$BXSHARE/SeaBIOS/bios.bin-1.13.0 # http://www.seabios.org/SeaBIOS
+#romimage: file=$BXSHARE/i440fx/i440fx.bin, flash_data=escd.bin
 #romimage: file=asus_p6np5.bin, flash_data=escd.bin
 #romimage: file=mybios.bin, address=0xfff80000 # 512k at memory top
+
+#=======================================================================
+# FW_CFG:
+# UEFI Firmware Support: Bochs supports UEFI boot using OVMF (Open Virtual
+# Machine Firmware) from the TianoCore EDK2 project. To use UEFI:
+#  romimage: file=OVMF.fd, address=0xffc00000
+# UEFI boot requires the fw_cfg device which provides system configuration to
+# the firmware via I/O ports 0x510-0x51B. This includes the E820 memory map,
+# ACPI tables, RAM size, and CPU count. See user doc for more info.
+#=======================================================================
+#fw_cfg: enabled=1
 
 #=======================================================================
 # VGAROMIMAGE
 # You now need to load a VGA ROM BIOS into C0000.
 #=======================================================================
-vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest.bin
-#vgaromimage: file=bios/VGABIOS-lgpl-latest-cirrus.bin
+vgaromimage: file=$BXSHARE/VGABIOS-lgpl/VGABIOS-lgpl-latest.bin
+#vgaromimage: file=bios/VGABIOS-lgpl/VGABIOS-lgpl-latest-cirrus.bin
 #vgaromimage: file=$BXSHARE/vgabios-cirrus.bin-1.13.0 # http://www.seabios.org/SeaVGABIOS
-#vgaromimage: file=bios/VGABIOS-elpin-2.40
+#vgaromimage: file=bios/VGABIOS-elpin/VGABIOS-elpin-2.40
 
 #=======================================================================
 # OPTROMIMAGE[1-4]:
@@ -369,11 +397,11 @@ vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest.bin
 #=======================================================================
 # GEFORCE:
 # This defines the experimental GeForce emulation. Currently supported models
-# are 'geforce3', 'geforcefx5900' and 'geforce6800'. These 2D/3D AGP cards
-# require an external VGA BIOS, the vga extension option to be set to 'geforce'
-# and the i440BX PCI/AGP chipset with the 'geforce' device assigned to AGP
-# (slot #5). The gui screen update timing for all models is controlled by the
-# related 'vga' options.
+# are 'geforce2', 'geforce3', 'geforcefx5900' and 'geforce6800'. These 2D/3D AGP
+# cards require an external VGA BIOS, the vga extension option to be set to
+# 'geforce' and the i440BX PCI/AGP chipset with the 'geforce' device assigned to
+# AGP (slot #5). The gui screen update timing for all models is controlled by
+# the related 'vga' options.
 #
 # Example:
 #   geforce: model=geforce3
@@ -490,6 +518,8 @@ mouse: enabled=0
 #  original i440FX doesn't support them. The options 'noacpi' and 'nohpet' make
 #  it possible to disable them. The option 'noagp' disables the incomplete AGP
 #  subsystem of the i440BX chipset.
+#  If PCI is enabled, the 'nofdc' option disables the FDC if no floppy drive
+#  is configured.
 #
 # Example:
 #   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k, advopts=noacpi
@@ -582,6 +612,7 @@ private_colormap: enabled=0
 #   floppya: image=path, status=inserted  (guess media type from image size)
 #   floppya: 1_44=vvfat:path, status=inserted  (use directory as VFAT media)
 #   floppya: type=1_44                    (1.44M 3.5" floppy drive, no media)
+#   floppya: type=none                    (no floppy, to be used with pci: advopts=nofdc)
 #
 # The path should be the name of a disk image file.  On Unix, you can use a raw
 # device name such as /dev/fd0 on Linux.  On win32 platforms, use drive letters
@@ -592,6 +623,7 @@ private_colormap: enabled=0
 # The optional parameter 'write_protected' can be used to control the media
 # write protect switch. By default it is turned off.
 #=======================================================================
+#floppya: type=none
 floppya: 1_44=/dev/fd0, status=inserted
 #floppya: image=../1.44, status=inserted
 #floppya: 1_44=/dev/fd0H1440, status=inserted
@@ -604,6 +636,7 @@ floppya: 1_44=/dev/fd0, status=inserted
 # FLOPPYB:
 # See FLOPPYA above for syntax
 #=======================================================================
+#floppyb: type=none
 #floppyb: 1_44=b:, status=inserted
 #floppyb: 1_44=b.img, status=inserted
 
@@ -635,7 +668,7 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x360, irq=9
 #
 # This defines the type and characteristics of all attached ata devices:
 #   type=       type of attached device [disk|cdrom]
-#   mode=       only valid for disks [flat|concat|dll|sparse|vmware3|vmware4]
+#   mode=       only valid for disks [flat|concat|dll|sparse|vmware3|vmware4|vhdx]
 #                                    [undoable|growing|volatile|vpc|vbox|vvfat]
 #   path=       path of the image / directory
 #   cylinders=  only valid for disks
@@ -780,16 +813,26 @@ debug: action=ignore
 #debug: action=ignore, pci=report # report BX_DEBUG from module 'pci'
 
 #=======================================================================
-# DEBUGGER_LOG:
-# Give the path of the log file you'd like Bochs to log debugger output.
-# If you really don't want it, make it /dev/null or '-'. :^(
+# DEBUGGER:
+# This defines the parameters of the Bochs internal debugger:
 #
-# Examples:
-#   debugger_log: ./debugger.out
+#  LOG:
+#  Give the path of the log file you'd like Bochs to log debugger output.
+#  If you really don't want it, make it /dev/null or '-'. :^(
+#
+#  GUI:
+#  If this parameter is set to 'true' or '1' the debugger gui is used instead
+#  of the command line version. The special value 'globalini' enables the gui
+#  and forces the usage of an ini file from BXSHARE path. The gui parameter is
+#  available only if Bochs is built with debugger gui support and the debugger
+#  is activated with the command line option '-dbg'.
+#
+# Example:
+#   debugger: log=./debugger.out, gui=true
 #=======================================================================
-#debugger_log: /dev/null
-#debugger_log: debugger.out
-debugger_log: -
+#debugger: log=/dev/null
+#debugger: log=debugger.out
+debugger: log=-
 
 #=======================================================================
 # COM1, COM2, COM3, COM4:
@@ -1180,8 +1223,10 @@ speaker: enabled=1, mode=sound, volume=8
 #=======================================================================
 # USB Debugger:
 # This is the experimental USB Debugger for the Windows Platform.
-# Specify a type (none, uhci, ohci, ehci, xhci) and one or more triggers.
-# (Currently, only xhci is supported, with some uhci in the process)
+# Specify a type (none, uhci, ohci, ehci, xhci), a device (if required) and
+# one or more triggers.
+# Currently, only uhci and xhci are supported, including the uhci companions
+# of ehci (devices "ehci/uhci0", "ehci/uhci1" and "ehci/uhci2").
 # Triggers:
 #   reset:       will break and load the debugger on a port reset
 #   enable:      will break and load the debugger on a port enable
@@ -1193,6 +1238,7 @@ speaker: enabled=1, mode=sound, volume=8
 #   non_exist:   will break and load the debugger on a non-existant port access
 # (experimental and is under development)
 #=======================================================================
+#usb_debug: type=uhci, device=uhci, reset=1, enable=1, start_frame=1, doorbell=1, event=1, data=1, non_exist=1
 #usb_debug: type=xhci, reset=1, enable=1, start_frame=1, doorbell=1, event=1, data=1, non_exist=1
 
 #=======================================================================

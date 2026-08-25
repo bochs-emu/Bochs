@@ -105,7 +105,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MONITOR(bxInstruction_c *i)
   bx_phy_address paddr = BX_CPU_THIS_PTR address_xlation.paddress1;
 #if BX_SUPPORT_MEMTYPE
   if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
-    BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR monitor.monitor_addr));
+    BX_DEBUG(("%s for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, i->getIaOpcodeNameShort(), paddr));
     BX_NEXT_INSTR(i);
   }
 #endif
@@ -266,7 +266,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMONITOR_Eq(bxInstruction_c *i)
   bx_phy_address paddr = BX_CPU_THIS_PTR address_xlation.paddress1;
 #if BX_SUPPORT_MEMTYPE
   if (BX_CPU_THIS_PTR address_xlation.memtype1 != BX_MEMTYPE_WB) {
-    BX_DEBUG(("UMONITOR for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, BX_CPU_THIS_PTR monitor.monitor_addr));
+    BX_DEBUG(("UMONITOR for non-WB memory type phys_addr=0x" FMT_PHY_ADDRX, paddr));
     BX_NEXT_INSTR(i);
   }
 #endif

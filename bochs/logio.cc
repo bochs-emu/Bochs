@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -221,6 +221,7 @@ void iofunctions::out(int level, const char *prefix, const char *fmt, va_list ap
   switch (level) {
     case LOGLEV_INFO: c='i'; break;
     case LOGLEV_PANIC: c='p'; break;
+    case LOGLEV_WARN: c='w'; break;
     case LOGLEV_ERROR: c='e'; break;
     case LOGLEV_DEBUG: c='d'; break;
     default: break;
@@ -270,8 +271,10 @@ void iofunctions::out(int level, const char *prefix, const char *fmt, va_list ap
   vsnprintf(msg, sizeof(msg), fmt, ap);
   fprintf(logfd, "%s\n", msg);
   fflush(logfd);
-  if (SIM->has_log_viewer()) {
-    SIM->log_msg(msgpfx, level, msg);
+  if (SIM) {
+    if (SIM->has_log_viewer()) {
+      SIM->log_msg(msgpfx, level, msg);
+    }
   }
   BX_UNLOCK(logio_mutex);
 }
@@ -430,7 +433,7 @@ void logfunctions::lwarn(const char *fmt, ...)
   if (onoff[LOGLEV_WARN] == ACT_IGNORE) return;
 
   va_start(ap, fmt);
-  logio->out(LOGLEV_INFO, prefix, fmt, ap);
+  logio->out(LOGLEV_WARN, prefix, fmt, ap);
   va_end(ap);
 
   if (onoff[LOGLEV_WARN] == ACT_WARN) {

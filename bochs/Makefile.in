@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2025  The Bochs Project
+# Copyright (C) 2001-2026  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -39,14 +39,14 @@ VERSION=@VERSION@
 REL_STRING=@REL_STRING@
 MAN_PAGE_1_LIST=bochs bximage bxhub bochs-dlx
 MAN_PAGE_5_LIST=bochsrc
-INSTALL_LIST_SHARE=bios/BIOS-bochs-* bios/VGABIOS* bios/SeaBIOS* bios/SeaVGABIOS* bios/bios.bin-* bios/i440fx.bin bios/README-i440fx bios/vgabios-cirrus.bin-* @INSTALL_LIST_FOR_PLATFORM@
+INSTALL_LIST_SHARE=bios/BIOS-bochs-* bios/OVMF/* bios/VGABIOS-elpin/* bios/VGABIOS-lgpl/* bios/SeaBIOS/* bios/i440fx/* @INSTALL_LIST_FOR_PLATFORM@
 INSTALL_LIST_DOC=CHANGES COPYING LICENSE README TODO misc/slirp.conf misc/vnet.conf docs-html/cpu_configurability.txt
 INSTALL_LIST_BIN=bochs@EXE@ bximage@EXE@
 INSTALL_LIST_BIN_OPTIONAL=@OPTIONAL_TARGET@
-INSTALL_LIST_WIN32=$(INSTALL_LIST_SHARE) $(INSTALL_LIST_DOC) $(INSTALL_LIST_BIN) $(INSTALL_LIST_BIN_OPTIONAL)
+INSTALL_LIST_WIN32=$(INSTALL_LIST_DOC) $(INSTALL_LIST_BIN) $(INSTALL_LIST_BIN_OPTIONAL)
 INSTALL_LIST_MACOSX=$(INSTALL_LIST_SHARE) $(INSTALL_LIST_DOC) bochs.scpt
 # for win32 and macosx, these files get renamed to *.txt in install process
-TEXT_FILE_LIST=README CHANGES COPYING LICENSE TODO VGABIOS-elpin-LICENSE VGABIOS-lgpl-README SeaBIOS-README SeaVGABIOS-README README-i440fx
+TEXT_FILE_LIST=README CHANGES COPYING LICENSE TODO bios/VGABIOS-elpin-LICENSE bios/VGABIOS-lgpl-README bios/SeaBIOS-README bios/SeaVGABIOS-README bios/README-i440fx
 CP=cp
 CAT=cat
 RM=rm
@@ -109,6 +109,7 @@ GUI_LINK_OPTS_WX = @GUI_LINK_OPTS_WX@
 GUI_LINK_OPTS = @GUI_LINK_OPTS@
 DEVICE_LINK_OPTS = @DEVICE_LINK_OPTS@
 RANLIB = @RANLIB@
+AR = @AR@
 
 CFLAGS_CONSOLE = @CFLAGS@ $(MCH_CFLAGS) $(FLA_FLAGS)
 CXXFLAGS_CONSOLE = @CXXFLAGS_CONSOLE@ $(MCH_CFLAGS) $(FLA_FLAGS)
@@ -242,8 +243,8 @@ bochs_plugins:
 	$(MAKE) plugins
 	@CD_UP_TWO@
 
-bximage@EXE@: misc/bximage.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc.o misc/vbox.o
-	@LINK_CONSOLE@ $(BXIMAGE_LINK_OPTS) misc/bximage.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc.o misc/vbox.o
+bximage@EXE@: misc/bximage.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc.o misc/vhdx.o misc/crc32c.o misc/vbox.o
+	@LINK_CONSOLE@ $(BXIMAGE_LINK_OPTS) misc/bximage.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc.o misc/vhdx.o misc/crc32c.o misc/vbox.o
 
 niclist@EXE@: misc/niclist.o
 	@LINK_CONSOLE@ misc/niclist.o @NICLIST_LINK_OPTS@
@@ -272,13 +273,21 @@ misc/vpc.o: $(srcdir)/iodev/hdimage/vpc.cc $(srcdir)/iodev/hdimage/vpc.h \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
 	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vpc.cc @OFP@$@
 
+misc/vhdx.o: $(srcdir)/iodev/hdimage/vhdx.cc $(srcdir)/iodev/hdimage/vhdx.h \
+  $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
+	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vhdx.cc @OFP@$@
+
+misc/crc32c.o: $(srcdir)/iodev/hdimage/crc32c.cc \
+  $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
+	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/crc32c.cc @OFP@$@
+
 misc/vbox.o: $(srcdir)/iodev/hdimage/vbox.cc $(srcdir)/iodev/hdimage/vbox.h \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
 	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vbox.cc @OFP@$@
 
 misc/bxhub.o: $(srcdir)/misc/bxhub.cc $(srcdir)/iodev/network/netmod.h \
   $(srcdir)/iodev/network/netutil.h $(srcdir)/misc/bxcompat.h
-	$(CC) @DASH@c $(BX_INCDIRS) $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bxhub.cc @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bxhub.cc @OFP@$@
 
 misc/netutil.o: $(srcdir)/iodev/network/netutil.cc $(srcdir)/iodev/network/netutil.h \
   $(srcdir)/iodev/network/netmod.h $(srcdir)/misc/bxcompat.h
@@ -368,7 +377,7 @@ gui/libgui.a::
 
 libbochs.a:
 	-rm -f libbochs.a
-	ar rv libbochs.a $(EXTERN_ENVIRONMENT_OBJS)
+	$(AR) rv libbochs.a $(EXTERN_ENVIRONMENT_OBJS)
 	$(RANLIB) libbochs.a
 
 # for wxWidgets port, on win32 platform
@@ -396,6 +405,8 @@ install_win32: download_dlx dl_docbook
 	-mkdir -p $(INSTDIR)
 	-cp -p obj-release/*.exe .
 	for i in $(INSTALL_LIST_WIN32); do if test -f $$i; then cp -p $$i $(INSTDIR); else cp -p $(srcdir)/$$i $(INSTDIR); fi; done
+	-mkdir $(INSTDIR)/bios
+	for i in $(INSTALL_LIST_SHARE); do if test -f $$i; then cp -p $$i $(INSTDIR)/bios/; else cp -p $(srcdir)/$$i $(INSTDIR)/bios/; fi; done
 	cp $(srcdir)/misc/sb16/sb16ctrl.example $(INSTDIR)/sb16ctrl.txt
 	cp -p $(srcdir)/misc/sb16/sb16ctrl.exe $(INSTDIR)
 	cp $(srcdir)/.bochsrc $(INSTDIR)/bochsrc-sample.txt

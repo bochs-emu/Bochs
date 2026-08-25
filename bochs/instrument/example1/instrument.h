@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2006-2015 Stanislav Shwartsman
+//   Copyright (c) 2006-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -76,9 +76,8 @@ public:
 
   void bx_instr_reset(unsigned type);
 
-  void bx_instr_cnear_branch_taken(bx_address branch_eip, bx_address new_eip);
-  void bx_instr_cnear_branch_not_taken(bx_address branch_eip);
-  void bx_instr_ucnear_branch(unsigned what, bx_address branch_eip, bx_address new_eip);
+  void bx_instr_near_branch_taken(unsigned what, bx_address branch_eip, bx_address new_eip);
+  void bx_instr_near_branch_not_taken(bx_address branch_eip);
   void bx_instr_far_branch(unsigned what, Bit16u prev_cs, bx_address prev_eip, Bit16u new_cs, bx_address new_eip);
 
   void bx_instr_before_execution(bxInstruction_c *i);
@@ -116,9 +115,8 @@ extern bxInstrumentation *icpu;
 #define BX_INSTR_DEBUG_CMD(cmd)
 
 /* branch resolution */
-#define BX_INSTR_CNEAR_BRANCH_TAKEN(cpu_id, branch_eip, new_eip) icpu[cpu_id].bx_instr_cnear_branch_taken(branch_eip, new_eip)
-#define BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(cpu_id, branch_eip) icpu[cpu_id].bx_instr_cnear_branch_not_taken(branch_eip)
-#define BX_INSTR_UCNEAR_BRANCH(cpu_id, what, branch_eip, new_eip) icpu[cpu_id].bx_instr_ucnear_branch(what, branch_eip, new_eip)
+#define BX_INSTR_NEAR_BRANCH_TAKEN(cpu_id, what, branch_eip, new_eip) icpu[cpu_id].bx_instr_near_branch_taken(what, branch_eip, new_eip)
+#define BX_INSTR_NEAR_BRANCH_NOT_TAKEN(cpu_id, branch_eip) icpu[cpu_id].bx_instr_near_branch_not_taken(branch_eip)
 #define BX_INSTR_FAR_BRANCH(cpu_id, what, prev_cs, prev_eip, new_cs, new_eip) icpu[cpu_id].bx_instr_far_branch(what, prev_cs, prev_eip, new_cs, new_eip)
 
 /* decoding completed */
@@ -180,9 +178,8 @@ extern bxInstrumentation *icpu;
 #define BX_INSTR_DEBUG_CMD(cmd)
 
 /* branch resolution */
-#define BX_INSTR_CNEAR_BRANCH_TAKEN(cpu_id, branch_eip, new_eip)
-#define BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(cpu_id, branch_eip)
-#define BX_INSTR_UCNEAR_BRANCH(cpu_id, what, branch_eip, new_eip)
+#define BX_INSTR_NEAR_BRANCH_TAKEN(cpu_id, what, branch_eip, new_eip)
+#define BX_INSTR_NEAR_BRANCH_NOT_TAKEN(cpu_id, branch_eip)
 #define BX_INSTR_FAR_BRANCH(cpu_id, what, prev_cs, prev_eip, new_cs, new_eip)
 
 /* decoding completed */

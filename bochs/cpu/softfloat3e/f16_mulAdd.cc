@@ -113,7 +113,11 @@ float16 f16_mulAdd(float16 a, float16 b, float16 c, uint8_t op, struct softfloat
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if (! expA) {
-        if (! sigA) goto zeroProd;
+        if (! sigA) {
+            if (sigB && !expB)
+                softfloat_raiseFlags(status, softfloat_flag_denormal);
+            goto zeroProd;
+        }
         softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalF16Sig(sigA);
         expA = normExpSig.exp;

@@ -249,6 +249,8 @@
     <ClInclude Include="..\gui\win32usb.h" />
     <ClInclude Include="..\gui\win32usbres.h" />
     <ClInclude Include="..\iodev\iodev.h" />
+    <ClInclude Include="..\iodev\usb\usb_uhci-defs.h" />
+    <ClInclude Include="..\iodev\usb\usb_xhci-defs.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

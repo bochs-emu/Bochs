@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2024  The Bochs Project
+//                2009-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -85,7 +85,7 @@ PLUGIN_ENTRY_FOR_MODULE(usb_ohci)
     SIM->register_addon_option("usb_ohci", usb_ohci_options_parser, usb_ohci_options_save);
   } else if (mode == PLUGIN_FINI) {
     SIM->unregister_addon_option("usb_ohci");
-    bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.usb");
+    bx_list_c *menu = (bx_list_c*)SIM->get_param("usb");
     delete theUSB_OHCI;
     menu->remove("ohci");
   } else if (mode == PLUGIN_PROBE) {
@@ -121,9 +121,9 @@ bx_usb_ohci_c::~bx_usb_ohci_c()
     remove_device(i);
   }
 
-  SIM->get_bochs_root()->remove("usb_ohci");
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   usb_rt->remove("ohci");
+  SIM->get_bochs_root()->remove("usb_ohci");
   BX_DEBUG(("Exit"));
 }
 
@@ -177,7 +177,11 @@ void bx_usb_ohci_c::init(void)
 
 #if BX_USB_DEBUGGER
   if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() == USB_DEBUG_OHCI) {
-    SIM->register_usb_debug_type(USB_DEBUG_OHCI);
+    bx_param_string_c *pdev = SIM->get_param_string(BXPN_USB_DEBUG_DEVICE);
+    if (pdev->isempty() || !strcmp(pdev->getptr(), "ohci")) {
+      BX_OHCI_THIS enable_usbdbg();
+      SIM->register_usb_debug_type(USB_DEBUG_OHCI, -1);
+    }
   }
 #endif
 
@@ -200,7 +204,7 @@ void bx_usb_ohci_c::reset(unsigned type)
 
 void bx_usb_ohci_c::register_state()
 {
-  BX_OHCI_THIS ohci_register_state(SIM->get_bochs_root());
+  BX_OHCI_THIS ohci_register_state("usb_ohci", SIM->get_bochs_root());
 }
 
 void bx_usb_ohci_c::after_restore_state()
@@ -275,10 +279,10 @@ Bit64s bx_usb_ohci_c::usb_param_handler(bx_param_c *param, bool set, Bit64s val)
     int portnum = atoi((param->get_parent())->get_name()+4) - 1;
     bool empty = (val == 0);
     if ((portnum >= 0) && (portnum < USB_OHCI_PORTS)) {
-      if (empty && BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ccs) {
-        BX_OHCI_THIS device_change |= (1 << portnum);
-      } else if (!empty && !BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ccs) {
-        BX_OHCI_THIS device_change |= (1 << portnum);
+      if (empty && theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.ccs) {
+        theUSB_OHCI->device_change |= (1 << portnum);
+      } else if (!empty && !theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.ccs) {
+        theUSB_OHCI->device_change |= (1 << portnum);
       } else if (val != ((bx_param_enum_c *) param)->get()) {
         BX_ERROR(("usb_param_handler(): port #%d already in use", portnum+1));
         val = ((bx_param_enum_c *) param)->get();
@@ -294,24 +298,24 @@ Bit64s bx_usb_ohci_c::usb_param_handler(bx_param_c *param, bool set, Bit64s val)
 Bit64s bx_usb_ohci_c::usb_param_oc_handler(bx_param_c *param, bool set, Bit64s val)
 {
   if (set && val) {
-    if (BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.nocp == 0) {
+    if (theUSB_OHCI->hub.op_regs.HcRhDescriptorA.nocp == 0) {
       int portnum = atoi((param->get_parent())->get_name()+4) - 1;
       if ((portnum >= 0) && (portnum < USB_OHCI_PORTS)) {
-        if (BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ccs) {
+        if (theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.ccs) {
           // is over current reported on a per-port basis?
-          if (BX_OHCI_THIS hub.op_regs.HcRhDescriptorA.ocpm == 1) {
-            BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.ocic = 1;
-            BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.poci = 1;
-            BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.pes = 0;
-            BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.pesc = 1;
-            BX_OHCI_THIS hub.usb_port[portnum].HcRhPortStatus.pps = 0;
+          if (theUSB_OHCI->hub.op_regs.HcRhDescriptorA.ocpm == 1) {
+            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.ocic = 1;
+            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.poci = 1;
+            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.pes = 0;
+            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.pesc = 1;
+            theUSB_OHCI->hub.usb_port[portnum].HcRhPortStatus.pps = 0;
             BX_DEBUG(("Over-current signaled on port #%d.", portnum + 1));
           // else over current is reported globally
           } else {
-            BX_OHCI_THIS hub.op_regs.HcRhStatus.oci = 1;
+            theUSB_OHCI->hub.op_regs.HcRhStatus.oci = 1;
             BX_DEBUG(("Global over-current signaled."));
           }
-          BX_OHCI_THIS set_interrupt(OHCI_INTR_RHSC);
+          theUSB_OHCI->set_interrupt(OHCI_INTR_RHSC);
         }
       } else {
         BX_ERROR(("Over-current: Bad portnum given: %d", portnum + 1));
@@ -328,7 +332,7 @@ Bit64s bx_usb_ohci_c::usb_param_oc_handler(bx_param_c *param, bool set, Bit64s v
 bool bx_usb_ohci_c::usb_param_enable_handler(bx_param_c *param, bool en)
 {
   int portnum = atoi((param->get_parent())->get_name() + 4) - 1;
-  if (en && (BX_OHCI_THIS hub.usb_port[portnum].device != NULL)) {
+  if (en && (theUSB_OHCI->hub.usb_port[portnum].device != NULL)) {
     en = 0;
   }
   return en;

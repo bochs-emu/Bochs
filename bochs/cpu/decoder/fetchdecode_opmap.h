@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2017-2023 Stanislav Shwartsman
+//   Copyright (c) 2017-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -744,6 +744,12 @@ static const Bit64u BxOpcodeTable84[] = { last_opcode(0, BX_IA_TEST_EbGb) };
 // opcode 85
 static const Bit64u BxOpcodeTable85[] = {
 #if BX_SUPPORT_X86_64
+  form_opcode(ATTR_OS64 | ATTR_SRC_EQ_DST, BX_IA_TEST_EqGq_IDIOM),
+#endif
+  form_opcode(ATTR_OS32 | ATTR_SRC_EQ_DST, BX_IA_TEST_EdGd_IDIOM),
+  form_opcode(ATTR_OS16 | ATTR_SRC_EQ_DST, BX_IA_TEST_EwGw_IDIOM),
+
+#if BX_SUPPORT_X86_64
   form_opcode(ATTR_OS64, BX_IA_TEST_EqGq),
 #endif
   form_opcode(ATTR_OS32, BX_IA_TEST_EdGd),
@@ -1002,7 +1008,7 @@ static const Bit64u BxOpcodeTableB8xBF[] = {
   last_opcode(ATTR_OS16, BX_IA_MOV_EwIw)
 };
 
-// opcode D0
+// opcode C0
 static const Bit64u BxOpcodeTableC0[] = {
   form_opcode(ATTR_NNN0, BX_IA_ROL_EbIb),
   form_opcode(ATTR_NNN1, BX_IA_ROR_EbIb),
@@ -1492,6 +1498,9 @@ static const Bit64u BxOpcodeTable0F00[] = {
   form_opcode(ATTR_NNN2, BX_IA_LLDT_Ew),
   form_opcode(ATTR_NNN3, BX_IA_LTR_Ew),
   form_opcode(ATTR_NNN4, BX_IA_VERR_Ew),
+#if BX_SUPPORT_FRED && BX_SUPPORT_X86_64
+  form_opcode(ATTR_NNN6 | ATTR_SSE_PREFIX_F2 | ATTR_IS64, BX_IA_LKGS_Ew),
+#endif
   last_opcode(ATTR_NNN5, BX_IA_VERW_Ew)
 };
 
@@ -1527,6 +1536,10 @@ static const Bit64u BxOpcodeTable0F01[] = {
   form_opcode(ATTR_NNN1 | ATTR_RRR0 | ATTR_MODC0 | ATTR_SSE_NO_PREFIX, BX_IA_MONITOR),  // 0F 01 C8
   form_opcode(ATTR_NNN1 | ATTR_RRR1 | ATTR_MODC0 | ATTR_SSE_NO_PREFIX, BX_IA_MWAIT),    // 0F 01 C9
   form_opcode(ATTR_NNN1 | ATTR_RRR2 | ATTR_MODC0 | ATTR_SSE_NO_PREFIX, BX_IA_CLAC),     // 0F 01 CA
+#if BX_SUPPORT_FRED && BX_SUPPORT_X86_64
+  form_opcode(ATTR_NNN1 | ATTR_RRR2 | ATTR_MODC0 | ATTR_SSE_PREFIX_F3 | ATTR_IS64, BX_IA_ERETU),
+  form_opcode(ATTR_NNN1 | ATTR_RRR2 | ATTR_MODC0 | ATTR_SSE_PREFIX_F2 | ATTR_IS64, BX_IA_ERETS),
+#endif
   form_opcode(ATTR_NNN1 | ATTR_RRR3 | ATTR_MODC0 | ATTR_SSE_NO_PREFIX, BX_IA_STAC),     // 0F 01 CB
 
   form_opcode(ATTR_NNN2 | ATTR_RRR0 | ATTR_MODC0 | ATTR_SSE_NO_PREFIX, BX_IA_XGETBV),   // 0F 01 D0
@@ -2037,7 +2050,10 @@ static const Bit64u BxOpcodeTable0F56[] = {
 
 // opcode 0F 57
 static const Bit64u BxOpcodeTable0F57[] = {
+  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_SRC_EQ_DST, BX_IA_XORPS_VpsWps_ZERO_IDIOM),
   form_opcode(ATTR_SSE_NO_PREFIX, BX_IA_XORPS_VpsWps),
+
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_SRC_EQ_DST, BX_IA_XORPD_VpdWpd_ZERO_IDIOM),
   last_opcode(ATTR_SSE_PREFIX_66, BX_IA_XORPD_VpdWpd)
 };
 
@@ -2855,7 +2871,7 @@ static const Bit64u BxOpcodeTable0FC7[] = {
   form_opcode(ATTR_OS64 | ATTR_MODC0 | ATTR_NNN7 | ATTR_NO_SSE_PREFIX_F2_F3, BX_IA_RDSEED_Eq),
 #endif
 #if BX_SUPPORT_X86_64 && BX_SUPPORT_UINTR
-  form_opcode(ATTR_IS64 | ATTR_MODC0 | ATTR_NNN6 | ATTR_SSE_PREFIX_F3, BX_IA_SENDUIPI_Gq),
+  form_opcode(ATTR_IS64 | ATTR_MODC0 | ATTR_NNN6 | ATTR_SSE_PREFIX_F3, BX_IA_SENDUIPI_Eq),
 #endif
   form_opcode(ATTR_NNN7 | ATTR_MODC0 | ATTR_SSE_PREFIX_F3, BX_IA_RDPID_Ed),
   form_opcode_lockable(ATTR_OS16_32 | ATTR_NNN1 | ATTR_MOD_MEM, BX_IA_CMPXCHG8B),
@@ -3071,6 +3087,7 @@ static const Bit64u BxOpcodeTable0FEE[] = {
 // opcode 0F EF
 static const Bit64u BxOpcodeTable0FEF[] = {
   form_opcode(ATTR_SSE_NO_PREFIX, BX_IA_PXOR_PqQq),
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_SRC_EQ_DST, BX_IA_PXOR_VdqWdq_ZERO_IDIOM),
   last_opcode(ATTR_SSE_PREFIX_66, BX_IA_PXOR_VdqWdq)
 };
 

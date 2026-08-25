@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //  PCI VGA dummy adapter Copyright (C) 2002,2003  Mike Nordell
 //
 //  This library is free software; you can redistribute it and/or
@@ -47,13 +47,53 @@
 
 bx_vga_c *theVga = NULL;
 
+enum {
+  BX_VBE_MEMSIZE_4MB,
+  BX_VBE_MEMSIZE_8MB,
+  BX_VBE_MEMSIZE_16MB,
+  BX_VBE_MEMSIZE_32MB
+};
+
+void vga_init_options(void)
+{
+  static const char *vbe_memsize_list[] = {
+    "4",
+    "8",
+    "16",
+    "32",
+    NULL
+  };
+  bx_param_enum_c *model = SIM->get_param_enum(BXPN_VGA_EXT_MODEL);
+  model->set_enabled(1);
+  model->set_label("VBE memory size (MB)");
+  model->set_description("Size of VBE memory in MB");
+  model->set_choices(vbe_memsize_list, BX_VBE_MEMSIZE_16MB, BX_VBE_MEMSIZE_4MB);
+
+  bx_list_c *deplist = new bx_list_c(NULL);
+  deplist->add(model);
+  SIM->get_param_enum(BXPN_VGA_EXTENSION)->set_dependent_list(deplist, 0);
+  SIM->get_param_enum(BXPN_VGA_EXTENSION)->set_dependent_bitmap(BX_VGA_EXTENSION_VBE, 1);
+}
+
+void vga_cleanup_options(void)
+{
+  bx_param_enum_c *model = SIM->get_param_enum(BXPN_VGA_EXT_MODEL);
+  model->set_choices(NULL, 0, 0);
+  model->set_label("Model");
+  model->set_enabled(0);
+  SIM->get_param_enum(BXPN_VGA_EXTENSION)->set_dependent_list(NULL, 0);
+}
+
 PLUGIN_ENTRY_FOR_MODULE(vga)
 {
   if (mode == PLUGIN_INIT) {
     theVga = new bx_vga_c();
     bx_devices.pluginVgaDevice = theVga;
     BX_REGISTER_DEVICE_DEVMODEL(plugin, type, theVga, BX_PLUGIN_VGA);
+    // add new configuration parameter for the config interface
+    vga_init_options();
   } else if (mode == PLUGIN_FINI) {
+    vga_cleanup_options();
     delete theVga;
   } else if (mode == PLUGIN_PROBE) {
     return (int)PLUGTYPE_VGA;
@@ -70,14 +110,20 @@ bx_vga_c::bx_vga_c() : bx_vgacore_c()
 
 bx_vga_c::~bx_vga_c()
 {
-  SIM->get_bochs_root()->remove("vga");
+  if (BX_VGA_THIS s.memory == NULL) {
+    delete [] BX_VGA_THIS s.memory;
+    BX_VGA_THIS s.memory = NULL;
+  }
+
+  if (SIM->get_bochs_root())
+    SIM->get_bochs_root()->remove("vga");
+
   BX_DEBUG(("Exit"));
 }
 
 bool bx_vga_c::init_vga_extension(void)
 {
-  unsigned addr;
-  bool ret = 0;
+  bool ret = false;
 
   BX_VGA_THIS init_iohandlers(read_handler, write_handler, "vga_video");
   BX_VGA_THIS pci_enabled = SIM->is_pci_device("pcivga");
@@ -90,11 +136,11 @@ bool bx_vga_c::init_vga_extension(void)
   BX_VGA_THIS vbe.base_address = 0x0000;
   if (!strcmp(BX_VGA_THIS vga_ext->get_selected(), "vbe")) {
     BX_VGA_THIS put("BXVGA");
-    for (addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
+    for (unsigned addr=VBE_DISPI_IOPORT_INDEX; addr<=VBE_DISPI_IOPORT_DATA; addr++) {
       DEV_register_ioread_handler(this, vbe_read_handler, addr, "vga video", 7);
       DEV_register_iowrite_handler(this, vbe_write_handler, addr, "vga video", 7);
     }
-    BX_VGA_THIS s.memsize = atoi(SIM->get_param_enum(BXPN_VBE_MEMSIZE)->get_selected()) << 20;
+    BX_VGA_THIS s.memsize = atoi(SIM->get_param_enum(BXPN_VGA_EXT_MODEL)->get_selected()) << 20;
     if (!BX_VGA_THIS pci_enabled) {
       BX_VGA_THIS vbe.base_address = VBE_DISPI_LFB_PHYSICAL_ADDRESS;
       DEV_register_memory_handlers(theVga, mem_read_handler, mem_write_handler,
@@ -125,7 +171,7 @@ bool bx_vga_c::init_vga_extension(void)
     BX_VGA_THIS s.max_xres = BX_VGA_THIS vbe.max_xres;
     BX_VGA_THIS s.max_yres = BX_VGA_THIS vbe.max_yres;
     BX_VGA_THIS vbe_present = 1;
-    ret = 1;
+    ret = true;
 
     BX_INFO(("VBE Bochs Display Extension Enabled (%d MB)", BX_VGA_THIS s.memsize >> 20));
   }
@@ -145,10 +191,13 @@ bool bx_vga_c::init_vga_extension(void)
       BX_VGA_THIS pci_conf[0x10] = 0x08;
       BX_VGA_THIS init_bar_mem(0, BX_VGA_THIS s.memsize,
                                mem_read_handler, mem_write_handler);
+
+      // Add BAR2 for QEMU-compatible VBE MMIO (used by OVMF QemuVideoDxe)
+      BX_VGA_THIS init_bar_mem(2, PCI_VGA_MMIO_SIZE,
+                               vbe_mmio_read_handler, vbe_mmio_write_handler);
     }
-    BX_VGA_THIS pci_rom_address = 0;
-    BX_VGA_THIS pci_rom_read_handler = mem_read_handler;
-    BX_VGA_THIS load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr());
+    BX_VGA_THIS load_pci_rom(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr(),
+                             mem_read_handler);
   }
 #endif
 #if BX_DEBUGGER
@@ -217,7 +266,7 @@ void bx_vga_c::after_restore_state(void)
   bx_vgacore_c::after_restore_state();
 #if BX_SUPPORT_PCI
   if (BX_VGA_THIS pci_enabled) {
-    bx_pci_device_c::after_restore_pci_state(mem_read_handler);
+    bx_pci_device_c::after_restore_pci_state();
   }
 #endif
   if (BX_VGA_THIS vbe.enabled) {
@@ -645,6 +694,7 @@ void bx_vga_c::update(void)
 
 bool bx_vga_c::mem_read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
+  bx_vga_c *class_ptr = (bx_vga_c *) param;
   Bit8u *data_ptr;
 #ifdef BX_LITTLE_ENDIAN
   data_ptr = (Bit8u *) data;
@@ -652,7 +702,7 @@ bool bx_vga_c::mem_read_handler(bx_phy_address addr, unsigned len, void *data, v
   data_ptr = (Bit8u *) data + (len - 1);
 #endif
   for (unsigned i = 0; i < len; i++) {
-    *data_ptr = theVga->mem_read(addr);
+    *data_ptr = class_ptr->mem_read(addr);
     addr++;
 #ifdef BX_LITTLE_ENDIAN
     data_ptr++;
@@ -666,9 +716,9 @@ bool bx_vga_c::mem_read_handler(bx_phy_address addr, unsigned len, void *data, v
 Bit8u bx_vga_c::mem_read(bx_phy_address addr)
 {
 #if BX_SUPPORT_PCI
-  if ((BX_VGA_THIS pci_enabled) && (BX_VGA_THIS pci_rom_size > 0)) {
-    Bit32u mask = (BX_VGA_THIS pci_rom_size - 1);
-    if (((Bit32u)addr & ~mask) == BX_VGA_THIS pci_rom_address) {
+  if ((BX_VGA_THIS pci_enabled) && (BX_VGA_THIS pci_bar[PCI_ROM_BAR].size > 0)) {
+    Bit32u mask = (BX_VGA_THIS pci_bar[PCI_ROM_BAR].size - 1);
+    if (((Bit32u)addr & ~mask) == BX_VGA_THIS pci_bar[PCI_ROM_BAR].addr) {
       if (BX_VGA_THIS pci_conf[0x30] & 0x01) {
         return BX_VGA_THIS pci_rom[addr & mask];
       } else {
@@ -695,6 +745,7 @@ Bit8u bx_vga_c::mem_read(bx_phy_address addr)
 
 bool bx_vga_c::mem_write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
+  bx_vga_c *class_ptr = (bx_vga_c *) param;
   Bit8u *data_ptr;
 #ifdef BX_LITTLE_ENDIAN
   data_ptr = (Bit8u *) data;
@@ -702,7 +753,7 @@ bool bx_vga_c::mem_write_handler(bx_phy_address addr, unsigned len, void *data, 
   data_ptr = (Bit8u *) data + (len - 1);
 #endif
   for (unsigned i = 0; i < len; i++) {
-    theVga->mem_write(addr, *data_ptr);
+    class_ptr->mem_write(addr, *data_ptr);
     addr++;
 #ifdef BX_LITTLE_ENDIAN
     data_ptr++;
@@ -787,7 +838,7 @@ bx_vga_c::vbe_mem_read(bx_phy_address addr)
   }
 
   // check for out of memory read
-  if (offset > BX_VGA_THIS s.memsize)
+  if (offset >= BX_VGA_THIS s.memsize)
     return 0;
 
   return (BX_VGA_THIS s.memory[offset]);
@@ -817,9 +868,9 @@ bx_vga_c::vbe_mem_write(bx_phy_address addr, Bit8u value)
   } else {
     // make sure we don't flood the logfile
     static int count=0;
-    if (count<100) {
+    if (count<10) {
       count ++;
-      BX_INFO(("VBE_mem_write out of video memory write at %x",offset));
+      BX_DEBUG(("VBE_mem_write out of video memory write at %x",offset));
     }
   }
 
@@ -836,6 +887,101 @@ bx_vga_c::vbe_mem_write(bx_phy_address addr, Bit8u value)
       SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
     }
   }
+}
+
+// MMIO handlers for BAR2 (QEMU-compatible VBE MMIO)
+bool bx_vga_c::vbe_mmio_read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
+{
+  bx_vga_c *class_ptr = (bx_vga_c *)param;
+  Bit32u offset = (Bit32u)(addr & 0xfff);
+  Bit32u value = 0xffffffff;
+
+  if (offset >= PCI_VGA_BOCHS_OFFSET && offset < (PCI_VGA_BOCHS_OFFSET + PCI_VGA_BOCHS_SIZE)) {
+    Bit32u reg_offset = offset - PCI_VGA_BOCHS_OFFSET;
+    Bit16u index = reg_offset >> 1;
+    class_ptr->vbe.curindex = index;
+
+    switch (index) {
+      case VBE_DISPI_INDEX_ID:
+        value = class_ptr->vbe.cur_dispi;
+        break;
+      case VBE_DISPI_INDEX_XRES:
+        value = class_ptr->vbe.get_capabilities ? class_ptr->vbe.max_xres : class_ptr->vbe.xres;
+        break;
+      case VBE_DISPI_INDEX_YRES:
+        value = class_ptr->vbe.get_capabilities ? class_ptr->vbe.max_yres : class_ptr->vbe.yres;
+        break;
+      case VBE_DISPI_INDEX_BPP:
+        value = class_ptr->vbe.get_capabilities ? class_ptr->vbe.max_bpp : class_ptr->vbe.bpp;
+        break;
+      case VBE_DISPI_INDEX_ENABLE:
+        value = class_ptr->vbe.enabled;
+        if (class_ptr->vbe.get_capabilities) value |= VBE_DISPI_GETCAPS;
+        if (class_ptr->vbe.dac_8bit) value |= VBE_DISPI_8BIT_DAC;
+        break;
+      case VBE_DISPI_INDEX_BANK:
+        value = class_ptr->vbe.bank[0];
+        break;
+      case VBE_DISPI_INDEX_X_OFFSET:
+        value = class_ptr->vbe.offset_x;
+        break;
+      case VBE_DISPI_INDEX_Y_OFFSET:
+        value = class_ptr->vbe.offset_y;
+        break;
+      case VBE_DISPI_INDEX_VIRT_WIDTH:
+        value = class_ptr->vbe.virtual_xres;
+        break;
+      case VBE_DISPI_INDEX_VIRT_HEIGHT:
+        value = class_ptr->vbe.virtual_yres;
+        break;
+      case VBE_DISPI_INDEX_VIDEO_MEMORY_64K:
+        value = (Bit16u)(class_ptr->s.memsize >> 16);
+        break;
+      default:
+        BX_ERROR(("VBE MMIO read: unknown index 0x%x", index));
+        value = 0;
+        break;
+    }
+  }
+
+  if (len == 1) {
+    *((Bit8u *)data) = (Bit8u)value;
+  } else if (len == 2) {
+    *((Bit16u *)data) = (Bit16u)value;
+  } else if (len == 4) {
+    *((Bit32u *)data) = value;
+  } else {
+    BX_PANIC(("vbe_mmio_read_handler: not supported len=%d", len));
+  }
+
+  return true;
+}
+
+bool bx_vga_c::vbe_mmio_write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
+{
+  bx_vga_c *class_ptr = (bx_vga_c *)param;
+  Bit32u offset = (Bit32u)(addr & 0xfff);
+  Bit32u value = 0;
+
+  if (len == 1) {
+    value = *((Bit8u *)data);
+  } else if (len == 2) {
+    value = *((Bit16u *)data);
+  } else if (len == 4) {
+    value = *((Bit32u *)data);
+  } else {
+    BX_PANIC(("vbe_mmio_write_handler: not supported len=%d", len));
+  }
+
+  if (offset >= PCI_VGA_BOCHS_OFFSET && offset < (PCI_VGA_BOCHS_OFFSET + PCI_VGA_BOCHS_SIZE)) {
+    Bit32u reg_offset = offset - PCI_VGA_BOCHS_OFFSET;
+    Bit16u index = reg_offset >> 1;
+
+    class_ptr->vbe.curindex = index;
+    vbe_write_handler(class_ptr, VBE_DISPI_IOPORT_DATA, value, (len == 1) ? 1U : 2U);
+  }
+
+  return true;
 }
 
 Bit32u bx_vga_c::vbe_read_handler(void *this_ptr, Bit32u address, unsigned io_len)
@@ -944,7 +1090,7 @@ void bx_vga_c::vbe_write_handler(void *this_ptr, Bit32u address, Bit32u value, u
   class_ptr->vbe_write(address, value, io_len);
 }
 
-Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
+void bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
 {
 #else
   UNUSED(this_ptr);
@@ -1000,15 +1146,15 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           // check that we don't set xres during vbe enabled
           if (!BX_VGA_THIS vbe.enabled)
           {
-            // check for within max xres range
-            if (value <= BX_VGA_THIS vbe.max_xres)
+            // check for within valid xres range
+            if ((value >= 320) && (value <= BX_VGA_THIS vbe.max_xres))
             {
               BX_VGA_THIS vbe.xres=(Bit16u) value;
               BX_INFO(("VBE set xres (%d)", value));
             }
             else
             {
-              BX_INFO(("VBE set xres more then max xres (%d)", value));
+              BX_ERROR(("VBE set xres not in valid range (%d)", value));
             }
           }
           else
@@ -1022,15 +1168,15 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           // check that we don't set yres during vbe enabled
           if (!BX_VGA_THIS vbe.enabled)
           {
-            // check for within max yres range
-            if (value <= BX_VGA_THIS vbe.max_yres)
+            // check for within valid yres range
+            if ((value >= 200) && (value <= BX_VGA_THIS vbe.max_yres))
             {
               BX_VGA_THIS vbe.yres=(Bit16u) value;
               BX_INFO(("VBE set yres (%d)", value));
             }
             else
             {
-              BX_INFO(("VBE set yres more then max yres (%d)", value));
+              BX_ERROR(("VBE set yres not in valid range (%d)", value));
             }
           }
           else
@@ -1264,6 +1410,10 @@ Bit32u bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           //        adjust result width based upon virt_height=yres
           Bit16u new_width=value;
           Bit16u new_height;
+          if (new_width == 0) {
+            new_width = BX_VGA_THIS vbe.xres;
+            BX_INFO(("VBE reset virtual width to xres %d", new_width));
+          }
           if (BX_VGA_THIS vbe.bpp != VBE_DISPI_BPP_4) {
             new_height = (BX_VGA_THIS s.memsize / BX_VGA_THIS vbe.bpp_multiplier) / new_width;
           } else {

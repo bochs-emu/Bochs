@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2014-2024 Stanislav Shwartsman
+//   Copyright (c) 2014-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -83,344 +83,6 @@ void bx_cpuid_t::init()
   ia_extensions_bitmask[0] = (1 << BX_ISA_386);
 }
 
-void bx_cpuid_t::get_std_cpuid_monitor_mwait_leaf(cpuid_function_t *leaf, Bit32u edx_power_states) const
-{
-  // CPUID function 0x00000005 - MONITOR/MWAIT Leaf
-
-#if BX_SUPPORT_MONITOR_MWAIT
-  // EAX - Smallest monitor-line size in bytes (cache line size)
-  // EBX - Largest  monitor-line size in bytes (cache line size)
-  // ECX -
-  //   [31:4] - reserved
-  //    [3:3] - Monitorless MWAIT support
-  //    [2:2] - reserved
-  //    [1:1] - exit MWAIT even with EFLAGS.IF = 0
-  //    [0:0] - MONITOR/MWAIT extensions are supported
-  // EDX -
-  //  [03-00] - number of C0 sub C-states supported using MWAIT
-  //  [07-04] - number of C1 sub C-states supported using MWAIT
-  //  [11-08] - number of C2 sub C-states supported using MWAIT
-  //  [15-12] - number of C3 sub C-states supported using MWAIT
-  //  [19-16] - number of C4 sub C-states supported using MWAIT
-  //  [31-20] - reserved
-  leaf->eax = CACHE_LINE_SIZE;
-  leaf->ebx = CACHE_LINE_SIZE;
-  leaf->ecx = 0x3;
-  if (is_cpu_extension_supported(BX_ISA_MONITORLESS_MWAIT))
-    leaf->ecx |= (1<<3);
-  leaf->edx = edx_power_states;
-#else
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-#endif
-}
-
-#if BX_SUPPORT_APIC
-
-#if BX_SUPPORT_SMP
-BX_CPP_INLINE static Bit32u ilog2(Bit32u x)
-{
-  Bit32u count = 0;
-  while(x>>=1) count++;
-  return count;
-}
-#endif
-
-// leaf 0x0000000B //
-void bx_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  // CPUID function 0x0000000B - Extended Topology Leaf
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = subfunction;
-  leaf->edx = cpu->get_apic_id();
-
-  enum {
-    BX_DOMAIN_TYPE_ID_VALUE_INVALID = 0,
-    BX_DOMAIN_TYPE_ID_VALUE_SMT_THREAD = 1,
-    BX_DOMAIN_TYPE_ID_VALUE_CORE = 2,
-    BX_DOMAIN_TYPE_ID_VALUE_PROCESSOR = 3
-  };
-
-#if BX_SUPPORT_SMP
-  switch(subfunction) {
-  case 0:
-     leaf->eax = ilog2(nthreads-1)+1;
-     leaf->ebx = nthreads;
-     leaf->ecx |= (BX_DOMAIN_TYPE_ID_VALUE_SMT_THREAD<<8);
-     break;
-
-  case 1:
-     leaf->eax = ilog2(ncores-1)+1;
-     leaf->ebx = ncores * nthreads;
-     leaf->ecx |= (BX_DOMAIN_TYPE_ID_VALUE_CORE<<8);
-     break;
-
-  case 2:
-     if (nprocessors > 1) {
-       leaf->eax = ilog2(nprocessors-1)+1;
-       leaf->ebx = nprocessors * ncores * nthreads;
-       leaf->ecx |= (BX_DOMAIN_TYPE_ID_VALUE_PROCESSOR<<8);
-     }
-     break;
-
-  default:
-     break;
-  }
-#endif
-}
-
-#endif
-
-#if BX_CPU_LEVEL >= 6
-extern XSaveRestoreStateHelper xsave_restore[];
-
-static unsigned xsave_max_size_required_by_features(Bit32u features)
-{
-  unsigned max_size = 512+64, size = 0;
-
-  for (unsigned n=xcr0_t::BX_XCR0_YMM_BIT; n < xcr0_t::BX_XCR0_LAST; n++) {
-    if (features & (1 << n))
-      size = xsave_restore[n].offset + xsave_restore[n].len;
-    if (size > max_size)
-      max_size = size;
-  }
-
-  return max_size;
-}
-
-static unsigned xsave_max_size_required_by_xsaves_features(Bit32u features)
-{
-  unsigned max_size = 512+64;
-
-  for (unsigned n=xcr0_t::BX_XCR0_YMM_BIT; n < xcr0_t::BX_XCR0_LAST; n++) {
-    if (features & (1 << n))
-      max_size += xsave_restore[n].len;
-  }
-
-  return max_size;
-}
-
-void bx_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-
-  if (!is_cpu_extension_supported(BX_ISA_XSAVE))
-    return;
-
-  if (subfunction == 0) {
-    // EAX - valid bits of XCR0 (lower part)
-    // EBX - Maximum size (in bytes) required by enabled features
-    // ECX - Maximum size (in bytes) required by CPU supported features
-    // EDX - valid bits of XCR0 (upper part)
-    leaf->eax = cpu->xcr0_suppmask;
-    leaf->ebx = xsave_max_size_required_by_features(cpu->xcr0.get32());
-    leaf->ecx = xsave_max_size_required_by_features(cpu->xcr0_suppmask);
-    leaf->edx = 0; // xcr0 is still 32-bit
-    return;
-  }
-
-  if (subfunction == 1) {
-    // EAX[0] - support for the XSAVEOPT instruction
-    // EAX[1] - support for compaction extensions to the XSAVE feature set
-    // EAX[2] - support for execution of XGETBV with ECX = 1
-    // EAX[3] - support for XSAVES, XRSTORS, and the IA32_XSS MSR
-    // EAX[4] - support for XFD
-    leaf->eax = 0;
-    if (is_cpu_extension_supported(BX_ISA_XSAVEOPT))
-      leaf->eax |= 0x1;
-    if (is_cpu_extension_supported(BX_ISA_XSAVEC))
-      leaf->eax |= (1<<1) | (1<<2);
-    if (is_cpu_extension_supported(BX_ISA_XSAVES))
-      leaf->eax |= (1<<3);
-
-    // EBX[31:00] - The size (in bytes) of the XSAVE area containing all states enabled by (XCRO | IA32_XSS)
-    leaf->ebx = 0;
-    if (is_cpu_extension_supported(BX_ISA_XSAVES))
-      leaf->ebx = xsave_max_size_required_by_xsaves_features(cpu->xcr0.get32() | cpu->msr.ia32_xss);
-
-    // ECX[31:0] - Reports the supported bits of the lower 32 bits of the IA32_XSS MSR.
-    //             IA32_XSS[n]    can be set to 1 only if ECX[n] is 1
-    // EDX[31:0] - Reports the supported bits of the upper 32 bits of the IA32_XSS MSR.
-    //             IA32_XSS[n+32] can be set to 1 only if EDX[n] is 1
-    leaf->ecx = cpu->ia32_xss_suppmask;
-    leaf->edx = 0; // xcr0 is still 32-bit
-    return;
-  }
-
-  if (subfunction < xcr0_t::BX_XCR0_LAST) {
-    Bit32u support_mask = cpu->xcr0_suppmask | cpu->ia32_xss_suppmask;
-    if (support_mask & (1 << subfunction)) {
-      leaf->eax = xsave_restore[subfunction].len;
-      leaf->ebx = xsave_restore[subfunction].offset;
-      // ECX[0] - set if this component managed through IA32_XSS register
-      // ECX[1] - set to indicate this component must be aligned to 64-byte
-      // ECX[2] - XFD support for this component
-      leaf->ecx = (cpu->ia32_xss_suppmask & (1 << subfunction)) != 0;
-      leaf->edx = 0;
-    }
-  }
-}
-#endif
-
-#if BX_SUPPORT_AMX
-void bx_cpuid_t::get_std_cpuid_amx_palette_info_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-
-  if (!is_cpu_extension_supported(BX_ISA_AMX))
-    return;
-
-  if (subfunction == 0) {
-    leaf->eax = 1; // max palette_id
-    leaf->ebx = 0;
-    leaf->ecx = 0;
-    leaf->edx = 0;
-    return;
-  }
-
-  // information about palette #1
-  if (subfunction == 1) {
-    // EAX[15:00] : Palette #1 total tile bytes = 8192
-    // EAX[31:16] : Palette #1 bytes per tile = 1024
-    leaf->eax = 8192 | (1024<<16);
-    // EBX[15:00] : Palette #1 bytes_per_row = 64
-    // EBX[31:16] : Palette #1 number of tiles = 8
-    leaf->ebx = 64 | (8<<16);
-    // ECX[15:00] : Palette #1 max_rows = 16
-    // ECX[31:16] : Reserved
-    leaf->ecx = 16;
-    // EdX[31:00] : Reserved
-    leaf->edx = 0;
-    return;
-  }
-}
-
-void bx_cpuid_t::get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-
-  if (!is_cpu_extension_supported(BX_ISA_AMX))
-    return;
-
-  switch(subfunction) {
-  case 0:
-    // EBX[07:00] = 16 TMUL_MAX_K (rows or columns)
-    // EBX[23:08] = 64 TMUL_MAX_N (column bytes)
-    // EBX[31:24] reserved
-    leaf->ebx = 16 | (64<<8);
-    break;
-
-  case 1:
-    // EAX:
-    // ---
-    //    [0] AMX-INT8
-    //    [1] AMX-BF16
-    //    [2] AMX-COMPLEX
-    //    [3] AMX-FP16
-    //    [4] AMX-FP8
-    //    [5] AMX-TRANSPOSE
-    //    [6] AMX-TF32 (FP19)
-    //    [7] AMX-AVX512
-    //    [8] AMX-MOVRS
-    // [31:9] reserved
-    if (is_cpu_extension_supported(BX_ISA_AMX_INT8))
-      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_INT8;
-    if (is_cpu_extension_supported(BX_ISA_AMX_BF16))
-      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_BF16;
-    if (is_cpu_extension_supported(BX_ISA_AMX_COMPLEX))
-      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_COMPLEX;
-    if (is_cpu_extension_supported(BX_ISA_AMX_FP16))
-      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP16;
-    // AMX_FP8
-    // AMX_TRANSPOSE
-    if (is_cpu_extension_supported(BX_ISA_AMX_TF32))
-      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_TF32;
-    if (is_cpu_extension_supported(BX_ISA_AMX_AVX512))
-      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_AVX512;
-    if (is_cpu_extension_supported(BX_ISA_AMX_MOVRS))
-      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_MOVRS;
-    // EBX/ECX/EDX = 0 (reserved)
-    break;
-
-  default:
-    break;
-  }
-}
-#endif
-
-void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
-{
-  leaf->eax = 0;
-  leaf->ebx = 0;
-  leaf->ecx = 0;
-  leaf->edx = 0;
-
-#if BX_SUPPORT_EVEX
-  if (!is_cpu_extension_supported(BX_ISA_AVX10_1))
-    return;
-
-  unsigned avx10_lvl = avx10_level();
-
-  switch (subfunction) {
-  case 0:
-    // EAX:
-    //   [31:00]: maximum supported subleaf
-    // EBX:
-    //   [07:00]: AVX10 version
-    //   [15:08]: reserved
-    //   [16:16]: VL128 supported (always '1)
-    //   [17:17]: VL256 supported (always '1)
-    //   [18:18]: VL512 supported (always '1)
-    //   [31:19]: reserved
-    // ECX:
-    //   [31:00]: reserved
-    // EDX:
-    //   [31:00]: reserved
-    leaf->eax = 0;
-    leaf->ebx = avx10_lvl | (1<<16) | (1<<17) | (1<<18);
-    leaf->ecx = 0;
-    leaf->edx = 0;
-    break;
-
-  case 1:
-    // EAX:
-    // EBX:
-    // ECX:
-    //   [2] AVX10_VNNI_INT instructions support
-    // EDX:
-    leaf->eax = 0;
-    leaf->ebx = 0;
-    leaf->ecx = (avx10_lvl >= 2) ? (1<<2) : 0;
-    leaf->edx = 0;
-    break;
-
-  default:
-    break;
-  }
-#endif
-}
-
-#if BX_SUPPORT_EVEX
-unsigned bx_cpuid_t::avx10_level() const
-{
-  if (is_cpu_extension_supported(BX_ISA_AVX10_2)) return 2;
-  if (is_cpu_extension_supported(BX_ISA_AVX10_1)) return 1;
-  return 0;
-}
-#endif
-
 void bx_cpuid_t::get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_function_t *leaf, unsigned limited_max_leaf) const
 {
   // EAX: highest function understood by CPUID
@@ -447,42 +109,6 @@ void bx_cpuid_t::get_leaf_0(unsigned max_leaf, const char *vendor_string, cpuid_
   memcpy(&(leaf->edx), vendor_string + 4, 4);
   memcpy(&(leaf->ecx), vendor_string + 8, 4);
 #ifdef BX_BIG_ENDIAN
-  leaf->ebx = bx_bswap32(leaf->ebx);
-  leaf->ecx = bx_bswap32(leaf->ecx);
-  leaf->edx = bx_bswap32(leaf->edx);
-#endif
-}
-
-void bx_cpuid_t::get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32u function, cpuid_function_t *leaf) const
-{
-  static const char *brand_string_ovr = (const char *)SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
-  if (brand_string_ovr && *brand_string_ovr) brand_string = brand_string_ovr;
-
-  switch(function) {
-  case 0x80000002:
-    memcpy(&(leaf->eax), brand_string     , 4);
-    memcpy(&(leaf->ebx), brand_string +  4, 4);
-    memcpy(&(leaf->ecx), brand_string +  8, 4);
-    memcpy(&(leaf->edx), brand_string + 12, 4);
-    break;
-  case 0x80000003:
-    memcpy(&(leaf->eax), brand_string + 16, 4);
-    memcpy(&(leaf->ebx), brand_string + 20, 4);
-    memcpy(&(leaf->ecx), brand_string + 24, 4);
-    memcpy(&(leaf->edx), brand_string + 28, 4);
-    break;
-  case 0x80000004:
-    memcpy(&(leaf->eax), brand_string + 32, 4);
-    memcpy(&(leaf->ebx), brand_string + 36, 4);
-    memcpy(&(leaf->ecx), brand_string + 40, 4);
-    memcpy(&(leaf->edx), brand_string + 44, 4);
-    break;
-  default:
-    break;
-  }
-
-#ifdef BX_BIG_ENDIAN
-  leaf->eax = bx_bswap32(leaf->eax);
   leaf->ebx = bx_bswap32(leaf->ebx);
   leaf->ecx = bx_bswap32(leaf->ecx);
   leaf->edx = bx_bswap32(leaf->edx);
@@ -757,209 +383,345 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_1_edx(Bit32u extra) const
   return edx;
 }
 
-// Most of the bits in ECX are reserved for Intel
-Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_ecx(Bit32u extra) const
+// CPUID function 0x00000005 - MONITOR/MWAIT Leaf
+void bx_cpuid_t::get_std_cpuid_monitor_mwait_leaf(cpuid_function_t *leaf, Bit32u edx_power_states) const
 {
-  Bit32u ecx = extra;
-
-  // i [0:0]   LAHF/SAHF instructions support in 64-bit mode
-  //   [1:1]   CMP_Legacy: Core multi-processing legacy mode (AMD)
-  //   [2:2]   SVM: Secure Virtual Machine (AMD)
-  //   [3:3]   Extended APIC Space
-  //   [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
-  // i [5:5]   LZCNT: LZCNT instruction support
-  //   [6:6]   SSE4A: SSE4A Instructions support
-  //   [7:7]   Misaligned SSE support
-  // i [8:8]   PREFETCHW: PREFETCHW instruction support - can be enabled through extra
-  //   [9:9]   OSVW: OS visible workarounds CPUID leaf (AMD)
-  //   [10:10] IBS: Instruction based sampling (not supported in Bochs)
-  //   [11:11] XOP: Extended Operations Support and XOP Prefix
-  //   [12:12] SKINIT support (not supported in Bochs)
-  //   [13:13] WDT: Watchdog timer support (not supported in Bochs)
-  //   [14:14] Reserved
-  //   [15:15] LWP: Light weight profiling (not supported in Bochs)
-  //   [16:16] FMA4: Four-operand FMA instructions support
-  //   [17:17] Reserved
-  //   [18:18] Reserved
-  //   [19:19] NodeId: Indicates support for NodeId MSR (0xc001100c)
-  //   [20:20] Reserved
-  //   [21:21] TBM: trailing bit manipulation instructions support
-  //   [22:22] Topology extensions support
-  //   [23:23] PerfCtrExtCore: core perf counter extensions support
-  //   [24:24] PerfCtrExtNB: NB perf counter extensions support
-  //   [25:25] Reserved
-  //   [26:26] Data breakpoint extension. Indicates support for MSR 0xC0011027 and MSRs 0xC001101[B:9]
-  //   [27:27] Performance time-stamp counter. Indicates support for MSR 0xC0010280
-  //   [28:28] PerfCtrExtL2I: L2I performance counter extensions support
-  //   [29:29] MONITORX/MWAITX instructions support
-  //   [30:30] AddrMaskExt: address mask extension support for instruction breakpoint
-  //   [31:31] Reserved
-
-#if BX_SUPPORT_X86_64
-  // [0:0]   LAHF/SAHF instructions support in 64-bit mode
-  if (is_cpu_extension_supported(BX_ISA_LM_LAHF_SAHF))
-    ecx |= BX_CPUID_EXT1_ECX_LAHF_SAHF;
-#endif
-
-  // [5:5]   LZCNT: LZCNT instruction support
-  if (is_cpu_extension_supported(BX_ISA_LZCNT))
-    ecx |= BX_CPUID_EXT1_ECX_LZCNT;
-
-  // now AMD specific bits
-#if BX_SUPPORT_SVM
-  // [2:2]   SVM: Secure Virtual Machine (AMD)
-  if (is_cpu_extension_supported(BX_ISA_SVM))
-    ecx |= BX_CPUID_EXT1_ECX_SVM;
-#endif
-
-  // [3:3]   Extended APIC Space
-  if (is_cpu_extension_supported(BX_ISA_XAPIC_EXT))
-    ecx |= BX_CPUID_EXT1_ECX_EXT_APIC_SPACE;
-
-  // [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
-  if (is_cpu_extension_supported(BX_ISA_ALT_MOV_CR8))
-    ecx |= BX_CPUID_EXT1_ECX_ALT_MOV_CR8;
-
-  // [6:6]   SSE4A: SSE4A Instructions support
-  if (is_cpu_extension_supported(BX_ISA_SSE4A))
-    ecx |= BX_CPUID_EXT1_ECX_SSE4A;
-
-  // [7:7]   Misaligned SSE support
-  if (is_cpu_extension_supported(BX_ISA_MISALIGNED_SSE))
-    ecx |= BX_CPUID_EXT1_ECX_MISALIGNED_SSE;
-
-  // [11:11] XOP: Extended Operations Support and XOP Prefix
-  if (is_cpu_extension_supported(BX_ISA_XOP))
-    ecx |= BX_CPUID_EXT1_ECX_XOP;
-
-  // [16:16] FMA4: Four-operand FMA instructions support
-  if (is_cpu_extension_supported(BX_ISA_FMA4))
-    ecx |= BX_CPUID_EXT1_ECX_FMA4;
-
-  // [21:21] TBM: trailing bit manipulation instructions support
-  if (is_cpu_extension_supported(BX_ISA_TBM))
-    ecx |= BX_CPUID_EXT1_ECX_TBM;
-
 #if BX_SUPPORT_MONITOR_MWAIT
-  // [29:29] MONITORX/MWAITX instructions support
-  if (is_cpu_extension_supported(BX_ISA_MONITORX_MWAITX))
-    ecx |= BX_CPUID_EXT1_ECX_MONITORX_MWAITX;
+  // EAX - Smallest monitor-line size in bytes (cache line size)
+  // EBX - Largest  monitor-line size in bytes (cache line size)
+  // ECX -
+  //   [31:4] - reserved
+  //    [3:3] - Monitorless MWAIT support
+  //    [2:2] - reserved
+  //    [1:1] - exit MWAIT even with EFLAGS.IF = 0
+  //    [0:0] - MONITOR/MWAIT extensions are supported
+  // EDX -
+  //  [03-00] - number of C0 sub C-states supported using MWAIT
+  //  [07-04] - number of C1 sub C-states supported using MWAIT
+  //  [11-08] - number of C2 sub C-states supported using MWAIT
+  //  [15-12] - number of C3 sub C-states supported using MWAIT
+  //  [19-16] - number of C4 sub C-states supported using MWAIT
+  //  [31-20] - reserved
+  leaf->eax = CACHE_LINE_SIZE;
+  leaf->ebx = CACHE_LINE_SIZE;
+  leaf->ecx = 0x3;
+  if (is_cpu_extension_supported(BX_ISA_MONITORLESS_MWAIT))
+    leaf->ecx |= (1<<3);
+  leaf->edx = edx_power_states;
+#else
+  leaf->eax = 0;
+  leaf->ebx = 0;
+  leaf->ecx = 0;
+  leaf->edx = 0;
+#endif
+}
+
+#if BX_SUPPORT_APIC
+
+#if BX_SUPPORT_SMP
+BX_CPP_INLINE static Bit32u ilog2(Bit32u x)
+{
+  Bit32u count = 0;
+  while(x>>=1) count++;
+  return count;
+}
 #endif
 
-  return ecx;
-}
-
-// Most of the bits in EDX are reserved for Intel
-Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_edx_intel() const
+// leaf 0x0000000B //
+void bx_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
 {
-  Bit32u edx = 0;
+  // CPUID function 0x0000000B - Extended Topology Leaf
+  leaf->eax = 0;
+  leaf->ebx = 0;
+  leaf->ecx = subfunction;
+  leaf->edx = cpu->get_apic_id();
 
-  //  [10:0] Reserved for Intel
+  enum {
+    BX_DOMAIN_TYPE_ID_VALUE_INVALID = 0,
+    BX_DOMAIN_TYPE_ID_VALUE_SMT_THREAD = 1,
+    BX_DOMAIN_TYPE_ID_VALUE_CORE = 2,
+    BX_DOMAIN_TYPE_ID_VALUE_PROCESSOR = 3
+  };
 
-  // [11:11] SYSCALL/SYSRET support
-  if (cpu->long64_mode())
-    edx |= BX_CPUID_EXT1_EDX_SYSCALL_SYSRET;
+#if BX_SUPPORT_SMP
+  switch(subfunction) {
+  case 0:
+     leaf->eax = ilog2(nthreads-1)+1;
+     leaf->ebx = nthreads;
+     leaf->ecx |= (BX_DOMAIN_TYPE_ID_VALUE_SMT_THREAD<<8);
+     break;
 
-  // [19:12] Reserved for Intel
+  case 1:
+     leaf->eax = ilog2(ncores-1)+1;
+     leaf->ebx = ncores * nthreads;
+     leaf->ecx |= (BX_DOMAIN_TYPE_ID_VALUE_CORE<<8);
+     break;
 
-  // [20:20] No-Execute page protection
-  if (is_cpu_extension_supported(BX_ISA_NX))
-    edx |= BX_CPUID_EXT1_EDX_NX;
+  case 2:
+     if (nprocessors > 1) {
+       leaf->eax = ilog2(nprocessors-1)+1;
+       leaf->ebx = nprocessors * ncores * nthreads;
+       leaf->ecx |= (BX_DOMAIN_TYPE_ID_VALUE_PROCESSOR<<8);
+     }
+     break;
 
-  // [25:21] Reserved for Intel
-
-  // [26:26] 1G paging support
-  if (is_cpu_extension_supported(BX_ISA_1G_PAGES))
-    edx |= BX_CPUID_EXT1_EDX_1G_PAGES;
-
-  // [27:27] Support RDTSCP Instruction
-  if (is_cpu_extension_supported(BX_ISA_RDTSCP))
-    edx |= BX_CPUID_EXT1_EDX_RDTSCP;
-
-  // [28:28] Reserved
-
-  // [29:29] Long Mode
-  if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
-    edx |= BX_CPUID_EXT1_EDX_LONG_MODE;
-
-  // [30:30] AMD 3DNow! Extensions
-  // [31:31] AMD 3DNow! Instructions
-
-  return edx;
-}
-
-// Many of the bits in EDX are the same as FN 0x00000001 for AMD
-Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_edx_amd(Bit32u extra) const
-{
-  Bit32u edx = get_std_cpuid_leaf_1_edx_common(extra);
-
-  // [*] indicates common bits
-  // * [0:0]   FPU on chip
-  // * [1:1]   VME: Virtual-8086 Mode enhancements
-  // * [2:2]   DE: Debug Extensions (I/O breakpoints)
-  // * [3:3]   PSE: Page Size Extensions
-  // * [4:4]   TSC: Time Stamp Counter
-  // * [5:5]   MSR: RDMSR and WRMSR support
-  // * [6:6]   PAE: Physical Address Extensions
-  // * [7:7]   MCE: Machine Check Exception
-  // * [8:8]   CXS: CMPXCHG8B instruction
-  // * [9:9]   APIC: APIC on Chip
-  // * [10:10] Reserved
-  //   [11:11] SYSCALL/SYSRET support
-  // * [12:12] MTRR: Memory Type Range Reg
-  // * [13:13] PGE/PTE Global Bit
-  // * [14:14] MCA: Machine Check Architecture
-  // * [15:15] CMOV: Cond Mov/Cmp Instructions
-  // * [16:16] PAT: Page Attribute Table
-  // * [17:17] PSE-36: Physical Address Extensions
-  //   [19:18] Reserved
-  if (is_cpu_extension_supported(BX_ISA_SYSCALL_SYSRET_LEGACY)) // only uncommon bit
-    edx |= BX_CPUID_EXT1_EDX_SYSCALL_SYSRET;
-
-  // [20:20] No-Execute page protection
-  if (is_cpu_extension_supported(BX_ISA_NX))
-    edx |= BX_CPUID_EXT1_EDX_NX;
-
-  // [21:21] Reserved
-
-  // [22:22] AMD MMX Extensions <- some Intel's SSE instructions were done in AMD under this name
-  if (is_cpu_extension_supported(BX_ISA_SSE) || is_cpu_extension_supported(BX_ISA_3DNOW_EXT))
-    edx |= BX_CPUID_EXT1_EDX_AMD_MMX_EXT;
-  
-  // * [23:23] MMX Technology
-  // * [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
-
-  // [25:25] Fast FXSAVE/FXRSTOR mode support
-  if (is_cpu_extension_supported(BX_ISA_FFXSR))
-    edx |= BX_CPUID_EXT1_EDX_FFXSR;
-
-  // [26:26] 1G paging support
-  if (is_cpu_extension_supported(BX_ISA_1G_PAGES))
-    edx |= BX_CPUID_EXT1_EDX_1G_PAGES;
-
-  // [27:27] Support RDTSCP Instruction
-  if (is_cpu_extension_supported(BX_ISA_RDTSCP))
-    edx |= BX_CPUID_EXT1_EDX_RDTSCP;
-
-  // [28:28] Reserved
-
-  // [29:29] Long Mode
-  if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
-    edx |= BX_CPUID_EXT1_EDX_LONG_MODE;
-
-  // [30:30] AMD 3DNow! Extensions (3DNow!+)
-  // [31:31] AMD 3DNow! Instructions
-#if BX_SUPPORT_3DNOW
-  if (is_cpu_extension_supported(BX_ISA_3DNOW)) {
-    edx |= BX_CPUID_EXT1_EDX_3DNOW;
-    if (is_cpu_extension_supported(BX_ISA_3DNOW_EXT))
-      edx |= BX_CPUID_EXT1_EDX_3DNOW_EXT;
+  default:
+     break;
   }
 #endif
-  
-  return edx;
 }
- 
+
+#endif
+
+#if BX_CPU_LEVEL >= 6
+extern XSaveRestoreStateHelper xsave_restore[];
+
+static unsigned xsave_max_size_required_by_features(Bit32u features)
+{
+  unsigned max_size = 512+64, size = 0;
+
+  for (unsigned n=xcr0_t::BX_XCR0_YMM_BIT; n < xcr0_t::BX_XCR0_LAST; n++) {
+    if (features & (1 << n))
+      size = xsave_restore[n].offset + xsave_restore[n].len;
+    if (size > max_size)
+      max_size = size;
+  }
+
+  return max_size;
+}
+
+static unsigned xsave_max_size_required_by_xsaves_features(Bit32u features)
+{
+  unsigned max_size = 512+64;
+
+  for (unsigned n=xcr0_t::BX_XCR0_YMM_BIT; n < xcr0_t::BX_XCR0_LAST; n++) {
+    if (features & (1 << n))
+      max_size += xsave_restore[n].len;
+  }
+
+  return max_size;
+}
+
+// CPUID Leaf 0x0000000D: XSAVE
+void bx_cpuid_t::get_std_cpuid_xsave_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
+{
+  leaf->eax = 0;
+  leaf->ebx = 0;
+  leaf->ecx = 0;
+  leaf->edx = 0;
+
+  if (!is_cpu_extension_supported(BX_ISA_XSAVE))
+    return;
+
+  if (subfunction == 0) {
+    // EAX - valid bits of XCR0 (lower part)
+    // EBX - Maximum size (in bytes) required by enabled features
+    // ECX - Maximum size (in bytes) required by CPU supported features
+    // EDX - valid bits of XCR0 (upper part)
+    leaf->eax = cpu->xcr0_suppmask;
+    leaf->ebx = xsave_max_size_required_by_features(cpu->xcr0.get32());
+    leaf->ecx = xsave_max_size_required_by_features(cpu->xcr0_suppmask);
+    leaf->edx = 0; // xcr0 is still 32-bit
+    return;
+  }
+
+  if (subfunction == 1) {
+    // EAX[0] - support for the XSAVEOPT instruction
+    // EAX[1] - support for compaction extensions to the XSAVE feature set
+    // EAX[2] - support for execution of XGETBV with ECX = 1
+    // EAX[3] - support for XSAVES, XRSTORS, and the IA32_XSS MSR
+    // EAX[4] - support for XFD
+    leaf->eax = 0;
+    if (is_cpu_extension_supported(BX_ISA_XSAVEOPT))
+      leaf->eax |= 0x1;
+    if (is_cpu_extension_supported(BX_ISA_XSAVEC))
+      leaf->eax |= (1<<1) | (1<<2);
+    if (is_cpu_extension_supported(BX_ISA_XSAVES))
+      leaf->eax |= (1<<3);
+
+    // EBX[31:00] - The size (in bytes) of the XSAVE area containing all states enabled by (XCRO | IA32_XSS)
+    leaf->ebx = 0;
+    if (is_cpu_extension_supported(BX_ISA_XSAVES))
+      leaf->ebx = xsave_max_size_required_by_xsaves_features(cpu->xcr0.get32() | cpu->msr.ia32_xss);
+
+    // ECX[31:0] - Reports the supported bits of the lower 32 bits of the IA32_XSS MSR.
+    //             IA32_XSS[n]    can be set to 1 only if ECX[n] is 1
+    // EDX[31:0] - Reports the supported bits of the upper 32 bits of the IA32_XSS MSR.
+    //             IA32_XSS[n+32] can be set to 1 only if EDX[n] is 1
+    leaf->ecx = cpu->ia32_xss_suppmask;
+    leaf->edx = 0; // xcr0 is still 32-bit
+    return;
+  }
+
+  if (subfunction < xcr0_t::BX_XCR0_LAST) {
+    Bit32u support_mask = cpu->xcr0_suppmask | cpu->ia32_xss_suppmask;
+    if (support_mask & (1 << subfunction)) {
+      leaf->eax = xsave_restore[subfunction].len;
+      leaf->ebx = xsave_restore[subfunction].offset;
+      // ECX[0] - set if this component managed through IA32_XSS register
+      // ECX[1] - set to indicate this component must be aligned to 64-byte when the compacted format of an XSAVE area is used
+      // ECX[2] - XFD support for this component
+      leaf->ecx = xsave_restore[subfunction].attr;
+      leaf->edx = 0;
+    }
+  }
+}
+#endif
+
+#if BX_SUPPORT_AMX
+// Leaf 0x0000001D: AMX Palette info
+void bx_cpuid_t::get_std_cpuid_amx_palette_info_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
+{
+  leaf->eax = 0;
+  leaf->ebx = 0;
+  leaf->ecx = 0;
+  leaf->edx = 0;
+
+  if (!is_cpu_extension_supported(BX_ISA_AMX))
+    return;
+
+  if (subfunction == 0) {
+    leaf->eax = 1; // max palette_id
+    leaf->ebx = 0;
+    leaf->ecx = 0;
+    leaf->edx = 0;
+    return;
+  }
+
+  // information about palette #1
+  if (subfunction == 1) {
+    // EAX[15:00] : Palette #1 total tile bytes = 8192
+    // EAX[31:16] : Palette #1 bytes per tile = 1024
+    leaf->eax = 8192 | (1024<<16);
+    // EBX[15:00] : Palette #1 bytes_per_row = 64
+    // EBX[31:16] : Palette #1 number of tiles = 8
+    leaf->ebx = 64 | (8<<16);
+    // ECX[15:00] : Palette #1 max_rows = 16
+    // ECX[31:16] : Reserved
+    leaf->ecx = 16;
+    // EdX[31:00] : Reserved
+    leaf->edx = 0;
+    return;
+  }
+}
+
+// Leaf 0x0000001E: AMX: TMUL Information Main leaf
+void bx_cpuid_t::get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
+{
+  leaf->eax = 0;
+  leaf->ebx = 0;
+  leaf->ecx = 0;
+  leaf->edx = 0;
+
+  if (!is_cpu_extension_supported(BX_ISA_AMX))
+    return;
+
+  switch(subfunction) {
+  case 0:
+    // EBX[07:00] = 16 TMUL_MAX_K (rows or columns)
+    // EBX[23:08] = 64 TMUL_MAX_N (column bytes)
+    // EBX[31:24] reserved
+    leaf->ebx = 16 | (64<<8);
+    break;
+
+  case 1:
+    // EAX:
+    // ---
+    //    [0] AMX-INT8
+    //    [1] AMX-BF16
+    //    [2] AMX-COMPLEX
+    //    [3] AMX-FP16
+    //    [4] AMX-FP8
+    //    [5] AMX-TRANSPOSE (deprecated)
+    //    [6] AMX-TF32 (deprecated)
+    //    [7] AMX-AVX512
+    //    [8] AMX-MOVRS
+    // [31:9] reserved
+    if (is_cpu_extension_supported(BX_ISA_AMX_INT8))
+      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_INT8;
+    if (is_cpu_extension_supported(BX_ISA_AMX_BF16))
+      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_BF16;
+    if (is_cpu_extension_supported(BX_ISA_AMX_COMPLEX))
+      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_COMPLEX;
+    if (is_cpu_extension_supported(BX_ISA_AMX_FP16))
+      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP16;
+    if (is_cpu_extension_supported(BX_ISA_AMX_FP8))
+      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP8;
+    if (is_cpu_extension_supported(BX_ISA_AMX_AVX512))
+      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_AVX512;
+    if (is_cpu_extension_supported(BX_ISA_AMX_MOVRS))
+      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_MOVRS;
+    // EBX/ECX/EDX = 0 (reserved)
+    break;
+
+  default:
+    break;
+  }
+}
+#endif
+
+#if BX_SUPPORT_EVEX
+unsigned bx_cpuid_t::avx10_level() const
+{
+  if (is_cpu_extension_supported(BX_ISA_AVX10_2)) return 2;
+  if (is_cpu_extension_supported(BX_ISA_AVX10_1)) return 1;
+  return 0;
+}
+#endif
+
+// Leaf 0x00000024: AVX10 support and versioning
+void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
+{
+  leaf->eax = 0;
+  leaf->ebx = 0;
+  leaf->ecx = 0;
+  leaf->edx = 0;
+
+#if BX_SUPPORT_EVEX
+  if (!is_cpu_extension_supported(BX_ISA_AVX10_1))
+    return;
+
+  unsigned avx10_lvl = avx10_level();
+
+  switch (subfunction) {
+  case 0:
+    // EAX:
+    //   [31:00]: maximum supported subleaf
+    // EBX:
+    //   [07:00]: AVX10 version
+    //   [15:08]: reserved
+    //   [16:16]: VL128 supported (always '1)
+    //   [17:17]: VL256 supported (always '1)
+    //   [18:18]: VL512 supported (always '1)
+    //   [31:19]: reserved
+    // ECX:
+    //   [31:00]: reserved
+    // EDX:
+    //   [31:00]: reserved
+    leaf->eax = 0;
+    leaf->ebx = avx10_lvl | (1<<16) | (1<<17) | (1<<18);
+    leaf->ecx = 0;
+    leaf->edx = 0;
+    break;
+
+  case 1:
+    // EAX:
+    // EBX:
+    // ECX:
+    //   [2] AVX10_VNNI_INT instructions support
+    // EDX:
+    leaf->eax = 0;
+    leaf->ebx = 0;
+    leaf->ecx = (avx10_lvl >= 2) ? (1<<2) : 0;
+    leaf->edx = 0;
+    break;
+
+  default:
+    break;
+  }
+#endif
+}
+
 // leaf 0x00000007, subleaf 0 - EBX
 Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ebx(Bit32u extra) const
 {
@@ -1167,11 +929,7 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ecx(Bit32u extra) const
     ecx |= BX_CPUID_STD7_SUBLEAF0_ECX_LA57;
 #endif
 
-  // [17:17] reserved
-  // [18:18] reserved
-  // [19:19] reserved
-  // [20:20] reserved
-  // [21:21] reserved
+  // [21:17] MPX MAWAU - MPX user address-width adjust
 
   // [22:22] RDPID: Read Processor ID support
   if (is_cpu_extension_supported(BX_ISA_RDPID))
@@ -1344,13 +1102,18 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra) const
   //   [10:10]  Fast zero-length REP MOVSB - not supported, can be enabled through extra
   //   [11:11]  Fast zero-length REP STOSB - not supported, can be enabled through extra
   //   [12:12]  Fast zero-length REP CMPSB/SCASB - not supported, can be enabled through extra
-  //   [18:13]  reserved
+  //   [16:13]  reserved
+
+  //   [17:17]  Flexible Return and Event Delivery (FRED) support
+  //   [18:18]  LKGS instruction support
+  if (is_cpu_extension_supported(BX_ISA_FRED))
+    eax |= BX_CPUID_STD7_SUBLEAF1_EAX_FRED | BX_CPUID_STD7_SUBLEAF1_EAX_LKGS;
 
   //   [19:19]  WRMSRNS instruction
   if (is_cpu_extension_supported(BX_ISA_WRMSRNS))
     eax |= BX_CPUID_STD7_SUBLEAF1_EAX_WRMSRNS;
 
-  //   [20:20]  reserved
+  //   [20:20]  NMI source reporting - not implemented yet
 
   //   [21:21]  AMX-FP16 support
 #if BX_SUPPORT_AMX
@@ -1386,20 +1149,24 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_eax(Bit32u extra) const
 }
 
 // leaf 0x00000007, subleaf 1 - ECX
-Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_ecx() const
+Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_ecx(Bit32u extra) const
 {
-  Bit32u ecx = 0;
+  Bit32u ecx = extra;
 
   // CPUID defines - features CPUID[0x00000007].ECX  [subleaf 1]
   // -----------------------------
 
-  //   [0:4]    reserved
+  //    [0:4]   reserved
 
-  //   [5:5]    Support immediate forms of RDMSR and WRMSRNS instructions
+  //    [5:5]   Support immediate forms of RDMSR and WRMSRNS instructions
   if (is_cpu_extension_supported(BX_ISA_MSR_IMM))
     ecx |= BX_CPUID_STD7_SUBLEAF1_ECX_MSR_IMM;
 
-  //   [31:5]   reserved
+  //   [10:6]   reserved
+
+  //  [11:11]   Support ACE instructions (not supported yet)
+
+  //  [31:12]   reserved
 
   return ecx;
 }
@@ -1441,10 +1208,15 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
     edx |= BX_CPUID_STD7_SUBLEAF1_EDX_AVX_VNNI_INT16;
 #endif
 
-  //   [12:11]  reserved
-  //   [13:13]  User Timer support
+  //   [13:11]  reserved
   //   [14:14]  PREFETCHITI: PREFETCHIT0/T1 instruction
+
   //   [15:15]  USER_MSR: support for URDMSR/UWRMSR instructions
+#if BX_SUPPORT_X86_64
+  if (is_cpu_extension_supported(BX_ISA_USER_MSR))
+    edx |= BX_CPUID_STD7_SUBLEAF1_EDX_USER_MSR;
+#endif
+
   //   [16:16]  reserved
 
   //   [17:17]  Flexible UIRET: UIRET sets UIF to the RFLAGS[1] image loaded from the stack
@@ -1471,6 +1243,293 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
   //   [31:24]  reserved
 
   return edx;
+}
+
+// leaf 0x00000015 - Time Stamp Counter and Nominal Core Crystal Clock Information
+void bx_cpuid_t::get_freq_leaf_15(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx) const
+{
+  static unsigned cpuid_freq = SIM->get_param_enum(BXPN_CPUID_FREQ)->get();
+
+  switch(cpuid_freq) {
+  case BX_CPUID_FREQ_NONE:
+    // EBX=0: TSC/crystal ratio not enumerated, ECX=0: crystal not enumerated;
+    // guests fall back to their own timer calibration and measure the true rate
+    get_leaf(leaf, 0, 0, 0, 0);
+    break;
+  case BX_CPUID_FREQ_IPS:
+    // TSC frequency = core crystal clock * EBX/EAX: report the true tick rate
+    // as a crystal running at 'ips' Hz with a 1/1 ratio
+    get_leaf(leaf, 1, 1, (Bit32u) SIM->get_param_num(BXPN_IPS)->get(), 0);
+    break;
+  case BX_CPUID_FREQ_HARDWARE:
+  default:
+    get_leaf(leaf, eax, ebx, ecx, 0);
+    break;
+  }
+}
+
+// leaf 0x00000016 - Processor Frequency Information
+void bx_cpuid_t::get_freq_leaf_16(cpuid_function_t *leaf, Bit32u eax, Bit32u ebx, Bit32u ecx) const
+{
+  static unsigned cpuid_freq = SIM->get_param_enum(BXPN_CPUID_FREQ)->get();
+
+  switch(cpuid_freq) {
+  case BX_CPUID_FREQ_NONE:
+    // EAX=0: processor base frequency not enumerated
+    get_leaf(leaf, 0, 0, 0, 0);
+    break;
+  case BX_CPUID_FREQ_IPS:
+    {
+      // report base and max frequency of the emulated tick rate in MHz
+      Bit32u mhz = (Bit32u)((SIM->get_param_num(BXPN_IPS)->get() + 500000) / 1000000);
+      get_leaf(leaf, mhz, mhz, 100, 0);
+    }
+    break;
+  case BX_CPUID_FREQ_HARDWARE:
+  default:
+    get_leaf(leaf, eax, ebx, ecx, 0);
+    break;
+  }
+}
+
+// Most of the bits in ECX are reserved for Intel
+Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_ecx(Bit32u extra) const
+{
+  Bit32u ecx = extra;
+
+  // i [0:0]   LAHF/SAHF instructions support in 64-bit mode
+  //   [1:1]   CMP_Legacy: Core multi-processing legacy mode (AMD)
+  //   [2:2]   SVM: Secure Virtual Machine (AMD)
+  //   [3:3]   Extended APIC Space
+  //   [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
+  // i [5:5]   LZCNT: LZCNT instruction support
+  //   [6:6]   SSE4A: SSE4A Instructions support
+  //   [7:7]   Misaligned SSE support
+  // i [8:8]   PREFETCHW: PREFETCHW instruction support - can be enabled through extra
+  //   [9:9]   OSVW: OS visible workarounds CPUID leaf (AMD)
+  //   [10:10] IBS: Instruction based sampling (not supported in Bochs)
+  //   [11:11] XOP: Extended Operations Support and XOP Prefix
+  //   [12:12] SKINIT support (not supported in Bochs)
+  //   [13:13] WDT: Watchdog timer support (not supported in Bochs)
+  //   [14:14] Reserved
+  //   [15:15] LWP: Light weight profiling (not supported in Bochs)
+  //   [16:16] FMA4: Four-operand FMA instructions support
+  //   [17:17] Reserved
+  //   [18:18] Reserved
+  //   [19:19] NodeId: Indicates support for NodeId MSR (0xc001100c)
+  //   [20:20] Reserved
+  //   [21:21] TBM: trailing bit manipulation instructions support
+  //   [22:22] Topology extensions support
+  //   [23:23] PerfCtrExtCore: core perf counter extensions support
+  //   [24:24] PerfCtrExtNB: NB perf counter extensions support
+  //   [25:25] Reserved
+  //   [26:26] Data breakpoint extension. Indicates support for MSR 0xC0011027 and MSRs 0xC001101[B:9]
+  //   [27:27] Performance time-stamp counter. Indicates support for MSR 0xC0010280
+  //   [28:28] PerfCtrExtL2I: L2I performance counter extensions support
+  //   [29:29] MONITORX/MWAITX instructions support
+  //   [30:30] AddrMaskExt: address mask extension support for instruction breakpoint
+  //   [31:31] Reserved
+
+#if BX_SUPPORT_X86_64
+  // [0:0]   LAHF/SAHF instructions support in 64-bit mode
+  if (is_cpu_extension_supported(BX_ISA_LM_LAHF_SAHF))
+    ecx |= BX_CPUID_EXT1_ECX_LAHF_SAHF;
+#endif
+
+  // [5:5]   LZCNT: LZCNT instruction support
+  if (is_cpu_extension_supported(BX_ISA_LZCNT))
+    ecx |= BX_CPUID_EXT1_ECX_LZCNT;
+
+  // now AMD specific bits
+#if BX_SUPPORT_SVM
+  // [2:2]   SVM: Secure Virtual Machine (AMD)
+  if (is_cpu_extension_supported(BX_ISA_SVM))
+    ecx |= BX_CPUID_EXT1_ECX_SVM;
+#endif
+
+  // [3:3]   Extended APIC Space
+  if (is_cpu_extension_supported(BX_ISA_XAPIC_EXT))
+    ecx |= BX_CPUID_EXT1_ECX_EXT_APIC_SPACE;
+
+  // [4:4]   AltMovCR8: LOCK MOV CR0 means MOV CR8
+  if (is_cpu_extension_supported(BX_ISA_ALT_MOV_CR8))
+    ecx |= BX_CPUID_EXT1_ECX_ALT_MOV_CR8;
+
+  // [6:6]   SSE4A: SSE4A Instructions support
+  if (is_cpu_extension_supported(BX_ISA_SSE4A))
+    ecx |= BX_CPUID_EXT1_ECX_SSE4A;
+
+  // [7:7]   Misaligned SSE support
+  if (is_cpu_extension_supported(BX_ISA_MISALIGNED_SSE))
+    ecx |= BX_CPUID_EXT1_ECX_MISALIGNED_SSE;
+
+  // [11:11] XOP: Extended Operations Support and XOP Prefix
+  if (is_cpu_extension_supported(BX_ISA_XOP))
+    ecx |= BX_CPUID_EXT1_ECX_XOP;
+
+  // [16:16] FMA4: Four-operand FMA instructions support
+  if (is_cpu_extension_supported(BX_ISA_FMA4))
+    ecx |= BX_CPUID_EXT1_ECX_FMA4;
+
+  // [21:21] TBM: trailing bit manipulation instructions support
+  if (is_cpu_extension_supported(BX_ISA_TBM))
+    ecx |= BX_CPUID_EXT1_ECX_TBM;
+
+#if BX_SUPPORT_MONITOR_MWAIT
+  // [29:29] MONITORX/MWAITX instructions support
+  if (is_cpu_extension_supported(BX_ISA_MONITORX_MWAITX))
+    ecx |= BX_CPUID_EXT1_ECX_MONITORX_MWAITX;
+#endif
+
+  return ecx;
+}
+
+// Most of the bits in EDX are reserved for Intel
+Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_edx_intel() const
+{
+  Bit32u edx = 0;
+
+  //  [10:0] Reserved for Intel
+
+  // [11:11] SYSCALL/SYSRET support
+  if (cpu->long64_mode())
+    edx |= BX_CPUID_EXT1_EDX_SYSCALL_SYSRET;
+
+  // [19:12] Reserved for Intel
+
+  // [20:20] No-Execute page protection
+  if (is_cpu_extension_supported(BX_ISA_NX))
+    edx |= BX_CPUID_EXT1_EDX_NX;
+
+  // [25:21] Reserved for Intel
+
+  // [26:26] 1G paging support
+  if (is_cpu_extension_supported(BX_ISA_1G_PAGES))
+    edx |= BX_CPUID_EXT1_EDX_1G_PAGES;
+
+  // [27:27] Support RDTSCP Instruction
+  if (is_cpu_extension_supported(BX_ISA_RDTSCP))
+    edx |= BX_CPUID_EXT1_EDX_RDTSCP;
+
+  // [28:28] Reserved
+
+  // [29:29] Long Mode
+  if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
+    edx |= BX_CPUID_EXT1_EDX_LONG_MODE;
+
+  // [30:30] AMD 3DNow! Extensions
+  // [31:31] AMD 3DNow! Instructions
+
+  return edx;
+}
+
+// Many of the bits in EDX are the same as FN 0x00000001 for AMD
+Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_edx_amd(Bit32u extra) const
+{
+  Bit32u edx = get_std_cpuid_leaf_1_edx_common(extra);
+
+  // [*] indicates common bits
+  // * [0:0]   FPU on chip
+  // * [1:1]   VME: Virtual-8086 Mode enhancements
+  // * [2:2]   DE: Debug Extensions (I/O breakpoints)
+  // * [3:3]   PSE: Page Size Extensions
+  // * [4:4]   TSC: Time Stamp Counter
+  // * [5:5]   MSR: RDMSR and WRMSR support
+  // * [6:6]   PAE: Physical Address Extensions
+  // * [7:7]   MCE: Machine Check Exception
+  // * [8:8]   CXS: CMPXCHG8B instruction
+  // * [9:9]   APIC: APIC on Chip
+  // * [10:10] Reserved
+  //   [11:11] SYSCALL/SYSRET support
+  // * [12:12] MTRR: Memory Type Range Reg
+  // * [13:13] PGE/PTE Global Bit
+  // * [14:14] MCA: Machine Check Architecture
+  // * [15:15] CMOV: Cond Mov/Cmp Instructions
+  // * [16:16] PAT: Page Attribute Table
+  // * [17:17] PSE-36: Physical Address Extensions
+  //   [19:18] Reserved
+  if (is_cpu_extension_supported(BX_ISA_SYSCALL_SYSRET_LEGACY)) // only uncommon bit
+    edx |= BX_CPUID_EXT1_EDX_SYSCALL_SYSRET;
+
+  // [20:20] No-Execute page protection
+  if (is_cpu_extension_supported(BX_ISA_NX))
+    edx |= BX_CPUID_EXT1_EDX_NX;
+
+  // [21:21] Reserved
+
+  // [22:22] AMD MMX Extensions <- some Intel's SSE instructions were done in AMD under this name
+  if (is_cpu_extension_supported(BX_ISA_SSE) || is_cpu_extension_supported(BX_ISA_3DNOW_EXT))
+    edx |= BX_CPUID_EXT1_EDX_AMD_MMX_EXT;
+  
+  // * [23:23] MMX Technology
+  // * [24:24] FXSR: FXSAVE/FXRSTOR (also indicates CR4.OSFXSR is available)
+
+  // [25:25] Fast FXSAVE/FXRSTOR mode support
+  if (is_cpu_extension_supported(BX_ISA_FFXSR))
+    edx |= BX_CPUID_EXT1_EDX_FFXSR;
+
+  // [26:26] 1G paging support
+  if (is_cpu_extension_supported(BX_ISA_1G_PAGES))
+    edx |= BX_CPUID_EXT1_EDX_1G_PAGES;
+
+  // [27:27] Support RDTSCP Instruction
+  if (is_cpu_extension_supported(BX_ISA_RDTSCP))
+    edx |= BX_CPUID_EXT1_EDX_RDTSCP;
+
+  // [28:28] Reserved
+
+  // [29:29] Long Mode
+  if (is_cpu_extension_supported(BX_ISA_LONG_MODE))
+    edx |= BX_CPUID_EXT1_EDX_LONG_MODE;
+
+  // [30:30] AMD 3DNow! Extensions (3DNow!+)
+  // [31:31] AMD 3DNow! Instructions
+#if BX_SUPPORT_3DNOW
+  if (is_cpu_extension_supported(BX_ISA_3DNOW)) {
+    edx |= BX_CPUID_EXT1_EDX_3DNOW;
+    if (is_cpu_extension_supported(BX_ISA_3DNOW_EXT))
+      edx |= BX_CPUID_EXT1_EDX_3DNOW_EXT;
+  }
+#endif
+  
+  return edx;
+}
+
+// leaf 0x80000002 - 0x80000004 //
+void bx_cpuid_t::get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32u function, cpuid_function_t *leaf) const
+{
+  static const char *brand_string_ovr = (const char *)SIM->get_param_string(BXPN_BRAND_STRING)->getptr();
+  if (brand_string_ovr && *brand_string_ovr) brand_string = brand_string_ovr;
+
+  switch(function) {
+  case 0x80000002:
+    memcpy(&(leaf->eax), brand_string     , 4);
+    memcpy(&(leaf->ebx), brand_string +  4, 4);
+    memcpy(&(leaf->ecx), brand_string +  8, 4);
+    memcpy(&(leaf->edx), brand_string + 12, 4);
+    break;
+  case 0x80000003:
+    memcpy(&(leaf->eax), brand_string + 16, 4);
+    memcpy(&(leaf->ebx), brand_string + 20, 4);
+    memcpy(&(leaf->ecx), brand_string + 24, 4);
+    memcpy(&(leaf->edx), brand_string + 28, 4);
+    break;
+  case 0x80000004:
+    memcpy(&(leaf->eax), brand_string + 32, 4);
+    memcpy(&(leaf->ebx), brand_string + 36, 4);
+    memcpy(&(leaf->ecx), brand_string + 40, 4);
+    memcpy(&(leaf->edx), brand_string + 44, 4);
+    break;
+  default:
+    break;
+  }
+
+#ifdef BX_BIG_ENDIAN
+  leaf->eax = bx_bswap32(leaf->eax);
+  leaf->ebx = bx_bswap32(leaf->ebx);
+  leaf->ecx = bx_bswap32(leaf->ecx);
+  leaf->edx = bx_bswap32(leaf->edx);
+#endif
 }
 
 // leaf 0x80000008 //
@@ -1663,7 +1722,6 @@ void bx_cpuid_t::sanity_checks() const
     if (is_cpu_extension_supported(BX_ISA_AMX_INT8) ||
         is_cpu_extension_supported(BX_ISA_AMX_BF16) ||
         is_cpu_extension_supported(BX_ISA_AMX_FP16) ||
-        is_cpu_extension_supported(BX_ISA_AMX_TF32) ||
         is_cpu_extension_supported(BX_ISA_AMX_COMPLEX) ||
         is_cpu_extension_supported(BX_ISA_AMX_MOVRS) ||
         is_cpu_extension_supported(BX_ISA_AMX_AVX512))

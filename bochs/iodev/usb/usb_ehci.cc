@@ -4,7 +4,7 @@
 //
 //  Experimental USB EHCI adapter (partly ported from Qemu)
 //
-//  Copyright (C) 2015-2025  The Bochs Project
+//  Copyright (C) 2015-2026  The Bochs Project
 //
 //  Copyright(c) 2008  Emutex Ltd. (address@hidden)
 //  Copyright(c) 2011-2012 Red Hat, Inc.
@@ -39,6 +39,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "pc_system.h"
 
 #if BX_SUPPORT_PCI && BX_SUPPORT_USB_EHCI
 
@@ -174,7 +175,7 @@ PLUGIN_ENTRY_FOR_MODULE(usb_ehci)
     SIM->register_addon_option("usb_ehci", usb_ehci_options_parser, usb_ehci_options_save);
   } else if (mode == PLUGIN_FINI) {
     SIM->unregister_addon_option("usb_ehci");
-    bx_list_c *menu = (bx_list_c*)SIM->get_param("ports.usb");
+    bx_list_c *menu = (bx_list_c*)SIM->get_param("usb");
     delete theUSB_EHCI;
     menu->remove("ehci");
   } else if (mode == PLUGIN_PROBE) {
@@ -224,9 +225,9 @@ bx_usb_ehci_c::~bx_usb_ehci_c()
     remove_device(i);
   }
 
-  SIM->get_bochs_root()->remove("usb_ehci");
   bx_list_c *usb_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_USB);
   usb_rt->remove("ehci");
+  SIM->get_bochs_root()->remove("usb_ehci");
   BX_DEBUG(("Exit"));
 }
 
@@ -287,7 +288,13 @@ void bx_usb_ehci_c::init(void)
     BX_EHCI_THIS uhci[2]->init_uhci(devfunc | 0x02, 0x8086, 0x24c7, 0x01, 0x00, BX_PCI_INTC);
 #if BX_USB_DEBUGGER
     if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() == USB_DEBUG_UHCI) {
-      SIM->register_usb_debug_type(USB_DEBUG_UHCI);
+      const char *device = SIM->get_param_string(BXPN_USB_DEBUG_DEVICE)->getptr();
+      if (!strncmp(device, "ehci/uhci", 9) && (strlen(device) == 10) &&
+          (device[9] >= '0') && (device[9] <= '2')) {
+        int devid = device[9] -'0';
+        BX_EHCI_THIS uhci[devid]->enable_usbdbg();
+        SIM->register_usb_debug_type(USB_DEBUG_UHCI, devid);
+      }
     }
 #endif
   } else if (companion_type == EHCI_COMPANION_OHCI) {
@@ -308,7 +315,13 @@ void bx_usb_ehci_c::init(void)
     BX_EHCI_THIS ohci[2]->init_ohci(devfunc | 0x02, 0x8086, 0x880E, 0x00, 0x00, BX_PCI_INTC);
 #if BX_USB_DEBUGGER
     if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() == USB_DEBUG_OHCI) {
-      SIM->register_usb_debug_type(USB_DEBUG_OHCI);
+      const char *device = SIM->get_param_string(BXPN_USB_DEBUG_DEVICE)->getptr();
+      if (!strncmp(device, "ehci/ohci", 9) && (strlen(device) == 10) &&
+          (device[9] >= '0') && (device[9] <= '2')) {
+        int devid = device[9] -'0';
+        BX_EHCI_THIS ohci[devid]->enable_usbdbg();
+        SIM->register_usb_debug_type(USB_DEBUG_OHCI, devid);
+      }
     }
 #endif
   } else
@@ -432,7 +445,7 @@ void bx_usb_ehci_c::register_state(void)
 {
   unsigned i;
   char tmpname[16];
-  bx_list_c *hub, *op_regs, *port, *reg, *hcic;
+  bx_list_c *hub, *op_regs, *port, *reg;
 
   bx_list_c *list = new bx_list_c(SIM->get_bochs_root(), "usb_ehci", "USB EHCI State");
   hub = new bx_list_c(list, "hub");
@@ -488,13 +501,11 @@ void bx_usb_ehci_c::register_state(void)
   for (i = 0; i < 3; i++) {
     if (uhci[i]) {
       sprintf(tmpname, "uhci%d", i);
-      hcic = new bx_list_c(list, tmpname);
-      uhci[i]->uhci_register_state(hcic);
+      uhci[i]->uhci_register_state(tmpname, list);
     }
     if (ohci[i]) {
       sprintf(tmpname, "ohci%d", i);
-      hcic = new bx_list_c(list, tmpname);
-      ohci[i]->ohci_register_state(hcic);
+      ohci[i]->ohci_register_state(tmpname, list);
     }
   }
 
@@ -505,7 +516,7 @@ void bx_usb_ehci_c::after_restore_state(void)
 {
   int i;
 
-  bx_pci_device_c::after_restore_pci_state(NULL);
+  bx_pci_device_c::after_restore_pci_state();
   for (i=0; i<USB_EHCI_PORTS; i++) {
     if (BX_EHCI_THIS hub.usb_port[i].device != NULL) {
       BX_EHCI_THIS hub.usb_port[i].device->after_restore_state();
@@ -808,6 +819,14 @@ bool bx_usb_ehci_c::get_port_routing(int port, int *n_cc, int *n_pcc)
 
 bool bx_usb_ehci_c::read_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
+#if !BX_USE_USB_EHCI_SMF
+  bx_usb_ehci_c *class_ptr = (bx_usb_ehci_c *) param;
+  return class_ptr->mem_read(addr, len, data);
+}
+
+bool bx_usb_ehci_c::mem_read(bx_phy_address addr, unsigned len, void *data)
+{
+#endif
   Bit32u val = 0, val_hi = 0;
   int port;
   const Bit32u offset = (Bit32u) (addr - BX_EHCI_THIS pci_bar[0].addr);
@@ -930,6 +949,14 @@ bool bx_usb_ehci_c::read_handler(bx_phy_address addr, unsigned len, void *data, 
 
 bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *data, void *param)
 {
+#if !BX_USE_USB_EHCI_SMF
+  bx_usb_ehci_c *class_ptr = (bx_usb_ehci_c *) param;
+  return class_ptr->mem_write(addr, len, data);
+}
+
+bool bx_usb_ehci_c::mem_write(bx_phy_address addr, unsigned len, void *data)
+{
+#endif
   Bit32u value = *((Bit32u *) data);
   Bit32u value_hi = *((Bit32u *) ((Bit8u *) data + 4));     // Q: should value and value_hi to be swapped on BIG_ENDIAN platform ?
   bool oldcfg, oldpo, oldpr, oldfpr;
@@ -979,7 +1006,7 @@ bool bx_usb_ehci_c::write_handler(bx_phy_address addr, unsigned len, void *data,
           }
           break;
         case 0x04:
-          BX_EHCI_THIS hub.op_regs.UsbSts.inti ^= (value & USBINTR_MASK);
+          BX_EHCI_THIS hub.op_regs.UsbSts.inti &= ~(value & USBINTR_MASK);
           BX_EHCI_THIS update_irq();
           break;
         case 0x08:
@@ -2518,10 +2545,10 @@ Bit64s bx_usb_ehci_c::usb_param_handler(bx_param_c *param, bool set, Bit64s val)
     portnum = atoi((param->get_parent())->get_name()+4) - 1;
     bool empty = (val == 0);
     if ((portnum >= 0) && (portnum < USB_EHCI_PORTS)) {
-      if (empty && (BX_EHCI_THIS hub.usb_port[portnum].device != NULL)) {
-        BX_EHCI_THIS device_change |= (1 << portnum);
-      } else if (!empty && (BX_EHCI_THIS hub.usb_port[portnum].device == NULL)) {
-        BX_EHCI_THIS device_change |= (1 << portnum);
+      if (empty && (theUSB_EHCI->hub.usb_port[portnum].device != NULL)) {
+        theUSB_EHCI->device_change |= (1 << portnum);
+      } else if (!empty && (theUSB_EHCI->hub.usb_port[portnum].device == NULL)) {
+        theUSB_EHCI->device_change |= (1 << portnum);
       } else if (val != ((bx_param_enum_c*)param)->get()) {
         BX_ERROR(("usb_param_handler(): port #%d already in use", portnum+1));
         val = ((bx_param_enum_c*)param)->get();
@@ -2539,15 +2566,15 @@ Bit64s bx_usb_ehci_c::usb_param_oc_handler(bx_param_c *param, bool set, Bit64s v
   if (set && val) {
     int portnum = atoi((param->get_parent())->get_name()+4) - 1;
     if ((portnum >= 0) && (portnum < USB_EHCI_PORTS)) {
-      if (BX_EHCI_THIS hub.usb_port[portnum].portsc.ccs) {
+      if (theUSB_EHCI->hub.usb_port[portnum].portsc.ccs) {
         // EHCI, section 4.2.5, page 58
-        BX_EHCI_THIS hub.usb_port[portnum].portsc.occ = 1;
-        BX_EHCI_THIS hub.usb_port[portnum].portsc.oca = 1;
-        BX_EHCI_THIS hub.usb_port[portnum].portsc.pec = 1;
-        BX_EHCI_THIS hub.usb_port[portnum].portsc.ped = 0;
-        BX_EHCI_THIS hub.usb_port[portnum].portsc.pp = 0; // optional (the HC may leave power on, limiting the current)
+        theUSB_EHCI->hub.usb_port[portnum].portsc.occ = 1;
+        theUSB_EHCI->hub.usb_port[portnum].portsc.oca = 1;
+        theUSB_EHCI->hub.usb_port[portnum].portsc.pec = 1;
+        theUSB_EHCI->hub.usb_port[portnum].portsc.ped = 0;
+        theUSB_EHCI->hub.usb_port[portnum].portsc.pp = 0; // optional (the HC may leave power on, limiting the current)
         BX_DEBUG(("Over-current signaled on port #%d.", portnum + 1));
-        BX_EHCI_THIS raise_irq(USBSTS_PCD);
+        theUSB_EHCI->raise_irq(USBSTS_PCD);
       }
     } else {
       BX_ERROR(("Over-current: Bad portnum given: %d", portnum + 1));
@@ -2561,7 +2588,7 @@ Bit64s bx_usb_ehci_c::usb_param_oc_handler(bx_param_c *param, bool set, Bit64s v
 bool bx_usb_ehci_c::usb_param_enable_handler(bx_param_c *param, bool en)
 {
   int portnum = atoi((param->get_parent())->get_name()+4) - 1;
-  if (en && (BX_EHCI_THIS hub.usb_port[portnum].device != NULL)) {
+  if (en && (theUSB_EHCI->hub.usb_port[portnum].device != NULL)) {
     en = 0;
   }
   return en;
