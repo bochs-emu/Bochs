@@ -44,6 +44,7 @@ case $which_config in
                 --enable-clgd54xx \
                 --enable-geforce \
                 --enable-voodoo \
+                --enable-rage128 \
                 --enable-usb \
                 --enable-usb-ohci \
                 --enable-usb-ehci \
