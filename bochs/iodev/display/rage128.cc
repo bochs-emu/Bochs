@@ -2317,6 +2317,8 @@ void bx_rage128_c::display_reset(void)
   crtc_offset_pending = false;
   crtc_offset_lock = false;
   vblank_save = false;
+  bank_dbg_last = 0xffffffff;
+  bank_dbg_count = 0;
   mem_vga_wp_sel = 0;
   mem_vga_rp_sel = 0;
   disp_ext = false;
