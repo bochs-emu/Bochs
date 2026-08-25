@@ -927,7 +927,7 @@ bool bx_rage128_c::agp_image_read(Bit32u off, Bit8u *dst, Bit32u len)
 {
   if (!pm4_bus_master_ok() || !agp_base)
     return false;
-  DEV_MEM_READ_PHYSICAL(agp_base + (off & 0x01ffffff), len, dst);
+  phys_read_chunked(agp_base + (off & 0x01ffffff), dst, len);
   return true;
 }
 
@@ -935,7 +935,7 @@ bool bx_rage128_c::agp_image_write(Bit32u off, const Bit8u *src, Bit32u len)
 {
   if (!pm4_bus_master_ok() || !agp_base)
     return false;
-  DEV_MEM_WRITE_PHYSICAL(agp_base + (off & 0x01ffffff), len, (Bit8u*)src);
+  phys_write_chunked(agp_base + (off & 0x01ffffff), src, len);
   return true;
 }
 

@@ -179,6 +179,37 @@ static BX_CPP_INLINE void rage128_write_phys32(Bit32u addr, Bit32u val)
   DEV_MEM_WRITE_PHYSICAL(addr, 4, buf);
 }
 
+// Bochs memory accesses must stay within one 4 KB page: the memory
+// handler is looked up for the start address and receives the whole
+// length, and the i440BX AGP aperture handler translates only the page of
+// the start address through the GART. A bulk transfer (texture staging,
+// AGP surface spans) therefore has to be split at page boundaries, or
+// everything past the first page is read from whatever physical pages
+// happen to follow the first GART page.
+void bx_rage128_c::phys_read_chunked(Bit32u addr, Bit8u *dst, Bit32u len)
+{
+  while (len) {
+    Bit32u n = 0x1000 - (addr & 0xfff);
+    if (n > len) n = len;
+    DEV_MEM_READ_PHYSICAL(addr, n, dst);
+    addr += n;
+    dst += n;
+    len -= n;
+  }
+}
+
+void bx_rage128_c::phys_write_chunked(Bit32u addr, const Bit8u *src, Bit32u len)
+{
+  while (len) {
+    Bit32u n = 0x1000 - (addr & 0xfff);
+    if (n > len) n = len;
+    DEV_MEM_WRITE_PHYSICAL(addr, n, (Bit8u*)src);
+    addr += n;
+    src += n;
+    len -= n;
+  }
+}
+
 bool bx_rage128_c::pm4_bus_read(Bit32u bus_addr, Bit32u *val)
 {
   if (!pm4_bus_master_ok())
@@ -203,20 +234,25 @@ bool bx_rage128_c::pm4_bus_read_block(Bit32u vm, Bit8u *dst, Bit32u len)
   if (pci_gart_page & 1) {
     if (!agp_base)
       return false;
-    DEV_MEM_READ_PHYSICAL(pm4_vm_addr(vm), len, dst);
+    phys_read_chunked(pm4_vm_addr(vm), dst, len);
     return true;
   }
   if ((vm & R128_CARD_AGP_HALF) && agp_base) {
-    DEV_MEM_READ_PHYSICAL(agp_base + (vm & 0x01ffffff), len, dst);
+    phys_read_chunked(agp_base + (vm & 0x01ffffff), dst, len);
     return true;
   }
-  for (Bit32u o = 0; o < len; o += 4) {
-    Bit32u v;
-    Bit8u buf[4];
-    if (!pm4_bus_read(vm + o, &v))
-      return false;
-    WriteHostDWordToLittleEndian((Bit32u*)buf, v);
-    memcpy(dst + o, buf, (len - o >= 4) ? 4u : (len - o));
+  // PCI GART: one page-table entry per 4 KB page
+  {
+    Bit32u table = pci_gart_page & 0xfffff000;
+    while (len) {
+      Bit32u n = 0x1000 - (vm & 0xfff);
+      if (n > len) n = len;
+      Bit32u pte = rage128_read_phys32(table + ((vm >> 12) & 0x1fff) * 4);
+      DEV_MEM_READ_PHYSICAL((pte & 0xfffff000) | (vm & 0xfff), n, dst);
+      vm += n;
+      dst += n;
+      len -= n;
+    }
   }
   return true;
 }
@@ -245,18 +281,25 @@ bool bx_rage128_c::pm4_bus_write_block(Bit32u vm, const Bit8u *src, Bit32u len)
   if (pci_gart_page & 1) {
     if (!agp_base)
       return false;
-    DEV_MEM_WRITE_PHYSICAL(pm4_vm_addr(vm), len, (Bit8u*)src);
+    phys_write_chunked(pm4_vm_addr(vm), src, len);
     return true;
   }
   if ((vm & R128_CARD_AGP_HALF) && agp_base) {
-    DEV_MEM_WRITE_PHYSICAL(agp_base + (vm & 0x01ffffff), len, (Bit8u*)src);
+    phys_write_chunked(agp_base + (vm & 0x01ffffff), src, len);
     return true;
   }
-  for (Bit32u o = 0; o < len; o += 4) {
-    Bit8u buf[4] = { 0, 0, 0, 0 };
-    memcpy(buf, src + o, (len - o >= 4) ? 4u : (len - o));
-    if (!pm4_bus_write(vm + o, ReadHostDWordFromLittleEndian((Bit32u*)buf)))
-      return false;
+  // PCI GART: one page-table entry per 4 KB page
+  {
+    Bit32u table = pci_gart_page & 0xfffff000;
+    while (len) {
+      Bit32u n = 0x1000 - (vm & 0xfff);
+      if (n > len) n = len;
+      Bit32u pte = rage128_read_phys32(table + ((vm >> 12) & 0x1fff) * 4);
+      DEV_MEM_WRITE_PHYSICAL((pte & 0xfffff000) | (vm & 0xfff), n, (Bit8u*)src);
+      vm += n;
+      src += n;
+      len -= n;
+    }
   }
   return true;
 }

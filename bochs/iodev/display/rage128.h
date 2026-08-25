@@ -408,6 +408,8 @@ private:
   Bit32u palette_data_read(void);
   void   update_mode(void);
   void   latch_crtc_offset(void);
+  static void phys_read_chunked(Bit32u addr, Bit8u *dst, Bit32u len);
+  static void phys_write_chunked(Bit32u addr, const Bit8u *src, Bit32u len);
   void   cursor_publish(void);
   void   cursor_frame_latch(void);
   void   timing_recalc(void);
