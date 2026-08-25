@@ -6,7 +6,7 @@
 // ported from QEMU block driver with some additions (see vvfat.cc)
 //
 // Copyright (c) 2004,2005  Johannes E. Schindelin
-// Copyright (C) 2010-2021  The Bochs Project
+// Copyright (C) 2010-2026  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -132,6 +132,7 @@ class vvfat_image_t : public device_image_t
     direntry_t* create_long_filename(const char* filename);
     void fat_set(unsigned int cluster, Bit32u value);
     void init_fat();
+    void lfn_to_sfn(const char *lfn, char sfn[12], int sequence);
     direntry_t* create_short_and_long_name(unsigned int directory_start,
       const char* filename, int is_dot);
     int read_directory(int mapping_index);

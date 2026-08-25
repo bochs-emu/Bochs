@@ -552,21 +552,54 @@ void vvfat_image_t::init_fat(void)
   }
 }
 
-void lfn_to_sfn(const char *lfn, char sfn[12], int sequence) {
+// create a valid Short Filename (sfn) from a given Long Filename (lfn) allowing the
+//  caller to send a sequence number (the number after the '~')
+// this assumes it is not a path but just the filename and possible extention
+void vvfat_image_t::lfn_to_sfn(const char *lfn, char sfn[12], int sequence) {
   char base[9] = { 0, };
   char ext[4] = { 0, };
-  char sequ[5] = { 0, };
-  
+  char sequ[8] = { 0, };
+  char filename[MAX_PATH];
+  int  dots = 0;
+  bool force = false;
+
+  // we need to copy the filename to a temp location so we don't modify the passed name
+  strncpy(filename, lfn, MAX_PATH-1);
+  filename[MAX_PATH-1] = '\0';
+
+  // we need to change any illegal char to a legal char.
+  // a valid SFN char is:
+  //  Uppercase letters A-Z
+  //  Numbers 0-9
+  //  space char (though it must be trailing?)
+  //  one of the chars listed in legalchars[] above
+  for (size_t i=0; i<strlen(filename); i++) {
+    dots += (filename[i] == '.');
+    // this could be sped up if we just use a single (long) string of chars,
+    //  instead of the shorter one we use below. Is it worth changing?
+    if (!(
+         (filename[i] == '.')                          ||
+         (filename[i] == ' ')                          ||
+        ((filename[i] >= 'a') && (filename[i] <= 'z')) || // we uppercase them below
+        ((filename[i] >= 'A') && (filename[i] <= 'Z')) ||
+        ((filename[i] >= '0') && (filename[i] <= '9')) ||
+         (strrchr("!#$%&'()-@^_`{}~", filename[i]) != NULL)
+        )) {
+      filename[i] = '_';
+      force = true;
+    }
+  }
+
   // Find extension
-  const char *dot = strrchr(lfn, '.');
+  const char *dot = strrchr(filename, '.');
   int ext_len = 0;
-  int base_len = (int) (dot ? (dot - lfn) : strlen(lfn));
+  int base_len = (int) (dot ? (dot - filename) : strlen(filename));
   
   // Copy and filter base name
   int j = 0;
   for (int k = 0; k < base_len && j<8; k++) {
-    if (lfn[k] != ' ' && lfn[k] != '.' && lfn[k] != ',')
-      base[j++] = toupper((unsigned char) lfn[k]);
+    if (filename[k] != ' ' && filename[k] != '.')
+      base[j++] = toupper((unsigned char) filename[k]);
   }
   
   // Copy and filter extension (max 3 chars)
@@ -578,7 +611,7 @@ void lfn_to_sfn(const char *lfn, char sfn[12], int sequence) {
   }
   
   // do we need to add the '~' stuff?
-  if ((base_len <= 8) && (dot != NULL) && (ext_len <= 3)) {
+  if (!force && (dots == 1) && ((base_len <= 8) && (ext_len <= 3))) {
     memset(sfn, ' ', 11);
     memcpy(sfn, base, strlen(base));
     memcpy(sfn + 8, ext, strlen(ext));
@@ -587,7 +620,9 @@ void lfn_to_sfn(const char *lfn, char sfn[12], int sequence) {
   }
   
   // Append short tail designation
-  // (crashes if sequence > 9999999 ?)
+  // (crashes if sequence > 999999 ?)
+  if (sequence > 999999)
+    BX_PANIC(("Fatal error with length of 'sequ' longer than 8 bytes!"));
   sprintf(sequ, "~%i", sequence);
   int max = 8 - (int) strlen(sequ);
   base[max] = '\0';
@@ -595,13 +630,6 @@ void lfn_to_sfn(const char *lfn, char sfn[12], int sequence) {
   
   // Format as 8.3 string
   sprintf(sfn, "%-8s%-3s", base, ext);
-  
-  // Remove space padding if needed or keep fixed 11 bytes
-  for (int k=0; k<11; k++) {
-    if (sfn[k] == ' ')
-      sfn[k] = ' ';
-  }
-  sfn[11] = '\0';
 }
 
 direntry_t* vvfat_image_t::create_short_and_long_name(
