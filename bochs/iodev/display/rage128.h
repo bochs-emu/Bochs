@@ -642,6 +642,8 @@ private:
   Bit32u crtc_ext_cntl;
   Bit32u bank_w[2];
   Bit32u bank_r[2];
+  Bit32u bank_dbg_last;
+  Bit32u bank_dbg_count;
   Bit32u dac_cntl;
   Bit8u  dac_mask_prog;
   Bit32u crtc_h_total_disp;
@@ -701,6 +703,7 @@ private:
   unsigned disp_xres, disp_yres, disp_bpp, disp_pitch;
   Bit32u   disp_base;
   bool     disp_dblscan;
+  bool     disp_hdbl;   // 320-wide low-res: display at 640, each pixel doubled
   bool     disp_blank;
   bool     disp_dac_const;
   Bit32u   disp_dac_const_color;

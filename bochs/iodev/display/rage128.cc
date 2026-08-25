@@ -1186,6 +1186,12 @@ void bx_rage128_c::mem_write(bx_phy_address addr, Bit8u value)
     Bit32u off = (((Bit32u)addr & 0x7fff) + bank_w[((Bit32u)addr >> 15) & 1]) & vram_mask;
     BX_RAGE128_THIS s.memory[off] = value;
     vram_dirty(off, 1);
+    // A banked CPU framebuffer write (VBE, not the LFB) can land on any page
+    // via bank switching; the incremental tile marking above can miss a row
+    // whose tile was painted while still blank. 86Box repaints every
+    // scanline each frame, so force a full re-scan here to match it. This
+    // path is only used by banked VBE modes -- games write the LFB.
+    needs_update_dispentire = true;
     return;
   }
   bx_vgacore_c::mem_write(addr, value);
@@ -1208,13 +1214,33 @@ void bx_rage128_c::update_banking(void)
   bool paged = disp_ext || (crtc_ext_cntl & RAGE128_VGA_MEM_PS_EN);
   Bit32u unit = (crtc_ext_cntl & RAGE128_CRTC_VGA_ATI_LINEAR) ? (RAGE128_VGA_PAGE_SIZE * 4) : RAGE128_VGA_PAGE_SIZE;
   if (paged) {
+    // The A0000 window is one contiguous 64 KB region: the low 32 KB half
+    // (A0000-A7FFF) is WPS0*unit, and the high half (A8000-AFFFF) always
+    // follows it by 32 KB. The VBIOS keeps WPS1 = WPS0 + (32KB/unit) to
+    // express that, but deriving the high half from the low one directly is
+    // both correct for the documented window model and immune to the high
+    // register lagging the low one (which left the A8000 half pointing at a
+    // stale page -- every second bank's rows came out black in VBETest's
+    // 32bpp banked moire).
     bank_w[0] = (mem_vga_wp_sel & 0x3ff) * unit;
-    bank_w[1] = ((mem_vga_wp_sel >> 16) & 0x3ff) * unit;
+    bank_w[1] = bank_w[0] + 0x8000;
     bank_r[0] = (mem_vga_rp_sel & 0x3ff) * unit;
-    bank_r[1] = ((mem_vga_rp_sel >> 16) & 0x3ff) * unit;
+    bank_r[1] = bank_r[0] + 0x8000;
   } else {
     bank_w[0] = bank_r[0] = 0x0000;
     bank_w[1] = bank_r[1] = 0x8000;
+  }
+  // TEMP banked-mode diagnostic: log the first WP_SEL/bank progression so the
+  // exact WPS0 step (should be +2 per 64K bank; VBETest banked moire showed
+  // +4 = a doubled stride) can be read from bochsout.txt. Remove after fix.
+  if (paged && (mem_vga_wp_sel != bank_dbg_last) && (bank_dbg_count < 48)) {
+    bank_dbg_last = mem_vga_wp_sel;
+    bank_dbg_count++;
+    BX_INFO(("R128BANK wp_sel=%08x rp_sel=%08x WPS0=%u unit=%uKB bank_w0=0x%x LINEAR=%d ext_cntl=%08x pitch=%u",
+             mem_vga_wp_sel, mem_vga_rp_sel, (unsigned)(mem_vga_wp_sel & 0x3ff),
+             (unsigned)(unit >> 10), (unsigned)bank_w[0],
+             (crtc_ext_cntl & RAGE128_CRTC_VGA_ATI_LINEAR) ? 1 : 0,
+             crtc_ext_cntl, (unsigned)(crtc_pitch & 0x3ff)));
   }
 }
 
@@ -2433,6 +2459,12 @@ void bx_rage128_c::update_mode(void)
   if (bpp == 0) bpp = 8;
   if (xres < 8) xres = 8;
   if (yres < 1) yres = 1;
+  // 320-wide double-scanned mode: real silicon pixel-doubles the source to
+  // 640 so the low-res frame keeps its aspect (86Box rage128_render_hdbl).
+  // The source is still 320 wide at the programmed pitch; disp_hdbl makes
+  // the scanout read source pixel x/2 while the GUI window is 640 wide.
+  disp_hdbl = (xres == 320) && (yres >= 400);
+  if (disp_hdbl) xres = 640;
   if (xres > BX_RAGE128_THIS s.max_xres) xres = BX_RAGE128_THIS s.max_xres;
   if (yres > BX_RAGE128_THIS s.max_yres) yres = BX_RAGE128_THIS s.max_yres;
   if (pitch == 0) pitch = xres * ((bpp + 7) / 8);
@@ -2650,10 +2682,11 @@ void bx_rage128_c::update(void)
       unsigned sy = disp_dblscan ? (yc >> 1) : yc;
       tile_ptr2 = tile_ptr;
       for (xc = 0; xc < width; xc++) {
-        Bit32u addr = disp_base + sy * disp_pitch + ((disp_bpp == 4) ? (xc >> 1) : xc * pxbytes);
+        unsigned sx = disp_hdbl ? (xc >> 1) : xc;
+        Bit32u addr = disp_base + sy * disp_pitch + ((disp_bpp == 4) ? (sx >> 1) : sx * pxbytes);
         if (disp_blank) colour = 0;
         else if (disp_dac_const) colour = disp_dac_const_color;
-        else colour = rage128_fetch_pixel(&vram[addr & vram_mask], disp_bpp, this, xc, lsb_nibble, pel8, dac_shift);
+        else colour = rage128_fetch_pixel(&vram[addr & vram_mask], disp_bpp, this, sx, lsb_nibble, pel8, dac_shift);
         if (!info.is_indexed) {
           colour = MAKE_COLOUR(colour, 24, info.red_shift, info.red_mask,
                                colour, 16, info.green_shift, info.green_mask,
@@ -2712,10 +2745,11 @@ void bx_rage128_c::paint_tile(unsigned xc, unsigned yc, bx_svga_tileinfo_t *info
     tile_ptr2 = tile_ptr;
     for (c = 0; c < w; c++) {
       unsigned x = xc + c;
-      Bit32u addr = rowaddr + ((disp_bpp == 4) ? (x >> 1) : x * pxbytes);
+      unsigned sx = disp_hdbl ? (x >> 1) : x;
+      Bit32u addr = rowaddr + ((disp_bpp == 4) ? (sx >> 1) : sx * pxbytes);
       if (disp_blank) colour = 0;
       else if (disp_dac_const) colour = disp_dac_const_color;
-      else colour = rage128_fetch_pixel(&vram[addr & vram_mask], disp_bpp, this, x, lsb_nibble, pel8, dac_shift);
+      else colour = rage128_fetch_pixel(&vram[addr & vram_mask], disp_bpp, this, sx, lsb_nibble, pel8, dac_shift);
       if (info->is_indexed) {
         *(tile_ptr2++) = (disp_bpp == 8) ? vram[addr & vram_mask] : (Bit8u)colour;
       } else {
