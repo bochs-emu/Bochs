@@ -390,6 +390,7 @@ private:
   bool   agp_image_read(Bit32u off, Bit8u *dst, Bit32u len);
   bool   agp_image_write(Bit32u off, const Bit8u *src, Bit32u len);
   Bit32u surf_xlate(Bit32u addr);
+  Bit32u bank_deint_addr(Bit32u addr);
   void   vram_dirty(Bit32u addr, Bit32u len);
 
   // ---- rage128.cc: display block (PLL / CRTC / DAC / cursor / scanout) ----
@@ -642,8 +643,6 @@ private:
   Bit32u crtc_ext_cntl;
   Bit32u bank_w[2];
   Bit32u bank_r[2];
-  Bit32u bank_dbg_last;
-  Bit32u bank_dbg_count;
   Bit32u dac_cntl;
   Bit8u  dac_mask_prog;
   Bit32u crtc_h_total_disp;
@@ -704,6 +703,12 @@ private:
   Bit32u   disp_base;
   bool     disp_dblscan;
   bool     disp_hdbl;   // 320-wide low-res: display at 640, each pixel doubled
+  // 32 MB cards are two 16 MB banks; in banked VBE modes VBETest interleaves
+  // the framebuffer across both banks (odd 64 KB blocks in bank 0, even in
+  // bank 1 at +16 MB), so the scanout must de-interleave. Gated tightly so it
+  // never touches the linear-framebuffer desktop or 3D.
+  bool     bank_deint;      // de-interleave the scanout this frame
+  bool     vga_banked_mode; // a banked VBE mode set WP_SEL since the last mode change
   bool     disp_blank;
   bool     disp_dac_const;
   Bit32u   disp_dac_const_color;
