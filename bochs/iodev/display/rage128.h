@@ -500,6 +500,7 @@ private:
   void   pm4_drain_wait(void);
   void   pm4_flip_notify(void);
   bool   pm4_enqueue_write(Bit32u off, Bit32u val);
+  bool   pm4_enqueue_indirect(Bit32u off, Bit32u n);
   Bit32u pm4_splice_ib(Bit32u wr, Bit32u off, Bit32u n, Bit32u rptr);
   void   cce_fifo_reserve(Bit32u wr, Bit32u need);
   bool   cce_get(Bit32u *val);

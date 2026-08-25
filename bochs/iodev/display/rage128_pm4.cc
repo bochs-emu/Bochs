@@ -577,6 +577,52 @@ bool bx_rage128_c::pm4_enqueue_write(Bit32u off, Bit32u val)
   return true;
 }
 
+// Queue an indirect buffer fired by a direct CPU write of IW_INDSIZE behind
+// the engine's pending work: a synthetic PACKET0(IW_INDOFF, 2) submit
+// followed by the buffer body spliced from guest memory now (so a later
+// recycle of the buffer cannot change what executes), exactly the form a
+// ring-fired submit takes after the pump. Executing the buffer immediately
+// on the CPU thread instead let its draws run ahead of state packets still
+// queued in the ring for the executor: the Rage 128 PRO OpenGL ICD writes
+// its texture state through the ring and fires the draw buffer by MMIO, so
+// every draw sampled the texture the previous draw of the same size had
+// bound (Quake III menus painted with the font atlases). Returns false when
+// the buffer must be run inline instead (executor not up, ring residue
+// unfetchable, FIFO full).
+bool bx_rage128_c::pm4_enqueue_indirect(Bit32u off, Bit32u n)
+{
+  Bit32u wr;
+
+  if (!cce_thread_started || on_cce_thread())
+    return false;
+  if (n == 0)
+    return true;
+  if (n > RAGE128_CCE_FIFO_DWORDS / 2)
+    return false;
+  // a synthetic submit must not jump ahead of unfetched ring dwords
+  if ((pm4_rptr != (pm4_wptr & pm4_ring_mask())) && (pm4_pump() != 1))
+    return false;
+  wr = cce_fifo_wr;
+  cce_fifo_reserve(wr, 3 + n);
+  if (rage128_cce_fifo_space(wr, cce_fifo_rd) < 3 + n)
+    return false;
+  // PACKET0(IW_INDOFF, count=2) { off, n }: the executor's poke of
+  // IW_INDSIZE runs the walk against the tagged body behind it
+  cce_fifo[wr & RAGE128_CCE_FIFO_MASK] = 0x000101ce;
+  cce_fifo[(wr + 1) & RAGE128_CCE_FIFO_MASK] = off;
+  cce_fifo[(wr + 2) & RAGE128_CCE_FIFO_MASK] = n;
+  for (Bit32u i = 0; i < 3; i++) {
+    cce_fifo_rptr[(wr + i) & RAGE128_CCE_FIFO_MASK] = 0xffffffff;
+    cce_fifo_tag[(wr + i) & RAGE128_CCE_FIFO_MASK] = 0;
+  }
+  wr = pm4_splice_ib(wr + 3, off, n, 0xffffffff);
+  BX_LOCK(cce_mutex);
+  cce_fifo_wr = wr;
+  BX_UNLOCK(cce_mutex);
+  bx_set_sem(&cce_wake_sem);
+  return true;
+}
+
 // ---------------------------------------------------------------------
 // Executor (CCE thread)
 // ---------------------------------------------------------------------
@@ -900,7 +946,6 @@ bool bx_rage128_c::pm4_reg_write(Bit32u off, Bit32u val, Bit32u mask)
       return true;
     }
     case RAGE128_PM4_BUFFER_DL_WPTR_DELAY: MERGE(pm4_wptr_delay); return true;
-    case RAGE128_PM4_VC_FPU_SETUP:  MERGE(t3d.fpu_setup); return true;
     case RAGE128_PM4_VC_DEBUG_CONFIG: MERGE(pm4_vc_debug_config); return true;
     case RAGE128_PM4_VC_STAT: return true;
     case RAGE128_PM4_MICROCODE_ADDR:
@@ -918,7 +963,20 @@ bool bx_rage128_c::pm4_reg_write(Bit32u off, Bit32u val, Bit32u mask)
     case RAGE128_PM4_IW_INDOFF:  MERGE(pm4_iw_indoff); return true;
     case RAGE128_PM4_IW_INDSIZE:
       MERGE(pm4_iw_indsize);
+      if (!on_cce_thread() && cce_thread_started) {
+        // Direct CPU submit: keep it behind the queued engine work
+        if (pm4_enqueue_indirect(pm4_iw_indoff, pm4_iw_indsize))
+          return true;
+        pm4_drain_wait();
+      }
       pm4_run_indirect();
+      return true;
+    case RAGE128_PM4_VC_FPU_SETUP:
+      // 3D setup state written by MMIO must not overtake queued draws
+      if (!on_cce_thread() && cce_thread_started && (mask == 0xffffffff) &&
+          pm4_enqueue_write(off, val))
+        return true;
+      MERGE(t3d.fpu_setup);
       return true;
     case RAGE128_WAIT_UNTIL:
       pm4_wait_until(val & mask);
