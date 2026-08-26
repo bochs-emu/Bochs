@@ -559,13 +559,13 @@ void vvfat_image_t::lfn_to_sfn(const char *lfn, char sfn[12], int sequence) {
   char base[9] = { 0, };
   char ext[4] = { 0, };
   char sequ[8] = { 0, };
-  char filename[MAX_PATH];
+  char filename[BX_MAX_PATH];
   int  dots = 0;
   bool force = false;
 
   // we need to copy the filename to a temp location so we don't modify the passed name
-  strncpy(filename, lfn, MAX_PATH-1);
-  filename[MAX_PATH-1] = '\0';
+  strncpy(filename, lfn, BX_MAX_PATH-1);
+  filename[BX_MAX_PATH-1] = '\0';
 
   // we need to change any illegal char to a legal char.
   // a valid SFN char is:
