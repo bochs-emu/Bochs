@@ -568,7 +568,7 @@ void vvfat_image_t::lfn_to_sfn(const char *lfn, char sfn[12], int sequence) {
 
   // we need to copy the long filename to a temp location so we don't modify the name that was passed.
   // also count how many dots are in the string, as well as remove any spaces.
-  for (i=0, j=0; i<strlen(lfn) && j<255; i++) {
+  for (i=0, j=0; i<strlen(lfn) && j<BX_MAX_PATH-1; i++) {
     if (lfn[i] == '.') dots++;
     if (lfn[i] == ' ')
       force = true;
