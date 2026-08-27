@@ -560,26 +560,48 @@ void vvfat_image_t::lfn_to_sfn(const char *lfn, char sfn[12], int sequence) {
   char ext[4] = { 0, };
   char sequ[8] = { 0, };
   char filename[BX_MAX_PATH];
+  char tempname[BX_MAX_PATH];
   int  dots = 0;
   bool force = false;
+  size_t i;
+  int j, k;
 
-  // we need to copy the filename to a temp location so we don't modify the passed name
-  strncpy(filename, lfn, BX_MAX_PATH-1);
-  filename[BX_MAX_PATH-1] = '\0';
+  // we need to copy the long filename to a temp location so we don't modify the name that was passed.
+  // also count how many dots are in the string, as well as remove any spaces.
+  for (i=0, j=0; i<strlen(lfn) && j<255; i++) {
+    if (lfn[i] == '.') dots++;
+    if (lfn[i] == ' ')
+      force = true;
+    else
+      tempname[j++] = lfn[i];
+  }
+  tempname[j] = '\0';
+
+  // if there were more than one dot in the name, remove all but the last one.
+  if (dots > 1) {
+    force = true;
+    for (i=0, j=0; i<strlen(tempname); i++) {
+      // the 'compiled code' will test the first equation first and if TRUE, will execute the next line,
+      //  not even touching the '--dots'
+      // the 'compiled code' will only test the second equation if tempname[i] == '.'
+      if ((tempname[i] != '.') || (--dots < 2))
+        filename[j++] = tempname[i];
+    }
+    filename[j] = '\0';
+  } else
+    strcpy(filename, tempname);
 
   // we need to change any illegal char to a legal char.
   // a valid SFN char is:
   //  Uppercase letters A-Z
   //  Numbers 0-9
   //  space char (though it must be trailing?)
-  //  one of the chars listed in legalchars[] above
-  for (size_t i=0; i<strlen(filename); i++) {
-    dots += (filename[i] == '.');
+  //  one of the chars listed in the string below
+  for (i=0; i<strlen(filename); i++) {
     // this could be sped up if we just use a single (long) string of chars,
     //  instead of the shorter one we use below. Is it worth changing?
     if (!(
          (filename[i] == '.')                          ||
-         (filename[i] == ' ')                          ||
         ((filename[i] >= 'a') && (filename[i] <= 'z')) || // we uppercase them below
         ((filename[i] >= 'A') && (filename[i] <= 'Z')) ||
         ((filename[i] >= '0') && (filename[i] <= '9')) ||
@@ -596,40 +618,44 @@ void vvfat_image_t::lfn_to_sfn(const char *lfn, char sfn[12], int sequence) {
   int base_len = (int) (dot ? (dot - filename) : strlen(filename));
   
   // Copy and filter base name
-  int j = 0;
-  for (int k = 0; k < base_len && j<8; k++) {
-    if (filename[k] != ' ' && filename[k] != '.')
+  for (k=0, j=0; k < base_len && j<8; k++) {
+    if (filename[k] != '.')
       base[j++] = toupper((unsigned char) filename[k]);
+  }
+
+  // if there was nothing there (because of all spaces, illegal chars, or the dot was the first char)
+  //  "insert" a base of "_"
+  if (strlen(base) == 0) {
+    force = true;
+    strcpy(base, "_");
   }
   
   // Copy and filter extension (max 3 chars)
   if (dot) {
     ext_len = (int) strlen(dot + 1);
-    j = 0;
-    for (int k = 1; dot[k] != '\0' && j < 3; k++)
+    for (k=1, j=0; dot[k] != '\0' && j < 3; k++)
       ext[j++] = toupper((unsigned char) dot[k]);
   }
   
   // do we need to add the '~' stuff?
-  if (!force && (dots == 1) && ((base_len <= 8) && (ext_len <= 3))) {
+  if (!force && (base_len <= 8) && (ext_len <= 3)) {
     memset(sfn, ' ', 11);
     memcpy(sfn, base, strlen(base));
     memcpy(sfn + 8, ext, strlen(ext));
     sfn[11] = '\0';
-    return;
+  } else {
+    // Append short tail designation
+    // (crashes if sequence > 999999 ?)
+    if (sequence > 999999)
+      BX_PANIC(("Fatal error with length of 'sequ' longer than 8 bytes!"));
+    sprintf(sequ, "~%i", sequence);
+    int max = 8 - (int) strlen(sequ);
+    base[max] = '\0';
+    strcat(base, sequ);
+    
+    // Format as 8.3 string
+    sprintf(sfn, "%-8s%-3s", base, ext);
   }
-  
-  // Append short tail designation
-  // (crashes if sequence > 999999 ?)
-  if (sequence > 999999)
-    BX_PANIC(("Fatal error with length of 'sequ' longer than 8 bytes!"));
-  sprintf(sequ, "~%i", sequence);
-  int max = 8 - (int) strlen(sequ);
-  base[max] = '\0';
-  strcat(base, sequ);
-  
-  // Format as 8.3 string
-  sprintf(sfn, "%-8s%-3s", base, ext);
 }
 
 direntry_t* vvfat_image_t::create_short_and_long_name(
