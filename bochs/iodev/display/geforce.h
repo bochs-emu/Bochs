@@ -49,6 +49,7 @@ struct gf_texture
 {
   Bit32u offset;
   Bit32u dma_obj;
+  Bit32u dimensions;
   Bit32u format;
   bool cubemap;
   bool linear;
@@ -58,7 +59,8 @@ struct gf_texture
   bool dxt_alpha_explicit;
   Bit32u color_bytes;
   Bit32u levels;
-  Bit32u base_size[3];
+  Bit32u size_log[3];
+  Bit32u size_npot[3];
   Bit32u size[3];
   Bit32u face_bytes;
   Bit32u wrap[3];
@@ -67,7 +69,6 @@ struct gf_texture
   Bit32u control1;
   bool signed_any;
   bool signed_comp[4];
-  Bit32u image_rect;
   Bit32u pal_dma_obj;
   Bit32u pal_ofs;
   Bit32u control3;
