@@ -2248,13 +2248,13 @@ bx_define_opcode(BX_IA_V128_VPCMPESTRI_VdqWdqIb, "vpcmpestri", "vpcmpestri", &BX
 bx_define_opcode(BX_IA_V128_VPCMPISTRM_VdqWdqIb, "vpcmpistrm", "vpcmpistrm", &BX_CPU_C::LOADU_Wdq, &BX_CPU_C::PCMPISTRM_VdqWdqIbR, BX_ISA_AVX, OP_Vdq, OP_Wdq, OP_Ib, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_V128_VPCMPISTRI_VdqWdqIb, "vpcmpistri", "vpcmpistri", &BX_CPU_C::LOADU_Wdq, &BX_CPU_C::PCMPISTRI_VdqWdqIbR, BX_ISA_AVX, OP_Vdq, OP_Wdq, OP_Ib, OP_NONE, BX_PREPARE_AVX)
 
-bx_define_opcode(BX_IA_V128_VAESIMC_VdqWdq, "vaesimc", "vaesimc", &BX_CPU_C::LOADU_Wdq, &BX_CPU_C::AESIMC_VdqWdqR, BX_ISA_AVX, OP_Vdq, OP_Wdq, OP_NONE, OP_NONE, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_V128_VAESKEYGENASSIST_VdqWdqIb, "vaeskeygenassist", "vaeskeygenassist", &BX_CPU_C::LOADU_Wdq, &BX_CPU_C::AESKEYGENASSIST_VdqWdqIbR, BX_ISA_AVX, OP_Vdq, OP_Wdq, OP_Ib, OP_NONE, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_V128_VAESENC_VdqHdqWdq, "vaesenc", "vaesenc", &BX_CPU_C::LOADU_Wdq, &BX_CPU_C::VAESENC_VdqHdqWdqR, BX_ISA_AVX, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_V128_VAESENCLAST_VdqHdqWdq, "vaesenclast", "vaesenclast", &BX_CPU_C::LOADU_Wdq, &BX_CPU_C::VAESENCLAST_VdqHdqWdqR, BX_ISA_AVX, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_V128_VAESDEC_VdqHdqWdq, "vaesdec", "vaesdec", &BX_CPU_C::LOADU_Wdq, &BX_CPU_C::VAESDEC_VdqHdqWdqR, BX_ISA_AVX, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_V128_VAESDECLAST_VdqHdqWdq, "vaesdeclast", "vaesdeclast", &BX_CPU_C::LOADU_Wdq, &BX_CPU_C::VAESDECLAST_VdqHdqWdqR, BX_ISA_AVX, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_V128_VPCLMULQDQ_VdqHdqWdqIb, "vpclmulqdq", "vpclmulqdq", &BX_CPU_C::LOADU_Wdq, &BX_CPU_C::VPCLMULQDQ_VdqHdqWdqIbR, BX_ISA_AVX, OP_Vdq, OP_Hdq, OP_Wdq, OP_Ib, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_V128_VAESIMC_VdqWdq, "vaesimc", "vaesimc", &BX_CPU_C::LOADU_Wdq, &BX_CPU_C::AESIMC_VdqWdqR, BX_ISA_AES_PCLMULQDQ, OP_Vdq, OP_Wdq, OP_NONE, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_V128_VAESKEYGENASSIST_VdqWdqIb, "vaeskeygenassist", "vaeskeygenassist", &BX_CPU_C::LOADU_Wdq, &BX_CPU_C::AESKEYGENASSIST_VdqWdqIbR, BX_ISA_AES_PCLMULQDQ, OP_Vdq, OP_Wdq, OP_Ib, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_V128_VAESENC_VdqHdqWdq, "vaesenc", "vaesenc", &BX_CPU_C::LOADU_Wdq, &BX_CPU_C::VAESENC_VdqHdqWdqR, BX_ISA_AES_PCLMULQDQ, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_V128_VAESENCLAST_VdqHdqWdq, "vaesenclast", "vaesenclast", &BX_CPU_C::LOADU_Wdq, &BX_CPU_C::VAESENCLAST_VdqHdqWdqR, BX_ISA_AES_PCLMULQDQ, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_V128_VAESDEC_VdqHdqWdq, "vaesdec", "vaesdec", &BX_CPU_C::LOADU_Wdq, &BX_CPU_C::VAESDEC_VdqHdqWdqR, BX_ISA_AES_PCLMULQDQ, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_V128_VAESDECLAST_VdqHdqWdq, "vaesdeclast", "vaesdeclast", &BX_CPU_C::LOADU_Wdq, &BX_CPU_C::VAESDECLAST_VdqHdqWdqR, BX_ISA_AES_PCLMULQDQ, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_V128_VPCLMULQDQ_VdqHdqWdqIb, "vpclmulqdq", "vpclmulqdq", &BX_CPU_C::LOADU_Wdq, &BX_CPU_C::VPCLMULQDQ_VdqHdqWdqIbR, BX_ISA_AES_PCLMULQDQ, OP_Vdq, OP_Hdq, OP_Wdq, OP_Ib, BX_PREPARE_AVX)
 
 // VAES extensions
 bx_define_opcode(BX_IA_V256_VAESENC_VdqHdqWdq, "vaesenc", "vaesenc", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VAESENC_VdqHdqWdqR, BX_ISA_VAES_VPCLMULQDQ, OP_Vdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_AVX)
