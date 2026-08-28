@@ -3297,7 +3297,7 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
     coords = coords_in;
   }
   Bit32u xyz[3] = { 0 };
-  for (int i = 0; i < tex->dimensions; i++) {
+  for (Bit32u i = 0; i < tex->dimensions; i++) {
     if (tex->unnormalized) {
       Bit32s c = coords[i];
       Bit32u size = tex->size[i];
