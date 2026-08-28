@@ -1608,7 +1608,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPEXPANDB_MASK_VdqWdqM(bxInstruction_c *i)
     // the EXPAND is going to read an element for each bit set to '1 in the opmask
     // and place it into the element corresponding to the opmask bit in the result
     // so it will read popcntq(opmask) bits from the source
-    Bit64u load_mask = (opmask == BX_CONST64(0xFFFFFFFFFFFFFFFF)) ? opmask : (1 << popcntq(opmask)) - 1;
+    Bit64u load_mask = (opmask == BX_CONST64(0xFFFFFFFFFFFFFFFF)) ? opmask : (BX_CONST64(1) << popcntq(opmask)) - 1;
     avx_masked_load8(i, BX_CPU_RESOLVE_ADDR(i), &op, load_mask); // read only popcntq(opmask) elements from the memory
 
     for (unsigned n = 0, k = 0; n < BYTE_ELEMENTS(len); n++, opmask >>= 1) {
@@ -1665,7 +1665,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPEXPANDW_MASK_VdqWdqM(bxInstruction_c *i)
     // the EXPAND is going to read an element for each bit set to '1 in the opmask
     // and place it into the element corresponding to the opmask bit in the result
     // so it will read popcntd(opmask) bits from the source
-    Bit32u load_mask = (1 << popcntd(opmask)) - 1;
+    Bit32u load_mask = (opmask == 0xffffffff) ? opmask : (Bit32u(1) << popcntd(opmask)) - 1;
     avx_masked_load16(i, BX_CPU_RESOLVE_ADDR(i), &op, load_mask); // read only popcntd(opmask) elements from the memory
 
     for (unsigned n = 0, k = 0; n < WORD_ELEMENTS(len); n++, opmask >>= 1) {
