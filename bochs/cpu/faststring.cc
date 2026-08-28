@@ -76,6 +76,14 @@ Bit32u BX_CPU_C::FastRepMOVSB(bx_address laddrSrc, bx_address laddrDst, Bit64u b
   // Check that native host access was not vetoed for that page
   if (!hostAddrDst) return 0;
 
+  // Each MOVS iteration must read a complete element before writing it.
+  // A forward byte copy cannot preserve this when the destination starts
+  // inside the current source element, so use the regular path instead.
+  bx_ptr_equiv_t hostSrc = (bx_ptr_equiv_t) hostAddrSrc;
+  bx_ptr_equiv_t hostDst = (bx_ptr_equiv_t) hostAddrDst;
+  if (hostDst > hostSrc && hostDst - hostSrc < granularity)
+    return 0;
+
   assert(! BX_CPU_THIS_PTR get_DF());
 
   // See how many bytes can fit in the rest of this page.
