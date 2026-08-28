@@ -234,7 +234,7 @@ void BX_CPU_C::initialize(void)
 
 #if BX_CONFIGURE_MSRS
   for (unsigned n=0; n < BX_MSR_MAX_INDEX; n++) {
-    BX_CPU_THIS_PTR msrs[n] = 0;
+    BX_CPU_THIS_PTR msrs[n] = NULL;
   }
   const char *msrs_filename = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->getptr();
   load_MSRs(msrs_filename);
@@ -873,6 +873,15 @@ BX_CPU_C::~BX_CPU_C()
 
 #if BX_CPU_LEVEL >= 5
   destroy_MSRs();
+
+#if BX_CONFIGURE_MSRS
+  for (unsigned n=0; n < BX_MSR_MAX_INDEX; n++) {
+    if (BX_CPU_THIS_PTR msrs[n]) {
+      delete BX_CPU_THIS_PTR msrs[n];
+      BX_CPU_THIS_PTR msrs[n] = NULL;
+    }
+  }
+#endif
 #endif
 
   BX_INSTR_EXIT(BX_CPU_ID);

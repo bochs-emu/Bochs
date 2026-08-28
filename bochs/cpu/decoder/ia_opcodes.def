@@ -1077,7 +1077,7 @@ bx_define_opcode(BX_IA_RSQRTSS_VssWss, "rsqrtss", "rsqrtss", &BX_CPU_C::LOAD_Wss
 bx_define_opcode(BX_IA_RCPPS_VpsWps, "rcpps", "rcpps", &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::RCPPS_VpsWpsR, BX_ISA_SSE, OP_Vps, OP_Wps, OP_NONE, OP_NONE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_RCPSS_VssWss, "rcpss", "rcpss", &BX_CPU_C::LOAD_Wss, &BX_CPU_C::RCPSS_VssWssR, BX_ISA_SSE, OP_Vss, OP_Wss, OP_NONE, OP_NONE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_PSHUFW_PqQqIb, "pshufw", "pshufw", &BX_CPU_C::PSHUFW_PqQqIb, &BX_CPU_C::PSHUFW_PqQqIb, BX_ISA_SSE/* | BX_ISA_3DNOW */, OP_Pq, OP_Qq, OP_Ib, OP_NONE, BX_PREPARE_MMX)
-bx_define_opcode(BX_IA_PSHUFLW_VdqWdqIb, "pshuflw", "pshuflw", &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PSHUFLW_VdqWdqIbR, BX_ISA_SSE, OP_Vdq, OP_Wdq, OP_Ib, OP_NONE, BX_PREPARE_SSE)
+bx_define_opcode(BX_IA_PSHUFLW_VdqWdqIb, "pshuflw", "pshuflw", &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::PSHUFLW_VdqWdqIbR, BX_ISA_SSE2, OP_Vdq, OP_Wdq, OP_Ib, OP_NONE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_PINSRW_PqEwIb, "pinsrw", "pinsrw", &BX_CPU_C::PINSRW_PqEwIb, &BX_CPU_C::PINSRW_PqEwIb, BX_ISA_SSE/* | BX_ISA_3DNOW */, OP_Pq, OP_Ew, OP_Ib, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_PEXTRW_GdNqIb, "pextrw", "pextrw", &BX_CPU_C::BxError, &BX_CPU_C::PEXTRW_GdNqIb, BX_ISA_SSE/* | BX_ISA_3DNOW */, OP_Gd, OP_Qq, OP_Ib, OP_NONE, BX_PREPARE_MMX)
 bx_define_opcode(BX_IA_SHUFPS_VpsWpsIb, "shufps", "shufps", &BX_CPU_C::LOAD_Wdq, &BX_CPU_C::SHUFPS_VpsWpsIbR, BX_ISA_SSE, OP_Vps, OP_Wps, OP_Ib, OP_NONE, BX_PREPARE_SSE)
@@ -1409,10 +1409,10 @@ bx_define_opcode(BX_IA_MOVBE_MqGq, "movbe", "movbeq", &BX_CPU_C::MOVBE_MqGq, &BX
 #endif // BX_CPU_LEVEL >= 6
 
 // POPCNT instruction
-bx_define_opcode(BX_IA_POPCNT_GwEw, "popcnt", "popcntw", &BX_CPU_C::LOAD_Ew, &BX_CPU_C::POPCNT_GwEwR, BX_ISA_SSE4_2, OP_Gw, OP_Ew, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_POPCNT_GdEd, "popcnt", "popcntl", &BX_CPU_C::LOAD_Ed, &BX_CPU_C::POPCNT_GdEdR, BX_ISA_SSE4_2, OP_Gd, OP_Ed, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_POPCNT_GwEw, "popcnt", "popcntw", &BX_CPU_C::LOAD_Ew, &BX_CPU_C::POPCNT_GwEwR, BX_ISA_POPCNT, OP_Gw, OP_Ew, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_POPCNT_GdEd, "popcnt", "popcntl", &BX_CPU_C::LOAD_Ed, &BX_CPU_C::POPCNT_GdEdR, BX_ISA_POPCNT, OP_Gd, OP_Ed, OP_NONE, OP_NONE, 0)
 #if BX_SUPPORT_X86_64
-bx_define_opcode(BX_IA_POPCNT_GqEq, "popcnt", "popcntq", &BX_CPU_C::LOAD_Eq, &BX_CPU_C::POPCNT_GqEqR, BX_ISA_SSE4_2, OP_Gq, OP_Eq, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_POPCNT_GqEq, "popcnt", "popcntq", &BX_CPU_C::LOAD_Eq, &BX_CPU_C::POPCNT_GqEqR, BX_ISA_POPCNT, OP_Gq, OP_Eq, OP_NONE, OP_NONE, 0)
 #endif
 // POPCNT instruction
 

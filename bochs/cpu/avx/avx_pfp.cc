@@ -519,21 +519,22 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VDPPS_VpsHpsWpsIbR(bxInstruction_c *i)
 
     // after multiplication: op1 = [AE, BF, CG, DH]
     xmm_mulps_mask(&op1.ymm128(n), &op2.ymm128(n), status, mask >> 4);
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
     // shuffle op2 = [BF, AE, DH, CG]
     xmm_shufps(&op2.ymm128(n), &op1.ymm128(n), &op1.ymm128(n), 0xb1);
 
     // op2 = [(BF+AE), (AE+BF), (DH+CG), (CG+DH)]
     xmm_addps(&op2.ymm128(n), &op1.ymm128(n), status);
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
     // shuffle op1 = [(DH+CG), (CG+DH), (BF+AE), (AE+BF)]
     xmm_shufpd(&op1.ymm128(n), &op2.ymm128(n), &op2.ymm128(n), 0x1);
 
     // op2 = [(BF+AE)+(DH+CG), (AE+BF)+(CG+DH), (DH+CG)+(BF+AE), (CG+DH)+(AE+BF)]
     xmm_addps_mask(&op2.ymm128(n), &op1.ymm128(n), status, mask);
+    check_exceptionsSSE(softfloat_getExceptionFlags(&status));
   }
-
-  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op2, len);
 

@@ -1193,7 +1193,7 @@ BX_CPP_INLINE void xmm_psravq(BxPackedXmmRegister *op1, const BxPackedXmmRegiste
 {
   for (unsigned n=0; n < 2; n++) {
     Bit64u shift = op2->xmm64u(n);
-    if(shift > 64)
+    if(shift > 63)
       op1->xmm64u(n) = (op1->xmm64s(n) < 0) ? BX_CONST64(0xffffffffffffffff) : 0;
     else
       op1->xmm64u(n) = (Bit64u)(op1->xmm64s(n) >> shift);
@@ -1337,7 +1337,7 @@ BX_CPP_INLINE void xmm_psrld(BxPackedXmmRegister *op, Bit64u shift_64)
 
 BX_CPP_INLINE void xmm_psrlq(BxPackedXmmRegister *op, Bit64u shift_64)
 {
-  if(shift_64 > 64) op->clear();
+  if(shift_64 > 63) op->clear();
   else
   {
     Bit8u shift = (Bit8u) shift_64;

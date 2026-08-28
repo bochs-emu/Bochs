@@ -417,49 +417,4 @@ const unsigned BX_XSAVE_XFD_SUPPORT = 0x4;
 #undef IMPLEMENT_CRREG_ACCESSORS
 #undef IMPLEMENT_DRREG_ACCESSORS
 
-#if BX_CPU_LEVEL >= 5
-
-typedef struct msr {
-  unsigned index;          // MSR index
-  unsigned type;           // MSR type: 1 - lin address, 2 - phy address
-#define BX_LIN_ADDRESS_MSR 1
-#define BX_PHY_ADDRESS_MSR 2
-  Bit64u val64;            // current MSR value
-  Bit64u reset_value;      // reset value
-  Bit64u reserved;         // r/o bits - fault on write
-  Bit64u ignored;          // hardwired bits - ignored on write
-
-  msr(unsigned idx, unsigned msr_type = 0, Bit64u reset_val = 0, Bit64u rsrv = 0, Bit64u ign = 0):
-     index(idx), type(msr_type), val64(reset_val), reset_value(reset_val),
-     reserved(rsrv), ignored(ign) {}
-
-  msr(unsigned idx, Bit64u reset_val = 0, Bit64u rsrv = 0, Bit64u ign = 0):
-     index(idx), type(0), val64(reset_val), reset_value(reset_val),
-     reserved(rsrv), ignored(ign) {}
-
-  BX_CPP_INLINE void reset() { val64 = reset_value; }
-  BX_CPP_INLINE Bit64u get64() const { return val64; }
-
-  BX_CPP_INLINE bool set64(Bit64u new_val) {
-     new_val = (new_val & ~ignored) | (val64 & ignored);
-     switch(type) {
-#if BX_SUPPORT_X86_64
-       case BX_LIN_ADDRESS_MSR:
-         if (! IsCanonical48(new_val)) return 0;
-         break;
-#endif
-       case BX_PHY_ADDRESS_MSR:
-         if (! IsValidPhyAddr(new_val)) return 0;
-         break;
-       default:
-         break;
-     }
-     if ((val64 ^ new_val) & reserved) return 0;
-     val64 = new_val;
-     return 1;
-  }
-} MSR;
-
-#endif // BX_CPU_LEVEL >= 5
-
 #endif

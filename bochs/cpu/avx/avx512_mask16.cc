@@ -157,7 +157,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::KSHIFTLW_KGwKEwIbR(bxInstruction_c *i)
 #if BX_SUPPORT_EVEX
   unsigned count = i->Ib();
   Bit16u opmask = 0;
-  if (count < 15)
+  if (count < 16)
     opmask = BX_READ_16BIT_OPMASK(i->src()) << count;
 
   BX_WRITE_OPMASK(i->dst(), opmask);
@@ -171,7 +171,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::KSHIFTRW_KGwKEwIbR(bxInstruction_c *i)
 #if BX_SUPPORT_EVEX
   unsigned count = i->Ib();
   Bit16u opmask = 0;
-  if (count < 15)
+  if (count < 16)
     opmask = BX_READ_16BIT_OPMASK(i->src()) >> count;
 
   BX_WRITE_OPMASK(i->dst(), opmask);
