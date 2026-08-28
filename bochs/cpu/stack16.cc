@@ -186,6 +186,30 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
   push_16(BP);
   Bit16u frame_ptr16 = SP;
 
+#if BX_SUPPORT_X86_64
+  if (long64_mode()) {
+    Bit64u rbp = RBP; // Use temp copy for case of exception.
+
+    if (level > 0) {
+      /* do level-1 times */
+      while (--level) {
+        rbp -= 2;
+        Bit16u temp16 = stack_read_word(rbp);
+        push_16(temp16);
+      }
+
+      /* push(frame pointer) */
+      push_16(frame_ptr16);
+    }
+
+    RSP -= imm16;
+
+    // ENTER finishes with memory write check on the final stack pointer
+    // the memory is touched but no write actually occurs
+    tickle_write_linear(BX_SEG_REG_SS, RSP, 2);
+  }
+  else
+#endif
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
     Bit32u ebp = EBP; // Use temp copy for case of exception.
 
