@@ -787,7 +787,7 @@ textconfig_notify_callback(void *unused, BxEvent *event)
     case BX_SYNC_EVT_LOG_DLG:
       if (event->u.logmsg.mode == BX_LOG_DLG_ASK) {
         int level = event->u.logmsg.level;
-        bx_printf("========================================================================\n");
+        bx_printf("\a========================================================================\n");
         bx_printf("Event type: %s\n", SIM->get_log_level_name (level));
         bx_printf("Device: %s\n", event->u.logmsg.prefix);
         bx_printf("Message: %s\n\n", event->u.logmsg.msg);
