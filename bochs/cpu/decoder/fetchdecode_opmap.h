@@ -1116,7 +1116,10 @@ static const Bit64u BxOpcodeTableC9_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTableC9_64[] = { last_opcode(0, BX_IA_LEAVE_Op64) };
+static const Bit64u BxOpcodeTableC9_64[] = {
+  form_opcode(ATTR_OS32_64, BX_IA_LEAVE_Op64),
+  last_opcode(ATTR_OS16, BX_IA_LEAVE_Op16)
+};
 #endif
 
 // opcode CA

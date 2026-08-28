@@ -264,10 +264,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::LEAVE16(bxInstruction_c *i)
 {
-  BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
-
   Bit16u value16;
 
+#if BX_SUPPORT_X86_64
+  if (long64_mode()) {
+    value16 = stack_read_word(RBP);
+    RSP = RBP + 2;
+  }
+  else
+#endif
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b) {
     value16 = stack_read_word(EBP);
     ESP = EBP + 2;
