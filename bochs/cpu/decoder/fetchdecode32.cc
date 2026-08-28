@@ -1584,7 +1584,6 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
                    (sse_prefix << SSE_PREFIX_OFFSET) |
                    (i->modC0() ? (1 << MODC0_OFFSET) : 0) |
                    (modrm.nnn << NNN_OFFSET) |
-                   (modrm.rm << RRR_OFFSET) |
                    (vex_w << VEX_W_OFFSET) |
                    (vl << VEX_VL_128_256_OFFSET);
   if (i->modC0() && modrm.nnn == modrm.rm)
