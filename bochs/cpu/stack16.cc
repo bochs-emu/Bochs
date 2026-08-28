@@ -230,8 +230,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENTER16_IwIb(bxInstruction_c *i)
     // ENTER finishes with memory write check on the final stack pointer
     // the memory is touched but no write actually occurs
     tickle_write_virtual_32(BX_SEG_REG_SS, ESP, 2);
-
-    BP = frame_ptr16;
   }
   else {
     Bit16u bp = BP;
