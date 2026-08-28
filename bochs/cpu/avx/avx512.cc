@@ -1836,7 +1836,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMPRESSB_MASK_WdqVdq(bxInstruction_c *i
     }
   }
 
-  Bit64u writemask = (BX_CONST64(1) << k) - 1;
+  Bit64u writemask = (k == 64) ? BX_CONST64(0xFFFFFFFFFFFFFFFF) : (BX_CONST64(1) << k) - 1;
 
   if (i->modC0()) {
     avx512_write_regb_masked(i, &result, len, writemask);
@@ -1865,7 +1865,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCOMPRESSW_MASK_WdqVdq(bxInstruction_c *i
     }
   }
 
-  Bit32u writemask = (1 << k) - 1;
+  Bit32u writemask = (k == 32) ? 0xFFFFFFFF : (1 << k) - 1;
 
   if (i->modC0()) {
     avx512_write_regw_masked(i, &result, len, writemask);
