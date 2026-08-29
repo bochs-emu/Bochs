@@ -334,7 +334,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGATHERQPS_MASK_VpsVSib(bxInstruction_c *i
 
   // ensure correct upper part clearing of the destination register
   if (len == BX_VL128) dest->vmm64u(1) = 0;
-  else len--;
+  else len >>= 1;
 
   BX_WRITE_OPMASK(i->opmask(), 0);
   BX_CLEAR_AVX_REGZ(i->dst(), len);
