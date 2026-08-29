@@ -96,7 +96,8 @@ float32 f32_range(float32 a, float32 b, bool is_max, bool is_abs, int sign_ctrl,
     else if (aIsNaN) {
         z = b;
     }
-    else if (signA != signB && ! is_abs) {
+    else if (signA != signB && (! is_abs ||
+             ((a & ~0x80000000) == (b & ~0x80000000)))) {
         if (! is_max) {
             z = signA ? a : b;
         } else {

@@ -96,7 +96,9 @@ float64 f64_range(float64 a, float64 b, bool is_max, bool is_abs, int sign_ctrl,
     else if (aIsNaN) {
         z = b;
     }
-    else if (signA != signB && ! is_abs) {
+    else if (signA != signB && (! is_abs ||
+             ((a & ~UINT64_C(0x8000000000000000)) ==
+              (b & ~UINT64_C(0x8000000000000000))))) {
         if (! is_max) {
             z = signA ? a : b;
         } else {
