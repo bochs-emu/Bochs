@@ -1254,6 +1254,7 @@ void bx_init_hardware()
   BX_INFO(("  Using pre-defined CPU configuration: %s",
       SIM->get_param_enum(BXPN_CPU_MODEL)->get_selected()));
 
+  BX_INFO(("Reporting CPUID frequency as: %s", SIM->get_param_enum(BXPN_CPUID_FREQ)->get_selected()));
   BX_INFO(("Optimization configuration"));
   BX_INFO(("  RepeatSpeedups support: %s", BX_SUPPORT_REPEAT_SPEEDUPS?"yes":"no"));
   BX_INFO(("  Fast function calls: %s", BX_FAST_FUNC_CALL?"yes":"no"));
