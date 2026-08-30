@@ -107,7 +107,8 @@ float32 f32_range(float32 a, float32 b, bool is_max, bool is_abs, int sign_ctrl,
         if (is_abs) {
             tmp_a = tmp_a & ~0x80000000; // clear the sign bit
             tmp_b = tmp_b & ~0x80000000;
-            signA = 0;
+            if (tmp_a != tmp_b)
+              signA = 0;
         }
         if (! is_max) {
             z = (signA ^ (tmp_a < tmp_b)) ? a : b;
