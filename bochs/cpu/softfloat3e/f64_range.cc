@@ -107,7 +107,8 @@ float64 f64_range(float64 a, float64 b, bool is_max, bool is_abs, int sign_ctrl,
         if (is_abs) {
             tmp_a = tmp_a & ~UINT64_C(0x8000000000000000); // clear the sign bit
             tmp_b = tmp_b & ~UINT64_C(0x8000000000000000);
-            signA = 0;
+            if (tmp_a != tmp_b)
+              signA = 0;
         }
 
         if (! is_max) {

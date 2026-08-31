@@ -234,7 +234,7 @@ void BX_CPU_C::initialize(void)
 
 #if BX_CONFIGURE_MSRS
   for (unsigned n=0; n < BX_MSR_MAX_INDEX; n++) {
-    BX_CPU_THIS_PTR msrs[n] = 0;
+    BX_CPU_THIS_PTR msrs[n] = NULL;
   }
   const char *msrs_filename = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->getptr();
   load_MSRs(msrs_filename);
@@ -873,6 +873,15 @@ BX_CPU_C::~BX_CPU_C()
 
 #if BX_CPU_LEVEL >= 5
   destroy_MSRs();
+
+#if BX_CONFIGURE_MSRS
+  for (unsigned n=0; n < BX_MSR_MAX_INDEX; n++) {
+    if (BX_CPU_THIS_PTR msrs[n]) {
+      delete BX_CPU_THIS_PTR msrs[n];
+      BX_CPU_THIS_PTR msrs[n] = NULL;
+    }
+  }
+#endif
 #endif
 
   BX_INSTR_EXIT(BX_CPU_ID);
@@ -1028,24 +1037,7 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 
   BX_CPU_THIS_PTR cpu_mode = BX_MODE_IA32_REAL;
-
-  // DR0 - DR7 (Debug Registers)
-#if BX_CPU_LEVEL >= 3
-  for (n=0; n<4; n++)
-    BX_CPU_THIS_PTR dr[n] = 0;
-#endif
-
-#if BX_CPU_LEVEL >= 5
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_486))
-    BX_CPU_THIS_PTR dr6.set32(0xFFFF0FF0);
-  else
-#endif
-    BX_CPU_THIS_PTR dr6.set32(0xFFFF1FF0); // on 386 bit 12 was set to '1 upon reset
-
-  BX_CPU_THIS_PTR dr7.set32(0x00000400);
-
   BX_CPU_THIS_PTR in_smm = false;
-
   BX_CPU_THIS_PTR pending_event = 0;
   BX_CPU_THIS_PTR event_mask = 0;
 
@@ -1080,13 +1072,27 @@ void BX_CPU_C::reset(unsigned source)
 #endif
 #endif
 
+  // DR0 - DR7 (Debug Registers)
+#if BX_CPU_LEVEL >= 3
+  for (n=0; n<4; n++)
+    BX_CPU_THIS_PTR dr[n] = 0;
+#endif
+
+#if BX_CPU_LEVEL >= 4
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_486))
+    BX_CPU_THIS_PTR dr6.set32(0xFFFF0FF0);
+  else
+#endif
+    BX_CPU_THIS_PTR dr6.set32(0xFFFF1FF0); // on 386 bit 12 was set to '1 upon reset
+
+  BX_CPU_THIS_PTR dr7.set32(0x00000400);
+
 #if BX_CPU_LEVEL >= 6
   if (source == BX_RESET_HARDWARE) {
     BX_CPU_THIS_PTR xcr0.set32(0x1);
   }
   BX_CPU_THIS_PTR xcr0_suppmask = get_xcr0_allow_mask();
   BX_CPU_THIS_PTR ia32_xss_suppmask = get_ia32_xss_allow_mask();
-
   BX_CPU_THIS_PTR msr.ia32_xss = 0;
 
 #if BX_SUPPORT_MONITOR_MWAIT

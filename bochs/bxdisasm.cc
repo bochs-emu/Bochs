@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2014-2020 Stanislav Shwartsman
+//   Copyright (c) 2014-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -72,7 +72,7 @@ unsigned disasm_next_opcode(const Bit8u *iptr, bool is_32, bool is_64)
   return i.ilen();
 }
 
-#define MAX_LENGTH_SUPPORTED 0x1000
+#define MAX_LENGTH_SUPPORTED 0x60000
 
 void disasm_string(const char *s)
 {
@@ -105,32 +105,59 @@ void disasm_string(const char *s)
 
 int main(int argn, const char **argv)
 {
+  bool file_mode = false;
+
   for (int i=1;i<argn;i++) {
     if (i == argn)
     {
-      printf("Usage: bxdisasm [-16|-32|-64] string-of-instruction-bytes\n");
+      printf("Usage: bxdisasm [/16|/32|/64] string-of-instruction-bytes\n");
+      printf("       bxdisasm [/16|/32|/64] -i <filename>\n");
       exit(1);
     }
 
-    if (!strcmp(argv[i], "/16")) {
-      is_32 = 0;
-      is_64 = 0;
-      printf("16 bit mode\n");
-      continue;
-    }
-    if (!strcmp(argv[i], "/32")) {
-      is_32 = 1;
-      is_64 = 0;
-      printf("32 bit mode\n");
-      continue;
-    }
-    if (!strcmp(argv[i], "/64")) {
-      is_32 = 1;
-      is_64 = 1;
-      printf("64 bit mode\n");
-      continue;
+    if (! file_mode) {
+      if (!strcmp(argv[i], "/16")) {
+        is_32 = 0;
+        is_64 = 0;
+        printf("16 bit mode\n");
+        continue;
+      }
+      if (!strcmp(argv[i], "/32")) {
+        is_32 = 1;
+        is_64 = 0;
+        printf("32 bit mode\n");
+        continue;
+      }
+      if (!strcmp(argv[i], "/64")) {
+        is_32 = 1;
+        is_64 = 1;
+        printf("64 bit mode\n");
+        continue;
+      }
+      if (!strcmp(argv[i], "-i")) {
+        file_mode = true;
+        continue;
+      }
     }
 
-    disasm_string(argv[i]);
+    if (file_mode) {
+      FILE *f = fopen(argv[i], "r");
+      if (!f) {
+        printf("Unable to open file: <%s>\n", argv[i]);
+        exit(1);
+      }
+      char ibuf[MAX_LENGTH_SUPPORTED] = {0};
+      fread(ibuf, 1, MAX_LENGTH_SUPPORTED, f);
+      fclose(f);
+
+      printf("string from file: %s\n", ibuf);
+
+      disasm_string(ibuf);
+    }
+    else {
+      disasm_string(argv[i]);
+    }
+
+    break;
   }
 }

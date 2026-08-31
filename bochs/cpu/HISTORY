@@ -7,6 +7,18 @@ Legend:
 [-] Medium-Low severity issue fixed
 
 -------------------------------------------------------------------------
+Changes after Bochs 3.1:
+
+- SSE/AVX: Fixed PSRLQ and PSRAVQ instructions with shift count = 64
+- SSE: PSHUFLW instruction should be supported under SSE2 instead of SSE
+- POPCNT: fix POPCNT instruction to depend on its own (already existing) CPUID feature flags and not SSE4.2
++ AVX512_OPMASK: Fixed behavior of KSHIFTLW/KSHIFTRW instructions with shift count = 15
+- REP_MOVSW/D/Q: Each MOVSD or MOVSQ iteration must read one complete source dword or qword before writing it to the destination. Do not allow copying partial words/dword/qwords.
+- AVX: Fixed order of unmasked exceptions handling in VDPPS instruction. VDPPS must determine SIMD floating-point exceptions separately for each multiply and add operation in execution order.
+- x86-64: implement ENTER and LEAVE instructions with OperandSize=16 and StackSize=64
+- AVX-512: VPBROADCASTMB2Q/VPBROADCASTMW2D instructions should require AVX512_CD
+
+-------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
 
 ! Implemented AMX-FP8 ISA extension

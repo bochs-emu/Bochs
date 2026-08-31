@@ -2823,12 +2823,14 @@ void bx_geforce_c::m2mf(gf_channel* ch)
   }
 }
 
-Bit32u swizzle(Bit32u x, Bit32u y, Bit32u width, Bit32u height)
+Bit32u swizzle(Bit32u x, Bit32u y, Bit32u z, Bit32u width, Bit32u height, Bit32u depth)
 {
   bool xleft = true;
   bool yleft = height != 1;
+  bool zleft = depth != 1;
   Bit32u xbit = 1;
   Bit32u ybit = 1;
+  Bit32u zbit = 1;
   Bit32u rbit = 1;
   Bit32u r = 0;
   do {
@@ -2846,7 +2848,14 @@ Bit32u swizzle(Bit32u x, Bit32u y, Bit32u width, Bit32u height)
       ybit <<= 1;
       yleft = ybit < height;
     }
-  } while (xleft || yleft);
+    if (zleft) {
+      if ((z & zbit) != 0)
+        r |= rbit;
+      rbit <<= 1;
+      zbit <<= 1;
+      zleft = zbit < depth;
+    }
+  } while (xleft || yleft || zleft);
   return r;
 }
 
@@ -2876,7 +2885,7 @@ void bx_geforce_c::tfc(gf_channel* ch)
             srccolor = tfc_words8[word_offset];
           }
           put_pixel_swzs(ch, ch->swzs_ofs +
-            swizzle(x + dx, y + dy, ch->swzs_width, ch->swzs_height) *
+            swizzle(x + dx, y + dy, 0, ch->swzs_width, ch->swzs_height, 1) *
             ch->swzs_color_bytes, srccolor);
         }
         word_offset++;
@@ -2928,7 +2937,7 @@ void bx_geforce_c::sifm(gf_channel* ch, bool swizzled)
           if (ch->sifm_color_bytes == 2 && ch->swzs_color_bytes == 4)
             srccolor = color_565_to_888(srccolor);
           put_pixel_swzs(ch, ch->swzs_ofs +
-            swizzle(x + dx, y + dy, ch->swzs_width, ch->swzs_height) *
+            swizzle(x + dx, y + dy, 0, ch->swzs_width, ch->swzs_height, 1) *
             ch->swzs_color_bytes, srccolor);
         }
         src_offset += spitch;
@@ -2970,7 +2979,7 @@ void bx_geforce_c::sifm(gf_channel* ch, bool swizzled)
           if (ch->sifm_color_bytes == 2 && ch->swzs_color_bytes == 4)
             srccolor = color_565_to_888(srccolor);
           put_pixel_swzs(ch, ch->swzs_ofs +
-            swizzle(x + dx, y + dy, ch->swzs_width, ch->swzs_height) *
+            swizzle(x + dx, y + dy, 0, ch->swzs_width, ch->swzs_height, 1) *
             ch->swzs_color_bytes, srccolor);
           sx += ch->sifm_dudx;
         }
@@ -3208,11 +3217,13 @@ void bx_geforce_c::d3d_texture_process_format(gf_texture* tex)
 void texture_update_size(gf_texture* tex, Bit32u cls)
 {
   if (tex->linear || cls >= 0x4097) {
-    tex->size[0] = tex->image_rect >> 16;
-    tex->size[1] = tex->image_rect & 0x0000ffff;
+    tex->size[0] = tex->size_npot[0];
+    tex->size[1] = tex->size_npot[1];
+    tex->size[2] = tex->size_npot[2];
   } else {
-    tex->size[0] = 1 << tex->base_size[0];
-    tex->size[1] = 1 << tex->base_size[1];
+    tex->size[0] = 1 << tex->size_log[0];
+    tex->size[1] = 1 << tex->size_log[1];
+    tex->size[2] = 1 << tex->size_log[2];
   }
   Bit32u lw = tex->size[0];
   Bit32u lh = tex->size[1];
@@ -3285,8 +3296,8 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
   } else {
     coords = coords_in;
   }
-  Bit32u xy[2];
-  for (int i = 0; i < 2; i++) {
+  Bit32u xyz[3] = { 0 };
+  for (Bit32u i = 0; i < tex->dimensions; i++) {
     if (tex->unnormalized) {
       Bit32s c = coords[i];
       Bit32u size = tex->size[i];
@@ -3309,7 +3320,7 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
             break;
         }
       }
-      xy[i] = c;
+      xyz[i] = c;
     } else {
       float c = coords[i];
       if (c < 0.0f || c > 1.0f) {
@@ -3329,13 +3340,13 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
             break;
         }
       }
-      xy[i] = c == 1.0f ? tex->size[i] - 1 : c * tex->size[i];
+      xyz[i] = c == 1.0f ? tex->size[i] - 1 : c * tex->size[i];
     }
   }
   if (tex->compressed) {
     Bit32u pitch = tex->size[0] * (tex->dxt_alpha_data ? 4 : 2);
-    Bit32u bx = xy[0] >> 2;
-    Bit32u by = xy[1] >> 2;
+    Bit32u bx = xyz[0] >> 2;
+    Bit32u by = xyz[1] >> 2;
     tex_ofs += by * pitch + bx * tex->color_bytes;
   } else if (tex->linear) {
     Bit32u pitch;
@@ -3343,9 +3354,9 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
       pitch = tex->control3 & 0x000fffff;
     else
       pitch = tex->control1 >> 16;
-    tex_ofs += xy[1] * pitch + xy[0] * tex->color_bytes;
+    tex_ofs += xyz[1] * pitch + xyz[0] * tex->color_bytes;
   } else
-    tex_ofs += swizzle(xy[0], xy[1], tex->size[0], tex->size[1]) * tex->color_bytes;
+    tex_ofs += swizzle(xyz[0], xyz[1], xyz[2], tex->size[0], tex->size[1], tex->size[2]) * tex->color_bytes;
   Bit32s color_int[4];
   float color_scale[4];
   switch (tex->format) {
@@ -3355,8 +3366,8 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
     case 0x86:   // DXT1
     case 0x87:   // DXT23
     case 0x88: { // DXT45
-      Bit32u ox = xy[0] & 3;
-      Bit32u oy = xy[1] & 3;
+      Bit32u ox = xyz[0] & 3;
+      Bit32u oy = xyz[1] & 3;
       if (tex->dxt_alpha_data) {
         Bit64u alpha_word = dma_read64(tex->dma_obj, tex_ofs);
         if (tex->dxt_alpha_explicit) {
@@ -5387,6 +5398,7 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
               case 0x00:   // NONE
                 break;
               case 0x01:   // PROJECT2D
+              case 0x02:   // PROJECT3D
               case 0x03: { // CUBEMAP
                 gf_texture* tex = &ch->d3d_texture[t];
                 d3d_sample_texture(ch, tex, ps_in[4 + t], rc_regs[8 + t]);
@@ -7287,8 +7299,11 @@ void bx_geforce_c::d3d_mh_0497_610(gf_channel* ch, Bit32u cls, Bit32u method, Bi
   if (cls == 0x0497) {
     tex->pal_dma_obj = (param & 1) == 1 ? ch->d3d_b_obj : ch->d3d_a_obj;
     tex->pal_ofs = param & 0xffffffc0;
-  } else
+  } else {
     tex->control3 = param;
+    tex->size_npot[2] = param >> 20;
+    texture_update_size(tex, cls);
+  }
 }
 
 void bx_geforce_c::d3d_mh_0097_620(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
@@ -7352,18 +7367,24 @@ void bx_geforce_c::d3d_mh_texture(gf_channel* ch, Bit32u cls, Bit32u method, Bit
     tex->dma_obj = (param & 3) == 1 ? ch->d3d_a_obj : ch->d3d_b_obj;
     tex->cubemap = (param & 4) != 0;
     if (cls == 0x0096) {
+      tex->dimensions = 2;
       tex->format = (param >> 7) & 0x1f;
       tex->levels = (param >> 12) & 0xf;
-      tex->base_size[0] = (param >> 16) & 0xf;
-      tex->base_size[1] = (param >> 20) & 0xf;
+      tex->size_log[0] = (param >> 16) & 0xf;
+      tex->size_log[1] = (param >> 20) & 0xf;
+      tex->size_log[2] = 0;
       tex->wrap[0] = (param >> 24) & 0xf;
       tex->wrap[1] = (param >> 28) & 0xf;
+      tex->wrap[2] = 1; // WRAP
     } else {
+      tex->dimensions = (param >> 4) & 0xf;
+      if (tex->dimensions < 1 || tex->dimensions > 3)
+        BX_ERROR(("Texture with %d dimensions", tex->dimensions));
       tex->format = (param >> 8) & 0xff;
       tex->levels = (param >> 16) & 0xf;
-      tex->base_size[0] = (param >> 20) & 0xf;
-      tex->base_size[1] = (param >> 24) & 0xf;
-      tex->base_size[2] = (param >> 28) & 0xf;
+      tex->size_log[0] = (param >> 20) & 0xf;
+      tex->size_log[1] = (param >> 24) & 0xf;
+      tex->size_log[2] = (param >> 28) & 0xf;
     }
     d3d_texture_process_format(tex);
     texture_update_size(tex, cls);
@@ -7397,7 +7418,8 @@ void bx_geforce_c::d3d_mh_texture(gf_channel* ch, Bit32u cls, Bit32u method, Bit
   } else if ((texture_method == 5 && cls == 0x0096) ||
              (texture_method == 7 && cls == 0x0097) ||
              (texture_method == 6 && cls >= 0x0497)) {
-    tex->image_rect = param;
+    tex->size_npot[0] = param >> 16;
+    tex->size_npot[1] = param & 0x0000ffff;
     texture_update_size(tex, cls);
   } else if ((texture_method == 7 && cls == 0x0096) ||
              (texture_method == 8 && cls == 0x0097)) {
