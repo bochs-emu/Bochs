@@ -4,7 +4,7 @@
 //
 //  Copyright (C) 2003       by Mariusz Matuszek
 //                              [NOmrmmSPAM @ users.sourceforge.net]
-//  Copyright (C) 2017-2021  The Bochs Project
+//  Copyright (C) 2017-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
