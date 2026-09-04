@@ -65,6 +65,10 @@ typedef ssize_t slirp_ssize_t;
 #include "slirp/libslirp.h"
 #endif
 #include <signal.h>
+#ifndef _WIN32
+#include <sys/wait.h>
+#include <sys/socket.h>
+#endif
 
 static unsigned int bx_slirp_instances = 0;
 
