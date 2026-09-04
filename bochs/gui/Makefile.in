@@ -232,7 +232,7 @@ enh_dbg.o: enh_dbg.@CPP_SUFFIX@ ../config.h ../bochs.h ../config.h ../osdep.h \
  ../cpu/decoder/features.h ../memory/memory-bochs.h ../pc_system.h \
  ../cpu/cpu.h ../cpu/decoder/decoder.h ../instrument/stubs/instrument.h \
  ../cpu/i387.h ../cpu/softfloat3e/include/softfloat_types.h \
- ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
+ ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
  ../cpu/crregs.h ../cpu/descriptor.h ../cpu/decoder/instr.h \
  ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/xmm.h \
  ../cpu/vmx.h ../cpu/vmx_ctrls.h ../cpu/access.h enh_dbg.h wenhdbg_res.h
@@ -348,7 +348,7 @@ enh_dbg.lo: enh_dbg.@CPP_SUFFIX@ ../config.h ../bochs.h ../config.h ../osdep.h \
  ../cpu/decoder/features.h ../memory/memory-bochs.h ../pc_system.h \
  ../cpu/cpu.h ../cpu/decoder/decoder.h ../instrument/stubs/instrument.h \
  ../cpu/i387.h ../cpu/softfloat3e/include/softfloat_types.h \
- ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
+ ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
  ../cpu/crregs.h ../cpu/descriptor.h ../cpu/decoder/instr.h \
  ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/xmm.h \
  ../cpu/vmx.h ../cpu/vmx_ctrls.h ../cpu/access.h enh_dbg.h wenhdbg_res.h
