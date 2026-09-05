@@ -134,7 +134,7 @@ class vvfat_image_t : public device_image_t
     void init_fat();
     void lfn_to_sfn(const char *lfn, char sfn[12], int sequence);
     direntry_t* create_short_and_long_name(unsigned int directory_start,
-      const char* filename, int is_dot);
+      const char* filename, int is_dot, direntry_t** entry_long);
     int read_directory(int mapping_index);
     Bit32u sector2cluster(off_t sector_num);
     off_t cluster2sector(Bit32u cluster_num);

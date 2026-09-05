@@ -456,7 +456,7 @@ static inline int short2long_name(char* dest,const char* src)
   len = 2 * i;
   dest[2*i] = dest[2*i+1] = 0;
   for (i = 2 * i + 2; (i % 26); i++)
-    dest[i] = (char)0xff;
+    dest[i] = (char) 0xff;
   return len;
 }
 
@@ -498,13 +498,10 @@ static void set_begin_of_direntry(direntry_t* direntry, Bit32u begin)
 
 static inline Bit8u fat_chksum(const direntry_t* entry)
 {
-  Bit8u c, chksum = 0;
-  int i;
+  Bit8u chksum = 0;
 
-  for (i = 0; i < 11; i++) {
-    c = entry->name[i];
-    chksum = (((chksum & 0xfe) >> 1) | ((chksum & 0x01) ? 0x80:0)) + c;
-  }
+  for (int i = 0; i < 11; i++)
+    chksum = ((chksum & 1) ? 0x80 : 0) + (chksum >> 1) + entry->name[i];
 
   return chksum;
 }
@@ -659,13 +656,12 @@ void vvfat_image_t::lfn_to_sfn(const char *lfn, char sfn[12], int sequence) {
 }
 
 direntry_t* vvfat_image_t::create_short_and_long_name(
-  unsigned int directory_start, const char* filename, int is_dot)
+  unsigned int directory_start, const char* filename, int is_dot, direntry_t** entry_long)
 {
   int long_index = directory.next;
   direntry_t* entry = NULL;
-  direntry_t* entry_long = NULL;
   char sfn[12];
-  int sequence = 0;
+  int sequence = 1;
 
   if (is_dot) {
     entry = (direntry_t*)array_get_next(&directory);
@@ -674,7 +670,8 @@ direntry_t* vvfat_image_t::create_short_and_long_name(
     return entry;
   }
 
-  entry_long = create_long_filename(filename);
+  if (entry_long != NULL)
+    *entry_long = create_long_filename(filename);
 
   // mangle duplicates
   lfn_to_sfn(filename, sfn, sequence); // first time assume no duplicates
@@ -696,20 +693,12 @@ direntry_t* vvfat_image_t::create_short_and_long_name(
     memcpy(entry->name, sfn, 11);
   }
 
-  // calculate checksum; propagate to long name
-  if (entry_long) {
-    Bit8u chksum = fat_chksum(entry);
-
-    // calculate anew, because realloc could have taken place
-    entry_long = (direntry_t*)array_get(&directory, long_index);
-    while (entry_long<entry && is_long_name(entry_long)) {
-      entry_long->reserved[1]=chksum;
-      entry_long++;
-    }
-  }
-
   return entry;
 }
+
+Bit16u nn(Bit16u n) {
+  return (n != 0xFFFF) ? n : 0;
+};
 
 /*
  * Read a directory. (the index of the corresponding mapping must be passed).
@@ -743,8 +732,8 @@ int vvfat_image_t::read_directory(int mapping_index)
 
   if (first_cluster != first_cluster_of_root_dir) {
     // create the top entries of a subdirectory
-    create_short_and_long_name(i, ".", 1);
-    create_short_and_long_name(i, "..", 1);
+    create_short_and_long_name(i, ".", 1, NULL);
+    create_short_and_long_name(i, "..", 1, NULL);
   }
 
   // actually read the directory, and allocate the mappings
@@ -782,8 +771,9 @@ int vvfat_image_t::read_directory(int mapping_index)
 
     count++;
     // create directory entry for this file
+    direntry_t* entry_long;
     if (!is_dot && !is_dotdot) {
-      direntry = create_short_and_long_name(i, entry->d_name, 0);
+      direntry = create_short_and_long_name(i, entry->d_name, 0, &entry_long);
     } else {
       direntry = (direntry_t*)array_get(&directory, is_dot ? i : i + 1);
     }
@@ -810,6 +800,17 @@ int vvfat_image_t::read_directory(int mapping_index)
       return -3;
     }
     direntry->size = htod32(S_ISDIR(st.st_mode) ? 0:st.st_size);
+
+    // calculate checksum; propagate to long name
+    if (entry_long != NULL) {
+      Bit8u chksum = fat_chksum(direntry);
+      
+      // calculate anew, because realloc could have taken place
+      while (entry_long<direntry && is_long_name(entry_long)) {
+        entry_long->reserved[1]=chksum;
+        entry_long++;
+      }
+    }
 
     // create mapping for this file
     if (!is_dot && !is_dotdot && (S_ISDIR(st.st_mode) || st.st_size)) {
@@ -857,8 +858,8 @@ int vvfat_image_t::read_directory(int mapping_index)
 
   if (first_cluster != first_cluster_of_root_dir) {
     // create the top entries of a subdirectory
-    create_short_and_long_name(i, ".", 1);
-    create_short_and_long_name(i, "..", 1);
+    create_short_and_long_name(i, ".", 1, NULL);
+    create_short_and_long_name(i, "..", 1, NULL);
   }
 
   // actually read the directory, and allocate the mappings
@@ -887,8 +888,9 @@ int vvfat_image_t::read_directory(int mapping_index)
 
     count++;
     // create directory entry for this file
+    direntry_t* entry_long = NULL;
     if (!is_dot && !is_dotdot) {
-      direntry = create_short_and_long_name(i, finddata.cFileName, 0);
+      direntry = create_short_and_long_name(i, finddata.cFileName, 0, &entry_long);
     } else {
       direntry = (direntry_t*)array_get(&directory, is_dot ? i : i + 1);
     }
@@ -915,6 +917,17 @@ int vvfat_image_t::read_directory(int mapping_index)
       return -3;
     }
     direntry->size = htod32((finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? 0:finddata.nFileSizeLow);
+
+    // calculate checksum; propagate to long name
+    if (entry_long != NULL) {
+      Bit8u chksum = fat_chksum(direntry);
+      
+      // calculate anew, because realloc could have taken place
+      while (entry_long<direntry && is_long_name(entry_long)) {
+        entry_long->reserved[1]=chksum;
+        entry_long++;
+      }
+    }
 
     // create mapping for this file
     if (!is_dot && !is_dotdot && ((finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) || finddata.nFileSizeLow)) {
