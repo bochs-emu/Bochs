@@ -3273,40 +3273,37 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
       coords_abs[i] = fabs(coords_in[i]);
     if (coords_abs[0] > coords_abs[1] && coords_abs[0] > coords_abs[2]) {
       coords_cubemap[0] = coords_cubemap[1] = 1.0f / coords_abs[0];
+      coords_cubemap[1] *= -coords_in[1];
       if (coords_in[0] > 0.0f) {
         face = 0;
         coords_cubemap[0] *= -coords_in[2];
-        coords_cubemap[1] *= -coords_in[1];
       } else {
         face = 1;
         coords_cubemap[0] *= coords_in[2];
-        coords_cubemap[1] *= -coords_in[1];
       }
     } else if (coords_abs[1] > coords_abs[0] && coords_abs[1] > coords_abs[2]) {
       coords_cubemap[0] = coords_cubemap[1] = 1.0f / coords_abs[1];
+      coords_cubemap[0] *= coords_in[0];
       if (coords_in[1] > 0.0f) {
         face = 2;
-        coords_cubemap[0] *= coords_in[0];
         coords_cubemap[1] *= coords_in[2];
       } else {
         face = 3;
-        coords_cubemap[0] *= coords_in[0];
         coords_cubemap[1] *= -coords_in[2];
       }
     } else {
       coords_cubemap[0] = coords_cubemap[1] = 1.0f / coords_abs[2];
+      coords_cubemap[1] *= -coords_in[1];
       if (coords_in[2] > 0.0f) {
         face = 4;
         coords_cubemap[0] *= coords_in[0];
-        coords_cubemap[1] *= -coords_in[1];
       } else {
         face = 5;
         coords_cubemap[0] *= -coords_in[0];
-        coords_cubemap[1] *= -coords_in[1];
       }
     }
-    coords_cubemap[0] = (coords_cubemap[0] + 1.0f) * 0.5f;
-    coords_cubemap[1] = (coords_cubemap[1] + 1.0f) * 0.5f;
+    coords_cubemap[0] = 0.5f * coords_cubemap[0] + 0.5f;
+    coords_cubemap[1] = 0.5f * coords_cubemap[1] + 0.5f;
     coords_cubemap[2] = 0.0f;
     coords = coords_cubemap;
     tex_ofs += face * tex->face_bytes;
@@ -3333,7 +3330,8 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
             if (Bit32u(c) >= size)
               c = size * 2 - c - 1;
             break;
-          default: // CLAMP_TO_EDGE
+          case 3:  // CLAMP_TO_EDGE
+          default:
             c = c < 0 ? 0 : size - 1;
             break;
         }
@@ -3353,7 +3351,8 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
             if (c > 1.0f)
               c = 2.0f - c;
             break;
-          default: // CLAMP_TO_EDGE
+          case 3:  // CLAMP_TO_EDGE
+          default:
             c = c < 0.0f ? 0.0f : 1.0f;
             break;
         }
@@ -4336,14 +4335,19 @@ void bx_geforce_c::d3d_register_combiners(gf_channel* ch, float regs[16][4], flo
   }
 }
 
-float length(float v[3])
+float length2(float v[2])
+{
+  return sqrt(v[0] * v[0] + v[1] * v[1]);
+}
+
+float length3(float v[3])
 {
   return sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 }
 
 float normalize(float v[3])
 {
-  float l = length(v);
+  float l = length3(v);
   float scale = 1.0f / l;
   v[0] *= scale;
   v[1] *= scale;
@@ -4353,10 +4357,22 @@ float normalize(float v[3])
 
 void normalize(float in[3], float out[3])
 {
-  float scale = 1.0f / length(in);
+  float scale = 1.0f / length3(in);
   out[0] = in[0] * scale;
   out[1] = in[1] * scale;
   out[2] = in[2] * scale;
+}
+
+void compute_partials_x(float v0[4], float v1[4], float ddx[4])
+{
+  for (Bit32u ci = 0; ci < 4; ci++)
+    ddx[ci] = v1[ci] - v0[ci];
+}
+
+void compute_partials_y(float v0[4], float v2[4], float ddy[4])
+{
+  for (Bit32u ci = 0; ci < 4; ci++)
+    ddy[ci] = v2[ci] - v0[ci];
 }
 
 void compute_partials(float v0[3], float v1[3], float v2[3], float ddx[3], float ddy[3])
@@ -4367,17 +4383,92 @@ void compute_partials(float v0[3], float v1[3], float v2[3], float ddx[3], float
   }
 }
 
-float compute_lod(gf_texture* tex, float ddx[3], float ddy[3])
+float compute_lod(gf_texture* tex, float coords[3], float ddx[3], float ddy[3])
 {
-  Bit32u* tex_sizes = tex->sizes[0];
-  float dsdx = ddx[0] * tex_sizes[0];
-  float dtdx = ddx[1] * tex_sizes[1];
-  float drdx = ddx[2] * tex_sizes[2];
-  float dsdy = ddy[0] * tex_sizes[0];
-  float dtdy = ddy[1] * tex_sizes[1];
-  float drdy = ddy[2] * tex_sizes[2];
-  float rho_x = sqrt(dsdx * dsdx + dtdx * dtdx + drdx * drdx);
-  float rho_y = sqrt(dsdy * dsdy + dtdy * dtdy + drdy * drdy);
+  float rho_x;
+  float rho_y;
+  if (tex->cubemap) {
+    float ddx_sel[3];
+    float ddy_sel[3];
+    float coords_sel[3];
+    float coords_abs[3];
+    for (Bit32u ci = 0; ci < 3; ci++)
+      coords_abs[ci] = fabs(coords[ci]);
+    if (coords_abs[0] > coords_abs[1] && coords_abs[0] > coords_abs[2]) {
+      coords_sel[2] = coords_abs[0];
+      coords_sel[1] = -coords[1];
+      ddx_sel[1] = -ddx[1];
+      ddy_sel[1] = -ddy[1];
+      if (coords[0] > 0.0f) {
+        coords_sel[0] = -coords[2];
+        ddx_sel[0] = -ddx[2];
+        ddy_sel[0] = -ddy[2];
+        ddx_sel[2] = ddx[0];
+        ddy_sel[2] = ddy[0];
+      } else {
+        coords_sel[0] = coords[2];
+        ddx_sel[0] = ddx[2];
+        ddy_sel[0] = ddy[2];
+        ddx_sel[2] = -ddx[0];
+        ddy_sel[2] = -ddy[0];
+      }
+    } else if (coords_abs[1] > coords_abs[0] && coords_abs[1] > coords_abs[2]) {
+      coords_sel[2] = coords_abs[1];
+      coords_sel[0] = coords[0];
+      ddx_sel[0] = ddx[0];
+      ddy_sel[0] = ddy[0];
+      if (coords[1] > 0.0f) {
+        coords_sel[1] = coords[2];
+        ddx_sel[1] = ddx[2];
+        ddy_sel[1] = ddy[2];
+        ddx_sel[2] = ddx[1];
+        ddy_sel[2] = ddy[1];
+      } else {
+        coords_sel[1] = -coords[2];
+        ddx_sel[1] = -ddx[2];
+        ddy_sel[1] = -ddy[2];
+        ddx_sel[2] = -ddx[1];
+        ddy_sel[2] = -ddy[1];
+      }
+    } else {
+      coords_sel[2] = coords_abs[2];
+      coords_sel[1] = -coords[1];
+      ddx_sel[1] = -ddx[1];
+      ddy_sel[1] = -ddy[1];
+      if (coords[2] > 0.0f) {
+        coords_sel[0] = coords[0];
+        ddx_sel[0] = ddx[0];
+        ddy_sel[0] = ddy[0];
+        ddx_sel[2] = ddx[2];
+        ddy_sel[2] = ddy[2];
+      } else {
+        coords_sel[0] = -coords[0];
+        ddx_sel[0] = -ddx[0];
+        ddy_sel[0] = -ddy[0];
+        ddx_sel[2] = -ddx[2];
+        ddy_sel[2] = -ddy[2];
+      }
+    }
+    float ddx_face[2];
+    float ddy_face[2];
+    float k = 0.5f * tex->sizes[0][0] / (coords_sel[2] * coords_sel[2]);
+    ddx_face[0] = k * (coords_sel[2] * ddx_sel[0] - coords_sel[0] * ddx_sel[2]);
+    ddy_face[0] = k * (coords_sel[2] * ddy_sel[0] - coords_sel[0] * ddy_sel[2]);
+    ddx_face[1] = k * (coords_sel[2] * ddx_sel[1] - coords_sel[1] * ddx_sel[2]);
+    ddy_face[1] = k * (coords_sel[2] * ddy_sel[1] - coords_sel[1] * ddy_sel[2]);
+    rho_x = length2(ddx_face);
+    rho_y = length2(ddy_face);
+  } else {
+    float ddx_scale[3];
+    float ddy_scale[3];
+    Bit32u* tex_sizes = tex->sizes[0];
+    for (Bit32u ci = 0; ci < 3; ci++) {
+      ddx_scale[ci] = ddx[ci] * tex_sizes[ci];
+      ddy_scale[ci] = ddy[ci] * tex_sizes[ci];
+    }
+    rho_x = length3(ddx_scale);
+    rho_y = length3(ddy_scale);
+  }
   return log2(BX_MAX(rho_x, rho_y));
 }
 
@@ -4458,6 +4549,22 @@ void bx_geforce_c::d3d_pixel_quad_shader(gf_channel* ch, float in[4][16][4],
     float op_results[4][4];
     Bit32u op = (dst_word >> 24) & 0x3f;
     switch (op) {
+      case 0x15: { // DDX
+        float ddx[4];
+        compute_partials_x(paramsq[0][0], paramsq[1][0], ddx);
+        for (Bit32u fi = 0; fi < 4; fi++)
+          for (Bit32u ci = 0; ci < 4; ci++)
+            op_results[fi][ci] = ddx[ci];
+        break;
+      }
+      case 0x16: { // DDY
+        float ddy[4];
+        compute_partials_y(paramsq[0][0], paramsq[2][0], ddy);
+        for (Bit32u fi = 0; fi < 4; fi++)
+          for (Bit32u ci = 0; ci < 4; ci++)
+            op_results[fi][ci] = ddy[ci];
+        break;
+      }
       case 0x18: { // TXP
         for (Bit32u fi = 0; fi < 4; fi++) {
           float winv = 1.0f / paramsq[fi][0][3];
@@ -4469,21 +4576,22 @@ void bx_geforce_c::d3d_pixel_quad_shader(gf_channel* ch, float in[4][16][4],
       }
       case 0x2f: // TXL
       case 0x31: // TXB
+      case 0x19: // TXD
       case 0x17: { // TEX
         Bit32u tex_unit = (dst_word >> 17) & 0xf;
         gf_texture* tex = &ch->d3d_texture[tex_unit];
-        float lodq[4] = { 0.0f };
+        float lodq[4];
         if (op == 0x2f) { // TXL
           for (Bit32u fi = 0; fi < 4; fi++)
             lodq[fi] = paramsq[fi][1][0];
+        } else if (op == 0x19) { // TXD
+          for (Bit32u fi = 0; fi < 4; fi++)
+            lodq[fi] = compute_lod(tex, paramsq[fi][0], paramsq[fi][1], paramsq[fi][2]);
         } else {
           float ddx[3];
           float ddy[3];
-          if (tex->cubemap)
-            for (Bit32u fi = 0; fi < 4; fi++)
-              normalize(paramsq[fi][0]);
           compute_partials(paramsq[0][0], paramsq[1][0], paramsq[2][0], ddx, ddy);
-          float lambda_base = compute_lod(tex, ddx, ddy);
+          float lambda_base = compute_lod(tex, paramsq[0][0], ddx, ddy);
           if (op == 0x31) { // TXB
             for (Bit32u fi = 0; fi < 4; fi++)
               lodq[fi] = lambda_base + paramsq[fi][1][0];
@@ -4524,7 +4632,7 @@ void bx_geforce_c::d3d_pixel_quad_shader(gf_channel* ch, float in[4][16][4],
         float ddx[3];
         float ddy[3];
         compute_partials(coords[0], coords[1], coords[2], ddx, ddy);
-        float lod = compute_lod(tex, ddx, ddy);
+        float lod = compute_lod(tex, coords[0], ddx, ddy);
         for (Bit32u fi = 0; fi < 4; fi++) {
           if (execute[fi]) {
             d3d_sample_texture(ch, tex, coords[fi], lod, op_results[fi]);
@@ -5098,7 +5206,7 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
           case 1: { // RADIAL
             float pt[3];
             position_to_view3(ch, p, pt);
-            fog_dist = length(pt);
+            fog_dist = length3(pt);
             break;
           }
           case 2:   // PLANAR
@@ -5526,7 +5634,7 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
                 float ddx[3];
                 float ddy[3];
                 compute_partials(ps_in[0][4 + t], ps_in[1][4 + t], ps_in[2][4 + t], ddx, ddy);
-                float lod = compute_lod(tex, ddx, ddy);
+                float lod = compute_lod(tex, ps_in[0][4 + t], ddx, ddy);
                 for (Bit32u fi = 0; fi < 4; fi++)
                   d3d_sample_texture(ch, tex, ps_in[fi][4 + t], lod, rc_regs[fi][8 + t]);
                 break;
@@ -5548,7 +5656,7 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
                 float ddx[3];
                 float ddy[3];
                 compute_partials(coords[0], coords[1], coords[2], ddx, ddy);
-                float lod = compute_lod(tex, ddx, ddy);
+                float lod = compute_lod(tex, coords[0], ddx, ddy);
                 for (Bit32u fi = 0; fi < 4; fi++)
                   d3d_sample_texture(ch, tex, coords[fi], lod, rc_regs[fi][8 + t]);
                 break;
@@ -5566,7 +5674,7 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
                 float ddx[3];
                 float ddy[3];
                 compute_partials(rv[0], rv[1], rv[2], ddx, ddy);
-                float lod = compute_lod(tex, ddx, ddy);
+                float lod = compute_lod(tex, rv[0], ddx, ddy);
                 for (Bit32u fi = 0; fi < 4; fi++)
                   d3d_sample_texture(ch, tex, rv[fi], lod, rc_regs[fi][8 + t]);
                 break;
