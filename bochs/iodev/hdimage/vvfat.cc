@@ -696,10 +696,6 @@ direntry_t* vvfat_image_t::create_short_and_long_name(
   return entry;
 }
 
-Bit16u nn(Bit16u n) {
-  return (n != 0xFFFF) ? n : 0;
-};
-
 /*
  * Read a directory. (the index of the corresponding mapping must be passed).
  */
