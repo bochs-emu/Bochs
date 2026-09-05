@@ -1011,7 +1011,6 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
                    (sse_prefix << SSE_PREFIX_OFFSET) |
                    (i->modC0() ? (1 << MODC0_OFFSET) : 0) |
                    ((nnn & 0x7) << NNN_OFFSET) |
-                   ((rm  & 0x7) << RRR_OFFSET) |
                    (vex_w << VEX_W_OFFSET) |
                    (vl << VEX_VL_128_256_OFFSET);
   if (i->modC0() && nnn == rm)

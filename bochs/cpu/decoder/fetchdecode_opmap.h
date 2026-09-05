@@ -1105,7 +1105,7 @@ static const Bit64u BxOpcodeTableC8_32[] = {
 #if BX_SUPPORT_X86_64
 static const Bit64u BxOpcodeTableC8_64[] = {
   form_opcode(ATTR_OS32_64, BX_IA_ENTER_Op64_IwIb),
-  last_opcode(ATTR_OS16, BX_IA_ENTER_Op16_IwIb)
+  last_opcode(ATTR_OS16,    BX_IA_ENTER_Op16_IwIb)
 };
 #endif
 
@@ -1118,7 +1118,7 @@ static const Bit64u BxOpcodeTableC9_32[] = {
 #if BX_SUPPORT_X86_64
 static const Bit64u BxOpcodeTableC9_64[] = {
   form_opcode(ATTR_OS32_64, BX_IA_LEAVE_Op64),
-  last_opcode(ATTR_OS16, BX_IA_LEAVE_Op16)
+  last_opcode(ATTR_OS16,    BX_IA_LEAVE_Op16)
 };
 #endif
 
@@ -1379,8 +1379,7 @@ static const Bit64u BxOpcodeTableF5[] = { last_opcode(0, BX_IA_CMC) };
 
 // opcode F6
 static const Bit64u BxOpcodeTableF6[] = {
-  form_opcode(ATTR_NNN0, BX_IA_TEST_EbIb),
-  form_opcode(ATTR_NNN1, BX_IA_TEST_EbIb),
+  form_opcode(ATTR_NNN0_1, BX_IA_TEST_EbIb),
   form_opcode_lockable(ATTR_NNN2, BX_IA_NOT_Eb),
   form_opcode_lockable(ATTR_NNN3, BX_IA_NEG_Eb),
   form_opcode(ATTR_NNN4, BX_IA_MUL_ALEb),
@@ -1392,8 +1391,7 @@ static const Bit64u BxOpcodeTableF6[] = {
 // opcode F7
 static const Bit64u BxOpcodeTableF7[] = {
 #if BX_SUPPORT_X86_64
-  form_opcode(ATTR_NNN0 | ATTR_OS64, BX_IA_TEST_EqId),
-  form_opcode(ATTR_NNN1 | ATTR_OS64, BX_IA_TEST_EqId),
+  form_opcode(ATTR_NNN0_1 | ATTR_OS64, BX_IA_TEST_EqId),
   form_opcode_lockable(ATTR_NNN2 | ATTR_OS64, BX_IA_NOT_Eq),
   form_opcode_lockable(ATTR_NNN3 | ATTR_OS64, BX_IA_NEG_Eq),
   form_opcode(ATTR_NNN4 | ATTR_OS64, BX_IA_MUL_RAXEq),
@@ -1402,8 +1400,7 @@ static const Bit64u BxOpcodeTableF7[] = {
   form_opcode(ATTR_NNN7 | ATTR_OS64, BX_IA_IDIV_RAXEq),
 #endif
 
-  form_opcode(ATTR_NNN0 | ATTR_OS32, BX_IA_TEST_EdId),
-  form_opcode(ATTR_NNN1 | ATTR_OS32, BX_IA_TEST_EdId),
+  form_opcode(ATTR_NNN0_1 | ATTR_OS32, BX_IA_TEST_EdId),
   form_opcode_lockable(ATTR_NNN2 | ATTR_OS32, BX_IA_NOT_Ed),
   form_opcode_lockable(ATTR_NNN3 | ATTR_OS32, BX_IA_NEG_Ed),
   form_opcode(ATTR_NNN4 | ATTR_OS32, BX_IA_MUL_EAXEd),
@@ -1411,8 +1408,7 @@ static const Bit64u BxOpcodeTableF7[] = {
   form_opcode(ATTR_NNN6 | ATTR_OS32, BX_IA_DIV_EAXEd),
   form_opcode(ATTR_NNN7 | ATTR_OS32, BX_IA_IDIV_EAXEd),
 
-  form_opcode(ATTR_NNN0 | ATTR_OS16, BX_IA_TEST_EwIw),
-  form_opcode(ATTR_NNN1 | ATTR_OS16, BX_IA_TEST_EwIw),
+  form_opcode(ATTR_NNN0_1 | ATTR_OS16, BX_IA_TEST_EwIw),
   form_opcode_lockable(ATTR_NNN2 | ATTR_OS16, BX_IA_NOT_Ew),
   form_opcode_lockable(ATTR_NNN3 | ATTR_OS16, BX_IA_NEG_Ew),
   form_opcode(ATTR_NNN4 | ATTR_OS16, BX_IA_MUL_AXEw),

@@ -38,7 +38,14 @@
 #define FPU_TOS                (BX_CPU_THIS_PTR the_i387.tos)
 #endif
 
-#include "fpu/tag_w.h"
+/* Tag Word */
+enum {
+  FPU_Tag_Valid   = 0x00,
+  FPU_Tag_Zero    = 0x01,
+  FPU_Tag_Special = 0x02,
+  FPU_Tag_Empty   = 0x03
+};
+
 #include "fpu/status_w.h"
 #include "fpu/control_w.h"
 

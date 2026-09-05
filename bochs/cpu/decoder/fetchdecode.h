@@ -485,6 +485,9 @@ const Bit64u ATTR_NNN5 = ((BX_CONST64(5)<<NNN_OFFSET) << 24) | (BX_CONST64(7)<<N
 const Bit64u ATTR_NNN6 = ((BX_CONST64(6)<<NNN_OFFSET) << 24) | (BX_CONST64(7)<<NNN_OFFSET);
 const Bit64u ATTR_NNN7 = ((BX_CONST64(7)<<NNN_OFFSET) << 24) | (BX_CONST64(7)<<NNN_OFFSET);
 
+// special case when both NNN0 and NNN1 can be accepted
+const Bit64u ATTR_NNN0_1 = ((BX_CONST64(0)<<(NNN_OFFSET+1)) << 24) | (BX_CONST64(3)<<(NNN_OFFSET+1));
+
 const Bit64u ATTR_LAST_OPCODE = BX_CONST64(0x8000000000000000);
 
 #define form_opcode(attr, ia_opcode) 		        ((attr) | (Bit64u(ia_opcode) << 48) | ATTR_LOCK_PREFIX_NOT_ALLOWED)

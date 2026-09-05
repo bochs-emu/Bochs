@@ -28,8 +28,6 @@
 
 #include "softfloat3e/include/softfloat.h"
 
-#define CHECK_PENDING_EXCEPTIONS 1
-
 #if BX_SUPPORT_FPU
 void BX_CPU_C::FPU_update_last_instruction(bxInstruction_c *i)
 {

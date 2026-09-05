@@ -52,9 +52,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct softfloat_status_t
 {
     uint8_t softfloat_roundingMode;
-    int softfloat_exceptionFlags;
-    int softfloat_exceptionMasks;
-    int softfloat_suppressException;
+    uint8_t softfloat_exceptionMasks;
+    uint8_t softfloat_suppressException;
 
     bool softfloat_denormals_are_zeros;
     bool softfloat_flush_underflow_to_zero;
@@ -64,6 +63,8 @@ struct softfloat_status_t
     | Valid values are 32, 64, and 80.
     *----------------------------------------------------------------------------*/
     uint8_t extF80_roundingPrecision;
+
+    int16_t softfloat_exceptionFlags;
 };
 
 /*----------------------------------------------------------------------------
