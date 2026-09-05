@@ -6,7 +6,7 @@
 // ported from QEMU block driver with some additions (see below)
 //
 // Copyright (c) 2004,2005  Johannes E. Schindelin
-// Copyright (C) 2010-2025  The Bochs Project
+// Copyright (C) 2010-2026  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -456,7 +456,7 @@ static inline int short2long_name(char* dest,const char* src)
   len = 2 * i;
   dest[2*i] = dest[2*i+1] = 0;
   for (i = 2 * i + 2; (i % 26); i++)
-    dest[i] = (char)0xff;
+    dest[i] = (char) 0xff;
   return len;
 }
 
@@ -498,13 +498,10 @@ static void set_begin_of_direntry(direntry_t* direntry, Bit32u begin)
 
 static inline Bit8u fat_chksum(const direntry_t* entry)
 {
-  Bit8u c, chksum = 0;
-  int i;
+  Bit8u chksum = 0;
 
-  for (i = 0; i < 11; i++) {
-    c = entry->name[i];
-    chksum = (((chksum & 0xfe) >> 1) | ((chksum & 0x01) ? 0x80:0)) + c;
-  }
+  for (int i = 0; i < 11; i++)
+    chksum = ((chksum & 1) ? 0x80 : 0) + (chksum >> 1) + entry->name[i];
 
   return chksum;
 }
@@ -552,14 +549,119 @@ void vvfat_image_t::init_fat(void)
   }
 }
 
+// create a valid Short Filename (sfn) from a given Long Filename (lfn) allowing the
+//  caller to send a sequence number (the number after the '~')
+// this assumes it is not a path but just the filename and possible extention
+void vvfat_image_t::lfn_to_sfn(const char *lfn, char sfn[12], int sequence) {
+  char base[9] = { 0, };
+  char ext[4] = { 0, };
+  char sequ[8] = { 0, };
+  char filename[BX_MAX_PATH];
+  char tempname[BX_MAX_PATH];
+  int  dots = 0;
+  bool force = false;
+  size_t i;
+  int j, k;
+
+  // we need to copy the long filename to a temp location so we don't modify the name that was passed.
+  // also count how many dots are in the string, as well as remove any spaces.
+  for (i=0, j=0; i<strlen(lfn) && j<BX_MAX_PATH-1; i++) {
+    if (lfn[i] == '.') dots++;
+    if (lfn[i] == ' ')
+      force = true;
+    else
+      tempname[j++] = lfn[i];
+  }
+  tempname[j] = '\0';
+
+  // if there were more than one dot in the name, remove all but the last one.
+  if (dots > 1) {
+    force = true;
+    for (i=0, j=0; i<strlen(tempname); i++) {
+      // the 'compiled code' will test the first equation first and if TRUE, will execute the next line,
+      //  not even touching the '--dots'
+      // the 'compiled code' will only test the second equation if tempname[i] == '.'
+      if ((tempname[i] != '.') || (--dots < 2))
+        filename[j++] = tempname[i];
+    }
+    filename[j] = '\0';
+  } else
+    strcpy(filename, tempname);
+
+  // we need to change any illegal char to a legal char.
+  // a valid SFN char is:
+  //  Uppercase letters A-Z
+  //  Numbers 0-9
+  //  space char (though it must be trailing?)
+  //  one of the chars listed in the string below
+  for (i=0; i<strlen(filename); i++) {
+    // this could be sped up if we just use a single (long) string of chars,
+    //  instead of the shorter one we use below. Is it worth changing?
+    if (!(
+         (filename[i] == '.')                          ||
+        ((filename[i] >= 'a') && (filename[i] <= 'z')) || // we uppercase them below
+        ((filename[i] >= 'A') && (filename[i] <= 'Z')) ||
+        ((filename[i] >= '0') && (filename[i] <= '9')) ||
+         (strrchr("!#$%&'()-@^_`{}~", filename[i]) != NULL)
+        )) {
+      filename[i] = '_';
+      force = true;
+    }
+  }
+
+  // Find extension
+  const char *dot = strrchr(filename, '.');
+  int ext_len = 0;
+  int base_len = (int) (dot ? (dot - filename) : strlen(filename));
+  
+  // Copy and filter base name
+  for (k=0, j=0; k < base_len && j<8; k++) {
+    if (filename[k] != '.')
+      base[j++] = toupper((unsigned char) filename[k]);
+  }
+
+  // if there was nothing there (because of all spaces, illegal chars, or the dot was the first char)
+  //  "insert" a base of "_"
+  if (strlen(base) == 0) {
+    force = true;
+    strcpy(base, "_");
+  }
+  
+  // Copy and filter extension (max 3 chars)
+  if (dot) {
+    ext_len = (int) strlen(dot + 1);
+    for (k=1, j=0; dot[k] != '\0' && j < 3; k++)
+      ext[j++] = toupper((unsigned char) dot[k]);
+  }
+  
+  // do we need to add the '~' stuff?
+  if (!force && (base_len <= 8) && (ext_len <= 3)) {
+    memset(sfn, ' ', 11);
+    memcpy(sfn, base, strlen(base));
+    memcpy(sfn + 8, ext, strlen(ext));
+    sfn[11] = '\0';
+  } else {
+    // Append short tail designation
+    // (crashes if sequence > 999999 ?)
+    if (sequence > 999999)
+      BX_PANIC(("Fatal error with length of 'sequ' longer than 8 bytes!"));
+    sprintf(sequ, "~%i", sequence);
+    int max = 8 - (int) strlen(sequ);
+    base[max] = '\0';
+    strcat(base, sequ);
+    
+    // Format as 8.3 string
+    sprintf(sfn, "%-8s%-3s", base, ext);
+  }
+}
+
 direntry_t* vvfat_image_t::create_short_and_long_name(
-  unsigned int directory_start, const char* filename, int is_dot)
+  unsigned int directory_start, const char* filename, int is_dot, direntry_t** entry_long)
 {
-  int i, j, long_index = directory.next;
+  int long_index = directory.next;
   direntry_t* entry = NULL;
-  direntry_t* entry_long = NULL;
-  char tempfn[BX_PATHNAME_LEN];
-  bool shorten = false;
+  char sfn[12];
+  int sequence = 1;
 
   if (is_dot) {
     entry = (direntry_t*)array_get_next(&directory);
@@ -568,93 +670,32 @@ direntry_t* vvfat_image_t::create_short_and_long_name(
     return entry;
   }
 
-  entry_long = create_long_filename(filename);
-
-  // short name should not contain spaces
-  j = 0;
-  for (i = 0; i < (int)strlen(filename); i++) {
-    if (filename[i] != ' ')
-      tempfn[j++] = filename[i];
-  }
-  tempfn[j] = 0;
-
-  i = strlen(tempfn);
-  for (j = i - 1; j > 0  && tempfn[j] != '.'; j--);
-  if (j > 0) {
-    if (j > 8) {
-      i = 8;
-      shorten = true;
-    } else {
-      i = j;
-    }
-  } else if (i > 8) {
-    i = 8;
-    shorten = true;
-  }
-
-  entry = (direntry_t*)array_get_next(&directory);
-  memset(entry->name, 0x20, 11);
-  memcpy(entry->name, tempfn, i);
-
-  if (j > 0)
-    for (i = 0; i < 3 && tempfn[j+1+i]; i++)
-      entry->name[i + 8] = tempfn[j+1+i];
-
-  // upcase & remove unwanted characters
-  for (i=10;i>=0;i--) {
-    if (i==10 || i==7) for (;i>0 && entry->name[i]==' ';i--);
-    if ((entry->name[i]<' ') || (entry->name[i]>0x7f)
-      || strchr(".*?<>|\":/\\[];,+='",entry->name[i]))
-      entry->name[i]='_';
-    else if (entry->name[i]>='a' && entry->name[i]<='z')
-      entry->name[i]+='A'-'a';
-  }
-  if (entry->name[0] == 0xe5) entry->name[0] = 0x05;
-  if (shorten) {
-    entry->name[6] = '~';
-    entry->name[7] = '0';
-  }
+  if (entry_long != NULL)
+    create_long_filename(filename);
 
   // mangle duplicates
+  lfn_to_sfn(filename, sfn, sequence); // first time assume no duplicates
+  entry = (direntry_t*) array_get_next(&directory);
+  memset(entry->name, ' ', 11);
+  memcpy(entry->name, sfn, 11);
   while (1) {
     direntry_t* entry1 = (direntry_t*)array_get(&directory, directory_start);
-    int j;
-
+    
     for (;entry1<entry;entry1++)
       if (!is_long_name(entry1) && !memcmp(entry1->name,entry->name,11))
         break; // found dupe
     if (entry1==entry) // no dupe found
       break;
-
-    // use all 8 characters of name
-    if (entry->name[7]==' ') {
-      int j;
-      for(j=6;j>0 && entry->name[j]==' ';j--)
-        entry->name[j]='~';
-    }
-
+    
     // increment number
-    for (j=7;j>0 && entry->name[j]=='9';j--)
-      entry->name[j]='0';
-    if (j > 0) {
-      if (entry->name[j]<'0' || entry->name[j]>'9')
-        entry->name[j]='0';
-      else
-        entry->name[j]++;
-    }
+    lfn_to_sfn(filename, sfn, ++sequence);
+    memset(entry->name, ' ', 11);
+    memcpy(entry->name, sfn, 11);
   }
 
-  // calculate checksum; propagate to long name
-  if (entry_long) {
-    Bit8u chksum = fat_chksum(entry);
-
-    // calculate anew, because realloc could have taken place
-    entry_long = (direntry_t*)array_get(&directory, long_index);
-    while (entry_long<entry && is_long_name(entry_long)) {
-      entry_long->reserved[1]=chksum;
-      entry_long++;
-    }
-  }
+  // calculate anew, because realloc could have taken place
+  if (entry_long != NULL)
+    *entry_long = (direntry_t*) array_get(&directory, long_index);
 
   return entry;
 }
@@ -691,8 +732,8 @@ int vvfat_image_t::read_directory(int mapping_index)
 
   if (first_cluster != first_cluster_of_root_dir) {
     // create the top entries of a subdirectory
-    create_short_and_long_name(i, ".", 1);
-    create_short_and_long_name(i, "..", 1);
+    create_short_and_long_name(i, ".", 1, NULL);
+    create_short_and_long_name(i, "..", 1, NULL);
   }
 
   // actually read the directory, and allocate the mappings
@@ -730,8 +771,9 @@ int vvfat_image_t::read_directory(int mapping_index)
 
     count++;
     // create directory entry for this file
+    direntry_t* entry_long;
     if (!is_dot && !is_dotdot) {
-      direntry = create_short_and_long_name(i, entry->d_name, 0);
+      direntry = create_short_and_long_name(i, entry->d_name, 0, &entry_long);
     } else {
       direntry = (direntry_t*)array_get(&directory, is_dot ? i : i + 1);
     }
@@ -758,6 +800,17 @@ int vvfat_image_t::read_directory(int mapping_index)
       return -3;
     }
     direntry->size = htod32(S_ISDIR(st.st_mode) ? 0:st.st_size);
+
+    // calculate checksum; propagate to long name
+    if (entry_long != NULL) {
+      Bit8u chksum = fat_chksum(direntry);
+      
+      // calculate anew, because realloc could have taken place
+      while (entry_long<direntry && is_long_name(entry_long)) {
+        entry_long->reserved[1]=chksum;
+        entry_long++;
+      }
+    }
 
     // create mapping for this file
     if (!is_dot && !is_dotdot && (S_ISDIR(st.st_mode) || st.st_size)) {
@@ -805,8 +858,8 @@ int vvfat_image_t::read_directory(int mapping_index)
 
   if (first_cluster != first_cluster_of_root_dir) {
     // create the top entries of a subdirectory
-    create_short_and_long_name(i, ".", 1);
-    create_short_and_long_name(i, "..", 1);
+    create_short_and_long_name(i, ".", 1, NULL);
+    create_short_and_long_name(i, "..", 1, NULL);
   }
 
   // actually read the directory, and allocate the mappings
@@ -835,8 +888,9 @@ int vvfat_image_t::read_directory(int mapping_index)
 
     count++;
     // create directory entry for this file
+    direntry_t* entry_long = NULL;
     if (!is_dot && !is_dotdot) {
-      direntry = create_short_and_long_name(i, finddata.cFileName, 0);
+      direntry = create_short_and_long_name(i, finddata.cFileName, 0, &entry_long);
     } else {
       direntry = (direntry_t*)array_get(&directory, is_dot ? i : i + 1);
     }
@@ -863,6 +917,17 @@ int vvfat_image_t::read_directory(int mapping_index)
       return -3;
     }
     direntry->size = htod32((finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ? 0:finddata.nFileSizeLow);
+
+    // calculate checksum; propagate to long name
+    if (entry_long != NULL) {
+      Bit8u chksum = fat_chksum(direntry);
+      
+      // calculate anew, because realloc could have taken place
+      while (entry_long<direntry && is_long_name(entry_long)) {
+        entry_long->reserved[1]=chksum;
+        entry_long++;
+      }
+    }
 
     // create mapping for this file
     if (!is_dot && !is_dotdot && ((finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) || finddata.nFileSizeLow)) {
@@ -997,7 +1062,7 @@ int vvfat_image_t::init_directories(const char* dirname)
   mapping->info.dir.parent_mapping_index = -1;
   mapping->first_mapping_index = -1;
   mapping->path = strdup(dirname);
-  i = strlen(mapping->path);
+  i = (int) strlen(mapping->path);
   if (i > 0 && mapping->path[i - 1] == '/')
     mapping->path[i - 1] = '\0';
   mapping->mode = MODE_DIRECTORY;
@@ -1459,7 +1524,7 @@ direntry_t* vvfat_image_t::read_direntry(Bit8u *buffer, char *filename)
           while ((i > 0) && (filename[i] == ' ')) filename[i--] = 0;
           if (entry->name[8] != ' ') strcat(filename, ".");
           memcpy(filename+i+2, entry->name + 8, 3);
-          i = strlen(filename) - 1;
+          i = (int) (strlen(filename) - 1);
           while (filename[i] == ' ') filename[i--] = 0;
           for (i = 0; i < (int)strlen(filename); i++) {
             if ((filename[i] > 0x40) && (filename[i] < 0x5b)) {
