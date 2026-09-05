@@ -671,7 +671,7 @@ direntry_t* vvfat_image_t::create_short_and_long_name(
   }
 
   if (entry_long != NULL)
-    *entry_long = create_long_filename(filename);
+    create_long_filename(filename);
 
   // mangle duplicates
   lfn_to_sfn(filename, sfn, sequence); // first time assume no duplicates
@@ -692,6 +692,10 @@ direntry_t* vvfat_image_t::create_short_and_long_name(
     memset(entry->name, ' ', 11);
     memcpy(entry->name, sfn, 11);
   }
+
+  // calculate anew, because realloc could have taken place
+  if (entry_long != NULL)
+    *entry_long = (direntry_t*) array_get(&directory, long_index);
 
   return entry;
 }
