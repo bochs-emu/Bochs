@@ -716,9 +716,9 @@ bool extF80_isUnsupported(extFloat80_t);
 bool extF80_isSignalingNaN(extFloat80_t);
 bool extF80_isNaN(extFloat80_t);
 
-bool extF80_sign(float64);
-int16_t extF80_exp(float64);
-uint64_t extF80_fraction(float64);
+bool extF80_sign(extFloat80_t);
+int16_t extF80_exp(extFloat80_t);
+uint64_t extF80_fraction(extFloat80_t);
 
 /*----------------------------------------------------------------------------
 | 128-bit (quadruple-precision) floating-point operations.
