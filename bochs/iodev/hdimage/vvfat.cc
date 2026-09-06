@@ -664,8 +664,7 @@ direntry_t* vvfat_image_t::create_short_and_long_name(
   int sequence = 1;
 
 #ifndef WIN32
-  struct timespec ct;
-  clock_gettime(CLOCK_REALTIME, &ct);
+  time_t ft = time(NULL);
 #else
   FILETIME ft;
   SYSTEMTIME st;
@@ -680,20 +679,12 @@ direntry_t* vvfat_image_t::create_short_and_long_name(
     entry->attributes = 0x10;
     entry->reserved[0] = 0;
     entry->reserved[1] = 0;
-#ifndef WIN32
-    entry->ctime = fat_datetime(ct, 1);
-    entry->cdate = fat_datetime(ct, 0);
-    entry->adate = fat_datetime(ct, 0);
-    entry->mtime = fat_datetime(ct, 1);
-    entry->mdate = fat_datetime(ct, 0);
-#else
     entry->ctime = fat_datetime(ft, 1);
     entry->cdate = fat_datetime(ft, 0);
     entry->adate = fat_datetime(ft, 0);
+    entry->begin_hi = 0;
     entry->mtime = fat_datetime(ft, 1);
     entry->mdate = fat_datetime(ft, 0);
-#endif
-    entry->begin_hi = 0;
     entry->begin = 0;
     entry->size = 0;
     return entry;
