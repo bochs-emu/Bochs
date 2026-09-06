@@ -759,7 +759,7 @@ int vvfat_image_t::read_directory(int mapping_index)
   // actually read the directory, and allocate the mappings
   while ((entry=readdir(dir))) {
     if ((first_cluster == 0) && (directory.next >= (Bit16u)(root_entries - 1))) {
-      BX_PANIC(("Too many entries in root directory, using only %d", count));
+      BX_WARN(("Too many entries in root directory, using only %d", count));
       break;
     }
     unsigned int length = strlen(dirname) + 2 + strlen(entry->d_name);
@@ -884,7 +884,7 @@ int vvfat_image_t::read_directory(int mapping_index)
   // actually read the directory, and allocate the mappings
   do {
     if ((first_cluster == 0) && (directory.next >= (Bit16u)(root_entries - 1))) {
-      BX_PANIC(("Too many entries in root directory, using only %d", count));
+      BX_WARN(("Too many entries in root directory, using only %d", count));
       break;
     }
     unsigned int length = lstrlen(dirname) + 2 + lstrlen(finddata.cFileName);
