@@ -759,7 +759,7 @@ int vvfat_image_t::read_directory(int mapping_index)
   // actually read the directory, and allocate the mappings
   while ((entry=readdir(dir))) {
     if ((first_cluster == 0) && (directory.next >= (Bit16u)(root_entries - 1))) {
-      BX_ERROR(("Too many entries in root directory, using only %d", count));
+      BX_PANIC(("Too many entries in root directory, using only %d", count));
       closedir(dir);
       return -2;
     }
@@ -791,7 +791,7 @@ int vvfat_image_t::read_directory(int mapping_index)
 
     count++;
     // create directory entry for this file
-    direntry_t* entry_long;
+    direntry_t* entry_long = NULL;
     if (!is_dot && !is_dotdot) {
       direntry = create_short_and_long_name(i, entry->d_name, 0, &entry_long);
     } else {
@@ -885,7 +885,7 @@ int vvfat_image_t::read_directory(int mapping_index)
   // actually read the directory, and allocate the mappings
   do {
     if ((first_cluster == 0) && (directory.next >= (Bit16u)(root_entries - 1))) {
-      BX_ERROR(("Too many entries in root directory, using only %d", count));
+      BX_PANIC(("Too many entries in root directory, using only %d", count));
       FindClose(hFind);
       return -2;
     }
