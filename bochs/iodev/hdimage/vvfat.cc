@@ -662,11 +662,26 @@ direntry_t* vvfat_image_t::create_short_and_long_name(
   direntry_t* entry = NULL;
   char sfn[12];
   int sequence = 1;
+  FILETIME ft;
+  SYSTEMTIME st;
+  GetSystemTime(&st);              // Gets the current system time
+  SystemTimeToFileTime(&st, &ft);  // Converts the current system time to file time format
 
   if (is_dot) {
     entry = (direntry_t*)array_get_next(&directory);
     memset(entry->name,0x20,11);
     memcpy(entry->name,filename,strlen(filename));
+    entry->attributes = 0x10;
+    entry->reserved[0] = 0;
+    entry->reserved[1] = 0;
+    entry->ctime = fat_datetime(ft, 1);
+    entry->cdate = fat_datetime(ft, 0);
+    entry->adate = fat_datetime(ft, 0);
+    entry->begin_hi = 0;
+    entry->mtime = fat_datetime(ft, 1);
+    entry->mdate = fat_datetime(ft, 0);
+    entry->begin = 0;
+    entry->size = 0;
     return entry;
   }
 
