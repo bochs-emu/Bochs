@@ -30,6 +30,21 @@ these four paragraphs for those parts of this code that are retained.
 #include "fpu_trans.h"
 #include "fpu_constant.h"
 
+//////////////////////////////
+// 3PI/4 constant
+//////////////////////////////
+
+#define FLOATX80_3PI4_EXP (0x4000)
+
+// 128-bit 3PI/4 fraction
+#ifdef BETTER_THAN_PENTIUM
+#define FLOAT_3PI4_HI (BX_CONST64(0x96cbe3f9990e91a7))
+#define FLOAT_3PI4_LO (BX_CONST64(0x9394c9e8a0a5159c))
+#else
+#define FLOAT_3PI4_HI (BX_CONST64(0x96cbe3f9990e91a7))
+#define FLOAT_3PI4_LO (BX_CONST64(0x9000000000000000))
+#endif
+
 #define FPATAN_ARR_SIZE 11
 
 static const float128_t float128_one =

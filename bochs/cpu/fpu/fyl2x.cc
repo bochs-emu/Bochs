@@ -27,7 +27,21 @@ these four paragraphs for those parts of this code that are retained.
 
 #include "fpu_trans.h"
 #include "softfloat-helpers.h"
-#include "fpu_constant.h"
+
+//////////////////////////////
+// 1/LN2 constant
+//////////////////////////////
+
+#define FLOAT_LN2INV_EXP  (0x3FFF)
+
+// 128-bit 1/LN2 fraction
+#ifdef BETTER_THAN_PENTIUM
+#define FLOAT_LN2INV_HI (BX_CONST64(0xb8aa3b295c17f0bb))
+#define FLOAT_LN2INV_LO (BX_CONST64(0xbe87fed0691d3e89))
+#else
+#define FLOAT_LN2INV_HI (BX_CONST64(0xb8aa3b295c17f0bb))
+#define FLOAT_LN2INV_LO (BX_CONST64(0xC000000000000000))
+#endif
 
 static const floatx80 floatx80_one = packFloatx80(0, 0x3fff, BX_CONST64(0x8000000000000000));
 

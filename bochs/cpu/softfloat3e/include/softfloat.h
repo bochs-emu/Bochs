@@ -720,6 +720,8 @@ bool extF80_sign(extFloat80_t);
 int16_t extF80_exp(extFloat80_t);
 uint64_t extF80_fraction(extFloat80_t);
 
+extFloat80_t packToExtF80(bool sign, uint16_t exp, uint64_t sig);
+
 /*----------------------------------------------------------------------------
 | 128-bit (quadruple-precision) floating-point operations.
 *----------------------------------------------------------------------------*/
