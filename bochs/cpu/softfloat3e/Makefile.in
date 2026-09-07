@@ -268,18 +268,9 @@ OBJS_OTHERS = \
   extF80_div$(OBJ) \
   extF80_rem$(OBJ) \
   extF80_sqrt$(OBJ) \
-  f128_to_ui32$(OBJ) \
-  f128_to_ui64$(OBJ) \
-  f128_to_i32$(OBJ) \
-  f128_to_i64$(OBJ) \
-  f128_to_ui32_r_minMag$(OBJ) \
-  f128_to_ui64_r_minMag$(OBJ) \
-  f128_to_i32_r_minMag$(OBJ) \
-  f128_to_i64_r_minMag$(OBJ) \
   f128_to_f32$(OBJ) \
   f128_to_extF80$(OBJ) \
   f128_to_f64$(OBJ) \
-  f128_roundToInt$(OBJ) \
   f128_addsub$(OBJ) \
   f128_mul$(OBJ) \
   f128_mulAdd$(OBJ) \
