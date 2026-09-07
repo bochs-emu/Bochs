@@ -337,12 +337,20 @@ BX_CPU_C::tickle_read_linear(unsigned s, bx_address laddr)
   void BX_CPP_AttrRegparmN(3)
 BX_CPU_C::tickle_write_linear(unsigned s, bx_address laddr, unsigned len)
 {
-  bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, len-1);
+  len--;
+
+  bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, len);
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+  bx_address lpf = AlignedAccessLPFOf(laddr, (len & BX_CPU_THIS_PTR alignment_check_mask));
+#else
   bx_address lpf = LPFOf(laddr);
+#endif
+  Bit32u pageOffset = PAGE_OFFSET(laddr);
+
   if (tlbEntry->lpf == lpf) {
     // See if the TLB entry privilege level allows us write access from this CPL
     if (isWriteOK(tlbEntry, USER_PL)) {
-      BX_CPU_THIS_PTR address_xlation.paddress1 = tlbEntry->ppf | PAGE_OFFSET(laddr);
+      BX_CPU_THIS_PTR address_xlation.paddress1 = tlbEntry->ppf | pageOffset;
       BX_CPU_THIS_PTR address_xlation.pages     = 1;
 #if BX_SUPPORT_MEMTYPE
       BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
@@ -352,9 +360,18 @@ BX_CPU_C::tickle_write_linear(unsigned s, bx_address laddr, unsigned len)
   }
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonicalAccess(laddr, BX_WRITE, USER_PL) || ! IsCanonicalAccess(laddr+len-1, BX_WRITE, USER_PL)) {
+  if (! IsCanonicalAccess(laddr, BX_WRITE, USER_PL) || ! IsCanonicalAccess(laddr+len, BX_WRITE, USER_PL)) {
     BX_ERROR(("tickle_write_linear(): canonical failure"));
     exception(int_number(s), 0);
+  }
+#endif
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  if (BX_CPU_THIS_PTR alignment_check() && USER_PL) {
+    if (pageOffset & len) {
+      BX_ERROR(("tickle_write_linear(): #AC misaligned access"));
+      exception(BX_AC_EXCEPTION, 0);
+    }
   }
 #endif
 
@@ -365,16 +382,16 @@ BX_CPU_C::tickle_write_linear(unsigned s, bx_address laddr, unsigned len)
   BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
 #endif
 
-  if ((laddr>>12) != (laddr + len-1) >> 12) {
+  if ((laddr>>12) != (laddr + len) >> 12) {
     BX_CPU_THIS_PTR address_xlation.pages     = 2;
-    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry, laddr+len-1, USER_PL, BX_WRITE);
+    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry, laddr+len, USER_PL, BX_WRITE);
 #if BX_SUPPORT_MEMTYPE
     BX_CPU_THIS_PTR address_xlation.memtype2  = tlbEntry->get_memtype();
 #endif
   }
 
 #if BX_X86_DEBUGGER
-  hwbreakpoint_match(laddr, len, BX_WRITE);
+  hwbreakpoint_match(laddr, len+1, BX_WRITE);
 #endif
 }
 
