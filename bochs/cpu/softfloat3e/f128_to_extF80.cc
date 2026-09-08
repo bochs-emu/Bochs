@@ -81,7 +81,6 @@ extFloat80_t f128_to_extF80(float128_t a, struct softfloat_status_t *status)
         if (! (frac64 | frac0)) {
             return packToExtF80(sign, 0, 0);
         }
-        softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalF128Sig(frac64, frac0);
         exp   = normExpSig.exp;
         frac64 = normExpSig.sig.v64;

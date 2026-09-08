@@ -117,14 +117,12 @@ float128_t f128_mulAdd(float128_t a, float128_t b, float128_t c, uint8_t op, str
     *------------------------------------------------------------------------*/
     if (! expA) {
         if (! (sigA.v64 | sigA.v0)) goto zeroProd;
-        softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalF128Sig(sigA.v64, sigA.v0);
         expA = normExpSig.exp;
         sigA = normExpSig.sig;
     }
     if (! expB) {
         if (! (sigB.v64 | sigB.v0)) goto zeroProd;
-        softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalF128Sig(sigB.v64, sigB.v0);
         expB = normExpSig.exp;
         sigB = normExpSig.sig;
@@ -149,7 +147,6 @@ float128_t f128_mulAdd(float128_t a, float128_t b, float128_t c, uint8_t op, str
             shiftDist += 8;
             goto sigZ;
         }
-        softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalF128Sig(sigC.v64, sigC.v0);
         expC = normExpSig.exp;
         sigC = normExpSig.sig;

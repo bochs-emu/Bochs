@@ -100,14 +100,12 @@ float128_t f128_div(float128_t a, float128_t b, struct softfloat_status_t *statu
             softfloat_raiseFlags(status, softfloat_flag_infinite);
             goto infinity;
         }
-        softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalF128Sig(sigB.v64, sigB.v0);
         expB = normExpSig.exp;
         sigB = normExpSig.sig;
     }
     if (! expA) {
         if (! (sigA.v64 | sigA.v0)) goto zero;
-        softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalF128Sig(sigA.v64, sigA.v0);
         expA = normExpSig.exp;
         sigA = normExpSig.sig;
