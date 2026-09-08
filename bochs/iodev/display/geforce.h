@@ -58,6 +58,7 @@ struct gf_texture
   bool dxt_alpha_data;
   bool dxt_alpha_explicit;
   Bit32u color_bytes;
+  Bit32u pitch;
   Bit32u levels;
   Bit32u size_log[3];
   Bit32u size_npot[3];
@@ -67,12 +68,12 @@ struct gf_texture
   Bit32u wrap[3];
   Bit32u control0;
   bool enabled;
-  Bit32u control1;
+  Bit32u s0[4];
+  Bit32u s1[4];
   bool signed_any;
   bool signed_comp[4];
   Bit32u pal_dma_obj;
   Bit32u pal_ofs;
-  Bit32u control3;
   Bit32u key_color;
   float offset_matrix[4];
 };
@@ -229,6 +230,7 @@ struct gf_channel
   Bit32u d3d_surface_format;
   Bit32u d3d_color_bytes;
   Bit32u d3d_depth_bytes;
+  bool d3d_swizzled;
   Bit32u d3d_surface_pitch_a;
   Bit32u d3d_surface_pitch_z;
   bool d3d_local_viewer;
