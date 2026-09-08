@@ -1129,7 +1129,7 @@ void bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           }
           else
           {
-            BX_PANIC(("VBE unknown Display Interface %x", value));
+            BX_WARN(("VBE unknown Display Interface %x", value));
           }
 
           // make sure we don't flood the logfile
