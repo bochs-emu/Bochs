@@ -1045,12 +1045,10 @@ void BX_CPU_C::reset(unsigned source)
     BX_CPU_THIS_PTR smbase = 0x30000; // do not change SMBASE on INIT
   }
 
+  BX_CPU_THIS_PTR cr0.set32(BX_CR0_NW_MASK | BX_CR0_CD_MASK);
 #if BX_SUPPORT_FPU
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_X87))
-    BX_CPU_THIS_PTR cr0.set32(0x60000010);
-  else
-#else
-    BX_CPU_THIS_PTR cr0.set32(0x60000000);
+    BX_CPU_THIS_PTR cr0.val |= BX_CR0_ET_MASK;
 #endif
 
   // handle reserved bits
