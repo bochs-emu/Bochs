@@ -5,13 +5,13 @@
  * significand), which has far more precision than the ~67
  * significant bits the original Intel algorithm requires, so we
  * do not need to reproduce the historical "80-bit-plus-a-few-extra-
- * bits" constant format described in the write-up -- we simply
- * decode the full precision given for every constant/table entry
- * directly into float128_t. Only the reduction step (isolating the
- * breakpoint c and remainder r = x - c) is done in extFloat80_t,
- * because that step is defined bitwise on x's 64-bit extended
- * significand. The final float128_t result is rounded back down to
- * extFloat80_t once, at the very end, with f128_to_extF80.
+ * bits" constant format -- we simply decode the full precision
+ * given for every constant/table entry directly into float128_t.
+ * Only the reduction step (isolating the breakpoint c and
+ * remainder r = x - c) is done in extFloat80_t, because that step
+ * is defined bitwise on x's 64-bit extended significand. The final
+ * float128_t result is rounded back down to extFloat80_t once,
+ * at the very end, with f128_to_extF80.
  *
  * Verified against the real x87 F2XM1 instruction (via inline asm on
  * an x86_64 host) over 200,000+ random points spanning the whole
@@ -23,7 +23,6 @@
 #include "softfloat3e/include/softfloat.h"
 #define FLOAT128
 #include "softfloat-specialize.h"
-#include "softfloat-helpers.h"
 
 #include "f2xm1_constants.h"
 
@@ -72,64 +71,39 @@ extern floatx80 softfloat_propagateNaNExtF80UI(uint16_t uiA64, uint64_t uiA0, ui
 */
 
 /* ------------------------------------------------------------------ */
-/* Constants (decoded once into float128_t / extFloat80_t).            */
+/* Constants                                                          */
 /* ------------------------------------------------------------------ */
 
-static const floatx80 floatx80_negone  = packToExtF80(1, 0x3fff, BX_CONST64(0x8000000000000000));
+static const floatx80 floatx80_negone = packToExtF80(1, 0x3fff, BX_CONST64(0x8000000000000000));
 
-typedef struct {
-    float128_t C1;                         /* 1, full precision */
-    float128_t L2;                         /* log(2), full precision       */
-    float128_t A1, A2, A3, A4, A5, A6;     /* Step-5 (|x|>=1/4) coeffs     */
-    float128_t B1, B2, B3, B4, B5, B6,     /* Step-4 (|x|<1/4) coeffs      */
-               B7, B8, B9, B10, B11;
-    float128_t table_d[F2XM1_TABLE_SIZE];  /* 64-entry 2^c-1 table         */
-} f2xm1_consts_t;
+static const float128_t f2xm1_C1 = packFloat128(BX_CONST64(0x3FFF000000000000), 0); /* 1.0 */
+static const float128_t f2xm1_L2 = packFloat128(EXP_L2_HI, EXP_L2_LO);              /* log(2) */
 
-#ifdef BETTER_THAN_PENTIUM
+/* Step-5 (|x| >= 1/4) coefficients */
+static const float128_t f2xm1_A1 = packFloat128(EXP_A_1_HI, EXP_A_1_LO);
+static const float128_t f2xm1_A2 = packFloat128(EXP_A_2_HI, EXP_A_2_LO);
+static const float128_t f2xm1_A3 = packFloat128(EXP_A_3_HI, EXP_A_3_LO);
+static const float128_t f2xm1_A4 = packFloat128(EXP_A_4_HI, EXP_A_4_LO);
+static const float128_t f2xm1_A5 = packFloat128(EXP_A_5_HI, EXP_A_5_LO);
+static const float128_t f2xm1_A6 = packFloat128(EXP_A_6_HI, EXP_A_6_LO);
 
-#define LN2_SIG_HI BX_CONST64(0xb17217f7d1cf79ab)
-#define LN2_SIG_LO BX_CONST64(0xc9e3b39800000000)  /* 96 bit precision */
+/* Step-4 (|x| < 1/4) coefficients */
+static const float128_t f2xm1_B1  = packFloat128(EXP_B_1_HI,  EXP_B_1_LO);
+static const float128_t f2xm1_B2  = packFloat128(EXP_B_2_HI,  EXP_B_2_LO);
+static const float128_t f2xm1_B3  = packFloat128(EXP_B_3_HI,  EXP_B_3_LO);
+static const float128_t f2xm1_B4  = packFloat128(EXP_B_4_HI,  EXP_B_4_LO);
+static const float128_t f2xm1_B5  = packFloat128(EXP_B_5_HI,  EXP_B_5_LO);
+static const float128_t f2xm1_B6  = packFloat128(EXP_B_6_HI,  EXP_B_6_LO);
+static const float128_t f2xm1_B7  = packFloat128(EXP_B_7_HI,  EXP_B_7_LO);
+static const float128_t f2xm1_B8  = packFloat128(EXP_B_8_HI,  EXP_B_8_LO);
+static const float128_t f2xm1_B9  = packFloat128(EXP_B_9_HI,  EXP_B_9_LO);
+static const float128_t f2xm1_B10 = packFloat128(EXP_B_10_HI, EXP_B_10_LO);
+static const float128_t f2xm1_B11 = packFloat128(EXP_B_11_HI, EXP_B_11_LO);
 
-#else
-
-#define LN2_SIG_HI BX_CONST64(0xb17217f7d1cf79ab)
-#define LN2_SIG_LO BX_CONST64(0xc000000000000000)  /* 67-bit precision */
-
-#endif
-
-static f2xm1_consts_t C;
-static bool C_ready = false;
-
-static void f2xm1_init_constants(void)
+/* 64-entry table of d = 2^c - 1 */
+static float128_t f2xm1_table_d(int index)
 {
-    C.C1 = packFloat128(BX_CONST64(0x3FFF000000000000), 0);
-
-    C.L2 = packFloat128(EXP_L2_HI, EXP_L2_LO);
-
-    C.A1 = packFloat128(EXP_A_1_HI, EXP_A_1_LO);
-    C.A2 = packFloat128(EXP_A_2_HI, EXP_A_2_LO);
-    C.A3 = packFloat128(EXP_A_3_HI, EXP_A_3_LO);
-    C.A4 = packFloat128(EXP_A_4_HI, EXP_A_4_LO);
-    C.A5 = packFloat128(EXP_A_5_HI, EXP_A_5_LO);
-    C.A6 = packFloat128(EXP_A_6_HI, EXP_A_6_LO);
-
-    C.B1  = packFloat128(EXP_B_1_HI,  EXP_B_1_LO);
-    C.B2  = packFloat128(EXP_B_2_HI,  EXP_B_2_LO);
-    C.B3  = packFloat128(EXP_B_3_HI,  EXP_B_3_LO);
-    C.B4  = packFloat128(EXP_B_4_HI,  EXP_B_4_LO);
-    C.B5  = packFloat128(EXP_B_5_HI,  EXP_B_5_LO);
-    C.B6  = packFloat128(EXP_B_6_HI,  EXP_B_6_LO);
-    C.B7  = packFloat128(EXP_B_7_HI,  EXP_B_7_LO);
-    C.B8  = packFloat128(EXP_B_8_HI,  EXP_B_8_LO);
-    C.B9  = packFloat128(EXP_B_9_HI,  EXP_B_9_LO);
-    C.B10 = packFloat128(EXP_B_10_HI, EXP_B_10_LO);
-    C.B11 = packFloat128(EXP_B_11_HI, EXP_B_11_LO);
-
-    for (int i = 0; i < F2XM1_TABLE_SIZE; i++)
-        C.table_d[i] = packFloat128(f2xm1_table_hi[i], f2xm1_table_lo[i]);
-
-    C_ready = true;
+    return packFloat128(f2xm1_table_hi[index], f2xm1_table_lo[index]);
 }
 
 /* ------------------------------------------------------------------ */
@@ -154,26 +128,27 @@ static extFloat80_t f2xm1_step5(extFloat80_t x, softfloat_status_t &status)
 
     extFloat80_t r = extF80_sub(x, c, &status);
 
-    float128_t rq = extF80_to_f128(r, &status);
-    float128_t s  = f128_mul(C.L2, rq, &status);
-    float128_t t  = f128_mul(s, s, &status);
+    /* s = L2 * r, rounded to extended (64-bit) precision */
+    extFloat80_t s80 = f128_mul_by_extF80(f2xm1_L2, r, softfloat_round_near_even, &status);
+    float128_t s = extF80_to_f128(s80, &status);
+    float128_t t = f128_mul(s, s, &status);
 
-    float128_t d  = C.table_d[index];           /* d  = get_table(index) */
-    float128_t d1 = f128_add(d, C.C1, &status); /* d1 = d + 1.0 */
+    float128_t d  = f2xm1_table_d(index);           /* d  = get_table(index) */
+    float128_t d1 = f128_add(d, f2xm1_C1, &status); /* d1 = d + 1.0 */
 
     /* p = t*(A2 + t*(A4 + t*A6)) ; p = s*p */
-    float128_t p = f128_mul(t, C.A6, &status);
-    p = f128_add(C.A4, p, &status);
+    float128_t p = f128_mul(t, f2xm1_A6, &status);
+    p = f128_add(f2xm1_A4, p, &status);
     p = f128_mul(t, p, &status);
-    p = f128_add(C.A2, p, &status);
+    p = f128_add(f2xm1_A2, p, &status);
     p = f128_mul(t, p, &status);
     p = f128_mul(s, p, &status);
 
     /* q = s + t*(A1 + t*(A3 + t*A5)) */
-    float128_t q = f128_mul(t, C.A5, &status);
-    q = f128_add(C.A3, q, &status);
+    float128_t q = f128_mul(t, f2xm1_A5, &status);
+    q = f128_add(f2xm1_A3, q, &status);
     q = f128_mul(t, q, &status);
-    q = f128_add(C.A1, q, &status);
+    q = f128_add(f2xm1_A1, q, &status);
     q = f128_mul(t, q, &status);
     q = f128_add(s, q, &status);
 
@@ -191,33 +166,42 @@ static extFloat80_t f2xm1_step5(extFloat80_t x, softfloat_status_t &status)
 static extFloat80_t f2xm1_step4(extFloat80_t x, softfloat_status_t &status)
 {
     float128_t xq = extF80_to_f128(x, &status);
-    float128_t s  = f128_mul(C.L2, xq, &status);
-    float128_t t  = f128_mul(s, s, &status);
+    float128_t s  = f128_mul(f2xm1_L2, xq, &status);
+    /* s1 = L2 * x, rounded to extended (64-bit) precision */
+    extFloat80_t s1_80 = f128_mul_by_extF80(f2xm1_L2, x, softfloat_round_near_even, &status);
+    float128_t s1 = extF80_to_f128(s1_80, &status);
+    float128_t t  = f128_mul(s, s1, &status);
 
-    float128_t u = f128_mul(t, C.B1, &status);        /* u = t * b1  (b1 = 0.5)  */
+    float128_t u = f128_mul(t, f2xm1_B1, &status);        /* u = t * b1  (b1 = 0.5)  */
 
     /* p = b2 + t*(b4 + t*(b6 + t*(b8 + t*b10))) ; p = t*p ; p = s*p */
-    float128_t p = f128_mul(t, C.B10, &status);
-    p = f128_add(C.B8, p, &status);
+    float128_t p = f128_mul(t, f2xm1_B10, &status);
+    p = f128_add(f2xm1_B8, p, &status);
     p = f128_mul(t, p, &status);
-    p = f128_add(C.B6, p, &status);
+    p = f128_add(f2xm1_B6, p, &status);
     p = f128_mul(t, p, &status);
-    p = f128_add(C.B4, p, &status);
+    p = f128_add(f2xm1_B4, p, &status);
     p = f128_mul(t, p, &status);
-    p = f128_add(C.B2, p, &status);
-    p = f128_mul(t, p, &status);
+    p = f128_add(f2xm1_B2, p, &status);
+    /* p = t*p, rounded to extended (64-bit) precision */
+    extFloat80_t p80 = f128_to_extF80(p, &status);
+    p80 = f128_mul_by_extF80(t, p80, softfloat_round_near_even, &status);
+    p = extF80_to_f128(p80, &status);
     p = f128_mul(s, p, &status);
 
     /* q = b3 + t*(b5 + t*(b7 + t*(b9 + t*b11))) ; q = t*q ; q = t*q */
-    float128_t q = f128_mul(t, C.B11, &status);
-    q = f128_add(C.B9, q, &status);
+    float128_t q = f128_mul(t, f2xm1_B11, &status);
+    q = f128_add(f2xm1_B9, q, &status);
     q = f128_mul(t, q, &status);
-    q = f128_add(C.B7, q, &status);
+    q = f128_add(f2xm1_B7, q, &status);
     q = f128_mul(t, q, &status);
-    q = f128_add(C.B5, q, &status);
+    q = f128_add(f2xm1_B5, q, &status);
     q = f128_mul(t, q, &status);
-    q = f128_add(C.B3, q, &status);
-    q = f128_mul(t, q, &status);
+    q = f128_add(f2xm1_B3, q, &status);
+    /* q = t*q, rounded to extended (64-bit) precision */
+    extFloat80_t q80 = f128_to_extF80(q, &status);
+    q80 = f128_mul_by_extF80(t, q80, softfloat_round_near_even, &status);
+    q = extF80_to_f128(q80, &status);
     q = f128_mul(t, q, &status);
 
     float128_t pq = f128_add(p, q, &status);
@@ -233,8 +217,6 @@ static extFloat80_t f2xm1_step4(extFloat80_t x, softfloat_status_t &status)
 
 extFloat80_t f2xm1(extFloat80_t x, softfloat_status_t &status)
 {
-    if (!C_ready) f2xm1_init_constants();
-
     // handle unsupported extended double-precision floating encodings
     if (extF80_isUnsupported(x)) {
         softfloat_raiseFlags(&status, softfloat_flag_invalid);
@@ -250,20 +232,9 @@ extFloat80_t f2xm1(extFloat80_t x, softfloat_status_t &status)
 
         softfloat_raiseFlags(&status, softfloat_flag_denormal | softfloat_flag_inexact);
 
-        Bit64u zSig0, zSig1, zSig2;
-        struct exp32_sig64 normExpSig;
-
-        normExpSig = softfloat_normSubnormalExtF80Sig(signif);
-        biasedExp = normExpSig.exp + 1;
-        signif = normExpSig.sig;
-
     tiny_argument:
-        mul128By64To192(LN2_SIG_HI, LN2_SIG_LO, signif, &zSig0, &zSig1, &zSig2);
-        if (0 < (Bit64s) zSig0) {
-            shortShift128Left(zSig0, zSig1, 1, &zSig0, &zSig1);
-            --biasedExp;
-        }
-        return softfloat_roundPackToExtF80(sign, biasedExp, zSig0, zSig1, 80, &status);
+        /* 2^x - 1 ~= x * log(2) */
+        return f128_mul_by_extF80(f2xm1_L2, x, softfloat_getRoundingMode(&status), &status);
     }
 
     /* ---- Step 1: NaN, infinities, |x| >= 1 -------------------------- */

@@ -273,6 +273,7 @@ OBJS_OTHERS = \
   f128_to_f64$(OBJ) \
   f128_addsub$(OBJ) \
   f128_mul$(OBJ) \
+  f128_mul_by_extF80$(OBJ) \
   f128_mulAdd$(OBJ) \
   f128_div$(OBJ)
 

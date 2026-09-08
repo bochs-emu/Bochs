@@ -39,10 +39,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "primitives.h"
 #include "softfloat.h"
 
-extFloat80_t
- softfloat_roundPackToExtF80(bool sign, int32_t exp, uint64_t sig, uint64_t sigExtra, uint8_t roundingPrecision, struct softfloat_status_t *status)
+extFloat80_t softfloat_roundPackToExtF80(bool sign, int32_t exp, uint64_t sig, uint64_t sigExtra, uint8_t roundingPrecision, struct softfloat_status_t *status)
 {
-    uint8_t roundingMode;
+    return softfloat_roundPackToExtF80(sign, exp, sig, sigExtra, roundingPrecision, softfloat_getRoundingMode(status), status);
+}
+
+extFloat80_t softfloat_roundPackToExtF80(bool sign, int32_t exp, uint64_t sig, uint64_t sigExtra, uint8_t roundingPrecision, uint8_t roundingMode, struct softfloat_status_t *status)
+{
     bool roundNearEven;
     uint64_t roundIncrement, roundMask, roundBits;
     bool isTiny, doIncrement;
@@ -50,8 +53,10 @@ extFloat80_t
     uint64_t sigExact;
 
     /*------------------------------------------------------------------------
+    | 'roundingMode' is passed explicitly (rather than read from 'status') so
+    | callers can round an intermediate step in a mode other than the one
+    | currently programmed. Exception flags are still reported via 'status'.
     *------------------------------------------------------------------------*/
-    roundingMode = softfloat_getRoundingMode(status);
     roundNearEven = (roundingMode == softfloat_round_near_even);
     if (roundingPrecision == 80) goto precision80;
     if (roundingPrecision == 64) {

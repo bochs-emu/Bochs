@@ -740,6 +740,7 @@ float128_t f128_roundToInt(float128_t, uint8_t, bool, struct softfloat_status_t 
 float128_t f128_add(float128_t, float128_t, struct softfloat_status_t *);
 float128_t f128_sub(float128_t, float128_t, struct softfloat_status_t *);
 float128_t f128_mul(float128_t, float128_t, struct softfloat_status_t *);
+extFloat80_t f128_mul_by_extF80(float128_t, extFloat80_t, uint8_t roundingMode, struct softfloat_status_t *);
 float128_t f128_mulAdd(float128_t, float128_t, float128_t, uint8_t op, struct softfloat_status_t *);
 float128_t f128_div(float128_t, float128_t, struct softfloat_status_t *);
 float128_t f128_sqrt(float128_t, struct softfloat_status_t *);

@@ -263,6 +263,7 @@
     <ClCompile Include="..\cpu\softfloat3e\f128_addsub.cc" />
     <ClCompile Include="..\cpu\softfloat3e\f128_div.cc" />
     <ClCompile Include="..\cpu\softfloat3e\f128_mul.cc" />
+    <ClCompile Include="..\cpu\softfloat3e\f128_mul_by_extF80.cc" />
     <ClCompile Include="..\cpu\softfloat3e\f128_mulAdd.cc" />
     <ClCompile Include="..\cpu\softfloat3e\f128_to_extF80.cc" />
     <ClCompile Include="..\cpu\softfloat3e\f128_to_f32.cc" />
