@@ -3233,11 +3233,13 @@ void texture_update_size(gf_texture* tex, Bit32u cls)
     tex->sizes[lod][0] = lw;
     tex->sizes[lod][1] = lh;
     tex->sizes[lod][2] = ld;
-    Bit32u level_bytes = ld * tex->color_bytes;
-    if (tex->compressed)
-      level_bytes *= ALIGN(lw, 4) * ALIGN(lh, 4) / 16;
+    Bit32u level_bytes;
+    if (tex->linear)
+      level_bytes = tex->pitch * lh * ld;
+    else if (tex->compressed)
+      level_bytes = tex->color_bytes * ALIGN(lw, 4) * ALIGN(lh, 4) / 16 * ld;
     else
-      level_bytes *= lw * lh;
+      level_bytes = tex->color_bytes * lw * lh * ld;
     tex->level_offset[lod] = tex->face_bytes;
     tex->face_bytes += level_bytes;
     lw /= 2;
@@ -3366,12 +3368,7 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
     Bit32u by = xyz[1] >> 2;
     tex_ofs += by * pitch + bx * tex->color_bytes;
   } else if (tex->linear) {
-    Bit32u pitch;
-    if (BX_GEFORCE_THIS card_type >= 0x40)
-      pitch = tex->control3 & 0x000fffff;
-    else
-      pitch = tex->control1 >> 16;
-    tex_ofs += xyz[1] * pitch + xyz[0] * tex->color_bytes;
+    tex_ofs += xyz[1] * tex->pitch + xyz[0] * tex->color_bytes;
   } else
     tex_ofs += swizzle(xyz[0], xyz[1], xyz[2], lodSize[0], lodSize[1], lodSize[2]) * tex->color_bytes;
   Bit32s color_int[4];
@@ -3734,10 +3731,9 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
       color[j] = color_int[i] * color_scale[i];
     }
   } else {
-    Bit16u s01 = tex->control1;
     for (Bit32u i = 0; i < 4; i++) {
       Bit32u j = (i + 3) & 3;
-      switch ((s01 >> (8 + i * 2)) & 3) {
+      switch (tex->s0[i]) {
         case 0:
           color[j] = 0.0f;
           break;
@@ -3745,7 +3741,7 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
           color[j] = 1.0f;
           break;
         default: {
-          Bit32u swz = (s01 >> (i * 2)) & 3;
+          Bit32u swz = tex->s1[i];
           color[j] = color_int[swz] * color_scale[swz];
           break;
         }
@@ -5363,11 +5359,11 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
     return;
   Bit32u pitch = ch->d3d_surface_pitch_a & 0xFFFF;
   Bit32u pitch_zeta = d3d_get_surface_pitch_z(ch);
-  Bit32u draw_offset = ch->d3d_surface_color_offset +
+  Bit32u draw_offset_base = ch->d3d_surface_color_offset +
     draw_y1 * pitch + draw_x1 * ch->d3d_color_bytes;
   Bit32u draw_offset_zeta = ch->d3d_surface_zeta_offset +
     draw_y1 * pitch_zeta + draw_x1 * ch->d3d_depth_bytes;
-  Bit32u redraw_offset = dma_lin_lookup(ch->d3d_color_obj, draw_offset) -
+  Bit32u redraw_offset = dma_lin_lookup(ch->d3d_color_obj, draw_offset_base) -
     BX_GEFORCE_THIS disp_offset;
   bool interpolate[16];
   for (int a = 0; a < 16; a++) {
@@ -5712,6 +5708,9 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
         }
         Bit32u x = qx + (fi & 1);
         Bit32u y = qy + (fi >> 1);
+        Bit32u draw_offset = ch->d3d_swizzled ? ch->d3d_surface_color_offset +
+          swizzle(x + draw_x1, y + draw_y1, 0, ch->swzs_width, ch->swzs_height, 1) * ch->d3d_color_bytes :
+          draw_offset_base + y * pitch + x * ch->d3d_color_bytes;
         float r = BX_MIN(BX_MAX(ps_tmp_regs_exp[fi][0][0], 0.0f), 1.0f);
         float g = BX_MIN(BX_MAX(ps_tmp_regs_exp[fi][0][1], 0.0f), 1.0f);
         float b = BX_MIN(BX_MAX(ps_tmp_regs_exp[fi][0][2], 0.0f), 1.0f);
@@ -5722,19 +5721,19 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
           float sa = a;
           float dr, dg, db, da;
           if (ch->d3d_color_bytes == 2) {
-            Bit16u color = dma_read16(ch->d3d_color_obj, draw_offset + y * pitch + x * 2);
+            Bit16u color = dma_read16(ch->d3d_color_obj, draw_offset);
             dr = ((color >> 11) & 0x1f) / 31.0f;
             dg = ((color >> 5) & 0x3f) / 63.0f;
             db = ((color >> 0) & 0x1f) / 31.0f;
             da = 1.0f;
           } else if (ch->d3d_color_bytes == 4) {
-            Bit32u color = dma_read32(ch->d3d_color_obj, draw_offset + y * pitch + x * 4);
+            Bit32u color = dma_read32(ch->d3d_color_obj, draw_offset);
             dr = ((color >> 16) & 0xff) / 255.0f;
             dg = ((color >> 8) & 0xff) / 255.0f;
             db = ((color >> 0) & 0xff) / 255.0f;
             da = ((color >> 24) & 0xff) / 255.0f;
           } else {
-            Bit8u color = dma_read8(ch->d3d_color_obj, draw_offset + y * pitch + x);
+            Bit8u color = dma_read8(ch->d3d_color_obj, draw_offset);
             dr = 0.0f;
             dg = 0.0f;
             db = color / 255.0f;
@@ -5772,12 +5771,12 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
             Bit8u b5 = b * 31.0f + 0.5f;
             Bit16u color = b5 << 0 | g6 << 5 | r5 << 11;
             if (ch->d3d_color_mask == 0x01010101) {
-              dma_write16(ch->d3d_color_obj, draw_offset + y * pitch + x * 2, color);
+              dma_write16(ch->d3d_color_obj, draw_offset, color);
             } else {
-              Bit16u dstcolor = dma_read16(ch->d3d_color_obj, draw_offset + y * pitch + x * 2);
+              Bit16u dstcolor = dma_read16(ch->d3d_color_obj, draw_offset);
               dstcolor &= ~ch->d3d_color_mask_565;
               dstcolor |= color & ch->d3d_color_mask_565;
-              dma_write16(ch->d3d_color_obj, draw_offset + y * pitch + x * 2, dstcolor);
+              dma_write16(ch->d3d_color_obj, draw_offset, dstcolor);
             }
           } else if (ch->d3d_color_bytes == 4) {
             Bit8u r8 = r * 255.0f + 0.5f;
@@ -5786,16 +5785,16 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
             Bit8u a8 = a * 255.0f + 0.5f;
             Bit32u color = b8 << 0 | g8 << 8 | r8 << 16 | a8 << 24;
             if (ch->d3d_color_mask == 0x01010101) {
-              dma_write32(ch->d3d_color_obj, draw_offset + y * pitch + x * 4, color);
+              dma_write32(ch->d3d_color_obj, draw_offset, color);
             } else {
-              Bit32u dstcolor = dma_read32(ch->d3d_color_obj, draw_offset + y * pitch + x * 4);
+              Bit32u dstcolor = dma_read32(ch->d3d_color_obj, draw_offset);
               dstcolor &= ~ch->d3d_color_mask_8888;
               dstcolor |= color & ch->d3d_color_mask_8888;
-              dma_write32(ch->d3d_color_obj, draw_offset + y * pitch + x * 4, dstcolor);
+              dma_write32(ch->d3d_color_obj, draw_offset, dstcolor);
             }
           } else {
             Bit8u color = b * 255.0f + 0.5f;
-            dma_write8(ch->d3d_color_obj, draw_offset + y * pitch + x, color);
+            dma_write8(ch->d3d_color_obj, draw_offset, color);
           }
         }
         if (ch->d3d_depth_test_enable && ch->d3d_depth_write_enable) {
@@ -5807,7 +5806,8 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
       }
     }
   }
-  BX_GEFORCE_THIS redraw_area_nd(redraw_offset, draw_width, draw_height);
+  if (!ch->d3d_swizzled)
+    BX_GEFORCE_THIS redraw_area_nd(redraw_offset, draw_width, draw_height);
 }
 
 void bx_geforce_c::d3d_process_vertex(gf_channel* ch, bool immediate)
@@ -6673,6 +6673,7 @@ void bx_geforce_c::d3d_mh_clip_vertical(gf_channel* ch, Bit32u cls, Bit32u metho
 void bx_geforce_c::d3d_mh_surface_format(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param)
 {
   ch->d3d_surface_format = param;
+  ch->d3d_swizzled = ((param >> 8) & 0xf) == 2;
   Bit32u format_color;
   Bit32u format_depth;
   if (cls <= 0x0097) {
@@ -7558,7 +7559,7 @@ void bx_geforce_c::d3d_mh_0497_610(gf_channel* ch, Bit32u cls, Bit32u method, Bi
     tex->pal_dma_obj = (param & 1) == 1 ? ch->d3d_b_obj : ch->d3d_a_obj;
     tex->pal_ofs = param & 0xffffffc0;
   } else {
-    tex->control3 = param;
+    tex->pitch = param & 0x000fffff;
     tex->size_npot[2] = param >> 20;
     texture_update_size(tex, cls);
   }
@@ -7661,7 +7662,14 @@ void bx_geforce_c::d3d_mh_texture(gf_channel* ch, Bit32u cls, Bit32u method, Bit
       ch->d3d_tex_shader_op[texture_index] = tex->enabled ? 0x01 : 0x00;
   } else if ((texture_method == 3 && cls == 0x0096) ||
              (texture_method == 4 && cls != 0x0096)) {
-    tex->control1 = param;
+    for (Bit32u i = 0; i < 4; i++) {
+      tex->s0[i] = (param >> (8 + i * 2)) & 3;
+      tex->s1[i] = (param >> (i * 2)) & 3;
+    }
+    if (cls <= 0x0497) {
+      tex->pitch = param >> 16;
+      texture_update_size(tex, cls);
+    }
   } else if ((texture_method == 6 && cls == 0x0096) ||
              (texture_method == 5 && cls != 0x0096)) {
     // filtering is not implemented
