@@ -17,6 +17,15 @@ Changes after Bochs 3.1:
 - AVX: Fixed order of unmasked exceptions handling in VDPPS instruction. VDPPS must determine SIMD floating-point exceptions separately for each multiply and add operation in execution order.
 - x86-64: implement ENTER and LEAVE instructions with OperandSize=16 and StackSize=64
 - AVX-512: VPBROADCASTMB2Q/VPBROADCASTMW2D instructions should require AVX512_CD
+- AVX-512: VPCMPB/VPCMPUB/VPCMPW/VPCMPUW instructions should require AVX512_BW
+- AES_AVX: Enforce AES feature flag in cpu to make sure sure these are disabled when AES gets disabled
++ AVX-512: Fix boundary conditions of write mask calculation for VPCOMPRESSB/VPCOMPRESSW instructions
++ AVX-512: Fix boundary conditions of load mask calculation for VPEXPANDB/VPEXPANDW instructions, VPEXPANDB was completely broken with load mask > 32 bit
++ AVX512_GATHER: Fix 512-bit qword-indexed VGATHERQPS zero upper
++ AVX-512: Fix VRANGE* output when both arguments are different sign same magnitude ad ABS_MIN and ABS_MAX is requsted
+- Legacy: added missing #AC check in ticke_write_linear, used for ENTER and XSAVE instructions
+- x87: improved implementation of F2XM1 x87 instruction
+- Legacy: fixed broken CR2 register initialization in reset() method, CR2 contained garbage value at the beginning instead of being initialized to 0
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
