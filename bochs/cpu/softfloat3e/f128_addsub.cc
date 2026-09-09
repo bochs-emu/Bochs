@@ -39,11 +39,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "softfloat.h"
 
 extern float128_t
- softfloat_addMagsF128(uint64_t, uint64_t, uint64_t, uint64_t, bool, struct softfloat_status_t *);
+ softfloat_addMagsF128(uint64_t, uint64_t, uint64_t, uint64_t, bool, uint8_t roundingMode, struct softfloat_status_t *);
 extern float128_t
- softfloat_subMagsF128(uint64_t, uint64_t, uint64_t, uint64_t, bool, struct softfloat_status_t *);
+ softfloat_subMagsF128(uint64_t, uint64_t, uint64_t, uint64_t, bool, uint8_t roundingMode, struct softfloat_status_t *);
 
-float128_t f128_add(float128_t a, float128_t b, struct softfloat_status_t *status)
+float128_t f128_add(float128_t a, float128_t b, uint8_t roundingMode, struct softfloat_status_t *status)
 {
     uint64_t uiA64, uiA0;
     bool signA;
@@ -59,13 +59,13 @@ float128_t f128_add(float128_t a, float128_t b, struct softfloat_status_t *statu
     signB = signF128UI64(uiB64);
 
     if (signA == signB) {
-        return softfloat_addMagsF128(uiA64, uiA0, uiB64, uiB0, signA, status);
+        return softfloat_addMagsF128(uiA64, uiA0, uiB64, uiB0, signA, roundingMode, status);
     } else {
-        return softfloat_subMagsF128(uiA64, uiA0, uiB64, uiB0, signA, status);
+        return softfloat_subMagsF128(uiA64, uiA0, uiB64, uiB0, signA, roundingMode, status);
     }
 }
 
-float128_t f128_sub(float128_t a, float128_t b, struct softfloat_status_t *status)
+float128_t f128_sub(float128_t a, float128_t b, uint8_t roundingMode, struct softfloat_status_t *status)
 {
     uint64_t uiA64, uiA0;
     bool signA;
@@ -81,8 +81,8 @@ float128_t f128_sub(float128_t a, float128_t b, struct softfloat_status_t *statu
     signB = signF128UI64(uiB64);
 
     if (signA == signB) {
-        return softfloat_subMagsF128(uiA64, uiA0, uiB64, uiB0, signA, status);
+        return softfloat_subMagsF128(uiA64, uiA0, uiB64, uiB0, signA, roundingMode, status);
     } else {
-        return softfloat_addMagsF128(uiA64, uiA0, uiB64, uiB0, signA, status);
+        return softfloat_addMagsF128(uiA64, uiA0, uiB64, uiB0, signA, roundingMode, status);
     }
 }

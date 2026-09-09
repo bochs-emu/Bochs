@@ -43,9 +43,9 @@ float128_t EvalPoly(float128_t x, const float128_t *arr, int n, softfloat_status
     float128_t r = arr[--n];
 
     do {
-        r = f128_mulAdd(r, x, arr[--n], 0, &status);
-//      r = f128_mul(r, x, &status);
-//      r = f128_add(r, arr[--n], &status);
+//      r = f128_mulAdd(r, x, arr[--n], 0, &status);
+        r = f128_mul(r, x, &status);
+        r = f128_add(r, arr[--n], &status);
 
     } while (n > 0);
 

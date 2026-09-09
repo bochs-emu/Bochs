@@ -39,7 +39,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "primitives.h"
 #include "specialize.h"
 
-float128_t softfloat_addMagsF128(uint64_t uiA64, uint64_t uiA0, uint64_t uiB64, uint64_t uiB0, bool signZ, struct softfloat_status_t *status)
+float128_t softfloat_addMagsF128(uint64_t uiA64, uint64_t uiA0, uint64_t uiB64, uint64_t uiB0, bool signZ, uint8_t roundingMode, struct softfloat_status_t *status)
 {
     int32_t expA;
     struct uint128 sigA;
@@ -131,7 +131,7 @@ float128_t softfloat_addMagsF128(uint64_t uiA64, uint64_t uiA0, uint64_t uiB64, 
     sigZExtra = sig128Extra.extra;
  roundAndPack:
     return
-        softfloat_roundPackToF128(signZ, expZ, sigZ.v64, sigZ.v0, sigZExtra, status);
+        softfloat_roundPackToF128(signZ, expZ, sigZ.v64, sigZ.v0, sigZExtra, roundingMode, status);
  propagateNaN:
     uiZ = softfloat_propagateNaNF128UI(uiA64, uiA0, uiB64, uiB0, status);
     return uiZ;

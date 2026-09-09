@@ -38,8 +38,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include "internals.h"
 #include "primitives.h"
+#include "softfloat.h"
 
+/*----------------------------------------------------------------------------
+| Convenience overload preserving the historical interface: the rounding
+| direction is taken from the mode currently programmed in 'status'.
+*----------------------------------------------------------------------------*/
 float128_t softfloat_normRoundPackToF128(bool sign, int32_t exp, uint64_t sig64, uint64_t sig0, struct softfloat_status_t *status)
+{
+    return
+        softfloat_normRoundPackToF128(sign, exp, sig64, sig0, softfloat_getRoundingMode(status), status);
+}
+
+float128_t softfloat_normRoundPackToF128(bool sign, int32_t exp, uint64_t sig64, uint64_t sig0, uint8_t roundingMode, struct softfloat_status_t *status)
 {
     int8_t shiftDist;
     struct uint128 sig128;
@@ -72,5 +83,5 @@ float128_t softfloat_normRoundPackToF128(bool sign, int32_t exp, uint64_t sig64,
         sig0  = sig128Extra.v.v0;
         sigExtra = sig128Extra.extra;
     }
-    return softfloat_roundPackToF128(sign, exp, sig64, sig0, sigExtra, status);
+    return softfloat_roundPackToF128(sign, exp, sig64, sig0, sigExtra, roundingMode, status);
 }
