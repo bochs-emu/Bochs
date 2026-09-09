@@ -71,7 +71,10 @@ float128_t softfloat_normRoundPackToF128(bool sign, int32_t exp, uint64_t sig64,
             sig64 = sig128.v64;
             sig0  = sig128.v0;
         }
-        if ((uint32_t) exp < 0x7FFD) {
+        /* the fast path skips roundPackToF128; take it only when no narrow
+           float128_t precision clamp is in effect there */
+        if ((uint32_t) exp < 0x7FFD
+                && (status->extF80_roundingPrecision < 83 || status->extF80_roundingPrecision > 127)) {
             z.v64 = packToF128UI64(sign, sig64 | sig0 ? exp : 0, sig64);
             z.v0  = sig0;
             return z;

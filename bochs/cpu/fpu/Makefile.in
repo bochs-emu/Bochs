@@ -47,7 +47,7 @@ BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I$(srcdir)/../.. -I../../@INSTRUMENT_D
 OBJS = ferr.o fpu.o fpu_arith.o fpu_compare.o fpu_const.o fpu_cmov.o \
                fpu_load_store.o fpu_misc.o fpu_trans.o \
                fprem.o fsincos.o f2xm1.o fyl2x.o fpatan.o \
-               poly.o
+               poly.o f128_67.o
 
 all: libfpu.a
 
@@ -230,3 +230,6 @@ poly.o: poly.@CPP_SUFFIX@ ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h ../../config.h \
  ../softfloat3e/include/softfloat-extra.h \
  ../softfloat3e/include/internals.h
+f128_67.o: f128_67.@CPP_SUFFIX@ ../softfloat3e/include/softfloat.h \
+ ../softfloat3e/include/softfloat_types.h ../../config.h \
+ ../softfloat3e/include/softfloat-extra.h

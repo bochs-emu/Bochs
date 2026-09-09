@@ -61,6 +61,52 @@ float128_t
     roundNearEven = (roundingMode == softfloat_round_near_even);
 
     /*------------------------------------------------------------------------
+    | Optional narrow-precision clamp: when 'status->extF80_roundingPrecision'
+    | is in 83..127 the float128_t result is reduced to a (precision - 16) bit
+    | significand (83 => 67 bits), emulating the internal extended-precision
+    | format of the P5/P6 x87 real microcode.
+    *------------------------------------------------------------------------*/
+    if (83 <= status->extF80_roundingPrecision && status->extF80_roundingPrecision <= 127) {
+        unsigned drop = 113 - (status->extF80_roundingPrecision - 16); // 2..46, within sig0
+        uint64_t ulp = UINT64_C(1) << drop;
+        uint64_t rem = sig0 & (ulp - 1);
+        uint64_t sticky = rem | (sigExtra != 0);
+        bool inc;
+        switch (roundingMode) {
+          default: /* softfloat_round_minMag - truncate, as the real microcode does */
+            inc = 0;
+            break;
+          case softfloat_round_near_even:
+            inc = (rem > (ulp>>1)) || ((rem == (ulp>>1)) && (sig0 & ulp));
+            break;
+          case softfloat_round_near_maxMag:
+            inc = (rem >= (ulp>>1));
+            break;
+          case softfloat_round_min:
+            inc = sign && sticky;
+            break;
+          case softfloat_round_max:
+            inc = ! sign && sticky;
+            break;
+        }
+        sig0 &= ~(ulp - 1);
+        sigExtra = 0;
+        if (sticky)
+            softfloat_raiseFlags(status, softfloat_flag_inexact);
+        if (inc) {
+            sig128 = softfloat_add128(sig64, sig0, 0, ulp);
+            sig64 = sig128.v64;
+            sig0  = sig128.v0;
+            if (UINT64_C(0x0002000000000000) <= sig64) {
+                sig128Extra = softfloat_shortShiftRightJam128Extra(sig64, sig0, 0, 1);
+                sig64 = sig128Extra.v.v64;
+                sig0  = sig128Extra.v.v0;
+                exp++;
+            }
+        }
+    }
+
+    /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     doIncrement = (UINT64_C(0x8000000000000000) <= sigExtra);
     if (! roundNearEven && (roundingMode != softfloat_round_near_maxMag)) {

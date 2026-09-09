@@ -1,23 +1,16 @@
 /*
  * f2xm1.c -- emulation of the Intel x87 F2XM1 instruction
  * ---------------------------------------------------------------
- * All intermediate arithmetic is carried out in float128_t (113-bit
- * significand), which has far more precision than the ~67
- * significant bits the original Intel algorithm requires, so we
- * do not need to reproduce the historical "80-bit-plus-a-few-extra-
- * bits" constant format -- we simply decode the full precision
- * given for every constant/table entry directly into float128_t.
- * Only the reduction step (isolating the breakpoint c and
- * remainder r = x - c) is done in extFloat80_t, because that step
- * is defined bitwise on x's 64-bit extended significand. The final
- * float128_t result is rounded back down to extFloat80_t once,
- * at the very end, with f128_to_extF80.
- *
- * Verified against the real x87 F2XM1 instruction (via inline asm on
- * an x86_64 host) over 200,000+ random points spanning the whole
- * domain plus all documented boundaries; observed max error was
- * ~1 ulp of the extended-precision (64-bit significand) result,
- * which is expected given the double-rounding (f128 -> extF80).
+ * Intermediate arithmetic is carried out in float128_t, following the
+ * extended-precision arithmetic of the real P5/P6 microcode: multiplies
+ * keep a ~67-bit significand and truncate, polynomial adds deliver a
+ * 64-bit significand rounded to nearest-even.
+ * Constants and the 2^c-1 table are decoded at full precision from the
+ * implementation-note values. The reduction step (isolating the break
+ * point c and remainder r = x - c) is done in extFloat80_t because it
+ * is defined bitwise on x's 64-bit significand. Only the final
+ * reconstruction (d + (d+1)*poly, or s + (u+p+q)) is done at full
+ * precision and rounded once, honouring the FPU rounding mode.
  */
 
 #include "softfloat3e/include/softfloat.h"
@@ -27,6 +20,11 @@
 #include "f2xm1_constants.h"
 
 extern floatx80 softfloat_propagateNaNExtF80UI(uint16_t uiA64, uint64_t uiA0, uint16_t uiB64, uint64_t uiB0, struct softfloat_status_t *status);
+
+/* f128_67.cc: P5/P6 extended-precision arithmetic - multiply keeps a ~67-bit
+   significand and truncates; add delivers a 64-bit significand, nearest-even. */
+extern float128_t f128_mul_67_chop(float128_t a, float128_t b, struct softfloat_status_t *status);
+extern float128_t f128_add_64_ne(float128_t a, float128_t b, struct softfloat_status_t *status);
 
 /*
    Given a number x in the range (-1, 1), the calculation of 2^x - 1 can be
@@ -106,6 +104,17 @@ static float128_t f2xm1_table_d(int index)
     return packFloat128(f2xm1_table_hi[index], f2xm1_table_lo[index]);
 }
 
+/* The final reconstruction add is done at full precision and rounded once to
+   the destination, honouring the FPU rounding mode.  Only that final rounding
+   determines SW.C1 (round-up): the round-up state accumulated by the earlier
+   intermediate roundings is discarded first. */
+static extFloat80_t f2xm1_reconstruct(float128_t a, float128_t b, softfloat_status_t &status)
+{
+    float128_t sum = f128_add(a, b, &status);   /* final reconstruction add, full precision */
+    status.softfloat_exceptionFlags &= ~RAISE_SW_C1;
+    return f128_to_extF80(sum, &status);        /* single rounding, per FPU mode */
+}
+
 /* ------------------------------------------------------------------ */
 /* Step 5 :  1/4 <= |x| < 1   (REDUCTION / APPROXIMATION / RECONSTRUCTION) */
 /* ------------------------------------------------------------------ */
@@ -131,32 +140,30 @@ static extFloat80_t f2xm1_step5(extFloat80_t x, softfloat_status_t &status)
     /* s = L2 * r, rounded to extended (64-bit) precision */
     extFloat80_t s80 = f128_mul_by_extF80(f2xm1_L2, r, softfloat_round_near_even, &status);
     float128_t s = extF80_to_f128(s80, &status);
-    float128_t t = f128_mul(s, s, &status);
+    float128_t t = f128_mul_67_chop(s, s, &status);
 
-    float128_t d  = f2xm1_table_d(index);           /* d  = get_table(index) */
-    float128_t d1 = f128_add(d, f2xm1_C1, &status); /* d1 = d + 1.0 */
+    float128_t d  = f2xm1_table_d(index);                  /* d  = get_table(index) */
+    float128_t d1 = f128_add_64_ne(d, f2xm1_C1, &status);  /* d1 = d + 1.0 */
 
     /* p = t*(A2 + t*(A4 + t*A6)) ; p = s*p */
-    float128_t p = f128_mul(t, f2xm1_A6, &status);
-    p = f128_add(f2xm1_A4, p, &status);
-    p = f128_mul(t, p, &status);
-    p = f128_add(f2xm1_A2, p, &status);
-    p = f128_mul(t, p, &status);
-    p = f128_mul(s, p, &status);
+    float128_t p = f128_mul_67_chop(t, f2xm1_A6, &status);
+    p = f128_add_64_ne(f2xm1_A4, p, &status);
+    p = f128_mul_67_chop(t, p, &status);
+    p = f128_add_64_ne(f2xm1_A2, p, &status);
+    p = f128_mul_67_chop(t, p, &status);
+    p = f128_mul_67_chop(s, p, &status);
 
     /* q = s + t*(A1 + t*(A3 + t*A5)) */
-    float128_t q = f128_mul(t, f2xm1_A5, &status);
-    q = f128_add(f2xm1_A3, q, &status);
-    q = f128_mul(t, q, &status);
-    q = f128_add(f2xm1_A1, q, &status);
-    q = f128_mul(t, q, &status);
-    q = f128_add(s, q, &status);
+    float128_t q = f128_mul_67_chop(t, f2xm1_A5, &status);
+    q = f128_add_64_ne(f2xm1_A3, q, &status);
+    q = f128_mul_67_chop(t, q, &status);
+    q = f128_add_64_ne(f2xm1_A1, q, &status);
+    q = f128_mul_67_chop(t, q, &status);
+    q = f128_add_64_ne(s, q, &status);
 
-    float128_t f  = f128_add(p, q, &status);          /* f = p + q  */
-    float128_t d1f = f128_mul(d1, f, &status);
-    float128_t resultq = f128_add(d, d1f, &status);   /* result = d + d1*f   */
-
-    return f128_to_extF80(resultq, &status);
+    float128_t f  = f128_add_64_ne(p, q, &status);         /* f = p + q  */
+    float128_t d1f = f128_mul_67_chop(d1, f, &status);
+    return f2xm1_reconstruct(d, d1f, status);              /* result = d + d1*f  */
 }
 
 /* ------------------------------------------------------------------ */
@@ -166,49 +173,47 @@ static extFloat80_t f2xm1_step5(extFloat80_t x, softfloat_status_t &status)
 static extFloat80_t f2xm1_step4(extFloat80_t x, softfloat_status_t &status)
 {
     float128_t xq = extF80_to_f128(x, &status);
-    float128_t s  = f128_mul(f2xm1_L2, xq, &status);
+    float128_t s  = f128_mul_67_chop(f2xm1_L2, xq, &status);
     /* s1 = L2 * x, rounded to extended (64-bit) precision */
     extFloat80_t s1_80 = f128_mul_by_extF80(f2xm1_L2, x, softfloat_round_near_even, &status);
     float128_t s1 = extF80_to_f128(s1_80, &status);
-    float128_t t  = f128_mul(s, s1, &status);
+    float128_t t  = f128_mul_67_chop(s, s1, &status);
 
-    float128_t u = f128_mul(t, f2xm1_B1, &status);        /* u = t * b1  (b1 = 0.5)  */
+    float128_t u = f128_mul_67_chop(t, f2xm1_B1, &status);   /* u = t * b1  (b1 = 0.5)  */
 
     /* p = b2 + t*(b4 + t*(b6 + t*(b8 + t*b10))) ; p = t*p ; p = s*p */
-    float128_t p = f128_mul(t, f2xm1_B10, &status);
-    p = f128_add(f2xm1_B8, p, &status);
-    p = f128_mul(t, p, &status);
-    p = f128_add(f2xm1_B6, p, &status);
-    p = f128_mul(t, p, &status);
-    p = f128_add(f2xm1_B4, p, &status);
-    p = f128_mul(t, p, &status);
-    p = f128_add(f2xm1_B2, p, &status);
+    float128_t p = f128_mul_67_chop(t, f2xm1_B10, &status);
+    p = f128_add_64_ne(f2xm1_B8, p, &status);
+    p = f128_mul_67_chop(t, p, &status);
+    p = f128_add_64_ne(f2xm1_B6, p, &status);
+    p = f128_mul_67_chop(t, p, &status);
+    p = f128_add_64_ne(f2xm1_B4, p, &status);
+    p = f128_mul_67_chop(t, p, &status);
+    p = f128_add_64_ne(f2xm1_B2, p, &status);
     /* p = t*p, rounded to extended (64-bit) precision */
     extFloat80_t p80 = f128_to_extF80(p, &status);
     p80 = f128_mul_by_extF80(t, p80, softfloat_round_near_even, &status);
     p = extF80_to_f128(p80, &status);
-    p = f128_mul(s, p, &status);
+    p = f128_mul_67_chop(s, p, &status);
 
     /* q = b3 + t*(b5 + t*(b7 + t*(b9 + t*b11))) ; q = t*q ; q = t*q */
-    float128_t q = f128_mul(t, f2xm1_B11, &status);
-    q = f128_add(f2xm1_B9, q, &status);
-    q = f128_mul(t, q, &status);
-    q = f128_add(f2xm1_B7, q, &status);
-    q = f128_mul(t, q, &status);
-    q = f128_add(f2xm1_B5, q, &status);
-    q = f128_mul(t, q, &status);
-    q = f128_add(f2xm1_B3, q, &status);
+    float128_t q = f128_mul_67_chop(t, f2xm1_B11, &status);
+    q = f128_add_64_ne(f2xm1_B9, q, &status);
+    q = f128_mul_67_chop(t, q, &status);
+    q = f128_add_64_ne(f2xm1_B7, q, &status);
+    q = f128_mul_67_chop(t, q, &status);
+    q = f128_add_64_ne(f2xm1_B5, q, &status);
+    q = f128_mul_67_chop(t, q, &status);
+    q = f128_add_64_ne(f2xm1_B3, q, &status);
     /* q = t*q, rounded to extended (64-bit) precision */
     extFloat80_t q80 = f128_to_extF80(q, &status);
     q80 = f128_mul_by_extF80(t, q80, softfloat_round_near_even, &status);
     q = extF80_to_f128(q80, &status);
-    q = f128_mul(t, q, &status);
+    q = f128_mul_67_chop(t, q, &status);
 
-    float128_t pq = f128_add(p, q, &status);
-    float128_t u_pq = f128_add(u, pq, &status);       /* u + (p + q)  */
-    float128_t resultq = f128_add(s, u_pq, &status);
-
-    return f128_to_extF80(resultq, &status);
+    float128_t pq = f128_add_64_ne(p, q, &status);
+    float128_t u_pq = f128_add_64_ne(u, pq, &status);   /* u + (p + q)  */
+    return f2xm1_reconstruct(s, u_pq, status);          /* result = s + (u+(p+q)) */
 }
 
 /* ------------------------------------------------------------------ */

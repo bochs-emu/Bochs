@@ -60,7 +60,9 @@ struct softfloat_status_t
 
     /*----------------------------------------------------------------------------
     | Rounding precision for 80-bit extended double-precision floating-point.
-    | Valid values are 32, 64, and 80.
+    | Valid values are 32, 64, and 80.  A value in 83..127 additionally clamps
+    | float128_t results to a (value - 16) bit significand (83 => 67-bit, the
+    | internal extended-precision format of the P5/P6 x87 real microcode)
     *----------------------------------------------------------------------------*/
     uint8_t extF80_roundingPrecision;
 
