@@ -3210,7 +3210,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMXON(bxInstruction_c *i)
 
   if (! BX_CPU_THIS_PTR in_vmx) {
     if (CPL != 0 || ! BX_CPU_THIS_PTR cr0.get_NE() ||
-        ! (BX_CPU_THIS_PTR cr0.get_PE()) || BX_GET_ENABLE_A20() == 0 ||
+        ! (BX_CPU_THIS_PTR cr0.get_PG()) || BX_GET_ENABLE_A20() == 0 ||
         ! (BX_CPU_THIS_PTR msr.ia32_feature_ctrl & BX_IA32_FEATURE_CONTROL_LOCK_BIT) ||
         ! (BX_CPU_THIS_PTR msr.ia32_feature_ctrl & BX_IA32_FEATURE_CONTROL_VMX_ENABLE_BIT))
     {
