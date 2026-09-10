@@ -64,6 +64,8 @@ these four paragraphs for those parts of this code that are retained.
 
 #define FLOAT128
 
+#include <stddef.h>
+
 #include "fpu_trans.h"
 #include "softfloat-helpers.h"
 #include "fpu_constant.h"
