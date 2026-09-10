@@ -24,8 +24,9 @@ Changes after Bochs 3.1:
 + AVX512_GATHER: Fix 512-bit qword-indexed VGATHERQPS zero upper
 + AVX-512: Fix VRANGE* output when both arguments are different sign same magnitude ad ABS_MIN and ABS_MAX is requsted
 - Legacy: added missing #AC check in ticke_write_linear, used for ENTER and XSAVE instructions
-- x87: improved implementation of F2XM1 x87 instruction
++ x87: improved implementation of x87 transendential instructions (F2XM1/FYL2X/FYL2XP1/FPATAN/FSIN/FCOS/FSINCOS/FPTAN) to match HW
 - Legacy: fixed broken CR2 register initialization in reset() method, CR2 contained garbage value at the beginning instead of being initialized to 0
+- VMX: Fixed typo in VMXON #GP(0) condition
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
