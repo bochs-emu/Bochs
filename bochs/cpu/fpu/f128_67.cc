@@ -31,12 +31,12 @@ the only rounding that reaches SW.C1 / the destination is the caller's final one
 
 #define F128_EXT_FORMAT_PRECISION 83   /* s_roundPackToF128 clamp value -> 67-bit significand */
 
-// Round a float128_t down to a 64-bit (extF80) significand using 'mode',
-// regardless of the rounding mode currently programmed in 'status'.
+// Round a float128_t to a 64-bit significand using 'mode', regardless of the
+// rounding mode currently programmed in 'status'.  ('f128_round' with the
+// x87 precision selector 80 -> 64-bit significand; softfloat3e/f128_round.cc.)
 static float128_t f128_round_to_64(float128_t v, uint8_t mode, struct softfloat_status_t *status)
 {
-    extFloat80_t r64 = f128_to_extF80(v, mode, status);
-    return extF80_to_f128(r64, status);
+    return f128_round(v, 80, mode, status);
 }
 
 // multiply, result truncated to a ~67-bit significand.  Assumes 'b' already
@@ -97,15 +97,16 @@ float128_t f128_div_64_ne(float128_t a, float128_t b, struct softfloat_status_t 
 }
 
 // multiply with only the top 64 bits of the right operand entering the
-// multiplier, product delivered rounded to a 64-bit significand, nearest-even.
-// Overloaded on the right operand: pass it as extFloat80_t when it originates as
-// one (no widen-then-narrow), or as float128_t (truncated here toward zero).
+// multiplier, result rounded to a 64-bit significand, nearest-even.  Overloaded
+// on the right operand: pass it as extFloat80_t when it originates as one (no
+// widen-then-narrow), or as float128_t (truncated here toward zero to 64 bits).
 float128_t f128_mul_64_ne(float128_t a, extFloat80_t b, struct softfloat_status_t *status)
 {
     float128_t product = f128_mul_by_extF80(a, b, softfloat_round_near_even, status);
     return f128_round_to_64(product, softfloat_round_near_even, status);
 }
 
+// multiply, result rounded to a 64-bit significand, nearest-even
 float128_t f128_mul_64_ne(float128_t a, float128_t b, struct softfloat_status_t *status)
 {
     extFloat80_t b64 = f128_to_extF80(b, softfloat_round_minMag, status);

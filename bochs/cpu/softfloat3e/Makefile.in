@@ -275,7 +275,8 @@ OBJS_OTHERS = \
   f128_mul$(OBJ) \
   f128_mul_by_extF80$(OBJ) \
   f128_mulAdd$(OBJ) \
-  f128_div$(OBJ)
+  f128_div$(OBJ) \
+  f128_round$(OBJ)
 
 OBJS_ALL = $(OBJS_PRIMITIVES) $(OBJS_SPECIALIZE) $(OBJS_OTHERS)
 

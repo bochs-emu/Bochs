@@ -738,6 +738,7 @@ int64_t f128_to_i64_r_minMag(float128_t, bool, struct softfloat_status_t *);
 float32 f128_to_f32(float128_t, struct softfloat_status_t *);
 float64 f128_to_f64(float128_t, struct softfloat_status_t *);
 extFloat80_t f128_to_extF80(float128_t, uint8_t roundingMode, struct softfloat_status_t *);
+float128_t f128_round(float128_t, uint8_t roundingPrecision, uint8_t roundingMode, struct softfloat_status_t *);
 float128_t f128_roundToInt(float128_t, uint8_t, bool, struct softfloat_status_t *);
 float128_t f128_add(float128_t, float128_t, uint8_t roundingMode, struct softfloat_status_t *);
 float128_t f128_sub(float128_t, float128_t, uint8_t roundingMode, struct softfloat_status_t *);
