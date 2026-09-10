@@ -20,15 +20,24 @@ these four paragraphs for those parts of this code that are retained.
 
 /*
  * fyl2x.cc -- emulation of the Intel x87 FYL2X and FYL2XP1 instructions
- * -------------------------------------------------------------------------
- * y * log2(x)  and  y * log2(1+x).  The log2 is computed with the P5/P6
- * table-driven algorithm: reduce x (or w = 1+x) against one of 32 break
- * points c, look the leading/trailing parts of log2(c) up in a table, and
- * add a small odd polynomial in u = 2(x-c)/(x+c).  |x-1| < 1/8 uses a
- * polynomial directly.  Every intermediate follows the internal
- * extended-precision arithmetic (see the f128_*_67_chop / f128_*_64_ne
- * helpers); only the closing  result = z * y  is rounded to the destination,
- * honouring the FPU rounding mode, and it alone sets SW.C1.
+ * =======================================================================
+ * FYL2X   : y * log2(x)          FYL2XP1 : y * log2(1 + x)
+ *
+ * log2 is table-driven.  Let  w = x  (FYL2X) or  w = 1 + x  (FYL2XP1), split
+ * as  w = 2^n * m  with m in [1,2).  Then
+ *     log2(w) = n + log2(m).
+ * Reduce m against one of 32 break points c:  u = 2(m - c)/(m + c)  is small
+ * and scale-invariant, and
+ *     log2(m) = log2(c) + (1/ln2) * (u + u^3/3 + u^5/5 + ...)
+ * with log2(c) stored as a lead + trail pair in a table and the odd series a
+ * short polynomial.  Arguments with |x - 1| < 1/8 skip the table and use a
+ * polynomial in  (x-1)/(x+1)  directly (and FYL2XP1 with |x| tiny uses just
+ * the first term).  The reduction is done on m's mantissa with n carried as a
+ * plain integer, keeping everything inside the float128_t exponent range.
+ *
+ * Every intermediate rounds to the x87 internal extended-precision widths
+ * (f128_67.cc helpers); only the closing  result = log2(w) * y  is rounded to
+ * the destination honouring the FPU mode, and it alone sets SW.C1.
  */
 
 #define FLOAT128

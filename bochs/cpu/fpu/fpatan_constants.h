@@ -1,4 +1,4 @@
-/* P5 arc-tangent table-driven constants (float128_t encoding). */
+/* Table-driven arc-tangent constants for FPATAN (float128_t encoding).  Generated - do not edit by hand. */
 #ifndef BX_FPATAN_CONSTANTS_H
 #define BX_FPATAN_CONSTANTS_H
 

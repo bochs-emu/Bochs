@@ -49,7 +49,7 @@ floatx80 fpatan(floatx80 a, floatx80 b, softfloat_status_t &status);
 int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, softfloat_status_t &status);
 int fsin(floatx80 &a, softfloat_status_t &status);
 int fcos(floatx80 &a, softfloat_status_t &status);
-int ftan(floatx80 &a, softfloat_status_t &status);
+int fptan(floatx80 &a, softfloat_status_t &status);
 
 /*-----------------------------------------------------------------------------
 | Calculates the absolute value of the extended double-precision floating-point

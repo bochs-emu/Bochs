@@ -229,13 +229,13 @@
     <ClCompile Include="..\cpu\fpu\fpu_trans.cc" />
     <ClCompile Include="..\cpu\fpu\fsincos.cc" />
     <ClCompile Include="..\cpu\fpu\fyl2x.cc" />
-    <ClCompile Include="..\cpu\fpu\poly.cc" />
     <ClCompile Include="..\cpu\fpu\f128_67.cc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\cpu\fpu\f2xm1_constants.h" />
     <ClInclude Include="..\cpu\fpu\fyl2x_constants.h" />
     <ClInclude Include="..\cpu\fpu\fpatan_constants.h" />
+    <ClInclude Include="..\cpu\fpu\fsincos_constants.h" />
     <ClInclude Include="..\cpu\fpu\control_w.h" />
     <ClInclude Include="..\cpu\fpu\fpu_constant.h" />
     <ClInclude Include="..\cpu\fpu\softfloat-specialize.h" />

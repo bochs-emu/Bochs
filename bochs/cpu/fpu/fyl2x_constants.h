@@ -1,4 +1,4 @@
-/* P5 log2 table-driven constants (float128_t encoding). */
+/* Table-driven log2 constants for FYL2X / FYL2XP1 (float128_t encoding).  Generated - do not edit by hand. */
 #ifndef BX_FYL2X_CONSTANTS_H
 #define BX_FYL2X_CONSTANTS_H
 

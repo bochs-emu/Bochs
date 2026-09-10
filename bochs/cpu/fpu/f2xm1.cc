@@ -19,18 +19,28 @@ these four paragraphs for those parts of this code that are retained.
 =============================================================================*/
 
 /*
- * f2xm1.c -- emulation of the Intel x87 F2XM1 instruction
- * ---------------------------------------------------------------
- * Intermediate arithmetic is carried out in float128_t, following the
- * extended-precision arithmetic of the real P5/P6 microcode: multiplies
- * keep a ~67-bit significand and truncate, polynomial adds deliver a
- * 64-bit significand rounded to nearest-even.
- * Constants and the 2^c-1 table are decoded at full precision from the
- * implementation-note values. The reduction step (isolating the break
- * point c and remainder r = x - c) is done in extFloat80_t because it
- * is defined bitwise on x's 64-bit significand. Only the final
- * reconstruction (d + (d+1)*poly, or s + (u+p+q)) is done at full
- * precision and rounded once, honouring the FPU rounding mode.
+ * f2xm1.cc -- emulation of the Intel x87 F2XM1 instruction  (2^x - 1)
+ * ------------------------------------------------------------------------
+ * Valid domain is |x| <= 1.  The value is built in float128_t but every
+ * intermediate step rounds to the x87 internal extended-precision widths
+ * (see f128_67.cc): products truncate to ~67 significand bits, polynomial
+ * adds round to 64 bits nearest-even.
+ *
+ * Two regimes, split at |x| = 1/4:
+ *
+ *   |x| >= 1/4 (step 5): table-driven.  Pick a break point c that keeps the
+ *     top few significand bits of x, so |r| = |x - c| is tiny.  With
+ *     d = 2^c - 1 taken from a precomputed table,
+ *         2^x - 1  =  d  +  (d + 1) * (2^r - 1),
+ *     and (2^r - 1) is a short polynomial in s = r*log2.
+ *
+ *   |x| < 1/4 (step 4): 2^x - 1 = exp(x*log2) - 1 directly, via a longer
+ *     polynomial in x*log2.
+ *
+ * The break-point reduction (isolating c and r = x - c) is a bitwise
+ * operation on x's 64-bit significand, so it is done in extFloat80_t.  Only
+ * the closing reconstruction add is rounded once to the destination
+ * honouring the FPU mode, and it alone sets SW.C1.
  */
 
 #include "softfloat3e/include/softfloat.h"
@@ -41,8 +51,9 @@ these four paragraphs for those parts of this code that are retained.
 
 extern floatx80 softfloat_propagateNaNExtF80UI(uint16_t uiA64, uint64_t uiA0, uint16_t uiB64, uint64_t uiB0, struct softfloat_status_t *status);
 
-/* f128_67.cc: P5/P6 extended-precision arithmetic - multiply keeps a ~67-bit
-   significand and truncates; add delivers a 64-bit significand, nearest-even. */
+/* internal extended-precision arithmetic (f128_67.cc): '_67_chop' multiplies
+   keep a ~67-bit significand and truncate; '_64_ne' / add_64_ne deliver a
+   64-bit significand rounded to nearest-even. */
 extern float128_t f128_mul_67_chop(float128_t a, float128_t b, struct softfloat_status_t *status);
 extern float128_t f128_add_64_ne(float128_t a, float128_t b, struct softfloat_status_t *status);
 extern float128_t f128_mul_64_ne(float128_t a, extFloat80_t b, struct softfloat_status_t *status);

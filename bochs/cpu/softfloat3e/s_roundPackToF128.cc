@@ -141,20 +141,34 @@ float128_t
                     && doIncrement)
        ) {
             /*----------------------------------------------------------------
+            | When the overflow exception is unmasked the x87 delivers the
+            | true significand with the exponent biased down by 0x6000, so the
+            | subsequent conversion to extF80 sees the wrapped value.  If a
+            | single wrap does not bring the exponent back in range, fall
+            | through to the masked-style clamp below.
             *----------------------------------------------------------------*/
-            softfloat_raiseFlags(status, softfloat_flag_overflow | softfloat_flag_inexact);
-            if (roundNearEven
-                || (roundingMode == softfloat_round_near_maxMag)
-                || (roundingMode == (sign ? softfloat_round_min : softfloat_round_max))
-           ) {
-                z.v64 = packToF128UI64(sign, 0x7FFF, 0);
-                z.v0  = 0;
-                softfloat_setRoundingUp(status);
-            } else {
-                z.v64 = packToF128UI64(sign, 0x7FFE, UINT64_C(0x0000FFFFFFFFFFFF));
-                z.v0  = UINT64_C(0xFFFFFFFFFFFFFFFF);
+            if (! softfloat_isMaskedException(status, softfloat_flag_overflow)) {
+                softfloat_raiseFlags(status, softfloat_flag_overflow);
+                exp -= 0x6000;
             }
-            return z;
+            if ((0x7FFD < exp) || ((exp == 0x7FFD)
+                    && softfloat_eq128(sig64, sig0, UINT64_C(0x0001FFFFFFFFFFFF), UINT64_C(0xFFFFFFFFFFFFFFFF))
+                    && doIncrement)
+           ) {
+                softfloat_raiseFlags(status, softfloat_flag_overflow | softfloat_flag_inexact);
+                if (roundNearEven
+                    || (roundingMode == softfloat_round_near_maxMag)
+                    || (roundingMode == (sign ? softfloat_round_min : softfloat_round_max))
+               ) {
+                    z.v64 = packToF128UI64(sign, 0x7FFF, 0);
+                    z.v0  = 0;
+                    softfloat_setRoundingUp(status);
+                } else {
+                    z.v64 = packToF128UI64(sign, 0x7FFE, UINT64_C(0x0000FFFFFFFFFFFF));
+                    z.v0  = UINT64_C(0xFFFFFFFFFFFFFFFF);
+                }
+                return z;
+            }
         }
     }
     /*------------------------------------------------------------------------

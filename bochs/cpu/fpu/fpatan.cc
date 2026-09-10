@@ -19,18 +19,29 @@ these four paragraphs for those parts of this code that are retained.
 =============================================================================*/
 
 /*
- * fpatan.cc -- emulation of the Intel x87 FPATAN instruction
- * -------------------------------------------------------------------------
- * atan2(y, x) with y = ST(1), x = ST(0).  Computed with the P5/P6 table-
- * driven algorithm: reduce so that 0 < v <= u (v,u = |y|,|x| possibly
- * swapped), take an IEEE remainder  32v = k*u + r  with |r| <= u/2, and
- * approximate arctan(v/u) either from a 33-entry arctan(k/32) table plus a
- * low order polynomial (k >= 2), or straight from a higher order polynomial
- * (k <= 1).  The result is reconstructed from the signs of x, y and the
- * swap flag.  Every intermediate follows the internal extended-precision
- * arithmetic (see the f128_*_67_chop / f128_*_64_ne helpers); only the
- * closing add is rounded to the destination honouring the FPU mode, and it
- * alone sets SW.C1.
+ * fpatan.cc -- emulation of the Intel x87 FPATAN instruction  (atan2(y, x))
+ * =======================================================================
+ * y = ST(1), x = ST(0).  Table-driven arc tangent:
+ *
+ *  1. REDUCTION.  Let u = max(|x|,|y|), v = min, remembering whether they were
+ *     swapped.  Form the integer quotient k and IEEE remainder r of  32*v  by
+ *     u  (so  32v = k*u + r,  |r| <= u/2,  k in 0..32).
+ *
+ *  2. APPROXIMATION of arctan(v/u):
+ *       k >= 2 : arctan(v/u) = arctan(k/32) + arctan(z),  where
+ *                z = r / (32u + k*v)  is small.  arctan(k/32) comes from a
+ *                33-entry table; arctan(z) from a short odd polynomial.
+ *       k <= 1 : arctan(v/u) directly from a longer odd polynomial in v/u.
+ *
+ *  3. RECONSTRUCTION.  atan2 is assembled from arctan(v/u), the swap flag and
+ *     the signs of x and y: the answer is  s*w  (no swap, x>0), or one of
+ *     +-pi/2 +- w  /  +-pi +- w  otherwise.
+ *
+ * The break-point reduction runs in a rescaled fixed-point domain (the larger
+ * operand normalised to [1,2)) so nothing overflows the float128_t exponent
+ * range.  Every intermediate rounds to the x87 internal extended-precision
+ * widths (f128_67.cc helpers); only the closing add is rounded to the
+ * destination honouring the FPU mode, and it alone sets SW.C1.
  */
 
 #define FLOAT128
@@ -110,26 +121,6 @@ static floatx80 fpatan_finish(float128_t f, float128_t g, int sflag, int sx, int
 // =================================================
 // FPATAN                  Compute arctan(y/x)
 // =================================================
-
-//
-// Uses the following identities:
-//
-// 1. ----------------------------------------------------------
-//
-//   atan(-x) = -atan(x)
-//
-// 2. ----------------------------------------------------------
-//
-//   atan(x) = k*atan(1/32) ... reduced against a 32-step break point grid;
-//   the remainder is handled by a low order polynomial and a table of
-//   arctan(k/32).
-//
-// 3. ----------------------------------------------------------
-//                   3     5     7     9                 2n+1
-//                  x     x     x     x              n  x
-//   atan(x) = x - --- + --- - --- + --- - ... + (-1)  ------ + ...
-//                  3     5     7     9                 2n+1
-//
 
 floatx80 fpatan(floatx80 a, floatx80 b, softfloat_status_t &status)
 {
@@ -343,12 +334,5 @@ return_PI_or_ZERO:
         }
     }
 
-    floatx80 result = fpatan_finish(f, g, sflag, sx, sy, status);
-
-    /* a subnormal (or underflowed-to-zero) result means the true angle was below
-       2^-16382 - flag the underflow the way the hardware does */
-    if ((result.signExp & 0x7FFF) == 0)
-        softfloat_raiseFlags(&status, softfloat_flag_underflow | softfloat_flag_inexact);
-
-    return result;
+    return fpatan_finish(f, g, sflag, sx, sy, status);
 }

@@ -47,7 +47,7 @@ BX_INCDIRS = -I.. -I../.. -I$(srcdir)/.. -I$(srcdir)/../.. -I../../@INSTRUMENT_D
 OBJS = ferr.o fpu.o fpu_arith.o fpu_compare.o fpu_const.o fpu_cmov.o \
                fpu_load_store.o fpu_misc.o fpu_trans.o \
                fprem.o fsincos.o f2xm1.o fyl2x.o fpatan.o \
-               poly.o f128_67.o
+               f128_67.o
 
 all: libfpu.a
 
@@ -218,7 +218,7 @@ fsincos.o: fsincos.@CPP_SUFFIX@ fpu_trans.h ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/internals.h softfloat-specialize.h \
  ../softfloat3e/include/softfloat_types.h softfloat-helpers.h \
  ../softfloat3e/include/primitives.h \
- ../softfloat3e/include/primitiveTypes.h fpu_constant.h
+ ../softfloat3e/include/primitiveTypes.h fpu_constant.h fsincos_constants.h
 fyl2x.o: fyl2x.@CPP_SUFFIX@ fpu_trans.h ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h ../../config.h \
  ../softfloat3e/include/softfloat-extra.h \
@@ -226,7 +226,3 @@ fyl2x.o: fyl2x.@CPP_SUFFIX@ fpu_trans.h ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h softfloat-helpers.h \
  ../softfloat3e/include/primitives.h \
  ../softfloat3e/include/primitiveTypes.h fyl2x_constants.h
-poly.o: poly.@CPP_SUFFIX@ ../softfloat3e/include/softfloat.h \
- ../softfloat3e/include/softfloat_types.h ../../config.h \
- ../softfloat3e/include/softfloat-extra.h \
- ../softfloat3e/include/internals.h
