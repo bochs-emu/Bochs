@@ -3857,7 +3857,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 ac_config_headers="$ac_config_headers config.h"
 
 
-VERSION="3.1"
+VERSION="3.1.devel"
 VER_MAJOR=3
 VER_MINOR=1
 VER_REVISION=0
