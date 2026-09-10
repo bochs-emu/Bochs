@@ -99,7 +99,8 @@ fpatan.o: fpatan.@CPP_SUFFIX@ ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h ../../config.h \
  ../softfloat3e/include/softfloat-extra.h \
  ../softfloat3e/include/internals.h fpu_trans.h softfloat-specialize.h \
- ../softfloat3e/include/softfloat_types.h fpu_constant.h
+ ../softfloat3e/include/softfloat_types.h softfloat-helpers.h fpu_constant.h \
+ fpatan_constants.h
 fprem.o: fprem.@CPP_SUFFIX@ fpu_trans.h ../softfloat3e/include/softfloat.h \
  ../softfloat3e/include/softfloat_types.h ../../config.h \
  ../softfloat3e/include/softfloat-extra.h \

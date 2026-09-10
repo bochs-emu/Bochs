@@ -18,17 +18,34 @@ the work is derivative, and (2) the source code includes prominent notice with
 these four paragraphs for those parts of this code that are retained.
 =============================================================================*/
 
-/*============================================================================
- * Written for Bochs (x86 achitecture simulator) by
- *            Stanislav Shwartsman [sshwarts at sourceforge net]
- * ==========================================================================*/
+/*
+ * fpatan.cc -- emulation of the Intel x87 FPATAN instruction
+ * -------------------------------------------------------------------------
+ * atan2(y, x) with y = ST(1), x = ST(0).  Computed with the P5/P6 table-
+ * driven algorithm: reduce so that 0 < v <= u (v,u = |y|,|x| possibly
+ * swapped), take an IEEE remainder  32v = k*u + r  with |r| <= u/2, and
+ * approximate arctan(v/u) either from a 33-entry arctan(k/32) table plus a
+ * low order polynomial (k >= 2), or straight from a higher order polynomial
+ * (k <= 1).  The result is reconstructed from the signs of x, y and the
+ * swap flag.  Every intermediate follows the internal extended-precision
+ * arithmetic (see the f128_*_67_chop / f128_*_64_ne helpers); only the
+ * closing add is rounded to the destination honouring the FPU mode, and it
+ * alone sets SW.C1.
+ */
 
 #define FLOAT128
 
-#include "softfloat3e/include/softfloat.h"
-
 #include "fpu_trans.h"
 #include "fpu_constant.h"
+#include "fpatan_constants.h"
+
+extern float128_t f128_mul_67_chop(float128_t a, float128_t b, struct softfloat_status_t *status);
+extern float128_t f128_add_67_chop(float128_t a, float128_t b, struct softfloat_status_t *status);
+extern float128_t f128_div_67_chop(float128_t a, float128_t b, struct softfloat_status_t *status);
+extern float128_t f128_add_64_ne (float128_t a, float128_t b, struct softfloat_status_t *status);
+extern float128_t f128_mul_64_ne (float128_t a, float128_t b, struct softfloat_status_t *status);
+
+#define FPATAN_SIGNBIT BX_CONST64(0x8000000000000000)
 
 //////////////////////////////
 // 3PI/4 constant
@@ -45,64 +62,49 @@ these four paragraphs for those parts of this code that are retained.
 #define FLOAT_3PI4_LO (BX_CONST64(0x9000000000000000))
 #endif
 
-#define FPATAN_ARR_SIZE 11
+static const floatx80 floatx80_pi = packFloatx80(0, 0x4000, BX_CONST64(0xc90fdaa22168c235));
 
-static const float128_t float128_one =
-        packFloat128(BX_CONST64(0x3fff000000000000), BX_CONST64(0x0000000000000000));
-static const float128_t float128_sqrt3 =
-        packFloat128(BX_CONST64(0x3fffbb67ae8584ca), BX_CONST64(0xa73b25742d7078b8));
-static const floatx80 floatx80_pi  =
-        packFloatx80(0, 0x4000, BX_CONST64(0xc90fdaa22168c235));
+static const float128_t float128_zero  = packFloat128(0, 0);
 
-static const float128_t float128_pi2 =
-        packFloat128(BX_CONST64(0x3fff921fb54442d1), BX_CONST64(0x8469898CC5170416));
-static const float128_t float128_pi4 =
-        packFloat128(BX_CONST64(0x3ffe921fb54442d1), BX_CONST64(0x8469898CC5170416));
-static const float128_t float128_pi6 =
-        packFloat128(BX_CONST64(0x3ffe0c152382d736), BX_CONST64(0x58465BB32E0F580F));
+static const float128_t fpatan_pi    = packFloat128(FPATAN_PI_HI,    FPATAN_PI_LO);
+static const float128_t fpatan_piby2 = packFloat128(FPATAN_PIBY2_HI, FPATAN_PIBY2_LO);
 
-static float128_t atan_arr[FPATAN_ARR_SIZE] =
+static const float128_t fpatan_A1 = packFloat128(FPATAN_A1_HI, FPATAN_A1_LO);
+static const float128_t fpatan_A2 = packFloat128(FPATAN_A2_HI, FPATAN_A2_LO);
+static const float128_t fpatan_A3 = packFloat128(FPATAN_A3_HI, FPATAN_A3_LO);
+static const float128_t fpatan_A4 = packFloat128(FPATAN_A4_HI, FPATAN_A4_LO);
+static const float128_t fpatan_B1 = packFloat128(FPATAN_B1_HI, FPATAN_B1_LO);
+static const float128_t fpatan_B2 = packFloat128(FPATAN_B2_HI, FPATAN_B2_LO);
+static const float128_t fpatan_B3 = packFloat128(FPATAN_B3_HI, FPATAN_B3_LO);
+static const float128_t fpatan_B4 = packFloat128(FPATAN_B4_HI, FPATAN_B4_LO);
+static const float128_t fpatan_B5 = packFloat128(FPATAN_B5_HI, FPATAN_B5_LO);
+static const float128_t fpatan_B6 = packFloat128(FPATAN_B6_HI, FPATAN_B6_LO);
+
+static float128_t fpatan_atan_tab(unsigned k)
 {
-    PACK_FLOAT_128(0x3fff000000000000, 0x0000000000000000), /*  1 */
-    PACK_FLOAT_128(0xbffd555555555555, 0x5555555555555555), /*  3 */
-    PACK_FLOAT_128(0x3ffc999999999999, 0x999999999999999a), /*  5 */
-    PACK_FLOAT_128(0xbffc249249249249, 0x2492492492492492), /*  7 */
-    PACK_FLOAT_128(0x3ffbc71c71c71c71, 0xc71c71c71c71c71c), /*  9 */
-    PACK_FLOAT_128(0xbffb745d1745d174, 0x5d1745d1745d1746), /* 11 */
-    PACK_FLOAT_128(0x3ffb3b13b13b13b1, 0x3b13b13b13b13b14), /* 13 */
-    PACK_FLOAT_128(0xbffb111111111111, 0x1111111111111111), /* 15 */
-    PACK_FLOAT_128(0x3ffae1e1e1e1e1e1, 0xe1e1e1e1e1e1e1e2), /* 17 */
-    PACK_FLOAT_128(0xbffaaf286bca1af2, 0x86bca1af286bca1b), /* 19 */
-    PACK_FLOAT_128(0x3ffa861861861861, 0x8618618618618618)  /* 21 */
-};
+    return packFloat128(fpatan_atan_hi[k], fpatan_atan_lo[k]);
+}
 
-extern float128_t OddPoly(float128_t x, const float128_t *arr, int n, softfloat_status_t &status);
-
-/* |x| < 1/4 */
-static float128_t poly_atan(float128_t x1, softfloat_status_t &status)
+// closing step: result = (a +) f + g, rounded once to the destination with the
+// FPU mode.  C1 reflects only that final rounding, so the round-up state left by
+// the earlier intermediate roundings is discarded first.
+//   sx = sign(x), sy = sign(y), sflag = 1 when |x|,|y| were swapped
+static floatx80 fpatan_finish(float128_t f, float128_t g, int sflag, int sx, int sy, softfloat_status_t &status)
 {
-/*
-    //                 3     5     7     9     11     13     15     17
-    //                x     x     x     x     x      x      x      x
-    // atan(x) ~ x - --- + --- - --- + --- - ---- + ---- - ---- + ----
-    //                3     5     7     9     11     13     15     17
-    //
-    //                 2     4     6     8     10     12     14     16
-    //                x     x     x     x     x      x      x      x
-    //   = x * [ 1 - --- + --- - --- + --- - ---- + ---- - ---- + ---- ]
-    //                3     5     7     9     11     13     15     17
-    //
-    //           5                          5
-    //          --       4k                --        4k+2
-    //   p(x) = >  C  * x           q(x) = >  C   * x
-    //          --  2k                     --  2k+1
-    //          k=0                        k=0
-    //
-    //                            2
-    //    atan(x) ~ x * [ p(x) + x * q(x) ]
-    //
-*/
-    return OddPoly(x1, (const float128_t*) atan_arr, FPATAN_ARR_SIZE, status);
+    float128_t val;
+
+    if (! sx && ! sflag) {
+        val = f128_add(f, g, &status);                 /* add_e(f, g) */
+    }
+    else {
+        float128_t a = sflag ? fpatan_piby2 : fpatan_pi;   /* (-1)^sy * (pi/2 or pi) */
+        if (sy) a.v64 ^= FPATAN_SIGNBIT;
+        float128_t fg = f128_add_67_chop(f, g, &status);
+        val = f128_add(a, fg, &status);                 /* add_e(a, f+g) */
+    }
+
+    status.softfloat_exceptionFlags &= ~RAISE_SW_C1;
+    return f128_to_extF80(val, &status);
 }
 
 // =================================================
@@ -118,31 +120,11 @@ static float128_t poly_atan(float128_t x1, softfloat_status_t &status)
 //
 // 2. ----------------------------------------------------------
 //
-//                             x + y
-//   atan(x) + atan(y) = atan -------, xy < 1
-//                             1-xy
-//
-//                             x + y
-//   atan(x) + atan(y) = atan ------- + PI, x > 0, xy > 1
-//                             1-xy
-//
-//                             x + y
-//   atan(x) + atan(y) = atan ------- - PI, x < 0, xy > 1
-//                             1-xy
+//   atan(x) = k*atan(1/32) ... reduced against a 32-step break point grid;
+//   the remainder is handled by a low order polynomial and a table of
+//   arctan(k/32).
 //
 // 3. ----------------------------------------------------------
-//
-//   atan(x) = atan(INF) + atan(- 1/x)
-//
-//                           x-1
-//   atan(x) = PI/4 + atan( ----- )
-//                           x+1
-//
-//                           x * sqrt(3) - 1
-//   atan(x) = PI/6 + atan( ----------------- )
-//                             x + sqrt(3)
-//
-// 4. ----------------------------------------------------------
 //                   3     5     7     9                 2n+1
 //                  x     x     x     x              n  x
 //   atan(x) = x - --- + --- - --- + --- - ... + (-1)  ------ + ...
@@ -163,8 +145,6 @@ floatx80 fpatan(floatx80 a, floatx80 b, softfloat_status_t &status)
     Bit64u bSig = extF80_fraction(b);
     Bit32s bExp = extF80_exp(b);
     int bSign = extF80_sign(b);
-
-    int zSign = aSign ^ bSign;
 
     if (bExp == 0x7FFF)
     {
@@ -227,75 +207,148 @@ return_PI_or_ZERO:
 
     softfloat_raiseFlags(&status, softfloat_flag_inexact);
 
-    /* |a| = |b| ==> return PI/4 */
-    if (aSig == bSig && aExp == bExp) {
-        if (aSign)
-            return softfloat_roundPackToExtF80(bSign, FLOATX80_3PI4_EXP, FLOAT_3PI4_HI, FLOAT_3PI4_LO, 80, &status);
-        else
-            return softfloat_roundPackToExtF80(bSign, FLOATX80_PI4_EXP, FLOAT_PI_HI, FLOAT_PI_LO, 80, &status);
+    /* ***** P5/P6 table-driven arc tangent ***** */
+    /*   x = ST(0) = 'a' (denominator),  y = ST(1) = 'b' (numerator)          */
+
+    int sx = aSign;
+    int sy = bSign;
+    int sz = sx ^ sy;
+    int sflag = 0;
+
+    /* aExp / bExp are biased and may be <= 0 after a denormal was normalized, so
+       keep the exponents as plain ints and never repack them verbatim.
+       Pick the larger magnitude as (uExp,uSig), the smaller as (vExp,vSig). */
+    Bit32s uExp = aExp, vExp = bExp;
+    Bit64u uSig = aSig, vSig = bSig;
+    if (aExp < bExp || (aExp == bExp && aSig < bSig)) {
+        uExp = bExp; uSig = bSig;
+        vExp = aExp; vSig = aSig;
+        sflag = 1;
+        sz ^= 1;
     }
 
-    /* ******************************** */
-    /* using float128 for approximation */
-    /* ******************************** */
+    /* Rescale the larger operand into [1,2) (biased exp 0x3FFF) and the smaller
+       by the same shift.  The approximation depends only on the ratio v/u, so
+       this is exact and keeps every value inside the float128_t exponent range. */
+    Bit32s vBias = 0x3FFF + (vExp - uExp);   /* biased exp of the smaller after rescale */
 
-    float128_t a128 = softfloat_normRoundPackToF128(0, aExp-0x10, aSig, 0, &status);
-    float128_t b128 = softfloat_normRoundPackToF128(0, bExp-0x10, bSig, 0, &status);
-    float128_t x;
-    int swap = 0, add_pi6 = 0, add_pi4 = 0;
+    float128_t f, g;
 
-    if (aExp > bExp || (aExp == bExp && aSig > bSig))
+    if (vBias < 1 && ! sx && ! sflag)
     {
-        x = f128_div(b128, a128, &status);
+        /* |y/x| below 2^-16382 and no pi term : the result is just y/|x|, a
+           genuine tiny value that underflows the destination. */
+        extFloat80_t xx = a;
+        xx.signExp &= 0x7FFF;
+        floatx80 tiny = extF80_div(b, xx, &status);
+        if ((tiny.signExp & 0x7FFF) == 0)
+            softfloat_raiseFlags(&status, softfloat_flag_underflow | softfloat_flag_inexact);
+        return tiny;
     }
-    else {
-        x = f128_div(a128, b128, &status);
-        swap = 1;
-    }
 
-    Bit32s xExp = expF128UI64(x.v64);
-
-    if (xExp <= FLOATX80_EXP_BIAS-40)
-        goto approximation_completed;
-
-    if (x.v64 >= BX_CONST64(0x3ffe800000000000))        // 3/4 < x < 1
+    if (vBias < 1)
     {
-        /*
-        arctan(x) = arctan((x-1)/(x+1)) + pi/4
-        */
-        float128_t t1 = f128_sub(x, float128_one, &status);
-        float128_t t2 = f128_add(x, float128_one, &status);
-        x = f128_div(t1, t2, &status);
-        add_pi4 = 1;
+        /* |y/x| is below 2^-16382 : arctan(v/u) == v/u to well beyond 64 bits.
+           The result is dominated by +-pi or +-pi/2 ; the arctan term vanishes. */
+        f = float128_zero;
+        g = float128_zero;
     }
     else
     {
-        /* argument correction */
-        if (xExp >= 0x3FFD)                     // 1/4 < x < 3/4
+        extFloat80_t U   = packToExtF80(0, (uint16_t) 0x3FFF,      uSig);
+        extFloat80_t V   = packToExtF80(0, (uint16_t) vBias,       vSig);
+        extFloat80_t V32 = packToExtF80(0, (uint16_t)(vBias + 5),  vSig);   /* 32*v */
+
+        /* truncated remainder: 32v = k*u + r0 with 0 <= r0 < u, k = floor(32v/u).
+           The remainder step is exact, so it must not leak exception flags. */
+        unsigned savedFlags = status.softfloat_exceptionFlags;
+        floatx80 r80;
+        Bit64u k = 0;
+        floatx80_remainder(V32, U, r80, k, &status);
+
+        float128_t u128 = extF80_to_f128(U, &status);
+        float128_t r128 = extF80_to_f128(r80, &status);
+
+        /* fold to |r| <= u/2 : if r0 > u/2 then r := r0 - u, k := k + 1 */
+        float128_t uHalf = u128;
+        uHalf.v64 -= (BX_CONST64(1) << 48);
+        if (r128.v64 > uHalf.v64 || (r128.v64 == uHalf.v64 && r128.v0 > uHalf.v0)) {
+            r128 = f128_sub(r128, u128, &status);
+            k++;
+        }
+        status.softfloat_exceptionFlags = savedFlags;
+
+        if (k > 32) k = 32;
+
+        float128_t v128 = extF80_to_f128(V, &status);
+
+        if (k > 1)
         {
-            /*
-            arctan(x) = arctan((x*sqrt(3)-1)/(x+sqrt(3))) + pi/6
-            */
-            float128_t t1 = f128_mul(x, float128_sqrt3, &status);
-            float128_t t2 = f128_add(x, float128_sqrt3, &status);
-            x = f128_sub(t1, float128_one, &status);
-            x = f128_div(x, t2, &status);
-            add_pi6 = 1;
+            /* Step 3.1 : table lookup + low order polynomial (32v/u >= 2) */
+            float128_t u1 = u128;
+            u1.v64 += (BX_CONST64(5) << 48);                          /* u1 = u * 32   */
+            float128_t v1 = f128_mul_67_chop(v128, i32_to_f128((int) k), &status);
+            float128_t s  = f128_add_67_chop(u1, v1, &status);        /* s = u1 + v1   */
+            float128_t z  = f128_div_67_chop(r128, s, &status);       /* z = r / s     */
+            float128_t c  = f128_mul_64_ne(z, z, &status);            /* c = z*z       */
+            float128_t h  = f128_mul_67_chop(c, c, &status);          /* h = c*c       */
+            if (sz) z.v64 ^= FPATAN_SIGNBIT;                          /* z := (-1)^sz z */
+            float128_t t  = f128_mul_67_chop(z, c, &status);          /* t = z*c       */
+
+            float128_t p = f128_mul_67_chop(h, fpatan_A3, &status);
+            p = f128_add_67_chop(fpatan_A1, p, &status);              /* p = A1 + h*A3 */
+
+            float128_t q = f128_mul_67_chop(h, fpatan_A4, &status);
+            q = f128_add_64_ne(fpatan_A2, q, &status);
+            q = f128_mul_67_chop(c, q, &status);                      /* q = c*(A2 + h*A4) */
+
+            f = fpatan_atan_tab((unsigned) k);                        /* arctan(k/32)  */
+            if (sz) f.v64 ^= FPATAN_SIGNBIT;
+
+            float128_t pq = f128_add_64_ne(p, q, &status);
+            g = f128_mul_67_chop(t, pq, &status);
+            g = f128_add_67_chop(z, g, &status);                      /* g = z + t*(p+q) */
+        }
+        else
+        {
+            /* Step 3.2 : high order polynomial in z = v/u  (32v/u < 2) */
+            float128_t z = f128_div_67_chop(v128, u128, &status);
+            if (sz) z.v64 ^= FPATAN_SIGNBIT;
+
+            if (((z.v64 >> 48) & 0x7FFF) < (Bit32u)(0x3FFF - 40)) {
+                /* |z| < 2^-40 */
+                f = z;
+                g = float128_zero;
+            }
+            else {
+                float128_t c = f128_mul_64_ne(z, z, &status);         /* c = z*z */
+                float128_t h = f128_mul_67_chop(c, c, &status);       /* h = c*c */
+                float128_t t = f128_mul_67_chop(z, c, &status);       /* t = z*c */
+
+                float128_t p = f128_mul_67_chop(h, fpatan_B5, &status);
+                p = f128_add_64_ne(p, fpatan_B3, &status);
+                p = f128_mul_67_chop(h, p, &status);
+                p = f128_add_67_chop(p, fpatan_B1, &status);          /* p = B1 + h*(B3 + h*B5) */
+
+                float128_t q = f128_mul_67_chop(h, fpatan_B6, &status);
+                q = f128_add_64_ne(q, fpatan_B4, &status);
+                q = f128_mul_67_chop(h, q, &status);
+                q = f128_add_67_chop(q, fpatan_B2, &status);
+                q = f128_mul_67_chop(q, c, &status);                  /* q = (B2 + h*(B4 + h*B6))*c */
+
+                f = z;
+                float128_t pq = f128_add_64_ne(p, q, &status);
+                g = f128_mul_67_chop(t, pq, &status);                 /* g = t*(p+q) */
+            }
         }
     }
 
-    x = poly_atan(x, status);
-    if (add_pi6) x = f128_add(x, float128_pi6, &status);
-    if (add_pi4) x = f128_add(x, float128_pi4, &status);
+    floatx80 result = fpatan_finish(f, g, sflag, sx, sy, status);
 
-approximation_completed:
-    if (swap) x = f128_sub(float128_pi2, x, &status);
-    floatx80 result = f128_to_extF80(x, &status);
-    if (zSign) floatx80_chs(result);
-    int rSign = extF80_sign(result);
-    if (!bSign && rSign)
-        return extF80_add(result, floatx80_pi, &status);
-    if (bSign && !rSign)
-        return extF80_sub(result, floatx80_pi, &status);
+    /* a subnormal (or underflowed-to-zero) result means the true angle was below
+       2^-16382 - flag the underflow the way the hardware does */
+    if ((result.signExp & 0x7FFF) == 0)
+        softfloat_raiseFlags(&status, softfloat_flag_underflow | softfloat_flag_inexact);
+
     return result;
 }
