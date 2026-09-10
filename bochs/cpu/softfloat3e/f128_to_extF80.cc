@@ -40,7 +40,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-extFloat80_t f128_to_extF80(float128_t a, uint8_t roundingMode, struct softfloat_status_t *status)
+/*----------------------------------------------------------------------------
+| Converts  a * 2^scale  to extFloat80_t, rounded once to 'roundingMode'.  'a'
+| is a finite float128_t (a mantissa) whose true exponent + 'scale' is the
+| result exponent and may be anywhere - the transcendental tiny-argument paths
+| carry a value that is below the float128_t exponent range as a normal mantissa
+| plus a separate exponent.  softfloat_roundPackToExtF80 does the single
+| rounding and the whole masked/unmasked underflow-overflow response; a non-zero
+| result that lands in the extF80 subnormal range is reported as an underflow
+| (the transcendental true value is always inexact).
+*----------------------------------------------------------------------------*/
+extFloat80_t f128_to_extF80(float128_t a, int32_t scale, uint8_t roundingMode, struct softfloat_status_t *status)
 {
     uint64_t uiA64, uiA0;
     bool sign;
@@ -90,7 +100,7 @@ extFloat80_t f128_to_extF80(float128_t a, uint8_t roundingMode, struct softfloat
     *------------------------------------------------------------------------*/
     sig128 = softfloat_shortShiftLeft128(frac64 | UINT64_C(0x0001000000000000), frac0, 15);
     extFloat80_t z =
-        softfloat_roundPackToExtF80(sign, exp, sig128.v64, sig128.v0, 80, roundingMode, status);
+        softfloat_roundPackToExtF80(sign, exp + scale, sig128.v64, sig128.v0, 80, roundingMode, status);
 
     /*------------------------------------------------------------------------
     | This conversion is used only to deliver the results of the x87

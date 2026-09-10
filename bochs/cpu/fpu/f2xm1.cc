@@ -266,9 +266,21 @@ extFloat80_t f2xm1(extFloat80_t x, softfloat_status_t &status)
 
     tiny_argument:
         {
-            /* 2^x - 1 ~= x * log(2) ; mul_e64 rounds to the destination, FPU mode */
-            float128_t prod = f128_mul_by_extF80(f2xm1_L2, x, softfloat_getRoundingMode(&status), &status);
-            return f128_to_extF80(prod, &status);
+            /* 2^x - 1 == x * log(2) to more than 64 bits.  x*log(2) is below the
+               float128 exponent range for a denormal x, so multiply on x's
+               [1,2) mantissa and let the closing f128_to_extF80 apply x's
+               exponent (single destination rounding, masked gradual / unmasked
+               0x6000 wrap underflow). */
+            Bit32s   xExp = biasedExp;
+            uint64_t xSig = signif;
+            if (! xExp) {
+                struct exp32_sig64 n = softfloat_normSubnormalExtF80Sig(xSig);
+                xExp = n.exp + 1;
+                xSig = n.sig;
+            }
+            float128_t prod = f128_mul_by_extF80(f2xm1_L2, packFloatx80(sign, FLOATX80_EXP_BIAS, xSig), 
+                                                 softfloat_getRoundingMode(&status), &status);
+            return f128_to_extF80(prod, xExp - FLOATX80_EXP_BIAS, softfloat_getRoundingMode(&status), &status);
         }
     }
 

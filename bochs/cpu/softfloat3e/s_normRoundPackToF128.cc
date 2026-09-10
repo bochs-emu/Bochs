@@ -46,11 +46,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 *----------------------------------------------------------------------------*/
 float128_t softfloat_normRoundPackToF128(bool sign, int32_t exp, uint64_t sig64, uint64_t sig0, struct softfloat_status_t *status)
 {
-    return
-        softfloat_normRoundPackToF128(sign, exp, sig64, sig0, softfloat_getRoundingMode(status), status);
+    return softfloat_normRoundPackToF128(sign, exp, sig64, sig0, softfloat_getRoundingMode(status), status->extF80_roundingPrecision, status);
 }
 
 float128_t softfloat_normRoundPackToF128(bool sign, int32_t exp, uint64_t sig64, uint64_t sig0, uint8_t roundingMode, struct softfloat_status_t *status)
+{
+    return softfloat_normRoundPackToF128(sign, exp, sig64, sig0, roundingMode, status->extF80_roundingPrecision, status);
+}
+
+float128_t softfloat_normRoundPackToF128(bool sign, int32_t exp, uint64_t sig64, uint64_t sig0, uint8_t roundingMode, uint8_t roundingPrecision, struct softfloat_status_t *status)
 {
     int8_t shiftDist;
     struct uint128 sig128;
@@ -74,7 +78,7 @@ float128_t softfloat_normRoundPackToF128(bool sign, int32_t exp, uint64_t sig64,
         /* the fast path skips roundPackToF128; take it only when no narrow
            float128_t precision clamp is in effect there */
         if ((uint32_t) exp < 0x7FFD
-                && (status->extF80_roundingPrecision < 83 || status->extF80_roundingPrecision > 127)) {
+                && (roundingPrecision < 83 || roundingPrecision > 127)) {
             z.v64 = packToF128UI64(sign, sig64 | sig0 ? exp : 0, sig64);
             z.v0  = sig0;
             return z;
@@ -86,5 +90,5 @@ float128_t softfloat_normRoundPackToF128(bool sign, int32_t exp, uint64_t sig64,
         sig0  = sig128Extra.v.v0;
         sigExtra = sig128Extra.extra;
     }
-    return softfloat_roundPackToF128(sign, exp, sig64, sig0, sigExtra, roundingMode, status);
+    return softfloat_roundPackToF128(sign, exp, sig64, sig0, sigExtra, roundingMode, roundingPrecision, status);
 }

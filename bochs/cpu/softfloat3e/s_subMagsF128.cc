@@ -48,6 +48,7 @@ float128_t
      uint64_t uiB0,
      bool signZ,
      uint8_t roundingMode,
+     uint8_t roundingPrecision,
      struct softfloat_status_t *status
 )
 {
@@ -126,7 +127,7 @@ float128_t
  aBigger:
     sigZ = softfloat_sub128(sigA.v64, sigA.v0, sigB.v64, sigB.v0);
  normRoundPack:
-    return softfloat_normRoundPackToF128(signZ, expZ - 5, sigZ.v64, sigZ.v0, roundingMode, status);
+    return softfloat_normRoundPackToF128(signZ, expZ - 5, sigZ.v64, sigZ.v0, roundingMode, roundingPrecision, status);
  propagateNaN:
     uiZ = softfloat_propagateNaNF128UI(uiA64, uiA0, uiB64, uiB0, status);
     return uiZ;

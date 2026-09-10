@@ -154,15 +154,30 @@ static float128_t fyl2x_poly(float128_t sarg, float128_t t, softfloat_status_t &
     return z;
 }
 
-// closing step common to both instructions: result = z * y, rounded to the
-// destination honouring the FPU mode; C1 reflects only this rounding.  'y' is
-// the untouched ST(1) operand (f128_mul_by_extF80 decodes a denormal itself).
-static floatx80 fyl2x_finish(float128_t z, floatx80 y, softfloat_status_t &status)
+// closing step common to both instructions: result = z * y * 2^extraExp, rounded
+// to the destination honouring the FPU mode; C1 reflects only this rounding.
+// z (a log value) is always a normal float128, but y and the result may be
+// denormal, and z*y can sit far below the float128 range while the true x87
+// result is still normal (tiny y, huge |log2 x|).  So the multiply runs on y's
+// [1,2) mantissa (a normal 113-bit product) and y's exponent - plus 'extraExp'
+// for the FYL2XP1 tiny-|x| path - is applied by the closing f128_to_extF80,
+// which does the single destination rounding and the masked / unmasked
+// (0x6000 wrap) underflow response.
+static floatx80 fyl2x_finish(float128_t z, floatx80 y, Bit32s extraExp, softfloat_status_t &status)
 {
     status.softfloat_exceptionFlags &= ~RAISE_SW_C1;
 
-    float128_t prod = f128_mul_by_extF80(z, y, softfloat_getRoundingMode(&status), &status);
-    return f128_to_extF80(prod, &status);   /* mul_e64(z, y, RC) -> destination */
+    int    ySign = extF80_sign(y);
+    Bit32s yExp  = extF80_exp(y);
+    Bit64u ySig  = extF80_fraction(y);
+    if (! yExp) {
+        struct exp32_sig64 n = softfloat_normSubnormalExtF80Sig(ySig);
+        yExp = n.exp + 1;
+        ySig = n.sig;
+    }
+    uint8_t roundingMode = softfloat_getRoundingMode(&status);
+    float128_t prod = f128_mul_by_extF80(z, packFloatx80(ySign, FLOATX80_EXP_BIAS, ySig), roundingMode, &status);
+    return f128_to_extF80(prod, (yExp - FLOATX80_EXP_BIAS) + extraExp, roundingMode, &status);
 }
 
 // the [1,2) mantissa of a normalized 64-bit significand as a float128_t
@@ -266,7 +281,7 @@ invalid:
         z = fyl2x_step5(fyl2x_mantissa128(aSig), aExp - 0x3FFF, status);
     }
 
-    return fyl2x_finish(z, b, status);
+    return fyl2x_finish(z, b, 0, status);
 }
 
 // =================================================
@@ -357,9 +372,13 @@ invalid:
         z = fyl2x_step5(wm, n, status);
     }
     else if (aExp < FLOATX80_EXP_BIAS - 70) {
-        // |x| < 2^-70 : first order term  z = (1/log2) * x
-        float128_t xf = extF80_to_f128(a, &status);
-        z = f128_mul_67_chop(fyl2x_L_inv, xf, &status);
+        // |x| < 2^-70 : log2(1+x) == x/ln2 to more than 67 bits.  x/ln2 alone is
+        // below the float128 exponent range for a denormal x (though y*log2(1+x)
+        // is a normal number), so evaluate  L_inv * mantissa(x)  and let
+        // fyl2x_finish add x's exponent back at the closing round.
+        float128_t z = f128_mul_67_chop(fyl2x_L_inv,
+                           extF80_to_f128(packFloatx80(aSign, FLOATX80_EXP_BIAS, aSig), &status), &status);
+        return fyl2x_finish(z, b, aExp - FLOATX80_EXP_BIAS, status);
     }
     else {
         // |x| < 1/8 : polynomial,  u = 2x/(x+2)
@@ -368,5 +387,5 @@ invalid:
         z = fyl2x_poly(xq, t, status);
     }
 
-    return fyl2x_finish(z, b, status);
+    return fyl2x_finish(z, b, 0, status);
 }

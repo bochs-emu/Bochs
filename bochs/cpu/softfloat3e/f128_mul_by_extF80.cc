@@ -55,7 +55,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 | callers require).
 *----------------------------------------------------------------------------*/
 
-float128_t f128_mul_by_extF80(float128_t a, extFloat80_t b, uint8_t roundingMode, struct softfloat_status_t *status)
+float128_t f128_mul_by_extF80(float128_t a, extFloat80_t b, uint8_t roundingMode, uint8_t roundingPrecision, struct softfloat_status_t *status)
 {
     uint64_t uiA64, uiA0;
     bool signA;
@@ -156,7 +156,7 @@ float128_t f128_mul_by_extF80(float128_t a, extFloat80_t b, uint8_t roundingMode
         sigZExtra = sig128Extra.extra;
     }
     return
-        softfloat_roundPackToF128(signZ, expZ, sigZ.v64, sigZ.v0, sigZExtra, roundingMode, status);
+        softfloat_roundPackToF128(signZ, expZ, sigZ.v64, sigZ.v0, sigZExtra, roundingMode, roundingPrecision, status);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  propagateNaN:

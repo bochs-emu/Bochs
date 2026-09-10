@@ -227,14 +227,16 @@ return_PI_or_ZERO:
 
     if (vBias < 1 && ! sx && ! sflag)
     {
-        /* |y/x| below 2^-16382 and no pi term : the result is just y/|x|, a
-           genuine tiny value that underflows the destination. */
-        extFloat80_t xx = a;
-        xx.signExp &= 0x7FFF;
-        floatx80 tiny = extF80_div(b, xx, &status);
-        if ((tiny.signExp & 0x7FFF) == 0)
-            softfloat_raiseFlags(&status, softfloat_flag_underflow | softfloat_flag_inexact);
-        return tiny;
+        /* |y/x| below 2^-16382 and no pi term : arctan(y/x) == y/x, a genuine
+           tiny value that underflows the destination.  y/x is below the float128
+           exponent range, so divide the [1,2) mantissas (both operands were
+           normalised above; V with vBias <= 0 could not be packed) and carry the
+           exponent difference to the single closing round. */
+        status.softfloat_exceptionFlags &= ~RAISE_SW_C1;
+        float128_t q = f128_div_67_chop(
+            extF80_to_f128(packToExtF80(sy, 0x3FFF, bSig), &status),
+            extF80_to_f128(packToExtF80(0,  0x3FFF, aSig), &status), &status);
+        return f128_to_extF80(q, bExp - aExp, softfloat_getRoundingMode(&status), &status);
     }
 
     if (vBias < 1)

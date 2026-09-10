@@ -39,50 +39,32 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "softfloat.h"
 
 extern float128_t
- softfloat_addMagsF128(uint64_t, uint64_t, uint64_t, uint64_t, bool, uint8_t roundingMode, struct softfloat_status_t *);
+ softfloat_addMagsF128(uint64_t, uint64_t, uint64_t, uint64_t, bool, uint8_t roundingMode, uint8_t roundingPrecision, struct softfloat_status_t *);
 extern float128_t
- softfloat_subMagsF128(uint64_t, uint64_t, uint64_t, uint64_t, bool, uint8_t roundingMode, struct softfloat_status_t *);
+ softfloat_subMagsF128(uint64_t, uint64_t, uint64_t, uint64_t, bool, uint8_t roundingMode, uint8_t roundingPrecision, struct softfloat_status_t *);
 
-float128_t f128_add(float128_t a, float128_t b, uint8_t roundingMode, struct softfloat_status_t *status)
+float128_t f128_add(float128_t a, float128_t b, uint8_t roundingMode, uint8_t roundingPrecision, struct softfloat_status_t *status)
 {
-    uint64_t uiA64, uiA0;
-    bool signA;
-    uint64_t uiB64, uiB0;
-    bool signB;
+    uint64_t uiA64 = a.v64, uiA0 = a.v0;
+    uint64_t uiB64 = b.v64, uiB0 = b.v0;
+    bool signA = signF128UI64(uiA64);
+    bool signB = signF128UI64(uiB64);
 
-    uiA64 = a.v64;
-    uiA0  = a.v0;
-    signA = signF128UI64(uiA64);
-
-    uiB64 = b.v64;
-    uiB0  = b.v0;
-    signB = signF128UI64(uiB64);
-
-    if (signA == signB) {
-        return softfloat_addMagsF128(uiA64, uiA0, uiB64, uiB0, signA, roundingMode, status);
-    } else {
-        return softfloat_subMagsF128(uiA64, uiA0, uiB64, uiB0, signA, roundingMode, status);
-    }
+    if (signA == signB)
+        return softfloat_addMagsF128(uiA64, uiA0, uiB64, uiB0, signA, roundingMode, roundingPrecision, status);
+    else
+        return softfloat_subMagsF128(uiA64, uiA0, uiB64, uiB0, signA, roundingMode, roundingPrecision, status);
 }
 
-float128_t f128_sub(float128_t a, float128_t b, uint8_t roundingMode, struct softfloat_status_t *status)
+float128_t f128_sub(float128_t a, float128_t b, uint8_t roundingMode, uint8_t roundingPrecision, struct softfloat_status_t *status)
 {
-    uint64_t uiA64, uiA0;
-    bool signA;
-    uint64_t uiB64, uiB0;
-    bool signB;
+    uint64_t uiA64 = a.v64, uiA0 = a.v0;
+    uint64_t uiB64 = b.v64, uiB0 = b.v0;
+    bool signA = signF128UI64(uiA64);
+    bool signB = signF128UI64(uiB64);
 
-    uiA64 = a.v64;
-    uiA0  = a.v0;
-    signA = signF128UI64(uiA64);
-
-    uiB64 = b.v64;
-    uiB0  = b.v0;
-    signB = signF128UI64(uiB64);
-
-    if (signA == signB) {
-        return softfloat_subMagsF128(uiA64, uiA0, uiB64, uiB0, signA, roundingMode, status);
-    } else {
-        return softfloat_addMagsF128(uiA64, uiA0, uiB64, uiB0, signA, roundingMode, status);
-    }
+    if (signA == signB)
+        return softfloat_subMagsF128(uiA64, uiA0, uiB64, uiB0, signA, roundingMode, roundingPrecision, status);
+    else
+        return softfloat_addMagsF128(uiA64, uiA0, uiB64, uiB0, signA, roundingMode, roundingPrecision, status);
 }

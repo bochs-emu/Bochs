@@ -531,50 +531,54 @@ int fsincos(floatx80 a, floatx80 *sin_a, floatx80 *cos_a, softfloat_status_t &st
 
         softfloat_raiseFlags(&status, softfloat_flag_denormal);
 
-        /* handle pseudo denormals */
-        if (! (aSig & BX_CONST64(0x8000000000000000))) {
-            softfloat_raiseFlags(&status, softfloat_flag_inexact);
-            if (sin_a)
-                softfloat_raiseFlags(&status, softfloat_flag_underflow);
-            sincos_tiny_argument(sin_a, cos_a, a);
-            return 0;
-        }
-
         struct exp32_sig64 normExpSig = softfloat_normSubnormalExtF80Sig(aSig);
         aExp = normExpSig.exp + 1;
         aSig = normExpSig.sig;
-    }
 
-    {
-        Bit32s expDiff = aExp - FLOATX80_EXP_BIAS;
-
-        /* argument too large for reduction */
-        if (expDiff >= 63)
-            return -1;
-
-        softfloat_raiseFlags(&status, softfloat_flag_inexact);
-
-        if (expDiff < -68) {       /* |x| < 2^-68 : sin(x) = x, cos(x) = 1 */
-            floatx80 xr = packFloatx80(aSign, aExp, aSig);
-            sincos_tiny_argument(sin_a, cos_a, xr);
+        /* true denormal (|x| < 2^-16382): sin(x) = x to well beyond working
+           precision, but the result is subnormal, so deliver it through the
+           standard round/pack - a masked underflow flushes it gradually, an
+           unmasked one applies the 0x6000 exponent bias.  cos(x) = 1. */
+        if (aExp <= 0) {
+            softfloat_raiseFlags(&status, softfloat_flag_inexact);
+            if (cos_a)
+                *cos_a = floatx80_one;
+            if (sin_a) {
+                softfloat_raiseFlags(&status, softfloat_flag_underflow);
+                *sin_a = softfloat_roundPackToExtF80(aSign, aExp, aSig, 0, 80, &status);
+            }
             return 0;
         }
+    }
 
-        int rNeg;
-        float128_t r;
-        int n1 = sincos_reduce(aExp, aSig, r, rNeg, status);
+    Bit32s expDiff = aExp - FLOATX80_EXP_BIAS;
 
-        /* FSINCOS and standalone FSIN/FCOS use different internal routines on
-           real hardware (see the file header) - dispatch accordingly. */
-        if (sin_a && cos_a) {
-            sc_fsincos(r, rNeg, n1, aSign, *sin_a, *cos_a, status);          /* FSINCOS */
-        }
-        else if (sin_a) {
-            *sin_a = sc_fsin_fcos(r, rNeg, n1, /*n2*/ 0, /*k1*/ aSign, status); /* FSIN  */
-        }
-        else {
-            *cos_a = sc_fsin_fcos(r, rNeg, n1, /*n2*/ 1, /*k1*/ 0, status);     /* FCOS  */
-        }
+    /* argument too large for reduction */
+    if (expDiff >= 63)
+        return -1;
+
+    softfloat_raiseFlags(&status, softfloat_flag_inexact);
+
+    if (expDiff < -68) {       /* |x| < 2^-68 : sin(x) = x, cos(x) = 1 */
+        floatx80 xr = packFloatx80(aSign, aExp, aSig);
+        sincos_tiny_argument(sin_a, cos_a, xr);
+        return 0;
+    }
+
+    int rNeg;
+    float128_t r;
+    int n1 = sincos_reduce(aExp, aSig, r, rNeg, status);
+
+    /* FSINCOS and standalone FSIN/FCOS use different internal routines on
+       real hardware (see the file header) - dispatch accordingly. */
+    if (sin_a && cos_a) {
+        sc_fsincos(r, rNeg, n1, aSign, *sin_a, *cos_a, status);             /* FSINCOS */
+    }
+    else if (sin_a) {
+        *sin_a = sc_fsin_fcos(r, rNeg, n1, /*n2*/ 0, /*k1*/ aSign, status); /* FSIN  */
+    }
+    else {
+        *cos_a = sc_fsin_fcos(r, rNeg, n1, /*n2*/ 1, /*k1*/ 0, status);     /* FCOS  */
     }
 
     return 0;
@@ -686,14 +690,19 @@ int fptan(floatx80 &a, softfloat_status_t &status)
     if (! aExp) {
         if (! aSig) return 0;                       /* tan(+-0) = +-0 */
         softfloat_raiseFlags(&status, softfloat_flag_denormal);
-        /* handle pseudo denormals */
-        if (! (aSig & BX_CONST64(0x8000000000000000))) {
-            softfloat_raiseFlags(&status, softfloat_flag_inexact | softfloat_flag_underflow);
-            return 0;
-        }
+
         struct exp32_sig64 normExpSig = softfloat_normSubnormalExtF80Sig(aSig);
         aExp = normExpSig.exp + 1;
         aSig = normExpSig.sig;
+
+        /* true denormal (|x| < 2^-16382): tan(x) = x, result subnormal -> deliver
+           through the standard round/pack (masked = gradual, unmasked = 0x6000
+           exponent bias). */
+        if (aExp <= 0) {
+            softfloat_raiseFlags(&status, softfloat_flag_inexact | softfloat_flag_underflow);
+            a = softfloat_roundPackToExtF80(aSign, aExp, aSig, 0, 80, &status);
+            return 0;
+        }
     }
 
     Bit32s expDiff = aExp - FLOATX80_EXP_BIAS;

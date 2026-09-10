@@ -42,11 +42,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 float128_t
  softfloat_roundPackToF128(bool sign, int32_t exp, uint64_t sig64, uint64_t sig0, uint64_t sigExtra, struct softfloat_status_t *status)
 {
-    return softfloat_roundPackToF128(sign, exp, sig64, sig0, sigExtra, softfloat_getRoundingMode(status), status);
+    return softfloat_roundPackToF128(sign, exp, sig64, sig0, sigExtra, softfloat_getRoundingMode(status), status->extF80_roundingPrecision, status);
 }
 
 float128_t
  softfloat_roundPackToF128(bool sign, int32_t exp, uint64_t sig64, uint64_t sig0, uint64_t sigExtra, uint8_t roundingMode, struct softfloat_status_t *status)
+{
+    return softfloat_roundPackToF128(sign, exp, sig64, sig0, sigExtra, roundingMode, status->extF80_roundingPrecision, status);
+}
+
+float128_t
+ softfloat_roundPackToF128(bool sign, int32_t exp, uint64_t sig64, uint64_t sig0, uint64_t sigExtra, uint8_t roundingMode, uint8_t roundingPrecision, struct softfloat_status_t *status)
 {
     bool roundNearEven, doIncrement, isTiny;
     struct uint128_extra sig128Extra;
@@ -54,20 +60,21 @@ float128_t
     float128_t z;
 
     /*------------------------------------------------------------------------
-    | 'roundingMode' is passed explicitly (rather than read from 'status') so
-    | callers can round an intermediate step in a mode other than the one
-    | currently programmed.  Exception flags are still reported via 'status'.
+    | 'roundingMode' and 'roundingPrecision' are passed explicitly (rather than
+    | read from 'status') so callers can round an intermediate step in a mode /
+    | to a width other than the one currently programmed.  Exception flags are
+    | still reported via 'status'.
     *------------------------------------------------------------------------*/
     roundNearEven = (roundingMode == softfloat_round_near_even);
 
     /*------------------------------------------------------------------------
-    | Optional narrow-precision clamp: when 'status->extF80_roundingPrecision'
-    | is in 83..127 the float128_t result is reduced to a (precision - 16) bit
-    | significand (83 => 67 bits), emulating the internal extended-precision
-    | format of the P5/P6 x87 real microcode.
+    | Optional narrow-precision clamp: when 'roundingPrecision' is in 83..127
+    | the float128_t result is reduced to a (precision - 16) bit significand
+    | (83 => 67 bits), emulating the internal extended-precision format of the
+    | P5/P6 x87 real microcode.
     *------------------------------------------------------------------------*/
-    if (83 <= status->extF80_roundingPrecision && status->extF80_roundingPrecision <= 127) {
-        unsigned drop = 113 - (status->extF80_roundingPrecision - 16); // 2..46, within sig0
+    if (83 <= roundingPrecision && roundingPrecision <= 127) {
+        unsigned drop = 113 - (roundingPrecision - 16); // 2..46, within sig0
         uint64_t ulp = UINT64_C(1) << drop;
         uint64_t rem = sig0 & (ulp - 1);
         uint64_t sticky = rem | (sigExtra != 0);
