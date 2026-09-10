@@ -89,5 +89,18 @@ extFloat80_t f128_to_extF80(float128_t a, uint8_t roundingMode, struct softfloat
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     sig128 = softfloat_shortShiftLeft128(frac64 | UINT64_C(0x0001000000000000), frac0, 15);
-    return softfloat_roundPackToExtF80(sign, exp, sig128.v64, sig128.v0, 80, roundingMode, status);
+    extFloat80_t z =
+        softfloat_roundPackToExtF80(sign, exp, sig128.v64, sig128.v0, 80, roundingMode, status);
+
+    /*------------------------------------------------------------------------
+    | This conversion is used only to deliver the results of the x87
+    | transcendental instructions, whose true value is always inexact.  A
+    | non-zero source that lands in the extF80 subnormal range (or rounds to
+    | zero) has therefore underflowed - report it even when the delivered
+    | significand happens to be exactly representable.
+    *------------------------------------------------------------------------*/
+    if ((z.signExp & 0x7FFF) == 0)
+        softfloat_raiseFlags(status, softfloat_flag_underflow | softfloat_flag_inexact);
+
+    return z;
 }
