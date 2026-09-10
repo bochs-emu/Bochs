@@ -737,18 +737,21 @@ int32_t f128_to_i32_r_minMag(float128_t, bool, struct softfloat_status_t *);
 int64_t f128_to_i64_r_minMag(float128_t, bool, struct softfloat_status_t *);
 float32 f128_to_f32(float128_t, struct softfloat_status_t *);
 float64 f128_to_f64(float128_t, struct softfloat_status_t *);
-extFloat80_t f128_to_extF80(float128_t, struct softfloat_status_t *);
+extFloat80_t f128_to_extF80(float128_t, uint8_t roundingMode, struct softfloat_status_t *);
 float128_t f128_roundToInt(float128_t, uint8_t, bool, struct softfloat_status_t *);
 float128_t f128_add(float128_t, float128_t, uint8_t roundingMode, struct softfloat_status_t *);
 float128_t f128_sub(float128_t, float128_t, uint8_t roundingMode, struct softfloat_status_t *);
 float128_t f128_mul(float128_t, float128_t, uint8_t roundingMode, struct softfloat_status_t *);
-extFloat80_t f128_mul_by_extF80(float128_t, extFloat80_t, uint8_t roundingMode, struct softfloat_status_t *);
+float128_t f128_mul_by_extF80(float128_t, extFloat80_t, uint8_t roundingMode, struct softfloat_status_t *);
 float128_t f128_mulAdd(float128_t, float128_t, float128_t, uint8_t op, struct softfloat_status_t *);
 float128_t f128_div(float128_t, float128_t, uint8_t roundingMode, struct softfloat_status_t *);
 float128_t f128_sqrt(float128_t, struct softfloat_status_t *);
 bool f128_isSignalingNaN(float128_t);
 bool f128_isNaN(float128_t);
 
+BX_CPP_INLINE extFloat80_t f128_to_extF80(float128_t a, struct softfloat_status_t *status) {
+    return f128_to_extF80(a, softfloat_getRoundingMode(status), status);
+}
 BX_CPP_INLINE float128_t f128_add(float128_t a, float128_t b, struct softfloat_status_t *status) {
     return f128_add(a, b, softfloat_getRoundingMode(status), status);
 }

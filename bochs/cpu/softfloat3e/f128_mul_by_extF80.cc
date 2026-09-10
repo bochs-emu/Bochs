@@ -42,33 +42,20 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "softfloat.h"
 
 /*----------------------------------------------------------------------------
-| Multiply the quadruple-precision (128-bit) floating-point value 'a' by the
-| extended double-precision (80-bit) floating-point value 'b' and return the
-| product rounded to a full 64-bit extended double-precision significand.
+| Multiply the quadruple-precision value 'a' by the extended double-precision
+| value 'b' and return a quadruple-precision product.
 |
-| The two significands are combined without any preliminary loss of precision
-| (float128 carries a 113-bit significand, extF80 a 64-bit one, and the exact
-| 177-bit product is formed before a single rounding), so no double rounding
-| occurs.  Every floating-point exception is produced: invalid, denormal
-| (raised whenever either source operand is a denormal - or, for the extF80
-| operand, a pseudo-denormal), overflow, underflow and inexact.
-|
-| The result always carries a 64-bit significand: this is the historical P5
-| "e64" internal format, and the extF80 rounding-precision control (24/53/64
-| bit) does not apply to these intermediate elementary-function products.
-|
-| 'roundingMode' selects the rounding direction applied when the exact product
-| is packed, overriding the mode currently in 'status'.  This is what
-| distinguishes the historical P5 elementary-function primitives 'mul_e64'
-| (round per the current mode) from 'mul_e64_ne' (force round-to-nearest-even
-| for the intermediate step).  All floating-point exception flags are still
-| reported through 'status'.
-|
-| Modeled on 'f128_mul' (quad * quad) and 'extF80_mul' (the extF80 operand
-| decoding and result packing).
+| This is 'f128_mul' with its right operand delivered in the 80-bit format: 'b'
+| is decoded like an extF80 (explicit integer bit, 64-bit significand, possible
+| pseudo-denormal) and its 63-bit fraction is dropped into the same position
+| 'f128_mul' would use, so the exact product is formed and rounded once, by
+| 'softfloat_roundPackToF128', exactly as for a quad * quad multiply.  The
+| 'roundingMode' and every exception flag behave as in 'f128_mul' (a denormal
+| operand additionally raises the denormal flag, as the elementary-function
+| callers require).
 *----------------------------------------------------------------------------*/
 
-extFloat80_t f128_mul_by_extF80(float128_t a, extFloat80_t b, uint8_t roundingMode, struct softfloat_status_t *status)
+float128_t f128_mul_by_extF80(float128_t a, extFloat80_t b, uint8_t roundingMode, struct softfloat_status_t *status)
 {
     uint64_t uiA64, uiA0;
     bool signA;
@@ -81,17 +68,14 @@ extFloat80_t f128_mul_by_extF80(float128_t a, extFloat80_t b, uint8_t roundingMo
     uint64_t sigB;
     bool signZ;
     uint64_t magBits;
-    struct exp32_sig128 normExpSig128;
-    struct exp32_sig64 normExpSig64;
+    struct exp32_sig128 normExpSigA;
+    struct exp32_sig64 normExpSigB;
     int32_t expZ;
     uint64_t sig256Z[4];
-    uint64_t sig2, sig1, sig0;
-    struct uint128 sigZ;
     uint64_t sigZExtra;
-    struct commonNaN commonNaN;
-    struct uint128 uiAExtF80;
-    uint16_t uiZ64;
-    uint64_t uiZ0;
+    struct uint128 sigZ;
+    struct uint128_extra sig128Extra;
+    struct uint128 uiZ;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -107,13 +91,14 @@ extFloat80_t f128_mul_by_extF80(float128_t a, extFloat80_t b, uint8_t roundingMo
     expB  = expExtF80UI64(uiB64);
     sigB  = uiB0;
     signZ = signA ^ signB;
-
     /*------------------------------------------------------------------------
-    | Handle unsupported extended double-precision floating encodings.
+    | Reject the unsupported extended double-precision encodings of 'b'.
     *------------------------------------------------------------------------*/
     if (extF80_isUnsupported(b)) {
         softfloat_raiseFlags(status, softfloat_flag_invalid);
-        return packToExtF80(defaultNaNExtF80UI64, defaultNaNExtF80UI0);
+        uiZ.v64 = defaultNaNF128UI64;
+        uiZ.v0  = defaultNaNF128UI0;
+        return uiZ;
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -130,95 +115,74 @@ extFloat80_t f128_mul_by_extF80(float128_t a, extFloat80_t b, uint8_t roundingMo
         goto infArg;
     }
     /*------------------------------------------------------------------------
-    | Decode / normalize operand 'a' (quadruple precision).
+    | Decode 'a' (quadruple precision).
     *------------------------------------------------------------------------*/
     if (! expA) {
-        if (! (sigA.v64 | sigA.v0)) {
-            if (! expB && sigB)
-                softfloat_raiseFlags(status, softfloat_flag_denormal);
-            return packToExtF80(signZ, 0, 0);
-        }
+        if (! (sigA.v64 | sigA.v0)) goto zero;
         softfloat_raiseFlags(status, softfloat_flag_denormal);
-        normExpSig128 = softfloat_normSubnormalF128Sig(sigA.v64, sigA.v0);
-        expA = normExpSig128.exp;
-        sigA = normExpSig128.sig;
+        normExpSigA = softfloat_normSubnormalF128Sig(sigA.v64, sigA.v0);
+        expA = normExpSigA.exp;
+        sigA = normExpSigA.sig;
     }
     /*------------------------------------------------------------------------
-    | Decode / normalize operand 'b' (extended double precision).
+    | Decode 'b' (extended double precision): pseudo-denormals become normal
+    | at exponent 1, true denormals are normalized.
     *------------------------------------------------------------------------*/
     if (! expB) {
+        if (! sigB) goto zero;
+        softfloat_raiseFlags(status, softfloat_flag_denormal);
         expB = 1;
-        if (sigB)
-            softfloat_raiseFlags(status, softfloat_flag_denormal);
     }
     if (! (sigB & UINT64_C(0x8000000000000000))) {
-        if (! sigB) return packToExtF80(signZ, 0, 0);
-        softfloat_raiseFlags(status, softfloat_flag_denormal);
-        normExpSig64 = softfloat_normSubnormalExtF80Sig(sigB);
-        expB += normExpSig64.exp;
-        sigB = normExpSig64.sig;
+        normExpSigB = softfloat_normSubnormalExtF80Sig(sigB);
+        expB += normExpSigB.exp;
+        sigB = normExpSigB.sig;
     }
     /*------------------------------------------------------------------------
-    | Both significands are now normalized:
-    |   sigA : 113-bit integer, unit bit at bit 112 (bit 48 of sigA.v64)
-    |   sigB :  64-bit integer, unit bit at bit 63
-    | so the exact product occupies at most 177 bits, with its unit bit at
-    | bit 175 (mantissa in [1,2)) or bit 176 (mantissa in [2,4)).
+    | Form the exact product.  sigA is a 113-bit significand (unit bit at bit
+    | 112); 'b's 63-bit fraction is placed exactly where f128_mul would place a
+    | 128-bit operand's fraction after its 16-bit left shift, and the implicit
+    | integer bit of 'b' is added back as the '+ sigA' term.
     *------------------------------------------------------------------------*/
-    expZ = expA + expB - 0x3FFF;
+    expZ = expA + expB - 0x4000;
     sigA.v64 |= UINT64_C(0x0001000000000000);
-    softfloat_mul128To256M(sigA.v64, sigA.v0, 0, sigB, sig256Z);
-    sig2 = sig256Z[indexWord(4, 2)];
-    sig1 = sig256Z[indexWord(4, 1)];
-    sig0 = sig256Z[indexWord(4, 0)];
-    /*------------------------------------------------------------------------
-    | Extract a 64-bit significand (unit bit at bit 63) plus a 64-bit 'extra'
-    | word for rounding, jamming everything below into the extra word.
-    *------------------------------------------------------------------------*/
-    if (sig2 & UINT64_C(0x0001000000000000)) {
-        /* mantissa in [2,4): unit bit at bit 176, shift right by 49 */
+    softfloat_mul128To256M(sigA.v64, sigA.v0, (sigB & UINT64_C(0x7FFFFFFFFFFFFFFF)) << 1, 0, sig256Z);
+    sigZExtra = sig256Z[indexWord(4, 1)] | (sig256Z[indexWord(4, 0)] != 0);
+    sigZ = softfloat_add128(sig256Z[indexWord(4, 3)], sig256Z[indexWord(4, 2)], sigA.v64, sigA.v0);
+    if (UINT64_C(0x0002000000000000) <= sigZ.v64) {
         ++expZ;
-        sigZ.v64  = (sig2 << 15) | (sig1 >> 49);
-        sigZ.v0   = (sig1 << 15) | (sig0 >> 49);
-        sigZExtra = sig0 & UINT64_C(0x0001FFFFFFFFFFFF);
-    } else {
-        /* mantissa in [1,2): unit bit at bit 175, shift right by 48 */
-        sigZ.v64  = (sig2 << 16) | (sig1 >> 48);
-        sigZ.v0   = (sig1 << 16) | (sig0 >> 48);
-        sigZExtra = sig0 & UINT64_C(0x0000FFFFFFFFFFFF);
+        sig128Extra = softfloat_shortShiftRightJam128Extra(sigZ.v64, sigZ.v0, sigZExtra, 1);
+        sigZ = sig128Extra.v;
+        sigZExtra = sig128Extra.extra;
     }
-    /*------------------------------------------------------------------------
-    | 'softfloat_roundPackToExtF80' consumes only 'sigZ.v64' and a single
-    | 64-bit extra word, so fold both the discarded low product bits and the
-    | second half of the 128-bit significand into that extra word (as a sticky
-    | bit when they cannot be represented exactly).
-    *------------------------------------------------------------------------*/
-    sigZExtra = sigZ.v0 | (sigZExtra != 0);
     return
-        softfloat_roundPackToExtF80(signZ, expZ, sigZ.v64, sigZExtra, 80, roundingMode, status);
+        softfloat_roundPackToF128(signZ, expZ, sigZ.v64, sigZ.v0, sigZExtra, roundingMode, status);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  propagateNaN:
-    if (isNaNExtF80UI(uiB64, uiB0)) {
-        softfloat_extF80UIToCommonNaN(uiB64, uiB0, &commonNaN, status);
-        uiAExtF80 = softfloat_commonNaNToExtF80UI(&commonNaN);
-    } else {
-        uiAExtF80.v64 = 0;
-        uiAExtF80.v0  = 0;
+    {
+        float128_t bf = extF80_to_f128(b, status);
+        uiZ = softfloat_propagateNaNF128UI(uiA64, uiA0, bf.v64, bf.v0, status);
     }
-    return softfloat_propagateNaNExtF80UI((uint16_t) uiAExtF80.v64, uiAExtF80.v0, uiB64, uiB0, status);
+    return uiZ;
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  infArg:
     if (! magBits) {
         softfloat_raiseFlags(status, softfloat_flag_invalid);
-        uiZ64 = defaultNaNExtF80UI64;
-        uiZ0  = defaultNaNExtF80UI0;
-    } else {
-        if ((! expA && (sigA.v64 | sigA.v0)) || (! expB && sigB))
-            softfloat_raiseFlags(status, softfloat_flag_denormal);
-        uiZ64 = packToExtF80UI64(signZ, 0x7FFF);
-        uiZ0  = UINT64_C(0x8000000000000000);
+        uiZ.v64 = defaultNaNF128UI64;
+        uiZ.v0  = defaultNaNF128UI0;
+        return uiZ;
     }
-    return packToExtF80(uiZ64, uiZ0);
+    if ((! expA && (sigA.v64 | sigA.v0)) || (! expB && sigB))
+        softfloat_raiseFlags(status, softfloat_flag_denormal);
+    uiZ.v64 = packToF128UI64(signZ, 0x7FFF, 0);
+    uiZ.v0  = 0;
+    return uiZ;
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+ zero:
+    uiZ.v64 = packToF128UI64(signZ, 0, 0);
+    uiZ.v0  = 0;
+    return uiZ;
 }

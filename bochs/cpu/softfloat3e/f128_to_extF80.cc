@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-extFloat80_t f128_to_extF80(float128_t a, struct softfloat_status_t *status)
+extFloat80_t f128_to_extF80(float128_t a, uint8_t roundingMode, struct softfloat_status_t *status)
 {
     uint64_t uiA64, uiA0;
     bool sign;
@@ -89,5 +89,5 @@ extFloat80_t f128_to_extF80(float128_t a, struct softfloat_status_t *status)
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     sig128 = softfloat_shortShiftLeft128(frac64 | UINT64_C(0x0001000000000000), frac0, 15);
-    return softfloat_roundPackToExtF80(sign, exp, sig128.v64, sig128.v0, 80, status);
+    return softfloat_roundPackToExtF80(sign, exp, sig128.v64, sig128.v0, 80, roundingMode, status);
 }

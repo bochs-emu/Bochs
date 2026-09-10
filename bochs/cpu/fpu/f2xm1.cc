@@ -1,3 +1,23 @@
+/*============================================================================
+This source file is an extension to the SoftFloat IEC/IEEE Floating-point
+Arithmetic Package, Release 2b, written for Bochs (x86 achitecture simulator)
+floating point emulation.
+
+THIS SOFTWARE IS DISTRIBUTED AS IS, FOR FREE.  Although reasonable effort has
+been made to avoid it, THIS SOFTWARE MAY CONTAIN FAULTS THAT WILL AT TIMES
+RESULT IN INCORRECT BEHAVIOR.  USE OF THIS SOFTWARE IS RESTRICTED TO PERSONS
+AND ORGANIZATIONS WHO CAN AND WILL TAKE FULL RESPONSIBILITY FOR ALL LOSSES,
+COSTS, OR OTHER PROBLEMS THEY INCUR DUE TO THE SOFTWARE, AND WHO FURTHERMORE
+EFFECTIVELY INDEMNIFY JOHN HAUSER AND THE INTERNATIONAL COMPUTER SCIENCE
+INSTITUTE (possibly via similar legal warning) AGAINST ALL LOSSES, COSTS, OR
+OTHER PROBLEMS INCURRED BY THEIR CUSTOMERS AND CLIENTS DUE TO THE SOFTWARE.
+
+Derivative works are acceptable, even for commercial purposes, so long as
+(1) the source code for the derivative work includes prominent notice that
+the work is derivative, and (2) the source code includes prominent notice with
+these four paragraphs for those parts of this code that are retained.
+=============================================================================*/
+
 /*
  * f2xm1.c -- emulation of the Intel x87 F2XM1 instruction
  * ---------------------------------------------------------------
@@ -25,6 +45,8 @@ extern floatx80 softfloat_propagateNaNExtF80UI(uint16_t uiA64, uint64_t uiA0, ui
    significand and truncates; add delivers a 64-bit significand, nearest-even. */
 extern float128_t f128_mul_67_chop(float128_t a, float128_t b, struct softfloat_status_t *status);
 extern float128_t f128_add_64_ne(float128_t a, float128_t b, struct softfloat_status_t *status);
+extern float128_t f128_mul_64_ne(float128_t a, extFloat80_t b, struct softfloat_status_t *status);
+extern float128_t f128_mul_64_ne(float128_t a, float128_t b, struct softfloat_status_t *status);
 
 /*
    Given a number x in the range (-1, 1), the calculation of 2^x - 1 can be
@@ -138,8 +160,7 @@ static extFloat80_t f2xm1_step5(extFloat80_t x, softfloat_status_t &status)
     extFloat80_t r = extF80_sub(x, c, &status);
 
     /* s = L2 * r, rounded to extended (64-bit) precision */
-    extFloat80_t s80 = f128_mul_by_extF80(f2xm1_L2, r, softfloat_round_near_even, &status);
-    float128_t s = extF80_to_f128(s80, &status);
+    float128_t s = f128_mul_64_ne(f2xm1_L2, r, &status);
     float128_t t = f128_mul_67_chop(s, s, &status);
 
     float128_t d  = f2xm1_table_d(index);                  /* d  = get_table(index) */
@@ -175,8 +196,7 @@ static extFloat80_t f2xm1_step4(extFloat80_t x, softfloat_status_t &status)
     float128_t xq = extF80_to_f128(x, &status);
     float128_t s  = f128_mul_67_chop(f2xm1_L2, xq, &status);
     /* s1 = L2 * x, rounded to extended (64-bit) precision */
-    extFloat80_t s1_80 = f128_mul_by_extF80(f2xm1_L2, x, softfloat_round_near_even, &status);
-    float128_t s1 = extF80_to_f128(s1_80, &status);
+    float128_t s1 = f128_mul_64_ne(f2xm1_L2, x, &status);
     float128_t t  = f128_mul_67_chop(s, s1, &status);
 
     float128_t u = f128_mul_67_chop(t, f2xm1_B1, &status);   /* u = t * b1  (b1 = 0.5)  */
@@ -191,9 +211,7 @@ static extFloat80_t f2xm1_step4(extFloat80_t x, softfloat_status_t &status)
     p = f128_mul_67_chop(t, p, &status);
     p = f128_add_64_ne(f2xm1_B2, p, &status);
     /* p = t*p, rounded to extended (64-bit) precision */
-    extFloat80_t p80 = f128_to_extF80(p, &status);
-    p80 = f128_mul_by_extF80(t, p80, softfloat_round_near_even, &status);
-    p = extF80_to_f128(p80, &status);
+    p = f128_mul_64_ne(t, p, &status);
     p = f128_mul_67_chop(s, p, &status);
 
     /* q = b3 + t*(b5 + t*(b7 + t*(b9 + t*b11))) ; q = t*q ; q = t*q */
@@ -206,9 +224,7 @@ static extFloat80_t f2xm1_step4(extFloat80_t x, softfloat_status_t &status)
     q = f128_mul_67_chop(t, q, &status);
     q = f128_add_64_ne(f2xm1_B3, q, &status);
     /* q = t*q, rounded to extended (64-bit) precision */
-    extFloat80_t q80 = f128_to_extF80(q, &status);
-    q80 = f128_mul_by_extF80(t, q80, softfloat_round_near_even, &status);
-    q = extF80_to_f128(q80, &status);
+    q = f128_mul_64_ne(t, q, &status);
     q = f128_mul_67_chop(t, q, &status);
 
     float128_t pq = f128_add_64_ne(p, q, &status);
@@ -238,8 +254,11 @@ extFloat80_t f2xm1(extFloat80_t x, softfloat_status_t &status)
         softfloat_raiseFlags(&status, softfloat_flag_denormal | softfloat_flag_inexact);
 
     tiny_argument:
-        /* 2^x - 1 ~= x * log(2) */
-        return f128_mul_by_extF80(f2xm1_L2, x, softfloat_getRoundingMode(&status), &status);
+        {
+            /* 2^x - 1 ~= x * log(2) ; mul_e64 rounds to the destination, FPU mode */
+            float128_t prod = f128_mul_by_extF80(f2xm1_L2, x, softfloat_getRoundingMode(&status), &status);
+            return f128_to_extF80(prod, &status);
+        }
     }
 
     /* ---- Step 1: NaN, infinities, |x| >= 1 -------------------------- */

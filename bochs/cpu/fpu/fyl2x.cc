@@ -18,134 +18,158 @@ the work is derivative, and (2) the source code includes prominent notice with
 these four paragraphs for those parts of this code that are retained.
 =============================================================================*/
 
-/*============================================================================
- * Written for Bochs (x86 achitecture simulator) by
- *            Stanislav Shwartsman [sshwarts at sourceforge net]
- * ==========================================================================*/
+/*
+ * fyl2x.cc -- emulation of the Intel x87 FYL2X and FYL2XP1 instructions
+ * -------------------------------------------------------------------------
+ * y * log2(x)  and  y * log2(1+x).  The log2 is computed with the P5/P6
+ * table-driven algorithm: reduce x (or w = 1+x) against one of 32 break
+ * points c, look the leading/trailing parts of log2(c) up in a table, and
+ * add a small odd polynomial in u = 2(x-c)/(x+c).  |x-1| < 1/8 uses a
+ * polynomial directly.  Every intermediate follows the internal
+ * extended-precision arithmetic (see the f128_*_67_chop / f128_*_64_ne
+ * helpers); only the closing  result = z * y  is rounded to the destination,
+ * honouring the FPU rounding mode, and it alone sets SW.C1.
+ */
 
 #define FLOAT128
 
 #include "fpu_trans.h"
 #include "softfloat-helpers.h"
+#include "fyl2x_constants.h"
 
-//////////////////////////////
-// 1/LN2 constant
-//////////////////////////////
+extern float128_t f128_mul_67_chop(float128_t a, float128_t b, struct softfloat_status_t *status);
+extern float128_t f128_add_67_chop(float128_t a, float128_t b, struct softfloat_status_t *status);
+extern float128_t f128_div_67_chop(float128_t a, float128_t b, struct softfloat_status_t *status);
+extern float128_t f128_add_64_ne (float128_t a, float128_t b, struct softfloat_status_t *status);
+extern float128_t f128_mul_64_ne (float128_t a, float128_t b, struct softfloat_status_t *status);
+extern float128_t f128_div_64_ne (float128_t a, float128_t b, struct softfloat_status_t *status);
 
-#define FLOAT_LN2INV_EXP  (0x3FFF)
+static const float128_t float128_one    = packFloat128(BX_CONST64(0x3fff000000000000), 0);
+static const float128_t float128_two    = packFloat128(BX_CONST64(0x4000000000000000), 0);
+static const float128_t float128_negone = packFloat128(BX_CONST64(0xbfff000000000000), 0);
 
-// 128-bit 1/LN2 fraction
-#ifdef BETTER_THAN_PENTIUM
-#define FLOAT_LN2INV_HI (BX_CONST64(0xb8aa3b295c17f0bb))
-#define FLOAT_LN2INV_LO (BX_CONST64(0xbe87fed0691d3e89))
-#else
-#define FLOAT_LN2INV_HI (BX_CONST64(0xb8aa3b295c17f0bb))
-#define FLOAT_LN2INV_LO (BX_CONST64(0xC000000000000000))
-#endif
+static const float128_t fyl2x_L_inv  = packFloat128(FYL2X_L_INV_HI,  FYL2X_L_INV_LO);
+static const float128_t fyl2x_L_inv2 = packFloat128(FYL2X_L_INV2_HI, FYL2X_L_INV2_LO);
+static const float128_t fyl2x_A1 = packFloat128(FYL2X_A1_HI, FYL2X_A1_LO);
+static const float128_t fyl2x_A2 = packFloat128(FYL2X_A2_HI, FYL2X_A2_LO);
+static const float128_t fyl2x_A3 = packFloat128(FYL2X_A3_HI, FYL2X_A3_LO);
+static const float128_t fyl2x_B1 = packFloat128(FYL2X_B1_HI, FYL2X_B1_LO);
+static const float128_t fyl2x_B2 = packFloat128(FYL2X_B2_HI, FYL2X_B2_LO);
+static const float128_t fyl2x_B3 = packFloat128(FYL2X_B3_HI, FYL2X_B3_LO);
+static const float128_t fyl2x_B4 = packFloat128(FYL2X_B4_HI, FYL2X_B4_LO);
+static const float128_t fyl2x_B5 = packFloat128(FYL2X_B5_HI, FYL2X_B5_LO);
+static const float128_t fyl2x_B6 = packFloat128(FYL2X_B6_HI, FYL2X_B6_LO);
 
-static const floatx80 floatx80_one = packFloatx80(0, 0x3fff, BX_CONST64(0x8000000000000000));
+static float128_t fyl2x_L_lead(int index)  { return packFloat128(fyl2x_L_hi[index], fyl2x_L_lo[index]); }
+static float128_t fyl2x_T_trail(int index) { return packFloat128(fyl2x_T_hi[index], fyl2x_T_lo[index]); }
 
-static const float128_t float128_one =
-    packFloat128(BX_CONST64(0x3fff000000000000), BX_CONST64(0x0000000000000000));
-static const float128_t float128_two =
-    packFloat128(BX_CONST64(0x4000000000000000), BX_CONST64(0x0000000000000000));
-
-static const float128_t float128_ln2inv2 =
-    packFloat128(BX_CONST64(0x400071547652b82f), BX_CONST64(0xe1777d0ffda0d23a));
-
-#define SQRT2_HALF_SIG 	BX_CONST64(0xb504f333f9de6484)
-
-extern float128_t OddPoly(float128_t x, const float128_t *arr, int n, softfloat_status_t &status);
-
-#define L2_ARR_SIZE 9
-
-static float128_t ln_arr[L2_ARR_SIZE] =
+// -------------------------------------------------------------------------
+// |x-1| >= 1/8 : table-driven reduction + low order polynomial.
+// 'wm' is the [1,2) mantissa of w (= x for FYL2X, 1+x for FYL2XP1) with its
+// exponent field forced to 2^0; 'n' is w's true (wide) unbiased exponent.
+// u = 2(w-c)/(w+c) is scale invariant, so the reduction runs on the mantissa
+// alone and stays clear of the float128_t exponent range.  Returns log2(w).
+// -------------------------------------------------------------------------
+static float128_t fyl2x_step5(float128_t wm, int n, softfloat_status_t &status)
 {
-    PACK_FLOAT_128(0x3fff000000000000, 0x0000000000000000), /*  1 */
-    PACK_FLOAT_128(0x3ffd555555555555, 0x5555555555555555), /*  3 */
-    PACK_FLOAT_128(0x3ffc999999999999, 0x999999999999999a), /*  5 */
-    PACK_FLOAT_128(0x3ffc249249249249, 0x2492492492492492), /*  7 */
-    PACK_FLOAT_128(0x3ffbc71c71c71c71, 0xc71c71c71c71c71c), /*  9 */
-    PACK_FLOAT_128(0x3ffb745d1745d174, 0x5d1745d1745d1746), /* 11 */
-    PACK_FLOAT_128(0x3ffb3b13b13b13b1, 0x3b13b13b13b13b14), /* 13 */
-    PACK_FLOAT_128(0x3ffb111111111111, 0x1111111111111111), /* 15 */
-    PACK_FLOAT_128(0x3ffae1e1e1e1e1e1, 0xe1e1e1e1e1e1e1e2)  /* 17 */
-};
+    // top 64 bits of the mantissa (implicit 1 + fraction[111:49])
+    Bit64u wsig = (BX_CONST64(1) << 63)
+                | ((wm.v64 & BX_CONST64(0x0000FFFFFFFFFFFF)) << 15)
+                | (wm.v0 >> 49);
 
-static float128_t poly_ln(float128_t x1, softfloat_status_t &status)
-{
-/*
-    //
-    //                     3     5     7     9     11     13     15
-    //        1+u         u     u     u     u     u      u      u
-    // 1/2 ln ---  ~ u + --- + --- + --- + --- + ---- + ---- + ---- =
-    //        1-u         3     5     7     9     11     13     15
-    //
-    //                     2     4     6     8     10     12     14
-    //                    u     u     u     u     u      u      u
-    //       = u * [ 1 + --- + --- + --- + --- + ---- + ---- + ---- ] =
-    //                    3     5     7     9     11     13     15
-    //
-    //           3                          3
-    //          --       4k                --        4k+2
-    //   p(u) = >  C  * u           q(u) = >  C   * u
-    //          --  2k                     --  2k+1
-    //          k=0                        k=0
-    //
-    //          1+u                 2
-    //   1/2 ln --- ~ u * [ p(u) + u * q(u) ]
-    //          1-u
-    //
-*/
-    return OddPoly(x1, (const float128_t*) ln_arr, L2_ARR_SIZE, status);
+    int index = (int)((wsig >> 58) & 0x1F);
+
+    // c = (1.b1 b2 b3 b4 b5 1) : keep the top 6 significand bits, force the
+    // next bit to 1, zero the rest.
+    Bit64u sigC = (wsig & (~BX_CONST64(0) << 58)) | (BX_CONST64(1) << 57);
+    float128_t cm = extF80_to_f128(packFloatx80(0, 0x3FFF, sigC), &status);
+    float128_t cmNeg = cm;
+    cmNeg.v64 ^= (BX_CONST64(1) << 63);
+
+    float128_t r = f128_add_64_ne(wm, cmNeg, &status);  /* r = w - c        */
+    float128_t s = f128_add_64_ne(r, r, &status);       /* s = 2r           */
+    float128_t t = f128_add_64_ne(wm, cm, &status);     /* t = w + c        */
+    float128_t u = f128_div_64_ne(s, t, &status);       /* u = 2(w-c)/(w+c) */
+
+    float128_t d1 = fyl2x_L_lead(index);
+    float128_t d2 = fyl2x_T_trail(index);
+    float128_t e  = f128_add_64_ne(i32_to_f128(n), d1, &status);  /* e = n + d1 */
+
+    float128_t u1 = f128_mul_67_chop(fyl2x_L_inv, u, &status);   /* u1 = (1/log2) * u */
+    float128_t v  = f128_mul_67_chop(u, u, &status);             /* v  = u*u          */
+
+    /* p = u1 + u * v*(A1 + v*(A2 + v*A3)) */
+    float128_t p = f128_mul_67_chop(v, fyl2x_A3, &status);
+    p = f128_add_64_ne(p, fyl2x_A2, &status);
+    p = f128_mul_67_chop(v, p, &status);
+    p = f128_add_64_ne(p, fyl2x_A1, &status);
+    p = f128_mul_67_chop(v, p, &status);
+    p = f128_mul_67_chop(p, u, &status);
+    p = f128_add_64_ne(u1, p, &status);
+
+    /* z = e + (d2 + p) */
+    float128_t z = f128_add_67_chop(d2, p, &status);
+    z = f128_add_67_chop(e, z, &status);
+    return z;
 }
 
-/* required sqrt(2)/2 < x < sqrt(2) */
-static float128_t poly_l2(float128_t x, softfloat_status_t &status)
+// -------------------------------------------------------------------------
+// |x-1| < 1/8 : polynomial in u.  'sarg' is (x-1) for FYL2X or x for
+// FYL2XP1; 't' is the matching denominator (x+1 or x+2).  Returns log2().
+// -------------------------------------------------------------------------
+static float128_t fyl2x_poly(float128_t sarg, float128_t t, softfloat_status_t &status)
 {
-    /* using float128 for approximation */
-    float128_t x_p1 = f128_add(x, float128_one, &status);
-    float128_t x_m1 = f128_sub(x, float128_one, &status);
-    x = f128_div(x_m1, x_p1, &status);
-    x = poly_ln(x, status);
-    x = f128_mul(x, float128_ln2inv2, &status);
-    return x;
+    float128_t s = f128_mul_67_chop(fyl2x_L_inv2, sarg, &status);
+    float128_t u = f128_div_67_chop(s, t, &status);
+    float128_t v = f128_mul_64_ne(u, u, &status);
+    float128_t w = f128_mul_67_chop(v, v, &status);
+
+    /* p = v*(B1 + w*(B3 + w*B5)) */
+    float128_t p = f128_mul_67_chop(w, fyl2x_B5, &status);
+    p = f128_add_64_ne(p, fyl2x_B3, &status);
+    p = f128_mul_67_chop(w, p, &status);
+    p = f128_add_64_ne(p, fyl2x_B1, &status);
+    p = f128_mul_67_chop(v, p, &status);
+
+    /* q = w*(B2 + w*(B4 + w*B6)) */
+    float128_t q = f128_mul_67_chop(w, fyl2x_B6, &status);
+    q = f128_add_64_ne(q, fyl2x_B4, &status);
+    q = f128_mul_67_chop(w, q, &status);
+    q = f128_add_64_ne(q, fyl2x_B2, &status);
+    q = f128_mul_67_chop(w, q, &status);
+
+    /* z = u + u*(p + q) */
+    float128_t pq = f128_add_64_ne(p, q, &status);
+    float128_t z = f128_mul_67_chop(u, pq, &status);
+    z = f128_add_67_chop(u, z, &status);
+    return z;
 }
 
-static float128_t poly_l2p1(float128_t x, softfloat_status_t &status)
+// closing step common to both instructions: result = z * y, rounded to the
+// destination honouring the FPU mode; C1 reflects only this rounding.  'y' is
+// the untouched ST(1) operand (f128_mul_by_extF80 decodes a denormal itself).
+static floatx80 fyl2x_finish(float128_t z, floatx80 y, softfloat_status_t &status)
 {
-    /* using float128 for approximation */
-    float128_t x_plus2 = f128_add(x, float128_two, &status);
-    x = f128_div(x, x_plus2, &status);
-    x = poly_ln(x, status);
-    x = f128_mul(x, float128_ln2inv2, &status);
-    return x;
+    status.softfloat_exceptionFlags &= ~RAISE_SW_C1;
+
+    float128_t prod = f128_mul_by_extF80(z, y, softfloat_getRoundingMode(&status), &status);
+    return f128_to_extF80(prod, &status);   /* mul_e64(z, y, RC) -> destination */
+}
+
+// the [1,2) mantissa of a normalized 64-bit significand as a float128_t
+// (exponent field 2^0).
+static float128_t fyl2x_mantissa128(Bit64u sig64)
+{
+    float128_t z;
+    z.v64 = (BX_CONST64(0x3FFF) << 48) | ((sig64 >> 15) & BX_CONST64(0x0000FFFFFFFFFFFF));
+    z.v0  = sig64 << 49;
+    return z;
 }
 
 // =================================================
 // FYL2X                   Compute y * log (x)
 //                                        2
 // =================================================
-
-//
-// Uses the following identities:
-//
-// 1. ----------------------------------------------------------
-//              ln(x)
-//   log (x) = -------,  ln (x*y) = ln(x) + ln(y)
-//      2       ln(2)
-//
-// 2. ----------------------------------------------------------
-//                1+u             x-1
-//   ln (x) = ln -----, when u = -----
-//                1-u             x+1
-//
-// 3. ----------------------------------------------------------
-//                        3     5     7           2n+1
-//       1+u             u     u     u           u
-//   ln ----- = 2 [ u + --- + --- + --- + ... + ------ + ... ]
-//       1-u             3     5     7           2n+1
-//
 
 floatx80 fyl2x(floatx80 a, floatx80 b, softfloat_status_t &status)
 {
@@ -218,26 +242,22 @@ invalid:
 
     softfloat_raiseFlags(&status, softfloat_flag_inexact);
 
-    int ExpDiff = aExp - 0x3FFF;
-    aExp = 0;
-    if (aSig >= SQRT2_HALF_SIG) {
-        ExpDiff++;
-        aExp--;
+    /* ***** P5/P6 table-driven log2 ***** */
+
+    bool step4 = ((aExp == 0x3FFE && aSig > BX_CONST64(0xE000000000000000)) ||
+                  (aExp == 0x3FFF && aSig < BX_CONST64(0x9000000000000000)));
+
+    float128_t z;
+    if (step4) {
+        float128_t xq = extF80_to_f128(packFloatx80(0, aExp, aSig), &status);
+        float128_t sarg = f128_add_64_ne(xq, float128_negone, &status);   /* x - 1 */
+        float128_t t    = f128_add_67_chop(xq, float128_one, &status);    /* x + 1 */
+        z = fyl2x_poly(sarg, t, status);
+    } else {
+        z = fyl2x_step5(fyl2x_mantissa128(aSig), aExp - 0x3FFF, status);
     }
 
-    /* ******************************** */
-    /* using float128 for approximation */
-    /* ******************************** */
-
-    float128_t b128 = softfloat_normRoundPackToF128(bSign, bExp-0x10, bSig, 0, &status);
-
-    Bit64u zSig0, zSig1;
-    shortShift128Right(aSig<<1, 0, 16, &zSig0, &zSig1);
-    float128_t x = packFloat128(0, aExp+0x3FFF, zSig0, zSig1);
-    x = poly_l2(x, status);
-    x = f128_add(x, i32_to_f128(ExpDiff), &status);
-    x = f128_mul(x, b128, &status);
-    return f128_to_extF80(x, &status);
+    return fyl2x_finish(z, b, status);
 }
 
 // =================================================
@@ -245,30 +265,10 @@ invalid:
 //                                        2
 // =================================================
 
-//
-// Uses the following identities:
-//
-// 1. ----------------------------------------------------------
-//              ln(x)
-//   log (x) = -------
-//      2       ln(2)
-//
-// 2. ----------------------------------------------------------
-//                  1+u              x
-//   ln (x+1) = ln -----, when u = -----
-//                  1-u             x+2
-//
-// 3. ----------------------------------------------------------
-//                        3     5     7           2n+1
-//       1+u             u     u     u           u
-//   ln ----- = 2 [ u + --- + --- + --- + ... + ------ + ... ]
-//       1-u             3     5     7           2n+1
-//
-
 floatx80 fyl2xp1(floatx80 a, floatx80 b, softfloat_status_t &status)
 {
     Bit32s aExp, bExp;
-    Bit64u aSig, bSig, zSig0, zSig1, zSig2;
+    Bit64u aSig, bSig;
     int aSign, bSign;
 
     // handle unsupported extended double-precision floating encodings
@@ -277,7 +277,6 @@ invalid:
         softfloat_raiseFlags(&status, softfloat_flag_invalid);
         return floatx80_default_nan;
     }
-
 
     aSig = extF80_fraction(a);
     aExp = extF80_exp(a);
@@ -335,42 +334,30 @@ invalid:
     if (aSign && aExp >= 0x3FFF)
         return a;
 
-    if (aExp >= 0x3FFC) // big argument
-    {
-        return fyl2x(extF80_add(a, floatx80_one, &status), b, status);
+    /* ***** P5/P6 table-driven log2(1+x) ***** */
+
+    float128_t z;
+    if (aExp >= 0x3FFC) {
+        // |x| >= 1/8 : reduce w = 1 + x with the table-driven path
+        float128_t xq = extF80_to_f128(packFloatx80(aSign, aExp, aSig), &status);
+        float128_t w = f128_add_67_chop(xq, float128_one, &status);
+        int n = (int)((w.v64 >> 48) & 0x7FFF) - 0x3FFF;
+        float128_t wm;
+        wm.v64 = (w.v64 & BX_CONST64(0x0000FFFFFFFFFFFF)) | (BX_CONST64(0x3FFF) << 48);
+        wm.v0  = w.v0;
+        z = fyl2x_step5(wm, n, status);
+    }
+    else if (aExp < FLOATX80_EXP_BIAS - 70) {
+        // |x| < 2^-70 : first order term  z = (1/log2) * x
+        float128_t xf = extF80_to_f128(a, &status);
+        z = f128_mul_67_chop(fyl2x_L_inv, xf, &status);
+    }
+    else {
+        // |x| < 1/8 : polynomial,  u = 2x/(x+2)
+        float128_t xq = extF80_to_f128(packFloatx80(aSign, aExp, aSig), &status);
+        float128_t t = f128_add_67_chop(xq, float128_two, &status);
+        z = fyl2x_poly(xq, t, status);
     }
 
-    // handle tiny argument
-    if (aExp < FLOATX80_EXP_BIAS-70)
-    {
-        // first order approximation, return (a*b)/ln(2)
-        Bit32s zExp = aExp + FLOAT_LN2INV_EXP - 0x3FFE;
-
-        mul128By64To192(FLOAT_LN2INV_HI, FLOAT_LN2INV_LO, aSig, &zSig0, &zSig1, &zSig2);
-        if (0 < (Bit64s) zSig0) {
-            shortShift128Left(zSig0, zSig1, 1, &zSig0, &zSig1);
-            --zExp;
-        }
-
-        zExp = zExp + bExp - 0x3FFE;
-        mul128By64To192(zSig0, zSig1, bSig, &zSig0, &zSig1, &zSig2);
-        if (0 < (Bit64s) zSig0) {
-            shortShift128Left(zSig0, zSig1, 1, &zSig0, &zSig1);
-            --zExp;
-        }
-
-        return softfloat_roundPackToExtF80(aSign ^ bSign, zExp, zSig0, zSig1, 80, &status);
-    }
-
-    /* ******************************** */
-    /* using float128 for approximation */
-    /* ******************************** */
-
-    float128_t b128 = softfloat_normRoundPackToF128(bSign, bExp-0x10, bSig, 0, &status);
-
-    shortShift128Right(aSig<<1, 0, 16, &zSig0, &zSig1);
-    float128_t x = packFloat128(aSign, aExp, zSig0, zSig1);
-    x = poly_l2p1(x, status);
-    x = f128_mul(x, b128, &status);
-    return f128_to_extF80(x, &status);
+    return fyl2x_finish(z, b, status);
 }
