@@ -1125,11 +1125,11 @@ void bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
               (value == VBE_DISPI_ID5))
           {
             // allow backwards compatible with previous dispi bioses
-            BX_VGA_THIS vbe.cur_dispi=value;
+            BX_VGA_THIS vbe.cur_dispi = value;
           }
           else
           {
-            BX_WARN(("VBE unknown Display Interface %x", value));
+            BX_ERROR(("VBE unknown Display Interface %x (len = %d)", value, io_len));
           }
 
           // make sure we don't flood the logfile
@@ -1137,7 +1137,7 @@ void bx_vga_c::vbe_write(Bit32u address, Bit32u value, unsigned io_len)
           if (count < 100)
           {
             count++;
-            BX_INFO(("VBE known Display Interface %x", value));
+            BX_INFO(("Using VBE known Display Interface %x", BX_VGA_THIS vbe.cur_dispi));
           }
         } break;
 
