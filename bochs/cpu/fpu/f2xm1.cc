@@ -144,7 +144,7 @@ static float128_t f2xm1_table_d(int index)
 static extFloat80_t f2xm1_reconstruct(float128_t a, float128_t b, softfloat_status_t &status)
 {
     float128_t sum = f128_add(a, b, &status);   /* final reconstruction add, full precision */
-    status.softfloat_exceptionFlags &= ~RAISE_SW_C1;
+    softfloat_clearRoundingUp(&status);
     return f128_to_extF80(sum, &status);        /* single rounding, per FPU mode */
 }
 

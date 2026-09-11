@@ -165,7 +165,7 @@ static float128_t fyl2x_poly(float128_t sarg, float128_t t, softfloat_status_t &
 // (0x6000 wrap) underflow response.
 static floatx80 fyl2x_finish(float128_t z, floatx80 y, Bit32s extraExp, softfloat_status_t &status)
 {
-    status.softfloat_exceptionFlags &= ~RAISE_SW_C1;
+    softfloat_clearRoundingUp(&status);
 
     int    ySign = extF80_sign(y);
     Bit32s yExp  = extF80_exp(y);

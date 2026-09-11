@@ -184,9 +184,12 @@ float128_t
         softfloat_raiseFlags(status, softfloat_flag_inexact);
     }
     if (doIncrement) {
+        uint64_t sig64Exact = sig64, sig0Exact = sig0;
         sig128 = softfloat_add128(sig64, sig0, 0, 1);
         sig64 = sig128.v64;
         sig0 = sig128.v0 & ~(uint64_t) (! (sigExtra & UINT64_C(0x7FFFFFFFFFFFFFFF)) & roundNearEven);
+        if (softfloat_lt128(sig64Exact, sig0Exact, sig64, sig0))
+            softfloat_setRoundingUp(status);
     } else {
         if (! (sig64 | sig0)) exp = 0;
     }

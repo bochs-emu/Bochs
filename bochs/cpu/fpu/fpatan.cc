@@ -114,7 +114,7 @@ static floatx80 fpatan_finish(float128_t f, float128_t g, int sflag, int sx, int
         val = f128_add(a, fg, &status);                 /* add_e(a, f+g) */
     }
 
-    status.softfloat_exceptionFlags &= ~RAISE_SW_C1;
+    softfloat_clearRoundingUp(&status);
     return f128_to_extF80(val, &status);
 }
 
@@ -232,7 +232,7 @@ return_PI_or_ZERO:
            exponent range, so divide the [1,2) mantissas (both operands were
            normalised above; V with vBias <= 0 could not be packed) and carry the
            exponent difference to the single closing round. */
-        status.softfloat_exceptionFlags &= ~RAISE_SW_C1;
+        softfloat_clearRoundingUp(&status);
         float128_t q = f128_div_67_chop(
             extF80_to_f128(packToExtF80(sy, 0x3FFF, bSig), &status),
             extF80_to_f128(packToExtF80(0,  0x3FFF, aSig), &status), &status);

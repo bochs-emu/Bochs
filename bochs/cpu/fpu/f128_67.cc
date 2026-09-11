@@ -52,8 +52,7 @@ float128_t f128_mul_67_chop(float128_t a, float128_t b, struct softfloat_status_
 // bits (e.g. r*r, s*s in the sin/cos polynomial).
 float128_t f128_mul_e67(float128_t a, float128_t b, struct softfloat_status_t *status)
 {
-    extFloat80_t b64 = f128_to_extF80(b, softfloat_round_minMag, status);
-    float128_t bt = extF80_to_f128(b64, status);
+    float128_t bt = f128_round_to_64(b, softfloat_round_minMag, status);
     return f128_mul_67_chop(a, bt, status);
 }
 

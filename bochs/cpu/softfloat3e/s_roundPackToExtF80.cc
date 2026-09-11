@@ -104,6 +104,9 @@ extFloat80_t softfloat_roundPackToExtF80(bool sign, int32_t exp, uint64_t sig, u
                 sig &= ~roundMask;
                 if (roundBits) {
                     softfloat_raiseFlags(status, softfloat_flag_inexact);
+                    /* real fractional bits at this step - its own decision is
+                       authoritative, drop any stale hint from an earlier stage */
+                    softfloat_clearRoundingUp(status);
                     if (sig > sigExact) softfloat_setRoundingUp(status);
                     if (isTiny)
                         softfloat_raiseFlags(status, softfloat_flag_underflow);
@@ -137,6 +140,9 @@ extFloat80_t softfloat_roundPackToExtF80(bool sign, int32_t exp, uint64_t sig, u
     sig &= ~roundMask;
     if (roundBits) {
         softfloat_raiseFlags(status, softfloat_flag_inexact);
+        /* real fractional bits at this step - its own decision is
+           authoritative, drop any stale hint from an earlier stage */
+        softfloat_clearRoundingUp(status);
         if (sig > sigExact) softfloat_setRoundingUp(status);
     }
     return packToExtF80(sign, exp, sig);
@@ -174,6 +180,11 @@ extFloat80_t softfloat_roundPackToExtF80(bool sign, int32_t exp, uint64_t sig, u
                     softfloat_raiseFlags(status, softfloat_flag_inexact);
                     if (isTiny)
                         softfloat_raiseFlags(status, softfloat_flag_underflow);
+                    /* this narrowing step has real fractional bits to decide
+                       with, so ITS own up/down decision below is authoritative -
+                       drop any round-up hint an earlier (wider) rounding stage
+                       left behind, it no longer applies */
+                    softfloat_clearRoundingUp(status);
                 }
                 doIncrement = (UINT64_C(0x8000000000000000) <= sigExtra);
                 if (! roundNearEven && (roundingMode != softfloat_round_near_maxMag)) {
@@ -229,6 +240,10 @@ extFloat80_t softfloat_roundPackToExtF80(bool sign, int32_t exp, uint64_t sig, u
     *------------------------------------------------------------------------*/
     if (sigExtra) {
         softfloat_raiseFlags(status, softfloat_flag_inexact);
+        /* this narrowing step has real fractional bits to decide with, so ITS
+           own up/down decision below is authoritative - drop any round-up hint
+           an earlier (wider) rounding stage left behind, it no longer applies */
+        softfloat_clearRoundingUp(status);
     }
     if (doIncrement) {
         sigExact = sig;

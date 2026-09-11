@@ -208,6 +208,15 @@ BX_CPP_INLINE int softfloat_getExceptionFlags(const struct softfloat_status_t *s
 BX_CPP_INLINE void softfloat_setRoundingUp(struct softfloat_status_t *status) {
     status->softfloat_exceptionFlags |= RAISE_SW_C1;
 }
+
+/*----------------------------------------------------------------------------
+| Drop a round-up indication a wider/earlier rounding stage left behind. Used
+| when a later, narrower rounding step has real fractional bits of its own to
+| decide with, making its own up/down decision authoritative.
+*----------------------------------------------------------------------------*/
+BX_CPP_INLINE void softfloat_clearRoundingUp(struct softfloat_status_t *status) {
+    status->softfloat_exceptionFlags &= ~RAISE_SW_C1;
+}
 #endif
 
 /*----------------------------------------------------------------------------

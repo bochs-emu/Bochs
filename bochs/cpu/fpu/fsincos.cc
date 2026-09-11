@@ -265,7 +265,7 @@ static void sincos_sincosd(float128_t d, float128_t &p, float128_t &q, softfloat
    report C1 the way the hardware does.) */
 static floatx80 sc_add_e64(float128_t a, float128_t b, softfloat_status_t &status)
 {
-    status.softfloat_exceptionFlags &= ~RAISE_SW_C1;
+    softfloat_clearRoundingUp(&status);
 
     float128_t sum = f128_add(a, b, &status);
 
@@ -737,7 +737,7 @@ int fptan(floatx80 &a, softfloat_status_t &status)
         den = g;
     }
 
-    status.softfloat_exceptionFlags &= ~RAISE_SW_C1;
+    softfloat_clearRoundingUp(&status);
     float128_t z = f128_div(num, den, softfloat_getRoundingMode(&status), &status);
     a = f128_to_extF80(z, &status);
 
