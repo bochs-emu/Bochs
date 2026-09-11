@@ -186,6 +186,7 @@ OBJS_OTHERS = \
   f16_mulAdd$(OBJ) \
   f16_div$(OBJ) \
   f16_sqrt$(OBJ) \
+  f16_scalef$(OBJ) \
   f32_to_ui8$(OBJ) \
   f32_to_ui32$(OBJ) \
   f32_to_ui64$(OBJ) \

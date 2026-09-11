@@ -40,38 +40,39 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "softfloat.h"
 
 /*----------------------------------------------------------------------------
-| Return the result of a floating point scale of the double-precision floating
-| point value `a' by multiplying it by 2 power of the double-precision
-| floating point value 'b' converted to integral value. If the result cannot
-| be represented in double precision, then the proper overflow response (for
-| positive scaling operand), or the proper underflow response (for negative
-| scaling operand) is issued. The operation is performed according to the
-| IEC/IEEE Standard for Binary Floating-Point Arithmetic.
+| Return the result of a floating point scale of the half-precision floating
+| point value `a' by multiplying it by 2 power of the half-precision floating
+| point value 'b' converted to integral value (rounded toward -infinity, i.e.
+| floor). If the result cannot be represented in half precision, then the
+| proper overflow response (for positive scaling operand), or the proper
+| underflow response (for negative scaling operand) is issued. The operation
+| is performed according to the IEC/IEEE Standard for Binary Floating-Point
+| Arithmetic.
 *----------------------------------------------------------------------------*/
 
-float64 f64_scalef(float64 a, float64 b, struct softfloat_status_t *status)
+float16 f16_scalef(float16 a, float16 b, struct softfloat_status_t *status)
 {
     bool signA;
     int16_t expA;
-    uint64_t sigA;
+    uint16_t sigA;
     bool signB;
     int16_t expB;
-    uint64_t sigB;
+    uint16_t sigB;
     int shiftCount;
     int scale = 0;
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    signA = signF64UI(a);
-    expA  = expF64UI(a);
-    sigA  = fracF64UI(a);
-    signB = signF64UI(b);
-    expB  = expF64UI(b);
-    sigB  = fracF64UI(b);
+    signA = signF16UI(a);
+    expA  = expF16UI(a);
+    sigA  = fracF16UI(a);
+    signB = signF16UI(b);
+    expB  = expF16UI(b);
+    sigB  = fracF16UI(b);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (expB == 0x7FF) {
-        if (sigB) return softfloat_propagateNaNF64UI(a, b, status);
+    if (expB == 0x1F) {
+        if (sigB) return softfloat_propagateNaNF16UI(a, b, status);
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
@@ -81,75 +82,90 @@ float64 f64_scalef(float64 a, float64 b, struct softfloat_status_t *status)
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (expA == 0x7FF) {
+    if (expA == 0x1F) {
         if (sigA) {
-            int aIsSignalingNaN = (sigA & UINT64_C(0x0008000000000000)) == 0;
-            if (aIsSignalingNaN || expB != 0x7FF || sigB)
-                return softfloat_propagateNaNF64UI(a, b, status);
+            int aIsSignalingNaN = (sigA & 0x0200) == 0;
+            if (aIsSignalingNaN || expB != 0x1F || sigB)
+                return softfloat_propagateNaNF16UI(a, b, status);
 
-            return signB ? 0 : packToF64UI(0, 0x7FF, 0);
+            return signB ? 0 : packToF16UI(0, 0x1F, 0);
         }
 
-        if (expB == 0x7FF && signB) {
+        if (expB == 0x1F && signB) {
             softfloat_raiseFlags(status, softfloat_flag_invalid);
-            return defaultNaNF64UI;
+            return defaultNaNF16UI;
         }
 
         return a;
     }
     /*------------------------------------------------------------------------
+    | Architectural rule for the denormal-operand exception on this
+    | instruction (confirmed against the ISA reference): it is checked for
+    | src1 (A) only - never independently for src2 (B) - and only when B is
+    | not NaN (already excluded above, which returns before this point). If
+    | A is a genuine denormal, DE is signaled regardless of B's value,
+    | *including* when B is +-Infinity or exactly zero. A == 0 is not
+    | itself denormal, so it never raises DE (it has its own special-case
+    | handling, combined with B == +-Infinity, immediately below).
     *------------------------------------------------------------------------*/
-    if (! expA) {
-        if (! sigA) {
-            if (expB == 0x7FF && ! signB) {
-                softfloat_raiseFlags(status, softfloat_flag_invalid);
-                return defaultNaNF64UI;
-            }
-            return packToF64UI(signA, 0, 0);
+    if (! expA && ! sigA) {
+        if (expB == 0x1F && ! signB) {
+            softfloat_raiseFlags(status, softfloat_flag_invalid);
+            return defaultNaNF16UI;
         }
-        softfloat_raiseFlags(status, softfloat_flag_denormal);
+        return packToF16UI(signA, 0, 0);
+    }
+
+    if (! expA) softfloat_raiseFlags(status, softfloat_flag_denormal);
+
+    if (expB == 0x1F) {
+        if (signB) return packToF16UI(signA, 0, 0);
+        return packToF16UI(signA, 0x1F, 0);
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if ((expB | sigB) == 0)
-        return packToF64UI(signA, expA, sigA); // honor DAZ
+        return packToF16UI(signA, expA, sigA); // honor DAZ
 
-    if (expB == 0x7FF) {
-        if (signB) return packToF64UI(signA, 0, 0);
-        return packToF64UI(signA, 0x7FF, 0);
-    }
-
-    if (0x40F <= expB) {
-        // handle obvious overflow/underflow result
-        return softfloat_roundPackToF64(signA, signB ? -0x3FF : 0x7FF, sigA, status);
+    if (expB >= 0x1A) {
+        // handle obvious overflow/underflow result. Include A's implicit
+        // leading-1 bit (when A is normal) before handing sigA to the
+        // extreme right-shift-and-jam inside roundPackToF16 - otherwise an
+        // exact-power-of-two A (sigA == 0, e.g. a=0x0400) looks like "zero
+        // significand, nothing lost" and the genuine underflow+inexact
+        // (the true infinite-precision result is nonzero, just far too
+        // small to represent) silently fails to get flagged.
+        uint16_t sigForBailout = sigA | (expA ? 0x0400 : 0);
+        return softfloat_roundPackToF16(signA, signB ? -0xF : 0x1F, sigForBailout, status);
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if (expB < 0x3FF) {
+    if (expB <= 0xE) {
         scale = -int(signB);
     }
     else {
-        sigB |= UINT64_C(0x0010000000000000);
-        shiftCount = 0x433 - expB;
-        uint64_t prev_sigB = sigB;
-        sigB >>= shiftCount;
-        scale = (int32_t) sigB;
+        sigB |= 0x0400;
+        shiftCount = 0x19 - expB;
+        uint16_t prev_sigB = sigB;
+        sigB = (uint16_t) (sigB >> shiftCount);
+        scale = (int) sigB;
+
         if (signB) {
-            if ((sigB<<shiftCount) != prev_sigB) scale++;
+            if ((uint16_t) (sigB << shiftCount) != prev_sigB) scale++;
             scale = -scale;
         }
 
-        if (scale >  0x1000) scale =  0x1000;
-        if (scale < -0x1000) scale = -0x1000;
+        if (scale >  0x40) scale =  0x40;
+        if (scale < -0x40) scale = -0x40;
     }
 
     if (expA != 0) {
-        sigA |= UINT64_C(0x0010000000000000);
+        sigA |= 0x0400;
     } else {
         expA++;
     }
 
     expA += scale - 1;
-    sigA <<= 10;
-    return softfloat_normRoundPackToF64(signA, expA, sigA, status);
+    sigA <<= 4;
+    return softfloat_normRoundPackToF16(signA, expA, sigA, status);
 }

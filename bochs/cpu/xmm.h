@@ -27,10 +27,7 @@
 /* XMM REGISTER */
 
 typedef
-#if defined(_MSC_VER) && (_MSC_VER>=1300)
-__declspec(align(16))
-#endif
-union bx_xmm_reg_t {
+union alignas(16) bx_xmm_reg_t {
    Bit8s   xmm_sbyte[16];
    Bit16s  xmm_s16[8];
    Bit32s  xmm_s32[4];
@@ -66,10 +63,7 @@ union bx_xmm_reg_t {
 /* AVX REGISTER */
 
 typedef
-#if defined(_MSC_VER) && (_MSC_VER>=1300)
-__declspec(align(32))
-#endif
-union bx_ymm_reg_t {
+union alignas(32) bx_ymm_reg_t {
    Bit8s   ymm_sbyte[32];
    Bit16s  ymm_s16[16];
    Bit32s  ymm_s32[8];
@@ -109,10 +103,7 @@ union bx_ymm_reg_t {
 #endif
 
 typedef
-#if defined(_MSC_VER) && (_MSC_VER>=1300)
-__declspec(align(64))
-#endif
-union bx_zmm_reg_t {
+union alignas(64) bx_zmm_reg_t {
    Bit8s   zmm_sbyte[64];
    Bit16s  zmm_s16[32];
    Bit32s  zmm_s32[16];

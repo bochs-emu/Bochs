@@ -282,6 +282,7 @@
     <ClCompile Include="..\cpu\softfloat3e\f16_mulAdd.cc" />
     <ClCompile Include="..\cpu\softfloat3e\f16_range.cc" />
     <ClCompile Include="..\cpu\softfloat3e\f16_roundToInt.cc" />
+    <ClCompile Include="..\cpu\softfloat3e\f16_scalef.cc" />
     <ClCompile Include="..\cpu\softfloat3e\f16_sqrt.cc" />
     <ClCompile Include="..\cpu\softfloat3e\f16_to_extF80.cc" />
     <ClCompile Include="..\cpu\softfloat3e\f16_to_i16.cc" />

@@ -288,6 +288,7 @@ float16 f16_getMant(float16, struct softfloat_status_t *, int, int);
 float16 f16_range(float16, float16, bool is_max, bool is_abs, int sign_ctrl, softfloat_status_t *);
 int f16_compare(float16, float16, bool, struct softfloat_status_t *);
 float16 f16_sqrt(float16, struct softfloat_status_t *);
+float16 f16_scalef(float16, float16, struct softfloat_status_t *);
 softfloat_class_t f16_class(float16);
 
 bool f16_isSignalingNaN(float16);

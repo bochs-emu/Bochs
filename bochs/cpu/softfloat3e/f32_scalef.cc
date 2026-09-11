@@ -111,7 +111,8 @@ float32 f32_scalef(float32 a, float32 b, struct softfloat_status_t *status)
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if ((expB | sigB) == 0) return a;
+    if ((expB | sigB) == 0)
+        return packToF32UI(signA, expA, sigA); // honor DAZ
 
     if (expB == 0xFF) {
         if (signB) return packToF32UI(signA, 0, 0);
