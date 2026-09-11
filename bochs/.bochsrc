@@ -922,7 +922,7 @@ parport1: enabled=1, file="parport.out"
 # Example for different drivers:
 #   sound: waveoutdrv=sdl, waveindrv=alsa, midioutdrv=dummy
 #=======================================================================
-sound: driver=default, waveout=/dev/dsp. wavein=, midiout=
+sound: driver=default, waveout=/dev/dsp, wavein=, midiout=
 
 #=======================================================================
 # SPEAKER:
