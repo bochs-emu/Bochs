@@ -122,8 +122,16 @@ invalid:
     }
 
     if (expB > 0x400E) {
-        /* generate appropriate overflow/underflow */
-        return softfloat_roundPackToExtF80(signA, signB ? -0x3FFF : 0x7FFF, sigA, 0, 80, status);
+        /* |scale| is so large here that the true (unbounded) result exponent
+           is always far beyond the +-0x6000 unmasked-exception wrap window,
+           no matter what expA is - so this is unrescuable overflow/underflow.
+           Feed roundPackToExtF80 a real expA + scale (not a boundary sentinel
+           equal to the wrap target) so its overflow/underflow detection - and
+           the +-0x6000 wrap it performs for unmasked exceptions - resolves to
+           the correct infinity / zero instead of accidentally landing back in
+           the representable range. */
+        int32_t scale = signB ? -0x10000 : 0x10000;
+        return softfloat_roundPackToExtF80(signA, expA + scale, sigA, 0, 80, status);
     }
 
     if (expB < 0x3FFF) return a;

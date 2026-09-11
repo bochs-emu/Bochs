@@ -84,6 +84,12 @@ extFloat80_t softfloat_roundPackToExtF80(bool sign, int32_t exp, uint64_t sig, u
             if (isTiny && sig && ! softfloat_isMaskedException(status, softfloat_flag_underflow)) {
                 softfloat_raiseFlags(status, softfloat_flag_underflow);
                 exp += 0x6000;
+                if (exp <= 0) {
+                    /* still not representable even after the wrap - unrescuable
+                       underflow, deliver a true (signed) zero */
+                    softfloat_raiseFlags(status, softfloat_flag_inexact);
+                    return packToExtF80(sign, 0, 0);
+                }
             }
             else {
                 sig = softfloat_shiftRightJam64(sig, 1 - exp);
@@ -152,6 +158,12 @@ extFloat80_t softfloat_roundPackToExtF80(bool sign, int32_t exp, uint64_t sig, u
             if (isTiny && sig && ! softfloat_isMaskedException(status, softfloat_flag_underflow)) {
                 softfloat_raiseFlags(status, softfloat_flag_underflow);
                 exp += 0x6000;
+                if (exp <= 0) {
+                    /* still not representable even after the wrap - unrescuable
+                       underflow, deliver a true (signed) zero */
+                    softfloat_raiseFlags(status, softfloat_flag_inexact);
+                    return packToExtF80(sign, 0, 0);
+                }
             }
             else {
                 sig64Extra = softfloat_shiftRightJam64Extra(sig, sigExtra, 1 - exp);
@@ -190,7 +202,15 @@ extFloat80_t softfloat_roundPackToExtF80(bool sign, int32_t exp, uint64_t sig, u
                 roundMask = 0;
  overflow:
                 softfloat_raiseFlags(status, softfloat_flag_overflow | softfloat_flag_inexact);
-                if (roundNearEven
+                if (! softfloat_isMaskedException(status, softfloat_flag_overflow)) {
+                    /* got here via the unmasked-overflow wrap and the true
+                       (unbounded) exponent still doesn't fit - genuinely
+                       unrepresentable even wrapped, deliver infinity
+                       unconditionally, independent of the rounding mode */
+                    exp = 0x7FFF;
+                    sig = UINT64_C(0x8000000000000000);
+                    softfloat_setRoundingUp(status);
+                } else if (roundNearEven
                     || (roundingMode == softfloat_round_near_maxMag)
                     || (roundingMode == (sign ? softfloat_round_min : softfloat_round_max))
                 ) {
