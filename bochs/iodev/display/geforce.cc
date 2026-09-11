@@ -1605,17 +1605,10 @@ void bx_geforce_c::update(void)
                       vid_ptr2 += 2;
                     }
                     EXTRACT_x555_TO_888(colour, red, green, blue);
-                    if (info.bpp >= 24) {
-                      colour =
-                        (BX_GEFORCE_THIS s.pel.data[red].red << 16) |
-                        (BX_GEFORCE_THIS s.pel.data[green].green << 8) |
-                        BX_GEFORCE_THIS s.pel.data[blue].blue;
-                    } else {
-                      colour = MAKE_COLOUR(
-                        BX_GEFORCE_THIS s.pel.data[blue].blue, 8, info.blue_shift, info.blue_mask,
-                        BX_GEFORCE_THIS s.pel.data[green].green, 8, info.green_shift, info.green_mask,
-                        BX_GEFORCE_THIS s.pel.data[red].red, 8, info.red_shift, info.red_mask);
-                    }
+                    colour = MAKE_COLOUR(
+                      BX_GEFORCE_THIS s.pel.data[blue].blue, 8, info.blue_shift, info.blue_mask,
+                      BX_GEFORCE_THIS s.pel.data[green].green, 8, info.green_shift, info.green_mask,
+                      BX_GEFORCE_THIS s.pel.data[red].red, 8, info.red_shift, info.red_mask);
                     if (info.is_little_endian) {
                       for (i=0; i<info.bpp; i+=8) {
                         *(tile_ptr2++) = colour >> i;
@@ -1663,17 +1656,10 @@ void bx_geforce_c::update(void)
                       vid_ptr2 += 2;
                     }
                     EXTRACT_565_TO_888(colour, red, green, blue);
-                    if (info.bpp >= 24) {
-                      colour =
-                        (BX_GEFORCE_THIS s.pel.data[red].red << 16) |
-                        (BX_GEFORCE_THIS s.pel.data[green].green << 8) |
-                        BX_GEFORCE_THIS s.pel.data[blue].blue;
-                    } else {
-                      colour = MAKE_COLOUR(
-                        BX_GEFORCE_THIS s.pel.data[blue].blue, 8, info.blue_shift, info.blue_mask,
-                        BX_GEFORCE_THIS s.pel.data[green].green, 8, info.green_shift, info.green_mask,
-                        BX_GEFORCE_THIS s.pel.data[red].red, 8, info.red_shift, info.red_mask);
-                    }
+                    colour = MAKE_COLOUR(
+                      BX_GEFORCE_THIS s.pel.data[blue].blue, 8, info.blue_shift, info.blue_mask,
+                      BX_GEFORCE_THIS s.pel.data[green].green, 8, info.green_shift, info.green_mask,
+                      BX_GEFORCE_THIS s.pel.data[red].red, 8, info.red_shift, info.red_mask);
                     if (info.is_little_endian) {
                       for (i=0; i<info.bpp; i+=8) {
                         *(tile_ptr2++) = colour >> i;

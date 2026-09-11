@@ -497,7 +497,9 @@ void bx_vga_c::update(void)
                         colour |= *(vid_ptr2++) << 8;
                         if (info.bpp >= 24) {
                           EXTRACT_x555_TO_888(colour, red, green, blue);
-                          colour = (red << 16) | (green << 8) | blue;
+                          colour = MAKE_COLOUR(blue, 8, info.blue_shift, info.blue_mask,
+                                               green, 8, info.green_shift, info.green_mask,
+                                               red, 8, info.red_shift, info.red_mask);
                         } else {
                           colour = MAKE_COLOUR(
                             colour & 0x001f, 5, info.blue_shift, info.blue_mask,
@@ -537,7 +539,9 @@ void bx_vga_c::update(void)
                         colour |= *(vid_ptr2++) << 8;
                         if (info.bpp >= 24) {
                           EXTRACT_565_TO_888(colour, red, green, blue);
-                          colour = (red << 16) | (green << 8) | blue;
+                          colour = MAKE_COLOUR(blue, 8, info.blue_shift, info.blue_mask,
+                                               green, 8, info.green_shift, info.green_mask,
+                                               red, 8, info.red_shift, info.red_mask);
                         } else {
                           colour = MAKE_COLOUR(
                             colour & 0x001f, 5, info.blue_shift, info.blue_mask,
