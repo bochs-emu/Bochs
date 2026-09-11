@@ -719,6 +719,22 @@ AC_ARG_ENABLE(trace-linking,
     ]
   )
 
+AC_MSG_CHECKING(for SIMD acceleration using intrinsics support)
+AC_ARG_ENABLE(trace-linking,
+  AS_HELP_STRING([--enable-simd-intrinsics], [enable SIMD acceleration using intrinsics (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    enable_simd_intrinsics=1
+   else
+    AC_MSG_RESULT(no)
+    enable_simd_intrinsics=0
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    enable_simd_intrinsics=0
+    ]
+  )
+
 AC_MSG_CHECKING(support for configurable MSR registers)
 AC_ARG_ENABLE(configurable-msrs,
   AS_HELP_STRING([--enable-configurable-msrs], [support for configurable MSR registers (yes if cpu level >= 5)]),
@@ -933,6 +949,7 @@ if test "$speedups_all" = 1; then
   speedup_fastcall=1
   speedup_handlers_chaining=1
   enable_trace_linking=1
+  enable_simd_intrinsics=1
 fi
 
 if test "$speedup_repeat" = 1; then
@@ -962,6 +979,12 @@ if test "$enable_trace_linking" = 1; then
   AC_DEFINE(BX_ENABLE_TRACE_LINKING, 1)
 else
   AC_DEFINE(BX_ENABLE_TRACE_LINKING, 0)
+fi
+
+if test "$enable_simd_intrinsics" = 1; then
+  AC_DEFINE(BX_SUPPORT_HOST_SIMD_INTRINSICS, 1)
+else
+  AC_DEFINE(BX_SUPPORT_HOST_SIMD_INTRINSICS, 0)
 fi
 
 READLINE_LIB=""
