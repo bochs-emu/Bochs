@@ -18,7 +18,7 @@ Changes after Bochs 3.1:
 - x86-64: implement ENTER and LEAVE instructions with OperandSize=16 and StackSize=64
 - AVX-512: VPBROADCASTMB2Q/VPBROADCASTMW2D instructions should require AVX512_CD
 - AVX-512: VPCMPB/VPCMPUB/VPCMPW/VPCMPUW instructions should require AVX512_BW
-- AES_AVX: Enforce AES feature flag in cpu to make sure sure these are disabled when AES gets disabled
+- AES_AVX: Enforce AES feature flag in cpu to make sure these are disabled when AES gets disabled
 + AVX-512: Fix boundary conditions of write mask calculation for VPCOMPRESSB/VPCOMPRESSW instructions
 + AVX-512: Fix boundary conditions of load mask calculation for VPEXPANDB/VPEXPANDW instructions, VPEXPANDB was completely broken with load mask > 32 bit
 + AVX512_GATHER: Fix 512-bit qword-indexed VGATHERQPS zero upper
