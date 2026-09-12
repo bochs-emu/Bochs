@@ -690,9 +690,15 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
     BX_CPU_THIS_PTR in_vmx_guest = BX_CPU_THIS_PTR in_smm_vmx_guest;
     BX_INFO(("SMM Restore: enable VMX %s mode", BX_CPU_THIS_PTR in_vmx_guest ? "guest" : "host"));
 
-    smm_state->cr0.set_PG(1); // set CR0.PG, CR0.NE and CR0.PE
-    smm_state->cr0.set_NE(1);
-    smm_state->cr0.set_PE(1);
+    if (!smm_state->cr0.get_PG() || !smm_state->cr0.get_NE() || smm_state->cr0.get_PE()) {
+      if (! BX_CPU_THIS_PTR in_vmx_guest) {
+        BX_PANIC(("SMM restore: CR0 state is corrupted in restore image !"));
+
+        smm_state->cr0.set_PG(1); // set CR0.PG, CR0.NE and CR0.PE
+        smm_state->cr0.set_NE(1);
+        smm_state->cr0.set_PE(1);
+      }
+    }
 
     smm_state->cr4.set_VMXE(1);
     // block and disable A20M;
