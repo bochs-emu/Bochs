@@ -100,7 +100,15 @@ float64 f64_roundToInt(float64 a, uint8_t scale, uint8_t roundingMode, bool exac
         uiZ += lastBitMask>>1;
     } else if (roundingMode == softfloat_round_near_even) {
         uiZ += lastBitMask>>1;
-        if (!(uiZ & roundBitsMask)) uiZ &= ~lastBitMask;
+        // When lastBitMask sits exactly one bit above the 52-bit fraction
+        // field (only possible at this branch's low edge, exp+scale==0x3FF),
+        // an exact tie means the increment carried all the way out of the
+        // fraction field into the exponent, so the kept fraction is exactly
+        // zero - already even - and must never be cleared back down; that
+        // bit is the exponent's LSB here, not a fraction bit, so testing it
+        // for "oddness" the way the in-field case does picks the wrong
+        // candidate half the time.
+        if (!(uiZ & roundBitsMask) && lastBitMask <= 0x0008000000000000ULL) uiZ &= ~lastBitMask;
     } else if (roundingMode == (signF64UI(uiZ) ? softfloat_round_min : softfloat_round_max)) {
         uiZ += roundBitsMask;
     }
