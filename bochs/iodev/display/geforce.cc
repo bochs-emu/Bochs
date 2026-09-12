@@ -3193,6 +3193,7 @@ void bx_geforce_c::d3d_texture_process_format(gf_texture* tex)
     case 0x00: // Y8
     case 0x01: // AY8
     case 0x0b: // I8_A8R8G8B8
+    case 0x19: // A8
     case 0x1b: // AY8
     case 0x81: // B8
       tex->color_bytes = 1;
@@ -3244,18 +3245,10 @@ void texture_update_size(gf_texture* tex, Bit32u cls)
 void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
   gf_texture* tex, float coords_in[3], float lodf, float color[4])
 {
-  Bit32u lodi;
-  if (lodf < 0.5f)
-    lodi = 0;
-  else if (lodf >= tex->levels - 0.5f)
-    lodi = tex->levels - 1;
-  else
-    lodi = (Bit32u)(lodf + 0.5f);
-  Bit32u tex_ofs = tex->offset + tex->level_offset[lodi];
   float* coords;
   float coords_cubemap[3];
+  Bit32u face;
   if (tex->cubemap) {
-    Bit32u face;
     float coords_abs[3];
     for (Bit32u i = 0; i < 3; i++)
       coords_abs[i] = fabs(coords_in[i]);
@@ -3294,69 +3287,187 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
     coords_cubemap[1] = 0.5f * coords_cubemap[1] + 0.5f;
     coords_cubemap[2] = 0.0f;
     coords = coords_cubemap;
-    tex_ofs += face * tex->face_bytes;
   } else {
+    face = 0;
     coords = coords_in;
   }
-  Bit32u* lodSize = tex->sizes[lodi];
-  Bit32u xyz[3] = { 0 };
-  for (Bit32u i = 0; i < tex->dimensions; i++) {
-    if (tex->unnormalized) {
-      Bit32s c = coords[i];
-      Bit32u size = lodSize[i];
-      if (c < 0 || Bit32u(c) >= size) {
-        switch (tex->wrap[i]) {
+  Bit32u filter = lodf < 0.0f ? tex->filter_mag : tex->filter_min;
+  bool linear_coord = filter == 2 || filter == 4 || filter == 6;
+  Bit32u lod_samples = 1;
+  Bit32u lodi[2] = { 0 };
+  float lodf_frac = 0.0f;
+  if (filter > 2) {
+    if (filter == 3 || filter == 4) {
+      lodi[0] = (Bit32u)(lodf + 0.5f);
+    } else if (filter == 5 || filter == 6) {
+      lod_samples = 2;
+      lodi[0] = (Bit32u)lodf;
+      lodi[1] = (Bit32u)(lodf + 1.0f);
+      lodf_frac = lodf - lodi[0];
+    }
+    for (Bit32u li = 0; li < lod_samples; li++) {
+      if (lodi[li] < 0)
+        lodi[li] = 0;
+      if (lodi[li] >= tex->levels)
+        lodi[li] = tex->levels - 1;
+    }
+    if (lod_samples == 2 && lodi[0] == lodi[1])
+      lod_samples = 1;
+  }
+  float colors[2][4] = { { 0.0f } };
+  for (Bit32u li = 0; li < lod_samples; li++) {
+    Bit32u* lodSize = tex->sizes[lodi[li]];
+    float coords_w[3] = { 0.0f };
+    for (Bit32u d = 0; d < tex->dimensions; d++) {
+      float c = coords[d];
+      if (!tex->unnormalized)
+        c *= lodSize[d];
+      if (c < 0.5f || c > lodSize[d] - 0.5f) {
+        switch (tex->wrap[d]) {
           case 1:  // WRAP
-            c %= size;
-            if (c < 0)
-              c += size;
-            break;
-          case 2:  // MIRROR
-            c %= size * 2;
-            if (c < 0)
-              c += size * 2;
-            if (Bit32u(c) >= size)
-              c = size * 2 - c - 1;
-            break;
-          case 3:  // CLAMP_TO_EDGE
-          default:
-            c = c < 0 ? 0 : size - 1;
-            break;
-        }
-      }
-      xyz[i] = c;
-    } else {
-      float c = coords[i];
-      if (c < 0.0f || c > 1.0f) {
-        switch (tex->wrap[i]) {
-          case 1:  // WRAP
-            c = c - floor(c);
-            break;
-          case 2:  // MIRROR
-            c = fmod(c, 2.0f);
+            c = fmod(c, lodSize[d]);
             if (c < 0.0f)
-              c += 2.0f;
-            if (c > 1.0f)
-              c = 2.0f - c;
+              c += lodSize[d];
             break;
+          case 4:  // CLAMP_TO_BORDER
+            if (c < -0.5f)
+              c = -0.5f;
+            if (c > lodSize[d] + 0.5f)
+              c = lodSize[d] + 0.5f;
+            break;
+          case 5:  // CLAMP
+            if (c < 0.0f)
+              c = 0.0f;
+            if (c >= lodSize[d])
+              c = nextafterf(lodSize[d], -INFINITY);
+            break;
+          case 2:  // MIRROR
+            c = fmod(c, 2.0f * lodSize[d]);
+            if (c < 0.0f)
+              c += 2.0f * lodSize[d];
+            if (c > lodSize[d])
+              c = 2.0f * lodSize[d] - c;
+            // fallthrough
           case 3:  // CLAMP_TO_EDGE
           default:
-            c = c < 0.0f ? 0.0f : 1.0f;
+            if (c < 0.5f)
+              c = 0.5f;
+            if (c > lodSize[d] - 0.5f)
+              c = lodSize[d] - 0.5f;
             break;
         }
       }
-      xyz[i] = c == 1.0f ? lodSize[i] - 1 : c * lodSize[i];
+      coords_w[d] = c;
+    }
+    if (linear_coord) {
+      float coords_sf[3];
+      float coeffs[3][2];
+      for (Bit32u d = 0; d < tex->dimensions; d++) {
+        float coord_s = coords_w[d] - 0.5f;
+        coords_sf[d] = floor(coord_s);
+        coeffs[d][1] = coord_s - coords_sf[d];
+        coeffs[d][0] = 1.0f - coeffs[d][1];
+      }
+      float corner[4];
+      Bit32s coords_i[3];
+      switch (tex->dimensions) {
+        case 1:
+        default: // should not happen
+          for (Bit32u cx = 0; cx < 2; cx++) {
+            coords_i[0] = (Bit32s)coords_sf[0] + cx;
+            d3d_sample_texture(ch, tex, coords_i, face, lodi[li], corner);
+            float k0 = coeffs[0][cx];
+            for (Bit32u ci = 0; ci < 4; ci++)
+              colors[li][ci] += k0 * corner[ci];
+          }
+          break;
+        case 2:
+          for (Bit32u cy = 0; cy < 2; cy++) {
+            coords_i[1] = (Bit32s)coords_sf[1] + cy;
+            float k1 = coeffs[1][cy];
+            for (Bit32u cx = 0; cx < 2; cx++) {
+              coords_i[0] = (Bit32s)coords_sf[0] + cx;
+              d3d_sample_texture(ch, tex, coords_i, face, lodi[li], corner);
+              float k0 = k1 * coeffs[0][cx];
+              for (Bit32u ci = 0; ci < 4; ci++)
+                colors[li][ci] += k0 * corner[ci];
+            }
+          }
+          break;
+        case 3:
+          for (Bit32u cz = 0; cz < 2; cz++) {
+            coords_i[2] = (Bit32s)coords_sf[2] + cz;
+            float k2 = coeffs[2][cz];
+            for (Bit32u cy = 0; cy < 2; cy++) {
+              coords_i[1] = (Bit32s)coords_sf[1] + cy;
+              float k1 = k2 * coeffs[1][cy];
+              for (Bit32u cx = 0; cx < 2; cx++) {
+                coords_i[0] = (Bit32s)coords_sf[0] + cx;
+                d3d_sample_texture(ch, tex, coords_i, face, lodi[li], corner);
+                float k0 = k1 * coeffs[0][cx];
+                for (Bit32u ci = 0; ci < 4; ci++)
+                  colors[li][ci] += k0 * corner[ci];
+              }
+            }
+          }
+          break;
+      }
+    } else {
+      Bit32s coords_i[3] = { 0 };
+      for (Bit32u d = 0; d < tex->dimensions; d++)
+        coords_i[d] = floor(coords_w[d]);
+      d3d_sample_texture(ch, tex, coords_i, face, lodi[li], colors[li]);
     }
   }
+  if (lod_samples == 1) {
+    for (Bit32u ci = 0; ci < 4; ci++)
+      color[ci] = colors[0][ci];
+  } else {
+    float omlf = 1.0f - lodf_frac;
+    for (Bit32u ci = 0; ci < 4; ci++)
+      color[ci] = colors[0][ci] * omlf + colors[1][ci] * lodf_frac;
+  }
+}
+
+void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
+  gf_texture* tex, Bit32s coords_in[3], Bit32u face, Bit32u lod, float color[4])
+{
+  Bit32u coords[3] = { 0 };
+  Bit32u* lodSize = tex->sizes[lod];
+  for (Bit32u d = 0; d < tex->dimensions; d++) {
+    Bit32s c = coords[d] = coords_in[d];
+    if (c < 0 || c >= lodSize[d]) {
+      switch (tex->wrap[d]) {
+        case 1:   // WRAP
+          if (c < 0)
+            coords[d] = lodSize[d] - 1;
+          else
+            coords[d] = 0;
+          break;
+        case 4:   // CLAMP_TO_BORDER
+        case 5:   // CLAMP
+          for (Bit32u ci = 0; ci < 4; ci++)
+            color[ci] = tex->border_color[ci];
+          return;
+        default:  // should not happen
+          color[0] = 1.0f;
+          color[1] = 0.0f;
+          color[2] = 0.0f;
+          color[3] = 1.0f;
+          return;
+      }
+    }
+  }
+  Bit32u tex_ofs = tex->offset + tex->level_offset[lod] + face * tex->face_bytes;
   if (tex->compressed) {
     Bit32u pitch = lodSize[0] * (tex->dxt_alpha_data ? 4 : 2);
-    Bit32u bx = xyz[0] >> 2;
-    Bit32u by = xyz[1] >> 2;
+    Bit32u bx = coords[0] >> 2;
+    Bit32u by = coords[1] >> 2;
     tex_ofs += by * pitch + bx * tex->color_bytes;
   } else if (tex->linear) {
-    tex_ofs += xyz[1] * tex->pitch + xyz[0] * tex->color_bytes;
+    tex_ofs += coords[1] * tex->pitch + coords[0] * tex->color_bytes;
   } else
-    tex_ofs += swizzle(xyz[0], xyz[1], xyz[2], lodSize[0], lodSize[1], lodSize[2]) * tex->color_bytes;
+    tex_ofs += swizzle(coords[0], coords[1], coords[2], lodSize[0], lodSize[1], lodSize[2]) * tex->color_bytes;
   Bit32s color_int[4];
   float color_scale[4];
   switch (tex->format) {
@@ -3366,8 +3477,8 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
     case 0x86:   // DXT1
     case 0x87:   // DXT23
     case 0x88: { // DXT45
-      Bit32u ox = xyz[0] & 3;
-      Bit32u oy = xyz[1] & 3;
+      Bit32u ox = coords[0] & 3;
+      Bit32u oy = coords[1] & 3;
       if (tex->dxt_alpha_data) {
         Bit64u alpha_word = dma_read64(tex->dma_obj, tex_ofs);
         if (tex->dxt_alpha_explicit) {
@@ -3680,6 +3791,18 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
       color_scale[3] = 1.0f / 255.0f;
       break;
     }
+    case 0x19: { // A8
+      Bit8u value = dma_read8(tex->dma_obj, tex_ofs);
+      color_int[0] = value;
+      color_scale[0] = 1.0f / 255.0f;
+      color_int[1] = 1;
+      color_scale[1] = 1.0f;
+      color_int[2] = 1;
+      color_scale[2] = 1.0f;
+      color_int[3] = 1;
+      color_scale[3] = 1.0f;
+      break;
+    }
     case 0x01:
     case 0x1b: { // AY8
       Bit8u value = dma_read8(tex->dma_obj, tex_ofs);
@@ -3693,15 +3816,15 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
       color_scale[3] = 1.0f / 255.0f;
       break;
     }
-    default:
+    default:     // not implemented
       color_int[0] = 1;
       color_scale[0] = 0.8f;
       color_int[1] = 1;
-      color_scale[1] = 0.8f + coords[0] * 0.2f;
+      color_scale[1] = 0.8f + 0.2f * coords[0] / lodSize[0];
       color_int[2] = 1;
-      color_scale[2] = 0.6f + coords[1] * 0.2f;
+      color_scale[2] = 0.6f + 0.2f * coords[1] / lodSize[1];
       color_int[3] = 1;
-      color_scale[3] = 0.6f + coords[2] * 0.2f;
+      color_scale[3] = 0.6f + 0.2f * coords[2] / lodSize[2];
       break;
   }
   if (tex->signed_any) {
@@ -7658,7 +7781,8 @@ void bx_geforce_c::d3d_mh_texture(gf_channel* ch, Bit32u cls, Bit32u method, Bit
     }
   } else if ((texture_method == 6 && cls == 0x0096) ||
              (texture_method == 5 && cls != 0x0096)) {
-    // filtering is not implemented
+    tex->filter_min = (param >> 16) & 7;
+    tex->filter_mag = (param >> 24) & 7;
     if (cls != 0x0096) {
       Bit32u signed_argb = param >> 28;
       tex->signed_any = signed_argb != 0;
@@ -7677,6 +7801,12 @@ void bx_geforce_c::d3d_mh_texture(gf_channel* ch, Bit32u cls, Bit32u method, Bit
              (texture_method == 8 && cls == 0x0097)) {
     tex->pal_dma_obj = (param & 1) == 1 ? ch->d3d_b_obj : ch->d3d_a_obj;
     tex->pal_ofs = param & 0xffffffc0;
+  } else if ((texture_method == 9 && cls == 0x0097) ||
+             (texture_method == 7 && cls >= 0x0497)) {
+    tex->border_color[0] = ((param >> 16) & 0xff) / 255.0f;
+    tex->border_color[1] = ((param >> 8) & 0xff) / 255.0f;
+    tex->border_color[2] = ((param >> 0) & 0xff) / 255.0f;
+    tex->border_color[3] = ((param >> 24) & 0xff) / 255.0f;
   } else if (texture_method >= 10 && texture_method <= 13 && cls == 0x0097) {
     tex->offset_matrix[texture_method - 10] = uint32_as_float(param);
   }

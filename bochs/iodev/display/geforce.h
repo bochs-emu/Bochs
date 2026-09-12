@@ -60,6 +60,8 @@ struct gf_texture
   Bit32u color_bytes;
   Bit32u pitch;
   Bit32u levels;
+  Bit32u filter_min;
+  Bit32u filter_mag;
   Bit32u size_log[3];
   Bit32u size_npot[3];
   Bit32u sizes[16][3];
@@ -74,6 +76,7 @@ struct gf_texture
   bool signed_comp[4];
   Bit32u pal_dma_obj;
   Bit32u pal_ofs;
+  float border_color[4];
   Bit32u key_color;
   float offset_matrix[4];
 };
@@ -724,6 +727,8 @@ private:
   BX_GEFORCE_SMF bool d3d_window_clip(gf_channel* ch, Bit32u* x, Bit32u* y, Bit32u* width, Bit32u* height);
   BX_GEFORCE_SMF void d3d_clear_surface(gf_channel* ch);
   BX_GEFORCE_SMF void d3d_texture_process_format(gf_texture* tex);
+  BX_GEFORCE_SMF void d3d_sample_texture(gf_channel* ch,
+    gf_texture* tex, Bit32s coords_in[3], Bit32u face, Bit32u lod, float color[4]);
   BX_GEFORCE_SMF void d3d_sample_texture(gf_channel* ch,
     gf_texture* tex, float coords_in[3], float lodf, float color[4]);
   BX_GEFORCE_SMF void d3d_vertex_shader(gf_channel* ch, float in[16][4], float out[16][4]);
