@@ -1,3 +1,25 @@
+Changes after Bochs 3.1 release:
+
+(up to date with commits done till 12 Sep 2026)
+
+- CPU emulation and instrumentation
+  ! Improved implementation of x87 transendential instructions (F2XM1/FYL2X/FYL2XP1/FPATAN/FSIN/FCOS/FSINCOS/FPTAN) to match HW
+  - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of AVX512/AVX512_FP16)
+    full list of all CPU bugfixes can be seen in Bochs source tree @ bochs/cpu/history)
+
+- I/O Devices
+  - VGA
+    - Setting wrong VBE "dispi ID" do not cause PANIC anymore
+  - GeForce
+    - Continue to improve GeForce model
+      - #846: Add volume texture support
+      - #858: Add level of detail support
+      - #860: Rewrite cubemap LOD calculation
+      - #864: Allow rendering to swizzled texture
+  - Hard drive / HD image
+    - VVFAT: Fixed LongName handling in vvfat disks
+
+-------------------------------------------------------------------------
 Changes in 3.1 (August 23, 2026):
 
 Brief summary :
