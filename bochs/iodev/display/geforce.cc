@@ -3436,7 +3436,7 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
   Bit32u* lodSize = tex->sizes[lod];
   for (Bit32u d = 0; d < tex->dimensions; d++) {
     Bit32s c = coords[d] = coords_in[d];
-    if (c < 0 || c >= lodSize[d]) {
+    if (c < 0 || (Bit32u) c >= lodSize[d]) {
       switch (tex->wrap[d]) {
         case 1:   // WRAP
           if (c < 0)
