@@ -25,8 +25,14 @@ Changes after Bochs 3.1:
 + AVX-512: Fix VRANGE* output when both arguments are different sign same magnitude ad ABS_MIN and ABS_MAX is requsted
 - Legacy: added missing #AC check in ticke_write_linear, used for ENTER and XSAVE instructions
 + x87: improved implementation of x87 transendential instructions (F2XM1/FYL2X/FYL2XP1/FPATAN/FSIN/FCOS/FSINCOS/FPTAN) to match HW
++ x87: fixed unmasked underflow/overflow corner cases for FSCALE x87 instruction
 - Legacy: fixed broken CR2 register initialization in reset() method, CR2 contained garbage value at the beginning instead of being initialized to 0
+- Legacy: swap order of memory accesses in CMPSB/CMPSW/CMPSD/CMPSQ instructions to match real HW: access ES:EDI first and seg:ESI later
 - VMX: Fixed typo in VMXON #GP(0) condition
++ AVX-512/AVX512_FP16: fixed corner case correctness issue for VRNDSCALE* instructions with denormal operand
++ AVX-512/AVX512_FP16: fixed corner case correctness issue for VRCPSH/VRCPPH and VRCP14* instructions
++ AVX-512/AVX512_FP16: fixed corner case correctness issue for VRSQRTSH/VRSQRTPH and VRSQRT14* instructions
+- SMM/VMX: allow SMM restore to VMX “unrestricted guest” (stop enforcing CR0.PE = CR0.PG = CR0.NE = 1 during RSM to VMX guest state)
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
