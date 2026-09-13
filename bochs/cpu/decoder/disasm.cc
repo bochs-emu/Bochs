@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013-2019 Stanislav Shwartsman
+//   Copyright (c) 2013-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -308,6 +308,7 @@ char *resolve_memsize(char *disbufptr, const bxInstruction_c *i, unsigned src_in
 
     case BX_GPR64:
     case BX_MMX_REG:
+    case BX_BOUND_REG:
 #if BX_SUPPORT_EVEX
     case BX_KMASK_REG:
 #endif
@@ -410,6 +411,10 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
     disbufptr = dis_sprintf(disbufptr, "%s", general_64bit_regname[srcreg]);
     break;
 #endif
+
+  case BX_BOUND_REG:
+    disbufptr = dis_sprintf(disbufptr, "b%d", srcreg);
+    break;
 
   case BX_FPU_REG:
     disbufptr = dis_sprintf(disbufptr, "st(%d)", srcreg & 0x7);

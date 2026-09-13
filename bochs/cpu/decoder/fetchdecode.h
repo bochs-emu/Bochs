@@ -133,17 +133,17 @@ enum {
   BX_GPR16 = 0x2,
   BX_GPR32 = 0x3,
   BX_GPR64 = 0x4,
-  BX_FPU_REG = 0x5,
-  BX_MMX_REG = 0x6,
-  BX_MMX_HALF_REG = 0x7,
-  BX_VMM_REG = 0x8,
-  BX_KMASK_REG = 0x9,
-  BX_KMASK_REG_PAIR = 0xA,
-  BX_TMM_REG = 0xB,
-  BX_SEGREG = 0xC,
-  BX_CREG = 0xD,
-  BX_DREG = 0xE
-  // encoding 0xF is still free
+  BX_BOUND_REG = 0x5,
+  BX_FPU_REG = 0x6,
+  BX_MMX_REG = 0x7,
+  BX_MMX_HALF_REG = 0x8,
+  BX_VMM_REG = 0x9,
+  BX_KMASK_REG = 0xA,
+  BX_KMASK_REG_PAIR = 0xB,
+  BX_TMM_REG = 0xC,
+  BX_SEGREG = 0xD,
+  BX_CREG = 0xE,
+  BX_DREG = 0xF
 };
 
 // to be used together with BX_SRC_VECTOR_RM
@@ -330,6 +330,9 @@ const Bit8u OP_Od = BX_FORM_SRC(BX_DIRECT_MEMREF_D, BX_SRC_IMM);
 const Bit8u OP_Oq = BX_FORM_SRC(BX_DIRECT_MEMREF_Q, BX_SRC_IMM);
 
 const Bit8u OP_Ap = BX_FORM_SRC(BX_DIRECT_PTR, BX_SRC_IMM);
+
+const Bit8u OP_GBnd = BX_FORM_SRC(BX_BOUND_REG, BX_SRC_NNN);
+const Bit8u OP_EBnd = BX_FORM_SRC(BX_BOUND_REG, BX_SRC_RM);
 
 const Bit8u OP_KGb = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_NNN);
 const Bit8u OP_KEb = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_RM);
