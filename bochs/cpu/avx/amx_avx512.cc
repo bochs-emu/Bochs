@@ -57,6 +57,30 @@ bool BX_CPP_AttrRegparmN(3) BX_CPU_C::tilemov_read_row(bxInstruction_c *i, bool 
   return true;
 }
 
+bool BX_CPP_AttrRegparmN(3) BX_CPU_C::tilemov_write_row(bxInstruction_c *i, bool immediate_form, const BxPackedAvxRegister *src)
+{
+  unsigned tile_dst = i->dst();
+  check_tile(i, tile_dst);
+
+  unsigned row;
+  if (immediate_form) {
+    row = i->Ib();
+  }
+  else {
+    row = (unsigned) BX_READ_16BIT_REG(i->src2());
+  }
+
+  row &= 0xf;
+
+  unsigned tile_num_rows = BX_CPU_THIS_PTR amx->tile_num_rows(tile_dst);
+  if (row > tile_num_rows)
+    return false;
+
+  AMX::TILE *tdst = &(BX_CPU_THIS_PTR amx->tile[tile_dst]);
+  tdst->row[row] = *src;
+  return true;
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILEMOVROW_VdqTrm(bxInstruction_c *i)
 {
   BxPackedAvxRegister dst;
@@ -64,6 +88,55 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILEMOVROW_VdqTrm(bxInstruction_c *i)
   BX_WRITE_AVX_REG(i->dst(), dst);
   if (result)
     BX_CPU_THIS_PTR amx->restart();
+
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILEMOVROW_TrmWdq(bxInstruction_c *i)
+{
+  if (BX_CPU_THIS_PTR amx->get_palette_id() != 2) {
+    BX_ERROR(("%s: not supported under pallette %d", i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR amx->get_palette_id()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  bool result = tilemov_write_row(i, i->getIaOpcode() == BX_IA_EVEX_TILEMOVROW_TrmWdqIb, &BX_READ_AVX_REG(i->src1()));
+  if (result)
+    BX_CPU_THIS_PTR amx->restart();
+
+  BX_NEXT_INSTR(i);
+}
+
+// TILEMOVCOL is write-only (AVX -> tile): it distributes the 16 dwords of the
+// source ZMM one per row into a single column of the destination tile. Out of
+// range column values cannot occur (masked to 0xf, and rows are always <= 16),
+// so unlike tilemov_read_row/tilemov_write_row there is no fault-avoidance
+// early return needed here.
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILEMOVCOL_TrmWdq(bxInstruction_c *i)
+{
+  if (BX_CPU_THIS_PTR amx->get_palette_id() != 2) {
+    BX_ERROR(("%s: not supported under pallette %d", i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR amx->get_palette_id()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  unsigned tile_dst = i->dst();
+  check_tile(i, tile_dst);
+
+  unsigned col;
+  if (i->getIaOpcode() == BX_IA_EVEX_TILEMOVCOL_TrmWdqIb)
+    col = i->Ib();
+  else
+    col = (unsigned) BX_READ_16BIT_REG(i->src2());
+
+  col &= 0xf;
+
+  const BxPackedAvxRegister &src = BX_READ_AVX_REG(i->src1());
+  AMX::TILE *tdst = &(BX_CPU_THIS_PTR amx->tile[tile_dst]);
+  unsigned tile_num_rows = BX_CPU_THIS_PTR amx->tile_num_rows(tile_dst);
+
+  for (unsigned row=0; row < tile_num_rows; row++)
+    tdst->row[row].vmm32u(col) = src.vmm32u(row);
+
+  BX_CPU_THIS_PTR amx->restart();
 
   BX_NEXT_INSTR(i);
 }

@@ -30,8 +30,7 @@
 
 #include "softfloat3e/include/softfloat.h"
 
-#include "bf8.h"
-#include "hf8.h"
+#include "fp8.h"
 #include "simd_int.h"
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTHF82PH_VphWf8R(bxInstruction_c *i)

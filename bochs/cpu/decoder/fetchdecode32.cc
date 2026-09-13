@@ -2132,6 +2132,12 @@ int BX_CPU_C::assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
        return(1);
     }
   }
+  if (! (fetchModeMask & BX_FETCH_MODE_SCALEDATA_OK)) {
+    if (op_flags & BX_PREPARE_SCALEDATA) {
+       if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoSCALEDATA;
+       return(1);
+    }
+  }
 #endif // BX_SUPPORT_AMX
 #endif // BX_SUPPORT_EVEX
 #endif // BX_SUPPORT_AVX

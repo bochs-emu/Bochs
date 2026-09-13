@@ -791,7 +791,7 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 - CPU Feature: avx10_1
 
  Enables CPUID[0x00000007].subleaf[1].ECX[19]: AVX10 supported flag.
- Enables CPUID[0x00000014] AVX10 CPUID leaf.
+ Enables CPUID[0x00000024] AVX10 CPUID leaf.
  Consolidates avx512, avx512dq, avx512bw, avx512cd, avx512vbmi, avx512vbmi2, avx512ifma52, avx512vpopcnt, avx512vnni, avx512bitalg, avx512bf16, avx512fp16 under same feature.
  Allows to limit maximum vector length to 256 bit (AVX10.256)
  XSAVE/XRSTOR support for AVX10.256
@@ -800,7 +800,6 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
 - CPU Feature: avx10_2
 
- Introduce EVEX.U bit (previously must be '1) to enable embedded rounding for 256-bit reg/reg instructions.
  Support AVX10.2 instructions (will #UD otherwise).
 
  Dependency: avx10_1
@@ -1087,6 +1086,19 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Includes VMX support.
 
  Dependency: longmode
+
+- CPU Feature: ace
+
+ Enables CPUID[0x00000007].subleaf[1].EAX[11]: ACE architecture flag.
+ Enables CPUID[0x00000024].subleaf[1]: ACE CPUID subleaf.
+ Enables CPUID[0x0000001D] : palette 2
+ Adds AMX SCALEDATA support
+ Enables XCR0[20] (SCALEDATA) state.
+ Enabled ACE AVX512_AUX_V2 instructions (will #UD otherwise).
+ Enables ACE AMX instructions (will #UD otherwise).
+
+ Dependency: BX_SUPPORT_EVEX, BX_SUPPORT_AMX
+             avx512, avx10_2, amx
 
 ---------------------------------------------------------------------------------------------------
 

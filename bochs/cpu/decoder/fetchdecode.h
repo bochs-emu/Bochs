@@ -66,6 +66,7 @@ enum BxDecodeError {
 #define FetchWORD(iptr) ReadHostWordFromLittleEndian((Bit16u*)(iptr))
 #define FetchQWORD(iptr) ReadHostQWordFromLittleEndian((Bit64u*)(iptr));
 
+#define BX_PREPARE_SCALEDATA         (0x800 | BX_PREPARE_AMX)
 #define BX_PREPARE_AMX               (0x400)
 #define BX_PREPARE_EVEX_NO_BROADCAST (0x200 | BX_PREPARE_EVEX)
 #define BX_PREPARE_EVEX_NO_SAE       (0x100 | BX_PREPARE_EVEX)
@@ -371,6 +372,8 @@ const Bit8u OP_Yq = BX_FORM_SRC(BX_RDIREF_Q, BX_SRC_IMPLICIT);
 
 const Bit8u OP_sYq  = BX_FORM_SRC(BX_MMX_RDIREF, BX_SRC_IMPLICIT);
 const Bit8u OP_sYdq = BX_FORM_SRC(BX_VEC_RDIREF, BX_SRC_IMPLICIT);
+
+const Bit8u OP_BsrVdq = BX_FORM_SRC(BX_NO_REGISTER, BX_SRC_NNN);
 
 struct bx_modrm {
   unsigned modrm, mod, nnn, rm;

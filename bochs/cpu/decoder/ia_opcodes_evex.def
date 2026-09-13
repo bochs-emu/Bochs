@@ -1715,6 +1715,32 @@ bx_define_opcode(BX_IA_EVEX_TCVTROWPS2BF16L_VphTrmIb, "tcvtrowps2bf16l", "tcvtro
 bx_define_opcode(BX_IA_EVEX_TCVTROWPS2BF16L_VphTrmBd, "tcvtrowps2bf16l", "tcvtrowps2bf16l", NULL, &BX_CPU_C::TCVTROWPS2BF16L_VphTrm, BX_ISA_AMX_AVX512, OP_Vph, OP_Trm, OP_Bd, OP_NONE, BX_PREPARE_AMX | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_EVEX_TCVTROWPS2BF16H_VphTrmIb, "tcvtrowps2bf16h", "tcvtrowps2bf16h", NULL, &BX_CPU_C::TCVTROWPS2BF16H_VphTrm, BX_ISA_AMX_AVX512, OP_Vph, OP_Trm, OP_Ib, OP_NONE, BX_PREPARE_AMX | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_EVEX_TCVTROWPS2BF16H_VphTrmBd, "tcvtrowps2bf16h", "tcvtrowps2bf16h", NULL, &BX_CPU_C::TCVTROWPS2BF16H_VphTrm, BX_ISA_AMX_AVX512, OP_Vph, OP_Trm, OP_Bd, OP_NONE, BX_PREPARE_AMX | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+
+// ACE extensions
+bx_define_opcode(BX_IA_EVEX_TILEMOVROW_TrmWdqIb, "tilemovrow", "tilemovrow", NULL, &BX_CPU_C::TILEMOVROW_TrmWdq, BX_ISA_ACE, OP_Trm, OP_Wdq, OP_Ib, OP_NONE, BX_PREPARE_SCALEDATA | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_TILEMOVROW_TrmWdqBd, "tilemovrow", "tilemovrow", NULL, &BX_CPU_C::TILEMOVROW_TrmWdq, BX_ISA_ACE, OP_Trm, OP_Wdq, OP_Bd, OP_NONE, BX_PREPARE_SCALEDATA | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_TILEMOVCOL_TrmWdqIb, "tilemovcol", "tilemovcol", NULL, &BX_CPU_C::TILEMOVCOL_TrmWdq, BX_ISA_ACE, OP_Trm, OP_Wdq, OP_Ib, OP_NONE, BX_PREPARE_SCALEDATA | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_TILEMOVCOL_TrmWdqBd, "tilemovcol", "tilemovcol", NULL, &BX_CPU_C::TILEMOVCOL_TrmWdq, BX_ISA_ACE, OP_Trm, OP_Wdq, OP_Bd, OP_NONE, BX_PREPARE_SCALEDATA | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+
+// Block Scale Register (BSR) Operations
+bx_define_opcode(BX_IA_EVEX_BSRMOVF_BsrVdqWdq, "bsrmovf", "bsrmovf", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::BSRMOVF_BsrVdqWdq, BX_ISA_ACE, OP_BsrVdq, OP_Hdq, OP_Wdq, OP_NONE, BX_PREPARE_SCALEDATA | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_BSRMOVL_BsrWdq, "bsrmovl", "bsrmovl", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::BSRMOV_BsrWdq, BX_ISA_ACE, OP_BsrVdq, OP_Wdq, OP_NONE, OP_NONE, BX_PREPARE_SCALEDATA | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_BSRMOVL_WdqBsr, "bsrmovl", "bsrmovl", &BX_CPU_C::BSRMOV_WdqBsrM, &BX_CPU_C::BSRMOV_WdqBsrR, BX_ISA_ACE, OP_Wdq, OP_BsrVdq, OP_NONE, OP_NONE, BX_PREPARE_SCALEDATA | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_BSRMOVH_BsrWdq, "bsrmovh", "bsrmovh", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::BSRMOV_BsrWdq, BX_ISA_ACE, OP_BsrVdq, OP_Wdq, OP_NONE, OP_NONE, BX_PREPARE_SCALEDATA | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_BSRMOVH_WdqBsr, "bsrmovh", "bsrmovh", &BX_CPU_C::BSRMOV_WdqBsrM, &BX_CPU_C::BSRMOV_WdqBsrR, BX_ISA_ACE, OP_Wdq, OP_BsrVdq, OP_NONE, OP_NONE, BX_PREPARE_SCALEDATA | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+
+// ACE v1 Section 14: Tile Outer Product Instructions. Register-only (no
+// memory form for either source), no masking/zeroing support per spec.
+bx_define_opcode(BX_IA_EVEX_TOP2BF16PS_TnnnWdqHdq, "top2bf16ps", "top2bf16ps", NULL, &BX_CPU_C::TOP2BF16PS_TnnnWdqHdq, BX_ISA_ACE, OP_Tnnn, OP_Wdq, OP_Hdq, OP_NONE, BX_PREPARE_SCALEDATA | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_TOP4BSSD_TnnnWdqHdq, "top4bssd", "top4bssd", NULL, &BX_CPU_C::TOP4BSSD_TnnnWdqHdq, BX_ISA_ACE, OP_Tnnn, OP_Wdq, OP_Hdq, OP_NONE, BX_PREPARE_SCALEDATA | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_TOP4BSUD_TnnnWdqHdq, "top4bsud", "top4bsud", NULL, &BX_CPU_C::TOP4BSUD_TnnnWdqHdq, BX_ISA_ACE, OP_Tnnn, OP_Wdq, OP_Hdq, OP_NONE, BX_PREPARE_SCALEDATA | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_TOP4BUSD_TnnnWdqHdq, "top4busd", "top4busd", NULL, &BX_CPU_C::TOP4BUSD_TnnnWdqHdq, BX_ISA_ACE, OP_Tnnn, OP_Wdq, OP_Hdq, OP_NONE, BX_PREPARE_SCALEDATA | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_TOP4BUUD_TnnnWdqHdq, "top4buud", "top4buud", NULL, &BX_CPU_C::TOP4BUUD_TnnnWdqHdq, BX_ISA_ACE, OP_Tnnn, OP_Wdq, OP_Hdq, OP_NONE, BX_PREPARE_SCALEDATA | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_TOP4MXBSSPS_TnnnWdqHdqIb, "top4mxbssps", "top4mxbssps", NULL, &BX_CPU_C::TOP4MXBSSPS_TnnnWdqHdqIb, BX_ISA_ACE, OP_Tnnn, OP_Wdq, OP_Hdq, OP_Ib, BX_PREPARE_SCALEDATA | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_TOP4MXBF8PS_TnnnWdqHdqIb, "top4mxbf8ps", "top4mxbf8ps", NULL, &BX_CPU_C::TOP4MXBF8PS_TnnnWdqHdqIb, BX_ISA_ACE, OP_Tnnn, OP_Wdq, OP_Hdq, OP_Ib, BX_PREPARE_SCALEDATA | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_TOP4MXBHF8PS_TnnnWdqHdqIb, "top4mxbhf8ps", "top4mxbhf8ps", NULL, &BX_CPU_C::TOP4MXBHF8PS_TnnnWdqHdqIb, BX_ISA_ACE, OP_Tnnn, OP_Wdq, OP_Hdq, OP_Ib, BX_PREPARE_SCALEDATA | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_TOP4MXHBF8PS_TnnnWdqHdqIb, "top4mxhbf8ps", "top4mxhbf8ps", NULL, &BX_CPU_C::TOP4MXHBF8PS_TnnnWdqHdqIb, BX_ISA_ACE, OP_Tnnn, OP_Wdq, OP_Hdq, OP_Ib, BX_PREPARE_SCALEDATA | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_TOP4MXHF8PS_TnnnWdqHdqIb, "top4mxhf8ps", "top4mxhf8ps", NULL, &BX_CPU_C::TOP4MXHF8PS_TnnnWdqHdqIb, BX_ISA_ACE, OP_Tnnn, OP_Wdq, OP_Hdq, OP_Ib, BX_PREPARE_SCALEDATA | BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 #endif
 
 // AVX10.2 MOVRS
@@ -1726,5 +1752,47 @@ bx_define_opcode(BX_IA_EVEX_VMOVRSD_VdqWdq, "vmovrsd", "vmovrsd", &BX_CPU_C::VMO
 bx_define_opcode(BX_IA_EVEX_VMOVRSD_VdqWdq_Kmask, "vmovrsd", "vmovrsd", &BX_CPU_C::VMOVUPS_MASK_VpsWpsM, NULL, BX_ISA_AVX10_2_MOVRS, OP_Vdq, OP_mVdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_EVEX_VMOVRSQ_VdqWdq, "vmovrsq", "vmovrsq", &BX_CPU_C::VMOVUPS_VpsWpsM, NULL, BX_ISA_AVX10_2_MOVRS, OP_Vdq, OP_mVdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_EVEX_VMOVRSQ_VdqWdq_Kmask, "vmovrsq", "vmovrsq", &BX_CPU_C::VMOVUPD_MASK_VpdWpdM, NULL, BX_ISA_AVX10_2_MOVRS, OP_Vdq, OP_mVdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+
+// ACE v1 Section 4.3: OCP format conversions + utility instructions (AVX10_V2_AUX)
+
+// FP32 -> FP8 (RNE / RTO), 2-operand form, m32bcst supported
+bx_define_opcode(BX_IA_EVEX_VCVTPS2BF8_Vf8Wps_Kmask, "vcvtps2bf8", "vcvtps2bf8", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VCVTPS2BF8_Vf8WpsR, BX_ISA_ACE, OP_Vdq, OP_mVps, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_EVEX_VCVTPS2BF8S_Vf8Wps_Kmask, "vcvtps2bf8s", "vcvtps2bf8s", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VCVTPS2BF8_Vf8WpsR, BX_ISA_ACE, OP_Vdq, OP_mVps, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_EVEX_VCVTPS2HF8_Vf8Wps_Kmask, "vcvtps2hf8", "vcvtps2hf8", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VCVTPS2HF8_Vf8WpsR, BX_ISA_ACE, OP_Vdq, OP_mVps, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_EVEX_VCVTPS2HF8S_Vf8Wps_Kmask, "vcvtps2hf8s", "vcvtps2hf8s", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VCVTPS2HF8_Vf8WpsR, BX_ISA_ACE, OP_Vdq, OP_mVps, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_EVEX_VCVTROPS2HF8_Vf8Wps_Kmask, "vcvtrops2hf8", "vcvtrops2hf8", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VCVTPS2HF8_Vf8WpsR, BX_ISA_ACE, OP_Vdq, OP_mVps, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_EVEX_VCVTROPS2HF8S_Vf8Wps_Kmask, "vcvtrops2hf8s", "vcvtrops2hf8s", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VCVTPS2HF8_Vf8WpsR, BX_ISA_ACE, OP_Vdq, OP_mVps, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+
+// FP32 -> FP8 (BIAS), 3-operand form: Vdq dst, Hdq src1=per-element bias dword, mVps src2=data (m32bcst supported)
+bx_define_opcode(BX_IA_EVEX_VCVTBIASPS2BF8_Vf8HdqWps_Kmask, "vcvtbiasps2bf8", "vcvtbiasps2bf8", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VCVTBIASPS2BF8_Vf8HdqWpsR, BX_ISA_ACE, OP_Vdq, OP_Hdq, OP_mVps, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_EVEX_VCVTBIASPS2BF8S_Vf8HdqWps_Kmask, "vcvtbiasps2bf8s", "vcvtbiasps2bf8s", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VCVTBIASPS2BF8_Vf8HdqWpsR, BX_ISA_ACE, OP_Vdq, OP_Hdq, OP_mVps, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_EVEX_VCVTBIASPS2HF8_Vf8HdqWps_Kmask, "vcvtbiasps2hf8", "vcvtbiasps2hf8", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VCVTBIASPS2HF8_Vf8HdqWpsR, BX_ISA_ACE, OP_Vdq, OP_Hdq, OP_mVps, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+bx_define_opcode(BX_IA_EVEX_VCVTBIASPS2HF8S_Vf8HdqWps_Kmask, "vcvtbiasps2hf8s", "vcvtbiasps2hf8s", &BX_CPU_C::LOAD_BROADCAST_MASK_VectorD, &BX_CPU_C::VCVTBIASPS2HF8_Vf8HdqWpsR, BX_ISA_ACE, OP_Vdq, OP_Hdq, OP_mVps, OP_NONE, BX_PREPARE_EVEX_NO_SAE)
+
+// FP8 -> FP32 (exact widen), source is quarter-width of dest, no broadcast
+bx_define_opcode(BX_IA_EVEX_VCVTBF82PS_VpsWf8_Kmask, "vcvtbf82ps", "vcvtbf82ps", &BX_CPU_C::LOAD_Quarter_Vector, &BX_CPU_C::VCVTBF82PS_VpsWf8R, BX_ISA_ACE, OP_Vps, OP_mVQV, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_VCVTHF82PS_VpsWf8_Kmask, "vcvthf82ps", "vcvthf82ps", &BX_CPU_C::LOAD_Quarter_Vector, &BX_CPU_C::VCVTHF82PS_VpsWf8R, BX_ISA_ACE, OP_Vps, OP_mVQV, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+
+// FP4 -> FP8 (exact widen), source is half-width of dest, no broadcast
+bx_define_opcode(BX_IA_EVEX_VCVTBF42HF8_Vf8Wf4_Kmask, "vcvtbf42hf8", "vcvtbf42hf8", &BX_CPU_C::LOAD_Half_Vector, &BX_CPU_C::VCVTBF42HF8_Vf8Wf4R, BX_ISA_ACE, OP_Vdq, OP_mVHV, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+
+// FP6 -> FP8 (exact widen), register-only source, same register class as dest
+bx_define_opcode(BX_IA_EVEX_VCVTBF62HF8_Vf8Wf6_Kmask, "vcvtbf62hf8", "vcvtbf62hf8", NULL, &BX_CPU_C::VCVTBF62HF8_Vf8Wf6R, BX_ISA_ACE, OP_Vdq, OP_mVdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_VCVTHF62HF8_Vf8Wf6_Kmask, "vcvthf62hf8", "vcvthf62hf8", NULL, &BX_CPU_C::VCVTHF62HF8_Vf8Wf6R, BX_ISA_ACE, OP_Vdq, OP_mVdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+
+// FP8 -> FP6 (RNE, saturating), register-only both operands, no masking/zeroing support.
+bx_define_opcode(BX_IA_EVEX_VCVTBF82BF6S_Vf6Wf8, "vcvtbf82bf6s", "vcvtbf82bf6s", NULL, &BX_CPU_C::VCVTBF82BF6S_Vf6Wf8R, BX_ISA_ACE, OP_mVdq, OP_Vdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_VCVTHF82HF6S_Vf6Wf8, "vcvthf82hf6s", "vcvthf82hf6s", NULL, &BX_CPU_C::VCVTHF82HF6S_Vf6Wf8R, BX_ISA_ACE, OP_mVdq, OP_Vdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+
+// FP8 -> FP4 (RNE, saturating), dest may be memory (half-width, nibble-packed), source always register, no masking/zeroing support
+bx_define_opcode(BX_IA_EVEX_VCVTBF82BF4S_Wf4Vdq, "vcvtbf82bf4s", "vcvtbf82bf4s", &BX_CPU_C::VCVTBF82BF4S_Wf4VdqM, &BX_CPU_C::VCVTBF82BF4S_Wf4VdqR, BX_ISA_ACE, OP_mVHV, OP_Vdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_VCVTHF82BF4S_Wf4Vdq, "vcvthf82bf4s", "vcvthf82bf4s", &BX_CPU_C::VCVTHF82BF4S_Wf4VdqM, &BX_CPU_C::VCVTHF82BF4S_Wf4VdqR, BX_ISA_ACE, OP_mVHV, OP_Vdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+
+// Sub-byte element extraction: dest always register, source reg/mem (no broadcast), imm8
+bx_define_opcode(BX_IA_EVEX_VUNPACKB_VdqWdqIb_Kmask, "vunpackb", "vunpackb", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VUNPACKB_VdqWdqIbR, BX_ISA_ACE, OP_Vdq, OP_mVdq, OP_Ib, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+
+// Down convert DWord to Byte with symmetric signed saturation, dest may be memory (quarter-width)
+bx_define_opcode(BX_IA_EVEX_VPMOVSSDB_WdqVdq, "vpmovssdb", "vpmovssdb", &BX_CPU_C::VPMOVSSDB_MASK_WdqVdqM, &BX_CPU_C::VPMOVSSDB_WdqVdqR, BX_ISA_ACE, OP_mVQV, OP_Vdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
+bx_define_opcode(BX_IA_EVEX_VPMOVSSDB_WdqVdq_Kmask, "vpmovssdb", "vpmovssdb", &BX_CPU_C::VPMOVSSDB_MASK_WdqVdqM, &BX_CPU_C::VPMOVSSDB_MASK_WdqVdqR, BX_ISA_ACE, OP_mVQV, OP_Vdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 
 #endif // BX_SUPPORT_EVEX
