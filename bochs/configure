@@ -1094,6 +1094,7 @@ enable_using_libslirp
 enable_raw_serial
 enable_clgd54xx
 enable_geforce
+enable_nvriva
 enable_voodoo
 enable_cdrom
 enable_cdaudio
@@ -1842,6 +1843,7 @@ Optional Features:
   --enable-raw-serial     use raw serial port access (no - incomplete)
   --enable-clgd54xx       enable CLGD54XX emulation (no)
   --enable-geforce        enable experimental GeForce emulation (no)
+  --enable-nvriva         enable experimental RIVA TNT2 M64 emulation (no)
   --enable-voodoo         enable 3dfx Voodoo Graphics emulation (no)
   --enable-cdrom          lowlevel CDROM support (yes)
   --enable-cdaudio        lowlevel CD AUDIO support (no)
@@ -25727,6 +25729,38 @@ else case e in #(
     { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
     printf "%s\n" "#define BX_SUPPORT_GEFORCE 0" >>confdefs.h
+
+
+   ;;
+esac
+fi
+
+
+
+
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for RIVA TNT2 M64 emulation (experimental)" >&5
+printf %s "checking for RIVA TNT2 M64 emulation (experimental)... " >&6; }
+# Check whether --enable-nvriva was given.
+if test ${enable_nvriva+y}
+then :
+  enableval=$enable_nvriva; if test "$enableval" = yes; then
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf "%s\n" "yes" >&6; }
+    printf "%s\n" "#define BX_SUPPORT_NVRIVA 1" >>confdefs.h
+
+    DISPLAY_OBJS="$DISPLAY_OBJS nvriva.o"
+    DISPLAY_DLL_TARGETS="$DISPLAY_DLL_TARGETS bx_nvriva.dll"
+   else
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+    printf "%s\n" "#define BX_SUPPORT_NVRIVA 0" >>confdefs.h
+
+   fi
+else case e in #(
+  e)
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf "%s\n" "no" >&6; }
+    printf "%s\n" "#define BX_SUPPORT_NVRIVA 0" >>confdefs.h
 
 
    ;;
