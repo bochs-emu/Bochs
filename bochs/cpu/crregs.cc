@@ -1900,6 +1900,19 @@ void BX_CPU_C::xsave_xrestor_init(void)
 #endif
 
   // XCR0[19]: APX state (not implemented)
+
+#if BX_SUPPORT_AMX
+  // XCR0[20]: SCALEDATA state
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_ACE) && BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AMX)) {
+    xsave_restore[xcr0_t::BX_XCR0_SCALEDATA_BIT].len    = XSAVE_SCALEDATA_STATE_LEN;
+    xsave_restore[xcr0_t::BX_XCR0_SCALEDATA_BIT].offset = XSAVE_SCALEDATA_STATE_OFFSET;
+    xsave_restore[xcr0_t::BX_XCR0_SCALEDATA_BIT].attr   = BX_XSAVE_ALIGN64;
+    xsave_restore[xcr0_t::BX_XCR0_SCALEDATA_BIT].xstate_in_use_method = &BX_CPU_C::xsave_scaledata_state_xinuse;
+    xsave_restore[xcr0_t::BX_XCR0_SCALEDATA_BIT].xsave_method = &BX_CPU_C::xsave_scaledata_state;
+    xsave_restore[xcr0_t::BX_XCR0_SCALEDATA_BIT].xrstor_method = &BX_CPU_C::xrstor_scaledata_state;
+    xsave_restore[xcr0_t::BX_XCR0_SCALEDATA_BIT].xrstor_init_method = &BX_CPU_C::xrstor_init_scaledata_state;
+  }
+#endif
 }
 
 #endif
@@ -1953,6 +1966,8 @@ Bit32u BX_CPU_C::get_xcr0_allow_mask(void)
 #if BX_SUPPORT_AMX
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AMX))
     allowMask |= BX_XCR0_XTILE_BITS_MASK;
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_ACE))
+    allowMask |= BX_XCR0_SCALEDATA_MASK;
 #endif
   return allowMask;
 }

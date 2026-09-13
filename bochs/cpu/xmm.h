@@ -574,6 +574,21 @@ BX_CPP_INLINE Bit8s BX_CPP_AttrRegparmN(1) SaturateDwordSToByteS(Bit32s value)
 }
 
 /*
+ * SaturateDwordSToByteSSymmetric converts a signed 32-bit value to a signed
+ * 8-bit value using symmetric saturation (used by VPMOVSSDB): the result is
+ * balanced around 0, so -128 is not a representable output. If the signed
+ * 32-bit value is less than -127, it is represented by the saturated value
+ * -127 (0x81). If it is greater than 127, it is represented by the
+ * saturated value 127 (0x7F).
+*/
+BX_CPP_INLINE Bit8s BX_CPP_AttrRegparmN(1) SaturateDwordSToByteSSymmetric(Bit32s value)
+{
+  if(value < -127) return -127;
+  if(value >  127) return  127;
+  return (Bit8s) value;
+}
+
+/*
  * SaturateQwordSToByteS converts a signed 64-bit value to a signed
  * 8-bit value. If the signed 64-bit value is less than -128, it is
  * represented by the saturated value -128 (0x80). If it is greater

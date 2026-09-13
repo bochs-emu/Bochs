@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013-2023 Stanislav Shwartsman
+//   Copyright (c) 2013-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -1551,6 +1551,70 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVUSQD_MASK_WdqVdqR(bxInstruction_c *i)
   if (len != BX_VL512) dst.ymm128(1).clear();
 
   BX_WRITE_YMM_REGZ(i->dst(), dst);
+  BX_NEXT_INSTR(i);
+}
+
+/* ==========================================================================
+ * VPMOVSSDB: down convert DWord to Byte with symmetric signed saturation.
+ * Structurally identical to VPMOVSDB only the saturation
+ * function differs (clamped to [-127, 127] instead of [-128, 127]).
+ * ==========================================================================
+ */
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSSDB_WdqVdqR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister dst = BX_READ_XMM_REG(i->dst());
+  BxPackedAvxRegister src = BX_READ_AVX_REG(i->src());
+  unsigned len = i->getVL();
+
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
+    dst.xmmsbyte(n) = SaturateDwordSToByteSSymmetric(src.vmm32s(n));
+  }
+
+  if (len == BX_VL128) dst.xmm32u(1) = 0;
+  if (len != BX_VL512) dst.xmm64u(1) = 0;
+
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSSDB_MASK_WdqVdqR(bxInstruction_c *i)
+{
+  BxPackedXmmRegister dst = BX_READ_XMM_REG(i->dst());
+  BxPackedAvxRegister src = BX_READ_AVX_REG(i->src());
+  unsigned len = i->getVL();
+
+  unsigned mask = BX_READ_16BIT_OPMASK(i->opmask());
+
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++, mask >>= 1) {
+    if (mask & 0x1)
+      dst.xmmsbyte(n) = SaturateDwordSToByteSSymmetric(src.vmm32s(n));
+    else
+      if (i->isZeroMasking()) dst.xmmubyte(n) = 0;
+  }
+
+  if (len == BX_VL128) dst.xmm32u(1) = 0;
+  if (len != BX_VL512) dst.xmm64u(1) = 0;
+
+  BX_WRITE_XMM_REG_CLEAR_HIGH(i->dst(), dst);
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMOVSSDB_MASK_WdqVdqM(bxInstruction_c *i)
+{
+  BxPackedAvxRegister src = BX_READ_AVX_REG(i->src()), dst;
+  unsigned len = i->getVL();
+
+  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
+    dst.vmmsbyte(n) = SaturateDwordSToByteSSymmetric(src.vmm32s(n));
+  }
+
+  Bit32u opmask = i->opmask() ? BX_READ_16BIT_OPMASK(i->opmask()) : (Bit32u) -1;
+  opmask &= CUT_OPMASK_TO(DWORD_ELEMENTS(len));
+
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
+  avx_masked_store8(i, eaddr, &dst, opmask);
+
   BX_NEXT_INSTR(i);
 }
 

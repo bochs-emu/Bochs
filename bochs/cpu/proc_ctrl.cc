@@ -533,7 +533,8 @@ void BX_CPU_C::handleAvxModeChange(void)
   }
   else {
     if (! protected_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE() ||
-        (~BX_CPU_THIS_PTR xcr0.get32() & (BX_XCR0_SSE_MASK | BX_XCR0_YMM_MASK)) != 0) {
+        (~BX_CPU_THIS_PTR xcr0.get32() & (BX_XCR0_SSE_MASK | BX_XCR0_YMM_MASK)) != 0)
+    {
       clear_avx_ok();
     }
     else {
@@ -551,9 +552,17 @@ void BX_CPU_C::handleAvxModeChange(void)
 #if BX_SUPPORT_AMX
   if (! long64_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE() ||
       (~BX_CPU_THIS_PTR xcr0.get32() & (BX_XCR0_XTILECFG_MASK | BX_XCR0_XTILEDATA_MASK)) != 0)
+  {
     clear_amx_ok();
-  else
+  }
+  else {
     set_amx_ok();
+
+    if ((~BX_CPU_THIS_PTR xcr0.get32() & BX_XCR0_SCALEDATA_MASK) != 0)
+      clear_scaledata_ok();
+    else
+      set_scaledata_ok();
+  }
 #endif
 
   if (BX_CPU_THIS_PTR cr4.get_OSXSAVE()) {
@@ -610,6 +619,19 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoAMX(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
 
   if (~BX_CPU_THIS_PTR xcr0.get32() & (BX_XCR0_XTILECFG_MASK | BX_XCR0_XTILEDATA_MASK))
+    exception(BX_UD_EXCEPTION, 0);
+
+  BX_ASSERT(0);
+
+  BX_NEXT_TRACE(i); // keep compiler happy
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoSCALEDATA(bxInstruction_c *i)
+{
+  if (! long64_mode() || ! BX_CPU_THIS_PTR cr4.get_OSXSAVE())
+    exception(BX_UD_EXCEPTION, 0);
+
+  if (~BX_CPU_THIS_PTR xcr0.get32() & (BX_XCR0_XTILECFG_MASK | BX_XCR0_XTILEDATA_MASK | BX_XCR0_SCALEDATA_MASK))
     exception(BX_UD_EXCEPTION, 0);
 
   BX_ASSERT(0);

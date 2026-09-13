@@ -216,10 +216,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\cpu\avx\amx.cc" />
+    <ClCompile Include="..\cpu\avx\amx_avx512.cc" />
+    <ClCompile Include="..\cpu\avx\amx_bsr.cc" />
+    <ClCompile Include="..\cpu\avx\amx_top.cc" />
     <ClCompile Include="..\cpu\avx\avx.cc" />
     <ClCompile Include="..\cpu\avx\avx10_2_bf16.cc" />
     <ClCompile Include="..\cpu\avx\avx10_2_cvt.cc" />
     <ClCompile Include="..\cpu\avx\avx10_2_cvt_fp8.cc" />
+    <ClCompile Include="..\cpu\avx\ace_cvt_ocp.cc" />
     <ClCompile Include="..\cpu\avx\avx10_2_minmax.cc" />
     <ClCompile Include="..\cpu\avx\avx10_2_misc.cc" />
     <ClCompile Include="..\cpu\avx\avx2.cc" />
@@ -246,6 +250,7 @@
     <ClCompile Include="..\cpu\avx\avx_fma.cc" />
     <ClCompile Include="..\cpu\avx\avx_pfp.cc" />
     <ClCompile Include="..\cpu\avx\bf16_arith.cc" />
+    <ClCompile Include="..\cpu\avx\fp8.cc" />
     <ClCompile Include="..\cpu\avx\gather.cc" />
     <ClCompile Include="..\cpu\avx\tbm32.cc" />
     <ClCompile Include="..\cpu\avx\tbm64.cc" />

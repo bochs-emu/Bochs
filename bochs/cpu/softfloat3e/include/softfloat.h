@@ -80,7 +80,8 @@ enum {
     softfloat_round_up          = softfloat_round_max,
     softfloat_round_minMag      = 3,
     softfloat_round_to_zero     = softfloat_round_minMag,
-    softfloat_round_near_maxMag = 4
+    softfloat_round_near_maxMag = 4,
+    softfloat_round_odd         = 6  // round to odd, used by the ACE/OCP FP8 format converts, to match softfloat3e original definition
 };
 
 /*----------------------------------------------------------------------------

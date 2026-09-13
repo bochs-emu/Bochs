@@ -2793,6 +2793,7 @@ bx_define_opcode(BX_IA_TILELOADDRST1_TnnnMdq, "tileloaddrst1", "tileloaddrst1", 
 bx_define_opcode(BX_IA_TILESTORED_MdqTnnn, "tilestored", "tilestored", &BX_CPU_C::TILESTORED_MdqTnnn, NULL, BX_ISA_AMX, OP_M, OP_Tnnn, OP_NONE, OP_NONE, BX_PREPARE_AMX)
 bx_define_opcode(BX_IA_TILERELEASE, "tilerelease", "tilerelease", NULL, &BX_CPU_C::TILERELEASE, BX_ISA_AMX, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_AMX)
 bx_define_opcode(BX_IA_TILEZERO_Tnnn, "tilezero", "tilezero", NULL, &BX_CPU_C::TILEZERO_Tnnn, BX_ISA_AMX, OP_Tnnn, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_AMX)
+bx_define_opcode(BX_IA_BSRINIT, "bsrinit", "bsrinit", NULL, &BX_CPU_C::BSRINIT, BX_ISA_ACE, OP_BsrVdq, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_SCALEDATA)
 bx_define_opcode(BX_IA_TDPBSSD_TnnnTrmTreg, "tdpbssd", "tdpbssd", NULL, &BX_CPU_C::TDPBSSD_TnnnTrmTreg, BX_ISA_AMX_INT8, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
 bx_define_opcode(BX_IA_TDPBSUD_TnnnTrmTreg, "tdpbsud", "tdpbsud", NULL, &BX_CPU_C::TDPBSUD_TnnnTrmTreg, BX_ISA_AMX_INT8, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
 bx_define_opcode(BX_IA_TDPBUSD_TnnnTrmTreg, "tdpbusd", "tdpbusd", NULL, &BX_CPU_C::TDPBUSD_TnnnTrmTreg, BX_ISA_AMX_INT8, OP_Tnnn, OP_Trm, OP_Treg, OP_NONE, BX_PREPARE_AMX)
