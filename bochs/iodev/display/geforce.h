@@ -534,6 +534,8 @@ private:
   BX_GEFORCE_SMF void update_fifo_wait();
   BX_GEFORCE_SMF void fifo_process();
   BX_GEFORCE_SMF void fifo_process(Bit32u chid);
+  BX_GEFORCE_SMF void object_save(gf_channel* ch, Bit32u subc);
+  BX_GEFORCE_SMF void object_load(gf_channel* ch, Bit32u subc);
   BX_GEFORCE_SMF int execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32u param);
 
   BX_GEFORCE_SMF void update_color_bytes_s2d(gf_channel* ch);
