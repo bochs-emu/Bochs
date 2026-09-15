@@ -38,11 +38,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSRINIT(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  if (i->dst() != 0) {
-    BX_ERROR(("%s: not supported BSR destination %d", i->getIaOpcodeNameShort(), i->dst()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   BX_CPU_THIS_PTR amx->bsr_clear();
 
   BX_NEXT_INSTR(i);
@@ -52,11 +47,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSRMOVF_BsrVdqWdq(bxInstruction_c *i)
 {
   if (BX_CPU_THIS_PTR amx->get_palette_id() != 2) {
     BX_ERROR(("%s: not supported under pallette %d", i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR amx->get_palette_id()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
-  if (i->dst() != 0) {
-    BX_ERROR(("%s: not supported BSR destination %d", i->getIaOpcodeNameShort(), i->dst()));
     exception(BX_UD_EXCEPTION, 0);
   }
 
@@ -73,11 +63,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSRMOV_BsrWdq(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  if (i->dst() != 0) {
-    BX_ERROR(("%s: not supported BSR destination %d", i->getIaOpcodeNameShort(), i->dst()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   BX_CPU_THIS_PTR amx->scaledata.scale[i->getIaOpcode() == BX_IA_EVEX_BSRMOVH_BsrWdq] = BX_READ_AVX_REG(i->src1());
 
   BX_NEXT_INSTR(i);
@@ -90,11 +75,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSRMOV_WdqBsrR(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  if (i->src() != 0) {
-    BX_ERROR(("%s: not supported BSR source %d", i->getIaOpcodeNameShort(), i->dst()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   BX_WRITE_AVX_REG(i->dst(), BX_CPU_THIS_PTR amx->scaledata.scale[i->getIaOpcode() == BX_IA_EVEX_BSRMOVH_BsrWdq]);
   BX_NEXT_INSTR(i);
 }
@@ -103,11 +83,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BSRMOV_WdqBsrM(bxInstruction_c *i)
 {
   if (BX_CPU_THIS_PTR amx->get_palette_id() != 2) {
     BX_ERROR(("%s: not supported under pallette %d", i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR amx->get_palette_id()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
-  if (i->src() != 0) {
-    BX_ERROR(("%s: not supported BSR source %d", i->getIaOpcodeNameShort(), i->dst()));
     exception(BX_UD_EXCEPTION, 0);
   }
 

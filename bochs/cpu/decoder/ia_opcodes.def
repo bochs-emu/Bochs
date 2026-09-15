@@ -472,14 +472,14 @@ bx_define_opcode(BX_IA_LEA_GdM, "lea", "leal", &BX_CPU_C::LEA_GdM, &BX_CPU_C::Bx
 bx_define_opcode(BX_IA_LEA_GwM, "lea", "leaw", &BX_CPU_C::LEA_GwM, &BX_CPU_C::BxError, 0, OP_Gw, OP_M, OP_NONE, OP_NONE, 0)
 
 // IDT/GDT/LDTR/TR access - keep NNN for VMX
-bx_define_opcode(BX_IA_SIDT_Ms, "sidt", "sidt", &BX_CPU_C::SIDT_Ms, &BX_CPU_C::BxError, 0, OP_M, BX_SRC_NNN, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_LIDT_Ms, "lidt", "lidt", &BX_CPU_C::LIDT_Ms, &BX_CPU_C::BxError, 0, BX_SRC_NNN, OP_M, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_SGDT_Ms, "sgdt", "sgdt", &BX_CPU_C::SGDT_Ms, &BX_CPU_C::BxError, 0, OP_M, BX_SRC_NNN, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_LGDT_Ms, "lgdt", "lgdt", &BX_CPU_C::LGDT_Ms, &BX_CPU_C::BxError, 0, BX_SRC_NNN, OP_M, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_SLDT_Ew, "sldt", "sldt", &BX_CPU_C::SLDT_Ew, &BX_CPU_C::SLDT_Ew, 0, OP_Ew, BX_SRC_NNN, OP_NONE, OP_NONE, BX_PROTECTED_MODE_ONLY)
-bx_define_opcode(BX_IA_LLDT_Ew, "lldt", "lldt", &BX_CPU_C::LLDT_Ew, &BX_CPU_C::LLDT_Ew, 0, BX_SRC_NNN, OP_Ew, OP_NONE, OP_NONE, BX_PROTECTED_MODE_ONLY)
-bx_define_opcode(BX_IA_STR_Ew, "str", "str", &BX_CPU_C::STR_Ew, &BX_CPU_C::STR_Ew, 0, OP_Ew, BX_SRC_NNN, OP_NONE, OP_NONE, BX_PROTECTED_MODE_ONLY)
-bx_define_opcode(BX_IA_LTR_Ew, "ltr", "ltr", &BX_CPU_C::LTR_Ew, &BX_CPU_C::LTR_Ew, 0, BX_SRC_NNN, OP_Ew, OP_NONE, OP_NONE, BX_PROTECTED_MODE_ONLY)
+bx_define_opcode(BX_IA_SIDT_Ms, "sidt", "sidt", &BX_CPU_C::SIDT_Ms, &BX_CPU_C::BxError, 0, OP_M, OP_NNN, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_LIDT_Ms, "lidt", "lidt", &BX_CPU_C::LIDT_Ms, &BX_CPU_C::BxError, 0, OP_NNN, OP_M, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_SGDT_Ms, "sgdt", "sgdt", &BX_CPU_C::SGDT_Ms, &BX_CPU_C::BxError, 0, OP_M, OP_NNN, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_LGDT_Ms, "lgdt", "lgdt", &BX_CPU_C::LGDT_Ms, &BX_CPU_C::BxError, 0, OP_NNN, OP_M, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_SLDT_Ew, "sldt", "sldt", &BX_CPU_C::SLDT_Ew, &BX_CPU_C::SLDT_Ew, 0, OP_Ew, OP_NNN, OP_NONE, OP_NONE, BX_PROTECTED_MODE_ONLY)
+bx_define_opcode(BX_IA_LLDT_Ew, "lldt", "lldt", &BX_CPU_C::LLDT_Ew, &BX_CPU_C::LLDT_Ew, 0, OP_NNN, OP_Ew, OP_NONE, OP_NONE, BX_PROTECTED_MODE_ONLY)
+bx_define_opcode(BX_IA_STR_Ew, "str", "str", &BX_CPU_C::STR_Ew, &BX_CPU_C::STR_Ew, 0, OP_Ew, OP_NNN, OP_NONE, OP_NONE, BX_PROTECTED_MODE_ONLY)
+bx_define_opcode(BX_IA_LTR_Ew, "ltr", "ltr", &BX_CPU_C::LTR_Ew, &BX_CPU_C::LTR_Ew, 0, OP_NNN, OP_Ew, OP_NONE, OP_NONE, BX_PROTECTED_MODE_ONLY)
 // IDT/GDT/LDTR/TR access - keep NNN for VMX
 
 bx_define_opcode(BX_IA_SMSW_Ew, "smsw", "smsw", &BX_CPU_C::SMSW_EwM, &BX_CPU_C::SMSW_EwR, 0, OP_Ew, OP_NONE, OP_NONE, OP_NONE, 0)
@@ -1036,11 +1036,11 @@ bx_define_opcode(BX_IA_FXRSTOR, "fxrstor", "fxrstor", &BX_CPU_C::FXRSTOR, &BX_CP
 // SSE
 bx_define_opcode(BX_IA_LDMXCSR, "ldmxcsr", "ldmxcsr", &BX_CPU_C::LDMXCSR, &BX_CPU_C::BxError, BX_ISA_SSE, OP_Md, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_SSE)
 bx_define_opcode(BX_IA_STMXCSR, "stmxcsr", "stmxcsr", &BX_CPU_C::STMXCSR, &BX_CPU_C::BxError, BX_ISA_SSE, OP_Md, OP_NONE, OP_NONE, OP_NONE, BX_PREPARE_SSE)
-bx_define_opcode(BX_IA_PREFETCH_Mb, "prefetch", "prefetch", &BX_CPU_C::PREFETCH, &BX_CPU_C::NOP, BX_ISA_SSE, OP_Mb, BX_SRC_NNN, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_PREFETCHT0_Mb, "prefetcht0", "prefetcht0", &BX_CPU_C::PREFETCH, &BX_CPU_C::NOP, BX_ISA_SSE, OP_Mb, BX_SRC_NNN, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_PREFETCHT1_Mb, "prefetcht1", "prefetcht1", &BX_CPU_C::PREFETCH, &BX_CPU_C::NOP, BX_ISA_SSE, OP_Mb, BX_SRC_NNN, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_PREFETCHT2_Mb, "prefetcht2", "prefetcht2", &BX_CPU_C::PREFETCH, &BX_CPU_C::NOP, BX_ISA_SSE, OP_Mb, BX_SRC_NNN, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_PREFETCHNTA_Mb, "prefetchnta", "prefetchnta", &BX_CPU_C::PREFETCH, &BX_CPU_C::NOP, BX_ISA_SSE, OP_Mb, BX_SRC_NNN, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_PREFETCH_Mb, "prefetch", "prefetch", &BX_CPU_C::PREFETCH, &BX_CPU_C::NOP, BX_ISA_SSE, OP_Mb, OP_NNN, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_PREFETCHT0_Mb, "prefetcht0", "prefetcht0", &BX_CPU_C::PREFETCH, &BX_CPU_C::NOP, BX_ISA_SSE, OP_Mb, OP_NNN, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_PREFETCHT1_Mb, "prefetcht1", "prefetcht1", &BX_CPU_C::PREFETCH, &BX_CPU_C::NOP, BX_ISA_SSE, OP_Mb, OP_NNN, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_PREFETCHT2_Mb, "prefetcht2", "prefetcht2", &BX_CPU_C::PREFETCH, &BX_CPU_C::NOP, BX_ISA_SSE, OP_Mb, OP_NNN, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_PREFETCHNTA_Mb, "prefetchnta", "prefetchnta", &BX_CPU_C::PREFETCH, &BX_CPU_C::NOP, BX_ISA_SSE, OP_Mb, OP_NNN, OP_NONE, OP_NONE, 0)
 // SSE
 
 // SSE and SSE2
@@ -1685,10 +1685,10 @@ bx_define_opcode(BX_IA_PUSH_Op64_Sw, "push", "pushq", NULL, &BX_CPU_C::PUSH64_Sw
 bx_define_opcode(BX_IA_POP_Op64_Sw, "pop", "popq", NULL, &BX_CPU_C::POP64_Sw, 0, OP_Sw, OP_NONE, OP_NONE, OP_NONE, 0)
 
 // IDT/GDT/LDTR/TR access - keep NNN for VMX
-bx_define_opcode(BX_IA_SGDT_Op64_Ms, "sgdt", "sgdt", &BX_CPU_C::SGDT64_Ms, &BX_CPU_C::BxError, 0, OP_M, BX_SRC_NNN, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_SIDT_Op64_Ms, "sidt", "sidt", &BX_CPU_C::SIDT64_Ms, &BX_CPU_C::BxError, 0, OP_M, BX_SRC_NNN, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_LGDT_Op64_Ms, "lgdt", "lgdt", &BX_CPU_C::LGDT64_Ms, &BX_CPU_C::BxError, 0, BX_SRC_NNN, OP_M, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_LIDT_Op64_Ms, "lidt", "lidt", &BX_CPU_C::LIDT64_Ms, &BX_CPU_C::BxError, 0, BX_SRC_NNN, OP_M, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_SGDT_Op64_Ms, "sgdt", "sgdt", &BX_CPU_C::SGDT64_Ms, &BX_CPU_C::BxError, 0, OP_M, OP_NNN, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_SIDT_Op64_Ms, "sidt", "sidt", &BX_CPU_C::SIDT64_Ms, &BX_CPU_C::BxError, 0, OP_M, OP_NNN, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_LGDT_Op64_Ms, "lgdt", "lgdt", &BX_CPU_C::LGDT64_Ms, &BX_CPU_C::BxError, 0, OP_NNN, OP_M, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_LIDT_Op64_Ms, "lidt", "lidt", &BX_CPU_C::LIDT64_Ms, &BX_CPU_C::BxError, 0, OP_NNN, OP_M, OP_NONE, OP_NONE, 0)
 // IDT/GDT/LDTR/TR access - keep NNN for VMX
 
 bx_define_opcode(BX_IA_MOV_RRXIq, "mov", "movq", NULL, &BX_CPU_C::MOV_RRXIq, 0, OP_Eq, OP_Iq, OP_NONE, OP_NONE, 0)

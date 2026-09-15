@@ -892,7 +892,7 @@ int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit1
     unsigned type = BX_DISASM_SRC_TYPE(src);
     src = BX_DISASM_SRC_ORIGIN(src);
 
-    if (src == BX_SRC_IMM || src == BX_SRC_BRANCH_OFFSET) {
+    if (src == BX_SRC_NONE) {
       switch(type) {
       case BX_IMM1:
         i->modRMForm.Ib[0] = 1;
@@ -907,6 +907,7 @@ int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit1
         }
         break;
       case BX_IMMBW_SE: // Sign extend 8-bit to 16-bit
+      case BX_JIMMBW_SE:
         if (remain != 0) {
           Bit8s temp8s = *iptr++;
           i->modRMForm.Iw[0] = (Bit16s) temp8s;
@@ -917,6 +918,7 @@ int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit1
         }
         break;
       case BX_IMMBD_SE: // Sign extend 8-bit to 32-bit
+      case BX_JIMMBD_SE:
         if (remain != 0) {
           Bit8s temp8s = *iptr++;
           i->modRMForm.Id    = (Bit32s) temp8s;
@@ -936,6 +938,7 @@ int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit1
         }
         break;
       case BX_IMMW:
+      case BX_JIMMW:
         if (remain > 1) {
           i->modRMForm.Iw[0] = FetchWORD(iptr);
           iptr += 2;
@@ -946,6 +949,7 @@ int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit1
         }
         break;
       case BX_IMMD:
+      case BX_JIMMD:
         if (remain > 3) {
           i->modRMForm.Id = FetchDWORD(iptr);
           iptr += 4;
@@ -1183,9 +1187,6 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, 
     unsigned index = BX_DISASM_SRC_ORIGIN(src);
     switch(index) {
     case BX_SRC_NONE:
-    case BX_SRC_IMM:
-    case BX_SRC_BRANCH_OFFSET:
-    case BX_SRC_IMPLICIT:
       break;
     case BX_SRC_EAX:
       i->setSrcReg(n, 0);
@@ -1239,9 +1240,6 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
 
     switch(src) {
     case BX_SRC_NONE:
-    case BX_SRC_IMM:
-    case BX_SRC_BRANCH_OFFSET:
-    case BX_SRC_IMPLICIT:
       break;
     case BX_SRC_EAX:
       i->setSrcReg(n, 0);
@@ -1260,6 +1258,9 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
       if (type == BX_TMM_REG) {
         if (nnn >= 8) return BX_AMX_ILLEGAL_TILE_REGISTER;
       }
+      if (type == BX_BSR_REG) {
+        if (nnn != 0) return BX_AMX_ILLEGAL_BSR_REGISTER;
+      }
 #endif
       break;
     case BX_SRC_RM:
@@ -1275,6 +1276,9 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
 #if BX_SUPPORT_AMX
         if (type == BX_TMM_REG) {
           if (rm >= 8) return BX_AMX_ILLEGAL_TILE_REGISTER;
+        }
+        if (type == BX_BSR_REG) {
+          if (rm != 0) return BX_AMX_ILLEGAL_BSR_REGISTER;
         }
 #endif
         i->setSrcReg(n, rm);
