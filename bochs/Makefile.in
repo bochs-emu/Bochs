@@ -252,6 +252,17 @@ niclist@EXE@: misc/niclist.o
 bxhub@EXE@: misc/bxhub.o misc/netutil.o
 	@LINK_CONSOLE@ misc/bxhub.o misc/netutil.o @BXHUB_LINK_OPTS@
 
+# standalone decoder/disassembler dev tool -- compiled straight from source
+# (not via the normal %.o objects, so it can't collide with their non-standalone
+# builds of the same files). Depends on every decoder .cc/.h via $(wildcard) so
+# it always rebuilds when any of them changes, without a hand-kept header list.
+bxdisasm@EXE@: $(srcdir)/bxdisasm.@CPP_SUFFIX@ config.h \
+  $(wildcard $(srcdir)/cpu/decoder/*.@CPP_SUFFIX@) $(wildcard $(srcdir)/cpu/decoder/*.h)
+	@LINK_CONSOLE@ -DBX_STANDALONE_DECODER $(BX_INCDIRS) $(CPPFLAGS) $(srcdir)/bxdisasm.@CPP_SUFFIX@ $(srcdir)/cpu/decoder/*.@CPP_SUFFIX@
+
+bxdisasm: bxdisasm@EXE@
+	@:
+
 # compile with console CXXFLAGS, not gui CXXFLAGS
 misc/bximage.o: $(srcdir)/misc/bximage.cc $(srcdir)/misc/bswap.h \
   $(srcdir)/misc/bxcompat.h $(srcdir)/iodev/hdimage/hdimage.h
