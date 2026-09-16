@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "22 Aug 2026" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "16 Sep 2026" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -723,6 +723,11 @@ older operating systems like MS-DOS), can be defined as:
   - rechs : a revised bitshift algorithm, using a 15 heads fake physical geometry, for disks up to 7.9GB (15482880 sectors). (don't use this unless you understand what you're doing)
   - lba : a standard lba-assisted algorithm, for disks up to 8.4GB (16450560 sectors)
   - auto : autoselection of best translation scheme. (it should be changed if system does not boot)
+
+When using the format "VENDOR:PRODUCT:REV" as the model string for the CD-ROM,
+the string is split into 3 parts for the use in ATAPI inquiry. The vendor
+id is limited to 8, product id to 16 and revision to 4 characters. For the ATA
+model string the first two of these parts are used separated with a space.
 
 Default values are:
    mode=flat, biosdetect=auto, translation=auto, model="Generic 1234"

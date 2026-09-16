@@ -290,14 +290,6 @@ void bx_hard_drive_c::init(void)
       BX_HD_THIS channels[channel].drives[device].identify_set = 0;
       if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_NONE) continue;
 
-      // Make model string
-      strncpy((char*)BX_HD_THIS channels[channel].drives[device].model_no,
-        SIM->get_param_string("model", base)->getptr(), 40);
-      while (strlen((char *)BX_HD_THIS channels[channel].drives[device].model_no) < 40) {
-        strcat((char*)BX_HD_THIS channels[channel].drives[device].model_no, " ");
-      }
-      BX_HD_THIS channels[channel].drives[device].model_no[40] = 0;
-
       if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_DISK) {
         BX_DEBUG(("Hard-Disk on target %d/%d",channel,device));
         BX_HD_THIS channels[channel].drives[device].device_type = IDE_DISK;
@@ -373,6 +365,15 @@ void bx_hard_drive_c::init(void)
         BX_HD_THIS channels[channel].drives[device].controller.buffer_total_size =
           MAX_MULTIPLE_SECTORS * sect_size;
         BX_HD_THIS channels[channel].drives[device].sect_size = sect_size;
+
+        // Make model string
+        strncpy((char*)BX_HD_THIS channels[channel].drives[device].model_no,
+          SIM->get_param_string("model", base)->getptr(), 40);
+        while (strlen((char *)BX_HD_THIS channels[channel].drives[device].model_no) < 40) {
+          strcat((char*)BX_HD_THIS channels[channel].drives[device].model_no, " ");
+        }
+        BX_HD_THIS channels[channel].drives[device].model_no[40] = 0;
+
       } else if (SIM->get_param_enum("type", base)->get() == BX_ATA_DEVICE_CDROM) {
         bx_list_c *cdrom_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_CDROM);
         sprintf(pname, "cdrom%d", BX_HD_THIS cdrom_count + 1);
@@ -415,6 +416,65 @@ void bx_hard_drive_c::init(void)
         if (BX_CONTROLLER(channel,device).sector_count != 0x18)
           BX_FATAL(("interrupt reason bit field error"));
         BX_CONTROLLER(channel,device).sector_count = 0;
+
+        // Make model string and set up inquiry data
+        char *model = strdup(SIM->get_param_string("model", base)->getptr());
+        bool cd_model_new = (strchr(model, ':') != NULL);
+        char *vendor_id = NULL, *product_id = NULL, *rev_level = NULL;
+        unsigned i;
+        if (!cd_model_new) {
+          strncpy((char*)BX_HD_THIS channels[channel].drives[device].model_no,
+                  model, 40);
+          vendor_id = strdup("BOCHS");
+          product_id = strdup("Generic CD-ROM");
+          rev_level = strdup("1.0");
+        } else {
+          vendor_id = strtok(model, ":");
+          product_id = strtok(NULL, ":");
+          rev_level = strtok(NULL, ":");
+          sprintf((char*)BX_HD_THIS channels[channel].drives[device].model_no,
+                  "%s %s", vendor_id, product_id);
+        }
+        if (strlen(vendor_id) > 8) vendor_id[8] = 0;
+        if (strlen(product_id) > 16) product_id[16] = 0;
+        if (strlen(rev_level) > 4) rev_level[4] = 0;
+
+        while (strlen((char *)BX_HD_THIS channels[channel].drives[device].model_no) < 40) {
+          strcat((char*)BX_HD_THIS channels[channel].drives[device].model_no, " ");
+        }
+        BX_HD_THIS channels[channel].drives[device].model_no[40] = 0;
+
+        BX_HD_THIS channels[channel].drives[device].atapi_inquiry[0] = 0x05; // CD-ROM
+        BX_HD_THIS channels[channel].drives[device].atapi_inquiry[1] = 0x80; // Removable
+        BX_HD_THIS channels[channel].drives[device].atapi_inquiry[2] = 0x00; // ISO, ECMA, ANSI version
+        BX_HD_THIS channels[channel].drives[device].atapi_inquiry[3] = 0x21; // ATAPI-2, as specified
+        BX_HD_THIS channels[channel].drives[device].atapi_inquiry[4] = 31; // additional length (total 36)
+        BX_HD_THIS channels[channel].drives[device].atapi_inquiry[5] = 0x00; // reserved
+        BX_HD_THIS channels[channel].drives[device].atapi_inquiry[6] = 0x00; // reserved
+        BX_HD_THIS channels[channel].drives[device].atapi_inquiry[7] = 0x00; // reserved
+        memset(&BX_HD_THIS channels[channel].drives[device].atapi_inquiry[8], ' ', 28);
+
+        // Vendor ID
+        for (i = 0; i < strlen(vendor_id); i++)
+          BX_HD_THIS channels[channel].drives[device].atapi_inquiry[8+i] = vendor_id[i];
+
+        // Product ID
+        for (i = 0; i < strlen(product_id); i++)
+          BX_HD_THIS channels[channel].drives[device].atapi_inquiry[16+i] = product_id[i];
+        if (BX_HD_THIS cdrom_count > 1) {
+          BX_HD_THIS channels[channel].drives[device].atapi_inquiry[31] = BX_SELECTED_DRIVE(channel).device_num;
+        }
+
+        // Product Revision level
+        for (i = 0; i < strlen(rev_level); i++)
+          BX_HD_THIS channels[channel].drives[device].atapi_inquiry[32+i] = rev_level[i];
+
+        free(model);
+        if (!cd_model_new) {
+          free(vendor_id);
+          free(product_id);
+          free(rev_level);
+        }
 
         // allocate low level driver
         BX_HD_THIS channels[channel].drives[device].cdrom.cd = DEV_hdimage_init_cdrom(SIM->get_param_string("path", base)->getptr());
@@ -1635,32 +1695,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
                   init_send_atapi_command(channel, atapi_command, 36, alloc_length);
 
-                  controller->buffer[0] = 0x05; // CD-ROM
-                  controller->buffer[1] = 0x80; // Removable
-                  controller->buffer[2] = 0x00; // ISO, ECMA, ANSI version
-                  controller->buffer[3] = 0x21; // ATAPI-2, as specified
-                  controller->buffer[4] = 31; // additional length (total 36)
-                  controller->buffer[5] = 0x00; // reserved
-                  controller->buffer[6] = 0x00; // reserved
-                  controller->buffer[7] = 0x00; // reserved
-
-                  // Vendor ID
-                  const char* vendor_id = "BOCHS   ";
-                  for (i = 0; i < 8; i++)
-                    controller->buffer[8+i] = vendor_id[i];
-
-                  // Product ID
-                  const char* product_id = "Generic CD-ROM  ";
-                  for (i = 0; i < 16; i++)
-                    controller->buffer[16+i] = product_id[i];
-                  if (BX_HD_THIS cdrom_count > 1) {
-                    controller->buffer[31] = BX_SELECTED_DRIVE(channel).device_num;
-                  }
-
-                  // Product Revision level
-                  const char* rev_level = "1.0 ";
-                  for (i = 0; i < 4; i++)
-                    controller->buffer[32+i] = rev_level[i];
+                  memcpy(controller->buffer, BX_SELECTED_DRIVE(channel).atapi_inquiry, 36);
 
                   ready_to_send_atapi(channel);
                 }
