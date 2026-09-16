@@ -407,6 +407,14 @@ struct gf_channel
   Bit32u gdi_words_left;
   Bit32u* gdi_words;
 
+  Bit32u lin_operation;
+  Bit32u lin_color_fmt;
+  Bit32u lin_color;
+  Bit32s lin_x0;
+  Bit32s lin_y0;
+  Bit32s lin_x1;
+  Bit32s lin_y1;
+
   Bit32u rect_operation;
   Bit32u rect_color_fmt;
   Bit32u rect_color;
@@ -552,6 +560,7 @@ private:
   BX_GEFORCE_SMF void execute_gdi(gf_channel* ch, Bit32u cls, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_swzsurf(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_chroma(gf_channel* ch, Bit32u method, Bit32u param);
+  BX_GEFORCE_SMF void execute_lin(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_rect(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_imageblit(gf_channel* ch, Bit32u method, Bit32u param);
   BX_GEFORCE_SMF void execute_ifc(gf_channel* ch, Bit32u method, Bit32u param);
@@ -715,6 +724,7 @@ private:
 
   BX_GEFORCE_SMF void gdi_fillrect(gf_channel* ch, bool clipped);
   BX_GEFORCE_SMF void gdi_blit(gf_channel* ch, Bit32u type);
+  BX_GEFORCE_SMF void lin(gf_channel* ch);
   BX_GEFORCE_SMF void rect(gf_channel* ch);
   BX_GEFORCE_SMF void ifc(gf_channel* ch, Bit32u word);
   BX_GEFORCE_SMF void iifc(gf_channel* ch);
