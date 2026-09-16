@@ -2551,27 +2551,79 @@ void bx_geforce_c::gdi_blit(gf_channel* ch, Bit32u type)
   BX_GEFORCE_THIS redraw_area_nd(redraw_offset, dwidth, height);
 }
 
+void bx_geforce_c::lin(gf_channel* ch)
+{
+  Bit32s x0 = ch->lin_x0;
+  Bit32s y0 = ch->lin_y0;
+  Bit32s x1 = ch->lin_x1;
+  Bit32s y1 = ch->lin_y1;
+  Bit32u srccolor = ch->lin_color;
+  Bit32s clipx0 = ch->clip_x;
+  Bit32s clipy0 = ch->clip_y;
+  Bit32s clipx1 = clipx0 + (Bit32s)ch->clip_width;
+  Bit32s clipy1 = clipy0 + (Bit32s)ch->clip_height;
+  Bit32s dx = abs(x1 - x0);
+  Bit32s incx = x0 < x1 ? 1 : -1;
+  Bit32s dy = -abs(y1 - y0);
+  Bit32s incy = y0 < y1 ? 1 : -1;
+  Bit32s error = dx + dy;
+  Bit32s x = x0;
+  Bit32s y = y0;
+  for (;;) {
+    if (x >= clipx0 && x < clipx1 &&
+        y >= clipy0 && y < clipy1 &&
+        (x != x1 || y != y1)) {
+      Bit32u draw_offset = ch->s2d_ofs_dst + y * ch->s2d_pitch_dst;
+      Bit32u dstcolor = get_pixel(ch->s2d_img_dst,
+        draw_offset, x, ch->s2d_color_bytes);
+      pixel_operation(ch, ch->lin_operation,
+        &dstcolor, &srccolor, ch->s2d_color_bytes, x, y);
+      put_pixel(ch, draw_offset, x, dstcolor);
+    }
+    Bit32s e2 = error * 2;
+    if (e2 >= dy) {
+      if (x == x1)
+        break;
+      error += dy;
+      x += incx;
+    }
+    if (e2 <= dx) {
+      if (y == y1)
+        break;
+      error += dx;
+      y += incy;
+    }
+  }
+  Bit32s xmin = BX_MIN(x0, x1);
+  Bit32s ymin = BX_MIN(y0, y1);
+  Bit32s xmax = BX_MAX(x0, x1);
+  Bit32s ymax = BX_MAX(y0, y1);
+  Bit32u redraw_offset = dma_lin_lookup(ch->s2d_img_dst,
+    ch->s2d_ofs_dst + ymin * ch->s2d_pitch_dst +
+    xmin * ch->s2d_color_bytes) - BX_GEFORCE_THIS disp_offset;
+  BX_GEFORCE_THIS redraw_area_nd(redraw_offset, xmax - xmin + 1, ymax - ymin + 1);
+}
+
 void bx_geforce_c::rect(gf_channel* ch)
 {
-  Bit16s dx = ch->rect_yx & 0xFFFF;
-  Bit16s dy = ch->rect_yx >> 16;
-  Bit16u width = ch->rect_hw & 0xFFFF;
-  Bit16u height = ch->rect_hw >> 16;
-  Bit32u pitch = ch->s2d_pitch_dst;
+  Bit32s x0 = (Bit16s)ch->rect_yx;
+  Bit32s y0 = (Bit16s)(ch->rect_yx >> 16);
+  Bit32u width = ch->rect_hw & 0xFFFF;
+  Bit32u height = ch->rect_hw >> 16;
   Bit32u srccolor = ch->rect_color;
   Bit32u draw_offset = ch->s2d_ofs_dst +
-    dy * pitch + dx * ch->s2d_color_bytes;
+    y0 * ch->s2d_pitch_dst + x0 * ch->s2d_color_bytes;
   Bit32u redraw_offset = dma_lin_lookup(ch->s2d_img_dst, draw_offset) -
     BX_GEFORCE_THIS disp_offset;
-  for (Bit16u y = 0; y < height; y++) {
-    for (Bit16u x = 0; x < width; x++) {
+  for (Bit32u y = 0; y < height; y++) {
+    for (Bit32u x = 0; x < width; x++) {
       Bit32u dstcolor = get_pixel(ch->s2d_img_dst,
         draw_offset, x, ch->s2d_color_bytes);
       pixel_operation(ch, ch->rect_operation,
-        &dstcolor, &srccolor, ch->s2d_color_bytes, dx + x, dy + y);
+        &dstcolor, &srccolor, ch->s2d_color_bytes, x0 + x, y0 + y);
       put_pixel(ch, draw_offset, x, dstcolor);
     }
-    draw_offset += pitch;
+    draw_offset += ch->s2d_pitch_dst;
   }
   BX_GEFORCE_THIS redraw_area_nd(redraw_offset, width, height);
 }
@@ -6277,6 +6329,57 @@ void bx_geforce_c::execute_chroma(gf_channel* ch, Bit32u method, Bit32u param)
     ch->chroma_color = param;
 }
 
+void bx_geforce_c::execute_lin(gf_channel* ch, Bit32u method, Bit32u param)
+{
+  if (method == 0x0bf)
+    ch->lin_operation = param;
+  else if (method == 0x0c0)
+    ch->lin_color_fmt = param;
+  else if (method == 0x0c1)
+    ch->lin_color = param;
+  else if (method >= 0x100 && method < 0x120) {
+    if (method & 1) {
+      ch->lin_x1 = (Bit16s)param;
+      ch->lin_y1 = (Bit16s)(param >> 16);
+      lin(ch);
+    } else {
+      ch->lin_x0 = (Bit16s)param;
+      ch->lin_y0 = (Bit16s)(param >> 16);
+    }
+  } else if (method >= 0x120 && method < 0x140) {
+    switch (method & 3) {
+      case 0:
+        ch->lin_x0 = (Bit32s)param;
+        break;
+      case 1:
+        ch->lin_y0 = (Bit32s)param;
+        break;
+      case 2:
+        ch->lin_x1 = (Bit32s)param;
+        break;
+      case 3:
+        ch->lin_y1 = (Bit32s)param;
+        lin(ch);
+        break;
+    }
+  } else if (method >= 0x140 && method < 0x160) {
+    ch->lin_x0 = ch->lin_x1;
+    ch->lin_y0 = ch->lin_y1;
+    ch->lin_x1 = (Bit16s)param;
+    ch->lin_y1 = (Bit16s)(param >> 16);
+    lin(ch);
+  } else if (method >= 0x160 && method < 0x180) {
+    if (method & 1) {
+      ch->lin_y0 = ch->lin_y1;
+      ch->lin_y1 = (Bit32s)param;
+      lin(ch);
+    } else {
+      ch->lin_x0 = ch->lin_x1;
+      ch->lin_x1 = (Bit32s)param;
+    }
+  }
+}
+
 void bx_geforce_c::execute_rect(gf_channel* ch, Bit32u method, Bit32u param)
 {
   if (method == 0x0bf)
@@ -8432,6 +8535,11 @@ int bx_geforce_c::execute_command(Bit32u chid, Bit32u subc, Bit32u method, Bit32
         case 0x57:
           execute_chroma(ch, method, param);
           break;
+        case 0x1c:
+        case 0x5c:
+          execute_lin(ch, method, param);
+          break;
+        case 0x1e:
         case 0x5e:
           execute_rect(ch, method, param);
           break;
