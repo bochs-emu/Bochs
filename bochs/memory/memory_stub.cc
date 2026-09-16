@@ -325,6 +325,8 @@ bool BX_MEMORY_STUB_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned 
   }
 
   a20addr = A20ADDR(addr);
+  dbg_invalidate_smc_pages(a20addr, len);
+
   for (; len>0; len--) {
     bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
     *(BX_MEM_THIS get_vector(linear_addr)) = *buf;

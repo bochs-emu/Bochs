@@ -26,6 +26,9 @@
 #include "memory-bochs.h"
 #include "param_names.h"
 #include "cpu/cpu.h"
+#if BX_DEBUGGER || BX_GDBSTUB
+#include "cpu/icache.h"
+#endif
 #include "gui/siminterface.h"
 #include "pc_system.h"
 #define LOG_THIS BX_MEM(0)->
@@ -688,6 +691,21 @@ bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, B
 }
 
 #if BX_DEBUGGER || BX_GDBSTUB
+
+// A debugger write does not go through the CPU write path and therefore does
+// not maintain the SMC write stamps. Traces already decoded from the modified
+// pages would survive and keep executing the old bytes, so invalidate the write
+// stamps of every touched page, which purges the affected traces from the
+// instruction caches of all CPUs.
+void dbg_invalidate_smc_pages(bx_phy_address addr, unsigned len)
+{
+  if (len == 0) return;
+
+  bx_phy_address last_page = (addr + len - 1) & ~((bx_phy_address) 0xfff);
+  for (bx_phy_address page = addr & ~((bx_phy_address) 0xfff); page <= last_page; page += 0x1000)
+    pageWriteStampTable.decWriteStamp(page);
+}
+
 bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf)
 {
   bx_phy_address a20addr = A20ADDR(addr);
@@ -718,6 +736,8 @@ bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit
     }
     memory_handler = memory_handler->next;
   }
+
+  dbg_invalidate_smc_pages(a20addr, len);
 
   for (; len>0; len--) {
     // Keep translated address in sync as we increment a20addr.

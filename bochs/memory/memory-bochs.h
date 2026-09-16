@@ -67,6 +67,11 @@ static BX_CPP_INLINE bx_phy_address bx_translate_gpa_to_linear(bx_phy_address gp
   return gpa;
 }
 
+#if BX_DEBUGGER || BX_GDBSTUB
+// invalidate the SMC write stamps of the pages touched by a debugger write
+BOCHSAPI void dbg_invalidate_smc_pages(bx_phy_address addr, unsigned len);
+#endif
+
 class BOCHSAPI BX_MEMORY_STUB_C : public logfunctions {
 protected:
   Bit64u  len, allocated;  // could be > 4G
