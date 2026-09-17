@@ -33,10 +33,11 @@ Changes after Bochs 3.1:
 + AVX-512/AVX512_FP16: fixed corner case correctness issue for VRNDSCALE* instructions with denormal operand
 + AVX-512/AVX512_FP16: fixed corner case correctness issue for VRCPSH/VRCPPH and VRCP14* instructions
 + AVX-512/AVX512_FP16: fixed corner case correctness issue for VRSQRTSH/VRSQRTPH and VRSQRT14* instructions
-- SMM/VMX: allow SMM restore to VMX “unrestricted guest” (stop enforcing CR0.PE = CR0.PG = CR0.NE = 1 during RSM to VMX guest state)
+- SMM/VMX: allow SMM restore to VMX "unrestricted guest" (stop enforcing CR0.PE = CR0.PG = CR0.NE = 1 during RSM to VMX guest state)
 - Legacy: update flags handling for AAD BCD instruction to handle undocumented flags more accurate like HW
 - AMX_AVX512: AMX_AVX512 instructions cannot be encoded with EVEX.b=1 and should #UD
 - AMX_AVX512: AMX_AVX512 instructions must #UD if EVEX is not enabled through XCR0[7:5]
+- APIC: APIC read from an address crossing 32-bit boundary actually returns all zero in HW
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
