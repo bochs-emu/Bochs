@@ -1296,7 +1296,6 @@ void vvfat_image_t::set_file_attributes(void)
 
 int vvfat_image_t::open(const char* dirname, int flags)
 {
-  Bit32u size_in_mb;
   char path[BX_PATHNAME_LEN];
   Bit8u mbr_buf[0x200];
   Bit8u boot_buf[0x200];
@@ -1414,8 +1413,8 @@ int vvfat_image_t::open(const char* dirname, int flags)
 
   hd_size = 512L * ((Bit64u)sector_count);
   if (sectors_per_cluster == 0) {
-    size_in_mb = (Bit32u)(hd_size >> 20);
-    if ((size_in_mb >= 2047) || (fat_type == 32)) {
+    Bit32u size_in_mb = (Bit32u)(hd_size >> 20);
+    if ((size_in_mb >= 2046) || (fat_type == 32)) {
       fat_type = 32;
       if (size_in_mb >= 32767) {
         sectors_per_cluster = 64;
