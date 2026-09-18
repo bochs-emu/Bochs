@@ -1250,6 +1250,9 @@ void bx_init_hardware()
 #else
   BX_INFO(("  SMP support: no"));
 #endif
+#if BX_SUPPORT_APIC
+  BX_INFO(("  using %sAPIC", simulate_xapic ? "x" : "legacy "));
+#endif
 
   BX_INFO(("  Using pre-defined CPU configuration: %s",
       SIM->get_param_enum(BXPN_CPU_MODEL)->get_selected()));
