@@ -78,7 +78,9 @@ struct gf_texture
   Bit32u pal_ofs;
   float border_color[4];
   Bit32u key_color;
-  float offset_matrix[4];
+  float bem_matrix[4];
+  float lum_scale;
+  float lum_offset;
 };
 
 struct gf_light

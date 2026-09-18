@@ -3882,8 +3882,13 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
   if (tex->signed_any) {
     for (Bit32u i = 0; i < 4; i++)
       if (tex->signed_comp[i]) {
-        color_int[i] = (Bit8s)color_int[i];
-        color_scale[i] = 1.0f / 128.0f;
+        if (color_scale[i] == 1.0f / 31.0f) {
+          color_int[i] = color_int[i] == 0x10 ? -120 : (Bit8s)(color_int[i] << 3);
+          color_scale[i] = 1.0f / 120.0f;
+        } else { // 1.0f / 255.0f
+          color_int[i] = color_int[i] == 0x80 ? -127 : (Bit8s)color_int[i];
+          color_scale[i] = 1.0f / 127.0f;
+        }
       }
   }
   if (BX_GEFORCE_THIS card_type <= 0x20) {
@@ -3909,6 +3914,16 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
       }
     }
   }
+}
+
+float clamp(float x, float min_val, float max_val)
+{
+  if (x < min_val)
+    return min_val;
+  else if (x > max_val)
+    return max_val;
+  else
+    return x;
 }
 
 float dot3(float x[3], float y[3])
@@ -4931,6 +4946,12 @@ void bx_geforce_c::d3d_pixel_quad_shader(gf_channel* ch, float in[4][16][4],
                   op_result[comp_index] = dp2a;
                 break;
               }
+              case 0x35: { // BEMLUM
+                float lum_adj = clamp(params[1][2] * params[2][2] + params[2][3], 0.0f, 1.0f);
+                for (int comp_index = 0; comp_index < 4; comp_index++)
+                  op_result[comp_index] = params[0][comp_index] * lum_adj;
+                break;
+              }
               case 0x36: { // RFL
                 reflection(params[0], params[1], op_result);
                 op_result[3] = 0.0f; // ignored
@@ -5781,7 +5802,8 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
         if (!ps_enable) {
           float uv[4][2] = { { 0.0f } };
           for (Bit32u t = 0; t < ch->d3d_tex_coord_count; t++) {
-            switch (ch->d3d_tex_shader_op[t]) {
+            Bit32u tex_shader_op = ch->d3d_tex_shader_op[t];
+            switch (tex_shader_op) {
               case 0x00:   // NONE
                 break;
               case 0x01:   // PROJECT2D
@@ -5796,18 +5818,19 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
                   d3d_sample_texture(ch, tex, ps_in[fi][4 + t], lod, rc_regs[fi][8 + t]);
                 break;
               }
-              case 0x06: { // BUMPENVMAP
+              case 0x06:   // BUMPENVMAP
+              case 0x07: { // BUMPENVMAP_LUM
                 float coords[4][3];
                 gf_texture* tex = &ch->d3d_texture[t];
                 for (Bit32u fi = 0; fi < 4; fi++) {
                   float* in_coords = ps_in[fi][4 + t];
                   float* prev_color = rc_regs[fi][8 + ch->d3d_tex_shader_previous[t]];
                   coords[fi][0] = in_coords[0] / in_coords[3] +
-                    tex->offset_matrix[0] * prev_color[2] +
-                    tex->offset_matrix[3] * prev_color[1];
+                    tex->bem_matrix[0] * prev_color[2] +
+                    tex->bem_matrix[3] * prev_color[1];
                   coords[fi][1] = in_coords[1] / in_coords[3] +
-                    tex->offset_matrix[1] * prev_color[2] +
-                    tex->offset_matrix[2] * prev_color[1];
+                    tex->bem_matrix[1] * prev_color[2] +
+                    tex->bem_matrix[2] * prev_color[1];
                   coords[fi][2] = 0.0f;
                 }
                 float ddx[3];
@@ -5816,6 +5839,15 @@ void bx_geforce_c::d3d_triangle_clipped(gf_channel* ch, float v0[16][4], float v
                 float lod = compute_lod(tex, coords[0], ddx, ddy);
                 for (Bit32u fi = 0; fi < 4; fi++)
                   d3d_sample_texture(ch, tex, coords[fi], lod, rc_regs[fi][8 + t]);
+                if (tex_shader_op == 0x07) { // BUMPENVMAP_LUM
+                  for (Bit32u fi = 0; fi < 4; fi++) {
+                    float* prev_color = rc_regs[fi][8 + ch->d3d_tex_shader_previous[t]];
+                    float lum_adj = clamp(prev_color[0] * tex->lum_scale + tex->lum_offset, 0.0f, 1.0f);
+                    for (Bit32u ci = 0; ci < 4; ci++) {
+                      rc_regs[fi][8 + t][ci] *= lum_adj;
+                    }
+                  }
+                }
                 break;
               }
               case 0x0c: { // DOT_RFLCT_SPEC
@@ -7911,7 +7943,11 @@ void bx_geforce_c::d3d_mh_texture(gf_channel* ch, Bit32u cls, Bit32u method, Bit
     tex->border_color[2] = ((param >> 0) & 0xff) / 255.0f;
     tex->border_color[3] = ((param >> 24) & 0xff) / 255.0f;
   } else if (texture_method >= 10 && texture_method <= 13 && cls == 0x0097) {
-    tex->offset_matrix[texture_method - 10] = uint32_as_float(param);
+    tex->bem_matrix[texture_method - 10] = uint32_as_float(param);
+  } else if (texture_method == 14 && cls == 0x0097) {
+    tex->lum_scale = uint32_as_float(param);
+  } else if (texture_method == 15 && cls == 0x0097) {
+    tex->lum_offset = uint32_as_float(param);
   }
 }
 
