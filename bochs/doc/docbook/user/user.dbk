@@ -4181,6 +4181,12 @@ but <emphasis>we don't recommend it</emphasis> for safety reasons. In Windows, t
 </para>
 
 <para>
+When using the disk image mode "vvfat", the path parameter specifies the host
+directory to use. The optional prefix "fat32:" forces the usage of the FAT32
+file system for disks with size from 512 to 2047 MB.
+</para>
+
+<para>
 Disk geometry autodetection works with images created by bximage if CHS is set
 to 0/0/0 (cylinders are calculated using heads=16 and spt=63). For other hard
 disk images and modes the cylinders, heads, and spt are mandatory. In all cases

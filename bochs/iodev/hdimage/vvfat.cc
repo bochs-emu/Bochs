@@ -1303,12 +1303,18 @@ int vvfat_image_t::open(const char* dirname, int flags)
   const char *logname = NULL;
   char ftype[10];
   bool ftype_ok;
+  bool fat32_req = false;
 
   UNUSED(flags);
   use_mbr_file = 0;
   use_boot_file = 0;
   fat_type = 0;
   sectors_per_cluster = 0;
+
+  if (!strncmp(dirname, "fat32:", 6)) {
+    fat32_req = true;
+    dirname = &dirname[6];
+  }
 
   snprintf(path, BX_PATHNAME_LEN, "%s/%s", dirname, VVFAT_MBR);
   if (read_sector_from_file(path, mbr_buf, 0)) {
@@ -1414,7 +1420,14 @@ int vvfat_image_t::open(const char* dirname, int flags)
   hd_size = 512L * ((Bit64u)sector_count);
   if (sectors_per_cluster == 0) {
     Bit32u size_in_mb = (Bit32u)(hd_size >> 20);
-    if ((size_in_mb >= 2046) || (fat_type == 32)) {
+    if (fat32_req) {
+      if (size_in_mb > 511) {
+        fat_type = 32;
+      } else {
+        BX_ERROR(("Ignoring FAT32 prefix for too small disk"));
+      }
+    }
+    if ((size_in_mb >= 2047) || (fat_type == 32)) {
       fat_type = 32;
       if (size_in_mb >= 32767) {
         sectors_per_cluster = 64;
