@@ -1073,6 +1073,9 @@ plugin_t bx_builtin_plugins[] = {
 #if BX_SUPPORT_GAMEPORT
   BUILTIN_OPT_PLUGIN_ENTRY(gameport),
 #endif
+#if BX_SUPPORT_APPLESMC
+  BUILTIN_OPT_PLUGIN_ENTRY(applesmc),
+#endif
 #if BX_SUPPORT_IODEBUG
   BUILTIN_OPT_PLUGIN_ENTRY(iodebug),
 #endif
