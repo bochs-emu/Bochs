@@ -386,6 +386,8 @@ void corei7_haswell_4770_t::get_std_cpuid_leaf_4(Bit32u subfunction, cpuid_funct
     leaf->edx = 0;
     return;
   }
+
+  adjust_std_cpuid_leaf_4_topology(leaf);
 }
 
 // leaf 0x00000005 MONITOR/MWAIT Leaf                //
