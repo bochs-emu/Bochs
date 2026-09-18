@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{31241E0A-FCB0-4062-9F3D-9EC705918A22}</ProjectGuid>
+    <ProjectGuid>{EF207172-3943-4697-8D01-0B9EDF7BAF01}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -68,24 +68,24 @@
     <_ProjectFileVersion>12.0.21005.1</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>.\..\obj-debug\bx_fw_cfg\</OutDir>
-    <IntDir>.\..\obj-debug\bx_fw_cfg\</IntDir>
+    <OutDir>.\..\obj-debug\bx_applesmc\</OutDir>
+    <IntDir>.\..\obj-debug\bx_applesmc\</IntDir>
     <LinkIncremental>true</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>.\..\obj-debug\bx_fw_cfg\</OutDir>
-    <IntDir>.\..\obj-debug\bx_fw_cfg\</IntDir>
+    <OutDir>.\..\obj-debug\bx_applesmc\</OutDir>
+    <IntDir>.\..\obj-debug\bx_applesmc\</IntDir>
     <LinkIncremental>true</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>.\..\obj-release\bx_fw_cfg\</OutDir>
-    <IntDir>.\..\obj-release\bx_fw_cfg\</IntDir>
+    <OutDir>.\..\obj-release\bx_applesmc\</OutDir>
+    <IntDir>.\..\obj-release\bx_applesmc\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>.\..\obj-release\bx_fw_cfg\</OutDir>
-    <IntDir>.\..\obj-release\bx_fw_cfg\</IntDir>
+    <OutDir>.\..\obj-release\bx_applesmc\</OutDir>
+    <IntDir>.\..\obj-release\bx_applesmc\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <BuildLog>
@@ -107,7 +107,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\obj-debug\bochs.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\obj-debug\bochs.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -137,7 +137,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>..\obj-debug\bochs.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\obj-debug\bochs.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -169,7 +169,7 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>../obj-release\bochs.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\obj-release\bochs.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
@@ -199,23 +199,17 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>../obj-release\bochs.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\obj-release\bochs.lib;winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
       <OutputFile>.\..\obj-release\$(TargetName)$(TargetExt)</OutputFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\iodev\fw_cfg.cc" />
-    <ClCompile Include="..\iodev\acpi_tables.cc" />
-    <ClCompile Include="..\iodev\smbios_tables.cc" />
+    <ClCompile Include="..\iodev\applesmc.cc" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\iodev\fw_cfg.h" />
-    <ClInclude Include="..\iodev\acpi_tables.h" />
-    <ClInclude Include="..\iodev\smbios_tables.h" />
-    <ClInclude Include="..\iodev\acpi_dsdt_aml.h" />
-    <ClInclude Include="..\iodev\iodev.h" />
+    <ClInclude Include="..\iodev\applesmc.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="bochs.vcxproj">

@@ -217,6 +217,7 @@
   <ItemGroup>
     <ClCompile Include="..\iodev\acpi.cc" />
     <ClCompile Include="..\iodev\acpi_tables.cc" />
+    <ClCompile Include="..\iodev\applesmc.cc" />
     <ClCompile Include="..\iodev\biosdev.cc" />
     <ClCompile Include="..\iodev\busmouse.cc" />
     <ClCompile Include="..\iodev\cmos.cc" />
@@ -242,6 +243,7 @@
     <ClCompile Include="..\iodev\serial.cc" />
     <ClCompile Include="..\iodev\serial_raw.cc" />
     <ClCompile Include="..\iodev\slowdown_timer.cc" />
+    <ClCompile Include="..\iodev\smbios_tables.cc" />
     <ClCompile Include="..\iodev\speaker.cc" />
     <ClCompile Include="..\iodev\unmapped.cc" />
     <ClCompile Include="..\iodev\virt_timer.cc" />
@@ -250,6 +252,7 @@
     <ClInclude Include="..\iodev\acpi.h" />
     <ClInclude Include="..\iodev\acpi_dsdt_aml.h" />
     <ClInclude Include="..\iodev\acpi_tables.h" />
+    <ClInclude Include="..\iodev\applesmc.h" />
     <ClInclude Include="..\iodev\biosdev.h" />
     <ClInclude Include="..\iodev\busmouse.h" />
     <ClInclude Include="..\iodev\cmos.h" />
@@ -275,6 +278,7 @@
     <ClInclude Include="..\iodev\serial.h" />
     <ClInclude Include="..\iodev\serial_raw.h" />
     <ClInclude Include="..\iodev\slowdown_timer.h" />
+    <ClInclude Include="..\iodev\smbios_tables.h" />
     <ClInclude Include="..\iodev\speaker.h" />
     <ClInclude Include="..\iodev\unmapped.h" />
     <ClInclude Include="..\iodev\virt_timer.h" />
