@@ -707,7 +707,7 @@ void bx_fw_cfg_c::generate_acpi_tables(void)
 void bx_fw_cfg_c::generate_smbios_tables(void)
 {
   bx_smbios_tables_c smbios_gen;
-  smbios_gen.generate_tables();
+  smbios_gen.generate_tables(BX_MEM_THIS get_memory_len());
 
   Bit8u* tables_blob = smbios_gen.get_tables_blob();
   Bit32u tables_size = smbios_gen.get_tables_size();
