@@ -120,6 +120,8 @@ protected:
   void get_ext_cpuid_brand_string_leaf(const char *brand_string, Bit32u function, cpuid_function_t *leaf) const;
   void get_cpuid_hidden_level(cpuid_function_t *leaf, const char *magic_string) const;
 
+  void adjust_std_cpuid_leaf_4_topology(cpuid_function_t *leaf) const;
+
 #if BX_SUPPORT_APIC
   void get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const;
 #endif
