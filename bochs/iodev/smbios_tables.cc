@@ -52,6 +52,8 @@ bx_smbios_tables_c::bx_smbios_tables_c()
     anchor_blob = NULL;
     anchor_size = 0;
 
+    ram_size = 0;
+    memory_array_handle = 0;
     next_handle = 0;
     structure_count = 0;
     max_structure_size = 0;
@@ -190,6 +192,67 @@ void bx_smbios_tables_c::build_type_3(void)
     append_structure(&t, sizeof(t), strings);
 }
 
+void bx_smbios_tables_c::build_type_16(void)
+{
+    struct smbios_type_16 t;
+    memset(&t, 0, sizeof(t));
+    t.header.type = 16;
+    t.header.length = sizeof(t);
+    t.header.handle = next_handle++;
+    memory_array_handle = t.header.handle;
+    t.location = 0x03;         // System board or motherboard
+    t.use = 0x03;              // System memory
+    t.error_correction = 0x03; // None
+    Bit64u capacity_kb = ram_size / 1024;
+    if (capacity_kb >= 0x80000000ULL) {
+        t.maximum_capacity = 0x80000000;
+        t.extended_maximum_capacity = ram_size;
+    } else {
+        t.maximum_capacity = (Bit32u) capacity_kb;
+    }
+    t.memory_error_information_handle = 0xFFFE; // not provided
+    t.number_of_memory_devices = 1;
+
+    const char *strings[] = { NULL };
+    append_structure(&t, sizeof(t), strings);
+}
+
+void bx_smbios_tables_c::build_type_17(void)
+{
+    struct smbios_type_17 t;
+    memset(&t, 0, sizeof(t));
+    t.header.type = 17;
+    t.header.length = sizeof(t);
+    t.header.handle = next_handle++;
+    t.physical_memory_array_handle = memory_array_handle;
+    t.memory_error_information_handle = 0xFFFE; // not provided
+    t.total_width = 64;
+    t.data_width = 64;
+    Bit64u size_mb = ram_size >> 20;
+    if (size_mb >= 0x7FFF) {
+        t.size = 0x7FFF; // real size is in extended_size
+        t.extended_size = (Bit32u) size_mb;
+    } else {
+        t.size = (Bit16u) size_mb;
+    }
+    t.form_factor = 0x09; // DIMM
+    t.device_set = 0;
+    t.device_locator_str = 1;
+    t.bank_locator_str = 2;
+    t.memory_type = 0x18; // DDR3, matches the iMac15,1
+    t.type_detail = 0x0080; // Synchronous
+    t.speed = 1600;
+    t.manufacturer_str = 3;
+    t.serial_number_str = 4;
+    t.asset_tag_number_str = 0;
+    t.part_number_str = 5;
+    t.attributes = 0x01; // Single rank
+    t.configured_clock_speed = 1600;
+
+    const char *strings[] = { "DIMM0", "BANK 0", "Bochs", "0", "BochsDIMM", NULL };
+    append_structure(&t, sizeof(t), strings);
+}
+
 void bx_smbios_tables_c::build_type_127(void)
 {
     struct smbios_type_127 t;
@@ -231,8 +294,9 @@ void bx_smbios_tables_c::build_anchor(void)
     memcpy(anchor_blob, &ep, sizeof(ep));
 }
 
-void bx_smbios_tables_c::generate_tables(void)
+void bx_smbios_tables_c::generate_tables(Bit64u guest_ram_size)
 {
+    ram_size = guest_ram_size;
     tables_capacity = SMBIOS_TABLES_CAPACITY;
     tables_blob = new Bit8u[tables_capacity];
     tables_size = 0;
@@ -241,6 +305,8 @@ void bx_smbios_tables_c::generate_tables(void)
     build_type_1();
     build_type_2();
     build_type_3();
+    build_type_16();
+    build_type_17();
     build_type_127();
 
     build_anchor();
