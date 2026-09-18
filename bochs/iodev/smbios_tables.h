@@ -125,6 +125,49 @@ struct smbios_type_3 {
     Bit8u sku_number_str;
 };
 
+// SMBIOS type 16 - Physical Memory Array. macOS's boot.efi reads the array's
+// maximum capacity and device count from here.
+struct smbios_type_16 {
+    struct smbios_structure_header header;
+    Bit8u location;
+    Bit8u use;
+    Bit8u error_correction;
+    Bit32u maximum_capacity;
+    Bit16u memory_error_information_handle;
+    Bit16u number_of_memory_devices;
+    Bit64u extended_maximum_capacity;
+};
+
+// SMBIOS type 17 - Memory Device. boot.efi adds up the "size" field of every
+// type 17 structure to fill in boot_args->PhysicalMemorySize, which the
+// macOS kernel uses as its RAM size (sane_size). Without any type 17
+// structure the kernel sees 0 bytes of RAM and panics in zone_init().
+struct smbios_type_17 {
+    struct smbios_structure_header header;
+    Bit16u physical_memory_array_handle;
+    Bit16u memory_error_information_handle;
+    Bit16u total_width;
+    Bit16u data_width;
+    Bit16u size;
+    Bit8u form_factor;
+    Bit8u device_set;
+    Bit8u device_locator_str;
+    Bit8u bank_locator_str;
+    Bit8u memory_type;
+    Bit16u type_detail;
+    Bit16u speed;
+    Bit8u manufacturer_str;
+    Bit8u serial_number_str;
+    Bit8u asset_tag_number_str;
+    Bit8u part_number_str;
+    Bit8u attributes;
+    Bit32u extended_size;
+    Bit16u configured_clock_speed;
+    Bit16u minimum_voltage;
+    Bit16u maximum_voltage;
+    Bit16u configured_voltage;
+};
+
 // SMBIOS type 127 - End-of-table
 struct smbios_type_127 {
     struct smbios_structure_header header;
@@ -138,8 +181,8 @@ public:
     bx_smbios_tables_c();
     ~bx_smbios_tables_c();
 
-    // Generate the tables + anchor blobs
-    void generate_tables(void);
+    // Generate the tables + anchor blobs; ram_size is the guest RAM in bytes
+    void generate_tables(Bit64u ram_size);
 
     Bit8u* get_tables_blob() { return tables_blob; }
     Bit32u get_tables_size() { return tables_size; }
@@ -152,6 +195,8 @@ private:
     void build_type_1(void);
     void build_type_2(void);
     void build_type_3(void);
+    void build_type_16(void);
+    void build_type_17(void);
     void build_type_127(void);
     void build_anchor(void);
 
@@ -161,6 +206,8 @@ private:
     void append_structure(void *formatted, Bit32u formatted_len,
                            const char * const *strings);
 
+    Bit64u ram_size;
+    Bit16u memory_array_handle;
     Bit16u next_handle;
     Bit16u structure_count;
     Bit16u max_structure_size;
