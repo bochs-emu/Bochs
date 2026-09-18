@@ -427,6 +427,24 @@ BX_CPP_INLINE static Bit32u ilog2(Bit32u x)
 }
 #endif
 
+// Leaf 0x00000004 of the pre-defined CPU models holds the values of the real
+// CPU. Make the core / thread sharing fields agree with the configured
+// topology, which is also what leaf 0x00000001 reports (ncores * nthreads).
+// Guests that derive threads per core from the two leaves (macOS does) divide
+// by zero if they disagree.
+void bx_cpuid_t::adjust_std_cpuid_leaf_4_topology(cpuid_function_t *leaf) const
+{
+  if ((leaf->eax & 0x1f) == 0) return; // no more caches
+
+  unsigned logical_processors = ncores * nthreads;
+  unsigned cache_level = (leaf->eax >> 5) & 0x7;
+  // L1 and L2 are private to a core, L3 is shared by the whole package
+  unsigned sharing_ids = (cache_level >= 3) ? logical_processors : nthreads;
+
+  leaf->eax &= 0x00003fff;
+  leaf->eax |= ((sharing_ids - 1) << 14) | ((logical_processors - 1) << 26);
+}
+
 // leaf 0x0000000B //
 void bx_cpuid_t::get_std_cpuid_extended_topology_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
 {
