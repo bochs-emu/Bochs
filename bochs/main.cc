@@ -81,7 +81,9 @@ bool bx_user_quit;
 Bit8u bx_cpu_count;
 #if BX_SUPPORT_APIC
 Bit32u apic_id_mask; // determinted by XAPIC option
-bool simulate_xapic;
+// Must be true from static initialization on: without SMP support the global
+// bx_cpu object (and its local APIC) is constructed before main() runs.
+bool simulate_xapic = true;
 #endif
 
 /* typedefs */
