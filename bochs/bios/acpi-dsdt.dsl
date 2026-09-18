@@ -245,6 +245,50 @@ DefinitionBlock (
                 }
             }
 
+	    /* primary IDE controller */
+            Device (IDE0)
+            {
+                Name (_HID, EisaId ("PNP0600"))
+                Name (_UID, 0x00)
+                Method (_STA, 0, NotSerialized)
+                {
+                    Return (0x00)
+                }
+
+                Method (_CRS, 0, NotSerialized)
+                {
+                    Name (BUF0, ResourceTemplate ()
+                    {
+                        IO (Decode16, 0x01F0, 0x01F0, 0x00, 0x08)
+                        IO (Decode16, 0x03F6, 0x03F6, 0x00, 0x01)
+                        IRQNoFlags () {14}
+                    })
+                    Return (BUF0)
+                }
+            }
+
+	    /* secondary IDE controller */
+            Device (IDE1)
+            {
+                Name (_HID, EisaId ("PNP0600"))
+                Name (_UID, 0x01)
+                Method (_STA, 0, NotSerialized)
+                {
+                    Return (0x00)
+                }
+
+                Method (_CRS, 0, NotSerialized)
+                {
+                    Name (BUF0, ResourceTemplate ()
+                    {
+                        IO (Decode16, 0x0170, 0x0170, 0x00, 0x08)
+                        IO (Decode16, 0x0376, 0x0376, 0x00, 0x01)
+                        IRQNoFlags () {15}
+                    })
+                    Return (BUF0)
+                }
+            }
+
 	    /* PS/2 floppy controller */
 	    Device (FDC0)
 	    {
