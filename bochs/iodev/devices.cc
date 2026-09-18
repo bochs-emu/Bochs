@@ -112,6 +112,9 @@ void bx_devices_c::init_stubs()
   pluginACPIController = &stubACPIController;
 #endif
   pluginExtFpuIRQ = &stubExtFpuIRQ;
+#if BX_SUPPORT_APPLESMC
+  pluginAppleSMC = &stubAppleSMC;
+#endif
 }
 
 void bx_devices_c::init(BX_MEM_C *newmem)

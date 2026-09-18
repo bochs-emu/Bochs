@@ -908,6 +908,9 @@ typedef Bit32u bx_phy_address;
   #error To enable the ES1370 soundcard, you must also enable PCI
 #endif
 
+// Apple SMC emulation (needed for macOS guests)
+#define BX_SUPPORT_APPLESMC 1
+
 // I/O Interface to debugger
 #define BX_SUPPORT_IODEBUG 0
 

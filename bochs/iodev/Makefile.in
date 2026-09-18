@@ -89,10 +89,12 @@ OBJS_THAT_CAN_BE_PLUGINS = \
   @BUSM_OBJS@ \
   @PCI_OBJS@ \
   @GAME_OBJS@ \
-  @IODEBUG_OBJS@
+  @IODEBUG_OBJS@ \
+  @APPLESMC_OBJS@
 
 OBJS_THAT_SUPPORT_OTHER_PLUGINS = \
   acpi_tables.o \
+  smbios_tables.o \
   pit82c54.o \
   scancodes.o \
   serial_raw.o
@@ -106,7 +108,7 @@ plugins: @PLUGIN_TARGET_2@
 
 plugins_gcc: $(PLUGIN_OBJS:@PLUGIN_LIBNAME_TRANSFORMATION@)
 
-plugins_msvc: $(IODEV_DLL_TARGETS) bx_fw_cfg.dll bx_keyboard.dll bx_pit.dll bx_gameport.dll bx_serial.dll bx_floppy.dll
+plugins_msvc: $(IODEV_DLL_TARGETS) bx_fw_cfg.dll bx_keyboard.dll bx_pit.dll bx_gameport.dll bx_serial.dll bx_floppy.dll bx_applesmc.dll
 
 libiodev.a: $(NONPLUGIN_OBJS)
 	@RMCOMMAND@ libiodev.a
@@ -131,8 +133,8 @@ libbx_%.la: %.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module $< -o $@ -rpath $(PLUGIN_PATH)
 
 # special link rules for plugins that require more than one object file
-libbx_fw_cfg.la: fw_cfg.lo acpi_tables.lo
-	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module fw_cfg.lo acpi_tables.lo -o libbx_fw_cfg.la -rpath $(PLUGIN_PATH)
+libbx_fw_cfg.la: fw_cfg.lo acpi_tables.lo smbios_tables.lo
+	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module fw_cfg.lo acpi_tables.lo smbios_tables.lo -o libbx_fw_cfg.la -rpath $(PLUGIN_PATH)
 
 libbx_keyboard.la: keyboard.lo scancodes.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module keyboard.lo scancodes.lo -o libbx_keyboard.la -rpath $(PLUGIN_PATH)
@@ -148,8 +150,8 @@ bx_%.dll: %.o
 	$(CXX) $(CXXFLAGS) -shared -o $@ $< $(WIN32_DLL_IMPORT_LIBRARY)
 
 # special link rules for plugins with Cygwin, MinGW/MSYS and MSVC nmake
-bx_fw_cfg.dll: fw_cfg.o acpi_tables.o
-	@LINK_DLL@ fw_cfg.o acpi_tables.o $(WIN32_DLL_IMPORT_LIBRARY)
+bx_fw_cfg.dll: fw_cfg.o acpi_tables.o smbios_tables.o
+	@LINK_DLL@ fw_cfg.o acpi_tables.o smbios_tables.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_keyboard.dll: keyboard.o scancodes.o
 	@LINK_DLL@ keyboard.o scancodes.o $(WIN32_DLL_IMPORT_LIBRARY)
@@ -159,6 +161,9 @@ bx_pit.dll: pit82c54.o pit.o
 
 bx_gameport.dll: gameport.o
 	@LINK_DLL@ gameport.o $(WIN32_DLL_IMPORT_LIBRARY) $(GAME_LINK_OPTS@LINK_VAR@)
+
+bx_applesmc.dll: applesmc.o
+	@LINK_DLL@ applesmc.o $(WIN32_DLL_IMPORT_LIBRARY)
 
 bx_serial.dll: serial.o serial_raw.o
 	@LINK_DLL@ serial.o serial_raw.o $(WIN32_DLL_IMPORT_LIBRARY) $(SER_LINK_OPTS@LINK_VAR@)
@@ -192,6 +197,8 @@ acpi.o: acpi.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../gui/gui.h pci.h acpi.h virt_timer.h ../pc_system.h
 acpi_tables.o: acpi_tables.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h acpi_tables.h acpi_dsdt_aml.h
+smbios_tables.o: smbios_tables.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../logio.h ../misc/bswap.h smbios_tables.h
 biosdev.o: biosdev.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
  ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
@@ -233,11 +240,15 @@ floppy.o: floppy.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio
 fw_cfg.o: fw_cfg.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
  ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
- ../gui/gui.h fw_cfg.h acpi_tables.h
+ ../gui/gui.h fw_cfg.h acpi_tables.h smbios_tables.h
 gameport.o: gameport.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
  ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
  ../gui/gui.h ../pc_system.h gameport.h
+applesmc.o: applesmc.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h applesmc.h
 harddrv.o: harddrv.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
  ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
@@ -333,6 +344,8 @@ acpi.lo: acpi.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h 
  ../gui/gui.h pci.h acpi.h virt_timer.h ../pc_system.h
 acpi_tables.lo: acpi_tables.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h acpi_tables.h acpi_dsdt_aml.h
+smbios_tables.lo: smbios_tables.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
+ ../logio.h ../misc/bswap.h smbios_tables.h
 biosdev.lo: biosdev.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
  ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
@@ -374,11 +387,15 @@ floppy.lo: floppy.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logi
 fw_cfg.lo: fw_cfg.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
  ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
- ../gui/gui.h fw_cfg.h acpi_tables.h
+ ../gui/gui.h fw_cfg.h acpi_tables.h smbios_tables.h
 gameport.lo: gameport.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
  ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
  ../gui/gui.h ../pc_system.h gameport.h
+applesmc.lo: applesmc.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
+ ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
+ ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../gui/gui.h applesmc.h
 harddrv.lo: harddrv.@CPP_SUFFIX@ iodev.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h ../plugin.h ../extplugin.h ../param_names.h \
  ../memory/memory-bochs.h ../gui/siminterface.h ../gui/paramtree.h \
