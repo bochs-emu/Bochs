@@ -916,6 +916,7 @@ INSTRUMENT_VAR
 INSTRUMENT_DIR
 READLINE_LIB
 IODEBUG_OBJS
+APPLESMC_OBJS
 GDBSTUB_VAR
 DEBUGGER_VAR
 NO_FLEX_YACC
@@ -1041,6 +1042,7 @@ enable_cpp
 enable_debugger
 enable_debugger_gui
 enable_gdb_stub
+enable_applesmc
 enable_iodebug
 enable_all_optimizations
 enable_readline
@@ -1778,6 +1780,8 @@ Optional Features:
   --enable-debugger-gui   compile in support for Bochs internal debugger GUI
                           (yes, if debugger is on)
   --enable-gdb-stub       enable gdb stub support (no)
+  --enable-applesmc       enable Apple SMC emulation, needed for macOS guests
+                          (default yes)
   --enable-iodebug        enable I/O interface to debugger (yes, if debugger
                           is on)
   --enable-all-optimizations
@@ -6236,7 +6240,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 6239 "configure"' > conftest.$ac_ext
+  echo '#line 6243 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7644,11 +7648,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7647: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7651: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7651: \$? = $ac_status" >&5
+   echo "$as_me:7655: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -7879,11 +7883,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7882: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7886: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7886: \$? = $ac_status" >&5
+   echo "$as_me:7890: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -7948,11 +7952,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7951: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7955: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7955: \$? = $ac_status" >&5
+   echo "$as_me:7959: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9790,7 +9794,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9793 "configure"
+#line 9797 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9886,7 +9890,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9889 "configure"
+#line 9893 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12008,11 +12012,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12011: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12015: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12015: \$? = $ac_status" >&5
+   echo "$as_me:12019: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -12077,11 +12081,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12080: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12084: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12084: \$? = $ac_status" >&5
+   echo "$as_me:12088: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13117,7 +13121,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13120 "configure"
+#line 13124 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13213,7 +13217,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13216 "configure"
+#line 13220 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -14034,11 +14038,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14037: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14041: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:14041: \$? = $ac_status" >&5
+   echo "$as_me:14045: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -14103,11 +14107,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14106: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14110: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14110: \$? = $ac_status" >&5
+   echo "$as_me:14114: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16072,11 +16076,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16075: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16079: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16079: \$? = $ac_status" >&5
+   echo "$as_me:16083: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16307,11 +16311,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16310: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16314: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16314: \$? = $ac_status" >&5
+   echo "$as_me:16318: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16376,11 +16380,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16379: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16383: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16383: \$? = $ac_status" >&5
+   echo "$as_me:16387: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -18218,7 +18222,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18221 "configure"
+#line 18225 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -18314,7 +18318,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18317 "configure"
+#line 18321 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -20069,7 +20073,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 20072 "configure"
+#line 20076 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -23858,6 +23862,40 @@ fi
 
 
 
+{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for Apple SMC emulation" >&5
+printf %s "checking for Apple SMC emulation... " >&6; }
+APPLESMC_OBJS=''
+# Check whether --enable-applesmc was given.
+if test ${enable_applesmc+y}
+then :
+  enableval=$enable_applesmc; if test "$enableval" = yes; then
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+    printf '%s\n' "#define BX_SUPPORT_APPLESMC 1" >>confdefs.h
+
+    APPLESMC_OBJS='applesmc.o'
+   else
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+    printf '%s\n' "#define BX_SUPPORT_APPLESMC 0" >>confdefs.h
+
+   fi
+
+else case e in #(
+  e)
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+    printf '%s\n' "#define BX_SUPPORT_APPLESMC 1" >>confdefs.h
+
+    APPLESMC_OBJS='applesmc.o'
+
+   ;;
+esac
+fi
+
+
+
+
 { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for I/O Interface to the debugger" >&5
 printf %s "checking for I/O Interface to the debugger... " >&6; }
 IODEBUG_OBJS=''
@@ -27231,7 +27269,7 @@ case $target in
       EXT_MSVC_DLL_RULES="!INCLUDE makeincl.vc"
       echo -e "# DLL PLUGIN TEST\n" > iodev/makeincl.vc
       IODEV_DLL_TARGETS=""
-      IODEV_DLL_LIST="biosdev cmos dma extfpuirq harddrv ioapic parallel pic speaker unmapped"
+      IODEV_DLL_LIST="applesmc biosdev cmos dma extfpuirq harddrv ioapic parallel pic speaker unmapped"
       if test "$pci" = "1"; then
         IODEV_DLL_LIST="$IODEV_DLL_LIST acpi pci pci2isa pci_ide hpet"
       fi

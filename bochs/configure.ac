@@ -878,6 +878,28 @@ AC_ARG_ENABLE(gdb-stub,
 AC_SUBST(GDBSTUB_VAR)
 
 
+AC_MSG_CHECKING(for Apple SMC emulation)
+APPLESMC_OBJS=''
+AC_ARG_ENABLE(applesmc,
+  AS_HELP_STRING([--enable-applesmc], [enable Apple SMC emulation, needed for macOS guests (default yes)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_APPLESMC, 1)
+    APPLESMC_OBJS='applesmc.o'
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_APPLESMC, 0)
+   fi
+   ],
+  [
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_APPLESMC, 1)
+    APPLESMC_OBJS='applesmc.o'
+  ]
+  )
+AC_SUBST(APPLESMC_OBJS)
+
+
 AC_MSG_CHECKING(for I/O Interface to the debugger)
 IODEBUG_OBJS=''
 AC_ARG_ENABLE(iodebug,
@@ -3145,7 +3167,7 @@ case $target in
       EXT_MSVC_DLL_RULES="!INCLUDE makeincl.vc"
       echo -e "# DLL PLUGIN TEST\n" > iodev/makeincl.vc
       IODEV_DLL_TARGETS=""
-      IODEV_DLL_LIST="biosdev cmos dma extfpuirq harddrv ioapic parallel pic speaker unmapped"
+      IODEV_DLL_LIST="applesmc biosdev cmos dma extfpuirq harddrv ioapic parallel pic speaker unmapped"
       if test "$pci" = "1"; then
         IODEV_DLL_LIST="$IODEV_DLL_LIST acpi pci pci2isa pci_ide hpet"
       fi
