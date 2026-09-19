@@ -72,7 +72,7 @@
 # "cmdmode"     - call a headerbar button handler after pressing F7 (sdl, sdl2,
 #                 win32, x)
 # "fullscreen"  - startup in fullscreen mode (sdl, sdl2)
-# "hideIPS"     - disable IPS output in status bar (nogui, rfb, sdl, sdl2, term, 
+# "hideIPS"     - disable IPS output in status bar (nogui, rfb, sdl, sdl2, term,
 #                 vncsrv, win32, wx, x)
 # "nokeyrepeat" - turn off host keyboard repeat (sdl, sdl2, win32, x)
 # "no_gui_console" - use system console instead of builtin gui console
@@ -978,6 +978,10 @@ speaker: enabled=1, mode=sound, volume=8
 #      non-continuous sound. 1000000 is usually a good value.  This needs a
 #      reasonably correct setting for the IPS parameter of the CPU option
 #      and also depends on the clock sync setting.
+# dsp_realtime:
+#      If set to 1 (default), the DSP timer is using the realtime engine,
+#      otherwise it is driven by the cpu and depends on the ips setting.
+#      The realtime mode may fix or reduce sound issues.
 #
 # Examples for output modes:
 #   sb16: midimode=2, midifile="output.mid", wavemode=1 # MIDI to file
@@ -992,9 +996,8 @@ speaker: enabled=1, mode=sound, volume=8
 # presence of the device. The wave and MIDI output can be sent to device, file
 # or both using the parameters 'wavemode', 'wavefile', 'midimode' and
 # 'midifile'. See the description of these parameters at the SB16 directive.
-# If the parameter 'dac_realtime' set to 1 (default), the DAC timers are using
-# the realtime engine, otherwise they are driven by the cpu and depend on the
-# ips setting. The realtime mode may fix or reduce sound issues.
+# The parameter 'dac_realtime' controls the timer mode of both DACs and works
+# like the SB16 parameter 'dsp_realtime'.
 #
 # Examples:
 #   es1370: enabled=1, wavemode=1                       # use 'sound' parameters

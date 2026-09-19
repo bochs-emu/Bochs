@@ -28,6 +28,7 @@ Changes after Bochs 3.1 release:
   - CD-ROM
     - Model parameter now supports format "VENDOR:PRODUCT:REV" for ATAPI inquiry
   - Sound
+    - SB16: Added parameter 'dsp_realtime' to use realtime mode for the DSP
     - ES1370: Added parameter 'dac_realtime' to use realtime mode for the DACs
 
 -------------------------------------------------------------------------

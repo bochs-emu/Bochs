@@ -1063,6 +1063,12 @@ the  IPS  parameter of the CPU option and also depends on
 the clock sync setting.  It  is  possible  to  adjust the
 dmatimer value at runtime.
 
+dsp_realtime:
+
+If set to 1 (default), the DSP timer is using the realtime engine, otherwise it
+is driven by the cpu and depends on the ips setting. The realtime mode may fix
+or reduce sound issues.
+
 Examples for output modes:
   sb16: midimode=2, midifile="output.mid", wavemode=1 # MIDI to file
   sb16: midimode=1, wavemode=3, wavefile="output.wav" # wave to file and device
@@ -1075,9 +1081,8 @@ presence of the device. The wave and MIDI output can be sent to device, file
 or both using the parameters 'wavemode', 'wavefile', 'midimode' and
 \&'midifile'. See the description of these parameters at the SB16 directive.
 
-If the parameter 'dac_realtime' set to 1 (default), the DAC timers are using
-the realtime engine, otherwise they are driven by the cpu and depend on the
-ips setting. The realtime mode may fix or reduce sound issues.
+The parameter 'dac_realtime' controls the timer mode of both DACs and works
+like the SB16 parameter 'dsp_realtime'.
 
 Example for using 'sound' parameters:
   es1370: enabled=1, wavemode=1
