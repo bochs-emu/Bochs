@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "18 Sep 2026" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "19 Sep 2026" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -1074,6 +1074,10 @@ DAC1+DAC2 output at the same time). The parameter 'enabled' controls the
 presence of the device. The wave and MIDI output can be sent to device, file
 or both using the parameters 'wavemode', 'wavefile', 'midimode' and
 \&'midifile'. See the description of these parameters at the SB16 directive.
+
+If the parameter 'dac_realtime' set to 1 (default), the DAC timers are using
+the realtime engine, otherwise they are driven by the cpu and depend on the
+ips setting. The realtime mode may fix or reduce sound issues.
 
 Example for using 'sound' parameters:
   es1370: enabled=1, wavemode=1

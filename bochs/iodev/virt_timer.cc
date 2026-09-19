@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -159,7 +159,9 @@ void bx_virt_timer_c::periodic(Bit64u time_passed, bool mode)
         }
         //This function MUST return, or the timer mechanism
         // will be broken.
+        triggeredTimer = i;
         timer[i].funct(timer[i].this_ptr);
+        triggeredTimer = 0;
       }
     }
   }
@@ -273,6 +275,14 @@ bool bx_virt_timer_c::unregisterTimer(unsigned timerID)
   timer[timerID].inUse = 0;
   if (timerID == (numTimers-1)) numTimers--;
   return true;
+}
+
+void bx_virt_timer_c::setTimerParam(unsigned timerIndex, Bit32u param)
+{
+  if (timerIndex >= numTimers)
+    BX_PANIC(("setTimerParam: timer %u OOB", timerIndex));
+
+  timer[timerIndex].param = param;
 }
 
 void bx_virt_timer_c::start_timers(void)

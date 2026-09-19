@@ -24,6 +24,11 @@ Changes after Bochs 3.1 release:
       - #871: Implement 2D lines
   - Hard drive / HD image
     - VVFAT: Fixed LongName handling in vvfat disks
+    - VVFAT: Adding path prefix "fat32:" forces using FAT32 file system
+  - CD-ROM
+    - Model parameter now supports format "VENDOR:PRODUCT:REV" for ATAPI inquiry
+  - Sound
+    - ES1370: Added parameter 'dac_realtime' to use realtime mode for the DACs
 
 -------------------------------------------------------------------------
 Changes in 3.1 (August 23, 2026):

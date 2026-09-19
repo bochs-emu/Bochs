@@ -992,6 +992,9 @@ speaker: enabled=1, mode=sound, volume=8
 # presence of the device. The wave and MIDI output can be sent to device, file
 # or both using the parameters 'wavemode', 'wavefile', 'midimode' and
 # 'midifile'. See the description of these parameters at the SB16 directive.
+# If the parameter 'dac_realtime' set to 1 (default), the DAC timers are using
+# the realtime engine, otherwise they are driven by the cpu and depend on the
+# ips setting. The realtime mode may fix or reduce sound issues.
 #
 # Examples:
 #   es1370: enabled=1, wavemode=1                       # use 'sound' parameters
