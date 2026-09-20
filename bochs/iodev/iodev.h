@@ -385,6 +385,12 @@ public:
   virtual void set_fpu_error(bool val) {}
 };
 
+#if BX_SUPPORT_APPLESMC
+class BOCHSAPI bx_applesmc_stub_c : public bx_devmodel_c {
+public:
+};
+#endif
+
 class BOCHSAPI bx_devices_c : public logfunctions {
 public:
   bx_devices_c();
@@ -487,6 +493,9 @@ public:
   bx_acpi_ctrl_stub_c *pluginACPIController;
 #endif
   bx_efirq_stub_c  *pluginExtFpuIRQ;
+#if BX_SUPPORT_APPLESMC
+  bx_applesmc_stub_c *pluginAppleSMC;
+#endif
 
   // stub classes that the pointers (above) can point to until a plugin is
   // loaded
@@ -512,6 +521,9 @@ public:
   bx_acpi_ctrl_stub_c stubACPIController;
 #endif
   bx_efirq_stub_c stubExtFpuIRQ;
+#if BX_SUPPORT_APPLESMC
+  bx_applesmc_stub_c stubAppleSMC;
+#endif
 
   // Some info to pass to devices which can handled bulk IO.  This allows
   // the interface to remain the same for IO devices which can't handle
