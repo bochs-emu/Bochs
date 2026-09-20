@@ -4664,9 +4664,9 @@ are in the usual "property=value" format.
 
    <listitem><para>
    <option>dsp_realtimer</option>:
-   If set to 1 (default), the DSP timer is using the realtime engine, otherwise
-   it is driven by the cpu and depends on the ips setting. The realtime mode may
-   fix or reduce sound issues.
+   If set to 1 (default is 0), the DSP timer is using the realtime engine,
+   otherwise it is driven by the cpu and depends on the ips setting. The realtime
+   mode may fix or reduce sound issues.
    </para></listitem>
 
  </itemizedlist>

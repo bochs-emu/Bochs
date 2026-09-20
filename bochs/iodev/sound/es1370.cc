@@ -151,7 +151,7 @@ void es1370_init_options(void)
       "dac_realtime",
       "DAC timers realtime",
       "If enabled, the DAC timers are based on realtime",
-      1);
+      0);
 
   bx_list_c *deplist = new bx_list_c(NULL);
   deplist->add(midimode);

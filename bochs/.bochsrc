@@ -979,7 +979,7 @@ speaker: enabled=1, mode=sound, volume=8
 #      reasonably correct setting for the IPS parameter of the CPU option
 #      and also depends on the clock sync setting.
 # dsp_realtime:
-#      If set to 1 (default), the DSP timer is using the realtime engine,
+#      If set to 1 (default is 0), the DSP timer is using the realtime engine,
 #      otherwise it is driven by the cpu and depends on the ips setting.
 #      The realtime mode may fix or reduce sound issues.
 #

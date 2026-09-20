@@ -112,7 +112,7 @@ void sb16_init_options(void)
     "dsp_realtime",
     "DSP timer realtime",
     "If enabled, the DSP timer is based on realtime",
-    1);
+    0);
 
   bx_list_c *deplist = new bx_list_c(NULL);
   deplist->add(midimode);

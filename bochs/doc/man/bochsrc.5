@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "19 Sep 2026" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "20 Sep 2026" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -1065,9 +1065,9 @@ dmatimer value at runtime.
 
 dsp_realtime:
 
-If set to 1 (default), the DSP timer is using the realtime engine, otherwise it
-is driven by the cpu and depends on the ips setting. The realtime mode may fix
-or reduce sound issues.
+If set to 1 (default is 0), the DSP timer is using the realtime engine,
+otherwise it is driven by the cpu and depends on the ips setting. The realtime
+mode may fix or reduce sound issues.
 
 Examples for output modes:
   sb16: midimode=2, midifile="output.mid", wavemode=1 # MIDI to file
