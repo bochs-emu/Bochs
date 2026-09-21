@@ -1008,12 +1008,21 @@ BxEvent* win32_notify_callback(void *unused, BxEvent *event)
         }
         return event;
       } else if (param->get_type() == BXT_PARAM_BOOL) {
+        BOOL capture = SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get();
+        if (capture) {
+          SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(0);
+          Sleep(100);
+        }
         UINT flag = MB_YESNO | MB_SETFOREGROUND;
         if (((bx_param_bool_c *)param)->get() == 0) {
           flag |= MB_DEFBUTTON2;
         }
         ((bx_param_bool_c *)param)->set(MessageBox(GetActiveWindow(), param->get_description(), param->get_label(), flag) == IDYES);
         event->retcode = 0;
+        // re-capture the mouse?
+        if (capture) {
+          SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(1);
+        }
         return event;
       }
     case BX_SYNC_EVT_TICK: // called periodically by siminterface.

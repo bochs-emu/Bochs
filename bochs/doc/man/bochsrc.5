@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "22 Aug 2026" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "20 Sep 2026" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -696,11 +696,14 @@ works with it.
 In UNIX it is possible to use a raw device as a Bochs hard disk,
 but WE DON'T RECOMMEND IT.
 
-The path is mandatory for hard disks. Disk geometry autodetection works with
-images created by bximage if CHS is set to 0/0/0 (cylinders are calculated
-using  heads=16 and spt=63). For other hard disk images and modes the
-cylinders, heads, and spt are mandatory. In all cases the disk size reported
-from the image must be exactly C*H*S*512.
+The path is mandatory for hard disks. When using the disk image mode "vvfat",
+it specifies the host directory to use. The optional prefix "fat32:" forces
+the usage of the FAT32 file system for disks with size from 512 to 2047 MB.
+
+Disk geometry autodetection works with images created by bximage if CHS is set
+to 0/0/0 (cylinders are calculated using  heads=16 and spt=63). For other hard
+disk images and modes the cylinders, heads, and spt are mandatory. In all cases
+the disk size reported from the image must be exactly C*H*S*512.
 
 The mode option defines how the disk image is handled. Disks can be defined as:
   - flat : one file flat layout
@@ -723,6 +726,11 @@ older operating systems like MS-DOS), can be defined as:
   - rechs : a revised bitshift algorithm, using a 15 heads fake physical geometry, for disks up to 7.9GB (15482880 sectors). (don't use this unless you understand what you're doing)
   - lba : a standard lba-assisted algorithm, for disks up to 8.4GB (16450560 sectors)
   - auto : autoselection of best translation scheme. (it should be changed if system does not boot)
+
+When using the format "VENDOR:PRODUCT:REV" as the model string for the CD-ROM,
+the string is split into 3 parts for the use in ATAPI inquiry. The vendor
+id is limited to 8, product id to 16 and revision to 4 characters. For the ATA
+model string the first two of these parts are used separated with a space.
 
 Default values are:
    mode=flat, biosdetect=auto, translation=auto, model="Generic 1234"
@@ -1055,6 +1063,12 @@ the  IPS  parameter of the CPU option and also depends on
 the clock sync setting.  It  is  possible  to  adjust the
 dmatimer value at runtime.
 
+dsp_realtime:
+
+If set to 1 (default is 0), the DSP timer is using the realtime engine,
+otherwise it is driven by the cpu and depends on the ips setting. The realtime
+mode may fix or reduce sound issues.
+
 Examples for output modes:
   sb16: midimode=2, midifile="output.mid", wavemode=1 # MIDI to file
   sb16: midimode=1, wavemode=3, wavefile="output.wav" # wave to file and device
@@ -1066,6 +1080,9 @@ DAC1+DAC2 output at the same time). The parameter 'enabled' controls the
 presence of the device. The wave and MIDI output can be sent to device, file
 or both using the parameters 'wavemode', 'wavefile', 'midimode' and
 \&'midifile'. See the description of these parameters at the SB16 directive.
+
+The parameter 'dac_realtime' controls the timer mode of both DACs and works
+like the SB16 parameter 'dsp_realtime'.
 
 Example for using 'sound' parameters:
   es1370: enabled=1, wavemode=1

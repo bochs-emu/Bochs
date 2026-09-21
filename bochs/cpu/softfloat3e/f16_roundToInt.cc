@@ -79,7 +79,15 @@ float16 f16_roundToInt(float16 a, uint8_t scale, uint8_t roundingMode, bool exac
         switch (roundingMode) {
          case softfloat_round_near_even:
             if (!frac) break;
+            // A normal input at this exact exp+scale boundary always has
+            // magnitude >= half the quantum (guaranteed by its implicit
+            // leading bit), so any nonzero frac means "round up". A
+            // denormal has no such guarantee - it can be anywhere in
+            // [0, quantum) - so its magnitude must be compared explicitly;
+            // an exact half (frac == 0x200) ties to the even (zero) choice.
+            if (!exp && (exp + scale) == 0xE && frac <= 0x200) break;
          case softfloat_round_near_maxMag:
+            if (!exp && (exp + scale) == 0xE && frac < 0x200) break;
             if ((exp + scale) == 0xE) uiZ |= packToF16UI(0, 0xF - scale, 0);
             break;
          case softfloat_round_min:
@@ -92,15 +100,28 @@ float16 f16_roundToInt(float16 a, uint8_t scale, uint8_t roundingMode, bool exac
         return uiZ;
     }
     /*------------------------------------------------------------------------
+    | A denormal has no implicit leading bit, so its significand occupies
+    | one bit position lower than a normal value's would for the same
+    | stored exponent; use the effective exponent of 1 (matching the
+    | smallest normal) when computing the rounding position so the grid
+    | this branch rounds to is the one the caller actually asked for.
     *------------------------------------------------------------------------*/
     uiZ = a;
-    lastBitMask = (uint16_t) 1<<(0x19 - exp - scale);
+    lastBitMask = (uint16_t) 1<<(0x19 - (exp ? exp : 1) - scale);
     roundBitsMask = lastBitMask - 1;
     if (roundingMode == softfloat_round_near_maxMag) {
         uiZ += lastBitMask>>1;
     } else if (roundingMode == softfloat_round_near_even) {
         uiZ += lastBitMask>>1;
-        if (!(uiZ & roundBitsMask)) uiZ &= ~lastBitMask;
+        // When lastBitMask sits exactly one bit above the 10-bit fraction
+        // field (only possible at this branch's low edge, exp+scale==0xF),
+        // an exact tie means the increment carried all the way out of the
+        // fraction field into the exponent, so the kept fraction is exactly
+        // zero - already even - and must never be cleared back down; that
+        // bit is the exponent's LSB here, not a fraction bit, so testing it
+        // for "oddness" the way the in-field case does picks the wrong
+        // candidate half the time.
+        if (!(uiZ & roundBitsMask) && lastBitMask <= 0x0200) uiZ &= ~lastBitMask;
     } else if (roundingMode == (signF16UI(uiZ) ? softfloat_round_min : softfloat_round_max)) {
         uiZ += roundBitsMask;
     }

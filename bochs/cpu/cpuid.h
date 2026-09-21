@@ -93,6 +93,7 @@ public:
 
 #if BX_SUPPORT_EVEX
   unsigned avx10_level() const;
+  unsigned ace_level() const;
 #endif
 
   BX_CPP_INLINE void enable_cpu_extension(unsigned extension) {

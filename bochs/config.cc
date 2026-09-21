@@ -3623,10 +3623,11 @@ int bx_write_configuration(const char *rc, int overwrite)
 #else
   fprintf(fp, "cpu: count=1, ips=%u, ", SIM->get_param_num(BXPN_IPS)->get());
 #endif
-  fprintf(fp, "model=%s, reset_on_triple_fault=%d, cpuid_limit_winnt=%d, cpuid_freq=%s",
+  fprintf(fp, "model=%s, reset_on_triple_fault=%d, cpuid_limit_winnt=%d, force_ignne=%d, cpuid_freq=%s",
     SIM->get_param_enum(BXPN_CPU_MODEL)->get_selected(),
     SIM->get_param_bool(BXPN_RESET_ON_TRIPLE_FAULT)->get(),
     SIM->get_param_bool(BXPN_CPUID_LIMIT_WINNT)->get(),
+    SIM->get_param_bool(BXPN_FORCE_IGNNE)->get(),
     SIM->get_param_enum(BXPN_CPUID_FREQ)->get_selected());
 #if BX_CPU_LEVEL >= 5
   fprintf(fp, ", ignore_bad_msrs=%d", SIM->get_param_bool(BXPN_IGNORE_BAD_MSRS)->get());

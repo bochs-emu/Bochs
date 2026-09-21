@@ -4208,6 +4208,12 @@ but <emphasis>we don't recommend it</emphasis> for safety reasons. In Windows, t
 </para>
 
 <para>
+When using the disk image mode "vvfat", the path parameter specifies the host
+directory to use. The optional prefix "fat32:" forces the usage of the FAT32
+file system for disks with size from 512 to 2047 MB.
+</para>
+
+<para>
 Disk geometry autodetection works with images created by bximage if CHS is set
 to 0/0/0 (cylinders are calculated using heads=16 and spt=63). For other hard
 disk images and modes the cylinders, heads, and spt are mandatory. In all cases
@@ -4288,15 +4294,22 @@ Please see <xref linkend="harddisk-modes"> for a discussion on disk modes.
 </para>
 
 <para>
+When using the format "VENDOR:PRODUCT:REV" as the model string for the CD-ROM,
+the string is split into 3 parts for the use in ATAPI inquiry. The vendor id is
+limited to 8, product id to 16 and revision to 4 characters. For the ATA model
+string the first two of these parts are used separated with a space.
+</para>
+
+<para>
 Default values are:
 <screen>
    mode=flat, biosdetect=auto, translation=auto, model="Generic 1234"
 </screen>
 </para>
 
-<para>
+<note><para>
   The <parameter>biosdetect</parameter> option has currently no effect on the BIOS.
-</para>
+</para></note>
 
 <note><para>
   Make sure the proper <link linkend="bochsopt-ata">ata option</link> is enabled when
@@ -4675,6 +4688,14 @@ are in the usual "property=value" format.
    <link linkend="bochsopt-cpu-ips">cpu option</link> und also denpends on the
    clock sync setting. It is possible to adjust the dmatimer value at runtime.
    </para></listitem>
+
+   <listitem><para>
+   <option>dsp_realtimer</option>:
+   If set to 1 (default is 0), the DSP timer is using the realtime engine,
+   otherwise it is driven by the cpu and depends on the ips setting. The realtime
+   mode may fix or reduce sound issues.
+   </para></listitem>
+
  </itemizedlist>
 </para>
 </section>
@@ -4691,6 +4712,10 @@ DAC1+DAC2 output at the same time). The parameter 'enabled' controls the
 presence of the device. The wave and MIDI output can be sent to device, file
 or both using the parameters 'wavemode', 'wavefile', 'midimode' and
 'midifile'. See the description of these parameters at the SB16 directive.
+</para>
+<para>
+The parameter 'dac_realtime' controls the timer mode of both DACs and works
+like the SB16 parameter 'dsp_realtime'.
 </para>
 </section>
 

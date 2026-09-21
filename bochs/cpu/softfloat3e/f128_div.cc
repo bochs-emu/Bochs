@@ -40,7 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "specialize.h"
 #include "softfloat.h"
 
-float128_t f128_div(float128_t a, float128_t b, struct softfloat_status_t *status)
+float128_t f128_div(float128_t a, float128_t b, uint8_t roundingMode, uint8_t roundingPrecision, struct softfloat_status_t *status)
 {
     uint64_t uiA64, uiA0;
     bool signA;
@@ -100,14 +100,12 @@ float128_t f128_div(float128_t a, float128_t b, struct softfloat_status_t *statu
             softfloat_raiseFlags(status, softfloat_flag_infinite);
             goto infinity;
         }
-        softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalF128Sig(sigB.v64, sigB.v0);
         expB = normExpSig.exp;
         sigB = normExpSig.sig;
     }
     if (! expA) {
         if (! (sigA.v64 | sigA.v0)) goto zero;
-        softfloat_raiseFlags(status, softfloat_flag_denormal);
         normExpSig = softfloat_normSubnormalF128Sig(sigA.v64, sigA.v0);
         expA = normExpSig.exp;
         sigA = normExpSig.sig;
@@ -159,7 +157,7 @@ float128_t f128_div(float128_t a, float128_t b, struct softfloat_status_t *statu
     term = softfloat_shortShiftLeft128(0, qs[1], 54);
     sigZ = softfloat_add128((uint64_t) qs[2]<<19, ((uint64_t) qs[0]<<25) + (q>>4), term.v64, term.v0);
     return
-        softfloat_roundPackToF128(signZ, expZ, sigZ.v64, sigZ.v0, sigZExtra, status);
+        softfloat_roundPackToF128(signZ, expZ, sigZ.v64, sigZ.v0, sigZExtra, roundingMode, roundingPrecision, status);
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
  propagateNaN:

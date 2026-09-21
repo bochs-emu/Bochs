@@ -253,6 +253,7 @@ private:
       unsigned sect_size;
 
       Bit8u model_no[41];
+      Bit8u atapi_inquiry[36];
       int statusbar_id;
       Bit8u device_num; // for ATAPI identify & inquiry
       int  status_changed;

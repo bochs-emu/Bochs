@@ -81,7 +81,9 @@ bool bx_user_quit;
 Bit8u bx_cpu_count;
 #if BX_SUPPORT_APIC
 Bit32u apic_id_mask; // determinted by XAPIC option
-bool simulate_xapic;
+// Must be true from static initialization on: without SMP support the global
+// bx_cpu object (and its local APIC) is constructed before main() runs.
+bool simulate_xapic = true;
 #endif
 
 /* typedefs */
@@ -1249,6 +1251,9 @@ void bx_init_hardware()
   BX_INFO(("  SMP support: yes, quantum=%d", SIM->get_param_num(BXPN_SMP_QUANTUM)->get()));
 #else
   BX_INFO(("  SMP support: no"));
+#endif
+#if BX_SUPPORT_APIC
+  BX_INFO(("  using %sAPIC", simulate_xapic ? "x" : "legacy "));
 #endif
 
   BX_INFO(("  Using pre-defined CPU configuration: %s",

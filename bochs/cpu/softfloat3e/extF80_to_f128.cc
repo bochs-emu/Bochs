@@ -61,8 +61,19 @@ float128_t extF80_to_f128(extFloat80_t a, struct softfloat_status_t *status)
 
     uiA64 = a.signExp;
     uiA0  = a.signif;
+
     exp = expExtF80UI64(uiA64);
     frac = uiA0 & UINT64_C(0x7FFFFFFFFFFFFFFF);
+
+    if (exp == 0) {
+        if (uiA0 != 0) {
+          softfloat_raiseFlags(status, softfloat_flag_denormal);
+          // fixing pseudo-denormal argument
+          if ((uiA0 & UINT64_C(0x8000000000000000)) != 0)
+              uiA64 |= 0x1;
+        }
+    }
+
     if ((exp == 0x7FFF) && frac) {
         softfloat_extF80UIToCommonNaN(uiA64, uiA0, &commonNaN, status);
         uiZ = softfloat_commonNaNToF128UI(&commonNaN);

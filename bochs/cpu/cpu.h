@@ -1338,6 +1338,10 @@ public: // for now...
   BX_SMF void clear_amx_ok();
   BX_SMF bool get_amx_ok();
 
+  BX_SMF void set_scaledata_ok();
+  BX_SMF void clear_scaledata_ok();
+  BX_SMF bool get_scaledata_ok();
+
   // for exceptions
   static jmp_buf jmp_buf_env;
 #define BX_ET_NONE (-1)
@@ -3926,9 +3930,33 @@ public: // for now...
   BX_SMF void TCVTROWPS2PHH_VphTrm(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TCVTROWPS2BF16L_VphTrm(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
   BX_SMF void TCVTROWPS2BF16H_VphTrm(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+
+  // ACE
+  BX_SMF void TILEMOVROW_TrmWdq(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TILEMOVCOL_TrmWdq(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+
+  // Block Scale Register (BSR) Operations
+  BX_SMF void BSRINIT(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BSRMOVF_BsrVdqWdq(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BSRMOV_BsrWdq(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BSRMOV_WdqBsrR(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BSRMOV_WdqBsrM(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+
+  // Tile Outer Product Instructions
+  BX_SMF void TOP2BF16PS_TnnnWdqHdq(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TOP4BSSD_TnnnWdqHdq(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TOP4BSUD_TnnnWdqHdq(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TOP4BUSD_TnnnWdqHdq(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TOP4BUUD_TnnnWdqHdq(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TOP4MXBSSPS_TnnnWdqHdqIb(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void top4mxf8ps_execute(bxInstruction_c *i, bool a_is_bf8, bool b_is_bf8) BX_CPP_AttrRegparmN(3);
+  BX_SMF void TOP4MXBF8PS_TnnnWdqHdqIb(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TOP4MXBHF8PS_TnnnWdqHdqIb(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TOP4MXHBF8PS_TnnnWdqHdqIb(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
+  BX_SMF void TOP4MXHF8PS_TnnnWdqHdqIb(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #endif
 
-#if BX_SUPPORT_AVX
+#if BX_SUPPORT_EVEX
   // AVX10.2 - VCOMX
   BX_SMF void VCOMXSS_VssWssR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCOMXSD_VsdWsdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4027,6 +4055,27 @@ public: // for now...
   BX_SMF void VCVTTPS2IUBS_V8bWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTTPS2IBS_MASK_V8bWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void VCVTTPS2IUBS_MASK_V8bWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  // ACE v1 Section 4.3: OCP format conversions + utility instructions (AVX10_V2_AUX)
+  BX_SMF void VCVTPS2BF8_Vf8WpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTPS2HF8_Vf8WpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTBIASPS2BF8_Vf8HdqWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTBIASPS2HF8_Vf8HdqWpsR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTBF82PS_VpsWf8R(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTHF82PS_VpsWf8R(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTBF42HF8_Vf8Wf4R(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTBF62HF8_Vf8Wf6R(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTHF62HF8_Vf8Wf6R(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTBF82BF6S_Vf6Wf8R(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTHF82HF6S_Vf6Wf8R(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTBF82BF4S_Wf4VdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTBF82BF4S_Wf4VdqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTHF82BF4S_Wf4VdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VCVTHF82BF4S_Wf4VdqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VUNPACKB_VdqWdqIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPMOVSSDB_WdqVdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPMOVSSDB_MASK_WdqVdqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void VPMOVSSDB_MASK_WdqVdqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
   BX_SMF void LZCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4538,6 +4587,7 @@ public: // for now...
 #endif
 #if BX_SUPPORT_AMX
   BX_SMF void BxNoAMX(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void BxNoSCALEDATA(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 #endif
 
@@ -4965,8 +5015,11 @@ public: // for now...
 #if BX_SUPPORT_AMX
   BX_SMF void check_tile(bxInstruction_c *i, unsigned tile_num) BX_CPP_AttrRegparmN(2);
   BX_SMF void check_tiles(bxInstruction_c *i, unsigned tile_dst, unsigned tile_src1, unsigned tile_src2);
+  BX_SMF bool palette_supported(unsigned palette_id);
   BX_SMF bool configure_tiles(bxInstruction_c *i, const BxPackedAvxRegister &tilecfg) BX_CPP_AttrRegparmN(2);
   BX_SMF bool tilemov_read_row(bxInstruction_c *i, bool immediate_form, BxPackedAvxRegister *dst) BX_CPP_AttrRegparmN(3);
+  BX_SMF bool tilemov_write_row(bxInstruction_c *i, bool immediate_form, const BxPackedAvxRegister *src) BX_CPP_AttrRegparmN(3);
+  BX_SMF void top4b_execute(bxInstruction_c *i, bool a_signed, bool b_signed) BX_CPP_AttrRegparmN(3);
 #endif
 
 #if BX_CPU_LEVEL >= 5
@@ -5342,6 +5395,11 @@ public: // for now...
   BX_SMF void xsave_tiledata_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_tiledata_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_init_tiledata_state(void);
+
+  BX_SMF bool xsave_scaledata_state_xinuse(void);
+  BX_SMF void xsave_scaledata_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_scaledata_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_init_scaledata_state(void);
 #endif
 #endif
 
@@ -5586,20 +5644,21 @@ BX_CPP_INLINE Bit32u BX_CPP_AttrRegparmN(1) BX_CPU_C::BxResolve32(bxInstruction_
 // bit 3 - FPU and MMX OK
 // bit 4 - SSE_OK
 // bit 5 - AVX_OK
-// bit 6 - OPMASK_OK
-// bit 7 - EVEX_OK
-// bit 8 - AMX_OK
+// bit 6 - EVEX_OK
+// bit 7 - AMX_OK
+// bit 8 - SCALEDATA_OK
 //
 
 enum {
-  BX_FETCH_MODE_IS32_MASK  = (1 << 0),
-  BX_FETCH_MODE_IS64_MASK  = (1 << 1),
+  BX_FETCH_MODE_IS32_MASK         = (1 << 0),
+  BX_FETCH_MODE_IS64_MASK         = (1 << 1),
   BX_FETCH_MODE_IS_PROTECTED_MODE = (1 << 2),
-  BX_FETCH_MODE_FPU_MMX_OK = (1 << 3),
-  BX_FETCH_MODE_SSE_OK     = (1 << 4),
-  BX_FETCH_MODE_AVX_OK     = (1 << 5),
-  BX_FETCH_MODE_EVEX_OK    = (1 << 6),
-  BX_FETCH_MODE_AMX_OK     = (1 << 7)
+  BX_FETCH_MODE_FPU_MMX_OK        = (1 << 3),
+  BX_FETCH_MODE_SSE_OK            = (1 << 4),
+  BX_FETCH_MODE_AVX_OK            = (1 << 5),
+  BX_FETCH_MODE_EVEX_OK           = (1 << 6),
+  BX_FETCH_MODE_AMX_OK            = (1 << 7),
+  BX_FETCH_MODE_SCALEDATA_OK      = (1 << 8)
 };
 
 BX_CPP_INLINE void BX_CPU_C::set_fpu_mmx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_FPU_MMX_OK; }
@@ -5619,8 +5678,12 @@ BX_CPP_INLINE void BX_CPU_C::clear_evex_ok() { BX_CPU_THIS_PTR cpu_state_use_ok 
 BX_CPP_INLINE bool BX_CPU_C::get_evex_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_EVEX_OK); }
 
 BX_CPP_INLINE void BX_CPU_C::set_amx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_AMX_OK; }
-BX_CPP_INLINE void BX_CPU_C::clear_amx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~BX_FETCH_MODE_AMX_OK; }
+BX_CPP_INLINE void BX_CPU_C::clear_amx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~(BX_FETCH_MODE_AMX_OK | BX_FETCH_MODE_SCALEDATA_OK); }
 BX_CPP_INLINE bool BX_CPU_C::get_amx_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_AMX_OK); }
+
+BX_CPP_INLINE void BX_CPU_C::set_scaledata_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_SCALEDATA_OK; }
+BX_CPP_INLINE void BX_CPU_C::clear_scaledata_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~BX_FETCH_MODE_SCALEDATA_OK; }
+BX_CPP_INLINE bool BX_CPU_C::get_scaledata_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_SCALEDATA_OK); }
 
 //
 // updateFetchModeMask - has to be called everytime

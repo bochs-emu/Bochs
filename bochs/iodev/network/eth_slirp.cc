@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2014-2024  The Bochs Project
+//  Copyright (C) 2014-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -65,6 +65,10 @@ typedef ssize_t slirp_ssize_t;
 #include "slirp/libslirp.h"
 #endif
 #include <signal.h>
+#ifndef _WIN32
+#include <sys/wait.h>
+#include <sys/socket.h>
+#endif
 
 static unsigned int bx_slirp_instances = 0;
 

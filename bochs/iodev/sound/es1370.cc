@@ -32,7 +32,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
-#include "pc_system.h"
+#include "virt_timer.h"
 #if BX_SUPPORT_PCI && BX_SUPPORT_ES1370
 
 #include "soundlow.h"
@@ -147,10 +147,16 @@ void es1370_init_options(void)
     "Wave file",
     "This is the file where the wave output is stored",
     "", BX_PATHNAME_LEN);
+  bx_param_bool_c *realtime = new bx_param_bool_c(menu,
+      "dac_realtime",
+      "DAC timers realtime",
+      "If enabled, the DAC timers are based on realtime",
+      0);
 
   bx_list_c *deplist = new bx_list_c(NULL);
   deplist->add(midimode);
   deplist->add(wavemode);
+  deplist->add(realtime);
   enabled->set_dependent_list(deplist);
   deplist = new bx_list_c(NULL);
   deplist->add(midifile);
@@ -265,6 +271,7 @@ void bx_es1370_c::init(void)
 
   BX_ES1370_THIS wavemode = SIM->get_param_enum("wavemode", base)->get();
   BX_ES1370_THIS midimode = SIM->get_param_enum("midimode", base)->get();
+  bool dac_realtime = SIM->get_param_bool("dac_realtime", base)->get();
 
   // always initialize lowlevel driver
   BX_ES1370_WAVEOUT1 = DEV_sound_get_waveout(0);
@@ -298,16 +305,16 @@ void bx_es1370_c::init(void)
   BX_ES1370_THIS s.mpu_outputinit = (BX_ES1370_THIS midimode & 1);
 
   if (BX_ES1370_THIS s.dac1_timer_index == BX_NULL_TIMER_HANDLE) {
-    BX_ES1370_THIS s.dac1_timer_index = DEV_register_timer
-      (BX_ES1370_THIS_PTR, es1370_timer_handler, 1, 1, 0, "es1370.dac1");
+    BX_ES1370_THIS s.dac1_timer_index = bx_virt_timer.register_timer
+      (BX_ES1370_THIS_PTR, es1370_timer_handler, 1, 1, 0, dac_realtime, "es1370.dac1");
     // DAC1 timer: inactive, continuous, frequency variable
-    bx_pc_system.setTimerParam(BX_ES1370_THIS s.dac1_timer_index, 0);
+    bx_virt_timer.setTimerParam(BX_ES1370_THIS s.dac1_timer_index, 0);
   }
   if (BX_ES1370_THIS s.dac2_timer_index == BX_NULL_TIMER_HANDLE) {
-    BX_ES1370_THIS s.dac2_timer_index = DEV_register_timer
-      (BX_ES1370_THIS_PTR, es1370_timer_handler, 1, 1, 0, "es1370.dac2");
+    BX_ES1370_THIS s.dac2_timer_index = bx_virt_timer.register_timer
+      (BX_ES1370_THIS_PTR, es1370_timer_handler, 1, 1, 0, dac_realtime, "es1370.dac2");
     // DAC2 timer: inactive, continuous, frequency variable
-    bx_pc_system.setTimerParam(BX_ES1370_THIS s.dac2_timer_index, 1);
+    bx_virt_timer.setTimerParam(BX_ES1370_THIS s.dac2_timer_index, 1);
   }
   if (BX_ES1370_THIS s.mpu_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_ES1370_THIS s.mpu_timer_index = DEV_register_timer
@@ -745,12 +752,12 @@ void bx_es1370_c::es1370_timer_handler(void *this_ptr)
 
 void bx_es1370_c::es1370_timer(void)
 {
-  int timer_id = bx_pc_system.triggeredTimerID();
-  unsigned i = bx_pc_system.triggeredTimerParam();
+  int timer_id = bx_virt_timer.triggeredTimerID();
+  unsigned i = bx_virt_timer.triggeredTimerParam();
   Bit32u ret = run_channel(i, timer_id, BX_ES1370_THIS s.dac_packet_size[i]);
   if (ret > 0) {
     Bit64u timer_val = (Bit64u)BX_ES1370_THIS s.dac_timer_val[i] * ret / BX_ES1370_THIS s.dac_packet_size[i];
-    bx_pc_system.activate_timer(timer_id, (Bit32u)timer_val, 1);
+    bx_virt_timer.activate_timer(timer_id, (Bit32u)timer_val, 1);
   }
 }
 
@@ -771,7 +778,7 @@ Bit32u bx_es1370_c::run_channel(unsigned chan, int timer_id, Bit32u buflen)
     if (chan == ADC_CHANNEL) {
       BX_ES1370_WAVEIN->stopwaverecord();
     } else {
-      bx_pc_system.deactivate_timer(timer_id);
+      bx_virt_timer.deactivate_timer(timer_id);
     }
     return 0;
   }
@@ -962,7 +969,7 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bool force)
           }
           BX_ES1370_THIS s.dac_timer_val[i] =
             (Bit32u)((Bit64u)BX_ES1370_THIS s.dac_packet_size[i] * 1000000 / (new_freq << d->shift));
-          bx_pc_system.activate_timer(timer_id, BX_ES1370_THIS s.dac_timer_val[i], 1);
+          bx_virt_timer.activate_timer(timer_id, BX_ES1370_THIS s.dac_timer_val[i], 1);
         }
       } else {
         if (i == ADC_CHANNEL) {
@@ -971,7 +978,7 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bool force)
           }
         } else {
           BX_ES1370_THIS s.dac_nr_active = -1;
-          bx_pc_system.deactivate_timer(timer_id);
+          bx_virt_timer.deactivate_timer(timer_id);
         }
       }
     }

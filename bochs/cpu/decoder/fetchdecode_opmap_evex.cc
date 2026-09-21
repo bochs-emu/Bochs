@@ -1099,6 +1099,12 @@ static const Bit64u BxOpcodeGroup_EVEX_0F3840[] = {
   last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1,                BX_IA_EVEX_VPMULLQ_VdqHdqWdq_Kmask)
 };
 
+// ACE v1 Section 4.3: Symmetric Signed Saturation Narrow (AVX10_V2_AUX)
+static const Bit64u BxOpcodeGroup_EVEX_0F3841[] = {
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_MASK_K0, BX_IA_EVEX_VPMOVSSDB_WdqVdq),
+  last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0,                BX_IA_EVEX_VPMOVSSDB_WdqVdq_Kmask)
+};
+
 static const Bit64u BxOpcodeGroup_EVEX_0F3842[] = {
   form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_MASK_K0, BX_IA_EVEX_VGETEXPPS_VpsWps),
   form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0,                BX_IA_EVEX_VGETEXPPS_VpsWps_Kmask),
@@ -1142,7 +1148,13 @@ static const Bit64u BxOpcodeGroup_EVEX_0F3847[] = {
 #if BX_SUPPORT_AMX
 static const Bit64u BxOpcodeGroup_EVEX_0F384A[] = {
   form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TILEMOVROW_VdqTrmBd),
-  last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TCVTROWD2PS_VpsTrmBd) 
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TILEMOVROW_TrmWdqBd),
+  last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TCVTROWD2PS_VpsTrmBd)
+};
+
+// ACE extensions: TILEMOVCOL has no read form and no memory form (register-only, write-only).
+static const Bit64u BxOpcodeGroup_EVEX_0F384B[] = {
+  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TILEMOVCOL_TrmWdqBd)
 };
 #endif
 
@@ -1233,6 +1245,25 @@ static const Bit64u BxOpcodeGroup_EVEX_0F385B[] = {
   form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL512 | ATTR_MOD_MEM | ATTR_VEX_W1 | ATTR_MASK_K0, BX_IA_EVEX_VBROADCASTI64x4_VdqWdq),
   last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL512 | ATTR_MOD_MEM | ATTR_VEX_W1,                BX_IA_EVEX_VBROADCASTI64x4_VdqWdq_Kmask)
 };
+
+#if BX_SUPPORT_AMX
+// ACE v1 Section 14.3: BF16 Rank-2 Outer Product. Register-only both
+// sources, no masking/zeroing support (spec Section 14.3.7) -> ATTR_MASK_K0.
+static const Bit64u BxOpcodeGroup_EVEX_0F385C[] = {
+  last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TOP2BF16PS_TnnnWdqHdq)
+};
+
+// ACE v1 Section 14.4: INT8 Byte Rank-4 Outer Products. Register-only both
+// sources, no masking/zeroing support (spec Section 14.4.9) -> ATTR_MASK_K0.
+// Prefix encodes the (A,B) sign combination, matching the existing
+// VPDPB[U|S][U|S]D convention: NP=UU, 66=US, F3=SU, F2=SS.
+static const Bit64u BxOpcodeGroup_EVEX_0F385E[] = {
+  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TOP4BUUD_TnnnWdqHdq),
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TOP4BUSD_TnnnWdqHdq),
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TOP4BSUD_TnnnWdqHdq),
+  last_opcode(ATTR_SSE_PREFIX_F2 | ATTR_VEX_W0 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TOP4BSSD_TnnnWdqHdq)
+};
+#endif
 
 static const Bit64u BxOpcodeGroup_EVEX_0F3862[] = {
   form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_MASK_K0, BX_IA_EVEX_VPEXPANDB_VdqWdq),
@@ -1679,7 +1710,29 @@ static const Bit64u BxOpcodeGroup_EVEX_0F3A05[] = {
 #if BX_SUPPORT_AMX
 static const Bit64u BxOpcodeGroup_EVEX_0F3A07[] = {
   form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TILEMOVROW_VdqTrmIb),
-  last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TCVTROWD2PS_VpsTrmIb) 
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TILEMOVROW_TrmWdqIb),
+  last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TCVTROWD2PS_VpsTrmIb)
+};
+
+// ACE extensions: TILEMOVCOL has no read form and no memory form (register-only, write-only).
+static const Bit64u BxOpcodeGroup_EVEX_0F3A2F[] = {
+  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TILEMOVCOL_TrmWdqIb)
+};
+
+// ACE v1 Section 14.1: MX FP8 Rank-4 Outer Products. Register-only both
+// sources, no masking/zeroing support (spec Section 14.1.8) -> ATTR_MASK_K0.
+// Prefix encodes (A,B) format: NP=BF8/BF8, F2=BF8/HF8, F3=HF8/BF8, 66=HF8/HF8.
+static const Bit64u BxOpcodeGroup_EVEX_0F3A8D[] = {
+  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TOP4MXBF8PS_TnnnWdqHdqIb),
+  form_opcode(ATTR_SSE_PREFIX_F2 | ATTR_VEX_W0 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TOP4MXBHF8PS_TnnnWdqHdqIb),
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TOP4MXHBF8PS_TnnnWdqHdqIb),
+  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TOP4MXHF8PS_TnnnWdqHdqIb)
+};
+
+// ACE v1 Section 14.2: MX INT8 Rank-4 Outer Product. Register-only both
+// sources, no masking/zeroing support (spec Section 14.2.8) -> ATTR_MASK_K0.
+static const Bit64u BxOpcodeGroup_EVEX_0F3A8F[] = {
+  last_opcode(ATTR_SSE_PREFIX_F2 | ATTR_VEX_W0 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TOP4MXBSSPS_TnnnWdqHdqIb)
 };
 #endif
 
@@ -1812,6 +1865,11 @@ static const Bit64u BxOpcodeGroup_EVEX_0F3A3B[] = {
   form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL512 | ATTR_VEX_W0,                BX_IA_EVEX_VEXTRACTI32x8_WdqVdqIb_Kmask),
   form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL512 | ATTR_VEX_W1 | ATTR_MASK_K0, BX_IA_EVEX_VEXTRACTI64x4_WdqVdqIb),
   last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL512 | ATTR_VEX_W1,                BX_IA_EVEX_VEXTRACTI64x4_WdqVdqIb_Kmask)
+};
+
+// ACE v1 Section 4.3: Sub-Byte Element Extraction (AVX10_V2_AUX)
+static const Bit64u BxOpcodeGroup_EVEX_0F3A3D[] = {
+  last_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0, BX_IA_EVEX_VUNPACKB_VdqWdqIb_Kmask)
 };
 
 static const Bit64u BxOpcodeGroup_EVEX_0F3A3E[] = {
@@ -1985,6 +2043,59 @@ static const Bit64u BxOpcodeGroup_EVEX_MAP5_2F[] = {
   form_opcode(ATTR_VEX_W0 | ATTR_MASK_K0 | ATTR_SSE_NO_PREFIX, BX_IA_EVEX_VCOMISH_VshWsh),
   form_opcode(ATTR_VEX_W0 | ATTR_MASK_K0 | ATTR_SSE_PREFIX_66, BX_IA_EVEX_VCOMISBF16_VshWsh),
   last_opcode(ATTR_VEX_W0 | ATTR_MASK_K0 | ATTR_SSE_PREFIX_F3, BX_IA_EVEX_VCOMXSH_VshWsh)
+};
+
+// ACE v1 Section 4.3: OCP format conversions (AVX10_V2_AUX)
+
+static const Bit64u BxOpcodeGroup_EVEX_MAP5_36[] = {
+  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W1, BX_IA_EVEX_VCVTBF82PS_VpsWf8_Kmask),
+  last_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0, BX_IA_EVEX_VCVTHF82PS_VpsWf8_Kmask)
+};
+
+static const Bit64u BxOpcodeGroup_EVEX_MAP5_37[] = {
+  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0,              BX_IA_EVEX_VCVTBF42HF8_Vf8Wf4_Kmask),
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W1 | ATTR_MODC0, BX_IA_EVEX_VCVTBF62HF8_Vf8Wf6_Kmask),
+  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_MODC0, BX_IA_EVEX_VCVTHF62HF8_Vf8Wf6_Kmask)
+};
+
+static const Bit64u BxOpcodeGroup_EVEX_MAP5_38[] = {
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0, BX_IA_EVEX_VCVTPS2HF8_Vf8Wps_Kmask),
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0, BX_IA_EVEX_VCVTROPS2HF8_Vf8Wps_Kmask),
+  last_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0, BX_IA_EVEX_VCVTBIASPS2HF8_Vf8HdqWps_Kmask)
+};
+
+static const Bit64u BxOpcodeGroup_EVEX_MAP5_39[] = {
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0, BX_IA_EVEX_VCVTPS2BF8_Vf8Wps_Kmask),
+  last_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0, BX_IA_EVEX_VCVTBIASPS2BF8_Vf8HdqWps_Kmask)
+};
+
+static const Bit64u BxOpcodeGroup_EVEX_MAP5_3A[] = {
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0, BX_IA_EVEX_VCVTPS2HF8S_Vf8Wps_Kmask),
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0, BX_IA_EVEX_VCVTROPS2HF8S_Vf8Wps_Kmask),
+  last_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0, BX_IA_EVEX_VCVTBIASPS2HF8S_Vf8HdqWps_Kmask)
+};
+
+static const Bit64u BxOpcodeGroup_EVEX_MAP5_3B[] = {
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0, BX_IA_EVEX_VCVTPS2BF8S_Vf8Wps_Kmask),
+  last_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0, BX_IA_EVEX_VCVTBIASPS2BF8S_Vf8HdqWps_Kmask)
+};
+
+static const Bit64u BxOpcodeGroup_EVEX_MAP5_3C[] = {
+  // VCVTHF82HF6S has no memory form per spec (register-only both operands),
+  // and no masking/zeroing support (spec Section 9.6) -> ATTR_MASK_K0.
+  last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_MASK_K0 | ATTR_MODC0, BX_IA_EVEX_VCVTHF82HF6S_Vf6Wf8)
+};
+
+static const Bit64u BxOpcodeGroup_EVEX_MAP5_3D[] = {
+  // No masking/zeroing support per spec Section 9.4 -> ATTR_MASK_K0.
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_MASK_K0, BX_IA_EVEX_VCVTHF82BF4S_Wf4Vdq),
+  last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W1 | ATTR_MASK_K0, BX_IA_EVEX_VCVTBF82BF4S_Wf4Vdq)
+};
+
+static const Bit64u BxOpcodeGroup_EVEX_MAP5_3E[] = {
+  // VCVTBF82BF6S has no memory form per spec (register-only both operands),
+  // and no masking/zeroing support (spec Section 9.6) -> ATTR_MASK_K0.
+  last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W1 | ATTR_MASK_K0 | ATTR_MODC0, BX_IA_EVEX_VCVTBF82BF6S_Vf6Wf8)
 };
 
 static const Bit64u BxOpcodeGroup_EVEX_MAP5_51[] = {
@@ -2280,6 +2391,18 @@ static const Bit64u BxOpcodeGroup_EVEX_MAP6_57[] = {
   form_opcode(ATTR_VEX_W0 | ATTR_SSE_PREFIX_F3, BX_IA_EVEX_VFMADDCSH_VshHphWsh_Kmask),
   last_opcode(ATTR_VEX_W0 | ATTR_SSE_PREFIX_F2, BX_IA_EVEX_VFCMADDCSH_VshHphWsh_Kmask)
 };
+
+#if BX_SUPPORT_AMX
+// ACE v1 Section 13: Block Scale Register (BSR) Operations. No masking or
+// zeroing support (spec Sections 13.1.6/13.2.6/13.3.6) -> ATTR_MASK_K0.
+static const Bit64u BxOpcodeGroup_EVEX_MAP6_95[] = {
+  form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W1 | ATTR_VL512 | ATTR_NNN0 | ATTR_MASK_K0 | ATTR_IS64, BX_IA_EVEX_BSRMOVF_BsrVdqWdq),
+  form_opcode(ATTR_SSE_PREFIX_F2 | ATTR_VEX_W1 | ATTR_VL512 | ATTR_NNN0 | ATTR_MASK_K0 | ATTR_IS64, BX_IA_EVEX_BSRMOVH_BsrWdq),
+  form_opcode(ATTR_SSE_PREFIX_F2 | ATTR_VEX_W0 | ATTR_VL512 | ATTR_NNN0 | ATTR_MASK_K0 | ATTR_IS64, BX_IA_EVEX_BSRMOVH_WdqBsr),
+  form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W1 | ATTR_VL512 | ATTR_NNN0 | ATTR_MASK_K0 | ATTR_IS64, BX_IA_EVEX_BSRMOVL_BsrWdq),
+  last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_VL512 | ATTR_NNN0 | ATTR_MASK_K0 | ATTR_IS64, BX_IA_EVEX_BSRMOVL_WdqBsr)
+};
+#endif
 
 static const Bit64u BxOpcodeGroup_EVEX_MAP6_96[] = {
   form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_MASK_K0, BX_IA_EVEX_VFMADDSUB132PH_VphHphWph),
@@ -2765,7 +2888,7 @@ const Bit64u *BxOpcodeTableEVEX[256*5] = {
   /* 3E */ BxOpcodeGroup_EVEX_0F383E,
   /* 3F */ BxOpcodeGroup_EVEX_0F383F,
   /* 40 */ BxOpcodeGroup_EVEX_0F3840,
-  /* 41 */ BxOpcodeGroup_ERR,
+  /* 41 */ BxOpcodeGroup_EVEX_0F3841,
   /* 42 */ BxOpcodeGroup_EVEX_0F3842,
   /* 43 */ BxOpcodeGroup_EVEX_0F3843,
   /* 44 */ BxOpcodeGroup_EVEX_0F3844,
@@ -2776,10 +2899,11 @@ const Bit64u *BxOpcodeTableEVEX[256*5] = {
   /* 49 */ BxOpcodeGroup_ERR,
 #if BX_SUPPORT_AMX
   /* 4A */ BxOpcodeGroup_EVEX_0F384A,
+  /* 4B */ BxOpcodeGroup_EVEX_0F384B,
 #else
   /* 4A */ BxOpcodeGroup_ERR,
-#endif
   /* 4B */ BxOpcodeGroup_ERR,
+#endif
   /* 4C */ BxOpcodeGroup_EVEX_0F384C,
   /* 4D */ BxOpcodeGroup_EVEX_0F384D,
   /* 4E */ BxOpcodeGroup_EVEX_0F384E,
@@ -2796,9 +2920,17 @@ const Bit64u *BxOpcodeTableEVEX[256*5] = {
   /* 59 */ BxOpcodeGroup_EVEX_0F3859,
   /* 5A */ BxOpcodeGroup_EVEX_0F385A,
   /* 5B */ BxOpcodeGroup_EVEX_0F385B,
+#if BX_SUPPORT_AMX
+  /* 5C */ BxOpcodeGroup_EVEX_0F385C,
+#else
   /* 5C */ BxOpcodeGroup_ERR,
+#endif
   /* 5D */ BxOpcodeGroup_ERR,
+#if BX_SUPPORT_AMX
+  /* 5E */ BxOpcodeGroup_EVEX_0F385E,
+#else
   /* 5E */ BxOpcodeGroup_ERR,
+#endif
   /* 5F */ BxOpcodeGroup_ERR,
   /* 60 */ BxOpcodeGroup_ERR,
   /* 61 */ BxOpcodeGroup_ERR,
@@ -3017,7 +3149,11 @@ const Bit64u *BxOpcodeTableEVEX[256*5] = {
   /* 2C */ BxOpcodeGroup_ERR,
   /* 2D */ BxOpcodeGroup_ERR,
   /* 2E */ BxOpcodeGroup_ERR,
+#if BX_SUPPORT_AMX
+  /* 2F */ BxOpcodeGroup_EVEX_0F3A2F,
+#else
   /* 2F */ BxOpcodeGroup_ERR,
+#endif
   /* 30 */ BxOpcodeGroup_ERR,
   /* 31 */ BxOpcodeGroup_ERR,
   /* 32 */ BxOpcodeGroup_ERR,
@@ -3031,7 +3167,7 @@ const Bit64u *BxOpcodeTableEVEX[256*5] = {
   /* 3A */ BxOpcodeGroup_EVEX_0F3A3A,
   /* 3B */ BxOpcodeGroup_EVEX_0F3A3B,
   /* 3C */ BxOpcodeGroup_ERR,
-  /* 3D */ BxOpcodeGroup_ERR,
+  /* 3D */ BxOpcodeGroup_EVEX_0F3A3D,
   /* 3E */ BxOpcodeGroup_EVEX_0F3A3E,
   /* 3F */ BxOpcodeGroup_EVEX_0F3A3F,
   /* 40 */ BxOpcodeGroup_ERR,
@@ -3115,9 +3251,17 @@ const Bit64u *BxOpcodeTableEVEX[256*5] = {
   /* 8A */ BxOpcodeGroup_ERR,
   /* 8B */ BxOpcodeGroup_ERR,
   /* 8C */ BxOpcodeGroup_ERR,
+#if BX_SUPPORT_AMX
+  /* 8D */ BxOpcodeGroup_EVEX_0F3A8D,
+#else
   /* 8D */ BxOpcodeGroup_ERR,
+#endif
   /* 8E */ BxOpcodeGroup_ERR,
+#if BX_SUPPORT_AMX
+  /* 8F */ BxOpcodeGroup_EVEX_0F3A8F,
+#else
   /* 8F */ BxOpcodeGroup_ERR,
+#endif
   /* 90 */ BxOpcodeGroup_ERR,
   /* 91 */ BxOpcodeGroup_ERR,
   /* 92 */ BxOpcodeGroup_ERR,
@@ -3286,15 +3430,15 @@ const Bit64u *BxOpcodeTableEVEX[256*5] = {
   /* 33 */ BxOpcodeGroup_ERR,
   /* 34 */ BxOpcodeGroup_ERR,
   /* 35 */ BxOpcodeGroup_ERR,
-  /* 36 */ BxOpcodeGroup_ERR,
-  /* 37 */ BxOpcodeGroup_ERR,
-  /* 38 */ BxOpcodeGroup_ERR,
-  /* 39 */ BxOpcodeGroup_ERR,
-  /* 3A */ BxOpcodeGroup_ERR,
-  /* 3B */ BxOpcodeGroup_ERR,
-  /* 3C */ BxOpcodeGroup_ERR,
-  /* 3D */ BxOpcodeGroup_ERR,
-  /* 3E */ BxOpcodeGroup_ERR,
+  /* 36 */ BxOpcodeGroup_EVEX_MAP5_36,
+  /* 37 */ BxOpcodeGroup_EVEX_MAP5_37,
+  /* 38 */ BxOpcodeGroup_EVEX_MAP5_38,
+  /* 39 */ BxOpcodeGroup_EVEX_MAP5_39,
+  /* 3A */ BxOpcodeGroup_EVEX_MAP5_3A,
+  /* 3B */ BxOpcodeGroup_EVEX_MAP5_3B,
+  /* 3C */ BxOpcodeGroup_EVEX_MAP5_3C,
+  /* 3D */ BxOpcodeGroup_EVEX_MAP5_3D,
+  /* 3E */ BxOpcodeGroup_EVEX_MAP5_3E,
   /* 3F */ BxOpcodeGroup_ERR,
   /* 40 */ BxOpcodeGroup_ERR,
   /* 41 */ BxOpcodeGroup_ERR,
@@ -3639,7 +3783,11 @@ const Bit64u *BxOpcodeTableEVEX[256*5] = {
   /* 92 */ BxOpcodeGroup_ERR,
   /* 93 */ BxOpcodeGroup_ERR,
   /* 94 */ BxOpcodeGroup_ERR,
+#if BX_SUPPORT_AMX
+  /* 95 */ BxOpcodeGroup_EVEX_MAP6_95,
+#else
   /* 95 */ BxOpcodeGroup_ERR,
+#endif
   /* 96 */ BxOpcodeGroup_EVEX_MAP6_96,
   /* 97 */ BxOpcodeGroup_EVEX_MAP6_97,
   /* 98 */ BxOpcodeGroup_EVEX_MAP6_98,

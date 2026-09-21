@@ -580,8 +580,12 @@ void bx_cpuid_t::get_std_cpuid_amx_palette_info_leaf(Bit32u subfunction, cpuid_f
   if (!is_cpu_extension_supported(BX_ISA_AMX))
     return;
 
+  unsigned max_palette_id = is_cpu_extension_supported(BX_ISA_ACE) ? 2 : 1;
+  if (subfunction >= max_palette_id)
+    return;
+
   if (subfunction == 0) {
-    leaf->eax = 1; // max palette_id
+    leaf->eax = max_palette_id;
     leaf->ebx = 0;
     leaf->ecx = 0;
     leaf->edx = 0;
@@ -600,6 +604,16 @@ void bx_cpuid_t::get_std_cpuid_amx_palette_info_leaf(Bit32u subfunction, cpuid_f
     // ECX[31:16] : Reserved
     leaf->ecx = 16;
     // EdX[31:00] : Reserved
+    leaf->edx = 0;
+    return;
+  }
+
+  // information about palette #2
+  if (subfunction == 2) {
+    // EAX[7:0] : ACE Major Version >= 1
+    leaf->eax = ace_level();
+    leaf->ebx = 0;
+    leaf->ecx = 0;
     leaf->edx = 0;
     return;
   }
@@ -667,6 +681,12 @@ unsigned bx_cpuid_t::avx10_level() const
   if (is_cpu_extension_supported(BX_ISA_AVX10_1)) return 1;
   return 0;
 }
+
+unsigned bx_cpuid_t::ace_level() const
+{
+  if (is_cpu_extension_supported(BX_ISA_ACE)) return 1;
+  return 0;
+}
 #endif
 
 // Leaf 0x00000024: AVX10 support and versioning
@@ -698,7 +718,10 @@ void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *
     //   [31:00]: reserved
     // EDX:
     //   [31:00]: reserved
-    leaf->eax = 0;
+    if (is_cpu_extension_supported(BX_ISA_ACE))
+      leaf->eax = 1;
+    else
+      leaf->eax = 0;
     leaf->ebx = avx10_lvl | (1<<16) | (1<<17) | (1<<18);
     leaf->ecx = 0;
     leaf->edx = 0;
@@ -708,12 +731,16 @@ void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *
     // EAX:
     // EBX:
     // ECX:
-    //   [2] AVX10_VNNI_INT instructions support
+    //   [2] AVX10_VNNI_INT instructions support, also known as AVX10_V1_AUX, part of AVX10.2
+    //   [3] AVX10_V2_AUX, part of ACE v1
     // EDX:
-    leaf->eax = 0;
-    leaf->ebx = 0;
-    leaf->ecx = (avx10_lvl >= 2) ? (1<<2) : 0;
-    leaf->edx = 0;
+    if (is_cpu_extension_supported(BX_ISA_ACE)) {
+      leaf->eax = 0;
+      leaf->ebx = 0;
+      leaf->ecx = (avx10_lvl >= 2) ? (1<<2) : 0;
+      leaf->ecx |= (1<<3);
+      leaf->edx = 0;
+    }
     break;
 
   default:
@@ -1164,7 +1191,11 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_ecx(Bit32u extra) const
 
   //   [10:6]   reserved
 
-  //  [11:11]   Support ACE instructions (not supported yet)
+  //  [11:11]   Support ACE instructions
+#if BX_SUPPORT_EVEX
+  if (is_cpu_extension_supported(BX_ISA_ACE))
+    ecx |= BX_CPUID_STD7_SUBLEAF1_ECX_ACE;
+#endif
 
   //  [31:12]   reserved
 
@@ -1724,16 +1755,19 @@ void bx_cpuid_t::sanity_checks() const
         is_cpu_extension_supported(BX_ISA_AMX_FP16) ||
         is_cpu_extension_supported(BX_ISA_AMX_COMPLEX) ||
         is_cpu_extension_supported(BX_ISA_AMX_MOVRS) ||
-        is_cpu_extension_supported(BX_ISA_AMX_AVX512))
+        is_cpu_extension_supported(BX_ISA_AMX_AVX512) ||
+        is_cpu_extension_supported(BX_ISA_ACE))
     {
       BX_FATAL(("PANIC: All AMX/TMUL extensions must be disabled if AMX is not supported !"));
     }
   }
 
-  // AMX -> AVX-512 or AVX10_VL512
-  if (is_cpu_extension_supported(BX_ISA_AMX)) {
-    if (is_cpu_extension_supported(BX_ISA_AMX_AVX512) && !is_cpu_extension_supported(BX_ISA_AVX10_2))
-      BX_FATAL(("PANIC: AMX-AVX512 require AVX10_2 to be enabled !"));
+  if (! is_cpu_extension_supported(BX_ISA_AVX10_2)) {
+    if (is_cpu_extension_supported(BX_ISA_AMX_AVX512) ||
+        is_cpu_extension_supported(BX_ISA_ACE))
+    {
+      BX_FATAL(("PANIC: AVX10_2 required to enable ACE or AMX_AVX512 !"));
+    }
   }
 
   if (is_cpu_extension_supported(BX_ISA_VMX) && is_cpu_extension_supported(BX_ISA_SVM))

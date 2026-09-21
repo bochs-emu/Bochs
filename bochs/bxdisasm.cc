@@ -85,13 +85,11 @@ void disasm_string(const char *s)
   hex2bin(ibuf, s, len);
   len /= 2; // length in bytes
 
-  char disbuf[256];
-
   const Bit8u *iptr = ibuf;
   while(len > 0) {
     unsigned bytes = (len > 16) ? 16 : len;
     printf("instruction bytes:");
-    for (int i=0;i<bytes;i++)
+    for (unsigned i=0;i<bytes;i++)
       printf("%02x", iptr[i]);
     printf("\n");
 

@@ -9,6 +9,7 @@ Legend:
 -------------------------------------------------------------------------
 Changes after Bochs 3.1:
 
+! Implemented AI Compute Extensions (ACE) emulation according AI Compute Extensions (ACE) Specification rev1.16.2 from x86 Ecosystem Advisory Group
 - SSE/AVX: Fixed PSRLQ and PSRAVQ instructions with shift count = 64
 - SSE: PSHUFLW instruction should be supported under SSE2 instead of SSE
 - POPCNT: fix POPCNT instruction to depend on its own (already existing) CPUID feature flags and not SSE4.2
@@ -17,6 +18,26 @@ Changes after Bochs 3.1:
 - AVX: Fixed order of unmasked exceptions handling in VDPPS instruction. VDPPS must determine SIMD floating-point exceptions separately for each multiply and add operation in execution order.
 - x86-64: implement ENTER and LEAVE instructions with OperandSize=16 and StackSize=64
 - AVX-512: VPBROADCASTMB2Q/VPBROADCASTMW2D instructions should require AVX512_CD
+- AVX-512: VPCMPB/VPCMPUB/VPCMPW/VPCMPUW instructions should require AVX512_BW
+- AES_AVX: Enforce AES feature flag in cpu to make sure these are disabled when AES gets disabled
++ AVX-512: Fix boundary conditions of write mask calculation for VPCOMPRESSB/VPCOMPRESSW instructions
++ AVX-512: Fix boundary conditions of load mask calculation for VPEXPANDB/VPEXPANDW instructions, VPEXPANDB was completely broken with load mask > 32 bit
++ AVX512_GATHER: Fix 512-bit qword-indexed VGATHERQPS zero upper
++ AVX-512: Fix VRANGE* output when both arguments are different sign same magnitude ad ABS_MIN and ABS_MAX is requsted
+- Legacy: added missing #AC check in ticke_write_linear, used for ENTER and XSAVE instructions
++ x87: improved implementation of x87 transendential instructions (F2XM1/FYL2X/FYL2XP1/FPATAN/FSIN/FCOS/FSINCOS/FPTAN) to match HW
++ x87: fixed unmasked underflow/overflow corner cases for FSCALE x87 instruction
+- Legacy: fixed broken CR2 register initialization in reset() method, CR2 contained garbage value at the beginning instead of being initialized to 0
+- Legacy: swap order of memory accesses in CMPSB/CMPSW/CMPSD/CMPSQ instructions to match real HW: access ES:EDI first and seg:ESI later
+- VMX: Fixed typo in VMXON #GP(0) condition
++ AVX-512/AVX512_FP16: fixed corner case correctness issue for VRNDSCALE* instructions with denormal operand
++ AVX-512/AVX512_FP16: fixed corner case correctness issue for VRCPSH/VRCPPH and VRCP14* instructions
++ AVX-512/AVX512_FP16: fixed corner case correctness issue for VRSQRTSH/VRSQRTPH and VRSQRT14* instructions
+- SMM/VMX: allow SMM restore to VMX "unrestricted guest" (stop enforcing CR0.PE = CR0.PG = CR0.NE = 1 during RSM to VMX guest state)
+- Legacy: update flags handling for AAD BCD instruction to handle undocumented flags more accurate like HW
+- AMX_AVX512: AMX_AVX512 instructions cannot be encoded with EVEX.b=1 and should #UD
+- AMX_AVX512: AMX_AVX512 instructions must #UD if EVEX is not enabled through XCR0[7:5]
+- APIC: APIC read from an address crossing 32-bit boundary actually returns all zero in HW
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):

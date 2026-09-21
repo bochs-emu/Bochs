@@ -39,10 +39,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "primitives.h"
 #include "softfloat.h"
 
-extFloat80_t
- softfloat_roundPackToExtF80(bool sign, int32_t exp, uint64_t sig, uint64_t sigExtra, uint8_t roundingPrecision, struct softfloat_status_t *status)
+extFloat80_t softfloat_roundPackToExtF80(bool sign, int32_t exp, uint64_t sig, uint64_t sigExtra, uint8_t roundingPrecision, struct softfloat_status_t *status)
 {
-    uint8_t roundingMode;
+    return softfloat_roundPackToExtF80(sign, exp, sig, sigExtra, roundingPrecision, softfloat_getRoundingMode(status), status);
+}
+
+extFloat80_t softfloat_roundPackToExtF80(bool sign, int32_t exp, uint64_t sig, uint64_t sigExtra, uint8_t roundingPrecision, uint8_t roundingMode, struct softfloat_status_t *status)
+{
     bool roundNearEven;
     uint64_t roundIncrement, roundMask, roundBits;
     bool isTiny, doIncrement;
@@ -50,8 +53,10 @@ extFloat80_t
     uint64_t sigExact;
 
     /*------------------------------------------------------------------------
+    | 'roundingMode' is passed explicitly (rather than read from 'status') so
+    | callers can round an intermediate step in a mode other than the one
+    | currently programmed. Exception flags are still reported via 'status'.
     *------------------------------------------------------------------------*/
-    roundingMode = softfloat_getRoundingMode(status);
     roundNearEven = (roundingMode == softfloat_round_near_even);
     if (roundingPrecision == 80) goto precision80;
     if (roundingPrecision == 64) {
@@ -79,6 +84,12 @@ extFloat80_t
             if (isTiny && sig && ! softfloat_isMaskedException(status, softfloat_flag_underflow)) {
                 softfloat_raiseFlags(status, softfloat_flag_underflow);
                 exp += 0x6000;
+                if (exp <= 0) {
+                    /* still not representable even after the wrap - unrescuable
+                       underflow, deliver a true (signed) zero */
+                    softfloat_raiseFlags(status, softfloat_flag_inexact);
+                    return packToExtF80(sign, 0, 0);
+                }
             }
             else {
                 sig = softfloat_shiftRightJam64(sig, 1 - exp);
@@ -93,6 +104,9 @@ extFloat80_t
                 sig &= ~roundMask;
                 if (roundBits) {
                     softfloat_raiseFlags(status, softfloat_flag_inexact);
+                    /* real fractional bits at this step - its own decision is
+                       authoritative, drop any stale hint from an earlier stage */
+                    softfloat_clearRoundingUp(status);
                     if (sig > sigExact) softfloat_setRoundingUp(status);
                     if (isTiny)
                         softfloat_raiseFlags(status, softfloat_flag_underflow);
@@ -126,6 +140,9 @@ extFloat80_t
     sig &= ~roundMask;
     if (roundBits) {
         softfloat_raiseFlags(status, softfloat_flag_inexact);
+        /* real fractional bits at this step - its own decision is
+           authoritative, drop any stale hint from an earlier stage */
+        softfloat_clearRoundingUp(status);
         if (sig > sigExact) softfloat_setRoundingUp(status);
     }
     return packToExtF80(sign, exp, sig);
@@ -147,6 +164,12 @@ extFloat80_t
             if (isTiny && sig && ! softfloat_isMaskedException(status, softfloat_flag_underflow)) {
                 softfloat_raiseFlags(status, softfloat_flag_underflow);
                 exp += 0x6000;
+                if (exp <= 0) {
+                    /* still not representable even after the wrap - unrescuable
+                       underflow, deliver a true (signed) zero */
+                    softfloat_raiseFlags(status, softfloat_flag_inexact);
+                    return packToExtF80(sign, 0, 0);
+                }
             }
             else {
                 sig64Extra = softfloat_shiftRightJam64Extra(sig, sigExtra, 1 - exp);
@@ -157,6 +180,11 @@ extFloat80_t
                     softfloat_raiseFlags(status, softfloat_flag_inexact);
                     if (isTiny)
                         softfloat_raiseFlags(status, softfloat_flag_underflow);
+                    /* this narrowing step has real fractional bits to decide
+                       with, so ITS own up/down decision below is authoritative -
+                       drop any round-up hint an earlier (wider) rounding stage
+                       left behind, it no longer applies */
+                    softfloat_clearRoundingUp(status);
                 }
                 doIncrement = (UINT64_C(0x8000000000000000) <= sigExtra);
                 if (! roundNearEven && (roundingMode != softfloat_round_near_maxMag)) {
@@ -185,7 +213,15 @@ extFloat80_t
                 roundMask = 0;
  overflow:
                 softfloat_raiseFlags(status, softfloat_flag_overflow | softfloat_flag_inexact);
-                if (roundNearEven
+                if (! softfloat_isMaskedException(status, softfloat_flag_overflow)) {
+                    /* got here via the unmasked-overflow wrap and the true
+                       (unbounded) exponent still doesn't fit - genuinely
+                       unrepresentable even wrapped, deliver infinity
+                       unconditionally, independent of the rounding mode */
+                    exp = 0x7FFF;
+                    sig = UINT64_C(0x8000000000000000);
+                    softfloat_setRoundingUp(status);
+                } else if (roundNearEven
                     || (roundingMode == softfloat_round_near_maxMag)
                     || (roundingMode == (sign ? softfloat_round_min : softfloat_round_max))
                 ) {
@@ -204,6 +240,10 @@ extFloat80_t
     *------------------------------------------------------------------------*/
     if (sigExtra) {
         softfloat_raiseFlags(status, softfloat_flag_inexact);
+        /* this narrowing step has real fractional bits to decide with, so ITS
+           own up/down decision below is authoritative - drop any round-up hint
+           an earlier (wider) rounding stage left behind, it no longer applies */
+        softfloat_clearRoundingUp(status);
     }
     if (doIncrement) {
         sigExact = sig;

@@ -1216,7 +1216,40 @@ bool BX_CPU_C::xsave_tiledata_state_xinuse(void)
   return (BX_CPU_THIS_PTR amx->tile_use_tracker == 0);  // all tiles are zero
 }
 
-#endif
+// SCALEDATA state management //
+void BX_CPU_C::xsave_scaledata_state(bxInstruction_c *i, bx_address offset)
+{
+  bx_address asize_mask = i->asize_mask();
+
+  write_virtual_zmmword(i->seg(), offset,                     &(BX_CPU_THIS_PTR amx->scaledata.scale[0]));
+  write_virtual_zmmword(i->seg(), (offset + 64) & asize_mask, &(BX_CPU_THIS_PTR amx->scaledata.scale[1]));
+}
+
+void BX_CPU_C::xrstor_scaledata_state(bxInstruction_c *i, bx_address offset)
+{
+  bx_address asize_mask = i->asize_mask();
+
+  read_virtual_zmmword(i->seg(), offset,                     &(BX_CPU_THIS_PTR amx->scaledata.scale[0]));
+  read_virtual_zmmword(i->seg(), (offset + 64) & asize_mask, &(BX_CPU_THIS_PTR amx->scaledata.scale[1]));
+}
+
+void BX_CPU_C::xrstor_init_scaledata_state(void)
+{
+  BX_CPU_THIS_PTR amx->bsr_clear();
+}
+
+bool BX_CPU_C::xsave_scaledata_state_xinuse(void)
+{
+  const AMX::SCALEDATA &scaledata = BX_CPU_THIS_PTR amx->scaledata;
+
+  for (unsigned n=0; n < 8; n++) {
+    if (scaledata.scale[0].vmm64u(n) != BX_CONST64(0x7F7F7F7F7F7F7F7F) ||
+        scaledata.scale[1].vmm64u(n) != BX_CONST64(0x7F7F7F7F7F7F7F7F)) return true;
+  }
+
+  return false;
+}
+#endif // BX_SUPPORT_AMX
 
 Bit32u BX_CPU_C::get_xinuse_vector(Bit32u requested_feature_bitmap)
 {
@@ -1342,7 +1375,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
 #endif
 
 #if BX_SUPPORT_AMX
-  if (EAX & BX_XCR0_XTILE_BITS_MASK) {
+  // TILECFG, TILEDATA, SCALEDATA all require both TILECFG and TILEDATA to be set
+  if (EAX & (BX_XCR0_XTILE_BITS_MASK | BX_XCR0_SCALEDATA_MASK)) {
     if ((EAX & BX_XCR0_XTILE_BITS_MASK) != BX_XCR0_XTILE_BITS_MASK) {
       BX_ERROR(("XSETBV: Illegal attempt to enable AMX state"));
       exception(BX_GP_EXCEPTION, 0);

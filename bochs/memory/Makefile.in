@@ -72,7 +72,7 @@ memory.o: memory.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../cpu/cpu.h ../cpu/decoder/decoder.h \
  ../cpu/decoder/features.h ../instrument/stubs/instrument.h ../cpu/i387.h \
  ../cpu/softfloat3e/include/softfloat_types.h ../config.h \
- ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
+ ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
  ../cpu/crregs.h ../cpu/descriptor.h ../cpu/decoder/instr.h \
  ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/xmm.h ../cpu/vmx.h \
  ../cpu/vmx_ctrls.h ../cpu/access.h ../cpu/icache.h ../iodev/iodev.h \
@@ -83,7 +83,7 @@ memory_stub.o: memory_stub.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h \
  ../instrument/stubs/instrument.h ../cpu/i387.h \
  ../cpu/softfloat3e/include/softfloat_types.h ../config.h \
- ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
+ ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
  ../cpu/crregs.h ../cpu/descriptor.h ../cpu/decoder/instr.h \
  ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/xmm.h ../cpu/vmx.h \
  ../cpu/vmx_ctrls.h ../cpu/access.h ../cpu/icache.h \
@@ -93,7 +93,7 @@ misc_mem.o: misc_mem.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../cpu/decoder/decoder.h ../cpu/decoder/features.h \
  ../instrument/stubs/instrument.h ../cpu/i387.h \
  ../cpu/softfloat3e/include/softfloat_types.h ../config.h \
- ../cpu/fpu/tag_w.h ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
+ ../cpu/fpu/status_w.h ../cpu/fpu/control_w.h \
  ../cpu/crregs.h ../cpu/descriptor.h ../cpu/decoder/instr.h \
  ../cpu/lazy_flags.h ../cpu/tlb.h ../cpu/xmm.h ../cpu/vmx.h \
  ../cpu/vmx_ctrls.h ../cpu/access.h ../gui/siminterface.h \

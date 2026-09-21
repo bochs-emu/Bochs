@@ -111,7 +111,8 @@ float64 f64_scalef(float64 a, float64 b, struct softfloat_status_t *status)
     }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
-    if ((expB | sigB) == 0) return a;
+    if ((expB | sigB) == 0)
+        return packToF64UI(signA, expA, sigA); // honor DAZ
 
     if (expB == 0x7FF) {
         if (signB) return packToF64UI(signA, 0, 0);

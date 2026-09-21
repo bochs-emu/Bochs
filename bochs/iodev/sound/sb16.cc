@@ -29,6 +29,7 @@
 
 #include "iodev.h"
 #include "pc_system.h"
+#include "virt_timer.h"
 
 #if BX_SUPPORT_SB16
 
@@ -107,12 +108,18 @@ void sb16_init_options(void)
     "Microseconds per second for a DMA cycle.",
     100000, BX_MAX_BIT32U,
     1000000);
+  bx_param_bool_c *realtime = new bx_param_bool_c(menu,
+    "dsp_realtime",
+    "DSP timer realtime",
+    "If enabled, the DSP timer is based on realtime",
+    0);
 
   bx_list_c *deplist = new bx_list_c(NULL);
   deplist->add(midimode);
   deplist->add(wavemode);
   deplist->add(loglevel);
   deplist->add(dmatimer);
+  deplist->add(realtime);
   enabled->set_dependent_list(deplist);
   deplist = new bx_list_c(NULL);
   deplist->add(midifile);
@@ -274,6 +281,7 @@ void bx_sb16_c::init(void)
   BX_SB16_THIS wavemode = SIM->get_param_enum("wavemode", base)->get();
   BX_SB16_THIS dmatimer = SIM->get_param_num("dmatimer", base)->get();
   BX_SB16_THIS loglevel = SIM->get_param_num("loglevel", base)->get();
+  bool dsp_realtime = SIM->get_param_bool("dsp_realtime", base)->get();
 
   // always initialize lowlevel driver
   BX_SB16_WAVEOUT1 = DEV_sound_get_waveout(0);
@@ -418,8 +426,8 @@ void bx_sb16_c::init(void)
   }
 
   if (DSP.timer_handle == BX_NULL_TIMER_HANDLE) {
-    DSP.timer_handle = DEV_register_timer
-      (BX_SB16_THISP, dsp_dmatimer_handler, 1, 1, 0, "sb16.dsp");
+    DSP.timer_handle = bx_virt_timer.register_timer
+      (BX_SB16_THISP, dsp_dmatimer_handler, 1, 1, 0, dsp_realtime, "sb16.dsp");
     // dma timer: inactive, continuous, frequency variable
   }
 
@@ -872,7 +880,7 @@ void bx_sb16_c::dsp_datawrite(Bit32u value)
            DSP.dma.param.format = 1;
            DSP.dma.chunkcount = 8820;
            DSP.dma.chunkindex = 0;
-           bx_pc_system.activate_timer(DSP.timer_handle, 45, 1);
+           bx_virt_timer.activate_timer(DSP.timer_handle, 45, 1);
            DSP.nondma_mode = 1;
            DSP.nondma_count = 0;
          }
@@ -1401,19 +1409,19 @@ Bit32u bx_sb16_c::dsp_adc_handler(Bit32u buflen)
 
 void bx_sb16_c::dsp_enabledma()
 {
-  bx_pc_system.activate_timer(DSP.timer_handle, DSP.dma.timer, 1);
+  bx_virt_timer.activate_timer(DSP.timer_handle, DSP.dma.timer, 1);
 }
 
 // dsp_disabledma(): Stop the DMA timer and thus the transfer, but don't abort it
 void bx_sb16_c::dsp_disabledma()
 {
-  bx_pc_system.deactivate_timer(DSP.timer_handle);
+  bx_virt_timer.deactivate_timer(DSP.timer_handle);
 }
 
 void bx_sb16_c::dsp_disable_nondma()
 {
   if (DSP.nondma_mode) {
-    bx_pc_system.deactivate_timer(DSP.timer_handle);
+    bx_virt_timer.deactivate_timer(DSP.timer_handle);
     DSP.nondma_mode = 0;
   }
 }

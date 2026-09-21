@@ -27,10 +27,7 @@
 /* XMM REGISTER */
 
 typedef
-#if defined(_MSC_VER) && (_MSC_VER>=1300)
-__declspec(align(16))
-#endif
-union bx_xmm_reg_t {
+union alignas(16) bx_xmm_reg_t {
    Bit8s   xmm_sbyte[16];
    Bit16s  xmm_s16[8];
    Bit32s  xmm_s32[4];
@@ -66,10 +63,7 @@ union bx_xmm_reg_t {
 /* AVX REGISTER */
 
 typedef
-#if defined(_MSC_VER) && (_MSC_VER>=1300)
-__declspec(align(32))
-#endif
-union bx_ymm_reg_t {
+union alignas(32) bx_ymm_reg_t {
    Bit8s   ymm_sbyte[32];
    Bit16s  ymm_s16[16];
    Bit32s  ymm_s32[8];
@@ -109,10 +103,7 @@ union bx_ymm_reg_t {
 #endif
 
 typedef
-#if defined(_MSC_VER) && (_MSC_VER>=1300)
-__declspec(align(64))
-#endif
-union bx_zmm_reg_t {
+union alignas(64) bx_zmm_reg_t {
    Bit8s   zmm_sbyte[64];
    Bit16s  zmm_s16[32];
    Bit32s  zmm_s32[16];
@@ -578,6 +569,21 @@ BX_CPP_INLINE Bit8s BX_CPP_AttrRegparmN(1) SaturateWordSToByteS(Bit16s value)
 BX_CPP_INLINE Bit8s BX_CPP_AttrRegparmN(1) SaturateDwordSToByteS(Bit32s value)
 {
   if(value < -128) return -128;
+  if(value >  127) return  127;
+  return (Bit8s) value;
+}
+
+/*
+ * SaturateDwordSToByteSSymmetric converts a signed 32-bit value to a signed
+ * 8-bit value using symmetric saturation (used by VPMOVSSDB): the result is
+ * balanced around 0, so -128 is not a representable output. If the signed
+ * 32-bit value is less than -127, it is represented by the saturated value
+ * -127 (0x81). If it is greater than 127, it is represented by the
+ * saturated value 127 (0x7F).
+*/
+BX_CPP_INLINE Bit8s BX_CPP_AttrRegparmN(1) SaturateDwordSToByteSSymmetric(Bit32s value)
+{
+  if(value < -127) return -127;
   if(value >  127) return  127;
   return (Bit8s) value;
 }

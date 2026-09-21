@@ -118,7 +118,9 @@ struct exp32_sig64 { int32_t exp; uint64_t sig; };
 struct exp32_sig64 softfloat_normSubnormalExtF80Sig(uint64_t);
 
 extFloat80_t
- softfloat_roundPackToExtF80(bool, int32_t, uint64_t, uint64_t, uint8_t, struct softfloat_status_t *);
+ softfloat_roundPackToExtF80(bool, int32_t, uint64_t, uint64_t, uint8_t roundingPrecision, uint8_t roundingMode, struct softfloat_status_t *);
+extFloat80_t
+ softfloat_roundPackToExtF80(bool, int32_t, uint64_t, uint64_t, uint8_t roundingPrecision, struct softfloat_status_t *);
 extFloat80_t
  softfloat_normRoundPackToExtF80(bool, int32_t, uint64_t, uint64_t, uint8_t, struct softfloat_status_t *);
 
@@ -135,7 +137,15 @@ struct exp32_sig128 { int32_t exp; struct uint128 sig; };
 struct exp32_sig128 softfloat_normSubnormalF128Sig(uint64_t, uint64_t);
 
 float128_t
+ softfloat_roundPackToF128(bool, int32_t, uint64_t, uint64_t, uint64_t, uint8_t roundingMode, uint8_t roundingPrecision, struct softfloat_status_t *);
+float128_t
+ softfloat_roundPackToF128(bool, int32_t, uint64_t, uint64_t, uint64_t, uint8_t roundingMode, struct softfloat_status_t *);
+float128_t
  softfloat_roundPackToF128(bool, int32_t, uint64_t, uint64_t, uint64_t, struct softfloat_status_t *);
+float128_t
+ softfloat_normRoundPackToF128(bool, int32_t, uint64_t, uint64_t, uint8_t roundingMode, uint8_t roundingPrecision, struct softfloat_status_t *);
+float128_t
+ softfloat_normRoundPackToF128(bool, int32_t, uint64_t, uint64_t, uint8_t roundingMode, struct softfloat_status_t *);
 float128_t
  softfloat_normRoundPackToF128(bool, int32_t, uint64_t, uint64_t, struct softfloat_status_t *);
 

@@ -308,6 +308,7 @@ const unsigned XSAVE_PKRU_STATE_OFFSET      = 2688;
 const unsigned XSAVE_XTILECFG_STATE_OFFSET  = 2752;
 const unsigned XSAVE_XTILEDATA_STATE_OFFSET = 2816;
 const unsigned XSAVE_APX_STATE_OFFSET       = 960;    // repurpose deprecated BND (MPX) state
+const unsigned XSAVE_SCALEDATA_STATE_OFFSET = 11008;
 
 struct xcr0_t {
   Bit32u  val; // 32bit value of register

@@ -39,21 +39,88 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "primitives.h"
 #include "softfloat.h"
 
-// trimmed for Bochs to support only 'softfloat_round_nearest_even' rounding mode
 float128_t
  softfloat_roundPackToF128(bool sign, int32_t exp, uint64_t sig64, uint64_t sig0, uint64_t sigExtra, struct softfloat_status_t *status)
 {
-    bool doIncrement, isTiny;
+    return softfloat_roundPackToF128(sign, exp, sig64, sig0, sigExtra, softfloat_getRoundingMode(status), status->extF80_roundingPrecision, status);
+}
+
+float128_t
+ softfloat_roundPackToF128(bool sign, int32_t exp, uint64_t sig64, uint64_t sig0, uint64_t sigExtra, uint8_t roundingMode, struct softfloat_status_t *status)
+{
+    return softfloat_roundPackToF128(sign, exp, sig64, sig0, sigExtra, roundingMode, status->extF80_roundingPrecision, status);
+}
+
+float128_t
+ softfloat_roundPackToF128(bool sign, int32_t exp, uint64_t sig64, uint64_t sig0, uint64_t sigExtra, uint8_t roundingMode, uint8_t roundingPrecision, struct softfloat_status_t *status)
+{
+    bool roundNearEven, doIncrement, isTiny;
     struct uint128_extra sig128Extra;
     struct uint128 sig128;
     float128_t z;
 
-    sigExtra = 0; // artificially reduce precision to match hardware x86 which uses only 67-bit
-    sig0 &= UINT64_C(0xFFFFFFFF00000000); // do 80 bits for now
+    /*------------------------------------------------------------------------
+    | 'roundingMode' and 'roundingPrecision' are passed explicitly (rather than
+    | read from 'status') so callers can round an intermediate step in a mode /
+    | to a width other than the one currently programmed.  Exception flags are
+    | still reported via 'status'.
+    *------------------------------------------------------------------------*/
+    roundNearEven = (roundingMode == softfloat_round_near_even);
+
+    /*------------------------------------------------------------------------
+    | Optional narrow-precision clamp: when 'roundingPrecision' is in 83..127
+    | the float128_t result is reduced to a (precision - 16) bit significand
+    | (83 => 67 bits), emulating the internal extended-precision format of the
+    | P5/P6 x87 real microcode.
+    *------------------------------------------------------------------------*/
+    if (83 <= roundingPrecision && roundingPrecision <= 127) {
+        unsigned drop = 113 - (roundingPrecision - 16); // 2..46, within sig0
+        uint64_t ulp = UINT64_C(1) << drop;
+        uint64_t rem = sig0 & (ulp - 1);
+        uint64_t sticky = rem | (sigExtra != 0);
+        bool inc;
+        switch (roundingMode) {
+          default: /* softfloat_round_minMag - truncate, as the real microcode does */
+            inc = 0;
+            break;
+          case softfloat_round_near_even:
+            inc = (rem > (ulp>>1)) || ((rem == (ulp>>1)) && (sig0 & ulp));
+            break;
+          case softfloat_round_near_maxMag:
+            inc = (rem >= (ulp>>1));
+            break;
+          case softfloat_round_min:
+            inc = sign && sticky;
+            break;
+          case softfloat_round_max:
+            inc = ! sign && sticky;
+            break;
+        }
+        sig0 &= ~(ulp - 1);
+        sigExtra = 0;
+        if (sticky)
+            softfloat_raiseFlags(status, softfloat_flag_inexact);
+        if (inc) {
+            sig128 = softfloat_add128(sig64, sig0, 0, ulp);
+            sig64 = sig128.v64;
+            sig0  = sig128.v0;
+            if (UINT64_C(0x0002000000000000) <= sig64) {
+                sig128Extra = softfloat_shortShiftRightJam128Extra(sig64, sig0, 0, 1);
+                sig64 = sig128Extra.v.v64;
+                sig0  = sig128Extra.v.v0;
+                exp++;
+            }
+        }
+    }
 
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     doIncrement = (UINT64_C(0x8000000000000000) <= sigExtra);
+    if (! roundNearEven && (roundingMode != softfloat_round_near_maxMag)) {
+        doIncrement =
+            (roundingMode == (sign ? softfloat_round_min : softfloat_round_max))
+                && sigExtra;
+    }
     /*------------------------------------------------------------------------
     *------------------------------------------------------------------------*/
     if (0x7FFD <= (uint32_t) exp) {
@@ -71,16 +138,44 @@ float128_t
                 softfloat_raiseFlags(status, softfloat_flag_underflow);
             }
             doIncrement = (UINT64_C(0x8000000000000000) <= sigExtra);
+            if (! roundNearEven && (roundingMode != softfloat_round_near_maxMag)) {
+                doIncrement =
+                    (roundingMode == (sign ? softfloat_round_min : softfloat_round_max))
+                        && sigExtra;
+            }
         } else if ((0x7FFD < exp) || ((exp == 0x7FFD)
                     && softfloat_eq128(sig64, sig0, UINT64_C(0x0001FFFFFFFFFFFF), UINT64_C(0xFFFFFFFFFFFFFFFF))
                     && doIncrement)
        ) {
             /*----------------------------------------------------------------
+            | When the overflow exception is unmasked the x87 delivers the
+            | true significand with the exponent biased down by 0x6000, so the
+            | subsequent conversion to extF80 sees the wrapped value.  If a
+            | single wrap does not bring the exponent back in range, fall
+            | through to the masked-style clamp below.
             *----------------------------------------------------------------*/
-            softfloat_raiseFlags(status, softfloat_flag_overflow | softfloat_flag_inexact);
-            z.v64 = packToF128UI64(sign, 0x7FFF, 0);
-            z.v0  = 0;
-            return z;
+            if (! softfloat_isMaskedException(status, softfloat_flag_overflow)) {
+                softfloat_raiseFlags(status, softfloat_flag_overflow);
+                exp -= 0x6000;
+            }
+            if ((0x7FFD < exp) || ((exp == 0x7FFD)
+                    && softfloat_eq128(sig64, sig0, UINT64_C(0x0001FFFFFFFFFFFF), UINT64_C(0xFFFFFFFFFFFFFFFF))
+                    && doIncrement)
+           ) {
+                softfloat_raiseFlags(status, softfloat_flag_overflow | softfloat_flag_inexact);
+                if (roundNearEven
+                    || (roundingMode == softfloat_round_near_maxMag)
+                    || (roundingMode == (sign ? softfloat_round_min : softfloat_round_max))
+               ) {
+                    z.v64 = packToF128UI64(sign, 0x7FFF, 0);
+                    z.v0  = 0;
+                    softfloat_setRoundingUp(status);
+                } else {
+                    z.v64 = packToF128UI64(sign, 0x7FFE, UINT64_C(0x0000FFFFFFFFFFFF));
+                    z.v0  = UINT64_C(0xFFFFFFFFFFFFFFFF);
+                }
+                return z;
+            }
         }
     }
     /*------------------------------------------------------------------------
@@ -89,9 +184,12 @@ float128_t
         softfloat_raiseFlags(status, softfloat_flag_inexact);
     }
     if (doIncrement) {
+        uint64_t sig64Exact = sig64, sig0Exact = sig0;
         sig128 = softfloat_add128(sig64, sig0, 0, 1);
         sig64 = sig128.v64;
-        sig0 = sig128.v0 & ~(uint64_t) (! (sigExtra & UINT64_C(0x7FFFFFFFFFFFFFFF)));
+        sig0 = sig128.v0 & ~(uint64_t) (! (sigExtra & UINT64_C(0x7FFFFFFFFFFFFFFF)) & roundNearEven);
+        if (softfloat_lt128(sig64Exact, sig0Exact, sig64, sig0))
+            softfloat_setRoundingUp(status);
     } else {
         if (! (sig64 | sig0)) exp = 0;
     }

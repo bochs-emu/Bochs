@@ -70,18 +70,28 @@ struct f16_t {
 };
 
 struct f32_t {
-    uint32_t v;
+    union {
+      uint32_t v;
+      float f;
+    } u;
 #ifdef __cplusplus
-    f32_t(uint32_t v32): v(v32) {}
-    operator uint32_t() const { return v; }
+    f32_t(uint32_t v32) { u.v = v32; }
+    f32_t(float f32) { u.f = f32; }
+    operator uint32_t() const { return u.v; }
+    operator float() const { return u.f; }
 #endif
 };
 
 struct f64_t {
-    uint64_t v;
+    union {
+      uint64_t v;
+      double f;
+    } u;
 #ifdef __cplusplus
-    f64_t(uint64_t v64): v(v64) {}
-    operator uint64_t() const { return v; }
+    f64_t(uint64_t v64) { u.v = v64; }
+    f64_t(double f64) { u.f = f64; }
+    operator uint64_t() const { return u.v; }
+    operator double() const { return u.f; }
 #endif
 };
 

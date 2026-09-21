@@ -30,10 +30,26 @@
 
 #include "amx.h"
 
+BX_CPP_INLINE bool BX_CPU_C::palette_supported(unsigned palette_id)
+{
+  switch (palette_id) {
+  case 0:
+    return true;
+  case 1:
+    return get_amx_ok();
+  case 2:
+    return get_scaledata_ok();
+  default:
+    return false;
+  }
+}
+
 bool BX_CPP_AttrRegparmN(2) BX_CPU_C::configure_tiles(bxInstruction_c *i, const BxPackedAvxRegister &tilecfg)
 {
   Bit8u palette_id = tilecfg.vmmubyte(0);
   Bit8u start_row  = tilecfg.vmmubyte(1);
+
+  if (! palette_supported(palette_id)) return false;
 
   if (palette_id == 0) {
     BX_CPU_THIS_PTR amx->clear();
@@ -73,6 +89,25 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::configure_tiles(bxInstruction_c *i, const 
     return true;
   }
 
+  if (is_cpu_extension_supported(BX_ISA_ACE)) {
+    if (palette_id == 2) {
+      if (tilecfg.vmm64u(0) > 255 || tilecfg.vmm64u(1) || ! is_clear(&tilecfg.vmm128(1)) || ! is_clear(&tilecfg.vmm128(2)) || ! is_clear(&tilecfg.vmm128(3))) {
+        BX_ERROR(("LDTILECFG: reserved bits set for palette_id=%d", palette_id));
+        return false;
+      }
+
+      for (unsigned n=0; n < 8; n++) {
+        BX_CPU_THIS_PTR amx->tilecfg[n].bytes_per_row = 64;
+        BX_CPU_THIS_PTR amx->tilecfg[n].rows = 16;
+      }
+
+      BX_CPU_THIS_PTR amx->clear();
+      BX_CPU_THIS_PTR amx->palette_id = 2;
+      BX_CPU_THIS_PTR amx->start_row = 0;
+      return true;
+    }
+  }
+
   return false;
 }
 
@@ -96,6 +131,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::STTILECFG(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILELOADD_TnnnMdq(bxInstruction_c *i)
 {
+  if (BX_CPU_THIS_PTR amx->get_palette_id() != 1) {
+    BX_ERROR(("%s: not supported under pallette %d", i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR amx->get_palette_id()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
   if (i->sibIndex() == BX_NIL_REGISTER) {
     BX_ERROR(("%s: SIB byte required", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
@@ -146,6 +186,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILELOADD_TnnnMdq(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILESTORED_MdqTnnn(bxInstruction_c *i)
 {
+  if (BX_CPU_THIS_PTR amx->get_palette_id() != 1) {
+    BX_ERROR(("%s: not supported under pallette %d", i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR amx->get_palette_id()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
   if (i->sibIndex() == BX_NIL_REGISTER) {
     BX_ERROR(("%s: SIB byte required", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
@@ -689,8 +734,7 @@ BX_CPP_INLINE float32 f32_silence_snan(float32 a)
 
 // AMX-FP8 //
 
-#include "bf8.h"
-#include "hf8.h"
+#include "fp8.h"
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TDPBF8PS_TnnnTrmTreg(bxInstruction_c *i)
 {

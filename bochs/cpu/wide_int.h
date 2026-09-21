@@ -51,7 +51,12 @@ typedef
 #endif
 
 extern void long_mul(Bit128u *product, Bit64u op1, Bit64u op2);
+extern void long_neg(Bit128s *n);
 extern void long_imul(Bit128s *product, Bit64s op1, Bit64s op2);
+extern void long_shl(Bit128u *a);
+extern void long_shr(Bit128u *a);
+extern unsigned long_sub(Bit128u *a, Bit128u *b); // return carry out
+extern unsigned long_add(Bit128u *a, Bit128u *b); // return carry out
 extern void long_div(Bit128u *quotient,Bit64u *remainder,const Bit128u *dividend,Bit64u divisor);
 extern void long_idiv(Bit128s *quotient,Bit64s *remainder,const Bit128s *dividend,Bit64s divisor);
 

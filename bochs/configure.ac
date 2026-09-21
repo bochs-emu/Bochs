@@ -8,7 +8,7 @@ AC_CONFIG_HEADERS([config.h])
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
-VERSION="3.1"
+VERSION="3.1.devel"
 VER_MAJOR=3
 VER_MINOR=1
 dnl // this should be > 90 for pre-release of next version otherwise revision level

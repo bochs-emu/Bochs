@@ -72,7 +72,7 @@
 # "cmdmode"     - call a headerbar button handler after pressing F7 (sdl, sdl2,
 #                 win32, x)
 # "fullscreen"  - startup in fullscreen mode (sdl, sdl2)
-# "hideIPS"     - disable IPS output in status bar (nogui, rfb, sdl, sdl2, term, 
+# "hideIPS"     - disable IPS output in status bar (nogui, rfb, sdl, sdl2, term,
 #                 vncsrv, win32, wx, x)
 # "nokeyrepeat" - turn off host keyboard repeat (sdl, sdl2, win32, x)
 # "no_gui_console" - use system console instead of builtin gui console
@@ -692,11 +692,19 @@ ata3: enabled=0, ioaddr1=0x168, ioaddr2=0x360, irq=9
 # access the "first" cdrom in the system.  On MacOSX, use path="drive"
 # to access the physical drive.
 #
-# The path is mandatory for hard disks. Disk geometry autodetection works with
-# images created by bximage if CHS is set to 0/0/0 (cylinders are calculated
-# using  heads=16 and spt=63). For other hard disk images and modes the
-# cylinders, heads, and spt are mandatory. In all cases the disk size reported
-# from the image must be exactly C*H*S*512.
+# The path is mandatory for hard disks. When using the disk image mode "vvfat",
+# it specifies the host directory to use. The optional prefix "fat32:" forces
+# the usage of the FAT32 file system for disks with size from 512 to 2047 MB.
+#
+# Disk geometry autodetection works with images created by bximage if CHS is set
+# to 0/0/0 (cylinders are calculated using  heads=16 and spt=63). For other hard
+# disk images and modes the cylinders, heads, and spt are mandatory. In all
+# cases the disk size reported from the image must be exactly C*H*S*512.
+#
+# When using the format "VENDOR:PRODUCT:REV" as the model string for the CD-ROM,
+# the string is split into 3 parts for the use in ATAPI inquiry. The vendor id
+# is limited to 8, product id to 16 and revision to 4 characters. For the ATA
+# model string the first two of these parts are used separated with a space.
 #
 # Default values are:
 #   mode=flat, biosdetect=auto, translation=auto, model="Generic 1234"
@@ -717,7 +725,7 @@ ata0-master: type=disk, mode=flat, path="30M.sample"
 #ata0-master: type=disk, mode=flat, path="30M.sample", cylinders=615, heads=6, spt=17
 #ata0-master: type=disk, mode=flat, path="c.img", cylinders=0 # autodetect
 #ata0-slave: type=disk, mode=vvfat, path=/bochs/images/vvfat, journal=vvfat.redolog
-#ata0-slave: type=cdrom, path=D:, status=inserted
+#ata0-slave: type=cdrom, path=D:, model="BOCHS:Generic CD-ROM:1.0", status=inserted
 #ata0-slave: type=cdrom, path=/dev/cdrom, status=inserted
 #ata0-slave: type=cdrom, path="drive", status=inserted
 #ata0-slave: type=cdrom, path=/dev/rcd0d, status=inserted
@@ -922,7 +930,7 @@ parport1: enabled=1, file="parport.out"
 # Example for different drivers:
 #   sound: waveoutdrv=sdl, waveindrv=alsa, midioutdrv=dummy
 #=======================================================================
-sound: driver=default, waveout=/dev/dsp. wavein=, midiout=
+sound: driver=default, waveout=/dev/dsp, wavein=, midiout=
 
 #=======================================================================
 # SPEAKER:
@@ -970,6 +978,10 @@ speaker: enabled=1, mode=sound, volume=8
 #      non-continuous sound. 1000000 is usually a good value.  This needs a
 #      reasonably correct setting for the IPS parameter of the CPU option
 #      and also depends on the clock sync setting.
+# dsp_realtime:
+#      If set to 1 (default is 0), the DSP timer is using the realtime engine,
+#      otherwise it is driven by the cpu and depends on the ips setting.
+#      The realtime mode may fix or reduce sound issues.
 #
 # Examples for output modes:
 #   sb16: midimode=2, midifile="output.mid", wavemode=1 # MIDI to file
@@ -984,6 +996,8 @@ speaker: enabled=1, mode=sound, volume=8
 # presence of the device. The wave and MIDI output can be sent to device, file
 # or both using the parameters 'wavemode', 'wavefile', 'midimode' and
 # 'midifile'. See the description of these parameters at the SB16 directive.
+# The parameter 'dac_realtime' controls the timer mode of both DACs and works
+# like the SB16 parameter 'dsp_realtime'.
 #
 # Examples:
 #   es1370: enabled=1, wavemode=1                       # use 'sound' parameters

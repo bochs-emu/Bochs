@@ -29,6 +29,9 @@
 //  F16: s|eeeee|mmmmmmmmmm
 //  BF8: s|eeeee|mm                          (E5M2)
 //  HF8: s|eeee|mmm                          (E4M3)
+//  BF6: s|eee|mm                            (E3M2)
+//  HF6: s|ee|mmm                            (E2M3)
+//  BF4: s|ee|m                              (E2M1)
 
 BX_CPP_INLINE float32 convert_bfloat16_to_fp32(bfloat16 op)
 {

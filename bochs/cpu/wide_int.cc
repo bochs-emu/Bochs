@@ -86,6 +86,16 @@ unsigned long_sub(Bit128u *a,Bit128u *b)
   return(a->hi > t);
 }
 
+unsigned long_add(Bit128u *a,Bit128u *b)
+{
+  Bit64u t = a->lo;
+  a->lo += b->lo;
+  int c = (a->lo < t);
+  t = a -> hi;
+  a->hi += b->hi + c;
+  return(a->hi < t);
+}
+
 int long_le(Bit128u *a,Bit128u *b)
 {
   if (a->hi == b->hi) {
