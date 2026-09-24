@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2013-2021  The Bochs Project
+//  Copyright (C) 2013-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -328,7 +328,7 @@ int bx_soundlow_midiout_alsa_c::alsa_seq_open(const char *alsadev)
   }
   port = atoi(ptr);
 
-  delete(mididev);
+  delete [] mididev;
 
   if (snd_seq_open(&alsa_seq.handle, "default", SND_SEQ_OPEN_OUTPUT, 0) < 0) {
     BX_ERROR(("Couldn't open ALSA sequencer for midi output"));
