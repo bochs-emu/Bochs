@@ -2210,7 +2210,11 @@ if test "$soundcard_present" = 1; then
   if test "$with_sdl" = yes; then
     SOUNDLOW_OBJS="$SOUNDLOW_OBJS soundsdl.o"
     if test "$bx_plugins" = 1; then
-      SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS `sdl-config --libs`"
+      if test "$enable_static_link" = yes; then
+        SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS `sdl-config --static-libs`"
+      else
+        SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS `sdl-config --libs`"
+      fi
     fi
     soundlow_drivers="$soundlow_drivers sdl"
     if test "$soundlow_default" = "dummy"; then
@@ -2220,7 +2224,11 @@ if test "$soundcard_present" = 1; then
   elif test "$with_sdl2" = yes; then
     SOUNDLOW_OBJS="$SOUNDLOW_OBJS soundsdl.o"
     if test "$bx_plugins" = 1; then
-      SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS `sdl2-config --libs`"
+      if test "$enable_static_link" = yes; then
+        SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS `sdl2-config --static-libs`"
+      else
+        SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS `sdl2-config --libs`"
+      fi
     fi
     soundlow_drivers="$soundlow_drivers sdl"
     if test "$soundlow_default" = "dummy"; then
@@ -2643,11 +2651,19 @@ if test "$with_sdl" = yes; then
   SDL_CFLAGS=`sdl-config --cflags`
   GUI_CFLAGS="$GUI_CFLAGS $SDL_CFLAGS"
   GUI_CXXFLAGS="$GUI_CXXFLAGS $SDL_CFLAGS"
-  GUI_LINK_OPTS_SDL="`sdl-config --libs`"
+  if test "$enable_static_link" = yes; then
+    GUI_LINK_OPTS_SDL="`sdl-config --static-libs`"
+  else
+    GUI_LINK_OPTS_SDL="`sdl-config --libs`"
+  fi
   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_SDL)"
   # The plugin version uses multi-threading support in Bochs core
   if test "$bx_plugins" = 1; then
-    NONPLUGIN_GUI_LINK_OPTS="`sdl-config --libs`"
+    if test "$enable_static_link" = yes; then
+      NONPLUGIN_GUI_LINK_OPTS="`sdl-config --static-libs`"
+    else
+      NONPLUGIN_GUI_LINK_OPTS="`sdl-config --libs`"
+    fi
   fi
   # The enhanced X debugger depends on GTK2
   if test "$DEFAULT_GUI" != win32; then
@@ -2680,11 +2696,19 @@ if test "$with_sdl2" = yes; then
   SDL2_CFLAGS=`sdl2-config --cflags`
   GUI_CFLAGS="$GUI_CFLAGS $SDL2_CFLAGS"
   GUI_CXXFLAGS="$GUI_CXXFLAGS $SDL2_CFLAGS"
-  GUI_LINK_OPTS_SDL2="`sdl2-config --libs`"
+  if test "$enable_static_link" = yes; then
+    GUI_LINK_OPTS_SDL="`sdl2-config --static-libs`"
+  else
+    GUI_LINK_OPTS_SDL2="`sdl2-config --libs`"
+  fi
   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_SDL2)"
   # The plugin version uses multi-threading support in Bochs core
   if test "$bx_plugins" = 1; then
-    NONPLUGIN_GUI_LINK_OPTS="`sdl2-config --libs`"
+    if test "$enable_static_link" = yes; then
+      NONPLUGIN_GUI_LINK_OPTS="`sdl2-config --static-libs`"
+    else
+      NONPLUGIN_GUI_LINK_OPTS="`sdl2-config --libs`"
+    fi
   fi
   # The enhanced X debugger depends on GTK2
   if test "$DEFAULT_GUI" != win32; then
