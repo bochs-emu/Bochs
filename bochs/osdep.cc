@@ -373,3 +373,28 @@ Bit64u bx_get_realtime64_usec(void)
 }
 #endif
 #endif
+
+#ifdef WIN32
+#include <timeapi.h>
+
+static TIMECAPS time_dev_caps;
+
+void bx_set_sys_timer_resolution(void)
+{
+  timeGetDevCaps(&time_dev_caps, sizeof(time_dev_caps));
+  timeBeginPeriod(time_dev_caps.wPeriodMin); // 1ms usually
+}
+
+void bx_reset_sys_timer_resolution(void)
+{
+  timeEndPeriod(time_dev_caps.wPeriodMin);
+}
+#else
+void bx_set_sys_timer_resolution(void)
+{
+}
+
+void bx_reset_sys_timer_resolution(void)
+{
+}
+#endif

@@ -349,6 +349,9 @@ BOCHSAPI extern Bit64u bx_get_realtime64_usec (void);
 BOCHSAPI_MSVCONLY extern void bx_init_realtime64_usec (void);
 #endif
 
+BOCHSAPI_MSVCONLY extern void bx_set_sys_timer_resolution (void);
+BOCHSAPI_MSVCONLY extern void bx_reset_sys_timer_resolution (void);
+
 #ifdef WIN32
 #undef BX_HAVE_MSLEEP
 #define BX_HAVE_MSLEEP 1

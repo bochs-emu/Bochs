@@ -322,6 +322,7 @@ void print_statistics_tree(bx_param_c *node, int level)
 
 int bxmain(void)
 {
+  bx_set_sys_timer_resolution();
   bx_init_realtime64_usec();
 #ifdef HAVE_LOCALE_H
   // Initialize locale (for isprint() and other functions)
@@ -334,6 +335,7 @@ int bxmain(void)
     BX_INSTR_INIT_ENV();
     if (bx_init_main(bx_startup_flags.argc, bx_startup_flags.argv) < 0) {
       BX_INSTR_EXIT_ENV();
+      bx_reset_sys_timer_resolution();
       return 0;
     }
     // read a param to decide which config interface to start.
@@ -372,6 +374,7 @@ int bxmain(void)
   BX_INSTR_EXIT_ENV();
   int exit_code = bx_cleanup_siminterface();
   bx_cleanup_options();
+  bx_reset_sys_timer_resolution();
   return exit_code;
 }
 
