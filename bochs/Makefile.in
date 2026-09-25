@@ -99,7 +99,7 @@ GUI_LINK_OPTS_SDL2 = @GUI_LINK_OPTS_SDL2@
 GUI_LINK_OPTS_RFB = @RFB_LIBS@
 GUI_LINK_OPTS_VNCSRV = @GUI_LINK_OPTS_VNCSRV@
 GUI_LINK_OPTS_AMIGAOS =
-GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomdlg32 -lcomctl32 -lshell32
+GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomdlg32 -lcomctl32 -lshell32 -lwinmm
 GUI_LINK_OPTS_WIN32_VCPP = user32.lib gdi32.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib
 GUI_LINK_OPTS_MACOS =
 GUI_LINK_OPTS_CARBON = -framework Carbon
@@ -256,9 +256,9 @@ bxhub@EXE@: misc/bxhub.o misc/netutil.o
 # (not via the normal %.o objects, so it can't collide with their non-standalone
 # builds of the same files). Depends on every decoder .cc/.h via $(wildcard) so
 # it always rebuilds when any of them changes, without a hand-kept header list.
-bxdisasm@EXE@: $(srcdir)/bxdisasm.@CPP_SUFFIX@ config.h \
-  $(wildcard $(srcdir)/cpu/decoder/*.@CPP_SUFFIX@) $(wildcard $(srcdir)/cpu/decoder/*.h)
-	@LINK_CONSOLE@ -DBX_STANDALONE_DECODER $(BX_INCDIRS) $(CPPFLAGS) $(srcdir)/bxdisasm.@CPP_SUFFIX@ $(srcdir)/cpu/decoder/*.@CPP_SUFFIX@
+@NOT_FOR_MSVC@bxdisasm@EXE@: $(srcdir)/bxdisasm.@CPP_SUFFIX@ config.h \
+@NOT_FOR_MSVC@  $(wildcard $(srcdir)/cpu/decoder/*.@CPP_SUFFIX@) $(wildcard $(srcdir)/cpu/decoder/*.h)
+@NOT_FOR_MSVC@	@LINK_CONSOLE@ -DBX_STANDALONE_DECODER $(BX_INCDIRS) $(CPPFLAGS) $(srcdir)/bxdisasm.@CPP_SUFFIX@ $(srcdir)/cpu/decoder/*.@CPP_SUFFIX@
 
 bxdisasm: bxdisasm@EXE@
 	@:

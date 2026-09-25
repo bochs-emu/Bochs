@@ -47,11 +47,13 @@ AC_ARG_ENABLE([static-link],
 # those settings by defining CFLAGS and CXXFLAGS before running configure.
 NO_LT=0
 MSVC_TARGET=0
+NOT_FOR_MSVC=''
 need_dlcompat_for_plugins=0
 case "$target" in
   *-pc-windows* | *-pc-winnt*)
     DEFAULT_GUI=win32 # default to win32 gui
     NO_LT=1           # do not use libtool at all
+    NOT_FOR_MSVC='#'
     case "$target" in
       x86_64*)
         MSVC_TARGET=64
@@ -2074,7 +2076,6 @@ AC_ARG_ENABLE(cdaudio,
   [ bx_cdaudio=0 ]
   )
 
-bx_win_link_winmm=0
 if test "$bx_cdaudio" = 1; then
   AC_DEFINE(LOWLEVEL_CDAUDIO, 1)
   if test "$bx_cdrom" = 0; then
@@ -2084,7 +2085,6 @@ if test "$bx_cdaudio" = 1; then
   case $target in
     *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32* | *.msys)
       AC_MSG_RESULT(win32)
-      bx_win_link_winmm=1
       ;;
     *)
       AC_MSG_RESULT(dummy)
@@ -2188,9 +2188,6 @@ if test "$soundcard_present" = 1; then
       ;;
     *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32* | *.msys)
       SOUNDLOW_OBJS='soundwin.o'
-      if test "$bx_plugins" = 0; then
-        bx_win_link_winmm=1
-      fi
       soundlow_drivers="win"
       soundlow_default="win"
       AC_DEFINE(BX_HAVE_SOUND_WIN, 1)
@@ -2304,13 +2301,6 @@ AC_ARG_ENABLE(gameport,
     AC_DEFINE(BX_SUPPORT_GAMEPORT, 1)
     if test "$gameport_present" = 0; then
       GAME_OBJS='gameport.o'
-      case $target in
-        *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32* | *.msys)
-          if test "$bx_plugins" = 0; then
-            bx_win_link_winmm=1
-          fi
-          ;;
-      esac
     fi
    else
     AC_MSG_RESULT(no)
@@ -2327,17 +2317,6 @@ AC_ARG_ENABLE(gameport,
     fi]
   )
 AC_SUBST(GAME_OBJS)
-
-if test "$bx_win_link_winmm" = 1; then
-  case $target in
-    *-cygwin* | *-mingw32* | *-msys)
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
-      ;;
-    *-pc-windows* | *-pc-winnt*)
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS winmm.lib"
-      ;;
-  esac
-fi
 
 BUSM_OBJS=''
 bx_busmouse=0
@@ -3163,7 +3142,7 @@ case $target in
       INSTALL_PLUGINS_VAR=install_dll_plugins
       WIN32_DLL_IMPORT_LIB="bochs.lib"
       LINK_DLL="link /dll /nologo /subsystem:console /incremental:no /out:\$@"
-      LIBS="$LIBS advapi32.lib comctl32.lib comdlg32.lib gdi32.lib shell32.lib user32.lib"
+      LIBS="$LIBS advapi32.lib comctl32.lib comdlg32.lib gdi32.lib shell32.lib user32.lib winmm.lib"
       PLUGIN_TARGET_2=plugins_msvc
       LINK_VAR="_VCPP"
       EXT_MSVC_DLL_RULES="!INCLUDE makeincl.vc"
@@ -3593,6 +3572,7 @@ AC_SUBST(BOCHS_BITS)
 AC_SUBST(IODEV_DLL_TARGETS)
 AC_SUBST(WIN32_DLL_IMPORT_LIB)
 AC_SUBST(INSTALL_PLUGINS_VAR)
+AC_SUBST(NOT_FOR_MSVC)
 
 AC_PATH_PROG(GZIP, gzip)
 AC_PATH_PROG(TAR, tar)
