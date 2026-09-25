@@ -173,7 +173,8 @@ private:
 
   UINT WaveDevice;        // Wave device ID, for waveOutOpen
 
-  LPWAVEHDR WaveOutHdr;
+  int NextHeader;
+  LPWAVEHDR WaveOutHdrs[2];
 };
 
 class bx_soundlow_wavein_win_c : public bx_soundlow_wavein_c {
