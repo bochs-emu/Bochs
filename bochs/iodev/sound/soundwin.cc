@@ -45,7 +45,7 @@
 #define ALIGN(size) ((size + 15) & ~15)
 
 #define size   ALIGN(sizeof(MIDIHDR)) \
-             + ALIGN(sizeof(WAVEHDR)) * 2 \
+             + ALIGN(sizeof(WAVEHDR)) * 3 \
              + ALIGN(BX_SOUND_WINDOWS_MAXSYSEXLEN) \
              + ALIGN(BX_SOUNDLOW_WAVEPACKETSIZE + 64)
 
@@ -84,9 +84,13 @@ bx_soundlow_waveout_win_c::bx_soundlow_waveout_win_c()
     :bx_soundlow_waveout_c()
 {
   WaveOutOpen = 0;
-  WaveOutHdr = (LPWAVEHDR) newbuffer(sizeof(WAVEHDR));
-  if (WaveOutHdr == NULL)
-    BX_PANIC(("Allocated memory was too small!"));
+  NextHeader = 0;
+  for (int i = 0; i < 2; i++) {
+    LPWAVEHDR waveOutHdr = (LPWAVEHDR)newbuffer(sizeof(WAVEHDR));
+    if (waveOutHdr == NULL)
+      BX_PANIC(("Allocated memory was too small!"));
+    WaveOutHdrs[i] = waveOutHdr;
+  }
 }
 
 int bx_soundlow_waveout_win_c::openwaveoutput(const char *wavedev)
@@ -184,26 +188,29 @@ int bx_soundlow_waveout_win_c::output(int length, Bit8u data[])
 {
   UINT ret;
 
-  // prepare the wave header
-  WaveOutHdr->lpData = (LPSTR)data;
-  WaveOutHdr->dwBufferLength = length;
-  WaveOutHdr->dwBytesRecorded = length;
-  WaveOutHdr->dwUser = 0;
-  WaveOutHdr->dwFlags = 0;
-  WaveOutHdr->dwLoops = 1;
+  LPWAVEHDR waveOutHdr = WaveOutHdrs[NextHeader];
 
-  ret = waveOutPrepareHeader(hWaveOut, WaveOutHdr, sizeof(*WaveOutHdr));
+  // prepare the wave header
+  waveOutHdr->lpData = (LPSTR)data;
+  waveOutHdr->dwBufferLength = length;
+  waveOutHdr->dwBytesRecorded = 0;
+  waveOutHdr->dwUser = 0;
+  waveOutHdr->dwFlags = 0;
+  waveOutHdr->dwLoops = 0;
+
+  ret = waveOutPrepareHeader(hWaveOut, waveOutHdr, sizeof(*waveOutHdr));
   if (ret != 0) {
     BX_ERROR(("waveOutPrepareHeader(): error = %d", ret));
     return BX_SOUNDLOW_ERR;
   }
 
-  ret = waveOutWrite(hWaveOut, WaveOutHdr, sizeof(*WaveOutHdr));
+  ret = waveOutWrite(hWaveOut, waveOutHdr, sizeof(*waveOutHdr));
   if (ret != 0) {
     char errormsg[4*MAXERRORLENGTH+1];
     waveOutGetErrorTextA(ret, errormsg, 4*MAXERRORLENGTH+1);
     BX_ERROR(("waveOutWrite(): %s", errormsg));
   }
+  NextHeader = 1 - NextHeader;
   Sleep(1000 / SOUNDWIN_PACKETS_PER_SEC);
 
   return BX_SOUNDLOW_OK;
