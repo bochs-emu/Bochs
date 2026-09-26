@@ -439,7 +439,7 @@ MyFrame::MyFrame(const wxString& title, const wxPoint& pos, const wxSize& size, 
                            wxSB_SUNKEN, wxSB_SUNKEN, wxSB_SUNKEN, wxSB_NORMAL};
   sb->SetStatusStyles(12, sbstyle);
 
-  CreateToolBar(wxNO_BORDER|wxHORIZONTAL|wxTB_FLAT);
+  CreateToolBar(wxNO_BORDER|wxTB_HORIZONTAL|wxTB_FLAT);
   bxToolBar = GetToolBar();
   bxToolBar->SetToolBitmapSize(wxSize(32, 32));
 
