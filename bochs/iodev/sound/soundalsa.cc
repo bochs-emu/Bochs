@@ -59,11 +59,11 @@ int alsa_pcm_open(bool mode, alsa_pcm_t *alsa_pcm, bx_pcm_param_t *param, logfun
   alsa_pcm->audio_bufsize = 0;
 
   if (alsa_pcm->handle == NULL) {
-    ret = snd_pcm_open(&alsa_pcm->handle, "default", mode ? SND_PCM_STREAM_CAPTURE : SND_PCM_STREAM_PLAYBACK, 0);
+    ret = snd_pcm_open(&alsa_pcm->handle, alsa_pcm->device, mode ? SND_PCM_STREAM_CAPTURE : SND_PCM_STREAM_PLAYBACK, 0);
     if (ret < 0) {
       return BX_SOUNDLOW_ERR;
     }
-    BX_INFO(("ALSA: opened default PCM %s device", mode ? "input":"output"));
+    BX_INFO(("ALSA: opened PCM %s device '%s'", mode ? "input":"output", alsa_pcm->device));
   }
   snd_pcm_hw_params_alloca(&hwparams);
   snd_pcm_hw_params_any(alsa_pcm->handle, hwparams);
@@ -136,6 +136,11 @@ bx_soundlow_waveout_alsa_c::bx_soundlow_waveout_alsa_c()
 
 int bx_soundlow_waveout_alsa_c::openwaveoutput(const char *wavedev)
 {
+  if ((strlen(wavedev) == 0) || !strcmp(wavedev, "none")) {
+    alsa_waveout.device = "default";
+  } else {
+    alsa_waveout.device = wavedev;
+  }
   set_pcm_params(&real_pcm_param);
   pcm_callback_id = register_wave_callback(this, pcm_callback);
   start_resampler_thread();
@@ -201,6 +206,11 @@ bx_soundlow_wavein_alsa_c::~bx_soundlow_wavein_alsa_c()
 
 int bx_soundlow_wavein_alsa_c::openwaveinput(const char *wavedev, sound_record_handler_t rh)
 {
+  if ((strlen(wavedev) == 0) || !strcmp(wavedev, "none")) {
+    alsa_wavein.device = "default";
+  } else {
+    alsa_wavein.device = wavedev;
+  }
   record_handler = rh;
   if (rh != NULL) {
     record_timer_index = DEV_register_timer(this, record_timer_handler, 1, 1, 0, "wavein");

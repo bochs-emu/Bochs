@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2013-2015  The Bochs Project
+//  Copyright (C) 2013-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -29,6 +29,7 @@
 #include <alsa/asoundlib.h>
 
 typedef struct {
+  const char *device;
   snd_pcm_t *handle;
   snd_pcm_uframes_t frames;
   int alsa_bufsize, audio_bufsize;

@@ -6192,7 +6192,7 @@ drivers and their features.
 <tbody>
   <row>
     <entry>alsa</entry>
-    <entry>use the default ALSA PCM device and the default ALSA sequencer
+    <entry>use the specified or default ALSA PCM device and the default ALSA sequencer
     on Linux</entry>
     <entry>Yes</entry>
     <entry>Yes</entry>
