@@ -160,20 +160,22 @@ typedef struct {
 class bx_soundlow_waveout_win_c : public bx_soundlow_waveout_c {
 public:
   bx_soundlow_waveout_win_c();
-  virtual ~bx_soundlow_waveout_win_c() {}
+  virtual ~bx_soundlow_waveout_win_c();
 
   virtual int openwaveoutput(const char *wavedev);
   virtual int set_pcm_params(bx_pcm_param_t *param);
   virtual int get_packetsize();
   virtual int output(int length, Bit8u data[]);
   virtual int closewaveoutput();
+  void header_done(int index);
 private:
   HWAVEOUT hWaveOut;      // Wave output device
-  int WaveOutOpen;        // is it open?
+  bool WaveOutOpen;       // is it open?
 
   UINT WaveDevice;        // Wave device ID, for waveOutOpen
 
   int NextHeader;
+  HANDLE HeaderDoneEvents[2];
   LPWAVEHDR WaveOutHdrs[2];
 };
 

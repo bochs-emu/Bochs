@@ -80,17 +80,28 @@ Bit8u* newbuffer(unsigned blksize)
 
 // bx_soundlow_waveout_win_c class implementation
 
+BX_MUTEX(waveout_mutex);
+
 bx_soundlow_waveout_win_c::bx_soundlow_waveout_win_c()
     :bx_soundlow_waveout_c()
 {
-  WaveOutOpen = 0;
   NextHeader = 0;
+  WaveOutOpen = false;
+  BX_INIT_MUTEX(waveout_mutex);
   for (int i = 0; i < 2; i++) {
+    HeaderDoneEvents[i] = CreateEvent(NULL, TRUE, FALSE, NULL);
     LPWAVEHDR waveOutHdr = (LPWAVEHDR)newbuffer(sizeof(WAVEHDR));
     if (waveOutHdr == NULL)
       BX_PANIC(("Allocated memory was too small!"));
     WaveOutHdrs[i] = waveOutHdr;
   }
+}
+
+bx_soundlow_waveout_win_c::~bx_soundlow_waveout_win_c()
+{
+  for (int i = 0; i < 2; i++)
+    CloseHandle(HeaderDoneEvents[i]);
+  BX_FINI_MUTEX(waveout_mutex);
 }
 
 int bx_soundlow_waveout_win_c::openwaveoutput(const char *wavedev)
@@ -110,6 +121,20 @@ int bx_soundlow_waveout_win_c::openwaveoutput(const char *wavedev)
   return BX_SOUNDLOW_OK;
 }
 
+void bx_soundlow_waveout_win_c::header_done(int index)
+{
+  SetEvent(HeaderDoneEvents[index]);
+}
+
+void CALLBACK waveOutProc(HWAVEOUT hwo, UINT uMsg,
+  DWORD_PTR dwInstance, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
+{
+  if (uMsg == WOM_DONE) {
+    ((bx_soundlow_waveout_win_c*)dwInstance)->header_done(
+      ((LPWAVEHDR)dwParam1)->dwUser);
+  }
+}
+
 int bx_soundlow_waveout_win_c::set_pcm_params(bx_pcm_param_t *param)
 {
   UINT ret;
@@ -117,10 +142,11 @@ int bx_soundlow_waveout_win_c::set_pcm_params(bx_pcm_param_t *param)
 
   BX_DEBUG(("set_pcm_params(): %u, %u, %u, %02x", param->samplerate, param->bits,
             param->channels, param->format));
-  if (WaveOutOpen != 0) {
+  if (WaveOutOpen) {
     closewaveoutput();
   }
 
+  BX_LOCK(waveout_mutex);
   // try three times to find a suitable format
   for (int tries = 0; tries < 3; tries++) {
     int frequency = real_pcm_param.samplerate;
@@ -135,7 +161,8 @@ int bx_soundlow_waveout_win_c::set_pcm_params(bx_pcm_param_t *param)
     waveformat.wf.nBlockAlign = bps;
     waveformat.wBitsPerSample = bits;
 
-    ret = waveOutOpen(&(hWaveOut), WaveDevice, (LPWAVEFORMATEX)&(waveformat.wf), 0, 0, CALLBACK_NULL);
+    ret = waveOutOpen(&(hWaveOut), WaveDevice, (LPWAVEFORMATEX)&(waveformat.wf),
+      (DWORD_PTR)waveOutProc, (DWORD_PTR)this, CALLBACK_FUNCTION);
     if (ret != 0) {
       char errormsg[4*MAXERRORLENGTH+1];
       waveOutGetErrorTextA(ret, errormsg, 4*MAXERRORLENGTH+1);
@@ -163,6 +190,7 @@ int bx_soundlow_waveout_win_c::set_pcm_params(bx_pcm_param_t *param)
 
         case 2:        // nope, doesn't work
           BX_ERROR(("Couldn't open wave output device (error = %d)!", ret));
+          BX_UNLOCK(waveout_mutex);
           return BX_SOUNDLOW_ERR;
       }
 
@@ -171,11 +199,15 @@ int bx_soundlow_waveout_win_c::set_pcm_params(bx_pcm_param_t *param)
       BX_DEBUG(("                nAvgBytesPerSec=%d, nBlockAlign=%d, wBitsPerSample=%d",
                 waveformat.wf.nAvgBytesPerSec, waveformat.wf.nBlockAlign, waveformat.wBitsPerSample));
     } else {
-      WaveOutOpen = 1;
+      WaveOutOpen = true;
+      for (int i = 0; i < 2; i++) {
+        WaveOutHdrs[i]->dwFlags = 0;
+        SetEvent(HeaderDoneEvents[i]);
+      }
       break;
     }
   }
-
+  BX_UNLOCK(waveout_mutex);
   return BX_SOUNDLOW_OK;
 }
 
@@ -186,42 +218,65 @@ int bx_soundlow_waveout_win_c::get_packetsize()
 
 int bx_soundlow_waveout_win_c::output(int length, Bit8u data[])
 {
+  BX_LOCK(waveout_mutex);
+  if (!WaveOutOpen) {
+    BX_UNLOCK(waveout_mutex);
+    return BX_SOUNDLOW_OK;
+  }
+
   UINT ret;
 
   LPWAVEHDR waveOutHdr = WaveOutHdrs[NextHeader];
+  HANDLE headerDoneEvent = HeaderDoneEvents[NextHeader];
 
   // prepare the wave header
   waveOutHdr->lpData = (LPSTR)data;
   waveOutHdr->dwBufferLength = length;
   waveOutHdr->dwBytesRecorded = 0;
-  waveOutHdr->dwUser = 0;
+  waveOutHdr->dwUser = NextHeader;
   waveOutHdr->dwFlags = 0;
   waveOutHdr->dwLoops = 0;
 
-  ret = waveOutPrepareHeader(hWaveOut, waveOutHdr, sizeof(*waveOutHdr));
+  ret = waveOutPrepareHeader(hWaveOut, waveOutHdr, sizeof(WAVEHDR));
   if (ret != 0) {
     BX_ERROR(("waveOutPrepareHeader(): error = %d", ret));
+    BX_UNLOCK(waveout_mutex);
     return BX_SOUNDLOW_ERR;
   }
 
-  ret = waveOutWrite(hWaveOut, waveOutHdr, sizeof(*waveOutHdr));
+  ResetEvent(headerDoneEvent);
+  ret = waveOutWrite(hWaveOut, waveOutHdr, sizeof(WAVEHDR));
   if (ret != 0) {
     char errormsg[4*MAXERRORLENGTH+1];
     waveOutGetErrorTextA(ret, errormsg, 4*MAXERRORLENGTH+1);
     BX_ERROR(("waveOutWrite(): %s", errormsg));
+    SetEvent(headerDoneEvent);
+    waveOutUnprepareHeader(hWaveOut, waveOutHdr, sizeof(WAVEHDR));
+    BX_UNLOCK(waveout_mutex);
+    return BX_SOUNDLOW_OK;
   }
-  NextHeader = 1 - NextHeader;
-  Sleep(1000 / SOUNDWIN_PACKETS_PER_SEC);
 
+  NextHeader ^= 1;
+  waveOutHdr = WaveOutHdrs[NextHeader];
+  headerDoneEvent = HeaderDoneEvents[NextHeader];
+
+  WaitForSingleObject(headerDoneEvent, INFINITE);
+  waveOutUnprepareHeader(hWaveOut, waveOutHdr, sizeof(WAVEHDR));
+  BX_UNLOCK(waveout_mutex);
   return BX_SOUNDLOW_OK;
 }
 
 int bx_soundlow_waveout_win_c::closewaveoutput()
 {
-  if (WaveOutOpen == 1) {
+  if (WaveOutOpen) {
     waveOutReset(hWaveOut);
+    WaitForMultipleObjects(2, HeaderDoneEvents, TRUE, INFINITE);
+    for (int i = 0; i < 2; i++)
+      waveOutUnprepareHeader(hWaveOut, WaveOutHdrs[i], sizeof(WAVEHDR));
+    BX_LOCK(waveout_mutex);
     waveOutClose(hWaveOut);
-    WaveOutOpen = 0;
+    WaveOutOpen = false;
+    BX_UNLOCK(waveout_mutex);
   }
   return BX_SOUNDLOW_OK;
 }
