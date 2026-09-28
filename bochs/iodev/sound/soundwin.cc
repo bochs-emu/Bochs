@@ -91,8 +91,11 @@ bx_soundlow_waveout_win_c::bx_soundlow_waveout_win_c()
   for (int i = 0; i < 2; i++) {
     HeaderDoneEvents[i] = CreateEvent(NULL, TRUE, FALSE, NULL);
     LPWAVEHDR waveOutHdr = (LPWAVEHDR)newbuffer(sizeof(WAVEHDR));
-    if (waveOutHdr == NULL)
+    if (waveOutHdr == NULL) {
       BX_PANIC(("Allocated memory was too small!"));
+      return;
+    }
+    memset(waveOutHdr, 0, sizeof(WAVEHDR)); // just in case
     WaveOutHdrs[i] = waveOutHdr;
   }
 }
@@ -131,7 +134,7 @@ void CALLBACK waveOutProc(HWAVEOUT hwo, UINT uMsg,
 {
   if (uMsg == WOM_DONE) {
     ((bx_soundlow_waveout_win_c*)dwInstance)->header_done(
-      ((LPWAVEHDR)dwParam1)->dwUser);
+      (int)((LPWAVEHDR)dwParam1)->dwUser);
   }
 }
 
@@ -201,7 +204,17 @@ int bx_soundlow_waveout_win_c::set_pcm_params(bx_pcm_param_t *param)
     } else {
       WaveOutOpen = true;
       for (int i = 0; i < 2; i++) {
-        WaveOutHdrs[i]->dwFlags = 0;
+        LPWAVEHDR waveOutHdr = WaveOutHdrs[i];
+        memset(waveOutHdr, 0, sizeof(WAVEHDR));
+        waveOutHdr->dwUser = i;
+        waveOutHdr->dwBufferLength = get_packet_size_bytes();
+        waveOutHdr->lpData = (LPSTR)(new Bit8u[waveOutHdr->dwBufferLength]);
+        ret = waveOutPrepareHeader(hWaveOut, waveOutHdr, sizeof(WAVEHDR));
+        if (ret != 0) {
+          BX_PANIC(("waveOutPrepareHeader(): error = %d", ret));
+          BX_UNLOCK(waveout_mutex);
+          return BX_SOUNDLOW_ERR;
+        }
         SetEvent(HeaderDoneEvents[i]);
       }
       break;
@@ -211,9 +224,19 @@ int bx_soundlow_waveout_win_c::set_pcm_params(bx_pcm_param_t *param)
   return BX_SOUNDLOW_OK;
 }
 
-int bx_soundlow_waveout_win_c::get_packetsize()
+int bx_soundlow_waveout_win_c::get_packet_size_bytes()
 {
   return (real_pcm_param.samplerate / SOUNDWIN_PACKETS_PER_SEC * 4);
+}
+
+int bx_soundlow_waveout_win_c::get_packet_size_msec()
+{
+  return 1000 / SOUNDWIN_PACKETS_PER_SEC;
+}
+
+int bx_soundlow_waveout_win_c::get_buffer_delay()
+{
+  return 1000 / SOUNDWIN_PACKETS_PER_SEC;
 }
 
 int bx_soundlow_waveout_win_c::output(int length, Bit8u data[])
@@ -224,44 +247,32 @@ int bx_soundlow_waveout_win_c::output(int length, Bit8u data[])
     return BX_SOUNDLOW_OK;
   }
 
-  UINT ret;
-
   LPWAVEHDR waveOutHdr = WaveOutHdrs[NextHeader];
   HANDLE headerDoneEvent = HeaderDoneEvents[NextHeader];
 
-  // prepare the wave header
-  waveOutHdr->lpData = (LPSTR)data;
-  waveOutHdr->dwBufferLength = length;
-  waveOutHdr->dwBytesRecorded = 0;
-  waveOutHdr->dwUser = NextHeader;
-  waveOutHdr->dwFlags = 0;
-  waveOutHdr->dwLoops = 0;
-
-  ret = waveOutPrepareHeader(hWaveOut, waveOutHdr, sizeof(WAVEHDR));
-  if (ret != 0) {
-    BX_ERROR(("waveOutPrepareHeader(): error = %d", ret));
+  if (length != waveOutHdr->dwBufferLength) {
+    BX_ERROR(("Wrong packet length %d, expected %d", length, waveOutHdr->dwBufferLength));
     BX_UNLOCK(waveout_mutex);
-    return BX_SOUNDLOW_ERR;
+    return BX_SOUNDLOW_OK;
   }
 
+  memcpy(waveOutHdr->lpData, data, length);
+
   ResetEvent(headerDoneEvent);
-  ret = waveOutWrite(hWaveOut, waveOutHdr, sizeof(WAVEHDR));
+  UINT ret = waveOutWrite(hWaveOut, waveOutHdr, sizeof(WAVEHDR));
   if (ret != 0) {
-    char errormsg[4*MAXERRORLENGTH+1];
-    waveOutGetErrorTextA(ret, errormsg, 4*MAXERRORLENGTH+1);
+    char errormsg[4 * MAXERRORLENGTH + 1];
+    waveOutGetErrorTextA(ret, errormsg, 4 * MAXERRORLENGTH + 1);
     BX_ERROR(("waveOutWrite(): %s", errormsg));
     SetEvent(headerDoneEvent);
-    waveOutUnprepareHeader(hWaveOut, waveOutHdr, sizeof(WAVEHDR));
     BX_UNLOCK(waveout_mutex);
     return BX_SOUNDLOW_OK;
   }
 
   NextHeader ^= 1;
-  waveOutHdr = WaveOutHdrs[NextHeader];
   headerDoneEvent = HeaderDoneEvents[NextHeader];
 
   WaitForSingleObject(headerDoneEvent, INFINITE);
-  waveOutUnprepareHeader(hWaveOut, waveOutHdr, sizeof(WAVEHDR));
   BX_UNLOCK(waveout_mutex);
   return BX_SOUNDLOW_OK;
 }
@@ -271,8 +282,11 @@ int bx_soundlow_waveout_win_c::closewaveoutput()
   if (WaveOutOpen) {
     waveOutReset(hWaveOut);
     WaitForMultipleObjects(2, HeaderDoneEvents, TRUE, INFINITE);
-    for (int i = 0; i < 2; i++)
-      waveOutUnprepareHeader(hWaveOut, WaveOutHdrs[i], sizeof(WAVEHDR));
+    for (int i = 0; i < 2; i++) {
+      LPWAVEHDR waveOutHdr = WaveOutHdrs[i];
+      waveOutUnprepareHeader(hWaveOut, waveOutHdr, sizeof(WAVEHDR));
+      delete[] waveOutHdr->lpData;
+    }
     BX_LOCK(waveout_mutex);
     waveOutClose(hWaveOut);
     WaveOutOpen = false;

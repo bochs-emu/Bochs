@@ -227,12 +227,21 @@ BX_THREAD_FUNC(mixer_thread, indata)
 
   bx_soundlow_waveout_c *waveout = (bx_soundlow_waveout_c*)indata;
   Bit8u *mixbuffer = new Bit8u[BX_SOUNDLOW_WAVEPACKETSIZE];
+  bool started = false;
   while (waveout->mixer_running()) {
-    len = waveout->get_packetsize();
+    len = waveout->get_packet_size_bytes();
     memset(mixbuffer, 0, len);
     if (waveout->mixer_common(mixbuffer, len)) {
+      if (!started) {
+        BX_MSLEEP(                          // Compensation for:
+          waveout->get_buffer_delay() +     // * Host audio buffer fill
+          waveout->get_packet_size_msec() + // * Mixer buffer fill
+          20);                              // * Resampler thread delay
+        started = true;
+      }
       waveout->output(len, mixbuffer);
     } else {
+      started = false;
       BX_MSLEEP(25);
     }
   }
@@ -328,9 +337,19 @@ int bx_soundlow_waveout_c::sendwavepacket(int length, Bit8u data[], bx_pcm_param
   return BX_SOUNDLOW_OK;
 }
 
-int bx_soundlow_waveout_c::get_packetsize()
+int bx_soundlow_waveout_c::get_packet_size_bytes()
 {
-  return (real_pcm_param.samplerate * 4 / 10);
+  return real_pcm_param.samplerate * 4 / 10;
+}
+
+int bx_soundlow_waveout_c::get_packet_size_msec()
+{
+  return 100;
+}
+
+int bx_soundlow_waveout_c::get_buffer_delay()
+{
+  return 0;
 }
 
 int bx_soundlow_waveout_c::output(int length, Bit8u data[])
