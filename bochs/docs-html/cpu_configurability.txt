@@ -281,6 +281,13 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Dependency: pae, msr, p6ni, sse and more
 
+- CPU Feature: longmode_amd (AMD specific behavior in long mode)
+
+ The feature enables AMD specific behavior in long mode, for example:
+ * AMD doesn't enforce TSS386 when entering long mode
+
+ Dependency: longmode
+
 - CPU Feature: lm_lahf_sahf (Long Mode LAHF/SAHF instructions support)
 
  Enables CPUID[0x80000001].ECX[0] flag.

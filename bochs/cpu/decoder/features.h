@@ -51,6 +51,7 @@ x86_feature(BX_ISA_WAITPKG, "waitpkg")                                  /* TPAUS
 x86_feature(BX_ISA_MONITORLESS_MWAIT, "monitorless_mwait")              /* MONITOR-less MWAIT extension */
 x86_feature(BX_ISA_MONITORX_MWAITX, "mwaitx")                           /* MONITORX/MWAITX instruction (AMD) */
 x86_feature(BX_ISA_LONG_MODE, "longmode")                               /* Long Mode (x86-64) support */
+x86_feature(BX_ISA_LONG_MODE_AMD, "longmode_amd")                       /* Long Mode (x86-64) support on AMD hardware */
 x86_feature(BX_ISA_LM_LAHF_SAHF, "lm_lahf_sahf")                        /* Long Mode LAHF/SAHF instruction */
 x86_feature(BX_ISA_NX, "nx")                                            /* No-Execute Pages support */
 x86_feature(BX_ISA_1G_PAGES, "1g_pages")                                /* 1Gb pages support */

@@ -54,6 +54,7 @@ athlon64_clawhammer_t::athlon64_clawhammer_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_PAT);
   enable_cpu_extension(BX_ISA_XAPIC);
   enable_cpu_extension(BX_ISA_LONG_MODE);
+  enable_cpu_extension(BX_ISA_LONG_MODE_AMD);
   enable_cpu_extension(BX_ISA_LM_LAHF_SAHF);
   enable_cpu_extension(BX_ISA_NX);
 }
