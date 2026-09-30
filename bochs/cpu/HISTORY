@@ -42,7 +42,7 @@ Changes after Bochs 3.1:
 + Fixed incorrect assertion in assert_checks: require CS.L and CS.D_B to be mutually exclusive only in long mode, CS.L is silently ignored outside of long mode
 + SVM: VMRUN didn't not load the guest CR2 from the VMCB (Debian 12 amd64 running KVM (kvm_amd) failed inside Bochs)
 + SVM: SVM VMEXIT loading host state should reset debug_trap and inhibit_mask
-+ SVM: interrupt shadow lost at a #DB intercept, after STI in the guest a #DB intercept at the next boundary saves VMCB INTERRUPT_SHADOW = 0 in Bochs, 1 on real Zen 4
++ SVM: interrupt shadow lost at a #DB intercept, after STI in the guest a #DB intercept at the next boundary saved VMCB INTERRUPT_SHADOW = 0 in Bochs, 1 on real Zen 4
 + SVM: V_IRQ never taken when the guest is entered with IF = 1 (VMRUN loads the guest RFLAGS before in_svm_guest = true, so handleInterruptMaskChange() evaluated the masks as the host)
 + SVM: AMD hardware doesn't enforce TSS386 to enter long mode (Debian 12 amd64 running kvm_amd with npt=1 fails: kvm_amd leaves TR = TSS286_BUSY and its 64-bit guest triple-faults while booting)
 + SVM: An intercepted #DB has already updated DR6 and leaves RF clear (AMD APM vol. 2, 15.12)
