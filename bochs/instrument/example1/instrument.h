@@ -80,8 +80,8 @@ public:
   void bx_instr_near_branch_not_taken(bx_address branch_eip);
   void bx_instr_far_branch(unsigned what, Bit16u prev_cs, bx_address prev_eip, Bit16u new_cs, bx_address new_eip);
 
-  void bx_instr_before_execution(bxInstruction_c *i);
-  void bx_instr_after_execution(bxInstruction_c *i);
+  void bx_instr_before_execution(const bxInstruction_c *i);
+  void bx_instr_after_execution(const bxInstruction_c *i);
 
   void bx_instr_interrupt(unsigned vector);
   void bx_instr_exception(unsigned vector, unsigned error_code);

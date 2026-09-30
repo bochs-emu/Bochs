@@ -38,8 +38,8 @@ void bx_instr_branch_taken(unsigned cpu, unsigned what, bx_address branch_eip, b
 void bx_instr_branch_not_taken(unsigned cpu, bx_address branch_eip);
 void bx_instr_far_branch(unsigned cpu, unsigned what, Bit16u prev_cs, bx_address prev_eip, Bit16u new_cs, bx_address new_eip);
 
-void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i);
-void bx_instr_after_execution(unsigned cpu, bxInstruction_c *i);
+void bx_instr_before_execution(unsigned cpu, const bxInstruction_c *i);
+void bx_instr_after_execution(unsigned cpu, const bxInstruction_c *i);
 
 void bx_instr_interrupt(unsigned cpu, unsigned vector);
 void bx_instr_exception(unsigned cpu, unsigned vector, unsigned error_code);

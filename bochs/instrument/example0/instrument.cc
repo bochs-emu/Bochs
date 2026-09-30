@@ -111,7 +111,7 @@ void bx_print_instruction(unsigned cpu, const instruction_t *i)
   }
 }
 
-void bx_instr_before_execution(unsigned cpu, bxInstruction_c *bx_instr)
+void bx_instr_before_execution(unsigned cpu, const bxInstruction_c *bx_instr)
 {
   if (!active) return;
 
@@ -130,7 +130,7 @@ void bx_instr_before_execution(unsigned cpu, bxInstruction_c *bx_instr)
   memcpy(i->opcode, bx_instr->get_opcode_bytes(), i->opcode_length);
 }
 
-void bx_instr_after_execution(unsigned cpu, bxInstruction_c *bx_instr)
+void bx_instr_after_execution(unsigned cpu, const bxInstruction_c *bx_instr)
 {
   if (!active) return;
 

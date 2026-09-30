@@ -44,7 +44,7 @@ void bx_instr_near_branch_taken(unsigned cpu, unsigned what, bx_address branch_e
 void bx_instr_near_branch_not_taken(unsigned cpu, bx_address branch_eip);
 void bx_instr_far_branch(unsigned cpu, unsigned what, Bit16u prev_cs, bx_address prev_eip, Bit16u new_cs, bx_address new_eip);
 
-void bx_instr_opcode(unsigned cpu, bxInstruction_c *i, const Bit8u *opcode, unsigned len, bool is32, bool is64);
+void bx_instr_opcode(unsigned cpu, const bxInstruction_c *i, const Bit8u *opcode, unsigned len, bool is32, bool is64);
 
 void bx_instr_interrupt(unsigned cpu, unsigned vector);
 void bx_instr_exception(unsigned cpu, unsigned vector, unsigned error_code);
@@ -56,9 +56,9 @@ void bx_instr_prefetch_hint(unsigned cpu, unsigned what, unsigned seg, bx_addres
 void bx_instr_clflush(unsigned cpu, bx_address laddr, bx_phy_address paddr);
 void bx_instr_cpuid(unsigned cpu);
 
-void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i);
-void bx_instr_after_execution(unsigned cpu, bxInstruction_c *i);
-void bx_instr_repeat_iteration(unsigned cpu, bxInstruction_c *i);
+void bx_instr_before_execution(unsigned cpu, const bxInstruction_c *i);
+void bx_instr_after_execution(unsigned cpu, const bxInstruction_c *i);
+void bx_instr_repeat_iteration(unsigned cpu, const bxInstruction_c *i);
 
 void bx_instr_inp(Bit16u addr, unsigned len);
 void bx_instr_inp2(Bit16u addr, unsigned len, unsigned val);
