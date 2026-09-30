@@ -552,6 +552,7 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   BX_CPU_THIS_PTR cr0.set32(guest.cr0.get32());
   BX_CPU_THIS_PTR cr4.set(guest.cr4.get());
   BX_CPU_THIS_PTR cr3 = guest.cr3;
+  BX_CPU_THIS_PTR cr2 = guest.cr2;
 
   if (paged_real_mode)
     BX_CPU_THIS_PTR cr0.val |= BX_CR0_PG_MASK;
