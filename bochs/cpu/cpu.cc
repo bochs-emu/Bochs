@@ -121,7 +121,6 @@ void BX_CPU_C::cpu_loop_debugger(void)
     if (BX_CPU_THIS_PTR trace)
       debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
 
-    // want to allow changing of the instruction inside instrumentation callback
     BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
     RIP += i->ilen();
     BX_CPU_CALL_METHOD(i->execute1, (i)); // might iterate repeat instruction
@@ -191,7 +190,6 @@ void BX_CPU_C::cpu_loop(void)
 
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
     for(;;) {
-      // want to allow changing of the instruction inside instrumentation callback
       BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
       RIP += i->ilen();
       // when handlers chaining is enabled this single call will execute entire trace
@@ -209,7 +207,6 @@ void BX_CPU_C::cpu_loop(void)
 
     for(;;) {
 
-      // want to allow changing of the instruction inside instrumentation callback
       BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
       RIP += i->ilen();
       BX_CPU_CALL_METHOD(i->execute1, (i)); // might iterate repeat instruction
@@ -257,7 +254,6 @@ void BX_CPU_C::cpu_run_trace(void)
   bxInstruction_c *i = entry->i;
 
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
-  // want to allow changing of the instruction inside instrumentation callback
   BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
   RIP += i->ilen();
   // when handlers chaining is enabled this single call will execute entire trace
@@ -271,7 +267,6 @@ void BX_CPU_C::cpu_run_trace(void)
   bxInstruction_c *last = i + (entry->tlen);
 
   for(;;) {
-    // want to allow changing of the instruction inside instrumentation callback
     BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
     RIP += i->ilen();
     BX_CPU_CALL_METHOD(i->execute1, (i)); // might iterate repeat instruction

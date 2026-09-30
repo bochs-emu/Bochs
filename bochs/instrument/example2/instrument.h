@@ -35,7 +35,7 @@ void bx_instr_interrupt(unsigned cpu, unsigned vector);
 void bx_instr_exception(unsigned cpu, unsigned vector, unsigned error_code);
 void bx_instr_hwinterrupt(unsigned cpu, unsigned vector, Bit16u cs, bx_address eip);
 
-void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i);
+void bx_instr_before_execution(unsigned cpu, const bxInstruction_c *i);
 
 /* initialization/deinitialization of instrumentalization*/
 #define BX_INSTR_INIT_ENV()
