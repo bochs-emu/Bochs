@@ -375,7 +375,10 @@ float_bf4 convert_bf8_to_bf4(float_bf8 a)
   int exp_rebias = BX_BF8_BIAS - BX_BF4_BIAS; // 15 - 1
   int new_exp = exp - exp_rebias;
 
-  if (exp == 0x1F) return pack_float_bf4(sign, 0x3, 0x1); // NaN/Inf -> clamp to FP4 max
+  if (exp == 0x1F) {
+    if (frac != 0) return pack_float_bf4(1, 0, 0);
+    return pack_float_bf4(sign, 0x3, 0x1); // Inf -> clamp to FP4 max
+  }
   if (exp > (exp_rebias + 3) || (exp == (exp_rebias + 3) && frac > 0x2))
     return pack_float_bf4(sign, 0x3, 0x1); // overflow -> clamp
   if (! exp && ! frac) return pack_float_bf4(sign, 0, 0); // zero
@@ -740,7 +743,7 @@ float_hf6 convert_hf8_to_hf6(float_hf8 a)
   return pack_float_hf6(sign, e_o, m_o);
 }
 
-// Convert packed FP8 E4M3 to FP4 E2M1; NaN (0x7F) clamps; RNE in subnormal.
+// Convert packed FP8 E4M3 to FP4 E2M1; NaN (0x7F) -> -0.0; RNE in subnormal.
 float_bf4 convert_hf8_to_bf4(float_hf8 a)
 {
   int sign = hf8_sign(a);
@@ -749,7 +752,7 @@ float_bf4 convert_hf8_to_bf4(float_hf8 a)
   int exp_rebias = BX_HF8_BIAS - BX_BF4_BIAS; // 7 - 1
   int new_exp = exp - exp_rebias;
 
-  if (exp == 0xF && frac == 0x7) return pack_float_bf4(sign, 0x3, 0x1); // NaN -> clamp
+  if (exp == 0xF && frac == 0x7) return pack_float_bf4(1, 0, 0);
   if (exp > (exp_rebias + 3) || (exp == (exp_rebias + 3) && frac > 0x4))
     return pack_float_bf4(sign, 0x3, 0x1); // overflow -> clamp
   if (! exp) return pack_float_bf4(sign, 0, 0); // zero / denorm -> zero
