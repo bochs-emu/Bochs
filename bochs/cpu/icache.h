@@ -110,7 +110,7 @@ static_assert(BX_FETCH_MODE_MASK_BITS <= 12, "fetchModeMask is too wide for the 
 
 static const bx_phy_address BX_ICACHE_INVALID_PHY_ADDRESS = bx_phy_address(-1);
 
-#define BxICacheEntries (1024 * 1024)  // Must be a power of 2.
+#define BxICacheEntries (512 * 1024)  // Must be a power of 2.
 
 // Instruction cache - physical address indexed direct mapped cache of
 // individual decoded instructions, shared by all CPUs. Instructions crossing
