@@ -1481,13 +1481,13 @@ void BX_CPU_C::assert_checks(void)
   // VM should be OFF in long mode
   if (long_mode()) {
     if (BX_CPU_THIS_PTR get_VM()) BX_PANIC(("assert_checks: VM is set in long mode !"));
-  }
 
-  // CS.L and CS.D_B are mutualy exclusive
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l &&
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b)
-  {
-    BX_PANIC(("assert_checks: CS.l and CS.d_b set together !"));
+    // CS.L and CS.D_B are mutualy exclusive in long mode, CS.L is ignired outside of long mode
+    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l &&
+        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b)
+    {
+      BX_PANIC(("assert_checks: CS.l and CS.d_b set together !"));
+    }
   }
 #endif
 
