@@ -1083,6 +1083,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMRUN(bxInstruction_c *i)
     Svm_Vmexit(SVM_VMEXIT_INVALID);
 
   BX_CPU_THIS_PTR in_svm_guest = true;
+  handleInterruptMaskChange(); // re-evaluate the interrupt masks as a guest: V_IRQ with IF already set (APM 15.21.4)
   BX_CPU_THIS_PTR svm_gif = true;
   BX_CPU_THIS_PTR async_event = 1;
 
