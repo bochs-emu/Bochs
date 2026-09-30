@@ -207,7 +207,7 @@ void BX_CPU_C::initialize(void)
   BX_CPU_THIS_PTR cpuid->sanity_checks();
 #endif
 
-  iCache = new bxICache_c;
+  traceCache = new bxTraceCache_c;
 
   init_FetchDecodeTables(); // must be called after init_isa_features_bitmask()
 
@@ -262,9 +262,9 @@ void BX_CPU_C::init_statistics(void)
   bx_list_c *cpu = new bx_list_c(SIM->get_statistics_root(), get_name(), get_name());
 
 #if InstrumentICACHE
-  new bx_shadow_num_c(cpu, "iCacheLookups", &stats->iCacheLookups);
+  new bx_shadow_num_c(cpu, "traceCacheLookups", &stats->traceCacheLookups);
   new bx_shadow_num_c(cpu, "iCachePrefetch", &stats->iCachePrefetch);
-  new bx_shadow_num_c(cpu, "iCacheMisses", &stats->iCacheMisses);
+  new bx_shadow_num_c(cpu, "traceCacheMisses", &stats->traceCacheMisses);
 #endif
 
 #if InstrumentTLB
@@ -849,7 +849,7 @@ void BX_CPU_C::after_restore_state(void)
 
 BX_CPU_C::~BX_CPU_C()
 {
-  delete iCache;
+  delete traceCache;
 
 #if BX_CPU_LEVEL >= 4
   delete cpuid;

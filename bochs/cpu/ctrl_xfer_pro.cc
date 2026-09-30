@@ -99,7 +99,7 @@ BX_CPU_C::load_cs(bx_selector_t *selector, bx_descriptor_t *descriptor, Bit8u cp
   // Handle special case of CS.LIMIT demotion (new descriptor limit is
   // smaller than current one)
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled > descriptor->u.segment.limit_scaled)
-    BX_CPU_THIS_PTR iCache->flushICacheEntries();
+    BX_CPU_THIS_PTR traceCache->flushTraceCacheEntries();
 #endif
 
   BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector = *selector;

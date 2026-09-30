@@ -44,7 +44,7 @@ extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned rem
 void flushICaches(void)
 {
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
-    BX_CPU(i)->iCache->flushICacheEntries();
+    BX_CPU(i)->traceCache->flushTraceCacheEntries();
     BX_CPU(i)->async_event |= BX_ASYNC_EVENT_STOP_TRACE;
   }
 
@@ -56,22 +56,22 @@ void handleSMC(bx_phy_address pAddr, Bit32u mask)
   INC_SMC_STAT(smc);
 
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
-    BX_CPU(i)->iCache->handleSMC(pAddr, mask);
+    BX_CPU(i)->traceCache->handleSMC(pAddr, mask);
     if (BX_CPU(i)->pAddrFetchPage == PPFOf(pAddr))
       BX_CPU(i)->async_event |= BX_ASYNC_EVENT_STOP_TRACE;
   }
 }
 
-void flushSMC(bxICacheEntry_c *e)
+void flushSMC(bxTraceCacheEntry_c *e)
 {
   if (e->pAddr != BX_ICACHE_INVALID_PHY_ADDRESS) {
     e->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
     if (! bx_dbg.debugger_active) {
-      extern void genDummyICacheEntry(bxInstruction_c *i);
+      extern void genDummyTraceCacheEntry(bxInstruction_c *i);
 //    for (unsigned instr=0;instr < e->tlen; instr++)
-//      genDummyICacheEntry(e->i + instr);
-      genDummyICacheEntry(e->i);
+//      genDummyTraceCacheEntry(e->i + instr);
+      genDummyTraceCacheEntry(e->i);
     }
 #endif
   }
@@ -86,7 +86,7 @@ void BX_CPU_C::BxEndTrace(bxInstruction_c *i)
   // do nothing, return to main cpu_loop
 }
 
-void genDummyICacheEntry(bxInstruction_c *i)
+void genDummyTraceCacheEntry(bxInstruction_c *i)
 {
   i->setILen(0);
   i->setIaOpcode(BX_INSERTED_OPCODE);
@@ -95,11 +95,11 @@ void genDummyICacheEntry(bxInstruction_c *i)
 
 #endif
 
-bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAddr)
+bxTraceCacheEntry_c* BX_CPU_C::serveTraceCacheMiss(Bit32u eipBiased, bx_phy_address pAddr)
 {
-  bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache->get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+  bxTraceCacheEntry_c *entry = BX_CPU_THIS_PTR traceCache->get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
-  BX_CPU_THIS_PTR iCache->alloc_trace(entry);
+  BX_CPU_THIS_PTR traceCache->alloc_trace(entry);
 
   // Cache miss. We weren't so lucky, but let's be optimistic - try to build
   // trace from incoming instruction bytes stream !
@@ -161,11 +161,11 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
       if (! bx_dbg.debugger_active) {
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
         entry->tlen++; /* Add the inserted end of trace opcode */
-        genDummyICacheEntry(++i);
+        genDummyTraceCacheEntry(++i);
 #endif
       }
 
-      BX_CPU_THIS_PTR iCache->commit_page_split_trace(BX_CPU_THIS_PTR pAddrFetchPage, entry);
+      BX_CPU_THIS_PTR traceCache->commit_page_split_trace(BX_CPU_THIS_PTR pAddrFetchPage, entry);
       return entry;
     }
 
@@ -199,7 +199,7 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
         if (mergeTraces(entry, i, pAddr)) {
           entry->traceMask |= traceMask;
           pageWriteStampTable.markICacheMask(pAddr, entry->traceMask);
-          BX_CPU_THIS_PTR iCache->commit_trace(entry->tlen);
+          BX_CPU_THIS_PTR traceCache->commit_trace(entry->tlen);
           return entry;
         }
       }
@@ -213,20 +213,20 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
   if (! bx_dbg.debugger_active) {
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
     entry->tlen++; /* Add the inserted end of trace opcode */
-    genDummyICacheEntry(i);
+    genDummyTraceCacheEntry(i);
 #endif
   }
 
-  BX_CPU_THIS_PTR iCache->commit_trace(entry->tlen);
+  BX_CPU_THIS_PTR traceCache->commit_trace(entry->tlen);
 
   return entry;
 }
 
-bool BX_CPU_C::mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr)
+bool BX_CPU_C::mergeTraces(bxTraceCacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr)
 {
   BX_ASSERT(!bx_dbg.debugger_active);
 
-  bxICacheEntry_c *e = BX_CPU_THIS_PTR iCache->find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+  bxTraceCacheEntry_c *e = BX_CPU_THIS_PTR traceCache->find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
   if (e != NULL)
   {

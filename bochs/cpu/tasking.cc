@@ -743,7 +743,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 #ifdef BX_SUPPORT_CS_LIMIT_DEMOTION
       // Handle special case of CS.LIMIT demotion (new descriptor limit is smaller than current one)
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled > cs_descriptor.u.segment.limit_scaled)
-        BX_CPU_THIS_PTR iCache->flushICacheEntries();
+        BX_CPU_THIS_PTR traceCache->flushTraceCacheEntries();
 #endif
 
       // All checks pass, fill in shadow cache
