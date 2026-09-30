@@ -73,12 +73,10 @@ void flushSMC(bxTraceCacheEntry_c *e)
   if (e->pAddr != BX_ICACHE_INVALID_PHY_ADDRESS) {
     e->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
-    if (! bx_dbg.debugger_active) {
-      extern void genDummyTraceCacheEntry(bxInstruction_c *i);
-//    for (unsigned instr=0;instr < e->tlen; instr++)
-//      genDummyTraceCacheEntry(e->i + instr);
-      genDummyTraceCacheEntry(e->i);
-    }
+    extern void genDummyTraceCacheEntry(bxInstruction_c *i);
+//  for (unsigned instr=0;instr < e->tlen; instr++)
+//    genDummyTraceCacheEntry(e->i + instr);
+    genDummyTraceCacheEntry(e->i);
 #endif
   }
 }
@@ -103,6 +101,9 @@ void genDummyTraceCacheEntry(bxInstruction_c *i)
 
 bxTraceCacheEntry_c* BX_CPU_C::serveTraceCacheMiss(Bit32u eipBiased, bx_phy_address pAddr)
 {
+  // internal debugger executes instructions directly from the instruction cache
+  BX_ASSERT(!bx_dbg.debugger_active);
+
   bxTraceCacheEntry_c *entry = BX_CPU_THIS_PTR traceCache->get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
   BX_CPU_THIS_PTR traceCache->alloc_trace(entry);
@@ -132,19 +133,15 @@ bxTraceCacheEntry_c* BX_CPU_C::serveTraceCacheMiss(Bit32u eipBiased, bx_phy_addr
     (BX_SMP_PROCESSORS > 1) ? SIM->get_param_num(BXPN_SMP_QUANTUM)->get() :
 #endif
     BX_MAX_TRACE_LENGTH;
-  if (bx_dbg.debugger_active)
-    quantum = 1;
 
   for (unsigned n=0;n < quantum;n++)
   {
-#if BX_SUPPORT_X86_64
-    if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-      ret = fetchDecode64(fetchPtr, i, remainingInPage);
-    else
-#endif
-      ret = fetchDecode32(fetchPtr, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, i, remainingInPage);
+    // look for the instruction in the instruction cache first, decode on miss
+    bxICacheEntry_c *iCacheEntry = iCache.find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+    if (iCacheEntry == NULL || iCacheEntry->i.ilen() > remainingInPage)
+      iCacheEntry = fillICacheEntry(fetchPtr, remainingInPage, pAddr);
 
-    if (ret < 0) {
+    if (iCacheEntry == NULL) {
       // Fetching instruction on segment/page boundary
       if (n > 0) {
          // The trace is already valid, it has several instructions inside,
@@ -164,28 +161,21 @@ bxTraceCacheEntry_c* BX_CPU_C::serveTraceCacheMiss(Bit32u eipBiased, bx_phy_addr
       pageWriteStampTable.markICacheMask(entry->pAddr, entry->traceMask);
       pageWriteStampTable.markICacheMask(BX_CPU_THIS_PTR pAddrFetchPage, 0x1);
 
-      if (! bx_dbg.debugger_active) {
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
-        entry->tlen++; /* Add the inserted end of trace opcode */
-        genDummyTraceCacheEntry(++i);
+      entry->tlen++; /* Add the inserted end of trace opcode */
+      genDummyTraceCacheEntry(++i);
 #endif
-      }
 
       BX_CPU_THIS_PTR traceCache->commit_page_split_trace(BX_CPU_THIS_PTR pAddrFetchPage, entry);
       return entry;
     }
 
-    ret = assignHandler(i, BX_CPU_THIS_PTR fetchModeMask);
-
     // add instruction to the trace
+    memcpy(i, &iCacheEntry->i, sizeof(bxInstruction_c));
+    ret = i->traceEnd();
+
     unsigned iLen = i->ilen();
     entry->tlen++;
-
-#ifdef BX_INSTR_STORE_OPCODE_BYTES
-    i->set_opcode_bytes(fetchPtr);
-#endif
-    BX_INSTR_OPCODE(BX_CPU_ID, i, fetchPtr, iLen,
-       BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, long64_mode());
 
     i++;
 
@@ -200,14 +190,12 @@ bxTraceCacheEntry_c* BX_CPU_C::serveTraceCacheMiss(Bit32u eipBiased, bx_phy_addr
     fetchPtr += iLen;
 
     // try to find a trace starting from current pAddr and merge
-    if (!bx_dbg.debugger_active) {
-      if (remainingInPage >= 15) { // avoid merging with page split trace
-        if (mergeTraces(entry, i, pAddr)) {
-          entry->traceMask |= traceMask;
-          pageWriteStampTable.markICacheMask(pAddr, entry->traceMask);
-          BX_CPU_THIS_PTR traceCache->commit_trace(entry->tlen);
-          return entry;
-        }
+    if (remainingInPage >= 15) { // avoid merging with page split trace
+      if (mergeTraces(entry, i, pAddr)) {
+        entry->traceMask |= traceMask;
+        pageWriteStampTable.markICacheMask(pAddr, entry->traceMask);
+        BX_CPU_THIS_PTR traceCache->commit_trace(entry->tlen);
+        return entry;
       }
     }
   }
@@ -216,12 +204,10 @@ bxTraceCacheEntry_c* BX_CPU_C::serveTraceCacheMiss(Bit32u eipBiased, bx_phy_addr
 
   pageWriteStampTable.markICacheMask(pAddr, entry->traceMask);
 
-  if (! bx_dbg.debugger_active) {
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
-    entry->tlen++; /* Add the inserted end of trace opcode */
-    genDummyTraceCacheEntry(i);
+  entry->tlen++; /* Add the inserted end of trace opcode */
+  genDummyTraceCacheEntry(i);
 #endif
-  }
 
   BX_CPU_THIS_PTR traceCache->commit_trace(entry->tlen);
 
@@ -230,21 +216,40 @@ bxTraceCacheEntry_c* BX_CPU_C::serveTraceCacheMiss(Bit32u eipBiased, bx_phy_addr
 
 bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAddr)
 {
-  bxICacheEntry_c *entry = iCache.get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
-
-  // invalidate the entry before decoding into it, boundaryFetch() could fault
-  entry->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
-
   unsigned remainingInPage = BX_CPU_THIS_PTR eipPageWindowSize - eipBiased;
   const Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
-  int ret;
-
-  bxInstruction_c *i = &entry->i;
 
 #if BX_SUPPORT_SMP == 0
   if (PPFOf(pAddr) == BX_CPU_THIS_PTR pAddrStackPage)
     invalidate_stack_cache();
 #endif
+
+  bxICacheEntry_c *entry = fillICacheEntry(fetchPtr, remainingInPage, pAddr);
+
+  if (entry == NULL) {
+    // Fetching instruction on segment/page boundary. Such instruction is never
+    // kept in the instruction cache because the 2nd page could be remapped
+    // without SMC. Decode it into the entry but leave the entry invalid so it
+    // will be decoded again next time.
+    entry = iCache.get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+    boundaryFetch(fetchPtr, remainingInPage, &entry->i);
+  }
+
+  return entry;
+}
+
+// Decode the instruction into the instruction cache. Returns NULL if the
+// instruction crosses the segment/page boundary, such instruction is never
+// kept in the instruction cache.
+bxICacheEntry_c* BX_CPU_C::fillICacheEntry(const Bit8u *fetchPtr, unsigned remainingInPage, bx_phy_address pAddr)
+{
+  bxICacheEntry_c *entry = iCache.get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+
+  // invalidate the entry before decoding into it
+  entry->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
+
+  bxInstruction_c *i = &entry->i;
+  int ret;
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
@@ -253,16 +258,10 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
 #endif
     ret = fetchDecode32(fetchPtr, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, i, remainingInPage);
 
-  if (ret < 0) {
-    // Fetching instruction on segment/page boundary. Such instruction is never
-    // kept in the instruction cache because the 2nd page could be remapped
-    // without SMC. Decode it into the entry but leave the entry invalid so it
-    // will be decoded again next time.
-    boundaryFetch(fetchPtr, remainingInPage, i);
-    return entry;
-  }
+  if (ret < 0) return NULL;
 
-  assignHandler(i, BX_CPU_THIS_PTR fetchModeMask);
+  if (assignHandler(i, BX_CPU_THIS_PTR fetchModeMask))
+    i->setTraceEnd();
 
 #ifdef BX_INSTR_STORE_OPCODE_BYTES
   i->set_opcode_bytes(fetchPtr);
@@ -279,8 +278,6 @@ bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAdd
 
 bool BX_CPU_C::mergeTraces(bxTraceCacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr)
 {
-  BX_ASSERT(!bx_dbg.debugger_active);
-
   bxTraceCacheEntry_c *e = BX_CPU_THIS_PTR traceCache->find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
   if (e != NULL)

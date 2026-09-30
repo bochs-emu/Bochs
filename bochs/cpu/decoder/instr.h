@@ -63,7 +63,8 @@ public:
 #endif
 
   struct {
-    // 15...0 opcode
+    // 15...15 trace end (stop trace indication from assignHandler)
+    // 14...0  opcode
     Bit16u ia_opcode;
 
     //  7...4 (unused)
@@ -280,10 +281,17 @@ public:
   }
 
   BX_CPP_INLINE unsigned getIaOpcode(void) const {
-    return metaInfo.ia_opcode;
+    return metaInfo.ia_opcode & 0x7fff;
   }
   BX_CPP_INLINE void setIaOpcode(Bit16u op) {
-    metaInfo.ia_opcode = op;
+    metaInfo.ia_opcode = op; // clears trace end indication as well
+  }
+
+  BX_CPP_INLINE bool traceEnd(void) const {
+    return metaInfo.ia_opcode >> 15;
+  }
+  BX_CPP_INLINE void setTraceEnd(void) {
+    metaInfo.ia_opcode |= 0x8000;
   }
   BX_CPP_INLINE const char* getIaOpcodeName(void) const {
     return get_bx_opcode_name(getIaOpcode());
