@@ -342,6 +342,8 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
     eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
   }
 
+  INC_ICACHE_STAT(iCacheLookups);
+
   bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrFetchPage + eipBiased;
   bxICacheEntry_c *entry = iCache.find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
@@ -349,6 +351,7 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
   if (entry == NULL || entry->i.ilen() > (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased))
   {
     // Instruction cache miss
+    INC_ICACHE_STAT(iCacheMisses);
     entry = serveICacheMiss((Bit32u) eipBiased, pAddr);
   }
 

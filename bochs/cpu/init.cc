@@ -265,6 +265,8 @@ void BX_CPU_C::init_statistics(void)
   new bx_shadow_num_c(cpu, "traceCacheLookups", &stats->traceCacheLookups);
   new bx_shadow_num_c(cpu, "iCachePrefetch", &stats->iCachePrefetch);
   new bx_shadow_num_c(cpu, "traceCacheMisses", &stats->traceCacheMisses);
+  new bx_shadow_num_c(cpu, "iCacheLookups", &stats->iCacheLookups);
+  new bx_shadow_num_c(cpu, "iCacheMisses", &stats->iCacheMisses);
 #endif
 
 #if InstrumentTLB
