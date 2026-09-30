@@ -111,7 +111,7 @@ void BX_CPU_C::cpu_loop_debugger(void)
     // stop tracing after every instruction to handle in internal debugger
     BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
 
-    bxICacheEntry_c *entry = getICacheEntry();
+    bxTraceCacheEntry_c *entry = getTraceCacheEntry();
     if (dbg_code_bp_after_fetch()) return;
     bxInstruction_c *i = entry->i;
     bxInstruction_c *last = i + (entry->tlen);
@@ -137,7 +137,7 @@ void BX_CPU_C::cpu_loop_debugger(void)
       if (BX_CPU_THIS_PTR async_event & ~BX_ASYNC_EVENT_STOP_TRACE) break;
 
       if (++i == last) {
-        entry = getICacheEntry();
+        entry = getTraceCacheEntry();
         if (dbg_code_bp_after_fetch()) return;
         i = entry->i;
         last = i + (entry->tlen);
@@ -195,7 +195,7 @@ void BX_CPU_C::cpu_loop(void)
       }
     }
 
-    bxICacheEntry_c *entry = getICacheEntry();
+    bxTraceCacheEntry_c *entry = getTraceCacheEntry();
     bxInstruction_c *i = entry->i;
 
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
@@ -210,7 +210,7 @@ void BX_CPU_C::cpu_loop(void)
 
       if (BX_CPU_THIS_PTR async_event) break;
 
-      i = getICacheEntry()->i;
+      i = getTraceCacheEntry()->i;
     }
 #else // BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS == 0
 
@@ -236,7 +236,7 @@ void BX_CPU_C::cpu_loop(void)
       if (BX_CPU_THIS_PTR async_event) break;
 
       if (++i == last) {
-        entry = getICacheEntry();
+        entry = getTraceCacheEntry();
         i = entry->i;
         last = i + (entry->tlen);
       }
@@ -262,7 +262,7 @@ void BX_CPU_C::cpu_run_trace(void)
     }
   }
 
-  bxICacheEntry_c *entry = getICacheEntry();
+  bxTraceCacheEntry_c *entry = getTraceCacheEntry();
   bxInstruction_c *i = entry->i;
 
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
@@ -303,7 +303,7 @@ void BX_CPU_C::cpu_run_trace(void)
 
 #include "decoder/ia_opcodes.h"
 
-bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
+bxTraceCacheEntry_c* BX_CPU_C::getTraceCacheEntry(void)
 {
   bx_address eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
 
@@ -312,16 +312,16 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
     eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
   }
 
-  INC_ICACHE_STAT(iCacheLookups);
+  INC_ICACHE_STAT(traceCacheLookups);
 
   bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrFetchPage + eipBiased;
-  bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache->find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+  bxTraceCacheEntry_c *entry = BX_CPU_THIS_PTR traceCache->find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
   if (entry == NULL || entry->i->ilen() == 0)
   {
-    // iCache miss. No validated instruction with matching fetch parameters is in the iCache.
-    INC_ICACHE_STAT(iCacheMisses);
-    entry = serveICacheMiss((Bit32u) eipBiased, pAddr);
+    // Trace cache miss. No valid trace with matching fetch parameters is in the trace cache.
+    INC_ICACHE_STAT(traceCacheMisses);
+    entry = serveTraceCacheMiss((Bit32u) eipBiased, pAddr);
   }
 
 #if BX_SUPPORT_CET
@@ -383,7 +383,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::linkTrace(bxInstruction_c *i)
 
   BX_SYNC_TIME_IF_SINGLE_PROCESSOR(0);
 
-  bxInstruction_c *next = i->getNextTrace(BX_CPU_THIS_PTR iCache->traceLinkTimeStamp);
+  bxInstruction_c *next = i->getNextTrace(BX_CPU_THIS_PTR traceCache->traceLinkTimeStamp);
   if (next) {
     BX_EXECUTE_INSTRUCTION(next);
     return;
@@ -395,14 +395,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::linkTrace(bxInstruction_c *i)
     eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
   }
 
-  INC_ICACHE_STAT(iCacheLookups);
+  INC_ICACHE_STAT(traceCacheLookups);
 
   bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrFetchPage + eipBiased;
-  bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache->find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+  bxTraceCacheEntry_c *entry = BX_CPU_THIS_PTR traceCache->find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
   if (entry != NULL) // link traces - handle only hit cases
   {
-    i->setNextTrace(entry->i, BX_CPU_THIS_PTR iCache->traceLinkTimeStamp);
+    i->setNextTrace(entry->i, BX_CPU_THIS_PTR traceCache->traceLinkTimeStamp);
     i = entry->i;
     BX_EXECUTE_INSTRUCTION(i);
   }
@@ -967,7 +967,7 @@ bool BX_CPU_C::dbg_check_code_bpoints(void)
   return false;
 }
 
-// Called by cpu_loop_debugger() right after getICacheEntry(), before the
+// Called by cpu_loop_debugger() right after getTraceCacheEntry(), before the
 // fetched instruction is executed. Returns true if prefetch() found code
 // breakpoint on the first instruction of the new fetch window.
 bool BX_CPU_C::dbg_code_bp_after_fetch(void)

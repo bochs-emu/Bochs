@@ -36,9 +36,9 @@
 struct bx_cpu_statistics
 {
   // icache statistics
-  Bit64u iCacheLookups;
+  Bit64u traceCacheLookups;
   Bit64u iCachePrefetch;
-  Bit64u iCacheMisses;
+  Bit64u traceCacheMisses;
 
   // tlb lookup statistics
   Bit64u tlbLookups;
@@ -59,7 +59,7 @@ struct bx_cpu_statistics
   Bit64u smc;
 
   bx_cpu_statistics():
-      iCacheLookups(0), iCachePrefetch(0), iCacheMisses(0),
+      traceCacheLookups(0), iCachePrefetch(0), traceCacheMisses(0),
       tlbLookups(0), tlbExecuteLookups(0), tlbWriteLookups(0),
       tlbMisses(0), tlbExecuteMisses(0), tlbWriteMisses(0),
       tlbGlobalFlushes(0), tlbNonGlobalFlushes(0),

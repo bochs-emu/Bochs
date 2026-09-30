@@ -425,8 +425,8 @@ class BX_MEM_C;
 class bxInstruction_c;
 class bx_local_apic_c;
 class AMX;
-class bxICache_c;
-struct bxICacheEntry_c;
+class bxTraceCache_c;
+struct bxTraceCacheEntry_c;
 
 // <TAG-TYPE-EXECUTEPTR-START>
 #if BX_USE_CPU_SMF
@@ -1439,7 +1439,7 @@ public: // for now...
   } PDPTR_CACHE;
 #endif
 
-  bxICache_c *iCache; // better to be aligned to 64-bytes boundary
+  bxTraceCache_c *traceCache; // better to be aligned to 64-bytes boundary
   Bit32u fetchModeMask;
 
   struct {
@@ -4660,9 +4660,9 @@ public: // for now...
 
   BX_SMF void boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *);
 
-  BX_SMF bxICacheEntry_c *serveICacheMiss(Bit32u eipBiased, bx_phy_address pAddr);
-  BX_SMF bxICacheEntry_c* getICacheEntry(void);
-  BX_SMF bool mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr);
+  BX_SMF bxTraceCacheEntry_c *serveTraceCacheMiss(Bit32u eipBiased, bx_phy_address pAddr);
+  BX_SMF bxTraceCacheEntry_c* getTraceCacheEntry(void);
+  BX_SMF bool mergeTraces(bxTraceCacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr);
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS && BX_ENABLE_TRACE_LINKING
   BX_SMF void linkTrace(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #endif
@@ -5673,6 +5673,14 @@ enum {
   BX_FETCH_MODE_AMX_OK            = (1 << 7),
   BX_FETCH_MODE_SCALEDATA_OK      = (1 << 8)
 };
+
+// number of fetchModeMask bits which could be set with current configuration
+// (the trace cache relies on it, update when adding new fetchModeMask bits)
+#if BX_SUPPORT_AMX
+const unsigned BX_FETCH_MODE_MASK_BITS = 9;
+#else
+const unsigned BX_FETCH_MODE_MASK_BITS = 7;
+#endif
 
 BX_CPP_INLINE void BX_CPU_C::set_fpu_mmx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_FPU_MMX_OK; }
 BX_CPP_INLINE void BX_CPU_C::clear_fpu_mmx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~BX_FETCH_MODE_FPU_MMX_OK; }
