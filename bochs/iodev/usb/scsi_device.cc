@@ -552,7 +552,7 @@ Bit32s scsi_device_t::scsi_send_command(Bit32u tag, Bit8u *buf, Bit8u cmd_len, i
   // check that the expected command length matches the sent command length.
   // some hardware may fail if the command length byte isn't correct.
   if (cmdlen != cmd_len) {
-    BX_ERROR(("Sent command length (%d) doesn't match expected command length (%d).", cmd_len, cmdlen));
+    BX_ERROR(("Sent command length (%d) doesn't match expected command length (%d). command=0x%02x", cmd_len, cmdlen, command));
 #if SCSI_STRICT_CDB
     _sense = SENSE_ILLEGAL_REQUEST;
     _asc = 0x1A; // Parameter List Length Error
