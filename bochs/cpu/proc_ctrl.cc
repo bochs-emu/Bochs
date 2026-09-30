@@ -1091,6 +1091,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
     setup_flat_SS(0);
 
     writeEFlags(read_eflags() & ~(BX_CPU_THIS_PTR msr.fmask) & ~(EFlagsRFMask), EFlagsValidMask);
+    // a SYSCALL whose SFMASK clears TF takes no single-step trap
+    if (! BX_CPU_THIS_PTR get_TF())
+      BX_CPU_THIS_PTR debug_trap &= ~BX_DEBUG_SINGLE_STEP_BIT;
+
     RIP = temp_RIP;
   }
   else
@@ -1204,6 +1208,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSRET(bxInstruction_c *i)
     BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type    = BX_DATA_READ_WRITE_ACCESSED;
 
     writeEFlags((Bit32u) R11, EFlagsValidMask);
+    // SYSRET takes the single-step trap by the TF it loads: none when TF = 0, and at once
+    // (before the target's first instruction) when TF = 1
+    if (! BX_CPU_THIS_PTR get_TF())
+      BX_CPU_THIS_PTR debug_trap &= ~BX_DEBUG_SINGLE_STEP_BIT;
+    else
+      BX_CPU_THIS_PTR debug_trap |=  BX_DEBUG_SINGLE_STEP_BIT;
   }
   else // (!64BIT_MODE)
 #endif

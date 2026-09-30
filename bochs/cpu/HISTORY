@@ -13,13 +13,13 @@ Changes after Bochs 3.1:
 - SSE/AVX: Fixed PSRLQ and PSRAVQ instructions with shift count = 64
 - SSE: PSHUFLW instruction should be supported under SSE2 instead of SSE
 - POPCNT: fix POPCNT instruction to depend on its own (already existing) CPUID feature flags and not SSE4.2
-+ AVX512_OPMASK: Fixed behavior of KSHIFTLW/KSHIFTRW instructions with shift count = 15
 - REP_MOVSW/D/Q: Each MOVSD or MOVSQ iteration must read one complete source dword or qword before writing it to the destination. Do not allow copying partial words/dword/qwords.
 - AVX: Fixed order of unmasked exceptions handling in VDPPS instruction. VDPPS must determine SIMD floating-point exceptions separately for each multiply and add operation in execution order.
 - x86-64: implement ENTER and LEAVE instructions with OperandSize=16 and StackSize=64
+- AES_AVX: Enforce AES feature flag in cpu to make sure these are disabled when AES gets disabled
++ AVX512_OPMASK: Fixed behavior of KSHIFTLW/KSHIFTRW instructions with shift count = 15
 - AVX-512: VPBROADCASTMB2Q/VPBROADCASTMW2D instructions should require AVX512_CD
 - AVX-512: VPCMPB/VPCMPUB/VPCMPW/VPCMPUW instructions should require AVX512_BW
-- AES_AVX: Enforce AES feature flag in cpu to make sure these are disabled when AES gets disabled
 + AVX-512: Fix boundary conditions of write mask calculation for VPCOMPRESSB/VPCOMPRESSW instructions
 + AVX-512: Fix boundary conditions of load mask calculation for VPEXPANDB/VPEXPANDW instructions, VPEXPANDB was completely broken with load mask > 32 bit
 + AVX512_GATHER: Fix 512-bit qword-indexed VGATHERQPS zero upper
@@ -45,6 +45,9 @@ Changes after Bochs 3.1:
 + SVM: interrupt shadow lost at a #DB intercept, after STI in the guest a #DB intercept at the next boundary saves VMCB INTERRUPT_SHADOW = 0 in Bochs, 1 on real Zen 4
 + SVM: V_IRQ never taken when the guest is entered with IF = 1 (VMRUN loads the guest RFLAGS before in_svm_guest = true, so handleInterruptMaskChange() evaluated the masks as the host)
 + SVM: AMD hardware doesn't enforce TSS386 to enter long mode (Debian 12 amd64 running kvm_amd with npt=1 fails: kvm_amd leaves TR = TSS286_BUSY and its 64-bit guest triple-faults while booting)
++ SVM: An intercepted #DB has already updated DR6 and leaves RF clear (AMD APM vol. 2, 15.12)
+- SYSENTER/SYSEXIT: SYSENTER/SYSEXIT are not allowed in long mode on AMD
+- SYSCALL/SYSRET: SYSCALL whose SFMASK clears TF takes no single-step trap, SYSRET takes the single-step trap by the TF it loads
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
