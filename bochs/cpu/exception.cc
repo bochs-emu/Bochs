@@ -959,10 +959,6 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
   VMexit_Event(BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
 #endif
 
-#if BX_SUPPORT_SVM
-  SvmInterceptException(BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
-#endif
-
   if (exception_class == BX_EXCEPTION_CLASS_FAULT)
   {
     // restore RIP/RSP to value before error occurred
@@ -1013,6 +1009,11 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
     // clear GD flag in the DR7 prior entering debug exception handler
     BX_CPU_THIS_PTR dr7.set_GD(0);
   }
+
+#if BX_SUPPORT_SVM
+  // an intercepted #DB has already updated DR6 and leaves RF clear
+  SvmInterceptException(BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
+#endif
 
   BX_CPU_THIS_PTR EXT = 1;
 
