@@ -825,7 +825,9 @@ void BX_CPU_C::SvmInterceptException(unsigned type, unsigned vector, Bit16u errc
     BX_CPU_THIS_PTR in_event = false; // clear in_event indication on #DF
 
   BX_CPU_THIS_PTR debug_trap = 0; // clear debug_trap field
-  BX_CPU_THIS_PTR inhibit_mask = 0;
+  // a #DB intercept keeps the interrupt shadow (e.g. after STI): it is saved in the VMCB
+  if (vector != BX_DB_EXCEPTION)
+    BX_CPU_THIS_PTR inhibit_mask = 0;
 
   Svm_Vmexit(SVM_VMEXIT_EXCEPTION + vector, (errcode_valid ? errcode : 0), qualification);
 }
