@@ -108,41 +108,32 @@ void BX_CPU_C::cpu_loop_debugger(void)
       }
     }
 
-    // stop tracing after every instruction to handle in internal debugger
+    // Stop tracing after every instruction to handle in internal debugger.
+    // The internal debugger executes individual instructions directly from
+    // the instruction cache, the stop trace indication must be set before
+    // every instruction, otherwise with handlers chaining the instruction
+    // would continue to the next (unrelated) instruction cache entry.
     BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
 
-    bxTraceCacheEntry_c *entry = getTraceCacheEntry();
+    bxInstruction_c *i = &(getICacheEntry()->i);
     if (dbg_code_bp_after_fetch()) return;
-    bxInstruction_c *i = entry->i;
-    bxInstruction_c *last = i + (entry->tlen);
 
-    for(;;) {
-      if (BX_CPU_THIS_PTR trace)
-        debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
+    if (BX_CPU_THIS_PTR trace)
+      debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
 
-      // want to allow changing of the instruction inside instrumentation callback
-      BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
-      RIP += i->ilen();
-      BX_CPU_CALL_METHOD(i->execute1, (i)); // might iterate repeat instruction
+    // want to allow changing of the instruction inside instrumentation callback
+    BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
+    RIP += i->ilen();
+    BX_CPU_CALL_METHOD(i->execute1, (i)); // might iterate repeat instruction
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS == 0
-      BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
-      BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
-      BX_CPU_THIS_PTR icount++;
+    BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
+    BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
+    BX_CPU_THIS_PTR icount++;
 #endif
-      if (BX_SMP_PROCESSORS == 1) BX_TICK1();
+    if (BX_SMP_PROCESSORS == 1) BX_TICK1();
 
-      // note instructions generating exceptions never reach this point
-      if (dbg_instruction_epilog()) return;
-
-      if (BX_CPU_THIS_PTR async_event & ~BX_ASYNC_EVENT_STOP_TRACE) break;
-
-      if (++i == last) {
-        entry = getTraceCacheEntry();
-        if (dbg_code_bp_after_fetch()) return;
-        i = entry->i;
-        last = i + (entry->tlen);
-      }
-    }
+    // note instructions generating exceptions never reach this point
+    if (dbg_instruction_epilog()) return;
   }  // while (1)
 }
 #endif // BX_DEBUGGER
@@ -343,6 +334,35 @@ bxTraceCacheEntry_c* BX_CPU_C::getTraceCacheEntry(void)
 #endif
 
   BX_ASSERT(entry->i->ilen() != 0);
+
+  return entry;
+}
+
+bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
+{
+  bx_address eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
+
+  if (eipBiased >= BX_CPU_THIS_PTR eipPageWindowSize) {
+    prefetch();
+    eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
+  }
+
+  bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrFetchPage + eipBiased;
+  bxICacheEntry_c *entry = iCache.find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+
+  // the cached instruction must fit into current fetch window (CS.limit could shrink)
+  if (entry == NULL || entry->i.ilen() > (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased))
+  {
+    // Instruction cache miss
+    entry = serveICacheMiss((Bit32u) eipBiased, pAddr);
+  }
+
+#if BX_SUPPORT_CET
+  if (WaitingForEndbranch(CPL))
+    CheckEndbranch(&entry->i);
+#endif
+
+  BX_ASSERT(entry->i.ilen() != 0);
 
   return entry;
 }
@@ -973,7 +993,7 @@ bool BX_CPU_C::dbg_check_code_bpoints(void)
   return false;
 }
 
-// Called by cpu_loop_debugger() right after getTraceCacheEntry(), before the
+// Called by cpu_loop_debugger() right after getICacheEntry(), before the
 // fetched instruction is executed. Returns true if prefetch() found code
 // breakpoint on the first instruction of the new fetch window.
 bool BX_CPU_C::dbg_code_bp_after_fetch(void)

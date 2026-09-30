@@ -36,6 +36,8 @@
 
 bxPageWriteStampTable pageWriteStampTable;
 
+bxICache_c iCache;
+
 extern int fetchDecode32(const Bit8u *fetchPtr, bool is_32, bxInstruction_c *i, unsigned remainingInPage);
 #if BX_SUPPORT_X86_64
 extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
@@ -48,12 +50,16 @@ void flushICaches(void)
     BX_CPU(i)->async_event |= BX_ASYNC_EVENT_STOP_TRACE;
   }
 
-  pageWriteStampTable.resetWriteStamps();
+  // The physically indexed instruction cache is never flushed, it is kept
+  // coherent by SMC detection only. Do not reset the page write stamps as
+  // they still guard the instructions stored in the instruction cache.
 }
 
 void handleSMC(bx_phy_address pAddr, Bit32u mask)
 {
   INC_SMC_STAT(smc);
+
+  iCache.handleSMC(pAddr, mask);
 
   for (unsigned i=0; i<BX_SMP_PROCESSORS; i++) {
     BX_CPU(i)->traceCache->handleSMC(pAddr, mask);
@@ -218,6 +224,55 @@ bxTraceCacheEntry_c* BX_CPU_C::serveTraceCacheMiss(Bit32u eipBiased, bx_phy_addr
   }
 
   BX_CPU_THIS_PTR traceCache->commit_trace(entry->tlen);
+
+  return entry;
+}
+
+bxICacheEntry_c* BX_CPU_C::serveICacheMiss(Bit32u eipBiased, bx_phy_address pAddr)
+{
+  bxICacheEntry_c *entry = iCache.get_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+
+  // invalidate the entry before decoding into it, boundaryFetch() could fault
+  entry->pAddr = BX_ICACHE_INVALID_PHY_ADDRESS;
+
+  unsigned remainingInPage = BX_CPU_THIS_PTR eipPageWindowSize - eipBiased;
+  const Bit8u *fetchPtr = BX_CPU_THIS_PTR eipFetchPtr + eipBiased;
+  int ret;
+
+  bxInstruction_c *i = &entry->i;
+
+#if BX_SUPPORT_SMP == 0
+  if (PPFOf(pAddr) == BX_CPU_THIS_PTR pAddrStackPage)
+    invalidate_stack_cache();
+#endif
+
+#if BX_SUPPORT_X86_64
+  if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
+    ret = fetchDecode64(fetchPtr, i, remainingInPage);
+  else
+#endif
+    ret = fetchDecode32(fetchPtr, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, i, remainingInPage);
+
+  if (ret < 0) {
+    // Fetching instruction on segment/page boundary. Such instruction is never
+    // kept in the instruction cache because the 2nd page could be remapped
+    // without SMC. Decode it into the entry but leave the entry invalid so it
+    // will be decoded again next time.
+    boundaryFetch(fetchPtr, remainingInPage, i);
+    return entry;
+  }
+
+  assignHandler(i, BX_CPU_THIS_PTR fetchModeMask);
+
+#ifdef BX_INSTR_STORE_OPCODE_BYTES
+  i->set_opcode_bytes(fetchPtr);
+#endif
+  BX_INSTR_OPCODE(BX_CPU_ID, i, fetchPtr, i->ilen(),
+     BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, long64_mode());
+
+  // Add the instruction to the instruction cache
+  entry->pAddr = pAddr;
+  pageWriteStampTable.markICache(pAddr, i->ilen());
 
   return entry;
 }
