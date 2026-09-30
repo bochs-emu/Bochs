@@ -5423,6 +5423,7 @@ public: // for now...
  BX_SMF bool EndbranchEnabledAndNotSuppressed(unsigned cpl) BX_CPP_AttrRegparmN(1);
  BX_SMF bool WaitingForEndbranch(unsigned cpl) BX_CPP_AttrRegparmN(1);
  BX_SMF bool LegacyEndbranchTreatment(unsigned cpl) BX_CPP_AttrRegparmN(1);
+ BX_SMF void CheckEndbranch(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
  BX_SMF void track_indirect(unsigned cpl) BX_CPP_AttrRegparmN(1);
  BX_SMF void track_indirect_if_not_suppressed(bxInstruction_c *i, unsigned cpl) BX_CPP_AttrRegparmN(2);
  BX_SMF void reset_endbranch_tracker(unsigned cpl, bool suppress=false) BX_CPP_AttrRegparmN(2);
