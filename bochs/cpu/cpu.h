@@ -1394,6 +1394,16 @@ public: // for now...
 #endif
   unsigned show_flag;
   bx_guard_found_t guard_found;
+
+  // Debugger code breakpoints page filter, recomputed by prefetch() every
+  // time the fetch window moves to another page (and when breakpoints are
+  // changed). dbg_instruction_epilog() looks for vir/lin/phy code breakpoints
+  // only if one of them could be located on the current fetch page, so the
+  // cost of the check does not depend on number of breakpoints defined.
+  bx_address dbg_fetch_lpf;     // linear page of the current fetch window
+  bool dbg_code_bp_on_page;     // some enabled code breakpoint might be on the current fetch page
+  bool dbg_code_bp_hit;         // prefetch() found code breakpoint on the first instruction of the new page
+  Bit64u dbg_loop_icount;       // icount on cpu_loop_debugger() entry
 #endif
 
 #if BX_INSTRUMENTATION
@@ -4616,6 +4626,9 @@ public: // for now...
 #endif
 #if BX_DEBUGGER
   BX_SMF bool dbg_instruction_epilog(void);
+  BX_SMF void dbg_update_code_bp_page(void);
+  BX_SMF bool dbg_check_code_bpoints(void);
+  BX_SMF bool dbg_code_bp_after_fetch(void);
 #endif
 #if BX_GDBSTUB
   BX_SMF bool gdbstub_instruction_epilog(void);

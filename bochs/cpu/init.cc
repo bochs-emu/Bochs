@@ -1237,6 +1237,10 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR stop_reason = 0;
   BX_CPU_THIS_PTR magic_break = 0;
+  BX_CPU_THIS_PTR dbg_fetch_lpf = 0;
+  BX_CPU_THIS_PTR dbg_code_bp_on_page = false;
+  BX_CPU_THIS_PTR dbg_code_bp_hit = false;
+  BX_CPU_THIS_PTR dbg_loop_icount = 0;
   BX_CPU_THIS_PTR trace = 0;
   BX_CPU_THIS_PTR trace_reg = 0;
   BX_CPU_THIS_PTR trace_mem = 0;

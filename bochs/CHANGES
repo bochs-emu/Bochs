@@ -10,6 +10,8 @@ Changes after Bochs 3.1 release:
 
 - Bochs debugger
   - Invalidate SMC pages after debugger memory writes
+  - Significantly speedup emulation when code breakpoints are defined in internal debugger, up to 2x-3x speedup observed with multiple breakpoints set
+  - Allow up to 32 code breakpoints (as they are much less painful for emulation performance now)
 
 - I/O Devices
   - VGA
