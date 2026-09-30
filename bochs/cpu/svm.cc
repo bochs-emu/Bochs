@@ -270,6 +270,11 @@ void BX_CPU_C::SvmExitLoadHostState(SVM_HOST_STATE *host)
 
   CPL = 0;
 
+  BX_CPU_THIS_PTR inhibit_mask = 0;
+  BX_CPU_THIS_PTR debug_trap = 0;
+
+  BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
+
   handleCpuContextChange();
 
 #if BX_SUPPORT_MONITOR_MWAIT
