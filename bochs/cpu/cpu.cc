@@ -303,6 +303,19 @@ void BX_CPU_C::cpu_run_trace(void)
 
 #include "decoder/ia_opcodes.h"
 
+#if BX_SUPPORT_CET
+// called when the CPU is waiting for ENDBRANCH, i is the next instruction to execute
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckEndbranch(bxInstruction_c *i)
+{
+  if (i->getIaOpcode() != (long64_mode() ? BX_IA_ENDBRANCH64 : BX_IA_ENDBRANCH32) && i->getIaOpcode() != BX_IA_INT3) {
+    if (LegacyEndbranchTreatment(CPL)) {
+      BX_ERROR(("#CP(ENDBRANCH): Endbranch is expected for CPL=%d", CPL));
+      exception(BX_CP_EXCEPTION, BX_CP_ENDBRANCH);
+    }
+  }
+}
+#endif
+
 bxTraceCacheEntry_c* BX_CPU_C::getTraceCacheEntry(void)
 {
   bx_address eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
@@ -325,15 +338,8 @@ bxTraceCacheEntry_c* BX_CPU_C::getTraceCacheEntry(void)
   }
 
 #if BX_SUPPORT_CET
-  if (WaitingForEndbranch(CPL)) {
-    bxInstruction_c *i = entry->i;
-    if (i->getIaOpcode() != (long64_mode() ? BX_IA_ENDBRANCH64 : BX_IA_ENDBRANCH32) && i->getIaOpcode() != BX_IA_INT3) {
-      if (LegacyEndbranchTreatment(CPL)) {
-        BX_ERROR(("#CP(ENDBRANCH): Endbranch is expected for CPL=%d", CPL));
-        exception(BX_CP_EXCEPTION, BX_CP_ENDBRANCH);
-      }
-    }
-  }
+  if (WaitingForEndbranch(CPL))
+    CheckEndbranch(entry->i);
 #endif
 
   BX_ASSERT(entry->i->ilen() != 0);
