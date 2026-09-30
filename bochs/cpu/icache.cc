@@ -137,9 +137,12 @@ bxTraceCacheEntry_c* BX_CPU_C::serveTraceCacheMiss(Bit32u eipBiased, bx_phy_addr
   for (unsigned n=0;n < quantum;n++)
   {
     // look for the instruction in the instruction cache first, decode on miss
+    INC_ICACHE_STAT(iCacheLookups);
     bxICacheEntry_c *iCacheEntry = iCache.find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
-    if (iCacheEntry == NULL || iCacheEntry->i.ilen() > remainingInPage)
+    if (iCacheEntry == NULL || iCacheEntry->i.ilen() > remainingInPage) {
+      INC_ICACHE_STAT(iCacheMisses);
       iCacheEntry = fillICacheEntry(fetchPtr, remainingInPage, pAddr);
+    }
 
     if (iCacheEntry == NULL) {
       // Fetching instruction on segment/page boundary
