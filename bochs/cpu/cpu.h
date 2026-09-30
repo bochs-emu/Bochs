@@ -427,6 +427,7 @@ class bx_local_apic_c;
 class AMX;
 class bxTraceCache_c;
 struct bxTraceCacheEntry_c;
+struct bxICacheEntry_c;
 
 // <TAG-TYPE-EXECUTEPTR-START>
 #if BX_USE_CPU_SMF
@@ -4662,6 +4663,8 @@ public: // for now...
 
   BX_SMF bxTraceCacheEntry_c *serveTraceCacheMiss(Bit32u eipBiased, bx_phy_address pAddr);
   BX_SMF bxTraceCacheEntry_c* getTraceCacheEntry(void);
+  BX_SMF bxICacheEntry_c *serveICacheMiss(Bit32u eipBiased, bx_phy_address pAddr);
+  BX_SMF bxICacheEntry_c* getICacheEntry(void);
   BX_SMF bool mergeTraces(bxTraceCacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr);
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS && BX_ENABLE_TRACE_LINKING
   BX_SMF void linkTrace(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
@@ -5676,7 +5679,7 @@ enum {
 };
 
 // number of fetchModeMask bits which could be set with current configuration
-// (the trace cache relies on it, update when adding new fetchModeMask bits)
+// (the trace cache and instruction cache rely on it, update when adding new fetchModeMask bits)
 #if BX_SUPPORT_AMX
 const unsigned BX_FETCH_MODE_MASK_BITS = 9;
 #else
