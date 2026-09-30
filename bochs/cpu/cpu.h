@@ -4664,6 +4664,7 @@ public: // for now...
   BX_SMF bxTraceCacheEntry_c *serveTraceCacheMiss(Bit32u eipBiased, bx_phy_address pAddr);
   BX_SMF bxTraceCacheEntry_c* getTraceCacheEntry(void);
   BX_SMF bxICacheEntry_c *serveICacheMiss(Bit32u eipBiased, bx_phy_address pAddr);
+  BX_SMF bxICacheEntry_c *fillICacheEntry(const Bit8u *fetchPtr, unsigned remainingInPage, bx_phy_address pAddr);
   BX_SMF bxICacheEntry_c* getICacheEntry(void);
   BX_SMF bool mergeTraces(bxTraceCacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr);
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS && BX_ENABLE_TRACE_LINKING
