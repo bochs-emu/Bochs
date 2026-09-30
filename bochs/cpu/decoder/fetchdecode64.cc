@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -443,8 +443,8 @@ static BxOpcodeDecodeDescriptor64 decode64_descriptor[] =
    /* 0F 31 */ { &decoder_simple64, BxOpcodeTable0F31 },
    /* 0F 32 */ { &decoder_simple64, BxOpcodeTable0F32 },
    /* 0F 33 */ { &decoder_simple64, BxOpcodeTable0F33 },
-   /* 0F 34 */ { &decoder_simple64, BxOpcodeTable0F34 },
-   /* 0F 35 */ { &decoder_simple64, BxOpcodeTable0F35 },
+   /* 0F 34 */ { &decoder_simple64, BxOpcodeTable0F34_64 },
+   /* 0F 35 */ { &decoder_simple64, BxOpcodeTable0F35_64 },
    /* 0F 36 */ { &decoder_ud64, NULL },
    /* 0F 37 */ { &decoder64, BxOpcodeTable0F37 },
    /* 0F 38 */ { &decoder64_modrm, NULL }, // 3-byte escape
