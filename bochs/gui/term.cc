@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2000-2021  The Bochs Project
+//  Copyright (C) 2000-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -185,26 +185,30 @@ void bx_term_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   put("TERM");
   // the ask menu causes trouble
   io->set_log_action(LOGLEV_PANIC, ACT_FATAL);
-#if !BX_DEBUGGER_TERM
-  // logfile should be different from stderr, otherwise terminal mode
-  // really ends up having fun
-  if (!strcmp(SIM->get_param_string(BXPN_LOG_FILENAME)->getptr(), "-"))
-    BX_PANIC(("cannot log to stderr in term mode"));
-  initscr();
-#else
-  FILE *scr_fp = NULL;
-  scr_fd = open("/dev/ptmx",O_RDWR);
-  if(scr_fd > 0){
-    scr_fp = fdopen(scr_fd,"w+");
-    grantpt(scr_fd);
-    unlockpt(scr_fd);
-    fprintf(stderr, "\nBochs connected to screen \"%s\"\n",ptsname(scr_fd));
+#if BX_DEBUGGER_TERM
+  if (bx_dbg.debugger_active) {
+    FILE *scr_fp = NULL;
+    scr_fd = open("/dev/ptmx",O_RDWR);
+    if (scr_fd > 0) {
+      scr_fp = fdopen(scr_fd,"w+");
+      grantpt(scr_fd);
+      unlockpt(scr_fd);
+      fprintf(stderr, "\nBochs connected to screen \"%s\"\n",ptsname(scr_fd));
+    }
+    // Drive curses from the pty rather than reassigning stdin/stdout: those are
+    // not modifiable lvalues on every platform (musl declares them FILE *const).
+    if (scr_fp == NULL || newterm(NULL, scr_fp, scr_fp) == NULL)
+      initscr();
   }
-  // Drive curses from the pty rather than reassigning stdin/stdout: those are
-  // not modifiable lvalues on every platform (musl declares them FILE *const).
-  if (scr_fp == NULL || newterm(NULL, scr_fp, scr_fp) == NULL)
-    initscr();
+  else
 #endif
+  {
+    // logfile should be different from stderr, otherwise terminal mode
+    // really ends up having fun
+    if (!strcmp(SIM->get_param_string(BXPN_LOG_FILENAME)->getptr(), "-"))
+      BX_PANIC(("cannot log to stderr in term mode"));
+    initscr();
+  }
   start_color();
   cbreak();
   curs_set(1);
@@ -233,7 +237,7 @@ void bx_term_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
         BX_ERROR(("Show IPS not available"));
 #endif
       } else {
-        BX_PANIC(("Unknown rfb option '%s'", argv[i]));
+        BX_PANIC(("Unknown term option '%s'", argv[i]));
       }
     }
   }
