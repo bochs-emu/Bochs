@@ -804,14 +804,14 @@ Bit32u BX_CPU_C::handle_pkeys(bx_address laddr, Bit64u leaf_entry, unsigned user
 
       // check of accessDisable bit set
       if (BX_CPU_THIS_PTR pkrs & (1<<(pkey*2))) {
-        BX_ERROR(("protection key access not allowed PKRS=%x pkey=%d", BX_CPU_THIS_PTR pkrs, pkey));
+        BX_ERROR(("protection key access not allowed PKRS=%x pkey=%d", (Bit32u) BX_CPU_THIS_PTR pkrs, pkey));
         page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
       }
 
       // check of writeDisable bit set
       if (BX_CPU_THIS_PTR pkrs & (1<<(pkey*2+1))) {
         if (isWrite && BX_CPU_THIS_PTR cr0.get_WP()) {
-          BX_ERROR(("protection key write not allowed PKRS=%x pkey=%d", BX_CPU_THIS_PTR pkrs, pkey));
+          BX_ERROR(("protection key write not allowed PKRS=%x pkey=%d", (Bit32u) BX_CPU_THIS_PTR pkrs, pkey));
           page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
         }
       }

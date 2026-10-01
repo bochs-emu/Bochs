@@ -76,6 +76,19 @@ public:
   }
 };
 
+// write only MSR, read causes #GP, written value is not remembered
+class WriteOnlyMSR : public MSR_Descriptor {
+public:
+  WriteOnlyMSR(const char *name, unsigned feature, Bit64u reserved_bits = 0): MSR_Descriptor(name, feature, reserved_bits) {}
+  virtual ~WriteOnlyMSR() {}
+
+  // get() is not overridden, read of write only MSR returns false (#GP)
+
+  virtual bool set(Bit64u val) {
+    return true;
+  }
+};
+
 // MSR which value is stored in Bit64u variable inside BX_CPU_C, accessed through a pointer
 class VarMSR : public MSR_Descriptor {
 private:

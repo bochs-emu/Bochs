@@ -206,7 +206,7 @@ void BX_CPU_C::init_MSRs()
 #endif
 
 #if BX_SUPPORT_UINTR
-  msr_desc[BX_MSR_IA32_UINTR_RR] = new MSR_Descriptor("MSR_IA32_UINTR_RR", BX_ISA_UINTR);
+  msr_desc[BX_MSR_IA32_UINTR_RR] = new VarMSR("MSR_IA32_UINTR_RR", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.uirr);
   msr_desc[BX_MSR_IA32_UINTR_HANDLER] = new VarMSR("MSR_IA32_UINTR_HANDLER", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.ui_handler, 0, is_canonical_msr);
   msr_desc[BX_MSR_IA32_UINTR_STACKADJUST] = new VarMSR("MSR_IA32_UINTR_STACKADJUST", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.stack_adjust, 0, is_canonical_msr);
   // IA32_UINTR_MISC MSR:
@@ -219,7 +219,7 @@ void BX_CPU_C::init_MSRs()
 #endif
 
 #if BX_SUPPORT_PKEYS
-  msr_desc[BX_MSR_IA32_PKRS] = new MSR_Descriptor("MSR_IA32_PKRS", BX_ISA_PKS, BX_CONST64(0xffffffff00000000)); // bits [63:32] are reserved
+  msr_desc[BX_MSR_IA32_PKRS] = new VarMSR("MSR_IA32_PKRS", BX_ISA_PKS, &BX_CPU_THIS_PTR pkrs, BX_CONST64(0xffffffff00000000)); // bits [63:32] are reserved
 #endif
 
 #if BX_SUPPORT_FRED
@@ -257,11 +257,11 @@ void BX_CPU_C::init_MSRs()
   // IA32_PRED_CMD MSR:
   //    [0] - Indirect Branch Prediction Barrier (IBPB)
   // [63:1] - reserved
-  msr_desc[BX_MSR_IA32_PRED_CMD] = new MSR_Descriptor("MSR_IA32_PRED_CMD", BX_ISA_SCA_MITIGATIONS, ~BX_CONST64(1));
+  msr_desc[BX_MSR_IA32_PRED_CMD] = new WriteOnlyMSR("MSR_IA32_PRED_CMD", BX_ISA_SCA_MITIGATIONS, ~BX_CONST64(1));
   // IA32_FLUSH_CMD MSR:
   //    [0] - WBINVD DL1 Cache
   // [63:1] - reserved
-  msr_desc[BX_MSR_IA32_FLUSH_CMD] = new MSR_Descriptor("MSR_IA32_FLUSH_CMD", BX_ISA_SCA_MITIGATIONS, ~BX_CONST64(1));
+  msr_desc[BX_MSR_IA32_FLUSH_CMD] = new WriteOnlyMSR("MSR_IA32_FLUSH_CMD", BX_ISA_SCA_MITIGATIONS, ~BX_CONST64(1));
 
 #if BX_SUPPORT_VMX
   msr_desc[BX_MSR_IA32_FEATURE_CONTROL] = new MSR_Descriptor("MSR_IA32_FEATURE_CONTROL", BX_ISA_VMX);
@@ -410,6 +410,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #endif
     case BX_MSR_IA32_BARRIER:                   // 0x02f
     case BX_MSR_TSC_ADJUST:                     // 0x03b
+    case BX_MSR_IA32_PRED_CMD:                  // 0x049
 #if BX_SUPPORT_MONITOR_MWAIT
     case BX_MSR_IA32_UMWAIT_CONTROL:            // 0x0e1
 #endif
@@ -417,6 +418,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_MTRRCAP:                        // 0x0fe
 #endif
     case BX_MSR_IA32_ARCH_CAPABILITIES:         // 0x10a
+    case BX_MSR_IA32_FLUSH_CMD:                 // 0x10b
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:                    // 0x174
     case BX_MSR_SYSENTER_ESP:                   // 0x175
@@ -499,7 +501,11 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_IA32_PL3_SSP:                   // 0x6a7
     case BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR:  // 0x6a8
 #endif
+#if BX_SUPPORT_PKEYS
+    case BX_MSR_IA32_PKRS:                      // 0x6e1
+#endif
 #if BX_SUPPORT_UINTR
+    case BX_MSR_IA32_UINTR_RR:                  // 0x985
     case BX_MSR_IA32_UINTR_HANDLER:             // 0x986
     case BX_MSR_IA32_UINTR_STACKADJUST:         // 0x987
     case BX_MSR_IA32_UINTR_MISC:                // 0x988
@@ -549,18 +555,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
 
-#if BX_SUPPORT_UINTR
-    case BX_MSR_IA32_UINTR_RR:
-      val64 = BX_CPU_THIS_PTR uintr.uirr;
-      break;
-#endif
-
-#if BX_SUPPORT_PKEYS
-    case BX_MSR_IA32_PKRS:
-      val64 = BX_CPU_THIS_PTR pkrs;
-      break;
-#endif
-
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_TSC_DEADLINE:
       val64 = BX_CPU_THIS_PTR lapic->get_tsc_deadline();
@@ -580,11 +574,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #endif
         val64 = BX_CPU_THIS_PTR msr.ia32_spec_ctrl;
       break;
-
-    case BX_MSR_IA32_PRED_CMD:
-    case BX_MSR_IA32_FLUSH_CMD:
-      // write only MSRs
-      return false;
 
 #if BX_SUPPORT_VMX
 /*
@@ -864,9 +853,11 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #endif
     case BX_MSR_IA32_BARRIER:                   // 0x02f
     case BX_MSR_TSC_ADJUST:                     // 0x03b
+    case BX_MSR_IA32_PRED_CMD:                  // 0x049
 #if BX_SUPPORT_MONITOR_MWAIT
     case BX_MSR_IA32_UMWAIT_CONTROL:            // 0x0e1
 #endif
+    case BX_MSR_IA32_FLUSH_CMD:                 // 0x10b
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:                    // 0x174
     case BX_MSR_SYSENTER_ESP:                   // 0x175
@@ -925,7 +916,11 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_IA32_PL3_SSP:                   // 0x6a7
     case BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR:  // 0x6a8
 #endif
+#if BX_SUPPORT_PKEYS
+    case BX_MSR_IA32_PKRS:                      // 0x6e1
+#endif
 #if BX_SUPPORT_UINTR
+    case BX_MSR_IA32_UINTR_RR:                  // 0x985
     case BX_MSR_IA32_UINTR_HANDLER:             // 0x986
     case BX_MSR_IA32_UINTR_STACKADJUST:         // 0x987
     case BX_MSR_IA32_UINTR_MISC:                // 0x988, reserved bits already checked above
@@ -978,21 +973,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       BX_CPU_THIS_PTR set_TSC(val_64);
       break;
 
-
-#if BX_SUPPORT_UINTR
-    case BX_MSR_IA32_UINTR_RR:
-      BX_CPU_THIS_PTR uintr.uirr = val_64;
-      uintr_uirr_update(); // potentially signal or clear user-level-interrupt
-      break;
-#endif
-
-#if BX_SUPPORT_PKEYS
-    case BX_MSR_IA32_PKRS:
-      BX_CPU_THIS_PTR pkrs = val_64;
-      set_PKeys(BX_CPU_THIS_PTR pkru, BX_CPU_THIS_PTR pkrs);
-      break;
-#endif
-
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_TSC_DEADLINE:
       BX_CPU_THIS_PTR lapic->set_tsc_deadline(val_64);
@@ -1012,11 +992,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       BX_CPU_THIS_PTR msr.ia32_spec_ctrl = GET32L(val_64);
       break;
 
-    case BX_MSR_IA32_PRED_CMD: // reserved bits already checked above
-    case BX_MSR_IA32_FLUSH_CMD:
-      // write only MSR, no need to remember written value
-      break;
-
 #if BX_SUPPORT_VMX
     // Support only two bits: lock bit (bit 0) and VMX enable (bit 2)
     case BX_MSR_IA32_FEATURE_CONTROL:
@@ -1032,6 +1007,16 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       BX_PANIC(("WRMSR: missing MSR handling for MSR %08x", index));
       return handle_unknown_wrmsr(index, val_64);
     }
+
+    // post-processing for MSRs which writes have side effects
+#if BX_SUPPORT_PKEYS
+    if (index == BX_MSR_IA32_PKRS)
+      set_PKeys(BX_CPU_THIS_PTR pkru, BX_CPU_THIS_PTR pkrs);
+#endif
+#if BX_SUPPORT_UINTR
+    if (index == BX_MSR_IA32_UINTR_RR)
+      uintr_uirr_update(); // potentially signal or clear user-level-interrupt
+#endif
   }
   else {
     switch (index) {

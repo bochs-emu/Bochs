@@ -1066,7 +1066,7 @@ public: // for now...
 #if BX_SUPPORT_PKEYS
   // protection keys
   Bit32u pkru;
-  Bit32u pkrs;
+  Bit64u pkrs;
 
   // unpacked protection keys to be tested together with accessBits from TLB
   // the unpacked key is stored in the accessBits format:
