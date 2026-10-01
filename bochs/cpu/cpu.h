@@ -683,8 +683,8 @@ typedef struct
 #if BX_CPU_LEVEL >= 6
   // SYSENTER/SYSEXIT instruction msr's
   Bit32u sysenter_cs_msr;
-  bx_address sysenter_esp_msr;
-  bx_address sysenter_eip_msr;
+  Bit64u sysenter_esp_msr;
+  Bit64u sysenter_eip_msr;
 
   BxPackedRegister pat;
   Bit64u mtrrphys[16];
@@ -933,6 +933,7 @@ struct BX_SMM_State;
 struct BxOpcodeInfo_t;
 struct bx_cpu_statistics;
 class bx_cpuid_t;
+class MSR_Descriptor;
 
 class BX_CPU_C : public logfunctions {
 public: // for now...
@@ -1085,14 +1086,14 @@ public: // for now...
 
 #if BX_SUPPORT_UINTR
   struct {
-    bx_address ui_handler;
+    Bit64u ui_handler;
     Bit64u stack_adjust;
-    Bit32u uinv;              // user interrupt notification vector, actually 8 bit
-    Bit32u uitt_size;         // user interrupt target table size
-    bx_address uitt_addr;     // user interrupt target table address
-    bx_address upid_addr;     // user posted-interrupt descriptor address
-    Bit64u uirr;              // user-interrupt request register
-    bool UIF;                 // if UIF=0 user interrupt cannot be delivered
+    Bit32u uinv;          // user interrupt notification vector, actually 8 bit
+    Bit32u uitt_size;     // user interrupt target table size
+    Bit64u uitt_addr;     // user interrupt target table address
+    Bit64u upid_addr;     // user posted-interrupt descriptor address
+    Bit64u uirr;          // user-interrupt request register
+    bool UIF;             // if UIF=0 user interrupt cannot be delivered
 
     bool senduipi_enabled() const { return uitt_addr & 0x1; }
   } uintr;
@@ -1139,6 +1140,9 @@ public: // for now...
 
 #if BX_CPU_LEVEL >= 5
   bx_regs_msr_t msr;
+
+  MSR_Descriptor **msr_desc;     // MSR descriptors for MSRs [0 .. BX_MSR_MAX_INDEX-1]
+  MSR_Descriptor **ext_msr_desc; // MSR descriptors for MSRs [0xC0000000 .. 0xC0000000+BX_EXTENDED_MSR_MAX_INDEX-1]
 #endif
 
 #if BX_CONFIGURE_MSRS

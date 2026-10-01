@@ -70,6 +70,27 @@ public:
   }
 };
 
+// MSR which value is stored in Bit64u variable inside BX_CPU_C, accessed through a pointer
+class MSR_Var_Descriptor : public MSR_Descriptor {
+private:
+  Bit64u *var;
+
+public:
+  MSR_Var_Descriptor(const char *name, unsigned feature, Bit64u *cpu_var, bool canonical = false, Bit64u reserved_bits = 0):
+     MSR_Descriptor(name, feature, canonical, reserved_bits), var(cpu_var) {}
+  virtual ~MSR_Var_Descriptor() {}
+
+  virtual bool get(Bit64u *val) {
+    *val = *var;
+    return true;
+  }
+
+  virtual bool set(Bit64u val) {
+    *var = val;
+    return true;
+  }
+};
+
 enum MSR_Register {
   BX_MSR_TSC            = 0x010,
   BX_MSR_PLATFORM_ID    = 0x017,

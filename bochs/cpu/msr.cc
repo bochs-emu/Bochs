@@ -43,13 +43,10 @@ extern bool is_invalid_cet_control(bx_address val);
 #endif
 
 #if BX_CPU_LEVEL >= 5
-static MSR_DescriptorPtr* msr_desc;
-static MSR_DescriptorPtr* ext_msr_desc;
 
+// MSR descriptors are per cpu, some of them refer to the cpu variables
 void BX_CPU_C::init_MSRs()
 {
-  if (msr_desc) return;
-
   msr_desc = new MSR_DescriptorPtr[BX_MSR_MAX_INDEX];
   for (unsigned i=0;i < BX_MSR_MAX_INDEX; i++)
     msr_desc[i] = NULL;
@@ -62,7 +59,7 @@ void BX_CPU_C::init_MSRs()
 #endif
 
 #if BX_SUPPORT_X86_64
-  msr_desc[BX_MSR_IA32_USER_MSR_CTL] = new MSR_Descriptor("MSR_IA32_USER_MSR_CTL", BX_ISA_USER_MSR, true /* force_canonical */);
+  msr_desc[BX_MSR_IA32_USER_MSR_CTL] = new MSR_Var_Descriptor("MSR_IA32_USER_MSR_CTL", BX_ISA_USER_MSR, &BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl, true /* force_canonical */);
 #endif
 
   msr_desc[BX_MSR_IA32_APERF] = new MSR_Descriptor("MSR_IA32_APERF", BX_ISA_PENTIUM);
@@ -70,8 +67,8 @@ void BX_CPU_C::init_MSRs()
 
 #if BX_CPU_LEVEL >= 6
   msr_desc[BX_MSR_SYSENTER_CS] = new MSR_Descriptor("MSR_IA32_SYSENTER_CS", BX_ISA_SYSENTER_SYSEXIT);
-  msr_desc[BX_MSR_SYSENTER_ESP] = new MSR_Descriptor("MSR_IA32_SYSENTER_ESP", BX_ISA_SYSENTER_SYSEXIT, true /* force_canonical */);
-  msr_desc[BX_MSR_SYSENTER_EIP] = new MSR_Descriptor("MSR_IA32_SYSENTER_EIP", BX_ISA_SYSENTER_SYSEXIT, true /* force_canonical */);
+  msr_desc[BX_MSR_SYSENTER_ESP] = new MSR_Var_Descriptor("MSR_IA32_SYSENTER_ESP", BX_ISA_SYSENTER_SYSEXIT, &BX_CPU_THIS_PTR msr.sysenter_esp_msr, true /* force_canonical */);
+  msr_desc[BX_MSR_SYSENTER_EIP] = new MSR_Var_Descriptor("MSR_IA32_SYSENTER_EIP", BX_ISA_SYSENTER_SYSEXIT, &BX_CPU_THIS_PTR msr.sysenter_eip_msr, true /* force_canonical */);
 #endif
 
 #if BX_CPU_LEVEL >= 6
@@ -117,28 +114,28 @@ void BX_CPU_C::init_MSRs()
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  msr_desc[BX_MSR_XSS] = new MSR_Descriptor("MSR_IA32_XSS", BX_ISA_XSAVES, false, ~Bit64u(get_ia32_xss_allow_mask()));
+  msr_desc[BX_MSR_XSS] = new MSR_Var_Descriptor("MSR_IA32_XSS", BX_ISA_XSAVES, &BX_CPU_THIS_PTR msr.ia32_xss, false, ~Bit64u(get_ia32_xss_allow_mask()));
 #endif
 
 #if BX_SUPPORT_CET
   msr_desc[BX_MSR_IA32_U_CET] = new MSR_Descriptor("MSR_IA32_U_CET", BX_ISA_CET, true /* force canonical */);
   msr_desc[BX_MSR_IA32_S_CET] = new MSR_Descriptor("MSR_IA32_S_CET", BX_ISA_CET, true /* force canonical */);
 
-  msr_desc[BX_MSR_IA32_PL0_SSP] = new MSR_Descriptor("MSR_IA32_PL0_SSP", BX_ISA_CET, true, BX_CONST64(0x3)); // force 4-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_PL1_SSP] = new MSR_Descriptor("MSR_IA32_PL1_SSP", BX_ISA_CET, true, BX_CONST64(0x3)); // force 4-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_PL2_SSP] = new MSR_Descriptor("MSR_IA32_PL2_SSP", BX_ISA_CET, true, BX_CONST64(0x3)); // force 4-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_PL3_SSP] = new MSR_Descriptor("MSR_IA32_PL3_SSP", BX_ISA_CET, true, BX_CONST64(0x3)); // force 4-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_PL0_SSP] = new MSR_Var_Descriptor("MSR_IA32_PL0_SSP", BX_ISA_CET, &BX_CPU_THIS_PTR msr.ia32_pl_ssp[0], true, BX_CONST64(0x3)); // force 4-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_PL1_SSP] = new MSR_Var_Descriptor("MSR_IA32_PL1_SSP", BX_ISA_CET, &BX_CPU_THIS_PTR msr.ia32_pl_ssp[1], true, BX_CONST64(0x3)); // force 4-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_PL2_SSP] = new MSR_Var_Descriptor("MSR_IA32_PL2_SSP", BX_ISA_CET, &BX_CPU_THIS_PTR msr.ia32_pl_ssp[2], true, BX_CONST64(0x3)); // force 4-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_PL3_SSP] = new MSR_Var_Descriptor("MSR_IA32_PL3_SSP", BX_ISA_CET, &BX_CPU_THIS_PTR msr.ia32_pl_ssp[3], true, BX_CONST64(0x3)); // force 4-byte alignment of the MSR value
 
-  msr_desc[BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR] = new MSR_Descriptor("MSR_IA32_INTERRUPT_SSP_TABLE_ADDR", BX_ISA_CET, true /* force canonical */);
+  msr_desc[BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR] = new MSR_Var_Descriptor("MSR_IA32_INTERRUPT_SSP_TABLE_ADDR", BX_ISA_CET, &BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table, true /* force canonical */);
 #endif
 
 #if BX_SUPPORT_UINTR
   msr_desc[BX_MSR_IA32_UINTR_RR] = new MSR_Descriptor("MSR_IA32_UINTR_RR", BX_ISA_UINTR);
-  msr_desc[BX_MSR_IA32_UINTR_HANDLER] = new MSR_Descriptor("MSR_IA32_UINTR_HANDLER", BX_ISA_UINTR, true /* force canonical */);
-  msr_desc[BX_MSR_IA32_UINTR_STACKADJUST] = new MSR_Descriptor("MSR_IA32_UINTR_STACKADJUST", BX_ISA_UINTR, true /* force canonical */);
+  msr_desc[BX_MSR_IA32_UINTR_HANDLER] = new MSR_Var_Descriptor("MSR_IA32_UINTR_HANDLER", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.ui_handler, true /* force canonical */);
+  msr_desc[BX_MSR_IA32_UINTR_STACKADJUST] = new MSR_Var_Descriptor("MSR_IA32_UINTR_STACKADJUST", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.stack_adjust, true /* force canonical */);
   msr_desc[BX_MSR_IA32_UINTR_MISC] = new MSR_Descriptor("MSR_IA32_UINTR_MISC", BX_ISA_UINTR, false, BX_CONST64(0xffffff0000000000));
-  msr_desc[BX_MSR_IA32_UINTR_PD] = new MSR_Descriptor("MSR_IA32_UINTR_PD", BX_ISA_UINTR, true, BX_CONST64(0x3f)); // bits [5:0] are reserved
-  msr_desc[BX_MSR_IA32_UINTR_TT] = new MSR_Descriptor("MSR_IA32_UINTR_TT", BX_ISA_UINTR, true, BX_CONST64(0x0e)); // bits [3:1] are reserved
+  msr_desc[BX_MSR_IA32_UINTR_PD] = new MSR_Var_Descriptor("MSR_IA32_UINTR_PD", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.upid_addr, true, BX_CONST64(0x3f)); // bits [5:0] are reserved
+  msr_desc[BX_MSR_IA32_UINTR_TT] = new MSR_Var_Descriptor("MSR_IA32_UINTR_TT", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.uitt_addr, true, BX_CONST64(0x0e)); // bits [3:1] are reserved
 #endif
 
 #if BX_SUPPORT_PKEYS
@@ -146,17 +143,17 @@ void BX_CPU_C::init_MSRs()
 #endif
 
 #if BX_SUPPORT_FRED
-  msr_desc[BX_MSR_IA32_FRED_RSP0] = new MSR_Descriptor("MSR_IA32_FRED_RSP0", BX_ISA_FRED, true, BX_CONST64(0x3f)); // force 64-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_FRED_RSP1] = new MSR_Descriptor("MSR_IA32_FRED_RSP1", BX_ISA_FRED, true, BX_CONST64(0x3f)); // force 64-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_FRED_RSP2] = new MSR_Descriptor("MSR_IA32_FRED_RSP2", BX_ISA_FRED, true, BX_CONST64(0x3f)); // force 64-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_FRED_RSP3] = new MSR_Descriptor("MSR_IA32_FRED_RSP3", BX_ISA_FRED, true, BX_CONST64(0x3f)); // force 64-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_FRED_STKLVLS] = new MSR_Descriptor("MSR_IA32_FRED_STKLVLS", BX_ISA_FRED);
+  msr_desc[BX_MSR_IA32_FRED_RSP0] = new MSR_Var_Descriptor("MSR_IA32_FRED_RSP0", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_rsp[0], true, BX_CONST64(0x3f)); // force 64-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_RSP1] = new MSR_Var_Descriptor("MSR_IA32_FRED_RSP1", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_rsp[1], true, BX_CONST64(0x3f)); // force 64-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_RSP2] = new MSR_Var_Descriptor("MSR_IA32_FRED_RSP2", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_rsp[2], true, BX_CONST64(0x3f)); // force 64-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_RSP3] = new MSR_Var_Descriptor("MSR_IA32_FRED_RSP3", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_rsp[3], true, BX_CONST64(0x3f)); // force 64-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_STKLVLS] = new MSR_Var_Descriptor("MSR_IA32_FRED_STKLVLS", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_stack_levels);
 #if BX_SUPPORT_CET
-  msr_desc[BX_MSR_IA32_FRED_SSP1] = new MSR_Descriptor("MSR_IA32_FRED_SSP1", BX_ISA_FRED, true, BX_CONST64(0x7)); // force 8-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_FRED_SSP2] = new MSR_Descriptor("MSR_IA32_FRED_SSP2", BX_ISA_FRED, true, BX_CONST64(0x7)); // force 8-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_FRED_SSP3] = new MSR_Descriptor("MSR_IA32_FRED_SSP3", BX_ISA_FRED, true, BX_CONST64(0x7)); // force 8-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_SSP1] = new MSR_Var_Descriptor("MSR_IA32_FRED_SSP1", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_ssp[1], true, BX_CONST64(0x7)); // force 8-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_SSP2] = new MSR_Var_Descriptor("MSR_IA32_FRED_SSP2", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_ssp[2], true, BX_CONST64(0x7)); // force 8-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_SSP3] = new MSR_Var_Descriptor("MSR_IA32_FRED_SSP3", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_ssp[3], true, BX_CONST64(0x7)); // force 8-byte alignment of the MSR value
 #endif
-  msr_desc[BX_MSR_IA32_FRED_CONFIG] = new MSR_Descriptor("MSR_IA32_FRED_CONFIG", BX_ISA_FRED, BX_CONST64(0x834));
+  msr_desc[BX_MSR_IA32_FRED_CONFIG] = new MSR_Var_Descriptor("MSR_IA32_FRED_CONFIG", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_cfg, true, BX_CONST64(0x834));
 #endif
 
 #if BX_CPU_LEVEL >= 6
@@ -233,15 +230,15 @@ void BX_CPU_C::init_MSRs()
 
   ext_msr_desc[BX_MSR_EFER - 0xc0000000] = new MSR_Descriptor("MSR_EFER", BX_ISA_PENTIUM, false, ~Bit64u(get_efer_allow_mask()));
   // requires BX_ISA_SYSCALL_SYSRET_LEGACY or BX_ISA_LONG_MODE
-  ext_msr_desc[BX_MSR_STAR - 0xc0000000] = new MSR_Descriptor("MSR_STAR", is_cpu_extension_supported(BX_ISA_LONG_MODE) ? BX_ISA_LONG_MODE : BX_ISA_SYSCALL_SYSRET_LEGACY);
+  ext_msr_desc[BX_MSR_STAR - 0xc0000000] = new MSR_Var_Descriptor("MSR_STAR", is_cpu_extension_supported(BX_ISA_LONG_MODE) ? BX_ISA_LONG_MODE : BX_ISA_SYSCALL_SYSRET_LEGACY, &BX_CPU_THIS_PTR msr.star);
 
 #if BX_SUPPORT_X86_64
-  ext_msr_desc[BX_MSR_LSTAR - 0xc0000000] = new MSR_Descriptor("MSR_LSTAR", BX_ISA_LONG_MODE, true /* force canonical */);
-  ext_msr_desc[BX_MSR_CSTAR - 0xc0000000] = new MSR_Descriptor("MSR_CSTAR", BX_ISA_LONG_MODE, true /* force canonical */);
+  ext_msr_desc[BX_MSR_LSTAR - 0xc0000000] = new MSR_Var_Descriptor("MSR_LSTAR", BX_ISA_LONG_MODE, &BX_CPU_THIS_PTR msr.lstar, true /* force canonical */);
+  ext_msr_desc[BX_MSR_CSTAR - 0xc0000000] = new MSR_Var_Descriptor("MSR_CSTAR", BX_ISA_LONG_MODE, &BX_CPU_THIS_PTR msr.cstar, true /* force canonical */);
   ext_msr_desc[BX_MSR_FMASK - 0xc0000000] = new MSR_Descriptor("MSR_FMASK", BX_ISA_LONG_MODE);
-  ext_msr_desc[BX_MSR_FSBASE - 0xc0000000] = new MSR_Descriptor("MSR_FSBASE", BX_ISA_LONG_MODE, true /* force canonical */);
-  ext_msr_desc[BX_MSR_GSBASE - 0xc0000000] = new MSR_Descriptor("MSR_GSBASE", BX_ISA_LONG_MODE, true /* force canonical */);
-  ext_msr_desc[BX_MSR_KERNELGSBASE - 0xc0000000] = new MSR_Descriptor("MSR_KERNELGSBASE", BX_ISA_LONG_MODE, true /* force canonical */);
+  ext_msr_desc[BX_MSR_FSBASE - 0xc0000000] = new MSR_Var_Descriptor("MSR_FSBASE", BX_ISA_LONG_MODE, &MSR_FSBASE, true /* force canonical */);
+  ext_msr_desc[BX_MSR_GSBASE - 0xc0000000] = new MSR_Var_Descriptor("MSR_GSBASE", BX_ISA_LONG_MODE, &MSR_GSBASE, true /* force canonical */);
+  ext_msr_desc[BX_MSR_KERNELGSBASE - 0xc0000000] = new MSR_Var_Descriptor("MSR_KERNELGSBASE", BX_ISA_LONG_MODE, &BX_CPU_THIS_PTR msr.kernelgsbase, true /* force canonical */);
   ext_msr_desc[BX_MSR_TSC_AUX - 0xc0000000] = new MSR_Descriptor("MSR_TSC_AUX", BX_ISA_RDTSCP);
 #endif
 }
@@ -298,7 +295,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #endif
 
   if (index < BX_MSR_MAX_INDEX || (index >= 0xc0000000 && index < (0xc0000000 + BX_EXTENDED_MSR_MAX_INDEX))) {
-    MSR_Descriptor *msr_desciptor = (index >= 0xc0000000) ? ext_msr_desc[index - 0xc0000000] : msr_desc[index];
+    MSR_Descriptor *msr_desciptor = (index >= 0xc0000000) ? BX_CPU_THIS_PTR ext_msr_desc[index - 0xc0000000] : BX_CPU_THIS_PTR msr_desc[index];
     if (! msr_desciptor) return handle_unknown_rdmsr(index, msr);
     if (! is_cpu_extension_supported(msr_desciptor->get_cpu_feature())) {
       BX_ERROR(("RDMSR %s: '%s' feature not enabled in the cpu model", msr_desciptor->get_name(), get_cpu_feature_name(msr_desciptor->get_cpu_feature())));
@@ -311,30 +308,74 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
     switch(index) {
     // MSRs converted to generic MSR descriptor interface
-    case BX_MSR_PLATFORM_ID:
-#if BX_SUPPORT_VMX
-    case BX_MSR_VMX_BASIC:
-    case BX_MSR_VMX_PINBASED_CTRLS:
-    case BX_MSR_VMX_PROCBASED_CTRLS:
-    case BX_MSR_VMX_VMEXIT_CTRLS:
-    case BX_MSR_VMX_VMEXIT_CTRLS2:
-    case BX_MSR_VMX_VMENTRY_CTRLS:
-    case BX_MSR_VMX_PROCBASED_CTRLS2:
-    case BX_MSR_VMX_PROCBASED_CTRLS3:
-#if BX_SUPPORT_VMX >= 2
-    case BX_MSR_VMX_TRUE_PINBASED_CTRLS:
-    case BX_MSR_VMX_TRUE_PROCBASED_CTRLS:
-    case BX_MSR_VMX_TRUE_VMEXIT_CTRLS:
-    case BX_MSR_VMX_TRUE_VMENTRY_CTRLS:
-    case BX_MSR_VMX_EPT_VPID_CAP:
-    case BX_MSR_VMX_VMFUNC:
+    case BX_MSR_PLATFORM_ID:                    // 0x017
+#if BX_SUPPORT_X86_64
+    case BX_MSR_IA32_USER_MSR_CTL:              // 0x01c
 #endif
-    case BX_MSR_VMX_MISC:
-    case BX_MSR_VMX_CR0_FIXED0:
-    case BX_MSR_VMX_CR0_FIXED1:
-    case BX_MSR_VMX_CR4_FIXED0:
-    case BX_MSR_VMX_CR4_FIXED1:
-    case BX_MSR_VMX_VMCS_ENUM:
+#if BX_CPU_LEVEL >= 6
+    case BX_MSR_SYSENTER_ESP:                   // 0x175
+    case BX_MSR_SYSENTER_EIP:                   // 0x176
+#endif
+#if BX_SUPPORT_FRED
+    case BX_MSR_IA32_FRED_RSP0:                 // 0x1cc
+    case BX_MSR_IA32_FRED_RSP1:                 // 0x1cd
+    case BX_MSR_IA32_FRED_RSP2:                 // 0x1ce
+    case BX_MSR_IA32_FRED_RSP3:                 // 0x1cf
+    case BX_MSR_IA32_FRED_STKLVLS:              // 0x1d0
+#if BX_SUPPORT_CET
+    case BX_MSR_IA32_FRED_SSP1:                 // 0x1d1
+    case BX_MSR_IA32_FRED_SSP2:                 // 0x1d2
+    case BX_MSR_IA32_FRED_SSP3:                 // 0x1d3
+#endif
+    case BX_MSR_IA32_FRED_CONFIG:               // 0x1d4
+#endif
+#if BX_SUPPORT_VMX
+    case BX_MSR_VMX_BASIC:                      // 0x480
+    case BX_MSR_VMX_PINBASED_CTRLS:             // 0x481
+    case BX_MSR_VMX_PROCBASED_CTRLS:            // 0x482
+    case BX_MSR_VMX_VMEXIT_CTRLS:               // 0x483
+    case BX_MSR_VMX_VMENTRY_CTRLS:              // 0x484
+    case BX_MSR_VMX_MISC:                       // 0x485
+    case BX_MSR_VMX_CR0_FIXED0:                 // 0x486
+    case BX_MSR_VMX_CR0_FIXED1:                 // 0x487
+    case BX_MSR_VMX_CR4_FIXED0:                 // 0x488
+    case BX_MSR_VMX_CR4_FIXED1:                 // 0x489
+    case BX_MSR_VMX_VMCS_ENUM:                  // 0x48a
+    case BX_MSR_VMX_PROCBASED_CTRLS2:           // 0x48b
+#if BX_SUPPORT_VMX >= 2
+    case BX_MSR_VMX_EPT_VPID_CAP:               // 0x48c
+    case BX_MSR_VMX_TRUE_PINBASED_CTRLS:        // 0x48d
+    case BX_MSR_VMX_TRUE_PROCBASED_CTRLS:       // 0x48e
+    case BX_MSR_VMX_TRUE_VMEXIT_CTRLS:          // 0x48f
+    case BX_MSR_VMX_TRUE_VMENTRY_CTRLS:         // 0x490
+    case BX_MSR_VMX_VMFUNC:                     // 0x491
+#endif
+    case BX_MSR_VMX_PROCBASED_CTRLS3:           // 0x492
+    case BX_MSR_VMX_VMEXIT_CTRLS2:              // 0x493
+#endif
+#if BX_SUPPORT_CET
+    case BX_MSR_IA32_PL0_SSP:                   // 0x6a4
+    case BX_MSR_IA32_PL1_SSP:                   // 0x6a5
+    case BX_MSR_IA32_PL2_SSP:                   // 0x6a6
+    case BX_MSR_IA32_PL3_SSP:                   // 0x6a7
+    case BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR:  // 0x6a8
+#endif
+#if BX_SUPPORT_UINTR
+    case BX_MSR_IA32_UINTR_HANDLER:             // 0x986
+    case BX_MSR_IA32_UINTR_STACKADJUST:         // 0x987
+    case BX_MSR_IA32_UINTR_PD:                  // 0x989
+    case BX_MSR_IA32_UINTR_TT:                  // 0x98a
+#endif
+#if BX_CPU_LEVEL >= 6
+    case BX_MSR_XSS:                            // 0xda0
+#endif
+    case BX_MSR_STAR:                           // 0xc0000081
+#if BX_SUPPORT_X86_64
+    case BX_MSR_LSTAR:                          // 0xc0000082
+    case BX_MSR_CSTAR:                          // 0xc0000083
+    case BX_MSR_FSBASE:                         // 0xc0000100
+    case BX_MSR_GSBASE:                         // 0xc0000101
+    case BX_MSR_KERNELGSBASE:                   // 0xc0000102
 #endif
       if (! msr_desciptor->get(&val64)) return false;
       break;
@@ -360,21 +401,9 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       val64 = BX_CPU_THIS_PTR get_TSC();
       break;
 
-#if BX_SUPPORT_X86_64
-    case BX_MSR_IA32_USER_MSR_CTL:
-      val64 = BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl;
-      break;
-#endif
-
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:
       val64 = BX_CPU_THIS_PTR msr.sysenter_cs_msr;
-      break;
-    case BX_MSR_SYSENTER_ESP:
-      val64 = BX_CPU_THIS_PTR msr.sysenter_esp_msr;
-      break;
-    case BX_MSR_SYSENTER_EIP:
-      val64 = BX_CPU_THIS_PTR msr.sysenter_eip_msr;
       break;
 #endif
 
@@ -448,47 +477,10 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 #endif
 
-#if BX_CPU_LEVEL >= 6
-    case BX_MSR_XSS:
-      val64 = BX_CPU_THIS_PTR msr.ia32_xss;
-      break;
-#endif
-
 #if BX_SUPPORT_CET
     case BX_MSR_IA32_U_CET:
     case BX_MSR_IA32_S_CET:
       val64 = BX_CPU_THIS_PTR msr.ia32_cet_control[index == BX_MSR_IA32_U_CET];
-      break;
-    case BX_MSR_IA32_PL0_SSP:
-    case BX_MSR_IA32_PL1_SSP:
-    case BX_MSR_IA32_PL2_SSP:
-    case BX_MSR_IA32_PL3_SSP:
-      val64 = BX_CPU_THIS_PTR msr.ia32_pl_ssp[index - BX_MSR_IA32_PL0_SSP];
-      break;
-    case BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR:
-      val64 = BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table;
-      break;
-#endif
-
-#if BX_SUPPORT_FRED
-    case BX_MSR_IA32_FRED_RSP0:
-    case BX_MSR_IA32_FRED_RSP1:
-    case BX_MSR_IA32_FRED_RSP2:
-    case BX_MSR_IA32_FRED_RSP3:
-      val64 = BX_CPU_THIS_PTR msr.ia32_fred_rsp[index - BX_MSR_IA32_FRED_RSP0];
-      break;
-#if BX_SUPPORT_CET
-    case BX_MSR_IA32_FRED_SSP1:
-    case BX_MSR_IA32_FRED_SSP2:
-    case BX_MSR_IA32_FRED_SSP3:
-      val64 = BX_CPU_THIS_PTR msr.ia32_fred_ssp[index - BX_MSR_IA32_FRED_SSP1 + 1];
-      break;
-#endif
-    case BX_MSR_IA32_FRED_STKLVLS:
-      val64 = BX_CPU_THIS_PTR msr.ia32_fred_stack_levels;
-      break;
-    case BX_MSR_IA32_FRED_CONFIG:
-      val64 = BX_CPU_THIS_PTR msr.ia32_fred_cfg;
       break;
 #endif
 
@@ -496,20 +488,8 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_IA32_UINTR_RR:
       val64 = BX_CPU_THIS_PTR uintr.uirr;
       break;
-    case BX_MSR_IA32_UINTR_HANDLER:
-      val64 = BX_CPU_THIS_PTR uintr.ui_handler;
-      break;
-    case BX_MSR_IA32_UINTR_STACKADJUST:
-      val64 = BX_CPU_THIS_PTR uintr.stack_adjust;
-      break;
     case BX_MSR_IA32_UINTR_MISC:
       val64 = GET64_FROM_HI32_LO32(BX_CPU_THIS_PTR uintr.uinv, BX_CPU_THIS_PTR uintr.uitt_size);
-      break;
-    case BX_MSR_IA32_UINTR_PD:
-      val64 = BX_CPU_THIS_PTR uintr.upid_addr;
-      break;
-    case BX_MSR_IA32_UINTR_TT:
-      val64 = BX_CPU_THIS_PTR uintr.uitt_addr;
       break;
 #endif
 
@@ -573,34 +553,14 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_EFER:
       if (! BX_CPU_THIS_PTR efer_suppmask) {
         BX_ERROR(("RDMSR MSR_EFER: EFER MSR is not supported !"));
-        return handle_unknown_rdmsr(index, msr);
+        return false;
       }
       val64 = BX_CPU_THIS_PTR efer.get32();
       break;
 
-    case BX_MSR_STAR:
-      val64 = BX_CPU_THIS_PTR msr.star;
-      break;
-
 #if BX_SUPPORT_X86_64
-    case BX_MSR_LSTAR:
-      val64 = BX_CPU_THIS_PTR msr.lstar;
-      break;
-    case BX_MSR_CSTAR:
-      val64 = BX_CPU_THIS_PTR msr.cstar;
-      break;
     case BX_MSR_FMASK:
       val64 = BX_CPU_THIS_PTR msr.fmask;
-      break;
-
-    case BX_MSR_FSBASE:
-      val64 = MSR_FSBASE;
-      break;
-    case BX_MSR_GSBASE:
-      val64 = MSR_GSBASE;
-      break;
-    case BX_MSR_KERNELGSBASE:
-      val64 = BX_CPU_THIS_PTR msr.kernelgsbase;
       break;
 
     case BX_MSR_TSC_AUX:
@@ -844,7 +804,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #endif
 
   if (index < BX_MSR_MAX_INDEX || (index >= 0xc0000000 && index < (0xc0000000 + BX_EXTENDED_MSR_MAX_INDEX))) {
-    MSR_Descriptor *msr_desciptor = (index >= 0xc0000000) ? ext_msr_desc[index - 0xc0000000] : msr_desc[index];
+    MSR_Descriptor *msr_desciptor = (index >= 0xc0000000) ? BX_CPU_THIS_PTR ext_msr_desc[index - 0xc0000000] : BX_CPU_THIS_PTR msr_desc[index];
     if (! msr_desciptor) return handle_unknown_wrmsr(index, val_64);
     if (! is_cpu_extension_supported(msr_desciptor->get_cpu_feature())) {
       BX_ERROR(("WRMSR %s: '%s' feature not enabled in the cpu model", msr_desciptor->get_name(), get_cpu_feature_name(msr_desciptor->get_cpu_feature())));
@@ -874,6 +834,54 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #endif
 
     switch(index) {
+    // MSRs converted to generic MSR descriptor interface
+#if BX_SUPPORT_X86_64
+    case BX_MSR_IA32_USER_MSR_CTL:              // 0x01c
+#endif
+#if BX_CPU_LEVEL >= 6
+    case BX_MSR_SYSENTER_ESP:                   // 0x175
+    case BX_MSR_SYSENTER_EIP:                   // 0x176
+#endif
+#if BX_SUPPORT_FRED
+    case BX_MSR_IA32_FRED_RSP0:                 // 0x1cc
+    case BX_MSR_IA32_FRED_RSP1:                 // 0x1cd
+    case BX_MSR_IA32_FRED_RSP2:                 // 0x1ce
+    case BX_MSR_IA32_FRED_RSP3:                 // 0x1cf
+    case BX_MSR_IA32_FRED_STKLVLS:              // 0x1d0
+#if BX_SUPPORT_CET
+    case BX_MSR_IA32_FRED_SSP1:                 // 0x1d1
+    case BX_MSR_IA32_FRED_SSP2:                 // 0x1d2
+    case BX_MSR_IA32_FRED_SSP3:                 // 0x1d3
+#endif
+    case BX_MSR_IA32_FRED_CONFIG:               // 0x1d4, reserved bits already checked above
+#endif
+#if BX_SUPPORT_CET
+    case BX_MSR_IA32_PL0_SSP:                   // 0x6a4
+    case BX_MSR_IA32_PL1_SSP:                   // 0x6a5
+    case BX_MSR_IA32_PL2_SSP:                   // 0x6a6
+    case BX_MSR_IA32_PL3_SSP:                   // 0x6a7
+    case BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR:  // 0x6a8
+#endif
+#if BX_SUPPORT_UINTR
+    case BX_MSR_IA32_UINTR_HANDLER:             // 0x986
+    case BX_MSR_IA32_UINTR_STACKADJUST:         // 0x987
+    case BX_MSR_IA32_UINTR_PD:                  // 0x989, reserved bits already checked above
+    case BX_MSR_IA32_UINTR_TT:                  // 0x98a, reserved bits already checked above
+#endif
+#if BX_CPU_LEVEL >= 6
+    case BX_MSR_XSS:                            // 0xda0, reserved bits already checked above
+#endif
+    case BX_MSR_STAR:                           // 0xc0000081
+#if BX_SUPPORT_X86_64
+    case BX_MSR_LSTAR:                          // 0xc0000082
+    case BX_MSR_CSTAR:                          // 0xc0000083
+    case BX_MSR_FSBASE:                         // 0xc0000100
+    case BX_MSR_GSBASE:                         // 0xc0000101
+    case BX_MSR_KERNELGSBASE:                   // 0xc0000102
+#endif
+      if (! msr_desciptor->set(val_64)) return false;
+      break;
+
 #if BX_SUPPORT_PERFMON
     case BX_MSR_PERFEVTSEL0:
     case BX_MSR_PERFEVTSEL1:
@@ -895,21 +903,9 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       BX_INFO(("WRMSR: ignore write into MSR IA32_MPERF"));
       break;
 
-#if BX_SUPPORT_X86_64
-    case BX_MSR_IA32_USER_MSR_CTL:
-      BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl = val_64;
-      break;
-#endif
-
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:
       BX_CPU_THIS_PTR msr.sysenter_cs_msr = val32_lo;
-      break;
-    case BX_MSR_SYSENTER_ESP:
-      BX_CPU_THIS_PTR msr.sysenter_esp_msr = val_64;
-      break;
-    case BX_MSR_SYSENTER_EIP:
-      BX_CPU_THIS_PTR msr.sysenter_eip_msr = val_64;
       break;
 #endif
 
@@ -1018,12 +1014,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       return relocate_apic(val_64);
 #endif
 
-#if BX_CPU_LEVEL >= 6
-    case BX_MSR_XSS: // reserved bits already checked above
-      BX_CPU_THIS_PTR msr.ia32_xss = val_64;
-      break;
-#endif
-
 #if BX_SUPPORT_CET
     case BX_MSR_IA32_U_CET:
     case BX_MSR_IA32_S_CET:
@@ -1033,39 +1023,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       }
       BX_CPU_THIS_PTR msr.ia32_cet_control[index == BX_MSR_IA32_U_CET] = val_64;
       break;
-
-    case BX_MSR_IA32_PL0_SSP:
-    case BX_MSR_IA32_PL1_SSP:
-    case BX_MSR_IA32_PL2_SSP:
-    case BX_MSR_IA32_PL3_SSP:
-      BX_CPU_THIS_PTR msr.ia32_pl_ssp[index - BX_MSR_IA32_PL0_SSP] = val_64;
-      break;
-
-    case BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR:
-      BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table = val_64;
-      break;
-#endif
-
-#if BX_SUPPORT_FRED
-    case BX_MSR_IA32_FRED_RSP0:
-    case BX_MSR_IA32_FRED_RSP1:
-    case BX_MSR_IA32_FRED_RSP2:
-    case BX_MSR_IA32_FRED_RSP3:
-      BX_CPU_THIS_PTR msr.ia32_fred_rsp[index - BX_MSR_IA32_FRED_RSP0] = val_64;
-      break;
-#if BX_SUPPORT_CET
-    case BX_MSR_IA32_FRED_SSP1:
-    case BX_MSR_IA32_FRED_SSP2:
-    case BX_MSR_IA32_FRED_SSP3:
-      BX_CPU_THIS_PTR msr.ia32_fred_ssp[index - BX_MSR_IA32_FRED_SSP1 + 1] = val_64;
-      break;
-#endif
-    case BX_MSR_IA32_FRED_STKLVLS:
-      BX_CPU_THIS_PTR msr.ia32_fred_stack_levels = val_64;
-      break;
-    case BX_MSR_IA32_FRED_CONFIG: // reserved bits already checked above
-      BX_CPU_THIS_PTR msr.ia32_fred_cfg = val_64;
-      break;
 #endif
 
 #if BX_SUPPORT_UINTR
@@ -1073,21 +1030,9 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       BX_CPU_THIS_PTR uintr.uirr = val_64;
       uintr_uirr_update(); // potentially signal or clear user-level-interrupt
       break;
-    case BX_MSR_IA32_UINTR_HANDLER:
-      BX_CPU_THIS_PTR uintr.ui_handler = val_64;
-      break;
-    case BX_MSR_IA32_UINTR_STACKADJUST:
-      BX_CPU_THIS_PTR uintr.stack_adjust = val_64;
-      break;
     case BX_MSR_IA32_UINTR_MISC: // reserved bits already checked above
       BX_CPU_THIS_PTR uintr.uitt_size = GET32L(val_64);
       BX_CPU_THIS_PTR uintr.uinv      = GET32H(val_64);
-      break;
-    case BX_MSR_IA32_UINTR_PD: // reserved bits already checked above
-      BX_CPU_THIS_PTR uintr.upid_addr = val_64;
-      break;
-    case BX_MSR_IA32_UINTR_TT: // reserved bits already checked above
-      BX_CPU_THIS_PTR uintr.uitt_addr = val_64;
       break;
 #endif
 
@@ -1141,29 +1086,9 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       if (! SetEFER(val_64)) return false;
       break;
 
-    case BX_MSR_STAR:
-      BX_CPU_THIS_PTR msr.star = val_64;
-      break;
-
 #if BX_SUPPORT_X86_64
-    case BX_MSR_LSTAR:
-      BX_CPU_THIS_PTR msr.lstar = val_64;
-      break;
-    case BX_MSR_CSTAR:
-      BX_CPU_THIS_PTR msr.cstar = val_64;
-      break;
     case BX_MSR_FMASK:
       BX_CPU_THIS_PTR msr.fmask = (Bit32u) val_64;
-      break;
-
-    case BX_MSR_FSBASE:
-      MSR_FSBASE = val_64;
-      break;
-    case BX_MSR_GSBASE:
-      MSR_GSBASE = val_64;
-      break;
-    case BX_MSR_KERNELGSBASE:
-      BX_CPU_THIS_PTR msr.kernelgsbase = val_64;
       break;
 
     case BX_MSR_TSC_AUX:
