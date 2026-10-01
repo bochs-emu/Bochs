@@ -103,6 +103,42 @@ public:
   }
 };
 
+bool isValidMSR_IA32_SPEC_CTRL(Bit64u val_64);
+
+// IA32_SPEC_CTRL MSR, could be virtualized by VMX
+class SpecCtrlMSR : public MSR_Descriptor {
+private:
+  BX_CPU_C *cpu;
+
+public:
+  SpecCtrlMSR(BX_CPU_C *cpu_ptr): MSR_Descriptor("MSR_IA32_SPEC_CTRL", BX_ISA_SCA_MITIGATIONS), cpu(cpu_ptr) {}
+
+  virtual bool get(Bit64u *val) {
+#if BX_SUPPORT_VMX >= 2
+    VMCS_CACHE *vm = &cpu->vmcs;
+    if (cpu->in_vmx_guest && vm->vmexec_ctrls3.VIRTUALIZE_IA32_SPEC_CTRL())
+      *val = vm->ia32_spec_ctrl_shadow;
+    else
+#endif
+      *val = cpu->msr.ia32_spec_ctrl;
+    return true;
+  }
+
+  virtual bool set(Bit64u val) {
+#if BX_SUPPORT_VMX >= 2
+    VMCS_CACHE *vm = &cpu->vmcs;
+    if (cpu->in_vmx_guest && vm->vmexec_ctrls3.VIRTUALIZE_IA32_SPEC_CTRL())
+      val = (cpu->msr.ia32_spec_ctrl & vm->ia32_spec_ctrl_mask) | (val & ~vm->ia32_spec_ctrl_mask);
+#endif
+    if (! isValidMSR_IA32_SPEC_CTRL(val)) {
+      BX_ERROR(("WRMSR: attempt to set reserved bits of IA32_SPEC_CTRL: 0x" FMT_LL "x", val));
+      return false;
+    }
+    cpu->msr.ia32_spec_ctrl = GET32L(val);
+    return true;
+  }
+};
+
 #undef LOG_THIS
 #define LOG_THIS BX_CPU_THIS_PTR
 
@@ -174,6 +210,29 @@ public:
 // MSR descriptors are per cpu, some of them refer to the cpu variables
 void BX_CPU_C::init_MSRs()
 {
+  //
+  // - An execution of WRMSR causes a #GP if it would load any of the following MSRs with a non-canonical address:
+  //      IA32_BNDCFGS, IA32_DS_AREA, IA32_FS_BASE, IA32_GS_BASE,
+  //      IA32_INTERRUPT_SSP_TABLE_ADDR, IA32_KERNEL_GS_BASE, IA32_LSTAR, IA32_PL0_SSP,
+  //      IA32_PL1_SSP, IA32_PL2_SSP, IA32_PL3_SSP, IA32_RTIT_ADDR0_A, IA32_RTIT_ADDR0_B,
+  //      IA32_RTIT_ADDR1_A, IA32_RTIT_ADDR1_B, IA32_RTIT_ADDR2_A, IA32_RTIT_ADDR2_B,
+  //      IA32_RTIT_ADDR3_A, IA32_RTIT_ADDR3_B, IA32_S_CET, IA32_SYSENTER_EIP, IA32_SYSENTER_ESP,
+  //      IA32_UINTR_HANDLER, IA32_UINTR_PD, IA32_UINTR_STACKADJUST, IA32_U_CET, and
+  //      IA32_UINTR_TT
+  // - An execution of XRSTORS causes a #GP if it would load any of the following MSRs with a non-canonical address:
+  //      IA32_PL0_SSP, IA32_PL1_SSP, IA32_PL2_SSP, IA32_PL3_SSP, IA32_RTIT_ADDR0_A,
+  //      IA32_RTIT_ADDR0_B, IA32_RTIT_ADDR1_A, IA32_RTIT_ADDR1_B, IA32_RTIT_ADDR2_A,
+  //      IA32_RTIT_ADDR2_B, IA32_RTIT_ADDR3_A, IA32_RTIT_ADDR3_B, IA32_U_CET,
+  //      IA32_UINTR_HANDLER, IA32_UINTR_PD, IA32_UINTR_STACKADJUST, or IA32_UINTR_TT
+  //
+  // With a small number of exceptions, this enforcement checks for CPU canonicality and is thus independent of the
+  // current paging mode. Thus, a processor that supports 5-level paging will allow the instructions mentioned
+  // above to load these registers with addresses that are 57-bit canonical but not 48-bit canonical, even if 4-level
+  // paging is active. (As a result, instructions that store these values - SGDT, SIDT, SLDT, STR, RDFSBASE,
+  // RDGSBASE, RDMSR, XSAVE, XSAVEC, XSAVEOPT, and XSAVES - may save addresses that are 57-bit canonical
+  // but not 48-bit canonical, even if 4-level paging is active)
+  //
+
 #if BX_SUPPORT_X86_64
   is_canonical_msr = is_cpu_extension_supported(BX_ISA_LA57) ? IsCanonical57 : IsCanonical48;
 #endif
@@ -325,7 +384,7 @@ void BX_CPU_C::init_MSRs()
   //     [4]: SSB_NO: Processor is not susceptible to Speculative Store Bypass
   //  [63:5]: reserved
   msr_desc[BX_MSR_IA32_ARCH_CAPABILITIES] = new ConstMSR("MSR_IA32_ARCH_CAPABILITIES", BX_ISA_SCA_MITIGATIONS, 0x1F); // read only, set bits [4:0]
-  msr_desc[BX_MSR_IA32_SPEC_CTRL] = new MSR_Descriptor("MSR_IA32_SPEC_CTRL", BX_ISA_SCA_MITIGATIONS);
+  msr_desc[BX_MSR_IA32_SPEC_CTRL] = new SpecCtrlMSR(this);
   // IA32_PRED_CMD MSR:
   //    [0] - Indirect Branch Prediction Barrier (IBPB)
   // [63:1] - reserved
@@ -336,7 +395,9 @@ void BX_CPU_C::init_MSRs()
   msr_desc[BX_MSR_IA32_FLUSH_CMD] = new WriteOnlyMSR("MSR_IA32_FLUSH_CMD", BX_ISA_SCA_MITIGATIONS, ~BX_CONST64(1));
 
 #if BX_SUPPORT_VMX
-  msr_desc[BX_MSR_IA32_FEATURE_CONTROL] = new MSR_Descriptor("MSR_IA32_FEATURE_CONTROL", BX_ISA_VMX);
+  // IA32_FEATURE_CONTROL MSR, locked for writes once the lock bit is set
+  // Support only two bits: lock bit (bit 0) and VMX enable (bit 2), all other bits are reserved
+  msr_desc[BX_MSR_IA32_FEATURE_CONTROL] = new VarMSR("MSR_IA32_FEATURE_CONTROL", BX_ISA_VMX, &BX_CPU_THIS_PTR msr.ia32_feature_ctrl, ~Bit64u(BX_IA32_FEATURE_CONTROL_BITS));
   // all these VMX MSRs are read only, the values are computed from vmx_cap so init_VMCS() must be called before
   msr_desc[BX_MSR_VMX_BASIC] = new ConstMSR("MSR_VMX_BASIC", BX_ISA_VMX, VMX_MSR_VMX_BASIC);
   msr_desc[BX_MSR_VMX_PINBASED_CTRLS] = new ConstMSR("MSR_VMX_PINBASED_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_PINBASED_CTRLS);
@@ -423,6 +484,12 @@ void BX_CPU_C::reset_MSRs(unsigned source)
 
   for (unsigned i=0;i < BX_EXTENDED_MSR_MAX_INDEX; i++)
     if (ext_msr_desc[i]) ext_msr_desc[i]->reset(source);
+
+#if BX_SUPPORT_VMX
+  // IA32_FEATURE_CONTROL MSR becomes read only once locked, unlock it on hardware reset
+  if (source == BX_RESET_HARDWARE)
+    msr_desc[BX_MSR_IA32_FEATURE_CONTROL]->set_reserved_bits(~Bit64u(BX_IA32_FEATURE_CONTROL_BITS));
+#endif
 }
 
 void BX_CPU_C::register_MSRs_state(bx_list_c *parent)
@@ -484,168 +551,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       return false;
     }
 
-    switch(index) {
-    // MSRs converted to generic MSR descriptor interface
-    case BX_MSR_TSC:                            // 0x010
-    case BX_MSR_PLATFORM_ID:                    // 0x017
-#if BX_SUPPORT_APIC
-    case BX_MSR_APICBASE:                       // 0x01b
-#endif
-#if BX_SUPPORT_X86_64
-    case BX_MSR_IA32_USER_MSR_CTL:              // 0x01c
-#endif
-    case BX_MSR_IA32_BARRIER:                   // 0x02f
-    case BX_MSR_TSC_ADJUST:                     // 0x03b
-    case BX_MSR_IA32_PRED_CMD:                  // 0x049
-#if BX_SUPPORT_MONITOR_MWAIT
-    case BX_MSR_IA32_UMWAIT_CONTROL:            // 0x0e1
-#endif
-    case BX_MSR_IA32_MPERF:                     // 0x0e7
-    case BX_MSR_IA32_APERF:                     // 0x0e8
-#if BX_CPU_LEVEL >= 6
-    case BX_MSR_MTRRCAP:                        // 0x0fe
-#endif
-    case BX_MSR_IA32_ARCH_CAPABILITIES:         // 0x10a
-    case BX_MSR_IA32_FLUSH_CMD:                 // 0x10b
-#if BX_CPU_LEVEL >= 6
-    case BX_MSR_SYSENTER_CS:                    // 0x174
-    case BX_MSR_SYSENTER_ESP:                   // 0x175
-    case BX_MSR_SYSENTER_EIP:                   // 0x176
-#endif
-#if BX_SUPPORT_FRED
-    case BX_MSR_IA32_FRED_RSP0:                 // 0x1cc
-    case BX_MSR_IA32_FRED_RSP1:                 // 0x1cd
-    case BX_MSR_IA32_FRED_RSP2:                 // 0x1ce
-    case BX_MSR_IA32_FRED_RSP3:                 // 0x1cf
-    case BX_MSR_IA32_FRED_STKLVLS:              // 0x1d0
-#if BX_SUPPORT_CET
-    case BX_MSR_IA32_FRED_SSP1:                 // 0x1d1
-    case BX_MSR_IA32_FRED_SSP2:                 // 0x1d2
-    case BX_MSR_IA32_FRED_SSP3:                 // 0x1d3
-#endif
-    case BX_MSR_IA32_FRED_CONFIG:               // 0x1d4
-#endif
-#if BX_CPU_LEVEL >= 6
-    case BX_MSR_MTRRPHYSBASE0:                  // 0x200
-    case BX_MSR_MTRRPHYSMASK0:                  // 0x201
-    case BX_MSR_MTRRPHYSBASE1:                  // 0x202
-    case BX_MSR_MTRRPHYSMASK1:                  // 0x203
-    case BX_MSR_MTRRPHYSBASE2:                  // 0x204
-    case BX_MSR_MTRRPHYSMASK2:                  // 0x205
-    case BX_MSR_MTRRPHYSBASE3:                  // 0x206
-    case BX_MSR_MTRRPHYSMASK3:                  // 0x207
-    case BX_MSR_MTRRPHYSBASE4:                  // 0x208
-    case BX_MSR_MTRRPHYSMASK4:                  // 0x209
-    case BX_MSR_MTRRPHYSBASE5:                  // 0x20a
-    case BX_MSR_MTRRPHYSMASK5:                  // 0x20b
-    case BX_MSR_MTRRPHYSBASE6:                  // 0x20c
-    case BX_MSR_MTRRPHYSMASK6:                  // 0x20d
-    case BX_MSR_MTRRPHYSBASE7:                  // 0x20e
-    case BX_MSR_MTRRPHYSMASK7:                  // 0x20f
-    case BX_MSR_MTRRFIX64K_00000:               // 0x250
-    case BX_MSR_MTRRFIX16K_80000:               // 0x258
-    case BX_MSR_MTRRFIX16K_A0000:               // 0x259
-    case BX_MSR_MTRRFIX4K_C0000:                // 0x268
-    case BX_MSR_MTRRFIX4K_C8000:                // 0x269
-    case BX_MSR_MTRRFIX4K_D0000:                // 0x26a
-    case BX_MSR_MTRRFIX4K_D8000:                // 0x26b
-    case BX_MSR_MTRRFIX4K_E0000:                // 0x26c
-    case BX_MSR_MTRRFIX4K_E8000:                // 0x26d
-    case BX_MSR_MTRRFIX4K_F0000:                // 0x26e
-    case BX_MSR_MTRRFIX4K_F8000:                // 0x26f
-    case BX_MSR_PAT:                            // 0x277
-    case BX_MSR_MTRR_DEFTYPE:                   // 0x2ff
-#endif
-#if BX_SUPPORT_VMX
-    case BX_MSR_VMX_BASIC:                      // 0x480
-    case BX_MSR_VMX_PINBASED_CTRLS:             // 0x481
-    case BX_MSR_VMX_PROCBASED_CTRLS:            // 0x482
-    case BX_MSR_VMX_VMEXIT_CTRLS:               // 0x483
-    case BX_MSR_VMX_VMENTRY_CTRLS:              // 0x484
-    case BX_MSR_VMX_MISC:                       // 0x485
-    case BX_MSR_VMX_CR0_FIXED0:                 // 0x486
-    case BX_MSR_VMX_CR0_FIXED1:                 // 0x487
-    case BX_MSR_VMX_CR4_FIXED0:                 // 0x488
-    case BX_MSR_VMX_CR4_FIXED1:                 // 0x489
-    case BX_MSR_VMX_VMCS_ENUM:                  // 0x48a
-    case BX_MSR_VMX_PROCBASED_CTRLS2:           // 0x48b
-#if BX_SUPPORT_VMX >= 2
-    case BX_MSR_VMX_EPT_VPID_CAP:               // 0x48c
-    case BX_MSR_VMX_TRUE_PINBASED_CTRLS:        // 0x48d
-    case BX_MSR_VMX_TRUE_PROCBASED_CTRLS:       // 0x48e
-    case BX_MSR_VMX_TRUE_VMEXIT_CTRLS:          // 0x48f
-    case BX_MSR_VMX_TRUE_VMENTRY_CTRLS:         // 0x490
-    case BX_MSR_VMX_VMFUNC:                     // 0x491
-#endif
-    case BX_MSR_VMX_PROCBASED_CTRLS3:           // 0x492
-    case BX_MSR_VMX_VMEXIT_CTRLS2:              // 0x493
-#endif
-#if BX_SUPPORT_CET
-    case BX_MSR_IA32_U_CET:                     // 0x6a0
-    case BX_MSR_IA32_S_CET:                     // 0x6a2
-    case BX_MSR_IA32_PL0_SSP:                   // 0x6a4
-    case BX_MSR_IA32_PL1_SSP:                   // 0x6a5
-    case BX_MSR_IA32_PL2_SSP:                   // 0x6a6
-    case BX_MSR_IA32_PL3_SSP:                   // 0x6a7
-    case BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR:  // 0x6a8
-#endif
-#if BX_CPU_LEVEL >= 6
-    case BX_MSR_TSC_DEADLINE:                   // 0x6e0
-#endif
-#if BX_SUPPORT_PKEYS
-    case BX_MSR_IA32_PKRS:                      // 0x6e1
-#endif
-#if BX_SUPPORT_UINTR
-    case BX_MSR_IA32_UINTR_RR:                  // 0x985
-    case BX_MSR_IA32_UINTR_HANDLER:             // 0x986
-    case BX_MSR_IA32_UINTR_STACKADJUST:         // 0x987
-    case BX_MSR_IA32_UINTR_MISC:                // 0x988
-    case BX_MSR_IA32_UINTR_PD:                  // 0x989
-    case BX_MSR_IA32_UINTR_TT:                  // 0x98a
-#endif
-#if BX_CPU_LEVEL >= 6
-    case BX_MSR_XSS:                            // 0xda0
-#endif
-    case BX_MSR_EFER:                           // 0xc0000080
-    case BX_MSR_STAR:                           // 0xc0000081
-#if BX_SUPPORT_X86_64
-    case BX_MSR_LSTAR:                          // 0xc0000082
-    case BX_MSR_CSTAR:                          // 0xc0000083
-    case BX_MSR_FMASK:                          // 0xc0000084
-    case BX_MSR_FSBASE:                         // 0xc0000100
-    case BX_MSR_GSBASE:                         // 0xc0000101
-    case BX_MSR_KERNELGSBASE:                   // 0xc0000102
-    case BX_MSR_TSC_AUX:                        // 0xc0000103
-#endif
-      if (! msr_desciptor->get(&val64)) return false;
-      break;
-
-
-    // SCA prevention MSRs
-    case BX_MSR_IA32_SPEC_CTRL:
-      //    [0] - Enable IBRS: Indirect Branch Restricted Speculation
-      //    [1] - Enable STIBP: Single Thread Indirect Branch Predictors
-      //    [2] - Enable SSCB: Speculative Store Bypass Disable
-      // [63:3] - reserved
-#if BX_SUPPORT_VMX >= 2
-      if (BX_CPU_THIS_PTR in_vmx_guest && vm->vmexec_ctrls3.VIRTUALIZE_IA32_SPEC_CTRL())
-        val64 = vm->ia32_spec_ctrl_shadow;
-      else
-#endif
-        val64 = BX_CPU_THIS_PTR msr.ia32_spec_ctrl;
-      break;
-
-#if BX_SUPPORT_VMX
-    case BX_MSR_IA32_FEATURE_CONTROL:
-      val64 = BX_CPU_THIS_PTR msr.ia32_feature_ctrl;
-      break;
-#endif
-
-    default:
-      // user defined MSRs (loaded from MSRs configuration file)
-      if (! msr_desciptor->get(&val64)) return false;
-      break;
-    }
+    if (! msr_desciptor->get(&val64)) return false;
   }
   else {
     switch (index) {
@@ -816,29 +722,6 @@ bool isValidMSR_IA32_SPEC_CTRL(Bit64u val_64)
 
 #if BX_CPU_LEVEL >= 5
 
-//
-// - An execution of WRMSR causes a #GP if it would load any of the following MSRs with a non-canonical address:
-//      IA32_BNDCFGS, IA32_DS_AREA, IA32_FS_BASE, IA32_GS_BASE,
-//      IA32_INTERRUPT_SSP_TABLE_ADDR, IA32_KERNEL_GS_BASE, IA32_LSTAR, IA32_PL0_SSP,
-//      IA32_PL1_SSP, IA32_PL2_SSP, IA32_PL3_SSP, IA32_RTIT_ADDR0_A, IA32_RTIT_ADDR0_B,
-//      IA32_RTIT_ADDR1_A, IA32_RTIT_ADDR1_B, IA32_RTIT_ADDR2_A, IA32_RTIT_ADDR2_B,
-//      IA32_RTIT_ADDR3_A, IA32_RTIT_ADDR3_B, IA32_S_CET, IA32_SYSENTER_EIP, IA32_SYSENTER_ESP,
-//      IA32_UINTR_HANDLER, IA32_UINTR_PD, IA32_UINTR_STACKADJUST, IA32_U_CET, and
-//      IA32_UINTR_TT
-// - An execution of XRSTORS causes a #GP if it would load any of the following MSRs with a non-canonical address:
-//      IA32_PL0_SSP, IA32_PL1_SSP, IA32_PL2_SSP, IA32_PL3_SSP, IA32_RTIT_ADDR0_A,
-//      IA32_RTIT_ADDR0_B, IA32_RTIT_ADDR1_A, IA32_RTIT_ADDR1_B, IA32_RTIT_ADDR2_A,
-//      IA32_RTIT_ADDR2_B, IA32_RTIT_ADDR3_A, IA32_RTIT_ADDR3_B, IA32_U_CET,
-//      IA32_UINTR_HANDLER, IA32_UINTR_PD, IA32_UINTR_STACKADJUST, or IA32_UINTR_TT
-//
-// With a small number of exceptions, this enforcement checks for CPU canonicality and is thus independent of the
-// current paging mode. Thus, a processor that supports 5-level paging will allow the instructions mentioned
-// above to load these registers with addresses that are 57-bit canonical but not 48-bit canonical, even if 4-level
-// paging is active. (As a result, instructions that store these values - SGDT, SIDT, SLDT, STR, RDFSBASE,
-// RDGSBASE, RDMSR, XSAVE, XSAVEC, XSAVEOPT, and XSAVES - may save addresses that are 57-bit canonical
-// but not 48-bit canonical, even if 4-level paging is active)
-//
-
 bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 {
   Bit32u val32_lo = GET32L(val_64);
@@ -895,147 +778,9 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       return false;
     }
 
-    switch(index) {
-    // MSRs converted to generic MSR descriptor interface
-    case BX_MSR_TSC:                            // 0x010
-#if BX_SUPPORT_APIC
-    case BX_MSR_APICBASE:                       // 0x01b
-#endif
-#if BX_SUPPORT_X86_64
-    case BX_MSR_IA32_USER_MSR_CTL:              // 0x01c
-#endif
-    case BX_MSR_IA32_BARRIER:                   // 0x02f
-    case BX_MSR_TSC_ADJUST:                     // 0x03b
-    case BX_MSR_IA32_PRED_CMD:                  // 0x049
-#if BX_SUPPORT_MONITOR_MWAIT
-    case BX_MSR_IA32_UMWAIT_CONTROL:            // 0x0e1
-#endif
-    case BX_MSR_IA32_MPERF:                     // 0x0e7
-    case BX_MSR_IA32_APERF:                     // 0x0e8
-    case BX_MSR_IA32_FLUSH_CMD:                 // 0x10b
-#if BX_CPU_LEVEL >= 6
-    case BX_MSR_SYSENTER_CS:                    // 0x174
-    case BX_MSR_SYSENTER_ESP:                   // 0x175
-    case BX_MSR_SYSENTER_EIP:                   // 0x176
-#endif
-#if BX_SUPPORT_FRED
-    case BX_MSR_IA32_FRED_RSP0:                 // 0x1cc
-    case BX_MSR_IA32_FRED_RSP1:                 // 0x1cd
-    case BX_MSR_IA32_FRED_RSP2:                 // 0x1ce
-    case BX_MSR_IA32_FRED_RSP3:                 // 0x1cf
-    case BX_MSR_IA32_FRED_STKLVLS:              // 0x1d0
-#if BX_SUPPORT_CET
-    case BX_MSR_IA32_FRED_SSP1:                 // 0x1d1
-    case BX_MSR_IA32_FRED_SSP2:                 // 0x1d2
-    case BX_MSR_IA32_FRED_SSP3:                 // 0x1d3
-#endif
-    case BX_MSR_IA32_FRED_CONFIG:               // 0x1d4, reserved bits already checked above
-#endif
-#if BX_CPU_LEVEL >= 6
-    case BX_MSR_MTRRPHYSBASE0:                  // 0x200
-    case BX_MSR_MTRRPHYSMASK0:                  // 0x201
-    case BX_MSR_MTRRPHYSBASE1:                  // 0x202
-    case BX_MSR_MTRRPHYSMASK1:                  // 0x203
-    case BX_MSR_MTRRPHYSBASE2:                  // 0x204
-    case BX_MSR_MTRRPHYSMASK2:                  // 0x205
-    case BX_MSR_MTRRPHYSBASE3:                  // 0x206
-    case BX_MSR_MTRRPHYSMASK3:                  // 0x207
-    case BX_MSR_MTRRPHYSBASE4:                  // 0x208
-    case BX_MSR_MTRRPHYSMASK4:                  // 0x209
-    case BX_MSR_MTRRPHYSBASE5:                  // 0x20a
-    case BX_MSR_MTRRPHYSMASK5:                  // 0x20b
-    case BX_MSR_MTRRPHYSBASE6:                  // 0x20c
-    case BX_MSR_MTRRPHYSMASK6:                  // 0x20d
-    case BX_MSR_MTRRPHYSBASE7:                  // 0x20e
-    case BX_MSR_MTRRPHYSMASK7:                  // 0x20f
-    case BX_MSR_MTRRFIX64K_00000:               // 0x250
-    case BX_MSR_MTRRFIX16K_80000:               // 0x258
-    case BX_MSR_MTRRFIX16K_A0000:               // 0x259
-    case BX_MSR_MTRRFIX4K_C0000:                // 0x268
-    case BX_MSR_MTRRFIX4K_C8000:                // 0x269
-    case BX_MSR_MTRRFIX4K_D0000:                // 0x26a
-    case BX_MSR_MTRRFIX4K_D8000:                // 0x26b
-    case BX_MSR_MTRRFIX4K_E0000:                // 0x26c
-    case BX_MSR_MTRRFIX4K_E8000:                // 0x26d
-    case BX_MSR_MTRRFIX4K_F0000:                // 0x26e
-    case BX_MSR_MTRRFIX4K_F8000:                // 0x26f
-    case BX_MSR_PAT:                            // 0x277
-    case BX_MSR_MTRR_DEFTYPE:                   // 0x2ff
-#endif
-#if BX_SUPPORT_CET
-    case BX_MSR_IA32_U_CET:                     // 0x6a0
-    case BX_MSR_IA32_S_CET:                     // 0x6a2
-    case BX_MSR_IA32_PL0_SSP:                   // 0x6a4
-    case BX_MSR_IA32_PL1_SSP:                   // 0x6a5
-    case BX_MSR_IA32_PL2_SSP:                   // 0x6a6
-    case BX_MSR_IA32_PL3_SSP:                   // 0x6a7
-    case BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR:  // 0x6a8
-#endif
-#if BX_CPU_LEVEL >= 6
-    case BX_MSR_TSC_DEADLINE:                   // 0x6e0
-#endif
-#if BX_SUPPORT_PKEYS
-    case BX_MSR_IA32_PKRS:                      // 0x6e1
-#endif
-#if BX_SUPPORT_UINTR
-    case BX_MSR_IA32_UINTR_RR:                  // 0x985
-    case BX_MSR_IA32_UINTR_HANDLER:             // 0x986
-    case BX_MSR_IA32_UINTR_STACKADJUST:         // 0x987
-    case BX_MSR_IA32_UINTR_MISC:                // 0x988, reserved bits already checked above
-    case BX_MSR_IA32_UINTR_PD:                  // 0x989, reserved bits already checked above
-    case BX_MSR_IA32_UINTR_TT:                  // 0x98a, reserved bits already checked above
-#endif
-#if BX_CPU_LEVEL >= 6
-    case BX_MSR_XSS:                            // 0xda0, reserved bits already checked above
-#endif
-    case BX_MSR_EFER:                           // 0xc0000080
-    case BX_MSR_STAR:                           // 0xc0000081
-#if BX_SUPPORT_X86_64
-    case BX_MSR_LSTAR:                          // 0xc0000082
-    case BX_MSR_CSTAR:                          // 0xc0000083
-    case BX_MSR_FMASK:                          // 0xc0000084
-    case BX_MSR_FSBASE:                         // 0xc0000100
-    case BX_MSR_GSBASE:                         // 0xc0000101
-    case BX_MSR_KERNELGSBASE:                   // 0xc0000102
-    case BX_MSR_TSC_AUX:                        // 0xc0000103
-#endif
-      if (! msr_desciptor->set(val_64)) {
-        BX_ERROR(("WRMSR: attempt to write invalid value 0x" FMT_LL "x to %s", val_64, msr_desciptor->get_name()));
-        return false;
-      }
-      break;
-
-    // SCA prevention MSRs
-    case BX_MSR_IA32_SPEC_CTRL:
-#if BX_SUPPORT_VMX >= 2
-      if (BX_CPU_THIS_PTR in_vmx_guest && vm->vmexec_ctrls3.VIRTUALIZE_IA32_SPEC_CTRL())
-        val_64 = (BX_CPU_THIS_PTR msr.ia32_spec_ctrl & vm->ia32_spec_ctrl_mask) | (val_64 & ~vm->ia32_spec_ctrl_mask);
-#endif
-      if (! isValidMSR_IA32_SPEC_CTRL(val_64)) {
-        BX_ERROR(("WRMSR: attempt to set reserved bits of IA32_SPEC_CTRL: 0x" FMT_LL "x", val_64));
-        return false;
-      }
-      BX_CPU_THIS_PTR msr.ia32_spec_ctrl = GET32L(val_64);
-      break;
-
-#if BX_SUPPORT_VMX
-    // Support only two bits: lock bit (bit 0) and VMX enable (bit 2)
-    case BX_MSR_IA32_FEATURE_CONTROL:
-      if (BX_CPU_THIS_PTR msr.ia32_feature_ctrl & 0x1) {
-        BX_ERROR(("WRMSR: IA32_FEATURE_CONTROL_MSR VMX lock bit is set !"));
-        return false;
-      }
-      BX_CPU_THIS_PTR msr.ia32_feature_ctrl = val32_lo;
-      break;
-#endif
-
-    default:
-      // user defined MSRs (loaded from MSRs configuration file)
-      if (! msr_desciptor->set(val_64)) {
-        BX_ERROR(("WRMSR: Write failed to MSR %s - #GP fault", msr_desciptor->get_name()));
-        return false;
-      }
-      break;
+    if (! msr_desciptor->set(val_64)) {
+      BX_ERROR(("WRMSR: attempt to write invalid value 0x" FMT_LL "x to %s", val_64, msr_desciptor->get_name()));
+      return false;
     }
 
     // post-processing for MSRs which writes have side effects
@@ -1046,6 +791,13 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #if BX_SUPPORT_UINTR
     if (index == BX_MSR_IA32_UINTR_RR)
       uintr_uirr_update(); // potentially signal or clear user-level-interrupt
+#endif
+#if BX_SUPPORT_VMX
+    if (index == BX_MSR_IA32_FEATURE_CONTROL) {
+      // once the lock bit is set the MSR becomes read only until hardware reset
+      if (BX_CPU_THIS_PTR msr.ia32_feature_ctrl & BX_IA32_FEATURE_CONTROL_LOCK_BIT)
+        msr_desciptor->set_read_only();
+    }
 #endif
   }
   else {

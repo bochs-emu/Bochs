@@ -47,6 +47,7 @@ public:
   bool is_enabled() const { return enabled; }
 
   void set_reserved_bits(Bit64u reserved_bits) { reserved = reserved_bits; }
+  void set_read_only() { reserved = ~BX_CONST64(0); }
 
   Bit64u get_reserved_bits() const { return reserved; }
   bool check_reserved_bits_violation(Bit64u value) const { return value & reserved; }

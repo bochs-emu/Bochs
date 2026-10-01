@@ -695,7 +695,7 @@ typedef struct
 #endif
 
 #if BX_SUPPORT_VMX
-  Bit32u ia32_feature_ctrl;
+  Bit64u ia32_feature_ctrl;
 #endif
 
 #if BX_SUPPORT_SVM
