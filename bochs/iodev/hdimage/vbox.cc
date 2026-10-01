@@ -229,7 +229,7 @@ ssize_t vbox_image_t::read(void *buf, size_t count)
   while (count > 0) {
     off_t readable = perform_seek();
     if (readable == INVALID_OFFSET) {
-      BX_ERROR(("vbox disk image read failed on %u bytes at " FMT_LL "d", (unsigned)count, current_offset));
+      BX_ERROR(("vbox disk image read failed on %u bytes at %lld", (unsigned)count, (long long)current_offset));
       return -1;
     }
 
@@ -253,7 +253,7 @@ ssize_t vbox_image_t::write(const void *buf, size_t count)
   while (count > 0) {
     off_t writable = perform_seek();
     if (writable == INVALID_OFFSET) {
-      BX_ERROR(("vbox disk image write failed on %u bytes at " FMT_LL "d", (unsigned)count, current_offset));
+      BX_ERROR(("vbox disk image write failed on %u bytes at %lld", (unsigned)count, (long long)current_offset));
       return -1;
     }
 
@@ -389,7 +389,7 @@ void vbox_image_t::read_block(const Bit32u index)
     offset = dtoh32(mtlb[index]) * header.block_size;
     bx_read_image(file_descriptor, header.offset_data + offset, block_data, header.block_size);
 
-    BX_DEBUG(("reading block index %d (%d) " FMT_LL "d", index, dtoh32(mtlb[index]), offset));
+    BX_DEBUG(("reading block index %d (%d) %lld", index, dtoh32(mtlb[index]), (long long)offset));
   }
 }
 
@@ -415,7 +415,7 @@ void vbox_image_t::write_block(const Bit32u index)
 
   offset = dtoh32(mtlb[index]) * header.block_size;
 
-  BX_DEBUG(("writing block index %d (%d) " FMT_LL "d", index, dtoh32(mtlb[index]), offset));
+  BX_DEBUG(("writing block index %d (%d) %lld", index, dtoh32(mtlb[index]), (long long)offset));
 
   bx_write_image(file_descriptor, header.offset_data + offset, block_data, header.block_size);
 }
