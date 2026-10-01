@@ -33,7 +33,11 @@ extern "C" {
 #include <signal.h>
 };
 
-#define BX_DEBUGGER_TERM (BX_DEBUGGER && !defined(__OpenBSD__))
+#if BX_DEBUGGER && !defined(__OpenBSD__)
+#define BX_DEBUGGER_TERM 1
+#else
+#define BX_DEBUGGER_TERM 0
+#endif
 
 class bx_term_gui_c : public bx_gui_c {
 public:
