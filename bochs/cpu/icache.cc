@@ -329,8 +329,11 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
   // Set RIP to the 0th byte of the 2nd page, and force a
   // prefetch so direct access of that physical page is possible, and
   // all the associated info is updated.
+  bx_phy_address pAddrPrevPage = BX_CPU_THIS_PTR pAddrFetchPage;
   RIP += remainingInPage;
   prefetch();
+  // remember 1st page of the instruction (used by SVM decode assist)
+  BX_CPU_THIS_PTR pAddrFetchPrevPage = pAddrPrevPage;
 
   unsigned fetchBufferLimit = 15;
   if (BX_CPU_THIS_PTR eipPageWindowSize < 15) {

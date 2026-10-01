@@ -1361,6 +1361,8 @@ public: // for now...
   Bit32u     eipPageWindowSize;
   const Bit8u *eipFetchPtr;
   bx_phy_address pAddrFetchPage; // Guest physical address of current instruction page
+  bx_phy_address pAddrFetchPrevPage; // Guest physical address of previous instruction page, valid only
+                                     // if current fetch window was established by page split boundaryFetch
 
   // Boundaries of current stack page, based on ESP
   bx_address espPageBias;        // Linear address of current stack page
@@ -5563,6 +5565,7 @@ public: // for now...
   BX_SMF void Svm_Vmexit(int reason, Bit64u exitinfo1 = 0, Bit64u exitinfo2 = 0);
   BX_SMF void SvmExitSaveGuestState(void);
   BX_SMF void SvmExitLoadHostState(SVM_HOST_STATE *host);
+  BX_SMF unsigned SvmFetchGuestInstructionBytes(Bit8u *bytes);
   BX_SMF Bit8u vmcb_read8(unsigned offset);
   BX_SMF Bit16u vmcb_read16(unsigned offset);
   BX_SMF Bit32u vmcb_read32(unsigned offset);

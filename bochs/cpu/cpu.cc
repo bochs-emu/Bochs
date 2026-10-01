@@ -659,8 +659,14 @@ void BX_CPU_C::prefetch(void)
 {
   bx_address laddr;
   unsigned pageOffset;
+  Bit32u windowSize;
 
   INC_ICACHE_STAT(iCachePrefetch);
+
+  // Keep the fetch window invalid until the new code page is successfully
+  // translated. If prefetch faults the window must not mix the new page bias
+  // with the old page fetch pointer (SVM decode assist relies on it).
+  BX_CPU_THIS_PTR eipPageWindowSize = 0;
 
 #if BX_SUPPORT_X86_64
   if (long64_mode()) {
@@ -675,7 +681,7 @@ void BX_CPU_C::prefetch(void)
 
     // Calculate RIP at the beginning of the page.
     BX_CPU_THIS_PTR eipPageBias = pageOffset - RIP;
-    BX_CPU_THIS_PTR eipPageWindowSize = 4096;
+    windowSize = 4096;
   }
   else
 #endif
@@ -703,9 +709,9 @@ void BX_CPU_C::prefetch(void)
       exception(BX_GP_EXCEPTION, 0);
     }
 
-    BX_CPU_THIS_PTR eipPageWindowSize = 4096;
+    windowSize = 4096;
     if (limit + BX_CPU_THIS_PTR eipPageBias < 4096) {
-      BX_CPU_THIS_PTR eipPageWindowSize = (Bit32u)(limit + BX_CPU_THIS_PTR eipPageBias + 1);
+      windowSize = (Bit32u)(limit + BX_CPU_THIS_PTR eipPageBias + 1);
     }
   }
 
@@ -749,6 +755,9 @@ void BX_CPU_C::prefetch(void)
     BX_CPU_THIS_PTR pAddrFetchPage = PPFOf(pAddr);
   }
 
+  // previous page is known only for fetch window established by boundaryFetch
+  BX_CPU_THIS_PTR pAddrFetchPrevPage = BX_ICACHE_INVALID_PHY_ADDRESS;
+
   if (fetchPtr) {
     BX_CPU_THIS_PTR eipFetchPtr = fetchPtr;
   }
@@ -766,6 +775,9 @@ void BX_CPU_C::prefetch(void)
       }
     }
   }
+
+  // the new fetch window is valid now
+  BX_CPU_THIS_PTR eipPageWindowSize = windowSize;
 
 #if BX_DEBUGGER
   // New fetch window is established: recompute debugger code breakpoints

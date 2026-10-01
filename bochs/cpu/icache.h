@@ -263,6 +263,17 @@ public:
     nextPageSplitIndex = (nextPageSplitIndex+1) & (BX_TRACE_CACHE_PAGE_SPLIT_ENTRIES-1);
   }
 
+  // return physical address of 2nd page of page split trace entry or BX_ICACHE_INVALID_PHY_ADDRESS
+  BX_CPP_INLINE bx_phy_address find_page_split_ppf(const bxTraceCacheEntry_c *e) const
+  {
+    for (unsigned i=0; i < BX_TRACE_CACHE_PAGE_SPLIT_ENTRIES; i++) {
+      if (pageSplitIndex[i].ppf != BX_ICACHE_INVALID_PHY_ADDRESS && pageSplitIndex[i].e == e)
+        return pageSplitIndex[i].ppf;
+    }
+
+    return BX_ICACHE_INVALID_PHY_ADDRESS;
+  }
+
   BX_CPP_INLINE void handleSMC(bx_phy_address pAddr, Bit32u mask);
 
   BX_CPP_INLINE void flushTraceCacheEntries(void);

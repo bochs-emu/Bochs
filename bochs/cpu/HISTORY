@@ -48,6 +48,8 @@ Changes after Bochs 3.1:
 + SVM: An intercepted #DB has already updated DR6 and leaves RF clear (AMD APM vol. 2, 15.12)
 - SYSENTER/SYSEXIT: SYSENTER/SYSEXIT are not allowed in long mode on AMD
 - SYSCALL/SYSRET: SYSCALL whose SFMASK clears TF takes no single-step trap, SYSRET takes the single-step trap by the TF it loads
+- CPUID: allow configuring i486dx4 model without x87 using cpu exclude_features
+! SVM: Implemented SVM Decode Assist feature and enabled in all CPUID models featuring SVM
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
