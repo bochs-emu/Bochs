@@ -82,6 +82,25 @@ public:
 };
 #endif
 
+// IA32_EFER MSR, write can change paging and long mode state
+class EferMSR : public MSR_Descriptor {
+private:
+  BX_CPU_C *cpu;
+
+public:
+  EferMSR(BX_CPU_C *cpu_ptr, Bit64u reserved_bits): MSR_Descriptor("MSR_EFER", BX_ISA_PENTIUM, reserved_bits), cpu(cpu_ptr) {}
+  virtual ~EferMSR() {}
+
+  virtual bool get(Bit64u *val) {
+    *val = cpu->efer.get32();
+    return true;
+  }
+
+  virtual bool set(Bit64u val) {
+    return cpu->SetEFER(val);
+  }
+};
+
 // MSR descriptors are per cpu, some of them refer to the cpu variables
 void BX_CPU_C::init_MSRs()
 {
@@ -293,7 +312,9 @@ void BX_CPU_C::init_MSRs()
   for (unsigned i=0;i < BX_EXTENDED_MSR_MAX_INDEX; i++)
     ext_msr_desc[i] = NULL;
 
-  ext_msr_desc[BX_MSR_EFER - 0xc0000000] = new MSR_Descriptor("MSR_EFER", BX_ISA_PENTIUM, ~Bit64u(get_efer_allow_mask()));
+  ext_msr_desc[BX_MSR_EFER - 0xc0000000] = new EferMSR(this, ~Bit64u(get_efer_allow_mask()));
+  if (! get_efer_allow_mask()) // EFER MSR doesn't exist if none of its features supported
+    ext_msr_desc[BX_MSR_EFER - 0xc0000000]->disable();
   // requires BX_ISA_SYSCALL_SYSRET_LEGACY or BX_ISA_LONG_MODE
   ext_msr_desc[BX_MSR_STAR - 0xc0000000] = new VarMSR("MSR_STAR", is_cpu_extension_supported(BX_ISA_LONG_MODE) ? BX_ISA_LONG_MODE : BX_ISA_SYSCALL_SYSRET_LEGACY, &BX_CPU_THIS_PTR msr.star);
 
@@ -483,6 +504,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_XSS:                            // 0xda0
 #endif
+    case BX_MSR_EFER:                           // 0xc0000080
     case BX_MSR_STAR:                           // 0xc0000081
 #if BX_SUPPORT_X86_64
     case BX_MSR_LSTAR:                          // 0xc0000082
@@ -572,14 +594,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       val64 = BX_CPU_THIS_PTR msr.ia32_feature_ctrl;
       break;
 #endif
-
-    case BX_MSR_EFER:
-      if (! BX_CPU_THIS_PTR efer_suppmask) {
-        BX_ERROR(("RDMSR MSR_EFER: EFER MSR is not supported !"));
-        return false;
-      }
-      val64 = BX_CPU_THIS_PTR efer.get32();
-      break;
 
     default:
       BX_PANIC(("RDMSR: missing MSR handling for MSR %08x", index));
@@ -918,6 +932,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_XSS:                            // 0xda0, reserved bits already checked above
 #endif
+    case BX_MSR_EFER:                           // 0xc0000080
     case BX_MSR_STAR:                           // 0xc0000081
 #if BX_SUPPORT_X86_64
     case BX_MSR_LSTAR:                          // 0xc0000082
@@ -1013,10 +1028,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       BX_CPU_THIS_PTR msr.ia32_feature_ctrl = val32_lo;
       break;
 #endif
-
-    case BX_MSR_EFER:
-      if (! SetEFER(val_64)) return false;
-      break;
 
     default:
       BX_PANIC(("WRMSR: missing MSR handling for MSR %08x", index));
