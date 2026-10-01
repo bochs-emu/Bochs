@@ -50,6 +50,9 @@ Changes after Bochs 3.1:
 - SYSCALL/SYSRET: SYSCALL whose SFMASK clears TF takes no single-step trap, SYSRET takes the single-step trap by the TF it loads
 - CPUID: allow configuring i486dx4 model without x87 using cpu exclude_features
 ! SVM: Implemented SVM Decode Assist feature and enabled in all CPUID models featuring SVM
+- FRED: Fixed reserved bits checking for MSR_IA32_FRED_CONFIG (0x1d4), bug was introduced in Bochs 3.1 release
+- MSR: MSR_TSX_AUX[63:32] are reserved bits, attempt to modify them should raise #GP(0)
+- MSR: enforce reserved bits checking for MSR_IA32_UMWAIT_CONTROL (0xe1) and BX_MSR_MTRR_DEFTYPE (0x2ff)
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):

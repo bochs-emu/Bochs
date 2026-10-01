@@ -58,6 +58,28 @@ bool isValidMSR_FixedMTRR(Bit64u fixed_mtrr_val);
 // variable range MTRR base must be valid physical address, bits [11:0] are memory type and reserved bits [11:8]
 static bool is_valid_mtrr_physbase(Bit64u val) { return IsValidPhyAddr(val) && isMemTypeValidMTRR(val & 0xFFF); }
 static bool is_valid_mtrr_physmask(Bit64u val) { return IsValidPhyAddr(val); }
+static bool is_valid_mtrr_deftype(Bit64u val) { return isMemTypeValidMTRR(val & 0x7); }
+#endif
+
+#if BX_SUPPORT_APIC
+// IA32_APIC_BASE MSR, write relocates (or enables/disables) the local APIC
+class ApicBaseMSR : public MSR_Descriptor {
+private:
+  BX_CPU_C *cpu;
+
+public:
+  ApicBaseMSR(BX_CPU_C *cpu_ptr): MSR_Descriptor("MSR_APICBASE", BX_ISA_PENTIUM), cpu(cpu_ptr) {}
+  virtual ~ApicBaseMSR() {}
+
+  virtual bool get(Bit64u *val) {
+    *val = cpu->msr.apicbase;
+    return true;
+  }
+
+  virtual bool set(Bit64u val) {
+    return cpu->relocate_apic(val);
+  }
+};
 #endif
 
 // MSR descriptors are per cpu, some of them refer to the cpu variables
@@ -75,7 +97,7 @@ void BX_CPU_C::init_MSRs()
   msr_desc[BX_MSR_PLATFORM_ID] = new ConstMSR("MSR_PLATFORM_ID", BX_ISA_PENTIUM, 0); // read only
 
 #if BX_SUPPORT_APIC
-  msr_desc[BX_MSR_APICBASE] = new MSR_Descriptor("MSR_APICBASE", BX_ISA_PENTIUM);
+  msr_desc[BX_MSR_APICBASE] = new ApicBaseMSR(this);
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -127,14 +149,25 @@ void BX_CPU_C::init_MSRs()
   msr_desc[BX_MSR_MTRRFIX4K_F0000] = new VarMSR("MSR_IA32_MTRRFIX4K_F0000", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrfix4k[6].u64, 0, isValidMSR_FixedMTRR);
   msr_desc[BX_MSR_MTRRFIX4K_F8000] = new VarMSR("MSR_IA32_MTRRFIX4K_F8000", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrfix4k[7].u64, 0, isValidMSR_FixedMTRR);
 
-  msr_desc[BX_MSR_MTRR_DEFTYPE] = new MSR_Descriptor("MSR_IA32_MTRR_DEFTYPE", BX_ISA_MTRR, BX_CONST64(0xfffffffffffff300)); // bits [63-12], [9:8] are reserved
+  // IA32_MTRR_DEF_TYPE MSR:
+  //    [2:0] - default memory type
+  //    [9:3] - reserved
+  //     [10] - fixed range MTRR enable
+  //     [11] - MTRR enable
+  //  [63:12] - reserved
+  msr_desc[BX_MSR_MTRR_DEFTYPE] = new VarMSR("MSR_IA32_MTRR_DEFTYPE", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrr_deftype, BX_CONST64(0xfffffffffffff3f8), is_valid_mtrr_deftype);
   msr_desc[BX_MSR_PAT] = new VarMSR("MSR_IA32_PAT", BX_ISA_PAT, &BX_CPU_THIS_PTR msr.pat.u64, 0, isValidMSR_PAT);
 #endif
 
   msr_desc[BX_MSR_TSC_ADJUST] = new VarMSR("MSR_IA32_TSC_ADJUST", BX_ISA_TSC_ADJUST, &BX_CPU_THIS_PTR tsc_adjust);
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  msr_desc[BX_MSR_IA32_UMWAIT_CONTROL] = new MSR_Descriptor("MSR_IA32_UMWAIT_CONTROL", BX_ISA_WAITPKG);
+  // IA32_UMWAIT_CONTROL MSR:
+  //      [0] - C0.2 is not allowed by the OS
+  //      [1] - reserved
+  //   [31:2] - maximum time in TSC-quanta that the processor can reside in either C0.1 or C0.2
+  //  [63:32] - reserved
+  msr_desc[BX_MSR_IA32_UMWAIT_CONTROL] = new VarMSR("MSR_IA32_UMWAIT_CONTROL", BX_ISA_WAITPKG, &BX_CPU_THIS_PTR msr.ia32_umwait_ctrl, BX_CONST64(0xffffffff00000002));
 #endif
 
 #if BX_CPU_LEVEL >= 6
@@ -267,11 +300,14 @@ void BX_CPU_C::init_MSRs()
 #if BX_SUPPORT_X86_64
   ext_msr_desc[BX_MSR_LSTAR - 0xc0000000] = new VarMSR("MSR_LSTAR", BX_ISA_LONG_MODE, &BX_CPU_THIS_PTR msr.lstar, 0, is_canonical_msr);
   ext_msr_desc[BX_MSR_CSTAR - 0xc0000000] = new VarMSR("MSR_CSTAR", BX_ISA_LONG_MODE, &BX_CPU_THIS_PTR msr.cstar, 0, is_canonical_msr);
-  ext_msr_desc[BX_MSR_FMASK - 0xc0000000] = new MSR_Descriptor("MSR_FMASK", BX_ISA_LONG_MODE);
+  // IA32_FMASK MSR:
+  //   [31:0]  - SYSCALL RFLAGS mask
+  //  [63:32]  - not used, writes ignored, reads return zero
+  ext_msr_desc[BX_MSR_FMASK - 0xc0000000] = new VarMSR("MSR_FMASK", BX_ISA_LONG_MODE, &BX_CPU_THIS_PTR msr.fmask, 0, NULL, BX_CONST64(0xffffffff00000000));
   ext_msr_desc[BX_MSR_FSBASE - 0xc0000000] = new VarMSR("MSR_FSBASE", BX_ISA_LONG_MODE, &MSR_FSBASE, 0, is_canonical_msr);
   ext_msr_desc[BX_MSR_GSBASE - 0xc0000000] = new VarMSR("MSR_GSBASE", BX_ISA_LONG_MODE, &MSR_GSBASE, 0, is_canonical_msr);
   ext_msr_desc[BX_MSR_KERNELGSBASE - 0xc0000000] = new VarMSR("MSR_KERNELGSBASE", BX_ISA_LONG_MODE, &BX_CPU_THIS_PTR msr.kernelgsbase, 0, is_canonical_msr);
-  ext_msr_desc[BX_MSR_TSC_AUX - 0xc0000000] = new MSR_Descriptor("MSR_TSC_AUX", BX_ISA_RDTSCP);
+  ext_msr_desc[BX_MSR_TSC_AUX - 0xc0000000] = new VarMSR("MSR_TSC_AUX", BX_ISA_RDTSCP, &BX_CPU_THIS_PTR msr.tsc_aux, BX_CONST64(0xffffffff00000000)); // bits [63:32] are reserved
 #endif
 }
 
@@ -341,11 +377,17 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     switch(index) {
     // MSRs converted to generic MSR descriptor interface
     case BX_MSR_PLATFORM_ID:                    // 0x017
+#if BX_SUPPORT_APIC
+    case BX_MSR_APICBASE:                       // 0x01b
+#endif
 #if BX_SUPPORT_X86_64
     case BX_MSR_IA32_USER_MSR_CTL:              // 0x01c
 #endif
     case BX_MSR_IA32_BARRIER:                   // 0x02f
     case BX_MSR_TSC_ADJUST:                     // 0x03b
+#if BX_SUPPORT_MONITOR_MWAIT
+    case BX_MSR_IA32_UMWAIT_CONTROL:            // 0x0e1
+#endif
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_MTRRCAP:                        // 0x0fe
 #endif
@@ -397,6 +439,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_MTRRFIX4K_F0000:                // 0x26e
     case BX_MSR_MTRRFIX4K_F8000:                // 0x26f
     case BX_MSR_PAT:                            // 0x277
+    case BX_MSR_MTRR_DEFTYPE:                   // 0x2ff
 #endif
 #if BX_SUPPORT_VMX
     case BX_MSR_VMX_BASIC:                      // 0x480
@@ -444,9 +487,11 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #if BX_SUPPORT_X86_64
     case BX_MSR_LSTAR:                          // 0xc0000082
     case BX_MSR_CSTAR:                          // 0xc0000083
+    case BX_MSR_FMASK:                          // 0xc0000084
     case BX_MSR_FSBASE:                         // 0xc0000100
     case BX_MSR_GSBASE:                         // 0xc0000101
     case BX_MSR_KERNELGSBASE:                   // 0xc0000102
+    case BX_MSR_TSC_AUX:                        // 0xc0000103
 #endif
       if (! msr_desciptor->get(&val64)) return false;
       break;
@@ -472,28 +517,10 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       val64 = BX_CPU_THIS_PTR get_TSC();
       break;
 
-#if BX_CPU_LEVEL >= 6
-    case BX_MSR_MTRR_DEFTYPE:
-      val64 = BX_CPU_THIS_PTR msr.mtrr_deftype;
-      break;
-#endif
-
     case BX_MSR_TSC:
       val64 = BX_CPU_THIS_PTR get_Virtual_TSC();
       break;
 
-#if BX_SUPPORT_MONITOR_MWAIT
-    case BX_MSR_IA32_UMWAIT_CONTROL:
-      val64 = BX_CPU_THIS_PTR msr.ia32_umwait_ctrl;
-      break;
-#endif
-
-#if BX_SUPPORT_APIC
-    case BX_MSR_APICBASE:
-      val64 = BX_CPU_THIS_PTR msr.apicbase;
-      BX_DEBUG(("RDMSR: Read %08x:%08x from MSR_APICBASE", GET32H(val64), GET32L(val64)));
-      break;
-#endif
 
 #if BX_SUPPORT_UINTR
     case BX_MSR_IA32_UINTR_RR:
@@ -553,16 +580,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       }
       val64 = BX_CPU_THIS_PTR efer.get32();
       break;
-
-#if BX_SUPPORT_X86_64
-    case BX_MSR_FMASK:
-      val64 = BX_CPU_THIS_PTR msr.fmask;
-      break;
-
-    case BX_MSR_TSC_AUX:
-      val64 = BX_CPU_THIS_PTR msr.tsc_aux;   // 32 bit MSR
-      break;
-#endif
 
     default:
       BX_PANIC(("RDMSR: missing MSR handling for MSR %08x", index));
@@ -823,11 +840,17 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
     switch(index) {
     // MSRs converted to generic MSR descriptor interface
+#if BX_SUPPORT_APIC
+    case BX_MSR_APICBASE:                       // 0x01b
+#endif
 #if BX_SUPPORT_X86_64
     case BX_MSR_IA32_USER_MSR_CTL:              // 0x01c
 #endif
     case BX_MSR_IA32_BARRIER:                   // 0x02f
     case BX_MSR_TSC_ADJUST:                     // 0x03b
+#if BX_SUPPORT_MONITOR_MWAIT
+    case BX_MSR_IA32_UMWAIT_CONTROL:            // 0x0e1
+#endif
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:                    // 0x174
     case BX_MSR_SYSENTER_ESP:                   // 0x175
@@ -875,6 +898,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_MTRRFIX4K_F0000:                // 0x26e
     case BX_MSR_MTRRFIX4K_F8000:                // 0x26f
     case BX_MSR_PAT:                            // 0x277
+    case BX_MSR_MTRR_DEFTYPE:                   // 0x2ff
 #endif
 #if BX_SUPPORT_CET
     case BX_MSR_IA32_U_CET:                     // 0x6a0
@@ -898,9 +922,11 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #if BX_SUPPORT_X86_64
     case BX_MSR_LSTAR:                          // 0xc0000082
     case BX_MSR_CSTAR:                          // 0xc0000083
+    case BX_MSR_FMASK:                          // 0xc0000084
     case BX_MSR_FSBASE:                         // 0xc0000100
     case BX_MSR_GSBASE:                         // 0xc0000101
     case BX_MSR_KERNELGSBASE:                   // 0xc0000102
+    case BX_MSR_TSC_AUX:                        // 0xc0000103
 #endif
       if (! msr_desciptor->set(val_64)) {
         BX_ERROR(("WRMSR: attempt to write invalid value 0x" FMT_LL "x to %s", val_64, msr_desciptor->get_name()));
@@ -929,31 +955,11 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       BX_INFO(("WRMSR: ignore write into MSR IA32_MPERF"));
       break;
 
-#if BX_CPU_LEVEL >= 6
-    case BX_MSR_MTRR_DEFTYPE:
-      if (! isMemTypeValidMTRR(val32_lo & 0xFF)) {
-        BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRR_DEFTYPE"));
-        return false;
-      }
-      BX_CPU_THIS_PTR msr.mtrr_deftype = val32_lo;
-      break;
-#endif
-
     case BX_MSR_TSC:
       BX_INFO(("WRMSR: write 0x%08x%08x to MSR_TSC", val32_hi, val32_lo));
       BX_CPU_THIS_PTR set_TSC(val_64);
       break;
 
-#if BX_SUPPORT_MONITOR_MWAIT
-    case BX_MSR_IA32_UMWAIT_CONTROL:
-      BX_CPU_THIS_PTR msr.ia32_umwait_ctrl = val32_lo;
-      break;
-#endif
-
-#if BX_SUPPORT_APIC
-    case BX_MSR_APICBASE:
-      return relocate_apic(val_64);
-#endif
 
 #if BX_SUPPORT_UINTR
     case BX_MSR_IA32_UINTR_RR:
@@ -1011,16 +1017,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_EFER:
       if (! SetEFER(val_64)) return false;
       break;
-
-#if BX_SUPPORT_X86_64
-    case BX_MSR_FMASK:
-      BX_CPU_THIS_PTR msr.fmask = (Bit32u) val_64;
-      break;
-
-    case BX_MSR_TSC_AUX:
-      BX_CPU_THIS_PTR msr.tsc_aux = val32_lo;
-      break;
-#endif
 
     default:
       BX_PANIC(("WRMSR: missing MSR handling for MSR %08x", index));

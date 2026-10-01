@@ -675,9 +675,9 @@ typedef struct
 #if BX_SUPPORT_X86_64
   Bit64u lstar;
   Bit64u cstar;
-  Bit32u fmask;
+  Bit64u fmask;
   Bit64u kernelgsbase;
-  Bit32u tsc_aux;
+  Bit64u tsc_aux;
 #endif
 
 #if BX_CPU_LEVEL >= 6
@@ -691,7 +691,7 @@ typedef struct
   BxPackedRegister mtrrfix64k;
   BxPackedRegister mtrrfix16k[2];
   BxPackedRegister mtrrfix4k[8];
-  Bit32u mtrr_deftype;
+  Bit64u mtrr_deftype;
 #endif
 
 #if BX_SUPPORT_VMX
@@ -725,7 +725,7 @@ typedef struct
 #endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  Bit32u ia32_umwait_ctrl;
+  Bit64u ia32_umwait_ctrl;
 #endif
 
   Bit32u ia32_spec_ctrl; // SCA
