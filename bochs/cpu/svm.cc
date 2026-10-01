@@ -1096,7 +1096,7 @@ void BX_CPU_C::Svm_Update_VM_CR_MSR(Bit64u val_64)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (BX_CPU_THIS_PTR msr.svm_vm_cr & BX_VM_CR_MSR_SVMDIS_MASK) {
+  if (val_64 & BX_VM_CR_MSR_SVMDIS_MASK) {
     if (BX_CPU_THIS_PTR efer.get_SVME()) {
       BX_ERROR(("VM_CR_MSR: attempt to set SVMDIS when EFER.SVME=1"));
       exception(BX_GP_EXCEPTION, 0);
