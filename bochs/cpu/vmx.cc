@@ -48,7 +48,7 @@ extern bool isValidMSR_IA32_SPEC_CTRL(Bit64u val_64);
 #endif
 
 #if BX_SUPPORT_CET
-extern bool is_invalid_cet_control(bx_address val);
+extern bool is_valid_cet_control(Bit64u val);
 #endif
 
 extern const char *segname[];
@@ -1305,7 +1305,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
        return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
 
-    if (is_invalid_cet_control(host_state->msr_ia32_s_cet)) {
+    if (! is_valid_cet_control(host_state->msr_ia32_s_cet)) {
        BX_ERROR(("VMFAIL: VMCS host IA32_S_CET invalid"));
        return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
@@ -1570,7 +1570,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
 
-    if (is_invalid_cet_control(guest.msr_ia32_s_cet)) {
+    if (! is_valid_cet_control(guest.msr_ia32_s_cet)) {
        BX_ERROR(("VMFAIL: VMCS guest IA32_S_CET invalid"));
        return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }

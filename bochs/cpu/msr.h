@@ -22,21 +22,22 @@
 #ifndef BX_MSR_H
 #define BX_MSR_H
 
+// optional per-MSR value check, returns true if the value is valid (otherwise WRMSR causes #GP)
+typedef bool (*MSR_Valid_Value_Check)(Bit64u val);
+
 class MSR_Descriptor {
 private:
   const char *msrname;
   unsigned cpu_feature;
-  bool force_canonical;
   bool enabled;    // false if the MSR is not present in current cpu configuration
   Bit64u reserved;
 
 public:
-  MSR_Descriptor(const char *name, unsigned feature, bool canonical = false, Bit64u reserved_bits = 0): msrname(name), cpu_feature(feature), force_canonical(canonical), enabled(true), reserved(reserved_bits) {}
+  MSR_Descriptor(const char *name, unsigned feature, Bit64u reserved_bits = 0): msrname(name), cpu_feature(feature), enabled(true), reserved(reserved_bits) {}
   virtual ~MSR_Descriptor() {}
 
   const char* get_name() const { return msrname; }
   unsigned get_cpu_feature() const { return cpu_feature; }
-  bool canonical() const { return force_canonical; }
   bool read_only() const { return ~reserved == 0; }
 
   void disable() { enabled = false; }
@@ -47,7 +48,7 @@ public:
   Bit64u get_reserved_bits() const { return reserved; }
   bool check_reserved_bits_violation(Bit64u value) const { return value & reserved; }
 
-  // generic MSR access interface, called by RDMSR/WRMSR after feature, reserved bits and canonical checks
+  // generic MSR access interface, called by RDMSR/WRMSR after feature and reserved bits checks
   // return false to signal #GP
   virtual bool get(Bit64u *val) { return false; }
   virtual bool set(Bit64u val) { return false; }
@@ -61,7 +62,7 @@ private:
   Bit64u value;
 
 public:
-  MSR_Const_Descriptor(const char *name, unsigned feature, Bit64u val): MSR_Descriptor(name, feature, false, ~BX_CONST64(0)), value(val) {}
+  MSR_Const_Descriptor(const char *name, unsigned feature, Bit64u val): MSR_Descriptor(name, feature, ~BX_CONST64(0)), value(val) {}
   virtual ~MSR_Const_Descriptor() {}
 
   virtual bool get(Bit64u *val) {
@@ -74,10 +75,11 @@ public:
 class MSR_Var_Descriptor : public MSR_Descriptor {
 private:
   Bit64u *var;
+  MSR_Valid_Value_Check is_valid; // NULL - no extra validation
 
 public:
-  MSR_Var_Descriptor(const char *name, unsigned feature, Bit64u *cpu_var, bool canonical = false, Bit64u reserved_bits = 0):
-     MSR_Descriptor(name, feature, canonical, reserved_bits), var(cpu_var) {}
+  MSR_Var_Descriptor(const char *name, unsigned feature, Bit64u *cpu_var, Bit64u reserved_bits = 0, MSR_Valid_Value_Check check = NULL):
+     MSR_Descriptor(name, feature, reserved_bits), var(cpu_var), is_valid(check) {}
   virtual ~MSR_Var_Descriptor() {}
 
   virtual bool get(Bit64u *val) {
@@ -86,6 +88,7 @@ public:
   }
 
   virtual bool set(Bit64u val) {
+    if (is_valid && ! is_valid(val)) return false;
     *var = val;
     return true;
   }
