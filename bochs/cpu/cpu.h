@@ -682,7 +682,7 @@ typedef struct
 
 #if BX_CPU_LEVEL >= 6
   // SYSENTER/SYSEXIT instruction msr's
-  Bit32u sysenter_cs_msr;
+  Bit64u sysenter_cs_msr;
   Bit64u sysenter_esp_msr;
   Bit64u sysenter_eip_msr;
 

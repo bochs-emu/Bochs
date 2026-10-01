@@ -86,23 +86,27 @@ void BX_CPU_C::init_MSRs()
   msr_desc[BX_MSR_IA32_MPERF] = new MSR_Descriptor("MSR_IA32_MPERF", BX_ISA_PENTIUM);
 
 #if BX_CPU_LEVEL >= 6
-  msr_desc[BX_MSR_SYSENTER_CS] = new MSR_Descriptor("MSR_IA32_SYSENTER_CS", BX_ISA_SYSENTER_SYSEXIT);
+  // IA32_SYSENTER_CS MSR:
+  //   [15:0]  - CS selector
+  //  [31:16]  - not used, can be read and written
+  //  [63:32]  - not used, writes ignored, reads return zero
+  msr_desc[BX_MSR_SYSENTER_CS] = new VarMSR("MSR_IA32_SYSENTER_CS", BX_ISA_SYSENTER_SYSEXIT, &BX_CPU_THIS_PTR msr.sysenter_cs_msr, 0, NULL, BX_CONST64(0xffffffff00000000));
   msr_desc[BX_MSR_SYSENTER_ESP] = new VarMSR("MSR_IA32_SYSENTER_ESP", BX_ISA_SYSENTER_SYSEXIT, &BX_CPU_THIS_PTR msr.sysenter_esp_msr, 0, is_canonical_msr);
   msr_desc[BX_MSR_SYSENTER_EIP] = new VarMSR("MSR_IA32_SYSENTER_EIP", BX_ISA_SYSENTER_SYSEXIT, &BX_CPU_THIS_PTR msr.sysenter_eip_msr, 0, is_canonical_msr);
 #endif
 
 #if BX_CPU_LEVEL >= 6
   msr_desc[BX_MSR_MTRRCAP] = new ConstMSR("MSR_IA32_MTRR_CAP", BX_ISA_MTRR, BX_CONST64(0x0000000000000500) | BX_NUM_VARIABLE_RANGE_MTRRS); // read only
-  msr_desc[BX_MSR_MTRRPHYSBASE0] = new VarMSR("MSR_IA32_MTRRPHYSBASE0", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[0], 0, is_valid_mtrr_physbase);
-  msr_desc[BX_MSR_MTRRPHYSMASK0] = new VarMSR("MSR_IA32_MTRRPHYSMASK0", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[1], BX_CONST64(0x7ff), is_valid_mtrr_physmask); // bits [10:0] are reserved
-  msr_desc[BX_MSR_MTRRPHYSBASE1] = new VarMSR("MSR_IA32_MTRRPHYSBASE1", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[2], 0, is_valid_mtrr_physbase);
-  msr_desc[BX_MSR_MTRRPHYSMASK1] = new VarMSR("MSR_IA32_MTRRPHYSMASK1", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[3], BX_CONST64(0x7ff), is_valid_mtrr_physmask);
-  msr_desc[BX_MSR_MTRRPHYSBASE2] = new VarMSR("MSR_IA32_MTRRPHYSBASE2", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[4], 0, is_valid_mtrr_physbase);
-  msr_desc[BX_MSR_MTRRPHYSMASK2] = new VarMSR("MSR_IA32_MTRRPHYSMASK2", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[5], BX_CONST64(0x7ff), is_valid_mtrr_physmask);
-  msr_desc[BX_MSR_MTRRPHYSBASE3] = new VarMSR("MSR_IA32_MTRRPHYSBASE3", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[6], 0, is_valid_mtrr_physbase);
-  msr_desc[BX_MSR_MTRRPHYSMASK3] = new VarMSR("MSR_IA32_MTRRPHYSMASK3", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[7], BX_CONST64(0x7ff), is_valid_mtrr_physmask);
-  msr_desc[BX_MSR_MTRRPHYSBASE4] = new VarMSR("MSR_IA32_MTRRPHYSBASE4", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[8], 0, is_valid_mtrr_physbase);
-  msr_desc[BX_MSR_MTRRPHYSMASK4] = new VarMSR("MSR_IA32_MTRRPHYSMASK4", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[9], BX_CONST64(0x7ff), is_valid_mtrr_physmask);
+  msr_desc[BX_MSR_MTRRPHYSBASE0] = new VarMSR("MSR_IA32_MTRRPHYSBASE0", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[0],  0, is_valid_mtrr_physbase);
+  msr_desc[BX_MSR_MTRRPHYSMASK0] = new VarMSR("MSR_IA32_MTRRPHYSMASK0", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[1],  BX_CONST64(0x7ff), is_valid_mtrr_physmask); // bits [10:0] are reserved
+  msr_desc[BX_MSR_MTRRPHYSBASE1] = new VarMSR("MSR_IA32_MTRRPHYSBASE1", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[2],  0, is_valid_mtrr_physbase);
+  msr_desc[BX_MSR_MTRRPHYSMASK1] = new VarMSR("MSR_IA32_MTRRPHYSMASK1", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[3],  BX_CONST64(0x7ff), is_valid_mtrr_physmask);
+  msr_desc[BX_MSR_MTRRPHYSBASE2] = new VarMSR("MSR_IA32_MTRRPHYSBASE2", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[4],  0, is_valid_mtrr_physbase);
+  msr_desc[BX_MSR_MTRRPHYSMASK2] = new VarMSR("MSR_IA32_MTRRPHYSMASK2", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[5],  BX_CONST64(0x7ff), is_valid_mtrr_physmask);
+  msr_desc[BX_MSR_MTRRPHYSBASE3] = new VarMSR("MSR_IA32_MTRRPHYSBASE3", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[6],  0, is_valid_mtrr_physbase);
+  msr_desc[BX_MSR_MTRRPHYSMASK3] = new VarMSR("MSR_IA32_MTRRPHYSMASK3", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[7],  BX_CONST64(0x7ff), is_valid_mtrr_physmask);
+  msr_desc[BX_MSR_MTRRPHYSBASE4] = new VarMSR("MSR_IA32_MTRRPHYSBASE4", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[8],  0, is_valid_mtrr_physbase);
+  msr_desc[BX_MSR_MTRRPHYSMASK4] = new VarMSR("MSR_IA32_MTRRPHYSMASK4", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[9],  BX_CONST64(0x7ff), is_valid_mtrr_physmask);
   msr_desc[BX_MSR_MTRRPHYSBASE5] = new VarMSR("MSR_IA32_MTRRPHYSBASE5", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[10], 0, is_valid_mtrr_physbase);
   msr_desc[BX_MSR_MTRRPHYSMASK5] = new VarMSR("MSR_IA32_MTRRPHYSMASK5", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[11], BX_CONST64(0x7ff), is_valid_mtrr_physmask);
   msr_desc[BX_MSR_MTRRPHYSBASE6] = new VarMSR("MSR_IA32_MTRRPHYSBASE6", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[12], 0, is_valid_mtrr_physbase);
@@ -110,7 +114,7 @@ void BX_CPU_C::init_MSRs()
   msr_desc[BX_MSR_MTRRPHYSBASE7] = new VarMSR("MSR_IA32_MTRRPHYSBASE7", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[14], 0, is_valid_mtrr_physbase);
   msr_desc[BX_MSR_MTRRPHYSMASK7] = new VarMSR("MSR_IA32_MTRRPHYSMASK7", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[15], BX_CONST64(0x7ff), is_valid_mtrr_physmask);
 
-  msr_desc[BX_MSR_MTRRFIX64K_00000] = new VarMSR("MSR_IA32_MTRRFIX64K_00000", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrfix64k.u64, 0, isValidMSR_FixedMTRR);
+  msr_desc[BX_MSR_MTRRFIX64K_00000] = new VarMSR("MSR_IA32_MTRRFIX64K_00000", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrfix64k.u64,    0, isValidMSR_FixedMTRR);
   msr_desc[BX_MSR_MTRRFIX16K_80000] = new VarMSR("MSR_IA32_MTRRFIX16K_80000", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrfix16k[0].u64, 0, isValidMSR_FixedMTRR);
   msr_desc[BX_MSR_MTRRFIX16K_A0000] = new VarMSR("MSR_IA32_MTRRFIX16K_A0000", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrfix16k[1].u64, 0, isValidMSR_FixedMTRR);
 
@@ -181,7 +185,8 @@ void BX_CPU_C::init_MSRs()
 #endif
 
   // artificial MSR for MRSLIST serialization
-  msr_desc[BX_MSR_IA32_BARRIER] = new MSR_Descriptor("MSR_IA32_BARRIER", BX_ISA_MSRLIST);
+  static Bit64u ia32_barrier = 0; // always zero, all writes are ignored
+  msr_desc[BX_MSR_IA32_BARRIER] = new VarMSR("MSR_IA32_BARRIER", BX_ISA_MSRLIST, &ia32_barrier, 0, NULL, ~BX_CONST64(0)); // reads return zero, writes ignored
 
   // SCA prevention MSRs
   // IA32_ARCH_CAPABILITIES MSR:
@@ -339,11 +344,13 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #if BX_SUPPORT_X86_64
     case BX_MSR_IA32_USER_MSR_CTL:              // 0x01c
 #endif
+    case BX_MSR_IA32_BARRIER:                   // 0x02f
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_MTRRCAP:                        // 0x0fe
 #endif
     case BX_MSR_IA32_ARCH_CAPABILITIES:         // 0x10a
 #if BX_CPU_LEVEL >= 6
+    case BX_MSR_SYSENTER_CS:                    // 0x174
     case BX_MSR_SYSENTER_ESP:                   // 0x175
     case BX_MSR_SYSENTER_EIP:                   // 0x176
 #endif
@@ -465,12 +472,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
 #if BX_CPU_LEVEL >= 6
-    case BX_MSR_SYSENTER_CS:
-      val64 = BX_CPU_THIS_PTR msr.sysenter_cs_msr;
-      break;
-#endif
-
-#if BX_CPU_LEVEL >= 6
     case BX_MSR_MTRR_DEFTYPE:
       val64 = BX_CPU_THIS_PTR msr.mtrr_deftype;
       break;
@@ -516,11 +517,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       val64 = BX_CPU_THIS_PTR lapic->get_tsc_deadline();
       break;
 #endif
-
-    // artificial MSR for MRSLIST serialization
-    case BX_MSR_IA32_BARRIER:
-      val64 = 0;
-      break;
 
     // SCA prevention MSRs
     case BX_MSR_IA32_SPEC_CTRL:
@@ -832,7 +828,9 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #if BX_SUPPORT_X86_64
     case BX_MSR_IA32_USER_MSR_CTL:              // 0x01c
 #endif
+    case BX_MSR_IA32_BARRIER:                   // 0x02f
 #if BX_CPU_LEVEL >= 6
+    case BX_MSR_SYSENTER_CS:                    // 0x174
     case BX_MSR_SYSENTER_ESP:                   // 0x175
     case BX_MSR_SYSENTER_EIP:                   // 0x176
 #endif
@@ -933,12 +931,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       break;
 
 #if BX_CPU_LEVEL >= 6
-    case BX_MSR_SYSENTER_CS:
-      BX_CPU_THIS_PTR msr.sysenter_cs_msr = val32_lo;
-      break;
-#endif
-
-#if BX_CPU_LEVEL >= 6
     case BX_MSR_MTRR_DEFTYPE:
       if (! isMemTypeValidMTRR(val32_lo & 0xFF)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRR_DEFTYPE"));
@@ -991,10 +983,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       BX_CPU_THIS_PTR lapic->set_tsc_deadline(val_64);
       break;
 #endif
-
-    // artificial MSR for MRSLIST serialization
-    case BX_MSR_IA32_BARRIER:
-      return true;
 
     // SCA prevention MSRs
     case BX_MSR_IA32_SPEC_CTRL:

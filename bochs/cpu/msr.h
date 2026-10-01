@@ -30,10 +30,11 @@ private:
   const char *msrname;
   unsigned cpu_feature;
   bool enabled;    // false if the MSR is not present in current cpu configuration
-  Bit64u reserved;
+  Bit64u reserved; // writing 1 to reserved bit causes #GP
+  Bit64u ignored;  // writes to ignored bits are ignored, the bits keep their previous value
 
 public:
-  MSR_Descriptor(const char *name, unsigned feature, Bit64u reserved_bits = 0): msrname(name), cpu_feature(feature), enabled(true), reserved(reserved_bits) {}
+  MSR_Descriptor(const char *name, unsigned feature, Bit64u reserved_bits = 0, Bit64u ignored_bits = 0): msrname(name), cpu_feature(feature), enabled(true), reserved(reserved_bits), ignored(ignored_bits) {}
   virtual ~MSR_Descriptor() {}
 
   const char* get_name() const { return msrname; }
@@ -47,6 +48,10 @@ public:
 
   Bit64u get_reserved_bits() const { return reserved; }
   bool check_reserved_bits_violation(Bit64u value) const { return value & reserved; }
+
+  Bit64u get_ignored_bits() const { return ignored; }
+  // ignored bits of the new value are replaced by their old value
+  Bit64u merge_ignored_bits(Bit64u new_val, Bit64u old_val) const { return (new_val & ~ignored) | (old_val & ignored); }
 
   // generic MSR access interface, called by RDMSR/WRMSR after feature and reserved bits checks
   // return false to signal #GP
@@ -78,8 +83,8 @@ private:
   MSR_Valid_Value_Check is_valid; // NULL - no extra validation
 
 public:
-  VarMSR(const char *name, unsigned feature, Bit64u *cpu_var, Bit64u reserved_bits = 0, MSR_Valid_Value_Check check = NULL):
-     MSR_Descriptor(name, feature, reserved_bits), var(cpu_var), is_valid(check) {}
+  VarMSR(const char *name, unsigned feature, Bit64u *cpu_var, Bit64u reserved_bits = 0, MSR_Valid_Value_Check check = NULL, Bit64u ignored_bits = 0):
+     MSR_Descriptor(name, feature, reserved_bits, ignored_bits), var(cpu_var), is_valid(check) {}
   virtual ~VarMSR() {}
 
   virtual bool get(Bit64u *val) {
@@ -88,6 +93,7 @@ public:
   }
 
   virtual bool set(Bit64u val) {
+    val = merge_ignored_bits(val, *var);
     if (is_valid && ! is_valid(val)) return false;
     *var = val;
     return true;
