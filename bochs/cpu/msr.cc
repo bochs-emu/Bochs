@@ -346,17 +346,6 @@ void BX_CPU_C::init_MSRs()
   msr_desc[BX_MSR_VMX_VMCS_ENUM] = new ConstMSR("MSR_VMX_VMCS_ENUM", BX_ISA_VMX, VMX_MSR_VMCS_ENUM);
 #endif
 
-#if BX_SUPPORT_PERFMON
-  msr_desc[BX_MSR_PERFEVTSEL0] = new MSR_Descriptor("MSR_IA32_PERFEVTSEL0", BX_ISA_PENTIUM);
-  msr_desc[BX_MSR_PERFEVTSEL1] = new MSR_Descriptor("MSR_IA32_PERFEVTSEL1", BX_ISA_PENTIUM);
-  msr_desc[BX_MSR_PERFEVTSEL2] = new MSR_Descriptor("MSR_IA32_PERFEVTSEL2", BX_ISA_PENTIUM);
-  msr_desc[BX_MSR_PERFEVTSEL3] = new MSR_Descriptor("MSR_IA32_PERFEVTSEL3", BX_ISA_PENTIUM);
-  msr_desc[BX_MSR_PERFEVTSEL4] = new MSR_Descriptor("MSR_IA32_PERFEVTSEL4", BX_ISA_PENTIUM);
-  msr_desc[BX_MSR_PERFEVTSEL5] = new MSR_Descriptor("MSR_IA32_PERFEVTSEL5", BX_ISA_PENTIUM);
-  msr_desc[BX_MSR_PERFEVTSEL6] = new MSR_Descriptor("MSR_IA32_PERFEVTSEL6", BX_ISA_PENTIUM);
-  msr_desc[BX_MSR_PERFEVTSEL7] = new MSR_Descriptor("MSR_IA32_PERFEVTSEL7", BX_ISA_PENTIUM);
-#endif
-
   ext_msr_desc = new MSR_DescriptorPtr[BX_EXTENDED_MSR_MAX_INDEX];
   for (unsigned i=0;i < BX_EXTENDED_MSR_MAX_INDEX; i++)
     ext_msr_desc[i] = NULL;
@@ -430,6 +419,12 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
         return false;
     }
   }
+#endif
+
+#if BX_SUPPORT_PERFMON
+  // not implemented, handled as unknown MSRs
+  if (index >= BX_MSR_PERFEVTSEL0 && index <= BX_MSR_PERFEVTSEL7)
+    BX_INFO(("RDMSR: read of MSR_IA32_PERFEVTSEL%d", index - BX_MSR_PERFEVTSEL0));
 #endif
 
   if (index < BX_MSR_MAX_INDEX || (index >= 0xc0000000 && index < (0xc0000000 + BX_EXTENDED_MSR_MAX_INDEX))) {
@@ -577,19 +572,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #endif
       if (! msr_desciptor->get(&val64)) return false;
       break;
-
-#if BX_SUPPORT_PERFMON
-    case BX_MSR_PERFEVTSEL0:
-    case BX_MSR_PERFEVTSEL1:
-    case BX_MSR_PERFEVTSEL2:
-    case BX_MSR_PERFEVTSEL3:
-    case BX_MSR_PERFEVTSEL4:
-    case BX_MSR_PERFEVTSEL5:
-    case BX_MSR_PERFEVTSEL6:
-    case BX_MSR_PERFEVTSEL7:
-      BX_INFO(("RDMSR: read of MSR_IA32_PERFEVTSEL%d", index - BX_MSR_PERFEVTSEL0));
-      return handle_unknown_rdmsr(index, msr);
-#endif
 
     case BX_MSR_IA32_APERF:
     case BX_MSR_IA32_MPERF:
@@ -860,6 +842,12 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
   }
 #endif
 
+#if BX_SUPPORT_PERFMON
+  // not implemented, handled as unknown MSRs
+  if (index >= BX_MSR_PERFEVTSEL0 && index <= BX_MSR_PERFEVTSEL7)
+    BX_INFO(("WRMSR: write into MSR_IA32_PERFEVTSEL%d: %08x:%08x", index - BX_MSR_PERFEVTSEL0, val32_hi, val32_lo));
+#endif
+
   if (index < BX_MSR_MAX_INDEX || (index >= 0xc0000000 && index < (0xc0000000 + BX_EXTENDED_MSR_MAX_INDEX))) {
     MSR_Descriptor *msr_desciptor = (index >= 0xc0000000) ? BX_CPU_THIS_PTR ext_msr_desc[index - 0xc0000000] : BX_CPU_THIS_PTR msr_desc[index];
     if (! msr_desciptor) return handle_unknown_wrmsr(index, val_64);
@@ -989,19 +977,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         return false;
       }
       break;
-
-#if BX_SUPPORT_PERFMON
-    case BX_MSR_PERFEVTSEL0:
-    case BX_MSR_PERFEVTSEL1:
-    case BX_MSR_PERFEVTSEL2:
-    case BX_MSR_PERFEVTSEL3:
-    case BX_MSR_PERFEVTSEL4:
-    case BX_MSR_PERFEVTSEL5:
-    case BX_MSR_PERFEVTSEL6:
-    case BX_MSR_PERFEVTSEL7:
-      BX_INFO(("WRMSR: write into MSR_IA32_PERFEVTSEL%d: %08x:%08x", index - BX_MSR_PERFEVTSEL0, val32_hi, val32_lo));
-      return handle_unknown_wrmsr(index, val_64);
-#endif
 
     case BX_MSR_IA32_APERF:
       BX_INFO(("WRMSR: ignore write into MSR IA32_APERF"));
