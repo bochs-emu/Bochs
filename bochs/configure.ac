@@ -721,27 +721,6 @@ AC_ARG_ENABLE(trace-linking,
     ]
   )
 
-AC_MSG_CHECKING(support for configurable MSR registers)
-AC_ARG_ENABLE(configurable-msrs,
-  AS_HELP_STRING([--enable-configurable-msrs], [support for configurable MSR registers (yes if cpu level >= 5)]),
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_CONFIGURE_MSRS, 1)
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_CONFIGURE_MSRS, 0)
-   fi],
-  [
-    if test "$bx_cpu_level" -ge 5; then
-      AC_MSG_RESULT(yes)
-      AC_DEFINE(BX_CONFIGURE_MSRS, 1)
-    else
-      AC_MSG_RESULT(no)
-      AC_DEFINE(BX_CONFIGURE_MSRS, 0)
-    fi
-    ]
-  )
-
 AC_MSG_CHECKING(show IPS)
 AC_ARG_ENABLE(show-ips,
   AS_HELP_STRING([--enable-show-ips], [show IPS in Bochs status bar / log file (yes)]),

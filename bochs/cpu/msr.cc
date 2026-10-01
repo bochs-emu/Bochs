@@ -26,6 +26,7 @@
 #include "cpu.h"
 #include "cpuid.h"
 #include "msr.h"
+#include "gui/siminterface.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 #if BX_SUPPORT_SVM
@@ -424,6 +425,15 @@ void BX_CPU_C::reset_MSRs(unsigned source)
     if (ext_msr_desc[i]) ext_msr_desc[i]->reset(source);
 }
 
+void BX_CPU_C::register_MSRs_state(bx_list_c *parent)
+{
+  for (unsigned i=0;i < BX_MSR_MAX_INDEX; i++)
+    if (msr_desc[i]) msr_desc[i]->register_state(parent);
+
+  for (unsigned i=0;i < BX_EXTENDED_MSR_MAX_INDEX; i++)
+    if (ext_msr_desc[i]) ext_msr_desc[i]->register_state(parent);
+}
+
 bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 {
   Bit64u val64 = 0;
@@ -632,8 +642,9 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #endif
 
     default:
-      BX_PANIC(("RDMSR: missing MSR handling for MSR %08x", index));
-      return handle_unknown_rdmsr(index, msr);
+      // user defined MSRs (loaded from MSRs configuration file)
+      if (! msr_desciptor->get(&val64)) return false;
+      break;
     }
   }
   else {
@@ -678,19 +689,11 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::handle_unknown_rdmsr(Bit32u index, Bit64u 
 
   if (result < 0) {
     // cpuid_t have no idea about this MSR
-#if BX_CONFIGURE_MSRS
-    if (index < BX_MSR_MAX_INDEX && BX_CPU_THIS_PTR msrs[index]) {
-      val_64 = BX_CPU_THIS_PTR msrs[index]->get64();
-    }
-    else
-#endif
-    {
-      // failed to find the MSR, could #GP or ignore it silently
-      BX_ERROR(("RDMSR: Unknown register %#x", index));
+    // failed to find the MSR, could #GP or ignore it silently
+    BX_ERROR(("RDMSR: Unknown register %#x", index));
 
-      if (! BX_CPU_THIS_PTR ignore_bad_msrs)
-        return false; // will result in #GP fault due to unknown MSR
-    }
+    if (! BX_CPU_THIS_PTR ignore_bad_msrs)
+      return false; // will result in #GP fault due to unknown MSR
   }
 
   *msr = val_64;
@@ -1027,8 +1030,12 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #endif
 
     default:
-      BX_PANIC(("WRMSR: missing MSR handling for MSR %08x", index));
-      return handle_unknown_wrmsr(index, val_64);
+      // user defined MSRs (loaded from MSRs configuration file)
+      if (! msr_desciptor->set(val_64)) {
+        BX_ERROR(("WRMSR: Write failed to MSR %s - #GP fault", msr_desciptor->get_name()));
+        return false;
+      }
+      break;
     }
 
     // post-processing for MSRs which writes have side effects
@@ -1082,15 +1089,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::handle_unknown_wrmsr(Bit32u index, Bit64u 
 
   if (result < 0) {
     // cpuid_t have no idea about this MSR
-#if BX_CONFIGURE_MSRS
-    if (index < BX_MSR_MAX_INDEX && BX_CPU_THIS_PTR msrs[index]) {
-      if (! BX_CPU_THIS_PTR msrs[index]->set64(val_64)) {
-        BX_ERROR(("WRMSR: Write failed to MSR %#x - #GP fault", index));
-        return false;
-      }
-      return true;
-    }
-#endif
     // failed to find the MSR, could #GP or ignore it silently
     BX_ERROR(("WRMSR: Unknown register %#x", index));
     if (! BX_CPU_THIS_PTR ignore_bad_msrs)
@@ -1413,7 +1411,60 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UWRMSR(bxInstruction_c *i)
 
 #endif
 
-#if BX_CONFIGURE_MSRS
+// user defined MSR loaded from MSRs configuration file, holds its own value
+class UserMSR : public MSR_Descriptor {
+private:
+  char name[24];
+  unsigned type;           // MSR type: 1 - lin address, 2 - phy address
+#define BX_LIN_ADDRESS_MSR 1
+#define BX_PHY_ADDRESS_MSR 2
+  Bit64u value;            // current MSR value
+  Bit64u reset_value;      // reset value
+  Bit64u ro_bits;          // r/o bits - fault on write if changed
+
+public:
+  UserMSR(Bit32u index, unsigned msr_type, Bit64u reset_val, Bit64u ro, Bit64u ignored_bits):
+     MSR_Descriptor(name, BX_ISA_PENTIUM, 0, ignored_bits), type(msr_type), value(reset_val), reset_value(reset_val), ro_bits(ro)
+  {
+    sprintf(name, "USER_MSR_0x%x", index);
+  }
+
+  virtual bool get(Bit64u *val) {
+    *val = value;
+    return true;
+  }
+
+  virtual bool set(Bit64u new_val) {
+    new_val = merge_ignored_bits(new_val, value);
+    switch(type) {
+      case BX_LIN_ADDRESS_MSR:
+        if (is_canonical_msr && ! is_canonical_msr(new_val)) return false;
+        break;
+      case BX_PHY_ADDRESS_MSR:
+        if (! IsValidPhyAddr(new_val)) return false;
+        break;
+      default:
+        break;
+    }
+    if ((value ^ new_val) & ro_bits) return false;
+    value = new_val;
+    return true;
+  }
+
+  // user defined MSRs do not change on INIT
+  virtual void reset(unsigned source) {
+    if (source == BX_RESET_HARDWARE)
+      value = reset_value;
+  }
+
+  virtual void register_state(bx_list_c *parent) {
+    bx_list_c *m = new bx_list_c(parent, name);
+    BXRS_DEC_PARAM_FIELD(m, type, type);
+    BXRS_HEX_PARAM_FIELD(m, val64, value);
+    BXRS_HEX_PARAM_FIELD(m, reset, reset_value);
+    BXRS_HEX_PARAM_FIELD(m, reserved, ro_bits);
+  }
+};
 
 int BX_CPU_C::load_MSRs(const char *file)
 {
@@ -1445,12 +1496,18 @@ int BX_CPU_C::load_MSRs(const char *file)
         BX_PANIC(("%s:%d > error parsing MSRs config file!", file, linenum));
         break;  // quit parsing after first error
       }
-      if (index >= BX_MSR_MAX_INDEX) {
-        BX_PANIC(("%s:%d > MSR index is too big !", file, linenum));
+      MSR_DescriptorPtr *msr_slot = NULL;
+      if (index < BX_MSR_MAX_INDEX)
+        msr_slot = &msr_desc[index];
+      else if (index >= 0xc0000000 && index < (0xc0000000 + BX_EXTENDED_MSR_MAX_INDEX))
+        msr_slot = &ext_msr_desc[index - 0xc0000000];
+
+      if (! msr_slot) {
+        BX_PANIC(("%s:%d > MSR index is out of supported range !", file, linenum));
         continue;
       }
-      if (BX_CPU_THIS_PTR msrs[index]) {
-        BX_PANIC(("%s:%d > MSR[0x%03x] is already defined!", file, linenum, index));
+      if (*msr_slot) {
+        BX_ERROR(("%s:%d > MSR[0x%03x] is already defined as %s, skipped", file, linenum, index, (*msr_slot)->get_name()));
         continue;
       }
       if (type > 2) {
@@ -1461,7 +1518,7 @@ int BX_CPU_C::load_MSRs(const char *file)
       BX_INFO(("loaded MSR[0x%03x] type=%d %08x:%08x %08x:%08x %08x:%08x", index, type,
         reset_hi, reset_lo, rsrv_hi, rsrv_lo, ignr_hi, ignr_lo));
 
-      BX_CPU_THIS_PTR msrs[index] = new MSR(this, index, type,
+      *msr_slot = new UserMSR(index, type,
         GET64_FROM_HI32_LO32(reset_hi, reset_lo),
         GET64_FROM_HI32_LO32(rsrv_hi, rsrv_lo),
         GET64_FROM_HI32_LO32(ignr_hi, ignr_lo));
@@ -1471,5 +1528,3 @@ int BX_CPU_C::load_MSRs(const char *file)
   fclose(fd);
   return retval;
 }
-
-#endif

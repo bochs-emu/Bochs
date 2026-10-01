@@ -1036,7 +1036,6 @@ enable_repeat_speedups
 enable_fast_function_calls
 enable_handlers_chaining
 enable_trace_linking
-enable_configurable_msrs
 enable_show_ips
 enable_cpp
 enable_debugger
@@ -1770,9 +1769,6 @@ Optional Features:
   --enable-handlers-chaining
                           support handlers-chaining emulation speedups (no)
   --enable-trace-linking  enable trace linking speedups support (no)
-  --enable-configurable-msrs
-                          support for configurable MSR registers (yes if cpu
-                          level >= 5)
   --enable-show-ips       show IPS in Bochs status bar / log file (yes)
   --enable-cpp            use .cpp as C++ suffix (no)
   --enable-debugger       compile in support for Bochs internal debugger (no)
@@ -6239,7 +6235,7 @@ ia64-*-hpux*)
   ;;
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 6242 "configure"' > conftest.$ac_ext
+  echo '#line 6238 "configure"' > conftest.$ac_ext
   if { { eval echo "\"\$as_me\":${as_lineno-$LINENO}: \"$ac_compile\""; } >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -7647,11 +7643,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7650: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7646: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7654: \$? = $ac_status" >&5
+   echo "$as_me:7650: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -7882,11 +7878,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7885: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7881: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:7889: \$? = $ac_status" >&5
+   echo "$as_me:7885: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -7951,11 +7947,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:7954: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:7950: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:7958: \$? = $ac_status" >&5
+   echo "$as_me:7954: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -9793,7 +9789,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9796 "configure"
+#line 9792 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -9889,7 +9885,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 9892 "configure"
+#line 9888 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -12011,11 +12007,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12014: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12010: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:12018: \$? = $ac_status" >&5
+   echo "$as_me:12014: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -12080,11 +12076,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:12083: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:12079: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:12087: \$? = $ac_status" >&5
+   echo "$as_me:12083: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -13120,7 +13116,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13123 "configure"
+#line 13119 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -13216,7 +13212,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 13219 "configure"
+#line 13215 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -14037,11 +14033,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14040: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14036: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:14044: \$? = $ac_status" >&5
+   echo "$as_me:14040: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -14106,11 +14102,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:14109: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:14105: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:14113: \$? = $ac_status" >&5
+   echo "$as_me:14109: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -16075,11 +16071,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16078: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16074: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16082: \$? = $ac_status" >&5
+   echo "$as_me:16078: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16310,11 +16306,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16313: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16309: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>conftest.err)
    ac_status=$?
    cat conftest.err >&5
-   echo "$as_me:16317: \$? = $ac_status" >&5
+   echo "$as_me:16313: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s "$ac_outfile"; then
      # The compiler can only warn and ignore the option if not recognized
      # So say no if there are warnings
@@ -16379,11 +16375,11 @@ else case e in #(
    -e 's:.*FLAGS}? :&$lt_compiler_flag :; t' \
    -e 's: [^ ]*conftest\.: $lt_compiler_flag&:; t' \
    -e 's:$: $lt_compiler_flag:'`
-   (eval echo "\"\$as_me:16382: $lt_compile\"" >&5)
+   (eval echo "\"\$as_me:16378: $lt_compile\"" >&5)
    (eval "$lt_compile" 2>out/conftest.err)
    ac_status=$?
    cat out/conftest.err >&5
-   echo "$as_me:16386: \$? = $ac_status" >&5
+   echo "$as_me:16382: \$? = $ac_status" >&5
    if (exit $ac_status) && test -s out/conftest2.$ac_objext
    then
      # The compiler can only warn and ignore the option if not recognized
@@ -18221,7 +18217,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18224 "configure"
+#line 18220 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -18317,7 +18313,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 18320 "configure"
+#line 18316 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -20072,7 +20068,7 @@ else
   lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 20075 "configure"
+#line 20071 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -23529,41 +23525,6 @@ else case e in #(
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf '%s\n' "no" >&6; }
     enable_trace_linking=0
-
-   ;;
-esac
-fi
-
-
-{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking support for configurable MSR registers" >&5
-printf %s "checking support for configurable MSR registers... " >&6; }
-# Check whether --enable-configurable-msrs was given.
-if test ${enable_configurable_msrs+y}
-then :
-  enableval=$enable_configurable_msrs; if test "$enableval" = yes; then
-    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf '%s\n' "yes" >&6; }
-    printf '%s\n' "#define BX_CONFIGURE_MSRS 1" >>confdefs.h
-
-   else
-    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf '%s\n' "no" >&6; }
-    printf '%s\n' "#define BX_CONFIGURE_MSRS 0" >>confdefs.h
-
-   fi
-else case e in #(
-  e)
-    if test "$bx_cpu_level" -ge 5; then
-      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf '%s\n' "yes" >&6; }
-      printf '%s\n' "#define BX_CONFIGURE_MSRS 1" >>confdefs.h
-
-    else
-      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf '%s\n' "no" >&6; }
-      printf '%s\n' "#define BX_CONFIGURE_MSRS 0" >>confdefs.h
-
-    fi
 
    ;;
 esac

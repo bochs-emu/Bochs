@@ -22,6 +22,8 @@
 #ifndef BX_MSR_H
 #define BX_MSR_H
 
+class bx_list_c;
+
 // optional per-MSR value check, returns true if the value is valid (otherwise WRMSR causes #GP)
 typedef bool (*MSR_Valid_Value_Check)(Bit64u val);
 
@@ -60,6 +62,9 @@ public:
 
   // called on every cpu reset, source is BX_RESET_HARDWARE or BX_RESET_SOFTWARE (INIT)
   virtual void reset(unsigned source) {}
+
+  // MSR descriptors holding their own state register it for save/restore
+  virtual void register_state(bx_list_c *parent) {}
 };
 
 typedef MSR_Descriptor* MSR_DescriptorPtr;
