@@ -30,6 +30,7 @@
 #endif
 #include "fw_cfg.h"
 #include "acpi_tables.h"
+#include "smbios_tables.h"
 
 #define LOG_THIS theFwCfgDevice->
 
@@ -218,6 +219,10 @@ void bx_fw_cfg_c::init(void)
 
   // Generate and add ACPI tables (critical for OVMF/Windows)
   generate_acpi_tables();
+
+  // Generate and add SMBIOS tables (identifies the guest as a Mac model,
+  // needed for macOS guests -- harmless for everything else)
+  generate_smbios_tables();
 
   BX_INFO(("fw_cfg device initialized (ports 0x510-0x511, DMA 0x514)"));
 }
@@ -696,4 +701,31 @@ void bx_fw_cfg_c::generate_acpi_tables(void)
 
   BX_INFO(("fw_cfg: added ACPI tables (%u bytes), RSDP (%u bytes), loader (%u bytes)",
            tables_size, rsdp_size, loader_size));
+}
+
+// Generate SMBIOS tables identifying the guest as a Mac model
+void bx_fw_cfg_c::generate_smbios_tables(void)
+{
+  bx_smbios_tables_c smbios_gen;
+  smbios_gen.generate_tables(BX_MEM_THIS get_memory_len());
+
+  Bit8u* tables_blob = smbios_gen.get_tables_blob();
+  Bit32u tables_size = smbios_gen.get_tables_size();
+
+  Bit8u* anchor_blob = smbios_gen.get_anchor_blob();
+  Bit32u anchor_size = smbios_gen.get_anchor_size();
+
+  // Copy data (add_file takes ownership, and smbios_gen will delete its buffers)
+  Bit8u* tables_copy = new Bit8u[tables_size];
+  memcpy(tables_copy, tables_blob, tables_size);
+
+  Bit8u* anchor_copy = new Bit8u[anchor_size];
+  memcpy(anchor_copy, anchor_blob, anchor_size);
+
+  // Add SMBIOS files to fw_cfg (OVMF expects these specific filenames)
+  add_file("etc/smbios/smbios-tables", tables_copy, tables_size);
+  add_file("etc/smbios/smbios-anchor", anchor_copy, anchor_size);
+
+  BX_INFO(("fw_cfg: added SMBIOS tables (%u bytes), anchor (%u bytes)",
+           tables_size, anchor_size));
 }

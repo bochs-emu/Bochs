@@ -71,6 +71,7 @@ extern "C" {
 #define BX_PLUGIN_PCIPNIC   "pcipnic"
 #define BX_PLUGIN_E1000     "e1000"
 #define BX_PLUGIN_GAMEPORT  "gameport"
+#define BX_PLUGIN_APPLESMC  "applesmc"
 #define BX_PLUGIN_SPEAKER   "speaker"
 #define BX_PLUGIN_ACPI      "acpi"
 #define BX_PLUGIN_IODEBUG   "iodebug"
@@ -447,6 +448,7 @@ PLUGIN_ENTRY_FOR_MODULE(pcipnic);
 PLUGIN_ENTRY_FOR_MODULE(e1000);
 PLUGIN_ENTRY_FOR_MODULE(extfpuirq);
 PLUGIN_ENTRY_FOR_MODULE(gameport);
+PLUGIN_ENTRY_FOR_MODULE(applesmc);
 PLUGIN_ENTRY_FOR_MODULE(speaker);
 PLUGIN_ENTRY_FOR_MODULE(acpi);
 PLUGIN_ENTRY_FOR_MODULE(iodebug);
