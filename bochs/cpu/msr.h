@@ -57,6 +57,9 @@ public:
   // return false to signal #GP
   virtual bool get(Bit64u *val) { return false; }
   virtual bool set(Bit64u val) { return false; }
+
+  // called on every cpu reset, source is BX_RESET_HARDWARE or BX_RESET_SOFTWARE (INIT)
+  virtual void reset(unsigned source) {}
 };
 
 typedef MSR_Descriptor* MSR_DescriptorPtr;
@@ -68,7 +71,6 @@ private:
 
 public:
   ConstMSR(const char *name, unsigned feature, Bit64u val): MSR_Descriptor(name, feature, ~BX_CONST64(0)), value(val) {}
-  virtual ~ConstMSR() {}
 
   virtual bool get(Bit64u *val) {
     *val = value;
@@ -80,7 +82,6 @@ public:
 class WriteOnlyMSR : public MSR_Descriptor {
 public:
   WriteOnlyMSR(const char *name, unsigned feature, Bit64u reserved_bits = 0): MSR_Descriptor(name, feature, reserved_bits) {}
-  virtual ~WriteOnlyMSR() {}
 
   // get() is not overridden, read of write only MSR returns false (#GP)
 
@@ -98,7 +99,6 @@ private:
 public:
   VarMSR(const char *name, unsigned feature, Bit64u *cpu_var, Bit64u reserved_bits = 0, MSR_Valid_Value_Check check = NULL, Bit64u ignored_bits = 0):
      MSR_Descriptor(name, feature, reserved_bits, ignored_bits), var(cpu_var), is_valid(check) {}
-  virtual ~VarMSR() {}
 
   virtual bool get(Bit64u *val) {
     *val = *var;

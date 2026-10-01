@@ -5597,6 +5597,7 @@ public: // for now...
 #if BX_CPU_LEVEL >= 5
   void init_MSRs();
   void destroy_MSRs();
+  void reset_MSRs(unsigned source);
 #if BX_CONFIGURE_MSRS
   int load_MSRs(const char *file);
 #endif

@@ -1212,6 +1212,11 @@ void BX_CPU_C::reset(unsigned source)
 
   }
 
+#if BX_CPU_LEVEL >= 5
+  // every MSR descriptor decides itself what to do on hardware reset or INIT, called after TSC is reset
+  BX_CPU_THIS_PTR reset_MSRs(source);
+#endif
+
   BX_CPU_THIS_PTR EXT = 0;
   BX_CPU_THIS_PTR last_exception_type = BX_ET_NONE;
 #if BX_SUPPORT_FRED

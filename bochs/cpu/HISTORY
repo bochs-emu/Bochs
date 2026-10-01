@@ -52,6 +52,7 @@ Changes after Bochs 3.1:
 ! SVM: Implemented SVM Decode Assist feature and enabled in all CPUID models featuring SVM
 - FRED: Fixed reserved bits checking for MSR_IA32_FRED_CONFIG (0x1d4), bug was introduced in Bochs 3.1 release
 - MSR: enforce reserved bits checking for MSR_TSX_AUX (0xc0000103), MSR_IA32_UMWAIT_CONTROL (0xe1), MSR_MTRR_DEFTYPE (0x2ff) and MSR_IA32_PKRS (0x6e1)
+- MSR: writing 0 value to read only MSR was passing validation checks reaching BX_PANIC
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):

@@ -69,7 +69,6 @@ private:
 
 public:
   ApicBaseMSR(BX_CPU_C *cpu_ptr): MSR_Descriptor("MSR_APICBASE", BX_ISA_PENTIUM), cpu(cpu_ptr) {}
-  virtual ~ApicBaseMSR() {}
 
   virtual bool get(Bit64u *val) {
     *val = cpu->msr.apicbase;
@@ -91,7 +90,6 @@ private:
 
 public:
   TscMSR(BX_CPU_C *cpu_ptr): MSR_Descriptor("MSR_IA32_TSC", BX_ISA_PENTIUM), cpu(cpu_ptr) {}
-  virtual ~TscMSR() {}
 
   virtual bool get(Bit64u *val) {
     *val = cpu->get_Virtual_TSC(); // takes into account VMX or SVM adjustments
@@ -107,6 +105,34 @@ public:
 #undef LOG_THIS
 #define LOG_THIS BX_CPU_THIS_PTR
 
+// IA32_MPERF / IA32_APERF MSRs: TSC frequency / actual performance clock counters (R/Write to clear)
+// No frequency scaling is emulated so both count at TSC frequency (also when not in C0 state).
+// The counter is derived from TSC, any write clears the counter.
+class AperfMperfMSR : public MSR_Descriptor {
+private:
+  BX_CPU_C *cpu;
+  Bit64u offset;
+
+public:
+  AperfMperfMSR(BX_CPU_C *cpu_ptr, const char *name): MSR_Descriptor(name, BX_ISA_PENTIUM), cpu(cpu_ptr), offset(0) {}
+
+  virtual bool get(Bit64u *val) {
+    *val = cpu->get_TSC() - offset; // use system (not virtualized) TSC counter
+    return true;
+  }
+
+  virtual bool set(Bit64u val) {
+    offset = cpu->get_TSC(); // any write clears the counter, the written value is ignored
+    return true;
+  }
+
+  // the counter is cleared on hardware reset, not changed on INIT
+  virtual void reset(unsigned source) {
+    if (source == BX_RESET_HARDWARE)
+      offset = cpu->get_TSC();
+  }
+};
+
 #if BX_CPU_LEVEL >= 6
 // IA32_TSC_DEADLINE MSR, lives in the local APIC
 class TscDeadlineMSR : public MSR_Descriptor {
@@ -115,7 +141,6 @@ private:
 
 public:
   TscDeadlineMSR(BX_CPU_C *cpu_ptr): MSR_Descriptor("MSR_TSC_DEADLINE", BX_ISA_TSC_DEADLINE), cpu(cpu_ptr) {}
-  virtual ~TscDeadlineMSR() {}
 
   virtual bool get(Bit64u *val) {
     *val = cpu->lapic->get_tsc_deadline();
@@ -136,7 +161,6 @@ private:
 
 public:
   EferMSR(BX_CPU_C *cpu_ptr, Bit64u reserved_bits): MSR_Descriptor("MSR_EFER", BX_ISA_PENTIUM, reserved_bits), cpu(cpu_ptr) {}
-  virtual ~EferMSR() {}
 
   virtual bool get(Bit64u *val) {
     *val = cpu->efer.get32();
@@ -168,8 +192,10 @@ void BX_CPU_C::init_MSRs()
   msr_desc[BX_MSR_IA32_USER_MSR_CTL] = new VarMSR("MSR_IA32_USER_MSR_CTL", BX_ISA_USER_MSR, &BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl, 0, is_canonical_msr);
 #endif
 
-  msr_desc[BX_MSR_IA32_APERF] = new MSR_Descriptor("MSR_IA32_APERF", BX_ISA_PENTIUM);
-  msr_desc[BX_MSR_IA32_MPERF] = new MSR_Descriptor("MSR_IA32_MPERF", BX_ISA_PENTIUM);
+  // IA32_MPERF MSR increments in proportion to a fixed frequency, which is configured when the processor is booted.
+  // IA32_APERF MSR increments in proportion to actual performance, while accounting for hardware coordination of P-state and TM1/TM2; or software initiated throttling.
+  msr_desc[BX_MSR_IA32_MPERF] = new AperfMperfMSR(this, "MSR_IA32_MPERF");
+  msr_desc[BX_MSR_IA32_APERF] = new AperfMperfMSR(this, "MSR_IA32_APERF");
 
 #if BX_CPU_LEVEL >= 6
   // IA32_SYSENTER_CS MSR:
@@ -389,6 +415,15 @@ void BX_CPU_C::destroy_MSRs()
   }
 }
 
+void BX_CPU_C::reset_MSRs(unsigned source)
+{
+  for (unsigned i=0;i < BX_MSR_MAX_INDEX; i++)
+    if (msr_desc[i]) msr_desc[i]->reset(source);
+
+  for (unsigned i=0;i < BX_EXTENDED_MSR_MAX_INDEX; i++)
+    if (ext_msr_desc[i]) ext_msr_desc[i]->reset(source);
+}
+
 bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 {
   Bit64u val64 = 0;
@@ -455,6 +490,8 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #if BX_SUPPORT_MONITOR_MWAIT
     case BX_MSR_IA32_UMWAIT_CONTROL:            // 0x0e1
 #endif
+    case BX_MSR_IA32_MPERF:                     // 0x0e7
+    case BX_MSR_IA32_APERF:                     // 0x0e8
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_MTRRCAP:                        // 0x0fe
 #endif
@@ -573,14 +610,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       if (! msr_desciptor->get(&val64)) return false;
       break;
 
-    case BX_MSR_IA32_APERF:
-    case BX_MSR_IA32_MPERF:
-      // IA32_MPERF MSR increments in proportion to a fixed frequency, which is configured when the processor is booted.
-      // IA32_APERF MSR increments in proportion to actual performance, while accounting for hardware coordination of P-state and TM1/TM2; or software initiated throttling.
-      //     use system (not virtualized) TSC counter
-      val64 = BX_CPU_THIS_PTR get_TSC();
-      break;
-
 
     // SCA prevention MSRs
     case BX_MSR_IA32_SPEC_CTRL:
@@ -597,11 +626,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
 #if BX_SUPPORT_VMX
-/*
-    case BX_MSR_IA32_SMM_MONITOR_CTRL:
-      BX_PANIC(("Dual-monitor treatment of SMI and SMM is not implemented"));
-      break;
-*/
     case BX_MSR_IA32_FEATURE_CONTROL:
       val64 = BX_CPU_THIS_PTR msr.ia32_feature_ctrl;
       break;
@@ -859,15 +883,13 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       BX_ERROR(("WRMSR %s: not supported by the cpu model", msr_desciptor->get_name()));
       return false;
     }
+    if (msr_desciptor->read_only()) {
+      BX_ERROR(("WRMSR: %s is read only", msr_desciptor->get_name()));
+      return false;
+    }
     if (msr_desciptor->check_reserved_bits_violation(val_64)) {
-      if (msr_desciptor->read_only()) {
-        BX_ERROR(("WRMSR: %s is read only", msr_desciptor->get_name()));
-        return false;
-      }
-      else {
-        BX_ERROR(("WRMSR: attempt to set reserved bits of %s", msr_desciptor->get_name()));
-        return false;
-      }
+      BX_ERROR(("WRMSR: attempt to set reserved bits of %s", msr_desciptor->get_name()));
+      return false;
     }
 
     switch(index) {
@@ -885,6 +907,8 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #if BX_SUPPORT_MONITOR_MWAIT
     case BX_MSR_IA32_UMWAIT_CONTROL:            // 0x0e1
 #endif
+    case BX_MSR_IA32_MPERF:                     // 0x0e7
+    case BX_MSR_IA32_APERF:                     // 0x0e8
     case BX_MSR_IA32_FLUSH_CMD:                 // 0x10b
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:                    // 0x174
@@ -977,15 +1001,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
         return false;
       }
       break;
-
-    case BX_MSR_IA32_APERF:
-      BX_INFO(("WRMSR: ignore write into MSR IA32_APERF"));
-      break;
-
-    case BX_MSR_IA32_MPERF:
-      BX_INFO(("WRMSR: ignore write into MSR IA32_MPERF"));
-      break;
-
 
     // SCA prevention MSRs
     case BX_MSR_IA32_SPEC_CTRL:
