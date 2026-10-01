@@ -1163,6 +1163,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UWRMSR(bxInstruction_c *i)
 
 #endif
 
+#if BX_CPU_LEVEL >= 5
+
 // user defined MSR loaded from MSRs configuration file, holds its own value
 class UserMSR : public MSR_Descriptor {
 private:
@@ -1280,3 +1282,5 @@ int BX_CPU_C::load_MSRs(const char *file)
   fclose(fd);
   return retval;
 }
+
+#endif // BX_CPU_LEVEL >= 5
