@@ -131,7 +131,7 @@ void BX_CPU_C::init_MSRs()
   msr_desc[BX_MSR_PAT] = new VarMSR("MSR_IA32_PAT", BX_ISA_PAT, &BX_CPU_THIS_PTR msr.pat.u64, 0, isValidMSR_PAT);
 #endif
 
-  msr_desc[BX_MSR_TSC_ADJUST] = new MSR_Descriptor("MSR_IA32_TSC_ADJUST", BX_ISA_TSC_ADJUST);
+  msr_desc[BX_MSR_TSC_ADJUST] = new VarMSR("MSR_IA32_TSC_ADJUST", BX_ISA_TSC_ADJUST, &BX_CPU_THIS_PTR tsc_adjust);
 
 #if BX_SUPPORT_MONITOR_MWAIT
   msr_desc[BX_MSR_IA32_UMWAIT_CONTROL] = new MSR_Descriptor("MSR_IA32_UMWAIT_CONTROL", BX_ISA_WAITPKG);
@@ -345,6 +345,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_IA32_USER_MSR_CTL:              // 0x01c
 #endif
     case BX_MSR_IA32_BARRIER:                   // 0x02f
+    case BX_MSR_TSC_ADJUST:                     // 0x03b
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_MTRRCAP:                        // 0x0fe
 #endif
@@ -479,9 +480,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
     case BX_MSR_TSC:
       val64 = BX_CPU_THIS_PTR get_Virtual_TSC();
-      break;
-    case BX_MSR_TSC_ADJUST:
-      val64 = BX_CPU_THIS_PTR tsc_adjust;
       break;
 
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -829,6 +827,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_IA32_USER_MSR_CTL:              // 0x01c
 #endif
     case BX_MSR_IA32_BARRIER:                   // 0x02f
+    case BX_MSR_TSC_ADJUST:                     // 0x03b
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_CS:                    // 0x174
     case BX_MSR_SYSENTER_ESP:                   // 0x175
@@ -943,10 +942,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_TSC:
       BX_INFO(("WRMSR: write 0x%08x%08x to MSR_TSC", val32_hi, val32_lo));
       BX_CPU_THIS_PTR set_TSC(val_64);
-      break;
-
-    case BX_MSR_TSC_ADJUST:
-      BX_CPU_THIS_PTR tsc_adjust = (Bit64s) val_64;
       break;
 
 #if BX_SUPPORT_MONITOR_MWAIT

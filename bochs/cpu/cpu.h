@@ -1052,7 +1052,7 @@ public: // for now...
   // remember the time in ticks that it was reset to zero.  With a little
   // algebra, we can also support setting it to something other than zero.
   // Don't read this directly; use get_TSC and set_TSC to access the TSC.
-  Bit64s tsc_adjust;
+  Bit64u tsc_adjust;
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   Bit64s tsc_offset;
 #endif
