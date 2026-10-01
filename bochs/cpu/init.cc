@@ -229,8 +229,12 @@ void BX_CPU_C::initialize(void)
   }
 #endif
 
+#if BX_SUPPORT_VMX
+  init_VMCS();
+#endif
+
 #if BX_CPU_LEVEL >= 5
-  init_MSRs();
+  init_MSRs(); // must be called after init_VMCS(), VMX capability MSRs are computed from vmx_cap
 
 #if BX_CONFIGURE_MSRS
   for (unsigned n=0; n < BX_MSR_MAX_INDEX; n++) {
@@ -245,10 +249,6 @@ void BX_CPU_C::initialize(void)
 #endif
 
   init_SMRAM();
-
-#if BX_SUPPORT_VMX
-  init_VMCS();
-#endif
 
   init_statistics();
 }

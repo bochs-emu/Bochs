@@ -54,8 +54,8 @@ void BX_CPU_C::init_MSRs()
   for (unsigned i=0;i < BX_MSR_MAX_INDEX; i++)
     msr_desc[i] = NULL;
 
-  msr_desc[BX_MSR_TSC] = new MSR_Descriptor("BX_IA32_TSC", BX_ISA_PENTIUM);
-  msr_desc[BX_MSR_PLATFORM_ID] = new MSR_Descriptor("MSR_PLATFORM_ID", BX_ISA_PENTIUM, false, ~BX_CONST64(0)); // read only
+  msr_desc[BX_MSR_TSC] = new MSR_Descriptor("MSR_IA32_TSC", BX_ISA_PENTIUM);
+  msr_desc[BX_MSR_PLATFORM_ID] = new MSR_Const_Descriptor("MSR_PLATFORM_ID", BX_ISA_PENTIUM, 0); // read only
 
 #if BX_SUPPORT_APIC
   msr_desc[BX_MSR_APICBASE] = new MSR_Descriptor("MSR_APICBASE", BX_ISA_PENTIUM);
@@ -107,10 +107,10 @@ void BX_CPU_C::init_MSRs()
   msr_desc[BX_MSR_MTRRFIX4K_F8000] = new MSR_Descriptor("MSR_IA32_MTRRFIX4K_F8000", BX_ISA_MTRR);
 
   msr_desc[BX_MSR_MTRR_DEFTYPE] = new MSR_Descriptor("MSR_IA32_MTRR_DEFTYPE", BX_ISA_MTRR, false, BX_CONST64(0xfffffffffffff300)); // bits [63-12], [9:8] are reserved
-  msr_desc[BX_MSR_PAT] = new MSR_Descriptor("BX_IA32_PAT", BX_ISA_PAT);
+  msr_desc[BX_MSR_PAT] = new MSR_Descriptor("MSR_IA32_PAT", BX_ISA_PAT);
 #endif
 
-  msr_desc[BX_MSR_TSC_ADJUST] = new MSR_Descriptor("BX_IA32_TSC_ADJUST", BX_ISA_TSC_ADJUST);
+  msr_desc[BX_MSR_TSC_ADJUST] = new MSR_Descriptor("MSR_IA32_TSC_ADJUST", BX_ISA_TSC_ADJUST);
 
 #if BX_SUPPORT_MONITOR_MWAIT
   msr_desc[BX_MSR_IA32_UMWAIT_CONTROL] = new MSR_Descriptor("MSR_IA32_UMWAIT_CONTROL", BX_ISA_WAITPKG);
@@ -156,7 +156,7 @@ void BX_CPU_C::init_MSRs()
   msr_desc[BX_MSR_IA32_FRED_SSP2] = new MSR_Descriptor("MSR_IA32_FRED_SSP2", BX_ISA_FRED, true, BX_CONST64(0x7)); // force 8-byte alignment of the MSR value
   msr_desc[BX_MSR_IA32_FRED_SSP3] = new MSR_Descriptor("MSR_IA32_FRED_SSP3", BX_ISA_FRED, true, BX_CONST64(0x7)); // force 8-byte alignment of the MSR value
 #endif
-  msr_desc[BX_MSR_IA32_FRED_CONFIG] = new MSR_Descriptor("BX_MSR_IA32_FRED_CONFIG", BX_ISA_FRED, BX_CONST64(0x834));
+  msr_desc[BX_MSR_IA32_FRED_CONFIG] = new MSR_Descriptor("MSR_IA32_FRED_CONFIG", BX_ISA_FRED, BX_CONST64(0x834));
 #endif
 
 #if BX_CPU_LEVEL >= 6
@@ -164,7 +164,7 @@ void BX_CPU_C::init_MSRs()
 #endif
 
   // artificial MSR for MRSLIST serialization
-  msr_desc[BX_MSR_IA32_BARRIER] = new MSR_Descriptor("BX_MSR_IA32_BARRIER", BX_ISA_MSRLIST);
+  msr_desc[BX_MSR_IA32_BARRIER] = new MSR_Descriptor("MSR_IA32_BARRIER", BX_ISA_MSRLIST);
 
   // SCA prevention MSRs
   msr_desc[BX_MSR_IA32_ARCH_CAPABILITIES] = new MSR_Descriptor("MSR_IA32_ARCH_CAPABILITIES", BX_ISA_SCA_MITIGATIONS, false, ~BX_CONST64(0)); // read only
@@ -180,29 +180,40 @@ void BX_CPU_C::init_MSRs()
 
 #if BX_SUPPORT_VMX
   msr_desc[BX_MSR_IA32_FEATURE_CONTROL] = new MSR_Descriptor("MSR_IA32_FEATURE_CONTROL", BX_ISA_VMX);
-  // all these VMX MSRs are read only
-  msr_desc[BX_MSR_VMX_BASIC] = new MSR_Descriptor("MSR_VMX_BASIC", BX_ISA_VMX, false, ~BX_CONST64(0));
-  msr_desc[BX_MSR_VMX_PINBASED_CTRLS] = new MSR_Descriptor("MSR_VMX_PINBASED_CTRLS", BX_ISA_VMX, false, ~BX_CONST64(0));
-  msr_desc[BX_MSR_VMX_PROCBASED_CTRLS] = new MSR_Descriptor("MSR_VMX_PROCBASED_CTRLS", BX_ISA_VMX, false, ~BX_CONST64(0));
-  msr_desc[BX_MSR_VMX_VMEXIT_CTRLS] = new MSR_Descriptor("MSR_VMX_VMEXIT_CTRLS", BX_ISA_VMX, false, ~BX_CONST64(0));
-  msr_desc[BX_MSR_VMX_VMEXIT_CTRLS2] = new MSR_Descriptor("MSR_VMX_VMEXIT_CTRLS2", BX_ISA_VMX, false, ~BX_CONST64(0));
-  msr_desc[BX_MSR_VMX_VMENTRY_CTRLS] = new MSR_Descriptor("MSR_VMX_VMENTRY_CTRLS", BX_ISA_VMX, false, ~BX_CONST64(0));
-  msr_desc[BX_MSR_VMX_PROCBASED_CTRLS2] = new MSR_Descriptor("MSR_VMX_PROCBASED_CTRLS2", BX_ISA_VMX, false, ~BX_CONST64(0));
-  msr_desc[BX_MSR_VMX_PROCBASED_CTRLS3] = new MSR_Descriptor("MSR_VMX_PROCBASED_CTRLS3", BX_ISA_VMX, false, ~BX_CONST64(0));
+  // all these VMX MSRs are read only, the values are computed from vmx_cap so init_VMCS() must be called before
+  msr_desc[BX_MSR_VMX_BASIC] = new MSR_Const_Descriptor("MSR_VMX_BASIC", BX_ISA_VMX, VMX_MSR_VMX_BASIC);
+  msr_desc[BX_MSR_VMX_PINBASED_CTRLS] = new MSR_Const_Descriptor("MSR_VMX_PINBASED_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_PINBASED_CTRLS);
+  msr_desc[BX_MSR_VMX_PROCBASED_CTRLS] = new MSR_Const_Descriptor("MSR_VMX_PROCBASED_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_PROCBASED_CTRLS);
+  msr_desc[BX_MSR_VMX_VMEXIT_CTRLS] = new MSR_Const_Descriptor("MSR_VMX_VMEXIT_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_VMEXIT_CTRLS);
+  msr_desc[BX_MSR_VMX_VMEXIT_CTRLS2] = new MSR_Const_Descriptor("MSR_VMX_VMEXIT_CTRLS2", BX_ISA_VMX, VMX_MSR_VMX_VMEXIT_CTRLS2);
+  if (! BX_CPU_THIS_PTR vmx_cap.vmx_vmexit_ctrl2_supported_bits)
+    msr_desc[BX_MSR_VMX_VMEXIT_CTRLS2]->disable();
+  msr_desc[BX_MSR_VMX_VMENTRY_CTRLS] = new MSR_Const_Descriptor("MSR_VMX_VMENTRY_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_VMENTRY_CTRLS);
+  msr_desc[BX_MSR_VMX_PROCBASED_CTRLS2] = new MSR_Const_Descriptor("MSR_VMX_PROCBASED_CTRLS2", BX_ISA_VMX, VMX_MSR_VMX_PROCBASED_CTRLS2);
+  if (! BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl2_supported_bits)
+    msr_desc[BX_MSR_VMX_PROCBASED_CTRLS2]->disable();
+  msr_desc[BX_MSR_VMX_PROCBASED_CTRLS3] = new MSR_Const_Descriptor("MSR_VMX_PROCBASED_CTRLS3", BX_ISA_VMX, VMX_MSR_VMX_PROCBASED_CTRLS3);
+  if (! BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl3_supported_bits)
+    msr_desc[BX_MSR_VMX_PROCBASED_CTRLS3]->disable();
 #if BX_SUPPORT_VMX >= 2
-  msr_desc[BX_MSR_VMX_TRUE_PINBASED_CTRLS] = new MSR_Descriptor("MSR_VMX_TRUE_PINBASED_CTRLS", BX_ISA_VMX, false, ~BX_CONST64(0));
-  msr_desc[BX_MSR_VMX_TRUE_PROCBASED_CTRLS] = new MSR_Descriptor("MSR_VMX_TRUE_PROCBASED_CTRLS", BX_ISA_VMX, false, ~BX_CONST64(0));
-  msr_desc[BX_MSR_VMX_TRUE_VMEXIT_CTRLS] = new MSR_Descriptor("MSR_VMX_TRUE_VMEXIT_CTRLS", BX_ISA_VMX, false, ~BX_CONST64(0));
-  msr_desc[BX_MSR_VMX_TRUE_VMENTRY_CTRLS] = new MSR_Descriptor("MSR_VMX_TRUE_VMENTRY_CTRLS", BX_ISA_VMX, false, ~BX_CONST64(0));
-  msr_desc[BX_MSR_VMX_EPT_VPID_CAP] = new MSR_Descriptor("MSR_VMX_EPT_VPID_CAP", BX_ISA_VMX, false, ~BX_CONST64(0));
-  msr_desc[BX_MSR_VMX_VMFUNC] = new MSR_Descriptor("MSR_VMX_VMFUNC", BX_ISA_VMX, false, ~BX_CONST64(0));
+  msr_desc[BX_MSR_VMX_TRUE_PINBASED_CTRLS] = new MSR_Const_Descriptor("MSR_VMX_TRUE_PINBASED_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_TRUE_PINBASED_CTRLS);
+  msr_desc[BX_MSR_VMX_TRUE_PROCBASED_CTRLS] = new MSR_Const_Descriptor("MSR_VMX_TRUE_PROCBASED_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_TRUE_PROCBASED_CTRLS);
+  msr_desc[BX_MSR_VMX_TRUE_VMEXIT_CTRLS] = new MSR_Const_Descriptor("MSR_VMX_TRUE_VMEXIT_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_TRUE_VMEXIT_CTRLS);
+  msr_desc[BX_MSR_VMX_TRUE_VMENTRY_CTRLS] = new MSR_Const_Descriptor("MSR_VMX_TRUE_VMENTRY_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_TRUE_VMENTRY_CTRLS);
+  msr_desc[BX_MSR_VMX_EPT_VPID_CAP] = new MSR_Const_Descriptor("MSR_VMX_EPT_VPID_CAP", BX_ISA_VMX, VMX_MSR_VMX_EPT_VPID_CAP);
+  if (VMX_MSR_VMX_EPT_VPID_CAP == 0)
+    msr_desc[BX_MSR_VMX_EPT_VPID_CAP]->disable();
+  msr_desc[BX_MSR_VMX_VMFUNC] = new MSR_Const_Descriptor("MSR_VMX_VMFUNC", BX_ISA_VMX, BX_CPU_THIS_PTR vmx_cap.vmx_vmfunc_supported_bits);
+  if (! BX_CPU_THIS_PTR vmx_cap.vmx_vmfunc_supported_bits)
+    msr_desc[BX_MSR_VMX_VMFUNC]->disable();
 #endif
-  msr_desc[BX_MSR_VMX_MISC] = new MSR_Descriptor("MSR_VMX_MISC", BX_ISA_VMX, false, ~BX_CONST64(0));
-  msr_desc[BX_MSR_VMX_CR0_FIXED0] = new MSR_Descriptor("MSR_VMX_CR0_FIXED0", BX_ISA_VMX, false, ~BX_CONST64(0));
-  msr_desc[BX_MSR_VMX_CR0_FIXED1] = new MSR_Descriptor("MSR_VMX_CR0_FIXED1", BX_ISA_VMX, false, ~BX_CONST64(0));
-  msr_desc[BX_MSR_VMX_CR4_FIXED0] = new MSR_Descriptor("MSR_VMX_CR4_FIXED0", BX_ISA_VMX, false, ~BX_CONST64(0));
-  msr_desc[BX_MSR_VMX_CR4_FIXED1] = new MSR_Descriptor("MSR_VMX_CR4_FIXED1", BX_ISA_VMX, false, ~BX_CONST64(0));
-  msr_desc[BX_MSR_VMX_VMCS_ENUM] = new MSR_Descriptor("MSR_VMX_VMCS_ENUM", BX_ISA_VMX, false, ~BX_CONST64(0));
+  msr_desc[BX_MSR_VMX_MISC] = new MSR_Const_Descriptor("MSR_VMX_MISC", BX_ISA_VMX, VMX_MSR_MISC);
+  msr_desc[BX_MSR_VMX_CR0_FIXED0] = new MSR_Const_Descriptor("MSR_VMX_CR0_FIXED0", BX_ISA_VMX, VMX_MSR_CR0_FIXED0);
+  msr_desc[BX_MSR_VMX_CR0_FIXED1] = new MSR_Const_Descriptor("MSR_VMX_CR0_FIXED1", BX_ISA_VMX, VMX_MSR_CR0_FIXED1);
+  msr_desc[BX_MSR_VMX_CR4_FIXED0] = new MSR_Const_Descriptor("MSR_VMX_CR4_FIXED0", BX_ISA_VMX, VMX_MSR_CR4_FIXED0);
+  // VMX_MSR_CR4_FIXED1 is cr4_suppmask which is not initialized yet
+  msr_desc[BX_MSR_VMX_CR4_FIXED1] = new MSR_Const_Descriptor("MSR_VMX_CR4_FIXED1", BX_ISA_VMX, get_cr4_allow_mask());
+  msr_desc[BX_MSR_VMX_VMCS_ENUM] = new MSR_Const_Descriptor("MSR_VMX_VMCS_ENUM", BX_ISA_VMX, VMX_MSR_VMCS_ENUM);
 #endif
 
 #if BX_SUPPORT_PERFMON
@@ -293,8 +304,41 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       BX_ERROR(("RDMSR %s: '%s' feature not enabled in the cpu model", msr_desciptor->get_name(), get_cpu_feature_name(msr_desciptor->get_cpu_feature())));
       return false;
     }
+    if (! msr_desciptor->is_enabled()) {
+      BX_ERROR(("RDMSR %s: not supported by the cpu model", msr_desciptor->get_name()));
+      return false;
+    }
 
     switch(index) {
+    // MSRs converted to generic MSR descriptor interface
+    case BX_MSR_PLATFORM_ID:
+#if BX_SUPPORT_VMX
+    case BX_MSR_VMX_BASIC:
+    case BX_MSR_VMX_PINBASED_CTRLS:
+    case BX_MSR_VMX_PROCBASED_CTRLS:
+    case BX_MSR_VMX_VMEXIT_CTRLS:
+    case BX_MSR_VMX_VMEXIT_CTRLS2:
+    case BX_MSR_VMX_VMENTRY_CTRLS:
+    case BX_MSR_VMX_PROCBASED_CTRLS2:
+    case BX_MSR_VMX_PROCBASED_CTRLS3:
+#if BX_SUPPORT_VMX >= 2
+    case BX_MSR_VMX_TRUE_PINBASED_CTRLS:
+    case BX_MSR_VMX_TRUE_PROCBASED_CTRLS:
+    case BX_MSR_VMX_TRUE_VMEXIT_CTRLS:
+    case BX_MSR_VMX_TRUE_VMENTRY_CTRLS:
+    case BX_MSR_VMX_EPT_VPID_CAP:
+    case BX_MSR_VMX_VMFUNC:
+#endif
+    case BX_MSR_VMX_MISC:
+    case BX_MSR_VMX_CR0_FIXED0:
+    case BX_MSR_VMX_CR0_FIXED1:
+    case BX_MSR_VMX_CR4_FIXED0:
+    case BX_MSR_VMX_CR4_FIXED1:
+    case BX_MSR_VMX_VMCS_ENUM:
+#endif
+      if (! msr_desciptor->get(&val64)) return false;
+      break;
+
 #if BX_SUPPORT_PERFMON
     case BX_MSR_PERFEVTSEL0:
     case BX_MSR_PERFEVTSEL1:
@@ -333,10 +377,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       val64 = BX_CPU_THIS_PTR msr.sysenter_eip_msr;
       break;
 #endif
-
-    case BX_MSR_PLATFORM_ID:
-      val64 = 0;
-      break;
 
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_MTRRCAP:   // read only MSR
@@ -527,83 +567,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 */
     case BX_MSR_IA32_FEATURE_CONTROL:
       val64 = BX_CPU_THIS_PTR msr.ia32_feature_ctrl;
-      break;
-    case BX_MSR_VMX_BASIC:
-      val64 = VMX_MSR_VMX_BASIC;
-      break;
-    case BX_MSR_VMX_PINBASED_CTRLS:
-      val64 = VMX_MSR_VMX_PINBASED_CTRLS;
-      break;
-    case BX_MSR_VMX_PROCBASED_CTRLS:
-      val64 = VMX_MSR_VMX_PROCBASED_CTRLS;
-      break;
-    case BX_MSR_VMX_VMEXIT_CTRLS:
-      val64 = VMX_MSR_VMX_VMEXIT_CTRLS;
-      break;
-    case BX_MSR_VMX_VMEXIT_CTRLS2:
-      if (BX_CPU_THIS_PTR vmx_cap.vmx_vmexit_ctrl2_supported_bits) {
-        val64 = VMX_MSR_VMX_VMEXIT_CTRLS2;
-        break;
-      }
-      return false;
-    case BX_MSR_VMX_VMENTRY_CTRLS:
-      val64 = VMX_MSR_VMX_VMENTRY_CTRLS;
-      break;
-    case BX_MSR_VMX_PROCBASED_CTRLS2:
-      if (BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl2_supported_bits) {
-        val64 = VMX_MSR_VMX_PROCBASED_CTRLS2;
-        break;
-      }
-      return false;
-    case BX_MSR_VMX_PROCBASED_CTRLS3:
-      if (BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl3_supported_bits) {
-        val64 = VMX_MSR_VMX_PROCBASED_CTRLS3;
-        break;
-      }
-      return false;
-#if BX_SUPPORT_VMX >= 2
-    case BX_MSR_VMX_TRUE_PINBASED_CTRLS:
-      val64 = VMX_MSR_VMX_TRUE_PINBASED_CTRLS;
-      break;
-    case BX_MSR_VMX_TRUE_PROCBASED_CTRLS:
-      val64 = VMX_MSR_VMX_TRUE_PROCBASED_CTRLS;
-      break;
-    case BX_MSR_VMX_TRUE_VMEXIT_CTRLS:
-      val64 = VMX_MSR_VMX_TRUE_VMEXIT_CTRLS;
-      break;
-    case BX_MSR_VMX_TRUE_VMENTRY_CTRLS:
-      val64 = VMX_MSR_VMX_TRUE_VMENTRY_CTRLS;
-      break;
-    case BX_MSR_VMX_EPT_VPID_CAP:
-      if (VMX_MSR_VMX_EPT_VPID_CAP != 0) {
-        val64 = VMX_MSR_VMX_EPT_VPID_CAP;
-        break;
-      }
-      return false;
-    case BX_MSR_VMX_VMFUNC:
-      if (BX_CPU_THIS_PTR vmx_cap.vmx_vmfunc_supported_bits) {
-        val64 = BX_CPU_THIS_PTR vmx_cap.vmx_vmfunc_supported_bits;
-        break;
-      }
-      return false;
-#endif
-    case BX_MSR_VMX_MISC:
-      val64 = VMX_MSR_MISC;
-      break;
-    case BX_MSR_VMX_CR0_FIXED0:
-      val64 = VMX_MSR_CR0_FIXED0;
-      break;
-    case BX_MSR_VMX_CR0_FIXED1:
-      val64 = VMX_MSR_CR0_FIXED1;
-      break;
-    case BX_MSR_VMX_CR4_FIXED0:
-      val64 = VMX_MSR_CR4_FIXED0;
-      break;
-    case BX_MSR_VMX_CR4_FIXED1:
-      val64 = VMX_MSR_CR4_FIXED1;
-      break;
-    case BX_MSR_VMX_VMCS_ENUM:
-      val64 = VMX_MSR_VMCS_ENUM;
       break;
 #endif
 
@@ -885,6 +848,10 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     if (! msr_desciptor) return handle_unknown_wrmsr(index, val_64);
     if (! is_cpu_extension_supported(msr_desciptor->get_cpu_feature())) {
       BX_ERROR(("WRMSR %s: '%s' feature not enabled in the cpu model", msr_desciptor->get_name(), get_cpu_feature_name(msr_desciptor->get_cpu_feature())));
+      return false;
+    }
+    if (! msr_desciptor->is_enabled()) {
+      BX_ERROR(("WRMSR %s: not supported by the cpu model", msr_desciptor->get_name()));
       return false;
     }
     if (msr_desciptor->check_reserved_bits_violation(val_64)) {

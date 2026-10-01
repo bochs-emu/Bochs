@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2019-2025  The Bochs Project
+//  Copyright (C) 2019-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -27,24 +27,48 @@ private:
   const char *msrname;
   unsigned cpu_feature;
   bool force_canonical;
+  bool enabled;    // false if the MSR is not present in current cpu configuration
   Bit64u reserved;
 
 public:
-  MSR_Descriptor(const char *name, unsigned feature, bool canonical = false, Bit64u reserved_bits = 0): msrname(name), cpu_feature(feature), force_canonical(canonical), reserved(reserved_bits) {}
- ~MSR_Descriptor() {}
+  MSR_Descriptor(const char *name, unsigned feature, bool canonical = false, Bit64u reserved_bits = 0): msrname(name), cpu_feature(feature), force_canonical(canonical), enabled(true), reserved(reserved_bits) {}
+  virtual ~MSR_Descriptor() {}
 
   const char* get_name() const { return msrname; }
   unsigned get_cpu_feature() const { return cpu_feature; }
   bool canonical() const { return force_canonical; }
   bool read_only() const { return ~reserved == 0; }
 
+  void disable() { enabled = false; }
+  bool is_enabled() const { return enabled; }
+
   void set_reserved_bits(Bit64u reserved_bits) { reserved = reserved_bits; }
 
   Bit64u get_reserved_bits() const { return reserved; }
   bool check_reserved_bits_violation(Bit64u value) const { return value & reserved; }
+
+  // generic MSR access interface, called by RDMSR/WRMSR after feature, reserved bits and canonical checks
+  // return false to signal #GP
+  virtual bool get(Bit64u *val) { return false; }
+  virtual bool set(Bit64u val) { return false; }
 };
 
 typedef MSR_Descriptor* MSR_DescriptorPtr;
+
+// read only MSR with constant value
+class MSR_Const_Descriptor : public MSR_Descriptor {
+private:
+  Bit64u value;
+
+public:
+  MSR_Const_Descriptor(const char *name, unsigned feature, Bit64u val): MSR_Descriptor(name, feature, false, ~BX_CONST64(0)), value(val) {}
+  virtual ~MSR_Const_Descriptor() {}
+
+  virtual bool get(Bit64u *val) {
+    *val = value;
+    return true;
+  }
+};
 
 enum MSR_Register {
   BX_MSR_TSC            = 0x010,
