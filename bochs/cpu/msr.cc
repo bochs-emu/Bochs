@@ -184,7 +184,14 @@ void BX_CPU_C::init_MSRs()
   msr_desc[BX_MSR_IA32_BARRIER] = new MSR_Descriptor("MSR_IA32_BARRIER", BX_ISA_MSRLIST);
 
   // SCA prevention MSRs
-  msr_desc[BX_MSR_IA32_ARCH_CAPABILITIES] = new MSR_Descriptor("MSR_IA32_ARCH_CAPABILITIES", BX_ISA_SCA_MITIGATIONS, ~BX_CONST64(0)); // read only
+  // IA32_ARCH_CAPABILITIES MSR:
+  //     [0]: RDCL_NO: The processor is not susceptible to Rogue Data Cache Load (RDCL)
+  //     [1]: IBRS_ALL: The processor supports enhanced IBRS
+  //     [2]: RSBA: The processor supports RSB Alternate
+  //     [3]: SKIP_L1DFL_VMENTRY: indicates the hypervisor need not flush the L1D on VM entry
+  //     [4]: SSB_NO: Processor is not susceptible to Speculative Store Bypass
+  //  [63:5]: reserved
+  msr_desc[BX_MSR_IA32_ARCH_CAPABILITIES] = new ConstMSR("MSR_IA32_ARCH_CAPABILITIES", BX_ISA_SCA_MITIGATIONS, 0x1F); // read only, set bits [4:0]
   msr_desc[BX_MSR_IA32_SPEC_CTRL] = new MSR_Descriptor("MSR_IA32_SPEC_CTRL", BX_ISA_SCA_MITIGATIONS);
   // IA32_PRED_CMD MSR:
   //    [0] - Indirect Branch Prediction Barrier (IBPB)
@@ -334,6 +341,9 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #endif
 #if BX_CPU_LEVEL >= 6
     case BX_MSR_MTRRCAP:                        // 0x0fe
+#endif
+    case BX_MSR_IA32_ARCH_CAPABILITIES:         // 0x10a
+#if BX_CPU_LEVEL >= 6
     case BX_MSR_SYSENTER_ESP:                   // 0x175
     case BX_MSR_SYSENTER_EIP:                   // 0x176
 #endif
@@ -513,16 +523,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       break;
 
     // SCA prevention MSRs
-    case BX_MSR_IA32_ARCH_CAPABILITIES:
-      //     [0]: RDCL_NO: The processor is not susceptible to Rogue Data Cache Load (RDCL)
-      //     [1]: IBRS_ALL: The processor supports enhanced IBRS
-      //     [2]: RSBA: The processor supports RSB Alternate
-      //     [3]: SKIP_L1DFL_VMENTRY: indicates the hypervisor need not flush the L1D on VM entry
-      //     [4]: SSB_NO: Processor is not susceptible to Speculative Store Bypass
-      //  [63:5]: reserved
-      val64 = 0x1F; // set bits [4:0]
-      break;
-
     case BX_MSR_IA32_SPEC_CTRL:
       //    [0] - Enable IBRS: Indirect Branch Restricted Speculation
       //    [1] - Enable STIBP: Single Thread Indirect Branch Predictors
