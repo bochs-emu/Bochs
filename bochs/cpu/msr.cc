@@ -50,6 +50,16 @@ extern bool is_valid_cet_control(Bit64u val);
 static bool is_valid_cet_control_msr(Bit64u val) { return is_canonical_msr(val) && is_valid_cet_control(val); }
 #endif
 
+#if BX_CPU_LEVEL >= 6
+bool isMemTypeValidMTRR(unsigned memtype);
+bool isValidMSR_PAT(Bit64u pat_val);
+bool isValidMSR_FixedMTRR(Bit64u fixed_mtrr_val);
+
+// variable range MTRR base must be valid physical address, bits [11:0] are memory type and reserved bits [11:8]
+static bool is_valid_mtrr_physbase(Bit64u val) { return IsValidPhyAddr(val) && isMemTypeValidMTRR(val & 0xFFF); }
+static bool is_valid_mtrr_physmask(Bit64u val) { return IsValidPhyAddr(val); }
+#endif
+
 // MSR descriptors are per cpu, some of them refer to the cpu variables
 void BX_CPU_C::init_MSRs()
 {
@@ -62,14 +72,14 @@ void BX_CPU_C::init_MSRs()
     msr_desc[i] = NULL;
 
   msr_desc[BX_MSR_TSC] = new MSR_Descriptor("MSR_IA32_TSC", BX_ISA_PENTIUM);
-  msr_desc[BX_MSR_PLATFORM_ID] = new MSR_Const_Descriptor("MSR_PLATFORM_ID", BX_ISA_PENTIUM, 0); // read only
+  msr_desc[BX_MSR_PLATFORM_ID] = new ConstMSR("MSR_PLATFORM_ID", BX_ISA_PENTIUM, 0); // read only
 
 #if BX_SUPPORT_APIC
   msr_desc[BX_MSR_APICBASE] = new MSR_Descriptor("MSR_APICBASE", BX_ISA_PENTIUM);
 #endif
 
 #if BX_SUPPORT_X86_64
-  msr_desc[BX_MSR_IA32_USER_MSR_CTL] = new MSR_Var_Descriptor("MSR_IA32_USER_MSR_CTL", BX_ISA_USER_MSR, &BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl, 0, is_canonical_msr);
+  msr_desc[BX_MSR_IA32_USER_MSR_CTL] = new VarMSR("MSR_IA32_USER_MSR_CTL", BX_ISA_USER_MSR, &BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl, 0, is_canonical_msr);
 #endif
 
   msr_desc[BX_MSR_IA32_APERF] = new MSR_Descriptor("MSR_IA32_APERF", BX_ISA_PENTIUM);
@@ -77,44 +87,44 @@ void BX_CPU_C::init_MSRs()
 
 #if BX_CPU_LEVEL >= 6
   msr_desc[BX_MSR_SYSENTER_CS] = new MSR_Descriptor("MSR_IA32_SYSENTER_CS", BX_ISA_SYSENTER_SYSEXIT);
-  msr_desc[BX_MSR_SYSENTER_ESP] = new MSR_Var_Descriptor("MSR_IA32_SYSENTER_ESP", BX_ISA_SYSENTER_SYSEXIT, &BX_CPU_THIS_PTR msr.sysenter_esp_msr, 0, is_canonical_msr);
-  msr_desc[BX_MSR_SYSENTER_EIP] = new MSR_Var_Descriptor("MSR_IA32_SYSENTER_EIP", BX_ISA_SYSENTER_SYSEXIT, &BX_CPU_THIS_PTR msr.sysenter_eip_msr, 0, is_canonical_msr);
+  msr_desc[BX_MSR_SYSENTER_ESP] = new VarMSR("MSR_IA32_SYSENTER_ESP", BX_ISA_SYSENTER_SYSEXIT, &BX_CPU_THIS_PTR msr.sysenter_esp_msr, 0, is_canonical_msr);
+  msr_desc[BX_MSR_SYSENTER_EIP] = new VarMSR("MSR_IA32_SYSENTER_EIP", BX_ISA_SYSENTER_SYSEXIT, &BX_CPU_THIS_PTR msr.sysenter_eip_msr, 0, is_canonical_msr);
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  msr_desc[BX_MSR_MTRRCAP] = new MSR_Descriptor("MSR_IA32_MTRR_CAP", BX_ISA_MTRR, ~BX_CONST64(0)); // read only
-  msr_desc[BX_MSR_MTRRPHYSBASE0] = new MSR_Descriptor("MSR_IA32_MTRRPHYSBASE0", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRPHYSMASK0] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK0", BX_ISA_MTRR, BX_CONST64(0x7ff)); // bits [10:0] are reserved
-  msr_desc[BX_MSR_MTRRPHYSBASE1] = new MSR_Descriptor("MSR_IA32_MTRRPHYSBASE1", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRPHYSMASK1] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK1", BX_ISA_MTRR, BX_CONST64(0x7ff));
-  msr_desc[BX_MSR_MTRRPHYSBASE2] = new MSR_Descriptor("MSR_IA32_MTRRPHYSBASE2", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRPHYSMASK2] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK2", BX_ISA_MTRR, BX_CONST64(0x7ff));
-  msr_desc[BX_MSR_MTRRPHYSBASE3] = new MSR_Descriptor("MSR_IA32_MTRRPHYSBASE3", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRPHYSMASK3] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK3", BX_ISA_MTRR, BX_CONST64(0x7ff));
-  msr_desc[BX_MSR_MTRRPHYSBASE4] = new MSR_Descriptor("MSR_IA32_MTRRPHYSBASE4", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRPHYSMASK4] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK4", BX_ISA_MTRR, BX_CONST64(0x7ff));
-  msr_desc[BX_MSR_MTRRPHYSBASE5] = new MSR_Descriptor("MSR_IA32_MTRRPHYSBASE5", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRPHYSMASK5] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK5", BX_ISA_MTRR, BX_CONST64(0x7ff));
-  msr_desc[BX_MSR_MTRRPHYSBASE6] = new MSR_Descriptor("MSR_IA32_MTRRPHYSBASE6", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRPHYSMASK6] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK6", BX_ISA_MTRR, BX_CONST64(0x7ff));
-  msr_desc[BX_MSR_MTRRPHYSBASE7] = new MSR_Descriptor("MSR_IA32_MTRRPHYSBASE7", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRPHYSMASK7] = new MSR_Descriptor("MSR_IA32_MTRRPHYSMASK7", BX_ISA_MTRR, BX_CONST64(0x7ff));
+  msr_desc[BX_MSR_MTRRCAP] = new ConstMSR("MSR_IA32_MTRR_CAP", BX_ISA_MTRR, BX_CONST64(0x0000000000000500) | BX_NUM_VARIABLE_RANGE_MTRRS); // read only
+  msr_desc[BX_MSR_MTRRPHYSBASE0] = new VarMSR("MSR_IA32_MTRRPHYSBASE0", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[0], 0, is_valid_mtrr_physbase);
+  msr_desc[BX_MSR_MTRRPHYSMASK0] = new VarMSR("MSR_IA32_MTRRPHYSMASK0", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[1], BX_CONST64(0x7ff), is_valid_mtrr_physmask); // bits [10:0] are reserved
+  msr_desc[BX_MSR_MTRRPHYSBASE1] = new VarMSR("MSR_IA32_MTRRPHYSBASE1", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[2], 0, is_valid_mtrr_physbase);
+  msr_desc[BX_MSR_MTRRPHYSMASK1] = new VarMSR("MSR_IA32_MTRRPHYSMASK1", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[3], BX_CONST64(0x7ff), is_valid_mtrr_physmask);
+  msr_desc[BX_MSR_MTRRPHYSBASE2] = new VarMSR("MSR_IA32_MTRRPHYSBASE2", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[4], 0, is_valid_mtrr_physbase);
+  msr_desc[BX_MSR_MTRRPHYSMASK2] = new VarMSR("MSR_IA32_MTRRPHYSMASK2", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[5], BX_CONST64(0x7ff), is_valid_mtrr_physmask);
+  msr_desc[BX_MSR_MTRRPHYSBASE3] = new VarMSR("MSR_IA32_MTRRPHYSBASE3", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[6], 0, is_valid_mtrr_physbase);
+  msr_desc[BX_MSR_MTRRPHYSMASK3] = new VarMSR("MSR_IA32_MTRRPHYSMASK3", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[7], BX_CONST64(0x7ff), is_valid_mtrr_physmask);
+  msr_desc[BX_MSR_MTRRPHYSBASE4] = new VarMSR("MSR_IA32_MTRRPHYSBASE4", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[8], 0, is_valid_mtrr_physbase);
+  msr_desc[BX_MSR_MTRRPHYSMASK4] = new VarMSR("MSR_IA32_MTRRPHYSMASK4", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[9], BX_CONST64(0x7ff), is_valid_mtrr_physmask);
+  msr_desc[BX_MSR_MTRRPHYSBASE5] = new VarMSR("MSR_IA32_MTRRPHYSBASE5", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[10], 0, is_valid_mtrr_physbase);
+  msr_desc[BX_MSR_MTRRPHYSMASK5] = new VarMSR("MSR_IA32_MTRRPHYSMASK5", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[11], BX_CONST64(0x7ff), is_valid_mtrr_physmask);
+  msr_desc[BX_MSR_MTRRPHYSBASE6] = new VarMSR("MSR_IA32_MTRRPHYSBASE6", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[12], 0, is_valid_mtrr_physbase);
+  msr_desc[BX_MSR_MTRRPHYSMASK6] = new VarMSR("MSR_IA32_MTRRPHYSMASK6", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[13], BX_CONST64(0x7ff), is_valid_mtrr_physmask);
+  msr_desc[BX_MSR_MTRRPHYSBASE7] = new VarMSR("MSR_IA32_MTRRPHYSBASE7", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[14], 0, is_valid_mtrr_physbase);
+  msr_desc[BX_MSR_MTRRPHYSMASK7] = new VarMSR("MSR_IA32_MTRRPHYSMASK7", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrphys[15], BX_CONST64(0x7ff), is_valid_mtrr_physmask);
 
-  msr_desc[BX_MSR_MTRRFIX64K_00000] = new MSR_Descriptor("MSR_IA32_MTRRFIX64K_00000", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRFIX16K_80000] = new MSR_Descriptor("MSR_IA32_MTRRFIX16K_80000", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRFIX16K_A0000] = new MSR_Descriptor("MSR_IA32_MTRRFIX16K_A0000", BX_ISA_MTRR);
+  msr_desc[BX_MSR_MTRRFIX64K_00000] = new VarMSR("MSR_IA32_MTRRFIX64K_00000", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrfix64k.u64, 0, isValidMSR_FixedMTRR);
+  msr_desc[BX_MSR_MTRRFIX16K_80000] = new VarMSR("MSR_IA32_MTRRFIX16K_80000", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrfix16k[0].u64, 0, isValidMSR_FixedMTRR);
+  msr_desc[BX_MSR_MTRRFIX16K_A0000] = new VarMSR("MSR_IA32_MTRRFIX16K_A0000", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrfix16k[1].u64, 0, isValidMSR_FixedMTRR);
 
-  msr_desc[BX_MSR_MTRRFIX4K_C0000] = new MSR_Descriptor("MSR_IA32_MTRRFIX4K_C0000", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRFIX4K_C8000] = new MSR_Descriptor("MSR_IA32_MTRRFIX4K_C8000", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRFIX4K_D0000] = new MSR_Descriptor("MSR_IA32_MTRRFIX4K_D0000", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRFIX4K_D8000] = new MSR_Descriptor("MSR_IA32_MTRRFIX4K_D8000", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRFIX4K_E0000] = new MSR_Descriptor("MSR_IA32_MTRRFIX4K_E0000", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRFIX4K_E8000] = new MSR_Descriptor("MSR_IA32_MTRRFIX4K_E8000", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRFIX4K_F0000] = new MSR_Descriptor("MSR_IA32_MTRRFIX4K_F0000", BX_ISA_MTRR);
-  msr_desc[BX_MSR_MTRRFIX4K_F8000] = new MSR_Descriptor("MSR_IA32_MTRRFIX4K_F8000", BX_ISA_MTRR);
+  msr_desc[BX_MSR_MTRRFIX4K_C0000] = new VarMSR("MSR_IA32_MTRRFIX4K_C0000", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrfix4k[0].u64, 0, isValidMSR_FixedMTRR);
+  msr_desc[BX_MSR_MTRRFIX4K_C8000] = new VarMSR("MSR_IA32_MTRRFIX4K_C8000", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrfix4k[1].u64, 0, isValidMSR_FixedMTRR);
+  msr_desc[BX_MSR_MTRRFIX4K_D0000] = new VarMSR("MSR_IA32_MTRRFIX4K_D0000", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrfix4k[2].u64, 0, isValidMSR_FixedMTRR);
+  msr_desc[BX_MSR_MTRRFIX4K_D8000] = new VarMSR("MSR_IA32_MTRRFIX4K_D8000", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrfix4k[3].u64, 0, isValidMSR_FixedMTRR);
+  msr_desc[BX_MSR_MTRRFIX4K_E0000] = new VarMSR("MSR_IA32_MTRRFIX4K_E0000", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrfix4k[4].u64, 0, isValidMSR_FixedMTRR);
+  msr_desc[BX_MSR_MTRRFIX4K_E8000] = new VarMSR("MSR_IA32_MTRRFIX4K_E8000", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrfix4k[5].u64, 0, isValidMSR_FixedMTRR);
+  msr_desc[BX_MSR_MTRRFIX4K_F0000] = new VarMSR("MSR_IA32_MTRRFIX4K_F0000", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrfix4k[6].u64, 0, isValidMSR_FixedMTRR);
+  msr_desc[BX_MSR_MTRRFIX4K_F8000] = new VarMSR("MSR_IA32_MTRRFIX4K_F8000", BX_ISA_MTRR, &BX_CPU_THIS_PTR msr.mtrrfix4k[7].u64, 0, isValidMSR_FixedMTRR);
 
   msr_desc[BX_MSR_MTRR_DEFTYPE] = new MSR_Descriptor("MSR_IA32_MTRR_DEFTYPE", BX_ISA_MTRR, BX_CONST64(0xfffffffffffff300)); // bits [63-12], [9:8] are reserved
-  msr_desc[BX_MSR_PAT] = new MSR_Descriptor("MSR_IA32_PAT", BX_ISA_PAT);
+  msr_desc[BX_MSR_PAT] = new VarMSR("MSR_IA32_PAT", BX_ISA_PAT, &BX_CPU_THIS_PTR msr.pat.u64, 0, isValidMSR_PAT);
 #endif
 
   msr_desc[BX_MSR_TSC_ADJUST] = new MSR_Descriptor("MSR_IA32_TSC_ADJUST", BX_ISA_TSC_ADJUST);
@@ -124,28 +134,28 @@ void BX_CPU_C::init_MSRs()
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  msr_desc[BX_MSR_XSS] = new MSR_Var_Descriptor("MSR_IA32_XSS", BX_ISA_XSAVES, &BX_CPU_THIS_PTR msr.ia32_xss, ~Bit64u(get_ia32_xss_allow_mask()));
+  msr_desc[BX_MSR_XSS] = new VarMSR("MSR_IA32_XSS", BX_ISA_XSAVES, &BX_CPU_THIS_PTR msr.ia32_xss, ~Bit64u(get_ia32_xss_allow_mask()));
 #endif
 
 #if BX_SUPPORT_CET
-  msr_desc[BX_MSR_IA32_U_CET] = new MSR_Var_Descriptor("MSR_IA32_U_CET", BX_ISA_CET, &BX_CPU_THIS_PTR msr.ia32_cet_control[1], 0, is_valid_cet_control_msr);
-  msr_desc[BX_MSR_IA32_S_CET] = new MSR_Var_Descriptor("MSR_IA32_S_CET", BX_ISA_CET, &BX_CPU_THIS_PTR msr.ia32_cet_control[0], 0, is_valid_cet_control_msr);
+  msr_desc[BX_MSR_IA32_U_CET] = new VarMSR("MSR_IA32_U_CET", BX_ISA_CET, &BX_CPU_THIS_PTR msr.ia32_cet_control[1], 0, is_valid_cet_control_msr);
+  msr_desc[BX_MSR_IA32_S_CET] = new VarMSR("MSR_IA32_S_CET", BX_ISA_CET, &BX_CPU_THIS_PTR msr.ia32_cet_control[0], 0, is_valid_cet_control_msr);
 
-  msr_desc[BX_MSR_IA32_PL0_SSP] = new MSR_Var_Descriptor("MSR_IA32_PL0_SSP", BX_ISA_CET, &BX_CPU_THIS_PTR msr.ia32_pl_ssp[0], BX_CONST64(0x3), is_canonical_msr); // force 4-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_PL1_SSP] = new MSR_Var_Descriptor("MSR_IA32_PL1_SSP", BX_ISA_CET, &BX_CPU_THIS_PTR msr.ia32_pl_ssp[1], BX_CONST64(0x3), is_canonical_msr); // force 4-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_PL2_SSP] = new MSR_Var_Descriptor("MSR_IA32_PL2_SSP", BX_ISA_CET, &BX_CPU_THIS_PTR msr.ia32_pl_ssp[2], BX_CONST64(0x3), is_canonical_msr); // force 4-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_PL3_SSP] = new MSR_Var_Descriptor("MSR_IA32_PL3_SSP", BX_ISA_CET, &BX_CPU_THIS_PTR msr.ia32_pl_ssp[3], BX_CONST64(0x3), is_canonical_msr); // force 4-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_PL0_SSP] = new VarMSR("MSR_IA32_PL0_SSP", BX_ISA_CET, &BX_CPU_THIS_PTR msr.ia32_pl_ssp[0], BX_CONST64(0x3), is_canonical_msr); // force 4-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_PL1_SSP] = new VarMSR("MSR_IA32_PL1_SSP", BX_ISA_CET, &BX_CPU_THIS_PTR msr.ia32_pl_ssp[1], BX_CONST64(0x3), is_canonical_msr); // force 4-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_PL2_SSP] = new VarMSR("MSR_IA32_PL2_SSP", BX_ISA_CET, &BX_CPU_THIS_PTR msr.ia32_pl_ssp[2], BX_CONST64(0x3), is_canonical_msr); // force 4-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_PL3_SSP] = new VarMSR("MSR_IA32_PL3_SSP", BX_ISA_CET, &BX_CPU_THIS_PTR msr.ia32_pl_ssp[3], BX_CONST64(0x3), is_canonical_msr); // force 4-byte alignment of the MSR value
 
-  msr_desc[BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR] = new MSR_Var_Descriptor("MSR_IA32_INTERRUPT_SSP_TABLE_ADDR", BX_ISA_CET, &BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table, 0, is_canonical_msr);
+  msr_desc[BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR] = new VarMSR("MSR_IA32_INTERRUPT_SSP_TABLE_ADDR", BX_ISA_CET, &BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table, 0, is_canonical_msr);
 #endif
 
 #if BX_SUPPORT_UINTR
   msr_desc[BX_MSR_IA32_UINTR_RR] = new MSR_Descriptor("MSR_IA32_UINTR_RR", BX_ISA_UINTR);
-  msr_desc[BX_MSR_IA32_UINTR_HANDLER] = new MSR_Var_Descriptor("MSR_IA32_UINTR_HANDLER", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.ui_handler, 0, is_canonical_msr);
-  msr_desc[BX_MSR_IA32_UINTR_STACKADJUST] = new MSR_Var_Descriptor("MSR_IA32_UINTR_STACKADJUST", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.stack_adjust, 0, is_canonical_msr);
+  msr_desc[BX_MSR_IA32_UINTR_HANDLER] = new VarMSR("MSR_IA32_UINTR_HANDLER", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.ui_handler, 0, is_canonical_msr);
+  msr_desc[BX_MSR_IA32_UINTR_STACKADJUST] = new VarMSR("MSR_IA32_UINTR_STACKADJUST", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.stack_adjust, 0, is_canonical_msr);
   msr_desc[BX_MSR_IA32_UINTR_MISC] = new MSR_Descriptor("MSR_IA32_UINTR_MISC", BX_ISA_UINTR, BX_CONST64(0xffffff0000000000));
-  msr_desc[BX_MSR_IA32_UINTR_PD] = new MSR_Var_Descriptor("MSR_IA32_UINTR_PD", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.upid_addr, BX_CONST64(0x3f), is_canonical_msr); // bits [5:0] are reserved
-  msr_desc[BX_MSR_IA32_UINTR_TT] = new MSR_Var_Descriptor("MSR_IA32_UINTR_TT", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.uitt_addr, BX_CONST64(0x0e), is_canonical_msr); // bits [3:1] are reserved
+  msr_desc[BX_MSR_IA32_UINTR_PD] = new VarMSR("MSR_IA32_UINTR_PD", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.upid_addr, BX_CONST64(0x3f), is_canonical_msr); // bits [5:0] are reserved
+  msr_desc[BX_MSR_IA32_UINTR_TT] = new VarMSR("MSR_IA32_UINTR_TT", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.uitt_addr, BX_CONST64(0x0e), is_canonical_msr); // bits [3:1] are reserved
 #endif
 
 #if BX_SUPPORT_PKEYS
@@ -153,17 +163,17 @@ void BX_CPU_C::init_MSRs()
 #endif
 
 #if BX_SUPPORT_FRED
-  msr_desc[BX_MSR_IA32_FRED_RSP0] = new MSR_Var_Descriptor("MSR_IA32_FRED_RSP0", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_rsp[0], BX_CONST64(0x3f), is_canonical_msr); // force 64-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_FRED_RSP1] = new MSR_Var_Descriptor("MSR_IA32_FRED_RSP1", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_rsp[1], BX_CONST64(0x3f), is_canonical_msr); // force 64-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_FRED_RSP2] = new MSR_Var_Descriptor("MSR_IA32_FRED_RSP2", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_rsp[2], BX_CONST64(0x3f), is_canonical_msr); // force 64-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_FRED_RSP3] = new MSR_Var_Descriptor("MSR_IA32_FRED_RSP3", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_rsp[3], BX_CONST64(0x3f), is_canonical_msr); // force 64-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_FRED_STKLVLS] = new MSR_Var_Descriptor("MSR_IA32_FRED_STKLVLS", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_stack_levels);
+  msr_desc[BX_MSR_IA32_FRED_RSP0] = new VarMSR("MSR_IA32_FRED_RSP0", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_rsp[0], BX_CONST64(0x3f), is_canonical_msr); // force 64-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_RSP1] = new VarMSR("MSR_IA32_FRED_RSP1", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_rsp[1], BX_CONST64(0x3f), is_canonical_msr); // force 64-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_RSP2] = new VarMSR("MSR_IA32_FRED_RSP2", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_rsp[2], BX_CONST64(0x3f), is_canonical_msr); // force 64-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_RSP3] = new VarMSR("MSR_IA32_FRED_RSP3", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_rsp[3], BX_CONST64(0x3f), is_canonical_msr); // force 64-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_STKLVLS] = new VarMSR("MSR_IA32_FRED_STKLVLS", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_stack_levels);
 #if BX_SUPPORT_CET
-  msr_desc[BX_MSR_IA32_FRED_SSP1] = new MSR_Var_Descriptor("MSR_IA32_FRED_SSP1", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_ssp[1], BX_CONST64(0x7), is_canonical_msr); // force 8-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_FRED_SSP2] = new MSR_Var_Descriptor("MSR_IA32_FRED_SSP2", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_ssp[2], BX_CONST64(0x7), is_canonical_msr); // force 8-byte alignment of the MSR value
-  msr_desc[BX_MSR_IA32_FRED_SSP3] = new MSR_Var_Descriptor("MSR_IA32_FRED_SSP3", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_ssp[3], BX_CONST64(0x7), is_canonical_msr); // force 8-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_SSP1] = new VarMSR("MSR_IA32_FRED_SSP1", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_ssp[1], BX_CONST64(0x7), is_canonical_msr); // force 8-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_SSP2] = new VarMSR("MSR_IA32_FRED_SSP2", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_ssp[2], BX_CONST64(0x7), is_canonical_msr); // force 8-byte alignment of the MSR value
+  msr_desc[BX_MSR_IA32_FRED_SSP3] = new VarMSR("MSR_IA32_FRED_SSP3", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_ssp[3], BX_CONST64(0x7), is_canonical_msr); // force 8-byte alignment of the MSR value
 #endif
-  msr_desc[BX_MSR_IA32_FRED_CONFIG] = new MSR_Var_Descriptor("MSR_IA32_FRED_CONFIG", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_cfg, BX_CONST64(0x834), is_canonical_msr);
+  msr_desc[BX_MSR_IA32_FRED_CONFIG] = new VarMSR("MSR_IA32_FRED_CONFIG", BX_ISA_FRED, &BX_CPU_THIS_PTR msr.ia32_fred_cfg, BX_CONST64(0x834), is_canonical_msr);
 #endif
 
 #if BX_CPU_LEVEL >= 6
@@ -188,39 +198,39 @@ void BX_CPU_C::init_MSRs()
 #if BX_SUPPORT_VMX
   msr_desc[BX_MSR_IA32_FEATURE_CONTROL] = new MSR_Descriptor("MSR_IA32_FEATURE_CONTROL", BX_ISA_VMX);
   // all these VMX MSRs are read only, the values are computed from vmx_cap so init_VMCS() must be called before
-  msr_desc[BX_MSR_VMX_BASIC] = new MSR_Const_Descriptor("MSR_VMX_BASIC", BX_ISA_VMX, VMX_MSR_VMX_BASIC);
-  msr_desc[BX_MSR_VMX_PINBASED_CTRLS] = new MSR_Const_Descriptor("MSR_VMX_PINBASED_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_PINBASED_CTRLS);
-  msr_desc[BX_MSR_VMX_PROCBASED_CTRLS] = new MSR_Const_Descriptor("MSR_VMX_PROCBASED_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_PROCBASED_CTRLS);
-  msr_desc[BX_MSR_VMX_VMEXIT_CTRLS] = new MSR_Const_Descriptor("MSR_VMX_VMEXIT_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_VMEXIT_CTRLS);
-  msr_desc[BX_MSR_VMX_VMEXIT_CTRLS2] = new MSR_Const_Descriptor("MSR_VMX_VMEXIT_CTRLS2", BX_ISA_VMX, VMX_MSR_VMX_VMEXIT_CTRLS2);
+  msr_desc[BX_MSR_VMX_BASIC] = new ConstMSR("MSR_VMX_BASIC", BX_ISA_VMX, VMX_MSR_VMX_BASIC);
+  msr_desc[BX_MSR_VMX_PINBASED_CTRLS] = new ConstMSR("MSR_VMX_PINBASED_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_PINBASED_CTRLS);
+  msr_desc[BX_MSR_VMX_PROCBASED_CTRLS] = new ConstMSR("MSR_VMX_PROCBASED_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_PROCBASED_CTRLS);
+  msr_desc[BX_MSR_VMX_VMEXIT_CTRLS] = new ConstMSR("MSR_VMX_VMEXIT_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_VMEXIT_CTRLS);
+  msr_desc[BX_MSR_VMX_VMEXIT_CTRLS2] = new ConstMSR("MSR_VMX_VMEXIT_CTRLS2", BX_ISA_VMX, VMX_MSR_VMX_VMEXIT_CTRLS2);
   if (! BX_CPU_THIS_PTR vmx_cap.vmx_vmexit_ctrl2_supported_bits)
     msr_desc[BX_MSR_VMX_VMEXIT_CTRLS2]->disable();
-  msr_desc[BX_MSR_VMX_VMENTRY_CTRLS] = new MSR_Const_Descriptor("MSR_VMX_VMENTRY_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_VMENTRY_CTRLS);
-  msr_desc[BX_MSR_VMX_PROCBASED_CTRLS2] = new MSR_Const_Descriptor("MSR_VMX_PROCBASED_CTRLS2", BX_ISA_VMX, VMX_MSR_VMX_PROCBASED_CTRLS2);
+  msr_desc[BX_MSR_VMX_VMENTRY_CTRLS] = new ConstMSR("MSR_VMX_VMENTRY_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_VMENTRY_CTRLS);
+  msr_desc[BX_MSR_VMX_PROCBASED_CTRLS2] = new ConstMSR("MSR_VMX_PROCBASED_CTRLS2", BX_ISA_VMX, VMX_MSR_VMX_PROCBASED_CTRLS2);
   if (! BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl2_supported_bits)
     msr_desc[BX_MSR_VMX_PROCBASED_CTRLS2]->disable();
-  msr_desc[BX_MSR_VMX_PROCBASED_CTRLS3] = new MSR_Const_Descriptor("MSR_VMX_PROCBASED_CTRLS3", BX_ISA_VMX, VMX_MSR_VMX_PROCBASED_CTRLS3);
+  msr_desc[BX_MSR_VMX_PROCBASED_CTRLS3] = new ConstMSR("MSR_VMX_PROCBASED_CTRLS3", BX_ISA_VMX, VMX_MSR_VMX_PROCBASED_CTRLS3);
   if (! BX_CPU_THIS_PTR vmx_cap.vmx_vmexec_ctrl3_supported_bits)
     msr_desc[BX_MSR_VMX_PROCBASED_CTRLS3]->disable();
 #if BX_SUPPORT_VMX >= 2
-  msr_desc[BX_MSR_VMX_TRUE_PINBASED_CTRLS] = new MSR_Const_Descriptor("MSR_VMX_TRUE_PINBASED_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_TRUE_PINBASED_CTRLS);
-  msr_desc[BX_MSR_VMX_TRUE_PROCBASED_CTRLS] = new MSR_Const_Descriptor("MSR_VMX_TRUE_PROCBASED_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_TRUE_PROCBASED_CTRLS);
-  msr_desc[BX_MSR_VMX_TRUE_VMEXIT_CTRLS] = new MSR_Const_Descriptor("MSR_VMX_TRUE_VMEXIT_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_TRUE_VMEXIT_CTRLS);
-  msr_desc[BX_MSR_VMX_TRUE_VMENTRY_CTRLS] = new MSR_Const_Descriptor("MSR_VMX_TRUE_VMENTRY_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_TRUE_VMENTRY_CTRLS);
-  msr_desc[BX_MSR_VMX_EPT_VPID_CAP] = new MSR_Const_Descriptor("MSR_VMX_EPT_VPID_CAP", BX_ISA_VMX, VMX_MSR_VMX_EPT_VPID_CAP);
+  msr_desc[BX_MSR_VMX_TRUE_PINBASED_CTRLS] = new ConstMSR("MSR_VMX_TRUE_PINBASED_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_TRUE_PINBASED_CTRLS);
+  msr_desc[BX_MSR_VMX_TRUE_PROCBASED_CTRLS] = new ConstMSR("MSR_VMX_TRUE_PROCBASED_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_TRUE_PROCBASED_CTRLS);
+  msr_desc[BX_MSR_VMX_TRUE_VMEXIT_CTRLS] = new ConstMSR("MSR_VMX_TRUE_VMEXIT_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_TRUE_VMEXIT_CTRLS);
+  msr_desc[BX_MSR_VMX_TRUE_VMENTRY_CTRLS] = new ConstMSR("MSR_VMX_TRUE_VMENTRY_CTRLS", BX_ISA_VMX, VMX_MSR_VMX_TRUE_VMENTRY_CTRLS);
+  msr_desc[BX_MSR_VMX_EPT_VPID_CAP] = new ConstMSR("MSR_VMX_EPT_VPID_CAP", BX_ISA_VMX, VMX_MSR_VMX_EPT_VPID_CAP);
   if (VMX_MSR_VMX_EPT_VPID_CAP == 0)
     msr_desc[BX_MSR_VMX_EPT_VPID_CAP]->disable();
-  msr_desc[BX_MSR_VMX_VMFUNC] = new MSR_Const_Descriptor("MSR_VMX_VMFUNC", BX_ISA_VMX, BX_CPU_THIS_PTR vmx_cap.vmx_vmfunc_supported_bits);
+  msr_desc[BX_MSR_VMX_VMFUNC] = new ConstMSR("MSR_VMX_VMFUNC", BX_ISA_VMX, BX_CPU_THIS_PTR vmx_cap.vmx_vmfunc_supported_bits);
   if (! BX_CPU_THIS_PTR vmx_cap.vmx_vmfunc_supported_bits)
     msr_desc[BX_MSR_VMX_VMFUNC]->disable();
 #endif
-  msr_desc[BX_MSR_VMX_MISC] = new MSR_Const_Descriptor("MSR_VMX_MISC", BX_ISA_VMX, VMX_MSR_MISC);
-  msr_desc[BX_MSR_VMX_CR0_FIXED0] = new MSR_Const_Descriptor("MSR_VMX_CR0_FIXED0", BX_ISA_VMX, VMX_MSR_CR0_FIXED0);
-  msr_desc[BX_MSR_VMX_CR0_FIXED1] = new MSR_Const_Descriptor("MSR_VMX_CR0_FIXED1", BX_ISA_VMX, VMX_MSR_CR0_FIXED1);
-  msr_desc[BX_MSR_VMX_CR4_FIXED0] = new MSR_Const_Descriptor("MSR_VMX_CR4_FIXED0", BX_ISA_VMX, VMX_MSR_CR4_FIXED0);
+  msr_desc[BX_MSR_VMX_MISC] = new ConstMSR("MSR_VMX_MISC", BX_ISA_VMX, VMX_MSR_MISC);
+  msr_desc[BX_MSR_VMX_CR0_FIXED0] = new ConstMSR("MSR_VMX_CR0_FIXED0", BX_ISA_VMX, VMX_MSR_CR0_FIXED0);
+  msr_desc[BX_MSR_VMX_CR0_FIXED1] = new ConstMSR("MSR_VMX_CR0_FIXED1", BX_ISA_VMX, VMX_MSR_CR0_FIXED1);
+  msr_desc[BX_MSR_VMX_CR4_FIXED0] = new ConstMSR("MSR_VMX_CR4_FIXED0", BX_ISA_VMX, VMX_MSR_CR4_FIXED0);
   // VMX_MSR_CR4_FIXED1 is cr4_suppmask which is not initialized yet
-  msr_desc[BX_MSR_VMX_CR4_FIXED1] = new MSR_Const_Descriptor("MSR_VMX_CR4_FIXED1", BX_ISA_VMX, get_cr4_allow_mask());
-  msr_desc[BX_MSR_VMX_VMCS_ENUM] = new MSR_Const_Descriptor("MSR_VMX_VMCS_ENUM", BX_ISA_VMX, VMX_MSR_VMCS_ENUM);
+  msr_desc[BX_MSR_VMX_CR4_FIXED1] = new ConstMSR("MSR_VMX_CR4_FIXED1", BX_ISA_VMX, get_cr4_allow_mask());
+  msr_desc[BX_MSR_VMX_VMCS_ENUM] = new ConstMSR("MSR_VMX_VMCS_ENUM", BX_ISA_VMX, VMX_MSR_VMCS_ENUM);
 #endif
 
 #if BX_SUPPORT_PERFMON
@@ -240,15 +250,15 @@ void BX_CPU_C::init_MSRs()
 
   ext_msr_desc[BX_MSR_EFER - 0xc0000000] = new MSR_Descriptor("MSR_EFER", BX_ISA_PENTIUM, ~Bit64u(get_efer_allow_mask()));
   // requires BX_ISA_SYSCALL_SYSRET_LEGACY or BX_ISA_LONG_MODE
-  ext_msr_desc[BX_MSR_STAR - 0xc0000000] = new MSR_Var_Descriptor("MSR_STAR", is_cpu_extension_supported(BX_ISA_LONG_MODE) ? BX_ISA_LONG_MODE : BX_ISA_SYSCALL_SYSRET_LEGACY, &BX_CPU_THIS_PTR msr.star);
+  ext_msr_desc[BX_MSR_STAR - 0xc0000000] = new VarMSR("MSR_STAR", is_cpu_extension_supported(BX_ISA_LONG_MODE) ? BX_ISA_LONG_MODE : BX_ISA_SYSCALL_SYSRET_LEGACY, &BX_CPU_THIS_PTR msr.star);
 
 #if BX_SUPPORT_X86_64
-  ext_msr_desc[BX_MSR_LSTAR - 0xc0000000] = new MSR_Var_Descriptor("MSR_LSTAR", BX_ISA_LONG_MODE, &BX_CPU_THIS_PTR msr.lstar, 0, is_canonical_msr);
-  ext_msr_desc[BX_MSR_CSTAR - 0xc0000000] = new MSR_Var_Descriptor("MSR_CSTAR", BX_ISA_LONG_MODE, &BX_CPU_THIS_PTR msr.cstar, 0, is_canonical_msr);
+  ext_msr_desc[BX_MSR_LSTAR - 0xc0000000] = new VarMSR("MSR_LSTAR", BX_ISA_LONG_MODE, &BX_CPU_THIS_PTR msr.lstar, 0, is_canonical_msr);
+  ext_msr_desc[BX_MSR_CSTAR - 0xc0000000] = new VarMSR("MSR_CSTAR", BX_ISA_LONG_MODE, &BX_CPU_THIS_PTR msr.cstar, 0, is_canonical_msr);
   ext_msr_desc[BX_MSR_FMASK - 0xc0000000] = new MSR_Descriptor("MSR_FMASK", BX_ISA_LONG_MODE);
-  ext_msr_desc[BX_MSR_FSBASE - 0xc0000000] = new MSR_Var_Descriptor("MSR_FSBASE", BX_ISA_LONG_MODE, &MSR_FSBASE, 0, is_canonical_msr);
-  ext_msr_desc[BX_MSR_GSBASE - 0xc0000000] = new MSR_Var_Descriptor("MSR_GSBASE", BX_ISA_LONG_MODE, &MSR_GSBASE, 0, is_canonical_msr);
-  ext_msr_desc[BX_MSR_KERNELGSBASE - 0xc0000000] = new MSR_Var_Descriptor("MSR_KERNELGSBASE", BX_ISA_LONG_MODE, &BX_CPU_THIS_PTR msr.kernelgsbase, 0, is_canonical_msr);
+  ext_msr_desc[BX_MSR_FSBASE - 0xc0000000] = new VarMSR("MSR_FSBASE", BX_ISA_LONG_MODE, &MSR_FSBASE, 0, is_canonical_msr);
+  ext_msr_desc[BX_MSR_GSBASE - 0xc0000000] = new VarMSR("MSR_GSBASE", BX_ISA_LONG_MODE, &MSR_GSBASE, 0, is_canonical_msr);
+  ext_msr_desc[BX_MSR_KERNELGSBASE - 0xc0000000] = new VarMSR("MSR_KERNELGSBASE", BX_ISA_LONG_MODE, &BX_CPU_THIS_PTR msr.kernelgsbase, 0, is_canonical_msr);
   ext_msr_desc[BX_MSR_TSC_AUX - 0xc0000000] = new MSR_Descriptor("MSR_TSC_AUX", BX_ISA_RDTSCP);
 #endif
 }
@@ -323,6 +333,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_IA32_USER_MSR_CTL:              // 0x01c
 #endif
 #if BX_CPU_LEVEL >= 6
+    case BX_MSR_MTRRCAP:                        // 0x0fe
     case BX_MSR_SYSENTER_ESP:                   // 0x175
     case BX_MSR_SYSENTER_EIP:                   // 0x176
 #endif
@@ -338,6 +349,36 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_IA32_FRED_SSP3:                 // 0x1d3
 #endif
     case BX_MSR_IA32_FRED_CONFIG:               // 0x1d4
+#endif
+#if BX_CPU_LEVEL >= 6
+    case BX_MSR_MTRRPHYSBASE0:                  // 0x200
+    case BX_MSR_MTRRPHYSMASK0:                  // 0x201
+    case BX_MSR_MTRRPHYSBASE1:                  // 0x202
+    case BX_MSR_MTRRPHYSMASK1:                  // 0x203
+    case BX_MSR_MTRRPHYSBASE2:                  // 0x204
+    case BX_MSR_MTRRPHYSMASK2:                  // 0x205
+    case BX_MSR_MTRRPHYSBASE3:                  // 0x206
+    case BX_MSR_MTRRPHYSMASK3:                  // 0x207
+    case BX_MSR_MTRRPHYSBASE4:                  // 0x208
+    case BX_MSR_MTRRPHYSMASK4:                  // 0x209
+    case BX_MSR_MTRRPHYSBASE5:                  // 0x20a
+    case BX_MSR_MTRRPHYSMASK5:                  // 0x20b
+    case BX_MSR_MTRRPHYSBASE6:                  // 0x20c
+    case BX_MSR_MTRRPHYSMASK6:                  // 0x20d
+    case BX_MSR_MTRRPHYSBASE7:                  // 0x20e
+    case BX_MSR_MTRRPHYSMASK7:                  // 0x20f
+    case BX_MSR_MTRRFIX64K_00000:               // 0x250
+    case BX_MSR_MTRRFIX16K_80000:               // 0x258
+    case BX_MSR_MTRRFIX16K_A0000:               // 0x259
+    case BX_MSR_MTRRFIX4K_C0000:                // 0x268
+    case BX_MSR_MTRRFIX4K_C8000:                // 0x269
+    case BX_MSR_MTRRFIX4K_D0000:                // 0x26a
+    case BX_MSR_MTRRFIX4K_D8000:                // 0x26b
+    case BX_MSR_MTRRFIX4K_E0000:                // 0x26c
+    case BX_MSR_MTRRFIX4K_E8000:                // 0x26d
+    case BX_MSR_MTRRFIX4K_F0000:                // 0x26e
+    case BX_MSR_MTRRFIX4K_F8000:                // 0x26f
+    case BX_MSR_PAT:                            // 0x277
 #endif
 #if BX_SUPPORT_VMX
     case BX_MSR_VMX_BASIC:                      // 0x480
@@ -420,52 +461,8 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #endif
 
 #if BX_CPU_LEVEL >= 6
-    case BX_MSR_MTRRCAP:   // read only MSR
-      val64 = BX_CONST64(0x0000000000000500) | BX_NUM_VARIABLE_RANGE_MTRRS;
-      break;
-    case BX_MSR_MTRRPHYSBASE0:
-    case BX_MSR_MTRRPHYSMASK0:
-    case BX_MSR_MTRRPHYSBASE1:
-    case BX_MSR_MTRRPHYSMASK1:
-    case BX_MSR_MTRRPHYSBASE2:
-    case BX_MSR_MTRRPHYSMASK2:
-    case BX_MSR_MTRRPHYSBASE3:
-    case BX_MSR_MTRRPHYSMASK3:
-    case BX_MSR_MTRRPHYSBASE4:
-    case BX_MSR_MTRRPHYSMASK4:
-    case BX_MSR_MTRRPHYSBASE5:
-    case BX_MSR_MTRRPHYSMASK5:
-    case BX_MSR_MTRRPHYSBASE6:
-    case BX_MSR_MTRRPHYSMASK6:
-    case BX_MSR_MTRRPHYSBASE7:
-    case BX_MSR_MTRRPHYSMASK7:
-      val64 = BX_CPU_THIS_PTR msr.mtrrphys[index - BX_MSR_MTRRPHYSBASE0];
-      break;
-    case BX_MSR_MTRRFIX64K_00000:
-      val64 = BX_CPU_THIS_PTR msr.mtrrfix64k.u64;
-      break;
-    case BX_MSR_MTRRFIX16K_80000:
-    case BX_MSR_MTRRFIX16K_A0000:
-      val64 = BX_CPU_THIS_PTR msr.mtrrfix16k[index - BX_MSR_MTRRFIX16K_80000].u64;
-      break;
-
-    case BX_MSR_MTRRFIX4K_C0000:
-    case BX_MSR_MTRRFIX4K_C8000:
-    case BX_MSR_MTRRFIX4K_D0000:
-    case BX_MSR_MTRRFIX4K_D8000:
-    case BX_MSR_MTRRFIX4K_E0000:
-    case BX_MSR_MTRRFIX4K_E8000:
-    case BX_MSR_MTRRFIX4K_F0000:
-    case BX_MSR_MTRRFIX4K_F8000:
-      val64 = BX_CPU_THIS_PTR msr.mtrrfix4k[index - BX_MSR_MTRRFIX4K_C0000].u64;
-      break;
-
     case BX_MSR_MTRR_DEFTYPE:
       val64 = BX_CPU_THIS_PTR msr.mtrr_deftype;
-      break;
-
-    case BX_MSR_PAT:
-      val64 = BX_CPU_THIS_PTR msr.pat.u64;
       break;
 #endif
 
@@ -852,6 +849,36 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #endif
     case BX_MSR_IA32_FRED_CONFIG:               // 0x1d4, reserved bits already checked above
 #endif
+#if BX_CPU_LEVEL >= 6
+    case BX_MSR_MTRRPHYSBASE0:                  // 0x200
+    case BX_MSR_MTRRPHYSMASK0:                  // 0x201
+    case BX_MSR_MTRRPHYSBASE1:                  // 0x202
+    case BX_MSR_MTRRPHYSMASK1:                  // 0x203
+    case BX_MSR_MTRRPHYSBASE2:                  // 0x204
+    case BX_MSR_MTRRPHYSMASK2:                  // 0x205
+    case BX_MSR_MTRRPHYSBASE3:                  // 0x206
+    case BX_MSR_MTRRPHYSMASK3:                  // 0x207
+    case BX_MSR_MTRRPHYSBASE4:                  // 0x208
+    case BX_MSR_MTRRPHYSMASK4:                  // 0x209
+    case BX_MSR_MTRRPHYSBASE5:                  // 0x20a
+    case BX_MSR_MTRRPHYSMASK5:                  // 0x20b
+    case BX_MSR_MTRRPHYSBASE6:                  // 0x20c
+    case BX_MSR_MTRRPHYSMASK6:                  // 0x20d
+    case BX_MSR_MTRRPHYSBASE7:                  // 0x20e
+    case BX_MSR_MTRRPHYSMASK7:                  // 0x20f
+    case BX_MSR_MTRRFIX64K_00000:               // 0x250
+    case BX_MSR_MTRRFIX16K_80000:               // 0x258
+    case BX_MSR_MTRRFIX16K_A0000:               // 0x259
+    case BX_MSR_MTRRFIX4K_C0000:                // 0x268
+    case BX_MSR_MTRRFIX4K_C8000:                // 0x269
+    case BX_MSR_MTRRFIX4K_D0000:                // 0x26a
+    case BX_MSR_MTRRFIX4K_D8000:                // 0x26b
+    case BX_MSR_MTRRFIX4K_E0000:                // 0x26c
+    case BX_MSR_MTRRFIX4K_E8000:                // 0x26d
+    case BX_MSR_MTRRFIX4K_F0000:                // 0x26e
+    case BX_MSR_MTRRFIX4K_F8000:                // 0x26f
+    case BX_MSR_PAT:                            // 0x277
+#endif
 #if BX_SUPPORT_CET
     case BX_MSR_IA32_U_CET:                     // 0x6a0
     case BX_MSR_IA32_S_CET:                     // 0x6a2
@@ -912,87 +939,12 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #endif
 
 #if BX_CPU_LEVEL >= 6
-    case BX_MSR_MTRRPHYSBASE0:
-    case BX_MSR_MTRRPHYSBASE1:
-    case BX_MSR_MTRRPHYSBASE2:
-    case BX_MSR_MTRRPHYSBASE3:
-    case BX_MSR_MTRRPHYSBASE4:
-    case BX_MSR_MTRRPHYSBASE5:
-    case BX_MSR_MTRRPHYSBASE6:
-    case BX_MSR_MTRRPHYSBASE7:
-      if (! IsValidPhyAddr(val_64)) {
-        BX_ERROR(("WRMSR[0x%08x]: attempt to write invalid phy addr to variable range MTRR %08x:%08x", index, val32_hi, val32_lo));
-        return false;
-      }
-      // handle 8-11 reserved bits
-      if (! isMemTypeValidMTRR(val32_lo & 0xFFF)) {
-        BX_ERROR(("WRMSR: attempt to write invalid Memory Type to BX_MSR_MTRRPHYSBASE"));
-        return false;
-      }
-      BX_CPU_THIS_PTR msr.mtrrphys[index - BX_MSR_MTRRPHYSBASE0] = val_64;
-      break;
-    case BX_MSR_MTRRPHYSMASK0:
-    case BX_MSR_MTRRPHYSMASK1:
-    case BX_MSR_MTRRPHYSMASK2:
-    case BX_MSR_MTRRPHYSMASK3:
-    case BX_MSR_MTRRPHYSMASK4:
-    case BX_MSR_MTRRPHYSMASK5:
-    case BX_MSR_MTRRPHYSMASK6:
-    case BX_MSR_MTRRPHYSMASK7:
-      if (! IsValidPhyAddr(val_64)) {
-        BX_ERROR(("WRMSR[0x%08x]: attempt to write invalid phy addr to variable range MTRR %08x:%08x", index, val32_hi, val32_lo));
-        return false;
-      }
-      BX_CPU_THIS_PTR msr.mtrrphys[index - BX_MSR_MTRRPHYSBASE0] = val_64;
-      break;
-
-    case BX_MSR_MTRRFIX64K_00000:
-      if (! isValidMSR_FixedMTRR(val_64)) {
-        BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRRFIX64K_00000 !"));
-        return false;
-      }
-      BX_CPU_THIS_PTR msr.mtrrfix64k = val_64;
-      break;
-
-    case BX_MSR_MTRRFIX16K_80000:
-    case BX_MSR_MTRRFIX16K_A0000:
-      if (! isValidMSR_FixedMTRR(val_64)) {
-        BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRRFIX16K register !"));
-        return false;
-      }
-      BX_CPU_THIS_PTR msr.mtrrfix16k[index - BX_MSR_MTRRFIX16K_80000] = val_64;
-      break;
-
-    case BX_MSR_MTRRFIX4K_C0000:
-    case BX_MSR_MTRRFIX4K_C8000:
-    case BX_MSR_MTRRFIX4K_D0000:
-    case BX_MSR_MTRRFIX4K_D8000:
-    case BX_MSR_MTRRFIX4K_E0000:
-    case BX_MSR_MTRRFIX4K_E8000:
-    case BX_MSR_MTRRFIX4K_F0000:
-    case BX_MSR_MTRRFIX4K_F8000:
-      if (! isValidMSR_FixedMTRR(val_64)) {
-        BX_ERROR(("WRMSR: attempt to write invalid Memory Type to fixed memory range MTRR !"));
-        return false;
-      }
-      BX_CPU_THIS_PTR msr.mtrrfix4k[index - BX_MSR_MTRRFIX4K_C0000] = val_64;
-      break;
-
     case BX_MSR_MTRR_DEFTYPE:
       if (! isMemTypeValidMTRR(val32_lo & 0xFF)) {
         BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_MTRR_DEFTYPE"));
         return false;
       }
       BX_CPU_THIS_PTR msr.mtrr_deftype = val32_lo;
-      break;
-
-    case BX_MSR_PAT:
-      if (! isValidMSR_PAT(val_64)) {
-        BX_ERROR(("WRMSR: attempt to write invalid Memory Type to MSR_PAT"));
-        return false;
-      }
-
-      BX_CPU_THIS_PTR msr.pat = val_64;
       break;
 #endif
 

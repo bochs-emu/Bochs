@@ -57,13 +57,13 @@ public:
 typedef MSR_Descriptor* MSR_DescriptorPtr;
 
 // read only MSR with constant value
-class MSR_Const_Descriptor : public MSR_Descriptor {
+class ConstMSR : public MSR_Descriptor {
 private:
   Bit64u value;
 
 public:
-  MSR_Const_Descriptor(const char *name, unsigned feature, Bit64u val): MSR_Descriptor(name, feature, ~BX_CONST64(0)), value(val) {}
-  virtual ~MSR_Const_Descriptor() {}
+  ConstMSR(const char *name, unsigned feature, Bit64u val): MSR_Descriptor(name, feature, ~BX_CONST64(0)), value(val) {}
+  virtual ~ConstMSR() {}
 
   virtual bool get(Bit64u *val) {
     *val = value;
@@ -72,15 +72,15 @@ public:
 };
 
 // MSR which value is stored in Bit64u variable inside BX_CPU_C, accessed through a pointer
-class MSR_Var_Descriptor : public MSR_Descriptor {
+class VarMSR : public MSR_Descriptor {
 private:
   Bit64u *var;
   MSR_Valid_Value_Check is_valid; // NULL - no extra validation
 
 public:
-  MSR_Var_Descriptor(const char *name, unsigned feature, Bit64u *cpu_var, Bit64u reserved_bits = 0, MSR_Valid_Value_Check check = NULL):
+  VarMSR(const char *name, unsigned feature, Bit64u *cpu_var, Bit64u reserved_bits = 0, MSR_Valid_Value_Check check = NULL):
      MSR_Descriptor(name, feature, reserved_bits), var(cpu_var), is_valid(check) {}
-  virtual ~MSR_Var_Descriptor() {}
+  virtual ~VarMSR() {}
 
   virtual bool get(Bit64u *val) {
     *val = *var;
