@@ -209,13 +209,17 @@ void BX_CPU_C::init_MSRs()
   msr_desc[BX_MSR_IA32_UINTR_RR] = new MSR_Descriptor("MSR_IA32_UINTR_RR", BX_ISA_UINTR);
   msr_desc[BX_MSR_IA32_UINTR_HANDLER] = new VarMSR("MSR_IA32_UINTR_HANDLER", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.ui_handler, 0, is_canonical_msr);
   msr_desc[BX_MSR_IA32_UINTR_STACKADJUST] = new VarMSR("MSR_IA32_UINTR_STACKADJUST", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.stack_adjust, 0, is_canonical_msr);
-  msr_desc[BX_MSR_IA32_UINTR_MISC] = new MSR_Descriptor("MSR_IA32_UINTR_MISC", BX_ISA_UINTR, BX_CONST64(0xffffff0000000000));
+  // IA32_UINTR_MISC MSR:
+  //   [31:0] - UITTSZ: user interrupt target table size
+  //  [39:32] - UINV: user interrupt notification vector
+  //  [63:40] - reserved
+  msr_desc[BX_MSR_IA32_UINTR_MISC] = new VarMSR("MSR_IA32_UINTR_MISC", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.misc, BX_CONST64(0xffffff0000000000));
   msr_desc[BX_MSR_IA32_UINTR_PD] = new VarMSR("MSR_IA32_UINTR_PD", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.upid_addr, BX_CONST64(0x3f), is_canonical_msr); // bits [5:0] are reserved
   msr_desc[BX_MSR_IA32_UINTR_TT] = new VarMSR("MSR_IA32_UINTR_TT", BX_ISA_UINTR, &BX_CPU_THIS_PTR uintr.uitt_addr, BX_CONST64(0x0e), is_canonical_msr); // bits [3:1] are reserved
 #endif
 
 #if BX_SUPPORT_PKEYS
-  msr_desc[BX_MSR_IA32_PKRS] = new MSR_Descriptor("MSR_IA32_PKRS", BX_ISA_PKS);
+  msr_desc[BX_MSR_IA32_PKRS] = new MSR_Descriptor("MSR_IA32_PKRS", BX_ISA_PKS, BX_CONST64(0xffffffff00000000)); // bits [63:32] are reserved
 #endif
 
 #if BX_SUPPORT_FRED
@@ -498,6 +502,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #if BX_SUPPORT_UINTR
     case BX_MSR_IA32_UINTR_HANDLER:             // 0x986
     case BX_MSR_IA32_UINTR_STACKADJUST:         // 0x987
+    case BX_MSR_IA32_UINTR_MISC:                // 0x988
     case BX_MSR_IA32_UINTR_PD:                  // 0x989
     case BX_MSR_IA32_UINTR_TT:                  // 0x98a
 #endif
@@ -547,9 +552,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 #if BX_SUPPORT_UINTR
     case BX_MSR_IA32_UINTR_RR:
       val64 = BX_CPU_THIS_PTR uintr.uirr;
-      break;
-    case BX_MSR_IA32_UINTR_MISC:
-      val64 = GET64_FROM_HI32_LO32(BX_CPU_THIS_PTR uintr.uinv, BX_CPU_THIS_PTR uintr.uitt_size);
       break;
 #endif
 
@@ -926,6 +928,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #if BX_SUPPORT_UINTR
     case BX_MSR_IA32_UINTR_HANDLER:             // 0x986
     case BX_MSR_IA32_UINTR_STACKADJUST:         // 0x987
+    case BX_MSR_IA32_UINTR_MISC:                // 0x988, reserved bits already checked above
     case BX_MSR_IA32_UINTR_PD:                  // 0x989, reserved bits already checked above
     case BX_MSR_IA32_UINTR_TT:                  // 0x98a, reserved bits already checked above
 #endif
@@ -980,10 +983,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_IA32_UINTR_RR:
       BX_CPU_THIS_PTR uintr.uirr = val_64;
       uintr_uirr_update(); // potentially signal or clear user-level-interrupt
-      break;
-    case BX_MSR_IA32_UINTR_MISC: // reserved bits already checked above
-      BX_CPU_THIS_PTR uintr.uitt_size = GET32L(val_64);
-      BX_CPU_THIS_PTR uintr.uinv      = GET32H(val_64);
       break;
 #endif
 

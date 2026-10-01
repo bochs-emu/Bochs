@@ -2334,7 +2334,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
 #if BX_SUPPORT_UINTR
   if (vm->vmentry_ctrls.LOAD_UINV()) {
-    BX_CPU_THIS_PTR uintr.uinv = guest.uintr_uinv;
+    BX_CPU_THIS_PTR uintr.set_uinv(guest.uintr_uinv);
   }
 #endif
 
@@ -2492,7 +2492,7 @@ void BX_CPU_C::VMenterInjectEvents(void)
   vm->idt_vector_error_code = error_code;
 
 #if BX_SUPPORT_UINTR
-  if (BX_CPU_THIS_PTR cr4.get_UINTR() && long64_mode() && vector == BX_CPU_THIS_PTR uintr.uinv) {
+  if (BX_CPU_THIS_PTR cr4.get_UINTR() && long64_mode() && vector == BX_CPU_THIS_PTR uintr.get_uinv()) {
     Process_UINTR_Notification();
   }
   else
@@ -2674,7 +2674,7 @@ void BX_CPU_C::VMexitSaveGuestState(Bit32u reason, Bit32u vector)
 
 #if BX_SUPPORT_UINTR
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UINTR)) {
-    VMwrite16(VMCS_16BIT_GUEST_UINV, BX_CPU_THIS_PTR uintr.uinv);
+    VMwrite16(VMCS_16BIT_GUEST_UINV, BX_CPU_THIS_PTR uintr.get_uinv());
   }
 #endif
 
@@ -3004,7 +3004,7 @@ void BX_CPU_C::VMexitLoadHostState(void)
 
 #if BX_SUPPORT_UINTR
   if (vm->vmexit_ctrls1.CLEAR_UINV()) {
-    BX_CPU_THIS_PTR uintr.uinv = 0;
+    BX_CPU_THIS_PTR uintr.set_uinv(0);
   }
 #endif
 

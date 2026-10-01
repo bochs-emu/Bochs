@@ -1088,14 +1088,17 @@ public: // for now...
   struct {
     Bit64u ui_handler;
     Bit64u stack_adjust;
-    Bit32u uinv;          // user interrupt notification vector, actually 8 bit
-    Bit32u uitt_size;     // user interrupt target table size
+    Bit64u misc;          // IA32_UINTR_MISC: [31:0] user interrupt target table size, [39:32] user interrupt notification vector
     Bit64u uitt_addr;     // user interrupt target table address
     Bit64u upid_addr;     // user posted-interrupt descriptor address
     Bit64u uirr;          // user-interrupt request register
     bool UIF;             // if UIF=0 user interrupt cannot be delivered
 
     bool senduipi_enabled() const { return uitt_addr & 0x1; }
+
+    Bit32u get_uitt_size() const { return GET32L(misc); }
+    Bit32u get_uinv() const { return GET32H(misc); }
+    void set_uinv(Bit32u uinv) { misc = GET64_FROM_HI32_LO32(uinv, GET32L(misc)); }
   } uintr;
 #endif
 

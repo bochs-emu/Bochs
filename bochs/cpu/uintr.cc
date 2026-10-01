@@ -178,7 +178,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SENDUIPI_Eq(bxInstruction_c *i)
   }
 
   Bit64u index = BX_READ_64BIT_REG(i->dst());
-  if (index > BX_CPU_THIS_PTR uintr.uitt_size) {
+  if (index > BX_CPU_THIS_PTR uintr.get_uitt_size()) {
     BX_ERROR(("SENDUIPI: value of the source operand exceeds UITT.SIZE"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -302,7 +302,7 @@ void BX_CPU_C::Process_UINTR_Notification()
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
     vm->idt_vector_error_code = 0;
-    vm->idt_vector_info = (BX_CPU_THIS_PTR uintr.uinv) | (BX_EXTERNAL_INTERRUPT << 8);
+    vm->idt_vector_info = (BX_CPU_THIS_PTR uintr.get_uinv()) | (BX_EXTERNAL_INTERRUPT << 8);
   }
 #endif
 
