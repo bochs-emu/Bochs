@@ -675,27 +675,27 @@ typedef struct
 #if BX_SUPPORT_X86_64
   Bit64u lstar;
   Bit64u cstar;
-  Bit32u fmask;
+  Bit64u fmask;
   Bit64u kernelgsbase;
-  Bit32u tsc_aux;
+  Bit64u tsc_aux;
 #endif
 
 #if BX_CPU_LEVEL >= 6
   // SYSENTER/SYSEXIT instruction msr's
-  Bit32u sysenter_cs_msr;
-  bx_address sysenter_esp_msr;
-  bx_address sysenter_eip_msr;
+  Bit64u sysenter_cs_msr;
+  Bit64u sysenter_esp_msr;
+  Bit64u sysenter_eip_msr;
 
   BxPackedRegister pat;
   Bit64u mtrrphys[16];
   BxPackedRegister mtrrfix64k;
   BxPackedRegister mtrrfix16k[2];
   BxPackedRegister mtrrfix4k[8];
-  Bit32u mtrr_deftype;
+  Bit64u mtrr_deftype;
 #endif
 
 #if BX_SUPPORT_VMX
-  Bit32u ia32_feature_ctrl;
+  Bit64u ia32_feature_ctrl;
 #endif
 
 #if BX_SUPPORT_SVM
@@ -725,7 +725,7 @@ typedef struct
 #endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  Bit32u ia32_umwait_ctrl;
+  Bit64u ia32_umwait_ctrl;
 #endif
 
   Bit32u ia32_spec_ctrl; // SCA
@@ -933,6 +933,7 @@ struct BX_SMM_State;
 struct BxOpcodeInfo_t;
 struct bx_cpu_statistics;
 class bx_cpuid_t;
+class MSR_Descriptor;
 
 class BX_CPU_C : public logfunctions {
 public: // for now...
@@ -1051,7 +1052,7 @@ public: // for now...
   // remember the time in ticks that it was reset to zero.  With a little
   // algebra, we can also support setting it to something other than zero.
   // Don't read this directly; use get_TSC and set_TSC to access the TSC.
-  Bit64s tsc_adjust;
+  Bit64u tsc_adjust;
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   Bit64s tsc_offset;
 #endif
@@ -1065,7 +1066,7 @@ public: // for now...
 #if BX_SUPPORT_PKEYS
   // protection keys
   Bit32u pkru;
-  Bit32u pkrs;
+  Bit64u pkrs;
 
   // unpacked protection keys to be tested together with accessBits from TLB
   // the unpacked key is stored in the accessBits format:
@@ -1085,16 +1086,19 @@ public: // for now...
 
 #if BX_SUPPORT_UINTR
   struct {
-    bx_address ui_handler;
+    Bit64u ui_handler;
     Bit64u stack_adjust;
-    Bit32u uinv;              // user interrupt notification vector, actually 8 bit
-    Bit32u uitt_size;         // user interrupt target table size
-    bx_address uitt_addr;     // user interrupt target table address
-    bx_address upid_addr;     // user posted-interrupt descriptor address
-    Bit64u uirr;              // user-interrupt request register
-    bool UIF;                 // if UIF=0 user interrupt cannot be delivered
+    Bit64u misc;          // IA32_UINTR_MISC: [31:0] user interrupt target table size, [39:32] user interrupt notification vector
+    Bit64u uitt_addr;     // user interrupt target table address
+    Bit64u upid_addr;     // user posted-interrupt descriptor address
+    Bit64u uirr;          // user-interrupt request register
+    bool UIF;             // if UIF=0 user interrupt cannot be delivered
 
     bool senduipi_enabled() const { return uitt_addr & 0x1; }
+
+    Bit32u get_uitt_size() const { return GET32L(misc); }
+    Bit32u get_uinv() const { return GET32H(misc); }
+    void set_uinv(Bit32u uinv) { misc = GET64_FROM_HI32_LO32(uinv, GET32L(misc)); }
   } uintr;
 #endif
 
@@ -1139,53 +1143,9 @@ public: // for now...
 
 #if BX_CPU_LEVEL >= 5
   bx_regs_msr_t msr;
-#endif
 
-#if BX_CONFIGURE_MSRS
-  typedef struct msr {
-    BX_CPU_C *cpu;
-
-    unsigned index;          // MSR index
-    unsigned type;           // MSR type: 1 - lin address, 2 - phy address
-#define BX_LIN_ADDRESS_MSR 1
-#define BX_PHY_ADDRESS_MSR 2
-    Bit64u val64;            // current MSR value
-    Bit64u reset_value;      // reset value
-    Bit64u reserved;         // r/o bits - fault on write
-    Bit64u ignored;          // hardwired bits - ignored on write
-
-    msr(BX_CPU_C *cpu_, unsigned idx, unsigned msr_type = 0, Bit64u reset_val = 0, Bit64u rsrv = 0, Bit64u ign = 0):
-       cpu(cpu_), index(idx), type(msr_type), val64(reset_val), reset_value(reset_val),
-       reserved(rsrv), ignored(ign) {}
-
-    msr(BX_CPU_C *cpu_, unsigned idx, Bit64u reset_val = 0, Bit64u rsrv = 0, Bit64u ign = 0):
-       cpu(cpu_), index(idx), type(0), val64(reset_val), reset_value(reset_val),
-       reserved(rsrv), ignored(ign) {}
-
-    BX_CPP_INLINE void reset() { val64 = reset_value; }
-    BX_CPP_INLINE Bit64u get64() const { return val64; }
-
-    BX_CPP_INLINE bool set64(Bit64u new_val) {
-       new_val = (new_val & ~ignored) | (val64 & ignored);
-       switch(type) {
-#if BX_SUPPORT_X86_64
-         case BX_LIN_ADDRESS_MSR:
-           if (! cpu->IsCpuidCanonical(new_val)) return 0;
-           break;
-#endif
-         case BX_PHY_ADDRESS_MSR:
-           if (! IsValidPhyAddr(new_val)) return 0;
-           break;
-         default:
-           break;
-       }
-       if ((val64 ^ new_val) & reserved) return 0;
-       val64 = new_val;
-       return 1;
-    }
-  } MSR;
-
-  MSR *msrs[BX_MSR_MAX_INDEX];
+  MSR_Descriptor **msr_desc;     // MSR descriptors for MSRs [0 .. BX_MSR_MAX_INDEX-1]
+  MSR_Descriptor **ext_msr_desc; // MSR descriptors for MSRs [0xC0000000 .. 0xC0000000+BX_EXTENDED_MSR_MAX_INDEX-1]
 #endif
 
 #if BX_SUPPORT_AMX
@@ -5588,11 +5548,12 @@ public: // for now...
 #endif
 
 #if BX_CPU_LEVEL >= 5
-  void init_MSRs();
-  void destroy_MSRs();
-#if BX_CONFIGURE_MSRS
-  int load_MSRs(const char *file);
-#endif
+  BX_SMF void init_MSRs();
+  BX_SMF void destroy_MSRs();
+  BX_SMF void reset_MSRs(unsigned source);
+  BX_SMF void register_MSRs_state(bx_list_c *parent);
+  BX_SMF MSR_Descriptor* get_MSR_descriptor(Bit32u index);
+  BX_SMF int load_MSRs(const char *file);
 #endif
 };
 

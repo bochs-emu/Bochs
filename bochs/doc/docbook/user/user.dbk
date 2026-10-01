@@ -2318,12 +2318,6 @@ SMP, x86_64 support) and the devices options (e.g. PCI, USB, Cirrus graphics).
       <entry>support for alignment check in the CPU and #AC exception</entry>
     </row>
     <row>
-      <entry>--enable-configurable-msrs</entry>
-      <entry>no</entry>
-      <entry>support for user configurations of emulated MSR registers
-          (see example in msrs.def)</entry>
-    </row>
-    <row>
       <entry>--enable-long-phy-address</entry>
       <entry>no</entry>
       <entry>support for guest physical address larger than 32 bit</entry>

@@ -712,13 +712,11 @@ void bx_init_options()
       "Don't put CPU to sleep state by MWAIT",
       0);
 #endif
-#if BX_CONFIGURE_MSRS
   new bx_param_filename_c(cpu_param,
       "msrs",
       "Configurable MSR definition file",
       "Set path to the configurable MSR definition file",
       "", BX_PATHNAME_LEN);
-#endif
 
   new bx_param_string_c(cpu_param,
       "brand_string",
@@ -3635,11 +3633,9 @@ int bx_write_configuration(const char *rc, int overwrite)
 #if BX_SUPPORT_MONITOR_MWAIT
   fprintf(fp, ", mwait_is_nop=%d", SIM->get_param_bool(BXPN_MWAIT_IS_NOP)->get());
 #endif
-#if BX_CONFIGURE_MSRS
   sparam = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH);
   if (!sparam->isempty())
     fprintf(fp, ", msrs=\"%s\"", sparam->getptr());
-#endif
   fprintf(fp, "\n");
 
   fprintf(fp, "print_timestamps: enabled=%d\n", bx_dbg.print_timestamps);

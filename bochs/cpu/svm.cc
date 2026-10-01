@@ -1096,7 +1096,7 @@ void BX_CPU_C::Svm_Update_VM_CR_MSR(Bit64u val_64)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (BX_CPU_THIS_PTR msr.svm_vm_cr & BX_VM_CR_MSR_SVMDIS_MASK) {
+  if (val_64 & BX_VM_CR_MSR_SVMDIS_MASK) {
     if (BX_CPU_THIS_PTR efer.get_SVME()) {
       BX_ERROR(("VM_CR_MSR: attempt to set SVMDIS when EFER.SVME=1"));
       exception(BX_GP_EXCEPTION, 0);
@@ -1218,9 +1218,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLOAD(bxInstruction_c *i)
   BX_CPU_THIS_PTR msr.star = vmcb_read64(SVM_GUEST_STAR_MSR);
   BX_CPU_THIS_PTR msr.lstar = CanonicalizeAddress(vmcb_read64(SVM_GUEST_LSTAR_MSR));
   BX_CPU_THIS_PTR msr.cstar = CanonicalizeAddress(vmcb_read64(SVM_GUEST_CSTAR_MSR));
-  BX_CPU_THIS_PTR msr.fmask = vmcb_read64(SVM_GUEST_FMASK_MSR);
+  BX_CPU_THIS_PTR msr.fmask = (Bit32u) vmcb_read64(SVM_GUEST_FMASK_MSR); // bits [63:32] are ignored
 
-  BX_CPU_THIS_PTR msr.sysenter_cs_msr = vmcb_read64(SVM_GUEST_SYSENTER_CS_MSR);
+  BX_CPU_THIS_PTR msr.sysenter_cs_msr = (Bit32u) vmcb_read64(SVM_GUEST_SYSENTER_CS_MSR); // bits [63:32] are ignored
   BX_CPU_THIS_PTR msr.sysenter_eip_msr = CanonicalizeAddress(vmcb_read64(SVM_GUEST_SYSENTER_EIP_MSR));
   BX_CPU_THIS_PTR msr.sysenter_esp_msr = CanonicalizeAddress(vmcb_read64(SVM_GUEST_SYSENTER_ESP_MSR));
 

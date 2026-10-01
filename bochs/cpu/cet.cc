@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2019-2025 Stanislav Shwartsman
+//   Copyright (c) 2019-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -38,13 +38,13 @@ const Bit64u BX_CET_SUPPRESS_DIS                           = (1 << 5);
 const Bit64u BX_CET_SUPPRESS_INDIRECT_BRANCH_TRACKING      = (1 << 10);
 const Bit64u BX_CET_WAIT_FOR_ENBRANCH                      = (1 << 11);
 
-bool is_invalid_cet_control(bx_address val)
+bool is_valid_cet_control(Bit64u val)
 {
   if ((val & (BX_CET_SUPPRESS_INDIRECT_BRANCH_TRACKING | BX_CET_WAIT_FOR_ENBRANCH)) ==
-             (BX_CET_SUPPRESS_INDIRECT_BRANCH_TRACKING | BX_CET_WAIT_FOR_ENBRANCH)) return true;
+             (BX_CET_SUPPRESS_INDIRECT_BRANCH_TRACKING | BX_CET_WAIT_FOR_ENBRANCH)) return false;
 
-  if (val & 0x3c0) return true; // reserved bits check
-  return false;
+  if (val & 0x3c0) return false; // reserved bits check
+  return true;
 }
 
 bool BX_CPP_AttrRegparmN(1) BX_CPU_C::ShadowStackEnabled(unsigned cpl)

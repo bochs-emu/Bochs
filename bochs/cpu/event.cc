@@ -173,7 +173,7 @@ void BX_CPU_C::HandleExtInterrupt(void)
 #endif
 
 #if BX_SUPPORT_UINTR
-  if (BX_CPU_THIS_PTR cr4.get_UINTR() && long64_mode() && vector == BX_CPU_THIS_PTR uintr.uinv)
+  if (BX_CPU_THIS_PTR cr4.get_UINTR() && long64_mode() && vector == BX_CPU_THIS_PTR uintr.get_uinv())
   {
 #if BX_SUPPORT_APIC
     BX_CPU_THIS_PTR lapic->receive_EOI();

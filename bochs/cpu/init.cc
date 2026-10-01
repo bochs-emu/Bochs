@@ -229,26 +229,22 @@ void BX_CPU_C::initialize(void)
   }
 #endif
 
-#if BX_CPU_LEVEL >= 5
-  init_MSRs();
+#if BX_SUPPORT_VMX
+  init_VMCS();
+#endif
 
-#if BX_CONFIGURE_MSRS
-  for (unsigned n=0; n < BX_MSR_MAX_INDEX; n++) {
-    BX_CPU_THIS_PTR msrs[n] = NULL;
-  }
+#if BX_CPU_LEVEL >= 5
+  init_MSRs(); // must be called after init_VMCS(), VMX capability MSRs are computed from vmx_cap
+
+  // user defined MSRs, must be loaded after init_MSRs() to skip MSRs already defined
   const char *msrs_filename = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->getptr();
   load_MSRs(msrs_filename);
-#endif
 
   // ignore bad MSRS if user asked for it
   BX_CPU_THIS_PTR ignore_bad_msrs = SIM->get_param_bool(BXPN_IGNORE_BAD_MSRS)->get();
 #endif
 
   init_SMRAM();
-
-#if BX_SUPPORT_VMX
-  init_VMCS();
-#endif
 
   init_statistics();
 }
@@ -552,20 +548,9 @@ void BX_CPU_C::register_state(void)
   }
 #endif
 
-#if BX_CONFIGURE_MSRS
+  // MSR descriptors holding their own state (i.e. user defined MSRs)
   bx_list_c *MSRS = new bx_list_c(cpu, "USER_MSR");
-  for(n=0; n < BX_MSR_MAX_INDEX; n++) {
-    if (! msrs[n]) continue;
-    sprintf(name, "msr_0x%03x", n);
-    bx_list_c *m = new bx_list_c(MSRS, name);
-    BXRS_HEX_PARAM_FIELD(m, index, msrs[n]->index);
-    BXRS_DEC_PARAM_FIELD(m, type, msrs[n]->type);
-    BXRS_HEX_PARAM_FIELD(m, val64, msrs[n]->val64);
-    BXRS_HEX_PARAM_FIELD(m, reset, msrs[n]->reset_value);
-    BXRS_HEX_PARAM_FIELD(m, reserved, msrs[n]->reserved);
-    BXRS_HEX_PARAM_FIELD(m, ignored, msrs[n]->ignored);
-  }
-#endif
+  BX_CPU_THIS_PTR register_MSRs_state(MSRS);
 #endif
 
 #if BX_SUPPORT_UINTR
@@ -575,8 +560,7 @@ void BX_CPU_C::register_state(void)
     BXRS_HEX_PARAM_FIELD(UINTR, uirr, uintr.uirr);
     BXRS_HEX_PARAM_FIELD(UINTR, ui_handler, uintr.ui_handler);
     BXRS_HEX_PARAM_FIELD(UINTR, stack_adjust, uintr.stack_adjust);
-    BXRS_HEX_PARAM_FIELD(UINTR, uinv, uintr.uinv);
-    BXRS_HEX_PARAM_FIELD(UINTR, uitt_size, uintr.uitt_size);
+    BXRS_HEX_PARAM_FIELD(UINTR, misc, uintr.misc);
     BXRS_HEX_PARAM_FIELD(UINTR, uitt_addr, uintr.uitt_addr);
     BXRS_HEX_PARAM_FIELD(UINTR, upid_addr, uintr.upid_addr);
   }
@@ -875,15 +859,6 @@ BX_CPU_C::~BX_CPU_C()
 
 #if BX_CPU_LEVEL >= 5
   destroy_MSRs();
-
-#if BX_CONFIGURE_MSRS
-  for (unsigned n=0; n < BX_MSR_MAX_INDEX; n++) {
-    if (BX_CPU_THIS_PTR msrs[n]) {
-      delete BX_CPU_THIS_PTR msrs[n];
-      BX_CPU_THIS_PTR msrs[n] = NULL;
-    }
-  }
-#endif
 #endif
 
   BX_INSTR_EXIT(BX_CPU_ID);
@@ -1203,15 +1178,12 @@ void BX_CPU_C::reset(unsigned source)
     BX_CPU_THIS_PTR msr.mtrr_deftype = 0;
 #endif
 
-    // All configurable MSRs do not change on INIT
-#if BX_CONFIGURE_MSRS
-    for (n=0; n < BX_MSR_MAX_INDEX; n++) {
-      if (BX_CPU_THIS_PTR msrs[n])
-        BX_CPU_THIS_PTR msrs[n]->reset();
-    }
-#endif
-
   }
+
+#if BX_CPU_LEVEL >= 5
+  // every MSR descriptor decides itself what to do on hardware reset or INIT, called after TSC is reset
+  BX_CPU_THIS_PTR reset_MSRs(source);
+#endif
 
   BX_CPU_THIS_PTR EXT = 0;
   BX_CPU_THIS_PTR last_exception_type = BX_ET_NONE;
