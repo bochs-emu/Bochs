@@ -5548,11 +5548,12 @@ public: // for now...
 #endif
 
 #if BX_CPU_LEVEL >= 5
-  void init_MSRs();
-  void destroy_MSRs();
-  void reset_MSRs(unsigned source);
-  void register_MSRs_state(bx_list_c *parent);
-  int load_MSRs(const char *file);
+  BX_SMF void init_MSRs();
+  BX_SMF void destroy_MSRs();
+  BX_SMF void reset_MSRs(unsigned source);
+  BX_SMF void register_MSRs_state(bx_list_c *parent);
+  BX_SMF MSR_Descriptor* get_MSR_descriptor(Bit32u index);
+  BX_SMF int load_MSRs(const char *file);
 #endif
 };
 
