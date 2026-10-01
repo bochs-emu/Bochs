@@ -777,6 +777,8 @@ Bit64u BX_CPU_C::compute_physical_TSC_delay(Bit64u tsc_delay)
 
 void BX_CPU_C::set_TSC(Bit64u newval)
 {
+  BX_INFO(("WRMSR: write 0x%08x%08x to MSR_IA32_TSC", GET32H(newval), GET32L(newval)));
+
   // compute the correct setting of tsc_adjust so that a get_TSC()
   // will return newval
   BX_CPU_THIS_PTR tsc_adjust = newval - bx_pc_system.time_ticks();

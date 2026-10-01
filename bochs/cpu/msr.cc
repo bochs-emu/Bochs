@@ -76,8 +76,55 @@ public:
     return true;
   }
 
+  virtual bool set(Bit64u val) { return cpu->relocate_apic(val); }
+};
+#endif
+
+// MSR descriptors log through the cpu they belong to
+#undef LOG_THIS
+#define LOG_THIS cpu->
+
+// IA32_TIME_STAMP_COUNTER MSR
+class TscMSR : public MSR_Descriptor {
+private:
+  BX_CPU_C *cpu;
+
+public:
+  TscMSR(BX_CPU_C *cpu_ptr): MSR_Descriptor("MSR_IA32_TSC", BX_ISA_PENTIUM), cpu(cpu_ptr) {}
+  virtual ~TscMSR() {}
+
+  virtual bool get(Bit64u *val) {
+    *val = cpu->get_Virtual_TSC(); // takes into account VMX or SVM adjustments
+    return true;
+  }
+
   virtual bool set(Bit64u val) {
-    return cpu->relocate_apic(val);
+    cpu->set_TSC(val);
+    return true;
+  }
+};
+
+#undef LOG_THIS
+#define LOG_THIS BX_CPU_THIS_PTR
+
+#if BX_CPU_LEVEL >= 6
+// IA32_TSC_DEADLINE MSR, lives in the local APIC
+class TscDeadlineMSR : public MSR_Descriptor {
+private:
+  BX_CPU_C *cpu;
+
+public:
+  TscDeadlineMSR(BX_CPU_C *cpu_ptr): MSR_Descriptor("MSR_TSC_DEADLINE", BX_ISA_TSC_DEADLINE), cpu(cpu_ptr) {}
+  virtual ~TscDeadlineMSR() {}
+
+  virtual bool get(Bit64u *val) {
+    *val = cpu->lapic->get_tsc_deadline();
+    return true;
+  }
+
+  virtual bool set(Bit64u val) {
+    cpu->lapic->set_tsc_deadline(val);
+    return true;
   }
 };
 #endif
@@ -96,9 +143,7 @@ public:
     return true;
   }
 
-  virtual bool set(Bit64u val) {
-    return cpu->SetEFER(val);
-  }
+  virtual bool set(Bit64u val) { return cpu->SetEFER(val); }
 };
 
 // MSR descriptors are per cpu, some of them refer to the cpu variables
@@ -112,7 +157,7 @@ void BX_CPU_C::init_MSRs()
   for (unsigned i=0;i < BX_MSR_MAX_INDEX; i++)
     msr_desc[i] = NULL;
 
-  msr_desc[BX_MSR_TSC] = new MSR_Descriptor("MSR_IA32_TSC", BX_ISA_PENTIUM);
+  msr_desc[BX_MSR_TSC] = new TscMSR(this);
   msr_desc[BX_MSR_PLATFORM_ID] = new ConstMSR("MSR_PLATFORM_ID", BX_ISA_PENTIUM, 0); // read only
 
 #if BX_SUPPORT_APIC
@@ -237,7 +282,7 @@ void BX_CPU_C::init_MSRs()
 #endif
 
 #if BX_CPU_LEVEL >= 6
-  msr_desc[BX_MSR_TSC_DEADLINE] = new MSR_Descriptor("MSR_TSC_DEADLINE", BX_ISA_TSC_DEADLINE);
+  msr_desc[BX_MSR_TSC_DEADLINE] = new TscDeadlineMSR(this);
 #endif
 
   // artificial MSR for MRSLIST serialization
@@ -401,6 +446,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
     switch(index) {
     // MSRs converted to generic MSR descriptor interface
+    case BX_MSR_TSC:                            // 0x010
     case BX_MSR_PLATFORM_ID:                    // 0x017
 #if BX_SUPPORT_APIC
     case BX_MSR_APICBASE:                       // 0x01b
@@ -501,6 +547,9 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
     case BX_MSR_IA32_PL3_SSP:                   // 0x6a7
     case BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR:  // 0x6a8
 #endif
+#if BX_CPU_LEVEL >= 6
+    case BX_MSR_TSC_DEADLINE:                   // 0x6e0
+#endif
 #if BX_SUPPORT_PKEYS
     case BX_MSR_IA32_PKRS:                      // 0x6e1
 #endif
@@ -550,16 +599,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
       val64 = BX_CPU_THIS_PTR get_TSC();
       break;
 
-    case BX_MSR_TSC:
-      val64 = BX_CPU_THIS_PTR get_Virtual_TSC();
-      break;
-
-
-#if BX_CPU_LEVEL >= 6
-    case BX_MSR_TSC_DEADLINE:
-      val64 = BX_CPU_THIS_PTR lapic->get_tsc_deadline();
-      break;
-#endif
 
     // SCA prevention MSRs
     case BX_MSR_IA32_SPEC_CTRL:
@@ -845,6 +884,7 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 
     switch(index) {
     // MSRs converted to generic MSR descriptor interface
+    case BX_MSR_TSC:                            // 0x010
 #if BX_SUPPORT_APIC
     case BX_MSR_APICBASE:                       // 0x01b
 #endif
@@ -916,6 +956,9 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
     case BX_MSR_IA32_PL3_SSP:                   // 0x6a7
     case BX_MSR_IA32_INTERRUPT_SSP_TABLE_ADDR:  // 0x6a8
 #endif
+#if BX_CPU_LEVEL >= 6
+    case BX_MSR_TSC_DEADLINE:                   // 0x6e0
+#endif
 #if BX_SUPPORT_PKEYS
     case BX_MSR_IA32_PKRS:                      // 0x6e1
 #endif
@@ -968,16 +1011,6 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
       BX_INFO(("WRMSR: ignore write into MSR IA32_MPERF"));
       break;
 
-    case BX_MSR_TSC:
-      BX_INFO(("WRMSR: write 0x%08x%08x to MSR_TSC", val32_hi, val32_lo));
-      BX_CPU_THIS_PTR set_TSC(val_64);
-      break;
-
-#if BX_CPU_LEVEL >= 6
-    case BX_MSR_TSC_DEADLINE:
-      BX_CPU_THIS_PTR lapic->set_tsc_deadline(val_64);
-      break;
-#endif
 
     // SCA prevention MSRs
     case BX_MSR_IA32_SPEC_CTRL:
