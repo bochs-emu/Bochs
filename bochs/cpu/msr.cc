@@ -845,8 +845,8 @@ bool isValidMSR_IA32_SPEC_CTRL(Bit64u val_64)
 // With a small number of exceptions, this enforcement checks for CPU canonicality and is thus independent of the
 // current paging mode. Thus, a processor that supports 5-level paging will allow the instructions mentioned
 // above to load these registers with addresses that are 57-bit canonical but not 48-bit canonical, even if 4-level
-// paging is active. (As a result, instructions that store these values — SGDT, SIDT, SLDT, STR, RDFSBASE,
-// RDGSBASE, RDMSR, XSAVE, XSAVEC, XSAVEOPT, and XSAVES — may save addresses that are 57-bit canonical
+// paging is active. (As a result, instructions that store these values - SGDT, SIDT, SLDT, STR, RDFSBASE,
+// RDGSBASE, RDMSR, XSAVE, XSAVEC, XSAVEOPT, and XSAVES - may save addresses that are 57-bit canonical
 // but not 48-bit canonical, even if 4-level paging is active)
 //
 
