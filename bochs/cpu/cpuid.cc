@@ -1651,8 +1651,8 @@ void bx_cpuid_t::sanity_checks() const
     BX_FATAL(("PANIC: 80486 ISA must be enabled for any Pentium and above CPU model !"));
   if (is_cpu_extension_supported(BX_ISA_P6) && ! is_cpu_extension_supported(BX_ISA_PENTIUM))
     BX_FATAL(("PANIC: Pentium ISA must be enabled for any P6 and above CPU model !"));
-  if (is_cpu_extension_supported(BX_ISA_486) && ! is_cpu_extension_supported(BX_ISA_X87))
-    BX_FATAL(("PANIC: FPU must be enabled for any 80486 and above CPU model !"));
+  if (is_cpu_extension_supported(BX_ISA_PENTIUM) && ! is_cpu_extension_supported(BX_ISA_X87))
+    BX_FATAL(("PANIC: FPU must be enabled for any Pentium and above CPU model !"));
 
   // 3DNow! -> MMX
   if (is_cpu_extension_supported(BX_ISA_3DNOW) && ! is_cpu_extension_supported(BX_ISA_MMX))
