@@ -550,23 +550,17 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::rdmsr(Bit32u index, Bit64u *msr)
 
 #if BX_SUPPORT_SVM
   // these SVM MSRs are not handled through MSR descriptors yet
-  switch (index) {
-  case BX_SVM_VM_CR_MSR:
+  if (index == BX_SVM_VM_CR_MSR || index == BX_SVM_HSAVE_PA_MSR) {
     if (! is_cpu_extension_supported(BX_ISA_SVM)) {
-      BX_ERROR(("RDMSR SVM_VM_CR_MSR: SVM support not enabled in the cpu model"));
+      BX_ERROR(("RDMSR %s: SVM support not enabled in the cpu model", (index == BX_SVM_VM_CR_MSR) ? "SVM_VM_CR_MSR" : "SVM_HSAVE_PA_MSR"));
       return false;
     }
-    *msr = BX_CPU_THIS_PTR msr.svm_vm_cr;
-    BX_DEBUG(("RDMSR: read %08x:%08x from MSR %x", GET32H(*msr), GET32L(*msr), index));
-    return true;
-
-  case BX_SVM_HSAVE_PA_MSR:
-    if (! is_cpu_extension_supported(BX_ISA_SVM)) {
-      BX_ERROR(("RDMSR SVM_HSAVE_PA_MSR: SVM support not enabled in the cpu model"));
-      return false;
-    }
-    *msr = BX_CPU_THIS_PTR msr.svm_hsave_pa;
-    BX_DEBUG(("RDMSR: read %08x:%08x from MSR %x", GET32H(*msr), GET32L(*msr), index));
+    if (index == BX_SVM_VM_CR_MSR)
+      val64 = BX_CPU_THIS_PTR msr.svm_vm_cr;
+    else
+      val64 = BX_CPU_THIS_PTR msr.svm_hsave_pa;
+    BX_DEBUG(("RDMSR: read %08x:%08x from MSR %x", GET32H(val64), GET32L(val64), index));
+    *msr = val64;
     return true;
   }
 #endif
