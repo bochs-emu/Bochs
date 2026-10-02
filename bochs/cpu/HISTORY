@@ -71,6 +71,7 @@ Changes after Bochs 3.1:
 + VMX: exit reason 85 is the WRMSRNS immediate form only, legacy WRMSRNS exits with WRMSR basic reason (32) and qualification 1
 + FRED: FRED event delivery saves CS augmented with CSL and IBT state (bits 18:16) on the shadow stack. shadow_stack_restore() truncated the expected CS to 16 bits, so ERETS raised #CP whenever CSL!=0 or the IBT bit was set.
 + FRED: FRED event delivery from CPL3 didn't save the user SSP into IA32_PL3_SSP, so ERETU restored a stale user shadow stack pointer
++ FRED: ERETU compared IA32_PL0_SSP against the new user SSP instead of the current SSP, could lead to false #CP
 - FRED: faulting LKGS left GS segment base and MSR_KERNEL_GS_BASE swapped
 
 -------------------------------------------------------------------------

@@ -447,16 +447,17 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
   }
 
 #if BX_SUPPORT_CET
+  // if user shadow stacks are enabled, check new SSP value on return to compatibility mode
   if (ShadowStackEnabled(3)) {
     if (! to_long_mode && GET32H(BX_CPU_THIS_PTR msr.ia32_pl_ssp[3])) {
       BX_ERROR(("ERETU: attempt to return to compatibility mode while MSR_IA32_PL3_SSP[63:32] != 0"));
       exception(BX_GP_EXCEPTION, 0);
     }
-    SSP = BX_CPU_THIS_PTR msr.ia32_pl_ssp[3];
   }
 
+  // if supervisor shadow stacks are enabled, compare current SSP to the FRED SSP MSR for stack level 0
   if (ShadowStackEnabled(0) && BX_CPU_THIS_PTR msr.ia32_pl_ssp[0] != SSP) {
-    BX_ERROR(("IRETU: supervisor shadow stack SSP mismatch"));
+    BX_ERROR(("ERETU: supervisor shadow stack SSP mismatch"));
     exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
   }
 #endif
@@ -493,6 +494,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
   // SS = new_SS
 
   swapgs();
+
+#if BX_SUPPORT_CET
+  if (ShadowStackEnabled(3))
+    SSP = BX_CPU_THIS_PTR msr.ia32_pl_ssp[3];
+#endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_CPU_THIS_PTR monitor.reset_umonitor();
