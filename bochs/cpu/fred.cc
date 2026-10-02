@@ -244,7 +244,9 @@ Bit32u BX_CPU_C::get_fred_event_info(Bit8u vector, unsigned type, bool nested_ex
   }
 
   // add ilen() of instruction caused the event to bits [31:28] for INTn, INT1, INT3/INTO, SYSCALL and SYSENTER
-  event_info |= (ilen << 28);
+  // for other event types these bits are cleared
+  if (type == BX_SOFTWARE_INTERRUPT || type == BX_PRIVILEGED_SOFTWARE_INTERRUPT || type == BX_SOFTWARE_EXCEPTION || type == BX_EVENT_OTHER)
+    event_info |= ((ilen & 0xf) << 28);
 
   return event_info;
 }
