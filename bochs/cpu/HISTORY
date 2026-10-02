@@ -70,6 +70,7 @@ Changes after Bochs 3.1:
 + VMX: fix VM-exit info for URDMSR, UWRMSR and immediate RDMSR/WRMSRNS + save VM-exit instruction information (bits 6:3 = data register operand)
 + VMX: exit reason 85 is the WRMSRNS immediate form only, legacy WRMSRNS exits with WRMSR basic reason (32) and qualification 1
 + FRED: FRED event delivery saves CS augmented with CSL and IBT state (bits 18:16) on the shadow stack. shadow_stack_restore() truncated the expected CS to 16 bits, so ERETS raised #CP whenever CSL!=0 or the IBT bit was set.
++ FRED: FRED event delivery from CPL3 didn't save the user SSP into IA32_PL3_SSP, so ERETU restored a stale user shadow stack pointer
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
@@ -629,7 +630,7 @@ Changes in Bochs 2.4.6 (February 22, 2011)
 + SSE: Fixed bug in PCMPGTQ instruction
 + VMX: Fixed external interrupt VMEXIT when RFLAGS.IF=0 and 'external interrupt exiting' control is set
 - VMX: Fixed VMEXIT reason reported by RDTSCP instruction
-- VMX, MWAIT: Do not allow MWAIT to enter MWAIT_IF sleep state when “interrupt-window exiting” VMX control is set and RFLAGS.IF = 0
+- VMX, MWAIT: Do not allow MWAIT to enter MWAIT_IF sleep state when ï¿½interrupt-window exitingï¿½ VMX control is set and RFLAGS.IF = 0
 - VMX: (partial fix) stuffed load should check for EPT read permissions only, todo: A/D bits update should check EPT write permissions
 + Save/Restore: Fixed restore of CPU state in real or v8086 mode (2.4.5 missed case)
 - x86-64: Fixed #SS exception error code in long mode interrupt to same priviledge level corner case

@@ -181,7 +181,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
 #if BX_SUPPORT_CET
   if (BX_CPU_THIS_PTR cr4.get_CET()) {
     if (ShadowStackEnabled(3) && old_CPL == 3) {
-      BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = CanonicalizeAddress(BX_CPU_THIS_PTR msr.ia32_pl_ssp[3]);
+      BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = CanonicalizeAddress(old_SSP);
     }
 
     reset_endbranch_tracker(0);
