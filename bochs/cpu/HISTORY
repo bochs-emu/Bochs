@@ -69,6 +69,7 @@ Changes after Bochs 3.1:
 - URDMSR/UWRMSR: missing #GP(0) if MSR address bits [63:14] are not all zero
 + VMX: fix VM-exit info for URDMSR, UWRMSR and immediate RDMSR/WRMSRNS + save VM-exit instruction information (bits 6:3 = data register operand)
 + VMX: exit reason 85 is the WRMSRNS immediate form only, legacy WRMSRNS exits with WRMSR basic reason (32) and qualification 1
++ FRED: FRED event delivery saves CS augmented with CSL and IBT state (bits 18:16) on the shadow stack. shadow_stack_restore() truncated the expected CS to 16 bits, so ERETS raised #CP whenever CSL!=0 or the IBT bit was set.
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
