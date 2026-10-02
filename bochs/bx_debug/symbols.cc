@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -23,60 +23,8 @@
 #include "debug.h"
 
 #if BX_DEBUGGER
-#if !((BX_HAVE_MAP || BX_HAVE_MAP_H) && (BX_HAVE_SET || BX_HAVE_SET_H))
-
-static const char BX_HAVE_MAP_ERR[] = "context not implemented because BX_HAVE_MAP=0\n";
-
-const char* bx_dbg_symbolic_address(bx_address context, bx_address eip, bx_address base)
-{
-  static bool first = true;
-  if (first) {
-    dbg_printf("%s", BX_HAVE_MAP_ERR);
-    first = false;
-  }
-  return "unk. ctxt";
-}
-
-int bx_dbg_symbol_command(const char* filename, bool global, bx_address offset)
-{
-  dbg_printf("%s", BX_HAVE_MAP_ERR);
-  return -1;
-}
-
-void bx_dbg_info_symbols_command(const char *symbol)
-{
-  dbg_printf("%s", BX_HAVE_MAP_ERR);
-}
-
-int bx_dbg_lbreakpoint_symbol_command(const char *symbol, const char *condition)
-{
-  dbg_printf("%s", BX_HAVE_MAP_ERR);
-  return -1;
-}
-
-bx_address bx_dbg_get_symbol_value(const char *symbol)
-{
-  return 0;
-}
-
-const char* bx_dbg_disasm_symbolic_address(bx_address eip, bx_address base)
-{
-  return 0;
-}
-
-#else   /* if BX_HAVE_MAP == 1 */
-
-#if BX_HAVE_MAP
 #include <map>
-#elif BX_HAVE_MAP_H
-#include <map.h>
-#endif
-
-#if BX_HAVE_SET
 #include <set>
-#elif BX_HAVE_SET_H
-#include <set.h>
-#endif
 
 struct symbol_entry_t
 {
@@ -435,5 +383,4 @@ int bx_dbg_lbreakpoint_symbol_command(const char *symbol, const char *condition)
   return -1;
 }
 
-#endif
 #endif

@@ -140,6 +140,21 @@ fi
 
 AC_PROG_CC
 AC_PROG_CXX
+
+dnl // Bochs requires at least C++11 compiler
+AC_LANG_SAVE
+AC_LANG([C++])
+AC_MSG_CHECKING(whether C++ compiler supports C++11)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if !(__cplusplus >= 201103L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201103L))
+#error C++11 is not supported
+#endif
+]], [[]])],[AC_MSG_RESULT(yes)],[
+     AC_MSG_RESULT(no)
+     AC_MSG_ERROR([Bochs requires C++ compiler with C++11 support])
+   ])
+AC_LANG_RESTORE
+
 AC_PROG_AR
 AC_PROG_MAKE_SET
 
@@ -278,30 +293,6 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[typedef struct { } __attribute__ ((pa
       AC_MSG_RESULT(no)
       AC_DEFINE(BX_NO_ATTRIBUTES)
     ])
-
-AC_LANG_SAVE
-AC_LANG([C++])
-AC_MSG_CHECKING(for set)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <set>]], [[]])],[
-     AC_MSG_RESULT(yes)
-     AC_DEFINE(BX_HAVE_SET)
-   ],[AC_MSG_RESULT(no)])
-AC_MSG_CHECKING(for set.h)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <set.h>]], [[]])],[
-     AC_MSG_RESULT(yes)
-     AC_DEFINE(BX_HAVE_SET_H)
-   ],[AC_MSG_RESULT(no)])
-AC_MSG_CHECKING(for map)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <map>]], [[]])],[
-     AC_MSG_RESULT(yes)
-     AC_DEFINE(BX_HAVE_MAP)
-   ],[AC_MSG_RESULT(no)])
-AC_MSG_CHECKING(for map.h)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <map.h>]], [[]])],[
-     AC_MSG_RESULT(yes)
-     AC_DEFINE(BX_HAVE_MAP_H)
-   ],[AC_MSG_RESULT(no)])
-AC_LANG_RESTORE
 
 dnl Implement a check for each gui library to see if has a chance of compiling.
 if test "$with_all_libs" = yes; then

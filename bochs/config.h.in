@@ -765,18 +765,6 @@ typedef Bit32u bx_phy_address;
 #  define BX_CPP_AttrRegparmN(X) /* Not defined */
 #endif
 
-// set if you do have <set>, used in bx_debug/dbg_main.c
-#define BX_HAVE_SET 0
-
-// set if you do have <set.h>, used in bx_debug/dbg_main.c
-#define BX_HAVE_SET_H 0
-
-// set if you do have <map>, used in bx_debug/dbg_main.c
-#define BX_HAVE_MAP 0
-
-// set if you do have <map.h>, used in bx_debug/dbg_main.c
-#define BX_HAVE_MAP_H 0
-
 // Support x86 hardware debugger registers and facilities.
 // These are the debug facilities offered by the x86 architecture,
 // not the optional built-in debugger.
