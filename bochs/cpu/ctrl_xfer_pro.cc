@@ -47,7 +47,8 @@ void BX_CPU_C::check_cs(bx_descriptor_t *descriptor, Bit16u cs_raw, Bit8u check_
 
 #if BX_SUPPORT_FRED
     if (BX_CPU_THIS_PTR cr4.get_FRED()) {
-      if (descriptor->dpl == 0 && !descriptor->u.segment.l) {
+      // cannot enter compatibility mode with CPL=0 (conforming DPL=0 code segment can be entered from CPL=3)
+      if (check_cpl == 0 && !descriptor->u.segment.l) {
         BX_ERROR(("check_cs(0x%04x): attempt to enter compatibility mode with CPL=0 under FRED enabled", cs_raw));
         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
       }
