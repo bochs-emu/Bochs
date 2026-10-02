@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2025 Stanislav Shwartsman
+//   Copyright (c) 2005-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -410,18 +410,27 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     /* satisfied above */
 
 #if BX_SUPPORT_CET
-    if (ShadowStackEnabled(CPL)) {
-      bx_address prev_SSP = SSP;
-      SSP = shadow_stack_restore(raw_cs_selector, cs_descriptor, new_rip);
-      if (SSP != prev_SSP) {
-        shadow_stack_atomic_clear_busy(prev_SSP, CPL);
-      }
+    bool shadow_stack_enabled = ShadowStackEnabled(CPL);
+    bx_address new_SSP = 0;
+    if (shadow_stack_enabled) {
+      new_SSP = shadow_stack_restore(raw_cs_selector, cs_descriptor, new_rip);
     }
 #endif
 
     /* load CS:EIP from stack */
     /* load CS-cache with new code segment descriptor */
     branch_far(&cs_selector, &cs_descriptor, new_rip, CPL);
+
+#if BX_SUPPORT_CET
+    if (shadow_stack_enabled) {
+      // In IA-32e mode same privilege IRET may be switching stacks if the interrupt was delivered through IST.
+      // SSP now points above the popped shadow stack frame. If restored SSP is not the same stack (stack switch
+      // happened) free the supervisor shadow stack token located at current SSP.
+      if (new_SSP != SSP)
+        shadow_stack_atomic_clear_busy(SSP, CPL);
+      SSP = new_SSP;
+    }
+#endif
 
     // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
     Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | EFlagsDFMask |
@@ -502,6 +511,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
       changeMask &= 0xffff;
 
 #if BX_SUPPORT_CET
+    bool same_privilege = (cs_selector.rpl == CPL);
     bx_address new_SSP = BX_CPU_THIS_PTR msr.ia32_pl_ssp[3];
     if (ShadowStackEnabled(CPL)) {
       if (SSP & 0x7) {
@@ -548,7 +558,10 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
       SSP = new_SSP;
     }
     if (ShadowStackEnabled(prev_cpl)) {
-      shadow_stack_atomic_clear_busy(old_SSP, prev_cpl);
+      // same privilege IRETQ frees the token only if there was a stack switch (interrupt delivered through IST),
+      // i.e. the restored SSP is not the same stack as SSP above the popped shadow stack frame
+      if (! same_privilege || new_SSP != old_SSP)
+        shadow_stack_atomic_clear_busy(old_SSP, prev_cpl);
     }
 #endif
 

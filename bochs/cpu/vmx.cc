@@ -1578,7 +1578,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
     if (! is_valid_cet_control(guest.msr_ia32_s_cet)) {
        BX_ERROR(("VMFAIL: VMCS guest IA32_S_CET invalid"));
-       return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
+       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
 
     guest.ssp = VMread_natural(VMCS_GUEST_SSP);

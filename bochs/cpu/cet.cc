@@ -182,7 +182,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAVEPREVSSP(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
+  // pop the "previous-ssp" token from current shadow stack (SSP is updated only after all checks passed)
   Bit64u previous_ssp_token = shadow_stack_read_qword(SSP, CPL);
+  unsigned pop_bytes = 8;
 
   // If the CF flag indicates there was a alignment hole on current shadow stack then pop that alignment hole
   // Note that the alignment hole can be present only when in legacy/compatibility mode
@@ -192,11 +194,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAVEPREVSSP(bxInstruction_c *i)
       exception(BX_GP_EXCEPTION, 0);
     }
     else {
-      // pop the alignment hole
-      if (shadow_stack_pop_32() != 0) {
+      // pop the alignment hole located right after the previous-ssp token
+      if (shadow_stack_read_dword(SSP + 8, CPL) != 0) {
         BX_ERROR(("%s: shadow stack alignment hole must be zero", i->getIaOpcodeNameShort()));
         exception(BX_GP_EXCEPTION, 0);
       }
+      pop_bytes += 4;
     }
   }
 
@@ -217,7 +220,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAVEPREVSSP(bxInstruction_c *i)
   old_ssp = old_ssp & ~BX_CONST64(0x07);
   shadow_stack_write_qword(old_ssp - 8, CPL, tmp);
 
-  SSP += 8;
+  SSP += pop_bytes;
 
   BX_NEXT_INSTR(i);
 }

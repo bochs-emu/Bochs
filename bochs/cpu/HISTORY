@@ -90,6 +90,8 @@ Changes after Bochs 3.1:
 - FRED: SYSCALL, ICEBP and INT 1 (vector 1) incorrectly reported #DB event data (e.g. BS bit when executed with TF=1)
 - FRED/LA57: ERETS SSP check and IA32_PL3_SSP save on event delivery must use CPU canonicality (max linear-address width), not paging canonicality
 - VMX/FRED: VM exit during FRED event delivery of SYSCALL or SYSENTER reported stale IDT-vectoring (original event) information
+- CET: SAVEPREVSSP with CF=1 (alignment hole) checked the previous-ssp token itself instead of the hole following it, so it always failed with #GP
+- CET: fix supervisor shadow stack token release on same privilege IRET in IA-32e mode
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
