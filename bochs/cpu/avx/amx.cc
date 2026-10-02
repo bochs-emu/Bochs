@@ -30,15 +30,20 @@
 
 #include "amx.h"
 
+// Palette support is determined by XCR0 only and doesn't depend on current cpu mode.
+// AMX instructions can be executed only in 64-bit mode (enforced by the decoder) but
+// XSAVE feature set (XRSTOR/XRSTORS) can load TILECFG state in any mode
 BX_CPP_INLINE bool BX_CPU_C::palette_supported(unsigned palette_id)
 {
+  Bit32u xcr0 = BX_CPU_THIS_PTR xcr0.get32();
+
   switch (palette_id) {
   case 0:
     return true;
   case 1:
-    return get_amx_ok();
+    return (xcr0 & BX_XCR0_XTILE_BITS_MASK) == BX_XCR0_XTILE_BITS_MASK;
   case 2:
-    return get_scaledata_ok();
+    return (xcr0 & (BX_XCR0_XTILE_BITS_MASK | BX_XCR0_SCALEDATA_MASK)) == (BX_XCR0_XTILE_BITS_MASK | BX_XCR0_SCALEDATA_MASK);
   default:
     return false;
   }
