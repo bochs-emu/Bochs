@@ -60,6 +60,7 @@ Changes after Bochs 3.1:
 - XSAVE/AMX: fixed incorrect detection of TILEDATA xinuse
 + XSAVE/AMX: fixed XSAVE of the TILECFG state
 + AMX: correct invalid row checking for TILEMOVROW/TILEMOVCOL instructions
+- AMX: failed LDTILECFG or XRSTOR of TILECFG state should not reset TILEDATA and SCALEDATA
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):

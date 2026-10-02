@@ -1167,13 +1167,15 @@ void BX_CPU_C::xrstor_tilecfg_state(bxInstruction_c *i, bx_address offset)
   BxPackedAvxRegister tilecfg;
   read_virtual_zmmword(i->seg(), offset, &tilecfg);
 
+  // XRSTOR doesn't #GP on unsupported TILECFG value, it initializes the register instead
+  // XRSTOR doesn't modify TILEDATA and SCALEDATA unless loading them from memory
   if (!configure_tiles(i, tilecfg))
-    BX_CPU_THIS_PTR amx->clear();
+    BX_CPU_THIS_PTR amx->init_tilecfg();
 }
 
 void BX_CPU_C::xrstor_init_tilecfg_state(void)
 {
-  BX_CPU_THIS_PTR amx->clear();
+  BX_CPU_THIS_PTR amx->init_tilecfg();
 }
 
 bool BX_CPU_C::xsave_tilecfg_state_xinuse(void)

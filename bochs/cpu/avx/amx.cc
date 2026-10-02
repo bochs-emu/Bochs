@@ -57,13 +57,13 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::configure_tiles(bxInstruction_c *i, const 
   if (! palette_supported(palette_id)) return false;
 
   if (palette_id == 0) {
-    BX_CPU_THIS_PTR amx->clear();
+    BX_CPU_THIS_PTR amx->init_tilecfg();
     return true;
   }
 
   if (palette_id == 1) {
     if ((tilecfg.vmm64u(0) >> 16) != 0 || tilecfg.vmm64u(1) || tilecfg.vmm64u(4) || tilecfg.vmm64u(5) || tilecfg.vmm64u(7)) {
-      BX_ERROR(("LDTILECFG: reserved bits set for palette_id=%d", palette_id));
+      BX_ERROR(("%s: reserved bits set for palette_id=%d", i->getIaOpcodeNameShort(), palette_id));
       return false;
     }
 
@@ -72,21 +72,21 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::configure_tiles(bxInstruction_c *i, const 
     for (unsigned n=0; n < 8; n++) {
       tile[n].bytes_per_row = tilecfg.vmm16u(8+n);
       if (tile[n].bytes_per_row > 64) {
-        BX_ERROR(("LDTILECFG: too many bytes_per_row for tile=%d in palette_id=%d", n, palette_id));
+        BX_ERROR(("%s: too many bytes_per_row for tile=%d in palette_id=%d", i->getIaOpcodeNameShort(), n, palette_id));
         return false;
       }        
       tile[n].rows = tilecfg.vmmubyte(48+n);
       if (tile[n].rows > 16) {
-        BX_ERROR(("LDTILECFG: too many rows for tile=%d in palette_id=%d", n, palette_id));
+        BX_ERROR(("%s: too many rows for tile=%d in palette_id=%d", i->getIaOpcodeNameShort(), n, palette_id));
         return false;
       }
       if ((tile[n].rows == 0 && tile[n].bytes_per_row != 0) || (tile[n].rows != 0 && tile[n].bytes_per_row == 0)) {
-        BX_ERROR(("LDTILECFG: invalid empty tile=%d in palette_id=%d", n, palette_id));
+        BX_ERROR(("%s: invalid empty tile=%d in palette_id=%d", i->getIaOpcodeNameShort(), n, palette_id));
         return false;
       }
     }
 
-    BX_CPU_THIS_PTR amx->clear();
+    BX_CPU_THIS_PTR amx->init_tilecfg();
     BX_CPU_THIS_PTR amx->palette_id = 1;
     BX_CPU_THIS_PTR amx->start_row = start_row;
     for (unsigned n=0; n < 8; n++)
@@ -97,11 +97,11 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::configure_tiles(bxInstruction_c *i, const 
   if (is_cpu_extension_supported(BX_ISA_ACE)) {
     if (palette_id == 2) {
       if (tilecfg.vmm64u(0) > 255 || tilecfg.vmm64u(1) || ! is_clear(&tilecfg.vmm128(1)) || ! is_clear(&tilecfg.vmm128(2)) || ! is_clear(&tilecfg.vmm128(3))) {
-        BX_ERROR(("LDTILECFG: reserved bits set for palette_id=%d", palette_id));
+        BX_ERROR(("%s: reserved bits set for palette_id=%d", i->getIaOpcodeNameShort(), palette_id));
         return false;
       }
 
-      BX_CPU_THIS_PTR amx->clear();
+      BX_CPU_THIS_PTR amx->init_tilecfg();
       BX_CPU_THIS_PTR amx->palette_id = 2;
       BX_CPU_THIS_PTR amx->start_row = 0;
 
@@ -125,6 +125,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LDTILECFG(bxInstruction_c *i)
 
   if (!configure_tiles(i, tilecfg))
     exception(BX_GP_EXCEPTION, 0);
+
+  // successful LDTILECFG initializes TILEDATA and SCALEDATA
+  BX_CPU_THIS_PTR amx->init_tiledata();
+  BX_CPU_THIS_PTR amx->bsr_clear();
 
   BX_NEXT_INSTR(i);
 }
