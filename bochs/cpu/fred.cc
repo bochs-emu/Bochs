@@ -536,13 +536,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LKGS_Ew(bxInstruction_c *i)
     segsel  = read_linear_word(i->seg(), get_laddr64(i->seg(), eaddr));
   }
 
-  // back up current GS segment base into MSR_KERNEL_GS_BASE
-  swapgs();
+  // back up current GS segment base, GS state is not modified if segment load faults
+  Bit64u temp_GS_base = MSR_GSBASE;
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], segsel);
 
-  // restore old GS segment base and put new loaded base into MSR_KERNEL_GS_BASE
-  swapgs();
+  // put new loaded base into MSR_KERNEL_GS_BASE and restore old GS segment base
+  BX_CPU_THIS_PTR msr.kernelgsbase = MSR_GSBASE;
+  MSR_GSBASE = temp_GS_base;
 
   BX_NEXT_INSTR(i);
 }
