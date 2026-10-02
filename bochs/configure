@@ -22889,13 +22889,6 @@ then :
 
 fi
 
-ac_fn_c_check_header_compile "$LINENO" "assert.h" "ac_cv_header_assert_h" "$ac_includes_default"
-if test "x$ac_cv_header_assert_h" = xyes
-then :
-  printf '%s\n' "#define HAVE_ASSERT_H 1" >>confdefs.h
-
-fi
-
 
 { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for plugins support" >&5
 printf %s "checking for plugins support... " >&6; }
