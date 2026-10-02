@@ -77,6 +77,7 @@ Changes after Bochs 3.1:
 - FRED: ERETU compared and loaded CS/SS selectors using 15 bits only instead of full 16-bit selector
 - FRED: #DB event data was missing BD bit (bit 13, debug register access detected)
 - FRED: event information instruction length must be reported only for INTn, INT1, INT3/INTO, SYSCALL and SYSENTER (can be others for VMX event injection)
+- FRED: STI blocking bit (bit 16 of augmented SS) was never saved, must be set only for hardware exceptions delivered while interrupts are blocked by STI
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):

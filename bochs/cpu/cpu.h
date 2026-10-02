@@ -4907,7 +4907,7 @@ public: // for now...
   BX_SMF const char *strseg(bx_segment_reg_t *seg);
   BX_SMF void interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u error_code);
 #if BX_SUPPORT_FRED
-  BX_SMF void FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code);
+  BX_SMF void FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code, bool sti_blocking = false);
   BX_SMF void set_fred_event_info_and_data(Bit8u vector, unsigned type, bool nested_exception, unsigned ilen);
   BX_SMF Bit64u get_fred_event_data(Bit8u vector, unsigned type) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit32u get_fred_event_info(Bit8u vector, unsigned type, bool nested_exception, unsigned ilen);

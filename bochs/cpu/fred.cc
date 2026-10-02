@@ -28,11 +28,16 @@
 
 #if BX_SUPPORT_X86_64 && BX_SUPPORT_FRED
 
-void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code)
+// sti_blocking: interrupt blocking by STI was in effect when hardware exception occurred
+void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code, bool sti_blocking)
 {
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   BX_CPU_THIS_PTR in_event = true;
 #endif
+
+  // discard inhibits for new context (SYSCALL and SYSENTER are not delivered through interrupt()),
+  // exception encountered during delivery of SYSCALL or SYSENTER should not report STI blocking
+  BX_CPU_THIS_PTR inhibit_mask = 0;
 
   Bit32u old_CPL = CPL;
   Bit32u old_CSL = (CPL == 3) ? 0 : CSL;
@@ -45,7 +50,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
 #endif
 
   Bit64u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
-  if (interrupts_inhibited(BX_INHIBIT_INTERRUPTS))
+  if (sti_blocking)
     old_SS |= (1 << 16);
   if (type == BX_EVENT_OTHER || type == BX_SOFTWARE_INTERRUPT) // event type is SYSCALL, SYSENTER or INTn
     old_SS |= (1 << 17);

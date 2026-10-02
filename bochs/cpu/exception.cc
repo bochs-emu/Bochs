@@ -772,6 +772,12 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
 
   BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
 
+#if BX_SUPPORT_FRED
+  // FRED event delivery saves interrupt blocking by STI (not by MOV SS) for hardware exceptions only
+  bool fred_sti_blocking = (type == BX_HARDWARE_EXCEPTION) &&
+       interrupts_inhibited(BX_INHIBIT_INTERRUPTS) && ! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG);
+#endif
+
   // Discard any traps and inhibits for new context; traps will
   // resume upon return.
   BX_CPU_THIS_PTR debug_trap = 0;
@@ -787,7 +793,7 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
   if (long_mode()) {
 #if BX_SUPPORT_FRED
     if (BX_CPU_THIS_PTR cr4.get_FRED())
-      FRED_EventDelivery(vector, type, error_code);
+      FRED_EventDelivery(vector, type, error_code, fred_sti_blocking);
     else
 #endif
       long_mode_int(vector, soft_int, push_error, error_code);
