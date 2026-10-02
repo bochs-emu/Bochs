@@ -1571,8 +1571,8 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
   if (vm->vmentry_ctrls.LOAD_GUEST_CET_STATE()) {
     guest.msr_ia32_s_cet = VMread_natural(VMCS_GUEST_IA32_S_CET);
-    if (!IsCanonical(guest.msr_ia32_s_cet) || (!x86_64_guest && GET32H(guest.msr_ia32_s_cet))) {
-       BX_ERROR(("VMFAIL: VMCS guest IA32_S_CET/ENDBR_LEGACY_BITMAP_BASE non canonical or invalid"));
+    if (!IsCanonical(guest.msr_ia32_s_cet)) {
+       BX_ERROR(("VMFAIL: VMCS guest IA32_S_CET/ENDBR_LEGACY_BITMAP_BASE non canonical"));
        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
 
@@ -1582,8 +1582,14 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
     }
 
     guest.ssp = VMread_natural(VMCS_GUEST_SSP);
-    if (!IsCanonical(guest.ssp) || (!x86_64_guest && GET32H(guest.ssp))) {
-       BX_ERROR(("VMFAIL: VMCS guest SSP non canonical or invalid"));
+    // Intel SDM Vol3, section 29.3.1.4 "Checks on Guest RIP, RFLAGS, and SSP":
+    //   If the processor supports the Intel 64 architecture, bits 63:N must be identical, where N is the CPU's
+    //   maximum linear-address width. (This check does not apply if the processor supports 64 linear-address
+    //   bits.) The guest SSP value is not required to be canonical; the value of bit N-1 may differ from that of bit N.
+    // IsCanonicalToWidth(addr, width) checks that bits 63:width-1 are identical, so use width N+1 to check bits 63:N
+    unsigned max_lin_addr_width = BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_LA57) ? 57 : 48;
+    if (! IsCanonicalToWidth(guest.ssp, max_lin_addr_width + 1)) {
+       BX_ERROR(("VMFAIL: VMCS guest SSP bits 63:N are not identical"));
        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
     if ((guest.ssp & 0x3) != 0) {
