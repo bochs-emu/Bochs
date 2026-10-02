@@ -1081,22 +1081,25 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSRLIST(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::URDMSR(bxInstruction_c *i)
 {
-  Bit32u index;
+  Bit64u msr_address;
 #if BX_SUPPORT_AVX
-  if (i->getIaOpcode() == BX_IA_URDMSR_EqId) index = i->Id();
+  if (i->getIaOpcode() == BX_IA_URDMSR_EqId) msr_address = i->Id();
   else
 #endif
-    index = BX_READ_64BIT_REG(i->src());
+    msr_address = BX_READ_64BIT_REG(i->src());
 
   if ((BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl & 0x1) == 0) {
     BX_ERROR(("%s: USER_MSR is disabled in IA32_USER_MSR_CTL", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  if (index > 0x3fff) {
-    BX_ERROR(("%s: MSR %x cannot be read by instruction", i->getIaOpcodeNameShort(), index));
+  // #GP(0) if MSR_address[63:14] is not all zero
+  if (msr_address > 0x3fff) {
+    BX_ERROR(("%s: MSR 0x" FMT_LL "x cannot be read by instruction", i->getIaOpcodeNameShort(), msr_address));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+  Bit32u index = (Bit32u) msr_address;
 
   Bit8u access_control = system_read_byte(LPFOf(BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl) + (index >> 3));
   if (access_control & (1 << (index & 7)))
@@ -1121,22 +1124,25 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::URDMSR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::UWRMSR(bxInstruction_c *i)
 {
-  Bit32u index;
+  Bit64u msr_address;
 #if BX_SUPPORT_AVX
-  if (i->getIaOpcode() == BX_IA_UWRMSR_IdEq) index = i->Id();
+  if (i->getIaOpcode() == BX_IA_UWRMSR_IdEq) msr_address = i->Id();
   else
 #endif
-    index = BX_READ_64BIT_REG(i->dst());
+    msr_address = BX_READ_64BIT_REG(i->dst());
 
   if ((BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl & 0x1) == 0) {
     BX_ERROR(("%s: USER_MSR is disabled in IA32_USER_MSR_CTL", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  if (index > 0x3fff) {
-    BX_ERROR(("%s: MSR %x cannot be written by instruction", i->getIaOpcodeNameShort(), index));
+  // #GP(0) if MSR_address[63:14] is not all zero
+  if (msr_address > 0x3fff) {
+    BX_ERROR(("%s: MSR 0x" FMT_LL "x cannot be written by instruction", i->getIaOpcodeNameShort(), msr_address));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+  Bit32u index = (Bit32u) msr_address;
 
   Bit8u access_control = system_read_byte(LPFOf(BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl) + (index >> 3) + 2048);
   if (access_control & (1 << (index & 7)))
