@@ -894,6 +894,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 
 #if BX_SUPPORT_FRED
   if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+#if BX_SUPPORT_VMX
+    // record original event information in case VM exit occurs during FRED event delivery
+    // (VMexit_Event never causes VM exit itself for BX_EVENT_OTHER event type)
+    VMexit_Event(BX_EVENT_OTHER, BX_EVENT_SYSENTER, 0, 0);
+#endif
     set_fred_event_info_and_data(BX_EVENT_SYSENTER, BX_EVENT_OTHER, false, i->ilen());
     FRED_EventDelivery(BX_EVENT_SYSENTER, BX_EVENT_OTHER, 0);
     BX_NEXT_TRACE(i);
@@ -1057,6 +1062,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 
 #if BX_SUPPORT_FRED
   if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+#if BX_SUPPORT_VMX
+    // record original event information in case VM exit occurs during FRED event delivery
+    // (VMexit_Event never causes VM exit itself for BX_EVENT_OTHER event type)
+    VMexit_Event(BX_EVENT_OTHER, BX_EVENT_SYSCALL, 0, 0);
+#endif
     set_fred_event_info_and_data(BX_EVENT_SYSCALL, BX_EVENT_OTHER, false, i->ilen());
     FRED_EventDelivery(BX_EVENT_SYSCALL, BX_EVENT_OTHER, 0);
     BX_NEXT_TRACE(i);

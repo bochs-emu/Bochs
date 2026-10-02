@@ -246,6 +246,11 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
     case BX_SOFTWARE_INTERRUPT:
       break; // no VMEXIT on software interrupt
 
+#if BX_SUPPORT_FRED
+    case BX_EVENT_OTHER:
+      break; // no VMEXIT on SYSCALL or SYSENTER delivered through FRED
+#endif
+
     default:
       BX_ERROR(("VMexit_Event: unknown event type %d", type));
   }
