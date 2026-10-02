@@ -62,6 +62,7 @@ public:
 static bx_term_gui_c *theGui = NULL;
 #if BX_DEBUGGER_TERM
 static int scr_fd = -1;
+static FILE *scr_fp = NULL;
 #endif
 IMPLEMENT_GUI_PLUGIN_CODE(term)
 
@@ -187,7 +188,6 @@ void bx_term_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   io->set_log_action(LOGLEV_PANIC, ACT_FATAL);
 #if BX_DEBUGGER_TERM
   if (bx_dbg.debugger_active) {
-    FILE *scr_fp = NULL;
     scr_fd = open("/dev/ptmx",O_RDWR);
     if (scr_fd > 0) {
       scr_fp = fdopen(scr_fd,"w+");
@@ -698,13 +698,18 @@ void bx_term_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 void bx_term_gui_c::exit(void)
 {
   if (!initialized) return;
-#if BX_DEBUGGER_TERM
-  if(scr_fd > 0)
-    close(scr_fd);
-#endif
   clear();
   flush();
   endwin();
+#if BX_DEBUGGER_TERM
+  if (scr_fp != NULL) {
+    fclose(scr_fp);   // also closes scr_fd
+    scr_fp = NULL;
+  } else if (scr_fd > 0) {
+    close(scr_fd);    // fdopen() failed, the pty is ours alone
+  }
+  scr_fd = -1;
+#endif
   BX_DEBUG(("exiting"));
 }
 
