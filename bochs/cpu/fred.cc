@@ -45,8 +45,9 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   Bit32u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
   old_CS |= old_CSL << 16;
 #if BX_SUPPORT_CET
-  if (BX_CPU_THIS_PTR cr4.get_CET() && WaitingForEndbranch(0))
-    old_CS |= (1 << 18); // cache the shadow stack tracking control in old_CS[18]
+  // old_CS[18] is set only for events occurring with CPL=0 while supervisor indirect branch tracker was in WAIT_FOR_ENDBRANCH state
+  if (CPL == 0 && BX_CPU_THIS_PTR cr4.get_CET() && WaitingForEndbranch(0))
+    old_CS |= (1 << 18); // cache the indirect branch tracking state in old_CS[18]
 #endif
 
   Bit64u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
