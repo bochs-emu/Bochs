@@ -581,7 +581,7 @@ void bx_cpuid_t::get_std_cpuid_amx_palette_info_leaf(Bit32u subfunction, cpuid_f
     return;
 
   unsigned max_palette_id = is_cpu_extension_supported(BX_ISA_ACE) ? 2 : 1;
-  if (subfunction >= max_palette_id)
+  if (subfunction > max_palette_id)
     return;
 
   if (subfunction == 0) {
