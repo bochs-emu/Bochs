@@ -75,8 +75,10 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   bool nested = (BX_CPU_THIS_PTR fred_event_info & (1 << 26)) != 0;
 
   // if CPL == 3 AND event is not an exception nested on event delivery AND event is not #DF
+  // (external interrupt or INTn with vector 8 is not #DF)
+  bool double_fault = (type == BX_HARDWARE_EXCEPTION && vector == BX_DF_EXCEPTION);
   Bit32u event_SL = 0;
-  if (CPL == 3 && !nested && vector != BX_DF_EXCEPTION) {
+  if (CPL == 3 && !nested && !double_fault) {
     event_SL = 0;
   }
   else {
