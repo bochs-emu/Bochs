@@ -187,7 +187,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
 #if BX_SUPPORT_CET
   if (BX_CPU_THIS_PTR cr4.get_CET()) {
     if (ShadowStackEnabled(3) && old_CPL == 3) {
-      BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = CanonicalizeAddress(old_SSP);
+      BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = CpuidCanonicalizeAddress(old_SSP); // sign-extend to max linear-address width
     }
 
     reset_endbranch_tracker(0);
@@ -299,7 +299,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETS(bxInstruction_c *i)
 #if BX_SUPPORT_CET
   if (ShadowStackEnabled(0)) {
     Bit64u new_SSP = shadow_stack_restore(temp_CS, new_RIP);
-    if (! IsCanonical(new_SSP)) {
+    if (! IsCpuidCanonical(new_SSP)) {
       BX_ERROR(("ERETS: new SSP not canonical !"));
       exception(BX_GP_EXCEPTION, 0);
     }

@@ -88,6 +88,7 @@ Changes after Bochs 3.1:
 - VMX/FRED: VM entry must check that host and guest IA32_FRED_CONFIG fields are canonical
 - FRED: external interrupt with vector 8 occurring at CPL=3 was treated as #DF when determining event stack level
 - FRED: SYSCALL, ICEBP and INT 1 (vector 1) incorrectly reported #DB event data (e.g. BS bit when executed with TF=1)
+- FRED/LA57: ERETS SSP check and IA32_PL3_SSP save on event delivery must use CPU canonicality (max linear-address width), not paging canonicality
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
