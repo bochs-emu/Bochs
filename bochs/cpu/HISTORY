@@ -84,6 +84,8 @@ Changes after Bochs 3.1:
 - FRED: ERETU must not check new RIP for canonicality when returning to compatibility mode (bits 63:32 of RIP are cleared instead)
 + FRED: exception encountered during delivery of external interrupt, NMI, INTn, SYSCALL or SYSENTER was not reported as nested (NST), so it used wrong stack level (also VMX nested exception bit 13)
 + VMX/FRED: VM exit with "save FRED" control saved guest IA32_FRED_RSP1-3/SSP1-3 into wrong VMCS fields (shifted by one, RSP3 overwrote STACK_LEVELS field)
+- VMX/FRED: VM entry must fail if host CR4.FRED is set while "host address-space size" VM-exit control is 0 (was causing BX_PANIC on VM exit)
+- VMX/FRED: VM entry must check that host and guest IA32_FRED_CONFIG fields are canonical
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):

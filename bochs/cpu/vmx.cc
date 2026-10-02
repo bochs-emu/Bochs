@@ -1348,8 +1348,8 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
 #if BX_SUPPORT_FRED
   if (vm->vmexit_ctrls2.LOAD_HOST_FRED()) {
     host_state->msr_ia32_fred_config = VMread_natural(VMCS_64BIT_HOST_IA32_FRED_CONFIG);
-    if (host_state->msr_ia32_fred_config & 0x834) {
-      BX_ERROR(("VMFAIL: VMCS host IA32_FRED_CONFIG reserved bits set!"));
+    if (!IsCanonical(host_state->msr_ia32_fred_config) || (host_state->msr_ia32_fred_config & 0x834) != 0) {
+      BX_ERROR(("VMFAIL: VMCS host IA32_FRED_CONFIG is not canonical or reserved bits set!"));
       return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
 
@@ -1407,6 +1407,12 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
         BX_ERROR(("VMFAIL: VMCS host CR4.PCIDE set"));
         return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
      }
+#if BX_SUPPORT_FRED
+     if (host_state->cr4.get_FRED()) {
+        BX_ERROR(("VMFAIL: VMCS host CR4.FRED set"));
+        return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
+     }
+#endif
   }
 #endif
 
@@ -1606,8 +1612,8 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 #if BX_SUPPORT_FRED
   if (vm->vmentry_ctrls.LOAD_GUEST_FRED()) {
     guest.msr_ia32_fred_config = VMread_natural(VMCS_64BIT_GUEST_IA32_FRED_CONFIG);
-    if (guest.msr_ia32_fred_config & 0x834) {
-      BX_ERROR(("VMFAIL: VMCS guest IA32_FRED_CONFIG reserved bits set!"));
+    if (!IsCanonical(guest.msr_ia32_fred_config) || (guest.msr_ia32_fred_config & 0x834) != 0) {
+      BX_ERROR(("VMFAIL: VMCS guest IA32_FRED_CONFIG is not canonical or reserved bits set!"));
       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
 
