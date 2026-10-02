@@ -491,12 +491,6 @@ if test "$bx_plugins" = 1 -a "$need_dlcompat_for_plugins" = 1; then
   fi
 fi
 
-AC_MSG_CHECKING(if compiler allows LL for 64-bit constants)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[ { 42LL; } ]])],[AC_MSG_RESULT(yes)],[
-      AC_MSG_RESULT(no)
-      AC_DEFINE(BX_64BIT_CONSTANTS_USE_LL, 0)
-    ])
-
 AC_MSG_CHECKING(for A20 support)
 AC_ARG_ENABLE(a20-pin,
   AS_HELP_STRING([--enable-a20-pin], [compile in support for A20 pin (yes)]),
@@ -3000,7 +2994,6 @@ case "$target" in
     CD_UP_TWO="cd ..\.."
     CD_UP_THREE="cd ..\..\.."
     have_gettimeofday=0  # even though it may exist in build environment
-    AC_DEFINE(BX_64BIT_CONSTANTS_USE_LL, 0)
     AC_DEFINE(BX_CPP_INLINE, __forceinline)
     AC_DEFINE(BX_NO_ATTRIBUTES, 1)
     AC_DEFINE(HAVE_LIBREADLINE, 0)

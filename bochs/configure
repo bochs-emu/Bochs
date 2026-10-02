@@ -23022,34 +23022,6 @@ printf '%s\n' "yes" >&6; }
   fi
 fi
 
-{ printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking if compiler allows LL for 64-bit constants" >&5
-printf %s "checking if compiler allows LL for 64-bit constants... " >&6; }
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-int
-main (void)
-{
- { 42LL; }
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_c_try_compile "$LINENO"
-then :
-  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf '%s\n' "yes" >&6; }
-else case e in #(
-  e)
-      { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf '%s\n' "no" >&6; }
-      printf '%s\n' "#define BX_64BIT_CONSTANTS_USE_LL 0" >>confdefs.h
-
-     ;;
-esac
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
-
 { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for A20 support" >&5
 printf %s "checking for A20 support... " >&6; }
 # Check whether --enable-a20-pin was given.
@@ -26911,8 +26883,6 @@ case "$target" in
     CD_UP_TWO="cd ..\.."
     CD_UP_THREE="cd ..\..\.."
     have_gettimeofday=0  # even though it may exist in build environment
-    printf '%s\n' "#define BX_64BIT_CONSTANTS_USE_LL 0" >>confdefs.h
-
     printf '%s\n' "#define BX_CPP_INLINE __forceinline" >>confdefs.h
 
     printf '%s\n' "#define BX_NO_ATTRIBUTES 1" >>confdefs.h
