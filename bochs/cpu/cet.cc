@@ -435,7 +435,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLRSSBSY(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENDBRANCH32(bxInstruction_c *i)
 {
   if (! long64_mode()) {
-    reset_endbranch_tracker(CPL);
+    // ENDBR32 is a NOP when indirect branch tracking is not enabled
+    if (EndbranchEnabled(CPL))
+      reset_endbranch_tracker(CPL);
     BX_NEXT_INSTR(i);
   }
 
@@ -445,7 +447,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENDBRANCH32(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENDBRANCH64(bxInstruction_c *i)
 {
   if (long64_mode()) {
-    reset_endbranch_tracker(CPL);
+    // ENDBR64 is a NOP when indirect branch tracking is not enabled
+    if (EndbranchEnabled(CPL))
+      reset_endbranch_tracker(CPL);
     BX_NEXT_INSTR(i);
   }
 

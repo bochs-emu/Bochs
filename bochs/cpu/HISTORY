@@ -58,7 +58,7 @@ Changes after Bochs 3.1:
 - MSR: MSR_IA32_EFER on CPU models without EFER: writing 0 used to succeed. It's now #GP(0)
 - SVM: BX_SVM_VM_CR_MSR write: the "SVMDIS while EFER.SVME=1 #GP" check tested the current VM_CR value instead of the value being written.
 - Legacy/AMD: AMD specific behavior always clear EFLAGS.RF when #DB exception occurs, however Intel pushed EFLAGS.RF=1 when rep string iteration was interrupted by #DB
-- XSAVE/AMX: fixed incorrect detection of TILEDATA xinuse
++ XSAVE/AMX: fixed incorrect detection of TILEDATA xinuse
 + XSAVE/AMX: fixed XSAVE of the TILECFG state
 + XSAVE/AMX: use correct value for BX_TILE_MAX_ROWS while XSAVE/XRSTOR TILEDATA state (code was using BX_TILE_REGISTERS instead of BX_TILE_MAX_ROWS)
 + AMX: correct invalid row checking for TILEMOVROW/TILEMOVCOL instructions
@@ -73,7 +73,7 @@ Changes after Bochs 3.1:
 + FRED: FRED event delivery from CPL3 didn't save the user SSP into IA32_PL3_SSP, so ERETU restored a stale user shadow stack pointer
 + FRED: ERETU compared IA32_PL0_SSP against the new user SSP instead of the current SSP, could lead to false #CP
 - FRED: faulting LKGS left GS segment base and MSR_KERNEL_GS_BASE swapped
-- FRED: ERETU to standard compatibility mode configuration checked new RIP against uninitialized CS descriptor limit
++ FRED: ERETU to standard compatibility mode configuration checked new RIP against uninitialized CS descriptor limit
 - FRED: ERETU compared and loaded CS/SS selectors using 15 bits only instead of full 16-bit selector
 - FRED: #DB event data was missing BD bit (bit 13, debug register access detected)
 - FRED: event information instruction length must be reported only for INTn, INT1, INT3/INTO, SYSCALL and SYSENTER (can be others for VMX event injection)
@@ -90,8 +90,9 @@ Changes after Bochs 3.1:
 - FRED: SYSCALL, ICEBP and INT 1 (vector 1) incorrectly reported #DB event data (e.g. BS bit when executed with TF=1)
 - FRED/LA57: ERETS SSP check and IA32_PL3_SSP save on event delivery must use CPU canonicality (max linear-address width), not paging canonicality
 - VMX/FRED: VM exit during FRED event delivery of SYSCALL or SYSENTER reported stale IDT-vectoring (original event) information
-+ CET: SAVEPREVSSP with CF=1 (alignment hole) checked the previous-ssp token itself instead of the hole following it, so it always failed with #GP
+- CET: SAVEPREVSSP with CF=1 (alignment hole) checked the previous-ssp token itself instead of the hole following it, so it always failed with #GP
 + CET: legacy code page bitmap must be read with CPL access rights (not supervisor), indexed by LA[31:15] outside 64-bit mode and LA[56:15] with LA57
+- CET: ENDBR32/ENDBR64 must not modify IA32_U_CET/IA32_S_CET TRACKER and SUPPRESS bits when indirect branch tracking is not enabled
 + CET: fix supervisor shadow stack token release on same privilege IRET in IA-32e mode
 
 -------------------------------------------------------------------------
