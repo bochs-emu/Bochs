@@ -440,7 +440,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
     new_RSP &= 0xFFFFFFFF;
 
     /* instruction pointer must be in code segment limit else #GP(0) */
-    if (new_RIP > cs_descriptor.u.segment.limit_scaled) {
+    /* new RIP is always within the limit with standard (flat) values for ring 3 in compatibility mode */
+    if (! flat && new_RIP > cs_descriptor.u.segment.limit_scaled) {
       BX_ERROR(("ERETU: RIP > limit"));
       exception(BX_GP_EXCEPTION, 0);
     }
