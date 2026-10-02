@@ -83,6 +83,7 @@ Changes after Bochs 3.1:
 - FRED: ERETS must establish STI blocking only if STI blocking was not in effect prior to ERETS (was not implemented during FRED implementation and left as TODO)
 - FRED: ERETU must not check new RIP for canonicality when returning to compatibility mode (bits 63:32 of RIP are cleared instead)
 + FRED: exception encountered during delivery of external interrupt, NMI, INTn, SYSCALL or SYSENTER was not reported as nested (NST), so it used wrong stack level (also VMX nested exception bit 13)
++ VMX/FRED: VM exit with "save FRED" control saved guest IA32_FRED_RSP1-3/SSP1-3 into wrong VMCS fields (shifted by one, RSP3 overwrote STACK_LEVELS field)
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):

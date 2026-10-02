@@ -2664,9 +2664,9 @@ void BX_CPU_C::VMexitSaveGuestState(Bit32u reason, Bit32u vector)
     VMwrite_natural(VMCS_64BIT_GUEST_IA32_FRED_CONFIG, BX_CPU_THIS_PTR msr.ia32_fred_cfg);
     VMwrite_natural(VMCS_64BIT_GUEST_IA32_FRED_STACK_LEVELS, BX_CPU_THIS_PTR msr.ia32_fred_stack_levels);
     for (unsigned i=1;i < 4; i++) {
-      VMwrite_natural(VMCS_64BIT_GUEST_IA32_FRED_RSP1 + 2*i, BX_CPU_THIS_PTR msr.ia32_fred_rsp[i]);
+      VMwrite_natural(VMCS_64BIT_GUEST_IA32_FRED_RSP1 + (i-1)*2, BX_CPU_THIS_PTR msr.ia32_fred_rsp[i]);
 #if BX_SUPPORT_CET
-      VMwrite_natural(VMCS_64BIT_GUEST_IA32_FRED_SSP1 + 2*i, BX_CPU_THIS_PTR msr.ia32_fred_ssp[i]);
+      VMwrite_natural(VMCS_64BIT_GUEST_IA32_FRED_SSP1 + (i-1)*2, BX_CPU_THIS_PTR msr.ia32_fred_ssp[i]);
 #endif
     }
   }
