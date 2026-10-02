@@ -47,7 +47,7 @@ bool BX_CPP_AttrRegparmN(3) BX_CPU_C::tilemov_read_row(bxInstruction_c *i, bool 
   row &= 0xf;
 
   unsigned tile_num_rows = BX_CPU_THIS_PTR amx->tile_num_rows(tile_src);
-  if (row > tile_num_rows) {
+  if (row >= tile_num_rows) {
     dst->clear();
     return false;
   }
@@ -73,7 +73,7 @@ bool BX_CPP_AttrRegparmN(3) BX_CPU_C::tilemov_write_row(bxInstruction_c *i, bool
   row &= 0xf;
 
   unsigned tile_num_rows = BX_CPU_THIS_PTR amx->tile_num_rows(tile_dst);
-  if (row > tile_num_rows)
+  if (row >= tile_num_rows)
     return false;
 
   AMX::TILE *tdst = &(BX_CPU_THIS_PTR amx->tile[tile_dst]);

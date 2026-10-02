@@ -59,6 +59,7 @@ Changes after Bochs 3.1:
 - Legacy/AMD: AMD specific behavior always clear EFLAGS.RF when #DB exception occurs, however Intel pushed EFLAGS.RF=1 when rep string iteration was interrupted by #DB
 - XSAVE/AMX: fixed incorrect detection of TILEDATA xinuse
 + XSAVE/AMX: fixed XSAVE of the TILECFG state
++ AMX: correct invalid row checking for TILEMOVROW/TILEMOVCOL instructions
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
