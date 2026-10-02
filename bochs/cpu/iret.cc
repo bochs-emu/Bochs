@@ -518,7 +518,9 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
         BX_ERROR(("iret64: SSP is not 8-byte aligned"));
         exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
       }
-      if (cs_selector.rpl != 3) {
+      // same privilege IRETQ (including CPL3 to CPL3) always restores SSP from the shadow stack,
+      // IA32_PL3_SSP is used only when returning to CPL3 from supervisor privilege level
+      if (cs_selector.rpl != 3 || same_privilege) {
         new_SSP = shadow_stack_restore(raw_cs_selector, cs_descriptor, new_rip);
       }
     }
