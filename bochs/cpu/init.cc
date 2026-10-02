@@ -641,6 +641,14 @@ void BX_CPU_C::register_state(void)
         }
       }
     }
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_ACE)) {
+      for (n=0; n<2; n++) {
+        for(unsigned j=0;j < BX_VLMAX*2;j++) {
+          sprintf(name, "bsr%d_%d", n, j);
+          new bx_shadow_num_c(amx_list, name, &(amx->scaledata.scale[n].vmm64u(j)), BASE_HEX);
+        }
+      }
+    }
   }
 #endif
 #endif // BX_CPU_LEVEL >= 6
