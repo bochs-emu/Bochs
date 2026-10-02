@@ -96,14 +96,15 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::configure_tiles(bxInstruction_c *i, const 
         return false;
       }
 
+      BX_CPU_THIS_PTR amx->clear();
+      BX_CPU_THIS_PTR amx->palette_id = 2;
+      BX_CPU_THIS_PTR amx->start_row = 0;
+
       for (unsigned n=0; n < 8; n++) {
         BX_CPU_THIS_PTR amx->tilecfg[n].bytes_per_row = 64;
         BX_CPU_THIS_PTR amx->tilecfg[n].rows = 16;
       }
 
-      BX_CPU_THIS_PTR amx->clear();
-      BX_CPU_THIS_PTR amx->palette_id = 2;
-      BX_CPU_THIS_PTR amx->start_row = 0;
       return true;
     }
   }

@@ -1147,11 +1147,15 @@ void BX_CPU_C::xsave_tilecfg_state(bxInstruction_c *i, bx_address offset)
 
   if (BX_CPU_THIS_PTR amx->tiles_configured()) {
     tilecfg.vmmubyte(0) = BX_CPU_THIS_PTR amx->palette_id;
-    tilecfg.vmmubyte(1) = BX_CPU_THIS_PTR amx->start_row;
 
-    for (unsigned n=0; n < 8; n++) {
-      tilecfg.vmm16u(8+n)    = BX_CPU_THIS_PTR amx->tilecfg[n].rows;
-      tilecfg.vmmubyte(48+n) = BX_CPU_THIS_PTR amx->tilecfg[n].bytes_per_row;
+    // palette 2 (ACE): bytes 1-63 are reserved and must be zero
+    if (BX_CPU_THIS_PTR amx->palette_id == 1) {
+      tilecfg.vmmubyte(1) = BX_CPU_THIS_PTR amx->start_row;
+
+      for (unsigned n=0; n < 8; n++) {
+        tilecfg.vmm16u(8+n)    = BX_CPU_THIS_PTR amx->tilecfg[n].bytes_per_row;
+        tilecfg.vmmubyte(48+n) = BX_CPU_THIS_PTR amx->tilecfg[n].rows;
+      }
     }
   }
 
