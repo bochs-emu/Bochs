@@ -107,9 +107,20 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::LegacyEndbranchTreatment(unsigned cpl)
   if (BX_CPU_THIS_PTR msr.ia32_cet_control[cpl==3] & BX_CET_LEGACY_INDIRECT_BRANCH_TREATMENT)
   {
     bx_address lip = get_laddr(BX_SEG_REG_CS, RIP);
-    bx_address bitmap_addr = LPFOf(BX_CPU_THIS_PTR msr.ia32_cet_control[cpl==3]) + ((lip & BX_CONST64(0xFFFFFFFFFFFF)) >> 15);
+    // bitmap is indexed by LA[31:15] in legacy and compatibility mode,
+    // by LA[47:15] in 64-bit mode (LA[56:15] when CR4.LA57 = 1)
+    bx_address bitmap_offset;
+    if (long64_mode())
+      bitmap_offset = (lip & (BX_CPU_THIS_PTR cr4.get_LA57() ? BX_CONST64(0x01FFFFFFFFFFFFFF) : BX_CONST64(0xFFFFFFFFFFFF))) >> 15;
+    else
+      bitmap_offset = GET32L(lip) >> 15;
+    bx_address bitmap_addr = LPFOf(BX_CPU_THIS_PTR msr.ia32_cet_control[cpl==3]) + bitmap_offset;
+    // address-size attribute for the bitmap load is 32 bits when IA32_EFER.LMA = 0
+    if (! long_mode())
+      bitmap_addr = GET32L(bitmap_addr);
     unsigned bitmap_index = (lip>>12) & 0x7;
-    Bit8u bitmap = system_read_byte(bitmap_addr);
+    // access rights for the bitmap load are determined by the CPL
+    Bit8u bitmap = read_linear_byte(BX_SEG_REG_DS, bitmap_addr);
     if ((bitmap & (1 << bitmap_index)) != 0) {
       reset_endbranch_tracker(cpl, true);
       return false;
