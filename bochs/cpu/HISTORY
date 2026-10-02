@@ -74,6 +74,8 @@ Changes after Bochs 3.1:
 + FRED: ERETU compared IA32_PL0_SSP against the new user SSP instead of the current SSP, could lead to false #CP
 - FRED: faulting LKGS left GS segment base and MSR_KERNEL_GS_BASE swapped
 - FRED: ERETU to standard compatibility mode configuration checked new RIP against uninitialized CS descriptor limit
+- FRED: ERETU compared and loaded CS/SS selectors using 15 bits only instead of full 16-bit selector
+- FRED: #DB event data was missing BD bit (bit 13, debug register access detected)
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):

@@ -224,7 +224,7 @@ Bit64u BX_CPP_AttrRegparmN(2) BX_CPU_C::get_fred_event_data(Bit8u vector, unsign
   }
 
   if (vector == BX_DB_EXCEPTION)
-    return BX_CPU_THIS_PTR debug_trap & 0x0000400f;
+    return BX_CPU_THIS_PTR debug_trap & 0x0000600f; // B3-B0, BD and BS bits
 
   if (type == BX_NMI)
     return 0; // until NMI source reporting is implemented
@@ -384,15 +384,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
   Bit16u raw_cs_selector = temp_CS & 0xffff;
   Bit16u raw_ss_selector = temp_SS & 0xffff;
 
-  if (((temp_CS & 0x7FFF) == (BX_CPU_THIS_PTR msr.star >> 48) + 16) &&
-      ((temp_SS & 0x7FFF) == (BX_CPU_THIS_PTR msr.star >> 48) + 8))
+  if (((temp_CS & 0xFFFF) == (BX_CPU_THIS_PTR msr.star >> 48) + 16) &&
+      ((temp_SS & 0xFFFF) == (BX_CPU_THIS_PTR msr.star >> 48) + 8))
   {
     // return to CPL3 in standard 64-bit configuration
     to_long_mode = true;
     flat = true;
   }
-  else if (((temp_CS & 0x7FFF) == (BX_CPU_THIS_PTR msr.star >> 48)) &&
-           ((temp_SS & 0x7FFF) == (BX_CPU_THIS_PTR msr.star >> 48) + 8))
+  else if (((temp_CS & 0xFFFF) == (BX_CPU_THIS_PTR msr.star >> 48)) &&
+           ((temp_SS & 0xFFFF) == (BX_CPU_THIS_PTR msr.star >> 48) + 8))
   {
     // return to CPL3 in standard compatibility mode configuration
     to_long_mode = false;
@@ -464,8 +464,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
 #endif
 
   if (flat) {
-    parse_selector(temp_CS & 0x7FFF, &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
-    parse_selector(temp_SS & 0x7FFF, &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
+    parse_selector(temp_CS & 0xFFFF, &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
+    parse_selector(temp_SS & 0xFFFF, &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
     setup_flat_CS(3, to_long_mode);
     setup_flat_SS(3);
