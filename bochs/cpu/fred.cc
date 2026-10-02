@@ -225,10 +225,11 @@ Bit64u BX_CPP_AttrRegparmN(2) BX_CPU_C::get_fred_event_data(Bit8u vector, unsign
 
     if (vector == BX_NM_EXCEPTION)
       return 0; // until MSR_XFD_ERR is implemented
-  }
 
-  if (vector == BX_DB_EXCEPTION)
-    return BX_CPU_THIS_PTR debug_trap & 0x0000600f; // B3-B0, BD and BS bits
+    // event data is defined only for #DB exception, not for SYSCALL (vector 1), ICEBP or INT 1
+    if (vector == BX_DB_EXCEPTION)
+      return BX_CPU_THIS_PTR debug_trap & 0x0000600f; // B3-B0, BD and BS bits
+  }
 
   if (type == BX_NMI)
     return 0; // until NMI source reporting is implemented
