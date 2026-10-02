@@ -93,6 +93,7 @@ Changes after Bochs 3.1:
 - CET: SAVEPREVSSP with CF=1 (alignment hole) checked the previous-ssp token itself instead of the hole following it, so it always failed with #GP
 + CET: legacy code page bitmap must be read with CPL access rights (not supervisor), indexed by LA[31:15] outside 64-bit mode and LA[56:15] with LA57
 - CET: ENDBR32/ENDBR64 must not modify IA32_U_CET/IA32_S_CET TRACKER and SUPPRESS bits when indirect branch tracking is not enabled
+- CET: far RET/IRET must check restored SSP against the mode being returned to (new CS.L) and require it canonical when returning to 64-bit mode
 + CET: fix supervisor shadow stack token release on same privilege IRET in IA-32e mode
 
 -------------------------------------------------------------------------

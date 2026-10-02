@@ -105,7 +105,9 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 
 #if BX_SUPPORT_CET
     if (ShadowStackEnabled(CPL)) {
-      SSP = shadow_stack_restore(raw_cs_selector, cs_descriptor, return_RIP);
+      bx_address new_SSP = shadow_stack_restore(raw_cs_selector, cs_descriptor, return_RIP);
+      check_restored_ssp(new_SSP, cs_descriptor);
+      SSP = new_SSP;
     }
 #endif
 
@@ -227,10 +229,7 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 #if BX_SUPPORT_CET
     bx_address old_SSP = SSP;
     if (ShadowStackEnabled(CPL)) {
-      if (!long64_mode() && GET32H(new_SSP) != 0) {
-        BX_ERROR(("return_protected: 64-bit SSP in legacy mode"));
-        exception(BX_GP_EXCEPTION, 0);
-      }
+      check_restored_ssp(new_SSP, cs_descriptor);
       SSP = new_SSP;
     }
     if (ShadowStackEnabled(prev_cpl)) {
@@ -270,12 +269,29 @@ BX_CPU_C::shadow_stack_restore(Bit64u cs_image, bx_address return_lip)
     BX_ERROR(("shadow_stack_restore: prevSSP must be 4-byte aligned"));
     exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
   }
-  if (!long64_mode() && (prevSSP>>32)!=0) {
-    BX_ERROR(("shadow_stack_restore: prevSSP must be 32-bit in 32-bit mode"));
-    exception(BX_GP_EXCEPTION, 0);
-  }
+
+  // the restored SSP is checked against the mode being returned to by check_restored_ssp()
 
   return prevSSP;
+}
+
+// check the SSP restored by far RET or IRET against the mode being returned to (determined by new CS):
+// the SSP must be below 4G when returning to legacy or compatibility mode and canonical
+// relative to the current paging mode when returning to 64-bit mode
+void BX_CPP_AttrRegparmN(2) BX_CPU_C::check_restored_ssp(bx_address new_SSP, const bx_descriptor_t &cs_descriptor)
+{
+  if (long_mode() && cs_descriptor.u.segment.l) {
+    if (! IsCanonical(new_SSP)) {
+      BX_ERROR(("check_restored_ssp: SSP is not canonical when returning to 64-bit mode"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+  }
+  else {
+    if (GET32H(new_SSP) != 0) {
+      BX_ERROR(("check_restored_ssp: SSP must be 32-bit when returning to legacy or compatibility mode"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+  }
 }
 
   bx_address BX_CPP_AttrRegparmN(3)

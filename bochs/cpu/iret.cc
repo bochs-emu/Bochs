@@ -170,7 +170,9 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
 #if BX_SUPPORT_CET
     if (ShadowStackEnabled(CPL)) {
-      SSP = shadow_stack_restore(raw_cs_selector, cs_descriptor, new_eip);
+      bx_address new_SSP = shadow_stack_restore(raw_cs_selector, cs_descriptor, new_eip);
+      check_restored_ssp(new_SSP, cs_descriptor);
+      SSP = new_SSP;
     }
 #endif
 
@@ -294,10 +296,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 #if BX_SUPPORT_CET
     bx_address old_SSP = SSP;
     if (ShadowStackEnabled(CPL)) {
-      if (GET32H(new_SSP) != 0) {
-        BX_ERROR(("iret_protected: 64-bit SSP in legacy mode"));
-        exception(BX_GP_EXCEPTION, 0);
-      }
+      check_restored_ssp(new_SSP, cs_descriptor);
       SSP = new_SSP;
     }
     if (ShadowStackEnabled(prev_cpl)) {
@@ -414,6 +413,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     bx_address new_SSP = 0;
     if (shadow_stack_enabled) {
       new_SSP = shadow_stack_restore(raw_cs_selector, cs_descriptor, new_rip);
+      check_restored_ssp(new_SSP, cs_descriptor);
     }
 #endif
 
@@ -551,10 +551,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
 #if BX_SUPPORT_CET
     bx_address old_SSP = SSP;
     if (ShadowStackEnabled(CPL)) {
-      if (!long64_mode() && GET32H(new_SSP) != 0) {
-        BX_ERROR(("iret64: 64-bit SSP in legacy mode"));
-        exception(BX_GP_EXCEPTION, 0);
-      }
+      check_restored_ssp(new_SSP, cs_descriptor);
       SSP = new_SSP;
     }
     if (ShadowStackEnabled(prev_cpl)) {
