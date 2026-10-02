@@ -1062,7 +1062,7 @@ void BX_CPU_C::xsave_uintr_state(bxInstruction_c *i, bx_address offset)
   write_virtual_qword(i->seg(),  offset,                    BX_CPU_THIS_PTR uintr.ui_handler);
   write_virtual_qword(i->seg(), (offset +  8) & asize_mask, BX_CPU_THIS_PTR uintr.stack_adjust);
 
-  Bit64u misc = GET64_FROM_HI32_LO32(BX_CPU_THIS_PTR uintr.uinv, BX_CPU_THIS_PTR uintr.uitt_size);
+  Bit64u misc = BX_CPU_THIS_PTR uintr.misc;
   if (BX_CPU_THIS_PTR uintr.UIF)
     misc |= BX_CONST64(0x8000000000000000);
   write_virtual_qword(i->seg(), (offset + 16) & asize_mask, misc);
@@ -1071,17 +1071,17 @@ void BX_CPU_C::xsave_uintr_state(bxInstruction_c *i, bx_address offset)
   write_virtual_qword(i->seg(), (offset + 32) & asize_mask, BX_CPU_THIS_PTR uintr.uirr);
   write_virtual_qword(i->seg(), (offset + 40) & asize_mask, BX_CPU_THIS_PTR uintr.uitt_addr);
 
-  BX_CPU_THIS_PTR uintr.uinv = 0;
+  BX_CPU_THIS_PTR uintr.set_uinv(0);
 }
 
 void BX_CPU_C::xrstor_uintr_state(bxInstruction_c *i, bx_address offset)
 {
-  if (BX_CPU_THIS_PTR uintr.uinv) {
+  if (BX_CPU_THIS_PTR uintr.get_uinv()) {
     BX_ERROR(("Attempting to restore UINTR state when UINTR.UINV is set: #GP(0)"));
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  BX_CPU_THIS_PTR uintr.uinv = 0; // will be restored and overwritten, should stay '0 in case of any fault
+  BX_CPU_THIS_PTR uintr.set_uinv(0); // will be restored and overwritten, should stay '0 in case of any fault
 
   bx_address asize_mask = i->asize_mask();
 
@@ -1116,8 +1116,7 @@ void BX_CPU_C::xrstor_init_uintr_state(void)
 {
   BX_CPU_THIS_PTR uintr.ui_handler = 0;
   BX_CPU_THIS_PTR uintr.stack_adjust = 0;
-  BX_CPU_THIS_PTR uintr.uitt_size = 0;
-  BX_CPU_THIS_PTR uintr.uinv = 0;
+  BX_CPU_THIS_PTR uintr.misc = 0;
   BX_CPU_THIS_PTR uintr.UIF = 0;
   BX_CPU_THIS_PTR uintr.upid_addr = 0;
   BX_CPU_THIS_PTR uintr.uitt_addr = 0;
@@ -1128,8 +1127,7 @@ bool BX_CPU_C::xsave_uintr_state_xinuse(void)
 {
   return BX_CPU_THIS_PTR uintr.ui_handler != 0 ||
          BX_CPU_THIS_PTR uintr.stack_adjust != 0 ||
-         BX_CPU_THIS_PTR uintr.uitt_size != 0 ||
-         BX_CPU_THIS_PTR uintr.uinv != 0 ||
+         BX_CPU_THIS_PTR uintr.misc != 0 ||
          BX_CPU_THIS_PTR uintr.UIF != 0 ||
          BX_CPU_THIS_PTR uintr.upid_addr != 0 ||
          BX_CPU_THIS_PTR uintr.uitt_addr != 0 ||
@@ -1213,7 +1211,7 @@ void BX_CPU_C::xrstor_init_tiledata_state(void)
 
 bool BX_CPU_C::xsave_tiledata_state_xinuse(void)
 {
-  return (BX_CPU_THIS_PTR amx->tile_use_tracker == 0);  // all tiles are zero
+  return (BX_CPU_THIS_PTR amx->tile_use_tracker != 0);  // not in use if all tiles are zero
 }
 
 // SCALEDATA state management //

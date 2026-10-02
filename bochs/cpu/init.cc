@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -207,7 +207,7 @@ void BX_CPU_C::initialize(void)
   BX_CPU_THIS_PTR cpuid->sanity_checks();
 #endif
 
-  iCache = new bxICache_c;
+  traceCache = new bxTraceCache_c;
 
   init_FetchDecodeTables(); // must be called after init_isa_features_bitmask()
 
@@ -229,26 +229,22 @@ void BX_CPU_C::initialize(void)
   }
 #endif
 
-#if BX_CPU_LEVEL >= 5
-  init_MSRs();
+#if BX_SUPPORT_VMX
+  init_VMCS();
+#endif
 
-#if BX_CONFIGURE_MSRS
-  for (unsigned n=0; n < BX_MSR_MAX_INDEX; n++) {
-    BX_CPU_THIS_PTR msrs[n] = NULL;
-  }
+#if BX_CPU_LEVEL >= 5
+  init_MSRs(); // must be called after init_VMCS(), VMX capability MSRs are computed from vmx_cap
+
+  // user defined MSRs, must be loaded after init_MSRs() to skip MSRs already defined
   const char *msrs_filename = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->getptr();
   load_MSRs(msrs_filename);
-#endif
 
   // ignore bad MSRS if user asked for it
   BX_CPU_THIS_PTR ignore_bad_msrs = SIM->get_param_bool(BXPN_IGNORE_BAD_MSRS)->get();
 #endif
 
   init_SMRAM();
-
-#if BX_SUPPORT_VMX
-  init_VMCS();
-#endif
 
   init_statistics();
 }
@@ -262,8 +258,10 @@ void BX_CPU_C::init_statistics(void)
   bx_list_c *cpu = new bx_list_c(SIM->get_statistics_root(), get_name(), get_name());
 
 #if InstrumentICACHE
-  new bx_shadow_num_c(cpu, "iCacheLookups", &stats->iCacheLookups);
+  new bx_shadow_num_c(cpu, "traceCacheLookups", &stats->traceCacheLookups);
   new bx_shadow_num_c(cpu, "iCachePrefetch", &stats->iCachePrefetch);
+  new bx_shadow_num_c(cpu, "traceCacheMisses", &stats->traceCacheMisses);
+  new bx_shadow_num_c(cpu, "iCacheLookups", &stats->iCacheLookups);
   new bx_shadow_num_c(cpu, "iCacheMisses", &stats->iCacheMisses);
 #endif
 
@@ -550,20 +548,9 @@ void BX_CPU_C::register_state(void)
   }
 #endif
 
-#if BX_CONFIGURE_MSRS
+  // MSR descriptors holding their own state (i.e. user defined MSRs)
   bx_list_c *MSRS = new bx_list_c(cpu, "USER_MSR");
-  for(n=0; n < BX_MSR_MAX_INDEX; n++) {
-    if (! msrs[n]) continue;
-    sprintf(name, "msr_0x%03x", n);
-    bx_list_c *m = new bx_list_c(MSRS, name);
-    BXRS_HEX_PARAM_FIELD(m, index, msrs[n]->index);
-    BXRS_DEC_PARAM_FIELD(m, type, msrs[n]->type);
-    BXRS_HEX_PARAM_FIELD(m, val64, msrs[n]->val64);
-    BXRS_HEX_PARAM_FIELD(m, reset, msrs[n]->reset_value);
-    BXRS_HEX_PARAM_FIELD(m, reserved, msrs[n]->reserved);
-    BXRS_HEX_PARAM_FIELD(m, ignored, msrs[n]->ignored);
-  }
-#endif
+  BX_CPU_THIS_PTR register_MSRs_state(MSRS);
 #endif
 
 #if BX_SUPPORT_UINTR
@@ -573,8 +560,7 @@ void BX_CPU_C::register_state(void)
     BXRS_HEX_PARAM_FIELD(UINTR, uirr, uintr.uirr);
     BXRS_HEX_PARAM_FIELD(UINTR, ui_handler, uintr.ui_handler);
     BXRS_HEX_PARAM_FIELD(UINTR, stack_adjust, uintr.stack_adjust);
-    BXRS_HEX_PARAM_FIELD(UINTR, uinv, uintr.uinv);
-    BXRS_HEX_PARAM_FIELD(UINTR, uitt_size, uintr.uitt_size);
+    BXRS_HEX_PARAM_FIELD(UINTR, misc, uintr.misc);
     BXRS_HEX_PARAM_FIELD(UINTR, uitt_addr, uintr.uitt_addr);
     BXRS_HEX_PARAM_FIELD(UINTR, upid_addr, uintr.upid_addr);
   }
@@ -849,7 +835,7 @@ void BX_CPU_C::after_restore_state(void)
 
 BX_CPU_C::~BX_CPU_C()
 {
-  delete iCache;
+  delete traceCache;
 
 #if BX_CPU_LEVEL >= 4
   delete cpuid;
@@ -873,15 +859,6 @@ BX_CPU_C::~BX_CPU_C()
 
 #if BX_CPU_LEVEL >= 5
   destroy_MSRs();
-
-#if BX_CONFIGURE_MSRS
-  for (unsigned n=0; n < BX_MSR_MAX_INDEX; n++) {
-    if (BX_CPU_THIS_PTR msrs[n]) {
-      delete BX_CPU_THIS_PTR msrs[n];
-      BX_CPU_THIS_PTR msrs[n] = NULL;
-    }
-  }
-#endif
 #endif
 
   BX_INSTR_EXIT(BX_CPU_ID);
@@ -1201,15 +1178,12 @@ void BX_CPU_C::reset(unsigned source)
     BX_CPU_THIS_PTR msr.mtrr_deftype = 0;
 #endif
 
-    // All configurable MSRs do not change on INIT
-#if BX_CONFIGURE_MSRS
-    for (n=0; n < BX_MSR_MAX_INDEX; n++) {
-      if (BX_CPU_THIS_PTR msrs[n])
-        BX_CPU_THIS_PTR msrs[n]->reset();
-    }
-#endif
-
   }
+
+#if BX_CPU_LEVEL >= 5
+  // every MSR descriptor decides itself what to do on hardware reset or INIT, called after TSC is reset
+  BX_CPU_THIS_PTR reset_MSRs(source);
+#endif
 
   BX_CPU_THIS_PTR EXT = 0;
   BX_CPU_THIS_PTR last_exception_type = BX_ET_NONE;
@@ -1222,6 +1196,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR eipPageBias = 0;
   BX_CPU_THIS_PTR eipPageWindowSize = 0;
   BX_CPU_THIS_PTR eipFetchPtr = NULL;
+  BX_CPU_THIS_PTR pAddrFetchPrevPage = BX_ICACHE_INVALID_PHY_ADDRESS;
 
   // invalidate current stack page
   BX_CPU_THIS_PTR espPageBias = 0;
@@ -1237,6 +1212,10 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR stop_reason = 0;
   BX_CPU_THIS_PTR magic_break = 0;
+  BX_CPU_THIS_PTR dbg_fetch_lpf = 0;
+  BX_CPU_THIS_PTR dbg_code_bp_on_page = false;
+  BX_CPU_THIS_PTR dbg_code_bp_hit = false;
+  BX_CPU_THIS_PTR dbg_loop_icount = 0;
   BX_CPU_THIS_PTR trace = 0;
   BX_CPU_THIS_PTR trace_reg = 0;
   BX_CPU_THIS_PTR trace_mem = 0;
@@ -1475,13 +1454,13 @@ void BX_CPU_C::assert_checks(void)
   // VM should be OFF in long mode
   if (long_mode()) {
     if (BX_CPU_THIS_PTR get_VM()) BX_PANIC(("assert_checks: VM is set in long mode !"));
-  }
 
-  // CS.L and CS.D_B are mutualy exclusive
-  if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l &&
-      BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b)
-  {
-    BX_PANIC(("assert_checks: CS.l and CS.d_b set together !"));
+    // CS.L and CS.D_B are mutualy exclusive in long mode, CS.L is ignired outside of long mode
+    if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l &&
+        BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b)
+    {
+      BX_PANIC(("assert_checks: CS.l and CS.d_b set together !"));
+    }
   }
 #endif
 

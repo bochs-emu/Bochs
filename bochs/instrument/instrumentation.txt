@@ -106,7 +106,7 @@ Possible operation types, passed through bx_instr_near_branch_taken and bx_instr
 This callback is called right before Bochs executes a VMEXIT.
 
 
-	void bx_instr_opcode(unsigned cpu, bxInstruction_c *i, const Bit8u *opcode, unsigned len, bool is32, bool is64);
+	void bx_instr_opcode(unsigned cpu, const bxInstruction_c *i, const Bit8u *opcode, unsigned len, bool is32, bool is64);
 
 The  callback  is  called  each  time, when Bochs completes  to  decode  a new
 instruction.  Through  this callback function Bochs could provide an opcode of
@@ -114,6 +114,10 @@ the instruction, opcode length and an execution mode (16/32/64).
 
 Note, that Bochs uses translation  caches so each simulated  instruction might
 be executed multiple times but decoded only once.
+
+The decoded instruction is passed to the instrumentation callbacks as a const
+pointer. It is kept in Bochs instruction cache, shared between all simulated
+CPUs and executed from there, so the callbacks must not modify it.
 
 
 	void bx_instr_interrupt(unsigned cpu, unsigned vector);
@@ -192,20 +196,20 @@ This callback is called each time when WRMSR instruction is executed.
 MSR number and written value passed as parameters to the callback function.
 
 
-	void bx_instr_repeat_iteration(unsigned cpu, bxInstruction_c *i);
+	void bx_instr_repeat_iteration(unsigned cpu, const bxInstruction_c *i);
 
 The  callback  is  called  each time, when Bochs simulator starts a new repeat
 iteration.
 
 
-	void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i);
+	void bx_instr_before_execution(unsigned cpu, const bxInstruction_c *i);
 
 The  callback  is  called  each time, when Bochs simulator starts a new
 instruction execution. In case of repeat instruction the callback will
 be called only once before the first iteration will be started. 
 
 
-	void bx_instr_after_execution(unsigned cpu, bxInstruction_c *i);
+	void bx_instr_after_execution(unsigned cpu, const bxInstruction_c *i);
 
 The  callback  is  called  each time, when Bochs simulator finishes any
 instruction execution. In case of repeat instruction the callback will

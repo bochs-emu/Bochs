@@ -84,7 +84,7 @@ void bxInstrumentation::bx_print_instruction(void)
   }
 }
 
-void bxInstrumentation::bx_instr_before_execution(bxInstruction_c *i)
+void bxInstrumentation::bx_instr_before_execution(const bxInstruction_c *i)
 {
   if (!active) return;
 
@@ -101,7 +101,7 @@ void bxInstrumentation::bx_instr_before_execution(bxInstruction_c *i)
   memcpy(opcode, i->get_opcode_bytes(), opcode_length);
 }
 
-void bxInstrumentation::bx_instr_after_execution(bxInstruction_c *i)
+void bxInstrumentation::bx_instr_after_execution(const bxInstruction_c *i)
 {
   if (!active) return;
 

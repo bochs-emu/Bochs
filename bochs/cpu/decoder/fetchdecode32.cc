@@ -437,8 +437,8 @@ static BxOpcodeDecodeDescriptor32 decode32_descriptor[] =
    /* 0F 31 */ { &decoder_simple32, BxOpcodeTable0F31 },
    /* 0F 32 */ { &decoder_simple32, BxOpcodeTable0F32 },
    /* 0F 33 */ { &decoder_simple32, BxOpcodeTable0F33 },
-   /* 0F 34 */ { &decoder_simple32, BxOpcodeTable0F34 },
-   /* 0F 35 */ { &decoder_simple32, BxOpcodeTable0F35 },
+   /* 0F 34 */ { &decoder_simple32, BxOpcodeTable0F34_32 },
+   /* 0F 35 */ { &decoder_simple32, BxOpcodeTable0F35_32 },
    /* 0F 36 */ { &decoder_ud32, NULL },
    /* 0F 37 */ { &decoder32, BxOpcodeTable0F37 },
    /* 0F 38 */ { &decoder32_modrm, NULL },          // 3-byte escape

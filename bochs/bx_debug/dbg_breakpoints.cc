@@ -21,6 +21,7 @@
 
 #include "bochs.h"
 #include "debug.h"
+#include "cpu/cpu.h"
 
 #if BX_DEBUGGER
 
@@ -48,6 +49,12 @@ void bx_dbg_breakpoint_changed(void)
   else
     bx_guard.guard_for &= ~BX_DBG_GUARD_IADDR_PHY;
 #endif
+
+  // Update code breakpoints page filter of every CPU for its current fetch
+  // window, no need to invalidate prefetch queue or flush TLB to do so.
+  for (int cpu=0; cpu < BX_SMP_PROCESSORS; cpu++) {
+    BX_CPU(cpu)->dbg_update_code_bp_page();
+  }
 }
 
 void bx_dbg_en_dis_breakpoint_command(unsigned handle, bool enable)
@@ -230,7 +237,7 @@ int bx_dbg_vbreakpoint_command(BreakpointKind bk, Bit32u cs, bx_address eip, con
   bp->condition = prepare_condition(condition);
   bp->enabled=1;
   bx_guard.iaddr.num_virtual++;
-  bx_guard.guard_for |= BX_DBG_GUARD_IADDR_VIR;
+  bx_dbg_breakpoint_changed();
   return bp->bpoint_id;
 
 #else
@@ -261,7 +268,7 @@ int bx_dbg_lbreakpoint_command(BreakpointKind bk, bx_address laddress, const cha
   bp->condition = prepare_condition(condition);
   bp->enabled=1;
   bx_guard.iaddr.num_linear++;
-  bx_guard.guard_for |= BX_DBG_GUARD_IADDR_LIN;
+  bx_dbg_breakpoint_changed();
   return BpId;
 
 #else
@@ -291,7 +298,7 @@ int bx_dbg_pbreakpoint_command(BreakpointKind bk, bx_phy_address paddress, const
   bp->condition = prepare_condition(condition);
   bp->enabled=1;
   bx_guard.iaddr.num_physical++;
-  bx_guard.guard_for |= BX_DBG_GUARD_IADDR_PHY;
+  bx_dbg_breakpoint_changed();
   return bp->bpoint_id;
 #else
   dbg_printf("Error: physical breakpoint support not compiled in.\n");

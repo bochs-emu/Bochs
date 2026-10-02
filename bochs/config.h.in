@@ -1,5 +1,5 @@
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -257,9 +257,9 @@
 // Enable only those you need. Recommend using only linear
 // breakpoints, unless you need others. Less supported means
 // slightly faster execution time.
-#define BX_DBG_MAX_VIR_BPOINTS 16
-#define BX_DBG_MAX_LIN_BPOINTS 16
-#define BX_DBG_MAX_PHY_BPOINTS 16
+#define BX_DBG_MAX_VIR_BPOINTS 32
+#define BX_DBG_MAX_LIN_BPOINTS 32
+#define BX_DBG_MAX_PHY_BPOINTS 32
 
 #define BX_DBG_MAX_WATCHPONTS  16
 
@@ -451,12 +451,12 @@
 #  error "can't find sizeof(type) of 4 bytes!"
 #endif
 
-#if SIZEOF_UNSIGNED_LONG == 8
-  typedef unsigned long Bit64u;
-  typedef   signed long Bit64s;
-#elif SIZEOF_UNSIGNED_LONG_LONG == 8
+#if SIZEOF_UNSIGNED_LONG_LONG == 8
   typedef unsigned long long Bit64u;
   typedef   signed long long Bit64s;
+#elif SIZEOF_UNSIGNED_LONG == 8
+  typedef unsigned long Bit64u;
+  typedef   signed long Bit64s;
 #else
 #  error "can't find data type of 8 bytes"
 #endif
@@ -681,14 +681,8 @@ typedef Bit32u bx_phy_address;
 #define BX_CPUID_VENDOR_LEN 12
 #define BX_CPUID_BRAND_LEN  48
 
-#define BX_CONFIGURE_MSRS 0
-
 #if (BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL < 4)
   #error Alignment exception check is not supported in i386 !
-#endif
-
-#if (BX_CONFIGURE_MSRS && BX_CPU_LEVEL < 5)
-  #error MSRs are supported only with CPU level >= 5 !
 #endif
 
 #if (!BX_SUPPORT_FPU && BX_CPU_LEVEL > 4)

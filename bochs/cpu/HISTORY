@@ -13,13 +13,13 @@ Changes after Bochs 3.1:
 - SSE/AVX: Fixed PSRLQ and PSRAVQ instructions with shift count = 64
 - SSE: PSHUFLW instruction should be supported under SSE2 instead of SSE
 - POPCNT: fix POPCNT instruction to depend on its own (already existing) CPUID feature flags and not SSE4.2
-+ AVX512_OPMASK: Fixed behavior of KSHIFTLW/KSHIFTRW instructions with shift count = 15
 - REP_MOVSW/D/Q: Each MOVSD or MOVSQ iteration must read one complete source dword or qword before writing it to the destination. Do not allow copying partial words/dword/qwords.
 - AVX: Fixed order of unmasked exceptions handling in VDPPS instruction. VDPPS must determine SIMD floating-point exceptions separately for each multiply and add operation in execution order.
 - x86-64: implement ENTER and LEAVE instructions with OperandSize=16 and StackSize=64
+- AES_AVX: Enforce AES feature flag in cpu to make sure these are disabled when AES gets disabled
++ AVX512_OPMASK: Fixed behavior of KSHIFTLW/KSHIFTRW instructions with shift count = 15
 - AVX-512: VPBROADCASTMB2Q/VPBROADCASTMW2D instructions should require AVX512_CD
 - AVX-512: VPCMPB/VPCMPUB/VPCMPW/VPCMPUW instructions should require AVX512_BW
-- AES_AVX: Enforce AES feature flag in cpu to make sure these are disabled when AES gets disabled
 + AVX-512: Fix boundary conditions of write mask calculation for VPCOMPRESSB/VPCOMPRESSW instructions
 + AVX-512: Fix boundary conditions of load mask calculation for VPEXPANDB/VPEXPANDW instructions, VPEXPANDB was completely broken with load mask > 32 bit
 + AVX512_GATHER: Fix 512-bit qword-indexed VGATHERQPS zero upper
@@ -38,6 +38,26 @@ Changes after Bochs 3.1:
 - AMX_AVX512: AMX_AVX512 instructions cannot be encoded with EVEX.b=1 and should #UD
 - AMX_AVX512: AMX_AVX512 instructions must #UD if EVEX is not enabled through XCR0[7:5]
 - APIC: APIC read from an address crossing 32-bit boundary actually returns all zero in HW
+- SMC: Fixed potential SMC detection problem while running guest code with AMX enabled (XCR0.TILECFG=XCR0.TILEDATA=1)
++ Fixed incorrect assertion in assert_checks: require CS.L and CS.D_B to be mutually exclusive only in long mode, CS.L is silently ignored outside of long mode
++ SVM: VMRUN didn't not load the guest CR2 from the VMCB (Debian 12 amd64 running KVM (kvm_amd) failed inside Bochs)
++ SVM: SVM VMEXIT loading host state should reset debug_trap and inhibit_mask
++ SVM: interrupt shadow lost at a #DB intercept, after STI in the guest a #DB intercept at the next boundary saved VMCB INTERRUPT_SHADOW = 0 in Bochs, 1 on real Zen 4
++ SVM: V_IRQ never taken when the guest is entered with IF = 1 (VMRUN loads the guest RFLAGS before in_svm_guest = true, so handleInterruptMaskChange() evaluated the masks as the host)
++ SVM: AMD hardware doesn't enforce TSS386 to enter long mode (Debian 12 amd64 running kvm_amd with npt=1 fails: kvm_amd leaves TR = TSS286_BUSY and its 64-bit guest triple-faults while booting)
++ SVM: An intercepted #DB has already updated DR6 and leaves RF clear (AMD APM vol. 2, 15.12)
+- SYSENTER/SYSEXIT: SYSENTER/SYSEXIT are not allowed in long mode on AMD
+- SYSCALL/SYSRET: SYSCALL whose SFMASK clears TF takes no single-step trap, SYSRET takes the single-step trap by the TF it loads
+- CPUID: allow configuring i486dx4 model without x87 using cpu exclude_features
+! SVM: Implemented SVM Decode Assist feature and enabled in all CPUID models featuring SVM
+- FRED: Fixed reserved bits checking for MSR_IA32_FRED_CONFIG (0x1d4), bug was introduced in Bochs 3.1 release
+- MSR: enforce reserved bits checking for MSR_TSX_AUX (0xc0000103), MSR_IA32_UMWAIT_CONTROL (0xe1), MSR_MTRR_DEFTYPE (0x2ff), MSR_IA32_PKRS (0x6e1) and MSR_IA32_FEATURE_CONTROL (0x3a)
+- MSR: writing 0 value to read only MSR was passing validation checks reaching BX_PANIC
+- MSR: writes to MSR_APERF/MSR_MPERF were ignored, so "write to clear" didn't work. Now any write clears the counter, and hardware reset clears it too.
+- MSR: MSR_IA32_EFER on CPU models without EFER: writing 0 used to succeed. It's now #GP(0)
+- SVM: BX_SVM_VM_CR_MSR write: the "SVMDIS while EFER.SVME=1 #GP" check tested the current VM_CR value instead of the value being written.
+- Legacy/AMD: AMD specific behavior always clear EFLAGS.RF when #DB exception occurs, however Intel pushed EFLAGS.RF=1 when rep string iteration was interrupted by #DB
+- XSAVE/AMX: fixed incorrect detection of TILEDATA xinuse
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2000-2021  The Bochs Project
+//  Copyright (C) 2000-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -33,7 +33,11 @@ extern "C" {
 #include <signal.h>
 };
 
-#define BX_DEBUGGER_TERM (BX_DEBUGGER && !defined(__OpenBSD__))
+#if BX_DEBUGGER && !defined(__OpenBSD__)
+#define BX_DEBUGGER_TERM 1
+#else
+#define BX_DEBUGGER_TERM 0
+#endif
 
 class bx_term_gui_c : public bx_gui_c {
 public:
@@ -58,6 +62,7 @@ public:
 static bx_term_gui_c *theGui = NULL;
 #if BX_DEBUGGER_TERM
 static int scr_fd = -1;
+static FILE *scr_fp = NULL;
 #endif
 IMPLEMENT_GUI_PLUGIN_CODE(term)
 
@@ -181,27 +186,29 @@ void bx_term_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   put("TERM");
   // the ask menu causes trouble
   io->set_log_action(LOGLEV_PANIC, ACT_FATAL);
-#if !BX_DEBUGGER_TERM
-  // logfile should be different from stderr, otherwise terminal mode
-  // really ends up having fun
-  if (!strcmp(SIM->get_param_string(BXPN_LOG_FILENAME)->getptr(), "-"))
-    BX_PANIC(("cannot log to stderr in term mode"));
-#else
-  FILE *old_stdin = stdin;
-  FILE *old_stdout = stdout;
-  scr_fd = open("/dev/ptmx",O_RDWR);
-  if(scr_fd > 0){
-    stdin = stdout = fdopen(scr_fd,"wr");
-    grantpt(scr_fd);
-    unlockpt(scr_fd);
-    fprintf(stderr, "\nBochs connected to screen \"%s\"\n",ptsname(scr_fd));
-  }
-#endif
-  initscr();
 #if BX_DEBUGGER_TERM
-  stdin = old_stdin;
-  stdout = old_stdout;
+  if (bx_dbg.debugger_active) {
+    scr_fd = open("/dev/ptmx",O_RDWR);
+    if (scr_fd > 0) {
+      scr_fp = fdopen(scr_fd,"w+");
+      grantpt(scr_fd);
+      unlockpt(scr_fd);
+      fprintf(stderr, "\nBochs connected to screen \"%s\"\n",ptsname(scr_fd));
+    }
+    // Drive curses from the pty rather than reassigning stdin/stdout: those are
+    // not modifiable lvalues on every platform (musl declares them FILE *const).
+    if (scr_fp == NULL || newterm(NULL, scr_fp, scr_fp) == NULL)
+      initscr();
+  }
+  else
 #endif
+  {
+    // logfile should be different from stderr, otherwise terminal mode
+    // really ends up having fun
+    if (!strcmp(SIM->get_param_string(BXPN_LOG_FILENAME)->getptr(), "-"))
+      BX_PANIC(("cannot log to stderr in term mode"));
+    initscr();
+  }
   start_color();
   cbreak();
   curs_set(1);
@@ -230,7 +237,7 @@ void bx_term_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
         BX_ERROR(("Show IPS not available"));
 #endif
       } else {
-        BX_PANIC(("Unknown rfb option '%s'", argv[i]));
+        BX_PANIC(("Unknown term option '%s'", argv[i]));
       }
     }
   }
@@ -691,13 +698,18 @@ void bx_term_gui_c::replace_bitmap(unsigned hbar_id, unsigned bmap_id)
 void bx_term_gui_c::exit(void)
 {
   if (!initialized) return;
-#if BX_DEBUGGER_TERM
-  if(scr_fd > 0)
-    close(scr_fd);
-#endif
   clear();
   flush();
   endwin();
+#if BX_DEBUGGER_TERM
+  if (scr_fp != NULL) {
+    fclose(scr_fp);   // also closes scr_fd
+    scr_fp = NULL;
+  } else if (scr_fd > 0) {
+    close(scr_fd);    // fdopen() failed, the pty is ours alone
+  }
+  scr_fd = -1;
+#endif
   BX_DEBUG(("exiting"));
 }
 

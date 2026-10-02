@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2025 Stanislav Shwartsman
+//   Copyright (c) 2011-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -269,6 +269,11 @@ void BX_CPU_C::SvmExitLoadHostState(SVM_HOST_STATE *host)
   RAX = host->rax;
 
   CPL = 0;
+
+  BX_CPU_THIS_PTR inhibit_mask = 0;
+  BX_CPU_THIS_PTR debug_trap = 0;
+
+  BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
 
   handleCpuContextChange();
 
@@ -552,6 +557,7 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   BX_CPU_THIS_PTR cr0.set32(guest.cr0.get32());
   BX_CPU_THIS_PTR cr4.set(guest.cr4.get());
   BX_CPU_THIS_PTR cr3 = guest.cr3;
+  BX_CPU_THIS_PTR cr2 = guest.cr2;
 
   if (paged_real_mode)
     BX_CPU_THIS_PTR cr0.val |= BX_CR0_PG_MASK;
@@ -610,6 +616,70 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   return true;
 }
 
+// Collect up to 15 guest instruction bytes at guest CS:RIP for SVM decode
+// assist. No new page walk is done (it could fault), the bytes are taken from
+// the code pages already translated by prefetch() for the current instruction:
+//  - the current fetch window when the instruction starts inside it
+//  - the previous page when the fetch window was moved by boundaryFetch()
+//    while fetching page split instruction
+//  - the 2nd page of page split trace when page split instruction was
+//    executed directly from the trace cache
+// Returns the number of bytes fetched, zero if the guest CS:RIP was never
+// fetched (for example a fault during event delivery).
+unsigned BX_CPU_C::SvmFetchGuestInstructionBytes(Bit8u *bytes)
+{
+  if (BX_CPU_THIS_PTR eipPageWindowSize == 0) return 0; // fetch window is invalid
+
+  bx_address eipBiased = BX_CPU_THIS_PTR prev_rip + BX_CPU_THIS_PTR eipPageBias;
+
+  // the instruction starts at pageOffset in page and may continue to nextPage
+  const Bit8u *page, *nextPage = NULL;
+  unsigned pageOffset;
+
+  if (eipBiased < BX_CPU_THIS_PTR eipPageWindowSize) {
+    // the instruction starts in the current fetch window, if it is page split
+    // instruction executed from the trace cache - find its 2nd page
+    page = BX_CPU_THIS_PTR eipFetchPtr;
+    pageOffset = (unsigned) eipBiased;
+    bxTraceCacheEntry_c *e = BX_CPU_THIS_PTR traceCache->find_entry(BX_CPU_THIS_PTR pAddrFetchPage + pageOffset, BX_CPU_THIS_PTR fetchModeMask);
+    if (e != NULL && (pageOffset + e->i->ilen()) > 4096) {
+      bx_phy_address pAddrNextPage = BX_CPU_THIS_PTR traceCache->find_page_split_ppf(e);
+      if (pAddrNextPage != BX_ICACHE_INVALID_PHY_ADDRESS)
+        nextPage = (const Bit8u*) getHostMemAddr(pAddrNextPage, BX_EXECUTE);
+    }
+  }
+  else if (BX_CPU_THIS_PTR pAddrFetchPrevPage != BX_ICACHE_INVALID_PHY_ADDRESS && (bx_address)(0 - eipBiased) < 15) {
+    // the fetch window was established by boundaryFetch(), the page split
+    // instruction starts at the end of the previous page
+    page = (const Bit8u*) getHostMemAddr(BX_CPU_THIS_PTR pAddrFetchPrevPage, BX_EXECUTE);
+    if (! page) return 0;
+    pageOffset = (unsigned) (eipBiased + 4096);
+    nextPage = BX_CPU_THIS_PTR eipFetchPtr;
+  }
+  else {
+    return 0; // the instruction at guest CS:RIP was never fetched
+  }
+
+  // fetch up to 15 bytes but do not cross CS limit
+  unsigned len = 15;
+  if (! long64_mode()) {
+    Bit32u eip = (Bit32u) BX_CPU_THIS_PTR prev_rip; // fetched instruction, eip <= limit
+    Bit32u limit = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled;
+    if ((limit - eip) < 14) len = limit - eip + 1;
+  }
+
+  unsigned fetched = 4096 - pageOffset;
+  if (fetched > len) fetched = len;
+  memcpy(bytes, page + pageOffset, fetched);
+
+  if (fetched < len && nextPage) {
+    memcpy(bytes + fetched, nextPage, len - fetched);
+    fetched = len;
+  }
+
+  return fetched;
+}
+
 void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
 {
   BX_DEBUG(("SVM VMEXIT reason=%d exitinfo1=%08x%08x exitinfo2=%08x%08x", reason,
@@ -639,7 +709,12 @@ void BX_CPU_C::Svm_Vmexit(int reason, Bit64u exitinfo1, Bit64u exitinfo2)
 
       if ((reason == SVM_VMEXIT_PF_EXCEPTION || reason == SVM_VMEXIT_NPF) && !(exitinfo1 & 0x10))
       {
-        // TODO
+        Bit8u instr_bytes[16];
+        memset(instr_bytes, 0, sizeof(instr_bytes));
+        instr_bytes[0] = (Bit8u) SvmFetchGuestInstructionBytes(instr_bytes + 1);
+
+        for (unsigned n=0; n < 16; n++)
+          vmcb_write8(SVM_CONTROL64_GUEST_INSTR_BYTES + n, instr_bytes[n]);
       }
       else {
         vmcb_write8(SVM_CONTROL64_GUEST_INSTR_BYTES, 0);
@@ -819,7 +894,9 @@ void BX_CPU_C::SvmInterceptException(unsigned type, unsigned vector, Bit16u errc
     BX_CPU_THIS_PTR in_event = false; // clear in_event indication on #DF
 
   BX_CPU_THIS_PTR debug_trap = 0; // clear debug_trap field
-  BX_CPU_THIS_PTR inhibit_mask = 0;
+  // a #DB intercept keeps the interrupt shadow (e.g. after STI): it is saved in the VMCB
+  if (vector != BX_DB_EXCEPTION)
+    BX_CPU_THIS_PTR inhibit_mask = 0;
 
   Svm_Vmexit(SVM_VMEXIT_EXCEPTION + vector, (errcode_valid ? errcode : 0), qualification);
 }
@@ -1019,7 +1096,7 @@ void BX_CPU_C::Svm_Update_VM_CR_MSR(Bit64u val_64)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (BX_CPU_THIS_PTR msr.svm_vm_cr & BX_VM_CR_MSR_SVMDIS_MASK) {
+  if (val_64 & BX_VM_CR_MSR_SVMDIS_MASK) {
     if (BX_CPU_THIS_PTR efer.get_SVME()) {
       BX_ERROR(("VM_CR_MSR: attempt to set SVMDIS when EFER.SVME=1"));
       exception(BX_GP_EXCEPTION, 0);
@@ -1075,6 +1152,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMRUN(bxInstruction_c *i)
     Svm_Vmexit(SVM_VMEXIT_INVALID);
 
   BX_CPU_THIS_PTR in_svm_guest = true;
+  handleInterruptMaskChange(); // re-evaluate the interrupt masks as a guest: V_IRQ with IF already set (APM 15.21.4)
   BX_CPU_THIS_PTR svm_gif = true;
   BX_CPU_THIS_PTR async_event = 1;
 
@@ -1140,9 +1218,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMLOAD(bxInstruction_c *i)
   BX_CPU_THIS_PTR msr.star = vmcb_read64(SVM_GUEST_STAR_MSR);
   BX_CPU_THIS_PTR msr.lstar = CanonicalizeAddress(vmcb_read64(SVM_GUEST_LSTAR_MSR));
   BX_CPU_THIS_PTR msr.cstar = CanonicalizeAddress(vmcb_read64(SVM_GUEST_CSTAR_MSR));
-  BX_CPU_THIS_PTR msr.fmask = vmcb_read64(SVM_GUEST_FMASK_MSR);
+  BX_CPU_THIS_PTR msr.fmask = (Bit32u) vmcb_read64(SVM_GUEST_FMASK_MSR); // bits [63:32] are ignored
 
-  BX_CPU_THIS_PTR msr.sysenter_cs_msr = vmcb_read64(SVM_GUEST_SYSENTER_CS_MSR);
+  BX_CPU_THIS_PTR msr.sysenter_cs_msr = (Bit32u) vmcb_read64(SVM_GUEST_SYSENTER_CS_MSR); // bits [63:32] are ignored
   BX_CPU_THIS_PTR msr.sysenter_eip_msr = CanonicalizeAddress(vmcb_read64(SVM_GUEST_SYSENTER_EIP_MSR));
   BX_CPU_THIS_PTR msr.sysenter_esp_msr = CanonicalizeAddress(vmcb_read64(SVM_GUEST_SYSENTER_ESP_MSR));
 

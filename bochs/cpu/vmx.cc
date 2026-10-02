@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2025 Stanislav Shwartsman
+//   Copyright (c) 2009-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -48,7 +48,7 @@ extern bool isValidMSR_IA32_SPEC_CTRL(Bit64u val_64);
 #endif
 
 #if BX_SUPPORT_CET
-extern bool is_invalid_cet_control(bx_address val);
+extern bool is_valid_cet_control(Bit64u val);
 #endif
 
 extern const char *segname[];
@@ -1305,7 +1305,7 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckHostState(void)
        return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
 
-    if (is_invalid_cet_control(host_state->msr_ia32_s_cet)) {
+    if (! is_valid_cet_control(host_state->msr_ia32_s_cet)) {
        BX_ERROR(("VMFAIL: VMCS host IA32_S_CET invalid"));
        return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
@@ -1570,7 +1570,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
 
-    if (is_invalid_cet_control(guest.msr_ia32_s_cet)) {
+    if (! is_valid_cet_control(guest.msr_ia32_s_cet)) {
        BX_ERROR(("VMFAIL: VMCS guest IA32_S_CET invalid"));
        return VMXERR_VMENTRY_INVALID_VM_HOST_STATE_FIELD;
     }
@@ -2311,7 +2311,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   // Handle special case of CS.LIMIT demotion (new descriptor limit is
   // smaller than current one)
   if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled > guest.sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled)
-    BX_CPU_THIS_PTR iCache->flushICacheEntries();
+    BX_CPU_THIS_PTR traceCache->flushTraceCacheEntries();
 #endif
 
   for(unsigned segreg=0; segreg<6; segreg++)
@@ -2334,7 +2334,7 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 
 #if BX_SUPPORT_UINTR
   if (vm->vmentry_ctrls.LOAD_UINV()) {
-    BX_CPU_THIS_PTR uintr.uinv = guest.uintr_uinv;
+    BX_CPU_THIS_PTR uintr.set_uinv(guest.uintr_uinv);
   }
 #endif
 
@@ -2492,7 +2492,7 @@ void BX_CPU_C::VMenterInjectEvents(void)
   vm->idt_vector_error_code = error_code;
 
 #if BX_SUPPORT_UINTR
-  if (BX_CPU_THIS_PTR cr4.get_UINTR() && long64_mode() && vector == BX_CPU_THIS_PTR uintr.uinv) {
+  if (BX_CPU_THIS_PTR cr4.get_UINTR() && long64_mode() && vector == BX_CPU_THIS_PTR uintr.get_uinv()) {
     Process_UINTR_Notification();
   }
   else
@@ -2674,7 +2674,7 @@ void BX_CPU_C::VMexitSaveGuestState(Bit32u reason, Bit32u vector)
 
 #if BX_SUPPORT_UINTR
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UINTR)) {
-    VMwrite16(VMCS_16BIT_GUEST_UINV, BX_CPU_THIS_PTR uintr.uinv);
+    VMwrite16(VMCS_16BIT_GUEST_UINV, BX_CPU_THIS_PTR uintr.get_uinv());
   }
 #endif
 
@@ -3004,7 +3004,7 @@ void BX_CPU_C::VMexitLoadHostState(void)
 
 #if BX_SUPPORT_UINTR
   if (vm->vmexit_ctrls1.CLEAR_UINV()) {
-    BX_CPU_THIS_PTR uintr.uinv = 0;
+    BX_CPU_THIS_PTR uintr.set_uinv(0);
   }
 #endif
 

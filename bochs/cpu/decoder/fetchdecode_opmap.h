@@ -1854,10 +1854,16 @@ static const Bit64u BxOpcodeTable0F32[] = { last_opcode(0, BX_IA_RDMSR) };
 static const Bit64u BxOpcodeTable0F33[] = { last_opcode(0, BX_IA_RDPMC) };
 
 // opcode 0F 34
-static const Bit64u BxOpcodeTable0F34[] = { last_opcode(0, BX_IA_SYSENTER) };
+static const Bit64u BxOpcodeTable0F34_32[] = { last_opcode(0, BX_IA_SYSENTER) };
+#if BX_SUPPORT_X86_64
+static const Bit64u BxOpcodeTable0F34_64[] = { last_opcode(0, BX_IA_SYSENTER_LONGMODE) };
+#endif
 
 // opcode 0F 35
-static const Bit64u BxOpcodeTable0F35[] = { last_opcode(0, BX_IA_SYSEXIT) };
+static const Bit64u BxOpcodeTable0F35_32[] = { last_opcode(0, BX_IA_SYSEXIT) };
+#if BX_SUPPORT_X86_64
+static const Bit64u BxOpcodeTable0F35_64[] = { last_opcode(0, BX_IA_SYSEXIT_LONGMODE) };
+#endif
 
 // opcode 0F 37
 static const Bit64u BxOpcodeTable0F37[] = { last_opcode(ATTR_SSE_NO_PREFIX, BX_IA_GETSEC) };

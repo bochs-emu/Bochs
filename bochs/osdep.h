@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -118,18 +118,18 @@ extern "C" {
 #endif  /* __MINGW32__ defined */
 
 #else    /* not WIN32 definitions */
-#if SIZEOF_UNSIGNED_LONG == 8
-#define FMT_64 "l"
-#define FMT_LL "%l"
-#define FMT_TICK "%011lu"
-#define FMT_ADDRX64 "%016lx"
-#define FMT_PHY_ADDRX64 "%012lx"
-#else
+#if SIZEOF_UNSIGNED_LONG_LONG == 8
 #define FMT_64 "ll"
 #define FMT_LL "%ll"
 #define FMT_TICK "%011llu"
 #define FMT_ADDRX64 "%016llx"
 #define FMT_PHY_ADDRX64 "%012llx"
+#else
+#define FMT_64 "l"
+#define FMT_LL "%l"
+#define FMT_TICK "%011lu"
+#define FMT_ADDRX64 "%016lx"
+#define FMT_PHY_ADDRX64 "%012lx"
 #endif
 #endif   /* not WIN32 definitions */
 

@@ -301,6 +301,20 @@ bool BX_MEMORY_STUB_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigne
 }
 
 #if BX_DEBUGGER || BX_GDBSTUB
+// A debugger write does not go through the CPU write path and therefore does
+// not maintain the SMC write stamps. Traces already decoded from the modified
+// pages would survive and keep executing the old bytes, so invalidate the write
+// stamps of every touched page, which purges the affected traces from the
+// instruction caches of all CPUs.
+void dbg_invalidate_smc_pages(bx_phy_address addr, unsigned len)
+{
+  if (len == 0) return;
+
+  bx_phy_address last_page = (addr + len - 1) & ~((bx_phy_address) 0xfff);
+  for (bx_phy_address page = addr & ~((bx_phy_address) 0xfff); page <= last_page; page += 0x1000)
+    pageWriteStampTable.decWriteStamp(page);
+}
+
 bool BX_MEMORY_STUB_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf)
 {
   bx_phy_address a20addr = A20ADDR(addr);

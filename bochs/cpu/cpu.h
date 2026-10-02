@@ -425,7 +425,8 @@ class BX_MEM_C;
 class bxInstruction_c;
 class bx_local_apic_c;
 class AMX;
-class bxICache_c;
+class bxTraceCache_c;
+struct bxTraceCacheEntry_c;
 struct bxICacheEntry_c;
 
 // <TAG-TYPE-EXECUTEPTR-START>
@@ -674,27 +675,27 @@ typedef struct
 #if BX_SUPPORT_X86_64
   Bit64u lstar;
   Bit64u cstar;
-  Bit32u fmask;
+  Bit64u fmask;
   Bit64u kernelgsbase;
-  Bit32u tsc_aux;
+  Bit64u tsc_aux;
 #endif
 
 #if BX_CPU_LEVEL >= 6
   // SYSENTER/SYSEXIT instruction msr's
-  Bit32u sysenter_cs_msr;
-  bx_address sysenter_esp_msr;
-  bx_address sysenter_eip_msr;
+  Bit64u sysenter_cs_msr;
+  Bit64u sysenter_esp_msr;
+  Bit64u sysenter_eip_msr;
 
   BxPackedRegister pat;
   Bit64u mtrrphys[16];
   BxPackedRegister mtrrfix64k;
   BxPackedRegister mtrrfix16k[2];
   BxPackedRegister mtrrfix4k[8];
-  Bit32u mtrr_deftype;
+  Bit64u mtrr_deftype;
 #endif
 
 #if BX_SUPPORT_VMX
-  Bit32u ia32_feature_ctrl;
+  Bit64u ia32_feature_ctrl;
 #endif
 
 #if BX_SUPPORT_SVM
@@ -724,7 +725,7 @@ typedef struct
 #endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
-  Bit32u ia32_umwait_ctrl;
+  Bit64u ia32_umwait_ctrl;
 #endif
 
   Bit32u ia32_spec_ctrl; // SCA
@@ -932,6 +933,7 @@ struct BX_SMM_State;
 struct BxOpcodeInfo_t;
 struct bx_cpu_statistics;
 class bx_cpuid_t;
+class MSR_Descriptor;
 
 class BX_CPU_C : public logfunctions {
 public: // for now...
@@ -1050,7 +1052,7 @@ public: // for now...
   // remember the time in ticks that it was reset to zero.  With a little
   // algebra, we can also support setting it to something other than zero.
   // Don't read this directly; use get_TSC and set_TSC to access the TSC.
-  Bit64s tsc_adjust;
+  Bit64u tsc_adjust;
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   Bit64s tsc_offset;
 #endif
@@ -1064,7 +1066,7 @@ public: // for now...
 #if BX_SUPPORT_PKEYS
   // protection keys
   Bit32u pkru;
-  Bit32u pkrs;
+  Bit64u pkrs;
 
   // unpacked protection keys to be tested together with accessBits from TLB
   // the unpacked key is stored in the accessBits format:
@@ -1084,16 +1086,19 @@ public: // for now...
 
 #if BX_SUPPORT_UINTR
   struct {
-    bx_address ui_handler;
+    Bit64u ui_handler;
     Bit64u stack_adjust;
-    Bit32u uinv;              // user interrupt notification vector, actually 8 bit
-    Bit32u uitt_size;         // user interrupt target table size
-    bx_address uitt_addr;     // user interrupt target table address
-    bx_address upid_addr;     // user posted-interrupt descriptor address
-    Bit64u uirr;              // user-interrupt request register
-    bool UIF;                 // if UIF=0 user interrupt cannot be delivered
+    Bit64u misc;          // IA32_UINTR_MISC: [31:0] user interrupt target table size, [39:32] user interrupt notification vector
+    Bit64u uitt_addr;     // user interrupt target table address
+    Bit64u upid_addr;     // user posted-interrupt descriptor address
+    Bit64u uirr;          // user-interrupt request register
+    bool UIF;             // if UIF=0 user interrupt cannot be delivered
 
     bool senduipi_enabled() const { return uitt_addr & 0x1; }
+
+    Bit32u get_uitt_size() const { return GET32L(misc); }
+    Bit32u get_uinv() const { return GET32H(misc); }
+    void set_uinv(Bit32u uinv) { misc = GET64_FROM_HI32_LO32(uinv, GET32L(misc)); }
   } uintr;
 #endif
 
@@ -1138,53 +1143,9 @@ public: // for now...
 
 #if BX_CPU_LEVEL >= 5
   bx_regs_msr_t msr;
-#endif
 
-#if BX_CONFIGURE_MSRS
-  typedef struct msr {
-    BX_CPU_C *cpu;
-
-    unsigned index;          // MSR index
-    unsigned type;           // MSR type: 1 - lin address, 2 - phy address
-#define BX_LIN_ADDRESS_MSR 1
-#define BX_PHY_ADDRESS_MSR 2
-    Bit64u val64;            // current MSR value
-    Bit64u reset_value;      // reset value
-    Bit64u reserved;         // r/o bits - fault on write
-    Bit64u ignored;          // hardwired bits - ignored on write
-
-    msr(BX_CPU_C *cpu_, unsigned idx, unsigned msr_type = 0, Bit64u reset_val = 0, Bit64u rsrv = 0, Bit64u ign = 0):
-       cpu(cpu_), index(idx), type(msr_type), val64(reset_val), reset_value(reset_val),
-       reserved(rsrv), ignored(ign) {}
-
-    msr(BX_CPU_C *cpu_, unsigned idx, Bit64u reset_val = 0, Bit64u rsrv = 0, Bit64u ign = 0):
-       cpu(cpu_), index(idx), type(0), val64(reset_val), reset_value(reset_val),
-       reserved(rsrv), ignored(ign) {}
-
-    BX_CPP_INLINE void reset() { val64 = reset_value; }
-    BX_CPP_INLINE Bit64u get64() const { return val64; }
-
-    BX_CPP_INLINE bool set64(Bit64u new_val) {
-       new_val = (new_val & ~ignored) | (val64 & ignored);
-       switch(type) {
-#if BX_SUPPORT_X86_64
-         case BX_LIN_ADDRESS_MSR:
-           if (! cpu->IsCpuidCanonical(new_val)) return 0;
-           break;
-#endif
-         case BX_PHY_ADDRESS_MSR:
-           if (! IsValidPhyAddr(new_val)) return 0;
-           break;
-         default:
-           break;
-       }
-       if ((val64 ^ new_val) & reserved) return 0;
-       val64 = new_val;
-       return 1;
-    }
-  } MSR;
-
-  MSR *msrs[BX_MSR_MAX_INDEX];
+  MSR_Descriptor **msr_desc;     // MSR descriptors for MSRs [0 .. BX_MSR_MAX_INDEX-1]
+  MSR_Descriptor **ext_msr_desc; // MSR descriptors for MSRs [0xC0000000 .. 0xC0000000+BX_EXTENDED_MSR_MAX_INDEX-1]
 #endif
 
 #if BX_SUPPORT_AMX
@@ -1360,6 +1321,8 @@ public: // for now...
   Bit32u     eipPageWindowSize;
   const Bit8u *eipFetchPtr;
   bx_phy_address pAddrFetchPage; // Guest physical address of current instruction page
+  bx_phy_address pAddrFetchPrevPage; // Guest physical address of previous instruction page, valid only
+                                     // if current fetch window was established by page split boundaryFetch
 
   // Boundaries of current stack page, based on ESP
   bx_address espPageBias;        // Linear address of current stack page
@@ -1394,6 +1357,16 @@ public: // for now...
 #endif
   unsigned show_flag;
   bx_guard_found_t guard_found;
+
+  // Debugger code breakpoints page filter, recomputed by prefetch() every
+  // time the fetch window moves to another page (and when breakpoints are
+  // changed). dbg_instruction_epilog() looks for vir/lin/phy code breakpoints
+  // only if one of them could be located on the current fetch page, so the
+  // cost of the check does not depend on number of breakpoints defined.
+  bx_address dbg_fetch_lpf;     // linear page of the current fetch window
+  bool dbg_code_bp_on_page;     // some enabled code breakpoint might be on the current fetch page
+  bool dbg_code_bp_hit;         // prefetch() found code breakpoint on the first instruction of the new page
+  Bit64u dbg_loop_icount;       // icount on cpu_loop_debugger() entry
 #endif
 
 #if BX_INSTRUMENTATION
@@ -1429,7 +1402,7 @@ public: // for now...
   } PDPTR_CACHE;
 #endif
 
-  bxICache_c *iCache; // better to be aligned to 64-bytes boundary
+  bxTraceCache_c *traceCache; // better to be aligned to 64-bytes boundary
   Bit32u fetchModeMask;
 
   struct {
@@ -4616,6 +4589,9 @@ public: // for now...
 #endif
 #if BX_DEBUGGER
   BX_SMF bool dbg_instruction_epilog(void);
+  BX_SMF void dbg_update_code_bp_page(void);
+  BX_SMF bool dbg_check_code_bpoints(void);
+  BX_SMF bool dbg_code_bp_after_fetch(void);
 #endif
 #if BX_GDBSTUB
   BX_SMF bool gdbstub_instruction_epilog(void);
@@ -4647,9 +4623,12 @@ public: // for now...
 
   BX_SMF void boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bxInstruction_c *);
 
+  BX_SMF bxTraceCacheEntry_c *serveTraceCacheMiss(Bit32u eipBiased, bx_phy_address pAddr);
+  BX_SMF bxTraceCacheEntry_c* getTraceCacheEntry(void);
   BX_SMF bxICacheEntry_c *serveICacheMiss(Bit32u eipBiased, bx_phy_address pAddr);
+  BX_SMF bxICacheEntry_c *fillICacheEntry(const Bit8u *fetchPtr, unsigned remainingInPage, bx_phy_address pAddr);
   BX_SMF bxICacheEntry_c* getICacheEntry(void);
-  BX_SMF bool mergeTraces(bxICacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr);
+  BX_SMF bool mergeTraces(bxTraceCacheEntry_c *entry, bxInstruction_c *i, bx_phy_address pAddr);
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS && BX_ENABLE_TRACE_LINKING
   BX_SMF void linkTrace(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 #endif
@@ -5410,6 +5389,7 @@ public: // for now...
  BX_SMF bool EndbranchEnabledAndNotSuppressed(unsigned cpl) BX_CPP_AttrRegparmN(1);
  BX_SMF bool WaitingForEndbranch(unsigned cpl) BX_CPP_AttrRegparmN(1);
  BX_SMF bool LegacyEndbranchTreatment(unsigned cpl) BX_CPP_AttrRegparmN(1);
+ BX_SMF void CheckEndbranch(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
  BX_SMF void track_indirect(unsigned cpl) BX_CPP_AttrRegparmN(1);
  BX_SMF void track_indirect_if_not_suppressed(bxInstruction_c *i, unsigned cpl) BX_CPP_AttrRegparmN(2);
  BX_SMF void reset_endbranch_tracker(unsigned cpl, bool suppress=false) BX_CPP_AttrRegparmN(2);
@@ -5545,6 +5525,7 @@ public: // for now...
   BX_SMF void Svm_Vmexit(int reason, Bit64u exitinfo1 = 0, Bit64u exitinfo2 = 0);
   BX_SMF void SvmExitSaveGuestState(void);
   BX_SMF void SvmExitLoadHostState(SVM_HOST_STATE *host);
+  BX_SMF unsigned SvmFetchGuestInstructionBytes(Bit8u *bytes);
   BX_SMF Bit8u vmcb_read8(unsigned offset);
   BX_SMF Bit16u vmcb_read16(unsigned offset);
   BX_SMF Bit32u vmcb_read32(unsigned offset);
@@ -5567,11 +5548,12 @@ public: // for now...
 #endif
 
 #if BX_CPU_LEVEL >= 5
-  void init_MSRs();
-  void destroy_MSRs();
-#if BX_CONFIGURE_MSRS
-  int load_MSRs(const char *file);
-#endif
+  BX_SMF void init_MSRs();
+  BX_SMF void destroy_MSRs();
+  BX_SMF void reset_MSRs(unsigned source);
+  BX_SMF void register_MSRs_state(bx_list_c *parent);
+  BX_SMF MSR_Descriptor* get_MSR_descriptor(Bit32u index);
+  BX_SMF int load_MSRs(const char *file);
 #endif
 };
 
@@ -5660,6 +5642,14 @@ enum {
   BX_FETCH_MODE_AMX_OK            = (1 << 7),
   BX_FETCH_MODE_SCALEDATA_OK      = (1 << 8)
 };
+
+// number of fetchModeMask bits which could be set with current configuration
+// (the trace cache and instruction cache rely on it, update when adding new fetchModeMask bits)
+#if BX_SUPPORT_AMX
+const unsigned BX_FETCH_MODE_MASK_BITS = 9;
+#else
+const unsigned BX_FETCH_MODE_MASK_BITS = 7;
+#endif
 
 BX_CPP_INLINE void BX_CPU_C::set_fpu_mmx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_FPU_MMX_OK; }
 BX_CPP_INLINE void BX_CPU_C::clear_fpu_mmx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~BX_FETCH_MODE_FPU_MMX_OK; }

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -60,6 +60,12 @@ void BX_CPU_C::cpu_loop_debugger(void)
   BX_CPU_THIS_PTR magic_break = 0;
   BX_CPU_THIS_PTR stop_reason = STOP_NO_REASON;
 
+  // Remember icount on entry: code breakpoint must not be reported on the
+  // instruction we are resuming from before at least one instruction was
+  // executed (e.g. continue from a breakpoint).
+  BX_CPU_THIS_PTR dbg_code_bp_hit = false;
+  BX_CPU_THIS_PTR dbg_loop_icount = get_icount();
+
   if (setjmp(BX_CPU_THIS_PTR jmp_buf_env)) {
     // can get here only from exception function or VMEXIT
     BX_CPU_THIS_PTR icount++;
@@ -89,41 +95,44 @@ void BX_CPU_C::cpu_loop_debugger(void)
         // If request to return to caller ASAP.
         return;
       }
-    }
 
-    // stop tracing after every instruction to handle in internal debugger
-    BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
-
-    bxICacheEntry_c *entry = getICacheEntry();
-    bxInstruction_c *i = entry->i;
-    bxInstruction_c *last = i + (entry->tlen);
-
-    for(;;) {
-      if (BX_CPU_THIS_PTR trace)
-        debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
-
-      // want to allow changing of the instruction inside instrumentation callback
-      BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
-      RIP += i->ilen();
-      BX_CPU_CALL_METHOD(i->execute1, (i)); // might iterate repeat instruction
-#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS == 0
-      BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
-      BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
-      BX_CPU_THIS_PTR icount++;
-#endif
-      if (BX_SMP_PROCESSORS == 1) BX_TICK1();
-
-      // note instructions generating exceptions never reach this point
-      if (dbg_instruction_epilog()) return;
-
-      if (BX_CPU_THIS_PTR async_event & ~BX_ASYNC_EVENT_STOP_TRACE) break;
-
-      if (++i == last) {
-        entry = getICacheEntry();
-        i = entry->i;
-        last = i + (entry->tlen);
+      // Event delivery (interrupt, SMI, VMEXIT etc.) could redirect RIP
+      // without leaving current fetch window, in such case prefetch() won't
+      // be called for the new RIP. Check code breakpoints here, the check
+      // after page change is done by prefetch() through dbg_code_bp_after_fetch().
+      if (BX_CPU_THIS_PTR dbg_code_bp_on_page && get_icount() != BX_CPU_THIS_PTR dbg_loop_icount) {
+        bx_address eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
+        if (eipBiased < BX_CPU_THIS_PTR eipPageWindowSize) {
+          if (dbg_check_code_bpoints()) return;
+        }
       }
     }
+
+    // Stop tracing after every instruction to handle in internal debugger.
+    // The internal debugger executes individual instructions directly from
+    // the instruction cache, the stop trace indication must be set before
+    // every instruction, otherwise with handlers chaining the instruction
+    // would continue to the next (unrelated) instruction cache entry.
+    BX_CPU_THIS_PTR async_event |= BX_ASYNC_EVENT_STOP_TRACE;
+
+    bxInstruction_c *i = &(getICacheEntry()->i);
+    if (dbg_code_bp_after_fetch()) return;
+
+    if (BX_CPU_THIS_PTR trace)
+      debug_disasm_instruction(BX_CPU_THIS_PTR prev_rip);
+
+    BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
+    RIP += i->ilen();
+    BX_CPU_CALL_METHOD(i->execute1, (i)); // might iterate repeat instruction
+#if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS == 0
+    BX_CPU_THIS_PTR prev_rip = RIP; // commit new RIP
+    BX_INSTR_AFTER_EXECUTION(BX_CPU_ID, i);
+    BX_CPU_THIS_PTR icount++;
+#endif
+    if (BX_SMP_PROCESSORS == 1) BX_TICK1();
+
+    // note instructions generating exceptions never reach this point
+    if (dbg_instruction_epilog()) return;
   }  // while (1)
 }
 #endif // BX_DEBUGGER
@@ -176,12 +185,11 @@ void BX_CPU_C::cpu_loop(void)
       }
     }
 
-    bxICacheEntry_c *entry = getICacheEntry();
+    bxTraceCacheEntry_c *entry = getTraceCacheEntry();
     bxInstruction_c *i = entry->i;
 
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
     for(;;) {
-      // want to allow changing of the instruction inside instrumentation callback
       BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
       RIP += i->ilen();
       // when handlers chaining is enabled this single call will execute entire trace
@@ -191,7 +199,7 @@ void BX_CPU_C::cpu_loop(void)
 
       if (BX_CPU_THIS_PTR async_event) break;
 
-      i = getICacheEntry()->i;
+      i = getTraceCacheEntry()->i;
     }
 #else // BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS == 0
 
@@ -199,7 +207,6 @@ void BX_CPU_C::cpu_loop(void)
 
     for(;;) {
 
-      // want to allow changing of the instruction inside instrumentation callback
       BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
       RIP += i->ilen();
       BX_CPU_CALL_METHOD(i->execute1, (i)); // might iterate repeat instruction
@@ -217,7 +224,7 @@ void BX_CPU_C::cpu_loop(void)
       if (BX_CPU_THIS_PTR async_event) break;
 
       if (++i == last) {
-        entry = getICacheEntry();
+        entry = getTraceCacheEntry();
         i = entry->i;
         last = i + (entry->tlen);
       }
@@ -243,11 +250,10 @@ void BX_CPU_C::cpu_run_trace(void)
     }
   }
 
-  bxICacheEntry_c *entry = getICacheEntry();
+  bxTraceCacheEntry_c *entry = getTraceCacheEntry();
   bxInstruction_c *i = entry->i;
 
 #if BX_SUPPORT_HANDLERS_CHAINING_SPEEDUPS
-  // want to allow changing of the instruction inside instrumentation callback
   BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
   RIP += i->ilen();
   // when handlers chaining is enabled this single call will execute entire trace
@@ -261,7 +267,6 @@ void BX_CPU_C::cpu_run_trace(void)
   bxInstruction_c *last = i + (entry->tlen);
 
   for(;;) {
-    // want to allow changing of the instruction inside instrumentation callback
     BX_INSTR_BEFORE_EXECUTION(BX_CPU_ID, i);
     RIP += i->ilen();
     BX_CPU_CALL_METHOD(i->execute1, (i)); // might iterate repeat instruction
@@ -284,6 +289,50 @@ void BX_CPU_C::cpu_run_trace(void)
 
 #include "decoder/ia_opcodes.h"
 
+#if BX_SUPPORT_CET
+// called when the CPU is waiting for ENDBRANCH, i is the next instruction to execute
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::CheckEndbranch(bxInstruction_c *i)
+{
+  if (i->getIaOpcode() != (long64_mode() ? BX_IA_ENDBRANCH64 : BX_IA_ENDBRANCH32) && i->getIaOpcode() != BX_IA_INT3) {
+    if (LegacyEndbranchTreatment(CPL)) {
+      BX_ERROR(("#CP(ENDBRANCH): Endbranch is expected for CPL=%d", CPL));
+      exception(BX_CP_EXCEPTION, BX_CP_ENDBRANCH);
+    }
+  }
+}
+#endif
+
+bxTraceCacheEntry_c* BX_CPU_C::getTraceCacheEntry(void)
+{
+  bx_address eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
+
+  if (eipBiased >= BX_CPU_THIS_PTR eipPageWindowSize) {
+    prefetch();
+    eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
+  }
+
+  INC_ICACHE_STAT(traceCacheLookups);
+
+  bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrFetchPage + eipBiased;
+  bxTraceCacheEntry_c *entry = BX_CPU_THIS_PTR traceCache->find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+
+  if (entry == NULL || entry->i->ilen() == 0)
+  {
+    // Trace cache miss. No valid trace with matching fetch parameters is in the trace cache.
+    INC_ICACHE_STAT(traceCacheMisses);
+    entry = serveTraceCacheMiss((Bit32u) eipBiased, pAddr);
+  }
+
+#if BX_SUPPORT_CET
+  if (WaitingForEndbranch(CPL))
+    CheckEndbranch(entry->i);
+#endif
+
+  BX_ASSERT(entry->i->ilen() != 0);
+
+  return entry;
+}
+
 bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
 {
   bx_address eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
@@ -296,28 +345,22 @@ bxICacheEntry_c* BX_CPU_C::getICacheEntry(void)
   INC_ICACHE_STAT(iCacheLookups);
 
   bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrFetchPage + eipBiased;
-  bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache->find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+  bxICacheEntry_c *entry = iCache.find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
-  if (entry == NULL || entry->i->ilen() == 0)
+  // the cached instruction must fit into current fetch window (CS.limit could shrink)
+  if (entry == NULL || entry->i.ilen() > (BX_CPU_THIS_PTR eipPageWindowSize - eipBiased))
   {
-    // iCache miss. No validated instruction with matching fetch parameters is in the iCache.
+    // Instruction cache miss
     INC_ICACHE_STAT(iCacheMisses);
     entry = serveICacheMiss((Bit32u) eipBiased, pAddr);
   }
 
 #if BX_SUPPORT_CET
-  if (WaitingForEndbranch(CPL)) {
-    bxInstruction_c *i = entry->i;
-    if (i->getIaOpcode() != (long64_mode() ? BX_IA_ENDBRANCH64 : BX_IA_ENDBRANCH32) && i->getIaOpcode() != BX_IA_INT3) {
-      if (LegacyEndbranchTreatment(CPL)) {
-        BX_ERROR(("#CP(ENDBRANCH): Endbranch is expected for CPL=%d", CPL));
-        exception(BX_CP_EXCEPTION, BX_CP_ENDBRANCH);
-      }
-    }
-  }
+  if (WaitingForEndbranch(CPL))
+    CheckEndbranch(&entry->i);
 #endif
 
-  BX_ASSERT(entry->i->ilen() != 0);
+  BX_ASSERT(entry->i.ilen() != 0);
 
   return entry;
 }
@@ -364,7 +407,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::linkTrace(bxInstruction_c *i)
 
   BX_SYNC_TIME_IF_SINGLE_PROCESSOR(0);
 
-  bxInstruction_c *next = i->getNextTrace(BX_CPU_THIS_PTR iCache->traceLinkTimeStamp);
+  bxInstruction_c *next = i->getNextTrace(BX_CPU_THIS_PTR traceCache->traceLinkTimeStamp);
   if (next) {
     BX_EXECUTE_INSTRUCTION(next);
     return;
@@ -376,14 +419,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::linkTrace(bxInstruction_c *i)
     eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
   }
 
-  INC_ICACHE_STAT(iCacheLookups);
+  INC_ICACHE_STAT(traceCacheLookups);
 
   bx_phy_address pAddr = BX_CPU_THIS_PTR pAddrFetchPage + eipBiased;
-  bxICacheEntry_c *entry = BX_CPU_THIS_PTR iCache->find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
+  bxTraceCacheEntry_c *entry = BX_CPU_THIS_PTR traceCache->find_entry(pAddr, BX_CPU_THIS_PTR fetchModeMask);
 
   if (entry != NULL) // link traces - handle only hit cases
   {
-    i->setNextTrace(entry->i, BX_CPU_THIS_PTR iCache->traceLinkTimeStamp);
+    i->setNextTrace(entry->i, BX_CPU_THIS_PTR traceCache->traceLinkTimeStamp);
     i = entry->i;
     BX_EXECUTE_INSTRUCTION(i);
   }
@@ -616,8 +659,14 @@ void BX_CPU_C::prefetch(void)
 {
   bx_address laddr;
   unsigned pageOffset;
+  Bit32u windowSize;
 
   INC_ICACHE_STAT(iCachePrefetch);
+
+  // Keep the fetch window invalid until the new code page is successfully
+  // translated. If prefetch faults the window must not mix the new page bias
+  // with the old page fetch pointer (SVM decode assist relies on it).
+  BX_CPU_THIS_PTR eipPageWindowSize = 0;
 
 #if BX_SUPPORT_X86_64
   if (long64_mode()) {
@@ -632,7 +681,7 @@ void BX_CPU_C::prefetch(void)
 
     // Calculate RIP at the beginning of the page.
     BX_CPU_THIS_PTR eipPageBias = pageOffset - RIP;
-    BX_CPU_THIS_PTR eipPageWindowSize = 4096;
+    windowSize = 4096;
   }
   else
 #endif
@@ -660,9 +709,9 @@ void BX_CPU_C::prefetch(void)
       exception(BX_GP_EXCEPTION, 0);
     }
 
-    BX_CPU_THIS_PTR eipPageWindowSize = 4096;
+    windowSize = 4096;
     if (limit + BX_CPU_THIS_PTR eipPageBias < 4096) {
-      BX_CPU_THIS_PTR eipPageWindowSize = (Bit32u)(limit + BX_CPU_THIS_PTR eipPageBias + 1);
+      windowSize = (Bit32u)(limit + BX_CPU_THIS_PTR eipPageBias + 1);
     }
   }
 
@@ -706,6 +755,9 @@ void BX_CPU_C::prefetch(void)
     BX_CPU_THIS_PTR pAddrFetchPage = PPFOf(pAddr);
   }
 
+  // previous page is known only for fetch window established by boundaryFetch
+  BX_CPU_THIS_PTR pAddrFetchPrevPage = BX_ICACHE_INVALID_PHY_ADDRESS;
+
   if (fetchPtr) {
     BX_CPU_THIS_PTR eipFetchPtr = fetchPtr;
   }
@@ -723,6 +775,28 @@ void BX_CPU_C::prefetch(void)
       }
     }
   }
+
+  // the new fetch window is valid now
+  BX_CPU_THIS_PTR eipPageWindowSize = windowSize;
+
+#if BX_DEBUGGER
+  // New fetch window is established: recompute debugger code breakpoints
+  // page filter for it. Similar to x86 HW code breakpoints the instruction
+  // at the beginning of the new window will be executed before the next
+  // dbg_instruction_epilog() so check it right here. The check is done only
+  // on instruction boundary (not for page split instruction fetch) and only
+  // if at least one instruction was executed since cpu_loop_debugger() entry.
+  if (bx_dbg.debugger_active) {
+    BX_CPU_THIS_PTR dbg_fetch_lpf = lpf;
+    dbg_update_code_bp_page();
+    if (BX_CPU_THIS_PTR dbg_code_bp_on_page) {
+      if (RIP == BX_CPU_THIS_PTR prev_rip && get_icount() != BX_CPU_THIS_PTR dbg_loop_icount) {
+        if (dbg_check_code_bpoints())
+          BX_CPU_THIS_PTR dbg_code_bp_hit = true;
+      }
+    }
+  }
+#endif
 }
 
 #if BX_DEBUGGER
@@ -776,68 +850,167 @@ bool BX_CPU_C::dbg_instruction_epilog(void)
   // Just committed an instruction, before fetching a new one
   // see if debugger is looking for iaddr breakpoint of any type
   if (bx_guard.guard_for) {
-    bx_address debug_eip = RIP;
-    Bit16u cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
-    dbg_get_guard_state(&BX_CPU_THIS_PTR guard_found.guard_state);
 
     if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_ALL) {
-#if (BX_DBG_MAX_VIR_BPOINTS > 0)
-      if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_VIR) {
-        for (unsigned n=0; n<bx_guard.iaddr.num_virtual; n++) {
-          if (bx_guard.iaddr.vir[n].enabled &&
-             (bx_guard.iaddr.vir[n].cs  == cs) &&
-             (bx_guard.iaddr.vir[n].eip == debug_eip))
-          {
-            if (! bx_guard.iaddr.vir[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.vir[n].condition)) {
-              BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_VIR;
-              BX_CPU_THIS_PTR guard_found.iaddr_index = n;
-              return true; // on a breakpoint
-            }
-          }
+      bx_address eipBiased = RIP + BX_CPU_THIS_PTR eipPageBias;
+      if (eipBiased < BX_CPU_THIS_PTR eipPageWindowSize) {
+        // RIP is still inside current fetch window so the page filter
+        // computed by prefetch() is valid for it. Skip the breakpoints
+        // lookup completely if no code breakpoint is on this page.
+        if (BX_CPU_THIS_PTR dbg_code_bp_on_page) {
+          if (dbg_check_code_bpoints()) return true; // on a breakpoint
         }
       }
-#endif
-#if (BX_DBG_MAX_LIN_BPOINTS > 0)
-      if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_LIN) {
-        for (unsigned n=0; n<bx_guard.iaddr.num_linear; n++) {
-          if (bx_guard.iaddr.lin[n].enabled &&
-             (bx_guard.iaddr.lin[n].addr == BX_CPU_THIS_PTR guard_found.guard_state.laddr))
-          {
-            if (! bx_guard.iaddr.lin[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.lin[n].condition)) {
-              BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_LIN;
-              BX_CPU_THIS_PTR guard_found.iaddr_index = n;
-              return true; // on a breakpoint
-            }
-          }
+      else {
+        // RIP left current fetch window, normally the next prefetch() will
+        // take care of the code breakpoint check for the new RIP. But if we
+        // are about to leave cpu_loop_debugger() (icount guard reached or
+        // async event could request return) there will be no such prefetch()
+        // before the next cpu_loop_debugger() entry, so do the check now.
+        if ((BX_CPU_THIS_PTR async_event & ~BX_ASYNC_EVENT_STOP_TRACE) ||
+           ((bx_guard.guard_for & BX_DBG_GUARD_ICOUNT) && get_icount() >= BX_CPU_THIS_PTR guard_found.icount_max))
+        {
+          if (dbg_check_code_bpoints()) return true; // on a breakpoint
         }
       }
-#endif
-#if (BX_DBG_MAX_PHY_BPOINTS > 0)
-      if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_PHY) {
-        bx_phy_address phy;
-        bool valid = dbg_xlate_linear2phy(BX_CPU_THIS_PTR guard_found.guard_state.laddr, &phy);
-        if (valid) {
-          for (unsigned n=0; n<bx_guard.iaddr.num_physical; n++) {
-            if (bx_guard.iaddr.phy[n].enabled && (bx_guard.iaddr.phy[n].addr == phy))
-            {
-              if (! bx_guard.iaddr.phy[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.phy[n].condition)) {
-                BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
-                BX_CPU_THIS_PTR guard_found.iaddr_index = n;
-                return true; // on a breakpoint
-              }
-            }
-          }
-        }
-      }
-#endif
     }
 
     // see if debugger requesting icount guard
     if (bx_guard.guard_for & BX_DBG_GUARD_ICOUNT) {
       if (get_icount() >= BX_CPU_THIS_PTR guard_found.icount_max) {
+        dbg_get_guard_state(&BX_CPU_THIS_PTR guard_found.guard_state);
         return true;
       }
     }
+  }
+
+  return false;
+}
+
+// Recompute debugger code breakpoints page filter for the current fetch
+// window. Called by prefetch() and when debugger breakpoints are changed.
+// The check is conservative: virtual breakpoint CS selector is ignored and
+// only EIP is compared against the window, so CS reload which doesn't
+// invalidate the fetch window could never hide a breakpoint.
+void BX_CPU_C::dbg_update_code_bp_page(void)
+{
+  BX_CPU_THIS_PTR dbg_code_bp_on_page = false;
+
+  if (! (bx_guard.guard_for & BX_DBG_GUARD_IADDR_ALL)) return;
+
+#if (BX_DBG_MAX_VIR_BPOINTS > 0)
+  if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_VIR) {
+    for (unsigned n=0; n<bx_guard.iaddr.num_virtual; n++) {
+      if (bx_guard.iaddr.vir[n].enabled) {
+        bx_address eipBiased = bx_guard.iaddr.vir[n].eip + BX_CPU_THIS_PTR eipPageBias;
+        if (eipBiased < BX_CPU_THIS_PTR eipPageWindowSize) {
+          BX_CPU_THIS_PTR dbg_code_bp_on_page = true;
+          return;
+        }
+      }
+    }
+  }
+#endif
+#if (BX_DBG_MAX_LIN_BPOINTS > 0)
+  if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_LIN) {
+    for (unsigned n=0; n<bx_guard.iaddr.num_linear; n++) {
+      if (bx_guard.iaddr.lin[n].enabled && LPFOf(bx_guard.iaddr.lin[n].addr) == BX_CPU_THIS_PTR dbg_fetch_lpf) {
+        BX_CPU_THIS_PTR dbg_code_bp_on_page = true;
+        return;
+      }
+    }
+  }
+#endif
+#if (BX_DBG_MAX_PHY_BPOINTS > 0)
+  if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_PHY) {
+    for (unsigned n=0; n<bx_guard.iaddr.num_physical; n++) {
+      if (bx_guard.iaddr.phy[n].enabled && PPFOf(bx_guard.iaddr.phy[n].addr) == BX_CPU_THIS_PTR pAddrFetchPage) {
+        BX_CPU_THIS_PTR dbg_code_bp_on_page = true;
+        return;
+      }
+    }
+  }
+#endif
+}
+
+// Exact code breakpoints match for the instruction at current CS:RIP.
+// Physical address of the instruction is taken from the current fetch window
+// when RIP is inside it (no page walk), otherwise translated by debugger.
+bool BX_CPU_C::dbg_check_code_bpoints(void)
+{
+  bx_address debug_eip = RIP;
+  Bit16u cs = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+  bx_address laddr = get_laddr(BX_SEG_REG_CS, debug_eip);
+
+#if (BX_DBG_MAX_VIR_BPOINTS > 0)
+  if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_VIR) {
+    for (unsigned n=0; n<bx_guard.iaddr.num_virtual; n++) {
+      if (bx_guard.iaddr.vir[n].enabled &&
+         (bx_guard.iaddr.vir[n].cs  == cs) &&
+         (bx_guard.iaddr.vir[n].eip == debug_eip))
+      {
+        if (! bx_guard.iaddr.vir[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.vir[n].condition)) {
+          dbg_get_guard_state(&BX_CPU_THIS_PTR guard_found.guard_state);
+          BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_VIR;
+          BX_CPU_THIS_PTR guard_found.iaddr_index = n;
+          return true; // on a breakpoint
+        }
+      }
+    }
+  }
+#endif
+#if (BX_DBG_MAX_LIN_BPOINTS > 0)
+  if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_LIN) {
+    for (unsigned n=0; n<bx_guard.iaddr.num_linear; n++) {
+      if (bx_guard.iaddr.lin[n].enabled &&
+         (bx_guard.iaddr.lin[n].addr == laddr))
+      {
+        if (! bx_guard.iaddr.lin[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.lin[n].condition)) {
+          dbg_get_guard_state(&BX_CPU_THIS_PTR guard_found.guard_state);
+          BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_LIN;
+          BX_CPU_THIS_PTR guard_found.iaddr_index = n;
+          return true; // on a breakpoint
+        }
+      }
+    }
+  }
+#endif
+#if (BX_DBG_MAX_PHY_BPOINTS > 0)
+  if (bx_guard.guard_for & BX_DBG_GUARD_IADDR_PHY) {
+    bx_phy_address phy;
+    bool valid = true;
+    bx_address eipBiased = debug_eip + BX_CPU_THIS_PTR eipPageBias;
+    if (eipBiased < BX_CPU_THIS_PTR eipPageWindowSize)
+      phy = BX_CPU_THIS_PTR pAddrFetchPage + eipBiased;
+    else
+      valid = dbg_xlate_linear2phy(laddr, &phy);
+    if (valid) {
+      for (unsigned n=0; n<bx_guard.iaddr.num_physical; n++) {
+        if (bx_guard.iaddr.phy[n].enabled && (bx_guard.iaddr.phy[n].addr == phy))
+        {
+          if (! bx_guard.iaddr.phy[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.phy[n].condition)) {
+            dbg_get_guard_state(&BX_CPU_THIS_PTR guard_found.guard_state);
+            BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
+            BX_CPU_THIS_PTR guard_found.iaddr_index = n;
+            return true; // on a breakpoint
+          }
+        }
+      }
+    }
+  }
+#endif
+
+  return false;
+}
+
+// Called by cpu_loop_debugger() right after getICacheEntry(), before the
+// fetched instruction is executed. Returns true if prefetch() found code
+// breakpoint on the first instruction of the new fetch window.
+bool BX_CPU_C::dbg_code_bp_after_fetch(void)
+{
+  if (BX_CPU_THIS_PTR dbg_code_bp_hit) {
+    BX_CPU_THIS_PTR dbg_code_bp_hit = false;
+    return true;
   }
 
   return false;

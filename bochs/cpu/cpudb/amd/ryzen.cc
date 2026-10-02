@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2012-2017 Stanislav Shwartsman
+//   Copyright (c) 2012-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -43,6 +43,7 @@ ryzen_t::ryzen_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
   enable_cpu_extension(BX_ISA_P6);
+  enable_cpu_extension(BX_ISA_AMD);
   enable_cpu_extension(BX_ISA_MMX);
   enable_cpu_extension(BX_ISA_SYSCALL_SYSRET_LEGACY);
   enable_cpu_extension(BX_ISA_SYSENTER_SYSEXIT);
@@ -198,7 +199,7 @@ Bit32u ryzen_t::get_svm_extensions_bitmask(void) const
 //       BX_CPUID_SVM_TSCRATE | // not implemented yet
 //       BX_CPUID_SVM_VMCB_CLEAN_BITS | // not implemented yet
          BX_CPUID_SVM_FLUSH_BY_ASID |
-//       BX_CPUID_SVM_DECODE_ASSIST | // not implemented yet
+         BX_CPUID_SVM_DECODE_ASSIST |
          BX_CPUID_SVM_PAUSE_FILTER |
          BX_CPUID_SVM_PAUSE_FILTER_THRESHOLD;
 //       BX_CPUID_SVM_AVIC; // not implemented yet

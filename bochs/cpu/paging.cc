@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -410,7 +410,7 @@ void BX_CPU_C::TLB_flush(void)
 #endif
 
   // break all links bewteen traces
-  BX_CPU_THIS_PTR iCache->breakLinks();
+  BX_CPU_THIS_PTR traceCache->breakLinks();
 }
 
 #if BX_CPU_LEVEL >= 6
@@ -431,7 +431,7 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
 #endif
 
   // break all links bewteen traces
-  BX_CPU_THIS_PTR iCache->breakLinks();
+  BX_CPU_THIS_PTR traceCache->breakLinks();
 }
 #endif
 
@@ -451,7 +451,7 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
 #endif
 
   // break all links bewteen traces
-  BX_CPU_THIS_PTR iCache->breakLinks();
+  BX_CPU_THIS_PTR traceCache->breakLinks();
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
@@ -804,14 +804,14 @@ Bit32u BX_CPU_C::handle_pkeys(bx_address laddr, Bit64u leaf_entry, unsigned user
 
       // check of accessDisable bit set
       if (BX_CPU_THIS_PTR pkrs & (1<<(pkey*2))) {
-        BX_ERROR(("protection key access not allowed PKRS=%x pkey=%d", BX_CPU_THIS_PTR pkrs, pkey));
+        BX_ERROR(("protection key access not allowed PKRS=%x pkey=%d", (Bit32u) BX_CPU_THIS_PTR pkrs, pkey));
         page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
       }
 
       // check of writeDisable bit set
       if (BX_CPU_THIS_PTR pkrs & (1<<(pkey*2+1))) {
         if (isWrite && BX_CPU_THIS_PTR cr0.get_WP()) {
-          BX_ERROR(("protection key write not allowed PKRS=%x pkey=%d", BX_CPU_THIS_PTR pkrs, pkey));
+          BX_ERROR(("protection key write not allowed PKRS=%x pkey=%d", (Bit32u) BX_CPU_THIS_PTR pkrs, pkey));
           page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
         }
       }

@@ -93,6 +93,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TOP2BF16PS_TnnnWdqHdq(bxInstruction_c *i)
     }
   }
 
+  BX_CPU_THIS_PTR amx->set_tile_used(tile_dst);
+
   BX_NEXT_INSTR(i);
 }
 
@@ -131,6 +133,8 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::top4b_execute(bxInstruction_c *i, bool a_s
       tdst->row[row].vmm32u(col) += (Bit32u) acc;
     }
   }
+
+  BX_CPU_THIS_PTR amx->set_tile_used(tile_dst);
 
   BX_NEXT_INSTR(i);
 }
@@ -260,6 +264,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TOP4MXBSSPS_TnnnWdqHdqIb(bxInstruction_c *
     }
   }
 
+  BX_CPU_THIS_PTR amx->set_tile_used(tile_dst);
+
   BX_NEXT_INSTR(i);
 }
 
@@ -371,6 +377,8 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::top4mxf8ps_execute(bxInstruction_c *i, boo
                                                      src2_quad, b_is_bf8, src2_scale);
     }
   }
+
+  BX_CPU_THIS_PTR amx->set_tile_used(tile_dst);
 
   BX_NEXT_INSTR(i);
 }
