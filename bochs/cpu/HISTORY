@@ -64,6 +64,7 @@ Changes after Bochs 3.1:
 - AMX: failed LDTILECFG or XRSTOR of TILECFG state should not reset TILEDATA and SCALEDATA
 + AMX: added missing reset of AMX state on hardware reset
 - MSR: reset MSR IA32_XSS only on hardware reset, unchanged on INIT
+- CPUID: correctly report presence of subleaf=1 in CPUID Leaf 0x0000001E: AMX: TMUL Information Main leaf (when present)
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):

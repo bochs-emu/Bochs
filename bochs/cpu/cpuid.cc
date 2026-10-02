@@ -630,8 +630,39 @@ void bx_cpuid_t::get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_
   if (!is_cpu_extension_supported(BX_ISA_AMX))
     return;
 
+  // AMX extensions reported in sub-leaf 1 EAX:
+  // ---
+  //    [0] AMX-INT8
+  //    [1] AMX-BF16
+  //    [2] AMX-COMPLEX
+  //    [3] AMX-FP16
+  //    [4] AMX-FP8
+  //    [5] AMX-TRANSPOSE (deprecated)
+  //    [6] AMX-TF32 (deprecated)
+  //    [7] AMX-AVX512
+  //    [8] AMX-MOVRS
+  // [31:9] reserved
+  Bit32u amx_extensions = 0;
+  if (is_cpu_extension_supported(BX_ISA_AMX_INT8))
+    amx_extensions |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_INT8;
+  if (is_cpu_extension_supported(BX_ISA_AMX_BF16))
+    amx_extensions |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_BF16;
+  if (is_cpu_extension_supported(BX_ISA_AMX_COMPLEX))
+    amx_extensions |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_COMPLEX;
+  if (is_cpu_extension_supported(BX_ISA_AMX_FP16))
+    amx_extensions |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP16;
+  if (is_cpu_extension_supported(BX_ISA_AMX_FP8))
+    amx_extensions |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP8;
+  if (is_cpu_extension_supported(BX_ISA_AMX_AVX512))
+    amx_extensions |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_AVX512;
+  if (is_cpu_extension_supported(BX_ISA_AMX_MOVRS))
+    amx_extensions |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_MOVRS;
+
   switch(subfunction) {
   case 0:
+    // EAX[31:00] = maximum number of sub-leaves supported in leaf 1EH,
+    //              sub-leaf 1 is reported only if there is AMX extension to report
+    leaf->eax = (amx_extensions != 0) ? 1 : 0;
     // EBX[07:00] = 16 TMUL_MAX_K (rows or columns)
     // EBX[23:08] = 64 TMUL_MAX_N (column bytes)
     // EBX[31:24] reserved
@@ -639,32 +670,8 @@ void bx_cpuid_t::get_std_cpuid_amx_tmul_leaf(Bit32u subfunction, cpuid_function_
     break;
 
   case 1:
-    // EAX:
-    // ---
-    //    [0] AMX-INT8
-    //    [1] AMX-BF16
-    //    [2] AMX-COMPLEX
-    //    [3] AMX-FP16
-    //    [4] AMX-FP8
-    //    [5] AMX-TRANSPOSE (deprecated)
-    //    [6] AMX-TF32 (deprecated)
-    //    [7] AMX-AVX512
-    //    [8] AMX-MOVRS
-    // [31:9] reserved
-    if (is_cpu_extension_supported(BX_ISA_AMX_INT8))
-      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_INT8;
-    if (is_cpu_extension_supported(BX_ISA_AMX_BF16))
-      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_BF16;
-    if (is_cpu_extension_supported(BX_ISA_AMX_COMPLEX))
-      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_COMPLEX;
-    if (is_cpu_extension_supported(BX_ISA_AMX_FP16))
-      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP16;
-    if (is_cpu_extension_supported(BX_ISA_AMX_FP8))
-      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_FP8;
-    if (is_cpu_extension_supported(BX_ISA_AMX_AVX512))
-      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_AVX512;
-    if (is_cpu_extension_supported(BX_ISA_AMX_MOVRS))
-      leaf->eax |= BX_CPUID_AMX_EXTENSIONS_EAX_AMX_MOVRS;
+    // EAX: AMX extensions (see above)
+    leaf->eax = amx_extensions;
     // EBX/ECX/EDX = 0 (reserved)
     break;
 
