@@ -1,5 +1,5 @@
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -451,12 +451,12 @@
 #  error "can't find sizeof(type) of 4 bytes!"
 #endif
 
-#if SIZEOF_UNSIGNED_LONG == 8
-  typedef unsigned long Bit64u;
-  typedef   signed long Bit64s;
-#elif SIZEOF_UNSIGNED_LONG_LONG == 8
+#if SIZEOF_UNSIGNED_LONG_LONG == 8
   typedef unsigned long long Bit64u;
   typedef   signed long long Bit64s;
+#elif SIZEOF_UNSIGNED_LONG == 8
+  typedef unsigned long Bit64u;
+  typedef   signed long Bit64s;
 #else
 #  error "can't find data type of 8 bytes"
 #endif
