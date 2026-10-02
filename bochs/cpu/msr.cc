@@ -249,7 +249,11 @@ void BX_CPU_C::init_MSRs()
 #endif
 
 #if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_USER_MSR_CTL] = new VarMSR("MSR_IA32_USER_MSR_CTL", BX_ISA_USER_MSR, &BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl, 0, is_canonical_msr);
+  // IA32_USER_MSR_CTL MSR:
+  //      [0] - enable URDMSR and UWRMSR
+  //   [11:1] - reserved
+  //  [63:12] - linear address of user-MSR bitmap (must be canonical)
+  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_USER_MSR_CTL] = new VarMSR("MSR_IA32_USER_MSR_CTL", BX_ISA_USER_MSR, &BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl, BX_CONST64(0xffe), is_canonical_msr);
 #endif
 
   // IA32_MPERF MSR increments in proportion to a fixed frequency, which is configured when the processor is booted.
