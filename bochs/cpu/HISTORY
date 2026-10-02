@@ -81,6 +81,7 @@ Changes after Bochs 3.1:
 - FRED: the restriction to enter compatibility mode with CPL=0 was checking target DPL instead of CPL (conforming DPL=0 code segment can be entered from CPL=3)
 - FRED: IBT tracker bit 18 of augmented CS must be set only for events occurring with CPL=0
 - FRED: ERETS must establish STI blocking only if STI blocking was not in effect prior to ERETS (was not implemented during FRED implementation and left as TODO)
+- FRED: ERETU must not check new RIP for canonicality when returning to compatibility mode (bits 63:32 of RIP are cleared instead)
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):

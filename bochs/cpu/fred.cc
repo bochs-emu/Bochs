@@ -380,8 +380,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
   Bit64u new_RSP = pop_64();
   Bit64u temp_SS = pop_64();
 
-  if (! IsCanonical(new_RIP) ||
-        (temp_CS & BX_CONST64(0xFFFFFFFFFFFF0003)) != 3 ||
+  // new RIP is checked once the new CS configuration is determined (canonical only when returning to 64-bit mode)
+  if ((temp_CS & BX_CONST64(0xFFFFFFFFFFFF0003)) != 3 ||
         (new_RFLAGS & BX_CONST64(0xFFFFFFFFFFC2B02A)) != 2 ||
         (temp_SS & 0xFFF80003) != 3) // do not check ss_selector[63:32]
   {
