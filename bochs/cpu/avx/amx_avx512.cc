@@ -78,6 +78,8 @@ bool BX_CPP_AttrRegparmN(3) BX_CPU_C::tilemov_write_row(bxInstruction_c *i, bool
 
   AMX::TILE *tdst = &(BX_CPU_THIS_PTR amx->tile[tile_dst]);
   tdst->row[row] = *src;
+
+  BX_CPU_THIS_PTR amx->set_tile_used(tile_dst);
   return true;
 }
 
@@ -137,6 +139,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILEMOVCOL_TrmWdq(bxInstruction_c *i)
     tdst->row[row].vmm32u(col) = src.vmm32u(row);
 
   BX_CPU_THIS_PTR amx->restart();
+
+  BX_CPU_THIS_PTR amx->set_tile_used(tile_dst);
 
   BX_NEXT_INSTR(i);
 }

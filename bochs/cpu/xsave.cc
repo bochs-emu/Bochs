@@ -1211,7 +1211,7 @@ void BX_CPU_C::xrstor_init_tiledata_state(void)
 
 bool BX_CPU_C::xsave_tiledata_state_xinuse(void)
 {
-  return (BX_CPU_THIS_PTR amx->tile_use_tracker == 0);  // all tiles are zero
+  return (BX_CPU_THIS_PTR amx->tile_use_tracker != 0);  // not in use if all tiles are zero
 }
 
 // SCALEDATA state management //
