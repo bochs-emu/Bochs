@@ -56,7 +56,7 @@
 #define BX_MUTEX(mutex) pthread_mutex_t mutex
 #define BX_INIT_MUTEX(mutex) pthread_mutex_init(&(mutex),NULL)
 #define BX_FINI_MUTEX(mutex) pthread_mutex_destroy(&(mutex))
-#define BX_MSLEEP(val) usleep(val*1000)
+#define BX_MSLEEP(val) usleep((val)*1000)
 
 #endif
 

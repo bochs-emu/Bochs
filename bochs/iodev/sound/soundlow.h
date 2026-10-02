@@ -99,7 +99,10 @@ public:
   virtual int openwaveoutput(const char *wavedev);
   virtual int set_pcm_params(bx_pcm_param_t *param);
   virtual int sendwavepacket(int length, Bit8u data[], bx_pcm_param_t *src_param);
-  virtual int get_packetsize();
+  virtual int get_packet_size_bytes();
+  virtual int get_packet_size_msec();
+  // Maximum amount of time audio buffer can be filled without blocking
+  virtual int get_buffer_delay();
   virtual int output(int length, Bit8u data[]);
   virtual int closewaveoutput();
 
