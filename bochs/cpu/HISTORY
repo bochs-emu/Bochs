@@ -94,6 +94,7 @@ Changes after Bochs 3.1:
 + CET: legacy code page bitmap must be read with CPL access rights (not supervisor), indexed by LA[31:15] outside 64-bit mode and LA[56:15] with LA57
 - CET: ENDBR32/ENDBR64 must not modify IA32_U_CET/IA32_S_CET TRACKER and SUPPRESS bits when indirect branch tracking is not enabled
 - CET: far RET/IRET must check restored SSP against the mode being returned to (new CS.L) and require it canonical when returning to 64-bit mode
+- CET: task switch must report #TS(new TSS) instead of #GP(0) when busy bit of new shadow stack token cannot be set, IRET task switch frees current shadow stack token only if SSP is 8-byte aligned
 + CET: fix supervisor shadow stack token release on same privilege IRET in IA-32e mode
 
 -------------------------------------------------------------------------

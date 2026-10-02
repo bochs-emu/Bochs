@@ -448,7 +448,9 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
       else {
         tempSSP = BX_CPU_THIS_PTR msr.ia32_pl_ssp[3];
       }
-      shadow_stack_atomic_clear_busy(SSP, CPL);
+      // clear busy flag on current shadow stack only if SSP is 8-byte aligned
+      if ((SSP & 0x7) == 0)
+        shadow_stack_atomic_clear_busy(SSP, CPL);
       SSP = 0;
     }
   }
@@ -789,7 +791,12 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
         BX_ERROR(("task_switch: newSSP is not aligned to 8 byte boundary"));
         exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc);
       }
-      shadow_stack_switch(newSSP);
+      SSP = newSSP;
+      // failure to set the busy flag in the new shadow stack token causes #TS(new TSS)
+      if (!shadow_stack_atomic_set_busy(SSP, CPL)) {
+        BX_ERROR(("task_switch: failure to set busy bit in new shadow stack token"));
+        exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc);
+      }
       if (pushCSLIPSSP) {
         call_far_shadow_stack_push(oldCS, oldRIP, oldSSP);
       }
