@@ -933,7 +933,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSENTER(bxInstruction_c *i)
 
 #if BX_SUPPORT_CET
   if (ShadowStackEnabled(CPL))
-    BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = SSP;
+    // in IA-32e mode adjust so bits 63:N get the value of bit N-1, N is the CPU maximum linear-address width
+    BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = long_mode() ? CpuidCanonicalizeAddress(SSP) : SSP;
   if (ShadowStackEnabled(0)) SSP = 0;
   track_indirect(0);
 #endif
@@ -1137,7 +1138,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SYSCALL(bxInstruction_c *i)
 
 #if BX_SUPPORT_CET
   if (ShadowStackEnabled(old_CPL))
-    BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = SSP;
+    // in IA-32e mode adjust so bits 63:N get the value of bit N-1, N is the CPU maximum linear-address width
+    BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = long_mode() ? CpuidCanonicalizeAddress(SSP) : SSP;
   if (ShadowStackEnabled(0)) SSP = 0;
   track_indirect(0);
 #endif
