@@ -51,6 +51,15 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Dependency: MSR
 
+- CPU feature: amd_implementation
+
+ The feature enables AMD specific implementation of x86 ISA.
+
+ For example the following differences are implemented in Bochs and distinguished by amd_implementation CPU flag:
+   * AMD hardware always clears EFLAGS.RF when #DB exception occurs
+     In Intel hardware a single-step #DB between two iterations of repeated string instruction pushes EFLAGS with RF set
+   * AMD doesn't enforce TSS386 when entering long mode
+
 - CPU Feature: mmx
 
  First introduced in Pentium.
@@ -287,13 +296,6 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Enables long mode page walk.
 
  Dependency: pae, msr, p6ni, sse and more
-
-- CPU Feature: longmode_amd (AMD specific behavior in long mode)
-
- The feature enables AMD specific behavior in long mode, for example:
- * AMD doesn't enforce TSS386 when entering long mode
-
- Dependency: longmode
 
 - CPU Feature: lm_lahf_sahf (Long Mode LAHF/SAHF instructions support)
 

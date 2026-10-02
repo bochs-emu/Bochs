@@ -42,6 +42,7 @@ phenom_8650_toliman_t::phenom_8650_toliman_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
+  enable_cpu_extension(BX_ISA_AMD);
   enable_cpu_extension(BX_ISA_MMX);
 #if BX_SUPPORT_3DNOW
   enable_cpu_extension(BX_ISA_3DNOW);
@@ -69,7 +70,6 @@ phenom_8650_toliman_t::phenom_8650_toliman_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_PAT);
   enable_cpu_extension(BX_ISA_XAPIC);
   enable_cpu_extension(BX_ISA_LONG_MODE);
-  enable_cpu_extension(BX_ISA_LONG_MODE_AMD);
   enable_cpu_extension(BX_ISA_LM_LAHF_SAHF);
   enable_cpu_extension(BX_ISA_NX);
   enable_cpu_extension(BX_ISA_FFXSR);

@@ -959,6 +959,11 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
   VMexit_Event(BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
 #endif
 
+  // AMD: a #DB pushes RF clear, also a single-step trap between two iterations of a REP string instruction
+  // (Intel pushes RF = 1 there, as the REP loop has asserted it)
+  if (vector == BX_DB_EXCEPTION && is_cpu_extension_supported(BX_ISA_AMD))
+    BX_CPU_THIS_PTR clear_RF();
+
   if (exception_class == BX_EXCEPTION_CLASS_FAULT)
   {
     // restore RIP/RSP to value before error occurred

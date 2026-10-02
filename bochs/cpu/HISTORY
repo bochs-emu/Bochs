@@ -56,6 +56,7 @@ Changes after Bochs 3.1:
 - MSR: writes to MSR_APERF/MSR_MPERF were ignored, so "write to clear" didn't work. Now any write clears the counter, and hardware reset clears it too.
 - MSR: MSR_IA32_EFER on CPU models without EFER: writing 0 used to succeed. It's now #GP(0)
 - SVM: BX_SVM_VM_CR_MSR write: the "SVMDIS while EFER.SVME=1 #GP" check tested the current VM_CR value instead of the value being written.
+- Legacy/AMD: AMD specific behavior always clear EFLAGS.RF when #DB exception occurs, however Intel pushed EFLAGS.RF=1 when rep string iteration was interrupted by #DB
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):

@@ -24,6 +24,7 @@ x86_feature(BX_ISA_X87, "x87")                                             /* FP
 x86_feature(BX_ISA_486, "486ni")                                           /* 486 new instruction */
 x86_feature(BX_ISA_PENTIUM, "pentium_ni")                                  /* Pentium new instruction */
 x86_feature(BX_ISA_P6, "p6ni")                                             /* P6 new instruction */
+x86_feature(BX_ISA_AMD, "amd_implementation")                              /* AMD specific behaviours in x86 ISA handling */
 x86_feature(BX_ISA_MMX, "mmx")                                             /* MMX instruction */
 x86_feature(BX_ISA_3DNOW, "3dnow")                                         /* 3DNow! Instructions (AMD) */
 x86_feature(BX_ISA_3DNOW_EXT, "3dnow_ext")                                 /* 3DNow! Extensions (AMD) */

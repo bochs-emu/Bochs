@@ -1065,7 +1065,7 @@ bool BX_CPU_C::SetCR0(bxInstruction_c *i, bx_address val)
         return false;
       }
       // AMD and Intel long mode implementations are slightly different
-      if (! is_cpu_extension_supported(BX_ISA_LONG_MODE_AMD)) {
+      if (! is_cpu_extension_supported(BX_ISA_AMD)) {
         // The TSS386 restriction is enforced by Intel while AMD actually doesn't check TSS type while entering the long mode
         if (BX_CPU_THIS_PTR tr.cache.type <= 3) {
           BX_ERROR(("SetCR0: attempt to enter x86-64 long mode with TSS286 in TR !"));
