@@ -22064,30 +22064,6 @@ then :
 fi
 
 
-  for ac_func in strtoull
-do :
-  ac_fn_c_check_func "$LINENO" "strtoull" "ac_cv_func_strtoull"
-if test "x$ac_cv_func_strtoull" = xyes
-then :
-  printf '%s\n' "#define HAVE_STRTOULL 1" >>confdefs.h
- printf '%s\n' "#define BX_HAVE_STRTOULL 1" >>confdefs.h
-
-fi
-
-done
-
-  for ac_func in strtouq
-do :
-  ac_fn_c_check_func "$LINENO" "strtouq" "ac_cv_func_strtouq"
-if test "x$ac_cv_func_strtouq" = xyes
-then :
-  printf '%s\n' "#define HAVE_STRTOUQ 1" >>confdefs.h
- printf '%s\n' "#define BX_HAVE_STRTOUQ 1" >>confdefs.h
-
-fi
-
-done
-
   for ac_func in strdup
 do :
   ac_fn_c_check_func "$LINENO" "strdup" "ac_cv_func_strdup"
@@ -22293,10 +22269,6 @@ else
   printf '%s\n' "#define BX_HAVE_SELECT 1" >>confdefs.h
 
   printf '%s\n' "#define BX_HAVE_SOCKLEN_T 0" >>confdefs.h
-
-  printf '%s\n' "#define BX_HAVE_STRTOULL 1" >>confdefs.h
-
-  printf '%s\n' "#define BX_HAVE_STRTOUQ 0" >>confdefs.h
 
   printf '%s\n' "#define BX_HAVE_STRDUP 1" >>confdefs.h
 

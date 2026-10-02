@@ -259,9 +259,7 @@ int bx_dbg_symbol_command(const char* filename, bool global, bx_address offset)
 
     // parse
     char* sym_name;
-#if BX_SUPPORT_X86_64 && BX_HAVE_STRTOUQ
-    bx_address addr = strtouq(buf, &sym_name, 16);
-#elif BX_SUPPORT_X86_64 && BX_HAVE_STRTOULL
+#if BX_SUPPORT_X86_64
     bx_address addr = strtoull(buf, &sym_name, 16);
 #else
     bx_address addr = strtoul(buf, &sym_name, 16);
@@ -334,7 +332,7 @@ void bx_dbg_info_symbols_command(const char *symbol)
       dbg_printf ("No symbols found\n");
     else {
       for(;iter!=rsyms->end() && bx_dbg_strprefix(probe.name, (*iter)->name);++iter) {
-#if BX_SUPPORT_X86_64 && (BX_HAVE_STRTOULL || BX_HAVE_STRTOUQ)
+#if BX_SUPPORT_X86_64
         dbg_printf (FMT_ADDRX64 ": %s\n", (*iter)->start, (*iter)->name);
 #else
         dbg_printf ("%08x: %s\n", (*iter)->start, (*iter)->name);
@@ -353,11 +351,8 @@ void bx_dbg_info_symbols_command(const char *symbol)
 
     context_t::sym_set_t::const_iterator iter;
     for(iter = syms->begin();iter!=syms->end();++iter) {
-#if BX_SUPPORT_X86_64 && (BX_HAVE_STRTOULL || BX_HAVE_STRTOUQ)
-        if (sizeof(long) == 8)
-            dbg_printf ("%16lx: %s\n", (*iter)->start, (*iter)->name);
-        else
-            dbg_printf ("%16llx: %s\n", (*iter)->start, (*iter)->name);
+#if BX_SUPPORT_X86_64
+      dbg_printf (FMT_ADDRX64 ": %s\n", (*iter)->start, (*iter)->name);
 #else
       dbg_printf ("%08x: %s\n", (*iter)->start, (*iter)->name);
 #endif

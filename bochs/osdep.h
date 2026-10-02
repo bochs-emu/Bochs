@@ -88,8 +88,6 @@ extern "C" {
 #define strrev _strrev
 #define stricmp _stricmp
 #define getch _getch
-#define strtoll _strtoi64
-#define strtoull _strtoui64
 #define isatty _isatty
 #define fileno _fileno
 #endif
@@ -155,16 +153,6 @@ extern "C" {
 // If you're considering implementing a missing library function, note
 // that it might be cleaner to conditionally disable the function call!
 //////////////////////////////////////////////////////////////////////
-
-#if BX_HAVE_STRTOULL
-  // great, just use the usual function
-#elif BX_HAVE_STRTOUQ
-  // they have strtouq and not strtoull
-  #define strtoull strtouq
-#else
-  #define strtoull bx_strtoull
-  extern Bit64u bx_strtoull (const char *nptr, char **endptr, int baseignore);
-#endif
 
 #if !BX_HAVE_STRDUP
 #define strdup bx_strdup
