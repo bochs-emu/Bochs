@@ -22041,30 +22041,6 @@ fi
 
 done
 
-  for ac_func in snprintf
-do :
-  ac_fn_c_check_func "$LINENO" "snprintf" "ac_cv_func_snprintf"
-if test "x$ac_cv_func_snprintf" = xyes
-then :
-  printf '%s\n' "#define HAVE_SNPRINTF 1" >>confdefs.h
- printf '%s\n' "#define BX_HAVE_SNPRINTF 1" >>confdefs.h
-
-fi
-
-done
-
-  for ac_func in vsnprintf
-do :
-  ac_fn_c_check_func "$LINENO" "vsnprintf" "ac_cv_func_vsnprintf"
-if test "x$ac_cv_func_vsnprintf" = xyes
-then :
-  printf '%s\n' "#define HAVE_VSNPRINTF 1" >>confdefs.h
- printf '%s\n' "#define BX_HAVE_VSNPRINTF 1" >>confdefs.h
-
-fi
-
-done
-
 if test "$MSVC_TARGET" = 0; then
 
   for ac_func in select

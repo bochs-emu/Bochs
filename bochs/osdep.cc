@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -36,30 +36,6 @@
 // Missing library functions.  These should work on any platform
 // that needs them.
 //////////////////////////////////////////////////////////////////////
-
-#if !BX_HAVE_SNPRINTF
-/* XXX use real snprintf */
-/* if they don't have snprintf, just use sprintf */
-int bx_snprintf (char *s, size_t maxlen, const char *format, ...)
-{
-  va_list arg;
-  int done;
-
-  va_start (arg, format);
-  done = vsprintf (s, format, arg);
-  va_end (arg);
-
-  return done;
-}
-
-#endif  /* !BX_HAVE_SNPRINTF */
-
-#if !BX_HAVE_VSNPRINTF
-int bx_vsnprintf (char *s, size_t maxlen, const char *format, va_list arg)
-{
-  return vsprintf (s, format, arg);
-}
-#endif /* !BX_HAVE_VSNPRINTF*/
 
 #if (!BX_HAVE_STRTOULL && !BX_HAVE_STRTOUQ)
 /* taken from glibc-2.2.2: strtod.c, and stripped down a lot.  There are

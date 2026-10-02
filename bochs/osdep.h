@@ -71,14 +71,6 @@ extern "C" {
 #endif
 
 #if defined(_MSC_VER)
-// win32 has snprintf though with different name.
-#define snprintf _snprintf
-#define vsnprintf _vsnprintf
-#undef BX_HAVE_SNPRINTF
-#undef BX_HAVE_VSNPRINTF
-#define BX_HAVE_SNPRINTF 1
-#define BX_HAVE_VSNPRINTF 1
-
 #define access _access
 #define fdopen _fdopen
 #define mktemp _mktemp
@@ -163,16 +155,6 @@ extern "C" {
 // If you're considering implementing a missing library function, note
 // that it might be cleaner to conditionally disable the function call!
 //////////////////////////////////////////////////////////////////////
-
-#if !BX_HAVE_SNPRINTF
-  #define snprintf bx_snprintf
-  extern int bx_snprintf (char *s, size_t maxlen, const char *format, ...);
-#endif
-
-#if !BX_HAVE_VSNPRINTF
-  #define vsnprintf bx_vsnprintf
-  extern int bx_vsnprintf (char *s, size_t maxlen, const char *format, va_list arg);
-#endif
 
 #if BX_HAVE_STRTOULL
   // great, just use the usual function
