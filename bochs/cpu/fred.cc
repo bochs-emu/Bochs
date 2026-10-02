@@ -31,9 +31,7 @@
 // sti_blocking: interrupt blocking by STI was in effect when hardware exception occurred
 void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code, bool sti_blocking)
 {
-#if BX_SUPPORT_VMX || BX_SUPPORT_SVM || BX_SUPPORT_FRED
   BX_CPU_THIS_PTR in_event = true;
-#endif
 
   // discard inhibits for new context (SYSCALL and SYSENTER are not delivered through interrupt()),
   // exception encountered during delivery of SYSCALL or SYSENTER should not report STI blocking
@@ -213,9 +211,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   BX_CPU_THIS_PTR fred_event_info = 0;
   BX_CPU_THIS_PTR fred_event_data = 0;
 
-#if BX_SUPPORT_VMX || BX_SUPPORT_SVM || BX_SUPPORT_FRED
   BX_CPU_THIS_PTR in_event = false;
-#endif
 
   // Loading CS will invalidate the EIP fetch window.
   invalidate_prefetch_q();
@@ -307,7 +303,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETS(bxInstruction_c *i)
       exception(BX_GP_EXCEPTION, 0);
     }
     if (new_CSL < CSL && BX_CPU_THIS_PTR msr.ia32_fred_ssp[CSL] != SSP) {
-      BX_ERROR(("IRETS changing stack level: SSP mismatch"));
+      BX_ERROR(("ERETS changing stack level: SSP mismatch"));
       exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
     }
     SSP = new_SSP;
