@@ -31,7 +31,7 @@
 #define BX_TILE_REGISTERS 8
 
 struct AMX {
-  AMX(): palette_id(0), start_row(0) {}
+  AMX(): palette_id(0), start_row(0), tile_use_tracker(0) {}
 
   unsigned palette_id; // 0 if tiles are not configured
   unsigned start_row;  // used to restart tile operations

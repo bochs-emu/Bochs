@@ -1251,6 +1251,12 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_EVEX
     for (n=0; n<8; n++) BX_WRITE_OPMASK(n, 0);
 #endif
+
+#if BX_SUPPORT_AMX
+    // Reset AMX state (TILECFG, TILEDATA and SCALEDATA) - unchanged on #INIT
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AMX))
+      BX_CPU_THIS_PTR amx->clear();
+#endif
   }
 #endif
 

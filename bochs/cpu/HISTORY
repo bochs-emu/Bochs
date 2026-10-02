@@ -59,8 +59,10 @@ Changes after Bochs 3.1:
 - Legacy/AMD: AMD specific behavior always clear EFLAGS.RF when #DB exception occurs, however Intel pushed EFLAGS.RF=1 when rep string iteration was interrupted by #DB
 - XSAVE/AMX: fixed incorrect detection of TILEDATA xinuse
 + XSAVE/AMX: fixed XSAVE of the TILECFG state
++ XSAVE/AMX: use correct value for BX_TILE_MAX_ROWS while XSAVE/XRSTOR TILEDATA state (code was using BX_TILE_REGISTERS instead of BX_TILE_MAX_ROWS)
 + AMX: correct invalid row checking for TILEMOVROW/TILEMOVCOL instructions
 - AMX: failed LDTILECFG or XRSTOR of TILECFG state should not reset TILEDATA and SCALEDATA
++ AMX: added missing reset of AMX state on hardware reset
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):

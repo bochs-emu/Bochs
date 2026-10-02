@@ -1189,7 +1189,7 @@ void BX_CPU_C::xsave_tiledata_state(bxInstruction_c *i, bx_address offset)
   bx_address asize_mask = i->asize_mask();
 
   for (unsigned tile=0; tile < BX_TILE_REGISTERS; tile++) {
-    for (unsigned row=0; row < BX_TILE_REGISTERS; row++) {
+    for (unsigned row=0; row < BX_TILE_MAX_ROWS; row++) {
       write_virtual_zmmword(i->seg(), (offset+(tile*BX_TILE_MAX_ROWS+row)*64) & asize_mask, &(BX_CPU_THIS_PTR amx->tile[tile].row[row]));
     }
   }
@@ -1200,7 +1200,7 @@ void BX_CPU_C::xrstor_tiledata_state(bxInstruction_c *i, bx_address offset)
   bx_address asize_mask = i->asize_mask();
 
   for (unsigned tile=0; tile < BX_TILE_REGISTERS; tile++) {
-    for (unsigned row=0; row < BX_TILE_REGISTERS; row++) {
+    for (unsigned row=0; row < BX_TILE_MAX_ROWS; row++) {
       read_virtual_zmmword(i->seg(), (offset+(tile*BX_TILE_MAX_ROWS+row)*64) & asize_mask, &(BX_CPU_THIS_PTR amx->tile[tile].row[row]));
     }
     BX_CPU_THIS_PTR amx->set_tile_used(tile);
