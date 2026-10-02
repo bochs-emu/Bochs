@@ -249,7 +249,11 @@ void BX_CPU_C::init_MSRs()
 #endif
 
 #if BX_SUPPORT_X86_64
-  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_USER_MSR_CTL] = new VarMSR("MSR_IA32_USER_MSR_CTL", BX_ISA_USER_MSR, &BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl, 0, is_canonical_msr);
+  // IA32_USER_MSR_CTL MSR:
+  //      [0] - enable URDMSR and UWRMSR
+  //   [11:1] - reserved
+  //  [63:12] - linear address of user-MSR bitmap (must be canonical)
+  BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_USER_MSR_CTL] = new VarMSR("MSR_IA32_USER_MSR_CTL", BX_ISA_USER_MSR, &BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl, BX_CONST64(0xffe), is_canonical_msr);
 #endif
 
   // IA32_MPERF MSR increments in proportion to a fixed frequency, which is configured when the processor is booted.
@@ -633,12 +637,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     Bit32u reason = VMX_VMEXIT_RDMSR;
+    Bit32u qualification = 0, instr_info = 0;
 #if BX_SUPPORT_AVX
     if (i->getIaOpcode() == BX_IA_RDMSR_EqId) {
       reason = VMX_VMEXIT_RDMSR_IMM;
+      qualification = index; // exit qualification is the MSR address
+      instr_info = i->dst() << 3;
     }
 #endif
-    VMexit_MSR(reason, index, 0);
+    VMexit_MSR(reason, index, qualification, instr_info);
   }
 #endif
 
@@ -952,12 +959,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     Bit32u reason = VMX_VMEXIT_WRMSR;
-    Bit32u qualification = 0;
-    if (i->getIaOpcode() != BX_IA_WRMSR) {
-      reason = VMX_VMEXIT_WRMSRNS;
+    Bit32u qualification = 0, instr_info = 0;
+#if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
+    if (i->getIaOpcode() == BX_IA_WRMSRNS_IdEq) {
+      reason = VMX_VMEXIT_WRMSRNS_IMM;
+      qualification = index; // exit qualification is the MSR address
+      instr_info = i->src() << 3;
+    }
+    else
+#endif
+    if (i->getIaOpcode() == BX_IA_WRMSRNS) {
+      // WRMSR and WRMSRNS use the same basic exit reason
       qualification = 1; // For WRMSR, the exit qualification is 0, while for WRMSRNS it is 1
     }
-    VMexit_MSR(reason, index, qualification);
+    VMexit_MSR(reason, index, qualification, instr_info);
   }
 #endif
 
@@ -1004,7 +1019,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSRLIST(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
     if (BX_CPU_THIS_PTR in_vmx_guest)
-      VMexit_MSR(VMX_VMEXIT_RDMSRLIST, (Bit32u) MSR_address, (Bit32u) MSR_address);
+      VMexit_MSR(VMX_VMEXIT_RDMSRLIST, (Bit32u) MSR_address, (Bit32u) MSR_address, 0);
 #endif
 
     if (!rdmsr((Bit32u) MSR_address, &val64))
@@ -1060,7 +1075,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSRLIST(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
     if (BX_CPU_THIS_PTR in_vmx_guest) {
       vm->msr_data = MSR_data;
-      VMexit_MSR(VMX_VMEXIT_WRMSRLIST, (Bit32u) MSR_address, (Bit32u) MSR_address);
+      VMexit_MSR(VMX_VMEXIT_WRMSRLIST, (Bit32u) MSR_address, (Bit32u) MSR_address, 0);
     }
 #endif
 
@@ -1081,29 +1096,32 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSRLIST(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::URDMSR(bxInstruction_c *i)
 {
-  Bit32u index;
+  Bit64u msr_address;
 #if BX_SUPPORT_AVX
-  if (i->getIaOpcode() == BX_IA_URDMSR_EqId) index = i->Id();
+  if (i->getIaOpcode() == BX_IA_URDMSR_EqId) msr_address = i->Id();
   else
 #endif
-    index = BX_READ_64BIT_REG(i->src());
+    msr_address = BX_READ_64BIT_REG(i->src());
 
   if ((BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl & 0x1) == 0) {
     BX_ERROR(("%s: USER_MSR is disabled in IA32_USER_MSR_CTL", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  if (index > 0x3fff) {
-    BX_ERROR(("%s: MSR %x cannot be read by instruction", i->getIaOpcodeNameShort(), index));
+  // #GP(0) if MSR_address[63:14] is not all zero
+  if (msr_address > 0x3fff) {
+    BX_ERROR(("%s: MSR 0x" FMT_LL "x cannot be read by instruction", i->getIaOpcodeNameShort(), msr_address));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+  Bit32u index = (Bit32u) msr_address;
 
   Bit8u access_control = system_read_byte(LPFOf(BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl) + (index >> 3));
   if (access_control & (1 << (index & 7)))
   {
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest)
-      VMexit_MSR(VMX_VMEXIT_URDMSR, index, 0);
+      VMexit_MSR(VMX_VMEXIT_URDMSR, index, index, i->dst() << 3);
 #endif
 
     Bit64u val_64 = 0;
@@ -1121,29 +1139,32 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::URDMSR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::UWRMSR(bxInstruction_c *i)
 {
-  Bit32u index;
+  Bit64u msr_address;
 #if BX_SUPPORT_AVX
-  if (i->getIaOpcode() == BX_IA_UWRMSR_IdEq) index = i->Id();
+  if (i->getIaOpcode() == BX_IA_UWRMSR_IdEq) msr_address = i->Id();
   else
 #endif
-    index = BX_READ_64BIT_REG(i->dst());
+    msr_address = BX_READ_64BIT_REG(i->dst());
 
   if ((BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl & 0x1) == 0) {
     BX_ERROR(("%s: USER_MSR is disabled in IA32_USER_MSR_CTL", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  if (index > 0x3fff) {
-    BX_ERROR(("%s: MSR %x cannot be written by instruction", i->getIaOpcodeNameShort(), index));
+  // #GP(0) if MSR_address[63:14] is not all zero
+  if (msr_address > 0x3fff) {
+    BX_ERROR(("%s: MSR 0x" FMT_LL "x cannot be written by instruction", i->getIaOpcodeNameShort(), msr_address));
     exception(BX_GP_EXCEPTION, 0);
   }
+
+  Bit32u index = (Bit32u) msr_address;
 
   Bit8u access_control = system_read_byte(LPFOf(BX_CPU_THIS_PTR msr.ia32_user_msr_ctrl) + (index >> 3) + 2048);
   if (access_control & (1 << (index & 7)))
   {
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest)
-      VMexit_MSR(VMX_VMEXIT_UWRMSR, index, 0);
+      VMexit_MSR(VMX_VMEXIT_UWRMSR, index, index, i->src() << 3);
 #endif
 
     Bit64u val_64 = BX_READ_64BIT_REG(i->src());

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2025 Stanislav Shwartsman
+//   Copyright (c) 2005-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -244,8 +244,10 @@ BX_CPU_C::return_protected(bxInstruction_c *i, Bit16u pop_bytes)
 }
 
 #if BX_SUPPORT_CET
+// cs_image is compared against the full 64-bit CS image saved on the shadow stack,
+// FRED event delivery saves CS selector augmented with CSL and IBT tracker state in bits [18:16]
   bx_address BX_CPP_AttrRegparmN(2)
-BX_CPU_C::shadow_stack_restore(Bit16u raw_cs_selector, bx_address return_lip)
+BX_CPU_C::shadow_stack_restore(Bit64u cs_image, bx_address return_lip)
 {
   if (SSP & 0x7) {
     BX_ERROR(("shadow_stack_restore: SSP must be 8-byte aligned"));
@@ -256,7 +258,7 @@ BX_CPU_C::shadow_stack_restore(Bit16u raw_cs_selector, bx_address return_lip)
   Bit64u shadowLIP = shadow_stack_pop_64();
   Bit64u shadowCS  = shadow_stack_pop_64();
 
-  if (raw_cs_selector != shadowCS) {
+  if (cs_image != shadowCS) {
     BX_ERROR(("shadow_stack_restore: CS mismatch"));
     exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
   }

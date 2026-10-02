@@ -164,7 +164,9 @@ public:
 
   virtual int openwaveoutput(const char *wavedev);
   virtual int set_pcm_params(bx_pcm_param_t *param);
-  virtual int get_packetsize();
+  virtual int get_packet_size_bytes();
+  virtual int get_packet_size_msec();
+  virtual int get_buffer_delay();
   virtual int output(int length, Bit8u data[]);
   virtual int closewaveoutput();
   void header_done(int index);

@@ -4907,7 +4907,7 @@ public: // for now...
   BX_SMF const char *strseg(bx_segment_reg_t *seg);
   BX_SMF void interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u error_code);
 #if BX_SUPPORT_FRED
-  BX_SMF void FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code);
+  BX_SMF void FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code, bool sti_blocking = false);
   BX_SMF void set_fred_event_info_and_data(Bit8u vector, unsigned type, bool nested_exception, unsigned ilen);
   BX_SMF Bit64u get_fred_event_data(Bit8u vector, unsigned type) BX_CPP_AttrRegparmN(2);
   BX_SMF Bit32u get_fred_event_info(Bit8u vector, unsigned type, bool nested_exception, unsigned ilen);
@@ -5042,7 +5042,7 @@ public: // for now...
 #if BX_SUPPORT_CET
   BX_SMF void shadow_stack_switch(bx_address new_SSP) BX_CPP_AttrRegparmN(1);
   BX_SMF void call_far_shadow_stack_push(Bit16u cs, bx_address lip, bx_address old_ssp) BX_CPP_AttrRegparmN(3);
-  BX_SMF bx_address shadow_stack_restore(Bit16u raw_cs_selector, bx_address return_rip) BX_CPP_AttrRegparmN(2);
+  BX_SMF bx_address shadow_stack_restore(Bit64u cs_image, bx_address return_lip) BX_CPP_AttrRegparmN(2);
   BX_SMF bx_address shadow_stack_restore(Bit16u raw_cs_selector, const bx_descriptor_t &cs_descriptor, bx_address return_rip) BX_CPP_AttrRegparmN(3);
 #endif
   BX_SMF void validate_seg_reg(unsigned seg);
@@ -5499,7 +5499,7 @@ public: // for now...
   BX_SMF void VMexit_TaskSwitch(Bit16u tss_selector, unsigned source) BX_CPP_AttrRegparmN(2);
   BX_SMF void VMexit_PAUSE(void);
   BX_SMF bool VMexit_CLTS(void);
-  BX_SMF void VMexit_MSR(unsigned op, Bit32u msr, Bit32u qualification) BX_CPP_AttrRegparmN(3);
+  BX_SMF void VMexit_MSR(unsigned op, Bit32u msr, Bit32u qualification, Bit32u instr_info);
   BX_SMF void VMexit_IO(bxInstruction_c *i, unsigned port, unsigned len) BX_CPP_AttrRegparmN(3);
   BX_SMF Bit32u VMexit_LMSW(bxInstruction_c *i, Bit32u msw) BX_CPP_AttrRegparmN(2);
   BX_SMF bx_address VMexit_CR0_Write(bxInstruction_c *i, bx_address) BX_CPP_AttrRegparmN(2);

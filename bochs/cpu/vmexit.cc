@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2025 Stanislav Shwartsman
+//   Copyright (c) 2009-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -352,17 +352,26 @@ const Bit32u BX_VMX_LO_MSR_END   = 0x00001FFF;
 const Bit32u BX_VMX_HI_MSR_START = 0xC0000000;
 const Bit32u BX_VMX_HI_MSR_END   = 0xC0001FFF;
 
-void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr, Bit32u qualification)
+void BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr, Bit32u qualification, Bit32u instr_info)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
   bool readmsr = (op == VMX_VMEXIT_RDMSR || op == VMX_VMEXIT_RDMSR_IMM || op == VMX_VMEXIT_RDMSRLIST || op == VMX_VMEXIT_URDMSR);
 
+  // VM exits due to URDMSR, UWRMSR and immediate forms of RDMSR and WRMSRNS
+  // save VM-exit instruction information (bits 6:3 hold the data register operand)
+  bool save_instr_info = (op == VMX_VMEXIT_URDMSR || op == VMX_VMEXIT_UWRMSR || op == VMX_VMEXIT_RDMSR_IMM || op == VMX_VMEXIT_WRMSRNS_IMM);
+
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
   if (! vm->vmexec_ctrls1.MSR_BITMAPS()) {
     BX_DEBUG(("VMEXIT: %sMSR 0x%08x", (readmsr) ? "RD" : "WR", msr));
-    VMexit(op, 0); // if MSR Bitmaps disabled, exit qualification is always 0
+    // for RDMSRLIST and WRMSRLIST, if MSR Bitmaps disabled, exit qualification is 0
+    if (op == VMX_VMEXIT_RDMSRLIST || op == VMX_VMEXIT_WRMSRLIST)
+      qualification = 0;
+    if (save_instr_info)
+      VMwrite32(VMCS_32BIT_VMEXIT_INSTRUCTION_INFO, instr_info);
+    VMexit(op, qualification);
   }
 
   bool vmexit = false;
@@ -389,6 +398,8 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr, Bit32u
 
   if (vmexit) {
      BX_DEBUG(("VMEXIT: %sMSR 0x%08x", (readmsr) ? "RD" : "WR", msr));
+     if (save_instr_info)
+       VMwrite32(VMCS_32BIT_VMEXIT_INSTRUCTION_INFO, instr_info);
      VMexit(op, qualification);
   }
 }

@@ -144,7 +144,7 @@ static const char *VMX_vmexit_reason_name[] =
   /* 82 */  "Reserved82",
   /* 83 */  "Reserved83",
   /* 84 */  "RDMSR immediate",
-  /* 85 */  "WRMSRNS",
+  /* 85 */  "WRMSRNS immediate",
 };
 
 #include "decoder/ia_opcodes.h"

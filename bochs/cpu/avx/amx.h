@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2024 Stanislav Shwartsman
+//   Copyright (c) 2024-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -31,7 +31,7 @@
 #define BX_TILE_REGISTERS 8
 
 struct AMX {
-  AMX(): palette_id(0), start_row(0) {}
+  AMX(): palette_id(0), start_row(0), tile_use_tracker(0) {}
 
   unsigned palette_id; // 0 if tiles are not configured
   unsigned start_row;  // used to restart tile operations
@@ -119,13 +119,22 @@ struct AMX {
     scaledata.reset();
   }
 
-  void clear() {
+  // initialize TILECFG state only (TILES_CONFIGURED = 0), TILEDATA and SCALEDATA are not modified
+  void init_tilecfg() {
     palette_id = 0;
     start_row = 0;
-    tile_use_tracker = 0;
-
-    clear_tiles();
     clear_tilecfg();
+  }
+
+  // initialize TILEDATA state
+  void init_tiledata() {
+    tile_use_tracker = 0;
+    clear_tiles();
+  }
+
+  void clear() {
+    init_tilecfg();
+    init_tiledata();
     bsr_clear();
   }
 };

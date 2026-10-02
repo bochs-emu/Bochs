@@ -51,12 +51,36 @@ Changes after Bochs 3.1:
 - CPUID: allow configuring i486dx4 model without x87 using cpu exclude_features
 ! SVM: Implemented SVM Decode Assist feature and enabled in all CPUID models featuring SVM
 - FRED: Fixed reserved bits checking for MSR_IA32_FRED_CONFIG (0x1d4), bug was introduced in Bochs 3.1 release
-- MSR: enforce reserved bits checking for MSR_TSX_AUX (0xc0000103), MSR_IA32_UMWAIT_CONTROL (0xe1), MSR_MTRR_DEFTYPE (0x2ff), MSR_IA32_PKRS (0x6e1) and MSR_IA32_FEATURE_CONTROL (0x3a)
+- MTRR: Fixed reserved bits checking for MSR_MTRR_DEFTYPE (0x2ff)
+- MSR: enforce reserved bits checking for MSR_TSX_AUX (0xc0000103), MSR_IA32_UMWAIT_CONTROL (0xe1), MSR_IA32_PKRS (0x6e1), MSR_IA32_USER_MSR_CTL (0x1c) and MSR_IA32_FEATURE_CONTROL (0x3a)
 - MSR: writing 0 value to read only MSR was passing validation checks reaching BX_PANIC
 - MSR: writes to MSR_APERF/MSR_MPERF were ignored, so "write to clear" didn't work. Now any write clears the counter, and hardware reset clears it too.
 - MSR: MSR_IA32_EFER on CPU models without EFER: writing 0 used to succeed. It's now #GP(0)
 - SVM: BX_SVM_VM_CR_MSR write: the "SVMDIS while EFER.SVME=1 #GP" check tested the current VM_CR value instead of the value being written.
 - Legacy/AMD: AMD specific behavior always clear EFLAGS.RF when #DB exception occurs, however Intel pushed EFLAGS.RF=1 when rep string iteration was interrupted by #DB
+- XSAVE/AMX: fixed incorrect detection of TILEDATA xinuse
++ XSAVE/AMX: fixed XSAVE of the TILECFG state
++ XSAVE/AMX: use correct value for BX_TILE_MAX_ROWS while XSAVE/XRSTOR TILEDATA state (code was using BX_TILE_REGISTERS instead of BX_TILE_MAX_ROWS)
++ AMX: correct invalid row checking for TILEMOVROW/TILEMOVCOL instructions
+- AMX: failed LDTILECFG or XRSTOR of TILECFG state should not reset TILEDATA and SCALEDATA
++ AMX: added missing reset of AMX state on hardware reset
+- MSR: reset MSR IA32_XSS only on hardware reset, unchanged on INIT
+- CPUID: correctly report presence of subleaf=1 in CPUID Leaf 0x0000001E: AMX: TMUL Information Main leaf (when present)
+- URDMSR/UWRMSR: missing #GP(0) if MSR address bits [63:14] are not all zero
++ VMX: fix VM-exit info for URDMSR, UWRMSR and immediate RDMSR/WRMSRNS + save VM-exit instruction information (bits 6:3 = data register operand)
++ VMX: exit reason 85 is the WRMSRNS immediate form only, legacy WRMSRNS exits with WRMSR basic reason (32) and qualification 1
++ FRED: FRED event delivery saves CS augmented with CSL and IBT state (bits 18:16) on the shadow stack. shadow_stack_restore() truncated the expected CS to 16 bits, so ERETS raised #CP whenever CSL!=0 or the IBT bit was set.
++ FRED: FRED event delivery from CPL3 didn't save the user SSP into IA32_PL3_SSP, so ERETU restored a stale user shadow stack pointer
++ FRED: ERETU compared IA32_PL0_SSP against the new user SSP instead of the current SSP, could lead to false #CP
+- FRED: faulting LKGS left GS segment base and MSR_KERNEL_GS_BASE swapped
+- FRED: ERETU to standard compatibility mode configuration checked new RIP against uninitialized CS descriptor limit
+- FRED: ERETU compared and loaded CS/SS selectors using 15 bits only instead of full 16-bit selector
+- FRED: #DB event data was missing BD bit (bit 13, debug register access detected)
+- FRED: event information instruction length must be reported only for INTn, INT1, INT3/INTO, SYSCALL and SYSENTER (can be others for VMX event injection)
+- FRED: STI blocking bit (bit 16 of augmented SS) was never saved, must be set only for hardware exceptions delivered while interrupts are blocked by STI
+- FRED: the restriction to enter compatibility mode with CPL=0 was checking target DPL instead of CPL (conforming DPL=0 code segment can be entered from CPL=3)
+- FRED: IBT tracker bit 18 of augmented CS must be set only for events occurring with CPL=0
+- FRED: ERETS must establish STI blocking only if STI blocking was not in effect prior to ERETS (was not implemented during FRED implementation and left as TODO)
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
@@ -616,7 +640,7 @@ Changes in Bochs 2.4.6 (February 22, 2011)
 + SSE: Fixed bug in PCMPGTQ instruction
 + VMX: Fixed external interrupt VMEXIT when RFLAGS.IF=0 and 'external interrupt exiting' control is set
 - VMX: Fixed VMEXIT reason reported by RDTSCP instruction
-- VMX, MWAIT: Do not allow MWAIT to enter MWAIT_IF sleep state when “interrupt-window exiting” VMX control is set and RFLAGS.IF = 0
+- VMX, MWAIT: Do not allow MWAIT to enter MWAIT_IF sleep state when ï¿½interrupt-window exitingï¿½ VMX control is set and RFLAGS.IF = 0
 - VMX: (partial fix) stuffed load should check for EPT read permissions only, todo: A/D bits update should check EPT write permissions
 + Save/Restore: Fixed restore of CPU state in real or v8086 mode (2.4.5 missed case)
 - x86-64: Fixed #SS exception error code in long mode interrupt to same priviledge level corner case

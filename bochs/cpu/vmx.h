@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2025 Stanislav Shwartsman
+//   Copyright (c) 2009-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -154,7 +154,7 @@ enum VMX_vmexit_reason {
    VMX_VMEXIT_RESERVED82 = 82,
    VMX_VMEXIT_RESERVED83 = 83,
    VMX_VMEXIT_RDMSR_IMM = 84,
-   VMX_VMEXIT_WRMSRNS = 85,
+   VMX_VMEXIT_WRMSRNS_IMM = 85,
    VMX_VMEXIT_LAST_REASON
 };
 

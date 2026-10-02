@@ -28,11 +28,16 @@
 
 #if BX_SUPPORT_X86_64 && BX_SUPPORT_FRED
 
-void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code)
+// sti_blocking: interrupt blocking by STI was in effect when hardware exception occurred
+void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code, bool sti_blocking)
 {
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   BX_CPU_THIS_PTR in_event = true;
 #endif
+
+  // discard inhibits for new context (SYSCALL and SYSENTER are not delivered through interrupt()),
+  // exception encountered during delivery of SYSCALL or SYSENTER should not report STI blocking
+  BX_CPU_THIS_PTR inhibit_mask = 0;
 
   Bit32u old_CPL = CPL;
   Bit32u old_CSL = (CPL == 3) ? 0 : CSL;
@@ -40,12 +45,13 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   Bit32u old_CS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
   old_CS |= old_CSL << 16;
 #if BX_SUPPORT_CET
-  if (BX_CPU_THIS_PTR cr4.get_CET() && WaitingForEndbranch(0))
-    old_CS |= (1 << 18); // cache the shadow stack tracking control in old_CS[18]
+  // old_CS[18] is set only for events occurring with CPL=0 while supervisor indirect branch tracker was in WAIT_FOR_ENDBRANCH state
+  if (CPL == 0 && BX_CPU_THIS_PTR cr4.get_CET() && WaitingForEndbranch(0))
+    old_CS |= (1 << 18); // cache the indirect branch tracking state in old_CS[18]
 #endif
 
   Bit64u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
-  if (interrupts_inhibited(BX_INHIBIT_INTERRUPTS))
+  if (sti_blocking)
     old_SS |= (1 << 16);
   if (type == BX_EVENT_OTHER || type == BX_SOFTWARE_INTERRUPT) // event type is SYSCALL, SYSENTER or INTn
     old_SS |= (1 << 17);
@@ -181,7 +187,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
 #if BX_SUPPORT_CET
   if (BX_CPU_THIS_PTR cr4.get_CET()) {
     if (ShadowStackEnabled(3) && old_CPL == 3) {
-      BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = CanonicalizeAddress(BX_CPU_THIS_PTR msr.ia32_pl_ssp[3]);
+      BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = CanonicalizeAddress(old_SSP);
     }
 
     reset_endbranch_tracker(0);
@@ -224,7 +230,7 @@ Bit64u BX_CPP_AttrRegparmN(2) BX_CPU_C::get_fred_event_data(Bit8u vector, unsign
   }
 
   if (vector == BX_DB_EXCEPTION)
-    return BX_CPU_THIS_PTR debug_trap & 0x0000400f;
+    return BX_CPU_THIS_PTR debug_trap & 0x0000600f; // B3-B0, BD and BS bits
 
   if (type == BX_NMI)
     return 0; // until NMI source reporting is implemented
@@ -244,7 +250,9 @@ Bit32u BX_CPU_C::get_fred_event_info(Bit8u vector, unsigned type, bool nested_ex
   }
 
   // add ilen() of instruction caused the event to bits [31:28] for INTn, INT1, INT3/INTO, SYSCALL and SYSENTER
-  event_info |= (ilen << 28);
+  // for other event types these bits are cleared
+  if (type == BX_SOFTWARE_INTERRUPT || type == BX_PRIVILEGED_SOFTWARE_INTERRUPT || type == BX_SOFTWARE_EXCEPTION || type == BX_EVENT_OTHER)
+    event_info |= ((ilen & 0xf) << 28);
 
   return event_info;
 }
@@ -318,8 +326,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETS(bxInstruction_c *i)
   set_CSL(new_CSL);
 
   // update event-related state
+  // establish STI blocking after ERETS only if STI blocking was not in effect prior to ERETS
+  // (blocking by STI is indicated by BX_INHIBIT_INTERRUPTS without BX_INHIBIT_DEBUG which is set by MOV SS)
   bool STI_block = (temp_SS >> 16) & 0x1;
-  if (STI_block && BX_CPU_THIS_PTR get_IF() /* STI blocking was no in effect prior to the instruction execution */)
+  bool STI_block_prior = interrupts_inhibited(BX_INHIBIT_INTERRUPTS) && ! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG);
+  if (STI_block && BX_CPU_THIS_PTR get_IF() && ! STI_block_prior)
     inhibit_interrupts(BX_INHIBIT_INTERRUPTS);
 
   bool pending_DB = (temp_SS >> 17) & 0x1;
@@ -384,15 +395,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
   Bit16u raw_cs_selector = temp_CS & 0xffff;
   Bit16u raw_ss_selector = temp_SS & 0xffff;
 
-  if (((temp_CS & 0x7FFF) == (BX_CPU_THIS_PTR msr.star >> 48) + 16) &&
-      ((temp_SS & 0x7FFF) == (BX_CPU_THIS_PTR msr.star >> 48) + 8))
+  if (((temp_CS & 0xFFFF) == (BX_CPU_THIS_PTR msr.star >> 48) + 16) &&
+      ((temp_SS & 0xFFFF) == (BX_CPU_THIS_PTR msr.star >> 48) + 8))
   {
     // return to CPL3 in standard 64-bit configuration
     to_long_mode = true;
     flat = true;
   }
-  else if (((temp_CS & 0x7FFF) == (BX_CPU_THIS_PTR msr.star >> 48)) &&
-           ((temp_SS & 0x7FFF) == (BX_CPU_THIS_PTR msr.star >> 48) + 8))
+  else if (((temp_CS & 0xFFFF) == (BX_CPU_THIS_PTR msr.star >> 48)) &&
+           ((temp_SS & 0xFFFF) == (BX_CPU_THIS_PTR msr.star >> 48) + 8))
   {
     // return to CPL3 in standard compatibility mode configuration
     to_long_mode = false;
@@ -440,30 +451,32 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
     new_RSP &= 0xFFFFFFFF;
 
     /* instruction pointer must be in code segment limit else #GP(0) */
-    if (new_RIP > cs_descriptor.u.segment.limit_scaled) {
+    /* new RIP is always within the limit with standard (flat) values for ring 3 in compatibility mode */
+    if (! flat && new_RIP > cs_descriptor.u.segment.limit_scaled) {
       BX_ERROR(("ERETU: RIP > limit"));
       exception(BX_GP_EXCEPTION, 0);
     }
   }
 
 #if BX_SUPPORT_CET
+  // if user shadow stacks are enabled, check new SSP value on return to compatibility mode
   if (ShadowStackEnabled(3)) {
     if (! to_long_mode && GET32H(BX_CPU_THIS_PTR msr.ia32_pl_ssp[3])) {
       BX_ERROR(("ERETU: attempt to return to compatibility mode while MSR_IA32_PL3_SSP[63:32] != 0"));
       exception(BX_GP_EXCEPTION, 0);
     }
-    SSP = BX_CPU_THIS_PTR msr.ia32_pl_ssp[3];
   }
 
+  // if supervisor shadow stacks are enabled, compare current SSP to the FRED SSP MSR for stack level 0
   if (ShadowStackEnabled(0) && BX_CPU_THIS_PTR msr.ia32_pl_ssp[0] != SSP) {
-    BX_ERROR(("IRETU: supervisor shadow stack SSP mismatch"));
+    BX_ERROR(("ERETU: supervisor shadow stack SSP mismatch"));
     exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
   }
 #endif
 
   if (flat) {
-    parse_selector(temp_CS & 0x7FFF, &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
-    parse_selector(temp_SS & 0x7FFF, &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
+    parse_selector(temp_CS & 0xFFFF, &BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector);
+    parse_selector(temp_SS & 0xFFFF, &BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector);
 
     setup_flat_CS(3, to_long_mode);
     setup_flat_SS(3);
@@ -493,6 +506,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETU(bxInstruction_c *i)
   // SS = new_SS
 
   swapgs();
+
+#if BX_SUPPORT_CET
+  if (ShadowStackEnabled(3))
+    SSP = BX_CPU_THIS_PTR msr.ia32_pl_ssp[3];
+#endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_CPU_THIS_PTR monitor.reset_umonitor();
@@ -536,13 +554,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LKGS_Ew(bxInstruction_c *i)
     segsel  = read_linear_word(i->seg(), get_laddr64(i->seg(), eaddr));
   }
 
-  // back up current GS segment base into MSR_KERNEL_GS_BASE
-  swapgs();
+  // back up current GS segment base, GS state is not modified if segment load faults
+  Bit64u temp_GS_base = MSR_GSBASE;
 
   load_seg_reg(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_GS], segsel);
 
-  // restore old GS segment base and put new loaded base into MSR_KERNEL_GS_BASE
-  swapgs();
+  // put new loaded base into MSR_KERNEL_GS_BASE and restore old GS segment base
+  BX_CPU_THIS_PTR msr.kernelgsbase = MSR_GSBASE;
+  MSR_GSBASE = temp_GS_base;
 
   BX_NEXT_INSTR(i);
 }

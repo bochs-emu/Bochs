@@ -3119,6 +3119,7 @@ case $target in
         IODEV_DLL_TARGETS="$IODEV_DLL_TARGETS bx_$i.dll"
       done
     else
+      LIBS="$LIBS winmm.lib"
       if test "$with_win32" != yes; then
         LIBS="$LIBS comctl32.lib"
       fi
@@ -3144,7 +3145,7 @@ case $target in
       fi
     else
       if test "$with_win32" != yes; then
-        LIBS="$LIBS -lcomctl32"
+        LIBS="$LIBS -lcomctl32 -lwinmm"
         if test "$gui_debugger" = 1; then
           LIBS="$LIBS -lgdi32 -lcomdlg32"
         fi

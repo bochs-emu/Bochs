@@ -641,6 +641,14 @@ void BX_CPU_C::register_state(void)
         }
       }
     }
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_ACE)) {
+      for (n=0; n<2; n++) {
+        for(unsigned j=0;j < BX_VLMAX*2;j++) {
+          sprintf(name, "bsr%d_%d", n, j);
+          new bx_shadow_num_c(amx_list, name, &(amx->scaledata.scale[n].vmm64u(j)), BASE_HEX);
+        }
+      }
+    }
   }
 #endif
 #endif // BX_CPU_LEVEL >= 6
@@ -1063,12 +1071,13 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR dr7.set32(0x00000400);
 
 #if BX_CPU_LEVEL >= 6
+  // XCR0 and IA32_XSS are unchanged on #INIT
   if (source == BX_RESET_HARDWARE) {
     BX_CPU_THIS_PTR xcr0.set32(0x1);
+    BX_CPU_THIS_PTR msr.ia32_xss = 0;
   }
   BX_CPU_THIS_PTR xcr0_suppmask = get_xcr0_allow_mask();
   BX_CPU_THIS_PTR ia32_xss_suppmask = get_ia32_xss_allow_mask();
-  BX_CPU_THIS_PTR msr.ia32_xss = 0;
 
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_CPU_THIS_PTR msr.ia32_umwait_ctrl = 0;
@@ -1250,6 +1259,12 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_SUPPORT_EVEX
     for (n=0; n<8; n++) BX_WRITE_OPMASK(n, 0);
+#endif
+
+#if BX_SUPPORT_AMX
+    // Reset AMX state (TILECFG, TILEDATA and SCALEDATA) - unchanged on #INIT
+    if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AMX))
+      BX_CPU_THIS_PTR amx->clear();
 #endif
   }
 #endif
