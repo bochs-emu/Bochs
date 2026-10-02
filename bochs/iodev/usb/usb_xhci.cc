@@ -3414,6 +3414,18 @@ int bx_usb_xhci_c::validate_slot_context(const struct SLOT_CONTEXT *slot_context
       if (slot_context->int_target > MaxIntrs)
         ret = PARAMETER_ERROR;
 
+      // xHCI v1.0, section 4.6.5, page 92: the slot state should be zero
+      if (slot_context->slot_state != 0) {
+        BX_DEBUG(("Address Device/Evaluate Context: Slot State != 0"));
+        ret = PARAMETER_ERROR;
+      }
+      
+      // xHCI v1.0, section 4.6.5, page 92: the address field should be zero
+      if (slot_context->device_address != 0) {
+        BX_DEBUG(("Address Device/Evaluate Context: Device Address != 0"));
+        ret = PARAMETER_ERROR;
+      }
+
       // all high-speed and lower devices must have a Max Exit Latency value of zero
       // (this will fail because 'rh_port_num' hasn't been initialized yet, so 'speed' will be -1)
       //if ((slot_context->max_exit_latency > 0) && (speed < USB_SPEED_SUPER))
