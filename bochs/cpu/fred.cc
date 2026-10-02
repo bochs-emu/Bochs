@@ -326,8 +326,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ERETS(bxInstruction_c *i)
   set_CSL(new_CSL);
 
   // update event-related state
+  // establish STI blocking after ERETS only if STI blocking was not in effect prior to ERETS
+  // (blocking by STI is indicated by BX_INHIBIT_INTERRUPTS without BX_INHIBIT_DEBUG which is set by MOV SS)
   bool STI_block = (temp_SS >> 16) & 0x1;
-  if (STI_block && BX_CPU_THIS_PTR get_IF() /* STI blocking was no in effect prior to the instruction execution */)
+  bool STI_block_prior = interrupts_inhibited(BX_INHIBIT_INTERRUPTS) && ! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG);
+  if (STI_block && BX_CPU_THIS_PTR get_IF() && ! STI_block_prior)
     inhibit_interrupts(BX_INHIBIT_INTERRUPTS);
 
   bool pending_DB = (temp_SS >> 17) & 0x1;
