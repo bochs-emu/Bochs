@@ -783,7 +783,7 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
   BX_CPU_THIS_PTR debug_trap = 0;
   BX_CPU_THIS_PTR inhibit_mask = 0;
 
-#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM || BX_SUPPORT_FRED
   BX_CPU_THIS_PTR in_event = true;
 #endif
 
@@ -819,7 +819,7 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
   unmask_event(BX_EVENT_VMX_MONITOR_TRAP_FLAG);
 #endif
 
-#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM || BX_SUPPORT_FRED
   BX_CPU_THIS_PTR in_event = false;
 #endif
 
@@ -1038,7 +1038,8 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
   }
 
 #if BX_SUPPORT_FRED
-  set_fred_event_info_and_data(vector, BX_HARDWARE_EXCEPTION, BX_CPU_THIS_PTR last_exception_type != BX_ET_NONE, 0);
+  // exception is nested if encountered during delivery of another event (any event type, not only exception)
+  set_fred_event_info_and_data(vector, BX_HARDWARE_EXCEPTION, BX_CPU_THIS_PTR in_event, 0);
 #endif
 
   BX_CPU_THIS_PTR last_exception_type = exception_type;

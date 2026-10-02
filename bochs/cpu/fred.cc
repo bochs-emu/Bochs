@@ -31,7 +31,7 @@
 // sti_blocking: interrupt blocking by STI was in effect when hardware exception occurred
 void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code, bool sti_blocking)
 {
-#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM || BX_SUPPORT_FRED
   BX_CPU_THIS_PTR in_event = true;
 #endif
 
@@ -211,7 +211,7 @@ void BX_CPU_C::FRED_EventDelivery(Bit8u vector, unsigned type, Bit16u error_code
   BX_CPU_THIS_PTR fred_event_info = 0;
   BX_CPU_THIS_PTR fred_event_data = 0;
 
-#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM || BX_SUPPORT_FRED
   BX_CPU_THIS_PTR in_event = false;
 #endif
 

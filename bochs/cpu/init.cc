@@ -1285,7 +1285,7 @@ void BX_CPU_C::reset(unsigned source)
   BX_CPU_THIS_PTR svm_gif = true;
 #endif
 
-#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM || BX_SUPPORT_FRED
   BX_CPU_THIS_PTR in_event = false;
 #endif
 

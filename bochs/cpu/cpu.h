@@ -1188,7 +1188,7 @@ public: // for now...
 
 #endif
 
-#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM || BX_SUPPORT_FRED
   bool in_event;
 #endif
 
