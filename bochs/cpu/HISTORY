@@ -67,6 +67,8 @@ Changes after Bochs 3.1:
 - MSR: reset MSR IA32_XSS only on hardware reset, unchanged on INIT
 - CPUID: correctly report presence of subleaf=1 in CPUID Leaf 0x0000001E: AMX: TMUL Information Main leaf (when present)
 - URDMSR/UWRMSR: missing #GP(0) if MSR address bits [63:14] are not all zero
++ VMX: fix VM-exit info for URDMSR, UWRMSR and immediate RDMSR/WRMSRNS + save VM-exit instruction information (bits 6:3 = data register operand)
++ VMX: exit reason 85 is the WRMSRNS immediate form only, legacy WRMSRNS exits with WRMSR basic reason (32) and qualification 1
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):

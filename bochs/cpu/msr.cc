@@ -637,12 +637,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSR(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     Bit32u reason = VMX_VMEXIT_RDMSR;
+    Bit32u qualification = 0, instr_info = 0;
 #if BX_SUPPORT_AVX
     if (i->getIaOpcode() == BX_IA_RDMSR_EqId) {
       reason = VMX_VMEXIT_RDMSR_IMM;
+      qualification = index; // exit qualification is the MSR address
+      instr_info = i->dst() << 3;
     }
 #endif
-    VMexit_MSR(reason, index, 0);
+    VMexit_MSR(reason, index, qualification, instr_info);
   }
 #endif
 
@@ -956,12 +959,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSR(bxInstruction_c *i)
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     Bit32u reason = VMX_VMEXIT_WRMSR;
-    Bit32u qualification = 0;
-    if (i->getIaOpcode() != BX_IA_WRMSR) {
-      reason = VMX_VMEXIT_WRMSRNS;
+    Bit32u qualification = 0, instr_info = 0;
+#if BX_SUPPORT_X86_64 && BX_SUPPORT_AVX
+    if (i->getIaOpcode() == BX_IA_WRMSRNS_IdEq) {
+      reason = VMX_VMEXIT_WRMSRNS_IMM;
+      qualification = index; // exit qualification is the MSR address
+      instr_info = i->src() << 3;
+    }
+    else
+#endif
+    if (i->getIaOpcode() == BX_IA_WRMSRNS) {
+      // WRMSR and WRMSRNS use the same basic exit reason
       qualification = 1; // For WRMSR, the exit qualification is 0, while for WRMSRNS it is 1
     }
-    VMexit_MSR(reason, index, qualification);
+    VMexit_MSR(reason, index, qualification, instr_info);
   }
 #endif
 
@@ -1008,7 +1019,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RDMSRLIST(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX >= 2
     if (BX_CPU_THIS_PTR in_vmx_guest)
-      VMexit_MSR(VMX_VMEXIT_RDMSRLIST, (Bit32u) MSR_address, (Bit32u) MSR_address);
+      VMexit_MSR(VMX_VMEXIT_RDMSRLIST, (Bit32u) MSR_address, (Bit32u) MSR_address, 0);
 #endif
 
     if (!rdmsr((Bit32u) MSR_address, &val64))
@@ -1064,7 +1075,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRMSRLIST(bxInstruction_c *i)
 #if BX_SUPPORT_VMX >= 2
     if (BX_CPU_THIS_PTR in_vmx_guest) {
       vm->msr_data = MSR_data;
-      VMexit_MSR(VMX_VMEXIT_WRMSRLIST, (Bit32u) MSR_address, (Bit32u) MSR_address);
+      VMexit_MSR(VMX_VMEXIT_WRMSRLIST, (Bit32u) MSR_address, (Bit32u) MSR_address, 0);
     }
 #endif
 
@@ -1110,7 +1121,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::URDMSR(bxInstruction_c *i)
   {
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest)
-      VMexit_MSR(VMX_VMEXIT_URDMSR, index, 0);
+      VMexit_MSR(VMX_VMEXIT_URDMSR, index, index, i->dst() << 3);
 #endif
 
     Bit64u val_64 = 0;
@@ -1153,7 +1164,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UWRMSR(bxInstruction_c *i)
   {
 #if BX_SUPPORT_VMX
     if (BX_CPU_THIS_PTR in_vmx_guest)
-      VMexit_MSR(VMX_VMEXIT_UWRMSR, index, 0);
+      VMexit_MSR(VMX_VMEXIT_UWRMSR, index, index, i->src() << 3);
 #endif
 
     Bit64u val_64 = BX_READ_64BIT_REG(i->src());
