@@ -244,7 +244,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSTORSSP(bxInstruction_c *i)
   }
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  bx_address laddr = agen_read_aligned(i->seg(), eaddr, 8);
+  bx_address laddr = agen_write_aligned(i->seg(), eaddr, 8); // #GP if destination is located in non-writable segment
   if (laddr & 0x7) {
     BX_ERROR(("%s: SSP_LA must be 8 bytes aligned", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -418,7 +418,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLRSSBSY(bxInstruction_c *i)
   }
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  bx_address laddr = agen_read_aligned(i->seg(), eaddr, 8);
+  bx_address laddr = agen_write_aligned(i->seg(), eaddr, 8); // #GP if destination is located in non-writable segment
   if (laddr & 0x7) {
     BX_ERROR(("%s: SSP_LA not aligned to 8 bytes boundary", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);

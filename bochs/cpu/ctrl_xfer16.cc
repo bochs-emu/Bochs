@@ -118,6 +118,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
   RSP_SPECULATIVE;
 
   Bit16u return_IP = pop_16();
+
+  // CS limit is checked before the shadow stack check
+  if (return_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
+    BX_ERROR(("%s: offset outside of CS limits", i->getIaOpcodeNameShort()));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
 #if BX_SUPPORT_CET
   if (ShadowStackEnabled(CPL)) {
     Bit32u shadow_IP = shadow_stack_pop_32();
@@ -125,11 +132,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
       exception(BX_CP_EXCEPTION, BX_CP_NEAR_RET);
   }
 #endif
-
-  if (return_IP > BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled) {
-    BX_ERROR(("%s: offset outside of CS limits", i->getIaOpcodeNameShort()));
-    exception(BX_GP_EXCEPTION, 0);
-  }
 
   EIP = return_IP;
 

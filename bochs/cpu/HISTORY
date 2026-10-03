@@ -102,6 +102,8 @@ Changes after Bochs 3.1:
 - CET: same privilege far CALL to legacy or compatibility mode must #GP if SSP is not in low 4GB
 - CET: IDT event delivery and call gates in IA-32e mode must sign-extend SSP saved into IA32_PL3_SSP from the max linear-address width (LA_adjust)
 - CET/UINTR: UIRET left SSP incremented when shadow stack return address mismatch caused #CP
+- CET: 16-bit near RET must check CS limit (#GP) before shadow stack return address (#CP)
+- CET: RSTORSSP and CLRSSBSY must #GP if memory operand is located in non-writable segment
 + CET: fix supervisor shadow stack token release on same privilege IRET in IA-32e mode
 
 -------------------------------------------------------------------------
