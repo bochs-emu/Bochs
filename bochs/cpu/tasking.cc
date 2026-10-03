@@ -778,8 +778,10 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   RSP_SPECULATIVE;
 
 #if BX_SUPPORT_CET
-  if (ShadowStackEnabled(CPL) || EndbranchEnabled(CPL)) {
-    if (v8086_mode()) {
+  // ShadowStackEnabled() and EndbranchEnabled() always return false in v8086 mode,
+  // so check the raw CPL3 controls (same check as IRET returning to v8086 mode)
+  if (v8086_mode()) {
+    if (UserCetEnabled()) {
       BX_ERROR(("task_switch: Shadowstack or Enbranch enabled in vm8086 mode"));
       exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc);
     }

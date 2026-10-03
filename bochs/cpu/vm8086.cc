@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2012  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -94,7 +94,9 @@ void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector, Bit32
   raw_gs_selector = (Bit16u) stack_read_dword(temp_ESP+32);
 
 #if BX_SUPPORT_CET
-  if (ShadowStackEnabled(0)) {
+  // shadow stack state is determined at CPL0, before entering v8086 mode where shadow stacks are never enabled
+  bool shadow_stack_enabled = ShadowStackEnabled(0);
+  if (shadow_stack_enabled) {
     if (SSP & 0x7) {
       BX_ERROR(("stack_return_to_v86: SSP is not 8-byte aligned"));
       exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
@@ -118,7 +120,8 @@ void BX_CPU_C::stack_return_to_v86(Bit32u new_eip, Bit32u raw_cs_selector, Bit32
   init_v8086_mode();
 
 #if BX_SUPPORT_CET
-  if (ShadowStackEnabled(0))
+  // now past all faulting points, free the supervisor shadow stack token
+  if (shadow_stack_enabled)
     shadow_stack_atomic_clear_busy(SSP, 0);
 #endif
 }

@@ -71,6 +71,14 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::EndbranchEnabledAndNotSuppressed(unsigned 
         (BX_CPU_THIS_PTR msr.ia32_cet_control[cpl==3] & (BX_CET_ENDBRANCH_ENABLED | BX_CET_SUPPRESS_INDIRECT_BRANCH_TRACKING)) == BX_CET_ENDBRANCH_ENABLED;
 }
 
+// shadow stack or indirect branch tracking enabled for CPL3 (raw CR4.CET and IA32_U_CET controls),
+// unlike ShadowStackEnabled/EndbranchEnabled this doesn't depend on protected mode to be current mode (v8086 mode)
+bool BX_CPU_C::UserCetEnabled(void)
+{
+  return BX_CPU_THIS_PTR cr4.get_CET() &&
+        (BX_CPU_THIS_PTR msr.ia32_cet_control[1] & (BX_CET_SHADOW_STACK_ENABLED | BX_CET_ENDBRANCH_ENABLED)) != 0;
+}
+
 bool BX_CPP_AttrRegparmN(1) BX_CPU_C::WaitingForEndbranch(unsigned cpl)
 {
   return BX_CPU_THIS_PTR cr4.get_CET() && protected_mode() &&

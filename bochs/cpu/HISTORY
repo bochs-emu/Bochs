@@ -104,6 +104,8 @@ Changes after Bochs 3.1:
 - CET/UINTR: UIRET left SSP incremented when shadow stack return address mismatch caused #CP
 - CET: 16-bit near RET must check CS limit (#GP) before shadow stack return address (#CP)
 - CET: RSTORSSP and CLRSSBSY must #GP if memory operand is located in non-writable segment
+- CET: IRET to virtual-8086 mode never freed supervisor shadow stack token (shadow stack state was checked after entering v8086 mode)
+- CET: task switch to virtual-8086 mode task with user shadow stack or indirect branch tracking enabled must #TS(new TSS)
 + CET: fix supervisor shadow stack token release on same privilege IRET in IA-32e mode
 
 -------------------------------------------------------------------------
