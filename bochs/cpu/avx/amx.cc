@@ -813,19 +813,15 @@ BX_CPP_INLINE bool fp8_fixpoint_is_zero(const fp8_fixpoint_t &x)
   return x.fp8_class == BX_FP8_FINITE && x.value == 0;
 }
 
-// accumulate exact product of two finite FP8 elements converted to fixed point
-BX_CPP_INLINE void fp8_fixpoint_mul_add(Bit64s s1, Bit64s s2, bool wide_product, Bit128s *sop, Bit64s *sop64)
+// accumulate exact product of two finite FP8 elements converted to fixed point,
+// product of two BF8 fixed point values might not fit into 64-bit
+BX_CPP_INLINE void fp8_fixpoint_mul_add(Bit64s s1, Bit64s s2, Bit128s *sop)
 {
   if (s1 == 0 || s2 == 0) return;
 
-  if (wide_product) {
-    Bit128s product;
-    long_imul(&product, s1, s2);
-    long_add((Bit128u*) sop, (Bit128u*) &product);
-  }
-  else {
-    *sop64 += s1 * s2;
-  }
+  Bit128s product;
+  long_imul(&product, s1, s2);
+  long_add((Bit128u*) sop, (Bit128u*) &product);
 }
 
 // add infinity of given sign to the infinity accumulation state:
@@ -864,10 +860,6 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::tdpfp8ps_execute(bxInstruction_c *i, bool 
   // fixed point scaling of the product: BF8 = 2^16, HF8 = 2^9 per element
   int factor = (a_is_bf8 && b_is_bf8) ? 32 : (!a_is_bf8 && !b_is_bf8) ? 18 : 25;
 
-  // product of two BF8 fixed point values might not fit into 64-bit, all other
-  // combinations (|hf8| < 2^18, |bf8| < 2^32) are accumulated exactly in 64-bit
-  bool wide_product = a_is_bf8 && b_is_bf8;
-
   // convert all src2 elements once
   fp8_fixpoint_t src2_fixpoint[BX_TILE_MAX_ROWS][64];
   for (unsigned k=0; k < max_k; k++)
@@ -890,14 +882,13 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::tdpfp8ps_execute(bxInstruction_c *i, bool 
       Bit128s sop;
       sop.lo = 0;
       sop.hi = 0;
-      Bit64s sop64 = 0;
 
       for (unsigned k=0; k < max_k; k++) {
         for (unsigned e=0; e < 4; e++) {
           const fp8_fixpoint_t &s1 = src1_fixpoint[4*k + e], &s2 = src2_fixpoint[k][4*n + e];
 
           if (s1.fp8_class == BX_FP8_FINITE && s2.fp8_class == BX_FP8_FINITE) {
-            fp8_fixpoint_mul_add(s1.value, s2.value, wide_product, &sop, &sop64);
+            fp8_fixpoint_mul_add(s1.value, s2.value, &sop);
           }
           else if (s1.fp8_class == BX_FP8_NAN || s2.fp8_class == BX_FP8_NAN) {
             nan = true;
@@ -927,10 +918,6 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::tdpfp8ps_execute(bxInstruction_c *i, bool 
         tmpf32 = (inf_state == BX_FP8_NEG_INF) ? float32_negative_inf : float32_positive_inf;
       }
       else {
-        if (! wide_product) {
-          sop.lo = (Bit64u) sop64;
-          sop.hi = (sop64 < 0) ? -1 : 0;
-        }
         tmpf32 = convert_fixpoint128_scaled_to_fp32_ftz_rne(sop, -factor);
       }
 

@@ -46,23 +46,23 @@
 extern softfloat_status_t prepare_ne_softfloat_status_helper(bool denormals_are_zeros);
 
 // Rank-2 BF16 outer product subtile: two BF16 pairs -> FP32 sum of products
-// -> FP32 accumulate. Spec Section 14.3.5 "op2bf16_subtile". DAZ is applied
-// per-operand via f32_denormal_to_zero() exactly where the spec calls for
-// it (both BF16-widened inputs, and the accumulator srcdest, but not the
-// products); prepare_ne_softfloat_status_helper(false) already gives RNE
-// with FTZ=1 on the f32_add/f32_mul outputs.
+// -> FP32 accumulate. Spec Section 14.3.5 "op2bf16_subtile".
+// Implemented to match Intel SDE which differs from the spec pseudocode:
+//  - the a0*b0 product is rounded to FP32 first and then fused with a1*b1 (FMA)
+//  - BF16 inputs and the srcdest accumulator are not DAZ-ed
+//  - NaN inputs are propagated (a1*b1 has priority), not converted to QNaN Indefinite
+// prepare_ne_softfloat_status_helper(false) gives RNE with FTZ=1 and DAZ=0.
 static float32 op2bf16_subtile(float32 srcdest, Bit32u op1, Bit32u op2, softfloat_status_t *status)
 {
-  float32 a0 = f32_denormal_to_zero(convert_bfloat16_to_fp32((bfloat16) op1));
-  float32 a1 = f32_denormal_to_zero(convert_bfloat16_to_fp32((bfloat16)(op1 >> 16)));
-  float32 b0 = f32_denormal_to_zero(convert_bfloat16_to_fp32((bfloat16) op2));
-  float32 b1 = f32_denormal_to_zero(convert_bfloat16_to_fp32((bfloat16)(op2 >> 16)));
+  float32 a0 = convert_bfloat16_to_fp32((bfloat16) op1);
+  float32 a1 = convert_bfloat16_to_fp32((bfloat16)(op1 >> 16));
+  float32 b0 = convert_bfloat16_to_fp32((bfloat16) op2);
+  float32 b1 = convert_bfloat16_to_fp32((bfloat16)(op2 >> 16));
 
   float32 p0 = f32_mul(a0, b0, status);
-  float32 p1 = f32_mul(a1, b1, status);
-  float32 sop = f32_add(p0, p1, status);
+  float32 sop = f32_mulAdd(a1, b1, p0, 0, status);
 
-  return f32_add(f32_denormal_to_zero(srcdest), sop, status);
+  return f32_add(srcdest, sop, status);
 }
 
 /* ==========================================================================
