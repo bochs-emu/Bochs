@@ -2453,12 +2453,12 @@ bx_define_opcode(BX_IA_VFNMSUB213PD_VpdHpdWpd, "vfnmsub213pd", "vfnmsub213pd", &
 bx_define_opcode(BX_IA_VFNMSUB231PS_VpsHpsWps, "vfnmsub231ps", "vfnmsub231ps", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::HANDLE_AVX_PFP_3OP<xmm_fnmsubps>, BX_ISA_AVX_FMA, OP_Vps, OP_Hps, OP_Wps, OP_Vps, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_VFNMSUB231PD_VpdHpdWpd, "vfnmsub231pd", "vfnmsub231pd", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::HANDLE_AVX_PFP_3OP<xmm_fnmsubpd>, BX_ISA_AVX_FMA, OP_Vpd, OP_Hpd, OP_Wpd, OP_Vpd, BX_PREPARE_AVX)
 
-bx_define_opcode(BX_IA_VFNMSUB132SS_VpsHssWss, "vfnmsub132ss", "vfnmsub132ss", &BX_CPU_C::LOAD_Wss, &BX_CPU_C::VFNMSUBSS_VpsHssWssR, BX_ISA_AVX_FMA, OP_Vps, OP_Vps, OP_Wps, OP_Hps, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_VFNMSUB132SD_VpdHsdWsd, "vfnmsub132sd", "vfnmsub132sd", &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::VFNMSUBSD_VpdHsdWsdR, BX_ISA_AVX_FMA, OP_Vpd, OP_Vpd, OP_Wpd, OP_Hpd, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_VFNMSUB213SS_VpsHssWss, "vfnmsub213ss", "vfnmsub213ss", &BX_CPU_C::LOAD_Wss, &BX_CPU_C::VFNMSUBSS_VpsHssWssR, BX_ISA_AVX_FMA, OP_Vps, OP_Hps, OP_Vps, OP_Wps, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_VFNMSUB213SD_VpdHsdWsd, "vfnmsub213sd", "vfnmsub213sd", &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::VFNMSUBSD_VpdHsdWsdR, BX_ISA_AVX_FMA, OP_Vpd, OP_Hpd, OP_Vpd, OP_Wpd, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_VFNMSUB231SS_VpsHssWss, "vfnmsub231ss", "vfnmsub231ss", &BX_CPU_C::LOAD_Wss, &BX_CPU_C::VFNMSUBSS_VpsHssWssR, BX_ISA_AVX_FMA, OP_Vps, OP_Hps, OP_Wps, OP_Vps, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_VFNMSUB231SD_VpdHsdWsd, "vfnmsub231sd", "vfnmsub231sd", &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::VFNMSUBSD_VpdHsdWsdR, BX_ISA_AVX_FMA, OP_Vpd, OP_Hpd, OP_Wpd, OP_Vpd, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VFNMSUB132SS_VpsHssWss, "vfnmsub132ss", "vfnmsub132ss", &BX_CPU_C::LOAD_Wss, &BX_CPU_C::VFNMSUBSS_VpsHssWssR, BX_ISA_AVX_FMA, OP_Vps, OP_Vps, OP_Wss, OP_Hss, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VFNMSUB132SD_VpdHsdWsd, "vfnmsub132sd", "vfnmsub132sd", &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::VFNMSUBSD_VpdHsdWsdR, BX_ISA_AVX_FMA, OP_Vpd, OP_Vpd, OP_Wsd, OP_Hsd, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VFNMSUB213SS_VpsHssWss, "vfnmsub213ss", "vfnmsub213ss", &BX_CPU_C::LOAD_Wss, &BX_CPU_C::VFNMSUBSS_VpsHssWssR, BX_ISA_AVX_FMA, OP_Vps, OP_Hss, OP_Vss, OP_Wss, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VFNMSUB213SD_VpdHsdWsd, "vfnmsub213sd", "vfnmsub213sd", &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::VFNMSUBSD_VpdHsdWsdR, BX_ISA_AVX_FMA, OP_Vpd, OP_Hsd, OP_Vsd, OP_Wsd, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VFNMSUB231SS_VpsHssWss, "vfnmsub231ss", "vfnmsub231ss", &BX_CPU_C::LOAD_Wss, &BX_CPU_C::VFNMSUBSS_VpsHssWssR, BX_ISA_AVX_FMA, OP_Vps, OP_Hss, OP_Wss, OP_Vss, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VFNMSUB231SD_VpdHsdWsd, "vfnmsub231sd", "vfnmsub231sd", &BX_CPU_C::LOAD_Wsd, &BX_CPU_C::VFNMSUBSD_VpdHsdWsdR, BX_ISA_AVX_FMA, OP_Vpd, OP_Hsd, OP_Wsd, OP_Vsd, BX_PREPARE_AVX)
 // AVX2 FMA
 
 // AVX VNNI
