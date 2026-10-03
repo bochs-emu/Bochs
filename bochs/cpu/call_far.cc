@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2025 Stanislav Shwartsman
+//   Copyright (c) 2005-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -58,6 +58,14 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 #if BX_SUPPORT_CET
     bx_address temp_LIP = get_laddr(BX_SEG_REG_CS, RIP);
     Bit16u old_CS = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+
+    if (ShadowStackEnabled(CPL)) {
+      // if target is legacy or compatibility mode then the SSP must be in low 4GB
+      if (! (long_mode() && cs_descriptor.u.segment.l) && GET32H(SSP) != 0) {
+        BX_ERROR(("call_protected: SSP must be in low 4GB when target is legacy or compatibility mode"));
+        exception(BX_GP_EXCEPTION, 0);
+      }
+    }
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -611,6 +619,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::shadow_stack_switch(bx_address new_SSP)
 
   if (SSP & 0x7) {
     BX_ERROR(("shadow_stack_switch: SSP is not aligned to 8 byte boundary"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+  // Intel SDM Vol1, section 18.2.3 "Supervisor Shadow Stack Token":
+  //   If the far CALL or event delivery will push a 24-byte stack frame after the token is acquired, the 8-byte
+  //   supervisor shadow stack token and the stack frame must be fully contained within a 32-byte region that is
+  //   aligned to 32-bytes on the shadow stack. If they are not, a general-protection exception (#GP(0)) occurs.
+  // (the same check appears in Vol2 CALL and INT n pseudocode right after the 8-byte alignment check)
+  if ((SSP & ~BX_CONST64(0x1F)) != ((SSP - 24) & ~BX_CONST64(0x1F))) {
+    BX_ERROR(("shadow_stack_switch: token and CS:LIP:SSP frame cross naturally aligned 32-byte region"));
     exception(BX_GP_EXCEPTION, 0);
   }
   if (!long64_mode() && GET32H(SSP) != 0) {

@@ -98,6 +98,8 @@ Changes after Bochs 3.1:
 - CET: SYSCALL and SYSENTER in IA-32e mode must sign-extend SSP saved into IA32_PL3_SSP from the max linear-address width (LA_adjust)
 - CET: IRETQ from CPL3 to CPL3 must restore SSP from the user shadow stack (and verify CS/LIP) instead of loading it from IA32_PL3_SSP
 - VMX/CET: VM entry guest SSP check must only require bits 63:N identical (N = max linear-address width), guest SSP is not required to be canonical
+- CET: far CALL/INT shadow stack switch must #GP if token and CS:LIP:SSP frame are not contained in a naturally aligned 32-byte region
+- CET: same privilege far CALL to legacy or compatibility mode must #GP if SSP is not in low 4GB
 + CET: fix supervisor shadow stack token release on same privilege IRET in IA-32e mode
 
 -------------------------------------------------------------------------
