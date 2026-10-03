@@ -1211,8 +1211,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPS_VpsWpsIbR(bxInstruction_c *i)
   xmm_shufpd(&op1, &op2, &op2, 0x1);
 
   // op2 = [(BF+AE)+(DH+CG), (AE+BF)+(CG+DH), (DH+CG)+(BF+AE), (CG+DH)+(AE+BF)]
-  xmm_addps_mask(&op2, &op1, status, mask);
+  xmm_addps(&op2, &op1, status);
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
+
+  // zero elements not selected by broadcast mask
+  xmm_zero_blendps(&op2, &op2, mask);
 
   BX_WRITE_XMM_REG(i->dst(), op2);
 
@@ -1243,8 +1246,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPD_VpdHpdWpdIbR(bxInstruction_c *i)
   xmm_shufpd(&op2, &op1, &op1, 0x1);
 
   // op1 = [AC+BD, BD+AC]
-  xmm_addpd_mask(&op1, &op2, status, mask);
+  xmm_addpd(&op1, &op2, status);
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
+
+  // zero elements not selected by broadcast mask
+  xmm_zero_blendpd(&op1, &op1, mask);
 
   BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
 

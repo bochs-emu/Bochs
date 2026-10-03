@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2023 Stanislav Shwartsman
+//   Copyright (c) 2011-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -539,9 +539,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VDPPS_VpsHpsWpsIbR(bxInstruction_c *i)
 
   for (unsigned n=0; n < len; n++) {
     // op2 = [(BF+AE)+(DH+CG), (AE+BF)+(CG+DH), (DH+CG)+(BF+AE), (CG+DH)+(AE+BF)]
-    xmm_addps_mask(&op2.ymm128(n), &op1.ymm128(n), status, mask);
+    xmm_addps(&op2.ymm128(n), &op1.ymm128(n), status);
   }
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
+
+  for (unsigned n=0; n < len; n++) {
+    // zero elements not selected by broadcast mask
+    xmm_zero_blendps(&op2.ymm128(n), &op2.ymm128(n), mask);
+  }
 
   BX_WRITE_YMM_REGZ_VLEN(i->dst(), op2, len);
   BX_NEXT_INSTR(i);
