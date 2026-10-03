@@ -1247,16 +1247,12 @@ static const Bit64u BxOpcodeGroup_EVEX_0F385B[] = {
 };
 
 #if BX_SUPPORT_AMX
-// ACE v1 Section 14.3: BF16 Rank-2 Outer Product. Register-only both
-// sources, no masking/zeroing support (spec Section 14.3.7) -> ATTR_MASK_K0.
+// ACE v1 Section 14.3: BF16 Rank-2 Outer Product
 static const Bit64u BxOpcodeGroup_EVEX_0F385C[] = {
   last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VEX_W0 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TOP2BF16PS_TnnnWdqHdq)
 };
 
-// ACE v1 Section 14.4: INT8 Byte Rank-4 Outer Products. Register-only both
-// sources, no masking/zeroing support (spec Section 14.4.9) -> ATTR_MASK_K0.
-// Prefix encodes the (A,B) sign combination, matching the existing
-// VPDPB[U|S][U|S]D convention: NP=UU, 66=US, F3=SU, F2=SS.
+// ACE v1 Section 14.4: INT8 Byte Rank-4 Outer Products
 static const Bit64u BxOpcodeGroup_EVEX_0F385E[] = {
   form_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_W0 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TOP4BUUD_TnnnWdqHdq),
   form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_VL512 | ATTR_MASK_K0 | ATTR_MODC0 | ATTR_IS64, BX_IA_EVEX_TOP4BUSD_TnnnWdqHdq),

@@ -705,8 +705,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCMMIMFP16PS_TnnnTrmTreg(bxInstruction_c *
         float32 s1i = convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k+1));     // imaginary
         float32 s2i = convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n+1));     // imaginary
 
-        tmp[2*n]   = f32_mulAdd(s1i, s2r, tmp[2*n],   0, &status);
-        tmp[2*n+1] = f32_mulAdd(s1r, s2i, tmp[2*n+1], 0, &status);
+        // real * imaginary products are accumulated first to get NaN propagation priority
+        // matching Intel SDE (SDM pseudocode has the two accumulators in reverse order)
+        tmp[2*n]   = f32_mulAdd(s1r, s2i, tmp[2*n],   0, &status);
+        tmp[2*n+1] = f32_mulAdd(s1i, s2r, tmp[2*n+1], 0, &status);
       }
     }
 

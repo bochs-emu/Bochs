@@ -15,6 +15,7 @@ Changes after Bochs 3.1:
 + AMX-FP8: rewrite TDPBF8PS/TDPHF8PS/TDPBHF8PS/TDPHBF8PS to match SDM: they must accumulate FP8 products exactly in fixed point over the whole K dimension with single rounding to FP32
 - AMX-AVX512: TCVTROWPS2PHH/TCVTROWPS2PHL should allow to produce FP16 denormal outputs instead of flushing them to zero
 - AMX-AVX512: TILEMOVROW/TCVTROW* must return zero for elements beyond configured tile row width and zero TILECFG.start_row also when the row is out of range
+- AMX-COMPLEX: fixed NaN propagation priority in TCMMIMFP16PS instruction to match Intel SDE
 - SSE/AVX: Fixed PSRLQ and PSRAVQ instructions with shift count = 64
 - SSE: PSHUFLW instruction should be supported under SSE2 instead of SSE
 - POPCNT: fix POPCNT instruction to depend on its own (already existing) CPUID feature flags and not SSE4.2
