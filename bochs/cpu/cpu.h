@@ -5000,6 +5000,7 @@ public: // for now...
   BX_SMF bool tilemov_read_row(bxInstruction_c *i, bool immediate_form, BxPackedAvxRegister *dst) BX_CPP_AttrRegparmN(3);
   BX_SMF bool tilemov_write_row(bxInstruction_c *i, bool immediate_form, const BxPackedAvxRegister *src) BX_CPP_AttrRegparmN(3);
   BX_SMF void top4b_execute(bxInstruction_c *i, bool a_signed, bool b_signed) BX_CPP_AttrRegparmN(3);
+  BX_SMF void tdpfp8ps_execute(bxInstruction_c *i, bool a_is_bf8, bool b_is_bf8) BX_CPP_AttrRegparmN(3);
 #endif
 
 #if BX_CPU_LEVEL >= 5

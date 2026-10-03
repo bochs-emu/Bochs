@@ -152,7 +152,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TOP4BUUD_TnnnWdqHdq(bxInstruction_c *i) { 
  * Bit128u/Bit128s hi:lo pair and long_neg()/long_shl() from wide_int.h.
  * ==========================================================================
  */
-static float32 convert_fixpoint128_scaled_to_fp32_ftz_rne(Bit128s x, int adjust)
+float32 convert_fixpoint128_scaled_to_fp32_ftz_rne(Bit128s x, int adjust)
 {
   if (x.lo == 0 && x.hi == 0) return 0;
 
@@ -278,7 +278,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TOP4MXBSSPS_TnnnWdqHdqIb(bxInstruction_c *
 // FP8 -> 64-bit fixed-point integer (exact bit-shift, no rounding). Spec
 // Section 16.5: BF8 (E5M2) result = 2^16 * float_value; HF8 (E4M3) result =
 // 2^9 * float_value. The alignment enables exact accumulation.
-static Bit64s convert_bf8_to_fixpoint64(Bit8u fp8_byte)
+Bit64s convert_bf8_to_fixpoint64(Bit8u fp8_byte)
 {
   int sign = (fp8_byte & 0x80) >> 7;
   int exp  = (fp8_byte & 0x7C) >> 2;
@@ -289,7 +289,7 @@ static Bit64s convert_bf8_to_fixpoint64(Bit8u fp8_byte)
   return sign ? -magnitude : magnitude;
 }
 
-static Bit64s convert_hf8_to_fixpoint64(Bit8u fp8_byte)
+Bit64s convert_hf8_to_fixpoint64(Bit8u fp8_byte)
 {
   int sign = (fp8_byte & 0x80) >> 7;
   int exp  = (fp8_byte & 0x78) >> 3;
