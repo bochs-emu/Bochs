@@ -1777,6 +1777,10 @@ void bx_cpuid_t::sanity_checks() const
     }
   }
 
+  // ACE extends AMX_AVX512 instructions (TILEMOVROW, TCVTROW*)
+  if (is_cpu_extension_supported(BX_ISA_ACE) && ! is_cpu_extension_supported(BX_ISA_AMX_AVX512))
+    BX_FATAL(("PANIC: ACE requires AMX_AVX512 to be enabled !"));
+
   if (is_cpu_extension_supported(BX_ISA_VMX) && is_cpu_extension_supported(BX_ISA_SVM))
     BX_FATAL(("PANIC: VMX and SVM cannot be enabled in same model !"));
 

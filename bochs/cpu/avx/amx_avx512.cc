@@ -46,14 +46,22 @@ bool BX_CPP_AttrRegparmN(3) BX_CPU_C::tilemov_read_row(bxInstruction_c *i, bool 
 
   row &= 0xf;
 
-  unsigned tile_num_rows = BX_CPU_THIS_PTR amx->tile_num_rows(tile_src);
-  if (row >= tile_num_rows) {
-    dst->clear();
-    return false;
-  }
+  // zero_tileconfig_start() is done also when the row is out of range
+  BX_CPU_THIS_PTR amx->restart();
 
+  dst->clear();
+
+  unsigned tile_num_rows = BX_CPU_THIS_PTR amx->tile_num_rows(tile_src);
+  if (row >= tile_num_rows)
+    return false;
+
+  // elements beyond configured tile row width are returned as zero
+  // (TILEDATA loaded by XRSTOR might have non-zero data there)
   AMX::TILE *tsrc = &(BX_CPU_THIS_PTR amx->tile[tile_src]);
-  *dst = tsrc->row[row];
+  unsigned dword_elements_per_row = BX_CPU_THIS_PTR amx->tile_dword_elements_per_row(tile_src);
+  for (unsigned n=0; n < dword_elements_per_row; n++)
+    dst->vmm32u(n) = tsrc->row[row].vmm32u(n);
+
   return true;
 }
 
@@ -86,10 +94,8 @@ bool BX_CPP_AttrRegparmN(3) BX_CPU_C::tilemov_write_row(bxInstruction_c *i, bool
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILEMOVROW_VdqTrm(bxInstruction_c *i)
 {
   BxPackedAvxRegister dst;
-  bool result = tilemov_read_row(i, i->getIaOpcode() == BX_IA_EVEX_TILEMOVROW_VdqTrmIb, &dst);
+  tilemov_read_row(i, i->getIaOpcode() == BX_IA_EVEX_TILEMOVROW_VdqTrmIb, &dst);
   BX_WRITE_AVX_REG(i->dst(), dst);
-  if (result)
-    BX_CPU_THIS_PTR amx->restart();
 
   BX_NEXT_INSTR(i);
 }
@@ -167,7 +173,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWD2PS_VpsTrm(bxInstruction_c *i)
     dst.vmm32u(n) = i32_to_f32(dst.vmm32u(n), &status);
 
   BX_WRITE_AVX_REG(i->dst(), dst);
-  BX_CPU_THIS_PTR amx->restart();
 
   BX_NEXT_INSTR(i);
 }
@@ -183,13 +188,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2PHL_VphTrm(bxInstruction_c *i)
 
   // "round to nearest even" rounding mode is used when doing each convertion below.
   softfloat_status_t status = prepare_ne_softfloat_status_helper(true);
+  // input FP32 denormals are treated as zero, FP16 denormal outputs are not flushed to zero
+  status.softfloat_flush_underflow_to_zero = false;
 
   // convert the fp32 source elements to fp16 and place them in low 16-bits of each dword
   for (unsigned n=0;n < DWORD_ELEMENTS(BX_VL512); n++)
     dst.vmm32u(n) = (Bit32u) f32_to_f16(dst.vmm32u(n), &status);
 
   BX_WRITE_AVX_REG(i->dst(), dst);
-  BX_CPU_THIS_PTR amx->restart();
 
   BX_NEXT_INSTR(i);
 }
@@ -205,13 +211,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2PHH_VphTrm(bxInstruction_c *i)
 
   // "round to nearest even" rounding mode is used when doing each convertion below.
   softfloat_status_t status = prepare_ne_softfloat_status_helper(true);
+  // input FP32 denormals are treated as zero, FP16 denormal outputs are not flushed to zero
+  status.softfloat_flush_underflow_to_zero = false;
 
   // convert the fp32 source elements to fp16 and place them in high 16-bits of each dword
   for (unsigned n=0;n < DWORD_ELEMENTS(BX_VL512); n++)
     dst.vmm32u(n) = ((Bit32u) f32_to_f16(dst.vmm32u(n), &status)) << 16;
 
   BX_WRITE_AVX_REG(i->dst(), dst);
-  BX_CPU_THIS_PTR amx->restart();
 
   BX_NEXT_INSTR(i);
 }
@@ -230,7 +237,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2BF16L_VphTrm(bxInstruction_c *i)
     dst.vmm32u(n) = (Bit32u) convert_ne_fp32_to_bfloat16(dst.vmm32u(n));
 
   BX_WRITE_AVX_REG(i->dst(), dst);
-  BX_CPU_THIS_PTR amx->restart();
 
   BX_NEXT_INSTR(i);
 }
@@ -249,7 +255,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2BF16H_VphTrm(bxInstruction_c *i)
     dst.vmm32u(n) = ((Bit32u) convert_ne_fp32_to_bfloat16(dst.vmm32u(n))) << 16;
 
   BX_WRITE_AVX_REG(i->dst(), dst);
-  BX_CPU_THIS_PTR amx->restart();
 
   BX_NEXT_INSTR(i);
 }
