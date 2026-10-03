@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -108,23 +108,6 @@ int hdmode_n_choices = 6;
 const char *sectsize_menu = "\nChoose the size of hard disk sectors.\nPlease type 512, 1024 or 4096. ";
 const char *sectsize_choices[] = { "512","1024","4096" };
 int sectsize_n_choices = 3;
-
-#if !BX_HAVE_SNPRINTF
-#include <stdarg.h>
-/* XXX use real snprintf */
-/* if they don't have snprintf, just use sprintf */
-int snprintf(char *s, size_t maxlen, const char *format, ...)
-{
-  va_list arg;
-  int done;
-
-  va_start(arg, format);
-  done = vsprintf(s, format, arg);
-  va_end(arg);
-
-  return done;
-}
-#endif  /* !BX_HAVE_SNPRINTF */
 
 #if !BX_HAVE_MKSTEMP
 int bx_mkstemp(char *tpl)

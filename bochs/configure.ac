@@ -140,6 +140,21 @@ fi
 
 AC_PROG_CC
 AC_PROG_CXX
+
+dnl // Bochs requires at least C++11 compiler
+AC_LANG_SAVE
+AC_LANG([C++])
+AC_MSG_CHECKING(whether C++ compiler supports C++11)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if !(__cplusplus >= 201103L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201103L))
+#error C++11 is not supported
+#endif
+]], [[]])],[AC_MSG_RESULT(yes)],[
+     AC_MSG_RESULT(no)
+     AC_MSG_ERROR([Bochs requires C++ compiler with C++11 support])
+   ])
+AC_LANG_RESTORE
+
 AC_PROG_AR
 AC_PROG_MAKE_SET
 
@@ -175,15 +190,11 @@ if test "$MSVC_TARGET" = 0; then
 fi
 AC_CHECK_FUNCS(getenv, AC_DEFINE(BX_HAVE_GETENV))
 AC_CHECK_FUNCS(setenv, AC_DEFINE(BX_HAVE_SETENV))
-AC_CHECK_FUNCS(snprintf, AC_DEFINE(BX_HAVE_SNPRINTF))
-AC_CHECK_FUNCS(vsnprintf, AC_DEFINE(BX_HAVE_VSNPRINTF))
 
 if test "$MSVC_TARGET" = 0; then
   AC_CHECK_FUNCS(select, AC_DEFINE(BX_HAVE_SELECT))
   AC_CHECK_TYPE(socklen_t, AC_DEFINE(BX_HAVE_SOCKLEN_T), , [#include <sys/types.h>
   #include <sys/socket.h>])
-  AC_CHECK_FUNCS(strtoull, AC_DEFINE(BX_HAVE_STRTOULL))
-  AC_CHECK_FUNCS(strtouq, AC_DEFINE(BX_HAVE_STRTOUQ))
   AC_CHECK_FUNCS(strdup, AC_DEFINE(BX_HAVE_STRDUP))
   AC_CHECK_FUNCS(strrev, AC_DEFINE(BX_HAVE_STRREV))
   AC_CHECK_FUNCS(stricmp, AC_DEFINE(BX_HAVE_STRICMP))
@@ -218,8 +229,6 @@ if test "$MSVC_TARGET" = 0; then
 else
   AC_DEFINE(BX_HAVE_SELECT, 1)
   AC_DEFINE(BX_HAVE_SOCKLEN_T, 0)
-  AC_DEFINE(BX_HAVE_STRTOULL, 1)
-  AC_DEFINE(BX_HAVE_STRTOUQ, 0)
   AC_DEFINE(BX_HAVE_STRDUP, 1)
   AC_DEFINE(BX_HAVE_STRREV, 1)
   AC_DEFINE(BX_HAVE_STRICMP, 1)
@@ -276,30 +285,6 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[typedef struct { } __attribute__ ((pa
       AC_MSG_RESULT(no)
       AC_DEFINE(BX_NO_ATTRIBUTES)
     ])
-
-AC_LANG_SAVE
-AC_LANG([C++])
-AC_MSG_CHECKING(for set)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <set>]], [[]])],[
-     AC_MSG_RESULT(yes)
-     AC_DEFINE(BX_HAVE_SET)
-   ],[AC_MSG_RESULT(no)])
-AC_MSG_CHECKING(for set.h)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <set.h>]], [[]])],[
-     AC_MSG_RESULT(yes)
-     AC_DEFINE(BX_HAVE_SET_H)
-   ],[AC_MSG_RESULT(no)])
-AC_MSG_CHECKING(for map)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <map>]], [[]])],[
-     AC_MSG_RESULT(yes)
-     AC_DEFINE(BX_HAVE_MAP)
-   ],[AC_MSG_RESULT(no)])
-AC_MSG_CHECKING(for map.h)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <map.h>]], [[]])],[
-     AC_MSG_RESULT(yes)
-     AC_DEFINE(BX_HAVE_MAP_H)
-   ],[AC_MSG_RESULT(no)])
-AC_LANG_RESTORE
 
 dnl Implement a check for each gui library to see if has a chance of compiling.
 if test "$with_all_libs" = yes; then
@@ -505,12 +490,6 @@ if test "$bx_plugins" = 1 -a "$need_dlcompat_for_plugins" = 1; then
     AC_MSG_RESULT(yes)
   fi
 fi
-
-AC_MSG_CHECKING(if compiler allows LL for 64-bit constants)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[ { 42LL; } ]])],[AC_MSG_RESULT(yes)],[
-      AC_MSG_RESULT(no)
-      AC_DEFINE(BX_64BIT_CONSTANTS_USE_LL, 0)
-    ])
 
 AC_MSG_CHECKING(for A20 support)
 AC_ARG_ENABLE(a20-pin,
@@ -3015,7 +2994,6 @@ case "$target" in
     CD_UP_TWO="cd ..\.."
     CD_UP_THREE="cd ..\..\.."
     have_gettimeofday=0  # even though it may exist in build environment
-    AC_DEFINE(BX_64BIT_CONSTANTS_USE_LL, 0)
     AC_DEFINE(BX_CPP_INLINE, __forceinline)
     AC_DEFINE(BX_NO_ATTRIBUTES, 1)
     AC_DEFINE(HAVE_LIBREADLINE, 0)
