@@ -113,6 +113,7 @@ Changes after Bochs 3.1:
 - VMX/UINTR: VM entry injecting event other than external interrupt with vector UINV must not perform user-interrupt notification processing
 - VMX/UINTR: VM exit occurring during user-interrupt notification processing must save IDT-vectoring information (as during delivery of external interrupt with vector UINV)
 - UINTR: user interrupt delivery must not be blocked by EFLAGS.IF=0
++ VMX/CET: write "prematurely busy shadow stack" tracking better matching SDM
 + CET: fix supervisor shadow stack token release on same privilege IRET in IA-32e mode
 
 -------------------------------------------------------------------------

@@ -821,9 +821,12 @@ void BX_CPU_C::vmx_page_modification_logging(Bit64u guest_laddr, Bit64u guest_pa
     if (BX_CPU_THIS_PTR nmi_unblocking_iret)
       vmexit_qualification |= (1 << 12);
 
-    if (vm->vmexit_ctrls2.SHADOW_STACK_PREMATURELY_BUSY_CTRL()) {
+#if BX_SUPPORT_CET
+    // the linear address is saved if the VM exit caused a shadow stack to become prematurely busy
+    if (vm->vmexit_ctrls2.SHADOW_STACK_PREMATURELY_BUSY_CTRL() && vm->shadow_stack_prematurely_busy) {
       VMwrite_natural(VMCS_GUEST_LINEAR_ADDR, guest_laddr);
     }
+#endif
     VMexit(VMX_VMEXIT_PML_LOGFULL, vmexit_qualification);
   }
 

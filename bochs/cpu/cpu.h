@@ -5043,6 +5043,7 @@ public: // for now...
 #if BX_SUPPORT_CET
   BX_SMF void shadow_stack_switch(bx_address new_SSP) BX_CPP_AttrRegparmN(1);
   BX_SMF void call_far_shadow_stack_push(Bit16u cs, bx_address lip, bx_address old_ssp) BX_CPP_AttrRegparmN(3);
+  BX_SMF void new_shadow_stack_push(Bit16u cs, bx_address lip, bx_address old_ssp) BX_CPP_AttrRegparmN(3);
   BX_SMF bx_address shadow_stack_restore(Bit64u cs_image, bx_address return_lip) BX_CPP_AttrRegparmN(2);
   BX_SMF bx_address shadow_stack_restore(Bit16u raw_cs_selector, const bx_descriptor_t &cs_descriptor, bx_address return_rip) BX_CPP_AttrRegparmN(3);
   BX_SMF void check_restored_ssp(bx_address new_SSP, const bx_descriptor_t &cs_descriptor) BX_CPP_AttrRegparmN(2);

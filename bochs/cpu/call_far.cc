@@ -446,7 +446,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
       bx_address old_SSP = SSP;
       shadow_stack_switch(BX_CPU_THIS_PTR msr.ia32_pl_ssp[CPL]);
       if (old_SS_DPL != 3)
-        call_far_shadow_stack_push(return_CS, temp_LIP, old_SSP);
+        new_shadow_stack_push(return_CS, temp_LIP, old_SSP);
     }
     track_indirect(CPL);
 #endif
@@ -587,7 +587,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
       bx_address old_SSP = SSP;
       shadow_stack_switch(BX_CPU_THIS_PTR msr.ia32_pl_ssp[CPL]);
       if (old_SS_DPL != 3)
-        call_far_shadow_stack_push(old_CS, temp_LIP, old_SSP);
+        new_shadow_stack_push(old_CS, temp_LIP, old_SSP);
     }
     track_indirect(CPL);
 #endif
@@ -644,11 +644,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::shadow_stack_switch(bx_address new_SSP)
 
 void BX_CPP_AttrRegparmN(3) BX_CPU_C::call_far_shadow_stack_push(Bit16u cs, bx_address lip, bx_address old_ssp)
 {
-#if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest)
-    BX_CPU_THIS_PTR vmcs.shadow_stack_prematurely_busy = true;
-#endif
-
   if (SSP & 0x7) {
     shadow_stack_write_dword(SSP-4, CPL, 0);
     SSP &= ~BX_CONST64(0x7);
@@ -657,10 +652,24 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::call_far_shadow_stack_push(Bit16u cs, bx_a
   shadow_stack_push_64(cs);
   shadow_stack_push_64(lip);
   shadow_stack_push_64(old_ssp);
+}
+
+// Push CS:LIP:SSP onto the supervisor shadow stack whose token was just acquired by shadow_stack_switch().
+// Intel SDM Vol1, section 18.2.3 "Supervisor Shadow Stack Token":
+//   If the far CALL or event delivery pushes a stack frame after the token is acquired and any of the pushes causes a
+//   fault or VM exit, the processor will revert to the old shadow stack and the busy bit in the new shadow stack's
+//   token remains set. The new shadow stack is said to be prematurely busy.
+// A VM exit caused by these pushes reports it (exit reason bit 25) and convertible EPT violation is not converted to #VE.
+void BX_CPP_AttrRegparmN(3) BX_CPU_C::new_shadow_stack_push(Bit16u cs, bx_address lip, bx_address old_ssp)
+{
+#if BX_SUPPORT_VMX
+  BX_CPU_THIS_PTR vmcs.shadow_stack_prematurely_busy = BX_CPU_THIS_PTR in_vmx_guest;
+#endif
+
+  call_far_shadow_stack_push(cs, lip, old_ssp);
 
 #if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest)
-    BX_CPU_THIS_PTR vmcs.shadow_stack_prematurely_busy = false;
+  BX_CPU_THIS_PTR vmcs.shadow_stack_prematurely_busy = false;
 #endif
 }
 #endif // BX_SUPPORT_CET

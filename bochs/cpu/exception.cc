@@ -263,10 +263,15 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16
   }
   if (ShadowStackEnabled(CPL)) {
     bx_address old_SSP = SSP;
-    if(check_ss_token)
+    if (check_ss_token) {
       shadow_stack_switch(new_SSP);
-    if (old_SS_DPL != 3)
-      call_far_shadow_stack_push(old_CS, return_LIP, old_SSP);
+      if (old_SS_DPL != 3)
+        new_shadow_stack_push(old_CS, return_LIP, old_SSP);
+    }
+    else {
+      if (old_SS_DPL != 3)
+        call_far_shadow_stack_push(old_CS, return_LIP, old_SSP);
+    }
   }
   track_indirect(CPL);
 #endif
@@ -618,7 +623,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
         bx_address old_SSP = SSP;
         shadow_stack_switch(new_SSP);
         if (old_SS_DPL != 3) {
-          call_far_shadow_stack_push(old_CS, return_LIP, old_SSP);
+          new_shadow_stack_push(old_CS, return_LIP, old_SSP);
         }
       }
       track_indirect(CPL);
@@ -965,6 +970,11 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 
 #if BX_SUPPORT_VMX
   VMexit_Event(BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
+#if BX_SUPPORT_CET
+  // the exception didn't cause VM exit: if it happened during pushes onto newly acquired shadow stack, the shadow
+  // stack became prematurely busy without VM exit and this is not reported anywhere
+  BX_CPU_THIS_PTR vmcs.shadow_stack_prematurely_busy = false;
+#endif
 #endif
 
   // AMD: a #DB pushes RF clear, also a single-step trap between two iterations of a REP string instruction
