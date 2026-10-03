@@ -569,6 +569,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TDPBF16PS_TnnnTrmTreg(bxInstruction_c *i)
 
 extern float32 convert_ne_fp16_to_fp32(float16 op);
 
+// convert FP16 elements of the tile to FP32 once, for reuse across the matrix multiplication loops
+static void convert_fp16_tile_to_fp32(AMX::TILE *tile, unsigned nrows, unsigned nelements, float32 dst[][32])
+{
+  for (unsigned row=0; row < nrows; row++)
+    for (unsigned e=0; e < nelements; e++)
+      dst[row][e] = convert_ne_fp16_to_fp32(tile->row[row].vmm16u(e));
+}
+
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::TDPFP16PS_TnnnTrmTreg(bxInstruction_c *i)
 {
   unsigned tile_dst = i->dst(), tile_src1 = i->src1(), tile_src2 = i->src2();
@@ -590,17 +598,20 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TDPFP16PS_TnnnTrmTreg(bxInstruction_c *i)
   // output FP32 denormals are always flushed to zero and input denormals are always treated as zero.
   softfloat_status_t status = prepare_ne_softfloat_status_helper(true);
 
+  // convert all FP16 source elements to FP32 once
+  float32 src1_fp32[BX_TILE_MAX_ROWS][32], src2_fp32[BX_TILE_MAX_ROWS][32];
+  convert_fp16_tile_to_fp32(tsrc1, max_m, 2*max_k, src1_fp32);
+  convert_fp16_tile_to_fp32(tsrc2, max_k, 2*max_n, src2_fp32);
+
   for (unsigned m=0; m < max_m; m++) {
     float32 tmp[32]; // new empty array
     for (unsigned n=0; n < 32; n++) tmp[n] = 0;
 
     for (unsigned k=0; k < max_k; k++) {
       for (unsigned n=0; n < max_n; n++) {
-        tmp[2*n]   = f32_mulAdd(convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k)),
-                                convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n)),   tmp[2*n],   0, &status);
+        tmp[2*n]   = f32_mulAdd(src1_fp32[m][2*k],   src2_fp32[k][2*n],   tmp[2*n],   0, &status);
 
-        tmp[2*n+1] = f32_mulAdd(convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k+1)),
-                                convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n+1)), tmp[2*n+1], 0, &status);
+        tmp[2*n+1] = f32_mulAdd(src1_fp32[m][2*k+1], src2_fp32[k][2*n+1], tmp[2*n+1], 0, &status);
       }
     }
 
@@ -642,16 +653,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCMMRLFP16PS_TnnnTrmTreg(bxInstruction_c *
   // output FP32 denormals are always flushed to zero and input denormals are always treated as zero.
   softfloat_status_t status = prepare_ne_softfloat_status_helper(true);
 
+  // convert all FP16 source elements to FP32 once
+  float32 src1_fp32[BX_TILE_MAX_ROWS][32], src2_fp32[BX_TILE_MAX_ROWS][32];
+  convert_fp16_tile_to_fp32(tsrc1, max_m, 2*max_k, src1_fp32);
+  convert_fp16_tile_to_fp32(tsrc2, max_k, 2*max_n, src2_fp32);
+
   for (unsigned m=0; m < max_m; m++) {
     float32 tmp[32]; // new empty array
     for (unsigned n=0; n < 32; n++) tmp[n] = 0;
 
     for (unsigned k=0; k < max_k; k++) {
       for (unsigned n=0; n < max_n; n++) {
-        float32 s1r = convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k));                        // real
-        float32 s2r = convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n));                        // real
-        float32 s1i = convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k+1));                      // imaginary
-        float32 s2i = convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n+1));                      // imaginary
+        float32 s1r = src1_fp32[m][2*k];     // real
+        float32 s2r = src2_fp32[k][2*n];     // real
+        float32 s1i = src1_fp32[m][2*k+1];   // imaginary
+        float32 s2i = src2_fp32[k][2*n+1];   // imaginary
 
         tmp[2*n]   = f32_mulAdd(s1r, s2r, tmp[2*n],   0, &status);                               // real
         tmp[2*n+1] = f32_mulAdd(s1i, s2i, tmp[2*n+1], softfloat_muladd_negate_product, &status);     // imaginary, negate for i^2 = -1
@@ -694,16 +710,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCMMIMFP16PS_TnnnTrmTreg(bxInstruction_c *
   // output FP32 denormals are always flushed to zero and input denormals are always treated as zero.
   softfloat_status_t status = prepare_ne_softfloat_status_helper(true);
 
+  // convert all FP16 source elements to FP32 once
+  float32 src1_fp32[BX_TILE_MAX_ROWS][32], src2_fp32[BX_TILE_MAX_ROWS][32];
+  convert_fp16_tile_to_fp32(tsrc1, max_m, 2*max_k, src1_fp32);
+  convert_fp16_tile_to_fp32(tsrc2, max_k, 2*max_n, src2_fp32);
+
   for (unsigned m=0; m < max_m; m++) {
     float32 tmp[32]; // new empty array
     for (unsigned n=0; n < 32; n++) tmp[n] = 0;
 
     for (unsigned k=0; k < max_k; k++) {
       for (unsigned n=0; n < max_n; n++) {
-        float32 s1r = convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k));       // real
-        float32 s2r = convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n));       // real
-        float32 s1i = convert_ne_fp16_to_fp32(tsrc1->row[m].vmm16u(2*k+1));     // imaginary
-        float32 s2i = convert_ne_fp16_to_fp32(tsrc2->row[k].vmm16u(2*n+1));     // imaginary
+        float32 s1r = src1_fp32[m][2*k];     // real
+        float32 s2r = src2_fp32[k][2*n];     // real
+        float32 s1i = src1_fp32[m][2*k+1];   // imaginary
+        float32 s2i = src2_fp32[k][2*n+1];   // imaginary
 
         // real * imaginary products are accumulated first to get NaN propagation priority
         // matching Intel SDE (SDM pseudocode has the two accumulators in reverse order)

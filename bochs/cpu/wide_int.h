@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2020 Stanislav Shwartsman
+//   Copyright (c) 2020-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -54,6 +54,7 @@ extern void long_mul(Bit128u *product, Bit64u op1, Bit64u op2);
 extern void long_neg(Bit128s *n);
 extern void long_imul(Bit128s *product, Bit64s op1, Bit64s op2);
 extern void long_shl(Bit128u *a);
+extern void long_shl_count(Bit128u *a, unsigned count);
 extern void long_shr(Bit128u *a);
 extern unsigned long_sub(Bit128u *a, Bit128u *b); // return carry out
 extern unsigned long_add(Bit128u *a, Bit128u *b); // return carry out

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2020 Stanislav Shwartsman
+//   Copyright (c) 2020-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -65,6 +65,24 @@ void long_shl(Bit128u *a)
   a->lo <<= 1;
   a->hi <<= 1;
   a->hi |= c;
+}
+
+void long_shl_count(Bit128u *a, unsigned count)
+{
+  if (count == 0) return;
+
+  if (count >= 128) {
+    a->hi = 0;
+    a->lo = 0;
+  }
+  else if (count >= 64) {
+    a->hi = a->lo << (count - 64);
+    a->lo = 0;
+  }
+  else {
+    a->hi = (a->hi << count) | (a->lo >> (64 - count));
+    a->lo <<= count;
+  }
 }
 
 void long_shr(Bit128u *a)

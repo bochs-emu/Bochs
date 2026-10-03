@@ -39,6 +39,7 @@
 #include "amx.h"
 #include "cpu/decoder/ia_opcodes.h"
 #include "softfloat3e/include/softfloat.h"
+#include "scalar_arith.h"
 #include "bf16.h"
 #include "wide_int.h"
 
@@ -50,19 +51,18 @@ extern softfloat_status_t prepare_ne_softfloat_status_helper(bool denormals_are_
 // it (both BF16-widened inputs, and the accumulator srcdest, but not the
 // products); prepare_ne_softfloat_status_helper(false) already gives RNE
 // with FTZ=1 on the f32_add/f32_mul outputs.
-static float32 op2bf16_subtile(float32 srcdest, Bit32u op1, Bit32u op2)
+static float32 op2bf16_subtile(float32 srcdest, Bit32u op1, Bit32u op2, softfloat_status_t *status)
 {
   float32 a0 = f32_denormal_to_zero(convert_bfloat16_to_fp32((bfloat16) op1));
   float32 a1 = f32_denormal_to_zero(convert_bfloat16_to_fp32((bfloat16)(op1 >> 16)));
   float32 b0 = f32_denormal_to_zero(convert_bfloat16_to_fp32((bfloat16) op2));
   float32 b1 = f32_denormal_to_zero(convert_bfloat16_to_fp32((bfloat16)(op2 >> 16)));
 
-  softfloat_status_t status = prepare_ne_softfloat_status_helper(false);
-  float32 p0 = f32_mul(a0, b0, &status);
-  float32 p1 = f32_mul(a1, b1, &status);
-  float32 sop = f32_add(p0, p1, &status);
+  float32 p0 = f32_mul(a0, b0, status);
+  float32 p1 = f32_mul(a1, b1, status);
+  float32 sop = f32_add(p0, p1, status);
 
-  return f32_add(f32_denormal_to_zero(srcdest), sop, &status);
+  return f32_add(f32_denormal_to_zero(srcdest), sop, status);
 }
 
 /* ==========================================================================
@@ -85,11 +85,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TOP2BF16PS_TnnnWdqHdq(bxInstruction_c *i)
 
   AMX::TILE *tdst = &(BX_CPU_THIS_PTR amx->tile[tile_dst]);
 
+  softfloat_status_t status = prepare_ne_softfloat_status_helper(false);
+
   for (unsigned row=0; row < 16; row++) {
     Bit32u op1 = src1.vmm32u(row);
     for (unsigned col=0; col < 16; col++) {
       Bit32u op2 = src2.vmm32u(col);
-      tdst->row[row].vmm32u(col) = op2bf16_subtile(tdst->row[row].vmm32u(col), op1, op2);
+      tdst->row[row].vmm32u(col) = op2bf16_subtile(tdst->row[row].vmm32u(col), op1, op2, &status);
     }
   }
 
@@ -149,7 +151,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TOP4BUUD_TnnnWdqHdq(bxInstruction_c *i) { 
  * Spec Section 16.5: left-normalize a signed 128-bit fixed-point magnitude so
  * its J-bit lands at bit 126, giving fixed guard/round/sticky bit positions,
  * then round to nearest-even with FTZ on underflow. Built on the existing
- * Bit128u/Bit128s hi:lo pair and long_neg()/long_shl() from wide_int.h.
+ * Bit128u/Bit128s hi:lo pair and long_neg()/long_shl_count() from wide_int.h.
  * ==========================================================================
  */
 float32 convert_fixpoint128_scaled_to_fp32_ftz_rne(Bit128s x, int adjust)
@@ -164,11 +166,12 @@ float32 convert_fixpoint128_scaled_to_fp32_ftz_rne(Bit128s x, int adjust)
   if (sign) long_neg((Bit128s*) &magnitude);
 
   // bit126 of the 128-bit value == bit62 of the hi half (126-64).
-  int Jbit_position = 126;
-  while (((magnitude.hi >> 62) & 1) == 0) {
-    Jbit_position--;
-    long_shl(&magnitude);
-  }
+  // The magnitude of the sums of products is always below 2^126, so the
+  // normalization is a left shift by (leading zeros - 1).
+  unsigned lz = magnitude.hi ? lzcntq(magnitude.hi) : 64 + lzcntq(magnitude.lo);
+  unsigned shift = lz - 1;
+  int Jbit_position = 126 - (int) shift;
+  long_shl_count(&magnitude, shift);
 
   // bits[101:0] straddle both halves: all of lo, plus hi bits[37:0].
   bool sticky = (magnitude.lo != 0) || ((magnitude.hi & ((BX_CONST64(1) << 38) - 1)) != 0);
@@ -223,6 +226,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TOP4MXBSSPS_TnnnWdqHdqIb(bxInstruction_c *
 
   AMX::TILE *tdst = &(BX_CPU_THIS_PTR amx->tile[tile_dst]);
 
+  // Accumulate into the FP32 tile element: DAZ=1 on srcdest only.
+  softfloat_status_t status = prepare_ne_softfloat_status_helper(false);
+
   for (unsigned row=0; row < 16; row++) {
     Bit32u src1_quad = src1.vmm32u(row);
     Bit8u src1_scale = src1_scales[row];
@@ -257,8 +263,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TOP4MXBSSPS_TnnnWdqHdqIb(bxInstruction_c *
       int exp_adjust = -12 + (int) src1_scale + (int) src2_scale - 254;
       float32 sop_fp32 = convert_fixpoint128_scaled_to_fp32_ftz_rne(sop128, exp_adjust);
 
-      // Accumulate into the FP32 tile element: DAZ=1 on srcdest only.
-      softfloat_status_t status = prepare_ne_softfloat_status_helper(false);
       float32 srcdest = f32_denormal_to_zero(tdst->row[row].vmm32u(col));
       tdst->row[row].vmm32u(col) = f32_add(srcdest, sop_fp32, &status);
     }
@@ -300,13 +304,14 @@ Bit64s convert_hf8_to_fixpoint64(Bit8u fp8_byte)
   return sign ? -magnitude : magnitude;
 }
 
-// Rank-4 MX FP8 outer product subtile. A single fixed-point product of two
-// FP8-derived Bit64s values can exceed 64 bits (e.g. BF8 magnitude up to
-// 7<<30, squared ~2^66), so the multiply goes through long_imul() into a
-// genuine 128-bit product, accumulated via long_add(). Spec Section 14.1.6
-// "op4mxf8_subtile".
-static float32 op4mxf8_subtile(float32 srcdest, Bit32u src1_quad, bool a_is_bf8, Bit8u src1_scale,
-                                                 Bit32u src2_quad, bool b_is_bf8, Bit8u src2_scale)
+// Rank-4 MX FP8 outer product subtile, the FP8 sub-elements are converted to
+// fixed point by the caller. A single fixed-point product of two FP8-derived
+// Bit64s values can exceed 64 bits (e.g. BF8 magnitude up to 7<<30, squared ~2^66),
+// so the multiply goes through long_imul() into a genuine 128-bit product,
+// accumulated via long_add(). Spec Section 14.1.6 "op4mxf8_subtile".
+static float32 op4mxf8_subtile(float32 srcdest, const Bit64s *src1_fixpoint, Bit8u src1_scale,
+                                                const Bit64s *src2_fixpoint, Bit8u src2_scale,
+                                                int factor, softfloat_status_t *status)
 {
   if (src1_scale == 0xFF || src2_scale == 0xFF)
     return 0x7FC00000u; // E8M0 NaN -> QNaN_Indefinite (positive sign, confirmed via SDE)
@@ -316,25 +321,18 @@ static float32 op4mxf8_subtile(float32 srcdest, Bit32u src1_quad, bool a_is_bf8,
   sop.hi = 0;
 
   for (unsigned k=0; k < 4; k++) {
-    Bit8u byte1 = (Bit8u)(src1_quad >> (k*8));
-    Bit8u byte2 = (Bit8u)(src2_quad >> (k*8));
-    Bit64s s1ei = a_is_bf8 ? convert_bf8_to_fixpoint64(byte1) : convert_hf8_to_fixpoint64(byte1);
-    Bit64s s2ei = b_is_bf8 ? convert_bf8_to_fixpoint64(byte2) : convert_hf8_to_fixpoint64(byte2);
-
     Bit128s product;
-    long_imul(&product, s1ei, s2ei);
+    long_imul(&product, src1_fixpoint[k], src2_fixpoint[k]);
     long_add((Bit128u*) &sop, (Bit128u*) &product);
   }
 
   // Combined exponent adjustment: fp8 fixpoint correction + E8M0 scale shifts.
-  int factor = (a_is_bf8 && b_is_bf8) ? 32 : (!a_is_bf8 && !b_is_bf8) ? 18 : 25;
   int exp_adjust = -factor + (int) src1_scale + (int) src2_scale - 254;
 
   float32 sop_fp32 = convert_fixpoint128_scaled_to_fp32_ftz_rne(sop, exp_adjust);
 
   // Accumulate into the FP32 tile element: DAZ=1 on srcdest only.
-  softfloat_status_t status = prepare_ne_softfloat_status_helper(false);
-  return f32_add(f32_denormal_to_zero(srcdest), sop_fp32, &status);
+  return f32_add(f32_denormal_to_zero(srcdest), sop_fp32, status);
 }
 
 void BX_CPP_AttrRegparmN(3) BX_CPU_C::top4mxf8ps_execute(bxInstruction_c *i, bool a_is_bf8, bool b_is_bf8)
@@ -362,19 +360,28 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::top4mxf8ps_execute(bxInstruction_c *i, boo
     src2_scales[s] = bsr.scale[0].vmmubyte(s*4 + b_group); // B = lower BSR half
   }
 
+  // convert all FP8 sub-elements to fixed point once
+  Bit64s src1_fixpoint[16][4], src2_fixpoint[16][4];
+  for (unsigned s=0; s < 16; s++) {
+    for (unsigned k=0; k < 4; k++) {
+      Bit8u byte1 = src1.vmmubyte(s*4 + k), byte2 = src2.vmmubyte(s*4 + k);
+      src1_fixpoint[s][k] = a_is_bf8 ? convert_bf8_to_fixpoint64(byte1) : convert_hf8_to_fixpoint64(byte1);
+      src2_fixpoint[s][k] = b_is_bf8 ? convert_bf8_to_fixpoint64(byte2) : convert_hf8_to_fixpoint64(byte2);
+    }
+  }
+
+  int factor = (a_is_bf8 && b_is_bf8) ? 32 : (!a_is_bf8 && !b_is_bf8) ? 18 : 25;
+
+  softfloat_status_t status = prepare_ne_softfloat_status_helper(false);
+
   AMX::TILE *tdst = &(BX_CPU_THIS_PTR amx->tile[tile_dst]);
 
   for (unsigned row=0; row < 16; row++) {
-    Bit32u src1_quad = src1.vmm32u(row);
-    Bit8u src1_scale = src1_scales[row];
-
     for (unsigned col=0; col < 16; col++) {
-      Bit32u src2_quad = src2.vmm32u(col);
-      Bit8u src2_scale = src2_scales[col];
-
       tdst->row[row].vmm32u(col) = op4mxf8_subtile(tdst->row[row].vmm32u(col),
-                                                     src1_quad, a_is_bf8, src1_scale,
-                                                     src2_quad, b_is_bf8, src2_scale);
+                                                     src1_fixpoint[row], src1_scales[row],
+                                                     src2_fixpoint[col], src2_scales[col],
+                                                     factor, &status);
     }
   }
 
