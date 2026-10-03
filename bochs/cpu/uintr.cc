@@ -332,17 +332,19 @@ void BX_CPU_C::Process_UINTR_Notification()
 bool BX_CPU_C::uintr_masked()
 {
   // The user-level interrupt can be delivered only if:
+  //   CR4.UINTR = 1
   //   long64_mode()
   //   UIF = 1
   //   CPL = 3
-  return !long64_mode() || !BX_CPU_THIS_PTR uintr.UIF || CPL != 3;
+  return !BX_CPU_THIS_PTR cr4.get_UINTR() || !long64_mode() || !BX_CPU_THIS_PTR uintr.UIF || CPL != 3;
 }
 
 // mask or unmask BX_EVENT_PENDING_UINTR according to conditions telling if it can be potentially delivered
 void BX_CPU_C::uintr_uirr_update()
 {
   // There is a pending user-level interrupt if UINTR.UIRR != 0
-  if (BX_CPU_THIS_PTR cr4.get_UINTR() && BX_CPU_THIS_PTR uintr.uirr)
+  // (CR4.UINTR is taken into account by uintr_masked(), re-evaluated whenever CR4 is modified)
+  if (BX_CPU_THIS_PTR uintr.uirr)
     signal_event(BX_EVENT_PENDING_UINTR);
   else
     clear_event(BX_EVENT_PENDING_UINTR);

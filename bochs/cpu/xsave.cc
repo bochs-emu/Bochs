@@ -1121,6 +1121,9 @@ void BX_CPU_C::xrstor_init_uintr_state(void)
   BX_CPU_THIS_PTR uintr.upid_addr = 0;
   BX_CPU_THIS_PTR uintr.uitt_addr = 0;
   BX_CPU_THIS_PTR uintr.uirr = 0;
+
+  uintr_uirr_update(); // UIRR = 0, cease recognition of any pending user interrupt
+  uintr_control();     // UIF = 0, disable user interrupt delivery
 }
 
 bool BX_CPU_C::xsave_uintr_state_xinuse(void)

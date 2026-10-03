@@ -52,7 +52,12 @@ bool BX_CPU_C::handleWaitForEvent(void)
   // an interrupt wakes up the CPU.
   while (1)
   {
-    if ((is_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR | BX_EVENT_PENDING_UINTR) && (BX_CPU_THIS_PTR get_IF() || BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF)) ||
+    // user interrupt wakes the logical processor only if it can be delivered (from TPAUSE/UMWAIT at CPL3),
+    // it never wakes from HLT/MWAIT which can be executed only with CPL=0
+    if ((is_pending(BX_EVENT_PENDING_INTR | BX_EVENT_PENDING_LAPIC_INTR) && (BX_CPU_THIS_PTR get_IF() || BX_CPU_THIS_PTR activity_state == BX_ACTIVITY_STATE_MWAIT_IF)) ||
+#if BX_SUPPORT_UINTR
+         is_unmasked_event_pending(BX_EVENT_PENDING_UINTR) ||
+#endif
          is_unmasked_event_pending(BX_EVENT_NMI | BX_EVENT_SMI | BX_EVENT_INIT |
             BX_EVENT_VMX_VTPR_UPDATE |
             BX_EVENT_VMX_VEOI_UPDATE |
@@ -173,7 +178,8 @@ void BX_CPU_C::HandleExtInterrupt(void)
 #endif
 
 #if BX_SUPPORT_UINTR
-  if (BX_CPU_THIS_PTR cr4.get_UINTR() && long64_mode() && vector == BX_CPU_THIS_PTR uintr.get_uinv())
+  // user-interrupt notification identification is performed when CR4.UINTR = IA32_EFER.LMA = 1 (also in compatibility mode)
+  if (BX_CPU_THIS_PTR cr4.get_UINTR() && long_mode() && vector == BX_CPU_THIS_PTR uintr.get_uinv())
   {
 #if BX_SUPPORT_APIC
     BX_CPU_THIS_PTR lapic->receive_EOI();

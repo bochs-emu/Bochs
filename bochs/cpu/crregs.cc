@@ -1445,6 +1445,10 @@ bool BX_CPU_C::SetCR4(bxInstruction_c *i, bx_address val)
   BX_CPU_THIS_PTR linaddr_width = BX_CPU_THIS_PTR cr4.get_LA57() ? 57 : 48;
 #endif
 
+#if BX_SUPPORT_UINTR
+  uintr_control(); // CR4.UINTR could be changed, potentially enable or disable user interrupt delivery
+#endif
+
   return true;
 }
 #endif // BX_CPU_LEVEL >= 4

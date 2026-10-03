@@ -106,6 +106,9 @@ Changes after Bochs 3.1:
 - CET: RSTORSSP and CLRSSBSY must #GP if memory operand is located in non-writable segment
 - CET: IRET to virtual-8086 mode never freed supervisor shadow stack token (shadow stack state was checked after entering v8086 mode)
 - CET: task switch to virtual-8086 mode task with user shadow stack or indirect branch tracking enabled must #TS(new TSS)
+- UINTR: user-interrupt notification must be identified when CR4.UINTR = IA32_EFER.LMA = 1 (also in compatibility mode), not only in 64-bit mode
+- UINTR: pending user interrupt must not wake HLT/MWAIT at CPL0 (only TPAUSE/UMWAIT when user interrupt can be delivered)
+- UINTR: XRSTORS of UINTR state in init configuration and MOV to CR4.UINTR did not re-evaluate pending user interrupt recognition and delivery blocking
 + CET: fix supervisor shadow stack token release on same privilege IRET in IA-32e mode
 
 -------------------------------------------------------------------------
