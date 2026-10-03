@@ -51,7 +51,7 @@ static const Bit64u BxOpcodeGroup_VEX_0F11[] = {
   form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_MODC0, BX_IA_V128_VMOVSS_WssHpsVss),
   form_opcode(ATTR_SSE_PREFIX_F2 | ATTR_MODC0, BX_IA_V128_VMOVSD_WsdHpdVsd),
   form_opcode(ATTR_SSE_PREFIX_F3 | ATTR_MOD_MEM, BX_IA_V128_VMOVSS_WssVss),
-  form_opcode(ATTR_SSE_PREFIX_F2 | ATTR_MOD_MEM, BX_IA_V128_VMOVSD_WsdVsd),
+  last_opcode(ATTR_SSE_PREFIX_F2 | ATTR_MOD_MEM, BX_IA_V128_VMOVSD_WsdVsd)
 };
 
 static const Bit64u BxOpcodeGroup_VEX_0F12[] = {
@@ -105,10 +105,11 @@ static const Bit64u BxOpcodeGroup_VEX_0F29[] = {
 };
 
 static const Bit64u BxOpcodeGroup_VEX_0F2A[] = {
-  form_opcode(ATTR_VEX_W0 | ATTR_SSE_PREFIX_F3, BX_IA_VCVTSI2SS_VssEd),
+  // VEX.W1 is ignored outside of 64-bit mode
   form_opcode(ATTR_VEX_W1 | ATTR_SSE_PREFIX_F3 | ATTR_IS64, BX_IA_VCVTSI2SS_VssEq),
-  form_opcode(ATTR_VEX_W0 | ATTR_SSE_PREFIX_F2, BX_IA_VCVTSI2SD_VsdEd),
-  last_opcode(ATTR_VEX_W1 | ATTR_SSE_PREFIX_F2 | ATTR_IS64, BX_IA_VCVTSI2SD_VsdEq),
+  form_opcode(ATTR_SSE_PREFIX_F3,                           BX_IA_VCVTSI2SS_VssEd),
+  form_opcode(ATTR_VEX_W1 | ATTR_SSE_PREFIX_F2 | ATTR_IS64, BX_IA_VCVTSI2SD_VsdEq),
+  last_opcode(ATTR_SSE_PREFIX_F2,                           BX_IA_VCVTSI2SD_VsdEd)
 };
 
 static const Bit64u BxOpcodeGroup_VEX_0F2B[] = {
@@ -119,17 +120,19 @@ static const Bit64u BxOpcodeGroup_VEX_0F2B[] = {
 };
 
 static const Bit64u BxOpcodeGroup_VEX_0F2C[] = {
-  form_opcode(ATTR_VEX_W0 | ATTR_SSE_PREFIX_F3, BX_IA_VCVTTSS2SI_GdWss),
+  // VEX.W1 is ignored outside of 64-bit mode
   form_opcode(ATTR_VEX_W1 | ATTR_SSE_PREFIX_F3 | ATTR_IS64, BX_IA_VCVTTSS2SI_GqWss),
-  form_opcode(ATTR_VEX_W0 | ATTR_SSE_PREFIX_F2, BX_IA_VCVTTSD2SI_GdWsd),
-  last_opcode(ATTR_VEX_W1 | ATTR_SSE_PREFIX_F2 | ATTR_IS64, BX_IA_VCVTTSD2SI_GqWsd)
+  form_opcode(ATTR_SSE_PREFIX_F3,                           BX_IA_VCVTTSS2SI_GdWss),
+  form_opcode(ATTR_VEX_W1 | ATTR_SSE_PREFIX_F2 | ATTR_IS64, BX_IA_VCVTTSD2SI_GqWsd),
+  last_opcode(ATTR_SSE_PREFIX_F2,                           BX_IA_VCVTTSD2SI_GdWsd)
 };
 
 static const Bit64u BxOpcodeGroup_VEX_0F2D[] = {
-  form_opcode(ATTR_VEX_W0 | ATTR_SSE_PREFIX_F3, BX_IA_VCVTSS2SI_GdWss),
+  // VEX.W1 is ignored outside of 64-bit mode
   form_opcode(ATTR_VEX_W1 | ATTR_SSE_PREFIX_F3 | ATTR_IS64, BX_IA_VCVTSS2SI_GqWss),
-  form_opcode(ATTR_VEX_W0 | ATTR_SSE_PREFIX_F2, BX_IA_VCVTSD2SI_GdWsd),
-  last_opcode(ATTR_VEX_W1 | ATTR_SSE_PREFIX_F2 | ATTR_IS64, BX_IA_VCVTSD2SI_GqWsd)
+  form_opcode(ATTR_SSE_PREFIX_F3,                           BX_IA_VCVTSS2SI_GdWss),
+  form_opcode(ATTR_VEX_W1 | ATTR_SSE_PREFIX_F2 | ATTR_IS64, BX_IA_VCVTSD2SI_GqWsd),
+  last_opcode(ATTR_SSE_PREFIX_F2,                           BX_IA_VCVTSD2SI_GdWsd)
 };
 
 static const Bit64u BxOpcodeGroup_VEX_0F2E[] = {
@@ -365,8 +368,9 @@ static const Bit64u BxOpcodeGroup_VEX_0F6D[] = {
 };
 
 static const Bit64u BxOpcodeGroup_VEX_0F6E[] = {
-  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128 | ATTR_VEX_W0, BX_IA_V128_VMOVD_VdqEd),
-  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128 | ATTR_VEX_W1 | ATTR_IS64, BX_IA_V128_VMOVQ_VdqEq)
+  // VEX.W1 is ignored outside of 64-bit mode
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128 | ATTR_VEX_W1 | ATTR_IS64, BX_IA_V128_VMOVQ_VdqEq),
+  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128,                           BX_IA_V128_VMOVD_VdqEd)
 };
 
 static const Bit64u BxOpcodeGroup_VEX_0F6F[] = {
@@ -450,8 +454,9 @@ static const Bit64u BxOpcodeGroup_VEX_0F7D[] = {
 };
 
 static const Bit64u BxOpcodeGroup_VEX_0F7E[] = {
-  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128 | ATTR_VEX_W0,             BX_IA_V128_VMOVD_EdVd),
+  // VEX.W1 is ignored outside of 64-bit mode
   form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128 | ATTR_VEX_W1 | ATTR_IS64, BX_IA_V128_VMOVQ_EqVq),
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128,                           BX_IA_V128_VMOVD_EdVd),
   last_opcode(ATTR_SSE_PREFIX_F3 | ATTR_VL128, BX_IA_VMOVQ_VqWq)
 };
 
@@ -1413,8 +1418,9 @@ static const Bit64u BxOpcodeGroup_VEX_0F3A15[] = {
 };
 
 static const Bit64u BxOpcodeGroup_VEX_0F3A16[] = {
-  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128 | ATTR_VEX_W0,             BX_IA_V128_VPEXTRD_EdVdqIb),
-  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128 | ATTR_VEX_W1 | ATTR_IS64, BX_IA_V128_VPEXTRQ_EqVdqIb)
+  // VEX.W1 is ignored outside of 64-bit mode
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128 | ATTR_VEX_W1 | ATTR_IS64, BX_IA_V128_VPEXTRQ_EqVdqIb),
+  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128,                           BX_IA_V128_VPEXTRD_EdVdqIb)
 };
 
 static const Bit64u BxOpcodeGroup_VEX_0F3A17[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128, BX_IA_V128_VEXTRACTPS_EdVpsIb) };
@@ -1425,8 +1431,9 @@ static const Bit64u BxOpcodeGroup_VEX_0F3A20[] = { last_opcode(ATTR_SSE_PREFIX_6
 static const Bit64u BxOpcodeGroup_VEX_0F3A21[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128, BX_IA_V128_VINSERTPS_VpsWssIb) };
 
 static const Bit64u BxOpcodeGroup_VEX_0F3A22[] = {
-  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128 | ATTR_VEX_W0,             BX_IA_V128_VPINSRD_VdqEdIb),
-  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128 | ATTR_VEX_W1 | ATTR_IS64, BX_IA_V128_VPINSRQ_VdqEqIb)
+  // VEX.W1 is ignored outside of 64-bit mode
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128 | ATTR_VEX_W1 | ATTR_IS64, BX_IA_V128_VPINSRQ_VdqEqIb),
+  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128,                           BX_IA_V128_VPINSRD_VdqEdIb)
 };
 
 static const Bit64u BxOpcodeGroup_VEX_0F3A30[] = {

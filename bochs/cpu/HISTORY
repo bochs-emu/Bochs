@@ -22,6 +22,9 @@ Changes after Bochs 3.1:
 + AVX512_BF16: Fixed merge masking in VCVTNEPS2BF16 instruction (masked out elements were zeroed instead of preserved)
 - AVX512_VP2INTERSECT: VP2INTERSECTD/VP2INTERSECTQ must #UD if EVEX.R or EVEX.R' encode mask register above k7
 - AVX_VNNI/AVX512_VNNI/AVX_VNNI_INT16: Fixed saturation in VPDPWSSDS/VPDPWSUDS/VPDPWUSDS when sum of two products overflows 32-bit
+- AVX-512: EVEX encoded VBROADCASTSD/VBROADCASTF32X2 must #UD when encoded with 128-bit vector length
+- AVX-512: Fixed missing end of opcode table marker for EVEX encoded VBROADCASTF32X4/F64X2/F32X8/F64X4 opcodes, invalid encodings could decode garbage instead of #UD
+- AVX/AVX-512: VEX.W1/EVEX.W1 must be ignored outside of 64-bit mode (a lot of instructions)
 - SSE/AVX: Fixed PSRLQ and PSRAVQ instructions with shift count = 64
 - SSE: PSHUFLW instruction should be supported under SSE2 instead of SSE
 - POPCNT: fix POPCNT instruction to depend on its own (already existing) CPUID feature flags and not SSE4.2
