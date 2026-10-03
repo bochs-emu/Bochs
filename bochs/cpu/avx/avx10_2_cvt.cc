@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2024 Stanislav Shwartsman
+//   Copyright (c) 2024-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -39,15 +39,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVT2PS2PHX_MASK_VphHpsWpsR(bxInstruction_
   unsigned num_elements_from_source = DWORD_ELEMENTS(len);
   unsigned n = 0;
 
-  // This instruction updates MXCSR as if all MXCSR numerical exceptions flags are masked and does not
+  // This instruction updates MXCSR flags as if all MXCSR numerical exceptions are masked and does not
   // generate floating point exceptions. MXCSR (and EVEX embedded rounding) determine the rounding
-  // mode. Input FP32 denormals are affected by MXCSR.DAZ but output FP16 denormals are not affected by
-  // MXCSR.FUZ and not flushed to zero
+  // mode. Input FP32 denormals are affected by MXCSR.DAZ and output FP16 denormals are flushed to zero
+  // when MXCSR.FUZ is set, regardless of MXCSR.UM (matching Intel SDE)
   softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
   softfloat_status_word_rc_override(status, i);
-  status.softfloat_flush_underflow_to_zero = 0; // ignore MXCSR.FUZ
   status.softfloat_exceptionMasks = softfloat_all_exceptions_mask;
-  status.softfloat_suppressException = softfloat_all_exceptions_mask;
+  status.softfloat_flush_underflow_to_zero = MXCSR.get_flush_masked_underflow();
 
   Bit32u mask, opmask = i->opmask() ? BX_READ_32BIT_OPMASK(i->opmask()) : (Bit32u) -1;
 
@@ -67,7 +66,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVT2PS2PHX_MASK_VphHpsWpsR(bxInstruction_
       dst.vmm16u(n + num_elements_from_source) = 0;
   }
 
-  check_exceptionsSSE(softfloat_getExceptionFlags(&status));
+  // update MXCSR flags only, never generate #XM
+  MXCSR.set_exceptions(softfloat_getExceptionFlags(&status));
 
   BX_WRITE_AVX_REGZ(i->dst(), dst, len);
   BX_NEXT_INSTR(i);
