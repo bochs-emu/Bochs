@@ -748,15 +748,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCMMIMFP16PS_TnnnTrmTreg(bxInstruction_c *
   BX_NEXT_INSTR(i);
 }
 
-// AMX-TF32 //
-
-BX_CPP_INLINE float32 f32_silence_snan(float32 a)
-{
-  if (f32_isNaN(a))
-    a = convert_to_QNaN(a);
-  return a;
-}
-
 // AMX-FP8 //
 
 #include "wide_int.h"
