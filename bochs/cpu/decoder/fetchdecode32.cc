@@ -1318,6 +1318,10 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
         if (i->isZeroMasking())
           return BX_EVEX_ILLEGAL_ZERO_MASKING_WITH_KMASK_SRC_OR_DEST;
       }
+      // #UD if EVEX.V' != 1 when general purpose register is encoded in EVEX.vvvv
+      if (type == BX_GPR32 || type == BX_GPR64) {
+        if (vvv >= 16) return BX_EVEX_ILLEGAL_GPR_REGISTER;
+      }
 #endif
 #if BX_SUPPORT_AMX
       if (type == BX_TMM_REG) {
