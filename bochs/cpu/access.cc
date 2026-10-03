@@ -316,9 +316,8 @@ bool BX_CPP_AttrRegparmN(3) BX_CPU_C::IsCanonicalAccess(bx_address laddr, unsign
     // A supervisor-mode instruction fetch causes a LASS violation if it would accesses a linear address[63] == 0
     // A supervisor-mode data access causes a LASS violation only if supervisor-mode access protection is enabled
     // (CR4.SMAP = 1) and RFLAGS.AC = 0 or the access implicitly accesses a system data structure.
-    // TODO: implicit supervisor-mode accesses (GDT, LDT, IDT, TSS, UPID ...) are not distinguished from explicit
-    //       ones yet, they are checked against RFLAGS.AC as well
-    if (rw == BX_EXECUTE || (BX_CPU_THIS_PTR cr4.get_SMAP() && ! BX_CPU_THIS_PTR get_AC())) {
+    bool implicit = (rw == BX_IMPLICIT_SUPERVISOR_READ || rw == BX_IMPLICIT_SUPERVISOR_WRITE);
+    if (rw == BX_EXECUTE || (BX_CPU_THIS_PTR cr4.get_SMAP() && (! BX_CPU_THIS_PTR get_AC() || implicit))) {
       if (access_user_space) {
         BX_ERROR(("Supervisor access LASS canonical violation for address 0x" FMT_LL "x rw=%d", laddr, rw));
         return false;
@@ -330,8 +329,11 @@ bool BX_CPP_AttrRegparmN(3) BX_CPU_C::IsCanonicalAccess(bx_address laddr, unsign
 }
 #endif
 
-int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned xlate_rw, Bit32u ac_mask, void *data)
+int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned rw, Bit32u ac_mask, void *data)
 {
+  // implicit supervisor-mode access is converted to plain read/write for instrumentation and debugger only
+  unsigned xlate_rw = (rw == BX_IMPLICIT_SUPERVISOR_READ) ? BX_READ : rw;
+
 #if BX_SUPPORT_CET
   BX_ASSERT(xlate_rw == BX_READ || xlate_rw == BX_RW || xlate_rw == BX_SHADOW_STACK_READ || xlate_rw == BX_SHADOW_STACK_RW);
 #else
@@ -341,7 +343,7 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
   bool user = (curr_pl == 3);
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonicalAccess(laddr, xlate_rw, user)) {
+  if (! IsCanonicalAccess(laddr, rw, user)) {
     BX_ERROR(("access_read_linear(): canonical failure"));
     return -1;
   }
@@ -363,7 +365,7 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
   /* check for reference across multiple pages */
   if ((pageOffset + len) <= 4096) {
     // Access within single page.
-    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, rw);
     BX_CPU_THIS_PTR address_xlation.pages     = 1;
 #if BX_SUPPORT_MEMTYPE
     BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
@@ -384,7 +386,7 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
 #if BX_SUPPORT_X86_64
     if (! long64_mode()) laddr2 &= 0xffffffff; /* handle linear address wrap in legacy mode */
     else {
-      if (! IsCanonicalAccess(laddr2, xlate_rw, user)) {
+      if (! IsCanonicalAccess(laddr2, rw, user)) {
         BX_ERROR(("access_read_linear(): canonical failure for second half of page split access"));
         return -1;
       }
@@ -393,8 +395,8 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
 
     bx_TLB_entry *tlbEntry2 = BX_DTLB_ENTRY_OF(laddr2, 0);
 
-    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, xlate_rw);
-    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, user, xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, rw);
+    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, user, rw);
 #if BX_SUPPORT_MEMTYPE
     BX_CPU_THIS_PTR address_xlation.memtype1 = tlbEntry->get_memtype();
     BX_CPU_THIS_PTR address_xlation.memtype2 = tlbEntry2->get_memtype();
@@ -435,8 +437,11 @@ int BX_CPU_C::access_read_linear(bx_address laddr, unsigned len, unsigned curr_p
   return 0;
 }
 
-int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned xlate_rw, Bit32u ac_mask, void *data)
+int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_pl, unsigned rw, Bit32u ac_mask, void *data)
 {
+  // implicit supervisor-mode access is converted to plain read/write for instrumentation and debugger only
+  unsigned xlate_rw = (rw == BX_IMPLICIT_SUPERVISOR_WRITE) ? BX_WRITE : rw;
+
 #if BX_SUPPORT_CET
   BX_ASSERT(xlate_rw == BX_WRITE || xlate_rw == BX_SHADOW_STACK_WRITE);
 #else
@@ -446,7 +451,7 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
   bool user = (curr_pl == 3);
 
 #if BX_SUPPORT_X86_64
-  if (! IsCanonicalAccess(laddr, xlate_rw, user)) {
+  if (! IsCanonicalAccess(laddr, rw, user)) {
     BX_ERROR(("access_write_linear(): canonical failure"));
     return -1;
   }
@@ -468,7 +473,7 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
   /* check for reference across multiple pages */
   if ((pageOffset + len) <= 4096) {
     // Access within single page.
-    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, rw);
     BX_CPU_THIS_PTR address_xlation.pages     = 1;
 #if BX_SUPPORT_MEMTYPE
     BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
@@ -492,7 +497,7 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
 #if BX_SUPPORT_X86_64
     if (! long64_mode()) laddr2 &= 0xffffffff; /* handle linear address wrap in legacy mode */
     else {
-      if (! IsCanonicalAccess(laddr2, xlate_rw, user)) {
+      if (! IsCanonicalAccess(laddr2, rw, user)) {
         BX_ERROR(("access_write_linear(): canonical failure for second half of page split access"));
         return -1;
       }
@@ -501,8 +506,8 @@ int BX_CPU_C::access_write_linear(bx_address laddr, unsigned len, unsigned curr_
 
     bx_TLB_entry *tlbEntry2 = BX_DTLB_ENTRY_OF(laddr2, 0);
 
-    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, xlate_rw);
-    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, user, xlate_rw);
+    BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, user, rw);
+    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry2, laddr2, user, rw);
 #if BX_SUPPORT_MEMTYPE
     BX_CPU_THIS_PTR address_xlation.memtype1 = tlbEntry->get_memtype();
     BX_CPU_THIS_PTR address_xlation.memtype2 = tlbEntry2->get_memtype();
@@ -562,7 +567,7 @@ BX_CPU_C::system_read_byte(bx_address laddr)
     }
   }
 
-  if (access_read_linear(laddr, 1, 0, BX_READ, 0x0, (void *) &data) < 0)
+  if (access_read_linear(laddr, 1, 0, BX_IMPLICIT_SUPERVISOR_READ, 0x0, (void *) &data) < 0)
     exception(BX_GP_EXCEPTION, 0);
 
   return data;
@@ -587,7 +592,7 @@ BX_CPU_C::system_read_word(bx_address laddr)
     }
   }
 
-  if (access_read_linear(laddr, 2, 0, BX_READ, 0x0, (void *) &data) < 0)
+  if (access_read_linear(laddr, 2, 0, BX_IMPLICIT_SUPERVISOR_READ, 0x0, (void *) &data) < 0)
     exception(BX_GP_EXCEPTION, 0);
 
   return data;
@@ -612,7 +617,7 @@ BX_CPU_C::system_read_dword(bx_address laddr)
     }
   }
 
-  if (access_read_linear(laddr, 4, 0, BX_READ, 0x0, (void *) &data) < 0)
+  if (access_read_linear(laddr, 4, 0, BX_IMPLICIT_SUPERVISOR_READ, 0x0, (void *) &data) < 0)
     exception(BX_GP_EXCEPTION, 0);
 
   return data;
@@ -637,7 +642,7 @@ BX_CPU_C::system_read_qword(bx_address laddr)
     }
   }
 
-  if (access_read_linear(laddr, 8, 0, BX_READ, 0x0, (void *) &data) < 0)
+  if (access_read_linear(laddr, 8, 0, BX_IMPLICIT_SUPERVISOR_READ, 0x0, (void *) &data) < 0)
     exception(BX_GP_EXCEPTION, 0);
 
   return data;
@@ -662,7 +667,7 @@ BX_CPU_C::system_write_byte(bx_address laddr, Bit8u data)
     }
   }
 
-  if (access_write_linear(laddr, 1, 0, BX_WRITE, 0x0, (void *) &data) < 0)
+  if (access_write_linear(laddr, 1, 0, BX_IMPLICIT_SUPERVISOR_WRITE, 0x0, (void *) &data) < 0)
     exception(BX_GP_EXCEPTION, 0);
 }
 
@@ -685,7 +690,7 @@ BX_CPU_C::system_write_word(bx_address laddr, Bit16u data)
     }
   }
 
-  if (access_write_linear(laddr, 2, 0, BX_WRITE, 0x0, (void *) &data) < 0)
+  if (access_write_linear(laddr, 2, 0, BX_IMPLICIT_SUPERVISOR_WRITE, 0x0, (void *) &data) < 0)
     exception(BX_GP_EXCEPTION, 0);
 }
 
@@ -708,7 +713,7 @@ BX_CPU_C::system_write_dword(bx_address laddr, Bit32u data)
     }
   }
 
-  if (access_write_linear(laddr, 4, 0, BX_WRITE, 0x0, (void *) &data) < 0)
+  if (access_write_linear(laddr, 4, 0, BX_IMPLICIT_SUPERVISOR_WRITE, 0x0, (void *) &data) < 0)
     exception(BX_GP_EXCEPTION, 0);
 }
 
@@ -731,7 +736,7 @@ BX_CPU_C::system_write_qword(bx_address laddr, Bit64u data)
     }
   }
 
-  if (access_write_linear(laddr, 8, 0, BX_WRITE, 0x0, (void *) &data) < 0)
+  if (access_write_linear(laddr, 8, 0, BX_IMPLICIT_SUPERVISOR_WRITE, 0x0, (void *) &data) < 0)
     exception(BX_GP_EXCEPTION, 0);
 }
 

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -359,6 +359,12 @@ enum {
   BX_SHADOW_STACK_INVALID = 6,  // can't execute shadow stack
   BX_SHADOW_STACK_RW      = 7,
 #endif
+  // implicit supervisor-mode access to system data structure (GDT, LDT, IDT, TSS, UPID ...),
+  // supervisor-mode access regardless of CPL and RFLAGS.AC; accepted by access_read_linear,
+  // access_write_linear and translate_linear (page walk code must test access type using bits:
+  // rw & 1 for write, rw & 4 for shadow stack, never compare rw == BX_READ or rw == BX_WRITE)
+  BX_IMPLICIT_SUPERVISOR_READ  = 8,
+  BX_IMPLICIT_SUPERVISOR_WRITE = 9
 };
 
 // types of reset

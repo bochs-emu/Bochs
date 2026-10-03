@@ -743,8 +743,9 @@ Bit32u BX_CPU_C::check_leaf_entry_faults(bx_address laddr, Bit64u leaf_entry, Bi
       page_fault(ERROR_PROTECTION, laddr, user, rw);
   }
 
-  // SMAP protections are disabled if EFLAGS.AC=1
-  if (BX_CPU_THIS_PTR cr4.get_SMAP() && ! BX_CPU_THIS_PTR get_AC() && rw != BX_EXECUTE && !user) {
+  // SMAP protections are disabled if EFLAGS.AC=1 (except for implicit supervisor-mode accesses)
+  bool implicit = (rw == BX_IMPLICIT_SUPERVISOR_READ || rw == BX_IMPLICIT_SUPERVISOR_WRITE);
+  if (BX_CPU_THIS_PTR cr4.get_SMAP() && (! BX_CPU_THIS_PTR get_AC() || implicit) && rw != BX_EXECUTE && !user) {
     if (IS_USER_PAGE(combined_access))
       page_fault(ERROR_PROTECTION, laddr, user, rw);
   }

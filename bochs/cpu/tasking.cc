@@ -219,8 +219,8 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   // used in the task switch are paged in.
   if (BX_CPU_THIS_PTR cr0.get_PG())
   {
-    translate_linear(BX_DTLB_ENTRY_OF(nbase32,               0), nbase32,               0, BX_READ); // old TSS
-    translate_linear(BX_DTLB_ENTRY_OF(nbase32 + new_TSS_max, 0), nbase32 + new_TSS_max, 0, BX_READ);
+    translate_linear(BX_DTLB_ENTRY_OF(nbase32,               0), nbase32,               0, BX_IMPLICIT_SUPERVISOR_READ); // old TSS
+    translate_linear(BX_DTLB_ENTRY_OF(nbase32 + new_TSS_max, 0), nbase32 + new_TSS_max, 0, BX_IMPLICIT_SUPERVISOR_READ);
 
     // ??? Humm, we check the new TSS region with READ above,
     // but sometimes we need to write the link field in that
@@ -231,8 +231,8 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
     if (source == BX_TASK_FROM_CALL || source == BX_TASK_FROM_INT)
     {
-      translate_linear(BX_DTLB_ENTRY_OF(nbase32,     0), nbase32,     0, BX_WRITE);
-      translate_linear(BX_DTLB_ENTRY_OF(nbase32 + 1, 0), nbase32 + 1, 0, BX_WRITE);
+      translate_linear(BX_DTLB_ENTRY_OF(nbase32,     0), nbase32,     0, BX_IMPLICIT_SUPERVISOR_WRITE);
+      translate_linear(BX_DTLB_ENTRY_OF(nbase32 + 1, 0), nbase32 + 1, 0, BX_IMPLICIT_SUPERVISOR_WRITE);
     }
   }
 
@@ -245,9 +245,9 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   if (source == BX_TASK_FROM_JUMP || source == BX_TASK_FROM_IRET) {
     // Bit is cleared
     Bit32u laddr = (Bit32u) BX_CPU_THIS_PTR gdtr.base + (BX_CPU_THIS_PTR tr.selector.index<<3) + 4;
-    access_read_linear(laddr, 4, 0, BX_RW, 0x0, &temp32);
+    access_read_linear(laddr, 4, 0, BX_IMPLICIT_SUPERVISOR_READ, 0x0, &temp32);
     temp32 &= ~0x200;
-    access_write_linear(laddr, 4, 0, BX_WRITE, 0x0, &temp32);
+    access_write_linear(laddr, 4, 0, BX_IMPLICIT_SUPERVISOR_WRITE, 0x0, &temp32);
   }
 
   // STEP 4: If the task switch was initiated with an IRET instruction,
@@ -275,8 +275,8 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     if (BX_CPU_THIS_PTR cr0.get_PG()) {
       Bit32u start = Bit32u(obase32 + 14), end = Bit32u(obase32 + 41);
 
-      translate_linear(BX_DTLB_ENTRY_OF(start, 0), start, 0, BX_WRITE);
-      translate_linear(BX_DTLB_ENTRY_OF(end, 0),   end,   0, BX_WRITE);
+      translate_linear(BX_DTLB_ENTRY_OF(start, 0), start, 0, BX_IMPLICIT_SUPERVISOR_WRITE);
+      translate_linear(BX_DTLB_ENTRY_OF(end, 0),   end,   0, BX_IMPLICIT_SUPERVISOR_WRITE);
     }
 
     system_write_word(Bit32u(obase32 + 14), IP);
@@ -304,8 +304,8 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     if (BX_CPU_THIS_PTR cr0.get_PG()) {
       Bit32u start = Bit32u(obase32 + 0x20), end = Bit32u(obase32 + 0x5d);
 
-      translate_linear(BX_DTLB_ENTRY_OF(start, 0), start, 0, BX_WRITE);
-      translate_linear(BX_DTLB_ENTRY_OF(end, 0),   end,   0, BX_WRITE);
+      translate_linear(BX_DTLB_ENTRY_OF(start, 0), start, 0, BX_IMPLICIT_SUPERVISOR_WRITE);
+      translate_linear(BX_DTLB_ENTRY_OF(end, 0),   end,   0, BX_IMPLICIT_SUPERVISOR_WRITE);
     }
 
     system_write_dword(Bit32u(obase32 + 0x20), EIP);
@@ -419,9 +419,9 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   {
     // set the new task's busy bit, should be done atomiclly using RMW
     Bit32u laddr = (Bit32u)(BX_CPU_THIS_PTR gdtr.base) + (tss_selector->index<<3) + 4;
-    access_read_linear(laddr, 4, 0, BX_RW, 0x0, &dword2);
+    access_read_linear(laddr, 4, 0, BX_IMPLICIT_SUPERVISOR_READ, 0x0, &dword2);
     dword2 |= 0x200;
-    access_write_linear(laddr, 4, 0, BX_WRITE, 0x0, &dword2);
+    access_write_linear(laddr, 4, 0, BX_IMPLICIT_SUPERVISOR_WRITE, 0x0, &dword2);
   }
 
 #if BX_SUPPORT_CET

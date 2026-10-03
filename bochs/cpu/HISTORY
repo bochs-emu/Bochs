@@ -117,6 +117,8 @@ Changes after Bochs 3.1:
 + CET: fix supervisor shadow stack token release on same privilege IRET in IA-32e mode
 - LASS: LASS must be enforced in IA-32e mode (IA32_EFER.LMA = 1) including compatibility mode, not only in 64-bit mode
 - LASS: masked AVX/AVX-512 loads and stores must pre-check unmasked elements for LASS violations (not only canonicality) so #GP takes priority over #PF
+- LASS: implicit supervisor-mode accesses (GDT, LDT, IDT, TSS, UPID, UITT, USER_MSR bitmap) must cause LASS violation regardless of RFLAGS.AC
+- SMAP: implicit supervisor-mode accesses (GDT, LDT, IDT, TSS, UPID ...) to user pages must cause #PF regardless of RFLAGS.AC
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
