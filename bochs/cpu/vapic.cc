@@ -391,7 +391,7 @@ void BX_CPU_C::VMX_Deliver_Virtual_Interrupt(void)
   BX_CPU_THIS_PTR EXT = 1; /* external event */
 
 #if BX_SUPPORT_UINTR
-  if (BX_CPU_THIS_PTR cr4.get_UINTR() && long64_mode() && vector == BX_CPU_THIS_PTR uintr.get_uinv())
+  if (BX_CPU_THIS_PTR cr4.get_UINTR() && long_mode() && vector == BX_CPU_THIS_PTR uintr.get_uinv())
   {
     unsigned vector = vm->svi;
     vm->svi = vapic_clear_and_find_highest_priority_int(BX_LAPIC_ISR1, vector);

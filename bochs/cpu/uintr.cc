@@ -262,7 +262,8 @@ void BX_CPU_C::send_uipi(Bit32u notification_destination, Bit32u notification_ve
 {
 #if BX_SUPPORT_VMX
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
-  if (vm->vmexec_ctrls1.TPR_SHADOW()) {
+  // sending of the notification IPI is virtualized only in VMX non-root operation
+  if (BX_CPU_THIS_PTR in_vmx_guest && vm->vmexec_ctrls1.TPR_SHADOW()) {
     if (vm->vmexec_ctrls2.VIRTUALIZE_APIC_ACCESSES()) {
       // virtualize sending of an XAPIC-mode IPI by:
       //   - writing to VICR_HI[31:24] = 8 bit destination APIC_ID from NDST[15:8]

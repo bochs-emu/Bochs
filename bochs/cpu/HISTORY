@@ -109,6 +109,7 @@ Changes after Bochs 3.1:
 - UINTR: user-interrupt notification must be identified when CR4.UINTR = IA32_EFER.LMA = 1 (also in compatibility mode), not only in 64-bit mode
 - UINTR: pending user interrupt must not wake HLT/MWAIT at CPL0 (only TPAUSE/UMWAIT when user interrupt can be delivered)
 - UINTR: XRSTORS of UINTR state in init configuration and MOV to CR4.UINTR did not re-evaluate pending user interrupt recognition and delivery blocking
++ VMX/UINTR: SENDUIPI outside of VMX non-root operation (e.g. in VMX root with current VMCS using TPR shadow) virtualized the notification IPI instead of sending it
 + CET: fix supervisor shadow stack token release on same privilege IRET in IA-32e mode
 
 -------------------------------------------------------------------------
