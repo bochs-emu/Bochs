@@ -99,11 +99,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UIRET(bxInstruction_c *i)
 
 #if BX_SUPPORT_CET
   if (ShadowStackEnabled(CPL)) {
-    Bit64u shadow_RIP  = shadow_stack_pop_64();
+    // SSP is updated only after the shadow stack RIP check passed
+    Bit64u shadow_RIP = shadow_stack_read_qword(SSP, CPL);
     if (new_rip != shadow_RIP) {
-      BX_ERROR(("shadow_stack_restore: LIP mismatch"));
+      BX_ERROR(("UIRET: shadow stack RIP mismatch"));
       exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
     }
+    SSP += 8;
   }
 #endif
 

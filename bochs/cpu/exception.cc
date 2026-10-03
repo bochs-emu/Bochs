@@ -258,7 +258,8 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16
 #if BX_SUPPORT_CET
   if(ShadowStackEnabled(old_CPL)) {
     if (old_CPL == 3)
-      BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = SSP;
+      // in IA-32e mode adjust so bits 63:N get the value of bit N-1, N is the CPU maximum linear-address width
+      BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = long_mode() ? CpuidCanonicalizeAddress(SSP) : SSP;
   }
   if (ShadowStackEnabled(CPL)) {
     bx_address old_SSP = SSP;
@@ -610,7 +611,8 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
 #if BX_SUPPORT_CET
       if(ShadowStackEnabled(old_CPL)) {
         if (old_CPL == 3)
-          BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = SSP;
+          // in IA-32e mode adjust so bits 63:N get the value of bit N-1, N is the CPU maximum linear-address width
+          BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = long_mode() ? CpuidCanonicalizeAddress(SSP) : SSP;
       }
       if (ShadowStackEnabled(CPL)) {
         bx_address old_SSP = SSP;
