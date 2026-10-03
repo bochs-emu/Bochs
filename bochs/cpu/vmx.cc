@@ -2514,7 +2514,8 @@ void BX_CPU_C::VMenterInjectEvents(void)
   vm->idt_vector_error_code = error_code;
 
 #if BX_SUPPORT_UINTR
-  if (BX_CPU_THIS_PTR cr4.get_UINTR() && long_mode() && vector == BX_CPU_THIS_PTR uintr.get_uinv()) {
+  // only injection of an external interrupt with vector UINV results in user-interrupt notification processing
+  if (type == BX_EXTERNAL_INTERRUPT && BX_CPU_THIS_PTR cr4.get_UINTR() && long_mode() && vector == BX_CPU_THIS_PTR uintr.get_uinv()) {
     Process_UINTR_Notification();
   }
   else

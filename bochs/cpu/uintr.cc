@@ -301,11 +301,13 @@ void BX_CPU_C::Process_UINTR_Notification()
 {
 #if BX_SUPPORT_VMX
   // the User-Level Interrupt notification process looks like external interrupt with the vector UINV
-  // in particular for IDT-vectoring info
+  // in particular for IDT-vectoring info: VM exits that occur during user-interrupt notification processing
+  // are treated as if they occurred during delivery of an external interrupt with the vector UINV
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
     vm->idt_vector_error_code = 0;
     vm->idt_vector_info = (BX_CPU_THIS_PTR uintr.get_uinv()) | (BX_EXTERNAL_INTERRUPT << 8);
+    BX_CPU_THIS_PTR in_event = true;
   }
 #endif
 
@@ -323,6 +325,10 @@ void BX_CPU_C::Process_UINTR_Notification()
   Bit64u PIR = system_read_qword(BX_CPU_THIS_PTR uintr.upid_addr + 8);
   system_write_qword(BX_CPU_THIS_PTR uintr.upid_addr + 8, 0);
 // should be done atomically using RMW
+
+#if BX_SUPPORT_VMX
+  BX_CPU_THIS_PTR in_event = false; // UPID accesses completed
+#endif
 
   // Step 3: for any bit set in the temporary PIR register set corresponding UIRR bit
   //         recognize pending user-level interrupt

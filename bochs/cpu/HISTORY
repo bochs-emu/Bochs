@@ -110,6 +110,9 @@ Changes after Bochs 3.1:
 - UINTR: pending user interrupt must not wake HLT/MWAIT at CPL0 (only TPAUSE/UMWAIT when user interrupt can be delivered)
 - UINTR: XRSTORS of UINTR state in init configuration and MOV to CR4.UINTR did not re-evaluate pending user interrupt recognition and delivery blocking
 + VMX/UINTR: SENDUIPI outside of VMX non-root operation (e.g. in VMX root with current VMCS using TPR shadow) virtualized the notification IPI instead of sending it
+- VMX/UINTR: VM entry injecting event other than external interrupt with vector UINV must not perform user-interrupt notification processing
+- VMX/UINTR: VM exit occurring during user-interrupt notification processing must save IDT-vectoring information (as during delivery of external interrupt with vector UINV)
+- UINTR: user interrupt delivery must not be blocked by EFLAGS.IF=0
 + CET: fix supervisor shadow stack token release on same privilege IRET in IA-32e mode
 
 -------------------------------------------------------------------------
