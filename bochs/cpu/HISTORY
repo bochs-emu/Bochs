@@ -21,6 +21,7 @@ Changes after Bochs 3.1:
 + AVX512_FP16: VCVTTPH2DQ/VCVTTPH2UDQ/VCVTTPH2QQ/VCVTTPH2UQQ instructions were mapped into their non-truncating forms and therefore used MXCSR rounding instead of truncation
 + AVX512_FP16: FP16 instructions must ignore MXCSR.DAZ for FP16 inputs and MXCSR.FUZ for FP16 outputs (matching Intel SDE)
 - AVX10.2: VCVT2PS2PHX must update MXCSR flags (as if all exceptions are masked, without generating #XM) and flush FP16 denormal outputs when MXCSR.FUZ=1 regardless of MXCSR.UM (matching Intel SDE)
+- SM3: VSM3MSG1/VSM3MSG2/VSM3RNDS2 must not require 16-byte alignment for memory operand (VEX encoded, Type 4 exception class)
 + AVX512_BF16: Fixed VCVTNE2PS2BF16 instruction taking upper half of the result from wrong elements of the first source
 + AVX512_BF16: Fixed merge masking in VCVTNEPS2BF16 instruction (masked out elements were zeroed instead of preserved)
 - AVX512_VP2INTERSECT: VP2INTERSECTD/VP2INTERSECTQ must #UD if EVEX.R or EVEX.R' encode mask register above k7
