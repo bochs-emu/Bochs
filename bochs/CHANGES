@@ -14,7 +14,8 @@ Changes after Bochs 3.1 release:
   - Allow up to 32 code breakpoints (as they are much less painful for emulation performance now)
 
 - Configure and compile
-  - removed configure option --enable-configurable-msrs, loading msrs.def is enabled by default for all models supporting MSR
+  - Bochs now require C++11 support for compilation, enforced via configure
+  - Removed configure option --enable-configurable-msrs, loading msrs.def is enabled by default for all models supporting MSR
 
 - I/O Devices
   - VGA
