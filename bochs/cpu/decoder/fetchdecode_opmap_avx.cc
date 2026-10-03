@@ -1487,8 +1487,8 @@ static const Bit64u BxOpcodeGroup_VEX_0F3A4A[] = { last_opcode(ATTR_SSE_PREFIX_6
 static const Bit64u BxOpcodeGroup_VEX_0F3A4B[] = { last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0, BX_IA_VBLENDVPD_VpdHpdWpdIb) };
 
 static const Bit64u BxOpcodeGroup_VEX_0F3A4C[] = {
-  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL128, BX_IA_V128_VPBLENDVB_VdqHdqWdqIb),
-  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VL256, BX_IA_V256_VPBLENDVB_VdqHdqWdqIb)
+  form_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_VL128, BX_IA_V128_VPBLENDVB_VdqHdqWdqIb),
+  last_opcode(ATTR_SSE_PREFIX_66 | ATTR_VEX_W0 | ATTR_VL256, BX_IA_V256_VPBLENDVB_VdqHdqWdqIb)
 };
 
 static const Bit64u BxOpcodeGroup_VEX_0F3A5C[] = {
