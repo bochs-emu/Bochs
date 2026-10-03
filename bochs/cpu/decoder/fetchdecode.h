@@ -54,7 +54,8 @@ enum BxDecodeError {
   BX_EVEX_ILLEGAL_ZERO_MASKING_VSIB,
   BX_EVEX_ILLEGAL_ZERO_MASKING_MEMORY_DESTINATION,
   BX_AMX_ILLEGAL_TILE_REGISTER,
-  BX_AMX_ILLEGAL_BSR_REGISTER
+  BX_AMX_ILLEGAL_BSR_REGISTER,
+  BX_AMX_SIB_REQUIRED
 };
 
 //
@@ -145,7 +146,8 @@ enum {
   BX_CREG = 0xE,
   BX_DREG = 0xF,
   BX_BSR_REG = 0x10,        // ACE v1 Block Scale Register (BSRMOVF/BSRMOVL/BSRMOVH/BSRINIT)
-  // 0x11-0x1F: 15 more free slots
+  BX_SIB_MEMORY = 0x11,     // memory reference which must be encoded with SIB byte (AMX TILELOADD/TILESTORED)
+  // 0x12-0x1F: 14 more free slots
 };
 
 // to be used together with BX_SRC_VECTOR_RM
@@ -365,6 +367,8 @@ const Bit8u OP_KGq2 = BX_FORM_SRC(BX_KMASK_REG_PAIR, BX_SRC_NNN);
 const Bit8u OP_Trm  = BX_FORM_SRC(BX_TMM_REG, BX_SRC_RM);
 const Bit8u OP_Tnnn = BX_FORM_SRC(BX_TMM_REG, BX_SRC_NNN);
 const Bit8u OP_Treg = BX_FORM_SRC(BX_TMM_REG, BX_SRC_VVV);
+
+const Bit8u OP_Msib = BX_FORM_SRC(BX_SIB_MEMORY, BX_SRC_RM);
 
 const Bit8u OP_ST0 = BX_FORM_SRC(BX_FPU_REG, BX_SRC_EAX);
 const Bit8u OP_STi = BX_FORM_SRC(BX_FPU_REG, BX_SRC_RM);

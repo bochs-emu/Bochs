@@ -146,11 +146,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILELOADD_TnnnMdq(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  if (i->sibIndex() == BX_NIL_REGISTER) {
-    BX_ERROR(("%s: SIB byte required", i->getIaOpcodeNameShort()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   unsigned tile = i->dst();
 
   check_tile(i, tile);
@@ -172,7 +167,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILELOADD_TnnnMdq(bxInstruction_c *i)
   BX_CPU_THIS_PTR amx->tile[tile].clear_upper_rows(BX_CPU_THIS_PTR amx->start_row);
 
   Bit64u start_eaddr = BX_READ_64BIT_REG(i->sibBase()) + (Bit64s) i->displ32s();
-  Bit64u stride = BX_READ_64BIT_REG(i->sibIndex()) << i->sibScale();
+  // if no index register in the SIB encoding, the value zero is used
+  Bit64u stride = (i->sibIndex() != 4) ? (BX_READ_64BIT_REG(i->sibIndex()) << i->sibScale()) : 0;
   i->setVL(BX_VL512);
 
   for (unsigned row=BX_CPU_THIS_PTR amx->start_row; row < rows; row++) {
@@ -201,11 +197,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILESTORED_MdqTnnn(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  if (i->sibIndex() == BX_NIL_REGISTER) {
-    BX_ERROR(("%s: SIB byte required", i->getIaOpcodeNameShort()));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   unsigned tile = i->src();
 
   check_tile(i, tile);
@@ -222,7 +213,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILESTORED_MdqTnnn(bxInstruction_c *i)
   i->setVL(BX_VL512);
 
   Bit64u start_eaddr = BX_READ_64BIT_REG(i->sibBase()) + (Bit64s) i->displ32s();
-  Bit64u stride = BX_READ_64BIT_REG(i->sibIndex()) << i->sibScale();
+  // if no index register in the SIB encoding, the value zero is used
+  Bit64u stride = (i->sibIndex() != 4) ? (BX_READ_64BIT_REG(i->sibIndex()) << i->sibScale()) : 0;
 
   for (unsigned row=BX_CPU_THIS_PTR amx->start_row; row < rows; row++) {
     BxPackedAvxRegister *data = &(BX_CPU_THIS_PTR amx->tile[tile].row[row]);

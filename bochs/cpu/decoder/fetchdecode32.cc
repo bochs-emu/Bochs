@@ -1284,6 +1284,11 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
         i->setSrcReg(n, rm);
       }
       else {
+#if BX_SUPPORT_AMX
+        // TILELOADD/TILESTORED: #UD if not using SIB addressing (ModRM.rm != 100b)
+        if (type == BX_SIB_MEMORY && (rm & 0x7) != 4)
+          return BX_AMX_SIB_REQUIRED;
+#endif
 #if BX_SUPPORT_EVEX
         mem_src = true;
 #endif
@@ -1336,7 +1341,8 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
     case BX_SRC_VSIB:
       if (! i->as32L())
         return BX_VSIB_FORBIDDEN_ASIZE16;
-      if (i->sibIndex() == BX_NIL_REGISTER)
+      // the presence of VSIB byte is enforced, #UD if ModRM.rm != 100b
+      if ((rm & 0x7) != 4)
         return BX_VSIB_ILLEGAL_SIB_INDEX;
 #if BX_SUPPORT_EVEX
       i->setSibIndex(i->sibIndex() | (vvv & 0x10));
