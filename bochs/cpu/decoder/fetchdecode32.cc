@@ -1247,7 +1247,7 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
     case BX_SRC_NNN:
       i->setSrcReg(n, nnn);
 #if BX_SUPPORT_EVEX
-      if (type == BX_KMASK_REG) {
+      if (type == BX_KMASK_REG || type == BX_KMASK_REG_PAIR) {
         if (nnn >= 8) return BX_EVEX_ILLEGAL_KMASK_REGISTER;
         // vector instruction using opmask as source or dest
         if (i->isZeroMasking())

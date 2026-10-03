@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013 Stanislav Shwartsman
+//   Copyright (c) 2013-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -152,7 +152,7 @@ BX_CPP_INLINE void xmm_pdpwssds(BxPackedXmmRegister *dst, const BxPackedXmmRegis
     Bit32s p1_dword = (Bit32s) op1->xmm16s(n*2)   * (Bit32s) op2->xmm16s(n*2);
     Bit32s p2_dword = (Bit32s) op1->xmm16s(n*2+1) * (Bit32s) op2->xmm16s(n*2+1);
 
-    Bit64s result = (Bit64s) dst->xmm32s(n) + (p1_dword + p2_dword);
+    Bit64s result = (Bit64s) dst->xmm32s(n) + p1_dword + p2_dword;
     dst->xmm32s(n) = SaturateQwordSToDwordS(result);
   }
 }
@@ -175,7 +175,7 @@ BX_CPP_INLINE void xmm_pdpwsuds(BxPackedXmmRegister *dst, const BxPackedXmmRegis
     Bit32s p1_dword = (Bit32s) op1->xmm16s(n*2)   * (Bit32u) op2->xmm16u(n*2);
     Bit32s p2_dword = (Bit32s) op1->xmm16s(n*2+1) * (Bit32u) op2->xmm16u(n*2+1);
 
-    Bit64s result = (Bit64s) dst->xmm32s(n) + (p1_dword + p2_dword);
+    Bit64s result = (Bit64s) dst->xmm32s(n) + p1_dword + p2_dword;
     dst->xmm32s(n) = SaturateQwordSToDwordS(result);
   }
 }
@@ -198,7 +198,7 @@ BX_CPP_INLINE void xmm_pdpwusds(BxPackedXmmRegister *dst, const BxPackedXmmRegis
     Bit32s p1_dword = (Bit32u) op1->xmm16u(n*2)   * (Bit32s) op2->xmm16s(n*2);
     Bit32s p2_dword = (Bit32u) op1->xmm16u(n*2+1) * (Bit32s) op2->xmm16s(n*2+1);
 
-    Bit64s result = (Bit64s) dst->xmm32s(n) + (p1_dword + p2_dword);
+    Bit64s result = (Bit64s) dst->xmm32s(n) + p1_dword + p2_dword;
     dst->xmm32s(n) = SaturateQwordSToDwordS(result);
   }
 }

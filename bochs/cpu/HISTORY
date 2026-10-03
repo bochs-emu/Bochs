@@ -18,6 +18,10 @@ Changes after Bochs 3.1:
 - AMX-COMPLEX: fixed NaN propagation priority in TCMMIMFP16PS instruction to match Intel SDE
 - AMX-AVX512/ACE: TILEMOVROW/TCVTROW*/TILEMOVCOL with general purpose register in EVEX.vvvv must #UD if EVEX.V' != 1
 - AMX-FP16/AMX-COMPLEX: TDPFP16PS/TCMMRLFP16PS/TCMMIMFP16PS must not treat FP32 srcdest denormals as zero (matching Intel SDE)
++ AVX512_BF16: Fixed VCVTNE2PS2BF16 instruction taking upper half of the result from wrong elements of the first source
++ AVX512_BF16: Fixed merge masking in VCVTNEPS2BF16 instruction (masked out elements were zeroed instead of preserved)
+- AVX512_VP2INTERSECT: VP2INTERSECTD/VP2INTERSECTQ must #UD if EVEX.R or EVEX.R' encode mask register above k7
+- AVX_VNNI/AVX512_VNNI/AVX_VNNI_INT16: Fixed saturation in VPDPWSSDS/VPDPWSUDS/VPDPWUSDS when sum of two products overflows 32-bit
 - SSE/AVX: Fixed PSRLQ and PSRAVQ instructions with shift count = 64
 - SSE: PSHUFLW instruction should be supported under SSE2 instead of SSE
 - POPCNT: fix POPCNT instruction to depend on its own (already existing) CPUID feature flags and not SSE4.2
