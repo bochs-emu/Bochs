@@ -595,8 +595,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TDPFP16PS_TnnnTrmTreg(bxInstruction_c *i)
   AMX::TILE *tsrc2 = &(BX_CPU_THIS_PTR amx->tile[tile_src2]);
 
   // "round to nearest even" rounding mode is used when doing each accumulation of the FMA.
-  // output FP32 denormals are always flushed to zero and input denormals are always treated as zero.
-  softfloat_status_t status = prepare_ne_softfloat_status_helper(true);
+  // output FP32 denormals are always flushed to zero, FP16 input denormals are not treated as zero.
+  // The FP32 srcdest accumulator is not DAZ-ed either (matches Intel SDE, SDM pseudocode states DAZ=1).
+  softfloat_status_t status = prepare_ne_softfloat_status_helper(false);
 
   // convert all FP16 source elements to FP32 once
   float32 src1_fp32[BX_TILE_MAX_ROWS][32], src2_fp32[BX_TILE_MAX_ROWS][32];
@@ -650,8 +651,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCMMRLFP16PS_TnnnTrmTreg(bxInstruction_c *
   AMX::TILE *tsrc2 = &(BX_CPU_THIS_PTR amx->tile[tile_src2]);
 
   // "round to nearest even" rounding mode is used when doing each accumulation of the FMA.
-  // output FP32 denormals are always flushed to zero and input denormals are always treated as zero.
-  softfloat_status_t status = prepare_ne_softfloat_status_helper(true);
+  // output FP32 denormals are always flushed to zero, FP16 input denormals are not treated as zero.
+  // The FP32 srcdest accumulator is not DAZ-ed either (matches Intel SDE, SDM pseudocode states DAZ=1).
+  softfloat_status_t status = prepare_ne_softfloat_status_helper(false);
 
   // convert all FP16 source elements to FP32 once
   float32 src1_fp32[BX_TILE_MAX_ROWS][32], src2_fp32[BX_TILE_MAX_ROWS][32];
@@ -707,8 +709,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCMMIMFP16PS_TnnnTrmTreg(bxInstruction_c *
   AMX::TILE *tsrc2 = &(BX_CPU_THIS_PTR amx->tile[tile_src2]);
 
   // "round to nearest even" rounding mode is used when doing each accumulation of the FMA.
-  // output FP32 denormals are always flushed to zero and input denormals are always treated as zero.
-  softfloat_status_t status = prepare_ne_softfloat_status_helper(true);
+  // output FP32 denormals are always flushed to zero, FP16 input denormals are not treated as zero.
+  // The FP32 srcdest accumulator is not DAZ-ed either (matches Intel SDE, SDM pseudocode states DAZ=1).
+  softfloat_status_t status = prepare_ne_softfloat_status_helper(false);
 
   // convert all FP16 source elements to FP32 once
   float32 src1_fp32[BX_TILE_MAX_ROWS][32], src2_fp32[BX_TILE_MAX_ROWS][32];
