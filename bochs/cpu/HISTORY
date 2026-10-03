@@ -115,6 +115,7 @@ Changes after Bochs 3.1:
 - UINTR: user interrupt delivery must not be blocked by EFLAGS.IF=0
 + VMX/CET: write "prematurely busy shadow stack" tracking better matching SDM
 + CET: fix supervisor shadow stack token release on same privilege IRET in IA-32e mode
+- LASS: LASS must be enforced in IA-32e mode (IA32_EFER.LMA = 1) including compatibility mode, not only in 64-bit mode
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):

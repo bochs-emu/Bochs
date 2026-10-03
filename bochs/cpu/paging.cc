@@ -1460,7 +1460,8 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
     }
 
 #if BX_SUPPORT_X86_64
-    if (long64_mode() && BX_CPU_THIS_PTR cr4.get_LASS()) {
+    // LASS applies in IA-32e mode including compatibility mode (laddr[63] == 0 in compatibility mode)
+    if (long_mode() && BX_CPU_THIS_PTR cr4.get_LASS()) {
       if (lpf >> 63) { // supervisor, cannot be accessed by user
         tlbEntry->accessBits &= ~(TLB_UserReadOK | TLB_UserWriteOK | TLB_UserReadShadowStackOK | TLB_UserWriteShadowStackOK | TLB_UserExecuteOK);
       }

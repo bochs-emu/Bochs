@@ -709,6 +709,16 @@ void BX_CPU_C::prefetch(void)
       exception(BX_GP_EXCEPTION, 0);
     }
 
+#if BX_SUPPORT_X86_64
+    // LASS applies to instruction fetches in compatibility mode as well
+    if (long_mode()) {
+      if (! IsCanonicalAccess(laddr, BX_EXECUTE, USER_PL)) {
+        BX_ERROR(("prefetch: #GP(0): LASS violation in compatibility mode"));
+        exception(BX_GP_EXCEPTION, 0);
+      }
+    }
+#endif
+
     windowSize = 4096;
     if (limit + BX_CPU_THIS_PTR eipPageBias < 4096) {
       windowSize = (Bit32u)(limit + BX_CPU_THIS_PTR eipPageBias + 1);

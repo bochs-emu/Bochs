@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2005-2024  The Bochs Project
+//  Copyright (C) 2005-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -299,7 +299,9 @@ bool BX_CPP_AttrRegparmN(3) BX_CPU_C::IsCanonicalAccess(bx_address laddr, unsign
     return false;
   }
 
-  if (long64_mode() && BX_CPU_THIS_PTR cr4.get_LASS()) {
+  // LASS applies in IA-32e mode (EFER.LMA = 1) including compatibility mode,
+  // 32-bit linear addresses produced in compatibility mode have laddr[63] == 0
+  if (long_mode() && BX_CPU_THIS_PTR cr4.get_LASS()) {
     // laddr[63] == 0 user, laddr[63] == 1 supervisor
     bool access_user_space = (laddr >> 63) == 0;
     if (user) {
