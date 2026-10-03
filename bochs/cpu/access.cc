@@ -314,8 +314,10 @@ bool BX_CPP_AttrRegparmN(3) BX_CPU_C::IsCanonicalAccess(bx_address laddr, unsign
     }
 
     // A supervisor-mode instruction fetch causes a LASS violation if it would accesses a linear address[63] == 0
-    // A supervisor-mode data access causes a LASS violation only if supervisor-mode access protection is enabled 
+    // A supervisor-mode data access causes a LASS violation only if supervisor-mode access protection is enabled
     // (CR4.SMAP = 1) and RFLAGS.AC = 0 or the access implicitly accesses a system data structure.
+    // TODO: implicit supervisor-mode accesses (GDT, LDT, IDT, TSS, UPID ...) are not distinguished from explicit
+    //       ones yet, they are checked against RFLAGS.AC as well
     if (rw == BX_EXECUTE || (BX_CPU_THIS_PTR cr4.get_SMAP() && ! BX_CPU_THIS_PTR get_AC())) {
       if (access_user_space) {
         BX_ERROR(("Supervisor access LASS canonical violation for address 0x" FMT_LL "x rw=%d", laddr, rw));

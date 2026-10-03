@@ -116,6 +116,7 @@ Changes after Bochs 3.1:
 + VMX/CET: write "prematurely busy shadow stack" tracking better matching SDM
 + CET: fix supervisor shadow stack token release on same privilege IRET in IA-32e mode
 - LASS: LASS must be enforced in IA-32e mode (IA32_EFER.LMA = 1) including compatibility mode, not only in 64-bit mode
+- LASS: masked AVX/AVX-512 loads and stores must pre-check unmasked elements for LASS violations (not only canonicality) so #GP takes priority over #PF
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
