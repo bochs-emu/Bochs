@@ -28,6 +28,7 @@ Changes after Bochs 3.1:
 - AVX_VNNI/AVX512_VNNI/AVX_VNNI_INT16: Fixed saturation in VPDPWSSDS/VPDPWSUDS/VPDPWUSDS when sum of two products overflows 32-bit
 - AVX-512: EVEX encoded VBROADCASTSD/VBROADCASTF32X2 must #UD when encoded with 128-bit vector length
 - AVX-512: Fixed missing end of opcode table marker for EVEX encoded VBROADCASTF32X4/F64X2/F32X8/F64X4 opcodes, invalid encodings could decode garbage instead of #UD
++ AVX_NE_CONVERT: VBCSTNEBF162PS/VBCSTNESH2PS opcodes were swapped (F3 vs 66 prefix) and broadcast a word instead of converted FP32 dword
 - AVX/AVX-512: VEX.W1/EVEX.W1 must be ignored outside of 64-bit mode (a lot of instructions)
 - SSE/AVX: Fixed PSRLQ and PSRAVQ instructions with shift count = 64
 - SSE: PSHUFLW instruction should be supported under SSE2 instead of SSE

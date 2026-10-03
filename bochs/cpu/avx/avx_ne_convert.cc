@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2023 Stanislav Shwartsman
+//   Copyright (c) 2023-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -68,7 +68,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VBCSTNEBF162PS_VpsWwM(bxInstruction_c *i)
   float32 op = convert_bfloat16_to_fp32(read_virtual_word(i->seg(), eaddr));
 
   for (unsigned n=0; n < len; n++)
-    xmm_pbroadcastw(&dst.vmm128(n), op);
+    xmm_pbroadcastd(&dst.vmm128(n), op);
 
   BX_WRITE_AVX_REG(i->dst(), dst);
   BX_NEXT_INSTR(i);
@@ -84,7 +84,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VBCSTNESH2PS_VpsWshM(bxInstruction_c *i)
   float32 op = convert_ne_fp16_to_fp32(read_virtual_word(i->seg(), eaddr));
 
   for (unsigned n=0; n < len; n++)
-    xmm_pbroadcastw(&dst.vmm128(n), op);
+    xmm_pbroadcastd(&dst.vmm128(n), op);
 
   BX_WRITE_AVX_REG(i->dst(), dst);
   BX_NEXT_INSTR(i);

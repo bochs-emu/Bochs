@@ -2493,7 +2493,7 @@ bx_define_opcode(BX_IA_VPDPWUUDS_VdqHdqWdq, "vpdpwuuds", "vpdpwuuds", &BX_CPU_C:
 
 // AVX-NE-CONVERT
 bx_define_opcode(BX_IA_VBCSTNEBF162PS_VpsWw, "vbcstnebf162ps", "vbcstnebf162ps", &BX_CPU_C::VBCSTNEBF162PS_VpsWwM, &BX_CPU_C::BxError, BX_ISA_AVX_NE_CONVERT, OP_Vps, OP_Ww, OP_NONE, OP_NONE, BX_PREPARE_AVX)
-bx_define_opcode(BX_IA_VBCSTNESH2PS_VpsWsh, "vbcstnesh2ps", "vbcstneshps", &BX_CPU_C::VBCSTNESH2PS_VpsWshM, &BX_CPU_C::BxError, BX_ISA_AVX_NE_CONVERT, OP_Vps, OP_Wsh, OP_NONE, OP_NONE, BX_PREPARE_AVX)
+bx_define_opcode(BX_IA_VBCSTNESH2PS_VpsWsh, "vbcstnesh2ps", "vbcstnesh2ps", &BX_CPU_C::VBCSTNESH2PS_VpsWshM, &BX_CPU_C::BxError, BX_ISA_AVX_NE_CONVERT, OP_Vps, OP_Wsh, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_VCVTNEEPH2PS_VpsWph, "vcvtneeph2ps", "vcvtneeph2ps", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VCVTNEEPH2PS_VpsWphR, BX_ISA_AVX_NE_CONVERT, OP_Vps, OP_Wph, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_VCVTNEOPH2PS_VpsWph, "vcvtneoph2ps", "vcvtneoph2ps", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VCVTNEOPH2PS_VpsWphR, BX_ISA_AVX_NE_CONVERT, OP_Vps, OP_Wph, OP_NONE, OP_NONE, BX_PREPARE_AVX)
 bx_define_opcode(BX_IA_VCVTNEEBF162PS_VpsWph, "vcvtneebf162ps", "vcvtneebf162ps", &BX_CPU_C::LOAD_Vector, &BX_CPU_C::VCVTNEEBF162PS_VpsWphR, BX_ISA_AVX_NE_CONVERT, OP_Vps, OP_Wph, OP_NONE, OP_NONE, BX_PREPARE_AVX)
