@@ -370,7 +370,7 @@ void BX_CPU_C::debug(bx_address offset)
     BX_INFO(("| CR2=0x%08x", (unsigned) BX_CPU_THIS_PTR cr2));
     BX_INFO(("| CR3=0x%08x", (unsigned) BX_CPU_THIS_PTR cr3));
 #if BX_CPU_LEVEL >= 4
-    BX_INFO(("| CR4=0x%08x: %s", cr4, stringify_CR4(cr4, s)));
+    BX_INFO(("| CR4=0x%08x: %s", (Bit32u) cr4, stringify_CR4(cr4, s)));
 #endif
   }
 
