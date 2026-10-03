@@ -2031,6 +2031,16 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
        BX_ERROR(("VMENTER FAIL: VMCS guest RIP > 32 bit"));
        return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
     }
+#if BX_SUPPORT_CET
+    // Intel SDM Vol3, section 29.3.2.3 "Loading Guest RIP, RSP, RFLAGS, and SSP":
+    //   As noted in Section 29.3.1.4, bits 63:32 of the RIP and RFLAGS fields must be 0 on VM entries that are not to
+    //   64-bit mode. (The same is true for SSP for VM entries that are not to 64-bit mode when the "load CET" VM-
+    //   entry control is 1.)
+    if (vm->vmentry_ctrls.LOAD_GUEST_CET_STATE() && GET32H(guest.ssp) != 0) {
+       BX_ERROR(("VMENTER FAIL: VMCS guest SSP > 32 bit"));
+       return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+#endif
   }
 #endif
 
