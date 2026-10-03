@@ -3251,6 +3251,13 @@ public: // for now...
   template <simd_xmm_shift func>
   BX_SMF void HANDLE_AVX512_SHIFT_IMM_WORD_EL_MASK(bxInstruction_c *i) BX_CPP_AttrRegparmN(1);
 
+  template <xmm_pfp_1op func>
+  BX_SMF void HANDLE_AVX_PFP_1OP_HALF(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  template <xmm_pfp_2op func>
+  BX_SMF void HANDLE_AVX_PFP_2OP_HALF(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  template <xmm_pfp_3op func>
+  BX_SMF void HANDLE_AVX_PFP_3OP_HALF(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
   template <xmm_pfp_1op_mask func>
   BX_SMF void HANDLE_AVX512_MASK_PFP_1OP_HALF(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   template <xmm_pfp_1op_mask func>

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2024 Stanislav Shwartsman
+//   Copyright (c) 2024-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -32,6 +32,7 @@
 #include "simd_int.h"
 
 extern softfloat_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
+extern softfloat_status_t mxcsr_to_softfloat_status_word_fp16(bx_mxcsr_t mxcsr);
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINMAXPD_MASK_VpdHpdWpdIbR(bxInstruction_c *i)
 {
@@ -170,7 +171,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINMAXPH_MASK_VphHphWphIbR(bxInstruction_
   int op_select =  i->Ib() & 0x3; 
   int sign_ctrl = (i->Ib() >> 2) & 0x3;
 
-  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+  softfloat_status_t status = mxcsr_to_softfloat_status_word_fp16(MXCSR);
   softfloat_status_word_rc_override(status, i);
 
   for (unsigned n=0, tmp_mask = opmask; n < num_elements; n++, tmp_mask >>= 1) {
@@ -204,7 +205,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMINMAXSH_MASK_VshHphWshIbR(bxInstruction_
     int op_select =  i->Ib() & 0x3; 
     int sign_ctrl = (i->Ib() >> 2) & 0x3;
 
-    softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+    softfloat_status_t status = mxcsr_to_softfloat_status_word_fp16(MXCSR);
     softfloat_status_word_rc_override(status, i);
 
     op1.xmm16u(0) = f16_minmax(op1.xmm16u(0), op2, op_select, sign_ctrl, propagate_NaNs, &status);

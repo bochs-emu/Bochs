@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2023 Stanislav Shwartsman
+//   Copyright (c) 2003-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -62,6 +62,21 @@ softfloat_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr)
   status.softfloat_exceptionMasks = mxcsr.get_exceptions_masks();
   status.softfloat_suppressException = 0;
   status.softfloat_denormals_are_zeros = mxcsr.get_DAZ();
+
+  return status;
+}
+
+// AVX512_FP16 instructions ignore MXCSR.DAZ for FP16 inputs and MXCSR.FUZ for FP16 outputs
+softfloat_status_t mxcsr_to_softfloat_status_word_fp16(bx_mxcsr_t mxcsr)
+{
+  softfloat_status_t status;
+
+  status.softfloat_exceptionFlags = 0; // clear exceptions before execution
+  status.softfloat_roundingMode = mxcsr.get_rounding_mode();
+  status.softfloat_flush_underflow_to_zero = 0; // ignore MXCSR.FUZ
+  status.softfloat_exceptionMasks = mxcsr.get_exceptions_masks();
+  status.softfloat_suppressException = 0;
+  status.softfloat_denormals_are_zeros = 0; // ignore MXCSR.DAZ
 
   return status;
 }

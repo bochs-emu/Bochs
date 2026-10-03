@@ -19,6 +19,7 @@ Changes after Bochs 3.1:
 - AMX-AVX512/ACE: TILEMOVROW/TCVTROW*/TILEMOVCOL with general purpose register in EVEX.vvvv must #UD if EVEX.V' != 1
 - AMX-FP16/AMX-COMPLEX: TDPFP16PS/TCMMRLFP16PS/TCMMIMFP16PS must not treat FP32 srcdest denormals as zero (matching Intel SDE)
 + AVX512_FP16: VCVTTPH2DQ/VCVTTPH2UDQ/VCVTTPH2QQ/VCVTTPH2UQQ instructions were mapped into their non-truncating forms and therefore used MXCSR rounding instead of truncation
++ AVX512_FP16: FP16 instructions must ignore MXCSR.DAZ for FP16 inputs and MXCSR.FUZ for FP16 outputs (matching Intel SDE)
 + AVX512_BF16: Fixed VCVTNE2PS2BF16 instruction taking upper half of the result from wrong elements of the first source
 + AVX512_BF16: Fixed merge masking in VCVTNEPS2BF16 instruction (masked out elements were zeroed instead of preserved)
 - AVX512_VP2INTERSECT: VP2INTERSECTD/VP2INTERSECTQ must #UD if EVEX.R or EVEX.R' encode mask register above k7

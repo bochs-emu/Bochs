@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2024 Stanislav Shwartsman
+//   Copyright (c) 2024-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -54,6 +54,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMOVD_VdWdR(bxInstruction_c *i)
 #include "decoder/ia_opcodes.h"
 
 extern softfloat_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
+extern softfloat_status_t mxcsr_to_softfloat_status_word_fp16(bx_mxcsr_t mxcsr);
 extern void softfloat_status_word_rc_override(softfloat_status_t &status, bxInstruction_c *i);
 
 void BX_CPU_C::write_eflags_vcomx(int float_relation)
@@ -112,7 +113,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCOMXSH_VshWshR(bxInstruction_c *i)
 {
   float16 op1 = BX_READ_XMM_REG_LO_WORD(i->dst()), op2 = BX_READ_XMM_REG_LO_WORD(i->src());
 
-  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+  softfloat_status_t status = mxcsr_to_softfloat_status_word_fp16(MXCSR);
   softfloat_status_word_rc_override(status, i);
   bool quiet  = (i->getIaOpcode() == BX_IA_EVEX_VUCOMXSH_VshWsh);
   int rc = f16_compare(op1, op2, quiet, &status);
