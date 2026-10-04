@@ -14,6 +14,8 @@ Changes after Bochs 3.1 release:
   - Allow up to 32 code breakpoints (as they are much less painful for emulation performance now)
   - Magic breakpoint activates the internal debugger also when Bochs was started without -dbg option
     (in Bochs compiled with the internal debugger). Use 'magic_break: enabled=0' to disable it.
+  - Added 'detach' debugger command: leave the debugger and continue simulation at full speed without it,
+    the debugger is activated again by magic breakpoint or time breakpoint
 
 - Configure and compile
   - Bochs now require C++11 support for compilation, enforced via configure
