@@ -39,6 +39,9 @@
 #endif
 #include "gui/bitmaps/userbutton.h"
 #include "gui/bitmaps/saverestore.h"
+#if BX_DEBUGGER
+  #include "gui/bitmaps/debugger.h"
+#endif
 
 #if BX_USE_GUI_CONSOLE
 #include "sdl.h"
@@ -139,6 +142,9 @@ bx_gui_c::bx_gui_c(void): disp_mode(DISP_MODE_SIM)
 {
   put("GUI"); // Init in specific_init
   bx_headerbar_entries = 0;
+#if BX_DEBUGGER
+  debugger_hbar_id = BX_MAX_HEADERBAR_ENTRIES;
+#endif
   statusitem_count = 0;
   led_timer_index = BX_NULL_TIMER_HANDLE;
   framebuffer = NULL;
@@ -249,6 +255,14 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
   BX_GUI_THIS usbdbg_trigger_bmap_id = create_bitmap(bx_usbdbg_trigger_bmap,
                           BX_USB_BMAP_X, BX_USB_BMAP_Y);
 #endif
+#if BX_DEBUGGER
+  if ((BX_GUI_THIS dialog_caps & BX_GUI_DLG_DEBUGGER) && SIM->debugger_activation_allowed()) {
+    BX_GUI_THIS debugger_bmap_id = create_bitmap(bx_debugger_bmap,
+                          BX_DEBUGGER_BMAP_X, BX_DEBUGGER_BMAP_Y);
+  } else {
+    BX_GUI_THIS dialog_caps &= ~BX_GUI_DLG_DEBUGGER;
+  }
+#endif
 
   // Add the initial bitmaps to the headerbar, and enable callback routine, for use
   // when that bitmap is clicked on. The floppy and cdrom devices are not
@@ -322,6 +336,16 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
   BX_GUI_THIS user_hbar_id = headerbar_bitmap(BX_GUI_THIS user_bmap_id,
                           BX_GRAVITY_RIGHT, userbutton_handler);
   BX_GUI_THIS set_tooltip(BX_GUI_THIS user_hbar_id, "Send keyboard shortcut");
+
+#if BX_DEBUGGER
+  // Debugger button (left of the user button), created last to keep the
+  // headerbar ids of the other buttons
+  if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_DEBUGGER) {
+    BX_GUI_THIS debugger_hbar_id = headerbar_bitmap(BX_GUI_THIS debugger_bmap_id,
+                          BX_GRAVITY_RIGHT, debugger_handler);
+    BX_GUI_THIS set_tooltip(BX_GUI_THIS debugger_hbar_id, "Enter or break into the debugger");
+  }
+#endif
 
   if (!parse_user_shortcut(SIM->get_param_string(BXPN_USER_SHORTCUT)->getptr())) {
     SIM->get_param_string(BXPN_USER_SHORTCUT)->set("none");
@@ -729,6 +753,13 @@ void bx_gui_c::set_usbdbg_bitmap(bool trigger)
 }
 #endif
 
+#if BX_DEBUGGER
+void bx_gui_c::debugger_handler(void)
+{
+  SIM->request_debugger_activation("GUI button");
+}
+#endif
+
 void bx_gui_c::toggle_mouse_enable(void)
 {
   int old = SIM->get_param_bool(BXPN_MOUSE_ENABLED)->get();
@@ -1087,6 +1118,14 @@ Bit8u bx_gui_c::get_mouse_headerbar_id()
 {
   return BX_GUI_THIS mouse_hbar_id;
 }
+
+#if BX_DEBUGGER
+// returns BX_MAX_HEADERBAR_ENTRIES if the gui has no debugger button
+Bit8u bx_gui_c::get_debugger_headerbar_id()
+{
+  return BX_GUI_THIS debugger_hbar_id;
+}
+#endif
 
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
 void bx_gui_c::init_debug_dialog(bool global_ini)

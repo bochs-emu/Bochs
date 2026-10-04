@@ -120,7 +120,8 @@ typedef enum {
   BX_TOOLBAR_CONFIG,
   BX_TOOLBAR_MOUSE_EN,
   BX_TOOLBAR_USER,
-  BX_TOOLBAR_USB_DEBUG
+  BX_TOOLBAR_USB_DEBUG,
+  BX_TOOLBAR_DEBUGGER
 } bx_toolbar_buttons;
 
 // normally all action choices are available for all event types. The exclude
@@ -716,6 +717,9 @@ public:
   // return 1 if device is connected to the AGP slot
   virtual bool is_agp_device(const char *name) {return 0;}
   virtual bool debugger_active() {return false;}
+  // runtime activation of the internal debugger (break if already active)
+  virtual bool debugger_activation_allowed() {return false;}
+  virtual void request_debugger_activation(const char *reason) {}
 #if BX_DEBUGGER
   // for debugger: same behavior as pressing control-C
   virtual void debug_break() {}

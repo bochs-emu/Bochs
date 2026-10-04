@@ -47,6 +47,7 @@ BEGIN
     GROUPBOX        "Simulation", IDSIMU, 10, 95, 70, 77
     DEFPUSHBUTTON   "Sta&rt", IDOK, 20, 110, 50, 14
     PUSHBUTTON      "Restore St&ate", IDRESTORE, 20, 130, 50, 14
+    PUSHBUTTON      "&Debugger", IDDEBUGGER, 20, 130, 50, 14, NOT WS_VISIBLE
     PUSHBUTTON      "&Quit", IDQUIT, 20, 150, 50, 14
     GROUPBOX        "Edit Options", IDEDITGRP, 100, 10, 95, 162
     LISTBOX         IDEDITBOX, 105, 20, 85, 150, WS_VSCROLL | WS_TABSTOP

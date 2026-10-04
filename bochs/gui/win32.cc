@@ -59,6 +59,9 @@ public:
 #if BX_SHOW_IPS
   virtual void show_ips(Bit32u ips_count);
 #endif
+#if BX_DEBUGGER
+  virtual void set_display_mode(disp_mode_t newmode);
+#endif
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -766,6 +769,9 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   if (gui_ci) {
     dialog_caps = BX_GUI_DLG_ALL;
   }
+#if BX_DEBUGGER
+  dialog_caps |= BX_GUI_DLG_DEBUGGER;
+#endif
   new_text_api = 1;
 }
 
@@ -1408,6 +1414,15 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
           toolbar_cmd = BX_TOOLBAR_FLOPPYB;
         } else if (wParam == 'C') {
           toolbar_cmd = BX_TOOLBAR_COPY;
+#if BX_DEBUGGER
+        } else if (wParam == 'D') {
+          // ignored while the debugger button is disabled (debugger prompt)
+          Bit8u hbar_id = bx_gui->get_debugger_headerbar_id();
+          if ((hbar_id < (unsigned) win32_toolbar_entries) &&
+              SendMessage(hwndTB, TB_ISBUTTONENABLED, hbar_id + 101, 0)) {
+            toolbar_cmd = BX_TOOLBAR_DEBUGGER;
+          }
+#endif
         } else if (wParam == 'F') {
           if (!saveParent) {
             set_fullscreen_mode(TRUE);
@@ -1723,6 +1738,11 @@ void bx_win32_gui_c::handle_events(void)
         case BX_TOOLBAR_SAVE_RESTORE:
           save_restore_handler();
           break;
+#if BX_DEBUGGER
+        case BX_TOOLBAR_DEBUGGER:
+          debugger_handler();
+          break;
+#endif
       }
     }
     else {
@@ -2222,6 +2242,21 @@ void bx_win32_gui_c::set_mouse_mode_absxy(bool mode)
 {
   win32MouseModeAbsXY = mode;
 }
+
+#if BX_DEBUGGER
+// The debugger button is disabled in config mode (debugger prompt or config
+// interface): a click would only be handled after the simulation resumes.
+// PostMessage is used since the caller may hold stInfo.keyCS (config button
+// handler) while the GUI thread waits for it.
+void bx_win32_gui_c::set_display_mode(disp_mode_t newmode)
+{
+  unsigned hbar_id = debugger_hbar_id;
+
+  if (hbar_id < (unsigned) win32_toolbar_entries) {
+    PostMessage(hwndTB, TB_ENABLEBUTTON, hbar_id + 101, MAKELONG(newmode == DISP_MODE_SIM, 0));
+  }
+}
+#endif
 
 #if BX_SHOW_IPS
 VOID CALLBACK MyTimer(HWND hwnd,UINT uMsg, UINT idEvent, DWORD dwTime)

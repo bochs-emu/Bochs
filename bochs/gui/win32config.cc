@@ -657,6 +657,10 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
         EnableWindow(GetDlgItem(hDlg, IDREADRC), FALSE);
         EnableWindow(GetDlgItem(hDlg, IDRESETCFG), FALSE);
         EnableWindow(GetDlgItem(hDlg, IDRESTORE), FALSE);
+        if (SIM->debugger_activation_allowed()) {
+          ShowWindow(GetDlgItem(hDlg, IDRESTORE), SW_HIDE);
+          ShowWindow(GetDlgItem(hDlg, IDDEBUGGER), SW_SHOW);
+        }
         SetWindowText(GetDlgItem(hDlg, IDOK), "&Continue");
         i = 0;
         while (runtime_options[i].label != NULL) {
@@ -846,6 +850,11 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
           }
           EndDialog(hDlg, 1);
           break;
+        case IDDEBUGGER:
+          SIM->update_runtime_options();
+          SIM->request_debugger_activation("runtime config dialog");
+          EndDialog(hDlg, 1);
+          break;
         case IDCANCEL:
           if (optedit) {
             PostMessage(hDlg, WM_COMMAND, (WPARAM)IDREVERT, 0);
@@ -877,6 +886,8 @@ static BOOL CALLBACK MainMenuDlgProc(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
                 EnableWindow(GetDlgItem(hDlg, IDREADRC), !optedit);
                 EnableWindow(GetDlgItem(hDlg, IDRESETCFG), !optedit);
                 EnableWindow(GetDlgItem(hDlg, IDRESTORE), !optedit);
+              } else {
+                EnableWindow(GetDlgItem(hDlg, IDDEBUGGER), !optedit);
               }
             }
           }

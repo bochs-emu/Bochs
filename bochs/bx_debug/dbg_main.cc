@@ -444,6 +444,21 @@ void bx_debug_break()
   bx_guard.interrupt_requested = true;
 }
 
+// Returns true if a request to activate the internal debugger (or to break
+// into it when it is already active) would be accepted.
+bool bx_dbg_activation_allowed(void)
+{
+  if (bx_dbg.debugger_active) return true;
+
+  // the debugger cannot be activated at runtime with these display libraries:
+  // wx forces the gui debugger and term sets up the debugger terminal only
+  // when the debugger is active on startup
+  const char *display = SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->get_selected();
+  if (SIM->is_wx_selected() || !strcmp(display, "term")) return false;
+
+  return true;
+}
+
 // Request to activate the internal debugger when Bochs is running without
 // it. The CPU loop returns on the next instruction boundary and the debugger
 // is activated by bx_dbg_activate() called from the simulation main loop.
@@ -454,14 +469,11 @@ void bx_dbg_request_activation(unsigned cpu, const char *reason)
     return;
   }
 
-  // the debugger cannot be activated at runtime with these display libraries:
-  // wx forces the gui debugger and term sets up the debugger terminal only
-  // when the debugger is active on startup
-  const char *display = SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->get_selected();
-  if (SIM->is_wx_selected() || !strcmp(display, "term")) {
+  if (! bx_dbg_activation_allowed()) {
     static bool warned = false;
     if (! warned) {
-      BX_ERROR(("debugger activation (%s) ignored: not supported with '%s' display library", reason, display));
+      BX_ERROR(("debugger activation (%s) ignored: not supported with '%s' display library", reason,
+        SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->get_selected()));
       warned = true;
     }
     return;

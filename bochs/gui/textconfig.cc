@@ -89,7 +89,8 @@ enum {
   BX_CI_RT_MISC,
   BX_CI_RT_SAVE_CFG,
   BX_CI_RT_CONT,
-  BX_CI_RT_QUIT
+  BX_CI_RT_QUIT,
+  BX_CI_RT_DEBUGGER
 };
 
 static int text_ci_callback(void *userdata, ci_command_t command);
@@ -373,6 +374,7 @@ static const char *runtime_menu_prompt =
 "8. Save configuration\n"
 "9. Continue simulation\n"
 "10. Quit now\n"
+"%s"
 "\n"
 "Please choose one:  [9] ";
 
@@ -412,7 +414,12 @@ void build_runtime_options_prompt(const char *format, char *buf, int size)
     }
   }
 
-  snprintf(buf, size, format, buffer[0], buffer[1]);
+  if (SIM->debugger_activation_allowed())
+    strcpy(buffer[2], "11. Continue and enter debugger\n");
+  else
+    buffer[2][0] = 0;
+
+  snprintf(buf, size, format, buffer[0], buffer[1], buffer[2]);
 }
 
 int do_menu(const char *pname)
@@ -544,7 +551,8 @@ int bx_text_config_interface(int menu)
         {
           char prompt[1024];
           build_runtime_options_prompt(runtime_menu_prompt, prompt, 1024);
-          if (ask_uint(prompt, "", 1, BX_CI_RT_QUIT, BX_CI_RT_CONT, &choice, 10) < 0) return -1;
+          unsigned max_choice = SIM->debugger_activation_allowed() ? BX_CI_RT_DEBUGGER : BX_CI_RT_QUIT;
+          if (ask_uint(prompt, "", 1, max_choice, BX_CI_RT_CONT, &choice, 10) < 0) return -1;
           switch (choice) {
             case BX_CI_RT_FLOPPYA:
               if (SIM->get_param_enum(BXPN_FLOPPYA_DEVTYPE)->get() != BX_FDD_NONE) do_menu(BXPN_FLOPPYA);
@@ -568,6 +576,11 @@ int bx_text_config_interface(int menu)
               bx_printf("You chose quit on the configuration interface.\n");
               bx_user_quit = 1;
               return 0;
+            case BX_CI_RT_DEBUGGER:
+              SIM->update_runtime_options();
+              SIM->request_debugger_activation("runtime config menu");
+              bx_printf("Continuing simulation and entering the debugger\n");
+              return 1;
             default: bx_printf("Menu choice %d not implemented.\n", choice);
           }
         }
