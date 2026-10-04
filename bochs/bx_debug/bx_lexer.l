@@ -110,6 +110,7 @@ bpd             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DISABLE_BREAKPOI
 quit            |
 exit            |
 q               { bxlval.sval = strdup(bxtext); return(BX_TOKEN_QUIT); }
+detach          { bxlval.sval = strdup(bxtext); return(BX_TOKEN_DETACH); }
 x               |
 xp              { BEGIN(EXAMINE); bxlval.sval = strdup(bxtext); return(BX_TOKEN_EXAMINE); }
 restore         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_RESTORE); }

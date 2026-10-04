@@ -5212,7 +5212,7 @@ This enables the GDB stub. See <xref linkend="debugging-with-gdb">.
 </para>
 </section>
 
-<section><title>magic_break</title>
+<section id="bochsopt-magicbreak"><title>magic_break</title>
 <para>
 Example for breaking on "XCHGW %DI, %DI" or "XCHGW %SP, %SP" execution
 <screen>
@@ -7398,7 +7398,22 @@ From here, you may use the following commands:
   q                           quit debugger and execution
   quit
   exit
+
+  detach                      leave the debugger and continue execution without it
 </screen>
+</para>
+<para>
+The debugger could also be activated at runtime when Bochs was started without
+the <option>-dbg</option> option: a <link linkend="bochsopt-magicbreak">magic breakpoint</link>
+activates the debugger and the simulation continues in the debugger mode.
+The <command>detach</command> command leaves the debugger and continues the
+simulation at full speed as if Bochs was started without the debugger.
+Breakpoints, watchpoints and other debugger settings are kept but they are
+inactive until the debugger is activated again by a magic breakpoint or a
+time breakpoint (<command>sb</command>, <command>sba</command>).
+Activating the debugger at runtime is not supported with the wx and term
+display libraries and <command>detach</command> is not supported with the
+debugger gui yet.
 </para>
 </section>
 
@@ -7668,6 +7683,12 @@ Insert a time break point "delta" instructions into the future ("delta" is a 64-
 <screen>sba <varname>time</varname></screen>
 
 Insert a time break point at "time" ("time" is a 64-bit integer followed by "L", for example 1000L).
+
+A time break point also activates the debugger after the <command>detach</command>
+command, for example <command>sb 1000000</command> followed by <command>detach</command>
+runs the simulation at full speed for 1000000 ticks. Without the debugger the
+time is checked at the end of the instruction trace, the simulation stops
+at the first instruction boundary at or after the requested time.
 
 <screen>print-stack [<varname>num words</varname>]</screen>
 

@@ -1167,32 +1167,32 @@ int bx_begin_simulation(int argc, char *argv[])
 
 
 #if BX_DEBUGGER
-  if (bx_dbg.debugger_active) {
-    // If using the debugger, it will take control and call
-    // bx_init_hardware() and cpu_loop()
-    bx_dbg_main();
+  // the simulation alternates between the internal debugger and running
+  // without it: the debugger could be activated at runtime and detached
+  while (1) {
+    if (bx_dbg.debugger_active) {
+      // the debugger takes control and returns when it is detached
+      bx_dbg_main();
+    }
+    bx_sim_loop();
+    if (bx_pc_system.kill_bochs_request)
+      break;
+    if (bx_dbg.activation_request)
+      bx_dbg_activate();
+  }
+#else
+#if BX_GDBSTUB
+  // If using gdbstub, it will take control and call
+  // bx_init_hardware() and cpu_loop()
+  if (bx_dbg.gdbstub_enabled) {
+    bx_gdbstub_init();
   }
   else
 #endif
   {
-#if BX_GDBSTUB
-    // If using gdbstub, it will take control and call
-    // bx_init_hardware() and cpu_loop()
-    if (bx_dbg.gdbstub_enabled) {
-      bx_gdbstub_init();
-    }
-    else
-#endif
-    {
-      bx_sim_loop();
-#if BX_DEBUGGER
-      if (!bx_pc_system.kill_bochs_request && bx_dbg.activation_request) {
-        // the internal debugger will take control
-        bx_dbg_activate();
-      }
-#endif
-    }
+    bx_sim_loop();
   }
+#endif
 
   BX_INFO(("cpu loop quit, shutting down simulator"));
   bx_atexit();
