@@ -37,18 +37,25 @@ BX_CPP_INLINE unsigned tzcntw(Bit16u val_16)
 {
   if (val_16 == 0) return 16;
 
+#if BX_HAVE___BUILTIN_CTZ
+  return __builtin_ctz(val_16);
+#else
   unsigned count = 0;
   if ((val_16 & 0x00ff) == 0) { count += 8; val_16 >>= 8; }
   if ((val_16 & 0x000f) == 0) { count += 4; val_16 >>= 4; }
   if ((val_16 & 0x0003) == 0) { count += 2; val_16 >>= 2; }
   if ((val_16 & 0x0001) == 0) { count += 1; }
   return count;
+#endif
 }
 
 BX_CPP_INLINE unsigned tzcntd(Bit32u val_32)
 {
   if (val_32 == 0) return 32;
 
+#if BX_HAVE___BUILTIN_CTZ
+  return __builtin_ctz(val_32);
+#else
   unsigned count = 0;
   if ((val_32 & 0x0000ffff) == 0) { count += 16; val_32 >>= 16; }
   if ((val_32 & 0x000000ff) == 0) { count +=  8; val_32 >>=  8; }
@@ -56,12 +63,16 @@ BX_CPP_INLINE unsigned tzcntd(Bit32u val_32)
   if ((val_32 & 0x00000003) == 0) { count +=  2; val_32 >>=  2; }
   if ((val_32 & 0x00000001) == 0) { count +=  1; }
   return count;
+#endif
 }
 
 BX_CPP_INLINE unsigned tzcntq(Bit64u val_64)
 {
   if (val_64 == 0) return 64;
 
+#if BX_HAVE___BUILTIN_CTZ
+  return __builtin_ctzll(val_64);
+#else
   unsigned count = 0;
   if ((val_64 & BX_CONST64(0x00000000ffffffff)) == 0) { count += 32; val_64 >>= 32; }
   if ((val_64 & BX_CONST64(0x000000000000ffff)) == 0) { count += 16; val_64 >>= 16; }
@@ -70,6 +81,7 @@ BX_CPP_INLINE unsigned tzcntq(Bit64u val_64)
   if ((val_64 & BX_CONST64(0x0000000000000003)) == 0) { count +=  2; val_64 >>=  2; }
   if ((val_64 & BX_CONST64(0x0000000000000001)) == 0) { count +=  1; }
   return count;
+#endif
 }
 
 // lzcnt
@@ -78,12 +90,16 @@ BX_CPP_INLINE unsigned lzcntw(Bit16u val_16)
 {
   if (val_16 == 0) return 16;
 
+#if BX_HAVE___BUILTIN_CLZ
+  return __builtin_clz(val_16) - 16;
+#else
   unsigned count = 0;
   if ((val_16 & 0xff00) == 0) { count += 8; val_16 <<= 8; }
   if ((val_16 & 0xf000) == 0) { count += 4; val_16 <<= 4; }
   if ((val_16 & 0xc000) == 0) { count += 2; val_16 <<= 2; }
   if ((val_16 & 0x8000) == 0) { count += 1; }
   return count;
+#endif
 }
 
 BX_CPP_INLINE unsigned most_significant_bitw(Bit16u val_16)
@@ -95,6 +111,9 @@ BX_CPP_INLINE unsigned lzcntd(Bit32u val_32)
 {
   if (val_32 == 0) return 32;
 
+#if BX_HAVE___BUILTIN_CLZ
+  return __builtin_clz(val_32);
+#else
   unsigned count = 0;
   if ((val_32 & 0xffff0000) == 0) { count += 16; val_32 <<= 16; }
   if ((val_32 & 0xff000000) == 0) { count +=  8; val_32 <<=  8; }
@@ -102,6 +121,7 @@ BX_CPP_INLINE unsigned lzcntd(Bit32u val_32)
   if ((val_32 & 0xc0000000) == 0) { count +=  2; val_32 <<=  2; }
   if ((val_32 & 0x80000000) == 0) { count +=  1; }
   return count;
+#endif
 }
 
 BX_CPP_INLINE unsigned most_significant_bitd(Bit32u val_32)
@@ -113,6 +133,9 @@ BX_CPP_INLINE unsigned lzcntq(Bit64u val_64)
 {
   if (val_64 == 0) return 64;
 
+#if BX_HAVE___BUILTIN_CLZ
+  return __builtin_clzll(val_64);
+#else
   unsigned count = 0;
   if ((val_64 & BX_CONST64(0xffffffff00000000)) == 0) { count += 32; val_64 <<= 32; }
   if ((val_64 & BX_CONST64(0xffff000000000000)) == 0) { count += 16; val_64 <<= 16; }
@@ -121,6 +144,7 @@ BX_CPP_INLINE unsigned lzcntq(Bit64u val_64)
   if ((val_64 & BX_CONST64(0xc000000000000000)) == 0) { count +=  2; val_64 <<=  2; }
   if ((val_64 & BX_CONST64(0x8000000000000000)) == 0) { count +=  1; }
   return count;
+#endif
 }
 
 BX_CPP_INLINE unsigned most_significant_bitq(Bit64u val_64)
@@ -132,25 +156,36 @@ BX_CPP_INLINE unsigned most_significant_bitq(Bit64u val_64)
 
 BX_CPP_INLINE unsigned popcntb(Bit8u val_8)
 {
+#if BX_HAVE___BUILTIN_POPCOUNT
+  return __builtin_popcount(val_8);
+#else
   val_8 = ((val_8>>1) & 0x55) + (val_8 & 0x55);
   val_8 = ((val_8>>2) & 0x33) + (val_8 & 0x33);
   val_8 = ((val_8>>4) & 0x0F) + (val_8 & 0x0F);
 
   return (unsigned) val_8;
+#endif
 }
 
 BX_CPP_INLINE unsigned popcntw(Bit16u val_16)
 {
+#if BX_HAVE___BUILTIN_POPCOUNT
+  return __builtin_popcount(val_16);
+#else
   val_16 = ((val_16>>1) & 0x5555) + (val_16 & 0x5555);
   val_16 = ((val_16>>2) & 0x3333) + (val_16 & 0x3333);
   val_16 = ((val_16>>4) & 0x0F0F) + (val_16 & 0x0F0F);
   val_16 = ((val_16>>8) & 0x00FF) + (val_16 & 0x00FF);
 
   return (unsigned) val_16;
+#endif
 }
 
 BX_CPP_INLINE unsigned popcntd(Bit32u val_32)
 {
+#if BX_HAVE___BUILTIN_POPCOUNT
+  return __builtin_popcount(val_32);
+#else
   val_32 = ((val_32 >>  1) & 0x55555555) + (val_32 & 0x55555555);
   val_32 = ((val_32 >>  2) & 0x33333333) + (val_32 & 0x33333333);
   val_32 = ((val_32 >>  4) & 0x0F0F0F0F) + (val_32 & 0x0F0F0F0F);
@@ -158,10 +193,14 @@ BX_CPP_INLINE unsigned popcntd(Bit32u val_32)
   val_32 = ((val_32 >> 16) & 0x0000FFFF) + (val_32 & 0x0000FFFF);
 
   return (unsigned) val_32;
+#endif
 }
 
 BX_CPP_INLINE unsigned popcntq(Bit64u val_64)
 {
+#if BX_HAVE___BUILTIN_POPCOUNT
+  return __builtin_popcountll(val_64);
+#else
   val_64 = ((val_64 >>  1) & BX_CONST64(0x5555555555555555)) + (val_64 & BX_CONST64(0x5555555555555555));
   val_64 = ((val_64 >>  2) & BX_CONST64(0x3333333333333333)) + (val_64 & BX_CONST64(0x3333333333333333));
   val_64 = ((val_64 >>  4) & BX_CONST64(0x0F0F0F0F0F0F0F0F)) + (val_64 & BX_CONST64(0x0F0F0F0F0F0F0F0F));
@@ -170,6 +209,7 @@ BX_CPP_INLINE unsigned popcntq(Bit64u val_64)
   val_64 = ((val_64 >> 32) & BX_CONST64(0x00000000FFFFFFFF)) + (val_64 & BX_CONST64(0x00000000FFFFFFFF));
 
   return (unsigned) val_64;
+#endif
 }
 
 // bit extract

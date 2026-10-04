@@ -22221,6 +22221,114 @@ esac
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam \
     conftest$ac_exeext conftest.$ac_ext
+  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for __builtin_clz" >&5
+printf %s "checking for __builtin_clz... " >&6; }
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+    volatile unsigned x = 0x12345678;
+    volatile unsigned long long y = 0x123456789ULL;
+
+int
+main (void)
+{
+
+    return __builtin_clz(x) + __builtin_clzll(y);
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+
+
+printf '%s\n' "#define BX_HAVE___BUILTIN_CLZ 1" >>confdefs.h
+
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+
+else case e in #(
+  e)
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+   ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for __builtin_ctz" >&5
+printf %s "checking for __builtin_ctz... " >&6; }
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+    volatile unsigned x = 0x12345678;
+    volatile unsigned long long y = 0x123456789ULL;
+
+int
+main (void)
+{
+
+    return __builtin_ctz(x) + __builtin_ctzll(y);
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+
+
+printf '%s\n' "#define BX_HAVE___BUILTIN_CTZ 1" >>confdefs.h
+
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+
+else case e in #(
+  e)
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+   ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+  { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for __builtin_popcount" >&5
+printf %s "checking for __builtin_popcount... " >&6; }
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+    volatile unsigned x = 0x12345678;
+    volatile unsigned long long y = 0x123456789ULL;
+
+int
+main (void)
+{
+
+    return __builtin_popcount(x) + __builtin_popcountll(y);
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"
+then :
+
+
+printf '%s\n' "#define BX_HAVE___BUILTIN_POPCOUNT 1" >>confdefs.h
+
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+
+else case e in #(
+  e)
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+   ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
     { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for __int128" >&5
 printf %s "checking for __int128... " >&6; }
   ac_ext=cpp
@@ -22338,6 +22446,12 @@ else
   printf '%s\n' "#define BX_HAVE___BUILTIN_BSWAP32 0" >>confdefs.h
 
   printf '%s\n' "#define BX_HAVE___BUILTIN_BSWAP64 0" >>confdefs.h
+
+  printf '%s\n' "#define BX_HAVE___BUILTIN_CLZ 0" >>confdefs.h
+
+  printf '%s\n' "#define BX_HAVE___BUILTIN_CTZ 0" >>confdefs.h
+
+  printf '%s\n' "#define BX_HAVE___BUILTIN_POPCOUNT 0" >>confdefs.h
 
   printf '%s\n' "#define BX_HAVE_INT128 0" >>confdefs.h
 

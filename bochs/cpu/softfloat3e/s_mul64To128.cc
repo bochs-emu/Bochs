@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 =============================================================================*/
 
 #include <stdint.h>
+#include "opts-GCC.h"
 #include "softfloat_types.h"
 
 #ifndef softfloat_mul64To128

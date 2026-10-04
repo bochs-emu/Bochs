@@ -36,6 +36,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include "primitives.h"
 
+// the table is used only by countLeadingZeros16/32/64 when not implemented using __builtin_clz
+#ifndef SOFTFLOAT_BUILTIN_CLZ
+
 const uint_least8_t softfloat_countLeadingZeros8[256] = {
     8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4,
     3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
@@ -55,3 +58,4 @@ const uint_least8_t softfloat_countLeadingZeros8[256] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
+#endif

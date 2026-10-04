@@ -40,6 +40,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include "config.h"
 #include "softfloat_types.h"
+#include "opts-GCC.h"
 
 #ifndef softfloat_shortShiftRightJam64
 /*----------------------------------------------------------------------------
@@ -92,7 +93,9 @@ BX_CPP_INLINE uint64_t softfloat_shiftRightJam64(uint64_t a, uint32_t dist)
 | into the number of leading 0 bits before the most-significant 1 of that
 | integer.  For integer zero (index 0), the corresponding table element is 8.
 *----------------------------------------------------------------------------*/
+#ifndef SOFTFLOAT_BUILTIN_CLZ
 extern const uint_least8_t softfloat_countLeadingZeros8[256];
+#endif
 
 #ifndef softfloat_countLeadingZeros16
 /*----------------------------------------------------------------------------

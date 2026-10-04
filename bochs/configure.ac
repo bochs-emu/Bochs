@@ -222,6 +222,42 @@ if test "$MSVC_TARGET" = 0; then
   ],[
     AC_MSG_RESULT(no)
   ])
+  AC_MSG_CHECKING(for __builtin_clz)
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+    volatile unsigned x = 0x12345678;
+    volatile unsigned long long y = 0x123456789ULL;
+  ]], [[
+    return __builtin_clz(x) + __builtin_clzll(y);
+  ]])],[
+    AC_DEFINE(BX_HAVE___BUILTIN_CLZ, 1, [Define to 1 if you have the '__builtin_clz' and '__builtin_clzll' functions.])
+    AC_MSG_RESULT(yes)
+  ],[
+    AC_MSG_RESULT(no)
+  ])
+  AC_MSG_CHECKING(for __builtin_ctz)
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+    volatile unsigned x = 0x12345678;
+    volatile unsigned long long y = 0x123456789ULL;
+  ]], [[
+    return __builtin_ctz(x) + __builtin_ctzll(y);
+  ]])],[
+    AC_DEFINE(BX_HAVE___BUILTIN_CTZ, 1, [Define to 1 if you have the '__builtin_ctz' and '__builtin_ctzll' functions.])
+    AC_MSG_RESULT(yes)
+  ],[
+    AC_MSG_RESULT(no)
+  ])
+  AC_MSG_CHECKING(for __builtin_popcount)
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+    volatile unsigned x = 0x12345678;
+    volatile unsigned long long y = 0x123456789ULL;
+  ]], [[
+    return __builtin_popcount(x) + __builtin_popcountll(y);
+  ]])],[
+    AC_DEFINE(BX_HAVE___BUILTIN_POPCOUNT, 1, [Define to 1 if you have the '__builtin_popcount' and '__builtin_popcountll' functions.])
+    AC_MSG_RESULT(yes)
+  ],[
+    AC_MSG_RESULT(no)
+  ])
   dnl check C++ compiler for native 128-bit integer types, division requires runtime library support
   AC_MSG_CHECKING(for __int128)
   AC_LANG_PUSH([C++])
@@ -255,6 +291,9 @@ else
   AC_DEFINE(BX_HAVE_USLEEP, 0)
   AC_DEFINE(BX_HAVE___BUILTIN_BSWAP32, 0)
   AC_DEFINE(BX_HAVE___BUILTIN_BSWAP64, 0)
+  AC_DEFINE(BX_HAVE___BUILTIN_CLZ, 0)
+  AC_DEFINE(BX_HAVE___BUILTIN_CTZ, 0)
+  AC_DEFINE(BX_HAVE___BUILTIN_POPCOUNT, 0)
   AC_DEFINE(BX_HAVE_INT128, 0)
   AC_DEFINE(BX_HAVE_TMPFILE64, 0)
   AC_DEFINE(BX_HAVE_FSEEK64, 0)

@@ -37,22 +37,31 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef opts_GCC_h
 #define opts_GCC_h 1
 
-#ifdef INLINE
-
 #include <stdint.h>
+#include "config.h"
 #include "primitiveTypes.h"
+#include "softfloat_types.h"
+
+// enable the optimizations according to the compiler features detected by configure
+#if BX_HAVE___BUILTIN_CLZ
+#define SOFTFLOAT_BUILTIN_CLZ 1
+#endif
+
+#if BX_HAVE_INT128
+#define SOFTFLOAT_INTRINSIC_INT128 1
+#endif
 
 #ifdef SOFTFLOAT_BUILTIN_CLZ
 
-INLINE uint8_t softfloat_countLeadingZeros16(uint16_t a)
+BX_CPP_INLINE uint8_t softfloat_countLeadingZeros16(uint16_t a)
     { return a ? __builtin_clz(a) - 16 : 16; }
 #define softfloat_countLeadingZeros16 softfloat_countLeadingZeros16
 
-INLINE uint8_t softfloat_countLeadingZeros32(uint32_t a)
+BX_CPP_INLINE uint8_t softfloat_countLeadingZeros32(uint32_t a)
     { return a ? __builtin_clz(a) : 32; }
 #define softfloat_countLeadingZeros32 softfloat_countLeadingZeros32
 
-INLINE uint8_t softfloat_countLeadingZeros64(uint64_t a)
+BX_CPP_INLINE uint8_t softfloat_countLeadingZeros64(uint64_t a)
     { return a ? __builtin_clzll(a) : 64; }
 #define softfloat_countLeadingZeros64 softfloat_countLeadingZeros64
 
@@ -60,32 +69,38 @@ INLINE uint8_t softfloat_countLeadingZeros64(uint64_t a)
 
 #ifdef SOFTFLOAT_INTRINSIC_INT128
 
-INLINE struct uint128 softfloat_mul64ByShifted32To128(uint64_t a, uint32_t b)
+BX_CPP_INLINE struct uint128 softfloat_mul64ByShifted32To128(uint64_t a, uint32_t b)
 {
-    union { unsigned __int128 ui; struct uint128 s; } uZ;
-    uZ.ui = (unsigned __int128) a * ((uint64_t) b<<32);
-    return uZ.s;
+    unsigned __int128 ui = (unsigned __int128) a * ((uint64_t) b<<32);
+    struct uint128 z;
+    z.v0  = (uint64_t) ui;
+    z.v64 = (uint64_t) (ui>>64);
+    return z;
 }
 #define softfloat_mul64ByShifted32To128 softfloat_mul64ByShifted32To128
 
-INLINE struct uint128 softfloat_mul64To128(uint64_t a, uint64_t b)
+BX_CPP_INLINE struct uint128 softfloat_mul64To128(uint64_t a, uint64_t b)
 {
-    union { unsigned __int128 ui; struct uint128 s; } uZ;
-    uZ.ui = (unsigned __int128) a * b;
-    return uZ.s;
+    unsigned __int128 ui = (unsigned __int128) a * b;
+    struct uint128 z;
+    z.v0  = (uint64_t) ui;
+    z.v64 = (uint64_t) (ui>>64);
+    return z;
 }
 #define softfloat_mul64To128 softfloat_mul64To128
 
-INLINE
+BX_CPP_INLINE
 struct uint128 softfloat_mul128By32(uint64_t a64, uint64_t a0, uint32_t b)
 {
-    union { unsigned __int128 ui; struct uint128 s; } uZ;
-    uZ.ui = ((unsigned __int128) a64<<64 | a0) * b;
-    return uZ.s;
+    unsigned __int128 ui = ((unsigned __int128) a64<<64 | a0) * b;
+    struct uint128 z;
+    z.v0  = (uint64_t) ui;
+    z.v64 = (uint64_t) (ui>>64);
+    return z;
 }
 #define softfloat_mul128By32 softfloat_mul128By32
 
-INLINE
+BX_CPP_INLINE
 void
  softfloat_mul128To256M(uint64_t a64, uint64_t a0, uint64_t b64, uint64_t b0, uint64_t *zPtr)
 {
@@ -104,8 +119,6 @@ void
     zPtr[indexWord(4, 3)] = z128>>64;
 }
 #define softfloat_mul128To256M softfloat_mul128To256M
-
-#endif
 
 #endif
 
