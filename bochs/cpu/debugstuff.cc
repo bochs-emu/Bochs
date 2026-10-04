@@ -364,13 +364,12 @@ void BX_CPU_C::debug(bx_address offset)
   else
 #endif // BX_SUPPORT_X86_64
   {
-    BX_INFO(("| EIP=%08x (%08x)", (unsigned) EIP,
-      (unsigned) BX_CPU_THIS_PTR prev_rip));
+    BX_INFO(("| EIP=%08x (%08x)", (Bit32u) EIP, (Bit32u) BX_CPU_THIS_PTR prev_rip));
     BX_INFO(("| CR0=0x%08x: %s", cr0, stringify_CR0(cr0, s)));
-    BX_INFO(("| CR2=0x%08x", (unsigned) BX_CPU_THIS_PTR cr2));
-    BX_INFO(("| CR3=0x%08x", (unsigned) BX_CPU_THIS_PTR cr3));
+    BX_INFO(("| CR2=0x%08x", (Bit32u) BX_CPU_THIS_PTR cr2));
+    BX_INFO(("| CR3=0x%08x", (Bit32u) BX_CPU_THIS_PTR cr3));
 #if BX_CPU_LEVEL >= 4
-    BX_INFO(("| CR4=0x%08x: %s", cr4, stringify_CR4(cr4, s)));
+    BX_INFO(("| CR4=0x%08x: %s", (Bit32u) cr4, stringify_CR4(cr4, s)));
 #endif
   }
 
