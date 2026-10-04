@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -250,7 +250,7 @@ int bx_soundlow_waveout_win_c::output(int length, Bit8u data[])
   LPWAVEHDR waveOutHdr = WaveOutHdrs[NextHeader];
   HANDLE headerDoneEvent = HeaderDoneEvents[NextHeader];
 
-  if (length != waveOutHdr->dwBufferLength) {
+  if (length != (int)waveOutHdr->dwBufferLength) {
     BX_ERROR(("Wrong packet length %d, expected %d", length, waveOutHdr->dwBufferLength));
     BX_UNLOCK(waveout_mutex);
     return BX_SOUNDLOW_OK;

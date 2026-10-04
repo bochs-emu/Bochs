@@ -1389,8 +1389,6 @@ const char *usb_msd_device_c::cdrom_path_handler(bx_param_string_c *param, bool 
         val = oldval;
         BX_ERROR(("cdrom tray locked: path change failed"));
       }
-    } else {
-      BX_PANIC(("cdrom_path_handler: cdrom not found"));
     }
   }
   return val;
@@ -1409,8 +1407,6 @@ Bit64s usb_msd_device_c::cdrom_status_handler(bx_param_c *param, bool set, Bit64
         BX_ERROR(("cdrom tray locked: eject failed"));
         return BX_INSERTED;
       }
-    } else {
-      BX_PANIC(("cdrom_status_handler: cdrom not found"));
     }
   }
   return val;

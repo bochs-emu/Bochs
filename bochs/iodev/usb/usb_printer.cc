@@ -392,8 +392,6 @@ const char *usb_printer_device_c::printfile_handler(bx_param_string_c *param, bo
       } else {
         printer->s.fname[0] = 0;
       }
-    } else {
-      BX_PANIC(("printfile_handler: printer not found"));
     }
   }
   return val;

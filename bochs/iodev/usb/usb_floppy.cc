@@ -1346,8 +1346,6 @@ const char *usb_floppy_device_c::floppy_path_handler(bx_param_string_c *param, b
     floppy = (usb_floppy_device_c*) param->get_parent()->get_device_param();
     if (floppy != NULL) {
       floppy->s.status_changed = 1;
-    } else {
-      BX_PANIC(("floppy_path_handler: floppy not found"));
     }
   }
   return val;
@@ -1361,8 +1359,6 @@ Bit64s usb_floppy_device_c::floppy_param_handler(bx_param_c *param, bool set, Bi
     floppy = (usb_floppy_device_c*) param->get_parent()->get_device_param();
     if (floppy != NULL) {
       floppy->s.status_changed = 1;
-    } else {
-      BX_PANIC(("floppy_status_handler: floppy not found"));
     }
   }
   return val;
