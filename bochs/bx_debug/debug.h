@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -225,6 +225,8 @@ typedef enum {
 #define BX_DBG_PENDING_IRQ 2
 
 BOCHSAPI void bx_debug_break(void);
+BOCHSAPI void bx_dbg_request_activation(unsigned cpu, const char *reason);
+void bx_dbg_activate(void);
 
 BOCHSAPI_MSVCONLY void bx_dbg_exit(int code);
 #if BX_DBG_EXTENSIONS

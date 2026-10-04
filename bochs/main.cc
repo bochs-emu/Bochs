@@ -322,6 +322,12 @@ void print_statistics_tree(bx_param_c *node, int level)
 
 int bxmain(void)
 {
+#if BX_DEBUGGER
+  // the internal debugger could be activated at any time during simulation,
+  // the stream buffering could be changed only before any I/O on the stream
+  setbuf(stdout, NULL);
+  setbuf(stderr, NULL);
+#endif
   bx_set_sys_timer_resolution();
   bx_init_realtime64_usec();
 #ifdef HAVE_LOCALE_H
@@ -1041,9 +1047,14 @@ static void bx_sim_loop(void)
       BX_CPU(0)->cpu_loop();
       if (bx_pc_system.kill_bochs_request)
         break;
+#if BX_DEBUGGER
+      if (bx_dbg.activation_request)
+        break;
+#endif
     }
     // for one processor, the only reason for cpu_loop to return is
-    // that kill_bochs_request was set by the GUI interface.
+    // that kill_bochs_request was set by the GUI interface or
+    // internal debugger activation was requested.
   }
 #if BX_SUPPORT_SMP
   else {
@@ -1085,6 +1096,15 @@ static void bx_sim_loop(void)
 
        if (bx_pc_system.kill_bochs_request)
          break;
+#if BX_DEBUGGER
+       if (bx_dbg.activation_request) {
+         // leave immediately, processors which return from cpu_run_trace()
+         // without executing would be accounted as halted, sync the time
+         // for already executed instructions
+         BX_TICKN(executed / BX_SMP_PROCESSORS);
+         break;
+       }
+#endif
     }
   }
 #endif /* BX_SUPPORT_SMP */
@@ -1165,6 +1185,12 @@ int bx_begin_simulation(int argc, char *argv[])
 #endif
     {
       bx_sim_loop();
+#if BX_DEBUGGER
+      if (!bx_pc_system.kill_bochs_request && bx_dbg.activation_request) {
+        // the internal debugger will take control
+        bx_dbg_activate();
+      }
+#endif
     }
   }
 

@@ -5223,9 +5223,14 @@ Note: Windows XP ntldr can cause problems with XCHGW %BX, %BX
 <screen>
   magic_break: enabled=1
 </screen>
-This enables the "magic breakpoint" feature when using the debugger.
-The useless cpu instruction XCHGW REGW, REGW causes Bochs to enter the
+This enables the "magic breakpoint" feature in Bochs compiled with the internal
+debugger. The useless cpu instruction XCHGW REGW, REGW causes Bochs to enter the
 debugger mode. This might be useful for software development.
+If Bochs was started without the debugger enabled (no <option>-dbg</option>
+command line option), the magic breakpoint activates the internal debugger
+and the simulation continues in the debugger mode.
+Note: the magic breakpoint is no longer ignored when Bochs is started without
+<option>-dbg</option>, use <option>enabled=0</option> to disable it.
 <screen>
   cx dx bx sp bp si di
 </screen>

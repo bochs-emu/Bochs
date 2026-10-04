@@ -1284,6 +1284,7 @@ public: // for now...
   }
 
 #define BX_ASYNC_EVENT_STOP_TRACE (1<<31)
+#define BX_ASYNC_EVENT_DEBUGGER_REQUEST (1<<30)
 
   bool  in_smm;
   unsigned cpu_mode;

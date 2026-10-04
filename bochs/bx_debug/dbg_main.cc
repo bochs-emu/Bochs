@@ -124,9 +124,6 @@ void bx_dbg_init(void)
 
 int bx_dbg_main(void)
 {
-  setbuf(stdout, NULL);
-  setbuf(stderr, NULL);
-
   bx_dbg_exit_called = 0;
 
   const char *debugger_log_filename = SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr();
@@ -175,7 +172,13 @@ int bx_dbg_main(void)
     last_cpu_mode[cpu] = 0;
   }
 
-  switch_dbg_cpu(0);
+  // select the CPU which requested the debugger activation (CPU0 by default)
+  switch_dbg_cpu(bx_dbg.activation_cpu);
+
+  if (bx_dbg.activation_reason != NULL) {
+    dbg_printf("(%u) Debugger activated: %s\n", bx_dbg.activation_cpu, bx_dbg.activation_reason);
+    bx_dbg.activation_reason = NULL;
+  }
 
   // finally, call the usual function to print the disassembly
   dbg_printf("Next at t=" FMT_LL "d\n", bx_pc_system.time_ticks());
@@ -432,6 +435,68 @@ void CDECL bx_debug_ctrlc_handler(int signum)
 void bx_debug_break()
 {
   bx_guard.interrupt_requested = true;
+}
+
+// Request to activate the internal debugger when Bochs is running without
+// it. The CPU loop returns on the next instruction boundary and the debugger
+// is activated by bx_dbg_activate() called from the simulation main loop.
+void bx_dbg_request_activation(unsigned cpu, const char *reason)
+{
+  if (bx_dbg.debugger_active) {
+    bx_debug_break();
+    return;
+  }
+
+  // the debugger cannot be activated at runtime with these display libraries:
+  // wx forces the gui debugger and term sets up the debugger terminal only
+  // when the debugger is active on startup
+  const char *display = SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->get_selected();
+  if (SIM->is_wx_selected() || !strcmp(display, "term")) {
+    static bool warned = false;
+    if (! warned) {
+      BX_ERROR(("debugger activation (%s) ignored: not supported with '%s' display library", reason, display));
+      warned = true;
+    }
+    return;
+  }
+
+  // keep the first request if several CPUs requested activation
+  if (bx_dbg.activation_request) return;
+
+  bx_dbg.activation_cpu = cpu;
+  bx_dbg.activation_reason = reason;
+  bx_dbg.activation_request = true;
+
+  for (int n=0; n<BX_SMP_PROCESSORS; n++) {
+    BX_CPU(n)->async_event |= BX_ASYNC_EVENT_DEBUGGER_REQUEST;
+  }
+}
+
+// Activate the internal debugger requested by bx_dbg_request_activation(),
+// called when the CPU loop is not running
+void bx_dbg_activate(void)
+{
+  BX_ASSERT(! bx_dbg.debugger_active);
+
+  bx_dbg.activation_request = false;
+  bx_dbg.debugger_active = true;
+  bx_guard.interrupt_requested = false;
+
+  SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set_enabled(1);
+
+  for (int n=0; n<BX_SMP_PROCESSORS; n++) {
+    BX_CPU(n)->async_event &= ~BX_ASYNC_EVENT_DEBUGGER_REQUEST;
+    // stop reason could be left stale by the CPU loop running without the debugger
+    BX_CPU(n)->stop_reason = (BX_CPU(n)->activity_state != BX_CPU_C::BX_ACTIVITY_STATE_ACTIVE) ? STOP_CPU_HALTED : STOP_NO_REASON;
+    // the fetch window was established without the debugger, force prefetch()
+    // to recompute the code breakpoints page filter for it
+    BX_CPU(n)->invalidate_prefetch_q();
+  }
+
+  BX_INFO(("[" FMT_LL "d] Debugger activated on CPU%u: %s",
+    bx_pc_system.time_ticks(), bx_dbg.activation_cpu, bx_dbg.activation_reason));
+
+  bx_dbg_main();
 }
 
 void bx_dbg_exit(int code)
