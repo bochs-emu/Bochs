@@ -358,7 +358,7 @@ void set_mouse_capture(bool enable)
 }
 
 #if BX_SHOW_IPS
-#if defined(__MINGW32__) || defined(_MSC_VER)
+#if defined(__MINGW32__) || defined(_MSC_VER) || defined(WIN32)
 Uint32 sdlTimer(Uint32 interval, void *param)
 {
   bx_show_ips_handler();
