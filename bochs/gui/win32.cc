@@ -216,6 +216,9 @@ void create_vga_font(void);
 void DrawBitmap(HDC, HBITMAP, int, int, int, int, int, int, Bit8u, Bit8u);
 void updateUpdated(int,int,int,int);
 static void win32_toolbar_click(int x);
+#if BX_DEBUGGER
+static void win32_focus_debugger_console(void);
+#endif
 
 Bit32u win32_to_bx_key[2][0x100] =
 {
@@ -1111,6 +1114,11 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       EnterCriticalSection(&stInfo.keyCS);
       enq_key_event(LOWORD(wParam)-101, TOOLBAR_CLICKED);
       LeaveCriticalSection(&stInfo.keyCS);
+#if BX_DEBUGGER
+      if ((unsigned)(LOWORD(wParam)-101) == bx_gui->get_debugger_headerbar_id()) {
+        win32_focus_debugger_console();
+      }
+#endif
     }
     break;
 
@@ -1421,6 +1429,7 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
           if ((hbar_id < (unsigned) win32_toolbar_entries) &&
               SendMessage(hwndTB, TB_ISBUTTONENABLED, hbar_id + 101, 0)) {
             toolbar_cmd = BX_TOOLBAR_DEBUGGER;
+            win32_focus_debugger_console();
           }
 #endif
         } else if (wParam == 'F') {
@@ -2211,6 +2220,23 @@ void win32_toolbar_click(int x)
     win32_toolbar_entry[x].f();
   }
 }
+
+#if BX_DEBUGGER
+// Bring the console window with the debugger command line to the foreground.
+// Called in the GUI thread when the debugger button is pressed (Windows lets
+// only the foreground application change the foreground window). Works with
+// the classic Windows console only, terminals like mintty or Windows Terminal
+// are not handled yet.
+void win32_focus_debugger_console(void)
+{
+  if (SIM->has_debug_gui()) return; // commands are entered in the gui debugger
+
+  HWND hwnd = GetConsoleWindow();
+  if ((hwnd != NULL) && IsWindowVisible(hwnd)) {
+    SetForegroundWindow(hwnd);
+  }
+}
+#endif
 
 void bx_win32_gui_c::mouse_enabled_changed_specific(bool val)
 {

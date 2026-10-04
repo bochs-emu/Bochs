@@ -5788,7 +5788,10 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
   <xref linkend="internal-debugger">). If the debugger is active and the simulation
   is running, it breaks into the debugger like pressing Ctrl-C in the console.
   The button is disabled while the debugger waits for a command. Activating the
-  debugger releases the mouse capture.
+  debugger releases the mouse capture. When Bochs runs in a classic Windows
+  console, the button also brings the console window with the debugger command
+  line to the foreground (not yet with other terminals like mintty or Windows
+  Terminal).
 </para>
 </listitem>
 <listitem>
