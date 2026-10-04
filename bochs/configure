@@ -22221,6 +22221,55 @@ esac
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.beam \
     conftest$ac_exeext conftest.$ac_ext
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: checking for __int128" >&5
+printf %s "checking for __int128... " >&6; }
+  ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
+  cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+    volatile unsigned long long x = 0x123456789abcdefULL, y = 0xfedcba987654321ULL;
+
+int
+main (void)
+{
+
+    unsigned __int128 a = (unsigned __int128) x * y;
+    signed __int128 b = (signed __int128) a >> 3;
+    return (int) (a / y) + (int) (a % y) + (int) (b / -5) + (int) (b % 7);
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_cxx_try_link "$LINENO"
+then :
+
+
+printf '%s\n' "#define BX_HAVE_INT128 1" >>confdefs.h
+
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+printf '%s\n' "yes" >&6; }
+
+else case e in #(
+  e)
+    { printf '%s\n' "$as_me:${as_lineno-$LINENO}: result: no" >&5
+printf '%s\n' "no" >&6; }
+   ;;
+esac
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext conftest.$ac_ext
+  ac_ext=c
+ac_cpp='$CPP $CPPFLAGS'
+ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_c_compiler_gnu
+
 
   for ac_func in tmpfile64
 do :
@@ -22289,6 +22338,8 @@ else
   printf '%s\n' "#define BX_HAVE___BUILTIN_BSWAP32 0" >>confdefs.h
 
   printf '%s\n' "#define BX_HAVE___BUILTIN_BSWAP64 0" >>confdefs.h
+
+  printf '%s\n' "#define BX_HAVE_INT128 0" >>confdefs.h
 
   printf '%s\n' "#define BX_HAVE_TMPFILE64 0" >>confdefs.h
 

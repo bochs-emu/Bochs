@@ -222,6 +222,22 @@ if test "$MSVC_TARGET" = 0; then
   ],[
     AC_MSG_RESULT(no)
   ])
+  dnl check C++ compiler for native 128-bit integer types, division requires runtime library support
+  AC_MSG_CHECKING(for __int128)
+  AC_LANG_PUSH([C++])
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+    volatile unsigned long long x = 0x123456789abcdefULL, y = 0xfedcba987654321ULL;
+  ]], [[
+    unsigned __int128 a = (unsigned __int128) x * y;
+    signed __int128 b = (signed __int128) a >> 3;
+    return (int) (a / y) + (int) (a % y) + (int) (b / -5) + (int) (b % 7);
+  ]])],[
+    AC_DEFINE(BX_HAVE_INT128, 1, [Define to 1 if the compiler supports native __int128 types.])
+    AC_MSG_RESULT(yes)
+  ],[
+    AC_MSG_RESULT(no)
+  ])
+  AC_LANG_POP([C++])
   AC_CHECK_FUNCS(tmpfile64, AC_DEFINE(BX_HAVE_TMPFILE64))
   AC_CHECK_FUNCS(fseek64, AC_DEFINE(BX_HAVE_FSEEK64))
   AC_CHECK_FUNCS(fseeko64, AC_DEFINE(BX_HAVE_FSEEKO64))
@@ -239,6 +255,7 @@ else
   AC_DEFINE(BX_HAVE_USLEEP, 0)
   AC_DEFINE(BX_HAVE___BUILTIN_BSWAP32, 0)
   AC_DEFINE(BX_HAVE___BUILTIN_BSWAP64, 0)
+  AC_DEFINE(BX_HAVE_INT128, 0)
   AC_DEFINE(BX_HAVE_TMPFILE64, 0)
   AC_DEFINE(BX_HAVE_FSEEK64, 0)
   AC_DEFINE(BX_HAVE_FSEEKO64, 0)
