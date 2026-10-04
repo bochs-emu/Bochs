@@ -822,9 +822,7 @@ BX_CPP_INLINE void fp8_fixpoint_mul_add(Bit64s s1, Bit64s s2, Bit128s *sop)
 {
   if (s1 == 0 || s2 == 0) return;
 
-  Bit128s product;
-  long_imul(&product, s1, s2);
-  long_add((Bit128u*) sop, (Bit128u*) &product);
+  *sop += (Bit128s) s1 * s2;
 }
 
 // add infinity of given sign to the infinity accumulation state:
@@ -882,9 +880,7 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::tdpfp8ps_execute(bxInstruction_c *i, bool 
       bool nan = f32_isNaN(srcdest);
       int inf_state = BX_FP8_NO_INF;
 
-      Bit128s sop;
-      sop.lo = 0;
-      sop.hi = 0;
+      Bit128s sop = 0;
 
       for (unsigned k=0; k < max_k; k++) {
         for (unsigned e=0; e < 4; e++) {

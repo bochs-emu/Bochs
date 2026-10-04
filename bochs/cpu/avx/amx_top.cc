@@ -150,36 +150,30 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TOP4BUUD_TnnnWdqHdq(bxInstruction_c *i) { 
  * MX INT8/FP8 Rank-4 Outer Products - shared fixed-point-to-FP32 conversion.
  * Spec Section 16.5: left-normalize a signed 128-bit fixed-point magnitude so
  * its J-bit lands at bit 126, giving fixed guard/round/sticky bit positions,
- * then round to nearest-even with FTZ on underflow. Built on the existing
- * Bit128u/Bit128s hi:lo pair and long_neg()/long_shl_count() from wide_int.h.
+ * then round to nearest-even with FTZ on underflow.
  * ==========================================================================
  */
 float32 convert_fixpoint128_scaled_to_fp32_ftz_rne(Bit128s x, int adjust)
 {
-  if (x.lo == 0 && x.hi == 0) return 0;
+  if (x == 0) return 0;
 
-  bool sign = (x.hi < 0);
+  bool sign = (x < 0);
 
-  Bit128u magnitude;
-  magnitude.lo = x.lo;
-  magnitude.hi = (Bit64u) x.hi;
-  if (sign) long_neg((Bit128s*) &magnitude);
+  Bit128u magnitude = sign ? -(Bit128u) x : (Bit128u) x;
 
-  // bit126 of the 128-bit value == bit62 of the hi half (126-64).
   // The magnitude of the sums of products is always below 2^126, so the
   // normalization is a left shift by (leading zeros - 1).
-  unsigned lz = magnitude.hi ? lzcntq(magnitude.hi) : 64 + lzcntq(magnitude.lo);
+  unsigned lz = GET128H(magnitude) ? lzcntq(GET128H(magnitude)) : 64 + lzcntq(GET128L(magnitude));
   unsigned shift = lz - 1;
   int Jbit_position = 126 - (int) shift;
-  long_shl_count(&magnitude, shift);
+  magnitude <<= shift;
 
-  // bits[101:0] straddle both halves: all of lo, plus hi bits[37:0].
-  bool sticky = (magnitude.lo != 0) || ((magnitude.hi & ((BX_CONST64(1) << 38) - 1)) != 0);
-  bool Gbit = (bool)((magnitude.hi >> 38) & 1); // bit102 -> hi bit38
-  bool Lbit = (bool)((magnitude.hi >> 39) & 1); // bit103 -> hi bit39
-  bool RndAdd = Gbit && (Lbit || sticky);
+  bool sticky = (magnitude & (((Bit128u) 1 << 102) - 1)) != 0; // bits[101:0]
+  bool Gbit = (bool)(GET128L(magnitude >> 102) & 1); // bit102
+  bool Lbit = (bool)(GET128L(magnitude >> 103) & 1); // bit103
+  bool RndAdd = Gbit & (Lbit | sticky);
 
-  Bit32u Mantissa = (Bit32u)(magnitude.hi >> 39); // bits[126:103] -> 24 bits
+  Bit32u Mantissa = (Bit32u) GET128L(magnitude >> 103); // bits[126:103] -> 24 bits
   Bit32u RndMantissa = Mantissa + (RndAdd ? 1 : 0);
   bool Ovf = (RndMantissa >> 24) != 0; // rounding carry into the exponent
 
@@ -256,12 +250,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TOP4MXBSSPS_TnnnWdqHdqIb(bxInstruction_c *
         sop += (Bit64s)((Bit32s) a * (Bit32s) b);
       }
 
-      Bit128s sop128;
-      sop128.lo = (Bit64u) sop;
-      sop128.hi = (sop < 0) ? (Bit64s) BX_CONST64(-1) : (Bit64s) 0; // sign-extend
-
       int exp_adjust = -12 + (int) src1_scale + (int) src2_scale - 254;
-      float32 sop_fp32 = convert_fixpoint128_scaled_to_fp32_ftz_rne(sop128, exp_adjust);
+      float32 sop_fp32 = convert_fixpoint128_scaled_to_fp32_ftz_rne(sop, exp_adjust);
 
       float32 srcdest = f32_denormal_to_zero(tdst->row[row].vmm32u(col));
       tdst->row[row].vmm32u(col) = f32_add(srcdest, sop_fp32, &status);
@@ -307,8 +297,8 @@ Bit64s convert_hf8_to_fixpoint64(Bit8u fp8_byte)
 // Rank-4 MX FP8 outer product subtile, the FP8 sub-elements are converted to
 // fixed point by the caller. A single fixed-point product of two FP8-derived
 // Bit64s values can exceed 64 bits (e.g. BF8 magnitude up to 7<<30, squared ~2^66),
-// so the multiply goes through long_imul() into a genuine 128-bit product,
-// accumulated via long_add(). Spec Section 14.1.6 "op4mxf8_subtile".
+// so the multiply produces a genuine 128-bit product, accumulated in 128-bit.
+// Spec Section 14.1.6 "op4mxf8_subtile".
 static float32 op4mxf8_subtile(float32 srcdest, const Bit64s *src1_fixpoint, Bit8u src1_scale,
                                                 const Bit64s *src2_fixpoint, Bit8u src2_scale,
                                                 int factor, softfloat_status_t *status)
@@ -316,14 +306,10 @@ static float32 op4mxf8_subtile(float32 srcdest, const Bit64s *src1_fixpoint, Bit
   if (src1_scale == 0xFF || src2_scale == 0xFF)
     return 0x7FC00000u; // E8M0 NaN -> QNaN_Indefinite (positive sign, confirmed via SDE)
 
-  Bit128s sop;
-  sop.lo = 0;
-  sop.hi = 0;
+  Bit128s sop = 0;
 
   for (unsigned k=0; k < 4; k++) {
-    Bit128s product;
-    long_imul(&product, src1_fixpoint[k], src2_fixpoint[k]);
-    long_add((Bit128u*) &sop, (Bit128u*) &product);
+    sop += (Bit128s) src1_fixpoint[k] * src2_fixpoint[k];
   }
 
   // Combined exponent adjustment: fp8 fixpoint correction + E8M0 scale shifts.

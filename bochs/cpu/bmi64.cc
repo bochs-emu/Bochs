@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2018 Stanislav Shwartsman
+//   Copyright (c) 2011-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -51,16 +51,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MULX_GqBqEqR(bxInstruction_c *i)
   Bit64u op1_64 = RDX;
   Bit64u op2_64 = BX_READ_64BIT_REG(i->src2());
 
-  Bit128u product_128;
+  Bit128u product_128 = (Bit128u) op1_64 * op2_64;
 
-  // product_128 = ((Bit128u) op1_64) * ((Bit128u) op2_64);
-  // product_64l = (Bit64u) (product_128 & 0xFFFFFFFFFFFFFFFF);
-  // product_64h = (Bit64u) (product_128 >> 64);
-
-  long_mul(&product_128,op1_64,op2_64);
-
-  BX_WRITE_64BIT_REG(i->src1(), product_128.lo);
-  BX_WRITE_64BIT_REG(i->dst(),  product_128.hi);
+  BX_WRITE_64BIT_REG(i->src1(), GET128L(product_128));
+  BX_WRITE_64BIT_REG(i->dst(),  GET128H(product_128));
 
   BX_NEXT_INSTR(i);
 }

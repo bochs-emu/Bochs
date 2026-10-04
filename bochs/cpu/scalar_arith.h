@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2014 Stanislav Shwartsman
+//   Copyright (c) 2014-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -35,40 +35,40 @@ BX_CPP_INLINE unsigned parity_byte(Bit8u val_8)
 
 BX_CPP_INLINE unsigned tzcntw(Bit16u val_16)
 {
-  Bit16u mask = 0x1;
+  if (val_16 == 0) return 16;
+
   unsigned count = 0;
-
-  while ((val_16 & mask) == 0 && mask) {
-    mask <<= 1;
-    count++;
-  }
-
+  if ((val_16 & 0x00ff) == 0) { count += 8; val_16 >>= 8; }
+  if ((val_16 & 0x000f) == 0) { count += 4; val_16 >>= 4; }
+  if ((val_16 & 0x0003) == 0) { count += 2; val_16 >>= 2; }
+  if ((val_16 & 0x0001) == 0) { count += 1; }
   return count;
 }
 
 BX_CPP_INLINE unsigned tzcntd(Bit32u val_32)
 {
-  Bit32u mask = 0x1;
+  if (val_32 == 0) return 32;
+
   unsigned count = 0;
-
-  while ((val_32 & mask) == 0 && mask) {
-    mask <<= 1;
-    count++;
-  }
-
+  if ((val_32 & 0x0000ffff) == 0) { count += 16; val_32 >>= 16; }
+  if ((val_32 & 0x000000ff) == 0) { count +=  8; val_32 >>=  8; }
+  if ((val_32 & 0x0000000f) == 0) { count +=  4; val_32 >>=  4; }
+  if ((val_32 & 0x00000003) == 0) { count +=  2; val_32 >>=  2; }
+  if ((val_32 & 0x00000001) == 0) { count +=  1; }
   return count;
 }
 
 BX_CPP_INLINE unsigned tzcntq(Bit64u val_64)
 {
-  Bit64u mask = 0x1;
+  if (val_64 == 0) return 64;
+
   unsigned count = 0;
-
-  while ((val_64 & mask) == 0 && mask) {
-    mask <<= 1;
-    count++;
-  }
-
+  if ((val_64 & BX_CONST64(0x00000000ffffffff)) == 0) { count += 32; val_64 >>= 32; }
+  if ((val_64 & BX_CONST64(0x000000000000ffff)) == 0) { count += 16; val_64 >>= 16; }
+  if ((val_64 & BX_CONST64(0x00000000000000ff)) == 0) { count +=  8; val_64 >>=  8; }
+  if ((val_64 & BX_CONST64(0x000000000000000f)) == 0) { count +=  4; val_64 >>=  4; }
+  if ((val_64 & BX_CONST64(0x0000000000000003)) == 0) { count +=  2; val_64 >>=  2; }
+  if ((val_64 & BX_CONST64(0x0000000000000001)) == 0) { count +=  1; }
   return count;
 }
 
@@ -76,14 +76,13 @@ BX_CPP_INLINE unsigned tzcntq(Bit64u val_64)
 
 BX_CPP_INLINE unsigned lzcntw(Bit16u val_16)
 {
-  Bit16u mask = 0x8000;
+  if (val_16 == 0) return 16;
+
   unsigned count = 0;
-
-  while ((val_16 & mask) == 0 && mask) {
-    mask >>= 1;
-    count++;
-  }
-
+  if ((val_16 & 0xff00) == 0) { count += 8; val_16 <<= 8; }
+  if ((val_16 & 0xf000) == 0) { count += 4; val_16 <<= 4; }
+  if ((val_16 & 0xc000) == 0) { count += 2; val_16 <<= 2; }
+  if ((val_16 & 0x8000) == 0) { count += 1; }
   return count;
 }
 
@@ -94,14 +93,14 @@ BX_CPP_INLINE unsigned most_significant_bitw(Bit16u val_16)
 
 BX_CPP_INLINE unsigned lzcntd(Bit32u val_32)
 {
-  Bit32u mask = 0x80000000;
+  if (val_32 == 0) return 32;
+
   unsigned count = 0;
-
-  while ((val_32 & mask) == 0 && mask) {
-    mask >>= 1;
-    count++;
-  }
-
+  if ((val_32 & 0xffff0000) == 0) { count += 16; val_32 <<= 16; }
+  if ((val_32 & 0xff000000) == 0) { count +=  8; val_32 <<=  8; }
+  if ((val_32 & 0xf0000000) == 0) { count +=  4; val_32 <<=  4; }
+  if ((val_32 & 0xc0000000) == 0) { count +=  2; val_32 <<=  2; }
+  if ((val_32 & 0x80000000) == 0) { count +=  1; }
   return count;
 }
 
@@ -112,14 +111,15 @@ BX_CPP_INLINE unsigned most_significant_bitd(Bit32u val_32)
 
 BX_CPP_INLINE unsigned lzcntq(Bit64u val_64)
 {
-  Bit64u mask = BX_CONST64(0x8000000000000000);
+  if (val_64 == 0) return 64;
+
   unsigned count = 0;
-
-  while ((val_64 & mask) == 0 && mask) {
-    mask >>= 1;
-    count++;
-  }
-
+  if ((val_64 & BX_CONST64(0xffffffff00000000)) == 0) { count += 32; val_64 <<= 32; }
+  if ((val_64 & BX_CONST64(0xffff000000000000)) == 0) { count += 16; val_64 <<= 16; }
+  if ((val_64 & BX_CONST64(0xff00000000000000)) == 0) { count +=  8; val_64 <<=  8; }
+  if ((val_64 & BX_CONST64(0xf000000000000000)) == 0) { count +=  4; val_64 <<=  4; }
+  if ((val_64 & BX_CONST64(0xc000000000000000)) == 0) { count +=  2; val_64 <<=  2; }
+  if ((val_64 & BX_CONST64(0x8000000000000000)) == 0) { count +=  1; }
   return count;
 }
 

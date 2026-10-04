@@ -2,8 +2,10 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2020-2026 Stanislav Shwartsman
+//   Copyright (c) 2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
+//
+//   Co-Authored-By: Claude Opus 5.5
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -22,182 +24,114 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "wide_int.h"
+#include "scalar_arith.h"
 
-void long_mul(Bit128u *product, Bit64u op1, Bit64u op2)
+#if BX_HAVE_INT128 == 0
+
+// divide 128-bit value u1:u0 by 64-bit value v, requires u1 < v so the quotient fits into 64-bit
+// Knuth algorithm D with 32-bit digits (Hacker's Delight, divlu)
+static Bit64u udiv128by64(Bit64u u1, Bit64u u0, Bit64u v, Bit64u *remainder)
 {
-  Bit32u a32 = op1>>32;
-  Bit32u a0 = op1;
-  Bit32u b32 = op2>>32;
-  Bit32u b0 = op2;
+  const Bit64u b = BX_CONST64(1) << 32;
 
-  product->lo = (Bit64u) a0 * b0;
-  Bit64u mid1 = (Bit64u) a32 * b0;
-  Bit64u mid = mid1 + (Bit64u) a0 * b32;
-  product->hi = (Bit64u) a32 * b32;
-  product->hi += (Bit64u) (mid < mid1)<<32 | mid>>32;
-  mid <<= 32;
-  product->lo += mid;
-  product->hi += (product->lo < mid);
-}
+  // normalize the divisor so its MSB is set
+  unsigned s = lzcntq(v);
+  v <<= s;
+  Bit64u vn1 = v >> 32, vn0 = v & 0xffffffff;
 
-void long_neg(Bit128s *n)
-{
-  Bit64u t = n->lo;
-  n->lo = - (Bit64s)(n->lo);
-  if (t - 1 > t) --n->hi;
-  n->hi = ~n->hi;
-}
+  Bit64u un32 = s ? ((u1 << s) | (u0 >> (64 - s))) : u1;
+  Bit64u un10 = u0 << s;
+  Bit64u un1 = un10 >> 32, un0 = un10 & 0xffffffff;
 
-void long_imul(Bit128s *product, Bit64s op1, Bit64s op2)
-{
-  unsigned s1,s2;
-
-  if ((s1 = (op1 < 0))) op1 = -op1;
-  if ((s2 = (op2 < 0))) op2 = -op2;
-  long_mul((Bit128u*)product,(Bit64u)op1,(Bit64u)op2);
-  if (s1 ^ s2)
-    long_neg(product);
-}
-
-void long_shl(Bit128u *a)
-{
-  Bit64u c = a->lo >> 63;
-  a->lo <<= 1;
-  a->hi <<= 1;
-  a->hi |= c;
-}
-
-void long_shl_count(Bit128u *a, unsigned count)
-{
-  if (count == 0) return;
-
-  if (count >= 128) {
-    a->hi = 0;
-    a->lo = 0;
-  }
-  else if (count >= 64) {
-    a->hi = a->lo << (count - 64);
-    a->lo = 0;
-  }
-  else {
-    a->hi = (a->hi << count) | (a->lo >> (64 - count));
-    a->lo <<= count;
-  }
-}
-
-void long_shr(Bit128u *a)
-{
-  Bit64u c;
-  c = a->hi << 63;
-  a->hi >>= 1;
-  a->lo >>= 1;
-  a->lo |= c;
-}
-
-unsigned long_sub(Bit128u *a,Bit128u *b)
-{
-  Bit64u t = a->lo;
-  a->lo -= b->lo;
-  int c = (a->lo > t);
-  t = a -> hi;
-  a->hi -= b->hi + c;
-  return(a->hi > t);
-}
-
-unsigned long_add(Bit128u *a,Bit128u *b)
-{
-  Bit64u t = a->lo;
-  a->lo += b->lo;
-  int c = (a->lo < t);
-  t = a -> hi;
-  a->hi += b->hi + c;
-  return(a->hi < t);
-}
-
-int long_le(Bit128u *a,Bit128u *b)
-{
-  if (a->hi == b->hi) {
-    return(a->lo <= b->lo);
-  } else {
-    return(a->hi <= b->hi);
-  }
-}
-
-void long_div(Bit128u *quotient,Bit64u *remainder,const Bit128u *dividend,Bit64u divisor)
-{
-  /*
-  n := 0;
-  while (divisor <= dividend) do
-    inc(n);
-    divisor := divisor * 2;
-  end;
-  quotient := 0;
-  while n > 0 do
-    divisor := divisor div 2;
-    quotient := quotient * 2;
-    temp := dividend;
-    dividend := dividend - divisor;
-    if temp > dividend then
-      dividend := temp;
-    else
-      inc(quotient);
-    end;
-    dec(n);
-  end;
-  remainder := dividend;
-  */
-
-  Bit128u d,acc,q,temp;
-  int n,c;
-
-  d.lo = divisor;
-  d.hi = 0;
-  acc.lo = dividend->lo;
-  acc.hi = dividend->hi;
-  q.lo = 0;
-  q.hi = 0;
-  n = 0;
-
-  while (long_le(&d,&acc) && n < 128) {
-    long_shl(&d);
-    n++;
+  // compute the first quotient digit
+  Bit64u q1 = un32 / vn1;
+  Bit64u rhat = un32 - q1 * vn1;
+  while (q1 >= b || q1 * vn0 > b * rhat + un1) {
+    q1--;
+    rhat += vn1;
+    if (rhat >= b) break;
   }
 
-  while (n > 0) {
-    long_shr(&d);
-    long_shl(&q);
-    temp.lo = acc.lo;
-    temp.hi = acc.hi;
-    c = long_sub(&acc,&d);
-    if (c) {
-      acc.lo = temp.lo;
-      acc.hi = temp.hi;
-    } else {
-      q.lo++;
+  Bit64u un21 = un32 * b + un1 - q1 * v;
+
+  // compute the second quotient digit
+  Bit64u q0 = un21 / vn1;
+  rhat = un21 - q0 * vn1;
+  while (q0 >= b || q0 * vn0 > b * rhat + un0) {
+    q0--;
+    rhat += vn1;
+    if (rhat >= b) break;
+  }
+
+  *remainder = (un21 * b + un0 - q0 * v) >> s;
+  return q1 * b + q0;
+}
+
+void bx_divmod128u(Bit128u dividend, Bit128u divisor, Bit128u *quotient, Bit128u *remainder)
+{
+  Bit64u n_hi = dividend.hi(), n_lo = dividend.lo();
+  Bit64u d_hi = divisor.hi(),  d_lo = divisor.lo();
+
+  if (d_hi == 0) {
+    if (n_hi == 0) {
+      // 64-bit by 64-bit division
+      *quotient  = n_lo / d_lo;
+      *remainder = n_lo % d_lo;
+      return;
     }
-    n--;
+
+    // 128-bit by 64-bit division
+    Bit64u q_hi = 0, r;
+    if (n_hi >= d_lo) {
+      q_hi = n_hi / d_lo;
+      n_hi = n_hi % d_lo;
+    }
+    Bit64u q_lo = udiv128by64(n_hi, n_lo, d_lo, &r);
+    *quotient  = MAKE128U(q_hi, q_lo);
+    *remainder = r;
+    return;
   }
 
-  *remainder = acc.lo;
-  quotient->lo  = q.lo;
-  quotient->hi  = q.hi;
+  // 128-bit by 128-bit division, the divisor >= 2^64 so the quotient fits into 64-bit
+  // (Hacker's Delight, divlu128)
+  if (dividend < divisor) {
+    *quotient  = 0;
+    *remainder = dividend;
+    return;
+  }
+
+  unsigned s = lzcntq(d_hi);
+  Bit64u v1 = (divisor << s).hi(); // normalized divisor high bits
+  Bit128u u1 = dividend >> 1;        // ensure no overflow in udiv128by64
+
+  Bit64u r;
+  Bit64u q = udiv128by64(u1.hi(), u1.lo(), v1, &r) >> (63 - s);
+
+  // q is the quotient or the quotient + 1
+  if (q != 0) q--;
+  Bit128u rem = dividend - Bit128u(q) * divisor;
+  if (rem >= divisor) {
+    q++;
+    rem -= divisor;
+  }
+
+  *quotient  = q;
+  *remainder = rem;
 }
 
-void long_idiv(Bit128s *quotient,Bit64s *remainder,const Bit128s *dividend,Bit64s divisor)
+// signed division truncates toward zero, the remainder has the sign of the dividend
+void bx_divmod128s(Bit128s dividend, Bit128s divisor, Bit128s *quotient, Bit128s *remainder)
 {
-  unsigned s1,s2;
-  Bit128s temp;
+  bool dividend_neg = (dividend < 0), divisor_neg = (divisor < 0);
 
-  temp = *dividend;
-  if ((s1 = (temp.hi < 0))) {
-    long_neg(&temp);
-  }
-  if ((s2 = (divisor < 0))) divisor = -divisor;
-  long_div((Bit128u*)quotient,(Bit64u*)remainder,(Bit128u*)&temp,divisor);
-  if (s1 ^ s2) {
-    long_neg(quotient);
-  }
-  if (s1) {
-    *remainder = -*remainder;
-  }
+  Bit128u n = dividend_neg ? -Bit128u(dividend) : Bit128u(dividend);
+  Bit128u d = divisor_neg  ? -Bit128u(divisor)  : Bit128u(divisor);
+
+  Bit128u q, r;
+  bx_divmod128u(n, d, &q, &r);
+
+  *quotient  = Bit128s((dividend_neg != divisor_neg) ? -q : q);
+  *remainder = Bit128s(dividend_neg ? -r : r);
 }
+
+#endif

@@ -743,9 +743,8 @@ Bit64u BX_CPU_C::get_Virtual_TSC()
       // RDTSC first computes the product of the value of the IA32_TIME_STAMP_COUNTER MSR and
       // the value of the TSC multiplier. It then shifts the value of the product right 48 bits and loads 
       // EAX:EDX with <the sum of that shifted value and the value of the TSC offset>.
-      Bit128u product_128;
-      long_mul(&product_128,tsc,BX_CPU_THIS_PTR vmcs.tsc_multiplier);
-      tsc = (product_128.lo >> 48) | (product_128.hi << 16);   // tsc = (uint64) (long128(tsc_value * tsc_multiplier) >> 48);
+      Bit128u product_128 = (Bit128u) tsc * BX_CPU_THIS_PTR vmcs.tsc_multiplier;
+      tsc = GET128L(product_128 >> 48);
     }
   }
 #endif
@@ -763,12 +762,9 @@ Bit64u BX_CPU_C::compute_physical_TSC_delay(Bit64u tsc_delay)
       // The virtual delay is multiplied by 2^48 (using a shift) to produce a 128-bit 
       // integer. That product is then divided by the TSC multiplier to produce a 64-bit integer.
       // The physical delay is that quotient.
-      Bit128u product128, quotient;
-      product128.hi = tsc_delay >> 16;
-      product128.lo = tsc_delay << 48;
-      long_div(&quotient, &tsc_delay /*just use it as temp to be destroyed*/, &product128, BX_CPU_THIS_PTR vmcs.tsc_multiplier);
-      BX_ASSERT(quotient.hi == 0);
-      tsc_delay = quotient.lo;                // tsc = Bit128(tsc_value << 48) / tsc_multiplier
+      Bit128u quotient = ((Bit128u) tsc_delay << 48) / BX_CPU_THIS_PTR vmcs.tsc_multiplier;
+      BX_ASSERT(GET128H(quotient) == 0);
+      tsc_delay = GET128L(quotient);
     }
   }
   return tsc_delay;

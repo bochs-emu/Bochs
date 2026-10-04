@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2022 Stanislav Shwartsman
+//   Copyright (c) 2022-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -45,12 +45,9 @@ BX_CPP_INLINE Bit64u pmadd52huq_scalar(Bit64u dst, Bit64u op1, Bit64u op2)
   op1 &= BX_CONST64(0x000fffffffffffff);
   op2 &= BX_CONST64(0x000fffffffffffff);
 
-  Bit128u product_128;
-  long_mul(&product_128, op1, op2);
+  Bit128u product_128 = (Bit128u) op1 * op2;
 
-  Bit64u temp = (product_128.lo >> 52) | ((product_128.hi & BX_CONST64(0x000000ffffffffff)) << 12);
-
-  return dst + temp;
+  return dst + GET128L(product_128 >> 52);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPMADD52LUQ_VdqHdqWdqR(bxInstruction_c *i)
