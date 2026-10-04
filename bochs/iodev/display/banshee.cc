@@ -3853,11 +3853,12 @@ void bx_banshee_c::blt_polygon_fill(bool force)
     }
     for (y = y0; y < y1; y++) {
       x0 = calc_line_xpos(BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_l1x, BLT.pgn_l1y, y);
-      if (y <= BLT.pgn_r0y) {
+      if (y < BLT.pgn_r0y) {
         x1 = calc_line_xpos(BLT.pgn_l0x, BLT.pgn_l0y, BLT.pgn_r0x, BLT.pgn_r0y, y);
       } else {
         x1 = calc_line_xpos(BLT.pgn_r0x, BLT.pgn_r0y, BLT.pgn_r1x, BLT.pgn_r1y, y);
       }
+      if (x1 == x0) x1++;
       if (BLT.pattern_blt) {
         if (!patrow0) {
           patline = (y + BLT.patsy) & 7;
