@@ -24,9 +24,10 @@
 /////////////////////////////////////////////////////////////////////////
 
 #include "wide_int.h"
-#include "scalar_arith.h"
 
 #if BX_HAVE_INT128 == 0
+
+#include "scalar_arith.h"
 
 // divide 128-bit value u1:u0 by 64-bit value v, requires u1 < v so the quotient fits into 64-bit
 // Knuth algorithm D with 32-bit digits (Hacker's Delight, divlu)
