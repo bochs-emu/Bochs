@@ -96,7 +96,7 @@ float16 softfloat_subMagsF16(uint16_t uiA, uint16_t uiB, struct softfloat_status
             expZ = 0;
         }
         sigZ = sigDiff<<shiftDist;
-        if (!expZ && sigDiff) {
+        if (!expZ && (sigZ < 0x0400)) {
             if (softfloat_flushUnderflowToZero(status)) {
                 softfloat_raiseFlags(status, softfloat_flag_underflow | softfloat_flag_inexact);
                 return packToF16UI(signZ, 0, 0);

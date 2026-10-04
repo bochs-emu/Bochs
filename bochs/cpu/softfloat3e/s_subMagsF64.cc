@@ -91,7 +91,7 @@ float64 softfloat_subMagsF64(uint64_t uiA, uint64_t uiB, bool signZ, struct soft
             shiftDist = expA;
             expZ = 0;
         }
-        if (!expZ && sigDiff) {
+        if (!expZ && ((sigDiff<<shiftDist) < UINT64_C(0x0010000000000000))) {
             if (softfloat_flushUnderflowToZero(status)) {
                 softfloat_raiseFlags(status, softfloat_flag_underflow | softfloat_flag_inexact);
                 return packToF64UI(signZ, 0, 0);

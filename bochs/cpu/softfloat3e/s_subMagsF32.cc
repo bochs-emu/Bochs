@@ -93,7 +93,7 @@ float32 softfloat_subMagsF32(uint32_t uiA, uint32_t uiB, struct softfloat_status
             shiftDist = expA;
             expZ = 0;
         }
-        if (!expZ && sigDiff) {
+        if (!expZ && ((sigDiff<<shiftDist) < 0x00800000)) {
             if (softfloat_flushUnderflowToZero(status)) {
                 softfloat_raiseFlags(status, softfloat_flag_underflow | softfloat_flag_inexact);
                 return packToF32UI(signZ, 0, 0);

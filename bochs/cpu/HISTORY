@@ -31,6 +31,7 @@ Changes after Bochs 3.1:
 + AVX_NE_CONVERT: VBCSTNEBF162PS/VBCSTNESH2PS opcodes were swapped (F3 vs 66 prefix) and broadcast a word instead of converted FP32 dword
 - AVX/AVX2: VPBLENDVB must #UD when encoded with VEX.W1
 - SSE4.1/AVX: DPPS/DPPD must always compute the final sum and update MXCSR flags (or raise #XM) even when broadcast mask imm8[3:0] is zero
++ SSE/AVX: FP add/sub of same-exponent operands producing exact normal result in the lowest binade was flushed to zero with MXCSR.FTZ=1 or raised spurious unmasked #U (softfloat subMags tininess check)
 - AVX/AVX-512: VEX.W1/EVEX.W1 must be ignored outside of 64-bit mode (a lot of instructions)
 - SSE/AVX: Fixed PSRLQ and PSRAVQ instructions with shift count = 64
 - SSE: PSHUFLW instruction should be supported under SSE2 instead of SSE
