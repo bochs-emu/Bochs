@@ -1272,9 +1272,12 @@ speaker: enabled=1, mode=sound, volume=8
 
 #=======================================================================
 # MAGIC_BREAK:
-# This enables the "magic breakpoint" feature when using the debugger.
-# The useless cpu instructions XCHG %REGW, %REGW causes Bochs to enter the
-# debugger mode. This might be useful for software development.
+# This enables the "magic breakpoint" feature in Bochs compiled with the
+# internal debugger. The useless cpu instructions XCHG %REGW, %REGW causes
+# Bochs to enter the debugger mode. This might be useful for software
+# development. If Bochs was started without the debugger enabled (no -dbg
+# command line option), the magic breakpoint activates the internal debugger.
+# Use enabled=0 to disable the magic breakpoint.
 #
 # You can specify multiple at once:
 #

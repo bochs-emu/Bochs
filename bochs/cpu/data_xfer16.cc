@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -22,6 +22,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "bx_debug/debug.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_EwIwM(bxInstruction_c *i)
@@ -223,8 +224,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XCHG_EwGwR(bxInstruction_c *i)
     66:87F6  | xchg si,si  | 1000011111 110 110 -> 6
     66:87FF  | xchg di,di  | 1000011111 111 111 -> 7
   */
-  if (bx_dbg.debugger_active && bx_dbg.magic_break && i->src() == i->dst() && (bx_dbg.magic_break & (1 << (i->src())))) {
-    BX_CPU_THIS_PTR magic_break = 1;
+  if (bx_dbg.magic_break && i->src() == i->dst() && (bx_dbg.magic_break & (1 << (i->src())))) {
+    if (bx_dbg.debugger_active)
+      BX_CPU_THIS_PTR magic_break = 1;
+    else
+      bx_dbg_request_activation(BX_CPU_ID, "magic breakpoint"); // activate the debugger
     BX_NEXT_INSTR(i);
   }
 #endif

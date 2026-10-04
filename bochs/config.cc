@@ -3166,7 +3166,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
     if (strncmp(params[1], "enabled=", 8)) {
       PARSE_ERR(("%s: magic_break directive malformed.", context));
     }
-    if ((params[1][8] == '0') || (!bx_dbg.debugger_active)) {
+    // magic break points also activate the debugger when it is not active
+    if (params[1][8] == '0') {
       BX_INFO(("Ignoring magic break points"));
     } else if (params[1][8] == '1') {
       bx_dbg_set_magic_bp_mask(bx_dbg_get_magic_bp_mask_from_str(params[1]));
