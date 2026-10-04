@@ -255,7 +255,7 @@ gui.o: gui.@CPP_SUFFIX@ ../iodev/iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/bitmaps/power.h ../gui/bitmaps/snapshot.h ../gui/bitmaps/copy.h \
  ../gui/bitmaps/paste.h ../gui/bitmaps/configbutton.h \
  ../gui/bitmaps/cdrom1.h ../gui/bitmaps/usb.h ../gui/bitmaps/userbutton.h \
- ../gui/bitmaps/saverestore.h sdl.h
+ ../gui/bitmaps/saverestore.h ../gui/bitmaps/debugger.h sdl.h
 keymap.o: keymap.@CPP_SUFFIX@ ../param_names.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h gui.h ../gui/siminterface.h \
  ../gui/paramtree.h keymap.h
@@ -371,7 +371,7 @@ gui.lo: gui.@CPP_SUFFIX@ ../iodev/iodev.h ../bochs.h ../config.h ../osdep.h \
  ../gui/bitmaps/power.h ../gui/bitmaps/snapshot.h ../gui/bitmaps/copy.h \
  ../gui/bitmaps/paste.h ../gui/bitmaps/configbutton.h \
  ../gui/bitmaps/cdrom1.h ../gui/bitmaps/usb.h ../gui/bitmaps/userbutton.h \
- ../gui/bitmaps/saverestore.h sdl.h
+ ../gui/bitmaps/saverestore.h ../gui/bitmaps/debugger.h sdl.h
 keymap.lo: keymap.@CPP_SUFFIX@ ../param_names.h ../bochs.h ../config.h ../osdep.h \
  ../logio.h ../misc/bswap.h gui.h ../gui/siminterface.h \
  ../gui/paramtree.h keymap.h

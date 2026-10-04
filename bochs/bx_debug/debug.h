@@ -225,6 +225,7 @@ typedef enum {
 #define BX_DBG_PENDING_IRQ 2
 
 BOCHSAPI void bx_debug_break(void);
+bool bx_dbg_activation_allowed(void);
 BOCHSAPI void bx_dbg_request_activation(unsigned cpu, const char *reason);
 void bx_dbg_activate(void);
 void bx_dbg_detach_command(void);

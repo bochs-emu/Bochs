@@ -5780,6 +5780,18 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
 </para></note>
 </listitem>
 <listitem>
+<para>debugger button</para>
+<para>
+  This button is present only if Bochs is compiled with the internal debugger
+  (currently on win32 only). If Bochs was started without the <option>-dbg</option>
+  option, it activates the internal debugger at runtime (see
+  <xref linkend="internal-debugger">). If the debugger is active and the simulation
+  is running, it breaks into the debugger like pressing Ctrl-C in the console.
+  The button is disabled while the debugger waits for a command. Activating the
+  debugger releases the mouse capture.
+</para>
+</listitem>
+<listitem>
 <para>user button</para>
 <para>
   Press this button if you want to send the keyboard shortcut defined with the
@@ -5871,6 +5883,10 @@ will not be received by the OS running in Bochs.
     <entry>Press the Config button</entry>
   </row>
   <row>
+    <entry>d</entry>
+    <entry>Press the Debugger button (win32 only)</entry>
+  </row>
+  <row>
     <entry>f</entry>
     <entry>Toggle windowed / fullscreen mode (sdl, sdl2 and win32 only)</entry>
   </row>
@@ -5944,6 +5960,12 @@ In the runtime configuration you can change the floppy/CD-ROM image or device,
 change the log options or adjust some other settings. If you have trouble with
 a specific device, you can change the log options for this device only to get
 more information (e.g. report debug messages).
+</para>
+<para>
+If Bochs is compiled with the internal debugger, the text mode runtime menu has
+the additional choice "Continue and enter debugger" and the win32 runtime dialog
+has a "Debugger" button. Both continue the simulation and activate the internal
+debugger at runtime (or break into it if it is already active).
 </para>
 </section>
 </section>
@@ -7404,12 +7426,14 @@ From here, you may use the following commands:
 </para>
 <para>
 The debugger could also be activated at runtime when Bochs was started without
-the <option>-dbg</option> option: a <link linkend="bochsopt-magicbreak">magic breakpoint</link>
+the <option>-dbg</option> option: a <link linkend="bochsopt-magicbreak">magic breakpoint</link>,
+the <link linkend="headerbar">debugger button</link> in the headerbar (win32) or
+the "Continue and enter debugger" choice of the runtime configuration
 activates the debugger and the simulation continues in the debugger mode.
 The <command>detach</command> command leaves the debugger and continues the
 simulation at full speed as if Bochs was started without the debugger.
 Breakpoints, watchpoints and other debugger settings are kept but they are
-inactive until the debugger is activated again by a magic breakpoint or a
+inactive until the debugger is activated again by one of the methods above or a
 time breakpoint (<command>sb</command>, <command>sba</command>).
 Activating the debugger at runtime is not supported with the wx and term
 display libraries and <command>detach</command> is not supported with the

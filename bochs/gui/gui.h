@@ -26,12 +26,19 @@
 // header bar and status bar stuff
 #define BX_HEADER_BAR_Y 32
 
-#if BX_USB_DEBUGGER
-  #define BX_MAX_PIXMAPS 19
-  #define BX_MAX_HEADERBAR_ENTRIES 13
+// one more pixmap and headerbar entry for the debugger button
+#if BX_DEBUGGER
+  #define BX_DEBUGGER_HB_ENTRIES 1
 #else
-  #define BX_MAX_PIXMAPS 17
-  #define BX_MAX_HEADERBAR_ENTRIES 12
+  #define BX_DEBUGGER_HB_ENTRIES 0
+#endif
+
+#if BX_USB_DEBUGGER
+  #define BX_MAX_PIXMAPS (19 + BX_DEBUGGER_HB_ENTRIES)
+  #define BX_MAX_HEADERBAR_ENTRIES (13 + BX_DEBUGGER_HB_ENTRIES)
+#else
+  #define BX_MAX_PIXMAPS (17 + BX_DEBUGGER_HB_ENTRIES)
+  #define BX_MAX_HEADERBAR_ENTRIES (12 + BX_DEBUGGER_HB_ENTRIES)
 #endif
 
 // align pixmaps towards left or right side of header bar
@@ -53,6 +60,8 @@
 #else
   #define BX_GUI_DLG_ALL          0x3F
 #endif
+// debugger button: not part of BX_GUI_DLG_ALL, each gui enables it explicitly
+#define BX_GUI_DLG_DEBUGGER     0x80
 
 // text mode blink feature
 #define BX_TEXT_BLINK_MODE      0x01
@@ -192,6 +201,9 @@ public:
   static void key_event(Bit32u key);
   static void set_text_charmap(Bit8u map, Bit8u *fbuffer);
   static Bit8u get_mouse_headerbar_id();
+#if BX_DEBUGGER
+  static Bit8u get_debugger_headerbar_id();
+#endif
 
   void init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
             unsigned x_tilesize, unsigned y_tilesize);
@@ -262,6 +274,9 @@ protected:
 #endif
   static void userbutton_handler(void);
   static void save_restore_handler(void);
+#if BX_DEBUGGER
+  static void debugger_handler(void);
+#endif
   // process clicks on the "classic" Bochs headerbar
   void headerbar_click(int x);
   // snapshot helper functions
@@ -296,6 +311,9 @@ protected:
   unsigned save_restore_bmap_id, save_restore_hbar_id;
 #if BX_USB_DEBUGGER
   unsigned usbdbg_bmap_id, usbdbg_dis_bmap_id, usbdbg_trigger_bmap_id, usbdbg_hbar_id;
+#endif
+#if BX_DEBUGGER
+  unsigned debugger_bmap_id, debugger_hbar_id;
 #endif
   // the "classic" Bochs headerbar
   unsigned bx_headerbar_entries;

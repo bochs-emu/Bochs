@@ -16,6 +16,9 @@ Changes after Bochs 3.1 release:
     (in Bochs compiled with the internal debugger). Use 'magic_break: enabled=0' to disable it.
   - Added 'detach' debugger command: leave the debugger and continue simulation at full speed without it,
     the debugger is activated again by magic breakpoint or time breakpoint
+  - The internal debugger can be activated at runtime from the GUI: new debugger button in the win32
+    headerbar (also command mode key 'd'), "Continue and enter debugger" choice in the runtime config
+    (text menu and win32 dialog). If the debugger is already active the button breaks into it.
 
 - Configure and compile
   - Bochs now require C++11 support for compilation, enforced via configure
