@@ -17,7 +17,7 @@ Changes after Bochs 3.1 release:
   - Added 'detach' debugger command: leave the debugger and continue simulation at full speed without it,
     the debugger is activated again by magic breakpoint or time breakpoint
   - The internal debugger can be activated at runtime from the GUI: new debugger button in the win32
-    headerbar (also command mode key 'd'), "Continue and enter debugger" choice in the runtime config
+    and sdl2 headerbar (also command mode key 'd'), "Continue and enter debugger" choice in the runtime config
     (text menu and win32 dialog). If the debugger is already active the button breaks into it.
   - The debugger choice of the panic / error "ask" dialog also activates the internal debugger when
     Bochs was started without -dbg (textconfig, win32, sdl2, x11). With 'panic: action=ask' this

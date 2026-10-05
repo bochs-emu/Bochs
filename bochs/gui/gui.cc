@@ -259,6 +259,8 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
   if ((BX_GUI_THIS dialog_caps & BX_GUI_DLG_DEBUGGER) && SIM->debugger_activation_allowed()) {
     BX_GUI_THIS debugger_bmap_id = create_bitmap(bx_debugger_bmap,
                           BX_DEBUGGER_BMAP_X, BX_DEBUGGER_BMAP_Y);
+    BX_GUI_THIS debugger_dis_bmap_id = create_bitmap(bx_debugger_dis_bmap,
+                          BX_DEBUGGER_BMAP_X, BX_DEBUGGER_BMAP_Y);
   } else {
     BX_GUI_THIS dialog_caps &= ~BX_GUI_DLG_DEBUGGER;
   }
@@ -757,6 +759,13 @@ void bx_gui_c::set_usbdbg_bitmap(bool trigger)
 void bx_gui_c::debugger_handler(void)
 {
   SIM->request_debugger_activation("GUI button");
+}
+
+void bx_gui_c::set_debugger_button(bool enabled)
+{
+  if (debugger_hbar_id < BX_MAX_HEADERBAR_ENTRIES) {
+    replace_bitmap(debugger_hbar_id, enabled ? debugger_bmap_id : debugger_dis_bmap_id);
+  }
 }
 #endif
 
