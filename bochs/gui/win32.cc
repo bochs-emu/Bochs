@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1402,11 +1402,11 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     if (bx_gui->command_mode_active()) {
       if (bx_gui->get_modifier_keys() == 0) {
         if (wParam == 'A') {
-          toolbar_cmd = 0; // Floppy A
+          toolbar_cmd = bx_gui->get_headerbar_id(BX_HB_FLOPPYA);
         } else if (wParam == 'B') {
-          toolbar_cmd = 1; // Floppy B
+          toolbar_cmd = bx_gui->get_headerbar_id(BX_HB_FLOPPYB);
         } else if (wParam == 'C') {
-          toolbar_cmd = 10; // Copy
+          toolbar_cmd = bx_gui->get_headerbar_id(BX_HB_COPY);
         } else if (wParam == 'F') {
           if (!saveParent) {
             set_fullscreen_mode(TRUE);
@@ -1418,21 +1418,21 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         } else if (wParam == 'M') {
           bx_gui->marklog_handler();
         } else if (wParam == 'P') {
-          toolbar_cmd = 9; // Paste
+          toolbar_cmd = bx_gui->get_headerbar_id(BX_HB_PASTE);
         } else if (wParam == 'R') {
-          toolbar_cmd = 6; // Reset
+          toolbar_cmd = bx_gui->get_headerbar_id(BX_HB_RESET);
         } else if (wParam == 'S') {
-          toolbar_cmd = 8; // Snapshot
+          toolbar_cmd = bx_gui->get_headerbar_id(BX_HB_SNAPSHOT);
         } else if (wParam == 'U') {
-          toolbar_cmd = 11; // User
+          toolbar_cmd = bx_gui->get_headerbar_id(BX_HB_USER);
         }
       } else if (bx_gui->get_modifier_keys() == BX_MOD_KEY_SHIFT) {
         if (wParam == 'C') {
-          toolbar_cmd = 7; // Config
+          toolbar_cmd = bx_gui->get_headerbar_id(BX_HB_CONFIG);
         } else if (wParam == 'P') {
-          toolbar_cmd = 4; // Power
+          toolbar_cmd = bx_gui->get_headerbar_id(BX_HB_POWER);
         } else if (wParam == 'S') {
-          toolbar_cmd = 5; // Suspend
+          toolbar_cmd = bx_gui->get_headerbar_id(BX_HB_SAVE_RESTORE);
         }
       }
       if (!keymod) {
