@@ -5792,7 +5792,7 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
 <para>debugger button</para>
 <para>
   This button is present only if Bochs is compiled with the internal debugger
-  (currently on win32 only). If Bochs was started without the <option>-dbg</option>
+  (currently win32 and sdl2). If Bochs was started without the <option>-dbg</option>
   option, it activates the internal debugger at runtime (see
   <xref linkend="internal-debugger">). If the debugger is active and the simulation
   is running, it breaks into the debugger like pressing Ctrl-C in the console.
@@ -5896,7 +5896,7 @@ will not be received by the OS running in Bochs.
   </row>
   <row>
     <entry>d</entry>
-    <entry>Press the Debugger button (win32 only)</entry>
+    <entry>Press the Debugger button (sdl2 and win32 only)</entry>
   </row>
   <row>
     <entry>f</entry>
@@ -7439,7 +7439,7 @@ From here, you may use the following commands:
 <para>
 The debugger could also be activated at runtime when Bochs was started without
 the <option>-dbg</option> option: a <link linkend="bochsopt-magicbreak">magic breakpoint</link>,
-the <link linkend="headerbar">debugger button</link> in the headerbar (win32) or
+the <link linkend="headerbar">debugger button</link> in the headerbar (win32, sdl2) or
 the "Continue and enter debugger" choice of the runtime configuration or
 the debugger choice of the <link linkend="bochsopt-logevents">panic dialog</link>
 (log action "ask", also shown for Ctrl-C in the console)

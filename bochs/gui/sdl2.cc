@@ -512,6 +512,9 @@ void bx_sdl2_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     dialog_caps |= BX_GUI_DLG_USB;
 #endif
   }
+#if BX_DEBUGGER
+  dialog_caps |= BX_GUI_DLG_DEBUGGER;
+#endif
   sdl_init_done = 1;
 }
 
@@ -783,6 +786,11 @@ void bx_sdl2_gui_c::handle_events(void)
               bx_gui->floppyB_handler();
             } else if (sdl_event.key.keysym.sym == SDLK_c) {
               bx_gui->copy_handler();
+#if BX_DEBUGGER
+            } else if ((sdl_event.key.keysym.sym == SDLK_d) &&
+                       (dialog_caps & BX_GUI_DLG_DEBUGGER)) {
+              bx_gui->debugger_handler();
+#endif
             } else if (sdl_event.key.keysym.sym == SDLK_f) {
               sdl_fullscreen_toggle = !sdl_fullscreen_toggle;
               if (sdl_fullscreen_toggle == 0) {
@@ -1336,6 +1344,20 @@ void bx_sdl2_gui_c::set_display_mode(disp_mode_t newmode)
   if (disp_mode == newmode) return;
   // remember the display mode for next time
   disp_mode = newmode;
+#if BX_DEBUGGER
+  if (newmode == DISP_MODE_SIM) {
+    // enable the debugger button before switching to fullscreen (no headerbar
+    // surface in fullscreen mode)
+    set_debugger_button(1);
+    // Events are not handled while the simulation is stopped (debugger prompt,
+    // config interface). Drop the keyboard and mouse input queued meanwhile,
+    // e.g. a click on the debugger button would break into the debugger again
+    // right after continuing.
+    SDL_PumpEvents();
+    SDL_FlushEvents(SDL_KEYDOWN, SDL_MOUSEWHEEL);
+    DEV_kbd_release_keys();
+  }
+#endif
   if ((newmode == DISP_MODE_SIM) && console_running()) {
     console_cleanup();
     return;
@@ -1354,6 +1376,12 @@ void bx_sdl2_gui_c::set_display_mode(disp_mode_t newmode)
         break;
     }
   }
+#if BX_DEBUGGER
+  if (newmode == DISP_MODE_CONFIG) {
+    // after the switch to windowed mode
+    set_debugger_button(0);
+  }
+#endif
 }
 
 
