@@ -19,6 +19,9 @@ Changes after Bochs 3.1 release:
   - The internal debugger can be activated at runtime from the GUI: new debugger button in the win32
     headerbar (also command mode key 'd'), "Continue and enter debugger" choice in the runtime config
     (text menu and win32 dialog). If the debugger is already active the button breaks into it.
+  - The debugger choice of the panic / error "ask" dialog also activates the internal debugger when
+    Bochs was started without -dbg (textconfig, win32, sdl2, x11). With 'panic: action=ask' this
+    includes Ctrl-C pressed in the console.
 
 - Configure and compile
   - Bochs now require C++11 support for compilation, enforced via configure

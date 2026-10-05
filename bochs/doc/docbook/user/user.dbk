@@ -4384,6 +4384,15 @@ and continue), report (print information to the console or log file), or ignore
 </para>
 
 <para>
+In Bochs compiled with the internal debugger the "ask" dialog also offers to
+continue in the debugger. If Bochs was started without the <option>-dbg</option>
+option, this choice activates the debugger at runtime (not supported with the
+wx and term display libraries). Pressing Ctrl-C in the console while Bochs runs
+without the debugger raises a panic, so with action=ask it shows the same
+dialog.
+</para>
+
+<para>
 It is also possible to specify the 'action' to do for each Bochs facility
 separately (e.g. crash on panics from everything except the CD-ROM, and only
 report those). See the <link linkend="logopts-by-device">log function module table</link>
@@ -7431,7 +7440,9 @@ From here, you may use the following commands:
 The debugger could also be activated at runtime when Bochs was started without
 the <option>-dbg</option> option: a <link linkend="bochsopt-magicbreak">magic breakpoint</link>,
 the <link linkend="headerbar">debugger button</link> in the headerbar (win32) or
-the "Continue and enter debugger" choice of the runtime configuration
+the "Continue and enter debugger" choice of the runtime configuration or
+the debugger choice of the <link linkend="bochsopt-logevents">panic dialog</link>
+(log action "ask", also shown for Ctrl-C in the console)
 activates the debugger and the simulation continues in the debugger mode.
 The <command>detach</command> command leaves the debugger and continues the
 simulation at full speed as if Bochs was started without the debugger.
