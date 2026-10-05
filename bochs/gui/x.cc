@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -2620,7 +2620,7 @@ int x11_ask_dialog(BxEvent *event)
   }
   if (mode == BX_LOG_DLG_ASK) {
 #if BX_DEBUGGER || BX_GDBSTUB
-    if (bx_dbg.debugger_active) {
+    if (SIM->debugger_activation_allowed()) {
       buttons.btn[i].label = "Debugger";
       buttons.btn[i].code = BX_LOG_ASK_CHOICE_ENTER_DEBUG;
       i++;

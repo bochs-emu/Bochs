@@ -786,7 +786,7 @@ BxEvent *
 textconfig_notify_callback(void *unused, BxEvent *event)
 {
   const char *log_action_ask_choices[] = { "cont", "alwayscont", "die", "abort", "debug" };
-  int log_action_n_choices = 4 + (SIM->debugger_active()||BX_GDBSTUB?1:0);
+  int log_action_n_choices = 4 + (SIM->debugger_activation_allowed()||BX_GDBSTUB?1:0);
 
   event->retcode = -1;
   switch (event->type)
@@ -811,7 +811,7 @@ textconfig_notify_callback(void *unused, BxEvent *event)
         bx_printf("  die        - stop execution now\n");
         bx_printf("  abort      - dump core %s\n", BX_HAVE_ABORT ? "" : "(Disabled)");
 #if BX_DEBUGGER
-        if (SIM->debugger_active()) {
+        if (SIM->debugger_activation_allowed()) {
           bx_printf("  debug      - continue and return to bochs debugger\n");
         }
 #endif

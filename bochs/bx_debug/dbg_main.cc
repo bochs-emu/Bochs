@@ -469,6 +469,13 @@ void bx_dbg_request_activation(unsigned cpu, const char *reason)
     return;
   }
 
+  // not before the simulation is initialized (e.g. panic dialog at startup):
+  // the CPUs may not exist yet
+  if (! SIM->get_init_done()) {
+    BX_ERROR(("debugger activation (%s) ignored: simulation not started yet", reason));
+    return;
+  }
+
   if (! bx_dbg_activation_allowed()) {
     static bool warned = false;
     if (! warned) {
