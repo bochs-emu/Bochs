@@ -1030,6 +1030,66 @@ bool load_and_init_display_lib(void)
   return (bx_gui != NULL);
 }
 
+// Run the simulation without the internal debugger, returns when the cpu loop
+// was requested to quit
+static void bx_sim_loop(void)
+{
+  if (BX_SMP_PROCESSORS == 1) {
+    // only one processor, run as fast as possible by not messing with
+    // quantums and loops.
+    while (1) {
+      BX_CPU(0)->cpu_loop();
+      if (bx_pc_system.kill_bochs_request)
+        break;
+    }
+    // for one processor, the only reason for cpu_loop to return is
+    // that kill_bochs_request was set by the GUI interface.
+  }
+#if BX_SUPPORT_SMP
+  else {
+    // SMP simulation: do a few instructions on each processor, then switch
+    // to another.  Increasing quantum speeds up overall performance, but
+    // reduces granularity of synchronization between processors.
+    // Current implementation uses dynamic quantum, each processor will
+    // execute exactly one trace then quit the cpu_loop and switch to
+    // the next processor.
+
+    static int quantum = SIM->get_param_num(BXPN_SMP_QUANTUM)->get();
+    Bit32u executed = 0, processor = 0;
+    bool run = true;
+
+    if (setjmp(BX_CPU_C::jmp_buf_env)) {
+      // can get here only from exception function or VMEXIT
+      BX_CPU(processor)->icount++;
+      run = false;
+    }
+    while (1) {
+      // do some instructions in each processor
+      if (run)
+        BX_CPU(processor)->cpu_run_trace();
+      else
+        run = true;
+
+       // see how many instruction it was able to run
+       Bit32u n = (Bit32u)(BX_CPU(processor)->get_icount() - BX_CPU(processor)->icount_last_sync);
+       if (n == 0) n = quantum; // the CPU was halted
+       executed += n;
+
+       if (++processor == BX_SMP_PROCESSORS) {
+         processor = 0;
+         BX_TICKN(executed / BX_SMP_PROCESSORS);
+         executed %= BX_SMP_PROCESSORS;
+       }
+
+       BX_CPU(processor)->icount_last_sync = BX_CPU(processor)->get_icount();
+
+       if (bx_pc_system.kill_bochs_request)
+         break;
+    }
+  }
+#endif /* BX_SUPPORT_SMP */
+}
+
 int bx_begin_simulation(int argc, char *argv[])
 {
   bx_user_quit = 0;
@@ -1104,60 +1164,7 @@ int bx_begin_simulation(int argc, char *argv[])
     else
 #endif
     {
-      if (BX_SMP_PROCESSORS == 1) {
-        // only one processor, run as fast as possible by not messing with
-        // quantums and loops.
-        while (1) {
-          BX_CPU(0)->cpu_loop();
-          if (bx_pc_system.kill_bochs_request)
-            break;
-        }
-        // for one processor, the only reason for cpu_loop to return is
-        // that kill_bochs_request was set by the GUI interface.
-      }
-#if BX_SUPPORT_SMP
-      else {
-        // SMP simulation: do a few instructions on each processor, then switch
-        // to another.  Increasing quantum speeds up overall performance, but
-        // reduces granularity of synchronization between processors.
-        // Current implementation uses dynamic quantum, each processor will
-        // execute exactly one trace then quit the cpu_loop and switch to
-        // the next processor.
-
-        static int quantum = SIM->get_param_num(BXPN_SMP_QUANTUM)->get();
-        Bit32u executed = 0, processor = 0;
-        bool run = true;
-
-        if (setjmp(BX_CPU_C::jmp_buf_env)) {
-          // can get here only from exception function or VMEXIT
-          BX_CPU(processor)->icount++;
-          run = false;
-        }
-        while (1) {
-          // do some instructions in each processor
-          if (run)
-            BX_CPU(processor)->cpu_run_trace();
-          else
-            run = true;
-
-           // see how many instruction it was able to run
-           Bit32u n = (Bit32u)(BX_CPU(processor)->get_icount() - BX_CPU(processor)->icount_last_sync);
-           if (n == 0) n = quantum; // the CPU was halted
-           executed += n;
-
-           if (++processor == BX_SMP_PROCESSORS) {
-             processor = 0;
-             BX_TICKN(executed / BX_SMP_PROCESSORS);
-             executed %= BX_SMP_PROCESSORS;
-           }
-
-           BX_CPU(processor)->icount_last_sync = BX_CPU(processor)->get_icount();
-
-           if (bx_pc_system.kill_bochs_request)
-             break;
-        }
-      }
-#endif /* BX_SUPPORT_SMP */
+      bx_sim_loop();
     }
   }
 
