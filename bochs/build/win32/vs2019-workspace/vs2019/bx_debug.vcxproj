@@ -216,6 +216,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\bx_debug\dbg_breakpoints.cc" />
+    <ClCompile Include="..\bx_debug\dbg_commands.cc" />
     <ClCompile Include="..\bx_debug\dbg_main.cc" />
     <ClCompile Include="..\bx_debug\bx_lexer.c" />
     <ClCompile Include="..\bx_debug\linux.cc" />
