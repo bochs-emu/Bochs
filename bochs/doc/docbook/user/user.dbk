@@ -4816,7 +4816,10 @@ version where this module was added.
   </row>
   <row>
     <entry>vde</entry>
-    <entry>Virtual Distributed Ethernet packetmover.
+    <entry>Virtual Distributed Ethernet packetmover. The 'ethdev' value is the
+    vde_switch socket directory (the argument of 'vde_switch -s'). If Bochs is
+    built with libvdeplug, its extended syntax (e.g. "/tmp/vde.ctl[2]" to
+    select switch port 2) is supported too.
     </entry>
     <entry>Yes</entry>
     <entry>Yes</entry>

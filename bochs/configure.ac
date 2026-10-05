@@ -1797,6 +1797,10 @@ NETLOW_OBJS=''
 SLIRP_OBJS=''
 SLIRP_OBJS2=''
 SLIRP_LINK_OPTS=''
+VDE_LINK_OPTS=''
+AC_ARG_ENABLE(using-libvdeplug,
+  AS_HELP_STRING([--enable-using-libvdeplug], [use libvdeplug for VDE networking if available (auto)]),
+  [use_libvdeplug=$enableval], [use_libvdeplug=auto])
 if test "$networking" = yes; then
   NETLOW_OBJS='eth_null.o eth_vnet.o'
   ethernet_modules='null vnet'
@@ -1896,6 +1900,27 @@ if test "$networking" = yes; then
       NETLOW_OBJS="$NETLOW_OBJS eth_vde.o"
       ethernet_modules="$ethernet_modules vde"
       AC_DEFINE(BX_NETMOD_VDE, 1)
+      have_libvdeplug=no
+      if test "$use_libvdeplug" != no; then
+        AC_CHECK_HEADER(libvdeplug.h, [
+          AC_CHECK_LIB(vdeplug, vde_open_real, [have_libvdeplug=yes])
+        ])
+      fi
+      AC_MSG_CHECKING(whether to use libvdeplug for VDE networking)
+      if test "$have_libvdeplug" = yes; then
+        AC_MSG_RESULT(yes)
+        if test "$bx_plugins" = 1; then
+          VDE_LINK_OPTS="-lvdeplug"
+        else
+          DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lvdeplug"
+        fi
+        AC_DEFINE(BX_HAVE_LIBVDEPLUG, 1)
+      else
+        AC_MSG_RESULT(no)
+        if test "$use_libvdeplug" = yes; then
+          AC_MSG_ERROR([libvdeplug requested but not found])
+        fi
+      fi
     fi
 
     AC_CHECK_HEADER(net/if_tun.h, [
@@ -1935,6 +1960,7 @@ AC_SUBST(NETDEV_DLL_TARGETS)
 AC_SUBST(SLIRP_OBJS)
 AC_SUBST(SLIRP_OBJS2)
 AC_SUBST(SLIRP_LINK_OPTS)
+AC_SUBST(VDE_LINK_OPTS)
 
 
 dnl // serial mode 'socket' needs ws2_32.dll in non-plugin mode
