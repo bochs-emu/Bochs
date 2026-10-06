@@ -204,13 +204,6 @@ void bx_dbg_user_input_loop(void)
   unsigned include_cmd_len = strlen(BX_INCLUDE_CMD);
 
   while(1) {
-    if (DISABLE_A20_LINE) { /// NEW NEW NEW
-	    uint32_t physical = (BX_CPU(0)->sregs[BX_SEG_REG_CS].selector.value << 4) + BX_CPU(0)->gen_reg[BX_16BIT_REG_IP].word.rx;
-	    if (physical == 0x7c00) { // reached the bootloader.
-		    bx_pc_system.set_enable_a20(0);
-		    DISABLE_A20_LINE = 0; // done. Stop disabling the A20 line again and again if the user entered commands like "help" or "b 0xXXXX" while at 0x7c00.
-	    }
-	  }
     SIM->refresh_ci();
     SIM->set_display_mode(DISP_MODE_CONFIG);
     SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(0);
