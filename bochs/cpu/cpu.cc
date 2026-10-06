@@ -234,7 +234,7 @@ void BX_CPU_C::cpu_loop(void)
         uint32_t physical = (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value << 4) + IP;
 		    if (physical == 0x7c00) { // if reached the bootloader.
           bx_pc_system.set_enable_a20(0);
-		      ALI_DISABLE_A20_LINE = 0; // done, stop calculating the physical address and comparing it with 0x7c00 over and over.
+		      DISABLE_A20_LINE = 0; // done, stop calculating the physical address and comparing it with 0x7c00 over and over.
 		    }
 	    }
     }
