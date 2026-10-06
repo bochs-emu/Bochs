@@ -373,6 +373,9 @@ enum {
 
 /* --- EXTERNS --- */
 
+/// NEW
+extern char DISABLE_A20_LINE;
+
 #if BX_GUI_SIGHANDLER
 extern bool bx_gui_sighandler;
 #endif
