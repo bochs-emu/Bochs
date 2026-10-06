@@ -88,7 +88,7 @@ void BX_CPU_C::cpu_loop_debugger(void)
   while (1) {
     /// NEW NEW NEW NEW
     if (DISABLE_A20_LINE) {
-      uint32_t physical = (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value << 4) + IP;
+      unsigned int physical = (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value << 4) + IP;
 		  if (physical == 0x7c00) { // if reached the bootloader.
         bx_pc_system.set_enable_a20(0);
 		    DISABLE_A20_LINE = 0; // done, stop calculating the physical address and comparing it with 0x7c00 over and over.
@@ -239,7 +239,7 @@ void BX_CPU_C::cpu_loop(void)
 
       /// NEW NEW NEW NEW
       if (DISABLE_A20_LINE) {
-        uint32_t physical = (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value << 4) + IP;
+        unsigned int physical = (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value << 4) + IP;
 		    if (physical == 0x7c00) { // if reached the bootloader.
           bx_pc_system.set_enable_a20(0);
 		      DISABLE_A20_LINE = 0; // done, stop calculating the physical address and comparing it with 0x7c00 over and over.
