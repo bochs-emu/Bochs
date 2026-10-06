@@ -53,6 +53,7 @@ const char **vga_extension_names;
 const char **vga_extension_plugins;
 const char **pcislot_dev_list;
 int bochsrc_include_level = 0;
+char DISABLE_A20_LINE = 0; /// NEW
 
 #define LOG_THIS genlog->
 
@@ -2483,6 +2484,17 @@ static int parse_line_formatted(const char *context, int num_params, char *param
       PARSE_ERR(("%s: maximum include level exceeded (limit = 2).", context));
     }
     bx_read_configuration(params[1]);
+  } else if (!strcmp(params[0], "A20")) { /// NEW.
+    if (!strncmp(params[1], "enable=", 7)) {
+      char val = *(params[1] + strlen("enable="));
+      if (val == '0') {
+        BX_INFO(("Will disable the A20 line before executing the bootloader."));
+        DISABLE_A20_LINE = 1;
+      }
+      // otherwise, enable the A20 line as usual.
+    } else {
+      PARSE_ERR(("%s: only 1 option is supported to control the A20 line (enable=1 or enable=0).", context));
+    }
   } else if (!strcmp(params[0], "plugin_ctrl")) {
     char *param, *pname, *val;
     for (i=1; i<num_params; i++) {
