@@ -11,3 +11,5 @@ A20: enable=0
 This will disable the A20 line before handing control over to the bootloader.
 
 If this line is absent or the value of the "enable" parameter is 1, Bochs will enable line A20 (which is the default behavior).
+
+For now the A20 line can be disabled if Bochs is running with 1 CPU only, and if the built-in debugger is running.
