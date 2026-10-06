@@ -16,7 +16,6 @@ Changes after Bochs 3.1 release:
 - Configure and compile
   - Bochs now require C++11 support for compilation, enforced via configure
   - Removed configure option --enable-configurable-msrs, loading msrs.def is enabled by default for all models supporting MSR
-  - Added configure option --enable-using-libvdeplug (default: use libvdeplug if available)
 
 - I/O Devices
   - VGA
@@ -39,9 +38,6 @@ Changes after Bochs 3.1 release:
     - SB16: Added parameter 'dsp_realtime' to use realtime mode for the DSP
     - ES1370: Added parameter 'dac_realtime' to use realtime mode for the DACs
     - ALSA sound driver: Added support to specify PCM device
-  - Networking
-    - VDE: Use libvdeplug to connect to the switch if available
-    - VDE: Fixed builtin switch protocol on non-Linux hosts (no abstract sockets), buffer overflow and receive path
   - General
     - Set Windows system timer resolution to 1ms. This help to reduce artefacts (clicking noises) during sound playback
 

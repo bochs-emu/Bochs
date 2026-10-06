@@ -131,9 +131,6 @@ libbx_%.la: %.lo
 libbx_eth_slirp.la: eth_slirp.lo @SLIRP_OBJS2@
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module eth_slirp.lo @SLIRP_OBJS2@ -o libbx_eth_slirp.la -rpath $(PLUGIN_PATH) @SLIRP_LINK_OPTS@
 
-libbx_eth_vde.la: eth_vde.lo
-	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module eth_vde.lo -o libbx_eth_vde.la -rpath $(PLUGIN_PATH) @VDE_LINK_OPTS@
-
 libbx_eth_vnet.la: eth_vnet.lo netutil.lo
 	$(LIBTOOL) --mode=link --tag CXX $(CXX) $(LDFLAGS) -module eth_vnet.lo netutil.lo -o libbx_eth_vnet.la -rpath $(PLUGIN_PATH)
 
