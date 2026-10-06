@@ -136,7 +136,7 @@ bx_vde_pktmover_c::bx_vde_pktmover_c(const char *netif,
   //if (strncmp (netif, "vde", 3) != 0) {
    // BX_PANIC (("eth_vde: interface name (%s) must be vde", netif));
   //}
-  char intname[IFNAMSIZ];
+  char intname[BX_PATHNAME_LEN];
   if (netif == NULL || strcmp(netif,"") == 0)
     strcpy(intname,"/tmp/vde.ctl");
   else
@@ -322,7 +322,13 @@ static int send_fd(char *name, int fddata, struct sockaddr_un *datasock, int gro
   req.type=((int)REQ_NEW_CONTROL)+((group > 0)?((geteuid()<<8) + group) << 8:0);
   req.sock.sun_family=AF_UNIX;
   memset(req.sock.sun_path, 0, sizeof(req.sock.sun_path));
+#if defined(__FreeBSD__)
+  // FreeBSD does not support abstract sockets
+  snprintf(req.sock.sun_path, sizeof(req.sock.sun_path), "/tmp/bochs-vde.%d.%d", pid, fddata);
+  unlink(req.sock.sun_path);
+#else
   sprintf(&req.sock.sun_path[1], "%5d", pid);
+#endif
 
   if(bind(fddata, (struct sockaddr *) &req.sock, sizeof(req.sock)) < 0) {
     perror("bind");
@@ -336,6 +342,10 @@ static int send_fd(char *name, int fddata, struct sockaddr_un *datasock, int gro
     perror("recv");
     return(-1);
   }
+#if defined(__FreeBSD__)
+  // the switch is connected to the data socket now, the path is not needed anymore
+  unlink(req.sock.sun_path);
+#endif
   return fdctl;
 }
 
