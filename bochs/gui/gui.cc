@@ -1088,40 +1088,6 @@ Bit8u bx_gui_c::get_mouse_headerbar_id()
   return BX_GUI_THIS mouse_hbar_id;
 }
 
-// returns the header bar id assigned by headerbar_bitmap() to the button
-// or BX_MAX_HEADERBAR_ENTRIES if the button is unknown
-unsigned bx_gui_c::get_headerbar_id(unsigned button)
-{
-  switch (button) {
-    case BX_HB_FLOPPYA:
-      return BX_GUI_THIS floppyA_hbar_id;
-    case BX_HB_FLOPPYB:
-      return BX_GUI_THIS floppyB_hbar_id;
-    case BX_HB_CDROM1:
-      return BX_GUI_THIS cdrom1_hbar_id;
-    case BX_HB_MOUSE:
-      return BX_GUI_THIS mouse_hbar_id;
-    case BX_HB_POWER:
-      return BX_GUI_THIS power_hbar_id;
-    case BX_HB_SAVE_RESTORE:
-      return BX_GUI_THIS save_restore_hbar_id;
-    case BX_HB_RESET:
-      return BX_GUI_THIS reset_hbar_id;
-    case BX_HB_CONFIG:
-      return BX_GUI_THIS config_hbar_id;
-    case BX_HB_SNAPSHOT:
-      return BX_GUI_THIS snapshot_hbar_id;
-    case BX_HB_PASTE:
-      return BX_GUI_THIS paste_hbar_id;
-    case BX_HB_COPY:
-      return BX_GUI_THIS copy_hbar_id;
-    case BX_HB_USER:
-      return BX_GUI_THIS user_hbar_id;
-    default:
-      return BX_MAX_HEADERBAR_ENTRIES;
-  }
-}
-
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
 void bx_gui_c::init_debug_dialog(bool global_ini)
 {

@@ -40,20 +40,6 @@
 
 #define BX_MAX_STATUSITEMS 10
 
-// header bar buttons (see get_headerbar_id())
-#define BX_HB_FLOPPYA           0
-#define BX_HB_FLOPPYB           1
-#define BX_HB_CDROM1            2
-#define BX_HB_MOUSE             3
-#define BX_HB_POWER             4
-#define BX_HB_SAVE_RESTORE      5
-#define BX_HB_RESET             6
-#define BX_HB_CONFIG            7
-#define BX_HB_SNAPSHOT          8
-#define BX_HB_PASTE             9
-#define BX_HB_COPY              10
-#define BX_HB_USER              11
-
 // gui dialog capabilities
 #define BX_GUI_DLG_FLOPPY       0x01
 #define BX_GUI_DLG_CDROM        0x02
@@ -206,7 +192,6 @@ public:
   static void key_event(Bit32u key);
   static void set_text_charmap(Bit8u map, Bit8u *fbuffer);
   static Bit8u get_mouse_headerbar_id();
-  static unsigned get_headerbar_id(unsigned button);
 
   void init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
             unsigned x_tilesize, unsigned y_tilesize);
