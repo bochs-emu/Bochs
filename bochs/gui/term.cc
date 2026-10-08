@@ -69,7 +69,6 @@ IMPLEMENT_GUI_PLUGIN_CODE(term)
 #define LOG_THIS theGui->
 
 bool initialized = 0;
-bool termHideIPS = 0;
 static unsigned int text_rows = 25, text_cols = 80;
 static unsigned long last_cursor_x, last_cursor_y;
 
@@ -227,16 +226,10 @@ void bx_term_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 #endif
 
   // parse term specific options
+  Bit8u flags = BX_GUI_OPT_HIDE_IPS | BX_GUI_OPT_CMDMODE;
   if (argc > 1) {
     for (i = 1; i < argc; i++) {
-      if (!strcmp(argv[i], "hideIPS")) {
-#if BX_SHOW_IPS
-        BX_INFO(("hide IPS display in status bar"));
-        termHideIPS = 1;
-#else
-        BX_ERROR(("Show IPS not available"));
-#endif
-      } else {
+      if (!parse_common_gui_options(argv[i], flags)) {
         BX_PANIC(("Unknown term option '%s'", argv[i]));
       }
     }
@@ -248,8 +241,10 @@ void bx_term_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   initialized = 1;
 }
 
-void do_char(int character, int alt)
+int do_char(int character, int alt)
 {
+  int toolbar_cmd = -1;
+
   switch (character) {
     // control keys
     case   0x9: do_scan(BX_KEY_TAB,0,0,alt); break;
@@ -351,7 +346,13 @@ void do_char(int character, int alt)
     case 'O': do_scan(BX_KEY_O,1,0,alt); break;
 
     // PQRSTUVW
-    case 'P': do_scan(BX_KEY_P,1,0,alt); break;
+    case 'P':
+      if (bx_gui->command_mode_active() && !alt) {
+        toolbar_cmd = BX_TOOLBAR_POWER;
+      } else {
+        do_scan(BX_KEY_P,1,0,alt);
+      }
+      break;
     case 'Q': do_scan(BX_KEY_Q,1,0,alt); break;
     case 'R': do_scan(BX_KEY_R,1,0,alt); break;
     case 'S': do_scan(BX_KEY_S,1,0,alt); break;
@@ -371,8 +372,20 @@ void do_char(int character, int alt)
 
     // `abcdefg
     case '`': do_scan(BX_KEY_GRAVE,0,0,alt); break;
-    case 'a': do_scan(BX_KEY_A,0,0,alt); break;
-    case 'b': do_scan(BX_KEY_B,0,0,alt); break;
+    case 'a':
+      if (bx_gui->command_mode_active() && !alt) {
+        toolbar_cmd = BX_TOOLBAR_FLOPPYA;
+      } else {
+        do_scan(BX_KEY_A,0,0,alt);
+      }
+      break;
+    case 'b':
+      if (bx_gui->command_mode_active() && !alt) {
+        toolbar_cmd = BX_TOOLBAR_FLOPPYB;
+      } else {
+        do_scan(BX_KEY_B,0,0,alt);
+      }
+      break;
     case 'c': do_scan(BX_KEY_C,0,0,alt); break;
     case 'd': do_scan(BX_KEY_D,0,0,alt); break;
     case 'e': do_scan(BX_KEY_E,0,0,alt); break;
@@ -385,17 +398,35 @@ void do_char(int character, int alt)
     case 'j': do_scan(BX_KEY_J,0,0,alt); break;
     case 'k': do_scan(BX_KEY_K,0,0,alt); break;
     case 'l': do_scan(BX_KEY_L,0,0,alt); break;
-    case 'm': do_scan(BX_KEY_M,0,0,alt); break;
+    case 'm':
+      if (bx_gui->command_mode_active() && !alt) {
+        bx_gui->marklog_handler();
+      } else {
+        do_scan(BX_KEY_M,0,0,alt);
+      }
+      break;
     case 'n': do_scan(BX_KEY_N,0,0,alt); break;
     case 'o': do_scan(BX_KEY_O,0,0,alt); break;
 
     // pqrstuvw
     case 'p': do_scan(BX_KEY_P,0,0,alt); break;
     case 'q': do_scan(BX_KEY_Q,0,0,alt); break;
-    case 'r': do_scan(BX_KEY_R,0,0,alt); break;
+    case 'r':
+      if (bx_gui->command_mode_active() && !alt) {
+        toolbar_cmd = BX_TOOLBAR_RESET;
+      } else {
+        do_scan(BX_KEY_R,0,0,alt);
+      }
+      break;
     case 's': do_scan(BX_KEY_S,0,0,alt); break;
     case 't': do_scan(BX_KEY_T,0,0,alt); break;
-    case 'u': do_scan(BX_KEY_U,0,0,alt); break;
+    case 'u':
+      if (bx_gui->command_mode_active() && !alt) {
+        toolbar_cmd = BX_TOOLBAR_USER;
+      } else {
+        do_scan(BX_KEY_U,0,0,alt);
+      }
+      break;
     case 'v': do_scan(BX_KEY_V,0,0,alt); break;
     case 'w': do_scan(BX_KEY_W,0,0,alt); break;
 
@@ -415,7 +446,23 @@ void do_char(int character, int alt)
     case KEY_F(4): do_scan(BX_KEY_F4,0,0,alt); break;
     case KEY_F(5): do_scan(BX_KEY_F5,0,0,alt); break;
     case KEY_F(6): do_scan(BX_KEY_F6,0,0,alt); break;
-    case KEY_F(7): do_scan(BX_KEY_F7,0,0,alt); break;
+    case KEY_F(7):
+      if (bx_gui->has_command_mode() && !bx_gui->command_mode_active() && !alt) {
+        bx_gui->set_command_mode(1);
+        if (LINES > (int)(text_rows + 1)) {
+#if BX_HAVE_COLOR_SET
+          color_set(7 << 3, NULL);
+#endif
+          mvaddstr(text_rows + 1, 16, "cmdmode");
+          if (last_cursor_y >= 0) {
+            move(last_cursor_y, last_cursor_x);
+          }
+        }
+        return -1;
+      } else {
+        do_scan(BX_KEY_F7,0,0,alt);
+      }
+      break;
     case KEY_F(8): do_scan(BX_KEY_F8,0,0,alt); break;
     case KEY_F(9): do_scan(BX_KEY_F9,0,0,alt); break;
     case KEY_F(10): do_scan(BX_KEY_F10,0,0,alt); break;
@@ -441,14 +488,47 @@ void do_char(int character, int alt)
       BX_INFO(("character unhandled: 0x%x",character));
       break;
   }
+  if (bx_gui->command_mode_active()) {
+    bx_gui->set_command_mode(0);
+    if (LINES > (int)(text_rows + 1)) {
+#if BX_HAVE_COLOR_SET
+      color_set(7 << 3, NULL);
+#endif
+      mvaddstr(text_rows + 1, 16, "       ");
+      if (last_cursor_y >= 0) {
+        move(last_cursor_y, last_cursor_x);
+      }
+    }
+  }
+  return toolbar_cmd;
 }
 
 void bx_term_gui_c::handle_events(void)
 {
-  int character;
+  int character, toolbar_cmd;
+
   while((character = getch()) != ERR) {
     BX_DEBUG(("scancode(0x%x)",character));
-    do_char(character,0);
+    toolbar_cmd = do_char(character, 0);
+    if (toolbar_cmd >= -1) {
+      switch (toolbar_cmd) {
+        case BX_TOOLBAR_FLOPPYA:
+          floppyA_handler();
+          break;
+        case BX_TOOLBAR_FLOPPYB:
+          floppyB_handler();
+          break;
+        case BX_TOOLBAR_RESET:
+          reset_handler();
+          break;
+        case BX_TOOLBAR_POWER:
+          power_handler();
+          break;
+        case BX_TOOLBAR_USER:
+          userbutton_handler();
+          break;
+      }
+    }
   }
 }
 
@@ -672,6 +752,10 @@ void bx_term_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, u
       color_set(7 << 3, NULL);
 #endif
       mvhline(text_rows + 1, 0, ' ', text_cols);
+#if BX_HAVE_COLOR_SET
+      color_set(7, NULL);
+#endif
+      mvaddch(text_rows + 1, 14, ACS_VLINE);
     }
 #endif
   }
@@ -752,7 +836,7 @@ void bx_term_gui_c::show_ips(Bit32u ips_count)
 {
   char ips_text[20];
 
-  if (!termHideIPS && (LINES > (int)(text_rows + 1))) {
+  if (!gui_opts.hide_ips && (LINES > (int)(text_rows + 1))) {
     ips_count /= 1000;
     sprintf(ips_text, "IPS: %u.%3.3uM ", ips_count / 1000, ips_count % 1000);
 #if BX_HAVE_COLOR_SET
