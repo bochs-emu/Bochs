@@ -3509,7 +3509,7 @@ void bx_dbg_print_help(void)
   dbg_printf("    help, q|quit|exit, set, instrument, show, trace, trace-reg,\n");
   dbg_printf("    trace-mem, u|disasm, ldsym, slist, addlyt, remlyt, lyt, source\n");
   dbg_printf("-*- Execution control -*-\n");
-  dbg_printf("    c|cont|continue, s|step, p|n|next, modebp, vmexitbp\n");
+  dbg_printf("    c|cont|continue, s|step, p|n|next, modebp, vmexitbp, detach\n");
   dbg_printf("-*- Breakpoint management -*-\n");
   dbg_printf("    vb|vbreak, lb|lbreak, pb|pbreak|b|break, sb, sba, blist,\n");
   dbg_printf("    bpe, bpd, d|del|delete, watch, unwatch, setmagicbps, clrmagicbps\n");

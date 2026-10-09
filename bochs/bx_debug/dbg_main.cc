@@ -78,6 +78,10 @@ void CDECL bx_debug_ctrlc_handler(int signum);
 
 static void bx_unnest_infile(void);
 static void bx_get_command(void);
+static void bx_dbg_deactivate(void);
+
+// leave the debugger input loop and detach the debugger
+static bool bx_dbg_detach_requested = false;
 
 bx_guard_t bx_guard;
 
@@ -122,24 +126,40 @@ void bx_dbg_init(void)
   bx_infile_stack[0].lineno = 0;
 }
 
+// Enter the internal debugger, returns when the debugger is detached
 int bx_dbg_main(void)
 {
-  setbuf(stdout, NULL);
-  setbuf(stderr, NULL);
-
   bx_dbg_exit_called = 0;
 
-  const char *debugger_log_filename = SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr();
+  // one-time initialization on the first debugger entry
+  if (dbg_cpu_list == NULL) {
+    const char *debugger_log_filename = SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->getptr();
 
-  // Open debugger log file if needed
-  if (strlen(debugger_log_filename) > 0 && (strcmp(debugger_log_filename, "-") != 0))
-  {
-    debugger_log = fopen(debugger_log_filename, "w");
-    if (!debugger_log) {
-      BX_PANIC(("Can not open debugger log file '%s'", debugger_log_filename));
+    // Open debugger log file if needed
+    if (strlen(debugger_log_filename) > 0 && (strcmp(debugger_log_filename, "-") != 0))
+    {
+      debugger_log = fopen(debugger_log_filename, "w");
+      if (!debugger_log) {
+        BX_PANIC(("Can not open debugger log file '%s'", debugger_log_filename));
+      }
+      else {
+        BX_INFO(("Using debugger log file %s", debugger_log_filename));
+      }
     }
-    else {
-      BX_INFO(("Using debugger log file %s", debugger_log_filename));
+
+    dbg_printf("Bochs internal debugger, type 'help' for help or 'c' to continue\n");
+
+    last_cr3 = new bx_address[BX_SMP_PROCESSORS];
+    last_cpu_mode = new unsigned[BX_SMP_PROCESSORS];
+
+    dbg_cpu_list = new bx_list_c *[BX_SMP_PROCESSORS];
+    for (int cpu=0; cpu<BX_SMP_PROCESSORS; cpu++) {
+      char cpu_param_name[10];
+      sprintf(cpu_param_name, "cpu%d", (int)cpu);
+      dbg_cpu_list[cpu] = (bx_list_c*) SIM->get_param(cpu_param_name, SIM->get_bochs_root());
+
+      last_cr3[cpu] = 0;
+      last_cpu_mode[cpu] = 0;
     }
   }
 
@@ -160,22 +180,13 @@ int bx_dbg_main(void)
     BX_INFO(("set SIGINT handler to bx_debug_ctrlc_handler"));
   }
 
-  dbg_printf("Bochs internal debugger, type 'help' for help or 'c' to continue\n");
+  // select the CPU which requested the debugger activation (CPU0 by default)
+  switch_dbg_cpu(bx_dbg.activation_cpu);
 
-  last_cr3 = new bx_address[BX_SMP_PROCESSORS];
-  last_cpu_mode = new unsigned[BX_SMP_PROCESSORS];
-
-  dbg_cpu_list = new bx_list_c *[BX_SMP_PROCESSORS];
-  for (int cpu=0; cpu<BX_SMP_PROCESSORS; cpu++) {
-    char cpu_param_name[10];
-    sprintf(cpu_param_name, "cpu%d", (int)cpu);
-    dbg_cpu_list[cpu] = (bx_list_c*) SIM->get_param(cpu_param_name, SIM->get_bochs_root());
-
-    last_cr3[cpu] = 0;
-    last_cpu_mode[cpu] = 0;
+  if (bx_dbg.activation_reason != NULL) {
+    dbg_printf("(%u) Debugger activated: %s\n", bx_dbg.activation_cpu, bx_dbg.activation_reason);
+    bx_dbg.activation_reason = NULL;
   }
-
-  switch_dbg_cpu(0);
 
   // finally, call the usual function to print the disassembly
   dbg_printf("Next at t=" FMT_LL "d\n", bx_pc_system.time_ticks());
@@ -183,13 +194,10 @@ int bx_dbg_main(void)
 
   bx_dbg_user_input_loop();
 
-  if(debugger_log != NULL) {
-    fclose(debugger_log);
-    debugger_log = NULL;
-  }
+  // the debugger was detached
+  bx_dbg_deactivate();
 
-  bx_dbg_exit(0);
-  return(0); // keep compiler happy
+  return(0);
 }
 
 void bx_dbg_interpret_line(char *cmd)
@@ -203,7 +211,9 @@ void bx_dbg_user_input_loop(void)
   int reti;
   unsigned include_cmd_len = strlen(BX_INCLUDE_CMD);
 
-  while(1) {
+  bx_dbg_detach_requested = false;
+
+  while(! bx_dbg_detach_requested) {
     SIM->refresh_ci();
     SIM->set_display_mode(DISP_MODE_CONFIG);
     SIM->get_param_bool(BXPN_MOUSE_ENABLED)->set(0);
@@ -432,6 +442,148 @@ void CDECL bx_debug_ctrlc_handler(int signum)
 void bx_debug_break()
 {
   bx_guard.interrupt_requested = true;
+}
+
+// Returns true if a request to activate the internal debugger (or to break
+// into it when it is already active) would be accepted.
+bool bx_dbg_activation_allowed(void)
+{
+  if (bx_dbg.debugger_active) return true;
+
+  // the debugger cannot be activated at runtime with these display libraries:
+  // wx forces the gui debugger and term sets up the debugger terminal only
+  // when the debugger is active on startup
+  const char *display = SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->get_selected();
+  if (SIM->is_wx_selected() || !strcmp(display, "term")) return false;
+
+  return true;
+}
+
+// Request to activate the internal debugger when Bochs is running without
+// it. The CPU loop returns on the next instruction boundary and the debugger
+// is activated by bx_dbg_activate() called from the simulation main loop.
+void bx_dbg_request_activation(unsigned cpu, const char *reason)
+{
+  if (bx_dbg.debugger_active) {
+    bx_debug_break();
+    return;
+  }
+
+  // not before the simulation is initialized (e.g. panic dialog at startup):
+  // the CPUs may not exist yet
+  if (! SIM->get_init_done()) {
+    BX_ERROR(("debugger activation (%s) ignored: simulation not started yet", reason));
+    return;
+  }
+
+  if (! bx_dbg_activation_allowed()) {
+    static bool warned = false;
+    if (! warned) {
+      BX_ERROR(("debugger activation (%s) ignored: not supported with '%s' display library", reason,
+        SIM->get_param_enum(BXPN_SEL_DISPLAY_LIBRARY)->get_selected()));
+      warned = true;
+    }
+    return;
+  }
+
+  // keep the first request if several CPUs requested activation
+  if (bx_dbg.activation_request) return;
+
+  bx_dbg.activation_cpu = cpu;
+  bx_dbg.activation_reason = reason;
+  bx_dbg.activation_request = true;
+
+  for (int n=0; n<BX_SMP_PROCESSORS; n++) {
+    BX_CPU(n)->async_event |= BX_ASYNC_EVENT_DEBUGGER_REQUEST;
+  }
+}
+
+// Activate the internal debugger requested by bx_dbg_request_activation(),
+// called when the CPU loop is not running. The simulation main loop enters
+// the debugger by bx_dbg_main() after that.
+void bx_dbg_activate(void)
+{
+  BX_ASSERT(! bx_dbg.debugger_active);
+
+  bx_dbg.activation_request = false;
+  bx_dbg.debugger_active = true;
+  bx_guard.interrupt_requested = false;
+
+  SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set_enabled(1);
+
+  for (int n=0; n<BX_SMP_PROCESSORS; n++) {
+    BX_CPU(n)->async_event &= ~BX_ASYNC_EVENT_DEBUGGER_REQUEST;
+    // stop reason could be left stale by the CPU loop running without the debugger
+    BX_CPU(n)->stop_reason = (BX_CPU(n)->activity_state != BX_CPU_C::BX_ACTIVITY_STATE_ACTIVE) ? STOP_CPU_HALTED : STOP_NO_REASON;
+    // the fetch window was established without the debugger, force prefetch()
+    // to recompute the code breakpoints page filter for it
+    BX_CPU(n)->invalidate_prefetch_q();
+  }
+
+  BX_INFO(("[" FMT_LL "d] Debugger activated on CPU%u: %s",
+    bx_pc_system.time_ticks(), bx_dbg.activation_cpu, bx_dbg.activation_reason));
+}
+
+// Leave the debugger and continue the simulation without it
+void bx_dbg_detach_command(void)
+{
+  if (SIM->has_debug_gui()) {
+    dbg_printf("detach is not supported with the gui debugger yet\n");
+    return;
+  }
+
+  unsigned num_bpoints = 0;
+#if (BX_DBG_MAX_VIR_BPOINTS > 0)
+  num_bpoints += bx_guard.iaddr.num_virtual;
+#endif
+#if (BX_DBG_MAX_LIN_BPOINTS > 0)
+  num_bpoints += bx_guard.iaddr.num_linear;
+#endif
+#if (BX_DBG_MAX_PHY_BPOINTS > 0)
+  num_bpoints += bx_guard.iaddr.num_physical;
+#endif
+
+  dbg_printf("Detaching debugger, simulation continues without it\n");
+  if (num_bpoints > 0 || num_read_watchpoints > 0 || num_write_watchpoints > 0) {
+    dbg_printf("%u breakpoints and %u watchpoints are inactive until the debugger is activated again\n",
+      num_bpoints, num_read_watchpoints + num_write_watchpoints);
+  }
+
+  char magic_str[64];
+  bx_dbg_get_magic_bp_str_from_mask(bx_dbg.magic_break, magic_str);
+  dbg_printf("Debugger activation: magic breakpoint%s, %d time breakpoints pending\n",
+    bx_dbg.magic_break ? magic_str : " disabled", timebp_queue_size);
+
+  bx_dbg_detach_requested = true;
+}
+
+// Deactivate the debugger after the detach command, the simulation main loop
+// continues to run without the debugger after that
+static void bx_dbg_deactivate(void)
+{
+  bx_dbg.debugger_active = false;
+  bx_guard.interrupt_requested = false;
+
+  // The debugger loop advances the time by single instructions without
+  // updating the time sync point, sync it so the instructions executed in
+  // the debugger are not accounted again by the CPU loop
+  for (int n=0; n<BX_SMP_PROCESSORS; n++) {
+    BX_CPU(n)->sync_icount();
+  }
+
+  // restore Ctrl-C handler used without the debugger
+  if (!SIM->has_debug_gui()) {
+    signal(SIGINT, bx_signal_handler);
+  }
+
+  if (debugger_log != NULL)
+    fflush(debugger_log);
+
+  sim_running->set(1);
+  SIM->refresh_ci();
+  SIM->set_display_mode(DISP_MODE_SIM);
+
+  BX_INFO(("[" FMT_LL "d] Debugger detached", bx_pc_system.time_ticks()));
 }
 
 void bx_dbg_exit(int code)

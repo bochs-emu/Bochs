@@ -315,6 +315,9 @@ typedef struct {
   bool dbg_gui_globalini;
 #endif
   Bit8u magic_break;
+  volatile bool activation_request; // request to activate the debugger
+  unsigned activation_cpu;          // CPU which requested the activation
+  const char *activation_reason;    // activation reason (static string)
 #endif
 #if BX_GDBSTUB
   bool gdbstub_enabled;

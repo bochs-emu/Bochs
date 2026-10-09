@@ -52,6 +52,7 @@ Bit64u eval_value;
 %token <sval> BX_TOKEN_DISABLE_BREAKPOINT
 %token <sval> BX_TOKEN_INFO
 %token <sval> BX_TOKEN_QUIT
+%token <sval> BX_TOKEN_DETACH
 %token <sval> BX_TOKEN_R
 %token <sval> BX_TOKEN_REGS
 %token <sval> BX_TOKEN_CPU
@@ -188,6 +189,7 @@ command:
     | bpe_command
     | bpd_command
     | quit_command
+    | detach_command
     | examine_command
     | restore_command
     | writemem_command
@@ -916,6 +918,14 @@ quit_command:
       }
     ;
 
+detach_command:
+      BX_TOKEN_DETACH '\n'
+      {
+        bx_dbg_detach_command();
+        free($1);
+      }
+    ;
+
 examine_command:
       BX_TOKEN_EXAMINE BX_TOKEN_XFORMAT expression '\n'
       {
@@ -1097,6 +1107,12 @@ help_command:
        BX_TOKEN_HELP BX_TOKEN_QUIT '\n'
        {
          dbg_printf("q|quit|exit - quit debugger and emulator execution\n");
+         free($1);free($2);
+       }
+     | BX_TOKEN_HELP BX_TOKEN_DETACH '\n'
+       {
+         dbg_printf("detach - leave debugger and continue emulator execution without it,\n");
+         dbg_printf("         the debugger is activated again by magic or time breakpoint\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_CONTINUE '\n'

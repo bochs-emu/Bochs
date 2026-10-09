@@ -4384,6 +4384,15 @@ and continue), report (print information to the console or log file), or ignore
 </para>
 
 <para>
+In Bochs compiled with the internal debugger the "ask" dialog also offers to
+continue in the debugger. If Bochs was started without the <option>-dbg</option>
+option, this choice activates the debugger at runtime (not supported with the
+wx and term display libraries). Pressing Ctrl-C in the console while Bochs runs
+without the debugger raises a panic, so with action=ask it shows the same
+dialog.
+</para>
+
+<para>
 It is also possible to specify the 'action' to do for each Bochs facility
 separately (e.g. crash on panics from everything except the CD-ROM, and only
 report those). See the <link linkend="logopts-by-device">log function module table</link>
@@ -5212,7 +5221,7 @@ This enables the GDB stub. See <xref linkend="debugging-with-gdb">.
 </para>
 </section>
 
-<section><title>magic_break</title>
+<section id="bochsopt-magicbreak"><title>magic_break</title>
 <para>
 Example for breaking on "XCHGW %DI, %DI" or "XCHGW %SP, %SP" execution
 <screen>
@@ -5223,9 +5232,14 @@ Note: Windows XP ntldr can cause problems with XCHGW %BX, %BX
 <screen>
   magic_break: enabled=1
 </screen>
-This enables the "magic breakpoint" feature when using the debugger.
-The useless cpu instruction XCHGW REGW, REGW causes Bochs to enter the
+This enables the "magic breakpoint" feature in Bochs compiled with the internal
+debugger. The useless cpu instruction XCHGW REGW, REGW causes Bochs to enter the
 debugger mode. This might be useful for software development.
+If Bochs was started without the debugger enabled (no <option>-dbg</option>
+command line option), the magic breakpoint activates the internal debugger
+and the simulation continues in the debugger mode.
+Note: the magic breakpoint is no longer ignored when Bochs is started without
+<option>-dbg</option>, use <option>enabled=0</option> to disable it.
 <screen>
   cx dx bx sp bp si di
 </screen>
@@ -5775,6 +5789,21 @@ behavoiur of Bochs at runtime if you click on one of these buttons:
 </para></note>
 </listitem>
 <listitem>
+<para>debugger button</para>
+<para>
+  This button is present only if Bochs is compiled with the internal debugger
+  (currently win32 and sdl2). If Bochs was started without the <option>-dbg</option>
+  option, it activates the internal debugger at runtime (see
+  <xref linkend="internal-debugger">). If the debugger is active and the simulation
+  is running, it breaks into the debugger like pressing Ctrl-C in the console.
+  The button is disabled while the debugger waits for a command. Activating the
+  debugger releases the mouse capture. When Bochs runs in a classic Windows
+  console, the button also brings the console window with the debugger command
+  line to the foreground (not yet with other terminals like mintty or Windows
+  Terminal).
+</para>
+</listitem>
+<listitem>
 <para>user button</para>
 <para>
   Press this button if you want to send the keyboard shortcut defined with the
@@ -5866,6 +5895,10 @@ will not be received by the OS running in Bochs.
     <entry>Press the Config button</entry>
   </row>
   <row>
+    <entry>d</entry>
+    <entry>Press the Debugger button (sdl2 and win32 only)</entry>
+  </row>
+  <row>
     <entry>f</entry>
     <entry>Toggle windowed / fullscreen mode (sdl, sdl2 and win32 only)</entry>
   </row>
@@ -5939,6 +5972,12 @@ In the runtime configuration you can change the floppy/CD-ROM image or device,
 change the log options or adjust some other settings. If you have trouble with
 a specific device, you can change the log options for this device only to get
 more information (e.g. report debug messages).
+</para>
+<para>
+If Bochs is compiled with the internal debugger, the text mode runtime menu has
+the additional choice "Continue and enter debugger" and the win32 runtime dialog
+has a "Debugger" button. Both continue the simulation and activate the internal
+debugger at runtime (or break into it if it is already active).
 </para>
 </section>
 </section>
@@ -7393,7 +7432,26 @@ From here, you may use the following commands:
   q                           quit debugger and execution
   quit
   exit
+
+  detach                      leave the debugger and continue execution without it
 </screen>
+</para>
+<para>
+The debugger could also be activated at runtime when Bochs was started without
+the <option>-dbg</option> option: a <link linkend="bochsopt-magicbreak">magic breakpoint</link>,
+the <link linkend="headerbar">debugger button</link> in the headerbar (win32, sdl2) or
+the "Continue and enter debugger" choice of the runtime configuration or
+the debugger choice of the <link linkend="bochsopt-logevents">panic dialog</link>
+(log action "ask", also shown for Ctrl-C in the console)
+activates the debugger and the simulation continues in the debugger mode.
+The <command>detach</command> command leaves the debugger and continues the
+simulation at full speed as if Bochs was started without the debugger.
+Breakpoints, watchpoints and other debugger settings are kept but they are
+inactive until the debugger is activated again by one of the methods above or a
+time breakpoint (<command>sb</command>, <command>sba</command>).
+Activating the debugger at runtime is not supported with the wx and term
+display libraries and <command>detach</command> is not supported with the
+debugger gui yet.
 </para>
 </section>
 
@@ -7663,6 +7721,12 @@ Insert a time break point "delta" instructions into the future ("delta" is a 64-
 <screen>sba <varname>time</varname></screen>
 
 Insert a time break point at "time" ("time" is a 64-bit integer followed by "L", for example 1000L).
+
+A time break point also activates the debugger after the <command>detach</command>
+command, for example <command>sb 1000000</command> followed by <command>detach</command>
+runs the simulation at full speed for 1000000 ticks. Without the debugger the
+time is checked at the end of the instruction trace, the simulation stops
+at the first instruction boundary at or after the requested time.
 
 <screen>print-stack [<varname>num words</varname>]</screen>
 

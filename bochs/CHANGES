@@ -12,6 +12,16 @@ Changes after Bochs 3.1 release:
   - Invalidate SMC pages after debugger memory writes
   - Significantly speedup emulation when code breakpoints are defined in internal debugger, up to 2x-3x speedup observed with multiple breakpoints set
   - Allow up to 32 code breakpoints (as they are much less painful for emulation performance now)
+  - Magic breakpoint activates the internal debugger also when Bochs was started without -dbg option
+    (in Bochs compiled with the internal debugger). Use 'magic_break: enabled=0' to disable it.
+  - Added 'detach' debugger command: leave the debugger and continue simulation at full speed without it,
+    the debugger is activated again by magic breakpoint or time breakpoint
+  - The internal debugger can be activated at runtime from the GUI: new debugger button in the win32
+    and sdl2 headerbar (also command mode key 'd'), "Continue and enter debugger" choice in the runtime config
+    (text menu and win32 dialog). If the debugger is already active the button breaks into it.
+  - The debugger choice of the panic / error "ask" dialog also activates the internal debugger when
+    Bochs was started without -dbg (textconfig, win32, sdl2, x11). With 'panic: action=ask' this
+    includes Ctrl-C pressed in the console.
 
 - Configure and compile
   - Bochs now require C++11 support for compilation, enforced via configure
