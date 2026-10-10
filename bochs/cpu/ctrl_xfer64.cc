@@ -411,6 +411,26 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EqR(bxInstruction_c *i)
   BX_NEXT_TRACE(i);
 }
 
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EqM(bxInstruction_c *i)
+{
+  bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
+  Bit64u op1_64 = read_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr));
+
+  if (! IsCanonical(op1_64)) {
+    BX_ERROR(("%s: canonical RIP violation", i->getIaOpcodeNameShort()));
+    exception(BX_GP_EXCEPTION, 0);
+  }
+
+  RIP = op1_64;
+  BX_INSTR_NEAR_BRANCH_TAKEN(BX_CPU_ID, BX_INSTR_IS_JMP_INDIRECT, PREV_RIP, RIP);
+
+#if BX_SUPPORT_CET
+  track_indirect_if_not_suppressed(i, CPL);
+#endif
+
+  BX_NEXT_TRACE(i);
+}
+
 /* Far indirect jump */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
 {

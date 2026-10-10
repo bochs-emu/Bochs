@@ -2109,7 +2109,9 @@ public: // for now...
   BX_SMF void JMP16_Ep(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void JMP_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void JMP_EdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void JMP_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void JMP_EwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 
   BX_SMF void SLDT_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void STR_Ew(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
@@ -4427,6 +4429,7 @@ public: // for now...
   BX_SMF void CALL_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void CALL64_Ep(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void JMP_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void JMP_EqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void JMP64_Ep(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void PUSHF_Fq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void POPF_Fq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
