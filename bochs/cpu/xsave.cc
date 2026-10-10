@@ -482,7 +482,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XRSTOR(bxInstruction_c *i)
 
 #endif // BX_CPU_LEVEL >= 6
 
-  BX_NEXT_INSTR(i);
+  BX_NEXT_TRACE(i);
 }
 
 #if BX_CPU_LEVEL >= 6

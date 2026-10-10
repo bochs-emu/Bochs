@@ -142,6 +142,7 @@ Changes after Bochs 3.1:
 - LASS: masked AVX/AVX-512 loads and stores must pre-check unmasked elements for LASS violations (not only canonicality) so #GP takes priority over #PF
 - LASS: implicit supervisor-mode accesses (GDT, LDT, IDT, TSS, UPID, UITT, USER_MSR bitmap) must cause LASS violation regardless of RFLAGS.AC
 - SMAP: implicit supervisor-mode accesses (GDT, LDT, IDT, TSS, UPID ...) to user pages must cause #PF regardless of RFLAGS.AC
+- XSAVE: make sure XRSTOR/XRSTORS always end trace, updating state like PKRS might require re-fetch after XRSTOR/XRSTORS execution
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):

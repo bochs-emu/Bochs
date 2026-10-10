@@ -1421,14 +1421,14 @@ bx_define_opcode(BX_IA_POPCNT_GqEq, "popcnt", "popcntq", &BX_CPU_C::LOAD_Eq, &BX
 // POPCNT instruction
 
 // XSAVE extensions
-bx_define_opcode(BX_IA_XRSTOR, "xrstor", "xrstor", &BX_CPU_C::XRSTOR, &BX_CPU_C::BxError, BX_ISA_XSAVE, OP_M, OP_NONE, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_XRSTOR, "xrstor", "xrstor", &BX_CPU_C::XRSTOR, &BX_CPU_C::BxError, BX_ISA_XSAVE, OP_M, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_XSAVE, "xsave", "xsave", &BX_CPU_C::XSAVE, &BX_CPU_C::BxError, BX_ISA_XSAVE, OP_M, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_XSAVEC, "xsavec", "xsavec", &BX_CPU_C::XSAVEC, &BX_CPU_C::BxError, BX_ISA_XSAVEC, OP_M, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_XSETBV, "xsetbv", "xsetbv", &BX_CPU_C::BxError, &BX_CPU_C::XSETBV, BX_ISA_XSAVE, OP_NONE, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 bx_define_opcode(BX_IA_XGETBV, "xgetbv", "xgetbv", &BX_CPU_C::BxError, &BX_CPU_C::XGETBV, BX_ISA_XSAVE, OP_NONE, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_XSAVEOPT, "xsaveopt", "xsaveopt", &BX_CPU_C::XSAVE, &BX_CPU_C::BxError, BX_ISA_XSAVEOPT, OP_M, OP_NONE, OP_NONE, OP_NONE, 0)
 bx_define_opcode(BX_IA_XSAVES, "xsaves", "xsaves", &BX_CPU_C::XSAVEC, &BX_CPU_C::BxError, BX_ISA_XSAVES, OP_M, OP_NONE, OP_NONE, OP_NONE, 0)
-bx_define_opcode(BX_IA_XRSTORS, "xrstors", "xrstors", &BX_CPU_C::XRSTOR, &BX_CPU_C::BxError, BX_ISA_XSAVES, OP_M, OP_NONE, OP_NONE, OP_NONE, 0)
+bx_define_opcode(BX_IA_XRSTORS, "xrstors", "xrstors", &BX_CPU_C::XRSTOR, &BX_CPU_C::BxError, BX_ISA_XSAVES, OP_M, OP_NONE, OP_NONE, OP_NONE, BX_TRACE_END)
 
 #if BX_CPU_LEVEL >= 6
 
