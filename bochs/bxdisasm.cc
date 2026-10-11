@@ -108,25 +108,25 @@ int main(int argn, const char **argv)
   for (int i=1;i<argn;i++) {
     if (i == argn)
     {
-      printf("Usage: bxdisasm [/16|/32|/64] string-of-instruction-bytes\n");
-      printf("       bxdisasm [/16|/32|/64] -i <filename>\n");
+      printf("Usage: bxdisasm [-16|-32|-64] string-of-instruction-bytes\n");
+      printf("       bxdisasm [-16|-32|-64] -i <filename>\n");
       exit(1);
     }
 
     if (! file_mode) {
-      if (!strcmp(argv[i], "/16")) {
+      if (!strcmp(argv[i], "-16")) {
         is_32 = 0;
         is_64 = 0;
         printf("16 bit mode\n");
         continue;
       }
-      if (!strcmp(argv[i], "/32")) {
+      if (!strcmp(argv[i], "-32")) {
         is_32 = 1;
         is_64 = 0;
         printf("32 bit mode\n");
         continue;
       }
-      if (!strcmp(argv[i], "/64")) {
+      if (!strcmp(argv[i], "-64")) {
         is_32 = 1;
         is_64 = 1;
         printf("64 bit mode\n");
