@@ -740,6 +740,84 @@ bool BX_CPU_C::xsave_sse_state_xinuse(void)
   return false;
 }
 
+#if BX_SUPPORT_MPX
+void BX_CPU_C::xsave_bndregs_state(bxInstruction_c *i, bx_address offset)
+{
+  sync_bndregs();
+
+  bx_address asize_mask = i->asize_mask();
+
+  for(unsigned index=0; index < 4; index++) {
+    write_virtual_qword(i->seg(), (offset + index*16)     & asize_mask, BX_CPU_THIS_PTR bndl[index]);
+    write_virtual_qword(i->seg(), (offset + index*16 + 8) & asize_mask, BX_CPU_THIS_PTR bndh[index]);
+  }
+}
+
+void BX_CPU_C::xrstor_bndregs_state(bxInstruction_c *i, bx_address offset)
+{
+  bx_address asize_mask = i->asize_mask();
+
+  for(unsigned index=0; index < 4; index++) {
+    BX_CPU_THIS_PTR bndl[index] = read_virtual_qword(i->seg(), (offset + index*16)     & asize_mask);
+    BX_CPU_THIS_PTR bndh[index] = read_virtual_qword(i->seg(), (offset + index*16 + 8) & asize_mask);
+  }
+
+  BX_CPU_THIS_PTR bndregs_clear = false;
+}
+
+void BX_CPU_C::xrstor_init_bndregs_state(void)
+{
+  for(unsigned index=0; index < 4; index++) {
+    BX_CPU_THIS_PTR bndl[index] = BX_CPU_THIS_PTR bndh[index] = 0;
+  }
+
+  BX_CPU_THIS_PTR bndregs_clear = false;
+}
+
+bool BX_CPU_C::xsave_bndregs_state_xinuse(void)
+{
+  if (BX_CPU_THIS_PTR bndregs_clear) {
+    xrstor_init_bndregs_state();
+    return false; // BND0-3 were initialized by near branch
+  }
+
+  for(unsigned index=0; index < 4; index++) {
+    if (BX_CPU_THIS_PTR bndl[index] || BX_CPU_THIS_PTR bndh[index])
+      return true;
+  }
+
+  return false;
+}
+
+void BX_CPU_C::xsave_bndcfg_state(bxInstruction_c *i, bx_address offset)
+{
+  write_virtual_qword(i->seg(), offset,     BX_CPU_THIS_PTR bndcfg[1]);
+  write_virtual_qword(i->seg(), offset + 8, BX_CPU_THIS_PTR bndstatus);
+}
+
+void BX_CPU_C::xrstor_bndcfg_state(bxInstruction_c *i, bx_address offset)
+{
+  BX_CPU_THIS_PTR bndcfg[1] = read_virtual_qword(i->seg(), offset);
+  BX_CPU_THIS_PTR bndcfg[1] &= ~BX_CONST64(0xffc); // reset all reserved bits and force canonical
+  BX_CPU_THIS_PTR bndcfg[1] = CanonicalizeAddress(BX_CPU_THIS_PTR bndcfg[1]);
+  BX_CPU_THIS_PTR bndstatus = read_virtual_qword(i->seg(), offset + 8);
+
+  handleBndModeChange(); // BNDCFGU.EN or BNDCFGU.BNDPRESERVE might change
+}
+
+void BX_CPU_C::xrstor_init_bndcfg_state(void)
+{
+  BX_CPU_THIS_PTR bndcfg[1] = BX_CPU_THIS_PTR bndstatus = 0;
+
+  handleBndModeChange(); // BNDCFGU.EN might change
+}
+
+bool BX_CPU_C::xsave_bndcfg_state_xinuse(void)
+{
+  return BX_CPU_THIS_PTR bndcfg[1] != 0 || BX_CPU_THIS_PTR bndstatus != 0;
+}
+#endif
+
 #if BX_SUPPORT_AVX
 
 // YMM state management //
@@ -1364,6 +1442,16 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
+#if BX_SUPPORT_MPX
+  if ((EAX & (BX_XCR0_BNDREGS_MASK | BX_XCR0_BNDCFG_MASK))) {
+    Bit32u bnd_state = (BX_XCR0_BNDREGS_MASK | BX_XCR0_BNDCFG_MASK);
+    if ((EAX & bnd_state) != bnd_state) {
+      BX_ERROR(("XSETBV: Illegal attempt to enable BND state"));
+      exception(BX_GP_EXCEPTION, 0);
+    }
+  }
+#endif
+
 #if BX_SUPPORT_AVX
   if ((EAX & (BX_XCR0_YMM_MASK | BX_XCR0_SSE_MASK)) == BX_XCR0_YMM_MASK) {
     BX_ERROR(("XSETBV: Attempt to enable AVX without SSE"));
@@ -1395,6 +1483,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XSETBV(bxInstruction_c *i)
 
 #if BX_SUPPORT_AVX
   handleAvxModeChange();
+#endif
+#if BX_SUPPORT_MPX
+  handleBndModeChange();
 #endif
 
 #endif // BX_CPU_LEVEL >= 6

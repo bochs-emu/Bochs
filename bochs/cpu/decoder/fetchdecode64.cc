@@ -413,8 +413,13 @@ static BxOpcodeDecodeDescriptor64 decode64_descriptor[] =
    /* 0F 17 */ { &decoder64_modrm, BxOpcodeTable0F17 },
    /* 0F 18 */ { &decoder64_modrm, BxOpcodeTable0F18 },
    /* 0F 19 */ { &decoder64_modrm, BxOpcodeTableMultiByteNOP },
+#if BX_SUPPORT_MPX
+   /* 0F 1A */ { &decoder64_modrm, BxOpcodeTable0F1A },
+   /* 0F 1B */ { &decoder64_modrm, BxOpcodeTable0F1B },
+#else
    /* 0F 1A */ { &decoder64_modrm, BxOpcodeTableMultiByteNOP },
    /* 0F 1B */ { &decoder64_modrm, BxOpcodeTableMultiByteNOP },
+#endif
    /* 0F 1C */ { &decoder64_modrm, BxOpcodeTableMultiByteNOP },
    /* 0F 1D */ { &decoder64_modrm, BxOpcodeTableMultiByteNOP },
 #if BX_SUPPORT_CET

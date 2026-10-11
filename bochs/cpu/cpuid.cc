@@ -806,7 +806,12 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ebx(Bit32u extra) const
   if (is_cpu_extension_supported(BX_ISA_FCS_FDS_DEPRECATION))
     ebx |= BX_CPUID_STD7_SUBLEAF0_EBX_DEPRECATE_FCS_FDS;
 
-  // [14:14]  Intel Memory Protection Extensions (MPX) - not supported
+  // [14:14]  Intel Memory Protection Extensions (MPX)
+#if BX_SUPPORT_MPX
+  if (is_cpu_extension_supported(BX_ISA_MPX))
+    ebx |= BX_CPUID_STD7_SUBLEAF0_EBX_MPX;
+#endif
+
   // [15:15]  Supports Platform Quality of Service Enforcement (PQE) capability - not supported
 
   // [16:16]  AVX512F instructions support

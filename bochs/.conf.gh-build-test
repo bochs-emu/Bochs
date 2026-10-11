@@ -73,6 +73,7 @@ case $which_config in
       --enable-fpu \
       --enable-alignment-check \
       --enable-3dnow \
+      --enable-mpx \
       --enable-monitor-mwait \
       --enable-protection-keys \
       --enable-svm \

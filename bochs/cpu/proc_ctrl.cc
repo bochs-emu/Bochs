@@ -594,6 +594,28 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoAVX(bxInstruction_c *i)
 }
 #endif
 
+#if BX_SUPPORT_MPX
+//
+// handleBndModeChange - has to be called everytime
+//   CR4.OSXSAVE / XCR0.BNDCSR / BNDCFGS / BNDCFGU changes
+//
+void BX_CPU_C::handleBndModeChange(void)
+{
+  // near branches might initialize BND0-3 if MPX is enabled without BNDPRESERVE at any CPL,
+  // the exact CPL check is done at execution time
+  if (BX_CPU_THIS_PTR cr4.get_OSXSAVE() && (BX_CPU_THIS_PTR xcr0.get32() & BX_XCR0_BNDCFG_MASK) != 0 &&
+     ((BX_CPU_THIS_PTR bndcfg[0] & 0x3) == BX_BNDCFG_MPX_ENABLED || (BX_CPU_THIS_PTR bndcfg[1] & 0x3) == BX_BNDCFG_MPX_ENABLED))
+  {
+    mpxregs_clear_enable();
+  }
+  else {
+    mpxregs_clear_disable();
+  }
+
+  updateFetchModeMask(); /* BNDREGS_CLEAR changed */
+}
+#endif
+
 #if BX_SUPPORT_EVEX
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::BxNoEVEX(bxInstruction_c *i)
 {
@@ -663,6 +685,9 @@ void BX_CPU_C::handleCpuContextChange(void)
 #if BX_SUPPORT_AVX
   handleAvxModeChange();
 #endif
+#endif
+#if BX_SUPPORT_MPX
+  handleBndModeChange();
 #endif
 
 #if BX_SUPPORT_X86_64

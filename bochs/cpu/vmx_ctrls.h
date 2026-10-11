@@ -238,7 +238,7 @@ public:
 #define VMX_VMENTRY_CTRL1_LOAD_PERF_GLOBAL_CTRL_MSR         (1 << 13) /* Perf Global Ctrl */
 #define VMX_VMENTRY_CTRL1_LOAD_PAT_MSR                      (1 << 14) /* PAT */
 #define VMX_VMENTRY_CTRL1_LOAD_EFER_MSR                     (1 << 15) /* EFER */
-#define VMX_VMENTRY_CTRL1_LOAD_BNDCFGS                      (1 << 16) /* MPX (not implemented) */
+#define VMX_VMENTRY_CTRL1_LOAD_BNDCFGS                      (1 << 16) /* MPX */
 #define VMX_VMENTRY_CTRL1_SUPPRESS_VMX_PACKETS              (1 << 17) /* Processor Trace (not implemented) */
 #define VMX_VMENTRY_CTRL1_LOAD_GUEST_RTIT_CTRL              (1 << 18) // not implemented
 #define VMX_VMENTRY_CTRL1_LOAD_UINV                         (1 << 19) /* UINTR */
@@ -292,7 +292,7 @@ public:
 #define VMX_VMEXIT_CTRL1_STORE_EFER_MSR             (1 << 20) /* EFER */
 #define VMX_VMEXIT_CTRL1_LOAD_EFER_MSR              (1 << 21) /* EFER */
 #define VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER (1 << 22) /* VMX preemption timer */
-#define VMX_VMEXIT_CTRL1_CLEAR_BNDCFGS              (1 << 23) /* MPX (not implemented) */
+#define VMX_VMEXIT_CTRL1_CLEAR_BNDCFGS              (1 << 23) /* MPX */
 #define VMX_VMEXIT_CTRL1_SUPPRESS_HOST_VMX_TRACE    (1 << 24) /* Processor Trace (not implemented) */
 #define VMX_VMEXIT_CTRL1_CLEAR_IA32_RTIT_CTRL       (1 << 25) /* Clear IA32_RTIT_CTRL MSR on vmexit (not implemented) */
 #define VMX_VMEXIT_CTRL1_CLEAR_IA32_LBR_CTRL        (1 << 26) /* Clear IA32_LBR_CTRL MSR on vmexit (not implemented) */

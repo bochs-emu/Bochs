@@ -324,6 +324,10 @@ void BX_CPU_C::init_MSRs()
   BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_UMWAIT_CONTROL] = new VarMSR("MSR_IA32_UMWAIT_CONTROL", BX_ISA_WAITPKG, &BX_CPU_THIS_PTR msr.ia32_umwait_ctrl, BX_CONST64(0xffffffff00000002));
 #endif
 
+#if BX_SUPPORT_MPX
+  BX_CPU_THIS_PTR msr_desc[BX_MSR_BNDCFGS] = new VarMSR("MSR_IA32_BNDCFGS", BX_ISA_MPX, &BX_CPU_THIS_PTR bndcfg[0], BX_CONST64(0xffc), is_canonical_msr);
+#endif
+
 #if BX_CPU_LEVEL >= 6
   BX_CPU_THIS_PTR msr_desc[BX_MSR_XSS] = new VarMSR("MSR_IA32_XSS", BX_ISA_XSAVES, &BX_CPU_THIS_PTR msr.ia32_xss, ~Bit64u(get_ia32_xss_allow_mask()));
 #endif
@@ -820,6 +824,10 @@ bool BX_CPP_AttrRegparmN(2) BX_CPU_C::wrmsr(Bit32u index, Bit64u val_64)
 #if BX_SUPPORT_PKEYS
   if (index == BX_MSR_IA32_PKRS)
     set_PKeys(BX_CPU_THIS_PTR pkru, BX_CPU_THIS_PTR pkrs);
+#endif
+#if BX_SUPPORT_MPX
+  if (index == BX_MSR_BNDCFGS)
+    handleBndModeChange(); // BNDCFGS.EN or BNDCFGS.BNDPRESERVE might change
 #endif
 #if BX_SUPPORT_UINTR
   if (index == BX_MSR_IA32_UINTR_RR)

@@ -2147,6 +2147,16 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
   }
 #endif
 
+#if BX_SUPPORT_MPX
+  if (vm->vmentry_ctrls.LOAD_BNDCFGS()) {
+    guest.bndcfgs = VMread64(VMCS_64BIT_GUEST_IA32_BNDCFGS);
+    if (! IsCanonical(guest.bndcfgs) || (guest.bndcfgs & 0xffc) != 0) {
+      BX_ERROR(("VMENTER FAIL: VMCS guest BNDCFGS is not canonical or has reserved bits set"));
+      return VMX_VMEXIT_VMENTRY_FAILURE_GUEST_STATE;
+    }
+  }
+#endif
+
   if ((guest.rflags & EFlagsIFMask) == 0) {
     if (guest.interruptibility_state & BX_VMX_INTERRUPTS_BLOCKED_BY_STI) {
       BX_ERROR(("VMENTER FAIL: VMCS guest interrupts can't be blocked by STI when EFLAGS.IF = 0"));
@@ -2357,6 +2367,12 @@ Bit32u BX_CPU_C::VMenterLoadCheckGuestState(Bit64u *qualification)
 #if BX_SUPPORT_UINTR
   if (vm->vmentry_ctrls.LOAD_UINV()) {
     BX_CPU_THIS_PTR uintr.set_uinv(guest.uintr_uinv);
+  }
+#endif
+
+#if BX_SUPPORT_MPX
+  if (vm->vmentry_ctrls.LOAD_BNDCFGS()) {
+    BX_CPU_THIS_PTR bndcfg[0] = guest.bndcfgs;
   }
 #endif
 
@@ -2707,6 +2723,13 @@ void BX_CPU_C::VMexitSaveGuestState(Bit32u reason, Bit32u vector)
   }
 #endif
 
+#if BX_SUPPORT_MPX
+  // VM exits always save IA32_BNDCFGS if 'load BNDCFGS' or 'clear BNDCFGS' controls are supported
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MPX)) {
+    VMwrite64(VMCS_64BIT_GUEST_IA32_BNDCFGS, BX_CPU_THIS_PTR bndcfg[0]);
+  }
+#endif
+
   for (n=0; n<6; n++) {
      Bit32u selector = BX_CPU_THIS_PTR sregs[n].selector.value;
      bool invalid = !BX_CPU_THIS_PTR sregs[n].cache.valid;
@@ -3017,6 +3040,12 @@ void BX_CPU_C::VMexitLoadHostState(void)
   BX_CPU_THIS_PTR idtr.base = host_state->idtr_base;
   BX_CPU_THIS_PTR idtr.limit = 0xFFFF;
 
+#if BX_SUPPORT_MPX
+  if (vm->vmexit_ctrls1.CLEAR_BNDCFGS()) {
+    BX_CPU_THIS_PTR bndcfg[0] = 0;
+  }
+#endif
+
 #if BX_SUPPORT_CET
   if (vm->vmexit_ctrls1.LOAD_HOST_CET_STATE()) {
     SSP = host_state->ssp;
@@ -3148,6 +3177,12 @@ void BX_CPU_C::VMexit(Bit32u reason, Bit64u qualification)
     }
   }
   BX_CPU_THIS_PTR speculative_rsp = false;
+
+#if BX_SUPPORT_MPX
+  // near branch which requested BND0-3 initialization has faulted
+  if (BX_CPU_THIS_PTR bndregs_clear && BX_CPU_THIS_PTR bndregs_clear_icount == get_icount())
+    BX_CPU_THIS_PTR bndregs_clear = false;
+#endif
 
   //
   // STEP 1: Saving Guest State to VMCS

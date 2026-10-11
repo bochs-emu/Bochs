@@ -239,6 +239,10 @@ public:
     return (metaInfo.metaInfo1 >> 2) & 0x3;
   }
 
+  BX_CPP_INLINE unsigned as16L(void) const {
+    return (metaInfo.metaInfo1 & 0x3) == 0;
+  }
+
   BX_CPP_INLINE unsigned as32L(void) const {
     return metaInfo.metaInfo1 & 0x1;
   }

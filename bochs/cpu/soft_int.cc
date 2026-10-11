@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -40,6 +40,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GwMa(bxInstruction_c *i)
 
   if (op1_16 < bound_min || op1_16 > bound_max) {
     BX_DEBUG(("%s: fails bounds test", i->getIaOpcodeNameShort()));
+#if BX_SUPPORT_MPX
+    if (MPX_Enabled()) BX_CPU_THIS_PTR bndstatus = BX_NO_MPX_EXCEPTION;
+#endif
     exception(BX_BR_EXCEPTION, 0);
   }
 
@@ -57,6 +60,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BOUND_GdMa(bxInstruction_c *i)
 
   if (op1_32 < bound_min || op1_32 > bound_max) {
     BX_DEBUG(("%s: fails bounds test", i->getIaOpcodeNameShort()));
+#if BX_SUPPORT_MPX
+    if (MPX_Enabled()) BX_CPU_THIS_PTR bndstatus = BX_NO_MPX_EXCEPTION;
+#endif
     exception(BX_BR_EXCEPTION, 0);
   }
 

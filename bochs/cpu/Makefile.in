@@ -103,6 +103,7 @@ OBJS = \
 	exception.o \
 	cpuid.o \
 	proc_ctrl.o \
+	mpx.o \
 	mwait.o \
 	crregs.o \
 	cet.o \
@@ -572,6 +573,14 @@ mult8.o: mult8.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  softfloat3e/include/softfloat_types.h ../config.h  \
  fpu/status_w.h fpu/control_w.h crregs.h descriptor.h decoder/instr.h \
  lazy_flags.h tlb.h xmm.h vmx.h vmx_ctrls.h stack.h access.h
+mpx.o: mpx.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
+ ../misc/bswap.h ../gui/siminterface.h ../gui/paramtree.h \
+ ../param_names.h cpu.h decoder/decoder.h decoder/features.h \
+ ../instrument/stubs/instrument.h i387.h \
+ softfloat3e/include/softfloat_types.h ../config.h \
+ fpu/status_w.h fpu/control_w.h crregs.h descriptor.h decoder/instr.h \
+ lazy_flags.h tlb.h xmm.h vmx.h vmx_ctrls.h stack.h access.h \
+ svm.h apic.h ../pc_system.h
 mwait.o: mwait.@CPP_SUFFIX@ ../bochs.h ../config.h ../osdep.h ../logio.h \
  ../misc/bswap.h ../gui/siminterface.h ../gui/paramtree.h \
  ../param_names.h cpu.h decoder/decoder.h decoder/features.h \

@@ -553,6 +553,25 @@ void BX_CPU_C::register_state(void)
   BX_CPU_THIS_PTR register_MSRs_state(MSRS);
 #endif
 
+#if BX_SUPPORT_MPX
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MPX)) {
+    bx_list_c *MPX = new bx_list_c(cpu, "MPX");
+    BXRS_HEX_PARAM_FIELD(MPX, bndl_0, bndl[0]);
+    BXRS_HEX_PARAM_FIELD(MPX, bndu_0, bndh[0]);
+    BXRS_HEX_PARAM_FIELD(MPX, bndl_1, bndl[1]);
+    BXRS_HEX_PARAM_FIELD(MPX, bndu_1, bndh[1]);
+    BXRS_HEX_PARAM_FIELD(MPX, bndl_2, bndl[2]);
+    BXRS_HEX_PARAM_FIELD(MPX, bndu_2, bndh[2]);
+    BXRS_HEX_PARAM_FIELD(MPX, bndl_3, bndl[3]);
+    BXRS_HEX_PARAM_FIELD(MPX, bndu_3, bndh[3]);
+    BXRS_HEX_PARAM_FIELD(MPX, bndcfgs, bndcfg[0]);
+    BXRS_HEX_PARAM_FIELD(MPX, bndcfgu, bndcfg[1]);
+    BXRS_HEX_PARAM_FIELD(MPX, bndstatus, bndstatus);
+    BXRS_PARAM_BOOL(MPX, bndregs_clear, bndregs_clear);
+    BXRS_DEC_PARAM_FIELD(MPX, bndregs_clear_icount, bndregs_clear_icount);
+  }
+#endif
+
 #if BX_SUPPORT_UINTR
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_UINTR)) {
     bx_list_c *UINTR = new bx_list_c(cpu, "UINTR");
@@ -1078,6 +1097,12 @@ void BX_CPU_C::reset(unsigned source)
   }
   BX_CPU_THIS_PTR xcr0_suppmask = get_xcr0_allow_mask();
   BX_CPU_THIS_PTR ia32_xss_suppmask = get_ia32_xss_allow_mask();
+
+#if BX_SUPPORT_MPX
+  BX_CPU_THIS_PTR bndcfg[0] = BX_CPU_THIS_PTR bndcfg[1] = BX_CPU_THIS_PTR bndstatus = 0;
+  xrstor_init_bndregs_state();
+  BX_CPU_THIS_PTR bndregs_clear_icount = 0;
+#endif
 
 #if BX_SUPPORT_MONITOR_MWAIT
   BX_CPU_THIS_PTR msr.ia32_umwait_ctrl = 0;

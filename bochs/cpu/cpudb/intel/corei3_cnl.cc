@@ -114,6 +114,9 @@ corei3_cnl_t::corei3_cnl_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
 #if BX_SUPPORT_PKEYS
   enable_cpu_extension(BX_ISA_PKU);
 #endif
+#if BX_SUPPORT_MPX
+  enable_cpu_extension(BX_ISA_MPX);
+#endif
 
   max_std_leaf = 0x16;
   max_ext_leaf = 0x80000008;
