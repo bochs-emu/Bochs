@@ -12,7 +12,7 @@
 #include "util.h"
 
 const struct in6_addr ALLNODES_MULTICAST = \
-    {           \
+    { { {       \
         0xff,   \
         0x02,   \
         0x00,   \
@@ -29,10 +29,10 @@ const struct in6_addr ALLNODES_MULTICAST = \
         0x00,   \
         0x00,   \
         0x01    \
-    };
+    } } };
 
 const struct in6_addr SOLICITED_NODE_PREFIX \
-    {                         \
+    { { {                     \
             0xff,             \
             0x02,             \
             0x00,             \
@@ -49,10 +49,10 @@ const struct in6_addr SOLICITED_NODE_PREFIX \
             0x00,             \
             0x00,             \
             0x00              \
-    };
+    } } };
 
 const struct in6_addr LINKLOCAL_ADDR \
-    {                  \
+    { { {              \
             0xfe,      \
             0x80,      \
             0x00,      \
@@ -69,10 +69,10 @@ const struct in6_addr LINKLOCAL_ADDR \
             0x00,      \
             0x00,      \
             0x02       \
-    };
+    } } };
 
 const struct in6_addr ZERO_ADDR = \
-    {           \
+    { { {       \
         0x00,   \
         0x00,   \
         0x00,   \
@@ -89,7 +89,7 @@ const struct in6_addr ZERO_ADDR = \
         0x00,   \
         0x00,   \
         0x00    \
-    };
+    } } };
 
 /* Check that two IPv6 addresses are equal */
 static inline bool in6_equal(const struct in6_addr *a, const struct in6_addr *b)

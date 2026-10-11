@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2025  The Bochs Project
+//  Copyright (C) 2008-2026  The Bochs Project
 
 #include "config.h"
 
@@ -24,6 +24,7 @@
 #include "cpu/cpu.h"
 
 extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip);
+extern const char *stringify_EFLAGS(Bit32u eflags, char *s);
 
 #include "enh_dbg.h"
 
@@ -39,16 +40,18 @@ extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr
 
 const char* DC0txt[2] = {"P.Address","L.Address"};    // DumpMode definitions in text
 
-const char* BTxt[6] = {
+const char* BTxt[NBUTTONS] = {
   "Continue [c]",
   "Step [s]",
   "Step N [s ###]",
+  "Step Over",
   "Refresh",
   "Break [^C]",
-  "Break All"};
+//"Break All"
+};
 
-int BtnLkup[6] = {
-    CMD_CONT, CMD_STEP1, CMD_STEPN, CMD_RFRSH, CMD_BREAK
+int BtnLkup[NBUTTONS] = {
+    CMD_CONT, CMD_STEP1, CMD_STEPN, CMD_STEPOVER, CMD_RFRSH, CMD_BREAK
 };
 
 #ifdef WIN32
@@ -144,14 +147,14 @@ static const char* RegLCName[EFER_Rnum + 1] = {
     "gdtr","idtr","ldtr","tr","cr0","cr2","cr3","cr4","efer"
 };
 static char* RDispName[EFER_Rnum + 1];
-static bx_param_num_c *RegObject[BX_MAX_SMP_THREADS_SUPPORTED][TOT_REG_NUM + EXTRA_REGS];
+static bx_param_num_c *RegObject[BX_MAX_SMP_THREADS_SUPPORTED][STD_REG_NUM + EXTRA_REGS];
 Bit64u rV[EFER_Rnum + 1];   // current values of registers
 Bit64u PV[EFER_Rnum + 1];   // previous values of registers
 Bit32s GDT_Len;             // "limits" (= bytesize-1) for GDT and IDT
 Bit32s IDT_Len;
-Bit8u RegColor[TOT_REG_NUM];    // specifies foreground and background color of registers
+Bit8u RegColor[STD_REG_NUM+EXTRA_REGS];    // specifies foreground and background color of registers
 // Text color is red if the upper bit is set. Background is set according to ColorList.
-int RitemToRnum[TOT_REG_NUM];   // mapping from Reg List Item# to register number
+int RitemToRnum[STD_REG_NUM];   // mapping from Reg List Item# to register number
 
 Bit64u ladrmin = 0; // bochs linear addressing access variables
 Bit64u ladrmax = 0;
@@ -437,29 +440,8 @@ void upr(char* d)
 // create EFLAGS display for Status line
 void ShowEflags(char *buf)
 {
-    static const char *EflBName[16] = {
-        "cf", "pf", "af", "zf", "sf", "tf", "if", "df", "of", "nt", "rf", "vm", "ac", "vif", "vip", "id"
-    };
-    static const int EflBNameLen[16] = {
-        2,2,2,2,2,2,2,2,2,2,2,2,2,3,3,2
-    };
-    static const int EflBitVal[16] = {
-        1, 4, 0x10, 0x40, 0x80, 0x100, 0x200, 0x400, 0x800, 0x4000, 0x10000, 0x20000, 0x40000, 0x80000, 0x100000, 0x200000
-    };
-
     Bit32u Efl = (Bit32u) rV[EFL_Rnum];
-    int i = 16;
-    char *cp = buf + 6;
-
-    sprintf(buf,"IOPL=%1u", (Efl & 0x3000) >> 12);
-    while (--i >= 0)
-    {
-        *(cp++)= ' ';
-        strcpy (cp, EflBName[i]);       // copy the name of the bitflag
-        if ((Efl & EflBitVal[i]) != 0)  // if the bit is set, put the name in uppercase
-            upr(cp);
-        cp += EflBNameLen[i];
-    }
+    stringify_EFLAGS(Efl, buf);
 }
 
 // change the display on the status line if anything has changed
@@ -529,7 +511,7 @@ bool ReadBxLMem(Bit64u laddr, unsigned len, Bit8u *buf)
 }
 
 // binary conversion (and validity testing) on hex/decimal char string inputs
-Bit64u cvthex(char *p, Bit64u errval)
+Bit64u cvthex(const char *p, Bit64u errval)
 {
     Bit64u ret = 0;
     bool end = FALSE;
@@ -547,9 +529,9 @@ Bit64u cvthex(char *p, Bit64u errval)
     return ret;
 }
 
-Bit64u cvt64(char *nstr, bool negok)
+Bit64u cvt64(const char *nstr, bool negok)
 {
-    char *p, *s;
+    const char *p, *s;
     Bit64u ret = 0;
     bool neg = FALSE;
     p= nstr;
@@ -573,7 +555,7 @@ Bit64u cvt64(char *nstr, bool negok)
 }
 
 // "singlestep" disassembly lines from the internal debugger are sometimes ignored
-bool isSSDisasm(char *s)
+bool isSSDisasm(const char *s)
 {
     if (ignSSDisasm == FALSE)   // ignoring those lines?
         return FALSE;
@@ -813,18 +795,18 @@ int FillSSE(int LineCount)
     return (LineCount);
 }
 
+#if BX_SUPPORT_FPU
+extern double x87_to_double(Bit16u signExp, Bit64u signif);
+
 // this routine is only called if debugger already knows FPU is supported
 // -- but it might not be active
 int FillMMX(int LineCount)
 {
-    static double scale_factor = pow(2.0, -63.0);
-    int i;
-    Bit16u exp = 0;
-    Bit64u mmreg = 0;
     bx_param_num_c *p;
-    unsigned short exponent[8];
+    Bit16u exponent[8];
     char *cols[3];
     char fputxt[60];
+    int i;
 
     cols[0] = fputxt;
     if ((rV[CR0_Rnum] & 0xc) != 0)  // TS or EM flags in CR0 temporarily disable MMX/FPU/SSE
@@ -840,35 +822,24 @@ int FillMMX(int LineCount)
     cols[2] = fputxt + 32;
     strcpy (fputxt, "MM0-ST0");
     strcpy (fputxt + 18, " : ");
-    i = 7;
     for (i = 0; i < 8; i++)
     {
         fputxt[2] = i + '0';
         fputxt[6] = i + '0';
         RitemToRnum[LineCount] = i + ST0_Rnum;
         p = RegObject[CurrentCPU][ST0_Rnum + i];
+        Bit64u mmreg = 0;
         if (p != NULL)
             mmreg = p->get64(); // get the value of "mmx(i)" register
-        else
-            mmreg = 0;
-        sprintf (fputxt + 10,Fmt32b[UprCase],GET32H(mmreg));
-        sprintf (fputxt + 21,Fmt32b[UprCase], GET32L(mmreg));
+        sprintf (fputxt + 10, Fmt64b[UprCase], mmreg);
 
         p = RegObject[CurrentCPU][ST0_exp + i];
+        Bit16u exp = 0;
         if (p != NULL)
             exp = (Bit16u) p->get64();  // get the exponent for this FPU register
-        else
-            exp = 0;
         exponent[i] = exp;              // save each one temporarily
-        double f = pow(2.0, ((0x7fff & exp) - 0x3fff));
-        if (exp & 0x8000)
-            f = -f;
-#ifdef _MSC_VER
-        f *= (double)(signed __int64)(mmreg>>1) * scale_factor * 2;
-#else
-        f *= mmreg*scale_factor;
-#endif
-        sprintf (cols[2],"%.3e",f);
+        double f = x87_to_double(exp, mmreg);
+        sprintf (cols[2],"%.3e", f);
         InsertListRow(cols, 3, REG_WND, LineCount, 3);  // 3 cols, group 3
         ++LineCount;
     }
@@ -877,13 +848,14 @@ int FillMMX(int LineCount)
     {
         fputxt[2] = i + '0';
         RitemToRnum[LineCount] = i + ST0_exp;
-        sprintf (fputxt+10,Fmt16b[UprCase], exponent[i]);   // col1
-        sprintf (fputxt+32,"%u", exponent[i]);      // col2
-        InsertListRow(cols, 3, REG_WND, LineCount, 3);  // 3 cols, group 3
+        sprintf (fputxt+10, Fmt16b[UprCase], exponent[i]);   // col1
+        sprintf (fputxt+32,"%u", exponent[i]);               // col2
+        InsertListRow(cols, 3, REG_WND, LineCount, 3);       // 3 cols, group 3
         ++LineCount;
     }
     return LineCount;
 }
+#endif
 
 // get values of Debug registers from simulation
 int FillDebugRegs(int itemnum)
@@ -1232,7 +1204,7 @@ void InitRegObjects()
     {
         // RegObject[j]s are all initialized to NULL when allocated in the BSS area
         // but it doesn't hurt anything to do it again, once
-        int i = TOT_REG_NUM + EXTRA_REGS;
+        int i = STD_REG_NUM + EXTRA_REGS;
         while (--i >= 0)
             RegObject[cpu][i] = (bx_param_num_c *) NULL;
 
@@ -1287,7 +1259,7 @@ void InitRegObjects()
         RegObject[cpu][CR0_Rnum] = SIM->get_param_num("CR0", cpu_list);
         RegObject[cpu][CR2_Rnum] = SIM->get_param_num("CR2", cpu_list);
         RegObject[cpu][CR3_Rnum] = SIM->get_param_num("CR3", cpu_list);
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
         RegObject[cpu][CR4_Rnum] = SIM->get_param_num("CR4", cpu_list);
 #endif
 #if BX_CPU_LEVEL >= 6
@@ -1655,7 +1627,7 @@ void FillPAGE()
             if((lin - start_lin) != (phy - start_phy)) {
                 if(start_lin != 1) {
                     sprintf (pa_lin,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_lin, lin - 1);
-                    sprintf (pa_phy,"0x" FMT_LLCAPX " - 0x" FMT_LLCAPX,
+                    sprintf (pa_phy,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64,
                         start_phy, start_phy + (lin-1-start_lin));
                     AddPagingLine (LineCount,pa_lin,pa_phy);
                     ++LineCount;
@@ -1666,7 +1638,7 @@ void FillPAGE()
         } else {
             if(start_lin != 1) {
                 sprintf (pa_lin,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_lin, lin - 1);
-                sprintf (pa_phy,"0x" FMT_LLCAPX " - 0x" FMT_LLCAPX,
+                sprintf (pa_phy,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64,
                     start_phy, start_phy + (lin-1-start_lin));
                 AddPagingLine (LineCount,pa_lin,pa_phy);
                 ++LineCount;
@@ -1686,8 +1658,8 @@ void FillPAGE()
         lin++;
     }
     if(start_lin != 1) {
-        sprintf (pa_lin,"0x" FMT_ADDRX64 " - 0x%08X", start_lin, -1);
-        sprintf (pa_phy,"0x" FMT_LLCAPX " - 0x" FMT_LLCAPX,start_phy, start_phy + (lin-1-start_lin));
+        sprintf (pa_lin,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_lin, (Bit64u)-1);
+        sprintf (pa_phy,"0x" FMT_ADDRX64 " - 0x" FMT_ADDRX64, start_phy, start_phy + (lin-1-start_lin));
         AddPagingLine (LineCount,pa_lin,pa_phy);
     }
     RedrawColumns(DUMP_WND);
@@ -2188,7 +2160,7 @@ void DoAllInit()
     p -= 512;           // 2 "hex" bytes per byte value
     tmpcb = p;
 
-    i = TOT_REG_NUM;        // fake up a color table -- there are just enough, currently
+    i = STD_REG_NUM;        // fake up a color table -- there are just enough, currently
     int j = 7;      // color 7 = orange
     while (i > 0)
     {
@@ -2593,11 +2565,27 @@ void doFind()
     }
 }
 
+void doStepOver()
+{
+    // can't run sim until everything is ready
+    if (AtBreak == FALSE || debug_cmd_ready != FALSE)
+        return;
+
+    // The VGAW *MUST* be refreshed periodically -- it's best to use the timer.
+    // Which means that the sim cannot be directly run from this msglp thread.
+    *debug_cmd = 'p';   // send a fake "continue" command to the internal debugger
+    debug_cmd[1] = 0;
+    debug_cmd_ready = TRUE;
+    AtBreak = FALSE;
+    StatusChange = TRUE;
+}
+
 void doStepN()
 {
     // can't run sim until everything is ready
     if (AtBreak == FALSE || debug_cmd_ready != FALSE)
         return;
+
     sprintf (tmpcb,"%d",PrevStepNSize);
     if (AskText("Singlestep N times","Number of steps (use 0x for hex):",tmpcb) == FALSE)
         return;
@@ -2747,16 +2735,13 @@ void ChangeReg()
 {
     // Change a register -- search for the first selected register
     int L = GetNextSelectedLI(REG_WND, -1);
-    if (AtBreak == FALSE || L == -1 || L >= TOT_REG_NUM)
+    if (AtBreak == FALSE || L == -1 || L >= STD_REG_NUM)
         return;
 
     int i = RitemToRnum[L];
     if (i > EFER_Rnum)      // TODO: extend this to more reg -- need display names for all
         return;
-//  if (i > EFER_Rnum)
-//      *tmpcb = 0;
-//  else
-        sprintf (tmpcb,"0x" FMT_LL "X", rV[i]);
+    sprintf (tmpcb,"0x" FMT_LL "X", rV[i]);
     if (AskText("Change Register Value",RDispName[i],tmpcb))
     {
         Bit64u val = cvt64(tmpcb,TRUE);     // input either hex or decimal
@@ -3047,15 +3032,7 @@ int HotKey (int ww, int Alt, int Shift, int Control)
             break;
 
         case VK_F8:
-                // can't continue until everything is ready
-            if (AtBreak != FALSE && debug_cmd_ready == FALSE)
-            {
-                *debug_cmd = 'p';   // send a fake "proceed" command to the internal debugger
-                debug_cmd[1] = 0;
-                debug_cmd_ready = TRUE;
-                AtBreak = FALSE;
-                StatusChange = TRUE;
-            }
+            doStepOver();
             break;
 
         case VK_F11:
@@ -3161,6 +3138,10 @@ void ActivateMenuItem (int cmd)
 
         case CMD_STEPN: // step N
             doStepN();
+            break;
+
+        case CMD_STEPOVER:
+            doStepOver();
             break;
 
         case CMD_BREAK: // break/stop the sim

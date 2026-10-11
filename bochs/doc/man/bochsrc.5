@@ -1,5 +1,5 @@
 .\"Document Author:  Timothy R. Butler   -   tbutler@uninetsolutions.com"
-.TH bochsrc 5 "07 Mar 2025" "bochsrc" "The Bochs Project"
+.TH bochsrc 5 "11 Oct 2026" "bochsrc" "The Bochs Project"
 .\"SKIP_SECTION"
 .SH NAME
 bochsrc \- Configuration file for Bochs.
@@ -48,8 +48,8 @@ directly with this option and some of them install a config option that is
 only available when the plugin device is loaded. The value "1" means to load
 the plugin and "0" will unload it (if loaded before).
 
-These plugins will be loaded by default (if present): 'biosdev', 'extfpuirq',
-\&'gameport', 'iodebug','parallel', 'serial', 'speaker' and 'unmapped'.
+These plugins will be loaded by default (if present): 'biosdev', 'gameport',
+\&'iodebug','parallel', 'serial', 'speaker' and 'unmapped'.
 
 These plugins are also supported, but they are usually loaded directly with
 their bochsrc option: 'e1000', 'es1370', 'ne2k', 'pcidev', 'pcipnic', 'sb16',
@@ -109,9 +109,9 @@ the "wx" display library.
 Some display libraries now support specific options to control their
 behaviour. These options are supported by more than one display library:
 
-  "cmdmode"     - call a headerbar button handler after pressing F7 (x, sdl, sdl2)
+  "cmdmode"     - call a headerbar button handler after pressing F7 (x, sdl, sdl2, term)
   "fullscreen"  - startup in fullscreen mode (sdl, sdl2)
-  "hideIPS"     - disable IPS output in status bar (rfb, sdl, sdl2, term, vncsrv, wx, x)
+  "hideIPS"     - disable IPS output in status bar (nogui, rfb, sdl, sdl2, term, vncsrv, wx, x)
   "nokeyrepeat" - turn off host keyboard repeat (sdl, sdl2, x)
   "no_gui_console" - use system console instead of builtin gui console (rfb, sdl, sdl2, vncsrv, x)
   "timeout"     - time (in seconds) to wait for client (rfb, vncsrv)
@@ -174,6 +174,20 @@ cpuid_limit_winnt:
 
 Determine whether to limit maximum CPUID function to 2. This mode is
 required to workaround WinNT installation and boot issues.
+
+force_ignne:
+
+Always act like if #IGNNE pin was asserted on CPU input.
+Avoid potential deadlock after unmasked x87 exception handling and FERR# assertion.
+
+cpuid_freq:
+
+Select how the CPUID frequency leaves 0x15/0x16 are reported by CPU models
+that implement them (hardware/none/ips). With 'hardware' (default) the
+values dumped from the modeled hardware are reported, but modern guest
+kernels trust these leaves for TSC calibration while the emulated TSC
+actually advances at the IPS rate. With 'none' the frequencies are reported
+as not enumerated, with 'ips' the leaves report the emulated tick rate.
 
 mwait_is_nop:
 
@@ -295,12 +309,8 @@ at startup if existing and saved on exit if modified. The Bochs BIOS doesn't
 use this feature yet.
 
 .B NOTE:
-If you use the BIOS-bochs-legacy romimage BIOS option, you cannot use a PCI
-enabled VGA ROM BIOS.
-
-.B NOTE:
-If you use a SeaBIOS binary in romimage BIOS option, you must use a PCI
-enabled VGA ROM BIOS.
+If you use a SeaBIOS binary in romimage BIOS option, you must use a VGA
+compatible PCI graphics adapter (ISA and AGP are not supported).
 
 Examples:
   romimage: file=bios/BIOS-bochs-latest, options=fastboot
@@ -310,11 +320,23 @@ Examples:
   romimage: file=mybios.bin, address=0xfff80000
 
 .TP
+.I "fw_cfg:"
+UEFI Firmware Support: Bochs supports UEFI boot using OVMF (Open Virtual
+Machine Firmware) from the TianoCore EDK2 project. UEFI boot requires the
+fw_cfg device which provides system configuration to the firmware via
+I/O ports 0x510-0x51B. This includes the E820 memory map, ACPI tables,
+RAM size, and CPU count. See user doc for more info.
+
+Example:
+  romimage: file=OVMF.fd, address=0xffc00000
+  fw_cfg: enabled=1
+
+.TP
 .I "vgaromimage:"
 You also need to load a VGA ROM BIOS into 0xC0000.
 
 Examples:
-  vgaromimage: file=bios/VGABIOS-elpin-2.40
+  vgaromimage: file=bios/VGABIOS-elpin/VGABIOS-elpin-2.40
   vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest.bin
   vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest-cirrus.bin
 
@@ -340,8 +362,9 @@ extension:
 
 Here you can specify the display extension to be used. With the value
 \&'none' you can use standard VGA with no extension. Other supported
-values are 'vbe' for Bochs VBE, 'cirrus' for Cirrus SVGA support and
-\&'voodoo' for Voodoo Graphics support (see 'voodoo' option).
+values are 'vbe' for Bochs VBE, 'cirrus' for Cirrus SVGA support,
+\&'voodoo' for Voodoo Graphics support (see 'voodoo' option) and
+\&'geforce' for experimental GeForce support (see 'geforce' option).
 
 update_freq:
 
@@ -363,7 +386,8 @@ ddc:
 
 This parameter defines the behaviour of the DDC emulation that returns
 the monitor EDID data. By default the 'builtin' values for 'Bochs Screen'
-are used. Other choices are 'disabled' (no DDC emulation) and 'file'
+are used. Other choices are 'builtin_gui' (limit builtin values based on
+gui capabilities), 'disabled' (no DDC emulation) and 'file'
 (read monitor EDID from file / path name separated with a colon).
 
 vbe_memsize:
@@ -378,17 +402,27 @@ Examples:
 
 .TP
 .I "voodoo:"
-This defines the Voodoo Graphics emulation (experimental). Currently
-supported models are 'voodoo1', 'voodoo2', 'banshee' and 'voodoo3'.
-The Voodoo2 support is not yet complete, but almost usable. The Banshee /
-Voodoo3 support is under construction, but basically usable. The 2D/3D cards
-require an external VGA BIOS the vga extension option to be set to 'voodoo'.
-If the i440BX PCI chipset is selected, they can be assigned to AGP (slot #5).
-The gui screen update timing for all models is controlled by the related
-\&'vga' options.
+This defines the Voodoo Graphics emulation. Currently supported models
+are 'voodoo1', 'voodoo2', 'banshee' and 'voodoo3'. The 2D/3D cards
+require the 'banshee' version of the LGPL'd VGABIOS or an external VGA BIOS
+and the vga extension option to be set to 'voodoo'. If the i440BX PCI chipset
+is selected, they can be assigned to AGP (slot #5). The gui screen update
+timing for all models is controlled by the related 'vga' options.
 
 Example:
   voodoo: enabled=1, model=voodoo1
+
+.TP
+.I "geforce:"
+This defines the experimental GeForce emulation. Currently supported models
+are 'geforce2', 'geforce3', 'geforcefx5900' and 'geforce6800'. These 2D/3D AGP
+cards require an external VGA BIOS, the vga extension option to be set to 'geforce'
+and the i440BX PCI/AGP chipset with the 'geforce' device assigned to AGP
+(slot #5). The gui screen update timing for all models is controlled by the
+related 'vga' options.
+
+Example:
+  geforce: model=geforce3
 
 .TP
 .I "keyboard:"
@@ -511,6 +545,8 @@ By default the "Bochs i440FX" chipset enables the ACPI and HPET devices, but
 original i440FX doesn't support them. The options 'noacpi' and 'nohpet' make
 it possible to disable them. The option 'noagp' disables the incomplete AGP
 subsystem of the i440BX chipset.
+If PCI is enabled, the 'nofdc' option disables the FDC if no floppy drive
+is configured.
 
 Example:
   pci: enabled=1, chipset=i440fx, slot1=pcivga, slot2=ne2k, advopts=noacpi
@@ -627,6 +663,7 @@ Use directory as 1.44M VFAT media:
 These options enables up to 4 ata channels. For each channel
 the two base io addresses and the irq must be specified.
 ata0 and ata1 are enabled by default, with the values shown below.
+These settings are required if PCI IDE is present.
 
 Examples:
    ata0: enabled=1, ioaddr1=0x1f0, ioaddr2=0x3f0, irq=14
@@ -640,7 +677,7 @@ Examples:
 This defines the type and characteristics of all attached ata devices:
    type=       type of attached device [disk|cdrom]
    path=       path of the image
-   mode=       image mode [flat|concat|sparse|vmware3|vmware4|undoable|growing|volatile|vpc|vbox|vvfat], only valid for disks
+   mode=       image mode [flat|concat|sparse|vmware3|vmware4|vhdx|undoable|growing|volatile|vpc|vbox|vvfat], only valid for disks
    cylinders=  only valid for disks
    heads=      only valid for disks
    spt=        only valid for disks
@@ -659,11 +696,14 @@ works with it.
 In UNIX it is possible to use a raw device as a Bochs hard disk,
 but WE DON'T RECOMMEND IT.
 
-The path is mandatory for hard disks. Disk geometry autodetection works with
-images created by bximage if CHS is set to 0/0/0 (cylinders are calculated
-using  heads=16 and spt=63). For other hard disk images and modes the
-cylinders, heads, and spt are mandatory. In all cases the disk size reported
-from the image must be exactly C*H*S*512.
+The path is mandatory for hard disks. When using the disk image mode "vvfat",
+it specifies the host directory to use. The optional prefix "fat32:" forces
+the usage of the FAT32 file system for disks with size from 512 to 2047 MB.
+
+Disk geometry autodetection works with images created by bximage if CHS is set
+to 0/0/0 (cylinders are calculated using  heads=16 and spt=63). For other hard
+disk images and modes the cylinders, heads, and spt are mandatory. In all cases
+the disk size reported from the image must be exactly C*H*S*512.
 
 The mode option defines how the disk image is handled. Disks can be defined as:
   - flat : one file flat layout
@@ -671,6 +711,7 @@ The mode option defines how the disk image is handled. Disks can be defined as:
   - sparse : stackable, commitable, rollbackable
   - vmware3 : vmware3 disk support
   - vmware4 : vmware4 disk support (aka VMDK)
+  - vhdx : VHDX disk support
   - undoable : flat file with commitable redolog
   - growing : growing file
   - volatile : flat file with volatile redolog
@@ -685,6 +726,11 @@ older operating systems like MS-DOS), can be defined as:
   - rechs : a revised bitshift algorithm, using a 15 heads fake physical geometry, for disks up to 7.9GB (15482880 sectors). (don't use this unless you understand what you're doing)
   - lba : a standard lba-assisted algorithm, for disks up to 8.4GB (16450560 sectors)
   - auto : autoselection of best translation scheme. (it should be changed if system does not boot)
+
+When using the format "VENDOR:PRODUCT:REV" as the model string for the CD-ROM,
+the string is split into 3 parts for the use in ATAPI inquiry. The vendor
+id is limited to 8, product id to 16 and revision to 4 characters. For the ATA
+model string the first two of these parts are used separated with a space.
 
 Default values are:
    mode=flat, biosdetect=auto, translation=auto, model="Generic 1234"
@@ -788,6 +834,19 @@ Example:
   error: action=report
   error: action=warn
 
+
+.TP
+.I "warn:"
+This level can be used to show import messages to the
+user. By default it brings up a message box. The reason
+for this condition can be different. It can be originally
+caused by a bug or missing feature in the emulation, but
+other reasons are also possible.
+
+Example:
+  warn: action=report
+
+
 .TP
 .I "info:"
 This  setting  tells Bochs  what  to  do  when  an event
@@ -816,14 +875,26 @@ Example:
   debug: action=ignore
 
 .TP
-.I "debugger_log:"
-Give the path of the log file you'd like Bochs to log debugger output.
-If you really don't want it, make it '/dev/null', or '-'.
+.I "debugger:"
+This defines the parameters of the Bochs internal debugger.
 
-Example:
-  log: debugger.out
-  log: /dev/null              (unix only)
-  log: -
+log
+
+Give the path of the log file you'd like Bochs to log debugger output.
+If you really don't want it, make it /dev/null or '-'.
+
+gui
+
+If this parameter is set to 'true' or '1' the debugger gui is used instead
+of the command line version. The special value 'globalini' enables the gui
+and forces the usage of an ini file from BXSHARE path. The gui parameter is
+available only if Bochs is built with debugger gui support and the debugger
+is activated with the command line option '-dbg'.
+
+Examples:
+  debugger: log=debugger.out, gui=true
+  debugger: log=/dev/null       (unix only)
+  debugger: log=-
 
 .TP
 .I "com1: \fP, \fIcom2: \fP, \fIcom3: \fPor \fIcom4:"
@@ -992,6 +1063,12 @@ the  IPS  parameter of the CPU option and also depends on
 the clock sync setting.  It  is  possible  to  adjust the
 dmatimer value at runtime.
 
+dsp_realtime:
+
+If set to 1 (default is 0), the DSP timer is using the realtime engine,
+otherwise it is driven by the cpu and depends on the ips setting. The realtime
+mode may fix or reduce sound issues.
+
 Examples for output modes:
   sb16: midimode=2, midifile="output.mid", wavemode=1 # MIDI to file
   sb16: midimode=1, wavemode=3, wavefile="output.wav" # wave to file and device
@@ -1003,6 +1080,9 @@ DAC1+DAC2 output at the same time). The parameter 'enabled' controls the
 presence of the device. The wave and MIDI output can be sent to device, file
 or both using the parameters 'wavemode', 'wavefile', 'midimode' and
 \&'midifile'. See the description of these parameters at the SB16 directive.
+
+The parameter 'dac_realtime' controls the timer mode of both DACs and works
+like the SB16 parameter 'dsp_realtime'.
 
 Example for using 'sound' parameters:
   es1370: enabled=1, wavemode=1

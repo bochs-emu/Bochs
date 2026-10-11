@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2024 Stanislav Shwartsman
+//   Copyright (c) 2024-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -31,7 +31,7 @@
 #define BX_TILE_REGISTERS 8
 
 struct AMX {
-  AMX(): palette_id(0), start_row(0) {}
+  AMX(): palette_id(0), start_row(0), tile_use_tracker(0) {}
 
   unsigned palette_id; // 0 if tiles are not configured
   unsigned start_row;  // used to restart tile operations
@@ -43,6 +43,7 @@ struct AMX {
   } tilecfg[BX_TILE_REGISTERS];
 
   bool tiles_configured() const { return palette_id != 0; }
+  unsigned get_palette_id() const { return palette_id; }
 
   void clear_tilecfg() {
     for (int i=0;i<BX_TILE_REGISTERS;i++) tilecfg[i].clear();
@@ -93,19 +94,48 @@ struct AMX {
     void clear() { clear_rows(BX_TILE_MAX_ROWS); }
   } tile[BX_TILE_REGISTERS] BX_CPP_AlignN(64);
 
+#if BX_SUPPORT_AMX
+  struct SCALEDATA {
+    bx_zmm_reg_t scale[2];
+
+    SCALEDATA() { reset(); }
+
+    void reset() {
+      for (unsigned n=0; n < 8; n++) {
+        scale[0].vmm64u(n) = BX_CONST64(0x7F7F7F7F7F7F7F7F);
+        scale[1].vmm64u(n) = BX_CONST64(0x7F7F7F7F7F7F7F7F);
+      }
+    }
+  } scaledata;
+#endif
+
   unsigned tile_use_tracker;
 
   void clear_tiles() {
     for (int i=0;i<BX_TILE_REGISTERS;i++) tile[i].clear();
   }
 
-  void clear() {
+  void bsr_clear() {
+    scaledata.reset();
+  }
+
+  // initialize TILECFG state only (TILES_CONFIGURED = 0), TILEDATA and SCALEDATA are not modified
+  void init_tilecfg() {
     palette_id = 0;
     start_row = 0;
-    tile_use_tracker = 0;
-
-    clear_tiles();
     clear_tilecfg();
+  }
+
+  // initialize TILEDATA state
+  void init_tiledata() {
+    tile_use_tracker = 0;
+    clear_tiles();
+  }
+
+  void clear() {
+    init_tilecfg();
+    init_tiledata();
+    bsr_clear();
   }
 };
 

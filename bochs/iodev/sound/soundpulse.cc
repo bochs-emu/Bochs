@@ -93,10 +93,22 @@ int bx_soundlow_waveout_pulse_c::set_pcm_params(bx_pcm_param_t *param)
   return BX_SOUNDLOW_OK;
 }
 
-int bx_soundlow_waveout_pulse_c::get_packetsize()
+int bx_soundlow_waveout_pulse_c::get_packet_size_bytes()
 {
   return BX_SOUND_PULSE_BUFSIZE;
 }
+
+/*
+int bx_soundlow_waveout_pulse_c::get_packet_size_msec()
+{
+  // TODO
+}
+
+int bx_soundlow_waveout_pulse_c::get_buffer_delay()
+{
+  // TODO
+}
+*/
 
 int bx_soundlow_waveout_pulse_c::output(int length, Bit8u data[])
 {

@@ -45,6 +45,7 @@ corei7_haswell_4770_t::corei7_haswell_4770_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_P6);
   enable_cpu_extension(BX_ISA_MMX);
   enable_cpu_extension(BX_ISA_SYSENTER_SYSEXIT);
+  enable_cpu_extension(BX_ISA_SYSENTER_SYSEXIT_LONGMODE);
   enable_cpu_extension(BX_ISA_CLFLUSH);
   enable_cpu_extension(BX_ISA_DEBUG_EXTENSIONS);
   enable_cpu_extension(BX_ISA_VME);

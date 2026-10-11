@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2023 Stanislav Shwartsman
+//   Copyright (c) 2023-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -47,8 +47,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNEPS2BF16_MASK_VphWpsR(bxInstruction_c
       dst.vmm16u(n) = convert_ne_fp32_to_bfloat16(src.vmm32u(n));
   }
 
+  // merge masking: keep original destination elements where opmask bit is clear
   if (! i->isZeroMasking()) {
-    simd_pblendw(&BX_READ_AVX_REG(i->dst()), &dst, opmask, num_elements);
+    simd_pblendw(&dst, &BX_READ_AVX_REG(i->dst()), ~opmask, num_elements);
   }
 
   BX_WRITE_AVX_REGZ(i->dst(), dst, len);
@@ -61,13 +62,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VCVTNE2PS2BF16_MASK_VphHpsWpsR(bxInstructi
   unsigned len = i->getVL();
   unsigned n=0;
 
-  // half of the elements
-  for (n=0; n < DWORD_ELEMENTS(len); n++)
+  unsigned half = DWORD_ELEMENTS(len);
+
+  // lower half of the elements from src2
+  for (n=0; n < half; n++)
     dst.vmm16u(n) = convert_ne_fp32_to_bfloat16(op2.vmm32u(n));
 
-  // other half of the elements
+  // upper half of the elements from src1
   for (;n < WORD_ELEMENTS(len); n++)
-    dst.vmm16u(n) = convert_ne_fp32_to_bfloat16(op1.vmm32u(n));
+    dst.vmm16u(n) = convert_ne_fp32_to_bfloat16(op1.vmm32u(n - half));
 
   if (i->opmask()) {
     avx512_write_regw_masked(i, &dst, len, BX_READ_32BIT_OPMASK(i->opmask()));

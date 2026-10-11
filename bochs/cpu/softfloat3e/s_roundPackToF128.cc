@@ -1,0 +1,201 @@
+/*============================================================================
+
+This C source file is part of the SoftFloat IEEE Floating-Point Arithmetic
+Package, Release 3e, by John R. Hauser.
+
+Copyright 2011, 2012, 2013, 2014, 2015, 2017 The Regents of the University of
+California.  All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+ 1. Redistributions of source code must retain the above copyright notice,
+    this list of conditions, and the following disclaimer.
+
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions, and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+
+ 3. Neither the name of the University nor the names of its contributors may
+    be used to endorse or promote products derived from this software without
+    specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS "AS IS", AND ANY
+EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE, ARE
+DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+=============================================================================*/
+
+#include <stdbool.h>
+#include <stdint.h>
+#include "internals.h"
+#include "primitives.h"
+#include "softfloat.h"
+
+float128_t
+ softfloat_roundPackToF128(bool sign, int32_t exp, uint64_t sig64, uint64_t sig0, uint64_t sigExtra, struct softfloat_status_t *status)
+{
+    return softfloat_roundPackToF128(sign, exp, sig64, sig0, sigExtra, softfloat_getRoundingMode(status), status->extF80_roundingPrecision, status);
+}
+
+float128_t
+ softfloat_roundPackToF128(bool sign, int32_t exp, uint64_t sig64, uint64_t sig0, uint64_t sigExtra, uint8_t roundingMode, struct softfloat_status_t *status)
+{
+    return softfloat_roundPackToF128(sign, exp, sig64, sig0, sigExtra, roundingMode, status->extF80_roundingPrecision, status);
+}
+
+float128_t
+ softfloat_roundPackToF128(bool sign, int32_t exp, uint64_t sig64, uint64_t sig0, uint64_t sigExtra, uint8_t roundingMode, uint8_t roundingPrecision, struct softfloat_status_t *status)
+{
+    bool roundNearEven, doIncrement, isTiny;
+    struct uint128_extra sig128Extra;
+    struct uint128 sig128;
+    float128_t z;
+
+    /*------------------------------------------------------------------------
+    | 'roundingMode' and 'roundingPrecision' are passed explicitly (rather than
+    | read from 'status') so callers can round an intermediate step in a mode /
+    | to a width other than the one currently programmed.  Exception flags are
+    | still reported via 'status'.
+    *------------------------------------------------------------------------*/
+    roundNearEven = (roundingMode == softfloat_round_near_even);
+
+    /*------------------------------------------------------------------------
+    | Optional narrow-precision clamp: when 'roundingPrecision' is in 83..127
+    | the float128_t result is reduced to a (precision - 16) bit significand
+    | (83 => 67 bits), emulating the internal extended-precision format of the
+    | P5/P6 x87 real microcode.
+    *------------------------------------------------------------------------*/
+    if (83 <= roundingPrecision && roundingPrecision <= 127) {
+        unsigned drop = 113 - (roundingPrecision - 16); // 2..46, within sig0
+        uint64_t ulp = UINT64_C(1) << drop;
+        uint64_t rem = sig0 & (ulp - 1);
+        uint64_t sticky = rem | (sigExtra != 0);
+        bool inc;
+        switch (roundingMode) {
+          default: /* softfloat_round_minMag - truncate, as the real microcode does */
+            inc = 0;
+            break;
+          case softfloat_round_near_even:
+            inc = (rem > (ulp>>1)) || ((rem == (ulp>>1)) && (sig0 & ulp));
+            break;
+          case softfloat_round_near_maxMag:
+            inc = (rem >= (ulp>>1));
+            break;
+          case softfloat_round_min:
+            inc = sign && sticky;
+            break;
+          case softfloat_round_max:
+            inc = ! sign && sticky;
+            break;
+        }
+        sig0 &= ~(ulp - 1);
+        sigExtra = 0;
+        if (sticky)
+            softfloat_raiseFlags(status, softfloat_flag_inexact);
+        if (inc) {
+            sig128 = softfloat_add128(sig64, sig0, 0, ulp);
+            sig64 = sig128.v64;
+            sig0  = sig128.v0;
+            if (UINT64_C(0x0002000000000000) <= sig64) {
+                sig128Extra = softfloat_shortShiftRightJam128Extra(sig64, sig0, 0, 1);
+                sig64 = sig128Extra.v.v64;
+                sig0  = sig128Extra.v.v0;
+                exp++;
+            }
+        }
+    }
+
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    doIncrement = (UINT64_C(0x8000000000000000) <= sigExtra);
+    if (! roundNearEven && (roundingMode != softfloat_round_near_maxMag)) {
+        doIncrement =
+            (roundingMode == (sign ? softfloat_round_min : softfloat_round_max))
+                && sigExtra;
+    }
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    if (0x7FFD <= (uint32_t) exp) {
+        if (exp < 0) {
+            /*----------------------------------------------------------------
+            *----------------------------------------------------------------*/
+            isTiny = (exp < -1) || ! doIncrement ||
+                softfloat_lt128(sig64, sig0, UINT64_C(0x0001FFFFFFFFFFFF), UINT64_C(0xFFFFFFFFFFFFFFFF));
+            sig128Extra = softfloat_shiftRightJam128Extra(sig64, sig0, sigExtra, -exp);
+            sig64 = sig128Extra.v.v64;
+            sig0  = sig128Extra.v.v0;
+            sigExtra = sig128Extra.extra;
+            exp = 0;
+            if (isTiny && sigExtra) {
+                softfloat_raiseFlags(status, softfloat_flag_underflow);
+            }
+            doIncrement = (UINT64_C(0x8000000000000000) <= sigExtra);
+            if (! roundNearEven && (roundingMode != softfloat_round_near_maxMag)) {
+                doIncrement =
+                    (roundingMode == (sign ? softfloat_round_min : softfloat_round_max))
+                        && sigExtra;
+            }
+        } else if ((0x7FFD < exp) || ((exp == 0x7FFD)
+                    && softfloat_eq128(sig64, sig0, UINT64_C(0x0001FFFFFFFFFFFF), UINT64_C(0xFFFFFFFFFFFFFFFF))
+                    && doIncrement)
+       ) {
+            /*----------------------------------------------------------------
+            | When the overflow exception is unmasked the x87 delivers the
+            | true significand with the exponent biased down by 0x6000, so the
+            | subsequent conversion to extF80 sees the wrapped value.  If a
+            | single wrap does not bring the exponent back in range, fall
+            | through to the masked-style clamp below.
+            *----------------------------------------------------------------*/
+            if (! softfloat_isMaskedException(status, softfloat_flag_overflow)) {
+                softfloat_raiseFlags(status, softfloat_flag_overflow);
+                exp -= 0x6000;
+            }
+            if ((0x7FFD < exp) || ((exp == 0x7FFD)
+                    && softfloat_eq128(sig64, sig0, UINT64_C(0x0001FFFFFFFFFFFF), UINT64_C(0xFFFFFFFFFFFFFFFF))
+                    && doIncrement)
+           ) {
+                softfloat_raiseFlags(status, softfloat_flag_overflow | softfloat_flag_inexact);
+                if (roundNearEven
+                    || (roundingMode == softfloat_round_near_maxMag)
+                    || (roundingMode == (sign ? softfloat_round_min : softfloat_round_max))
+               ) {
+                    z.v64 = packToF128UI64(sign, 0x7FFF, 0);
+                    z.v0  = 0;
+                    softfloat_setRoundingUp(status);
+                } else {
+                    z.v64 = packToF128UI64(sign, 0x7FFE, UINT64_C(0x0000FFFFFFFFFFFF));
+                    z.v0  = UINT64_C(0xFFFFFFFFFFFFFFFF);
+                }
+                return z;
+            }
+        }
+    }
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    if (sigExtra) {
+        softfloat_raiseFlags(status, softfloat_flag_inexact);
+    }
+    if (doIncrement) {
+        uint64_t sig64Exact = sig64, sig0Exact = sig0;
+        sig128 = softfloat_add128(sig64, sig0, 0, 1);
+        sig64 = sig128.v64;
+        sig0 = sig128.v0 & ~(uint64_t) (! (sigExtra & UINT64_C(0x7FFFFFFFFFFFFFFF)) & roundNearEven);
+        if (softfloat_lt128(sig64Exact, sig0Exact, sig64, sig0))
+            softfloat_setRoundingUp(status);
+    } else {
+        if (! (sig64 | sig0)) exp = 0;
+    }
+    /*------------------------------------------------------------------------
+    *------------------------------------------------------------------------*/
+    z.v64 = packToF128UI64(sign, exp, sig64);
+    z.v0  = sig0;
+    return z;
+}

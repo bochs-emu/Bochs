@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2024 Stanislav Shwartsman
+//   Copyright (c) 2024-2025 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -120,6 +120,8 @@ public:
 #define VMX_VM_EXEC_CTRL2_UMWAIT_TPAUSE_VMEXIT      (1 << 26) /* WAITPKG */
 #define VMX_VM_EXEC_CTRL2_PCONFIG_ENABLE            (1 << 27) // not implemented yet
 #define VMX_VM_EXEC_CTRL2_SGX_ENCLV_VMEXIT          (1 << 28) /* ENCLV/SGX (not implemented) */
+#define VMX_VM_EXEC_CTRL2_VMM_BUS_LOCK_DETECTION    (1 << 30) // not implemented yet
+#define VMX_VM_EXEC_CTRL2_INSTRUCTION_TIMEOUT       (1 << 31) // just never happens in Bochs but can be enabled
 
    bool VIRTUALIZE_APIC_ACCESSES() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL2_VIRTUALIZE_APIC_ACCESSES; }
    bool EPT_ENABLE() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL2_EPT_ENABLE; }
@@ -149,6 +151,8 @@ public:
    bool UMWAIT_TPAUSE_VMEXIT() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL2_UMWAIT_TPAUSE_VMEXIT; }
    bool PCONFIG_ENABLE() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL2_PCONFIG_ENABLE; }
    bool SGX_ENCLV_VMEXIT() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL2_SGX_ENCLV_VMEXIT; }
+   bool VMM_BUS_LOCK_DETECTION() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL2_VMM_BUS_LOCK_DETECTION; }
+   bool INSTRUCTION_TIMEOUT_VMEXIT() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL2_INSTRUCTION_TIMEOUT; }
 
    bool query_any(Bit32u mask) const { return (vmexec_ctrls & mask) != 0; }
    bool query_all(Bit32u mask) const { return (vmexec_ctrls & mask) == mask; }
@@ -172,7 +176,7 @@ public:
 #define VMX_VM_EXEC_CTRL3_IPI_VIRTUALIZATION        (1 <<  4) /* IPI virtualization (not implemented) */
 #define VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST            (1 <<  6) /* MSRLIST */
 #define VMX_VM_EXEC_CTRL3_VIRTUALIZE_IA32_SPEC_CTRL (1 <<  7)
-#define VMX_VM_EXEC_CTRL3_EMULATE_AVX10_VL256       (1 << 13)
+#define VMX_VM_EXEC_CTRL3_APIC_TIMER_VIRTUALIZATION (1 <<  8) // not implemented
 
    bool LOADIWKEY_VMEXIT() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL3_LOADIWKEY_VMEXIT; }
    bool HLAT_ENABLE() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL3_HLAT_ENABLE; }
@@ -181,7 +185,7 @@ public:
    bool IPI_VIRTUALIZATION() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL3_IPI_VIRTUALIZATION; }
    bool ENABLE_MSRLIST() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL3_ENABLE_MSRLIST; }
    bool VIRTUALIZE_IA32_SPEC_CTRL() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL3_VIRTUALIZE_IA32_SPEC_CTRL; }
-   bool EMULATE_AVX10_VL256() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL3_EMULATE_AVX10_VL256; }
+   bool APIC_TIMER_VIRTUALIZATION() const { return vmexec_ctrls & VMX_VM_EXEC_CTRL3_APIC_TIMER_VIRTUALIZATION; }
 
    bool query_any(Bit64u mask) const { return (vmexec_ctrls & mask) != 0; }
    bool query_all(Bit64u mask) const { return (vmexec_ctrls & mask) == mask; }
@@ -234,13 +238,14 @@ public:
 #define VMX_VMENTRY_CTRL1_LOAD_PERF_GLOBAL_CTRL_MSR         (1 << 13) /* Perf Global Ctrl */
 #define VMX_VMENTRY_CTRL1_LOAD_PAT_MSR                      (1 << 14) /* PAT */
 #define VMX_VMENTRY_CTRL1_LOAD_EFER_MSR                     (1 << 15) /* EFER */
-#define VMX_VMENTRY_CTRL1_LOAD_BNDCFGS                      (1 << 16) /* MPX (not implemented) */
+#define VMX_VMENTRY_CTRL1_LOAD_BNDCFGS                      (1 << 16) /* MPX */
 #define VMX_VMENTRY_CTRL1_SUPPRESS_VMX_PACKETS              (1 << 17) /* Processor Trace (not implemented) */
 #define VMX_VMENTRY_CTRL1_LOAD_GUEST_RTIT_CTRL              (1 << 18) // not implemented
 #define VMX_VMENTRY_CTRL1_LOAD_UINV                         (1 << 19) /* UINTR */
 #define VMX_VMENTRY_CTRL1_LOAD_GUEST_CET_STATE              (1 << 20) /* CET */
 #define VMX_VMENTRY_CTRL1_LOAD_GUEST_LBR_CTRL               (1 << 21) // not implemented
 #define VMX_VMENTRY_CTRL1_LOAD_GUEST_PKRS                   (1 << 22) /* Supervisor-Mode Protection Keys */
+#define VMX_VMENTRY_CTRL1_LOAD_GUEST_FRED                   (1 << 23) /* FRED */
 #define VMX_VMENTRY_CTRL1_LOAD_GUEST_IA32_SPEC_CTRL         (1 << 24)
 
    bool LOAD_DBG_CTRLS() const { return vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_DBG_CTRLS; }
@@ -257,6 +262,7 @@ public:
    bool LOAD_GUEST_CET_STATE() const { return vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_GUEST_CET_STATE; }
    bool LOAD_GUEST_LBR() const { return vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_GUEST_LBR_CTRL; }
    bool LOAD_GUEST_PKRS() const { return vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_GUEST_PKRS; }
+   bool LOAD_GUEST_FRED() const { return vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_GUEST_FRED; }
    bool LOAD_GUEST_IA32_SPEC_CTRL() const { return vmentry_ctrls & VMX_VMENTRY_CTRL1_LOAD_GUEST_IA32_SPEC_CTRL; }
 
    bool query_any(Bit32u mask) const { return (vmentry_ctrls & mask) != 0; }
@@ -286,7 +292,7 @@ public:
 #define VMX_VMEXIT_CTRL1_STORE_EFER_MSR             (1 << 20) /* EFER */
 #define VMX_VMEXIT_CTRL1_LOAD_EFER_MSR              (1 << 21) /* EFER */
 #define VMX_VMEXIT_CTRL1_STORE_VMX_PREEMPTION_TIMER (1 << 22) /* VMX preemption timer */
-#define VMX_VMEXIT_CTRL1_CLEAR_BNDCFGS              (1 << 23) /* MPX (not implemented) */
+#define VMX_VMEXIT_CTRL1_CLEAR_BNDCFGS              (1 << 23) /* MPX */
 #define VMX_VMEXIT_CTRL1_SUPPRESS_HOST_VMX_TRACE    (1 << 24) /* Processor Trace (not implemented) */
 #define VMX_VMEXIT_CTRL1_CLEAR_IA32_RTIT_CTRL       (1 << 25) /* Clear IA32_RTIT_CTRL MSR on vmexit (not implemented) */
 #define VMX_VMEXIT_CTRL1_CLEAR_IA32_LBR_CTRL        (1 << 26) /* Clear IA32_LBR_CTRL MSR on vmexit (not implemented) */
@@ -330,9 +336,13 @@ private:
 public:
    BxVmexit2Controls(Bit64u ctrls = 0): vmexit2_ctrls(ctrls) {}
 
+#define VMX_VMEXIT_CTRL2_SAVE_GUEST_FRED            (1 <<  0)
+#define VMX_VMEXIT_CTRL2_LOAD_HOST_FRED             (1 <<  1)
 #define VMX_VMEXIT_CTRL2_LOAD_HOST_IA32_SPEC_CTRL   (1 <<  2)
 #define VMX_VMEXIT_CTRL2_SHADOW_STACK_BUSY_CTRL     (1 <<  3) /* Shadow stack prematurely busy */
 
+   bool SAVE_GUEST_FRED() const { return vmexit2_ctrls & VMX_VMEXIT_CTRL2_SAVE_GUEST_FRED; }
+   bool LOAD_HOST_FRED() const { return vmexit2_ctrls & VMX_VMEXIT_CTRL2_LOAD_HOST_FRED; }
    bool LOAD_HOST_IA32_SPEC_CTRL() const { return vmexit2_ctrls & VMX_VMEXIT_CTRL2_LOAD_HOST_IA32_SPEC_CTRL; }
    bool SHADOW_STACK_PREMATURELY_BUSY_CTRL() const { return vmexit2_ctrls & VMX_VMEXIT_CTRL2_SHADOW_STACK_BUSY_CTRL; }
 

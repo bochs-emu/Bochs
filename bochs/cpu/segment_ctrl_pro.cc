@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2015  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -492,7 +492,7 @@ void parse_descriptor(Bit32u dword1, Bit32u dword2, bx_descriptor_t *temp)
         break;
 
       default: // reserved
-        temp->valid    = 0;
+        temp->valid = 0;
         break;
     }
   }
@@ -677,3 +677,85 @@ bool BX_CPU_C::fetch_raw_descriptor2_64(const bx_selector_t *selector, Bit32u *d
   return true;
 }
 #endif
+
+void BX_CPU_C::fetch_ss_descriptor(Bit16u raw_ss_selector, const bx_selector_t *ss_selector, bx_descriptor_t *ss_descriptor, unsigned cs_rpl, unsigned exception_no)
+{
+  Bit32u dword1, dword2;
+
+  fetch_raw_descriptor(ss_selector, &dword1, &dword2, exception_no);
+  parse_descriptor(dword1, dword2, ss_descriptor);
+
+  /* selector RPL must = RPL of the return CS selector,
+   * else #GP(selector) */
+  if (ss_selector->rpl != cs_rpl) {
+    BX_ERROR(("fetch_ss_descriptor: SS.rpl != CS.rpl"));
+    exception(exception_no, raw_ss_selector & 0xfffc);
+  }
+
+  /* descriptor AR byte must indicate a writable data segment,
+   * else #GP(selector) */
+  if (ss_descriptor->valid==0 || ss_descriptor->segment==0 ||
+       IS_CODE_SEGMENT(ss_descriptor->type) ||
+      !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor->type))
+  {
+    BX_ERROR(("fetch_ss_descriptor: SS.AR byte not writable data"));
+    exception(exception_no, raw_ss_selector & 0xfffc);
+  }
+
+  /* descriptor dpl must = RPL of the return CS selector,
+   * else #GP(selector) */
+  if (ss_descriptor->dpl != cs_rpl) {
+    BX_ERROR(("fetch_ss_descriptor: SS.dpl != CS.rpl"));
+    exception(exception_no, raw_ss_selector & 0xfffc);
+  }
+
+  /* segment must be present else #SS(selector) */
+  if (! ss_descriptor->p) {
+    BX_ERROR(("fetch_ss_descriptor: SS not present"));
+    exception(BX_SS_EXCEPTION, raw_ss_selector & 0xfffc);
+  }
+}
+
+void BX_CPU_C::setup_flat_CS(unsigned dpl, bool longmode)
+{
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.valid   = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.p       = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.dpl     = dpl;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.segment = 1;  /* data/code segment */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.type    = BX_CODE_EXEC_READ_ACCESSED;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.base         = 0;          // base address
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled = 0xFFFFFFFF; // scaled segment limit
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.g            = 1;          // 4k granularity
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.avl          = 0;          // available for use by system
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b          = !longmode;
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.l            =  longmode;
+#endif
+
+#if BX_SUPPORT_X86_64
+  handleCpuModeChange(); // mode change could happen only when in long_mode()
+#else
+  updateFetchModeMask(/* CS reloaded */);
+#endif
+
+#if BX_CPU_LEVEL >= 4
+  handleAlignmentCheck(/* CPL change */);
+#endif
+}
+
+void BX_CPU_C::setup_flat_SS(unsigned dpl)
+{
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.valid    = SegValidCache | SegAccessROK | SegAccessWOK | SegAccessROK4G | SegAccessWOK4G;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.p        = 1;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl      = dpl;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.segment  = 1; /* data/code segment */
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.type     = BX_DATA_READ_WRITE_ACCESSED;
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.base         = 0;          // base address
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.limit_scaled = 0xFFFFFFFF; // scaled segment limit
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.g            = 1;          // 4k granularity
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.d_b          = 1;          // 32-bit mode
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.avl          = 0;          // available for use by system
+#if BX_SUPPORT_X86_64
+  BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.u.segment.l            = 0;
+#endif
+}

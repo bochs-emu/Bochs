@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -129,6 +129,8 @@ typedef enum {
 #define BX_LOG_OPTS_EXCLUDE(type, choice)  (             \
    /* can't die, ask or warn, on debug or info events */ \
    (type <= LOGLEV_INFO && (choice >= ACT_WARN))         \
+   /* can't die or ask, on warn events */                \
+   || (type == LOGLEV_WARN && (choice > ACT_WARN))       \
    /* can't ignore panics */                             \
    || (type == LOGLEV_PANIC && choice == ACT_IGNORE)     \
    )
@@ -449,14 +451,8 @@ enum {
 enum {
   BX_DDC_MODE_DISABLED,
   BX_DDC_MODE_BUILTIN,
+  BX_DDC_MODE_BUILTIN_GUI,
   BX_DDC_MODE_FILE
-};
-
-enum {
-  BX_VBE_MEMSIZE_4MB,
-  BX_VBE_MEMSIZE_8MB,
-  BX_VBE_MEMSIZE_16MB,
-  BX_VBE_MEMSIZE_32MB
 };
 
 enum {
@@ -618,6 +614,7 @@ public:
   virtual bx_param_c *get_param(const char *pname, bx_param_c *base=NULL) {return NULL;}
   virtual bx_param_num_c *get_param_num(const char *pname, bx_param_c *base=NULL) {return NULL;}
   virtual bx_param_string_c *get_param_string(const char *pname, bx_param_c *base=NULL) {return NULL;}
+  virtual bx_param_bytestring_c *get_param_bytestring(const char *pname, bx_param_c *base=NULL) {return NULL;}
   virtual bx_param_bool_c *get_param_bool(const char *pname, bx_param_c *base=NULL) {return NULL;}
   virtual bx_param_enum_c *get_param_enum(const char *pname, bx_param_c *base=NULL) {return NULL;}
   virtual unsigned gen_param_id() {return 0;}
@@ -732,7 +729,7 @@ public:
     void *userdata) {}
   virtual int configuration_interface(const char* name, ci_command_t command) {return -1; }
 #if BX_USB_DEBUGGER
-  virtual void register_usb_debug_type(int type) {}
+  virtual void register_usb_debug_type(int type, int devid = -1) {}
   virtual void usb_debug_trigger(int type, int trigger, Bit64u param0, int param1, int param2) {}
   virtual int usb_debug_interface(int type, Bit64u param0, int param1, int param2) { return -1; }
 #endif

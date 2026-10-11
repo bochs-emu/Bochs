@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2014-2018 Stanislav Shwartsman
+//   Copyright (c) 2014-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -38,7 +38,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCONFLICTD_MASK_VdqWdqR(bxInstruction_c *
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   unsigned len = i->getVL();
 
-  for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
+  for (int n=DWORD_ELEMENTS(len)-1; n >= 0; n--) {
     op.vmm32u(n) = simd_pconflictd(&op, n);
   }
 
@@ -57,7 +57,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCONFLICTQ_MASK_VdqWdqR(bxInstruction_c *
   BxPackedAvxRegister op = BX_READ_AVX_REG(i->src());
   unsigned len = i->getVL();
 
-  for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
+  for (int n=QWORD_ELEMENTS(len)-1; n >= 0; n--) {
     op.vmm64u(n) = simd_pconflictq(&op, n);
   }
 
@@ -74,12 +74,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPCONFLICTQ_MASK_VdqWdqR(bxInstruction_c *
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTMB2Q_VdqKEbR(bxInstruction_c *i)
 {
   simd_pbroadcastq(&BX_AVX_REG(i->dst()), (Bit64u) BX_READ_8BIT_OPMASK(i->src()), QWORD_ELEMENTS(i->getVL()));
+  BX_CLEAR_AVX_REGZ(i->dst(), i->getVL())
   BX_NEXT_INSTR(i);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPBROADCASTMW2D_VdqKEwR(bxInstruction_c *i)
 {
   simd_pbroadcastd(&BX_AVX_REG(i->dst()), (Bit32u) BX_READ_16BIT_OPMASK(i->src()), DWORD_ELEMENTS(i->getVL()));
+  BX_CLEAR_AVX_REGZ(i->dst(), i->getVL())
   BX_NEXT_INSTR(i);
 }
 
@@ -202,7 +204,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VPSHUFBITQMB_MASK_KGqHdqWdqR(bxInstruction
     Bit64u src = op1.vmm64u(n), ctrl = op2.vmm64u(n);
 
     Bit32u tmp = 0;
-    for (unsigned i=0; i < 7; i++) {
+    for (unsigned i=0; i < 8; i++) {
       tmp |= Bit32u((src >> (ctrl & 0x3F)) & 0x1) << i;
       ctrl >>= 8;
     }

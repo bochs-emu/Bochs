@@ -848,7 +848,7 @@ bool MyPanel::fillBxKeyEvent(wxKeyEvent& wxev, BxKeyEvent& bxev, bool release)
     mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F10, !release);
   } else if (key == WXK_F12) {
     mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_F12, !release);
-  } else if (key == 'g') {
+  } else if ((key == 'g') || (key == 'G')) {
     mouse_toggle = bx_gui->mouse_toggle_check(BX_MT_KEY_G, !release);
   }
   if (mouse_toggle) {
@@ -997,8 +997,6 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   wxDisplay display;
 
   put("WX");
-  wx_maxres = display.GetGeometry();
-  info("Current display dimensions %d x %d", wx_maxres.GetWidth(), wx_maxres.GetHeight());
   if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
     BX_INFO(("private_colormap option ignored."));
   }
@@ -1079,6 +1077,8 @@ void bx_wx_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
   num_events = 0;
 
+  wx_maxres = display.GetGeometry();
+  BX_INFO(("maximum host resolution: x=%d y=%d", wx_maxres.GetWidth(), wx_maxres.GetHeight()));
   new_gfx_api = 1;
   new_text_api = 1;
   dialog_caps = BX_GUI_DLG_USER | BX_GUI_DLG_SNAPSHOT | BX_GUI_DLG_SAVE_RESTORE;
@@ -1407,7 +1407,7 @@ void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, uns
   IFDBG_VGA(wxLogDebug (wxT ("MyPanel::dimension_update got lock. wxScreen=%p", wxScreen)));
   BX_INFO (("dimension update x=%d y=%d fontheight=%d fontwidth=%d bpp=%d", x, y, fheight, fwidth, bpp));
   if ((bpp == 8) || (bpp == 15) || (bpp == 16) || (bpp == 24) || (bpp == 32)) {
-    if (bpp == 32) BX_INFO(("wxWidgets ignores bit 24..31 in 32bpp mode"));
+//    if (bpp == 32) BX_INFO(("wxWidgets ignores bit 24..31 in 32bpp mode"));
     disp_bpp = guest_bpp = bpp;
   } else {
     BX_PANIC(("%d bpp graphics mode not supported", bpp));
@@ -1419,7 +1419,6 @@ void bx_wx_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, uns
   guest_yres = y;
   if (((int)x > wx_maxres.GetWidth()) || ((int)y > wx_maxres.GetHeight())) {
     BX_PANIC(("dimension_update(): resolution of out of display bounds"));
-    return;
   }
   wxScreenX = x;
   wxScreenY = y;

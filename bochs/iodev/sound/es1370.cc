@@ -5,7 +5,7 @@
 // ES1370 soundcard support (ported from QEMU)
 //
 // Copyright (c) 2005  Vassili Karpov (malc)
-// Copyright (C) 2011-2021  The Bochs Project
+// Copyright (C) 2011-2026  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -32,6 +32,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "virt_timer.h"
 #if BX_SUPPORT_PCI && BX_SUPPORT_ES1370
 
 #include "soundlow.h"
@@ -146,10 +147,16 @@ void es1370_init_options(void)
     "Wave file",
     "This is the file where the wave output is stored",
     "", BX_PATHNAME_LEN);
+  bx_param_bool_c *realtime = new bx_param_bool_c(menu,
+      "dac_realtime",
+      "DAC timers realtime",
+      "If enabled, the DAC timers are based on realtime",
+      0);
 
   bx_list_c *deplist = new bx_list_c(NULL);
   deplist->add(midimode);
   deplist->add(wavemode);
+  deplist->add(realtime);
   enabled->set_dependent_list(deplist);
   deplist = new bx_list_c(NULL);
   deplist->add(midifile);
@@ -237,7 +244,7 @@ bx_es1370_c::~bx_es1370_c()
 
   SIM->unregister_runtime_config_handler(s.rt_conf_id);
   SIM->get_bochs_root()->remove("es1370");
-  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_SOUND);
   misc_rt->remove("es1370");
   BX_DEBUG(("Exit"));
 }
@@ -264,6 +271,7 @@ void bx_es1370_c::init(void)
 
   BX_ES1370_THIS wavemode = SIM->get_param_enum("wavemode", base)->get();
   BX_ES1370_THIS midimode = SIM->get_param_enum("midimode", base)->get();
+  bool dac_realtime = SIM->get_param_bool("dac_realtime", base)->get();
 
   // always initialize lowlevel driver
   BX_ES1370_WAVEOUT1 = DEV_sound_get_waveout(0);
@@ -297,16 +305,16 @@ void bx_es1370_c::init(void)
   BX_ES1370_THIS s.mpu_outputinit = (BX_ES1370_THIS midimode & 1);
 
   if (BX_ES1370_THIS s.dac1_timer_index == BX_NULL_TIMER_HANDLE) {
-    BX_ES1370_THIS s.dac1_timer_index = DEV_register_timer
-      (BX_ES1370_THIS_PTR, es1370_timer_handler, 1, 1, 0, "es1370.dac1");
+    BX_ES1370_THIS s.dac1_timer_index = bx_virt_timer.register_timer
+      (BX_ES1370_THIS_PTR, es1370_timer_handler, 1, 1, 0, dac_realtime, "es1370.dac1");
     // DAC1 timer: inactive, continuous, frequency variable
-    bx_pc_system.setTimerParam(BX_ES1370_THIS s.dac1_timer_index, 0);
+    bx_virt_timer.setTimerParam(BX_ES1370_THIS s.dac1_timer_index, 0);
   }
   if (BX_ES1370_THIS s.dac2_timer_index == BX_NULL_TIMER_HANDLE) {
-    BX_ES1370_THIS s.dac2_timer_index = DEV_register_timer
-      (BX_ES1370_THIS_PTR, es1370_timer_handler, 1, 1, 0, "es1370.dac2");
+    BX_ES1370_THIS s.dac2_timer_index = bx_virt_timer.register_timer
+      (BX_ES1370_THIS_PTR, es1370_timer_handler, 1, 1, 0, dac_realtime, "es1370.dac2");
     // DAC2 timer: inactive, continuous, frequency variable
-    bx_pc_system.setTimerParam(BX_ES1370_THIS s.dac2_timer_index, 1);
+    bx_virt_timer.setTimerParam(BX_ES1370_THIS s.dac2_timer_index, 1);
   }
   if (BX_ES1370_THIS s.mpu_timer_index == BX_NULL_TIMER_HANDLE) {
     BX_ES1370_THIS s.mpu_timer_index = DEV_register_timer
@@ -320,7 +328,7 @@ void bx_es1370_c::init(void)
   BX_ES1370_THIS s.midicmd_index = 0;
 
   // init runtime parameters
-  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_MISC);
+  bx_list_c *misc_rt = (bx_list_c*)SIM->get_param(BXPN_MENU_RUNTIME_SOUND);
   bx_list_c *menu = new bx_list_c(misc_rt, "es1370", "ES1370 Runtime Options");
   menu->set_options(menu->SHOW_PARENT | menu->USE_BOX_TITLE);
 
@@ -421,7 +429,7 @@ void bx_es1370_c::register_state(void)
 
 void bx_es1370_c::after_restore_state(void)
 {
-  bx_pci_device_c::after_restore_pci_state(NULL);
+  bx_pci_device_c::after_restore_pci_state();
   BX_ES1370_THIS check_lower_irq(BX_ES1370_THIS s.sctl);
   BX_ES1370_THIS s.adc_inputinit = 0;
   BX_ES1370_THIS s.dac_nr_active = -1;
@@ -744,12 +752,12 @@ void bx_es1370_c::es1370_timer_handler(void *this_ptr)
 
 void bx_es1370_c::es1370_timer(void)
 {
-  int timer_id = bx_pc_system.triggeredTimerID();
-  unsigned i = bx_pc_system.triggeredTimerParam();
+  int timer_id = bx_virt_timer.triggeredTimerID();
+  unsigned i = bx_virt_timer.triggeredTimerParam();
   Bit32u ret = run_channel(i, timer_id, BX_ES1370_THIS s.dac_packet_size[i]);
   if (ret > 0) {
     Bit64u timer_val = (Bit64u)BX_ES1370_THIS s.dac_timer_val[i] * ret / BX_ES1370_THIS s.dac_packet_size[i];
-    bx_pc_system.activate_timer(timer_id, (Bit32u)timer_val, 1);
+    bx_virt_timer.activate_timer(timer_id, (Bit32u)timer_val, 1);
   }
 }
 
@@ -770,7 +778,7 @@ Bit32u bx_es1370_c::run_channel(unsigned chan, int timer_id, Bit32u buflen)
     if (chan == ADC_CHANNEL) {
       BX_ES1370_WAVEIN->stopwaverecord();
     } else {
-      bx_pc_system.deactivate_timer(timer_id);
+      bx_virt_timer.deactivate_timer(timer_id);
     }
     return 0;
   }
@@ -961,7 +969,7 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bool force)
           }
           BX_ES1370_THIS s.dac_timer_val[i] =
             (Bit32u)((Bit64u)BX_ES1370_THIS s.dac_packet_size[i] * 1000000 / (new_freq << d->shift));
-          bx_pc_system.activate_timer(timer_id, BX_ES1370_THIS s.dac_timer_val[i], 1);
+          bx_virt_timer.activate_timer(timer_id, BX_ES1370_THIS s.dac_timer_val[i], 1);
         }
       } else {
         if (i == ADC_CHANNEL) {
@@ -970,7 +978,7 @@ void bx_es1370_c::update_voices(Bit32u ctl, Bit32u sctl, bool force)
           }
         } else {
           BX_ES1370_THIS s.dac_nr_active = -1;
-          bx_pc_system.deactivate_timer(timer_id);
+          bx_virt_timer.deactivate_timer(timer_id);
         }
       }
     }
@@ -1111,12 +1119,12 @@ Bit64s bx_es1370_c::es1370_param_handler(bx_param_c *param, bool set, Bit64s val
   if (set) {
     const char *pname = param->get_name();
     if (!strcmp(pname, "wavemode")) {
-      if (val != BX_ES1370_THIS wavemode) {
-        BX_ES1370_THIS wave_changed |= 1;
+      if (val != theES1370Device->wavemode) {
+        theES1370Device->wave_changed |= 1;
       }
     } else if (!strcmp(pname, "midimode")) {
-      if (val != BX_ES1370_THIS midimode) {
-        BX_ES1370_THIS midi_changed |= 1;
+      if (val != theES1370Device->midimode) {
+        theES1370Device->midi_changed |= 1;
       }
     } else {
       BX_PANIC(("es1370_param_handler called with unexpected parameter '%s'", pname));
@@ -1132,9 +1140,9 @@ const char* bx_es1370_c::es1370_param_string_handler(bx_param_string_c *param, b
   if (set && (strcmp(val, oldval))) {
     const char *pname = param->get_name();
     if (!strcmp(pname, "wavefile")) {
-      BX_ES1370_THIS wave_changed |= 2;
+      theES1370Device->wave_changed |= 2;
     } else if (!strcmp(pname, "midifile")) {
-      BX_ES1370_THIS midi_changed |= 2;
+      theES1370Device->midi_changed |= 2;
     } else {
       BX_PANIC(("es1370_param_string_handler called with unexpected parameter '%s'", pname));
     }

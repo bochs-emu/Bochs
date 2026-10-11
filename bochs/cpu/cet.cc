@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2019 Stanislav Shwartsman
+//   Copyright (c) 2019-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -38,13 +38,13 @@ const Bit64u BX_CET_SUPPRESS_DIS                           = (1 << 5);
 const Bit64u BX_CET_SUPPRESS_INDIRECT_BRANCH_TRACKING      = (1 << 10);
 const Bit64u BX_CET_WAIT_FOR_ENBRANCH                      = (1 << 11);
 
-bool is_invalid_cet_control(bx_address val)
+bool is_valid_cet_control(Bit64u val)
 {
   if ((val & (BX_CET_SUPPRESS_INDIRECT_BRANCH_TRACKING | BX_CET_WAIT_FOR_ENBRANCH)) ==
-             (BX_CET_SUPPRESS_INDIRECT_BRANCH_TRACKING | BX_CET_WAIT_FOR_ENBRANCH)) return true;
+             (BX_CET_SUPPRESS_INDIRECT_BRANCH_TRACKING | BX_CET_WAIT_FOR_ENBRANCH)) return false;
 
-  if (val & 0x3c0) return true; // reserved bits check
-  return false;
+  if (val & 0x3c0) return false; // reserved bits check
+  return true;
 }
 
 bool BX_CPP_AttrRegparmN(1) BX_CPU_C::ShadowStackEnabled(unsigned cpl)
@@ -69,6 +69,14 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::EndbranchEnabledAndNotSuppressed(unsigned 
 {
   return BX_CPU_THIS_PTR cr4.get_CET() && protected_mode() &&
         (BX_CPU_THIS_PTR msr.ia32_cet_control[cpl==3] & (BX_CET_ENDBRANCH_ENABLED | BX_CET_SUPPRESS_INDIRECT_BRANCH_TRACKING)) == BX_CET_ENDBRANCH_ENABLED;
+}
+
+// shadow stack or indirect branch tracking enabled for CPL3 (raw CR4.CET and IA32_U_CET controls),
+// unlike ShadowStackEnabled/EndbranchEnabled this doesn't depend on protected mode to be current mode (v8086 mode)
+bool BX_CPU_C::UserCetEnabled(void)
+{
+  return BX_CPU_THIS_PTR cr4.get_CET() &&
+        (BX_CPU_THIS_PTR msr.ia32_cet_control[1] & (BX_CET_SHADOW_STACK_ENABLED | BX_CET_ENDBRANCH_ENABLED)) != 0;
 }
 
 bool BX_CPP_AttrRegparmN(1) BX_CPU_C::WaitingForEndbranch(unsigned cpl)
@@ -107,9 +115,20 @@ bool BX_CPP_AttrRegparmN(1) BX_CPU_C::LegacyEndbranchTreatment(unsigned cpl)
   if (BX_CPU_THIS_PTR msr.ia32_cet_control[cpl==3] & BX_CET_LEGACY_INDIRECT_BRANCH_TREATMENT)
   {
     bx_address lip = get_laddr(BX_SEG_REG_CS, RIP);
-    bx_address bitmap_addr = LPFOf(BX_CPU_THIS_PTR msr.ia32_cet_control[cpl==3]) + ((lip & BX_CONST64(0xFFFFFFFFFFFF)) >> 15);
+    // bitmap is indexed by LA[31:15] in legacy and compatibility mode,
+    // by LA[47:15] in 64-bit mode (LA[56:15] when CR4.LA57 = 1)
+    bx_address bitmap_offset;
+    if (long64_mode())
+      bitmap_offset = (lip & (BX_CPU_THIS_PTR cr4.get_LA57() ? BX_CONST64(0x01FFFFFFFFFFFFFF) : BX_CONST64(0xFFFFFFFFFFFF))) >> 15;
+    else
+      bitmap_offset = GET32L(lip) >> 15;
+    bx_address bitmap_addr = LPFOf(BX_CPU_THIS_PTR msr.ia32_cet_control[cpl==3]) + bitmap_offset;
+    // address-size attribute for the bitmap load is 32 bits when IA32_EFER.LMA = 0
+    if (! long_mode())
+      bitmap_addr = GET32L(bitmap_addr);
     unsigned bitmap_index = (lip>>12) & 0x7;
-    Bit8u bitmap = system_read_byte(bitmap_addr);
+    // access rights for the bitmap load are determined by the CPL
+    Bit8u bitmap = read_linear_byte(BX_SEG_REG_DS, bitmap_addr);
     if ((bitmap & (1 << bitmap_index)) != 0) {
       reset_endbranch_tracker(cpl, true);
       return false;
@@ -182,7 +201,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAVEPREVSSP(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
+  // pop the "previous-ssp" token from current shadow stack (SSP is updated only after all checks passed)
   Bit64u previous_ssp_token = shadow_stack_read_qword(SSP, CPL);
+  unsigned pop_bytes = 8;
 
   // If the CF flag indicates there was a alignment hole on current shadow stack then pop that alignment hole
   // Note that the alignment hole can be present only when in legacy/compatibility mode
@@ -192,11 +213,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAVEPREVSSP(bxInstruction_c *i)
       exception(BX_GP_EXCEPTION, 0);
     }
     else {
-      // pop the alignment hole
-      if (shadow_stack_pop_32() != 0) {
+      // pop the alignment hole located right after the previous-ssp token
+      if (shadow_stack_read_dword(SSP + 8, CPL) != 0) {
         BX_ERROR(("%s: shadow stack alignment hole must be zero", i->getIaOpcodeNameShort()));
         exception(BX_GP_EXCEPTION, 0);
       }
+      pop_bytes += 4;
     }
   }
 
@@ -217,7 +239,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAVEPREVSSP(bxInstruction_c *i)
   old_ssp = old_ssp & ~BX_CONST64(0x07);
   shadow_stack_write_qword(old_ssp - 8, CPL, tmp);
 
-  SSP += 8;
+  SSP += pop_bytes;
 
   BX_NEXT_INSTR(i);
 }
@@ -230,7 +252,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RSTORSSP(bxInstruction_c *i)
   }
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  bx_address laddr = agen_read_aligned(i->seg(), eaddr, 8);
+  bx_address laddr = agen_write_aligned(i->seg(), eaddr, 8); // #GP if destination is located in non-writable segment
   if (laddr & 0x7) {
     BX_ERROR(("%s: SSP_LA must be 8 bytes aligned", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -351,6 +373,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::WRUSSQ(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SETSSBSY(bxInstruction_c *i)
 {
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+    BX_ERROR(("%s: Not supported when FRED is enabled in CR4", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
   if (! ShadowStackEnabled(0)) {
     BX_ERROR(("%s: shadow stack not enabled", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
@@ -379,6 +408,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SETSSBSY(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLRSSBSY(bxInstruction_c *i)
 {
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+    BX_ERROR(("%s: Not supported when FRED is enabled in CR4", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
   if (! ShadowStackEnabled(0)) {
     BX_ERROR(("%s: shadow stack not enabled", i->getIaOpcodeNameShort()));
     exception(BX_UD_EXCEPTION, 0);
@@ -390,7 +426,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLRSSBSY(bxInstruction_c *i)
   }
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR(i);
-  bx_address laddr = agen_read_aligned(i->seg(), eaddr, 8);
+  bx_address laddr = agen_write_aligned(i->seg(), eaddr, 8); // #GP if destination is located in non-writable segment
   if (laddr & 0x7) {
     BX_ERROR(("%s: SSP_LA not aligned to 8 bytes boundary", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -407,7 +443,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CLRSSBSY(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENDBRANCH32(bxInstruction_c *i)
 {
   if (! long64_mode()) {
-    reset_endbranch_tracker(CPL);
+    // ENDBR32 is a NOP when indirect branch tracking is not enabled
+    if (EndbranchEnabled(CPL))
+      reset_endbranch_tracker(CPL);
     BX_NEXT_INSTR(i);
   }
 
@@ -417,7 +455,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENDBRANCH32(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ENDBRANCH64(bxInstruction_c *i)
 {
   if (long64_mode()) {
-    reset_endbranch_tracker(CPL);
+    // ENDBR64 is a NOP when indirect branch tracking is not enabled
+    if (EndbranchEnabled(CPL))
+      reset_endbranch_tracker(CPL);
     BX_NEXT_INSTR(i);
   }
 

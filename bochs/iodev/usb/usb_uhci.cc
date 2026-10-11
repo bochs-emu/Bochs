@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2025  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2025  The Bochs Project
+//                2009-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -86,7 +86,7 @@ PLUGIN_ENTRY_FOR_MODULE(usb_uhci)
     SIM->register_addon_option("usb_uhci", usb_uhci_options_parser, usb_uhci_options_save);
   } else if (mode == PLUGIN_FINI) {
     SIM->unregister_addon_option("usb_uhci");
-    bx_list_c *menu = (bx_list_c *) SIM->get_param("ports.usb");
+    bx_list_c *menu = (bx_list_c *) SIM->get_param("usb");
     delete theUSB_UHCI;
     menu->remove("uhci");
   } else if (mode == PLUGIN_PROBE) {
@@ -122,10 +122,9 @@ bx_usb_uhci_c::~bx_usb_uhci_c()
     remove_device(i);
   }
 
-  SIM->get_bochs_root()->remove("usb_uhci");
   bx_list_c *usb_rt = (bx_list_c *) SIM->get_param(BXPN_MENU_RUNTIME_USB);
   usb_rt->remove("uhci");
-
+  SIM->get_bochs_root()->remove("usb_uhci");
   BX_DEBUG(("Exit"));
 }
 
@@ -189,7 +188,11 @@ void bx_usb_uhci_c::init(void)
 
 #if BX_USB_DEBUGGER
   if (SIM->get_param_enum(BXPN_USB_DEBUG_TYPE)->get() == USB_DEBUG_UHCI) {
-    SIM->register_usb_debug_type(USB_DEBUG_UHCI);
+    bx_param_string_c *pdev = SIM->get_param_string(BXPN_USB_DEBUG_DEVICE);
+    if (pdev->isempty() || !strcmp(pdev->getptr(), "uhci")) {
+      BX_UHCI_THIS enable_usbdbg();
+      SIM->register_usb_debug_type(USB_DEBUG_UHCI, -1);
+    }
   }
 #endif
 
@@ -212,7 +215,7 @@ void bx_usb_uhci_c::reset(unsigned type)
 
 void bx_usb_uhci_c::register_state()
 {
-  BX_UHCI_THIS uhci_register_state(SIM->get_bochs_root());
+  BX_UHCI_THIS uhci_register_state("usb_uhci", SIM->get_bochs_root());
 }
 
 void bx_usb_uhci_c::after_restore_state()
@@ -261,19 +264,19 @@ void bx_usb_uhci_c::runtime_config(void)
 
   for (int i = 0; i < USB_UHCI_PORTS; i++) {
     // device change support
-    if ((BX_UHCI_THIS device_change & (1 << i)) != 0) {
-      if (!BX_UHCI_THIS hub.usb_port[i].status) {
+    if ((theUSB_UHCI->device_change & (1 << i)) != 0) {
+      if (!theUSB_UHCI->hub.usb_port[i].status) {
         sprintf(pname, "port%d", i + 1);
         init_device(i, (bx_list_c *) SIM->get_param(pname, SIM->get_param(BXPN_USB_UHCI)));
       } else {
         set_connect_status(i, 0);
         remove_device(i);
       }
-      BX_UHCI_THIS device_change &= ~(1 << i);
+      theUSB_UHCI->device_change &= ~(1 << i);
     }
     // forward to connected device
-    if (BX_UHCI_THIS hub.usb_port[i].device != NULL) {
-      BX_UHCI_THIS hub.usb_port[i].device->runtime_config();
+    if (theUSB_UHCI->hub.usb_port[i].device != NULL) {
+      theUSB_UHCI->hub.usb_port[i].device->runtime_config();
     }
   }
 }
@@ -285,10 +288,10 @@ Bit64s bx_usb_uhci_c::usb_param_handler(bx_param_c *param, bool set, Bit64s val)
     int portnum = atoi((param->get_parent())->get_name() + 4) - 1;
     bool empty = (val == 0);
     if ((portnum >= 0) && (portnum < USB_UHCI_PORTS)) {
-      if (empty && BX_UHCI_THIS hub.usb_port[portnum].status) {
-        BX_UHCI_THIS device_change |= (1 << portnum);
-      } else if (!empty && !BX_UHCI_THIS hub.usb_port[portnum].status) {
-        BX_UHCI_THIS device_change |= (1 << portnum);
+      if (empty && theUSB_UHCI->hub.usb_port[portnum].status) {
+        theUSB_UHCI->device_change |= (1 << portnum);
+      } else if (!empty && !theUSB_UHCI->hub.usb_port[portnum].status) {
+        theUSB_UHCI->device_change |= (1 << portnum);
       } else if (val != ((bx_param_enum_c *) param)->get()) {
         BX_ERROR(("usb_param_handler(): port #%d already in use", portnum+1));
         val = ((bx_param_enum_c *) param)->get();
@@ -306,14 +309,14 @@ Bit64s bx_usb_uhci_c::usb_param_oc_handler(bx_param_c *param, bool set, Bit64s v
   if (set && val) {
     int portnum = atoi((param->get_parent())->get_name()+4) - 1;
     if ((portnum >= 0) && (portnum < USB_UHCI_PORTS)) {
-      if (BX_UHCI_THIS hub.usb_port[portnum].status) {
+      if (theUSB_UHCI->hub.usb_port[portnum].status) {
         // The UHCI specification does not specify what happens when an over-current
         //  condition exists. Therefore, we will set the condition and then envoke
         //  an interrupt. Hopefully the guest will check the port change.
-        BX_UHCI_THIS hub.usb_port[portnum].over_current_change = 1;
-        BX_UHCI_THIS hub.usb_port[portnum].over_current = 1;
+        theUSB_UHCI->hub.usb_port[portnum].over_current_change = 1;
+        theUSB_UHCI->hub.usb_port[portnum].over_current = 1;
         BX_DEBUG(("Over-current signaled on port #%d.", portnum + 1));
-        BX_UHCI_THIS update_irq();
+        theUSB_UHCI->update_irq();
       }
     } else {
       BX_ERROR(("Over-current: Bad portnum given: %d", portnum + 1));
@@ -327,7 +330,7 @@ Bit64s bx_usb_uhci_c::usb_param_oc_handler(bx_param_c *param, bool set, Bit64s v
 bool bx_usb_uhci_c::usb_param_enable_handler(bx_param_c *param, bool en)
 {
   int portnum = atoi((param->get_parent())->get_name() + 4) - 1;
-  if (en && (BX_UHCI_THIS hub.usb_port[portnum].device != NULL)) {
+  if (en && (theUSB_UHCI->hub.usb_port[portnum].device != NULL)) {
     en = 0;
   }
   return en;

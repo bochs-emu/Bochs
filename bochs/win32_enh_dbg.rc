@@ -8,6 +8,7 @@ MENU_1 MENU
         MENUITEM "Continue [c]\tF5",CMD_CONT
         MENUITEM "Step [s]\tF11",CMD_STEP1
         MENUITEM "Step #...\tF9",CMD_STEPN
+        MENUITEM "StepOver\tF8",CMD_STEPOVER
         MENUITEM "Break\tCtrl+C",CMD_BREAK
         MENUITEM SEPARATOR
         MENUITEM "Breakpoint (ASM selected)\tF6",CMD_BRKPT

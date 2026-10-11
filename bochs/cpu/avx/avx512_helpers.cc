@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2023 Stanislav Shwartsman
+//   Copyright (c) 2023-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -36,7 +36,7 @@ void BX_CPU_C::avx_masked_load8(bxInstruction_c *i, bx_address eaddr, BxPackedAv
     Bit64u laddr = get_laddr64(i->seg(), eaddr);
     for (unsigned n=0; n < BYTE_ELEMENTS(len); n++) {
        if (mask & (BX_CONST64(1)<<n)) {
-          if (! IsCanonical(laddr + n))
+          if (! IsCanonicalAccess(laddr + n, BX_READ, USER_PL))
              exception(int_number(i->seg()), 0);
        }
     }
@@ -58,7 +58,7 @@ void BX_CPU_C::avx_masked_load16(bxInstruction_c *i, bx_address eaddr, BxPackedA
     Bit64u laddr = get_laddr64(i->seg(), eaddr);
     for (unsigned n=0; n < WORD_ELEMENTS(len); n++) {
        if (mask & (1<<n)) {
-          if (! IsCanonical(laddr + 2*n))
+          if (! IsCanonicalAccess(laddr + 2*n, BX_READ, USER_PL))
              exception(int_number(i->seg()), 0);
        }
     }
@@ -89,7 +89,7 @@ void BX_CPU_C::avx_masked_load32(bxInstruction_c *i, bx_address eaddr, BxPackedA
     Bit64u laddr = get_laddr64(i->seg(), eaddr);
     for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
        if (mask & (1<<n)) {
-          if (! IsCanonical(laddr + 4*n))
+          if (! IsCanonicalAccess(laddr + 4*n, BX_READ, USER_PL))
              exception(int_number(i->seg()), 0);
        }
     }
@@ -120,7 +120,7 @@ void BX_CPU_C::avx_masked_load64(bxInstruction_c *i, bx_address eaddr, BxPackedA
     Bit64u laddr = get_laddr64(i->seg(), eaddr);
     for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
        if (mask & (1<<n)) {
-          if (! IsCanonical(laddr + 8*n))
+          if (! IsCanonicalAccess(laddr + 8*n, BX_READ, USER_PL))
              exception(int_number(i->seg()), 0);
        }
     }
@@ -152,7 +152,7 @@ void BX_CPU_C::avx_masked_store8(bxInstruction_c *i, bx_address eaddr, const BxP
     Bit64u laddr = get_laddr64(i->seg(), eaddr);
     for (unsigned n=0; n < BYTE_ELEMENTS(len); n++) {
       if (mask & (BX_CONST64(1)<<n)) {
-        if (! IsCanonical(laddr + n))
+        if (! IsCanonicalAccess(laddr + n, BX_WRITE, USER_PL))
            exception(int_number(i->seg()), 0);
       }
     }
@@ -180,7 +180,7 @@ void BX_CPU_C::avx_masked_store16(bxInstruction_c *i, bx_address eaddr, const Bx
     Bit64u laddr = get_laddr64(i->seg(), eaddr);
     for (unsigned n=0; n < WORD_ELEMENTS(len); n++) {
       if (mask & (1<<n)) {
-        if (! IsCanonical(laddr + 2*n))
+        if (! IsCanonicalAccess(laddr + 2*n, BX_WRITE, USER_PL))
            exception(int_number(i->seg()), 0);
       }
     }
@@ -217,7 +217,7 @@ void BX_CPU_C::avx_masked_store32(bxInstruction_c *i, bx_address eaddr, const Bx
     Bit64u laddr = get_laddr64(i->seg(), eaddr);
     for (unsigned n=0; n < DWORD_ELEMENTS(len); n++) {
       if (mask & (1<<n)) {
-        if (! IsCanonical(laddr + 4*n))
+        if (! IsCanonicalAccess(laddr + 4*n, BX_WRITE, USER_PL))
            exception(int_number(i->seg()), 0);
       }
     }
@@ -254,7 +254,7 @@ void BX_CPU_C::avx_masked_store64(bxInstruction_c *i, bx_address eaddr, const Bx
     Bit64u laddr = get_laddr64(i->seg(), eaddr);
     for (unsigned n=0; n < QWORD_ELEMENTS(len); n++) {
       if (mask & (1<<n)) {
-        if (! IsCanonical(laddr + 8*n))
+        if (! IsCanonicalAccess(laddr + 8*n, BX_WRITE, USER_PL))
            exception(int_number(i->seg()), 0);
       }
     }

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2018 Stanislav Shwartsman
+//   Copyright (c) 2003-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -27,10 +27,7 @@
 /* XMM REGISTER */
 
 typedef
-#if defined(_MSC_VER) && (_MSC_VER>=1300)
-__declspec(align(16))
-#endif
-union bx_xmm_reg_t {
+union alignas(16) bx_xmm_reg_t {
    Bit8s   xmm_sbyte[16];
    Bit16s  xmm_s16[8];
    Bit32s  xmm_s32[4];
@@ -66,10 +63,7 @@ union bx_xmm_reg_t {
 /* AVX REGISTER */
 
 typedef
-#if defined(_MSC_VER) && (_MSC_VER>=1300)
-__declspec(align(32))
-#endif
-union bx_ymm_reg_t {
+union alignas(32) bx_ymm_reg_t {
    Bit8s   ymm_sbyte[32];
    Bit16s  ymm_s16[16];
    Bit32s  ymm_s32[8];
@@ -109,10 +103,7 @@ union bx_ymm_reg_t {
 #endif
 
 typedef
-#if defined(_MSC_VER) && (_MSC_VER>=1300)
-__declspec(align(64))
-#endif
-union bx_zmm_reg_t {
+union alignas(64) bx_zmm_reg_t {
    Bit8s   zmm_sbyte[64];
    Bit16s  zmm_s16[32];
    Bit32s  zmm_s32[16];
@@ -283,7 +274,8 @@ typedef BxPackedYmmRegister BxPackedAvxRegister;
 #define BX_READ_YMM_REG(index) (BX_CPU_THIS_PTR vmm[index].vmm256(0))
 
 /* clear upper part of the ZMM register */
-#define BX_CLEAR_AVX_HIGH256(index) { BX_CPU_THIS_PTR vmm[index].vmm256(1).clear(); }
+#define BX_CLEAR_AVX_HIGH256(index) \
+  if (BX_CPU_THIS_PTR maxvl > BX_VL256) { BX_CPU_THIS_PTR vmm[index].vmm256(1).clear(); }
 
 #else /* BX_SUPPORT_EVEX */
 
@@ -297,10 +289,15 @@ typedef BxPackedYmmRegister BxPackedAvxRegister;
 
 #define BX_YMM_REG BX_READ_YMM_REG
 
+/* clear YMM register, upper part of the ZMM register unchanged */
+#define BX_CLEAR_YMM_REG(index) { BX_YMM_REG(index).clear(); }
+
 /* clear upper part of AVX128 register */
-#define BX_CLEAR_AVX_HIGH128(index) \
-    { BX_CPU_THIS_PTR vmm[index].vmm128(1).clear(); \
-      BX_CLEAR_AVX_HIGH256(index); }
+#define BX_CLEAR_AVX_HIGH128(index)                 \
+    if (BX_CPU_THIS_PTR maxvl > BX_VL128) {         \
+      BX_CPU_THIS_PTR vmm[index].vmm128(1).clear(); \
+      BX_CLEAR_AVX_HIGH256(index);                  \
+    }                                               \
 
 /* write YMM register and clear upper part of the AVX register */
 #define BX_WRITE_YMM_REGZ(index, reg) \
@@ -347,19 +344,12 @@ typedef BxPackedYmmRegister BxPackedAvxRegister;
 
 #define BX_AVX_REG BX_READ_AVX_REG
 
-/* write AVX register */
+/* write full AVX register */
 #define BX_WRITE_AVX_REG(index, reg) { (BX_CPU_THIS_PTR vmm[index]) = (reg); }
 
 /* read AVX register lane */
 #define BX_READ_AVX_REG_LANE(index, line) \
      (BX_CPU_THIS_PTR vmm[index].vmm128(line))
-
-/* write AVX register and potentialy clear upper part of the register */
-#define BX_WRITE_YMM_REGZ_VLEN(index, reg256, vlen)               \
-    { (BX_YMM_REG(index)) = (reg256);                             \
-      if (vlen == BX_VL256) { BX_CLEAR_AVX_HIGH256(index); }      \
-      else if (vlen == BX_VL128) { BX_CLEAR_AVX_HIGH128(index); } \
-    }
 
 /* clear upper part of the AVX register */
 #define BX_CLEAR_AVX_REGZ(index, vlen)                              \
@@ -367,11 +357,45 @@ typedef BxPackedYmmRegister BxPackedAvxRegister;
       else if ((vlen) == BX_VL128) { BX_CLEAR_AVX_HIGH128(index); } \
     }
 
-/* write AVX register and potentialy clear upper part of the register */
-#define BX_WRITE_AVX_REGZ(index, reg, vlen)                       \
-    { BX_CPU_THIS_PTR vmm[index] = (reg);                         \
-      BX_CLEAR_AVX_REGZ(index, vlen);                             \
-    }
+/* write 256-bit YMM register up to vector length and clear upper part of the register */
+#define BX_WRITE_YMM_REGZ_VLEN(index, reg256, vlen) {              \
+     if ((vlen) == BX_VL128) {                                     \
+       BX_XMM_REG(index) = reg256.ymm128(0);                       \
+       BX_CLEAR_AVX_HIGH128(index);                                \
+     } else {                                                      \
+       BX_WRITE_YMM_REGZ(index, reg256);                           \
+     }                                                             \
+}
+
+#if BX_SUPPORT_EVEX
+
+/* write AVX register up to vector length and clear upper part of the register */
+#define BX_WRITE_AVX_REGZ(index, reg, vlen) {                      \
+     if ((vlen) == BX_VL256) {                                     \
+       BX_YMM_REG(index) = reg.vmm256(0);                          \
+       BX_CLEAR_AVX_HIGH256(index);                                \
+     } else if ((vlen) == BX_VL128) {                              \
+       BX_XMM_REG(index) = reg.vmm128(0);                          \
+       BX_CLEAR_AVX_HIGH128(index);                                \
+     } else {                                                      \
+       BX_WRITE_AVX_REG(index, reg);                               \
+     }                                                             \
+}
+
+#else
+
+/* write AVX register up to vector length and clear upper part of the register */
+#define BX_WRITE_AVX_REGZ(index, reg, vlen) {                      \
+     if ((vlen) == BX_VL256) {                                     \
+       BX_YMM_REG(index) = reg;                                    \
+       BX_CLEAR_AVX_HIGH256(index);                                \
+     } else {                                                      \
+       BX_XMM_REG(index) = reg.vmm128(0);                          \
+       BX_CLEAR_AVX_HIGH128(index);                                \
+     }                                                             \
+}
+
+#endif
 
 /* clear AVX register */
 #define BX_CLEAR_AVX_REG(index) { BX_CPU_THIS_PTR vmm[index].clear(); }
@@ -473,7 +497,7 @@ const Bit32u MXCSR_PM = 0x00001000;
 
 const Bit32u MXCSR_RESET = 0x00001F80;  /* reset value of the MXCSR register */
 
-struct BOCHSAPI bx_mxcsr_t
+struct bx_mxcsr_t
 {
   Bit32u mxcsr;
 
@@ -545,6 +569,21 @@ BX_CPP_INLINE Bit8s BX_CPP_AttrRegparmN(1) SaturateWordSToByteS(Bit16s value)
 BX_CPP_INLINE Bit8s BX_CPP_AttrRegparmN(1) SaturateDwordSToByteS(Bit32s value)
 {
   if(value < -128) return -128;
+  if(value >  127) return  127;
+  return (Bit8s) value;
+}
+
+/*
+ * SaturateDwordSToByteSSymmetric converts a signed 32-bit value to a signed
+ * 8-bit value using symmetric saturation (used by VPMOVSSDB): the result is
+ * balanced around 0, so -128 is not a representable output. If the signed
+ * 32-bit value is less than -127, it is represented by the saturated value
+ * -127 (0x81). If it is greater than 127, it is represented by the
+ * saturated value 127 (0x7F).
+*/
+BX_CPP_INLINE Bit8s BX_CPP_AttrRegparmN(1) SaturateDwordSToByteSSymmetric(Bit32s value)
+{
+  if(value < -127) return -127;
   if(value >  127) return  127;
   return (Bit8s) value;
 }

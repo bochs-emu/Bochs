@@ -6,7 +6,7 @@
 //
 // Copyright (c) 2005       Fabrice Bellard
 // Copyright (C) 2009-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//               2009-2023  The Bochs Project
+//               2009-2025  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -466,7 +466,7 @@ static BX_CPP_INLINE void put_dwords(bx_phy_address addr, Bit32u *buf, int num)
 // their name. USB HC emulations use the static 'create' method
 // to locate and instantiate a usb_device_c class.
 //
-class BOCHSAPI_MSVCONLY usbdev_locator_c {
+class BOCHSAPI usbdev_locator_c {
 public:
   static bool module_present(const char *type);
   static void cleanup();

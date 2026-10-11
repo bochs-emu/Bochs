@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -71,14 +71,6 @@ extern "C" {
 #endif
 
 #if defined(_MSC_VER)
-// win32 has snprintf though with different name.
-#define snprintf _snprintf
-#define vsnprintf _vsnprintf
-#undef BX_HAVE_SNPRINTF
-#undef BX_HAVE_VSNPRINTF
-#define BX_HAVE_SNPRINTF 1
-#define BX_HAVE_VSNPRINTF 1
-
 #define access _access
 #define fdopen _fdopen
 #define mktemp _mktemp
@@ -96,8 +88,6 @@ extern "C" {
 #define strrev _strrev
 #define stricmp _stricmp
 #define getch _getch
-#define strtoll _strtoi64
-#define strtoull _strtoui64
 #define isatty _isatty
 #define fileno _fileno
 #endif
@@ -118,18 +108,18 @@ extern "C" {
 #endif  /* __MINGW32__ defined */
 
 #else    /* not WIN32 definitions */
-#if SIZEOF_UNSIGNED_LONG == 8
-#define FMT_64 "l"
-#define FMT_LL "%l"
-#define FMT_TICK "%011lu"
-#define FMT_ADDRX64 "%016lx"
-#define FMT_PHY_ADDRX64 "%012lx"
-#else
+#if SIZEOF_UNSIGNED_LONG_LONG == 8
 #define FMT_64 "ll"
 #define FMT_LL "%ll"
 #define FMT_TICK "%011llu"
 #define FMT_ADDRX64 "%016llx"
 #define FMT_PHY_ADDRX64 "%012llx"
+#else
+#define FMT_64 "l"
+#define FMT_LL "%l"
+#define FMT_TICK "%011lu"
+#define FMT_ADDRX64 "%016lx"
+#define FMT_PHY_ADDRX64 "%012lx"
 #endif
 #endif   /* not WIN32 definitions */
 
@@ -163,26 +153,6 @@ extern "C" {
 // If you're considering implementing a missing library function, note
 // that it might be cleaner to conditionally disable the function call!
 //////////////////////////////////////////////////////////////////////
-
-#if !BX_HAVE_SNPRINTF
-  #define snprintf bx_snprintf
-  extern int bx_snprintf (char *s, size_t maxlen, const char *format, ...);
-#endif
-
-#if !BX_HAVE_VSNPRINTF
-  #define vsnprintf bx_vsnprintf
-  extern int bx_vsnprintf (char *s, size_t maxlen, const char *format, va_list arg);
-#endif
-
-#if BX_HAVE_STRTOULL
-  // great, just use the usual function
-#elif BX_HAVE_STRTOUQ
-  // they have strtouq and not strtoull
-  #define strtoull strtouq
-#else
-  #define strtoull bx_strtoull
-  extern Bit64u bx_strtoull (const char *nptr, char **endptr, int baseignore);
-#endif
 
 #if !BX_HAVE_STRDUP
 #define strdup bx_strdup
@@ -345,8 +315,12 @@ BX_CPP_INLINE void bx_ppc_store_le64(Bit64u *p, Bit64u v)
 
 #if BX_HAVE_REALTIME_USEC
 // 64-bit time in useconds.
-BOCHSAPI_MSVCONLY extern Bit64u bx_get_realtime64_usec (void);
+BOCHSAPI extern Bit64u bx_get_realtime64_usec (void);
+BOCHSAPI_MSVCONLY extern void bx_init_realtime64_usec (void);
 #endif
+
+BOCHSAPI_MSVCONLY extern void bx_set_sys_timer_resolution (void);
+BOCHSAPI_MSVCONLY extern void bx_reset_sys_timer_resolution (void);
 
 #ifdef WIN32
 #undef BX_HAVE_MSLEEP

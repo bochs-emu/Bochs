@@ -51,6 +51,15 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Dependency: MSR
 
+- CPU feature: amd_implementation
+
+ The feature enables AMD specific implementation of x86 ISA.
+
+ For example the following differences are implemented in Bochs and distinguished by amd_implementation CPU flag:
+   * AMD hardware always clears EFLAGS.RF when #DB exception occurs
+     In Intel hardware a single-step #DB between two iterations of repeated string instruction pushes EFLAGS with RF set
+   * AMD doesn't enforce TSS386 when entering long mode
+
 - CPU Feature: mmx
 
  First introduced in Pentium.
@@ -156,6 +165,13 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
  Enables SYSENTER/SYSEXIT instructions (will #UD otherwise)
  
  Dependency: MSR
+
+- CPU Feature: sysenter_sysexit_longmode (SYSENTER/SYSEXIT support in long mode)
+
+ AMD doesn't support SYSENTER/SYSEXIT instructions in long mode.
+ Enable support for SYSENTER/SYSEXIT support in long mode.
+
+ Dependency: longmode
 
 - CPU Feature: clflush
 
@@ -531,6 +547,17 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Dependency: SMX and GETSEC instruction not yet implemented in Bochs
 
+- CPU Feature: mpx
+
+BX_CPUID_STD7_SUBLEAF0_EBX_MPX;
+
+ Enables CPUID[0x00000007].subleaf[0].EBX[14]: MPX support flag.
+ Enables BNDCFGS MSR register (0xD90)
+ Enables BNDCFG and BNDREGS XSAVE state managment and BND registers, MPX instructions emulation
+ VMX support
+
+ Dependency: xsave
+
 - CPU Feature: rdrand
 
  Enables CPUID[0x00000001].ECX[30] flag.
@@ -766,13 +793,6 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Dependency: amx
 
-- CPU Feature: amx_tf32
-
- Enables CPUID[0x0000001E].subleaf[1].EAX[6]: AMX TF32 extensions support.
- Enables AMX_TF32 instructions (will #UD otherwise).
-
- Dependency: amx
-
 - CPU Feature: amx_complex
 
  Enables CPUID[0x00000007].subleaf[1].EDX[8]: AMX_COMPLEX extensions flag.
@@ -798,22 +818,15 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 - CPU Feature: avx10_1
 
  Enables CPUID[0x00000007].subleaf[1].ECX[19]: AVX10 supported flag.
- Enables CPUID[0x00000014] AVX10 CPUID leaf.
+ Enables CPUID[0x00000024] AVX10 CPUID leaf.
  Consolidates avx512, avx512dq, avx512bw, avx512cd, avx512vbmi, avx512vbmi2, avx512ifma52, avx512vpopcnt, avx512vnni, avx512bitalg, avx512bf16, avx512fp16 under same feature.
  Allows to limit maximum vector length to 256 bit (AVX10.256)
  XSAVE/XRSTOR support for AVX10.256
 
  Dependency: avx512
 
-- CPU Feature: avx10_vl512
-
- Support 512-bit vector length for AVX10.1
-
- Dependency: avx10_1
-
 - CPU Feature: avx10_2
 
- Introduce EVEX.U bit (previously must be '1) to enable embedded rounding for 256-bit reg/reg instructions.
  Support AVX10.2 instructions (will #UD otherwise).
 
  Dependency: avx10_1
@@ -1078,6 +1091,41 @@ Bochs CPU configurability - go over all CPUID feature extensions and see how and
 
  Comments:
    - if AVX10.2 (feature avx10_2) is enabled the avx10_2_movrs must be enabled as well
+
+- CPU Feature: fred
+
+ Enables FRED (Flexible Event Return and Delivery) and new instructions (LKGS, ERETU, ERETS), alters behavior of several existing instructions.
+ Enables CPUID[0x00000007].subleaf[1].EAX[17] flag (FRED) and CPUID[0x00000007].subleaf[1].EAX[18] flag (LKGS)
+ Controls ability to set CR4[32] (FRED) Enable bit.
+ Enables new FRED MSR state:
+        IA32_FRED_RSP0-IA32_FRED_RSP3 MSR (0x1cc-0x1cf), IA32_FRED_STKLVLS MSR (0x1d0), IA32_FRED_SSP1-IA32_FRED_SSP3 MSR (0x1d1-0x1d3),
+        IA32_FRED_CONFIG MSR (0x988)
+ Includes VMX support.
+
+ Dependency: BX_SUPPORT_FRED
+             longmode
+
+- CPU Feature: user_msr
+
+ Enables USER_MSR new instructions (URDMSR and UWRMSR)
+ Enables CPUID[0x00000007].subleaf[1].EAX[15] flag (USER_MSR)
+ Enables new MSR register (0x1C) - IA32_USER_MSR_CTRL
+ Includes VMX support.
+
+ Dependency: longmode
+
+- CPU Feature: ace
+
+ Enables CPUID[0x00000007].subleaf[1].EAX[11]: ACE architecture flag.
+ Enables CPUID[0x00000024].subleaf[1]: ACE CPUID subleaf.
+ Enables CPUID[0x0000001D] : palette 2
+ Adds AMX SCALEDATA support
+ Enables XCR0[20] (SCALEDATA) state.
+ Enabled ACE AVX512_AUX_V2 instructions (will #UD otherwise).
+ Enables ACE AMX instructions (will #UD otherwise).
+
+ Dependency: BX_SUPPORT_EVEX, BX_SUPPORT_AMX
+             avx512, avx10_2, amx
 
 ---------------------------------------------------------------------------------------------------
 

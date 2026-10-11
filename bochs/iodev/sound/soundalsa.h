@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2013-2015  The Bochs Project
+//  Copyright (C) 2013-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -29,20 +29,25 @@
 #include <alsa/asoundlib.h>
 
 typedef struct {
+  const char *device;
   snd_pcm_t *handle;
   snd_pcm_uframes_t frames;
   int alsa_bufsize, audio_bufsize;
+  int packet_size_msec;
+  int buffer_delay;
   char *buffer;
 } alsa_pcm_t;
 
 class bx_soundlow_waveout_alsa_c : public bx_soundlow_waveout_c {
 public:
   bx_soundlow_waveout_alsa_c();
-  virtual ~bx_soundlow_waveout_alsa_c() {}
+  virtual ~bx_soundlow_waveout_alsa_c();
 
   virtual int openwaveoutput(const char *wavedev);
   virtual int set_pcm_params(bx_pcm_param_t *param);
-  virtual int get_packetsize();
+  virtual int get_packet_size_bytes();
+  virtual int get_packet_size_msec();
+  virtual int get_buffer_delay();
   virtual int output(int length, Bit8u data[]);
   virtual int closewaveoutput();
 private:

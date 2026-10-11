@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2002-2023 Zwane Mwaikambo, Stanislav Shwartsman
+//  Copyright (c) 2002-2026 Zwane Mwaikambo, Stanislav Shwartsman
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -293,10 +293,12 @@ public:
 };
 
 bool apic_bus_deliver_lowest_priority(Bit8u vector, apic_dest_t dest, bool trig_mode, bool broadcast);
-BOCHSAPI_MSVCONLY bool apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bool logical_dest, bool level, bool trig_mode);
+BOCHSAPI bool apic_bus_deliver_interrupt(Bit8u vector, apic_dest_t dest, Bit8u delivery_mode, bool logical_dest, bool level, bool trig_mode);
 bool apic_bus_broadcast_interrupt(Bit8u vector, Bit8u delivery_mode, bool trig_mode, int exclude_cpu);
 
 BX_CPP_INLINE bool is_x2apic_msr_range(Bit32u index) { return index >= 0x800 && index <= 0x8FF; }
+
+BX_CPP_INLINE Bit32u x2apic_msr_to_apic_register_index(Bit32u msr) { return (msr - 0x800) << 4; }
 
 #endif // if BX_SUPPORT_APIC
 

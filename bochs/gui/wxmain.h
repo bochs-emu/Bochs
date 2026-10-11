@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2024  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -65,6 +65,7 @@ enum
   ID_Edit_Keyboard,
   ID_Edit_Boot,
   ID_Edit_Serial_Parallel,
+  ID_Edit_USB,
   ID_Edit_Network,
   ID_Edit_Sound,
   ID_Edit_Other,
@@ -196,6 +197,7 @@ public:
   void OnEditKeyboard(wxCommandEvent& event);
   void OnEditBoot(wxCommandEvent& event);
   void OnEditSerialParallel(wxCommandEvent& event);
+  void OnEditUSB(wxCommandEvent& event);
   void OnEditNet(wxCommandEvent& event);
   void OnEditSound(wxCommandEvent& event);
   void OnEditOther(wxCommandEvent& event);

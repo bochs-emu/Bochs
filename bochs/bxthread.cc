@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2017-2021  The Bochs Project
+//  Copyright (C) 2017-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -71,7 +71,7 @@ bool bx_wait_for_event(bx_thread_event_t *thread_ev)
 #endif
 }
 
-bool BOCHSAPI_MSVCONLY bx_create_sem(bx_thread_sem_t *thread_sem)
+bool BOCHSAPI bx_create_sem(bx_thread_sem_t *thread_sem)
 {
 #if defined(WIN32)
   thread_sem->sem = CreateSemaphore(NULL, 0, 1, NULL);
@@ -82,7 +82,7 @@ bool BOCHSAPI_MSVCONLY bx_create_sem(bx_thread_sem_t *thread_sem)
 #endif
 }
 
-void BOCHSAPI_MSVCONLY bx_destroy_sem(bx_thread_sem_t *thread_sem)
+void BOCHSAPI bx_destroy_sem(bx_thread_sem_t *thread_sem)
 {
 #if defined(WIN32)
   CloseHandle(thread_sem->sem);
@@ -91,7 +91,7 @@ void BOCHSAPI_MSVCONLY bx_destroy_sem(bx_thread_sem_t *thread_sem)
 #endif
 }
 
-void BOCHSAPI_MSVCONLY bx_wait_sem(bx_thread_sem_t *thread_sem)
+void BOCHSAPI bx_wait_sem(bx_thread_sem_t *thread_sem)
 {
 #if defined(WIN32)
   WaitForSingleObject(thread_sem->sem, INFINITE);
@@ -100,7 +100,7 @@ void BOCHSAPI_MSVCONLY bx_wait_sem(bx_thread_sem_t *thread_sem)
 #endif
 }
 
-void BOCHSAPI_MSVCONLY bx_set_sem(bx_thread_sem_t *thread_sem)
+void BOCHSAPI bx_set_sem(bx_thread_sem_t *thread_sem)
 {
 #if defined(WIN32)
   ReleaseSemaphore(thread_sem->sem, 1, NULL);

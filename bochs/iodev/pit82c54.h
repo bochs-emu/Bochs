@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -26,7 +26,7 @@
 #ifndef _PIT_82C54_H_
 #define _PIT_82C54_H_ 1
 
-typedef void (*out_handler_t)(bool value);
+typedef void (*out_handler_t)(void *this_ptr, bool value);
 
 class pit_82C54 : public logfunctions {
 public:
@@ -93,7 +93,8 @@ private:
     bool state_bit_2;
     Bit32u next_change_time; //Next time something besides count changes.
                              //0 means never.
-    out_handler_t out_handler; // OUT pin callback (for IRQ0)
+    void *out_this_ptr;
+    out_handler_t out_handler; // OUT pin callback (for IRQ0 and speaker)
   };
 
   counter_type counter[3];
@@ -136,7 +137,7 @@ public:
   bool read_GATE(Bit8u cnum);
 
   bool read_OUT(Bit8u cnum);
-  void set_OUT_handler(Bit8u cnum, out_handler_t outh);
+  void set_OUT_handler(Bit8u cnum, void *this_ptr, out_handler_t outh);
 
   Bit32u get_clock_event_time(Bit8u cnum);
   Bit32u get_next_event_time(void);

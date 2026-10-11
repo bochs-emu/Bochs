@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2014-2108 Stanislav Shwartsman
+//   Copyright (c) 2014-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -8290,15 +8290,19 @@ float16 approximate_rsqrt14(float16 op, bool daz)
   const Bit16u *rsqrt_table = (exp & 1) ? rsqrt14_table1 : rsqrt14_table0;
 
   exp = 0xE - ((exp - 0xF) >> 1);
-  if (fraction)
-    fraction = rsqrt_table[fraction << 5];
-  else
-    exp++;
+  // An exact power-of-two input (fraction==0) does NOT always produce an
+  // exact power-of-two result - only when the input's exponent parity makes
+  // it one (handled by the table1 lookup naturally rounding up to exactly
+  // 0x400 and carrying into the exponent below); skipping the lookup here
+  // for the other parity (table0) silently dropped a real, nonzero result.
+  fraction = rsqrt_table[fraction << 5];
 
-  // round to nearest even
-  Bit16u roundBits = fraction & 0x3F;
+  // round the 16-bit table result down to the 10-bit half-precision
+  // fraction field, round-to-nearest (ties round up - confirmed against
+  // hardware, this is not round-to-nearest-even); packFloat16 combines
+  // exp and fraction with addition, so a fraction that rounds up to
+  // exactly 0x400 correctly carries into the exponent.
   fraction = (fraction + 0x20)>>6;
-  fraction &= ~(Bit16u) (!(roundBits ^ 0x20));
 
   return packFloat16(0, exp, fraction);
 }
@@ -8352,13 +8356,18 @@ float32 approximate_rsqrt14(float32 op, bool daz)
    * Using two precalculated 32K-entry tables.
    */
 
-  const Bit16u *rsqrt_table = (exp & 1) ? rsqrt14_table1 : rsqrt14_table0;
+  bool oddExp = (exp & 1) != 0;
+  const Bit16u *rsqrt_table = oddExp ? rsqrt14_table1 : rsqrt14_table0;
 
   exp = 0x7E - ((exp - 0x7F) >> 1);
-  if (fraction)
-    fraction = rsqrt_table[fraction >> 8];
-  else
+  // An exact power-of-two input (fraction==0) only produces an exact
+  // power-of-two result when using rsqrt_table1 (odd input exponent) - the
+  // other parity's table[0] entry is a real, nonzero approximation that
+  // must still be looked up, not skipped.
+  if (fraction == 0 && oddExp)
     exp++;
+  else
+    fraction = rsqrt_table[fraction >> 8];
 
   return packFloat32(0, exp, fraction << 7);
 }
@@ -8409,13 +8418,18 @@ float64 approximate_rsqrt14(float64 op, bool daz)
   // for the shifted off bits.
   fraction = (fraction >> 29) | ((fraction & 0x1fffffff) != 0);
 
-  const Bit16u *rsqrt_table = (exp & 1) ? rsqrt14_table1 : rsqrt14_table0;
+  bool oddExp = (exp & 1) != 0;
+  const Bit16u *rsqrt_table = oddExp ? rsqrt14_table1 : rsqrt14_table0;
 
   exp = 0x3FE - ((exp - 0x3FF) >> 1);
-  if (fraction)
-    fraction = rsqrt_table[(Bit32u)fraction >> 8];
-  else
+  // An exact power-of-two input (fraction==0) only produces an exact
+  // power-of-two result when using rsqrt_table1 (odd input exponent) - the
+  // other parity's table[0] entry is a real, nonzero approximation that
+  // must still be looked up, not skipped.
+  if (fraction == 0 && oddExp)
     exp++;
+  else
+    fraction = rsqrt_table[(Bit32u)fraction >> 8];
 
   return packFloat64(0, exp, fraction << 36);
 }
@@ -8514,7 +8528,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRTSH_MASK_VshHphWshR(bxInstruction_c *
 
   if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
     float16 op2 = BX_READ_XMM_REG_LO_WORD(i->src2());
-    op1.xmm16u(0) = approximate_rsqrt14(op2, MXCSR.get_DAZ());
+    op1.xmm16u(0) = approximate_rsqrt14(op2, false); // MXCSR.DAZ is ignored for FP16 inputs
   }
   else {
     if (i->isZeroMasking())
@@ -8536,7 +8550,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRSQRTPH_MASK_VphWphR(bxInstruction_c *i)
 
   for (unsigned n=0, tmp_mask = mask; n < num_elements; n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1)
-      op.vmm16u(n) = approximate_rsqrt14((float16) op.vmm16u(n), MXCSR.get_DAZ());
+      op.vmm16u(n) = approximate_rsqrt14((float16) op.vmm16u(n), false); // MXCSR.DAZ is ignored for FP16 inputs
     else
       op.vmm16u(n) = 0;
   }

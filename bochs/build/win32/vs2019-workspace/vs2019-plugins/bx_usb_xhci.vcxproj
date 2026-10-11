@@ -209,6 +209,7 @@
     <ClCompile Include="..\iodev\usb\usb_xhci.cc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\iodev\usb\usb_xhci-defs.h" />
     <ClInclude Include="..\iodev\usb\usb_xhci.h" />
   </ItemGroup>
   <ItemGroup>

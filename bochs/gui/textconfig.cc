@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2024  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -44,6 +44,7 @@
 extern "C" {
 #endif
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <ctype.h>
 #include <string.h>
@@ -347,12 +348,13 @@ static const char *startup_options_prompt =
 "9. Bochs Display & Interface options\n"
 "10. Keyboard & Mouse options\n"
 "11. Disk & Boot options\n"
-"12. Serial / Parallel / USB options\n"
-"13. Network card options\n"
-"14. Sound card options\n"
-"15. Other options\n"
+"12. Serial / Parallel options\n"
+"13. USB configuration\n"
+"14. Network card options\n"
+"15. Sound card options\n"
+"16. Other options\n"
 #if BX_PLUGINS
-"16. User-defined options\n"
+"17. User-defined options\n"
 #endif
 "\n"
 "Please choose one: [0] ";
@@ -528,11 +530,12 @@ int bx_text_config_interface(int menu)
           case 10: do_menu("keyboard_mouse"); break;
           case 11: do_menu(BXPN_MENU_DISK); break;
           case 12: do_menu("ports"); break;
-          case 13: do_menu("network"); break;
-          case 14: do_menu("sound"); break;
-          case 15: do_menu("misc"); break;
+          case 13: do_menu("usb"); break;
+          case 14: do_menu("network"); break;
+          case 15: do_menu("sound"); break;
+          case 16: do_menu("misc"); break;
 #if BX_PLUGINS
-          case 16: do_menu("user"); break;
+          case 17: do_menu("user"); break;
 #endif
           default: BAD_OPTION(menu, choice);
         }
@@ -580,15 +583,15 @@ static void bx_print_log_action_table()
 {
   // just try to print all the prefixes first.
   bx_printf("Current log settings:\n");
-  bx_printf("                 Debug      Info       Error       Panic\n");
-  bx_printf("ID    Device     Action     Action     Action      Action\n");
-  bx_printf("----  ---------  ---------  ---------  ----------  ----------\n");
+  bx_printf("                 Debug      Info       Warn       Error      Panic\n");
+  bx_printf("ID    Device     Action     Action     Action     Action     Action\n");
+  bx_printf("----  ---------  ---------  ---------  ---------  ---------  ----------\n");
   int i, j, imax=SIM->get_n_log_modules();
   for (i=0; i<imax; i++) {
     if (strcmp(SIM->get_prefix(i), BX_NULL_PREFIX)) {
-      bx_printf("%3d.  %s ", i, SIM->get_prefix(i));
+      bx_printf("%3d.  %s   ", i, SIM->get_prefix(i));
       for (j=0; j<SIM->get_max_log_level(); j++) {
-        bx_printf("%10s ", SIM->get_action_name(SIM->get_log_action(i, j)));
+        bx_printf("%-10s ", SIM->get_action_name(SIM->get_log_action(i, j)));
       }
       bx_printf("\n");
     }
@@ -784,7 +787,7 @@ textconfig_notify_callback(void *unused, BxEvent *event)
     case BX_SYNC_EVT_LOG_DLG:
       if (event->u.logmsg.mode == BX_LOG_DLG_ASK) {
         int level = event->u.logmsg.level;
-        bx_printf("========================================================================\n");
+        bx_printf("\a========================================================================\n");
         bx_printf("Event type: %s\n", SIM->get_log_level_name (level));
         bx_printf("Device: %s\n", event->u.logmsg.prefix);
         bx_printf("Message: %s\n\n", event->u.logmsg.msg);

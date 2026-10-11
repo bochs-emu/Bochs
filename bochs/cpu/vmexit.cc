@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2024 Stanislav Shwartsman
+//   Copyright (c) 2009-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -246,6 +246,11 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
     case BX_SOFTWARE_INTERRUPT:
       break; // no VMEXIT on software interrupt
 
+#if BX_SUPPORT_FRED
+    case BX_EVENT_OTHER:
+      break; // no VMEXIT on SYSCALL or SYSENTER delivered through FRED
+#endif
+
     default:
       BX_ERROR(("VMexit_Event: unknown event type %d", type));
   }
@@ -257,7 +262,8 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
   // [10:08] | Interrupt/Exception type
   // [11:11] | error code pushed to the stack
   // [12:12] | NMI unblocking due to IRET
-  // [30:13] | reserved
+  // [13:13] | nested event identification (FRED)
+  // [30:14] | reserved
   // [31:31] | interruption info valid
   //
 
@@ -267,6 +273,12 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
     vm->idt_vector_info = vector | (type << 8);
     if (errcode_valid)
       vm->idt_vector_info |= (1 << 11); // error code delivered
+#if BX_SUPPORT_FRED
+    if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+      if (BX_CPU_THIS_PTR in_event && vector != BX_DF_EXCEPTION)
+        vm->idt_vector_info |= (1 << 13);
+    }
+#endif
 
     BX_CPU_THIS_PTR nmi_unblocking_iret = false;
     return;
@@ -294,7 +306,8 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
   // [10: 8] interruption type
   // [11:11] error code delivered
   // [12:12] NMI unblocking due to IRET
-  // [30:13] reserved
+  // [13:13] nested event identification (FRED)
+  // [30:14] reserved
   // [31:31] valid
 
   Bit32u interruption_info = vector | (type << 8);
@@ -304,6 +317,16 @@ void BX_CPU_C::VMexit_Event(unsigned type, unsigned vector, Bit16u errcode, bool
 
   if (BX_CPU_THIS_PTR nmi_unblocking_iret)
     interruption_info |= (1 << 12);
+
+  // Set bit [13] if the vmexit is due to a nested exception encountered during delivery
+  // of an earlier event using FRED delivery. It is not set for vmexits due to #DF or
+  // events encountered during IDT event delivery.
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+    if (BX_CPU_THIS_PTR in_event && vector != BX_DF_EXCEPTION)
+      interruption_info |= (1 << 13);
+  }
+#endif
 
   VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_INFO, interruption_info);
   VMwrite32(VMCS_32BIT_VMEXIT_INTERRUPTION_ERR_CODE, errcode);
@@ -334,17 +357,26 @@ const Bit32u BX_VMX_LO_MSR_END   = 0x00001FFF;
 const Bit32u BX_VMX_HI_MSR_START = 0xC0000000;
 const Bit32u BX_VMX_HI_MSR_END   = 0xC0001FFF;
 
-void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr)
+void BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr, Bit32u qualification, Bit32u instr_info)
 {
   BX_ASSERT(BX_CPU_THIS_PTR in_vmx_guest);
 
-  bool readmsr = (op == VMX_VMEXIT_RDMSR || op == VMX_VMEXIT_RDMSRLIST);
+  bool readmsr = (op == VMX_VMEXIT_RDMSR || op == VMX_VMEXIT_RDMSR_IMM || op == VMX_VMEXIT_RDMSRLIST || op == VMX_VMEXIT_URDMSR);
+
+  // VM exits due to URDMSR, UWRMSR and immediate forms of RDMSR and WRMSRNS
+  // save VM-exit instruction information (bits 6:3 hold the data register operand)
+  bool save_instr_info = (op == VMX_VMEXIT_URDMSR || op == VMX_VMEXIT_UWRMSR || op == VMX_VMEXIT_RDMSR_IMM || op == VMX_VMEXIT_WRMSRNS_IMM);
 
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
 
   if (! vm->vmexec_ctrls1.MSR_BITMAPS()) {
     BX_DEBUG(("VMEXIT: %sMSR 0x%08x", (readmsr) ? "RD" : "WR", msr));
-    VMexit(op, 0);
+    // for RDMSRLIST and WRMSRLIST, if MSR Bitmaps disabled, exit qualification is 0
+    if (op == VMX_VMEXIT_RDMSRLIST || op == VMX_VMEXIT_WRMSRLIST)
+      qualification = 0;
+    if (save_instr_info)
+      VMwrite32(VMCS_32BIT_VMEXIT_INSTRUCTION_INFO, instr_info);
+    VMexit(op, qualification);
   }
 
   bool vmexit = false;
@@ -371,7 +403,9 @@ void BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_MSR(unsigned op, Bit32u msr)
 
   if (vmexit) {
      BX_DEBUG(("VMEXIT: %sMSR 0x%08x", (readmsr) ? "RD" : "WR", msr));
-     VMexit(op, (op >= VMX_VMEXIT_RDMSRLIST) ? msr : 0);
+     if (save_instr_info)
+       VMwrite32(VMCS_32BIT_VMEXIT_INSTRUCTION_INFO, instr_info);
+     VMexit(op, qualification);
   }
 }
 
@@ -621,7 +655,7 @@ bx_address BX_CPP_AttrRegparmN(2) BX_CPU_C::VMexit_CR4_Write(bxInstruction_c *i,
   }
 
   // keep untouched all the bits set in CR4 mask
-  return (BX_CPU_THIS_PTR cr4.get32() & vm->vm_cr4_mask) | (val & ~vm->vm_cr4_mask);
+  return (BX_CPU_THIS_PTR cr4.get() & vm->vm_cr4_mask) | (val & ~vm->vm_cr4_mask);
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::VMexit_CR8_Read(bxInstruction_c *i)
@@ -787,9 +821,12 @@ void BX_CPU_C::vmx_page_modification_logging(Bit64u guest_laddr, Bit64u guest_pa
     if (BX_CPU_THIS_PTR nmi_unblocking_iret)
       vmexit_qualification |= (1 << 12);
 
-    if (vm->vmexit_ctrls2.SHADOW_STACK_PREMATURELY_BUSY_CTRL()) {
+#if BX_SUPPORT_CET
+    // the linear address is saved if the VM exit caused a shadow stack to become prematurely busy
+    if (vm->vmexit_ctrls2.SHADOW_STACK_PREMATURELY_BUSY_CTRL() && vm->shadow_stack_prematurely_busy) {
       VMwrite_natural(VMCS_GUEST_LINEAR_ADDR, guest_laddr);
     }
+#endif
     VMexit(VMX_VMEXIT_PML_LOGFULL, vmexit_qualification);
   }
 

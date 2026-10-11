@@ -36,6 +36,7 @@ private:
   Bit8u get_edid_byte(void);
 
   struct {
+    bool  init_done;
     Bit8u ddc_mode;
     bool  DCKhost;
     bool  DDAhost;

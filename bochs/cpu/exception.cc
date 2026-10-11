@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2019  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -30,6 +30,7 @@
 #endif
 
 #include "param_names.h"
+#include "pc_system.h"
 #include "iodev/iodev.h"
 
 #include "bx_debug/debug.h"
@@ -257,14 +258,20 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16
 #if BX_SUPPORT_CET
   if(ShadowStackEnabled(old_CPL)) {
     if (old_CPL == 3)
-      BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = SSP;
+      // in IA-32e mode adjust so bits 63:N get the value of bit N-1, N is the CPU maximum linear-address width
+      BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = long_mode() ? CpuidCanonicalizeAddress(SSP) : SSP;
   }
   if (ShadowStackEnabled(CPL)) {
     bx_address old_SSP = SSP;
-    if(check_ss_token)
+    if (check_ss_token) {
       shadow_stack_switch(new_SSP);
-    if (old_SS_DPL != 3)
-      call_far_shadow_stack_push(old_CS, return_LIP, old_SSP);
+      if (old_SS_DPL != 3)
+        new_shadow_stack_push(old_CS, return_LIP, old_SSP);
+    }
+    else {
+      if (old_SS_DPL != 3)
+        call_far_shadow_stack_push(old_CS, return_LIP, old_SSP);
+    }
   }
   track_indirect(CPL);
 #endif
@@ -457,42 +464,11 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
         exception(BX_TS_EXCEPTION, 0); /* TS(ext) */
       }
 
+      parse_selector(SS_for_cpl_x, &ss_selector);
+
       // selector index must be within its descriptor table limits
       // else #TS(SS selector + EXT)
-      parse_selector(SS_for_cpl_x, &ss_selector);
-      // fetch 2 dwords of descriptor; call handles out of limits checks
-      fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_TS_EXCEPTION);
-      parse_descriptor(dword1, dword2, &ss_descriptor);
-
-      // selector rpl must = dpl of code segment,
-      // else #TS(SS selector + ext)
-      if (ss_selector.rpl != cs_descriptor.dpl) {
-        BX_ERROR(("interrupt(): SS.rpl != CS.dpl"));
-        exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-      }
-
-      // stack seg DPL must = DPL of code segment,
-      // else #TS(SS selector + ext)
-      if (ss_descriptor.dpl != cs_descriptor.dpl) {
-        BX_ERROR(("interrupt(): SS.dpl != CS.dpl"));
-        exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-      }
-
-      // descriptor must indicate writable data segment,
-      // else #TS(SS selector + EXT)
-      if (ss_descriptor.valid==0 || ss_descriptor.segment==0 ||
-           IS_CODE_SEGMENT(ss_descriptor.type) ||
-          !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
-      {
-        BX_ERROR(("interrupt(): SS is not writable data segment"));
-        exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-      }
-
-      // seg must be present, else #SS(SS selector + ext)
-      if (! IS_PRESENT(ss_descriptor)) {
-        BX_ERROR(("interrupt(): SS not present"));
-        exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-      }
+      fetch_ss_descriptor(SS_for_cpl_x, &ss_selector, &ss_descriptor, cs_descriptor.dpl, BX_TS_EXCEPTION);
 
       // IP must be within CS segment boundaries, else #GP(0)
       if (gate_dest_offset > cs_descriptor.u.segment.limit_scaled) {
@@ -640,13 +616,14 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
 #if BX_SUPPORT_CET
       if(ShadowStackEnabled(old_CPL)) {
         if (old_CPL == 3)
-          BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = SSP;
+          // in IA-32e mode adjust so bits 63:N get the value of bit N-1, N is the CPU maximum linear-address width
+          BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = long_mode() ? CpuidCanonicalizeAddress(SSP) : SSP;
       }
       if (ShadowStackEnabled(CPL)) {
         bx_address old_SSP = SSP;
         shadow_stack_switch(new_SSP);
         if (old_SS_DPL != 3) {
-          call_far_shadow_stack_push(old_CS, return_LIP, old_SSP);
+          new_shadow_stack_push(old_CS, return_LIP, old_SSP);
         }
       }
       track_indirect(CPL);
@@ -787,6 +764,11 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
     case BX_NMI:
     case BX_HARDWARE_EXCEPTION:
       break;
+#if BX_SUPPORT_FRED
+    case BX_EVENT_OTHER:
+      BX_ASSERT(vector <= 2);
+      break;
+#endif
 
     default:
       BX_PANIC(("interrupt(): unknown exception type %d", type));
@@ -795,12 +777,20 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
   BX_DEBUG(("interrupt(): vector = %02x, TYPE = %u, EXT = %u",
       vector, type, (unsigned) BX_CPU_THIS_PTR EXT));
 
+  BX_CPU_THIS_PTR activity_state = BX_ACTIVITY_STATE_ACTIVE;
+
+#if BX_SUPPORT_FRED
+  // FRED event delivery saves interrupt blocking by STI (not by MOV SS) for hardware exceptions only
+  bool fred_sti_blocking = (type == BX_HARDWARE_EXCEPTION) &&
+       interrupts_inhibited(BX_INHIBIT_INTERRUPTS) && ! (BX_CPU_THIS_PTR inhibit_mask & BX_INHIBIT_DEBUG);
+#endif
+
   // Discard any traps and inhibits for new context; traps will
   // resume upon return.
   BX_CPU_THIS_PTR debug_trap = 0;
   BX_CPU_THIS_PTR inhibit_mask = 0;
 
-#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM || BX_SUPPORT_FRED
   BX_CPU_THIS_PTR in_event = true;
 #endif
 
@@ -808,7 +798,12 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
 
 #if BX_SUPPORT_X86_64
   if (long_mode()) {
-    long_mode_int(vector, soft_int, push_error, error_code);
+#if BX_SUPPORT_FRED
+    if (BX_CPU_THIS_PTR cr4.get_FRED())
+      FRED_EventDelivery(vector, type, error_code, fred_sti_blocking);
+    else
+#endif
+      long_mode_int(vector, soft_int, push_error, error_code);
   }
   else
 #endif
@@ -831,7 +826,7 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
   unmask_event(BX_EVENT_VMX_MONITOR_TRAP_FLAG);
 #endif
 
-#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM || BX_SUPPORT_FRED
   BX_CPU_THIS_PTR in_event = false;
 #endif
 
@@ -855,7 +850,7 @@ static const bool is_exception_OK[3][3] = {
 };
 
 struct BxExceptionInfo {
-  unsigned exception_type;
+  int exception_type;
   unsigned exception_class;
   bool push_error;
 };
@@ -936,7 +931,7 @@ bool BX_CPU_C::exception_push_error(unsigned vector)
 // error_code: if exception generates and error, push this error code
 void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 {
-  unsigned exception_type = BX_ET_BENIGN;
+  int exception_type = BX_ET_BENIGN;
   unsigned exception_class = BX_EXCEPTION_CLASS_FAULT;
   bool push_error = false;
 
@@ -975,11 +970,17 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 
 #if BX_SUPPORT_VMX
   VMexit_Event(BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
+#if BX_SUPPORT_CET
+  // the exception didn't cause VM exit: if it happened during pushes onto newly acquired shadow stack, the shadow
+  // stack became prematurely busy without VM exit and this is not reported anywhere
+  BX_CPU_THIS_PTR vmcs.shadow_stack_prematurely_busy = false;
+#endif
 #endif
 
-#if BX_SUPPORT_SVM
-  SvmInterceptException(BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
-#endif
+  // AMD: a #DB pushes RF clear, also a single-step trap between two iterations of a REP string instruction
+  // (Intel pushes RF = 1 there, as the REP loop has asserted it)
+  if (vector == BX_DB_EXCEPTION && is_cpu_extension_supported(BX_ISA_AMD))
+    BX_CPU_THIS_PTR clear_RF();
 
   if (exception_class == BX_EXCEPTION_CLASS_FAULT)
   {
@@ -992,6 +993,11 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
 #endif
     }
     BX_CPU_THIS_PTR speculative_rsp = false;
+#if BX_SUPPORT_MPX
+    // near branch which requested BND0-3 initialization has faulted
+    if (BX_CPU_THIS_PTR bndregs_clear && BX_CPU_THIS_PTR bndregs_clear_icount == get_icount())
+      BX_CPU_THIS_PTR bndregs_clear = false;
+#endif
 
     if (vector != BX_DB_EXCEPTION) BX_CPU_THIS_PTR assert_RF();
 
@@ -1015,8 +1021,7 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
         bx_pc_system.Reset(BX_RESET_HARDWARE);
       }
       else {
-        BX_PANIC(("exception(): 3rd (%d) exception with no resolution", vector));
-        BX_ERROR(("WARNING: Any simulation after this point is completely bogus !"));
+        BX_WARN(("exception(): 3rd (%d) exception with no resolution", vector));
         shutdown();
       }
       longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
@@ -1026,29 +1031,44 @@ void BX_CPU_C::exception(unsigned vector, Bit16u error_code)
   if (vector == BX_DB_EXCEPTION) {
     // Commit debug events to DR6: preserve DR5.BS and DR6.BD values,
     // only software can clear them
-    BX_CPU_THIS_PTR dr6.val32 = (BX_CPU_THIS_PTR dr6.val32  & 0xffff6ff0) |
-                                (BX_CPU_THIS_PTR debug_trap & 0x0000e00f);
+    BX_CPU_THIS_PTR dr6.val = (BX_CPU_THIS_PTR dr6.val    & 0xffff6ff0) |
+                              (BX_CPU_THIS_PTR debug_trap & 0x0000e00f);
 
     // clear GD flag in the DR7 prior entering debug exception handler
     BX_CPU_THIS_PTR dr7.set_GD(0);
   }
+
+#if BX_SUPPORT_SVM
+  // an intercepted #DB has already updated DR6 and leaves RF clear
+  SvmInterceptException(BX_HARDWARE_EXCEPTION, vector, error_code, push_error);
+#endif
 
   BX_CPU_THIS_PTR EXT = 1;
 
   /* if we've already had 1st exception, see if 2nd causes a
    * Double Fault instead. Otherwise, just record 1st exception.
    */
-  if (exception_type != BX_ET_DOUBLE_FAULT) {
+  if (BX_CPU_THIS_PTR last_exception_type != BX_ET_NONE && exception_type != BX_ET_DOUBLE_FAULT) {
     if (! is_exception_OK[BX_CPU_THIS_PTR last_exception_type][exception_type]) {
       exception(BX_DF_EXCEPTION, 0);
     }
   }
 
+#if BX_SUPPORT_FRED
+  // exception is nested if encountered during delivery of another event (any event type, not only exception)
+  set_fred_event_info_and_data(vector, BX_HARDWARE_EXCEPTION, BX_CPU_THIS_PTR in_event, 0);
+#endif
+
   BX_CPU_THIS_PTR last_exception_type = exception_type;
 
   interrupt(vector, BX_HARDWARE_EXCEPTION, push_error, error_code);
 
-  BX_CPU_THIS_PTR last_exception_type = 0; // error resolved
+  BX_CPU_THIS_PTR last_exception_type = BX_ET_NONE; // error resolved
+
+#if BX_SUPPORT_FRED
+  BX_CPU_THIS_PTR fred_event_info = 0;
+  BX_CPU_THIS_PTR fred_event_data = 0;
+#endif
 
   longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
 }

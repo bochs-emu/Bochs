@@ -45,6 +45,7 @@ corei5_arrandale_m520_t::corei5_arrandale_m520_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_MMX);
   enable_cpu_extension(BX_ISA_P6);
   enable_cpu_extension(BX_ISA_SYSENTER_SYSEXIT);
+  enable_cpu_extension(BX_ISA_SYSENTER_SYSEXIT_LONGMODE);
   enable_cpu_extension(BX_ISA_SSE);
   enable_cpu_extension(BX_ISA_SSE2);
   enable_cpu_extension(BX_ISA_SSE3);

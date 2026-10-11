@@ -41,7 +41,7 @@ SOFTFLOAT_OPTS = \
 
 DELETE = @RMCOMMAND@
 C_INCLUDES = -I. -I../.. -I$(SOURCE_DIR)/include
-COMPILE_C = \
+COMPILE_CXX = \
   $(CXX) @DASH@c @CFLAGS@ \
     -DSOFTFLOAT_FAST_INT64 $(SOFTFLOAT_OPTS) $(C_INCLUDES) @OFP@$@
 MAKELIB = @MAKELIB@
@@ -186,6 +186,7 @@ OBJS_OTHERS = \
   f16_mulAdd$(OBJ) \
   f16_div$(OBJ) \
   f16_sqrt$(OBJ) \
+  f16_scalef$(OBJ) \
   f32_to_ui8$(OBJ) \
   f32_to_ui32$(OBJ) \
   f32_to_ui64$(OBJ) \
@@ -268,44 +269,38 @@ OBJS_OTHERS = \
   extF80_div$(OBJ) \
   extF80_rem$(OBJ) \
   extF80_sqrt$(OBJ) \
-  f128_to_ui32$(OBJ) \
-  f128_to_ui64$(OBJ) \
-  f128_to_i32$(OBJ) \
-  f128_to_i64$(OBJ) \
-  f128_to_ui32_r_minMag$(OBJ) \
-  f128_to_ui64_r_minMag$(OBJ) \
-  f128_to_i32_r_minMag$(OBJ) \
-  f128_to_i64_r_minMag$(OBJ) \
   f128_to_f32$(OBJ) \
   f128_to_extF80$(OBJ) \
   f128_to_f64$(OBJ) \
-  f128_roundToInt$(OBJ) \
   f128_addsub$(OBJ) \
   f128_mul$(OBJ) \
+  f128_mul_by_extF80$(OBJ) \
   f128_mulAdd$(OBJ) \
-  f128_div$(OBJ)
+  f128_div$(OBJ) \
+  f128_round$(OBJ)
 
 OBJS_ALL = $(OBJS_PRIMITIVES) $(OBJS_SPECIALIZE) $(OBJS_OTHERS)
 
 $(OBJS_ALL): \
   $(SOURCE_DIR)/include/primitiveTypes.h \
+  $(SOURCE_DIR)/include/opts-GCC.h \
   $(SOURCE_DIR)/include/primitives.h
 $(OBJS_SPECIALIZE) $(OBJS_OTHERS): \
   $(SOURCE_DIR)/include/softfloat_types.h $(SOURCE_DIR)/include/internals.h \
   $(SOURCE_DIR)/include/specialize.h \
   $(SOURCE_DIR)/include/softfloat.h
 
-@GNU_MAKE_ONLY@$(OBJS_PRIMITIVES) $(OBJS_OTHERS): %$(OBJ): $(SOURCE_DIR)/%.c
-@GNU_MAKE_ONLY@	$(COMPILE_C) $(SOURCE_DIR)/$*.c
+@GNU_MAKE_ONLY@$(OBJS_PRIMITIVES) $(OBJS_OTHERS): %$(OBJ): $(SOURCE_DIR)/%.cc
+@GNU_MAKE_ONLY@	$(COMPILE_CXX) $(SOURCE_DIR)/$*.cc
 
-@GNU_MAKE_ONLY@$(OBJS_SPECIALIZE): %$(OBJ): $(SOURCE_DIR)/$(SPECIALIZE_TYPE)/%.c
-@GNU_MAKE_ONLY@	$(COMPILE_C) $(SOURCE_DIR)/$(SPECIALIZE_TYPE)/$*.c
+@GNU_MAKE_ONLY@$(OBJS_SPECIALIZE): %$(OBJ): $(SOURCE_DIR)/$(SPECIALIZE_TYPE)/%.cc
+@GNU_MAKE_ONLY@	$(COMPILE_CXX) $(SOURCE_DIR)/$(SPECIALIZE_TYPE)/$*.cc
 
-@NMAKE_ONLY@.c.o:
-@NMAKE_ONLY@	$(COMPILE_C) /Tp$<
+@NMAKE_ONLY@.cc.o:
+@NMAKE_ONLY@	$(COMPILE_CXX) /Tp$<
 
-@NMAKE_ONLY@{8086-SSE\}.c.o:
-@NMAKE_ONLY@	$(COMPILE_C) /Tp$<
+@NMAKE_ONLY@{8086-SSE\}.cc.o:
+@NMAKE_ONLY@	$(COMPILE_CXX) /Tp$<
 
 libsoftfloat$(LIB): $(OBJS_ALL)
 	$(DELETE) $@

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2017 Stanislav Shwartsman
+//   Copyright (c) 2003-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -68,7 +68,7 @@ unsigned BX_CPU_C::FPU_exception(bxInstruction_c *i, unsigned exception, bool is
 
   /* Set summary bits iff exception isn't masked */
   if (unmasked) {
-    FPU_PARTIAL_STATUS |= (FPU_SW_Summary | FPU_SW_Backward);
+    set_unmasked_fpu_exception();
 
     // when FOPCODE deprecation is set, FOPCODE is updated only when unmasked x87 exception occurs
     if (is_cpu_extension_supported(BX_ISA_FOPCODE_DEPRECATION))
@@ -141,6 +141,93 @@ unsigned BX_CPU_C::FPU_exception(bxInstruction_c *i, unsigned exception, bool is
   }
 
   return unmasked;
+}
+
+//
+// When MS-DOS compatibility mode is enabled for the Intel486 or Pentium processors (NE bit is set to 0) and the
+// IGNNE# input pin is de-asserted, the FERR# signal is generated as follows:
+//
+// 1. When an x87 FPU instruction causes an unmasked x87 FPU exception, the processor (in most cases) uses a
+//    "deferred" method of reporting the error. This means that the processor does not respond immediately, but
+//    rather freezes just before executing the next WAIT or x87 FPU instruction (except for "no-wait" instructions,
+//    which the x87 FPU executes regardless of an error condition).
+//
+// 2. When the processor freezes, it also asserts the FERR# output.
+//
+// 3. The frozen processor waits for an external interrupt, which must be supplied by external hardware in response
+//    to the FERR# assertion.
+//
+// 4. In MS-DOS compatibility systems, FERR# is fed to the IRQ13 input in the cascaded PIC. The PIC generates
+//    interrupt 75H, which then branches to interrupt 2, as described earlier in this appendix for systems using the
+//    Intel 286 and Intel 287 or Intel386 and Intel 387 processors.
+//
+// The deferred method of error reporting is used for all exceptions caused by the basic arithmetic instructions
+// (including FADD, FSUB, FMUL, FDIV, FSQRT, FCOM and FUCOM), for precision exceptions caused by all types of x87
+// FPU instructions, and for numeric underflow and overflow exceptions caused by all types of x87 FPU instructions
+// except stores to memory.
+//
+// Some x87 FPU instructions with some x87 FPU exceptions use an "immediate" method of reporting errors. Here,
+// the FERR# is asserted immediately, at the time that the exception occurs. The immediate method of error
+// reporting is used for x87 FPU stack fault, invalid operation and denormal exceptions caused by all transcendental
+// instructions, FSCALE, FXTRACT, FPREM and others, and all exceptions (except precision) when caused by x87 FPU
+// store instructions. Like deferred error reporting, immediate error reporting will cause the processor to freeze just
+// before executing the next WAIT or x87 FPU instruction if the error condition has not been cleared by that time.
+// Note that in general, whether deferred or immediate error reporting is used for an x87 FPU exception depends both
+// on which exception occurred and which instruction caused that exception. A complete specification of these cases,
+// which applies to both the Pentium and the Intel486 processors, is given in Section 5.1.21 in the Pentium Processor
+// Family Developer's Manual: Volume 1
+//
+
+#include "iodev/iodev.h"
+
+void BX_CPU_C::FPU_check_pending_exceptions(void)
+{
+  if(BX_CPU_THIS_PTR the_i387.get_partial_status() & FPU_SW_Summary)
+  {
+     // NE=1 selects the native or internal mode, which generates #MF,
+     // which is an extension introduced with 80486.
+     // NE=0 selects the original (backward compatible) FPU error
+     // handling, which generates an IRQ 13 via the PIC chip.
+#if BX_CPU_LEVEL >= 4
+     if (BX_CPU_THIS_PTR cr0.get_NE() != 0) {
+         exception(BX_MF_EXCEPTION, 0);
+     }
+     else
+#endif
+     {
+        // MSDOS compatibility mode
+        if (! BX_CPU_THIS_PTR get_IGNNE()) {
+          // with "deferred" method of reporting the error here is the time to assert FERR#
+          DEV_extfpuirq_set_fpu_error(true);
+
+          enter_sleep_state(BX_ACTIVITY_WAIT_FOR_X87);
+          longjmp(BX_CPU_THIS_PTR jmp_buf_env, 1); // go back to main decode loop
+        }
+     }
+  }
+}
+
+// this code uses "immediate" method of reporting errors for simplicity
+void BX_CPU_C::set_unmasked_fpu_exception()
+{
+  /* set the B and ES bits in the status-word */
+  FPU_PARTIAL_STATUS |= (FPU_SW_Summary | FPU_SW_Backward);
+
+  BX_DEBUG(("Set FERR# on unmasked x87 exception"));
+
+  // Here we set FERR# (Reset after FSW B/ES are cleared)
+  DEV_extfpuirq_set_fpu_error(true);
+}
+
+void BX_CPU_C::clear_unmasked_fpu_exception()
+{
+  /* clear the B and ES bits in the status-word */
+  FPU_PARTIAL_STATUS &= ~(FPU_SW_Summary | FPU_SW_Backward);
+
+  BX_DEBUG(("Clear FERR#"));
+
+  // Here we set FERR# (Reset after FSW B/ES are cleared)
+  DEV_extfpuirq_set_fpu_error(false);
 }
 
 #endif

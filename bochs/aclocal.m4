@@ -250,7 +250,6 @@ ltmain="$ac_aux_dir/ltmain.sh"
 ofile="$default_ofile"
 with_gnu_ld="$lt_cv_prog_gnu_ld"
 
-AC_CHECK_TOOL(AR, ar, false)
 AC_CHECK_TOOL(RANLIB, ranlib, :)
 AC_CHECK_TOOL(STRIP, strip, :)
 
@@ -258,7 +257,6 @@ old_CC="$CC"
 old_CFLAGS="$CFLAGS"
 
 # Set sane defaults for various variables
-test -z "$AR" && AR=ar
 test -z "$AR_FLAGS" && AR_FLAGS=cru
 test -z "$AS" && AS=as
 test -z "$CC" && CC=cc

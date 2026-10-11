@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2024  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -45,6 +45,7 @@ extern "C" {
 #define BX_PLUGIN_CMOS      "cmos"
 #define BX_PLUGIN_VGA       "vga"
 #define BX_PLUGIN_CIRRUS    "svga_cirrus"
+#define BX_PLUGIN_GEFORCE   "geforce"
 #define BX_PLUGIN_FLOPPY    "floppy"
 #define BX_PLUGIN_PARALLEL  "parallel"
 #define BX_PLUGIN_SERIAL    "serial"
@@ -54,6 +55,7 @@ extern "C" {
 #define BX_PLUGIN_DMA       "dma"
 #define BX_PLUGIN_PIC       "pic"
 #define BX_PLUGIN_PIT       "pit"
+#define BX_PLUGIN_FW_CFG    "fw_cfg"
 #define BX_PLUGIN_PCI       "pci"
 #define BX_PLUGIN_PCI2ISA   "pci2isa"
 #define BX_PLUGIN_PCI_IDE   "pci_ide"
@@ -79,7 +81,7 @@ extern "C" {
 
 #define BX_REGISTER_DEVICE_DEVMODEL(a,b,c,d) pluginRegisterDeviceDevmodel(a,b,c,d)
 #define BX_UNREGISTER_DEVICE_DEVMODEL(a,b) pluginUnregisterDeviceDevmodel(a,b)
-#define PLUG_device_present(a) pluginDevicePresent(a)
+#define PLUG_device_present(a,b) pluginDevicePresent(a,b)
 
 #if BX_PLUGINS
 
@@ -89,10 +91,11 @@ extern "C" {
 #define PLUG_get_plugins_count(type) bx_get_plugins_count(type)
 #define PLUG_get_plugin_name(type,index) bx_get_plugin_name(type,index)
 #define PLUG_get_plugin_flags(type,index) bx_get_plugin_flags(type,index)
-#define PLUG_load_plugin_var(name,type) {bx_load_plugin(name,type);}
+#define PLUG_load_plugin_var(name,type) bx_load_plugin(name,type)
 #define PLUG_load_opt_plugin(name) bx_load_plugin(name,PLUGTYPE_OPTIONAL)
 #define PLUG_unload_opt_plugin(name) bx_unload_plugin(name,1)
 #define PLUG_unload_plugin_type(name,type) {bx_unload_plugin_type(name,type);}
+#define PLUG_find_plugin(name) bx_find_plugin(name)
 
 #define DEV_register_ioread_handler(b,c,d,e,f)  pluginRegisterIOReadHandler(b,c,d,e,f)
 #define DEV_register_iowrite_handler(b,c,d,e,f) pluginRegisterIOWriteHandler(b,c,d,e,f)
@@ -120,6 +123,7 @@ extern "C" {
 #define PLUG_load_plugin_var(name,type) bx_load_plugin_np(name,type)
 #define PLUG_load_opt_plugin(name) bx_load_plugin_np(name,PLUGTYPE_OPTIONAL)
 #define PLUG_unload_opt_plugin(name) bx_unload_opt_plugin(name,1)
+#define PLUG_find_plugin(name) bx_find_plugin_np(name)
 
 #define DEV_register_ioread_handler(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e,f)
 #define DEV_register_iowrite_handler(b,c,d,e,f) bx_devices.register_io_write_handler(b,c,d,e,f)
@@ -189,10 +193,10 @@ extern "C" {
 #define DEV_bulk_io_host_addr() (bx_devices.bulkIOHostAddr)
 
 ///////// DMA macros
-#define DEV_dma_register_8bit_channel(channel, dmaRead, dmaWrite, name) \
-  (bx_devices.pluginDmaDevice->registerDMA8Channel(channel, dmaRead, dmaWrite, name))
-#define DEV_dma_register_16bit_channel(channel, dmaRead, dmaWrite, name) \
-  (bx_devices.pluginDmaDevice->registerDMA16Channel(channel, dmaRead, dmaWrite, name))
+#define DEV_dma_register_8bit_channel(channel, this_ptr, dmaRead, dmaWrite, name) \
+  (bx_devices.pluginDmaDevice->registerDMA8Channel(channel, this_ptr, dmaRead, dmaWrite, name))
+#define DEV_dma_register_16bit_channel(channel, this_ptr, dmaRead, dmaWrite, name) \
+  (bx_devices.pluginDmaDevice->registerDMA16Channel(channel, this_ptr, dmaRead, dmaWrite, name))
 #define DEV_dma_unregister_channel(channel) \
   (bx_devices.pluginDmaDevice->unregisterDMAChannel(channel))
 #define DEV_dma_set_drq(channel, val) \
@@ -214,8 +218,7 @@ extern "C" {
   (bx_devices.pluginVgaDevice->vga_redraw_area(left, top, right, bottom))
 #define DEV_vga_get_text_snapshot(rawsnap, height, width) \
   (bx_devices.pluginVgaDevice->get_text_snapshot(rawsnap, height, width))
-#define DEV_vga_refresh(a) \
-  (bx_devices.pluginVgaDevice->refresh_display(bx_devices.pluginVgaDevice,a))
+#define DEV_vga_refresh(a) (bx_devices.pluginVgaDevice->refresh_display(a))
 #define DEV_vga_set_override(a,b) (bx_devices.pluginVgaDevice->set_override(a,b))
 
 ///////// PCI macros
@@ -226,10 +229,10 @@ extern "C" {
 #define DEV_pci_get_slot_from_dev(a) bx_devices.pci_get_slot_from_dev(a)
 #define DEV_pci_get_confAddr() bx_devices.pci_get_confAddr()
 #define DEV_pci_set_irq(a,b,c) bx_devices.pluginPci2IsaBridge->pci_set_irq(a,b,c)
-#define DEV_pci_set_base_mem(a,b,c,d,e,f) \
-  (bx_devices.pci_set_base_mem(a,b,c,d,e,f))
-#define DEV_pci_set_base_io(a,b,c,d,e,f,g,h) \
-  (bx_devices.pci_set_base_io(a,b,c,d,e,f,g,h))
+#define DEV_pci_set_base_mem(a,b,c,d,e,f,g) \
+  (bx_devices.pci_set_base_mem(a,b,c,d,e,f,g))
+#define DEV_pci_set_base_io(a,b,c,d,e,f,g,h,i) \
+  (bx_devices.pci_set_base_io(a,b,c,d,e,f,g,h,i))
 #define DEV_ide_bmdma_present() bx_devices.pluginPciIdeController->bmdma_present()
 #define DEV_ide_bmdma_set_irq(a) bx_devices.pluginPciIdeController->bmdma_set_irq(a)
 #define DEV_ide_bmdma_start_transfer(a) \
@@ -271,6 +274,10 @@ extern "C" {
 #define DEV_gameport_set_enabled(a) BX_ERROR(("gameport emulation not present"))
 #endif
 
+///////// External FPU IRQ macros
+#define DEV_extfpuirq_set_enabled(a) bx_devices.pluginExtFpuIRQ->set_enabled(a)
+#define DEV_extfpuirq_set_fpu_error(a) bx_devices.pluginExtFpuIRQ->set_fpu_error(a)
+
 
 #if BX_HAVE_DLFCN_H
 #include <dlfcn.h>
@@ -303,7 +310,7 @@ typedef void (*deviceReset_t)(unsigned);
 
 BOCHSAPI void pluginRegisterDeviceDevmodel(plugin_t *plugin, Bit16u type, bx_devmodel_c *dev, const char *name);
 BOCHSAPI void pluginUnregisterDeviceDevmodel(const char *name, Bit16u type);
-BOCHSAPI bool pluginDevicePresent(const char *name);
+BOCHSAPI bool pluginDevicePresent(const char *name, bool core);
 
 /* === IO port stuff === */
 BOCHSAPI extern int (*pluginRegisterIOReadHandler)(void *thisPtr, ioReadHandler_t callback,
@@ -341,6 +348,7 @@ void plugin_abort(plugin_t *plugin);
 Bit8u bx_get_plugins_count(Bit16u type);
 const char* bx_get_plugin_name(Bit16u type, Bit8u index);
 Bit8u bx_get_plugin_flags(Bit16u type, Bit8u index);
+Bit16u bx_find_plugin(const char *name);
 #endif
 bool bx_load_plugin(const char *name, Bit16u type);
 bool bx_unload_plugin(const char *name, bool devflag);
@@ -359,6 +367,7 @@ const char* bx_get_plugin_name_np(Bit16u type, Bit8u index);
 Bit8u bx_get_plugin_flags_np(Bit16u type, Bit8u index);
 int bx_load_plugin_np(const char *name, Bit16u type);
 int bx_unload_opt_plugin(const char *name, bool devflag);
+Bit16u bx_find_plugin_np(const char *name);
 #endif
 
 // every plugin must define this, within the extern"C" block, so that
@@ -416,8 +425,10 @@ PLUGIN_ENTRY_FOR_MODULE(cmos);
 PLUGIN_ENTRY_FOR_MODULE(dma);
 PLUGIN_ENTRY_FOR_MODULE(pic);
 PLUGIN_ENTRY_FOR_MODULE(pit);
+PLUGIN_ENTRY_FOR_MODULE(fw_cfg);
 PLUGIN_ENTRY_FOR_MODULE(vga);
 PLUGIN_ENTRY_FOR_MODULE(svga_cirrus);
+PLUGIN_ENTRY_FOR_MODULE(geforce);
 PLUGIN_ENTRY_FOR_MODULE(floppy);
 PLUGIN_ENTRY_FOR_MODULE(parallel);
 PLUGIN_ENTRY_FOR_MODULE(pci);
@@ -489,6 +500,7 @@ PLUGIN_ENTRY_FOR_IMG_MODULE(vmware3);
 PLUGIN_ENTRY_FOR_IMG_MODULE(vmware4);
 PLUGIN_ENTRY_FOR_IMG_MODULE(vbox);
 PLUGIN_ENTRY_FOR_IMG_MODULE(vpc);
+PLUGIN_ENTRY_FOR_IMG_MODULE(vhdx);
 PLUGIN_ENTRY_FOR_IMG_MODULE(vvfat);
 
 #endif

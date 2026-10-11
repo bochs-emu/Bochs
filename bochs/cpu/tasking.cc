@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2014  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -23,6 +23,8 @@
 #include "bochs.h"
 #include "cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
+
+#include "icache.h"
 
 #if BX_SUPPORT_SVM
 #include "svm.h"
@@ -217,8 +219,8 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   // used in the task switch are paged in.
   if (BX_CPU_THIS_PTR cr0.get_PG())
   {
-    translate_linear(BX_DTLB_ENTRY_OF(nbase32,               0), nbase32,               0, BX_READ); // old TSS
-    translate_linear(BX_DTLB_ENTRY_OF(nbase32 + new_TSS_max, 0), nbase32 + new_TSS_max, 0, BX_READ);
+    translate_linear(BX_DTLB_ENTRY_OF(nbase32,               0), nbase32,               0, BX_IMPLICIT_SUPERVISOR_READ); // old TSS
+    translate_linear(BX_DTLB_ENTRY_OF(nbase32 + new_TSS_max, 0), nbase32 + new_TSS_max, 0, BX_IMPLICIT_SUPERVISOR_READ);
 
     // ??? Humm, we check the new TSS region with READ above,
     // but sometimes we need to write the link field in that
@@ -229,8 +231,8 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 
     if (source == BX_TASK_FROM_CALL || source == BX_TASK_FROM_INT)
     {
-      translate_linear(BX_DTLB_ENTRY_OF(nbase32,     0), nbase32,     0, BX_WRITE);
-      translate_linear(BX_DTLB_ENTRY_OF(nbase32 + 1, 0), nbase32 + 1, 0, BX_WRITE);
+      translate_linear(BX_DTLB_ENTRY_OF(nbase32,     0), nbase32,     0, BX_IMPLICIT_SUPERVISOR_WRITE);
+      translate_linear(BX_DTLB_ENTRY_OF(nbase32 + 1, 0), nbase32 + 1, 0, BX_IMPLICIT_SUPERVISOR_WRITE);
     }
   }
 
@@ -243,9 +245,9 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   if (source == BX_TASK_FROM_JUMP || source == BX_TASK_FROM_IRET) {
     // Bit is cleared
     Bit32u laddr = (Bit32u) BX_CPU_THIS_PTR gdtr.base + (BX_CPU_THIS_PTR tr.selector.index<<3) + 4;
-    access_read_linear(laddr, 4, 0, BX_RW, 0x0, &temp32);
+    access_read_linear(laddr, 4, 0, BX_IMPLICIT_SUPERVISOR_READ, 0x0, &temp32);
     temp32 &= ~0x200;
-    access_write_linear(laddr, 4, 0, BX_WRITE, 0x0, &temp32);
+    access_write_linear(laddr, 4, 0, BX_IMPLICIT_SUPERVISOR_WRITE, 0x0, &temp32);
   }
 
   // STEP 4: If the task switch was initiated with an IRET instruction,
@@ -273,8 +275,8 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     if (BX_CPU_THIS_PTR cr0.get_PG()) {
       Bit32u start = Bit32u(obase32 + 14), end = Bit32u(obase32 + 41);
 
-      translate_linear(BX_DTLB_ENTRY_OF(start, 0), start, 0, BX_WRITE);
-      translate_linear(BX_DTLB_ENTRY_OF(end, 0),   end,   0, BX_WRITE);
+      translate_linear(BX_DTLB_ENTRY_OF(start, 0), start, 0, BX_IMPLICIT_SUPERVISOR_WRITE);
+      translate_linear(BX_DTLB_ENTRY_OF(end, 0),   end,   0, BX_IMPLICIT_SUPERVISOR_WRITE);
     }
 
     system_write_word(Bit32u(obase32 + 14), IP);
@@ -302,8 +304,8 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     if (BX_CPU_THIS_PTR cr0.get_PG()) {
       Bit32u start = Bit32u(obase32 + 0x20), end = Bit32u(obase32 + 0x5d);
 
-      translate_linear(BX_DTLB_ENTRY_OF(start, 0), start, 0, BX_WRITE);
-      translate_linear(BX_DTLB_ENTRY_OF(end, 0),   end,   0, BX_WRITE);
+      translate_linear(BX_DTLB_ENTRY_OF(start, 0), start, 0, BX_IMPLICIT_SUPERVISOR_WRITE);
+      translate_linear(BX_DTLB_ENTRY_OF(end, 0),   end,   0, BX_IMPLICIT_SUPERVISOR_WRITE);
     }
 
     system_write_dword(Bit32u(obase32 + 0x20), EIP);
@@ -417,9 +419,9 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   {
     // set the new task's busy bit, should be done atomiclly using RMW
     Bit32u laddr = (Bit32u)(BX_CPU_THIS_PTR gdtr.base) + (tss_selector->index<<3) + 4;
-    access_read_linear(laddr, 4, 0, BX_RW, 0x0, &dword2);
+    access_read_linear(laddr, 4, 0, BX_IMPLICIT_SUPERVISOR_READ, 0x0, &dword2);
     dword2 |= 0x200;
-    access_write_linear(laddr, 4, 0, BX_WRITE, 0x0, &dword2);
+    access_write_linear(laddr, 4, 0, BX_IMPLICIT_SUPERVISOR_WRITE, 0x0, &dword2);
   }
 
 #if BX_SUPPORT_CET
@@ -446,7 +448,9 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
       else {
         tempSSP = BX_CPU_THIS_PTR msr.ia32_pl_ssp[3];
       }
-      shadow_stack_atomic_clear_busy(SSP, CPL);
+      // clear busy flag on current shadow stack only if SSP is 8-byte aligned
+      if ((SSP & 0x7) == 0)
+        shadow_stack_atomic_clear_busy(SSP, CPL);
       SSP = 0;
     }
   }
@@ -472,7 +476,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   BX_CPU_THIS_PTR cr0.set_TS(1);
 
   // Task switch clears LE/L3/L2/L1/L0 in DR7
-  BX_CPU_THIS_PTR dr7.val32 &= ~0x00000155;
+  BX_CPU_THIS_PTR dr7.val &= ~0x00000155;
 
   // Step 10: If call or interrupt, set the NT flag in the eflags
   //          image stored in new task's TSS.  If IRET or JMP,
@@ -741,7 +745,7 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
 #ifdef BX_SUPPORT_CS_LIMIT_DEMOTION
       // Handle special case of CS.LIMIT demotion (new descriptor limit is smaller than current one)
       if (BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.limit_scaled > cs_descriptor.u.segment.limit_scaled)
-        BX_CPU_THIS_PTR iCache.flushICacheEntries();
+        BX_CPU_THIS_PTR traceCache->flushTraceCacheEntries();
 #endif
 
       // All checks pass, fill in shadow cache
@@ -774,8 +778,10 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   RSP_SPECULATIVE;
 
 #if BX_SUPPORT_CET
-  if (ShadowStackEnabled(CPL) || EndbranchEnabled(CPL)) {
-    if (v8086_mode()) {
+  // ShadowStackEnabled() and EndbranchEnabled() always return false in v8086 mode,
+  // so check the raw CPL3 controls (same check as IRET returning to v8086 mode)
+  if (v8086_mode()) {
+    if (UserCetEnabled()) {
       BX_ERROR(("task_switch: Shadowstack or Enbranch enabled in vm8086 mode"));
       exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc);
     }
@@ -787,7 +793,12 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
         BX_ERROR(("task_switch: newSSP is not aligned to 8 byte boundary"));
         exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc);
       }
-      shadow_stack_switch(newSSP);
+      SSP = newSSP;
+      // failure to set the busy flag in the new shadow stack token causes #TS(new TSS)
+      if (!shadow_stack_atomic_set_busy(SSP, CPL)) {
+        BX_ERROR(("task_switch: failure to set busy bit in new shadow stack token"));
+        exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc);
+      }
       if (pushCSLIPSSP) {
         call_far_shadow_stack_push(oldCS, oldRIP, oldSSP);
       }
@@ -807,11 +818,11 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     }
     if (ShadowStackEnabled(CPL)) {
       if (tempSSP & 0x3) {
-        BX_ERROR(("shadow_stack_restore: tempSSP must be 4-byte aligned"));
+        BX_ERROR(("task switch shadow_stack_restore: tempSSP must be 4-byte aligned"));
         exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
       }
       if (GET32H(tempSSP)!=0) {
-        BX_ERROR(("shadow_stack_restore: prevSSP must be 32-bit in 32-bit mode"));
+        BX_ERROR(("task switch shadow_stack_restore: prevSSP must be 32-bit in 32-bit mode"));
         exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
       }
       SSP = tempSSP;

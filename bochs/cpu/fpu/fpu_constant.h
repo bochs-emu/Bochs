@@ -49,34 +49,4 @@ these four paragraphs for those parts of this code that are retained.
 #define FLOATX80_PI2_EXP  (0x3FFF)
 #define FLOATX80_PI4_EXP  (0x3FFE)
 
-//////////////////////////////
-// 3PI/4 constant
-//////////////////////////////
-
-#define FLOATX80_3PI4_EXP (0x4000)
-
-// 128-bit 3PI/4 fraction
-#ifdef BETTER_THAN_PENTIUM
-#define FLOAT_3PI4_HI (BX_CONST64(0x96cbe3f9990e91a7))
-#define FLOAT_3PI4_LO (BX_CONST64(0x9394c9e8a0a5159c))
-#else
-#define FLOAT_3PI4_HI (BX_CONST64(0x96cbe3f9990e91a7))
-#define FLOAT_3PI4_LO (BX_CONST64(0x9000000000000000))
-#endif
-
-//////////////////////////////
-// 1/LN2 constant
-//////////////////////////////
-
-#define FLOAT_LN2INV_EXP  (0x3FFF)
-
-// 128-bit 1/LN2 fraction
-#ifdef BETTER_THAN_PENTIUM
-#define FLOAT_LN2INV_HI (BX_CONST64(0xb8aa3b295c17f0bb))
-#define FLOAT_LN2INV_LO (BX_CONST64(0xbe87fed0691d3e89))
-#else
-#define FLOAT_LN2INV_HI (BX_CONST64(0xb8aa3b295c17f0bb))
-#define FLOAT_LN2INV_LO (BX_CONST64(0xC000000000000000))
-#endif
-
 #endif

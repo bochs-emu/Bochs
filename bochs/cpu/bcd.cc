@@ -117,16 +117,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAM(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::AAD(bxInstruction_c *i)
 {
-  Bit16u tmp = AH;
-  tmp *= i->Ib();
-  tmp += AL;
-
-  AX = (tmp & 0xff);
+  Bit8u tmp = AH * i->Ib();
+  Bit8u result = tmp + AL;
 
   /* modification of flags A,C,O is undocumented */
   /* The following behaviour seems to match the P6 and
      its derived processors. */
-  SET_FLAGS_OSZAPC_LOGIC_8(AL);
+  SET_FLAGS_OSZAPC_ADD_8(tmp, AL, result);
+
+  AX = result;
 
   BX_NEXT_INSTR(i);
 }

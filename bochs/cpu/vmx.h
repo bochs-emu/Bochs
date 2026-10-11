@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2009-2024 Stanislav Shwartsman
+//   Copyright (c) 2009-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -144,13 +144,17 @@ enum VMX_vmexit_reason {
    VMX_VMEXIT_ENQCMD_PASID = 72,
    VMX_VMEXIT_ENQCMDS_PASID = 73,
    VMX_VMEXIT_BUS_LOCK = 74,
-   VMX_VMEXIT_NOTIFY_WINDOW = 75,
+   VMX_VMEXIT_INSTRUCTION_TIMEOUT = 75,
    VMX_VMEXIT_SEAMCALL = 76,
    VMX_VMEXIT_TDCALL = 77,
    VMX_VMEXIT_RDMSRLIST = 78,
    VMX_VMEXIT_WRMSRLIST = 79,
    VMX_VMEXIT_URDMSR = 80,
    VMX_VMEXIT_UWRMSR = 81,
+   VMX_VMEXIT_RESERVED82 = 82,
+   VMX_VMEXIT_RESERVED83 = 83,
+   VMX_VMEXIT_RDMSR_IMM = 84,
+   VMX_VMEXIT_WRMSRNS_IMM = 85,
    VMX_VMEXIT_LAST_REASON
 };
 
@@ -179,11 +183,12 @@ enum VMX_vmentry_error {
 
 // VMABORT error code
 enum VMX_vmabort_code {
-   VMABORT_SAVING_GUEST_MSRS_FAILURE = 0,
-   VMABORT_HOST_PDPTR_CORRUPTED,
-   VMABORT_VMEXIT_VMCS_CORRUPTED,
-   VMABORT_LOADING_HOST_MSRS,
-   VMABORT_VMEXIT_MACHINE_CHECK_ERROR
+   VMABORT_SAVING_GUEST_MSRS_FAILURE = 1,
+   VMABORT_HOST_PDPTR_CORRUPTED = 2,
+   VMABORT_VMEXIT_VMCS_CORRUPTED = 3,
+   VMABORT_LOADING_HOST_MSRS = 4,
+   VMABORT_VMEXIT_MACHINE_CHECK_ERROR = 5,
+   VMABORT_VMEXIT_TO_32BIT_HOST_FROM_64BIT_GUEST = 6
 };
 
 // VMX APIC ACCESS VMEXIT qualification
@@ -298,8 +303,8 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_64BIT_CONTROL_LO_PASID_DIRECTORY_ADDR_HI         0x00002039
 #define VMCS_64BIT_CONTROL_HI_PASID_DIRECTORY_ADDR            0x0000203A
 #define VMCS_64BIT_CONTROL_HI_PASID_DIRECTORY_ADDR_HI         0x0000203B
-#define VMCS_64BIT_CONTROL_SHARED_EPT_POINTER                 0x0000203C
-#define VMCS_64BIT_CONTROL_SHARED_EPT_POINTER_HI              0x0000203D
+#define VMCS_64BIT_CONTROL_SEAM_SHARED_EPT_POINTER            0x0000203C
+#define VMCS_64BIT_CONTROL_SEAM_SHARED_EPT_POINTER_HI         0x0000203D
 #define VMCS_64BIT_CONTROL_PCONFIG_EXITING_BITMAP             0x0000203E
 #define VMCS_64BIT_CONTROL_PCONFIG_EXITING_BITMAP_HI          0x0000203F
 #define VMCS_64BIT_CONTROL_HLAT_POINTER                       0x00002040 /* HLAT (not implemented) */
@@ -314,6 +319,8 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_64BIT_CONTROL_IA32_SPEC_CTRL_SHADOW_HI           0x0000204D
 #define VMCS_64BIT_CONTROL_GUEST_DEADLINE_SHADOW              0x0000204E /* APIC timer virtualization (not implemented) */
 #define VMCS_64BIT_CONTROL_GUEST_DEADLINE_SHADOW_HI           0x0000204F
+#define VMCS_64BIT_CONTROL_INJECTED_EVENT_DATA                0x00002052 /* FRED */
+#define VMCS_64BIT_CONTROL_INJECTED_EVENT_DATA_HI             0x00002053
 
 
 /* VMCS 64-bit read only data fields */
@@ -322,6 +329,8 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_64BIT_GUEST_PHYSICAL_ADDR_HI                  0x00002401
 #define VMCS_64BIT_MSR_DATA                                0x00002402 /* MSRLIST */
 #define VMCS_64BIT_MSR_DATA_HI                             0x00002403
+#define VMCS_64BIT_ORIGINAL_EVENT_DATA                     0x00002404 /* FRED */
+#define VMCS_64BIT_ORIGINAL_EVENT_DATA_HI                  0x00002405
 
 /* VMCS 64-bit guest state fields */
 /* binary 0010_10xx_xxxx_xxx0 */
@@ -343,12 +352,28 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_64BIT_GUEST_IA32_PDPTE2_HI                    0x0000280F
 #define VMCS_64BIT_GUEST_IA32_PDPTE3                       0x00002810
 #define VMCS_64BIT_GUEST_IA32_PDPTE3_HI                    0x00002811
-#define VMCS_64BIT_GUEST_IA32_BNDCFGS                      0x00002812 /* MPX (not implemented) */
+#define VMCS_64BIT_GUEST_IA32_BNDCFGS                      0x00002812 /* MPX */
 #define VMCS_64BIT_GUEST_IA32_BNDCFGS_HI                   0x00002813
 #define VMCS_64BIT_GUEST_IA32_RTIT_CTL                     0x00002814 /* Processor Trace (not implemented) */
 #define VMCS_64BIT_GUEST_IA32_RTIT_CTL_HI                  0x00002815
 #define VMCS_64BIT_GUEST_IA32_PKRS                         0x00002818 /* Supervisor-Mode Protection Keys */
 #define VMCS_64BIT_GUEST_IA32_PKRS_HI                      0x00002819
+#define VMCS_64BIT_GUEST_IA32_FRED_CONFIG                  0x0000281A /* FRED */
+#define VMCS_64BIT_GUEST_IA32_FRED_CONFIG_HI               0x0000281B
+#define VMCS_64BIT_GUEST_IA32_FRED_RSP1                    0x0000281C /* FRED */
+#define VMCS_64BIT_GUEST_IA32_FRED_RSP1_HI                 0x0000281D
+#define VMCS_64BIT_GUEST_IA32_FRED_RSP2                    0x0000281E /* FRED */
+#define VMCS_64BIT_GUEST_IA32_FRED_RSP2_HI                 0x0000281F
+#define VMCS_64BIT_GUEST_IA32_FRED_RSP3                    0x00002820 /* FRED */
+#define VMCS_64BIT_GUEST_IA32_FRED_RSP3_HI                 0x00002821
+#define VMCS_64BIT_GUEST_IA32_FRED_STACK_LEVELS            0x00002822 /* FRED */
+#define VMCS_64BIT_GUEST_IA32_FRED_STACK_LEVELS_HI         0x00002823
+#define VMCS_64BIT_GUEST_IA32_FRED_SSP1                    0x00002824 /* FRED */
+#define VMCS_64BIT_GUEST_IA32_FRED_SSP1_HI                 0x00002825
+#define VMCS_64BIT_GUEST_IA32_FRED_SSP2                    0x00002826 /* FRED */
+#define VMCS_64BIT_GUEST_IA32_FRED_SSP2_HI                 0x00002827
+#define VMCS_64BIT_GUEST_IA32_FRED_SSP3                    0x00002828 /* FRED */
+#define VMCS_64BIT_GUEST_IA32_FRED_SSP3_HI                 0x00002829
 #define VMCS_64BIT_GUEST_IA32_SPEC_CTRL                    0x0000282E /* MSR_IA32_SPEC_CTRL virtualization */
 #define VMCS_64BIT_GUEST_IA32_SPEC_CTRL_HI                 0x0000282F
 #define VMCS_64BIT_GUEST_DEADLINE                          0x00002830 /* APIC timer virtualization (not implemented) */
@@ -364,6 +389,22 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_64BIT_HOST_IA32_PERF_GLOBAL_CTRL_HI           0x00002C05
 #define VMCS_64BIT_HOST_IA32_PKRS                          0x00002C06 /* Supervisor-Mode Protection Keys */
 #define VMCS_64BIT_HOST_IA32_PKRS_HI                       0x00002C07
+#define VMCS_64BIT_HOST_IA32_FRED_CONFIG                   0x00002C08 /* FRED */
+#define VMCS_64BIT_HOST_IA32_FRED_CONFIG_HI                0x00002C09
+#define VMCS_64BIT_HOST_IA32_FRED_RSP1                     0x00002C0A /* FRED */
+#define VMCS_64BIT_HOST_IA32_FRED_RSP1_HI                  0x00002C0B
+#define VMCS_64BIT_HOST_IA32_FRED_RSP2                     0x00002C0C /* FRED */
+#define VMCS_64BIT_HOST_IA32_FRED_RSP2_HI                  0x00002C0D
+#define VMCS_64BIT_HOST_IA32_FRED_RSP3                     0x00002C0E /* FRED */
+#define VMCS_64BIT_HOST_IA32_FRED_RSP3_HI                  0x00002C0F
+#define VMCS_64BIT_HOST_IA32_FRED_STACK_LEVELS             0x00002C10 /* FRED */
+#define VMCS_64BIT_HOST_IA32_FRED_STACK_LEVELS_HI          0x00002C11
+#define VMCS_64BIT_HOST_IA32_FRED_SSP1                     0x00002C12 /* FRED */
+#define VMCS_64BIT_HOST_IA32_FRED_SSP1_HI                  0x00002C13
+#define VMCS_64BIT_HOST_IA32_FRED_SSP2                     0x00002C14 /* FRED */
+#define VMCS_64BIT_HOST_IA32_FRED_SSP2_HI                  0x00002C15
+#define VMCS_64BIT_HOST_IA32_FRED_SSP3                     0x00002C16 /* FRED */
+#define VMCS_64BIT_HOST_IA32_FRED_SSP3_HI                  0x00002C17
 #define VMCS_64BIT_HOST_IA32_SPEC_CTRL                     0x00002C1A /* MSR_IA32_SPEC_CTRL virtualization */
 #define VMCS_64BIT_HOST_IA32_SPEC_CTRL_HI                  0x00002C1B
 
@@ -387,6 +428,8 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_32BIT_CONTROL_SECONDARY_VMEXEC_CONTROLS       0x0000401E
 #define VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_GAP          0x00004020 /* PAUSE loop exiting */
 #define VMCS_32BIT_CONTROL_PAUSE_LOOP_EXITING_WINDOW       0x00004022 /* PAUSE loop exiting */
+#define VMCS_32BIT_CONTROL_INSTRUCTION_TIMEOUT_CTRL        0x00004024
+#define VMCS_32BIT_CONTROL_SEAM_GUEST_KEYID                0x00004026 /* SEAM (not implemented) */
 
 /* VMCS 32-bit read only data fields */
 /* binary 0100_01xx_xxxx_xxx0 */
@@ -527,7 +570,7 @@ enum {
     ((VMCS_FIELD_WIDTH(encoding) << 2) + VMCS_FIELD_TYPE(encoding))
 
 #define VMX_HIGHEST_16BIT_VMCS_ENCODING          (0x20)
-#define VMX_HIGHEST_64BIT_VMCS_ENCODING          (0x50)
+#define VMX_HIGHEST_64BIT_VMCS_ENCODING          (0x54)
 #define VMX_HIGHEST_32BIT_VMCS_ENCODING          (0x30)
 #define VMX_HIGHEST_NATURAL_WIDTH_VMCS_ENCODING  (0x30)
 
@@ -622,7 +665,7 @@ typedef struct bx_VMCS_GUEST_STATE
 {
    bx_address cr0;
    bx_address cr3;
-   bx_address cr4;
+   bx_cr4_t   cr4;
    bx_address dr7;
 
    bx_address rip;
@@ -662,6 +705,15 @@ typedef struct bx_VMCS_GUEST_STATE
    bx_address interrupt_ssp_table_address;
 #endif
 
+#if BX_SUPPORT_FRED
+   Bit64u msr_ia32_fred_config;
+   Bit64u msr_ia32_fred_rsp[4]; // msr_ia32_fred_rsp[0] doesn't exists in VMCS, added for convinience
+#if BX_SUPPORT_CET
+   Bit64u msr_ia32_fred_ssp[4]; // msr_ia32_fred_ssp[0] doesn't exists in VMCS, added for convinience
+#endif
+   Bit64u msr_ia32_fred_stack_levels;
+#endif
+
 #if BX_SUPPORT_UINTR
    Bit16u uintr_uinv;
 #endif
@@ -669,13 +721,17 @@ typedef struct bx_VMCS_GUEST_STATE
 #if BX_SUPPORT_PKEYS
    Bit32u pkrs;
 #endif
+
+#if BX_SUPPORT_MPX
+   Bit64u bndcfgs;
+#endif
 } VMCS_GUEST_STATE;
 
 typedef struct bx_VMCS_HOST_STATE
 {
    bx_address cr0;
    bx_address cr3;
-   bx_address cr4;
+   bx_cr4_t   cr4;
 
    Bit16u segreg_selector[6];
 
@@ -707,6 +763,15 @@ typedef struct bx_VMCS_HOST_STATE
    Bit64u msr_ia32_s_cet;
    bx_address ssp;
    bx_address interrupt_ssp_table_address;
+#endif
+
+#if BX_SUPPORT_FRED
+   Bit64u msr_ia32_fred_config;
+   Bit64u msr_ia32_fred_rsp[4]; // msr_ia32_fred_rsp[0] doesn't exists in VMCS, added for convinience
+#if BX_SUPPORT_CET
+   Bit64u msr_ia32_fred_ssp[4]; // msr_ia32_fred_ssp[0] doesn't exists in VMCS, added for convinience
+#endif
+   Bit64u msr_ia32_fred_stack_levels;
 #endif
 
 #if BX_SUPPORT_PKEYS
@@ -938,14 +1003,18 @@ const Bit32u BX_VMCS_SHADOW_BIT_MASK = 0x80000000;
 //       IA32_VMX_TRUE_ENTRY_CTLS MSRs are supported.
 // 56:56 if set software can use VM entry to deliver a hardware exception
 //       with or without an error code, regardless of vector
-// 57:63 reserved, must be zero
+// 57:57 reserved, must be zero
+// 58:58 VMX nested exception support (FRED)
+// 59:63 reserved, must be zero
 //
 
 #define VMX_MSR_VMX_BASIC_LO (BX_CPU_THIS_PTR vmcs_map->get_vmcs_revision_id())
 #define VMX_MSR_VMX_BASIC_HI \
-     (VMX_VMCS_AREA_SIZE | ((!is_cpu_extension_supported(BX_ISA_LONG_MODE)) << 16) | \
-     (BX_MEMTYPE_WB << 18) | (1<<22)) | ((BX_SUPPORT_VMX >= 2) ? (1<<23) : 0) | \
-     (is_cpu_extension_supported(BX_ISA_CET) ? (1<<24) : 0)
+     ((VMX_VMCS_AREA_SIZE | ((!is_cpu_extension_supported(BX_ISA_LONG_MODE)) << 16) | \
+      (BX_MEMTYPE_WB << 18) | (1<<22)) | \
+     ((BX_SUPPORT_VMX >= 2) ? (1<<23) : 0) |\
+      (is_cpu_extension_supported(BX_ISA_CET) ? (1<<24) : 0) |\
+      (is_cpu_extension_supported(BX_ISA_FRED) ? (1<<26) : 0))
 
 #define VMX_MSR_VMX_BASIC \
    GET64_FROM_HI32_LO32(VMX_MSR_VMX_BASIC_HI, VMX_MSR_VMX_BASIC_LO)
@@ -1144,12 +1213,7 @@ const Bit64u VMX_MSR_CR4_FIXED0 =
    GET64_FROM_HI32_LO32(VMX_MSR_CR4_FIXED0_HI, VMX_MSR_CR4_FIXED0_LO);
 
 // allowed 1-setting in CR0 in VMX mode
-#define VMX_MSR_CR4_FIXED1_LO (BX_CPU_THIS_PTR cr4_suppmask)
-#define VMX_MSR_CR4_FIXED1_HI (0)
-
-#define VMX_MSR_CR4_FIXED1 \
-   GET64_FROM_HI32_LO32(VMX_MSR_CR4_FIXED1_HI, VMX_MSR_CR4_FIXED1_LO)
-
+#define VMX_MSR_CR4_FIXED1 (BX_CPU_THIS_PTR cr4_suppmask)
 
 //
 // IA32_VMX_VMCS_ENUM MSR (0x48a)

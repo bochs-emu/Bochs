@@ -79,6 +79,7 @@ public:
   virtual void sim_is_idle(void);
 #endif
   virtual void statusbar_setitem_specific(int element, bool active, bool w);
+  virtual void start_update();
 private:
   void send_mouse_status(void);
   void xkeypress(KeySym keysym, int press_release);
@@ -139,6 +140,7 @@ static void enable_cursor();
 static bool x11_use_kbd_mapping = 0;
 static Bit32u convertStringToXKeysym(const char *string);
 
+static bool x_palette_changed = 0;
 static bool x_init_done = 0;
 
 static Pixmap vgafont[2][256];
@@ -294,17 +296,12 @@ Bit32u ascii_to_key_event[0x5f] = {
   BX_KEY_GRAVE
 };
 
-extern Bit8u graphics_snapshot[32 * 1024];
-
 static void create_internal_vga_font(void);
-// extern "C" void select_visual(void);
-
-#define ROUNDUP(nbytes, pad) ((((nbytes) + ((pad)-1)) / (pad)) * ((pad)>>3))
-
 
 #define MAX_VGA_COLORS 256
 
 unsigned long col_vals[MAX_VGA_COLORS]; // 256 VGA colors
+bool palentry_changed[MAX_VGA_COLORS];
 unsigned curr_foreground, curr_background;
 
 BxEvent *x11_notify_callback(void *unused, BxEvent *event);
@@ -435,6 +432,7 @@ static void warp_cursor(int dx, int dy)
      warp_dx = dx;
      warp_dy = dy;
      XWarpPointer(bx_x_display, None, None, 0, 0, 0, 0, dx, dy);
+     XFlush(bx_x_display);
   }
 }
 
@@ -684,6 +682,7 @@ void bx_x_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
     col_vals[0]  = BlackPixel(bx_x_display, bx_x_screen_num);
     col_vals[15] = WhitePixel(bx_x_display, bx_x_screen_num);
     for (i = 1; i < MAX_VGA_COLORS; i++) {
+      palentry_changed[i] = 0;
       if (i==15) continue;
       col_vals[i] = col_vals[0];
     }
@@ -1354,12 +1353,31 @@ bool bx_x_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green, Bit8u blue)
     color.pixel = index;
     XStoreColor(bx_x_display, default_cmap, &color);
     return(0); // no screen update needed
-  }
-  else {
-    XAllocColor(bx_x_display, DefaultColormap(bx_x_display, bx_x_screen_num),
-                &color);
-    col_vals[index] = color.pixel;
+  } else {
+    palentry_changed[index] = 1;
+    x_palette_changed = 1;
     return(1); // screen update needed
+  }
+}
+
+void bx_x_gui_c::start_update(void)
+{
+  XColor color;
+
+  if (x_palette_changed) {
+    for (unsigned i = 0; i < MAX_VGA_COLORS; i++) {
+      if (palentry_changed[i]) {
+        color.flags = DoRed | DoGreen | DoBlue;
+        color.red   = palette[i].red << 8;
+        color.green = palette[i].green << 8;
+        color.blue  = palette[i].blue << 8;
+        XAllocColor(bx_x_display, DefaultColormap(bx_x_display, bx_x_screen_num),
+                    &color);
+        col_vals[i] = color.pixel;
+        palentry_changed[i] = 0;
+      }
+    }
+    x_palette_changed = 0;
   }
 }
 
@@ -1797,10 +1815,12 @@ void bx_x_gui_c::xkeypress(KeySym keysym, int press_release)
     kmodchange = set_modifier_keys(BX_MOD_KEY_CAPS, !press_release);
   }
 
-  if (console_running() && !press_release) {
-    if (((keysym >= XK_space) && (keysym <= XK_asciitilde)) ||
-        (keysym == XK_Return) || (keysym == XK_BackSpace)) {
-      console_key_enq((Bit8u)(keysym & 0xff));
+  if (console_running()) {
+    if (!press_release) {
+      if (((keysym >= XK_space) && (keysym <= XK_asciitilde)) ||
+          (keysym == XK_Return) || (keysym == XK_BackSpace)) {
+        console_key_enq((Bit8u)(keysym & 0xff));
+      }
     }
     return;
   }
@@ -2106,7 +2126,10 @@ x11_control_c::x11_control_c(int _type, int x, int y, unsigned int w, unsigned i
 
 x11_control_c::~x11_control_c()
 {
-  if (value != NULL) free(value);
+  if (value != NULL) {
+    delete [] value;
+    value = NULL;
+  }
 }
 
 void x11_control_c::set_pos(int x, int y)

@@ -35,8 +35,10 @@ case $which_config in
       --enable-evex \
       --enable-amx \
       --enable-cet \
+      --enable-fred \
       --enable-pci \
       --enable-clgd54xx \
+      --enable-geforce \
       --enable-voodoo \
       --enable-usb \
       --enable-usb-ohci \
@@ -71,12 +73,14 @@ case $which_config in
       --enable-fpu \
       --enable-alignment-check \
       --enable-3dnow \
+      --enable-mpx \
       --enable-monitor-mwait \
       --enable-protection-keys \
       --enable-svm \
       --enable-vmx=2 \
       --enable-avx \
       --enable-cet \
+      --enable-fred \
       --enable-evex \
       --enable-amx \
       --enable-uintr \
@@ -89,6 +93,7 @@ case $which_config in
       --enable-e1000 \
       --enable-pci \
       --enable-clgd54xx \
+      --enable-geforce \
       --enable-voodoo \
       --enable-usb \
       --enable-usb-ohci \
@@ -112,6 +117,7 @@ case $which_config in
       --enable-vmx=1 \
       --enable-pci \
       --enable-clgd54xx \
+      --enable-geforce \
       --enable-voodoo \
       --enable-usb \
       --enable-usb-ohci \
@@ -134,6 +140,7 @@ case $which_config in
       --enable-x86-64 \
       --enable-pci \
       --enable-clgd54xx \
+      --enable-geforce \
       --enable-voodoo \
       --enable-usb \
       --enable-usb-ohci \

@@ -85,8 +85,10 @@ struct BX_SMM_State
 
   bx_cr0_t   cr0;
   bx_address cr3;
-#if BX_CPU_LEVEL >= 5
+#if BX_CPU_LEVEL >= 4
   bx_cr4_t   cr4;
+#endif
+#if BX_CPU_LEVEL >= 5
   bx_efer_t efer;
 #endif
 
@@ -153,7 +155,7 @@ enum SMMRAM_Fields {
   SMRAM_FIELD_CR0,
   SMRAM_FIELD_CR3_HI32,     // zero when physical address size 32-bit
   SMRAM_FIELD_CR3,
-  SMRAM_FIELD_CR4_HI32,     // always zero
+  SMRAM_FIELD_CR4_HI32,
   SMRAM_FIELD_CR4,
   SMRAM_FIELD_EFER_HI32,    // always zero
   SMRAM_FIELD_EFER,

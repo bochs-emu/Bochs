@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -22,6 +22,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "icache.h"
 #include "cpuid.h"
 #include "msr.h"
 #define LOG_THIS BX_CPU_THIS_PTR
@@ -409,7 +410,7 @@ void BX_CPU_C::TLB_flush(void)
 #endif
 
   // break all links bewteen traces
-  BX_CPU_THIS_PTR iCache.breakLinks();
+  BX_CPU_THIS_PTR traceCache->breakLinks();
 }
 
 #if BX_CPU_LEVEL >= 6
@@ -430,7 +431,7 @@ void BX_CPU_C::TLB_flushNonGlobal(void)
 #endif
 
   // break all links bewteen traces
-  BX_CPU_THIS_PTR iCache.breakLinks();
+  BX_CPU_THIS_PTR traceCache->breakLinks();
 }
 #endif
 
@@ -450,7 +451,7 @@ void BX_CPU_C::TLB_invlpg(bx_address laddr)
 #endif
 
   // break all links bewteen traces
-  BX_CPU_THIS_PTR iCache.breakLinks();
+  BX_CPU_THIS_PTR traceCache->breakLinks();
 }
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INVLPG(bxInstruction_c* i)
@@ -742,8 +743,9 @@ Bit32u BX_CPU_C::check_leaf_entry_faults(bx_address laddr, Bit64u leaf_entry, Bi
       page_fault(ERROR_PROTECTION, laddr, user, rw);
   }
 
-  // SMAP protections are disabled if EFLAGS.AC=1
-  if (BX_CPU_THIS_PTR cr4.get_SMAP() && ! BX_CPU_THIS_PTR get_AC() && rw != BX_EXECUTE && !user) {
+  // SMAP protections are disabled if EFLAGS.AC=1 (except for implicit supervisor-mode accesses)
+  bool implicit = (rw == BX_IMPLICIT_SUPERVISOR_READ || rw == BX_IMPLICIT_SUPERVISOR_WRITE);
+  if (BX_CPU_THIS_PTR cr4.get_SMAP() && (! BX_CPU_THIS_PTR get_AC() || implicit) && rw != BX_EXECUTE && !user) {
     if (IS_USER_PAGE(combined_access))
       page_fault(ERROR_PROTECTION, laddr, user, rw);
   }
@@ -774,22 +776,20 @@ BX_CPP_INLINE Bit32u calculate_pat(Bit32u entry, Bit32u lpf_mask)
 #if BX_SUPPORT_X86_64
 
 #if BX_SUPPORT_PKEYS
-Bit32u BX_CPU_C::handle_pkeys(bx_address laddr, Bit64u leaf_entry, unsigned user, unsigned rw)
+Bit32u BX_CPU_C::handle_pkeys(bx_address laddr, Bit64u leaf_entry, unsigned user, bool user_page, unsigned rw)
 {
   Bit32u pkey = 0;
 
   if (rw != BX_EXECUTE) {
     bool isWrite = (rw & 1); // write or r-m-w
 
-    if (BX_CPU_THIS_PTR cr4.get_PKE()) {
+    if (BX_CPU_THIS_PTR cr4.get_PKE() && user_page) {
       pkey = (leaf_entry >> 59) & 0xf;
 
       // check of accessDisable bit set
-      if (user) {
-        if (BX_CPU_THIS_PTR pkru & (1<<(pkey*2))) {
-          BX_ERROR(("protection key access not allowed PKRU=%x pkey=%d", BX_CPU_THIS_PTR pkru, pkey));
-          page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
-        }
+      if (BX_CPU_THIS_PTR pkru & (1<<(pkey*2))) {
+        BX_ERROR(("protection key access not allowed PKRU=%x pkey=%d", BX_CPU_THIS_PTR pkru, pkey));
+        page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
       }
 
       // check of writeDisable bit set
@@ -800,20 +800,19 @@ Bit32u BX_CPU_C::handle_pkeys(bx_address laddr, Bit64u leaf_entry, unsigned user
         }
       }
     }
-
-    if (BX_CPU_THIS_PTR cr4.get_PKS() && !user) {
+    else if (BX_CPU_THIS_PTR cr4.get_PKS() && !user_page) {
       pkey = (leaf_entry >> 59) & 0xf;
 
       // check of accessDisable bit set
       if (BX_CPU_THIS_PTR pkrs & (1<<(pkey*2))) {
-        BX_ERROR(("protection key access not allowed PKRS=%x pkey=%d", BX_CPU_THIS_PTR pkrs, pkey));
+        BX_ERROR(("protection key access not allowed PKRS=%x pkey=%d", (Bit32u) BX_CPU_THIS_PTR pkrs, pkey));
         page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
       }
 
       // check of writeDisable bit set
       if (BX_CPU_THIS_PTR pkrs & (1<<(pkey*2+1))) {
         if (isWrite && BX_CPU_THIS_PTR cr0.get_WP()) {
-          BX_ERROR(("protection key write not allowed PKRS=%x pkey=%d", BX_CPU_THIS_PTR pkrs, pkey));
+          BX_ERROR(("protection key write not allowed PKRS=%x pkey=%d", (Bit32u) BX_CPU_THIS_PTR pkrs, pkey));
           page_fault(ERROR_PROTECTION | ERROR_PKEY, laddr, user, rw);
         }
       }
@@ -891,7 +890,7 @@ bx_phy_address BX_CPU_C::translate_linear_long_mode(bx_address laddr, Bit32u &lp
   }
 
 #if BX_SUPPORT_PKEYS
-  pkey = handle_pkeys(laddr, entry[leaf], user, rw);
+  pkey = handle_pkeys(laddr, entry[leaf], user, IS_USER_PAGE(combined_access) != 0, rw);
 #endif
 
   combined_access = check_leaf_entry_faults(laddr, entry[leaf], combined_access, user, rw, nx_page);
@@ -925,13 +924,15 @@ void BX_CPU_C::update_access_dirty_PAE(bx_phy_address *entry_addr, Bit64u *entry
   }
 
   // Update A/D bits if needed
-  // Specifically, a processor that supports CET will never set the dirty flag in a paging-structure entry in which the R/W flag is clear
+  // As long as CR0.WP = 1, no processor that supports CET will ever set the dirty flag in a paging-structure entry in which the R/W flag is 0.
   bool set_dirty = write && !(entry[leaf] & 0x40);
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
+#if BX_SUPPORT_CET
+  if (BX_CPU_THIS_PTR cr0.get_WP() && BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
     if (set_dirty && !(entry[leaf] & 0x02)) {
       BX_PANIC(("PAE: asked to set dirty on paging leaf entry with R/W bit clear"));
     }
   }
+#endif
   if (!(entry[leaf] & 0x20) || set_dirty) {
     entry[leaf] |= 0x20; // Update A and possibly D bits
     if (set_dirty) entry[leaf] |= 0x40;
@@ -1239,13 +1240,15 @@ void BX_CPU_C::update_access_dirty(bx_phy_address *entry_addr, Bit32u *entry, Bx
   }
 
   // Update A/D bits if needed
-  // Specifically, a processor that supports CET will never set the dirty flag in a paging-structure entry in which the R/W flag is clear
+  // As long as CR0.WP = 1, no processor that supports CET will ever set the dirty flag in a paging-structure entry in which the R/W flag is 0.
   bool set_dirty = write && !(entry[leaf] & 0x40);
-  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
+#if BX_SUPPORT_CET
+  if (BX_CPU_THIS_PTR cr0.get_WP() && BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
     if (set_dirty && !(entry[leaf] & 0x02)) {
       BX_PANIC(("Legacy Paging: asked to set dirty on paging leaf entry with R/W bit clear"));
     }
   }
+#endif
   if (!(entry[leaf] & 0x20) || set_dirty) {
     entry[leaf] |= 0x20; // Update A and possibly D bits
     if (set_dirty) entry[leaf] |= 0x40;
@@ -1458,7 +1461,8 @@ bx_phy_address BX_CPU_C::translate_linear(bx_TLB_entry *tlbEntry, bx_address lad
     }
 
 #if BX_SUPPORT_X86_64
-    if (long64_mode() && BX_CPU_THIS_PTR cr4.get_LASS()) {
+    // LASS applies in IA-32e mode including compatibility mode (laddr[63] == 0 in compatibility mode)
+    if (long_mode() && BX_CPU_THIS_PTR cr4.get_LASS()) {
       if (lpf >> 63) { // supervisor, cannot be accessed by user
         tlbEntry->accessBits &= ~(TLB_UserReadOK | TLB_UserWriteOK | TLB_UserReadShadowStackOK | TLB_UserWriteShadowStackOK | TLB_UserExecuteOK);
       }
@@ -1988,7 +1992,7 @@ bx_phy_address BX_CPU_C::translate_guest_physical(bx_phy_address guest_paddr, bx
     }
 
     if (curr_entry & PAGING_EPT_RESERVED_BITS) {
-      BX_DEBUG(("EPT %s: reserved bit is set 0x" FMT_ADDRX64 "(reserved: " FMT_ADDRX64 ")", bx_paging_level[leaf], curr_entry, curr_entry & PAGING_EPT_RESERVED_BITS));
+      BX_DEBUG(("EPT %s: reserved bit is set 0x" FMT_ADDRX64 "(reserved: " FMT_ADDRX64 ")", bx_paging_level[leaf], curr_entry, (Bit64u)(curr_entry & PAGING_EPT_RESERVED_BITS)));
       vmexit_reason = VMX_VMEXIT_EPT_MISCONFIGURATION;
       break;
     }
@@ -2211,9 +2215,9 @@ bool BX_CPU_C::spp_walk(bx_phy_address guest_paddr, bx_address guest_laddr, BxMe
 
 #if BX_DEBUGGER
 
-void dbg_print_paging_pte(int level, Bit64u entry, bool nested_walk)
+void dbg_print_paging_pte(int level, Bit64u pt_address, Bit64u entry, bool nested_walk)
 {
-  dbg_printf("%5s: 0x%08x%08x", nested_walk ? bx_nested_paging_level[level] : bx_paging_level[level], GET32H(entry), GET32L(entry));
+  dbg_printf("%5s: 0x%08x%08x : 0x%08x%08x", nested_walk ? bx_nested_paging_level[level] : bx_paging_level[level], GET32H(pt_address), GET32L(pt_address), GET32H(entry), GET32L(entry));
 
   if (entry & BX_CONST64(0x8000000000000000))
     dbg_printf(" XD");
@@ -2248,9 +2252,9 @@ void dbg_print_paging_pte(int level, Bit64u entry, bool nested_walk)
 }
 
 #if BX_SUPPORT_VMX >= 2
-void dbg_print_ept_paging_pte(int level, Bit64u entry, bool mbe)
+void dbg_print_ept_paging_pte(int level, Bit64u pt_address, Bit64u entry, bool mbe)
 {
-  dbg_printf("EPT %4s: 0x%08x%08x", bx_paging_level[level], GET32H(entry), GET32L(entry));
+  dbg_printf("EPT %4s: 0x%08x%08x : 0x%08x%08x", bx_paging_level[level], GET32H(pt_address), GET32L(pt_address), GET32H(entry), GET32L(entry));
 
   if (level != BX_LEVEL_PTE && (entry & 0x80))
     dbg_printf(" PS");
@@ -2292,7 +2296,7 @@ bool BX_CPU_C::dbg_translate_guest_physical_ept(bx_phy_address guest_paddr, bx_p
     BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pt_address, 8, &pte);
 #if BX_DEBUGGER
     if (verbose)
-      dbg_print_ept_paging_pte(level, pte, vm->vmexec_ctrls2.MBE_CTRL());
+      dbg_print_ept_paging_pte(level, pt_address, pte, vm->vmexec_ctrls2.MBE_CTRL());
 #endif
     switch(pte & 7) {
     case BX_EPT_ENTRY_NOT_PRESENT:
@@ -2397,7 +2401,7 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
         BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pt_address, 8, &pte);
 #if BX_DEBUGGER
         if (verbose)
-          dbg_print_paging_pte(level, pte, nested_walk);
+          dbg_print_paging_pte(level, pt_address, pte, nested_walk);
 #endif
         if(!(pte & 1))
           goto page_fault;
@@ -2442,7 +2446,7 @@ bool BX_CPU_C::dbg_xlate_linear2phy(bx_address laddr, bx_phy_address *phy, bx_ad
         BX_MEM(0)->readPhysicalPage(BX_CPU_THIS, pt_address, 4, &pte);
 #if BX_DEBUGGER
         if (verbose)
-          dbg_print_paging_pte(level, pte, nested_walk);
+          dbg_print_paging_pte(level, pt_address, pte, nested_walk);
 #endif
         if (!(pte & 1))
           goto page_fault;
@@ -2612,6 +2616,12 @@ bool BX_CPU_C::check_addr_in_tlb_buffers(const Bit8u *addr, const Bit8u *end)
         (BX_CPU_THIS_PTR vmcbhostptr  < (const bx_hostpageaddr_t)end)) return true;
   }
 #endif
+
+  if (((const bx_hostpageaddr_t)BX_CPU_THIS_PTR eipFetchPtr >= (const bx_hostpageaddr_t)addr) &&
+      ((const bx_hostpageaddr_t)BX_CPU_THIS_PTR eipFetchPtr  < (const bx_hostpageaddr_t)end)) return true;
+
+  if (((const bx_hostpageaddr_t)BX_CPU_THIS_PTR espHostPtr >= (const bx_hostpageaddr_t)addr) &&
+      ((const bx_hostpageaddr_t)BX_CPU_THIS_PTR espHostPtr  < (const bx_hostpageaddr_t)end)) return true;
 
   for (unsigned tlb_entry_num=0; tlb_entry_num < BX_DTLB_SIZE; tlb_entry_num++) {
     bx_TLB_entry *tlbEntry = &BX_CPU_THIS_PTR DTLB.entry[tlb_entry_num];

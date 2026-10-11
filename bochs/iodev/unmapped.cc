@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -276,7 +276,7 @@ Bit64s bx_unmapped_c::param_handler(bx_param_c *param, bool set, Bit64s val)
     param->get_param_path(pname, BX_PATHNAME_LEN);
     if (set) {
       if (!strcmp(pname, BXPN_PORT_E9_HACK)) {
-        BX_UM_THIS s.port_e9_hack = (val != 0);
+        theUnmappedDevice->s.port_e9_hack = (val != 0);
       } else {
         BX_PANIC(("param_handler called with unexpected parameter '%s'", pname));
       }

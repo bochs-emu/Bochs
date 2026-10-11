@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -36,6 +36,9 @@ class bx_nogui_gui_c : public bx_gui_c {
 public:
   bx_nogui_gui_c (void) {}
   DECLARE_GUI_VIRTUAL_METHODS()
+#if BX_SHOW_IPS
+  void show_ips(Bit32u ips_count);
+#endif
 };
 
 // declare one instance of the gui object and call macro to insert the
@@ -44,6 +47,11 @@ static bx_nogui_gui_c *theGui = NULL;
 IMPLEMENT_GUI_PLUGIN_CODE(nogui)
 
 #define LOG_THIS theGui->
+
+#if BX_SHOW_IPS
+static bool ips_update = false;
+static char ips_text[40];
+#endif
 
 // This file defines stubs for the GUI interface, which is a
 // place to start if you want to port bochs to a platform, for
@@ -71,14 +79,21 @@ IMPLEMENT_GUI_PLUGIN_CODE(nogui)
 void bx_nogui_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 {
   put("NOGUI");
-  UNUSED(argc);
-  UNUSED(argv);
   UNUSED(headerbar_y);
 
   UNUSED(bochs_icon_bits);  // global variable
 
   if (SIM->get_param_bool(BXPN_PRIVATE_COLORMAP)->get()) {
     BX_INFO(("private_colormap option ignored."));
+  }
+
+  // parse nogui specific options
+  if (argc > 1) {
+    for (int i = 1; i < argc; i++) {
+      if (!parse_common_gui_options(argv[i], BX_GUI_OPT_HIDE_IPS)) {
+        BX_PANIC(("Unknown nogui option '%s'", argv[i]));
+      }
+    }
   }
 }
 
@@ -91,6 +106,12 @@ void bx_nogui_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
 
 void bx_nogui_gui_c::handle_events(void)
 {
+#if BX_SHOW_IPS
+  if (ips_update) {
+    BX_INFO(("%s", ips_text));
+    ips_update = false;
+  }
+#endif
 }
 
 
@@ -327,5 +348,15 @@ void bx_nogui_gui_c::exit(void)
 void bx_nogui_gui_c::mouse_enabled_changed_specific(bool val)
 {
 }
+
+#if BX_SHOW_IPS
+void bx_nogui_gui_c::show_ips(Bit32u ips_count)
+{
+  if (!gui_opts.hide_ips && !ips_update) {
+    sprintf(ips_text, "ips = %3.3fM", ips_count / 1000000.0);
+    ips_update = true;
+  }
+}
+#endif
 
 #endif /* if BX_WITH_NOGUI */

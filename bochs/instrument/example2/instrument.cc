@@ -79,7 +79,7 @@ void bx_instr_hwinterrupt(unsigned cpu, unsigned vector, Bit16u cs, bx_address e
 
 #define IA_CNT_DUMP_THRESHOLD 100000000 /* 100M */
 
-void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i)
+void bx_instr_before_execution(unsigned cpu, const bxInstruction_c *i)
 {
   if(ia_stats[cpu].active) {
     ia_stats[cpu].ia_cnt[i->getIaOpcode() * 2 + !!i->modC0()]++;

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2023 Stanislav Shwartsman
+//   Copyright (c) 2023-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -88,9 +88,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UIRET(bxInstruction_c *i)
 
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
-  Bit64u new_rip      = stack_read_qword(RSP + 8);
-  Bit32u new_eflags   = (Bit32u) stack_read_qword(RSP + 16);
-  Bit64u new_rsp      = stack_read_qword(RSP + 24);
+  Bit64u new_rip      = stack_read_qword(RSP);
+  Bit32u new_eflags   = (Bit32u) stack_read_qword(RSP + 8);
+  Bit64u new_rsp      = stack_read_qword(RSP + 16);
 
   if (!IsCanonical(new_rip)) {
     BX_ERROR(("UIRET #GP(0): return RIP is not canonical"));
@@ -99,11 +99,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UIRET(bxInstruction_c *i)
 
 #if BX_SUPPORT_CET
   if (ShadowStackEnabled(CPL)) {
-    Bit64u shadow_RIP  = shadow_stack_pop_64();
+    // SSP is updated only after the shadow stack RIP check passed
+    Bit64u shadow_RIP = shadow_stack_read_qword(SSP, CPL);
     if (new_rip != shadow_RIP) {
-      BX_ERROR(("shadow_stack_restore: LIP mismatch"));
+      BX_ERROR(("UIRET: shadow stack RIP mismatch"));
       exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
     }
+    SSP += 8;
   }
 #endif
 
@@ -165,7 +167,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TESTUI(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::SENDUIPI_Gq(bxInstruction_c *i)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::SENDUIPI_Eq(bxInstruction_c *i)
 {
   if (! BX_CPU_THIS_PTR cr4.get_UINTR()) {
     BX_ERROR(("%s: UINTR in not enabled in CR4", i->getIaOpcodeNameShort()));
@@ -177,8 +179,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SENDUIPI_Gq(bxInstruction_c *i)
     exception(BX_UD_EXCEPTION, 0);
   }
 
-  Bit64u index = BX_READ_64BIT_REG(i->src());
-  if (index > BX_CPU_THIS_PTR uintr.uitt_size) {
+  Bit64u index = BX_READ_64BIT_REG(i->dst());
+  if (index > BX_CPU_THIS_PTR uintr.get_uitt_size()) {
     BX_ERROR(("SENDUIPI: value of the source operand exceeds UITT.SIZE"));
     exception(BX_GP_EXCEPTION, 0);
   }
@@ -260,7 +262,8 @@ void BX_CPU_C::send_uipi(Bit32u notification_destination, Bit32u notification_ve
 {
 #if BX_SUPPORT_VMX
   VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
-  if (vm->vmexec_ctrls1.TPR_SHADOW()) {
+  // sending of the notification IPI is virtualized only in VMX non-root operation
+  if (BX_CPU_THIS_PTR in_vmx_guest && vm->vmexec_ctrls1.TPR_SHADOW()) {
     if (vm->vmexec_ctrls2.VIRTUALIZE_APIC_ACCESSES()) {
       // virtualize sending of an XAPIC-mode IPI by:
       //   - writing to VICR_HI[31:24] = 8 bit destination APIC_ID from NDST[15:8]
@@ -290,7 +293,7 @@ void BX_CPU_C::send_uipi(Bit32u notification_destination, Bit32u notification_ve
   //    ICR[64:32] = the APIC_ID from NDST[15:8] (legacy apic mode) or NDST[31:0] (x2apic mode)
   //    ICR[31:8] = 0 (indicating a physically addressed fixed-mode IPI)
 #if BX_SUPPORT_APIC
-  BX_CPU_THIS_PTR lapic->send_ipi(x2apic_mode() ? notification_destination : (notification_destination >> 8), notification_vector);
+  BX_CPU_THIS_PTR lapic->write_x2apic(BX_LAPIC_ICR_LO, x2apic_mode() ? notification_destination : (notification_destination & 0xff00) << 16, notification_vector);
 #endif
 }
 
@@ -298,11 +301,13 @@ void BX_CPU_C::Process_UINTR_Notification()
 {
 #if BX_SUPPORT_VMX
   // the User-Level Interrupt notification process looks like external interrupt with the vector UINV
-  // in particular for IDT-vectoring info
+  // in particular for IDT-vectoring info: VM exits that occur during user-interrupt notification processing
+  // are treated as if they occurred during delivery of an external interrupt with the vector UINV
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     VMCS_CACHE *vm = &BX_CPU_THIS_PTR vmcs;
     vm->idt_vector_error_code = 0;
-    vm->idt_vector_info = (BX_CPU_THIS_PTR uintr.uinv) | (BX_EXTERNAL_INTERRUPT << 8);
+    vm->idt_vector_info = (BX_CPU_THIS_PTR uintr.get_uinv()) | (BX_EXTERNAL_INTERRUPT << 8);
+    BX_CPU_THIS_PTR in_event = true;
   }
 #endif
 
@@ -321,6 +326,10 @@ void BX_CPU_C::Process_UINTR_Notification()
   system_write_qword(BX_CPU_THIS_PTR uintr.upid_addr + 8, 0);
 // should be done atomically using RMW
 
+#if BX_SUPPORT_VMX
+  BX_CPU_THIS_PTR in_event = false; // UPID accesses completed
+#endif
+
   // Step 3: for any bit set in the temporary PIR register set corresponding UIRR bit
   //         recognize pending user-level interrupt
   BX_CPU_THIS_PTR uintr.uirr |= PIR;
@@ -330,17 +339,19 @@ void BX_CPU_C::Process_UINTR_Notification()
 bool BX_CPU_C::uintr_masked()
 {
   // The user-level interrupt can be delivered only if:
+  //   CR4.UINTR = 1
   //   long64_mode()
   //   UIF = 1
   //   CPL = 3
-  return !long64_mode() || !BX_CPU_THIS_PTR uintr.UIF || CPL != 3;
+  return !BX_CPU_THIS_PTR cr4.get_UINTR() || !long64_mode() || !BX_CPU_THIS_PTR uintr.UIF || CPL != 3;
 }
 
 // mask or unmask BX_EVENT_PENDING_UINTR according to conditions telling if it can be potentially delivered
 void BX_CPU_C::uintr_uirr_update()
 {
   // There is a pending user-level interrupt if UINTR.UIRR != 0
-  if (BX_CPU_THIS_PTR cr4.get_UINTR() && BX_CPU_THIS_PTR uintr.uirr)
+  // (CR4.UINTR is taken into account by uintr_masked(), re-evaluated whenever CR4 is modified)
+  if (BX_CPU_THIS_PTR uintr.uirr)
     signal_event(BX_EVENT_PENDING_UINTR);
   else
     clear_event(BX_EVENT_PENDING_UINTR);

@@ -4,7 +4,7 @@
 //
 //  Copyright (C) 2003       by Mariusz Matuszek
 //                              [NOmrmmSPAM @ users.sourceforge.net]
-//  Copyright (C) 2017-2021  The Bochs Project
+//  Copyright (C) 2017-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -93,10 +93,10 @@ extern "C" {
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <netinet/in.h>
-#include <net/ethernet.h>
 #include <net/if.h>
 #ifdef __linux__
 #include <linux/types.h>
+#include <net/ethernet.h>
 #endif
 #include <netdb.h>
 #define closesocket(s) close(s)

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -120,8 +120,8 @@ void bx_pit_c::init(void)
   BX_PIT_THIS s.speaker_level = 0;
 
   BX_PIT_THIS s.timer.init();
-  BX_PIT_THIS s.timer.set_OUT_handler(0, irq_handler);
-  BX_PIT_THIS s.timer.set_OUT_handler(2, speaker_handler);
+  BX_PIT_THIS s.timer.set_OUT_handler(0, this, irq_handler);
+  BX_PIT_THIS s.timer.set_OUT_handler(2, this, speaker_handler);
 
   Bit64u my_time_usec = bx_virt_timer.time_usec(BX_PIT_THIS is_realtime);
 
@@ -403,9 +403,10 @@ bool bx_pit_c::periodic(Bit32u usec_delta)
   return 0;
 }
 
-void bx_pit_c::irq_handler(bool value)
+void bx_pit_c::irq_handler(void *this_ptr, bool value)
 {
-  if (BX_PIT_THIS s.irq_enabled) {
+  bx_pit_c *class_ptr = (bx_pit_c*) this_ptr;
+  if (class_ptr->s.irq_enabled) {
     if (value == 1) {
       DEV_pic_raise_irq(0);
     } else {
@@ -414,10 +415,15 @@ void bx_pit_c::irq_handler(bool value)
   }
 }
 
-void bx_pit_c::speaker_handler(bool value)
+void bx_pit_c::speaker_handler(void *this_ptr, bool value)
 {
-  if (BX_PIT_THIS s.timer.get_mode(2) != 3) {
-    DEV_speaker_set_line(value & BX_PIT_THIS s.speaker_data_on);
+  bx_pit_c *class_ptr = (bx_pit_c*) this_ptr;
+  if (class_ptr->s.timer.get_mode(2) != 3) {
+    bool new_speaker_level = value & class_ptr->s.speaker_data_on;
+    if(class_ptr->s.speaker_level != new_speaker_level) {
+      DEV_speaker_set_line(new_speaker_level);
+      class_ptr->s.speaker_level = new_speaker_level;
+    }
   }
 }
 

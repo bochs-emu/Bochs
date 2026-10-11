@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -29,6 +29,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "pc_system.h"
 
 #if BX_SUPPORT_PCI
 
@@ -80,7 +81,7 @@ void bx_piix3_c::init(void)
   DEV_register_pci_handlers(this, &BX_P2I_THIS s.devfunc, BX_PLUGIN_PCI2ISA,
       "PIIX3 PCI-to-ISA bridge");
 
-  DEV_register_iowrite_handler(this, write_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge", 1);
+  DEV_register_iowrite_handler(this, write_handler, 0x00B2, "PIIX3 PCI-to-ISA bridge", 3);
   DEV_register_iowrite_handler(this, write_handler, 0x00B3, "PIIX3 PCI-to-ISA bridge", 1);
   DEV_register_iowrite_handler(this, write_handler, 0x04D0, "PIIX3 PCI-to-ISA bridge", 1);
   DEV_register_iowrite_handler(this, write_handler, 0x04D1, "PIIX3 PCI-to-ISA bridge", 1);
@@ -282,12 +283,19 @@ void bx_piix3_c::write(Bit32u address, Bit32u value, unsigned io_len)
 
   switch (address) {
     case 0x00b2:
-      if (PLUG_device_present(BX_PLUGIN_ACPI)) {
+#if BX_SUPPORT_APIC
+      if (PLUG_device_present(BX_PLUGIN_ACPI, false)) {
         DEV_acpi_generate_smi((Bit8u)value);
       } else {
         BX_ERROR(("write 0x%02x: APM command register not supported without ACPI", value));
       }
+#else
+      BX_ERROR(("write 0x%02x: APM command register not supported without APIC", value));
+#endif
       BX_P2I_THIS s.apmc = value & 0xff;
+      if (io_len == 2) {
+        BX_P2I_THIS s.apms = (Bit8u)(value >> 8);
+      }
       break;
     case 0x00b3:
       BX_P2I_THIS s.apms = value & 0xff;
@@ -363,6 +371,14 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
                     (value8 >> 6) & 1, (value8 >> 7) & 1));
           DEV_mem_set_bios_rom_access(BIOS_ROM_LOWER, (value8 >> 6) & 1);
           DEV_mem_set_bios_rom_access(BIOS_ROM_EXTENDED, (value8 >> 7) & 1);
+        }
+        if ((value8 & 0x20) != (oldval & 0x20)) {
+          if (PLUG_device_present(BX_PLUGIN_EXTFPUIRQ, false)) {
+            BX_INFO(("%sable FERR# input and IGNNE# output", ((value8 & 0x20) != 0) ? "En":"Dis"));
+            DEV_extfpuirq_set_enabled((value8 & 0x20) != 0);
+          } else {
+            BX_ERROR(("External FPU IRQ plugin not loaded"));
+          }
         }
         BX_P2I_THIS pci_conf[address+i] = value8;
         break;

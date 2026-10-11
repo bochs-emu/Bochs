@@ -52,18 +52,21 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 struct softfloat_status_t
 {
     uint8_t softfloat_roundingMode;
-    int softfloat_exceptionFlags;
-    int softfloat_exceptionMasks;
-    int softfloat_suppressException;
+    uint8_t softfloat_exceptionMasks;
+    uint8_t softfloat_suppressException;
 
     bool softfloat_denormals_are_zeros;
     bool softfloat_flush_underflow_to_zero;
 
     /*----------------------------------------------------------------------------
     | Rounding precision for 80-bit extended double-precision floating-point.
-    | Valid values are 32, 64, and 80.
+    | Valid values are 32, 64, and 80.  A value in 83..127 additionally clamps
+    | float128_t results to a (value - 16) bit significand (83 => 67-bit, the
+    | internal extended-precision format of the P5/P6 x87 real microcode)
     *----------------------------------------------------------------------------*/
     uint8_t extF80_roundingPrecision;
+
+    int16_t softfloat_exceptionFlags;
 };
 
 /*----------------------------------------------------------------------------
@@ -77,7 +80,8 @@ enum {
     softfloat_round_up          = softfloat_round_max,
     softfloat_round_minMag      = 3,
     softfloat_round_to_zero     = softfloat_round_minMag,
-    softfloat_round_near_maxMag = 4
+    softfloat_round_near_maxMag = 4,
+    softfloat_round_odd         = 6  // round to odd, used by the ACE/OCP FP8 format converts, to match softfloat3e original definition
 };
 
 /*----------------------------------------------------------------------------
@@ -205,6 +209,15 @@ BX_CPP_INLINE int softfloat_getExceptionFlags(const struct softfloat_status_t *s
 BX_CPP_INLINE void softfloat_setRoundingUp(struct softfloat_status_t *status) {
     status->softfloat_exceptionFlags |= RAISE_SW_C1;
 }
+
+/*----------------------------------------------------------------------------
+| Drop a round-up indication a wider/earlier rounding stage left behind. Used
+| when a later, narrower rounding step has real fractional bits of its own to
+| decide with, making its own up/down decision authoritative.
+*----------------------------------------------------------------------------*/
+BX_CPP_INLINE void softfloat_clearRoundingUp(struct softfloat_status_t *status) {
+    status->softfloat_exceptionFlags &= ~RAISE_SW_C1;
+}
 #endif
 
 /*----------------------------------------------------------------------------
@@ -276,6 +289,7 @@ float16 f16_getMant(float16, struct softfloat_status_t *, int, int);
 float16 f16_range(float16, float16, bool is_max, bool is_abs, int sign_ctrl, softfloat_status_t *);
 int f16_compare(float16, float16, bool, struct softfloat_status_t *);
 float16 f16_sqrt(float16, struct softfloat_status_t *);
+float16 f16_scalef(float16, float16, struct softfloat_status_t *);
 softfloat_class_t f16_class(float16);
 
 bool f16_isSignalingNaN(float16);
@@ -715,32 +729,64 @@ bool extF80_isUnsupported(extFloat80_t);
 bool extF80_isSignalingNaN(extFloat80_t);
 bool extF80_isNaN(extFloat80_t);
 
-bool extF80_sign(float64);
-int16_t extF80_exp(float64);
-uint64_t extF80_fraction(float64);
+bool extF80_sign(extFloat80_t);
+int16_t extF80_exp(extFloat80_t);
+uint64_t extF80_fraction(extFloat80_t);
+
+extFloat80_t packToExtF80(bool sign, uint16_t exp, uint64_t sig);
 
 /*----------------------------------------------------------------------------
 | 128-bit (quadruple-precision) floating-point operations.
 *----------------------------------------------------------------------------*/
-uint32_t f128_to_ui32(float128_t, uint8_t, bool, struct softfloat_status_t *);
-uint64_t f128_to_ui64(float128_t, uint8_t, bool, struct softfloat_status_t *);
-int32_t f128_to_i32(float128_t, uint8_t, bool, struct softfloat_status_t *);
-int64_t f128_to_i64(float128_t, uint8_t, bool, struct softfloat_status_t *);
-uint32_t f128_to_ui32_r_minMag(float128_t, bool, struct softfloat_status_t *);
-uint64_t f128_to_ui64_r_minMag(float128_t, bool, struct softfloat_status_t *);
-int32_t f128_to_i32_r_minMag(float128_t, bool, struct softfloat_status_t *);
-int64_t f128_to_i64_r_minMag(float128_t, bool, struct softfloat_status_t *);
 float32 f128_to_f32(float128_t, struct softfloat_status_t *);
 float64 f128_to_f64(float128_t, struct softfloat_status_t *);
-extFloat80_t f128_to_extF80(float128_t, struct softfloat_status_t *);
-float128_t f128_roundToInt(float128_t, uint8_t, bool, struct softfloat_status_t *);
-float128_t f128_add(float128_t, float128_t, struct softfloat_status_t *);
-float128_t f128_sub(float128_t, float128_t, struct softfloat_status_t *);
-float128_t f128_mul(float128_t, float128_t, struct softfloat_status_t *);
+extFloat80_t f128_to_extF80(float128_t, int32_t scale, uint8_t roundingMode, struct softfloat_status_t *);
+float128_t f128_round(float128_t, uint8_t roundingPrecision, uint8_t roundingMode, struct softfloat_status_t *);
+float128_t f128_add(float128_t, float128_t, uint8_t roundingMode, uint8_t roundingPrecision, struct softfloat_status_t *);
+float128_t f128_sub(float128_t, float128_t, uint8_t roundingMode, uint8_t roundingPrecision, struct softfloat_status_t *);
+float128_t f128_mul(float128_t, float128_t, uint8_t roundingMode, uint8_t roundingPrecision, struct softfloat_status_t *);
+float128_t f128_mul_by_extF80(float128_t, extFloat80_t, uint8_t roundingMode, uint8_t roundingPrecision, struct softfloat_status_t *);
 float128_t f128_mulAdd(float128_t, float128_t, float128_t, uint8_t op, struct softfloat_status_t *);
-float128_t f128_div(float128_t, float128_t, struct softfloat_status_t *);
-float128_t f128_sqrt(float128_t, struct softfloat_status_t *);
+float128_t f128_div(float128_t, float128_t, uint8_t roundingMode, uint8_t roundingPrecision, struct softfloat_status_t *);
 bool f128_isSignalingNaN(float128_t);
 bool f128_isNaN(float128_t);
+
+BX_CPP_INLINE float128_t f128_add(float128_t a, float128_t b, struct softfloat_status_t *status) {
+    return f128_add(a, b, softfloat_getRoundingMode(status), softfloat_extF80_roundingPrecision(status), status);
+}
+BX_CPP_INLINE float128_t f128_add(float128_t a, float128_t b, uint8_t roundingMode, struct softfloat_status_t *status) {
+    return f128_add(a, b, roundingMode, softfloat_extF80_roundingPrecision(status), status);
+}
+BX_CPP_INLINE float128_t f128_sub(float128_t a, float128_t b, struct softfloat_status_t *status) {
+    return f128_sub(a, b, softfloat_getRoundingMode(status), softfloat_extF80_roundingPrecision(status), status);
+}
+BX_CPP_INLINE float128_t f128_sub(float128_t a, float128_t b, uint8_t roundingMode, struct softfloat_status_t *status) {
+    return f128_sub(a, b, roundingMode, softfloat_extF80_roundingPrecision(status), status);
+}
+
+BX_CPP_INLINE float128_t f128_mul(float128_t a, float128_t b, struct softfloat_status_t *status) {
+    return f128_mul(a, b, softfloat_getRoundingMode(status), softfloat_extF80_roundingPrecision(status), status);
+}
+BX_CPP_INLINE float128_t f128_mul(float128_t a, float128_t b, uint8_t roundingMode, struct softfloat_status_t *status) {
+    return f128_mul(a, b, roundingMode, softfloat_extF80_roundingPrecision(status), status);
+}
+
+BX_CPP_INLINE float128_t f128_div(float128_t a, float128_t b, struct softfloat_status_t *status) {
+    return f128_div(a, b, softfloat_getRoundingMode(status), softfloat_extF80_roundingPrecision(status), status);
+}
+BX_CPP_INLINE float128_t f128_div(float128_t a, float128_t b, uint8_t roundingMode, struct softfloat_status_t *status) {
+    return f128_div(a, b, roundingMode, softfloat_extF80_roundingPrecision(status), status);
+}
+
+BX_CPP_INLINE float128_t f128_mul_by_extF80(float128_t a, extFloat80_t b, uint8_t roundingMode, struct softfloat_status_t *status) {
+    return f128_mul_by_extF80(a, b, roundingMode, softfloat_extF80_roundingPrecision(status), status);
+}
+
+BX_CPP_INLINE extFloat80_t f128_to_extF80(float128_t a, struct softfloat_status_t *status) {
+    return f128_to_extF80(a, 0, softfloat_getRoundingMode(status), status);
+}
+BX_CPP_INLINE extFloat80_t f128_to_extF80(float128_t a, uint8_t roundingMode, struct softfloat_status_t *status) {
+    return f128_to_extF80(a, 0, roundingMode, status);
+}
 
 #endif

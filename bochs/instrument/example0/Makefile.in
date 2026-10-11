@@ -33,6 +33,7 @@ CPPFLAGS = @CPPFLAGS@
 LDFLAGS = @LDFLAGS@
 LIBS = @LIBS@
 RANLIB = @RANLIB@
+AR = @AR@
 
 
 # ===========================================================

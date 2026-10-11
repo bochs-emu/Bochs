@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -96,6 +96,7 @@ public:
   virtual bx_param_c *get_param(const char *pname, bx_param_c *base=NULL);
   virtual bx_param_num_c *get_param_num(const char *pname, bx_param_c *base=NULL);
   virtual bx_param_string_c *get_param_string(const char *pname, bx_param_c *base=NULL);
+  virtual bx_param_bytestring_c *get_param_bytestring(const char *pname, bx_param_c *base=NULL);
   virtual bx_param_bool_c *get_param_bool(const char *pname, bx_param_c *base=NULL);
   virtual bx_param_enum_c *get_param_enum(const char *pname, bx_param_c *base=NULL);
   virtual Bit32u gen_param_id() { return param_id++; }
@@ -181,7 +182,7 @@ public:
     void *userdata);
   virtual int configuration_interface(const char* name, ci_command_t command);
 #if BX_USB_DEBUGGER
-  virtual void register_usb_debug_type(int type);
+  virtual void register_usb_debug_type(int type, int devid = -1);
   virtual void usb_debug_trigger(int type, int trigger, Bit64u param0, int param1, int param2);
   virtual int usb_debug_interface(int type, Bit64u param0, int param1, int param2);
 #endif
@@ -321,9 +322,22 @@ bx_param_string_c *bx_real_sim_c::get_param_string(const char *pname, bx_param_c
     BX_ERROR(("get_param_string(%s) could not find a parameter", pname));
     return NULL;
   }
-  if (gen->get_type() == BXT_PARAM_STRING || gen->get_type() == BXT_PARAM_BYTESTRING)
+  if (gen->get_type() == BXT_PARAM_STRING)
     return (bx_param_string_c *)gen;
   BX_ERROR(("get_param_string(%s) could not find a string parameter with that name", pname));
+  return NULL;
+}
+
+bx_param_bytestring_c *bx_real_sim_c::get_param_bytestring(const char *pname, bx_param_c *base)
+{
+  bx_param_c *gen = get_param(pname, base);
+  if (gen==NULL) {
+    BX_ERROR(("get_param_bytestring(%s) could not find a parameter", pname));
+    return NULL;
+  }
+  if (gen->get_type() == BXT_PARAM_BYTESTRING)
+    return (bx_param_bytestring_c *)gen;
+  BX_ERROR(("get_param_bytestring(%s) could not find a byte string parameter with that name", pname));
   return NULL;
 }
 
@@ -382,6 +396,7 @@ int bx_cleanup_siminterface()
   io->exit_log2();
   int exit_code = SIM->get_exit_code();
   delete SIM;
+  SIM = NULL;
   return exit_code;
 }
 
@@ -938,9 +953,9 @@ int bx_real_sim_c::configuration_interface(const char *ignore, ci_command_t comm
 }
 
 #if BX_USB_DEBUGGER
-void bx_real_sim_c::register_usb_debug_type(int type)
+void bx_real_sim_c::register_usb_debug_type(int type, int devid)
 {
-  usb_dbg_register_type(type);
+  usb_dbg_register_type(type, devid);
 }
 
 void bx_real_sim_c::usb_debug_trigger(int type, int trigger, Bit64u param0, int param1, int param2)
@@ -1280,6 +1295,61 @@ static int bx_restore_getline(FILE *fp, char *line, int maxlen)
   return (ret != NULL) ? len : 0;
 }
 
+static bool bx_shadow_data_read(FILE *fp, Bit8u *dst, Bit64u data_size, const char *path)
+{
+  // Read in chunks so very large blobs don't rely on a single huge stdio call.
+  const size_t chunk_size = 16 * 1024 * 1024;
+  // On 32-bit hosts, size_t may be smaller than the serialized blob size.
+  // Reject early instead of truncating pointer math/casts below.
+  const Bit64u max_size_t = (Bit64u)(~((size_t)0));
+
+  if (data_size > max_size_t) {
+    BX_ERROR(("restore_bochs_param(): data size " FMT_LL "u in '%s' exceeds host addressable range", data_size, path));
+    return false;
+  }
+
+  Bit64u pos = 0;
+  while (pos < data_size) {
+    size_t count = (size_t)(data_size - pos);
+    if (count > chunk_size) count = chunk_size;
+    // State files are expected to contain at least data_size bytes.
+    if (fread(dst + (size_t)pos, 1, count, fp) != count) {
+      BX_ERROR(("restore_bochs_param(): short read in '%s' at offset " FMT_LL "u", path, pos));
+      return false;
+    }
+    pos += count;
+  }
+
+  return true;
+}
+
+static bool bx_shadow_data_write(FILE *fp, const Bit8u *src, Bit64u data_size, const char *path)
+{
+  // Write in chunks to keep behavior deterministic for multi-GB state files.
+  const size_t chunk_size = 16 * 1024 * 1024;
+  // Keep pointer offset casts safe on all targets (especially 32-bit builds).
+  const Bit64u max_size_t = (Bit64u)(~((size_t)0));
+
+  if (data_size > max_size_t) {
+    BX_ERROR(("save_sr_param(): data size " FMT_LL "u in '%s' exceeds host addressable range", data_size, path));
+    return false;
+  }
+
+  Bit64u pos = 0;
+  while (pos < data_size) {
+    size_t count = (size_t)(data_size - pos);
+    if (count > chunk_size) count = chunk_size;
+    // Partial writes would corrupt the checkpoint image.
+    if (fwrite(src + (size_t)pos, 1, count, fp) != count) {
+      BX_ERROR(("save_sr_param(): short write in '%s' at offset " FMT_LL "u", path, pos));
+      return false;
+    }
+    pos += count;
+  }
+
+  return true;
+}
+
 bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, const char *restore_name)
 {
   char devstate[BX_PATHNAME_LEN], devdata[BX_PATHNAME_LEN];
@@ -1340,7 +1410,10 @@ bool bx_real_sim_c::restore_bochs_param(bx_list_c *root, const char *sr_path, co
                       sprintf(devdata, "%s/%s", sr_path, ptr);
                       fp2 = fopen(devdata, "rb");
                       if (fp2 != NULL) {
-                        fread(dparam->getptr(), 1, dparam->get_size(), fp2);
+                        if (!bx_shadow_data_read(fp2, dparam->getptr(), dparam->get_size(), devdata)) {
+                          fclose(fp2);
+                          return 0;
+                        }
                         fclose(fp2);
                       }
                     } else if (!strcmp(ptr, "[")) {
@@ -1457,22 +1530,28 @@ bool bx_real_sim_c::save_sr_param(FILE *fp, bx_param_c *node, const char *sr_pat
             strcpy(tmpstr, pname);
           fp2 = fopen(tmpstr, "wb");
           if (fp2 != NULL) {
-            fwrite(dparam->getptr(), 1, dparam->get_size(), fp2);
+            if (!bx_shadow_data_write(fp2, dparam->getptr(), dparam->get_size(), tmpstr)) {
+              fclose(fp2);
+              return 0;
+            }
             fclose(fp2);
           }
         } else {
           fprintf(fp, "[\n");
-          for (i=0; i < (int)dparam->get_size(); i++) {
-            if ((i % 16) == 0) {
+          // Text-format dumps are rare, but keep indexing 64-bit for consistency
+          // with large binary parameters.
+          Bit64u data_size = dparam->get_size();
+          for (Bit64u idx=0; idx < data_size; idx++) {
+            if ((idx % 16) == 0) {
               for (j=0; j<(level+1); j++)
                 fprintf(fp, "  ");
             } else {
               fprintf(fp, ", ");
             }
-            fprintf(fp, "0x%02x", dparam->get(i));
-            if (i == (int)(dparam->get_size() - 1)) {
+            fprintf(fp, "0x%02x", dparam->get(idx));
+            if (idx == (data_size - 1)) {
               fprintf(fp, "\n");
-            } else if ((i % 16) == 15) {
+            } else if ((idx % 16) == 15) {
               fprintf(fp, ",\n");
             }
           }
@@ -1541,10 +1620,14 @@ bool bx_real_sim_c::opt_plugin_ctrl(const char *plugname, bool load)
     return 1;
   }
   if (plugin_ctrl->get_by_name(plugname) == NULL) {
-    BX_PANIC(("Plugin '%s' not found", plugname));
+    if (load && (PLUG_find_plugin(plugname) != PLUGTYPE_NULL)) {
+      BX_WARN(("Plugin '%s' is not optional", plugname));
+    } else {
+      BX_PANIC(("Plugin '%s' not found", plugname));
+    }
     return 0;
   }
-  if (load != PLUG_device_present(plugname)) {
+  if (load != PLUG_device_present(plugname, false)) {
     if (load) {
       if (PLUG_load_opt_plugin(plugname)) {
         SIM->get_param_bool(plugname, plugin_ctrl)->set(1);

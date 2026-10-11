@@ -63,7 +63,8 @@ public:
 #endif
 
   struct {
-    // 15...0 opcode
+    // 15...15 trace end (stop trace indication from assignHandler)
+    // 14...0  opcode
     Bit16u ia_opcode;
 
     //  7...4 (unused)
@@ -104,8 +105,7 @@ public:
         Bit16u Iw[2];
         // use Ib[3] as EVEX mask register
         // use Ib[2] as AVX attributes
-        //     7..6 (unused)
-        //     5..5 EVEX.U
+        //     7..5 (unused)
         //     4..4 VEX.W
         //     3..3 Broadcast/RC/SAE control (EVEX.b)
         //     2..2 Zeroing/Merging mask (EVEX.z)
@@ -239,6 +239,10 @@ public:
     return (metaInfo.metaInfo1 >> 2) & 0x3;
   }
 
+  BX_CPP_INLINE unsigned as16L(void) const {
+    return (metaInfo.metaInfo1 & 0x3) == 0;
+  }
+
   BX_CPP_INLINE unsigned as32L(void) const {
     return metaInfo.metaInfo1 & 0x1;
   }
@@ -281,10 +285,17 @@ public:
   }
 
   BX_CPP_INLINE unsigned getIaOpcode(void) const {
-    return metaInfo.ia_opcode;
+    return metaInfo.ia_opcode & 0x7fff;
   }
   BX_CPP_INLINE void setIaOpcode(Bit16u op) {
-    metaInfo.ia_opcode = op;
+    metaInfo.ia_opcode = op; // clears trace end indication as well
+  }
+
+  BX_CPP_INLINE bool traceEnd(void) const {
+    return metaInfo.ia_opcode >> 15;
+  }
+  BX_CPP_INLINE void setTraceEnd(void) {
+    metaInfo.ia_opcode |= 0x8000;
   }
   BX_CPP_INLINE const char* getIaOpcodeName(void) const {
     return get_bx_opcode_name(getIaOpcode());
@@ -345,13 +356,6 @@ public:
   }
   BX_CPP_INLINE unsigned getEvexb(void) const {
     return modRMForm.Ib[2] & (1 << 3);
-  }
-
-  BX_CPP_INLINE void setEvexU(unsigned bit) {
-    modRMForm.Ib[2] = (modRMForm.Ib[2] & ~(1<<5)) | (bit<<5);
-  }
-  BX_CPP_INLINE unsigned getEvexU(void) const {
-    return modRMForm.Ib[2] & (1 << 5);
   }
 
   BX_CPP_INLINE void setZeroMasking(unsigned bit) {

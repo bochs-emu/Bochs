@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C)      2025  Benjamin David Lunt
-//  Copyright (C) 2003-2025 The Bochs Project
+//  Copyright (C) 2003-2026 The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -53,40 +53,10 @@ enum {
   UHCI_REG_COUNT
 };
 
-// copy&paste start
-// from uhci_core.h
-#define USB_UHCI_QUEUE_STACK_SIZE  256
-
-#define USB_UHCI_IS_LINK_VALID(item)  ((item & 1) == 0)  // return TRUE if valid link address
-#define USB_UHCI_IS_LINK_QUEUE(item)  ((item & 2) == 2)  // return TRUE if link is a queue pointer
-
-struct USB_UHCI_QUEUE_STACK {
-  int    queue_cnt;
-  Bit32u queue_stack[USB_UHCI_QUEUE_STACK_SIZE];
-};
-
-#pragma pack (push, 1)
-struct TD {
-  Bit32u dword0;
-  Bit32u dword1;
-  Bit32u dword2;
-  Bit32u dword3;
-};
-
-struct QUEUE {
-  Bit32u horz;
-  Bit32u vert;
-};
-#pragma pack (pop)
-
-// from usb_xhci.h
-#define OPS_REGS_OFFSET   0x20
-#define XHCI_PORT_SET_OFFSET  (0x400 + OPS_REGS_OFFSET)
-// copy&paste end
-
 extern const char *hc_param_str[];
 
 extern int usb_debug_type;
+extern int usb_debug_devid;
 extern bx_param_c *host_param;
 extern Bit32u pci_bar_address;
 
@@ -99,6 +69,11 @@ extern struct S_ATTRIBUTES attribs_u_ports[];
 extern bool u_changed[UHCI_REG_COUNT];
 
 bool uhci_add_queue(struct USB_UHCI_QUEUE_STACK *stack, const Bit32u addr);
+
+// OHCI
+extern struct S_ATTRIBUTES attribs_o_control[];
+extern struct S_ATTRIBUTES attribs_o_cmd_sts[];
+extern struct S_ATTRIBUTES attribs_o_ports[];
 
 // xHCI
 #define VIEW_TRB_TYPE_NONE      0
@@ -135,7 +110,7 @@ extern const char *ep_state_str[];
 extern const char *string_sct_str[];
 
 // USB debug API
-void usb_dbg_register_type(int type);
+void usb_dbg_register_type(int type, int devid);
 
 int usb_dbg_interface(int type, Bit64u param0, int param1, int param2);
 
@@ -146,10 +121,14 @@ int usb_debug_dialog(int break_type, Bit64u param0, int param1, int param2);
 Bit32u get_pci_bar_addr(bx_shadow_data_c *pci_conf, Bit8u bar_num);
 
 Bit32u usb_io_read(Bit16u addr, unsigned io_len);
+Bit32u usb_mmio_read_dword(const Bit32u address);
 
 void usb_io_write(Bit16u addr, Bit32u value, unsigned io_len);
 
-Bit32u xhci_read_dword(const Bit32u address);
+bx_list_c* get_usb_hc_state(int type);
+const char* get_usb_hc_name(int type);
+
+bx_param_enum_c* get_hc_port_device(Bit8u port);
 
 #endif  // BX_USB_DEBUGGER
 #endif  // BX_USB_DEBUG_H

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2023  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -223,7 +223,7 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
   vertSizer->Add(text, 0, wxALL, 10);
   applyDefault = new wxButton(this, ID_ApplyDefault, ADVLOG_DEFAULTS);
   vertSizer->Add(applyDefault, 0, wxALL|wxALIGN_RIGHT, 10);
-  headerSizer = new wxGridSizer(ADVLOG_OPTS_N_TYPES + 1);
+  headerSizer = new wxGridSizer(LOG_OPTS_N_TYPES + 1);
   vertSizer->Add(headerSizer, 0, wxALL|wxGROW, 10);
   scrollWin = new wxScrolledWindow(this, -1);
   vertSizer->Add(scrollWin, 1, wxALL|wxGROW, 10);
@@ -246,9 +246,9 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
   // to get the scrollWin geometry right, first build everything on a wxPanel,
   // with gridSizer as the main sizer.
   scrollPanel = new wxPanel(scrollWin, -1);
-  gridSizer = new wxGridSizer(ADVLOG_OPTS_N_TYPES + 1);
+  gridSizer = new wxGridSizer(LOG_OPTS_N_TYPES + 1);
   // add title row
-  int typemax = ADVLOG_OPTS_N_TYPES;
+  int typemax = LOG_OPTS_N_TYPES;
   text = new wxStaticText(this, -1, wxT("Device"));
   headerSizer->Add(text, 0, wxALIGN_LEFT);
   int type;
@@ -261,7 +261,7 @@ AdvancedLogOptionsDialog::AdvancedLogOptionsDialog(
   action = new wxChoice** [devmax];   // array of pointers
   for (int dev=0; dev<devmax; dev++) {
     if (strcmp(SIM->get_logfn_name(dev), "?")) {
-      action[dev] = new wxChoice* [ADVLOG_OPTS_N_TYPES];
+      action[dev] = new wxChoice* [LOG_OPTS_N_TYPES];
       // name of device in first column
       gridSizer->Add(new wxStaticText(scrollPanel, -1, wxString(SIM->get_logfn_name(dev), wxConvUTF8)),
                      0, wxALL | wxALIGN_CENTER_VERTICAL);
@@ -956,9 +956,13 @@ void ParamDialog::AddParam(
             newcontext.gridSizer = NULL; // will be created if needed
             // the child itself is a list. Add the child's children in
             // this new context.
-            bx_list_c *childl = (bx_list_c *)child;
-            for (int j=0; j<childl->get_size(); j++)
-              AddParam(childl->get(j), plain, &newcontext);
+            if (child->get_options() & bx_list_c::USE_SCROLL_WINDOW) {
+              AddParam(child, plain, &newcontext);
+            } else {
+              for (int j=0; j<child->get_size(); j++) {
+                AddParam(child->get(j), plain, &newcontext);
+              }
+            }
             const char *pagename = child->get_title();
             if (!pagename) pagename = child->get_name();
             panel->SetAutoLayout(TRUE);
@@ -1100,7 +1104,13 @@ bool ParamDialog::CopyGuiToParam(bx_param_c *param)
     case BXT_PARAM_ENUM: {
       bx_param_enum_c *enump = (bx_param_enum_c*) pstr->param;
       int value = pstr->u.choice->GetSelection() + enump->get_min();
-      if (value != enump->get()) enump->set(value);
+      if (value != enump->get()) {
+        char buf[80];
+        wxString tmp(pstr->u.choice->GetString(pstr->u.choice->GetSelection()));
+        strncpy(buf, tmp.mb_str(wxConvUTF8), sizeof(buf) - 1);
+        buf[sizeof(buf)-1] = 0;
+        enump->set_by_name(buf);
+      }
       break;
     }
     case BXT_PARAM_STRING: {

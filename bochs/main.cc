@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -23,6 +23,7 @@
 #include "param_names.h"
 #include "cpu/cpu.h"
 #include "iodev/iodev.h"
+#include "pc_system.h"
 #include "iodev/hdimage/hdimage.h"
 #if BX_NETWORKING
 #include "iodev/network/netmod.h"
@@ -80,7 +81,9 @@ bool bx_user_quit;
 Bit8u bx_cpu_count;
 #if BX_SUPPORT_APIC
 Bit32u apic_id_mask; // determinted by XAPIC option
-bool simulate_xapic;
+// Must be true from static initialization on: without SMP support the global
+// bx_cpu object (and its local APIC) is constructed before main() runs.
+bool simulate_xapic = true;
 #endif
 
 /* typedefs */
@@ -95,15 +98,26 @@ typedef BX_CPU_C *BX_CPU_C_PTR;
 
 #if BX_SUPPORT_SMP
 // multiprocessor simulation, we need an array of cpus
-BOCHSAPI BX_CPU_C_PTR *bx_cpu_array = NULL;
+BX_CPU_C_PTR *bx_cpu_array = NULL;
 #else
 // single processor simulation, so there's one of everything
-BOCHSAPI BX_CPU_C bx_cpu;
+BX_CPU_C bx_cpu;
 #endif
 
 BOCHSAPI BX_MEM_C bx_mem;
 
 char *bochsrc_filename = NULL;
+
+Bit32u round_up_to_power_of_2(Bit32u x)
+{
+  Bit32u r = x - 1;
+  r |= r >> 1;
+  r |= r >> 2;
+  r |= r >> 4;
+  r |= r >> 8;
+  r |= r >> 16;
+  return r + 1;
+}
 
 size_t bx_get_timestamp(char *buffer)
 {
@@ -248,7 +262,7 @@ void print_tree(bx_param_c *node, int level, bool xml)
         break;
       }
     case BXT_PARAM_DATA:
-      dbg_printf("'binary data size=%d'", ((bx_shadow_data_c*)node)->get_size());
+      dbg_printf("'binary data size=" FMT_LL "u'", ((bx_shadow_data_c*)node)->get_size());
       break;
     default:
       dbg_printf("(unknown parameter type)");
@@ -308,6 +322,8 @@ void print_statistics_tree(bx_param_c *node, int level)
 
 int bxmain(void)
 {
+  bx_set_sys_timer_resolution();
+  bx_init_realtime64_usec();
 #ifdef HAVE_LOCALE_H
   // Initialize locale (for isprint() and other functions)
   setlocale (LC_ALL, "");
@@ -319,6 +335,7 @@ int bxmain(void)
     BX_INSTR_INIT_ENV();
     if (bx_init_main(bx_startup_flags.argc, bx_startup_flags.argv) < 0) {
       BX_INSTR_EXIT_ENV();
+      bx_reset_sys_timer_resolution();
       return 0;
     }
     // read a param to decide which config interface to start.
@@ -357,6 +374,7 @@ int bxmain(void)
   BX_INSTR_EXIT_ENV();
   int exit_code = bx_cleanup_siminterface();
   bx_cleanup_options();
+  bx_reset_sys_timer_resolution();
   return exit_code;
 }
 
@@ -721,11 +739,19 @@ int bx_init_main(int argc, char *argv[])
 #if BX_DEBUGGER
     else if (!strcmp("-debugger", argv[arg]) || !strcmp("-dbg", argv[arg])) {
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
+      SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set_enabled(1);
+#if BX_SUPPORT_IODEBUG
+      SIM->get_param(BXPN_IODEBUG_ALL_RINGS)->set_enabled(1);
+#endif
       bx_dbg.debugger_active = true;
     }
-#if BX_DEBUGGER_GUI
     else if (!strncmp("-dbg_gui", argv[arg], 8)) {
+#if BX_DEBUGGER_GUI
       SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
+      SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set_enabled(1);
+#if BX_SUPPORT_IODEBUG
+      SIM->get_param(BXPN_IODEBUG_ALL_RINGS)->set_enabled(1);
+#endif
       bx_dbg.debugger_active = true;
       bx_dbg.debugger_gui = true;
       if ((strlen(argv[arg]) > 9) && (argv[arg][8] == ':')) {
@@ -737,8 +763,10 @@ int bx_init_main(int argc, char *argv[])
       } else if (argv[arg][8] != 0) {
         BX_PANIC(("-dbg_gui option malformed"));
       }
-    }
+#else
+      BX_PANIC(("Bochs debugger gui not available - use command line debugger instead"));
 #endif
+    }
     else if (!strcmp("-dbglog", argv[arg])) {
       if (++arg >= argc) BX_PANIC(("-dbglog must be followed by a filename"));
       else SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set(argv[arg]);
@@ -1002,6 +1030,66 @@ bool load_and_init_display_lib(void)
   return (bx_gui != NULL);
 }
 
+// Run the simulation without the internal debugger, returns when the cpu loop
+// was requested to quit
+static void bx_sim_loop(void)
+{
+  if (BX_SMP_PROCESSORS == 1) {
+    // only one processor, run as fast as possible by not messing with
+    // quantums and loops.
+    while (1) {
+      BX_CPU(0)->cpu_loop();
+      if (bx_pc_system.kill_bochs_request)
+        break;
+    }
+    // for one processor, the only reason for cpu_loop to return is
+    // that kill_bochs_request was set by the GUI interface.
+  }
+#if BX_SUPPORT_SMP
+  else {
+    // SMP simulation: do a few instructions on each processor, then switch
+    // to another.  Increasing quantum speeds up overall performance, but
+    // reduces granularity of synchronization between processors.
+    // Current implementation uses dynamic quantum, each processor will
+    // execute exactly one trace then quit the cpu_loop and switch to
+    // the next processor.
+
+    static int quantum = SIM->get_param_num(BXPN_SMP_QUANTUM)->get();
+    Bit32u executed = 0, processor = 0;
+    bool run = true;
+
+    if (setjmp(BX_CPU_C::jmp_buf_env)) {
+      // can get here only from exception function or VMEXIT
+      BX_CPU(processor)->icount++;
+      run = false;
+    }
+    while (1) {
+      // do some instructions in each processor
+      if (run)
+        BX_CPU(processor)->cpu_run_trace();
+      else
+        run = true;
+
+       // see how many instruction it was able to run
+       Bit32u n = (Bit32u)(BX_CPU(processor)->get_icount() - BX_CPU(processor)->icount_last_sync);
+       if (n == 0) n = quantum; // the CPU was halted
+       executed += n;
+
+       if (++processor == BX_SMP_PROCESSORS) {
+         processor = 0;
+         BX_TICKN(executed / BX_SMP_PROCESSORS);
+         executed %= BX_SMP_PROCESSORS;
+       }
+
+       BX_CPU(processor)->icount_last_sync = BX_CPU(processor)->get_icount();
+
+       if (bx_pc_system.kill_bochs_request)
+         break;
+    }
+  }
+#endif /* BX_SUPPORT_SMP */
+}
+
 int bx_begin_simulation(int argc, char *argv[])
 {
   bx_user_quit = 0;
@@ -1076,60 +1164,7 @@ int bx_begin_simulation(int argc, char *argv[])
     else
 #endif
     {
-      if (BX_SMP_PROCESSORS == 1) {
-        // only one processor, run as fast as possible by not messing with
-        // quantums and loops.
-        while (1) {
-          BX_CPU(0)->cpu_loop();
-          if (bx_pc_system.kill_bochs_request)
-            break;
-        }
-        // for one processor, the only reason for cpu_loop to return is
-        // that kill_bochs_request was set by the GUI interface.
-      }
-#if BX_SUPPORT_SMP
-      else {
-        // SMP simulation: do a few instructions on each processor, then switch
-        // to another.  Increasing quantum speeds up overall performance, but
-        // reduces granularity of synchronization between processors.
-        // Current implementation uses dynamic quantum, each processor will
-        // execute exactly one trace then quit the cpu_loop and switch to
-        // the next processor.
-
-        static int quantum = SIM->get_param_num(BXPN_SMP_QUANTUM)->get();
-        Bit32u executed = 0, processor = 0;
-        bool run = true;
-
-        if (setjmp(BX_CPU_C::jmp_buf_env)) {
-          // can get here only from exception function or VMEXIT
-          BX_CPU(processor)->icount++;
-          run = false;
-        }
-        while (1) {
-          // do some instructions in each processor
-          if (run)
-            BX_CPU(processor)->cpu_run_trace();
-          else
-            run = true;
-
-           // see how many instruction it was able to run
-           Bit32u n = (Bit32u)(BX_CPU(processor)->get_icount() - BX_CPU(processor)->icount_last_sync);
-           if (n == 0) n = quantum; // the CPU was halted
-           executed += n;
-
-           if (++processor == BX_SMP_PROCESSORS) {
-             processor = 0;
-             BX_TICKN(executed / BX_SMP_PROCESSORS);
-             executed %= BX_SMP_PROCESSORS;
-           }
-
-           BX_CPU(processor)->icount_last_sync = BX_CPU(processor)->get_icount();
-
-           if (bx_pc_system.kill_bochs_request)
-             break;
-        }
-      }
-#endif /* BX_SUPPORT_SMP */
+      bx_sim_loop();
     }
   }
 
@@ -1215,22 +1250,24 @@ void bx_init_hardware()
   BX_INFO(("  processors: %d (cores=%u, HT threads=%u)", BX_SMP_PROCESSORS,
     SIM->get_param_num(BXPN_CPU_NCORES)->get(), SIM->get_param_num(BXPN_CPU_NTHREADS)->get()));
   BX_INFO(("  A20 line support: %s", BX_SUPPORT_A20?"yes":"no"));
-#if BX_CONFIGURE_MSRS
   const char *msrs_file = SIM->get_param_string(BXPN_CONFIGURABLE_MSRS_PATH)->getptr();
   if ((strlen(msrs_file) > 0) && strcmp(msrs_file, "none"))
     BX_INFO(("  load configurable MSRs from file \"%s\"", msrs_file));
-#endif
-  BX_INFO(("IPS is set to %d", (Bit32u) SIM->get_param_num(BXPN_IPS)->get()));
+  BX_INFO(("IPS is set to %u", (Bit32u) SIM->get_param_num(BXPN_IPS)->get()));
   BX_INFO(("CPU configuration"));
 #if BX_SUPPORT_SMP
   BX_INFO(("  SMP support: yes, quantum=%d", SIM->get_param_num(BXPN_SMP_QUANTUM)->get()));
 #else
   BX_INFO(("  SMP support: no"));
 #endif
+#if BX_SUPPORT_APIC
+  BX_INFO(("  using %sAPIC", simulate_xapic ? "x" : "legacy "));
+#endif
 
   BX_INFO(("  Using pre-defined CPU configuration: %s",
       SIM->get_param_enum(BXPN_CPU_MODEL)->get_selected()));
 
+  BX_INFO(("Reporting CPUID frequency as: %s", SIM->get_param_enum(BXPN_CPUID_FREQ)->get_selected()));
   BX_INFO(("Optimization configuration"));
   BX_INFO(("  RepeatSpeedups support: %s", BX_SUPPORT_REPEAT_SPEEDUPS?"yes":"no"));
   BX_INFO(("  Fast function calls: %s", BX_FAST_FUNC_CALL?"yes":"no"));
@@ -1305,6 +1342,12 @@ void bx_init_hardware()
 
   bx_param_num_c *bxp_memblock_size = SIM->get_param_num(BXPN_MEM_BLOCK_SIZE);
   Bit32u memBlockSize = (Bit32u)(bxp_memblock_size->get64() * 1024);
+  if (memBlockSize < 4096) {
+    memBlockSize = memSize / 4096;
+    if (memBlockSize < 4096) memBlockSize = 4096;
+    memBlockSize = round_up_to_power_of_2(memBlockSize);
+    BX_INFO(("Auto-adjusting memory block size to %u", memBlockSize));
+  }
 
   BX_MEM(0)->init_memory(memSize, hostMemSize, memBlockSize);
 
@@ -1327,7 +1370,7 @@ void bx_init_hardware()
     base = (bx_list_c*) SIM->get_param(pname);
     if (!SIM->get_param_string("file", base)->isempty())
       BX_MEM(0)->load_RAM(SIM->get_param_string("file", base)->getptr(),
-                          SIM->get_param_num("address", base)->get());
+                          SIM->get_param_num("address", base)->get64());
   }
 
 #if BX_SUPPORT_SMP == 0

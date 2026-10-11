@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -44,6 +44,7 @@
 #include "iodev/hdimage/vmware3.h"
 #include "iodev/hdimage/vmware4.h"
 #include "iodev/hdimage/vpc.h"
+#include "iodev/hdimage/vhdx.h"
 #include "iodev/hdimage/vbox.h"
 
 #define BXIMAGE_FUNC_NULL            0
@@ -99,31 +100,14 @@ const unsigned fdsize_sectors[] = { 320, 360, 640, 720, 1440, 2400, 2880, 3360, 
 int fdsize_n_choices = 10;
 
 // menu data for choosing disk mode
-const char *hdmode_menu = "\nWhat kind of image should I create?\nPlease type flat, sparse, growing, vpc or vmware4. ";
-const char *hdmode_choices[] = {"flat", "sparse", "growing", "vpc", "vmware4" };
-int hdmode_n_choices = 5;
+const char *hdmode_menu = "\nWhat kind of image should I create?\nPlease type flat, sparse, growing, vpc, vhdx or vmware4. ";
+const char *hdmode_choices[] = {"flat", "sparse", "growing", "vpc", "vhdx", "vmware4" };
+int hdmode_n_choices = 6;
 
 // menu data for choosing hard disk sector size
 const char *sectsize_menu = "\nChoose the size of hard disk sectors.\nPlease type 512, 1024 or 4096. ";
 const char *sectsize_choices[] = { "512","1024","4096" };
 int sectsize_n_choices = 3;
-
-#if !BX_HAVE_SNPRINTF
-#include <stdarg.h>
-/* XXX use real snprintf */
-/* if they don't have snprintf, just use sprintf */
-int snprintf(char *s, size_t maxlen, const char *format, ...)
-{
-  va_list arg;
-  int done;
-
-  va_start(arg, format);
-  done = vsprintf(s, format, arg);
-  va_end(arg);
-
-  return done;
-}
-#endif  /* !BX_HAVE_SNPRINTF */
 
 #if !BX_HAVE_MKSTEMP
 int bx_mkstemp(char *tpl)
@@ -336,6 +320,8 @@ device_image_t* init_image(const char *imgmode)
     hdimage = new growing_image_t();
   } else if (!strcmp(imgmode, "vpc")) {
     hdimage = new vpc_image_t();
+  } else if (!strcmp(imgmode, "vhdx")) {
+    hdimage = new vhdx_image_t();
   } else if (!strcmp(imgmode, "vbox")) {
     hdimage = new vbox_image_t();
   } else {
@@ -417,6 +403,8 @@ device_image_t* create_hard_disk_image(const char *filename, const char *imgmode
   } else if(!strcmp(imgmode, "sparse")) {
     hdimage->create_image(filename, size);
   } else if(!strcmp(imgmode, "vpc")) {
+    hdimage->create_image(filename, size);
+  } else if(!strcmp(imgmode, "vhdx")) {
     hdimage->create_image(filename, size);
   } else if(!strcmp(imgmode, "vmware4")) {
     hdimage->create_image(filename, size);

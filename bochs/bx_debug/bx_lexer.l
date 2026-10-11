@@ -146,6 +146,7 @@ watch           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WATCH); }
 unwatch         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_UNWATCH); }
 read            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_READ); }
 w|write         { bxlval.sval = strdup(bxtext); return(BX_TOKEN_WRITE); }
+rla             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_RUN_TO_LADDR); }
 show            { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SHOW); }
 ldsym           { bxlval.sval = strdup(bxtext); return(BX_TOKEN_LOAD_SYMBOLS); }
 setmagicbps     { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SET_MAGIC_BREAK_POINTS); }

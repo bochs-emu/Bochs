@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2019 Stanislav Shwartsman
+//   Copyright (c) 2005-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -170,7 +170,9 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
 #if BX_SUPPORT_CET
     if (ShadowStackEnabled(CPL)) {
-      SSP = shadow_stack_restore(raw_cs_selector, cs_descriptor, new_eip);
+      bx_address new_SSP = shadow_stack_restore(raw_cs_selector, cs_descriptor, new_eip);
+      check_restored_ssp(new_SSP, cs_descriptor);
+      SSP = new_SSP;
     }
 #endif
 
@@ -236,41 +238,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 
     parse_selector(raw_ss_selector, &ss_selector);
 
-    /* selector RPL must = RPL of return CS selector,
-     * else #GP(SS selector) */
-    if (ss_selector.rpl != cs_selector.rpl) {
-      BX_ERROR(("iret: SS.rpl != CS.rpl"));
-      exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc);
-    }
-
-    /* selector index must be within its descriptor table limits,
-     * else #GP(SS selector) */
-    fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-
-    parse_descriptor(dword1, dword2, &ss_descriptor);
-
-    /* AR byte must indicate a writable data segment,
-     * else #GP(SS selector) */
-    if (ss_descriptor.valid==0 || ss_descriptor.segment==0 ||
-         IS_CODE_SEGMENT(ss_descriptor.type) ||
-        !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
-    {
-      BX_ERROR(("iret: SS AR byte not writable or code segment"));
-      exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc);
-    }
-
-    /* stack segment DPL must equal the RPL of the return CS selector,
-     * else #GP(SS selector) */
-    if (ss_descriptor.dpl != cs_selector.rpl) {
-      BX_ERROR(("iret: SS.dpl != CS selector RPL"));
-      exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc);
-    }
-
-    /* SS must be present, else #NP(SS selector) */
-    if (! IS_PRESENT(ss_descriptor)) {
-      BX_ERROR(("iret: SS not present!"));
-      exception(BX_NP_EXCEPTION, raw_ss_selector & 0xfffc);
-    }
+    fetch_ss_descriptor(raw_ss_selector, &ss_selector, &ss_descriptor, cs_selector.rpl, BX_GP_EXCEPTION);
 
     if (i->os32L()) {
       new_esp = stack_read_dword(temp_ESP + 12);
@@ -328,10 +296,7 @@ BX_CPU_C::iret_protected(bxInstruction_c *i)
 #if BX_SUPPORT_CET
     bx_address old_SSP = SSP;
     if (ShadowStackEnabled(CPL)) {
-      if (GET32H(new_SSP) != 0) {
-        BX_ERROR(("iret_protected: 64-bit SSP in legacy mode"));
-        exception(BX_GP_EXCEPTION, 0);
-      }
+      check_restored_ssp(new_SSP, cs_descriptor);
       SSP = new_SSP;
     }
     if (ShadowStackEnabled(prev_cpl)) {
@@ -423,6 +388,15 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
   }
 
+#if BX_SUPPORT_FRED
+  if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+    if (cs_selector.rpl > CPL) {
+      BX_ERROR(("iret64: ring transition is not allowed when FRED is enabled"));
+      exception(BX_GP_EXCEPTION, raw_cs_selector & 0xfffc);
+    }
+  }
+#endif
+
   // check code-segment descriptor
   check_cs(&cs_descriptor, raw_cs_selector, 0, cs_selector.rpl);
 
@@ -435,18 +409,28 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     /* satisfied above */
 
 #if BX_SUPPORT_CET
-    if (ShadowStackEnabled(CPL)) {
-      bx_address prev_SSP = SSP;
-      SSP = shadow_stack_restore(raw_cs_selector, cs_descriptor, new_rip);
-      if (SSP != prev_SSP) {
-        shadow_stack_atomic_clear_busy(prev_SSP, CPL);
-      }
+    bool shadow_stack_enabled = ShadowStackEnabled(CPL);
+    bx_address new_SSP = 0;
+    if (shadow_stack_enabled) {
+      new_SSP = shadow_stack_restore(raw_cs_selector, cs_descriptor, new_rip);
+      check_restored_ssp(new_SSP, cs_descriptor);
     }
 #endif
 
     /* load CS:EIP from stack */
     /* load CS-cache with new code segment descriptor */
     branch_far(&cs_selector, &cs_descriptor, new_rip, CPL);
+
+#if BX_SUPPORT_CET
+    if (shadow_stack_enabled) {
+      // In IA-32e mode same privilege IRET may be switching stacks if the interrupt was delivered through IST.
+      // SSP now points above the popped shadow stack frame. If restored SSP is not the same stack (stack switch
+      // happened) free the supervisor shadow stack token located at current SSP.
+      if (new_SSP != SSP)
+        shadow_stack_atomic_clear_busy(SSP, CPL);
+      SSP = new_SSP;
+    }
+#endif
 
     // ID,VIP,VIF,AC,VM,RF,x,NT,IOPL,OF,DF,IF,TF,SF,ZF,x,AF,x,PF,x,CF
     Bit32u changeMask = EFlagsOSZAPCMask | EFlagsTFMask | EFlagsDFMask |
@@ -510,41 +494,7 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
     }
     else {
       parse_selector(raw_ss_selector, &ss_selector);
-
-      /* selector RPL must = RPL of return CS selector,
-       * else #GP(SS selector) */
-      if (ss_selector.rpl != cs_selector.rpl) {
-        BX_ERROR(("iret64: SS.rpl != CS.rpl"));
-        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc);
-      }
-
-      /* selector index must be within its descriptor table limits,
-       * else #GP(SS selector) */
-      fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_GP_EXCEPTION);
-      parse_descriptor(dword1, dword2, &ss_descriptor);
-
-      /* AR byte must indicate a writable data segment,
-       * else #GP(SS selector) */
-      if (ss_descriptor.valid==0 || ss_descriptor.segment==0 ||
-          IS_CODE_SEGMENT(ss_descriptor.type) ||
-         !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
-      {
-        BX_ERROR(("iret64: SS AR byte not writable or code segment"));
-        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc);
-      }
-
-      /* stack segment DPL must equal the RPL of the return CS selector,
-       * else #GP(SS selector) */
-      if (ss_descriptor.dpl != cs_selector.rpl) {
-        BX_ERROR(("iret64: SS.dpl != CS selector RPL"));
-        exception(BX_GP_EXCEPTION, raw_ss_selector & 0xfffc);
-      }
-
-      /* SS must be present, else #NP(SS selector) */
-      if (! IS_PRESENT(ss_descriptor)) {
-        BX_ERROR(("iret64: SS not present!"));
-        exception(BX_NP_EXCEPTION, raw_ss_selector & 0xfffc);
-      }
+      fetch_ss_descriptor(raw_ss_selector, &ss_selector, &ss_descriptor, cs_selector.rpl, BX_GP_EXCEPTION);
     }
 
     Bit8u prev_cpl = CPL; /* previous CPL */
@@ -561,13 +511,16 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
       changeMask &= 0xffff;
 
 #if BX_SUPPORT_CET
+    bool same_privilege = (cs_selector.rpl == CPL);
     bx_address new_SSP = BX_CPU_THIS_PTR msr.ia32_pl_ssp[3];
     if (ShadowStackEnabled(CPL)) {
       if (SSP & 0x7) {
         BX_ERROR(("iret64: SSP is not 8-byte aligned"));
         exception(BX_CP_EXCEPTION, BX_CP_FAR_RET_IRET);
       }
-      if (cs_selector.rpl != 3) {
+      // same privilege IRETQ (including CPL3 to CPL3) always restores SSP from the shadow stack,
+      // IA32_PL3_SSP is used only when returning to CPL3 from supervisor privilege level
+      if (cs_selector.rpl != 3 || same_privilege) {
         new_SSP = shadow_stack_restore(raw_cs_selector, cs_descriptor, new_rip);
       }
     }
@@ -600,14 +553,14 @@ BX_CPU_C::long_iret(bxInstruction_c *i)
 #if BX_SUPPORT_CET
     bx_address old_SSP = SSP;
     if (ShadowStackEnabled(CPL)) {
-      if (!long64_mode() && GET32H(new_SSP) != 0) {
-        BX_ERROR(("iret64: 64-bit SSP in legacy mode"));
-        exception(BX_GP_EXCEPTION, 0);
-      }
+      check_restored_ssp(new_SSP, cs_descriptor);
       SSP = new_SSP;
     }
     if (ShadowStackEnabled(prev_cpl)) {
-      shadow_stack_atomic_clear_busy(old_SSP, prev_cpl);
+      // same privilege IRETQ frees the token only if there was a stack switch (interrupt delivered through IST),
+      // i.e. the restored SSP is not the same stack as SSP above the popped shadow stack frame
+      if (! same_privilege || new_SSP != old_SSP)
+        shadow_stack_atomic_clear_busy(old_SSP, prev_cpl);
     }
 #endif
 

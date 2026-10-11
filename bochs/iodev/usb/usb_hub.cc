@@ -5,7 +5,7 @@
 // USB hub emulation support (ported from QEMU)
 //
 // Copyright (C) 2005       Fabrice Bellard
-// Copyright (C) 2009-2023  The Bochs Project
+// Copyright (C) 2009-2026  The Bochs Project
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -264,7 +264,7 @@ usb_hub_device_c::~usb_hub_device_c(void)
     remove_device(i);
   }
   if (SIM->is_wx_selected()) {
-    bx_list_c *usb = (bx_list_c *) SIM->get_param("ports.usb");
+    bx_list_c *usb = (bx_list_c *) SIM->get_param("usb");
     usb->remove(hub.config->get_name());
   }
   bx_list_c *usb_rt = (bx_list_c *) SIM->get_param(BXPN_MENU_RUNTIME_USB);
@@ -278,6 +278,12 @@ bool usb_hub_device_c::set_option(const char *option)
     if ((hub.n_ports < 2) || (hub.n_ports > USB_HUB_MAX_PORTS)) {
       BX_ERROR(("ignoring invalid number of ports (%d)", hub.n_ports));
       hub.n_ports = USB_HUB_DEF_PORTS;
+    } else {
+      if (hub.n_ports > 4) {
+        hub.config->set_options(bx_list_c::SHOW_PARENT | bx_list_c::USE_SCROLL_WINDOW);
+      } else {
+        hub.config->set_options(bx_list_c::SHOW_PARENT);
+      }
     }
     return 1;
   }
@@ -324,7 +330,7 @@ bool usb_hub_device_c::init()
     device->set_dependent_bitmap(0, 0);
   }
   if (SIM->is_wx_selected()) {
-    bx_list_c *usb = (bx_list_c *) SIM->get_param("ports.usb");
+    bx_list_c *usb = (bx_list_c *) SIM->get_param("usb");
     usb->add(hub.config);
   }
   sprintf(hub.info_txt, "%d-port USB hub", hub.n_ports);

@@ -117,7 +117,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPTAN(bxInstruction_c *i)
      i387cw_to_softfloat_status_word(BX_CPU_THIS_PTR the_i387.get_control_word() | FPU_PR_80_BITS);
 
   floatx80 y = BX_READ_FPU_REG(0);
-  if (ftan(y, status) == -1)
+  if (fptan(y, status) == -1)
   {
      FPU_PARTIAL_STATUS |= FPU_SW_C2;
      BX_NEXT_INSTR(i);

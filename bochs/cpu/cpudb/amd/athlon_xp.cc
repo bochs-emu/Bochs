@@ -34,6 +34,7 @@ athlon_xp_t::athlon_xp_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_X87);
   enable_cpu_extension(BX_ISA_486);
   enable_cpu_extension(BX_ISA_PENTIUM);
+  enable_cpu_extension(BX_ISA_AMD);
   enable_cpu_extension(BX_ISA_MMX);
   enable_cpu_extension(BX_ISA_SYSENTER_SYSEXIT);
   enable_cpu_extension(BX_ISA_SYSCALL_SYSRET_LEGACY);

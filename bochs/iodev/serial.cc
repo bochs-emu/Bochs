@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -31,6 +31,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "pc_system.h"
 
 #if !defined(WIN32) || defined(__CYGWIN__)
 #include <sys/types.h>
@@ -702,6 +703,7 @@ void bx_serial_c::lower_interrupt(Bit8u port)
       (BX_SER_THIS s[port].ls_interrupt == false) &&
       (BX_SER_THIS s[port].ms_interrupt == false) &&
       (BX_SER_THIS s[port].fifo_interrupt == false)) {
+    BX_DEBUG(("Lower Interrupt"));
     DEV_pic_lower_irq(BX_SER_THIS s[port].IRQ);
   }
 }
@@ -754,8 +756,38 @@ void bx_serial_c::raise_interrupt(Bit8u port, int type)
       break;
   }
   if (gen_int && BX_SER_THIS s[port].modem_cntl.out2) {
+    BX_DEBUG(("Raise Interrupt"));
     DEV_pic_raise_irq(BX_SER_THIS s[port].IRQ);
   }
+}
+
+const char *bx_serial_c::ser_get_name(Bit32u address, Bit8u port, bool read) {
+  switch (address & 0x7) {
+    case 0:
+      if (BX_SER_THIS s[port].line_cntl.dlab)
+        return "LSB divisor";
+      else
+        return (read) ? "Receive Buffer" : "Transmit Buffer";
+    case 1:
+      if (BX_SER_THIS s[port].line_cntl.dlab)
+        return "MSB divisor";
+      else
+        return "Interrupt Enable";
+    case 2:
+      return (read) ? "Interrupt Identification" : "FIFO Control";
+    case 3:
+      return "Line Control";
+    case 4:
+      return "Modem Control";
+    case 5:
+      return (read) ? "Line Status" : "READ ONLY!";
+    case 6:
+      return (read) ? "Modem Status" : "READ ONLY!";
+    case 7:
+      return "Scratch";
+  }
+  // we shouldn't get here
+  return "Unknown";
 }
 
 // static IO port read callback handler
@@ -951,7 +983,7 @@ Bit32u bx_serial_c::read(Bit32u address, unsigned io_len)
       break;
   }
 
-  BX_DEBUG(("com%d register read from address: 0x%04x = 0x%02x", port+1, address, val));
+  BX_DEBUG(("com%d register read from address: 0x%04x (%s) = 0x%02x", port+1, address, ser_get_name(address, port, true), val));
 
   return(val);
 }
@@ -996,7 +1028,7 @@ void bx_serial_c::write(Bit32u address, Bit32u value, unsigned io_len)
     case 0x02e8: port = 3; break;
   }
 
-  BX_DEBUG(("com%d register write to  address: 0x%04x = 0x%02x", port+1, address, value));
+  BX_DEBUG(("com%d register write to  address: 0x%04x (%s) = 0x%02x", port+1, address, ser_get_name(address, port, false), value));
 
   bool new_b0 = value & 0x01;
   bool new_b1 = (value & 0x02) >> 1;
@@ -1451,7 +1483,7 @@ void bx_serial_c::tx_timer(void)
 #if defined(SERIAL_ENABLE)
       BX_DEBUG(("com%d: write: '%c'", port+1, BX_SER_THIS s[port].tsrbuffer));
       if (BX_SER_THIS s[port].tty_id >= 0) {
-        write(BX_SER_THIS s[port].tty_id, (bx_ptr_t) & BX_SER_THIS s[port].tsrbuffer, 1);
+        ::write(BX_SER_THIS s[port].tty_id, (bx_ptr_t) & BX_SER_THIS s[port].tsrbuffer, 1);
       }
 #endif
       break;
@@ -1608,7 +1640,7 @@ void bx_serial_c::rx_timer(void)
       case BX_SER_MODE_TERM:
 #if BX_HAVE_SELECT && defined(SERIAL_ENABLE)
         if ((BX_SER_THIS s[port].tty_id >= 0) && (select(BX_SER_THIS s[port].tty_id + 1, &fds, NULL, NULL, &tval) == 1)) {
-          (void) read(BX_SER_THIS s[port].tty_id, &chbuf, 1);
+          (void) ::read(BX_SER_THIS s[port].tty_id, &chbuf, 1);
           BX_DEBUG(("com%d: read: '%c'", port+1, chbuf));
           data_ready = 1;
         }
@@ -1774,9 +1806,9 @@ const char* bx_serial_c::serial_file_param_handler(bx_param_string_c *param, boo
 {
   if ((set) && (strcmp(val, oldval))) {
     int port = atoi((param->get_parent())->get_name()) - 1;
-    if (BX_SER_THIS s[port].output != NULL) {
-      fclose(BX_SER_THIS s[port].output);
-      BX_SER_THIS s[port].output = NULL;
+    if (theSerialDevice->s[port].output != NULL) {
+      fclose(theSerialDevice->s[port].output);
+      theSerialDevice->s[port].output = NULL;
     }
     // tx_timer() re-opens the output file on demand
   }

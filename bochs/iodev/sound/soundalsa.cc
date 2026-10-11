@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2013-2021  The Bochs Project
+//  Copyright (C) 2013-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -59,11 +59,14 @@ int alsa_pcm_open(bool mode, alsa_pcm_t *alsa_pcm, bx_pcm_param_t *param, logfun
   alsa_pcm->audio_bufsize = 0;
 
   if (alsa_pcm->handle == NULL) {
-    ret = snd_pcm_open(&alsa_pcm->handle, "default", mode ? SND_PCM_STREAM_CAPTURE : SND_PCM_STREAM_PLAYBACK, 0);
+    ret = snd_pcm_open(&alsa_pcm->handle, alsa_pcm->device, mode ? SND_PCM_STREAM_CAPTURE : SND_PCM_STREAM_PLAYBACK, 0);
     if (ret < 0) {
       return BX_SOUNDLOW_ERR;
     }
-    BX_INFO(("ALSA: opened default PCM %s device", mode ? "input":"output"));
+    BX_INFO(("ALSA: opened PCM %s device '%s'", mode ? "input":"output", alsa_pcm->device));
+  } else {
+    if (snd_pcm_state(alsa_pcm->handle) == SND_PCM_STATE_XRUN)
+      snd_pcm_prepare(alsa_pcm->handle);
   }
   snd_pcm_hw_params_alloca(&hwparams);
   snd_pcm_hw_params_any(alsa_pcm->handle, hwparams);
@@ -97,6 +100,7 @@ int alsa_pcm_open(bool mode, alsa_pcm_t *alsa_pcm, bx_pcm_param_t *param, logfun
 #if BX_HAVE_LIBSAMPLERATE || BX_HAVE_SOXR_LSR
   snd_pcm_hw_params_set_rate_resample(alsa_pcm->handle, hwparams, 0);
 #endif
+  dir = 0;
   ret =snd_pcm_hw_params_set_rate_near(alsa_pcm->handle, hwparams, &freq, &dir);
   if (ret < 0)
     return BX_SOUNDLOW_ERR;
@@ -105,16 +109,24 @@ int alsa_pcm_open(bool mode, alsa_pcm_t *alsa_pcm, bx_pcm_param_t *param, logfun
     BX_INFO(("changed sample rate to %d", freq));
   }
 
-  alsa_pcm->frames = 32;
+  dir = 0;
+  int period_req = param->samplerate / 50; // 20ms
+  alsa_pcm->frames = period_req;
   snd_pcm_hw_params_set_period_size_near(alsa_pcm->handle, hwparams, &alsa_pcm->frames, &dir);
+  alsa_pcm->packet_size_msec = 1000 * (int)alsa_pcm->frames / param->samplerate;
+
+  int buf_size_req = alsa_pcm->frames * 2; // 40ms
+  snd_pcm_uframes_t buf_size = buf_size_req;
+  snd_pcm_hw_params_set_buffer_size_near(alsa_pcm->handle, hwparams, &buf_size);
+  alsa_pcm->buffer_delay = 1000 * (int)(buf_size + alsa_pcm->frames) / param->samplerate;
 
   ret = snd_pcm_hw_params(alsa_pcm->handle, hwparams);
   if (ret < 0) {
     return BX_SOUNDLOW_ERR;
   }
-  snd_pcm_hw_params_get_period_size(hwparams, &alsa_pcm->frames, &dir);
+  BX_DEBUG(("ALSA: period requested %d, set to %d samples", period_req, (int)alsa_pcm->frames));
+  BX_DEBUG(("ALSA: buffer requested %d, set to %d samples", buf_size_req, (int)buf_size));
   alsa_pcm->alsa_bufsize = alsa_pcm->frames * size;
-  BX_DEBUG(("ALSA: buffer size set to %d", alsa_pcm->alsa_bufsize));
   if (alsa_pcm->buffer != NULL) {
     free(alsa_pcm->buffer);
     alsa_pcm->buffer = NULL;
@@ -127,15 +139,28 @@ int alsa_pcm_open(bool mode, alsa_pcm_t *alsa_pcm, bx_pcm_param_t *param, logfun
 
 // bx_soundlow_waveout_alsa_c class implementation
 
+BX_MUTEX(waveout_mutex);
+
 bx_soundlow_waveout_alsa_c::bx_soundlow_waveout_alsa_c()
     :bx_soundlow_waveout_c()
 {
+  BX_INIT_MUTEX(waveout_mutex);
   alsa_waveout.handle = NULL;
   alsa_waveout.buffer = NULL;
 }
 
+bx_soundlow_waveout_alsa_c::~bx_soundlow_waveout_alsa_c()
+{
+  BX_FINI_MUTEX(waveout_mutex);
+}
+
 int bx_soundlow_waveout_alsa_c::openwaveoutput(const char *wavedev)
 {
+  if ((strlen(wavedev) == 0) || !strcmp(wavedev, "none")) {
+    alsa_waveout.device = "default";
+  } else {
+    alsa_waveout.device = wavedev;
+  }
   set_pcm_params(&real_pcm_param);
   pcm_callback_id = register_wave_callback(this, pcm_callback);
   start_resampler_thread();
@@ -145,29 +170,49 @@ int bx_soundlow_waveout_alsa_c::openwaveoutput(const char *wavedev)
 
 int bx_soundlow_waveout_alsa_c::set_pcm_params(bx_pcm_param_t *param)
 {
-  return alsa_pcm_open(0, &alsa_waveout, param, this);
+  BX_LOCK(waveout_mutex);
+  int ret = alsa_pcm_open(0, &alsa_waveout, param, this);
+  BX_UNLOCK(waveout_mutex);
+  return ret;
 }
 
-int bx_soundlow_waveout_alsa_c::get_packetsize()
+int bx_soundlow_waveout_alsa_c::get_packet_size_bytes()
 {
   return alsa_waveout.alsa_bufsize;
 }
 
+int bx_soundlow_waveout_alsa_c::get_packet_size_msec()
+{
+  return alsa_waveout.packet_size_msec;
+}
+
+int bx_soundlow_waveout_alsa_c::get_buffer_delay()
+{
+  return alsa_waveout.buffer_delay;
+}
+
 int bx_soundlow_waveout_alsa_c::output(int length, Bit8u data[])
 {
+  BX_LOCK(waveout_mutex);
   if (!alsa_waveout.handle || (length > alsa_waveout.alsa_bufsize)) {
+    BX_UNLOCK(waveout_mutex);
     return BX_SOUNDLOW_ERR;
   }
-  int ret = snd_pcm_writei(alsa_waveout.handle, data, alsa_waveout.frames);
-  if (ret == -EPIPE) {
-    /* EPIPE means underrun */
-    BX_ERROR(("ALSA: underrun occurred"));
-    snd_pcm_prepare(alsa_waveout.handle);
-  } else if (ret < 0) {
-    BX_ERROR(("ALSA: error from writei: %s", snd_strerror(ret)));
-  }  else if (ret != (int)alsa_waveout.frames) {
-    BX_ERROR(("ALSA: short write, write %d frames", ret));
+  for (int i = 0; i < 2; i++) {
+    int ret = snd_pcm_writei(alsa_waveout.handle, data, alsa_waveout.frames);
+    if (ret == -EPIPE) {
+      /* EPIPE means underrun */
+      BX_ERROR(("ALSA: underrun occurred"));
+      snd_pcm_prepare(alsa_waveout.handle);
+      continue;
+    } else if (ret < 0) {
+      BX_ERROR(("ALSA: error from writei: %s", snd_strerror(ret)));
+    } else if (ret != (int)alsa_waveout.frames) {
+      BX_ERROR(("ALSA: short write, write %d frames", ret));
+    }
+    break;
   }
+  BX_UNLOCK(waveout_mutex);
   return BX_SOUNDLOW_OK;
 }
 
@@ -201,6 +246,11 @@ bx_soundlow_wavein_alsa_c::~bx_soundlow_wavein_alsa_c()
 
 int bx_soundlow_wavein_alsa_c::openwaveinput(const char *wavedev, sound_record_handler_t rh)
 {
+  if ((strlen(wavedev) == 0) || !strcmp(wavedev, "none")) {
+    alsa_wavein.device = "default";
+  } else {
+    alsa_wavein.device = wavedev;
+  }
   record_handler = rh;
   if (rh != NULL) {
     record_timer_index = DEV_register_timer(this, record_timer_handler, 1, 1, 0, "wavein");
@@ -328,7 +378,7 @@ int bx_soundlow_midiout_alsa_c::alsa_seq_open(const char *alsadev)
   }
   port = atoi(ptr);
 
-  delete(mididev);
+  delete [] mididev;
 
   if (snd_seq_open(&alsa_seq.handle, "default", SND_SEQ_OPEN_OUTPUT, 0) < 0) {
     BX_ERROR(("Couldn't open ALSA sequencer for midi output"));

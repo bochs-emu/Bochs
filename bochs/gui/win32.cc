@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -82,6 +82,7 @@ IMPLEMENT_GUI_PLUGIN_CODE(win32)
 #define SCANCODE_BUFSIZE    20
 #define MOUSE_PRESSED       0x20000000
 #define TOOLBAR_CLICKED     0x08000000
+#define CMDMODE_EVENT       0x10000000
 #define MOUSE_MOTION        0x22000000
 #define FOCUS_CHANGED       0x44000000
 #define BX_SYSKEY           (KF_UP|KF_REPEAT|KF_ALTDOWN)
@@ -676,7 +677,9 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   }
 
   win32_nokeyrepeat = gui_opts.nokeyrepeat;
+#if BX_SHOW_IPS
   hideIPS = gui_opts.hide_ips;
+#endif
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
   if (bx_dbg.debugger_active && bx_dbg.debugger_gui) {
     if (gui_ci) {
@@ -1400,11 +1403,11 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
     if (bx_gui->command_mode_active()) {
       if (bx_gui->get_modifier_keys() == 0) {
         if (wParam == 'A') {
-          toolbar_cmd = 0; // Floppy A
+          toolbar_cmd = BX_TOOLBAR_FLOPPYA;
         } else if (wParam == 'B') {
-          toolbar_cmd = 1; // Floppy B
+          toolbar_cmd = BX_TOOLBAR_FLOPPYB;
         } else if (wParam == 'C') {
-          toolbar_cmd = 10; // Copy
+          toolbar_cmd = BX_TOOLBAR_COPY;
         } else if (wParam == 'F') {
           if (!saveParent) {
             set_fullscreen_mode(TRUE);
@@ -1416,21 +1419,21 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
         } else if (wParam == 'M') {
           bx_gui->marklog_handler();
         } else if (wParam == 'P') {
-          toolbar_cmd = 9; // Paste
+          toolbar_cmd = BX_TOOLBAR_PASTE;
         } else if (wParam == 'R') {
-          toolbar_cmd = 6; // Reset
+          toolbar_cmd = BX_TOOLBAR_RESET;
         } else if (wParam == 'S') {
-          toolbar_cmd = 8; // Snapshot
+          toolbar_cmd = BX_TOOLBAR_SNAPSHOT;
         } else if (wParam == 'U') {
-          toolbar_cmd = 11; // User
+          toolbar_cmd = BX_TOOLBAR_USER;
         }
       } else if (bx_gui->get_modifier_keys() == BX_MOD_KEY_SHIFT) {
         if (wParam == 'C') {
-          toolbar_cmd = 7; // Config
+          toolbar_cmd = BX_TOOLBAR_CONFIG;
         } else if (wParam == 'P') {
-          toolbar_cmd = 4; // Power
+          toolbar_cmd = BX_TOOLBAR_POWER;
         } else if (wParam == 'S') {
-          toolbar_cmd = 5; // Suspend
+          toolbar_cmd = BX_TOOLBAR_SAVE_RESTORE;
         }
       }
       if (!keymod) {
@@ -1439,7 +1442,7 @@ LRESULT CALLBACK simWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
       }
       if (toolbar_cmd >= 0) {
         EnterCriticalSection(&stInfo.keyCS);
-        enq_key_event((Bit32u)toolbar_cmd, TOOLBAR_CLICKED);
+        enq_key_event((Bit32u)toolbar_cmd, CMDMODE_EVENT);
         LeaveCriticalSection(&stInfo.keyCS);
         return 0;
       }
@@ -1687,6 +1690,40 @@ void bx_win32_gui_c::handle_events(void)
     }
     else if (key & TOOLBAR_CLICKED) {
       win32_toolbar_click(LOWORD(key));
+    }
+    else if (key & CMDMODE_EVENT) {
+      switch (LOWORD(key)) {
+        case BX_TOOLBAR_FLOPPYA:
+          floppyA_handler();
+          break;
+        case BX_TOOLBAR_FLOPPYB:
+          floppyB_handler();
+          break;
+        case BX_TOOLBAR_COPY:
+          copy_handler();
+          break;
+        case BX_TOOLBAR_PASTE:
+          paste_handler();
+          break;
+        case BX_TOOLBAR_RESET:
+          reset_handler();
+          break;
+        case BX_TOOLBAR_SNAPSHOT:
+          snapshot_handler();
+          break;
+        case BX_TOOLBAR_USER:
+          userbutton_handler();
+          break;
+        case BX_TOOLBAR_CONFIG:
+          config_handler();
+          break;
+        case BX_TOOLBAR_POWER:
+          power_handler();
+          break;
+        case BX_TOOLBAR_SAVE_RESTORE:
+          save_restore_handler();
+          break;
+      }
     }
     else {
       key_event = win32_to_bx_key[(key & 0x100) ? 1 : 0][key & 0xff];

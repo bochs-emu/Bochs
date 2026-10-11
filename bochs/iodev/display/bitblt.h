@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2017-2018  The Bochs Project
+//  Copyright (C) 2017-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -66,7 +66,7 @@ typedef void (*bx_bitblt_rop_t)(
     } \
   }
 
-#ifdef BX_USE_BINARY_ROP
+#ifdef BX_USE_BINARY_FWD_ROP
 IMPLEMENT_FORWARD_BITBLT(0, *dst = 0)
 IMPLEMENT_FORWARD_BITBLT(src_and_dst, *dst = (*src) & (*dst))
 IMPLEMENT_FORWARD_BITBLT(nop, (void)0)
@@ -83,7 +83,9 @@ IMPLEMENT_FORWARD_BITBLT(src_or_notdst, *dst = (*src) | (~(*dst)))
 IMPLEMENT_FORWARD_BITBLT(notsrc, *dst = (~(*src)))
 IMPLEMENT_FORWARD_BITBLT(notsrc_or_dst, *dst = (~(*src)) | (*dst))
 IMPLEMENT_FORWARD_BITBLT(notsrc_and_notdst, *dst = (~(*src)) & (~(*dst)))
+#endif
 
+#ifdef BX_USE_BINARY_BKWD_ROP
 IMPLEMENT_BACKWARD_BITBLT(0, *dst = 0)
 IMPLEMENT_BACKWARD_BITBLT(src_and_dst, *dst = (*src) & (*dst))
 IMPLEMENT_BACKWARD_BITBLT(nop, (void)0)

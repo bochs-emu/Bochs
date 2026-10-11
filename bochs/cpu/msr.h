@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2019-2025  The Bochs Project
+//  Copyright (C) 2019-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -22,24 +22,112 @@
 #ifndef BX_MSR_H
 #define BX_MSR_H
 
+class bx_list_c;
+
+// optional per-MSR value check, returns true if the value is valid (otherwise WRMSR causes #GP)
+typedef bool (*MSR_Valid_Value_Check)(Bit64u val);
+
 class MSR_Descriptor {
 private:
   const char *msrname;
   unsigned cpu_feature;
+  bool enabled;    // false if the MSR is not present in current cpu configuration
+  Bit64u reserved; // writing 1 to reserved bit causes #GP
+  Bit64u ignored;  // writes to ignored bits are ignored, the bits keep their previous value
 
 public:
-  MSR_Descriptor(const char *name, unsigned feature): msrname(name), cpu_feature(feature) {}
- ~MSR_Descriptor() {}
+  MSR_Descriptor(const char *name, unsigned feature, Bit64u reserved_bits = 0, Bit64u ignored_bits = 0): msrname(name), cpu_feature(feature), enabled(true), reserved(reserved_bits), ignored(ignored_bits) {}
+  virtual ~MSR_Descriptor() {}
 
   const char* get_name() const { return msrname; }
   unsigned get_cpu_feature() const { return cpu_feature; }
+  bool read_only() const { return ~reserved == 0; }
+
+  void disable() { enabled = false; }
+  bool is_enabled() const { return enabled; }
+
+  void set_reserved_bits(Bit64u reserved_bits) { reserved = reserved_bits; }
+  void set_read_only() { reserved = ~BX_CONST64(0); }
+
+  Bit64u get_reserved_bits() const { return reserved; }
+  bool check_reserved_bits_violation(Bit64u value) const { return value & reserved; }
+
+  Bit64u get_ignored_bits() const { return ignored; }
+  // ignored bits of the new value are replaced by their old value
+  Bit64u merge_ignored_bits(Bit64u new_val, Bit64u old_val) const { return (new_val & ~ignored) | (old_val & ignored); }
+
+  // generic MSR access interface, called by RDMSR/WRMSR after feature and reserved bits checks
+  // return false to signal #GP
+  virtual bool get(Bit64u *val) { return false; }
+  virtual bool set(Bit64u val) { return false; }
+
+  // called on every cpu reset, source is BX_RESET_HARDWARE or BX_RESET_SOFTWARE (INIT)
+  virtual void reset(unsigned source) {}
+
+  // MSR descriptors holding their own state register it for save/restore
+  virtual void register_state(bx_list_c *parent) {}
 };
 
 typedef MSR_Descriptor* MSR_DescriptorPtr;
 
+// read only MSR with constant value
+class ConstMSR : public MSR_Descriptor {
+private:
+  Bit64u value;
+
+public:
+  ConstMSR(const char *name, unsigned feature, Bit64u val): MSR_Descriptor(name, feature, ~BX_CONST64(0)), value(val) {}
+
+  virtual bool get(Bit64u *val) {
+    *val = value;
+    return true;
+  }
+};
+
+// write only MSR, read causes #GP, written value is not remembered
+class WriteOnlyMSR : public MSR_Descriptor {
+public:
+  WriteOnlyMSR(const char *name, unsigned feature, Bit64u reserved_bits = 0): MSR_Descriptor(name, feature, reserved_bits) {}
+
+  // get() is not overridden, read of write only MSR returns false (#GP)
+
+  virtual bool set(Bit64u val) {
+    return true;
+  }
+};
+
+// MSR which value is stored in Bit64u variable inside BX_CPU_C, accessed through a pointer
+class VarMSR : public MSR_Descriptor {
+private:
+  Bit64u *var;
+  MSR_Valid_Value_Check is_valid; // NULL - no extra validation
+
+public:
+  VarMSR(const char *name, unsigned feature, Bit64u *cpu_var, Bit64u reserved_bits = 0, MSR_Valid_Value_Check check = NULL, Bit64u ignored_bits = 0):
+     MSR_Descriptor(name, feature, reserved_bits, ignored_bits), var(cpu_var), is_valid(check) {}
+
+  virtual bool get(Bit64u *val) {
+    *val = *var;
+    return true;
+  }
+
+  virtual bool set(Bit64u val) {
+    val = merge_ignored_bits(val, *var);
+    if (is_valid && ! is_valid(val)) return false;
+    *var = val;
+    return true;
+  }
+};
+
 enum MSR_Register {
   BX_MSR_TSC            = 0x010,
+  BX_MSR_PLATFORM_ID    = 0x017,
   BX_MSR_APICBASE       = 0x01b,
+
+#if BX_SUPPORT_X86_64
+  BX_MSR_IA32_USER_MSR_CTL = 0x01c,
+#endif
+
   BX_MSR_TSC_ADJUST     = 0x03b,
   BX_MSR_TSC_DEADLINE   = 0x6e0,
 
@@ -53,6 +141,9 @@ enum MSR_Register {
   BX_MSR_IA32_ARCH_CAPABILITIES = 0x10a,
   BX_MSR_IA32_FLUSH_CMD         = 0x10b,
 
+  BX_MSR_IA32_MPERF = 0xe7,
+  BX_MSR_IA32_APERF = 0xe8,
+
 #if BX_CPU_LEVEL >= 6
   BX_MSR_SYSENTER_CS  = 0x174,
   BX_MSR_SYSENTER_ESP = 0x175,
@@ -61,6 +152,18 @@ enum MSR_Register {
 
   BX_MSR_IA32_XFD = 0x1c4,
   BX_MSR_IA32_XFD_ERROR = 0x1c5,
+
+#if BX_SUPPORT_X86_64
+  BX_MSR_IA32_FRED_RSP0    = 0x1cc,
+  BX_MSR_IA32_FRED_RSP1    = 0x1cd,
+  BX_MSR_IA32_FRED_RSP2    = 0x1ce,
+  BX_MSR_IA32_FRED_RSP3    = 0x1cf,
+  BX_MSR_IA32_FRED_STKLVLS = 0x1d0,
+  BX_MSR_IA32_FRED_SSP1    = 0x1d1,
+  BX_MSR_IA32_FRED_SSP2    = 0x1d2,
+  BX_MSR_IA32_FRED_SSP3    = 0x1d3,
+  BX_MSR_IA32_FRED_CONFIG  = 0x1d4,
+#endif
 
   BX_MSR_DEBUGCTLMSR      = 0x1d9,
   BX_MSR_LASTBRANCHFROMIP = 0x1db,
@@ -169,8 +272,10 @@ enum MSR_Register {
   BX_MSR_IA32_UINTR_MISC = 0x988,
   BX_MSR_IA32_UINTR_PD = 0x989, // interface to UPID_ADDR
   BX_MSR_IA32_UINTR_TT = 0x98A, // interface to UITT_ADDR
+#endif
 
-  BX_MSR_IA32_UINTR_TIMER = 0x1B00, // for User Timer feature (not implemented yet)
+#if BX_SUPPORT_MPX
+  BX_MSR_BNDCFGS = 0xD90,
 #endif
 
   BX_MSR_XSS = 0xDA0,

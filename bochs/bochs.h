@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -147,6 +147,7 @@ int  bx_write_usb_options(FILE *fp, int maxports, bx_list_c *base);
 #endif
 
 Bit32u crc32(const Bit8u *buf, int len);
+Bit32u crc32_extend(Bit32u seed_crc, const Bit8u *buf, int len);
 
 // used to print param tree from debugger
 void print_tree(bx_param_c *node, int level = 0, bool xml = false);
@@ -327,7 +328,7 @@ typedef struct {
 } bx_debug_t;
 
 #if BX_SHOW_IPS
-BOCHSAPI_MSVCONLY void bx_show_ips_handler(void);
+BOCHSAPI void bx_show_ips_handler(void);
 #endif
 void CDECL bx_signal_handler(int signum);
 BOCHSAPI_MSVCONLY int bx_atexit(void);
@@ -358,6 +359,12 @@ enum {
   BX_SHADOW_STACK_INVALID = 6,  // can't execute shadow stack
   BX_SHADOW_STACK_RW      = 7,
 #endif
+  // implicit supervisor-mode access to system data structure (GDT, LDT, IDT, TSS, UPID ...),
+  // supervisor-mode access regardless of CPL and RFLAGS.AC; accepted by access_read_linear,
+  // access_write_linear and translate_linear (page walk code must test access type using bits:
+  // rw & 1 for write, rw & 4 for shadow stack, never compare rw == BX_READ or rw == BX_WRITE)
+  BX_IMPLICIT_SUPERVISOR_READ  = 8,
+  BX_IMPLICIT_SUPERVISOR_WRITE = 9
 };
 
 // types of reset

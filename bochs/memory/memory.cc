@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2020  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,9 @@
 
 #include "bochs.h"
 #include "cpu/cpu.h"
+#include "cpu/icache.h"
 #include "iodev/iodev.h"
+#include "pc_system.h"
 #define LOG_THIS BX_MEM_THIS
 
 //
@@ -40,6 +42,7 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
 {
   Bit8u *data_ptr;
   bx_phy_address a20addr = A20ADDR(addr);
+
   struct memory_handler_struct *memory_handler = NULL;
 
   // Note: accesses should always be contained within a single page
@@ -48,6 +51,7 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
   }
 
 #if BX_SUPPORT_MONITOR_MWAIT
+  // MWAIT monitors physical pages - must use a20addr, not post-PCI-hole linear_addr
   BX_MEM_THIS check_monitor(a20addr, len);
 #endif
 
@@ -84,8 +88,13 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
 
 mem_write:
 
-  // all memory access fits in single 4K page
-  if ((a20addr < BX_MEM_THIS len) && !is_bios) {
+  // all memory access fits in single 4K page - use translated linear address
+  if ((bx_translate_gpa_to_linear(a20addr) < BX_MEM_THIS len) && !is_bios) {
+    // Check if address is in PCI hole - do not access RAM backing store!
+    if (bx_is_pci_hole_addr(a20addr)) {
+      return;
+    }
+
     // all of data is within limits of physical memory
     if (a20addr < 0x000a0000 || a20addr >= 0x00100000)
     {
@@ -178,6 +187,7 @@ void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
 {
   Bit8u *data_ptr;
   bx_phy_address a20addr = A20ADDR(addr);
+
   struct memory_handler_struct *memory_handler = NULL;
 
   // Note: accesses should always be contained within a single page
@@ -209,14 +219,32 @@ void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
           memory_handler->end >= a20addr &&
           memory_handler->read_handler(a20addr, len, data, memory_handler->param))
     {
-      return;
+#if BX_SUPPORT_PCI
+      if (BX_MEM_THIS pci_enabled && ((a20addr & 0xfffc0000) == 0x000c0000)) {
+        unsigned area = (unsigned)(a20addr >> 14) & 0x0f;
+        if (area > BX_MEM_AREA_F0000) area = BX_MEM_AREA_F0000;
+        if (BX_MEM_THIS memory_type[area][0] == 0) { // Read from ROM
+          return;
+        }
+      } else
+#endif
+      {
+        return;
+      }
     }
     memory_handler = memory_handler->next;
   }
 
 mem_read:
 
-  if ((a20addr < BX_MEM_THIS len) && !is_bios) {
+  // Use translated linear address for bounds check
+  if ((bx_translate_gpa_to_linear(a20addr) < BX_MEM_THIS len) && !is_bios) {
+    // Check if address is in PCI hole - do not access RAM backing store!
+    if (bx_is_pci_hole_addr(a20addr)) {
+      memset(data, 0xff, len);
+      return;
+    }
+
     // all of data is within limits of physical memory
     if (a20addr < 0x000a0000 || a20addr >= 0x00100000)
     {
@@ -349,7 +377,8 @@ void BX_MEM_C::dmaWritePhysicalPage(bx_phy_address addr, unsigned len, Bit8u *da
 
   Bit8u *memptr = getHostMemAddr(NULL, addr, BX_WRITE);
   if (memptr != NULL) {
-    pageWriteStampTable.decWriteStamp(addr);
+    bx_phy_address a20addr = A20ADDR(addr);
+    pageWriteStampTable.decWriteStamp(a20addr);
     memcpy(memptr, data, len);
   }
   else {

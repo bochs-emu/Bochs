@@ -58,6 +58,7 @@ bx_define_cpudb(corei7_icelake_u)
 bx_define_cpudb(tigerlake)
 bx_define_cpudb(sapphire_rapids)
 bx_define_cpudb(arrow_lake)
+bx_define_cpudb(wildcat_lake)
 #endif
 #endif
 #endif

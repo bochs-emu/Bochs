@@ -5,7 +5,7 @@
 /*
  *  PCIDEV: PCI host device mapping
  *  Copyright (C) 2003       Frank Cornelis
- *  Copyright (C) 2003-2021  The Bochs Project
+ *  Copyright (C) 2003-2026  The Bochs Project
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -434,9 +434,9 @@ void bx_pcidev_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
           pcidev_mem_write_handler,
           &BX_PCIDEV_THIS regions[io_reg_idx].start,
           (Bit8u*)&BX_PCIDEV_THIS regions[io_reg_idx].config_value,
-          BX_PCIDEV_THIS regions[io_reg_idx].size)) {
-            BX_INFO(("new base #%d memory address: 0x%08x", io_reg_idx,
-                     BX_PCIDEV_THIS regions[io_reg_idx].start));
+          BX_PCIDEV_THIS regions[io_reg_idx].size, true)) {
+        BX_INFO(("new base #%d memory address: 0x%08x", io_reg_idx,
+                 BX_PCIDEV_THIS regions[io_reg_idx].start));
       }
     } else {
       /*
@@ -448,7 +448,7 @@ void bx_pcidev_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len
             read_handler, write_handler,
             &BX_PCIDEV_THIS regions[io_reg_idx].start,
             (Bit8u*)&BX_PCIDEV_THIS regions[io_reg_idx].config_value,
-            BX_PCIDEV_THIS regions[io_reg_idx].size, iomask, "pcidev")) {
+            BX_PCIDEV_THIS regions[io_reg_idx].size, iomask, "pcidev", true)) {
         BX_INFO(("new base #%d i/o address: 0x%04x", io_reg_idx,
                  (Bit16u)BX_PCIDEV_THIS regions[io_reg_idx].start));
       }

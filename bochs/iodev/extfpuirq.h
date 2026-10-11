@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -32,12 +32,14 @@
 #endif
 
 
-class bx_extfpuirq_c : public bx_devmodel_c {
+class bx_extfpuirq_c : public bx_efirq_stub_c {
 public:
   bx_extfpuirq_c();
   virtual ~bx_extfpuirq_c();
   virtual void   init(void);
   virtual void   reset(unsigned type);
+  virtual void   set_enabled(bool val) {enabled = val;}
+  virtual void   set_fpu_error(bool val);
 
 private:
 
@@ -45,6 +47,9 @@ private:
 #if !BX_USE_EFI_SMF
   void   write(Bit32u address, Bit32u value, unsigned io_len);
 #endif
+
+  bool enabled;
+  bool FERR;
 };
 
 #endif

@@ -3,7 +3,7 @@
 /////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (C) 2009-2023  Benjamin D Lunt (fys [at] fysnet [dot] net)
-//                2009-2023  The Bochs Project
+//                2009-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -44,7 +44,7 @@ private:
   int rt_conf_id;
 
   void init_device(Bit8u port, bx_list_c *portconf);
-  static void remove_device(Bit8u port);
+  void remove_device(Bit8u port);
 
   static void runtime_config_handler(void *);
   void runtime_config(void);

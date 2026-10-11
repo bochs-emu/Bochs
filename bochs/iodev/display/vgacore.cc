@@ -154,6 +154,7 @@ void bx_vgacore_c::init_standard_vga(void)
   BX_VGA_THIS s.sequencer.extended_mem = 1; // display mem greater than 64K
   BX_VGA_THIS s.sequencer.odd_even_dis = 1; // use sequential addressing mode
 
+  BX_VGA_THIS s.CRTC.max_reg = 0x18;
   BX_VGA_THIS s.dac_shift = 2;
   BX_VGA_THIS s.last_bpp = 8;
   BX_VGA_THIS s.vclk[0] = 25175000;
@@ -204,34 +205,34 @@ void bx_vgacore_c::init_gui(void)
   }
 }
 
-void bx_vgacore_c::init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t f_write)
+void bx_vgacore_c::init_iohandlers(bx_read_handler_t f_read, bx_write_handler_t f_write, const char *name)
 {
   unsigned addr, i;
   Bit8u io_mask[16] = {3, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 3, 1};
   for (addr=0x03B4; addr<=0x03B5; addr++) {
-    DEV_register_ioread_handler(this, f_read, addr, "vga video", 1);
-    DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
+    DEV_register_ioread_handler(this, f_read, addr, name, 1);
+    DEV_register_iowrite_handler(this, f_write, addr, name, 3);
   }
 
   for (addr=0x03BA; addr<=0x03BA; addr++) {
-    DEV_register_ioread_handler(this, f_read, addr, "vga video", 1);
-    DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
+    DEV_register_ioread_handler(this, f_read, addr, name, 1);
+    DEV_register_iowrite_handler(this, f_write, addr, name, 3);
   }
 
   i = 0;
   for (addr=0x03C0; addr<=0x03CF; addr++) {
-    DEV_register_ioread_handler(this, f_read, addr, "vga video", io_mask[i++]);
-    DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
+    DEV_register_ioread_handler(this, f_read, addr, name, io_mask[i++]);
+    DEV_register_iowrite_handler(this, f_write, addr, name, 3);
   }
 
   for (addr=0x03D4; addr<=0x03D5; addr++) {
-    DEV_register_ioread_handler(this, f_read, addr, "vga video", 3);
-    DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
+    DEV_register_ioread_handler(this, f_read, addr, name, 3);
+    DEV_register_iowrite_handler(this, f_write, addr, name, 3);
   }
 
   for (addr=0x03DA; addr<=0x03DA; addr++) {
-    DEV_register_ioread_handler(this, f_read, addr, "vga video", 3);
-    DEV_register_iowrite_handler(this, f_write, addr, "vga video", 3);
+    DEV_register_ioread_handler(this, f_read, addr, name, 3);
+    DEV_register_iowrite_handler(this, f_write, addr, name, 3);
   }
 }
 
@@ -526,8 +527,9 @@ Bit32u bx_vgacore_c::read(Bit32u address, unsigned io_len)
 
       /* reading this port resets the flip-flop to address mode */
       BX_VGA_THIS s.attribute_ctrl.flip_flop = 0;
-      RETURN(retval);
-      break;
+      /* enabling this can flood the log file */
+//      BX_DEBUG(("read from 0x%04x = 0x%02x", address, ret));
+      return retval;
 
     case 0x03c0: /* */
       if (BX_VGA_THIS s.attribute_ctrl.flip_flop == 0) {
@@ -1091,7 +1093,7 @@ void bx_vgacore_c::write(Bit32u address, Bit32u value, unsigned io_len, bool no_
     case 0x03b4: /* CRTC Index Register (monochrome emulation modes) */
     case 0x03d4: /* CRTC Index Register (color emulation modes) */
       BX_VGA_THIS s.CRTC.address = value & 0x3f;
-      if (BX_VGA_THIS s.CRTC.address > 0x18)
+      if (BX_VGA_THIS s.CRTC.address > BX_VGA_THIS s.CRTC.max_reg)
         BX_DEBUG(("write: invalid CRTC register 0x%02x selected",
           (unsigned) BX_VGA_THIS s.CRTC.address));
       break;
@@ -1347,6 +1349,7 @@ void bx_vgacore_c::update(void)
       cs_visible = 0;
     }
   }
+  bx_gui->start_update();
 
   // fields that effect the way video memory is serialized into screen output:
   // GRAPHICS CONTROLLER:
@@ -1880,6 +1883,9 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
   }
 
   offset += BX_VGA_THIS s.ext_offset;
+  if (((offset << 2) + 3) >= BX_VGA_THIS s.memsize) {
+    return; // out of bounds
+  }
 
   switch (BX_VGA_THIS s.graphics_ctrl.write_mode) {
     unsigned i;
@@ -2393,19 +2399,18 @@ void bx_vgacore_c::redraw_area(unsigned x0, unsigned y0, unsigned width, unsigne
   }
 }
 
-void bx_vgacore_c::refresh_display(void *this_ptr, bool redraw)
+void bx_vgacore_c::refresh_display(bool redraw)
 {
-  bx_vgacore_c *vgadev = (bx_vgacore_c *) this_ptr;
 #if BX_SUPPORT_PCI
-  if (vgadev->s.vga_override && (vgadev->s.nvgadev != NULL)) {
-    vgadev->s.nvgadev->refresh_display(vgadev->s.nvgadev, redraw);
+  if (BX_VGA_THIS s.vga_override && (BX_VGA_THIS s.nvgadev != NULL)) {
+    BX_VGA_THIS s.nvgadev->refresh_display(redraw);
     return;
   }
 #endif
   if (redraw) {
-    vga_redraw_area(0, 0, vgadev->s.last_xres, vgadev->s.last_yres);
+    vga_redraw_area(0, 0, BX_VGA_THIS s.last_xres, BX_VGA_THIS s.last_yres);
   }
-  vga_timer_handler(vgadev);
+  vga_timer_handler(BX_VGA_THIS_PTR);
 }
 
 void bx_vgacore_c::vga_timer_handler(void *this_ptr)

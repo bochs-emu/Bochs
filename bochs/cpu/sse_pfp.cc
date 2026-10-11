@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2023 Stanislav Shwartsman
+//   Copyright (c) 2003-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -66,6 +66,21 @@ softfloat_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr)
   return status;
 }
 
+// AVX512_FP16 instructions ignore MXCSR.DAZ for FP16 inputs and MXCSR.FUZ for FP16 outputs
+softfloat_status_t mxcsr_to_softfloat_status_word_fp16(bx_mxcsr_t mxcsr)
+{
+  softfloat_status_t status;
+
+  status.softfloat_exceptionFlags = 0; // clear exceptions before execution
+  status.softfloat_roundingMode = mxcsr.get_rounding_mode();
+  status.softfloat_flush_underflow_to_zero = 0; // ignore MXCSR.FUZ
+  status.softfloat_exceptionMasks = mxcsr.get_exceptions_masks();
+  status.softfloat_suppressException = 0;
+  status.softfloat_denormals_are_zeros = 0; // ignore MXCSR.DAZ
+
+  return status;
+}
+
 void mxcsr_to_softfloat_status_word_imm_override(softfloat_status_t &status, Bit8u control)
 {
   // override MXCSR rounding mode with control coming from imm8
@@ -81,7 +96,7 @@ void mxcsr_to_softfloat_status_word_imm_override(softfloat_status_t &status, Bit
 void softfloat_status_word_rc_override(softfloat_status_t &status, bxInstruction_c *i)
 {
   /* must be VL512 otherwise EVEX.LL encodes vector length */
-  if (i->modC0() && i->getEvexb() && ((i->getVL() == BX_VL512) || (!i->getEvexU() && (i->getVL() == BX_VL256)))) {
+  if (i->modC0() && i->getEvexb() && (i->getVL() == BX_VL512)) {
     status.softfloat_roundingMode = i->getRC();
     status.softfloat_suppressException = softfloat_all_exceptions_mask;
     status.softfloat_exceptionMasks = softfloat_all_exceptions_mask;
@@ -1196,8 +1211,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPS_VpsWpsIbR(bxInstruction_c *i)
   xmm_shufpd(&op1, &op2, &op2, 0x1);
 
   // op2 = [(BF+AE)+(DH+CG), (AE+BF)+(CG+DH), (DH+CG)+(BF+AE), (CG+DH)+(AE+BF)]
-  xmm_addps_mask(&op2, &op1, status, mask);
+  xmm_addps(&op2, &op1, status);
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
+
+  // zero elements not selected by broadcast mask
+  xmm_zero_blendps(&op2, &op2, mask);
 
   BX_WRITE_XMM_REG(i->dst(), op2);
 
@@ -1228,8 +1246,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DPPD_VpdHpdWpdIbR(bxInstruction_c *i)
   xmm_shufpd(&op2, &op1, &op1, 0x1);
 
   // op1 = [AC+BD, BD+AC]
-  xmm_addpd_mask(&op1, &op2, status, mask);
+  xmm_addpd(&op1, &op2, status);
   check_exceptionsSSE(softfloat_getExceptionFlags(&status));
+
+  // zero elements not selected by broadcast mask
+  xmm_zero_blendpd(&op1, &op1, mask);
 
   BX_WRITE_XMM_REGZ(i->dst(), op1, i->getVL());
 

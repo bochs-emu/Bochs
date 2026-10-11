@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2023 Stanislav Shwartsman
+//   Copyright (c) 2011-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -31,6 +31,7 @@
 #include "softfloat3e/include/softfloat.h"
 
 extern softfloat_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
+extern softfloat_status_t mxcsr_to_softfloat_status_word_fp16(bx_mxcsr_t mxcsr);
 
 #include "simd_pfp.h"
 
@@ -93,7 +94,7 @@ AVX2_FMA_SCALAR_DOUBLE(VFNMSUBSD_VpdHsdWsdR, f64_fnmsub)
     float16 op2 = BX_READ_XMM_REG_LO_WORD(i->src2());                         \
     float16 op3 = BX_READ_XMM_REG_LO_WORD(i->src3());                         \
                                                                               \
-    softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);        \
+    softfloat_status_t status = mxcsr_to_softfloat_status_word_fp16(MXCSR);   \
     softfloat_status_word_rc_override(status, i);                             \
     op1 = (func)(op1, op2, op3, &status);                                     \
     check_exceptionsSSE(softfloat_getExceptionFlags(&status));                \

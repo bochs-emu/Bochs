@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2023  The Bochs Project
+//  Copyright (C) 2001-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -27,6 +27,7 @@
 typedef enum {
   LOGLEV_DEBUG = 0,
   LOGLEV_INFO,
+  LOGLEV_WARN,
   LOGLEV_ERROR,
   LOGLEV_PANIC,
   N_LOGLEV
@@ -56,10 +57,11 @@ public:
   logfunctions(class iofunctions *);
   virtual ~logfunctions(void);
 
+  void ldebug(const char *fmt, ...) BX_CPP_AttrPrintf(2, 3);
   void info(const char *fmt, ...)   BX_CPP_AttrPrintf(2, 3);
+  void lwarn(const char *fmt, ...)   BX_CPP_AttrPrintf(2, 3);
   void error(const char *fmt, ...)  BX_CPP_AttrPrintf(2, 3);
   void panic(const char *fmt, ...)  BX_CPP_AttrPrintf(2, 3);
-  void ldebug(const char *fmt, ...) BX_CPP_AttrPrintf(2, 3);
   void fatal1(const char *fmt, ...) BX_CPP_AttrPrintf(2, 3);
   void fatal(int level, const char *prefix, const char *fmt, va_list ap, int exit_status);
   void warn(int level, const char *prefix, const char *fmt, va_list ap);
@@ -139,8 +141,9 @@ typedef class iofunctions iofunc_t;
 
 #if BX_NO_LOGGING
 
-#define BX_INFO(x)
 #define BX_DEBUG(x)
+#define BX_INFO(x)
+#define BX_WARN(x)
 #define BX_ERROR(x)
 #define BX_PANIC(x) (LOG_THIS panic) x
 #define BX_FATAL(x) (LOG_THIS fatal1) x
@@ -149,8 +152,9 @@ typedef class iofunctions iofunc_t;
 
 #else
 
-#define BX_INFO(x)  (LOG_THIS info) x
 #define BX_DEBUG(x) (LOG_THIS ldebug) x
+#define BX_INFO(x)  (LOG_THIS info) x
+#define BX_WARN(x)  (LOG_THIS lwarn) x
 #define BX_ERROR(x) (LOG_THIS error) x
 #define BX_PANIC(x) (LOG_THIS panic) x
 #define BX_FATAL(x) (LOG_THIS fatal1) x

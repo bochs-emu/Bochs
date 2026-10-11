@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -954,7 +954,7 @@ Bit16u cdrom_boot();
 
 // static char bios_svn_version_string[] = "$Revision$ $Date$";
 
-#define BIOS_COPYRIGHT_STRING "(c) 2001-2025  The Bochs Project"
+#define BIOS_COPYRIGHT_STRING "(c) 2001-2026  The Bochs Project"
 
 #if DEBUG_ATA
 #  define BX_DEBUG_ATA(a...) BX_DEBUG(a)
@@ -5530,9 +5530,9 @@ int13_edd(DS, SI, device)
 
     if (type == ATA_TYPE_ATAPI)
     {
-      npc     = 0xffffffff;
-      nph     = 0xffffffff;
-      npspt   = 0xffffffff;
+      npc     = 0xffff;
+      nph     = 0xffff;
+      npspt   = 0xffff;
       lba_low = 0xffffffff;
       lba_high = 0xffffffff;
 
@@ -5688,7 +5688,7 @@ int13_harddisk(DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
   Bit32u lba_low, lba_high;
   Bit16u cylinder, head, sector;
   Bit16u segment, offset;
-  Bit16u npc, nph, npspt, nlc, nlh, nlspt;
+  Bit16u nph, npspt, nlc, nlh, nlspt;
   Bit16u size, count;
   Bit8u  device, status;
 
@@ -5718,6 +5718,7 @@ int13_harddisk(DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
   switch (GET_AH()) {
 
     case 0x00: /* disk controller reset */
+    case 0x0D: /* disk controller reset */
       ata_reset (device);
       goto int13_success;
       break;
@@ -5931,7 +5932,6 @@ int13_harddisk(DS, ES, DI, SI, BP, ELDX, BX, DX, CX, AX, IP, CS, FLAGS)
 
     case 0x09: /* initialize drive parameters */
     case 0x0c: /* seek to specified cylinder */
-    case 0x0d: /* alternate disk reset */
     case 0x11: /* recalibrate */
     case 0x14: /* controller internal diagnostic */
       BX_INFO("int13_harddisk: function %02xh unimplemented, returns success\n", GET_AH());
@@ -7271,10 +7271,13 @@ floppy_media_sense(drive)
   // Changed if-else to switch
   switch(drive_type) {
     case 1:    // 360K 5.25" drive
+      config_data = 0x00; // 0000 0000
+      media_state = 0x35; // 0011 0101
+      retval = 1;
+      break;
     case 2:    // 1.2 MB 5.25" drive
       config_data = 0x00; // 0000 0000
-      /* 1.2 MB 5.25" drive: media_state - need double stepping??? (bit 5) */
-      media_state = 0x25; // 0010 0101
+      media_state = 0x15; // 0001 0101
       retval = 1;
       break;
     case 3:    // 720K 3.5" drive
@@ -7294,7 +7297,7 @@ floppy_media_sense(drive)
     case 7:    // 180k 5.25" drive
     case 8:    // 320k 5.25" drive
       config_data = 0x00; // 0000 0000
-      media_state = 0x27; // 0010 0111
+      media_state = 0x37; // 0011 0111
       retval = 1;
       break;
     default:   // not recognized
@@ -10188,7 +10191,6 @@ pci_real_select_reg:
   pop dx
   ret
 
-#if BX_ROMBIOS32
 pci_set_pam_regs_ro:
   xor  bx, bx
   mov  di, #0x5a
@@ -10205,7 +10207,6 @@ pci_next_pam_reg:
   cmp  di, #0x5e
   jne pci_set_pam_regs_loop
   ret
-#endif
 
 .align 16
 pci_routing_table_structure:
@@ -10317,6 +10318,58 @@ pcibios_init_sel_reg:
   pop eax
   ret
 
+pcibios_init_vgarom:
+  push bx
+  mov  ecx, eax
+  xor  bx, bx
+  mov  dl, #0x58
+  call pcibios_init_sel_reg
+  mov  dx, #0x0cfe
+  in   ax, dx
+  mov  al, #0x22
+  cmp  ecx, #0x8000
+  jbe  set_pam1
+  mov  ah, #0x22
+set_pam1:
+  out  dx, ax
+  pop  bx
+  mov  dl, #0x30
+  call pcibios_init_sel_reg
+  mov  dx, #0x0cfc
+  mov  eax, #0x000c0001
+  out  dx, eax
+  push ds
+  mov  ax, #0xc000
+  mov  ds, ax
+  mov  es, ax
+  xor  si, si
+  xor  di, di
+  push ecx
+  shr  ecx, #1
+  rep
+    movsw
+  pop  ecx
+  pop  ds
+  push bx
+  xor  bx, bx
+  mov  dl, #0x58
+  call pcibios_init_sel_reg
+  mov  dx, #0x0cfe
+  in   ax, dx
+  or   al, #0x11
+  cmp  ecx, #0x8000
+  jbe  set_pam2
+  or   ah, #0x11
+set_pam2:
+  out  dx, ax
+  pop  bx
+  mov  dl, #0x30
+  call pcibios_init_sel_reg
+  mov  dx, #0x0cfc
+  xor  eax, eax
+  out  dx, eax
+  ret
+
 pcibios_init_iomem_bases:
   push bp
   mov  bp, sp
@@ -10391,6 +10444,25 @@ enable_iomem_space:
   in   al, dx
   or   al, #0x03
   out  dx, al
+  mov  dl, #0x0a ;; check class code
+  call pcibios_init_sel_reg
+  mov  dx, #0x0cfe
+  in   ax, dx
+  cmp  ax, #0x0300 ;; class VGA
+  jne  next_pci_dev
+  mov  dl, #0x30
+  call pcibios_init_sel_reg
+  in   eax, dx
+  mov  ecx, eax
+  mov  dx, #0x0cfc
+  mov  eax, #0xfffffffe
+  out  dx, eax
+  in   eax, dx
+  cmp  eax, ecx
+  je   next_pci_dev
+  xor  eax, #0xffffffff
+  inc  eax
+  call pcibios_init_vgarom
 next_pci_dev:
   mov  byte ptr[bp-8], #0x10
   inc  bx
@@ -10437,6 +10509,11 @@ pcibios_init_irqs:
   in   ax, dx
   cmp  ax, [si+12] ;; check irq router
   jne  pci_init_end
+  mov  dl, #0x4c
+  call pcibios_init_sel_reg
+  mov  dx, #0x0cfe
+  mov  al, #0x23 ;; enable coprocessor error function
+  out  dx, al
   mov  dl, [si+34]
   call pcibios_init_sel_reg
   push bx ;; save irq router bus + devfunc
@@ -11314,9 +11391,7 @@ vga_init_ok:
   mov  cx, #0xc800  ;; init option roms
   mov  ax, #0xe000
   call rom_scan
-#if BX_ROMBIOS32
   call pci_set_pam_regs_ro
-#endif
 
 #if BX_ELTORITO_BOOT
   call _interactive_bootkey

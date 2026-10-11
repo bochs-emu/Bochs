@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2013-2019 Stanislav Shwartsman
+//   Copyright (c) 2013-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -308,6 +308,7 @@ char *resolve_memsize(char *disbufptr, const bxInstruction_c *i, unsigned src_in
 
     case BX_GPR64:
     case BX_MMX_REG:
+    case BX_BOUND_REG:
 #if BX_SUPPORT_EVEX
     case BX_KMASK_REG:
 #endif
@@ -411,6 +412,10 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
     break;
 #endif
 
+  case BX_BOUND_REG:
+    disbufptr = dis_sprintf(disbufptr, "b%d", srcreg);
+    break;
+
   case BX_FPU_REG:
     disbufptr = dis_sprintf(disbufptr, "st(%d)", srcreg & 0x7);
     break;
@@ -461,6 +466,10 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
 
   case BX_TMM_REG:
     disbufptr = dis_sprintf(disbufptr, "tmm%d", srcreg);
+    break;
+
+  case BX_BSR_REG:
+    disbufptr = dis_sprintf(disbufptr, "bsr%d", srcreg);
     break;
 
   case BX_SEGREG:
@@ -599,8 +608,8 @@ char *disasm_branch_target(char *disbufptr, const bxInstruction_c *i, unsigned s
   const char *sym = "";
 
   switch(src_type) {
-  case BX_IMMW:
-  case BX_IMMBW_SE: // 8-bit signed value sign extended to 16-bit size
+  case BX_JIMMW:
+  case BX_JIMMBW_SE: // 8-bit signed value sign extended to 16-bit size
     imm16 = (Bit16s) i->Iw();
     target = (rip + i->ilen() + imm16) & 0xffff; // do not add CS_BASE in 16-bit
     sym = GET_SYMBOL(target);
@@ -613,8 +622,8 @@ char *disasm_branch_target(char *disbufptr, const bxInstruction_c *i, unsigned s
     }
     break;
 
-  case BX_IMMD:
-  case BX_IMMBD_SE: // 8-bit signed value sign extended to 32-bit size
+  case BX_JIMMD:
+  case BX_JIMMBD_SE: // 8-bit signed value sign extended to 32-bit size
     imm32 = (Bit32s) i->Id();
     target = rip + i->ilen() + (Bit32s) i->Id();
     target = (cs_base != BX_JUMP_TARGET_NOT_REQ) ? bx_address(cs_base + target) : target;
@@ -759,6 +768,9 @@ char* disasm_source(char *disbufptr, unsigned n, bool srcs_used, const bxInstruc
   unsigned src_type = BX_DISASM_SRC_TYPE(src);
   unsigned src_index = BX_DISASM_SRC_ORIGIN(src);
 
+  // type==0 covers both "no operand" (OP_NONE) and "register value not
+  // shown" (e.g. OP_NNN, used by SIDT/SLDT/STR to feed nnn into dst()
+  // without printing it) -- both are 0 by design.
   if (! src_type && src_index != BX_SRC_RM && src_index != BX_SRC_VECTOR_RM) return disbufptr;
 
   if (srcs_used) disbufptr = dis_sprintf(disbufptr, ", ");
@@ -774,17 +786,19 @@ char* disasm_source(char *disbufptr, unsigned n, bool srcs_used, const bxInstruc
   else {
     if (src_index == BX_SRC_VECTOR_RM) src_type = BX_VMM_REG;
 
-    if (src_index == BX_SRC_IMM) {
-      // this is immediate value
-      disbufptr = disasm_immediate(disbufptr, i, src_type, style);
-    }
-    else if (src_index == BX_SRC_BRANCH_OFFSET) {
-      // this is immediate value used as branch target
-      disbufptr = disasm_branch_target(disbufptr, i, src_type, cs_base, rip, style);
-    }
-    else if (src_index == BX_SRC_IMPLICIT) {
-      // this is implicit register or memory reference
-      disbufptr = disasm_implicit_src(disbufptr, i, src_type, style);
+    if (src_index == BX_SRC_NONE) {
+      if (src_type <= BX_DIRECT_MEMREF_Q) {
+        // this is immediate value
+        disbufptr = disasm_immediate(disbufptr, i, src_type, style);
+      }
+      else if (src_type <= BX_JIMMD) {
+        // this is immediate value used as branch target
+        disbufptr = disasm_branch_target(disbufptr, i, src_type, cs_base, rip, style);
+      }
+      else {
+        // this is implicit register or memory reference
+        disbufptr = disasm_implicit_src(disbufptr, i, src_type, style);
+      }
     }
     else {
       // this is register reference

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2014-2018 Stanislav Shwartsman
+//   Copyright (c) 2014-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -8234,6 +8234,7 @@ static const Bit16u rcp14_table[65536] = {
 #include "softfloat3e/include/softfloat.h"
 
 extern softfloat_status_t mxcsr_to_softfloat_status_word(bx_mxcsr_t mxcsr);
+extern softfloat_status_t mxcsr_to_softfloat_status_word_fp16(bx_mxcsr_t mxcsr);
 
 #include "fpu/softfloat-specialize.h"
 #include "simd_int.h"
@@ -8319,15 +8320,19 @@ float16 approximate_rcp14(float16 op, const softfloat_status_t &status)
     if (softfloat_flushUnderflowToZero(&status))
       return packFloat16(sign, 0, 0);
 
-    fraction32 >>= (1 - exp); // make denormal result, note that -1 <= exp <= 0 so no rounding needed
+    // The table value is normalized (an implicit leading 1 before it is
+    // assumed); making it a denormal result means that leading 1 becomes
+    // an explicit bit of the fraction, so it must be inserted before the
+    // right shift - shifting the raw table value alone silently drops it,
+    // undercounting the result by roughly a factor of 2.
+    fraction32 = (fraction32 | 0x10000) >> (1 - exp); // make denormal result
     exp = 0;
   }
 
-  // round to nearest even
-  Bit16u roundBits = fraction32 & 0x3F;
+  // round the 16-bit table result down to the 10-bit half-precision
+  // fraction field, round-to-nearest (ties round up - confirmed against
+  // hardware, this is not round-to-nearest-even)
   fraction32 = (fraction32 + 0x20)>>6;
-  fraction32 &= ~(Bit16u) (!(roundBits ^ 0x20));
-  if (! fraction32) exp = 0;
 
   return packFloat16(sign, exp, fraction32);
 }
@@ -8382,7 +8387,12 @@ float32 approximate_rcp14(float32 op, const softfloat_status_t &status)
     if (softfloat_flushUnderflowToZero(&status))
       return packFloat32(sign, 0, 0);
 
-    fraction >>= (1 - exp); // make denormal result, note that -1 <= exp <= 0 so no rounding needed
+    // The table value is normalized (an implicit leading 1 before it is
+    // assumed); making it a denormal result means that leading 1 becomes
+    // an explicit bit of the fraction, so it must be inserted before the
+    // right shift - shifting the raw table value alone silently drops it,
+    // undercounting the result by roughly a factor of 2.
+    fraction = (fraction | 0x00800000) >> (1 - exp); // make denormal result
     exp = 0;
   }
 
@@ -8445,7 +8455,12 @@ float64 approximate_rcp14(float64 op, const softfloat_status_t &status)
     if (softfloat_flushUnderflowToZero(&status))
       return packFloat64(sign, 0, 0);
 
-    fraction >>= (1 - exp); // make denormal result, note that -1 <= exp <= 0 so no rounding needed
+    // The table value is normalized (an implicit leading 1 before it is
+    // assumed); making it a denormal result means that leading 1 becomes
+    // an explicit bit of the fraction, so it must be inserted before the
+    // right shift - shifting the raw table value alone silently drops it,
+    // undercounting the result by roughly a factor of 2.
+    fraction = (fraction | BX_CONST64(0x0010000000000000)) >> (1 - exp); // make denormal result
     exp = 0;
   }
 
@@ -8555,7 +8570,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCPSH_MASK_VshHphWshR(bxInstruction_c *i)
   if (! i->opmask() || BX_SCALAR_ELEMENT_MASK(i->opmask())) {
     float16 op2 = BX_READ_XMM_REG_LO_WORD(i->src2());
 
-    softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+    softfloat_status_t status = mxcsr_to_softfloat_status_word_fp16(MXCSR);
     op1.xmm16u(0) = approximate_rcp14(op2, status);
   }
   else {
@@ -8576,7 +8591,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VRCPPH_MASK_VphWphR(bxInstruction_c *i)
   unsigned len = i->getVL();
   unsigned num_elements = WORD_ELEMENTS(len);
 
-  softfloat_status_t status = mxcsr_to_softfloat_status_word(MXCSR);
+  softfloat_status_t status = mxcsr_to_softfloat_status_word_fp16(MXCSR);
 
   for (unsigned n=0, tmp_mask = mask; n < num_elements; n++, tmp_mask >>= 1) {
     if (tmp_mask & 0x1)

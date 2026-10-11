@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2018 Stanislav Shwartsman
+//   Copyright (c) 2003-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -347,14 +347,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FXRSTOR(bxInstruction_c *i)
   BX_CPU_THIS_PTR the_i387 = restore_i387;
 
   /* check for unmasked exceptions */
-  if (FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask) {
-    /* set the B and ES bits in the status-word */
-    FPU_PARTIAL_STATUS |= FPU_SW_Summary | FPU_SW_Backward;
-  }
-  else {
-    /* clear the B and ES bits in the status-word */
-    FPU_PARTIAL_STATUS &= ~(FPU_SW_Summary | FPU_SW_Backward);
-  }
+  if (FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask)
+    set_unmasked_fpu_exception();
+  else
+    clear_unmasked_fpu_exception();
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR efer.get_FFXSR() && CPL == 0 && long64_mode()) {

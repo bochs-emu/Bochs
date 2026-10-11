@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2005-2024 Stanislav Shwartsman
+//   Copyright (c) 2005-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -58,6 +58,14 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
 #if BX_SUPPORT_CET
     bx_address temp_LIP = get_laddr(BX_SEG_REG_CS, RIP);
     Bit16u old_CS = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+
+    if (ShadowStackEnabled(CPL)) {
+      // if target is legacy or compatibility mode then the SSP must be in low 4GB
+      if (! (long_mode() && cs_descriptor.u.segment.l) && GET32H(SSP) != 0) {
+        BX_ERROR(("call_protected: SSP must be in low 4GB when target is legacy or compatibility mode"));
+        exception(BX_GP_EXCEPTION, 0);
+      }
+    }
 #endif
 
 #if BX_SUPPORT_X86_64
@@ -171,6 +179,12 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         BX_ERROR(("call_protected: gate type %u unsupported in long mode", (unsigned) gate_descriptor.type));
         exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
       }
+#if BX_SUPPORT_FRED
+      if (BX_CPU_THIS_PTR cr4.get_FRED()) {
+        BX_ERROR(("call_protected: call gate not allowed when FRED is enabled"));
+        exception(BX_GP_EXCEPTION, cs_raw & 0xfffc);
+      }
+#endif
       // gate descriptor must be present else #NP(gate selector)
       if (! IS_PRESENT(gate_descriptor)) {
         BX_ERROR(("call_protected: call gate not present"));
@@ -294,37 +308,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
     // selector index must be within its descriptor table limits,
     //   else #TS(SS selector)
     parse_selector(SS_for_cpl_x, &ss_selector);
-    fetch_raw_descriptor(&ss_selector, &dword1, &dword2, BX_TS_EXCEPTION);
-    parse_descriptor(dword1, dword2, &ss_descriptor);
 
-    // selector's RPL must equal DPL of code segment,
-    //   else #TS(SS selector)
-    if (ss_selector.rpl != cs_descriptor.dpl) {
-      BX_ERROR(("call_gate: SS selector.rpl != CS descr.dpl"));
-      exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-    }
-
-    // stack segment DPL must equal DPL of code segment,
-    //   else #TS(SS selector)
-    if (ss_descriptor.dpl != cs_descriptor.dpl) {
-      BX_ERROR(("call_gate: SS descr.rpl != CS descr.dpl"));
-      exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-    }
-
-    // descriptor must indicate writable data segment,
-    //   else #TS(SS selector)
-    if (ss_descriptor.valid==0 || ss_descriptor.segment==0 ||
-        IS_CODE_SEGMENT(ss_descriptor.type) || !IS_DATA_SEGMENT_WRITEABLE(ss_descriptor.type))
-    {
-      BX_ERROR(("call_gate: ss descriptor is not writable data seg"));
-      exception(BX_TS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-    }
-
-    // segment must be present, else #SS(SS selector)
-    if (! IS_PRESENT(ss_descriptor)) {
-      BX_ERROR(("call_gate: ss descriptor not present"));
-      exception(BX_SS_EXCEPTION, SS_for_cpl_x & 0xfffc);
-    }
+    fetch_ss_descriptor(SS_for_cpl_x, &ss_selector, &ss_descriptor, cs_descriptor.dpl, BX_TS_EXCEPTION);
 
     // get word count from call gate, mask to 5 bits
     unsigned param_count = gate_descriptor->u.gate.param_count & 0x1f;
@@ -349,8 +334,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
     new_stack.cache = ss_descriptor;
     new_stack.selector.rpl = cs_descriptor.dpl;
     // add cpl to the selector value
-    new_stack.selector.value = (0xfffc & new_stack.selector.value) |
-    new_stack.selector.rpl;
+    new_stack.selector.value = (0xfffc & new_stack.selector.value) | new_stack.selector.rpl;
 
     /* load new SS:SP value from TSS */
     if (ss_descriptor.u.segment.d_b) {
@@ -454,14 +438,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
 #if BX_SUPPORT_CET
     if (ShadowStackEnabled(old_CPL)) {
       if (old_CPL == 3)
-        BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = SSP;
+        // in IA-32e mode adjust so bits 63:N get the value of bit N-1, N is the CPU maximum linear-address width
+        BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = long_mode() ? CpuidCanonicalizeAddress(SSP) : SSP;
     }
 
     if(ShadowStackEnabled(CPL)) {
       bx_address old_SSP = SSP;
       shadow_stack_switch(BX_CPU_THIS_PTR msr.ia32_pl_ssp[CPL]);
       if (old_SS_DPL != 3)
-        call_far_shadow_stack_push(return_CS, temp_LIP, old_SSP);
+        new_shadow_stack_push(return_CS, temp_LIP, old_SSP);
     }
     track_indirect(CPL);
 #endif
@@ -595,13 +580,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
 #if BX_SUPPORT_CET
     if(ShadowStackEnabled(old_CPL)) {
       if (old_CPL == 3)
-        BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = SSP;
+        // in IA-32e mode adjust so bits 63:N get the value of bit N-1, N is the CPU maximum linear-address width
+        BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = long_mode() ? CpuidCanonicalizeAddress(SSP) : SSP;
     }
     if(ShadowStackEnabled(CPL)) {
       bx_address old_SSP = SSP;
       shadow_stack_switch(BX_CPU_THIS_PTR msr.ia32_pl_ssp[CPL]);
       if (old_SS_DPL != 3)
-        call_far_shadow_stack_push(old_CS, temp_LIP, old_SSP);
+        new_shadow_stack_push(old_CS, temp_LIP, old_SSP);
     }
     track_indirect(CPL);
 #endif
@@ -637,6 +623,15 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::shadow_stack_switch(bx_address new_SSP)
     BX_ERROR(("shadow_stack_switch: SSP is not aligned to 8 byte boundary"));
     exception(BX_GP_EXCEPTION, 0);
   }
+  // Intel SDM Vol1, section 18.2.3 "Supervisor Shadow Stack Token":
+  //   If the far CALL or event delivery will push a 24-byte stack frame after the token is acquired, the 8-byte
+  //   supervisor shadow stack token and the stack frame must be fully contained within a 32-byte region that is
+  //   aligned to 32-bytes on the shadow stack. If they are not, a general-protection exception (#GP(0)) occurs.
+  // (the same check appears in Vol2 CALL and INT n pseudocode right after the 8-byte alignment check)
+  if ((SSP & ~BX_CONST64(0x1F)) != ((SSP - 24) & ~BX_CONST64(0x1F))) {
+    BX_ERROR(("shadow_stack_switch: token and CS:LIP:SSP frame cross naturally aligned 32-byte region"));
+    exception(BX_GP_EXCEPTION, 0);
+  }
   if (!long64_mode() && GET32H(SSP) != 0) {
     BX_ERROR(("shadow_stack_switch: 64-bit SSP not in 64-bit mode"));
     exception(BX_GP_EXCEPTION, 0);
@@ -649,11 +644,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::shadow_stack_switch(bx_address new_SSP)
 
 void BX_CPP_AttrRegparmN(3) BX_CPU_C::call_far_shadow_stack_push(Bit16u cs, bx_address lip, bx_address old_ssp)
 {
-#if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest)
-    BX_CPU_THIS_PTR vmcs.shadow_stack_prematurely_busy = true;
-#endif
-
   if (SSP & 0x7) {
     shadow_stack_write_dword(SSP-4, CPL, 0);
     SSP &= ~BX_CONST64(0x7);
@@ -662,10 +652,24 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::call_far_shadow_stack_push(Bit16u cs, bx_a
   shadow_stack_push_64(cs);
   shadow_stack_push_64(lip);
   shadow_stack_push_64(old_ssp);
+}
+
+// Push CS:LIP:SSP onto the supervisor shadow stack whose token was just acquired by shadow_stack_switch().
+// Intel SDM Vol1, section 18.2.3 "Supervisor Shadow Stack Token":
+//   If the far CALL or event delivery pushes a stack frame after the token is acquired and any of the pushes causes a
+//   fault or VM exit, the processor will revert to the old shadow stack and the busy bit in the new shadow stack's
+//   token remains set. The new shadow stack is said to be prematurely busy.
+// A VM exit caused by these pushes reports it (exit reason bit 25) and convertible EPT violation is not converted to #VE.
+void BX_CPP_AttrRegparmN(3) BX_CPU_C::new_shadow_stack_push(Bit16u cs, bx_address lip, bx_address old_ssp)
+{
+#if BX_SUPPORT_VMX
+  BX_CPU_THIS_PTR vmcs.shadow_stack_prematurely_busy = BX_CPU_THIS_PTR in_vmx_guest;
+#endif
+
+  call_far_shadow_stack_push(cs, lip, old_ssp);
 
 #if BX_SUPPORT_VMX
-  if (BX_CPU_THIS_PTR in_vmx_guest)
-    BX_CPU_THIS_PTR vmcs.shadow_stack_prematurely_busy = false;
+  BX_CPU_THIS_PTR vmcs.shadow_stack_prematurely_busy = false;
 #endif
 }
 #endif // BX_SUPPORT_CET

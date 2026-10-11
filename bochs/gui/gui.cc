@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -22,6 +22,7 @@
 #include <signal.h>
 #include "iodev.h"
 #include "virt_timer.h"
+#include "iodev/display/pxextract.h"
 #include "keymap.h"
 #include "gui/bitmaps/floppya.h"
 #include "gui/bitmaps/floppyb.h"
@@ -151,6 +152,7 @@ bx_gui_c::bx_gui_c(void): disp_mode(DISP_MODE_SIM)
   snapshot_buffer = NULL;
   command_mode.present = 0;
   command_mode.active = 0;
+  fullscreen_mode = false;
   marker_count = 0;
   memset(palette, 0, sizeof(palette));
   memset(vga_charmap[0], 0, 0x2000);
@@ -548,7 +550,8 @@ void bx_gui_c::snapshot_handler(void)
   int fd, i, j, pitch;
   Bit8u *snapshot_ptr = NULL;
   Bit8u *row_buffer, *pixel_ptr, *row_ptr;
-  Bit8u bmp_header[54], iBits, b1, b2;
+  Bit8u bmp_header[54], iBits, red, green, blue;
+  Bit16u color;
   Bit32u ilen, len, rlen;
   char filename[BX_PATHNAME_LEN], msg[80], *ext;
   Bit8u snap_fmt;
@@ -643,16 +646,16 @@ void bx_gui_c::snapshot_handler(void)
       } else if ((BX_GUI_THIS guest_bpp == 15) || (BX_GUI_THIS guest_bpp == 16)) {
         pixel_ptr = row_ptr;
         for (j = 0; j < (int)(BX_GUI_THIS guest_xres * 3); j+=3) {
-          b1 = *(pixel_ptr++);
-          b2 = *(pixel_ptr++);
-          *(row_buffer+j)   = (b1 << 3);
+          color = *(pixel_ptr++);
+          color |= (*(pixel_ptr++) << 8);
           if (BX_GUI_THIS guest_bpp == 15) {
-            *(row_buffer+j+1) = ((b1 & 0xe0) >> 2) | (b2 << 6);
-            *(row_buffer+j+2) = (b2 & 0x7c) << 1;
+            EXTRACT_x555_TO_888(color, red, green, blue);
           } else {
-            *(row_buffer+j+1) = ((b1 & 0xe0) >> 3) | (b2 << 5);
-            *(row_buffer+j+2) = (b2 & 0xf8);
+            EXTRACT_565_TO_888(color, red, green, blue);
           }
+          *(row_buffer+j)   = blue;
+          *(row_buffer+j+1) = green;
+          *(row_buffer+j+2) = red;
         }
       } else if (BX_GUI_THIS guest_bpp == 32) {
         pixel_ptr = row_ptr;
@@ -1074,7 +1077,9 @@ bool bx_gui_c::palette_change_common(Bit8u index, Bit8u red, Bit8u green, Bit8u 
 void bx_gui_c::show_ips(Bit32u ips_count)
 {
 #if BX_SHOW_IPS
-  BX_INFO(("ips = %3.3fM", ips_count / 1000000.0));
+  if (!gui_opts.hide_ips) {
+    BX_INFO(("ips = %3.3fM", ips_count / 1000000.0));
+  }
 #endif
 }
 
@@ -1551,6 +1556,7 @@ void bx_gui_c::console_refresh(bool force)
 {
   if (force) memset(console.oldscreen, 0xff, BX_CONSOLE_BUFSIZE);
   if (BX_GUI_THIS new_text_api) {
+    start_update();
     text_update_common(console.oldscreen, console.screen, console.cursor_addr,
                        &console.tminfo);
   } else {
@@ -1687,7 +1693,7 @@ bool bx_gui_c::parse_common_gui_options(const char *arg, Bit8u flags)
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
     SIM->message_box("ERROR", "The 'gui_debug' option is deprecated - use command line option '-dbg_gui' instead");
 #else
-    SIM->message_box("ERROR", "Bochs debugger not available - ignoring 'gui_debug' option");
+    SIM->message_box("ERROR", "Bochs debugger gui not available - ignoring 'gui_debug' option");
 #endif
     return false;
 #if BX_SHOW_IPS

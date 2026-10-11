@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -111,7 +111,7 @@ typedef struct {
 } bx_svga_tileinfo_t;
 
 
-BOCHSAPI_MSVCONLY Bit8u reverse_bitorder(Bit8u);
+BOCHSAPI Bit8u reverse_bitorder(Bit8u);
 
 BOCHSAPI extern class bx_gui_c *bx_gui;
 
@@ -185,6 +185,7 @@ public:
 #if BX_USE_GUI_CONSOLE
   virtual void set_console_edit_mode(bool mode) {}
 #endif
+  virtual void start_update(void) {}
 
   // The following function(s) are defined already, and your
   // GUI code calls them

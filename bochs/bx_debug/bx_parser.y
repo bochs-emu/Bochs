@@ -113,6 +113,7 @@ Bit64u eval_value;
 %token <sval> BX_TOKEN_UNWATCH
 %token <sval> BX_TOKEN_READ
 %token <sval> BX_TOKEN_WRITE
+%token <sval> BX_TOKEN_RUN_TO_LADDR
 %token <sval> BX_TOKEN_SHOW
 %token <sval> BX_TOKEN_LOAD_SYMBOLS
 %token <sval> BX_TOKEN_SET_MAGIC_BREAK_POINTS
@@ -165,6 +166,7 @@ command:
       continue_command
     | stepN_command
     | step_over_command
+    | run_to_laddr_command
     | set_command
     | cpu_command
     | breakpoint_command
@@ -550,6 +552,14 @@ step_over_command:
       BX_TOKEN_STEP_OVER '\n'
       {
         bx_dbg_step_over_command();
+        free($1);
+      }
+    ;
+
+run_to_laddr_command:
+      BX_TOKEN_RUN_TO_LADDR expression '\n'
+      {
+        bx_dbg_run_to_laddr($2);
         free($1);
       }
     ;
@@ -1107,6 +1117,11 @@ help_command:
          dbg_printf("n|next|p - execute instruction stepping over subroutines\n");
          free($1);free($2);
        }
+     | BX_TOKEN_HELP BX_TOKEN_RUN_TO_LADDR '\n'
+       {
+         dbg_printf("rla <addr> - continue until reaching the linear address\n");
+         free($1);free($2);
+       }
      | BX_TOKEN_HELP BX_TOKEN_VBREAKPOINT '\n'
        {
          dbg_printf("vb|vbreak <seg:offset> - set a virtual address instruction breakpoint\n");
@@ -1121,8 +1136,8 @@ help_command:
        }
      | BX_TOKEN_HELP BX_TOKEN_PBREAKPOINT '\n'
        {
-         dbg_printf("p|pb|break|pbreak <addr> - set a physical address instruction breakpoint\n");
-         dbg_printf("p|pb|break|pbreak <addr> if \"expression\" - set a conditional physical address instruction breakpoint\n");
+         dbg_printf("b|pb|break|pbreak <addr> - set a physical address instruction breakpoint\n");
+         dbg_printf("b|pb|break|pbreak <addr> if \"expression\" - set a conditional physical address instruction breakpoint\n");
          free($1);free($2);
        }
      | BX_TOKEN_HELP BX_TOKEN_DEL_BREAKPOINT '\n'

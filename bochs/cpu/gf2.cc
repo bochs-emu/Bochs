@@ -120,7 +120,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGF2P8AFFINEINVQB_VdqHdqWdqIbR(bxInstructi
 
 #if BX_SUPPORT_EVEX
   if (i->opmask())
-    avx512_write_regq_masked(i, &dst, len, BX_READ_8BIT_OPMASK(i->opmask()));
+    avx512_write_regb_masked(i, &dst, len, BX_READ_OPMASK(i->opmask()));
   else
 #endif
     BX_WRITE_AVX_REGZ(i->dst(), dst, len);
@@ -152,7 +152,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VGF2P8AFFINEQB_VdqHdqWdqIbR(bxInstruction_
 
 #if BX_SUPPORT_EVEX
   if (i->opmask())
-    avx512_write_regq_masked(i, &dst, len, BX_READ_8BIT_OPMASK(i->opmask()));
+    avx512_write_regb_masked(i, &dst, len, BX_READ_OPMASK(i->opmask()));
   else
 #endif
     BX_WRITE_AVX_REGZ(i->dst(), dst, len);

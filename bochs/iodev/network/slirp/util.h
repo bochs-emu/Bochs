@@ -71,12 +71,10 @@
 #endif
 
 #if defined(_WIN32) /* CONFIG_IOVEC */
-#if !defined(IOV_MAX) /* XXX: to avoid duplicate with QEMU osdep.h */
 struct iovec {
     void *iov_base;
     size_t iov_len;
 };
-#endif
 #else
 #include <sys/uio.h>
 #endif

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2024  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -397,8 +397,13 @@ static BxOpcodeDecodeDescriptor32 decode32_descriptor[] =
 #if BX_CPU_LEVEL >= 6
    /* 0F 18 */ { &decoder32_modrm, BxOpcodeTable0F18 },
    /* 0F 19 */ { &decoder32_modrm, BxOpcodeTableMultiByteNOP },
+#if BX_SUPPORT_MPX
+   /* 0F 1A */ { &decoder32_modrm, BxOpcodeTable0F1A },
+   /* 0F 1B */ { &decoder32_modrm, BxOpcodeTable0F1B },
+#else
    /* 0F 1A */ { &decoder32_modrm, BxOpcodeTableMultiByteNOP },
    /* 0F 1B */ { &decoder32_modrm, BxOpcodeTableMultiByteNOP },
+#endif
    /* 0F 1C */ { &decoder32_modrm, BxOpcodeTableMultiByteNOP },
    /* 0F 1D */ { &decoder32_modrm, BxOpcodeTableMultiByteNOP },
 #if BX_SUPPORT_CET
@@ -437,8 +442,8 @@ static BxOpcodeDecodeDescriptor32 decode32_descriptor[] =
    /* 0F 31 */ { &decoder_simple32, BxOpcodeTable0F31 },
    /* 0F 32 */ { &decoder_simple32, BxOpcodeTable0F32 },
    /* 0F 33 */ { &decoder_simple32, BxOpcodeTable0F33 },
-   /* 0F 34 */ { &decoder_simple32, BxOpcodeTable0F34 },
-   /* 0F 35 */ { &decoder_simple32, BxOpcodeTable0F35 },
+   /* 0F 34 */ { &decoder_simple32, BxOpcodeTable0F34_32 },
+   /* 0F 35 */ { &decoder_simple32, BxOpcodeTable0F35_32 },
    /* 0F 36 */ { &decoder_ud32, NULL },
    /* 0F 37 */ { &decoder32, BxOpcodeTable0F37 },
    /* 0F 38 */ { &decoder32_modrm, NULL },          // 3-byte escape
@@ -714,7 +719,7 @@ static unsigned sreg_mod1or2_base32[8] = {
 extern int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit16u ia_opcode, bool is_64);
 extern Bit16u findOpcode(const Bit64u *opMap, Bit32u opMsk);
 
-static const Bit8u *decodeModrm32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned mod, unsigned nnn, unsigned rm)
+static const Bit8u *decodeModrm32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned mod, unsigned rm)
 {
   unsigned seg = BX_SEG_REG_DS;
 
@@ -879,7 +884,7 @@ static const Bit8u *parseModrm32(const Bit8u *iptr, unsigned &remain, bxInstruct
     i->assertModC0();
   }
   else {
-    iptr = decodeModrm32(iptr, remain, i, modrm->mod, modrm->nnn, modrm->rm);
+    iptr = decodeModrm32(iptr, remain, i, modrm->mod, modrm->rm);
   }
 
   return iptr;
@@ -892,7 +897,7 @@ int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit1
     unsigned type = BX_DISASM_SRC_TYPE(src);
     src = BX_DISASM_SRC_ORIGIN(src);
 
-    if (src == BX_SRC_IMM || src == BX_SRC_BRANCH_OFFSET) {
+    if (src == BX_SRC_NONE) {
       switch(type) {
       case BX_IMM1:
         i->modRMForm.Ib[0] = 1;
@@ -907,6 +912,7 @@ int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit1
         }
         break;
       case BX_IMMBW_SE: // Sign extend 8-bit to 16-bit
+      case BX_JIMMBW_SE:
         if (remain != 0) {
           Bit8s temp8s = *iptr++;
           i->modRMForm.Iw[0] = (Bit16s) temp8s;
@@ -917,6 +923,7 @@ int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit1
         }
         break;
       case BX_IMMBD_SE: // Sign extend 8-bit to 32-bit
+      case BX_JIMMBD_SE:
         if (remain != 0) {
           Bit8s temp8s = *iptr++;
           i->modRMForm.Id    = (Bit32s) temp8s;
@@ -936,6 +943,7 @@ int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit1
         }
         break;
       case BX_IMMW:
+      case BX_JIMMW:
         if (remain > 1) {
           i->modRMForm.Iw[0] = FetchWORD(iptr);
           iptr += 2;
@@ -946,6 +954,7 @@ int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit1
         }
         break;
       case BX_IMMD:
+      case BX_JIMMD:
         if (remain > 3) {
           i->modRMForm.Id = FetchDWORD(iptr);
           iptr += 4;
@@ -1183,14 +1192,13 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, 
     unsigned index = BX_DISASM_SRC_ORIGIN(src);
     switch(index) {
     case BX_SRC_NONE:
-    case BX_SRC_IMM:
-    case BX_SRC_BRANCH_OFFSET:
-    case BX_SRC_IMPLICIT:
       break;
     case BX_SRC_EAX:
       i->setSrcReg(n, 0);
       break;
     case BX_SRC_NNN:
+      // REX.R is ignored when ModRM.reg encodes a segment register
+      if (type == BX_SEGREG) nnn &= 0x7;
       i->setSrcReg(n, nnn);
       break;
     case BX_SRC_RM:
@@ -1221,7 +1229,7 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, 
 }
 
 #if BX_SUPPORT_AVX
-BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, bool had_evex = false, bool displ8 = false)
+BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, Bit32u had_evex = 0, bool displ8 = false)
 {
   bool use_vvv = false;
 #if BX_SUPPORT_EVEX
@@ -1239,17 +1247,20 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
 
     switch(src) {
     case BX_SRC_NONE:
-    case BX_SRC_IMM:
-    case BX_SRC_BRANCH_OFFSET:
-    case BX_SRC_IMPLICIT:
       break;
     case BX_SRC_EAX:
       i->setSrcReg(n, 0);
       break;
     case BX_SRC_NNN:
+#if BX_SUPPORT_EVEX
+      // #UD if EVEX.R' != 1 when general purpose register is encoded in ModRM.reg
+      if (had_evex != 0 && type >= BX_GPR8 && type <= BX_GPR64) {
+        if (nnn >= 16) return BX_EVEX_ILLEGAL_GPR_REGISTER;
+      }
+#endif
       i->setSrcReg(n, nnn);
 #if BX_SUPPORT_EVEX
-      if (type == BX_KMASK_REG) {
+      if (type == BX_KMASK_REG || type == BX_KMASK_REG_PAIR) {
         if (nnn >= 8) return BX_EVEX_ILLEGAL_KMASK_REGISTER;
         // vector instruction using opmask as source or dest
         if (i->isZeroMasking())
@@ -1259,6 +1270,9 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
 #if BX_SUPPORT_AMX
       if (type == BX_TMM_REG) {
         if (nnn >= 8) return BX_AMX_ILLEGAL_TILE_REGISTER;
+      }
+      if (type == BX_BSR_REG) {
+        if (nnn != 0) return BX_AMX_ILLEGAL_BSR_REGISTER;
       }
 #endif
       break;
@@ -1276,10 +1290,23 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
         if (type == BX_TMM_REG) {
           if (rm >= 8) return BX_AMX_ILLEGAL_TILE_REGISTER;
         }
+        if (type == BX_BSR_REG) {
+          if (rm != 0) return BX_AMX_ILLEGAL_BSR_REGISTER;
+        }
+#endif
+#if BX_SUPPORT_EVEX
+        // EVEX.X is ignored when ModRM.rm encodes general purpose register
+        if (had_evex != 0 && type >= BX_GPR8 && type <= BX_GPR64)
+          rm &= 0xf;
 #endif
         i->setSrcReg(n, rm);
       }
       else {
+#if BX_SUPPORT_AMX
+        // TILELOADD/TILESTORED: #UD if not using SIB addressing (ModRM.rm != 100b)
+        if (type == BX_SIB_MEMORY && (rm & 0x7) != 4)
+          return BX_AMX_SIB_REQUIRED;
+#endif
 #if BX_SUPPORT_EVEX
         mem_src = true;
 #endif
@@ -1309,6 +1336,10 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
         if (i->isZeroMasking())
           return BX_EVEX_ILLEGAL_ZERO_MASKING_WITH_KMASK_SRC_OR_DEST;
       }
+      // #UD if EVEX.V' != 1 when general purpose register is encoded in EVEX.vvvv
+      if (type == BX_GPR32 || type == BX_GPR64) {
+        if (vvv >= 16) return BX_EVEX_ILLEGAL_GPR_REGISTER;
+      }
 #endif
 #if BX_SUPPORT_AMX
       if (type == BX_TMM_REG) {
@@ -1319,7 +1350,7 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
     case BX_SRC_VIB:
       if (is_64) {
 #if BX_SUPPORT_EVEX
-        if (had_evex)
+        if (had_evex != 0)
           i->setSrcReg(n, ((i->Ib() << 1) & 0x10) | (i->Ib() >> 4));
         else
 #endif
@@ -1332,7 +1363,8 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
     case BX_SRC_VSIB:
       if (! i->as32L())
         return BX_VSIB_FORBIDDEN_ASIZE16;
-      if (i->sibIndex() == BX_NIL_REGISTER)
+      // the presence of VSIB byte is enforced, #UD if ModRM.rm != 100b
+      if ((rm & 0x7) != 4)
         return BX_VSIB_ILLEGAL_SIB_INDEX;
 #if BX_SUPPORT_EVEX
       i->setSibIndex(i->sibIndex() | (vvv & 0x10));
@@ -1347,7 +1379,7 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
     }
 
 #if BX_SUPPORT_EVEX
-    if (had_evex && displ8 && mem_src) {
+    if (had_evex != 0 && displ8 && mem_src) {
       displ8_scale = evex_displ8_compression(i, ia_opcode, src, type, vex_w);
     }
 #endif
@@ -1510,7 +1542,7 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   //    7 6 5 4 3 2 1 0
   //    ---------------
   // P0 R X B R'0 m m m
-  // P1 w v v v v u p p ; evex.u was always '1 before avx10.2
+  // P1 w v v v v u p p
   // P2 z L'L b V'a a a
 
   // EVEX.mmmm - opcode group
@@ -1523,11 +1555,14 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   // EVEX.W    - opsize promotion / opcode extension
   // EVEX.z    - zero masking / merging
   // EVEX.b    - broadcast / round control / SAE
-  // EVEX.u    - round control / SAE for 256-bit (AVX10.2)
   // EVEX.LL   - vector length control
 
   // check for reserved EVEX bits
   if ((evex & 0x08) != 0)
+    return(ia_opcode);
+
+  // EVEX.U must be '1
+  if ((evex & 0x400) == 0)
     return(ia_opcode);
 
   unsigned evex_opc_map = evex & 0x7;
@@ -1554,9 +1589,6 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   i->setVL(1 << evex_vl_rc);
   i->setVexW(vex_w);
 
-  unsigned evex_u = (evex >> 10) & 0x1;
-  i->setEvexU(evex_u);
-
   unsigned evex_z = (evex >> 23) & 0x1;
   i->setZeroMasking(evex_z);
 
@@ -1576,9 +1608,6 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   if (modrm.mod == 0xc0) {
     // EVEX.b in reg form implies 512-bit vector length
     if (i->getEvexb()) i->setVL(BX_VL512);
-
-    // EVEX.u=0 in reg form implies 256-bit vector length
-    if (!i->getEvexU()) i->setVL(BX_VL256);
   }
 
   Bit32u vl = i->getVL()-1; // 0: VL128, 1: VL256, 3: VL512
@@ -1587,7 +1616,6 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
                    (sse_prefix << SSE_PREFIX_OFFSET) |
                    (i->modC0() ? (1 << MODC0_OFFSET) : 0) |
                    (modrm.nnn << NNN_OFFSET) |
-                   (modrm.rm << RRR_OFFSET) |
                    (vex_w << VEX_W_OFFSET) |
                    (vl << VEX_VL_128_256_OFFSET);
   if (i->modC0() && modrm.nnn == modrm.rm)
@@ -1608,7 +1636,10 @@ int decoder_evex32(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
     }
   }
 
-  BxDecodeError decode_err = assign_srcs(i, ia_opcode, false, modrm.nnn, modrm.rm, vvv, vex_w, true, displ8);
+  // evex cannot be zero because opcode map 0 is not populated
+  BX_ASSERT(evex != 0);
+
+  BxDecodeError decode_err = assign_srcs(i, ia_opcode, false, modrm.nnn, modrm.rm, vvv, vex_w, evex, displ8);
   if (decode_err != BX_DECODE_OK)
     ia_opcode = BX_IA_ERROR;
 
@@ -2067,40 +2098,43 @@ int BX_CPU_C::assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
 
   Bit32u op_flags = BxOpcodesTable[ia_opcode].opflags;
 
+#if BX_SUPPORT_MPX
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_MPX)) {
+    // near branch without BND (F2) prefix might initialize BND0-3, the original handler is called through execute2
+    if ((fetchModeMask & BX_FETCH_MODE_BNDREGS_CLEAR) != 0 && (op_flags & BX_MPX_BNDREGS_CLEAR) != 0 && i->lockRepUsedValue() != 2) {
+      i->handlers.execute2 = i->execute1;
+      i->execute1 = &BX_CPU_C::BxMpxBndRegsInitBranch;
+    }
+  }
+#endif
+
 #if BX_SUPPORT_EVEX
   if ((op_flags & BX_PREPARE_EVEX) != 0) {
-    bool allow512 = BX_CPU_THIS_PTR cpuid->support_avx10_512();
-#if BX_SUPPORT_VMX
-    if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.vmexec_ctrls3.EMULATE_AVX10_VL256()) allow512 = false;
-#endif
-    if (! allow512 && i->getVL() == BX_VL512 && (op_flags & BX_EVEX_VL_IGNORE) == 0) {
-      BX_DEBUG(("%s: VL512 is not supported for this processor", i->getIaOpcodeNameShort()));
-      i->execute1 = &BX_CPU_C::BxError;
-    }
-
     if (i->getEvexb()) {
       if (! i->modC0()) {
         if ((op_flags & BX_PREPARE_EVEX_NO_BROADCAST) == BX_PREPARE_EVEX_NO_BROADCAST) {
           BX_DEBUG(("%s: broadcast is not supported for this instruction", i->getIaOpcodeNameShort()));
           i->execute1 = &BX_CPU_C::BxError;
+          return(1);
         }
       }
       else {
         if ((op_flags & BX_PREPARE_EVEX_NO_SAE) == BX_PREPARE_EVEX_NO_SAE) {
           BX_DEBUG(("%s: EVEX.b in reg form is not allowed for instructions which cannot cause floating point exception", i->getIaOpcodeNameShort()));
           i->execute1 = &BX_CPU_C::BxError;
+          return(1);
         }
-      }
-    }
-
-    if (! i->getEvexU()) {
-      if (! BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX10_2)) {
-        BX_DEBUG(("%s: EVEX.U must be '1 without AVX10.2", i->getIaOpcodeNameShort()));
-        i->execute1 = &BX_CPU_C::BxError;
       }
     }
   }
 #endif
+
+  if (! protected_mode()) {
+     if ((op_flags & BX_PROTECTED_MODE_ONLY) != 0) {
+        if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxProtectedModeRequired;
+        return(1);
+     }
+  }
 
   if (! (fetchModeMask & BX_FETCH_MODE_FPU_MMX_OK)) {
      if (op_flags & BX_PREPARE_FPU) {
@@ -2127,12 +2161,6 @@ int BX_CPU_C::assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
     }
   }
 #if BX_SUPPORT_EVEX
-  if (! (fetchModeMask & BX_FETCH_MODE_OPMASK_OK)) {
-    if (op_flags & BX_PREPARE_OPMASK) {
-       if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoOpMask;
-       return(1);
-    }
-  }
   if (! (fetchModeMask & BX_FETCH_MODE_EVEX_OK)) {
     if (op_flags & BX_PREPARE_EVEX) {
        if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoEVEX;
@@ -2146,10 +2174,16 @@ int BX_CPU_C::assignHandler(bxInstruction_c *i, Bit32u fetchModeMask)
        return(1);
     }
   }
-#endif
-#endif
-#endif
-#endif
+  if (! (fetchModeMask & BX_FETCH_MODE_SCALEDATA_OK)) {
+    if (op_flags & BX_PREPARE_SCALEDATA) {
+       if (i->execute1 != &BX_CPU_C::BxError) i->execute1 = &BX_CPU_C::BxNoSCALEDATA;
+       return(1);
+    }
+  }
+#endif // BX_SUPPORT_AMX
+#endif // BX_SUPPORT_EVEX
+#endif // BX_SUPPORT_AVX
+#endif // BX_CPU_LEVEL >= 6
 
   if ((op_flags & BX_TRACE_END) != 0 || i->execute1 == &BX_CPU_C::BxError)
      return(1);
@@ -2212,8 +2246,7 @@ void BX_CPU_C::init_FetchDecodeTables(void)
         case BX_ISA_AVX512_BITALG:
         case BX_ISA_AVX512_BF16:
         case BX_ISA_AVX512_FP16:
-          // It is possible that AVX512 is not supported on this processor but AVX10 is (for example AVX10_VL256 only)
-          // AVX10_1 includes all above AVX512 extensions
+          // It is possible that AVX512 is not supported on this processor but AVX10 is AVX10_1 includes all above AVX512 extensions
           if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_AVX10_1)) continue;
 
         default: break;

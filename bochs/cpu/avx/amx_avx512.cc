@@ -1,0 +1,262 @@
+/////////////////////////////////////////////////////////////////////////
+// $Id$
+/////////////////////////////////////////////////////////////////////////
+//
+//   Copyright (c) 2024-2026 Stanislav Shwartsman
+//          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
+//
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
+//
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+//  Lesser General Public License for more details.
+//
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library; if not, write to the Free Software
+//  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA B 02110-1301 USA
+//
+/////////////////////////////////////////////////////////////////////////
+
+#define NEED_CPU_REG_SHORTCUTS 1
+#include "bochs.h"
+#include "cpu.h"
+#define LOG_THIS BX_CPU_THIS_PTR
+
+#if BX_SUPPORT_AMX
+
+#include "amx.h"
+#include "cpu/decoder/ia_opcodes.h"
+
+bool BX_CPP_AttrRegparmN(3) BX_CPU_C::tilemov_read_row(bxInstruction_c *i, bool immediate_form, BxPackedAvxRegister *dst)
+{
+  unsigned tile_src = i->src1();
+  check_tile(i, tile_src);
+
+  unsigned row;
+  if (immediate_form) {
+    row = i->Ib();
+  }
+  else {
+    row = (unsigned) BX_READ_16BIT_REG(i->src2());
+  }
+
+  row &= 0xf;
+
+  // zero_tileconfig_start() is done also when the row is out of range
+  BX_CPU_THIS_PTR amx->restart();
+
+  dst->clear();
+
+  unsigned tile_num_rows = BX_CPU_THIS_PTR amx->tile_num_rows(tile_src);
+  if (row >= tile_num_rows)
+    return false;
+
+  // elements beyond configured tile row width are returned as zero
+  // (TILEDATA loaded by XRSTOR might have non-zero data there)
+  AMX::TILE *tsrc = &(BX_CPU_THIS_PTR amx->tile[tile_src]);
+  unsigned dword_elements_per_row = BX_CPU_THIS_PTR amx->tile_dword_elements_per_row(tile_src);
+  for (unsigned n=0; n < dword_elements_per_row; n++)
+    dst->vmm32u(n) = tsrc->row[row].vmm32u(n);
+
+  return true;
+}
+
+bool BX_CPP_AttrRegparmN(3) BX_CPU_C::tilemov_write_row(bxInstruction_c *i, bool immediate_form, const BxPackedAvxRegister *src)
+{
+  unsigned tile_dst = i->dst();
+  check_tile(i, tile_dst);
+
+  unsigned row;
+  if (immediate_form) {
+    row = i->Ib();
+  }
+  else {
+    row = (unsigned) BX_READ_16BIT_REG(i->src2());
+  }
+
+  row &= 0xf;
+
+  unsigned tile_num_rows = BX_CPU_THIS_PTR amx->tile_num_rows(tile_dst);
+  if (row >= tile_num_rows)
+    return false;
+
+  AMX::TILE *tdst = &(BX_CPU_THIS_PTR amx->tile[tile_dst]);
+  tdst->row[row] = *src;
+
+  BX_CPU_THIS_PTR amx->set_tile_used(tile_dst);
+  return true;
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILEMOVROW_VdqTrm(bxInstruction_c *i)
+{
+  BxPackedAvxRegister dst;
+  tilemov_read_row(i, i->getIaOpcode() == BX_IA_EVEX_TILEMOVROW_VdqTrmIb, &dst);
+  BX_WRITE_AVX_REG(i->dst(), dst);
+
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILEMOVROW_TrmWdq(bxInstruction_c *i)
+{
+  if (BX_CPU_THIS_PTR amx->get_palette_id() != 2) {
+    BX_ERROR(("%s: not supported under pallette %d", i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR amx->get_palette_id()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  bool result = tilemov_write_row(i, i->getIaOpcode() == BX_IA_EVEX_TILEMOVROW_TrmWdqIb, &BX_READ_AVX_REG(i->src1()));
+  if (result)
+    BX_CPU_THIS_PTR amx->restart();
+
+  BX_NEXT_INSTR(i);
+}
+
+// TILEMOVCOL is write-only (AVX -> tile): it distributes the 16 dwords of the
+// source ZMM one per row into a single column of the destination tile. Out of
+// range column values cannot occur (masked to 0xf, and rows are always <= 16),
+// so unlike tilemov_read_row/tilemov_write_row there is no fault-avoidance
+// early return needed here.
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::TILEMOVCOL_TrmWdq(bxInstruction_c *i)
+{
+  if (BX_CPU_THIS_PTR amx->get_palette_id() != 2) {
+    BX_ERROR(("%s: not supported under pallette %d", i->getIaOpcodeNameShort(), BX_CPU_THIS_PTR amx->get_palette_id()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
+  unsigned tile_dst = i->dst();
+  check_tile(i, tile_dst);
+
+  unsigned col;
+  if (i->getIaOpcode() == BX_IA_EVEX_TILEMOVCOL_TrmWdqIb)
+    col = i->Ib();
+  else
+    col = (unsigned) BX_READ_16BIT_REG(i->src2());
+
+  col &= 0xf;
+
+  const BxPackedAvxRegister &src = BX_READ_AVX_REG(i->src1());
+  AMX::TILE *tdst = &(BX_CPU_THIS_PTR amx->tile[tile_dst]);
+  unsigned tile_num_rows = BX_CPU_THIS_PTR amx->tile_num_rows(tile_dst);
+
+  for (unsigned row=0; row < tile_num_rows; row++)
+    tdst->row[row].vmm32u(col) = src.vmm32u(row);
+
+  BX_CPU_THIS_PTR amx->restart();
+
+  BX_CPU_THIS_PTR amx->set_tile_used(tile_dst);
+
+  BX_NEXT_INSTR(i);
+}
+
+#include "softfloat3e/include/softfloat.h"
+#include "bf16.h"
+
+extern softfloat_status_t prepare_ne_softfloat_status_helper(bool denormals_are_zeros);
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWD2PS_VpsTrm(bxInstruction_c *i)
+{
+  BxPackedAvxRegister dst;
+  bool result = tilemov_read_row(i, i->getIaOpcode() == BX_IA_EVEX_TCVTROWD2PS_VpsTrmIb, &dst);
+  if (!result) {
+    BX_CLEAR_AVX_REG(i->dst());
+    BX_NEXT_INSTR(i);
+  }
+
+  // "round to nearest even" rounding mode is used when doing each convertion below.
+  softfloat_status_t status = prepare_ne_softfloat_status_helper(true);
+
+  // converting the int32 source elements to fp32
+  for (unsigned n=0;n < DWORD_ELEMENTS(BX_VL512); n++)
+    dst.vmm32u(n) = i32_to_f32(dst.vmm32u(n), &status);
+
+  BX_WRITE_AVX_REG(i->dst(), dst);
+
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2PHL_VphTrm(bxInstruction_c *i)
+{
+  BxPackedAvxRegister dst;
+  bool result = tilemov_read_row(i, i->getIaOpcode() == BX_IA_EVEX_TCVTROWPS2PHL_VphTrmIb, &dst);
+  if (!result) {
+    BX_CLEAR_AVX_REG(i->dst());
+    BX_NEXT_INSTR(i);
+  }
+
+  // "round to nearest even" rounding mode is used when doing each convertion below.
+  softfloat_status_t status = prepare_ne_softfloat_status_helper(true);
+  // input FP32 denormals are treated as zero, FP16 denormal outputs are not flushed to zero
+  status.softfloat_flush_underflow_to_zero = false;
+
+  // convert the fp32 source elements to fp16 and place them in low 16-bits of each dword
+  for (unsigned n=0;n < DWORD_ELEMENTS(BX_VL512); n++)
+    dst.vmm32u(n) = (Bit32u) f32_to_f16(dst.vmm32u(n), &status);
+
+  BX_WRITE_AVX_REG(i->dst(), dst);
+
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2PHH_VphTrm(bxInstruction_c *i)
+{
+  BxPackedAvxRegister dst;
+  bool result = tilemov_read_row(i, i->getIaOpcode() == BX_IA_EVEX_TCVTROWPS2PHH_VphTrmIb, &dst);
+  if (!result) {
+    BX_CLEAR_AVX_REG(i->dst());
+    BX_NEXT_INSTR(i);
+  }
+
+  // "round to nearest even" rounding mode is used when doing each convertion below.
+  softfloat_status_t status = prepare_ne_softfloat_status_helper(true);
+  // input FP32 denormals are treated as zero, FP16 denormal outputs are not flushed to zero
+  status.softfloat_flush_underflow_to_zero = false;
+
+  // convert the fp32 source elements to fp16 and place them in high 16-bits of each dword
+  for (unsigned n=0;n < DWORD_ELEMENTS(BX_VL512); n++)
+    dst.vmm32u(n) = ((Bit32u) f32_to_f16(dst.vmm32u(n), &status)) << 16;
+
+  BX_WRITE_AVX_REG(i->dst(), dst);
+
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2BF16L_VphTrm(bxInstruction_c *i)
+{
+  BxPackedAvxRegister dst;
+  bool result = tilemov_read_row(i, i->getIaOpcode() == BX_IA_EVEX_TCVTROWPS2BF16L_VphTrmIb, &dst);
+  if (!result) {
+    BX_CLEAR_AVX_REG(i->dst());
+    BX_NEXT_INSTR(i);
+  }
+
+  // convert the fp32 source elements to bf16 and place them in low 16-bits of each dword
+  for (unsigned n=0;n < DWORD_ELEMENTS(BX_VL512); n++)
+    dst.vmm32u(n) = (Bit32u) convert_ne_fp32_to_bfloat16(dst.vmm32u(n));
+
+  BX_WRITE_AVX_REG(i->dst(), dst);
+
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::TCVTROWPS2BF16H_VphTrm(bxInstruction_c *i)
+{
+  BxPackedAvxRegister dst;
+  bool result = tilemov_read_row(i, i->getIaOpcode() == BX_IA_EVEX_TCVTROWPS2BF16H_VphTrmIb, &dst);
+  if (!result) {
+    BX_CLEAR_AVX_REG(i->dst());
+    BX_NEXT_INSTR(i);
+  }
+
+  // convert the fp32 source elements to bf16 and place them in high 16-bits of each dword
+  for (unsigned n=0;n < DWORD_ELEMENTS(BX_VL512); n++)
+    dst.vmm32u(n) = ((Bit32u) convert_ne_fp32_to_bfloat16(dst.vmm32u(n))) << 16;
+
+  BX_WRITE_AVX_REG(i->dst(), dst);
+
+  BX_NEXT_INSTR(i);
+}
+
+#endif // BX_SUPPORT_AMX

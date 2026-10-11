@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2003-2018 Stanislav Shwartsman
+//   Copyright (c) 2003-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -26,11 +26,7 @@
 #include "cpu/cpu.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
-#include "iodev/iodev.h"
-
 #include "softfloat3e/include/softfloat.h"
-
-#define CHECK_PENDING_EXCEPTIONS 1
 
 #if BX_SUPPORT_FPU
 void BX_CPU_C::FPU_update_last_instruction(bxInstruction_c *i)
@@ -48,28 +44,6 @@ void BX_CPU_C::FPU_update_last_instruction(bxInstruction_c *i)
       BX_CPU_THIS_PTR the_i387.fds = BX_CPU_THIS_PTR sregs[i->seg()].selector.value;
       BX_CPU_THIS_PTR the_i387.fdp = RMAddr(i);
     }
-  }
-}
-
-void BX_CPU_C::FPU_check_pending_exceptions(void)
-{
-  if(BX_CPU_THIS_PTR the_i387.get_partial_status() & FPU_SW_Summary)
-  {
-     // NE=1 selects the native or internal mode, which generates #MF,
-     // which is an extension introduced with 80486.
-     // NE=0 selects the original (backward compatible) FPU error
-     // handling, which generates an IRQ 13 via the PIC chip.
-#if BX_CPU_LEVEL >= 4
-     if (BX_CPU_THIS_PTR cr0.get_NE() != 0) {
-         exception(BX_MF_EXCEPTION, 0);
-     }
-     else
-#endif
-     {
-        // MSDOS compatibility external interrupt (IRQ13)
-        BX_INFO(("math_abort: MSDOS compatibility FPU exception"));
-        DEV_pic_raise_irq(13);
-     }
   }
 }
 
@@ -323,14 +297,9 @@ bx_address BX_CPU_C::fpu_load_environment(bxInstruction_c *i)
 
     /* check for unmasked exceptions */
     if (FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask)
-    {
-        /* set the B and ES bits in the status-word */
-        FPU_PARTIAL_STATUS |= FPU_SW_Summary | FPU_SW_Backward;
-    }
-    else {
-        /* clear the B and ES bits in the status-word */
-        FPU_PARTIAL_STATUS &= ~(FPU_SW_Summary | FPU_SW_Backward);
-    }
+        set_unmasked_fpu_exception();
+    else
+        clear_unmasked_fpu_exception();
 
     return (eaddr + offset) & asize_mask;
 }
@@ -347,15 +316,9 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FLDCW(bxInstruction_c *i)
 
   /* check for unmasked exceptions */
   if (FPU_PARTIAL_STATUS & ~FPU_CONTROL_WORD & FPU_CW_Exceptions_Mask)
-  {
-      /* set the B and ES bits in the status-word */
-      FPU_PARTIAL_STATUS |= FPU_SW_Summary | FPU_SW_Backward;
-  }
+      set_unmasked_fpu_exception();
   else
-  {
-      /* clear the B and ES bits in the status-word */
-      FPU_PARTIAL_STATUS &= ~(FPU_SW_Summary | FPU_SW_Backward);
-  }
+      clear_unmasked_fpu_exception();
 
   BX_NEXT_INSTR(i);
 }
@@ -439,6 +402,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNCLEX(bxInstruction_c *i)
                    FPU_SW_Underflow|FPU_SW_Overflow|FPU_SW_Zero_Div|FPU_SW_Denormal_Op|
                    FPU_SW_Invalid);
 
+  clear_unmasked_fpu_exception();
+
   // do not update last fpu instruction pointer
 
   BX_NEXT_INSTR(i);
@@ -476,8 +441,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FNSTENV(bxInstruction_c *i)
   fpu_save_environment(i);
   /* mask all floating point exceptions */
   FPU_CONTROL_WORD |= FPU_CW_Exceptions_Mask;
-  /* clear the B and ES bits in the status word */
-  FPU_PARTIAL_STATUS &= ~(FPU_SW_Backward|FPU_SW_Summary);
+
+  clear_unmasked_fpu_exception();
 
   BX_NEXT_INSTR(i);
 }
@@ -507,9 +472,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::FPLEGACY(bxInstruction_c *i)
 
 #include <math.h>
 
-void BX_CPU_C::print_state_FPU(void)
+double x87_to_double(Bit16u signExp, Bit64u signif)
 {
   static double scale_factor = pow(2.0, -63.0);
+
+  double f = pow(2.0, ((0x7fff & signExp) - 0x3fff));
+  if (signExp & 0x8000) f = -f;
+#ifdef _MSC_VER
+  f *= (double)(signed __int64)(signif>>1) * scale_factor * 2;
+#else
+  f *= signif*scale_factor;
+#endif
+
+  return f;
+}
+
+void BX_CPU_C::print_state_FPU(void)
+{
   static const char* cw_round_control[] = {
     "NEAREST", "DOWN", "UP", "CHOP"
   };
@@ -570,13 +549,7 @@ void BX_CPU_C::print_state_FPU(void)
     const floatx80 &fp = BX_FPU_REG(i);
     unsigned tag = BX_CPU_THIS_PTR the_i387.FPU_gettagi((i-tos)&7);
     if (tag != FPU_Tag_Empty) tag = FPU_tagof(fp);
-    double f = pow(2.0, ((0x7fff & fp.signExp) - 0x3fff));
-    if (fp.signExp & 0x8000) f = -f;
-#ifdef _MSC_VER
-    f *= (double)(signed __int64)(fp.signif>>1) * scale_factor * 2;
-#else
-    f *= fp.signif*scale_factor;
-#endif
+    double f = x87_to_double(fp.signExp, fp.signif);
     softfloat_class_t f_class = extF80_class(fp);
     fprintf(stderr, "%sFP%d ST%d(%c):        raw 0x%04x:%08x%08x (%.10f) (%s)\n",
           i==tos?"=>":"  ", i, (i-tos)&7,

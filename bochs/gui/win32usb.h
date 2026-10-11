@@ -51,6 +51,7 @@ INT_PTR CALLBACK hc_uhci_callback_td(HWND hDlg, UINT msg, WPARAM wParam, LPARAM 
 //
 INT_PTR CALLBACK hc_ohci_callback(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam);
 int hc_ohci_init(HWND hwnd);
+int hc_ohci_save(HWND hwnd);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //  EHCI

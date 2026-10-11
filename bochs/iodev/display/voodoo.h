@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2012-2024  The Bochs Project
+//  Copyright (C) 2012-2025  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,8 @@
 
 #ifndef BX_IODEV_VOODOO_H
 #define BX_IODEV_VOODOO_H
+
+//#define BANSHEE_TILED_FB
 
 #define BX_VOODOO_THIS theVoodooDevice->
 #define BX_VOODOO_THIS_PTR theVoodooDevice
@@ -64,7 +66,7 @@ public:
   virtual void register_state(void) {}
 
   virtual void start_fifo_thread(void);
-  virtual void refresh_display(void *this_ptr, bool redraw);
+  virtual void refresh_display(bool redraw);
   virtual void redraw_area(unsigned x0, unsigned y0,
                            unsigned width, unsigned height);
   virtual bool update(void);
@@ -202,6 +204,7 @@ public:
   virtual Bit8u  mem_read(bx_phy_address addr);
   virtual void   mem_write(bx_phy_address addr, Bit8u value);
 
+  virtual void   refresh_display(bool redraw);
   virtual void   redraw_area(unsigned x0, unsigned y0,
                              unsigned width, unsigned height);
 

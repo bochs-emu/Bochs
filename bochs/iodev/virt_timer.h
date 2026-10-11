@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -42,10 +42,12 @@ private:
                                //   This function MUST return.
     void *this_ptr;            // The this-> pointer for C++ callbacks
                                //   has to be stored as well.
-    char id[BxMaxTimerIDLen]; // String ID of timer.
+    char id[BxMaxTimerIDLen];  // String ID of timer.
+    Bit32u param;              // Device-specific value assigned to timer (optional)
   } timer[BX_MAX_VIRTUAL_TIMERS];
 
-  unsigned   numTimers;  // Number of currently allocated timers.
+  unsigned   numTimers;      // Number of currently allocated timers.
+  unsigned   triggeredTimer; // ID of the actually triggered timer.
 
   struct {
     //Variables for the timer subsystem:
@@ -123,6 +125,8 @@ public:
   //unregister a previously registered timer.
   bool unregisterTimer(unsigned timerID);
 
+  void   setTimerParam(unsigned timerID, Bit32u param);
+
   void start_timers(void);
 
   //activate a deactivated but registered timer.
@@ -131,6 +135,12 @@ public:
   //deactivate (but don't unregister) a currently registered timer.
   void deactivate_timer(unsigned timer_index);
 
+  unsigned triggeredTimerID(void) {
+    return triggeredTimer;
+  }
+  Bit32u triggeredTimerParam(void) {
+    return timer[triggeredTimer].param;
+  }
 
   //Timer handlers passed to pc_system
   static void pc_system_timer_handler_0(void* this_ptr);

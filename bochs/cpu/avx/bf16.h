@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2024 Stanislav Shwartsman
+//   Copyright (c) 2024-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -24,12 +24,14 @@
 #ifndef BX_BF16_HELPER
 #define BX_BF16_HELPER
 
-// TF32: s|eeeeeeee|mmmmmmmmmm-------------
 // FP32: s|eeeeeeee|mmmmmmmmmmmmmmmmmmmmmmm
 // BF16: s|eeeeeeee|mmmmmmm
 //  F16: s|eeeee|mmmmmmmmmm
 //  BF8: s|eeeee|mm                          (E5M2)
 //  HF8: s|eeee|mmm                          (E4M3)
+//  BF6: s|eee|mm                            (E3M2)
+//  HF6: s|ee|mmm                            (E2M3)
+//  BF4: s|ee|m                              (E2M1)
 
 BX_CPP_INLINE float32 convert_bfloat16_to_fp32(bfloat16 op)
 {
@@ -59,12 +61,6 @@ BX_CPP_INLINE bfloat16 convert_ne_fp32_to_bfloat16(float32 op)
 
   Bit32u rounding_bias = 0x7FFF + ((op >> 16) & 0x1);
   return (op + rounding_bias) >> 16;
-}
-
-// convert fp32 to tf32 by zeroing out lower mantissa bits [12:0]
-BX_CPP_INLINE float32 fp32_convert_to_tf32(float32 a)
-{
-  return a & 0xffffe000;
 }
 
 // bf16 arithmetics

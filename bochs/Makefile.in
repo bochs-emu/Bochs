@@ -1,4 +1,4 @@
-# Copyright (C) 2001-2025  The Bochs Project
+# Copyright (C) 2001-2026  The Bochs Project
 #
 # This library is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -39,14 +39,14 @@ VERSION=@VERSION@
 REL_STRING=@REL_STRING@
 MAN_PAGE_1_LIST=bochs bximage bxhub bochs-dlx
 MAN_PAGE_5_LIST=bochsrc
-INSTALL_LIST_SHARE=bios/BIOS-bochs-* bios/VGABIOS* bios/SeaBIOS* bios/SeaVGABIOS* bios/bios.bin-* bios/i440fx.bin bios/README-i440fx bios/vgabios-cirrus.bin-* @INSTALL_LIST_FOR_PLATFORM@
+INSTALL_LIST_SHARE=bios/BIOS-bochs-* bios/OVMF/* bios/VGABIOS-elpin/* bios/VGABIOS-lgpl/* bios/SeaBIOS/* bios/i440fx/* @INSTALL_LIST_FOR_PLATFORM@
 INSTALL_LIST_DOC=CHANGES COPYING LICENSE README TODO misc/slirp.conf misc/vnet.conf docs-html/cpu_configurability.txt
 INSTALL_LIST_BIN=bochs@EXE@ bximage@EXE@
 INSTALL_LIST_BIN_OPTIONAL=@OPTIONAL_TARGET@
-INSTALL_LIST_WIN32=$(INSTALL_LIST_SHARE) $(INSTALL_LIST_DOC) $(INSTALL_LIST_BIN) $(INSTALL_LIST_BIN_OPTIONAL)
+INSTALL_LIST_WIN32=$(INSTALL_LIST_DOC) $(INSTALL_LIST_BIN) $(INSTALL_LIST_BIN_OPTIONAL)
 INSTALL_LIST_MACOSX=$(INSTALL_LIST_SHARE) $(INSTALL_LIST_DOC) bochs.scpt
 # for win32 and macosx, these files get renamed to *.txt in install process
-TEXT_FILE_LIST=README CHANGES COPYING LICENSE TODO VGABIOS-elpin-LICENSE VGABIOS-lgpl-README SeaBIOS-README SeaVGABIOS-README README-i440fx
+TEXT_FILE_LIST=README CHANGES COPYING LICENSE TODO bios/VGABIOS-elpin-LICENSE bios/VGABIOS-lgpl-README bios/SeaBIOS-README bios/SeaVGABIOS-README bios/README-i440fx
 CP=cp
 CAT=cat
 RM=rm
@@ -96,13 +96,11 @@ X_PRE_LIBS = @X_PRE_LIBS@
 GUI_LINK_OPTS_X = $(X_LIBS) $(X_PRE_LIBS)
 GUI_LINK_OPTS_SDL = @GUI_LINK_OPTS_SDL@
 GUI_LINK_OPTS_SDL2 = @GUI_LINK_OPTS_SDL2@
-GUI_LINK_OPTS_SVGA =  -lvga -lvgagl
 GUI_LINK_OPTS_RFB = @RFB_LIBS@
 GUI_LINK_OPTS_VNCSRV = @GUI_LINK_OPTS_VNCSRV@
 GUI_LINK_OPTS_AMIGAOS =
-GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomdlg32 -lcomctl32 -lshell32
-GUI_LINK_OPTS_WIN32_VCPP = user32.lib gdi32.lib winmm.lib \
-  comdlg32.lib comctl32.lib advapi32.lib shell32.lib
+GUI_LINK_OPTS_WIN32 = -luser32 -lgdi32 -lcomdlg32 -lcomctl32 -lshell32 -lwinmm
+GUI_LINK_OPTS_WIN32_VCPP = user32.lib gdi32.lib comdlg32.lib comctl32.lib advapi32.lib shell32.lib
 GUI_LINK_OPTS_MACOS =
 GUI_LINK_OPTS_CARBON = -framework Carbon
 GUI_LINK_OPTS_NOGUI =
@@ -111,6 +109,7 @@ GUI_LINK_OPTS_WX = @GUI_LINK_OPTS_WX@
 GUI_LINK_OPTS = @GUI_LINK_OPTS@
 DEVICE_LINK_OPTS = @DEVICE_LINK_OPTS@
 RANLIB = @RANLIB@
+AR = @AR@
 
 CFLAGS_CONSOLE = @CFLAGS@ $(MCH_CFLAGS) $(FLA_FLAGS)
 CXXFLAGS_CONSOLE = @CXXFLAGS_CONSOLE@ $(MCH_CFLAGS) $(FLA_FLAGS)
@@ -198,7 +197,7 @@ bochs@EXE@: @IODEV_LIB_VAR@ @DISPLAY_LIB_VAR@ @HDIMAGE_LIB_VAR@ @USB_LIB_VAR@ @N
 		@SOUND_LIB_VAR@ @DEBUGGER_VAR@ cpu/libcpu.a @AVX_LIB_VAR@ cpu/cpudb/libcpudb.a \
 		memory/libmemory.a gui/libgui.a @INSTRUMENT_VAR@ \
 		$(BX_OBJS) $(SIMX86_OBJS) @FPU_VAR@ @GDBSTUB_VAR@
-	$(DLLTOOL) --export-all-symbols --output-def bochs.def \
+	$(DLLTOOL) --output-def bochs.def \
 		$(BX_OBJS) $(SIMX86_OBJS) \
 		@IODEV_LIB_VAR@ @DISPLAY_LIB_VAR@ @HDIMAGE_LIB_VAR@ @USB_LIB_VAR@ @NETWORK_LIB_VAR@ @SOUND_LIB_VAR@ \
 		cpu/libcpu.a @AVX_LIB_VAR@ cpu/cpudb/libcpudb.a memory/libmemory.a gui/libgui.a \
@@ -244,14 +243,25 @@ bochs_plugins:
 	$(MAKE) plugins
 	@CD_UP_TWO@
 
-bximage@EXE@: misc/bximage.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc.o misc/vbox.o
-	@LINK_CONSOLE@ $(BXIMAGE_LINK_OPTS) misc/bximage.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc.o misc/vbox.o
+bximage@EXE@: misc/bximage.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc.o misc/vhdx.o misc/crc32c.o misc/vbox.o
+	@LINK_CONSOLE@ $(BXIMAGE_LINK_OPTS) misc/bximage.o misc/hdimage.o misc/vmware3.o misc/vmware4.o misc/vpc.o misc/vhdx.o misc/crc32c.o misc/vbox.o
 
 niclist@EXE@: misc/niclist.o
 	@LINK_CONSOLE@ misc/niclist.o @NICLIST_LINK_OPTS@
 
 bxhub@EXE@: misc/bxhub.o misc/netutil.o
 	@LINK_CONSOLE@ misc/bxhub.o misc/netutil.o @BXHUB_LINK_OPTS@
+
+# standalone decoder/disassembler dev tool -- compiled straight from source
+# (not via the normal %.o objects, so it can't collide with their non-standalone
+# builds of the same files). Depends on every decoder .cc/.h via $(wildcard) so
+# it always rebuilds when any of them changes, without a hand-kept header list.
+@NOT_FOR_MSVC@bxdisasm@EXE@: $(srcdir)/bxdisasm.@CPP_SUFFIX@ config.h \
+@NOT_FOR_MSVC@  $(wildcard $(srcdir)/cpu/decoder/*.@CPP_SUFFIX@) $(wildcard $(srcdir)/cpu/decoder/*.h)
+@NOT_FOR_MSVC@	@LINK_CONSOLE@ -DBX_STANDALONE_DECODER $(BX_INCDIRS) $(CPPFLAGS) $(srcdir)/bxdisasm.@CPP_SUFFIX@ $(srcdir)/cpu/decoder/*.@CPP_SUFFIX@
+
+bxdisasm: bxdisasm@EXE@
+	@:
 
 # compile with console CXXFLAGS, not gui CXXFLAGS
 misc/bximage.o: $(srcdir)/misc/bximage.cc $(srcdir)/misc/bswap.h \
@@ -274,13 +284,21 @@ misc/vpc.o: $(srcdir)/iodev/hdimage/vpc.cc $(srcdir)/iodev/hdimage/vpc.h \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
 	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vpc.cc @OFP@$@
 
+misc/vhdx.o: $(srcdir)/iodev/hdimage/vhdx.cc $(srcdir)/iodev/hdimage/vhdx.h \
+  $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
+	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vhdx.cc @OFP@$@
+
+misc/crc32c.o: $(srcdir)/iodev/hdimage/crc32c.cc \
+  $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
+	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/crc32c.cc @OFP@$@
+
 misc/vbox.o: $(srcdir)/iodev/hdimage/vbox.cc $(srcdir)/iodev/hdimage/vbox.h \
   $(srcdir)/iodev/hdimage/hdimage.h $(srcdir)/misc/bxcompat.h
 	$(CXX) @DASH@c $(BX_INCDIRS) @BXIMAGE_FLAG@ $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/iodev/hdimage/vbox.cc @OFP@$@
 
 misc/bxhub.o: $(srcdir)/misc/bxhub.cc $(srcdir)/iodev/network/netmod.h \
   $(srcdir)/iodev/network/netutil.h $(srcdir)/misc/bxcompat.h
-	$(CC) @DASH@c $(BX_INCDIRS) $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bxhub.cc @OFP@$@
+	$(CXX) @DASH@c $(BX_INCDIRS) $(CPPFLAGS) $(CXXFLAGS_CONSOLE) $(srcdir)/misc/bxhub.cc @OFP@$@
 
 misc/netutil.o: $(srcdir)/iodev/network/netutil.cc $(srcdir)/iodev/network/netutil.h \
   $(srcdir)/iodev/network/netmod.h $(srcdir)/misc/bxcompat.h
@@ -370,12 +388,12 @@ gui/libgui.a::
 
 libbochs.a:
 	-rm -f libbochs.a
-	ar rv libbochs.a $(EXTERN_ENVIRONMENT_OBJS)
+	$(AR) rv libbochs.a $(EXTERN_ENVIRONMENT_OBJS)
 	$(RANLIB) libbochs.a
 
 # for wxWidgets port, on win32 platform
 wxbochs_resources.o: wxbochs.rc win32res.rc bxversion.rc win32_enh_dbg.rc win32usbres.rc
-	`wx-config --rescomp` $(srcdir)/wxbochs.rc -o $@
+	$(RC_CMD) $(srcdir)/wxbochs.rc -o $@
 
 # for win32 gui
 win32res.o: win32res.rc bxversion.rc win32_enh_dbg.rc win32usbres.rc
@@ -398,6 +416,8 @@ install_win32: download_dlx dl_docbook
 	-mkdir -p $(INSTDIR)
 	-cp -p obj-release/*.exe .
 	for i in $(INSTALL_LIST_WIN32); do if test -f $$i; then cp -p $$i $(INSTDIR); else cp -p $(srcdir)/$$i $(INSTDIR); fi; done
+	-mkdir $(INSTDIR)/bios
+	for i in $(INSTALL_LIST_SHARE); do if test -f $$i; then cp -p $$i $(INSTDIR)/bios/; else cp -p $(srcdir)/$$i $(INSTDIR)/bios/; fi; done
 	cp $(srcdir)/misc/sb16/sb16ctrl.example $(INSTDIR)/sb16ctrl.txt
 	cp -p $(srcdir)/misc/sb16/sb16ctrl.exe $(INSTDIR)
 	cp $(srcdir)/.bochsrc $(INSTDIR)/bochsrc-sample.txt
@@ -793,7 +813,7 @@ crc.o: crc.@CPP_SUFFIX@ config.h
 gdbstub.o: gdbstub.@CPP_SUFFIX@ bochs.h config.h osdep.h logio.h misc/bswap.h \
  param_names.h cpu/cpu.h cpu/decoder/decoder.h cpu/decoder/features.h \
  instrument/stubs/instrument.h cpu/i387.h \
- cpu/softfloat3e/include/softfloat_types.h config.h cpu/fpu/tag_w.h \
+ cpu/softfloat3e/include/softfloat_types.h config.h \
  cpu/fpu/status_w.h cpu/fpu/control_w.h cpu/crregs.h cpu/descriptor.h \
  cpu/decoder/instr.h cpu/lazy_flags.h cpu/tlb.h cpu/icache.h cpu/xmm.h \
  cpu/vmx.h cpu/vmx_ctrls.h cpu/stack.h cpu/access.h gui/siminterface.h \
@@ -802,7 +822,7 @@ logio.o: logio.@CPP_SUFFIX@ bochs.h config.h osdep.h logio.h misc/bswap.h \
  gui/siminterface.h gui/paramtree.h pc_system.h bxthread.h cpu/cpu.h \
  cpu/decoder/decoder.h cpu/decoder/features.h \
  instrument/stubs/instrument.h cpu/i387.h \
- cpu/softfloat3e/include/softfloat_types.h config.h cpu/fpu/tag_w.h \
+ cpu/softfloat3e/include/softfloat_types.h config.h \
  cpu/fpu/status_w.h cpu/fpu/control_w.h cpu/crregs.h cpu/descriptor.h \
  cpu/decoder/instr.h cpu/lazy_flags.h cpu/tlb.h cpu/icache.h cpu/xmm.h \
  cpu/vmx.h cpu/vmx_ctrls.h cpu/access.h bx_debug/debug.h osdep.h \
@@ -810,7 +830,7 @@ logio.o: logio.@CPP_SUFFIX@ bochs.h config.h osdep.h logio.h misc/bswap.h \
 main.o: main.@CPP_SUFFIX@ bochs.h config.h osdep.h logio.h misc/bswap.h bxversion.h \
  param_names.h cpu/cpu.h cpu/decoder/decoder.h cpu/decoder/features.h \
  instrument/stubs/instrument.h cpu/i387.h \
- cpu/softfloat3e/include/softfloat_types.h config.h cpu/fpu/tag_w.h \
+ cpu/softfloat3e/include/softfloat_types.h config.h \
  cpu/fpu/status_w.h cpu/fpu/control_w.h cpu/crregs.h cpu/descriptor.h \
  cpu/decoder/instr.h cpu/lazy_flags.h cpu/tlb.h cpu/icache.h cpu/xmm.h \
  cpu/vmx.h cpu/vmx_ctrls.h cpu/access.h iodev/iodev.h bochs.h plugin.h \
@@ -823,7 +843,7 @@ osdep.o: osdep.@CPP_SUFFIX@ bochs.h config.h osdep.h logio.h misc/bswap.h \
 pc_system.o: pc_system.@CPP_SUFFIX@ bochs.h config.h osdep.h logio.h misc/bswap.h \
  cpu/cpu.h cpu/decoder/decoder.h cpu/decoder/features.h \
  instrument/stubs/instrument.h cpu/i387.h \
- cpu/softfloat3e/include/softfloat_types.h config.h cpu/fpu/tag_w.h \
+ cpu/softfloat3e/include/softfloat_types.h config.h \
  cpu/fpu/status_w.h cpu/fpu/control_w.h cpu/crregs.h cpu/descriptor.h \
  cpu/decoder/instr.h cpu/lazy_flags.h cpu/tlb.h cpu/icache.h cpu/xmm.h \
  cpu/vmx.h cpu/vmx_ctrls.h cpu/access.h iodev/iodev.h bochs.h plugin.h \

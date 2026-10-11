@@ -24,6 +24,7 @@
 #define NEED_CPU_REG_SHORTCUTS 1
 #include "bochs.h"
 #include "cpu.h"
+#include "icache.h"
 #define LOG_THIS BX_CPU_THIS_PTR
 
   void BX_CPP_AttrRegparmN(3)
@@ -330,6 +331,67 @@ BX_CPU_C::tickle_read_linear(unsigned s, bx_address laddr)
 
 #if BX_X86_DEBUGGER
   hwbreakpoint_match(laddr, 1, BX_READ);
+#endif
+}
+
+  void BX_CPP_AttrRegparmN(3)
+BX_CPU_C::tickle_write_linear(unsigned s, bx_address laddr, unsigned len)
+{
+  len--;
+
+  bx_TLB_entry *tlbEntry = BX_DTLB_ENTRY_OF(laddr, len);
+#if BX_SUPPORT_ALIGNMENT_CHECK && BX_CPU_LEVEL >= 4
+  bx_address lpf = AlignedAccessLPFOf(laddr, (len & BX_CPU_THIS_PTR alignment_check_mask));
+#else
+  bx_address lpf = LPFOf(laddr);
+#endif
+  Bit32u pageOffset = PAGE_OFFSET(laddr);
+
+  if (tlbEntry->lpf == lpf) {
+    // See if the TLB entry privilege level allows us write access from this CPL
+    if (isWriteOK(tlbEntry, USER_PL)) {
+      BX_CPU_THIS_PTR address_xlation.paddress1 = tlbEntry->ppf | pageOffset;
+      BX_CPU_THIS_PTR address_xlation.pages     = 1;
+#if BX_SUPPORT_MEMTYPE
+      BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
+#endif
+      return;
+    }
+  }
+
+#if BX_SUPPORT_X86_64
+  if (! IsCanonicalAccess(laddr, BX_WRITE, USER_PL) || ! IsCanonicalAccess(laddr+len, BX_WRITE, USER_PL)) {
+    BX_ERROR(("tickle_write_linear(): canonical failure"));
+    exception(int_number(s), 0);
+  }
+#endif
+
+#if BX_CPU_LEVEL >= 4 && BX_SUPPORT_ALIGNMENT_CHECK
+  if (BX_CPU_THIS_PTR alignment_check() && USER_PL) {
+    if (pageOffset & len) {
+      BX_ERROR(("tickle_write_linear(): #AC misaligned access"));
+      exception(BX_AC_EXCEPTION, 0);
+    }
+  }
+#endif
+
+  // access spans accross two pages
+  BX_CPU_THIS_PTR address_xlation.pages     = 1;
+  BX_CPU_THIS_PTR address_xlation.paddress1 = translate_linear(tlbEntry, laddr, USER_PL, BX_WRITE);
+#if BX_SUPPORT_MEMTYPE
+  BX_CPU_THIS_PTR address_xlation.memtype1  = tlbEntry->get_memtype();
+#endif
+
+  if ((laddr>>12) != (laddr + len) >> 12) {
+    BX_CPU_THIS_PTR address_xlation.pages     = 2;
+    BX_CPU_THIS_PTR address_xlation.paddress2 = translate_linear(tlbEntry, laddr+len, USER_PL, BX_WRITE);
+#if BX_SUPPORT_MEMTYPE
+    BX_CPU_THIS_PTR address_xlation.memtype2  = tlbEntry->get_memtype();
+#endif
+  }
+
+#if BX_X86_DEBUGGER
+  hwbreakpoint_match(laddr, len+1, BX_WRITE);
 #endif
 }
 
@@ -1235,7 +1297,8 @@ bool BX_CPP_AttrRegparmN(4) BX_CPU_C::shadow_stack_lock_cmpxchg8b(bx_address off
 
 bool BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_atomic_set_busy(bx_address offset, unsigned curr_pl)
 {
-  return shadow_stack_lock_cmpxchg8b(offset, curr_pl, offset | 0x1, offset);
+  // set busy fail if address in the token is above 4GB while in compatibility mode
+  return shadow_stack_lock_cmpxchg8b(offset, curr_pl, offset | 0x1, long64_mode() ? offset : GET32L(offset));
 }
 
 bool BX_CPP_AttrRegparmN(2) BX_CPU_C::shadow_stack_atomic_clear_busy(bx_address offset, unsigned curr_pl)

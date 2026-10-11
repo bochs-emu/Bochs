@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2023 Stanislav Shwartsman
+//   Copyright (c) 2011-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -36,7 +36,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VZEROUPPER(bxInstruction_c *i)
   for(unsigned index=0; index < 16; index++) // clear only 16 registers even if AVX-512 is present
   {
     if (index < 8 || long64_mode())
-      BX_CLEAR_AVX_HIGH128(index);
+      BX_CLEAR_AVX_HIGH128(index);  // clear to MAXVL
   }
 
   BX_NEXT_INSTR(i);
@@ -47,8 +47,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VZEROALL(bxInstruction_c *i)
 {
   for(unsigned index=0; index < 16; index++) // clear only 16 registers even if AVX-512 is present
   {
-    if (index < 8 || long64_mode())
-      BX_CLEAR_AVX_REG(index);
+    if (index < 8 || long64_mode()) {
+      BX_CLEAR_YMM_REG(index);
+      BX_CLEAR_AVX_HIGH256(index); // clear to MAXVL
+    }
   }
 
   BX_NEXT_INSTR(i);

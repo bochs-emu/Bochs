@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2021  The Bochs Project
+//  Copyright (C) 2004-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -29,6 +29,7 @@
 #define BX_PLUGGABLE
 
 #include "iodev.h"
+#include "pc_system.h"
 
 #if BX_SUPPORT_PCI
 
@@ -95,7 +96,7 @@ void bx_pci_ide_c::init(void)
     if (BX_PIDE_THIS s.bmdma[i].timer_index == BX_NULL_TIMER_HANDLE) {
       BX_PIDE_THIS s.bmdma[i].timer_index =
         DEV_register_timer(this, timer_handler, 1000, 0,0, "PIIX3 BM-DMA timer");
-        bx_pc_system.setTimerParam(BX_PIDE_THIS s.bmdma[i].timer_index, i);
+      bx_pc_system.setTimerParam(BX_PIDE_THIS s.bmdma[i].timer_index, i);
     }
   }
 
@@ -111,6 +112,14 @@ void bx_pci_ide_c::init(void)
     init_pci_conf(0x8086, 0x7010, 0x00, 0x010180, 0x00, 0);
   }
   BX_PIDE_THIS init_bar_io(4, 16, read_handler, write_handler, &bmdma_iomask[0]);
+
+  // PCI IDE always provides 2 IDE channels
+  if (!SIM->get_param_bool("ata.0.resources.enabled")->get() ||
+      !SIM->get_param_bool("ata.1.resources.enabled")->get()) {
+    BX_INFO(("Enable primary and secondary IDE channel (override settings)"));
+    SIM->get_param("ata.0.resources")->reset();
+    SIM->get_param("ata.1.resources")->reset();
+  }
 }
 
 void bx_pci_ide_c::reset(unsigned type)
@@ -169,14 +178,14 @@ void bx_pci_ide_c::register_state(void)
 
 void bx_pci_ide_c::after_restore_state(void)
 {
-  bx_pci_device_c::after_restore_pci_state(NULL);
+  bx_pci_device_c::after_restore_pci_state();
 }
 
 Bit64s bx_pci_ide_c::param_save_handler(void *devptr, bx_param_c *param)
 {
 #if !BX_USE_PIDE_SMF
   bx_pci_ide_c *class_ptr = (bx_pci_ide_c *) devptr;
-  return class_ptr->param_save(param, val);
+  return class_ptr->param_save(param);
 }
 
 Bit64s bx_pci_ide_c::param_save(bx_param_c *param)
@@ -256,7 +265,7 @@ void bx_pci_ide_c::timer()
   }
   if (BX_PIDE_THIS s.bmdma[channel].cmd_rwcon &&
       !BX_PIDE_THIS s.bmdma[channel].data_ready) {
-    bx_pc_system.activate_timer(BX_PIDE_THIS s.bmdma[channel].timer_index, 1000, 0);
+    bx_pc_system.activate_timer(BX_PIDE_THIS s.bmdma[channel].timer_index, 1, 0);
     return;
   }
   DEV_MEM_READ_PHYSICAL(BX_PIDE_THIS s.bmdma[channel].prd_current, 4, (Bit8u *)&prd.addr);
@@ -400,7 +409,7 @@ void bx_pci_ide_c::write(Bit32u address, Bit32u value, unsigned io_len)
         BX_PIDE_THIS s.bmdma[channel].prd_current = BX_PIDE_THIS s.bmdma[channel].dtpr;
         BX_PIDE_THIS s.bmdma[channel].buffer_top = BX_PIDE_THIS s.bmdma[channel].buffer;
         BX_PIDE_THIS s.bmdma[channel].buffer_idx = BX_PIDE_THIS s.bmdma[channel].buffer;
-        bx_pc_system.activate_timer(BX_PIDE_THIS s.bmdma[channel].timer_index, 1000, 0);
+        bx_pc_system.activate_timer(BX_PIDE_THIS s.bmdma[channel].timer_index, 1, 0);
       } else if (!(value & 0x01) && BX_PIDE_THIS s.bmdma[channel].cmd_ssbm) {
         BX_PIDE_THIS s.bmdma[channel].cmd_ssbm = 0;
         BX_PIDE_THIS s.bmdma[channel].status &= ~0x01;

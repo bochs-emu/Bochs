@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2021  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -74,8 +74,8 @@ private:
   BX_PIT_SMF void handle_timer();
   BX_PIT_SMF bool periodic(Bit32u usec_delta);
 
-  BX_PIT_SMF void  irq_handler(bool value);
-  BX_PIT_SMF void  speaker_handler(bool value);
+  static void  irq_handler(void *this_ptr, bool value);
+  static void  speaker_handler(void *this_ptr, bool value);
 
   BX_PIT_SMF Bit16u get_timer(int Timer);
   BX_PIT_SMF Bit16u new_timer_count(int Timer);

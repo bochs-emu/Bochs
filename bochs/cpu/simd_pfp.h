@@ -964,14 +964,6 @@ BX_CPP_INLINE void xmm_scalefpd_mask(BxPackedXmmRegister *op1, const BxPackedXmm
   }
 }
 
-// FIXME, f16_scalef should be implemented in softfloat3e
-extern float32 convert_ne_fp16_to_fp32(float16 op);
-
-BX_CPP_INLINE float16 f16_scalef(float16 a, float16 b, softfloat_status_t *status)
-{
-  return f32_to_f16(f32_scalef(convert_ne_fp16_to_fp32(a), convert_ne_fp16_to_fp32(b), status), status);
-}
-
 BX_CPP_INLINE void xmm_scalefph(BxPackedXmmRegister *op1, const BxPackedXmmRegister *op2, softfloat_status_t &status)
 {
   for (unsigned n=0;n<8;n++) {

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -105,130 +105,270 @@ void cdrom_base_c::eject_cdrom()
   }
 }
 
+int cdrom_base_c::read_sub_channel(Bit8u* buf, bool sub_q, bool msf, int start_track, int format, int alloc_length) {
+  int ret_len = 4;
+  
+  buf[0] = 0;
+  buf[1] = 0; // audio status not supported
+  buf[2] = 0; 
+  buf[3] = 4;
+  
+  if (sub_q) { // !sub_q == header only
+    if (format == 1) {
+      buf[2] = 0;  // length (MSB -> LSB)
+      buf[3] = 12; // 
+                        
+      buf[ 4] = 1;  // format code = 1
+      buf[ 5] = (0 << 4) | (0 << 0); // ADR | CONTROL
+      buf[ 6] = 1;  // track number
+      buf[ 7] = 1;  // index number
+      if (msf) {
+        // in TIME format
+        Bit32u lba = /*BX_SELECTED_DRIVE(channel).cdrom.curr_lba*/ 0 + (2 * 75); // 150 = 2 second lead-in from start
+        int mins = (lba / 75) / 60;
+        int secs = (lba / 75) % 60;
+        int frames = lba % 75;
+        buf[ 8] = 0;  // Absolute CD Address (H = 0)
+        buf[ 9] = mins;  // M field (0 -> 99)
+        buf[10] = secs;  // S field (0 -> 59)
+        buf[11] = frames;  // F field (0 -> 74)
+        buf[12] = 0;  // Track Relative CD Address (H = 0)
+        buf[13] = mins;  // M field (0 -> 99)
+        buf[14] = secs;  // S field (0 -> 59)
+        buf[15] = frames;  // F field (0 -> 74)
+      } else {
+        // LBA = (((M * 60) + S) * 75) + F - 150
+        // in LBA format
+        buf[ 8] = 0;  // Absolute CD Address (MSB -> LSB)
+        buf[ 9] = 0;  //
+        buf[10] = 0;  //
+        buf[11] = 1;  //
+        buf[12] = 0;  // Track Relative CD Address (MSB -> LSB)
+        buf[13] = 0;  //
+        buf[14] = 0;  //
+        buf[15] = 1;  //
+      }
+      ret_len = 16;
+                        
+    } else if (format == 2) {
+      buf[3] = 20;
+      buf[4] = 2;
+      buf[8] = 0; // no MCN
+      memset(&buf[9], 0, 13);
+      buf[22] = 0; // zero
+      buf[23] = 0; // AFRAME (0 -> 4Ah)
+      ret_len = 24;
+
+    } else if (format == 3) {
+      buf[3] = 20;
+      buf[4] = 3;
+      buf[5] = (1 << 4) | (4 << 0); // 0x14
+      buf[6] = 1;
+      buf[7] = 0; // reserved
+      buf[8] = 0; // no ISRC
+      memset(&buf[9], 0, 12);
+      buf[21] = 0; // zero
+      buf[22] = 0; // AFRAME (0 -> 4Ah)
+      buf[23] = 0; // reserved
+      ret_len = 24;
+    } else {
+      ret_len = 0;
+    }
+  }
+  
+  return ret_len;
+}
+
+// note: when the data returned is verified to work in all cases, to make this
+//  faster and lighter code, we can simply hard code each format's return as a binary array.
+// (especially format 2)
 bool cdrom_base_c::read_toc(Bit8u* buf, int* length, bool msf, int start_track, int format)
 {
-  unsigned i;
-  Bit32u blocks;
-  int len = 4;
+  Bit32u blocks = capacity();
+  Bit8u *p;
+  int len = 0;
+
+  // we only support a starting track of 1
+  // mmc4r05a.pdf, 6.29.2.5 states that the track number should be 1 to 99 only...
+  // 6.30.3.2.3 states that a one track device has a track number of 1
+  if (start_track > 1) {
+    BX_ERROR(("Read TOC: Starting Track should be 0 or 1 (is %i)", start_track));
+    return false;
+  }
 
   switch (format) {
     case 0:
-      // From atapi specs : start track can be 0-63, AA
-      if ((start_track > 1) && (start_track != 0xaa))
-        return 0;
-
+      // we are 20 bytes in length
+      buf[0] = (((20 - 2) & 0xFF00) >> 8);
+      buf[1] = (((20 - 2) & 0x00FF) >> 0);
+      
+      // first and last track is 1
       buf[2] = 1;
       buf[3] = 1;
 
-      if (start_track <= 1) {
-        buf[len++] = 0; // Reserved
-        buf[len++] = 0x14; // ADR, control
-        buf[len++] = 1; // Track number
-        buf[len++] = 0; // Reserved
-
-        // Start address
-        if (msf) {
-          buf[len++] = 0; // reserved
-          buf[len++] = 0; // minute
-          buf[len++] = 2; // second
-          buf[len++] = 0; // frame
-        } else {
-          buf[len++] = 0;
-          buf[len++] = 0;
-          buf[len++] = 0;
-          buf[len++] = 0; // logical sector 0
-        }
-      }
-
-      // Lead out track
-      buf[len++] = 0; // Reserved
-      buf[len++] = 0x16; // ADR, control
-      buf[len++] = 0xaa; // Track number
-      buf[len++] = 0; // Reserved
-
-      blocks = capacity();
+      ////////////////////////////////////
+      // first descriptor
+      buf[4] = 0x00; // Reserved
+      buf[5] = 0x15; // ADR = 1, control = 5
+      buf[6] = 0x01; // Track number
+      buf[7] = 0x00; // Reserved
 
       // Start address
       if (msf) {
-        buf[len++] = 0; // reserved
-        buf[len++] = (Bit8u)(((blocks + 150) / 75) / 60); // minute
-        buf[len++] = (Bit8u)(((blocks + 150) / 75) % 60); // second
-        buf[len++] = (Bit8u)((blocks + 150) % 75); // frame;
+        buf[8] = 0x00;  // reserved
+        buf[9] = 0x00;  // minute
+        buf[10] = 0x02; // second
+        buf[11] = 0x00; // frame
       } else {
-        buf[len++] = (blocks >> 24) & 0xff;
-        buf[len++] = (blocks >> 16) & 0xff;
-        buf[len++] = (blocks >> 8) & 0xff;
-        buf[len++] = (blocks >> 0) & 0xff;
+        // logical sector 0
+        buf[8] = 0x00;
+        buf[9] = 0x00;
+        buf[10] = 0x00;
+        buf[11] = 0x00;
       }
-      buf[0] = ((len-2) >> 8) & 0xff;
-      buf[1] = (len-2) & 0xff;
+
+      ////////////////////////////////////
+      // second descriptor
+      
+      // Lead out track
+      buf[12] = 0x00; // Reserved
+      buf[13] = 0x16; // ADR = 1, control = 6
+      buf[14] = 0xAA; // Track number
+      buf[15] = 0x00; // Reserved
+
+      // Start address of next
+      // i.e.: size of this track
+      if (msf) {
+        buf[16] = 0; // reserved
+        buf[17] = (Bit8u) (((blocks + 150) / 75) / 60); // minute
+        buf[18] = (Bit8u) (((blocks + 150) / 75) % 60); // second
+        buf[19] = (Bit8u) ((blocks + 150) % 75);        // frame;
+      } else {
+        buf[16] = (blocks >> 24) & 0xFF;
+        buf[17] = (blocks >> 16) & 0xFF;
+        buf[18] = (blocks >> 8) & 0xFF;
+        buf[19] = (blocks >> 0) & 0xFF;
+      }
+      len = 20;
       break;
 
-    case 1:
-      // multi session stuff - emulate a single session only
-      buf[0] = 0;
-      buf[1] = 0x0a;
+    case 1: // multi session stuff - emulate a single session only
+      // we are 12 bytes in length
+      buf[0] = (((12 - 2) & 0xFF00) >> 8);
+      buf[1] = (((12 - 2) & 0x00FF) >> 0);
       buf[2] = 1;
       buf[3] = 1;
-      for (i = 0; i < 8; i++)
-        buf[4+i] = 0;
+       // this assumes we are a data CD-ROM (Audio will return something other than 0x14)
+       buf[ 4] = 0;      // reserved
+       buf[ 5] = 0x14;   // adr in high nibble, cntrl in low nibble (0x17 if dvd+r, 0x14 all others)
+       buf[ 6] = 1;      // first track number in last complete session
+       buf[ 7] = 0;      // reserved
+       if (msf) {          // MSF is 00:02:00
+         buf[ 8] = 0;      // zero
+         buf[ 9] = 0;      // minute
+         buf[10] = 2;      // second
+         buf[11] = 0;      // frame
+       } else {
+         buf[ 8] = 0;      // MSB: Start Address of first track in last session
+         buf[ 9] = 0;      // 
+         buf[10] = 0;      //  (returns zero)
+         buf[11] = 0;      // LSB:
+       }
       len = 12;
       break;
 
+    case 3: // (return zero bytes)
+    case 4: //
+      break;
+
     case 2:
-      // raw toc - emulate a single session only (ported from qemu)
+      // we are 48 bytes in length
+      buf[0] = (((48 - 2) & 0xFF00) >> 8);
+      buf[1] = (((48 - 2) & 0x00FF) >> 0);
+      
+      // first and last track is 1
       buf[2] = 1;
       buf[3] = 1;
 
-      for (i = 0; i < 4; i++) {
-        buf[len++] = 1;
-        buf[len++] = 0x14;
-        buf[len++] = 0;
-        if (i < 3) {
-          buf[len++] = 0xa0 + i;
-        } else {
-          buf[len++] = 1;
-        }
-        buf[len++] = 0;
-        buf[len++] = 0;
-        buf[len++] = 0;
-        if (i < 2) {
-          buf[len++] = 0;
-          buf[len++] = 1;
-          buf[len++] = 0;
-          buf[len++] = 0;
-        } else if (i == 2) {
-          blocks = capacity();
-          if (msf) {
-            buf[len++] = 0; // reserved
-            buf[len++] = (Bit8u)(((blocks + 150) / 75) / 60); // minute
-            buf[len++] = (Bit8u)(((blocks + 150) / 75) % 60); // second
-            buf[len++] = (Bit8u)((blocks + 150) % 75); // frame;
-          } else {
-            buf[len++] = (blocks >> 24) & 0xff;
-            buf[len++] = (blocks >> 16) & 0xff;
-            buf[len++] = (blocks >> 8) & 0xff;
-            buf[len++] = (blocks >> 0) & 0xff;
-          }
-        } else {
-          buf[len++] = 0;
-          buf[len++] = 0;
-          buf[len++] = 0;
-          buf[len++] = 0;
-        }
-      }
-      buf[0] = ((len-2) >> 8) & 0xff;
-      buf[1] = (len-2) & 0xff;
+      // raw toc - emulate a single session only
+      p = &buf[4];
+      p[0] = 0x01;    // session number (only 1)
+      p[1] = 0x16;    // ADR = 1, Control = 6 (Data track, recorded uninterrupted)
+      p[2] = 0x00;    // TNO = 0
+      p[3] = 0xA0;    // POINT = 0xA0
+      p[4] = 0x00;    // Min
+      p[5] = 0x00;    // Sec
+      p[6] = 0x00;    // Frame
+      p[7] = 0x00;    // Zero or (Hour/PHour)
+      p[8] = 0x01;    // PMin
+      p[9] = 0x20;    // PSec
+      p[10] = 0x00;    // PFrame
+
+      p += 11;
+      p[0] = 0x01;    // session number (only 1)
+      p[1] = 0x16;    // ADR = 1, Control = 6 (Data track, recorded uninterrupted)
+      p[2] = 0x00;    // TNO = 0
+      p[3] = 0xA1;    // POINT = 0xA1
+      p[4] = 0x00;    // Min
+      p[5] = 0x00;    // Sec
+      p[6] = 0x00;    // Frame
+      p[7] = 0x00;    // Zero or (Hour/PHour)
+      p[8] = 0x01;    // PMin
+      p[9] = 0x00;    // PSec
+      p[10] = 0x00;    // PFrame
+
+      p += 11;
+      p[0] = 0x01;    // session number (only 1)
+      p[1] = 0x16;    // ADR = 1, Control = 6 (Data track, recorded uninterrupted)
+      p[2] = 0x00;    // TNO = 0
+      p[3] = 0xA2;    // POINT = 0xA2
+      p[4] = 0x00;    // Min
+      p[5] = 0x00;    // Sec
+      p[6] = 0x00;    // Frame
+      p[7] = 0x00;    // Zero or (Hour/PHour)
+      p[8] = (Bit8u) (((blocks + 150) / 75) / 60); // Pminute
+      p[9] = (Bit8u) (((blocks + 150) / 75) % 60); // Psecond
+      p[10] = (Bit8u) ((blocks + 150) % 75);       // Pframe;
+
+      p += 11;
+      p[0] = 0x01;    // session number (only 1)
+      p[1] = 0x15;    // ADR = 1, Control = 5 (Data track, recorded incremental)
+      p[2] = 0x00;    // TNO = 0
+      p[3] = 0x01;    // POINT = 0x01
+      p[4] = 0x00;    // Min
+      p[5] = 0x00;    // Sec
+      p[6] = 0x00;    // Frame
+      p[7] = 0x00;    // Zero or (Hour/PHour)
+      p[8] = 0x00;    // Pminute
+      p[9] = 0x02;    // Psecond
+      p[10] = 0x00;   // Pframe
+
+      len = 48;
       break;
 
-    default:
-      BX_PANIC(("cdrom: read_toc(): unknown format"));
-      return 0;
+    case 5:
+      // return the header only
+      buf[0] = ((2 & 0xFF00) >> 8);
+      buf[1] = ((2 & 0x00FF) >> 0);
+      
+      // first and last track is 0
+      buf[2] = 0;
+      buf[3] = 0;
+      len = 4;
+      break;
+      
+    // don't do the 'default' here.
+    // the calling function catches unknown format values
+    //default:
+    //  BX_PANIC(("cdrom: read_toc(): unknown format"));
+    //  return false;
   }
 
-  *length = len;
-
-  return 1;
+  if (len <= 0)
+    return false;
+  
+  if (length) *length = len;
+  return true;
 }
 
 bool BX_CPP_AttrRegparmN(3) cdrom_base_c::read_block(Bit8u* buf, Bit32u lba, int blocksize)
@@ -303,3 +443,25 @@ bool cdrom_base_c::seek(Bit32u lba)
 
   return read_block(buffer, lba, BX_CD_FRAMESIZE);
 }
+
+#if LOWLEVEL_CDAUDIO
+bool cdrom_base_c::play_audio(Bit32u lba, Bit32u length) {
+  // unimplemented
+  return 0;
+}
+
+bool cdrom_base_c::play_audio_msf(Bit8u* buf) {
+  // unimplemented
+  return 0;
+}
+
+bool cdrom_base_c::stop_audio(void) {
+  // unimplemented
+  return 0;
+}
+
+bool cdrom_base_c::pause_resume_audio(bool pause) {
+  // unimplemented
+  return 0;
+}
+#endif

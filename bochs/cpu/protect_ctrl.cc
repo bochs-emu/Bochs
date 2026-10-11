@@ -32,11 +32,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ARPL_EwGw(bxInstruction_c *i)
 {
   Bit16u op2_16, op1_16;
 
-  if (! protected_mode()) {
-    BX_DEBUG(("ARPL: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   /* op1_16 is a register or memory reference */
   if (i->modC0()) {
     op1_16 = BX_READ_16BIT_REG(i->dst());
@@ -77,11 +72,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LAR_GvEw(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
   Bit32u dword3 = 0;
 #endif
-
-  if (! protected_mode()) {
-    BX_ERROR(("LAR: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
 
   if (i->modC0()) {
     raw_selector = BX_READ_16BIT_REG(i->src());
@@ -191,11 +181,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
   Bit32u dword3 = 0;
 #endif
 
-  if (! protected_mode()) {
-    BX_ERROR(("LSL: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   if (i->modC0()) {
     raw_selector = BX_READ_16BIT_REG(i->src());
   }
@@ -285,11 +270,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LSL_GvEw(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
 {
-  if (! protected_mode()) {
-    BX_ERROR(("SLDT: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
 #if BX_CPU_LEVEL >= 5
   if (CPL!=0 && BX_CPU_THIS_PTR cr4.get_UMIP()) {
     BX_ERROR(("SLDT: CPL != 0 causes #GP when CR4.UMIP set"));
@@ -329,11 +309,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SLDT_Ew(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::STR_Ew(bxInstruction_c *i)
 {
-  if (! protected_mode()) {
-    BX_ERROR(("STR: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
 #if BX_CPU_LEVEL >= 5
   if (CPL!=0 && BX_CPU_THIS_PTR cr4.get_UMIP()) {
     BX_ERROR(("STR: CPL != 0 causes #GP when CR4.UMIP set"));
@@ -381,11 +356,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LLDT_Ew(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
   Bit32u dword3 = 0;
 #endif
-
-  if (! protected_mode()) {
-    BX_ERROR(("LLDT: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
 
   if (CPL != 0) {
     BX_ERROR(("LLDT: The current priveledge level is not 0"));
@@ -484,11 +454,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LTR_Ew(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
   Bit32u dword3 = 0;
 #endif
-
-  if (! protected_mode()) {
-    BX_ERROR(("LTR: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
 
   if (CPL != 0) {
     BX_ERROR(("LTR: The current priveledge level is not 0"));
@@ -602,11 +567,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERR_Ew(bxInstruction_c *i)
   bx_selector_t selector;
   Bit32u dword1, dword2;
 
-  if (! protected_mode()) {
-    BX_ERROR(("VERR: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
-
   if (i->modC0()) {
     raw_selector = BX_READ_16BIT_REG(i->src());
   }
@@ -693,11 +653,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::VERW_Ew(bxInstruction_c *i)
   bx_descriptor_t descriptor;
   bx_selector_t selector;
   Bit32u dword1, dword2;
-
-  if (! protected_mode()) {
-    BX_ERROR(("VERW: not recognized in real or virtual-8086 mode"));
-    exception(BX_UD_EXCEPTION, 0);
-  }
 
   if (i->modC0()) {
     raw_selector = BX_READ_16BIT_REG(i->src());

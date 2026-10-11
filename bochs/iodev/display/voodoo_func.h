@@ -1139,8 +1139,10 @@ void swap_buffers(voodoo_state *v)
   }
 
   /* decrement the pending count and reset our state */
+  BX_LOCK(fifo_mutex);
   if (v->fbi.swaps_pending)
     v->fbi.swaps_pending--;
+  BX_UNLOCK(fifo_mutex);
   v->fbi.vblank_count = 0;
   v->fbi.vblank_swap_pending = 0;
 }
@@ -1159,9 +1161,7 @@ Bit32s swapbuffer(voodoo_state *v, Bit32u data)
   /* if we're not syncing to the retrace, process the command immediately */
   if (!(data & 1))
   {
-    BX_LOCK(fifo_mutex);
     swap_buffers(v);
-    BX_UNLOCK(fifo_mutex);
     return 0;
   } else {
     if (v->vtimer_running) {
@@ -2297,7 +2297,8 @@ void register_w(Bit32u offset, Bit32u data, bool log)
 
     case colBufferStride: /* Banshee */
       if (v->type >= VOODOO_BANSHEE && (chips & 1)) {
-        if (data & 0x8000)
+        v->banshee.col_tiled = ((data & 0x8000) != 0);
+        if (v->banshee.col_tiled)
           v->fbi.rowpixels = (data & 0x7f) << 6;
         else
           v->fbi.rowpixels = (data & 0x3fff) >> 1;
@@ -2314,7 +2315,8 @@ void register_w(Bit32u offset, Bit32u data, bool log)
       if (v->type >= VOODOO_BANSHEE && (chips & 1)) {
         Bit32u rowpixels;
 
-        if (data & 0x8000)
+        v->banshee.aux_tiled = ((data & 0x8000) != 0);
+        if (v->banshee.aux_tiled)
           rowpixels = (data & 0x7f) << 6;
         else
           rowpixels = (data & 0x3fff) >> 1;
@@ -2878,6 +2880,9 @@ Bit32u cmdfifo_calc_depth_needed(cmdfifo_info *f)
       break;
     case 5:
       needed = 2 + ((command >> 3) & 0x7ffff);
+      break;
+    case 6:
+      needed = 4;
       break;
     default:
       BX_ERROR(("CMDFIFO: unsupported packet type %d", type));

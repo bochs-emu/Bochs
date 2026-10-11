@@ -11,7 +11,7 @@
 #
 
 VERSION=@VERSION@    # substituted in with configure script
-VERSION=2.0.pre4
+VERSION=3.0
 BUILDROOT=./_dmg_top
 INSTALL_PREFIX=$BUILDROOT/Bochs-${VERSION}
 DMG=./Bochs-${VERSION}.dmg

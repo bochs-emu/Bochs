@@ -64,12 +64,12 @@ DefinitionBlock (
                prt_slot0(0x0004),
                prt_slot1(0x0005),
                prt_slot2(0x0006),
-               prt_slot3(0x0007),
-               prt_slot0(0x0008),
-               prt_slot1(0x0009),
-               prt_slot2(0x000a),
-               prt_slot3(0x000b),
-               prt_slot0(0x000c),
+               prt_slot1(0x0007),
+               prt_slot1(0x0008),
+               prt_slot2(0x0009),
+               prt_slot3(0x000a),
+               prt_slot0(0x000b),
+               prt_slot1(0x000c),
                prt_slot1(0x000d),
                prt_slot2(0x000e),
                prt_slot3(0x000f),
@@ -136,6 +136,7 @@ DefinitionBlock (
                     ,, , AddressRangeMemory, TypeStatic)
             })
         }
+#ifdef BX_HPET
         Device(HPET) {
             Name(_HID,  EISAID("PNP0103"))
             Name(_UID, 0)
@@ -154,6 +155,7 @@ DefinitionBlock (
                 )
             })
         }
+#endif
     }
 
     Scope(\_SB.PCI0) {
@@ -240,6 +242,50 @@ DefinitionBlock (
                          IRQNoFlags () {12}
                     })
                     Return (TMP)
+                }
+            }
+
+	    /* primary IDE controller */
+            Device (IDE0)
+            {
+                Name (_HID, EisaId ("PNP0600"))
+                Name (_UID, 0x00)
+                Method (_STA, 0, NotSerialized)
+                {
+                    Return (0x00)
+                }
+
+                Method (_CRS, 0, NotSerialized)
+                {
+                    Name (BUF0, ResourceTemplate ()
+                    {
+                        IO (Decode16, 0x01F0, 0x01F0, 0x00, 0x08)
+                        IO (Decode16, 0x03F6, 0x03F6, 0x00, 0x01)
+                        IRQNoFlags () {14}
+                    })
+                    Return (BUF0)
+                }
+            }
+
+	    /* secondary IDE controller */
+            Device (IDE1)
+            {
+                Name (_HID, EisaId ("PNP0600"))
+                Name (_UID, 0x01)
+                Method (_STA, 0, NotSerialized)
+                {
+                    Return (0x00)
+                }
+
+                Method (_CRS, 0, NotSerialized)
+                {
+                    Name (BUF0, ResourceTemplate ()
+                    {
+                        IO (Decode16, 0x0170, 0x0170, 0x00, 0x08)
+                        IO (Decode16, 0x0376, 0x0376, 0x00, 0x01)
+                        IRQNoFlags () {15}
+                    })
+                    Return (BUF0)
                 }
             }
 

@@ -8,14 +8,14 @@ AC_CONFIG_HEADERS([config.h])
 
 dnl // Put Bochs version information right here so that it gets substituted
 dnl // into all the right places.
-VERSION="3.0.devel"
+VERSION="3.1.devel"
 VER_MAJOR=3
-VER_MINOR=0
+VER_MINOR=1
 dnl // this should be > 90 for pre-release of next version otherwise revision level
 VER_REVISION=0
 dnl // this should be 0 for release and 1 for development version
 VER_DEV=1
-REL_STRING="Built from GitHub snapshot after release 3.0"
+REL_STRING="Built from GitHub snapshot after release 3.1"
 REL_TIMESTAMP=`grep "Updated:" $srcdir/README | sed 's/Updated: //'`
 
 changequote(<<, >>)
@@ -47,11 +47,13 @@ AC_ARG_ENABLE([static-link],
 # those settings by defining CFLAGS and CXXFLAGS before running configure.
 NO_LT=0
 MSVC_TARGET=0
+NOT_FOR_MSVC=''
 need_dlcompat_for_plugins=0
 case "$target" in
   *-pc-windows* | *-pc-winnt*)
     DEFAULT_GUI=win32 # default to win32 gui
     NO_LT=1           # do not use libtool at all
+    NOT_FOR_MSVC='#'
     case "$target" in
       x86_64*)
         MSVC_TARGET=64
@@ -138,6 +140,22 @@ fi
 
 AC_PROG_CC
 AC_PROG_CXX
+
+dnl // Bochs requires at least C++11 compiler
+AC_LANG_SAVE
+AC_LANG([C++])
+AC_MSG_CHECKING(whether C++ compiler supports C++11)
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+#if !(__cplusplus >= 201103L || (defined(_MSVC_LANG) && _MSVC_LANG >= 201103L))
+#error C++11 is not supported
+#endif
+]], [[]])],[AC_MSG_RESULT(yes)],[
+     AC_MSG_RESULT(no)
+     AC_MSG_ERROR([Bochs requires C++ compiler with C++11 support])
+   ])
+AC_LANG_RESTORE
+
+AC_PROG_AR
 AC_PROG_MAKE_SET
 
 if test "$NO_LT" != 1; then
@@ -172,15 +190,11 @@ if test "$MSVC_TARGET" = 0; then
 fi
 AC_CHECK_FUNCS(getenv, AC_DEFINE(BX_HAVE_GETENV))
 AC_CHECK_FUNCS(setenv, AC_DEFINE(BX_HAVE_SETENV))
-AC_CHECK_FUNCS(snprintf, AC_DEFINE(BX_HAVE_SNPRINTF))
-AC_CHECK_FUNCS(vsnprintf, AC_DEFINE(BX_HAVE_VSNPRINTF))
 
 if test "$MSVC_TARGET" = 0; then
   AC_CHECK_FUNCS(select, AC_DEFINE(BX_HAVE_SELECT))
   AC_CHECK_TYPE(socklen_t, AC_DEFINE(BX_HAVE_SOCKLEN_T), , [#include <sys/types.h>
   #include <sys/socket.h>])
-  AC_CHECK_FUNCS(strtoull, AC_DEFINE(BX_HAVE_STRTOULL))
-  AC_CHECK_FUNCS(strtouq, AC_DEFINE(BX_HAVE_STRTOUQ))
   AC_CHECK_FUNCS(strdup, AC_DEFINE(BX_HAVE_STRDUP))
   AC_CHECK_FUNCS(strrev, AC_DEFINE(BX_HAVE_STRREV))
   AC_CHECK_FUNCS(stricmp, AC_DEFINE(BX_HAVE_STRICMP))
@@ -208,6 +222,58 @@ if test "$MSVC_TARGET" = 0; then
   ],[
     AC_MSG_RESULT(no)
   ])
+  AC_MSG_CHECKING(for __builtin_clz)
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+    volatile unsigned x = 0x12345678;
+    volatile unsigned long long y = 0x123456789ULL;
+  ]], [[
+    return __builtin_clz(x) + __builtin_clzll(y);
+  ]])],[
+    AC_DEFINE(BX_HAVE___BUILTIN_CLZ, 1, [Define to 1 if you have the '__builtin_clz' and '__builtin_clzll' functions.])
+    AC_MSG_RESULT(yes)
+  ],[
+    AC_MSG_RESULT(no)
+  ])
+  AC_MSG_CHECKING(for __builtin_ctz)
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+    volatile unsigned x = 0x12345678;
+    volatile unsigned long long y = 0x123456789ULL;
+  ]], [[
+    return __builtin_ctz(x) + __builtin_ctzll(y);
+  ]])],[
+    AC_DEFINE(BX_HAVE___BUILTIN_CTZ, 1, [Define to 1 if you have the '__builtin_ctz' and '__builtin_ctzll' functions.])
+    AC_MSG_RESULT(yes)
+  ],[
+    AC_MSG_RESULT(no)
+  ])
+  AC_MSG_CHECKING(for __builtin_popcount)
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+    volatile unsigned x = 0x12345678;
+    volatile unsigned long long y = 0x123456789ULL;
+  ]], [[
+    return __builtin_popcount(x) + __builtin_popcountll(y);
+  ]])],[
+    AC_DEFINE(BX_HAVE___BUILTIN_POPCOUNT, 1, [Define to 1 if you have the '__builtin_popcount' and '__builtin_popcountll' functions.])
+    AC_MSG_RESULT(yes)
+  ],[
+    AC_MSG_RESULT(no)
+  ])
+  dnl check C++ compiler for native 128-bit integer types, division requires runtime library support
+  AC_MSG_CHECKING(for __int128)
+  AC_LANG_PUSH([C++])
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+    volatile unsigned long long x = 0x123456789abcdefULL, y = 0xfedcba987654321ULL;
+  ]], [[
+    unsigned __int128 a = (unsigned __int128) x * y;
+    signed __int128 b = (signed __int128) a >> 3;
+    return (int) (a / y) + (int) (a % y) + (int) (b / -5) + (int) (b % 7);
+  ]])],[
+    AC_DEFINE(BX_HAVE_INT128, 1, [Define to 1 if the compiler supports native __int128 types.])
+    AC_MSG_RESULT(yes)
+  ],[
+    AC_MSG_RESULT(no)
+  ])
+  AC_LANG_POP([C++])
   AC_CHECK_FUNCS(tmpfile64, AC_DEFINE(BX_HAVE_TMPFILE64))
   AC_CHECK_FUNCS(fseek64, AC_DEFINE(BX_HAVE_FSEEK64))
   AC_CHECK_FUNCS(fseeko64, AC_DEFINE(BX_HAVE_FSEEKO64))
@@ -215,8 +281,6 @@ if test "$MSVC_TARGET" = 0; then
 else
   AC_DEFINE(BX_HAVE_SELECT, 1)
   AC_DEFINE(BX_HAVE_SOCKLEN_T, 0)
-  AC_DEFINE(BX_HAVE_STRTOULL, 1)
-  AC_DEFINE(BX_HAVE_STRTOUQ, 0)
   AC_DEFINE(BX_HAVE_STRDUP, 1)
   AC_DEFINE(BX_HAVE_STRREV, 1)
   AC_DEFINE(BX_HAVE_STRICMP, 1)
@@ -227,6 +291,10 @@ else
   AC_DEFINE(BX_HAVE_USLEEP, 0)
   AC_DEFINE(BX_HAVE___BUILTIN_BSWAP32, 0)
   AC_DEFINE(BX_HAVE___BUILTIN_BSWAP64, 0)
+  AC_DEFINE(BX_HAVE___BUILTIN_CLZ, 0)
+  AC_DEFINE(BX_HAVE___BUILTIN_CTZ, 0)
+  AC_DEFINE(BX_HAVE___BUILTIN_POPCOUNT, 0)
+  AC_DEFINE(BX_HAVE_INT128, 0)
   AC_DEFINE(BX_HAVE_TMPFILE64, 0)
   AC_DEFINE(BX_HAVE_FSEEK64, 0)
   AC_DEFINE(BX_HAVE_FSEEKO64, 0)
@@ -239,11 +307,9 @@ else
   fi
 fi
 AC_CHECK_FUNCS(sleep, AC_DEFINE(BX_HAVE_SLEEP))
-AC_CHECK_FUNCS(nanosleep, AC_DEFINE(BX_HAVE_NANOSLEEP))
 AC_CHECK_FUNCS(abort, AC_DEFINE(BX_HAVE_ABORT))
 AC_CHECK_MEMBER(struct sockaddr_in.sin_len, AC_DEFINE(BX_HAVE_SOCKADDR_IN_SIN_LEN), , [#include <sys/socket.h>
 #include <netinet/in.h> ])
-AC_CHECK_FUNCS(mktime, AC_DEFINE(BX_HAVE_MKTIME))
 
 dnl As of autoconf 2.53, the standard largefile test fails for Linux/gcc.
 dnl It does not put the largefiles arguments into CFLAGS, even though Linux/gcc
@@ -275,30 +341,6 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[typedef struct { } __attribute__ ((pa
       AC_MSG_RESULT(no)
       AC_DEFINE(BX_NO_ATTRIBUTES)
     ])
-
-AC_LANG_SAVE
-AC_LANG([C++])
-AC_MSG_CHECKING(for set)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <set>]], [[]])],[
-     AC_MSG_RESULT(yes)
-     AC_DEFINE(BX_HAVE_SET)
-   ],[AC_MSG_RESULT(no)])
-AC_MSG_CHECKING(for set.h)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <set.h>]], [[]])],[
-     AC_MSG_RESULT(yes)
-     AC_DEFINE(BX_HAVE_SET_H)
-   ],[AC_MSG_RESULT(no)])
-AC_MSG_CHECKING(for map)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <map>]], [[]])],[
-     AC_MSG_RESULT(yes)
-     AC_DEFINE(BX_HAVE_MAP)
-   ],[AC_MSG_RESULT(no)])
-AC_MSG_CHECKING(for map.h)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <map.h>]], [[]])],[
-     AC_MSG_RESULT(yes)
-     AC_DEFINE(BX_HAVE_MAP_H)
-   ],[AC_MSG_RESULT(no)])
-AC_LANG_RESTORE
 
 dnl Implement a check for each gui library to see if has a chance of compiling.
 if test "$with_all_libs" = yes; then
@@ -433,7 +475,6 @@ AC_ARG_ENABLE(idle-hack,
 AC_SUBST(BX_USE_IDLE_HACK)
 
 AC_CHECK_HEADER(dlfcn.h, AC_DEFINE(BX_HAVE_DLFCN_H, 1))
-AC_CHECK_HEADER(assert.h, AC_DEFINE(HAVE_ASSERT_H, 1))
 
 AC_MSG_CHECKING(for plugins support)
 AC_ARG_ENABLE(plugins,
@@ -505,12 +546,6 @@ if test "$bx_plugins" = 1 -a "$need_dlcompat_for_plugins" = 1; then
     AC_MSG_RESULT(yes)
   fi
 fi
-
-AC_MSG_CHECKING(if compiler allows LL for 64-bit constants)
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[ { 42LL; } ]])],[AC_MSG_RESULT(yes)],[
-      AC_MSG_RESULT(no)
-      AC_DEFINE(BX_64BIT_CONSTANTS_USE_LL, 0)
-    ])
 
 AC_MSG_CHECKING(for A20 support)
 AC_ARG_ENABLE(a20-pin,
@@ -715,27 +750,6 @@ AC_ARG_ENABLE(trace-linking,
   [
     AC_MSG_RESULT(no)
     enable_trace_linking=0
-    ]
-  )
-
-AC_MSG_CHECKING(support for configurable MSR registers)
-AC_ARG_ENABLE(configurable-msrs,
-  AS_HELP_STRING([--enable-configurable-msrs], [support for configurable MSR registers (yes if cpu level >= 5)]),
-  [if test "$enableval" = yes; then
-    AC_MSG_RESULT(yes)
-    AC_DEFINE(BX_CONFIGURE_MSRS, 1)
-   else
-    AC_MSG_RESULT(no)
-    AC_DEFINE(BX_CONFIGURE_MSRS, 0)
-   fi],
-  [
-    if test "$bx_cpu_level" -ge 5; then
-      AC_MSG_RESULT(yes)
-      AC_DEFINE(BX_CONFIGURE_MSRS, 1)
-    else
-      AC_MSG_RESULT(no)
-      AC_DEFINE(BX_CONFIGURE_MSRS, 0)
-    fi
     ]
   )
 
@@ -1285,6 +1299,29 @@ if test "$support_uintr" -gt 0 -a "$use_x86_64" = 0; then
   AC_MSG_ERROR([User Level Interrupt feature emulation require x86-64 enabled])
 fi
 
+support_fred=0
+AC_MSG_CHECKING(for Flexible Interrupt Delivery FRED support (experimental))
+AC_ARG_ENABLE(fred,
+  AS_HELP_STRING([--enable-fred], [for Flexible Interrupt Delivery FRED support (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_FRED, 1)
+    support_fred=1
+   elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_FRED, 0)
+   fi
+   ],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_FRED, 0)
+  ]
+  )
+
+if test "$support_fred" -gt 0 -a "$use_x86_64" = 0; then
+  AC_MSG_ERROR([Flexible Interrupt Delivery (FRED) emulation require x86-64 enabled])
+fi
+
 AC_MSG_CHECKING(for 3DNow! support)
 AC_ARG_ENABLE(3dnow,
   AS_HELP_STRING([--enable-3dnow], [3DNow! support (no - incomplete)]),
@@ -1351,7 +1388,7 @@ AC_ARG_ENABLE(monitor_mwait,
   ]
   )
 
-AC_MSG_CHECKING(for limited hardware performance monitoring emulation support (experimental))
+AC_MSG_CHECKING(for limited hardware performance monitoring emulation support)
 AC_ARG_ENABLE(perfmon,
   AS_HELP_STRING([--enable-perfmon], [support for limited hardware performance monitoring emulation (yes, if cpu level > 5 - experimental)]),
   [if test "$enableval" = yes; then
@@ -1387,6 +1424,23 @@ AC_ARG_ENABLE(memtype,
   [
     AC_MSG_RESULT(no)
     AC_DEFINE(BX_SUPPORT_MEMTYPE, 0)
+  ]
+  )
+
+AC_MSG_CHECKING(for MPX support)
+AC_ARG_ENABLE(mpx,
+  AS_HELP_STRING([--enable-mpx], [support for MPX emulation]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_MPX, 1)
+   elif test "$enableval" = no; then
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_MPX, 0)
+   fi
+   ],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_MPX, 0)
   ]
   )
 
@@ -1949,6 +2003,24 @@ AC_ARG_ENABLE(clgd54xx,
     ]
   )
 
+AC_MSG_CHECKING(for GeForce emulation (experimental))
+AC_ARG_ENABLE(geforce,
+  AS_HELP_STRING([--enable-geforce], [enable experimental GeForce emulation (no)]),
+  [if test "$enableval" = yes; then
+    AC_MSG_RESULT(yes)
+    AC_DEFINE(BX_SUPPORT_GEFORCE, 1)
+    DISPLAY_OBJS="$DISPLAY_OBJS geforce.o"
+    DISPLAY_DLL_TARGETS="$DISPLAY_DLL_TARGETS bx_geforce.dll"
+   else
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_GEFORCE, 0)
+   fi],
+  [
+    AC_MSG_RESULT(no)
+    AC_DEFINE(BX_SUPPORT_GEFORCE, 0)
+    ]
+  )
+
 AC_MSG_CHECKING(for 3dfx Voodoo Graphics emulation)
 AC_ARG_ENABLE(voodoo,
   AS_HELP_STRING([--enable-voodoo], [enable 3dfx Voodoo Graphics emulation (no)]),
@@ -2021,6 +2093,36 @@ else
   AC_DEFINE(BX_SUPPORT_CDROM, 0)
 fi
 
+AC_MSG_CHECKING(for lowlevel CD AUDIO support)
+AC_ARG_ENABLE(cdaudio,
+  AS_HELP_STRING([--enable-cdaudio], [lowlevel CD AUDIO support (no)]),
+  [if test "$enableval" = yes; then
+     bx_cdaudio=1
+   else
+     bx_cdaudio=0
+   fi],
+  [ bx_cdaudio=0 ]
+  )
+
+if test "$bx_cdaudio" = 1; then
+  AC_DEFINE(LOWLEVEL_CDAUDIO, 1)
+  if test "$bx_cdrom" = 0; then
+    AC_MSG_RESULT(yes)
+    AC_MSG_ERROR([Lowlevel CD AUDIO requires lowlevel CDROM support])
+  fi
+  case $target in
+    *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32* | *.msys)
+      AC_MSG_RESULT(win32)
+      ;;
+    *)
+      AC_MSG_RESULT(dummy)
+      ;;
+  esac
+else
+  AC_MSG_RESULT(no)
+  AC_DEFINE(LOWLEVEL_CDAUDIO, 0)
+fi
+
 AC_SUBST(CDROM_OBJS)
 
 
@@ -2088,10 +2190,16 @@ if test "$soundcard_present" = 1; then
       AC_DEFINE(BX_HAVE_SOUND_SDL, 1)
       ;;
     *-linux* | *-freebsd*)
-      SOUNDLOW_OBJS='soundoss.o'
-      soundlow_drivers="oss"
-      soundlow_default="oss"
-      AC_DEFINE(BX_HAVE_SOUND_OSS, 1)
+      bx_have_oss=0
+      AC_CHECK_HEADER([sys/soundcard.h], [bx_have_oss=1])
+      if test "$bx_have_oss" = 1; then
+        SOUNDLOW_OBJS='soundoss.o'
+        soundlow_drivers="oss"
+        soundlow_default="oss"
+        AC_DEFINE(BX_HAVE_SOUND_OSS, 1)
+      else
+        soundlow_default="dummy"
+      fi
       bx_have_alsa=0
       AC_CHECK_HEADER([alsa/asoundlib.h], [bx_have_alsa=1])
       if test "$bx_have_alsa" = 1; then
@@ -2106,16 +2214,8 @@ if test "$soundcard_present" = 1; then
         fi
       fi
       ;;
-    *-pc-windows*)
+    *-pc-windows* | *-pc-winnt* | *-cygwin* | *-mingw32* | *.msys)
       SOUNDLOW_OBJS='soundwin.o'
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS winmm.lib"
-      soundlow_drivers="win"
-      soundlow_default="win"
-      AC_DEFINE(BX_HAVE_SOUND_WIN, 1)
-      ;;
-    *-cygwin* | *-mingw32* | *-msys)
-      SOUNDLOW_OBJS='soundwin.o'
-      DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
       soundlow_drivers="win"
       soundlow_default="win"
       AC_DEFINE(BX_HAVE_SOUND_WIN, 1)
@@ -2135,7 +2235,11 @@ if test "$soundcard_present" = 1; then
   if test "$with_sdl" = yes; then
     SOUNDLOW_OBJS="$SOUNDLOW_OBJS soundsdl.o"
     if test "$bx_plugins" = 1; then
-      SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS `sdl-config --libs`"
+      if test "$enable_static_link" = yes; then
+        SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS `sdl-config --static-libs`"
+      else
+        SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS `sdl-config --libs`"
+      fi
     fi
     soundlow_drivers="$soundlow_drivers sdl"
     if test "$soundlow_default" = "dummy"; then
@@ -2145,7 +2249,11 @@ if test "$soundcard_present" = 1; then
   elif test "$with_sdl2" = yes; then
     SOUNDLOW_OBJS="$SOUNDLOW_OBJS soundsdl.o"
     if test "$bx_plugins" = 1; then
-      SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS `sdl2-config --libs`"
+      if test "$enable_static_link" = yes; then
+        SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS `sdl2-config --static-libs`"
+      else
+        SDL_SOUND_LINK_OPTS="$SDL_SOUND_LINK_OPTS `sdl2-config --libs`"
+      fi
     fi
     soundlow_drivers="$soundlow_drivers sdl"
     if test "$soundlow_default" = "dummy"; then
@@ -2221,11 +2329,6 @@ AC_ARG_ENABLE(gameport,
     AC_DEFINE(BX_SUPPORT_GAMEPORT, 1)
     if test "$gameport_present" = 0; then
       GAME_OBJS='gameport.o'
-      case $target in
-        *-cygwin* | *-mingw32* | *-msys)
-           DEVICE_LINK_OPTS="$DEVICE_LINK_OPTS -lwinmm"
-           ;;
-      esac
     fi
    else
     AC_MSG_RESULT(no)
@@ -2242,7 +2345,6 @@ AC_ARG_ENABLE(gameport,
     fi]
   )
 AC_SUBST(GAME_OBJS)
-
 
 BUSM_OBJS=''
 bx_busmouse=0
@@ -2388,7 +2490,7 @@ SLASH="/"
 CXXFP=""
 CFP=""
 OFP="-o "
-MAKELIB="ar rv \$@"
+MAKELIB="\$(AR) rv \$@"
 RMCOMMAND="rm -f "
 # first define link variables without libtool
 LINK="\$(CXX) -o \$@ \$(CXXFLAGS) \$(LDFLAGS)"
@@ -2556,11 +2658,19 @@ if test "$with_sdl" = yes; then
   SDL_CFLAGS=`sdl-config --cflags`
   GUI_CFLAGS="$GUI_CFLAGS $SDL_CFLAGS"
   GUI_CXXFLAGS="$GUI_CXXFLAGS $SDL_CFLAGS"
-  GUI_LINK_OPTS_SDL="`sdl-config --libs`"
+  if test "$enable_static_link" = yes; then
+    GUI_LINK_OPTS_SDL="`sdl-config --static-libs`"
+  else
+    GUI_LINK_OPTS_SDL="`sdl-config --libs`"
+  fi
   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_SDL)"
   # The plugin version uses multi-threading support in Bochs core
   if test "$bx_plugins" = 1; then
-    NONPLUGIN_GUI_LINK_OPTS="`sdl-config --libs`"
+    if test "$enable_static_link" = yes; then
+      NONPLUGIN_GUI_LINK_OPTS="`sdl-config --static-libs`"
+    else
+      NONPLUGIN_GUI_LINK_OPTS="`sdl-config --libs`"
+    fi
   fi
   # The enhanced X debugger depends on GTK2
   if test "$DEFAULT_GUI" != win32; then
@@ -2593,11 +2703,19 @@ if test "$with_sdl2" = yes; then
   SDL2_CFLAGS=`sdl2-config --cflags`
   GUI_CFLAGS="$GUI_CFLAGS $SDL2_CFLAGS"
   GUI_CXXFLAGS="$GUI_CXXFLAGS $SDL2_CFLAGS"
-  GUI_LINK_OPTS_SDL2="`sdl2-config --libs`"
+  if test "$enable_static_link" = yes; then
+    GUI_LINK_OPTS_SDL="`sdl2-config --static-libs`"
+  else
+    GUI_LINK_OPTS_SDL2="`sdl2-config --libs`"
+  fi
   GUI_LINK_OPTS="$GUI_LINK_OPTS \$(GUI_LINK_OPTS_SDL2)"
   # The plugin version uses multi-threading support in Bochs core
   if test "$bx_plugins" = 1; then
-    NONPLUGIN_GUI_LINK_OPTS="`sdl2-config --libs`"
+    if test "$enable_static_link" = yes; then
+      NONPLUGIN_GUI_LINK_OPTS="`sdl2-config --static-libs`"
+    else
+      NONPLUGIN_GUI_LINK_OPTS="`sdl2-config --libs`"
+    fi
   fi
   # The enhanced X debugger depends on GTK2
   if test "$DEFAULT_GUI" != win32; then
@@ -2767,6 +2885,10 @@ if test "$with_wx" = yes; then
   # problems.
   case $target in
     *-pc-windows* | *-cygwin* | *-mingw32* | *-msys)
+       RC_CMD=`$WX_CONFIG --rescomp`
+       if test "x$RC_CMD" = x; then
+         RC_CMD="`which windres` -I. `$WX_CONFIG --cflags`"
+       fi
        EXTRA_BX_OBJS="$EXTRA_BX_OBJS wxbochs_resources.o"
 	   GUI_LINK_OPTS_WX="$GUI_LINK_OPTS_WX"
        ;;
@@ -2945,7 +3067,6 @@ case "$target" in
     CD_UP_TWO="cd ..\.."
     CD_UP_THREE="cd ..\..\.."
     have_gettimeofday=0  # even though it may exist in build environment
-    AC_DEFINE(BX_64BIT_CONSTANTS_USE_LL, 0)
     AC_DEFINE(BX_CPP_INLINE, __forceinline)
     AC_DEFINE(BX_NO_ATTRIBUTES, 1)
     AC_DEFINE(HAVE_LIBREADLINE, 0)
@@ -3048,7 +3169,7 @@ case $target in
       INSTALL_PLUGINS_VAR=install_dll_plugins
       WIN32_DLL_IMPORT_LIB="bochs.lib"
       LINK_DLL="link /dll /nologo /subsystem:console /incremental:no /out:\$@"
-      LIBS="$LIBS advapi32.lib comctl32.lib comdlg32.lib gdi32.lib shell32.lib user32.lib"
+      LIBS="$LIBS advapi32.lib comctl32.lib comdlg32.lib gdi32.lib shell32.lib user32.lib winmm.lib"
       PLUGIN_TARGET_2=plugins_msvc
       LINK_VAR="_VCPP"
       EXT_MSVC_DLL_RULES="!INCLUDE makeincl.vc"
@@ -3071,6 +3192,7 @@ case $target in
         IODEV_DLL_TARGETS="$IODEV_DLL_TARGETS bx_$i.dll"
       done
     else
+      LIBS="$LIBS winmm.lib"
       if test "$with_win32" != yes; then
         LIBS="$LIBS comctl32.lib"
       fi
@@ -3096,7 +3218,10 @@ case $target in
       fi
     else
       if test "$with_win32" != yes; then
-        LIBS="$LIBS -lcomctl32"
+        LIBS="$LIBS -lcomctl32 -lwinmm"
+        if test "$gui_debugger" = 1; then
+          LIBS="$LIBS -lgdi32 -lcomdlg32"
+        fi
       fi
     fi
     CI_PLUGIN_OBJS="$CI_PLUGIN_OBJS \$(CI_OBJS_WIN32)"
@@ -3278,9 +3403,11 @@ for flag in $acx_pthread_flags; do
 	# pthread_cleanup_push because it is one of the few pthread
 	# functions on Solaris that doesn't have a non-functional libc stub.
 	# We try pthread_create on general principles.
-	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]], [[pthread_t th; pthread_join(th, 0);
-		     pthread_attr_init(0); pthread_cleanup_push(0, 0);
-		     pthread_create(0,0,0,0); pthread_cleanup_pop(0); ]])],[acx_pthread_ok=yes],[])
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>
+                void* test(void* a) { (void)a; return (void*)0; } 
+             ]], [[pthread_t th = {0}; pthread_attr_t th_attr; pthread_join(th, 0);
+		     pthread_attr_init(&th_attr); pthread_cleanup_push(0, 0);
+		     pthread_create(&th,0,test,0); pthread_cleanup_pop(0); ]])],[acx_pthread_ok=yes],[])
 
 	LIBS="$save_LIBS"
 	CFLAGS="$save_CFLAGS"
@@ -3305,9 +3432,11 @@ if test "x$acx_pthread_ok" = xyes; then
 	# Detect AIX lossage: threads are created detached by default
 	# and the JOINABLE attribute has a nonstandard name (UNDETACHED).
 	AC_MSG_CHECKING([for joinable pthread attribute])
-	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]], [[int attr=PTHREAD_CREATE_JOINABLE;]])],[ok=PTHREAD_CREATE_JOINABLE],[ok=unknown])
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]], [[int
+    attr=PTHREAD_CREATE_JOINABLE; (void)attr;]])],[ok=PTHREAD_CREATE_JOINABLE],[ok=unknown])
 	if test x"$ok" = xunknown; then
-		AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]], [[int attr=PTHREAD_CREATE_UNDETACHED;]])],[ok=PTHREAD_CREATE_UNDETACHED],[ok=unknown])
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <pthread.h>]], [[int
+        attr=PTHREAD_CREATE_UNDETACHED; (void)attr;]])],[ok=PTHREAD_CREATE_UNDETACHED],[ok=unknown])
 	fi
 	if test x"$ok" != xPTHREAD_CREATE_JOINABLE; then
 		AC_DEFINE(PTHREAD_CREATE_JOINABLE, $ok,
@@ -3471,6 +3600,7 @@ AC_SUBST(BOCHS_BITS)
 AC_SUBST(IODEV_DLL_TARGETS)
 AC_SUBST(WIN32_DLL_IMPORT_LIB)
 AC_SUBST(INSTALL_PLUGINS_VAR)
+AC_SUBST(NOT_FOR_MSVC)
 
 AC_PATH_PROG(GZIP, gzip)
 AC_PATH_PROG(TAR, tar)

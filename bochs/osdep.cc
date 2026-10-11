@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2017  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -36,174 +36,6 @@
 // Missing library functions.  These should work on any platform
 // that needs them.
 //////////////////////////////////////////////////////////////////////
-
-#if !BX_HAVE_SNPRINTF
-/* XXX use real snprintf */
-/* if they don't have snprintf, just use sprintf */
-int bx_snprintf (char *s, size_t maxlen, const char *format, ...)
-{
-  va_list arg;
-  int done;
-
-  va_start (arg, format);
-  done = vsprintf (s, format, arg);
-  va_end (arg);
-
-  return done;
-}
-
-#endif  /* !BX_HAVE_SNPRINTF */
-
-#if !BX_HAVE_VSNPRINTF
-int bx_vsnprintf (char *s, size_t maxlen, const char *format, va_list arg)
-{
-  return vsprintf (s, format, arg);
-}
-#endif /* !BX_HAVE_VSNPRINTF*/
-
-#if (!BX_HAVE_STRTOULL && !BX_HAVE_STRTOUQ)
-/* taken from glibc-2.2.2: strtod.c, and stripped down a lot.  There are
-   still a few leftover references to decimal points and exponents,
-   but it works for bases 10 and 16 */
-
-#define RETURN(val,end)							      \
-    do { if (endptr != NULL) *endptr = (char *) (end);		      \
-	 return val; } while (0)
-
-Bit64u bx_strtoull (const char *nptr, char **endptr, int baseignore)
-{
-  int negative;			/* The sign of the number.  */
-  int exponent;			/* Exponent of the number.  */
-
-  /* Numbers starting `0X' or `0x' have to be processed with base 16.  */
-  int base = 10;
-
-  /* Number of bits currently in result value.  */
-  int bits;
-
-  /* Running pointer after the last character processed in the string.  */
-  const char *cp, *tp;
-  /* Start of significant part of the number.  */
-  const char *startp, *start_of_digits;
-  /* Total number of digit and number of digits in integer part.  */
-  int dig_no;
-  /* Contains the last character read.  */
-  char c;
-
-  Bit64s n = 0;
-  char const *p;
-
-  /* Prepare number representation.  */
-  exponent = 0;
-  negative = 0;
-  bits = 0;
-
-  /* Parse string to get maximal legal prefix.  We need the number of
-     characters of the integer part, the fractional part and the exponent.  */
-  cp = nptr - 1;
-  /* Ignore leading white space.  */
-  do
-    c = *++cp;
-  while (isspace (c));
-
-  /* Get sign of the result.  */
-  if (c == '-')
-  {
-     negative = 1;
-     c = *++cp;
-  }
-  else if (c == '+')
-    c = *++cp;
-
-  if (c < '0' || c > '9')
-  {
-     /* It is really a text we do not recognize.  */
-     RETURN (0, nptr);
-  }
-
-  /* First look whether we are faced with a hexadecimal number.  */
-  if (c == '0' && tolower (cp[1]) == 'x')
-  {
-     /* Okay, it is a hexa-decimal number.  Remember this and skip
-        the characters.  BTW: hexadecimal numbers must not be
-        grouped.  */
-     base = 16;
-     cp += 2;
-     c = *cp;
-  }
-
-  /* Record the start of the digits, in case we will check their grouping.  */
-  start_of_digits = startp = cp;
-
-  /* Ignore leading zeroes.  This helps us to avoid useless computations.  */
-  while (c == '0')
-    c = *++cp;
-
-  /* If no other digit but a '0' is found the result is 0.0.
-     Return current read pointer.  */
-  if ((c < '0' || c > '9')
-      && (base == 16 && (c < tolower ('a') || c > tolower ('f')))
-      && (base == 16 && (cp == start_of_digits || tolower (c) != 'p'))
-      && (base != 16 && tolower (c) != 'e'))
-    {
-      tp = start_of_digits;
-      /* If TP is at the start of the digits, there was no correctly
-	 grouped prefix of the string; so no number found.  */
-      RETURN (0, tp == start_of_digits ? (base == 16 ? cp - 1 : nptr) : tp);
-    }
-
-  /* Remember first significant digit and read following characters until the
-     decimal point, exponent character or any non-FP number character.  */
-  startp = cp;
-  dig_no = 0;
-  while (1)
-  {
-      if ((c >= '0' && c <= '9')
-	  || (base == 16 && tolower (c) >= 'a' && tolower (c) <= 'f'))
-	++dig_no;
-      else
-	break;
-      c = *++cp;
-  }
-
-  /* The whole string is parsed.  Store the address of the next character.  */
-  if (endptr)
-    *endptr = (char *) cp;
-
-  if (dig_no == 0)
-    return 0;
-
-  for (p=start_of_digits; p!=cp; p++) {
-    n = n * (Bit64s)base;
-    c = tolower (*p);
-    c = (c >= 'a') ? (10+c-'a') : c-'0';
-    n = n + (Bit64s)c;
-    //printf ("after shifting in digit %c, n is %lld\n", *p, n);
-  }
-  return negative? -n : n;
-}
-#endif  /* !BX_HAVE_STRTOULL */
-
-#if BX_TEST_STRTOULL_MAIN
-/* test driver for strtoull.  Do not compile by default. */
-int main (int argc, char **argv)
-{
-  char buf[256], *endbuf;
-  long l;
-  Bit64s ll;
-  while (1) {
-    printf ("Enter a long int: ");
-    fgets (buf, sizeof(buf), stdin);
-    l = strtoul (buf, &endbuf, 10);
-    printf ("As a long, %ld\n", l);
-    printf ("Endbuf is at buf[%d]\n", endbuf-buf);
-    ll = bx_strtoull(buf, &endbuf, 10);
-    printf ("As a long long, %lld\n", ll);
-    printf ("Endbuf is at buf[%d]\n", endbuf-buf);
-  }
-  return 0;
-}
-#endif  /* BX_TEST_STRTOULL_MAIN */
 
 #if !BX_HAVE_STRDUP
 /* XXX use real strdup */
@@ -344,22 +176,25 @@ struct tm *localtime_r(const time_t *timep, struct tm *result)
 
 #if BX_HAVE_REALTIME_USEC
 #if defined(WIN32)
-static Bit64u last_realtime64_top = 0;
-static Bit64u last_realtime64_bottom = 0;
+static LARGE_INTEGER realtime64_freq;
+
+void bx_init_realtime64_usec(void)
+{
+  QueryPerformanceFrequency(&realtime64_freq);
+}
 
 Bit64u bx_get_realtime64_usec(void)
 {
-  Bit64u new_bottom = ((Bit64u) GetTickCount()) & BX_CONST64(0x0FFFFFFFF);
-  if(new_bottom < last_realtime64_bottom) {
-    last_realtime64_top += BX_CONST64(0x0000000100000000);
-  }
-  last_realtime64_bottom = new_bottom;
-  Bit64u interim_realtime64 =
-    (last_realtime64_top & BX_CONST64(0xFFFFFFFF00000000)) |
-    (new_bottom          & BX_CONST64(0x00000000FFFFFFFF));
-  return interim_realtime64*(BX_CONST64(1000));
+  LARGE_INTEGER ticks;
+  QueryPerformanceCounter(&ticks);
+  // Overflows approximately every month
+  return ticks.QuadPart * 1000000LL / realtime64_freq.QuadPart;
 }
 #elif BX_HAVE_GETTIMEOFDAY
+void bx_init_realtime64_usec(void)
+{
+}
+
 Bit64u bx_get_realtime64_usec(void)
 {
   timeval thetime;
@@ -369,4 +204,29 @@ Bit64u bx_get_realtime64_usec(void)
   return mytime;
 }
 #endif
+#endif
+
+#ifdef WIN32
+#include <timeapi.h>
+
+static TIMECAPS time_dev_caps;
+
+void bx_set_sys_timer_resolution(void)
+{
+  timeGetDevCaps(&time_dev_caps, sizeof(time_dev_caps));
+  timeBeginPeriod(time_dev_caps.wPeriodMin); // 1ms usually
+}
+
+void bx_reset_sys_timer_resolution(void)
+{
+  timeEndPeriod(time_dev_caps.wPeriodMin);
+}
+#else
+void bx_set_sys_timer_resolution(void)
+{
+}
+
+void bx_reset_sys_timer_resolution(void)
+{
+}
 #endif

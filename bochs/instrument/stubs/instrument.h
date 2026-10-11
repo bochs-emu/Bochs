@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2006-2015 Stanislav Shwartsman
+//   Copyright (c) 2006-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -40,12 +40,11 @@ void bx_instr_mwait(unsigned cpu, bx_phy_address addr, unsigned len, Bit32u flag
 void bx_instr_debug_promt();
 void bx_instr_debug_cmd(const char *cmd);
 
-void bx_instr_cnear_branch_taken(unsigned cpu, bx_address branch_eip, bx_address new_eip);
-void bx_instr_cnear_branch_not_taken(unsigned cpu, bx_address branch_eip);
-void bx_instr_ucnear_branch(unsigned cpu, unsigned what, bx_address branch_eip, bx_address new_eip);
+void bx_instr_near_branch_taken(unsigned cpu, unsigned what, bx_address branch_eip, bx_address new_eip);
+void bx_instr_near_branch_not_taken(unsigned cpu, bx_address branch_eip);
 void bx_instr_far_branch(unsigned cpu, unsigned what, Bit16u prev_cs, bx_address prev_eip, Bit16u new_cs, bx_address new_eip);
 
-void bx_instr_opcode(unsigned cpu, bxInstruction_c *i, const Bit8u *opcode, unsigned len, bool is32, bool is64);
+void bx_instr_opcode(unsigned cpu, const bxInstruction_c *i, const Bit8u *opcode, unsigned len, bool is32, bool is64);
 
 void bx_instr_interrupt(unsigned cpu, unsigned vector);
 void bx_instr_exception(unsigned cpu, unsigned vector, unsigned error_code);
@@ -57,9 +56,9 @@ void bx_instr_prefetch_hint(unsigned cpu, unsigned what, unsigned seg, bx_addres
 void bx_instr_clflush(unsigned cpu, bx_address laddr, bx_phy_address paddr);
 void bx_instr_cpuid(unsigned cpu);
 
-void bx_instr_before_execution(unsigned cpu, bxInstruction_c *i);
-void bx_instr_after_execution(unsigned cpu, bxInstruction_c *i);
-void bx_instr_repeat_iteration(unsigned cpu, bxInstruction_c *i);
+void bx_instr_before_execution(unsigned cpu, const bxInstruction_c *i);
+void bx_instr_after_execution(unsigned cpu, const bxInstruction_c *i);
+void bx_instr_repeat_iteration(unsigned cpu, const bxInstruction_c *i);
 
 void bx_instr_inp(Bit16u addr, unsigned len);
 void bx_instr_inp2(Bit16u addr, unsigned len, unsigned val);
@@ -90,9 +89,8 @@ void bx_instr_vmexit(unsigned cpu, Bit32u reason, Bit64u qualification);
 #define BX_INSTR_DEBUG_CMD(cmd)          bx_instr_debug_cmd(cmd)
 
 /* branch resolution */
-#define BX_INSTR_CNEAR_BRANCH_TAKEN(cpu_id, branch_eip, new_eip) bx_instr_cnear_branch_taken(cpu_id, branch_eip, new_eip)
-#define BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(cpu_id, branch_eip) bx_instr_cnear_branch_not_taken(cpu_id, branch_eip)
-#define BX_INSTR_UCNEAR_BRANCH(cpu_id, what, branch_eip, new_eip) bx_instr_ucnear_branch(cpu_id, what, branch_eip, new_eip)
+#define BX_INSTR_NEAR_BRANCH_TAKEN(cpu_id, what, branch_eip, new_eip) bx_instr_near_branch_taken(cpu_id, what, branch_eip, new_eip)
+#define BX_INSTR_NEAR_BRANCH_NOT_TAKEN(cpu_id, branch_eip) bx_instr_near_branch_not_taken(cpu_id, branch_eip)
 #define BX_INSTR_FAR_BRANCH(cpu_id, what, prev_cs, prev_eip, new_cs, new_eip) \
                        bx_instr_far_branch(cpu_id, what, prev_cs, prev_eip, new_cs, new_eip)
 
@@ -157,9 +155,8 @@ void bx_instr_vmexit(unsigned cpu, Bit32u reason, Bit64u qualification);
 #define BX_INSTR_DEBUG_CMD(cmd)
 
 /* branch resolution */
-#define BX_INSTR_CNEAR_BRANCH_TAKEN(cpu_id, branch_eip, new_eip)
-#define BX_INSTR_CNEAR_BRANCH_NOT_TAKEN(cpu_id, branch_eip)
-#define BX_INSTR_UCNEAR_BRANCH(cpu_id, what, branch_eip, new_eip)
+#define BX_INSTR_NEAR_BRANCH_TAKEN(cpu_id, what, branch_eip, new_eip)
+#define BX_INSTR_NEAR_BRANCH_NOT_TAKEN(cpu_id, branch_eip)
 #define BX_INSTR_FAR_BRANCH(cpu_id, what, prev_cs, prev_eip, new_cs, new_eip)
 
 /* decoding completed */
