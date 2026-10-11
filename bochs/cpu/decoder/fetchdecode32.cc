@@ -1197,6 +1197,8 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, 
       i->setSrcReg(n, 0);
       break;
     case BX_SRC_NNN:
+      // REX.R is ignored when ModRM.reg encodes a segment register
+      if (type == BX_SEGREG) nnn &= 0x7;
       i->setSrcReg(n, nnn);
       break;
     case BX_SRC_RM:
