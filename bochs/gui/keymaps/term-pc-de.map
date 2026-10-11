@@ -1,0 +1,176 @@
+# Bochs Keymap file
+# $Id$
+# Target: PC(x86) keyboard, DE keymap, term gui
+# Author: Volker Ruppert
+#
+# The keymap file describes the layout of a keyboard, and how it translates
+# into Bochs key codes.
+#
+# Format:
+#  BX_Keysym                ASCII_equivalent      Term keycode
+#
+# Or, for keys that require modifiers:
+#  BX_Keysym+BX_Modifier    ASCII_equivalent    Term keycode
+#
+# BX_Keysym and BX_Modifier must be present in the bx_key_symbol[] list in
+# gui/keymap.cc.  The BX_Modifier is usually a shift key press, but it
+# could be any key.  Presently a maximum of one modifier is supported, but this
+# could be changed in keymap.h (structure def has only one slot for modifier),
+# keymap.cc (parsing code), and iodev/keyboard.cc (simulate keypresses for >1
+# modifier).
+#
+# The ASCII_equivalent must be either apostrophe + one character + apostrophe,
+# or one of these keywords: space, return, tab, backslash, apostrophe, none.
+# This format is designed to look like a char constant in C, but it's a very
+# simple parser.  There's no concept of backslash being an escape char.  The
+# backslash and apostrophe entries are provided for aesthetic purposes only: no
+# C++ programmer wants to see '\' or '''. The parser doesn't care, but they are
+# ugly.
+
+BX_KEY_0                                      '0'        '0'
+BX_KEY_0+BX_KEY_ALT_R                         '}'        '}'
+BX_KEY_0+BX_KEY_SHIFT_L                       '='        '='
+BX_KEY_1                                      '1'        '1'
+BX_KEY_1+BX_KEY_SHIFT_L                       '!'        '!'
+BX_KEY_2                                      '2'        '2'
+BX_KEY_2+BX_KEY_SHIFT_L                       '"'        '"'
+BX_KEY_3                                      '3'        '3'
+BX_KEY_4                                      '4'        '4'
+BX_KEY_4+BX_KEY_SHIFT_L                       '$'        '$'
+BX_KEY_5                                      '5'        '5'
+BX_KEY_5+BX_KEY_SHIFT_L                       '%'        '%'
+BX_KEY_6                                      '6'        '6'
+BX_KEY_6+BX_KEY_SHIFT_L                       '&'        '&'
+BX_KEY_7                                      '7'        '7'
+BX_KEY_7+BX_KEY_ALT_R                         '{'        '{'
+BX_KEY_7+BX_KEY_SHIFT_L                       '/'        '/'
+BX_KEY_8                                      '8'        '8'
+BX_KEY_8+BX_KEY_ALT_R                         '['        '['
+BX_KEY_8+BX_KEY_SHIFT_L                       '('        '('
+BX_KEY_9                                      '9'        '9'
+BX_KEY_9+BX_KEY_ALT_R                         ']'        ']'
+BX_KEY_9+BX_KEY_SHIFT_L                       ')'        ')'
+BX_KEY_A+BX_KEY_CTRL_L                        none       0x1
+BX_KEY_A+BX_KEY_SHIFT_L                       'A'        'A'
+BX_KEY_A                                      'a'        'a'
+BX_KEY_B+BX_KEY_CTRL_L                        none       0x2
+BX_KEY_B+BX_KEY_SHIFT_L                       'B'        'B'
+BX_KEY_B                                      'b'        'b'
+BX_KEY_C+BX_KEY_CTRL_L                        none       0x3
+BX_KEY_C+BX_KEY_SHIFT_L                       'C'        'C'
+BX_KEY_C                                      'c'        'c'
+BX_KEY_D+BX_KEY_CTRL_L                        none       0x4
+BX_KEY_D+BX_KEY_SHIFT_L                       'D'        'D'
+BX_KEY_D                                      'd'        'd'
+BX_KEY_E+BX_KEY_CTRL_L                        none       0x5
+BX_KEY_E+BX_KEY_SHIFT_L                       'E'        'E'
+BX_KEY_E                                      'e'        'e'
+BX_KEY_F+BX_KEY_CTRL_L                        none       0x6
+BX_KEY_F+BX_KEY_SHIFT_L                       'F'        'F'
+BX_KEY_F                                      'f'        'f'
+BX_KEY_G+BX_KEY_CTRL_L                        none       0x7
+BX_KEY_G+BX_KEY_SHIFT_L                       'G'        'G'
+BX_KEY_G                                      'g'        'g'
+BX_KEY_H+BX_KEY_CTRL_L                        none       0x8
+BX_KEY_H+BX_KEY_SHIFT_L                       'H'        'H'
+BX_KEY_H                                      'h'        'h'
+BX_KEY_I+BX_KEY_SHIFT_L                       'I'        'I'
+BX_KEY_I                                      'i'        'i'
+BX_KEY_J+BX_KEY_SHIFT_L                       'J'        'J'
+BX_KEY_J                                      'j'        'j'
+BX_KEY_K+BX_KEY_CTRL_L                        none       0xb
+BX_KEY_K+BX_KEY_SHIFT_L                       'K'        'K'
+BX_KEY_K                                      'k'        'k'
+BX_KEY_L+BX_KEY_CTRL_L                        none       0xc
+BX_KEY_L+BX_KEY_SHIFT_L                       'L'        'L'
+BX_KEY_L                                      'l'        'l'
+BX_KEY_M+BX_KEY_SHIFT_L                       'M'        'M'
+BX_KEY_M                                      'm'        'm'
+BX_KEY_N+BX_KEY_CTRL_L                        none       0xe
+BX_KEY_N+BX_KEY_SHIFT_L                       'N'        'N'
+BX_KEY_N                                      'n'        'n'
+BX_KEY_O+BX_KEY_CTRL_L                        none       0xf
+BX_KEY_O+BX_KEY_SHIFT_L                       'O'        'O'
+BX_KEY_O                                      'o'        'o'
+BX_KEY_P+BX_KEY_CTRL_L                        none       0x10
+BX_KEY_P+BX_KEY_SHIFT_L                       'P'        'P'
+BX_KEY_P                                      'p'        'p'
+BX_KEY_Q+BX_KEY_CTRL_L                        none       0x11
+BX_KEY_Q+BX_KEY_SHIFT_L                       'Q'        'Q'
+BX_KEY_Q+BX_KEY_ALT_R                         '@'        '@'
+BX_KEY_Q                                      'q'        'q'
+BX_KEY_R+BX_KEY_CTRL_L                        none       0x12
+BX_KEY_R+BX_KEY_SHIFT_L                       'R'        'R'
+BX_KEY_R                                      'r'        'r'
+BX_KEY_S+BX_KEY_CTRL_L                        none       0x13
+BX_KEY_S+BX_KEY_SHIFT_L                       'S'        'S'
+BX_KEY_S                                      's'        's'
+BX_KEY_T+BX_KEY_CTRL_L                        none       0x14
+BX_KEY_T+BX_KEY_SHIFT_L                       'T'        'T'
+BX_KEY_T                                      't'        't'
+BX_KEY_U+BX_KEY_CTRL_L                        none       0x15
+BX_KEY_U+BX_KEY_SHIFT_L                       'U'        'U'
+BX_KEY_U                                      'u'        'u'
+BX_KEY_V+BX_KEY_CTRL_L                        none       0x16
+BX_KEY_V+BX_KEY_SHIFT_L                       'V'        'V'
+BX_KEY_V                                      'v'        'v'
+BX_KEY_W+BX_KEY_CTRL_L                        none       0x17
+BX_KEY_W+BX_KEY_SHIFT_L                       'W'        'W'
+BX_KEY_W                                      'w'        'w'
+BX_KEY_X+BX_KEY_CTRL_L                        none       0x18
+BX_KEY_X+BX_KEY_SHIFT_L                       'X'        'X'
+BX_KEY_X                                      'x'        'x'
+BX_KEY_Y+BX_KEY_CTRL_L                        none       0x19
+BX_KEY_Y+BX_KEY_SHIFT_L                       'Z'        'Z'
+BX_KEY_Y                                      'z'        'z'
+BX_KEY_Z+BX_KEY_CTRL_L                        none       0x1a
+BX_KEY_Z+BX_KEY_SHIFT_L                       'Y'        'Y'
+BX_KEY_Z                                      'y'        'y'
+BX_KEY_F1                                     none       0x109
+BX_KEY_F2                                     none       0x10a
+BX_KEY_F3                                     none       0x10b
+BX_KEY_F4                                     none       0x10c
+BX_KEY_F5                                     none       0x10d
+BX_KEY_F6                                     none       0x10e
+BX_KEY_F7                                     none       0x10f
+BX_KEY_F8                                     none       0x110
+BX_KEY_F9                                     none       0x111
+BX_KEY_F10                                    none       0x112
+BX_KEY_F11                                    none       0x113
+BX_KEY_F12                                    none       0x114
+BX_KEY_BACKSLASH+BX_KEY_SHIFT_L               apostrophe 0x27
+BX_KEY_BACKSLASH                              '#'        '#'
+BX_KEY_BACKSPACE                              none       0x107
+BX_KEY_COMMA                                  ','        ','
+BX_KEY_COMMA+BX_KEY_SHIFT_L                   ';'        ';'
+BX_KEY_DELETE                                 none       0x14a
+BX_KEY_DOWN                                   none       0x102
+BX_KEY_END                                    none       0x168
+BX_KEY_ENTER                                  return     0xa
+# BX_KEY_EQUALS                                 none       0x9f
+BX_KEY_EQUALS+BX_KEY_SHIFT_L                  '`'        '`'
+BX_KEY_ESC                                    none       0x1b
+BX_KEY_GRAVE                                  '^'        '^'
+BX_KEY_HOME                                   none       0x106
+BX_KEY_INSERT                                 none       0x14b
+BX_KEY_LEFT                                   none       0x104
+BX_KEY_LEFT_BACKSLASH+BX_KEY_ALT_R            '|'        '|'
+BX_KEY_LEFT_BACKSLASH+BX_KEY_SHIFT_L          '>'        '>'
+BX_KEY_LEFT_BACKSLASH                         '<'        '<'
+BX_KEY_MINUS+BX_KEY_ALT_R                     backslash  0x5c
+BX_KEY_MINUS+BX_KEY_SHIFT_L                   '?'        '?'
+# BX_KEY_MINUS                                  none       '?'
+BX_KEY_PAGE_DOWN                              none       0x152
+BX_KEY_PAGE_UP                                none       0x153
+BX_KEY_PERIOD+BX_KEY_SHIFT_L                  ':'        ':'
+BX_KEY_PERIOD                                 '.'        '.'
+BX_KEY_RIGHT                                  none       0x105
+BX_KEY_RIGHT_BRACKET+BX_KEY_ALT_R             '~'        '~'
+BX_KEY_RIGHT_BRACKET+BX_KEY_SHIFT_L           '*'        '*'
+BX_KEY_RIGHT_BRACKET                          '+'        '+'
+BX_KEY_SLASH                                  '-'        '-'
+BX_KEY_SLASH+BX_KEY_SHIFT_L                   '_'        '_'
+BX_KEY_SPACE                                  space      0x20
+BX_KEY_TAB+BX_KEY_SHIFT_L                     none       0x161
+BX_KEY_TAB                                    tab        0x9
+BX_KEY_UP                                     none       0x103

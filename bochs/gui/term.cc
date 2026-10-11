@@ -25,6 +25,7 @@
 
 #include "bochs.h"
 #include "param_names.h"
+#include "keymap.h"
 #include "iodev.h"
 #if BX_WITH_TERM
 
@@ -71,6 +72,7 @@ IMPLEMENT_GUI_PLUGIN_CODE(term)
 bool initialized = 0;
 static unsigned int text_rows = 25, text_cols = 80;
 static unsigned long last_cursor_x, last_cursor_y;
+bool term_use_kbd_mapping;
 
 static short curses_color[8] = {
   /* 0 */ COLOR_BLACK,
@@ -102,6 +104,25 @@ static chtype vga_to_term[128] = {
   0xb0, ' ',  ' ',  ' ',  ' ',  0xb2, ' ',  ' '
 };
 
+/* convertStringToXKeysym is a keymap callback
+ * used when reading the keymap file.
+ * It converts a Symblic String to a GUI Constant
+ *
+ * It returns a Bit32u constant or BX_KEYMAP_UNKNOWN if it fails
+ */
+static Bit32u convertStringToKeysym(const char *string)
+{
+  Bit32u keysym = BX_KEYMAP_UNKNOWN;
+
+  if (!strncmp ("0x", string, 2)) {
+    keysym = strtol(string, NULL, 16);
+  } else if ((strlen(string) == 3) && (string[0] == 0x27) && (string[2] == 0x27)) {
+    keysym = (Bit32u)string[1];
+  }
+
+  return keysym;
+}
+
 static void do_scan(int key_event, int shift, int ctrl, int alt)
 {
   /* At some point, cache alt/ctrl/shift so only when the state
@@ -112,21 +133,25 @@ static void do_scan(int key_event, int shift, int ctrl, int alt)
                   shift ? "(shift)" : "",
                   ctrl ? "(ctrl)" : "",
                   alt ? "(alt)" : ""));
-  if(shift)
+  if (shift)
     DEV_kbd_gen_scancode(BX_KEY_SHIFT_L);
-  if(ctrl)
+  if (ctrl)
     DEV_kbd_gen_scancode(BX_KEY_CTRL_L);
-  if(alt)
+  if (alt == 1)
     DEV_kbd_gen_scancode(BX_KEY_ALT_L);
+  if (alt == 2)
+    DEV_kbd_gen_scancode(BX_KEY_ALT_R);
   DEV_kbd_gen_scancode(key_event);
   key_event |= BX_KEY_RELEASED;
 
   DEV_kbd_gen_scancode(key_event);
-  if(alt)
+  if (alt == 1)
     DEV_kbd_gen_scancode(BX_KEY_ALT_L|BX_KEY_RELEASED);
-  if(ctrl)
+  if (alt == 2)
+    DEV_kbd_gen_scancode(BX_KEY_ALT_R|BX_KEY_RELEASED);
+  if (ctrl)
     DEV_kbd_gen_scancode(BX_KEY_CTRL_L|BX_KEY_RELEASED);
-  if(shift)
+  if (shift)
     DEV_kbd_gen_scancode(BX_KEY_SHIFT_L|BX_KEY_RELEASED);
 }
 
@@ -185,6 +210,12 @@ void bx_term_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   put("TERM");
   // the ask menu causes trouble
   io->set_log_action(LOGLEV_PANIC, ACT_FATAL);
+
+  // loads keymap for term
+  term_use_kbd_mapping = SIM->get_param_bool(BXPN_KBD_USEMAPPING)->get();
+  if (term_use_kbd_mapping) {
+    bx_keymap.loadKeymap("term", convertStringToKeysym);
+  }
 #if BX_DEBUGGER_TERM
   if (bx_dbg.debugger_active) {
     scr_fd = open("/dev/ptmx",O_RDWR);
@@ -282,208 +313,219 @@ int do_char(int character, int alt)
       case 'P':
         toolbar_cmd = BX_TOOLBAR_POWER;
         break;
+      case KEY_F(7):
+        do_scan(BX_KEY_F7,0,0,alt);
+        break;
     }
     term_set_command_mode(0);
     return toolbar_cmd;
   }
+  if ((character == KEY_F(7)) && bx_gui->has_command_mode() &&
+      !bx_gui->command_mode_active() && !alt) {
+    term_set_command_mode(1);
+    return -1;
+  }
 
-  switch (character) {
-    // control keys
-    case   0x9: do_scan(BX_KEY_TAB,0,0,alt); break;
-    case   0xa: do_scan(BX_KEY_KP_ENTER,0,0,alt); break;
-    case   0xd: do_scan(BX_KEY_KP_DELETE,0,0,alt); break;
-    case   0x1: do_scan(BX_KEY_A,0,1,alt); break;
-    case   0x2: do_scan(BX_KEY_B,0,1,alt); break;
-    case   0x3: do_scan(BX_KEY_C,0,1,alt); break;
-    case   0x4: do_scan(BX_KEY_D,0,1,alt); break;
-    case   0x5: do_scan(BX_KEY_E,0,1,alt); break;
-    case   0x6: do_scan(BX_KEY_F,0,1,alt); break;
-    case   0x7: do_scan(BX_KEY_G,0,1,alt); break;
-    case   0x8: do_scan(BX_KEY_H,0,1,alt); break;
-    case   0xb: do_scan(BX_KEY_K,0,1,alt); break;
-    case   0xc: do_scan(BX_KEY_L,0,1,alt); break;
-    case   0xe: do_scan(BX_KEY_N,0,1,alt); break;
-    case   0xf: do_scan(BX_KEY_O,0,1,alt); break;
-    case  0x10: do_scan(BX_KEY_P,0,1,alt); break;
-    case  0x11: do_scan(BX_KEY_Q,0,1,alt); break;
-    case  0x12: do_scan(BX_KEY_R,0,1,alt); break;
-    case  0x13: do_scan(BX_KEY_S,0,1,alt); break;
-    case  0x14: do_scan(BX_KEY_T,0,1,alt); break;
-    case  0x15: do_scan(BX_KEY_U,0,1,alt); break;
-    case  0x16: do_scan(BX_KEY_V,0,1,alt); break;
-    case  0x17: do_scan(BX_KEY_W,0,1,alt); break;
-    case  0x18: do_scan(BX_KEY_X,0,1,alt); break;
-    case  0x19: do_scan(BX_KEY_Y,0,1,alt); break;
-    case  0x1a: do_scan(BX_KEY_Z,0,1,alt); break;
-    case  0x20: do_scan(BX_KEY_SPACE,0,0,alt); break;
-    case 0x107: do_scan(BX_KEY_BACKSPACE,0,0,alt); break;
-    case 0x102: do_scan(BX_KEY_DOWN,0,0,alt); break;
-    case 0x103: do_scan(BX_KEY_UP,0,0,alt); break;
-    case 0x104: do_scan(BX_KEY_LEFT,0,0,alt); break;
-    case 0x105: do_scan(BX_KEY_RIGHT,0,0,alt); break;
-    case 0x152: do_scan(BX_KEY_PAGE_DOWN,0,0,alt); break;
-    case 0x153: do_scan(BX_KEY_PAGE_UP,0,0,alt); break;
-    case 0x106: do_scan(BX_KEY_HOME,0,0,alt); break;
-    case 0x168: do_scan(BX_KEY_END,0,0,alt); break;
-    case 0x14b: do_scan(BX_KEY_INSERT,0,0,alt); break;
-    case 0x7f:  do_scan(BX_KEY_DELETE,0,0,alt); break;
-    case 0x1b:  do_scan(BX_KEY_ESC,0,0,alt); break;
-    case '!': do_scan(BX_KEY_1,1,0,alt); break;
-    case '\'': do_scan(BX_KEY_SINGLE_QUOTE,0,0,alt); break;
-    case '#': do_scan(BX_KEY_3,1,0,alt); break;
-    case '$': do_scan(BX_KEY_4,1,0,alt); break;
-    case '%': do_scan(BX_KEY_5,1,0,alt); break;
-    case '^': do_scan(BX_KEY_6,1,0,alt); break;
-    case '&': do_scan(BX_KEY_7,1,0,alt); break;
-    case '"': do_scan(BX_KEY_SINGLE_QUOTE,1,0,alt); break;
+  if (!term_use_kbd_mapping) {
+    switch (character) {
+      // control keys
+      case   0x9: do_scan(BX_KEY_TAB,0,0,alt); break;
+      case   0xa: do_scan(BX_KEY_KP_ENTER,0,0,alt); break;
+      case   0xd: do_scan(BX_KEY_KP_DELETE,0,0,alt); break;
+      case   0x1: do_scan(BX_KEY_A,0,1,alt); break;
+      case   0x2: do_scan(BX_KEY_B,0,1,alt); break;
+      case   0x3: do_scan(BX_KEY_C,0,1,alt); break;
+      case   0x4: do_scan(BX_KEY_D,0,1,alt); break;
+      case   0x5: do_scan(BX_KEY_E,0,1,alt); break;
+      case   0x6: do_scan(BX_KEY_F,0,1,alt); break;
+      case   0x7: do_scan(BX_KEY_G,0,1,alt); break;
+      case   0x8: do_scan(BX_KEY_H,0,1,alt); break;
+      case   0xb: do_scan(BX_KEY_K,0,1,alt); break;
+      case   0xc: do_scan(BX_KEY_L,0,1,alt); break;
+      case   0xe: do_scan(BX_KEY_N,0,1,alt); break;
+      case   0xf: do_scan(BX_KEY_O,0,1,alt); break;
+      case  0x10: do_scan(BX_KEY_P,0,1,alt); break;
+      case  0x11: do_scan(BX_KEY_Q,0,1,alt); break;
+      case  0x12: do_scan(BX_KEY_R,0,1,alt); break;
+      case  0x13: do_scan(BX_KEY_S,0,1,alt); break;
+      case  0x14: do_scan(BX_KEY_T,0,1,alt); break;
+      case  0x15: do_scan(BX_KEY_U,0,1,alt); break;
+      case  0x16: do_scan(BX_KEY_V,0,1,alt); break;
+      case  0x17: do_scan(BX_KEY_W,0,1,alt); break;
+      case  0x18: do_scan(BX_KEY_X,0,1,alt); break;
+      case  0x19: do_scan(BX_KEY_Y,0,1,alt); break;
+      case  0x1a: do_scan(BX_KEY_Z,0,1,alt); break;
+      case  0x20: do_scan(BX_KEY_SPACE,0,0,alt); break;
+      case 0x107: do_scan(BX_KEY_BACKSPACE,0,0,alt); break;
+      case 0x102: do_scan(BX_KEY_DOWN,0,0,alt); break;
+      case 0x103: do_scan(BX_KEY_UP,0,0,alt); break;
+      case 0x104: do_scan(BX_KEY_LEFT,0,0,alt); break;
+      case 0x105: do_scan(BX_KEY_RIGHT,0,0,alt); break;
+      case 0x152: do_scan(BX_KEY_PAGE_DOWN,0,0,alt); break;
+      case 0x153: do_scan(BX_KEY_PAGE_UP,0,0,alt); break;
+      case 0x106: do_scan(BX_KEY_HOME,0,0,alt); break;
+      case 0x168: do_scan(BX_KEY_END,0,0,alt); break;
+      case 0x14b: do_scan(BX_KEY_INSERT,0,0,alt); break;
+      case 0x7f:  do_scan(BX_KEY_DELETE,0,0,alt); break;
+      case 0x1b:  do_scan(BX_KEY_ESC,0,0,alt); break;
+      case '!': do_scan(BX_KEY_1,1,0,alt); break;
+      case '\'': do_scan(BX_KEY_SINGLE_QUOTE,0,0,alt); break;
+      case '#': do_scan(BX_KEY_3,1,0,alt); break;
+      case '$': do_scan(BX_KEY_4,1,0,alt); break;
+      case '%': do_scan(BX_KEY_5,1,0,alt); break;
+      case '^': do_scan(BX_KEY_6,1,0,alt); break;
+      case '&': do_scan(BX_KEY_7,1,0,alt); break;
+      case '"': do_scan(BX_KEY_SINGLE_QUOTE,1,0,alt); break;
 
-    // ()*+,-./
-    case '(': do_scan(BX_KEY_9,1,0,alt); break;
-    case ')': do_scan(BX_KEY_0,1,0,alt); break;
-    case '*': do_scan(BX_KEY_8,1,0,alt); break;
-    case '+': do_scan(BX_KEY_EQUALS,1,0,alt); break;
-    case ',': do_scan(BX_KEY_COMMA,0,0,alt); break;
-    case '-': do_scan(BX_KEY_MINUS,0,0,alt); break;
-    case '.': do_scan(BX_KEY_PERIOD,0,0,alt); break;
-    case '/': do_scan(BX_KEY_SLASH,0,0,alt); break;
+      // ()*+,-./
+      case '(': do_scan(BX_KEY_9,1,0,alt); break;
+      case ')': do_scan(BX_KEY_0,1,0,alt); break;
+      case '*': do_scan(BX_KEY_8,1,0,alt); break;
+      case '+': do_scan(BX_KEY_EQUALS,1,0,alt); break;
+      case ',': do_scan(BX_KEY_COMMA,0,0,alt); break;
+      case '-': do_scan(BX_KEY_MINUS,0,0,alt); break;
+      case '.': do_scan(BX_KEY_PERIOD,0,0,alt); break;
+      case '/': do_scan(BX_KEY_SLASH,0,0,alt); break;
 
-    // 01234567
-    case '0': do_scan(BX_KEY_0,0,0,alt); break;
-    case '1': do_scan(BX_KEY_1,0,0,alt); break;
-    case '2': do_scan(BX_KEY_2,0,0,alt); break;
-    case '3': do_scan(BX_KEY_3,0,0,alt); break;
-    case '4': do_scan(BX_KEY_4,0,0,alt); break;
-    case '5': do_scan(BX_KEY_5,0,0,alt); break;
-    case '6': do_scan(BX_KEY_6,0,0,alt); break;
-    case '7': do_scan(BX_KEY_7,0,0,alt); break;
+      // 01234567
+      case '0': do_scan(BX_KEY_0,0,0,alt); break;
+      case '1': do_scan(BX_KEY_1,0,0,alt); break;
+      case '2': do_scan(BX_KEY_2,0,0,alt); break;
+      case '3': do_scan(BX_KEY_3,0,0,alt); break;
+      case '4': do_scan(BX_KEY_4,0,0,alt); break;
+      case '5': do_scan(BX_KEY_5,0,0,alt); break;
+      case '6': do_scan(BX_KEY_6,0,0,alt); break;
+      case '7': do_scan(BX_KEY_7,0,0,alt); break;
 
-    // 89:;<=>?
-    case '8': do_scan(BX_KEY_8,0,0,alt); break;
-    case '9': do_scan(BX_KEY_9,0,0,alt); break;
-    case ':': do_scan(BX_KEY_SEMICOLON,1,0,alt); break;
-    case ';': do_scan(BX_KEY_SEMICOLON,0,0,alt); break;
-    case '<': do_scan(BX_KEY_COMMA,1,0,alt); break;
-    case '=': do_scan(BX_KEY_EQUALS,0,0,alt); break;
-    case '>': do_scan(BX_KEY_PERIOD,1,0,alt); break;
-    case '?': do_scan(BX_KEY_SLASH,1,0,alt); break;
+      // 89:;<=>?
+      case '8': do_scan(BX_KEY_8,0,0,alt); break;
+      case '9': do_scan(BX_KEY_9,0,0,alt); break;
+      case ':': do_scan(BX_KEY_SEMICOLON,1,0,alt); break;
+      case ';': do_scan(BX_KEY_SEMICOLON,0,0,alt); break;
+      case '<': do_scan(BX_KEY_COMMA,1,0,alt); break;
+      case '=': do_scan(BX_KEY_EQUALS,0,0,alt); break;
+      case '>': do_scan(BX_KEY_PERIOD,1,0,alt); break;
+      case '?': do_scan(BX_KEY_SLASH,1,0,alt); break;
 
-    // @ABCDEFG
-    case '@': do_scan(BX_KEY_2,1,0,alt); break;
-    case 'A': do_scan(BX_KEY_A,1,0,alt); break;
-    case 'B': do_scan(BX_KEY_B,1,0,alt); break;
-    case 'C': do_scan(BX_KEY_C,1,0,alt); break;
-    case 'D': do_scan(BX_KEY_D,1,0,alt); break;
-    case 'E': do_scan(BX_KEY_E,1,0,alt); break;
-    case 'F': do_scan(BX_KEY_F,1,0,alt); break;
-    case 'G': do_scan(BX_KEY_G,1,0,alt); break;
+      // @ABCDEFG
+      case '@': do_scan(BX_KEY_2,1,0,alt); break;
+      case 'A': do_scan(BX_KEY_A,1,0,alt); break;
+      case 'B': do_scan(BX_KEY_B,1,0,alt); break;
+      case 'C': do_scan(BX_KEY_C,1,0,alt); break;
+      case 'D': do_scan(BX_KEY_D,1,0,alt); break;
+      case 'E': do_scan(BX_KEY_E,1,0,alt); break;
+      case 'F': do_scan(BX_KEY_F,1,0,alt); break;
+      case 'G': do_scan(BX_KEY_G,1,0,alt); break;
 
-    // HIJKLMNO
-    case 'H': do_scan(BX_KEY_H,1,0,alt); break;
-    case 'I': do_scan(BX_KEY_I,1,0,alt); break;
-    case 'J': do_scan(BX_KEY_J,1,0,alt); break;
-    case 'K': do_scan(BX_KEY_K,1,0,alt); break;
-    case 'L': do_scan(BX_KEY_L,1,0,alt); break;
-    case 'M': do_scan(BX_KEY_M,1,0,alt); break;
-    case 'N': do_scan(BX_KEY_N,1,0,alt); break;
-    case 'O': do_scan(BX_KEY_O,1,0,alt); break;
+      // HIJKLMNO
+      case 'H': do_scan(BX_KEY_H,1,0,alt); break;
+      case 'I': do_scan(BX_KEY_I,1,0,alt); break;
+      case 'J': do_scan(BX_KEY_J,1,0,alt); break;
+      case 'K': do_scan(BX_KEY_K,1,0,alt); break;
+      case 'L': do_scan(BX_KEY_L,1,0,alt); break;
+      case 'M': do_scan(BX_KEY_M,1,0,alt); break;
+      case 'N': do_scan(BX_KEY_N,1,0,alt); break;
+      case 'O': do_scan(BX_KEY_O,1,0,alt); break;
 
-    // PQRSTUVW
-    case 'P': do_scan(BX_KEY_P,1,0,alt); break;
-    case 'Q': do_scan(BX_KEY_Q,1,0,alt); break;
-    case 'R': do_scan(BX_KEY_R,1,0,alt); break;
-    case 'S': do_scan(BX_KEY_S,1,0,alt); break;
-    case 'T': do_scan(BX_KEY_T,1,0,alt); break;
-    case 'U': do_scan(BX_KEY_U,1,0,alt); break;
-    case 'V': do_scan(BX_KEY_V,1,0,alt); break;
-    case 'W': do_scan(BX_KEY_W,1,0,alt); break;
+      // PQRSTUVW
+      case 'P': do_scan(BX_KEY_P,1,0,alt); break;
+      case 'Q': do_scan(BX_KEY_Q,1,0,alt); break;
+      case 'R': do_scan(BX_KEY_R,1,0,alt); break;
+      case 'S': do_scan(BX_KEY_S,1,0,alt); break;
+      case 'T': do_scan(BX_KEY_T,1,0,alt); break;
+      case 'U': do_scan(BX_KEY_U,1,0,alt); break;
+      case 'V': do_scan(BX_KEY_V,1,0,alt); break;
+      case 'W': do_scan(BX_KEY_W,1,0,alt); break;
 
-    // XYZ[\]^_
-    case 'X': do_scan(BX_KEY_X,1,0,alt); break;
-    case 'Y': do_scan(BX_KEY_Y,1,0,alt); break;
-    case 'Z': do_scan(BX_KEY_Z,1,0,alt); break;
-    case '{': do_scan(BX_KEY_LEFT_BRACKET,1,0,alt); break;
-    case '|': do_scan(BX_KEY_BACKSLASH,1,0,alt); break;
-    case '}': do_scan(BX_KEY_RIGHT_BRACKET,1,0,alt); break;
-    case '_': do_scan(BX_KEY_MINUS,1,0,alt); break;
+      // XYZ[\]^_
+      case 'X': do_scan(BX_KEY_X,1,0,alt); break;
+      case 'Y': do_scan(BX_KEY_Y,1,0,alt); break;
+      case 'Z': do_scan(BX_KEY_Z,1,0,alt); break;
+      case '{': do_scan(BX_KEY_LEFT_BRACKET,1,0,alt); break;
+      case '|': do_scan(BX_KEY_BACKSLASH,1,0,alt); break;
+      case '}': do_scan(BX_KEY_RIGHT_BRACKET,1,0,alt); break;
+      case '_': do_scan(BX_KEY_MINUS,1,0,alt); break;
 
-    // `abcdefg
-    case '`': do_scan(BX_KEY_GRAVE,0,0,alt); break;
-    case 'a': do_scan(BX_KEY_A,0,0,alt); break;
-    case 'b': do_scan(BX_KEY_B,0,0,alt); break;
-    case 'c': do_scan(BX_KEY_C,0,0,alt); break;
-    case 'd': do_scan(BX_KEY_D,0,0,alt); break;
-    case 'e': do_scan(BX_KEY_E,0,0,alt); break;
-    case 'f': do_scan(BX_KEY_F,0,0,alt); break;
-    case 'g': do_scan(BX_KEY_G,0,0,alt); break;
+      // `abcdefg
+      case '`': do_scan(BX_KEY_GRAVE,0,0,alt); break;
+      case 'a': do_scan(BX_KEY_A,0,0,alt); break;
+      case 'b': do_scan(BX_KEY_B,0,0,alt); break;
+      case 'c': do_scan(BX_KEY_C,0,0,alt); break;
+      case 'd': do_scan(BX_KEY_D,0,0,alt); break;
+      case 'e': do_scan(BX_KEY_E,0,0,alt); break;
+      case 'f': do_scan(BX_KEY_F,0,0,alt); break;
+      case 'g': do_scan(BX_KEY_G,0,0,alt); break;
 
-    // hijklmno
-    case 'h': do_scan(BX_KEY_H,0,0,alt); break;
-    case 'i': do_scan(BX_KEY_I,0,0,alt); break;
-    case 'j': do_scan(BX_KEY_J,0,0,alt); break;
-    case 'k': do_scan(BX_KEY_K,0,0,alt); break;
-    case 'l': do_scan(BX_KEY_L,0,0,alt); break;
-    case 'm': do_scan(BX_KEY_M,0,0,alt); break;
-    case 'n': do_scan(BX_KEY_N,0,0,alt); break;
-    case 'o': do_scan(BX_KEY_O,0,0,alt); break;
+      // hijklmno
+      case 'h': do_scan(BX_KEY_H,0,0,alt); break;
+      case 'i': do_scan(BX_KEY_I,0,0,alt); break;
+      case 'j': do_scan(BX_KEY_J,0,0,alt); break;
+      case 'k': do_scan(BX_KEY_K,0,0,alt); break;
+      case 'l': do_scan(BX_KEY_L,0,0,alt); break;
+      case 'm': do_scan(BX_KEY_M,0,0,alt); break;
+      case 'n': do_scan(BX_KEY_N,0,0,alt); break;
+      case 'o': do_scan(BX_KEY_O,0,0,alt); break;
 
-    // pqrstuvw
-    case 'p': do_scan(BX_KEY_P,0,0,alt); break;
-    case 'q': do_scan(BX_KEY_Q,0,0,alt); break;
-    case 'r': do_scan(BX_KEY_R,0,0,alt); break;
-    case 's': do_scan(BX_KEY_S,0,0,alt); break;
-    case 't': do_scan(BX_KEY_T,0,0,alt); break;
-    case 'u': do_scan(BX_KEY_U,0,0,alt); break;
-    case 'v': do_scan(BX_KEY_V,0,0,alt); break;
-    case 'w': do_scan(BX_KEY_W,0,0,alt); break;
+      // pqrstuvw
+      case 'p': do_scan(BX_KEY_P,0,0,alt); break;
+      case 'q': do_scan(BX_KEY_Q,0,0,alt); break;
+      case 'r': do_scan(BX_KEY_R,0,0,alt); break;
+      case 's': do_scan(BX_KEY_S,0,0,alt); break;
+      case 't': do_scan(BX_KEY_T,0,0,alt); break;
+      case 'u': do_scan(BX_KEY_U,0,0,alt); break;
+      case 'v': do_scan(BX_KEY_V,0,0,alt); break;
+      case 'w': do_scan(BX_KEY_W,0,0,alt); break;
 
-    // xyz{|}~
-    case 'x': do_scan(BX_KEY_X,0,0,alt); break;
-    case 'y': do_scan(BX_KEY_Y,0,0,alt); break;
-    case 'z': do_scan(BX_KEY_Z,0,0,alt); break;
-    case '[': do_scan(BX_KEY_LEFT_BRACKET,0,0,alt); break;
-    case '\\': do_scan(BX_KEY_BACKSLASH,0,0,alt); break;
-    case ']': do_scan(BX_KEY_RIGHT_BRACKET,0,0,alt); break;
-    case '~': do_scan(BX_KEY_GRAVE,1,0,alt); break;
+      // xyz{|}~
+      case 'x': do_scan(BX_KEY_X,0,0,alt); break;
+      case 'y': do_scan(BX_KEY_Y,0,0,alt); break;
+      case 'z': do_scan(BX_KEY_Z,0,0,alt); break;
+      case '[': do_scan(BX_KEY_LEFT_BRACKET,0,0,alt); break;
+      case '\\': do_scan(BX_KEY_BACKSLASH,0,0,alt); break;
+      case ']': do_scan(BX_KEY_RIGHT_BRACKET,0,0,alt); break;
+      case '~': do_scan(BX_KEY_GRAVE,1,0,alt); break;
 
-    // function keys
-    case KEY_F(1): do_scan(BX_KEY_F1,0,0,alt); break;
-    case KEY_F(2): do_scan(BX_KEY_F2,0,0,alt); break;
-    case KEY_F(3): do_scan(BX_KEY_F3,0,0,alt); break;
-    case KEY_F(4): do_scan(BX_KEY_F4,0,0,alt); break;
-    case KEY_F(5): do_scan(BX_KEY_F5,0,0,alt); break;
-    case KEY_F(6): do_scan(BX_KEY_F6,0,0,alt); break;
-    case KEY_F(7):
-      if (bx_gui->has_command_mode() && !bx_gui->command_mode_active() && !alt) {
-        term_set_command_mode(1);
-      } else {
-        do_scan(BX_KEY_F7,0,0,alt);
-        term_set_command_mode(0);
-      }
-      break;
-    case KEY_F(8): do_scan(BX_KEY_F8,0,0,alt); break;
-    case KEY_F(9): do_scan(BX_KEY_F9,0,0,alt); break;
-    case KEY_F(10): do_scan(BX_KEY_F10,0,0,alt); break;
-    case KEY_F(11): do_scan(BX_KEY_F11,0,0,alt); break;
-    case KEY_F(12): do_scan(BX_KEY_F12,0,0,alt); break;
+      // function keys
+      case KEY_F(1): do_scan(BX_KEY_F1,0,0,alt); break;
+      case KEY_F(2): do_scan(BX_KEY_F2,0,0,alt); break;
+      case KEY_F(3): do_scan(BX_KEY_F3,0,0,alt); break;
+      case KEY_F(4): do_scan(BX_KEY_F4,0,0,alt); break;
+      case KEY_F(5): do_scan(BX_KEY_F5,0,0,alt); break;
+      case KEY_F(6): do_scan(BX_KEY_F6,0,0,alt); break;
+      case KEY_F(7): do_scan(BX_KEY_F7,0,0,alt); break;
+      case KEY_F(8): do_scan(BX_KEY_F8,0,0,alt); break;
+      case KEY_F(9): do_scan(BX_KEY_F9,0,0,alt); break;
+      case KEY_F(10): do_scan(BX_KEY_F10,0,0,alt); break;
+      case KEY_F(11): do_scan(BX_KEY_F11,0,0,alt); break;
+      case KEY_F(12): do_scan(BX_KEY_F12,0,0,alt); break;
 
-    // shifted function keys
-    case KEY_F(13): do_scan(BX_KEY_F1,1,0,alt); break;
-    case KEY_F(14): do_scan(BX_KEY_F2,1,0,alt); break;
-    case KEY_F(15): do_scan(BX_KEY_F3,1,0,alt); break;
-    case KEY_F(16): do_scan(BX_KEY_F4,1,0,alt); break;
-    case KEY_F(17): do_scan(BX_KEY_F5,1,0,alt); break;
-    case KEY_F(18): do_scan(BX_KEY_F6,1,0,alt); break;
-    case KEY_F(19): do_scan(BX_KEY_F7,1,0,alt); break;
-    case KEY_F(20): do_scan(BX_KEY_F8,1,0,alt); break;
+      // shifted function keys
+      case KEY_F(13): do_scan(BX_KEY_F1,1,0,alt); break;
+      case KEY_F(14): do_scan(BX_KEY_F2,1,0,alt); break;
+      case KEY_F(15): do_scan(BX_KEY_F3,1,0,alt); break;
+      case KEY_F(16): do_scan(BX_KEY_F4,1,0,alt); break;
+      case KEY_F(17): do_scan(BX_KEY_F5,1,0,alt); break;
+      case KEY_F(18): do_scan(BX_KEY_F6,1,0,alt); break;
+      case KEY_F(19): do_scan(BX_KEY_F7,1,0,alt); break;
+      case KEY_F(20): do_scan(BX_KEY_F8,1,0,alt); break;
 
-    default:
-      if(character > 0x79) {
-         do_char(character - 0x80,1);
-         break;
-      }
-
-      BX_INFO(("character unhandled: 0x%x",character));
-      break;
+      default:
+        if (character > 0x79) {
+          do_char(character - 0x80,1);
+          break;
+        }
+        BX_INFO(("do_char(): character 0x%x unhandled!",character));
+        break;
+    }
+  } else {
+    /* use mapping */
+    BXKeyEntry *entry = bx_keymap.findHostKey(character);
+    if (!entry) {
+      BX_ERROR(("do_char(): character 0x%x unhandled!", (unsigned) character));
+      return -1;
+    }
+    if (entry->modKey == 19) alt = 2;
+    do_scan(entry->baseKey, entry->modKey == 1, entry->modKey == 0, alt);
   }
   return -1;
 }
