@@ -146,6 +146,7 @@ Changes after Bochs 3.1:
 - XSAVE: make sure XRSTOR/XRSTORS always end trace, updating state like PKRS might require re-fetch after XRSTOR/XRSTORS execution
 - SVM: correctly handle DR6 reserved bits
 - Legacy: MOV Sreg,r/m and MOV r/m,Sreg must ignore REX.R in 64-bit mode (was generating #UD)
+- VMX: MOV DR8-DR15 must #UD before checking for MOV-DR VM exit
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):

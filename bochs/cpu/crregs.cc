@@ -213,6 +213,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdDd(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
 {
+  // #UD for DR8-DR15 has priority over MOV-DR VM exit
+  if (i->dst() >= 8) {
+    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
     VMexit_DR_Access(0 /* write */, i->dst(), i->src());
@@ -223,11 +229,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_DqRq(bxInstruction_c *i)
       BX_ERROR(("%s: access to DR4/DR5 causes #UD", i->getIaOpcodeNameShort()));
       exception(BX_UD_EXCEPTION, 0);
     }
-  }
-
-  if (i->dst() >= 8) {
-    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
-    exception(BX_UD_EXCEPTION, 0);
   }
 
   // Note: processor clears GD upon entering debug exception
@@ -320,6 +321,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
 {
   Bit64u val_64;
 
+  // #UD for DR8-DR15 has priority over MOV-DR VM exit
+  if (i->src() >= 8) {
+    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
     VMexit_DR_Access(1 /* read */, i->src(), i->dst());
@@ -330,11 +337,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqDq(bxInstruction_c *i)
       BX_ERROR(("%s: access to DR4/DR5 causes #UD", i->getIaOpcodeNameShort()));
       exception(BX_UD_EXCEPTION, 0);
     }
-  }
-
-  if (i->src() >= 8) {
-    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
-    exception(BX_UD_EXCEPTION, 0);
   }
 
   // Note: processor clears GD upon entering debug exception
