@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -40,7 +40,8 @@ extern "C" {
 * [8]: This is needed for WinXP to function properly (IBM PS/2)
 * [9]: Extended CMOS Checksum is performed on registers 0x40 to 0x79 as a byte-wise sum of this range
 * [10]: Bochs initially sets this register to 0x26, which is the default, but when read, returns 0x25. DOS/OS must do this.
-* 
+* [11]: For testing the A20 line within a boot loader, bit 1 of register 0x2D is either set or clear, so that
+*        a given BIOS (i440fx or BIOS-bochs-*) can set or clear the A20 accordingly
 */
 
 unsigned char cmos[] = {
@@ -199,7 +200,7 @@ unsigned char cmos[] = {
   0x00,  // 0x2A:  [   ]    Second Extended Hard Disk Drive: Landing Zone (low byte) [0x00]
   0x00,  // 0x2B:  [   ]    Second Extended Hard Disk Drive: Landing Zone (high byte) [0x00]
   0x00,  // 0x2C:  [   ]    Second Extended Hard Disk Drive: Sectors per Track [0x00]
-  0x13,  // 0x2D:  [   ]    Configuration Options [0x13]
+  0x13,  // 0x2D:  [11 ]    Configuration Options [0x13]
          //                  bit  7 Weitek Installed
          //                  bit  6 Floppy Drive Seek - turn off for fast boot
          //                  bit  5 Boot Order
@@ -208,7 +209,7 @@ unsigned char cmos[] = {
          //                  bit  4 Boot Speed (0 - Low; 1 - High)
          //                  bit  3 External Cache Enable (1 = On)
          //                  bit  2 Internal Cache Enable (1 = On)
-         //                  bit  1 Use Fast Gate A20 after boot (1 = On)
+         //                  bit  1 Use Fast Gate A20 after boot (1 = On) (See note 11)
          //                  bit  0 Turbo Switch (1 = On)
   0x00,  // 0x2E:  [6  ]    Standard CMOS Checksum (high byte)
   0x00,  // 0x2F:  [6  ]    Standard CMOS Checksum (low byte)
@@ -359,6 +360,7 @@ static_assert ((sizeof(cmos) == 128), "cmos struct must be 128 bytes in length")
 char extended = 0;     // 0 = 64-byte cmos (default), 1 = 128-byte cmos
 char use_bcd = 0;      // 0 = use binary (default), 1 = use BCD
 char use_24hour = 0;   // 0 = use 12-hour mode (default), 1 = use 24 hour mode
+char a20line = 0;      // 0 = do nothing (use default), -1 = clear bit 1 in 0x2D, 1 = set bit 1 in 0x2D
 char filename[256] = { 0, };
 
 // convert a value to either BCD or binary
@@ -379,7 +381,9 @@ void parse_command(int argc, char *argv[]) {
                     "  parameters can start with / or -\n"
                     "   /x   = create 128-byte cmos file, else 64-byte (default)\n"
                     "   /bcd = use BCD values, else use binary values (default)\n"
-                    "   /24  = use 24-hour mode, else use 12-hour mode (default)\n", argv[0]);
+                    "   /24  = use 24-hour mode, else use 12-hour mode (default)\n"
+                    "   /a20on = set bit 1 in register 0x2D\n"
+                    "   /a20off = clear bit 1 in register 0x2D\n", argv[0]);
     exit(1);
   }
 
@@ -394,6 +398,12 @@ void parse_command(int argc, char *argv[]) {
       }
       else if (stricmp(&argv[i][1], "24") == 0) {
         use_24hour = 1;
+      }
+      else if (stricmp(&argv[i][1], "a20on") == 0) {
+        a20line = 1;
+      }
+      else if (stricmp(&argv[i][1], "a20off") == 0) {
+        a20line = (char) -1;
       }
 
       // else it is something else
@@ -460,6 +470,12 @@ int main(int argc, char *argv[]) {
   cmos[0x09] = create_value(today->tm_year - 2000); // assumes we are in the 21st century
   printf("Setting the date and time to: %s", asctime(today));
 
+  // set/clear the bit in register 0x2D
+  if (a20line == (char) -1)
+    cmos[0x2D] &= ~(1<<1);
+  else if (a20line == 1)
+    cmos[0x2D] |= (1<<1);
+  
   // calculate the standard checksum (0x2E->0x2F)
   // it is calculated as the byte sum of registers 0x10 to 0x2D
   crc = 0;
