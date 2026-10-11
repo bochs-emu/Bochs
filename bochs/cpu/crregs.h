@@ -194,7 +194,17 @@ struct bx_dr6_t {
   IMPLEMENT_CRREG_ACCESSORS(BT, 15);
 
   BX_CPP_INLINE Bit32u get32() const { return val; }
-  BX_CPP_INLINE void set32(Bit32u val32) { val = val32; }
+
+  BX_CPP_INLINE void set32(Bit32u val_32)
+  {
+#if BX_CPU_LEVEL <= 4
+    // On 386/486 bit12 is settable
+    val = (val & 0xffff0ff0) | (val_32 & 0x0000f00f);
+#else
+    // On Pentium+, bit12 is always zero
+    val = (val & 0xffff0ff0) | (val_32 & 0x0000e00f);
+#endif
+  }
 };
 
 struct bx_dr7_t {
