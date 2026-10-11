@@ -241,9 +241,51 @@ void bx_term_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   initialized = 1;
 }
 
+void term_set_command_mode(bool enable)
+{
+  bx_gui->set_command_mode(enable);
+  if (LINES > (int)(text_rows + 1)) {
+#if BX_HAVE_COLOR_SET
+    color_set(7 << 3, NULL);
+#endif
+    mvaddstr(text_rows + 1, 16, enable ? "cmdmode":"       ");
+    if (last_cursor_y >= 0) {
+      move(last_cursor_y, last_cursor_x);
+    }
+  }
+}
+
 int do_char(int character, int alt)
 {
   int toolbar_cmd = -1;
+
+  if (bx_gui->command_mode_active() && !alt) {
+    switch (character) {
+      case 'a':
+        toolbar_cmd = BX_TOOLBAR_FLOPPYA;
+        break;
+      case 'b':
+        toolbar_cmd = BX_TOOLBAR_FLOPPYB;
+        break;
+      case 'm':
+        bx_gui->marklog_handler();
+        break;
+      case 'r':
+        toolbar_cmd = BX_TOOLBAR_RESET;
+        break;
+      case 's':
+        toolbar_cmd = BX_TOOLBAR_SNAPSHOT;
+        break;
+      case 'u':
+        toolbar_cmd = BX_TOOLBAR_USER;
+        break;
+      case 'P':
+        toolbar_cmd = BX_TOOLBAR_POWER;
+        break;
+    }
+    term_set_command_mode(0);
+    return toolbar_cmd;
+  }
 
   switch (character) {
     // control keys
@@ -346,13 +388,7 @@ int do_char(int character, int alt)
     case 'O': do_scan(BX_KEY_O,1,0,alt); break;
 
     // PQRSTUVW
-    case 'P':
-      if (bx_gui->command_mode_active() && !alt) {
-        toolbar_cmd = BX_TOOLBAR_POWER;
-      } else {
-        do_scan(BX_KEY_P,1,0,alt);
-      }
-      break;
+    case 'P': do_scan(BX_KEY_P,1,0,alt); break;
     case 'Q': do_scan(BX_KEY_Q,1,0,alt); break;
     case 'R': do_scan(BX_KEY_R,1,0,alt); break;
     case 'S': do_scan(BX_KEY_S,1,0,alt); break;
@@ -372,20 +408,8 @@ int do_char(int character, int alt)
 
     // `abcdefg
     case '`': do_scan(BX_KEY_GRAVE,0,0,alt); break;
-    case 'a':
-      if (bx_gui->command_mode_active() && !alt) {
-        toolbar_cmd = BX_TOOLBAR_FLOPPYA;
-      } else {
-        do_scan(BX_KEY_A,0,0,alt);
-      }
-      break;
-    case 'b':
-      if (bx_gui->command_mode_active() && !alt) {
-        toolbar_cmd = BX_TOOLBAR_FLOPPYB;
-      } else {
-        do_scan(BX_KEY_B,0,0,alt);
-      }
-      break;
+    case 'a': do_scan(BX_KEY_A,0,0,alt); break;
+    case 'b': do_scan(BX_KEY_B,0,0,alt); break;
     case 'c': do_scan(BX_KEY_C,0,0,alt); break;
     case 'd': do_scan(BX_KEY_D,0,0,alt); break;
     case 'e': do_scan(BX_KEY_E,0,0,alt); break;
@@ -398,35 +422,17 @@ int do_char(int character, int alt)
     case 'j': do_scan(BX_KEY_J,0,0,alt); break;
     case 'k': do_scan(BX_KEY_K,0,0,alt); break;
     case 'l': do_scan(BX_KEY_L,0,0,alt); break;
-    case 'm':
-      if (bx_gui->command_mode_active() && !alt) {
-        bx_gui->marklog_handler();
-      } else {
-        do_scan(BX_KEY_M,0,0,alt);
-      }
-      break;
+    case 'm': do_scan(BX_KEY_M,0,0,alt); break;
     case 'n': do_scan(BX_KEY_N,0,0,alt); break;
     case 'o': do_scan(BX_KEY_O,0,0,alt); break;
 
     // pqrstuvw
     case 'p': do_scan(BX_KEY_P,0,0,alt); break;
     case 'q': do_scan(BX_KEY_Q,0,0,alt); break;
-    case 'r':
-      if (bx_gui->command_mode_active() && !alt) {
-        toolbar_cmd = BX_TOOLBAR_RESET;
-      } else {
-        do_scan(BX_KEY_R,0,0,alt);
-      }
-      break;
+    case 'r': do_scan(BX_KEY_R,0,0,alt); break;
     case 's': do_scan(BX_KEY_S,0,0,alt); break;
     case 't': do_scan(BX_KEY_T,0,0,alt); break;
-    case 'u':
-      if (bx_gui->command_mode_active() && !alt) {
-        toolbar_cmd = BX_TOOLBAR_USER;
-      } else {
-        do_scan(BX_KEY_U,0,0,alt);
-      }
-      break;
+    case 'u': do_scan(BX_KEY_U,0,0,alt); break;
     case 'v': do_scan(BX_KEY_V,0,0,alt); break;
     case 'w': do_scan(BX_KEY_W,0,0,alt); break;
 
@@ -448,19 +454,10 @@ int do_char(int character, int alt)
     case KEY_F(6): do_scan(BX_KEY_F6,0,0,alt); break;
     case KEY_F(7):
       if (bx_gui->has_command_mode() && !bx_gui->command_mode_active() && !alt) {
-        bx_gui->set_command_mode(1);
-        if (LINES > (int)(text_rows + 1)) {
-#if BX_HAVE_COLOR_SET
-          color_set(7 << 3, NULL);
-#endif
-          mvaddstr(text_rows + 1, 16, "cmdmode");
-          if (last_cursor_y >= 0) {
-            move(last_cursor_y, last_cursor_x);
-          }
-        }
-        return -1;
+        term_set_command_mode(1);
       } else {
         do_scan(BX_KEY_F7,0,0,alt);
+        term_set_command_mode(0);
       }
       break;
     case KEY_F(8): do_scan(BX_KEY_F8,0,0,alt); break;
@@ -488,19 +485,7 @@ int do_char(int character, int alt)
       BX_INFO(("character unhandled: 0x%x",character));
       break;
   }
-  if (bx_gui->command_mode_active()) {
-    bx_gui->set_command_mode(0);
-    if (LINES > (int)(text_rows + 1)) {
-#if BX_HAVE_COLOR_SET
-      color_set(7 << 3, NULL);
-#endif
-      mvaddstr(text_rows + 1, 16, "       ");
-      if (last_cursor_y >= 0) {
-        move(last_cursor_y, last_cursor_x);
-      }
-    }
-  }
-  return toolbar_cmd;
+  return -1;
 }
 
 void bx_term_gui_c::handle_events(void)
@@ -543,19 +528,34 @@ void bx_term_gui_c::clear_screen(void)
 #if BX_HAVE_COLOR_SET
   color_set(7, NULL);
 #endif
-#if BX_HAVE_MVHLINE
-  if (LINES > (int)text_rows) {
-    mvhline(text_rows, 0, ACS_HLINE, text_cols);
-  }
-#endif
 #if BX_HAVE_MVVLINE
   if (COLS > (int)text_cols) {
     mvvline(0, text_cols, ACS_VLINE, text_rows);
   }
 #endif
-  if ((LINES > (int)text_rows) && (COLS > (int)text_cols)) {
-    mvaddch(text_rows, text_cols, ACS_LRCORNER);
+#if BX_HAVE_MVHLINE
+  if (LINES > (int)text_rows) {
+    mvhline(text_rows, 0, ACS_HLINE, text_cols);
+    if (COLS > (int)text_cols) {
+      mvaddch(text_rows, text_cols, ACS_LRCORNER);
+    }
   }
+  if (LINES > (int)(text_rows + 2)) {
+    mvhline(text_rows + 2, 0, ACS_HLINE, text_cols);
+    if (COLS > (int)text_cols) {
+      mvaddch(text_rows + 1, text_cols, ACS_VLINE);
+      mvaddch(text_rows + 2, text_cols, ACS_LRCORNER);
+    }
+#if BX_HAVE_COLOR_SET
+    color_set(7 << 3, NULL);
+#endif
+    mvhline(text_rows + 1, 0, ' ', text_cols);
+#if BX_HAVE_COLOR_SET
+    color_set(7, NULL);
+#endif
+    mvaddch(text_rows + 1, 14, ACS_VLINE);
+  }
+#endif
 }
 
 int get_color_pair(Bit8u vga_attr)
@@ -727,37 +727,6 @@ void bx_term_gui_c::dimension_update(unsigned x, unsigned y, unsigned fheight, u
   if (guest_textmode) {
     text_cols = x / fwidth;
     text_rows = y / fheight;
-#if BX_HAVE_COLOR_SET
-    color_set(7, NULL);
-#endif
-#if BX_HAVE_MVVLINE
-    if (COLS > (int)text_cols) {
-      mvvline(0, text_cols, ACS_VLINE, text_rows);
-    }
-#endif
-#if BX_HAVE_MVHLINE
-    if (LINES > (int)text_rows) {
-      mvhline(text_rows, 0, ACS_HLINE, text_cols);
-      if (COLS > (int)text_cols) {
-        mvaddch(text_rows, text_cols, ACS_LRCORNER);
-      }
-    }
-    if (LINES > (int)(text_rows + 2)) {
-      mvhline(text_rows + 2, 0, ACS_HLINE, text_cols);
-      if (COLS > (int)text_cols) {
-        mvaddch(text_rows + 1, text_cols, ACS_VLINE);
-        mvaddch(text_rows + 2, text_cols, ACS_LRCORNER);
-      }
-#if BX_HAVE_COLOR_SET
-      color_set(7 << 3, NULL);
-#endif
-      mvhline(text_rows + 1, 0, ' ', text_cols);
-#if BX_HAVE_COLOR_SET
-      color_set(7, NULL);
-#endif
-      mvaddch(text_rows + 1, 14, ACS_VLINE);
-    }
-#endif
   }
 }
 

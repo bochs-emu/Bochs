@@ -41,6 +41,10 @@ Changes after Bochs 3.1 release:
   - General
     - Set Windows system timer resolution to 1ms. This help to reduce artefacts (clicking noises) during sound playback
 
+- GUI and display libraries
+    - term gui: Fixed terminal init in debugger enabled mode
+    - term gui: Added support for the command mode
+
 - BIOS
   - ACPI: restore missing IDE0 and IDE1 entries (PNP0600, matching the legacy primary/secondary IDE controller I/O ports and IRQs) in acpi-dsdt.dsl
 
