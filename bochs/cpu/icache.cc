@@ -40,7 +40,7 @@ bxICache_c iCache;
 
 extern int fetchDecode32(const Bit8u *fetchPtr, bool is_32, bxInstruction_c *i, unsigned remainingInPage);
 #if BX_SUPPORT_X86_64
-extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
+extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage, bool apx_ok);
 #endif
 
 void flushICaches(void)
@@ -256,7 +256,7 @@ bxICacheEntry_c* BX_CPU_C::fillICacheEntry(const Bit8u *fetchPtr, unsigned remai
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-    ret = fetchDecode64(fetchPtr, i, remainingInPage);
+    ret = fetchDecode64(fetchPtr, i, remainingInPage, BX_CPU_THIS_PTR get_apx_ok());
   else
 #endif
     ret = fetchDecode32(fetchPtr, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, i, remainingInPage);
@@ -351,7 +351,7 @@ void BX_CPU_C::boundaryFetch(const Bit8u *fetchPtr, unsigned remainingInPage, bx
 
 #if BX_SUPPORT_X86_64
   if (BX_CPU_THIS_PTR cpu_mode == BX_MODE_LONG_64)
-    ret = fetchDecode64(fetchBuffer, i, remainingInPage+fetchBufferLimit);
+    ret = fetchDecode64(fetchBuffer, i, remainingInPage+fetchBufferLimit, BX_CPU_THIS_PTR get_apx_ok());
   else
 #endif
     ret = fetchDecode32(fetchBuffer, BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].cache.u.segment.d_b, i, remainingInPage+fetchBufferLimit);

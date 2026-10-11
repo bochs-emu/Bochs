@@ -756,6 +756,41 @@ void bx_cpuid_t::get_std_cpuid_avx10_leaf(Bit32u subfunction, cpuid_function_t *
 #endif
 }
 
+#if BX_SUPPORT_APX
+// Leaf 0x00000029: APX support and versioning
+void bx_cpuid_t::get_std_cpuid_apx_leaf(Bit32u subfunction, cpuid_function_t *leaf) const
+{
+  leaf->eax = 0;
+  leaf->ebx = 0;
+  leaf->ecx = 0;
+  leaf->edx = 0;
+
+  if (!is_cpu_extension_supported(BX_ISA_APX))
+    return;
+
+  switch (subfunction) {
+  case 0:
+    // EAX:
+    //   [31:00]: maximum supported subleaf
+    // EBX:
+    //   [00:00]: APX_NCI_NDD_NF - APX new conditional ISA, NDD, NF support
+    //   [31:01]: reserved
+    // ECX:
+    //   [31:00]: reserved
+    // EDX:
+    //   [31:00]: reserved
+    leaf->eax = 0;
+    leaf->ebx = 0x1;
+    leaf->ecx = 0;
+    leaf->edx = 0;
+    break;
+
+  default:
+    break;
+  }
+}
+#endif
+
 // leaf 0x00000007, subleaf 0 - EBX
 Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_ebx(Bit32u extra) const
 {
@@ -1274,7 +1309,15 @@ Bit32u bx_cpuid_t::get_std_cpuid_leaf_7_subleaf_1_edx(Bit32u extra) const
     edx |= BX_CPUID_STD7_SUBLEAF1_EDX_AVX10;
 #endif
 
-  //   [22:20]  reserved
+  //   [20:20]  reserved
+
+  //   [21:21]  APX support
+#if BX_SUPPORT_APX
+  if (is_cpu_extension_supported(BX_ISA_APX))
+    edx |= BX_CPUID_STD7_SUBLEAF1_EDX_APX;
+#endif
+
+  //   [22:22]  reserved
 
   //   [23:23]  to be used by VMM: MWAIT and CPUID LEAF5 support (introduced with Monitorless MWAIT support)
 #if BX_SUPPORT_MONITOR_MWAIT
@@ -1797,6 +1840,13 @@ void bx_cpuid_t::sanity_checks() const
   if (is_cpu_extension_supported(BX_ISA_AVX10_2_MOVRS))
     if (! is_cpu_extension_supported(BX_ISA_AVX10_2) || !is_cpu_extension_supported(BX_ISA_MOVRS))
       BX_FATAL(("PANIC: AVX 10.2 MOVRS expected to be enabled only if MOVRS and AVX10.2 are both enabled !"));
+
+  if (is_cpu_extension_supported(BX_ISA_APX)) {
+    if (is_cpu_extension_supported(BX_ISA_MPX))
+      BX_FATAL(("PANIC: APX cannot be supported together with MPX !"));
+    if (! is_cpu_extension_supported(BX_ISA_AVX512))
+      BX_FATAL(("PANIC: APX require EVEX and AVX512 support !"));
+  }
 }
 
 void bx_cpuid_t::dump_features() const

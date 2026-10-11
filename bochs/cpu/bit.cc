@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -366,6 +366,23 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_MdGd(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
+// register forms exist only in APX EVEX map4 encoding (both 60 and 61 opcodes)
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GwEwR(bxInstruction_c *i)
+{
+  Bit16u val16 = BX_READ_16BIT_REG(i->src());
+  BX_WRITE_16BIT_REG(i->dst(), bx_bswap16(val16));
+
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GdEdR(bxInstruction_c *i)
+{
+  Bit32u val32 = BX_READ_32BIT_REG(i->src());
+  BX_WRITE_32BIT_REGZ(i->dst(), bx_bswap32(val32));
+
+  BX_NEXT_INSTR(i);
+}
+
 #if BX_SUPPORT_X86_64
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GqMq(bxInstruction_c *i)
@@ -382,6 +399,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_MqGq(bxInstruction_c *i)
   Bit64u val64 = BX_READ_64BIT_REG(i->src());
   bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
   write_linear_qword(i->seg(), get_laddr64(i->seg(), eaddr), bx_bswap64(val64));
+
+  BX_NEXT_INSTR(i);
+}
+
+void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOVBE_GqEqR(bxInstruction_c *i)
+{
+  Bit64u val64 = BX_READ_64BIT_REG(i->src());
+  BX_WRITE_64BIT_REG(i->dst(), bx_bswap64(val64));
 
   BX_NEXT_INSTR(i);
 }

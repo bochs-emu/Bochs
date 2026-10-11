@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -342,8 +342,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::POPCNT_GwEwR(bxInstruction_c *i)
 {
   Bit16u op_16 = popcntw(BX_READ_16BIT_REG(i->src()));
 
-  clearEFlagsOSZAPC();
-  if (! op_16) assert_ZF();
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    clearEFlagsOSZAPC();
+    if (! op_16) assert_ZF();
+  }
 
   BX_WRITE_16BIT_REG(i->dst(), op_16);
 
@@ -356,8 +361,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::TZCNT_GwEwR(bxInstruction_c *i)
   Bit16u op1_16 = BX_READ_16BIT_REG(i->src());
   Bit16u result_16 = (Bit16u) tzcntw(op1_16);
 
-  set_CF(! op1_16);
-  set_ZF(! result_16);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    set_CF(! op1_16);
+    set_ZF(! result_16);
+  }
 
   BX_WRITE_16BIT_REG(i->dst(), result_16);
 
@@ -370,8 +380,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::LZCNT_GwEwR(bxInstruction_c *i)
   Bit16u op1_16 = BX_READ_16BIT_REG(i->src());
   Bit16u result_16 = (Bit16u) lzcntw(op1_16);
 
-  set_CF(! op1_16);
-  set_ZF(! result_16);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    set_CF(! op1_16);
+    set_ZF(! result_16);
+  }
 
   BX_WRITE_16BIT_REG(i->dst(), result_16);
 

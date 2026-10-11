@@ -103,6 +103,25 @@ const Bit64u BX_PHY_ADDRESS_RESERVED_BITS = (~BX_PHY_ADDRESS_MASK);
 #define R14 (BX_CPU_THIS_PTR gen_reg[14].rrx)
 #define R15 (BX_CPU_THIS_PTR gen_reg[15].rrx)
 
+#if BX_SUPPORT_APX
+#define R16 (BX_CPU_THIS_PTR gen_reg[16].rrx)
+#define R17 (BX_CPU_THIS_PTR gen_reg[17].rrx)
+#define R18 (BX_CPU_THIS_PTR gen_reg[18].rrx)
+#define R19 (BX_CPU_THIS_PTR gen_reg[19].rrx)
+#define R20 (BX_CPU_THIS_PTR gen_reg[20].rrx)
+#define R21 (BX_CPU_THIS_PTR gen_reg[21].rrx)
+#define R22 (BX_CPU_THIS_PTR gen_reg[22].rrx)
+#define R23 (BX_CPU_THIS_PTR gen_reg[23].rrx)
+#define R24 (BX_CPU_THIS_PTR gen_reg[24].rrx)
+#define R25 (BX_CPU_THIS_PTR gen_reg[25].rrx)
+#define R26 (BX_CPU_THIS_PTR gen_reg[26].rrx)
+#define R27 (BX_CPU_THIS_PTR gen_reg[27].rrx)
+#define R28 (BX_CPU_THIS_PTR gen_reg[28].rrx)
+#define R29 (BX_CPU_THIS_PTR gen_reg[29].rrx)
+#define R30 (BX_CPU_THIS_PTR gen_reg[30].rrx)
+#define R31 (BX_CPU_THIS_PTR gen_reg[31].rrx)
+#endif
+
 // access to 64 bit instruction pointer
 #define RIP (BX_CPU_THIS_PTR gen_reg[BX_64BIT_REG_RIP].rrx)
 
@@ -971,7 +990,8 @@ public: // for now...
   // rsi: source index
   // rdi: destination index
   // esp: stack pointer
-  // r8..r15 x86-64 extended registers
+  // r8...r15 x86-64 extended registers
+  // r16..r31 apx extended registers
   // rip: instruction pointer
   // ssp: shadow stack pointer
   // tmp: temp register
@@ -1323,6 +1343,10 @@ public: // for now...
   BX_SMF void clear_amx_ok();
   BX_SMF bool get_amx_ok();
 
+  BX_SMF void set_apx_ok();
+  BX_SMF void clear_apx_ok();
+  BX_SMF bool get_apx_ok();
+
   BX_SMF void set_scaledata_ok();
   BX_SMF void clear_scaledata_ok();
   BX_SMF bool get_scaledata_ok();
@@ -1459,6 +1483,17 @@ public: // for now...
     set_PF(1 & ((flags32) >> 2));
     set_CF(1 & ((flags32) >> 0));
   }
+
+#if BX_SUPPORT_APX
+  BX_SMF BX_CPP_INLINE void setDFV_OSZAPC(Bit32u dfv) {
+    set_CF(dfv & 0x1);
+    set_PF(dfv & 0x1);
+    set_ZF((dfv >> 1) & 0x1);
+    set_SF((dfv >> 2) & 0x1);
+    set_OF((dfv >> 3) & 0x1);
+    clear_AF();
+  }
+#endif
 
   BX_SMF BX_CPP_INLINE void clearEFlagsOSZAPC(void) {
     SET_FLAGS_OSZAPC_LOGIC_32(1);
@@ -2677,9 +2712,12 @@ public: // for now...
   BX_SMF void MOVBE_GdMd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVBE_MwGw(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVBE_MdGd(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVBE_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVBE_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
   BX_SMF void MOVBE_GqMq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void MOVBE_MqGq(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void MOVBE_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
   /* MOVBE Intel Atom(R) instruction */
 #endif
@@ -4108,6 +4146,738 @@ public: // for now...
   BX_SMF void VPMOVSSDB_MASK_WdqVdqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #endif
 
+#if BX_SUPPORT_APX
+  BX_SMF void ADD_BbGbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ADC_BbGbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SBB_BbGbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SUB_BbGbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AND_BbGbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void OR_BbGbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void XOR_BbGbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ADD_BbEbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ADC_BbEbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SBB_BbEbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SUB_BbEbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AND_BbEbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void OR_BbEbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void XOR_BbEbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ADD_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ADC_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SBB_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SUB_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AND_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void OR_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void XOR_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ADD_BwEwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ADC_BwEwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SBB_BwEwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SUB_BwEwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AND_BwEwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void OR_BwEwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void XOR_BwEwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ADD_EbGbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SUB_EbGbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AND_EbGbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void OR_EbGbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void XOR_EbGbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_ND0_ADD_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_ND0_SUB_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_ND0_AND_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_ND0_OR_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_ND0_XOR_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ADD_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SUB_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AND_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void OR_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void XOR_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_ND0_ADD_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_ND0_SUB_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_ND0_AND_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_ND0_OR_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_ND0_XOR_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ADD_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ADC_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SBB_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SUB_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AND_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void OR_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void XOR_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ADD_BdEdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ADC_BdEdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SBB_BdEdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SUB_BdEdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AND_BdEdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void OR_BdEdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void XOR_BdEdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ADD_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ADC_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SBB_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SUB_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AND_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void OR_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void XOR_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ADD_BqEqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ADC_BqEqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SBB_BqEqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SUB_BqEqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void AND_BqEqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void OR_BqEqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void XOR_BqEqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ADCX_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ADOX_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ADCX_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ADOX_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void NEG_BbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void NEG_BwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void NEG_BdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void NEG_BqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_NEG_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_NEG_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_NEG_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_NEG_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void INC_BbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void INC_BwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void INC_BdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void INC_BqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_INC_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_INC_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_INC_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_INC_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void DEC_BbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void DEC_BwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void DEC_BdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void DEC_BqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_DEC_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_DEC_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_DEC_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_DEC_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_NF_MUL_ALEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_MUL_AXEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_MUL_EAXEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_MUL_RAXEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_IMUL_ALEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_IMUL_AXEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_IMUL_EAXEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_IMUL_RAXEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void IMUL_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void IMUL_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void IMUL_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void NOT_BbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void NOT_BwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void NOT_BdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void NOT_BqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CCMPF(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CCMPB_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPBE_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPL_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPLE_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNB_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNBE_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNL_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNLE_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPO_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNO_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPS_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNS_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPZ_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNZ_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CCMPB_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPBE_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPL_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPLE_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNB_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNBE_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNL_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNLE_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPO_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNO_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPS_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNS_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPZ_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNZ_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CCMPB_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPBE_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPL_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPLE_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNB_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNBE_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNL_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNLE_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPO_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNO_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPS_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNS_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPZ_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNZ_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CCMPB_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPBE_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPL_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPLE_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNB_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNBE_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNL_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNLE_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPO_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNO_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPS_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNS_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPZ_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNZ_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CCMPB_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPBE_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPL_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPLE_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNB_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNBE_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNL_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNLE_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPO_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNO_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPS_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNS_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPZ_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNZ_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CCMPB_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPBE_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPL_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPLE_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNB_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNBE_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNL_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNLE_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPO_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNO_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPS_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNS_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPZ_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNZ_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CCMPB_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPBE_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPL_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPLE_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNB_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNBE_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNL_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNLE_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPO_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNO_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPS_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNS_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPZ_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNZ_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CCMPB_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPBE_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPL_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPLE_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNB_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNBE_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNL_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNLE_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPO_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNO_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPS_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNS_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPZ_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CCMPNZ_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CTESTF(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CTESTB_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTBE_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTL_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTLE_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNB_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNBE_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNL_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNLE_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTO_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNO_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTS_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNS_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTZ_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNZ_GbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CTESTB_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTBE_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTL_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTLE_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNB_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNBE_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNL_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNLE_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTO_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNO_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTS_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNS_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTZ_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNZ_EbIbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CTESTB_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTBE_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTL_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTLE_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNB_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNBE_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNL_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNLE_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTO_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNO_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTS_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNS_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTZ_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNZ_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CTESTB_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTBE_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTL_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTLE_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNB_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNBE_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNL_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNLE_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTO_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNO_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTS_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNS_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTZ_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNZ_EwIwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CTESTB_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTBE_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTL_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTLE_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNB_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNBE_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNL_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNLE_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTO_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNO_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTS_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNS_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTZ_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNZ_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CTESTB_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTBE_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTL_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTLE_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNB_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNBE_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNL_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNLE_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTO_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNO_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTS_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNS_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTZ_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNZ_EdIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CTESTB_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTBE_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTL_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTLE_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNB_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNBE_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNL_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNLE_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTO_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNO_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTS_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNS_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTZ_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNZ_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CTESTB_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTBE_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTL_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTLE_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNB_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNBE_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNL_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNLE_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTO_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNO_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTS_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNS_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTZ_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CTESTNZ_EqIdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CFCMOVO_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNO_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVB_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNB_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVZ_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNZ_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVBE_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNBE_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVS_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNS_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVP_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNP_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVL_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNL_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVLE_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNLE_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CFCMOVO_GwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNO_GwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVB_GwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNB_GwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVZ_GwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNZ_GwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVBE_GwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNBE_GwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVS_GwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNS_GwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVP_GwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNP_GwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVL_GwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNL_GwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVLE_GwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNLE_GwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CFCMOVO_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNO_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVB_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNB_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVZ_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNZ_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVBE_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNBE_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVS_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNS_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVP_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNP_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVL_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNL_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVLE_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNLE_EwGwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CMOVO_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNO_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVB_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNB_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVZ_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNZ_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVBE_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNBE_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVS_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNS_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVP_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNP_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVL_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNL_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVLE_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNLE_BwGwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CFCMOVO_BwGwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNO_BwGwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVB_BwGwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNB_BwGwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVZ_BwGwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNZ_BwGwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVBE_BwGwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNBE_BwGwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVS_BwGwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNS_BwGwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVP_BwGwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNP_BwGwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVL_BwGwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNL_BwGwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVLE_BwGwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNLE_BwGwEwM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CFCMOVO_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNO_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVB_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNB_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVZ_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNZ_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVBE_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNBE_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVS_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNS_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVP_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNP_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVL_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNL_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVLE_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNLE_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CFCMOVO_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNO_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVB_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNB_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVZ_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNZ_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVBE_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNBE_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVS_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNS_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVP_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNP_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVL_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNL_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVLE_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNLE_GdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CFCMOVO_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNO_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVB_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNB_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVZ_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNZ_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVBE_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNBE_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVS_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNS_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVP_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNP_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVL_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNL_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVLE_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNLE_EdGdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CMOVO_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNO_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVB_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNB_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVZ_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNZ_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVBE_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNBE_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVS_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNS_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVP_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNP_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVL_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNL_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVLE_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNLE_BdGdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CFCMOVO_BdGdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNO_BdGdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVB_BdGdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNB_BdGdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVZ_BdGdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNZ_BdGdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVBE_BdGdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNBE_BdGdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVS_BdGdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNS_BdGdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVP_BdGdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNP_BdGdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVL_BdGdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNL_BdGdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVLE_BdGdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNLE_BdGdEdM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CFCMOVO_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNO_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVB_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNB_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVZ_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNZ_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVBE_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNBE_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVS_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNS_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVP_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNP_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVL_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNL_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVLE_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNLE_GqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CFCMOVO_GqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNO_GqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVB_GqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNB_GqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVZ_GqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNZ_GqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVBE_GqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNBE_GqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVS_GqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNS_GqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVP_GqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNP_GqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVL_GqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNL_GqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVLE_GqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNLE_GqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CFCMOVO_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNO_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVB_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNB_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVZ_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNZ_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVBE_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNBE_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVS_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNS_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVP_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNP_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVL_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNL_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVLE_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNLE_EqGqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CMOVO_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNO_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVB_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNB_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVZ_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNZ_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVBE_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNBE_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVS_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNS_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVP_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNP_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVL_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNL_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVLE_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CMOVNLE_BqGqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void CFCMOVO_BqGqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNO_BqGqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVB_BqGqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNB_BqGqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVZ_BqGqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNZ_BqGqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVBE_BqGqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNBE_BqGqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVS_BqGqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNS_BqGqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVP_BqGqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNP_BqGqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVL_BqGqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNL_BqGqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVLE_BqGqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void CFCMOVNLE_BqGqEqM(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void SETO_ZU_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SETNO_ZU_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SETB_ZU_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SETNB_ZU_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SETZ_ZU_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SETNZ_ZU_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SETBE_ZU_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SETNBE_ZU_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SETS_ZU_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SETNS_ZU_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SETP_ZU_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SETNP_ZU_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SETL_ZU_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SETNL_ZU_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SETLE_ZU_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SETNLE_ZU_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void JMPABS(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void PUSH2_BqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void POP2_BqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ROL_BbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ROR_BbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCL_BbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCR_BbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHL_BbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHR_BbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SAR_BbEbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ROL_BwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ROR_BwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCL_BwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCR_BwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHL_BwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHR_BwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SAR_BwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ROL_BdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ROR_BdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCL_BdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCR_BdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHL_BdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHR_BdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SAR_BdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void ROL_BqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void ROR_BqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCL_BqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void RCR_BqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHL_BqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHR_BqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SAR_BqEqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_NF_ROL_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ROR_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHL_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHR_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SAR_EbR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_NF_ROL_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ROR_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHL_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHR_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SAR_EwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_NF_ROL_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ROR_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHL_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHR_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SAR_EdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void APX_NF_ROL_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_ROR_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHL_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHR_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SAR_EqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void SHLD_BwEwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHLD_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHRD_BwEwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHRD_EwGwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void SHLD_BdEdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHLD_EdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHRD_BdEdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHRD_EdGdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+
+  BX_SMF void SHLD_BqEqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHLD_EqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void SHRD_BqEqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+  BX_SMF void APX_NF_SHRD_EqGqR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
+#endif
+
   BX_SMF void LZCNT_GwEwR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
   BX_SMF void LZCNT_GdEdR(bxInstruction_c *) BX_CPP_AttrRegparmN(1);
 #if BX_SUPPORT_X86_64
@@ -5413,6 +6183,12 @@ public: // for now...
   BX_SMF void xrstor_hi_zmm_state(bxInstruction_c *i, bx_address offset);
   BX_SMF void xrstor_init_hi_zmm_state(void);
 #endif
+#if BX_SUPPORT_APX
+  BX_SMF bool xsave_apx_state_xinuse(void);
+  BX_SMF void xsave_apx_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_apx_state(bxInstruction_c *i, bx_address offset);
+  BX_SMF void xrstor_init_apx_state(void);
+#endif
 #endif
 
 #if BX_SUPPORT_PKEYS
@@ -5708,16 +6484,17 @@ BX_CPP_INLINE Bit32u BX_CPP_AttrRegparmN(1) BX_CPU_C::BxResolve32(bxInstruction_
 
 // fetchModeMask:
 // -------------
-// bit 0 - CS.D_B
-// bit 1 - long64 mode (CS.L)
-// bit 2 - protected mode
-// bit 3 - FPU and MMX OK
-// bit 4 - SSE_OK
-// bit 5 - AVX_OK
-// bit 6 - EVEX_OK
-// bit 7 - BNDREGS_CLEAR (near branches might initialize BND0-3)
-// bit 8 - AMX_OK
-// bit 9 - SCALEDATA_OK
+// bit 0  - CS.D_B
+// bit 1  - long64 mode (CS.L)
+// bit 2  - protected mode
+// bit 3  - FPU and MMX OK
+// bit 4  - SSE_OK
+// bit 5  - AVX_OK
+// bit 6  - EVEX_OK
+// bit 7  - BNDREGS_CLEAR (near branches might initialize BND0-3)
+// bit 8  - APX_OK
+// bit 9  - AMX_OK
+// bit 10 - SCALEDATA_OK
 //
 
 enum {
@@ -5729,14 +6506,17 @@ enum {
   BX_FETCH_MODE_AVX_OK            = (1 << 5),
   BX_FETCH_MODE_EVEX_OK           = (1 << 6),
   BX_FETCH_MODE_BNDREGS_CLEAR     = (1 << 7),
-  BX_FETCH_MODE_AMX_OK            = (1 << 8),
-  BX_FETCH_MODE_SCALEDATA_OK      = (1 << 9)
+  BX_FETCH_MODE_APX_OK            = (1 << 8),
+  BX_FETCH_MODE_AMX_OK            = (1 << 9),
+  BX_FETCH_MODE_SCALEDATA_OK      = (1 << 10),
 };
 
 // number of fetchModeMask bits which could be set with current configuration
 // (the trace cache and instruction cache rely on it, update when adding new fetchModeMask bits)
 #if BX_SUPPORT_AMX
-const unsigned BX_FETCH_MODE_MASK_BITS = 10;
+const unsigned BX_FETCH_MODE_MASK_BITS = 11;
+#elif BX_SUPPORT_APX
+const unsigned BX_FETCH_MODE_MASK_BITS = 9;
 #elif BX_SUPPORT_MPX
 const unsigned BX_FETCH_MODE_MASK_BITS = 8;
 #else
@@ -5764,6 +6544,13 @@ BX_CPP_INLINE void BX_CPU_C::mpxregs_clear_enable() { BX_CPU_THIS_PTR cpu_state_
 BX_CPP_INLINE void BX_CPU_C::mpxregs_clear_disable() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~BX_FETCH_MODE_BNDREGS_CLEAR; }
 #endif
 
+#if BX_SUPPORT_APX
+BX_CPP_INLINE void BX_CPU_C::set_apx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_APX_OK; }
+BX_CPP_INLINE void BX_CPU_C::clear_apx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~BX_FETCH_MODE_APX_OK; }
+BX_CPP_INLINE bool BX_CPU_C::get_apx_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_APX_OK); }
+#endif
+
+#if BX_SUPPORT_AMX
 BX_CPP_INLINE void BX_CPU_C::set_amx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_AMX_OK; }
 BX_CPP_INLINE void BX_CPU_C::clear_amx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~(BX_FETCH_MODE_AMX_OK | BX_FETCH_MODE_SCALEDATA_OK); }
 BX_CPP_INLINE bool BX_CPU_C::get_amx_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_AMX_OK); }
@@ -5771,10 +6558,11 @@ BX_CPP_INLINE bool BX_CPU_C::get_amx_ok() { return (BX_CPU_THIS_PTR cpu_state_us
 BX_CPP_INLINE void BX_CPU_C::set_scaledata_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_SCALEDATA_OK; }
 BX_CPP_INLINE void BX_CPU_C::clear_scaledata_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~BX_FETCH_MODE_SCALEDATA_OK; }
 BX_CPP_INLINE bool BX_CPU_C::get_scaledata_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_SCALEDATA_OK); }
+#endif
 
 //
 // updateFetchModeMask - has to be called everytime
-//   CS.L / CS.D_B / CR0.PE, CR0.TS or CR0.EM / CR4.OSFXSR / CR4.OSXSAVE changes
+//   CS.L / CS.D_B / CR0.PE, CR0.TS or CR0.EM / CR4.OSFXSR / CR4.OSXSAVE / XCR0 changes
 //
 BX_CPP_INLINE void BX_CPU_C::updateFetchModeMask(void)
 {

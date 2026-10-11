@@ -160,3 +160,4 @@ x86_feature(BX_ISA_RAO_INT, "rao_int")                                     /* RA
 x86_feature(BX_ISA_MOVRS, "movrs")                                         /* MOVRS instructions support */
 x86_feature(BX_ISA_FRED, "fred")                                           /* FRED: Flexible Return and Event Deivery support */
 x86_feature(BX_ISA_USER_MSR, "user_msr")                                   /* USER_MSR: Support URDMSR/UWRMSR instructions */
+x86_feature(BX_ISA_APX, "apx")                                             /* APX instructions support */

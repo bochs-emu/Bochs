@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2016-2017 Stanislav Shwartsman
+//   Copyright (c) 2016-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -67,18 +67,18 @@ public:
     // 14...0  opcode
     Bit16u ia_opcode;
 
-    //  7...4 (unused)
-    //  3...0 ilen (0..15)
+    //  7..4 (unused)
+    //  3..0 ilen (0..15)
     Bit8u ilen;
 
 #define BX_LOCK_PREFIX_USED 1
-    //  7...6 lockUsed, repUsed (0=none, 1=0xF0, 2=0xF2, 3=0xF3)
-    //  5...5 extend8bit
-    //  4...4 mod==c0 (modrm)
-    //  3...3 os64
-    //  2...2 os32
-    //  1...1 as64
-    //  0...0 as32
+    //  7..6 lockUsed, repUsed (0=none, 1=0xF0, 2=0xF2, 3=0xF3)
+    //  5..5 extend8bit
+    //  4..4 mod==c0 (modrm)
+    //  3..3 os64
+    //  2..2 os32
+    //  1..1 as64
+    //  0..0 as32
     Bit8u metaInfo1;
   } metaInfo;
 
@@ -94,8 +94,21 @@ public:
     BX_INSTR_METADATA_SCALE = 7
   };
 
-  // using 5-bit field for registers (16 regs in 64-bit, RIP, NIL)
+  // using 6-bit field for registers (32 regs in 64-bit APX and EVEX, RIP, NIL)
   Bit8u metaData[8];
+
+#if BX_SUPPORT_APX
+  // APX metadata:
+  // apx[0]:
+  //   7..7 (unused)
+  //   6..6 REX2 prefix was used (must be zero when non APX instruction)
+  //   5..4 (unused)
+  //   3..3 APX.ND (derived from EVEX.b)
+  //   2..2 APX.NF (derived from EVEX.mask, EVEX.mask[2])
+  //   1..0 (unused)
+  // apx[1..3]: unused
+  Bit8u apx[4];
+#endif
 
   union {
     // Form (longest case): [opcode+modrm+sib/displacement32/immediate32]
@@ -157,10 +170,10 @@ public:
 
 #if BX_SUPPORT_CET
   BX_CPP_INLINE unsigned segOverrideCet(void) const {
-    return metaData[BX_INSTR_METADATA_CET_SEGOVERRIDE];
+    return metaData[BX_INSTR_METADATA_CET_SEGOVERRIDE] & 0x1;
   }
-  BX_CPP_INLINE void setCetSegOverride(unsigned val) {
-    metaData[BX_INSTR_METADATA_CET_SEGOVERRIDE] = val;
+  BX_CPP_INLINE void setCetSegOverride() {
+    metaData[BX_INSTR_METADATA_CET_SEGOVERRIDE] |= 0x1;
   }
 #endif
 
@@ -213,6 +226,10 @@ public:
   BX_CPP_INLINE void init(unsigned os32, unsigned as32, unsigned os64, unsigned as64)
   {
     metaInfo.metaInfo1 = (os32<<2) | (os64<<3) | (as32<<0) | (as64<<1);
+    metaData[BX_INSTR_METADATA_CET_SEGOVERRIDE] = 0;
+#if BX_SUPPORT_APX
+    apx[0] = 0;
+#endif
   }
 
   BX_CPP_INLINE unsigned os32L(void) const {
@@ -371,6 +388,29 @@ public:
   BX_CPP_INLINE unsigned getRC(void) const {
     return modRMForm.Ib[2] & 0x3;
   }
+
+#if BX_SUPPORT_APX
+  BX_CPP_INLINE unsigned getREX2(void) const {
+    return apx[0] & (1<<6);
+  }
+  BX_CPP_INLINE void setREX2() {
+    apx[0] |= (1<<6);
+  }
+
+  BX_CPP_INLINE unsigned getApxEvexNF(void) const {
+    return apx[0] & (1<<2);
+  }
+  BX_CPP_INLINE void setApxEvexNF() {
+    apx[0] |= (1<<2);
+  }
+
+  BX_CPP_INLINE unsigned getApxEvexND(void) const {
+    return apx[0] & (1<<3);
+  }
+  BX_CPP_INLINE void setApxEvexND() {
+    apx[0] |= (1<<3);
+  }
+#endif
 #endif
 
   BX_CPP_INLINE void setSrcReg(unsigned src, unsigned reg) {
@@ -393,6 +433,15 @@ public:
   BX_CPP_INLINE unsigned src3() const {
     return metaData[BX_INSTR_METADATA_SRC3];
   }
+
+#if BX_SUPPORT_APX
+  BX_CPP_INLINE void set_dfv(unsigned dfv) {
+    metaData[BX_INSTR_METADATA_SRC2] = dfv;
+  }
+  BX_CPP_INLINE unsigned dfv() const {
+    return metaData[BX_INSTR_METADATA_SRC2];
+  }
+#endif
 
   BX_CPP_INLINE unsigned src() const { return src1(); }
 
@@ -427,7 +476,7 @@ enum BxDisasmStyle {
   BX_DISASM_GAS
 };
 
-extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip, BxDisasmStyle style = BX_DISASM_INTEL);
+extern char* disasm(const Bit8u *opcode, bool is_32, bool is_64, char *disbufptr, bxInstruction_c *i, bx_address cs_base, bx_address rip, BxDisasmStyle style = BX_DISASM_INTEL, bool apx_ok = true);
 extern unsigned bx_disasm_wrapper(bool is_32, bool is_64, bx_address cs_base, bx_address ip, const Bit8u *instr, char *disbuf);
 
 #endif

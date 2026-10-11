@@ -841,6 +841,14 @@ void bx_dbg_info_registers_command(unsigned cpu, int which_regs_mask)
     dbg_printf("r14: %08x_%08x\n", GET32H(reg), GET32L(reg));
     reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_R15);
     dbg_printf("r15: %08x_%08x\n", GET32H(reg), GET32L(reg));
+#if BX_SUPPORT_APX
+    if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_APX)) {
+      for (unsigned i=0; i<16; i++) {
+        reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_R15 + 1 + i);
+        dbg_printf("r%u: %08x_%08x\n", 16 + i, GET32H(reg), GET32L(reg));
+      }
+    }
+#endif
     reg = BX_CPU(cpu)->get_instruction_pointer();
     dbg_printf("rip: %08x_%08x\n", GET32H(reg), GET32L(reg));
 #if BX_SUPPORT_CET
@@ -1060,7 +1068,7 @@ next_page:
 
 extern int fetchDecode32(const Bit8u *fetchPtr, bool is_32, bxInstruction_c *i, unsigned remainingInPage);
 #if BX_SUPPORT_X86_64
-extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
+extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage, bool apx_ok);
 #endif
 
 // Read 16 instruction bytes at laddr for decoding. Bytes from the next page
@@ -1086,7 +1094,7 @@ static bool bx_dbg_read_instruction(unsigned which_cpu, bx_address laddr, bool i
   int ret;
 #if BX_SUPPORT_X86_64
   if (is_64)
-    ret = fetchDecode64(buf, &i, len);
+    ret = fetchDecode64(buf, &i, len, true);
   else
 #endif
     ret = fetchDecode32(buf, is_32, &i, len);
@@ -3995,7 +4003,7 @@ void bx_dbg_step_over_command()
   int ret = -1;
 #if BX_SUPPORT_X86_64
   if (IS_CODE_64(guard_state.code_32_64))
-    ret = fetchDecode64(opcode_bytes, &i, 16);
+    ret = fetchDecode64(opcode_bytes, &i, 16, true);
   else
 #endif
     ret = fetchDecode32(opcode_bytes, IS_CODE_32(guard_state.code_32_64), &i, 16);

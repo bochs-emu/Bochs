@@ -1795,4 +1795,8 @@ bx_define_opcode(BX_IA_EVEX_VUNPACKB_VdqWdqIb_Kmask, "vunpackb", "vunpackb", &BX
 bx_define_opcode(BX_IA_EVEX_VPMOVSSDB_WdqVdq, "vpmovssdb", "vpmovssdb", &BX_CPU_C::VPMOVSSDB_MASK_WdqVdqM, &BX_CPU_C::VPMOVSSDB_WdqVdqR, BX_ISA_ACE, OP_mVQV, OP_Vdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 bx_define_opcode(BX_IA_EVEX_VPMOVSSDB_WdqVdq_Kmask, "vpmovssdb", "vpmovssdb", &BX_CPU_C::VPMOVSSDB_MASK_WdqVdqM, &BX_CPU_C::VPMOVSSDB_MASK_WdqVdqR, BX_ISA_ACE, OP_mVQV, OP_Vdq, OP_NONE, OP_NONE, BX_PREPARE_EVEX_NO_SAE | BX_PREPARE_EVEX_NO_BROADCAST)
 
+#if BX_SUPPORT_APX
+#include "ia_opcodes_evex_apx.def"
+#endif // BX_SUPPORT_APX
+
 #endif // BX_SUPPORT_EVEX
