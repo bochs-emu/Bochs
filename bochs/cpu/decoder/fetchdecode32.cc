@@ -1279,7 +1279,7 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
     case BX_SRC_RM:
       if (i->modC0()) {
 #if BX_SUPPORT_EVEX
-        if (type == BX_KMASK_REG) {
+        if (BX_IS_KMASK_REG(type)) {
           rm &= 0x7;
           // vector instruction using opmask as source or dest
           if (i->isZeroMasking())

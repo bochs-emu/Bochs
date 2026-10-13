@@ -133,7 +133,7 @@ enum {
 };
 
 // for disasm: register type/size when source is a register, or memory-access
-// size hint when it's a memory reference. 5 bits (0-31); 16 used, 15 free.
+// size hint when it's a memory reference. 5 bits (0-31); 21 used, 11 free.
 enum {
   BX_NO_REGISTER = 0,
   BX_GPR8 = 0x1,
@@ -145,15 +145,18 @@ enum {
   BX_MMX_REG = 0x7,
   BX_MMX_HALF_REG = 0x8,
   BX_VMM_REG = 0x9,
-  BX_KMASK_REG = 0xA,
-  BX_KMASK_REG_PAIR = 0xB,
-  BX_TMM_REG = 0xC,
-  BX_SEGREG = 0xD,
-  BX_CREG = 0xE,
-  BX_DREG = 0xF,
-  BX_BSR_REG = 0x10,        // ACE v1 Block Scale Register (BSRMOVF/BSRMOVL/BSRMOVH/BSRINIT)
-  BX_SIB_MEMORY = 0x11,     // memory reference which must be encoded with SIB byte (AMX TILELOADD/TILESTORED)
-  // 0x12-0x1F: 14 more free slots
+  BX_KMASK_REG = 0xA,       // opmask register or qword memory reference (KMOVQ)
+  BX_KMASK_REG_B = 0xB,     // opmask register or byte memory reference (KMOVB)
+  BX_KMASK_REG_W = 0xC,     // opmask register or word memory reference (KMOVW)
+  BX_KMASK_REG_D = 0xD,     // opmask register or dword memory reference (KMOVD)
+  BX_KMASK_REG_PAIR = 0xE,
+  BX_TMM_REG = 0xF,
+  BX_SEGREG = 0x10,
+  BX_CREG = 0x11,
+  BX_DREG = 0x12,
+  BX_BSR_REG = 0x13,        // ACE v1 Block Scale Register (BSRMOVF/BSRMOVL/BSRMOVH/BSRINIT)
+  BX_SIB_MEMORY = 0x14,     // memory reference which must be encoded with SIB byte (AMX TILELOADD/TILESTORED)
+  // 0x15-0x1F: 11 more free slots
 };
 
 // to be used together with BX_SRC_VECTOR_RM
@@ -219,6 +222,9 @@ enum {
 
 #define BX_DISASM_SRC_ORIGIN(desc) ((desc) & 0x7)
 #define BX_DISASM_SRC_TYPE(desc) ((desc) >> 3)
+
+// opmask register source type (byte/word/dword/qword memory reference size)
+#define BX_IS_KMASK_REG(type) ((type) >= BX_KMASK_REG && (type) <= BX_KMASK_REG_D)
 
 const Bit8u OP_NONE = BX_SRC_NONE;
 
@@ -353,15 +359,15 @@ const Bit8u OP_GBnd = BX_FORM_SRC(BX_BOUND_REG, BX_SRC_NNN);
 const Bit8u OP_EBnd = BX_FORM_SRC(BX_BOUND_REG, BX_SRC_RM);
 
 const Bit8u OP_KGb = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_NNN);
-const Bit8u OP_KEb = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_RM);
+const Bit8u OP_KEb = BX_FORM_SRC(BX_KMASK_REG_B, BX_SRC_RM);
 const Bit8u OP_KHb = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_VVV);
 
 const Bit8u OP_KGw = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_NNN);
-const Bit8u OP_KEw = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_RM);
+const Bit8u OP_KEw = BX_FORM_SRC(BX_KMASK_REG_W, BX_SRC_RM);
 const Bit8u OP_KHw = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_VVV);
 
 const Bit8u OP_KGd = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_NNN);
-const Bit8u OP_KEd = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_RM);
+const Bit8u OP_KEd = BX_FORM_SRC(BX_KMASK_REG_D, BX_SRC_RM);
 const Bit8u OP_KHd = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_VVV);
 
 const Bit8u OP_KGq = BX_FORM_SRC(BX_KMASK_REG, BX_SRC_NNN);

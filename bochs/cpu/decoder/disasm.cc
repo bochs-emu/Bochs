@@ -293,16 +293,25 @@ char *resolve_memsize(char *disbufptr, const bxInstruction_c *i, unsigned src_in
   else if (src_index == BX_SRC_RM) {
     switch(src_type) {
     case BX_GPR8:
+#if BX_SUPPORT_EVEX
+    case BX_KMASK_REG_B:
+#endif
       disbufptr = dis_sprintf(disbufptr, "byte ptr ");
       break;
 
     case BX_GPR16:
     case BX_SEGREG:
+#if BX_SUPPORT_EVEX
+    case BX_KMASK_REG_W:
+#endif
       disbufptr = dis_sprintf(disbufptr, "word ptr ");
       break;
 
     case BX_GPR32:
     case BX_MMX_HALF_REG:
+#if BX_SUPPORT_EVEX
+    case BX_KMASK_REG_D:
+#endif
       disbufptr = dis_sprintf(disbufptr, "dword ptr ");
       break;
 
@@ -445,6 +454,9 @@ char *disasm_regref(char *disbufptr, const bxInstruction_c *i, unsigned src_num,
 
 #if BX_SUPPORT_EVEX
   case BX_KMASK_REG:
+  case BX_KMASK_REG_B:
+  case BX_KMASK_REG_W:
+  case BX_KMASK_REG_D:
     disbufptr = dis_sprintf(disbufptr, "k%d", srcreg);
     assert(srcreg < 8);
     if (src_num == 0 && i->opmask()) {
