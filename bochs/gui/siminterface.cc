@@ -878,9 +878,13 @@ bool bx_real_sim_c::is_agp_device(const char *name)
 
 #if BX_DEBUGGER
 
+// Returns true if a request to activate the internal debugger (or to break
+// into it when it is already active) would be accepted.
 bool bx_real_sim_c::debugger_activation_allowed()
 {
-  return bx_dbg_activation_allowed();
+  if (bx_dbg.debugger_active) return true;
+
+  return bx_gui->debugger_activation_allowed();
 }
 
 // this should only be called from the sim_thread.

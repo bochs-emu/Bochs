@@ -60,6 +60,7 @@ public:
   virtual void show_ips(Bit32u ips_count);
 #endif
 #if BX_DEBUGGER
+  virtual bool debugger_activation_allowed();
   virtual void set_display_mode(disp_mode_t newmode);
 #endif
 };
@@ -772,9 +773,6 @@ void bx_win32_gui_c::specific_init(int argc, char **argv, unsigned headerbar_y)
   if (gui_ci) {
     dialog_caps = BX_GUI_DLG_ALL;
   }
-#if BX_DEBUGGER
-  dialog_caps |= BX_GUI_DLG_DEBUGGER;
-#endif
   new_text_api = 1;
 }
 
@@ -2270,6 +2268,11 @@ void bx_win32_gui_c::set_mouse_mode_absxy(bool mode)
 }
 
 #if BX_DEBUGGER
+bool bx_win32_gui_c::debugger_activation_allowed()
+{
+  return !bx_dbg.debugger_gui;
+}
+
 // The debugger button is disabled in config mode (debugger prompt or config
 // interface): a click would only be handled after the simulation resumes.
 // PostMessage is used since the caller may hold stInfo.keyCS (config button

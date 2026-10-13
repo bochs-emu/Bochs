@@ -62,8 +62,6 @@
 #else
   #define BX_GUI_DLG_ALL          0x3F
 #endif
-// debugger button: not part of BX_GUI_DLG_ALL, each gui enables it explicitly
-#define BX_GUI_DLG_DEBUGGER     0x80
 
 // text mode blink feature
 #define BX_TEXT_BLINK_MODE      0x01
@@ -204,6 +202,7 @@ public:
   static void set_text_charmap(Bit8u map, Bit8u *fbuffer);
   static Bit8u get_mouse_headerbar_id();
 #if BX_DEBUGGER
+  virtual bool debugger_activation_allowed() {return false;}
   static Bit8u get_debugger_headerbar_id();
 #endif
 

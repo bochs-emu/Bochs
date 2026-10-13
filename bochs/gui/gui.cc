@@ -256,13 +256,11 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
                           BX_USB_BMAP_X, BX_USB_BMAP_Y);
 #endif
 #if BX_DEBUGGER
-  if ((BX_GUI_THIS dialog_caps & BX_GUI_DLG_DEBUGGER) && SIM->debugger_activation_allowed()) {
+  if (BX_GUI_THIS debugger_activation_allowed()) {
     BX_GUI_THIS debugger_bmap_id = create_bitmap(bx_debugger_bmap,
                           BX_DEBUGGER_BMAP_X, BX_DEBUGGER_BMAP_Y);
     BX_GUI_THIS debugger_dis_bmap_id = create_bitmap(bx_debugger_dis_bmap,
                           BX_DEBUGGER_BMAP_X, BX_DEBUGGER_BMAP_Y);
-  } else {
-    BX_GUI_THIS dialog_caps &= ~BX_GUI_DLG_DEBUGGER;
   }
 #endif
 
@@ -342,7 +340,7 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
 #if BX_DEBUGGER
   // Debugger button (left of the user button), created last to keep the
   // headerbar ids of the other buttons
-  if (BX_GUI_THIS dialog_caps & BX_GUI_DLG_DEBUGGER) {
+  if (BX_GUI_THIS debugger_activation_allowed()) {
     BX_GUI_THIS debugger_hbar_id = headerbar_bitmap(BX_GUI_THIS debugger_bmap_id,
                           BX_GRAVITY_RIGHT, debugger_handler);
     BX_GUI_THIS set_tooltip(BX_GUI_THIS debugger_hbar_id, "Enter or break into the debugger");
