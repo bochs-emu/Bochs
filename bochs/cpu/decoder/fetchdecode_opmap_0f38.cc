@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2017-2024 Stanislav Shwartsman
+//   Copyright (c) 2017-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -235,8 +235,9 @@ static const Bit64u BxOpcodeTable0F38F8[] = {
 #if BX_SUPPORT_X86_64
   form_opcode(ATTR_IS64 | ATTR_MODC0   | ATTR_SSE_PREFIX_F2, BX_IA_URDMSR_EqGq),
   form_opcode(ATTR_IS64 | ATTR_MODC0   | ATTR_SSE_PREFIX_F3, BX_IA_UWRMSR_GqEq),
-  form_opcode(ATTR_OS64 | ATTR_MOD_MEM | ATTR_SSE_PREFIX_66, BX_IA_MOVDIR64B_GqMdq),
+  form_opcode(ATTR_AS64 | ATTR_MOD_MEM | ATTR_SSE_PREFIX_66, BX_IA_MOVDIR64B_GqMdq),
 #endif
+  form_opcode(ATTR_AS16 | ATTR_MOD_MEM | ATTR_SSE_PREFIX_66, BX_IA_MOVDIR64B_GwMdq),
   last_opcode(            ATTR_MOD_MEM | ATTR_SSE_PREFIX_66, BX_IA_MOVDIR64B_GdMdq)
 };
 
