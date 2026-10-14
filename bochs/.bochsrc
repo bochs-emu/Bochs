@@ -1277,7 +1277,8 @@ speaker: enabled=1, mode=sound, volume=8
 # Bochs to enter the debugger mode. This might be useful for software
 # development. If Bochs was started without the debugger enabled (no -dbg
 # command line option), the magic breakpoint activates the internal debugger
-# (currently with the win32 display library only, not with the gui debugger).
+# (currently with the win32 display library only, the command line debugger is
+# activated also if the gui debugger is selected).
 # Use enabled=0 to disable the magic breakpoint.
 #
 # You can specify multiple at once:

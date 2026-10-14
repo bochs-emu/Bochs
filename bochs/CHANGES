@@ -15,7 +15,8 @@ Changes after Bochs 3.1 release:
   - Significantly speedup emulation when code breakpoints are defined in internal debugger, up to 2x-3x speedup observed with multiple breakpoints set
   - Allow up to 32 code breakpoints (as they are much less painful for emulation performance now)
   - Activation of the command line debugger at runtime, when Bochs compiled with the internal debugger
-    was started without -dbg option (currently with the win32 display library only, not with the gui debugger):
+    was started without -dbg option (currently with the win32 display library only, the gui debugger
+    can only be started with -dbg / -dbg_gui command line options):
     - Magic breakpoint activates the debugger. Use 'magic_break: enabled=0' to disable it.
     - New debugger button in the win32 headerbar (also command mode key 'd'), it breaks into the
       debugger if it is already active
