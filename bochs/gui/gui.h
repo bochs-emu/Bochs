@@ -26,10 +26,10 @@
 // header bar and status bar stuff
 #define BX_HEADER_BAR_Y 32
 
-// debugger button: one headerbar entry, two pixmaps (enabled / disabled)
+// debugger button: one headerbar entry, one pixmap
 #if BX_DEBUGGER
   #define BX_DEBUGGER_HB_ENTRIES 1
-  #define BX_DEBUGGER_PIXMAPS    2
+  #define BX_DEBUGGER_PIXMAPS    1
 #else
   #define BX_DEBUGGER_HB_ENTRIES 0
   #define BX_DEBUGGER_PIXMAPS    0
@@ -277,9 +277,6 @@ protected:
   static void save_restore_handler(void);
 #if BX_DEBUGGER
   static void debugger_handler(void);
-  // show the debugger button enabled or disabled, for guis without a native
-  // disabled state of headerbar buttons
-  void set_debugger_button(bool enabled);
 #endif
   // process clicks on the "classic" Bochs headerbar
   void headerbar_click(int x);
@@ -317,7 +314,7 @@ protected:
   unsigned usbdbg_bmap_id, usbdbg_dis_bmap_id, usbdbg_trigger_bmap_id, usbdbg_hbar_id;
 #endif
 #if BX_DEBUGGER
-  unsigned debugger_bmap_id, debugger_dis_bmap_id, debugger_hbar_id;
+  unsigned debugger_bmap_id, debugger_hbar_id;
 #endif
   // the "classic" Bochs headerbar
   unsigned bx_headerbar_entries;
