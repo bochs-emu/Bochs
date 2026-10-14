@@ -328,7 +328,7 @@ void trinity_apu_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *l
     //   [20:20] SMAP: Supervisor Mode Access Prevention
     //   [31:21] reserved
     leaf->ebx = get_std_cpuid_leaf_7_ebx();
-    leaf->ecx = 0;
+    leaf->ecx = get_std_cpuid_leaf_7_ecx();
     leaf->edx = 0;
     break;
   default:

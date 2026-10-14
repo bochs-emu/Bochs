@@ -360,8 +360,7 @@ void ryzen_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t *leaf) c
     //   [30:30] reserved
     //   [31:31] reserved
     leaf->ebx = get_std_cpuid_leaf_7_ebx();
-
-    leaf->ecx = 0;
+    leaf->ecx = get_std_cpuid_leaf_7_ecx();
     leaf->edx = 0;
     break;
   default:

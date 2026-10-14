@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2015-2017 Stanislav Shwartsman
+//   Copyright (c) 2015-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -454,7 +454,7 @@ void broadwell_ult_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_function_t 
     //   [31:31] reserved
     leaf->ebx = get_std_cpuid_leaf_7_ebx(BX_CPUID_STD7_SUBLEAF0_EBX_ENCHANCED_REP_STRINGS);
 
-    leaf->ecx = 0;
+    leaf->ecx = get_std_cpuid_leaf_7_ecx();
     leaf->edx = 0;
     break;
   default:
