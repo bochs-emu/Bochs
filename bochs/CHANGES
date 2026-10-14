@@ -1,10 +1,11 @@
 Changes after Bochs 3.1 release:
 
-(up to date with commits done till 30 Sep 2026)
+(up to date with commits done till 14 Oct 2026)
 
 - CPU emulation and instrumentation
   ! Implemented AI Compute Extensions (ACE) emulation according AI Compute Extensions (ACE) Specification rev1.16.2 from x86 Ecosystem Advisory Group
   ! Implemented support for Intel MPX ISA extension
+  ! Implemented SVM Decode Assist feature + CET state management under SVM
   ! Improved implementation of x87 transendential instructions (F2XM1/FYL2X/FYL2XP1/FPATAN/FSIN/FCOS/FSINCOS/FPTAN) to match HW
   - Bugfixes for CPU emulation correctness (critical bugfixes for emulation of AVX_NE_CONVERT, AVX512/AVX512_FP16, AMX, VMX, SVM, CET, FRED)
     full list of all CPU bugfixes can be seen in Bochs source tree @ bochs/cpu/history)
@@ -31,6 +32,8 @@ Changes after Bochs 3.1 release:
       - #869: Fix object migration between subchannels
       - #871: Implement 2D lines
       - #873: Implement bump mapping with luminance
+  - Banshee
+      - Two small fixes in blt_polygon_fill
   - Hard drive / HD image
     - VVFAT: Fixed LongName handling in vvfat disks
     - VVFAT: Adding path prefix "fat32:" forces using FAT32 file system
@@ -40,6 +43,10 @@ Changes after Bochs 3.1 release:
     - SB16: Added parameter 'dsp_realtime' to use realtime mode for the DSP
     - ES1370: Added parameter 'dac_realtime' to use realtime mode for the DACs
     - ALSA sound driver: Added support to specify PCM device
+    - Implement sound buffering
+      - With this change, mixer thread adds short delay before starting sound playback. It allows to get rid of crackling noise during playback.
+  - Networking
+    - VDE: fix networking on FreeBSD
   - General
     - Set Windows system timer resolution to 1ms. This help to reduce artefacts (clicking noises) during sound playback
 
