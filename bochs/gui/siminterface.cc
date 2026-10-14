@@ -884,6 +884,9 @@ bool bx_real_sim_c::debugger_activation_allowed()
 {
   if (bx_dbg.debugger_active) return true;
 
+  // no gui loaded yet (e.g. log dialog at startup) or already unloaded
+  if (bx_gui == NULL) return false;
+
   return bx_gui->debugger_activation_allowed();
 }
 
