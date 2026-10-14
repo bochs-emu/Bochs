@@ -66,6 +66,7 @@ Changes after Bochs 3.1:
 - APIC: APIC read from an address crossing 32-bit boundary actually returns all zero in HW
 - SMC: Fixed potential SMC detection problem while running guest code with AMX enabled (XCR0.TILECFG=XCR0.TILEDATA=1)
 + Fixed incorrect assertion in assert_checks: require CS.L and CS.D_B to be mutually exclusive only in long mode, CS.L is silently ignored outside of long mode
+! SVM: implemented CET state management - guest S_CET, SSP and ISST_ADDR are loaded by VMRUN and saved on #VMEXIT, VMRUN CET consistency checks
 + SVM: VMRUN didn't not load the guest CR2 from the VMCB (Debian 12 amd64 running KVM (kvm_amd) failed inside Bochs)
 + SVM: SVM VMEXIT loading host state should reset debug_trap and inhibit_mask
 + SVM: interrupt shadow lost at a #DB intercept, after STI in the guest a #DB intercept at the next boundary saved VMCB INTERRUPT_SHADOW = 0 in Bochs, 1 on real Zen 4

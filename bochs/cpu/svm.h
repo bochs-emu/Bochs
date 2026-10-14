@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//   Copyright (c) 2011-2015 Stanislav Shwartsman
+//   Copyright (c) 2011-2026 Stanislav Shwartsman
 //          Written by Stanislav Shwartsman [sshwarts at sourceforge net]
 //
 //  This library is free software; you can redistribute it and/or
@@ -141,6 +141,19 @@ enum SVM_intercept_codes {
 #define SVM_CONTROL32_EXITINTINFO               (0x088)
 #define SVM_CONTROL32_EXITINTINFO_ERROR_CODE    (0x08c)
 #define SVM_CONTROL_NESTED_PAGING_ENABLE        (0x090)
+
+// VMCB control area offset 0x090 control bits
+enum {
+  SVM_NESTED_CTRL_NP_ENABLE        = (1 << 0),  // Nested Paging
+  SVM_NESTED_CTRL_SEV_ENABLE       = (1 << 1),  // Secure Encrypted Virtualization
+  SVM_NESTED_CTRL_SEV_ES_ENABLE    = (1 << 2),  // Encrypted State for SEV
+  SVM_NESTED_CTRL_GMET_ENABLE      = (1 << 3),  // Guest Mode Execute Trap
+  SVM_NESTED_CTRL_SSS_CHECK_ENABLE = (1 << 4),  // Supervisor Shadow Stack restrictions
+  SVM_NESTED_CTRL_VTE_ENABLE       = (1 << 5),  // Virtual Transparent Encryption
+  SVM_NESTED_CTRL_ROGPT_ENABLE     = (1 << 6),  // Read Only Guest Page Tables
+  SVM_NESTED_CTRL_INVLPGB_ENABLE   = (1 << 7),  // INVLPGB and TLBSYNC execution in guest
+  SVM_NESTED_CTRL_PML_ENABLE       = (1 << 11)  // Page Modification Logging
+};
 
 #define SVM_VIRTUAL_APIC_BAR                    (0x098)
 
@@ -302,6 +315,12 @@ struct SVM_HOST_STATE
   Bit64u rax;
 
   BxPackedRegister pat_msr;
+
+#if BX_SUPPORT_CET
+  Bit64u ssp;
+  Bit64u msr_ia32_s_cet;
+  Bit64u interrupt_ssp_table_address;
+#endif
 };
 
 struct SVM_GUEST_STATE
@@ -327,6 +346,12 @@ struct SVM_GUEST_STATE
   unsigned cpl;
 
   bool inhibit_interrupts;
+
+#if BX_SUPPORT_CET
+  Bit64u ssp;
+  Bit64u msr_ia32_s_cet;
+  Bit64u interrupt_ssp_table_address;
+#endif
 };
 
 struct SVM_CONTROLS

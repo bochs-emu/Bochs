@@ -40,6 +40,10 @@
 
 extern const char *segname[];
 
+#if BX_SUPPORT_CET
+extern bool is_valid_cet_control(Bit64u val);
+#endif
+
 void BX_CPU_C::set_VMCBPTR(Bit64u vmcbptr)
 {
   BX_CPU_THIS_PTR vmcbptr = vmcbptr;
@@ -230,6 +234,14 @@ void BX_CPU_C::SvmEnterSaveHostState(SVM_HOST_STATE *host)
   host->rax = RAX;
 
   host->pat_msr = BX_CPU_THIS_PTR msr.pat;
+
+#if BX_SUPPORT_CET
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
+    host->ssp = SSP;
+    host->msr_ia32_s_cet = BX_CPU_THIS_PTR msr.ia32_cet_control[0];
+    host->interrupt_ssp_table_address = BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table;
+  }
+#endif
 }
 
 void BX_CPU_C::SvmExitLoadHostState(SVM_HOST_STATE *host)
@@ -267,6 +279,14 @@ void BX_CPU_C::SvmExitLoadHostState(SVM_HOST_STATE *host)
   RIP = BX_CPU_THIS_PTR prev_rip = host->rip;
   RSP = host->rsp;
   RAX = host->rax;
+
+#if BX_SUPPORT_CET
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
+    SSP = host->ssp;
+    BX_CPU_THIS_PTR msr.ia32_cet_control[0] = host->msr_ia32_s_cet;
+    BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table = host->interrupt_ssp_table_address;
+  }
+#endif
 
   CPL = 0;
 
@@ -309,6 +329,14 @@ void BX_CPU_C::SvmExitSaveGuestState(void)
   vmcb_write64(SVM_GUEST_RAX, RAX);
   vmcb_write64(SVM_GUEST_RSP, RSP);
   vmcb_write64(SVM_GUEST_RIP, RIP);
+
+#if BX_SUPPORT_CET
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
+    vmcb_write64(SVM_GUEST_S_CET, BX_CPU_THIS_PTR msr.ia32_cet_control[0]);
+    vmcb_write64(SVM_GUEST_SSP, SSP);
+    vmcb_write64(SVM_GUEST_ISST_ADDR, BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table);
+  }
+#endif
 
   vmcb_write8(SVM_GUEST_CPL, CPL);
 
@@ -386,7 +414,8 @@ bool BX_CPU_C::SvmEnterLoadCheckControls(SVM_CONTROLS *ctrls)
 
   ctrls->last_pause_time = 0;
 
-  ctrls->nested_paging = vmcb_read8(SVM_CONTROL_NESTED_PAGING_ENABLE);
+  Bit32u nested_ctrls = vmcb_read32(SVM_CONTROL_NESTED_PAGING_ENABLE);
+  ctrls->nested_paging = (nested_ctrls & SVM_NESTED_CTRL_NP_ENABLE) != 0;
   if (! BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_NESTED_PAGING)) {
      if (ctrls->nested_paging) {
         BX_ERROR(("VMRUN: Nesting paging is not supported in this SVM configuration !"));
@@ -490,6 +519,33 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   }
   guest.dr7 = vmcb_read32(SVM_GUEST_DR7);
 
+#if BX_SUPPORT_CET
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
+    guest.msr_ia32_s_cet = vmcb_read64(SVM_GUEST_S_CET);
+    if (! IsCanonical(guest.msr_ia32_s_cet) || ! is_valid_cet_control(guest.msr_ia32_s_cet)) {
+      BX_ERROR(("VMRUN: Guest S_CET reserved bits set"));
+      return false;
+    }
+
+    // SSP and ISST_ADDR are canonicalized (not checked) by VMRUN
+    guest.ssp = CanonicalizeAddress(vmcb_read64(SVM_GUEST_SSP));
+    guest.interrupt_ssp_table_address = CanonicalizeAddress(vmcb_read64(SVM_GUEST_ISST_ADDR));
+
+    if (guest.cr4.get_CET()) {
+      if (! guest.cr0.get_WP()) {
+        BX_ERROR(("VMRUN: Guest CR4.CET=1 when CR0.WP=0"));
+        return false;
+      }
+
+      // U_CET is not part of the VMCB state, the current U_CET.SH_STK_EN value is used
+      if ((guest.eflags & EFlagsVMMask) != 0 && (BX_CPU_THIS_PTR msr.ia32_cet_control[1] & 0x1) != 0) {
+        BX_ERROR(("VMRUN: Guest CR4.CET=1 and U_CET.SH_STK_EN=1 when EFLAGS.VM=1"));
+        return false;
+      }
+    }
+  }
+#endif
+
   guest.pat_msr = vmcb_read64(SVM_GUEST_PAT);
 
   for (n=0;n < 4; n++) {
@@ -589,6 +645,14 @@ bool BX_CPU_C::SvmEnterLoadCheckGuestState(void)
   RIP = BX_CPU_THIS_PTR prev_rip = guest.rip;
   RSP = guest.rsp;
   RAX = guest.rax;
+
+#if BX_SUPPORT_CET
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_CET)) {
+    SSP = guest.ssp;
+    BX_CPU_THIS_PTR msr.ia32_cet_control[0] = guest.msr_ia32_s_cet;
+    BX_CPU_THIS_PTR msr.ia32_interrupt_ssp_table = guest.interrupt_ssp_table_address;
+  }
+#endif
 
   CPL = guest.cpl;
 
@@ -1442,6 +1506,11 @@ void BX_CPU_C::register_svm_state(bx_param_c *parent)
   BXRS_HEX_PARAM_FIELD(host, rip, BX_CPU_THIS_PTR vmcb->host_state.rip);
   BXRS_HEX_PARAM_FIELD(host, rsp, BX_CPU_THIS_PTR vmcb->host_state.rsp);
   BXRS_HEX_PARAM_FIELD(host, rax, BX_CPU_THIS_PTR vmcb->host_state.rax);
+#if BX_SUPPORT_CET
+  BXRS_HEX_PARAM_FIELD(host, ssp, BX_CPU_THIS_PTR vmcb->host_state.ssp);
+  BXRS_HEX_PARAM_FIELD(host, s_cet, BX_CPU_THIS_PTR vmcb->host_state.msr_ia32_s_cet);
+  BXRS_HEX_PARAM_FIELD(host, interrupt_ssp_table_address, BX_CPU_THIS_PTR vmcb->host_state.interrupt_ssp_table_address);
+#endif
 }
 
 #endif // BX_SUPPORT_SVM
