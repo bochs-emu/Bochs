@@ -14,16 +14,17 @@ Changes after Bochs 3.1 release:
   - Invalidate SMC pages after debugger memory writes
   - Significantly speedup emulation when code breakpoints are defined in internal debugger, up to 2x-3x speedup observed with multiple breakpoints set
   - Allow up to 32 code breakpoints (as they are much less painful for emulation performance now)
-  - Magic breakpoint activates the internal debugger also when Bochs was started without -dbg option
-    (in Bochs compiled with the internal debugger). Use 'magic_break: enabled=0' to disable it.
-  - Added 'detach' debugger command: leave the debugger and continue simulation at full speed without it,
-    the debugger is activated again by magic breakpoint or time breakpoint
-  - The internal debugger can be activated at runtime from the GUI: new debugger button in the win32
-    and sdl2 headerbar (also command mode key 'd'), "Continue and enter debugger" choice in the runtime config
-    (text menu and win32 dialog). If the debugger is already active the button breaks into it.
-  - The debugger choice of the panic / error "ask" dialog also activates the internal debugger when
-    Bochs was started without -dbg (textconfig, win32, sdl2, x11). With 'panic: action=ask' this
-    includes Ctrl-C pressed in the console.
+  - Activation of the command line debugger at runtime, when Bochs compiled with the internal debugger
+    was started without -dbg option (currently with the win32 display library only, not with the gui debugger):
+    - Magic breakpoint activates the debugger. Use 'magic_break: enabled=0' to disable it.
+    - New debugger button in the win32 headerbar (also command mode key 'd'), it breaks into the
+      debugger if it is already active
+    - "Continue and enter debugger" choice in the runtime config (text menu and win32 dialog)
+    - The debugger choice of the panic / error "ask" dialog (textconfig and win32 dialog). With
+      'panic: action=ask' this includes Ctrl-C pressed in the console.
+  - Added 'detach' debugger command (not with the gui debugger): leave the debugger and continue simulation
+    at full speed without it, the debugger is activated again by magic breakpoint or time breakpoint.
+    With display libraries other than win32 the debugger cannot be activated again after 'detach'.
 
 - Configure and compile
   - Bochs now require C++11 support for compilation, enforced via configure
