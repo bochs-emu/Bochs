@@ -322,6 +322,12 @@ void print_statistics_tree(bx_param_c *node, int level)
 
 int bxmain(void)
 {
+#if BX_DEBUGGER
+  // the internal debugger could be activated at any time during simulation,
+  // the stream buffering could be changed only before any I/O on the stream
+  setbuf(stdout, NULL);
+  setbuf(stderr, NULL);
+#endif
   bx_set_sys_timer_resolution();
   bx_init_realtime64_usec();
 #ifdef HAVE_LOCALE_H
@@ -465,7 +471,7 @@ int split_string_into_argv(char *string, int *argc_out, char **argv, int max_arg
 }
 #endif /* if defined(__WXMSW__) */
 
-#if defined(__WXMSW__) || ((BX_WITH_SDL || BX_WITH_SDL2) && defined(WIN32))
+#if defined(__WXMSW__) || ((BX_WITH_SDL || BX_WITH_SDL2) && defined(WIN32) && !defined(__CYGWIN__))
 // The RedirectIOToConsole() function is copied from an article called "Adding
 // Console I/O to a Win32 GUI App" in Windows Developer Journal, December 1997.
 // It creates a console window.
@@ -503,7 +509,7 @@ int RedirectIOToConsole()
   setvbuf(stderr, NULL, _IONBF, 0);
   return 1;
 }
-#endif  /* if defined(__WXMSW__) || ((BX_WITH_SDL || BX_WITH_SDL2) && defined(WIN32)) */
+#endif  /* if defined(__WXMSW__) || ((BX_WITH_SDL || BX_WITH_SDL2) && defined(WIN32) && !defined(__CYGWIN__)) */
 
 #if defined(__WXMSW__)
 // only used for wxWidgets/win32.
@@ -562,8 +568,9 @@ int CDECL main(int argc, char *argv[])
   if (bx_noconsole) {
     FreeConsole();
   } else {
-#if BX_WITH_SDL || BX_WITH_SDL2
-    // if SDL/win32, try to create a console window.
+#if (BX_WITH_SDL || BX_WITH_SDL2) && !defined(__CYGWIN__)
+    // if SDL/win32, try to create a console window (cygwin: stdio is already
+    // connected to the terminal)
     if (!RedirectIOToConsole()) {
       return 1;
     }
@@ -1041,9 +1048,14 @@ static void bx_sim_loop(void)
       BX_CPU(0)->cpu_loop();
       if (bx_pc_system.kill_bochs_request)
         break;
+#if BX_DEBUGGER
+      if (bx_dbg.activation_request)
+        break;
+#endif
     }
     // for one processor, the only reason for cpu_loop to return is
-    // that kill_bochs_request was set by the GUI interface.
+    // that kill_bochs_request was set by the GUI interface or
+    // internal debugger activation was requested.
   }
 #if BX_SUPPORT_SMP
   else {
@@ -1085,6 +1097,15 @@ static void bx_sim_loop(void)
 
        if (bx_pc_system.kill_bochs_request)
          break;
+#if BX_DEBUGGER
+       if (bx_dbg.activation_request) {
+         // leave immediately, processors which return from cpu_run_trace()
+         // without executing would be accounted as halted, sync the time
+         // for already executed instructions
+         BX_TICKN(executed / BX_SMP_PROCESSORS);
+         break;
+       }
+#endif
     }
   }
 #endif /* BX_SUPPORT_SMP */
@@ -1147,26 +1168,32 @@ int bx_begin_simulation(int argc, char *argv[])
 
 
 #if BX_DEBUGGER
-  if (bx_dbg.debugger_active) {
-    // If using the debugger, it will take control and call
-    // bx_init_hardware() and cpu_loop()
-    bx_dbg_main();
+  // the simulation alternates between the internal debugger and running
+  // without it: the debugger could be activated at runtime and detached
+  while (1) {
+    if (bx_dbg.debugger_active) {
+      // the debugger takes control and returns when it is detached
+      bx_dbg_main();
+    }
+    bx_sim_loop();
+    if (bx_pc_system.kill_bochs_request)
+      break;
+    if (bx_dbg.activation_request)
+      bx_dbg_activate();
+  }
+#else
+#if BX_GDBSTUB
+  // If using gdbstub, it will take control and call
+  // bx_init_hardware() and cpu_loop()
+  if (bx_dbg.gdbstub_enabled) {
+    bx_gdbstub_init();
   }
   else
 #endif
   {
-#if BX_GDBSTUB
-    // If using gdbstub, it will take control and call
-    // bx_init_hardware() and cpu_loop()
-    if (bx_dbg.gdbstub_enabled) {
-      bx_gdbstub_init();
-    }
-    else
-#endif
-    {
-      bx_sim_loop();
-    }
+    bx_sim_loop();
   }
+#endif
 
   BX_INFO(("cpu loop quit, shutting down simulator"));
   bx_atexit();

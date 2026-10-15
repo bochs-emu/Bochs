@@ -171,6 +171,8 @@ public:
   virtual bool is_agp_device(const char *name);
 #if BX_DEBUGGER
   virtual bool debugger_active() {return bx_dbg.debugger_active;}
+  virtual bool debugger_activation_allowed();
+  virtual void request_debugger_activation(const char *reason);
   virtual void debug_break();
   virtual void debug_interpret_cmd(char *cmd);
   virtual char *debug_get_next_command();
@@ -875,6 +877,24 @@ bool bx_real_sim_c::is_agp_device(const char *name)
 }
 
 #if BX_DEBUGGER
+
+// Returns true if a request to activate the internal debugger (or to break
+// into it when it is already active) would be accepted.
+bool bx_real_sim_c::debugger_activation_allowed()
+{
+  if (bx_dbg.debugger_active) return true;
+
+  // no gui loaded yet (e.g. log dialog at startup) or already unloaded
+  if (bx_gui == NULL) return false;
+
+  return bx_gui->debugger_activation_allowed();
+}
+
+// this should only be called from the sim_thread.
+void bx_real_sim_c::request_debugger_activation(const char *reason)
+{
+  bx_dbg_request_activation(0, reason);
+}
 
 // this can be safely called from either thread.
 void bx_real_sim_c::debug_break()

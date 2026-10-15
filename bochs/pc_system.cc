@@ -433,7 +433,10 @@ void bx_pc_system_c::dumpStatsTimer(void* this_ptr)
 #if BX_DEBUGGER
 void bx_pc_system_c::timebp_handler(void* this_ptr)
 {
-   BX_CPU(0)->break_point = BREAK_POINT_TIME;
+   if (bx_dbg.debugger_active)
+     BX_CPU(0)->break_point = BREAK_POINT_TIME;
+   else
+     bx_dbg_request_activation(0, "time breakpoint"); // activate the debugger
    BX_DEBUG(("Time breakpoint triggered"));
 
    if (timebp_queue_size > 1) {

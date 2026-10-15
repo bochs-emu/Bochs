@@ -111,6 +111,9 @@ bool BX_CPU_C::handleWaitForEvent(void)
 #if BX_DEBUGGER
     if (bx_dbg.debugger_active && bx_guard.interrupt_requested)
       return 1; // Return to caller of cpu_loop.
+
+    if (bx_dbg.activation_request)
+      return 1; // Return to caller of cpu_loop to activate the debugger.
 #endif
 
     if (bx_pc_system.kill_bochs_request) {
@@ -243,6 +246,13 @@ bool BX_CPU_C::handleAsyncEvent(void)
     // setting kill_bochs_request causes the cpu loop to return ASAP.
     return 1; // Return to caller of cpu_loop.
   }
+
+#if BX_DEBUGGER
+  if (bx_dbg.activation_request) {
+    // debugger activation request causes the cpu loop to return ASAP.
+    return 1; // Return to caller of cpu_loop.
+  }
+#endif
 
   // Priority 1: Hardware Reset and Machine Checks
   //   RESET

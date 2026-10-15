@@ -608,11 +608,14 @@ void logfunctions::ask(int level, const char *prefix, const char *fmt, va_list a
 #endif
 #if BX_DEBUGGER
     case BX_LOG_ASK_CHOICE_ENTER_DEBUG:
-      // user chose debugger.  To "drop into the debugger" we just set the
-      // interrupt_requested bit and continue execution.  Before the next
-      // instruction, it should notice the user interrupt and return to
-      // the debugger.
-      bx_debug_break();
+      // user chose debugger: break into the debugger, or activate it if Bochs
+      // runs without it. Execution continues and the debugger takes over
+      // before the next instruction.
+      {
+        static char reason[32];
+        snprintf(reason, sizeof(reason), "%s dialog", SIM->get_log_level_name(level));
+        SIM->request_debugger_activation(reason);
+      }
       break;
 #elif BX_GDBSTUB
     case BX_LOG_ASK_CHOICE_ENTER_DEBUG:
