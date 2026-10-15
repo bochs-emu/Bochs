@@ -151,7 +151,7 @@ Changes after Bochs 3.1:
 - Legacy: MOV Sreg,r/m and MOV r/m,Sreg must ignore REX.R in 64-bit mode (was generating #UD)
 - VMX: MOV DR8-DR15 must #UD before checking for MOV-DR VM exit
 - EVEX: #UD if EVEX.R'=0 for GPR encoded in ModRM.reg, EVEX.X is ignored for GPR encoded in ModRM.rm (was accessing RIP/internal registers)
-- CPUID: add std leaf 7 ECX calculation to CPUID models which support std leaf 7 but have nothing to report there (ECX reported=0), required for correct CET reporting after using add_features="cet"
+- CPUID: add std leaf 7 ECX/EDX calculation to CPUID models which support std leaf 7 but have nothing to report there (ECX/EDX reported=0), required for correct CET reporting after using add_features="cet"
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):

@@ -421,7 +421,7 @@ void corei7_haswell_4770_t::get_std_cpuid_leaf_7(Bit32u subfunction, cpuid_funct
     leaf->ebx = get_std_cpuid_leaf_7_ebx(BX_CPUID_STD7_SUBLEAF0_EBX_ENCHANCED_REP_STRINGS);
 
     leaf->ecx = get_std_cpuid_leaf_7_ecx();
-    leaf->edx = 0;
+    leaf->edx = get_std_cpuid_leaf_7_edx();
     break;
   default:
     leaf->eax = 0;
