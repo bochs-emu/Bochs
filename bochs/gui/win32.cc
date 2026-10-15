@@ -2268,12 +2268,9 @@ void bx_win32_gui_c::set_mouse_mode_absxy(bool mode)
 }
 
 #if BX_DEBUGGER
-// The command line debugger can be activated at runtime, also if the gui
-// debugger is selected (it can only be started with -dbg / -dbg_gui).
-// If the gui debugger is active the debugger button breaks into it.
 bool bx_win32_gui_c::debugger_activation_allowed()
 {
-  return 1;
+  return !bx_dbg.debugger_gui;
 }
 
 // The debugger button is disabled in config mode (debugger prompt or config
