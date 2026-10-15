@@ -3206,7 +3206,18 @@ static int parse_line_formatted(const char *context, int num_params, char *param
   } else if (!strcmp(params[0], "debugger")) {
 #if BX_DEBUGGER
     for (i=1; i<num_params; i++) {
-      if (!strncmp(params[i], "log=", 4)) {
+      if (!strncmp(params[i], "activate=", 9)) {
+        if (params[i][9] == '0' || !strcmp(&params[i][9], "false")) {
+          bx_dbg.debugger_active = false;
+        } else if (params[i][9] == '1' || !strcmp(&params[i][9], "true")) {
+          SIM->get_param_enum(BXPN_BOCHS_START)->set(BX_QUICK_START);
+          SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set_enabled(1);
+#if BX_SUPPORT_IODEBUG
+          SIM->get_param(BXPN_IODEBUG_ALL_RINGS)->set_enabled(1);
+#endif
+          bx_dbg.debugger_active = true;
+        }
+      } else if (!strncmp(params[i], "log=", 4)) {
         SIM->get_param_string(BXPN_DEBUGGER_LOG_FILENAME)->set(&params[i][4]);
       } else if (!strncmp(params[i], "gui=", 4)) {
 #if BX_DEBUGGER_GUI
@@ -3217,6 +3228,10 @@ static int parse_line_formatted(const char *context, int num_params, char *param
         } else if (!strcmp(&params[i][4], "globalini")) {
           bx_dbg.debugger_gui = true;
           bx_dbg.dbg_gui_globalini = true;
+        }
+        if (!bx_dbg.debugger_active && bx_dbg.debugger_gui) {
+          bx_dbg.debugger_gui = false;
+          PARSE_WARN(("%s: Bochs debugger gui enabled, but debugger inactive", context));
         }
 #else
         PARSE_WARN(("%s: Bochs debugger gui not available", context));
