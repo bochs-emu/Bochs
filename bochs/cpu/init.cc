@@ -1313,6 +1313,9 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM || BX_SUPPORT_FRED
   BX_CPU_THIS_PTR in_event = false;
 #endif
+#if BX_SUPPORT_CET && BX_SUPPORT_VMX
+  BX_CPU_THIS_PTR vmcs.shadow_stack_prematurely_busy = false;
+#endif
 
 #if BX_SUPPORT_VMX
   BX_CPU_THIS_PTR nmi_unblocking_iret = false;

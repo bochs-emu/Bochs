@@ -69,6 +69,7 @@ Changes after Bochs 3.1:
 ! SVM: implemented CET state management - guest S_CET, SSP and ISST_ADDR are loaded by VMRUN and saved on #VMEXIT, VMRUN CET consistency checks
 + CET: same privilege far CALL and 64-bit interrupt without stack switch did the shadow stack push after loading new CS, if the push faulted new CS was left loaded with old RIP (SVM decode assist also recorded 0 guest instruction bytes)
 + CET: far CALL through call gate to more privilege and interrupt to inner privilege or through IST did the shadow stack switch and push after loading new CS, if they faulted new CS/CPL was left loaded with old RIP
++ VMX: vmcs.shadow_stack_prematurely_busy was not initialized on reset, until the first VMEXIT a stale value could suppress convertible EPT violation #VE or set exit reason bit 25 (shadow stack prematurely busy)
 + SVM: VMRUN didn't not load the guest CR2 from the VMCB (Debian 12 amd64 running KVM (kvm_amd) failed inside Bochs)
 + SVM: SVM VMEXIT loading host state should reset debug_trap and inhibit_mask
 + SVM: interrupt shadow lost at a #DB intercept, after STI in the guest a #DB intercept at the next boundary saved VMCB INTERRUPT_SHADOW = 0 in Bochs, 1 on real Zen 4
