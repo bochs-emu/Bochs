@@ -693,6 +693,8 @@ VMX_error_code BX_CPU_C::VMenterLoadCheckVmControls(void)
        BX_ERROR(("VMFAIL: VMCS EXEC CTRL: broken #VE information address"));
        return VMXERR_VMENTRY_INVALID_VM_CONTROL_FIELD;
      }
+     // the current EPTP index is reported in the #VE information area
+     vm->eptp_index = VMread16(VMCS_16BIT_CONTROL_EPTP_INDEX);
   }
 #endif
 
