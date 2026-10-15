@@ -49,8 +49,6 @@ void BX_CPU_C::call_far16(bxInstruction_c *i, Bit16u cs_raw, Bit16u disp16)
 {
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
-  invalidate_prefetch_q();
-
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
@@ -84,8 +82,6 @@ void BX_CPU_C::call_far16(bxInstruction_c *i, Bit16u cs_raw, Bit16u disp16)
 void BX_CPU_C::jmp_far16(bxInstruction_c *i, Bit16u cs_raw, Bit16u disp16)
 {
   BX_INSTR_FAR_BRANCH_ORIGIN();
-
-  invalidate_prefetch_q();
 
   // jump_protected doesn't affect RSP so it is RSP safe
   if (protected_mode()) {
@@ -152,8 +148,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear16_Iw(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar16_Iw(bxInstruction_c *i)
 {
   BX_INSTR_FAR_BRANCH_ORIGIN();
-
-  invalidate_prefetch_q();
 
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_ret;
@@ -544,8 +538,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP16_Ep(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET16(bxInstruction_c *i)
 {
   BX_INSTR_FAR_BRANCH_ORIGIN();
-
-  invalidate_prefetch_q();
 
 #if BX_SUPPORT_SVM
   if (BX_CPU_THIS_PTR in_svm_guest) {

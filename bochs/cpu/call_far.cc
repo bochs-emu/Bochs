@@ -91,6 +91,13 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         temp_rsp -= 4;
       }
 
+#if BX_SUPPORT_CET
+      // shadow stack push could fault, do it before CS is loaded
+      if (ShadowStackEnabled(CPL)) {
+        call_far_shadow_stack_push(old_CS, temp_LIP, SSP, CPL);
+      }
+#endif
+
       // load code segment descriptor into CS cache
       // load CS with new code segment selector
       // set RPL of CS to CPL
@@ -136,6 +143,13 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
         temp_RSP -= 4;
       }
 
+#if BX_SUPPORT_CET
+      // shadow stack push could fault, do it before CS is loaded
+      if (ShadowStackEnabled(CPL)) {
+        call_far_shadow_stack_push(old_CS, temp_LIP, SSP, CPL);
+      }
+#endif
+
       // load code segment descriptor into CS cache
       // load CS with new code segment selector
       // set RPL of CS to CPL
@@ -148,9 +162,6 @@ BX_CPU_C::call_protected(bxInstruction_c *i, Bit16u cs_raw, bx_address disp)
     }
 
 #if BX_SUPPORT_CET
-    if (ShadowStackEnabled(CPL)) {
-      call_far_shadow_stack_push(old_CS, temp_LIP, SSP);
-    }
     track_indirect(CPL);
 #endif
 
@@ -421,7 +432,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
 #if BX_SUPPORT_CET
     bx_address temp_LIP = get_laddr(BX_SEG_REG_CS, return_EIP);
     unsigned old_SS_DPL = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].cache.dpl;
-    unsigned old_CPL = CPL;
+
+    if (ShadowStackEnabled(CPL)) {
+      if (CPL == 3)
+        // in IA-32e mode adjust so bits 63:N get the value of bit N-1, N is the CPU maximum linear-address width
+        BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = long_mode() ? CpuidCanonicalizeAddress(SSP) : SSP;
+    }
+
+    // shadow stack switch and push could fault, do them before CS is loaded
+    // (16/32-bit call gate is not allowed in long mode, the target is never 64-bit code)
+    if (ShadowStackEnabled(cs_descriptor.dpl)) {
+      bx_address old_SSP = SSP;
+      shadow_stack_switch(BX_CPU_THIS_PTR msr.ia32_pl_ssp[cs_descriptor.dpl], cs_descriptor.dpl, false);
+      if (old_SS_DPL != 3)
+        new_shadow_stack_push(return_CS, temp_LIP, old_SSP, cs_descriptor.dpl);
+    }
 #endif
 
     /* load SS descriptor */
@@ -436,18 +461,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
     EIP = new_EIP;
 
 #if BX_SUPPORT_CET
-    if (ShadowStackEnabled(old_CPL)) {
-      if (old_CPL == 3)
-        // in IA-32e mode adjust so bits 63:N get the value of bit N-1, N is the CPU maximum linear-address width
-        BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = long_mode() ? CpuidCanonicalizeAddress(SSP) : SSP;
-    }
-
-    if(ShadowStackEnabled(CPL)) {
-      bx_address old_SSP = SSP;
-      shadow_stack_switch(BX_CPU_THIS_PTR msr.ia32_pl_ssp[CPL]);
-      if (old_SS_DPL != 3)
-        new_shadow_stack_push(return_CS, temp_LIP, old_SSP);
-    }
     track_indirect(CPL);
 #endif
   }
@@ -469,6 +482,11 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
 #if BX_SUPPORT_CET
     Bit32u temp_LIP = get_segment_base(BX_SEG_REG_CS) + ((gate_descriptor->type == BX_386_CALL_GATE) ? EIP : IP);
     Bit16u old_CS = BX_CPU_THIS_PTR sregs[BX_SEG_REG_CS].selector.value;
+
+    // shadow stack push could fault, do it before CS is loaded
+    if (ShadowStackEnabled(CPL)) {
+      call_far_shadow_stack_push(old_CS, temp_LIP, SSP, CPL);
+    }
 #endif
 
     // load CS:EIP from gate
@@ -477,9 +495,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate(bx_descriptor_t *gate_descriptor
     branch_far(&cs_selector, &cs_descriptor, new_EIP, CPL);
 
 #if BX_SUPPORT_CET
-    if (ShadowStackEnabled(CPL)) {
-      call_far_shadow_stack_push(old_CS, temp_LIP, SSP);
-    }
     track_indirect(CPL);
 #endif
   }
@@ -569,6 +584,21 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
     write_new_stack_qword(RSP_for_cpl_x - 32, cs_descriptor.dpl, old_RIP);
     RSP_for_cpl_x -= 32;
 
+#if BX_SUPPORT_CET
+    if(ShadowStackEnabled(old_CPL)) {
+      if (old_CPL == 3)
+        // in IA-32e mode adjust so bits 63:N get the value of bit N-1, N is the CPU maximum linear-address width
+        BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = long_mode() ? CpuidCanonicalizeAddress(SSP) : SSP;
+    }
+    // shadow stack switch and push could fault, do them before CS is loaded
+    if(ShadowStackEnabled(cs_descriptor.dpl)) {
+      bx_address old_SSP = SSP;
+      shadow_stack_switch(BX_CPU_THIS_PTR msr.ia32_pl_ssp[cs_descriptor.dpl], cs_descriptor.dpl, true);
+      if (old_SS_DPL != 3)
+        new_shadow_stack_push(old_CS, temp_LIP, old_SSP, cs_descriptor.dpl);
+    }
+#endif
+
     // load CS:RIP (guaranteed to be in 64 bit mode)
     branch_far(&cs_selector, &cs_descriptor, new_RIP, cs_descriptor.dpl);
 
@@ -578,17 +608,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
     RSP = RSP_for_cpl_x;
 
 #if BX_SUPPORT_CET
-    if(ShadowStackEnabled(old_CPL)) {
-      if (old_CPL == 3)
-        // in IA-32e mode adjust so bits 63:N get the value of bit N-1, N is the CPU maximum linear-address width
-        BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = long_mode() ? CpuidCanonicalizeAddress(SSP) : SSP;
-    }
-    if(ShadowStackEnabled(CPL)) {
-      bx_address old_SSP = SSP;
-      shadow_stack_switch(BX_CPU_THIS_PTR msr.ia32_pl_ssp[CPL]);
-      if (old_SS_DPL != 3)
-        new_shadow_stack_push(old_CS, temp_LIP, old_SSP);
-    }
     track_indirect(CPL);
 #endif
   }
@@ -600,22 +619,28 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::call_gate64(bx_selector_t *gate_selector)
     write_new_stack_qword(RSP -  8, CPL, old_CS);
     write_new_stack_qword(RSP - 16, CPL, old_RIP);
 
+#if BX_SUPPORT_CET
+    // shadow stack push could fault, do it before CS is loaded
+    if (ShadowStackEnabled(CPL)) {
+      call_far_shadow_stack_push(old_CS, temp_LIP, SSP, CPL);
+    }
+#endif
+
     // load CS:RIP (guaranteed to be in 64 bit mode)
     branch_far(&cs_selector, &cs_descriptor, new_RIP, CPL);
 
     RSP -= 16;
 
 #if BX_SUPPORT_CET
-    if (ShadowStackEnabled(CPL)) {
-      call_far_shadow_stack_push(old_CS, temp_LIP, SSP);
-    }
     track_indirect(CPL);
 #endif
   }
 }
 
 #if BX_SUPPORT_CET
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::shadow_stack_switch(bx_address new_SSP)
+// cpl and long64 describe the target of the control transfer: the shadow stack
+// switch is done before the new CS is loaded
+void BX_CPP_AttrRegparmN(3) BX_CPU_C::shadow_stack_switch(bx_address new_SSP, unsigned cpl, bool long64)
 {
   SSP = new_SSP;
 
@@ -632,26 +657,28 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::shadow_stack_switch(bx_address new_SSP)
     BX_ERROR(("shadow_stack_switch: token and CS:LIP:SSP frame cross naturally aligned 32-byte region"));
     exception(BX_GP_EXCEPTION, 0);
   }
-  if (!long64_mode() && GET32H(SSP) != 0) {
+  if (!long64 && GET32H(SSP) != 0) {
     BX_ERROR(("shadow_stack_switch: 64-bit SSP not in 64-bit mode"));
     exception(BX_GP_EXCEPTION, 0);
   }
-  if (!shadow_stack_atomic_set_busy(SSP, CPL)) {
+  if (!shadow_stack_atomic_set_busy(SSP, cpl, long64)) {
     BX_ERROR(("shadow_stack_switch: failure to set busy bit"));
     exception(BX_GP_EXCEPTION, 0);
   }
 }
 
-void BX_CPP_AttrRegparmN(3) BX_CPU_C::call_far_shadow_stack_push(Bit16u cs, bx_address lip, bx_address old_ssp)
+// cpl is the privilege level of the target, the push could be done before the new CS is loaded
+void BX_CPP_AttrRegparmN(4) BX_CPU_C::call_far_shadow_stack_push(Bit16u cs, bx_address lip, bx_address old_ssp, unsigned cpl)
 {
   if (SSP & 0x7) {
-    shadow_stack_write_dword(SSP-4, CPL, 0);
+    shadow_stack_write_dword(SSP-4, cpl, 0);
     SSP &= ~BX_CONST64(0x7);
   }
 
-  shadow_stack_push_64(cs);
-  shadow_stack_push_64(lip);
-  shadow_stack_push_64(old_ssp);
+  shadow_stack_write_qword(SSP-8,  cpl, cs);
+  shadow_stack_write_qword(SSP-16, cpl, lip);
+  shadow_stack_write_qword(SSP-24, cpl, old_ssp);
+  SSP -= 24;
 }
 
 // Push CS:LIP:SSP onto the supervisor shadow stack whose token was just acquired by shadow_stack_switch().
@@ -660,13 +687,13 @@ void BX_CPP_AttrRegparmN(3) BX_CPU_C::call_far_shadow_stack_push(Bit16u cs, bx_a
 //   fault or VM exit, the processor will revert to the old shadow stack and the busy bit in the new shadow stack's
 //   token remains set. The new shadow stack is said to be prematurely busy.
 // A VM exit caused by these pushes reports it (exit reason bit 25) and convertible EPT violation is not converted to #VE.
-void BX_CPP_AttrRegparmN(3) BX_CPU_C::new_shadow_stack_push(Bit16u cs, bx_address lip, bx_address old_ssp)
+void BX_CPP_AttrRegparmN(4) BX_CPU_C::new_shadow_stack_push(Bit16u cs, bx_address lip, bx_address old_ssp, unsigned cpl)
 {
 #if BX_SUPPORT_VMX
   BX_CPU_THIS_PTR vmcs.shadow_stack_prematurely_busy = BX_CPU_THIS_PTR in_vmx_guest;
 #endif
 
-  call_far_shadow_stack_push(cs, lip, old_ssp);
+  call_far_shadow_stack_push(cs, lip, old_ssp, cpl);
 
 #if BX_SUPPORT_VMX
   BX_CPU_THIS_PTR vmcs.shadow_stack_prematurely_busy = false;

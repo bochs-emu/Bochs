@@ -287,6 +287,9 @@ void BX_CPU_C::init_v8086_mode(void)
     BX_CPU_THIS_PTR sregs[sreg].selector.rpl                 = 3;
   }
 
+  // CS was reloaded, invalidate the EIP fetch window
+  invalidate_prefetch_q();
+
   handleCpuModeChange();
 
 #if BX_CPU_LEVEL >= 4

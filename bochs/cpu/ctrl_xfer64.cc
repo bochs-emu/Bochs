@@ -78,8 +78,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear64_Iw(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar64_Iw(bxInstruction_c *i)
 {
-  invalidate_prefetch_q();
-
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
 #if BX_DEBUGGER
@@ -178,8 +176,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL_EqR(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::CALL64_Ep(bxInstruction_c *i)
 {
-  invalidate_prefetch_q();
-
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
 #if BX_DEBUGGER
@@ -441,8 +437,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP_EqM(bxInstruction_c *i)
 /* Far indirect jump */
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
 {
-  invalidate_prefetch_q();
-
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
   bx_address eaddr = BX_CPU_RESOLVE_ADDR_64(i);
@@ -467,8 +461,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP64_Ep(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET64(bxInstruction_c *i)
 {
-  invalidate_prefetch_q();
-
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
 #if BX_SUPPORT_SVM

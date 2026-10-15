@@ -795,12 +795,12 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
       }
       SSP = newSSP;
       // failure to set the busy flag in the new shadow stack token causes #TS(new TSS)
-      if (!shadow_stack_atomic_set_busy(SSP, CPL)) {
+      if (!shadow_stack_atomic_set_busy(SSP, CPL, long64_mode())) {
         BX_ERROR(("task_switch: failure to set busy bit in new shadow stack token"));
         exception(BX_TS_EXCEPTION, BX_CPU_THIS_PTR tr.selector.value & 0xfffc);
       }
       if (pushCSLIPSSP) {
-        call_far_shadow_stack_push(oldCS, oldRIP, oldSSP);
+        call_far_shadow_stack_push(oldCS, oldRIP, oldSSP, CPL);
       }
     }
     track_indirect(CPL);

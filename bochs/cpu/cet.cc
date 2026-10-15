@@ -396,7 +396,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SETSSBSY(bxInstruction_c *i)
     exception(BX_GP_EXCEPTION, 0);
   }
 
-  if (!shadow_stack_atomic_set_busy(ssp_laddr, CPL)) {
+  if (!shadow_stack_atomic_set_busy(ssp_laddr, CPL, long64_mode())) {
     BX_ERROR(("%s: failed to set SSP busy bit", i->getIaOpcodeNameShort()));
     exception(BX_CP_EXCEPTION, BX_CP_SETSSBSY);
   }

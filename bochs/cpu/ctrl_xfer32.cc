@@ -51,8 +51,6 @@ void BX_CPU_C::call_far32(bxInstruction_c *i, Bit16u cs_raw, Bit32u disp32)
 {
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
-  invalidate_prefetch_q();
-
 #if BX_DEBUGGER
   BX_CPU_THIS_PTR show_flag |= Flag_call;
 #endif
@@ -86,8 +84,6 @@ void BX_CPU_C::call_far32(bxInstruction_c *i, Bit16u cs_raw, Bit32u disp32)
 void BX_CPU_C::jmp_far32(bxInstruction_c *i, Bit16u cs_raw, Bit32u disp32)
 {
   BX_INSTR_FAR_BRANCH_ORIGIN();
-
-  invalidate_prefetch_q();
 
   // jump_protected doesn't affect ESP so it is ESP safe
   if (protected_mode()) {
@@ -149,8 +145,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETnear32_Iw(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::RETfar32_Iw(bxInstruction_c *i)
 {
-  invalidate_prefetch_q();
-
   BX_INSTR_FAR_BRANCH_ORIGIN();
 
 #if BX_DEBUGGER
@@ -564,8 +558,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::JMP32_Ep(bxInstruction_c *i)
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::IRET32(bxInstruction_c *i)
 {
   BX_ASSERT(BX_CPU_THIS_PTR cpu_mode != BX_MODE_LONG_64);
-
-  invalidate_prefetch_q();
 
   BX_INSTR_FAR_BRANCH_ORIGIN();
 

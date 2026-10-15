@@ -154,6 +154,8 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16
   Bit64u old_SS  = BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS].selector.value;
   Bit64u old_RSP = RSP;
 
+  unsigned new_CPL = CPL;
+
   // if code segment is non-conforming and DPL < CPL then
   // INTERRUPT TO INNER PRIVILEGE:
   if (IS_CODE_SEGMENT_NON_CONFORMING(cs_descriptor.type) && cs_descriptor.dpl < CPL)
@@ -195,11 +197,7 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16
       write_new_stack_qword(RSP_for_cpl_x, cs_descriptor.dpl, error_code);
     }
 
-    // load CS:RIP (guaranteed to be in 64 bit mode)
-    branch_far(&cs_selector, &cs_descriptor, gate_dest_offset, cs_descriptor.dpl);
-
-    // set up null SS descriptor
-    load_null_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], cs_descriptor.dpl);
+    new_CPL = cs_descriptor.dpl;
   }
   else if(IS_CODE_SEGMENT_CONFORMING(cs_descriptor.type) || cs_descriptor.dpl==CPL)
   {
@@ -245,9 +243,6 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16
       RSP_for_cpl_x -= 8;
       write_new_stack_qword(RSP_for_cpl_x, cs_descriptor.dpl, error_code);
     }
-
-    // set the RPL field of CS to CPL
-    branch_far(&cs_selector, &cs_descriptor, gate_dest_offset, CPL);
   }
   else {
     BX_ERROR(("interrupt(long mode): bad descriptor type %u (CS.DPL=%u CPL=%u)",
@@ -261,18 +256,32 @@ void BX_CPU_C::long_mode_int(Bit8u vector, bool soft_int, bool push_error, Bit16
       // in IA-32e mode adjust so bits 63:N get the value of bit N-1, N is the CPU maximum linear-address width
       BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = long_mode() ? CpuidCanonicalizeAddress(SSP) : SSP;
   }
-  if (ShadowStackEnabled(CPL)) {
+  // shadow stack switch and push could fault, do them before CS is loaded
+  if (ShadowStackEnabled(new_CPL)) {
     bx_address old_SSP = SSP;
     if (check_ss_token) {
-      shadow_stack_switch(new_SSP);
+      shadow_stack_switch(new_SSP, new_CPL, true);
       if (old_SS_DPL != 3)
-        new_shadow_stack_push(old_CS, return_LIP, old_SSP);
+        new_shadow_stack_push(old_CS, return_LIP, old_SSP, new_CPL);
     }
     else {
       if (old_SS_DPL != 3)
-        call_far_shadow_stack_push(old_CS, return_LIP, old_SSP);
+        call_far_shadow_stack_push(old_CS, return_LIP, old_SSP, new_CPL);
     }
   }
+#endif
+
+  bool inner_privilege = (new_CPL != CPL);
+
+  // load CS:RIP (guaranteed to be in 64 bit mode)
+  // set the RPL field of CS to new CPL
+  branch_far(&cs_selector, &cs_descriptor, gate_dest_offset, new_CPL);
+
+  // set up null SS descriptor for interrupt to inner privilege
+  if (inner_privilege)
+    load_null_selector(&BX_CPU_THIS_PTR sregs[BX_SEG_REG_SS], new_CPL);
+
+#if BX_SUPPORT_CET
   track_indirect(CPL);
 #endif
 
@@ -605,6 +614,23 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
         SP = temp_SP;
       }
 
+#if BX_SUPPORT_CET
+      if(ShadowStackEnabled(old_CPL)) {
+        if (old_CPL == 3)
+          // in IA-32e mode adjust so bits 63:N get the value of bit N-1, N is the CPU maximum linear-address width
+          BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = long_mode() ? CpuidCanonicalizeAddress(SSP) : SSP;
+      }
+      // shadow stack switch and push could fault, do them before CS is loaded
+      // (legacy protected mode interrupt, the target is never 64-bit code)
+      if (ShadowStackEnabled(cs_descriptor.dpl)) {
+        bx_address old_SSP = SSP;
+        shadow_stack_switch(new_SSP, cs_descriptor.dpl, false);
+        if (old_SS_DPL != 3) {
+          new_shadow_stack_push(old_CS, return_LIP, old_SSP, cs_descriptor.dpl);
+        }
+      }
+#endif
+
       // load new CS:eIP values from gate
       // set CPL to new code segment DPL
       // set RPL of CS to CPL
@@ -614,18 +640,6 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
       load_ss(&ss_selector, &ss_descriptor, cs_descriptor.dpl);
 
 #if BX_SUPPORT_CET
-      if(ShadowStackEnabled(old_CPL)) {
-        if (old_CPL == 3)
-          // in IA-32e mode adjust so bits 63:N get the value of bit N-1, N is the CPU maximum linear-address width
-          BX_CPU_THIS_PTR msr.ia32_pl_ssp[3] = long_mode() ? CpuidCanonicalizeAddress(SSP) : SSP;
-      }
-      if (ShadowStackEnabled(CPL)) {
-        bx_address old_SSP = SSP;
-        shadow_stack_switch(new_SSP);
-        if (old_SS_DPL != 3) {
-          new_shadow_stack_push(old_CS, return_LIP, old_SSP);
-        }
-      }
       track_indirect(CPL);
 #endif
 
@@ -677,7 +691,7 @@ void BX_CPU_C::protected_mode_int(Bit8u vector, bool soft_int, bool push_error, 
 
 #if BX_SUPPORT_CET
       if(ShadowStackEnabled(CPL)) {
-        call_far_shadow_stack_push(old_CS, return_LIP, SSP);
+        call_far_shadow_stack_push(old_CS, return_LIP, SSP, CPL);
       }
       track_indirect(CPL);
 #endif
