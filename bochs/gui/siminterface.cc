@@ -173,6 +173,7 @@ public:
   virtual bool debugger_active() {return bx_dbg.debugger_active;}
   virtual bool debugger_activation_allowed();
   virtual void request_debugger_activation(const char *reason);
+  virtual bool start_debug_gui();
   virtual void debug_break();
   virtual void debug_interpret_cmd(char *cmd);
   virtual char *debug_get_next_command();
@@ -896,10 +897,31 @@ void bx_real_sim_c::request_debugger_activation(const char *reason)
   bx_dbg_request_activation(0, reason);
 }
 
+// Start the gui debugger at runtime, used by the debugger activation if the
+// gui debugger is selected (debugger: gui=1). Returns false if not supported.
+bool bx_real_sim_c::start_debug_gui()
+{
+#if BX_DEBUGGER_GUI
+  if ((bx_gui != NULL) && bx_gui->start_debug_dialog()) {
+    set_debug_gui(1);
+    return 1;
+  }
+#endif
+  return 0;
+}
+
 // this can be safely called from either thread.
 void bx_real_sim_c::debug_break()
 {
-  bx_debug_break();
+  if (bx_dbg.debugger_active) {
+    bx_debug_break();
+  } else {
+    // gui debugger window open while the debugger is detached: activate it.
+    // Called from the gui debugger thread: the async_event update could race
+    // with the cpu, the pending request is then seen on the next async event
+    // or in HLT.
+    bx_dbg_request_activation(0, "GUI debugger break");
+  }
 }
 
 // this should only be called from the sim_thread.

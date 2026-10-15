@@ -832,8 +832,10 @@ debug: action=ignore
 #  If this parameter is set to 'true' or '1' the debugger gui is used instead
 #  of the command line version. The special value 'globalini' enables the gui
 #  and forces the usage of an ini file from BXSHARE path. The gui parameter is
-#  available only if Bochs is built with debugger gui support and the debugger
-#  is activated with the command line option '-dbg'.
+#  available only if Bochs is built with debugger gui support. The debugger
+#  gui starts with the command line option '-dbg', without it the debugger gui
+#  is started when the debugger is activated at runtime (currently with the
+#  win32 display library only).
 #
 # Example:
 #   debugger: log=./debugger.out, gui=true
@@ -1277,8 +1279,7 @@ speaker: enabled=1, mode=sound, volume=8
 # Bochs to enter the debugger mode. This might be useful for software
 # development. If Bochs was started without the debugger enabled (no -dbg
 # command line option), the magic breakpoint activates the internal debugger
-# (currently with the win32 display library only, the command line debugger is
-# activated also if the gui debugger is selected).
+# (currently with the win32 display library only).
 # Use enabled=0 to disable the magic breakpoint.
 #
 # You can specify multiple at once:

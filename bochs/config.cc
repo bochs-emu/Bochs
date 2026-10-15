@@ -3230,10 +3230,8 @@ static int parse_line_formatted(const char *context, int num_params, char *param
           bx_dbg.debugger_gui = true;
           bx_dbg.dbg_gui_globalini = true;
         }
-        if (!bx_dbg.debugger_active && bx_dbg.debugger_gui) {
-          bx_dbg.debugger_gui = false;
-          PARSE_WARN(("%s: Bochs debugger gui enabled, but debugger inactive", context));
-        }
+        // with the debugger inactive the gui is used when the debugger is
+        // activated at runtime
 #else
         PARSE_WARN(("%s: Bochs debugger gui not available", context));
 #endif

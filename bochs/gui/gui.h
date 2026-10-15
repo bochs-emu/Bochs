@@ -234,6 +234,9 @@ public:
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
   void init_debug_dialog(bool global_ini);
   void close_debug_dialog(void);
+  // start the gui debugger at runtime (debugger activation), returns false
+  // if not supported
+  virtual bool start_debug_dialog(void) {return false;}
 #endif
 #if BX_USE_GUI_CONSOLE
   bool has_gui_console(void) {return console.present;}
