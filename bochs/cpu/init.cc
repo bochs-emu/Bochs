@@ -1082,10 +1082,10 @@ void BX_CPU_C::reset(unsigned source)
 
 #if BX_CPU_LEVEL >= 4
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_486))
-    BX_CPU_THIS_PTR dr6.set32(0xFFFF0FF0);
+    BX_CPU_THIS_PTR dr6.val = 0xFFFF0FF0;
   else
 #endif
-    BX_CPU_THIS_PTR dr6.set32(0xFFFF1FF0); // on 386 bit 12 was set to '1 upon reset
+    BX_CPU_THIS_PTR dr6.val = 0xFFFF1FF0; // on 386 bit 12 was set to '1 upon reset
 
   BX_CPU_THIS_PTR dr7.set32(0x00000400);
 
