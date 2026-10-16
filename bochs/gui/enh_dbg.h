@@ -282,107 +282,110 @@ extern char *CmdHistory[CmdHistorySize];   // 64 command History storage (fixed 
 extern int CmdHInsert;                     // index of next history entry to store
 
 // register storage -- names and values
-#define RAX_Rnum    0
-#define RBX_Rnum    1
-#define RCX_Rnum    2
-#define RDX_Rnum    3
-#define RSI_Rnum    4
-#define RDI_Rnum    5
-#define RBP_Rnum    6
-#define RSP_Rnum    7
-#define RIP_Rnum    8
-#define R8_Rnum     9
-#define R9_Rnum     10
-#define R10_Rnum    11
-#define R11_Rnum    12
-#define R12_Rnum    13
-#define R13_Rnum    14
-#define R14_Rnum    15
-#define R15_Rnum    16
-#define EFL_Rnum    17      // it makes the most sense if EFLAGS is between RXX and EXX
-#define EAX_Rnum    18      // because it "belongs with" both sets of GP registers
-#define EBX_Rnum    19
-#define ECX_Rnum    20
-#define EDX_Rnum    21
-#define ESI_Rnum    22
-#define EDI_Rnum    23
-#define EBP_Rnum    24
-#define ESP_Rnum    25
-#define EIP_Rnum    26
-#define CS_Rnum     27
-#define DS_Rnum     28
-#define ES_Rnum     29
-#define SS_Rnum     30
-#define FS_Rnum     31
-#define GS_Rnum     32
-#define GDTRnum     33
-#define IDTRnum     34
-#define LDTRnum     35
-#define TRRnum      36
-#define CR0_Rnum    37
-#define CR2_Rnum    38
-#define CR3_Rnum    39
-#define CR4_Rnum    40
-#define EFER_Rnum   41      // currently used to mark the last entry in rV[]
-#define ST0_Rnum    42
-#define ST1_Rnum    43
-#define ST2_Rnum    44
-#define ST3_Rnum    45
-#define ST4_Rnum    46
-#define ST5_Rnum    47
-#define ST6_Rnum    48
-#define ST7_Rnum    49
-#define XMM0_Rnum   50
-#define XMM1_Rnum   51
-#define XMM2_Rnum   52
-#define XMM3_Rnum   53
-#define XMM4_Rnum   54
-#define XMM5_Rnum   55
-#define XMM6_Rnum   56
-#define XMM7_Rnum   57
-#define XMM8_Rnum   58
-#define XMM9_Rnum   59
-#define XMMA_Rnum   60
-#define XMMB_Rnum   61
-#define XMMC_Rnum   62
-#define XMMD_Rnum   63
-#define XMME_Rnum   64
-#define XMMF_Rnum   65
-#define DR0_Rnum    66
-#define DR1_Rnum    67
-#define DR2_Rnum    68
-#define DR3_Rnum    69
-#define DR6_Rnum    70
-#define DR7_Rnum    71
-// #define TR0_Rnum 72  -- put Test Registers in here when they are supported
-#define STD_REG_NUM 72
-// extra "register numbers" for registers that have more than one part
-#define GDTR_Lim    72
-#define IDTR_Lim    73
-#define ST0_exp     74
-#define ST1_exp     75
-#define ST2_exp     76
-#define ST3_exp     77
-#define ST4_exp     78
-#define ST5_exp     79
-#define ST6_exp     80
-#define ST7_exp     81
-#define XMM0_hi     82
-#define XMM1_hi     82
-#define XMM2_hi     83
-#define XMM3_hi     84
-#define XMM4_hi     85
-#define XMM5_hi     86
-#define XMM6_hi     87
-#define XMM7_hi     88
-#define XMM8_hi     89
-#define XMM9_hi     90
-#define XMMA_hi     91
-#define XMMB_hi     92
-#define XMMC_hi     93
-#define XMMD_hi     94
-#define XMME_hi     95
-#define XMMF_hi     96
+enum {
+  RAX_Rnum,
+  RBX_Rnum,
+  RCX_Rnum,
+  RDX_Rnum,
+  RSI_Rnum,
+  RDI_Rnum,
+  RBP_Rnum,
+  RSP_Rnum,
+  RIP_Rnum,
+  R8_Rnum,
+  R9_Rnum,
+  R10_Rnum,
+  R11_Rnum,
+  R12_Rnum,
+  R13_Rnum,
+  R14_Rnum,
+  R15_Rnum,
+  EFL_Rnum,                 // it makes the most sense if EFLAGS is between RXX and EXX
+  EAX_Rnum,                 // because it "belongs with" both sets of GP registers
+  EBX_Rnum,
+  ECX_Rnum,
+  EDX_Rnum,
+  ESI_Rnum,
+  EDI_Rnum,
+  EBP_Rnum,
+  ESP_Rnum,
+  EIP_Rnum,
+  CS_Rnum,
+  DS_Rnum,
+  ES_Rnum,
+  SS_Rnum,
+  FS_Rnum,
+  GS_Rnum,
+  GDTRnum,
+  IDTRnum,
+  LDTRnum,
+  TRRnum,
+  CR0_Rnum,
+  CR2_Rnum,
+  CR3_Rnum,
+  CR4_Rnum,
+  EFER_Rnum,                // currently used to mark the last entry in rV[]
+  ST0_Rnum,
+  ST1_Rnum,
+  ST2_Rnum,
+  ST3_Rnum,
+  ST4_Rnum,
+  ST5_Rnum,
+  ST6_Rnum,
+  ST7_Rnum,
+  XMM0_Rnum,
+  XMM1_Rnum,
+  XMM2_Rnum,
+  XMM3_Rnum,
+  XMM4_Rnum,
+  XMM5_Rnum,
+  XMM6_Rnum,
+  XMM7_Rnum,
+  XMM8_Rnum,
+  XMM9_Rnum,
+  XMMA_Rnum,
+  XMMB_Rnum,
+  XMMC_Rnum,
+  XMMD_Rnum,
+  XMME_Rnum,
+  XMMF_Rnum,
+  DR0_Rnum,
+  DR1_Rnum,
+  DR2_Rnum,
+  DR3_Rnum,
+  DR6_Rnum,
+  DR7_Rnum,
+  // TR0_Rnum -- put Test Registers in here when they are supported
+  STD_REG_NUM,
+  // extra "register numbers" for registers that have more than one part
+  GDTR_Lim = STD_REG_NUM,
+  IDTR_Lim,
+  ST0_exp,
+  ST1_exp,
+  ST2_exp,
+  ST3_exp,
+  ST4_exp,
+  ST5_exp,
+  ST6_exp,
+  ST7_exp,
+  XMM0_hi,
+  XMM1_hi,
+  XMM2_hi,
+  XMM3_hi,
+  XMM4_hi,
+  XMM5_hi,
+  XMM6_hi,
+  XMM7_hi,
+  XMM8_hi,
+  XMM9_hi,
+  XMMA_hi,
+  XMMB_hi,
+  XMMC_hi,
+  XMMD_hi,
+  XMME_hi,
+  XMMF_hi
+};
+
 #define EXTRA_REGS  28
 
 extern Bit8u RegColor[STD_REG_NUM+EXTRA_REGS];   // specifies foreground and background color of registers
