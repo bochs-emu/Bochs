@@ -1306,6 +1306,18 @@ static const Bit64u BxOpcodeGroup_EVEX_MAP4_88[] = {
   last_opcode(ATTR_NO_SSE_PREFIX_F2_F3 | ATTR_VEX_L0 | ATTR_APX_ND0 | ATTR_OS16, BX_IA_POPCNT_GwEw)
 };
 
+// EVEX.LLZ.NP.MAP4.W0 8A !(11):rrr:bbb        MOVRS {NF=0} {ND=0} r8, m8
+static const Bit64u BxOpcodeGroup_EVEX_MAP4_8A[] = {
+  last_opcode(ATTR_SSE_NO_PREFIX | ATTR_VEX_L0 | ATTR_VEX_W0 | ATTR_MOD_MEM | ATTR_APX_NF0 | ATTR_APX_ND0, BX_IA_MOVRS_GbEb)
+};
+
+// EVEX.LLZ.NP|66.MAP4.SCALABLE 8B !(11):rrr:bbb MOVRS {NF=0} {ND=0} rv, mv
+static const Bit64u BxOpcodeGroup_EVEX_MAP4_8B[] = {
+  form_opcode(ATTR_NO_SSE_PREFIX_F2_F3 | ATTR_VEX_L0 | ATTR_MOD_MEM | ATTR_APX_NF0 | ATTR_APX_ND0 | ATTR_OS64, BX_IA_MOVRS_GqEq),
+  form_opcode(ATTR_NO_SSE_PREFIX_F2_F3 | ATTR_VEX_L0 | ATTR_MOD_MEM | ATTR_APX_NF0 | ATTR_APX_ND0 | ATTR_OS32, BX_IA_MOVRS_GdEd),
+  last_opcode(ATTR_NO_SSE_PREFIX_F2_F3 | ATTR_VEX_L0 | ATTR_MOD_MEM | ATTR_APX_NF0 | ATTR_APX_ND0 | ATTR_OS16, BX_IA_MOVRS_GwEw)
+};
+
 // EVEX.LLZ.NP.MAP4.SCALABLE F4               TZCNT {NF} {ND=0}
 // EVEX.LLZ.66.MAP4.SCALABLE F4               TZCNT {NF} {ND=0}    osize16
 static const Bit64u BxOpcodeGroup_EVEX_MAP4_F4[] = {
@@ -2110,6 +2122,13 @@ static const Bit64u BxOpcodeGroup_EVEX_MAP4_AF[] = {
   form_opcode(ATTR_NO_SSE_PREFIX_F2_F3 | ATTR_OS16 | ATTR_VEX_L0 | ATTR_APX_ND0 | ATTR_APX_NF0, BX_IA_IMUL_GwEw),
   form_opcode(ATTR_NO_SSE_PREFIX_F2_F3 | ATTR_OS16 | ATTR_VEX_L0 | ATTR_APX_ND0 | ATTR_APX_NF1, BX_IA_APX_IMUL_GwEw),
   last_opcode(ATTR_NO_SSE_PREFIX_F2_F3 | ATTR_OS16 | ATTR_VEX_L0 | ATTR_APX_ND1,                BX_IA_APX_IMUL_BwGwEw)
+};
+
+// EVEX.128.F2.MAP7 F6 11:000:bbb id         RDMSR     {NF=0} {ND=0} (EVEX.W ignored)
+// EVEX.128.F3.MAP7 F6 11:000:bbb id         WRMSRNS   {NF=0} {ND=0} (EVEX.W ignored)
+static const Bit64u BxOpcodeGroup_EVEX_MAP7_F6[] = {
+  form_opcode(ATTR_MODC0 | ATTR_NNN0 | ATTR_SSE_PREFIX_F2 | ATTR_VEX_L0 | ATTR_APX_NF0 | ATTR_APX_ND0, BX_IA_RDMSR_EqId),
+  last_opcode(ATTR_MODC0 | ATTR_NNN0 | ATTR_SSE_PREFIX_F3 | ATTR_VEX_L0 | ATTR_APX_NF0 | ATTR_APX_ND0, BX_IA_WRMSRNS_IdEq)
 };
 
 // EVEX.128.F2.MAP7.W0 F8 11:000:bbb id      URDMSR    {NF=0} {ND=0}
