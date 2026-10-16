@@ -824,6 +824,13 @@ debug: action=ignore
 # DEBUGGER:
 # This defines the parameters of the Bochs internal debugger:
 #
+#  ACTIVATE:
+#  If this parameter is set to 'true' or '1' the debugger is started on
+#  startup, same as the command line option '-dbg' (the configuration menu
+#  is skipped). If set to 'false' or '0' (default) Bochs is started without
+#  the debugger, it could be activated at runtime (currently with the win32
+#  display library only).
+#
 #  LOG:
 #  Give the path of the log file you'd like Bochs to log debugger output.
 #  If you really don't want it, make it /dev/null or '-'. :^(
@@ -833,12 +840,13 @@ debug: action=ignore
 #  of the command line version. The special value 'globalini' enables the gui
 #  and forces the usage of an ini file from BXSHARE path. The gui parameter is
 #  available only if Bochs is built with debugger gui support. The debugger
-#  gui starts with the command line option '-dbg', without it the debugger gui
-#  is started when the debugger is activated at runtime (currently with the
-#  win32 display library only).
+#  gui starts on startup with the command line option '-dbg' or with
+#  'activate=1', without them the debugger gui is started when the debugger
+#  is activated at runtime (currently with the win32 display library only).
 #
 # Example:
 #   debugger: log=./debugger.out, gui=true
+#   debugger: activate=1, gui=true
 #=======================================================================
 #debugger: log=/dev/null
 #debugger: log=debugger.out

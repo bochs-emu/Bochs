@@ -24,6 +24,8 @@ Changes after Bochs 3.1 release:
     - "Continue and enter debugger" choice in the runtime config (text menu and win32 dialog)
     - The debugger choice of the panic / error "ask" dialog (textconfig and win32 dialog). With
       'panic: action=ask' this includes Ctrl-C pressed in the console.
+  - Added 'activate' parameter to the 'debugger' bochsrc option: start the debugger on startup
+    (same as the -dbg command line option), e.g. 'debugger: activate=1, gui=1' starts the gui debugger
   - Added 'detach' debugger command: leave the debugger and continue simulation at full speed without it,
     the debugger is activated again by magic breakpoint or time breakpoint. With the gui debugger its
     window stays open and its Break button activates the debugger again.
