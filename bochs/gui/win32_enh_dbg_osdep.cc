@@ -1749,17 +1749,21 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
         }
         case WM_CLOSE:
         {
-            GetWindowRect(hY, &rY);
-            bx_user_quit = 1;
-            SIM->debug_break();
-            KillTimer(hh,2);
-            if (*CustomFont != DefFont)
-                DeleteObject (*CustomFont);
-            DeleteObject(CustomFont[1]);
-            DeleteObject(CustomFont[2]);
-            DeleteObject(CustomFont[3]);
-            DestroyWindow(hY);
-            hY = NULL;
+            if (bx_user_quit) {
+                GetWindowRect(hY, &rY);
+                SIM->debug_break();
+                KillTimer(hh,2);
+                if (*CustomFont != DefFont)
+                    DeleteObject (*CustomFont);
+                DeleteObject(CustomFont[1]);
+                DeleteObject(CustomFont[2]);
+                DeleteObject(CustomFont[3]);
+                DestroyWindow(hY);
+                hY = NULL;
+            } else {
+                DetachDebugger();
+                return 0;
+            }
             break;
         }
     }

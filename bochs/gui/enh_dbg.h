@@ -73,6 +73,8 @@ void WriteOSSettings(FILE *fd);
 void HitBreak();
 void ParseIDText(const char *x);
 
+void DetachDebugger();
+
 extern bool vgaw_refresh;
 
 #ifdef WIN32

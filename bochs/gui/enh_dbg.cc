@@ -3725,4 +3725,16 @@ void CloseDebugDialog()
   CloseDialog();
 }
 
+void DetachDebugger()
+{
+    // can't run sim until everything is ready
+    if (AtBreak == FALSE || debug_cmd_ready != FALSE)
+        return;
+
+    AtBreak = FALSE;
+    StatusChange = TRUE;
+    strcpy(debug_cmd, "detach");
+    debug_cmd_ready = TRUE;
+}
+
 #endif
