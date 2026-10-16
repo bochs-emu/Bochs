@@ -883,7 +883,7 @@ int FillDebugRegs(int itemnum)
         else
             sprintf(drtxt + 4,Fmt32b[UprCase],(Bit32u) val);
 
-        InsertListRow(cols, 2, REG_WND, itemnum, 5);    // 3 cols, group 5
+        InsertListRow(cols, 2, REG_WND, itemnum, 5);    // 2 cols, group 5
         ++drtxt[2];         // change the name, the cheap way
         if (i == 3) drtxt[2] += 2;  // jump from "DR3" to "DR6"
         ++itemnum;
@@ -1701,7 +1701,10 @@ void FillStack()
     cols[16]= stktxt;
     cols[17]= stktxt + 80;
     doDumpRefresh = FALSE;
-    StackLA = (Bit64u) BX_CPU(CurrentCPU)->get_laddr(BX_SEG_REG_SS, (bx_address) rV[RSP_Rnum]);
+    bx_address StackPtr = (bx_address) rV[RSP_Rnum];
+    if (In64Mode == FALSE && BX_CPU(CurrentCPU)->sregs[BX_SEG_REG_SS].cache.u.segment.d_b == 0)
+        StackPtr &= 0xffff;     // 16-bit stack segment (SS.B=0) uses SP only
+    StackLA = (Bit64u) BX_CPU(CurrentCPU)->get_laddr(BX_SEG_REG_SS, StackPtr);
 
     if (PStackLA == 1)               // illegal value requests a full refresh
         PStackLA = StackLA ^ 0x4000; // force a non-match below (kludge)
@@ -1815,12 +1818,17 @@ void FillStack()
         if (In64Mode == FALSE)
         {
             int tmp;
-            sprintf (cols[0],Fmt32b[1],StackLA);
+            sprintf (cols[0],Fmt32b[1],(Bit32u) StackLA);
             if (In32Mode == FALSE)
+            {
                 tmp = *((Bit16s *) cp);
+                sprintf (cols[1],Fmt16b[UprCase],(Bit16u) tmp);    // 16-bit stack entry, no sign extension
+            }
             else
+            {
                 tmp = *((Bit32s *) cp);
-            sprintf (cols[1],Fmt32b[UprCase],tmp);
+                sprintf (cols[1],Fmt32b[UprCase],tmp);
+            }
             sprintf (cols[17],"%d",tmp);
         }
         else
