@@ -2321,11 +2321,11 @@ void OnBreak()
         RefreshDataWin();
 }
 
-static int HexFromAsk(const char* ask, char* b)       // this routine converts a user-typed hex string into binary bytes
+static int HexFromAsk(const char* ask, char* b, int maxlen)    // this routine converts a user-typed hex string into binary bytes
 {                   // it ignores any bigendian issues -- binary is converted front to end as chars
     int y = 0;
     int i = 0;
-    for(;;)
+    while (y < maxlen)  // never write more than maxlen bytes into b
     {
         unsigned int C = 0;
         if (strlen(ask + i) < 2)
@@ -2571,7 +2571,7 @@ void doFind()
 {
     unsigned int i, L;
     bool Select;
-    char srchstr[100];
+    char srchstr[ASKTEXT_MAX + 2];  // the reply text, possibly wrapped in "*...*"
     if (AtBreak == FALSE)
         return;
     *tmpcb = 0;
@@ -2602,7 +2602,7 @@ void doFind()
             "Sequential hex bytes (e.g 00FEFA - no spaces), or ascii string (max. 16b):",tmpcb) == FALSE)
             return;
 
-        int by = HexFromAsk(tmpcb,srchstr);     // by = len of binary search string
+        int by = HexFromAsk(tmpcb,srchstr,sizeof(srchstr));     // by = len of binary search string
 
         // Find in all rows of 16 bytes -- must do rows, so they can be selected
         for(i = 0, L = 0; i < 4096; i += 16, L++)

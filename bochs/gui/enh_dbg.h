@@ -206,6 +206,8 @@ extern unsigned CpuSupportSSE; // cpu supports SSE
 extern unsigned CurrentCPU;    // cpu that is being displayed
 
 // AskTest stuff -- for the generic dialog box
+#define ASKTEXT_MAX 100    // max size of the reply text in the "ask" dialog, including the terminating zero
+
 struct ASKTEXT {
     const char* title;
     const char* prompt;

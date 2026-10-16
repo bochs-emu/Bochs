@@ -164,7 +164,7 @@ INT_PTR CALLBACK A_DP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
         case WM_COMMAND:
             if (LOWORD(ww) == IDOK)
             {
-                GetWindowText(GetDlgItem(hh,102),ask_str.reply,100);
+                GetWindowText(GetDlgItem(hh,102),ask_str.reply,ASKTEXT_MAX);
                 EndDialog(hh,IDOK);
                 return 0;
             }

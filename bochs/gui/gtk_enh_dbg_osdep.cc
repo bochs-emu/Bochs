@@ -253,6 +253,7 @@ bool ShowAskDialog()
         gtk_widget_show (AskPrompt);
         gtk_box_pack_start(GTK_BOX(gtk_dialog_get_content_area(GTK_DIALOG(dialog))), AskPrompt, TRUE, TRUE, 5);
         AskEntry = gtk_entry_new ();
+        gtk_entry_set_max_length (GTK_ENTRY (AskEntry), ASKTEXT_MAX - 1);
         // "Enter" (activate) = OK button
         gtk_entry_set_activates_default (GTK_ENTRY (AskEntry), TRUE);
         // increase the width of the Entry to about 80 chars
@@ -268,7 +269,8 @@ bool ShowAskDialog()
     if (gtk_dialog_run (GTK_DIALOG (dialog)) == GTK_RESPONSE_OK)
     {
         entry_text = gtk_entry_get_text (GTK_ENTRY (AskEntry));
-        strcpy (ask_str.reply, entry_text);
+        strncpy (ask_str.reply, entry_text, ASKTEXT_MAX - 1);
+        ask_str.reply[ASKTEXT_MAX - 1] = 0;
         ret = TRUE;
     }
 
