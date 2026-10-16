@@ -26,6 +26,19 @@ Changes after Bochs 3.1 release:
   - Added 'detach' debugger command (not with the gui debugger): leave the debugger and continue simulation
     at full speed without it, the debugger is activated again by magic breakpoint or time breakpoint.
     With display libraries other than win32 the debugger cannot be activated again after 'detach'.
+  - Enhanced (gui) debugger bugfixes:
+    - Editing memory in linear memory dump wrote the bytes to physical address equal to the linear address
+    - XMM registers view shows the correct upper half of each XMM register
+    - IDT view selects the gate size by CPU mode: 4-byte IVT in real mode, 8-byte gates in protected/V8086 mode,
+      16-byte gates in long mode (including compatibility mode)
+    - GDT view in long mode shows 16-byte LDT/TSS/call gate descriptors as one entry with 64-bit base and long mode type names
+    - DR0-DR3 are shown as 64-bit values in 64-bit mode
+    - IP is shown masked to 16 bits in 16-bit mode
+    - Stack view in 16-bit mode shows 16-bit entries and uses SP for 16-bit stack segment (SS.B=0)
+    - Memory dump search could select rows by comparing past the end of the 4K dump
+    - Register list supports all register groups shown at once in 64-bit mode
+    - Fixed buffer overflows (Find search string, ask dialog reply, font name, bx_enh_dbg.ini parsing)
+    - bx_enh_dbg.ini is sanitized on load: invalid values are reported and ignored
 
 - Configure and compile
   - Bochs now require C++11 support for compilation, enforced via configure
