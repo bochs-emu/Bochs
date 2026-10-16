@@ -154,7 +154,7 @@ Bit32s GDT_Len;             // "limits" (= bytesize-1) for GDT and IDT
 Bit32s IDT_Len;
 Bit8u RegColor[STD_REG_NUM+EXTRA_REGS];    // specifies foreground and background color of registers
 // Text color is red if the upper bit is set. Background is set according to ColorList.
-int RitemToRnum[STD_REG_NUM];   // mapping from Reg List Item# to register number
+int RitemToRnum[STD_REG_NUM+EXTRA_REGS];   // mapping from Reg List Item# to register number
 
 bool DumpInitted = FALSE;      // has the MemDump window ever been filled with data?
 int DumpAlign = 1;
@@ -2735,7 +2735,7 @@ void ChangeReg()
 {
     // Change a register -- search for the first selected register
     int L = GetNextSelectedLI(REG_WND, -1);
-    if (AtBreak == FALSE || L == -1 || L >= STD_REG_NUM)
+    if (AtBreak == FALSE || L == -1 || L >= STD_REG_NUM+EXTRA_REGS)
         return;
 
     int i = RitemToRnum[L];

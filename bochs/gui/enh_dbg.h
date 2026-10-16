@@ -390,7 +390,7 @@ enum {
 
 extern Bit8u RegColor[STD_REG_NUM+EXTRA_REGS];   // specifies foreground and background color of registers
 // Text color is red if the upper bit is set. Background is set according to ColorList.
-extern int RitemToRnum[STD_REG_NUM];   // mapping from Reg List Item# to register number
+extern int RitemToRnum[STD_REG_NUM+EXTRA_REGS];   // mapping from Reg List Item# to register number
 
 // do the linear breakpoint list as 2 arrays, rather than a structure -- much easier to search!
 extern bx_address BrkLAddr[BX_DBG_MAX_LIN_BPOINTS+1];
