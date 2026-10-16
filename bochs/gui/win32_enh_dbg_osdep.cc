@@ -1826,7 +1826,7 @@ bool OSInit()
       HDC hdc = GetDC(hY);
       memset(&mylf, 0, sizeof(LOGFONT));
       mylf.lfWeight = FW_NORMAL;
-      GetTextFace(hdc, LF_FULLFACESIZE, mylf.lfFaceName); // (constant is max length of a fontname)
+      GetTextFace(hdc, LF_FACESIZE, mylf.lfFaceName); // (lfFaceName holds LF_FACESIZE chars, including the terminating zero)
       GetTextMetrics(hdc, &tm);
       ReleaseDC(hY, hdc);
       mylf.lfHeight = -(tm.tmHeight);     // request a TOTAL font height of tmHeight
