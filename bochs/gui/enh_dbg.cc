@@ -2338,10 +2338,10 @@ static int HexFromAsk(const char* ask, char* b, int maxlen)    // this routine c
     return y;
 }
 
-static bool FindHex(const unsigned char* b1,int bs,const unsigned char* b2,int by)
+static bool FindHex(const unsigned char* b1,int bs,int avail,const unsigned char* b2,int by)
 {
-    // search bs bytes of b1
-    for(int i = 0; i < bs; i++)       // TODO: this loop could be a little more efficient.
+    // search bs bytes of b1, a match must fit into the avail bytes of b1 (end of DataDump)
+    for(int i = 0; i < bs && i + by <= avail; i++)       // TODO: this loop could be a little more efficient.
     {                       // -- it just scans an input byte string against DataDump memory
         bool Match = TRUE;
         for(int y = 0; y < by; y++)
@@ -2608,7 +2608,7 @@ void doFind()
         for(i = 0, L = 0; i < 4096; i += 16, L++)
         {
             Select = FALSE;
-            if (by != 0 && FindHex((unsigned char *)DataDump + i,16,(unsigned char *)srchstr,by))
+            if (by != 0 && FindHex((unsigned char *)DataDump + i,16,4096 - i,(unsigned char *)srchstr,by))
                 Select = TRUE;
             SetLIState(DUMP_WND, L, Select);
         }
@@ -2618,7 +2618,7 @@ void doFind()
         by = (int)strlen(tmpcb);
         for(i = 0, L = 0; i < 4096; i += 16, L++)
         {
-            if (by != 0 && FindHex((unsigned char *)DataDump + i,16,(unsigned char *)tmpcb,by))
+            if (by != 0 && FindHex((unsigned char *)DataDump + i,16,4096 - i,(unsigned char *)tmpcb,by))
                 SetLIState(DUMP_WND, L, Select);
         }
     }
