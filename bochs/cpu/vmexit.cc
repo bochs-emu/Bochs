@@ -38,10 +38,16 @@ Bit32u gen_instruction_info(bxInstruction_c *i, Bit32u reason, bool rw_form)
   Bit32u instr_info = 0;
 
   switch(reason) {
+#if BX_SUPPORT_VMX >= 2
+    case VMX_VMEXIT_GDTR_IDTR_ACCESS:
+      // bit 11 holds operand size (0 - 16-bit, 1 - 32-bit), undefined in 64-bit mode
+      if (i->os32L())
+        instr_info |= 1 << 11;
+      // fall through
+#endif
     case VMX_VMEXIT_VMREAD:
     case VMX_VMEXIT_VMWRITE:
 #if BX_SUPPORT_VMX >= 2
-    case VMX_VMEXIT_GDTR_IDTR_ACCESS:
     case VMX_VMEXIT_LDTR_TR_ACCESS:
     case VMX_VMEXIT_INVEPT:
     case VMX_VMEXIT_INVVPID:
@@ -60,7 +66,7 @@ Bit32u gen_instruction_info(bxInstruction_c *i, Bit32u reason, bool rw_form)
       // bits 12:11 hold operand size
       if (i->os64L())
         instr_info |= 1 << 12;
-      else if (i->as32L())
+      else if (i->os32L())
         instr_info |= 1 << 11;
       break;
 

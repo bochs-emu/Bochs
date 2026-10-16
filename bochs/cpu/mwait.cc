@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2019-2023  The Bochs Project
+//  Copyright (C) 2019-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -304,7 +304,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest && BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.RDTSC_VMEXIT()) {
-    VMexit((i->getIaOpcode() == BX_IA_TPAUSE_Ed) ? VMX_VMEXIT_TPAUSE : VMX_VMEXIT_UMWAIT, 0);
+    VMexit_Instruction(i, (i->getIaOpcode() == BX_IA_TPAUSE_Ed) ? VMX_VMEXIT_TPAUSE : VMX_VMEXIT_UMWAIT, BX_READ);
   }
 #endif
 

@@ -157,6 +157,9 @@ Changes after Bochs 3.1:
 - VMX: MOV DR8-DR15 must #UD before checking for MOV-DR VM exit
 - EVEX: #UD if EVEX.R'=0 for GPR encoded in ModRM.reg, EVEX.X is ignored for GPR encoded in ModRM.rm (was accessing RIP/internal registers)
 - CPUID: add std leaf 7 ECX/EDX calculation to CPUID models which support std leaf 7 but have nothing to report there (ECX/EDX reported=0), required for correct CET reporting after using add_features="cet"
+- VMX: VM-exit instruction information for RDRAND/RDSEED reported address size instead of operand size
+- VMX: TPAUSE/UMWAIT VM exit must save VM-exit instruction information (bits 6:3 = source register operand)
+- VMX: VM-exit instruction information for LIDT/LGDT/SIDT/SGDT must report operand size in bit 11
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
