@@ -1441,9 +1441,7 @@ void FillGDT()
             cols[17] = gdttxt + 30;
             strcpy (cols[17],"illegal address");
             InsertListRow(cols, 18, DUMP_WND, row, 8);  // 18 cols, "no group"
-            RedrawColumns(DUMP_WND);
-            EndListUpdate(DUMP_WND);
-            break;
+            break;      // the list is finalized after the loop
         }
         laddr += 8;
 
@@ -1585,9 +1583,7 @@ void FillIDT()
         {
             strcpy (cols[17],"illegal address");
             InsertListRow(cols, 18, DUMP_WND, i, 8);    // 18 cols, "no group"
-            RedrawColumns(DUMP_WND);
-            EndListUpdate(DUMP_WND);
-            break;
+            break;      // the list is finalized after the loop
         }
         laddr += entrysize;
         // enforce proper littleendianness on the idtbuf bytes
