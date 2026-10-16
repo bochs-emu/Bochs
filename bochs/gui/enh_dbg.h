@@ -306,6 +306,22 @@ enum {
   R13_Rnum,
   R14_Rnum,
   R15_Rnum,
+  R16_Rnum,                 // APX extended GPRs
+  R17_Rnum,
+  R18_Rnum,
+  R19_Rnum,
+  R20_Rnum,
+  R21_Rnum,
+  R22_Rnum,
+  R23_Rnum,
+  R24_Rnum,
+  R25_Rnum,
+  R26_Rnum,
+  R27_Rnum,
+  R28_Rnum,
+  R29_Rnum,
+  R30_Rnum,
+  R31_Rnum,
   EFL_Rnum,                 // it makes the most sense if EFLAGS is between RXX and EXX
   EAX_Rnum,                 // because it "belongs with" both sets of GP registers
   EBX_Rnum,
