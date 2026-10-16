@@ -2561,24 +2561,26 @@ void MakeBL(TreeParent *h_P, bx_param_c *p)
 
 bool ParseOSSettings(const char *param, const char *value)
 {
-  char *val2, *ptr;
+  int x, y, w, h;
 
   if (!strcmp(param, "FontName")) {
-    strncpy(fontname, value, 80);
+    if (strlen(value) >= sizeof(fontname)) {  // must fit into fontname with the terminating zero
+      fprintf(stderr, "bx_enh_dbg.ini: invalid value '%s' for option '%s'\n", value, param);
+      return 1;
+    }
+    strcpy(fontname, value);
     font_init = 1;
     return 1;
   } else if (!strcmp(param, "MainWindow")) {
-    val2 = strdup(value);
-    ptr = strtok(val2, ",");
-    win_x = atoi(ptr);
-    ptr = strtok(NULL, ",");
-    win_y = atoi(ptr);
-    ptr = strtok(NULL, ",");
-    win_w = atoi(ptr);
-    ptr = strtok(NULL, "\n");
-    win_h = atoi(ptr);
+    if (sscanf(value, "%d , %d , %d , %d", &x, &y, &w, &h) != 4) {
+      fprintf(stderr, "bx_enh_dbg.ini: invalid value '%s' for option '%s'\n", value, param);
+      return 1;
+    }
+    win_x = x;
+    win_y = y;
+    win_w = w;
+    win_h = h;
     window_init = 1;
-    free(val2);
     return 1;
   }
   return 0;

@@ -8,7 +8,7 @@
 //
 //  Modified by Bruce Ewing
 //
-//  Copyright (C) 2008-2024  The Bochs Project
+//  Copyright (C) 2008-2026  The Bochs Project
 
 #include "bochs.h"
 #include "bx_debug/debug.h"
@@ -1894,9 +1894,13 @@ void MakeBL(HTREEITEM *h_P, bx_param_c *p)
 
 bool ParseOSSettings(const char *param, const char *value)
 {
-  char *val2, *ptr;
+  int left, top, right, bottom;
 
   if (!strcmp(param, "FontName")) {
+    if (strlen(value) >= LF_FACESIZE) {   // must fit into lfFaceName with the terminating zero
+      fprintf(stderr, "bx_enh_dbg.ini: invalid value '%s' for option '%s'\n", value, param);
+      return 1;
+    }
     memset(&mylf, 0, sizeof(LOGFONT));
     mylf.lfWeight = FW_NORMAL;
     strcpy(mylf.lfFaceName, value);
@@ -1907,17 +1911,15 @@ bool ParseOSSettings(const char *param, const char *value)
     fontInit |= 2;
     return 1;
   } else if (!strcmp(param, "MainWindow")) {
-    val2 = strdup(value);
-    ptr = strtok(val2, ",");
-    rY.left = atoi(ptr);
-    ptr = strtok(NULL, ",");
-    rY.top = atoi(ptr);
-    ptr = strtok(NULL, ",");
-    rY.right = atoi(ptr);
-    ptr = strtok(NULL, "\n");
-    rY.bottom = atoi(ptr);
+    if (sscanf(value, "%d , %d , %d , %d", &left, &top, &right, &bottom) != 4) {
+      fprintf(stderr, "bx_enh_dbg.ini: invalid value '%s' for option '%s'\n", value, param);
+      return 1;
+    }
+    rY.left = left;
+    rY.top = top;
+    rY.right = right;
+    rY.bottom = bottom;
     windowInit = TRUE;
-    free(val2);
     return 1;
   }
   return 0;
