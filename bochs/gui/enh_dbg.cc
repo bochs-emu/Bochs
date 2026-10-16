@@ -857,10 +857,10 @@ int FillMMX(int LineCount)
 int FillDebugRegs(int itemnum)
 {
     bx_param_num_c *bxp;
-    Bit32u val;
+    Bit64u val;
     unsigned int i;
     char *cols[2];
-    char drtxt[20];
+    char drtxt[24];
 
     strcpy (drtxt,"dr0");
     if (UprCase != FALSE)
@@ -876,9 +876,12 @@ int FillDebugRegs(int itemnum)
         bxp = RegObject[CurrentCPU][DR0_Rnum + i];
         val = 0;
         if (bxp != NULL)
-             val = bxp->get();
+             val = bxp->get64();
         RitemToRnum[itemnum] = i + DR0_Rnum;
-        sprintf(drtxt + 4,Fmt32b[UprCase],val);
+        if (In64Mode)
+            sprintf(drtxt + 4,Fmt64b[UprCase],val);
+        else
+            sprintf(drtxt + 4,Fmt32b[UprCase],(Bit32u) val);
 
         InsertListRow(cols, 2, REG_WND, itemnum, 5);    // 3 cols, group 5
         ++drtxt[2];         // change the name, the cheap way
@@ -1487,15 +1490,9 @@ void FillIDT()
     Bit8u idtbuf[16];
     Bit16u sel;
     Bit32u ofs;
-    unsigned entrysize;
     unsigned int i;
     char *cols[18];
     char idttxt[80];
-    unsigned int mode = 0;
-    if (In32Mode)
-        mode = 1;
-    if (In64Mode)
-        mode = 2;
     doDumpRefresh = FALSE;
 
     *idttxt = 0;
@@ -1517,8 +1514,14 @@ void FillIDT()
     cols[15]= idttxt;
     cols[16]= idttxt;
     cols[17]= idttxt + 10;
-    entrysize = 4 << mode; // calculate the bytesize of the entries
+
+    unsigned entrysize = 8;     // protected and V8086 mode: 8 byte gates
+    if (CpuMode == BX_MODE_IA32_REAL)
+        entrysize = 4;          // real mode: 4 byte IVT entries (even with 32-bit CS)
+    else if (CpuMode == BX_MODE_LONG_64 || CpuMode == BX_MODE_LONG_COMPAT)
+        entrysize = 16;         // long mode (also compatibility mode): 16 byte gates
     unsigned int k = (IDT_Len + 1) / entrysize;
+
     StartListUpdate(DUMP_WND);
 
     // recover the IDT linear base address
@@ -1544,19 +1547,21 @@ void FillIDT()
         ofs = idtbuf[0] | ((Bit32u) idtbuf[1] << 8);
         sel = idtbuf[2] | ((Bit16u) idtbuf[3] << 8);
 
-        switch (mode)
+        switch (CpuMode)
         {
-            case 0:     // Real Mode
+            case BX_MODE_IA32_REAL:
                 sprintf(cols[17],"0x%04X:0x%04X", sel, ofs);
                 break;
 
-            case 1:     // Pmode
+            case BX_MODE_IA32_V8086:
+            case BX_MODE_IA32_PROTECTED:
                 ofs |= ((Bit32u) idtbuf[6] << 16) | ((Bit32u) idtbuf[7] << 24);
                 sprintf(cols[17],"0x%04X:0x%08X", sel, ofs);
                 // TODO: also print some flags from idtbuf[5], maybe, in another column
                 break;
 
-            case 2:     // Lmode
+            case BX_MODE_LONG_COMPAT:
+            case BX_MODE_LONG_64:
                 Bit64u off64 = (Bit64u)(ofs | ((Bit32u) idtbuf[6] << 16) | ((Bit32u) idtbuf[7] << 24));
                 off64 |= ((Bit64u) idtbuf[8] << 32) | ((Bit64u) idtbuf[9] << 40);
                 off64 |= ((Bit64u) idtbuf[10] << 48) | ((Bit64u) idtbuf[11] << 56);
