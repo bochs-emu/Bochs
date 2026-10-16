@@ -3705,8 +3705,13 @@ bx_address bx_dbg_get_ssp(void)
 
 Bit8u bx_dbg_get_reg8l_value(unsigned reg)
 {
-  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS))
+  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < 16))
     return BX_CPU(dbg_cpu)->get_reg8l(reg);
+
+#if BX_SUPPORT_APX
+  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_APX) && reg < 32)
+    return BX_CPU(dbg_cpu)->get_reg8l(reg);
+#endif
 
   dbg_printf("Unknown 8BL register [%d] !!!\n", reg);
   return 0;
@@ -3714,7 +3719,7 @@ Bit8u bx_dbg_get_reg8l_value(unsigned reg)
 
 Bit8u bx_dbg_get_reg8h_value(unsigned reg)
 {
-  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS))
+  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < 16))
     return BX_CPU(dbg_cpu)->get_reg8h(reg);
 
   dbg_printf("Unknown 8BH register [%d] !!!\n", reg);
@@ -3723,8 +3728,13 @@ Bit8u bx_dbg_get_reg8h_value(unsigned reg)
 
 Bit16u bx_dbg_get_reg16_value(unsigned reg)
 {
-  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS))
+  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < 16))
     return BX_CPU(dbg_cpu)->get_reg16(reg);
+
+#if BX_SUPPORT_APX
+  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_APX) && reg < 32)
+    return BX_CPU(dbg_cpu)->get_reg16(reg);
+#endif
 
   dbg_printf("Unknown 16B register [%d] !!!\n", reg);
   return 0;
@@ -3732,8 +3742,13 @@ Bit16u bx_dbg_get_reg16_value(unsigned reg)
 
 Bit32u bx_dbg_get_reg32_value(unsigned reg)
 {
-  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS))
+  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < 16))
     return BX_CPU(dbg_cpu)->get_reg32(reg);
+
+#if BX_SUPPORT_APX
+  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_APX) && reg < 32)
+    return BX_CPU(dbg_cpu)->get_reg32(reg);
+#endif
 
   dbg_printf("Unknown 32B register [%d] !!!\n", reg);
   return 0;
@@ -3742,8 +3757,13 @@ Bit32u bx_dbg_get_reg32_value(unsigned reg)
 Bit64u bx_dbg_get_reg64_value(unsigned reg)
 {
 #if BX_SUPPORT_X86_64
-  if (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS)
+  if (BX_CPU(dbg_cpu)->long64_mode() && reg < 16)
     return BX_CPU(dbg_cpu)->get_reg64(reg);
+
+#if BX_SUPPORT_APX
+  if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_APX) && reg < 32)
+    return BX_CPU(dbg_cpu)->get_reg64(reg);
+#endif
 #endif
 
   dbg_printf("Unknown 64B register [%d] !!!\n", reg);
@@ -3752,15 +3772,19 @@ Bit64u bx_dbg_get_reg64_value(unsigned reg)
 
 void bx_dbg_set_reg8l_value(unsigned reg, Bit8u value)
 {
-  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS))
+  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < 16))
     BX_CPU(dbg_cpu)->set_reg8l(reg, value);
+#if BX_SUPPORT_APX
+  else if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_APX) && reg < 32)
+    BX_CPU(dbg_cpu)->set_reg8l(reg, value);
+#endif
   else
     dbg_printf("Unknown 8BL register [%d] !!!\n", reg);
 }
 
 void bx_dbg_set_reg8h_value(unsigned reg, Bit8u value)
 {
-  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS))
+  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < 16))
     BX_CPU(dbg_cpu)->set_reg8h(reg, value);
   else
     dbg_printf("Unknown 8BH register [%d] !!!\n", reg);
@@ -3768,16 +3792,24 @@ void bx_dbg_set_reg8h_value(unsigned reg, Bit8u value)
 
 void bx_dbg_set_reg16_value(unsigned reg, Bit16u value)
 {
-  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS))
+  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < 16))
     BX_CPU(dbg_cpu)->set_reg16(reg, value);
+#if BX_SUPPORT_APX
+  else if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_APX) && reg < 32)
+    BX_CPU(dbg_cpu)->set_reg16(reg, value);
+#endif
   else
     dbg_printf("Unknown 16B register [%d] !!!\n", reg);
 }
 
 void bx_dbg_set_reg32_value(unsigned reg, Bit32u value)
 {
-  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS))
+  if (reg < 8 || (BX_CPU(dbg_cpu)->long64_mode() && reg < 16))
     BX_CPU(dbg_cpu)->set_reg32(reg, value);
+#if BX_SUPPORT_APX
+  else if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_APX) && reg < 32)
+    BX_CPU(dbg_cpu)->set_reg32(reg, value);
+#endif
   else
     dbg_printf("Unknown 32B register [%d] !!!\n", reg);
 }
@@ -3785,8 +3817,12 @@ void bx_dbg_set_reg32_value(unsigned reg, Bit32u value)
 void bx_dbg_set_reg64_value(unsigned reg, Bit64u value)
 {
 #if BX_SUPPORT_X86_64
-  if (BX_CPU(dbg_cpu)->long64_mode() && reg < BX_GENERAL_REGISTERS)
+  if (BX_CPU(dbg_cpu)->long64_mode() && reg < 16)
     BX_CPU(dbg_cpu)->set_reg64(reg, value);
+#if BX_SUPPORT_APX
+  else if (BX_CPU(dbg_cpu)->is_cpu_extension_supported(BX_ISA_APX) && reg < 32)
+    BX_CPU(dbg_cpu)->set_reg64(reg, value);
+#endif
   else
 #endif
     dbg_printf("Unknown 64B register [%d] !!!\n", reg);
