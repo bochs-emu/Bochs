@@ -156,10 +156,6 @@ Bit8u RegColor[STD_REG_NUM+EXTRA_REGS];    // specifies foreground and backgroun
 // Text color is red if the upper bit is set. Background is set according to ColorList.
 int RitemToRnum[STD_REG_NUM];   // mapping from Reg List Item# to register number
 
-Bit64u ladrmin = 0; // bochs linear addressing access variables
-Bit64u ladrmax = 0;
-Bit64u l_p_offset;
-
 bool DumpInitted = FALSE;      // has the MemDump window ever been filled with data?
 int DumpAlign = 1;
 int PrevDAD;                   // saves "previous DumpAlign value" (forces column autosize)
@@ -2228,7 +2224,6 @@ void OnBreak()
     // remember register values from before the last run
     while (--i >= 0)
         PV[i] = rV[i];
-    ladrmin = ladrmax;      // invalidate any old linear->phys mapping
 
     // then detect current CPU mode the *right* way -- look for changes
     // TODO: create param Objects for CS.d_b and cpu_mode for each CPU
@@ -2778,19 +2773,12 @@ void SetMemLine(int L)
 
     if (AskText("Change Memory Values",addrstr,tmpcb))
     {
+        unsigned int byteval;
         Bit8u newval;
+        bool written;
         int err=0;
         char *x = tmpcb;
         upr(x);         // force input string to uppercase
-
-        if (LinearDump)    // is h is a LINEAR address? Convert to physical!
-        {
-            // use the ReadBx function to calculate the lin->phys offset
-            if (ReadBxLMem(h,0,(Bit8u *)addrstr) == FALSE) // "read" 0 bytes
-                err = 2;
-            else
-                h -= l_p_offset;    // convert h to a physmem address
-        }
 
         while (*x != 0 && err == 0)
         {
@@ -2812,9 +2800,14 @@ void SetMemLine(int L)
             }
             if (err == 0)
             {
-                // convert the hex to a byte, and try to store the byte in bochs physmem
-                sscanf (s,"%2X", (unsigned int*)&newval);
-                if (bx_mem.dbg_set_mem(BX_CPU(CurrentCPU), (bx_phy_address) h, 1, &newval) == FALSE)
+                // convert the hex to a byte, and try to store the byte in bochs memory
+                sscanf (s,"%2X", &byteval);
+                newval = (Bit8u) byteval;
+                if (LinearDump)    // h is a LINEAR address, translate it through the CPU paging
+                    written = bx_dbg_write_linear(CurrentCPU, (bx_address) h, 1, &newval);
+                else
+                    written = bx_mem.dbg_set_mem(BX_CPU(CurrentCPU), (bx_phy_address) h, 1, &newval);
+                if (written == FALSE)
                     err = 2;
                 else
                     *u++ = newval;      // update DataDump array so it will refresh on the screen
