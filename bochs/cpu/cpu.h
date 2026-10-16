@@ -6526,8 +6526,8 @@ BX_CPP_INLINE void BX_CPU_C::mpxregs_clear_disable() { BX_CPU_THIS_PTR cpu_state
 #if BX_SUPPORT_APX
 BX_CPP_INLINE void BX_CPU_C::set_apx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_APX_OK; }
 BX_CPP_INLINE void BX_CPU_C::clear_apx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok &= ~BX_FETCH_MODE_APX_OK; }
-BX_CPP_INLINE bool BX_CPU_C::get_apx_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_APX_OK); }
 #endif
+BX_CPP_INLINE bool BX_CPU_C::get_apx_ok() { return (BX_CPU_THIS_PTR cpu_state_use_ok & BX_FETCH_MODE_APX_OK); }
 
 #if BX_SUPPORT_AMX
 BX_CPP_INLINE void BX_CPU_C::set_amx_ok() { BX_CPU_THIS_PTR cpu_state_use_ok |= BX_FETCH_MODE_AMX_OK; }
