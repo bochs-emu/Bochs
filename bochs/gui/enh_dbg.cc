@@ -885,9 +885,11 @@ int FillDebugRegs(int itemnum)
         if (bxp != NULL)
              val = bxp->get64();
         RitemToRnum[itemnum] = i + DR0_Rnum;
+#if BX_SUPPORT_X86_64
         if (In64Mode)
             sprintf(drtxt + 4,Fmt64b[UprCase],val);
         else
+#endif
             sprintf(drtxt + 4,Fmt32b[UprCase],(Bit32u) val);
 
         InsertListRow(cols, 2, REG_WND, itemnum, 5);    // 2 cols, group 5
@@ -947,10 +949,12 @@ void FillAsm(Bit64u LAddr, int MaxLines)
             if (len <= BufLen)      // disassembly was successful?
             {
                 AsmLA[AsmLineCount] = LAddr;        // save, and
-                if (In64Mode == FALSE)      // "display" linear addy of the opcode
-                    sprintf (asmtxt,Fmt32b[UprCase],LAddr);
-                else
+#if BX_SUPPORT_X86_64
+                if (In64Mode)      // "display" linear addy of the opcode
                     sprintf (asmtxt,Fmt64b[UprCase],LAddr);
+                else
+#endif
+                    sprintf (asmtxt,Fmt32b[UprCase],LAddr);
 
                 BufLen -= len;  // used up len bytes from buffer
                 LAddr += len;   // calculate next LAddr
@@ -1081,10 +1085,12 @@ void LoadRegList()
                 Bit16u limit = GDT_Len;
                 if (i == IDTRnum)
                     limit = IDT_Len;
-                if (In64Mode == FALSE)
-                    sprintf(regtxt,xDT32Fmt[UprCase],(Bit32u)rV[i],limit);
-                else
+#if BX_SUPPORT_x86_64
+                if (In64Mode)
                     sprintf(regtxt,xDT64Fmt[UprCase],rV[i],limit);
+                else
+#endif
+                    sprintf(regtxt,xDT32Fmt[UprCase],(Bit32u)rV[i],limit);
 
             }
             else
@@ -1102,9 +1108,11 @@ void LoadRegList()
         {
             RitemToRnum[itemnum] = i;
 
+#if BX_SUPPORT_x86_64
             if (In64Mode && (i == CR2_Rnum || i == CR3_Rnum))
                 sprintf(regtxt,Fmt64b[UprCase],rV[i]);
             else
+#endif
                 sprintf(regtxt,Fmt32b[UprCase],(Bit32u)rV[i]);
 
             cols[0] = RDispName[i];
@@ -1390,7 +1398,6 @@ void FillGDT()
     unsigned int i, j, GroupId;
     unsigned int row = 0;
     unsigned int k = (GDT_Len + 1) / 8;
-    bool LongMode = (CpuMode == BX_MODE_LONG_64 || CpuMode == BX_MODE_LONG_COMPAT);
     Bit8u gdtbuf[16];
     char *cols[18];
     char gdttxt[100];
@@ -1418,6 +1425,10 @@ void FillGDT()
     cols[15]= gdttxt;
     cols[16]= gdttxt;
 
+#if BX_SUPPORT_X86_64
+    bool LongMode = (CpuMode == BX_MODE_LONG_64 || CpuMode == BX_MODE_LONG_COMPAT);
+#endif
+
     for(i = 0; i < k; i++)
     {
         // read 2 dwords from bochs linear mem into "buffer"
@@ -1438,6 +1449,7 @@ void FillGDT()
 
         // in long mode LDT, TSS and call gate descriptors take two GDT slots (16 bytes)
         bool Desc16 = FALSE;
+#if BX_SUPPORT_X86_64
         if (LongMode && (gdtbuf[5] & 0x10) == 0 && (i + 1) < k)
         {
             unsigned type = gdtbuf[5] & 0xf;
@@ -1450,6 +1462,7 @@ void FillGDT()
                 }
             }
         }
+#endif
 
         // enforce proper littleendianness on the gdtbuf bytes
         Bit32u limit = gdtbuf[0] | ((Bit32u) gdtbuf[1] << 8);
@@ -1466,9 +1479,11 @@ void FillGDT()
             if (limit == 0 && (gdtbuf[5] & 0x80) == 0)      // 'P' (present) bit
                 GroupId = 0;
             // point to the approprate info string for the GDT system segment type
+#if BX_SUPPORT_X86_64
             if (LongMode)
                 cols[17] = (char*)GDTsT64[(int) (gdtbuf[5] & 0xf)];
             else
+#endif
                 cols[17] = (char*)GDTsT[(int) (gdtbuf[5] & 0xf)];
         }
         else        // it's an 'executable' code or data segment
@@ -1847,7 +1862,15 @@ void FillStack()
     i = 0;
     while (StackLA < EndLA)
     {
-        if (In64Mode == FALSE)
+#if BX_SUPPORT_X86_64
+        if (In64Mode) {
+            Bit64s tmp = *((Bit64s *) cp);
+            sprintf (cols[0],Fmt64b[UprCase],StackLA);
+            sprintf (cols[1],Fmt64b[1],tmp);
+            sprintf (cols[17], FMT_LL "d",tmp);
+        }
+        else
+#endif
         {
             int tmp;
             sprintf (cols[0],Fmt32b[1],(Bit32u) StackLA);
@@ -1862,13 +1885,6 @@ void FillStack()
                 sprintf (cols[1],Fmt32b[UprCase],tmp);
             }
             sprintf (cols[17],"%d",tmp);
-        }
-        else
-        {
-            Bit64s tmp = *((Bit64s *) cp);
-            sprintf (cols[0],Fmt64b[UprCase],StackLA);
-            sprintf (cols[1],Fmt64b[1],tmp);
-            sprintf (cols[17], FMT_LL "d",tmp);
         }
         InsertListRow(cols, 18, DUMP_WND, i, 8);    // 18 cols, "no group"
         StackLA += wordsize;
@@ -2107,10 +2123,12 @@ void ShowData()
     x = DataDump;       // data dumps are ALWAYS 4K
     for(i = 0; i < 4096; i += 16)
     {
-        if (In64Mode == FALSE)
-            sprintf(cols[0],"0x%08X",(Bit32u) (DumpStart + i));
-        else
+#if BX_SUPPORT_X86_64
+        if (In64Mode)
             sprintf(cols[0],"0x" FMT_LLCAPX,DumpStart + i);
+        else
+#endif
+            sprintf(cols[0],"0x%08X",(Bit32u) (DumpStart + i));
 
         *tmphex = 0;
         *cols[17] = 0;
@@ -2274,6 +2292,7 @@ void OnBreak()
     // TODO: create param Objects for CS.d_b and cpu_mode for each CPU
     unsigned PrevCpuMode = CpuMode;
     CpuMode = BX_CPU(CurrentCPU)->get_cpu_mode();
+#if BX_SUPPORT_X86_64
     if (CpuMode == BX_MODE_LONG_64)
     {
         if (In64Mode == FALSE)          // Entering LongMode?
@@ -2285,6 +2304,7 @@ void OnBreak()
         }
     }
     else
+#endif
     {
         bool d_b = BX_CPU(CurrentCPU)->sregs[BX_SEG_REG_CS].cache.u.segment.d_b;
         if (In32Mode != d_b || In64Mode != FALSE || PrevCpuMode != CpuMode)
@@ -2360,10 +2380,13 @@ bool InitDataDump(bool isLinear, Bit64u newDS)
         return FALSE;
     if (((int) newDS & 0xf) != 0)       // legal addys must be on 16byte boundary
     {
-        if (In64Mode == FALSE)
-            sprintf(tmpcb,"0x%X",(Bit32u) DumpStart);
-        else
+#if BX_SUPPORT_X86_64
+        if (In64Mode)
             sprintf(tmpcb,"0x" FMT_LL "X",DumpStart);
+        else
+#endif
+            sprintf(tmpcb,"0x%X",(Bit32u) DumpStart);
+
         if (AskText("4K Memory Dump","4K Memory Dump -- Enter Address (use 0x for hex):",tmpcb) == FALSE)
             return FALSE;
 
