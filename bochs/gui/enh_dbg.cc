@@ -1024,15 +1024,15 @@ void LoadRegList()
         for (i = EAX_Rnum; i <= EIP_Rnum; i++)
         {
             RitemToRnum[itemnum] = i;
-            sprintf(regtxt, Fmt32b[UprCase], (Bit32u)rV[i]);  // print the hex column
-            sprintf(cols[2], FMT_LL "d", rV[i]);     // and decimal
             cols[0] = RDispName[i];
 
-            if (In32Mode == FALSE && i == 26)   // Check for Real Mode (Pmode is TRUE in Long Mode)
+            if (In32Mode == FALSE && i == EIP_Rnum)   // Check for Real Mode (Pmode is TRUE in Long Mode)
             {
                 rV[EIP_Rnum] &= 0xffff;     // in Real Mode, mask IP to 2 bytes
                 ++cols[0];                  // and shorten name to 2 letters
             }
+            sprintf(regtxt, Fmt32b[UprCase], (Bit32u)rV[i]);  // print the hex column
+            sprintf(cols[2], FMT_LL "d", rV[i]);     // and decimal
             InsertListRow(cols, 3, REG_WND, itemnum, 0);    // 3 cols, group 0
             ++itemnum;
         }
