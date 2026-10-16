@@ -178,16 +178,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_BqEqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-// NEG Eq with NF=1 (ND=0 register form): flags are not updated
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_NEG_EqR(bxInstruction_c *i)
-{
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
-  op1_64 = -op1_64;
-  BX_WRITE_64BIT_REG(i->dst(), op1_64);
-
-  BX_NEXT_INSTR(i);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_BqEqR(bxInstruction_c *i)
 {
   Bit64u op1_64 = BX_READ_64BIT_REG(i->src());
@@ -200,16 +190,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_BqEqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-// INC Eq with NF=1 (ND=0 register form): flags are not updated
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_INC_EqR(bxInstruction_c *i)
-{
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
-  op1_64++;
-  BX_WRITE_64BIT_REG(i->dst(), op1_64);
-
-  BX_NEXT_INSTR(i);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_BqEqR(bxInstruction_c *i)
 {
   Bit64u op1_64 = BX_READ_64BIT_REG(i->src());
@@ -218,16 +198,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_BqEqR(bxInstruction_c *i)
 
   if (! i->getApxEvexNF())
     SET_FLAGS_OSZAP_SUB_64(op1_64 + 1, 0, op1_64);
-
-  BX_NEXT_INSTR(i);
-}
-
-// DEC Eq with NF=1 (ND=0 register form): flags are not updated
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_DEC_EqR(bxInstruction_c *i)
-{
-  Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
-  op1_64--;
-  BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
   BX_NEXT_INSTR(i);
 }

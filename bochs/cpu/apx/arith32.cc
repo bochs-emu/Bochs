@@ -177,16 +177,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_BdEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-// INC Ed with NF=1 (ND=0 register form): flags are not updated
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_INC_EdR(bxInstruction_c *i)
-{
-  Bit32u op1_32 = BX_READ_32BIT_REG(i->dst());
-  op1_32++;
-  BX_WRITE_32BIT_REGZ(i->dst(), op1_32);
-
-  BX_NEXT_INSTR(i);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_BdEdR(bxInstruction_c *i)
 {
   Bit32u erx = BX_READ_32BIT_REG(i->src());
@@ -200,16 +190,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_BdEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-// DEC Ed with NF=1 (ND=0 register form): flags are not updated
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_DEC_EdR(bxInstruction_c *i)
-{
-  Bit32u op1_32 = BX_READ_32BIT_REG(i->dst());
-  op1_32--;
-  BX_WRITE_32BIT_REGZ(i->dst(), op1_32);
-
-  BX_NEXT_INSTR(i);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_BdEdR(bxInstruction_c *i)
 {
   Bit32u op1_32 = BX_READ_32BIT_REG(i->src());
@@ -218,16 +198,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_BdEdR(bxInstruction_c *i)
 
   if (! i->getApxEvexNF())
     SET_FLAGS_OSZAPC_SUB_32(0, 0 - op1_32, op1_32);
-
-  BX_NEXT_INSTR(i);
-}
-
-// NEG Ed with NF=1 (ND=0 register form): flags are not updated
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_NEG_EdR(bxInstruction_c *i)
-{
-  Bit32u op1_32 = BX_READ_32BIT_REG(i->dst());
-  op1_32 = -op1_32;
-  BX_WRITE_32BIT_REGZ(i->dst(), op1_32);
 
   BX_NEXT_INSTR(i);
 }

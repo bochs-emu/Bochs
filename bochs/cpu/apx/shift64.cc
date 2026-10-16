@@ -32,16 +32,17 @@
 // EVEX map4 shift/rotate forms:
 //   SHxD_BqEqGqR    : ND=1, dst = vvvv, src1 = rm (or TMP after LOAD_Eq), src2 = reg, flags updated unless NF=1,
 //                     the upper part of the destination register is always cleared
-//   APX_NF_SHxD_EqGqR : ND=0 NF=1 register form, dst = rm, src = reg, flags are not updated
+//                     also ND=0 NF=1 register form (def duplicates rm as dst and src1)
 //   <op>_BqEqR      : ND=1, dst = vvvv, src = rm (or TMP after LOAD_Eq), flags updated unless NF=1,
 //                     the upper part of the destination register is always cleared
-//   APX_NF_<op>_EqR : ND=0 NF=1 register form, dst = rm, flags are not updated
+//                     also ND=0 NF=1 register form (def duplicates rm as dst and src)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_BqEqGqR(bxInstruction_c *i)
 {
   unsigned count;
 
-  if (i->getIaOpcode() == BX_IA_APX_SHLD_BqEqGq)
+  unsigned ia_opcode = i->getIaOpcode();
+  if (ia_opcode == BX_IA_APX_SHLD_BqEqGq || ia_opcode == BX_IA_APX_SHLD_EqGq)
     count = CL;
   else
     count = i->Ib();
@@ -68,32 +69,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_BqEqGqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHLD_EqGqR(bxInstruction_c *i)
-{
-  unsigned count;
-
-  if (i->getIaOpcode() == BX_IA_APX_SHLD_EqGq)
-    count = CL;
-  else
-    count = i->Ib();
-
-  count &= 0x3f; // use only 6 LSB's
-
-  if (count) {
-    Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
-    Bit64u op2_64 = BX_READ_64BIT_REG(i->src());
-    Bit64u result_64 = (op1_64 << count) | (op2_64 >> (64 - count));
-    BX_WRITE_64BIT_REG(i->dst(), result_64);
-  }
-
-  BX_NEXT_INSTR(i);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_BqEqGqR(bxInstruction_c *i)
 {
   unsigned count;
 
-  if (i->getIaOpcode() == BX_IA_APX_SHRD_BqEqGq)
+  unsigned ia_opcode = i->getIaOpcode();
+  if (ia_opcode == BX_IA_APX_SHRD_BqEqGq || ia_opcode == BX_IA_APX_SHRD_EqGq)
     count = CL;
   else
     count = i->Ib();
@@ -120,32 +101,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_BqEqGqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHRD_EqGqR(bxInstruction_c *i)
-{
-  unsigned count;
-
-  if (i->getIaOpcode() == BX_IA_APX_SHRD_EqGq)
-    count = CL;
-  else
-    count = i->Ib();
-
-  count &= 0x3f; // use only 6 LSB's
-
-  if (count) {
-    Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
-    Bit64u op2_64 = BX_READ_64BIT_REG(i->src());
-    Bit64u result_64 = (op2_64 << (64 - count)) | (op1_64 >> count);
-    BX_WRITE_64BIT_REG(i->dst(), result_64);
-  }
-
-  BX_NEXT_INSTR(i);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_BqEqR(bxInstruction_c *i)
 {
   unsigned count;
 
-  if (i->getIaOpcode() == BX_IA_APX_ROL_BqEq)
+  unsigned ia_opcode = i->getIaOpcode();
+  if (ia_opcode == BX_IA_APX_ROL_BqEq || ia_opcode == BX_IA_APX_ROL_Eq)
     count = CL;
   else
     count = i->Ib();
@@ -171,31 +132,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_BqEqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ROL_EqR(bxInstruction_c *i)
-{
-  unsigned count;
-
-  if (i->getIaOpcode() == BX_IA_APX_ROL_Eq)
-    count = CL;
-  else
-    count = i->Ib();
-
-  count &= 0x3f;
-
-  if (count) {
-    Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
-    Bit64u result_64 = rol64(op1_64, count);
-    BX_WRITE_64BIT_REG(i->dst(), result_64);
-  }
-
-  BX_NEXT_INSTR(i);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_BqEqR(bxInstruction_c *i)
 {
   unsigned count;
 
-  if (i->getIaOpcode() == BX_IA_APX_ROR_BqEq)
+  unsigned ia_opcode = i->getIaOpcode();
+  if (ia_opcode == BX_IA_APX_ROR_BqEq || ia_opcode == BX_IA_APX_ROR_Eq)
     count = CL;
   else
     count = i->Ib();
@@ -217,26 +159,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_BqEqR(bxInstruction_c *i)
   }
 
   BX_WRITE_64BIT_REG(i->dst(), result_64);
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ROR_EqR(bxInstruction_c *i)
-{
-  unsigned count;
-
-  if (i->getIaOpcode() == BX_IA_APX_ROR_Eq)
-    count = CL;
-  else
-    count = i->Ib();
-
-  count &= 0x3f;
-
-  if (count) {
-    Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
-    Bit64u result_64 = ror64(op1_64, count);
-    BX_WRITE_64BIT_REG(i->dst(), result_64);
-  }
 
   BX_NEXT_INSTR(i);
 }
@@ -315,7 +237,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_BqEqR(bxInstruction_c *i)
 {
   unsigned count;
 
-  if (i->getIaOpcode() == BX_IA_APX_SHL_BqEq)
+  unsigned ia_opcode = i->getIaOpcode();
+  if (ia_opcode == BX_IA_APX_SHL_BqEq || ia_opcode == BX_IA_APX_SHL_Eq)
     count = CL;
   else
     count = i->Ib();
@@ -343,31 +266,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_BqEqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHL_EqR(bxInstruction_c *i)
-{
-  unsigned count;
-
-  if (i->getIaOpcode() == BX_IA_APX_SHL_Eq)
-    count = CL;
-  else
-    count = i->Ib();
-
-  count &= 0x3f;
-
-  if (count) {
-    Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
-    Bit64u result_64 = (op1_64 << count);
-    BX_WRITE_64BIT_REG(i->dst(), result_64);
-  }
-
-  BX_NEXT_INSTR(i);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_BqEqR(bxInstruction_c *i)
 {
   unsigned count;
 
-  if (i->getIaOpcode() == BX_IA_APX_SHR_BqEq)
+  unsigned ia_opcode = i->getIaOpcode();
+  if (ia_opcode == BX_IA_APX_SHR_BqEq || ia_opcode == BX_IA_APX_SHR_Eq)
     count = CL;
   else
     count = i->Ib();
@@ -396,31 +300,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_BqEqR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHR_EqR(bxInstruction_c *i)
-{
-  unsigned count;
-
-  if (i->getIaOpcode() == BX_IA_APX_SHR_Eq)
-    count = CL;
-  else
-    count = i->Ib();
-
-  count &= 0x3f;
-
-  if (count) {
-    Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
-    Bit64u result_64 = (op1_64 >> count);
-    BX_WRITE_64BIT_REG(i->dst(), result_64);
-  }
-
-  BX_NEXT_INSTR(i);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_BqEqR(bxInstruction_c *i)
 {
   unsigned count;
 
-  if (i->getIaOpcode() == BX_IA_APX_SAR_BqEq)
+  unsigned ia_opcode = i->getIaOpcode();
+  if (ia_opcode == BX_IA_APX_SAR_BqEq || ia_opcode == BX_IA_APX_SAR_Eq)
     count = CL;
   else
     count = i->Ib();
@@ -443,26 +328,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_BqEqR(bxInstruction_c *i)
   }
 
   BX_WRITE_64BIT_REG(i->dst(), result_64);
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SAR_EqR(bxInstruction_c *i)
-{
-  unsigned count;
-
-  if (i->getIaOpcode() == BX_IA_APX_SAR_Eq)
-    count = CL;
-  else
-    count = i->Ib();
-
-  count &= 0x3f;
-
-  if (count) {
-    Bit64u op1_64 = BX_READ_64BIT_REG(i->dst());
-    Bit64u result_64 = ((Bit64s) op1_64) >> count;
-    BX_WRITE_64BIT_REG(i->dst(), result_64);
-  }
 
   BX_NEXT_INSTR(i);
 }

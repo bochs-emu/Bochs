@@ -840,6 +840,12 @@ char* disasm_source(char *disbufptr, unsigned n, bool srcs_used, const bxInstruc
   unsigned src_type = BX_DISASM_SRC_TYPE(src);
   unsigned src_index = BX_DISASM_SRC_ORIGIN(src);
 
+#if BX_SUPPORT_APX
+  // APX ND=0 forms reuse ND=1 handlers with destination duplicated as first source, do not print it twice
+  if (n == 1 && src == BxOpcodesTable[ia_opcode].src[0] && src_type >= BX_GPR8 && src_type <= BX_GPR64)
+    return disbufptr;
+#endif
+
   // type==0 covers both "no operand" (OP_NONE) and "register value not
   // shown" (e.g. OP_NNN, used by SIDT/SLDT/STR to feed nnn into dst()
   // without printing it) -- both are 0 by design.

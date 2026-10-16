@@ -32,16 +32,17 @@
 // EVEX map4 shift/rotate forms:
 //   SHxD_BdEdGdR    : ND=1, dst = vvvv, src1 = rm (or TMP after LOAD_Ed), src2 = reg, flags updated unless NF=1,
 //                     the upper part of the destination register is always cleared
-//   APX_NF_SHxD_EdGdR : ND=0 NF=1 register form, dst = rm, src = reg, flags are not updated
+//                     also ND=0 NF=1 register form (def duplicates rm as dst and src1)
 //   <op>_BdEdR      : ND=1, dst = vvvv, src = rm (or TMP after LOAD_Ed), flags updated unless NF=1,
 //                     the upper part of the destination register is always cleared
-//   APX_NF_<op>_EdR : ND=0 NF=1 register form, dst = rm, flags are not updated
+//                     also ND=0 NF=1 register form (def duplicates rm as dst and src)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_BdEdGdR(bxInstruction_c *i)
 {
   unsigned count;
 
-  if (i->getIaOpcode() == BX_IA_APX_SHLD_BdEdGd)
+  unsigned ia_opcode = i->getIaOpcode();
+  if (ia_opcode == BX_IA_APX_SHLD_BdEdGd || ia_opcode == BX_IA_APX_SHLD_EdGd)
     count = CL;
   else
     count = i->Ib();
@@ -68,35 +69,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHLD_BdEdGdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHLD_EdGdR(bxInstruction_c *i)
-{
-  unsigned count;
-
-  if (i->getIaOpcode() == BX_IA_APX_SHLD_EdGd)
-    count = CL;
-  else
-    count = i->Ib();
-
-  count &= 0x1f; // use only 5 LSB's
-
-  Bit32u op1_32 = BX_READ_32BIT_REG(i->dst());
-  Bit32u result_32 = op1_32;
-
-  if (count) {
-    Bit32u op2_32 = BX_READ_32BIT_REG(i->src());
-    result_32 = (op1_32 << count) | (op2_32 >> (32 - count));
-  }
-
-  BX_WRITE_32BIT_REGZ(i->dst(), result_32); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_BdEdGdR(bxInstruction_c *i)
 {
   unsigned count;
 
-  if (i->getIaOpcode() == BX_IA_APX_SHRD_BdEdGd)
+  unsigned ia_opcode = i->getIaOpcode();
+  if (ia_opcode == BX_IA_APX_SHRD_BdEdGd || ia_opcode == BX_IA_APX_SHRD_EdGd)
     count = CL;
   else
     count = i->Ib();
@@ -123,35 +101,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHRD_BdEdGdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHRD_EdGdR(bxInstruction_c *i)
-{
-  unsigned count;
-
-  if (i->getIaOpcode() == BX_IA_APX_SHRD_EdGd)
-    count = CL;
-  else
-    count = i->Ib();
-
-  count &= 0x1f; // use only 5 LSB's
-
-  Bit32u op1_32 = BX_READ_32BIT_REG(i->dst());
-  Bit32u result_32 = op1_32;
-
-  if (count) {
-    Bit32u op2_32 = BX_READ_32BIT_REG(i->src());
-    result_32 = (op2_32 << (32 - count)) | (op1_32 >> count);
-  }
-
-  BX_WRITE_32BIT_REGZ(i->dst(), result_32); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_BdEdR(bxInstruction_c *i)
 {
   unsigned count;
 
-  if (i->getIaOpcode() == BX_IA_APX_ROL_BdEd)
+  unsigned ia_opcode = i->getIaOpcode();
+  if (ia_opcode == BX_IA_APX_ROL_BdEd || ia_opcode == BX_IA_APX_ROL_Ed)
     count = CL;
   else
     count = i->Ib();
@@ -177,34 +132,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_BdEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ROL_EdR(bxInstruction_c *i)
-{
-  unsigned count;
-
-  if (i->getIaOpcode() == BX_IA_APX_ROL_Ed)
-    count = CL;
-  else
-    count = i->Ib();
-
-  count &= 0x1f;
-
-  Bit32u op1_32 = BX_READ_32BIT_REG(i->dst());
-  Bit32u result_32 = op1_32;
-
-  if (count) {
-    result_32 = rol32(op1_32, count);
-  }
-
-  BX_WRITE_32BIT_REGZ(i->dst(), result_32); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_BdEdR(bxInstruction_c *i)
 {
   unsigned count;
 
-  if (i->getIaOpcode() == BX_IA_APX_ROR_BdEd)
+  unsigned ia_opcode = i->getIaOpcode();
+  if (ia_opcode == BX_IA_APX_ROR_BdEd || ia_opcode == BX_IA_APX_ROR_Ed)
     count = CL;
   else
     count = i->Ib();
@@ -226,29 +159,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROR_BdEdR(bxInstruction_c *i)
   }
 
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_ROR_EdR(bxInstruction_c *i)
-{
-  unsigned count;
-
-  if (i->getIaOpcode() == BX_IA_APX_ROR_Ed)
-    count = CL;
-  else
-    count = i->Ib();
-
-  count &= 0x1f;
-
-  Bit32u op1_32 = BX_READ_32BIT_REG(i->dst());
-  Bit32u result_32 = op1_32;
-
-  if (count) {
-    result_32 = ror32(op1_32, count);
-  }
-
-  BX_WRITE_32BIT_REGZ(i->dst(), result_32); // always clear upper part of the register
 
   BX_NEXT_INSTR(i);
 }
@@ -327,7 +237,8 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_BdEdR(bxInstruction_c *i)
 {
   unsigned count;
 
-  if (i->getIaOpcode() == BX_IA_APX_SHL_BdEd)
+  unsigned ia_opcode = i->getIaOpcode();
+  if (ia_opcode == BX_IA_APX_SHL_BdEd || ia_opcode == BX_IA_APX_SHL_Ed)
     count = CL;
   else
     count = i->Ib();
@@ -355,34 +266,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_BdEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHL_EdR(bxInstruction_c *i)
-{
-  unsigned count;
-
-  if (i->getIaOpcode() == BX_IA_APX_SHL_Ed)
-    count = CL;
-  else
-    count = i->Ib();
-
-  count &= 0x1f;
-
-  Bit32u op1_32 = BX_READ_32BIT_REG(i->dst());
-  Bit32u result_32 = op1_32;
-
-  if (count) {
-    result_32 = (op1_32 << count);
-  }
-
-  BX_WRITE_32BIT_REGZ(i->dst(), result_32); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_BdEdR(bxInstruction_c *i)
 {
   unsigned count;
 
-  if (i->getIaOpcode() == BX_IA_APX_SHR_BdEd)
+  unsigned ia_opcode = i->getIaOpcode();
+  if (ia_opcode == BX_IA_APX_SHR_BdEd || ia_opcode == BX_IA_APX_SHR_Ed)
     count = CL;
   else
     count = i->Ib();
@@ -411,34 +300,12 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_BdEdR(bxInstruction_c *i)
   BX_NEXT_INSTR(i);
 }
 
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SHR_EdR(bxInstruction_c *i)
-{
-  unsigned count;
-
-  if (i->getIaOpcode() == BX_IA_APX_SHR_Ed)
-    count = CL;
-  else
-    count = i->Ib();
-
-  count &= 0x1f;
-
-  Bit32u op1_32 = BX_READ_32BIT_REG(i->dst());
-  Bit32u result_32 = op1_32;
-
-  if (count) {
-    result_32 = (op1_32 >> count);
-  }
-
-  BX_WRITE_32BIT_REGZ(i->dst(), result_32); // always clear upper part of the register
-
-  BX_NEXT_INSTR(i);
-}
-
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_BdEdR(bxInstruction_c *i)
 {
   unsigned count;
 
-  if (i->getIaOpcode() == BX_IA_APX_SAR_BdEd)
+  unsigned ia_opcode = i->getIaOpcode();
+  if (ia_opcode == BX_IA_APX_SAR_BdEd || ia_opcode == BX_IA_APX_SAR_Ed)
     count = CL;
   else
     count = i->Ib();
@@ -461,29 +328,6 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_BdEdR(bxInstruction_c *i)
   }
 
   BX_WRITE_32BIT_REGZ(i->dst(), result_32);
-
-  BX_NEXT_INSTR(i);
-}
-
-void BX_CPP_AttrRegparmN(1) BX_CPU_C::APX_NF_SAR_EdR(bxInstruction_c *i)
-{
-  unsigned count;
-
-  if (i->getIaOpcode() == BX_IA_APX_SAR_Ed)
-    count = CL;
-  else
-    count = i->Ib();
-
-  count &= 0x1f;
-
-  Bit32u op1_32 = BX_READ_32BIT_REG(i->dst());
-  Bit32u result_32 = op1_32;
-
-  if (count) {
-    result_32 = ((Bit32s) op1_32) >> count;
-  }
-
-  BX_WRITE_32BIT_REGZ(i->dst(), result_32); // always clear upper part of the register
 
   BX_NEXT_INSTR(i);
 }
