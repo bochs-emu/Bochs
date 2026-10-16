@@ -331,6 +331,8 @@ const Bit64u VMX_VMFUNC_EPTP_SWITCHING_MASK = (BX_CONST64(1) << VMX_VMFUNC_EPTP_
 #define VMCS_64BIT_MSR_DATA_HI                             0x00002403
 #define VMCS_64BIT_ORIGINAL_EVENT_DATA                     0x00002404 /* FRED */
 #define VMCS_64BIT_ORIGINAL_EVENT_DATA_HI                  0x00002405
+#define VMCS_64BIT_VMEXIT_EXT_INSTRUCTION_INFO             0x00002406 /* APX */
+#define VMCS_64BIT_VMEXIT_EXT_INSTRUCTION_INFO_HI          0x00002407
 
 /* VMCS 64-bit guest state fields */
 /* binary 0010_10xx_xxxx_xxx0 */
