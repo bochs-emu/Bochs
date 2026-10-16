@@ -916,14 +916,38 @@ bool BX_CPU_C::SvmInjectEvents(void)
     BX_CPU_THIS_PTR last_exception_type = get_exception_type(vector);
   }
 
-  ctrls->exitintinfo = ctrls->eventinj & ~0x80000000;
-  ctrls->exitintinfo_error_code = error_code;
-
   interrupt(vector, type, push_error, error_code);
 
   BX_CPU_THIS_PTR last_exception_type = BX_ET_NONE; // error resolved
 
   return true;
+}
+
+void BX_CPU_C::SvmRecordExitIntInfo(unsigned type, unsigned vector, bool push_error, Bit16u error_code)
+{
+  if (! BX_CPU_THIS_PTR in_svm_guest) return;
+
+  // -----------------------------------------
+  //              EXITINTINFO
+  // -----------------------------------------
+  // [07:00] | Interrupt/Exception vector
+  // [10:08] | Interrupt/Exception type
+  // [11:11] | error code pushed to the stack
+  // [30:12] | reserved
+  // [31:31] | interruption info valid
+  //
+
+  // record the event being delivered through the IDT, INT1/INT3/INTO are reported as exceptions
+  unsigned svm_type = BX_HARDWARE_EXCEPTION;
+  if (type == BX_EXTERNAL_INTERRUPT || type == BX_NMI || type == BX_SOFTWARE_INTERRUPT)
+    svm_type = type;
+
+  SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb->ctrls;
+
+  ctrls->exitintinfo = vector | (svm_type << 8);
+  if (push_error)
+    ctrls->exitintinfo |= (1 << 11); // error code delivered
+  ctrls->exitintinfo_error_code = error_code;
 }
 
 void BX_CPU_C::SvmInterceptException(unsigned type, unsigned vector, Bit16u errcode, bool errcode_valid, Bit64u qualification)
@@ -932,29 +956,10 @@ void BX_CPU_C::SvmInterceptException(unsigned type, unsigned vector, Bit16u errc
 
   BX_ASSERT(vector < 32);
 
-  SVM_CONTROLS *ctrls = &BX_CPU_THIS_PTR vmcb->ctrls;
-
   BX_ASSERT(type == BX_HARDWARE_EXCEPTION || type == BX_SOFTWARE_EXCEPTION);
 
-  if (! SVM_EXCEPTION_INTERCEPTED(vector)) {
-
-    // -----------------------------------------
-    //              EXITINTINFO
-    // -----------------------------------------
-    // [07:00] | Interrupt/Exception vector
-    // [10:08] | Interrupt/Exception type
-    // [11:11] | error code pushed to the stack
-    // [30:12] | reserved
-    // [31:31] | interruption info valid
-    //
-
-    // record IDT vectoring information
-    ctrls->exitintinfo_error_code = errcode;
-    ctrls->exitintinfo = vector | (BX_HARDWARE_EXCEPTION << 8);
-    if (errcode_valid)
-      BX_CPU_THIS_PTR vmcb->ctrls.exitintinfo |= (1 << 11); // error code delivered
-    return;
-  }
+  // EXITINTINFO for non-intercepted exception is recorded by interrupt() after combining with prior events
+  if (! SVM_EXCEPTION_INTERCEPTED(vector)) return;
 
   BX_ERROR(("SVM VMEXIT: event vector 0x%02x type %d error code=0x%04x", vector, type, errcode));
 

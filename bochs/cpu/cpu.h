@@ -5623,6 +5623,7 @@ public: // for now...
   BX_SMF void vmcb_write64(unsigned offset, Bit64u val_64);
   BX_SMF void svm_segment_read(bx_segment_reg_t *seg, unsigned offset);
   BX_SMF void svm_segment_write(bx_segment_reg_t *seg, unsigned offset);
+  BX_SMF void SvmRecordExitIntInfo(unsigned type, unsigned vector, bool push_error, Bit16u error_code);
   BX_SMF void SvmInterceptException(unsigned type, unsigned vector,
        Bit16u errcode, bool errcode_valid, Bit64u qualification = 0);
   BX_SMF void SvmInterceptIO(bxInstruction_c *i, unsigned port, unsigned len);

@@ -808,6 +808,10 @@ void BX_CPU_C::interrupt(Bit8u vector, unsigned type, bool push_error, Bit16u er
   BX_CPU_THIS_PTR in_event = true;
 #endif
 
+#if BX_SUPPORT_SVM
+  SvmRecordExitIntInfo(type, vector, push_error, error_code);
+#endif
+
   RSP_SPECULATIVE;
 
 #if BX_SUPPORT_X86_64

@@ -77,6 +77,7 @@ Changes after Bochs 3.1:
 + SVM: V_IRQ never taken when the guest is entered with IF = 1 (VMRUN loads the guest RFLAGS before in_svm_guest = true, so handleInterruptMaskChange() evaluated the masks as the host)
 + SVM: AMD hardware doesn't enforce TSS386 to enter long mode (Debian 12 amd64 running kvm_amd with npt=1 fails: kvm_amd leaves TR = TSS286_BUSY and its 64-bit guest triple-faults while booting)
 + SVM: An intercepted #DB has already updated DR6 and leaves RF clear (AMD APM vol. 2, 15.12)
+- SVM: EXITINTINFO was not recorded for INTn, ICEBP, external/virtual interrupt and NMI delivery (stale value reported) and recorded 2nd exception instead of prior event on intercepted #DF
 - SYSENTER/SYSEXIT: SYSENTER/SYSEXIT are not allowed in long mode on AMD
 - SYSCALL/SYSRET: SYSCALL whose SFMASK clears TF takes no single-step trap, SYSRET takes the single-step trap by the TF it loads
 - CPUID: allow configuring i486dx4 model without x87 using cpu exclude_features
