@@ -79,7 +79,7 @@ bool ShowButtons = TRUE;     // Display the top-row Step/Continue pushbuttons
 bool SeeRegColors = TRUE;    // Display registers with background color "groups"
 bool ignoreNxtT = TRUE;      // Do not show "Next at t=" output lines
 bool ignSSDisasm = TRUE;     // Do not show extra disassembly line at each break
-int UprCase = 0;             // 1 = convert all Asm, Register names, Register values to uppercase
+bool UprCase = 0;            // 1 = convert all Asm, Register names, Register values to uppercase
 int DumpInAsciiMode = 3;     // bit 1 = show ASCII in dumps, bit 2 = show hex, value=0 is illegal
 int DumpWSIndex = 0;         // word size index for memory dump
 bool LogView = 0;            // Send log to output window
@@ -1085,7 +1085,7 @@ void LoadRegList()
                 Bit16u limit = GDT_Len;
                 if (i == IDTRnum)
                     limit = IDT_Len;
-#if BX_SUPPORT_x86_64
+#if BX_SUPPORT_X86_64
                 if (In64Mode)
                     sprintf(regtxt,xDT64Fmt[UprCase],rV[i],limit);
                 else
@@ -1108,7 +1108,7 @@ void LoadRegList()
         {
             RitemToRnum[itemnum] = i;
 
-#if BX_SUPPORT_x86_64
+#if BX_SUPPORT_X86_64
             if (In64Mode && (i == CR2_Rnum || i == CR3_Rnum))
                 sprintf(regtxt,Fmt64b[UprCase],rV[i]);
             else

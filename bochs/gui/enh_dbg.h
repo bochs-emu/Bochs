@@ -168,7 +168,7 @@ extern bool ShowButtons;     // Display the top-row Step/Continue pushbuttons
 extern bool SeeRegColors;    // Display registers with background color "groups"
 extern bool ignoreNxtT;      // Do not show "Next at t=" output lines
 extern bool ignSSDisasm;     // Do not show extra disassembly line at each break
-extern int UprCase;          // 1 = convert all Asm, Register names, Register values to uppercase
+extern bool UprCase;         // 1 = convert all Asm, Register names, Register values to uppercase
 extern int DumpInAsciiMode;  // bit 1 = show ASCII in dumps, bit 2 = show hex, value=0 is illegal
 extern int DumpWSIndex;      // word size index for memory dump
 extern bool LogView;         // Send log to output window
