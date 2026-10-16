@@ -153,6 +153,15 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
   //   2) TSS DPL must be >= TSS selector RPL
   //   3) TSS descriptor is not busy.
 
+#if BX_SUPPORT_SVM
+  // The SVM task switch intercept is checked after the incoming TSS descriptor and task gate
+  // have been checked but before TSS limit checks
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    if (SVM_INTERCEPT(SVM_INTERCEPT0_TASK_SWITCH))
+      SvmInterceptTaskSwitch(tss_selector->value, source, push_error, error_code);
+  }
+#endif
+
   // STEP 2: The processor performs limit-checking on the target TSS
   //         to verify that the TSS limit is greater than or equal
   //         to 67h (2Bh for 16-bit TSS).
@@ -182,13 +191,6 @@ void BX_CPU_C::task_switch(bxInstruction_c *i, bx_selector_t *tss_selector,
     BX_ERROR(("task_switch(): new TSS limit < %d", new_TSS_max));
     exception(BX_TS_EXCEPTION, tss_selector->value & 0xfffc);
   }
-
-#if BX_SUPPORT_SVM
-  if (BX_CPU_THIS_PTR in_svm_guest) {
-    if (SVM_INTERCEPT(SVM_INTERCEPT0_TASK_SWITCH))
-      SvmInterceptTaskSwitch(tss_selector->value, source, push_error, error_code);
-  }
-#endif
 
 #if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest)
