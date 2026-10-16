@@ -3547,7 +3547,7 @@ void ReadSettings()
   char *ret, *param, *val;
   bool format_checked = 0;
   size_t len1 = 0, len2;
-  int i;
+  int i, n;
 
   if (global_ini) {
     get_bxshare_path(path);
@@ -3611,26 +3611,57 @@ void ReadSettings()
         } else if (!strcmp(param, "ignSSDisasm")) {
           ignSSDisasm = !strcmp(val, "TRUE");
         } else if (!strcmp(param, "UprCase")) {
-          UprCase = atoi(val);
+          n = atoi(val);
+          if (n != 0 && n != 1) {
+            fprintf(stderr, "bx_enh_dbg.ini: invalid value '%s' for option '%s'\n", val, param);
+            continue;
+          }
+          UprCase = n;
         } else if (!strcmp(param, "DumpInAsciiMode")) {
-          DumpInAsciiMode = atoi(val);
+          n = atoi(val);
+          if (n < 1 || n > 3) {     // bit 0 = ASCII, bit 1 = hex, 0 is illegal
+            fprintf(stderr, "bx_enh_dbg.ini: invalid value '%s' for option '%s'\n", val, param);
+            continue;
+          }
+          DumpInAsciiMode = n;
         } else if (!strcmp(param, "isLittleEndian")) {
           isLittleEndian = !strcmp(val, "TRUE");
         } else if (!strcmp(param, "DefaultAsmLines")) {
-          DefaultAsmLines = atoi(val);
+          n = atoi(val);
+          if (n < 1)
+            n = 1;
+          else if (n > MAX_ASM)
+            n = MAX_ASM;
+          DefaultAsmLines = n;
         } else if (!strcmp(param, "DumpWSIndex")) {
-          DumpWSIndex = atoi(val);
+          n = atoi(val);
+          if (n < 0 || n > 4) {     // word size 1, 2, 4, 8 or 16 bytes
+            fprintf(stderr, "bx_enh_dbg.ini: invalid value '%s' for option '%s'\n", val, param);
+            continue;
+          }
+          DumpWSIndex = n;
           DumpAlign = (1 << DumpWSIndex);
           PrevDAD = 0;
         } else if (!strcmp(param, "DockOrder")) {
-          DockOrder = (short)strtoul(val, NULL, 16);
+          n = (int) strtoul(val, NULL, 16);
+          // each of the 3 lists (1 = Reg, 2 = ASM, 3 = Dump) must appear exactly once
+          if (n != 0x123 && n != 0x132 && n != 0x213 && n != 0x231 && n != 0x312 && n != 0x321) {
+            fprintf(stderr, "bx_enh_dbg.ini: invalid value '%s' for option '%s'\n", val, param);
+            continue;
+          }
+          DockOrder = (short) n;
         } else if ((len1 == 15) && !strncmp(param, "ListWidthPix[", 13) && (param[14] == ']')) {
           if ((param[13] < '0') || (param[13] > '2')) {
-            fprintf(stderr, "bx_enh_dbg.ini: invalid index for option SeeReg[x]\n");
+            fprintf(stderr, "bx_enh_dbg.ini: invalid index for option ListWidthPix[x]\n");
             continue;
           }
           i = atoi(&param[13]);
-          ListWidthPix[i] = atoi(val);
+          n = atoi(val);
+          if (n <= 0) {
+            fprintf(stderr, "bx_enh_dbg.ini: invalid value '%s' for option '%s'\n", val, param);
+            continue;
+          }
+          ListWidthPix[i] = n;
         } else if (!ParseOSSettings(param, val)) {
           fprintf(stderr, "bx_enh_dbg.ini: unknown option '%s'\n", line);
         }
