@@ -1341,6 +1341,8 @@ BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, un
       if (type == BX_DFV) {
         i->set_dfv(15 - (vvv & 0xf));
         has_dfv = true;
+        // EVEX.aaa holds source condition code, not the NF indication
+        i->clearApxEvexNF();
         break;
       }
 #endif

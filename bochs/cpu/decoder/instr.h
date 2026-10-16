@@ -403,6 +403,9 @@ public:
   BX_CPP_INLINE void setApxEvexNF() {
     apx[0] |= (1<<2);
   }
+  BX_CPP_INLINE void clearApxEvexNF() {
+    apx[0] &= ~(1<<2);
+  }
 
   BX_CPP_INLINE unsigned getApxEvexND(void) const {
     return apx[0] & (1<<3);

@@ -943,6 +943,11 @@ char* disasm(char *disbufptr, const bxInstruction_c *i, bx_address cs_base, bx_a
   else {
     disbufptr = dis_sprintf(disbufptr, "%s", get_intel_disasm_opcode_name(ia_opcode));
   }
+#if BX_SUPPORT_APX
+  // EVEX.NF=1: no flags update
+  if (i->getApxEvexNF())
+    disbufptr = dis_sprintf(disbufptr, "{nf}");
+#endif
   disbufptr = dis_putc(disbufptr, ' ');
 
   // Step 3: print sources

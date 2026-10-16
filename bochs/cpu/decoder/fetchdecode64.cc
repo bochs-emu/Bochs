@@ -1087,7 +1087,9 @@ static int decoder_evex64_common(const Bit8u *iptr, unsigned &remain, bxInstruct
 
     is_apx = true;
 
-    if (opmask == 4)
+    // EVEX.NF=1 means no flags update, except map4 40-4F where it selects the CFCMOVcc form
+    // (SETcc requires NF=0), CCMP/CTEST clear it in assign_srcs (EVEX.aaa is source condition code)
+    if (opmask == 4 && ! (evex_opc_map == 4 && (opcode_byte & 0xf0) == 0x40))
       i->setApxEvexNF();
 
     if (evex_b) i->setApxEvexND();
