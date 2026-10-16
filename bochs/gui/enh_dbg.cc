@@ -208,6 +208,13 @@ static const char* GDTsT[] = { "","Available 16bit TSS","LDT","Busy 16bit TSS","
                 "Reserved","32bit Interrupt Gate","32bit Trap Gate"
 };
 
+// system segment types in long mode (IA-32e mode), LDT, TSS and call gate descriptors are 16 bytes
+static const char* GDTsT64[] = { "Reserved","Reserved","LDT","Reserved","Reserved",
+                "Reserved","Reserved","Reserved","Reserved",
+                "Available 64bit TSS","Reserved","Busy 64bit TSS","64bit Call Gate",
+                "Reserved","64bit Interrupt Gate","64bit Trap Gate"
+};
+
 // Register hex display formats -- index by UprCase
 static const char* Fmt64b[2] = { FMT_ADDRX64, "%016llX" };
 static const char* Fmt32b[2] = { "%08x", "%08X" };
@@ -1381,8 +1388,10 @@ void doUpdate()
 void FillGDT()
 {
     unsigned int i, j, GroupId;
+    unsigned int row = 0;
     unsigned int k = (GDT_Len + 1) / 8;
-    Bit8u gdtbuf[8];
+    bool LongMode = (CpuMode == BX_MODE_LONG_64 || CpuMode == BX_MODE_LONG_COMPAT);
+    Bit8u gdtbuf[16];
     char *cols[18];
     char gdttxt[100];
     doDumpRefresh = FALSE;
@@ -1420,12 +1429,27 @@ void FillGDT()
             cols[3]= gdttxt;
             cols[17] = gdttxt + 30;
             strcpy (cols[17],"illegal address");
-            InsertListRow(cols, 18, DUMP_WND, i, 8);    // 18 cols, "no group"
+            InsertListRow(cols, 18, DUMP_WND, row, 8);  // 18 cols, "no group"
             RedrawColumns(DUMP_WND);
             EndListUpdate(DUMP_WND);
             break;
         }
         laddr += 8;
+
+        // in long mode LDT, TSS and call gate descriptors take two GDT slots (16 bytes)
+        bool Desc16 = FALSE;
+        if (LongMode && (gdtbuf[5] & 0x10) == 0 && (i + 1) < k)
+        {
+            unsigned type = gdtbuf[5] & 0xf;
+            if (type == 0x2 || type == 0x9 || type == 0xb || type == 0xc)
+            {
+                if (ReadBxLMem(laddr, 8, gdtbuf + 8) != FALSE)
+                {
+                    Desc16 = TRUE;
+                    laddr += 8;
+                }
+            }
+        }
 
         // enforce proper littleendianness on the gdtbuf bytes
         Bit32u limit = gdtbuf[0] | ((Bit32u) gdtbuf[1] << 8);
@@ -1442,7 +1466,10 @@ void FillGDT()
             if (limit == 0 && (gdtbuf[5] & 0x80) == 0)      // 'P' (present) bit
                 GroupId = 0;
             // point to the approprate info string for the GDT system segment type
-            cols[17] = (char*)GDTsT[(int) (gdtbuf[5] & 0xf)];
+            if (LongMode)
+                cols[17] = (char*)GDTsT64[(int) (gdtbuf[5] & 0xf)];
+            else
+                cols[17] = (char*)GDTsT[(int) (gdtbuf[5] & 0xf)];
         }
         else        // it's an 'executable' code or data segment
         {
@@ -1460,9 +1487,11 @@ void FillGDT()
         }
 
         // enforce proper littleendianness on the gdtbuf bytes
-        Bit32u base = gdtbuf[2] | ((Bit32u) gdtbuf[3] << 8);
+        Bit64u base = gdtbuf[2] | ((Bit32u) gdtbuf[3] << 8);
         base |= (Bit32u) gdtbuf[4] << 16;
         base |= (Bit32u) gdtbuf[7] << 24;
+        if (Desc16)     // upper 32 bits of the base are in the second half of the descriptor
+            base |= (Bit64u) (gdtbuf[8] | ((Bit32u) gdtbuf[9] << 8) | ((Bit32u) gdtbuf[10] << 16) | ((Bit32u) gdtbuf[11] << 24)) << 32;
 
         if ((gdtbuf[6] & 0x60) == 0x20)     // test for longmode segment
         {
@@ -1471,12 +1500,15 @@ void FillGDT()
         }
         else
             sprintf(cols[2],"0x%X",limit);
-        sprintf(cols[1],"0x%X",base);
+        sprintf(cols[1],"0x" FMT_LLCAPX,base);
         sprintf(cols[3],"%u", (gdtbuf[5] & 0x60) >> 5);
 
         if (i == 0)
             cols[17] = (char*)GDTt2[7];    // call "Null" selector "unused"
-        InsertListRow(cols, 18, DUMP_WND, i, GroupId);  // 18 cols
+        InsertListRow(cols, 18, DUMP_WND, row, GroupId);    // 18 cols
+        ++row;
+        if (Desc16)
+            ++i;        // skip the GDT slot holding the second half of the descriptor
     }
 
     RedrawColumns(DUMP_WND);
