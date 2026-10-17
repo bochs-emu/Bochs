@@ -1813,7 +1813,8 @@ one_more:
   BX_INSTR_DEBUG_PROMPT();
   bx_dbg_print_guard_results();
 
-  if (watchpoint_continue && (BX_CPU(which)->stop_reason == STOP_READ_WATCH_POINT ||
+  // which is -1 when stopped by Ctrl-C (no cpu hit a guard)
+  if (watchpoint_continue && which >= 0 && (BX_CPU(which)->stop_reason == STOP_READ_WATCH_POINT ||
             BX_CPU(which)->stop_reason == STOP_WRITE_WATCH_POINT))
   goto one_more;
 }
