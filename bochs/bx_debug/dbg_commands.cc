@@ -1019,7 +1019,7 @@ void bx_dbg_vmexitbp_command()
   dbg_printf("vmexit switch break %s\n",
     BX_CPU(dbg_cpu)->vmexit_break ? "enabled" : "disabled");
 #else
-  dbg_printf("VMX is not compiled in, cannot set vmexit breakpoint !");
+  dbg_printf("VMX is not compiled in, cannot set vmexit breakpoint !\n");
 #endif
 }
 
@@ -1687,7 +1687,7 @@ void bx_dbg_watch(int type, bx_phy_address address, Bit32u len)
     dbg_printf("write watchpoint at 0x" FMT_PHY_ADDRX " len=%d inserted\n", address, len);
   }
   else {
-    dbg_printf("bx_dbg_watch: broken watchpoint type");
+    dbg_printf("bx_dbg_watch: broken watchpoint type\n");
   }
 }
 
@@ -3249,7 +3249,7 @@ void bx_dbg_info_tss_command(void)
     bx_dbg_print_tss(BX_MEM(0)->get_vector(paddr), len);
   }
   else {
-    dbg_printf("bx_dbg_info_tss_command: failed to get physical address for TSS.BASE !");
+    dbg_printf("bx_dbg_info_tss_command: failed to get physical address for TSS.BASE !\n");
   }
 }
 
@@ -3749,19 +3749,19 @@ void bx_dbg_load_segreg(unsigned seg_no, unsigned value)
 {
   bx_segment_reg_t sreg;
 
-  if (seg_no > 6) {
-    dbg_printf("bx_dbg_load_segreg: unknown segment register !");
+  if (seg_no > 5) {
+    dbg_printf("bx_dbg_load_segreg: unknown segment register !\n");
     return;
   }
 
   if (value > 0xffff) {
-    dbg_printf("bx_dbg_load_segreg: segment selector out of limits !");
+    dbg_printf("bx_dbg_load_segreg: segment selector out of limits !\n");
     return;
   }
 
   unsigned cpu_mode = BX_CPU(dbg_cpu)->get_cpu_mode();
   if (cpu_mode == BX_MODE_LONG_64) {
-    dbg_printf("bx_dbg_load_segreg: not supported in long64 mode !");
+    dbg_printf("bx_dbg_load_segreg: not supported in long64 mode !\n");
     return;
   }
 

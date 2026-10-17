@@ -1337,7 +1337,6 @@ help_command:
          dbg_printf("u|disasm [/count] <start> <end> - disassemble instructions for given linear address\n");
          dbg_printf("    Optional 'count' is the number of disassembled instructions\n");
          dbg_printf("u|disasm switch-mode - switch between Intel and AT&T disassembler syntax\n");
-         dbg_printf("u|disasm hex on/off - control disasm offsets and displacements format\n");
          dbg_printf("u|disasm size = n - tell debugger what segment size [16|32|64] to use\n");
          dbg_printf("       when \"disassemble\" command is used.\n");
          free($1);free($2);
