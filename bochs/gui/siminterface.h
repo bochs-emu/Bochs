@@ -750,6 +750,8 @@ public:
   virtual bool is_wx_selected() const {return 0;}
   virtual void set_debug_gui(bool val) {}
   virtual bool has_debug_gui() const {return 0;}
+  // start the gui debugger at runtime (debugger activation)
+  virtual bool start_debug_gui() {return 0;}
   // provide interface to bx_gui->set_display_mode() method for config
   // interfaces to use.
   virtual void set_display_mode(disp_mode_t newmode) {}

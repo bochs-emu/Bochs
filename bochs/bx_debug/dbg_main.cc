@@ -515,6 +515,15 @@ void bx_dbg_activate(void)
     BX_CPU(n)->invalidate_prefetch_q();
   }
 
+#if BX_DEBUGGER_GUI
+  // gui debugger selected (debugger: gui=1) but not started yet - start it now
+  if (bx_dbg.debugger_gui && !SIM->has_debug_gui()) {
+    if (!SIM->start_debug_gui()) {
+      BX_ERROR(("gui debugger could not be started, using the command line debugger"));
+    }
+  }
+#endif
+
   BX_INFO(("[" FMT_LL "d] Debugger activated on CPU%u: %s",
     bx_pc_system.time_ticks(), bx_dbg.activation_cpu, bx_dbg.activation_reason));
 }
@@ -522,11 +531,6 @@ void bx_dbg_activate(void)
 // Leave the debugger and continue the simulation without it
 void bx_dbg_detach_command(void)
 {
-  if (SIM->has_debug_gui()) {
-    dbg_printf("detach is not supported with the gui debugger yet\n");
-    return;
-  }
-
   unsigned num_bpoints = 0;
 #if (BX_DBG_MAX_VIR_BPOINTS > 0)
   num_bpoints += bx_guard.iaddr.num_virtual;
@@ -548,6 +552,10 @@ void bx_dbg_detach_command(void)
   bx_dbg_get_magic_bp_str_from_mask(bx_dbg.magic_break, magic_str);
   dbg_printf("Debugger activation: magic breakpoint%s, %d time breakpoints pending\n",
     bx_dbg.magic_break ? magic_str : " disabled", timebp_queue_size);
+  if (SIM->has_debug_gui()) {
+    // the gui debugger window stays open while the debugger is detached
+    dbg_printf("The Break button of the gui debugger activates the debugger again\n");
+  }
 
   bx_dbg_detach_requested = true;
 }

@@ -26,6 +26,7 @@
 #define CMD_WPTRD   109
 #define CMD_FIND    110
 #define CMD_RFRSH   111
+#define CMD_DETACH  112
 // View Menu:
 #define CMD_PHYDMP  113
 #define CMD_LINDMP  114

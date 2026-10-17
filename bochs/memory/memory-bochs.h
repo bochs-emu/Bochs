@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  I/O memory handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -185,6 +185,9 @@ private:
   BX_MEM_SMF Bit8u flash_read(Bit32u addr);
   BX_MEM_SMF void  flash_write(Bit32u addr, Bit8u data);
 
+  BX_MEM_SMF BX_CPP_INLINE struct memory_handler_struct *find_memory_handler(struct memory_handler_struct *memory_handler, bx_phy_address a20addr, bool write);
+  BX_MEM_SMF BX_CPP_INLINE bool is_smram_data_access(bx_phy_address a20addr, bool smm_mode);
+
 public:
   BX_MEM_C();
   virtual ~BX_MEM_C();
@@ -244,5 +247,27 @@ public:
 };
 
 BOCHSAPI extern BX_MEM_C bx_mem;
+
+// return first memory handler in the list starting from <memory_handler> which covers a20addr,
+// for write access only handlers with write_handler are considered
+BX_CPP_INLINE struct memory_handler_struct *BX_MEM_C::find_memory_handler(struct memory_handler_struct *memory_handler, bx_phy_address a20addr, bool write)
+{
+  while (memory_handler) {
+    if (memory_handler->begin <= a20addr && memory_handler->end >= a20addr) {
+      if (!write || memory_handler->write_handler != NULL)
+        return memory_handler;
+    }
+    memory_handler = memory_handler->next;
+  }
+
+  return NULL;
+}
+
+// check if CPU data access to a20addr goes to SMRAM (instead of memory handlers)
+BX_CPP_INLINE bool BX_MEM_C::is_smram_data_access(bx_phy_address a20addr, bool smm_mode)
+{
+  return (a20addr >= 0x000a0000 && a20addr < 0x000c0000) && BX_MEM_THIS smram_available &&
+         (BX_MEM_THIS smram_enable || (smm_mode && !BX_MEM_THIS smram_restricted));
+}
 
 #endif

@@ -62,6 +62,9 @@ public:
 #if BX_DEBUGGER
   virtual bool debugger_activation_allowed();
   virtual void set_display_mode(disp_mode_t newmode);
+#if BX_DEBUGGER_GUI
+  virtual bool start_debug_dialog(void);
+#endif
 #endif
 };
 
@@ -182,6 +185,8 @@ static BOOL fix_size = FALSE;
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
 static BOOL gui_debug = FALSE;
 static BOOL win32_enh_dbg_global_ini = FALSE;
+// sent by the simulation thread to start the gui debugger in the GUI thread
+#define BX_WM_START_DEBUG_DIALOG (WM_APP + 1)
 #endif
 static HWND hotKeyReceiver = NULL;
 static HWND saveParent = NULL;
@@ -1123,6 +1128,16 @@ LRESULT CALLBACK mainWndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
   case WM_SETFOCUS:
     SetFocus(stInfo.simWnd);
     return 0;
+
+#if BX_DEBUGGER && BX_DEBUGGER_GUI
+  case BX_WM_START_DEBUG_DIALOG:
+    // gui debugger activated at runtime, the dialog must be created here in
+    // the GUI thread like on startup
+    gui_debug = TRUE;
+    win32_enh_dbg_global_ini = bx_dbg.dbg_gui_globalini;
+    bx_gui->init_debug_dialog(win32_enh_dbg_global_ini);
+    return 0;
+#endif
 
   case WM_KILLFOCUS:
     enq_key_event(0, FOCUS_CHANGED);
@@ -2227,7 +2242,8 @@ void win32_toolbar_click(int x)
 // are not handled yet.
 void win32_focus_debugger_console(void)
 {
-  if (SIM->has_debug_gui()) return; // commands are entered in the gui debugger
+  // commands are entered in the gui debugger (active or started on activation)
+  if (bx_dbg.debugger_gui) return;
 
   HWND hwnd = GetConsoleWindow();
   if ((hwnd != NULL) && IsWindowVisible(hwnd)) {
@@ -2268,10 +2284,32 @@ void bx_win32_gui_c::set_mouse_mode_absxy(bool mode)
 }
 
 #if BX_DEBUGGER
+// The debugger can be activated at runtime: the gui debugger if it is
+// selected (debugger: gui=1), the command line debugger otherwise. If the
+// debugger is active the debugger button breaks into it.
 bool bx_win32_gui_c::debugger_activation_allowed()
 {
-  return !bx_dbg.debugger_gui;
+  return 1;
 }
+
+#if BX_DEBUGGER_GUI
+// Start the gui debugger at runtime. The dialog must be created by the GUI
+// thread: SendMessage() returns after it exists, so the simulation thread
+// cannot race with the notify callback switch done by the dialog init.
+// Called from the simulation main loop (no stInfo.keyCS held).
+bool bx_win32_gui_c::start_debug_dialog(void)
+{
+  // the gui debugger requires the win32 config interface (see specific_init)
+  if (strcmp(SIM->get_param_enum(BXPN_SEL_CONFIG_INTERFACE)->get_selected(), "win32config")) {
+    return 0;
+  }
+  if (!stInfo.UIinited) {
+    return 0;
+  }
+  SendMessage(stInfo.mainWnd, BX_WM_START_DEBUG_DIALOG, 0, 0);
+  return 1;
+}
+#endif
 
 // The debugger button is disabled in config mode (debugger prompt or config
 // interface): a click would only be handled after the simulation resumes.

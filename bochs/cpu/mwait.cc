@@ -48,7 +48,7 @@ bool BX_CPU_C::is_monitor(bx_phy_address begin_addr, unsigned len)
   bx_phy_address monitor_end = monitor_begin + CACHE_LINE_SIZE - 1;
 
   bx_phy_address end_addr = begin_addr + len;
-  if (begin_addr >= monitor_end || end_addr <= monitor_begin)
+  if (begin_addr > monitor_end || end_addr <= monitor_begin)
     return false;
   else
     return true;

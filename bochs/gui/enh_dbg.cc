@@ -2268,10 +2268,26 @@ void RefreshDataWin()
     }
 }
 
+// change the CPU shown in the gui debugger, the commands typed by the user
+// are executed on the same CPU
+void SelectCPU(unsigned newCPU)
+{
+    if (newCPU >= (unsigned) BX_SMP_PROCESSORS || CurrentCPU == newCPU)
+        return;
+    if (BX_SMP_PROCESSORS > 1)      // CPU buttons exist only for SMP simulation
+        SetCPUButton(CurrentCPU, newCPU);
+    CurrentCPU = newCPU;
+    dbg_cpu = newCPU;
+    BottomAsmLA = ~0;       // force an ASM autoload, to repaint
+}
+
 // performs tasks whenever the simulation "breaks"
 void OnBreak()
 {
     int i = EFER_Rnum + 1;
+    // show the CPU selected by the debugger (the CPU which hit a breakpoint
+    // or requested the debugger activation, or changed by "cpu" command)
+    SelectCPU(dbg_cpu);
     // check if Ptime has changed
     TakeInputFocus();
 
@@ -3233,6 +3249,10 @@ void ActivateMenuItem (int cmd)
             }
             break;
 
+        case CMD_DETACH: // detach debugger (don't hide)
+            DetachDebugger();
+            break;
+
         case CMD_PHYDMP:        // "physical mem" data dump
             InitDataDump(0,(Bit64u) 1);
             break;
@@ -3723,6 +3743,19 @@ void CloseDebugDialog()
   SIM->set_log_viewer(0);
   SIM->set_notify_callback(old_callback, old_callback_arg);
   CloseDialog();
+}
+
+bool DetachDebugger()
+{
+    // can't run sim until everything is ready
+    if (AtBreak == FALSE || debug_cmd_ready != FALSE)
+        return FALSE;
+
+    AtBreak = FALSE;
+    StatusChange = TRUE;
+    strcpy(debug_cmd, "detach");
+    debug_cmd_ready = TRUE;
+	return TRUE;
 }
 
 #endif
