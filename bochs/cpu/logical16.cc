@@ -35,7 +35,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EwGwM(bxInstruction_c *i)
   op1_16 ^= op2_16;
   write_RMW_linear_word(op1_16);
 
-  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -80,7 +83,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EwIwM(bxInstruction_c *i)
   op1_16 ^= i->Iw();
   write_RMW_linear_word(op1_16);
 
-  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -106,7 +112,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EwIwM(bxInstruction_c *i)
   op1_16 |= i->Iw();
   write_RMW_linear_word(op1_16);
 
-  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -153,7 +162,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EwGwM(bxInstruction_c *i)
   op1_16 |= op2_16;
   write_RMW_linear_word(op1_16);
 
-  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -199,7 +211,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EwGwM(bxInstruction_c *i)
   op1_16 &= op2_16;
   write_RMW_linear_word(op1_16);
 
-  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -244,7 +259,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EwIwM(bxInstruction_c *i)
   op1_16 &= i->Iw();
   write_RMW_linear_word(op1_16);
 
-  SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_LOGIC_16(op1_16);
 
   BX_NEXT_INSTR(i);
 }

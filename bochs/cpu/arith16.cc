@@ -50,7 +50,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EwGwM(bxInstruction_c *i)
 
   write_RMW_linear_word(sum_16);
 
-  SET_FLAGS_OSZAPC_ADD_16(op1_16, op2_16, sum_16);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_ADD_16(op1_16, op2_16, sum_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -207,7 +210,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EwGwM(bxInstruction_c *i)
 
   write_RMW_linear_word(diff_16);
 
-  SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -356,7 +362,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EwIwM(bxInstruction_c *i)
 
   write_RMW_linear_word(sum_16);
 
-  SET_FLAGS_OSZAPC_ADD_16(op1_16, op2_16, sum_16);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_ADD_16(op1_16, op2_16, sum_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -411,7 +420,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EwIwM(bxInstruction_c *i)
 
   write_RMW_linear_word(diff_16);
 
-  SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_SUB_16(op1_16, op2_16, diff_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -461,7 +473,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EwM(bxInstruction_c *i)
   op1_16 = -op1_16;
   write_RMW_linear_word(op1_16);
 
-  SET_FLAGS_OSZAPC_SUB_16(0, 0 - op1_16, op1_16);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_SUB_16(0, 0 - op1_16, op1_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -485,7 +500,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_EwM(bxInstruction_c *i)
   op1_16++;
   write_RMW_linear_word(op1_16);
 
-  SET_FLAGS_OSZAP_ADD_16(op1_16 - 1, 0, op1_16);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAP_ADD_16(op1_16 - 1, 0, op1_16);
 
   BX_NEXT_INSTR(i);
 }
@@ -498,7 +516,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_EwM(bxInstruction_c *i)
   op1_16--;
   write_RMW_linear_word(op1_16);
 
-  SET_FLAGS_OSZAP_SUB_16(op1_16 + 1, 0, op1_16);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAP_SUB_16(op1_16 + 1, 0, op1_16);
 
   BX_NEXT_INSTR(i);
 }

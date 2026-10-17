@@ -137,6 +137,10 @@ protected:
 
   void get_std_cpuid_monitor_mwait_leaf(cpuid_function_t *leaf, Bit32u edx_power_states) const;
 
+#if BX_SUPPORT_APX
+  void get_std_cpuid_apx_leaf(Bit32u subfunction, cpuid_function_t *leaf) const; // leaf 0x29
+#endif
+
   Bit32u get_std_cpuid_leaf_1_ecx(Bit32u extra = 0) const;
   Bit32u get_std_cpuid_leaf_1_edx_common(Bit32u extra = 0) const;
   Bit32u get_std_cpuid_leaf_1_edx(Bit32u extra = 0) const;

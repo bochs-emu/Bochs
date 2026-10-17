@@ -108,6 +108,9 @@ bochs-msvc-src.zip
 # /bocks/cpu/avx/
 /bochs/cpu/avx/Makefile
 
+# /bochs/cpu/apx
+/bochs/cpu/apx/Makefile
+
 # /bochs/cpu/cpudb/
 /bochs/cpu/cpudb/Makefile
 

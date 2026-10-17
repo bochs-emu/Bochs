@@ -1336,6 +1336,46 @@ bool BX_CPU_C::xsave_scaledata_state_xinuse(void)
 }
 #endif // BX_SUPPORT_AMX
 
+#if BX_SUPPORT_APX
+
+void BX_CPU_C::xsave_apx_state(bxInstruction_c *i, bx_address offset)
+{
+  bx_address asize_mask = i->asize_mask();
+
+  for(unsigned index=0; index < 16; index++) {
+    write_virtual_qword(i->seg(), (offset+index*8) & asize_mask, BX_READ_64BIT_REG(index+16));
+  }
+}
+
+void BX_CPU_C::xrstor_apx_state(bxInstruction_c *i, bx_address offset)
+{
+  bx_address asize_mask = i->asize_mask();
+
+  for(unsigned index=0; index < 16; index++) {
+    Bit64u val64 = read_virtual_qword(i->seg(), (offset+index*8) & asize_mask);
+    BX_WRITE_64BIT_REG(index+16, val64);
+  }
+}
+
+void BX_CPU_C::xrstor_init_apx_state(void)
+{
+  // initialize APX registers with reset values
+  for(unsigned index=16; index < 32; index++) {
+    BX_WRITE_64BIT_REG(index, 0);
+  }
+}
+
+bool BX_CPU_C::xsave_apx_state_xinuse(void)
+{
+  for(unsigned index=16; index < 32; index++) {
+    if (BX_READ_64BIT_REG(index)) return true;
+  }
+
+  return false;
+}
+
+#endif
+
 Bit32u BX_CPU_C::get_xinuse_vector(Bit32u requested_feature_bitmap)
 {
   Bit32u xinuse = 0;

@@ -35,7 +35,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EbGbM(bxInstruction_c *i)
   op1 ^= op2;
   write_RMW_linear_byte(op1);
 
-  SET_FLAGS_OSZAPC_LOGIC_8(op1);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_LOGIC_8(op1);
 
   BX_NEXT_INSTR(i);
 }
@@ -80,7 +83,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::XOR_EbIbM(bxInstruction_c *i)
   op1 ^= op2;
   write_RMW_linear_byte(op1);
 
-  SET_FLAGS_OSZAPC_LOGIC_8(op1);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_LOGIC_8(op1);
 
   BX_NEXT_INSTR(i);
 }
@@ -108,7 +114,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EbIbM(bxInstruction_c *i)
   op1 |= op2;
   write_RMW_linear_byte(op1);
 
-  SET_FLAGS_OSZAPC_LOGIC_8(op1);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_LOGIC_8(op1);
 
   BX_NEXT_INSTR(i);
 }
@@ -157,7 +166,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::OR_EbGbM(bxInstruction_c *i)
   op1 |= op2;
   write_RMW_linear_byte(op1);
 
-  SET_FLAGS_OSZAPC_LOGIC_8(op1);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_LOGIC_8(op1);
 
   BX_NEXT_INSTR(i);
 }
@@ -203,7 +215,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EbGbM(bxInstruction_c *i)
   op1 &= op2;
   write_RMW_linear_byte(op1);
 
-  SET_FLAGS_OSZAPC_LOGIC_8(op1);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_LOGIC_8(op1);
 
   BX_NEXT_INSTR(i);
 }
@@ -248,7 +263,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::AND_EbIbM(bxInstruction_c *i)
   op1 &= op2;
   write_RMW_linear_byte(op1);
 
-  SET_FLAGS_OSZAPC_LOGIC_8(op1);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_LOGIC_8(op1);
 
   BX_NEXT_INSTR(i);
 }
