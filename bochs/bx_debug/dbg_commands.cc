@@ -2215,17 +2215,17 @@ void bx_dbg_examine_command(const char *command, const char *format, bool format
   else {
     if (format==NULL) {
       dbg_printf("dbg_examine: format NULL\n");
-      bx_dbg_exit(1);
+      return;
     }
 
     if (strlen(format) < 2) {
       dbg_printf("dbg_examine: invalid format passed.\n");
-      bx_dbg_exit(1);
+      return;
     }
 
     if (format[0] != '/') {
       dbg_printf("dbg_examine: '/' is not first char of format.\n");
-      bx_dbg_exit(1);
+      return;
     }
 
     format++;
@@ -2280,8 +2280,7 @@ void bx_dbg_examine_command(const char *command, const char *format, bool format
 
         default:
           dbg_printf("dbg_examine: invalid format passed. \'%c\'\n", ch);
-          bx_dbg_exit(1);
-          break;
+          return;
       }
     }
   }
@@ -3281,6 +3280,7 @@ void bx_dbg_info_device(const char *dev, const char *args)
   char *ptr;
   char string[512];
   size_t len;
+  bool too_many = false;
 
   if (strlen(dev) == 0) {
     if (bx_debug_info_list == NULL) {
@@ -3312,14 +3312,16 @@ void bx_dbg_info_device(const char *dev, const char *args)
             if (argc < 16) {
               argv[argc++] = strdup(string);
             } else {
-              BX_PANIC (("too many parameters, max is 16\n"));
+              dbg_printf("info device: too many parameters, max is 16\n");
+              too_many = true;
               break;
             }
             ptr = strtok(NULL, ",");
           }
           delete [] options;
         }
-        temp->device->debug_dump(argc, argv);
+        if (!too_many)
+          temp->device->debug_dump(argc, argv);
         for (i = 0; i < (unsigned)argc; i++) {
           if (argv[i] != NULL) {
             free(argv[i]);
