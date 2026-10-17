@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1656,6 +1656,8 @@ redolog_t::redolog_t()
   extent_index = (Bit32u)0;
   extent_offset = (Bit32u)0;
   extent_next = (Bit32u)0;
+  bitmap_update = 1;
+  imagepos = 0;
 }
 
 void redolog_t::print_header()
