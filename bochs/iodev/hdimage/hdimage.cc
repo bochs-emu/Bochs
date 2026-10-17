@@ -1013,7 +1013,7 @@ int sparse_image_t::read_header()
 
 #ifdef _POSIX_MAPPED_FILES
   // Try to memory map from the beginning of the file (0 is trivially a page multiple)
-  void *mmap_header = mmap(NULL, preamble_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+  mmap_header = mmap(NULL, preamble_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
   if (mmap_header == MAP_FAILED) {
     BX_INFO(("failed to mmap sparse disk file - using conventional file access"));
     mmap_header = NULL;
@@ -1104,26 +1104,32 @@ int sparse_image_t::open(const char* pathname0, int flags)
 
 void sparse_image_t::close()
 {
-  BX_DEBUG(("concat_image_t.close"));
+  BX_DEBUG(("sparse_image_t.close"));
 #ifdef _POSIX_MAPPED_FILES
   if (mmap_header != NULL) {
     int ret = munmap(mmap_header, mmap_length);
     if (ret != 0)
       BX_INFO(("failed to un-memory map sparse disk file"));
+    mmap_header = NULL;
+    pagetable = NULL; // We didn't malloc it
   }
-  pagetable = NULL; // We didn't malloc it
 #endif
   if (fd > -1) {
     bx_close_image(fd, pathname);
+    fd = -1;
   }
   if (pathname != NULL) {
     free(pathname);
+    pathname = NULL;
   }
   if (pagetable != NULL) {
     delete [] pagetable;
+    pagetable = NULL;
   }
   if (parent_image != NULL) {
+    parent_image->close();
     delete parent_image;
+    parent_image = NULL;
   }
 }
 
