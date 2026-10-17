@@ -17,6 +17,9 @@ Bit64u eval_value;
   unsigned bval;
 }
 
+// free strings of tokens discarded during error recovery
+%destructor { free($$); } <sval>
+
 // Common registers
 %type <uval> BX_TOKEN_SEGREG
 %type <bval> BX_TOKEN_TOGGLE_ON_OFF
@@ -293,7 +296,7 @@ show_command:
     | BX_TOKEN_SHOW BX_TOKEN_ALL '\n'
       {
           bx_dbg_show_command("all");
-          free($1);
+          free($1); free($2);
       }
     | BX_TOKEN_SHOW BX_TOKEN_OFF '\n'
       {
@@ -587,34 +590,42 @@ set_command:
     | BX_TOKEN_SET BX_TOKEN_8BL_REG '=' expression '\n'
       {
         bx_dbg_set_reg8l_value($2, $4);
+        free($1);
       }
     | BX_TOKEN_SET BX_TOKEN_8BH_REG '=' expression '\n'
       {
         bx_dbg_set_reg8h_value($2, $4);
+        free($1);
       }
     | BX_TOKEN_SET BX_TOKEN_16B_REG '=' expression '\n'
       {
         bx_dbg_set_reg16_value($2, $4);
+        free($1);
       }
     | BX_TOKEN_SET BX_TOKEN_32B_REG '=' expression '\n'
       {
         bx_dbg_set_reg32_value($2, $4);
+        free($1);
       }
     | BX_TOKEN_SET BX_TOKEN_64B_REG '=' expression '\n'
       {
         bx_dbg_set_reg64_value($2, $4);
+        free($1);
       }
     | BX_TOKEN_SET BX_TOKEN_REG_EIP '=' expression '\n'
       {
         bx_dbg_set_rip_value($4);
+        free($1);
       }
     | BX_TOKEN_SET BX_TOKEN_REG_RIP '=' expression '\n'
       {
         bx_dbg_set_rip_value($4);
+        free($1);
       }
     | BX_TOKEN_SET BX_TOKEN_SEGREG '=' expression '\n'
       {
         bx_dbg_load_segreg($2, $4);
+        free($1);
       }
     ;
 
@@ -776,22 +787,22 @@ info_command:
     | BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_GENERIC '\n'
       {
         bx_dbg_info_device($3, "");
-        free($1); free($2);
+        free($1); free($2); free($3);
       }
     | BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_GENERIC BX_TOKEN_STRING '\n'
       {
         bx_dbg_info_device($3, $4);
-        free($1); free($2);
+        free($1); free($2); free($3); free($4);
       }
     | BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_STRING '\n'
       {
         bx_dbg_info_device($3, "");
-        free($1); free($2);
+        free($1); free($2); free($3);
       }
     | BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_STRING BX_TOKEN_STRING '\n'
       {
         bx_dbg_info_device($3, $4);
-        free($1); free($2);
+        free($1); free($2); free($3); free($4);
       }
     ;
 
