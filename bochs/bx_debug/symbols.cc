@@ -216,7 +216,7 @@ const char* bx_dbg_disasm_symbolic_address(bx_address xip, bx_address base)
   if (!entr) {
     return 0;
   }
-  snprintf (buf, 80, "%s+%" FMT_64 "x", entr->name, (base+xip) - entr->start);
+  snprintf (buf, 80, "%s+%" FMT_64 "x", entr->name, (Bit64u) ((base+xip) - entr->start));
   return buf;
 }
 

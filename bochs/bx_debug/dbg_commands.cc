@@ -1110,7 +1110,7 @@ void bx_dbg_where_command()
   }
   Bit32u bp = cpu->get_reg32(BX_32BIT_REG_EBP);
   bx_address ip = cpu->get_instruction_pointer();
-  dbg_printf("(%d) 0x%08x\n", dbg_cpu, ip);
+  dbg_printf("(%d) 0x" FMT_ADDRX "\n", dbg_cpu, ip);
   for (int i = 1; i < 50; i++) {
     // Up
     bx_phy_address paddr;
@@ -1145,13 +1145,13 @@ void bx_dbg_where_command()
     }
 
     // Print
-    dbg_printf("(%d) 0x%08x\n", i, ip);
+    dbg_printf("(%d) 0x" FMT_ADDRX "\n", i, ip);
   }
 }
 
 void bx_dbg_print_string_command(bx_address start_addr)
 {
-  dbg_printf("0x%08x: ", start_addr);
+  dbg_printf("0x" FMT_ADDRX ": ", start_addr);
   for (int i = 0; ; i++) {
     Bit8u buf = 0;
     if (! bx_dbg_read_linear(dbg_cpu, start_addr+i, 1, &buf)) break;
@@ -1476,7 +1476,7 @@ void bx_dbg_deref_command(bx_address addr, unsigned deep)
       dbg_printf("error dereferencing 0x" FMT_ADDRX "\n", addr);
     }
     else {
-      dbg_printf("error dereferencing 0x" FMT_ADDRX " (deep: 0x%lx) - last data found: 0x" FMT_ADDRX "\n", 
+      dbg_printf("error dereferencing 0x" FMT_ADDRX " (deep: 0x%x) - last data found: 0x" FMT_ADDRX "\n",
         addr, deep_sc, last_data_found);
     }
   }
@@ -2622,7 +2622,7 @@ void bx_dbg_set_symbol_command(const char *symbol, bx_address val)
   }
   else if (!strcmp(symbol, "cpu")) {
     if (val >= BX_SMP_PROCESSORS) {
-      dbg_printf("invalid cpu id number %d\n", val);
+      dbg_printf("invalid cpu id number " FMT_LL "u\n", (Bit64u) val);
       return;
     }
     switch_dbg_cpu(val);
@@ -2780,7 +2780,7 @@ void bx_dbg_crc_command(bx_phy_address addr1, bx_phy_address addr2)
     dbg_printf("Error: could not crc32 memory\n");
     return;
   }
-  dbg_printf("0x%lx\n", crc1);
+  dbg_printf("0x%08x\n", crc1);
 }
 
 void bx_dbg_print_descriptor(Bit32u lo, Bit32u hi)
@@ -3828,7 +3828,7 @@ bx_address bx_dbg_get_laddr(Bit16u sel, bx_address ofs)
       }
 
       if (ofs < lowaddr || ofs > highaddr) {
-        dbg_printf("WARNING: Offset %08X is out of selector %04x limit (%08x...%08x)!\n", ofs, sel, lowaddr, highaddr);
+        dbg_printf("WARNING: Offset " FMT_ADDRX " is out of selector %04x limit (%08x...%08x)!\n", ofs, sel, lowaddr, highaddr);
       }
     }
 
