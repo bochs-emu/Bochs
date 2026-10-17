@@ -212,10 +212,32 @@ LRESULT CALLBACK ThisEditProc(HWND hh, UINT mm, WPARAM ww, LPARAM ll)
             // throw away all Enter keys (bell problems)
             if (ww == VK_RETURN)
                 return 0;
+            // ^c and ^a in the Output window are handled on WM_KEYDOWN
+            if (i != 0 && (ww == 3 || ww == 1))
+                return 0;
                 // force all typed input to the Input window (wEdit[0] = Input)
             CallWindowProc(*wEdit, hE_I, mm, ww, ll);
             return 0;
         case WM_KEYDOWN:
+            if (i != 0 && GetKeyState(VK_CONTROL) < 0)
+            {
+                if (ww == 'A')      // ^a = select all text in the Output window
+                {
+                    CallWindowProc(wEdit[1], hh, EM_SETSEL, 0, -1);
+                    return 0;
+                }
+                if (ww == 'C')      // ^c = copy the selected text, or break if nothing is selected
+                {
+                    DWORD SelStart, SelEnd;
+                    CallWindowProc(wEdit[1], hh, EM_GETSEL, (WPARAM) &SelStart, (LPARAM) &SelEnd);
+                    if (SelStart != SelEnd)
+                    {
+                        CallWindowProc(wEdit[1], hh, WM_COPY, 0, 0);
+                        return 0;
+                    }
+                }
+            }
+            // fall through
         case WM_SYSKEYDOWN:
             // simply let parent know about all keydowns in these edit boxes
             SendMessage(GetParent(hh),mm,ww,ll);
@@ -1325,7 +1347,9 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
             // Input / Output
             hE_I = CreateWindowEx(0,"edit","",WS_CHILD | WS_VISIBLE,0,0,1,1,hh,(HMENU)1004,GetModuleHandle(0),0);
             // without AUTOHSCROLL, output window text is always supposed to wordwrap
-            hE_O = CreateWindowEx(0,"edit","",WS_VSCROLL | WS_BORDER | WS_CHILD | WS_VISIBLE | ES_MULTILINE,0,0,1,1,hh,(HMENU)1003,GetModuleHandle(0),0);
+            // the output window never gets the input focus (the Input window keeps the caret),
+            // NOHIDESEL keeps the selected text visible, so it can be copied
+            hE_O = CreateWindowEx(0,"edit","",WS_VSCROLL | WS_BORDER | WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_READONLY | ES_NOHIDESEL,0,0,1,1,hh,(HMENU)1003,GetModuleHandle(0),0);
             SendMessage(hE_I,WM_SETFONT,(WPARAM)DefFont, MAKELPARAM(TRUE,0));
             SendMessage(hE_O,WM_SETFONT,(WPARAM)hF,MAKELPARAM(TRUE,0));
 
@@ -1417,6 +1441,16 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
             // Input window caret is created in SetSizeIOS, when the WM_SIZE message arrives
             break;
         }
+
+        case WM_CTLCOLORSTATIC:
+            // keep the white background of the read only Output window
+            if ((HWND) ll == hE_O)
+            {
+                SetBkColor((HDC) ww, GetSysColor(COLOR_WINDOW));
+                SetTextColor((HDC) ww, GetSysColor(COLOR_WINDOWTEXT));
+                return (LRESULT) GetSysColorBrush(COLOR_WINDOW);
+            }
+            break;
 
         case WM_SIZE:
         {
