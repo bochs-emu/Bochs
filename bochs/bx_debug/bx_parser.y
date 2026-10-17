@@ -154,10 +154,26 @@ bool eval_value_valid; // eval_value was set by the last parsed line
 %type <uval> vexpression
 %type <uval> expression
 
-%left '+' '-' '|' '^' '<' '>'
-%left '*' '/' '&' BX_TOKEN_LSHIFT BX_TOKEN_RSHIFT BX_TOKEN_DEREF_CHR
-%left BX_TOKEN_EQ BX_TOKEN_NE BX_TOKEN_LE BX_TOKEN_GE
+/* Operator precedence, lowest to highest, follows C. The seg:offset ':'
+   operator is asymmetric: its rule gets the lowest precedence (SEGOFF)
+   while the ':' token itself gets the highest, so the offset extends as
+   far right as possible and the segment binds tightly on the left:
+     cs:eip+2 = cs:(eip+2), 1+cs:eip = 1+(cs:eip), *ds:esi = *(ds:esi),
+     a:b:c = a:(b:c)
+   The '$' dereference operator binds tighter than any binary operator
+   but looser than unary ones: rax+8$2 = rax+(8$2), *rax$2 = (*rax)$2 */
+%right SEGOFF
+%left '|'
+%left '^'
+%left '&'
+%left BX_TOKEN_EQ BX_TOKEN_NE
+%left '<' '>' BX_TOKEN_LE BX_TOKEN_GE
+%left BX_TOKEN_LSHIFT BX_TOKEN_RSHIFT
+%left '+' '-'
+%left '*' '/'
+%left BX_TOKEN_DEREF_CHR
 %left NOT NEG INDIRECT
+%right ':'
 
 %start commands
 
@@ -1584,7 +1600,7 @@ expression:
    | BX_TOKEN_REG_EIP                { $$ = bx_dbg_get_eip(); }
    | BX_TOKEN_REG_RIP                { $$ = bx_dbg_get_rip(); }
    | BX_TOKEN_REG_SSP                { $$ = bx_dbg_get_ssp(); }
-   | expression ':' expression       { $$ = bx_dbg_get_laddr ($1, $3); }
+   | expression ':' expression %prec SEGOFF { $$ = bx_dbg_get_laddr ($1, $3); }
    | expression '+' expression       { $$ = $1 + $3; }
    | expression '-' expression       { $$ = $1 - $3; }
    | expression '*' expression       { $$ = $1 * $3; }
