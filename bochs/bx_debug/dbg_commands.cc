@@ -2167,12 +2167,12 @@ static void bx_print_char(Bit8u ch)
     dbg_printf(" \\x%02X", ch);
 }
 
-void dbg_printf_binary(const char *format, Bit32u data, int bits)
+void dbg_printf_binary(const char *format, Bit64u data, int bits)
 {
   int len = 0;
-  char num[33];
+  char num[65];
 
-  for (unsigned b = 1 << (bits - 1); b; b >>= 1)
+  for (Bit64u b = BX_CONST64(1) << (bits - 1); b; b >>= 1)
     num[len++] = (data & b) ? '1' : '0';
   num[len] = 0;
   dbg_printf(format, num);
