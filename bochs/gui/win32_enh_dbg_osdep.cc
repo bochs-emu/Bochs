@@ -1761,7 +1761,9 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                 DestroyWindow(hY);
                 hY = NULL;
             } else {
-                DetachDebugger();
+                if (DetachDebugger()) {
+                    ShowWindow(hY, SW_HIDE);
+                }
                 return 0;
             }
             break;
@@ -1781,6 +1783,7 @@ void HitBreak()
     if (doDumpRefresh != FALSE)
         RefreshDataWin();
     OnBreak();
+    ShowWindow(hY, SW_SHOW);
 }
 
 // This function must be called immediately after bochs starts

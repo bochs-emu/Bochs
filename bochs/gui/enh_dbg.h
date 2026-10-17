@@ -73,7 +73,7 @@ void WriteOSSettings(FILE *fd);
 void HitBreak();
 void ParseIDText(const char *x);
 
-void DetachDebugger();
+bool DetachDebugger();
 
 extern bool vgaw_refresh;
 

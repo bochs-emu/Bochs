@@ -3233,6 +3233,10 @@ void ActivateMenuItem (int cmd)
             }
             break;
 
+        case CMD_DETACH: // detach debugger (don't hide)
+            DetachDebugger();
+            break;
+
         case CMD_PHYDMP:        // "physical mem" data dump
             InitDataDump(0,(Bit64u) 1);
             break;
@@ -3725,16 +3729,17 @@ void CloseDebugDialog()
   CloseDialog();
 }
 
-void DetachDebugger()
+bool DetachDebugger()
 {
     // can't run sim until everything is ready
     if (AtBreak == FALSE || debug_cmd_ready != FALSE)
-        return;
+        return FALSE;
 
     AtBreak = FALSE;
     StatusChange = TRUE;
     strcpy(debug_cmd, "detach");
     debug_cmd_ready = TRUE;
+	return TRUE;
 }
 
 #endif
