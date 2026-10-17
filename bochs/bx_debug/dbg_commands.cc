@@ -1058,6 +1058,50 @@ next_page:
   return 1;
 }
 
+extern int fetchDecode32(const Bit8u *fetchPtr, bool is_32, bxInstruction_c *i, unsigned remainingInPage);
+#if BX_SUPPORT_X86_64
+extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
+#endif
+
+// Read 16 instruction bytes at laddr for decoding. Bytes from the next page
+// are read only if that page is available, otherwise they are zero-filled and
+// the instruction is checked to fit into the bytes which could be read.
+static bool bx_dbg_read_instruction(unsigned which_cpu, bx_address laddr, bool is_32, bool is_64, Bit8u *buf)
+{
+  unsigned len = 0x1000 - PAGE_OFFSET(laddr);
+  bx_phy_address paddr;
+
+  if (len >= 16)
+    return bx_dbg_read_linear(which_cpu, laddr, 16, buf);
+
+  if (! bx_dbg_read_linear(which_cpu, laddr, len, buf))
+    return 0;
+
+  if (BX_CPU(which_cpu)->dbg_xlate_linear2phy(laddr + len, &paddr))
+    return bx_dbg_read_linear(which_cpu, laddr + len, 16 - len, buf + len);
+
+  memset(buf + len, 0, 16 - len);
+
+  bxInstruction_c i;
+  int ret;
+#if BX_SUPPORT_X86_64
+  if (is_64)
+    ret = fetchDecode64(buf, &i, len);
+  else
+#endif
+    ret = fetchDecode32(buf, is_32, &i, len);
+#if BX_SUPPORT_X86_64 == 0
+  UNUSED(is_64);
+#endif
+
+  if (ret < 0) {
+    dbg_printf("instruction at linear 0x" FMT_ADDRX " crosses into page not available (linear 0x" FMT_ADDRX ")\n", laddr, laddr + len);
+    return 0;
+  }
+
+  return 1;
+}
+
 bool bx_dbg_write_linear(unsigned which_cpu, bx_address laddr, unsigned len, Bit8u *buf)
 {
   unsigned remainsInPage;
@@ -1900,7 +1944,8 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
     return;
   }
 
-  if (bx_dbg_read_linear(which_cpu, guard_state.laddr, 16, bx_disasm_ibuf))
+  if (bx_dbg_read_instruction(which_cpu, guard_state.laddr,
+        IS_CODE_32(guard_state.code_32_64), IS_CODE_64(guard_state.code_32_64), bx_disasm_ibuf))
   {
     unsigned ilen = bx_dbg_disasm_wrapper(IS_CODE_32(guard_state.code_32_64),
       IS_CODE_64(guard_state.code_32_64),
@@ -2728,7 +2773,7 @@ void bx_dbg_disassemble_command(const char *format, Bit64u from, Bit64u to)
   do {
     numlines--;
 
-    if (! bx_dbg_read_linear(dbg_cpu, from, 16, bx_disasm_ibuf)) break;
+    if (! bx_dbg_read_instruction(dbg_cpu, from, dis_size==32, dis_size==64, bx_disasm_ibuf)) break;
 
     unsigned ilen = bx_dbg_disasm_wrapper(dis_size==32, dis_size==64,
        0/*(bx_address)(-1)*/, from/*(bx_address)(-1)*/, bx_disasm_ibuf, bx_disasm_tbuf);
@@ -3923,11 +3968,6 @@ bx_address bx_dbg_get_laddr(Bit16u sel, bx_address ofs)
   return laddr;
 }
 
-extern int fetchDecode32(const Bit8u *fetchPtr, bool is_32, bxInstruction_c *i, unsigned remainingInPage);
-#if BX_SUPPORT_X86_64
-extern int fetchDecode64(const Bit8u *fetchPtr, bxInstruction_c *i, unsigned remainingInPage);
-#endif
-
 void bx_dbg_step_over_command()
 {
   bx_dbg_guard_state_t guard_state;
@@ -3935,7 +3975,8 @@ void bx_dbg_step_over_command()
   bx_address laddr = guard_state.laddr;
   Bit8u opcode_bytes[32];
 
-  if (! bx_dbg_read_linear(dbg_cpu, laddr, 16, opcode_bytes))
+  if (! bx_dbg_read_instruction(dbg_cpu, laddr,
+        IS_CODE_32(guard_state.code_32_64), IS_CODE_64(guard_state.code_32_64), opcode_bytes))
   {
     return;
   }
