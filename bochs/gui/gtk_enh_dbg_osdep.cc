@@ -1455,6 +1455,16 @@ gboolean keydown_event_cb(GtkWidget *widget, GdkEventKey *event, gpointer data)
     switch (event->keyval)
     {
         case  'c':
+            if (Control != 0)
+            {
+                // ^c = copy the text selected in the Output window, or break if nothing is selected
+                GtkTextBuffer *OBuffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(OText));
+                if (gtk_text_buffer_get_has_selection(OBuffer))
+                {
+                    gtk_text_buffer_copy_clipboard(OBuffer, gtk_clipboard_get(GDK_SELECTION_CLIPBOARD));
+                    return TRUE;
+                }
+            }
         case  'd':
         case  'f':
             if (Control == 0) break;
@@ -2341,6 +2351,8 @@ bool OSInit()
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(ScrlWinOut), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
     OText = gtk_text_view_new();
     gtk_text_view_set_editable(GTK_TEXT_VIEW(OText), FALSE);    // set it to "read only"
+    // the Output window never gets the input focus (the Input window gets all keystrokes),
+    // text can be selected with the mouse and copied by ^c or the popup menu
     gtk_widget_set_can_focus(OText, FALSE);
     gtk_container_add (GTK_CONTAINER(ScrlWinOut), OText);
 // a TextView *already has* a viewport, so DON'T add another one -- or it won't scroll properly!
