@@ -1553,7 +1553,7 @@ vexpression:
    | vexpression '+' vexpression     { $$ = $1 + $3; }
    | vexpression '-' vexpression     { $$ = $1 - $3; }
    | vexpression '*' vexpression     { $$ = $1 * $3; }
-   | vexpression '/' vexpression     { $$ = $1 / $3; }
+   | vexpression '/' vexpression     { $$ = ($3 != 0) ? $1 / $3 : 0; }
    | vexpression BX_TOKEN_DEREF_CHR vexpression { $$ = bx_dbg_deref($1, $3, NULL, NULL); }
    | vexpression BX_TOKEN_RSHIFT vexpression { $$ = $1 >> $3; }
    | vexpression BX_TOKEN_LSHIFT vexpression { $$ = $1 << $3; }
