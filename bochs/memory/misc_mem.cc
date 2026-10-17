@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  I/O memory handlers API Copyright (C) 2003 by Frank Cornelis
 //
@@ -393,7 +393,8 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
       return;
     }
     if ((romaddress < 0xc0000) ||
-        (((romaddress + size - 1) > 0xdffff) && (romaddress < 0xe0000))) {
+        (((romaddress + size - 1) > 0xdffff) && (romaddress < 0xe0000)) ||
+        ((romaddress + size) > 0xf0000)) {
       close(fd);
       BX_PANIC(("ROM: ROM address space out of range"));
       return;
@@ -403,9 +404,10 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
       start_idx = (((Bit32u)romaddress - 0xc0000) >> 11);
       end_idx = start_idx + (size >> 11) + (((size % 2048) > 0) ? 1 : 0);
     } else {
-      offset = romaddress & BIOS_MASK;
+      // E0000-EFFFF is served from the last 128K of the BIOS ROM
+      offset = BIOS_MAP_LAST128K(romaddress);
       start_idx = 64;
-      end_idx = 64;
+      end_idx = 65;
     }
     for (i = start_idx; i < end_idx; i++) {
       if (BX_MEM_THIS rom_present[i]) {
