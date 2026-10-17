@@ -944,19 +944,19 @@ void bx_dbg_timebp_command(bool absolute, Bit64u time)
   if (timebp_timer >= 0) {
     if (timebp_queue_size == 0 || abs_time < timebp_queue[0]) {
       /* first in queue */
-      for (int i = timebp_queue_size; i >= 0; i--)
+      for (int i = timebp_queue_size - 1; i >= 0; i--)
         timebp_queue[i+1] = timebp_queue[i];
       timebp_queue[0] = abs_time;
       timebp_queue_size++;
       bx_pc_system.activate_timer_ticks(timebp_timer, diff, 0);
     } else {
-      /* not first, insert at suitable place */
-      for (int i = 1; i < timebp_queue_size; i++) {
+      /* not first, insert at suitable place (check queue[0] for duplicate too) */
+      for (int i = 0; i < timebp_queue_size; i++) {
         if (timebp_queue[i] == abs_time) {
           dbg_printf("Time breakpoint not inserted (duplicate)\n");
           return;
         } else if (abs_time < timebp_queue[i]) {
-          for (int j = timebp_queue_size; j >= i; j--)
+          for (int j = timebp_queue_size - 1; j >= i; j--)
             timebp_queue[j+1] = timebp_queue[j];
           timebp_queue[i] = abs_time;
           goto inserted;
