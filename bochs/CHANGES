@@ -61,9 +61,9 @@ Changes after Bochs 3.1 release:
   - Register list supports all register groups shown at once in 64-bit mode
   - Fixed buffer overflows (Find search string, ask dialog reply, font name, bx_enh_dbg.ini parsing)
   - bx_enh_dbg.ini is sanitized on load: invalid values are reported and ignored
-  - GUI debugger (win32): allow copy text from the output window
-    - output window is read only and keeps the selection visible
-    - ^a selects all output text, ^c copies the selection (^c without selection still breaks the simulation)
+  - Allow copy text from the output window (^c copies the selected text, ^c without selection still breaks the simulation)
+    - win32: output window is read only and keeps the selection visible, ^a selects all output text
+    - GTK: select the text with the mouse, "Select All" and "Copy" are also available in the right-click menu
 
 - Configure and compile
   - Bochs now require C++11 support for compilation, enforced via configure
