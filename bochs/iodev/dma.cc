@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -731,7 +731,7 @@ void bx_dma_c::raise_HLDA(void)
       else
         BX_PANIC(("no dmaWrite handler for channel %u.", channel));
 
-      DEV_MEM_WRITE_PHYSICAL_DMA(phy_addr, len, buffer);
+      DEV_MEM_WRITE_PHYSICAL_DMA(phy_addr, len * 2, buffer);
 
       BX_DBG_DMA_REPORT(phy_addr, len * 2, BX_WRITE, buffer[0] | (buffer[1] << 16)); // FIXME
     }
