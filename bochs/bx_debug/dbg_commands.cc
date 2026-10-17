@@ -4120,13 +4120,13 @@ unsigned bx_dbg_disasm_wrapper(bool is_32, bool is_64, bx_address cs_base, bx_ad
 
   if (disasm_style == BX_DISASM_INTEL || disasm_style == BX_DISASM_GAS)
     new_disasm_style = BxDisasmStyle(disasm_style);
-  else if (disasm_syntax_intel == BX_DISASM_INTEL)
-    new_disasm_style = BxDisasmStyle(BX_DISASM_INTEL);
+  else if (disasm_syntax_intel)
+    new_disasm_style = BX_DISASM_INTEL;
   else
-    new_disasm_style = BxDisasmStyle(BX_DISASM_GAS);
+    new_disasm_style = BX_DISASM_GAS;
 
   bxInstruction_c i;
-  disasm(instr, is_32, is_64, disbuf, &i, cs_base, ip, new_disasm_style ? BX_DISASM_INTEL : BX_DISASM_GAS);
+  disasm(instr, is_32, is_64, disbuf, &i, cs_base, ip, new_disasm_style);
   unsigned ilen = i.ilen();
 
   return ilen;
