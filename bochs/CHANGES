@@ -14,6 +14,21 @@ Changes after Bochs 3.1 release:
   - Invalidate SMC pages after debugger memory writes
   - Significantly speedup emulation when code breakpoints are defined in internal debugger, up to 2x-3x speedup observed with multiple breakpoints set
   - Allow up to 32 code breakpoints (as they are much less painful for emulation performance now)
+  - Expression evaluation follows C-like operator precedence
+  - Bugfixes in various internal debugger commands:
+    - Invalid input to x/xp and 'info device' commands reports an error instead of terminating Bochs
+    - Fixed 'x /gt' (examine 64-bit values)
+    - x/xp and 'info ivt' no longer print garbage when memory cannot be read
+    - Fixed wrong symbol names shown by symbol lookup, x/xp and bt commands
+    - Fixed 'bt' (backtrace) in 16-bit mode
+    - Fixed deref and the '$' operator in 16/32-bit mode
+    - Fixed 'loadmem' of files larger than 4K
+    - Fixed time breakpoints (sb/sba)
+    - Correctly handle instructions crossing a 4K page boundary in disassembly and step over (p/n) command
+    - 'info tss' now supports all TSS types
+    - 'info linux' detects kernel/user mode correctly for all kernel versions
+    - SMP: breakpoint conditions are evaluated on the CPU that hit the breakpoint, and several commands no longer access the wrong CPU
+    - SMP: on activation debugger switches to the CPU that hit a breakpoint, watchpoint or magic breakpoint
   - Activation of the internal debugger at runtime, when Bochs compiled with the internal debugger
     was started without -dbg option (currently with the win32 display library only). The gui debugger
     is activated if it is selected with 'debugger: gui=1' (requires the win32 config interface),
@@ -30,19 +45,20 @@ Changes after Bochs 3.1 release:
     the debugger is activated again by magic breakpoint or time breakpoint. With the gui debugger its
     window stays open and its Break button activates the debugger again.
     With display libraries other than win32 the debugger cannot be activated again after 'detach'.
-  - Enhanced (gui) debugger bugfixes:
-    - Editing memory in linear memory dump wrote the bytes to physical address equal to the linear address
-    - XMM registers view shows the correct upper half of each XMM register
-    - IDT view selects the gate size by CPU mode: 4-byte IVT in real mode, 8-byte gates in protected/V8086 mode,
-      16-byte gates in long mode (including compatibility mode)
-    - GDT view in long mode shows 16-byte LDT/TSS/call gate descriptors as one entry with 64-bit base and long mode type names
-    - DR0-DR3 are shown as 64-bit values in 64-bit mode
-    - IP is shown masked to 16 bits in 16-bit mode
-    - Stack view in 16-bit mode shows 16-bit entries and uses SP for 16-bit stack segment (SS.B=0)
-    - Memory dump search could select rows by comparing past the end of the 4K dump
-    - Register list supports all register groups shown at once in 64-bit mode
-    - Fixed buffer overflows (Find search string, ask dialog reply, font name, bx_enh_dbg.ini parsing)
-    - bx_enh_dbg.ini is sanitized on load: invalid values are reported and ignored
+
+- Enhanced (gui) debugger enhancements and bugfixes
+  - Editing memory in linear memory dump wrote the bytes to physical address equal to the linear address
+  - XMM registers view shows the correct upper half of each XMM register
+  - IDT view selects the gate size by CPU mode: 4-byte IVT in real mode, 8-byte gates in protected/V8086 mode,
+    16-byte gates in long mode (including compatibility mode)
+  - GDT view in long mode shows 16-byte LDT/TSS/call gate descriptors as one entry with 64-bit base and long mode type names
+  - DR0-DR3 are shown as 64-bit values in 64-bit mode
+  - IP is shown masked to 16 bits in 16-bit mode
+  - Stack view in 16-bit mode shows 16-bit entries and uses SP for 16-bit stack segment (SS.B=0)
+  - Memory dump search could select rows by comparing past the end of the 4K dump
+  - Register list supports all register groups shown at once in 64-bit mode
+  - Fixed buffer overflows (Find search string, ask dialog reply, font name, bx_enh_dbg.ini parsing)
+  - bx_enh_dbg.ini is sanitized on load: invalid values are reported and ignored
 
 - Configure and compile
   - Bochs now require C++11 support for compilation, enforced via configure

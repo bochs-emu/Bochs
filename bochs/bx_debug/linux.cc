@@ -13,19 +13,10 @@
 
 #define LOG_THIS genlog->
 
-// Linux segment selectors from <asm/segment.h>, for reference:
-//
-//   kernel                     KERNEL_CS  KERNEL_DS  USER_CS  USER_DS
-//   i386   2.0 - 2.4           0x10       0x18       0x23     0x2B
-//   i386   2.6 and later       0x60       0x68       0x73     0x7B
-//   x86-64 (all versions)      0x10       0x18       0x33     0x2B
-//                                                    0x23 (32-bit compat)
-//
-// The selectors differ between kernel versions, so the processor mode is
-// decided by the privilege level (CPL is the RPL of CS in protected mode):
-// the kernel runs at CPL 0 and user processes at CPL 3.
-#define KERNEL_CPL 0
-#define USER_CPL   3
+// for Linux segment numbers
+// these numbers are from <asm/segment.h>
+#define KERNEL_CS 0x10
+#define USER_CS 0x18
 
 void bx_dbg_info_linux_command(void)
 {
@@ -37,15 +28,15 @@ void bx_dbg_info_linux_command(void)
   int mode;
   if (cpu_mode >= BX_MODE_IA32_PROTECTED) {
     // protected mode
-    if ((cs.sel & 3) == KERNEL_CPL) {
+    if (cs.sel == KERNEL_CS) {
       mode = 'k';
       fprintf (stderr, "Processor mode: kernel\n");
-    } else if ((cs.sel & 3) == USER_CPL) {
+    } else if (cs.sel == USER_CS) {
       fprintf (stderr, "Processor mode: user\n");
       mode = 'u';
     } else {
       mode = '?';
-      fprintf (stderr, "Processor mode: ??? protected=1 but CPL is not 0 or 3\n");
+      fprintf (stderr, "Processor mode: ??? protected=1 but unrecognized CS\n");
     }
   } else {
     mode = 'r';
