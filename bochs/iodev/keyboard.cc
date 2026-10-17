@@ -1188,7 +1188,7 @@ void bx_keyb_c::kbd_ctrl_to_mouse(Bit8u value)
     switch (value) {
       case 0xe6: // Set Mouse Scaling to 1:1
         controller_enQ(0xFA, 1); // ACK
-        BX_KEY_THIS s.mouse.scaling = 2;
+        BX_KEY_THIS s.mouse.scaling = 1;
         BX_DEBUG(("mouse: scaling set to 1:1"));
         break;
 
