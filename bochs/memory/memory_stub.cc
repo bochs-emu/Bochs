@@ -122,10 +122,7 @@ void BX_MEMORY_STUB_C::init_memory(Bit64u guest, Bit64u host, Bit32u block_size)
 
   if (BX_MEM_THIS actual_vector != NULL) {
     BX_INFO(("freeing existing memory vector"));
-    delete [] BX_MEM_THIS actual_vector;
-    BX_MEM_THIS actual_vector = NULL;
-    BX_MEM_THIS vector = NULL;
-    BX_MEM_THIS blocks = NULL;
+    BX_MEMORY_STUB_C::cleanup_memory(); // also frees blocks[] array
   }
   BX_MEM_THIS vector = alloc_vector_aligned(host + BIOSROMSZ + EXROMSIZE + 4096, BX_MEM_VECTOR_ALIGN);
   BX_INFO(("allocated memory at %p. after alignment, vector=%p, block_size = %dK",

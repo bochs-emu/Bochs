@@ -58,6 +58,11 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host, Bit32u block_size)
 {
   unsigned idx, i;
 
+  if (BX_MEM_THIS memory_handlers != NULL) {
+    BX_INFO(("freeing existing memory handlers"));
+    cleanup_memory(); // also frees memory vector and saves modified flash data
+  }
+
   BX_MEMORY_STUB_C::init_memory(guest, host, block_size);
 
   BX_MEM_THIS smram_available = false;
