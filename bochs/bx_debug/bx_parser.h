@@ -321,7 +321,7 @@ extern int bxdebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 14 "bx_parser.y"
+#line 15 "bx_parser.y"
 
   char    *sval;
   Bit64u   uval;

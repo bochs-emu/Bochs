@@ -56,6 +56,8 @@ extern "C" {
   extern char *bxtext;  // Using the pointer option rather than array
   extern int bxwrap(void);
   extern void bx_add_lex_input(char *buf);
+  extern void bx_push_lex_input(char *buf);
+  extern void bx_pop_lex_input(void);
 
   // Yacc defs
   extern int bxparse(void);
@@ -179,7 +181,7 @@ void bx_dbg_info_device(const char *, const char *);
 void bx_dbg_print_help(void);
 void bx_dbg_calc_command(Bit64u value);
 void bx_dbg_dump_table(void);
-bool bx_dbg_eval_condition(char *condition);
+bool bx_dbg_eval_condition(char *condition, unsigned cpu);
 
 // callbacks from CPU
 void bx_dbg_exception(unsigned cpu, Bit8u vector, Bit16u error_code);

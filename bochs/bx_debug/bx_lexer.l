@@ -23,6 +23,11 @@ int bx_yyinput(char *buf, int max_size);
 static char    *lex_input_ptr = NULL;
 static unsigned lex_input_size = 0;
 
+// saved outer input while a nested string is being parsed
+static char    *saved_lex_input_ptr = NULL;
+static unsigned saved_lex_input_size = 0;
+static int      saved_lex_start = 0;
+
 #if BX_SUPPORT_X86_64
   #define LONG_MODE_8BL_REG(reg) \
      { bxlval.uval = reg; return(BX_TOKEN_8BL_REG); }
@@ -315,6 +320,33 @@ bx_add_lex_input(char *buf)
   // requests from yyinput
 
   bx_flush_buffer( YY_CURRENT_BUFFER );
+}
+
+// Parse a nested string (breakpoint condition evaluated from inside of
+// the CPU loop) in a new lexer buffer, keeping the not yet consumed input
+// of the outer command line. Only one level of nesting is supported.
+  void
+bx_push_lex_input(char *buf)
+{
+  saved_lex_input_ptr  = lex_input_ptr;
+  saved_lex_input_size = lex_input_size;
+  saved_lex_start = YY_START;
+
+  lex_input_ptr  = buf;
+  lex_input_size = strlen(buf);
+
+  bxpush_buffer_state(bx_create_buffer(NULL, YY_BUF_SIZE));
+  BEGIN(INITIAL);
+}
+
+  void
+bx_pop_lex_input(void)
+{
+  bxpop_buffer_state();
+  BEGIN(saved_lex_start);
+
+  lex_input_ptr  = saved_lex_input_ptr;
+  lex_input_size = saved_lex_input_size;
 }
 
 #endif /* if BX_DEBUGGER */

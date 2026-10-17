@@ -9,6 +9,7 @@
 
 #if BX_DEBUGGER
 Bit64u eval_value;
+bool eval_value_valid; // eval_value was set by the last parsed line
 %}
 
 %union {
@@ -229,7 +230,7 @@ command:
     | remlyt_command
     | lyt_command
     | if_command
-    | expression { eval_value = $1; }
+    | expression { eval_value = $1; eval_value_valid = true; }
     |
     | '\n'
       {
@@ -1496,6 +1497,7 @@ calc_command:
    BX_TOKEN_CALC expression '\n'
    {
      eval_value = $2;
+     eval_value_valid = true;
      bx_dbg_calc_command($2);
      free($1);
    }
@@ -1530,6 +1532,7 @@ if_command:
    BX_TOKEN_IF expression '\n'
    {
      eval_value = $2 != 0;
+     eval_value_valid = true;
      bx_dbg_calc_command($2);
      free($1);
    }

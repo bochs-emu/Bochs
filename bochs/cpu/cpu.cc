@@ -959,7 +959,7 @@ bool BX_CPU_C::dbg_check_code_bpoints(void)
          (bx_guard.iaddr.vir[n].cs  == cs) &&
          (bx_guard.iaddr.vir[n].eip == debug_eip))
       {
-        if (! bx_guard.iaddr.vir[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.vir[n].condition)) {
+        if (! bx_guard.iaddr.vir[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.vir[n].condition, BX_CPU_ID)) {
           dbg_get_guard_state(&BX_CPU_THIS_PTR guard_found.guard_state);
           BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_VIR;
           BX_CPU_THIS_PTR guard_found.iaddr_index = n;
@@ -975,7 +975,7 @@ bool BX_CPU_C::dbg_check_code_bpoints(void)
       if (bx_guard.iaddr.lin[n].enabled &&
          (bx_guard.iaddr.lin[n].addr == laddr))
       {
-        if (! bx_guard.iaddr.lin[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.lin[n].condition)) {
+        if (! bx_guard.iaddr.lin[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.lin[n].condition, BX_CPU_ID)) {
           dbg_get_guard_state(&BX_CPU_THIS_PTR guard_found.guard_state);
           BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_LIN;
           BX_CPU_THIS_PTR guard_found.iaddr_index = n;
@@ -998,7 +998,7 @@ bool BX_CPU_C::dbg_check_code_bpoints(void)
       for (unsigned n=0; n<bx_guard.iaddr.num_physical; n++) {
         if (bx_guard.iaddr.phy[n].enabled && (bx_guard.iaddr.phy[n].addr == phy))
         {
-          if (! bx_guard.iaddr.phy[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.phy[n].condition)) {
+          if (! bx_guard.iaddr.phy[n].condition || bx_dbg_eval_condition(bx_guard.iaddr.phy[n].condition, BX_CPU_ID)) {
             dbg_get_guard_state(&BX_CPU_THIS_PTR guard_found.guard_state);
             BX_CPU_THIS_PTR guard_found.guard_found = BX_DBG_GUARD_IADDR_PHY;
             BX_CPU_THIS_PTR guard_found.iaddr_index = n;

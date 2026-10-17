@@ -3544,10 +3544,31 @@ void bx_dbg_calc_command(Bit64u value)
   dbg_printf("0x" FMT_LL "x " FMT_LL "d\n", eval_value, eval_value);
 }
 
-bool bx_dbg_eval_condition(char *condition)
+// Evaluate breakpoint condition in the context of the CPU which hit the
+// breakpoint. The condition is parsed while the CPU loop runs from inside of
+// the outer command (continue, step, ...), so the lexer input and the parser
+// lookahead of the outer command line are preserved. A condition which fails
+// to parse or does not produce a value is treated as true (stop).
+bool bx_dbg_eval_condition(char *condition, unsigned cpu)
 {
-  extern Bit64u eval_value;
-  bx_dbg_interpret_line(condition);
+  extern bool eval_value_valid;
+  extern int bxchar;
+  int saved_bxchar = bxchar;
+  unsigned saved_dbg_cpu = dbg_cpu;
+
+  dbg_cpu = cpu;
+  eval_value_valid = false;
+  bx_push_lex_input(condition);
+  int ret = bxparse();
+  bx_pop_lex_input();
+  bxchar = saved_bxchar;
+  dbg_cpu = saved_dbg_cpu;
+
+  if (ret != 0 || !eval_value_valid) {
+    dbg_printf("CPU%u: cannot evaluate breakpoint condition, stopping: %s", cpu, condition);
+    return true;
+  }
+
   return eval_value != 0;
 }
 
