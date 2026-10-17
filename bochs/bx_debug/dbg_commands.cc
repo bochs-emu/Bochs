@@ -540,7 +540,7 @@ void bx_dbg_print_amx_state(void)
   bx_dbg_print_amx_state(dbg_cpu);
 }
 
-void bx_dbg_print_amx_tile_command(unsigned cpu, int tile)
+void bx_dbg_print_amx_tile_command(unsigned cpu, unsigned tile)
 {
 #if BX_SUPPORT_AMX
   if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_AMX)) {
@@ -575,7 +575,7 @@ void bx_dbg_print_amx_tile_command(unsigned cpu, int tile)
   }
 }
 
-void bx_dbg_print_amx_tile_command(int tile)
+void bx_dbg_print_amx_tile_command(unsigned tile)
 {
   bx_dbg_print_amx_tile_command(dbg_cpu, tile);
 }
@@ -1659,7 +1659,7 @@ void bx_dbg_print_watchpoints(void)
       dbg_printf("wr 0x" FMT_PHY_ADDRX " len=%d\t\t(%04x)\n",
           write_watchpoint[i].addr, write_watchpoint[i].len, (int)buf[0] | ((int)buf[1] << 8));
     else
-      dbg_printf("rd 0x" FMT_PHY_ADDRX " len=%d\t\t(read error)\n",
+      dbg_printf("wr 0x" FMT_PHY_ADDRX " len=%d\t\t(memory access error)\n",
           write_watchpoint[i].addr, write_watchpoint[i].len);
   }
 }
