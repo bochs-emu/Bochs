@@ -1357,22 +1357,24 @@ gboolean MemMouseDown_cb(GtkWidget *widget, GdkEventButton *event, gpointer data
     return FALSE;
 }
 
+// show the newCPU button as selected
+void SetCPUButton(unsigned oldCPU, unsigned newCPU)
+{
+    // change text on oldCPU button to lowercase and BOLD with markup
+    sprintf (tmpcb, "<b>cpu%u</b>", oldCPU);
+    gtk_label_set_markup (GTK_LABEL(CpuB_label[oldCPU]), tmpcb);
+    // change text on newCPU button to uppercase and BOLD with markup
+    sprintf (tmpcb, "<b>CPU%u</b>", newCPU);
+    gtk_label_set_markup (GTK_LABEL(CpuB_label[newCPU]), tmpcb);
+}
+
 // Change the CPU display
 void CPUb_cb(GtkWidget *widget, gpointer CPUnum)    // "CPUnum" is the value supplied at handler creation
 {
     unsigned int newCPU = GPOINTER_TO_INT(CPUnum);
     if (CurrentCPU != newCPU)
     {
-        // change text on CurrentCPU button to lowercase and BOLD with markup
-        strcpy (tmpcb, "<b>cpu0</b>");
-        tmpcb[6] = CurrentCPU + '0';
-        gtk_label_set_markup (GTK_LABEL(CpuB_label[CurrentCPU]), tmpcb);
-        // change text on newCPU button to uppercase and BOLD with markup
-        strcpy (tmpcb, "<b>CPU0</b>");
-        tmpcb[6] = newCPU + '0';
-        gtk_label_set_markup (GTK_LABEL(CpuB_label[newCPU]), tmpcb);
-        CurrentCPU = newCPU;
-        BottomAsmLA = ~0;       // force an ASM autoload, to repaint
+        SelectCPU(newCPU);
         if (AtBreak != FALSE)   // if at a break, pretend it just happened
             OnBreak();          // refresh the ASM and Register windows
     }

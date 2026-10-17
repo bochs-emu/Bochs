@@ -1484,16 +1484,7 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
                 unsigned int newCPU = LW - MULTICPU_BTN_BASE;
                 if (CurrentCPU != newCPU)
                 {
-                    // change text on CurrentCPU button to lowercase
-                    strcpy (tmpcb, "cpu0");
-                    tmpcb[3] = CurrentCPU + '0';
-                    SendMessage (hCPUt[CurrentCPU],WM_SETTEXT,(WPARAM) 0 ,(LPARAM) tmpcb);
-                    // change text on newCPU button to UPPERCASE
-                    strcpy (tmpcb, "CPU0");
-                    tmpcb[3] = newCPU + '0';
-                    SendMessage (hCPUt[newCPU],WM_SETTEXT,(WPARAM) 0 ,(LPARAM) tmpcb);
-                    CurrentCPU = newCPU;
-                    BottomAsmLA = ~0;       // force an ASM autoload, to repaint
+                    SelectCPU(newCPU);
                     if (AtBreak != FALSE)   // if at a break, pretend it just happened
                         OnBreak();          // refresh the ASM and Register windows
                 }
@@ -1770,6 +1761,17 @@ LRESULT CALLBACK B_WP(HWND hh,UINT mm,WPARAM ww,LPARAM ll)
         }
     }
     return DefWindowProc(hh,mm,ww,ll);
+}
+
+// show the newCPU button as selected
+void SetCPUButton(unsigned oldCPU, unsigned newCPU)
+{
+    // change text on oldCPU button to lowercase
+    sprintf (tmpcb, "cpu%u", oldCPU);
+    SendMessage (hCPUt[oldCPU],WM_SETTEXT,(WPARAM) 0 ,(LPARAM) tmpcb);
+    // change text on newCPU button to UPPERCASE
+    sprintf (tmpcb, "CPU%u", newCPU);
+    SendMessage (hCPUt[newCPU],WM_SETTEXT,(WPARAM) 0 ,(LPARAM) tmpcb);
 }
 
 void HitBreak()

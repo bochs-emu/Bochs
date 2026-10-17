@@ -2268,10 +2268,26 @@ void RefreshDataWin()
     }
 }
 
+// change the CPU shown in the gui debugger, the commands typed by the user
+// are executed on the same CPU
+void SelectCPU(unsigned newCPU)
+{
+    if (newCPU >= (unsigned) BX_SMP_PROCESSORS || CurrentCPU == newCPU)
+        return;
+    if (BX_SMP_PROCESSORS > 1)      // CPU buttons exist only for SMP simulation
+        SetCPUButton(CurrentCPU, newCPU);
+    CurrentCPU = newCPU;
+    dbg_cpu = newCPU;
+    BottomAsmLA = ~0;       // force an ASM autoload, to repaint
+}
+
 // performs tasks whenever the simulation "breaks"
 void OnBreak()
 {
     int i = EFER_Rnum + 1;
+    // show the CPU selected by the debugger (the CPU which hit a breakpoint
+    // or requested the debugger activation, or changed by "cpu" command)
+    SelectCPU(dbg_cpu);
     // check if Ptime has changed
     TakeInputFocus();
 
