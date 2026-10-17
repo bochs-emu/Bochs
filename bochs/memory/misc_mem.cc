@@ -71,6 +71,7 @@ void BX_MEM_C::init_memory(Bit64u guest, Bit64u host, Bit32u block_size)
   BX_MEM_THIS pci_enabled = SIM->get_param_bool(BXPN_PCI_ENABLED)->get();
   BX_MEM_THIS bios_write_enabled = false;
   BX_MEM_THIS bios_rom_addr = 0xffff0000;
+  BX_MEM_THIS bios_rom_access = 0;
   BX_MEM_THIS flash_type = 0;
   BX_MEM_THIS flash_status = 0x80;
   BX_MEM_THIS flash_wsm_state = FLASH_READ_ARRAY;
@@ -908,6 +909,13 @@ BX_MEM_C::registerMemoryHandlers(void *param, memory_handler_t read_handler,
     return false;
   if (!read_handler) // allow NULL write and fetch handler
     return false;
+#if BX_PHY_ADDRESS_LONG
+  // page_idx << 20 calculations below are done in 32-bit
+  if (end_addr > BX_CONST64(0xffffffff)) {
+    BX_PANIC(("registerMemoryHandlers: memory handlers above 4GB are not supported (0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX ")", begin_addr, end_addr));
+    return false;
+  }
+#endif
   bool ro_handler = (!write_handler && !da_handler);
   BX_INFO(("Register memory access handlers: 0x" FMT_PHY_ADDRX " - 0x" FMT_PHY_ADDRX, begin_addr, end_addr));
   for (Bit32u page_idx = (Bit32u)(begin_addr >> 20); page_idx <= (Bit32u)(end_addr >> 20); page_idx++) {
