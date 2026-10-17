@@ -1035,41 +1035,41 @@ static const yytype_uint8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   162,   162,   163,   167,   168,   169,   170,   171,   172,
-     173,   174,   175,   176,   177,   178,   179,   180,   181,   182,
-     183,   184,   185,   186,   187,   188,   189,   190,   191,   192,
-     193,   194,   195,   196,   197,   198,   199,   200,   201,   202,
-     203,   204,   205,   206,   207,   208,   209,   210,   211,   212,
-     213,   214,   215,   216,   217,   218,   219,   220,   221,   222,
-     223,   224,   225,   226,   227,   228,   229,   230,   231,   237,
-     238,   243,   244,   249,   250,   251,   252,   253,   254,   259,
-     264,   272,   280,   288,   293,   298,   303,   308,   313,   321,
-     329,   337,   345,   353,   361,   369,   374,   382,   387,   395,
-     400,   405,   410,   415,   420,   425,   430,   435,   440,   445,
-     453,   458,   463,   468,   476,   481,   489,   494,   502,   510,
-     518,   523,   531,   536,   541,   546,   554,   562,   570,   577,
-     582,   587,   591,   595,   599,   603,   607,   611,   615,   622,
-     627,   632,   637,   642,   647,   652,   657,   662,   667,   672,
-     677,   682,   690,   698,   703,   711,   716,   721,   726,   731,
-     736,   741,   746,   751,   756,   761,   766,   771,   776,   781,
-     786,   791,   799,   800,   803,   811,   819,   827,   835,   843,
-     851,   859,   867,   875,   883,   891,   899,   906,   914,   922,
-     930,   935,   940,   945,   953,   961,   969,   977,   985,   993,
-    1001,  1006,  1011,  1016,  1021,  1029,  1034,  1039,  1044,  1049,
-    1054,  1059,  1064,  1072,  1078,  1083,  1091,  1099,  1107,  1112,
-    1118,  1124,  1131,  1136,  1141,  1147,  1153,  1159,  1164,  1169,
-    1174,  1179,  1184,  1189,  1194,  1200,  1206,  1212,  1220,  1225,
-    1230,  1235,  1240,  1245,  1250,  1255,  1260,  1265,  1270,  1275,
-    1280,  1285,  1290,  1295,  1300,  1305,  1310,  1315,  1320,  1325,
-    1330,  1335,  1345,  1356,  1362,  1375,  1380,  1391,  1396,  1412,
-    1428,  1440,  1452,  1457,  1463,  1468,  1473,  1478,  1486,  1495,
-    1504,  1512,  1520,  1530,  1531,  1532,  1533,  1534,  1535,  1536,
-    1537,  1538,  1539,  1540,  1541,  1542,  1543,  1544,  1545,  1546,
-    1547,  1548,  1549,  1550,  1551,  1552,  1553,  1554,  1555,  1561,
-    1562,  1563,  1564,  1565,  1566,  1567,  1568,  1569,  1570,  1571,
+       0,   165,   165,   166,   170,   171,   172,   173,   174,   175,
+     176,   177,   178,   179,   180,   181,   182,   183,   184,   185,
+     186,   187,   188,   189,   190,   191,   192,   193,   194,   195,
+     196,   197,   198,   199,   200,   201,   202,   203,   204,   205,
+     206,   207,   208,   209,   210,   211,   212,   213,   214,   215,
+     216,   217,   218,   219,   220,   221,   222,   223,   224,   225,
+     226,   227,   228,   229,   230,   231,   232,   233,   234,   240,
+     241,   246,   247,   252,   253,   254,   255,   256,   257,   262,
+     267,   275,   283,   291,   296,   301,   306,   311,   316,   324,
+     332,   340,   348,   356,   364,   372,   377,   385,   390,   398,
+     403,   408,   413,   418,   423,   428,   433,   438,   443,   448,
+     456,   461,   466,   471,   479,   484,   492,   497,   505,   513,
+     521,   526,   534,   539,   544,   549,   557,   565,   573,   580,
+     585,   590,   595,   600,   605,   610,   615,   620,   625,   633,
+     638,   643,   648,   653,   658,   663,   668,   673,   678,   683,
+     688,   693,   701,   709,   714,   722,   727,   732,   737,   742,
+     747,   752,   757,   762,   767,   772,   777,   782,   787,   792,
+     797,   802,   810,   811,   814,   822,   830,   838,   846,   854,
+     862,   870,   878,   886,   894,   902,   910,   917,   925,   933,
+     941,   946,   951,   956,   964,   972,   980,   988,   996,  1004,
+    1012,  1017,  1022,  1027,  1032,  1040,  1045,  1050,  1055,  1060,
+    1065,  1070,  1075,  1083,  1089,  1094,  1102,  1110,  1118,  1123,
+    1129,  1135,  1142,  1147,  1152,  1158,  1164,  1170,  1175,  1180,
+    1185,  1190,  1195,  1200,  1205,  1211,  1217,  1223,  1231,  1236,
+    1241,  1246,  1251,  1256,  1261,  1266,  1271,  1276,  1281,  1286,
+    1291,  1296,  1301,  1306,  1311,  1316,  1321,  1326,  1331,  1336,
+    1341,  1346,  1355,  1366,  1372,  1385,  1390,  1401,  1406,  1422,
+    1438,  1450,  1462,  1467,  1473,  1478,  1483,  1488,  1496,  1505,
+    1514,  1522,  1530,  1540,  1541,  1542,  1543,  1544,  1545,  1546,
+    1547,  1548,  1549,  1550,  1551,  1552,  1553,  1554,  1555,  1556,
+    1557,  1558,  1559,  1560,  1561,  1562,  1563,  1564,  1565,  1571,
     1572,  1573,  1574,  1575,  1576,  1577,  1578,  1579,  1580,  1581,
     1582,  1583,  1584,  1585,  1586,  1587,  1588,  1589,  1590,  1591,
-    1592,  1593,  1594,  1595
+    1592,  1593,  1594,  1595,  1596,  1597,  1598,  1599,  1600,  1601,
+    1602,  1603,  1604,  1605
 };
 #endif
 
@@ -2222,7 +2222,599 @@ yydestruct (const char *yymsg,
   YY_SYMBOL_PRINT (yymsg, yykind, yyvaluep, yylocationp);
 
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
-  YY_USE (yykind);
+  switch (yykind)
+    {
+    case YYSYMBOL_BX_TOKEN_CONTINUE: /* BX_TOKEN_CONTINUE  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2231 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_IF: /* BX_TOKEN_IF  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2237 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_STEPN: /* BX_TOKEN_STEPN  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2243 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_STEP_OVER: /* BX_TOKEN_STEP_OVER  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2249 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_SET: /* BX_TOKEN_SET  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2255 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_DEBUGGER: /* BX_TOKEN_DEBUGGER  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2261 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_LIST_BREAK: /* BX_TOKEN_LIST_BREAK  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2267 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_VBREAKPOINT: /* BX_TOKEN_VBREAKPOINT  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2273 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_LBREAKPOINT: /* BX_TOKEN_LBREAKPOINT  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2279 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_PBREAKPOINT: /* BX_TOKEN_PBREAKPOINT  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2285 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_DEL_BREAKPOINT: /* BX_TOKEN_DEL_BREAKPOINT  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2291 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_ENABLE_BREAKPOINT: /* BX_TOKEN_ENABLE_BREAKPOINT  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2297 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_DISABLE_BREAKPOINT: /* BX_TOKEN_DISABLE_BREAKPOINT  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2303 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_INFO: /* BX_TOKEN_INFO  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2309 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_QUIT: /* BX_TOKEN_QUIT  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2315 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_DETACH: /* BX_TOKEN_DETACH  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2321 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_R: /* BX_TOKEN_R  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2327 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_REGS: /* BX_TOKEN_REGS  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2333 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_CPU: /* BX_TOKEN_CPU  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2339 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_FPU: /* BX_TOKEN_FPU  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2345 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_MMX: /* BX_TOKEN_MMX  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2351 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_XMM: /* BX_TOKEN_XMM  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2357 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_YMM: /* BX_TOKEN_YMM  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2363 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_ZMM: /* BX_TOKEN_ZMM  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2369 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_AVX: /* BX_TOKEN_AVX  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2375 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_AMX: /* BX_TOKEN_AMX  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2381 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_TILE: /* BX_TOKEN_TILE  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2387 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_IDT: /* BX_TOKEN_IDT  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2393 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_IVT: /* BX_TOKEN_IVT  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2399 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_GDT: /* BX_TOKEN_GDT  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2405 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_LDT: /* BX_TOKEN_LDT  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2411 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_TSS: /* BX_TOKEN_TSS  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2417 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_TAB: /* BX_TOKEN_TAB  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2423 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_ALL: /* BX_TOKEN_ALL  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2429 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_LINUX: /* BX_TOKEN_LINUX  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2435 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_DEBUG_REGS: /* BX_TOKEN_DEBUG_REGS  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2441 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_CONTROL_REGS: /* BX_TOKEN_CONTROL_REGS  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2447 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_SEGMENT_REGS: /* BX_TOKEN_SEGMENT_REGS  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2453 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_EXAMINE: /* BX_TOKEN_EXAMINE  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2459 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_XFORMAT: /* BX_TOKEN_XFORMAT  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2465 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_DISFORMAT: /* BX_TOKEN_DISFORMAT  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2471 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_RESTORE: /* BX_TOKEN_RESTORE  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2477 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_WRITEMEM: /* BX_TOKEN_WRITEMEM  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2483 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_LOADMEM: /* BX_TOKEN_LOADMEM  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2489 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_SETPMEM: /* BX_TOKEN_SETPMEM  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2495 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_DEREF: /* BX_TOKEN_DEREF  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2501 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_SYMBOLNAME: /* BX_TOKEN_SYMBOLNAME  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2507 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_QUERY: /* BX_TOKEN_QUERY  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2513 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_PENDING: /* BX_TOKEN_PENDING  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2519 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_TAKE: /* BX_TOKEN_TAKE  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2525 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_DMA: /* BX_TOKEN_DMA  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2531 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_IRQ: /* BX_TOKEN_IRQ  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2537 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_SMI: /* BX_TOKEN_SMI  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2543 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_NMI: /* BX_TOKEN_NMI  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2549 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_TLB: /* BX_TOKEN_TLB  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2555 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_DISASM: /* BX_TOKEN_DISASM  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2561 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_INSTRUMENT: /* BX_TOKEN_INSTRUMENT  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2567 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_STRING: /* BX_TOKEN_STRING  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2573 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_STOP: /* BX_TOKEN_STOP  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2579 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_DOIT: /* BX_TOKEN_DOIT  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2585 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_CRC: /* BX_TOKEN_CRC  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2591 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_TRACE: /* BX_TOKEN_TRACE  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2597 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_TRACEREG: /* BX_TOKEN_TRACEREG  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2603 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_TRACEMEM: /* BX_TOKEN_TRACEMEM  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2609 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_SWITCH_MODE: /* BX_TOKEN_SWITCH_MODE  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2615 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_SIZE: /* BX_TOKEN_SIZE  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2621 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_PTIME: /* BX_TOKEN_PTIME  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2627 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_TIMEBP_ABSOLUTE: /* BX_TOKEN_TIMEBP_ABSOLUTE  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2633 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_TIMEBP: /* BX_TOKEN_TIMEBP  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2639 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_MODEBP: /* BX_TOKEN_MODEBP  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2645 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_VMEXITBP: /* BX_TOKEN_VMEXITBP  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2651 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_PRINT_STACK: /* BX_TOKEN_PRINT_STACK  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2657 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_BT: /* BX_TOKEN_BT  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2663 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_WATCH: /* BX_TOKEN_WATCH  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2669 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_UNWATCH: /* BX_TOKEN_UNWATCH  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2675 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_READ: /* BX_TOKEN_READ  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2681 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_WRITE: /* BX_TOKEN_WRITE  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2687 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_RUN_TO_LADDR: /* BX_TOKEN_RUN_TO_LADDR  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2693 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_SHOW: /* BX_TOKEN_SHOW  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2699 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_LOAD_SYMBOLS: /* BX_TOKEN_LOAD_SYMBOLS  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2705 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_SET_MAGIC_BREAK_POINTS: /* BX_TOKEN_SET_MAGIC_BREAK_POINTS  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2711 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_CLEAR_MAGIC_BREAK_POINTS: /* BX_TOKEN_CLEAR_MAGIC_BREAK_POINTS  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2717 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_SYMBOLS: /* BX_TOKEN_SYMBOLS  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2723 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_LIST_SYMBOLS: /* BX_TOKEN_LIST_SYMBOLS  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2729 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_GLOBAL: /* BX_TOKEN_GLOBAL  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2735 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_WHERE: /* BX_TOKEN_WHERE  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2741 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_PRINT_STRING: /* BX_TOKEN_PRINT_STRING  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2747 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_PAGE: /* BX_TOKEN_PAGE  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2753 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_HELP: /* BX_TOKEN_HELP  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2759 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_XML: /* BX_TOKEN_XML  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2765 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_CALC: /* BX_TOKEN_CALC  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2771 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_ADDLYT: /* BX_TOKEN_ADDLYT  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2777 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_REMLYT: /* BX_TOKEN_REMLYT  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2783 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_LYT: /* BX_TOKEN_LYT  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2789 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_SOURCE: /* BX_TOKEN_SOURCE  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2795 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_DEVICE: /* BX_TOKEN_DEVICE  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2801 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_GENERIC: /* BX_TOKEN_GENERIC  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2807 "y.tab.c"
+        break;
+
+    case YYSYMBOL_BX_TOKEN_REGISTERS: /* BX_TOKEN_REGISTERS  */
+#line 21 "bx_parser.y"
+            { free(((*yyvaluep).sval)); }
+#line 2813 "y.tab.c"
+        break;
+
+      default:
+        break;
+    }
   YY_IGNORE_MAYBE_UNINITIALIZED_END
 }
 
@@ -2485,1450 +3077,1458 @@ yyreduce:
   switch (yyn)
     {
   case 66: /* command: expression  */
-#line 229 "bx_parser.y"
+#line 232 "bx_parser.y"
                  { eval_value = (yyvsp[0].uval); }
-#line 2491 "y.tab.c"
+#line 3083 "y.tab.c"
     break;
 
   case 68: /* command: '\n'  */
-#line 232 "bx_parser.y"
+#line 235 "bx_parser.y"
       {
       }
-#line 2498 "y.tab.c"
+#line 3090 "y.tab.c"
     break;
 
   case 70: /* BX_TOKEN_TOGGLE_ON_OFF: BX_TOKEN_OFF  */
-#line 239 "bx_parser.y"
+#line 242 "bx_parser.y"
     { (yyval.bval)=(yyvsp[0].bval); }
-#line 2504 "y.tab.c"
+#line 3096 "y.tab.c"
     break;
 
   case 72: /* BX_TOKEN_REGISTERS: BX_TOKEN_REGS  */
-#line 245 "bx_parser.y"
+#line 248 "bx_parser.y"
     { (yyval.sval)=(yyvsp[0].sval); }
-#line 2510 "y.tab.c"
+#line 3102 "y.tab.c"
     break;
 
   case 78: /* BX_TOKEN_SEGREG: BX_TOKEN_GS  */
-#line 255 "bx_parser.y"
+#line 258 "bx_parser.y"
     { (yyval.uval)=(yyvsp[0].uval); }
-#line 2516 "y.tab.c"
+#line 3108 "y.tab.c"
     break;
 
   case 79: /* timebp_command: BX_TOKEN_TIMEBP expression '\n'  */
-#line 260 "bx_parser.y"
+#line 263 "bx_parser.y"
       {
           bx_dbg_timebp_command(0, (yyvsp[-1].uval));
           free((yyvsp[-2].sval));
       }
-#line 2525 "y.tab.c"
+#line 3117 "y.tab.c"
     break;
 
   case 80: /* timebp_command: BX_TOKEN_TIMEBP_ABSOLUTE expression '\n'  */
-#line 265 "bx_parser.y"
+#line 268 "bx_parser.y"
       {
           bx_dbg_timebp_command(1, (yyvsp[-1].uval));
           free((yyvsp[-2].sval));
       }
-#line 2534 "y.tab.c"
+#line 3126 "y.tab.c"
     break;
 
   case 81: /* modebp_command: BX_TOKEN_MODEBP '\n'  */
-#line 273 "bx_parser.y"
+#line 276 "bx_parser.y"
       {
           bx_dbg_modebp_command();
           free((yyvsp[-1].sval));
       }
-#line 2543 "y.tab.c"
+#line 3135 "y.tab.c"
     break;
 
   case 82: /* vmexitbp_command: BX_TOKEN_VMEXITBP '\n'  */
-#line 281 "bx_parser.y"
+#line 284 "bx_parser.y"
       {
           bx_dbg_vmexitbp_command();
           free((yyvsp[-1].sval));
       }
-#line 2552 "y.tab.c"
+#line 3144 "y.tab.c"
     break;
 
   case 83: /* show_command: BX_TOKEN_SHOW BX_TOKEN_GENERIC '\n'  */
-#line 289 "bx_parser.y"
+#line 292 "bx_parser.y"
       {
           bx_dbg_show_command((yyvsp[-1].sval));
           free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
       }
-#line 2561 "y.tab.c"
+#line 3153 "y.tab.c"
     break;
 
   case 84: /* show_command: BX_TOKEN_SHOW BX_TOKEN_ALL '\n'  */
-#line 294 "bx_parser.y"
+#line 297 "bx_parser.y"
       {
           bx_dbg_show_command("all");
-          free((yyvsp[-2].sval));
+          free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
       }
-#line 2570 "y.tab.c"
+#line 3162 "y.tab.c"
     break;
 
   case 85: /* show_command: BX_TOKEN_SHOW BX_TOKEN_OFF '\n'  */
-#line 299 "bx_parser.y"
+#line 302 "bx_parser.y"
       {
           bx_dbg_show_command("off");
           free((yyvsp[-2].sval));
       }
-#line 2579 "y.tab.c"
+#line 3171 "y.tab.c"
     break;
 
   case 86: /* show_command: BX_TOKEN_SHOW BX_TOKEN_STRING '\n'  */
-#line 304 "bx_parser.y"
+#line 307 "bx_parser.y"
       {
           bx_dbg_show_param_command((yyvsp[-1].sval), 0);
           free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
       }
-#line 2588 "y.tab.c"
+#line 3180 "y.tab.c"
     break;
 
   case 87: /* show_command: BX_TOKEN_SHOW BX_TOKEN_STRING BX_TOKEN_XML '\n'  */
-#line 309 "bx_parser.y"
+#line 312 "bx_parser.y"
       {
           bx_dbg_show_param_command((yyvsp[-2].sval), 1);
           free((yyvsp[-3].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
       }
-#line 2597 "y.tab.c"
+#line 3189 "y.tab.c"
     break;
 
   case 88: /* show_command: BX_TOKEN_SHOW '\n'  */
-#line 314 "bx_parser.y"
+#line 317 "bx_parser.y"
       {
           bx_dbg_show_command(0);
           free((yyvsp[-1].sval));
       }
-#line 2606 "y.tab.c"
+#line 3198 "y.tab.c"
     break;
 
   case 89: /* page_command: BX_TOKEN_PAGE expression '\n'  */
-#line 322 "bx_parser.y"
+#line 325 "bx_parser.y"
       {
           bx_dbg_xlate_address((yyvsp[-1].uval));
           free((yyvsp[-2].sval));
       }
-#line 2615 "y.tab.c"
+#line 3207 "y.tab.c"
     break;
 
   case 90: /* tlb_command: BX_TOKEN_TLB expression '\n'  */
-#line 330 "bx_parser.y"
+#line 333 "bx_parser.y"
       {
           bx_dbg_tlb_lookup((yyvsp[-1].uval));
           free((yyvsp[-2].sval));
       }
-#line 2624 "y.tab.c"
+#line 3216 "y.tab.c"
     break;
 
   case 91: /* ptime_command: BX_TOKEN_PTIME '\n'  */
-#line 338 "bx_parser.y"
+#line 341 "bx_parser.y"
       {
           bx_dbg_ptime_command();
           free((yyvsp[-1].sval));
       }
-#line 2633 "y.tab.c"
+#line 3225 "y.tab.c"
     break;
 
   case 92: /* trace_command: BX_TOKEN_TRACE BX_TOKEN_TOGGLE_ON_OFF '\n'  */
-#line 346 "bx_parser.y"
+#line 349 "bx_parser.y"
       {
           bx_dbg_trace_command((yyvsp[-1].bval));
           free((yyvsp[-2].sval));
       }
-#line 2642 "y.tab.c"
+#line 3234 "y.tab.c"
     break;
 
   case 93: /* trace_reg_command: BX_TOKEN_TRACEREG BX_TOKEN_TOGGLE_ON_OFF '\n'  */
-#line 354 "bx_parser.y"
+#line 357 "bx_parser.y"
       {
           bx_dbg_trace_reg_command((yyvsp[-1].bval));
           free((yyvsp[-2].sval));
       }
-#line 2651 "y.tab.c"
+#line 3243 "y.tab.c"
     break;
 
   case 94: /* trace_mem_command: BX_TOKEN_TRACEMEM BX_TOKEN_TOGGLE_ON_OFF '\n'  */
-#line 362 "bx_parser.y"
+#line 365 "bx_parser.y"
       {
           bx_dbg_trace_mem_command((yyvsp[-1].bval));
           free((yyvsp[-2].sval));
       }
-#line 2660 "y.tab.c"
+#line 3252 "y.tab.c"
     break;
 
   case 95: /* print_stack_command: BX_TOKEN_PRINT_STACK '\n'  */
-#line 370 "bx_parser.y"
+#line 373 "bx_parser.y"
       {
           bx_dbg_print_stack_command(16);
           free((yyvsp[-1].sval));
       }
-#line 2669 "y.tab.c"
+#line 3261 "y.tab.c"
     break;
 
   case 96: /* print_stack_command: BX_TOKEN_PRINT_STACK BX_TOKEN_NUMERIC '\n'  */
-#line 375 "bx_parser.y"
+#line 378 "bx_parser.y"
       {
           bx_dbg_print_stack_command((yyvsp[-1].uval));
           free((yyvsp[-2].sval));
       }
-#line 2678 "y.tab.c"
+#line 3270 "y.tab.c"
     break;
 
   case 97: /* backtrace_command: BX_TOKEN_BT '\n'  */
-#line 383 "bx_parser.y"
+#line 386 "bx_parser.y"
       {
         bx_dbg_bt_command(16);
         free((yyvsp[-1].sval));
       }
-#line 2687 "y.tab.c"
+#line 3279 "y.tab.c"
     break;
 
   case 98: /* backtrace_command: BX_TOKEN_BT BX_TOKEN_NUMERIC '\n'  */
-#line 388 "bx_parser.y"
+#line 391 "bx_parser.y"
       {
         bx_dbg_bt_command((yyvsp[-1].uval));
         free((yyvsp[-2].sval));
       }
-#line 2696 "y.tab.c"
+#line 3288 "y.tab.c"
     break;
 
   case 99: /* watch_point_command: BX_TOKEN_WATCH BX_TOKEN_STOP '\n'  */
-#line 396 "bx_parser.y"
+#line 399 "bx_parser.y"
       {
           bx_dbg_watchpoint_continue(0);
           free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
       }
-#line 2705 "y.tab.c"
+#line 3297 "y.tab.c"
     break;
 
   case 100: /* watch_point_command: BX_TOKEN_WATCH BX_TOKEN_CONTINUE '\n'  */
-#line 401 "bx_parser.y"
+#line 404 "bx_parser.y"
       {
           bx_dbg_watchpoint_continue(1);
           free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
       }
-#line 2714 "y.tab.c"
+#line 3306 "y.tab.c"
     break;
 
   case 101: /* watch_point_command: BX_TOKEN_WATCH '\n'  */
-#line 406 "bx_parser.y"
+#line 409 "bx_parser.y"
       {
           bx_dbg_print_watchpoints();
           free((yyvsp[-1].sval));
       }
-#line 2723 "y.tab.c"
+#line 3315 "y.tab.c"
     break;
 
   case 102: /* watch_point_command: BX_TOKEN_WATCH BX_TOKEN_R expression '\n'  */
-#line 411 "bx_parser.y"
+#line 414 "bx_parser.y"
       {
           bx_dbg_watch(0, (yyvsp[-1].uval), 1); /* BX_READ */
           free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
       }
-#line 2732 "y.tab.c"
+#line 3324 "y.tab.c"
     break;
 
   case 103: /* watch_point_command: BX_TOKEN_WATCH BX_TOKEN_READ expression '\n'  */
-#line 416 "bx_parser.y"
+#line 419 "bx_parser.y"
       {
           bx_dbg_watch(0, (yyvsp[-1].uval), 1); /* BX_READ */
           free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
       }
-#line 2741 "y.tab.c"
+#line 3333 "y.tab.c"
     break;
 
   case 104: /* watch_point_command: BX_TOKEN_WATCH BX_TOKEN_WRITE expression '\n'  */
-#line 421 "bx_parser.y"
+#line 424 "bx_parser.y"
       {
           bx_dbg_watch(1, (yyvsp[-1].uval), 1); /* BX_WRITE */
           free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
       }
-#line 2750 "y.tab.c"
+#line 3342 "y.tab.c"
     break;
 
   case 105: /* watch_point_command: BX_TOKEN_WATCH BX_TOKEN_R expression expression '\n'  */
-#line 426 "bx_parser.y"
+#line 429 "bx_parser.y"
       {
           bx_dbg_watch(0, (yyvsp[-2].uval), (yyvsp[-1].uval)); /* BX_READ */
           free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
       }
-#line 2759 "y.tab.c"
-    break;
-
-  case 106: /* watch_point_command: BX_TOKEN_WATCH BX_TOKEN_READ expression expression '\n'  */
-#line 431 "bx_parser.y"
-      {
-          bx_dbg_watch(0, (yyvsp[-2].uval), (yyvsp[-1].uval)); /* BX_READ */
-          free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
-      }
-#line 2768 "y.tab.c"
-    break;
-
-  case 107: /* watch_point_command: BX_TOKEN_WATCH BX_TOKEN_WRITE expression expression '\n'  */
-#line 436 "bx_parser.y"
-      {
-          bx_dbg_watch(1, (yyvsp[-2].uval), (yyvsp[-1].uval)); /* BX_WRITE */
-          free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
-      }
-#line 2777 "y.tab.c"
-    break;
-
-  case 108: /* watch_point_command: BX_TOKEN_UNWATCH '\n'  */
-#line 441 "bx_parser.y"
-      {
-          bx_dbg_unwatch_all();
-          free((yyvsp[-1].sval));
-      }
-#line 2786 "y.tab.c"
-    break;
-
-  case 109: /* watch_point_command: BX_TOKEN_UNWATCH expression '\n'  */
-#line 446 "bx_parser.y"
-      {
-          bx_dbg_unwatch((yyvsp[-1].uval));
-          free((yyvsp[-2].sval));
-      }
-#line 2795 "y.tab.c"
-    break;
-
-  case 110: /* symbol_command: BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_STRING '\n'  */
-#line 454 "bx_parser.y"
-      {
-        bx_dbg_symbol_command((yyvsp[-1].sval), 0, 0);
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
-      }
-#line 2804 "y.tab.c"
-    break;
-
-  case 111: /* symbol_command: BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_STRING expression '\n'  */
-#line 459 "bx_parser.y"
-      {
-        bx_dbg_symbol_command((yyvsp[-2].sval), 0, (yyvsp[-1].uval));
-        free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
-      }
-#line 2813 "y.tab.c"
-    break;
-
-  case 112: /* symbol_command: BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_GLOBAL BX_TOKEN_STRING '\n'  */
-#line 464 "bx_parser.y"
-      {
-        bx_dbg_symbol_command((yyvsp[-1].sval), 1, 0);
-        free((yyvsp[-3].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
-      }
-#line 2822 "y.tab.c"
-    break;
-
-  case 113: /* symbol_command: BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_GLOBAL BX_TOKEN_STRING expression '\n'  */
-#line 469 "bx_parser.y"
-      {
-        bx_dbg_symbol_command((yyvsp[-2].sval), 1, (yyvsp[-1].uval));
-        free((yyvsp[-4].sval)); free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
-      }
-#line 2831 "y.tab.c"
-    break;
-
-  case 114: /* set_magic_break_points_command: BX_TOKEN_SET_MAGIC_BREAK_POINTS '\n'  */
-#line 477 "bx_parser.y"
-      {
-        bx_dbg_set_magic_bp_mask(0);
-        free((yyvsp[-1].sval));
-      }
-#line 2840 "y.tab.c"
-    break;
-
-  case 115: /* set_magic_break_points_command: BX_TOKEN_SET_MAGIC_BREAK_POINTS BX_TOKEN_STRING '\n'  */
-#line 482 "bx_parser.y"
-      {
-        bx_dbg_set_magic_bp_mask(bx_dbg_get_magic_bp_mask_from_str((yyvsp[-1].sval)));
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
-      }
-#line 2849 "y.tab.c"
-    break;
-
-  case 116: /* clr_magic_break_points_command: BX_TOKEN_CLEAR_MAGIC_BREAK_POINTS '\n'  */
-#line 490 "bx_parser.y"
-      {
-        bx_dbg_set_magic_bp_mask(0);
-        free((yyvsp[-1].sval));
-      }
-#line 2858 "y.tab.c"
-    break;
-
-  case 117: /* clr_magic_break_points_command: BX_TOKEN_CLEAR_MAGIC_BREAK_POINTS BX_TOKEN_STRING '\n'  */
-#line 495 "bx_parser.y"
-      {
-        bx_dbg_clr_magic_bp_mask(bx_dbg_get_magic_bp_mask_from_str((yyvsp[-1].sval)));
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
-      }
-#line 2867 "y.tab.c"
-    break;
-
-  case 118: /* where_command: BX_TOKEN_WHERE '\n'  */
-#line 503 "bx_parser.y"
-      {
-        bx_dbg_where_command();
-        free((yyvsp[-1].sval));
-      }
-#line 2876 "y.tab.c"
-    break;
-
-  case 119: /* print_string_command: BX_TOKEN_PRINT_STRING expression '\n'  */
-#line 511 "bx_parser.y"
-      {
-        bx_dbg_print_string_command((yyvsp[-1].uval));
-        free((yyvsp[-2].sval));
-      }
-#line 2885 "y.tab.c"
-    break;
-
-  case 120: /* continue_command: BX_TOKEN_CONTINUE '\n'  */
-#line 519 "bx_parser.y"
-      {
-        bx_dbg_continue_command(1);
-        free((yyvsp[-1].sval));
-      }
-#line 2894 "y.tab.c"
-    break;
-
-  case 121: /* continue_command: BX_TOKEN_CONTINUE BX_TOKEN_IF expression '\n'  */
-#line 524 "bx_parser.y"
-      {
-        bx_dbg_continue_command((yyvsp[-1].uval));
-        free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
-      }
-#line 2903 "y.tab.c"
-    break;
-
-  case 122: /* stepN_command: BX_TOKEN_STEPN '\n'  */
-#line 532 "bx_parser.y"
-      {
-        bx_dbg_stepN_command(dbg_cpu, 1);
-        free((yyvsp[-1].sval));
-      }
-#line 2912 "y.tab.c"
-    break;
-
-  case 123: /* stepN_command: BX_TOKEN_STEPN BX_TOKEN_NUMERIC '\n'  */
-#line 537 "bx_parser.y"
-      {
-        bx_dbg_stepN_command(dbg_cpu, (yyvsp[-1].uval));
-        free((yyvsp[-2].sval));
-      }
-#line 2921 "y.tab.c"
-    break;
-
-  case 124: /* stepN_command: BX_TOKEN_STEPN BX_TOKEN_ALL BX_TOKEN_NUMERIC '\n'  */
-#line 542 "bx_parser.y"
-      {
-        bx_dbg_stepN_command(-1, (yyvsp[-1].uval));
-        free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
-      }
-#line 2930 "y.tab.c"
-    break;
-
-  case 125: /* stepN_command: BX_TOKEN_STEPN BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'  */
-#line 547 "bx_parser.y"
-      {
-        bx_dbg_stepN_command((yyvsp[-2].uval), (yyvsp[-1].uval));
-        free((yyvsp[-3].sval));
-      }
-#line 2939 "y.tab.c"
-    break;
-
-  case 126: /* step_over_command: BX_TOKEN_STEP_OVER '\n'  */
-#line 555 "bx_parser.y"
-      {
-        bx_dbg_step_over_command();
-        free((yyvsp[-1].sval));
-      }
-#line 2948 "y.tab.c"
-    break;
-
-  case 127: /* run_to_laddr_command: BX_TOKEN_RUN_TO_LADDR expression '\n'  */
-#line 563 "bx_parser.y"
-      {
-        bx_dbg_run_to_laddr((yyvsp[-1].uval));
-        free((yyvsp[-2].sval));
-      }
-#line 2957 "y.tab.c"
-    break;
-
-  case 128: /* cpu_command: BX_TOKEN_CPU BX_TOKEN_NUMERIC '\n'  */
-#line 571 "bx_parser.y"
-      {
-        bx_dbg_set_symbol_command("$cpu", (yyvsp[-1].uval));
-        free((yyvsp[-2].sval));
-      }
-#line 2966 "y.tab.c"
-    break;
-
-  case 129: /* set_command: BX_TOKEN_SET BX_TOKEN_DISASM BX_TOKEN_TOGGLE_ON_OFF '\n'  */
-#line 578 "bx_parser.y"
-      {
-        bx_dbg_set_auto_disassemble((yyvsp[-1].bval));
-        free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
-      }
-#line 2975 "y.tab.c"
-    break;
-
-  case 130: /* set_command: BX_TOKEN_SET BX_TOKEN_SYMBOLNAME '=' expression '\n'  */
-#line 583 "bx_parser.y"
-      {
-        bx_dbg_set_symbol_command((yyvsp[-3].sval), (yyvsp[-1].uval));
-        free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
-      }
-#line 2984 "y.tab.c"
-    break;
-
-  case 131: /* set_command: BX_TOKEN_SET BX_TOKEN_8BL_REG '=' expression '\n'  */
-#line 588 "bx_parser.y"
-      {
-        bx_dbg_set_reg8l_value((yyvsp[-3].uval), (yyvsp[-1].uval));
-      }
-#line 2992 "y.tab.c"
-    break;
-
-  case 132: /* set_command: BX_TOKEN_SET BX_TOKEN_8BH_REG '=' expression '\n'  */
-#line 592 "bx_parser.y"
-      {
-        bx_dbg_set_reg8h_value((yyvsp[-3].uval), (yyvsp[-1].uval));
-      }
-#line 3000 "y.tab.c"
-    break;
-
-  case 133: /* set_command: BX_TOKEN_SET BX_TOKEN_16B_REG '=' expression '\n'  */
-#line 596 "bx_parser.y"
-      {
-        bx_dbg_set_reg16_value((yyvsp[-3].uval), (yyvsp[-1].uval));
-      }
-#line 3008 "y.tab.c"
-    break;
-
-  case 134: /* set_command: BX_TOKEN_SET BX_TOKEN_32B_REG '=' expression '\n'  */
-#line 600 "bx_parser.y"
-      {
-        bx_dbg_set_reg32_value((yyvsp[-3].uval), (yyvsp[-1].uval));
-      }
-#line 3016 "y.tab.c"
-    break;
-
-  case 135: /* set_command: BX_TOKEN_SET BX_TOKEN_64B_REG '=' expression '\n'  */
-#line 604 "bx_parser.y"
-      {
-        bx_dbg_set_reg64_value((yyvsp[-3].uval), (yyvsp[-1].uval));
-      }
-#line 3024 "y.tab.c"
-    break;
-
-  case 136: /* set_command: BX_TOKEN_SET BX_TOKEN_REG_EIP '=' expression '\n'  */
-#line 608 "bx_parser.y"
-      {
-        bx_dbg_set_rip_value((yyvsp[-1].uval));
-      }
-#line 3032 "y.tab.c"
-    break;
-
-  case 137: /* set_command: BX_TOKEN_SET BX_TOKEN_REG_RIP '=' expression '\n'  */
-#line 612 "bx_parser.y"
-      {
-        bx_dbg_set_rip_value((yyvsp[-1].uval));
-      }
-#line 3040 "y.tab.c"
-    break;
-
-  case 138: /* set_command: BX_TOKEN_SET BX_TOKEN_SEGREG '=' expression '\n'  */
-#line 616 "bx_parser.y"
-      {
-        bx_dbg_load_segreg((yyvsp[-3].uval), (yyvsp[-1].uval));
-      }
-#line 3048 "y.tab.c"
-    break;
-
-  case 139: /* breakpoint_command: BX_TOKEN_VBREAKPOINT '\n'  */
-#line 623 "bx_parser.y"
-      {
-        bx_dbg_vbreakpoint_command(bkAtIP, 0, 0, NULL);
-        free((yyvsp[-1].sval));
-      }
-#line 3057 "y.tab.c"
-    break;
-
-  case 140: /* breakpoint_command: BX_TOKEN_VBREAKPOINT vexpression ':' vexpression '\n'  */
-#line 628 "bx_parser.y"
-      {
-        bx_dbg_vbreakpoint_command(bkRegular, (yyvsp[-3].uval), (yyvsp[-1].uval), NULL);
-        free((yyvsp[-4].sval));
-      }
-#line 3066 "y.tab.c"
-    break;
-
-  case 141: /* breakpoint_command: BX_TOKEN_VBREAKPOINT vexpression ':' vexpression BX_TOKEN_IF BX_TOKEN_STRING '\n'  */
-#line 633 "bx_parser.y"
-      {
-        bx_dbg_vbreakpoint_command(bkRegular, (yyvsp[-5].uval), (yyvsp[-3].uval), (yyvsp[-1].sval));
-        free((yyvsp[-6].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
-      }
-#line 3075 "y.tab.c"
-    break;
-
-  case 142: /* breakpoint_command: BX_TOKEN_LBREAKPOINT '\n'  */
-#line 638 "bx_parser.y"
-      {
-        bx_dbg_lbreakpoint_command(bkAtIP, 0, NULL);
-        free((yyvsp[-1].sval));
-      }
-#line 3084 "y.tab.c"
-    break;
-
-  case 143: /* breakpoint_command: BX_TOKEN_LBREAKPOINT expression '\n'  */
-#line 643 "bx_parser.y"
-      {
-        bx_dbg_lbreakpoint_command(bkRegular, (yyvsp[-1].uval), NULL);
-        free((yyvsp[-2].sval));
-      }
-#line 3093 "y.tab.c"
-    break;
-
-  case 144: /* breakpoint_command: BX_TOKEN_LBREAKPOINT expression BX_TOKEN_IF BX_TOKEN_STRING '\n'  */
-#line 648 "bx_parser.y"
-      {
-        bx_dbg_lbreakpoint_command(bkRegular, (yyvsp[-3].uval), (yyvsp[-1].sval));
-        free((yyvsp[-4].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
-      }
-#line 3102 "y.tab.c"
-    break;
-
-  case 145: /* breakpoint_command: BX_TOKEN_LBREAKPOINT BX_TOKEN_STRING '\n'  */
-#line 653 "bx_parser.y"
-      {
-        bx_dbg_lbreakpoint_symbol_command((yyvsp[-1].sval), NULL);
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
-      }
-#line 3111 "y.tab.c"
-    break;
-
-  case 146: /* breakpoint_command: BX_TOKEN_LBREAKPOINT BX_TOKEN_STRING BX_TOKEN_IF BX_TOKEN_STRING '\n'  */
-#line 658 "bx_parser.y"
-      {
-        bx_dbg_lbreakpoint_symbol_command((yyvsp[-3].sval), (yyvsp[-1].sval));
-        free((yyvsp[-4].sval)); free((yyvsp[-3].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
-      }
-#line 3120 "y.tab.c"
-    break;
-
-  case 147: /* breakpoint_command: BX_TOKEN_PBREAKPOINT '\n'  */
-#line 663 "bx_parser.y"
-      {
-        bx_dbg_pbreakpoint_command(bkAtIP, 0, NULL);
-        free((yyvsp[-1].sval));
-      }
-#line 3129 "y.tab.c"
-    break;
-
-  case 148: /* breakpoint_command: BX_TOKEN_PBREAKPOINT expression '\n'  */
-#line 668 "bx_parser.y"
-      {
-        bx_dbg_pbreakpoint_command(bkRegular, (yyvsp[-1].uval), NULL);
-        free((yyvsp[-2].sval));
-      }
-#line 3138 "y.tab.c"
-    break;
-
-  case 149: /* breakpoint_command: BX_TOKEN_PBREAKPOINT expression BX_TOKEN_IF BX_TOKEN_STRING '\n'  */
-#line 673 "bx_parser.y"
-      {
-        bx_dbg_pbreakpoint_command(bkRegular, (yyvsp[-3].uval), (yyvsp[-1].sval));
-        free((yyvsp[-4].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
-      }
-#line 3147 "y.tab.c"
-    break;
-
-  case 150: /* breakpoint_command: BX_TOKEN_PBREAKPOINT '*' expression '\n'  */
-#line 678 "bx_parser.y"
-      {
-        bx_dbg_pbreakpoint_command(bkRegular, (yyvsp[-1].uval), NULL);
-        free((yyvsp[-3].sval));
-      }
-#line 3156 "y.tab.c"
-    break;
-
-  case 151: /* breakpoint_command: BX_TOKEN_PBREAKPOINT '*' expression BX_TOKEN_IF BX_TOKEN_STRING '\n'  */
-#line 683 "bx_parser.y"
-      {
-        bx_dbg_pbreakpoint_command(bkRegular, (yyvsp[-3].uval), (yyvsp[-1].sval));
-        free((yyvsp[-5].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
-      }
-#line 3165 "y.tab.c"
-    break;
-
-  case 152: /* blist_command: BX_TOKEN_LIST_BREAK '\n'  */
-#line 691 "bx_parser.y"
-      {
-        bx_dbg_info_bpoints_command();
-        free((yyvsp[-1].sval));
-      }
-#line 3174 "y.tab.c"
-    break;
-
-  case 153: /* slist_command: BX_TOKEN_LIST_SYMBOLS '\n'  */
-#line 699 "bx_parser.y"
-      {
-        bx_dbg_info_symbols_command(0);
-        free((yyvsp[-1].sval));
-      }
-#line 3183 "y.tab.c"
-    break;
-
-  case 154: /* slist_command: BX_TOKEN_LIST_SYMBOLS BX_TOKEN_STRING '\n'  */
-#line 704 "bx_parser.y"
-      {
-        bx_dbg_info_symbols_command((yyvsp[-1].sval));
-        free((yyvsp[-2].sval));free((yyvsp[-1].sval));
-      }
-#line 3192 "y.tab.c"
-    break;
-
-  case 155: /* info_command: BX_TOKEN_INFO BX_TOKEN_PBREAKPOINT '\n'  */
-#line 712 "bx_parser.y"
-      {
-        bx_dbg_info_bpoints_command();
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
-      }
-#line 3201 "y.tab.c"
-    break;
-
-  case 156: /* info_command: BX_TOKEN_INFO BX_TOKEN_CPU '\n'  */
-#line 717 "bx_parser.y"
-      {
-        bx_dbg_info_registers_command(-1);
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
-      }
-#line 3210 "y.tab.c"
-    break;
-
-  case 157: /* info_command: BX_TOKEN_INFO BX_TOKEN_IDT optional_numeric optional_numeric '\n'  */
-#line 722 "bx_parser.y"
-      {
-        bx_dbg_info_idt_command((yyvsp[-2].uval), (yyvsp[-1].uval));
-        free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
-      }
-#line 3219 "y.tab.c"
-    break;
-
-  case 158: /* info_command: BX_TOKEN_INFO BX_TOKEN_IVT optional_numeric optional_numeric '\n'  */
-#line 727 "bx_parser.y"
-      {
-        bx_dbg_info_ivt_command((yyvsp[-2].uval), (yyvsp[-1].uval));
-        free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
-      }
-#line 3228 "y.tab.c"
-    break;
-
-  case 159: /* info_command: BX_TOKEN_INFO BX_TOKEN_GDT optional_numeric optional_numeric '\n'  */
-#line 732 "bx_parser.y"
-      {
-        bx_dbg_info_gdt_command((yyvsp[-2].uval), (yyvsp[-1].uval));
-        free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
-      }
-#line 3237 "y.tab.c"
-    break;
-
-  case 160: /* info_command: BX_TOKEN_INFO BX_TOKEN_LDT optional_numeric optional_numeric '\n'  */
-#line 737 "bx_parser.y"
-      {
-        bx_dbg_info_ldt_command((yyvsp[-2].uval), (yyvsp[-1].uval));
-        free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
-      }
-#line 3246 "y.tab.c"
-    break;
-
-  case 161: /* info_command: BX_TOKEN_INFO BX_TOKEN_TAB '\n'  */
-#line 742 "bx_parser.y"
-      {
-        bx_dbg_dump_table();
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
-      }
-#line 3255 "y.tab.c"
-    break;
-
-  case 162: /* info_command: BX_TOKEN_INFO BX_TOKEN_TSS '\n'  */
-#line 747 "bx_parser.y"
-      {
-        bx_dbg_info_tss_command();
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
-      }
-#line 3264 "y.tab.c"
-    break;
-
-  case 163: /* info_command: BX_TOKEN_INFO BX_TOKEN_FLAGS '\n'  */
-#line 752 "bx_parser.y"
-      {
-        bx_dbg_info_flags();
-        free((yyvsp[-2].sval));
-      }
-#line 3273 "y.tab.c"
-    break;
-
-  case 164: /* info_command: BX_TOKEN_INFO BX_TOKEN_LINUX '\n'  */
-#line 757 "bx_parser.y"
-      {
-        bx_dbg_info_linux_command();
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
-      }
-#line 3282 "y.tab.c"
-    break;
-
-  case 165: /* info_command: BX_TOKEN_INFO BX_TOKEN_SYMBOLS '\n'  */
-#line 762 "bx_parser.y"
-      {
-        bx_dbg_info_symbols_command(0);
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
-      }
-#line 3291 "y.tab.c"
-    break;
-
-  case 166: /* info_command: BX_TOKEN_INFO BX_TOKEN_SYMBOLS BX_TOKEN_STRING '\n'  */
-#line 767 "bx_parser.y"
-      {
-        bx_dbg_info_symbols_command((yyvsp[-1].sval));
-        free((yyvsp[-3].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
-      }
-#line 3300 "y.tab.c"
-    break;
-
-  case 167: /* info_command: BX_TOKEN_INFO BX_TOKEN_DEVICE '\n'  */
-#line 772 "bx_parser.y"
-      {
-        bx_dbg_info_device("", "");
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
-      }
-#line 3309 "y.tab.c"
-    break;
-
-  case 168: /* info_command: BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_GENERIC '\n'  */
-#line 777 "bx_parser.y"
-      {
-        bx_dbg_info_device((yyvsp[-1].sval), "");
-        free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
-      }
-#line 3318 "y.tab.c"
-    break;
-
-  case 169: /* info_command: BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_GENERIC BX_TOKEN_STRING '\n'  */
-#line 782 "bx_parser.y"
-      {
-        bx_dbg_info_device((yyvsp[-2].sval), (yyvsp[-1].sval));
-        free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
-      }
-#line 3327 "y.tab.c"
-    break;
-
-  case 170: /* info_command: BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_STRING '\n'  */
-#line 787 "bx_parser.y"
-      {
-        bx_dbg_info_device((yyvsp[-1].sval), "");
-        free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
-      }
-#line 3336 "y.tab.c"
-    break;
-
-  case 171: /* info_command: BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_STRING BX_TOKEN_STRING '\n'  */
-#line 792 "bx_parser.y"
-      {
-        bx_dbg_info_device((yyvsp[-2].sval), (yyvsp[-1].sval));
-        free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
-      }
-#line 3345 "y.tab.c"
-    break;
-
-  case 172: /* optional_numeric: %empty  */
-#line 799 "bx_parser.y"
-               { (yyval.uval) = EMPTY_ARG; }
 #line 3351 "y.tab.c"
     break;
 
-  case 174: /* regs_command: BX_TOKEN_REGISTERS '\n'  */
-#line 804 "bx_parser.y"
+  case 106: /* watch_point_command: BX_TOKEN_WATCH BX_TOKEN_READ expression expression '\n'  */
+#line 434 "bx_parser.y"
       {
-        bx_dbg_info_registers_command(BX_INFO_GENERAL_PURPOSE_REGS);
-        free((yyvsp[-1].sval));
+          bx_dbg_watch(0, (yyvsp[-2].uval), (yyvsp[-1].uval)); /* BX_READ */
+          free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
       }
 #line 3360 "y.tab.c"
     break;
 
-  case 175: /* fpu_regs_command: BX_TOKEN_FPU '\n'  */
-#line 812 "bx_parser.y"
+  case 107: /* watch_point_command: BX_TOKEN_WATCH BX_TOKEN_WRITE expression expression '\n'  */
+#line 439 "bx_parser.y"
       {
-        bx_dbg_info_registers_command(BX_INFO_FPU_REGS);
-        free((yyvsp[-1].sval));
+          bx_dbg_watch(1, (yyvsp[-2].uval), (yyvsp[-1].uval)); /* BX_WRITE */
+          free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
       }
 #line 3369 "y.tab.c"
     break;
 
-  case 176: /* mmx_regs_command: BX_TOKEN_MMX '\n'  */
-#line 820 "bx_parser.y"
+  case 108: /* watch_point_command: BX_TOKEN_UNWATCH '\n'  */
+#line 444 "bx_parser.y"
       {
-        bx_dbg_info_registers_command(BX_INFO_MMX_REGS);
-        free((yyvsp[-1].sval));
+          bx_dbg_unwatch_all();
+          free((yyvsp[-1].sval));
       }
 #line 3378 "y.tab.c"
     break;
 
-  case 177: /* xmm_regs_command: BX_TOKEN_XMM '\n'  */
-#line 828 "bx_parser.y"
+  case 109: /* watch_point_command: BX_TOKEN_UNWATCH expression '\n'  */
+#line 449 "bx_parser.y"
       {
-        bx_dbg_info_registers_command(BX_INFO_SSE_REGS);
-        free((yyvsp[-1].sval));
+          bx_dbg_unwatch((yyvsp[-1].uval));
+          free((yyvsp[-2].sval));
       }
 #line 3387 "y.tab.c"
     break;
 
-  case 178: /* ymm_regs_command: BX_TOKEN_YMM '\n'  */
-#line 836 "bx_parser.y"
+  case 110: /* symbol_command: BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_STRING '\n'  */
+#line 457 "bx_parser.y"
       {
-        bx_dbg_info_registers_command(BX_INFO_YMM_REGS);
-        free((yyvsp[-1].sval));
+        bx_dbg_symbol_command((yyvsp[-1].sval), 0, 0);
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
       }
 #line 3396 "y.tab.c"
     break;
 
-  case 179: /* zmm_regs_command: BX_TOKEN_ZMM '\n'  */
-#line 844 "bx_parser.y"
+  case 111: /* symbol_command: BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_STRING expression '\n'  */
+#line 462 "bx_parser.y"
       {
-        bx_dbg_info_registers_command(BX_INFO_ZMM_REGS);
-        free((yyvsp[-1].sval));
+        bx_dbg_symbol_command((yyvsp[-2].sval), 0, (yyvsp[-1].uval));
+        free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
       }
 #line 3405 "y.tab.c"
     break;
 
-  case 180: /* amx_regs_command: BX_TOKEN_AMX '\n'  */
-#line 852 "bx_parser.y"
+  case 112: /* symbol_command: BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_GLOBAL BX_TOKEN_STRING '\n'  */
+#line 467 "bx_parser.y"
       {
-        bx_dbg_info_registers_command(BX_INFO_AMX_REGS);
-        free((yyvsp[-1].sval));
+        bx_dbg_symbol_command((yyvsp[-1].sval), 1, 0);
+        free((yyvsp[-3].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
       }
 #line 3414 "y.tab.c"
     break;
 
-  case 181: /* print_tile_command: BX_TOKEN_TILE BX_TOKEN_NUMERIC '\n'  */
-#line 860 "bx_parser.y"
+  case 113: /* symbol_command: BX_TOKEN_LOAD_SYMBOLS BX_TOKEN_GLOBAL BX_TOKEN_STRING expression '\n'  */
+#line 472 "bx_parser.y"
       {
-        bx_dbg_print_amx_tile_command((yyvsp[-1].uval));
-        free((yyvsp[-2].sval));
+        bx_dbg_symbol_command((yyvsp[-2].sval), 1, (yyvsp[-1].uval));
+        free((yyvsp[-4].sval)); free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
       }
 #line 3423 "y.tab.c"
     break;
 
-  case 182: /* segment_regs_command: BX_TOKEN_SEGMENT_REGS '\n'  */
-#line 868 "bx_parser.y"
+  case 114: /* set_magic_break_points_command: BX_TOKEN_SET_MAGIC_BREAK_POINTS '\n'  */
+#line 480 "bx_parser.y"
       {
-        bx_dbg_info_segment_regs_command();
+        bx_dbg_set_magic_bp_mask(0);
         free((yyvsp[-1].sval));
       }
 #line 3432 "y.tab.c"
     break;
 
-  case 183: /* control_regs_command: BX_TOKEN_CONTROL_REGS '\n'  */
-#line 876 "bx_parser.y"
+  case 115: /* set_magic_break_points_command: BX_TOKEN_SET_MAGIC_BREAK_POINTS BX_TOKEN_STRING '\n'  */
+#line 485 "bx_parser.y"
       {
-        bx_dbg_info_control_regs_command();
-        free((yyvsp[-1].sval));
+        bx_dbg_set_magic_bp_mask(bx_dbg_get_magic_bp_mask_from_str((yyvsp[-1].sval)));
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
       }
 #line 3441 "y.tab.c"
     break;
 
-  case 184: /* debug_regs_command: BX_TOKEN_DEBUG_REGS '\n'  */
-#line 884 "bx_parser.y"
+  case 116: /* clr_magic_break_points_command: BX_TOKEN_CLEAR_MAGIC_BREAK_POINTS '\n'  */
+#line 493 "bx_parser.y"
       {
-        bx_dbg_info_debug_regs_command();
+        bx_dbg_set_magic_bp_mask(0);
         free((yyvsp[-1].sval));
       }
 #line 3450 "y.tab.c"
     break;
 
-  case 185: /* delete_command: BX_TOKEN_DEL_BREAKPOINT BX_TOKEN_NUMERIC '\n'  */
-#line 892 "bx_parser.y"
+  case 117: /* clr_magic_break_points_command: BX_TOKEN_CLEAR_MAGIC_BREAK_POINTS BX_TOKEN_STRING '\n'  */
+#line 498 "bx_parser.y"
       {
-        bx_dbg_del_breakpoint_command((yyvsp[-1].uval));
-        free((yyvsp[-2].sval));
+        bx_dbg_clr_magic_bp_mask(bx_dbg_get_magic_bp_mask_from_str((yyvsp[-1].sval)));
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
       }
 #line 3459 "y.tab.c"
     break;
 
-  case 186: /* bpe_command: BX_TOKEN_ENABLE_BREAKPOINT BX_TOKEN_NUMERIC '\n'  */
-#line 900 "bx_parser.y"
+  case 118: /* where_command: BX_TOKEN_WHERE '\n'  */
+#line 506 "bx_parser.y"
       {
-        bx_dbg_en_dis_breakpoint_command((yyvsp[-1].uval), 1);
-        free((yyvsp[-2].sval));
+        bx_dbg_where_command();
+        free((yyvsp[-1].sval));
       }
 #line 3468 "y.tab.c"
     break;
 
-  case 187: /* bpd_command: BX_TOKEN_DISABLE_BREAKPOINT BX_TOKEN_NUMERIC '\n'  */
-#line 907 "bx_parser.y"
+  case 119: /* print_string_command: BX_TOKEN_PRINT_STRING expression '\n'  */
+#line 514 "bx_parser.y"
       {
-        bx_dbg_en_dis_breakpoint_command((yyvsp[-1].uval), 0);
+        bx_dbg_print_string_command((yyvsp[-1].uval));
         free((yyvsp[-2].sval));
       }
 #line 3477 "y.tab.c"
     break;
 
-  case 188: /* quit_command: BX_TOKEN_QUIT '\n'  */
-#line 915 "bx_parser.y"
+  case 120: /* continue_command: BX_TOKEN_CONTINUE '\n'  */
+#line 522 "bx_parser.y"
       {
-        bx_dbg_quit_command();
+        bx_dbg_continue_command(1);
         free((yyvsp[-1].sval));
       }
 #line 3486 "y.tab.c"
     break;
 
-  case 189: /* detach_command: BX_TOKEN_DETACH '\n'  */
-#line 923 "bx_parser.y"
+  case 121: /* continue_command: BX_TOKEN_CONTINUE BX_TOKEN_IF expression '\n'  */
+#line 527 "bx_parser.y"
       {
-        bx_dbg_detach_command();
-        free((yyvsp[-1].sval));
+        bx_dbg_continue_command((yyvsp[-1].uval));
+        free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
       }
 #line 3495 "y.tab.c"
     break;
 
-  case 190: /* examine_command: BX_TOKEN_EXAMINE BX_TOKEN_XFORMAT expression '\n'  */
-#line 931 "bx_parser.y"
+  case 122: /* stepN_command: BX_TOKEN_STEPN '\n'  */
+#line 535 "bx_parser.y"
       {
-        bx_dbg_examine_command((yyvsp[-3].sval), (yyvsp[-2].sval),1, (yyvsp[-1].uval), 1);
-        free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
+        bx_dbg_stepN_command(dbg_cpu, 1);
+        free((yyvsp[-1].sval));
       }
 #line 3504 "y.tab.c"
     break;
 
-  case 191: /* examine_command: BX_TOKEN_EXAMINE BX_TOKEN_XFORMAT '\n'  */
-#line 936 "bx_parser.y"
+  case 123: /* stepN_command: BX_TOKEN_STEPN BX_TOKEN_NUMERIC '\n'  */
+#line 540 "bx_parser.y"
       {
-        bx_dbg_examine_command((yyvsp[-2].sval), (yyvsp[-1].sval),1, 0, 0);
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+        bx_dbg_stepN_command(dbg_cpu, (yyvsp[-1].uval));
+        free((yyvsp[-2].sval));
       }
 #line 3513 "y.tab.c"
     break;
 
-  case 192: /* examine_command: BX_TOKEN_EXAMINE expression '\n'  */
-#line 941 "bx_parser.y"
+  case 124: /* stepN_command: BX_TOKEN_STEPN BX_TOKEN_ALL BX_TOKEN_NUMERIC '\n'  */
+#line 545 "bx_parser.y"
       {
-        bx_dbg_examine_command((yyvsp[-2].sval), NULL,0, (yyvsp[-1].uval), 1);
-        free((yyvsp[-2].sval));
+        bx_dbg_stepN_command(-1, (yyvsp[-1].uval));
+        free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
       }
 #line 3522 "y.tab.c"
     break;
 
-  case 193: /* examine_command: BX_TOKEN_EXAMINE '\n'  */
-#line 946 "bx_parser.y"
+  case 125: /* stepN_command: BX_TOKEN_STEPN BX_TOKEN_NUMERIC BX_TOKEN_NUMERIC '\n'  */
+#line 550 "bx_parser.y"
       {
-        bx_dbg_examine_command((yyvsp[-1].sval), NULL,0, 0, 0);
-        free((yyvsp[-1].sval));
+        bx_dbg_stepN_command((yyvsp[-2].uval), (yyvsp[-1].uval));
+        free((yyvsp[-3].sval));
       }
 #line 3531 "y.tab.c"
     break;
 
-  case 194: /* restore_command: BX_TOKEN_RESTORE BX_TOKEN_STRING BX_TOKEN_STRING '\n'  */
-#line 954 "bx_parser.y"
+  case 126: /* step_over_command: BX_TOKEN_STEP_OVER '\n'  */
+#line 558 "bx_parser.y"
       {
-        bx_dbg_restore_command((yyvsp[-2].sval), (yyvsp[-1].sval));
-        free((yyvsp[-3].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+        bx_dbg_step_over_command();
+        free((yyvsp[-1].sval));
       }
 #line 3540 "y.tab.c"
     break;
 
-  case 195: /* writemem_command: BX_TOKEN_WRITEMEM BX_TOKEN_STRING expression expression '\n'  */
-#line 962 "bx_parser.y"
+  case 127: /* run_to_laddr_command: BX_TOKEN_RUN_TO_LADDR expression '\n'  */
+#line 566 "bx_parser.y"
       {
-        bx_dbg_writemem_command((yyvsp[-3].sval), (yyvsp[-2].uval), (yyvsp[-1].uval));
-        free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
+        bx_dbg_run_to_laddr((yyvsp[-1].uval));
+        free((yyvsp[-2].sval));
       }
 #line 3549 "y.tab.c"
     break;
 
-  case 196: /* loadmem_command: BX_TOKEN_LOADMEM BX_TOKEN_STRING expression '\n'  */
-#line 970 "bx_parser.y"
+  case 128: /* cpu_command: BX_TOKEN_CPU BX_TOKEN_NUMERIC '\n'  */
+#line 574 "bx_parser.y"
       {
-        bx_dbg_loadmem_command((yyvsp[-2].sval), (yyvsp[-1].uval));
-        free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
+        bx_dbg_set_symbol_command("$cpu", (yyvsp[-1].uval));
+        free((yyvsp[-2].sval));
       }
 #line 3558 "y.tab.c"
     break;
 
-  case 197: /* setpmem_command: BX_TOKEN_SETPMEM expression expression expression '\n'  */
-#line 978 "bx_parser.y"
+  case 129: /* set_command: BX_TOKEN_SET BX_TOKEN_DISASM BX_TOKEN_TOGGLE_ON_OFF '\n'  */
+#line 581 "bx_parser.y"
       {
-        bx_dbg_setpmem_command((yyvsp[-3].uval), (yyvsp[-2].uval), (yyvsp[-1].uval));
-        free((yyvsp[-4].sval));
+        bx_dbg_set_auto_disassemble((yyvsp[-1].bval));
+        free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
       }
 #line 3567 "y.tab.c"
     break;
 
-  case 198: /* deref_command: BX_TOKEN_DEREF expression expression '\n'  */
-#line 986 "bx_parser.y"
+  case 130: /* set_command: BX_TOKEN_SET BX_TOKEN_SYMBOLNAME '=' expression '\n'  */
+#line 586 "bx_parser.y"
       {
-        bx_dbg_deref_command((yyvsp[-2].uval), (yyvsp[-1].uval));
-        free((yyvsp[-3].sval));
+        bx_dbg_set_symbol_command((yyvsp[-3].sval), (yyvsp[-1].uval));
+        free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
       }
 #line 3576 "y.tab.c"
     break;
 
-  case 199: /* query_command: BX_TOKEN_QUERY BX_TOKEN_PENDING '\n'  */
-#line 994 "bx_parser.y"
+  case 131: /* set_command: BX_TOKEN_SET BX_TOKEN_8BL_REG '=' expression '\n'  */
+#line 591 "bx_parser.y"
       {
-        bx_dbg_query_command((yyvsp[-1].sval));
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+        bx_dbg_set_reg8l_value((yyvsp[-3].uval), (yyvsp[-1].uval));
+        free((yyvsp[-4].sval));
       }
 #line 3585 "y.tab.c"
     break;
 
-  case 200: /* take_command: BX_TOKEN_TAKE BX_TOKEN_DMA '\n'  */
-#line 1002 "bx_parser.y"
+  case 132: /* set_command: BX_TOKEN_SET BX_TOKEN_8BH_REG '=' expression '\n'  */
+#line 596 "bx_parser.y"
       {
-        bx_dbg_take_command((yyvsp[-1].sval), 1);
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+        bx_dbg_set_reg8h_value((yyvsp[-3].uval), (yyvsp[-1].uval));
+        free((yyvsp[-4].sval));
       }
 #line 3594 "y.tab.c"
     break;
 
-  case 201: /* take_command: BX_TOKEN_TAKE BX_TOKEN_DMA BX_TOKEN_NUMERIC '\n'  */
-#line 1007 "bx_parser.y"
+  case 133: /* set_command: BX_TOKEN_SET BX_TOKEN_16B_REG '=' expression '\n'  */
+#line 601 "bx_parser.y"
       {
-        bx_dbg_take_command((yyvsp[-2].sval), (yyvsp[-1].uval));
-        free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
+        bx_dbg_set_reg16_value((yyvsp[-3].uval), (yyvsp[-1].uval));
+        free((yyvsp[-4].sval));
       }
 #line 3603 "y.tab.c"
     break;
 
-  case 202: /* take_command: BX_TOKEN_TAKE BX_TOKEN_IRQ '\n'  */
-#line 1012 "bx_parser.y"
+  case 134: /* set_command: BX_TOKEN_SET BX_TOKEN_32B_REG '=' expression '\n'  */
+#line 606 "bx_parser.y"
       {
-        bx_dbg_take_command((yyvsp[-1].sval), 1);
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+        bx_dbg_set_reg32_value((yyvsp[-3].uval), (yyvsp[-1].uval));
+        free((yyvsp[-4].sval));
       }
 #line 3612 "y.tab.c"
     break;
 
-  case 203: /* take_command: BX_TOKEN_TAKE BX_TOKEN_SMI '\n'  */
-#line 1017 "bx_parser.y"
+  case 135: /* set_command: BX_TOKEN_SET BX_TOKEN_64B_REG '=' expression '\n'  */
+#line 611 "bx_parser.y"
       {
-        bx_dbg_take_command((yyvsp[-1].sval), 1);
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+        bx_dbg_set_reg64_value((yyvsp[-3].uval), (yyvsp[-1].uval));
+        free((yyvsp[-4].sval));
       }
 #line 3621 "y.tab.c"
     break;
 
-  case 204: /* take_command: BX_TOKEN_TAKE BX_TOKEN_NMI '\n'  */
-#line 1022 "bx_parser.y"
+  case 136: /* set_command: BX_TOKEN_SET BX_TOKEN_REG_EIP '=' expression '\n'  */
+#line 616 "bx_parser.y"
       {
-        bx_dbg_take_command((yyvsp[-1].sval), 1);
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+        bx_dbg_set_rip_value((yyvsp[-1].uval));
+        free((yyvsp[-4].sval));
       }
 #line 3630 "y.tab.c"
     break;
 
-  case 205: /* disassemble_command: BX_TOKEN_DISASM '\n'  */
-#line 1030 "bx_parser.y"
+  case 137: /* set_command: BX_TOKEN_SET BX_TOKEN_REG_RIP '=' expression '\n'  */
+#line 621 "bx_parser.y"
       {
-        bx_dbg_disassemble_current(NULL);
-        free((yyvsp[-1].sval));
+        bx_dbg_set_rip_value((yyvsp[-1].uval));
+        free((yyvsp[-4].sval));
       }
 #line 3639 "y.tab.c"
     break;
 
-  case 206: /* disassemble_command: BX_TOKEN_DISASM expression '\n'  */
-#line 1035 "bx_parser.y"
+  case 138: /* set_command: BX_TOKEN_SET BX_TOKEN_SEGREG '=' expression '\n'  */
+#line 626 "bx_parser.y"
       {
-        bx_dbg_disassemble_command(NULL, (yyvsp[-1].uval), (yyvsp[-1].uval));
-        free((yyvsp[-2].sval));
+        bx_dbg_load_segreg((yyvsp[-3].uval), (yyvsp[-1].uval));
+        free((yyvsp[-4].sval));
       }
 #line 3648 "y.tab.c"
     break;
 
-  case 207: /* disassemble_command: BX_TOKEN_DISASM expression expression '\n'  */
-#line 1040 "bx_parser.y"
+  case 139: /* breakpoint_command: BX_TOKEN_VBREAKPOINT '\n'  */
+#line 634 "bx_parser.y"
       {
-        bx_dbg_disassemble_command(NULL, (yyvsp[-2].uval), (yyvsp[-1].uval));
-        free((yyvsp[-3].sval));
+        bx_dbg_vbreakpoint_command(bkAtIP, 0, 0, NULL);
+        free((yyvsp[-1].sval));
       }
 #line 3657 "y.tab.c"
     break;
 
-  case 208: /* disassemble_command: BX_TOKEN_DISASM BX_TOKEN_DISFORMAT '\n'  */
-#line 1045 "bx_parser.y"
+  case 140: /* breakpoint_command: BX_TOKEN_VBREAKPOINT vexpression ':' vexpression '\n'  */
+#line 639 "bx_parser.y"
       {
-        bx_dbg_disassemble_current((yyvsp[-1].sval));
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+        bx_dbg_vbreakpoint_command(bkRegular, (yyvsp[-3].uval), (yyvsp[-1].uval), NULL);
+        free((yyvsp[-4].sval));
       }
 #line 3666 "y.tab.c"
     break;
 
-  case 209: /* disassemble_command: BX_TOKEN_DISASM BX_TOKEN_DISFORMAT expression '\n'  */
-#line 1050 "bx_parser.y"
+  case 141: /* breakpoint_command: BX_TOKEN_VBREAKPOINT vexpression ':' vexpression BX_TOKEN_IF BX_TOKEN_STRING '\n'  */
+#line 644 "bx_parser.y"
       {
-        bx_dbg_disassemble_command((yyvsp[-2].sval), (yyvsp[-1].uval), (yyvsp[-1].uval));
-        free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
+        bx_dbg_vbreakpoint_command(bkRegular, (yyvsp[-5].uval), (yyvsp[-3].uval), (yyvsp[-1].sval));
+        free((yyvsp[-6].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
       }
 #line 3675 "y.tab.c"
     break;
 
-  case 210: /* disassemble_command: BX_TOKEN_DISASM BX_TOKEN_DISFORMAT expression expression '\n'  */
-#line 1055 "bx_parser.y"
+  case 142: /* breakpoint_command: BX_TOKEN_LBREAKPOINT '\n'  */
+#line 649 "bx_parser.y"
       {
-        bx_dbg_disassemble_command((yyvsp[-3].sval), (yyvsp[-2].uval), (yyvsp[-1].uval));
-        free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
+        bx_dbg_lbreakpoint_command(bkAtIP, 0, NULL);
+        free((yyvsp[-1].sval));
       }
 #line 3684 "y.tab.c"
     break;
 
-  case 211: /* disassemble_command: BX_TOKEN_DISASM BX_TOKEN_SWITCH_MODE '\n'  */
-#line 1060 "bx_parser.y"
+  case 143: /* breakpoint_command: BX_TOKEN_LBREAKPOINT expression '\n'  */
+#line 654 "bx_parser.y"
       {
-        bx_dbg_disassemble_switch_mode();
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+        bx_dbg_lbreakpoint_command(bkRegular, (yyvsp[-1].uval), NULL);
+        free((yyvsp[-2].sval));
       }
 #line 3693 "y.tab.c"
     break;
 
-  case 212: /* disassemble_command: BX_TOKEN_DISASM BX_TOKEN_SIZE '=' BX_TOKEN_NUMERIC '\n'  */
-#line 1065 "bx_parser.y"
+  case 144: /* breakpoint_command: BX_TOKEN_LBREAKPOINT expression BX_TOKEN_IF BX_TOKEN_STRING '\n'  */
+#line 659 "bx_parser.y"
       {
-        bx_dbg_set_disassemble_size((yyvsp[-1].uval));
-        free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
+        bx_dbg_lbreakpoint_command(bkRegular, (yyvsp[-3].uval), (yyvsp[-1].sval));
+        free((yyvsp[-4].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
       }
 #line 3702 "y.tab.c"
     break;
 
-  case 213: /* instrument_command: BX_TOKEN_INSTRUMENT BX_TOKEN_STOP '\n'  */
-#line 1073 "bx_parser.y"
+  case 145: /* breakpoint_command: BX_TOKEN_LBREAKPOINT BX_TOKEN_STRING '\n'  */
+#line 664 "bx_parser.y"
       {
-        bx_dbg_instrument_command((yyvsp[-1].sval));
+        bx_dbg_lbreakpoint_symbol_command((yyvsp[-1].sval), NULL);
         free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
       }
 #line 3711 "y.tab.c"
     break;
 
-  case 214: /* instrument_command: BX_TOKEN_INSTRUMENT BX_TOKEN_STRING '\n'  */
-#line 1079 "bx_parser.y"
+  case 146: /* breakpoint_command: BX_TOKEN_LBREAKPOINT BX_TOKEN_STRING BX_TOKEN_IF BX_TOKEN_STRING '\n'  */
+#line 669 "bx_parser.y"
       {
-        bx_dbg_instrument_command((yyvsp[-1].sval));
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+        bx_dbg_lbreakpoint_symbol_command((yyvsp[-3].sval), (yyvsp[-1].sval));
+        free((yyvsp[-4].sval)); free((yyvsp[-3].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
       }
 #line 3720 "y.tab.c"
     break;
 
-  case 215: /* instrument_command: BX_TOKEN_INSTRUMENT BX_TOKEN_GENERIC '\n'  */
-#line 1084 "bx_parser.y"
+  case 147: /* breakpoint_command: BX_TOKEN_PBREAKPOINT '\n'  */
+#line 674 "bx_parser.y"
       {
-        bx_dbg_instrument_command((yyvsp[-1].sval));
-        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+        bx_dbg_pbreakpoint_command(bkAtIP, 0, NULL);
+        free((yyvsp[-1].sval));
       }
 #line 3729 "y.tab.c"
     break;
 
-  case 216: /* doit_command: BX_TOKEN_DOIT expression '\n'  */
-#line 1092 "bx_parser.y"
+  case 148: /* breakpoint_command: BX_TOKEN_PBREAKPOINT expression '\n'  */
+#line 679 "bx_parser.y"
       {
-        bx_dbg_doit_command((yyvsp[-1].uval));
+        bx_dbg_pbreakpoint_command(bkRegular, (yyvsp[-1].uval), NULL);
         free((yyvsp[-2].sval));
       }
 #line 3738 "y.tab.c"
     break;
 
-  case 217: /* crc_command: BX_TOKEN_CRC expression expression '\n'  */
-#line 1100 "bx_parser.y"
+  case 149: /* breakpoint_command: BX_TOKEN_PBREAKPOINT expression BX_TOKEN_IF BX_TOKEN_STRING '\n'  */
+#line 684 "bx_parser.y"
       {
-        bx_dbg_crc_command((yyvsp[-2].uval), (yyvsp[-1].uval));
-        free((yyvsp[-3].sval));
+        bx_dbg_pbreakpoint_command(bkRegular, (yyvsp[-3].uval), (yyvsp[-1].sval));
+        free((yyvsp[-4].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
       }
 #line 3747 "y.tab.c"
     break;
 
+  case 150: /* breakpoint_command: BX_TOKEN_PBREAKPOINT '*' expression '\n'  */
+#line 689 "bx_parser.y"
+      {
+        bx_dbg_pbreakpoint_command(bkRegular, (yyvsp[-1].uval), NULL);
+        free((yyvsp[-3].sval));
+      }
+#line 3756 "y.tab.c"
+    break;
+
+  case 151: /* breakpoint_command: BX_TOKEN_PBREAKPOINT '*' expression BX_TOKEN_IF BX_TOKEN_STRING '\n'  */
+#line 694 "bx_parser.y"
+      {
+        bx_dbg_pbreakpoint_command(bkRegular, (yyvsp[-3].uval), (yyvsp[-1].sval));
+        free((yyvsp[-5].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 3765 "y.tab.c"
+    break;
+
+  case 152: /* blist_command: BX_TOKEN_LIST_BREAK '\n'  */
+#line 702 "bx_parser.y"
+      {
+        bx_dbg_info_bpoints_command();
+        free((yyvsp[-1].sval));
+      }
+#line 3774 "y.tab.c"
+    break;
+
+  case 153: /* slist_command: BX_TOKEN_LIST_SYMBOLS '\n'  */
+#line 710 "bx_parser.y"
+      {
+        bx_dbg_info_symbols_command(0);
+        free((yyvsp[-1].sval));
+      }
+#line 3783 "y.tab.c"
+    break;
+
+  case 154: /* slist_command: BX_TOKEN_LIST_SYMBOLS BX_TOKEN_STRING '\n'  */
+#line 715 "bx_parser.y"
+      {
+        bx_dbg_info_symbols_command((yyvsp[-1].sval));
+        free((yyvsp[-2].sval));free((yyvsp[-1].sval));
+      }
+#line 3792 "y.tab.c"
+    break;
+
+  case 155: /* info_command: BX_TOKEN_INFO BX_TOKEN_PBREAKPOINT '\n'  */
+#line 723 "bx_parser.y"
+      {
+        bx_dbg_info_bpoints_command();
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 3801 "y.tab.c"
+    break;
+
+  case 156: /* info_command: BX_TOKEN_INFO BX_TOKEN_CPU '\n'  */
+#line 728 "bx_parser.y"
+      {
+        bx_dbg_info_registers_command(-1);
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 3810 "y.tab.c"
+    break;
+
+  case 157: /* info_command: BX_TOKEN_INFO BX_TOKEN_IDT optional_numeric optional_numeric '\n'  */
+#line 733 "bx_parser.y"
+      {
+        bx_dbg_info_idt_command((yyvsp[-2].uval), (yyvsp[-1].uval));
+        free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
+      }
+#line 3819 "y.tab.c"
+    break;
+
+  case 158: /* info_command: BX_TOKEN_INFO BX_TOKEN_IVT optional_numeric optional_numeric '\n'  */
+#line 738 "bx_parser.y"
+      {
+        bx_dbg_info_ivt_command((yyvsp[-2].uval), (yyvsp[-1].uval));
+        free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
+      }
+#line 3828 "y.tab.c"
+    break;
+
+  case 159: /* info_command: BX_TOKEN_INFO BX_TOKEN_GDT optional_numeric optional_numeric '\n'  */
+#line 743 "bx_parser.y"
+      {
+        bx_dbg_info_gdt_command((yyvsp[-2].uval), (yyvsp[-1].uval));
+        free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
+      }
+#line 3837 "y.tab.c"
+    break;
+
+  case 160: /* info_command: BX_TOKEN_INFO BX_TOKEN_LDT optional_numeric optional_numeric '\n'  */
+#line 748 "bx_parser.y"
+      {
+        bx_dbg_info_ldt_command((yyvsp[-2].uval), (yyvsp[-1].uval));
+        free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
+      }
+#line 3846 "y.tab.c"
+    break;
+
+  case 161: /* info_command: BX_TOKEN_INFO BX_TOKEN_TAB '\n'  */
+#line 753 "bx_parser.y"
+      {
+        bx_dbg_dump_table();
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 3855 "y.tab.c"
+    break;
+
+  case 162: /* info_command: BX_TOKEN_INFO BX_TOKEN_TSS '\n'  */
+#line 758 "bx_parser.y"
+      {
+        bx_dbg_info_tss_command();
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 3864 "y.tab.c"
+    break;
+
+  case 163: /* info_command: BX_TOKEN_INFO BX_TOKEN_FLAGS '\n'  */
+#line 763 "bx_parser.y"
+      {
+        bx_dbg_info_flags();
+        free((yyvsp[-2].sval));
+      }
+#line 3873 "y.tab.c"
+    break;
+
+  case 164: /* info_command: BX_TOKEN_INFO BX_TOKEN_LINUX '\n'  */
+#line 768 "bx_parser.y"
+      {
+        bx_dbg_info_linux_command();
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 3882 "y.tab.c"
+    break;
+
+  case 165: /* info_command: BX_TOKEN_INFO BX_TOKEN_SYMBOLS '\n'  */
+#line 773 "bx_parser.y"
+      {
+        bx_dbg_info_symbols_command(0);
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 3891 "y.tab.c"
+    break;
+
+  case 166: /* info_command: BX_TOKEN_INFO BX_TOKEN_SYMBOLS BX_TOKEN_STRING '\n'  */
+#line 778 "bx_parser.y"
+      {
+        bx_dbg_info_symbols_command((yyvsp[-1].sval));
+        free((yyvsp[-3].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 3900 "y.tab.c"
+    break;
+
+  case 167: /* info_command: BX_TOKEN_INFO BX_TOKEN_DEVICE '\n'  */
+#line 783 "bx_parser.y"
+      {
+        bx_dbg_info_device("", "");
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 3909 "y.tab.c"
+    break;
+
+  case 168: /* info_command: BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_GENERIC '\n'  */
+#line 788 "bx_parser.y"
+      {
+        bx_dbg_info_device((yyvsp[-1].sval), "");
+        free((yyvsp[-3].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 3918 "y.tab.c"
+    break;
+
+  case 169: /* info_command: BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_GENERIC BX_TOKEN_STRING '\n'  */
+#line 793 "bx_parser.y"
+      {
+        bx_dbg_info_device((yyvsp[-2].sval), (yyvsp[-1].sval));
+        free((yyvsp[-4].sval)); free((yyvsp[-3].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 3927 "y.tab.c"
+    break;
+
+  case 170: /* info_command: BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_STRING '\n'  */
+#line 798 "bx_parser.y"
+      {
+        bx_dbg_info_device((yyvsp[-1].sval), "");
+        free((yyvsp[-3].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 3936 "y.tab.c"
+    break;
+
+  case 171: /* info_command: BX_TOKEN_INFO BX_TOKEN_DEVICE BX_TOKEN_STRING BX_TOKEN_STRING '\n'  */
+#line 803 "bx_parser.y"
+      {
+        bx_dbg_info_device((yyvsp[-2].sval), (yyvsp[-1].sval));
+        free((yyvsp[-4].sval)); free((yyvsp[-3].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 3945 "y.tab.c"
+    break;
+
+  case 172: /* optional_numeric: %empty  */
+#line 810 "bx_parser.y"
+               { (yyval.uval) = EMPTY_ARG; }
+#line 3951 "y.tab.c"
+    break;
+
+  case 174: /* regs_command: BX_TOKEN_REGISTERS '\n'  */
+#line 815 "bx_parser.y"
+      {
+        bx_dbg_info_registers_command(BX_INFO_GENERAL_PURPOSE_REGS);
+        free((yyvsp[-1].sval));
+      }
+#line 3960 "y.tab.c"
+    break;
+
+  case 175: /* fpu_regs_command: BX_TOKEN_FPU '\n'  */
+#line 823 "bx_parser.y"
+      {
+        bx_dbg_info_registers_command(BX_INFO_FPU_REGS);
+        free((yyvsp[-1].sval));
+      }
+#line 3969 "y.tab.c"
+    break;
+
+  case 176: /* mmx_regs_command: BX_TOKEN_MMX '\n'  */
+#line 831 "bx_parser.y"
+      {
+        bx_dbg_info_registers_command(BX_INFO_MMX_REGS);
+        free((yyvsp[-1].sval));
+      }
+#line 3978 "y.tab.c"
+    break;
+
+  case 177: /* xmm_regs_command: BX_TOKEN_XMM '\n'  */
+#line 839 "bx_parser.y"
+      {
+        bx_dbg_info_registers_command(BX_INFO_SSE_REGS);
+        free((yyvsp[-1].sval));
+      }
+#line 3987 "y.tab.c"
+    break;
+
+  case 178: /* ymm_regs_command: BX_TOKEN_YMM '\n'  */
+#line 847 "bx_parser.y"
+      {
+        bx_dbg_info_registers_command(BX_INFO_YMM_REGS);
+        free((yyvsp[-1].sval));
+      }
+#line 3996 "y.tab.c"
+    break;
+
+  case 179: /* zmm_regs_command: BX_TOKEN_ZMM '\n'  */
+#line 855 "bx_parser.y"
+      {
+        bx_dbg_info_registers_command(BX_INFO_ZMM_REGS);
+        free((yyvsp[-1].sval));
+      }
+#line 4005 "y.tab.c"
+    break;
+
+  case 180: /* amx_regs_command: BX_TOKEN_AMX '\n'  */
+#line 863 "bx_parser.y"
+      {
+        bx_dbg_info_registers_command(BX_INFO_AMX_REGS);
+        free((yyvsp[-1].sval));
+      }
+#line 4014 "y.tab.c"
+    break;
+
+  case 181: /* print_tile_command: BX_TOKEN_TILE BX_TOKEN_NUMERIC '\n'  */
+#line 871 "bx_parser.y"
+      {
+        bx_dbg_print_amx_tile_command((yyvsp[-1].uval));
+        free((yyvsp[-2].sval));
+      }
+#line 4023 "y.tab.c"
+    break;
+
+  case 182: /* segment_regs_command: BX_TOKEN_SEGMENT_REGS '\n'  */
+#line 879 "bx_parser.y"
+      {
+        bx_dbg_info_segment_regs_command();
+        free((yyvsp[-1].sval));
+      }
+#line 4032 "y.tab.c"
+    break;
+
+  case 183: /* control_regs_command: BX_TOKEN_CONTROL_REGS '\n'  */
+#line 887 "bx_parser.y"
+      {
+        bx_dbg_info_control_regs_command();
+        free((yyvsp[-1].sval));
+      }
+#line 4041 "y.tab.c"
+    break;
+
+  case 184: /* debug_regs_command: BX_TOKEN_DEBUG_REGS '\n'  */
+#line 895 "bx_parser.y"
+      {
+        bx_dbg_info_debug_regs_command();
+        free((yyvsp[-1].sval));
+      }
+#line 4050 "y.tab.c"
+    break;
+
+  case 185: /* delete_command: BX_TOKEN_DEL_BREAKPOINT BX_TOKEN_NUMERIC '\n'  */
+#line 903 "bx_parser.y"
+      {
+        bx_dbg_del_breakpoint_command((yyvsp[-1].uval));
+        free((yyvsp[-2].sval));
+      }
+#line 4059 "y.tab.c"
+    break;
+
+  case 186: /* bpe_command: BX_TOKEN_ENABLE_BREAKPOINT BX_TOKEN_NUMERIC '\n'  */
+#line 911 "bx_parser.y"
+      {
+        bx_dbg_en_dis_breakpoint_command((yyvsp[-1].uval), 1);
+        free((yyvsp[-2].sval));
+      }
+#line 4068 "y.tab.c"
+    break;
+
+  case 187: /* bpd_command: BX_TOKEN_DISABLE_BREAKPOINT BX_TOKEN_NUMERIC '\n'  */
+#line 918 "bx_parser.y"
+      {
+        bx_dbg_en_dis_breakpoint_command((yyvsp[-1].uval), 0);
+        free((yyvsp[-2].sval));
+      }
+#line 4077 "y.tab.c"
+    break;
+
+  case 188: /* quit_command: BX_TOKEN_QUIT '\n'  */
+#line 926 "bx_parser.y"
+      {
+        bx_dbg_quit_command();
+        free((yyvsp[-1].sval));
+      }
+#line 4086 "y.tab.c"
+    break;
+
+  case 189: /* detach_command: BX_TOKEN_DETACH '\n'  */
+#line 934 "bx_parser.y"
+      {
+        bx_dbg_detach_command();
+        free((yyvsp[-1].sval));
+      }
+#line 4095 "y.tab.c"
+    break;
+
+  case 190: /* examine_command: BX_TOKEN_EXAMINE BX_TOKEN_XFORMAT expression '\n'  */
+#line 942 "bx_parser.y"
+      {
+        bx_dbg_examine_command((yyvsp[-3].sval), (yyvsp[-2].sval),1, (yyvsp[-1].uval), 1);
+        free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
+      }
+#line 4104 "y.tab.c"
+    break;
+
+  case 191: /* examine_command: BX_TOKEN_EXAMINE BX_TOKEN_XFORMAT '\n'  */
+#line 947 "bx_parser.y"
+      {
+        bx_dbg_examine_command((yyvsp[-2].sval), (yyvsp[-1].sval),1, 0, 0);
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 4113 "y.tab.c"
+    break;
+
+  case 192: /* examine_command: BX_TOKEN_EXAMINE expression '\n'  */
+#line 952 "bx_parser.y"
+      {
+        bx_dbg_examine_command((yyvsp[-2].sval), NULL,0, (yyvsp[-1].uval), 1);
+        free((yyvsp[-2].sval));
+      }
+#line 4122 "y.tab.c"
+    break;
+
+  case 193: /* examine_command: BX_TOKEN_EXAMINE '\n'  */
+#line 957 "bx_parser.y"
+      {
+        bx_dbg_examine_command((yyvsp[-1].sval), NULL,0, 0, 0);
+        free((yyvsp[-1].sval));
+      }
+#line 4131 "y.tab.c"
+    break;
+
+  case 194: /* restore_command: BX_TOKEN_RESTORE BX_TOKEN_STRING BX_TOKEN_STRING '\n'  */
+#line 965 "bx_parser.y"
+      {
+        bx_dbg_restore_command((yyvsp[-2].sval), (yyvsp[-1].sval));
+        free((yyvsp[-3].sval)); free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 4140 "y.tab.c"
+    break;
+
+  case 195: /* writemem_command: BX_TOKEN_WRITEMEM BX_TOKEN_STRING expression expression '\n'  */
+#line 973 "bx_parser.y"
+      {
+        bx_dbg_writemem_command((yyvsp[-3].sval), (yyvsp[-2].uval), (yyvsp[-1].uval));
+        free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
+      }
+#line 4149 "y.tab.c"
+    break;
+
+  case 196: /* loadmem_command: BX_TOKEN_LOADMEM BX_TOKEN_STRING expression '\n'  */
+#line 981 "bx_parser.y"
+      {
+        bx_dbg_loadmem_command((yyvsp[-2].sval), (yyvsp[-1].uval));
+        free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
+      }
+#line 4158 "y.tab.c"
+    break;
+
+  case 197: /* setpmem_command: BX_TOKEN_SETPMEM expression expression expression '\n'  */
+#line 989 "bx_parser.y"
+      {
+        bx_dbg_setpmem_command((yyvsp[-3].uval), (yyvsp[-2].uval), (yyvsp[-1].uval));
+        free((yyvsp[-4].sval));
+      }
+#line 4167 "y.tab.c"
+    break;
+
+  case 198: /* deref_command: BX_TOKEN_DEREF expression expression '\n'  */
+#line 997 "bx_parser.y"
+      {
+        bx_dbg_deref_command((yyvsp[-2].uval), (yyvsp[-1].uval));
+        free((yyvsp[-3].sval));
+      }
+#line 4176 "y.tab.c"
+    break;
+
+  case 199: /* query_command: BX_TOKEN_QUERY BX_TOKEN_PENDING '\n'  */
+#line 1005 "bx_parser.y"
+      {
+        bx_dbg_query_command((yyvsp[-1].sval));
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 4185 "y.tab.c"
+    break;
+
+  case 200: /* take_command: BX_TOKEN_TAKE BX_TOKEN_DMA '\n'  */
+#line 1013 "bx_parser.y"
+      {
+        bx_dbg_take_command((yyvsp[-1].sval), 1);
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 4194 "y.tab.c"
+    break;
+
+  case 201: /* take_command: BX_TOKEN_TAKE BX_TOKEN_DMA BX_TOKEN_NUMERIC '\n'  */
+#line 1018 "bx_parser.y"
+      {
+        bx_dbg_take_command((yyvsp[-2].sval), (yyvsp[-1].uval));
+        free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
+      }
+#line 4203 "y.tab.c"
+    break;
+
+  case 202: /* take_command: BX_TOKEN_TAKE BX_TOKEN_IRQ '\n'  */
+#line 1023 "bx_parser.y"
+      {
+        bx_dbg_take_command((yyvsp[-1].sval), 1);
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 4212 "y.tab.c"
+    break;
+
+  case 203: /* take_command: BX_TOKEN_TAKE BX_TOKEN_SMI '\n'  */
+#line 1028 "bx_parser.y"
+      {
+        bx_dbg_take_command((yyvsp[-1].sval), 1);
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 4221 "y.tab.c"
+    break;
+
+  case 204: /* take_command: BX_TOKEN_TAKE BX_TOKEN_NMI '\n'  */
+#line 1033 "bx_parser.y"
+      {
+        bx_dbg_take_command((yyvsp[-1].sval), 1);
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 4230 "y.tab.c"
+    break;
+
+  case 205: /* disassemble_command: BX_TOKEN_DISASM '\n'  */
+#line 1041 "bx_parser.y"
+      {
+        bx_dbg_disassemble_current(NULL);
+        free((yyvsp[-1].sval));
+      }
+#line 4239 "y.tab.c"
+    break;
+
+  case 206: /* disassemble_command: BX_TOKEN_DISASM expression '\n'  */
+#line 1046 "bx_parser.y"
+      {
+        bx_dbg_disassemble_command(NULL, (yyvsp[-1].uval), (yyvsp[-1].uval));
+        free((yyvsp[-2].sval));
+      }
+#line 4248 "y.tab.c"
+    break;
+
+  case 207: /* disassemble_command: BX_TOKEN_DISASM expression expression '\n'  */
+#line 1051 "bx_parser.y"
+      {
+        bx_dbg_disassemble_command(NULL, (yyvsp[-2].uval), (yyvsp[-1].uval));
+        free((yyvsp[-3].sval));
+      }
+#line 4257 "y.tab.c"
+    break;
+
+  case 208: /* disassemble_command: BX_TOKEN_DISASM BX_TOKEN_DISFORMAT '\n'  */
+#line 1056 "bx_parser.y"
+      {
+        bx_dbg_disassemble_current((yyvsp[-1].sval));
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 4266 "y.tab.c"
+    break;
+
+  case 209: /* disassemble_command: BX_TOKEN_DISASM BX_TOKEN_DISFORMAT expression '\n'  */
+#line 1061 "bx_parser.y"
+      {
+        bx_dbg_disassemble_command((yyvsp[-2].sval), (yyvsp[-1].uval), (yyvsp[-1].uval));
+        free((yyvsp[-3].sval)); free((yyvsp[-2].sval));
+      }
+#line 4275 "y.tab.c"
+    break;
+
+  case 210: /* disassemble_command: BX_TOKEN_DISASM BX_TOKEN_DISFORMAT expression expression '\n'  */
+#line 1066 "bx_parser.y"
+      {
+        bx_dbg_disassemble_command((yyvsp[-3].sval), (yyvsp[-2].uval), (yyvsp[-1].uval));
+        free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
+      }
+#line 4284 "y.tab.c"
+    break;
+
+  case 211: /* disassemble_command: BX_TOKEN_DISASM BX_TOKEN_SWITCH_MODE '\n'  */
+#line 1071 "bx_parser.y"
+      {
+        bx_dbg_disassemble_switch_mode();
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 4293 "y.tab.c"
+    break;
+
+  case 212: /* disassemble_command: BX_TOKEN_DISASM BX_TOKEN_SIZE '=' BX_TOKEN_NUMERIC '\n'  */
+#line 1076 "bx_parser.y"
+      {
+        bx_dbg_set_disassemble_size((yyvsp[-1].uval));
+        free((yyvsp[-4].sval)); free((yyvsp[-3].sval));
+      }
+#line 4302 "y.tab.c"
+    break;
+
+  case 213: /* instrument_command: BX_TOKEN_INSTRUMENT BX_TOKEN_STOP '\n'  */
+#line 1084 "bx_parser.y"
+      {
+        bx_dbg_instrument_command((yyvsp[-1].sval));
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 4311 "y.tab.c"
+    break;
+
+  case 214: /* instrument_command: BX_TOKEN_INSTRUMENT BX_TOKEN_STRING '\n'  */
+#line 1090 "bx_parser.y"
+      {
+        bx_dbg_instrument_command((yyvsp[-1].sval));
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 4320 "y.tab.c"
+    break;
+
+  case 215: /* instrument_command: BX_TOKEN_INSTRUMENT BX_TOKEN_GENERIC '\n'  */
+#line 1095 "bx_parser.y"
+      {
+        bx_dbg_instrument_command((yyvsp[-1].sval));
+        free((yyvsp[-2].sval)); free((yyvsp[-1].sval));
+      }
+#line 4329 "y.tab.c"
+    break;
+
+  case 216: /* doit_command: BX_TOKEN_DOIT expression '\n'  */
+#line 1103 "bx_parser.y"
+      {
+        bx_dbg_doit_command((yyvsp[-1].uval));
+        free((yyvsp[-2].sval));
+      }
+#line 4338 "y.tab.c"
+    break;
+
+  case 217: /* crc_command: BX_TOKEN_CRC expression expression '\n'  */
+#line 1111 "bx_parser.y"
+      {
+        bx_dbg_crc_command((yyvsp[-2].uval), (yyvsp[-1].uval));
+        free((yyvsp[-3].sval));
+      }
+#line 4347 "y.tab.c"
+    break;
+
   case 218: /* help_command: BX_TOKEN_HELP BX_TOKEN_QUIT '\n'  */
-#line 1108 "bx_parser.y"
+#line 1119 "bx_parser.y"
        {
          dbg_printf("q|quit|exit - quit debugger and emulator execution\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3756 "y.tab.c"
+#line 4356 "y.tab.c"
     break;
 
   case 219: /* help_command: BX_TOKEN_HELP BX_TOKEN_DETACH '\n'  */
-#line 1113 "bx_parser.y"
+#line 1124 "bx_parser.y"
        {
          dbg_printf("detach - leave debugger and continue emulator execution without it,\n");
          dbg_printf("         the debugger is activated again by magic or time breakpoint\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3766 "y.tab.c"
+#line 4366 "y.tab.c"
     break;
 
   case 220: /* help_command: BX_TOKEN_HELP BX_TOKEN_CONTINUE '\n'  */
-#line 1119 "bx_parser.y"
+#line 1130 "bx_parser.y"
        {
          dbg_printf("c|cont|continue - continue executing\n");
          dbg_printf("c|cont|continue if \"expression\" - continue executing only if expression is true\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3776 "y.tab.c"
+#line 4376 "y.tab.c"
     break;
 
   case 221: /* help_command: BX_TOKEN_HELP BX_TOKEN_STEPN '\n'  */
-#line 1125 "bx_parser.y"
+#line 1136 "bx_parser.y"
        {
          dbg_printf("s|step [count] - execute #count instructions on current processor (default is one instruction)\n");
          dbg_printf("s|step [cpu] <count> - execute #count instructions on processor #cpu\n");
          dbg_printf("s|step all <count> - execute #count instructions on all the processors\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3787 "y.tab.c"
+#line 4387 "y.tab.c"
     break;
 
   case 222: /* help_command: BX_TOKEN_HELP BX_TOKEN_STEP_OVER '\n'  */
-#line 1132 "bx_parser.y"
+#line 1143 "bx_parser.y"
        {
          dbg_printf("n|next|p - execute instruction stepping over subroutines\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3796 "y.tab.c"
+#line 4396 "y.tab.c"
     break;
 
   case 223: /* help_command: BX_TOKEN_HELP BX_TOKEN_RUN_TO_LADDR '\n'  */
-#line 1137 "bx_parser.y"
+#line 1148 "bx_parser.y"
        {
          dbg_printf("rla <addr> - continue until reaching the linear address\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3805 "y.tab.c"
+#line 4405 "y.tab.c"
     break;
 
   case 224: /* help_command: BX_TOKEN_HELP BX_TOKEN_VBREAKPOINT '\n'  */
-#line 1142 "bx_parser.y"
+#line 1153 "bx_parser.y"
        {
          dbg_printf("vb|vbreak <seg:offset> - set a virtual address instruction breakpoint\n");
          dbg_printf("vb|vbreak <seg:offset> if \"expression\" - set a conditional virtual address instruction breakpoint\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3815 "y.tab.c"
+#line 4415 "y.tab.c"
     break;
 
   case 225: /* help_command: BX_TOKEN_HELP BX_TOKEN_LBREAKPOINT '\n'  */
-#line 1148 "bx_parser.y"
+#line 1159 "bx_parser.y"
        {
          dbg_printf("lb|lbreak <addr> - set a linear address instruction breakpoint\n");
          dbg_printf("lb|lbreak <addr> if \"expression\" - set a conditional linear address instruction breakpoint\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3825 "y.tab.c"
+#line 4425 "y.tab.c"
     break;
 
   case 226: /* help_command: BX_TOKEN_HELP BX_TOKEN_PBREAKPOINT '\n'  */
-#line 1154 "bx_parser.y"
+#line 1165 "bx_parser.y"
        {
          dbg_printf("b|pb|break|pbreak <addr> - set a physical address instruction breakpoint\n");
          dbg_printf("b|pb|break|pbreak <addr> if \"expression\" - set a conditional physical address instruction breakpoint\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3835 "y.tab.c"
+#line 4435 "y.tab.c"
     break;
 
   case 227: /* help_command: BX_TOKEN_HELP BX_TOKEN_DEL_BREAKPOINT '\n'  */
-#line 1160 "bx_parser.y"
+#line 1171 "bx_parser.y"
        {
          dbg_printf("d|del|delete <n> - delete a breakpoint\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3844 "y.tab.c"
+#line 4444 "y.tab.c"
     break;
 
   case 228: /* help_command: BX_TOKEN_HELP BX_TOKEN_ENABLE_BREAKPOINT '\n'  */
-#line 1165 "bx_parser.y"
+#line 1176 "bx_parser.y"
        {
          dbg_printf("bpe <n> - enable a breakpoint\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3853 "y.tab.c"
+#line 4453 "y.tab.c"
     break;
 
   case 229: /* help_command: BX_TOKEN_HELP BX_TOKEN_DISABLE_BREAKPOINT '\n'  */
-#line 1170 "bx_parser.y"
+#line 1181 "bx_parser.y"
        {
          dbg_printf("bpd <n> - disable a breakpoint\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3862 "y.tab.c"
+#line 4462 "y.tab.c"
     break;
 
   case 230: /* help_command: BX_TOKEN_HELP BX_TOKEN_LIST_BREAK '\n'  */
-#line 1175 "bx_parser.y"
+#line 1186 "bx_parser.y"
        {
          dbg_printf("blist - list all breakpoints (same as 'info break')\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3871 "y.tab.c"
+#line 4471 "y.tab.c"
     break;
 
   case 231: /* help_command: BX_TOKEN_HELP BX_TOKEN_MODEBP '\n'  */
-#line 1180 "bx_parser.y"
+#line 1191 "bx_parser.y"
        {
          dbg_printf("modebp - toggles mode switch breakpoint\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3880 "y.tab.c"
+#line 4480 "y.tab.c"
     break;
 
   case 232: /* help_command: BX_TOKEN_HELP BX_TOKEN_VMEXITBP '\n'  */
-#line 1185 "bx_parser.y"
+#line 1196 "bx_parser.y"
        {
          dbg_printf("vmexitbp - toggles VMEXIT switch breakpoint\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3889 "y.tab.c"
+#line 4489 "y.tab.c"
     break;
 
   case 233: /* help_command: BX_TOKEN_HELP BX_TOKEN_CRC '\n'  */
-#line 1190 "bx_parser.y"
+#line 1201 "bx_parser.y"
        {
          dbg_printf("crc <addr1> <addr2> - show CRC32 for physical memory range addr1..addr2\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3898 "y.tab.c"
+#line 4498 "y.tab.c"
     break;
 
   case 234: /* help_command: BX_TOKEN_HELP BX_TOKEN_TRACE '\n'  */
-#line 1195 "bx_parser.y"
+#line 1206 "bx_parser.y"
        {
          dbg_printf("trace on  - print disassembly for every executed instruction\n");
          dbg_printf("trace off - disable instruction tracing\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3908 "y.tab.c"
+#line 4508 "y.tab.c"
     break;
 
   case 235: /* help_command: BX_TOKEN_HELP BX_TOKEN_TRACEREG '\n'  */
-#line 1201 "bx_parser.y"
+#line 1212 "bx_parser.y"
        {
          dbg_printf("trace-reg on  - print all registers before every executed instruction\n");
          dbg_printf("trace-reg off - disable registers state tracing\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3918 "y.tab.c"
+#line 4518 "y.tab.c"
     break;
 
   case 236: /* help_command: BX_TOKEN_HELP BX_TOKEN_TRACEMEM '\n'  */
-#line 1207 "bx_parser.y"
+#line 1218 "bx_parser.y"
        {
          dbg_printf("trace-mem on  - print all memory accesses occurred during instruction execution\n");
          dbg_printf("trace-mem off - disable memory accesses tracing\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3928 "y.tab.c"
+#line 4528 "y.tab.c"
     break;
 
   case 237: /* help_command: BX_TOKEN_HELP BX_TOKEN_RESTORE '\n'  */
-#line 1213 "bx_parser.y"
+#line 1224 "bx_parser.y"
        {
          dbg_printf("restore <param_name> [path] - restore bochs root param from the file\n");
          dbg_printf("for example:\n");
@@ -3936,232 +4536,231 @@ yyreduce:
          dbg_printf("restore \"cpu0\" \"/save\" - restore CPU #0 from file \"cpu0\" located in directory \"/save\"\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3940 "y.tab.c"
+#line 4540 "y.tab.c"
     break;
 
   case 238: /* help_command: BX_TOKEN_HELP BX_TOKEN_PTIME '\n'  */
-#line 1221 "bx_parser.y"
+#line 1232 "bx_parser.y"
        {
          dbg_printf("ptime - print current time (number of ticks since start of simulation)\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3949 "y.tab.c"
+#line 4549 "y.tab.c"
     break;
 
   case 239: /* help_command: BX_TOKEN_HELP BX_TOKEN_TIMEBP '\n'  */
-#line 1226 "bx_parser.y"
+#line 1237 "bx_parser.y"
        {
          dbg_printf("sb <delta> - insert a time breakpoint delta instructions into the future\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3958 "y.tab.c"
+#line 4558 "y.tab.c"
     break;
 
   case 240: /* help_command: BX_TOKEN_HELP BX_TOKEN_TIMEBP_ABSOLUTE '\n'  */
-#line 1231 "bx_parser.y"
+#line 1242 "bx_parser.y"
        {
          dbg_printf("sba <time> - insert breakpoint at specific time\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3967 "y.tab.c"
+#line 4567 "y.tab.c"
     break;
 
   case 241: /* help_command: BX_TOKEN_HELP BX_TOKEN_PRINT_STACK '\n'  */
-#line 1236 "bx_parser.y"
+#line 1247 "bx_parser.y"
        {
          dbg_printf("print-stack [num_words] - print the num_words top 16 bit words on the stack\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3976 "y.tab.c"
+#line 4576 "y.tab.c"
     break;
 
   case 242: /* help_command: BX_TOKEN_HELP BX_TOKEN_BT '\n'  */
-#line 1241 "bx_parser.y"
+#line 1252 "bx_parser.y"
        {
          dbg_printf("bt [num_entries] - prints backtrace\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3985 "y.tab.c"
+#line 4585 "y.tab.c"
     break;
 
   case 243: /* help_command: BX_TOKEN_HELP BX_TOKEN_LOAD_SYMBOLS '\n'  */
-#line 1246 "bx_parser.y"
+#line 1257 "bx_parser.y"
        {
          dbg_printf("ldsym [global] <filename> [offset] - load symbols from file\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 3994 "y.tab.c"
+#line 4594 "y.tab.c"
     break;
 
   case 244: /* help_command: BX_TOKEN_HELP BX_TOKEN_SET_MAGIC_BREAK_POINTS '\n'  */
-#line 1251 "bx_parser.y"
+#line 1262 "bx_parser.y"
        {
          dbg_printf("setmagicbps \"cx dx bx sp bp si di\" - set new magic breakpoints. You can specify multiple at once. Using the setmagicbps command without any arguments will disable all of them\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4003 "y.tab.c"
+#line 4603 "y.tab.c"
     break;
 
   case 245: /* help_command: BX_TOKEN_HELP BX_TOKEN_CLEAR_MAGIC_BREAK_POINTS '\n'  */
-#line 1256 "bx_parser.y"
+#line 1267 "bx_parser.y"
        {
          dbg_printf("clrmagicbps \"cx dx bx sp bp si di\" - clear magic breakpoints. You can specify multiple at once. Using the clrmagicbps command without any arguments will disable all of them\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4012 "y.tab.c"
+#line 4612 "y.tab.c"
     break;
 
   case 246: /* help_command: BX_TOKEN_HELP BX_TOKEN_LIST_SYMBOLS '\n'  */
-#line 1261 "bx_parser.y"
+#line 1272 "bx_parser.y"
        {
          dbg_printf("slist [string] - list symbols whose preffix is string (same as 'info symbols')\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4021 "y.tab.c"
+#line 4621 "y.tab.c"
     break;
 
   case 247: /* help_command: BX_TOKEN_HELP BX_TOKEN_REGISTERS '\n'  */
-#line 1266 "bx_parser.y"
+#line 1277 "bx_parser.y"
        {
          dbg_printf("r|reg|regs|registers - list of CPU registers and their contents (same as 'info registers')\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4030 "y.tab.c"
+#line 4630 "y.tab.c"
     break;
 
   case 248: /* help_command: BX_TOKEN_HELP BX_TOKEN_FPU '\n'  */
-#line 1271 "bx_parser.y"
+#line 1282 "bx_parser.y"
        {
          dbg_printf("fp|fpu - print FPU state\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4039 "y.tab.c"
+#line 4639 "y.tab.c"
     break;
 
   case 249: /* help_command: BX_TOKEN_HELP BX_TOKEN_MMX '\n'  */
-#line 1276 "bx_parser.y"
+#line 1287 "bx_parser.y"
        {
          dbg_printf("mmx - print MMX state\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4048 "y.tab.c"
+#line 4648 "y.tab.c"
     break;
 
   case 250: /* help_command: BX_TOKEN_HELP BX_TOKEN_XMM '\n'  */
-#line 1281 "bx_parser.y"
+#line 1292 "bx_parser.y"
        {
          dbg_printf("xmm|sse - print SSE state\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4057 "y.tab.c"
+#line 4657 "y.tab.c"
     break;
 
   case 251: /* help_command: BX_TOKEN_HELP BX_TOKEN_YMM '\n'  */
-#line 1286 "bx_parser.y"
+#line 1297 "bx_parser.y"
        {
          dbg_printf("ymm - print AVX state\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4066 "y.tab.c"
+#line 4666 "y.tab.c"
     break;
 
   case 252: /* help_command: BX_TOKEN_HELP BX_TOKEN_ZMM '\n'  */
-#line 1291 "bx_parser.y"
+#line 1302 "bx_parser.y"
        {
          dbg_printf("zmm - print AVX-512 state\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4075 "y.tab.c"
+#line 4675 "y.tab.c"
     break;
 
   case 253: /* help_command: BX_TOKEN_HELP BX_TOKEN_AMX '\n'  */
-#line 1296 "bx_parser.y"
+#line 1307 "bx_parser.y"
        {
          dbg_printf("amx - print AMX state\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4084 "y.tab.c"
+#line 4684 "y.tab.c"
     break;
 
   case 254: /* help_command: BX_TOKEN_HELP BX_TOKEN_SEGMENT_REGS '\n'  */
-#line 1301 "bx_parser.y"
+#line 1312 "bx_parser.y"
        {
          dbg_printf("sreg - show segment registers\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4093 "y.tab.c"
+#line 4693 "y.tab.c"
     break;
 
   case 255: /* help_command: BX_TOKEN_HELP BX_TOKEN_CONTROL_REGS '\n'  */
-#line 1306 "bx_parser.y"
+#line 1317 "bx_parser.y"
        {
          dbg_printf("creg - show control registers\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4102 "y.tab.c"
+#line 4702 "y.tab.c"
     break;
 
   case 256: /* help_command: BX_TOKEN_HELP BX_TOKEN_DEBUG_REGS '\n'  */
-#line 1311 "bx_parser.y"
+#line 1322 "bx_parser.y"
        {
          dbg_printf("dreg - show debug registers\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4111 "y.tab.c"
+#line 4711 "y.tab.c"
     break;
 
   case 257: /* help_command: BX_TOKEN_HELP BX_TOKEN_WRITEMEM '\n'  */
-#line 1316 "bx_parser.y"
+#line 1327 "bx_parser.y"
        {
          dbg_printf("writemem <filename> <laddr> <len> - dump 'len' bytes of virtual memory starting from the linear address 'laddr' into the file\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4120 "y.tab.c"
+#line 4720 "y.tab.c"
     break;
 
   case 258: /* help_command: BX_TOKEN_HELP BX_TOKEN_LOADMEM '\n'  */
-#line 1321 "bx_parser.y"
+#line 1332 "bx_parser.y"
        {
          dbg_printf("loadmem <filename> <laddr> - load file bytes to virtual memory starting from the linear address 'laddr'\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4129 "y.tab.c"
+#line 4729 "y.tab.c"
     break;
 
   case 259: /* help_command: BX_TOKEN_HELP BX_TOKEN_SETPMEM '\n'  */
-#line 1326 "bx_parser.y"
+#line 1337 "bx_parser.y"
        {
          dbg_printf("setpmem <addr> <datasize> <val> - set physical memory location of size 'datasize' to value 'val'\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4138 "y.tab.c"
+#line 4738 "y.tab.c"
     break;
 
   case 260: /* help_command: BX_TOKEN_HELP BX_TOKEN_DEREF '\n'  */
-#line 1331 "bx_parser.y"
+#line 1342 "bx_parser.y"
        {
          dbg_printf("deref <addr> <deep> - pointer dereference. For example: get value of [[[rax]]] or ***rax: deref rax 3\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4147 "y.tab.c"
+#line 4747 "y.tab.c"
     break;
 
   case 261: /* help_command: BX_TOKEN_HELP BX_TOKEN_DISASM '\n'  */
-#line 1336 "bx_parser.y"
+#line 1347 "bx_parser.y"
        {
          dbg_printf("u|disasm [/count] <start> <end> - disassemble instructions for given linear address\n");
          dbg_printf("    Optional 'count' is the number of disassembled instructions\n");
          dbg_printf("u|disasm switch-mode - switch between Intel and AT&T disassembler syntax\n");
-         dbg_printf("u|disasm hex on/off - control disasm offsets and displacements format\n");
          dbg_printf("u|disasm size = n - tell debugger what segment size [16|32|64] to use\n");
          dbg_printf("       when \"disassemble\" command is used.\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4161 "y.tab.c"
+#line 4760 "y.tab.c"
     break;
 
   case 262: /* help_command: BX_TOKEN_HELP BX_TOKEN_WATCH '\n'  */
-#line 1346 "bx_parser.y"
+#line 1356 "bx_parser.y"
        {
          dbg_printf("watch - print current watch point status\n");
          dbg_printf("watch stop - stop simulation when a watchpoint is encountred\n");
@@ -4172,21 +4771,21 @@ yyreduce:
          dbg_printf("watch w|write addr <len> - insert a write watch point at physical address addr with range <len>\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4176 "y.tab.c"
+#line 4775 "y.tab.c"
     break;
 
   case 263: /* help_command: BX_TOKEN_HELP BX_TOKEN_UNWATCH '\n'  */
-#line 1357 "bx_parser.y"
+#line 1367 "bx_parser.y"
        {
          dbg_printf("unwatch      - remove all watch points\n");
          dbg_printf("unwatch addr - remove a watch point\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4186 "y.tab.c"
+#line 4785 "y.tab.c"
     break;
 
   case 264: /* help_command: BX_TOKEN_HELP BX_TOKEN_EXAMINE '\n'  */
-#line 1363 "bx_parser.y"
+#line 1373 "bx_parser.y"
        {
          dbg_printf("x  /nuf <addr> - examine memory at linear address\n");
          dbg_printf("xp /nuf <addr> - examine memory at physical address\n");
@@ -4199,20 +4798,20 @@ yyreduce:
          dbg_printf("    m selects an alternative output format (memory dump)\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4203 "y.tab.c"
+#line 4802 "y.tab.c"
     break;
 
   case 265: /* help_command: BX_TOKEN_HELP BX_TOKEN_INSTRUMENT '\n'  */
-#line 1376 "bx_parser.y"
+#line 1386 "bx_parser.y"
        {
          dbg_printf("instrument <command|\"string command\"> - calls BX_INSTR_DEBUG_CMD instrumentation callback with <command|\"string command\">\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4212 "y.tab.c"
+#line 4811 "y.tab.c"
     break;
 
   case 266: /* help_command: BX_TOKEN_HELP BX_TOKEN_SET '\n'  */
-#line 1381 "bx_parser.y"
+#line 1391 "bx_parser.y"
        {
          dbg_printf("set <regname> = <expr> - set register value to expression\n");
          dbg_printf("set eflags = <expr> - set eflags value to expression, not all flags can be modified\n");
@@ -4223,20 +4822,20 @@ yyreduce:
          dbg_printf("set u|disasm off - same as 'set $auto_disassemble = 0'\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4227 "y.tab.c"
+#line 4826 "y.tab.c"
     break;
 
   case 267: /* help_command: BX_TOKEN_HELP BX_TOKEN_PAGE '\n'  */
-#line 1392 "bx_parser.y"
+#line 1402 "bx_parser.y"
        {
          dbg_printf("page <laddr> - show linear to physical xlation for linear address laddr\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4236 "y.tab.c"
+#line 4835 "y.tab.c"
     break;
 
   case 268: /* help_command: BX_TOKEN_HELP BX_TOKEN_INFO '\n'  */
-#line 1397 "bx_parser.y"
+#line 1407 "bx_parser.y"
        {
          dbg_printf("info break - show information about current breakpoint status\n");
          dbg_printf("info cpu - show dump of all cpu registers\n");
@@ -4252,11 +4851,11 @@ yyreduce:
          dbg_printf("info device [string] [string] - show state of device with options\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4256 "y.tab.c"
+#line 4855 "y.tab.c"
     break;
 
   case 269: /* help_command: BX_TOKEN_HELP BX_TOKEN_SHOW '\n'  */
-#line 1413 "bx_parser.y"
+#line 1423 "bx_parser.y"
        {
          dbg_printf("show <command> - toggles show symbolic info (calls to begin with)\n");
          dbg_printf("show - shows current show mode\n");
@@ -4272,11 +4871,11 @@ yyreduce:
          dbg_printf("show dbg_none - turn off all bx_dbg flags\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4276 "y.tab.c"
+#line 4875 "y.tab.c"
     break;
 
   case 270: /* help_command: BX_TOKEN_HELP BX_TOKEN_CALC '\n'  */
-#line 1429 "bx_parser.y"
+#line 1439 "bx_parser.y"
        {
          dbg_printf("calc|? <expr> - calculate a expression and display the result.\n");
          dbg_printf("    'expr' can reference any general-purpose, opmask and segment\n");
@@ -4288,11 +4887,11 @@ yyreduce:
          dbg_printf("    ***rax: rax$3\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4292 "y.tab.c"
+#line 4891 "y.tab.c"
     break;
 
   case 271: /* help_command: BX_TOKEN_HELP BX_TOKEN_ADDLYT '\n'  */
-#line 1441 "bx_parser.y"
+#line 1451 "bx_parser.y"
        {
          dbg_printf("addlyt <file> - cause debugger to execute a script file every time execution stops.\n");
          dbg_printf("    Example of use: 1. Create a script file (script.txt) with the following content:\n");
@@ -4304,480 +4903,480 @@ yyreduce:
          dbg_printf("    Then, when you execute a step/DebugBreak... you will see: registers, stack and disasm.\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4308 "y.tab.c"
+#line 4907 "y.tab.c"
     break;
 
   case 272: /* help_command: BX_TOKEN_HELP BX_TOKEN_REMLYT '\n'  */
-#line 1453 "bx_parser.y"
+#line 1463 "bx_parser.y"
        {
          dbg_printf("remlyt - stops debugger to execute the script file added previously with addlyt command.\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4317 "y.tab.c"
+#line 4916 "y.tab.c"
     break;
 
   case 273: /* help_command: BX_TOKEN_HELP BX_TOKEN_LYT '\n'  */
-#line 1458 "bx_parser.y"
+#line 1468 "bx_parser.y"
        {
          dbg_printf("lyt - cause debugger to execute script file added previously with addlyt command.\n");
          dbg_printf("    Use it as a refresh/context.\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4327 "y.tab.c"
+#line 4926 "y.tab.c"
     break;
 
   case 274: /* help_command: BX_TOKEN_HELP BX_TOKEN_PRINT_STRING '\n'  */
-#line 1464 "bx_parser.y"
+#line 1474 "bx_parser.y"
        {
          dbg_printf("print-string <addr> - prints a null-ended string from a linear address.\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4336 "y.tab.c"
+#line 4935 "y.tab.c"
     break;
 
   case 275: /* help_command: BX_TOKEN_HELP BX_TOKEN_SOURCE '\n'  */
-#line 1469 "bx_parser.y"
+#line 1479 "bx_parser.y"
        {
          dbg_printf("source <file> - cause debugger to execute a script file.\n");
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4345 "y.tab.c"
+#line 4944 "y.tab.c"
     break;
 
   case 276: /* help_command: BX_TOKEN_HELP BX_TOKEN_HELP '\n'  */
-#line 1474 "bx_parser.y"
+#line 1484 "bx_parser.y"
        {
          bx_dbg_print_help();
          free((yyvsp[-2].sval));free((yyvsp[-1].sval));
        }
-#line 4354 "y.tab.c"
+#line 4953 "y.tab.c"
     break;
 
   case 277: /* help_command: BX_TOKEN_HELP '\n'  */
-#line 1479 "bx_parser.y"
+#line 1489 "bx_parser.y"
        {
          bx_dbg_print_help();
          free((yyvsp[-1].sval));
        }
-#line 4363 "y.tab.c"
+#line 4962 "y.tab.c"
     break;
 
   case 278: /* calc_command: BX_TOKEN_CALC expression '\n'  */
-#line 1487 "bx_parser.y"
+#line 1497 "bx_parser.y"
    {
      eval_value = (yyvsp[-1].uval);
      bx_dbg_calc_command((yyvsp[-1].uval));
      free((yyvsp[-2].sval));
    }
-#line 4373 "y.tab.c"
+#line 4972 "y.tab.c"
     break;
 
   case 279: /* addlyt_command: BX_TOKEN_ADDLYT BX_TOKEN_STRING '\n'  */
-#line 1496 "bx_parser.y"
+#line 1506 "bx_parser.y"
    {
      bx_dbg_addlyt((yyvsp[-1].sval));
      free((yyvsp[-2].sval));
      free((yyvsp[-1].sval));
    }
-#line 4383 "y.tab.c"
+#line 4982 "y.tab.c"
     break;
 
   case 280: /* remlyt_command: BX_TOKEN_REMLYT '\n'  */
-#line 1505 "bx_parser.y"
+#line 1515 "bx_parser.y"
    {
      bx_dbg_remlyt();
      free((yyvsp[-1].sval));
    }
-#line 4392 "y.tab.c"
+#line 4991 "y.tab.c"
     break;
 
   case 281: /* lyt_command: BX_TOKEN_LYT '\n'  */
-#line 1513 "bx_parser.y"
+#line 1523 "bx_parser.y"
    {
      bx_dbg_lyt();
      free((yyvsp[-1].sval));
    }
-#line 4401 "y.tab.c"
+#line 5000 "y.tab.c"
     break;
 
   case 282: /* if_command: BX_TOKEN_IF expression '\n'  */
-#line 1521 "bx_parser.y"
+#line 1531 "bx_parser.y"
    {
      eval_value = (yyvsp[-1].uval) != 0;
      bx_dbg_calc_command((yyvsp[-1].uval));
      free((yyvsp[-2].sval));
    }
-#line 4411 "y.tab.c"
+#line 5010 "y.tab.c"
     break;
 
   case 283: /* vexpression: BX_TOKEN_NUMERIC  */
-#line 1530 "bx_parser.y"
+#line 1540 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[0].uval); }
-#line 4417 "y.tab.c"
+#line 5016 "y.tab.c"
     break;
 
   case 284: /* vexpression: BX_TOKEN_STRING  */
-#line 1531 "bx_parser.y"
+#line 1541 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_symbol_value((yyvsp[0].sval)); free((yyvsp[0].sval));}
-#line 4423 "y.tab.c"
+#line 5022 "y.tab.c"
     break;
 
   case 285: /* vexpression: BX_TOKEN_8BL_REG  */
-#line 1532 "bx_parser.y"
+#line 1542 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg8l_value((yyvsp[0].uval)); }
-#line 4429 "y.tab.c"
+#line 5028 "y.tab.c"
     break;
 
   case 286: /* vexpression: BX_TOKEN_8BH_REG  */
-#line 1533 "bx_parser.y"
+#line 1543 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg8h_value((yyvsp[0].uval)); }
-#line 4435 "y.tab.c"
+#line 5034 "y.tab.c"
     break;
 
   case 287: /* vexpression: BX_TOKEN_16B_REG  */
-#line 1534 "bx_parser.y"
+#line 1544 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg16_value((yyvsp[0].uval)); }
-#line 4441 "y.tab.c"
+#line 5040 "y.tab.c"
     break;
 
   case 288: /* vexpression: BX_TOKEN_32B_REG  */
-#line 1535 "bx_parser.y"
+#line 1545 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg32_value((yyvsp[0].uval)); }
-#line 4447 "y.tab.c"
+#line 5046 "y.tab.c"
     break;
 
   case 289: /* vexpression: BX_TOKEN_64B_REG  */
-#line 1536 "bx_parser.y"
+#line 1546 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg64_value((yyvsp[0].uval)); }
-#line 4453 "y.tab.c"
+#line 5052 "y.tab.c"
     break;
 
   case 290: /* vexpression: BX_TOKEN_OPMASK_REG  */
-#line 1537 "bx_parser.y"
+#line 1547 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_opmask_value((yyvsp[0].uval)); }
-#line 4459 "y.tab.c"
+#line 5058 "y.tab.c"
     break;
 
   case 291: /* vexpression: BX_TOKEN_SEGREG  */
-#line 1538 "bx_parser.y"
+#line 1548 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_selector_value((yyvsp[0].uval)); }
-#line 4465 "y.tab.c"
+#line 5064 "y.tab.c"
     break;
 
   case 292: /* vexpression: BX_TOKEN_REG_IP  */
-#line 1539 "bx_parser.y"
+#line 1549 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_ip (); }
-#line 4471 "y.tab.c"
+#line 5070 "y.tab.c"
     break;
 
   case 293: /* vexpression: BX_TOKEN_REG_EIP  */
-#line 1540 "bx_parser.y"
+#line 1550 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_eip(); }
-#line 4477 "y.tab.c"
+#line 5076 "y.tab.c"
     break;
 
   case 294: /* vexpression: BX_TOKEN_REG_RIP  */
-#line 1541 "bx_parser.y"
+#line 1551 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_rip(); }
-#line 4483 "y.tab.c"
+#line 5082 "y.tab.c"
     break;
 
   case 295: /* vexpression: BX_TOKEN_REG_SSP  */
-#line 1542 "bx_parser.y"
+#line 1552 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_ssp(); }
-#line 4489 "y.tab.c"
+#line 5088 "y.tab.c"
     break;
 
   case 296: /* vexpression: vexpression '+' vexpression  */
-#line 1543 "bx_parser.y"
+#line 1553 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) + (yyvsp[0].uval); }
-#line 4495 "y.tab.c"
+#line 5094 "y.tab.c"
     break;
 
   case 297: /* vexpression: vexpression '-' vexpression  */
-#line 1544 "bx_parser.y"
+#line 1554 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) - (yyvsp[0].uval); }
-#line 4501 "y.tab.c"
+#line 5100 "y.tab.c"
     break;
 
   case 298: /* vexpression: vexpression '*' vexpression  */
-#line 1545 "bx_parser.y"
+#line 1555 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) * (yyvsp[0].uval); }
-#line 4507 "y.tab.c"
+#line 5106 "y.tab.c"
     break;
 
   case 299: /* vexpression: vexpression '/' vexpression  */
-#line 1546 "bx_parser.y"
-                                     { (yyval.uval) = (yyvsp[-2].uval) / (yyvsp[0].uval); }
-#line 4513 "y.tab.c"
+#line 1556 "bx_parser.y"
+                                     { (yyval.uval) = ((yyvsp[0].uval) != 0) ? (yyvsp[-2].uval) / (yyvsp[0].uval) : 0; }
+#line 5112 "y.tab.c"
     break;
 
   case 300: /* vexpression: vexpression BX_TOKEN_DEREF_CHR vexpression  */
-#line 1547 "bx_parser.y"
+#line 1557 "bx_parser.y"
                                                 { (yyval.uval) = bx_dbg_deref((yyvsp[-2].uval), (yyvsp[0].uval), NULL, NULL); }
-#line 4519 "y.tab.c"
+#line 5118 "y.tab.c"
     break;
 
   case 301: /* vexpression: vexpression BX_TOKEN_RSHIFT vexpression  */
-#line 1548 "bx_parser.y"
+#line 1558 "bx_parser.y"
                                              { (yyval.uval) = (yyvsp[-2].uval) >> (yyvsp[0].uval); }
-#line 4525 "y.tab.c"
+#line 5124 "y.tab.c"
     break;
 
   case 302: /* vexpression: vexpression BX_TOKEN_LSHIFT vexpression  */
-#line 1549 "bx_parser.y"
+#line 1559 "bx_parser.y"
                                              { (yyval.uval) = (yyvsp[-2].uval) << (yyvsp[0].uval); }
-#line 4531 "y.tab.c"
+#line 5130 "y.tab.c"
     break;
 
   case 303: /* vexpression: vexpression '|' vexpression  */
-#line 1550 "bx_parser.y"
+#line 1560 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) | (yyvsp[0].uval); }
-#line 4537 "y.tab.c"
+#line 5136 "y.tab.c"
     break;
 
   case 304: /* vexpression: vexpression '^' vexpression  */
-#line 1551 "bx_parser.y"
+#line 1561 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) ^ (yyvsp[0].uval); }
-#line 4543 "y.tab.c"
+#line 5142 "y.tab.c"
     break;
 
   case 305: /* vexpression: vexpression '&' vexpression  */
-#line 1552 "bx_parser.y"
+#line 1562 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) & (yyvsp[0].uval); }
-#line 4549 "y.tab.c"
+#line 5148 "y.tab.c"
     break;
 
   case 306: /* vexpression: '!' vexpression  */
-#line 1553 "bx_parser.y"
+#line 1563 "bx_parser.y"
                                      { (yyval.uval) = !(yyvsp[0].uval); }
-#line 4555 "y.tab.c"
+#line 5154 "y.tab.c"
     break;
 
   case 307: /* vexpression: '-' vexpression  */
-#line 1554 "bx_parser.y"
+#line 1564 "bx_parser.y"
                                      { (yyval.uval) = -(yyvsp[0].uval); }
-#line 4561 "y.tab.c"
+#line 5160 "y.tab.c"
     break;
 
   case 308: /* vexpression: '(' vexpression ')'  */
-#line 1555 "bx_parser.y"
+#line 1565 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-1].uval); }
-#line 4567 "y.tab.c"
+#line 5166 "y.tab.c"
     break;
 
   case 309: /* expression: BX_TOKEN_NUMERIC  */
-#line 1561 "bx_parser.y"
+#line 1571 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[0].uval); }
-#line 4573 "y.tab.c"
+#line 5172 "y.tab.c"
     break;
 
   case 310: /* expression: BX_TOKEN_STRING  */
-#line 1562 "bx_parser.y"
+#line 1572 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_symbol_value((yyvsp[0].sval)); free((yyvsp[0].sval));}
-#line 4579 "y.tab.c"
+#line 5178 "y.tab.c"
     break;
 
   case 311: /* expression: BX_TOKEN_8BL_REG  */
-#line 1563 "bx_parser.y"
+#line 1573 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg8l_value((yyvsp[0].uval)); }
-#line 4585 "y.tab.c"
+#line 5184 "y.tab.c"
     break;
 
   case 312: /* expression: BX_TOKEN_8BH_REG  */
-#line 1564 "bx_parser.y"
+#line 1574 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg8h_value((yyvsp[0].uval)); }
-#line 4591 "y.tab.c"
+#line 5190 "y.tab.c"
     break;
 
   case 313: /* expression: BX_TOKEN_16B_REG  */
-#line 1565 "bx_parser.y"
+#line 1575 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg16_value((yyvsp[0].uval)); }
-#line 4597 "y.tab.c"
+#line 5196 "y.tab.c"
     break;
 
   case 314: /* expression: BX_TOKEN_32B_REG  */
-#line 1566 "bx_parser.y"
+#line 1576 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg32_value((yyvsp[0].uval)); }
-#line 4603 "y.tab.c"
+#line 5202 "y.tab.c"
     break;
 
   case 315: /* expression: BX_TOKEN_64B_REG  */
-#line 1567 "bx_parser.y"
+#line 1577 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_reg64_value((yyvsp[0].uval)); }
-#line 4609 "y.tab.c"
+#line 5208 "y.tab.c"
     break;
 
   case 316: /* expression: BX_TOKEN_OPMASK_REG  */
-#line 1568 "bx_parser.y"
+#line 1578 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_opmask_value((yyvsp[0].uval)); }
-#line 4615 "y.tab.c"
+#line 5214 "y.tab.c"
     break;
 
   case 317: /* expression: BX_TOKEN_SEGREG  */
-#line 1569 "bx_parser.y"
+#line 1579 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_selector_value((yyvsp[0].uval)); }
-#line 4621 "y.tab.c"
+#line 5220 "y.tab.c"
     break;
 
   case 318: /* expression: BX_TOKEN_REG_IP  */
-#line 1570 "bx_parser.y"
+#line 1580 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_ip (); }
-#line 4627 "y.tab.c"
+#line 5226 "y.tab.c"
     break;
 
   case 319: /* expression: BX_TOKEN_REG_EIP  */
-#line 1571 "bx_parser.y"
+#line 1581 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_eip(); }
-#line 4633 "y.tab.c"
+#line 5232 "y.tab.c"
     break;
 
   case 320: /* expression: BX_TOKEN_REG_RIP  */
-#line 1572 "bx_parser.y"
+#line 1582 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_rip(); }
-#line 4639 "y.tab.c"
+#line 5238 "y.tab.c"
     break;
 
   case 321: /* expression: BX_TOKEN_REG_SSP  */
-#line 1573 "bx_parser.y"
+#line 1583 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_ssp(); }
-#line 4645 "y.tab.c"
+#line 5244 "y.tab.c"
     break;
 
   case 322: /* expression: expression ':' expression  */
-#line 1574 "bx_parser.y"
+#line 1584 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_get_laddr ((yyvsp[-2].uval), (yyvsp[0].uval)); }
-#line 4651 "y.tab.c"
+#line 5250 "y.tab.c"
     break;
 
   case 323: /* expression: expression '+' expression  */
-#line 1575 "bx_parser.y"
+#line 1585 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) + (yyvsp[0].uval); }
-#line 4657 "y.tab.c"
+#line 5256 "y.tab.c"
     break;
 
   case 324: /* expression: expression '-' expression  */
-#line 1576 "bx_parser.y"
+#line 1586 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) - (yyvsp[0].uval); }
-#line 4663 "y.tab.c"
+#line 5262 "y.tab.c"
     break;
 
   case 325: /* expression: expression '*' expression  */
-#line 1577 "bx_parser.y"
+#line 1587 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) * (yyvsp[0].uval); }
-#line 4669 "y.tab.c"
+#line 5268 "y.tab.c"
     break;
 
   case 326: /* expression: expression '/' expression  */
-#line 1578 "bx_parser.y"
+#line 1588 "bx_parser.y"
                                      { (yyval.uval) = ((yyvsp[0].uval) != 0) ? (yyvsp[-2].uval) / (yyvsp[0].uval) : 0; }
-#line 4675 "y.tab.c"
+#line 5274 "y.tab.c"
     break;
 
   case 327: /* expression: expression BX_TOKEN_DEREF_CHR expression  */
-#line 1579 "bx_parser.y"
+#line 1589 "bx_parser.y"
                                               { (yyval.uval) = bx_dbg_deref((yyvsp[-2].uval), (yyvsp[0].uval), NULL, NULL); }
-#line 4681 "y.tab.c"
+#line 5280 "y.tab.c"
     break;
 
   case 328: /* expression: expression BX_TOKEN_RSHIFT expression  */
-#line 1580 "bx_parser.y"
+#line 1590 "bx_parser.y"
                                            { (yyval.uval) = (yyvsp[-2].uval) >> (yyvsp[0].uval); }
-#line 4687 "y.tab.c"
+#line 5286 "y.tab.c"
     break;
 
   case 329: /* expression: expression BX_TOKEN_LSHIFT expression  */
-#line 1581 "bx_parser.y"
+#line 1591 "bx_parser.y"
                                            { (yyval.uval) = (yyvsp[-2].uval) << (yyvsp[0].uval); }
-#line 4693 "y.tab.c"
+#line 5292 "y.tab.c"
     break;
 
   case 330: /* expression: expression '|' expression  */
-#line 1582 "bx_parser.y"
+#line 1592 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) | (yyvsp[0].uval); }
-#line 4699 "y.tab.c"
+#line 5298 "y.tab.c"
     break;
 
   case 331: /* expression: expression '^' expression  */
-#line 1583 "bx_parser.y"
+#line 1593 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) ^ (yyvsp[0].uval); }
-#line 4705 "y.tab.c"
+#line 5304 "y.tab.c"
     break;
 
   case 332: /* expression: expression '&' expression  */
-#line 1584 "bx_parser.y"
+#line 1594 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) & (yyvsp[0].uval); }
-#line 4711 "y.tab.c"
+#line 5310 "y.tab.c"
     break;
 
   case 333: /* expression: expression '>' expression  */
-#line 1585 "bx_parser.y"
+#line 1595 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) > (yyvsp[0].uval); }
-#line 4717 "y.tab.c"
+#line 5316 "y.tab.c"
     break;
 
   case 334: /* expression: expression '<' expression  */
-#line 1586 "bx_parser.y"
+#line 1596 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-2].uval) < (yyvsp[0].uval); }
-#line 4723 "y.tab.c"
+#line 5322 "y.tab.c"
     break;
 
   case 335: /* expression: expression BX_TOKEN_EQ expression  */
-#line 1587 "bx_parser.y"
+#line 1597 "bx_parser.y"
                                        { (yyval.uval) = (yyvsp[-2].uval) == (yyvsp[0].uval); }
-#line 4729 "y.tab.c"
+#line 5328 "y.tab.c"
     break;
 
   case 336: /* expression: expression BX_TOKEN_NE expression  */
-#line 1588 "bx_parser.y"
+#line 1598 "bx_parser.y"
                                        { (yyval.uval) = (yyvsp[-2].uval) != (yyvsp[0].uval); }
-#line 4735 "y.tab.c"
+#line 5334 "y.tab.c"
     break;
 
   case 337: /* expression: expression BX_TOKEN_LE expression  */
-#line 1589 "bx_parser.y"
+#line 1599 "bx_parser.y"
                                        { (yyval.uval) = (yyvsp[-2].uval) <= (yyvsp[0].uval); }
-#line 4741 "y.tab.c"
+#line 5340 "y.tab.c"
     break;
 
   case 338: /* expression: expression BX_TOKEN_GE expression  */
-#line 1590 "bx_parser.y"
+#line 1600 "bx_parser.y"
                                        { (yyval.uval) = (yyvsp[-2].uval) >= (yyvsp[0].uval); }
-#line 4747 "y.tab.c"
+#line 5346 "y.tab.c"
     break;
 
   case 339: /* expression: '!' expression  */
-#line 1591 "bx_parser.y"
+#line 1601 "bx_parser.y"
                                      { (yyval.uval) = !(yyvsp[0].uval); }
-#line 4753 "y.tab.c"
+#line 5352 "y.tab.c"
     break;
 
   case 340: /* expression: '-' expression  */
-#line 1592 "bx_parser.y"
+#line 1602 "bx_parser.y"
                                      { (yyval.uval) = -(yyvsp[0].uval); }
-#line 4759 "y.tab.c"
+#line 5358 "y.tab.c"
     break;
 
   case 341: /* expression: '*' expression  */
-#line 1593 "bx_parser.y"
+#line 1603 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_lin_indirect((yyvsp[0].uval)); }
-#line 4765 "y.tab.c"
+#line 5364 "y.tab.c"
     break;
 
   case 342: /* expression: '@' expression  */
-#line 1594 "bx_parser.y"
+#line 1604 "bx_parser.y"
                                      { (yyval.uval) = bx_dbg_phy_indirect((yyvsp[0].uval)); }
-#line 4771 "y.tab.c"
+#line 5370 "y.tab.c"
     break;
 
   case 343: /* expression: '(' expression ')'  */
-#line 1595 "bx_parser.y"
+#line 1605 "bx_parser.y"
                                      { (yyval.uval) = (yyvsp[-1].uval); }
-#line 4777 "y.tab.c"
+#line 5376 "y.tab.c"
     break;
 
 
-#line 4781 "y.tab.c"
+#line 5380 "y.tab.c"
 
       default: break;
     }
@@ -4970,7 +5569,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 1598 "bx_parser.y"
+#line 1608 "bx_parser.y"
 
 #endif  /* if BX_DEBUGGER */
 /* The #endif is appended by the makefile after running yacc. */
