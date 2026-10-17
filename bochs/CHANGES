@@ -1,6 +1,6 @@
 Changes after Bochs 3.1 release:
 
-(up to date with commits done till 14 Oct 2026)
+(up to date with commits done till 17 Oct 2026)
 
 - CPU emulation and instrumentation
   ! Implemented AI Compute Extensions (ACE) emulation according AI Compute Extensions (ACE) Specification rev1.16.2 from x86 Ecosystem Advisory Group
@@ -73,6 +73,9 @@ Changes after Bochs 3.1 release:
 - I/O Devices
   - VGA
     - Setting wrong VBE "dispi ID" do not cause PANIC anymore
+    - Fixed guest-to-host heap buffer overflow in text mode with high CRTC start address
+  - Cirrus
+    - Fixed guest-to-host stack buffer overflow in color expand video-to-video BitBLT
   - GeForce
     - Continue to improve GeForce model
       - #846: Add volume texture support
@@ -87,6 +90,8 @@ Changes after Bochs 3.1 release:
   - Hard drive / HD image
     - VVFAT: Fixed LongName handling in vvfat disks
     - VVFAT: Adding path prefix "fat32:" forces using FAT32 file system
+    - VBOX: Fixed data corruption in images with more than 4GB of allocated data
+    - VMWARE3: Fixed data corruption on Windows hosts (image files were opened in text mode)
   - CD-ROM
     - Model parameter now supports format "VENDOR:PRODUCT:REV" for ATAPI inquiry
   - Sound
@@ -101,6 +106,8 @@ Changes after Bochs 3.1 release:
     - Set Windows system timer resolution to 1ms. This help to reduce artefacts (clicking noises) during sound playback
 
 - GUI and display libraries
+    - win32 gui
+      - Fixed crash on paste when the clipboard has no text
     - term gui
       - Fixed terminal init in debugger enabled mode
       - Added support for the command mode
