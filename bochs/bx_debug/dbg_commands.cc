@@ -2182,7 +2182,7 @@ void bx_dbg_examine_command(const char *command, const char *format, bool format
   Bit16u  data16;
   Bit32u  data32;
   Bit64u  data64;
-  unsigned columns, per_line, offset;
+  unsigned columns, per_line;
   bool is_linear;
   Bit8u databuf[8];
 
@@ -2292,7 +2292,6 @@ void bx_dbg_examine_command(const char *command, const char *format, bool format
 
   data_size = 0;
   per_line  = 0;
-  offset = 0;
 
   if (memory_dump) {
     if (display_format == 'c') {
@@ -2332,11 +2331,11 @@ void bx_dbg_examine_command(const char *command, const char *format, bool format
       if (memory_dump)
         dbg_printf("0x" FMT_ADDRX ":", addr);
       else {
-        const char *Sym=bx_dbg_disasm_symbolic_address(addr + offset, 0);
+        const char *Sym=bx_dbg_disasm_symbolic_address(addr, 0);
         if (Sym)
           dbg_printf("0x" FMT_ADDRX " <%s>:", addr, Sym);
-      else
-        dbg_printf("0x" FMT_ADDRX " <bogus+%8u>:", addr, offset);
+        else
+          dbg_printf("0x" FMT_ADDRX ":", addr);
       }
       columns = 1;
     }
@@ -2468,7 +2467,6 @@ void bx_dbg_examine_command(const char *command, const char *format, bool format
     addr += data_size;
     bx_debugger.default_addr = addr;
     columns++;
-    offset += data_size;
   }
   dbg_printf("\n");
 }
