@@ -1927,7 +1927,7 @@ bool bx_win32_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green,
 
 void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
-  HDC hdc;
+//HDC hdc;
   HGDIOBJ oldObj;
   unsigned yt = y_tilesize;
 
@@ -1935,7 +1935,7 @@ void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 	yt = dimension_y - y0;
   }
   EnterCriticalSection(&stInfo.drawCS);
-  hdc = GetDC(stInfo.simWnd);
+//hdc = GetDC(stInfo.simWnd);
 
   oldObj = SelectObject(MemoryDC, MemoryBitmap);
 
@@ -1946,7 +1946,7 @@ void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
   updateUpdated(x0, y0, x0 + x_tilesize, y0 + yt);
 
-  ReleaseDC(stInfo.simWnd, hdc);
+//ReleaseDC(stInfo.simWnd, hdc);
   LeaveCriticalSection(&stInfo.drawCS);
 }
 
