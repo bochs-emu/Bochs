@@ -1566,7 +1566,7 @@ void bx_dbg_bt_command(unsigned dist)
     bx_address rip = cpu->get_instruction_pointer();
     const char *Sym=bx_dbg_disasm_symbolic_address(rip, 0);
     dbg_printf("%012" FMT_64 "x -> %012" FMT_64 "x (%s)\n",
-      (Bit64u)linear_sp, (Bit64u)rip, Sym);
+      (Bit64u)linear_sp, (Bit64u)rip, Sym ? Sym : "<unknown>");
     len = 8;
   } else
 #endif
@@ -1577,7 +1577,7 @@ void bx_dbg_bt_command(unsigned dist)
       bx_address eip = cpu->get_instruction_pointer();
       const char *Sym=bx_dbg_disasm_symbolic_address(eip, 0);
       dbg_printf("%08x -> %08x (%s)\n",
-        (Bit32u)linear_sp, (Bit32u)eip, Sym);
+        (Bit32u)linear_sp, (Bit32u)eip, Sym ? Sym : "<unknown>");
       len = 4;
     } else {
       linear_bp = cpu->get_reg16(BX_16BIT_REG_BP);
@@ -1585,7 +1585,7 @@ void bx_dbg_bt_command(unsigned dist)
       bx_address ip = cpu->get_instruction_pointer();
       const char *Sym=bx_dbg_disasm_symbolic_address(ip, 0);
       dbg_printf("%04x -> %04x (%s)\n",
-        (Bit16u)linear_sp, (Bit16u)ip, Sym);
+        (Bit16u)linear_sp, (Bit16u)ip, Sym ? Sym : "<unknown>");
       len = 2;
     }
   }
