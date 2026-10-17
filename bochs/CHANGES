@@ -29,6 +29,8 @@ Changes after Bochs 3.1 release:
     - 'info linux' detects kernel/user mode correctly for all kernel versions
     - SMP: breakpoint conditions are evaluated on the CPU that hit the breakpoint, and several commands no longer access the wrong CPU
     - SMP: on activation debugger switches to the CPU that hit a breakpoint, watchpoint or magic breakpoint
+    - Fixed debugger hang on binary compiled without readline (for example Win32) on a whitespace-only line at the prompt;
+      blank lines in sourced scripts no longer repeat the previous command
   - Activation of the internal debugger at runtime, when Bochs compiled with the internal debugger
     was started without -dbg option (currently with the win32 display library only). The gui debugger
     is activated if it is selected with 'debugger: gui=1' (requires the win32 config interface),
