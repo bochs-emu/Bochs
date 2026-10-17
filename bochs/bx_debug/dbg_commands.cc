@@ -3210,35 +3210,75 @@ void bx_dbg_info_ivt_command(unsigned from, unsigned to)
     dbg_printf("cpu in protected mode, use info idt\n");
 }
 
-static void bx_dbg_print_tss(Bit8u *tss, int len)
+// TSS layout kinds for 'info tss'
+#define BX_DBG_TSS_16BIT 16
+#define BX_DBG_TSS_32BIT 32
+#define BX_DBG_TSS_64BIT 64
+
+static void bx_dbg_print_tss(const Bit8u *tss, unsigned kind)
 {
-  if (len<104) {
-    dbg_printf("Invalid tss length (limit must be greater then 103)\n");
+  if (kind == BX_DBG_TSS_16BIT) {
+    dbg_printf("ss:sp(0): 0x%04x:0x%04x\n",
+      conv_2xBit8u_to_Bit16u(tss+0x04), conv_2xBit8u_to_Bit16u(tss+0x02));
+    dbg_printf("ss:sp(1): 0x%04x:0x%04x\n",
+      conv_2xBit8u_to_Bit16u(tss+0x08), conv_2xBit8u_to_Bit16u(tss+0x06));
+    dbg_printf("ss:sp(2): 0x%04x:0x%04x\n",
+      conv_2xBit8u_to_Bit16u(tss+0x0c), conv_2xBit8u_to_Bit16u(tss+0x0a));
+    dbg_printf("ip: 0x%04x\n", conv_2xBit8u_to_Bit16u(tss+0x0e));
+    dbg_printf("flags: 0x%04x\n", conv_2xBit8u_to_Bit16u(tss+0x10));
+
+    dbg_printf("cs: 0x%04x ds: 0x%04x ss: 0x%04x\n",
+      conv_2xBit8u_to_Bit16u(tss+0x24), conv_2xBit8u_to_Bit16u(tss+0x28), conv_2xBit8u_to_Bit16u(tss+0x26));
+    dbg_printf("es: 0x%04x\n", conv_2xBit8u_to_Bit16u(tss+0x22));
+
+    dbg_printf("ax: 0x%04x  bx: 0x%04x  cx: 0x%04x  dx: 0x%04x\n",
+      conv_2xBit8u_to_Bit16u(tss+0x12), conv_2xBit8u_to_Bit16u(tss+0x18),
+      conv_2xBit8u_to_Bit16u(tss+0x14), conv_2xBit8u_to_Bit16u(tss+0x16));
+    dbg_printf("si: 0x%04x  di: 0x%04x  bp: 0x%04x  sp: 0x%04x\n",
+      conv_2xBit8u_to_Bit16u(tss+0x1e), conv_2xBit8u_to_Bit16u(tss+0x20),
+      conv_2xBit8u_to_Bit16u(tss+0x1c), conv_2xBit8u_to_Bit16u(tss+0x1a));
+
+    dbg_printf("ldt: 0x%04x\n", conv_2xBit8u_to_Bit16u(tss+0x2a));
+    return;
+  }
+
+  if (kind == BX_DBG_TSS_64BIT) {
+    for (unsigned n=0; n<3; n++) {
+      Bit64u rsp = conv_8xBit8u_to_Bit64u(tss+0x04+n*8);
+      dbg_printf("rsp(%u): 0x%08x%08x\n", n, GET32H(rsp), GET32L(rsp));
+    }
+    for (unsigned n=1; n<=7; n++) {
+      Bit64u ist = conv_8xBit8u_to_Bit64u(tss+0x24+(n-1)*8);
+      dbg_printf("ist%u: 0x%08x%08x\n", n, GET32H(ist), GET32L(ist));
+    }
+    dbg_printf("i/o map: 0x%04x\n", conv_2xBit8u_to_Bit16u(tss+0x66));
     return;
   }
 
   dbg_printf("ss:esp(0): 0x%04x:0x%08x\n",
-    *(Bit16u*)(tss+8), *(Bit32u*)(tss+4));
+    conv_2xBit8u_to_Bit16u(tss+0x08), conv_4xBit8u_to_Bit32u(tss+0x04));
   dbg_printf("ss:esp(1): 0x%04x:0x%08x\n",
-    *(Bit16u*)(tss+0x10), *(Bit32u*)(tss+0xc));
+    conv_2xBit8u_to_Bit16u(tss+0x10), conv_4xBit8u_to_Bit32u(tss+0x0c));
   dbg_printf("ss:esp(2): 0x%04x:0x%08x\n",
-    *(Bit16u*)(tss+0x18), *(Bit32u*)(tss+0x14));
-  dbg_printf("cr3: 0x%08x\n", *(Bit32u*)(tss+0x1c));
-  dbg_printf("eip: 0x%08x\n", *(Bit32u*)(tss+0x20));
-  dbg_printf("eflags: 0x%08x\n", *(Bit32u*)(tss+0x24));
+    conv_2xBit8u_to_Bit16u(tss+0x18), conv_4xBit8u_to_Bit32u(tss+0x14));
+  dbg_printf("cr3: 0x%08x\n", conv_4xBit8u_to_Bit32u(tss+0x1c));
+  dbg_printf("eip: 0x%08x\n", conv_4xBit8u_to_Bit32u(tss+0x20));
+  dbg_printf("eflags: 0x%08x\n", conv_4xBit8u_to_Bit32u(tss+0x24));
 
   dbg_printf("cs: 0x%04x ds: 0x%04x ss: 0x%04x\n",
-    *(Bit16u*)(tss+76), *(Bit16u*)(tss+84), *(Bit16u*)(tss+80));
+    conv_2xBit8u_to_Bit16u(tss+76), conv_2xBit8u_to_Bit16u(tss+84), conv_2xBit8u_to_Bit16u(tss+80));
   dbg_printf("es: 0x%04x fs: 0x%04x gs: 0x%04x\n",
-    *(Bit16u*)(tss+72), *(Bit16u*)(tss+88), *(Bit16u*)(tss+92));
+    conv_2xBit8u_to_Bit16u(tss+72), conv_2xBit8u_to_Bit16u(tss+88), conv_2xBit8u_to_Bit16u(tss+92));
 
   dbg_printf("eax: 0x%08x  ebx: 0x%08x  ecx: 0x%08x  edx: 0x%08x\n",
-    *(Bit32u*)(tss+0x28), *(Bit32u*)(tss+0x34), *(Bit32u*)(tss+0x2c), *(Bit32u*)(tss+0x30));
+    conv_4xBit8u_to_Bit32u(tss+0x28), conv_4xBit8u_to_Bit32u(tss+0x34),
+    conv_4xBit8u_to_Bit32u(tss+0x2c), conv_4xBit8u_to_Bit32u(tss+0x30));
   dbg_printf("esi: 0x%08x  edi: 0x%08x  ebp: 0x%08x  esp: 0x%08x\n",
-    *(Bit32u*)(tss+0x40), *(Bit32u*)(tss+0x44), *(Bit32u*)(tss+0x3c), *(Bit32u*)(tss+0x38));
+    conv_4xBit8u_to_Bit32u(tss+0x40), conv_4xBit8u_to_Bit32u(tss+0x44),
+    conv_4xBit8u_to_Bit32u(tss+0x3c), conv_4xBit8u_to_Bit32u(tss+0x38));
 
-  dbg_printf("ldt: 0x%04x\n", *(Bit16u*)(tss+0x60));
-  dbg_printf("i/o map: 0x%04x\n", *(Bit16u*)(tss+0x66));
+  dbg_printf("ldt: 0x%04x\n", conv_2xBit8u_to_Bit16u(tss+0x60));
+  dbg_printf("i/o map: 0x%04x\n", conv_2xBit8u_to_Bit16u(tss+0x66));
 }
 
 void bx_dbg_info_tss_command(void)
@@ -3251,18 +3291,37 @@ void bx_dbg_info_tss_command(void)
 #if BX_SUPPORT_X86_64
   base |= (Bit64u)(tr.dword3) << 32;
 #endif
-  Bit32u len = (tr.des_l & 0xffff) + 1;
+  Bit32u limit = (tr.des_l & 0xffff) | (tr.des_h & 0x000f0000);
+  if (tr.des_h & 0x00800000) // G bit
+    limit = (limit << 12) | 0xfff;
+  unsigned type = (tr.des_h >> 8) & 0xf;
 
-  dbg_printf("tr:s=0x%x, base=0x" FMT_ADDRX ", valid=%u\n",
-      (unsigned) tr.sel, base, (unsigned) tr.valid);
+  unsigned kind = BX_DBG_TSS_32BIT;
+  if (type == BX_SYS_SEGMENT_AVAIL_286_TSS || type == BX_SYS_SEGMENT_BUSY_286_TSS)
+    kind = BX_DBG_TSS_16BIT;
+#if BX_SUPPORT_X86_64
+  unsigned cpu_mode = BX_CPU(dbg_cpu)->get_cpu_mode();
+  if (cpu_mode == BX_MODE_LONG_COMPAT || cpu_mode == BX_MODE_LONG_64)
+    kind = BX_DBG_TSS_64BIT;
+#endif
 
-  bx_phy_address paddr = 0;
-  if (BX_CPU(dbg_cpu)->dbg_xlate_linear2phy(base, &paddr)) {
-    bx_dbg_print_tss(BX_MEM(0)->get_vector(paddr), len);
+  dbg_printf("tr:s=0x%x, base=0x" FMT_ADDRX ", limit=0x%x, %u-bit TSS, valid=%u\n",
+      (unsigned) tr.sel, base, (unsigned) limit, kind, (unsigned) tr.valid);
+
+  // minimal TSS size: 44 bytes for 16-bit TSS, 104 bytes for 32-bit/64-bit TSS
+  unsigned tss_size = (kind == BX_DBG_TSS_16BIT) ? 44 : 104;
+  if (limit < tss_size - 1) {
+    dbg_printf("Invalid tss length (limit must be greater than %u)\n", tss_size - 1);
+    return;
   }
-  else {
-    dbg_printf("bx_dbg_info_tss_command: failed to get physical address for TSS.BASE !\n");
+
+  Bit8u tss[104];
+  if (! bx_dbg_read_linear(dbg_cpu, base, tss_size, tss)) {
+    dbg_printf("bx_dbg_info_tss_command: failed to read TSS memory\n");
+    return;
   }
+
+  bx_dbg_print_tss(tss, kind);
 }
 
 /*
