@@ -71,7 +71,11 @@ bool ParseOSSettings(const char *param, const char *value);
 void WriteOSSettings(FILE *fd);
 
 void HitBreak();
+void SetCPUButton(unsigned oldCPU, unsigned newCPU);
+void SelectCPU(unsigned newCPU);
 void ParseIDText(const char *x);
+
+bool DetachDebugger();
 
 extern bool vgaw_refresh;
 

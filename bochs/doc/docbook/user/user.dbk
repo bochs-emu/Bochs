@@ -4415,12 +4415,21 @@ problem like "could not find hard drive image."
 Examples:
 <screen>
   debugger: log=debugger.out, gui=true
+  debugger: activate=1, gui=true
   debugger: log=/dev/null              (Unix only)
   debugger: log=-
 </screen>
 </para>
 <para>
 This defines the parameters of the Bochs internal debugger.
+</para>
+<para><command>activate</command></para>
+<para>
+If this parameter is set to 'true' or '1' the debugger is started on startup,
+same as the command line option <option>-dbg</option> (the configuration menu
+is skipped). If set to 'false' or '0' (default) Bochs is started without the
+debugger, it could be activated at runtime (currently with the win32 display
+library only, see <xref linkend="internal-debugger">).
 </para>
 <para><command>log</command></para>
 <para>
@@ -4432,8 +4441,11 @@ If you really don't want it, make it /dev/null or '-'.
 If this parameter is set to 'true' or '1' the debugger gui is used instead
 of the command line version. The special value 'globalini' enables the gui
 and forces the usage of an ini file from BXSHARE path. The gui parameter is
-available only if Bochs is built with debugger gui support and the debugger
-is activated with the command line option '-dbg'.
+available only if Bochs is built with debugger gui support. The debugger
+gui starts on startup with the command line option '-dbg' or with the
+<command>activate</command> parameter, without them the debugger gui is
+started when the debugger is activated at runtime (currently with the win32
+display library only).
 </para>
 </section>
 
@@ -7451,13 +7463,14 @@ Breakpoints, watchpoints and other debugger settings are kept but they are
 inactive until the debugger is activated again by one of the methods above or a
 time breakpoint (<command>sb</command>, <command>sba</command>).
 Activating the debugger at runtime is currently supported with the win32
-display library only and it always activates the command line debugger, the
-debugger gui can only be started with the <option>-dbg_gui</option> option
-(or <option>-dbg</option> with the debugger gui enabled). With other display
+display library only. It starts the debugger gui if it is selected with the
+<option>gui</option> parameter of the <option>debugger</option> bochsrc option
+(requires the win32 config interface), the command line debugger otherwise.
+With other display
 libraries the debugger could only be started with the <option>-dbg</option>
 option and after <command>detach</command> it cannot be activated again.
-The <command>detach</command> command is not supported with the debugger
-gui yet.
+With the debugger gui the <command>detach</command> command keeps the debugger
+gui window open, its Break button activates the debugger again.
 </para>
 </section>
 
@@ -7871,7 +7884,22 @@ For example:
 At runtime you need use the command line option <option>-dbg_gui</option> or the
 command option <option>-dbg</option> in combination with the <option>gui</option>
 parameter of the <option>debugger</option> bochsrc option in order to use the GUI
-instead of the command line debugger.
+instead of the command line debugger. The bochsrc line
+<screen>
+  debugger: activate=1, gui=1
+</screen>
+does the same without any command line option.
+</para>
+<para>
+With the win32 display library the GUI debugger can also be started at runtime:
+if Bochs was started without <option>-dbg</option> and the <option>gui</option>
+parameter of the <option>debugger</option> bochsrc option is set, the GUI debugger
+window is opened when the debugger is activated (debugger button, magic breakpoint,
+runtime configuration or panic dialog, see <xref linkend="internal-debugger">).
+The same bochsrc line could also be given on the command line, for example
+<screen>
+  bochsdbg -q -f bochsrc.txt "debugger: gui=1"
+</screen>
 </para>
 <note><para>The wxWidgets port of Bochs always uses this debugger GUI, since the
 command line interface is not available then.
