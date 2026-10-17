@@ -220,15 +220,24 @@ void bx_dbg_user_input_loop(void)
 reparse:
     if ((*tmp_buf_ptr == '\n') || (*tmp_buf_ptr == 0))
     {
-        if ((*tmp_buf_prev != '\n') && (*tmp_buf_prev != 0)) {
-          strncpy(tmp_buf, tmp_buf_prev, sizeof(tmp_buf));
-          tmp_buf[sizeof(tmp_buf) - 1] = '\0';
+        // empty or whitespace only line typed by user repeats the last command
+        if (bx_infile_stack_index == 0 && *tmp_buf_prev != 0) {
+          strcpy(tmp_buf, tmp_buf_prev);
+          tmp_buf_ptr = &tmp_buf[0];
           goto reparse;
         }
+        continue;
     }
-    else if ((strncmp(tmp_buf_ptr, BX_INCLUDE_CMD, include_cmd_len) == 0) &&
-              (tmp_buf_ptr[include_cmd_len] == ' ' ||
-               tmp_buf_ptr[include_cmd_len] == '\t'))
+
+    // remember the last command typed by user (without leading whitespace)
+    if (bx_infile_stack_index == 0) {
+      strncpy(tmp_buf_prev, tmp_buf_ptr, sizeof(tmp_buf_prev));
+      tmp_buf_prev[sizeof(tmp_buf_prev) - 1] = '\0';
+    }
+
+    if ((strncmp(tmp_buf_ptr, BX_INCLUDE_CMD, include_cmd_len) == 0) &&
+         (tmp_buf_ptr[include_cmd_len] == ' ' ||
+          tmp_buf_ptr[include_cmd_len] == '\t'))
     {
       char *ptr = tmp_buf_ptr + include_cmd_len + 1;
       while(*ptr==' ' || *ptr=='\t')
@@ -313,7 +322,6 @@ void bx_get_command(void)
   else {
     if (bx_infile_stack_index == 0)
       dbg_printf("%s", prompt);
-    strncpy(tmp_buf_prev, tmp_buf, sizeof(tmp_buf_prev));
     charptr_ret = fgets(tmp_buf, sizeof(tmp_buf), bx_infile_stack[bx_infile_stack_index].fp);
   }
 #endif
