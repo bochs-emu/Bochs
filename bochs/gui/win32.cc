@@ -1870,7 +1870,12 @@ int bx_win32_gui_c::get_clipboard_text(Bit8u **bytes, Bit32s *nbytes)
 {
   if (OpenClipboard(stInfo.simWnd)) {
     HGLOBAL hg = GetClipboardData(CF_TEXT);
-    char *data = (char *)GlobalLock(hg);
+    char *data = (hg != NULL) ? (char *)GlobalLock(hg) : NULL;
+    if (data == NULL) {
+      CloseClipboard();
+      BX_ERROR(("paste: no text on the clipboard"));
+      return 0;
+    }
     *nbytes = (Bit32s)strlen(data);
     *bytes = new Bit8u[1 + *nbytes];
     BX_INFO(("found %d bytes on the clipboard", *nbytes));
