@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2023  The Bochs Project
+//  Copyright (C) 2023-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -114,6 +114,10 @@ void BX_MEMORY_STUB_C::init_memory(Bit64u guest, Bit64u host, Bit32u block_size)
 
   if (! is_power_of_2(block_size)) {
     BX_PANIC(("Block size %d is not power of two !", block_size));
+  }
+  // read/writePhysicalPage assume that single 4K page access is contained in single memory block
+  if (block_size < 4096) {
+    BX_PANIC(("Block size %d must be at least 4K !", block_size));
   }
 
   if (BX_MEM_THIS actual_vector != NULL) {
@@ -466,24 +470,31 @@ void BX_MEMORY_STUB_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, uns
     }
 
     // all of data is within limits of physical memory
+    // access fits in single 4K page and memory block size is at least 4K, so whole
+    // access is contained in single memory block
+    // host_ptr points into guest RAM, guest memory is stored little-endian whatever the
+    // host is, so host_ptr always advances upwards together with the guest address,
+    // only data_ptr (host order value buffer) direction depends on host endianness
+    Bit8u *host_ptr = BX_MEM_THIS get_vector(linear_addr);
+
     if (len == 8) {
       pageWriteStampTable.decWriteStamp(phys_addr, 8);
-      WriteHostQWordToLittleEndian((Bit64u*) BX_MEM_THIS get_vector(linear_addr), *(Bit64u*)data);
+      WriteHostQWordToLittleEndian((Bit64u*) host_ptr, *(Bit64u*)data);
       return;
     }
     if (len == 4) {
       pageWriteStampTable.decWriteStamp(phys_addr, 4);
-      WriteHostDWordToLittleEndian((Bit32u*) BX_MEM_THIS get_vector(linear_addr), *(Bit32u*)data);
+      WriteHostDWordToLittleEndian((Bit32u*) host_ptr, *(Bit32u*)data);
       return;
     }
     if (len == 2) {
       pageWriteStampTable.decWriteStamp(phys_addr, 2);
-      WriteHostWordToLittleEndian((Bit16u*) BX_MEM_THIS get_vector(linear_addr), *(Bit16u*)data);
+      WriteHostWordToLittleEndian((Bit16u*) host_ptr, *(Bit16u*)data);
       return;
     }
     if (len == 1) {
       pageWriteStampTable.decWriteStamp(phys_addr, 1);
-      * (BX_MEM_THIS get_vector(linear_addr)) = * (Bit8u *) data;
+      *host_ptr = * (Bit8u *) data;
       return;
     }
     // len == other, just fall thru to special cases handling
@@ -498,10 +509,10 @@ void BX_MEMORY_STUB_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, uns
       // Write in chunks of 8 bytes if we can
       if ((len & 7) == 0) {
         pageWriteStampTable.decWriteStamp(phys_addr, 8);
-        WriteHostQWordToLittleEndian((Bit64u*) BX_MEM_THIS get_vector(linear_addr), *(Bit64u*)data_ptr);
+        WriteHostQWordToLittleEndian((Bit64u*) host_ptr, *(Bit64u*)data_ptr);
         len -= 8;
         phys_addr += 8;
-        linear_addr += 8;
+        host_ptr += 8;
 #ifdef BX_LITTLE_ENDIAN
         data_ptr += 8;
 #else
@@ -510,11 +521,11 @@ void BX_MEMORY_STUB_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, uns
         if (len == 0) return;
       } else {
         pageWriteStampTable.decWriteStamp(phys_addr, 1);
-        *(BX_MEM_THIS get_vector(linear_addr)) = *data_ptr;
+        *host_ptr = *data_ptr;
         if (len == 1) return;
         len--;
         phys_addr++;
-        linear_addr++;
+        host_ptr++;
 #ifdef BX_LITTLE_ENDIAN
         data_ptr++;
 #else // BX_BIG_ENDIAN
@@ -522,9 +533,6 @@ void BX_MEMORY_STUB_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, uns
 #endif
       }
     }
-
-    pageWriteStampTable.decWriteStamp(phys_addr);
-
   } else {
     // access outside limits of physical memory, ignore
     BX_DEBUG(("Write outside the limits of physical memory (0x" FMT_PHY_ADDRX " -> linear 0x" FMT_PHY_ADDRX ") (ignore)", a20addr, linear_addr));
@@ -551,20 +559,27 @@ void BX_MEMORY_STUB_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsi
       return;
     }
 
+    // access fits in single 4K page and memory block size is at least 4K, so whole
+    // access is contained in single memory block
+    // host_ptr points into guest RAM, guest memory is stored little-endian whatever the
+    // host is, so host_ptr always advances upwards together with the guest address,
+    // only data_ptr (host order value buffer) direction depends on host endianness
+    Bit8u *host_ptr = BX_MEM_THIS get_vector(linear_addr);
+
     if (len == 8) {
-      * (Bit64u*) data = ReadHostQWordFromLittleEndian((Bit64u*) BX_MEM_THIS get_vector(linear_addr));
+      * (Bit64u*) data = ReadHostQWordFromLittleEndian((Bit64u*) host_ptr);
       return;
     }
     if (len == 4) {
-      * (Bit32u*) data = ReadHostDWordFromLittleEndian((Bit32u*) BX_MEM_THIS get_vector(linear_addr));
+      * (Bit32u*) data = ReadHostDWordFromLittleEndian((Bit32u*) host_ptr);
       return;
     }
     if (len == 2) {
-      * (Bit16u*) data = ReadHostWordFromLittleEndian((Bit16u*) BX_MEM_THIS get_vector(linear_addr));
+      * (Bit16u*) data = ReadHostWordFromLittleEndian((Bit16u*) host_ptr);
       return;
     }
     if (len == 1) {
-      * (Bit8u *) data = * (BX_MEM_THIS get_vector(linear_addr));
+      * (Bit8u *) data = *host_ptr;
       return;
     }
     // len == other case can just fall thru to special cases handling
@@ -579,9 +594,9 @@ void BX_MEMORY_STUB_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsi
     while(1) {
       // Read in chunks of 8 bytes if we can
       if ((len & 7) == 0) {
-        *((Bit64u*)data_ptr) = ReadHostQWordFromLittleEndian((Bit64u*) BX_MEM_THIS get_vector(linear_addr));
+        *((Bit64u*)data_ptr) = ReadHostQWordFromLittleEndian((Bit64u*) host_ptr);
         len -= 8;
-        linear_addr += 8;
+        host_ptr += 8;
 #ifdef BX_LITTLE_ENDIAN
         data_ptr += 8;
 #else
@@ -590,10 +605,10 @@ void BX_MEMORY_STUB_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsi
 
         if (len == 0) return;
       } else {
-        *data_ptr = *(BX_MEM_THIS get_vector(linear_addr));
+        *data_ptr = *host_ptr;
         if (len == 1) return;
         len--;
-        linear_addr++;
+        host_ptr++;
 #ifdef BX_LITTLE_ENDIAN
         data_ptr++;
 #else // BX_BIG_ENDIAN

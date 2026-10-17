@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -40,7 +40,7 @@
 
 void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, void *data)
 {
-  Bit8u *data_ptr;
+  Bit8u *data_ptr, *host_ptr;
   bx_phy_address a20addr = A20ADDR(addr);
 
   struct memory_handler_struct *memory_handler = NULL;
@@ -110,13 +110,19 @@ mem_write:
 
     pageWriteStampTable.decWriteStamp(a20addr);
 
+    // access fits in single 4K page and memory block size is at least 4K
+    // host_ptr points into guest RAM, guest memory is stored little-endian whatever the
+    // host is, so host_ptr always advances upwards together with a20addr,
+    // only data_ptr (host order value buffer) direction depends on host endianness
+    host_ptr = BX_MEM_THIS get_vector(a20addr);
+
     // addr must be in range 000A0000 .. 000FFFFF
     for(unsigned i=0; i<len; i++) {
       // SMMRAM
       if (a20addr < 0x000c0000) {
         // devices are not allowed to access SMMRAM under VGA memory
         if (cpu) {
-          *(BX_MEM_THIS get_vector(a20addr)) = *data_ptr;
+          *host_ptr = *data_ptr;
         }
         goto inc_one;
       }
@@ -133,7 +139,7 @@ mem_write:
         if (BX_MEM_THIS memory_type[area][1] == 1) {
           // Writes to ShadowRAM
           BX_DEBUG(("Writing to ShadowRAM: address 0x" FMT_PHY_ADDRX ", data %02x", a20addr, *data_ptr));
-          *(BX_MEM_THIS get_vector(a20addr)) = *data_ptr;
+          *host_ptr = *data_ptr;
         } else if ((area >= BX_MEM_AREA_E0000) && BX_MEM_THIS bios_write_enabled) {
           // volatile BIOS write support
           if (BX_MEM_THIS flash_type > 0) {
@@ -150,6 +156,7 @@ mem_write:
 
 inc_one:
       a20addr++;
+      host_ptr++; // guest RAM is little-endian, always advance upwards
 #ifdef BX_LITTLE_ENDIAN
       data_ptr++;
 #else // BX_BIG_ENDIAN
@@ -185,7 +192,7 @@ inc_one:
 
 void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, void *data)
 {
-  Bit8u *data_ptr;
+  Bit8u *data_ptr, *host_ptr;
   bx_phy_address a20addr = A20ADDR(addr);
 
   struct memory_handler_struct *memory_handler = NULL;
@@ -258,13 +265,19 @@ mem_read:
     data_ptr = (Bit8u *) data + (len - 1);
 #endif
 
+    // access fits in single 4K page and memory block size is at least 4K
+    // host_ptr points into guest RAM, guest memory is stored little-endian whatever the
+    // host is, so host_ptr always advances upwards together with a20addr,
+    // only data_ptr (host order value buffer) direction depends on host endianness
+    host_ptr = BX_MEM_THIS get_vector(a20addr);
+
     // addr must be in range 000A0000 .. 000FFFFF
     for (unsigned i=0; i<len; i++) {
 
       // SMMRAM
       if (a20addr < 0x000c0000) {
         // devices are not allowed to access SMMRAM under VGA memory
-        if (cpu) *data_ptr = *(BX_MEM_THIS get_vector(a20addr));
+        if (cpu) *data_ptr = *host_ptr;
         goto inc_one;
       }
 
@@ -286,14 +299,14 @@ mem_read:
           }
         } else {
           // Read from ShadowRAM
-          *data_ptr = *(BX_MEM_THIS get_vector(a20addr));
+          *data_ptr = *host_ptr;
         }
       }
       else
 #endif  // #if BX_SUPPORT_PCI
       {
         if ((a20addr & 0xfffc0000) != 0x000c0000) {
-          *data_ptr = *(BX_MEM_THIS get_vector(a20addr));
+          *data_ptr = *host_ptr;
         }
         else if ((a20addr & 0xfffe0000) == 0x000e0000) {
           // last 128K of BIOS ROM mapped to 0xE0000-0xFFFFF
@@ -306,6 +319,7 @@ mem_read:
 
 inc_one:
       a20addr++;
+      host_ptr++; // guest RAM is little-endian, always advance upwards
 #ifdef BX_LITTLE_ENDIAN
       data_ptr++;
 #else // BX_BIG_ENDIAN
