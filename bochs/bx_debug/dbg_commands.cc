@@ -2401,7 +2401,10 @@ void bx_dbg_examine_command(const char *command, const char *format, bool format
     }
     else {
       // address is already physical address
-      BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), (bx_phy_address) addr, data_size, databuf);
+      if (! BX_MEM(0)->dbg_fetch_mem(BX_CPU(dbg_cpu), (bx_phy_address) addr, data_size, databuf)) {
+        dbg_printf("\nbx_dbg_examine_command: physical memory read error (phy=0x" FMT_PHY_ADDRX ")\n", (bx_phy_address) addr);
+        return;
+      }
     }
 
     //FIXME HanishKVC The char display for data to be properly integrated
@@ -3241,13 +3244,16 @@ void bx_dbg_info_ivt_command(unsigned from, unsigned to)
 
     for (unsigned i = from; i <= to; i++)
     {
-      bx_dbg_read_linear(dbg_cpu, idtr.base + i*4, 4, buff);
+      if (! bx_dbg_read_linear(dbg_cpu, idtr.base + i*4, 4, buff)) {
+        // bx_dbg_read_linear already printed an error message if failed
+        return;
+      }
       seg = ((Bit32u) buff[3] << 8) | buff[2];
       off = ((Bit32u) buff[1] << 8) | buff[0];
-      bx_dbg_read_linear(dbg_cpu, (seg << 4) + off, 1, buff);
+      bool dummy_iret = bx_dbg_read_linear(dbg_cpu, (seg << 4) + off, 1, buff) && (buff[0] == 0xcf);
       dbg_printf("INT# %02x > %04X:%04X (0x%08x) %s%s\n", i, seg, off,
          (unsigned) ((seg << 4) + off), bx_dbg_ivt_desc(i),
-         (buff[0] == 0xcf) ? " ; dummy iret" : "");
+         dummy_iret ? " ; dummy iret" : "");
     }
     if (all) dbg_printf("You can list individual entries with 'info ivt [NUM]' or groups with 'info ivt [NUM] [NUM]'\n");
   }
