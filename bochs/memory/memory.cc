@@ -65,25 +65,16 @@ void BX_MEM_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned le
     bx_devices.pluginIODebug->mem_write(cpu, a20addr, len, data);
 #endif
 
-    if ((a20addr >= 0x000a0000 && a20addr < 0x000c0000) && BX_MEM_THIS smram_available)
-    {
-      // SMRAM memory space
-      if (BX_MEM_THIS smram_enable || (cpu->smm_mode() && !BX_MEM_THIS smram_restricted))
-        goto mem_write;
-    }
+    // SMRAM memory space
+    if (BX_MEM_THIS is_smram_data_access(a20addr, cpu->smm_mode()))
+      goto mem_write;
   }
 
-  memory_handler = BX_MEM_THIS memory_handlers[a20addr >> 20];
+  memory_handler = BX_MEM_THIS find_memory_handler(BX_MEM_THIS memory_handlers[a20addr >> 20], a20addr, true);
   while (memory_handler) {
-    if (memory_handler->write_handler != NULL) {
-      if (memory_handler->begin <= a20addr &&
-          memory_handler->end >= a20addr &&
-          memory_handler->write_handler(a20addr, len, data, memory_handler->param))
-      {
-        return;
-      }
-    }
-    memory_handler = memory_handler->next;
+    if (memory_handler->write_handler(a20addr, len, data, memory_handler->param))
+      return;
+    memory_handler = BX_MEM_THIS find_memory_handler(memory_handler->next, a20addr, true);
   }
 
 mem_write:
@@ -212,19 +203,14 @@ void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
     bx_devices.pluginIODebug->mem_read(cpu, a20addr, len, data);
 #endif
 
-    if ((a20addr >= 0x000a0000 && a20addr < 0x000c0000) && BX_MEM_THIS smram_available)
-    {
-      // SMRAM memory space
-      if (BX_MEM_THIS smram_enable || (cpu->smm_mode() && !BX_MEM_THIS smram_restricted))
-        goto mem_read;
-    }
+    // SMRAM memory space
+    if (BX_MEM_THIS is_smram_data_access(a20addr, cpu->smm_mode()))
+      goto mem_read;
   }
 
-  memory_handler = BX_MEM_THIS memory_handlers[a20addr >> 20];
+  memory_handler = BX_MEM_THIS find_memory_handler(BX_MEM_THIS memory_handlers[a20addr >> 20], a20addr, false);
   while (memory_handler) {
-    if (memory_handler->begin <= a20addr &&
-          memory_handler->end >= a20addr &&
-          memory_handler->read_handler(a20addr, len, data, memory_handler->param))
+    if (memory_handler->read_handler(a20addr, len, data, memory_handler->param))
     {
 #if BX_SUPPORT_PCI
       if (BX_MEM_THIS pci_enabled && ((a20addr & 0xfffc0000) == 0x000c0000)) {
@@ -239,7 +225,7 @@ void BX_MEM_C::readPhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, unsigned len
         return;
       }
     }
-    memory_handler = memory_handler->next;
+    memory_handler = BX_MEM_THIS find_memory_handler(memory_handler->next, a20addr, false);
   }
 
 mem_read:

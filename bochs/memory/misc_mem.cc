@@ -599,36 +599,21 @@ bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, B
   bx_phy_address a20addr = A20ADDR(addr);
   bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
   struct memory_handler_struct *memory_handler = NULL;
-  bool ret = true, use_memory_handler = false, use_smram = false;
+  bool ret = true;
 
   bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
 #if BX_PHY_ADDRESS_LONG
   if (a20addr > BX_CONST64(0xffffffff)) is_bios = false;
 #endif
 
-  if ((a20addr >= 0x000a0000 && a20addr < 0x000c0000) && BX_MEM_THIS smram_available)
-  {
-    // SMRAM memory space
-    if (BX_MEM_THIS smram_enable || (cpu->smm_mode() && !BX_MEM_THIS smram_restricted))
-      use_smram = true;
-  }
-
-  memory_handler = BX_MEM_THIS memory_handlers[a20addr >> 20];
-  while (memory_handler) {
-    if (memory_handler->begin <= a20addr && memory_handler->end >= a20addr)
-    {
-      if (!use_smram) {
-        use_memory_handler = true;
-        break;
-      }
-    }
-    memory_handler = memory_handler->next;
-  }
+  // SMRAM space accessible to the CPU is never served by memory handlers
+  if (! BX_MEM_THIS is_smram_data_access(a20addr, cpu->smm_mode()))
+    memory_handler = BX_MEM_THIS find_memory_handler(BX_MEM_THIS memory_handlers[a20addr >> 20], a20addr, false);
 
   for (; len>0; len--) {
     // Keep translated address in sync as we increment a20addr.
     linear_addr = bx_translate_gpa_to_linear(a20addr);
-    if (use_memory_handler) {
+    if (memory_handler) {
       memory_handler->read_handler(a20addr, 1, buf, memory_handler->param);
     }
 #if BX_SUPPORT_PCI
@@ -690,7 +675,7 @@ bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, B
       ret = false; // error, beyond limits of memory
     }
     buf++;
-    a20addr++;
+    a20addr = A20ADDR(a20addr + 1);
   }
   return ret;
 }
@@ -702,38 +687,22 @@ bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit
   bx_phy_address a20addr = A20ADDR(addr);
   bx_phy_address linear_addr = bx_translate_gpa_to_linear(a20addr);
   struct memory_handler_struct *memory_handler = NULL;
-  bool use_memory_handler = false, use_smram = false;
 
   bool is_bios = (a20addr >= (bx_phy_address)BX_MEM_THIS bios_rom_addr);
 #if BX_PHY_ADDRESS_LONG
   if (a20addr > BX_CONST64(0xffffffff)) is_bios = false;
 #endif
 
-  if ((a20addr >= 0x000a0000 && a20addr < 0x000c0000) && BX_MEM_THIS smram_available)
-  {
-    // SMRAM memory space
-    if (BX_MEM_THIS smram_enable || (cpu->smm_mode() && !BX_MEM_THIS smram_restricted))
-      use_smram = true;
-  }
-
-  memory_handler = BX_MEM_THIS memory_handlers[a20addr >> 20];
-  while (memory_handler) {
-    if (memory_handler->begin <= a20addr && memory_handler->end >= a20addr)
-    {
-      if (!use_smram) {
-        use_memory_handler = true;
-        break;
-      }
-    }
-    memory_handler = memory_handler->next;
-  }
+  // SMRAM space accessible to the CPU is never served by memory handlers
+  if (! BX_MEM_THIS is_smram_data_access(a20addr, cpu->smm_mode()))
+    memory_handler = BX_MEM_THIS find_memory_handler(BX_MEM_THIS memory_handlers[a20addr >> 20], a20addr, false);
 
   dbg_invalidate_smc_pages(a20addr, len);
 
   for (; len>0; len--) {
     // Keep translated address in sync as we increment a20addr.
     linear_addr = bx_translate_gpa_to_linear(a20addr);
-    if (use_memory_handler) {
+    if (memory_handler) {
       memory_handler->write_handler(a20addr, 1, buf, memory_handler->param);
     }
 #if BX_SUPPORT_PCI
@@ -759,7 +728,7 @@ bool BX_MEM_C::dbg_set_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit
       *(BX_MEM_THIS get_vector(linear_addr)) = *buf;
     }
     buf++;
-    a20addr++;
+    a20addr = A20ADDR(a20addr + 1);
   }
   return true;
 }
@@ -797,16 +766,12 @@ Bit8u *BX_MEM_C::getHostMemAddr(BX_CPU_C *cpu, bx_phy_address addr, unsigned rw)
   }
 #endif
 
-  struct memory_handler_struct *memory_handler = BX_MEM_THIS memory_handlers[a20addr >> 20];
-  while (memory_handler) {
-    if (memory_handler->begin <= a20addr &&
-        memory_handler->end >= a20addr) {
-      if (memory_handler->da_handler)
-        return memory_handler->da_handler(a20addr, rw, memory_handler->param);
-      else
-        return(NULL); // Vetoed! memory handler for i/o apic, vram, mmio and PCI PnP
-    }
-    memory_handler = memory_handler->next;
+  struct memory_handler_struct *memory_handler = BX_MEM_THIS find_memory_handler(BX_MEM_THIS memory_handlers[a20addr >> 20], a20addr, false);
+  if (memory_handler) {
+    if (memory_handler->da_handler)
+      return memory_handler->da_handler(a20addr, rw, memory_handler->param);
+    else
+      return(NULL); // Vetoed! memory handler for i/o apic, vram, mmio and PCI PnP
   }
 
   // Never allow direct access in the PCI/MMIO hole, except for the BIOS/UEFI
