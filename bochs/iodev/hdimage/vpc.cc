@@ -116,6 +116,12 @@ int vpc_image_t::check_format(int fd, Bit64u imgsize)
   return vpc_disk_type;
 }
 
+vpc_image_t::vpc_image_t()
+{
+  fd = -1;
+  pagetable = NULL;
+}
+
 int vpc_image_t::open(const char* _pathname, int flags)
 {
   int i;
@@ -259,7 +265,9 @@ void vpc_image_t::close(void)
 {
   if (fd > -1) {
     delete [] pagetable;
+    pagetable = NULL;
     bx_close_image(fd, pathname);
+    fd = -1;
   }
 }
 
