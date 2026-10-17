@@ -103,8 +103,6 @@ void dbg_printf(const char *fmt, ...)
 
 int bx_dbg_set_rcfile(const char *rcfile)
 {
-  strncpy(bx_infile_stack[0].fname, rcfile, BX_MAX_PATH);
-  bx_infile_stack[0].fname[BX_MAX_PATH-1] = 0;
   BX_INFO(("debugger using rc file '%s'.", rcfile));
   return bx_nest_infile((char*)rcfile);
 }
@@ -123,6 +121,7 @@ void bx_dbg_init(void)
 
   bx_infile_stack_index = 0;
   bx_infile_stack[0].fp = stdin;
+  strcpy(bx_infile_stack[0].fname, "stdin");
   bx_infile_stack[0].lineno = 0;
 }
 
@@ -236,6 +235,10 @@ reparse:
         ptr++;
 
       int len = strlen(ptr);
+      // get rid of trailing newline and whitespace
+      while (len > 0 && (ptr[len-1] == '\n' || ptr[len-1] == '\r' ||
+                         ptr[len-1] == ' '  || ptr[len-1] == '\t'))
+        ptr[--len] = 0;
       if (len == 0) {
         dbg_printf("%s: no filename given to 'source' command.\n", argv0);
         if (bx_infile_stack_index > 0) {
@@ -244,7 +247,6 @@ reparse:
         }
         continue;
       }
-      ptr[len-1] = 0; // get rid of newline
       reti = bx_nest_infile(ptr);
       if (reti==0 && bx_infile_stack_index > 0) {
         dbg_printf("%s: ERROR in source file causes exit.\n", argv0);
