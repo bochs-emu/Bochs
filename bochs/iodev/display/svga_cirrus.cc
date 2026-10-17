@@ -3655,7 +3655,8 @@ void bx_svga_cirrus_c::svga_patterncopy()
 void bx_svga_cirrus_c::svga_simplebitblt()
 {
   Bit8u color[4];
-  Bit8u work_colorexp[2048];
+  // holds one color expanded row: up to bltwidth (max 0x2000) bytes
+  Bit8u work_colorexp[0x2000];
   Bit16u w, x, y, pxcolor, trcolor;
   Bit8u *src, *dst;
   unsigned bits, bits_xor, bitmask;
