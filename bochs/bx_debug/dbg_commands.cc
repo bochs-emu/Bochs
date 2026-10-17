@@ -948,7 +948,7 @@ void bx_dbg_timebp_command(bool absolute, Bit64u time)
         timebp_queue[i+1] = timebp_queue[i];
       timebp_queue[0] = abs_time;
       timebp_queue_size++;
-      bx_pc_system.activate_timer_ticks(timebp_timer, diff, 1);
+      bx_pc_system.activate_timer_ticks(timebp_timer, diff, 0);
     } else {
       /* not first, insert at suitable place */
       for (int i = 1; i < timebp_queue_size; i++) {

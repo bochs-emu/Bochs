@@ -443,9 +443,11 @@ void bx_pc_system_c::timebp_handler(void* this_ptr)
      Bit64s new_diff = timebp_queue[1] - bx_pc_system.time_ticks();
      bx_pc_system.activate_timer_ticks(timebp_timer, new_diff, 0);
    }
-   timebp_queue_size--;
-   for (int i = 0; i < timebp_queue_size; i++)
-     timebp_queue[i] = timebp_queue[i+1];
+   if (timebp_queue_size > 0) {
+     timebp_queue_size--;
+     for (int i = 0; i < timebp_queue_size; i++)
+       timebp_queue[i] = timebp_queue[i+1];
+   }
 }
 #endif // BX_DEBUGGER
 
