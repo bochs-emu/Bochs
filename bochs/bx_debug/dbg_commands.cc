@@ -2561,7 +2561,9 @@ void bx_dbg_loadmem_command(const char *filename, bx_address laddr)
       if (0 != bytes_read) {
         if (!bx_dbg_write_linear(dbg_cpu, laddr, bytes_read, databuf)) {
           dbg_printf("Error: loadmem: could not set memory\n");
+          break;
         }
+        laddr += bytes_read;
       }
   } while (0 != bytes_read);
 
