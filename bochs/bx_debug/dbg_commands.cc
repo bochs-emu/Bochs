@@ -4278,6 +4278,10 @@ void bx_dbg_step_over_command()
 #if BX_SUPPORT_X86_64
     case BX_IA_JMPF_Op64_Ep:
 #endif
+#if BX_SUPPORT_APX
+    // jmpabs    REX2 0xA1
+    case BX_IA_APX_JMPABS:
+#endif
       bx_dbg_stepN_command(dbg_cpu, 1);
       return;
   }
