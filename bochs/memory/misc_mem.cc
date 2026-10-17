@@ -361,9 +361,11 @@ void BX_MEM_C::load_ROM(const char *path, bx_phy_address romaddress, Bit8u type)
   }
   if (type == 0) {
     if (romaddress > 0) {
-      if ((romaddress + size) != 0x100000 && (romaddress + size)) {
+      // BIOS must end either at 1M or at 4G (32-bit wrap around to 0)
+      Bit32u rom_end = (Bit32u)(romaddress + size);
+      if (rom_end != 0x100000 && rom_end != 0) {
         close(fd);
-        BX_PANIC(("ROM: System BIOS must end at 0xfffff"));
+        BX_PANIC(("ROM: System BIOS must end at 0xfffff or 0xffffffff"));
         return;
       }
     } else {
