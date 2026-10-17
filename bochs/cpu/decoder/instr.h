@@ -87,7 +87,7 @@ public:
     BX_INSTR_METADATA_SRC1  = 1,
     BX_INSTR_METADATA_SRC2  = 2,
     BX_INSTR_METADATA_SRC3  = 3,
-    BX_INSTR_METADATA_CET_SEGOVERRIDE = 3, // share src3
+    BX_INSTR_METADATA_APX_CET_SEGOVERRIDE = 3, // share src3
     BX_INSTR_METADATA_SEG   = 4,
     BX_INSTR_METADATA_BASE  = 5,
     BX_INSTR_METADATA_INDEX = 6,
@@ -95,20 +95,17 @@ public:
   };
 
   // using 6-bit field for registers (32 regs in 64-bit APX and EVEX, RIP, NIL)
-  Bit8u metaData[8];
-
-#if BX_SUPPORT_APX
-  // APX metadata:
-  // apx[0]:
-  //   7..7 (unused)
+  //
+  // metaData[BX_INSTR_METADATA_APX_CET_SEGOVERRIDE] is used as bit array when
+  // instruction has no src3 register (src3 register overrides the whole byte):
+  //   7..7 APX.NF (derived from EVEX.mask, EVEX.mask[2])
   //   6..6 REX2 prefix was used (must be zero when non APX instruction)
   //   5..4 (unused)
   //   3..3 APX.ND (derived from EVEX.b)
-  //   2..2 APX.NF (derived from EVEX.mask, EVEX.mask[2])
-  //   1..0 (unused)
-  // apx[1..3]: unused
-  Bit8u apx[4];
-#endif
+  //   2..1 (unused)
+  //   0..0 CET segment override (DS prefix used as NOTRACK)
+  // Bits 7..6 are never set by src3 register (6-bit field)
+  Bit8u metaData[8];
 
   union {
     // Form (longest case): [opcode+modrm+sib/displacement32/immediate32]
@@ -168,15 +165,6 @@ public:
     metaData[BX_INSTR_METADATA_SEG] = val;
   }
 
-#if BX_SUPPORT_CET
-  BX_CPP_INLINE unsigned segOverrideCet(void) const {
-    return metaData[BX_INSTR_METADATA_CET_SEGOVERRIDE] & 0x1;
-  }
-  BX_CPP_INLINE void setCetSegOverride() {
-    metaData[BX_INSTR_METADATA_CET_SEGOVERRIDE] |= 0x1;
-  }
-#endif
-
   BX_CPP_INLINE void setFoo(unsigned foo) {
     // none of x87 instructions has immediate
     modRMForm.Iw[0] = foo;
@@ -226,10 +214,7 @@ public:
   BX_CPP_INLINE void init(unsigned os32, unsigned as32, unsigned os64, unsigned as64)
   {
     metaInfo.metaInfo1 = (os32<<2) | (os64<<3) | (as32<<0) | (as64<<1);
-    metaData[BX_INSTR_METADATA_CET_SEGOVERRIDE] = 0;
-#if BX_SUPPORT_APX
-    apx[0] = 0;
-#endif
+    metaData[BX_INSTR_METADATA_APX_CET_SEGOVERRIDE] = 0;
   }
 
   BX_CPP_INLINE unsigned os32L(void) const {
@@ -391,29 +376,38 @@ public:
 
 #if BX_SUPPORT_APX
   BX_CPP_INLINE unsigned getREX2(void) const {
-    return apx[0] & (1<<6);
+    return metaData[BX_INSTR_METADATA_APX_CET_SEGOVERRIDE] & (1<<6);
   }
   BX_CPP_INLINE void setREX2() {
-    apx[0] |= (1<<6);
+    metaData[BX_INSTR_METADATA_APX_CET_SEGOVERRIDE] |= (1<<6);
   }
 
   BX_CPP_INLINE unsigned getApxEvexNF(void) const {
-    return apx[0] & (1<<2);
+    return metaData[BX_INSTR_METADATA_APX_CET_SEGOVERRIDE] & (1<<7);
   }
   BX_CPP_INLINE void setApxEvexNF() {
-    apx[0] |= (1<<2);
+    metaData[BX_INSTR_METADATA_APX_CET_SEGOVERRIDE] |= (1<<7);
   }
   BX_CPP_INLINE void clearApxEvexNF() {
-    apx[0] &= ~(1<<2);
+    metaData[BX_INSTR_METADATA_APX_CET_SEGOVERRIDE] &= ~(1<<7);
   }
 
   BX_CPP_INLINE unsigned getApxEvexND(void) const {
-    return apx[0] & (1<<3);
+    return metaData[BX_INSTR_METADATA_APX_CET_SEGOVERRIDE] & (1<<3);
   }
   BX_CPP_INLINE void setApxEvexND() {
-    apx[0] |= (1<<3);
+    metaData[BX_INSTR_METADATA_APX_CET_SEGOVERRIDE] |= (1<<3);
   }
 #endif
+#endif
+
+#if BX_SUPPORT_CET
+  BX_CPP_INLINE unsigned segOverrideCet(void) const {
+    return metaData[BX_INSTR_METADATA_APX_CET_SEGOVERRIDE] & 0x1;
+  }
+  BX_CPP_INLINE void setCetSegOverride() {
+    metaData[BX_INSTR_METADATA_APX_CET_SEGOVERRIDE] |= 0x1;
+  }
 #endif
 
   BX_CPP_INLINE void setSrcReg(unsigned src, unsigned reg) {
