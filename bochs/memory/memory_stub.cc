@@ -497,10 +497,10 @@ void BX_MEMORY_STUB_C::writePhysicalPage(BX_CPU_C *cpu, bx_phy_address addr, uns
     while(1) {
       // Write in chunks of 8 bytes if we can
       if ((len & 7) == 0) {
-      pageWriteStampTable.decWriteStamp(phys_addr, 8);
+        pageWriteStampTable.decWriteStamp(phys_addr, 8);
         WriteHostQWordToLittleEndian((Bit64u*) BX_MEM_THIS get_vector(linear_addr), *(Bit64u*)data_ptr);
         len -= 8;
-      phys_addr += 8;
+        phys_addr += 8;
         linear_addr += 8;
 #ifdef BX_LITTLE_ENDIAN
         data_ptr += 8;
