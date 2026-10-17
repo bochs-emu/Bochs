@@ -1666,6 +1666,11 @@ void bx_dbg_print_watchpoints(void)
 
 void bx_dbg_watch(int type, bx_phy_address address, Bit32u len)
 {
+  if (len == 0) {
+    dbg_printf("watch: length must be greater than zero\n");
+    return;
+  }
+
   if (type == BX_READ) {
     if (num_read_watchpoints == BX_DBG_MAX_WATCHPONTS) {
       dbg_printf("Too many read watchpoints (%d)\n", BX_DBG_MAX_WATCHPONTS);
