@@ -1922,6 +1922,10 @@ void bx_dbg_stepN_command(int cpu, Bit32u count)
 
   BX_INSTR_DEBUG_PROMPT();
   bx_dbg_print_guard_results();
+
+  // back to config mode: the gui debugger single step calls this directly,
+  // without returning through the debugger input loop
+  SIM->set_display_mode(DISP_MODE_CONFIG);
 }
 
 void bx_dbg_disassemble_current(int which_cpu, int print_time)
