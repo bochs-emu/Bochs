@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2025  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -1647,7 +1647,9 @@ void bx_vgacore_c::update(void)
       MSL = 3;
     }
     rows = (VDE+1)/(MSL+1);
-    if ((rows * tm_info.line_offset) > (1 << 17)) {
+    // the text buffer and the text snapshot hold 128K, the displayed text
+    // (plus one more row for vertical panning) starts at the start address
+    if ((tm_info.start_address + (rows + 1) * tm_info.line_offset) > (1 << 17)) {
       BX_ERROR(("update(): text mode: out of memory"));
       return;
     }
