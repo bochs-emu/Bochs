@@ -190,7 +190,7 @@ void bx_dbg_exception(unsigned cpu, Bit8u vector, Bit16u error_code)
      "(#CP) Shadow Stack Protection",
   };
 
-  if (BX_CPU(dbg_cpu)->trace || bx_dbg.exceptions)
+  if (BX_CPU(cpu)->trace || bx_dbg.exceptions)
   {
     if (vector <= BX_CP_EXCEPTION) {
       dbg_printf("CPU %d: Exception 0x%02x - %s occurred (error_code=0x%04x)\n",
@@ -205,7 +205,7 @@ void bx_dbg_exception(unsigned cpu, Bit8u vector, Bit16u error_code)
 
 void bx_dbg_interrupt(unsigned cpu, Bit8u vector, Bit16u error_code)
 {
-  if (BX_CPU(dbg_cpu)->trace || bx_dbg.interrupts)
+  if (BX_CPU(cpu)->trace || bx_dbg.interrupts)
   {
     dbg_printf("CPU %d: Interrupt 0x%02x occurred (error_code=0x%04x)\n",
       cpu, vector, error_code);
@@ -466,7 +466,7 @@ void bx_dbg_print_avx_state(unsigned cpu, unsigned vlen)
   char param_name[24];
 
   if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_AVX)) {
-    bx_dbg_print_mxcsr_state();
+    bx_dbg_print_mxcsr_state(cpu);
 
     unsigned num_regs = 16;
 #if BX_SUPPORT_EVEX
@@ -606,7 +606,7 @@ void bx_dbg_print_mmx_state(void)
 void bx_dbg_print_fpu_state(unsigned cpu)
 {
 #if BX_SUPPORT_FPU
-  BX_CPU(dbg_cpu)->print_state_FPU();
+  BX_CPU(cpu)->print_state_FPU();
 #else
   dbg_printf("The CPU doesn't support FPU state !\n");
 #endif
@@ -806,7 +806,7 @@ void bx_dbg_info_registers_command(unsigned cpu, int which_regs_mask)
     dbg_printf("esi: 0x%08x %d\n", (unsigned) reg, (int) reg);
     reg = BX_CPU(cpu)->get_reg32(BX_32BIT_REG_EDI);
     dbg_printf("edi: 0x%08x %d\n", (unsigned) reg, (int) reg);
-    reg = bx_dbg_get_eip();
+    reg = BX_CPU(cpu)->get_eip();
     dbg_printf("eip: 0x%08x\n", (unsigned) reg);
 #else
     reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_RAX);
@@ -841,7 +841,7 @@ void bx_dbg_info_registers_command(unsigned cpu, int which_regs_mask)
     dbg_printf("r14: %08x_%08x\n", GET32H(reg), GET32L(reg));
     reg = BX_CPU(cpu)->get_reg64(BX_64BIT_REG_R15);
     dbg_printf("r15: %08x_%08x\n", GET32H(reg), GET32L(reg));
-    reg = bx_dbg_get_rip();
+    reg = BX_CPU(cpu)->get_instruction_pointer();
     dbg_printf("rip: %08x_%08x\n", GET32H(reg), GET32L(reg));
 #if BX_SUPPORT_CET
     if (BX_CPU(cpu)->is_cpu_extension_supported(BX_ISA_CET)) {
@@ -1899,7 +1899,7 @@ void bx_dbg_disassemble_current(int which_cpu, int print_time)
     // in each cpu description (see cpu/cpu.h) and update/compare those "prev" values
     // from here. (eks)
     if(BX_CPU(which_cpu)->trace_reg)
-      bx_dbg_info_registers_command(BX_INFO_GENERAL_PURPOSE_REGS);
+      bx_dbg_info_registers_command(which_cpu, BX_INFO_GENERAL_PURPOSE_REGS);
 
     if (print_time)
       dbg_printf("(%u).[" FMT_LL "d] ", which_cpu, bx_pc_system.time_ticks());
