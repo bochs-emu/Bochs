@@ -1449,8 +1449,15 @@ bx_address bx_dbg_deref(bx_address addr, unsigned deep, unsigned* error_deep, bx
       *error_deep = i + 1;
       break;
     }
-    deref_addr = 0;
-    deref_addr |= *((bx_address*)buf);
+#if BX_SUPPORT_X86_64
+    if (len == 8)
+      deref_addr = conv_8xBit8u_to_Bit64u(buf);
+    else
+#endif
+    if (len == 4)
+      deref_addr = conv_4xBit8u_to_Bit32u(buf);
+    else
+      deref_addr = conv_2xBit8u_to_Bit16u(buf);
     *last_data_found = deref_addr;
   }
 
