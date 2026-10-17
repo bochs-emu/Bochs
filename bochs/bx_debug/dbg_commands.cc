@@ -1574,7 +1574,7 @@ void bx_dbg_bt_command(unsigned dist)
       len = 4;
     } else {
       linear_bp = cpu->get_reg16(BX_16BIT_REG_BP);
-      linear_sp = cpu->get_reg16(BX_16BIT_REG_BP);
+      linear_sp = cpu->get_reg16(BX_16BIT_REG_SP);
       bx_address ip = cpu->get_instruction_pointer();
       const char *Sym=bx_dbg_disasm_symbolic_address(ip, 0);
       dbg_printf("%04x -> %04x (%s)\n",
