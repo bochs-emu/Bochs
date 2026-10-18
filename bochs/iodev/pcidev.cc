@@ -126,7 +126,7 @@ PLUGIN_ENTRY_FOR_MODULE(pcidev)
     SIM->register_addon_option("pcidev", pcidev_options_parser, pcidev_options_save);
   } else if (mode == PLUGIN_FINI) {
     SIM->unregister_addon_option("pcidev");
-    bx_list_c *menu = (bx_list_c*)SIM->get_param("network");
+    bx_list_c *menu = (bx_list_c*)SIM->get_param("pci");
     menu->remove("pcidev");
     delete thePciDevAdapter;
   } else if (mode == PLUGIN_PROBE) {
@@ -171,7 +171,7 @@ static bool pcidev_mem_read_handler(bx_phy_address addr, unsigned len, void *dat
     if (fd == -1)
         return false; /* we failed to handle the request, so let a default handler do it for us */
 
-    BX_INFO(("Reading I/O memory at 0x%08x", (unsigned)addr));
+    BX_DEBUG(("Reading I/O memory at 0x%08x", (unsigned)addr));
     struct pcidev_io_struct io;
     io.address = addr + region->host_start - region->start;
     switch(len) {
@@ -208,7 +208,7 @@ static bool pcidev_mem_write_handler(bx_phy_address addr, unsigned len, void *da
     if (fd == -1)
         return false; /* we failed to handle the request, so let a default handler do it for us */
 
-    BX_INFO(("Writing I/O memory at 0x%08x", (unsigned)addr));
+    BX_DEBUG(("Writing I/O memory at 0x%08x", (unsigned)addr));
     struct pcidev_io_struct io;
     io.address = addr + region->host_start - region->start;
     switch(len) {
