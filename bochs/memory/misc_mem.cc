@@ -560,7 +560,11 @@ void BX_MEM_C::load_RAM(const char *path, bx_phy_address ramaddress)
 void BX_MEM_C::reset(void)
 {
   // Reset memory state for UEFI support
-  // UEFI firmware (OVMF) modifies ROM during execution, so we need to reload it on reset
+  // UEFI firmware (OVMF) modifies ROM during execution, so we need to reload it on reset.
+  // Only the system BIOS area of rom[] can be modified by the guest (BIOS write enable or flash),
+  // the expansion ROM area (0xC0000-0xDFFFF) is never written after it was loaded by init code
+  // (system BIOS and option ROMs from main.cc, VGA BIOS from the VGA device only for non-PCI VGA),
+  // so it stays loaded as is.
 
   // Reset flash state to initial values (same as init_memory)
   BX_MEM_THIS bios_write_enabled = false;
@@ -568,35 +572,29 @@ void BX_MEM_C::reset(void)
   BX_MEM_THIS flash_wsm_state = FLASH_READ_ARRAY;
   BX_MEM_THIS flash_modified = false;
 
-  // Clear ROM presence tracking (so load_ROM doesn't PANIC on address conflicts)
-  for (int i = 0; i < 65; i++) {
-    BX_MEM_THIS rom_present[i] = false;
-  }
+  // Clear ROM presence tracking of the system BIOS area (rom_present[64] tracks 0xE0000-0xEFFFF)
+  BX_MEM_THIS rom_present[64] = false;
 
-  // Clear ROM area and reload from disk
-  memset(BX_MEM_THIS rom, 0xff, BIOSROMSZ + EXROMSIZE);
+  // Clear system BIOS area and reload it from disk
+  memset(BX_MEM_THIS rom, 0xff, BIOSROMSZ);
 
   // Reload system BIOS ROM
   BX_MEM_THIS load_ROM(SIM->get_param_string(BXPN_ROM_PATH)->getptr(),
                        SIM->get_param_num(BXPN_ROM_ADDRESS)->get(), 0);
 
-  // Reload VGABIOS ROM if configured
-  if (!SIM->get_param_string(BXPN_VGA_ROM_PATH)->isempty()) {
-    BX_MEM_THIS load_ROM(SIM->get_param_string(BXPN_VGA_ROM_PATH)->getptr(), 0xc0000, 1);
-  }
-
-  // Reload optional ROMs
+  // Reload optional ROMs mapped into the system BIOS area (0xE0000-0xEFFFF)
   char pname[24];
   for (int i = 0; i < BX_N_OPTROM_IMAGES; i++) {
     sprintf(pname, "%s.%d", BXPN_OPTROM_BASE, i + 1);
     bx_list_c *base = (bx_list_c*)SIM->get_param(pname);
-    if (!SIM->get_param_string("file", base)->isempty()) {
+    if (!SIM->get_param_string("file", base)->isempty() &&
+        SIM->get_param_num("address", base)->get() >= 0xe0000) {
       BX_MEM_THIS load_ROM(SIM->get_param_string("file", base)->getptr(),
                            SIM->get_param_num("address", base)->get(), 2);
     }
   }
 
-  BX_DEBUG(("memory reset: ROM images reloaded"));
+  BX_DEBUG(("memory reset: system BIOS ROM reloaded"));
 }
 
 bool BX_MEM_C::dbg_fetch_mem(BX_CPU_C *cpu, bx_phy_address addr, unsigned len, Bit8u *buf)
