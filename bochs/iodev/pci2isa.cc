@@ -97,6 +97,7 @@ void bx_piix3_c::init(void)
     for (j=0; j<16; j++) {
       BX_P2I_THIS s.irq_level[i][j] = 0x0;
     }
+    BX_P2I_THIS s.pirq_level[i] = 0x0;
   }
   // initialize readonly registers
   if (BX_P2I_THIS s.chipset == BX_PCI_CHIPSET_I430FX) {
@@ -149,6 +150,7 @@ void bx_piix3_c::reset(unsigned type)
 
   for (unsigned i = 0; i < 4; i++) {
     pci_set_irq(BX_P2I_THIS s.devfunc, i+1, 0);
+    pirq_route_changed(i, BX_P2I_THIS pci_conf[0x60 + i], 0x80);
     BX_P2I_THIS pci_conf[0x60 + i] = 0x80;
   }
 
@@ -181,6 +183,11 @@ void bx_piix3_c::register_state(void)
       new bx_shadow_num_c(irql, name, &BX_P2I_THIS s.irq_level[i][j]);
     }
   }
+  bx_list_c *pirql = new bx_list_c(list, "pirq_level");
+  for (i=0; i<4; i++) {
+    sprintf(name, "%u", i);
+    new bx_shadow_num_c(pirql, name, &BX_P2I_THIS s.pirq_level[i], BASE_HEX);
+  }
 }
 
 void bx_piix3_c::pci_set_irq(Bit8u devfunc, unsigned line, bool level)
@@ -209,6 +216,11 @@ void bx_piix3_c::pci_set_irq(Bit8u devfunc, unsigned line, bool level)
     DEV_ioapic_set_irq_level(pirq + 16, level);
   }
 #endif
+  if (level) {
+    BX_P2I_THIS s.pirq_level[pirq] |= (1 << device);
+  } else {
+    BX_P2I_THIS s.pirq_level[pirq] &= ~(1 << device);
+  }
   Bit8u irq = BX_P2I_THIS pci_conf[0x60 + pirq];
   if ((irq < 16) && (((1 << irq) & 0xdef8) > 0)) {
     if (level) {
@@ -226,6 +238,36 @@ void bx_piix3_c::pci_set_irq(Bit8u devfunc, unsigned line, bool level)
         BX_DEBUG(("INT%c -> PIRQ%c -> IRQ %d = 0", line+64, pirq+65, irq));
       }
     }
+  }
+}
+
+// move the PIC input of an asserted PIRQ when its routing register changes
+void bx_piix3_c::pirq_route_changed(Bit8u pirq, Bit8u old_route, Bit8u new_route)
+{
+  unsigned i;
+  bool active;
+
+  if ((old_route < 16) && (((1 << old_route) & 0xdef8) > 0) &&
+      (BX_P2I_THIS s.irq_level[pirq][old_route] != 0)) {
+    BX_P2I_THIS s.irq_level[pirq][old_route] = 0;
+    active = 0;
+    for (i = 0; i < 4; i++) {
+      if (BX_P2I_THIS s.irq_level[i][old_route]) active = 1;
+    }
+    if (!active) {
+      DEV_pic_set_irq_level(old_route, BX_IRQ_TYPE_PIRQ, 0);
+    }
+  }
+  if ((new_route < 16) && (((1 << new_route) & 0xdef8) > 0) &&
+      (BX_P2I_THIS s.pirq_level[pirq] != 0)) {
+    active = 0;
+    for (i = 0; i < 4; i++) {
+      if (BX_P2I_THIS s.irq_level[i][new_route]) active = 1;
+    }
+    if (!active) {
+      DEV_pic_set_irq_level(new_route, BX_IRQ_TYPE_PIRQ, 1);
+    }
+    BX_P2I_THIS s.irq_level[pirq][new_route] = BX_P2I_THIS s.pirq_level[pirq];
   }
 }
 
@@ -406,6 +448,7 @@ void bx_piix3_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io_len)
           BX_P2I_THIS pci_conf[address+i] = value8;
           BX_INFO(("PCI IRQ routing: PIRQ%c# set to 0x%02x", address+i-31,
                    value8));
+          pirq_route_changed(address+i-0x60, oldval, value8);
         }
         break;
       case 0x6a:

@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -294,10 +294,9 @@ void bx_pci_bridge_c::pci_write_handler(Bit8u address, Bit32u value, unsigned io
         }
         break;
       case 0x07:
+        // write 1 to clear, DEVSEL timing bits are read-only
         if (BX_PCI_THIS chipset == BX_PCI_CHIPSET_I430FX) {
           value8 &= 0x30;
-        } else if (BX_PCI_THIS chipset != BX_PCI_CHIPSET_I440BX) {
-          value8 = (BX_PCI_THIS pci_conf[0x07] & ~value8) | 0x02;
         } else {
           value8 &= 0xf9;
         }

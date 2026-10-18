@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2021  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -61,7 +61,10 @@ public:
   Bit32u get_hi_part () const  { return hi; }
   void set_lo_part (Bit32u val_lo_part) {
     // keep high 32 bits of value, replace low 32, ignore R/O bits
-    lo = val_lo_part & 0xffffafff;
+    // (delivery status and remote IRR keep their current state)
+    lo = (val_lo_part & 0xffffafff) | (lo & 0x00005000);
+    // remote IRR is only defined for level triggered interrupts
+    if (! trigger_mode()) clear_remote_irr();
   }
   void set_hi_part (Bit32u val_hi_part) {
     // keep low 32 bits of value, replace high 32

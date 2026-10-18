@@ -1711,7 +1711,7 @@ void bx_pci_device_c::load_pci_rom(const char *path, memory_handler_t mem_read_h
 {
   struct stat stat_buf;
   int fd, ret;
-  unsigned long size, max_size;
+  unsigned long size, max_size, offset;
   Bit32u pci_rom_size;
 
   if (*path == '\0') {
@@ -1742,7 +1742,7 @@ void bx_pci_device_c::load_pci_rom(const char *path, memory_handler_t mem_read_h
     BX_PANIC(("PCI ROM image too large"));
     return;
   }
-  if ((size % 512) != 0) {
+  if ((size == 0) || ((size % 512) != 0)) {
     close(fd);
     BX_PANIC(("PCI ROM image size must be multiple of 512 (size = %ld)", size));
     return;
@@ -1752,13 +1752,18 @@ void bx_pci_device_c::load_pci_rom(const char *path, memory_handler_t mem_read_h
   }
   pci_rom_size = (max_size << 1);
   pci_rom = new Bit8u[pci_rom_size];
+  // unused part of the ROM BAR window reads as 0xff
+  memset(pci_rom, 0xff, pci_rom_size);
 
+  offset = 0;
   while (size > 0) {
-    ret = read(fd, (bx_ptr_t) pci_rom, size);
+    ret = read(fd, (bx_ptr_t) (pci_rom + offset), size);
     if (ret <= 0) {
       BX_PANIC(("read failed on PCI ROM image: '%s'", path));
+      break;
     }
     size -= ret;
+    offset += ret;
   }
   close(fd);
 

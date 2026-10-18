@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -54,8 +54,11 @@ private:
     Bit8u apmc;
     Bit8u apms;
     Bit32u irq_level[4][16];
+    Bit32u pirq_level[4]; // devices asserting each PIRQ, independent of routing
     Bit8u pci_reset;
   } s;
+
+  void pirq_route_changed(Bit8u pirq, Bit8u old_route, Bit8u new_route);
 
   static Bit32u read_handler(void *this_ptr, Bit32u address, unsigned io_len);
   static void   write_handler(void *this_ptr, Bit32u address, Bit32u value, unsigned io_len);
