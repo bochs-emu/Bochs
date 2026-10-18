@@ -71,6 +71,7 @@ bx_devices_c::bx_devices_c()
     irq_handler_name[i] = NULL;
   }
   sound_device_count = 0;
+  timer_handle = BX_NULL_TIMER_HANDLE;
 }
 
 bx_devices_c::~bx_devices_c()
@@ -401,7 +402,7 @@ void bx_devices_c::init(BX_MEM_C *newmem)
 
   }
 
-  if (timer_handle != BX_NULL_TIMER_HANDLE) {
+  if (timer_handle == BX_NULL_TIMER_HANDLE) {
     timer_handle = DEV_register_timer(this, timer_handler,
       (unsigned) BX_IODEV_HANDLER_PERIOD, 1, 1, "devices.cc");
   }
@@ -515,6 +516,8 @@ void bx_devices_c::exit()
 
   bx_virt_timer.setup();
   bx_slowdown_timer.exit();
+  // pc_system deletes all timers on exit, register again on the next init()
+  timer_handle = BX_NULL_TIMER_HANDLE;
 
   // unload device plugins
   bx_unload_plugins();
