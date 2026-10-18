@@ -769,7 +769,7 @@ bool bx_devices_c::register_io_read_handler(void *this_ptr, bx_read_handler_t f,
       break;
     }
     curr = curr->next;
-  } while (curr->next != &io_read_handlers);
+  } while (curr != &io_read_handlers);
 
   if (!io_read_handler) {
     io_read_handler = new struct io_handler_struct;
@@ -828,7 +828,7 @@ bool bx_devices_c::register_io_write_handler(void *this_ptr, bx_write_handler_t 
       break;
     }
     curr = curr->next;
-  } while (curr->next != &io_write_handlers);
+  } while (curr != &io_write_handlers);
 
   if (!io_write_handler) {
     io_write_handler = new struct io_handler_struct;
@@ -892,7 +892,7 @@ bool bx_devices_c::register_io_read_handler_range(void *this_ptr, bx_read_handle
       break;
     }
     curr = curr->next;
-  } while (curr->next != &io_read_handlers);
+  } while (curr != &io_read_handlers);
 
   if (!io_read_handler) {
     io_read_handler = new struct io_handler_struct;
@@ -957,7 +957,7 @@ bool bx_devices_c::register_io_write_handler_range(void *this_ptr, bx_write_hand
       break;
     }
     curr = curr->next;
-  } while (curr->next != &io_write_handlers);
+  } while (curr != &io_write_handlers);
 
   if (!io_write_handler) {
     io_write_handler = new struct io_handler_struct;
