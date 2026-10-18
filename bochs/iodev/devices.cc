@@ -1778,6 +1778,9 @@ void bx_pci_device_c::pci_write_handler_common(Bit8u address, Bit32u value, unsi
     return;
   }
 
+  if ((io_len + (address & 3)) > 4) {
+    io_len = 4 - (address & 3); // clamp io_len
+  }
   // handle base address registers if header type bit #0 and #1 are clear
   if (((pci_conf[0x0e] & 0x03) == 0) && (address >= 0x10) && (address < 0x28)) {
     bnum = ((address - 0x10) >> 2);
@@ -1901,6 +1904,9 @@ Bit32u bx_pci_device_c::pci_read_handler(Bit8u address, unsigned io_len)
 {
   Bit32u value = 0;
 
+  if ((io_len + (address & 3)) > 4) {
+    io_len = 4 - (address & 3); // clamp io_len
+  }
   for (unsigned i=0; i<io_len; i++) {
     value |= (pci_conf[address+i] << (i*8));
   }
