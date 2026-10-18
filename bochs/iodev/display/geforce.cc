@@ -3234,6 +3234,7 @@ void bx_geforce_c::d3d_texture_process_format(gf_texture* tex)
     case 0x1e: // X8R8G8B8
     case 0x3a: // A8B8G8R8
     case 0x85: // A8R8G8B8
+    case 0x9e: // X8R8G8B8
       tex->color_bytes = 4;
       break;
     default:
@@ -3805,7 +3806,8 @@ void bx_geforce_c::d3d_sample_texture(gf_channel* ch,
       break;
     }
     case 0x07:
-    case 0x1e: { // X8R8G8B8
+    case 0x1e:
+    case 0x9e: { // X8R8G8B8
       Bit32u value = dma_read32(tex->dma_obj, tex_ofs);
       color_int[0] = 1;
       color_scale[0] = 1.0f;
@@ -5422,6 +5424,17 @@ void bx_geforce_c::d3d_triangle(gf_channel* ch, Bit32u base)
       }
     }
   }
+
+  // back-transform
+  if ((ch->d3d_transform_execution_mode & 3) != 0 &&
+      (ch->d3d_transform_execution_mode & 4) == 0 &&
+      BX_GEFORCE_THIS card_type == 0x20) {
+    for (Bit32u vi = 0; vi < 3; vi++) {
+      for (Bit32u ci = 0; ci < 3; ci++)
+        vs_out[vi][0][ci] = (vs_out[vi][0][ci] - ch->d3d_viewport_offset[ci]) * vs_out[vi][0][3];
+    }
+  }
+
   bool clipped[3];
   Bit32u clip_count = 0;
   float clip_thresh = BX_GEFORCE_THIS card_type <= 0x20 ?
@@ -5479,8 +5492,11 @@ void bx_geforce_c::d3d_clip_to_screen(gf_channel* ch, float pos_clip[4], float p
 {
   pos_screen[3] = 1.0f / pos_clip[3];
   if (((ch->d3d_transform_execution_mode & 3) != 0 &&
-      (ch->d3d_transform_execution_mode & 0x100) == 0 &&
-      BX_GEFORCE_THIS card_type >= 0x35) ||
+       (ch->d3d_transform_execution_mode & 0x100) == 0 &&
+       BX_GEFORCE_THIS card_type >= 0x35) ||
+      ((ch->d3d_transform_execution_mode & 3) != 0 &&
+       (ch->d3d_transform_execution_mode & 4) == 0 && // back-transform
+       BX_GEFORCE_THIS card_type == 0x20) ||
       (ch->d3d_transform_execution_mode & 3) == 0) {
     for (int i = 0; i < 3; i++) {
       pos_screen[i] = pos_clip[i] * pos_screen[3];
@@ -5488,7 +5504,7 @@ void bx_geforce_c::d3d_clip_to_screen(gf_channel* ch, float pos_clip[4], float p
         pos_screen[i] *= ch->d3d_model_view_matrix[1][i];
         pos_screen[i] += ch->d3d_model_view_matrix[1][i + 4];
       } else {
-        if (BX_GEFORCE_THIS card_type > 0x20)
+        if (BX_GEFORCE_THIS card_type >= 0x35)
           pos_screen[i] *= ch->d3d_viewport_scale[i];
         pos_screen[i] += ch->d3d_viewport_offset[i];
       }
