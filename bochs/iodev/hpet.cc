@@ -9,7 +9,7 @@
 //
 //  Authors: Beth Kon <bkon@us.ibm.com>
 //
-//  Copyright (C) 2017-2025  The Bochs Project
+//  Copyright (C) 2017-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -127,6 +127,24 @@ static BX_CPP_INLINE int activating_bit(Bit64u old, Bit64u _new, Bit64u mask)
 static BX_CPP_INLINE int deactivating_bit(Bit64u old, Bit64u _new, Bit64u mask)
 {
   return ((old & mask) && !(_new & mask));
+}
+
+// IRQ lines 0..15 are routed through the PIC (which forwards them to the
+// I/O APIC), lines 16 and up exist on the I/O APIC only
+static void hpet_set_irq_line(int route, bool level)
+{
+  if (route < 16) {
+    if (level) {
+      DEV_pic_raise_irq(route);
+    } else {
+      DEV_pic_lower_irq(route);
+    }
+  }
+#if BX_SUPPORT_APIC
+  else if (DEV_ioapic_present()) {
+    DEV_ioapic_set_irq_level((Bit8u)route, level);
+  }
+#endif
 }
 
 // static memory read/write functions
@@ -304,7 +322,7 @@ void bx_hpet_c::update_irq(HPETTimer *timer, bool set)
   }
   mask = (BX_CONST64(1) << timer->tn);
   if (!set || !hpet_enabled()) {
-    DEV_pic_lower_irq(route);
+    hpet_set_irq_line(route, 0);
   } else {
     if (timer->config & HPET_TN_TYPE_LEVEL) {
       /* If HPET_TN_ENABLE bit is 0, "the timer will still operate and
@@ -317,10 +335,10 @@ void bx_hpet_c::update_irq(HPETTimer *timer, bool set)
         Bit32u val32 = (Bit32u)timer->fsb;
         DEV_MEM_WRITE_PHYSICAL((bx_phy_address) (timer->fsb >> 32), sizeof(Bit32u), (Bit8u *) &val32);
       } else if (timer->config & HPET_TN_TYPE_LEVEL) {
-        DEV_pic_raise_irq(route);
+        hpet_set_irq_line(route, 1);
       } else {
-        DEV_pic_lower_irq(route);
-        DEV_pic_raise_irq(route);
+        hpet_set_irq_line(route, 0);
+        hpet_set_irq_line(route, 1);
       }
     }
   }
