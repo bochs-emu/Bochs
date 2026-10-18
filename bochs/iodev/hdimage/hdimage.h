@@ -231,6 +231,9 @@ class BOCHSAPI device_image_t
 class flat_image_t : public device_image_t
 {
   public:
+      // Default constructor
+      flat_image_t();
+
       // Open an image with specific flags. Returns non-negative if successful.
       int open(const char* pathname, int flags);
 

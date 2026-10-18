@@ -653,6 +653,11 @@ void device_image_t::register_state(bx_list_c *parent)
 
 /*** flat_image_t function definitions ***/
 
+flat_image_t::flat_image_t()
+{
+  fd = -1;
+}
+
 int flat_image_t::open(const char* _pathname, int flags)
 {
   pathname = _pathname;
@@ -671,6 +676,7 @@ void flat_image_t::close()
 {
   if (fd > -1) {
     bx_close_image(fd, pathname);
+    fd = -1;
   }
 }
 
@@ -1889,17 +1895,25 @@ int redolog_t::open(const char* filename, const char *type, int flags)
 
 void redolog_t::close()
 {
-  if (fd >= 0)
+  if (fd >= 0) {
     bx_close_image(fd, pathname);
+    fd = -1;
+  }
 
-  if (pathname != NULL)
+  if (pathname != NULL) {
     delete [] pathname;
+    pathname = NULL;
+  }
 
-  if (catalog != NULL)
+  if (catalog != NULL) {
     delete [] catalog;
+    catalog = NULL;
+  }
 
-  if (bitmap != NULL)
+  if (bitmap != NULL) {
     delete [] bitmap;
+    bitmap = NULL;
+  }
 }
 
 Bit64u redolog_t::get_size()
@@ -2325,7 +2339,9 @@ bool coherency_check(device_image_t *ro_disk, redolog_t *redolog)
 undoable_image_t::undoable_image_t(const char* _redolog_name)
 {
   redolog = new redolog_t();
+  ro_disk = NULL;
   redolog_name = NULL;
+  caps = 0;
   if (_redolog_name != NULL) {
     if ((strlen(_redolog_name) > 0) && (strcmp(_redolog_name,"none") != 0)) {
       redolog_name = new char[strlen(_redolog_name) + 1];
@@ -2397,10 +2413,13 @@ int undoable_image_t::open(const char* pathname, int flags)
 void undoable_image_t::close()
 {
   redolog->close();
-  ro_disk->close();
+  if (ro_disk != NULL)
+    ro_disk->close();
 
-  if (redolog_name != NULL)
+  if (redolog_name != NULL) {
     delete [] redolog_name;
+    redolog_name = NULL;
+  }
 }
 
 Bit64s undoable_image_t::lseek(Bit64s offset, int whence)
@@ -2477,8 +2496,10 @@ void undoable_image_t::restore_state(const char *backup_fname)
 volatile_image_t::volatile_image_t(const char* _redolog_name)
 {
   redolog = new redolog_t();
+  ro_disk = NULL;
   redolog_temp = NULL;
   redolog_name = NULL;
+  caps = 0;
   if (_redolog_name != NULL) {
     if ((strlen(_redolog_name) > 0) && (strcmp(_redolog_name,"none") != 0)) {
       redolog_name = new char[strlen(_redolog_name) + 1];
@@ -2564,17 +2585,22 @@ int volatile_image_t::open(const char* pathname, int flags)
 void volatile_image_t::close()
 {
   redolog->close();
-  ro_disk->close();
+  if (ro_disk != NULL)
+    ro_disk->close();
 
+  if (redolog_temp != NULL) {
 #if defined(WIN32) || BX_WITH_MACOS
-  // on non-unix we have to wait till the file is closed to delete it
-  unlink(redolog_temp);
+    // on non-unix we have to wait till the file is closed to delete it
+    unlink(redolog_temp);
 #endif
-  if (redolog_temp!=NULL)
     delete [] redolog_temp;
+    redolog_temp = NULL;
+  }
 
-  if (redolog_name!=NULL)
+  if (redolog_name != NULL) {
     delete [] redolog_name;
+    redolog_name = NULL;
+  }
 }
 
 Bit64s volatile_image_t::lseek(Bit64s offset, int whence)
