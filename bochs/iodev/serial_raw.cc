@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2004-2021  The Bochs Project
+//  Copyright (C) 2004-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -144,7 +144,8 @@ void serial_raw::set_stop_bits(int val)
 #ifdef WIN32
   if (val == 1) {
     dcb.StopBits = ONESTOPBIT;
-  } if (dcb.ByteSize == 5) {
+  } else if (dcb.ByteSize == 5) {
+    // "2 stop bits" with 5 data bits means 1.5 stop bits on the 8250
     dcb.StopBits = ONE5STOPBITS;
   } else {
     dcb.StopBits = TWOSTOPBITS;
