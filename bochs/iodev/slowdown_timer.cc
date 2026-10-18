@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2009  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -99,7 +99,10 @@ void bx_slowdown_timer_c::exit(void)
 
 void bx_slowdown_timer_c::after_restore_state(void)
 {
+  // restart the real time / emulated time comparison from now
+  s.start_time = get_realtime_usec();
   s.start_emulated_time = bx_pc_system.time_usec();
+  s.lasttime = 0;
 }
 
 void bx_slowdown_timer_c::timer_handler(void * this_ptr)
