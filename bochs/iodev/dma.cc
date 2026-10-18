@@ -703,11 +703,13 @@ void bx_dma_c::raise_HLDA(void)
              (BX_DMA_THIS s[ma_sl].chan[channel].current_address << ma_sl);
 
   if (!BX_DMA_THIS s[ma_sl].chan[channel].mode.address_decrement) {
-    maxlen = (BX_DMA_THIS s[ma_sl].chan[channel].current_count + 1) << ma_sl;
-    BX_DMA_THIS TC = (maxlen <= BX_DMA_BUFFER_SIZE);
-    if (maxlen > BX_DMA_BUFFER_SIZE) {
-      maxlen = BX_DMA_BUFFER_SIZE;
+    // up to 0x10000 transfers (0x20000 bytes for 16-bit), does not fit in Bit16u
+    Bit32u bytes_left = ((Bit32u)BX_DMA_THIS s[ma_sl].chan[channel].current_count + 1) << ma_sl;
+    BX_DMA_THIS TC = (bytes_left <= BX_DMA_BUFFER_SIZE);
+    if (bytes_left > BX_DMA_BUFFER_SIZE) {
+      bytes_left = BX_DMA_BUFFER_SIZE;
     }
+    maxlen = (Bit16u)bytes_left;
   } else {
     BX_DMA_THIS TC = (BX_DMA_THIS s[ma_sl].chan[channel].current_count == 0);
     maxlen = 1 << ma_sl;
