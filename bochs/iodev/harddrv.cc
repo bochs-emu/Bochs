@@ -1737,6 +1737,21 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                       raise_interrupt(channel);
                       break;
                     }
+                    if (lba > BX_SELECTED_DRIVE(channel).cdrom.max_lba) {
+                      atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_LOGICAL_BLOCK_OOR, 1);
+                      raise_interrupt(channel);
+                      break;
+                    }
+                    if ((lba + transfer_length - 1) > BX_SELECTED_DRIVE(channel).cdrom.max_lba) {
+                      transfer_length = (BX_SELECTED_DRIVE(channel).cdrom.max_lba - lba + 1);
+                    }
+                    // the byte count of the whole transfer must fit into an int
+                    if (transfer_length > (0x7fffffff / 2352)) {
+                      BX_ERROR(("Read CD: transfer length %u too large", transfer_length));
+                      atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
+                      raise_interrupt(channel);
+                      break;
+                    }
                     switch (transfer_req & 0xf8) {
                       case 0x00:
                         atapi_cmd_nop(controller);
@@ -1836,7 +1851,6 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     break;
                   }
 
-                  // Ben: see comment below
                   if ((lba + transfer_length - 1) > BX_SELECTED_DRIVE(channel).cdrom.max_lba) {
                     transfer_length = (BX_SELECTED_DRIVE(channel).cdrom.max_lba - lba + 1);
                   }
@@ -1846,19 +1860,14 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     BX_INFO(("READ(%d) with transfer length <= 0, ok (%i)", atapi_command==0x28?10:12, transfer_length));
                     break;
                   }
-
-/* Ben: I commented this out and added the three lines above.  I am not sure this is the correct thing
-        to do, but it seems to work.
-        FIXME: I think that if the transfer_length is more than we can transfer, we should return
-        some sort of flag/error/bitrep stating so.  I haven't read the atapi specs enough to know
-        what needs to be done though.
-
-                  if ((lba + transfer_length - 1) > BX_SELECTED_DRIVE(channel).cdrom.max_lba) {
-                    atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_LOGICAL_BLOCK_OOR, 1);
+                  // the byte count of the whole transfer must fit into an int
+                  if (transfer_length > (0x7fffffff / 2048)) {
+                    BX_ERROR(("READ(12) transfer length %d too large", transfer_length));
+                    atapi_cmd_error(channel, SENSE_ILLEGAL_REQUEST, ASC_INV_FIELD_IN_CMD_PACKET, 1);
                     raise_interrupt(channel);
                     break;
                   }
-*/
+
                   BX_DEBUG_ATAPI(("cdrom: READ (%d) LBA=%d LEN=%d DMA=%d", atapi_command==0x28?10:12,
                                   lba, transfer_length, controller->packet_dma));
 
