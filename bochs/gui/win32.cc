@@ -128,6 +128,8 @@ static BITMAPINFO* bitmap_info=(BITMAPINFO*)0;
 static RGBQUAD* cmap_index;  // indeces into system colormap
 static HBITMAP MemoryBitmap = NULL;
 static HDC MemoryDC = NULL;
+static HDC FontDC = NULL;
+static HGDIOBJ FontDCdefBitmap = NULL;
 static RECT updated_area;
 static BOOL updated_area_valid = FALSE;
 static HWND desktopWindow;
@@ -219,7 +221,7 @@ DWORD WINAPI UIThread(PVOID);
 void SetStatusText(unsigned Num, const char *Text, bool active, Bit8u color=0);
 void terminateEmul(int);
 void create_vga_font(void);
-void DrawBitmap(HDC, HBITMAP, int, int, int, int, int, int, Bit8u, Bit8u);
+void DrawBitmap(HBITMAP, int, int, int, int, int, int, Bit8u, Bit8u);
 void updateUpdated(int,int,int,int);
 static void win32_toolbar_click(int x);
 #if BX_DEBUGGER
@@ -596,6 +598,10 @@ void terminateEmul(int reason)
   x_tilesize = 0;
 
   if (MemoryDC) DeleteDC (MemoryDC);
+  if (FontDC) {
+    SelectObject(FontDC, FontDCdefBitmap);
+    DeleteDC(FontDC);
+  }
   if (MemoryBitmap) DeleteObject (MemoryBitmap);
 
   delete[] (char*)bitmap_info;
@@ -1036,9 +1042,14 @@ DWORD WINAPI UIThread(LPVOID)
     hdc = GetDC(stInfo.simWnd);
     MemoryBitmap = CreateCompatibleBitmap(hdc, win32_max_xres, win32_max_yres);
     MemoryDC = CreateCompatibleDC(hdc);
+    FontDC = CreateCompatibleDC(hdc);
     ReleaseDC(stInfo.simWnd, hdc);
+    if (FontDC) {
+      // remember the default 1x1 bitmap to deselect the font bitmaps later
+      FontDCdefBitmap = GetCurrentObject(FontDC, OBJ_BITMAP);
+    }
 
-    if (MemoryBitmap && MemoryDC) {
+    if (MemoryBitmap && MemoryDC && FontDC) {
       resize_main_window(FALSE);
       ShowWindow(stInfo.mainWnd, SW_SHOW);
 #if BX_DEBUGGER && BX_DEBUGGER_GUI
@@ -1837,14 +1848,11 @@ void bx_win32_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u y
                                Bit8u fw, Bit8u fh, Bit8u fx, Bit8u fy,
                                bool gfxcharw9, Bit8u cs, Bit8u ce, bool curs, bool font2)
 {
-  HDC hdc;
-
   if (!stInfo.UIinited) return;
 
   EnterCriticalSection(&stInfo.drawCS);
-  hdc = GetDC(stInfo.simWnd);
   Bit8u map = (font2) ? 1 : 0;
-  DrawBitmap(hdc, vgafont[map][ch], xc, yc, fw, fh, fx, fy, fc, bc);
+  DrawBitmap(vgafont[map][ch], xc, yc, fw, fh, fx, fy, fc, bc);
   if (curs && (ce >= fy) && (cs < (fh + fy))) {
     if (cs > fy) {
       yc += (cs - fy);
@@ -1853,9 +1861,8 @@ void bx_win32_gui_c::draw_char(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc, Bit16u y
     if ((ce - cs + 1) < fh) {
       fh = ce - cs + 1;
     }
-    DrawBitmap(hdc, vgafont[map][ch], xc, yc, fw, fh, fx, cs, bc, fc);
+    DrawBitmap(vgafont[map][ch], xc, yc, fw, fh, fx, cs, bc, fc);
   }
-  ReleaseDC(stInfo.simWnd, hdc);
   LeaveCriticalSection(&stInfo.drawCS);
 }
 
@@ -1927,7 +1934,6 @@ bool bx_win32_gui_c::palette_change(Bit8u index, Bit8u red, Bit8u green,
 
 void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 {
-//HDC hdc;
   HGDIOBJ oldObj;
   unsigned yt = y_tilesize;
 
@@ -1935,7 +1941,6 @@ void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 	yt = dimension_y - y0;
   }
   EnterCriticalSection(&stInfo.drawCS);
-//hdc = GetDC(stInfo.simWnd);
 
   oldObj = SelectObject(MemoryDC, MemoryBitmap);
 
@@ -1946,7 +1951,6 @@ void bx_win32_gui_c::graphics_tile_update(Bit8u *tile, unsigned x0, unsigned y0)
 
   updateUpdated(x0, y0, x0 + x_tilesize, y0 + yt);
 
-//ReleaseDC(stInfo.simWnd, hdc);
   LeaveCriticalSection(&stInfo.drawCS);
 }
 
@@ -2165,48 +2169,34 @@ COLORREF GetColorRef(Bit8u pal_idx)
 }
 
 
-void DrawBitmap(HDC hdc, HBITMAP hBitmap, int xStart, int yStart, int width,
+// FontDC and MemoryDC use the default MM_TEXT mapping mode, so device and
+// logical coordinates are the same (no DPtoLP() conversion required)
+void DrawBitmap(HBITMAP hBitmap, int xStart, int yStart, int width,
                 int height, int fcol, int frow, Bit8u fgcolor, Bit8u bgcolor)
 {
-  BITMAP bm;
-  HDC hdcMem;
-  POINT ptSize, ptOrg;
   HGDIOBJ oldObj;
 
-  hdcMem = CreateCompatibleDC(hdc);
-  SelectObject(hdcMem, hBitmap);
-  SetMapMode(hdcMem, GetMapMode (hdc));
-
-  GetObject(hBitmap, sizeof (BITMAP), (LPVOID) &bm);
-
-  ptSize.x = width;
-  ptSize.y = height;
-
-  DPtoLP(hdc, &ptSize, 1);
-
-  ptOrg.x = fcol;
-  ptOrg.y = frow;
-  DPtoLP(hdcMem, &ptOrg, 1);
+  SelectObject(FontDC, hBitmap);
 
   oldObj = SelectObject(MemoryDC, MemoryBitmap);
 
   COLORREF crFore = SetTextColor(MemoryDC, GetColorRef(bgcolor));
   COLORREF crBack = SetBkColor(MemoryDC, GetColorRef(fgcolor));
   if (xChar > 9) {
-    StretchBlt(MemoryDC, xStart, yStart, ptSize.x, ptSize.y, hdcMem, ptOrg.x,
-              ptOrg.y, ptSize.x / 2, ptSize.y, SRCCOPY);
+    StretchBlt(MemoryDC, xStart, yStart, width, height, FontDC, fcol,
+              frow, width / 2, height, SRCCOPY);
   } else {
-    BitBlt(MemoryDC, xStart, yStart, ptSize.x, ptSize.y, hdcMem, ptOrg.x,
-           ptOrg.y, SRCCOPY);
+    BitBlt(MemoryDC, xStart, yStart, width, height, FontDC, fcol,
+           frow, SRCCOPY);
   }
   SetBkColor(MemoryDC, crBack);
   SetTextColor(MemoryDC, crFore);
 
   SelectObject(MemoryDC, oldObj);
+  // deselect the font bitmap, set_font() may update it with SetBitmapBits()
+  SelectObject(FontDC, FontDCdefBitmap);
 
-  updateUpdated(xStart, yStart, ptSize.x + xStart, ptSize.y + yStart);
-
-  DeleteDC(hdcMem);
+  updateUpdated(xStart, yStart, width + xStart, height + yStart);
 }
 
 
