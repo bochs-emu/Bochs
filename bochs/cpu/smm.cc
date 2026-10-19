@@ -114,7 +114,7 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR in_smm_vmx_guest = BX_CPU_THIS_PTR in_vmx_guest;
   if (BX_CPU_THIS_PTR in_smm_vmx && !BX_CPU_THIS_PTR in_smm_vmx_guest) {
     if (!BX_CPU_THIS_PTR cr0.get_PG() || !BX_CPU_THIS_PTR cr0.get_NE() || !BX_CPU_THIS_PTR cr0.get_PE())
-      BX_PANIC(("SMM save: CR0 state is corrupted while saving satet to SMM !"));
+      BX_PANIC(("SMM save: CR0 state is corrupted while saving state to SMM !"));
   }
   BX_CPU_THIS_PTR in_vmx = false;
   BX_CPU_THIS_PTR in_vmx_guest = false;
