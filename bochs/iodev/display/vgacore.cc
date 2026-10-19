@@ -2220,6 +2220,8 @@ void bx_vgacore_c::mem_write(bx_phy_address addr, Bit8u value)
         }
         SET_TILE_UPDATED(BX_VGA_THIS, x_tileno, y_tileno, 1);
       } else if (BX_VGA_THIS s.graphics_ctrl.shift_reg == 2) {
+        if (BX_VGA_THIS s.line_offset == 0) // CRTC offset register 0x13 programmed to 0
+          return;
         offset -= start_addr;
         x_tileno = (offset % BX_VGA_THIS s.line_offset) * 4 / (X_TILESIZE / 2);
         if (BX_VGA_THIS s.y_doublescan) {

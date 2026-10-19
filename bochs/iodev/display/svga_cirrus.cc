@@ -821,7 +821,8 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
         }
       }
       Bit32u dstart = (Bit32u)(BX_CIRRUS_THIS disp_ptr - BX_CIRRUS_THIS s.memory);
-      if (offset >= dstart) {
+      // svga_pitch is 0 if the guest programmed CRTC offset register 0x13 to 0
+      if ((offset >= dstart) && (BX_CIRRUS_THIS svga_pitch > 0)) {
         BX_CIRRUS_THIS svga_needs_update_tile = 1;
         offset -= dstart;
         x = (offset % BX_CIRRUS_THIS svga_pitch) / (BX_CIRRUS_THIS svga_bpp / 8);
@@ -895,7 +896,8 @@ void bx_svga_cirrus_c::mem_write(bx_phy_address addr, Bit8u value)
         }
       }
       Bit32u dstart = (Bit32u)(BX_CIRRUS_THIS disp_ptr - BX_CIRRUS_THIS s.memory);
-      if (offset >= dstart) {
+      // svga_pitch is 0 if the guest programmed CRTC offset register 0x13 to 0
+      if ((offset >= dstart) && (BX_CIRRUS_THIS svga_pitch > 0)) {
         BX_CIRRUS_THIS svga_needs_update_tile = 1;
         offset -= dstart;
         x = (offset % BX_CIRRUS_THIS svga_pitch) / (BX_CIRRUS_THIS svga_bpp / 8);
@@ -3131,6 +3133,24 @@ void bx_svga_cirrus_c::pci_write_handler(Bit8u address, Bit32u value, unsigned i
 //
 /////////////////////////////////////////////////////////////////////////
 
+// check that a BLT area starting at 'addr' does not cross the video memory
+// boundaries: 'height' rows of 'width' bytes, rows are 'pitch' bytes apart.
+// With negative pitch (backwards BLT) the rows go down from 'addr' and each
+// row ends at its start address.
+static bool cirrus_blt_area_valid(Bit32u addr, int pitch, int width, int height, Bit32u memsize)
+{
+  Bit64s lo, hi;
+
+  if (pitch < 0) {
+    hi = (Bit64s) addr;
+    lo = hi + (Bit64s) (height - 1) * pitch - (width - 1);
+  } else {
+    lo = (Bit64s) addr;
+    hi = lo + (Bit64s) (height - 1) * pitch + (width - 1);
+  }
+  return (lo >= 0) && (hi < (Bit64s) memsize);
+}
+
 void bx_svga_cirrus_c::svga_reset_bitblt(void)
 {
   BX_CIRRUS_THIS control.reg[0x31] &= ~(CIRRUS_BLT_START|CIRRUS_BLT_BUSY|CIRRUS_BLT_FIFOUSED);
@@ -3234,6 +3254,11 @@ void bx_svga_cirrus_c::svga_bitblt()
                              CIRRUS_BLTMODE_PATTERNCOPY |
                              CIRRUS_BLTMODE_COLOREXPAND)) ==
       (CIRRUS_BLTMODE_PATTERNCOPY | CIRRUS_BLTMODE_COLOREXPAND)) {
+    if (!cirrus_blt_area_valid(dstaddr, BX_CIRRUS_THIS bitblt.dstpitch, BX_CIRRUS_THIS bitblt.bltwidth,
+                               BX_CIRRUS_THIS bitblt.bltheight, BX_CIRRUS_THIS s.memsize)) {
+      BX_ERROR(("BLT: solid fill destination out of video memory, ignored"));
+      goto ignoreblt;
+    }
     BX_CIRRUS_THIS bitblt.rop_handler = svga_get_fwd_rop_handler(BX_CIRRUS_THIS bitblt.bltrop);
     BX_CIRRUS_THIS bitblt.dst = BX_CIRRUS_THIS s.memory + dstaddr;
     svga_solidfill();
@@ -3269,6 +3294,44 @@ void bx_svga_cirrus_c::svga_bitblt()
 
     BX_DEBUG(("BLT redraw: x = %d, y = %d, w = %d, h = %d", BX_CIRRUS_THIS redraw.x,
       BX_CIRRUS_THIS redraw.y, BX_CIRRUS_THIS redraw.w, BX_CIRRUS_THIS redraw.h));
+
+    // the BLT engine accesses the video memory through pointers without address
+    // wrapping (except the pattern copy destination), reject BLT operations
+    // crossing the video memory boundaries
+    if (!(BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_PATTERNCOPY) &&
+        !cirrus_blt_area_valid(dstaddr, BX_CIRRUS_THIS bitblt.dstpitch, BX_CIRRUS_THIS bitblt.bltwidth,
+                               BX_CIRRUS_THIS bitblt.bltheight, BX_CIRRUS_THIS s.memsize)) {
+      BX_ERROR(("BLT: destination out of video memory, ignored"));
+      goto ignoreblt;
+    }
+    if ((BX_CIRRUS_THIS bitblt.bltmode & (CIRRUS_BLTMODE_MEMSYSSRC|CIRRUS_BLTMODE_MEMSYSDEST)) == 0) {
+      Bit32u srcstart = srcaddr;
+      int srcpitch = BX_CIRRUS_THIS bitblt.srcpitch;
+      int srcwidth = BX_CIRRUS_THIS bitblt.bltwidth;
+      int srcheight = BX_CIRRUS_THIS bitblt.bltheight;
+      if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_PATTERNCOPY) {
+        // 8x8 pattern
+        srcstart = srcaddr & ~0x07;
+        if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
+          srcwidth = 8;
+        } else if (BX_CIRRUS_THIS bitblt.pixelwidth == 3) {
+          srcwidth = 8 * 32;
+        } else {
+          srcwidth = 8 * 8 * BX_CIRRUS_THIS bitblt.pixelwidth;
+        }
+        srcpitch = 0;
+        srcheight = 1;
+      } else if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_COLOREXPAND) {
+        // 1 bit per pixel, packed rows (the transparent BLT may read one more byte per row)
+        srcwidth = srcheight * (((BX_CIRRUS_THIS bitblt.bltwidth / BX_CIRRUS_THIS bitblt.pixelwidth + 7) >> 3) + 1);
+        srcpitch = 0;
+        srcheight = 1;
+      }
+      if (!cirrus_blt_area_valid(srcstart, srcpitch, srcwidth, srcheight, BX_CIRRUS_THIS s.memsize)) {
+        BX_ERROR(("BLT: source out of video memory, ignored"));
+        goto ignoreblt;
+      }
+    }
 
     // setup bitblt engine.
     if (BX_CIRRUS_THIS bitblt.bltmode & CIRRUS_BLTMODE_MEMSYSSRC) {
