@@ -43,6 +43,8 @@
 #include "svm.h"
 #endif
 
+#include "msr.h"
+
 #include <stdlib.h>
 
 BX_CPU_C::BX_CPU_C(unsigned id): bx_cpuid(id)
@@ -851,6 +853,14 @@ void BX_CPU_C::after_restore_state(void)
 
 #if BX_SUPPORT_PKEYS
   set_PKeys(BX_CPU_THIS_PTR pkru, BX_CPU_THIS_PTR pkrs);
+#endif
+
+#if BX_SUPPORT_VMX
+  if (BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_FEATURE_CONTROL]) {
+    // once the lock bit is set the MSR becomes read only until hardware reset
+    bool locked = (BX_CPU_THIS_PTR msr.ia32_feature_ctrl & BX_IA32_FEATURE_CONTROL_LOCK_BIT) != 0;
+    BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_FEATURE_CONTROL]->set_read_only(locked);
+  }
 #endif
 
   handleCpuContextChange();
