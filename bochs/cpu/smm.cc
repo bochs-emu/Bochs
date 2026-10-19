@@ -112,6 +112,10 @@ void BX_CPU_C::enter_system_management_mode(void)
   BX_CPU_THIS_PTR cr4.set_VMXE(0);
   BX_CPU_THIS_PTR in_smm_vmx = BX_CPU_THIS_PTR in_vmx;
   BX_CPU_THIS_PTR in_smm_vmx_guest = BX_CPU_THIS_PTR in_vmx_guest;
+  if (BX_CPU_THIS_PTR in_smm_vmx && !BX_CPU_THIS_PTR in_smm_vmx_guest) {
+    if (!BX_CPU_THIS_PTR cr0.get_PG() || !BX_CPU_THIS_PTR cr0.get_NE() || !BX_CPU_THIS_PTR cr0.get_PE())
+      BX_PANIC(("SMM save: CR0 state is corrupted while saving satet to SMM !"));
+  }
   BX_CPU_THIS_PTR in_vmx = false;
   BX_CPU_THIS_PTR in_vmx_guest = false;
 
@@ -690,7 +694,7 @@ bool BX_CPU_C::resume_from_system_management_mode(BX_SMM_State *smm_state)
     BX_CPU_THIS_PTR in_vmx_guest = BX_CPU_THIS_PTR in_smm_vmx_guest;
     BX_INFO(("SMM Restore: enable VMX %s mode", BX_CPU_THIS_PTR in_vmx_guest ? "guest" : "host"));
 
-    if (!smm_state->cr0.get_PG() || !smm_state->cr0.get_NE() || smm_state->cr0.get_PE()) {
+    if (!smm_state->cr0.get_PG() || !smm_state->cr0.get_NE() || !smm_state->cr0.get_PE()) {
       if (! BX_CPU_THIS_PTR in_vmx_guest) {
         BX_PANIC(("SMM restore: CR0 state is corrupted in restore image !"));
 
