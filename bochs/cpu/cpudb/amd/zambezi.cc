@@ -88,6 +88,7 @@ zambezi_t::zambezi_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_MISALIGNED_SSE);
   enable_cpu_extension(BX_ISA_ALT_MOV_CR8);
   enable_cpu_extension(BX_ISA_XAPIC_EXT);
+  enable_cpu_extension(BX_ISA_TCE);
 }
 
 void zambezi_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -331,7 +332,7 @@ void zambezi_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
   //   [14:14] Reserved
   // ! [15:15] LWP: Light weight profiling
   // * [16:16] FMA4: Four-operand FMA instructions support
-  //   [17:17] Reserved
+  // * [17:17] TCE: Translation Cache Extensions
   //   [18:18] Reserved
   // * [19:19] NodeId: Indicates support for NodeId MSR (0xc001100c)
   //   [20:20] Reserved

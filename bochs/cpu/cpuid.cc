@@ -1357,7 +1357,7 @@ Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_ecx(Bit32u extra) const
   //   [14:14] Reserved
   //   [15:15] LWP: Light weight profiling (not supported in Bochs)
   //   [16:16] FMA4: Four-operand FMA instructions support
-  //   [17:17] Reserved
+  //   [17:17] TCE: Translation Cache Extensions
   //   [18:18] Reserved
   //   [19:19] NodeId: Indicates support for NodeId MSR (0xc001100c)
   //   [20:20] Reserved
@@ -1413,6 +1413,10 @@ Bit32u bx_cpuid_t::get_ext_cpuid_leaf_1_ecx(Bit32u extra) const
   // [16:16] FMA4: Four-operand FMA instructions support
   if (is_cpu_extension_supported(BX_ISA_FMA4))
     ecx |= BX_CPUID_EXT1_ECX_FMA4;
+
+  // [17:17] TCE: Translation Cache Extensions
+  if (is_cpu_extension_supported(BX_ISA_TCE))
+    ecx |= BX_CPUID_EXT1_ECX_TCE;
 
   // [21:21] TBM: trailing bit manipulation instructions support
   if (is_cpu_extension_supported(BX_ISA_TBM))

@@ -92,6 +92,7 @@ trinity_apu_t::trinity_apu_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_MISALIGNED_SSE);
   enable_cpu_extension(BX_ISA_ALT_MOV_CR8);
   enable_cpu_extension(BX_ISA_XAPIC_EXT);
+  enable_cpu_extension(BX_ISA_TCE);
 }
 
 void trinity_apu_t::get_cpuid_leaf(Bit32u function, Bit32u subfunction, cpuid_function_t *leaf) const
@@ -394,7 +395,6 @@ void trinity_apu_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
                                     /* BX_CPUID_EXT1_ECX_SKINIT | */ // not implemented
                                        BX_CPUID_EXT1_ECX_WDT |
                                     /* BX_CPUID_EXT1_ECX_LWP | */    // not implemented
-                                       BX_CPUID_EXT1_ECX_TCE |
                                        BX_CPUID_EXT1_ECX_NODEID |
                                        BX_CPUID_EXT1_ECX_TOPOLOGY_EXTENSIONS |
                                        BX_CPUID_EXT1_ECX_PERFCTR_EXT_CORE |

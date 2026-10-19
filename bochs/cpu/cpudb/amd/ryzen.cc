@@ -101,6 +101,7 @@ ryzen_t::ryzen_t(BX_CPU_C *cpu): bx_cpuid_t(cpu)
   enable_cpu_extension(BX_ISA_MISALIGNED_SSE);
   enable_cpu_extension(BX_ISA_ALT_MOV_CR8);
   enable_cpu_extension(BX_ISA_XAPIC_EXT);
+  enable_cpu_extension(BX_ISA_TCE);
   enable_cpu_extension(BX_ISA_CLZERO);
 #if BX_SUPPORT_MONITOR_MWAIT
   enable_cpu_extension(BX_ISA_MONITORX_MWAITX);
@@ -429,7 +430,6 @@ void ryzen_t::get_ext_cpuid_leaf_1(cpuid_function_t *leaf) const
                                        BX_CPUID_EXT1_ECX_OSVW |
                                     /* BX_CPUID_EXT1_ECX_SKINIT | */ // not implemented
                                        BX_CPUID_EXT1_ECX_WDT |
-                                       BX_CPUID_EXT1_ECX_TCE |
                                        BX_CPUID_EXT1_ECX_TOPOLOGY_EXTENSIONS |
                                        BX_CPUID_EXT1_ECX_PERFCTR_EXT_CORE |
                                        BX_CPUID_EXT1_ECX_PERFCTR_EXT_NB |
