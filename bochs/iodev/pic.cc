@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2002-2025  The Bochs Project
+//  Copyright (C) 2002-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -205,18 +205,12 @@ Bit32u bx_pic_c::read(Bit32u address, unsigned io_len)
 
   if((address == 0x20 || address == 0x21) && BX_PIC_THIS s.master_pic.polled) {
     // In polled mode. Treat this as an interrupt acknowledge
-    clear_highest_interrupt(& BX_PIC_THIS s.master_pic);
-    BX_PIC_THIS s.master_pic.polled = 0;
-    pic_service(& BX_PIC_THIS s.master_pic);
-    return io_len==1?BX_PIC_THIS s.master_pic.irq:(BX_PIC_THIS s.master_pic.irq)<<8|(BX_PIC_THIS s.master_pic.irq);  // Return the current irq requested
+    return poll_command(& BX_PIC_THIS s.master_pic);
   }
 
   if((address == 0xa0 || address == 0xa1) && BX_PIC_THIS s.slave_pic.polled) {
     // In polled mode. Treat this as an interrupt acknowledge
-    clear_highest_interrupt(& BX_PIC_THIS s.slave_pic);
-    BX_PIC_THIS s.slave_pic.polled = 0;
-    pic_service(& BX_PIC_THIS s.slave_pic);
-    return io_len==1?BX_PIC_THIS s.slave_pic.irq:(BX_PIC_THIS s.slave_pic.irq)<<8|(BX_PIC_THIS s.slave_pic.irq);  // Return the current irq requested
+    return poll_command(& BX_PIC_THIS s.slave_pic);
   }
 
   switch (address) {
@@ -298,6 +292,9 @@ void bx_pic_c::write(Bit32u address, Bit32u value, unsigned io_len)
       pic->lowest_priority = 7;
       pic->auto_eoi = 0;
       pic->rotate_on_autoeoi = 0;
+      pic->special_mask = 0;    /* special mask mode is cleared */
+      pic->read_reg_select = 0; /* status read set to IRR */
+      pic->polled = 0;
       pic->INT = 0; /* reprogramming clears previous INTR request */
       if (pic->master) {
         BX_CLEAR_INTR();
@@ -546,6 +543,36 @@ void bx_pic_c::clear_highest_interrupt(bx_pic_t *pic)
     if(irq > 7)
       irq = 0;
   } while(irq != highest_priority);
+}
+
+// OCW3 poll command: the next read acts like an interrupt acknowledge and
+// returns bit 7 = interrupt pending, bits 2..0 = highest priority request
+Bit8u bx_pic_c::poll_command(bx_pic_t *pic)
+{
+  Bit8u value = 0x00;
+
+  pic->polled = 0;
+  if (pic->INT) {
+    Bit8u irq = pic->irq;
+    pic->INT = 0;
+    if (pic->master) {
+      BX_CLEAR_INTR();
+    } else {
+      // request on the master cascade input is withdrawn
+      BX_PIC_THIS lower_irq(2, BX_IRQ_TYPE_ISA);
+    }
+    // In level sensitive mode don't clear the irr bit.
+    if (!(pic->edge_level & (1 << irq)))
+      pic->irr &= ~(1 << irq);
+    // In autoeoi mode don't set the isr bit.
+    if (!pic->auto_eoi)
+      pic->isr |= (1 << irq);
+    else if (pic->rotate_on_autoeoi)
+      pic->lowest_priority = irq;
+    value = 0x80 | irq;
+  }
+  pic_service(pic);
+  return value;
 }
 
 void bx_pic_c::pic_service(bx_pic_t *pic)
