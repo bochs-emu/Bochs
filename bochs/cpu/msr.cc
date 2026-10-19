@@ -496,7 +496,7 @@ void BX_CPU_C::reset_MSRs(unsigned source)
 #if BX_SUPPORT_VMX
   // IA32_FEATURE_CONTROL MSR becomes read only once locked, unlock it on hardware reset
   if (source == BX_RESET_HARDWARE)
-    BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_FEATURE_CONTROL]->set_reserved_bits(~Bit64u(BX_IA32_FEATURE_CONTROL_BITS));
+    BX_CPU_THIS_PTR msr_desc[BX_MSR_IA32_FEATURE_CONTROL]->set_read_only(false);
 #endif
 }
 

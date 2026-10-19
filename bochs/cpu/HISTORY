@@ -87,6 +87,7 @@ Changes after Bochs 3.1:
 - MTRR: Fixed reserved bits checking for MSR_MTRR_DEFTYPE (0x2ff)
 - MSR: enforce reserved bits checking for MSR_TSX_AUX (0xc0000103), MSR_IA32_UMWAIT_CONTROL (0xe1), MSR_IA32_PKRS (0x6e1), MSR_IA32_USER_MSR_CTL (0x1c) and MSR_IA32_FEATURE_CONTROL (0x3a)
 - MSR: writing 0 value to read only MSR was passing validation checks reaching BX_PANIC
+- MSR: MSR with all bits reserved (e.g. MSR_IA32_XSS without any supported XSS feature) was treated as read only, writing 0 must be allowed
 - MSR: writes to MSR_APERF/MSR_MPERF were ignored, so "write to clear" didn't work. Now any write clears the counter, and hardware reset clears it too.
 - MSR: MSR_IA32_EFER on CPU models without EFER: writing 0 used to succeed. It's now #GP(0)
 - SVM: BX_SVM_VM_CR_MSR write: the "SVMDIS while EFER.SVME=1 #GP" check tested the current VM_CR value instead of the value being written.
