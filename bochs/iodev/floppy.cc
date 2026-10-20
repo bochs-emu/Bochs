@@ -1415,6 +1415,7 @@ void bx_floppy_ctrl_c::floppy_command(void)
       }
 
       if ((cylinder >= BX_FD_THIS s.media[drive].tracks) ||
+          (sector == 0) || // sector numbers are 1 based
           (sector > BX_FD_THIS s.media[drive].sectors_per_track)) {
         BX_ERROR(("attempt to read/write/verify/scan sector %u passed last sector %u",
                      (unsigned) sector,
@@ -1618,22 +1619,22 @@ void bx_floppy_ctrl_c::floppy_command(void)
     case FD_CMD_RESTORE:
       drive = BX_FD_THIS s.DOR & FDC_DRV_MASK;
       BX_FD_THIS s.DSR &= 0x03; // the DRATEx bits are unmapped
-      BX_FD_THIS s.DSR |= (BX_FD_THIS s.command[0] & 0x7c);
-      BX_FD_THIS s.option = BX_FD_THIS s.command[1];
+      BX_FD_THIS s.DSR |= (BX_FD_THIS s.command[1] & 0x7c);
+      BX_FD_THIS s.option = BX_FD_THIS s.command[2];
       for (i = 0; i < 4; i++) {
-        BX_FD_THIS s.cylinder[i] = BX_FD_THIS s.command[2+i];
+        BX_FD_THIS s.cylinder[i] = BX_FD_THIS s.command[3+i];
       }
-      BX_FD_THIS s.SRT = (BX_FD_THIS s.command[6] >> 4);
-      BX_FD_THIS s.HUT = (BX_FD_THIS s.command[6] & 0x0f);
-      BX_FD_THIS s.HLT = BX_FD_THIS s.command[7] >> 1;
+      BX_FD_THIS s.SRT = (BX_FD_THIS s.command[7] >> 4);
+      BX_FD_THIS s.HUT = (BX_FD_THIS s.command[7] & 0x0f);
+      BX_FD_THIS s.HLT = BX_FD_THIS s.command[8] >> 1;
       BX_FD_THIS s.main_status_reg &= FD_MS_NDMA;
-      BX_FD_THIS s.main_status_reg |= (BX_FD_THIS s.command[7] & 1) ? FD_MS_NDMA : 0;
-      BX_FD_THIS s.eot[drive] = BX_FD_THIS s.command[8];
-      BX_FD_THIS s.lock = (BX_FD_THIS s.command[9] & 0x80) > 0;
-      BX_FD_THIS s.perp_mode = (BX_FD_THIS s.command[9] & 0x7f);
-      BX_FD_THIS s.config = BX_FD_THIS s.command[10];
-      BX_FD_THIS s.pretrk = BX_FD_THIS s.command[11];
-      BX_FD_THIS s.power_down = BX_FD_THIS s.command[12];
+      BX_FD_THIS s.main_status_reg |= (BX_FD_THIS s.command[8] & 1) ? FD_MS_NDMA : 0;
+      BX_FD_THIS s.eot[drive] = BX_FD_THIS s.command[9];
+      BX_FD_THIS s.lock = (BX_FD_THIS s.command[10] & 0x80) > 0;
+      BX_FD_THIS s.perp_mode = (BX_FD_THIS s.command[10] & 0x7f);
+      BX_FD_THIS s.config = BX_FD_THIS s.command[11];
+      BX_FD_THIS s.pretrk = BX_FD_THIS s.command[12];
+      BX_FD_THIS s.power_down = BX_FD_THIS s.command[13];
       enter_idle_phase();
       return;
 
@@ -2146,6 +2147,8 @@ Bit16u bx_floppy_ctrl_c::dma_read(Bit8u *buffer, Bit16u maxlen)
           BX_FD_THIS s.status_reg2 = 0;
         }
         enter_result_phase();
+        // command finished: no further sector increment and no timer
+        return len;
       }
       // time to write one sector at 300 rpm
       increment_sector();
