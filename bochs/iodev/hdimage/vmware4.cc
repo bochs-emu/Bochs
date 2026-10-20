@@ -180,7 +180,7 @@ ssize_t vmware4_image_t::read(void * buf, size_t count)
   while (count > 0) {
     off_t readable = perform_seek();
     if (readable == INVALID_OFFSET) {
-      BX_DEBUG(("vmware4 disk image read failed on %u bytes at " FMT_LL "d", (unsigned)count, current_offset));
+      BX_DEBUG(("vmware4 disk image read failed on %u bytes at %lld", (unsigned)count, (long long)current_offset));
       return -1;
     }
 
@@ -202,7 +202,7 @@ ssize_t vmware4_image_t::write(const void * buf, size_t count)
   while (count > 0) {
     off_t writable = perform_seek();
     if (writable == INVALID_OFFSET) {
-      BX_DEBUG(("vmware4 disk image write failed on %u bytes at " FMT_LL "d", (unsigned)count, current_offset));
+      BX_DEBUG(("vmware4 disk image write failed on %u bytes at %lld", (unsigned)count, (long long)current_offset));
       return -1;
     }
 
