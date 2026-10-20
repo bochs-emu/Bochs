@@ -49,6 +49,17 @@
 #define get_packet_word(controller,b) (((Bit16u)controller->buffer[(b)] << 8) | controller->buffer[(b)+1])
 
 
+// convert a mode parameter list built with the 8 byte MODE SENSE(10)
+// header (total_len bytes) into the MODE SENSE(6) format (4 byte header)
+static void mode_sense6_header(Bit8u *buf, unsigned total_len)
+{
+  buf[0] = (Bit8u)(total_len - 4 - 1); // mode data length
+  buf[1] = buf[2];                     // medium type
+  buf[2] = buf[3];                     // device specific parameter
+  buf[3] = 0;                          // block descriptor length
+  memmove(buf + 4, buf + 8, total_len - 8);
+}
+
 #define BX_CONTROLLER(c,a) (BX_HD_THIS channels[(c)].drives[(a)]).controller
 #define BX_DRIVE(c,a) (BX_HD_THIS channels[(c)].drives[(a)])
 
@@ -1531,20 +1542,24 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                   }
                   Bit8u PC = controller->buffer[2] >> 6;
                   Bit8u PageCode = controller->buffer[2] & 0x3f;
+                  // the response is built with the MODE SENSE(10) header,
+                  // MODE SENSE(6) uses a 4 byte shorter header
+                  int hdr_adj = (atapi_command == 0x1a) ? 4 : 0;
 
                   switch (PC) {
                     case 0x0: // current values
                       switch (PageCode) {
                         case 0x01: // error recovery
-                          init_send_atapi_command(channel, atapi_command, sizeof(error_recovery_t) + 8, alloc_length);
+                          init_send_atapi_command(channel, atapi_command, sizeof(error_recovery_t) + 8 - hdr_adj, alloc_length);
                           init_mode_sense_single(channel, &BX_SELECTED_DRIVE(channel).cdrom.current.error_recovery,
                                                  sizeof(error_recovery_t));
+                          if (hdr_adj) mode_sense6_header(controller->buffer, sizeof(error_recovery_t) + 8);
                           ready_to_send_atapi(channel);
                           break;
 
                         case 0x2a: // CD-ROM capabilities & mech. status
-                          init_send_atapi_command(channel, atapi_command, 28, alloc_length);
-                          init_mode_sense_single(channel, &controller->buffer[8], 28);
+                          init_send_atapi_command(channel, atapi_command, 28 - hdr_adj, alloc_length);
+                          init_mode_sense_single(channel, &controller->buffer[8], 20);
                           controller->buffer[8] = 0x2a;
                           controller->buffer[9] = 0x12;
                           controller->buffer[10] = 0x03;
@@ -1569,11 +1584,12 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                           controller->buffer[25] = 0;
                           controller->buffer[26] = 0;
                           controller->buffer[27] = 0;
+                          if (hdr_adj) mode_sense6_header(controller->buffer, 28);
                           ready_to_send_atapi(channel);
                           break;
                           
                         case 0x0e: // CD-ROM audio control
-                          init_send_atapi_command(channel, atapi_command, 16, alloc_length);
+                          init_send_atapi_command(channel, atapi_command, 16 - hdr_adj, alloc_length);
                           controller->buffer[0] = 0;
                           controller->buffer[1] = 14;
                           controller->buffer[2] = (1<<2) | (0<<1);
@@ -1590,6 +1606,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                           controller->buffer[13] = 0;
                           controller->buffer[14] = 0; // port muted
                           controller->buffer[15] = 0;
+                          if (hdr_adj) mode_sense6_header(controller->buffer, 16);
                           ready_to_send_atapi(channel);
                           break;
 
@@ -1633,8 +1650,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                     case 0x2: // default values
                       switch (PageCode) {
                         case 0x2a: // CD-ROM capabilities & mech. status, copied from current values
-                          init_send_atapi_command(channel, atapi_command, 28, alloc_length);
-                          init_mode_sense_single(channel, &controller->buffer[8], 28);
+                          init_send_atapi_command(channel, atapi_command, 28 - hdr_adj, alloc_length);
+                          init_mode_sense_single(channel, &controller->buffer[8], 20);
                           controller->buffer[8] = 0x2a;
                           controller->buffer[9] = 0x12;
                           controller->buffer[10] = 0x03;
@@ -1659,6 +1676,7 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                           controller->buffer[25] = 0;
                           controller->buffer[26] = 0;
                           controller->buffer[27] = 0;
+                          if (hdr_adj) mode_sense6_header(controller->buffer, 28);
                           ready_to_send_atapi(channel);
                           break;
 
@@ -2199,7 +2217,8 @@ void bx_hard_drive_c::write(Bit32u address, Bit32u value, unsigned io_len)
                   controller->buffer[1] = (Bit8u) ((return_length - 4) >> 16);
                   controller->buffer[2] = (Bit8u) ((return_length - 4) >>  8);
                   controller->buffer[3] = (Bit8u) ((return_length - 4) >>  0);
-                  init_send_atapi_command(channel, atapi_command, return_length, num_descs);
+                  // allocation length is given in descriptors (16 bytes each) plus header
+                  init_send_atapi_command(channel, atapi_command, return_length, (int)num_descs * 16 + 8);
                   ready_to_send_atapi(channel);
                 //}
               } break;
