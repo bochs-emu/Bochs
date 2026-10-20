@@ -53,7 +53,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EdGdM(bxInstruction_c *i)
   sum_32 = op1_32 + op2_32;
   write_RMW_linear_dword(sum_32);
 
-  SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32);
 
   BX_NEXT_INSTR(i);
 }
@@ -221,7 +224,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EdGdM(bxInstruction_c *i)
   diff_32 = op1_32 - op2_32;
   write_RMW_linear_dword(diff_32);
 
-  SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 
   BX_NEXT_INSTR(i);
 }
@@ -383,7 +389,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EdIdM(bxInstruction_c *i)
   sum_32 = op1_32 + op2_32;
   write_RMW_linear_dword(sum_32);
 
-  SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_ADD_32(op1_32, op2_32, sum_32);
 
   BX_NEXT_INSTR(i);
 }
@@ -441,7 +450,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EdIdM(bxInstruction_c *i)
   diff_32 = op1_32 - op2_32;
   write_RMW_linear_dword(diff_32);
 
-  SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_SUB_32(op1_32, op2_32, diff_32);
 
   BX_NEXT_INSTR(i);
 }
@@ -495,7 +507,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EdM(bxInstruction_c *i)
   op1_32 = -op1_32;
   write_RMW_linear_dword(op1_32);
 
-  SET_FLAGS_OSZAPC_SUB_32(0, 0 - op1_32, op1_32);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_SUB_32(0, 0 - op1_32, op1_32);
 
   BX_NEXT_INSTR(i);
 }
@@ -519,7 +534,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_EdM(bxInstruction_c *i)
   op1_32++;
   write_RMW_linear_dword(op1_32);
 
-  SET_FLAGS_OSZAP_ADD_32(op1_32 - 1, 0, op1_32);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAP_ADD_32(op1_32 - 1, 0, op1_32);
 
   BX_NEXT_INSTR(i);
 }
@@ -532,7 +550,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_EdM(bxInstruction_c *i)
   op1_32--;
   write_RMW_linear_dword(op1_32);
 
-  SET_FLAGS_OSZAP_SUB_32(op1_32 + 1, 0, op1_32);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAP_SUB_32(op1_32 + 1, 0, op1_32);
 
   BX_NEXT_INSTR(i);
 }

@@ -631,6 +631,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RdCR4(bxInstruction_c *i)
 #if BX_SUPPORT_X86_64
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR0Rq(bxInstruction_c *i)
 {
+#if BX_SUPPORT_APX
+  if (i->dst() > 8) {
+    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
   if (CPL!=0) {
     BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -761,6 +768,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_CR4Rq(bxInstruction_c *i)
 
 void BX_CPP_AttrRegparmN(1) BX_CPU_C::MOV_RqCR0(bxInstruction_c *i)
 {
+#if BX_SUPPORT_APX
+  if (i->src() > 8) {
+    BX_ERROR(("%s: #UD - register index out of range", i->getIaOpcodeNameShort()));
+    exception(BX_UD_EXCEPTION, 0);
+  }
+#endif
+
   if (CPL!=0) {
     BX_ERROR(("%s: #GP(0) if CPL is not 0", i->getIaOpcodeNameShort()));
     exception(BX_GP_EXCEPTION, 0);
@@ -1931,7 +1945,18 @@ void BX_CPU_C::xsave_xrestor_init(void)
   }
 #endif
 
-  // XCR0[19]: APX state (not implemented)
+#if BX_SUPPORT_APX
+  // XCR0[19]: APX state
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_APX)) {
+    xsave_restore[xcr0_t::BX_XCR0_APX_BIT].len    = XSAVE_APX_STATE_LEN;
+    xsave_restore[xcr0_t::BX_XCR0_APX_BIT].offset = XSAVE_APX_STATE_OFFSET;
+    xsave_restore[xcr0_t::BX_XCR0_APX_BIT].attr   = 0;
+    xsave_restore[xcr0_t::BX_XCR0_APX_BIT].xstate_in_use_method = &BX_CPU_C::xsave_apx_state_xinuse;
+    xsave_restore[xcr0_t::BX_XCR0_APX_BIT].xsave_method = &BX_CPU_C::xsave_apx_state;
+    xsave_restore[xcr0_t::BX_XCR0_APX_BIT].xrstor_method = &BX_CPU_C::xrstor_apx_state;
+    xsave_restore[xcr0_t::BX_XCR0_APX_BIT].xrstor_init_method = &BX_CPU_C::xrstor_init_apx_state;
+  }
+#endif
 
 #if BX_SUPPORT_AMX
   // XCR0[20]: SCALEDATA state
@@ -2004,6 +2029,10 @@ Bit32u BX_CPU_C::get_xcr0_allow_mask(void)
     allowMask |= BX_XCR0_XTILE_BITS_MASK;
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_ACE))
     allowMask |= BX_XCR0_SCALEDATA_MASK;
+#endif
+#if BX_SUPPORT_APX
+  if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_APX))
+    allowMask |= BX_XCR0_APX_MASK;
 #endif
   return allowMask;
 }

@@ -405,6 +405,9 @@ static const Bit64u BxOpcodeTable48x4F[] = {
 // opcode 50 - 57
 static const Bit64u BxOpcodeTable50x57[] = {
 #if BX_SUPPORT_X86_64
+#if BX_SUPPORT_APX
+  form_opcode(ATTR_APX_REX2 | ATTR_OS64, BX_IA_APX_PUSHP_Eq),
+#endif
   form_opcode(ATTR_OS32_64 | ATTR_IS64, BX_IA_PUSH_Eq),
 #endif
   form_opcode(ATTR_OS32    | ATTR_IS32, BX_IA_PUSH_Ed),
@@ -414,6 +417,9 @@ static const Bit64u BxOpcodeTable50x57[] = {
 // opcode 58 - 5F
 static const Bit64u BxOpcodeTable58x5F[] = {
 #if BX_SUPPORT_X86_64
+#if BX_SUPPORT_APX
+  form_opcode(ATTR_APX_REX2 | ATTR_OS64, BX_IA_APX_POPP_Eq),
+#endif
   form_opcode(ATTR_OS32_64 | ATTR_IS64, BX_IA_POP_Eq),
 #endif
   form_opcode(ATTR_OS32    | ATTR_IS32, BX_IA_POP_Ed),
@@ -509,7 +515,7 @@ static const Bit64u BxOpcodeTable70_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable70_64[] = { last_opcode(0, BX_IA_JO_Jbq) };
+static const Bit64u BxOpcodeTable70_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JO_Jbq) };
 #endif
 
 // opcode 71
@@ -519,7 +525,7 @@ static const Bit64u BxOpcodeTable71_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable71_64[] = { last_opcode(0, BX_IA_JNO_Jbq) };
+static const Bit64u BxOpcodeTable71_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JNO_Jbq) };
 #endif
 
 // opcode 72
@@ -529,7 +535,7 @@ static const Bit64u BxOpcodeTable72_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable72_64[] = { last_opcode(0, BX_IA_JB_Jbq) };
+static const Bit64u BxOpcodeTable72_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JB_Jbq) };
 #endif
 
 // opcode 73
@@ -539,7 +545,7 @@ static const Bit64u BxOpcodeTable73_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable73_64[] = { last_opcode(0, BX_IA_JNB_Jbq) };
+static const Bit64u BxOpcodeTable73_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JNB_Jbq) };
 #endif
 
 // opcode 74
@@ -549,7 +555,7 @@ static const Bit64u BxOpcodeTable74_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable74_64[] = { last_opcode(0, BX_IA_JZ_Jbq) };
+static const Bit64u BxOpcodeTable74_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JZ_Jbq) };
 #endif
 
 // opcode 75
@@ -559,7 +565,7 @@ static const Bit64u BxOpcodeTable75_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable75_64[] = { last_opcode(0, BX_IA_JNZ_Jbq) };
+static const Bit64u BxOpcodeTable75_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JNZ_Jbq) };
 #endif
 
 // opcode 76
@@ -569,7 +575,7 @@ static const Bit64u BxOpcodeTable76_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable76_64[] = { last_opcode(0, BX_IA_JBE_Jbq) };
+static const Bit64u BxOpcodeTable76_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JBE_Jbq) };
 #endif
 
 // opcode 77
@@ -579,7 +585,7 @@ static const Bit64u BxOpcodeTable77_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable77_64[] = { last_opcode(0, BX_IA_JNBE_Jbq) };
+static const Bit64u BxOpcodeTable77_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JNBE_Jbq) };
 #endif
 
 // opcode 78
@@ -589,7 +595,7 @@ static const Bit64u BxOpcodeTable78_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable78_64[] = { last_opcode(0, BX_IA_JS_Jbq) };
+static const Bit64u BxOpcodeTable78_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JS_Jbq) };
 #endif
 
 // opcode 79
@@ -599,7 +605,7 @@ static const Bit64u BxOpcodeTable79_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable79_64[] = { last_opcode(0, BX_IA_JNS_Jbq) };
+static const Bit64u BxOpcodeTable79_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JNS_Jbq) };
 #endif
 
 // opcode 7A
@@ -609,7 +615,7 @@ static const Bit64u BxOpcodeTable7A_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable7A_64[] = { last_opcode(0, BX_IA_JP_Jbq) };
+static const Bit64u BxOpcodeTable7A_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JP_Jbq) };
 #endif
 
 // opcode 7B
@@ -619,7 +625,7 @@ static const Bit64u BxOpcodeTable7B_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable7B_64[] = { last_opcode(0, BX_IA_JNP_Jbq) };
+static const Bit64u BxOpcodeTable7B_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JNP_Jbq) };
 #endif
 
 // opcode 7C
@@ -629,7 +635,7 @@ static const Bit64u BxOpcodeTable7C_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable7C_64[] = { last_opcode(0, BX_IA_JL_Jbq) };
+static const Bit64u BxOpcodeTable7C_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JL_Jbq) };
 #endif
 
 // opcode 7D
@@ -639,7 +645,7 @@ static const Bit64u BxOpcodeTable7D_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable7D_64[] = { last_opcode(0, BX_IA_JNL_Jbq) };
+static const Bit64u BxOpcodeTable7D_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JNL_Jbq) };
 #endif
 
 // opcode 7E
@@ -649,7 +655,7 @@ static const Bit64u BxOpcodeTable7E_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable7E_64[] = { last_opcode(0, BX_IA_JLE_Jbq) };
+static const Bit64u BxOpcodeTable7E_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JLE_Jbq) };
 #endif
 
 // opcode 7F
@@ -659,7 +665,7 @@ static const Bit64u BxOpcodeTable7F_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable7F_64[] = { last_opcode(0, BX_IA_JNLE_Jbq) };
+static const Bit64u BxOpcodeTable7F_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JNLE_Jbq) };
 #endif
 
 // opcode 80
@@ -887,7 +893,7 @@ static const Bit64u BxOpcodeTable9F_64[] = { last_opcode(0, BX_IA_LAHF_LM) };
 // opcode A0
 static const Bit64u BxOpcodeTableA0_32[] = { last_opcode(0, BX_IA_MOV_ALOd) };
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTableA0_64[] = { last_opcode(0, BX_IA_MOV_ALOq) };
+static const Bit64u BxOpcodeTableA0_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_MOV_ALOq) };
 #endif
 
 // opcode A1
@@ -898,16 +904,19 @@ static const Bit64u BxOpcodeTableA1_32[] = {
 
 #if BX_SUPPORT_X86_64
 static const Bit64u BxOpcodeTableA1_64[] = {
-  form_opcode(ATTR_OS64, BX_IA_MOV_RAXOq),
-  form_opcode(ATTR_OS32, BX_IA_MOV_EAXOq),
-  last_opcode(ATTR_OS16, BX_IA_MOV_AXOq)
+#if BX_SUPPORT_APX
+  form_opcode(ATTR_APX_REX2 | ATTR_OS16_32 | ATTR_AS64 | ATTR_SSE_NO_PREFIX, BX_IA_APX_JMPABS),
+#endif
+  form_opcode(ATTR_OS64 | ATTR_NO_APX_REX2, BX_IA_MOV_RAXOq),
+  form_opcode(ATTR_OS32 | ATTR_NO_APX_REX2, BX_IA_MOV_EAXOq),
+  last_opcode(ATTR_OS16 | ATTR_NO_APX_REX2, BX_IA_MOV_AXOq)
 };
 #endif
 
 // opcode A2
 static const Bit64u BxOpcodeTableA2_32[] = { last_opcode(0, BX_IA_MOV_OdAL) };
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTableA2_64[] = { last_opcode(0, BX_IA_MOV_OqAL) };
+static const Bit64u BxOpcodeTableA2_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_MOV_OqAL) };
 #endif
 
 // opcode A3
@@ -918,82 +927,82 @@ static const Bit64u BxOpcodeTableA3_32[] = {
 
 #if BX_SUPPORT_X86_64
 static const Bit64u BxOpcodeTableA3_64[] = {
-  form_opcode(ATTR_OS64, BX_IA_MOV_OqRAX),
-  form_opcode(ATTR_OS32, BX_IA_MOV_OqEAX),
-  last_opcode(ATTR_OS16, BX_IA_MOV_OqAX)
+  form_opcode(ATTR_OS64 | ATTR_NO_APX_REX2, BX_IA_MOV_OqRAX),
+  form_opcode(ATTR_OS32 | ATTR_NO_APX_REX2, BX_IA_MOV_OqEAX),
+  last_opcode(ATTR_OS16 | ATTR_NO_APX_REX2, BX_IA_MOV_OqAX)
 };
 #endif
 
 // opcode A4
-static const Bit64u BxOpcodeTableA4[] = { last_opcode(0, BX_IA_REP_MOVSB_YbXb) };
+static const Bit64u BxOpcodeTableA4[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_REP_MOVSB_YbXb) };
 
 // opcode A5
 static const Bit64u BxOpcodeTableA5[] = {
 #if BX_SUPPORT_X86_64
-  form_opcode(ATTR_OS64, BX_IA_REP_MOVSQ_YqXq),
+  form_opcode(ATTR_OS64 | ATTR_NO_APX_REX2, BX_IA_REP_MOVSQ_YqXq),
 #endif
-  form_opcode(ATTR_OS32, BX_IA_REP_MOVSD_YdXd),
-  last_opcode(ATTR_OS16, BX_IA_REP_MOVSW_YwXw)
+  form_opcode(ATTR_OS32 | ATTR_NO_APX_REX2, BX_IA_REP_MOVSD_YdXd),
+  last_opcode(ATTR_OS16 | ATTR_NO_APX_REX2, BX_IA_REP_MOVSW_YwXw)
 };
 
 // opcode A6
-static const Bit64u BxOpcodeTableA6[] = { last_opcode(0, BX_IA_REP_CMPSB_XbYb) };
+static const Bit64u BxOpcodeTableA6[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_REP_CMPSB_XbYb) };
 
 // opcode A7
 static const Bit64u BxOpcodeTableA7[] = {
 #if BX_SUPPORT_X86_64
-  form_opcode(ATTR_OS64, BX_IA_REP_CMPSQ_XqYq),
+  form_opcode(ATTR_OS64 | ATTR_NO_APX_REX2, BX_IA_REP_CMPSQ_XqYq),
 #endif
-  form_opcode(ATTR_OS32, BX_IA_REP_CMPSD_XdYd),
-  last_opcode(ATTR_OS16, BX_IA_REP_CMPSW_XwYw)
+  form_opcode(ATTR_OS32 | ATTR_NO_APX_REX2, BX_IA_REP_CMPSD_XdYd),
+  last_opcode(ATTR_OS16 | ATTR_NO_APX_REX2, BX_IA_REP_CMPSW_XwYw)
 };
 
 // opcode A8
-static const Bit64u BxOpcodeTableA8[] = { last_opcode(0, BX_IA_TEST_ALIb) };
+static const Bit64u BxOpcodeTableA8[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_TEST_ALIb) };
 
 // opcode A9
 static const Bit64u BxOpcodeTableA9[] = {
 #if BX_SUPPORT_X86_64
-  form_opcode(ATTR_OS64, BX_IA_TEST_RAXId),
+  form_opcode(ATTR_OS64 | ATTR_NO_APX_REX2, BX_IA_TEST_RAXId),
 #endif
-  form_opcode(ATTR_OS32, BX_IA_TEST_EAXId),
-  last_opcode(ATTR_OS16, BX_IA_TEST_AXIw)
+  form_opcode(ATTR_OS32 | ATTR_NO_APX_REX2, BX_IA_TEST_EAXId),
+  last_opcode(ATTR_OS16 | ATTR_NO_APX_REX2, BX_IA_TEST_AXIw)
 };
 
 // opcode AA
-static const Bit64u BxOpcodeTableAA[] = { last_opcode(0, BX_IA_REP_STOSB_YbAL) };
+static const Bit64u BxOpcodeTableAA[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_REP_STOSB_YbAL) };
 
 // opcode AB
 static const Bit64u BxOpcodeTableAB[] = {
 #if BX_SUPPORT_X86_64
-  form_opcode(ATTR_OS64, BX_IA_REP_STOSQ_YqRAX),
+  form_opcode(ATTR_OS64 | ATTR_NO_APX_REX2, BX_IA_REP_STOSQ_YqRAX),
 #endif
-  form_opcode(ATTR_OS32, BX_IA_REP_STOSD_YdEAX),
-  last_opcode(ATTR_OS16, BX_IA_REP_STOSW_YwAX)
+  form_opcode(ATTR_OS32 | ATTR_NO_APX_REX2, BX_IA_REP_STOSD_YdEAX),
+  last_opcode(ATTR_OS16 | ATTR_NO_APX_REX2, BX_IA_REP_STOSW_YwAX)
 };
 
 // opcode AC
-static const Bit64u BxOpcodeTableAC[] = { last_opcode(0, BX_IA_REP_LODSB_ALXb) };
+static const Bit64u BxOpcodeTableAC[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_REP_LODSB_ALXb) };
 
 // opcode AD
 static const Bit64u BxOpcodeTableAD[] = {
 #if BX_SUPPORT_X86_64
-  form_opcode(ATTR_OS64, BX_IA_REP_LODSQ_RAXXq),
+  form_opcode(ATTR_OS64 | ATTR_NO_APX_REX2, BX_IA_REP_LODSQ_RAXXq),
 #endif
-  form_opcode(ATTR_OS32, BX_IA_REP_LODSD_EAXXd),
-  last_opcode(ATTR_OS16, BX_IA_REP_LODSW_AXXw)
+  form_opcode(ATTR_OS32 | ATTR_NO_APX_REX2, BX_IA_REP_LODSD_EAXXd),
+  last_opcode(ATTR_OS16 | ATTR_NO_APX_REX2, BX_IA_REP_LODSW_AXXw)
 };
 
 // opcode AE
-static const Bit64u BxOpcodeTableAE[] = { last_opcode(0, BX_IA_REP_SCASB_ALYb) };
+static const Bit64u BxOpcodeTableAE[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_REP_SCASB_ALYb) };
 
 // opcode AF
 static const Bit64u BxOpcodeTableAF[] = {
 #if BX_SUPPORT_X86_64
-  form_opcode(ATTR_OS64, BX_IA_REP_SCASQ_RAXYq),
+  form_opcode(ATTR_OS64 | ATTR_NO_APX_REX2, BX_IA_REP_SCASQ_RAXYq),
 #endif
-  form_opcode(ATTR_OS32, BX_IA_REP_SCASD_EAXYd),
-  last_opcode(ATTR_OS16, BX_IA_REP_SCASW_AXYw)
+  form_opcode(ATTR_OS32 | ATTR_NO_APX_REX2, BX_IA_REP_SCASD_EAXYd),
+  last_opcode(ATTR_OS16 | ATTR_NO_APX_REX2, BX_IA_REP_SCASW_AXYw)
 };
 
 // opcode B0 - B7
@@ -1266,7 +1275,7 @@ static const Bit64u BxOpcodeTableE0_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTableE0_64[] = { last_opcode(ATTR_IS64, BX_IA_LOOPNE_Jbq) };
+static const Bit64u BxOpcodeTableE0_64[] = { last_opcode(ATTR_IS64 | ATTR_NO_APX_REX2, BX_IA_LOOPNE_Jbq) };
 #endif
 
 // opcode E1
@@ -1276,7 +1285,7 @@ static const Bit64u BxOpcodeTableE1_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTableE1_64[] = { last_opcode(ATTR_IS64, BX_IA_LOOPE_Jbq) };
+static const Bit64u BxOpcodeTableE1_64[] = { last_opcode(ATTR_IS64 | ATTR_NO_APX_REX2, BX_IA_LOOPE_Jbq) };
 #endif
 
 // opcode E2
@@ -1286,7 +1295,7 @@ static const Bit64u BxOpcodeTableE2_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTableE2_64[] = { last_opcode(ATTR_IS64, BX_IA_LOOP_Jbq) };
+static const Bit64u BxOpcodeTableE2_64[] = { last_opcode(ATTR_IS64 | ATTR_NO_APX_REX2, BX_IA_LOOP_Jbq) };
 #endif
 
 // opcode E3
@@ -1296,25 +1305,25 @@ static const Bit64u BxOpcodeTableE3_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTableE3_64[] = { last_opcode(ATTR_IS64, BX_IA_JRCXZ_Jbq) };
+static const Bit64u BxOpcodeTableE3_64[] = { last_opcode(ATTR_IS64 | ATTR_NO_APX_REX2, BX_IA_JRCXZ_Jbq) };
 #endif
 
 // opcode E4
-static const Bit64u BxOpcodeTableE4[] = { last_opcode(0, BX_IA_IN_ALIb) };
+static const Bit64u BxOpcodeTableE4[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_IN_ALIb) };
 
 // opcode E5
 static const Bit64u BxOpcodeTableE5[] = {
-  form_opcode(ATTR_OS32_64, BX_IA_IN_EAXIb),
-  last_opcode(ATTR_OS16,    BX_IA_IN_AXIb)
+  form_opcode(ATTR_OS32_64 | ATTR_NO_APX_REX2, BX_IA_IN_EAXIb),
+  last_opcode(ATTR_OS16    | ATTR_NO_APX_REX2, BX_IA_IN_AXIb)
 };
 
 // opcode E6
-static const Bit64u BxOpcodeTableE6[] = { last_opcode(0, BX_IA_OUT_IbAL) };
+static const Bit64u BxOpcodeTableE6[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_OUT_IbAL) };
 
 // opcode E7
 static const Bit64u BxOpcodeTableE7[] = {
-  form_opcode(ATTR_OS32_64, BX_IA_OUT_IbEAX),
-  last_opcode(ATTR_OS16,    BX_IA_OUT_IbAX)
+  form_opcode(ATTR_OS32_64 | ATTR_NO_APX_REX2, BX_IA_OUT_IbEAX),
+  last_opcode(ATTR_OS16    | ATTR_NO_APX_REX2, BX_IA_OUT_IbAX)
 };
 
 // opcode E8
@@ -1324,7 +1333,7 @@ static const Bit64u BxOpcodeTableE8_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTableE8_64[] = { last_opcode(0, BX_IA_CALL_Jq) };
+static const Bit64u BxOpcodeTableE8_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_CALL_Jq) };
 #endif
 
 // opcode E9
@@ -1334,7 +1343,7 @@ static const Bit64u BxOpcodeTableE9_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTableE9_64[] = { last_opcode(0, BX_IA_JMP_Jq) };
+static const Bit64u BxOpcodeTableE9_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JMP_Jq) };
 #endif
 
 // opcode EA
@@ -1347,25 +1356,25 @@ static const Bit64u BxOpcodeTableEB_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTableEB_64[] = { last_opcode(0, BX_IA_JMP_Jbq) };
+static const Bit64u BxOpcodeTableEB_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JMP_Jbq) };
 #endif
 
 // opcode EC
-static const Bit64u BxOpcodeTableEC[] = { last_opcode(0, BX_IA_IN_ALDX) };
+static const Bit64u BxOpcodeTableEC[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_IN_ALDX) };
 
 // opcode ED
 static const Bit64u BxOpcodeTableED[] = {
-  form_opcode(ATTR_OS32_64, BX_IA_IN_EAXDX),
-  last_opcode(ATTR_OS16,    BX_IA_IN_AXDX)
+  form_opcode(ATTR_OS32_64 | ATTR_NO_APX_REX2, BX_IA_IN_EAXDX),
+  last_opcode(ATTR_OS16    | ATTR_NO_APX_REX2, BX_IA_IN_AXDX)
 };
 
 // opcode EE
-static const Bit64u BxOpcodeTableEE[] = { last_opcode(0, BX_IA_OUT_DXAL) };
+static const Bit64u BxOpcodeTableEE[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_OUT_DXAL) };
 
 // opcode EF
 static const Bit64u BxOpcodeTableEF[] = {
-  form_opcode(ATTR_OS32_64, BX_IA_OUT_DXEAX),
-  last_opcode(ATTR_OS16,    BX_IA_OUT_DXAX)
+  form_opcode(ATTR_OS32_64 | ATTR_NO_APX_REX2, BX_IA_OUT_DXEAX),
+  last_opcode(ATTR_OS16    | ATTR_NO_APX_REX2, BX_IA_OUT_DXAX)
 };
 
 // opcode F1
@@ -1880,31 +1889,31 @@ static const Bit64u BxOpcodeTable0F2F[] = {
 };
 
 // opcode 0F 30
-static const Bit64u BxOpcodeTable0F30[] = { last_opcode(0, BX_IA_WRMSR) };
+static const Bit64u BxOpcodeTable0F30[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_WRMSR) };
 
 // opcode 0F 31 - end trace to avoid multiple TSC samples in one cycle
-static const Bit64u BxOpcodeTable0F31[] = { last_opcode(0, BX_IA_RDTSC) };
+static const Bit64u BxOpcodeTable0F31[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_RDTSC) };
 
 // opcode 0F 32 - end trace to avoid multiple TSC samples in one cycle
-static const Bit64u BxOpcodeTable0F32[] = { last_opcode(0, BX_IA_RDMSR) };
+static const Bit64u BxOpcodeTable0F32[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_RDMSR) };
 
 // opcode 0F 33
-static const Bit64u BxOpcodeTable0F33[] = { last_opcode(0, BX_IA_RDPMC) };
+static const Bit64u BxOpcodeTable0F33[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_RDPMC) };
 
 // opcode 0F 34
-static const Bit64u BxOpcodeTable0F34_32[] = { last_opcode(0, BX_IA_SYSENTER) };
+static const Bit64u BxOpcodeTable0F34_32[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_SYSENTER) };
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F34_64[] = { last_opcode(0, BX_IA_SYSENTER_LONGMODE) };
+static const Bit64u BxOpcodeTable0F34_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_SYSENTER_LONGMODE) };
 #endif
 
 // opcode 0F 35
-static const Bit64u BxOpcodeTable0F35_32[] = { last_opcode(0, BX_IA_SYSEXIT) };
+static const Bit64u BxOpcodeTable0F35_32[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_SYSEXIT) };
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F35_64[] = { last_opcode(0, BX_IA_SYSEXIT_LONGMODE) };
+static const Bit64u BxOpcodeTable0F35_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_SYSEXIT_LONGMODE) };
 #endif
 
 // opcode 0F 37
-static const Bit64u BxOpcodeTable0F37[] = { last_opcode(ATTR_SSE_NO_PREFIX, BX_IA_GETSEC) };
+static const Bit64u BxOpcodeTable0F37[] = { last_opcode(ATTR_SSE_NO_PREFIX | ATTR_NO_APX_REX2, BX_IA_GETSEC) };
 
 // opcode 0F 40
 static const Bit64u BxOpcodeTable0F40[] = {
@@ -2384,7 +2393,7 @@ static const Bit64u BxOpcodeTable0F80_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F80_64[] = { last_opcode(0, BX_IA_JO_Jq) };
+static const Bit64u BxOpcodeTable0F80_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JO_Jq) };
 #endif
 
 // opcode 0F 81
@@ -2394,7 +2403,7 @@ static const Bit64u BxOpcodeTable0F81_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F81_64[] = { last_opcode(0, BX_IA_JNO_Jq) };
+static const Bit64u BxOpcodeTable0F81_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JNO_Jq) };
 #endif
 
 // opcode 0F 82
@@ -2404,7 +2413,7 @@ static const Bit64u BxOpcodeTable0F82_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F82_64[] = { last_opcode(0, BX_IA_JB_Jq) };
+static const Bit64u BxOpcodeTable0F82_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JB_Jq) };
 #endif
 
 // opcode 0F 83
@@ -2414,7 +2423,7 @@ static const Bit64u BxOpcodeTable0F83_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F83_64[] = { last_opcode(0, BX_IA_JNB_Jq) };
+static const Bit64u BxOpcodeTable0F83_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JNB_Jq) };
 #endif
 
 // opcode 0F 84
@@ -2424,7 +2433,7 @@ static const Bit64u BxOpcodeTable0F84_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F84_64[] = { last_opcode(0, BX_IA_JZ_Jq) };
+static const Bit64u BxOpcodeTable0F84_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JZ_Jq) };
 #endif
 
 // opcode 0F 85
@@ -2434,7 +2443,7 @@ static const Bit64u BxOpcodeTable0F85_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F85_64[] = { last_opcode(0, BX_IA_JNZ_Jq) };
+static const Bit64u BxOpcodeTable0F85_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JNZ_Jq) };
 #endif
 
 // opcode 0F 86
@@ -2444,7 +2453,7 @@ static const Bit64u BxOpcodeTable0F86_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F86_64[] = { last_opcode(0, BX_IA_JBE_Jq) };
+static const Bit64u BxOpcodeTable0F86_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JBE_Jq) };
 #endif
 
 // opcode 0F 87
@@ -2454,7 +2463,7 @@ static const Bit64u BxOpcodeTable0F87_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F87_64[] = { last_opcode(0, BX_IA_JNBE_Jq) };
+static const Bit64u BxOpcodeTable0F87_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JNBE_Jq) };
 #endif
 
 // opcode 0F 88
@@ -2464,7 +2473,7 @@ static const Bit64u BxOpcodeTable0F88_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F88_64[] = { last_opcode(0, BX_IA_JS_Jq) };
+static const Bit64u BxOpcodeTable0F88_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JS_Jq) };
 #endif
 
 // opcode 0F 89
@@ -2474,7 +2483,7 @@ static const Bit64u BxOpcodeTable0F89_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F89_64[] = { last_opcode(0, BX_IA_JNS_Jq) };
+static const Bit64u BxOpcodeTable0F89_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JNS_Jq) };
 #endif
 
 // opcode 0F 8A
@@ -2484,7 +2493,7 @@ static const Bit64u BxOpcodeTable0F8A_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F8A_64[] = { last_opcode(0, BX_IA_JP_Jq) };
+static const Bit64u BxOpcodeTable0F8A_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JP_Jq) };
 #endif
 
 // opcode 0F 8B
@@ -2494,7 +2503,7 @@ static const Bit64u BxOpcodeTable0F8B_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F8B_64[] = { last_opcode(0, BX_IA_JNP_Jq) };
+static const Bit64u BxOpcodeTable0F8B_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JNP_Jq) };
 #endif
 
 // opcode 0F 8C
@@ -2504,7 +2513,7 @@ static const Bit64u BxOpcodeTable0F8C_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F8C_64[] = { last_opcode(0, BX_IA_JL_Jq) };
+static const Bit64u BxOpcodeTable0F8C_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JL_Jq) };
 #endif
 
 // opcode 0F 8D
@@ -2514,7 +2523,7 @@ static const Bit64u BxOpcodeTable0F8D_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F8D_64[] = { last_opcode(0, BX_IA_JNL_Jq) };
+static const Bit64u BxOpcodeTable0F8D_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JNL_Jq) };
 #endif
 
 // opcode 0F 8E
@@ -2524,7 +2533,7 @@ static const Bit64u BxOpcodeTable0F8E_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F8E_64[] = { last_opcode(0, BX_IA_JLE_Jq) };
+static const Bit64u BxOpcodeTable0F8E_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JLE_Jq) };
 #endif
 
 // opcode 0F 8F
@@ -2534,7 +2543,7 @@ static const Bit64u BxOpcodeTable0F8F_32[] = {
 };
 
 #if BX_SUPPORT_X86_64
-static const Bit64u BxOpcodeTable0F8F_64[] = { last_opcode(0, BX_IA_JNLE_Jq) };
+static const Bit64u BxOpcodeTable0F8F_64[] = { last_opcode(ATTR_NO_APX_REX2, BX_IA_JNLE_Jq) };
 #endif
 
 // opcode 0F 90 - 0F 9F
@@ -2686,9 +2695,9 @@ static const Bit64u BxOpcodeTable0FAE[] = {
   form_opcode(ATTR_NNN1 | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX, BX_IA_FXRSTOR),
   form_opcode(ATTR_NNN2 | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX, BX_IA_LDMXCSR),
   form_opcode(ATTR_NNN3 | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX, BX_IA_STMXCSR),
-  form_opcode(ATTR_NNN4 | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX, BX_IA_XSAVE),
-  form_opcode(ATTR_NNN5 | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX, BX_IA_XRSTOR),
-  form_opcode(ATTR_NNN6 | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX, BX_IA_XSAVEOPT),
+  form_opcode(ATTR_NNN4 | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX | ATTR_NO_APX_REX2, BX_IA_XSAVE),
+  form_opcode(ATTR_NNN5 | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX | ATTR_NO_APX_REX2, BX_IA_XRSTOR),
+  form_opcode(ATTR_NNN6 | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX | ATTR_NO_APX_REX2, BX_IA_XSAVEOPT),
   form_opcode(ATTR_NNN6 | ATTR_MOD_MEM | ATTR_SSE_PREFIX_66, BX_IA_CLWB),
 #if BX_SUPPORT_CET
   form_opcode(ATTR_NNN6 | ATTR_MOD_MEM | ATTR_SSE_PREFIX_F3, BX_IA_CLRSSBSY),
@@ -2925,9 +2934,9 @@ static const Bit64u BxOpcodeTable0FC7[] = {
 #if BX_SUPPORT_X86_64
   form_opcode_lockable(ATTR_OS64    | ATTR_NNN1 | ATTR_MOD_MEM, BX_IA_CMPXCHG16B),
 #endif
-  form_opcode(ATTR_NNN3 | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX, BX_IA_XRSTORS),
-  form_opcode(ATTR_NNN4 | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX, BX_IA_XSAVEC),
-  form_opcode(ATTR_NNN5 | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX, BX_IA_XSAVES),
+  form_opcode(ATTR_NNN3 | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX | ATTR_NO_APX_REX2, BX_IA_XRSTORS),
+  form_opcode(ATTR_NNN4 | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX | ATTR_NO_APX_REX2, BX_IA_XSAVEC),
+  form_opcode(ATTR_NNN5 | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX | ATTR_NO_APX_REX2, BX_IA_XSAVES),
   form_opcode(ATTR_NNN6 | ATTR_MOD_MEM | ATTR_SSE_NO_PREFIX, BX_IA_VMPTRLD_Mq),
   form_opcode(ATTR_NNN6 | ATTR_MOD_MEM | ATTR_SSE_PREFIX_66, BX_IA_VMCLEAR_Mq),
   form_opcode(ATTR_NNN6 | ATTR_MOD_MEM | ATTR_SSE_PREFIX_F3, BX_IA_VMXON_Mq),

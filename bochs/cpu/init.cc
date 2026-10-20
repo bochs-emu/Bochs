@@ -339,6 +339,24 @@ void BX_CPU_C::register_state(void)
   BXRS_HEX_PARAM_SIMPLE(cpu, R13);
   BXRS_HEX_PARAM_SIMPLE(cpu, R14);
   BXRS_HEX_PARAM_SIMPLE(cpu, R15);
+#if BX_SUPPORT_APX
+  BXRS_HEX_PARAM_SIMPLE(cpu, R16);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R17);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R18);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R19);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R20);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R21);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R22);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R23);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R24);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R25);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R26);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R27);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R28);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R29);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R30);
+  BXRS_HEX_PARAM_SIMPLE(cpu, R31);
+#endif
   BXRS_HEX_PARAM_SIMPLE(cpu, RIP);
 #else
   BXRS_HEX_PARAM_SIMPLE(cpu, EAX);
@@ -913,8 +931,20 @@ void BX_CPU_C::reset(unsigned source)
   else
     BX_INFO(("cpu reset"));
 
+#if BX_SUPPORT_APX
+  for (n=0;n<16;n++)
+#else
   for (n=0;n<BX_GENERAL_REGISTERS;n++)
+#endif
     BX_WRITE_32BIT_REGZ(n, 0);
+
+#if BX_SUPPORT_APX
+  // Reset R16-R31 state - unchanged on #INIT
+  if (source == BX_RESET_HARDWARE) {
+    for (n=16;n<BX_GENERAL_REGISTERS;n++)
+      BX_WRITE_32BIT_REGZ(n, 0);
+  }
+#endif
 
 //BX_WRITE_32BIT_REGZ(BX_32BIT_REG_EDX, get_cpu_version_information());
 

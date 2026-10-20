@@ -42,7 +42,7 @@
 // In 64-bit mode the CS, DS, ES, and SS segment overrides are ignored.
 
 // decoding instructions; accessing seg reg's by index
-static unsigned sreg_mod0_base32[16] = {
+static unsigned sreg_mod0_base32[BX_GENERAL_REGISTERS] = {
   BX_SEG_REG_DS,
   BX_SEG_REG_DS,
   BX_SEG_REG_DS,
@@ -58,16 +58,51 @@ static unsigned sreg_mod0_base32[16] = {
   BX_SEG_REG_DS,
   BX_SEG_REG_DS,
   BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+#if BX_SUPPORT_APX
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
   BX_SEG_REG_DS
+#endif
 };
 
-static unsigned sreg_mod1or2_base32[16] = {
+static unsigned sreg_mod1or2_base32[BX_GENERAL_REGISTERS] = {
   BX_SEG_REG_DS,
   BX_SEG_REG_DS,
   BX_SEG_REG_DS,
   BX_SEG_REG_DS,
   BX_SEG_REG_SS,
   BX_SEG_REG_SS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+#if BX_SUPPORT_APX
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
+  BX_SEG_REG_DS,
   BX_SEG_REG_DS,
   BX_SEG_REG_DS,
   BX_SEG_REG_DS,
@@ -78,6 +113,7 @@ static unsigned sreg_mod1or2_base32[16] = {
   BX_SEG_REG_DS,
   BX_SEG_REG_DS,
   BX_SEG_REG_DS
+#endif
 };
 
 // common fetchdecode32/64 opcode tables
@@ -105,7 +141,7 @@ extern Bit16u findOpcode(const Bit64u *opMap, Bit32u opMsk);
 
 extern BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, unsigned nnn, unsigned rm);
 #if BX_SUPPORT_AVX
-extern BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, Bit32u had_evex = 0, bool displ8 = false);
+extern BxDecodeError assign_srcs(bxInstruction_c *i, unsigned ia_opcode, bool is_64, unsigned nnn, unsigned rm, unsigned vvv, unsigned vex_w, Bit32u had_evex = 0, bool displ8 = false, BxApxDecode apx = BX_APX_DISABLED);
 #endif
 
 extern int fetchImmediate(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, Bit16u ia_opcode, bool is_64);
@@ -116,7 +152,13 @@ extern int decoder64_fp_escape(const Bit8u *iptr, unsigned &remain, bxInstructio
 extern int decoder64_3dnow(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table);
 extern int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table);
 extern int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table);
+#if BX_SUPPORT_APX
+extern int decoder_evex64_noapx(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table);
+#endif
 extern int decoder_xop64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table);
+#if BX_SUPPORT_APX
+extern int decoder_rex2(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table);
+#endif
 extern int decoder_ud64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table);
 extern int decoder64_nop(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table);
 extern int decoder64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table);
@@ -344,7 +386,11 @@ static BxOpcodeDecodeDescriptor64 decode64_descriptor[] =
    /*    D2 */ { &decoder64_modrm, BxOpcodeTableD2 },
    /*    D3 */ { &decoder64_modrm, BxOpcodeTableD3 },
    /*    D4 */ { &decoder_ud64, NULL },
+#if BX_SUPPORT_APX
+   /*    D5 */ { &decoder_rex2, NULL },           // APX REX2
+#else
    /*    D5 */ { &decoder_ud64, NULL },
+#endif
    /*    D6 */ { &decoder_ud64, NULL },
    /*    D7 */ { &decoder_simple64, BxOpcodeTableD7 },
    /*    D8 */ { &decoder64_fp_escape, NULL },
@@ -664,7 +710,7 @@ const Bit8u *decodeModrm64(const Bit8u *iptr, unsigned &remain, bxInstruction_c 
   // note that mod==11b handled outside
 
   if ((rm & 0x7) != 4) { // no s-i-b byte
-    i->setSibBase(rm & 0xf);
+    i->setSibBase(rm & 0x1f);
     i->setSibIndex(4); // no Index encoding by default
     if (mod == 0x00) { // mod == 00b
       if ((rm & 0x7) == 5) {
@@ -675,7 +721,7 @@ const Bit8u *decodeModrm64(const Bit8u *iptr, unsigned &remain, bxInstruction_c 
       goto modrm_done;
     }
     // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
-    seg = sreg_mod1or2_base32[rm & 0xf];
+    seg = sreg_mod1or2_base32[rm & 0x1f];
   }
   else { // mod!=11b, rm==4, s-i-b byte follows
     unsigned sib, base, index, scale;
@@ -690,13 +736,13 @@ const Bit8u *decodeModrm64(const Bit8u *iptr, unsigned &remain, bxInstruction_c 
     index = (sib & 0x7) | rex_x; sib >>= 3;
     scale =  sib;
     i->setSibScale(scale);
-    i->setSibBase(base & 0xf);
+    i->setSibBase(base & 0x1f);
     // this part is a little tricky - assign index value always,
     // it will be really used if the instruction is Gather. Others
     // assume that resolve function will do the right thing.
-    i->setSibIndex(index & 0xf);
+    i->setSibIndex(index & 0x1f);
     if (mod == 0x00) { // mod==00b, rm==4
-      seg = sreg_mod0_base32[base & 0xf];
+      seg = sreg_mod0_base32[base & 0x1f];
       if ((base & 0x7) == 5) {
         i->setSibBase(BX_NIL_REGISTER);
         goto get_32bit_displ;
@@ -705,7 +751,7 @@ const Bit8u *decodeModrm64(const Bit8u *iptr, unsigned &remain, bxInstruction_c 
       goto modrm_done;
     }
     // (mod == 0x40), mod==01b or (mod == 0x80), mod==10b
-    seg = sreg_mod1or2_base32[base & 0xf];
+    seg = sreg_mod1or2_base32[base & 0x1f];
   }
 
   // (mod == 0x40), mod==01b
@@ -798,6 +844,7 @@ int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
     remain--;
     vex = *iptr++;  // fetch VEX3
 
+    i->assertExtend8bit();    // legaxy REX side-effects
     if (vex & 0x80) {
       vex_w = 1;
       i->assertOs64();
@@ -898,7 +945,36 @@ int decoder_vex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   return ia_opcode;
 }
 
-int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table)
+#if BX_SUPPORT_APX
+// returns true for legacy and VEX instructions promoted to EVEX by APX
+// (iptr points to the ModRM byte, used to distinguish memory and register forms)
+static bool is_apx_opcode(unsigned evex_opc_map, unsigned opcode_byte, const Bit8u *iptr, unsigned remain)
+{
+  // map4 and map7 hold only APX promoted instructions
+  if (evex_opc_map == 4 || evex_opc_map == 7)
+    return true;
+
+  // KMOV* in map1 90-93
+  if (opcode_byte >= 0x90 && opcode_byte <= 0x93)
+    return true;
+
+  // AMX memory forms in map2 49-4B (register forms of 4A/4B are AMX-AVX512 / ACE instructions)
+  if (opcode_byte >= 0x149 && opcode_byte <= 0x14b)
+    return (remain != 0 && (*iptr & 0xc0) != 0xc0);
+
+  // CMPccXADD in map2 E0-EF and BMI1/BMI2 in map2 F2-F7 (map2 F0/F1 are not defined in EVEX)
+  if (opcode_byte >= 0x1e0 && opcode_byte <= 0x1f7)
+    return true;
+
+  // RORX in map3 F0
+  if (opcode_byte == 0x2f0)
+    return true;
+
+  return false;
+}
+#endif
+
+static int decoder_evex64_common(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, bool apx_ok)
 {
   int ia_opcode = BX_IA_ERROR;
 
@@ -925,52 +1001,83 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   // EVEX format: 0x62 P0 P1 P2
   // -----------
 
-  //    7 6 5 4 3 2 1 0
-  //    ---------------
-  // P0 R X B R'0 m m m
-  // P1 w v v v v u p p
-  // P2 z L'L b V'a a a
+  //    7 6 5 4  3  2 1 0
+  //    -----------------
+  // P0 R X B R4 0  m m m
+  // P1 w v v v  v  1 p p
+  // P2 z L L b  V4 a a a
 
   // EVEX.mmmm - opcode group
   // EVEX.pp   - compressed legacy SSE prefix
   // EVEX.RXB  - RXB to combine with MODRM.reg and MODRM.nnn
-  // EVEX.R'   - combine with EVEX.R and MODRM.reg
+  // EVEX.R4   - combine with EVEX.R and MODRM.reg
   // EVEX.vvvv - save as VEX.vvvv
-  // EVEX.V'   - combine with EVEX.vvvv or when VSIB present
+  // EVEX.V4   - combine with EVEX.vvvv or when VSIB present
   // EVEX.aaa  - embedded opmask register
   // EVEX.W    - opsize promotion / opcode extension
   // EVEX.z    - zero masking / merging
   // EVEX.b    - broadcast / round control / SAE
   // EVEX.LL   - vector length control
 
-  // check for reserved EVEX bits
-  if ((evex & 0x08) != 0)
-    return(ia_opcode);
+  // under APX:
 
-  // EVEX.U must be '1
-  if ((evex & 0x400) == 0)
-    return(ia_opcode);
+  //    7 6 5 4  3  2 1 0
+  //    -----------------
+  // P0 R X B R4 B4 m m m
+  // P1 w v v v  v  u p p
+  // P2 z L L ND V4 a a a
+
+  // EVEX.aaa  must be '0  ; bit[2] might be repurposed to EVEX.NF
+  //                       ; for CCMP/CTEST repurposed as SC0/SC1/SC2
+  // EVEX.V4   for CCMP/CTEST repurposed as SC3
+  // EVEX.z    must be '0
+  // EVEX.LL   must be '0
+  // EVEX.b    repurposed to EVEX.ND
+  // EVEX.u    used as ~EVEX.X4 when mod != 3, must be 1 otherwise
+  // EVEX.vvvv for CCMP/CTEST repurposed as DFV
+
+  if (! apx_ok) {
+    // check for reserved EVEX bits (EVEX.B4 without APX)
+    if ((evex & 0x08) != 0)
+      return(ia_opcode);
+
+    // EVEX.U must be '1 (EVEX.X4 without APX)
+    if ((evex & 0x400) == 0)
+      return(ia_opcode);
+  }
 
   unsigned evex_opc_map = evex & 0x7;
-  if (evex_opc_map == 0 || evex_opc_map == 4 || evex_opc_map == 7)
+  if (evex_opc_map == 0)
     return(ia_opcode);
-  if (evex_opc_map >= 4) evex_opc_map--; // skipped map4 in the table
+#if BX_SUPPORT_APX == 0
+  if (evex_opc_map == 4 || evex_opc_map == 7)
+    return(ia_opcode);
+  if (evex_opc_map > 4) evex_opc_map--; // skipped map4 in the table if APX is not compiled in
+#endif
 
   unsigned rex_r = 0, rex_x = 0, rex_b = 0;
   rex_r = ((evex >> 4) & 0x8) ^ 0x8;
-  rex_r |= (evex & 0x10) ^ 0x10;
+  rex_r |= (evex & 0x10) ^ 0x10; // add R4
   rex_x = ((evex >> 3) & 0x8) ^ 0x8;
+  rex_x |= ((evex >> 6) & 0x10) ^ 0x10; // add X4
   rex_b = ((evex >> 2) & 0x8) ^ 0x8;
+  rex_b |= ((evex & 0x8) << 1); // add B4
 
   sse_prefix = (evex >> 8) & 0x3;
+#if BX_SUPPORT_APX
+  if (sse_prefix == SSE_PREFIX_66)
+    i->setOs32B(0);
+#endif
+  int evex_u = (evex >> 10) & 0x1;
   int vvv = 15 - ((evex >> 11) & 0xf);
-  unsigned evex_v = ((evex >> 15) & 0x10) ^ 0x10;
-  vvv |= evex_v;
+  unsigned evex_v4 = ((evex >> 15) & 0x10) ^ 0x10;
+  vvv |= evex_v4;
   unsigned vex_w = (evex >> 15) & 0x1;
   if (vex_w) {
     i->assertOs64();
     i->assertOs32();
   }
+  i->assertExtend8bit();    // legaxy REX side-effects
 
   unsigned opmask = (evex >> 16) & 0x7;
   i->setOpmask(opmask);
@@ -991,6 +1098,27 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
   unsigned opcode_byte = (evex >> 24);
   opcode_byte += 256 * (evex_opc_map-1);
 
+#if BX_SUPPORT_APX
+  bool is_apx = false;
+  if (is_apx_opcode(evex_opc_map, opcode_byte, iptr, remain)) {
+    // legacy and VEX instructions promoted to EVEX exist only when APX is enabled
+    if (! apx_ok)
+      return(ia_opcode);
+
+    if (evex_z)
+      return(ia_opcode);
+
+    is_apx = true;
+
+    // EVEX.NF=1 means no flags update, except map4 40-4F where it selects the CFCMOVcc form
+    // (SETcc requires NF=0), CCMP/CTEST clear it in assign_srcs (EVEX.aaa is source condition code)
+    if (opmask == 4 && ! (evex_opc_map == 4 && (opcode_byte & 0xf0) == 0x40))
+      i->setApxEvexNF();
+
+    if (evex_b) i->setApxEvexND();
+  }
+#endif
+
   // opcode requires modrm byte
   struct bx_modrm modrm;
   iptr = parseModrm64(iptr, remain, i, rex_r, rex_x, rex_b, &modrm);
@@ -998,16 +1126,32 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
     return(-1);
 
   bool displ8 = (modrm.mod == 0x40); // mod == 01b
+#if BX_SUPPORT_APX
+  // no disp8*N compression for legacy/VEX instructions promoted to EVEX by APX (N is always 1)
+  if (is_apx) displ8 = false;
+#endif
 
   if (i->modC0()) {
-    modrm.rm |= (rex_x << 1); // extension for vector register size only valid for mod==3
+    // EVEX.U must be '1 when mod == 3, when mod != 3 it is used as ~EVEX.X4
+    if (! evex_u)
+      return(ia_opcode);
 
-    // EVEX.b in reg form implies 512-bit vector length
-    if (i->getEvexb()) i->setVL(BX_VL512);
+#if BX_SUPPORT_APX
+    if (! is_apx)
+#endif
+    {
+      modrm.rm &= 0xf;  // clear bits that potentially were set through rex_b
+      modrm.rm |= (rex_x << 1);
+
+      // EVEX.b in reg form implies 512-bit vector length
+      if (i->getEvexb()) i->setVL(BX_VL512);
+    }
   }
 
   unsigned nnn = modrm.nnn;
   unsigned rm  = modrm.rm;
+
+//printf("opcode: %x w=%d sse_prefix=%d osize=%d nnn=%d mask=%d evex_b=%d ll=%d vvv=%d\n", opcode_byte, vex_w, sse_prefix, i->osize(), nnn & 0x7, opmask, evex_b, (evex >> 21) & 0x3, vvv);
 
   Bit32u vl = i->getVL()-1; // 0: VL128, 1: VL256, 3: VL512
   Bit32u decmask = (1 << IS64_OFFSET) |
@@ -1017,40 +1161,75 @@ int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
                    (i->modC0() ? (1 << MODC0_OFFSET) : 0) |
                    ((nnn & 0x7) << NNN_OFFSET) |
                    (vex_w << VEX_W_OFFSET) |
+                   (evex_b << EVEX_B_OFFSET) |   // needed for APX EVEX.ND only
                    (vl << VEX_VL_128_256_OFFSET);
   if (i->modC0() && nnn == rm)
     decmask |= (1 << SRC_EQ_DST_OFFSET);
   if (!opmask)
     decmask |= (1 << MASK_K0_OFFSET);
+#if BX_SUPPORT_APX
+  if (is_apx) {
+    unsigned scc = (evex >> 16) & 0xf;
+    decmask |= (scc << APX_SCC_OFFSET);
+    decmask |= (1 << APX_REX2_OFFSET);
+  }
+#endif
 
   ia_opcode = findOpcode(BxOpcodeTableEVEX[opcode_byte], decmask);
 
-  bool has_immediate = (opcode_byte >= 0x70 && opcode_byte <= 0x73) || (opcode_byte >= 0xC2 && opcode_byte <= 0xC6) || (opcode_byte >= 0x200 && opcode_byte < 0x300);
-  if (has_immediate) {
-    if (remain != 0) {
-      i->modRMForm.Ib[0] = *iptr;
-      remain--;
-    }
-    else {
-      return(-1);
+#if BX_SUPPORT_APX
+  if (is_apx) {
+    if (fetchImmediate(iptr, remain, i, ia_opcode, true) < 0)
+      return (-1);
+  }
+  else
+#endif
+  {
+    bool has_immediate = (opcode_byte >= 0x70 && opcode_byte <= 0x73) || (opcode_byte >= 0xC2 && opcode_byte <= 0xC6) || (opcode_byte >= 0x200 && opcode_byte < 0x300);
+    if (has_immediate) {
+      if (remain != 0) {
+        i->modRMForm.Ib[0] = *iptr;
+        remain--;
+      }
+      else {
+        return(-1);
+      }
     }
   }
 
   // evex cannot be zero because opcode map 0 is not populated
   BX_ASSERT(evex != 0);
 
-  BxDecodeError decode_err = assign_srcs(i, ia_opcode, true, nnn, rm, vvv, vex_w, evex, displ8);
+  BxApxDecode apx = apx_ok ? BX_APX_ENABLED : BX_APX_DISABLED;
+#if BX_SUPPORT_APX
+  if (is_apx) apx = BX_APX_PROMOTED;
+#endif
+
+  BxDecodeError decode_err = assign_srcs(i, ia_opcode, true, nnn, rm, vvv, vex_w, evex, displ8, apx);
   if (decode_err != BX_DECODE_OK)
     ia_opcode = BX_IA_ERROR;
 
   // EVEX specific #UD conditions
-  if (i->getVL() > BX_VL512) {
+  // (use local vl, APX map4 imm16/imm32 immediate overwrites VL stored in the instruction)
+  if (vl >= BX_VL512) {
     ia_opcode = BX_IA_ERROR;
   }
 #endif
 
   return ia_opcode;
 }
+
+int decoder_evex64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table)
+{
+  return decoder_evex64_common(iptr, remain, i, b1, sse_prefix, rex_prefix, BX_SUPPORT_APX != 0);
+}
+
+#if BX_SUPPORT_APX
+int decoder_evex64_noapx(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table)
+{
+  return decoder_evex64_common(iptr, remain, i, b1, sse_prefix, rex_prefix, false);
+}
+#endif
 
 int decoder_xop64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table)
 {
@@ -1141,6 +1320,66 @@ int decoder_xop64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   return ia_opcode;
 }
 
+#if BX_SUPPORT_APX
+int decoder_rex2(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table)
+{
+  int ia_opcode = BX_IA_ERROR;
+
+  // REX2 prefix:    0xD5 | M R4 X4 B4 W R3 X3 B3 | opcode
+  //                                   ^^^^^^^^^^ rex payload
+
+  assert(b1 == 0xd5);
+
+  if (remain < 2)
+    return(-1);
+
+  // REX prefix before REX2 prefix is illegal
+  if (rex_prefix)
+    return(ia_opcode);
+
+  rex_prefix = *iptr++;
+  rex_prefix = ((rex_prefix) | (rex_prefix << 4)) & 0xf0f;
+  b1 = *iptr++;
+  if (rex_prefix & 0x800) b1 |= 0x100;
+  remain -= 2;
+
+  i->setREX2();
+
+  // no VEX, EVEX or REX2, no 3-byte opcode
+  switch(b1) {
+    case 0xc4:
+    case 0xc5:  // VEX
+    case 0x62:  // EVEX
+    case 0xd5:  // REX2
+    case 0x138:
+    case 0x13a: // 3-byte opcode
+      return(ia_opcode);
+  }
+
+  BxOpcodeDecodeDescriptor64 *decode_descriptor = &decode64_descriptor[b1];
+  BxFetchDecode64Ptr decode_method = decode_descriptor->decode_method;
+  opcode_table = decode_descriptor->opcode_table;
+
+  if (b1 == 0x8f) {
+     // special XOP case require special treatment:
+     //     0x8f should be treated as regular opcode with modrm
+     decode_method = &decoder64_modrm;
+  }
+
+  i->assertExtend8bit();    // legaxy REX side-effects
+  if (rex_prefix & 0x8) {   // REX.W is set
+    i->assertOs64();
+    i->assertOs32();
+  }
+
+  ia_opcode = (*decode_method)(iptr, remain, i, b1, sse_prefix, rex_prefix, opcode_table);
+  if (ia_opcode < 0)
+    return(-1);
+
+  return ia_opcode;
+}
+#endif
+
 int decoder_ud64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned b1, unsigned sse_prefix, unsigned rex_prefix, const void *opcode_table)
 {
   return BX_IA_ERROR;
@@ -1158,6 +1397,14 @@ int decoder64_fp_escape(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i,
     rex_x = ((rex_prefix & 0x2) << 2);
     rex_b = ((rex_prefix & 0x1) << 3);
   }
+
+#if BX_SUPPORT_APX
+  if (rex_prefix > 0xff) {
+    rex_r |= ((rex_prefix & 0x400) >> 6);
+    rex_x |= ((rex_prefix & 0x200) >> 5);
+    rex_b |= ((rex_prefix & 0x100) >> 4);
+  }
+#endif
 
   struct bx_modrm modrm;
   iptr = parseModrm64(iptr, remain, i, rex_r, rex_x, rex_b, &modrm);
@@ -1197,6 +1444,14 @@ int decoder64_modrm(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, uns
     rex_b = ((rex_prefix & 0x1) << 3);
   }
 
+#if BX_SUPPORT_APX
+  if (rex_prefix > 0xff) {
+    rex_r |= ((rex_prefix & 0x400) >> 6);
+    rex_x |= ((rex_prefix & 0x200) >> 5);
+    rex_b |= ((rex_prefix & 0x100) >> 4);
+  }
+#endif
+
   struct bx_modrm modrm;
   iptr = parseModrm64(iptr, remain, i, rex_r, rex_x, rex_b, &modrm);
   if (! iptr)
@@ -1211,6 +1466,10 @@ int decoder64_modrm(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, uns
                    ((modrm.rm  & 0x7) << RRR_OFFSET);
   if (i->modC0() && modrm.nnn == modrm.rm)
     decmask |= (1 << SRC_EQ_DST_OFFSET);
+#if BX_SUPPORT_APX
+  if (i->getREX2())
+    decmask |= (1 << APX_REX2_OFFSET);
+#endif
 
   Bit16u ia_opcode = findOpcode((const Bit64u*) opcode_table, decmask);
 
@@ -1228,6 +1487,11 @@ int decoder64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned 
   if (rex_prefix) {
     rex_b = ((rex_prefix & 0x1) << 3);
   }
+#if BX_SUPPORT_APX
+  if (rex_prefix > 0xff) {
+    rex_b |= ((rex_prefix & 0x100) >> 4);
+  }
+#endif
 
   unsigned rm = (b1 & 7) | rex_b;
   unsigned nnn = (b1 >> 3) & 7;
@@ -1242,6 +1506,10 @@ int decoder64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsigned 
                    ((rm  & 0x7) << RRR_OFFSET);
   if (nnn == rm)
     decmask |= (1 << SRC_EQ_DST_OFFSET);
+#if BX_SUPPORT_APX
+  if (i->getREX2())
+    decmask |= (1 << APX_REX2_OFFSET);
+#endif
 
   Bit16u ia_opcode = findOpcode((const Bit64u*) opcode_table, decmask);
 
@@ -1264,6 +1532,12 @@ int decoder_creg64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
     // rex_x not used
     rex_b = ((rex_prefix & 0x1) << 3);
   }
+#if BX_SUPPORT_APX
+  if (rex_prefix > 0xff) {
+    rex_r |= ((rex_prefix & 0x400) >> 6);
+    rex_b |= ((rex_prefix & 0x100) >> 4);
+  }
+#endif
 
   // opcode requires modrm byte
   if (remain == 0)
@@ -1284,6 +1558,10 @@ int decoder_creg64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsi
                    (1 << MODC0_OFFSET) |
                    ((nnn & 0x7) << NNN_OFFSET) |
                    ((rm  & 0x7) << RRR_OFFSET);
+#if BX_SUPPORT_APX
+  if (i->getREX2())
+    decmask |= (1 << APX_REX2_OFFSET);
+#endif
 
   Bit16u ia_opcode = findOpcode((Bit64u *) opcode_table, decmask);
 
@@ -1303,6 +1581,14 @@ int decoder64_3dnow(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, uns
     rex_x = ((rex_prefix & 0x2) << 2);
     rex_b = ((rex_prefix & 0x1) << 3);
   }
+
+#if BX_SUPPORT_APX
+  if (rex_prefix > 0xff) {
+    rex_r |= ((rex_prefix & 0x400) >> 6);
+    rex_x |= ((rex_prefix & 0x200) >> 5);
+    rex_b |= ((rex_prefix & 0x100) >> 4);
+  }
+#endif
 
   struct bx_modrm modrm;
   iptr = parseModrm64(iptr, remain, i, rex_r, rex_x, rex_b, &modrm);
@@ -1332,6 +1618,12 @@ int decoder64_nop(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, unsig
   i->assertModC0();
 
   unsigned rex_b = (rex_prefix & 0x1);
+#if BX_SUPPORT_APX
+  if (rex_prefix > 0xff) {
+    rex_b |= ((rex_prefix & 0x100) >> 4);
+  }
+#endif
+
   if (rex_b) {
     return decoder64(iptr, remain, i, b1, sse_prefix, rex_prefix, opcode_table);
   }
@@ -1349,13 +1641,22 @@ int decoder_simple64(const Bit8u *iptr, unsigned &remain, bxInstruction_c *i, un
 
   const Bit64u *op = (const Bit64u *) opcode_table;
 
+#if BX_SUPPORT_APX
+  // the only attribute checked is REX2 prefix not allowed
+  if (i->getREX2()) {
+    Bit32u rex2_mask = (1 << APX_REX2_OFFSET);
+    if ((Bit32u(*op) & rex2_mask) != 0 && (Bit32u(*op >> 24) & rex2_mask) == 0)
+      return BX_IA_ERROR;
+  }
+#endif
+
   // no immediate expected, no sources expected, take first opcode
   // check attributes ?
   Bit16u ia_opcode = Bit16u(*op >> 48) & 0x7FFF; // upper bit indicates that parsing is done and doesn't belong to opcode
   return ia_opcode;
 }
 
-int fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPage)
+int fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPage, bool apx_ok)
 {
   if (remainingInPage > 15) remainingInPage = 15;
   i->setILen(remainingInPage);
@@ -1365,7 +1666,7 @@ int fetchDecode64(const Bit8u *iptr, bxInstruction_c *i, unsigned remainingInPag
   int ia_opcode = BX_IA_ERROR;
   unsigned seg_override = BX_SEG_REG_NULL;
 #if BX_SUPPORT_CET
-  unsigned seg_override_cet = BX_SEG_REG_NULL;
+  bool seg_override_cet = false;
 #endif
   bool lock = 0;
   unsigned sse_prefix = SSE_PREFIX_NONE;
@@ -1384,7 +1685,7 @@ fetch_b1:
   // in 64-bit mode DS prefix is ignored but still recorded for CET Endbranch suppress hint
   // keep it even if overridden by FS: or GS:
   if (b1 == 0x3e)
-    seg_override_cet = BX_SEG_REG_DS;
+    seg_override_cet = true;
 #endif
 
   switch (b1) {
@@ -1472,6 +1773,16 @@ fetch_b1:
   BxFetchDecode64Ptr decode_method = decode_descriptor->decode_method;
   const void *opcode_table = decode_descriptor->opcode_table;
 
+#if BX_SUPPORT_APX
+  // without APX enabled REX2 prefix is #UD and EVEX cannot encode extended GPRs
+  if (! apx_ok) {
+    if (b1 == 0xd5)
+      decode_method = &decoder_ud64;
+    else if (b1 == 0x62)
+      decode_method = &decoder_evex64_noapx;
+  }
+#endif
+
   // handle 3-byte opcode
   if (b1 == 0x138 || b1 == 0x13a) {
     if (remain == 0)
@@ -1498,7 +1809,7 @@ fetch_b1:
 
   i->setSeg(BX_SEG_REG_DS); // default segment is DS:
 #if BX_SUPPORT_CET
-  i->setCetSegOverride(seg_override_cet);
+  if (seg_override_cet) i->setCetSegOverride();
 #endif
 
   i->modRMForm.Id = 0;

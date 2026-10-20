@@ -142,6 +142,8 @@ bool StackEntChg[STACK_ENTRIES];     // flag for "change detected" on each stack
 static const char* RegLCName[EFER_Rnum + 1] = {
     "rax","rbx","rcx","rdx","rsi","rdi","rbp","rsp","rip",
     "r8","r9","r10","r11","r12","r13","r14","r15",
+    "r16","r17","r18","r19","r20","r21","r22","r23",
+    "r24","r25","r26","r27","r28","r29","r30","r31",
     "eflags","eax","ebx","ecx","edx","esi","edi","ebp","esp","eip",
     "cs","ds","es","ss","fs","gs",
     "gdtr","idtr","ldtr","tr","cr0","cr2","cr3","cr4","efer"
@@ -1017,7 +1019,12 @@ void LoadRegList()
     if (In64Mode)
     {
         showEreg = SeeReg[0];       // get user option setting for EAX, etc.
-        for (i = RAX_Rnum; i <= R15_Rnum; i++)
+        int LastGPR = R15_Rnum;
+#if BX_SUPPORT_APX
+        if (BX_CPU(CurrentCPU)->is_cpu_extension_supported(BX_ISA_APX))
+            LastGPR = R31_Rnum;     // APX extended GPRs R16-R31
+#endif
+        for (i = RAX_Rnum; i <= LastGPR; i++)
         {
             RitemToRnum[itemnum] = i;   // always recreate the register -> itemnum mapping
             sprintf(regtxt,Fmt64b[UprCase], rV[i]);  // print the hex column
@@ -1256,6 +1263,24 @@ void InitRegObjects()
         RegObject[cpu][R13_Rnum] = SIM->get_param_num("R13", cpu_list);
         RegObject[cpu][R14_Rnum] = SIM->get_param_num("R14", cpu_list);
         RegObject[cpu][R15_Rnum] = SIM->get_param_num("R15", cpu_list);
+#if BX_SUPPORT_APX
+        RegObject[cpu][R16_Rnum] = SIM->get_param_num("R16", cpu_list);
+        RegObject[cpu][R17_Rnum] = SIM->get_param_num("R17", cpu_list);
+        RegObject[cpu][R18_Rnum] = SIM->get_param_num("R18", cpu_list);
+        RegObject[cpu][R19_Rnum] = SIM->get_param_num("R19", cpu_list);
+        RegObject[cpu][R20_Rnum] = SIM->get_param_num("R20", cpu_list);
+        RegObject[cpu][R21_Rnum] = SIM->get_param_num("R21", cpu_list);
+        RegObject[cpu][R22_Rnum] = SIM->get_param_num("R22", cpu_list);
+        RegObject[cpu][R23_Rnum] = SIM->get_param_num("R23", cpu_list);
+        RegObject[cpu][R24_Rnum] = SIM->get_param_num("R24", cpu_list);
+        RegObject[cpu][R25_Rnum] = SIM->get_param_num("R25", cpu_list);
+        RegObject[cpu][R26_Rnum] = SIM->get_param_num("R26", cpu_list);
+        RegObject[cpu][R27_Rnum] = SIM->get_param_num("R27", cpu_list);
+        RegObject[cpu][R28_Rnum] = SIM->get_param_num("R28", cpu_list);
+        RegObject[cpu][R29_Rnum] = SIM->get_param_num("R29", cpu_list);
+        RegObject[cpu][R30_Rnum] = SIM->get_param_num("R30", cpu_list);
+        RegObject[cpu][R31_Rnum] = SIM->get_param_num("R31", cpu_list);
+#endif
 #endif
         RegObject[cpu][EFL_Rnum] = SIM->get_param_num("EFLAGS", cpu_list);
         RegObject[cpu][CS_Rnum] = SIM->get_param_num("CS.selector", cpu_list);
@@ -2194,7 +2219,7 @@ void DoAllInit()
 
     // divide up the pre-allocated char buffer into smaller pieces
     p = bigbuf + outbufSIZE;    // point at the end of preallocated mem
-    p -= 200;           // 200 bytes is enough for all the register names
+    p -= 256;           // 256 bytes is enough for all the register names
     RDispName[0] = p;
     p -= 4096;
     DataDump = p;       // storage for 4K memory dumps

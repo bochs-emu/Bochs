@@ -59,6 +59,14 @@ enum BxDecodeError {
   BX_AMX_SIB_REQUIRED
 };
 
+// APX state of EVEX instruction decode (assign_srcs)
+enum BxApxDecode {
+  BX_APX_DISABLED = 0, // APX is not enabled: extended GPRs cannot be encoded in EVEX GPR operands
+  BX_APX_ENABLED,      // APX is enabled, regular EVEX instruction: extended GPRs allowed
+  BX_APX_PROMOTED      // APX is enabled, legacy/VEX instruction promoted to EVEX: extended GPRs allowed,
+                       // EVEX.aaa[1:0] are reserved (except CCMP/CTEST where aaa is source condition code)
+};
+
 //
 // This file contains common IA-32/X86-64 opcode tables, like FPU opcode
 // table, 3DNow! opcode table or SSE opcode groups (choose the opcode
@@ -70,10 +78,11 @@ enum BxDecodeError {
 #define FetchQWORD(iptr) ReadHostQWordFromLittleEndian((Bit64u*)(iptr));
 
 #if BX_SUPPORT_MPX
-#define BX_MPX_BNDREGS_CLEAR         (0x1000)
+#define BX_MPX_BNDREGS_CLEAR         (0x2000)
 #else
 #define BX_MPX_BNDREGS_CLEAR         (0)
 #endif
+#define BX_PREPARE_APX               (0x1000)
 #define BX_PREPARE_SCALEDATA         (0x800 | BX_PREPARE_AMX)
 #define BX_PREPARE_AMX               (0x400)
 #define BX_PREPARE_EVEX_NO_BROADCAST (0x200 | BX_PREPARE_EVEX)
@@ -156,7 +165,8 @@ enum {
   BX_DREG = 0x12,
   BX_BSR_REG = 0x13,        // ACE v1 Block Scale Register (BSRMOVF/BSRMOVL/BSRMOVH/BSRINIT)
   BX_SIB_MEMORY = 0x14,     // memory reference which must be encoded with SIB byte (AMX TILELOADD/TILESTORED)
-  // 0x15-0x1F: 11 more free slots
+  BX_DFV = 0x15             // APX
+  // 0x16-0x1F: 10 more free slots
 };
 
 // to be used together with BX_SRC_VECTOR_RM
@@ -333,8 +343,12 @@ const Bit8u OP_Hsh = BX_FORM_SRC(BX_VMM_REG, BX_SRC_VVV);
 const Bit8u OP_Hss = BX_FORM_SRC(BX_VMM_REG, BX_SRC_VVV);
 const Bit8u OP_Hsd = BX_FORM_SRC(BX_VMM_REG, BX_SRC_VVV);
 
+const Bit8u OP_Bb = BX_FORM_SRC(BX_GPR8, BX_SRC_VVV);
+const Bit8u OP_Bw = BX_FORM_SRC(BX_GPR16, BX_SRC_VVV);
 const Bit8u OP_Bd = BX_FORM_SRC(BX_GPR32, BX_SRC_VVV);
 const Bit8u OP_Bq = BX_FORM_SRC(BX_GPR64, BX_SRC_VVV);
+
+const Bit8u OP_DFV = BX_FORM_SRC(BX_DFV, BX_SRC_VVV);
 
 const Bit8u OP_VIb = BX_FORM_SRC(BX_VMM_REG, BX_SRC_VIB);
 
@@ -410,15 +424,16 @@ struct bx_modrm {
 2222 1111 1111 11
 3210 9876 5432 1098 7654 3210
 -----------------------------
-OOAA SSLM IVEX VVVM SRRR  NNN
-SSSS SSoo SEVO EEEA R
-6363 EEcd 6XEP XXXS C
-4242 PPkC 4 X  ...K =
- / / PR 0      VVWK D
- 1 1 EE        LL 0 S
- 6 6 FF        50   T
-     II        1/
-     XX        21
+OOAA SSLM I.ER VVVM  RRR SNNN
+SSSS SSoo S VE EEEA ---- R
+6363 EEcd 6 EX XXXS EEEE C
+4242 PPkC 4 X2 ...K VVVV =
+ / / PR 0   .  VVWK EEEE D
+ 1 1 EE     B  LL 0 XXXX S
+ 6 6 FF        50   .... T
+     II        1/   SSSS
+     XX        21   CCCC
+                    3210
 */
 
 const unsigned OS64_OFFSET = 23;
@@ -430,15 +445,15 @@ const unsigned SSE_PREFIX_OFFSET = 18;
 const unsigned LOCK_PREFIX_OFFSET = 17;
 const unsigned MODC0_OFFSET = 16;
 const unsigned IS64_OFFSET = 15;
-const unsigned VEX_OFFSET = 14;
-const unsigned EVEX_OFFSET = 13;
-const unsigned XOP_OFFSET = 12;
+const unsigned EVEX_B_OFFSET = 13;
+const unsigned APX_REX2_OFFSET = 12;  // REX2 prefix or APX instruction promoted to EVEX
 const unsigned VEX_VL_512_OFFSET = 11;
 const unsigned VEX_VL_128_256_OFFSET = 10;
 const unsigned VEX_W_OFFSET = 9;
 const unsigned MASK_K0_OFFSET = 8;
-const unsigned SRC_EQ_DST_OFFSET = 7;
+const unsigned SRC_EQ_DST_OFFSET = 3;
 const unsigned RRR_OFFSET = 4;
+const unsigned APX_SCC_OFFSET = 4;
 const unsigned NNN_OFFSET = 0;
 
 const Bit64u ATTR_OS64 = ((BX_CONST64(3)<<OS32_OFFSET) << 24) | (BX_CONST64(3)<<OS32_OFFSET);
@@ -474,9 +489,9 @@ const Bit64u ATTR_NO_MODC0 = ((BX_CONST64(0)<<MODC0_OFFSET) << 24) | (BX_CONST64
 const Bit64u ATTR_MOD_REG = ATTR_MODC0;
 const Bit64u ATTR_MOD_MEM = ATTR_NO_MODC0;
 
-const Bit64u ATTR_VEX = ((BX_CONST64(1)<<VEX_OFFSET) << 24) | (BX_CONST64(1)<<VEX_OFFSET);
-const Bit64u ATTR_EVEX = ((BX_CONST64(1)<<EVEX_OFFSET) << 24) | (BX_CONST64(1)<<EVEX_OFFSET);
-const Bit64u ATTR_XOP = ((BX_CONST64(1)<<XOP_OFFSET) << 24) | (BX_CONST64(1)<<XOP_OFFSET);
+// REX2 prefix used or legacy/VEX instruction promoted to EVEX by APX (64-bit mode with APX enabled only)
+const Bit64u ATTR_NO_APX_REX2 = ((BX_CONST64(0)<<APX_REX2_OFFSET) << 24) | (BX_CONST64(1)<<APX_REX2_OFFSET);
+const Bit64u ATTR_APX_REX2    = ((BX_CONST64(1)<<APX_REX2_OFFSET) << 24) | (BX_CONST64(1)<<APX_REX2_OFFSET);
 
 const Bit64u ATTR_VL128 =     ((BX_CONST64(0)<<VEX_VL_128_256_OFFSET) << 24) | (BX_CONST64(3)<<VEX_VL_128_256_OFFSET);
 const Bit64u ATTR_VL256 =     ((BX_CONST64(1)<<VEX_VL_128_256_OFFSET) << 24) | (BX_CONST64(3)<<VEX_VL_128_256_OFFSET);
@@ -489,10 +504,17 @@ const Bit64u ATTR_VEX_L0 = ATTR_VL128;
 const Bit64u ATTR_VEX_W0 = ((BX_CONST64(0)<<VEX_W_OFFSET) << 24) | (BX_CONST64(1)<<VEX_W_OFFSET);
 const Bit64u ATTR_VEX_W1 = ((BX_CONST64(1)<<VEX_W_OFFSET) << 24) | (BX_CONST64(1)<<VEX_W_OFFSET);
 
-const Bit64u ATTR_NO_VEX_EVEX_XOP = ((BX_CONST64(0)<<XOP_OFFSET) << 24) | (BX_CONST64(3)<<XOP_OFFSET);
+const Bit64u ATTR_EVEX_B0 = ((BX_CONST64(0)<<EVEX_B_OFFSET) << 24) | (BX_CONST64(1)<<EVEX_B_OFFSET);
+const Bit64u ATTR_EVEX_B1 = ((BX_CONST64(1)<<EVEX_B_OFFSET) << 24) | (BX_CONST64(1)<<EVEX_B_OFFSET);
+
+const Bit64u ATTR_APX_ND0 = ATTR_EVEX_B0;
+const Bit64u ATTR_APX_ND1 = ATTR_EVEX_B1;
 
 const Bit64u ATTR_MASK_K0 = ((BX_CONST64(1)<<MASK_K0_OFFSET) << 24) | (BX_CONST64(1)<<MASK_K0_OFFSET);
 const Bit64u ATTR_MASK_REQUIRED = ((BX_CONST64(0)<<MASK_K0_OFFSET) << 24) | (BX_CONST64(1)<<MASK_K0_OFFSET);
+
+const Bit64u ATTR_APX_NF0 = ATTR_MASK_K0;
+const Bit64u ATTR_APX_NF1 = ATTR_MASK_REQUIRED;
 
 const Bit64u ATTR_SRC_EQ_DST = ATTR_MOD_REG | ((BX_CONST64(1)<<SRC_EQ_DST_OFFSET) << 24) | (BX_CONST64(1)<<SRC_EQ_DST_OFFSET);
 
@@ -516,6 +538,23 @@ const Bit64u ATTR_NNN7 = ((BX_CONST64(7)<<NNN_OFFSET) << 24) | (BX_CONST64(7)<<N
 
 // special case when both NNN0 and NNN1 can be accepted
 const Bit64u ATTR_NNN0_1 = ((BX_CONST64(0)<<(NNN_OFFSET+1)) << 24) | (BX_CONST64(3)<<(NNN_OFFSET+1));
+
+const Bit64u ATTR_APX_SCC_0 = ((BX_CONST64(0x0)<<RRR_OFFSET) << 24) | (BX_CONST64(0xF)<<RRR_OFFSET);
+const Bit64u ATTR_APX_SCC_1 = ((BX_CONST64(0x1)<<RRR_OFFSET) << 24) | (BX_CONST64(0xF)<<RRR_OFFSET);
+const Bit64u ATTR_APX_SCC_2 = ((BX_CONST64(0x2)<<RRR_OFFSET) << 24) | (BX_CONST64(0xF)<<RRR_OFFSET);
+const Bit64u ATTR_APX_SCC_3 = ((BX_CONST64(0x3)<<RRR_OFFSET) << 24) | (BX_CONST64(0xF)<<RRR_OFFSET);
+const Bit64u ATTR_APX_SCC_4 = ((BX_CONST64(0x4)<<RRR_OFFSET) << 24) | (BX_CONST64(0xF)<<RRR_OFFSET);
+const Bit64u ATTR_APX_SCC_5 = ((BX_CONST64(0x5)<<RRR_OFFSET) << 24) | (BX_CONST64(0xF)<<RRR_OFFSET);
+const Bit64u ATTR_APX_SCC_6 = ((BX_CONST64(0x6)<<RRR_OFFSET) << 24) | (BX_CONST64(0xF)<<RRR_OFFSET);
+const Bit64u ATTR_APX_SCC_7 = ((BX_CONST64(0x7)<<RRR_OFFSET) << 24) | (BX_CONST64(0xF)<<RRR_OFFSET);
+const Bit64u ATTR_APX_SCC_8 = ((BX_CONST64(0x8)<<RRR_OFFSET) << 24) | (BX_CONST64(0xF)<<RRR_OFFSET);
+const Bit64u ATTR_APX_SCC_9 = ((BX_CONST64(0x9)<<RRR_OFFSET) << 24) | (BX_CONST64(0xF)<<RRR_OFFSET);
+const Bit64u ATTR_APX_SCC_A = ((BX_CONST64(0xA)<<RRR_OFFSET) << 24) | (BX_CONST64(0xF)<<RRR_OFFSET);
+const Bit64u ATTR_APX_SCC_B = ((BX_CONST64(0xB)<<RRR_OFFSET) << 24) | (BX_CONST64(0xF)<<RRR_OFFSET);
+const Bit64u ATTR_APX_SCC_C = ((BX_CONST64(0xC)<<RRR_OFFSET) << 24) | (BX_CONST64(0xF)<<RRR_OFFSET);
+const Bit64u ATTR_APX_SCC_D = ((BX_CONST64(0xD)<<RRR_OFFSET) << 24) | (BX_CONST64(0xF)<<RRR_OFFSET);
+const Bit64u ATTR_APX_SCC_E = ((BX_CONST64(0xE)<<RRR_OFFSET) << 24) | (BX_CONST64(0xF)<<RRR_OFFSET);
+const Bit64u ATTR_APX_SCC_F = ((BX_CONST64(0xF)<<RRR_OFFSET) << 24) | (BX_CONST64(0xF)<<RRR_OFFSET);
 
 const Bit64u ATTR_LAST_OPCODE = BX_CONST64(0x8000000000000000);
 
