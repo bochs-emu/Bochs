@@ -61,6 +61,9 @@ static int      saved_lex_start = 0;
 %x EXAMINE
 %x DISASM
 
+/* r8..r31 (r16..r31 are APX extended GPRs), register id is the register number */
+GPR_R8_R31      r([89]|[12][0-9]|3[01])
+
 %%
 <*>[ \t]+       ; // eat up whitespace
 set             { bxlval.sval = strdup(bxtext); return(BX_TOKEN_SET); }
@@ -173,14 +176,7 @@ sil             { LONG_MODE_8BL_REG(BX_8BIT_REG_SIL); }
 dil             { LONG_MODE_8BL_REG(BX_8BIT_REG_DIL); }
 spl             { LONG_MODE_8BL_REG(BX_8BIT_REG_SPL); }
 bpl             { LONG_MODE_8BL_REG(BX_8BIT_REG_BPL); }
-r8b             { LONG_MODE_8BL_REG(BX_8BIT_REG_R8);  }
-r9b             { LONG_MODE_8BL_REG(BX_8BIT_REG_R9);  }
-r10b            { LONG_MODE_8BL_REG(BX_8BIT_REG_R10); }
-r11b            { LONG_MODE_8BL_REG(BX_8BIT_REG_R11); }
-r12b            { LONG_MODE_8BL_REG(BX_8BIT_REG_R12); }
-r13b            { LONG_MODE_8BL_REG(BX_8BIT_REG_R13); }
-r14b            { LONG_MODE_8BL_REG(BX_8BIT_REG_R14); }
-r15b            { LONG_MODE_8BL_REG(BX_8BIT_REG_R15); }
+{GPR_R8_R31}b   { LONG_MODE_8BL_REG(atoi(bxtext+1)); }
 ah              { bxlval.uval = BX_8BIT_REG_AH; return(BX_TOKEN_8BH_REG);}
 bh              { bxlval.uval = BX_8BIT_REG_BH; return(BX_TOKEN_8BH_REG);}
 ch              { bxlval.uval = BX_8BIT_REG_CH; return(BX_TOKEN_8BH_REG);}
@@ -193,14 +189,7 @@ si              { bxlval.uval = BX_16BIT_REG_SI; return(BX_TOKEN_16B_REG);}
 di              { bxlval.uval = BX_16BIT_REG_DI; return(BX_TOKEN_16B_REG);}
 bp              { bxlval.uval = BX_16BIT_REG_BP; return(BX_TOKEN_16B_REG);}
 sp              { bxlval.uval = BX_16BIT_REG_SP; return(BX_TOKEN_16B_REG);}
-r8w             { LONG_MODE_16B_REG(BX_16BIT_REG_R8);  }
-r9w             { LONG_MODE_16B_REG(BX_16BIT_REG_R9);  }
-r10w            { LONG_MODE_16B_REG(BX_16BIT_REG_R10); }
-r11w            { LONG_MODE_16B_REG(BX_16BIT_REG_R11); }
-r12w            { LONG_MODE_16B_REG(BX_16BIT_REG_R12); }
-r13w            { LONG_MODE_16B_REG(BX_16BIT_REG_R13); }
-r14w            { LONG_MODE_16B_REG(BX_16BIT_REG_R14); }
-r15w            { LONG_MODE_16B_REG(BX_16BIT_REG_R15); }
+{GPR_R8_R31}w   { LONG_MODE_16B_REG(atoi(bxtext+1)); }
 eax             { bxlval.uval = BX_32BIT_REG_EAX; return(BX_TOKEN_32B_REG);}
 ebx             { bxlval.uval = BX_32BIT_REG_EBX; return(BX_TOKEN_32B_REG);}
 ecx             { bxlval.uval = BX_32BIT_REG_ECX; return(BX_TOKEN_32B_REG);}
@@ -209,14 +198,7 @@ esi             { bxlval.uval = BX_32BIT_REG_ESI; return(BX_TOKEN_32B_REG);}
 edi             { bxlval.uval = BX_32BIT_REG_EDI; return(BX_TOKEN_32B_REG);}
 ebp             { bxlval.uval = BX_32BIT_REG_EBP; return(BX_TOKEN_32B_REG);}
 esp             { bxlval.uval = BX_32BIT_REG_ESP; return(BX_TOKEN_32B_REG);}
-r8d             { LONG_MODE_32B_REG(BX_32BIT_REG_R8);  }
-r9d             { LONG_MODE_32B_REG(BX_32BIT_REG_R9);  }
-r10d            { LONG_MODE_32B_REG(BX_32BIT_REG_R10); }
-r11d            { LONG_MODE_32B_REG(BX_32BIT_REG_R11); }
-r12d            { LONG_MODE_32B_REG(BX_32BIT_REG_R12); }
-r13d            { LONG_MODE_32B_REG(BX_32BIT_REG_R13); }
-r14d            { LONG_MODE_32B_REG(BX_32BIT_REG_R14); }
-r15d            { LONG_MODE_32B_REG(BX_32BIT_REG_R15); }
+{GPR_R8_R31}d   { LONG_MODE_32B_REG(atoi(bxtext+1)); }
 rax             { LONG_MODE_64B_REG(BX_64BIT_REG_RAX); }
 rbx             { LONG_MODE_64B_REG(BX_64BIT_REG_RBX); }
 rcx             { LONG_MODE_64B_REG(BX_64BIT_REG_RCX); }
@@ -225,14 +207,7 @@ rsi             { LONG_MODE_64B_REG(BX_64BIT_REG_RSI); }
 rdi             { LONG_MODE_64B_REG(BX_64BIT_REG_RDI); }
 rsp             { LONG_MODE_64B_REG(BX_64BIT_REG_RSP); }
 rbp             { LONG_MODE_64B_REG(BX_64BIT_REG_RBP); }
-r8              { LONG_MODE_64B_REG(BX_64BIT_REG_R8);  }
-r9              { LONG_MODE_64B_REG(BX_64BIT_REG_R9);  }
-r10             { LONG_MODE_64B_REG(BX_64BIT_REG_R10); }
-r11             { LONG_MODE_64B_REG(BX_64BIT_REG_R11); }
-r12             { LONG_MODE_64B_REG(BX_64BIT_REG_R12); }
-r13             { LONG_MODE_64B_REG(BX_64BIT_REG_R13); }
-r14             { LONG_MODE_64B_REG(BX_64BIT_REG_R14); }
-r15             { LONG_MODE_64B_REG(BX_64BIT_REG_R15); }
+{GPR_R8_R31}    { LONG_MODE_64B_REG(atoi(bxtext+1)); }
 ip              { return(BX_TOKEN_REG_IP); }
 eip             { return(BX_TOKEN_REG_EIP);}
 rip             { return(BX_TOKEN_REG_RIP);}

@@ -431,6 +431,12 @@ bool BX_CPU_C::vmcs_field_supported(Bit32u encoding)
     case VMCS_64BIT_ORIGINAL_EVENT_DATA_HI:
       return is_cpu_extension_supported(BX_ISA_FRED);
 #endif
+
+#if BX_SUPPORT_APX
+    case VMCS_64BIT_VMEXIT_EXT_INSTRUCTION_INFO:
+    case VMCS_64BIT_VMEXIT_EXT_INSTRUCTION_INFO_HI:
+      return is_cpu_extension_supported(BX_ISA_APX);
+#endif
 #endif
 
     /* VMCS 64-bit guest state fields */

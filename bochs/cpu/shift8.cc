@@ -2,7 +2,7 @@
 // $Id$
 /////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (C) 2001-2018  The Bochs Project
+//  Copyright (C) 2001-2026  The Bochs Project
 //
 //  This library is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU Lesser General Public
@@ -83,7 +83,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EbM(bxInstruction_c *i)
     if (count & 0x18) {
       bit0 = (op1_8 &  1);
       bit7 = (op1_8 >> 7);
-      BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(bit0 ^ bit7, bit0);
+#if BX_SUPPORT_APX
+      if (! i->getApxEvexNF())
+#endif
+        BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(bit0 ^ bit7, bit0);
     }
   }
   else {
@@ -99,7 +102,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ROL_EbM(bxInstruction_c *i)
     bit0 = (result_8 &  1);
     bit7 = (result_8 >> 7);
 
-    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(bit0 ^ bit7, bit0);
+#if BX_SUPPORT_APX
+    if (! i->getApxEvexNF())
+#endif
+      BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(bit0 ^ bit7, bit0);
   }
 
   BX_NEXT_INSTR(i);
@@ -393,8 +399,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHL_EbM(bxInstruction_c *i)
 
   write_RMW_linear_byte(result_8);
 
-  SET_FLAGS_OSZAPC_LOGIC_8(result_8);
-  BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    SET_FLAGS_OSZAPC_LOGIC_8(result_8);
+    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
+  }
 
   BX_NEXT_INSTR(i);
 }
@@ -452,8 +463,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SHR_EbM(bxInstruction_c *i)
     //            of == 0       if count >= 2
     unsigned of = (((result_8 << 1) ^ result_8) >> 7) & 0x1;
 
-    SET_FLAGS_OSZAPC_LOGIC_8(result_8);
-    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
+#if BX_SUPPORT_APX
+    if (! i->getApxEvexNF())
+#endif
+    {
+      SET_FLAGS_OSZAPC_LOGIC_8(result_8);
+      BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(of, cf);
+    }
   }
 
   BX_NEXT_INSTR(i);
@@ -507,9 +523,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SAR_EbM(bxInstruction_c *i)
 
     unsigned cf = (((Bit8s) op1_8) >> (count - 1)) & 0x1;
 
-    SET_FLAGS_OSZAPC_LOGIC_8(result_8);
-    /* signed overflow cannot happen in SAR instruction */
-    BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(0, cf);
+#if BX_SUPPORT_APX
+    if (! i->getApxEvexNF())
+#endif
+    {
+      SET_FLAGS_OSZAPC_LOGIC_8(result_8);
+      /* signed overflow cannot happen in SAR instruction */
+      BX_CPU_THIS_PTR oszapc.set_flags_OxxxxC(0, cf);
+    }
   }
 
   BX_NEXT_INSTR(i);

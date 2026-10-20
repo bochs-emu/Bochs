@@ -38,7 +38,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EqGqM(bxInstruction_c *i)
   sum_64 = op1_64 + op2_64;
   write_RMW_linear_qword(sum_64);
 
-  SET_FLAGS_OSZAPC_ADD_64(op1_64, op2_64, sum_64);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_ADD_64(op1_64, op2_64, sum_64);
 
   BX_NEXT_INSTR(i);
 }
@@ -214,7 +217,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EqGqM(bxInstruction_c *i)
   diff_64 = op1_64 - op2_64;
   write_RMW_linear_qword(diff_64);
 
-  SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
 
   BX_NEXT_INSTR(i);
 }
@@ -378,7 +384,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ADD_EqIdM(bxInstruction_c *i)
   sum_64 = op1_64 + op2_64;
   write_RMW_linear_qword(sum_64);
 
-  SET_FLAGS_OSZAPC_ADD_64(op1_64, op2_64, sum_64);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_ADD_64(op1_64, op2_64, sum_64);
 
   BX_NEXT_INSTR(i);
 }
@@ -440,7 +449,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::SUB_EqIdM(bxInstruction_c *i)
   diff_64 = op1_64 - op2_64;
   write_RMW_linear_qword(diff_64);
 
-  SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_SUB_64(op1_64, op2_64, diff_64);
 
   BX_NEXT_INSTR(i);
 }
@@ -495,7 +507,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::NEG_EqM(bxInstruction_c *i)
   op1_64 = -op1_64;
   write_RMW_linear_qword(op1_64);
 
-  SET_FLAGS_OSZAPC_SUB_64(0, -op1_64, op1_64);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAPC_SUB_64(0, -op1_64, op1_64);
 
   BX_NEXT_INSTR(i);
 }
@@ -519,7 +534,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::INC_EqM(bxInstruction_c *i)
   op1_64++;
   write_RMW_linear_qword(op1_64);
 
-  SET_FLAGS_OSZAP_ADD_64(op1_64 - 1, 0, op1_64);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAP_ADD_64(op1_64 - 1, 0, op1_64);
 
   BX_NEXT_INSTR(i);
 }
@@ -540,7 +558,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::DEC_EqM(bxInstruction_c *i)
   op1_64--;
   write_RMW_linear_qword(op1_64);
 
-  SET_FLAGS_OSZAP_SUB_64(op1_64 + 1, 0, op1_64);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAP_SUB_64(op1_64 + 1, 0, op1_64);
 
   BX_NEXT_INSTR(i);
 }

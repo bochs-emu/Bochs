@@ -39,7 +39,10 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::ANDN_GqBqEqR(bxInstruction_c *i)
 
   op1_64 = ~op1_64 & op2_64;
 
-  SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+    SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
 
   BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
@@ -66,8 +69,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSI_BqEqR(bxInstruction_c *i)
 
   op1_64 = (-op1_64) & op1_64;
 
-  SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
-  set_CF(tmpCF);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
+    set_CF(tmpCF);
+  }
 
   BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
@@ -81,8 +89,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSMSK_BqEqR(bxInstruction_c *i)
 
   op1_64 = (op1_64-1) ^ op1_64;
 
-  SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
-  set_CF(tmpCF);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
+    set_CF(tmpCF);
+  }
 
   BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
@@ -96,8 +109,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BLSR_BqEqR(bxInstruction_c *i)
 
   op1_64 = (op1_64-1) & op1_64;
 
-  SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
-  set_CF(tmpCF);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
+    set_CF(tmpCF);
+  }
 
   BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
@@ -168,9 +186,14 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BEXTR_GqEqBqR(bxInstruction_c *i)
   Bit64u op1_64 = bextrq(BX_READ_64BIT_REG(i->src1()), start, len);
   BX_WRITE_64BIT_REG(i->dst(), op1_64);
 
-  clearEFlagsOSZAPC();
-  if (op1_64 == 0)
-    assert_ZF();
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    clearEFlagsOSZAPC();
+    if (op1_64 == 0)
+      assert_ZF();
+  }
 
   BX_NEXT_INSTR(i);
 }
@@ -189,8 +212,13 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::BZHI_GqEqBqR(bxInstruction_c *i)
     tmpCF = 1;
   }
 
-  SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
-  set_CF(tmpCF);
+#if BX_SUPPORT_APX
+  if (! i->getApxEvexNF())
+#endif
+  {
+    SET_FLAGS_OSZAxC_LOGIC_64(op1_64); // keep PF unchanged
+    set_CF(tmpCF);
+  }
 
   BX_WRITE_64BIT_REG(i->dst(), op1_64);
 

@@ -33,6 +33,7 @@
 
 bool is_32 = 1;
 bool is_64 = 0;
+bool apx_ok = 0;
 
 unsigned char char2byte(unsigned char input)
 {
@@ -63,10 +64,10 @@ unsigned disasm_next_opcode(const Bit8u *iptr, bool is_32, bool is_64)
   char disbuf[256];
 
   bxInstruction_c i;
-  disasm(iptr, is_32, is_64, disbuf, &i, 0, 0, BX_DISASM_INTEL);
+  disasm(iptr, is_32, is_64, disbuf, &i, 0, 0, BX_DISASM_INTEL, apx_ok);
   printf("disasm: %s (opcode handler=%s)\n", disbuf, i.getIaOpcodeName());
 
-  disasm(iptr, is_32, is_64, disbuf, &i, 0, 0, BX_DISASM_GAS);
+  disasm(iptr, is_32, is_64, disbuf, &i, 0, 0, BX_DISASM_GAS, apx_ok);
   printf("disasm: %s (opcode handler=%s)\n", disbuf, i.getIaOpcodeName());
 
   return i.ilen();
@@ -108,8 +109,8 @@ int main(int argn, const char **argv)
   for (int i=1;i<argn;i++) {
     if (i == argn)
     {
-      printf("Usage: bxdisasm [-16|-32|-64] string-of-instruction-bytes\n");
-      printf("       bxdisasm [-16|-32|-64] -i <filename>\n");
+      printf("Usage: bxdisasm [-16|-32|-64] [-apx] string-of-instruction-bytes\n");
+      printf("       bxdisasm [-16|-32|-64] [-apx] -i <filename>\n");
       exit(1);
     }
 
@@ -130,6 +131,11 @@ int main(int argn, const char **argv)
         is_32 = 1;
         is_64 = 1;
         printf("64 bit mode\n");
+        continue;
+      }
+      if (!strcmp(argv[i], "-apx")) {
+        apx_ok = 1;
+        printf("APX enabled\n");
         continue;
       }
       if (!strcmp(argv[i], "-i")) {
