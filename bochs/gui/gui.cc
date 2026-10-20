@@ -148,6 +148,7 @@ bx_gui_c::bx_gui_c(void): disp_mode(DISP_MODE_SIM)
   statusitem_count = 0;
   led_timer_index = BX_NULL_TIMER_HANDLE;
   framebuffer = NULL;
+  tile = NULL;
   guest_textmode = 1;
   guest_fwidth = 8;
   guest_fheight = 16;
@@ -170,6 +171,9 @@ bx_gui_c::~bx_gui_c()
 {
   if (framebuffer != NULL) {
     delete [] framebuffer;
+  }
+  if (tile != NULL) {
+    delete [] tile;
   }
 #if BX_USE_GUI_CONSOLE
   if (console.running) {
@@ -351,8 +355,13 @@ void bx_gui_c::init(int argc, char **argv, unsigned max_xres, unsigned max_yres,
 
   BX_GUI_THIS charmap_updated = 0;
 
-  if (!BX_GUI_THIS new_gfx_api && (BX_GUI_THIS framebuffer == NULL)) {
-    BX_GUI_THIS framebuffer = new Bit8u[max_xres * max_yres * 4];
+  if (!BX_GUI_THIS new_gfx_api) {
+    if (BX_GUI_THIS framebuffer == NULL) {
+      BX_GUI_THIS framebuffer = new Bit8u[max_xres * max_yres * 4];
+    }
+    if (BX_GUI_THIS tile == NULL) {
+      tile = new Bit8u[BX_GUI_THIS x_tilesize * BX_GUI_THIS y_tilesize * 4];
+    }
   }
   show_headerbar();
 
@@ -1206,12 +1215,10 @@ Bit8u *bx_gui_c::graphics_tile_get(unsigned x0, unsigned y0,
 void bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
                                         unsigned w, unsigned h)
 {
-  Bit8u *tile;
   Bit8u *tile_ptr, *fb_ptr;
   Bit16u xc, yc, fb_pitch, tile_pitch;
   Bit8u r, diffx, diffy;
 
-  tile = new Bit8u[BX_GUI_THIS x_tilesize * BX_GUI_THIS y_tilesize * 4];
   diffx = (x0 % BX_GUI_THIS x_tilesize);
   diffy = (y0 % BX_GUI_THIS y_tilesize);
   if (diffx > 0) {
@@ -1236,7 +1243,6 @@ void bx_gui_c::graphics_tile_update_in_place(unsigned x0, unsigned y0,
       BX_GUI_THIS graphics_tile_update(tile, xc, yc);
     }
   }
-  delete [] tile;
 }
 
 void bx_gui_c::draw_char_common(Bit8u ch, Bit8u fc, Bit8u bc, Bit16u xc,

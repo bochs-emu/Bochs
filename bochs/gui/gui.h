@@ -352,6 +352,7 @@ protected:
   Bit16u host_yres;
   Bit16u host_pitch;
   Bit8u host_bpp;
+  Bit8u *tile;
   Bit8u *framebuffer;
   // new text update API
   bool new_text_api;
