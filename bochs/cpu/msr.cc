@@ -464,6 +464,13 @@ void BX_CPU_C::init_MSRs()
   BX_CPU_THIS_PTR ext_msr_desc[BX_MSR_KERNELGSBASE - 0xc0000000] = new VarMSR("MSR_KERNELGSBASE", BX_ISA_LONG_MODE, &BX_CPU_THIS_PTR msr.kernelgsbase, 0, is_canonical_msr);
   BX_CPU_THIS_PTR ext_msr_desc[BX_MSR_TSC_AUX - 0xc0000000] = new VarMSR("MSR_TSC_AUX", BX_ISA_RDTSCP, &BX_CPU_THIS_PTR msr.tsc_aux, BX_CONST64(0xffffffff00000000)); // bits [63:32] are reserved
 #endif
+
+#if BX_SUPPORT_SVM
+  // TSC_RATIO MSR scales the TSC value read by SVM guest
+  BX_CPU_THIS_PTR ext_msr_desc[BX_MSR_TSC_RATIO - 0xc0000000] = new VarMSR("MSR_TSC_RATIO", BX_ISA_SVM, &BX_CPU_THIS_PTR msr.svm_tsc_ratio, BX_SVM_TSC_RATIO_RESERVED_BITS);
+  if (! BX_SUPPORT_SVM_EXTENSION(BX_CPUID_SVM_TSCRATE))
+    BX_CPU_THIS_PTR ext_msr_desc[BX_MSR_TSC_RATIO - 0xc0000000]->disable();
+#endif
 }
 
 void BX_CPU_C::destroy_MSRs()

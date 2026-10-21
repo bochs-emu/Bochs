@@ -565,6 +565,7 @@ void BX_CPU_C::register_state(void)
   if (BX_CPUID_SUPPORT_ISA_EXTENSION(BX_ISA_SVM)) {
     BXRS_HEX_PARAM_FIELD(MSR, svm_hsave_pa, msr.svm_hsave_pa);
     BXRS_HEX_PARAM_FIELD(MSR, svm_vm_cr, msr.svm_vm_cr);
+    BXRS_HEX_PARAM_FIELD(MSR, svm_tsc_ratio, msr.svm_tsc_ratio);
   }
 #endif
 
@@ -1155,6 +1156,7 @@ void BX_CPU_C::reset(unsigned source)
 #if BX_SUPPORT_SVM
   BX_CPU_THIS_PTR msr.svm_hsave_pa = 0;
   BX_CPU_THIS_PTR msr.svm_vm_cr = 0;     // enable SVME if was disabled, clear LOCK bit
+  BX_CPU_THIS_PTR msr.svm_tsc_ratio = BX_SVM_TSC_RATIO_DEFAULT; // 1.0
 #endif
 
 #if BX_SUPPORT_CET

@@ -405,6 +405,13 @@ struct SVM_CONTROLS
 #define BX_VM_CR_MSR_LOCK_MASK          (1<<3)
 #define BX_VM_CR_MSR_SVMDIS_MASK        (1<<4)
 
+// TSC_RATIO MSR 0xc0000104: TSC ratio in 8.32 fixed point format
+//   [31:0] - fractional part
+//  [39:32] - integer part
+//  [63:40] - reserved, must be zero
+#define BX_SVM_TSC_RATIO_DEFAULT        BX_CONST64(0x0000000100000000)
+#define BX_SVM_TSC_RATIO_RESERVED_BITS  BX_CONST64(0xffffff0000000000)
+
 struct VMCB_CACHE
 {
   SVM_HOST_STATE host_state;

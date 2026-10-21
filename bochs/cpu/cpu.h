@@ -720,6 +720,7 @@ typedef struct
 #if BX_SUPPORT_SVM
   Bit32u svm_vm_cr;
   Bit64u svm_hsave_pa;
+  Bit64u svm_tsc_ratio;
 #endif
 
 #if BX_CPU_LEVEL >= 6
@@ -6070,7 +6071,7 @@ public: // for now...
   BX_SMF Bit64u get_TSC();
   BX_SMF void   set_TSC(Bit64u tsc);
   BX_SMF Bit64u get_Virtual_TSC(); // takes into account VMX or SVM adjustments
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   BX_SMF Bit64u compute_physical_TSC_delay(Bit64u virtual_tsc_delay);
 #endif
 #endif

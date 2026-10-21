@@ -782,18 +782,30 @@ Bit64u BX_CPU_C::get_Virtual_TSC()
     }
   }
 #endif
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    // The TSC value read by SVM guest is scaled by TSC_RATIO MSR (8.32 fixed point format)
+    // before TSC_OFFSET is added, the MSR is 1.0 when TSC ratio feature is not supported
+    Bit64u tsc_ratio = BX_CPU_THIS_PTR msr.svm_tsc_ratio;
+    if (tsc_ratio != BX_SVM_TSC_RATIO_DEFAULT) {
+      Bit128u product_128 = (Bit128u) tsc * tsc_ratio;
+      tsc = GET128L(product_128 >> 32);
+    }
+  }
+#endif
 #if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   tsc += BX_CPU_THIS_PTR tsc_offset;    // BX_CPU_THIS_PTR tsc_offset = 0 if not in VMX or SVM guest
 #endif
   return tsc;
 }
 
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
 Bit64u BX_CPU_C::compute_physical_TSC_delay(Bit64u tsc_delay)
 {
+#if BX_SUPPORT_VMX
   if (BX_CPU_THIS_PTR in_vmx_guest) {
     if (BX_CPU_THIS_PTR vmcs.vmexec_ctrls1.TSC_OFFSET() && BX_CPU_THIS_PTR vmcs.vmexec_ctrls2.TSC_SCALING()) {
-      // The virtual delay is multiplied by 2^48 (using a shift) to produce a 128-bit 
+      // The virtual delay is multiplied by 2^48 (using a shift) to produce a 128-bit
       // integer. That product is then divided by the TSC multiplier to produce a 64-bit integer.
       // The physical delay is that quotient.
       Bit128u quotient = ((Bit128u) tsc_delay << 48) / BX_CPU_THIS_PTR vmcs.tsc_multiplier;
@@ -801,6 +813,21 @@ Bit64u BX_CPU_C::compute_physical_TSC_delay(Bit64u tsc_delay)
       tsc_delay = GET128L(quotient);
     }
   }
+#endif
+#if BX_SUPPORT_SVM
+  if (BX_CPU_THIS_PTR in_svm_guest) {
+    Bit64u tsc_ratio = BX_CPU_THIS_PTR msr.svm_tsc_ratio;
+    // TSC ratio of zero freezes the guest TSC, keep the delay unscaled in this case
+    if (tsc_ratio != BX_SVM_TSC_RATIO_DEFAULT && tsc_ratio != 0) {
+      Bit128u quotient = ((Bit128u) tsc_delay << 32) / tsc_ratio;
+      // the physical delay could overflow 64-bit when TSC ratio is less than 1.0
+      if (GET128H(quotient) != 0)
+        tsc_delay = BX_CONST64(0xffffffffffffffff);
+      else
+        tsc_delay = GET128L(quotient);
+    }
+  }
+#endif
   return tsc_delay;
 }
 #endif

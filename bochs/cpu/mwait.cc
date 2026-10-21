@@ -348,7 +348,7 @@ void BX_CPP_AttrRegparmN(1) BX_CPU_C::UMWAIT_Ed(bxInstruction_c *i)
   }
 
   BX_ASSERT(instr_delay > 0);
-#if BX_SUPPORT_VMX
+#if BX_SUPPORT_VMX || BX_SUPPORT_SVM
   instr_delay = compute_physical_TSC_delay(instr_delay);
 #endif
 
