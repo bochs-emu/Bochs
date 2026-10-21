@@ -11,6 +11,7 @@ Changes after Bochs 3.1:
 
 ! Implemented AI Compute Extensions (ACE) emulation according AI Compute Extensions (ACE) Specification rev1.16.2 from x86 Ecosystem Advisory Group
 ! Implemented support for Intel MPX ISA extension
+! Implemented SVM TSC Ratio MSR (TSC scaling for SVM guests), enabled in Zambezi, Trinity and Ryzen models
 - CPUID: models reporting TCE in CPUID (Ryzen, Trinity) did not allow setting EFER.TCE (#GP on WRMSR), enable TCE for all Family 15h+ AMD models (Zambezi, Trinity, Ryzen)
 - AMX: TILELOADD/TILESTORED must #UD if memory operand is encoded without SIB byte, use zero stride when SIB has no index register (was using RSP)
 - AVX/AVX-512: VGATHER/VSCATTER instructions must #UD if memory operand is encoded without VSIB byte
@@ -165,6 +166,7 @@ Changes after Bochs 3.1:
 - VMX: TPAUSE/UMWAIT VM exit must save VM-exit instruction information (bits 6:3 = source register operand)
 - VMX: VM-exit instruction information for LIDT/LGDT/SIDT/SGDT must report operand size in bit 11
 - MONITOR/MWAIT: write to the last byte of the monitored cache line did not wake up the monitor (off-by-one in monitor range check)
++ LAPIC: allow local APIC to be re-enabled after clearing APIC global enable bit in IA32_APIC_BASE MSR, also #GP on attempt to switch directly from disabled APIC to x2APIC mode
 + LAPIC: EOI cleared TMR after broadcasting the EOI to the IOAPIC, wiping the TMR bit of a still asserted level triggered interrupt re-delivered by that EOI.
          The next EOI was not broadcast and the IOAPIC Remote IRR got stuck (Windows Vista boot hang with GeForce).
 

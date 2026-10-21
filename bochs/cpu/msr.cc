@@ -887,44 +887,44 @@ bool BX_CPU_C::relocate_apic(Bit64u val_64)
 
   const Bit32u BX_MSR_APICBASE_RESERVED_BITS = (0x2ff | (is_cpu_extension_supported(BX_ISA_X2APIC) ? 0 : 0x400));
 
-  if (apic_global_enable_on()) {
-    Bit32u val32_hi = GET32H(val_64), val32_lo = GET32L(val_64);
-    BX_INFO(("WRMSR: wrote %08x:%08x to MSR_APICBASE", val32_hi, val32_lo));
-    if (! IsValidPhyAddr(val_64)) {
-      BX_ERROR(("relocate_apic: invalid physical address"));
-      return false;
-    }
-    if (val32_lo & BX_MSR_APICBASE_RESERVED_BITS) {
-      BX_ERROR(("relocate_apic: attempt to set reserved bits"));
-      return false;
-    }
+  Bit32u val32_hi = GET32H(val_64), val32_lo = GET32L(val_64);
+  BX_INFO(("WRMSR: wrote %08x:%08x to MSR_APICBASE", val32_hi, val32_lo));
+  if (! IsValidPhyAddr(val_64)) {
+    BX_ERROR(("relocate_apic: invalid physical address"));
+    return false;
+  }
+  if (val32_lo & BX_MSR_APICBASE_RESERVED_BITS) {
+    BX_ERROR(("relocate_apic: attempt to set reserved bits"));
+    return false;
+  }
 
 #if BX_CPU_LEVEL >= 6
-    if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
-      unsigned apic_state = (BX_CPU_THIS_PTR msr.apicbase >> 10) & 3;
-      unsigned new_state = (val32_lo >> 10) & 3;
+  if (is_cpu_extension_supported(BX_ISA_X2APIC)) {
+    unsigned apic_state = (BX_CPU_THIS_PTR msr.apicbase >> 10) & 3;
+    unsigned new_state = (val32_lo >> 10) & 3;
 
-      if (new_state != apic_state) {
-        if (new_state == BX_APIC_STATE_INVALID) {
-          BX_ERROR(("relocate_apic: attempt to set invalid apic state"));
-          return false;
-        }
-        if (apic_state == BX_APIC_X2APIC_MODE && new_state != BX_APIC_GLOBALLY_DISABLED) {
-          BX_ERROR(("relocate_apic: attempt to switch from x2apic -> xapic"));
-          return false;
-        }
+    if (new_state != apic_state) {
+      if (new_state == BX_APIC_STATE_INVALID) {
+        BX_ERROR(("relocate_apic: attempt to set invalid apic state"));
+        return false;
+      }
+      if (apic_state == BX_APIC_X2APIC_MODE && new_state != BX_APIC_GLOBALLY_DISABLED) {
+        BX_ERROR(("relocate_apic: attempt to switch from x2apic -> xapic"));
+        return false;
+      }
+      if (apic_state == BX_APIC_GLOBALLY_DISABLED && new_state == BX_APIC_X2APIC_MODE) {
+        BX_ERROR(("relocate_apic: attempt to switch from disabled apic -> x2apic"));
+        return false;
       }
     }
+  }
 #endif
 
-    BX_CPU_THIS_PTR msr.apicbase = (bx_phy_address) val_64;
-    BX_CPU_THIS_PTR lapic->set_base(BX_CPU_THIS_PTR msr.apicbase);
-    // TLB flush is required for emulation correctness
-    TLB_flush();  // don't care about performance of apic relocation
-  }
-  else {
-    BX_INFO(("WRMSR: MSR_APICBASE APIC global enable bit cleared !"));
-  }
+  // the local APIC could be disabled and re-enabled again by toggling the APIC global enable bit
+  BX_CPU_THIS_PTR msr.apicbase = (bx_phy_address) val_64;
+  BX_CPU_THIS_PTR lapic->set_base(BX_CPU_THIS_PTR msr.apicbase);
+  // TLB flush is required for emulation correctness
+  TLB_flush();  // don't care about performance of apic relocation
 
   return true;
 }
