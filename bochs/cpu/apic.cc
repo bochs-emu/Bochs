@@ -734,8 +734,10 @@ void bx_local_apic_c::receive_EOI(Bit32u value)
        BX_DEBUG(("local apic received EOI, hopefully for vector 0x%02x", vec));
        clear_vector(isr, vec);
        if(get_vector(tmr, vec)) {
-           apic_bus_broadcast_eoi(vec);
            clear_vector(tmr, vec);
+           // the EOI may cause an immediate re-delivery of a still asserted
+           // level triggered interrupt which sets the TMR bit again
+           apic_bus_broadcast_eoi(vec);
        }
        service_local_apic();
     }
@@ -756,8 +758,8 @@ void bx_local_apic_c::receive_SEOI(Bit8u vec)
      BX_DEBUG(("local apic received SEOI for vector 0x%02x", vec));
      clear_vector(isr, vec);
      if(get_vector(tmr, vec)) {
-         apic_bus_broadcast_eoi(vec);
          clear_vector(tmr, vec);
+         apic_bus_broadcast_eoi(vec);
      }
      service_local_apic();
   }

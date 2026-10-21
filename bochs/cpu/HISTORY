@@ -164,6 +164,8 @@ Changes after Bochs 3.1:
 - VMX: TPAUSE/UMWAIT VM exit must save VM-exit instruction information (bits 6:3 = source register operand)
 - VMX: VM-exit instruction information for LIDT/LGDT/SIDT/SGDT must report operand size in bit 11
 - MONITOR/MWAIT: write to the last byte of the monitored cache line did not wake up the monitor (off-by-one in monitor range check)
++ LAPIC: EOI cleared TMR after broadcasting the EOI to the IOAPIC, wiping the TMR bit of a still asserted level triggered interrupt re-delivered by that EOI.
+         The next EOI was not broadcast and the IOAPIC Remote IRR got stuck (Windows Vista boot hang with GeForce).
 
 -------------------------------------------------------------------------
 Changes in Bochs 3.1 (August 23, 2026):
